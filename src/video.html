@@ -1,0 +1,66 @@
+<html>
+<head>
+<title>canvas video test</title>
+<script src="code/ScriptLoader.js"></script>
+<script type="text/javascript">
+// ---------------------------------------------------------
+var canvas = null, stage = null, resource = null;
+var vid = null;
+function loadedFxn(){
+	console.log("script loaded");
+	classesLoadedFxn();
+}
+function pageLoadedFxn(){
+	console.log("page loaded");
+	var list = ["code/ByteData.js","code/Dispatch.js","code/LLNode.js","code/Queue.js","code/V2D.js",
+	"code/Matrix2D.js","code/Obj2D.js", "code/Code.js","code/Ticker.js","code/Keyboard.js","code/ImageLoader.js",
+	"code/MultiLoader.js","code/Resource.js","code/Output.js","code/Canvas.js",
+	"code/Voxel.js","code/Lattice.js","code/Map.js","code/DO.js","code/Video.js","code/Stage.js",
+	"VideoData1.js"];
+	var scriptLoader = new ScriptLoader("",list,classesLoadedFxn);
+	scriptLoader.load();
+	console.log("loading external files");
+}
+function classesLoadedFxn(){
+	console.log("starting app");
+	resource = new Resource();
+	resource.setFxnComplete( resourceLoadedFxn );
+	resource.load();
+}
+function resourceLoadedFxn(){
+	canvas = new Canvas(resource,null,600,400,Canvas.STAGE_FIT_FIXED);
+	canvas.setClass("videoCanvas");
+	stage = new Stage(canvas, (1/2)*1000);
+	resource.alertLoadCompleteEvents();
+	stage.start();
+	stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,efF);
+	//
+	vid = new Video();
+	stage.addChild(vid);
+}
+function efF(e){
+	vid.matrix.identity();
+	vid.matrix.scale(2.0,2.0);
+	vid.matrix.translate(100,100);//Math.random()*100,Math.random()*100);
+	vid.matrix.rotate(Math.random()*Math.PI/12);
+}
+
+// ---------------------------------------------------------
+</script>
+<style type="text/css">
+body{
+	border:0px;
+	margin:0px;
+	background:url('pattern.jpg');
+}
+.videoCanvas{
+	position:relative;
+	top: 0px;
+	left: 0px;
+}
+</style>
+</head>
+<body onload="pageLoadedFxn();">
+
+</body>
+</html>
