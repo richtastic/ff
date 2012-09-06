@@ -1,10 +1,12 @@
 // Stage.js
 Stage.EVENT_ON_ENTER_FRAME
+Stage.tempMatrix = new Matrix2D();
 
 function Stage(can, fr){
 	var self = this;
 	var root = new DO();
 	this.root = root;
+	root.stage = this;
 	this.canvas = can;
 	this.tempCanvas = new Canvas(null,null,1,1,Canvas.STAGE_FIT_FIXED,true);
 	var frameRate = fr;
@@ -60,6 +62,28 @@ function Stage(can, fr){
 	this.removeAllChilden = function(ch){
 		root.removeAllChilden(ch);
 	}
+	// ------------------------------------------ requests
+	this.getCurrentMousePosition = function(){
+		return this.canvas.mousePosition;
+	}
+	this.globalPointToLocalPoint = function(obj, pos){
+		var mat = Stage.tempMatrix;
+		var newPos = new V2D();
+		var arr = new Array();
+		var i;
+		while(obj){
+			arr.push(obj);
+			obj = obj.parent;
+		}
+		mat.identity();
+		for(i=arr.length-1;i>=0;--i){
+		//for(i=0;i<arr.length;++i){
+			mat.mult(mat,arr[i].matrix);
+			//mat.mult(arr[i].matrix,mat);
+		}
+		mat.multV2D(newPos,pos);
+		return newPos;
+	}
 	// ------------------------- events
 	this.getIntersection = function(pos){
 		var context = this.tempCanvas.getContext();
@@ -82,19 +106,27 @@ function Stage(can, fr){
 		// 
 	}
 	this.canvasMouseClick = function(pos){
-		var intersection = self.getIntersection(pos); // self
+		var intersection = self.getIntersection(pos);
 		if(intersection){
-			// alert all parents down to this object...
-			console.log("parents");
-			intersection.alertAll(Canvas.EVENT_CLICK,intersection);
+			var arr = new Array(intersection,pos);
+			var obj = intersection;
+			while(obj){ // self to ancestors
+				obj.alertAll(Canvas.EVENT_MOUSE_CLICK,arr);
+				obj = obj.parent;
+			}
+			Code.emptyArray(arr); arr = null;
 		}
 		pos = null;
+	}
+	this.canvasMouseMove = function(pos){
+		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	}
 // ------------------------------------------------------------------ constructor
 	this.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.stageResized);
 	this.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,this.canvasMouseDown);
 	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP,this.canvasMouseUp);
 	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.canvasMouseClick);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this.canvasMouseMove);
 }
 
 

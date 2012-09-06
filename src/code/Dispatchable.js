@@ -1,6 +1,6 @@
 // Dispatchable.js
 
-function Dispatchable(can, fr){
+function Dispatchable(){
 	this.dispatch = new Dispatch();
 	this.addFunction = function(str,fxn){
 		this.dispatch.addFunction(str,fxn);

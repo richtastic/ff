@@ -6,9 +6,8 @@
 // ---------------------------------------------------------
 var resource, canvas, stage, do1, do2, do3;
 // ---------------------------------------------------------
-var ff;
+var ff = null;
 function pageLoadedFxn(){
-	console.log("page loaded");
 	ff = new FFLoadAll("code/",classesLoadedFxn);
 }
 function classesLoadedFxn(){
@@ -48,9 +47,12 @@ function resourceLoadedFxn(){
 	do3.matrix.translate(50,50);
 	do1.addChild(do3);
 	// -------------
-	do1.addFunction(Canvas.EVENT_CLICK,do1Click);
-	do2.addFunction(Canvas.EVENT_CLICK,do2Click);
-	do3.addFunction(Canvas.EVENT_CLICK,do3Click);
+	//Code.extendClass(do3,Draggable);
+	/*
+	do1.addFunction(Canvas.EVENT_MOUSE_CLICK,do1Click);
+	do2.addFunction(Canvas.EVENT_MOUSE_CLICK,do2Click);
+	do3.addFunction(Canvas.EVENT_MOUSE_CLICK,do3Click);
+	*/
 }
 // ---------------------------------------------------------
 function do1Click(o){
@@ -63,53 +65,38 @@ function do3Click(o){
 	console.log("3");
 }
 function canvasClickFxn(pos){
-	//console.log("clicked: ("+pos.x+","+pos.y+")");
-	/*
-		if(intersection==do1){
-			console.log( "1" );
-		}else if(intersection==do2){
-			console.log( "2" );
-		}else if(intersection==do3){
-			console.log( "3" );
-		}
-		//console.log( intersection );
-	}*/
-	/*
-	var do1 = new DO();
-	do1.clearGraphics();
-	do1.setFillRGBA(0x00000FF99);
-	do1.drawRect(-10,-10,20,20);
-	do1.matrix.translate(pos.x,pos.y);
-	stage.addChild(do1);
-	*/
-	/*
-	do1.setLine(1.0,0x00FF00);
-	do1.beginPath();
-	do1.moveTo(0,0);
-	do1.lineTo(100,0);
-	do1.lineTo(100,100);
-	do1.lineTo(0,100);
-	do1.lineTo(0,0);
-	do1.strokeLine();
-	do1.endPath();
-	*/
+	//
 }
 function efF(o){
-	/*
-	do1.matrix.identity();
-	do1.matrix.rotate(Math.PI/8);
-	do1.matrix.translate(Math.random()*100,Math.random()*100);
-	do2.matrix.identity();
-	do2.matrix.translate(Math.random()*100,Math.random()*100);
-	*/
+	//
 }
 // ---------------------------------------------------------
 
 // ---------------------------------------------------------
 /*
-polygon filling
-click / hit-test
-panels/windows
+BASE-64 ENCODE/DECODE
+view-source:http://ostermiller.org/calc/encode.html
+http://en.wikipedia.org/wiki/Base64
+
+[A-Z][a-z][0-9]+/ padding with =
+(base64 bits)%8==0 => no padding
+(base64 bits)%8==2 =>  = padding
+(base64 bits)%8==4 => == padding
+
+IMAGES
+http://www.worldwidewhat.net/2012/07/how-to-draw-bitmaps-using-javascript/
+
+FONT FACE
+http://forums.mozillazine.org/viewtopic.php?f=25&t=2251187
+http://www.opinionatedgeek.com/dotnet/tools/base64encode/
+http://www.motobit.com/util/base64-decoder-encoder.asp
+http://www.hcidata.info/base64.htm
+
+http://beej.us/blog/data/html5s-canvas-2-pixel/
+https://developer.mozilla.org/en-US/docs/HTML/Canvas/Pixel_manipulation_with_canvas
+http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
+http://stackoverflow.com/questions/667045/getpixel-from-html-canvas
+
 */
 </script>
 </head>

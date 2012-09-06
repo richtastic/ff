@@ -1,13 +1,15 @@
 // DO.js
 
 function DO(parentDO){
+	var self = this;
+	this.stage = null;
 	this.parent = null, this.children = new Array(); // 0 = back, length-1 = front
 	this.width = 100, this.height = 100;
 	this.matrix = new Matrix2D();
 	this.parent = parentDO;
 	Code.extendClass(this,Dispatchable);
-// rendering ---------------------------------------------------------------------------------
 	this.canvas = null;
+// rendering ---------------------------------------------------------------------------------
 	this.setupRender = function(canvas){
 		this.canvas = canvas;
 		var context = canvas.getContext();
@@ -114,6 +116,7 @@ function DO(parentDO){
 // Display List ----------------------------------------------------------------------------------------------------------------
 	this.addChild = function(ch){
 		ch.parent = this;
+		ch.stage = this.stage;
 		Code.addUnique(this.children,ch);
 	}
 	this.removeChild = function(ch){
@@ -133,6 +136,67 @@ function DO(parentDO){
 		this.parent = null;
 		Code.killMe(this);
 	}
+	// ------------------------------------------------------------------ stage passthrough
+	this.getCurrentMousePosition = function(){
+		return this.stage.getCurrentMousePosition();
+	}
+	this.globalPointToLocalPoint = function(pos){
+		return this.stage.globalPointToLocalPoint(this,pos);
+	}
+	// -------------------------------------------------------------------- dragging
+	this.isDragging = false;
+	this.dragTimer = new Ticker(1/4);
+	this.prevMousePos = new V2D();
+	this.mouseDistance = new V2D();
+this.origin = new V2D();
+	this.timerDrag = function(e){
+		//console.log("timerDrage");
+		if(self.isDragging){
+			var pos = self.getCurrentMousePosition();
+			//pos = self.globalPointToLocalPoint(pos);
+			//self.matrix.translate((pos.x-self.prevMousePos.x),(pos.y-self.prevMousePos.y));
+			//self.matrix.pretranslate((pos.x-self.prevMousePos.x),(pos.y-self.prevMousePos.y));
+//var origin = new V2D(0,0);
+//origin = self.globalPointToLocalPoint(origin);
+//var origin = new V2D(0,0);
+var origin = self.origin;
+//origin = self.globalPointToLocalPoint(origin);
+pos = self.globalPointToLocalPoint(pos);
+var origin = self.origin;
+self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDistance.y)+origin);
+			self.prevMousePos.x = pos.x; self.prevMousePos.y = pos.y;
+		}
+	}
+	this.dragTimer.addFunction(Ticker.EVENT_TICK,this.timerDrag);
+	this.startDrag = function(){
+		self.isDragging = true;
+		self.stage.addFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
+		//self.dragTimer.start();
+	}
+	this.stopDrag = function(){
+		//self.dragTimer.stop();
+		self.stage.removeFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
+		self.isDragging = false;
+	}
+	this.checkDrag = function(arr){
+		var obj = arr[0];
+		var pos = arr[1];
+		if(obj==self){
+			//pos = self.globalPointToLocalPoint(pos);
+			console.log(self.isDragging+" pos:"+pos.x+","+pos.y);
+			self.prevMousePos.x = pos.x; self.prevMousePos.y = pos.y;
+var origin = self.origin;//new V2D(0,0);
+origin = self.globalPointToLocalPoint(origin);
+pos = self.globalPointToLocalPoint(pos);
+self.mouseDistance.x = pos.x-origin.x; self.mouseDistance.y = pos.y-origin.y;
+			if(self.isDragging){
+				self.stopDrag();
+			}else{
+				self.startDrag();
+			}
+		}
+	}
+	
 	// ------------------------------------------------------------------ intersection
 	this.checkIntersectionChildren = true;
 	this.checkIntersectionSelf = true;
@@ -178,6 +242,9 @@ function DO(parentDO){
 	this.lineTo(0,0);
 	this.strokeLine();
 	this.endPath();
+// --------------
+	this.addFunction(Canvas.EVENT_MOUSE_CLICK,this.checkDrag);
+	//this.addFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
 }
 
 

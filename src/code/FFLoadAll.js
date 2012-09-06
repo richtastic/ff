@@ -1,32 +1,34 @@
 // FFLoadAll.js
-
+// no dependencies
 function FFLoadAll(homeDir, completeFxn){
 	var self = this;
+	this.homeDir = homeDir;
 	this.startLoadingFxn = function(){
-		console.log(1);
-		var list = ["code/ByteData.js","code/Dispatch.js","code/Dispatchable.js","code/LLNode.js","code/Queue.js","code/V2D.js",
-		"code/Matrix2D.js","code/Obj2D.js", "code/Code.js","code/Ticker.js","code/Keyboard.js","code/ImageLoader.js",
-		"code/MultiLoader.js","code/Resource.js","code/Output.js","code/Canvas.js",
-		"code/Voxel.js","code/Lattice.js","code/Map.js","code/DO.js","code/Video.js","code/Stage.js" ];
+		var list = ["ByteData.js","Dispatch.js","Dispatchable.js","LLNode.js","Queue.js","V2D.js",
+		"Matrix2D.js","Obj2D.js", "Code.js","Ticker.js","Keyboard.js","ImageLoader.js",
+		"MultiLoader.js","Resource.js","Output.js","Canvas.js",
+		"Voxel.js","Lattice.js","Map.js","DO.js","Draggable.js","Video.js","Stage.js" ];
+		for(var i=0;i<list.length;++i){
+			list[i] = self.homeDir+""+list[i];
+		}
 		var scriptLoader = new ScriptLoader("",list,self.classesLoadedFxn);
 		scriptLoader.load();
 	}
 	this.classesLoadedFxn = function(){
-		console.log(2);
-		self.compFxn();
+		if(self.compFxn!=null){
+			self.compFxn();
+		}
 	}
-// -------------------------------------------------- constructor / initialilizer
+// -------------------------------------------------- constructor / initialilizer / auto-loading
 	this.compFxn = completeFxn;
-	var url = homeDir+"ScriptLoader.as";
-console.log(url);
+	var url = this.homeDir+"ScriptLoader.js";
 	var head = document.getElementsByTagName("head")[0];
 	var script = document.createElement("script");
 	script.type = "text/javascript";
 	script.src = url;
-	script.onreadystatechange = this.startLoadingFxn;
-	script.onload = this.startLoadingFxn;
+	script.onreadystatechange = self.startLoadingFxn;
+	script.onload = self.startLoadingFxn;
 	head.appendChild(script);
-	console.log(0);
 }
 
 

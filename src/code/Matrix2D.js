@@ -14,14 +14,23 @@ function Matrix2D(){
 	}
 	this.translate = translate;
 	function translate(tx,ty){
-		this.x += tx; this.y += ty; // faster than multiply call
+		var mat = Matrix2D.temp;
+		mat.setParameters(1,0,0,1,tx,ty);
+		this.mult(mat,this);
+		//this.x += tx; this.y += ty; // faster than multiply call
 	}
+		this.pretranslate = function(tx,ty){
+			//console.log("pre");
+			var mat = Matrix2D.temp;
+			mat.setParameters(1,0,0,1,tx,ty);
+			this.mult(this,mat);
+		}
 	this.rotate = rotate;
 	function rotate(theta){
 		var mat = Matrix2D.temp;
 		var cA = Math.cos(theta), sA = Math.sin(theta);
 		mat.setParameters(cA,-sA,sA,cA,0,0);
-		this.mult(this,mat);
+		this.mult(mat,this);
 	}
 	this.scale = function(sx,sy){
 		var mat = Matrix2D.temp;
@@ -29,7 +38,7 @@ function Matrix2D(){
 			sy = sx;
 		}
 		mat.setParameters(sx,0,0,sy,0,0);
-		this.mult(this,mat);
+		this.mult(mat,this);
 	}
 	this.mult = function(mA,mB){
 		var aA=mA.a,aB=mA.b,aC=mA.c,aD=mA.d,aX=mA.x,aY=mA.y;

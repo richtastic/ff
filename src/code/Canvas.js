@@ -6,6 +6,7 @@ Canvas.STAGE_FIT_SCALE = 2;
 Canvas.EVENT_MOUSE_DOWN = "canevtmdn";
 Canvas.EVENT_MOUSE_UP = "canevtmup";
 Canvas.EVENT_MOUSE_CLICK = "canevtclk";
+Canvas.EVENT_MOUSE_MOVE = "canevtmov";
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 //
 
@@ -14,6 +15,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	// public
 	this.resource = resource;
 	this.mouseDown = false;
+	this.mousePosition = new V2D();
 	// private
 	var canvas, context;
 	Code.extendClass(this,Dispatchable);
@@ -95,23 +97,6 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this.canvas.width = wid;
 		this.canvas.height = hei;
 	}
-	// dispatch -----------------------------------------------------------
-/*
-	dispatch = new Dispatch();
-	this.addFunction = addFunction;
-	function addFunction(str,fxn){
-		console.log("added-"+str);
-		dispatch.addFunction(str,fxn);
-	}
-	this.removeFunction = removeFunction;
-	function removeFunction(str,fxn){
-		dispatch.removeFunction(str,fxn);
-	}
-	this.alertAll = alertAll;
-	function alertAll(str,o){
-		dispatch.alertAll(str,o);
-	}
-*/
 	// getters -----------------------------------------------------------
 	this.getCanvas = getCanvas;
 	function getCanvas(){
@@ -127,16 +112,18 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		canvas.addEventListener('click', canvasClickFxn);
 		canvas.addEventListener('mousedown', canvasMouseDownFxn);
 		canvas.addEventListener('mouseup', canvasMouseUpFxn);
+		canvas.addEventListener('mousemove', canvasMouseMoveFxn);
 	}
 	this.removeListeners = removeListeners;
 	function removeListeners(){
 		canvas.removeEventListener('click', canvasClickFxn);
 		canvas.removeEventListener('mousedown', canvasMouseDownFxn);
 		canvas.removeEventListener('mouseup', canvasMouseUpFxn);
+		canvas.removeEventListener('mousemove', canvasMouseMoveFxn);
 	}
 	function canvasClickFxn(e){
 		pos = getMousePosition(e);
-		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos); // others
+		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 		pos = null;
 	}
 	function canvasMouseDownFxn(e){
@@ -146,10 +133,15 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		pos = null;
 	}
 	function canvasMouseUpFxn(e){
-		//alert(e);
 		this.mouseDown = false;
 		pos = getMousePosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+		pos = null;
+	}
+	function canvasMouseMoveFxn(e){
+		pos = getMousePosition(e);
+		self.mousePosition.x = pos.x; self.mousePosition.y = pos.y;
+		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 		pos = null;
 	}
 	function getMousePosition(e){
