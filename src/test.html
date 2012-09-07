@@ -4,7 +4,7 @@
 <script src="code/FFLoadAll.js"></script>
 <script type="text/javascript">
 // ---------------------------------------------------------
-var resource, canvas, stage, do1, do2, do3;
+var resource, keyboard, canvas, stage, do1, do2, do3;
 // ---------------------------------------------------------
 var ff = null;
 function pageLoadedFxn(){
@@ -17,7 +17,7 @@ function classesLoadedFxn(){
 }
 function resourceLoadedFxn(){
 	canvas = new Canvas(resource,null,0,0,Canvas.STAGE_FIT_FILL);
-	stage = new Stage(canvas, (1/2)*1000);
+	stage = new Stage(canvas, (1/18)*1000);
 	resource.alertLoadCompleteEvents();
 	stage.start();
 	stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,efF);
@@ -29,7 +29,9 @@ function resourceLoadedFxn(){
 	do1.drawRect(-50,-50,100,100);
 	do1.matrix.rotate(Math.PI/4);
 	do1.matrix.translate(100,100);
+	//do1.matrix.rotate(Math.PI/14);
 	stage.addChild(do1);
+	/*
 	// -------------
 	do2 = new DO();
 	do2.clearGraphics();
@@ -46,6 +48,7 @@ function resourceLoadedFxn(){
 	do3.matrix.rotate(Math.PI/3);
 	do3.matrix.translate(50,50);
 	do1.addChild(do3);
+	*/
 	// -------------
 	//Code.extendClass(do3,Draggable);
 	/*
@@ -53,8 +56,32 @@ function resourceLoadedFxn(){
 	do2.addFunction(Canvas.EVENT_MOUSE_CLICK,do2Click);
 	do3.addFunction(Canvas.EVENT_MOUSE_CLICK,do3Click);
 	*/
+	keyboard = new Keyboard();
+	keyboard.addListeners();
+	keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,keyDownFxn);
+	keyboard.addFunction(Keyboard.EVENT_KEY_UP,keyUpFxn);
 }
 // ---------------------------------------------------------
+var moveAmount = 5;
+function keyDownFxn(e){
+	var obj = do1;
+	if(keyboard.keyIsDown(Keyboard.KEY_SHIFT)){
+		obj = do2;
+	}
+	if(e==Keyboard.KEY_UP){
+		obj.matrix.translate(0,-moveAmount);
+	}else if(e==Keyboard.KEY_DOWN){
+		obj.matrix.translate(0,moveAmount);
+	}else if(e==Keyboard.KEY_LEFT){
+		obj.matrix.translate(-moveAmount,0);
+	}else if(e==Keyboard.KEY_RIGHT){
+		obj.matrix.translate(moveAmount,0);
+	}
+}
+function keyUpFxn(e){
+	//console.log("up");
+}
+
 function do1Click(o){
 	console.log("1");
 }

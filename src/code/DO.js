@@ -144,6 +144,7 @@ function DO(parentDO){
 		return this.stage.globalPointToLocalPoint(this,pos);
 	}
 	// -------------------------------------------------------------------- dragging
+	this.enableDragging = false;
 	this.isDragging = false;
 	this.dragTimer = new Ticker(1/4);
 	this.prevMousePos = new V2D();
@@ -179,20 +180,22 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 		self.isDragging = false;
 	}
 	this.checkDrag = function(arr){
-		var obj = arr[0];
-		var pos = arr[1];
-		if(obj==self){
-			//pos = self.globalPointToLocalPoint(pos);
-			console.log(self.isDragging+" pos:"+pos.x+","+pos.y);
-			self.prevMousePos.x = pos.x; self.prevMousePos.y = pos.y;
-var origin = self.origin;//new V2D(0,0);
-origin = self.globalPointToLocalPoint(origin);
-pos = self.globalPointToLocalPoint(pos);
-self.mouseDistance.x = pos.x-origin.x; self.mouseDistance.y = pos.y-origin.y;
-			if(self.isDragging){
-				self.stopDrag();
-			}else{
-				self.startDrag();
+		if( self.enableDragging ){
+			var obj = arr[0];
+			var pos = arr[1];
+			if(obj==self){
+				//pos = self.globalPointToLocalPoint(pos);
+				console.log(self.isDragging+" pos:"+pos.x+","+pos.y);
+				self.prevMousePos.x = pos.x; self.prevMousePos.y = pos.y;
+	var origin = self.origin;//new V2D(0,0);
+	origin = self.globalPointToLocalPoint(origin);
+	pos = self.globalPointToLocalPoint(pos);
+	self.mouseDistance.x = pos.x-origin.x; self.mouseDistance.y = pos.y-origin.y;
+				if(self.isDragging){
+					self.stopDrag();
+				}else{
+					self.startDrag();
+				}
 			}
 		}
 	}

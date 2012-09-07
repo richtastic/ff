@@ -5,8 +5,6 @@ Keyboard.EVENT_KEY_UP = "kbdevtkup";
 function Keyboard(){
 	var key = new Array();
 	var dispatch = new Dispatch();
-	fillKeys();
-	
 	function fillKeys(){
 		var i;
 		for(i=0;i<=255;++i){
@@ -49,6 +47,12 @@ function Keyboard(){
 		key[num] = false;
 		dispatch.alertAll(Keyboard.EVENT_KEY_UP,num);
 	}
+	this.keyIsDown = keyIsDown;
+	function keyIsDown(num){
+		return key[num];
+	}
+// --------------------------------------------------------- constructor
+	fillKeys();
 }
 // constants:
 Keyboard.KEY_TAB = 9;

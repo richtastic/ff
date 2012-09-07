@@ -17,7 +17,7 @@ function Matrix2D(){
 		var mat = Matrix2D.temp;
 		mat.setParameters(1,0,0,1,tx,ty);
 		this.mult(mat,this);
-		//this.x += tx; this.y += ty; // faster than multiply call
+		//this.mult(this,mat);
 	}
 		this.pretranslate = function(tx,ty){
 			//console.log("pre");
@@ -31,6 +31,7 @@ function Matrix2D(){
 		var cA = Math.cos(theta), sA = Math.sin(theta);
 		mat.setParameters(cA,-sA,sA,cA,0,0);
 		this.mult(mat,this);
+		//this.mult(this,mat);
 	}
 	this.scale = function(sx,sy){
 		var mat = Matrix2D.temp;
@@ -39,6 +40,7 @@ function Matrix2D(){
 		}
 		mat.setParameters(sx,0,0,sy,0,0);
 		this.mult(mat,this);
+		//this.mult(this,mat);
 	}
 	this.mult = function(mA,mB){
 		var aA=mA.a,aB=mA.b,aC=mA.c,aD=mA.d,aX=mA.x,aY=mA.y;
