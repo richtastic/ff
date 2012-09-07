@@ -1,25 +1,18 @@
 <html>
 <head>
 <title>canvas video test</title>
-<script src="code/ScriptLoader.js"></script>
+<script src="code/FFLoadAll.js"></script>
 <script type="text/javascript">
 // ---------------------------------------------------------
 var canvas = null, stage = null, resource = null;
 var vid = null;
-function loadedFxn(){
-	console.log("script loaded");
-	classesLoadedFxn();
+function defaultLoadedFxn(){
+	var list = ["VideoData1.js"];
+    var scriptLoader = new ScriptLoader("",list,classesLoadedFxn);
+    scriptLoader.load();
 }
 function pageLoadedFxn(){
-	console.log("page loaded");
-	var list = ["code/ByteData.js","code/Dispatch.js","code/LLNode.js","code/Queue.js","code/V2D.js",
-	"code/Matrix2D.js","code/Obj2D.js", "code/Code.js","code/Ticker.js","code/Keyboard.js","code/ImageLoader.js",
-	"code/MultiLoader.js","code/Resource.js","code/Output.js","code/Canvas.js",
-	"code/Voxel.js","code/Lattice.js","code/Map.js","code/DO.js","code/Video.js","code/Stage.js",
-	"VideoData1.js"];
-	var scriptLoader = new ScriptLoader("",list,classesLoadedFxn);
-	scriptLoader.load();
-	console.log("loading external files");
+    ff = new FFLoadAll("code/",defaultLoadedFxn);
 }
 function classesLoadedFxn(){
 	console.log("starting app");
