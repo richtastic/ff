@@ -126,5 +126,59 @@ Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 		v.x = fitHei*ar; v.y = fitHei;
 	}
 }
-
+// -------------------------------------------------------- images
+Code.generateBMPImageHeader = function(w,h){ // 
+    var imgWidth = parseInt(width);
+    var imgHeight = parseInt(height);
+    var imageData = new Array();
+    var sizeOfImage = imgWidth * imgHeight;
+    var height = h;
+    var width = w;
+    height = Code.asLittleEndianHex(height, 4);
+    width = Code.asLittleEndianHex(width, 4);
+    num_file_bytes = Code.asLittleEndianHex(sizeOfImage*4, 4);
+    imageHeader = ('BM' +                // "Magic Number"
+                num_file_bytes +     // size of the file (bytes)*
+                '\x00\x00' +         // reserved
+                '\x00\x00' +         // reserved
+                '\x36\x00\x00\x00' + // offset of where BMP data lives (54 bytes)
+                '\x28\x00\x00\x00' + // number of remaining bytes in header from here (40 bytes)
+                width +              // the width of the bitmap in pixels*
+                height +             // the height of the bitmap in pixels*
+                '\x01\x00' +         // the number of color planes (1)
+                '\x20\x00' +         // 32 bits / pixel
+                '\x00\x00\x00\x00' + // No compression (0)
+                '\x00\x00\x00\x00' + // size of the BMP data (bytes)*
+                '\x13\x0B\x00\x00' + // 2835 pixels/meter - horizontal resolution
+                '\x13\x0B\x00\x00' + // 2835 pixels/meter - the vertical resolution
+                '\x00\x00\x00\x00' + // Number of colors in the palette (keep 0 for 32-bit)
+                '\x00\x00\x00\x00'   // 0 important colors (means all colors are important)
+        );
+    return imageHeader;
+}
+Code.asLittleEndianHex = function(value, bytes){
+    var result = [];
+    for (; bytes>0; bytes--){
+        result.push(String.fromCharCode(value & 255));
+        value >>= 8;
+    }
+    return result.join('');
+}
+Code.setPixelRGBA = function(dat, x,y, r,g,b,a){
+    var index = (x+y*dat.width)*4;
+    dat.data[index+0] = r;
+    dat.data[index+1] = g;
+    dat.data[index+2] = b;
+    dat.data[index+3] = a;
+}
+Code.generateBMPImageSrc = function(wid,hei,imageData){
+    return 'data:image/bmp;base64,'+window.btoa(Code.generateBMPImageHeader(wid,hei)+imageData.join(""));
+}
+Code.generateImageFromData = function(wid,hei,imageData){
+    var img = new Image(wid,hei);
+    img.width = wid;
+    img.height = hei;
+    img.src = Code.generateBMPImageSrc(wid,hei,imageData);
+    return img;
+}
 

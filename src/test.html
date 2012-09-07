@@ -10,14 +10,41 @@ var ff = null;
 function pageLoadedFxn(){
 	ff = new FFLoadAll("code/",classesLoadedFxn);
 }
+/*
+var r = 0xFFFF0000, g = 0xFF00FFFF, b = 0xFF0000FF, k = 0x00000000;
+var sourceImageData = [
+r, g, b, k
+];
+var wid = 100, hei = 100;
+    var imageData = new Array();
+    var imgDatLen = sourceImageData.length;
+    var index = 0;
+    console.log(imgDatLen);
+    for(j=0;j<hei;++j){
+        for(i=0;i<wid;++i){
+            col = sourceImageData[index % imgDatLen];//0xFF0000FF;
+            r = Code.getRedARGB(col);
+            g = Code.getGrnARGB(col);
+            b = Code.getBluARGB(col);
+            a = Code.getAlpARGB(col);
+            col = String.fromCharCode( b,g,r,0 );
+            imageData[ ((hei-j-1)*wid+i)] = col;
+            ++index;
+        }
+    }
+    var img = Code.generateImageFromData(wid,hei, imageData);
+    var body = document.getElementsByTagName('body') [0];
+    body.appendChild(img);
+    console.log(body);
+*/
 function classesLoadedFxn(){
 	resource = new Resource();
 	resource.setFxnComplete( resourceLoadedFxn );
 	resource.load();
 }
 function resourceLoadedFxn(){
-	canvas = new Canvas(resource,null,0,0,Canvas.STAGE_FIT_FILL);
-	stage = new Stage(canvas, (1/18)*1000);
+	canvas = new Canvas(resource,null,600,300,Canvas.STAGE_FIT_FILL);
+	stage = new Stage(canvas, (1/50)*1000);
 	resource.alertLoadCompleteEvents();
 	stage.start();
 	stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,efF);
@@ -31,13 +58,12 @@ function resourceLoadedFxn(){
 	do1.matrix.translate(100,100);
 	//do1.matrix.rotate(Math.PI/14);
 	stage.addChild(do1);
-	/*
 	// -------------
 	do2 = new DO();
 	do2.clearGraphics();
 	do2.setFillRGBA(0x099000099);
 	do2.drawRect(-50,-50,100,100);
-	do2.matrix.rotate(Math.PI/8);
+	//do2.matrix.rotate(Math.PI/8);
 	do2.matrix.translate(50,50);
 	do1.addChild(do2);
 	// -------------
@@ -48,7 +74,6 @@ function resourceLoadedFxn(){
 	do3.matrix.rotate(Math.PI/3);
 	do3.matrix.translate(50,50);
 	do1.addChild(do3);
-	*/
 	// -------------
 	//Code.extendClass(do3,Draggable);
 	/*
@@ -60,11 +85,14 @@ function resourceLoadedFxn(){
 	keyboard.addListeners();
 	keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,keyDownFxn);
 	keyboard.addFunction(Keyboard.EVENT_KEY_UP,keyUpFxn);
+    /* */
+   
 }
 // ---------------------------------------------------------
 var moveAmount = 5;
 function keyDownFxn(e){
-	var obj = do1;
+	/*
+    var obj = do1;
 	if(keyboard.keyIsDown(Keyboard.KEY_SHIFT)){
 		obj = do2;
 	}
@@ -76,7 +104,7 @@ function keyDownFxn(e){
 		obj.matrix.translate(-moveAmount,0);
 	}else if(e==Keyboard.KEY_RIGHT){
 		obj.matrix.translate(moveAmount,0);
-	}
+	}*/
 }
 function keyUpFxn(e){
 	//console.log("up");
@@ -95,7 +123,22 @@ function canvasClickFxn(pos){
 	//
 }
 function efF(o){
-	//
+    var obj = do1;
+	if(keyboard.keyIsDown(Keyboard.KEY_SHIFT)){
+        obj = do2;
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_UP)){
+        obj.matrix.translate(0,-moveAmount);
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_DOWN)){
+        obj.matrix.translate(0,moveAmount);
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_LEFT)){
+        obj.matrix.translate(-moveAmount,0);
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_RIGHT)){
+        obj.matrix.translate(moveAmount,0);
+    }
 }
 // ---------------------------------------------------------
 
