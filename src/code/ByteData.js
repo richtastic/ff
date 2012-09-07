@@ -118,6 +118,22 @@ function ByteData(){
 			this.writeUint6( num );
 		}
 	}
+    // ------------------------------------------------------------------------------------------------- Uint#
+    this.writeUintN = function(n,b){
+        var i, ander = 1;
+        for(i=0;i<b;++i){
+            (ander&n)==0?writeBit(0):writeBit(1);
+            ander <<= 1;
+        }
+    }
+    this.readUintN = function(b){
+        var i, ander = 1, n=0;
+        for(i=0;i<b;++i){
+            readBit()==0?n:n|=ander;
+            ander <<= 1;
+        }
+        return n;
+    }
 	// ------------------------------------------------------------------------------------------------- Uint4 nibble
 	this.writeUint4 = function(n){
 		var i, ander = 1;
@@ -125,6 +141,7 @@ function ByteData(){
 			(ander&n)==0?writeBit(0):writeBit(1);
 			ander <<= 1;
 		}
+        //this.writeUintN(n,4);
 	}
 	this.readUint4 = function(){
 		var i, ander = 1, n=0;
@@ -133,6 +150,7 @@ function ByteData(){
 			ander <<= 1;
 		}
 		return n;
+        //return this.readUintN(4);
 	}
 	// ------------------------------------------------------------------------------------------------- Uint6
 	this.writeUint6 = function(n){
