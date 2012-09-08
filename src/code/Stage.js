@@ -1,5 +1,6 @@
 // Stage.js
-Stage.EVENT_ON_ENTER_FRAME
+Stage.EVENT_ON_ENTER_FRAME="staextfrm";
+Stage.EVENT_ON_EXIT_FRAME="staextfrm";
 Stage.tempMatrix = new Matrix2D();
 
 function Stage(can, fr){
@@ -34,6 +35,7 @@ function Stage(can, fr){
 		++time;
 		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,time);
 		self.render();
+		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,time);
 	}
 	this.start = start;
 	function start(){
