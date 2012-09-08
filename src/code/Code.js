@@ -31,7 +31,7 @@ Code.removeElement = function(a,o){ // preserves order
 		}
 	}
 }
-Code.removeElementSimple = function(a,o){ // not preserves order
+Code.removeElementSimple = function(a,o){ // not preserve order
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){

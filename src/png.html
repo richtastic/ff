@@ -1,0 +1,80 @@
+<html>
+<head>
+<title>png test</title>
+<script src="code/FFLoadAll.js"></script>
+<script type="text/javascript">
+// ---------------------------------------------------------
+//var resource, keyboard, canvas, stage, do1, do2, do3;
+// ---------------------------------------------------------
+function pageLoadedFxn(){
+	ff = new FFLoadAll("code/",defaultLoadedFxn);
+}
+function defaultLoadedFxn(){
+	console.log("png testing");
+	var bit = new ByteData();
+	bit.writeString("bacon tastes good",0);
+	console.log( bit.toStringBin() );
+	console.log( bit.toString64BitEncoded() );
+	bit.initRead();
+	console.log( bit.readString(0) );
+}
+/*
+var r = 0xFFFF0000, g = 0xFF00FFFF, b = 0xFF0000FF, k = 0x00000000;
+var sourceImageData = [
+r, g, b, k
+];
+var wid = 100, hei = 100;
+    var imageData = new Array();
+    var imgDatLen = sourceImageData.length;
+    var index = 0;
+    console.log(imgDatLen);
+    for(j=0;j<hei;++j){
+        for(i=0;i<wid;++i){
+            col = sourceImageData[index % imgDatLen];//0xFF0000FF;
+            r = Code.getRedARGB(col);
+            g = Code.getGrnARGB(col);
+            b = Code.getBluARGB(col);
+            a = Code.getAlpARGB(col);
+            col = String.fromCharCode( b,g,r,0 );
+            imageData[ ((hei-j-1)*wid+i)] = col;
+            ++index;
+        }
+    }
+    var img = Code.generateImageFromData(wid,hei, imageData);
+    var body = document.getElementsByTagName('body') [0];
+    body.appendChild(img);
+    console.log(body);
+*/
+
+/*
+BASE-64 ENCODE/DECODE
+view-source:http://ostermiller.org/calc/encode.html
+http://en.wikipedia.org/wiki/Base64
+
+[A-Z][a-z][0-9]+/ padding with =
+(base64 bits)%8==0 => no padding
+(base64 bits)%8==2 =>  = padding
+(base64 bits)%8==4 => == padding
+
+IMAGES
+http://www.worldwidewhat.net/2012/07/how-to-draw-bitmaps-using-javascript/
+
+FONT FACE
+http://forums.mozillazine.org/viewtopic.php?f=25&t=2251187
+http://www.opinionatedgeek.com/dotnet/tools/base64encode/
+http://www.motobit.com/util/base64-decoder-encoder.asp
+http://www.hcidata.info/base64.htm
+
+http://beej.us/blog/data/html5s-canvas-2-pixel/
+https://developer.mozilla.org/en-US/docs/HTML/Canvas/Pixel_manipulation_with_canvas
+http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
+http://stackoverflow.com/questions/667045/getpixel-from-html-canvas
+
+*/
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;background:url('pattern.jpg');">
+
+
+</body>
+</html>

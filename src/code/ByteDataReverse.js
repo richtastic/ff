@@ -1,5 +1,5 @@
 // ByteData.js
-// ------------------------------------------------------------------------------------------------- correct 64-bit encoding
+// ------------------------------------------------------------------------------------------------- class
 ByteData.arrayString64 = null;
 ByteData.arrayInverse64 = null;
 ByteData.getString64Array = function(){
@@ -45,7 +45,7 @@ ByteData.getString64Hash = function(){
 	if(ByteData.arrayInverseBit64){
 		return ByteData.arrayInverseBit64;
 	}
-	var arr = ByteData.getStringBit64Array();
+	var arr = ByteData.getString64BitArray();
 	var i, len = arr.length;
 	ByteData.arrayInverseBit64 = new Array();
 	for(i=0;i<len;++i){
@@ -161,63 +161,115 @@ function ByteData(){
 	}
     // ------------------------------------------------------------------------------------------------- Uint#
     this.writeUintN = function(n,b){
-        /*var i, ander = 1;
+        var i, ander = 1;
         for(i=0;i<b;++i){
             (ander&n)==0?writeBit(0):writeBit(1);
             ander <<= 1;
-        }*/
-        var i, ander = 1;
-        ander <<= b-1;
-        for(i=0;i<b;++i){
-            (ander&n)==0?writeBit(0):writeBit(1);
-            ander >>= 1;
-            ander &= 0x7FFFFFFF;
         }
     }
     this.readUintN = function(b){
-        /*var i, ander = 1, n=0;
+        var i, ander = 1, n=0;
         for(i=0;i<b;++i){
             readBit()==0?n:n|=ander;
             ander <<= 1;
-        }*/
-        var i, ander = 1, n=0;
-        ander <<= b-1;
-        for(i=0;i<b;++i){
-            readBit()==0?n:n|=ander;
-            ander >>= 1;
-            ander &= 0x7FFFFFFF;
         }
         return n;
     }
 	// ------------------------------------------------------------------------------------------------- Uint4 nibble
-	this.writeUint4 = function(n){ this.writeUintN(n,4); }
-	this.readUint4 = function(){ return this.readUintN(4); }
+	this.writeUint4 = function(n){
+		var i, ander = 1;
+		for(i=0;i<4;++i){
+			(ander&n)==0?writeBit(0):writeBit(1);
+			ander <<= 1;
+		}
+        //this.writeUintN(n,4);
+	}
+	this.readUint4 = function(){
+		var i, ander = 1, n=0;
+		for(i=0;i<4;++i){
+			readBit()==0?n:n|=ander;
+			ander <<= 1;
+		}
+		return n;
+        //return this.readUintN(4);
+	}
 	// ------------------------------------------------------------------------------------------------- Uint6
-	this.writeUint6 = function(n){ this.writeUintN(n,6); }
-	this.readUint6 = function(){ return this.readUintN(6); }
+	this.writeUint6 = function(n){
+		var i, ander = 1;
+		for(i=0;i<6;++i){
+			(ander&n)==0?writeBit(0):writeBit(1);
+			ander <<= 1;
+		}
+	}
+	this.readUint6 = function(){
+		var i, ander = 1, n=0;
+		for(i=0;i<6;++i){
+			readBit()==0?n:n|=ander;
+			ander <<= 1;
+		}
+		return n;
+	}
 	// ------------------------------------------------------------------------------------------------- Uint8 byte
-	this.writeUint8 = function(n){ this.writeUintN(n,8); }
-	this.readUint8 = function(){ return this.readUintN(8); }
+	this.writeUint8 = function(n){
+		var i, ander = 1;
+		for(i=0;i<8;++i){
+			(ander&n)==0?writeBit(0):writeBit(1);
+			ander <<= 1;
+		}
+	}
+	this.readUint8 = function(){
+		var i, ander = 1, n=0;
+		for(i=0;i<8;++i){
+			readBit()==0?n:n|=ander;
+			ander <<= 1;
+		}
+		return n;
+	}
 	// ------------------------------------------------------------------------------------------------- Uint16
-	this.writeUint16 = function(n){ this.writeUintN(n,16); }
-	this.readUint16 = function(){ return this.readUintN(16); }
+	this.writeUint16 = function(n){
+		var i, ander = 1;
+		for(i=0;i<16;++i){
+			(ander&n)==0?writeBit(0):writeBit(1);
+			ander <<= 1;
+		}
+	}
+	this.readUint16 = function(){
+		var i, ander = 1, n=0;
+		for(i=0;i<16;++i){
+			readBit()==0?n:n|=ander;
+			ander <<= 1;
+		}
+		return n;
+	}
 	// ------------------------------------------------------------------------------------------------- Uint32
-	this.writeUint32 = function(n){ this.writeUintN(n,32); }
-	this.readUint32 = function(){ return this.readUintN(32); }
+	this.writeUint32 = function(n){
+		var i, ander = 1;
+		for(i=0;i<32;++i){
+			(ander&n)==0?writeBit(0):writeBit(1);
+			ander <<= 1;
+		}
+	}
+	this.readUint32 = function(){
+		var i, ander = 1, n=0;
+		for(i=0;i<32;++i){
+			readBit()==0?n:n|=ander;
+			ander <<= 1;
+		}
+		return n;
+	}
 	// ------------------------------------------------------------------------------------------------- Strings
 	this.writeString = function(str,includeLength){
 		var i, len = str.length;
-		if( includeLength===null || includeLength===undefined){
+		if( includeLength==null ){
+			console.log("write len:"+len);
 			this.writeUint32(len);
 		}
 		for(i=0;i<len;++i){
 			this.writeASCII(str.charAt(i));
 		}
 	}
-	this.readString = function(includeLength){
-		if(includeLength===null || includeLength===undefined){
-			includeLength = -1;
-		}
+	this.readString = function(str,includeLength){
+		if(includeLength==null){ includeLength = -1; }
 		var i, len, str = "";
 		if(includeLength<0){ // read byte length
 			len = this.readUint32();
@@ -279,7 +331,7 @@ function ByteData(){
 		var i, str = "";
 		var totBits = getTotalBits();
 		var len = Math.ceil(totBits/6.0);
-		var rem = len*6 - totBits;
+		var rem = totBits - len*6;
 		for(i=0;i<len;++i){
 			str = str+ arr[ this.readUint6() ];
 		}
