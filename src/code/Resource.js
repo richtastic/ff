@@ -1,79 +1,51 @@
 // Resource.js
 
 function Resource(){
-	var tex = new Array();
-	this.tex = tex;
-	var snd = new Array();
-	this.snd = snd;
-	var map = new Array();
-	this.map = map;
-	var imgLoader = new ImageLoader( "images/", new Array(), this );
-	this.imgLoader = imgLoader;
-	var fxnLoader = new MultiLoader( new Array(), this );
-	this.fxnLoader = fxnLoader;
-	imgLoader.setFxnComplete(load2);
-	fxnLoader.setFxnComplete(load3);
-	var fxnComplete = null;
-	// dispatch -----------------------------------------------------------
-	var dispatch = new Dispatch();
-	this.addFunction = addFunction;
-	function addFunction(str,fxn){
-		dispatch.addFunction(str,fxn);
-	}
-	this.removeFunction = removeFunction;
-	function removeFunction(str,fxn){
-		dispatch.removeFunction(str,fxn);
-	}
-	this.alertAll = alertAll;
-	function alertAll(str,o){
-		dispatch.alertAll(str,o);
-	}
+	var self = this;
+	this.tex = new Array();
+	this.snd = new Array();
+	this.map = new Array();
+	this.imgLoader = new ImageLoader( "images/", new Array(), this );
+	this.fxnLoader = new MultiLoader( new Array(), this );
+	Code.extendClass(this,Dispatchable);
 	// loading ------------------------------------------------------------------------------
-	this.load = load;
-	function load(){
-		imgLoader.load();
+	this.load = function(){
+		this.imgLoader.load();
 	}
-	this.load2 = load2;
-	function load2(imgList, ref){
+	this.load2 = function(imgList, ref){
 		var i;
 		for(i=0;i<imgList.length;++i){
-			tex[i] = imgList[i];
+			self.tex[i] = imgList[i];
 		}
-		fxnLoader.load();
+		self.fxnLoader.load();
 	}
-	this.load3 = load3;
-	function load3(){
-		addListeners();
+	this.load3 = function(){
+		self.addListeners();
 		if(fxnComplete!=null){
 			fxnComplete();
 		}
 	}
-	this.setFxnComplete = setFxnComplete;
-	function setFxnComplete(fxn){
+	this.setFxnComplete = function(fxn){
 		fxnComplete = fxn;
 	}
-	this.kill = kill;
-	function kill(){
-		
+	this.kill = function(){
+		// 
 	}
 	// global event listeners ----------------------------------------------------
-	this.alertLoadCompleteEvents = alertLoadCompleteEvents;
-	function alertLoadCompleteEvents(){
-		windowResizeListener(null);
+	this.alertLoadCompleteEvents = function(){
+		self.windowResizeListener(null);
 	}
-	this.addListeners = addListeners;
-	function addListeners(){
-		window.onresize = windowResizeListener;
-		//window.onresize = windowResizedFxn;
+	this.addListeners = function(){
+		window.onresize = self.windowResizeListener;
 	}
-	this.windowResizeListener = windowResizeListener;
-	function windowResizeListener(e){
-		//window.innerWidth+" "+window.innerHeight
+	this.windowResizeListener = function(e){
 		p = new V2D(window.innerWidth,window.innerHeight);
-		alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);
+		self.alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);
 	}
-	
-	
+// ----------------------------------------------------------------------- constructor
+	this.imgLoader.setFxnComplete(this.load2);
+	this.fxnLoader.setFxnComplete(this.load3);
+	this.fxnComplete = null;
 }
 
 

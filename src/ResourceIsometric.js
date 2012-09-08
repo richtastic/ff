@@ -11,12 +11,12 @@ ResourceIsometric.SND_1 = 0;
 function ResourceIsometric(){
 	Code.extendClass(this,Resource);
 	var self = this;
-	this.imgLoader.setLoadList( "images/", new Array("iso_gnd_stone.png"), this );
-	this.fxnLoader.setLoadList( new Array(loadLevels), this );
-	this.loadLevels = loadLevels;
-	function loadLevels(ref){
+	var imgList = ["iso_gnd_stone.png"];
+	this.load1 = function(ref){
 		console.log("...");
 	}
-	
+// ------------------------------------------------------- constructor
+	this.imgLoader.setLoadList( "images/", imgList, this );
+	this.fxnLoader.setLoadList( new Array(this.load1), this );
 }
 
