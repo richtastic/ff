@@ -10,7 +10,6 @@ ResourceIsometric.SND_1 = 0;
 
 function ResourceIsometric(){
 	Code.extendClass(this,Resource);
-	var self = this;
 	var imgList = ["iso_gnd_stone.png"];
 	this.load1 = function(ref){
 		console.log("...");

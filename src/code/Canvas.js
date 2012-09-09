@@ -164,6 +164,8 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		}else if(stageFit==Canvas.STAGE_FIT_SCALE){
 			Code.preserveAspectRatio2D(p,canvasWidth,canvasHeight,o.x,o.y);
 			canvas.width = Math.floor(p.x); Math.floor(canvas.height = p.y);
+		}else{ // Canvas.STAGE_FIT_FIXED
+			//
 		}
 		/*
 		var fill = context.createRadialGradient(canvas.width/2,canvas.height/2,0, canvas.width/2,canvas.height/2,500);

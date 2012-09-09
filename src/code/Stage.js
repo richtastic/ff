@@ -8,6 +8,7 @@ function Stage(can, fr){
 	var root = new DO();
 	this.root = root;
 	root.stage = this;
+	root.clearGraphics();
 	this.canvas = can;
 	this.tempCanvas = new Canvas(null,null,1,1,Canvas.STAGE_FIT_FIXED,true);
 	var frameRate = fr;
@@ -28,14 +29,14 @@ function Stage(can, fr){
 	timer.addFunction(Ticker.EVENT_TICK,enterFrame);
 	this.render = function(){
 		this.canvas.clearAll();
+		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,time);
 		root.render(canvas);
+		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,time);
 	}
 	this.enterFrame = enterFrame;
 	function enterFrame(e){
 		++time;
-		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,time);
 		self.render();
-		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,time);
 	}
 	this.start = start;
 	function start(){
@@ -99,7 +100,6 @@ function Stage(can, fr){
 	// ------------------------- events
 	this.stageResized = function(o){
 		root.width = o.x; root.height = o.y;
-		root.clearGraphics();
 	}
 	this.canvasMouseDown = function(e){
 		// 

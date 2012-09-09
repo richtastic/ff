@@ -17,6 +17,10 @@ function defaultLoadedFxn(){
 	console.log( bit.toString64BitEncoded() );
 	bit.initRead();
 	console.log( bit.readString(0) );
+	var img64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAA8CAYAAAAOhRhuAAABf0lEQVR4nO2ZsUvDQBjFE3ETKaHoVBGz1LpmcnHK4iIuzm6u/hfdBf8Bl87i4tLJxSmrxSUgdlJKKGIddfW9QB7HiXzD99teQnKPd4+7kEuTSA7L0+/f+nF6m8a8by3Ozt/jhhTB831yfgmdGY0O4P7r/AX05HocNIa5hNyQQs4vrzNH5XHQALPZE+i7m6vOMc0l5IYUrfnkzuzt4zqzM9jtfGFVVaCLogCt1ilzCbkhRVqeXUBneM4V3AnVMYY7Zy4hN6RIed1heO+q6xp0nuegl+8L0L2tPmje21arL9DmEnJDinW+sJFtg36Y3oNW30PcGX5+kA9Be4dCMWeo1SEmtFOqMwpzCbkhhezQZ/MGWnWKO9Pf7IFefCw7xzOXkBtStDqkOqNomibKkLmE3JBCfg8x3DEmyzLQ8/oZtNrbzCXkhhTy/xDDHeNOqY5wp/hsxFxCbkgR/J86tEOqM4y5hNyQIvi8TK1TTOgZrLmE3JAi6ow9Sfzc/v8xZ+gHuqlxwZ2PVhYAAAAASUVORK5CYII=";
+	var img = Code.generateImageFrombit64encode(img64);
+	document.body.appendChild(img);
+	// console.log(img);
 }
 /*
 var r = 0xFFFF0000, g = 0xFF00FFFF, b = 0xFF0000FF, k = 0x00000000;
@@ -47,14 +51,10 @@ var wid = 100, hei = 100;
 */
 
 /*
-BASE-64 ENCODE/DECODE
-view-source:http://ostermiller.org/calc/encode.html
-http://en.wikipedia.org/wiki/Base64
+http://www.libpng.org/pub/png/spec/1.2/PNG-Chunks.html
+http://en.wikipedia.org/wiki/Portable_Network_Graphics
 
-[A-Z][a-z][0-9]+/ padding with =
-(base64 bits)%8==0 => no padding
-(base64 bits)%8==2 =>  = padding
-(base64 bits)%8==4 => == padding
+
 
 IMAGES
 http://www.worldwidewhat.net/2012/07/how-to-draw-bitmaps-using-javascript/

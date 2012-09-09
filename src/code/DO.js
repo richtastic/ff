@@ -4,6 +4,7 @@ function DO(parentDO){
 	var self = this;
 	this.stage = null;
 	this.parent = null, this.children = new Array(); // 0 = back, length-1 = front
+	this.mask = false;
 	this.width = 100, this.height = 100;
 	this.matrix = new Matrix2D();
 	this.parent = parentDO;
@@ -24,10 +25,22 @@ function DO(parentDO){
 	}
 	this.render = function(canvas){
 		this.setupRender(canvas);
+		var context = this.canvas.getContext();
+		var prevComposite = context.globalCompositeOperation; // "source-over";
+		//console.log(prevComposite);
+		
 		this.drawGraphics(canvas); // self render
+		if(this.mask){
+			context.globalCompositeOperation = "destination-atop";// "destination-out";// "destination-in"; // "source-out";
+			// copy destination-atop destination-in destination-out destination-over
+			// lighter xor source-atop source-in source-out source-over
+		}
 		var i, len = this.children.length;
 		for(i=0;i<len;++i){ // children render
 			this.children[i].render(canvas);
+		}
+		if(this.mask!=null){
+			context.globalCompositeOperation = prevComposite;
 		}
 		this.takedownRender(canvas);
 	}
