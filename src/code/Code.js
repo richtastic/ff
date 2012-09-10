@@ -60,6 +60,13 @@ Code.newArray = function(){
 	}
 	return arr;
 }
+Code.copyArray = function(a,b){ // a = b
+	Code.emptyArray(a);
+	var i, len = b.length;
+	for(i=0;i<len;++i){
+		a[i] = b[i];
+	}
+}
 // conversion functions ----------------------------------------------
 Code.getHex = function (intVal){
 	var str = intVal.toString(16);

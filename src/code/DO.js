@@ -27,8 +27,6 @@ function DO(parentDO){
 		this.setupRender(canvas);
 		var context = this.canvas.getContext();
 		var prevComposite = context.globalCompositeOperation; // "source-over";
-		//console.log(prevComposite);
-		
 		this.drawGraphics(canvas); // self render
 		if(this.mask){
 			context.globalCompositeOperation = "destination-atop";// "destination-out";// "destination-in"; // "source-out";

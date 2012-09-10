@@ -106,6 +106,12 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	function getContext(){
 		return context;
 	}
+	this.getWidth = function(){
+		return self.canvas.width;
+	}
+	this.getHeight = function(){
+		return self.canvas.height;
+	}
 	// LISTENERS ----------------------------------------------------------
 	this.addListeners = addListeners;
 	function addListeners(){

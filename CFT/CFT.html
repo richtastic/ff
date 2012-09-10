@@ -1,0 +1,78 @@
+<html>
+<!doctype html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<head>
+<title>CFT</title>
+<script src="../src/code/FFLoadAll.js"></script>
+<script type="text/javascript">
+// ---------------------------------------------------------
+var ff, sl, cft;
+// ---------------------------------------------------------
+function pageLoadedFxn(){
+	ff = new FFLoadAll("../src/code/",defaultLoadedFxn);
+}
+function defaultLoadedFxn(){
+    var list = ["ResourceCFT.js","CFT.js"];
+    var sl = new ScriptLoader("src/",list,customLoadedFxn);
+    sl.load();
+}
+function customLoadedFxn(){
+    cft = new CFT();
+}
+/*
+TODO:
+
+sketch the several game scenarios:
+    - main game
+    - sandbox / editing room
+    - social windows/interaction
+
+program basic block-grid + interaction
+    - walking
+    - keyboard-colorchange
+    - jump
+
+
+Here’s the notes from today’s CFT meeting, mostly this is for you Cheryl to keep you in the loop (we will explain everything Monday morning as well), and also if you’re a visual thinker like me it just helps to “see” what we all just talked about. J
+
+We decided to stick to a game idea of building levels, it will be leveraging what we currently have in Pixel’D:
+
+So you start off “blank” and as you collect those yellow pieces, you get a drawing prompt to fill in one of those grey pieces. A small window with a mini pixel painter (much like the stamp maker in digital painter) would pop up each time you touch a yellow piece. The painter would have an outline of the object you could draw over (which goes with our current trends of kids drawing over the princesses). To keep the spirit of drawing alive there will be some obstacles in which drawing is not optional. For instance, drawing a bridge to cross a gap, even if you choose to simply draw a line.  I’m thinking you should be allowed to reuse pieces you’ve already made. So if you’ve made an awesome bridge, you would be able to use that same bridge 3 levels later.
+
+There would be complexity settings for your character or mascot, if you want a simple character, you only have to draw a picture. If you want an animated sprite, you will get the tools to create one along with a grey character to trace over so you don’t have to figure out the animation yourself. Basically the game is as simple or complex as you want it to be.
+
+We were thinking of themes, so if you were in say a Mickey theme, it would ask you to draw something Mickey would like. If you are not an artist and just want to play the game, there would be default pieces you could use instead of drawing.  There would be hidden Easter eggs you could find as well, much like the Hidden Mickey’s in Disneyworld, which would give you a special prize.
+
+After you have completed a level you can now use those filled in pieces to create your own level (which I will get to in a second). Each level unlocks more complex mechanisms and blocks for you to use. So if you want to build a better level, it’s in your best interest to complete more levels. Also there will be a store for you to sell your custom items, just as there is talk to have a store to sell stamps you make in Pixel’D painter. What we were thinking is that users that put their stamps up for free will have their artwork randomly placed in the default levels for other users to find and collect. This will inspire a sense of community and sharing among users, while still giving them an immediate reward for doing so.
+
+With each level you complete you would get some digital currency to use in the store. The higher the level, the more money you would get. That way if you want to complete a level over and over again just for the coins, you can, but it would be a better reward (and you’d get more items) to complete the higher ones.
+
+Once you feel you have enough stuff to build a level, you can open up a level builder and use all your acquired pieces and components to create your own level. At the end of each level the user will have the option to give out a drawn prize, that other users can use in their own levels or even as a pixel’D stamp for their artwork.
+
+There will also be a sand box room where you can create custom blocks, edit objects, and make your character do silly things if you’re in a creative mood, but not in the mood to play games.
+
+Alison:
+·        User store.
+   How it will work
+   What categories
+   How it will integrate into both this game and Pixel’D
+Catherine:
+·        User trends
+   What kids are currently doing
+   What themes and objects will appeal to them most and why.
+Richie:
+·        Simple demo (if possible) of the guy moving and filling in the blocks using Action Script of Java
+Chris:
+·        Game mechanism ideas, level ideas. Whatever you have time for before you leave.
+Tiffany
+·        UI design
+·        Item PNGs for Richie
+Cheryl
+
+·        We’ll figure this out when you get back. ;D
+
+*/
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px; margin:0px; background:url('../src/images/pattern.jpg');"></body>
+</html>
