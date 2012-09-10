@@ -118,19 +118,14 @@ function CFT(){
 	this.keyDownFxn = function(key){
 		var dir = null;
 		if(key==Keyboard.KEY_LF){
-			console.log("LEFT");
 			dir = new V2D(-1,0);
 		}else if(key==Keyboard.KEY_RT){
-			console.log("RIGHT");
 			dir = new V2D(1,0);
 		}else if(key==Keyboard.KEY_UP){
-			console.log("UP");
 			dir = new V2D(0,-1);
 		}else if(key==Keyboard.KEY_DN){
-			console.log("DOWN");
 			dir = new V2D(0,1);
 		}
-		console.log("look");
 		if(dir){
 			var wid = self.latticeNumX, hei = self.latticeNumY;
 			var i, j, k, len;
