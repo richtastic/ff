@@ -1,32 +1,17 @@
 // Obj2D.js
-/*
 Obj2D.TYPE_NONE = 0;
 Obj2D.TYPE_WALL = 1;
 Obj2D.TYPE_CHAR = 2;
 Obj2D.TYPE_ENEM = 3;
 Obj2D.TYPE_ITEM = 4;
 Obj2D.TYPE_EXIT = 5;
+
 Obj2D.DIR_NA = 0;
 Obj2D.DIR_UP = 1;
 Obj2D.DIR_DN = 2;
 Obj2D.DIR_LF = 3;
 Obj2D.DIR_RT = 4;
-*/
 
-function Obj2D(mc){
-	var self = this;
-	this.id = 0;
-	this.mc = null;
-	this.remove = false;
-	this.process = function(time){
-
-	}
-	this.render = function(){
-
-	}
-	this.mc = mc
-}
-/*
 function Obj2D(x,y, arr){
 	this.amt = 0;
 	this.complete = false;
@@ -102,6 +87,7 @@ function Obj2D(x,y, arr){
 		//
 	}
 */
+}
 
 
 

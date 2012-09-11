@@ -4,7 +4,7 @@ function Voxel(){
 	var self = this;
 	this.fore = new Array();	// 
 	this.char = new Array();	// 
-	//this.coll = new Array();	// 
+	this.coll = new Array();	// 
 	this.item = new Array();	// 
 	this.back = new Array();	// 
 	this.reserved = false;
@@ -13,6 +13,7 @@ function Voxel(){
 	this.clear = function(){
 		Code.emptyArray(self.fore);
 		Code.emptyArray(self.char);
+		Code.emptyArray(self.coll);
 		Code.emptyArray(self.item);
 		Code.emptyArray(self.back);
 		self.reserved = false;
@@ -44,12 +45,25 @@ function Voxel(){
 	this.getItems = function(){
 		return self.item;
 	}
+// ----------------------------------------------- coll
+	this.setColls = function(arr){
+		Code.copyArray(self.coll,arr);
+	}
+	this.getColls = function(){
+		return self.coll;
+	}
 // ----------------------------------------------- back
 	this.setBG = function(arr){
 		Code.copyArray(self.back,arr);
 	}
 	this.getBG = function(){
 		return self.back;
+	}
+	this.addBG = function(ba){
+		self.back.push(ba);
+	}
+	this.removeBG = function(ba){
+		Code.removeElement(self.back,ba);
 	}
 // -----------------------------------------------
 	this.getReserved = function(){

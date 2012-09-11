@@ -3,18 +3,22 @@
 function CFT(){
 	var self = this;
 	this.resource = null, this.keyboard = null, this.canvas = null, this.stage = null;
+	this.scriptLoader = null;
 	//
-	this.phoneScreenLong = null;
+	this.mcContent = null;
+		this.mcCover = null;
+		this.mcScreen = null;
+			this.mcGame = null;
+	//
 	this.phoneDimX = 480, this.phoneDimY = 320;
 	// 
-	this.latticeOffX = 0, this.latticeOffY = 0;
-	this.latticeCellX = 20, this.latticeCellY = 20;
-	this.latticeNumX = 0, this.latticeNumY = 0;
-	this.lattice = null;
+	this.game = null;
 	this.charMain = null;
 	//
-	this.screenWidth = 0, this.screenHeight = 0;
 	this.constructor = function(){
+    	self.classesLoadedFxn();
+	}
+	this.classesLoadedFxn = function(){
     	self.resource = new ResourceCFT();
     	self.resource.setFxnComplete( self.resourceLoadedFxn );
     	self.resource.load();
@@ -24,35 +28,141 @@ function CFT(){
 	    self.stage = new Stage(self.canvas, (1/24)*1000);
 	    self.keyboard = new Keyboard();
 	    // -------------
-	    self.phoneScreenLong = new DO();
-	    self.phoneScreenLong.clearGraphics();
-	    self.phoneScreenLong.setFillRGBA(0xFFFFFFFF);
-	    self.phoneScreenLong.drawRect(-self.phoneDimX/2,-self.phoneDimY/2,self.phoneDimX,self.phoneDimY);
-	    self.stage.addChild(self.phoneScreenLong);
-	    /*
-	    var do1 = new DO();
-	    do1.clearGraphics();
-	    do1.setFillRGBA(0xFF220099);
-	    do1.drawRect(-50,-50,100,100);
-	    do1.matrix.rotate(Math.PI/4);
-	    do1.matrix.translate(220,100);
-	    */
-	    //stage.addChild(do1);
-	    //phoneScreenLong.addChild(do1);
-	    //phoneScreenLong.mask = true;
-	    // world setup
-	    var wid = self.phoneDimX, hei = self.phoneDimY;
-	    self.latticeNumX = wid/self.latticeCellX;
-	    self.latticeNumY = hei/self.latticeCellY;
-	    self.lattice = new Lattice(self.latticeNumX,self.latticeNumY, Voxel);
-	    self.initLattice();
+	    self.mcContent = new DO();
+	    self.mcContent.setFillRGBA(0xFFFF99FF);
+	    self.mcContent.drawRect(-self.phoneDimX/2,-self.phoneDimY/2,self.phoneDimX,self.phoneDimY);
+
+	    var img = self.resource.tex[ResourceCFT.TEX_IPHONE_1];
+	    self.mcCover = new DOImage(img);
+	    self.mcCover.matrix.identity();
+	    self.mcCover.matrix.translate((img.width/2),(img.height/2));
+	    self.mcCover.matrix.rotate(Math.PI/2);
+	    self.mcCover.matrix.translate(1,0); // pic is off a titch
+
+	    self.mcScreen = new DO();
+	    self.mcScreen.matrix.identity();
+	    self.mcScreen.matrix.translate(-self.phoneDimX/2,-self.phoneDimY/2);
+
+		self.mcGame = new DO();
+	    self.mcGame.matrix.identity();
+	    //
+	    self.stage.addChild(self.mcContent);
+	    self.mcContent.addChild(self.mcScreen);
+	    self.mcContent.addChild(self.mcCover);
+	    self.mcScreen.addChild(self.mcGame);
+	    
+	    self.game = new PixelGame(self.mcGame, self.phoneDimX, self.phoneDimY);
+	    var im = new DOImage(self.resource.tex[ResourceCFT.TEX_CHAR_GIRL_1])
+	    var ob = new Obj2D( im );
+	    self.game.lattice.getElement(2,2).addBG( ob );
+
+	    
+	    var doa = new DOAnim();
+	    doa.clearGraphics();
+	    doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_REGULAR_1]), 2 );
+	    doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_TALL_1]), 2 );
+	    doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_REGULAR_1]), 2 );
+	    doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_WIDE_1]), 2 );
+	    self.stage.addChild(doa);
+	    
+	    
+
 	    // 
 	    self.addListeners();
 	    self.resource.alertLoadCompleteEvents();
 	    self.stage.start();
 	    console.log("CFT complete");
 	}
-	CFT.MAP_BLANK = " ";
+	this.addListeners = function(){
+		self.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,self.windowResizeFxn);
+	    self.stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,self.enterFrameFxn);
+	    self.stage.addFunction(Stage.EVENT_ON_EXIT_FRAME,self.exitFrameFxn);
+	    self.canvas.addFunction(Canvas.EVENT_CLICK,self.canvasClickFxn);
+		self.keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,self.keyDownFxn);
+		self.keyboard.addFunction(Keyboard.EVENT_KEY_UP,self.keyUpFxn);
+		self.keyboard.addListeners();
+	}
+	this.removeListeners = function(){
+		self.canvas.removeFunction(Canvas.EVENT_WINDOW_RESIZE,self.windowResizeFxn);
+	    self.stage.removeFunction(Stage.EVENT_ON_ENTER_FRAME,self.enterFrameFxn);
+	    self.stage.removeFunction(Stage.EVENT_ON_EXIT_FRAME,self.exitFrameFxn);
+	    self.canvas.removeFunction(Canvas.EVENT_CLICK,self.canvasClickFxn);
+		self.keyboard.removeFunction(Keyboard.EVENT_KEY_DOWN,self.keyDownFxn);
+		self.keyboard.removeFunction(Keyboard.EVENT_KEY_UP,self.keyUpFxn);
+		self.keyboard.removeListeners();
+	}
+	this.keyDownFxn = function(key){
+		/*
+		var dir = null;
+		if(key==Keyboard.KEY_LF){
+			dir = new V2D(-1,0);
+		}else if(key==Keyboard.KEY_RT){
+			dir = new V2D(1,0);
+		}else if(key==Keyboard.KEY_UP){
+			dir = new V2D(0,-1);
+		}else if(key==Keyboard.KEY_DN){
+			dir = new V2D(0,1);
+		}
+		*/
+	}
+	this.keyUpFxn = function(key){
+
+	}
+	this.windowResizeFxn = function(o){
+	    self.mcContent.matrix.identity();
+	    self.mcContent.matrix.translate(o.x/2,o.y/2);
+	}
+	this.enterFrameFxn = function(o){
+		self.game.render();
+	}
+	this.exitFrameFxn = function(o){
+		self.drawPhoneCover();
+	}
+	this.drawPhoneCover = function(){
+		/*
+		var can = self.canvas.getCanvas();
+		var con = self.canvas.getContext();
+		var img = self.resource.tex[ResourceCFT.TEX_IPHONE_1];
+		con.save();
+		var prevAlpha = con.globalAlpha;
+		con.globalAlpha = 0.5;
+		con.translate(1,0);
+		con.translate((self.screenWidth/2), (self.screenHeight/2));
+		con.rotate(-Math.PI/2);
+		con.translate(-(img.width/2),-(img.height/2));
+		con.drawImage(img, 0,0); 
+		con.globalAlpha = prevAlpha;
+		con.restore();
+		*/
+	}
+	this.canvasClickFxn = function(o){
+
+	}
+// -------------------------------------------------------------------------------- constructor
+	this.constructor();
+}
+/*
+	Obj2D
+		- DO/DOImage -> display image
+		- portrait -> grid-based description of what it looks like - reference is bottom-left
+			- portraitWidth
+			- portraitHeight
+	> (BG) (bg)
+		<as is>
+		
+	> Block (still block)
+		- occupy space
+		> Char (moveable)
+			- TO MOVE - none of portrait blocks intersect in direction -> set reserved before move
+	> Item (fg) - INTERACT: add to char inventory | add/sub char heath
+		- 
+	> Evt (not rendered) - enable character ability (ladder-climb) | kill character (gas-) | 
+
+
+
+*/
+
+/*CFT.MAP_BLANK = " ";
 	CFT.MAP_ITEM_SPARKLE = "^";
 	CFT.MAP_BLOCK_DEFAULT = "*";
 	CFT.MAP_PORTAL_DEFAULT = "P";
@@ -77,12 +187,8 @@ function CFT(){
 					"************************"; // 16
 		var i, len, x, y, vox, ch;
 		var img = self.resource.tex[ResourceCFT.TEX_BOX_GRASS_1];
-		//len = 10;
 		len = str.length;
 		for(i=0;i<len;++i){
-			//x = Math.floor(Math.random()*self.latticeNumX);
-			//y = Math.floor(Math.random()*self.latticeNumY);
-			//console.log(x+"/"+self.latticeNumX+" : "+y+"/"+self.latticeNumY);
 			vox = self.lattice.getIndex(i);//Element(x,y);
 			ch = str.charAt(i);
 			if(ch==CFT.MAP_BLOCK_DEFAULT){
@@ -96,136 +202,4 @@ function CFT(){
 				vox.setChars( new Array(self.resource.tex[ResourceCFT.TEX_CHAR_BLANK_1]) );
 			}
 		}
-	}
-	this.addListeners = function(){
-		self.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,self.windowResizeFxn);
-	    self.stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,self.enterFrameFxn);
-	    self.stage.addFunction(Stage.EVENT_ON_EXIT_FRAME,self.exitFrameFxn);
-	    self.canvas.addFunction(Canvas.EVENT_CLICK,self.canvasClickFxn);
-		self.keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,self.keyDownFxn);
-		self.keyboard.addFunction(Keyboard.EVENT_KEY_UP,self.keyUpFxn);
-		self.keyboard.addListeners();
-	}
-	this.removeListeners = function(){
-		self.canvas.removeFunction(Canvas.EVENT_WINDOW_RESIZE,self.windowResizeFxn);
-	    self.stage.removeFunction(Stage.EVENT_ON_ENTER_FRAME,self.enterFrameFxn);
-	    self.stage.removeFunction(Stage.EVENT_ON_EXIT_FRAME,self.exitFrameFxn);
-	    self.canvas.removeFunction(Canvas.EVENT_CLICK,self.canvasClickFxn);
-		self.keyboard.removeFunction(Keyboard.EVENT_KEY_DOWN,self.keyDownFxn);
-		self.keyboard.removeFunction(Keyboard.EVENT_KEY_UP,self.keyUpFxn);
-		self.keyboard.removeListeners();
-	}
-	this.keyDownFxn = function(key){
-		var dir = null;
-		if(key==Keyboard.KEY_LF){
-			dir = new V2D(-1,0);
-		}else if(key==Keyboard.KEY_RT){
-			dir = new V2D(1,0);
-		}else if(key==Keyboard.KEY_UP){
-			dir = new V2D(0,-1);
-		}else if(key==Keyboard.KEY_DN){
-			dir = new V2D(0,1);
-		}
-		if(dir){
-			var wid = self.latticeNumX, hei = self.latticeNumY;
-			var i, j, k, len;
-			var img, arr, vox;
-			for(j=0;j<hei;++j){
-				for(i=0;i<wid;++i){
-					vox = self.lattice.getElement(i,j);
-					arr = vox.getChars(); len = arr.length;
-					for(k=0;k<len;++k){
-						img = arr[k];
-						if(img == self.charMain){
-							i+=dir.x; j+=dir.y;
-							if(0<=i&&i<wid && 0<=j&&j<hei){
-								vox.setChars(new Array());
-								vox = self.lattice.getElement(i,j);
-								vox.setChars(new Array(self.charMain));
-							}
-							return;
-						}
-					}
-				}
-			}
-		}
-	}
-	this.keyUpFxn = function(key){
-
-	}
-	this.windowResizeFxn = function(o){
-		self.screenWidth = o.x, self.screenHeight = o.y;
-	    self.phoneScreenLong.matrix.identity();
-	    self.phoneScreenLong.matrix.translate(o.x/2,o.y/2);
-	    self.latticeOffX = (o.x-self.phoneDimX)/2;
-	    self.latticeOffY = (o.y-self.phoneDimY)/2;
-	}
-	this.enterFrameFxn = function(o){
-		// pre
-	}
-	this.exitFrameFxn = function(o){
-		// content
-		/*var wid = self.latticeNumX, hei = self.latticeNumY;
-		var sizX = self.latticeCellX, sizY = self.latticeCellY;
-		var offX = self.latticeOffX, offY = self.latticeOffY;
-		var can = self.canvas.getCanvas();
-		var con = self.canvas.getContext();
-		var i, j;
-		var img = self.resource.tex[ResourceCFT.TEX_BOX_BLANK_1];
-		for(j=0;j<hei;++j){
-			for(i=0;i<wid;++i){
-				con.drawImage(img, offX+sizX*i,offY+sizY*j, sizX,sizY);
-			}
-		}*/
-		//
-		self.renderLattice();
-		// iphone cover
-		var can = self.canvas.getCanvas();
-		var con = self.canvas.getContext();
-		var img = self.resource.tex[ResourceCFT.TEX_IPHONE_1];
-		con.save();
-		con.translate(1,0);
-		con.translate((self.screenWidth/2), (self.screenHeight/2));
-		con.rotate(-Math.PI/2);
-		con.translate(-(img.width/2),-(img.height/2));
-		con.drawImage(img, 0,0); 
-		con.restore();
-	}
-	this.renderLattice = function(){
-		var wid = self.latticeNumX, hei = self.latticeNumY;
-		var sizX = self.latticeCellX, sizY = self.latticeCellY;
-		var offX = self.latticeOffX, offY = self.latticeOffY;
-		var can = self.canvas.getCanvas();
-		var con = self.canvas.getContext();
-		var i, j, k, len;
-		var img, arr, vox;
-		for(j=0;j<hei;++j){
-			for(i=0;i<wid;++i){
-				vox = self.lattice.getElement(i,j);
-				// backgrounds
-				arr = vox.getBG(); len = arr.length;
-				for(k=0;k<len;++k){
-					img = arr[k];
-					con.drawImage(img, offX+sizX*i,offY+sizY*j, sizX,sizY);
-				}
-				// items
-				arr = vox.getItems(); len = arr.length;
-				for(k=0;k<len;++k){
-					img = arr[k];
-					con.drawImage(img, offX+sizX*i,offY+sizY*j, sizX,sizY);
-				}
-				// chars
-				arr = vox.getChars(); len = arr.length;
-				for(k=0;k<len;++k){
-					img = arr[k];
-					con.drawImage(img, offX+sizX*i,offY+sizY*j, sizX,sizY);
-				}
-			}
-		}
-	}
-	this.canvasClickFxn = function(o){
-
-	}
-// -------------------------------------------------------------------------------- constructor
-	this.constructor();
-}
+	}*/

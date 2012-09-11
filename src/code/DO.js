@@ -134,7 +134,7 @@ function DO(parentDO){
 		ch.parent = null;
 		Code.removeElement(this.children,ch);
 	}
-	this.removeAllChilden = function(ch){
+	this.removeAllChildren = function(ch){
 		var i, len = this.children.length;
 		for(i=0;i<len;++i){
 			this.children[i].parent = null;
@@ -244,6 +244,7 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 		return Code.getColRGBA(dat[index],dat[index+1],dat[index+2],dat[index+3]);
 	}
 // ------------------------------------------------------------------ constructor
+	/*
 	this.clearGraphics();
 	this.setFillRGBA(0x0000FF99);
 	this.drawRect(0,0,100,100);
@@ -256,6 +257,7 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 	this.lineTo(0,0);
 	this.strokeLine();
 	this.endPath();
+	*/
 // --------------
 	this.addFunction(Canvas.EVENT_MOUSE_CLICK,this.checkDrag);
 	//this.addFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);

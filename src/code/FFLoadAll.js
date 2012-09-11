@@ -7,7 +7,7 @@ function FFLoadAll(homeDir, completeFxn){
 		var list = ["ByteData.js","Dispatch.js","Dispatchable.js","PNGImage.js","LLNode.js","Queue.js","V2D.js",
 		"Matrix2D.js","Obj2D.js", "Code.js","Ticker.js","Keyboard.js","ImageLoader.js",
 		"MultiLoader.js","Resource.js","Output.js","Canvas.js",
-		"Voxel.js","Lattice.js","Map.js","DO.js","Draggable.js","Video.js","Stage.js" ];
+		"Voxel.js","Lattice.js","Map.js","DO.js","Draggable.js","Video.js","Stage.js","Frame.js","DOAnim.js","DOImage.js"];
 		for(var i=0;i<list.length;++i){
 			list[i] = self.homeDir+""+list[i];
 		}

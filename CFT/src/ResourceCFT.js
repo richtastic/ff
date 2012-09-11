@@ -11,6 +11,9 @@ ResourceCFT.TEX_PORTAL_BLANK_1 = 6;
 ResourceCFT.TEX_PORTAL_GOLD_1 = 7;
 ResourceCFT.TEX_DIAMOND_YELLOW_1 = 8;
 ResourceCFT.TEX_IPHONE_1 = 9;
+ResourceCFT.TEX_PIXY_REGULAR_1 = 10;
+ResourceCFT.TEX_PIXY_TALL_1 = 11;
+ResourceCFT.TEX_PIXY_WIDE_1 = 12;
 ResourceCFT.TEX_1 = 0;
 // MAPS ---------------------------------------
 ResourceCFT.MAP_1 = 0;
@@ -21,12 +24,12 @@ ResourceCFT.SND_1 = 0;
 function ResourceCFT(){
 	Code.extendClass(this,Resource);
 	this.load1 = function(ref){
-		console.log("...");
+		// ...
 	}
 // ------------------------------------------------------- constructor
-	var imgList = ["box_blank.png","box_filled.png","character_blank.png","character_filled.png",
-		"ladder_blank.png","ladder_filled.png","portal_blank.png","portal_filled.png","sparkle_yellow.png",
-		"iphone.png"];
+	var imgList = ["box_blank.png","box_filled.png","character_blank.png","character_filled.png","ladder_blank.png",
+					"ladder_filled.png","portal_blank.png","portal_filled.png","sparkle_yellow.png", "iphone.png",
+					"pixy_regular.png", "pixy_tall.png", "pixy_wide.png"];
 	this.imgLoader.setLoadList( "images/", imgList, this );
 	this.fxnLoader.setLoadList( new Array(this.load1), this );
 }
