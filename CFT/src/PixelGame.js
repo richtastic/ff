@@ -30,6 +30,12 @@ function PixelGame(mcMain, screenWidth, screenHeight, rec){
 	    self.latticeNumY = self.screenHeight/self.latticeCellY;
 	    self.lattice = new Lattice(self.latticeNumX, self.latticeNumY, Voxel);
 	}
+    this.addListeners = function(){
+        //
+    }
+    this.removeListeners = function(){
+        //
+    }
     // ----------------------------------------------------------------------- BGs
     this.addBG= function(o){
         self.lattice.getElement(o.pos.x,o.pos.y).addBG(o);

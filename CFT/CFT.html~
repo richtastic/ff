@@ -12,7 +12,7 @@ function pageLoadedFxn(){
 	ff = new FFLoadAll("../src/code/",defaultLoadedFxn);
 }
 function defaultLoadedFxn(){
-    var list = ["Obj2D.js","Block2D.js","Char2D.js","Comp2D.js","DrawScreen.js","ResourceCFT.js","CFT.js","PixelGame.js"];
+    var list = ["Obj2D.js","Block2D.js","Char2D.js","Comp2D.js","ResourceCFT.js","CFT.js","PixelGame.js"];
     var sl = new ScriptLoader("src/",list,customLoadedFxn);
     sl.load();
 }

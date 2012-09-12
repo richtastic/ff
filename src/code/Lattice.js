@@ -7,7 +7,6 @@ function Lattice(xNum,yNum, obj){
 	this.x=0, this.y=0, this.xy=0;
 	this.setDims = function(xNum,yNum, obj){
 		self.x = xNum; self.y = yNum; self.xy = self.x*self.y;
-		console.log(self.x,self.y);
 		if(self.a!=null && self.a!=undefined){
 			Code.emptyArray(self.a);
 			delete self.a;

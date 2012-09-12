@@ -39,7 +39,6 @@ function AudioLoader(dir,list,cb){
         }
     }
     this.next = function(e){
-        console.log(self.audioList.length);
         if(self.audioList.length<=0){
             if(self.completeLoadedFxn!=null){
                 self.completeLoadedFxn(self.loadedList);
@@ -47,7 +46,6 @@ function AudioLoader(dir,list,cb){
             }
         }
         var src = self.audioList.shift();
-        console.log("LOADING: "+src);
         var aud = document.createElement("audio");
         aud.src = src;
         aud.type = "audio/"+src.substr(src.length-3,3);
