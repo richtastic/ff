@@ -31,6 +31,13 @@ function CFT(){
     //
     this.gameMode = 0;
     //
+    this.transformMode = 0;
+    this.transformObjects = new Array();
+    this.transformTex = null;
+    this.transformScale = 1;
+    this.transformOffsetX = 0;
+    this.transformOffsetY = 0;
+    //
 	this.constructor = function(){
     	self.classesLoadedFxn();
 	}
@@ -71,6 +78,12 @@ function CFT(){
 	    self.initLattice(self.game.lattice);
 	    
 	    self.drawScreen = new DrawScreen();
+        var scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BACKGROUND_1] );
+        var scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_TOOLBAR_1] );
+        scn2.matrix.identity();
+        scn2.matrix.translate(4,14);
+        self.drawScreen.addBase(scn1);
+        self.drawScreen.addBase(scn2);
         //
         self.gameMode = CFT.GAME_MODE_GAME;
 	    // 
@@ -189,6 +202,7 @@ function CFT(){
 		self.keyboard.removeListeners();
 	}
 	this.keyDownFxn = function(key){
+        if(self.gameMode==CFT.GAME_MODE_GAME){
         var i,j,k;
 		var dir = null;
         if(key==Keyboard.KEY_LF || key==Keyboard.KEY_RT || key==Keyboard.KEY_UP || key==Keyboard.KEY_DN){
@@ -210,60 +224,90 @@ function CFT(){
             var items = self.game.getItemsAt(self.charMain);
             for(i=0;i<items.length;++i){
                 if(items[i].id==CFT.ITEM_ID_SPARKLE_3){
-                    self.charMain.mc.image = self.resource.tex[ResourceCFT.TEX_CHAR_GIRL_1];
-                    self.charMain.scale = 1.6;
-                    self.charMain.offset.x = -5; self.charMain.offset.y = -13;
                     self.game.removeItem(items[i]);
-//self.gameMode=CFT.GAME_MODE_GAME;
-self.gameMode=CFT.GAME_MODE_DRAW;
-//self.mcScreen.removeAllChildren();
-self.mcScreen.addChild(self.drawScreen);
-
-var scn0 = new DO();
-var scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BACKGROUND_1] );
-var scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_TOOLBAR_1] );
-    scn2.matrix.identity();
-    scn2.matrix.translate(4,14);
-//var scn3 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BLOCK_BLANK_1] );
-var scn3 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BLOCK_COLOR_1] );
-    scn3.matrix.identity();
-    scn3.matrix.translate(150,60);
-scn0.addChild(scn1);
-scn0.addChild(scn2);
-scn0.addChild(scn3);
-self.drawScreen.addScreen(scn0);
-self.drawScreen.gotoFirstScreen();
+                    self.transformObjects.push(self.charMain);
+                    self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_3, self.resource.tex[ResourceCFT.TEX_CHAR_GIRL_1], 1.6, -5,-13);
                 }else if(items[i].id==CFT.ITEM_ID_SPARKLE_5){
                     var blocks = self.game.getAllObjectWithID(CFT.BLOCK_ID_DEFAULT);
                     for(j=0;j<blocks.length;++j){
-                        blocks[j].mc.image = self.resource.tex[ResourceCFT.TEX_BOX_GRASS_1];
+                        self.transformObjects.push(blocks[j]);
                     }
                     self.game.removeItem(items[i]);
+                    self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_5, self.resource.tex[ResourceCFT.TEX_BOX_GRASS_1]);
                 }else if(items[i].id==CFT.ITEM_ID_SPARKLE_2){
                     var blocks = self.game.getAllObjectWithID(CFT.ITEM_ID_LADDER_DEFAULT);
                     for(j=0;j<blocks.length;++j){
-                        blocks[j].mc.image = self.resource.tex[ResourceCFT.TEX_LADDER_GOLD_1];
+                        self.transformObjects.push(blocks[j]);
                     }
                     self.game.removeItem(items[i]);
+                    self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_2, self.resource.tex[ResourceCFT.TEX_LADDER_GOLD_1]);
                 }else if(items[i].id==CFT.ITEM_ID_SPARKLE_1){
                     var blocks = self.game.getAllObjectWithID(CFT.ITEM_ID_PORTAL_DEFAULT);
                     for(j=0;j<blocks.length;++j){
-                        blocks[j].mc.image = self.resource.tex[ResourceCFT.TEX_PORTAL_GOLD_1];
+                        self.transformObjects.push(blocks[j]);
                     }
                     self.game.removeItem(items[i]);
+                    self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_1, self.resource.tex[ResourceCFT.TEX_PORTAL_GOLD_1]);
                 }else if(items[i].id==CFT.ITEM_ID_SPARKLE_4){
-                    // background
-                    var img = self.resource.tex[ResourceCFT.TEX_BACKGROUND_CLOUDS_1];
-                    self.game.mcBack.image = img;
-                    self.game.mcBack.matrix.identity();
-                    self.game.mcBack.matrix.scale(self.game.screenWidth/img.width,self.game.screenHeight/img.height);
-                    // 
                     self.game.removeItem(items[i]);
+                    self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_4);
                 }
             }
             
         }
+        }else if(self.gameMode==CFT.GAME_MODE_DRAW){
+            if(key==Keyboard.KEY_SPACE){
+                
+                if( !self.drawScreen.gotoNextScreen() ){
+                    self.toggleGameModeGame();
+                }
+            }
+        }
 	}
+    this.toggleGameModeGame = function(){
+        self.gameMode=CFT.GAME_MODE_GAME;
+        self.mcScreen.removeAllChildren();
+        self.mcScreen.addChild(self.mcGame);
+        var i;
+        if(self.transformMode==CFT.ITEM_ID_SPARKLE_4){
+            var img = self.resource.tex[ResourceCFT.TEX_BACKGROUND_CLOUDS_1];
+            self.game.mcBack.image = img;
+            self.game.mcBack.matrix.identity();
+            self.game.mcBack.matrix.scale(self.game.screenWidth/img.width,self.game.screenHeight/img.height);
+        }else{
+            for(i=0;i<self.transformObjects.length;++i){
+                self.transformObjects[i].mc.image = self.transformTex;
+                if(self.transformScale!=null){
+                    self.transformObjects[i].scale = self.transformScale;
+                    self.transformObjects[i].offset.x = self.transformOffsetX;
+                    self.transformObjects[i].offset.y = self.transformOffsetY;
+                }
+            }
+        }
+        Code.emptyArray(self.transformObjects);
+    }
+    this.toggleGameModeDraw = function(type, tex,sca,offX,offY){
+        self.transformTex = tex;
+        self.transformScale = sca;
+        self.transformOffsetX = offX;
+        self.transformOffsetY = offY;
+        self.gameMode=CFT.GAME_MODE_DRAW;
+        self.mcScreen.addChild(self.drawScreen);
+        self.transformMode = type;
+        var scn1, scn2;
+        if(true || self.transformMode==CFT.ITEM_ID_SPARKLE_3){
+            scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BLOCK_BLANK_1] );
+            scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BLOCK_COLOR_1] );
+        }
+        scn1.matrix.identity();
+        scn1.matrix.translate(150,60);
+        scn2.matrix.identity();
+        scn2.matrix.translate(150,60);
+        self.drawScreen.emptyScreens();
+        self.drawScreen.addScreen(scn1);
+        self.drawScreen.addScreen(scn2);
+        self.drawScreen.gotoFirstScreen();
+    }
 	this.keyUpFxn = function(key){
 
 	}
