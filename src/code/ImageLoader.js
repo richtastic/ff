@@ -4,13 +4,11 @@ function ImageLoader(base,arr,obj){
 	var files = new Array();
 	var images = new Array();
 	var index = 0;
-	var reference = null;
 	var fxnComplete = null;
 	setLoadList(base,arr,obj);
 	
 	this.setLoadList = setLoadList;
-	function setLoadList(base,arr,obj){
-		reference = obj;
+	function setLoadList(base,arr){
 		Code.emptyArray(files);
 		Code.emptyArray(images);
 		var i;
@@ -31,7 +29,7 @@ function ImageLoader(base,arr,obj){
 		++index;
 		if(index>=files.length){
 			if(fxnComplete!=null){
-				fxnComplete(images,reference);
+				fxnComplete(images);
 			}
 			Code.emptyArray(images);
 			return;

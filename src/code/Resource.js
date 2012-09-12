@@ -2,29 +2,44 @@
 
 function Resource(){
 	var self = this;
+    this.audioPlayer = new Audio();
 	this.tex = new Array();
 	this.snd = new Array();
 	this.map = new Array();
-	this.imgLoader = new ImageLoader( "images/", new Array(), this );
-	this.fxnLoader = new MultiLoader( new Array(), this );
+    this.audLoader = new AudioLoader( "", new Array() );
+	this.imgLoader = new ImageLoader( "images/", new Array() );
+	this.fxnLoader = new MultiLoader( new Array() );
 	Code.extendClass(this,Dispatchable);
+    // audio playing -------------------------------
+    this.playSound = function(aud){
+        self.audioPlayer.src = aud.src;
+        //self.audioPlayer.load();
+        self.audioPlayer.play();
+    }
 	// loading ------------------------------------------------------------------------------
 	this.load = function(){
 		this.imgLoader.load();
 	}
-	this.load2 = function(imgList, ref){
+	this.load2 = function(imgList){ // image complete
 		var i;
 		for(i=0;i<imgList.length;++i){
 			self.tex[i] = imgList[i];
 		}
-		self.fxnLoader.load();
+		self.audLoader.load();
 	}
-	this.load3 = function(){
-		self.addListeners();
-		if(fxnComplete!=null){
-			fxnComplete();
-		}
+	this.load3 = function(audList){ // audio complete
+		var i;
+        for(i=0;i<audList.length;++i){
+            self.snd[i] = audList[i];
+        }
+        self.fxnLoader.load();
 	}
+    this.load4 = function(){ // functions complete
+        self.addListeners();
+        if(fxnComplete!=null){
+            fxnComplete();
+        }
+    }
 	this.setFxnComplete = function(fxn){
 		fxnComplete = fxn;
 	}
@@ -44,7 +59,8 @@ function Resource(){
 	}
 // ----------------------------------------------------------------------- constructor
 	this.imgLoader.setFxnComplete(this.load2);
-	this.fxnLoader.setFxnComplete(this.load3);
+    this.audLoader.setFxnComplete(this.load3);
+    this.fxnLoader.setFxnComplete(this.load4);
 	this.fxnComplete = null;
 }
 

@@ -45,6 +45,12 @@ function Voxel(){
 	this.getItems = function(){
 		return self.item;
 	}
+    this.addItem = function(it){
+        self.item.push(it);
+    }
+    this.removeItem = function(it){
+        Code.removeElement(self.item,it);
+    }
 // ----------------------------------------------- coll
 	this.setColls = function(arr){
 		Code.copyArray(self.coll,arr);
@@ -52,6 +58,12 @@ function Voxel(){
 	this.getColls = function(){
 		return self.coll;
 	}
+    this.addColl = function(co){
+        self.coll.push(co);
+    }
+    this.removeColl = function(co){
+        Code.removeElement(self.coll,co);
+    }
 // ----------------------------------------------- back
 	this.setBG = function(arr){
 		Code.copyArray(self.back,arr);

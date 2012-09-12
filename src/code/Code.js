@@ -77,8 +77,8 @@ Code.getHex = function (intVal){
 }
 
 // class functions ----------------------------------------------
-Code.extendClass = function(child,parent){ // parent.apply(child); child.base = new parent; child.base.child = child;
-	parent.apply(child); child.super = new parent; // child.super.child = child;
+Code.extendClass = function(child,parent,args){ // parent.apply(child); child.base = new parent; child.base.child = child;
+	parent.apply(child,args); child.super = new parent; // child.super.child = child;
 	/*for (var key in child){
 		console.log("child["+key+"]");
 	}

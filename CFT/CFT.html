@@ -12,7 +12,7 @@ function pageLoadedFxn(){
 	ff = new FFLoadAll("../src/code/",defaultLoadedFxn);
 }
 function defaultLoadedFxn(){
-    var list = ["ResourceCFT.js","CFT.js","PixelGame.js"];
+    var list = ["Obj2D.js","Block2D.js","Char2D.js","Comp2D.js","ResourceCFT.js","CFT.js","PixelGame.js"];
     var sl = new ScriptLoader("src/",list,customLoadedFxn);
     sl.load();
 }
@@ -74,5 +74,5 @@ Cheryl
 */
 </script>
 </head>
-<body onload="pageLoadedFxn();" style="border:0px; margin:0px; background:url('../src/images/pattern.jpg');"></body>
+<body onload="pageLoadedFxn();" style="border:0px; margin:0px; background:url('images/bg_pixeld.png'); background-size:40px 40px; background-repeat:repeat;"></body>
 </html>

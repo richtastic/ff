@@ -5,6 +5,7 @@ function DOImage(img, parentDO){
 	this.image = img;
 // rendering ---------------------------------------------------------------------------------
 	this.render = function(canvas){
+        if(!this.image){return;}
 		this.super.setupRender.call(this,canvas);
 		var context = this.canvas.getContext();
 		context.drawImage(this.image, 0,0);

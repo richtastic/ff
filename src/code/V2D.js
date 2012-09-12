@@ -1,18 +1,16 @@
 // V2D.js
 function V2D(xP,yP){ // input is debug HTML object
+    var self = this;
 	this.x = xP; this.y = yP;
-	this.length = length;
-	function length(){
+	this.length = function(){
 		return Math.sqrt(x*x+y*y);
 	}
-	this.norm = norm;
-	function norm(){
-		dist = Math.sqrt(this.x*this.x+this.y*this.y);
-		this.x = this.x/dist; this.y = this.y/dist;
+	this.norm = function(){
+		dist = Math.sqrt(self.x*self.x+self.y*self.y);
+		self.x = self.x/dist; self.y = self.y/dist;
 	}
-	this.kill = kill
-	function kill(){
-		this.x = undefined; this.y = undefined;
+	this.kill = function(){
+		self.x = undefined; self.y = undefined;
 		//this = null; FF does not like
 	}
 }
