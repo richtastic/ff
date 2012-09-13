@@ -22,14 +22,13 @@ function Comp2D(mc, x,y, sca, oX,oY){
             if(self.lagTime>=self.lagTimeTotal){
                 self.lagTime = 0;
                 var dir = new V2D( Math.floor(self.followPos.x-self.pos.x), Math.floor(self.followPos.y-self.pos.y) );
-                //console.log(dir);
-                if(dir.x!=0){
+                if(Math.abs(dir.x)>1){
                     if(dir.x<0){
                         self.moveLeft();
                     }else{
                         self.moveRight();
                     }
-                }else if(dir.y!=0){
+                }else if(Math.abs(dir.y)>1){
                     if(dir.y<0){
                         self.moveUp();
                     }else{

@@ -1,12 +1,14 @@
 // CFT.js
 CFT.ITEM_ID_SPARKLE_1 = 1;
-CFT.ITEM_ID_SPARKLE_2 = 2;
-CFT.ITEM_ID_SPARKLE_3 = 3;
-CFT.ITEM_ID_SPARKLE_4 = 4;
-CFT.ITEM_ID_SPARKLE_5 = 5;
+CFT.ITEM_ID_SPARKLE_2 = 3;
+CFT.ITEM_ID_SPARKLE_3 = 4;
+CFT.ITEM_ID_SPARKLE_4 = 5;
+CFT.ITEM_ID_SPARKLE_5 = 6;
+CFT.ITEM_ID_SPARKLE_6 = 2;
 CFT.BLOCK_ID_DEFAULT = 10;
 CFT.ITEM_ID_LADDER_DEFAULT = 11;
 CFT.ITEM_ID_PORTAL_DEFAULT = 12;
+CFT.ITEM_ID_COMPLETE_END = 13;
 //
 CFT.GAME_MODE_GAME = 0;
 CFT.GAME_MODE_DRAW = 1;
@@ -48,7 +50,7 @@ function CFT(){
 	}
 	self.resourceLoadedFxn = function(){
 	    self.canvas = new Canvas(self.resource,null,10,10,Canvas.STAGE_FIT_FILL);// phoneDimX,phoneDimY,Canvas.STAGE_FIT_FIXED);
-	    self.stage = new Stage(self.canvas, (1/24)*1000);
+	    self.stage = new Stage(self.canvas, (1/12)*1000);
 	    self.keyboard = new Keyboard();
 	    // -------------
 	    self.mcContent = new DO();
@@ -81,7 +83,8 @@ function CFT(){
         var scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BACKGROUND_1] );
         var scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_TOOLBAR_1] );
         scn2.matrix.identity();
-        scn2.matrix.translate(4,14);
+        scn2.matrix.scale(0.92);
+        scn2.matrix.translate(-11,-11);
         self.drawScreen.addBase(scn1);
         self.drawScreen.addBase(scn2);
         //
@@ -99,20 +102,21 @@ function CFT(){
     CFT.MAP_BLOCK_CHAR_MAIN = "M";
     CFT.MAP_BLOCK_CHAR_PIXY = "O";
     CFT.MAP_ITEM_LADDER_DEFAULT = "|";
+    CFT.MAP_ITEM_BUBBLE = "B";
     this.initLattice = function(lattice){
         var im, ob;
                 //   123456789012345678901234
-        var str =   "                        "+ // 1
+        var str =   "B                       "+ // 1
                     "                        "+ // 2
                     "         ^  |      P |  "+ // 3
                     "        ****|********|* "+ // 4
                     "            |        |  "+ // 5
-                    "    |       |        |  "+ // 6
+                    "    |       |    B   |  "+ // 6
                     " ***|*****  |        |  "+ // 7
                     "  * |   *   |        |  "+ // 8
-                    "  * | ^ *   |        |  "+ // 9
+                    " B* | ^ *   |        |  "+ // 9
                     "****|*******************"+ // 10
-                    "    |                   "+ // 11
+                    "    |                  B"+ // 11
                     "    |              |    "+ // 12
                     "  *****************|**  "+ // 13
                     "                   |    "+ // 14
@@ -152,6 +156,13 @@ function CFT(){
                 obj = new Obj2D(new DOImage(img), x,y, scale, -16,-34);
                 obj.id = CFT.ITEM_ID_PORTAL_DEFAULT;
                 self.game.addBG( obj );
+                //
+                img = null;//self.resource.tex[ResourceCFT.TEX_DIAMOND_YELLOW_1];
+                scale = 1.0;
+                obj = new Obj2D(new DOImage(img), x,y, scale, 4,0);
+                obj.id = sparkle_id;
+                self.game.addItem( obj );
+                ++sparkle_id;
             }else if(ch==CFT.MAP_ITEM_SPARKLE){
                 img = self.resource.tex[ResourceCFT.TEX_DIAMOND_YELLOW_1];
                 scale = 1.0;
@@ -165,6 +176,11 @@ function CFT(){
                 obj = new Obj2D(new DOImage(img), x,y, scale, 0,0);
                 obj.id = CFT.ITEM_ID_LADDER_DEFAULT;
                 self.game.addBG( obj );
+            }else if(ch==CFT.MAP_ITEM_BUBBLE){
+                img = self.resource.tex[ResourceCFT.TEX_BUBBLE_1];
+                scale = 1.0;
+                obj = new Obj2D(new DOImage(img), x,y, scale, 3,3);
+                self.game.addBG( obj );
             }
             ++x;
             if(x>=lattice.x){
@@ -177,10 +193,10 @@ function CFT(){
     this.generatePixy = function(){
         var doa = new DOAnim();
         doa.clearGraphics();
-        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_REGULAR_1]), 2 );
-        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_TALL_1]), 2 );
-        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_REGULAR_1]), 2 );
-        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_WIDE_1]), 2 );
+        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_REGULAR_1]), 1 );
+        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_TALL_1]), 1 );
+        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_REGULAR_1]), 1 );
+        doa.addFrame( new DOImage(self.resource.tex[ResourceCFT.TEX_PIXY_WIDE_1]), 1 );
         return doa;
     }
 	this.addListeners = function(){
@@ -251,8 +267,11 @@ function CFT(){
                 }else if(items[i].id==CFT.ITEM_ID_SPARKLE_4){
                     self.game.removeItem(items[i]);
                     self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_4);
+                }else if(items[i].id==CFT.ITEM_ID_SPARKLE_6){
+                    self.game.removeItem(items[i]);
+                    self.toggleGameModeDraw(CFT.ITEM_ID_SPARKLE_6);
                 }
-            }
+            } 
             
         }
         }else if(self.gameMode==CFT.GAME_MODE_DRAW){
@@ -287,23 +306,46 @@ function CFT(){
         Code.emptyArray(self.transformObjects);
     }
     this.toggleGameModeDraw = function(type, tex,sca,offX,offY){
+        self.transformMode = type;
+        self.gameMode=CFT.GAME_MODE_DRAW;
+        self.drawScreen.emptyScreens();
+        var scn1, scn2;
+        if(self.transformMode==CFT.ITEM_ID_SPARKLE_6){
+            var scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BACKGROUND_1] );
+            scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_INVENTORY_1] );
+            scn2.matrix.identity();
+            scn2.matrix.scale(1.0);
+            scn2.matrix.translate(30,50);
+            self.mcScreen.addChild(scn1);
+            self.mcScreen.addChild(scn2);
+            self.resource.playSound(self.resource.snd[1]); // yay sounds
+            return;
+        }
         self.transformTex = tex;
         self.transformScale = sca;
         self.transformOffsetX = offX;
         self.transformOffsetY = offY;
-        self.gameMode=CFT.GAME_MODE_DRAW;
         self.mcScreen.addChild(self.drawScreen);
-        self.transformMode = type;
-        var scn1, scn2;
-        if(true || self.transformMode==CFT.ITEM_ID_SPARKLE_3){
+        if(self.transformMode==CFT.ITEM_ID_SPARKLE_1){ // PORTAL
+            scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_PORTAL_BLANK_1] );
+            scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_PORTAL_COLOR_1] );
+        }else if(self.transformMode==CFT.ITEM_ID_SPARKLE_2){ // LADDER
+            scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_LADDER_BLANK_1] );
+            scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_LADDER_COLOR_1] );
+        }else if(self.transformMode==CFT.ITEM_ID_SPARKLE_3){ // CHARACTER
+            scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_CHAR_BLANK_1] );
+            scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_CHAR_COLOR_1] );
+        }else if(self.transformMode==CFT.ITEM_ID_SPARKLE_4){ // WALLPAPER
+            scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BG_BLANK_1] );
+            scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BG_COLOR_1] );
+        }else if(self.transformMode==CFT.ITEM_ID_SPARKLE_5){ // BLOCK
             scn1 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BLOCK_BLANK_1] );
             scn2 = new DOImage( self.resource.tex[ResourceCFT.TEX_DRAW_BLOCK_COLOR_1] );
         }
         scn1.matrix.identity();
-        scn1.matrix.translate(150,60);
-        scn2.matrix.identity();
-        scn2.matrix.translate(150,60);
-        self.drawScreen.emptyScreens();
+        scn1.matrix.scale(1.25);
+        scn1.matrix.translate(125,35);
+        scn2.matrix.copy(scn1.matrix);
         self.drawScreen.addScreen(scn1);
         self.drawScreen.addScreen(scn2);
         self.drawScreen.gotoFirstScreen();
@@ -317,7 +359,6 @@ function CFT(){
 	}
     
 	this.enterFrameFxn = function(o){
-
         if(self.gameMode==CFT.GAME_MODE_GAME){
         var can = self.mcContent.stage.canvas;
         var con = can.getContext();

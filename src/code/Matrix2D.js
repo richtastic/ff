@@ -52,6 +52,9 @@ function Matrix2D(){
 		this.d = aC*bB + aD*bD;
 		this.y = aC*bX + aD*bY + aY;
 	}
+	this.copy = function(m){
+		this.setParameters(m.a,m.b,m.c,m.d,m.x,m.y);
+	}
 	this.inverse = function(m){
 		var det = this.a;
 	}

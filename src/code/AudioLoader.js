@@ -2,6 +2,7 @@
 
 function AudioLoader(dir,list,cb){
     var self = this;
+    this.verbose = false;
     this.audioList = new Array();
     this.loadedList = new Array();
     this.completeLoadedFxn = null;
@@ -54,6 +55,9 @@ function AudioLoader(dir,list,cb){
         aud.addEventListener("loaded",self.next);
         self.loadedList.push(aud);
         document.body.appendChild(aud);
+        if(self.verbose){
+            console.log("loading audio: "+src);
+        }
     }
     this.load = function(){
         self.next();

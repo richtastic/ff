@@ -2,11 +2,12 @@
 // no dependencies
 // http://stackoverflow.com/questions/950087/include-javascript-file-inside-javascript-file
 function ScriptLoader(base,arr,comp){
+	var self = this;
+	this.verbose = false;
 	this.files = new Array();
 	this.scripts = new Array();
 	this.completeFxn = null;
 	this.index = -1;
-	var self = this; // needed for calls outside this
 	this.setLoadList = function(base,arr,comp){
 		while(this.files.length>0){ this.files.pop(); }
 		while(this.scripts.length>0){ this.scripts.pop(); }
@@ -36,6 +37,9 @@ function ScriptLoader(base,arr,comp){
 		script.onreadystatechange = self.next;
 		script.onload = self.next;
 		head.appendChild(script);
+		if(self.verbose){
+			console.log("loading script: "+url);
+		}
 	}
 	// constructor
 	this.setLoadList(base,arr,comp);

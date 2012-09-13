@@ -12,6 +12,7 @@ function FFLoadAll(homeDir, completeFxn){
 			list[i] = self.homeDir+""+list[i];
 		}
 		var scriptLoader = new ScriptLoader("",list,self.classesLoadedFxn);
+		scriptLoader.verbose = true;
 		scriptLoader.load();
 	}
 	this.classesLoadedFxn = function(){
