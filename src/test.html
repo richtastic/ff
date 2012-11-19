@@ -43,6 +43,7 @@ function classesLoadedFxn(){
 	resource.load();
 }
 function resourceLoadedFxn(){
+	console.log('recosds');
 	canvas = new Canvas(resource,null,600,300,Canvas.STAGE_FIT_FILL);
 	stage = new Stage(canvas, (1/50)*1000);
 	resource.alertLoadCompleteEvents();
@@ -120,7 +121,7 @@ function do3Click(o){
 	console.log("3");
 }
 function canvasClickFxn(pos){
-	//
+	console.log('click');
 }
 function efF(o){
     var obj = do1;

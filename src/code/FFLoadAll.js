@@ -1,8 +1,9 @@
 // FFLoadAll.js
 // no dependencies
-function FFLoadAll(homeDir, completeFxn){
+function FFLoadAll(homeDir, completeFxn, verbose){
 	var self = this;
 	this.homeDir = homeDir;
+	this.verbose = verbose?true:false;
 	this.startLoadingFxn = function(){
 		var list = ["BinaryGrid.js","ByteData.js","Dispatch.js","Dispatchable.js","PNGImage.js","LLNode.js","Queue.js","V2D.js",
 		"Matrix2D.js","Code.js","Ticker.js","Keyboard.js","ImageLoader.js",
@@ -11,8 +12,7 @@ function FFLoadAll(homeDir, completeFxn){
 		for(var i=0;i<list.length;++i){
 			list[i] = self.homeDir+""+list[i];
 		}
-		var scriptLoader = new ScriptLoader("",list,self.classesLoadedFxn);
-		scriptLoader.verbose = true;
+		var scriptLoader = new ScriptLoader("",list,self.classesLoadedFxn,self.verbose);
 		scriptLoader.load();
 	}
 	this.classesLoadedFxn = function(){

@@ -53,9 +53,15 @@ function Resource(){
 	this.addListeners = function(){
 		window.onresize = self.windowResizeListener;
 	}
+	this.prevWindowInnerWidth = -1;
+	this.prevWindowInnerHeight = -1;
 	this.windowResizeListener = function(e){
 		p = new V2D(window.innerWidth,window.innerHeight);
-		self.alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);
+		if(p.x!=self.prevWindowInnerWidth || p.y!=self.prevWindowInnerHeight){ // filter double-calls
+			self.prevWindowInnerWidth = p.x;
+			self.prevWindowInnerHeight = p.y;
+			self.alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);
+		}
 	}
 // ----------------------------------------------------------------------- constructor
 	this.imgLoader.setFxnComplete(this.load2);

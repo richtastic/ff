@@ -1,0 +1,41 @@
+<html>
+<head>
+<title>Simulation Program with Integrated Circuit Emphasis</title>
+<script src="../code/FFLoadAll.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+// ---------------------------------------------------------
+var ff, scriptLoader;
+// ---------------------------------------------------------
+function pageLoadedFxn(){
+	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,false);
+}
+function defaultClassesLoadedFxn(){
+    var list = ["Spice.js"];
+    scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,false);
+    scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+    console.log("loading complete");
+    spice = new Spice();
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;background:url('images/background_grid.png');">
+<a href="google, you're still living in the past"></a>
+</body>
+</html>
+<!--
+Circuit
+CircuitNode
+CircuitElement
+    CircuitResistor
+    CircuitCapacitor
+    CircuitInductor
+    CircuitSourceCurrent
+    CircuitSourceVoltage
+    CircuitDependentCurrent
+    CircuitDependentVoltage
+
+) Find or assign ground to node
+-->

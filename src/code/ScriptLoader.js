@@ -1,9 +1,9 @@
 // ScriptLoader.js
 // no dependencies
 // http://stackoverflow.com/questions/950087/include-javascript-file-inside-javascript-file
-function ScriptLoader(base,arr,comp){
+function ScriptLoader(base,arr,comp, verbose){
 	var self = this;
-	this.verbose = false;
+	this.verbose = verbose?true:false;
 	this.files = new Array();
 	this.scripts = new Array();
 	this.completeFxn = null;
@@ -38,6 +38,7 @@ function ScriptLoader(base,arr,comp){
 		script.onload = self.next;
 		head.appendChild(script);
 		if(self.verbose){
+			console.log(self.verbose);
 			console.log("loading script: "+url);
 		}
 	}

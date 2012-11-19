@@ -17,8 +17,8 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.mouseDown = false;
 	this.mousePosition = new V2D();
 	// private
-	var canvas, context;
 	Code.extendClass(this,Dispatchable);
+	var canvas, context;
 	var canvasWidth, canvasHeight;
 	var stageFit = Canvas.STAGE_FIT_FIXED;
 	if(canHTML){
@@ -181,7 +181,8 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		context.fillStyle = fill;
 		context.fillRect(0,0,canvas.width,canvas.height);
 		*/
-		self.dispatch.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
+		console.log('re-can');
+		//self.dispatch.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
 	}
 // -------------------------------------------------------------- constructor
 	if(resource){ // may not get one
@@ -196,6 +197,3 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		*/
 		//var fill = '#FF0000';
 		//var fill = 'rgba(255,0,0,0.10)';
-
-1
-

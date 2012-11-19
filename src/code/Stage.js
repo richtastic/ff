@@ -14,6 +14,8 @@ function Stage(can, fr){
 	var frameRate = fr;
 	var time = 0;
 	// dispatch -----------------------------------------------------------
+	Code.extendClass(this,Dispatchable);
+	/*
 	this.dispatch = new Dispatch();
 	this.addFunction = function(str,fxn){
 		this.dispatch.addFunction(str,fxn);
@@ -23,7 +25,7 @@ function Stage(can, fr){
 	}
 	this.alertAll = function(str,o){
 		this.dispatch.alertAll(str,o);
-	}
+	}*/
 	// rendering -----------------------------------------------------------
 	var timer = new Ticker(frameRate);
 	timer.addFunction(Ticker.EVENT_TICK,enterFrame);
@@ -40,7 +42,7 @@ function Stage(can, fr){
 	}
 	this.start = start;
 	function start(){
-		this.addListeners();
+		//this.addListeners();
 		timer.start();
 	}
 	this.stop = stop;
@@ -108,16 +110,23 @@ function Stage(can, fr){
 		// 
 	}
 	this.canvasMouseClick = function(pos){
-		var intersection = self.getIntersection(pos);
+		var arr, obj, intersection = self.getIntersection(pos);
+		/*
+		var arr = new Array(intersection,pos);
+		console.log('mouse click');
+		self.alertAll(Canvas.EVENT_MOUSE_CLICK,arr);
+		console.log('----');
+		*/		
+		arr = new Array( intersection, pos );
 		if(intersection){
-			var arr = new Array(intersection,pos);
-			var obj = intersection;
+			obj = intersection;
 			while(obj){ // self to ancestors
 				obj.alertAll(Canvas.EVENT_MOUSE_CLICK,arr);
 				obj = obj.parent;
 			}
-			Code.emptyArray(arr); arr = null;
 		}
+		//Code.emptyArray(arr); // results in undefined in events
+		arr = null;
 		pos = null;
 	}
 	this.canvasMouseMove = function(pos){
