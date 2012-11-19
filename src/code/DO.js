@@ -68,6 +68,7 @@ function DO(parentDO){
 		this.graphics.push( Code.newArray(this.canvasSetLine,Code.newArray(wid,str)) );
 	}
 	this.canvasSetLine = function(wid,col){
+		//console.log("SET LINE: "+wid+" "+col);
 		this.canvas.setLine(wid,col);
 	}
 // ------------------------------------------------------------------------------------------

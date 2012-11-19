@@ -62,6 +62,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	}
 	this.setLine = setLine;
 	function setLine(wid,col){
+		//console.log("LINE: "+wid+col);
 		context.lineWidth = wid;
 		context.strokeStyle = col;
 		context.lineJoin = 'bevel';

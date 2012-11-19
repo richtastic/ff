@@ -41,15 +41,8 @@ function Spice(){
 	this.keyboard = new Keyboard();
 	this.resource.alertLoadCompleteEvents();
 	// 
-	this.DO = new DO();
-	do1 = this.DO;
-    do1.clearGraphics();
-    do1.setFillRGBA(0x1122FF99);
-    do1.drawRect(0,0,100,100);
-    do1.addFunction(Canvas.EVENT_MOUSE_CLICK,this.clickWinFxn);
-    //do1.matrix.rotate(Math.PI/4);
-    //do1.matrix.translate(100,100);
-    this.stage.addChild(do1);
+	this.win = new Win();
+    this.stage.addChild(this.win);
     // 
     this.windows = new Array();
     // 
