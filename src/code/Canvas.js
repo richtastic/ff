@@ -88,6 +88,10 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.endPath = endPath;
 	function endPath(){
 		context.closePath();
+	};
+	this.fill = fill;
+	function fill(){
+		context.fill();
 	}
 	this.clearAll = clearAll;
 	function clearAll(){
@@ -147,6 +151,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	}
 	function canvasMouseMoveFxn(e){
 		pos = getMousePosition(e);
+		//console.log("moiuaes we4n3kkldkhfadkh");
 		self.mousePosition.x = pos.x; self.mousePosition.y = pos.y;
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 		pos = null;
@@ -182,8 +187,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		context.fillStyle = fill;
 		context.fillRect(0,0,canvas.width,canvas.height);
 		*/
-		console.log('re-can');
-		//self.dispatch.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
+		self.dispatch.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
 	}
 // -------------------------------------------------------------- constructor
 	if(resource){ // may not get one

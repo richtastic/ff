@@ -2,53 +2,46 @@
 
 function ImageLoader(base,arr,obj){
 	var self = this;
-	var files = new Array();
-	var images = new Array();
-	var index = 0;
-	var fxnComplete = null;
-	setLoadList(base,arr,obj);
-	this.setLoadList = setLoadList;
-	function setLoadList(base,arr){
-		Code.emptyArray(files);
-		Code.emptyArray(images);
-		var i;
-		for(i=0;i<arr.length;++i){
-			files.push(base+""+arr[i]);
+	self.files = new Array();
+	self.images = new Array();
+	self.index = 0;
+	self.fxnComplete = null;
+	self.setLoadList = function(base,arr){
+		Code.emptyArray(self.files);
+		Code.emptyArray(self.images);
+		for(var i=0;i<arr.length;++i){
+			self.files.push(base+""+arr[i]);
 		}
-	}
-	
-	this.load = load;
-	function load(){
-		index = -1;
-		next(null);
-	}
-	function next(e){
-		if(e!=null){
-			images[index] = e.target;
-		}
-		++index;
-		if(index>=files.length){
-			if(fxnComplete!=null){
-				fxnComplete(images);
+	};
+	self.load = function(){
+		self.index = -1;
+		self.next(null);
+	};
+	self.next = function(e){
+		++self.index;
+		if(self.index>=self.files.length){
+			if(self.fxnComplete!=null){
+				self.fxnComplete(self.images);
 			}
-			Code.emptyArray(images);
+			Code.emptyArray(self.images);
 			return;
 		}
-		var img = new Image(); //images[index] = img;
-		img.addEventListener("load",next,false);
-		img.src = files[index];
+		var img = new Image();
+		img.addEventListener("load",self.next,false);
+		img.src = self.files[self.index];
+		self.images[self.index] = img;
 		if(self.verbose){
-            console.log("loading image: "+files[index]);
+            console.log("loading image: "+self.files[self.index]);
         }
-	}
-	this.setFxnComplete = setFxnComplete;
-	function setFxnComplete(fxn){
-		fxnComplete = fxn;
-	}
-	this.kill = kill;
-	function kill(){
-		
-	}
+	};
+	self.setFxnComplete = function(fxn){
+		self.fxnComplete = fxn;
+	};
+	self.kill = function(){
+		// 
+	};
+	// constructor
+	self.setLoadList(base,arr,obj);
 }
 
 

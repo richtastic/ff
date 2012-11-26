@@ -1,4 +1,80 @@
 // ByteData.js
+// ------------------------------------------------------------------------------------------------- Binary Math
+ByteData.and = function(c,a,b){ // c = a & b
+	var i, len = Math.min(a.getTotalBits(),b.getTotalBits());
+	for(i=0;i<len;++i){
+		if( a.getBit(i) && b.getBit(i) ){
+			c.setBit(i,1);
+		}else{
+			c.setBit(i,0);
+		}
+	}
+}
+ByteData.or = function(c,a,b){ // c = a | b
+	var i, len = Math.min(a.getTotalBits(),b.getTotalBits());
+	for(i=0;i<len;++i){
+		if( a.getBit(i) || b.getBit(i) ){
+			c.setBit(i,1);
+		}else{
+			c.setBit(i,0);
+		}
+	}
+}
+ByteData.add = function(c,a,b){ // c = a + b
+	var i, len = Math.min(a.getTotalBits(),b.getTotalBits());
+	var aBit, bBit, cBit, cout = 0;
+	for(i=0;i<len;++i){
+		aBit = a.getBit(i);
+		bBit = b.getBit(i);
+		if(aBit!=0){
+			if(bBit!=0){
+				if(cout!=0){
+					cBit = 1;
+					cout = 1;
+				}else{
+					cBit = 0;
+					cout = 1;
+				}
+			}else{
+				if(cout!=0){
+					cBit = 0;
+					cout = 1;
+				}else{
+					cBit = 1;
+					cout = 0;
+				}
+			}
+		}else{
+			if(bBit!=0){
+				if(cout!=0){
+					cBit = 0;
+					cout = 1;
+				}else{
+					cBit = 1;
+					cout = 0;
+				}
+			}else{
+				if(cout!=0){
+					cBit = 1;
+					cout = 0;
+				}else{
+					cBit = 0;
+					cout = 0;
+				}
+			}
+		}
+		c.setBit(i,cBit);
+	}
+};
+ByteData.sub = function(c,a,b){ // c = a - b
+	// 2s compliment?
+};
+ByteData.mul = function(c,a,b){ // c = a * b
+	// shifting
+};
+ByteData.div = function(c,a,b){ // c = a / b
+	// ?
+};
 // ------------------------------------------------------------------------------------------------- correct 64-bit encoding
 ByteData.arrayString64 = null;
 ByteData.arrayInverse64 = null;
@@ -87,6 +163,34 @@ function ByteData(){
 		length = -1;
 		subIndex = 0;
 		subCount = 0;
+	}
+	this.setBit = setBit;
+	function getBit(n){
+		var s = Math.floor(n/32);
+		var b = n % 32;
+		var ander = -2147483648;
+		for(var i=0;i<b;++i){
+			ander >>= 1;
+			ander &= 0x7FFFFFFF;
+		}
+		return (bytes[s] & ander) != 0;
+	};
+	this.getBit = getBit;
+	function setBit(n,v){
+//			n = (length+1)*32 - (31 - subCount) - (n+1); // reverse
+		var s = Math.floor(n/32);
+		var b = n % 32;
+		var ander = -2147483648;
+		for(var i=0;i<b;++i){
+			ander >>= 1;
+			ander &= 0x7FFFFFFF;
+		}
+		if(v!=0){
+			bytes[s] = bytes[s] | ander;
+		}else{
+			ander = ~ander;
+			bytes[s] = bytes[s] & ander;
+		}
 	}
 	this.writeBit = writeBit;
 	function writeBit(b){ // 0 or 1

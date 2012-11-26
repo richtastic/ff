@@ -11,31 +11,32 @@ function pageLoadedFxn(){
 	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,false);
 }
 function defaultClassesLoadedFxn(){
-    var list = ["Win.js","Spice.js"];
-    scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,false);
-    scriptLoader.load();
+	var list = ["Win.js","WinManager.js","ResourceSpice.js","Spice.js"];
+	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,false);
+	scriptLoader.load();
 }
 function customClassesLoadedFxn(){
-    console.log("loading complete");
-    spice = new Spice();
+	console.log("loading complete");
+	spice = new Spice();
 }
 </script>
 </head>
-<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;background:url('images/background_grid.png');">
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
 <a href="google, you're still living in the past"></a>
 </body>
 </html>
 <!--
+background:url('images/background_grid.png');
 Circuit
 CircuitNode
 CircuitElement
-    CircuitResistor
-    CircuitCapacitor
-    CircuitInductor
-    CircuitSourceCurrent
-    CircuitSourceVoltage
-    CircuitDependentCurrent
-    CircuitDependentVoltage
+	CircuitResistor
+	CircuitCapacitor
+	CircuitInductor
+	CircuitSourceCurrent
+	CircuitSourceVoltage
+	CircuitDependentCurrent
+	CircuitDependentVoltage
 
 ) Find or assign ground to node
 -->

@@ -2,16 +2,35 @@
 
 function DO(parentDO){
 	var self = this;
-	this.stage = null;
-	this.parent = null, this.children = new Array(); // 0 = back, length-1 = front
-	this.mask = false;
-	this.width = 100, this.height = 100;
-	this.matrix = new Matrix2D();
-	this.parent = parentDO;
-	Code.extendClass(this,Dispatchable);
-	this.canvas = null;
+	self.stage = null;
+	self.parent = null, self.children = new Array(); // 0 = back, length-1 = front
+	self.mask = false;
+	self.width = 100, self.height = 100;
+	self.matrix = new Matrix2D();
+	self.parent = parentDO;
+	Code.extendClass(self,Dispatchable);
+	self.canvas = null;
+	//
+// downward message propagation ---------------------------------------------------------------------------------
+	self.transformPoint = function(a,b){
+		self.matrix.multV2D(a,b);
+		//a.x += self.x; a.y += self.y;
+	}
+	self.transformEvent = function(evt,pos){ // self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
+		var i, len=self.children.length;
+		for(i=0;i<len;++i){
+			var newPos = new V2D();
+			self.transformPoint(newPos,pos);
+			self.children[i].transformEvent(evt,newPos);
+		}
+		self.alertAll(evt,pos);
+	};
+	self.addedToStage = function(stage){
+		//console.log("ADDED TO STAGE");
+		//console.log(stage);
+	};
 // rendering ---------------------------------------------------------------------------------
-	this.setupRender = function(canvas){
+	self.setupRender = function(canvas){
 		this.canvas = canvas;
 		var context = canvas.getContext();
 		context.save();
@@ -99,6 +118,13 @@ function DO(parentDO){
 	this.canvasStrokeLine = function(){
 		this.canvas.strokeLine();
 	}
+	// ------------------------------------------------------------------------------------------
+	this.fill = function(){
+		this.graphics.push( Code.newArray(this.canvasFill,Code.newArray()) );
+	}
+	this.canvasFill= function(){
+		this.canvas.fill();
+	}
 // ------------------------------------------------------------------------------------------
 	this.endPath = function(){
 		this.graphics.push( Code.newArray(this.canvasEndPath,Code.newArray()) );
@@ -129,7 +155,9 @@ function DO(parentDO){
 	this.addChild = function(ch){
 		ch.parent = this;
 		ch.stage = this.stage;
-		Code.addUnique(this.children,ch);
+		if( Code.addUnique(this.children,ch) ){
+			ch.addedToStage(this.stage);
+		}
 	}
 	this.removeChild = function(ch){
 		ch.parent = null;
@@ -211,7 +239,9 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 			}
 		}
 	}
-	
+	// ------------------------------------------------------------------ translatePosition
+	this.getIntersection = function(pos, can){
+	}
 	// ------------------------------------------------------------------ intersection
 	this.checkIntersectionChildren = true;
 	this.checkIntersectionSelf = true;

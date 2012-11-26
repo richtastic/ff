@@ -15,7 +15,8 @@ Code.elementExists = function(a,o){
 	return false;
 }
 Code.addUnique = function(a,o){
-	if( !Code.elementExists(a,o) ){ a.push(o); }
+	if( !Code.elementExists(a,o) ){ a.push(o); return true; }
+	return false;
 }
 Code.removeElement = function(a,o){ // preserves order
 	var i, len = a.length;
@@ -78,7 +79,13 @@ Code.getHex = function (intVal){
 
 // class functions ----------------------------------------------
 Code.extendClass = function(child,parent,args){ // parent.apply(child); child.base = new parent; child.base.child = child;
-	parent.apply(child,args); child.super = new parent; // child.super.child = child;
+	var par = new parent;
+	parent.apply(child,args); child.super = par; // child.super.child = child;
+	/*
+	for (var key in par){
+		console.log("parent["+key+"]");
+	}
+	*/
 	/*for (var key in child){
 		console.log("child["+key+"]");
 	}
@@ -125,6 +132,14 @@ Code.getAlpARGB = function(col){
 Code.getJSRGBA = function(col){
 	return "rgba("+Code.getRedRGBA(col)+","+Code.getGrnRGBA(col)+","+Code.getBluRGBA(col)+","+Code.getAlpRGBA(col)/255.0+")";
 }
+// object styling functions ----------------------------------------------
+Code.copyProperties = function(objectOut,objectIn){
+	for(p in objectIn){
+		if(!objectOut[p]){
+			objectOut[p] = objectIn[p];
+		}
+	}
+};
 // ? functions ----------------------------------------------
 Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 	var ar = wid/hei;

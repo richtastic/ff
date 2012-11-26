@@ -103,20 +103,54 @@ function Stage(can, fr){
 	this.stageResized = function(o){
 		root.width = o.x; root.height = o.y;
 	}
-	this.canvasMouseDown = function(e){
-		// 
-	}
+	this.canvasMouseEventPropagate = function(evt,pos){
+		var path, arr, obj, intersection = self.getIntersection(pos);
+		arr = new Array( intersection, pos );
+		path = new Array();
+		if(intersection){
+			obj = intersection;
+			while(obj){ // self to ancestors - create path
+				path.push(obj);
+				obj = obj.parent;
+			}
+			var newPos = new V2D(pos.x,pos.y);
+			while(path.length>0){// run path
+				obj = path.pop();
+				obj.transformPoint(newPos,newPos);
+				// var a = obj.matrix.getParameters(); console.log(newPos.x+","+newPos.y+" | "+a[0]+" "+a[1]+" "+a[2]+" | "+a[3]+" "+a[4]+" "+a[5]+" ");
+				var argPos = new V2D(newPos.x,newPos.y);
+				arr[1] = argPos;
+				obj.alertAll(evt,arr);
+			}
+		}
+		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined in events
+	};
+	this.canvasMouseDown = function(pos){
+		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+	};
 	this.canvasMouseUp = function(e){
-		// 
-	}
+		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	};
 	this.canvasMouseClick = function(pos){
+		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+	};
+	this.canvasMouseMove = function(pos){ // reverse direction & no rendering = everyone gets is
+		self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
+		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+	};
+	// self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
+// ------------------------------------------------------------------ constructor
+	this.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.stageResized);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,this.canvasMouseDown);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP,this.canvasMouseUp);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.canvasMouseClick);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this.canvasMouseMove);
+}
+/*
 		var arr, obj, intersection = self.getIntersection(pos);
-		/*
-		var arr = new Array(intersection,pos);
-		console.log('mouse click');
-		self.alertAll(Canvas.EVENT_MOUSE_CLICK,arr);
-		console.log('----');
-		*/		
 		arr = new Array( intersection, pos );
 		if(intersection){
 			obj = intersection;
@@ -125,20 +159,7 @@ function Stage(can, fr){
 				obj = obj.parent;
 			}
 		}
-		//Code.emptyArray(arr); // results in undefined in events
-		arr = null;
-		pos = null;
-	}
-	this.canvasMouseMove = function(pos){
-		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
-	}
-// ------------------------------------------------------------------ constructor
-	this.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.stageResized);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,this.canvasMouseDown);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP,this.canvasMouseUp);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.canvasMouseClick);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this.canvasMouseMove);
-}
-
+		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined in events
+		*/
 
 
