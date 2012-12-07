@@ -79,7 +79,7 @@ Code.getHex = function (intVal){
 
 // class functions ----------------------------------------------
 Code.extendClass = function(child,parent,args){ // parent.apply(child); child.base = new parent; child.base.child = child;
-	var par = new parent;
+	var par = new parent();
 	parent.apply(child,args); child.super = par; // child.super.child = child;
 	/*
 	for (var key in par){
@@ -208,5 +208,14 @@ Code.generateImageFrombit64encode = function(str){
     var img = new Image();
     img.src = str;
     return img;
-}
+};
+Code.getTimeMilliseconds = function(){
+    var d = new Date();
+    return d.getTime();
+};
+
+
+
+
+
 

@@ -1,6 +1,7 @@
 // ResourceSpice.js
 // TEXTURES -----------------------------------
-ResourceSpice.TEX_BACKGROUND_GRID_1 = 0;
+ResourceSpice.TEX_DEBUG_1 = 0;
+ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 ResourceSpice.TEX_X = 0;
 // MAPS ---------------------------------------
 ResourceSpice.MAP_X = 0;
@@ -17,6 +18,6 @@ function ResourceSpice(){
 		// .. load something else
 	};
 	// CONSTRUCTOR
-	self.imgLoader.setLoadList( "../spice/images/", new Array( "background_grid.png" ), self );
+	self.imgLoader.setLoadList( "../spice/images/", new Array( "debug_texture.png", "background_grid.png" ), self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
 }

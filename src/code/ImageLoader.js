@@ -28,6 +28,7 @@ function ImageLoader(base,arr,obj){
 		}
 		var img = new Image();
 		img.addEventListener("load",self.next,false);
+		//img.crossOrigin = '';
 		img.src = self.files[self.index];
 		self.images[self.index] = img;
 		if(self.verbose){

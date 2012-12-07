@@ -5,7 +5,7 @@ function FFLoadAll(homeDir, completeFxn, verbose){
 	this.homeDir = homeDir;
 	this.verbose = verbose?true:false;
 	this.startLoadingFxn = function(){
-		var list = ["BinaryGrid.js","ByteData.js","Dispatch.js","Dispatchable.js","PNGImage.js","LLNode.js","Queue.js","V2D.js",
+		var list = ["BinaryGrid.js","ByteData.js","Dispatch.js","Dispatchable.js","PNGImage.js","LLNode.js","Queue.js","V2D.js","Complex.js",
 		"Matrix2D.js","Code.js","Ticker.js","Keyboard.js","ImageLoader.js",
 		"MultiLoader.js","Resource.js","Output.js","Canvas.js","AudioLoader.js",
 		"Voxel.js","Lattice.js","Map.js","DO.js","DOScroll.js","Draggable.js","Video.js","Stage.js","Frame.js","DOAnim.js","DOImage.js"];

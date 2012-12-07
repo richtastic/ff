@@ -41,6 +41,11 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	context = canvas.getContext("2d");
 	this.canvas = canvas;
 	this.context = context;
+this.getImageData = function(a,b,c,d){
+	var context = self.getContext();
+	var imgData = context.getImageData(a,b,c,d);
+	return imgData;
+}
 	// ------------------------------------------------------------
 	this.setClass = setClass;
 	function setClass(name){
@@ -54,12 +59,19 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.setFillRGBA = setFillRGBA;
 	function setFillRGBA(col){
 		context.fillStyle = Code.getJSRGBA(col);
-	}
+	};
 	this.drawRect = drawRect;
 	function drawRect(sX,sY,wX,hY){
-		//console.log(sX,sY,wX,hY);
 		this.context.fillRect(sX,sY,wX,hY);
-	}
+	};
+	this.drawImage = drawImage;
+	function drawImage(img, pX,pY){//,wX,hY){
+		//this.context.drawImage(img, pX,pY,wX,hY);
+		//console.log(arguments);
+		//console.log( this.context.drawImage );
+		//this.context.drawImage.call(this.context,arguments);//(img, pX,pY,wX,hY);
+		this.context.drawImage(img,pX,pY);
+	};
 	this.setLine = setLine;
 	function setLine(wid,col){
 		//console.log("LINE: "+wid+col);
@@ -151,10 +163,9 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	}
 	function canvasMouseMoveFxn(e){
 		pos = getMousePosition(e);
-		//console.log("moiuaes we4n3kkldkhfadkh");
 		self.mousePosition.x = pos.x; self.mousePosition.y = pos.y;
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
-		pos = null;
+		//pos = null;
 	}
 	function getMousePosition(e){
 		var pos = new V2D(0,0);

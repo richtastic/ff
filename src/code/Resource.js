@@ -48,16 +48,16 @@ function Resource(){
 	}
 	// global event listeners ----------------------------------------------------
 	self.alertLoadCompleteEvents = function(){
-		self.windowResizeListener(null);
+		self.windowResizeListener(null,true);
 	}
 	self.addListeners = function(){
 		window.onresize = self.windowResizeListener;
 	}
 	self.prevWindowInnerWidth = -1;
 	self.prevWindowInnerHeight = -1;
-	self.windowResizeListener = function(e){
+	self.windowResizeListener = function(e,f){
 		p = new V2D(window.innerWidth,window.innerHeight);
-		if(p.x!=self.prevWindowInnerWidth || p.y!=self.prevWindowInnerHeight){ // filter double-calls
+		if(f || p.x!=self.prevWindowInnerWidth || p.y!=self.prevWindowInnerHeight){ // filter double-calls
 			self.prevWindowInnerWidth = p.x;
 			self.prevWindowInnerHeight = p.y;
 			self.alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);

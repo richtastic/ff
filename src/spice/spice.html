@@ -11,14 +11,39 @@ function pageLoadedFxn(){
 	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["Win.js","WinManager.js","ResourceSpice.js","Spice.js"];
+	var list = ["CircuitPin.js","CircuitNode.js","CircuitNet.js","CircuitSimulation.js","CircuitElement.js","CircuitImpedance","CircuitResistor.js","CircuitSourceVoltage.js",
+				"Win.js","WinManager.js","ResourceSpice.js","Spice.js"];
 	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,false);
 	scriptLoader.load();
 }
 function customClassesLoadedFxn(){
 	console.log("loading complete");
-	spice = new Spice();
+	//spice = new Spice();
+	var netlist = new CircuitNet();
+	var sim = new CircuitSimulation();
+	var resistor = new CircuitResistor(100);
+	var source = new CircuitSourceVoltage(5);
+	netlist.addElement(resistor);
+	netlist.addElement(source);
+	netlist.connectElements( resistor,0, source,0 );
+	netlist.connectElements( resistor,1, source,1 );
+	// netlist.disconnectElements( resistor,0, source,0 );
+	//
+	//console.log( "Resistor: " + resistor.toString() );
+	//console.log( "Source: " + source.toString() );
+	// simulate DC
+	sim.netlist(netlist);
+	sim.simulate(simulationCompleteFxn, simulationProgressFxn);
+};
+function simulationCompleteFxn(sim){
+	console.log("100%");
+	//console.log(sim);
+};
+function simulationProgressFxn(sim,perc){
+	console.log( Math.round(perc*100)+"%" );
+	//console.log(sim);
 }
+
 </script>
 </head>
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
@@ -39,4 +64,17 @@ CircuitElement
 	CircuitDependentVoltage
 
 ) Find or assign ground to node
+/*
+	var a = new Complex(5,4);
+	var b = new Complex(2,3);
+	var c = new Complex(0,0);
+	console.log( a.toString() );
+	console.log( b.toString() );
+	Complex.add(c,a,b);
+	console.log( c.toString() );
+	Complex.mul(c,a,b);
+	console.log( c.toStringRect() );
+	console.log( c.toStringEuler() );
+	*/
 -->
+

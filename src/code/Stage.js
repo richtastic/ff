@@ -11,6 +11,13 @@ function Stage(can, fr){
 	root.clearGraphics();
 	this.canvas = can;
 	this.tempCanvas = new Canvas(null,null,1,1,Canvas.STAGE_FIT_FIXED,true);
+/*
+console.log(this.tempCanvas.canvas);
+document.body.appendChild(this.tempCanvas.canvas);
+this.tempCanvas.canvas.style.position="absolute";
+this.tempCanvas.canvas.style.left="0px";
+this.tempCanvas.canvas.style.top="0px";
+*/
 	var frameRate = fr;
 	var time = 0;
 	// dispatch -----------------------------------------------------------
@@ -107,6 +114,8 @@ function Stage(can, fr){
 		var path, arr, obj, intersection = self.getIntersection(pos);
 		arr = new Array( intersection, pos );
 		path = new Array();
+//console.log("INTERSECTION: ");
+//console.log(intersection);
 		if(intersection){
 			obj = intersection;
 			while(obj){ // self to ancestors - create path
@@ -123,7 +132,7 @@ function Stage(can, fr){
 				obj.alertAll(evt,arr);
 			}
 		}
-		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined in events
+		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 	};
 	this.canvasMouseDown = function(pos){
 		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
