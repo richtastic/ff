@@ -18,7 +18,8 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesLoadedFxn(){
 	console.log("loading complete");
-	//spice = new Spice();
+	spice = new Spice();
+return;
 	var netlist = new CircuitNet();
 	var sim = new CircuitSimulation();
 	var resistor = new CircuitResistor(100);
@@ -36,11 +37,11 @@ function customClassesLoadedFxn(){
 	sim.simulate(simulationCompleteFxn, simulationProgressFxn);
 };
 function simulationCompleteFxn(sim){
-	console.log("100%");
+	//console.log("100%");
 	//console.log(sim);
 };
 function simulationProgressFxn(sim,perc){
-	console.log( Math.round(perc*100)+"%" );
+	//console.log( Math.round(perc*100)+"%" );
 	//console.log(sim);
 }
 

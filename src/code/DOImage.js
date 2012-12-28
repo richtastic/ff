@@ -1,24 +1,80 @@
 // DOImage.js
+DOImage.RENDER_MODE_NORMAL = 0;
+DOImage.RENDER_MODE_REPEAT = 1;
+DOImage.RENDER_MODE_X = 2;
+DOImage.RENDER_MODE_X = 3;
 
 function DOImage(img, options, parentDO){
 	var self = this;
 	Code.extendClass(self,DO);
 	self.image = img;
 	self.imagePattern = null;
-	self.width = -1;
-	self.height = -1;
+	self.imageWidth = -1;
+	self.imageHeight = -1;
+	self.imagePosX = 0;
+	self.imagePosY = 0;
+	self.renderMode = DOImage.RENDER_MODE_NORMAL;
 	if(options){
-		if(options.width){ self.width=options.width; }
-		if(options.height){ self.height=options.height; }
+		if(options.width){ self.imageWidth=options.width; }
+		if(options.height){ self.imageHeight=options.height; }
 	}
-	//self.imagePattern = null;
 	self.addedToStage = function(stage){
-		if( self.width>=0 && self.height>=0 ){
-			var context = stage.canvas.getContext();
-			self.imagePattern = context.createPattern(self.image,'repeat');
-		}
+		self.checkPattern();
+	};
+	self.checkPattern = function(){
+		if( self.imageWidth>=0 && self.imageHeight>=0 ){
+			if(self.stage){
+				var context = self.stage.canvas.getContext();
+				self.imagePattern = context.createPattern(self.image,'repeat');
+			}
+		};
 	};
 // rendering ---------------------------------------------------------------------------------
+	self.drawImage = function(posX,posY,wid,hei){
+		if(posX!==null){ self.imagePosX=posX; }
+		if(posY!==null){ self.imagePosX=posY; }
+		if(wid!==null){ self.imageWidth=wid; }
+		if(hei!==null){ self.imageHeight=hei; }
+		self.checkPattern();
+		self.graphics.push( Code.newArray(self.canvasDrawImage,[]) );
+	};
+	self.canvasDrawImage = function(){ // all internal params
+		if(self.imagePattern){
+			var context = self.stage.canvas.getContext();
+			/*
+			self.stage.canvas.setFill(self.imagePattern);
+			self.stage.canvas.beginPath();
+			self.stage.canvas.moveTo(self.imagePosX,self.imagePosY);
+			self.stage.canvas.lineTo(self.imagePosX+self.imageWidth,self.imagePosY);
+			self.stage.canvas.lineTo(self.imagePosX+self.imageWidth,self.imagePosY+self.imageHeight);
+			self.stage.canvas.lineTo(self.imagePosX,self.imagePosY+self.imageHeight);
+			self.stage.canvas.lineTo(self.imagePosX,self.imagePosY);
+			self.stage.canvas.strokeLine();
+			self.stage.canvas.endPath();
+			*/
+	/*
+	this.clearGraphics();
+	this.setFillRGBA(0x0000FF99);
+	this.drawRect(0,0,100,100);
+	this.setLine(1.0,0x00FF00);
+	this.beginPath();
+	this.moveTo(0,0);
+	this.lineTo(100,0);
+	this.lineTo(100,100);
+	this.lineTo(0,100);
+	this.lineTo(0,0);
+	this.strokeLine();
+	this.endPath();
+	*/	
+	
+	//		self.imagePattern = context.createPattern(self.image,'repeat');
+			context.fillStyle = self.imagePattern;
+    		context.fillRect(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
+		}else{
+			self.canvas.drawImage(self.image,self.imagePosX,self.imagePosY);//,self.imageWidth,self.imageHeight);
+		}
+	};
+// ------------------------------------------------------------------------------------------
 /*
 self.render = function(canvas){
 		self.super.setupRender.call(self,canvas);
@@ -43,6 +99,7 @@ if(self.image){
 		self.super.kill.call(self);
 	};
 }
+
 
 
 

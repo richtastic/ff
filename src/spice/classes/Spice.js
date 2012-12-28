@@ -65,7 +65,7 @@ function Spice(){
 	self.constructor = function(){
 		// CONSTRUCTOR
 		self.canvas = new Canvas(self.resource,null,600,300,Canvas.STAGE_FIT_FILL);
-		self.stage = new Stage(self.canvas, 1000/18);
+		self.stage = new Stage(self.canvas, 1000/4);
 		self.keyboard = new Keyboard();
 		self.resource.alertLoadCompleteEvents();
 		// 
@@ -85,8 +85,8 @@ function Spice(){
 		//self.doRoot.addChild( self.scroller );
 		//self.maskee = new DO();
 		//self.addChild(maskee);
-		//var img = self.resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
-		var img = self.resource.tex[ResourceSpice.TEX_DEBUG_1];
+		var img = self.resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
+		//var img = self.resource.tex[ResourceSpice.TEX_DEBUG_1];
 		// 
 		// SCROLLER
 		self.scroller = new DOScroll();
@@ -95,7 +95,7 @@ function Spice(){
 		// CONTENT
 		var doBG = new DOImage(img);
 		doBG.clearGraphics();
-		doBG.drawImage(img,0,0);//,100,100);
+		doBG.drawImage(0,0,2000,2000);
 		self.scroller.addChild( doBG );
 		// doBG.addFunction(Canvas.EVENT_MOUSE_DOWN,self.puts);
 		// 

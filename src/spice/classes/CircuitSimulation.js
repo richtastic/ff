@@ -100,7 +100,7 @@ function CircuitSimulation(){
 		}
 		for(i=0;i<self.nodeList.length;++i){
 			node = self.nodeList[i];
-			//console.log(node.voltage);
+			console.log(node.voltage);
 		}
 	};
 	// 

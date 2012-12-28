@@ -10,6 +10,8 @@ function DO(parentDO){
 	self.parent = parentDO;
 	Code.extendClass(self,Dispatchable);
 	self.canvas = null;
+	// FAST-POINT-RENDERING
+	self.pointRendering = false;
 	//
 // downward message propagation ---------------------------------------------------------------------------------
 	self.transformPoint = function(a,b){
@@ -33,135 +35,134 @@ function DO(parentDO){
 // could be separate function that uses visible-everything to guarantee 0-alpha is valid
 // rendering ---------------------------------------------------------------------------------
 	self.setupRender = function(canvas){
-		this.canvas = canvas;
+		self.canvas = canvas;
 		var context = canvas.getContext();
 		context.save();
-		var a = this.matrix.getParameters();
+		var a = self.matrix.getParameters();
 		context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
 		Code.emptyArray(a);
 	}
-	this.takedownRender = function(){
-		var context = this.canvas.getContext();
+	self.takedownRender = function(){
+		var context = self.canvas.getContext();
 		context.restore();
 	}
-	this.render = function(canvas){
-		this.setupRender(canvas);
-		var context = this.canvas.getContext();
+	self.render = function(canvas){
+		self.setupRender(canvas);
+		var context = self.canvas.getContext();
 		//var prevComposite = context.globalCompositeOperation; // "source-over";
-		this.drawGraphics(canvas); // self render
-		if(this.mask){
+		self.drawGraphics(canvas); // self render
+		if(self.mask){
 			context.clip();
 		//	context.globalCompositeOperation = "source-atop";//"destination-atop";// "destination-out";// "destination-in"; // "source-out";
 			// copy destination-atop destination-in destination-out destination-over
 			// lighter xor source-atop source-in source-out source-over
 		}
-		var i, len = this.children.length;
+		var i, len = self.children.length;
 		for(i=0;i<len;++i){ // children render
-			this.children[i].render(canvas);
+			self.children[i].render(canvas);
 		}
-		if(this.mask){
+		if(self.mask){
 			//context.restore();
 		//	context.globalCompositeOperation = prevComposite;
 		}
-		this.takedownRender(canvas);
+		self.takedownRender(canvas);
 	}
 // drawing ----------------------------------------------------------------------------------
-	this.graphics = new Array();
-	this.clearGraphics = function(){
-		Code.emptyArray(this.graphics);
+	self.graphics = new Array();
+	self.clearGraphics = function(){
+		Code.emptyArray(self.graphics);
 	}
 // ------------------------------------------------------------------------------------------
-	this.setFill = function(col){ // int color
+	self.setFill = function(col){ // int color
 		var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetFill,Code.newArray(str)) );
+		self.graphics.push( Code.newArray(self.canvasSetFill,Code.newArray(str)) );
 	}
-	this.canvasSetFill = function(col){
-		this.canvas.setFill(col);
-	}
-// ------------------------------------------------------------------------------------------
-	this.setFillRGBA = function(col){ // var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetFillRGBA,Code.newArray(col)) );
-	}
-	this.canvasSetFillRGBA = function(col){
-		this.canvas.setFillRGBA(col);
+	self.canvasSetFill = function(col){
+		self.canvas.setFill(col);
 	}
 // ------------------------------------------------------------------------------------------
-	this.setLine = function(wid,col){
+	self.setFillRGBA = function(col){ // var str = Code.getHex(col);
+		self.graphics.push( Code.newArray(self.canvasSetFillRGBA,Code.newArray(col)) );
+	}
+	self.canvasSetFillRGBA = function(col){
+		self.canvas.setFillRGBA(col);
+	}
+// ------------------------------------------------------------------------------------------
+	self.setLine = function(wid,col){
 		var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetLine,Code.newArray(wid,str)) );
+		self.graphics.push( Code.newArray(self.canvasSetLine,Code.newArray(wid,str)) );
 	};
-	this.canvasSetLine = function(wid,col){
+	self.canvasSetLine = function(wid,col){
 		//console.log("SET LINE: "+wid+" "+col);
-		this.canvas.setLine(wid,col);
+		self.canvas.setLine(wid,col);
 	};
 // ------------------------------------------------------------------------------------------
-	this.beginPath = function(){
-		this.graphics.push( Code.newArray(this.canvasBeginPath,Code.newArray()) );
+	self.beginPath = function(){
+		self.graphics.push( Code.newArray(self.canvasBeginPath,Code.newArray()) );
 	};
-	this.canvasBeginPath = function(){
-		this.canvas.beginPath();
-	};
-// ------------------------------------------------------------------------------------------
-	this.moveTo = function(pX,pY){
-		this.graphics.push( Code.newArray(this.canvasMoveTo,Code.newArray(pX,pY)) );
-	};
-	this.canvasMoveTo = function(pX,pY){
-		this.canvas.moveTo(pX,pY);
+	self.canvasBeginPath = function(){
+		self.canvas.beginPath();
 	};
 // ------------------------------------------------------------------------------------------
-	this.lineTo = function(pX,pY){
-		this.graphics.push( Code.newArray(this.canvasLineTo,Code.newArray(pX,pY)) );
+	self.moveTo = function(pX,pY){
+		self.graphics.push( Code.newArray(self.canvasMoveTo,Code.newArray(pX,pY)) );
 	};
-	this.canvasLineTo = function(pX,pY){
-		this.canvas.lineTo(pX,pY);
-	};
-// ------------------------------------------------------------------------------------------
-	this.strokeLine = function(){
-		this.graphics.push( Code.newArray(this.canvasStrokeLine,Code.newArray()) );
-	};
-	this.canvasStrokeLine = function(){
-		this.canvas.strokeLine();
+	self.canvasMoveTo = function(pX,pY){
+		self.canvas.moveTo(pX,pY);
 	};
 // ------------------------------------------------------------------------------------------
-	this.fill = function(){
-		this.graphics.push( Code.newArray(this.canvasFill,Code.newArray()) );
+	self.lineTo = function(pX,pY){
+		self.graphics.push( Code.newArray(self.canvasLineTo,Code.newArray(pX,pY)) );
 	};
-	this.canvasFill= function(){
-		this.canvas.fill();
-	};
-// ------------------------------------------------------------------------------------------
-	this.endPath = function(){
-		this.graphics.push( Code.newArray(this.canvasEndPath,Code.newArray()) );
-	};
-	this.canvasEndPath = function(){
-		this.canvas.endPath();
+	self.canvasLineTo = function(pX,pY){
+		self.canvas.lineTo(pX,pY);
 	};
 // ------------------------------------------------------------------------------------------
-	this.drawRect = function(sX,sY,wX,hY){
-		this.graphics.push( Code.newArray(this.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
+	self.strokeLine = function(){
+		self.graphics.push( Code.newArray(self.canvasStrokeLine,Code.newArray()) );
 	};
-	this.canvasDrawRect = function(sX,sY,wX,hY){
-		this.canvas.drawRect(sX,sY,wX,hY);
+	self.canvasStrokeLine = function(){
+		self.canvas.strokeLine();
 	};
 // ------------------------------------------------------------------------------------------
-	this.drawImage = function(img,pX,pY,wX,hY){
+	self.fill = function(){
+		self.graphics.push( Code.newArray(self.canvasFill,Code.newArray()) );
+	};
+	self.canvasFill= function(){
+		self.canvas.fill();
+	};
+// ------------------------------------------------------------------------------------------
+	self.endPath = function(){
+		self.graphics.push( Code.newArray(self.canvasEndPath,Code.newArray()) );
+	};
+	self.canvasEndPath = function(){
+		self.canvas.endPath();
+	};
+// ------------------------------------------------------------------------------------------
+	self.drawRect = function(sX,sY,wX,hY){
+		self.graphics.push( Code.newArray(self.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
+	};
+	self.canvasDrawRect = function(sX,sY,wX,hY){
+		self.canvas.drawRect(sX,sY,wX,hY);
+	};
+// ------------------------------------------------------------------------------------------
+	self.drawImage = function(img,pX,pY,wX,hY){
 		console.log(img.width);
-		//console.log(arguments);
 		if(wX===null || hY===null){
 			wX = img.width;
 			hY = img.height;
 		}
-		//this.graphics.push( Code.newArray(this.canvasDrawImage,Code.newArray(img, pX,pY,wX,hY)) );
-		this.graphics.push( Code.newArray(this.canvasDrawImage,arguments) );
+		//self.graphics.push( Code.newArray(self.canvasDrawImage,Code.newArray(img, pX,pY,wX,hY)) );
+		self.graphics.push( Code.newArray(self.canvasDrawImage,arguments) );
 	};
-	this.canvasDrawImage = function(img,pX,pY,wX,hY){
+	self.canvasDrawImage = function(img,pX,pY,wX,hY){
 		//console.log(arguments);
-		this.canvas.drawImage(img,pX,pY,wX,hY);
+		self.canvas.drawImage(img,pX,pY,wX,hY);
 	};
 // ------------------------------------------------------------------------------------------
-	this.drawGraphics = function(canvas){
-		this.canvas = canvas;
-		var arr = this.graphics;
+	self.drawGraphics = function(canvas){
+		self.canvas = canvas;
+		var arr = self.graphics;
 		var i, len = arr.length;
 		var args, fxn;
 		for(i=0;i<len;++i){
@@ -171,45 +172,45 @@ function DO(parentDO){
 		}
 	};
 // Display List ----------------------------------------------------------------------------------------------------------------
-	this.addChild = function(ch){
+	self.addChild = function(ch){
 		ch.parent = this;
 		ch.stage = this.stage;
 		if( Code.addUnique(this.children,ch) ){
 			ch.addedToStage(this.stage);
 		}
 	};
-	this.removeChild = function(ch){
+	self.removeChild = function(ch){
 		ch.parent = null;
 		Code.removeElement(this.children,ch);
 	};
-	this.removeAllChildren = function(ch){
+	self.removeAllChildren = function(ch){
 		var i, len = this.children.length;
 		for(i=0;i<len;++i){
 			this.children[i].parent = null;
 		}
 		Code.emptyArray(this.children);
 	}
-	this.kill = function(ch){
+	self.kill = function(ch){
 		Code.killArray(this.children);
 		this.matrix.kill();
 		this.parent = null;
 		Code.killMe(this);
 	}
 	// ------------------------------------------------------------------ stage passthrough
-	this.getCurrentMousePosition = function(){
+	self.getCurrentMousePosition = function(){
 		return this.stage.getCurrentMousePosition();
 	}
-	this.globalPointToLocalPoint = function(pos){
+	self.globalPointToLocalPoint = function(pos){
 		return this.stage.globalPointToLocalPoint(this,pos);
 	}
 	// -------------------------------------------------------------------- dragging
-	this.enableDragging = false;
-	this.isDragging = false;
-	this.dragTimer = new Ticker(1/4);
-	this.prevMousePos = new V2D();
-	this.mouseDistance = new V2D();
-this.origin = new V2D();
-	this.timerDrag = function(e){
+	self.enableDragging = false;
+	self.isDragging = false;
+	self.dragTimer = new Ticker(1/4);
+	self.prevMousePos = new V2D();
+	self.mouseDistance = new V2D();
+self.origin = new V2D();
+	self.timerDrag = function(e){
 		//console.log("timerDrage");
 		if(self.isDragging){
 			var pos = self.getCurrentMousePosition();
@@ -239,8 +240,7 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 		self.isDragging = false;
 	}
 	this.checkDrag = function(arr){
-		if( self.enableDragging ){
-			var obj = arr[0];
+		if( self.enableDragging ){x
 			var pos = arr[1];
 			if(obj==self){
 				//pos = self.globalPointToLocalPoint(pos);
@@ -265,6 +265,7 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 	this.checkIntersectionChildren = true;
 	this.checkIntersectionSelf = true;
 	this.getIntersection = function(pos, can){
+		self.pointRendering = true;
 		this.setupRender(can);
 		if(self.mask){
 			var context = can.getContext();
@@ -277,20 +278,24 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 				ret = this.children[i].getIntersection(pos, can);
 				if(ret){
 					this.takedownRender(can);
+					self.pointRendering = false;
 					return ret;
 				}
 			}
 		}
 		if(this.checkIntersectionSelf){
-			this.drawGraphics(can); // this.render(can);
+//all DO objects must use ONLY the canvas passed to it through the render functions - not internally stored
+			// this.drawGraphics(can); // this.render(can);
 			var context = can.getContext();
 			var imgData = can.getImageData(0,0,can.canvas.width,can.canvas.height);//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 			var pix = this.getPixelRGBA( imgData, pos.x,pos.y);
 			this.takedownRender(can);
 			if(pix!=0){
+				self.pointRendering = false;
 				return this;
 			}
 		}
+		self.pointRendering = false;
 		return null;
 	}
 	this.getPixelRGBA = function(img, x,y){

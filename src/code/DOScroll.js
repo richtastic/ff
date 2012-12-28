@@ -3,6 +3,8 @@
 function DOScroll(parentDO){
 	var self = this;
 	Code.extendClass(self,DO);
+	self.rangeLimitsX = [-300, 500];
+	self.rangeLimitsY = [-300, 300];
 	// content
 	self.content = self;
 	this.addChild = function(ch){
@@ -17,8 +19,10 @@ function DOScroll(parentDO){
 		// console.log( Code.getTimeMilliseconds() );
 		pos = pos?pos:new V2D();
 		self.dragging = true;
-		self.dragOffset.x = pos.x - self.content.matrix.x;
-		self.dragOffset.y = pos.y - self.content.matrix.y;
+		var offsetX = pos.x - self.content.matrix.x;
+		var offsetY = pos.y - self.content.matrix.y;
+		self.dragOffset.x = offsetX;
+		self.dragOffset.y = offsetY;
 	};
 	self.stopDrag = function(){
 		self.dragging = false;
@@ -40,6 +44,8 @@ function DOScroll(parentDO){
 		if(self.dragging){
 			self.content.matrix.x = e.x - self.dragOffset.x;
 			self.content.matrix.y = e.y - self.dragOffset.y;
+			self.content.matrix.x = Math.min(Math.max(self.content.matrix.x,self.rangeLimitsX[0]),self.rangeLimitsX[1]);
+			self.content.matrix.y = Math.min(Math.max(self.content.matrix.y,self.rangeLimitsY[0]),self.rangeLimitsY[1]);
 		}
 	};
 	self.kill = function(){

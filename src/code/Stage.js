@@ -114,8 +114,6 @@ this.tempCanvas.canvas.style.top="0px";
 		var path, arr, obj, intersection = self.getIntersection(pos);
 		arr = new Array( intersection, pos );
 		path = new Array();
-//console.log("INTERSECTION: ");
-//console.log(intersection);
 		if(intersection){
 			obj = intersection;
 			while(obj){ // self to ancestors - create path

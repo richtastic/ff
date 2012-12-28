@@ -13,9 +13,9 @@ Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
 	var self = this;
 	// public
-	this.resource = resource;
-	this.mouseDown = false;
-	this.mousePosition = new V2D();
+	self.resource = resource;
+	self.mouseDown = false;
+	self.mousePosition = new V2D();
 	// private
 	Code.extendClass(this,Dispatchable);
 	var canvas, context;
@@ -39,40 +39,48 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		stageFit = fitStyle;
 	}
 	context = canvas.getContext("2d");
-	this.canvas = canvas;
-	this.context = context;
-this.getImageData = function(a,b,c,d){
+	self.canvas = canvas;
+	self.context = context;
+self.getImageData = function(a,b,c,d){
 	var context = self.getContext();
 	var imgData = context.getImageData(a,b,c,d);
 	return imgData;
 }
 	// ------------------------------------------------------------
-	this.setClass = setClass;
+	self.setClass = setClass;
 	function setClass(name){
-		this.canvas.setAttribute("class",name);
+		self.canvas.setAttribute("class",name);
 	}
 	// drawing ------------------------------------------------------------
-	this.setFill = setFill;
+	self.setFill = setFill;
 	function setFill(col){
 		context.fillStyle = col;
 	}
-	this.setFillRGBA = setFillRGBA;
+	self.setFillRGBA = setFillRGBA;
 	function setFillRGBA(col){
 		context.fillStyle = Code.getJSRGBA(col);
 	};
-	this.drawRect = drawRect;
+	self.drawRect = drawRect;
 	function drawRect(sX,sY,wX,hY){
-		this.context.fillRect(sX,sY,wX,hY);
+		self.context.fillRect(sX,sY,wX,hY);
 	};
-	this.drawImage = drawImage;
-	function drawImage(img, pX,pY){//,wX,hY){
-		//this.context.drawImage(img, pX,pY,wX,hY);
+	self.drawImage = drawImage;
+	function drawImage(img, pX,pY,wX,hY){
 		//console.log(arguments);
-		//console.log( this.context.drawImage );
-		//this.context.drawImage.call(this.context,arguments);//(img, pX,pY,wX,hY);
-		this.context.drawImage(img,pX,pY);
+		if(pX!==undefined && pY!==undefined){
+			if(wX!==undefined && hY!==undefined){
+				console.log(img,pX,pY,wX,hY);
+				self.context.drawImage(img,pX,pY,wX,hY);
+			}else{
+				self.context.drawImage(img,pX,pY);
+			}
+		}else{
+			console.log(self.context);
+			console.log(img);
+			self.context.drawImage(img);
+		}
 	};
-	this.setLine = setLine;
+	self.setLine = setLine;
 	function setLine(wid,col){
 		//console.log("LINE: "+wid+col);
 		context.lineWidth = wid;
@@ -80,64 +88,64 @@ this.getImageData = function(a,b,c,d){
 		context.lineJoin = 'bevel';
 		context.lineCap = 'round';
 	}
-	this.beginPath = beginPath;
+	self.beginPath = beginPath;
 	function beginPath(){
 		context.beginPath();
 	}
-	this.moveTo = moveTo;
+	self.moveTo = moveTo;
 	function moveTo(pX,pY){
 		context.moveTo(pX,pY);
 	}
-	this.lineTo = lineTo;
+	self.lineTo = lineTo;
 	function lineTo(pX,pY){
 		context.lineTo(pX,pY);
 		//context.stroke();
 	}
-	this.strokeLine = strokeLine;
+	self.strokeLine = strokeLine;
 	function strokeLine(){
 		context.stroke();
 	}
-	this.endPath = endPath;
+	self.endPath = endPath;
 	function endPath(){
 		context.closePath();
 	};
-	this.fill = fill;
+	self.fill = fill;
 	function fill(){
 		context.fill();
 	}
-	this.clearAll = clearAll;
+	self.clearAll = clearAll;
 	function clearAll(){
-		var wid = this.canvas.width;
-		var hei = this.canvas.height;
-		this.canvas.width = 0;
-		this.canvas.height = 0;
-		this.canvas.width = wid;
-		this.canvas.height = hei;
+		var wid = self.canvas.width;
+		var hei = self.canvas.height;
+		self.canvas.width = 0;
+		self.canvas.height = 0;
+		self.canvas.width = wid;
+		self.canvas.height = hei;
 	}
 	// getters -----------------------------------------------------------
-	this.getCanvas = getCanvas;
+	self.getCanvas = getCanvas;
 	function getCanvas(){
 		return canvas;
 	}
-	this.getContext = getContext;
+	self.getContext = getContext;
 	function getContext(){
 		return context;
 	}
-	this.getWidth = function(){
+	self.getWidth = function(){
 		return self.canvas.width;
 	}
-	this.getHeight = function(){
+	self.getHeight = function(){
 		return self.canvas.height;
 	}
 	// LISTENERS ----------------------------------------------------------
-	this.addListeners = addListeners;
+	self.addListeners = addListeners;
 	function addListeners(){
 		canvas.addEventListener('click', canvasClickFxn);
 		canvas.addEventListener('mousedown', canvasMouseDownFxn);
 		canvas.addEventListener('mouseup', canvasMouseUpFxn);
 		canvas.addEventListener('mousemove', canvasMouseMoveFxn);
 	}
-	this.removeListeners = removeListeners;
+	self.removeListeners = removeListeners;
 	function removeListeners(){
 		canvas.removeEventListener('click', canvasClickFxn);
 		canvas.removeEventListener('mousedown', canvasMouseDownFxn);
@@ -150,13 +158,13 @@ this.getImageData = function(a,b,c,d){
 		pos = null;
 	}
 	function canvasMouseDownFxn(e){
-		this.mouseDown = true;
+		self.mouseDown = true;
 		pos = getMousePosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 		pos = null;
 	}
 	function canvasMouseUpFxn(e){
-		this.mouseDown = false;
+		self.mouseDown = false;
 		pos = getMousePosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 		pos = null;
@@ -180,7 +188,7 @@ this.getImageData = function(a,b,c,d){
 		return pos;
 	}
 	// ------------------ resource listeners
-	this.windowResizedFxn = function(o){
+	self.windowResizedFxn = function(o){
 		var p = new V2D(o.x,o.y);
 		if(stageFit==Canvas.STAGE_FIT_FILL){
 			canvas.width = o.x; canvas.height = o.y;
@@ -202,7 +210,7 @@ this.getImageData = function(a,b,c,d){
 	}
 // -------------------------------------------------------------- constructor
 	if(resource){ // may not get one
-		resource.addFunction(Dispatch.EVENT_WINDOW_RESIZE,this.windowResizedFxn);
+		resource.addFunction(Dispatch.EVENT_WINDOW_RESIZE,self.windowResizedFxn);
 	}
 }
 
