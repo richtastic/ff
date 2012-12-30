@@ -141,20 +141,4 @@ function Spice(){
 	self.resource.setFxnComplete(self.constructor);
 	self.resource.load();
 }
-/*
-stationary
-parchment
-papyrus
-notepad
-monograph 
-represetation
-sketch
-prototype
-blueprint
-model
-plan
-diagram
-scheme
-sketch
-draft / rough-draft
-*/
+
