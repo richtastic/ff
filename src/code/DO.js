@@ -49,13 +49,9 @@ function DO(parentDO){
 	self.render = function(canvas){
 		self.setupRender(canvas);
 		var context = self.canvas.getContext();
-		//var prevComposite = context.globalCompositeOperation; // "source-over";
 		self.drawGraphics(canvas); // self render
 		if(self.mask){
 			context.clip();
-		//	context.globalCompositeOperation = "source-atop";//"destination-atop";// "destination-out";// "destination-in"; // "source-out";
-			// copy destination-atop destination-in destination-out destination-over
-			// lighter xor source-atop source-in source-out source-over
 		}
 		var i, len = self.children.length;
 		for(i=0;i<len;++i){ // children render
@@ -63,7 +59,6 @@ function DO(parentDO){
 		}
 		if(self.mask){
 			//context.restore();
-		//	context.globalCompositeOperation = prevComposite;
 		}
 		self.takedownRender(canvas);
 	}
@@ -204,67 +199,47 @@ function DO(parentDO){
 		return this.stage.globalPointToLocalPoint(this,pos);
 	}
 	// -------------------------------------------------------------------- dragging
-	self.enableDragging = false;
-	self.isDragging = false;
-	self.dragTimer = new Ticker(1/4);
-	self.prevMousePos = new V2D();
-	self.mouseDistance = new V2D();
-self.origin = new V2D();
-	self.timerDrag = function(e){
-		//console.log("timerDrage");
-		if(self.isDragging){
-			var pos = self.getCurrentMousePosition();
-			//pos = self.globalPointToLocalPoint(pos);
-			//self.matrix.translate((pos.x-self.prevMousePos.x),(pos.y-self.prevMousePos.y));
-			//self.matrix.pretranslate((pos.x-self.prevMousePos.x),(pos.y-self.prevMousePos.y));
-//var origin = new V2D(0,0);
-//origin = self.globalPointToLocalPoint(origin);
-//var origin = new V2D(0,0);
-var origin = self.origin;
-//origin = self.globalPointToLocalPoint(origin);
-pos = self.globalPointToLocalPoint(pos);
-var origin = self.origin;
-self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDistance.y)+origin);
-			self.prevMousePos.x = pos.x; self.prevMousePos.y = pos.y;
+	// dragging
+	self.rangeLimitsX = [-9E9, 9E9];
+	self.rangeLimitsY = [-9E9, 9E9];
+	self.dragEnabled = false;
+	self.dragging = false;
+	self.dragOffset = new V2D();
+	self.startDrag = function(pos){
+		pos = pos?pos:new V2D();
+		self.dragging = true;
+		self.dragOffset.x = pos.x - 2*self.matrix.x;
+		self.dragOffset.y = pos.y - 2*self.matrix.y;
+	};
+	self.stopDrag = function(){
+		self.dragging = false;
+	};
+	self.dragMouseDownFxn = function(e){
+		if(e[0]==self && self.dragEnabled){
+			self.startDrag(e[1]);
+			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 		}
-	}
-	this.dragTimer.addFunction(Ticker.EVENT_TICK,this.timerDrag);
-	this.startDrag = function(){
-		self.isDragging = true;
-		self.stage.addFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
-		//self.dragTimer.start();
-	}
-	this.stopDrag = function(){
-		//self.dragTimer.stop();
-		self.stage.removeFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
-		self.isDragging = false;
-	}
-	this.checkDrag = function(arr){
-		if( self.enableDragging ){x
-			var pos = arr[1];
-			if(obj==self){
-				//pos = self.globalPointToLocalPoint(pos);
-				console.log(self.isDragging+" pos:"+pos.x+","+pos.y);
-				self.prevMousePos.x = pos.x; self.prevMousePos.y = pos.y;
-	var origin = self.origin;//new V2D(0,0);
-	origin = self.globalPointToLocalPoint(origin);
-	pos = self.globalPointToLocalPoint(pos);
-	self.mouseDistance.x = pos.x-origin.x; self.mouseDistance.y = pos.y-origin.y;
-				if(self.isDragging){
-					self.stopDrag();
-				}else{
-					self.startDrag();
-				}
-			}
+	};
+	self.dragMouseUpFxn = function(e){
+		if(self.dragEnabled || self.dragging){
+			self.stopDrag();
+			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 		}
-	}
-	// ------------------------------------------------------------------ translatePosition
-	this.getIntersection = function(pos, can){
-	}
+	};
+	self.mouseMoveDragCheckFxn = function(e){
+		if(self.dragging){
+			self.matrix.x = e.x - self.dragOffset.x;
+			self.matrix.y = e.y - self.dragOffset.y;
+			self.matrix.x = Math.min(Math.max(self.matrix.x,self.rangeLimitsX[0]),self.rangeLimitsX[1]);
+			self.matrix.y = Math.min(Math.max(self.matrix.y,self.rangeLimitsY[0]),self.rangeLimitsY[1]);
+		}
+	};
+	self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
+	self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
 	// ------------------------------------------------------------------ intersection
-	this.checkIntersectionChildren = true;
-	this.checkIntersectionSelf = true;
-	this.getIntersection = function(pos, can){
+	self.checkIntersectionChildren = true;
+	self.checkIntersectionSelf = true;
+	self.getIntersection = function(pos, can){
 		self.pointRendering = true;
 		this.setupRender(can);
 		if(self.mask){
@@ -275,7 +250,7 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 		if(this.checkIntersectionChildren){
 			var ret, i, len = this.children.length;
 			for(i=len-1;i>=0;--i){
-				ret = this.children[i].getIntersection(pos, can);
+				ret = self.children[i].getIntersection(pos, can);
 				if(ret){
 					this.takedownRender(can);
 					self.pointRendering = false;
@@ -283,9 +258,10 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 				}
 			}
 		}
-		if(this.checkIntersectionSelf){
+		if(self.checkIntersectionSelf){
 //all DO objects must use ONLY the canvas passed to it through the render functions - not internally stored
-			// this.drawGraphics(can); // this.render(can);
+			this.drawGraphics(can);
+			//this.render(can);
 			var context = can.getContext();
 			var imgData = can.getImageData(0,0,can.canvas.width,can.canvas.height);//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 			var pix = this.getPixelRGBA( imgData, pos.x,pos.y);
@@ -319,7 +295,7 @@ self.matrix.translate((pos.x-self.mouseDistance.x)+origin, (pos.y-self.mouseDist
 	this.endPath();
 	*/
 // --------------
-	this.addFunction(Canvas.EVENT_MOUSE_CLICK,this.checkDrag);
+	//this.addFunction(Canvas.EVENT_MOUSE_DOWN,this.checkDrag);
 	//this.addFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
 }
 

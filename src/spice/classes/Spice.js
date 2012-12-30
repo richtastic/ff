@@ -39,9 +39,11 @@ function Spice(){
 	};
 	self.canvasResizeFxn = function(e){
 		var wid = e.x, hei = e.y;
+		var sX = 0, sY = 0;
+		//wid = 300;hei = 200;
 		self.scroller.clearGraphics();
 		self.scroller.setLine(1,0xFF00FF00);
-		self.scroller.setFillRGBA(0x00000001);
+		self.scroller.setFillRGBA(0x00000000); // 0x00000001
 		self.scroller.beginPath();
 		self.scroller.moveTo(0,0);
 		self.scroller.lineTo(wid,0);
@@ -51,6 +53,23 @@ function Spice(){
 		self.scroller.strokeLine();
 		self.scroller.endPath();
 		self.scroller.fill();
+		//
+		sX = wid*(2/3);
+		sY = 0;
+		wid = wid*(1/3);
+		hei = hei;
+		self.library.clearGraphics();
+		self.library.setLine(1.0,0x00FF00);
+		self.library.setFillRGBA(0x00FFFF99);
+		self.library.beginPath();
+		self.library.moveTo(sX,sY);
+		self.library.lineTo(sX+wid,sY);
+		self.library.lineTo(sX+wid,sY+hei);
+		self.library.lineTo(sX,sY+hei);
+		self.library.lineTo(sX,sY);
+		self.library.strokeLine();
+		self.library.endPath();
+		self.library.fill();
 	}
 	self.canvasClickFxn = function(e){
 		// console.log(e);
@@ -85,18 +104,53 @@ function Spice(){
 		//self.doRoot.addChild( self.scroller );
 		//self.maskee = new DO();
 		//self.addChild(maskee);
+
 		var img = self.resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
-		//var img = self.resource.tex[ResourceSpice.TEX_DEBUG_1];
-		// 
 		// SCROLLER
 		self.scroller = new DOScroll();
 		self.doRoot.addChild( self.scroller );
 		self.scroller.dragEnabled = false;
+		
 		// CONTENT
+		
 		var doBG = new DOImage(img);
 		doBG.clearGraphics();
 		doBG.drawImage(0,0,2000,2000);
 		self.scroller.addChild( doBG );
+		doBG.dragEnabled = true;
+		doBG.rangeLimitsX = [-100, 100];
+		doBG.rangeLimitsY = [-100, 100];
+		
+		// ELEMENTS
+		img = self.resource.tex[ResourceSpice.TEX_DEBUG_1];
+		var doEle = new DOImage(img);
+		doEle.clearGraphics();
+		doEle.drawImage(0,0,100,100);
+		//self.scroller.addChild( doEle );
+		doBG.addChild( doEle );
+		doEle.dragEnabled = true;
+
+		// library
+		self.library = new DO();
+		self.doRoot.addChild( self.library );
+		
+/*
+		var doEle = new DO();
+	doEle.clearGraphics();
+	doEle.setFillRGBA(0x0000FF99);
+	doEle.drawRect(0,0,100,100);
+	doEle.setLine(1.0,0x00FF00);
+	doEle.beginPath();
+	doEle.moveTo(0,0);
+	doEle.lineTo(100,0);
+	doEle.lineTo(100,100);
+	doEle.lineTo(0,100);
+	doEle.lineTo(0,0);
+	doEle.strokeLine();
+	doEle.endPath();
+		self.doRoot.addChild( doEle );
+		doEle.dragEnabled = true;
+*/
 		// doBG.addFunction(Canvas.EVENT_MOUSE_DOWN,self.puts);
 		// 
 		// 

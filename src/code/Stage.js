@@ -10,13 +10,13 @@ function Stage(can, fr){
 	root.stage = this;
 	root.clearGraphics();
 	this.canvas = can;
-	this.tempCanvas = new Canvas(null,null,1,1,Canvas.STAGE_FIT_FIXED,true);
+	this.tempCanvas = new Canvas(null,null,51,51,Canvas.STAGE_FIT_FIXED,true);
 /*
 console.log(this.tempCanvas.canvas);
 document.body.appendChild(this.tempCanvas.canvas);
 this.tempCanvas.canvas.style.position="absolute";
 this.tempCanvas.canvas.style.left="0px";
-this.tempCanvas.canvas.style.top="0px";
+this.tempCanvas.canvas.style.top="200px";
 */
 	var frameRate = fr;
 	var time = 0;
@@ -103,8 +103,6 @@ this.tempCanvas.canvas.style.top="0px";
 		this.tempCanvas.clearAll();
 		context.transform(1,0,0,1,-pos.x,-pos.y);
 		return this.root.getIntersection(newPos,this.tempCanvas);
-			// this.canvas.clearAll();
-			// return this.root.getIntersection(pos,this.canvas);
 	}
 	// ------------------------- events
 	this.stageResized = function(o){

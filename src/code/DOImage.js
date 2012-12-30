@@ -39,8 +39,14 @@ function DOImage(img, options, parentDO){
 		self.graphics.push( Code.newArray(self.canvasDrawImage,[]) );
 	};
 	self.canvasDrawImage = function(){ // all internal params
+		if(self.pointRendering){
+			var context = self.canvas.getContext();
+			context.fillStyle = "#000";
+			context.fillRect(0,0,self.imageWidth,self.imageHeight);
+		}else{
 		if(self.imagePattern){
-			var context = self.stage.canvas.getContext();
+			var context = self.canvas.getContext();
+			//self.imagePattern = context.createPattern(self.image,'repeat');
 			/*
 			self.stage.canvas.setFill(self.imagePattern);
 			self.stage.canvas.beginPath();
@@ -70,9 +76,11 @@ function DOImage(img, options, parentDO){
 	//		self.imagePattern = context.createPattern(self.image,'repeat');
 			context.fillStyle = self.imagePattern;
     		context.fillRect(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
+//console.log(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
 		}else{
 			self.canvas.drawImage(self.image,self.imagePosX,self.imagePosY);//,self.imageWidth,self.imageHeight);
 		}
+	}
 	};
 // ------------------------------------------------------------------------------------------
 /*
