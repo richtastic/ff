@@ -3,10 +3,17 @@ Canvas.STAGE_FIT_FIXED = 0;
 Canvas.STAGE_FIT_FILL = 1;
 Canvas.STAGE_FIT_SCALE = 2;
 // CLASS VARIABLES
+// these propagate up/down the display/list
 Canvas.EVENT_MOUSE_DOWN = "canevtmdn";
 Canvas.EVENT_MOUSE_UP = "canevtmup";
 Canvas.EVENT_MOUSE_CLICK = "canevtclk";
 Canvas.EVENT_MOUSE_MOVE = "canevtmov";
+// these are only sent to DOs who have registered listeners
+Canvas.EVENT_MOUSE_DOWN_OUTSIDE = "canevtmdnout";
+Canvas.EVENT_MOUSE_UP_OUTSIDE = "canevtmupout";
+Canvas.EVENT_MOUSE_CLICK_OUTSIDE = "canevtclkout";
+Canvas.EVENT_MOUSE_MOVE_OUTSIDE = "canevtmovout";
+// 
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 //
 

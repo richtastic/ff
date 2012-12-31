@@ -205,6 +205,14 @@ function DO(parentDO){
 	self.dragEnabled = false;
 	self.dragging = false;
 	self.dragOffset = new V2D();
+	self.dragRoundingX = 0;
+	self.dragRoundingY = 0;
+	self.setDraggingEnabled = function(){
+		self.dragging = true;
+	};
+	self.setDraggingDisabled = function(){
+		self.dragging = false;
+	};
 	self.startDrag = function(pos){
 		pos = pos?pos:new V2D();
 		self.dragging = true;
@@ -226,16 +234,28 @@ function DO(parentDO){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 		}
 	};
+	self.dragMouseUpOutsideFxn = function(e){
+		console.log("self.dragMouseUpOutsideFxn");
+	};
 	self.mouseMoveDragCheckFxn = function(e){
 		if(self.dragging){
 			self.matrix.x = e.x - self.dragOffset.x;
 			self.matrix.y = e.y - self.dragOffset.y;
-			self.matrix.x = Math.min(Math.max(self.matrix.x,self.rangeLimitsX[0]),self.rangeLimitsX[1]);
-			self.matrix.y = Math.min(Math.max(self.matrix.y,self.rangeLimitsY[0]),self.rangeLimitsY[1]);
+			var x = Math.min(Math.max(self.matrix.x,self.rangeLimitsX[0]),self.rangeLimitsX[1]);
+			var y = Math.min(Math.max(self.matrix.y,self.rangeLimitsY[0]),self.rangeLimitsY[1]);
+			if(self.dragRoundingX>0){
+				x = self.dragRoundingX*Math.round(x/self.dragRoundingX);
+			}
+			if(self.dragRoundingY>0){
+				y = self.dragRoundingY*Math.round(y/self.dragRoundingY);
+			}
+			self.matrix.x = x;
+			self.matrix.y = y;
 		}
 	};
 	self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 	self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+	self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpOutsideFxn);
 	// ------------------------------------------------------------------ intersection
 	self.checkIntersectionChildren = true;
 	self.checkIntersectionSelf = true;

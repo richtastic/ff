@@ -84,7 +84,7 @@ function Spice(){
 	self.constructor = function(){
 		// CONSTRUCTOR
 		self.canvas = new Canvas(self.resource,null,600,300,Canvas.STAGE_FIT_FILL);
-		self.stage = new Stage(self.canvas, 1000/4);
+		self.stage = new Stage(self.canvas, 1000/18);
 		self.keyboard = new Keyboard();
 		self.resource.alertLoadCompleteEvents();
 		// 
@@ -117,7 +117,7 @@ function Spice(){
 		doBG.clearGraphics();
 		doBG.drawImage(0,0,2000,2000);
 		self.scroller.addChild( doBG );
-		doBG.dragEnabled = true;
+		doBG.setDragEnabled();
 		doBG.rangeLimitsX = [-100, 100];
 		doBG.rangeLimitsY = [-100, 100];
 		
@@ -128,7 +128,9 @@ function Spice(){
 		doEle.drawImage(0,0,100,100);
 		//self.scroller.addChild( doEle );
 		doBG.addChild( doEle );
-		doEle.dragEnabled = true;
+		doEle.dragRoundingX = 50;
+		doEle.dragRoundingY = 50;
+		doEle.setDragEnabled();
 
 		// library
 		self.library = new DO();
