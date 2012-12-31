@@ -117,7 +117,7 @@ function Spice(){
 		doBG.clearGraphics();
 		doBG.drawImage(0,0,2000,2000);
 		self.scroller.addChild( doBG );
-		doBG.setDragEnabled();
+		doBG.setDraggingEnabled();
 		doBG.rangeLimitsX = [-100, 100];
 		doBG.rangeLimitsY = [-100, 100];
 		
@@ -128,9 +128,7 @@ function Spice(){
 		doEle.drawImage(0,0,100,100);
 		//self.scroller.addChild( doEle );
 		doBG.addChild( doEle );
-		doEle.dragRoundingX = 50;
-		doEle.dragRoundingY = 50;
-		doEle.setDragEnabled();
+		doEle.setDraggingEnabled(50,50);
 
 		// library
 		self.library = new DO();

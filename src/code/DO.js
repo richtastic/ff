@@ -207,11 +207,13 @@ function DO(parentDO){
 	self.dragOffset = new V2D();
 	self.dragRoundingX = 0;
 	self.dragRoundingY = 0;
-	self.setDraggingEnabled = function(){
-		self.dragging = true;
+	self.setDraggingEnabled = function(rX,rY){
+		if(rX!==null && rX!==undefined && rX!==0){ self.dragRoundingX = rX; }else{ self.dragRoundingX = 0; }
+		if(rY!==null && rY!==undefined && rY!==0){ self.dragRoundingY = rY; }else{ self.dragRoundingY = 0; }
+		self.dragEnabled = true;
 	};
 	self.setDraggingDisabled = function(){
-		self.dragging = false;
+		self.dragEnabled = false;
 	};
 	self.startDrag = function(pos){
 		pos = pos?pos:new V2D();

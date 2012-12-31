@@ -146,6 +146,22 @@ this.tempCanvas.canvas.style.top="200px";
 		self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	};
+	this.canvasMouseDownOutside = function(pos){
+		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,pos);
+	};
+	this.canvasMouseUpOutside = function(e){
+		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP_OUTSIDE,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_UP_OUTSIDE,pos);
+	};
+	this.canvasMouseClickOutside = function(pos){
+		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,pos);
+	};
+	this.canvasMouseMoveOutside = function(pos){
+		//self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,new V2D(pos.x,pos.y));
+		self.alertAll(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,pos);
+	};
 	// self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
 // ------------------------------------------------------------------ constructor
 	this.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.stageResized);
@@ -153,6 +169,12 @@ this.tempCanvas.canvas.style.top="200px";
 	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP,this.canvasMouseUp);
 	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.canvasMouseClick);
 	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this.canvasMouseMove);
+	/*
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this.canvasMouseDownOutside);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this.canvasMouseUpOutside);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,this.canvasMouseClickOutside);
+	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this.canvasMouseMoveOutside);
+	*/
 }
 /*
 		var arr, obj, intersection = self.getIntersection(pos);
