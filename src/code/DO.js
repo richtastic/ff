@@ -9,6 +9,15 @@ DO.addToStageRecursive = function(ch){
 		}
 	}
 };
+DO.removedFromStageRecursive = function(ch){
+	for(i=0;i<ch.children.length;++i){
+		if(ch.children[i].stage != null){
+			ch.children[i].stage = null;
+			ch.children[i].removedFromStage(ch.stage);
+			self.removedFromStageRecursive(ch.children[i]);
+		}
+	}
+};
 
 function DO(parentDO){
 	var self = this;
@@ -23,22 +32,28 @@ function DO(parentDO){
 	self.canvas = null;
 	// FAST-POINT-RENDERING
 	self.pointRendering = false;
-	// Code.extendClass(self,Dispatchable); self.super.addFunction.call(self,str,fxn);
+	Code.extendClass(self,Dispatchable);
 // self-event registering and dispatching ---------------------------------------------------------------------------------
 	self.dispatch = new Dispatch();
 	self.addFunction = function(str,fxn){
-		console.log(self.stage);
+		self.super.addFunction.call(this,str,fxn);
 		if(self.stage){
 			self.stage.addFunctionDO(self,str,fxn);
 		}
-		self.dispatch.addFunction(str,fxn);
 	};
+	self.removeFunction = function(str,fxn){
+		self.super.removeFunction.call(this,str,fxn);
+		if(self.stage){
+			self.stage.removeFunctionDO(self,str,fxn);
+		}
+	};
+	/*
 	self.removeFunction = function(str,fxn){
 		self.dispatch.removeFunction(str,fxn);
 	};
 	self.alertAll = function(str,o){
 		self.dispatch.alertAll(str,o);
-	};
+	};*/
 // downward message propagation ---------------------------------------------------------------------------------
 	self.transformPoint = function(a,b){
 		self.matrix.multV2D(a,b); // a.x += self.x; a.y += self.y;
@@ -204,7 +219,9 @@ function DO(parentDO){
 	};
 	self.removeChild = function(ch){
 		ch.parent = null;
-		Code.removeElement(self.children,ch);
+		if( Code.removeElement(self.children,ch) ){
+			DO.removedFromStageRecursive(ch);
+		}
 	};
 	self.removeAllChildren = function(ch){
 		var i, len = self.children.length;
@@ -259,14 +276,15 @@ function DO(parentDO){
 		}
 	};
 	self.dragMouseUpFxn = function(e){
-		if(self.dragEnabled || self.dragging){
-			self.stopDrag();
+		if(self.dragEnabled && self.dragging){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
+			self.stopDrag();
 		}
-	};
+	};/*
 	self.dragMouseUpOutsideFxn = function(e){
 		console.log("self.dragMouseUpOutsideFxn");
-	};
+		self.dragMouseUpFxn(e);
+	};*/
 	self.mouseMoveDragCheckFxn = function(e){
 		if(self.dragging){
 			self.matrix.x = e.x - self.dragOffset.x;
@@ -286,12 +304,12 @@ function DO(parentDO){
 	self.addListeners = function(){
 		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpOutsideFxn);
+		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);//self.dragMouseUpOutsideFxn);
 	};
 	self.removeListeners = function(){
 		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpOutsideFxn);
+		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);//self.dragMouseUpOutsideFxn);
 	};
 	// ------------------------------------------------------------------ intersection
 	self.checkIntersectionChildren = true;

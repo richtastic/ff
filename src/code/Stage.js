@@ -24,12 +24,23 @@ self.tempCanvas.canvas.style.top="200px";
 	self.eventList = new Object(); // hash
 	self.addFunctionDO = function(obj,str,fxn){
 		//console.log("addFunctionDO");
-		/*for(e in self.eventList){
-			console.log(self.eventList[e]);
-		}*/
-		//console.log(str);
 		self.eventList[str].push([obj,fxn]);
 	};
+	self.removeFunctionDO = function(obj,str,fxn){
+		//console.log("removeFunctionDO");
+		var i, j, item, arr = self.eventList[str];
+		for(i=0;i<arr.length;++i){
+			item = arr[i];
+			if(item[0]==obj && item[1]==fxn){
+				//console.log("REMOVED");
+				if(arr.length>i){
+					arr[i] = arr[arr.length-1];
+				}
+				arr.pop();
+				break;
+			}
+		}
+	}
 	/*
 	self.dispatch = new Dispatch();
 	self.addFunction = function(str,fxn){
@@ -118,6 +129,25 @@ self.tempCanvas.canvas.style.top="200px";
 		var path, arr, obj, intersection = self.getIntersection(pos);
 		arr = new Array( intersection, pos );
 		path = new Array();
+		// OUTSIDE
+		var list = null;
+		if(evt==Canvas.EVENT_MOUSE_UP){
+			var list = self.eventList[Canvas.EVENT_MOUSE_UP_OUTSIDE];
+		}else if(evt==Canvas.EVENT_MOUSE_DOWN){
+			var list = self.eventList[Canvas.EVENT_MOUSE_DOWN_OUTSIDE];
+		}else if(evt==Canvas.EVENT_MOUSE_CLICK){
+			var list = self.eventList[Canvas.EVENT_MOUSE_CLICK_OUTSIDE];
+		}else if(evt==Canvas.EVENT_MOUSE_MOVE){
+			var list = self.eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
+		}
+		if(list){
+			for(var i=0;i<list.length;++i){
+				if(intersection!=list[i][0]){
+					list[i][1](pos);
+				}
+			}
+		}
+		// 
 		if(intersection){
 			obj = intersection;
 			while(obj){ // self to ancestors - create path
@@ -152,6 +182,7 @@ self.tempCanvas.canvas.style.top="200px";
 		self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	};
+	/*
 	self.canvasMouseDownOutside = function(pos){
 		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,pos);
@@ -168,6 +199,7 @@ self.tempCanvas.canvas.style.top="200px";
 		//self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,new V2D(pos.x,pos.y));
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,pos);
 	};
+	*/
 	// self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
 	//self.addListeners
 // ------------------------------------------------------------------ constructor

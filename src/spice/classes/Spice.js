@@ -104,7 +104,7 @@ function Spice(){
 		//self.doRoot.addChild( self.scroller );
 		//self.maskee = new DO();
 		//self.addChild(maskee);
-
+		
 		var img = self.resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
 		// SCROLLER
 		self.scroller = new DOScroll();
@@ -136,7 +136,6 @@ function Spice(){
 		// library
 		self.library = new DO();
 		self.doRoot.addChild( self.library );
-console.log("Z");
 		
 /*
 		var doEle = new DO();
