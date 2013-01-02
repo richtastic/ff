@@ -19,6 +19,7 @@ function DOImage(img, options, parentDO){
 		if(options.height){ self.imageHeight=options.height; }
 	}
 	self.addedToStage = function(stage){
+		self.super.addedToStage.call(self,stage);
 		self.checkPattern();
 	};
 	self.checkPattern = function(){
@@ -35,7 +36,7 @@ function DOImage(img, options, parentDO){
 		if(posY!==null){ self.imagePosX=posY; }
 		if(wid!==null){ self.imageWidth=wid; }
 		if(hei!==null){ self.imageHeight=hei; }
-		self.checkPattern();
+		//self.checkPattern();
 		self.graphics.push( Code.newArray(self.canvasDrawImage,[]) );
 	};
 	self.canvasDrawImage = function(){ // all internal params
@@ -46,6 +47,7 @@ function DOImage(img, options, parentDO){
 		}else{
 		if(self.imagePattern){
 			var context = self.canvas.getContext();
+
 			//self.imagePattern = context.createPattern(self.image,'repeat');
 			/*
 			self.stage.canvas.setFill(self.imagePattern);

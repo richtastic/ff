@@ -1,5 +1,15 @@
 // DO.js
 
+DO.addToStageRecursive = function(ch){
+	for(i=0;i<ch.children.length;++i){
+		if(ch.children[i].stage != ch.stage){
+			ch.children[i].stage = ch.stage;
+			ch.children[i].addedToStage(ch.stage);
+			self.addToStageRecursive(ch.children[i]);
+		}
+	}
+};
+
 function DO(parentDO){
 	var self = this;
 	self.stage = null;
@@ -17,6 +27,7 @@ function DO(parentDO){
 // self-event registering and dispatching ---------------------------------------------------------------------------------
 	self.dispatch = new Dispatch();
 	self.addFunction = function(str,fxn){
+		console.log(self.stage);
 		if(self.stage){
 			self.stage.addFunctionDO(self,str,fxn);
 		}
@@ -42,14 +53,10 @@ function DO(parentDO){
 		self.alertAll(evt,pos);
 	};
 	self.addedToStage = function(stage){
-		self.stage = stage;
-		console.log("ADDED TO STAGE");
-//		self.addListeners();
+		this.addListeners();
 	};
 	self.removedFromStage = function(stage){
-		self.stage = null;
-		console.log("REMOVED FROM STAGE");
-//		self.removeListeners();
+		this.removeListeners();
 	};
 // intersections ---------------------------------------------------------------------------------
 // could be separate function that uses visible-everything to guarantee 0-alpha is valid
@@ -191,8 +198,8 @@ function DO(parentDO){
 		ch.parent = self;
 		ch.stage = self.stage;
 		if( Code.addUnique(self.children,ch) ){
-// GO DOWN HIERARCHY LIST OF ChILDREN AND ADD TO STAGE
-			ch.addedToStage(self.stage);
+			ch.addedToStage(ch.stage);
+			DO.addToStageRecursive(ch);
 		}
 	};
 	self.removeChild = function(ch){
@@ -345,8 +352,8 @@ function DO(parentDO){
 	this.endPath();
 	*/
 // --------------
-self.addListeners();
-	console.log("ADD LISTENERS");
+	//self.addListeners();
+	//console.log("ADD LISTENERS");
 }
 
 
