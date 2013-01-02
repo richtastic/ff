@@ -42,8 +42,14 @@ function DO(parentDO){
 		self.alertAll(evt,pos);
 	};
 	self.addedToStage = function(stage){
+		self.stage = stage;
 		console.log("ADDED TO STAGE");
 //		self.addListeners();
+	};
+	self.removedFromStage = function(stage){
+		self.stage = null;
+		console.log("REMOVED FROM STAGE");
+//		self.removeListeners();
 	};
 // intersections ---------------------------------------------------------------------------------
 // could be separate function that uses visible-everything to guarantee 0-alpha is valid
@@ -177,20 +183,21 @@ function DO(parentDO){
 		for(i=0;i<len;++i){
 			fxn = arr[i][0];
 			args = arr[i][1];
-			fxn.apply(this,args);
+			fxn.apply(self,args);
 		}
 	};
 // Display List ----------------------------------------------------------------------------------------------------------------
 	self.addChild = function(ch){
-		ch.parent = this;
-		ch.stage = this.stage;
-		if( Code.addUnique(this.children,ch) ){
-			ch.addedToStage(this.stage);
+		ch.parent = self;
+		ch.stage = self.stage;
+		if( Code.addUnique(self.children,ch) ){
+// GO DOWN HIERARCHY LIST OF ChILDREN AND ADD TO STAGE
+			ch.addedToStage(self.stage);
 		}
 	};
 	self.removeChild = function(ch){
 		ch.parent = null;
-		Code.removeElement(this.children,ch);
+		Code.removeElement(self.children,ch);
 	};
 	self.removeAllChildren = function(ch){
 		var i, len = self.children.length;
@@ -203,14 +210,14 @@ function DO(parentDO){
 		Code.killArray(self.children);
 		self.matrix.kill();
 		self.parent = null;
-		Code.killMe(this);
+		Code.killMe(self);
 	}
 	// ------------------------------------------------------------------ stage passthrough
 	self.getCurrentMousePosition = function(){
-		return this.stage.getCurrentMousePosition();
+		return self.stage.getCurrentMousePosition();
 	}
 	self.globalPointToLocalPoint = function(pos){
-		return this.stage.globalPointToLocalPoint(this,pos);
+		return self.stage.globalPointToLocalPoint(self,pos);
 	}
 	// -------------------------------------------------------------------- dragging
 	// dragging
@@ -317,7 +324,7 @@ function DO(parentDO){
 		self.pointRendering = false;
 		return null;
 	}
-	this.getPixelRGBA = function(img, x,y){
+	self.getPixelRGBA = function(img, x,y){
 		if(x>=img.width || x<0 || y>=img.height || y<0){ return 0; }
 		var index = (y*img.width + x)*4, dat = img.data;
 		return Code.getColRGBA(dat[index],dat[index+1],dat[index+2],dat[index+3]);
