@@ -1,14 +1,13 @@
 // Dispatch.js
-Dispatch.EVENT_START = "evtsta";
-Dispatch.EVENT_STOP = "evtsto";
-Dispatch.EVENT_LOAD = "evtloa";
-Dispatch.EVENT_COMPLETE = "evtcmp";
+Dispatch.EVENT_START = "disevtsta";
+Dispatch.EVENT_STOP = "disevtsto";
+Dispatch.EVENT_LOAD = "disevtloa";
+Dispatch.EVENT_COMPLETE = "disevtcmp";
 // -----------------------------
 
 function Dispatch(){
 	var list;
 	list = new Array();
-	
 	this.showList = showList;
 	function showList(){
 		var key;

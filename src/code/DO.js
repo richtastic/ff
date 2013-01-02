@@ -3,20 +3,34 @@
 function DO(parentDO){
 	var self = this;
 	self.stage = null;
-	self.parent = null, self.children = new Array(); // 0 = back, length-1 = front
+	self.parent = null;
+	self.children = new Array(); // 0 = back, length-1 = front
 	self.mask = false;
-	self.width = 100, self.height = 100;
+	self.width = 100;
+	self.height = 100;
 	self.matrix = new Matrix2D();
 	self.parent = parentDO;
-	Code.extendClass(self,Dispatchable);
 	self.canvas = null;
 	// FAST-POINT-RENDERING
 	self.pointRendering = false;
-	//
+	// Code.extendClass(self,Dispatchable); self.super.addFunction.call(self,str,fxn);
+// self-event registering and dispatching ---------------------------------------------------------------------------------
+	self.dispatch = new Dispatch();
+	self.addFunction = function(str,fxn){
+		if(self.stage){
+			self.stage.addFunctionDO(self,str,fxn);
+		}
+		self.dispatch.addFunction(str,fxn);
+	};
+	self.removeFunction = function(str,fxn){
+		self.dispatch.removeFunction(str,fxn);
+	};
+	self.alertAll = function(str,o){
+		self.dispatch.alertAll(str,o);
+	};
 // downward message propagation ---------------------------------------------------------------------------------
 	self.transformPoint = function(a,b){
-		self.matrix.multV2D(a,b);
-		//a.x += self.x; a.y += self.y;
+		self.matrix.multV2D(a,b); // a.x += self.x; a.y += self.y;
 	};
 	self.transformEvent = function(evt,pos){ // self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
 		var i, len=self.children.length;
@@ -28,8 +42,8 @@ function DO(parentDO){
 		self.alertAll(evt,pos);
 	};
 	self.addedToStage = function(stage){
-		//console.log("ADDED TO STAGE");
-		//console.log(stage);
+		console.log("ADDED TO STAGE");
+//		self.addListeners();
 	};
 // intersections ---------------------------------------------------------------------------------
 // could be separate function that uses visible-everything to guarantee 0-alpha is valid
@@ -179,16 +193,16 @@ function DO(parentDO){
 		Code.removeElement(this.children,ch);
 	};
 	self.removeAllChildren = function(ch){
-		var i, len = this.children.length;
+		var i, len = self.children.length;
 		for(i=0;i<len;++i){
-			this.children[i].parent = null;
+			self.children[i].parent = null;
 		}
-		Code.emptyArray(this.children);
+		Code.emptyArray(self.children);
 	}
 	self.kill = function(ch){
-		Code.killArray(this.children);
-		this.matrix.kill();
-		this.parent = null;
+		Code.killArray(self.children);
+		self.matrix.kill();
+		self.parent = null;
 		Code.killMe(this);
 	}
 	// ------------------------------------------------------------------ stage passthrough
@@ -255,9 +269,16 @@ function DO(parentDO){
 			self.matrix.y = y;
 		}
 	};
-	self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
-	self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-	self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpOutsideFxn);
+	self.addListeners = function(){
+		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
+		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpOutsideFxn);
+	};
+	self.removeListeners = function(){
+		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
+		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpOutsideFxn);
+	};
 	// ------------------------------------------------------------------ intersection
 	self.checkIntersectionChildren = true;
 	self.checkIntersectionSelf = true;
@@ -317,8 +338,8 @@ function DO(parentDO){
 	this.endPath();
 	*/
 // --------------
-	//this.addFunction(Canvas.EVENT_MOUSE_DOWN,this.checkDrag);
-	//this.addFunction(Canvas.EVENT_MOUSE_MOVE,this.timerDrag);
+self.addListeners();
+	console.log("ADD LISTENERS");
 }
 
 

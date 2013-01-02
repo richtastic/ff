@@ -111,4 +111,9 @@ if(self.image){
 
 
 
-
+/*
+THINGS TO BE ABLE TO DO WITH DOIMAGE:
+use native size only
+use input width/height
+rotate 
+*/

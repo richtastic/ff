@@ -48,11 +48,11 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	context = canvas.getContext("2d");
 	self.canvas = canvas;
 	self.context = context;
-self.getImageData = function(a,b,c,d){
-	var context = self.getContext();
-	var imgData = context.getImageData(a,b,c,d);
-	return imgData;
-}
+	self.getImageData = function(a,b,c,d){
+		var context = self.getContext();
+		var imgData = context.getImageData(a,b,c,d);
+		return imgData;
+	};
 	// ------------------------------------------------------------
 	self.setClass = setClass;
 	function setClass(name){

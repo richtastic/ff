@@ -5,80 +5,86 @@ Stage.tempMatrix = new Matrix2D();
 
 function Stage(can, fr){
 	var self = this;
-	var root = new DO();
-	this.root = root;
-	root.stage = this;
-	root.clearGraphics();
-	this.canvas = can;
-	this.tempCanvas = new Canvas(null,null,51,51,Canvas.STAGE_FIT_FIXED,true);
+	self.root = new DO();
+	self.root.stage = this;
+	self.root.clearGraphics();
+	self.canvas = can;
+	var timer = new Ticker(fr);
+	self.time = 0;
+	self.tempCanvas = new Canvas(null,null,51,51,Canvas.STAGE_FIT_FIXED,true);
 /*
-console.log(this.tempCanvas.canvas);
-document.body.appendChild(this.tempCanvas.canvas);
-this.tempCanvas.canvas.style.position="absolute";
-this.tempCanvas.canvas.style.left="0px";
-this.tempCanvas.canvas.style.top="200px";
+console.log(self.tempCanvas.canvas);
+document.body.appendChild(self.tempCanvas.canvas);
+self.tempCanvas.canvas.style.position="absolute";
+self.tempCanvas.canvas.style.left="0px";
+self.tempCanvas.canvas.style.top="200px";
 */
-	var frameRate = fr;
-	var time = 0;
 	// dispatch -----------------------------------------------------------
 	Code.extendClass(this,Dispatchable);
+	self.eventList = new Object(); // hash
+	self.addFunctionDO = function(obj,str,fxn){
+		//console.log("addFunctionDO");
+		/*for(e in self.eventList){
+			console.log(self.eventList[e]);
+		}*/
+		//console.log(str);
+		self.eventList[str].push([obj,fxn]);
+	};
 	/*
-	this.dispatch = new Dispatch();
-	this.addFunction = function(str,fxn){
-		this.dispatch.addFunction(str,fxn);
+	self.dispatch = new Dispatch();
+	self.addFunction = function(str,fxn){
+		self.dispatch.addFunction(str,fxn);
 	}
-	this.removeFunction = function(str,fxn){
-		this.dispatch.removeFunction(str,fxn);
+	self.removeFunction = function(str,fxn){
+		self.dispatch.removeFunction(str,fxn);
 	}
-	this.alertAll = function(str,o){
-		this.dispatch.alertAll(str,o);
+	self.alertAll = function(str,o){
+		self.dispatch.alertAll(str,o);
 	}*/
 	// rendering -----------------------------------------------------------
-	var timer = new Ticker(frameRate);
-	timer.addFunction(Ticker.EVENT_TICK,enterFrame);
-	this.render = function(){
-		this.canvas.clearAll();
-		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,time);
-		root.render(this.canvas);
-		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,time);
-	}
-	this.enterFrame = enterFrame;
-	function enterFrame(e){
-		++time;
+	self.render = function(){
+		self.canvas.clearAll();
+		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,self.time);
+		self.root.render(self.canvas);
+		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,self.time);
+	};
+	self.enterFrame = function(e){
+		++self.time;
 		self.render();
-	}
-	this.start = start;
-	function start(){
-		//this.addListeners();
+	};
+	self.start = function(){
 		timer.start();
-	}
-	this.stop = stop;
-	function stop(){
+	};
+	self.stop = function(){
 		timer.stop();
+	};
+	self.addListeners = function(){
+		timer.addFunction(Ticker.EVENT_TICK,self.enterFrame);
+		self.canvas.addListeners();
+		self.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,self.stageResized);
+		self.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,self.canvasMouseDown);
+		self.canvas.addFunction(Canvas.EVENT_MOUSE_UP,self.canvasMouseUp);
+		self.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,self.canvasMouseClick);
+		self.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,self.canvasMouseMove);
 	}
-	this.addListeners = addListeners;
-	function addListeners(){
-		this.canvas.addListeners();
-	}
-	this.removeListeners = removeListeners;
-	function removeListeners(){
-		this.canvas.removeListeners();
+	self.removeListeners = function(){
+		self.canvas.removeListeners();
 	}
 	// Display List ---------------------- PASSTHROUGH
-	this.addChild = function(ch){
-		root.addChild(ch);
+	self.addChild = function(ch){
+		self.root.addChild(ch);
 	}
-	this.removeChild = function(ch){
-		root.removeChild(ch);
+	self.removeChild = function(ch){
+		self.root.removeChild(ch);
 	}
-	this.removeAllChilden = function(ch){
-		root.removeAllChilden(ch);
+	self.removeAllChilden = function(ch){
+		self.root.removeAllChilden(ch);
 	}
 	// ------------------------------------------ requests
-	this.getCurrentMousePosition = function(){
-		return this.canvas.mousePosition;
+	self.getCurrentMousePosition = function(){
+		return self.canvas.mousePosition;
 	}
-	this.globalPointToLocalPoint = function(obj, pos){
+	self.globalPointToLocalPoint = function(obj, pos){
 		var mat = Stage.tempMatrix;
 		var newPos = new V2D();
 		var arr = new Array();
@@ -97,18 +103,18 @@ this.tempCanvas.canvas.style.top="200px";
 		return newPos;
 	}
 	// ------------------------- events
-	this.getIntersection = function(pos){
-		var context = this.tempCanvas.getContext();
+	self.getIntersection = function(pos){
+		var context = self.tempCanvas.getContext();
 		var newPos = new V2D(0,0);
-		this.tempCanvas.clearAll();
+		self.tempCanvas.clearAll();
 		context.transform(1,0,0,1,-pos.x,-pos.y);
-		return this.root.getIntersection(newPos,this.tempCanvas);
+		return self.root.getIntersection(newPos,self.tempCanvas);
 	}
 	// ------------------------- events
-	this.stageResized = function(o){
-		root.width = o.x; root.height = o.y;
+	self.stageResized = function(o){
+		self.root.width = o.x; self.root.height = o.y;
 	}
-	this.canvasMouseEventPropagate = function(evt,pos){
+	self.canvasMouseEventPropagate = function(evt,pos){
 		var path, arr, obj, intersection = self.getIntersection(pos);
 		arr = new Array( intersection, pos );
 		path = new Array();
@@ -130,63 +136,45 @@ this.tempCanvas.canvas.style.top="200px";
 		}
 		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 	};
-	this.canvasMouseDown = function(pos){
+	self.canvasMouseDown = function(pos){
 		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 	};
-	this.canvasMouseUp = function(e){
+	self.canvasMouseUp = function(e){
 		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 	};
-	this.canvasMouseClick = function(pos){
+	self.canvasMouseClick = function(pos){
 		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 	};
-	this.canvasMouseMove = function(pos){ // reverse direction & no rendering = everyone gets is
+	self.canvasMouseMove = function(pos){ // reverse direction & no rendering = everyone gets is
 		self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	};
-	this.canvasMouseDownOutside = function(pos){
+	self.canvasMouseDownOutside = function(pos){
 		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,pos);
 	};
-	this.canvasMouseUpOutside = function(e){
+	self.canvasMouseUpOutside = function(e){
 		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP_OUTSIDE,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_UP_OUTSIDE,pos);
 	};
-	this.canvasMouseClickOutside = function(pos){
+	self.canvasMouseClickOutside = function(pos){
 		//self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,pos);
 	};
-	this.canvasMouseMoveOutside = function(pos){
+	self.canvasMouseMoveOutside = function(pos){
 		//self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,new V2D(pos.x,pos.y));
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,pos);
 	};
 	// self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
+	//self.addListeners
 // ------------------------------------------------------------------ constructor
-	this.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.stageResized);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,this.canvasMouseDown);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP,this.canvasMouseUp);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.canvasMouseClick);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this.canvasMouseMove);
-	/*
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this.canvasMouseDownOutside);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this.canvasMouseUpOutside);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,this.canvasMouseClickOutside);
-	this.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this.canvasMouseMoveOutside);
-	*/
+	var evts = [Canvas.EVENT_MOUSE_UP,Canvas.EVENT_MOUSE_DOWN,Canvas.EVENT_MOUSE_CLICK,Canvas.EVENT_MOUSE_MOVE,
+				Canvas.EVENT_MOUSE_UP_OUTSIDE,Canvas.EVENT_MOUSE_DOWN_OUTSIDE,Canvas.EVENT_MOUSE_CLICK_OUTSIDE,Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
+	for(e in evts){
+		self.eventList[evts[e]] = new Array();
+	}
+	self.addListeners();
 }
-/*
-		var arr, obj, intersection = self.getIntersection(pos);
-		arr = new Array( intersection, pos );
-		if(intersection){
-			obj = intersection;
-			while(obj){ // self to ancestors
-				obj.alertAll(Canvas.EVENT_MOUSE_CLICK,arr);
-				obj = obj.parent;
-			}
-		}
-		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined in events
-		*/
-
-

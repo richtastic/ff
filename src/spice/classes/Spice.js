@@ -88,14 +88,18 @@ function Spice(){
 		self.keyboard = new Keyboard();
 		self.resource.alertLoadCompleteEvents();
 		// 
+console.log("A");
 		self.doRoot = new DO();
 			self.doMenus = new DO();
 			self.doWindows = new WinManager();
 			self.doDraft = new DO();
+console.log("B");
 		self.stage.addChild(self.doRoot);
 			self.doRoot.addChild(self.doMenus);
 			self.doRoot.addChild(self.doWindows);
+console.log("C");
 			self.doRoot.addChild(self.doDraft);
+console.log("D");
 		// 
 		//self.doWindows.addWin( {} );
 		//self.doWindows.addWin( {} );
@@ -133,6 +137,7 @@ function Spice(){
 		// library
 		self.library = new DO();
 		self.doRoot.addChild( self.library );
+console.log("Z");
 		
 /*
 		var doEle = new DO();
