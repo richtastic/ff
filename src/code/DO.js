@@ -318,8 +318,15 @@ function DO(parentDO){
 //console.log(self.matrix.toString());
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
-				//console.log(" ::> "+diffX+","+diffY);
-				self.matrix.pretranslate(diffX,diffY); // this wont work for skewing?
+				// GRID ROUNDING
+				if(self.dragRoundingX>0){
+					diffX = self.dragRoundingX*Math.round(diffX/self.dragRoundingX);
+				}
+				if(self.dragRoundingY>0){
+					diffY = self.dragRoundingY*Math.round(diffY/self.dragRoundingY);
+				}
+				// LIMITS ?
+				self.matrix.pretranslate(diffX,diffY);
 				// 
 
 				//self.dragOffset.x = pos.x;
