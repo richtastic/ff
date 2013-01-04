@@ -19,12 +19,15 @@ function Matrix2D(){
 		this.mult(mat,this);
 		//this.mult(this,mat);
 	}
-		this.pretranslate = function(tx,ty){
-			//console.log("pre");
-			var mat = Matrix2D.temp;
-			mat.setParameters(1,0,0,1,tx,ty);
-			this.mult(this,mat);
-		}
+	this.pretranslate = function(tx,ty){
+		//console.log("pre");
+		var mat = Matrix2D.temp;
+		mat.setParameters(1,0,0,1,tx,ty);
+		this.mult(this,mat);
+	}
+
+// skewing by x, y
+
 	this.rotate = rotate;
 	function rotate(theta){
 		var mat = Matrix2D.temp;
@@ -55,8 +58,35 @@ function Matrix2D(){
 	this.copy = function(m){
 		this.setParameters(m.a,m.b,m.c,m.d,m.x,m.y);
 	}
-	this.inverse = function(m){
-		var det = this.a;
+	this.inverse = function(m){ // http://www.dr-lex.be/random/matrix_inv.html
+		var det = 1/(m.a*m.d - m.b*m.c);
+		var a = m.d*det;
+		var b = -m.b*det;
+		var x = (m.b*m.y-m.d*m.x)*det;
+		var c = -m.c*det;
+		var d = m.a*det;
+		var y = (m.c*m.x-m.a*m.y)*det;
+		this.a = a; this.b = b; this.c = c; this.d = d; this.x = x; this.y = y;
+/*
+a b x
+c d y
+e f g
+
+DET = a*(d*g-y*f) - c*(b*g-x*f) + e*(b*y-x*d)
+    = a*d - c*b
+A = g*d - y*f
+  = d
+B = f*x-g*b
+  = -b
+X = b*y-d*x
+  = ^
+C = e*y-g*c
+  = -c
+D = g*a-e*x
+  = a
+Y = c*x-a*y
+  = ^
+*/
 	}
 	this.multV2D = function(aV,bV){ // a = trans(b)
 		var ax = this.a*bV.x + this.b*bV.y + this.x;
@@ -67,6 +97,10 @@ function Matrix2D(){
 	this.getParameters = getParameters;
 	function getParameters(){
 		return new Array(this.a,this.b,this.c,this.d,this.x,this.y);
+	}
+	this.toString = toString;
+	function toString(){
+		return "[ "+this.a+" "+this.b+" "+this.x+" | "+this.c+" "+this.d+" "+this.y+" ]";
 	}
 	this.kill = kill;
 	function kill(){

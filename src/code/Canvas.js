@@ -167,6 +167,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	function canvasMouseDownFxn(e){
 		self.mouseDown = true;
 		pos = getMousePosition(e);
+//console.log("MOUSE ORIGIN POSITION: "+pos.x+","+pos.y);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 		pos = null;
 	}
@@ -192,6 +193,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		}
 		pos.x = e.pageX - pos.x;
 		pos.y = e.pageY - pos.y;
+//		pos.y = -pos.y; // flip y
 		return pos;
 	}
 	// ------------------ resource listeners

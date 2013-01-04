@@ -25,8 +25,6 @@ function DO(parentDO){
 	self.parent = null;
 	self.children = new Array(); // 0 = back, length-1 = front
 	self.mask = false;
-	self.width = 100;
-	self.height = 100;
 	self.matrix = new Matrix2D();
 	self.parent = parentDO;
 	self.canvas = null;
@@ -55,8 +53,14 @@ function DO(parentDO){
 		self.dispatch.alertAll(str,o);
 	};*/
 // downward message propagation ---------------------------------------------------------------------------------
+	self.inverseTransformPoint = function(a,b){
+		var inv = new Matrix2D();
+		inv.inverse(self.matrix);
+		inv.multV2D(a,b);
+		//self.matrix.multV2D(a,b);
+	};
 	self.transformPoint = function(a,b){
-		self.matrix.multV2D(a,b); // a.x += self.x; a.y += self.y;
+		self.matrix.multV2D(a,b);
 	};
 	self.transformEvent = function(evt,pos){ // self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
 		var i, len=self.children.length;
@@ -81,7 +85,20 @@ function DO(parentDO){
 		var context = canvas.getContext();
 		context.save();
 		var a = self.matrix.getParameters();
+		//context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
+		//context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
+		//context.transform(a[0],-a[2],-a[1],a[3],a[4],a[5]);
 		context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
+		//context.transform(a[0],a[2],a[1],a[3],a[4],a[5]); // a b c d x y => a b c d e f
+		/*
+		a b x
+		c d y
+		0 0 1
+		=>
+		a c e
+		b d f
+		0 0 1
+		*/
 		Code.emptyArray(a);
 	}
 	self.takedownRender = function(){
@@ -261,16 +278,24 @@ function DO(parentDO){
 		self.dragEnabled = false;
 	};
 	self.startDrag = function(pos){
+		if(!self.dragEnabled){ return; }
+		//console.log("START DRAG----------------------------------------------------");
+		//console.log(pos.x+","+pos.y);
+		// self.globalPointToLocalPoint
 		pos = pos?pos:new V2D();
 		self.dragging = true;
-		self.dragOffset.x = pos.x - 2*self.matrix.x;
-		self.dragOffset.y = pos.y - 2*self.matrix.y;
+//self.dragOffset.x = pos.x - 2*self.matrix.x;
+//self.dragOffset.y = pos.y - 2*self.matrix.y;
+		self.dragOffset.x = pos.x;
+		self.dragOffset.y = pos.y;
 	};
 	self.stopDrag = function(){
 		self.dragging = false;
 	};
 	self.dragMouseDownFxn = function(e){
 		if(e[0]==self && self.dragEnabled){
+			var pos = e[1];
+//			console.log("MOUSE DOWN: ::::::::::::::::::::::::::"+e[1].x+","+e[1].y);
 			self.startDrag(e[1]);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 		}
@@ -287,8 +312,23 @@ function DO(parentDO){
 	};*/
 	self.mouseMoveDragCheckFxn = function(e){
 		if(self.dragging){
-			self.matrix.x = e.x - self.dragOffset.x;
-			self.matrix.y = e.y - self.dragOffset.y;
+			if(e[0]==self){
+				var pos = e[1];
+//				console.log("MOUSE MOVE: ::::::::::::::::::::::::::"+pos.x+","+pos.y);
+//console.log(self.matrix.toString());
+				var diffX = pos.x - self.dragOffset.x;
+				var diffY = pos.y - self.dragOffset.y;
+				//console.log(" ::> "+diffX+","+diffY);
+				self.matrix.pretranslate(diffX,diffY); // this wont work for skewing?
+				// 
+
+				//self.dragOffset.x = pos.x;
+				//self.dragOffset.y = pos.y;
+			}
+			//self.matrix.translate
+/*
+//			self.matrix.x = e.x - self.dragOffset.x;
+//			self.matrix.y = e.y - self.dragOffset.y;
 			var x = Math.min(Math.max(self.matrix.x,self.rangeLimitsX[0]),self.rangeLimitsX[1]);
 			var y = Math.min(Math.max(self.matrix.y,self.rangeLimitsY[0]),self.rangeLimitsY[1]);
 			if(self.dragRoundingX>0){
@@ -297,8 +337,9 @@ function DO(parentDO){
 			if(self.dragRoundingY>0){
 				y = self.dragRoundingY*Math.round(y/self.dragRoundingY);
 			}
-			self.matrix.x = x;
-			self.matrix.y = y;
+//			self.matrix.x = x;
+//			self.matrix.y = y;
+*/
 		}
 	};
 	self.addListeners = function(){

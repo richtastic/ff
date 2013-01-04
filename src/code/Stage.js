@@ -157,7 +157,11 @@ self.tempCanvas.canvas.style.top="200px";
 			var newPos = new V2D(pos.x,pos.y);
 			while(path.length>0){// run path
 				obj = path.pop();
-				obj.transformPoint(newPos,newPos);
+				obj.inverseTransformPoint(newPos,newPos);
+if(evt==Canvas.EVENT_MOUSE_DOWN){
+	console.log("POSITION: "+newPos.x+","+newPos.y);
+	//console.log("  "+obj.matrix.toString());
+}
 				// var a = obj.matrix.getParameters(); console.log(newPos.x+","+newPos.y+" | "+a[0]+" "+a[1]+" "+a[2]+" | "+a[3]+" "+a[4]+" "+a[5]+" ");
 				var argPos = new V2D(newPos.x,newPos.y);
 				arr[1] = argPos;
@@ -178,8 +182,9 @@ self.tempCanvas.canvas.style.top="200px";
 		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 	};
-	self.canvasMouseMove = function(pos){ // reverse direction & no rendering = everyone gets is
-		self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
+	self.canvasMouseMove = function(pos){
+		//self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y)); // reverse direction & no rendering = everyone gets is
+		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	};
 	/*

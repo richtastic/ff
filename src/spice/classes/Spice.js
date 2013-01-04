@@ -128,10 +128,13 @@ function Spice(){
 		doEle.drawImage(0,0,100,100);
 		//self.scroller.addChild( doEle );
 		doBG.addChild( doEle );
-		doEle.setDraggingEnabled(50,50);
+		doEle.setDraggingEnabled(50,0);
 //doEle.matrix.translate(-50);
-//doEle.matrix.rotate(-Math.PI/2);
-//doEle.matrix.translate(50);
+//doEle.matrix.rotate(Math.PI/6);
+doEle.matrix.rotate(0*Math.PI/2);
+//doEle.matrix.scale(1,2);
+doEle.matrix.b += 0.5;
+doEle.matrix.translate(150,150);
 		
 		// library
 		self.library = new DO();
