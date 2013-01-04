@@ -45,6 +45,12 @@ function Matrix2D(){
 		this.mult(mat,this);
 		//this.mult(this,mat);
 	}
+	this.premult = function(m){
+		this.mult(this,m);
+	}
+	this.postmult = function(m){
+		this.mult(m,this);
+	}
 	this.mult = function(mA,mB){
 		var aA=mA.a,aB=mA.b,aC=mA.c,aD=mA.d,aX=mA.x,aY=mA.y;
 		var bA=mB.a,bB=mB.b,bC=mB.c,bD=mB.d,bX=mB.x,bY=mB.y;

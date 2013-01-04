@@ -279,13 +279,8 @@ function DO(parentDO){
 	};
 	self.startDrag = function(pos){
 		if(!self.dragEnabled){ return; }
-		//console.log("START DRAG----------------------------------------------------");
-		//console.log(pos.x+","+pos.y);
-		// self.globalPointToLocalPoint
 		pos = pos?pos:new V2D();
 		self.dragging = true;
-//self.dragOffset.x = pos.x - 2*self.matrix.x;
-//self.dragOffset.y = pos.y - 2*self.matrix.y;
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
 	};
@@ -295,14 +290,15 @@ function DO(parentDO){
 	self.dragMouseDownFxn = function(e){
 		if(e[0]==self && self.dragEnabled){
 			var pos = e[1];
-//			console.log("MOUSE DOWN: ::::::::::::::::::::::::::"+e[1].x+","+e[1].y);
 			self.startDrag(e[1]);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
+			self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 		}
 	};
 	self.dragMouseUpFxn = function(e){
 		if(self.dragEnabled && self.dragging){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
+			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 			self.stopDrag();
 		}
 	};/*
@@ -310,12 +306,13 @@ function DO(parentDO){
 		console.log("self.dragMouseUpOutsideFxn");
 		self.dragMouseUpFxn(e);
 	};*/
-	self.mouseMoveDragCheckFxn = function(e){
+	self.mouseMoveDragCheckFxnOutside = function(e){
+		self.mouseMoveDragCheckFxn(e,false);
+	}
+	self.mouseMoveDragCheckFxn = function(e,check){
 		if(self.dragging){
-			if(e[0]==self){
+			if(e[0]==self || !check){
 				var pos = e[1];
-//				console.log("MOUSE MOVE: ::::::::::::::::::::::::::"+pos.x+","+pos.y);
-//console.log(self.matrix.toString());
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
 				// GRID ROUNDING
@@ -327,8 +324,6 @@ function DO(parentDO){
 				}
 				// LIMITS ?
 				self.matrix.pretranslate(diffX,diffY);
-				// 
-
 				//self.dragOffset.x = pos.x;
 				//self.dragOffset.y = pos.y;
 			}

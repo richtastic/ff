@@ -141,9 +141,20 @@ self.tempCanvas.canvas.style.top="200px";
 			var list = self.eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
 		}
 		if(list){
+			var newPos, arr, mat = new Matrix2D();
 			for(var i=0;i<list.length;++i){
-				if(intersection!=list[i][0]){
-					list[i][1](pos);
+				var obj = list[i][0];
+				if(intersection!=obj){
+					newPos = new V2D(pos.x,pos.y);
+					mat.identity();
+					while(obj != null){
+						mat.postmult(obj.matrix);
+						obj = obj.parent;
+					}
+					mat.inverse(mat);
+					mat.multV2D(newPos,newPos);
+					arr = [intersection,newPos];
+					list[i][1](arr);
 				}
 			}
 		}
@@ -158,11 +169,6 @@ self.tempCanvas.canvas.style.top="200px";
 			while(path.length>0){// run path
 				obj = path.pop();
 				obj.inverseTransformPoint(newPos,newPos);
-if(evt==Canvas.EVENT_MOUSE_DOWN){
-	console.log("POSITION: "+newPos.x+","+newPos.y);
-	//console.log("  "+obj.matrix.toString());
-}
-				// var a = obj.matrix.getParameters(); console.log(newPos.x+","+newPos.y+" | "+a[0]+" "+a[1]+" "+a[2]+" | "+a[3]+" "+a[4]+" "+a[5]+" ");
 				var argPos = new V2D(newPos.x,newPos.y);
 				arr[1] = argPos;
 				obj.alertAll(evt,arr);
