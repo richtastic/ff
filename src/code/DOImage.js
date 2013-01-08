@@ -1,8 +1,15 @@
 // DOImage.js
-DOImage.RENDER_MODE_NORMAL = 0;
-DOImage.RENDER_MODE_REPEAT = 1;
-DOImage.RENDER_MODE_X = 2;
-DOImage.RENDER_MODE_X = 3;
+/*
+rendering:
+	- use native size - ** default
+	- use given size
+		- repeat to fill
+		- stretch to fill
+intersection:
+	- use rectangle
+	- use image alpha
+
+*/
 
 function DOImage(img, options, parentDO){
 	var self = this;
@@ -13,7 +20,6 @@ function DOImage(img, options, parentDO){
 	self.imageHeight = -1;
 	self.imagePosX = 0;
 	self.imagePosY = 0;
-	self.renderMode = DOImage.RENDER_MODE_NORMAL;
 	if(options){
 		if(options.width){ self.imageWidth=options.width; }
 		if(options.height){ self.imageHeight=options.height; }
@@ -45,69 +51,42 @@ function DOImage(img, options, parentDO){
 			context.fillStyle = "#000";
 			context.fillRect(0,0,self.imageWidth,self.imageHeight);
 		}else{
-		if(self.imagePattern){
-			var context = self.canvas.getContext();
-
-			//self.imagePattern = context.createPattern(self.image,'repeat');
-			/*
-			self.stage.canvas.setFill(self.imagePattern);
-			self.stage.canvas.beginPath();
-			self.stage.canvas.moveTo(self.imagePosX,self.imagePosY);
-			self.stage.canvas.lineTo(self.imagePosX+self.imageWidth,self.imagePosY);
-			self.stage.canvas.lineTo(self.imagePosX+self.imageWidth,self.imagePosY+self.imageHeight);
-			self.stage.canvas.lineTo(self.imagePosX,self.imagePosY+self.imageHeight);
-			self.stage.canvas.lineTo(self.imagePosX,self.imagePosY);
-			self.stage.canvas.strokeLine();
-			self.stage.canvas.endPath();
-			*/
-	/*
-	this.clearGraphics();
-	this.setFillRGBA(0x0000FF99);
-	this.drawRect(0,0,100,100);
-	this.setLine(1.0,0x00FF00);
-	this.beginPath();
-	this.moveTo(0,0);
-	this.lineTo(100,0);
-	this.lineTo(100,100);
-	this.lineTo(0,100);
-	this.lineTo(0,0);
-	this.strokeLine();
-	this.endPath();
-	*/	
-	
-	//		self.imagePattern = context.createPattern(self.image,'repeat');
-			context.fillStyle = self.imagePattern;
-    		context.fillRect(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
-//console.log(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
-		}else{
-			self.canvas.drawImage(self.image,self.imagePosX,self.imagePosY);//,self.imageWidth,self.imageHeight);
+			if(self.imagePattern){
+				var context = self.canvas.getContext();
+		//		self.imagePattern = context.createPattern(self.image,'repeat');
+				context.fillStyle = self.imagePattern;
+	    		context.fillRect(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
+			}else{
+				self.canvas.drawImage(self.image,self.imagePosX,self.imagePosY);//,self.imageWidth,self.imageHeight);
+			}
 		}
-	}
 	};
-// ------------------------------------------------------------------------------------------
-/*
-self.render = function(canvas){
-		self.super.setupRender.call(self,canvas);
-		
-		var context = this.canvas.getContext();
-		this.drawGraphics(canvas); // self render
-if(self.image){
-	context.drawImage(self.image, 0,0);//,200,200);
-}
-		if(this.mask){
-			context.clip();
-		}
-		var i, len = this.children.length;
-		for(i=0;i<len;++i){ // children render
-			this.children[i].render(canvas);
-		}
-		self.super.takedownRender.call(self,canvas);
-	}
-*/
+	self.declareRender = function(){
+		self.clearGraphics();
+		self.drawImage(0,0,self.imageWidth,self.imageHeight);
+	};
+	self.setWidth = function(wid){
+		self.imageWidth = wid;
+		self.declareRender();
+	};
+	self.setHeight = function(hei){
+		self.imageHeight = hei;
+		self.declareRender();
+	};
+	self.getWidth = function(){
+		return self.imageWidth;
+	};
+	self.getHeight = function(){
+		return self.imageHeight;
+	};
 	self.kill = function(){
 		self.image = null;
 		self.super.kill.call(self);
 	};
+	// constructor ------------------------------------------------------------------------------------------
+	self.imageWidth = self.image.width;
+	self.imageHeight = self.image.height;
+	self.declareRender();
 }
 
 

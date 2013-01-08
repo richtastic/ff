@@ -1,8 +1,89 @@
 // Win.js
+Win.WIN_BAR_LEFT = "bar_left";
+Win.WIN_BAR_CEN = "bar_cen";
+Win.WIN_BAR_RIGHT = "bar_right";
+Win.WIN_BODY_TOP_RIGHT = "body_top_right";
+Win.WIN_BODY_TOP_LEFT = "body_top_left";
+Win.WIN_BODY_TOP_CEN = "body_top_cen";
+Win.WIN_BODY_MID_RIGHT = "body_mid_right";
+Win.WIN_BODY_MID_LEFT = "body_mid_left";
+Win.WIN_BODY_MID_CEN = "body_mid_cen";
+Win.WIN_BODY_BOT_RIGHT = "body_bot_right";
+Win.WIN_BODY_BOT_LEFT = "body_bot_left";
+Win.WIN_BODY_BOT_CEN = "body_bot_cen";
 
 function Win(style){
 	var self = this;
 	Code.extendClass(this,DO,arguments);
+	self.style = {
+		bar_left:null, bar_mid:null, bar_right:null,
+		top_left:null, top_mid:null, top_right:null, 
+		cen_left:null, cen_mid:null, cen_right:null,
+		bot_left:null, bot_mid:null, bot_right:null,
+		font:"?",
+		title:"Title Here",
+		buttons:[]
+	};
+	self.updateStyle = function(style){
+		// 
+	};
+	// CONSTRUCTOR
+	self.style = {
+		bar_left:null, bar_mid:null, bar_right:null,
+		top_left:null, top_mid:null, top_right:null, 
+		cen_left:null, cen_mid:null, cen_right:null,
+		bot_left:null, bot_mid:null, bot_right:null,
+		font:"?",
+		title:"Title Here",
+		buttons:[]
+	};
+	self.do_bar_left = new DOImage( style[Win.WIN_BAR_LEFT] );
+	self.do_bar_cen = new DOImage( style[Win.WIN_BAR_CEN] );
+	self.do_bar_right = new DOImage( style[Win.WIN_BAR_RIGHT] );
+	self.do_body_top_left = new DOImage( style[Win.WIN_BODY_TOP_LEFT] );
+	self.do_body_top_cen = new DOImage( style[Win.WIN_BODY_TOP_CEN] );
+	self.do_body_top_right = new DOImage( style[Win.WIN_BODY_TOP_RIGHT] );
+	self.addChild(self.do_bar_left);
+	self.addChild(self.do_bar_cen);
+	self.addChild(self.do_bar_right);
+	self.addChild(self.do_body_top_left);
+	self.addChild(self.do_body_top_cen);
+	self.addChild(self.do_body_top_right);
+	// position info
+	var total_width = 200;
+	var total_height = 150;
+	var bar_cen_wid = total_width - self.do_bar_left.getWidth() - self.do_bar_right.getWidth();
+	var bar_height = Math.max(self.do_bar_left.getHeight(),self.do_bar_cen.getHeight(),self.do_bar_right.getHeight());
+	//
+	console.log(self.do_body_top_left.getWidth());
+	console.log(self.do_body_top_right.getWidth());
+	var top_cen_wid = total_width - self.do_body_top_left.getWidth() - self.do_body_top_right.getWidth();
+console.log(top_cen_wid);
+	var top_height = 0;
+	//
+	var cen_height = 0;
+	//
+	var bot_height = 0;
+	var posX = 0, posY = 0;
+	// position bar
+	self.do_bar_left.matrix.translate(posX,posY);
+	posX += self.do_bar_left.getWidth();
+	self.do_bar_cen.matrix.translate(posX,posY);
+	self.do_bar_cen.setWidth(bar_cen_wid);
+	posX += bar_cen_wid;
+	self.do_bar_right.matrix.translate(posX,posY);
+	// position body
+	posX = 0;
+	posY += bar_height;
+	self.do_body_top_left.matrix.translate(posX,posY);
+	posX += self.do_body_top_left.getWidth();
+	self.do_body_top_cen.matrix.translate(posX,posY);
+	self.do_body_top_cen.setWidth(top_cen_wid);
+	posX += top_cen_wid;
+	self.do_body_top_right.matrix.translate(posX,posY);
+	
+	//self.updateStyle(style);
+	/*
 	// dragging
 	self.dragging = false;
 	self.dragOffset = new V2D();
@@ -17,11 +98,9 @@ function Win(style){
 	};
 	// 
 	self.titleMouseDownFxn = function(e){
-		//console.log("MOsE DOWN: "+e[1].x+","+e[1].y);
 		self.startDrag(e[1]);
 	};
 	self.titleMouseUpFxn = function(e){
-		//console.log("MOsE UP:");
 		self.stopDrag();
 	};
 	self.mouseMoveDragCheckFxn = function(e){
@@ -71,6 +150,7 @@ function Win(style){
 	};
 	// CONSTRUCTOR
 	self.update(style);
+	*/
 }
 /*
 self.clearGraphics();

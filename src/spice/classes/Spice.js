@@ -90,14 +90,21 @@ function Spice(){
 		// 
 		self.doRoot = new DO();
 			self.doMenus = new DO();
-			self.doWindows = new WinManager();
 			self.doDraft = new DO();
+			self.doWindows = new WinManager();
 		self.stage.addChild(self.doRoot);
 			self.doRoot.addChild(self.doMenus);
-			self.doRoot.addChild(self.doWindows);
 			self.doRoot.addChild(self.doDraft);
+			self.doRoot.addChild(self.doWindows);
 		// 
-		//self.doWindows.addWin( {} );
+		var style = {};
+		style[Win.WIN_BAR_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_RED];
+		style[Win.WIN_BAR_CEN] = self.resource.tex[ResourceSpice.TEX_WIN_BAR_CEN_ACTIVE_RED];
+		style[Win.WIN_BAR_RIGHT] = self.resource.tex[ResourceSpice.TEX_WIN_BAR_RIGHT_ACTIVE_RED];
+		style[Win.WIN_BODY_TOP_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_TOP_LEFT_RED];
+		style[Win.WIN_BODY_TOP_CEN] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_TOP_CEN_RED];
+		style[Win.WIN_BODY_TOP_RIGHT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_TOP_RIGHT_RED];
+		self.doWindows.addWin( style );
 		//self.doWindows.addWin( {} );
 		//
 		//self.scroller = new DOScroll();
@@ -108,7 +115,7 @@ function Spice(){
 		var img = self.resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
 		// SCROLLER
 		self.scroller = new DOScroll();
-		self.doRoot.addChild( self.scroller );
+		self.doDraft.addChild( self.scroller );
 		self.scroller.dragEnabled = false;
 		
 		// CONTENT

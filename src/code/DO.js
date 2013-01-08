@@ -5,7 +5,7 @@ DO.addToStageRecursive = function(ch){
 		if(ch.children[i].stage != ch.stage){
 			ch.children[i].stage = ch.stage;
 			ch.children[i].addedToStage(ch.stage);
-			self.addToStageRecursive(ch.children[i]);
+			DO.addToStageRecursive(ch.children[i]);
 		}
 	}
 };
