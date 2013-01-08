@@ -43,27 +43,36 @@ function Win(style){
 	self.do_body_top_left = new DOImage( style[Win.WIN_BODY_TOP_LEFT] );
 	self.do_body_top_cen = new DOImage( style[Win.WIN_BODY_TOP_CEN] );
 	self.do_body_top_right = new DOImage( style[Win.WIN_BODY_TOP_RIGHT] );
+	self.do_body_mid_left = new DOImage( style[Win.WIN_BODY_MID_LEFT] );
+	self.do_body_mid_cen = new DOImage( style[Win.WIN_BODY_MID_CEN] );
+	self.do_body_mid_right = new DOImage( style[Win.WIN_BODY_MID_RIGHT] );
+	self.do_body_bot_left = new DOImage( style[Win.WIN_BODY_BOT_LEFT] );
+	self.do_body_bot_cen = new DOImage( style[Win.WIN_BODY_BOT_CEN] );
+	self.do_body_bot_right = new DOImage( style[Win.WIN_BODY_BOT_RIGHT] );
 	self.addChild(self.do_bar_left);
 	self.addChild(self.do_bar_cen);
 	self.addChild(self.do_bar_right);
 	self.addChild(self.do_body_top_left);
 	self.addChild(self.do_body_top_cen);
 	self.addChild(self.do_body_top_right);
+	self.addChild(self.do_body_mid_left);
+	self.addChild(self.do_body_mid_cen);
+	self.addChild(self.do_body_mid_right);
+	self.addChild(self.do_body_bot_left);
+	self.addChild(self.do_body_bot_cen);
+	self.addChild(self.do_body_bot_right);
 	// position info
 	var total_width = 200;
 	var total_height = 150;
 	var bar_cen_wid = total_width - self.do_bar_left.getWidth() - self.do_bar_right.getWidth();
 	var bar_height = Math.max(self.do_bar_left.getHeight(),self.do_bar_cen.getHeight(),self.do_bar_right.getHeight());
-	//
-	console.log(self.do_body_top_left.getWidth());
-	console.log(self.do_body_top_right.getWidth());
 	var top_cen_wid = total_width - self.do_body_top_left.getWidth() - self.do_body_top_right.getWidth();
-console.log(top_cen_wid);
-	var top_height = 0;
-	//
-	var cen_height = 0;
-	//
-	var bot_height = 0;
+	var mid_cen_wid = total_width - self.do_body_mid_left.getWidth() - self.do_body_mid_right.getWidth();
+	var bot_cen_wid = total_width - self.do_body_bot_left.getWidth() - self.do_body_bot_right.getWidth();
+	var top_height = Math.max(self.do_body_top_left.getHeight(),self.do_body_top_cen.getHeight(),self.do_body_top_right.getHeight());
+	var mid_height = Math.max(self.do_body_mid_left.getHeight(),self.do_body_mid_cen.getHeight(),self.do_body_mid_right.getHeight());
+	var bot_height = Math.max(self.do_body_bot_left.getHeight(),self.do_body_bot_cen.getHeight(),self.do_body_bot_right.getHeight());
+mid_height = total_height - bar_height - top_height - bot_height;
 	var posX = 0, posY = 0;
 	// position bar
 	self.do_bar_left.matrix.translate(posX,posY);
@@ -72,7 +81,7 @@ console.log(top_cen_wid);
 	self.do_bar_cen.setWidth(bar_cen_wid);
 	posX += bar_cen_wid;
 	self.do_bar_right.matrix.translate(posX,posY);
-	// position body
+	// position body top
 	posX = 0;
 	posY += bar_height;
 	self.do_body_top_left.matrix.translate(posX,posY);
@@ -81,7 +90,28 @@ console.log(top_cen_wid);
 	self.do_body_top_cen.setWidth(top_cen_wid);
 	posX += top_cen_wid;
 	self.do_body_top_right.matrix.translate(posX,posY);
-	
+	// position body mid
+	posX = 0;
+	posY += top_height;
+	self.do_body_mid_left.matrix.translate(posX,posY);
+	self.do_body_mid_left.setHeight(mid_height);
+	posX += self.do_body_top_left.getWidth();
+	self.do_body_mid_cen.matrix.translate(posX,posY);
+	self.do_body_mid_cen.setWidth(mid_cen_wid);
+	self.do_body_mid_cen.setHeight(mid_height);
+	posX += mid_cen_wid;
+	self.do_body_mid_right.matrix.translate(posX,posY);
+	self.do_body_mid_right.setHeight(mid_height);
+	// position body bot
+	posX = 0;
+	posY += mid_height;
+	self.do_body_bot_left.matrix.translate(posX,posY);
+	posX += self.do_body_top_left.getWidth();
+	self.do_body_bot_cen.matrix.translate(posX,posY);
+	self.do_body_bot_cen.setWidth(bot_cen_wid);
+	posX += bot_cen_wid;
+	self.do_body_bot_right.matrix.translate(posX,posY);
+	// 
 	//self.updateStyle(style);
 	/*
 	// dragging

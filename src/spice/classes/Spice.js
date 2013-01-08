@@ -104,6 +104,12 @@ function Spice(){
 		style[Win.WIN_BODY_TOP_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_TOP_LEFT_RED];
 		style[Win.WIN_BODY_TOP_CEN] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_TOP_CEN_RED];
 		style[Win.WIN_BODY_TOP_RIGHT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_TOP_RIGHT_RED];
+		style[Win.WIN_BODY_MID_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_MID_LEFT_RED];
+		style[Win.WIN_BODY_MID_CEN] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_MID_CEN_RED];
+		style[Win.WIN_BODY_MID_RIGHT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_MID_RIGHT_RED];
+		style[Win.WIN_BODY_BOT_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_BOT_LEFT_RED];
+		style[Win.WIN_BODY_BOT_CEN] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_BOT_CEN_RED];
+		style[Win.WIN_BODY_BOT_RIGHT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED];
 		self.doWindows.addWin( style );
 		//self.doWindows.addWin( {} );
 		//
