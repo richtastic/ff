@@ -1,13 +1,14 @@
 // DO.js
 DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
 DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
+DO.EVENT_DRAGGED = "do.evtdragged";
 
-DO.addToStageRecursive = function(ch){
+DO.addToStageRecursive = function(ch,stage){
+	ch.stage = stage;
+	ch.addedToStage(stage);
 	for(i=0;i<ch.children.length;++i){
-		if(ch.children[i].stage != ch.stage){
-			ch.children[i].stage = ch.stage;
-			ch.children[i].addedToStage(ch.stage);
-			DO.addToStageRecursive(ch.children[i]);
+		if(ch.children[i].stage != stage){
+			DO.addToStageRecursive(ch.children[i],stage);
 		}
 	}
 };
@@ -36,9 +37,12 @@ function DO(parentDO){
 // self-event registering and dispatching ---------------------------------------------------------------------------------
 	self.dispatch = new Dispatch();
 	self.addFunction = function(str,fxn){
+		//console.log("self.addFunction");
 		self.super.addFunction.call(this,str,fxn);
 		if(self.stage){
 			self.stage.addFunctionDO(self,str,fxn);
+		}else{
+		//	console.log("NO STAGE");
 		}
 	};
 	self.removeFunction = function(str,fxn){
@@ -59,7 +63,6 @@ function DO(parentDO){
 		var inv = new Matrix2D();
 		inv.inverse(self.matrix);
 		inv.multV2D(a,b);
-		//self.matrix.multV2D(a,b);
 	};
 	self.transformPoint = function(a,b){
 		self.matrix.multV2D(a,b);
@@ -243,9 +246,8 @@ function DO(parentDO){
 	self.addChild = function(ch){
 		ch.parent = self;
 		ch.stage = self.stage;
-		if( Code.addUnique(self.children,ch) ){
-			ch.addedToStage(ch.stage);
-			DO.addToStageRecursive(ch);
+		if( Code.addUnique(self.children,ch) ){//self.stage!=null ){
+			DO.addToStageRecursive(ch,self.stage);
 		}
 	};
 	self.removeChild = function(ch){
@@ -299,23 +301,28 @@ function DO(parentDO){
 	};
 	self.startDrag = function(pos){
 		if(!self.dragEnabled){ return; }
+		console.log("START");
 		pos = pos?pos:new V2D();
 		self.dragging = true;
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
 	};
 	self.stopDrag = function(){
+		console.log("STOP");
 		self.dragging = false;
 	};
 	self.dragMouseDownFxn = function(e){
+		console.log("DOWN");
 		if(e[0]==self && self.dragEnabled){
 			var pos = e[1];
 			self.startDrag(e[1]);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
+			console.log("ADD EVENT MOUSE DOWN OUTSIDE");
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 		}
 	};
 	self.dragMouseUpFxn = function(e){
+		console.log("UP");
 		if(self.dragEnabled && self.dragging){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
@@ -323,6 +330,7 @@ function DO(parentDO){
 		}
 	};
 	self.mouseMoveDragCheckFxnOutside = function(e){
+		console.log("OUTSIDE");
 		self.mouseMoveDragCheckFxn(e,false);
 	}
 	self.mouseMoveDragCheckFxn = function(e,check){
@@ -339,7 +347,10 @@ function DO(parentDO){
 					diffY = self.dragRoundingY*Math.round(diffY/self.dragRoundingY);
 				}
 				// LIMITS ?
-				self.matrix.pretranslate(diffX,diffY);
+				//if(diffX!=0 && diffY!=0){
+					self.matrix.pretranslate(diffX,diffY);
+					self.alertAll(DO.EVENT_DRAGGED,self);
+				//}
 				//self.dragOffset.x = pos.x;
 				//self.dragOffset.y = pos.y;
 			}

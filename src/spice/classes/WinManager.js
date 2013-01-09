@@ -14,6 +14,5 @@ function WinManager(){
 		Code.copyProperties(style,WinManager.DEFAULT_WINDOW_STYLE);
 		var win = new Win(style);
 		self.addChild(win);
-		////this.win = new Win();
 	};
 }

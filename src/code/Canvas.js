@@ -32,6 +32,8 @@ Canvas.EVENT_MOUSE_MOVE_OUTSIDE = "canevtmovout";
 // 
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 //
+Canvas.IMAGE_TYPE_PNG = "png";
+Canvas.IMAGE_TYPE_JPG = "jpg";
 
 function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
 	var self = this;
@@ -69,6 +71,9 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		var imgData = context.getImageData(a,b,c,d);
 		return imgData;
 	};
+	self.toDataURL = function(){
+		return self.canvas.toDataURL.call(self.canvas,arguments);
+	}
 	// ------------------------------------------------------------
 	self.setClass = setClass;
 	function setClass(name){
@@ -175,6 +180,16 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	self.getHeight = function(){
 		return self.canvas.height;
 	}
+	self.setWidth = function(wid){
+		self.canvas.width = wid;
+	};
+	self.setHeight = function(hei){
+		self.canvas.height = hei;
+	};
+	self.setSize = function(wid,hei){
+		self.canvas.width = wid;
+		self.canvas.height = hei;
+	};
 	// LISTENERS ----------------------------------------------------------
 	self.addListeners = addListeners;
 	function addListeners(){

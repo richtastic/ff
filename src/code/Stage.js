@@ -11,7 +11,14 @@ function Stage(can, fr){
 	self.canvas = can;
 	var timer = new Ticker(fr);
 	self.time = 0;
-	self.tempCanvas = new Canvas(null,null,51,51,Canvas.STAGE_FIT_FIXED,true);
+	self.tempCanvas = new Canvas(null,null,1,1,Canvas.STAGE_FIT_FIXED,true);
+	self.renderCanvas = new Canvas(null,null,100,100,Canvas.STAGE_FIT_FIXED,true);
+/*
+document.body.appendChild(self.renderCanvas.canvas);
+self.renderCanvas.canvas.style.position="absolute";
+self.renderCanvas.canvas.style.left="0px";
+self.renderCanvas.canvas.style.top="100px";
+/*
 /*
 console.log(self.tempCanvas.canvas);
 document.body.appendChild(self.tempCanvas.canvas);
@@ -19,12 +26,29 @@ self.tempCanvas.canvas.style.position="absolute";
 self.tempCanvas.canvas.style.left="0px";
 self.tempCanvas.canvas.style.top="200px";
 */
+	self.renderImage = function(wid,hei,obj, matrix, type){
+		self.renderCanvas.clearAll();
+		self.renderCanvas.setSize(wid,hei);
+		obj.render(self.renderCanvas);
+		var img;
+		if(type==null||type==Canvas.IMAGE_TYPE_PNG){
+  			img = self.renderCanvas.toDataURL();
+  		}else{
+  			img = self.renderCanvas.toDataURL('image/jpeg');
+  		}
+  		return img;
+	};
 	// dispatch -----------------------------------------------------------
 	Code.extendClass(this,Dispatchable);
 	self.eventList = new Object(); // hash
 	self.addFunctionDO = function(obj,str,fxn){
-		//console.log("addFunctionDO");
-		self.eventList[str].push([obj,fxn]);
+		console.log("ADD FUNCTION DO - "+str);
+		if(true){//self.eventList[str]!=null){
+			self.eventList[str].push([obj,fxn]);
+		}else{
+			console.log("NULL: "+str);
+			//Canvas.EVENT_MOUSE_MOVE_OUTSIDE
+		}
 	};
 	self.removeFunctionDO = function(obj,str,fxn){
 		//console.log("removeFunctionDO");
