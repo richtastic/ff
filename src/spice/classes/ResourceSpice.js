@@ -18,6 +18,12 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_WIN_BODY_BOT_LEFT_RED = 14;
 	ResourceSpice.TEX_WIN_BODY_BOT_CEN_RED = 15;
 	ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED = 16;
+	ResourceSpice.TEX_WIN_ICON_CLOSE_ACTIVE_RED = 17;
+	ResourceSpice.TEX_WIN_ICON_CLOSE_INACTIVE_RED = 18;
+	ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED = 19;
+	ResourceSpice.TEX_WIN_ICON_MIN_INACTIVE_RED = 20;
+	ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED = 21;
+	ResourceSpice.TEX_WIN_ICON_MAX_INACTIVE_RED = 22;
 ResourceSpice.TEX_X = 0;
 // MAPS ---------------------------------------
 ResourceSpice.MAP_X = 0;
@@ -53,6 +59,13 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_WIN_BODY_BOT_LEFT_RED] = "window/win_body_bot_left.png";
 	tex[ResourceSpice.TEX_WIN_BODY_BOT_CEN_RED] = "window/win_body_bot_cen.png";
 	tex[ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED] = "window/win_body_bot_right.png";
+	tex[ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED] = "window/win_body_bot_right.png";
+	tex[ResourceSpice.TEX_WIN_ICON_CLOSE_ACTIVE_RED] = "window/win_button_close_active.png";
+	tex[ResourceSpice.TEX_WIN_ICON_CLOSE_INACTIVE_RED] = "window/win_button_close_inactive.png";
+	tex[ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED] = "window/win_button_min_active.png";
+	tex[ResourceSpice.TEX_WIN_ICON_MIN_INACTIVE_RED] = "window/win_button_min_inactive.png";
+	tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED] = "window/win_button_max_active.png";
+	tex[ResourceSpice.TEX_WIN_ICON_MAX_INACTIVE_RED] = "window/win_button_max_inactive.png";
 	self.imgLoader.setLoadList( texdir, tex, self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
 }

@@ -211,6 +211,9 @@ self.tempCanvas.canvas.style.top="200px";
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,pos);
 	};
 	*/
+	self.setCursorStyle = function(style){
+		self.canvas.setCursorStyle(style);
+	};
 	// self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
 	//self.addListeners
 // ------------------------------------------------------------------ constructor

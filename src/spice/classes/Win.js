@@ -1,5 +1,5 @@
 // Win.js
-Win.WIN_BAR_LEFT = "bar_left";
+Win.WIN_BAR_br = "bar_tr";
 Win.WIN_BAR_CEN = "bar_cen";
 Win.WIN_BAR_RIGHT = "bar_right";
 Win.WIN_BODY_TOP_RIGHT = "body_top_right";
@@ -11,6 +11,7 @@ Win.WIN_BODY_MID_CEN = "body_mid_cen";
 Win.WIN_BODY_BOT_RIGHT = "body_bot_right";
 Win.WIN_BODY_BOT_LEFT = "body_bot_left";
 Win.WIN_BODY_BOT_CEN = "body_bot_cen";
+Win.WIN_ICON_LIST = "icon_list";
 
 function Win(style){
 	var self = this;
@@ -27,6 +28,25 @@ function Win(style){
 	self.updateStyle = function(style){
 		// 
 	};
+	// WINDOW INTERACTION
+	self.handle_mouse_down_bar_fxn = function(e){
+		console.log("self.handle_mouse_down_bar_fxn");
+		console.log(e);
+		self.stage.setCursorStyle(Canvas.CURSOR_STYLE_LEFT);
+		self.stage.setCursorStyle(Canvas.CURSOR_STYLE_GRAB);
+		//self.stage.setCursorStyle("url(http://0.tqn.com/d/webdesign/1/0/5/I/1/cursor_pointer.gif)");
+		//self.stage.setCursorStyle("url(http://www.w3schools.com/cssref/smiley.gif)");
+	};
+	self.handle_mouse_up_bar_fxn = function(e){
+		console.log("self.handle_mouse_up_bar_fxn");
+		console.log(e);
+		self.stage.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
+	};
+	self.handle_mouse_up_outside_bar_fxn = function(e){
+		console.log("self.handle_mouse_up_outside_bar_fxn");
+		console.log(e);
+		self.stage.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
+	};
 	// CONSTRUCTOR
 	self.style = {
 		bar_left:null, bar_mid:null, bar_right:null,
@@ -37,6 +57,8 @@ function Win(style){
 		title:"Title Here",
 		buttons:[]
 	};
+	var posX = 0, posY = 0;
+	// window graphics
 	self.do_bar_left = new DOImage( style[Win.WIN_BAR_LEFT] );
 	self.do_bar_cen = new DOImage( style[Win.WIN_BAR_CEN] );
 	self.do_bar_right = new DOImage( style[Win.WIN_BAR_RIGHT] );
@@ -61,19 +83,65 @@ function Win(style){
 	self.addChild(self.do_body_bot_left);
 	self.addChild(self.do_body_bot_cen);
 	self.addChild(self.do_body_bot_right);
-	// position info
+	// window icons
+	self.button_icon_list = new Array();
+	var button_start_x = 4, button_start_y = 4, button_spacing_x = 22;
+	var img, i;
+	var arr = style[Win.WIN_ICON_LIST];
+	var len = arr.length;
+	posX = button_start_x;
+	posY = button_start_y;
+	for(i=0;i<len;++i){
+		img = new DOImage(arr[i]);
+		img.matrix.translate(posX,posY);
+		self.button_icon_list.push(img);
+		self.addChild(img);
+		posX += button_spacing_x;
+	}
+	// given size info
 	var total_width = 200;
 	var total_height = 150;
+	// window handles
+	self.do_drag_bar = new DO();
+	self.do_stretch_left = new DO();
+	self.do_stretch_right = new DO();
+	self.do_stretch_top = new DO();
+	self.do_stretch_bot = new DO();
+	self.do_stretch_tl = new DO();
+	self.do_stretch_tr = new DO();
+	self.do_stretch_bl = new DO();
+	self.do_stretch_br = new DO();
+	self.addChild(self.do_drag_bar);
+	self.addChild(self.do_stretch_left);
+	self.addChild(self.do_stretch_right);
+	self.addChild(self.do_stretch_top);
+	self.addChild(self.do_stretch_bot);
+	self.addChild(self.do_stretch_tl);
+	self.addChild(self.do_stretch_tr);
+	self.addChild(self.do_stretch_bl);
+	self.addChild(self.do_stretch_br);
+	self.do_drag_bar.setRenderingOff();
+	self.do_stretch_left.setRenderingOff();
+	self.do_stretch_right.setRenderingOff();
+	self.do_stretch_top.setRenderingOff();
+	self.do_stretch_bot.setRenderingOff();
+	self.do_stretch_tl.setRenderingOff();
+	self.do_stretch_tr.setRenderingOff();
+	self.do_stretch_bl.setRenderingOff();
+	self.do_stretch_br.setRenderingOff();
+	// position info
 	var bar_cen_wid = total_width - self.do_bar_left.getWidth() - self.do_bar_right.getWidth();
 	var bar_height = Math.max(self.do_bar_left.getHeight(),self.do_bar_cen.getHeight(),self.do_bar_right.getHeight());
+console.log(bar_height);
 	var top_cen_wid = total_width - self.do_body_top_left.getWidth() - self.do_body_top_right.getWidth();
 	var mid_cen_wid = total_width - self.do_body_mid_left.getWidth() - self.do_body_mid_right.getWidth();
 	var bot_cen_wid = total_width - self.do_body_bot_left.getWidth() - self.do_body_bot_right.getWidth();
 	var top_height = Math.max(self.do_body_top_left.getHeight(),self.do_body_top_cen.getHeight(),self.do_body_top_right.getHeight());
-	var mid_height = Math.max(self.do_body_mid_left.getHeight(),self.do_body_mid_cen.getHeight(),self.do_body_mid_right.getHeight());
+	//var mid_height = Math.max(self.do_body_mid_left.getHeight(),self.do_body_mid_cen.getHeight(),self.do_body_mid_right.getHeight());
 	var bot_height = Math.max(self.do_body_bot_left.getHeight(),self.do_body_bot_cen.getHeight(),self.do_body_bot_right.getHeight());
-mid_height = total_height - bar_height - top_height - bot_height;
-	var posX = 0, posY = 0;
+	var mid_height = total_height - bar_height - top_height - bot_height;
+	posX = 0;
+	posY = 0;
 	// position bar
 	self.do_bar_left.matrix.translate(posX,posY);
 	posX += self.do_bar_left.getWidth();
@@ -111,7 +179,100 @@ mid_height = total_height - bar_height - top_height - bot_height;
 	self.do_body_bot_cen.setWidth(bot_cen_wid);
 	posX += bot_cen_wid;
 	self.do_body_bot_right.matrix.translate(posX,posY);
-	// 
+	// size handles
+	self.do_drag_bar.clearGraphics();
+	self.do_drag_bar.setFillRGBA(0x00FF0099);
+	self.do_drag_bar.beginPath();
+	self.do_drag_bar.moveTo(0,0);
+	self.do_drag_bar.lineTo(total_width,0);
+	self.do_drag_bar.lineTo(total_width,bar_height);
+	self.do_drag_bar.lineTo(0,bar_height);
+	self.do_drag_bar.lineTo(0,0);
+	self.do_drag_bar.fill();
+	//
+	var handle_stretch_size = 5;
+	var bot_stretch_start = total_height-handle_stretch_size;
+	var right_stretch_start = total_width-handle_stretch_size;
+	self.do_stretch_left.clearGraphics();
+	self.do_stretch_left.setFillRGBA(0xFF000099);
+	self.do_stretch_left.beginPath();
+	self.do_stretch_left.moveTo(0,handle_stretch_size);
+	self.do_stretch_left.lineTo(handle_stretch_size,handle_stretch_size);
+	self.do_stretch_left.lineTo(handle_stretch_size,bot_stretch_start);
+	self.do_stretch_left.lineTo(0,bot_stretch_start);
+	self.do_stretch_left.lineTo(0,handle_stretch_size);
+	self.do_stretch_left.fill();
+	self.do_stretch_right.clearGraphics();
+	self.do_stretch_right.setFillRGBA(0xFF000099);
+	self.do_stretch_right.beginPath();
+	self.do_stretch_right.moveTo(right_stretch_start,handle_stretch_size);
+	self.do_stretch_right.lineTo(total_width,handle_stretch_size);
+	self.do_stretch_right.lineTo(total_width,bot_stretch_start);
+	self.do_stretch_right.lineTo(right_stretch_start,bot_stretch_start);
+	self.do_stretch_right.lineTo(right_stretch_start,handle_stretch_size);
+	self.do_stretch_right.fill();
+	self.do_stretch_top.clearGraphics();
+	self.do_stretch_top.setFillRGBA(0xFF000099);
+	self.do_stretch_top.beginPath();
+	self.do_stretch_top.moveTo(handle_stretch_size,0);
+	self.do_stretch_top.lineTo(right_stretch_start,0);
+	self.do_stretch_top.lineTo(right_stretch_start,handle_stretch_size);
+	self.do_stretch_top.lineTo(handle_stretch_size,handle_stretch_size);
+	self.do_stretch_top.lineTo(handle_stretch_size,0);
+	self.do_stretch_top.fill();
+	self.do_stretch_bot.clearGraphics();
+	self.do_stretch_bot.setFillRGBA(0xFF000099);
+	self.do_stretch_bot.beginPath();
+	self.do_stretch_bot.moveTo(handle_stretch_size,bot_stretch_start);
+	self.do_stretch_bot.lineTo(right_stretch_start,bot_stretch_start);
+	self.do_stretch_bot.lineTo(right_stretch_start,total_height);
+	self.do_stretch_bot.lineTo(handle_stretch_size,total_height);
+	self.do_stretch_bot.lineTo(handle_stretch_size,bot_stretch_start);
+	self.do_stretch_bot.fill();
+	self.do_stretch_tl.clearGraphics();
+	self.do_stretch_tl.setFillRGBA(0xFFFF0099);
+	self.do_stretch_tl.beginPath();
+	self.do_stretch_tl.moveTo(0,0);
+	self.do_stretch_tl.lineTo(handle_stretch_size,0);
+	self.do_stretch_tl.lineTo(handle_stretch_size,handle_stretch_size);
+	self.do_stretch_tl.lineTo(0,handle_stretch_size);
+	self.do_stretch_tl.lineTo(0,0);
+	self.do_stretch_tl.fill();
+	self.do_stretch_tr.clearGraphics();
+	self.do_stretch_tr.setFillRGBA(0xFFFF0099);
+	self.do_stretch_tr.beginPath();
+	self.do_stretch_tr.moveTo(right_stretch_start,0);
+	self.do_stretch_tr.lineTo(total_width,0);
+	self.do_stretch_tr.lineTo(total_width,handle_stretch_size);
+	self.do_stretch_tr.lineTo(right_stretch_start,handle_stretch_size);
+	self.do_stretch_tr.lineTo(right_stretch_start,0);
+	self.do_stretch_tr.fill();
+	self.do_stretch_bl.clearGraphics();
+	self.do_stretch_bl.setFillRGBA(0xFFFF0099);
+	self.do_stretch_bl.beginPath();
+	self.do_stretch_bl.moveTo(0,bot_stretch_start);
+	self.do_stretch_bl.lineTo(handle_stretch_size,bot_stretch_start);
+	self.do_stretch_bl.lineTo(handle_stretch_size,total_height);
+	self.do_stretch_bl.lineTo(0,total_height);
+	self.do_stretch_bl.lineTo(0,bot_stretch_start);
+	self.do_stretch_bl.fill();
+	self.do_stretch_br.clearGraphics();
+	self.do_stretch_br.setFillRGBA(0xFFFF0099);
+	self.do_stretch_br.beginPath();
+	self.do_stretch_br.moveTo(right_stretch_start,bot_stretch_start);
+	self.do_stretch_br.lineTo(total_width,bot_stretch_start);
+	self.do_stretch_br.lineTo(total_width,total_height);
+	self.do_stretch_br.lineTo(right_stretch_start,total_height);
+	self.do_stretch_br.lineTo(right_stretch_start,bot_stretch_start);
+	self.do_stretch_br.fill();
+	// internal listeners
+	self.addListenersDragBar = function(){
+		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_DOWN,self.handle_mouse_down_bar_fxn);
+		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP,self.handle_mouse_up_bar_fxn);
+		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.handle_mouse_up_outside_bar_fxn);
+	};
+	self.do_drag_bar.addFunction(DO.EVENT_ADDED_TO_STAGE,self.addListenersDragBar);
+	//self.do_drag_bar.endPath();
 	//self.updateStyle(style);
 	/*
 	// dragging

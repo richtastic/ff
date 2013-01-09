@@ -1,4 +1,6 @@
 // DO.js
+DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
+DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
 
 DO.addToStageRecursive = function(ch){
 	for(i=0;i<ch.children.length;++i){
@@ -72,15 +74,25 @@ function DO(parentDO){
 		self.alertAll(evt,pos);
 	};
 	self.addedToStage = function(stage){
+		this.alertAll(DO.EVENT_ADDED_TO_STAGE,this);
 		this.addListeners();
 	};
 	self.removedFromStage = function(stage){
 		this.removeListeners();
+		this.alertAll(DO.EVENT_REMOVED_FROM_STAGE,this);
 	};
 // intersections ---------------------------------------------------------------------------------
 // could be separate function that uses visible-everything to guarantee 0-alpha is valid
 // rendering ---------------------------------------------------------------------------------
+	self.rendering_mode = true;
+	self.setRenderingOff = function(){
+		self.rendering_mode = false;
+	};
+	self.setRenderingOn = function(){
+		self.rendering_mode = true;
+	};
 	self.setupRender = function(canvas){
+		if(!self.rendering_mode){return;}
 		self.canvas = canvas;
 		var context = canvas.getContext();
 		context.save();
@@ -100,12 +112,14 @@ function DO(parentDO){
 		0 0 1
 		*/
 		Code.emptyArray(a);
-	}
+	};
 	self.takedownRender = function(){
+		if(!self.rendering_mode){return;}
 		var context = self.canvas.getContext();
 		context.restore();
-	}
+	};
 	self.render = function(canvas){
+		if(!self.rendering_mode){return;}
 		self.setupRender(canvas);
 		var context = self.canvas.getContext();
 		self.drawGraphics(canvas); // self render
@@ -273,8 +287,14 @@ function DO(parentDO){
 		if(rX!==null && rX!==undefined && rX!==0){ self.dragRoundingX = rX; }else{ self.dragRoundingX = 0; }
 		if(rY!==null && rY!==undefined && rY!==0){ self.dragRoundingY = rY; }else{ self.dragRoundingY = 0; }
 		self.dragEnabled = true;
+		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
+		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 	};
 	self.setDraggingDisabled = function(){
+		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
+		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 		self.dragEnabled = false;
 	};
 	self.startDrag = function(pos){
@@ -301,11 +321,7 @@ function DO(parentDO){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 			self.stopDrag();
 		}
-	};/*
-	self.dragMouseUpOutsideFxn = function(e){
-		console.log("self.dragMouseUpOutsideFxn");
-		self.dragMouseUpFxn(e);
-	};*/
+	};
 	self.mouseMoveDragCheckFxnOutside = function(e){
 		self.mouseMoveDragCheckFxn(e,false);
 	}
@@ -345,14 +361,10 @@ function DO(parentDO){
 		}
 	};
 	self.addListeners = function(){
-		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
-		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);//self.dragMouseUpOutsideFxn);
+		//
 	};
 	self.removeListeners = function(){
-		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
-		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);//self.dragMouseUpOutsideFxn);
+		//
 	};
 	// ------------------------------------------------------------------ intersection
 	self.checkIntersectionChildren = true;

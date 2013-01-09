@@ -3,6 +3,22 @@ Canvas.STAGE_FIT_FIXED = 0;
 Canvas.STAGE_FIT_FILL = 1;
 Canvas.STAGE_FIT_SCALE = 2;
 // CLASS VARIABLES
+Canvas.CURSOR_STYLE_DEFAULT = "auto";					// 
+Canvas.CURSOR_STYLE_DEFAULT = "default";				// ^
+Canvas.CURSOR_STYLE_CROSSHAIR = "crosshair";			// +
+Canvas.CURSOR_STYLE_RESIZE_TOP = "n-resize";			// ^|
+Canvas.CURSOR_STYLE_RESIZE_TOP_LEFT = "nw-resize";		// |\
+Canvas.CURSOR_STYLE_RESIZE_TOP_RIGHT = "ne-resize";		// /|
+Canvas.CURSOR_STYLE_RESIZE_BOTTOM = "s-resize";			// v
+Canvas.CURSOR_STYLE_RESIZE_BOTTOM_LEFT = "se-resize";	// |/
+Canvas.CURSOR_STYLE_RESIZE_BOTTOM_RIGHT = "sw-resize";	// \|
+Canvas.CURSOR_STYLE_RESIZE_RIGHT = "e-resize";			// >|
+Canvas.CURSOR_STYLE_RESIZE_LEFT = "w-resize";			// |<
+Canvas.CURSOR_STYLE_QUESTION = "help";					// ?
+Canvas.CURSOR_STYLE_GRAB = "move";						// _m
+Canvas.CURSOR_STYLE_POINT = "point";					// ^ / |m
+Canvas.CURSOR_STYLE_WAIT = "progress";					// tick
+Canvas.CURSOR_STYLE_TYPE = "text";						// I
 // these propagate up/down the display/list
 Canvas.EVENT_MOUSE_DOWN = "canevtmdn";
 Canvas.EVENT_MOUSE_UP = "canevtmup";
@@ -57,7 +73,22 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	self.setClass = setClass;
 	function setClass(name){
 		self.canvas.setAttribute("class",name);
-	}
+	};
+	/*
+	self.cover = document.createElement("div");
+	self.cover.style.width = "100px";
+	self.cover.style.height = "100px";
+	self.cover.style.background = "#F00";
+	self.cover.style.zIndex = "999999";
+	self.cover.style.position = "absolute";
+	self.cover.style.left = "0px";
+	self.cover.style.top = "0px";
+	self.cover.style.display = "block";
+	document.body.appendChild(self.cover);
+	*/
+	self.setCursorStyle = function(style){
+		self.canvas.style.cursor = style;
+	};
 	// drawing ------------------------------------------------------------
 	self.setFill = setFill;
 	function setFill(col){
@@ -216,8 +247,9 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		context.fillRect(0,0,canvas.width,canvas.height);
 		*/
 		self.dispatch.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
-	}
+	};
 // -------------------------------------------------------------- constructor
+	self.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 	if(resource){ // may not get one
 		resource.addFunction(Dispatch.EVENT_WINDOW_RESIZE,self.windowResizedFxn);
 	}

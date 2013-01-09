@@ -110,6 +110,11 @@ function Spice(){
 		style[Win.WIN_BODY_BOT_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_BOT_LEFT_RED];
 		style[Win.WIN_BODY_BOT_CEN] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_BOT_CEN_RED];
 		style[Win.WIN_BODY_BOT_RIGHT] = self.resource.tex[ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED];
+		style[Win.WIN_ICON_LIST] = new Array(
+			self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_ACTIVE_RED],
+			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED],
+			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED]
+			);
 		self.doWindows.addWin( style );
 		//self.doWindows.addWin( {} );
 		//
