@@ -245,14 +245,16 @@ function DO(parentDO){
 // Display List ----------------------------------------------------------------------------------------------------------------
 	self.addChild = function(ch){
 		ch.parent = self;
-		ch.stage = self.stage;
-		if( Code.addUnique(self.children,ch) ){//self.stage!=null ){
+		//ch.stage = self.stage;
+		Code.addUnique(self.children,ch)
+		if( self.stage!=null ){
 			DO.addToStageRecursive(ch,self.stage);
 		}
 	};
 	self.removeChild = function(ch){
 		ch.parent = null;
-		if( Code.removeElement(self.children,ch) ){
+		Code.removeElement(self.children,ch);
+		if( true ){
 			DO.removedFromStageRecursive(ch);
 		}
 	};
