@@ -61,13 +61,14 @@ console.log(img);
 
 	// internal listeners
 	self.addListenersDragBar = function(){
-		/*
+		
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_DOWN,self.handle_mouse_down_bar_fxn);
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP,self.handle_mouse_up_bar_fxn);
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.handle_mouse_up_outside_bar_fxn);
-		*/
-		//self.do_drag_bar.addFunction(DO.EVENT_DRAGGED,self.handle_bar_dragged);
+		
+		self.do_drag_bar.addFunction(DO.EVENT_DRAGGED,self.handle_bar_dragged);
 		console.log("ADDED TO STAGE...");
+		console.log(self.do_drag_bar.toString());
 		console.log(self.do_drag_bar.stage);
 		self.do_drag_bar.setDraggingEnabled();
 	};
@@ -155,7 +156,7 @@ self.do_drag_bar.addFunction(DO.EVENT_ADDED_TO_STAGE,self.addListenersDragBar);
 	self.win_level_0.addChild(self.do_stretch_tr);
 	self.win_level_0.addChild(self.do_stretch_bl);
 	self.win_level_0.addChild(self.do_stretch_br);
-	/*
+	
 	self.do_drag_bar.setRenderingOff();
 	self.do_stretch_left.setRenderingOff();
 	self.do_stretch_right.setRenderingOff();
@@ -165,7 +166,7 @@ self.do_drag_bar.addFunction(DO.EVENT_ADDED_TO_STAGE,self.addListenersDragBar);
 	self.do_stretch_tr.setRenderingOff();
 	self.do_stretch_bl.setRenderingOff();
 	self.do_stretch_br.setRenderingOff();
-	*/
+	
 	// position info
 	var bar_cen_wid = total_width - self.do_bar_left.getWidth() - self.do_bar_right.getWidth();
 	var bar_height = Math.max(self.do_bar_left.getHeight(),self.do_bar_cen.getHeight(),self.do_bar_right.getHeight());

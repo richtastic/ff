@@ -43,10 +43,10 @@ self.tempCanvas.canvas.style.top="200px";
 	self.eventList = new Object(); // hash
 	self.addFunctionDO = function(obj,str,fxn){
 		console.log("ADD FUNCTION DO - "+str);
-		if(true){//self.eventList[str]!=null){
+		if(self.eventList[str]!=null){
 			self.eventList[str].push([obj,fxn]);
 		}else{
-			console.log("NULL: "+str);
+			//console.log("NULL: "+str);
 			//Canvas.EVENT_MOUSE_MOVE_OUTSIDE
 		}
 	};

@@ -3,16 +3,30 @@ DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
 DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
 DO.EVENT_DRAGGED = "do.evtdragged";
 
-DO.addToStageRecursive = function(ch,stage){
-	ch.stage = stage;
-	ch.addedToStage(stage);
-	for(i=0;i<ch.children.length;++i){
-		if(ch.children[i].stage != stage){
-			DO.addToStageRecursive(ch.children[i],stage);
-		}
+DO.addToStageRecursive = function(ch,sta){
+	ch.stage = sta;
+	ch.addedToStage(sta);
+	for(var i=0;i<ch.children.length;++i){
+		//if(ch.children[i].stage != sta){
+			DO.addToStageRecursive(ch.children[i],sta);
+		//}else{
+		//	console.log(count+ind+"RECURSIVE CALL CANCELED FOR: "+ch.toString()+"-"+ch.children[i].toString());
+			//ch.print();
+		//}
 	}
 };
+DO.printChildren = function(pre,obj){
+	var str = "";
+	for(var i=0;i<obj.children.length;++i){
+		str += " "+obj.children[i].toString();
+	}
+	//if(str!=""){
+		console.log(pre+"children: '"+str+"'");
+	//}
+}
 DO.removedFromStageRecursive = function(ch){
+	ch.stage = null;
+	ch.removedFromStage(stage);
 	for(i=0;i<ch.children.length;++i){
 		if(ch.children[i].stage != null){
 			ch.children[i].stage = null;
@@ -21,9 +35,22 @@ DO.removedFromStageRecursive = function(ch){
 		}
 	}
 };
+DO.printRecursive = function(obj,cur,ind,fin){
+	var beg = cur;//.substr(0,cur.length-1);
+	//console.log(""+cur);
+	console.log(""+beg+fin+obj.toString());
+	for(var i=0; i<obj.children.length; ++i){
+		DO.printRecursive(obj.children[i],ind+"|"+cur,ind,fin);
+	}
+};
+DO.winIndex = 0;
 
 function DO(parentDO){
 	var self = this;
+	self.id = DO.winIndex++;
+	self.toString = function(){
+		return "[DO "+self.id+(self.stage==null?"-":"*")+"]";
+	};
 	self.stage = null;
 	self.parent = null;
 	self.children = new Array(); // 0 = back, length-1 = front
@@ -95,7 +122,6 @@ function DO(parentDO){
 		self.rendering_mode = true;
 	};
 	self.setupRender = function(canvas){
-		if(!self.rendering_mode){return;}
 		self.canvas = canvas;
 		var context = canvas.getContext();
 		context.save();
@@ -117,7 +143,6 @@ function DO(parentDO){
 		Code.emptyArray(a);
 	};
 	self.takedownRender = function(){
-		if(!self.rendering_mode){return;}
 		var context = self.canvas.getContext();
 		context.restore();
 	};
@@ -243,10 +268,21 @@ function DO(parentDO){
 		}
 	};
 // Display List ----------------------------------------------------------------------------------------------------------------
+	self.DOExists = function(obj){
+		if(self==obj){
+			return true;
+			for(i=0;i<self.children.length;++i){
+				if(self.children[i].DOExists(obj)){
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	self.addChild = function(ch){
+//console.log("addChild-------------------------");
 		ch.parent = self;
-		//ch.stage = self.stage;
-		Code.addUnique(self.children,ch)
+		Code.addUnique(self.children,ch);
 		if( self.stage!=null ){
 			DO.addToStageRecursive(ch,self.stage);
 		}
@@ -333,7 +369,13 @@ function DO(parentDO){
 	};
 	self.mouseMoveDragCheckFxnOutside = function(e){
 		console.log("OUTSIDE");
-		self.mouseMoveDragCheckFxn(e,false);
+		if(self.dragEnabled && self.dragging){
+			self.mouseMoveDragCheckFxn(e,false);
+		}else{
+			console.log("RE-MOVED");
+			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
+			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
+		}
 	}
 	self.mouseMoveDragCheckFxn = function(e,check){
 		if(self.dragging){
@@ -421,8 +463,13 @@ function DO(parentDO){
 		if(x>=img.width || x<0 || y>=img.height || y<0){ return 0; }
 		var index = (y*img.width + x)*4, dat = img.data;
 		return Code.getColRGBA(dat[index],dat[index+1],dat[index+2],dat[index+3]);
-	}
+	};
+// ------------------------------------------------------------------ debugging
+	self.print = function(){
+		DO.printRecursive(self,"","  ","-");
+	};
 // ------------------------------------------------------------------ constructor
+//console.log("new DO");
 	/*
 	this.clearGraphics();
 	this.setFillRGBA(0x0000FF99);
