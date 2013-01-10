@@ -24,6 +24,19 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_WIN_ICON_MIN_INACTIVE_RED = 20;
 	ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED = 21;
 	ResourceSpice.TEX_WIN_ICON_MAX_INACTIVE_RED = 22;
+	// CIRCUIT IMAGES ---------------------------------------
+	ResourceSpice.TEX_CIRCUIT_RESISTOR_RED = 23;
+	ResourceSpice.TEX_CIRCUIT_CAPACITOR_RED = 24;
+	ResourceSpice.TEX_CIRCUIT_INDUCTOR_RED = 25;
+	ResourceSpice.TEX_CIRCUIT_DIODE_RED = 26;
+	ResourceSpice.TEX_CIRCUIT_SOURCE_VOLTAGE_RED = 27;
+	ResourceSpice.TEX_CIRCUIT_SOURCE_CURRENT_RED = 28;
+	ResourceSpice.TEX_CIRCUIT_CURRENT_DEPENDENT_CURRENT_RED = 29;
+	ResourceSpice.TEX_CIRCUIT_CURRENT_DEPENDENT_VOLTAGE_RED = 30;
+	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_CURRENT_RED = 31;
+	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_VOLTAGE_RED = 32;
+	//ResourceSpice.TEX_CIRCUIT__RED = ;
+	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
 // MAPS ---------------------------------------
 ResourceSpice.MAP_X = 0;
