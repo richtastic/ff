@@ -35,6 +35,8 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_CIRCUIT_CURRENT_DEPENDENT_VOLTAGE_RED = 30;
 	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_CURRENT_RED = 31;
 	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_VOLTAGE_RED = 32;
+	ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED = 33;
+	ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED = 33;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
@@ -79,6 +81,22 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_WIN_ICON_MIN_INACTIVE_RED] = "window/win_button_min_inactive.png";
 	tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED] = "window/win_button_max_active.png";
 	tex[ResourceSpice.TEX_WIN_ICON_MAX_INACTIVE_RED] = "window/win_button_max_inactive.png";
+	//
+	tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CAPACITOR_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_INDUCTOR_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_DIODE_RED] = "circuit/diode_hollow.png";
+	tex[ResourceSpice.TEX_CIRCUIT_SOURCE_VOLTAGE_RED] = "circuit/dc_voltage.png";
+	tex[ResourceSpice.TEX_CIRCUIT_SOURCE_CURRENT_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CURRENT_DEPENDENT_CURRENT_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CURRENT_DEPENDENT_VOLTAGE_RED ] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_CURRENT_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_VOLTAGE_RED] = "circuit/resistor.png";
+	tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED] = "circuit/pin_connect.png";
+	tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED] = "circuit/pin_disconnect.png";
+	
+	//
 	self.imgLoader.setLoadList( texdir, tex, self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
 }
+
