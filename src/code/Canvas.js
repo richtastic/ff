@@ -109,17 +109,16 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	};
 	self.drawImage = drawImage;
 	function drawImage(img, pX,pY,wX,hY){
-		//console.log(arguments);
 		if(pX!==undefined && pY!==undefined){
 			if(wX!==undefined && hY!==undefined){
-				console.log(img,pX,pY,wX,hY);
+
 				self.context.drawImage(img,pX,pY,wX,hY);
 			}else{
 				self.context.drawImage(img,pX,pY);
 			}
 		}else{
-			console.log(self.context);
-			console.log(img);
+			//console.log(self.context);
+			//console.log(img);
 			self.context.drawImage(img);
 		}
 	};

@@ -7,12 +7,9 @@ DO.addToStageRecursive = function(ch,sta){
 	ch.stage = sta;
 	ch.addedToStage(sta);
 	for(var i=0;i<ch.children.length;++i){
-		//if(ch.children[i].stage != sta){
+		if(ch.children[i].stage != sta){ 
 			DO.addToStageRecursive(ch.children[i],sta);
-		//}else{
-		//	console.log(count+ind+"RECURSIVE CALL CANCELED FOR: "+ch.toString()+"-"+ch.children[i].toString());
-			//ch.print();
-		//}
+		} // else already has it
 	}
 };
 DO.printChildren = function(pre,obj){
@@ -26,11 +23,10 @@ DO.printChildren = function(pre,obj){
 }
 DO.removedFromStageRecursive = function(ch){
 	ch.stage = null;
-	ch.removedFromStage(stage);
+	ch.removedFromStage(null);
 	for(i=0;i<ch.children.length;++i){
 		if(ch.children[i].stage != null){
-			ch.children[i].stage = null;
-			ch.children[i].removedFromStage(ch.stage);
+			//ch.children[i].removedFromStage(ch.stage);
 			self.removedFromStageRecursive(ch.children[i]);
 		}
 	}
@@ -63,16 +59,13 @@ function DO(parentDO){
 	Code.extendClass(self,Dispatchable);
 // self-event registering and dispatching ---------------------------------------------------------------------------------
 	self.dispatch = new Dispatch();
-	self.addFunction = function(str,fxn){
-		//console.log("self.addFunction");
+	this.addFunction = function(str,fxn){
 		self.super.addFunction.call(this,str,fxn);
 		if(self.stage){
 			self.stage.addFunctionDO(self,str,fxn);
-		}else{
-		//	console.log("NO STAGE");
 		}
 	};
-	self.removeFunction = function(str,fxn){
+	this.removeFunction = function(str,fxn){
 		self.super.removeFunction.call(this,str,fxn);
 		if(self.stage){
 			self.stage.removeFunctionDO(self,str,fxn);
@@ -146,7 +139,8 @@ function DO(parentDO){
 		var context = self.canvas.getContext();
 		context.restore();
 	};
-	self.render = function(canvas){
+	this.render = function(canvas){
+		//console.log("DO RENDER "+self.children.length);
 		if(!self.rendering_mode){return;}
 		self.setupRender(canvas);
 		var context = self.canvas.getContext();
@@ -154,9 +148,9 @@ function DO(parentDO){
 		if(self.mask){
 			context.clip();
 		}
-		var i, len = self.children.length;
+		var i, len = this.children.length;
 		for(i=0;i<len;++i){ // children render
-			self.children[i].render(canvas);
+			this.children[i].render(canvas);
 		}
 		if(self.mask){
 			//context.restore();
@@ -252,7 +246,6 @@ function DO(parentDO){
 		self.graphics.push( Code.newArray(self.canvasDrawImage,arguments) );
 	};
 	self.canvasDrawImage = function(img,pX,pY,wX,hY){
-		//console.log(arguments);
 		self.canvas.drawImage(img,pX,pY,wX,hY);
 	};
 // ------------------------------------------------------------------------------------------
@@ -280,7 +273,7 @@ function DO(parentDO){
 		return false;
 	}
 	self.addChild = function(ch){
-//console.log("addChild-------------------------");
+		if(!ch){return;}
 		ch.parent = self;
 		Code.addUnique(self.children,ch);
 		if( self.stage!=null ){
@@ -288,6 +281,7 @@ function DO(parentDO){
 		}
 	};
 	self.removeChild = function(ch){
+		if(!ch){return;}
 		ch.parent = null;
 		Code.removeElement(self.children,ch);
 		if( true ){
@@ -351,6 +345,7 @@ function DO(parentDO){
 	};
 	self.dragMouseDownFxn = function(e){
 		console.log("DOWN");
+		console.log(self.toString());
 		if(e[0]==self && self.dragEnabled){
 			var pos = e[1];
 			self.startDrag(e[1]);
@@ -435,10 +430,10 @@ function DO(parentDO){
 		if(this.checkIntersectionChildren){
 			var ret, i, len = this.children.length;
 			for(i=len-1;i>=0;--i){
-				ret = self.children[i].getIntersection(pos, can);
+				ret = this.children[i].getIntersection(pos, can);
 				if(ret){
 					this.takedownRender(can);
-					self.pointRendering = false;
+					this.pointRendering = false;
 					return ret;
 				}
 			}

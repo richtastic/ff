@@ -67,9 +67,9 @@ console.log(img);
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.handle_mouse_up_outside_bar_fxn);
 		
 		self.do_drag_bar.addFunction(DO.EVENT_DRAGGED,self.handle_bar_dragged);
-		console.log("ADDED TO STAGE...");
+		/*console.log("ADDED TO STAGE...");
 		console.log(self.do_drag_bar.toString());
-		console.log(self.do_drag_bar.stage);
+		console.log(self.do_drag_bar.stage);*/
 		self.do_drag_bar.setDraggingEnabled();
 	};
 	// CONSTRUCTOR

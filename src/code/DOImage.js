@@ -1,4 +1,7 @@
 // DOImage.js
+DOImage.RENDER_MODE_STRETCH = 0;
+DOImage.RENDER_MODE_PATTERN = 1;
+DOImage.RENDER_MODE_SUBSET = 2;
 /*
 rendering:
 	- use native size - ** default
@@ -20,6 +23,7 @@ function DOImage(img, options, parentDO){
 	self.imageHeight = -1;
 	self.imagePosX = 0;
 	self.imagePosY = 0;
+	self.renderMode = DOImage.RENDER_MODE_PATTERN;
 	if(options){
 		if(options.width){ self.imageWidth=options.width; }
 		if(options.height){ self.imageHeight=options.height; }
@@ -39,31 +43,48 @@ function DOImage(img, options, parentDO){
 // rendering ---------------------------------------------------------------------------------
 	self.drawImage = function(posX,posY,wid,hei){
 		if(posX!==null){ self.imagePosX=posX; }
-		if(posY!==null){ self.imagePosX=posY; }
+		if(posY!==null){ self.imagePosY=posY; }
 		if(wid!==null){ self.imageWidth=wid; }
 		if(hei!==null){ self.imageHeight=hei; }
 		//self.checkPattern();
 		self.graphics.push( Code.newArray(self.canvasDrawImage,[]) );
 	};
+	this.setRenderModePattern = function(){
+		self.renderMode = DOImage.RENDER_MODE_PATTERN;
+		self.imagePattern = null;
+	}
+	this.setRenderModeStretch = function(){
+		self.renderMode = DOImage.RENDER_MODE_STRETCH;
+		self.imagePattern = null;
+	}
 	self.canvasDrawImage = function(){ // all internal params
 		if(self.pointRendering){
 			var context = self.canvas.getContext();
 			context.fillStyle = "#000";
 			context.fillRect(0,0,self.imageWidth,self.imageHeight);
 		}else{
-			if(self.imagePattern){
+			if(self.renderMode == DOImage.RENDER_MODE_STRETCH){
+				self.canvas.drawImage(self.image,self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
+			}else if(self.renderMode == DOImage.RENDER_MODE_PATTERN){ // want to NOT CONTINUOUSLY CHECK/CREATE PATTERNS
 				var context = self.canvas.getContext();
-		//		self.imagePattern = context.createPattern(self.image,'repeat');
+				if(!self.imagePattern){
+					self.imagePattern = context.createPattern(self.image,'repeat');
+				}
 				context.fillStyle = self.imagePattern;
 	    		context.fillRect(self.imagePosX,self.imagePosY,self.imageWidth,self.imageHeight);
-			}else{
-				self.canvas.drawImage(self.image,self.imagePosX,self.imagePosY);//,self.imageWidth,self.imageHeight);
+			}else if(self.renderMode == DOImage.RENDER_MODE_SUBSET){ // http://tutorials.jenkov.com/html5-canvas/images.html
+				self.canvas.drawImage(self.image, 10,20, 50,50, 0,0,200,100);
 			}
 		}
 	};
 	self.declareRender = function(){
 		self.clearGraphics();
 		self.drawImage(0,0,self.imageWidth,self.imageHeight);
+	};
+	self.setSize = function(wid,hei){
+		self.imageWidth = wid;
+		self.imageHeight = hei;
+		self.declareRender();
 	};
 	self.setWidth = function(wid){
 		self.imageWidth = wid;

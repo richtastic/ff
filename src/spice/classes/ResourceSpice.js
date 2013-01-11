@@ -36,7 +36,7 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_CURRENT_RED = 31;
 	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_VOLTAGE_RED = 32;
 	ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED = 33;
-	ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED = 33;
+	ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED = 34;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;

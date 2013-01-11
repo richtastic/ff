@@ -26,7 +26,7 @@ self.tempCanvas.canvas.style.position="absolute";
 self.tempCanvas.canvas.style.left="0px";
 self.tempCanvas.canvas.style.top="200px";
 */
-	self.renderImage = function(wid,hei,obj, matrix, type){
+	self.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
 		self.renderCanvas.clearAll();
 		self.renderCanvas.setSize(wid,hei);
 		obj.render(self.renderCanvas);
@@ -42,26 +42,22 @@ self.tempCanvas.canvas.style.top="200px";
 	Code.extendClass(this,Dispatchable);
 	self.eventList = new Object(); // hash
 	self.addFunctionDO = function(obj,str,fxn){
-		console.log("ADD FUNCTION DO - "+str);
 		if(self.eventList[str]!=null){
 			self.eventList[str].push([obj,fxn]);
 		}else{
-			//console.log("NULL: "+str);
-			//Canvas.EVENT_MOUSE_MOVE_OUTSIDE
+			// 
 		}
 	};
 	self.removeFunctionDO = function(obj,str,fxn){
-		//console.log("removeFunctionDO");
 		var i, j, item, arr = self.eventList[str];
 		for(i=0;i<arr.length;++i){
 			item = arr[i];
 			if(item[0]==obj && item[1]==fxn){
-				//console.log("REMOVED");
 				if(arr.length>i){
 					arr[i] = arr[arr.length-1];
 				}
 				arr.pop();
-				break;
+				break; // assume single
 			}
 		}
 	}

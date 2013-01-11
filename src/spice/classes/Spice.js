@@ -41,18 +41,7 @@ function Spice(){
 		var wid = e.x, hei = e.y;
 		var sX = 0, sY = 0;
 		//wid = 300;hei = 200;
-		self.scroller.clearGraphics();
-		self.scroller.setLine(1,0xFF00FF00);
-		self.scroller.setFillRGBA(0x00000000); // 0x00000001
-		self.scroller.beginPath();
-		self.scroller.moveTo(0,0);
-		self.scroller.lineTo(wid,0);
-		self.scroller.lineTo(wid,hei);
-		self.scroller.lineTo(0,hei);
-		self.scroller.lineTo(0,0);
-		self.scroller.strokeLine();
-		self.scroller.endPath();
-		self.scroller.fill();
+		self.doDraft.resize(wid,hei);
 		//
 		sX = wid*(2/3);
 		sY = 0;
@@ -90,11 +79,11 @@ function Spice(){
 		// 
 		self.doRoot = new DO();
 			self.doMenus = new DO();
-			self.doDraft = new DO();
+			self.doDraft = new Draft({},self.resource);
 			self.doWindows = new WinManager();
 		self.stage.addChild(self.doRoot);
 			self.doRoot.addChild(self.doMenus);
-			self.doRoot.addChild(self.doDraft);
+			self.doRoot.addChild(self.doDraft.display());
 			self.doRoot.addChild(self.doWindows);
 		// 
 		var style = {};
@@ -115,7 +104,7 @@ function Spice(){
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED],
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED]
 			);
-		self.doWindows.addWin( style );
+//		self.doWindows.addWin( style );
 		//self.doWindows.addWin( {} );
 		//
 		//self.scroller = new DOScroll();
@@ -123,40 +112,11 @@ function Spice(){
 		//self.maskee = new DO();
 		//self.addChild(maskee);
 		
-		var img = self.resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
-		// SCROLLER
-		self.scroller = new DOScroll();
-		self.doDraft.addChild( self.scroller );
-		self.scroller.dragEnabled = false;
-		
-		// CONTENT
-		
-		var doBG = new DOImage(img);
-		doBG.clearGraphics();
-		doBG.drawImage(0,0,2000,2000);
-		self.scroller.addChild( doBG );
-		doBG.setDraggingEnabled();
-		doBG.rangeLimitsX = [-100, 100];
-		doBG.rangeLimitsY = [-100, 100];
-		
-		// ELEMENTS
-		img = self.resource.tex[ResourceSpice.TEX_DEBUG_1];
-		var doEle = new DOImage(img);
-		doEle.clearGraphics();
-		doEle.drawImage(0,0,100,100);
-		//self.scroller.addChild( doEle );
-		doBG.addChild( doEle );
-		doEle.setDraggingEnabled(50,50);
-//doEle.matrix.translate(-50);
-//doEle.matrix.rotate(Math.PI/6);
-doEle.matrix.rotate(Math.PI);
-//doEle.matrix.scale(1,2);
-//doEle.matrix.b += 0.5;
-doEle.matrix.translate(150,150);
 		
 		// library
 		self.library = new DO();
 		self.doRoot.addChild( self.library );
+//self.doRoot.stage.root.print();
 		
 /*
 		var doEle = new DO();

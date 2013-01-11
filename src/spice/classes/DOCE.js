@@ -3,10 +3,8 @@ DOCE.X = 0;
 
 function DOCE(style){
 	var self = this;
-	// Code.extendClass(this,DO,arguments);
-	// 
-	self.display = new DO();
-	self.element = new DO(style.element);
+	Code.extendClass(this,DOContainer,arguments);
+	/*self.element = new DO(style.element);
 	self.display.addChild(element);
 	self.pins = new Array();
 	var pinList = style.pins;
@@ -16,6 +14,7 @@ function DOCE(style){
 		self.pins.push(img);
 		self.display.addChild(img);
 	}
+	*/
 	//
 	// YAY
 }
