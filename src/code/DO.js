@@ -12,15 +12,6 @@ DO.addToStageRecursive = function(ch,sta){
 		} // else already has it
 	}
 };
-DO.printChildren = function(pre,obj){
-	var str = "";
-	for(var i=0;i<obj.children.length;++i){
-		str += " "+obj.children[i].toString();
-	}
-	//if(str!=""){
-		console.log(pre+"children: '"+str+"'");
-	//}
-}
 DO.removedFromStageRecursive = function(ch){
 	ch.stage = null;
 	ch.removedFromStage(null);
@@ -43,7 +34,7 @@ DO.winIndex = 0;
 
 function DO(parentDO){
 	var self = this;
-	self.id = DO.winIndex++;
+	this.id = DO.winIndex++;
 	self.toString = function(){
 		return "[DO "+self.id+(self.stage==null?"-":"*")+"]";
 	};
@@ -51,7 +42,7 @@ function DO(parentDO){
 	self.parent = null;
 	self.children = new Array(); // 0 = back, length-1 = front
 	self.mask = false;
-	self.matrix = new Matrix2D();
+	this.matrix = new Matrix2D();
 	self.parent = parentDO;
 	self.canvas = null;
 	// FAST-POINT-RENDERING
@@ -79,13 +70,13 @@ function DO(parentDO){
 		self.dispatch.alertAll(str,o);
 	};*/
 // downward message propagation ---------------------------------------------------------------------------------
-	self.inverseTransformPoint = function(a,b){
+	this.inverseTransformPoint = function(a,b){
 		var inv = new Matrix2D();
-		inv.inverse(self.matrix);
+		inv.inverse(this.matrix);
 		inv.multV2D(a,b);
 	};
 	self.transformPoint = function(a,b){
-		self.matrix.multV2D(a,b);
+		this.matrix.multV2D(a,b);
 	};
 	self.transformEvent = function(evt,pos){ // self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
 		var i, len=self.children.length;
@@ -115,10 +106,10 @@ function DO(parentDO){
 		self.rendering_mode = true;
 	};
 	self.setupRender = function(canvas){
-		self.canvas = canvas;
+		this.canvas = canvas;
 		var context = canvas.getContext();
 		context.save();
-		var a = self.matrix.getParameters();
+		var a = this.matrix.getParameters();
 		//context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
 		//context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
 		//context.transform(a[0],-a[2],-a[1],a[3],a[4],a[5]);
@@ -297,8 +288,8 @@ function DO(parentDO){
 	}
 	self.kill = function(ch){
 		Code.killArray(self.children);
-		self.matrix.kill();
-		self.parent = null;
+		this.matrix.kill();
+		this.parent = null;
 		Code.killMe(self);
 	}
 	// ------------------------------------------------------------------ stage passthrough
@@ -372,7 +363,7 @@ function DO(parentDO){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 		}
 	}
-	self.mouseMoveDragCheckFxn = function(e,check){
+	this.mouseMoveDragCheckFxn = function(e,check){
 		if(self.dragging){
 			if(e[0]==self || !check){
 				var pos = e[1];
@@ -387,27 +378,12 @@ function DO(parentDO){
 				}
 				// LIMITS ?
 				//if(diffX!=0 && diffY!=0){
-					self.matrix.pretranslate(diffX,diffY);
-					self.alertAll(DO.EVENT_DRAGGED,self);
+					this.matrix.pretranslate(diffX,diffY);
+					this.alertAll(DO.EVENT_DRAGGED,self);
 				//}
 				//self.dragOffset.x = pos.x;
 				//self.dragOffset.y = pos.y;
 			}
-			//self.matrix.translate
-/*
-//			self.matrix.x = e.x - self.dragOffset.x;
-//			self.matrix.y = e.y - self.dragOffset.y;
-			var x = Math.min(Math.max(self.matrix.x,self.rangeLimitsX[0]),self.rangeLimitsX[1]);
-			var y = Math.min(Math.max(self.matrix.y,self.rangeLimitsY[0]),self.rangeLimitsY[1]);
-			if(self.dragRoundingX>0){
-				x = self.dragRoundingX*Math.round(x/self.dragRoundingX);
-			}
-			if(self.dragRoundingY>0){
-				y = self.dragRoundingY*Math.round(y/self.dragRoundingY);
-			}
-//			self.matrix.x = x;
-//			self.matrix.y = y;
-*/
 		}
 	};
 	self.addListeners = function(){

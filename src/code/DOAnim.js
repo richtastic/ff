@@ -3,6 +3,7 @@
 function DOAnim(parentDO){
 	var self = this;
 	Code.extendClass(this,DO);
+/*
 	self.frames = new Array();	// 
 	self.currentFrame = 0;		// index
 	self.currentContent = null;	// object
@@ -23,7 +24,9 @@ function DOAnim(parentDO){
 	}
 // rendering ---------------------------------------------------------------------------------
 	this.render = function(canvas){
-		this.super.render.call(this,canvas);
+		//console.log(this.matrix.toString());
+		//console.log(self.super.matrix.toString());
+		this.super.render.call(self,canvas);
 		if(self.playing){
 			self.gotoNextFrame();
 		}
@@ -91,6 +94,12 @@ function DOAnim(parentDO){
 	};
 // constructor ---------------------------------------------------------------------------------
 	// 
+	//console.log("HIA");
+*/
+	for(key in self){
+		console.log(key+": "+(this[key]==this.super[key]));
+		//console.log("...");
+	}
 }
 
 

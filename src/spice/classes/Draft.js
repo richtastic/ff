@@ -68,6 +68,7 @@ function Draft(style,resource){
 	pin.addFrame(img,8);
 	pin.gotoFrame(0);
 	//pin.setStop();
+	pin.matrix.translate(100,200);
 
 	self._background.addChild(pin);
 //	self.addElement();

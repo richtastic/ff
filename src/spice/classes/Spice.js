@@ -104,7 +104,7 @@ function Spice(){
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED],
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED]
 			);
-//		self.doWindows.addWin( style );
+		self.doWindows.addWin( style );
 		//self.doWindows.addWin( {} );
 		//
 		//self.scroller = new DOScroll();
@@ -116,25 +116,7 @@ function Spice(){
 		// library
 		self.library = new DO();
 		self.doRoot.addChild( self.library );
-//self.doRoot.stage.root.print();
-		
-/*
-		var doEle = new DO();
-	doEle.clearGraphics();
-	doEle.setFillRGBA(0x0000FF99);
-	doEle.drawRect(0,0,100,100);
-	doEle.setLine(1.0,0x00FF00);
-	doEle.beginPath();
-	doEle.moveTo(0,0);
-	doEle.lineTo(100,0);
-	doEle.lineTo(100,100);
-	doEle.lineTo(0,100);
-	doEle.lineTo(0,0);
-	doEle.strokeLine();
-	doEle.endPath();
-		self.doRoot.addChild( doEle );
-		doEle.dragEnabled = true;
-*/
+
 		// doBG.addFunction(Canvas.EVENT_MOUSE_DOWN,self.puts);
 		// 
 		// 

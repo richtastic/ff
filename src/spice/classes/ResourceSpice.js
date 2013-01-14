@@ -74,7 +74,6 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_WIN_BODY_BOT_LEFT_RED] = "window/win_body_bot_left.png";
 	tex[ResourceSpice.TEX_WIN_BODY_BOT_CEN_RED] = "window/win_body_bot_cen.png";
 	tex[ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED] = "window/win_body_bot_right.png";
-	tex[ResourceSpice.TEX_WIN_BODY_BOT_RIGHT_RED] = "window/win_body_bot_right.png";
 	tex[ResourceSpice.TEX_WIN_ICON_CLOSE_ACTIVE_RED] = "window/win_button_close_active.png";
 	tex[ResourceSpice.TEX_WIN_ICON_CLOSE_INACTIVE_RED] = "window/win_button_close_inactive.png";
 	tex[ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED] = "window/win_button_min_active.png";

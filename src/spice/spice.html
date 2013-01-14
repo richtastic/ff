@@ -17,6 +17,13 @@ function defaultClassesLoadedFxn(){
 	scriptLoader.load();
 }
 function customClassesLoadedFxn(){
+	var A = new Complex(1,1);
+	var B = new Complex(-1,1);
+console.log(A.toString());
+console.log(B.toString());
+	Complex.add(A,A,B);
+console.log(A.toString());
+return;
 	console.log("loading complete");
 	spice = new Spice();
 return;
@@ -135,6 +142,12 @@ VIEWS::::::::::::::::::::::::::::::::::::::::::::::
 	- pins
 
 SCHEDULE:
+	CODE
+		- only use SELF for local/event uses
+		- private vars use _ prefix
+		- complete kill functions
+		- upgrade to new inheritence system
+		- extract DO graphics to GRAPHICS class
 	CIRCUIT
 		- connecting
 		- visual vs internal
@@ -143,4 +156,5 @@ SCHEDULE:
 		- code
 
 -->
+
 

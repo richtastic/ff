@@ -30,11 +30,6 @@ function Win(style){
 	self.updateStyle = function(style){
 		// 
 	};
-/*
-var mat = new Matrix2D(); mat.identity(); // mat.inverse(self.matrix);
-var img = self.stage.renderImage(self.total_width,self.total_height, self, mat);
-console.log(img);
-*/
 	// WINDOW INTERACTION
 	self.handle_mouse_down_bar_fxn = function(e){
 		self.stage.setCursorStyle(Canvas.CURSOR_STYLE_LEFT);

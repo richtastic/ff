@@ -76,28 +76,54 @@ Code.getHex = function (intVal){
 	}
 	return '#'+str;
 }
-
 // class functions ----------------------------------------------
+Code.RESERVED_WORDS = ["super","superList","superRank","superFxn"];
+Code.TYPE_OBJECT = "object";
+Code.TYPE_FUNCTION = "function";
+Code.TYPE_NUMBER = "number";
+Code.TYPE_STRING = "string";
+Code.TYPE_UNDEFINED = "undefined";
 Code.extendClass = function(child,parent,args){ // parent.apply(child); child.base = new parent; child.base.child = child;
-	var par = new parent();
-	parent.apply(child,args); child.super = par; // child.super.child = child;
-	/*
-	for (var key in par){
-		console.log("parent["+key+"]");
+	parent.apply(child,args);
+	if(!child.super){
+		child.superList = [ {} ];
+		child.superRank = 0;
+		child.super = function(n){
+			if(n == undefined){
+				return null; // arguments.callee ?
+			}else if(typeof n == Code.TYPE_FUNCTION){
+				return child.superList[ n.superRank ];
+			}
+			return child.superList[n];
+		}
+	}else{
+		child.superList.push({});
+		child.superRank++;
 	}
-	*/
-	/*for (var key in child){
-		console.log("child["+key+"]");
+	for(key in child){
+		if(typeof child[key] == Code.TYPE_FUNCTION){
+			if(!child[key].superFxn){
+				child[key].superFxn = child[key];
+				child[key].superRank = child.superRank;
+			}
+		}
 	}
-	for (var key in child.super){
-		console.log("child.super["+key+"]");
-	}*/
-	/*
-	for (var key in child.super){ // copy all variables from parent to child
-		//console.log("parent["+key+"] = ");//+child.super[key]);
-		child[key] = child.super[key];
+}
+Code.overrideClass = function(child,oldFxn,newFxn){
+	var fxnKey = null;
+	for(key in child){
+		if(typeof child[key] == Code.TYPE_FUNCTION){
+			if(child[key]==oldFxn){
+				fxnKey = key;
+				break;
+			}
+		}
 	}
-	*/
+	child.superList[child.superRank][fxnKey] = oldFxn;
+	child[fxnKey] = newFxn;
+	newFxn.superFxn = fxnKey;
+	newFxn.superRank = child.superRank;
+	return newFxn;
 }
 // color functions ----------------------------------------------------
 Code.getColRGBA = function(r,g,b,a){
