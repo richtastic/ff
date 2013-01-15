@@ -8,8 +8,7 @@ Dispatch.EVENT_COMPLETE = "disevtcmp";
 function Dispatch(){
 	var list;
 	list = new Array();
-	this.showList = showList;
-	function showList(){
+	this.showList = function(){
 		var key;
 		var str = "";
 		for(key in list){
@@ -17,9 +16,7 @@ function Dispatch(){
 		}
 		alert( str );
 	}
-// FUNCTIONS --------------------------------------------------------------
-	this.alertAll = alertAll;
-	function alertAll(str,o){
+	this.alertAll = function(str,o){
 		if(list[str] == undefined){
 			return;
 		}
@@ -28,15 +25,13 @@ function Dispatch(){
 			list[str][i](o);
 		}
 	}
-	this.addFunction = addFunction;
-	function addFunction(str,fxn){
+	this.addFunction = function(str,fxn){
 		if( list[str] == undefined){
 			list[str] = new Array();
 		}
 		Code.addUnique(list[str],fxn);
 	}
-	this.removeFunction = removeFunction;
-	function removeFunction(str,fxn){
+	this.removeFunction = function(str,fxn){
 		if( list[str] == undefined){
 			return;
 		}

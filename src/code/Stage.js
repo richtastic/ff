@@ -180,6 +180,9 @@ self.tempCanvas.canvas.style.top="200px";
 		}
 		// 
 		if(intersection){
+if(evt==Canvas.EVENT_MOUSE_DOWN){
+	"DOWN"
+}
 			obj = intersection;
 			while(obj){ // self to ancestors - create path
 				path.push(obj);
@@ -193,6 +196,8 @@ self.tempCanvas.canvas.style.top="200px";
 				arr[1] = argPos;
 				obj.alertAll(evt,arr);
 			}
+		}else{
+			console.log("NO INTERSECTION");
 		}
 		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 	};

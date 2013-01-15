@@ -23,13 +23,12 @@ function FFLoadAll(homeDir, completeFxn, verbose){
 	}
 // -------------------------------------------------- constructor / initialilizer / auto-loading
 	this.compFxn = completeFxn;
-	var url = this.homeDir+"ScriptLoader.js";
 	var head = document.getElementsByTagName("head")[0];
 	var script = document.createElement("script");
 	script.type = "text/javascript";
-	script.src = url;
-	script.onreadystatechange = self.startLoadingFxn;
-	script.onload = self.startLoadingFxn;
+	script.src = this.homeDir+"ScriptLoader.js";
+	script.onreadystatechange = this.startLoadingFxn;
+	script.onload = this.startLoadingFxn;
 	head.appendChild(script);
 }
 

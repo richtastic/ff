@@ -3,41 +3,40 @@
 function Spice(){
 	var self = this;
 	// LISTENERS
-	self.addListeners = function(){
-		self.resource.addListeners();
-		self.canvas.addListeners();
-		self.stage.addListeners();
-		self.keyboard.addListeners();
-		// 
-		self.stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,self.stageEnterFrameFxn);
-		self.stage.addFunction(Stage.EVENT_ON_EXIT_FRAME,self.stageExitFrameFxn);
-		self.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,self.canvasClickFxn);
-		self.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,self.canvasResizeFxn);
-		self.keyboard.addFunction(Keyboard.EVENT_KEY_UP,self.keyUpFxn);
-		self.keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,self.keyDownFxn);
-		self.resource.alertLoadCompleteEvents();
-		self.stage.start();
+	this.addListeners = function(){
+		this.resource.addListeners();
+		this.canvas.addListeners();
+		this.stage.addListeners();
+		this.keyboard.addListeners();
+		this.stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this.stageEnterFrameFxn);
+		this.stage.addFunction(Stage.EVENT_ON_EXIT_FRAME,this.stageExitFrameFxn);
+		this.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.canvasClickFxn);
+		this.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.canvasResizeFxn);
+		this.keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.keyUpFxn);
+		this.keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.keyDownFxn);
+		this.resource.alertLoadCompleteEvents();
+		this.stage.start();
 	};
-	self.removeListeners = function(){
-		// 
-	};
-	self.stageEnterFrameFxn = function(e){
+	this.removeListeners = function(){
 		// 
 	};
-	self.stageExitFrameFxn = function(e){
+	this.stageEnterFrameFxn = function(e){
+		// 
+	};
+	this.stageExitFrameFxn = function(e){
 		//
 	};
-	self.keyUpFxn = function(k){
+	this.keyUpFxn = function(k){
 		if(k==Keyboard.KEY_LET_Z){
-			self.scroller.dragEnabled = false;
+			this.scroller.dragEnabled = false;
 		}
 	};
-	self.keyDownFxn = function(k){
+	this.keyDownFxn = function(k){
 		if(k==Keyboard.KEY_LET_Z){
-			self.scroller.dragEnabled = true;
+			this.scroller.dragEnabled = true;
 		}
 	};
-	self.canvasResizeFxn = function(e){
+	this.canvasResizeFxn = function(e){
 		var wid = e.x, hei = e.y;
 		var sX = 0, sY = 0;
 		//wid = 300;hei = 200;
@@ -60,31 +59,33 @@ function Spice(){
 		self.library.endPath();
 		self.library.fill();
 	}
-	self.canvasClickFxn = function(e){
+	this.canvasClickFxn = function(e){
 		// console.log(e);
 	};
-	self.clickWinFxn = function(e){
+	this.clickWinFxn = function(e){
 		console.log("clickWinFxn");
 		console.log(e);
 	};
-	self.puts = function(e){
+	this.puts = function(e){
 		console.log(e);
 	};
-	self.constructor = function(){
+	this.constructor = function(){
 		// CONSTRUCTOR
 		self.canvas = new Canvas(self.resource,null,600,300,Canvas.STAGE_FIT_FILL);
 		self.stage = new Stage(self.canvas, 1000/18);
 		self.keyboard = new Keyboard();
 		self.resource.alertLoadCompleteEvents();
-		// 
+		
 		self.doRoot = new DO();
 			self.doMenus = new DO();
 			self.doDraft = new Draft({},self.resource);
 			self.doWindows = new WinManager();
 		self.stage.addChild(self.doRoot);
 			self.doRoot.addChild(self.doMenus);
-			self.doRoot.addChild(self.doDraft.display());
+var dos = self.doDraft.display();
+			self.doRoot.addChild(dos);
 			self.doRoot.addChild(self.doWindows);
+		
 		// 
 		var style = {};
 		style[Win.WIN_BAR_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_RED];
@@ -122,43 +123,19 @@ function Spice(){
 		// 
 		// SCROLLLLLLLLLLLLLLLLLLLLLLLLLLLLLER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		//self.backImage = new DOImage(img,{width:300,height:200});
-		/*
-		self.scroller = new DO();
-			self.scroller.clearGraphics();
-			self.scroller.setLine(1,0xFF00FFFF);
-			self.scroller.setFillRGBA(0x0000FF99);
-			//self.scroller.drawRect(0,0,100,100);
-			self.scroller.beginPath();
-			self.scroller.moveTo(0,0);
-			self.scroller.lineTo(100,0);
-			self.scroller.lineTo(100,100);
-			self.scroller.lineTo(0,100);
-			self.scroller.lineTo(0,0);
-			self.scroller.strokeLine();
-			self.scroller.endPath();
-			self.scroller.fill();
-		self.backImage = new DOImage(img);
-		self.doRoot.addChild( self.scroller );
-		self.scroller.addChild( self.backImage );
-		self.scroller.mask = true;
-		// 
-			self.scroller.addFunction(Canvas.EVENT_MOUSE_DOWN,self.scrollMouseDownFxn);
-			self.scroller.addFunction(Canvas.EVENT_MOUSE_UP,self.scrollMouseUpFxn);
-			// MOUSE_UP_OUTSIDE
-			//self.backImage.addFunction(Canvas.EVENT_MOUSE_DOWN,self.scrollMouseDownFxn);
-		*/
+		
 		self.addListeners();
 	};
 	// 
-	self.scrollMouseDownFxn = function(e){
+	this.scrollMouseDownFxn = function(e){
 		console.log(e);
 	};
-	self.scrollMouseUpFxn = function(e){
+	this.scrollMouseUpFxn = function(e){
 		console.log(e);
 	};
 	// 
-	self.resource = new ResourceSpice();
-	self.resource.setFxnComplete(self.constructor);
-	self.resource.load();
+	this.resource = new ResourceSpice();
+	this.resource.setFxnComplete(this.constructor);
+	this.resource.load();
 }
 

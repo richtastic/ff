@@ -4,28 +4,27 @@ Draft.X = 0;
 function Draft(style,resource){
 	var self = this;
 	Code.extendClass(this,DOContainer,arguments);
-	self._resource = resource;
-	self._elements = new Array();
+	this._resource = resource;
+	this._elements = new Array();
 	// SCROLLER
-	self._scroller = new DOScroll();
-	self._display.addChild( self._scroller );
+	this._scroller = new DOScroll();
+	this._display.addChild( this._scroller );
 	// BACKGROUND
-	var img = self._resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
-	self._background = new DOImage(img);
-	self._background.clearGraphics();
-	self._background.drawImage(0,0,2000,2000);
-	self._scroller.addChild( self._background );
-	self._background.setDraggingEnabled();
-	self._background.rangeLimitsX = [-100, 100];
-	self._background.rangeLimitsY = [-100, 100];
+	var img = this._resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
+	this._background = new DOImage(img);
+	this._background.clearGraphics();
+	this._background.drawImage(0,0,2000,2000);
+	this._scroller.addChild( this._background );
+	this._background.setDraggingEnabled();
+	this._background.rangeLimitsX = [-100, 100];
+	this._background.rangeLimitsY = [-100, 100];
 	// FXNS
-	self.addElement = function(){
-		
-		img = self._resource.tex[ResourceSpice.TEX_DEBUG_1];
+	this.addElement = function(){
+		img = this._resource.tex[ResourceSpice.TEX_DEBUG_1];
 		var doEle = new DOImage(img);
 		doEle.clearGraphics();
 		doEle.drawImage(0,0,100,100);
-		self._background.addChild( doEle );
+		this._background.addChild( doEle );
 		doEle.setDraggingEnabled(50,50);
 		//doEle.matrix.translate(-50);
 		//doEle.matrix.rotate(Math.PI/6);
@@ -35,43 +34,43 @@ function Draft(style,resource){
 		doEle.matrix.translate(150,150);
 		
 	}
-	self.resize = function(wid,hei){
-		self._scroller.clearGraphics();
-		self._scroller.setLine(1,0xFF00FF00);
-		self._scroller.setFillRGBA(0x00000000); // 0x00000001
-		self._scroller.beginPath();
-		self._scroller.moveTo(0,0);
-		self._scroller.lineTo(wid,0);
-		self._scroller.lineTo(wid,hei);
-		self._scroller.lineTo(0,hei);
-		self._scroller.lineTo(0,0);
-		self._scroller.strokeLine();
-		self._scroller.endPath();
-		self._scroller.fill();
+	this.resize = function(wid,hei){
+		this._scroller.clearGraphics();
+		this._scroller.setLine(1,0xFF00FF00);
+		this._scroller.setFillRGBA(0x00000000); // 0x00000001
+		this._scroller.beginPath();
+		this._scroller.moveTo(0,0);
+		this._scroller.lineTo(wid,0);
+		this._scroller.lineTo(wid,hei);
+		this._scroller.lineTo(0,hei);
+		this._scroller.lineTo(0,0);
+		this._scroller.strokeLine();
+		this._scroller.endPath();
+		this._scroller.fill();
 	}
 	// ELEMENTS
 	var img
 	var pin = new DOAnim();
-	/*var img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
-	var img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
+	/*var img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
+	var img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
 	img.setSize(50,50);
 	img.setRenderModeStretch();
 	pin.addFrame(img,1);
 	img.setDraggingEnabled(50,50);
 	*/
 	//img.setSize(50,50);
-	img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
+	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
 	img.setRenderModeStretch();
 	pin.addFrame(img,4);
-	img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]);
+	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]);
 	img.setRenderModeStretch();
 	pin.addFrame(img,8);
 	pin.gotoFrame(0);
 	//pin.setStop();
 	pin.matrix.translate(100,200);
 
-	self._background.addChild(pin);
-//	self.addElement();
+	this._background.addChild(pin);
+//	this.addElement();
 	// YAY
 }
 

@@ -71,3 +71,11 @@ function Complex(rea,img){
 		this._value = null;
 	}
 };
+/*
+var A = new Complex(1,1);
+	var B = new Complex(-1,1);
+console.log(A.toString());
+console.log(B.toString());
+	Complex.add(A,A,B);
+console.log(A.toString());
+*/

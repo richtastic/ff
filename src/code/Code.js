@@ -1,24 +1,36 @@
 // Code.js
+Code.RESERVED_WORDS = ["super","superList","superRank","superFxn"];
+Code.TYPE_OBJECT = "object";
+Code.TYPE_FUNCTION = "function";
+Code.TYPE_NUMBER = "number";
+Code.TYPE_STRING = "string";
+Code.TYPE_UNDEFINED = "undefined";
+// instance functions ----------------------------------------------
 function Code(){
 	alert('you shouldn\'t instantiate the Code class');
 }
 // basic functions ----------------------------------------------
 Code.log = function(o){
-	console.log( o.toString() );
+	if(typeof o == Code.TYPE_STRING){
+		console.log(o);
+	}else if(typeof o == Code.TYPE_FUNCTION){
+		console.log(o);
+	}else{
+		console.log( o.toString() );
+	}
 }
 // array functions ----------------------------------------------
-Code.elementExists = function(a,o){
-	var i;
-	for(i=0;i<a.length;++i){
+Code.elementExists = function(a,o){ // O(n)
+	for(var i=0; i<a.length; ++i){
 		if(a[i]==o){ return true; }
 	}
 	return false;
 }
-Code.addUnique = function(a,o){
+Code.addUnique = function(a,o){ // O(n)
 	if( !Code.elementExists(a,o) ){ a.push(o); return true; }
 	return false;
 }
-Code.removeElement = function(a,o){ // preserves order
+Code.removeElement = function(a,o){ // preserves order O(n)
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){
@@ -32,7 +44,7 @@ Code.removeElement = function(a,o){ // preserves order
 		}
 	}
 }
-Code.removeElementSimple = function(a,o){ // not preserve order
+Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){
@@ -62,6 +74,7 @@ Code.newArray = function(){
 	return arr;
 }
 Code.copyArray = function(a,b){ // a = b
+	if(a==b){return;}
 	Code.emptyArray(a);
 	var i, len = b.length;
 	for(i=0;i<len;++i){
@@ -77,52 +90,46 @@ Code.getHex = function (intVal){
 	return '#'+str;
 }
 // class functions ----------------------------------------------
-Code.RESERVED_WORDS = ["super","superList","superRank","superFxn"];
-Code.TYPE_OBJECT = "object";
-Code.TYPE_FUNCTION = "function";
-Code.TYPE_NUMBER = "number";
-Code.TYPE_STRING = "string";
-Code.TYPE_UNDEFINED = "undefined";
-Code.extendClass = function(child,parent,args){ // parent.apply(child); child.base = new parent; child.base.child = child;
-	parent.apply(child,args);
-	if(!child.super){
-		child.superList = [ {} ];
-		child.superRank = 0;
+Code.extendClass = function(child,parent,args){
+	parent.apply(child,args); // give functions and objects
+	if(!child.super){ // first extension
+		child._superList = [ {} ];
+		child._superRank = 0;
 		child.super = function(n){
 			if(n == undefined){
 				return null; // arguments.callee ?
 			}else if(typeof n == Code.TYPE_FUNCTION){
-				return child.superList[ n.superRank ];
+				return child._superList[ n._superRank ];
 			}
-			return child.superList[n];
+			return child._superList[n];
 		}
-	}else{
-		child.superList.push({});
-		child.superRank++;
+	}else{ // add another 'super' object
+		child._superList.push({});
+		child._superRank++;
 	}
-	for(key in child){
+	for(key in child){ // give each function a rank/overriding fxn
 		if(typeof child[key] == Code.TYPE_FUNCTION){
-			if(!child[key].superFxn){
-				child[key].superFxn = child[key];
-				child[key].superRank = child.superRank;
+			if(!child[key]._superFxn){
+				child[key]._superFxn = child[key];
+				child[key]._superRank = child._superRank;
 			}
 		}
 	}
 }
 Code.overrideClass = function(child,oldFxn,newFxn){
 	var fxnKey = null;
-	for(key in child){
+	for(key in child){ // find key name
 		if(typeof child[key] == Code.TYPE_FUNCTION){
 			if(child[key]==oldFxn){
 				fxnKey = key;
 				break;
 			}
 		}
-	}
-	child.superList[child.superRank][fxnKey] = oldFxn;
+	}// save old fxn in super and set key to new fxn
+	child._superList[child._superRank][fxnKey] = oldFxn;
 	child[fxnKey] = newFxn;
-	newFxn.superFxn = fxnKey;
-	newFxn.superRank = child.superRank;
+	newFxn._superFxn = fxnKey;
+	newFxn._superRank = child._superRank;
 	return newFxn;
 }
 // color functions ----------------------------------------------------
@@ -159,9 +166,9 @@ Code.getJSRGBA = function(col){
 	return "rgba("+Code.getRedRGBA(col)+","+Code.getGrnRGBA(col)+","+Code.getBluRGBA(col)+","+Code.getAlpRGBA(col)/255.0+")";
 }
 // object styling functions ----------------------------------------------
-Code.copyProperties = function(objectOut,objectIn){
+Code.copyProperties = function(objectOut,objectIn, override){
 	for(p in objectIn){
-		if(!objectOut[p]){
+		if(!objectOut[p] || override){
 			objectOut[p] = objectIn[p];
 		}
 	}
@@ -229,7 +236,6 @@ Code.generateImageFromData = function(wid,hei,imageData){
     img.src = Code.generateBMPImageSrc(wid,hei,imageData);
     return img;
 }
-//Code.generateImageFrombit64encode = function(wid,hei,str){
 Code.generateImageFrombit64encode = function(str){
     var img = new Image();
     img.src = str;

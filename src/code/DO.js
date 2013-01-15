@@ -17,8 +17,7 @@ DO.removedFromStageRecursive = function(ch){
 	ch.removedFromStage(null);
 	for(i=0;i<ch.children.length;++i){
 		if(ch.children[i].stage != null){
-			//ch.children[i].removedFromStage(ch.stage);
-			self.removedFromStageRecursive(ch.children[i]);
+			DO.removedFromStageRecursive(ch.children[i]);
 		}
 	}
 };
@@ -35,39 +34,39 @@ DO.winIndex = 0;
 function DO(parentDO){
 	var self = this;
 	this.id = DO.winIndex++;
-	self.toString = function(){
-		return "[DO "+self.id+(self.stage==null?"-":"*")+"]";
-	};
-	self.stage = null;
-	self.parent = null;
-	self.children = new Array(); // 0 = back, length-1 = front
-	self.mask = false;
+	this.stage = null;
+	this.parent = null;
+	this.children = new Array(); // 0 = back, length-1 = front
+	this.mask = false;
 	this.matrix = new Matrix2D();
-	self.parent = parentDO;
-	self.canvas = null;
+	this.parent = parentDO;
+	this.canvas = null;
 	// FAST-POINT-RENDERING
-	self.pointRendering = false;
-	Code.extendClass(self,Dispatchable);
+	this.pointRendering = false;
+	Code.extendClass(this,Dispatchable,arguments);
 // self-event registering and dispatching ---------------------------------------------------------------------------------
-	self.dispatch = new Dispatch();
-	this.addFunction = function(str,fxn){
-		self.super.addFunction.call(this,str,fxn);
-		if(self.stage){
-			self.stage.addFunctionDO(self,str,fxn);
+	this.dispatch = new Dispatch();
+	//this.addFunction = function(str,fxn){
+	//
+	this.addFunction = Code.overrideClass(this, this.addFunction, function(str,fxn){
+		this.super(arguments.callee).addFunction.call(this,str,fxn);//this.super.addFunction.call(this,str,fxn);
+		if(this.stage){
+			this.stage.addFunctionDO(this,str,fxn);
 		}
-	};
-	this.removeFunction = function(str,fxn){
-		self.super.removeFunction.call(this,str,fxn);
-		if(self.stage){
-			self.stage.removeFunctionDO(self,str,fxn);
+	})
+	//this.removeFunction = function(str,fxn){
+	this.removeFunction = Code.overrideClass(this, this.removeFunction, function(str,fxn){
+		this.super(arguments.callee).removeFunction.call(this,str,fxn);//this.super.removeFunction.call(this,str,fxn);
+		if(this.stage){
+			this.stage.removeFunctionDO(this,str,fxn);
 		}
-	};
+	})
 	/*
-	self.removeFunction = function(str,fxn){
-		self.dispatch.removeFunction(str,fxn);
+	this.removeFunction = function(str,fxn){
+		this.dispatch.removeFunction(str,fxn);
 	};
-	self.alertAll = function(str,o){
-		self.dispatch.alertAll(str,o);
+	this.alertAll = function(str,o){
+		this.dispatch.alertAll(str,o);
 	};*/
 // downward message propagation ---------------------------------------------------------------------------------
 	this.inverseTransformPoint = function(a,b){
@@ -75,254 +74,238 @@ function DO(parentDO){
 		inv.inverse(this.matrix);
 		inv.multV2D(a,b);
 	};
-	self.transformPoint = function(a,b){
+	this.transformPoint = function(a,b){
 		this.matrix.multV2D(a,b);
 	};
-	self.transformEvent = function(evt,pos){ // self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
-		var i, len=self.children.length;
+	this.transformEvent = function(evt,pos){ // this.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
+		var i, len=this.children.length;
 		for(i=0;i<len;++i){
 			var newPos = new V2D();
-			self.transformPoint(newPos,pos);
-			self.children[i].transformEvent(evt,newPos);
+			this.transformPoint(newPos,pos);
+			this.children[i].transformEvent(evt,newPos);
 		}
-		self.alertAll(evt,pos);
+		this.alertAll(evt,pos);
 	};
-	self.addedToStage = function(stage){
+	this.addedToStage = function(stage){
 		this.alertAll(DO.EVENT_ADDED_TO_STAGE,this);
 		this.addListeners();
 	};
-	self.removedFromStage = function(stage){
+	this.removedFromStage = function(stage){
 		this.removeListeners();
 		this.alertAll(DO.EVENT_REMOVED_FROM_STAGE,this);
 	};
 // intersections ---------------------------------------------------------------------------------
 // could be separate function that uses visible-everything to guarantee 0-alpha is valid
 // rendering ---------------------------------------------------------------------------------
-	self.rendering_mode = true;
-	self.setRenderingOff = function(){
+	this.rendering_mode = true;
+	this.setRenderingOff = function(){
 		self.rendering_mode = false;
 	};
-	self.setRenderingOn = function(){
+	this.setRenderingOn = function(){
 		self.rendering_mode = true;
 	};
-	self.setupRender = function(canvas){
-		this.canvas = canvas;
+	this.setupRender = function(canvas){
+		self.canvas = canvas;
 		var context = canvas.getContext();
 		context.save();
-		var a = this.matrix.getParameters();
-		//context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
-		//context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
-		//context.transform(a[0],-a[2],-a[1],a[3],a[4],a[5]);
+		var a = self.matrix.getParameters();
 		context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
-		//context.transform(a[0],a[2],a[1],a[3],a[4],a[5]); // a b c d x y => a b c d e f
-		/*
-		a b x
-		c d y
-		0 0 1
-		=>
-		a c e
-		b d f
-		0 0 1
-		*/
 		Code.emptyArray(a);
 	};
-	self.takedownRender = function(){
+	this.takedownRender = function(){
 		var context = self.canvas.getContext();
 		context.restore();
 	};
 	this.render = function(canvas){
-		//console.log("DO RENDER "+self.children.length);
 		if(!self.rendering_mode){return;}
 		self.setupRender(canvas);
 		var context = self.canvas.getContext();
-		self.drawGraphics(canvas); // self render
+		self.drawGraphics(canvas); // this render
 		if(self.mask){
 			context.clip();
 		}
-		var i, len = this.children.length;
+		var i, len = self.children.length;
 		for(i=0;i<len;++i){ // children render
-			this.children[i].render(canvas);
-		}
-		if(self.mask){
-			//context.restore();
+			self.children[i].render(canvas);
 		}
 		self.takedownRender(canvas);
 	}
 // drawing ----------------------------------------------------------------------------------
-	self.graphics = new Array();
-	self.clearGraphics = function(){
+	this.graphics = new Array();
+	this.clearGraphics = function(){
 		Code.emptyArray(self.graphics);
 	}
 // ------------------------------------------------------------------------------------------
-	self.setFill = function(col){ // int color
+	this.setFill = function(col){ // int color
 		var str = Code.getHex(col);
-		self.graphics.push( Code.newArray(self.canvasSetFill,Code.newArray(str)) );
+		this.graphics.push( Code.newArray(this.canvasSetFill,Code.newArray(str)) );
 	}
-	self.canvasSetFill = function(col){
-		self.canvas.setFill(col);
+	this.canvasSetFill = function(col){
+		this.canvas.setFill(col);
 	}
 // ------------------------------------------------------------------------------------------
-	self.setFillRGBA = function(col){ // var str = Code.getHex(col);
-		self.graphics.push( Code.newArray(self.canvasSetFillRGBA,Code.newArray(col)) );
+	this.setFillRGBA = function(col){ // var str = Code.getHex(col);
+		this.graphics.push( Code.newArray(this.canvasSetFillRGBA,Code.newArray(col)) );
 	}
-	self.canvasSetFillRGBA = function(col){
-		self.canvas.setFillRGBA(col);
+	this.canvasSetFillRGBA = function(col){
+		this.canvas.setFillRGBA(col);
 	}
 // ------------------------------------------------------------------------------------------
-	self.setLine = function(wid,col){
+	this.setLine = function(wid,col){
 		var str = Code.getHex(col);
-		self.graphics.push( Code.newArray(self.canvasSetLine,Code.newArray(wid,str)) );
+		this.graphics.push( Code.newArray(this.canvasSetLine,Code.newArray(wid,str)) );
 	};
-	self.canvasSetLine = function(wid,col){
+	this.canvasSetLine = function(wid,col){
 		//console.log("SET LINE: "+wid+" "+col);
-		self.canvas.setLine(wid,col);
+		this.canvas.setLine(wid,col);
 	};
 // ------------------------------------------------------------------------------------------
-	self.beginPath = function(){
-		self.graphics.push( Code.newArray(self.canvasBeginPath,Code.newArray()) );
+	this.beginPath = function(){
+		this.graphics.push( Code.newArray(this.canvasBeginPath,Code.newArray()) );
 	};
-	self.canvasBeginPath = function(){
-		self.canvas.beginPath();
-	};
-// ------------------------------------------------------------------------------------------
-	self.moveTo = function(pX,pY){
-		self.graphics.push( Code.newArray(self.canvasMoveTo,Code.newArray(pX,pY)) );
-	};
-	self.canvasMoveTo = function(pX,pY){
-		self.canvas.moveTo(pX,pY);
+	this.canvasBeginPath = function(){
+		this.canvas.beginPath();
 	};
 // ------------------------------------------------------------------------------------------
-	self.lineTo = function(pX,pY){
-		self.graphics.push( Code.newArray(self.canvasLineTo,Code.newArray(pX,pY)) );
+	this.moveTo = function(pX,pY){
+		this.graphics.push( Code.newArray(this.canvasMoveTo,Code.newArray(pX,pY)) );
 	};
-	self.canvasLineTo = function(pX,pY){
-		self.canvas.lineTo(pX,pY);
-	};
-// ------------------------------------------------------------------------------------------
-	self.strokeLine = function(){
-		self.graphics.push( Code.newArray(self.canvasStrokeLine,Code.newArray()) );
-	};
-	self.canvasStrokeLine = function(){
-		self.canvas.strokeLine();
+	this.canvasMoveTo = function(pX,pY){
+		this.canvas.moveTo(pX,pY);
 	};
 // ------------------------------------------------------------------------------------------
-	self.fill = function(){
-		self.graphics.push( Code.newArray(self.canvasFill,Code.newArray()) );
+	this.lineTo = function(pX,pY){
+		this.graphics.push( Code.newArray(this.canvasLineTo,Code.newArray(pX,pY)) );
 	};
-	self.canvasFill= function(){
-		self.canvas.fill();
-	};
-// ------------------------------------------------------------------------------------------
-	self.endPath = function(){
-		self.graphics.push( Code.newArray(self.canvasEndPath,Code.newArray()) );
-	};
-	self.canvasEndPath = function(){
-		self.canvas.endPath();
+	this.canvasLineTo = function(pX,pY){
+		this.canvas.lineTo(pX,pY);
 	};
 // ------------------------------------------------------------------------------------------
-	self.drawRect = function(sX,sY,wX,hY){
-		self.graphics.push( Code.newArray(self.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
+	this.strokeLine = function(){
+		this.graphics.push( Code.newArray(this.canvasStrokeLine,Code.newArray()) );
 	};
-	self.canvasDrawRect = function(sX,sY,wX,hY){
-		self.canvas.drawRect(sX,sY,wX,hY);
+	this.canvasStrokeLine = function(){
+		this.canvas.strokeLine();
 	};
 // ------------------------------------------------------------------------------------------
-	self.drawImage = function(img,pX,pY,wX,hY){
+	this.fill = function(){
+		this.graphics.push( Code.newArray(this.canvasFill,Code.newArray()) );
+	};
+	this.canvasFill= function(){
+		this.canvas.fill();
+	};
+// ------------------------------------------------------------------------------------------
+	this.endPath = function(){
+		this.graphics.push( Code.newArray(this.canvasEndPath,Code.newArray()) );
+	};
+	this.canvasEndPath = function(){
+		this.canvas.endPath();
+	};
+// ------------------------------------------------------------------------------------------
+	this.drawRect = function(sX,sY,wX,hY){
+		this.graphics.push( Code.newArray(this.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
+	};
+	this.canvasDrawRect = function(sX,sY,wX,hY){
+		this.canvas.drawRect(sX,sY,wX,hY);
+	};
+// ------------------------------------------------------------------------------------------
+	this.drawImage = function(img,pX,pY,wX,hY){
 		console.log(img.width);
 		if(wX===null || hY===null){
 			wX = img.width;
 			hY = img.height;
 		}
-		//self.graphics.push( Code.newArray(self.canvasDrawImage,Code.newArray(img, pX,pY,wX,hY)) );
-		self.graphics.push( Code.newArray(self.canvasDrawImage,arguments) );
+		//this.graphics.push( Code.newArray(this.canvasDrawImage,Code.newArray(img, pX,pY,wX,hY)) );
+		this.graphics.push( Code.newArray(this.canvasDrawImage,arguments) );
 	};
-	self.canvasDrawImage = function(img,pX,pY,wX,hY){
-		self.canvas.drawImage(img,pX,pY,wX,hY);
+	this.canvasDrawImage = function(img,pX,pY,wX,hY){
+		this.canvas.drawImage(img,pX,pY,wX,hY);
 	};
 // ------------------------------------------------------------------------------------------
-	self.drawGraphics = function(canvas){
-		self.canvas = canvas;
-		var arr = self.graphics;
+	this.drawGraphics = function(canvas){
+		this.canvas = canvas;
+		var arr = this.graphics;
 		var i, len = arr.length;
 		var args, fxn;
 		for(i=0;i<len;++i){
 			fxn = arr[i][0];
 			args = arr[i][1];
-			fxn.apply(self,args);
+			fxn.apply(this,args);
 		}
 	};
 // Display List ----------------------------------------------------------------------------------------------------------------
-	self.DOExists = function(obj){
-		if(self==obj){
+	this.DOExists = function(obj){
+		if(this==obj){
 			return true;
-			for(i=0;i<self.children.length;++i){
-				if(self.children[i].DOExists(obj)){
+			for(i=0;i<this.children.length;++i){
+				if(this.children[i].DOExists(obj)){
 					return true;
 				}
 			}
 		}
 		return false;
 	}
-	self.addChild = function(ch){
+	this.addChild = function(ch){
 		if(!ch){return;}
-		ch.parent = self;
-		Code.addUnique(self.children,ch);
-		if( self.stage!=null ){
-			DO.addToStageRecursive(ch,self.stage);
+		ch.parent = this;
+		Code.addUnique(this.children,ch);
+		if( this.stage!=null ){
+			DO.addToStageRecursive(ch,this.stage);
 		}
 	};
-	self.removeChild = function(ch){
+	this.removeChild = function(ch){
 		if(!ch){return;}
 		ch.parent = null;
-		Code.removeElement(self.children,ch);
+		Code.removeElement(this.children,ch);
 		if( true ){
 			DO.removedFromStageRecursive(ch);
 		}
 	};
-	self.removeAllChildren = function(ch){
-		var i, len = self.children.length;
+	this.removeAllChildren = function(ch){
+		var i, len = this.children.length;
 		for(i=0;i<len;++i){
-			self.children[i].parent = null;
+			this.children[i].parent = null;
 		}
-		Code.emptyArray(self.children);
+		Code.emptyArray(this.children);
 	}
-	self.kill = function(ch){
-		Code.killArray(self.children);
+	this.kill = function(ch){
+		Code.killArray(this.children);
 		this.matrix.kill();
 		this.parent = null;
-		Code.killMe(self);
+		Code.killMe(this);
 	}
 	// ------------------------------------------------------------------ stage passthrough
-	self.getCurrentMousePosition = function(){
-		return self.stage.getCurrentMousePosition();
+	this.getCurrentMousePosition = function(){
+		return this.stage.getCurrentMousePosition();
 	}
-	self.globalPointToLocalPoint = function(pos){
-		return self.stage.globalPointToLocalPoint(self,pos);
+	this.globalPointToLocalPoint = function(pos){
+		return this.stage.globalPointToLocalPoint(this,pos);
 	}
 	// -------------------------------------------------------------------- dragging
 	// dragging
-	self.rangeLimitsX = [-9E9, 9E9];
-	self.rangeLimitsY = [-9E9, 9E9];
-	self.dragEnabled = false;
-	self.dragging = false;
-	self.dragOffset = new V2D();
-	self.dragRoundingX = 0;
-	self.dragRoundingY = 0;
-	self.setDraggingEnabled = function(rX,rY){
+	this.rangeLimitsX = [-9E9, 9E9];
+	this.rangeLimitsY = [-9E9, 9E9];
+	this.dragEnabled = false;
+	this.dragging = false;
+	this.dragOffset = new V2D();
+	this.dragRoundingX = 0;
+	this.dragRoundingY = 0;
+	this.setDraggingEnabled = function(rX,rY){
 		if(rX!==null && rX!==undefined && rX!==0){ self.dragRoundingX = rX; }else{ self.dragRoundingX = 0; }
 		if(rY!==null && rY!==undefined && rY!==0){ self.dragRoundingY = rY; }else{ self.dragRoundingY = 0; }
 		self.dragEnabled = true;
+		console.log(self.dragMouseDownFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 	};
-	self.setDraggingDisabled = function(){
+	this.setDraggingDisabled = function(){
 		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
 		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 		self.dragEnabled = false;
 	};
-	self.startDrag = function(pos){
+	this.startDrag = function(pos){
 		if(!self.dragEnabled){ return; }
 		console.log("START");
 		pos = pos?pos:new V2D();
@@ -330,13 +313,12 @@ function DO(parentDO){
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
 	};
-	self.stopDrag = function(){
+	this.stopDrag = function(){
 		console.log("STOP");
 		self.dragging = false;
 	};
-	self.dragMouseDownFxn = function(e){
+	this.dragMouseDownFxn = function(e){
 		console.log("DOWN");
-		console.log(self.toString());
 		if(e[0]==self && self.dragEnabled){
 			var pos = e[1];
 			self.startDrag(e[1]);
@@ -345,7 +327,7 @@ function DO(parentDO){
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 		}
 	};
-	self.dragMouseUpFxn = function(e){
+	this.dragMouseUpFxn = function(e){
 		console.log("UP");
 		if(self.dragEnabled && self.dragging){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
@@ -353,7 +335,7 @@ function DO(parentDO){
 			self.stopDrag();
 		}
 	};
-	self.mouseMoveDragCheckFxnOutside = function(e){
+	this.mouseMoveDragCheckFxnOutside = function(e){
 		console.log("OUTSIDE");
 		if(self.dragEnabled && self.dragging){
 			self.mouseMoveDragCheckFxn(e,false);
@@ -378,66 +360,69 @@ function DO(parentDO){
 				}
 				// LIMITS ?
 				//if(diffX!=0 && diffY!=0){
-					this.matrix.pretranslate(diffX,diffY);
-					this.alertAll(DO.EVENT_DRAGGED,self);
+					self.matrix.pretranslate(diffX,diffY);
+					self.alertAll(DO.EVENT_DRAGGED,self);
 				//}
 				//self.dragOffset.x = pos.x;
 				//self.dragOffset.y = pos.y;
 			}
 		}
 	};
-	self.addListeners = function(){
+	this.addListeners = function(){
 		//
 	};
-	self.removeListeners = function(){
+	this.removeListeners = function(){
 		//
 	};
 	// ------------------------------------------------------------------ intersection
-	self.checkIntersectionChildren = true;
-	self.checkIntersectionSelf = true;
-	self.getIntersection = function(pos, can){
+	this.checkIntersectionChildren = true;
+	this.checkIntersectionthis = true;
+	this.getIntersection = function(pos, can){
 		self.pointRendering = true;
-		this.setupRender(can);
+		self.setupRender(can);
 		if(self.mask){
 			var context = can.getContext();
-			this.drawGraphics(can);
+			self.drawGraphics(can);
 			context.clip();
 		}
-		if(this.checkIntersectionChildren){
-			var ret, i, len = this.children.length;
+		if(self.checkIntersectionChildren){
+			var ret, i, len = self.children.length;
 			for(i=len-1;i>=0;--i){
-				ret = this.children[i].getIntersection(pos, can);
+				ret = self.children[i].getIntersection(pos, can);
 				if(ret){
-					this.takedownRender(can);
-					this.pointRendering = false;
+					self.takedownRender(can);
+					self.pointRendering = false;
 					return ret;
 				}
 			}
 		}
-		if(self.checkIntersectionSelf){
+		if(self.checkIntersectionthis){
 //all DO objects must use ONLY the canvas passed to it through the render functions - not internally stored
-			this.drawGraphics(can);
-			//this.render(can);
+			self.drawGraphics(can);
+			//self.render(can);
 			var context = can.getContext();
 			var imgData = can.getImageData(0,0,can.canvas.width,can.canvas.height);//context.getImageData(0,0,can.canvas.width,can.canvas.height);
-			var pix = this.getPixelRGBA( imgData, pos.x,pos.y);
-			this.takedownRender(can);
+			var pix = self.getPixelRGBA( imgData, pos.x,pos.y);
+			self.takedownRender(can);
 			if(pix!=0){
 				self.pointRendering = false;
-				return this;
+				return self;
 			}
 		}
 		self.pointRendering = false;
 		return null;
 	}
-	self.getPixelRGBA = function(img, x,y){
+	this.getPixelRGBA = function(img, x,y){
 		if(x>=img.width || x<0 || y>=img.height || y<0){ return 0; }
 		var index = (y*img.width + x)*4, dat = img.data;
 		return Code.getColRGBA(dat[index],dat[index+1],dat[index+2],dat[index+3]);
 	};
 // ------------------------------------------------------------------ debugging
-	self.print = function(){
-		DO.printRecursive(self,"","  ","-");
+	this.toString = function(){
+		return "[DO "+this.id+(this.stage==null?"-":"*")+"]";
+	};
+	this.print = function(){
+		DO.printRecursive(this,"","  ","-");
 	};
 // ------------------------------------------------------------------ constructor
 //console.log("new DO");
@@ -456,7 +441,7 @@ function DO(parentDO){
 	this.endPath();
 	*/
 // --------------
-	//self.addListeners();
+	//this.addListeners();
 	//console.log("ADD LISTENERS");
 }
 
