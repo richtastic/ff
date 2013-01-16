@@ -37,85 +37,94 @@ Canvas.IMAGE_TYPE_JPG = "jpg";
 
 function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
 	var self = this;
-	// public
-	this.resource = resource;
-	this.mouseDown = false;
-	this.mousePosition = new V2D();
-	// private
 	Code.extendClass(this,Dispatchable);
-	var canvas, context;
-	var canvasWidth, canvasHeight;
-	var stageFit = Canvas.STAGE_FIT_FIXED;
+	this._resource = resource;
+	this._mouseDown = false;
+	this._mousePosition = new V2D();
 	if(canHTML){
-		canvas = canHTML;
+		this._canvas = canHTML;
 	}else{
-		canvas = document.createElement("canvas");
+		this._canvas = document.createElement("canvas");
 		if(!hidden){
-			document.body.appendChild(canvas);
+			document.body.appendChild(this._canvas);
 		}
 	}
+	this._stageFit = Canvas.STAGE_FIT_FIXED;
 	if(canWid&&canHei){
-		canvasWidth = canWid; canvasHeight = canHei;
-		canvas.width = canWid; canvas.height = canHei;
+		this._canvas.width = canWid; this._canvas.height = canHei;
 	}else{
-		stageFit = Canvas.STAGE_FIT_FILL;
+		this._stageFit = Canvas.STAGE_FIT_FILL;
 	}
 	if(fitStyle){
-		stageFit = fitStyle;
+		this._stageFit = fitStyle;
 	}
-	context = canvas.getContext("2d");
-	this.canvas = canvas;
-	this.context = context;
+	this._context = this._canvas.getContext("2d");
+// IMAGE ------------------------------------------------------------
 	this.getImageData = function(a,b,c,d){
-		var context = this.getContext();
-		var imgData = context.getImageData(a,b,c,d);
+		var imgData = this._context.getImageData(a,b,c,d);
 		return imgData;
 	};
 	this.toDataURL = function(){
-		return this.canvas.toDataURL.call(this.canvas,arguments);
+		return this._canvas.toDataURL.call(this.canvas,arguments);
 	}
-	// ------------------------------------------------------------
+// STYLES ------------------------------------------------------------
 	this.setClass = function(name){
-		this.canvas.setAttribute("class",name);
+		this._canvas.setAttribute("class",name);
 	};
 	this.setCursorStyle = function(style){
-		this.canvas.style.cursor = style;
+		this._canvas.style.cursor = style;
 	};
-	// drawing ------------------------------------------------------------
+// DRAWING ------------------------------------------------------------
 	this.setLine = function(wid,col){
-		context.lineWidth = wid;
-		context.strokeStyle = col;
-		context.lineJoin = 'bevel';
-		context.lineCap = 'round';
+		this._context.lineWidth = wid;
+		this._context.strokeStyle = col;
+		this._context.lineJoin = 'bevel';
+		this._context.lineCap = 'round';
 	}
 	this.setLineJoinCap = function(j,c){
-		context.lineJoin = j;
-		context.lineCap = c;
+		this._context.lineJoin = j;
+		this._context.lineCap = c;
 	}
 	this.setFill = function(col){
-		context.fillStyle = col;
+		this._context.fillStyle = col;
 	}
-
-
-?
-
-
+	this.beginPath = function(){
+		this._context.beginPath();
+	}
+	this.moveTo = function(pX,pY){
+		this._context.moveTo(pX,pY);
+	}
+	this.lineTo = function(pX,pY){
+		this._context.lineTo(pX,pY);
+	}
+	this.strokeLine = function(){
+		this._context.stroke();
+	}
+	this.fill = function(){
+		this._context.fill();
+	}
+	this.endPath = function(){
+		this._context.closePath();
+	}
 	this.drawRect = function(sX,sY,wX,hY){
-		this.context.fillRect(sX,sY,wX,hY);
-	};
+		this._context.fillRect(sX,sY,wX,hY);
+	}
+	this.strokeRect = function(sX,sY,wX,hY){
+		this._context.fillRect(sX,sY,wX,hY);
+	}
 	this.drawImage0 = function(img){
-		self.context.drawImage(img);
+		this._context.drawImage(img);
 	}
 	this.drawImage2 = function(img,px,py){
-		self.context.drawImage(img,px,py);
+		this._context.drawImage(img,px,py);
 	}
 	this.drawImage4 = function(img,pX,pY,wX,hY){
-		self.context.drawImage(img,pX,pY,wX,hY);
+		this._context.drawImage(img,pX,pY,wX,hY);
 	}
 	this.drawImage8 = function(img,sx,sy,swid,shei,x,y,wid,hei){
-		self.context.drawImage(img,sx,sy,swid,shei,x,y,wid,hei);
+		this._context.drawImage(img,sx,sy,swid,shei,x,y,wid,hei);
 	}
-	this.drawImage = function(img,pX,pY,wX,hY,mX,mY,dX,dY){
+	/*this.drawImage = function(img,pX,pY,wX,hY,mX,mY,dX,dY){
 		if(pX!==undefined && pY!==undefined){
 			if(wX!==undefined && hY!==undefined){
 				if(dX!==undefined && dY!==undefined){
@@ -129,90 +138,72 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		}else{
 			self.drawImage0(img);
 		}
+	}*/
+	this.clear = function(){
+		/*var wid = this.canvas.width; var hei = this.canvas.height; this.canvas.width = 0; this.canvas.height = 0; this.canvas.width = wid; this.canvas.height = hei;*/
+		this._canvas.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
-	this.beginPath = function(){
-		context.beginPath();
+// GETTERS -----------------------------------------------------------
+	this.mousePosition = function(){
+		return this._mousePosition;
 	}
-	this.moveTo = function(pX,pY){
-		context.moveTo(pX,pY);
-	}
-	this.lineTo = function(pX,pY){
-		context.lineTo(pX,pY);
-	}
-	this.strokeLine = function(){
-		context.stroke();
-	}
-	this.endPath = function(){
-		context.closePath();
-	};
-	this.fillEnd = function(){
-		context.fill();
-	}
-	this.clearAll = function(){
-		var wid = this.canvas.width;
-		var hei = this.canvas.height;
-		this.canvas.width = 0;
-		this.canvas.height = 0;
-		this.canvas.width = wid;
-		this.canvas.height = hei;
-	}
-	// getters -----------------------------------------------------------
 	this.getCanvas = function(){
-		return canvas;
+		return this._canvas;
 	}
 	this.getContext = function(){
-		return context;
+		return this._context;
 	}
 	this.getWidth = function(){
-		return this.canvas.width;
+		return this._canvas.width;
 	}
 	this.getHeight = function(){
-		return this.canvas.height;
+		return this._canvas.height;
 	}
 	this.setWidth = function(wid){
-		this.canvas.width = wid;
+		this._canvas.width = wid;
 	};
 	this.setHeight = function(hei){
-		this.canvas.height = hei;
+		this._canvas.height = hei;
 	};
 	this.setSize = function(wid,hei){
-		this.canvas.width = wid;
-		this.canvas.height = hei;
+		this._canvas.width = wid;
+		this._canvas.height = hei;
 	};
-	// LISTENERS ----------------------------------------------------------
+// LISTENERS ----------------------------------------------------------
 	this.addListeners = function(){
-		canvas.addEventListener('click', this.canvasClickFxn);
-		canvas.addEventListener('mousedown', this.canvasMouseDownFxn);
-		canvas.addEventListener('mouseup', this.canvasMouseUpFxn);
-		canvas.addEventListener('mousemove', this.canvasMouseMoveFxn);
+		this._canvas.addEventListener('click', this.canvasClickFxn);
+		this._canvas.addEventListener('mousedown', this.canvasMouseDownFxn);
+		this._canvas.addEventListener('mouseup', this.canvasMouseUpFxn);
+		this._canvas.addEventListener('mousemove', this.canvasMouseMoveFxn);
 	}
 	this.removeListeners = function(){
-		canvas.removeEventListener('click', this.canvasClickFxn);
-		canvas.removeEventListener('mousedown', this.canvasMouseDownFxn);
-		canvas.removeEventListener('mouseup', this.canvasMouseUpFxn);
-		canvas.removeEventListener('mousemove', this.canvasMouseMoveFxn);
+		this._canvas.removeEventListener('click', this.canvasClickFxn);
+		this._canvas.removeEventListener('mousedown', this.canvasMouseDownFxn);
+		this._canvas.removeEventListener('mouseup', this.canvasMouseUpFxn);
+		this._canvas.removeEventListener('mousemove', this.canvasMouseMoveFxn);
 	}
+// MOUSE POSITIONING --------------------------------------------------------
 	this.canvasClickFxn = function(e){
 		pos = self.getMousePosition(e);
-		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+		this.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 		pos = null;
 	}
 	this.canvasMouseDownFxn = function(e){
-		self.mouseDown = true;
-		pos = self.getMousePosition(e);
-		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+		this._mouseDown = true;
+		pos = this.getMousePosition(e);
+		this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 		pos = null;
 	}
 	this.canvasMouseUpFxn = function(e){
-		self.mouseDown = false;
+		this._mouseDown = false;
 		pos = self.getMousePosition(e);
-		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+		this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 		pos = null;
 	}
 	this.canvasMouseMoveFxn = function(e){
-		pos = self.getMousePosition(e);
-		self.mousePosition.x = pos.x; self.mousePosition.y = pos.y;
-		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+		pos = this.getMousePosition(e);
+		this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
+		this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 		//pos = null;
 	}
 	this.getMousePosition = function(e){
@@ -227,14 +218,14 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		pos.y = e.pageY - pos.y;
 		return pos;
 	}
-	// ------------------ resource listeners
+// ... --------------------------------------------------------
 	this.windowResizedFxn = function(o){
 		var p = new V2D(o.x,o.y);
-		if(stageFit==Canvas.STAGE_FIT_FILL){
-			canvas.width = o.x; canvas.height = o.y;
-		}else if(stageFit==Canvas.STAGE_FIT_SCALE){
+		if(self._stageFit==Canvas.STAGE_FIT_FILL){
+			self._canvas.width = o.x; self._canvas.height = o.y;
+		}else if(self._stageFit==Canvas.STAGE_FIT_SCALE){
 			Code.preserveAspectRatio2D(p,canvasWidth,canvasHeight,o.x,o.y);
-			canvas.width = Math.floor(p.x); Math.floor(canvas.height = p.y);
+			self._canvas.width = Math.floor(p.x); self._canvas.height = Math.floor(self._canvas.height = p.y);
 		}else{ // Canvas.STAGE_FIT_FIXED
 			//
 		}
@@ -242,8 +233,8 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	};
 // -------------------------------------------------------------- constructor
 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
-	if(resource){ // may not get one
-		resource.addFunction(Dispatch.EVENT_WINDOW_RESIZE,this.windowResizedFxn);
+	if(this._resource){ // may not get one
+		this._resource.addFunction(Dispatch.EVENT_WINDOW_RESIZE,this.windowResizedFxn);
 	}
 }
 
