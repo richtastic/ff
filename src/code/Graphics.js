@@ -1,103 +1,99 @@
 // Graphics.js
+// IMAGE RENDERING MODE
 Graphics.RENDER_MODE_STRETCH = 0; // fit image to wid/hei
 Graphics.RENDER_MODE_PATTERN = 1; // keep image scale 1:1, and repeat
 Graphics.RENDER_MODE_SUBSET = 2; // use sub-portion of image
 Graphics.X = "";
 
+// ------------------------------------------------------------------------------------------
+Graphics.setCanvas = function(canvas){
+	Graphics.canvas = canvas;
+}
+Graphics.canvasSetLine = function(wid,col){
+	Graphics.canvas.setLine(wid,col);
+}
+Graphics.setLineJoinCap = function(j,c){
+	Graphics.canvas.setLineJoinCap(j,c);
+}
+Graphics.canvasSetFill = function(col){
+	Graphics.canvas.setFill(col);
+}
+Graphics.canvasBeginPath = function(){
+	Graphics.canvas.beginPath();
+}
+Graphics.canvasMoveTo = function(pX,pY){
+	Graphics.canvas.moveTo(pX,pY);
+}
+Graphics.canvasLineTo = function(pX,pY){
+	Graphics.canvas.lineTo(pX,pY);
+}
+Graphics.canvasStrokeLine = function(){
+	Graphics.canvas.strokeLine();
+}
+Graphics.canvasFill= function(){
+	Graphics.canvas.fill();
+}
+Graphics.canvasEndPath = function(){
+	Graphics.canvas.endPath();
+}
+Graphics.canvasDrawRect = function(sX,sY,wX,hY){
+	Graphics.canvas.drawRect(sX,sY,wX,hY);
+}
 
 function Graphics(){
 	var self = this;
-	this.graphics = new Array();
-	this.clearGraphics = function(){
-		Code.emptyArray(self.graphics);
+	this._graphics = new Array();
+// drawing ------------------------------------------------------------------------------------------
+	this.clear = function(){
+		Code.emptyArray(self._graphics);
 	}
-// ------------------------------------------------------------------------------------------
-	this.setFill = function(col){ // int color
-		var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetFill,Code.newArray(str)) );
+	/*this.setLine = function(wid,col){ // 3, 0xAABBCC
+		this._graphics.push( Code.newArray(Graphics.canvasSetLine,Code.newArray(wid,Code.getHex(col))) );
+	}*/
+	this.setLine = function(wid,col){ // 3, 0xAABBCCDD
+		this._graphics.push( Code.newArray(Graphics.canvasSetLine,Code.newArray(wid,Code.getJSRGBA(col))) );
 	}
-	this.canvasSetFill = function(col){
-		this.canvas.setFill(col);
+	this.setLineJoinCap = function(j,c){
+		this._graphics.push( Code.newArray(Graphics.canvasSetLineJoinCap,Code.newArray(j,c)) );
 	}
-// ------------------------------------------------------------------------------------------
-	this.setFillRGBA = function(col){ // var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetFillRGBA,Code.newArray(col)) );
+	/*this.setFill = function(col){ // 0xAABBCC
+		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getHex(col))) );
+	}*/
+	this.setFill = function(col){ 0xAABBCCDD
+		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getJSRGBA(col))) );
 	}
-	this.canvasSetFillRGBA = function(col){
-		this.canvas.setFillRGBA(col);
-	}
-// ------------------------------------------------------------------------------------------
-	this.setLine = function(wid,col){
-		var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetLine,Code.newArray(wid,str)) );
-	};
-	this.canvasSetLine = function(wid,col){
-		//console.log("SET LINE: "+wid+" "+col);
-		this.canvas.setLine(wid,col);
-	};
-// ------------------------------------------------------------------------------------------
 	this.beginPath = function(){
-		this.graphics.push( Code.newArray(this.canvasBeginPath,Code.newArray()) );
-	};
-	this.canvasBeginPath = function(){
-		this.canvas.beginPath();
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(Graphics.canvasBeginPath,Code.newArray()) );
+	}
 	this.moveTo = function(pX,pY){
-		this.graphics.push( Code.newArray(this.canvasMoveTo,Code.newArray(pX,pY)) );
-	};
-	this.canvasMoveTo = function(pX,pY){
-		this.canvas.moveTo(pX,pY);
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(Graphics.canvasMoveTo,Code.newArray(pX,pY)) );
+	}
 	this.lineTo = function(pX,pY){
-		this.graphics.push( Code.newArray(this.canvasLineTo,Code.newArray(pX,pY)) );
-	};
-	this.canvasLineTo = function(pX,pY){
-		this.canvas.lineTo(pX,pY);
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(Graphics.canvasLineTo,Code.newArray(pX,pY)) );
+	}
 	this.strokeLine = function(){
-		this.graphics.push( Code.newArray(this.canvasStrokeLine,Code.newArray()) );
-	};
-	this.canvasStrokeLine = function(){
-		this.canvas.strokeLine();
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(Graphics.canvasStrokeLine,Code.newArray()) );
+	}
 	this.fill = function(){
-		this.graphics.push( Code.newArray(this.canvasFill,Code.newArray()) );
-	};
-	this.canvasFill= function(){
-		this.canvas.fill();
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(Graphics.canvasFill,Code.newArray()) );
+	}
 	this.endPath = function(){
-		this.graphics.push( Code.newArray(this.canvasEndPath,Code.newArray()) );
-	};
-	this.canvasEndPath = function(){
-		this.canvas.endPath();
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(Graphics.canvasEndPath,Code.newArray()) );
+	}
 	this.drawRect = function(sX,sY,wX,hY){
-		this.graphics.push( Code.newArray(this.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
-	};
-	this.canvasDrawRect = function(sX,sY,wX,hY){
-		this.canvas.drawRect(sX,sY,wX,hY);
-	};
-// ------------------------------------------------------------------------------------------
+		this._graphics.push( Code.newArray(this.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
+	}
 	this.drawImage = function(img,pX,pY,wX,hY){
-		console.log(img.width);
 		if(wX===null || hY===null){
 			wX = img.width;
 			hY = img.height;
 		}
-		//this.graphics.push( Code.newArray(this.canvasDrawImage,Code.newArray(img, pX,pY,wX,hY)) );
 		this.graphics.push( Code.newArray(this.canvasDrawImage,arguments) );
 	};
 	this.canvasDrawImage = function(img,pX,pY,wX,hY){
+YERRRRRRRRRRRRr
 		this.canvas.drawImage(img,pX,pY,wX,hY);
 	};
-// ------------------------------------------------------------------------------------------
 	this.drawGraphics = function(canvas){
 		this.canvas = canvas;
 		var arr = this.graphics;
@@ -109,16 +105,18 @@ function Graphics(){
 			fxn.apply(this,args);
 		}
 	};
-// ------------------------------------------------------------------------------------------
+// rendering ------------------------------------------------------------------------------------------
 	this.setupRender = function(canvas){
-		// self.canvas = canvas;
-	};
+		Graphics.setCanvas(canvas);
+	}
 	this.takedownRender = function(){
-		// 
-	};
+		Graphics.setCanvas(null);
+	}
 	this.render = function(canvas){
 		canvas.getContext();
+		self.setupRender();
 		self.drawGraphics(canvas);
+		self.takedownRender();
 	}
 
 // IMAGES ------------------------------------------------------------------------------------------
@@ -164,10 +162,12 @@ function Graphics(){
 			}
 		}
 	};
+	/*
 	this.declareRender = function(){
 		self.clearGraphics();
 		self.drawImage(0,0,self.imageWidth,self.imageHeight);
 	};
+	*/
 // ------------------------------------------------------------------------------------------
 	this.kill = function(){
 		//

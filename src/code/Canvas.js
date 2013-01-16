@@ -75,41 +75,60 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		return this.canvas.toDataURL.call(this.canvas,arguments);
 	}
 	// ------------------------------------------------------------
-	this.setClass = setClass;
-	function setClass(name){
+	this.setClass = function(name){
 		this.canvas.setAttribute("class",name);
 	};
 	this.setCursorStyle = function(style){
 		this.canvas.style.cursor = style;
 	};
 	// drawing ------------------------------------------------------------
-	this.setFill = function(col){
-		context.fillStyle = col;
-	}
-	this.setFillRGBA = function(col){
-		context.fillStyle = Code.getJSRGBA(col);
-	};
-	this.drawRect = function(sX,sY,wX,hY){
-		this.context.fillRect(sX,sY,wX,hY);
-	};
-	this.drawImage = function(img, pX,pY,wX,hY){
-		if(pX!==undefined && pY!==undefined){
-			if(wX!==undefined && hY!==undefined){
-				//console.log(img,pX,pY,wX,hY);
-				self.context.drawImage(img,pX,pY,wX,hY);
-			}else{
-				self.context.drawImage(img,pX,pY);
-			}
-		}else{
-			self.context.drawImage(img);
-		}
-	};
 	this.setLine = function(wid,col){
-		//console.log("LINE: "+wid+col);
 		context.lineWidth = wid;
 		context.strokeStyle = col;
 		context.lineJoin = 'bevel';
 		context.lineCap = 'round';
+	}
+	this.setLineJoinCap = function(j,c){
+		context.lineJoin = j;
+		context.lineCap = c;
+	}
+	this.setFill = function(col){
+		context.fillStyle = col;
+	}
+
+
+?
+
+
+	this.drawRect = function(sX,sY,wX,hY){
+		this.context.fillRect(sX,sY,wX,hY);
+	};
+	this.drawImage0 = function(img){
+		self.context.drawImage(img);
+	}
+	this.drawImage2 = function(img,px,py){
+		self.context.drawImage(img,px,py);
+	}
+	this.drawImage4 = function(img,pX,pY,wX,hY){
+		self.context.drawImage(img,pX,pY,wX,hY);
+	}
+	this.drawImage8 = function(img,sx,sy,swid,shei,x,y,wid,hei){
+		self.context.drawImage(img,sx,sy,swid,shei,x,y,wid,hei);
+	}
+	this.drawImage = function(img,pX,pY,wX,hY,mX,mY,dX,dY){
+		if(pX!==undefined && pY!==undefined){
+			if(wX!==undefined && hY!==undefined){
+				if(dX!==undefined && dY!==undefined){
+					self.drawImage8(img,pX,pY, wX,hY, mX,mY, dX,dY);
+				}else{
+					self.drawImage4(img,pX,pY,wX,hY);
+				}
+			}else{
+				self.drawImage2(img,pX,pY);
+			}
+		}else{
+			self.drawImage0(img);
+		}
 	}
 	this.beginPath = function(){
 		context.beginPath();
@@ -119,7 +138,6 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	}
 	this.lineTo = function(pX,pY){
 		context.lineTo(pX,pY);
-		//context.stroke();
 	}
 	this.strokeLine = function(){
 		context.stroke();
@@ -127,7 +145,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.endPath = function(){
 		context.closePath();
 	};
-	this.fill = function(){
+	this.fillEnd = function(){
 		context.fill();
 	}
 	this.clearAll = function(){

@@ -22,8 +22,7 @@ DO.removedFromStageRecursive = function(ch){
 	}
 };
 DO.printRecursive = function(obj,cur,ind,fin){
-	var beg = cur;//.substr(0,cur.length-1);
-	//console.log(""+cur);
+	var beg = cur;
 	console.log(""+beg+fin+obj.toString());
 	for(var i=0; i<obj.children.length; ++i){
 		DO.printRecursive(obj.children[i],ind+"|"+cur,ind,fin);
