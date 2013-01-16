@@ -7,7 +7,7 @@ function Stage(can, fr){
 	var self = this;
 	self.root = new DO();
 	self.root.stage = this;
-	self.root.clearGraphics();
+	self.root.graphics.clearGraphics();
 	self.canvas = can;
 	var timer = new Ticker(fr);
 	self.time = 0;

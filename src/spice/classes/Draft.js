@@ -12,8 +12,8 @@ function Draft(style,resource){
 	// BACKGROUND
 	var img = this._resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
 	this._background = new DOImage(img);
-	this._background.clearGraphics();
-	this._background.drawImage(0,0,2000,2000);
+	this._background.graphicsIllustration.clearGraphics();
+	this._background.graphicsIllustration.drawImage(0,0,2000,2000);
 	this._scroller.addChild( this._background );
 	this._background.setDraggingEnabled();
 	this._background.rangeLimitsX = [-100, 100];
@@ -35,18 +35,18 @@ function Draft(style,resource){
 		
 	}
 	this.resize = function(wid,hei){
-		this._scroller.clearGraphics();
-		this._scroller.setLine(1,0xFF00FF00);
-		this._scroller.setFillRGBA(0x00000000); // 0x00000001
-		this._scroller.beginPath();
-		this._scroller.moveTo(0,0);
-		this._scroller.lineTo(wid,0);
-		this._scroller.lineTo(wid,hei);
-		this._scroller.lineTo(0,hei);
-		this._scroller.lineTo(0,0);
-		this._scroller.strokeLine();
-		this._scroller.endPath();
-		this._scroller.fill();
+		this._scroller.graphicsIllustration.clearGraphics();
+		this._scroller.graphicsIllustration.setLine(1,0xFF00FF00);
+		this._scroller.graphicsIllustration.setFillRGBA(0x00000000); // 0x00000001
+		this._scroller.graphicsIllustration.beginPath();
+		this._scroller.graphicsIllustration.moveTo(0,0);
+		this._scroller.graphicsIllustration.lineTo(wid,0);
+		this._scroller.graphicsIllustration.lineTo(wid,hei);
+		this._scroller.graphicsIllustration.lineTo(0,hei);
+		this._scroller.graphicsIllustration.lineTo(0,0);
+		this._scroller.graphicsIllustration.strokeLine();
+		this._scroller.graphicsIllustration.endPath();
+		this._scroller.graphicsIllustration.fill();
 	}
 	// ELEMENTS
 	var img
@@ -60,10 +60,10 @@ function Draft(style,resource){
 	*/
 	//img.setSize(50,50);
 	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
-	img.setRenderModeStretch();
+	img.graphicsIllustration.setRenderModeStretch();
 	pin.addFrame(img,4);
 	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]);
-	img.setRenderModeStretch();
+	img.graphicsIllustration.setRenderModeStretch();
 	pin.addFrame(img,8);
 	pin.gotoFrame(0);
 	//pin.setStop();

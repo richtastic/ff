@@ -45,30 +45,22 @@ function DO(parentDO){
 	this.pointRendering = false;
 	Code.extendClass(this,Dispatchable,arguments);
 // self-event registering and dispatching ---------------------------------------------------------------------------------
-	this.dispatch = new Dispatch();
-	//this.addFunction = function(str,fxn){
-	//
 	this.addFunction = Code.overrideClass(this, this.addFunction, function(str,fxn){
 		this.super(arguments.callee).addFunction.call(this,str,fxn);//this.super.addFunction.call(this,str,fxn);
 		if(this.stage){
 			this.stage.addFunctionDO(this,str,fxn);
 		}
 	})
-	//this.removeFunction = function(str,fxn){
 	this.removeFunction = Code.overrideClass(this, this.removeFunction, function(str,fxn){
 		this.super(arguments.callee).removeFunction.call(this,str,fxn);//this.super.removeFunction.call(this,str,fxn);
 		if(this.stage){
 			this.stage.removeFunctionDO(this,str,fxn);
 		}
 	})
-	/*
-	this.removeFunction = function(str,fxn){
-		this.dispatch.removeFunction(str,fxn);
-	};
-	this.alertAll = function(str,o){
-		this.dispatch.alertAll(str,o);
-	};*/
-// downward message propagation ---------------------------------------------------------------------------------
+	this.alertAll = Code.overrideClass(this, this.alertAll, function(str,o){ //function(str,o){
+		this.super(arguments.callee).alertAll.call(this,str,o);
+	})
+// ---------------------------------------------------------------------------------
 	this.inverseTransformPoint = function(a,b){
 		var inv = new Matrix2D();
 		inv.inverse(this.matrix);
@@ -86,17 +78,10 @@ function DO(parentDO){
 		}
 		this.alertAll(evt,pos);
 	};
-	this.addedToStage = function(stage){
-		this.alertAll(DO.EVENT_ADDED_TO_STAGE,this);
-		this.addListeners();
-	};
-	this.removedFromStage = function(stage){
-		this.removeListeners();
-		this.alertAll(DO.EVENT_REMOVED_FROM_STAGE,this);
-	};
-// intersections ---------------------------------------------------------------------------------
-// could be separate function that uses visible-everything to guarantee 0-alpha is valid
 // rendering ---------------------------------------------------------------------------------
+	this.graphics = new Graphics();
+	this.graphicsIllustration = this.graphics;
+	this.graphicsIntersection = this.graphicsIllustration;
 	this.rendering_mode = true;
 	this.setRenderingOff = function(){
 		self.rendering_mode = false;
@@ -116,11 +101,13 @@ function DO(parentDO){
 		var context = self.canvas.getContext();
 		context.restore();
 	};
+
 	this.render = function(canvas){
 		if(!self.rendering_mode){return;}
+		var context = canvas.getContext();
 		self.setupRender(canvas);
-		var context = self.canvas.getContext();
-		self.drawGraphics(canvas); // this render
+		self.graphicsIllustration.setupRender(canvas);
+		self.graphicsIllustration.render(canvas);
 		if(self.mask){
 			context.clip();
 		}
@@ -128,111 +115,9 @@ function DO(parentDO){
 		for(i=0;i<len;++i){ // children render
 			self.children[i].render(canvas);
 		}
+		self.graphicsIllustration.takedownRender(canvas);
 		self.takedownRender(canvas);
 	}
-// drawing ----------------------------------------------------------------------------------
-	this.graphics = new Array();
-	this.clearGraphics = function(){
-		Code.emptyArray(self.graphics);
-	}
-// ------------------------------------------------------------------------------------------
-	this.setFill = function(col){ // int color
-		var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetFill,Code.newArray(str)) );
-	}
-	this.canvasSetFill = function(col){
-		this.canvas.setFill(col);
-	}
-// ------------------------------------------------------------------------------------------
-	this.setFillRGBA = function(col){ // var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetFillRGBA,Code.newArray(col)) );
-	}
-	this.canvasSetFillRGBA = function(col){
-		this.canvas.setFillRGBA(col);
-	}
-// ------------------------------------------------------------------------------------------
-	this.setLine = function(wid,col){
-		var str = Code.getHex(col);
-		this.graphics.push( Code.newArray(this.canvasSetLine,Code.newArray(wid,str)) );
-	};
-	this.canvasSetLine = function(wid,col){
-		//console.log("SET LINE: "+wid+" "+col);
-		this.canvas.setLine(wid,col);
-	};
-// ------------------------------------------------------------------------------------------
-	this.beginPath = function(){
-		this.graphics.push( Code.newArray(this.canvasBeginPath,Code.newArray()) );
-	};
-	this.canvasBeginPath = function(){
-		this.canvas.beginPath();
-	};
-// ------------------------------------------------------------------------------------------
-	this.moveTo = function(pX,pY){
-		this.graphics.push( Code.newArray(this.canvasMoveTo,Code.newArray(pX,pY)) );
-	};
-	this.canvasMoveTo = function(pX,pY){
-		this.canvas.moveTo(pX,pY);
-	};
-// ------------------------------------------------------------------------------------------
-	this.lineTo = function(pX,pY){
-		this.graphics.push( Code.newArray(this.canvasLineTo,Code.newArray(pX,pY)) );
-	};
-	this.canvasLineTo = function(pX,pY){
-		this.canvas.lineTo(pX,pY);
-	};
-// ------------------------------------------------------------------------------------------
-	this.strokeLine = function(){
-		this.graphics.push( Code.newArray(this.canvasStrokeLine,Code.newArray()) );
-	};
-	this.canvasStrokeLine = function(){
-		this.canvas.strokeLine();
-	};
-// ------------------------------------------------------------------------------------------
-	this.fill = function(){
-		this.graphics.push( Code.newArray(this.canvasFill,Code.newArray()) );
-	};
-	this.canvasFill= function(){
-		this.canvas.fill();
-	};
-// ------------------------------------------------------------------------------------------
-	this.endPath = function(){
-		this.graphics.push( Code.newArray(this.canvasEndPath,Code.newArray()) );
-	};
-	this.canvasEndPath = function(){
-		this.canvas.endPath();
-	};
-// ------------------------------------------------------------------------------------------
-	this.drawRect = function(sX,sY,wX,hY){
-		this.graphics.push( Code.newArray(this.canvasDrawRect,Code.newArray(sX,sY,wX,hY)) );
-	};
-	this.canvasDrawRect = function(sX,sY,wX,hY){
-		this.canvas.drawRect(sX,sY,wX,hY);
-	};
-// ------------------------------------------------------------------------------------------
-	this.drawImage = function(img,pX,pY,wX,hY){
-		console.log(img.width);
-		if(wX===null || hY===null){
-			wX = img.width;
-			hY = img.height;
-		}
-		//this.graphics.push( Code.newArray(this.canvasDrawImage,Code.newArray(img, pX,pY,wX,hY)) );
-		this.graphics.push( Code.newArray(this.canvasDrawImage,arguments) );
-	};
-	this.canvasDrawImage = function(img,pX,pY,wX,hY){
-		this.canvas.drawImage(img,pX,pY,wX,hY);
-	};
-// ------------------------------------------------------------------------------------------
-	this.drawGraphics = function(canvas){
-		this.canvas = canvas;
-		var arr = this.graphics;
-		var i, len = arr.length;
-		var args, fxn;
-		for(i=0;i<len;++i){
-			fxn = arr[i][0];
-			args = arr[i][1];
-			fxn.apply(this,args);
-		}
-	};
 // Display List ----------------------------------------------------------------------------------------------------------------
 	this.DOExists = function(obj){
 		if(this==obj){
@@ -245,6 +130,14 @@ function DO(parentDO){
 		}
 		return false;
 	}
+	this.addedToStage = function(stage){
+		this.alertAll(DO.EVENT_ADDED_TO_STAGE,this);
+		this.addListeners();
+	}
+	this.removedFromStage = function(stage){
+		this.removeListeners();
+		this.alertAll(DO.EVENT_REMOVED_FROM_STAGE,this);
+	}
 	this.addChild = function(ch){
 		if(!ch){return;}
 		ch.parent = this;
@@ -252,7 +145,7 @@ function DO(parentDO){
 		if( this.stage!=null ){
 			DO.addToStageRecursive(ch,this.stage);
 		}
-	};
+	}
 	this.removeChild = function(ch){
 		if(!ch){return;}
 		ch.parent = null;
@@ -260,7 +153,7 @@ function DO(parentDO){
 		if( true ){
 			DO.removedFromStageRecursive(ch);
 		}
-	};
+	}
 	this.removeAllChildren = function(ch){
 		var i, len = this.children.length;
 		for(i=0;i<len;++i){
@@ -294,7 +187,6 @@ function DO(parentDO){
 		if(rX!==null && rX!==undefined && rX!==0){ self.dragRoundingX = rX; }else{ self.dragRoundingX = 0; }
 		if(rY!==null && rY!==undefined && rY!==0){ self.dragRoundingY = rY; }else{ self.dragRoundingY = 0; }
 		self.dragEnabled = true;
-		console.log(self.dragMouseDownFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
@@ -378,11 +270,11 @@ function DO(parentDO){
 	this.checkIntersectionChildren = true;
 	this.checkIntersectionthis = true;
 	this.getIntersection = function(pos, can){
-		self.pointRendering = true;
+		self.graphicsIllustration.pointRendering = true;
 		self.setupRender(can);
 		if(self.mask){
 			var context = can.getContext();
-			self.drawGraphics(can);
+			self.graphics.render(can);//drawGraphics(can);
 			context.clip();
 		}
 		if(self.checkIntersectionChildren){
@@ -391,25 +283,25 @@ function DO(parentDO){
 				ret = self.children[i].getIntersection(pos, can);
 				if(ret){
 					self.takedownRender(can);
-					self.pointRendering = false;
+					self.graphicsIllustration.pointRendering = false;
 					return ret;
 				}
 			}
 		}
 		if(self.checkIntersectionthis){
 //all DO objects must use ONLY the canvas passed to it through the render functions - not internally stored
-			self.drawGraphics(can);
+			self.graphics.drawGraphics(can);
 			//self.render(can);
 			var context = can.getContext();
 			var imgData = can.getImageData(0,0,can.canvas.width,can.canvas.height);//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 			var pix = self.getPixelRGBA( imgData, pos.x,pos.y);
 			self.takedownRender(can);
 			if(pix!=0){
-				self.pointRendering = false;
+				self.graphicsIllustration.pointRendering = false;
 				return self;
 			}
 		}
-		self.pointRendering = false;
+		self.graphicsIllustration.pointRendering = false;
 		return null;
 	}
 	this.getPixelRGBA = function(img, x,y){

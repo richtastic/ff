@@ -46,18 +46,18 @@ function Spice(){
 		sY = 0;
 		wid = wid*(1/3);
 		hei = hei;
-		self.library.clearGraphics();
-		self.library.setLine(1.0,0x00FF00);
-		self.library.setFillRGBA(0x00FFFF99);
-		self.library.beginPath();
-		self.library.moveTo(sX,sY);
-		self.library.lineTo(sX+wid,sY);
-		self.library.lineTo(sX+wid,sY+hei);
-		self.library.lineTo(sX,sY+hei);
-		self.library.lineTo(sX,sY);
-		self.library.strokeLine();
-		self.library.endPath();
-		self.library.fill();
+		self.library.graphicsIllustration.clearGraphics();
+		self.library.graphicsIllustration.setLine(1.0,0x00FF00);
+		self.library.graphicsIllustration.setFillRGBA(0x00FFFF99);
+		self.library.graphicsIllustration.beginPath();
+		self.library.graphicsIllustration.moveTo(sX,sY);
+		self.library.graphicsIllustration.lineTo(sX+wid,sY);
+		self.library.graphicsIllustration.lineTo(sX+wid,sY+hei);
+		self.library.graphicsIllustration.lineTo(sX,sY+hei);
+		self.library.graphicsIllustration.lineTo(sX,sY);
+		self.library.graphicsIllustration.strokeLine();
+		self.library.graphicsIllustration.endPath();
+		self.library.graphicsIllustration.fill();
 	}
 	this.canvasClickFxn = function(e){
 		// console.log(e);

@@ -95,12 +95,13 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.drawImage = function(img, pX,pY,wX,hY){
 		if(pX!==undefined && pY!==undefined){
 			if(wX!==undefined && hY!==undefined){
-				this.context.drawImage(img,pX,pY,wX,hY);
+				//console.log(img,pX,pY,wX,hY);
+				self.context.drawImage(img,pX,pY,wX,hY);
 			}else{
-				this.context.drawImage(img,pX,pY);
+				self.context.drawImage(img,pX,pY);
 			}
 		}else{
-			this.context.drawImage(img);
+			self.context.drawImage(img);
 		}
 	};
 	this.setLine = function(wid,col){

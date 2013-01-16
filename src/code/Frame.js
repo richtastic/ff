@@ -23,7 +23,7 @@ function Frame(con,len){
 		self._content = null;
 	};
 	// constructor ----------------
-	self.length(len);
-	self.content(con);
+	self.length(len?len:1);
+	self.content(con?con:null);
 }
 
