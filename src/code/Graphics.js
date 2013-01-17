@@ -42,16 +42,16 @@ Graphics.canvasStrokeRect = function(sX,sY,wX,hY){
 }
 // ---- images
 Graphics.canvasDrawImage0 = function(img){
-	Graphics.canvas.drawImage(img);
+	Graphics.canvas.drawImage0(img);
 }
 Graphics.canvasDrawImage2 = function(img,wX,hY){
-	Graphics.canvas.drawImage(img,wX,hY);
+	Graphics.canvas.drawImage2(img,wX,hY);
 }
 Graphics.canvasDrawImage4 = function(img,pX,pY,wX,hY){
-	Graphics.canvas.drawImage(img,pX,pY,wX,hY);
+	Graphics.canvas.drawImage4(img,pX,pY,wX,hY);
 }
 Graphics.canvasDrawImage8 = function(img,aX,aY,bX,bY,cX,cY,dX,dY){
-	Graphics.canvas.drawImage(img,aX,aY,bX,bY,cX,cY,dX,dY);
+	Graphics.canvas.drawImage8(img,aX,aY,bX,bY,cX,cY,dX,dY);
 }
 
 Graphics.canvasDrawImagePattern = function(img,pX,pY,wX,hY){
@@ -103,13 +103,17 @@ function Graphics(){
 	// ---- images
 	this.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch to fit
 		if(dY!==undefined){
-			this._graphics.push( Code.newArray(Graphics.drawImage8,Code.newArray(img,aX,aY,bX,bY,cX,cY,dX,dY)) );
+			console.log("A");
+			this._graphics.push( Code.newArray(Graphics.canvasDrawImage8,Code.newArray(img,aX,aY,bX,bY,cX,cY,dX,dY)) );
 		}else if(bY!==undefined){
-			this._graphics.push( Code.newArray(Graphics.drawImage4,Code.newArray(img,aX,aY,bX,bY)) );
+			console.log("B");
+			this._graphics.push( Code.newArray(Graphics.canvasDrawImage4,Code.newArray(img,aX,aY,bX,bY)) );
 		}else if(aY!==undefined){
-			this._graphics.push( Code.newArray(Graphics.drawImage2,Code.newArray(img,aX,aY)) );
+			console.log("C");
+			this._graphics.push( Code.newArray(Graphics.canvasDrawImage2,Code.newArray(img,aX,aY)) );
 		}else{
-			this._graphics.push( Code.newArray(Graphics.drawImage0,Code.newArray(img)) );
+			console.log("D");
+			this._graphics.push( Code.newArray(Graphics.canvasDrawImage0,Code.newArray(img)) );
 		}
 	};
 	this.drawImagePattern = function(pat,pX,pY,wid,hei){

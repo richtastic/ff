@@ -285,13 +285,12 @@ function DO(parentDO){
 			}
 		}
 		if(self.checkIntersectionthis){
-self.graphics.setupRender(can);
-self.graphics.render(can);
-self.graphics.takedownRender(can);
+			self.graphicsIntersection.setupRender(can);
+			self.graphicsIntersection.render(can);
+			self.graphicsIntersection.takedownRender(can);
 			var context = can.getContext();
 			var imgData = can.getImageData(0,0,can.getWidth(),can.getHeight());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 			var pix = self.getPixelRGBA( imgData, pos.x,pos.y);
-			console.log(pix);
 			self.takedownRender(can);
 			if(pix!=0){
 				return self;

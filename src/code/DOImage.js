@@ -3,23 +3,23 @@
 function DOImage(img, options, parentDO){
 	var self = this;
 	Code.extendClass(self,DO);
-	this.image = img;
+	this._image = img;
 	if(options){
-		if(options.width){ self.imageWidth=options.width; }
-		if(options.height){ self.imageHeight=options.height; }
+		if(options.width){ self._imageWidth=options.width; }
+		if(options.height){ self._imageHeight=options.height; }
 	}
 	this.addedToStage = Code.overrideClass(this, this.addedToStage, function(stage){
 		this.super(arguments.callee).addedToStage.call(this,stage);
-		self.checkPattern();
+		console.log("added");
+		self.graphicsIllustration.clear();
+		var context = self.stage.getCanvas().getContext();
+		self._pattern = context.createPattern(self._image,'repeat');
+		self.graphicsIllustration.drawImagePattern(self._pattern,0,0,100,100);
 	})
-	this.checkPattern = function(){
-		if( self.imageWidth>=0 && self.imageHeight>=0 ){
-			if(self.stage){
-				var context = self.stage.canvas.getContext();
-				self.imagePattern = context.createPattern(self.image,'repeat');
-			}
-		};
-	};
+	/*
+	var context = self.stage.canvas.getContext();
+	self.imagePattern = context.createPattern(self.image,'repeat');
+	*/
 // rendering ---------------------------------------------------------------------------------
 	this.setSize = function(wid,hei){
 		self.imageWidth = wid;
@@ -27,23 +27,26 @@ function DOImage(img, options, parentDO){
 		//self.graphicsIllustration.drawImage(self.image,0,0,wid,hei);
 	}
 	this.setWidth = function(wid){
-		self.imageWidth = wid;
+		self._imageWidth = wid;
 	};
 	this.setHeight = function(hei){
-		self.imageHeight = hei;
+		self._imageHeight = hei;
 	};
 	this.getWidth = function(){
-		return self.graphicsIllustration.imageWidth;
+		return self._imageWidth;
 	};
 	this.getHeight = function(){
-		return self.graphicsIllustration.imageHeight;
+		return self._imageHeight;
 	};
 	this.kill = function(){
 		self.image = null;
 		self.super.kill.call(self);
 	};
 	// constructor ------------------------------------------------------------------------------------------
-	// 
+	/*
+	self.graphicsIllustration.clear();
+	self.graphicsIllustration.drawImage(self._image,0,0,100,100);
+	*/
 }
 
 

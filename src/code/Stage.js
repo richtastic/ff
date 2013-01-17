@@ -20,12 +20,13 @@ self.renderCanvas.canvas.style.position="absolute";
 self.renderCanvas.canvas.style.left="0px";
 self.renderCanvas.canvas.style.top="100px";
 */
+/*
 var can = self._tempCanvas.getCanvas();
 document.body.appendChild(can);
 can.style.position="absolute";
 can.style.left="0px";
 can.style.top="200px";
-
+*/
 	self.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
 		self.renderCanvas.clear();
 		self.renderCanvas.setSize(wid,hei);
@@ -39,6 +40,9 @@ can.style.top="200px";
   		return img;
 	};
 	// dispatch -----------------------------------------------------------
+	this.getCanvas = function(){
+		return self._canvas;
+	}
 	Code.extendClass(this,Dispatchable);
 	self.eventList = new Object(); // hash
 	self.addFunctionDO = function(obj,str,fxn){
@@ -191,7 +195,6 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 		}
 		// 
 		if(intersection){
-			console.log("INTERSECT");
 if(evt==Canvas.EVENT_MOUSE_DOWN){
 	"DOWN"
 }
@@ -209,7 +212,7 @@ if(evt==Canvas.EVENT_MOUSE_DOWN){
 				obj.alertAll(evt,arr);
 			}
 		}else{
-			console.log("NO INTERSECTION");
+			//
 		}
 		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 	};

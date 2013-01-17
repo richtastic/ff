@@ -91,6 +91,10 @@ self.doRoot.graphicsIllustration.lineTo(0,0);
 //self.doRoot.graphicsIllustration.endPath();
 self.doRoot.graphicsIllustration.strokeLine();
 self.doRoot.graphicsIllustration.fill();
+
+var doimg = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_RED]);
+self.doRoot.addChild(doimg);
+
 self.addListeners();
 return;
 			self.doMenus = new DO();
