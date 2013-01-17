@@ -34,9 +34,11 @@ Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 //
 Canvas.IMAGE_TYPE_PNG = "png";
 Canvas.IMAGE_TYPE_JPG = "jpg";
+Canvas.id = 0;
 
 function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
 	var self = this;
+	this.id = Canvas.id++;
 	Code.extendClass(this,Dispatchable);
 	this._resource = resource;
 	this._mouseDown = false;
@@ -140,8 +142,8 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		}
 	}*/
 	this.clear = function(){
-		/*var wid = this.canvas.width; var hei = this.canvas.height; this.canvas.width = 0; this.canvas.height = 0; this.canvas.width = wid; this.canvas.height = hei;*/
-		this._canvas.clearRect(0,0,this._canvas.width,this._canvas.height);
+		var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
+		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
 // GETTERS -----------------------------------------------------------
 	this.mousePosition = function(){
@@ -185,30 +187,30 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 // MOUSE POSITIONING --------------------------------------------------------
 	this.canvasClickFxn = function(e){
 		pos = self.getMousePosition(e);
-		this.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 		pos = null;
 	}
 	this.canvasMouseDownFxn = function(e){
-		this._mouseDown = true;
-		pos = this.getMousePosition(e);
-		this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+		self._mouseDown = true;
+		pos = self.getMousePosition(e);
+		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 		pos = null;
 	}
 	this.canvasMouseUpFxn = function(e){
-		this._mouseDown = false;
+		self._mouseDown = false;
 		pos = self.getMousePosition(e);
-		this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 		pos = null;
 	}
 	this.canvasMouseMoveFxn = function(e){
-		pos = this.getMousePosition(e);
-		this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
-		this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+		pos = self.getMousePosition(e);
+		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
+		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 		//pos = null;
 	}
 	this.getMousePosition = function(e){
 		var pos = new V2D(0,0);
-		var ele = canvas;
+		var ele = self._canvas;
 		while(ele != null){
 			pos.x += ele.offsetLeft;
 			pos.y += ele.offsetTop;

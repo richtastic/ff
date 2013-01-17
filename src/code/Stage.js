@@ -8,26 +8,26 @@ function Stage(can, fr){
 	self.root = new DO();
 	self.root.stage = this;
 	self.root.graphics.clear();
-	self.canvas = can;
-	var timer = new Ticker(fr);
-	self.time = 0;
-	self.tempCanvas = new Canvas(null,null,1,1,Canvas.STAGE_FIT_FIXED,true);
-	self.renderCanvas = new Canvas(null,null,100,100,Canvas.STAGE_FIT_FIXED,true);
+	self._canvas = can;
+	self._timer = new Ticker(fr);
+	self._time = 0;
+	self._tempCanvas = new Canvas(null,null,100,100,Canvas.STAGE_FIT_FIXED,true);
+	self._renderCanvas = new Canvas(null,null,100,100,Canvas.STAGE_FIT_FIXED,true);
 /*
-document.body.appendChild(self.renderCanvas.canvas);
+var can = self._renderCanvas.getCanvas();
+document.body.appendChild(can);
 self.renderCanvas.canvas.style.position="absolute";
 self.renderCanvas.canvas.style.left="0px";
 self.renderCanvas.canvas.style.top="100px";
-/*
-/*
-console.log(self.tempCanvas.canvas);
-document.body.appendChild(self.tempCanvas.canvas);
-self.tempCanvas.canvas.style.position="absolute";
-self.tempCanvas.canvas.style.left="0px";
-self.tempCanvas.canvas.style.top="200px";
 */
+var can = self._tempCanvas.getCanvas();
+document.body.appendChild(can);
+can.style.position="absolute";
+can.style.left="0px";
+can.style.top="200px";
+
 	self.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
-		self.renderCanvas.clearAll();
+		self.renderCanvas.clear();
 		self.renderCanvas.setSize(wid,hei);
 		obj.render(self.renderCanvas);
 		var img;
@@ -73,33 +73,34 @@ self.tempCanvas.canvas.style.top="200px";
 		self.dispatch.alertAll(str,o);
 	}*/
 	// rendering -----------------------------------------------------------
-	self.render = function(){
-		self.canvas.clearAll();
+	this.render = function(){
+		self._canvas.clear();
 		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,self.time);
-		self.root.render(self.canvas);
+		self.root.render(self._canvas);
+//		self.root.render(self._tempCanvas);
 		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,self.time);
 	};
-	self.enterFrame = function(e){
+	this.enterFrame = function(e){
 		++self.time;
 		self.render();
 	};
-	self.start = function(){
-		timer.start();
+	this.start = function(){
+		self._timer.start();
 	};
-	self.stop = function(){
-		timer.stop();
+	this.stop = function(){
+		self._timer.stop();
 	};
-	self.addListeners = function(){
-		timer.addFunction(Ticker.EVENT_TICK,self.enterFrame);
-		self.canvas.addListeners();
-		self.canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,self.stageResized);
-		self.canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,self.canvasMouseDown);
-		self.canvas.addFunction(Canvas.EVENT_MOUSE_UP,self.canvasMouseUp);
-		self.canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,self.canvasMouseClick);
-		self.canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,self.canvasMouseMove);
+	this.addListeners = function(){
+		self._timer.addFunction(Ticker.EVENT_TICK,self.enterFrame);
+		self._canvas.addListeners();
+		self._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,self.stageResized);
+		self._canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,self.canvasMouseDown);
+		self._canvas.addFunction(Canvas.EVENT_MOUSE_UP,self.canvasMouseUp);
+		self._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,self.canvasMouseClick);
+		self._canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,self.canvasMouseMove);
 	}
 	self.removeListeners = function(){
-		self.canvas.removeListeners();
+		self._canvas.removeListeners();
 	}
 	// Display List ---------------------- PASSTHROUGH
 	self.addChild = function(ch){
@@ -113,7 +114,7 @@ self.tempCanvas.canvas.style.top="200px";
 	}
 	// ------------------------------------------ requests
 	self.getCurrentMousePosition = function(){
-		return self.canvas.mousePosition;
+		return self._canvas.mousePosition();
 	}
 	self.globalPointToLocalPoint = function(obj, pos){
 		var mat = Stage.tempMatrix;
@@ -135,18 +136,28 @@ self.tempCanvas.canvas.style.top="200px";
 	}
 	// ------------------------- events
 	self.getIntersection = function(pos){
-		var context = self.tempCanvas.getContext();
+		var context = self._tempCanvas.getContext();
 		var newPos = new V2D(0,0);
-		self.tempCanvas.clearAll();
-		context.transform(1,0,0,1,-pos.x,-pos.y);
-		return self.root.getIntersection(newPos,self.tempCanvas);
+self._tempCanvas.clear();
+/*
+self._tempCanvas.setFill(Code.getJSRGBA(0x00FF0066));
+self._tempCanvas.moveTo(0,0);
+self._tempCanvas.lineTo(100,0);
+self._tempCanvas.lineTo(100,100);
+self._tempCanvas.lineTo(0,100);
+self._tempCanvas.lineTo(0,0);
+self._tempCanvas.fill();
+*/
+context.setTransform(1,0,0,1,-pos.x,-pos.y);
+//self.root.render(self._tempCanvas);
+		return self.root.getIntersection(newPos,self._tempCanvas);
 	}
 	// ------------------------- events
 	self.stageResized = function(o){
 		self.root.width = o.x; self.root.height = o.y;
 	}
 	self.canvasMouseEventPropagate = function(evt,pos){
-		var path, arr, obj, intersection = self.getIntersection(pos);
+		var path, arr, obj, intersection = self.getIntersection(pos,self._tempCanvas);
 		arr = new Array( intersection, pos );
 		path = new Array();
 		// OUTSIDE
@@ -180,6 +191,7 @@ self.tempCanvas.canvas.style.top="200px";
 		}
 		// 
 		if(intersection){
+			console.log("INTERSECT");
 if(evt==Canvas.EVENT_MOUSE_DOWN){
 	"DOWN"
 }
@@ -214,7 +226,6 @@ if(evt==Canvas.EVENT_MOUSE_DOWN){
 		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 	};
 	self.canvasMouseMove = function(pos){
-		//self.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y)); // reverse direction & no rendering = everyone gets is
 		self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	};
@@ -237,7 +248,7 @@ if(evt==Canvas.EVENT_MOUSE_DOWN){
 	};
 	*/
 	self.setCursorStyle = function(style){
-		self.canvas.setCursorStyle(style);
+		self._canvas.setCursorStyle(style);
 	};
 	// self.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
 	//self.addListeners

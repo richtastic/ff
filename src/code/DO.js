@@ -102,11 +102,12 @@ function DO(parentDO){
 	};
 
 	this.render = function(canvas){
-		if(!self.rendering_mode){return;}
+		// self.rendering_mode ???
 		var context = canvas.getContext();
 		self.setupRender(canvas);
 		self.graphicsIllustration.setupRender(canvas);
 		self.graphicsIllustration.render(canvas);
+		self.graphicsIllustration.takedownRender(canvas);
 		if(self.mask){
 			context.clip();
 		}
@@ -114,7 +115,6 @@ function DO(parentDO){
 		for(i=0;i<len;++i){ // children render
 			self.children[i].render(canvas);
 		}
-		self.graphicsIllustration.takedownRender(canvas);
 		self.takedownRender(canvas);
 	}
 // Display List ----------------------------------------------------------------------------------------------------------------
@@ -269,11 +269,9 @@ function DO(parentDO){
 	this.checkIntersectionChildren = true;
 	this.checkIntersectionthis = true;
 	this.getIntersection = function(pos, can){
-		self.graphicsIllustration.pointRendering = true;
 		self.setupRender(can);
 		if(self.mask){
 			var context = can.getContext();
-			self.graphics.render(can);//drawGraphics(can);
 			context.clip();
 		}
 		if(self.checkIntersectionChildren){
@@ -282,25 +280,23 @@ function DO(parentDO){
 				ret = self.children[i].getIntersection(pos, can);
 				if(ret){
 					self.takedownRender(can);
-					self.graphicsIllustration.pointRendering = false;
 					return ret;
 				}
 			}
 		}
 		if(self.checkIntersectionthis){
-//all DO objects must use ONLY the canvas passed to it through the render functions - not internally stored
-			self.graphics.drawGraphics(can);
-			//self.render(can);
+self.graphics.setupRender(can);
+self.graphics.render(can);
+self.graphics.takedownRender(can);
 			var context = can.getContext();
-			var imgData = can.getImageData(0,0,can.canvas.width,can.canvas.height);//context.getImageData(0,0,can.canvas.width,can.canvas.height);
+			var imgData = can.getImageData(0,0,can.getWidth(),can.getHeight());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 			var pix = self.getPixelRGBA( imgData, pos.x,pos.y);
+			console.log(pix);
 			self.takedownRender(can);
 			if(pix!=0){
-				self.graphicsIllustration.pointRendering = false;
 				return self;
 			}
 		}
-		self.graphicsIllustration.pointRendering = false;
 		return null;
 	}
 	this.getPixelRGBA = function(img, x,y){

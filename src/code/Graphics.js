@@ -1,8 +1,10 @@
 // Graphics.js
 Graphics.X = 0;
+Graphics.canvas = null;
 
 // ------------------------------------------------------------------------------------------
 Graphics.setCanvas = function(canvas){
+//console.log(canvas);
 	Graphics.canvas = canvas;
 }
 Graphics.canvasSetLine = function(wid,col){
@@ -117,7 +119,7 @@ function Graphics(){
 
 // rendering ------------------------------------------------------------------------------------------
 	this.drawGraphics = function(canvas){
-		var arr = this.graphics;
+		var arr = this._graphics;
 		var i, len = arr.length;
 		var args, fxn;
 		for(i=0;i<len;++i){
@@ -133,9 +135,8 @@ function Graphics(){
 		Graphics.setCanvas(null);
 	}
 	this.render = function(canvas){
-		self.setupRender();
+		if(!canvas){return;}
 		self.drawGraphics(canvas);
-		self.takedownRender();
 	}
 // ------------------------------------------------------------------------------------------
 	this.kill = function(){

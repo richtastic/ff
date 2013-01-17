@@ -40,15 +40,16 @@ function Spice(){
 		var wid = e.x, hei = e.y;
 		var sX = 0, sY = 0;
 		//wid = 300;hei = 200;
-		self.doDraft.resize(wid,hei);
+		//self.doDraft.resize(wid,hei);
+return;
 		//
 		sX = wid*(2/3);
 		sY = 0;
 		wid = wid*(1/3);
 		hei = hei;
-		self.library.graphicsIllustration.clearGraphics();
-		self.library.graphicsIllustration.setLine(1.0,0x00FF00);
-		self.library.graphicsIllustration.setFillRGBA(0x00FFFF99);
+		self.library.graphicsIllustration.clear();
+		self.library.graphicsIllustration.setLine(1.0,0x00FF0099);
+		self.library.graphicsIllustration.setFill(0x00FFFF99);
 		self.library.graphicsIllustration.beginPath();
 		self.library.graphicsIllustration.moveTo(sX,sY);
 		self.library.graphicsIllustration.lineTo(sX+wid,sY);
@@ -77,10 +78,24 @@ function Spice(){
 		self.resource.alertLoadCompleteEvents();
 		
 		self.doRoot = new DO();
+		self.stage.addChild(self.doRoot);
+self.doRoot.graphicsIllustration.clear();
+self.doRoot.graphicsIllustration.setLine(1,0x0000FF99);
+self.doRoot.graphicsIllustration.setFill(0xFF000099);
+self.doRoot.graphicsIllustration.beginPath();
+self.doRoot.graphicsIllustration.moveTo(0,0);
+self.doRoot.graphicsIllustration.lineTo(100,0);
+self.doRoot.graphicsIllustration.lineTo(100,100);
+self.doRoot.graphicsIllustration.lineTo(0,100);
+self.doRoot.graphicsIllustration.lineTo(0,0);
+//self.doRoot.graphicsIllustration.endPath();
+self.doRoot.graphicsIllustration.strokeLine();
+self.doRoot.graphicsIllustration.fill();
+self.addListeners();
+return;
 			self.doMenus = new DO();
 			self.doDraft = new Draft({},self.resource);
 			self.doWindows = new WinManager();
-		self.stage.addChild(self.doRoot);
 			self.doRoot.addChild(self.doMenus);
 var dos = self.doDraft.display();
 			self.doRoot.addChild(dos);

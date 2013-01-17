@@ -35,9 +35,9 @@ function Draft(style,resource){
 		
 	}
 	this.resize = function(wid,hei){
-		this._scroller.graphicsIllustration.clearGraphics();
+		this._scroller.graphicsIllustration.clear();
 		this._scroller.graphicsIllustration.setLine(1,0xFF00FF00);
-		this._scroller.graphicsIllustration.setFillRGBA(0x00000000); // 0x00000001
+		this._scroller.graphicsIllustration.setFill(0x00000000); // 0x00000001
 		this._scroller.graphicsIllustration.beginPath();
 		this._scroller.graphicsIllustration.moveTo(0,0);
 		this._scroller.graphicsIllustration.lineTo(wid,0);
