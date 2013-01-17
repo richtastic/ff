@@ -12,7 +12,7 @@ function Draft(style,resource){
 	// BACKGROUND
 	var img = this._resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
 	this._background = new DOImage(img);
-	this._background.graphicsIllustration.clearGraphics();
+	this._background.graphicsIllustration.clear();
 	this._background.graphicsIllustration.drawImage(0,0,2000,2000);
 	this._scroller.addChild( this._background );
 	this._background.setDraggingEnabled();
@@ -60,10 +60,10 @@ function Draft(style,resource){
 	*/
 	//img.setSize(50,50);
 	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
-	img.graphicsIllustration.setRenderModeStretch();
+	img.graphicsIllustration.drawImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
 	pin.addFrame(img,4);
 	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]);
-	img.graphicsIllustration.setRenderModeStretch();
+	img.graphicsIllustration.drawImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
 	pin.addFrame(img,8);
 	pin.gotoFrame(0);
 	//pin.setStop();

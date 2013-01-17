@@ -39,8 +39,17 @@ Graphics.canvasStrokeRect = function(sX,sY,wX,hY){
 	Graphics.canvas.strokeRect(sX,sY,wX,hY);
 }
 // ---- images
-Graphics.canvasDrawImage = function(img,pX,pY,wX,hY){
+Graphics.canvasDrawImage0 = function(img){
+	Graphics.canvas.drawImage(img);
+}
+Graphics.canvasDrawImage2 = function(img,wX,hY){
+	Graphics.canvas.drawImage(img,wX,hY);
+}
+Graphics.canvasDrawImage4 = function(img,pX,pY,wX,hY){
 	Graphics.canvas.drawImage(img,pX,pY,wX,hY);
+}
+Graphics.canvasDrawImage8 = function(img,aX,aY,bX,bY,cX,cY,dX,dY){
+	Graphics.canvas.drawImage(img,aX,aY,bX,bY,cX,cY,dX,dY);
 }
 
 Graphics.canvasDrawImagePattern = function(img,pX,pY,wX,hY){

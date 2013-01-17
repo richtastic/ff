@@ -1,22 +1,9 @@
 // DOImage.js
 
-/*
-rendering:
-	- use native size - ** default
-	- use given size
-		- repeat to fill
-		- stretch to fill
-intersection:
-	- use rectangle
-	- use image alpha
-
-*/
 function DOImage(img, options, parentDO){
 	var self = this;
 	Code.extendClass(self,DO);
 	this.image = img;
-	this.graphicsIllustration.image = img;
-	this.graphicsIllustration.renderMode = Graphics.RENDER_MODE_PATTERN;
 	if(options){
 		if(options.width){ self.imageWidth=options.width; }
 		if(options.height){ self.imageHeight=options.height; }
@@ -34,23 +21,16 @@ function DOImage(img, options, parentDO){
 		};
 	};
 // rendering ---------------------------------------------------------------------------------
-	this.declareRender = function(){
-		self.graphicsIllustration.declareRender();
-		//self.graphicsIllustration.clearGraphics();
-		//self.graphicsIllustration.drawImage(0,0,self.imageWidth,self.imageHeight);
-	};
 	this.setSize = function(wid,hei){
-		self.graphicsIllustration.imageWidth = wid;
-		self.graphicsIllustration.imageHeight = hei;
-		self.declareRender();
-	};
+		self.imageWidth = wid;
+		self.imageHeight = hei;
+		//self.graphicsIllustration.drawImage(self.image,0,0,wid,hei);
+	}
 	this.setWidth = function(wid){
-		self.graphicsIllustration.imageWidth = wid;
-		self.graphicsIllustration.declareRender();
+		self.imageWidth = wid;
 	};
 	this.setHeight = function(hei){
-		self.graphicsIllustration.imageHeight = hei;
-		self.graphicsIllustration.declareRender();
+		self.imageHeight = hei;
 	};
 	this.getWidth = function(){
 		return self.graphicsIllustration.imageWidth;
@@ -63,9 +43,7 @@ function DOImage(img, options, parentDO){
 		self.super.kill.call(self);
 	};
 	// constructor ------------------------------------------------------------------------------------------
-	this.graphicsIllustration.imageWidth = self.graphicsIllustration.image.width;
-	this.graphicsIllustration.imageHeight = self.graphicsIllustration.image.height;
-	this.declareRender();
+	// 
 }
 
 
