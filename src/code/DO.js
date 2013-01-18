@@ -40,8 +40,6 @@ function DO(parentDO){
 	this.matrix = new Matrix2D();
 	this.parent = parentDO;
 	this.canvas = null;
-	// FAST-POINT-RENDERING
-	this.pointRendering = false;
 	Code.extendClass(this,Dispatchable,arguments);
 // self-event registering and dispatching ---------------------------------------------------------------------------------
 	this.addFunction = Code.overrideClass(this, this.addFunction, function(str,fxn){

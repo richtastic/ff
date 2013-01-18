@@ -95,6 +95,9 @@ self.doRoot.graphicsIllustration.fill();
 var doimg = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_RED]);
 self.doRoot.addChild(doimg);
 
+//doimg.drawSingle(0,0,150,200);
+doimg.drawPattern(50,50,50,100);
+
 self.addListeners();
 return;
 			self.doMenus = new DO();
