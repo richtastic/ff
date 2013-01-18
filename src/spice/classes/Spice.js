@@ -96,7 +96,7 @@ var doimg = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_
 self.doRoot.addChild(doimg);
 
 //doimg.drawSingle(0,0,150,200);
-doimg.drawPattern(50,50,50,100);
+doimg.drawPattern(0,0,50,100);
 
 self.addListeners();
 return;

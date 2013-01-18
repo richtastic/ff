@@ -17,16 +17,9 @@ function DOImage(img, options, parentDO){
 	}
 	this.addedToStage = Code.overrideClass(this, this.addedToStage, function(stage){
 		this.super(arguments.callee).addedToStage.call(this,stage);
-		/*
-		self.graphicsIllustration.clear();
-		var context = self.stage.getCanvas().getContext();
-		self._pattern = context.createPattern(self._image,'repeat');
-		self.graphicsIllustration.drawImagePattern(self._pattern,0,0,200,200);
-		*/
 	})
 // rendering ---------------------------------------------------------------------------------
 	this._renderA = function(canvas){
-console.log("RENDER A");
 		if(self._imageQueue.length>0){
 			var i, j, fxn, args;
 			for(i=0; i<self._imageQueue.length; ++i){
@@ -52,6 +45,7 @@ console.log("RENDER A");
 		this._renderFxn(canvas);
 	})
 	this.drawSingle = function(pX,pY,w,h){
+		Code.emptyArray(self._imageQueue);
 		this._imageQueue.push( Code.newArray(self.graphicsIllustration.clear,Code.newArray()) );
 		this._imageQueue.push( Code.newArray(self.graphicsIllustration.drawImage,Code.newArray(self._image,pX,pY,w,h)) );
 		this._renderFxn = this._renderA;
@@ -63,6 +57,7 @@ console.log("RENDER A");
 		self.graphicsIllustration.drawImagePattern(self._pattern,pX,pY,w,h);
 	}
 	this.drawPattern = function(pX,pY,w,h){
+		Code.emptyArray(self._imageQueue);
 		this._imageQueue.push( Code.newArray(self.drawPatternTerminal,Code.newArray(null,pX,pY,w,h)) );
 		this._renderFxn = this._renderA;
 	}
