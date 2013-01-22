@@ -20,13 +20,13 @@ self.renderCanvas.canvas.style.position="absolute";
 self.renderCanvas.canvas.style.left="0px";
 self.renderCanvas.canvas.style.top="100px";
 */
-/*
+
 var can = self._tempCanvas.getCanvas();
 document.body.appendChild(can);
 can.style.position="absolute";
 can.style.left="0px";
 can.style.top="200px";
-*/
+
 	self.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
 		self.renderCanvas.clear();
 		self.renderCanvas.setSize(wid,hei);
@@ -195,9 +195,6 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 		}
 		// 
 		if(intersection){
-if(evt==Canvas.EVENT_MOUSE_DOWN){
-	"DOWN"
-}
 			obj = intersection;
 			while(obj){ // self to ancestors - create path
 				path.push(obj);
@@ -212,7 +209,9 @@ if(evt==Canvas.EVENT_MOUSE_DOWN){
 				obj.alertAll(evt,arr);
 			}
 		}else{
-			//
+			if(evt==Canvas.EVENT_MOUSE_DOWN){
+				console.log("DOWN - NO INT");
+			}
 		}
 		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 	};

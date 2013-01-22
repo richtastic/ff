@@ -79,12 +79,12 @@ function DO(parentDO){
 	this.graphics = new Graphics();
 	this.graphicsIllustration = this.graphics;
 	this.graphicsIntersection = this.graphicsIllustration;
-	this.rendering_mode = true;
-	this.setRenderingOff = function(){
-		self.rendering_mode = false;
+	this.newGraphicsIllustration = function(gr){
+		this.graphicsIllustration = gr?gr:new Graphics();
+		this.graphics = this.graphicsIllustration;
 	};
-	this.setRenderingOn = function(){
-		self.rendering_mode = true;
+	this.newGraphicsIntersection = function(gr){
+		this.graphicsIntersection = gr?gr:new Graphics();
 	};
 	this.setupRender = function(canvas){
 		self.canvas = canvas;
@@ -100,7 +100,6 @@ function DO(parentDO){
 	};
 
 	this.render = function(canvas){
-		// self.rendering_mode ???
 		var context = canvas.getContext();
 		self.setupRender(canvas);
 		self.graphicsIllustration.setupRender(canvas);
@@ -264,15 +263,25 @@ function DO(parentDO){
 		//
 	};
 	// ------------------------------------------------------------------ intersection
-	this.checkIntersectionChildren = true;
-	this.checkIntersectionthis = true;
+	this.checkIntersectionChildren = function(b){
+		if(b!==undefined){
+			this._checkIntersectionChildren = b;
+		}else{
+			return this._checkIntersectionChildren;
+		}
+	}
+	this._checkIntersectionChildren = true;
+	this._checkIntersectionThis = true;
 	this.getIntersection = function(pos, can){
 		self.setupRender(can);
+		var context = can.getContext();
 		if(self.mask){
-			var context = can.getContext();
+			self.graphicsIntersection.setupRender(can);
+			self.graphicsIntersection.render(can);
+			self.graphicsIntersection.takedownRender(can);
 			context.clip();
 		}
-		if(self.checkIntersectionChildren){
+		if(self._checkIntersectionChildren){
 			var ret, i, len = self.children.length;
 			for(i=len-1;i>=0;--i){
 				ret = self.children[i].getIntersection(pos, can);
@@ -282,7 +291,7 @@ function DO(parentDO){
 				}
 			}
 		}
-		if(self.checkIntersectionthis){
+		if(self._checkIntersectionThis){
 			self.graphicsIntersection.setupRender(can);
 			self.graphicsIntersection.render(can);
 			self.graphicsIntersection.takedownRender(can);

@@ -102,6 +102,9 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.strokeLine = function(){
 		this._context.stroke();
 	}
+	this.arc = function(pX,pY, rad, sA,eA, cw){
+		this._context.arc(pX,pY, rad, sA,eA, cw);
+	}
 	this.fill = function(){
 		this._context.fill();
 	}

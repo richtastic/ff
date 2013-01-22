@@ -25,6 +25,9 @@ Graphics.canvasMoveTo = function(pX,pY){
 Graphics.canvasLineTo = function(pX,pY){
 	Graphics.canvas.lineTo(pX,pY);
 }
+Graphics.arc = function(pX,pY, rad, sA,eA, cw){
+	Graphics.canvas.arc(pX,pY, rad, sA,eA, cw);
+}
 Graphics.canvasStrokeLine = function(){
 	Graphics.canvas.strokeLine();
 }
@@ -85,6 +88,9 @@ function Graphics(){
 	this.lineTo = function(pX,pY){
 		this._graphics.push( Code.newArray(Graphics.canvasLineTo,Code.newArray(pX,pY)) );
 	}
+	this.arc = function(pX,pY, rad, sA,eA, cw){
+		this._graphics.push( Code.newArray(Graphics.arc,Code.newArray(pX,pY, rad, sA,eA, cw)) );
+	}
 	this.strokeLine = function(){
 		this._graphics.push( Code.newArray(Graphics.canvasStrokeLine,Code.newArray()) );
 	}
@@ -130,6 +136,12 @@ function Graphics(){
 			fxn = arr[i][0];
 			args = arr[i][1];
 			fxn.apply(this,args);
+			//console.log(fxn);
+			if(fxn!==undefined){
+				//fxn.apply(this,args);
+			}else{
+				//console.log(args);
+			}
 		}
 	};
 	this.setupRender = function(canvas){

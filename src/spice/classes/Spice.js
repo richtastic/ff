@@ -39,10 +39,7 @@ function Spice(){
 	this.canvasResizeFxn = function(e){
 		var wid = e.x, hei = e.y;
 		var sX = 0, sY = 0;
-		//wid = 300;hei = 200;
-		//self.doDraft.resize(wid,hei);
-return;
-		//
+		self.doDraft.resize(wid,hei);
 		sX = wid*(2/3);
 		sY = 0;
 		wid = wid*(1/3);
@@ -79,6 +76,7 @@ return;
 		
 		self.doRoot = new DO();
 		self.stage.addChild(self.doRoot);
+/*
 self.doRoot.graphicsIllustration.clear();
 self.doRoot.graphicsIllustration.setLine(1,0x0000FF99);
 self.doRoot.graphicsIllustration.setFill(0xFF000099);
@@ -100,14 +98,14 @@ doimg.drawPattern(0,0,50,100);
 
 self.addListeners();
 return;
-			self.doMenus = new DO();
-			self.doDraft = new Draft({},self.resource);
-			self.doWindows = new WinManager();
-			self.doRoot.addChild(self.doMenus);
-var dos = self.doDraft.display();
-			self.doRoot.addChild(dos);
-			self.doRoot.addChild(self.doWindows);
-		
+*/
+		self.doMenus = new DO();
+		self.doDraft = new Draft({},self.resource);
+		self.doWindows = new WinManager();
+		self.doRoot.addChild(self.doMenus);
+		self.doRoot.addChild(self.doDraft.display());
+		self.doRoot.addChild(self.doWindows);
+	
 		// 
 		var style = {};
 		style[Win.WIN_BAR_LEFT] = self.resource.tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_RED];
@@ -128,8 +126,7 @@ var dos = self.doDraft.display();
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED]
 			);
 		self.doWindows.addWin( style );
-		//self.doWindows.addWin( {} );
-		//
+		
 		//self.scroller = new DOScroll();
 		//self.doRoot.addChild( self.scroller );
 		//self.maskee = new DO();
@@ -145,6 +142,35 @@ var dos = self.doDraft.display();
 		// 
 		// SCROLLLLLLLLLLLLLLLLLLLLLLLLLLLLLER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		//self.backImage = new DOImage(img,{width:300,height:200});
+// BUTTON TEST:
+var img
+var pin = new DOButton();
+self.doRoot.addChild(pin);
+
+img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_ACTIVE_RED]); img.drawSingle();
+pin.setFrameMouseOut( img );
+img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_UP_RED]); img.drawSingle();
+pin.setFrameMouseOver( img );
+img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_DOWN_RED]); img.drawSingle();
+pin.setFrameMouseDown( img );
+img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_INACTIVE_RED]); img.drawSingle();
+pin.setFrameDisabled( img );
+pin.matrix.translate(200,200);
+
+pin.newGraphicsIntersection();
+pin.graphicsIntersection.clear();
+pin.graphicsIntersection.setFill(0xFF00FFFF);
+pin.graphicsIntersection.beginPath();
+/*
+pin.graphicsIntersection.moveTo(0,0);
+pin.graphicsIntersection.lineTo(20,0);
+pin.graphicsIntersection.lineTo(20,20);
+pin.graphicsIntersection.lineTo(0,20);
+pin.graphicsIntersection.lineTo(0,0);
+*/
+pin.graphicsIntersection.arc(10,10, 10, 0,2*Math.PI, true);
+pin.graphicsIntersection.endPath();
+pin.graphicsIntersection.fill();
 		
 		self.addListeners();
 	};

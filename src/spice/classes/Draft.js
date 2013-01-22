@@ -12,18 +12,28 @@ function Draft(style,resource){
 	// BACKGROUND
 	var img = this._resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];
 	this._background = new DOImage(img);
-	this._background.graphicsIllustration.clear();
-	this._background.graphicsIllustration.drawImage(0,0,2000,2000);
 	this._scroller.addChild( this._background );
-	this._background.setDraggingEnabled();
+	this._background.drawPattern(0,0,2000,2000);
+	// intersection BG
+	this._background.newGraphicsIntersection();
+	this._background.graphicsIntersection.clear();
+	this._background.graphicsIntersection.setFill(0xFF00FFFF);
+	this._background.graphicsIllustration.beginPath();
+	this._background.graphicsIllustration.moveTo(0,0);
+	this._background.graphicsIllustration.lineTo(2000,0);
+	this._background.graphicsIllustration.lineTo(2000,2000);
+	this._background.graphicsIllustration.lineTo(0,2000);
+	this._background.graphicsIllustration.lineTo(0,0);
+	this._background.graphicsIllustration.endPath();
+	this._background.graphicsIntersection.fill();
 	this._background.rangeLimitsX = [-100, 100];
 	this._background.rangeLimitsY = [-100, 100];
+	this._background.setDraggingEnabled();
 	// FXNS
 	this.addElement = function(){
 		img = this._resource.tex[ResourceSpice.TEX_DEBUG_1];
 		var doEle = new DOImage(img);
-		doEle.clearGraphics();
-		doEle.drawImage(0,0,100,100);
+		doEle.drawSingle(0,0,100,100);
 		this._background.addChild( doEle );
 		doEle.setDraggingEnabled(50,50);
 		//doEle.matrix.translate(-50);
@@ -54,11 +64,9 @@ function Draft(style,resource){
 	/*var img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
 	var img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
 	img.setSize(50,50);
-	img.setRenderModeStretch();
 	pin.addFrame(img,1);
 	img.setDraggingEnabled(50,50);
 	*/
-	//img.setSize(50,50);
 	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
 	img.graphicsIllustration.drawImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
 	pin.addFrame(img,4);
@@ -66,7 +74,7 @@ function Draft(style,resource){
 	img.graphicsIllustration.drawImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
 	pin.addFrame(img,8);
 	pin.gotoFrame(0);
-	//pin.setStop();
+	pin.setStop();
 	pin.matrix.translate(100,200);
 
 	this._background.addChild(pin);
