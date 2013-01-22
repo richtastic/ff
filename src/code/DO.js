@@ -172,8 +172,15 @@ function DO(parentDO){
 	}
 	// -------------------------------------------------------------------- dragging
 	// dragging
-	this.rangeLimitsX = [-9E9, 9E9];
-	this.rangeLimitsY = [-9E9, 9E9];
+	this._checkLimits = false;
+	this._rangeLimitsX = [-1000, 10000];
+	this._rangeLimitsY = [0, 0];
+	this.checkRangeLimitsOn = function(){
+		this._checkLimits = true;
+	}
+	this.checkRangeLimitsOff = function(){
+		this._checkLimits = false;
+	}
 	this.dragEnabled = false;
 	this.dragging = false;
 	this.dragOffset = new V2D();
@@ -246,13 +253,22 @@ function DO(parentDO){
 				if(self.dragRoundingY>0){
 					diffY = self.dragRoundingY*Math.round(diffY/self.dragRoundingY);
 				}
-				// LIMITS ?
-				//if(diffX!=0 && diffY!=0){
-					self.matrix.pretranslate(diffX,diffY);
-					self.alertAll(DO.EVENT_DRAGGED,self);
-				//}
-				//self.dragOffset.x = pos.x;
-				//self.dragOffset.y = pos.y;
+				self.matrix.pretranslate(diffX,diffY);
+				if(self._checkLimits){
+					var xNum = self.matrix.translateX();
+					var yNum = self.matrix.translateY();
+					if(xNum<self._rangeLimitsX[0]){
+						self.matrix.pretranslate(self._rangeLimitsX[0]-xNum,0);
+					}else if(xNum>self._rangeLimitsX[1]){
+						self.matrix.pretranslate(self._rangeLimitsX[1]-xNum,0);
+					}
+					if(yNum<self._rangeLimitsY[0]){
+						self.matrix.pretranslate(0,self._rangeLimitsY[0]-yNum);
+					}else if(yNum>self._rangeLimitsY[1]){
+						self.matrix.pretranslate(0,self._rangeLimitsY[1]-yNum);
+					}
+				}
+				self.alertAll(DO.EVENT_DRAGGED,self);
 			}
 		}
 	};

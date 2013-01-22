@@ -17,7 +17,20 @@ function Matrix2D(){
 		var mat = Matrix2D.temp;
 		mat.setParameters(1,0,0,1,tx,ty);
 		this.mult(mat,this);
-		//this.mult(this,mat);
+	}
+	this.translateX = function(tx){
+		if(tx!==undefined){
+			self.translate(tx,0);
+		}else{
+			return this.x;
+		}
+	}
+	this.translateY = function(ty){
+		if(ty!==undefined){
+			self.translate(0,ty);
+		}else{
+			return this.y;
+		}
 	}
 	this.pretranslate = function(tx,ty){
 		//console.log("pre");
