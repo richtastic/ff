@@ -7,6 +7,7 @@ DOButton.FRAME_DISABLED = 3;
 function DOButton(parentDO){
 	var self = this;
 	Code.extendClass(this,DOAnim);
+	this._enabledButton = true;
 	this._mouseAction = DOButton.FRAME_MOUSE_OUT;
 	this._frames[DOButton.FRAME_MOUSE_OUT] = new Frame();
 	this._frames[DOButton.FRAME_MOUSE_OVER] = new Frame();
@@ -38,25 +39,36 @@ function DOButton(parentDO){
 			this.gotoFrame(this._mouseAction);
 		}
 	}
+// enabling/disabling ---------------------------------------------------------------------------------
+	this.setDisabled = function(){
+		this._enabledButton = false;
+		this._mouseAction = DOButton.FRAME_DISABLED;
+		this._gotoImmediate();
+	}
+	this.setEnabled = function(){
+		this._enabledButton = true;
+		this._mouseAction = DOButton.FRAME_MOUSE_OUT;
+		this._gotoImmediate();
+	}
 // mouse interaction ---------------------------------------------------------------------------------
 	this._buttonMouseDownFxn = function(e){
-		console.log("down");
+		if(!self._enabledButton){ return; }
 		self._gotoImmediate(DOButton.FRAME_MOUSE_DOWN);
 	}
 	this._buttonMouseUpFxn = function(e){
-		console.log("up");
+		if(!self._enabledButton){ return; }
 		self._gotoImmediate(DOButton.FRAME_MOUSE_OVER);
 	}
 	this._buttonMouseClickFxn = function(e){
-		console.log("click");
+		if(!self._enabledButton){ return; }
 	}
 	this._buttonMouseOverFxn = function(e){
-		console.log("move");
+		if(!self._enabledButton){ return; }
 		self._gotoImmediate(DOButton.FRAME_MOUSE_OVER);
 	}
 	this._buttonMouseOutFxn = function(e){
+		if(!self._enabledButton){ return; }
 		self._gotoImmediate(DOButton.FRAME_MOUSE_OUT);
-		console.log("out");
 	}
 //  ---------------------------------------------------------------------------------
 	this.addedToStage = Code.overrideClass(this, this.addedToStage, function(stage){
@@ -69,8 +81,6 @@ function DOButton(parentDO){
 		self.addFunction(Canvas.EVENT_MOUSE_UP,self._buttonMouseUpFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_CLICK,self._buttonMouseClickFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_MOVE,self._buttonMouseOverFxn);
-		//self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self._buttonMouseOutFxn);
-		//self.addFunction(Canvas.EVENT_MOUSE_CLICK_OUTSIDE,self._buttonMouseOutFxn);
 		self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self._buttonMouseOutFxn);
 	})
 	

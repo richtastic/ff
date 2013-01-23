@@ -173,9 +173,17 @@ function DO(parentDO){
 	// -------------------------------------------------------------------- dragging
 	// dragging
 	this._checkLimits = false;
-	this._rangeLimitsX = [-1000, 10000];
-	this._rangeLimitsY = [0, 0];
-	this.checkRangeLimitsOn = function(){
+	this._rangeLimitsX = [-100, 100];
+	this._rangeLimitsY = [-100, 100];
+	this.checkRangeLimitsOn = function(xLim,yLim){
+		if(xLim!==undefined){
+			this._rangeLimitsX[0] = xLim[0];
+			this._rangeLimitsX[1] = xLim[1];
+		}
+		if(yLim!==undefined){
+			this._rangeLimitsY[0] = yLim[0];
+			this._rangeLimitsY[1] = yLim[1];
+		}
 		this._checkLimits = true;
 	}
 	this.checkRangeLimitsOff = function(){
@@ -191,56 +199,57 @@ function DO(parentDO){
 		if(rY!==null && rY!==undefined && rY!==0){ self.dragRoundingY = rY; }else{ self.dragRoundingY = 0; }
 		self.dragEnabled = true;
 		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
-		self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-		self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
+		//self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.dragMouseUpFxn);
 	};
 	this.setDraggingDisabled = function(){
 		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
-		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
-		self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 		self.dragEnabled = false;
 	};
 	this.startDrag = function(pos){
 		if(!self.dragEnabled){ return; }
-		console.log("START");
 		pos = pos?pos:new V2D();
-		self.dragging = true;
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
+		self.dragging = true;
 	};
 	this.stopDrag = function(){
-		console.log("STOP");
 		self.dragging = false;
 	};
 	this.dragMouseDownFxn = function(e){
-		console.log("DOWN");
+		//console.log("M-DOWN");
 		if(e[0]==self && self.dragEnabled){
 			var pos = e[1];
 			self.startDrag(e[1]);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
-			console.log("ADD EVENT MOUSE DOWN OUTSIDE");
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
+			self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+			self.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 		}
 	};
 	this.dragMouseUpFxn = function(e){
-		console.log("UP");
-		if(self.dragEnabled && self.dragging){
+		if(true){//self.dragEnabled && self.dragging){
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
+			self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+			self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 			self.stopDrag();
+			self.dragging = false;
 		}
+		//console.log("M-UP "+self.dragging);
 	};
 	this.mouseMoveDragCheckFxnOutside = function(e){
-		console.log("OUTSIDE");
 		if(self.dragEnabled && self.dragging){
 			self.mouseMoveDragCheckFxn(e,false);
 		}else{
-			console.log("RE-MOVED");
+			//console.log("RE-MOVED");
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 			self.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
+			self.removeFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
+			self.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.dragMouseUpFxn);
 		}
 	}
 	this.mouseMoveDragCheckFxn = function(e,check){
+		//console.log("move "+self.dragging);
 		if(self.dragging){
 			if(e[0]==self || !check){
 				var pos = e[1];

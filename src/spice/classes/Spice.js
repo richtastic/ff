@@ -126,12 +126,12 @@ return;
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED]
 			);
 		self.doWindows.addWin( style );
+		self.doWindows.win( 0 ).matrix.translate(450,50);
 		
 		//self.scroller = new DOScroll();
 		//self.doRoot.addChild( self.scroller );
 		//self.maskee = new DO();
 		//self.addChild(maskee);
-		
 		
 		// library
 		self.library = new DO();
@@ -143,7 +143,7 @@ return;
 		// SCROLLLLLLLLLLLLLLLLLLLLLLLLLLLLLER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 		//self.backImage = new DOImage(img,{width:300,height:200});
 // BUTTON TEST:
-var img
+var img;
 var pin = new DOButton();
 self.doRoot.addChild(pin);
 
@@ -156,11 +156,14 @@ pin.setFrameMouseDown( img );
 img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_INACTIVE_RED]); img.drawSingle();
 pin.setFrameDisabled( img );
 pin.matrix.translate(200,200);
-
+// trigger area
 pin.newGraphicsIntersection();
 pin.graphicsIntersection.clear();
 pin.graphicsIntersection.setFill(0xFF00FFFF);
 pin.graphicsIntersection.beginPath();
+
+//pin.setDisabled();
+
 /*
 pin.graphicsIntersection.moveTo(0,0);
 pin.graphicsIntersection.lineTo(20,0);

@@ -118,7 +118,9 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._context.fillRect(sX,sY,wX,hY);
 	}
 	this.drawImage0 = function(img){
-		this._context.drawImage(img);
+		if(this && this._context && img){ // WHYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+			this._context.drawImage(img);
+		}
 	}
 	this.drawImage2 = function(img,px,py){
 		this._context.drawImage(img,px,py);
@@ -180,12 +182,14 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._canvas.addEventListener('mousedown', this.canvasMouseDownFxn);
 		this._canvas.addEventListener('mouseup', this.canvasMouseUpFxn);
 		this._canvas.addEventListener('mousemove', this.canvasMouseMoveFxn);
+		this._canvas.addEventListener("mouseout",this.canvasMouseOutFxn);
 	}
 	this.removeListeners = function(){
 		this._canvas.removeEventListener('click', this.canvasClickFxn);
 		this._canvas.removeEventListener('mousedown', this.canvasMouseDownFxn);
 		this._canvas.removeEventListener('mouseup', this.canvasMouseUpFxn);
 		this._canvas.removeEventListener('mousemove', this.canvasMouseMoveFxn);
+		this._canvas.removeEventListener("mouseout",this.canvasMouseOutFxn);
 	}
 // MOUSE POSITIONING --------------------------------------------------------
 	this.canvasClickFxn = function(e){
@@ -210,6 +214,12 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 		//pos = null;
+	}
+	this.canvasMouseOutFxn = function(e){
+		pos = self.getMousePosition(e);
+		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
+		//self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...
+		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 	}
 	this.getMousePosition = function(e){
 		var pos = new V2D(0,0);

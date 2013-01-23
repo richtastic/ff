@@ -59,25 +59,8 @@ function Draft(style,resource){
 		this._scroller.graphicsIllustration.fill();
 	}
 	// ELEMENTS
-	var img
-	var pin = new DOAnim();
-	/*var img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
-	var img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
-	img.setSize(50,50);
-	pin.addFrame(img,1);
-	img.setDraggingEnabled(50,50);
-	*/
-	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
-	img.graphicsIllustration.drawImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
-	pin.addFrame(img,4);
-	img = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]);
-	img.graphicsIllustration.drawImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]);
-	pin.addFrame(img,8);
-	pin.gotoFrame(0);
-	pin.setStop();
-	pin.matrix.translate(100,200);
-
-	this._background.addChild(pin);
+	var pin = new DOCE({},this._resource);
+	this._background.addChild(pin.display());
 //	this.addElement();
 	// YAY
 }

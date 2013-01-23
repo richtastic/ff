@@ -12,12 +12,14 @@ Win.WIN_BODY_BOT_RIGHT = "body_bot_right";
 Win.WIN_BODY_BOT_LEFT = "body_bot_left";
 Win.WIN_BODY_BOT_CEN = "body_bot_cen";
 Win.WIN_ICON_LIST = "icon_list";
+Win.INF = 10E10;
 
 function Win(style){
 	var self = this;
 	Code.extendClass(this,DO,arguments);
 	this.total_width = 250;
 	this.total_height = 160;
+	this.handle_stretch_size = 5;
 	this.style = {
 		bar_left:null, bar_mid:null, bar_right:null,
 		top_left:null, top_mid:null, top_right:null, 
@@ -54,28 +56,34 @@ function Win(style){
 		self.win_level_3.matrix.copy(self.do_drag_bar.matrix);
 	}
 	this.handle_stretch_right_dragged = function(o){
-		//console.log("stretched right");
-		console.log(o.matrix.translateX());
-		self.total_width = 250 + o.matrix.translateX();
-		console.log(self.total_width);
+		self.total_width = o.matrix.translateX() + self.handle_stretch_size;
 		self._refreshDisplay();
 	}
-
+	this.handle_stretch_right_dragged = function(o){
+		self.total_width = o.matrix.translateX() + self.handle_stretch_size;
+		self._refreshDisplay();
+	}
+	this.handle_stretch_bot_dragged = function(o){
+		self.total_height = o.matrix.translateY() + self.handle_stretch_size;
+		self._refreshDisplay();
+	}
 	// internal listeners
 	this.addListenersDragBar = function(){
-		
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_DOWN,self.handle_mouse_down_bar_fxn);
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP,self.handle_mouse_up_bar_fxn);
 		self.do_drag_bar.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,self.handle_mouse_up_outside_bar_fxn);
-		
+		//
 		self.do_drag_bar.addFunction(DO.EVENT_DRAGGED,self.handle_bar_dragged);
 		self.do_drag_bar.setDraggingEnabled();
 		//
 		self.do_stretch_right.addFunction(DO.EVENT_DRAGGED,self.handle_stretch_right_dragged);
-		self.do_stretch_right.checkRangeLimitsOn();
+		self.do_stretch_right.checkRangeLimitsOn([-Win.INF,Win.INF],[0,0]);
 		self.do_stretch_right.setDraggingEnabled();
 		//
-	};
+		self.do_stretch_bot.addFunction(DO.EVENT_DRAGGED,self.handle_stretch_bot_dragged);
+		self.do_stretch_bot.checkRangeLimitsOn([0,0],[-Win.INF,Win.INF]);
+		self.do_stretch_bot.setDraggingEnabled();
+	}
 
 	this._refreshDisplay = function(){
 		// position info
@@ -87,8 +95,8 @@ function Win(style){
 		var top_height = Math.max(self.do_body_top_left.imageHeight(),self.do_body_top_cen.imageHeight(),self.do_body_top_right.imageHeight());
 		var bot_height = Math.max(self.do_body_bot_left.imageHeight(),self.do_body_bot_cen.imageHeight(),self.do_body_bot_right.imageHeight());
 		var mid_height = self.total_height - bar_height - top_height - bot_height;
-		posX = 0;
-		posY = 0;
+		// initial positioning
+		posX = 0; posY = 0;
 		self.do_bar_left.matrix.identity();
 		self.do_bar_cen.matrix.identity();
 		self.do_bar_right.matrix.identity();
@@ -155,81 +163,96 @@ function Win(style){
 		self.do_drag_bar.graphicsIntersection.lineTo(0,0);
 		self.do_drag_bar.graphicsIntersection.fill();
 		//
-		var handle_stretch_size = 5;
+		var handle_stretch_size = self.handle_stretch_size;
 		var bot_stretch_start = self.total_height-handle_stretch_size;
 		var right_stretch_start = self.total_width-handle_stretch_size;
 		self.do_stretch_left.graphicsIntersection.clear();
-		self.do_stretch_left.graphicsIllustration.setFill(0xFF000099);
-		self.do_stretch_left.graphicsIllustration.beginPath();
-		self.do_stretch_left.graphicsIllustration.moveTo(0,handle_stretch_size);
-		self.do_stretch_left.graphicsIllustration.lineTo(handle_stretch_size,handle_stretch_size);
-		self.do_stretch_left.graphicsIllustration.lineTo(handle_stretch_size,bot_stretch_start);
-		self.do_stretch_left.graphicsIllustration.lineTo(0,bot_stretch_start);
-		self.do_stretch_left.graphicsIllustration.lineTo(0,handle_stretch_size);
-		self.do_stretch_left.graphicsIllustration.fill();
-		self.do_stretch_right.graphicsIllustration.clear();
-		self.do_stretch_right.graphicsIllustration.setFill(0xFF000099);
-		self.do_stretch_right.graphicsIllustration.beginPath();
-		self.do_stretch_right.graphicsIllustration.moveTo(right_stretch_start,handle_stretch_size);
-		self.do_stretch_right.graphicsIllustration.lineTo(self.total_width,handle_stretch_size);
-		self.do_stretch_right.graphicsIllustration.lineTo(self.total_width,bot_stretch_start);
-		self.do_stretch_right.graphicsIllustration.lineTo(right_stretch_start,bot_stretch_start);
-		self.do_stretch_right.graphicsIllustration.lineTo(right_stretch_start,handle_stretch_size);
-		self.do_stretch_right.graphicsIllustration.fill();
-		self.do_stretch_top.graphicsIllustration.clear();
-		self.do_stretch_top.graphicsIllustration.setFill(0xFF000099);
-		self.do_stretch_top.graphicsIllustration.beginPath();
-		self.do_stretch_top.graphicsIllustration.moveTo(handle_stretch_size,0);
-		self.do_stretch_top.graphicsIllustration.lineTo(right_stretch_start,0);
-		self.do_stretch_top.graphicsIllustration.lineTo(right_stretch_start,handle_stretch_size);
-		self.do_stretch_top.graphicsIllustration.lineTo(handle_stretch_size,handle_stretch_size);
-		self.do_stretch_top.graphicsIllustration.lineTo(handle_stretch_size,0);
-		self.do_stretch_top.graphicsIllustration.fill();
-		self.do_stretch_bot.graphicsIllustration.clear();
-		self.do_stretch_bot.graphicsIllustration.setFill(0xFF000099);
-		self.do_stretch_bot.graphicsIllustration.beginPath();
-		self.do_stretch_bot.graphicsIllustration.moveTo(handle_stretch_size,bot_stretch_start);
-		self.do_stretch_bot.graphicsIllustration.lineTo(right_stretch_start,bot_stretch_start);
-		self.do_stretch_bot.graphicsIllustration.lineTo(right_stretch_start,self.total_height);
-		self.do_stretch_bot.graphicsIllustration.lineTo(handle_stretch_size,self.total_height);
-		self.do_stretch_bot.graphicsIllustration.lineTo(handle_stretch_size,bot_stretch_start);
-		self.do_stretch_bot.graphicsIllustration.fill();
-		self.do_stretch_tl.graphicsIllustration.clear();
-		self.do_stretch_tl.graphicsIllustration.setFill(0xFFFF0099);
-		self.do_stretch_tl.graphicsIllustration.beginPath();
-		self.do_stretch_tl.graphicsIllustration.moveTo(0,0);
-		self.do_stretch_tl.graphicsIllustration.lineTo(handle_stretch_size,0);
-		self.do_stretch_tl.graphicsIllustration.lineTo(handle_stretch_size,handle_stretch_size);
-		self.do_stretch_tl.graphicsIllustration.lineTo(0,handle_stretch_size);
-		self.do_stretch_tl.graphicsIllustration.lineTo(0,0);
-		self.do_stretch_tl.graphicsIllustration.fill();
-		self.do_stretch_tr.graphicsIllustration.clear();
-		self.do_stretch_tr.graphicsIllustration.setFill(0xFFFF0099);
-		self.do_stretch_tr.graphicsIllustration.beginPath();
-		self.do_stretch_tr.graphicsIllustration.moveTo(right_stretch_start,0);
-		self.do_stretch_tr.graphicsIllustration.lineTo(self.total_width,0);
-		self.do_stretch_tr.graphicsIllustration.lineTo(self.total_width,handle_stretch_size);
-		self.do_stretch_tr.graphicsIllustration.lineTo(right_stretch_start,handle_stretch_size);
-		self.do_stretch_tr.graphicsIllustration.lineTo(right_stretch_start,0);
-		self.do_stretch_tr.graphicsIllustration.fill();
-		self.do_stretch_bl.graphicsIllustration.clear();
-		self.do_stretch_bl.graphicsIllustration.setFill(0xFFFF0099);
-		self.do_stretch_bl.graphicsIllustration.beginPath();
-		self.do_stretch_bl.graphicsIllustration.moveTo(0,bot_stretch_start);
-		self.do_stretch_bl.graphicsIllustration.lineTo(handle_stretch_size,bot_stretch_start);
-		self.do_stretch_bl.graphicsIllustration.lineTo(handle_stretch_size,self.total_height);
-		self.do_stretch_bl.graphicsIllustration.lineTo(0,self.total_height);
-		self.do_stretch_bl.graphicsIllustration.lineTo(0,bot_stretch_start);
-		self.do_stretch_bl.graphicsIllustration.fill();
-		self.do_stretch_br.graphicsIllustration.clear();
-		self.do_stretch_br.graphicsIllustration.setFill(0xFFFF0099);
-		self.do_stretch_br.graphicsIllustration.beginPath();
-		self.do_stretch_br.graphicsIllustration.moveTo(right_stretch_start,bot_stretch_start);
-		self.do_stretch_br.graphicsIllustration.lineTo(self.total_width,bot_stretch_start);
-		self.do_stretch_br.graphicsIllustration.lineTo(self.total_width,self.total_height);
-		self.do_stretch_br.graphicsIllustration.lineTo(right_stretch_start,self.total_height);
-		self.do_stretch_br.graphicsIllustration.lineTo(right_stretch_start,bot_stretch_start);
-		self.do_stretch_br.graphicsIllustration.fill();
+		self.do_stretch_left.graphicsIntersection.setFill(0xFF000099);
+		self.do_stretch_left.graphicsIntersection.beginPath();
+		self.do_stretch_left.graphicsIntersection.moveTo(0,handle_stretch_size);
+		self.do_stretch_left.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
+		self.do_stretch_left.graphicsIntersection.lineTo(handle_stretch_size,bot_stretch_start);
+		self.do_stretch_left.graphicsIntersection.lineTo(0,bot_stretch_start);
+		self.do_stretch_left.graphicsIntersection.lineTo(0,handle_stretch_size);
+		self.do_stretch_left.graphicsIntersection.fill();
+		// - right
+		self.do_stretch_right.graphicsIntersection.clear();
+		self.do_stretch_right.graphicsIntersection.setFill(0xFF000099);
+		self.do_stretch_right.graphicsIntersection.beginPath();
+		self.do_stretch_right.graphicsIntersection.moveTo(handle_stretch_size,handle_stretch_size);
+		self.do_stretch_right.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
+		self.do_stretch_right.graphicsIntersection.lineTo(handle_stretch_size,bot_stretch_start);
+		self.do_stretch_right.graphicsIntersection.lineTo(0,bot_stretch_start);
+		self.do_stretch_right.graphicsIntersection.lineTo(0,handle_stretch_size);
+		self.do_stretch_right.graphicsIntersection.fill();
+		self.do_stretch_right.matrix.identity();
+		self.do_stretch_right.matrix.translate(right_stretch_start,0);
+		// - top
+		self.do_stretch_top.graphicsIntersection.clear();
+		self.do_stretch_top.graphicsIntersection.setFill(0xFF000099);
+		self.do_stretch_top.graphicsIntersection.beginPath();
+		self.do_stretch_top.graphicsIntersection.moveTo(handle_stretch_size,0);
+		self.do_stretch_top.graphicsIntersection.lineTo(right_stretch_start,0);
+		self.do_stretch_top.graphicsIntersection.lineTo(right_stretch_start,handle_stretch_size);
+		self.do_stretch_top.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
+		self.do_stretch_top.graphicsIntersection.lineTo(handle_stretch_size,0);
+		self.do_stretch_top.graphicsIntersection.fill();
+		// - bot
+		self.do_stretch_bot.graphicsIntersection.clear();
+		self.do_stretch_bot.graphicsIntersection.setFill(0xFF000099);
+		self.do_stretch_bot.graphicsIntersection.beginPath();
+		self.do_stretch_bot.graphicsIntersection.moveTo(handle_stretch_size,0);
+		self.do_stretch_bot.graphicsIntersection.lineTo(right_stretch_start,0);
+		self.do_stretch_bot.graphicsIntersection.lineTo(right_stretch_start,handle_stretch_size);
+		self.do_stretch_bot.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
+		self.do_stretch_bot.graphicsIntersection.lineTo(handle_stretch_size,0);
+		self.do_stretch_bot.graphicsIntersection.fill();
+		self.do_stretch_bot.matrix.identity();
+		self.do_stretch_bot.matrix.translate(0,bot_stretch_start);
+		/*
+		self.do_stretch_bot.graphicsIntersection.moveTo(handle_stretch_size,bot_stretch_start);
+		self.do_stretch_bot.graphicsIntersection.lineTo(right_stretch_start,bot_stretch_start);
+		self.do_stretch_bot.graphicsIntersection.lineTo(right_stretch_start,self.total_height);
+		self.do_stretch_bot.graphicsIntersection.lineTo(handle_stretch_size,self.total_height);
+		self.do_stretch_bot.graphicsIntersection.lineTo(handle_stretch_size,bot_stretch_start);
+		*/
+		//
+		self.do_stretch_tl.graphicsIntersection.clear();
+		self.do_stretch_tl.graphicsIntersection.setFill(0xFFFF0099);
+		self.do_stretch_tl.graphicsIntersection.beginPath();
+		self.do_stretch_tl.graphicsIntersection.moveTo(0,0);
+		self.do_stretch_tl.graphicsIntersection.lineTo(handle_stretch_size,0);
+		self.do_stretch_tl.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
+		self.do_stretch_tl.graphicsIntersection.lineTo(0,handle_stretch_size);
+		self.do_stretch_tl.graphicsIntersection.lineTo(0,0);
+		self.do_stretch_tl.graphicsIntersection.fill();
+		self.do_stretch_tr.graphicsIntersection.clear();
+		self.do_stretch_tr.graphicsIntersection.setFill(0xFFFF0099);
+		self.do_stretch_tr.graphicsIntersection.beginPath();
+		self.do_stretch_tr.graphicsIntersection.moveTo(right_stretch_start,0);
+		self.do_stretch_tr.graphicsIntersection.lineTo(self.total_width,0);
+		self.do_stretch_tr.graphicsIntersection.lineTo(self.total_width,handle_stretch_size);
+		self.do_stretch_tr.graphicsIntersection.lineTo(right_stretch_start,handle_stretch_size);
+		self.do_stretch_tr.graphicsIntersection.lineTo(right_stretch_start,0);
+		self.do_stretch_tr.graphicsIntersection.fill();
+		self.do_stretch_bl.graphicsIntersection.clear();
+		self.do_stretch_bl.graphicsIntersection.setFill(0xFFFF0099);
+		self.do_stretch_bl.graphicsIntersection.beginPath();
+		self.do_stretch_bl.graphicsIntersection.moveTo(0,bot_stretch_start);
+		self.do_stretch_bl.graphicsIntersection.lineTo(handle_stretch_size,bot_stretch_start);
+		self.do_stretch_bl.graphicsIntersection.lineTo(handle_stretch_size,self.total_height);
+		self.do_stretch_bl.graphicsIntersection.lineTo(0,self.total_height);
+		self.do_stretch_bl.graphicsIntersection.lineTo(0,bot_stretch_start);
+		self.do_stretch_bl.graphicsIntersection.fill();
+		self.do_stretch_br.graphicsIntersection.clear();
+		self.do_stretch_br.graphicsIntersection.setFill(0xFFFF0099);
+		self.do_stretch_br.graphicsIntersection.beginPath();
+		self.do_stretch_br.graphicsIntersection.moveTo(right_stretch_start,bot_stretch_start);
+		self.do_stretch_br.graphicsIntersection.lineTo(self.total_width,bot_stretch_start);
+		self.do_stretch_br.graphicsIntersection.lineTo(self.total_width,self.total_height);
+		self.do_stretch_br.graphicsIntersection.lineTo(right_stretch_start,self.total_height);
+		self.do_stretch_br.graphicsIntersection.lineTo(right_stretch_start,bot_stretch_start);
+		self.do_stretch_br.graphicsIntersection.fill();
 	}
 	// CONSTRUCTOR
 	self.style = {
@@ -313,6 +336,9 @@ function Win(style){
 	self.win_level_0.addChild(self.do_stretch_tr);
 	self.win_level_0.addChild(self.do_stretch_bl);
 	self.win_level_0.addChild(self.do_stretch_br);
+	//
+	self.do_stretch_right.newGraphicsIntersection();
+	self.do_stretch_bot.newGraphicsIntersection();
 
 	self._refreshDisplay();
 

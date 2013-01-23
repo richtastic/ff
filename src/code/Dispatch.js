@@ -23,6 +23,9 @@ function Dispatch(){
 		var i;
 		for(i=0;i<list[str].length;++i){
 			list[str][i](o);
+			if(!list[str]){
+				return;
+			}
 		}
 	}
 	this.addFunction = function(str,fxn){

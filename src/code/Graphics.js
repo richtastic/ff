@@ -109,16 +109,12 @@ function Graphics(){
 	// ---- images
 	this.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch to fit
 		if(dY!==undefined){
-			console.log("A");
 			this._graphics.push( Code.newArray(Graphics.canvasDrawImage8,Code.newArray(img,aX,aY,bX,bY,cX,cY,dX,dY)) );
 		}else if(bY!==undefined){
-			console.log("B");
 			this._graphics.push( Code.newArray(Graphics.canvasDrawImage4,Code.newArray(img,aX,aY,bX,bY)) );
 		}else if(aY!==undefined){
-			console.log("C");
 			this._graphics.push( Code.newArray(Graphics.canvasDrawImage2,Code.newArray(img,aX,aY)) );
 		}else{
-			console.log("D");
 			this._graphics.push( Code.newArray(Graphics.canvasDrawImage0,Code.newArray(img)) );
 		}
 	};
