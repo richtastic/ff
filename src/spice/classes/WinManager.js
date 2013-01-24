@@ -4,8 +4,7 @@ WinManager.DEFAULT_WINDOW_STYLE = {
 	x: 0,
 	y: 0,
 	width: 250,
-	height: 200,
-	// 
+	height: 200
 };
 function WinManager(){
 	var self = this;

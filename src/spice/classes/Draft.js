@@ -17,14 +17,14 @@ function Draft(style,resource){
 	// intersection BG
 	this._background.newGraphicsIntersection();
 	this._background.graphicsIntersection.clear();
-	this._background.graphicsIntersection.setFill(0xFF00FFFF);
-	this._background.graphicsIllustration.beginPath();
-	this._background.graphicsIllustration.moveTo(0,0);
-	this._background.graphicsIllustration.lineTo(2000,0);
-	this._background.graphicsIllustration.lineTo(2000,2000);
-	this._background.graphicsIllustration.lineTo(0,2000);
-	this._background.graphicsIllustration.lineTo(0,0);
-	this._background.graphicsIllustration.endPath();
+	this._background.graphicsIntersection.setFill(0x00FF00FF);
+	this._background.graphicsIntersection.beginPath();
+	this._background.graphicsIntersection.moveTo(0,0);
+	this._background.graphicsIntersection.lineTo(2000,0);
+	this._background.graphicsIntersection.lineTo(2000,2000);
+	this._background.graphicsIntersection.lineTo(0,2000);
+	this._background.graphicsIntersection.lineTo(0,0);
+	this._background.graphicsIntersection.endPath();
 	this._background.graphicsIntersection.fill();
 	this._background.rangeLimitsX = [-100, 100];
 	this._background.rangeLimitsY = [-100, 100];
@@ -61,7 +61,5 @@ function Draft(style,resource){
 	// ELEMENTS
 	var pin = new DOCE({},this._resource);
 	this._background.addChild(pin.display());
-//	this.addElement();
-	// YAY
 }
 

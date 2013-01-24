@@ -15,9 +15,9 @@ function DOImage(img, options, parentDO){
 		if(options.width){ self._imageWidth=options.width; }
 		if(options.height){ self._imageHeight=options.height; }
 	}
-	this.addedToStage = Code.overrideClass(this, this.addedToStage, function(stage){
+	/*this.addedToStage = Code.overrideClass(this, this.addedToStage, function(stage){
 		this.super(arguments.callee).addedToStage.call(this,stage);
-	})
+	})*/
 // rendering ---------------------------------------------------------------------------------
 	this.drawSingle = function(pX,pY,w,h){
 		this._setProperties(pX,pY,w,h);
@@ -118,6 +118,6 @@ function DOImage(img, options, parentDO){
 	})
 	// constructor ------------------------------------------------------------------------------------------
 	this.image(this._image);
-	this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight);
+	//this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight);
 }
 

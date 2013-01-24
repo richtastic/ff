@@ -300,15 +300,21 @@ function DO(parentDO){
 	this.getIntersection = function(pos, can){
 		self.setupRender(can);
 		var context = can.getContext();
-		if(self.mask){
+		/*if(self.mask){
 			self.graphicsIntersection.setupRender(can);
 			self.graphicsIntersection.render(can);
 			self.graphicsIntersection.takedownRender(can);
 			context.clip();
-		}
+		}*/
 		if(self._checkIntersectionChildren){
 			var ret, i, len = self.children.length;
 			for(i=len-1;i>=0;--i){
+				/*if(self.mask){
+					self.graphicsIntersection.setupRender(can);
+					self.graphicsIntersection.render(can);
+					self.graphicsIntersection.takedownRender(can);
+					context.clip();
+				}*/
 				ret = self.children[i].getIntersection(pos, can);
 				if(ret){
 					self.takedownRender(can);

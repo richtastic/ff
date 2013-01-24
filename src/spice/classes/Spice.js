@@ -28,12 +28,12 @@ function Spice(){
 	};
 	this.keyUpFxn = function(k){
 		if(k==Keyboard.KEY_LET_Z){
-			this.scroller.dragEnabled = false;
+			//this.scroller.dragEnabled = false;
 		}
 	};
 	this.keyDownFxn = function(k){
 		if(k==Keyboard.KEY_LET_Z){
-			this.scroller.dragEnabled = true;
+			//this.scroller.dragEnabled = true;
 		}
 	};
 	this.canvasResizeFxn = function(e){

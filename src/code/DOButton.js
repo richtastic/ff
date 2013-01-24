@@ -3,6 +3,9 @@ DOButton.FRAME_MOUSE_OUT = 0;
 DOButton.FRAME_MOUSE_OVER = 1;
 DOButton.FRAME_MOUSE_DOWN = 2;
 DOButton.FRAME_DISABLED = 3;
+//
+DOButton.EVENT_BUTTON_DOWN = "evtbtndwn";
+DOButton.EVENT_BUTTON_UP = "evtbtnups";
 
 function DOButton(parentDO){
 	var self = this;
@@ -54,10 +57,12 @@ function DOButton(parentDO){
 	this._buttonMouseDownFxn = function(e){
 		if(!self._enabledButton){ return; }
 		self._gotoImmediate(DOButton.FRAME_MOUSE_DOWN);
+		self.alertAll(DOButton.EVENT_BUTTON_DOWN,e);
 	}
 	this._buttonMouseUpFxn = function(e){
 		if(!self._enabledButton){ return; }
 		self._gotoImmediate(DOButton.FRAME_MOUSE_OVER);
+		self.alertAll(DOButton.EVENT_BUTTON_UP,e);
 	}
 	this._buttonMouseClickFxn = function(e){
 		if(!self._enabledButton){ return; }

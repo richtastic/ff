@@ -119,7 +119,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	}
 	this.drawImage0 = function(img){
 		if(this && this._context && img){ // WHYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
-			this._context.drawImage(img);
+			this._context.drawImage(img); // this function does not exist
 		}
 	}
 	this.drawImage2 = function(img,px,py){
