@@ -1,14 +1,14 @@
 // Dispatchable.js
 
 function Dispatchable(){
-	this.dispatch = new Dispatch();
+	this._dispatch = new Dispatch();
 	this.addFunction = function(str,fxn){
-		this.dispatch.addFunction(str,fxn);
+		this._dispatch.addFunction(str,fxn);
 	}
 	this.removeFunction = function(str,fxn){
-		this.dispatch.removeFunction(str,fxn);
+		this._dispatch.removeFunction(str,fxn);
 	}
 	this.alertAll = function(str,o){
-		this.dispatch.alertAll(str,o);
+		this._dispatch.alertAll(str,o);
 	}
 }

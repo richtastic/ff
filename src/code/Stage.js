@@ -79,10 +79,10 @@ can.style.top="200px";
 	// rendering -----------------------------------------------------------
 	this.render = function(){
 		self._canvas.clear();
-		self.dispatch.alertAll(Stage.EVENT_ON_ENTER_FRAME,self.time);
+		self.alertAll(Stage.EVENT_ON_ENTER_FRAME,self.time);
 		self.root.render(self._canvas);
 //		self.root.render(self._tempCanvas);
-		self.dispatch.alertAll(Stage.EVENT_ON_EXIT_FRAME,self.time);
+		self.alertAll(Stage.EVENT_ON_EXIT_FRAME,self.time);
 	};
 	this.enterFrame = function(e){
 		++self.time;

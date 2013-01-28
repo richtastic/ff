@@ -29,6 +29,13 @@ function Draft(style,resource){
 	this._background.rangeLimitsX = [-100, 100];
 	this._background.rangeLimitsY = [-100, 100];
 	this._background.setDraggingEnabled();
+	// WIRES
+	this._wires = new DO();
+	this._wires.newGraphicsIntersection();
+	this._background.addChild(this._wires);
+	// ELEMENTS
+	this._elements = new DO();
+	this._background.addChild(this._elements);
 	// FXNS
 	this.addElement = function(){
 		img = this._resource.tex[ResourceSpice.TEX_DEBUG_1];
@@ -46,7 +53,7 @@ function Draft(style,resource){
 	}
 	this.resize = function(wid,hei){
 		this._scroller.graphicsIllustration.clear();
-		this._scroller.graphicsIllustration.setLine(1,0xFF00FF00);
+		this._scroller.graphicsIllustration.setLine(0,0xFF00FFFF);
 		this._scroller.graphicsIllustration.setFill(0x00000000); // 0x00000001
 		this._scroller.graphicsIllustration.beginPath();
 		this._scroller.graphicsIllustration.moveTo(0,0);
@@ -58,8 +65,36 @@ function Draft(style,resource){
 		this._scroller.graphicsIllustration.endPath();
 		this._scroller.graphicsIllustration.fill();
 	}
+	this._wirePointA = null;
+	this._handleElementPoint = function(o){
+		var x = o.x, y = o.y;
+		/*
+		var img = self._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED];
+		var dobj = new DOImage(img);
+		dobj.drawSingle(x-img.width/2,y-img.height/2,img.width,img.height);
+		self._background.addChild(dobj);
+		*/
+		self._wirePointA = new V2D(x,y);
+	}
 	// ELEMENTS
-	var pin = new DOCE({},this._resource);
-	this._background.addChild(pin.display());
+	var pin = new DOCE({resource:this._resource,dispatch:this.dispatch});
+	this._elements.addChild(pin.display());
+	pin.addFunction(DOCE.EVENT_PIN_SELECTED,this._handleElementPoint);
+	//
+	this._handleMouseMove = function(o){
+		if(self._wirePointA){
+			var pt = o[1];
+			self._wires.graphics.clear();
+			self._wires.graphics.setLine(2,0xFF0000FF);
+			self._wires.graphics.moveTo(self._wirePointA.x,self._wirePointA.y);
+			self._wires.graphics.lineTo(pt.x-self._background.matrix.x,pt.y-self._background.matrix.y);
+			self._wires.graphics.strokeLine();
+			self._wires.graphics.setLine(2,0x0);
+			self._wires.graphics.moveTo(0,0);
+			self._wires.graphics.moveTo(10,10);
+			self._wires.graphics.strokeLine();
+		}
+	}
+	this._display.addFunction(Canvas.EVENT_MOUSE_MOVE,this._handleMouseMove);
 }
 

@@ -244,7 +244,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		}else{ // Canvas.STAGE_FIT_FIXED
 			//
 		}
-		self.dispatch.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
+		self.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
 	};
 // -------------------------------------------------------------- constructor
 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);

@@ -151,6 +151,7 @@ function Win(style){
 		self.do_body_bot_cen.drawPattern(0,0,bot_cen_wid,self.do_body_bot_cen.imageHeight());
 		posX += bot_cen_wid;
 		self.do_body_bot_right.matrix.translate(posX,posY);
+		self.do_body_bot_right.drawSingle(0,0,self.do_body_bot_right.imageWidth(),self.do_body_bot_right.imageHeight());
 		// size handles
 		self.do_drag_bar.newGraphicsIntersection();
 		self.do_drag_bar.graphicsIntersection.clear();
