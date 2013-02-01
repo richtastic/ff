@@ -29,13 +29,13 @@ function Draft(style,resource){
 	this._background.rangeLimitsX = [-100, 100];
 	this._background.rangeLimitsY = [-100, 100];
 	this._background.setDraggingEnabled();
+	// ELEMENTS
+	this._elements = new DO();
+	this._background.addChild(this._elements);
 	// WIRES
 	this._wires = new DO();
 	this._wires.newGraphicsIntersection();
 	this._background.addChild(this._wires);
-	// ELEMENTS
-	this._elements = new DO();
-	this._background.addChild(this._elements);
 	// FXNS
 	this.addElement = function(){
 		img = this._resource.tex[ResourceSpice.TEX_DEBUG_1];
@@ -53,7 +53,8 @@ function Draft(style,resource){
 	}
 	this.resize = function(wid,hei){
 		this._scroller.graphicsIllustration.clear();
-		this._scroller.graphicsIllustration.setLine(0,0xFF00FFFF);
+		this._scroller.graphicsIllustration.strokeLine();
+		//this._scroller.graphicsIllustration.setLine(8,0x00FF00FF);
 		this._scroller.graphicsIllustration.setFill(0x00000000); // 0x00000001
 		this._scroller.graphicsIllustration.beginPath();
 		this._scroller.graphicsIllustration.moveTo(0,0);
@@ -61,7 +62,7 @@ function Draft(style,resource){
 		this._scroller.graphicsIllustration.lineTo(wid,hei);
 		this._scroller.graphicsIllustration.lineTo(0,hei);
 		this._scroller.graphicsIllustration.lineTo(0,0);
-		this._scroller.graphicsIllustration.strokeLine();
+		//this._scroller.graphicsIllustration.strokeLine();
 		this._scroller.graphicsIllustration.endPath();
 		this._scroller.graphicsIllustration.fill();
 	}
@@ -82,16 +83,16 @@ function Draft(style,resource){
 	pin.addFunction(DOCE.EVENT_PIN_SELECTED,this._handleElementPoint);
 	//
 	this._handleMouseMove = function(o){
+		//self._wirePointA = new V2D( Math.random()*100, Math.random()*100 );
 		if(self._wirePointA){
 			var pt = o[1];
+			//var pt = new V2D(100+Math.random()*100, 100+Math.random()*100);
 			self._wires.graphics.clear();
 			self._wires.graphics.setLine(2,0xFF0000FF);
+			self._wires.graphics.beginPath();
 			self._wires.graphics.moveTo(self._wirePointA.x,self._wirePointA.y);
 			self._wires.graphics.lineTo(pt.x-self._background.matrix.x,pt.y-self._background.matrix.y);
-			self._wires.graphics.strokeLine();
-			self._wires.graphics.setLine(2,0x0);
-			self._wires.graphics.moveTo(0,0);
-			self._wires.graphics.moveTo(10,10);
+			self._wires.graphics.endPath();
 			self._wires.graphics.strokeLine();
 		}
 	}

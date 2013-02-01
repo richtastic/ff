@@ -45,15 +45,15 @@ function Spice(){
 		wid = wid*(1/3);
 		hei = hei;
 		self.library.graphicsIllustration.clear();
-		self.library.graphicsIllustration.setLine(1.0,0x00FF0099);
-		self.library.graphicsIllustration.setFill(0x00FFFF99);
+		//self.library.graphicsIllustration.setLine(1.0,0x00FF0099);
+		self.library.graphicsIllustration.setFill(0x00FFFF66);
 		self.library.graphicsIllustration.beginPath();
 		self.library.graphicsIllustration.moveTo(sX,sY);
 		self.library.graphicsIllustration.lineTo(sX+wid,sY);
 		self.library.graphicsIllustration.lineTo(sX+wid,sY+hei);
 		self.library.graphicsIllustration.lineTo(sX,sY+hei);
 		self.library.graphicsIllustration.lineTo(sX,sY);
-		self.library.graphicsIllustration.strokeLine();
+		//self.library.graphicsIllustration.strokeLine();
 		self.library.graphicsIllustration.endPath();
 		self.library.graphicsIllustration.fill();
 	}
@@ -161,20 +161,11 @@ pin.newGraphicsIntersection();
 pin.graphicsIntersection.clear();
 pin.graphicsIntersection.setFill(0xFF00FFFF);
 pin.graphicsIntersection.beginPath();
-
 //pin.setDisabled();
-
-/*
-pin.graphicsIntersection.moveTo(0,0);
-pin.graphicsIntersection.lineTo(20,0);
-pin.graphicsIntersection.lineTo(20,20);
-pin.graphicsIntersection.lineTo(0,20);
-pin.graphicsIntersection.lineTo(0,0);
-*/
 pin.graphicsIntersection.arc(10,10, 10, 0,2*Math.PI, true);
 pin.graphicsIntersection.endPath();
 pin.graphicsIntersection.fill();
-		
+
 		self.addListeners();
 	};
 	// 

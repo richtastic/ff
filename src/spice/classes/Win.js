@@ -162,6 +162,7 @@ function Win(style){
 		self.do_drag_bar.graphicsIntersection.lineTo(self.total_width,bar_height);
 		self.do_drag_bar.graphicsIntersection.lineTo(0,bar_height);
 		self.do_drag_bar.graphicsIntersection.lineTo(0,0);
+		self.do_drag_bar.graphicsIntersection.endPath();
 		self.do_drag_bar.graphicsIntersection.fill();
 		//
 		var handle_stretch_size = self.handle_stretch_size;
@@ -175,6 +176,7 @@ function Win(style){
 		self.do_stretch_left.graphicsIntersection.lineTo(handle_stretch_size,bot_stretch_start);
 		self.do_stretch_left.graphicsIntersection.lineTo(0,bot_stretch_start);
 		self.do_stretch_left.graphicsIntersection.lineTo(0,handle_stretch_size);
+		self.do_stretch_left.graphicsIntersection.endPath();
 		self.do_stretch_left.graphicsIntersection.fill();
 		// - right
 		self.do_stretch_right.graphicsIntersection.clear();
@@ -185,6 +187,7 @@ function Win(style){
 		self.do_stretch_right.graphicsIntersection.lineTo(handle_stretch_size,bot_stretch_start);
 		self.do_stretch_right.graphicsIntersection.lineTo(0,bot_stretch_start);
 		self.do_stretch_right.graphicsIntersection.lineTo(0,handle_stretch_size);
+		self.do_stretch_right.graphicsIntersection.endPath();
 		self.do_stretch_right.graphicsIntersection.fill();
 		self.do_stretch_right.matrix.identity();
 		self.do_stretch_right.matrix.translate(right_stretch_start,0);
@@ -197,6 +200,7 @@ function Win(style){
 		self.do_stretch_top.graphicsIntersection.lineTo(right_stretch_start,handle_stretch_size);
 		self.do_stretch_top.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
 		self.do_stretch_top.graphicsIntersection.lineTo(handle_stretch_size,0);
+		self.do_stretch_top.graphicsIntersection.endPath();
 		self.do_stretch_top.graphicsIntersection.fill();
 		// - bot
 		self.do_stretch_bot.graphicsIntersection.clear();
@@ -207,6 +211,7 @@ function Win(style){
 		self.do_stretch_bot.graphicsIntersection.lineTo(right_stretch_start,handle_stretch_size);
 		self.do_stretch_bot.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
 		self.do_stretch_bot.graphicsIntersection.lineTo(handle_stretch_size,0);
+		self.do_stretch_bot.graphicsIntersection.endPath();
 		self.do_stretch_bot.graphicsIntersection.fill();
 		self.do_stretch_bot.matrix.identity();
 		self.do_stretch_bot.matrix.translate(0,bot_stretch_start);
@@ -226,6 +231,7 @@ function Win(style){
 		self.do_stretch_tl.graphicsIntersection.lineTo(handle_stretch_size,handle_stretch_size);
 		self.do_stretch_tl.graphicsIntersection.lineTo(0,handle_stretch_size);
 		self.do_stretch_tl.graphicsIntersection.lineTo(0,0);
+		self.do_stretch_tl.graphicsIntersection.endPath();
 		self.do_stretch_tl.graphicsIntersection.fill();
 		self.do_stretch_tr.graphicsIntersection.clear();
 		self.do_stretch_tr.graphicsIntersection.setFill(0xFFFF0099);
@@ -235,6 +241,7 @@ function Win(style){
 		self.do_stretch_tr.graphicsIntersection.lineTo(self.total_width,handle_stretch_size);
 		self.do_stretch_tr.graphicsIntersection.lineTo(right_stretch_start,handle_stretch_size);
 		self.do_stretch_tr.graphicsIntersection.lineTo(right_stretch_start,0);
+		self.do_stretch_tr.graphicsIntersection.endPath();
 		self.do_stretch_tr.graphicsIntersection.fill();
 		self.do_stretch_bl.graphicsIntersection.clear();
 		self.do_stretch_bl.graphicsIntersection.setFill(0xFFFF0099);
@@ -244,6 +251,7 @@ function Win(style){
 		self.do_stretch_bl.graphicsIntersection.lineTo(handle_stretch_size,self.total_height);
 		self.do_stretch_bl.graphicsIntersection.lineTo(0,self.total_height);
 		self.do_stretch_bl.graphicsIntersection.lineTo(0,bot_stretch_start);
+		self.do_stretch_bl.graphicsIntersection.endPath();
 		self.do_stretch_bl.graphicsIntersection.fill();
 		self.do_stretch_br.graphicsIntersection.clear();
 		self.do_stretch_br.graphicsIntersection.setFill(0xFFFF0099);
@@ -253,6 +261,7 @@ function Win(style){
 		self.do_stretch_br.graphicsIntersection.lineTo(self.total_width,self.total_height);
 		self.do_stretch_br.graphicsIntersection.lineTo(right_stretch_start,self.total_height);
 		self.do_stretch_br.graphicsIntersection.lineTo(right_stretch_start,bot_stretch_start);
+		self.do_stretch_br.graphicsIntersection.endPath();
 		self.do_stretch_br.graphicsIntersection.fill();
 	}
 	// CONSTRUCTOR
