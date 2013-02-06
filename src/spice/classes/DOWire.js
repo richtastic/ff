@@ -2,7 +2,8 @@
 
 function DOWire(style){
 	var self = this;
-	Code.extendClass(this,DOContainer,[style]);
+	Code.extendClass(this,DOCE,[style]);
+	/*
 	//
 	this._a = new V2D();
 	this._b = new V2D();
@@ -18,5 +19,6 @@ function DOWire(style){
 	this._calculateCorners = function(){
 		//
 	}
+	*/
 }
 

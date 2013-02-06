@@ -1,4 +1,12 @@
 // DOCE.js - Display Object Circuit Element
+DOCE.TYPE_UNKNOWN = 0;
+DOCE.TYPE_WIRE = 1;
+DOCE.TYPE_RESISTOR = 2;
+DOCE.TYPE_VOLTAGE_SOURCE = 3;
+DOCE.TYPE_CURRENT_SOURCE = 4;
+DOCE.TYPE_DIODE = 5;
+// ...
+// EVENTS
 DOCE.EVENT_PIN_SELECTED = "docepinsel";
 
 function DOCE(style){
@@ -6,10 +14,23 @@ function DOCE(style){
 	Code.extendClass(this,DOContainer,style);
 	this._resource = style.resource;
 	this.dispatch = style.dispatch;
-var img, pin;
+	//
+	this._pins = new Array();
+	this._type = DOCE.TYPE_UNKNOWN;
+	this.pins = function(){
+		return this._pins;
+	}
+	this.type = function(o){
+		if(arguments.length==0){
+			return this._type;
+		}
+		this._type = o;
+	}
+// --------------------------------------------------- 
 	// main image
 	this._center = new DOImage(this._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED]);
 	this._center.drawSingle(0,0,50,50);
+	//
 	this.pinDownFxn = function(o){
 		var m = new Matrix2D(); m.inverse(self._display.matrix); 
 		var cumm = new Matrix2D(); cumm.identity();
@@ -27,8 +48,8 @@ var img, pin;
 		}
 	}
 	// button-pin 1
+var img, pin;
 	pin = new DOButton();
-	this._pin = pin;
 	
 		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]); img.drawSingle(-10,-10,20,20);
 		pin.setFrameMouseOut( img );
@@ -40,8 +61,8 @@ var img, pin;
 		// intersection
 		pin.newGraphicsIntersection();
 		pin.graphicsIntersection.clear();
-	this._pin.matrix.identity();
-	this._pin.matrix.translate(25,0);
+	pin.matrix.identity();
+	pin.matrix.translate(25,0);
 	
 	pin.graphicsIntersection.clear();
 	pin.graphicsIntersection.setFill(0xFF0000FF);
@@ -56,7 +77,7 @@ var img, pin;
 	// 
 	// insertion leyering
 	this._display.addChild(this._center);
-	this._display.addChild(this._pin);
+	this._display.addChild(pin);
 	//
 	
 	this._display.matrix.translate(100,200);
