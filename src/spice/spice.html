@@ -12,7 +12,7 @@ function pageLoadedFxn(){
 }
 function defaultClassesLoadedFxn(){
 	var list = ["CircuitPin.js","CircuitNode.js","CircuitNet.js","CircuitSimulation.js","CircuitElement.js","CircuitImpedance.js","CircuitResistor.js","CircuitSourceVoltage.js",
-				"Win.js","WinManager.js","DOContainer.js","DOCE.js","DOPin.js","ElementConnection.js","DOWire.js","DO2Pin.js","DOIC.js","Draft.js","ResourceSpice.js","Spice.js"];
+				"Win.js","WinManager.js","DOContainer.js","DOCE.js","DOPin.js","ElementConnection.js","DOWire.js","DO2Pin.js","DOChip.js","Draft.js","ResourceSpice.js","Spice.js"];
 	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,false);
 	scriptLoader.load();
 }

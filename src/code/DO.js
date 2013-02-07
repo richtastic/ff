@@ -142,6 +142,9 @@ function DO(parentDO){
 			DO.addToStageRecursive(ch,this.stage);
 		}
 	}
+	this.removeParent = function(){
+		this.parent.removeChild(this);
+	}
 	this.removeChild = function(ch){
 		if(!ch){return;}
 		ch.parent = null;

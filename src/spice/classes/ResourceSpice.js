@@ -43,6 +43,13 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_VOLTAGE_RED = 38;
 	ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED = 39;
 	ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED = 40;
+	// CHIP IMAGES ---------------------------------------------
+	ResourceSpice.TEX_CIRCUIT_CHIP_CENTER = 41;
+	ResourceSpice.TEX_CIRCUIT_CHIP_CORNER = 42;
+	ResourceSpice.TEX_CIRCUIT_CHIP_KEY = 43;
+	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_CLEAR = 44;
+	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN = 45;
+	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY = 46;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
@@ -64,7 +71,7 @@ function ResourceSpice(){
 	var texdir = "../spice/images/";
 	var tex = new Array();
 	tex[ResourceSpice.TEX_DEBUG_1] = "debug_texture.png";
-	tex[ResourceSpice.TEX_BACKGROUND_GRID_1] = "background_grid.png";
+	tex[ResourceSpice.TEX_BACKGROUND_GRID_1] = "circuit/background_grid.png";
 	tex[ResourceSpice.TEX_WIN_BAR_LEFT_ACTIVE_RED] = "window/win_bar_left_active.png";
 	tex[ResourceSpice.TEX_WIN_BAR_LEFT_INACTIVE_RED] = "window/win_bar_left_inactive.png";
 	tex[ResourceSpice.TEX_WIN_BAR_CEN_ACTIVE_RED] = "window/win_bar_cen_active.png";
@@ -92,7 +99,7 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_WIN_ICON_MAX_UP_RED] = "window/win_button_max_active.png";
 	tex[ResourceSpice.TEX_WIN_ICON_MAX_DOWN_RED] = "window/win_button_max_active.png";
 	tex[ResourceSpice.TEX_WIN_ICON_MAX_INACTIVE_RED] = "window/win_button_max_inactive.png";
-	//
+	// 
 	tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED] = "circuit/resistor.png";
 	tex[ResourceSpice.TEX_CIRCUIT_CAPACITOR_RED] = "circuit/resistor.png";
 	tex[ResourceSpice.TEX_CIRCUIT_INDUCTOR_RED] = "circuit/resistor.png";
@@ -105,7 +112,12 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_CIRCUIT_VOLTAGE_DEPENDENT_VOLTAGE_RED] = "circuit/resistor.png";
 	tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED] = "circuit/pin_connect.png";
 	tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED] = "circuit/pin_disconnect.png";
-	
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_CENTER] = "circuit/chip_center.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_CORNER] = "circuit/chip_corner.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_KEY] = "circuit/chip_key.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_CLEAR] = "circuit/chip_side_clear.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN] = "circuit/chip_side_pin.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY] = "circuit/chip_side_key.png";
 	//
 	self.imgLoader.setLoadList( texdir, tex, self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );

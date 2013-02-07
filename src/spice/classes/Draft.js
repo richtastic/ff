@@ -78,9 +78,21 @@ function Draft(style,resource){
 		self._wirePointA = new V2D(x,y);
 	}
 	// ELEMENTS
-	var pin = new DOCE({resource:this._resource,dispatch:this.dispatch});
+	var pin = new DO2Pin({resource:this._resource,dispatch:this.dispatch});
 	this._elements.addChild(pin.display());
 	pin.addFunction(DOCE.EVENT_PIN_SELECTED,this._handleElementPoint);
+	//
+	var stlye = {resource:this._resource, dispatch:this.dispatch};
+	style[DOChip.CHIP_TEX_CORNER] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_CORNER];
+	style[DOChip.CHIP_TEX_CENTER] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_CENTER];
+	style[DOChip.CHIP_TEX_KEY] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_KEY];
+	style[DOChip.CHIP_TEX_SIDE_CLEAR] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_CLEAR];
+	style[DOChip.CHIP_TEX_SIDE_PIN] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN];
+	style[DOChip.CHIP_TEX_SIDE_KEY] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY];
+	//
+	var chip = new DOChip(style);
+	this._elements.addChild( chip.display() );
+	chip.display().matrix.translate(30,30);
 	//
 	this._handleMouseMove = function(o){
 		//self._wirePointA = new V2D( Math.random()*100, Math.random()*100 );
