@@ -194,12 +194,14 @@ function DO(parentDO){
 	}
 	this.dragEnabled = false;
 	this.dragging = false;
+	this.dragAnyChildren = false;
 	this.dragOffset = new V2D();
 	this.dragRoundingX = 0;
 	this.dragRoundingY = 0;
-	this.setDraggingEnabled = function(rX,rY){
+	this.setDraggingEnabled = function(rX,rY, any){
 		if(rX!==null && rX!==undefined && rX!==0){ self.dragRoundingX = rX; }else{ self.dragRoundingX = 0; }
 		if(rY!==null && rY!==undefined && rY!==0){ self.dragRoundingY = rY; }else{ self.dragRoundingY = 0; }
+		if(any!==null && any!==undefined){ self.dragAnyChildren = any; }else{ self.dragAnyChildren = false; }
 		self.dragEnabled = true;
 		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		//self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.dragMouseUpFxn);
@@ -220,7 +222,7 @@ function DO(parentDO){
 	};
 	this.dragMouseDownFxn = function(e){
 		//console.log("M-DOWN");
-		if(e[0]==self && self.dragEnabled){
+		if(self.dragEnabled && (e[0]==self || self.dragAnyChildren)){
 			var pos = e[1];
 			self.startDrag(e[1]);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
