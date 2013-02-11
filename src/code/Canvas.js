@@ -47,6 +47,9 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._canvas = canHTML;
 	}else{
 		this._canvas = document.createElement("canvas");
+		this._canvas.style.position="absolute";
+		this._canvas.style.left="0px";
+		this._canvas.style.top="0px";
 		if(!hidden){
 			document.body.appendChild(this._canvas);
 		}
