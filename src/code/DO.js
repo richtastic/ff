@@ -302,6 +302,12 @@ function DO(parentDO){
 	}
 	this._checkIntersectionChildren = true;
 	this._checkIntersectionThis = true;
+	this.checkIntersectionChildren = function(bool){
+		this._checkIntersectionChildren = bool;
+	}
+	this.checkIntersectionThis = function(bool){
+		this._checkIntersectionThis = bool;
+	}
 	this.getIntersection = function(pos, can){
 		self.setupRender(can);
 		var context = can.getContext();

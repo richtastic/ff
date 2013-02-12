@@ -26,17 +26,23 @@ function DOChip(style){
 	this._chip_bots = new Array();
 	// self.do_bar_left.matrix.identity();
 	// self.do_bar_left.drawSingle(0,0,self.do_bar_left.imageWidth(),self.do_bar_left.imageHeight());
-	//self.do_bar_cen.drawPattern(0,0,bar_cen_wid,self.do_bar_cen.height());
+	// self.do_bar_cen.drawPattern(0,0,bar_cen_wid,self.do_bar_cen.height());
+	this._handle_observables_drag = function(o){
+		console.log(o);
+		self._connections.matrix.copy( self._observables.matrix );
+	}
+	this._observables.checkIntersectionChildren(false);
+	this._observables.newGraphicsIntersection();
+	this._observables.addFunction(DO.EVENT_DRAGGED,this._handle_observables_drag);
 	this._redraw = function(){
-		this._display.removeChild( this._chip_top_left );
-		this._display.removeChild( this._chip_top_right );
-		this._display.removeChild( this._chip_bot_left );
-		this._display.removeChild( this._chip_bot_right );
-		this._display.removeChild( this._chip_center );
-		this._display.removeChild( this._chip_key );
+		this._observables.removeChild( this._chip_top_left );
+		this._observables.removeChild( this._chip_top_right );
+		this._observables.removeChild( this._chip_bot_left );
+		this._observables.removeChild( this._chip_bot_right );
+		this._observables.removeChild( this._chip_center );
+		this._observables.removeChild( this._chip_key );
 		//
-		var countWidth = 2, countHeight = 3;
-		//var block = self._chip_top_left.imageWidth(); // delete this
+		var countWidth = 5, countHeight = 3;
 		var small = self._chip_top_left.imageWidth();//self._chip_center.imageHeight();
 		var large = small*2.0;//self._chip_center.imageWidth();
 		var key = self._chip_key.imageWidth();
@@ -77,7 +83,7 @@ function DOChip(style){
 			ele.drawSingle(0,0,small,large);
 			ele.matrix.identity();
 			ele.matrix.translate(0,i*large+small);
-			this._display.addChild( ele );
+			this._observables.addChild( ele );
 			this._chip_lefts.push(ele);
 		}
 		//
@@ -91,7 +97,7 @@ function DOChip(style){
 			ele.matrix.identity();
 			ele.matrix.rotate(Math.PI);
 			ele.matrix.translate(countWidth*large+2*small,(i+1)*large+small);
-			this._display.addChild( ele );
+			this._observables.addChild( ele );
 			this._chip_rights.push(ele);
 		}
 		//
@@ -105,7 +111,7 @@ function DOChip(style){
 			ele.matrix.identity();
 			ele.matrix.rotate(-Math.PI/2);
 			ele.matrix.translate((i+1)*large+small,0);
-			this._display.addChild( ele );
+			this._observables.addChild( ele );
 			this._chip_tops.push(ele);
 		}
 		//
@@ -119,19 +125,58 @@ function DOChip(style){
 			ele.matrix.identity();
 			ele.matrix.rotate(Math.PI/2);
 			ele.matrix.translate(i*large+1*small,countHeight*large+2*small);
-			this._display.addChild( ele );
+			this._observables.addChild( ele );
 			this._chip_bots.push(ele);
 		}
 		// 
-		this._display.addChild( this._chip_top_left );
-		this._display.addChild( this._chip_top_right );
-		this._display.addChild( this._chip_bot_left );
-		this._display.addChild( this._chip_bot_right );
-		this._display.addChild( this._chip_center );
-		this._display.addChild( this._chip_key );
+		this._observables.addChild( this._chip_top_left );
+		this._observables.addChild( this._chip_top_right );
+		this._observables.addChild( this._chip_bot_left );
+		this._observables.addChild( this._chip_bot_right );
+		this._observables.addChild( this._chip_center );
+		this._observables.addChild( this._chip_key );
+		//
+		var totWid = countWidth*large+2*small;
+		var totHei = countHeight*large+2*small;
+		this._observables.graphicsIntersection.clear();
+		this._observables.graphicsIntersection.setFill(0xCC0099FF);
+		this._observables.graphicsIntersection.beginPath();
+		this._observables.graphicsIntersection.moveTo(0,0);
+		this._observables.graphicsIntersection.lineTo(totWid,0);
+		this._observables.graphicsIntersection.lineTo(totWid,totHei);
+		this._observables.graphicsIntersection.lineTo(0,totHei);
+		this._observables.graphicsIntersection.lineTo(0,0);
+		this._observables.graphicsIntersection.endPath();
+		this._observables.graphicsIntersection.fill();
+		this._observables.setDraggingEnabled(large,large);
+		// ------------------------------------------------------------------------- pins
+		var pin;
+		while( this._connections.children.length > 0 ){
+			pin = this._connections.children.pop();
+			//pin.removeFunction();
+		}
+		pin = new DOButton();
+		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]); img.drawSingle(-10,-10,20,20);
+		pin.setFrameMouseOut( img );
+		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]); img.drawSingle(-10,-10,20,20);
+		pin.setFrameMouseOver( img )
+		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]); img.drawSingle(-10,-10,20,20);
+		pin.setFrameMouseDown( img );
+		pin.setFrameDisabled( img );
+		pin.newGraphicsIntersection();
+		pin.graphicsIntersection.clear();
+		pin.matrix.identity();
+		pin.matrix.translate(25,0);
+		pin.graphicsIntersection.clear();
+		pin.graphicsIntersection.setFill(0xFF0000FF);
+		pin.graphicsIntersection.beginPath();
+		pin.graphicsIntersection.arc(0,0, 14, 0,2*Math.PI, true);
+		pin.graphicsIntersection.endPath();
+		pin.graphicsIntersection.fill();
+		this.addPin(pin);
 	}
 	this._redraw();
-	this._display.setDraggingEnabled(0,0,true);
+	//this._observables
 }
 /*
 if top-width-count == 0 -> put indicator on top
