@@ -28,7 +28,6 @@ function DOChip(style){
 	// self.do_bar_left.drawSingle(0,0,self.do_bar_left.imageWidth(),self.do_bar_left.imageHeight());
 	// self.do_bar_cen.drawPattern(0,0,bar_cen_wid,self.do_bar_cen.height());
 	this._handle_observables_drag = function(o){
-		console.log(o);
 		self._connections.matrix.copy( self._observables.matrix );
 	}
 	this._observables.checkIntersectionChildren(false);
@@ -154,26 +153,52 @@ function DOChip(style){
 		while( this._connections.children.length > 0 ){
 			pin = this._connections.children.pop();
 			//pin.removeFunction();
+			//pin.kill();
 		}
-		pin = new DOButton();
-		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]); img.drawSingle(-10,-10,20,20);
+		// left
+		for(i=0;i<countHeight;++i){
+			pin = this._generate_pin();
+			pin.matrix.translate( 0, small + (i+0.5)*large );
+			this.addPin(pin);
+		}
+		// bot
+		for(i=0;i<countWidth;++i){
+			pin = this._generate_pin();
+			pin.matrix.translate( small + (i+0.5)*large, 2*small + countHeight*large );
+			this.addPin(pin);
+		}
+		// right
+		for(i=0;i<countHeight;++i){
+			pin = this._generate_pin();
+			pin.matrix.translate( 2*small + countWidth*large, small + (countHeight-i-0.5)*large );
+			this.addPin(pin);
+		}
+		// top
+		for(i=0;i<countWidth;++i){
+			pin = this._generate_pin();
+			pin.matrix.translate( small + (countWidth-i-0.5)*large, 0 );
+			this.addPin(pin);
+		}
+		
+	}
+	this._generate_pin = function(){
+		var pin = new DOButton();
+		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED]); img.drawSingle(-10,-10,20,20);
 		pin.setFrameMouseOut( img );
-		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_DISCONNECT_RED]); img.drawSingle(-10,-10,20,20);
+		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_OPEN]); img.drawSingle(-10,-10,20,20);
 		pin.setFrameMouseOver( img )
-		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_PIN_CONNECT_RED]); img.drawSingle(-10,-10,20,20);
+		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED]); img.drawSingle(-10,-10,20,20);
 		pin.setFrameMouseDown( img );
 		pin.setFrameDisabled( img );
 		pin.newGraphicsIntersection();
 		pin.graphicsIntersection.clear();
-		pin.matrix.identity();
-		pin.matrix.translate(25,0);
 		pin.graphicsIntersection.clear();
 		pin.graphicsIntersection.setFill(0xFF0000FF);
 		pin.graphicsIntersection.beginPath();
 		pin.graphicsIntersection.arc(0,0, 14, 0,2*Math.PI, true);
 		pin.graphicsIntersection.endPath();
 		pin.graphicsIntersection.fill();
-		this.addPin(pin);
+		return pin;
 	}
 	this._redraw();
 	//this._observables

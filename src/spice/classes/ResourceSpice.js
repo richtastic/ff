@@ -50,6 +50,8 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_CLEAR = 44;
 	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN = 45;
 	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY = 46;
+	ResourceSpice.TEX_CIRCUIT_CHIP_PIN_OPEN = 47;
+	ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED = 48;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
@@ -118,6 +120,8 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_CLEAR] = "circuit/chip_side_clear.png";
 	tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN] = "circuit/chip_side_pin.png";
 	tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY] = "circuit/chip_side_key.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_OPEN] = "circuit/chip_pin_open.png";
+	tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED] = "circuit/chip_pin_closed.png";
 	//
 	self.imgLoader.setLoadList( texdir, tex, self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
