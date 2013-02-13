@@ -1,35 +1,40 @@
 // ScriptLoader.js
 // no dependencies
 // http://stackoverflow.com/questions/950087/include-javascript-file-inside-javascript-file
-function ScriptLoader(base,arr,comp, verbose){
+function ScriptLoader(base,arr,comp,prog, verbose){
 	var self = this;
-	this.verbose = verbose?true:false;
-	this.files = new Array();
-	this.scripts = new Array();
-	this.completeFxn = null;
-	this.index = -1;
-	this.setLoadList = function(base,arr,comp){
-		while(this.files.length>0){ this.files.pop(); }
-		while(this.scripts.length>0){ this.scripts.pop(); }
-		this.completeFxn = comp;
+	this._verbose = verbose?true:false;
+	this._files = new Array();
+	this._scripts = new Array();
+	this._completeFxn = null;
+	this._progressFxn = null;
+	this._index = -1;
+	this.setLoadList = function(base,arr,comp,prog){
+		while(this._files.length>0){ this._files.pop(); }
+		while(this._scripts.length>0){ this._scripts.pop(); }
+		this._completeFxn = comp;
+		this._progressFxn = prog;
 		if(arr==null){ return; }
 		for(var i=0;i<arr.length;++i){
-			this.files.push(base+""+arr[i]);
+			this._files.push(base+""+arr[i]);
 		}
 	}
 	this.load = function(){
-		this.index = -1;
+		this._index = -1;
 		this.next(null);
 	}
 	this.next = function(e){
-		++self.index;
-		if(self.index>=self.files.length){
-			if(self.completeFxn){
-				self.completeFxn();
+		++self._index;
+		if(self._index>=self._files.length){
+			if(self._completeFxn){
+				self._completeFxn( {files:self._files} );
 			}
 			return;
 		}
-		var url = self.files[self.index];
+		var url = self._files[self._index];
+		if(self._progressFxn){
+			self._progressFxn( {loaded:self._index, total:self._files.length, next:url} );
+		}
 		var head = document.getElementsByTagName("head")[0];
 		var script = document.createElement("script");
 		script.type = "text/javascript";
@@ -37,11 +42,11 @@ function ScriptLoader(base,arr,comp, verbose){
 		script.onreadystatechange = self.next;
 		script.onload = self.next;
 		head.appendChild(script);
-		if(self.verbose){
-			console.log(self.verbose);
+		if(self._verbose){
+			console.log(eslf._verbose);
 			console.log("loading script: "+url);
 		}
 	}
 	// constructor
-	this.setLoadList(base,arr,comp);
+	this.setLoadList(base,arr,comp,prog);
 }

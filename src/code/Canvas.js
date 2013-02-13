@@ -186,6 +186,12 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._canvas.addEventListener('mouseup', this.canvasMouseUpFxn);
 		this._canvas.addEventListener('mousemove', this.canvasMouseMoveFxn);
 		this._canvas.addEventListener("mouseout",this.canvasMouseOutFxn);
+		this._canvas.addEventListener('touchstart', this.canvasTouchStartFxn);
+		this._canvas.addEventListener('touchmove', this.canvasTouchMoveFxn);
+		this._canvas.addEventListener('touchend', this.canvasTouchEndFxn);
+		this._canvas.addEventListener('touchenter', this.canvasTouchEnterFxn);
+		this._canvas.addEventListener('touchleave', this.canvasTouchLeaveFxn);
+		this._canvas.addEventListener('touchcancel', this.canvasTouchCancelFxn);
 	}
 	this.removeListeners = function(){
 		this._canvas.removeEventListener('click', this.canvasClickFxn);
@@ -193,32 +199,85 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._canvas.removeEventListener('mouseup', this.canvasMouseUpFxn);
 		this._canvas.removeEventListener('mousemove', this.canvasMouseMoveFxn);
 		this._canvas.removeEventListener("mouseout",this.canvasMouseOutFxn);
+		this._canvas.removeEventListener('touchstart', this.canvasTouchStartFxn);
+		this._canvas.removeEventListener('touchmove', this.canvasTouchMoveFxn);
+		this._canvas.removeEventListener('touchend', this.canvasTouchEndFxn);
+		this._canvas.removeEventListener('touchenter', this.canvasTouchEnterFxn);
+		this._canvas.removeEventListener('touchleave', this.canvasTouchLeaveFxn);
+		this._canvas.removeEventListener('touchcancel', this.canvasTouchCancelFxn);
+	}
+// TOUCH POSITIONING --------------------------------------------------------
+	// https://developer.mozilla.org/en-US/docs/DOM/TouchEvent
+	this.canvasTouchStartFxn = function(e){ // e.target.touchdata[]
+		setFeedback( "TOUCH START" );
+		e.preventDefault();
+		pos = self.getTouchPosition(e);
+		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+		pos = null;
+	}
+	this.canvasTouchMoveFxn = function(e){
+		setFeedback( "TOUCH MOVE" );
+		e.preventDefault();
+		pos = self.getTouchPosition(e);
+		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+	}
+	this.canvasTouchEndFxn = function(e){
+		setFeedback( "TOUCH END" );
+		e.preventDefault();
+		pos = self.getTouchPosition(e);
+		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	}
+	this.canvasTouchEnterFxn = function(e){
+		//
+	}
+	this.canvasTouchLeaveFxn = function(e){
+		//
+	}
+	this.canvasTouchCancelFxn = function(e){
+		//
+	}
+	this.getTouchPosition = function(e){
+		var pos = new V2D(0,0);
+		var ele = self._canvas;
+		while(ele != null){
+			pos.x += ele.offsetLeft;
+			pos.y += ele.offsetTop;
+			ele = ele.offsetParent;
+		}
+		pos.x = e.pageX - pos.x;
+		pos.y = e.pageY - pos.y;
+		return pos;
 	}
 // MOUSE POSITIONING --------------------------------------------------------
 	this.canvasClickFxn = function(e){
-		pos = self.getMousePosition(e);
+		e.preventDefault();
+		pos = self.getTouchPosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
 		pos = null;
 	}
 	this.canvasMouseDownFxn = function(e){
+		e.preventDefault();
 		self._mouseDown = true;
 		pos = self.getMousePosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 		pos = null;
 	}
 	this.canvasMouseUpFxn = function(e){
+		e.preventDefault();
 		self._mouseDown = false;
 		pos = self.getMousePosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 		pos = null;
 	}
 	this.canvasMouseMoveFxn = function(e){
+		e.preventDefault();
 		pos = self.getMousePosition(e);
 		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 		//pos = null;
 	}
 	this.canvasMouseOutFxn = function(e){
+		e.preventDefault();
 		pos = self.getMousePosition(e);
 		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
 		//self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...

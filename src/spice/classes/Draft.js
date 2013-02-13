@@ -64,8 +64,11 @@ function Draft(style,resource){
 		this._scroller.graphicsIllustration.fill();
 	}
 	this._wirePointA = null;
-	this._handleElementPoint = function(o){
-		var x = o.x, y = o.y;
+	this._handleElementPoint = function(e){
+		console.log(e);
+		//var srcP = e.sourcePoint;
+		var finalPoint = e.finalPoint;
+		var x = finalPoint.x, y = finalPoint.y;
 		/*
 		var img = self._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED];
 		var dobj = new DOImage(img);
@@ -119,5 +122,4 @@ function Draft(style,resource){
 				_wires
 					... wires
 				_
-
 */

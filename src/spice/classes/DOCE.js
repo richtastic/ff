@@ -23,6 +23,13 @@ function DOCE(style){
 	this._display.addChild(this._observables);
 	this._display.addChild(this._connections);
 	//
+	this._handle_observables_drag = function(o){
+		self._connections.matrix.copy( self._observables.matrix );
+	}
+	this._observables.checkIntersectionChildren(false);
+	this._observables.newGraphicsIntersection();
+	this._observables.addFunction(DO.EVENT_DRAGGED,this._handle_observables_drag);
+	//
 	this.pins = function(){
 		return this._pins;
 	}
@@ -33,10 +40,40 @@ function DOCE(style){
 		this._type = o;
 	}
 	this.addPin = function(pin){
-		pin.addFunction(DOButton.EVENT_BUTTON_DOWN,this.pinDownFxn);
-		this._connections.addChild(pin);
+		var bu = pin.button();
+		bu.addFunction(DOButton.EVENT_BUTTON_DOWN,this.pinDownFxn);
+		this._connections.addChild( pin.display() );
+		Code.addUnique(this._pins,pin);
+	}
+	this.removePin = function(pin){
+		// ?
 	}
 	//
+	this.pinDownFxn = function(o){
+		var m = new Matrix2D();
+		var cumm = new Matrix2D(); cumm.identity();
+		var d = o[0];
+		var p = o[1];
+		var isSame = false;
+		while(d!=undefined){
+			m.copy(d.matrix);
+			cumm.mult(m,cumm);
+			if(d==self._display){ isSame=true; break;}
+			d = d.parent;
+		}
+		if(isSame){
+			var x = cumm.x, y = cumm.y;
+			var obj = {
+				sourcePoint: o[1],
+				finalPoint: new V2D(x,y),
+				sourceElement: o[0],
+				finalElement: self
+			};
+			self.alertAll(DOCE.EVENT_PIN_SELECTED,obj);
+		}
+	}
+	// BAD:
+	/*
 	this.pinDownFxn = function(o){
 		var m = new Matrix2D(); m.inverse(self._display.matrix); 
 		var cumm = new Matrix2D(); cumm.identity();
@@ -50,10 +87,16 @@ function DOCE(style){
 		}
 		if(isSame){
 			var x = -cumm.x, y = -cumm.y;
-			self.alertAll(DOCE.EVENT_PIN_SELECTED,new V2D(x,y));
+			var obj = {
+				sourcePoint: o[1],
+				finalPoint: new V2D(x,y),
+				sourceElement: o[0],
+				finalElement: self
+			};
+			self.alertAll(DOCE.EVENT_PIN_SELECTED,obj);
 		}
 	}
-
+	*/
 }
 /*
 	_display

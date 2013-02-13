@@ -8,15 +8,28 @@
 var ff, scriptLoader;
 // ---------------------------------------------------------
 function pageLoadedFxn(){
-	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,false);
+	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+}
+function setFeedback(str){
+	document.getElementsByName("feedback")[0].innerHTML = str;
+}
+function defaultClassesProgressFxn(o){
+	var perc = 0.0 + 0.5*(o.loaded/o.total);
+	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
 }
 function defaultClassesLoadedFxn(){
+	setFeedback( "50%" );
 	var list = ["CircuitPin.js","CircuitNode.js","CircuitNet.js","CircuitSimulation.js","CircuitElement.js","CircuitImpedance.js","CircuitResistor.js","CircuitSourceVoltage.js",
 				"Win.js","WinManager.js","DOContainer.js","DOCE.js","DOPin.js","ElementConnection.js","DOWire.js","DO2Pin.js","DOChip.js","Draft.js","ResourceSpice.js","Spice.js"];
-	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,false);
+	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,customClassesProgressFxn,false);
 	scriptLoader.load();
 }
+function customClassesProgressFxn(o){
+	var perc = 0.5 + 0.5*(o.loaded/o.total);
+	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
+}
 function customClassesLoadedFxn(){
+	setFeedback( "" );
 	console.log("loading complete");
 	spice = new Spice();
 return;
@@ -48,6 +61,7 @@ function simulationProgressFxn(sim,perc){
 </script>
 </head>
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div name="feedback" style=""></div>
 <a href="google, you're still living in the past"></a>
 </body>
 </html>
