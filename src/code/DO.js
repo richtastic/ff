@@ -2,6 +2,9 @@
 DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
 DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
 DO.EVENT_DRAGGED = "do.evtdragged";
+DO.EVENT_DOWN = "do.evtdown";
+DO.EVENT_UP = "do.evtup";
+DO.EVENT_CLICKED = "do.evtclicked";
 
 DO.addToStageRecursive = function(ch,sta){
 	ch.stage = sta;
@@ -28,6 +31,30 @@ DO.printRecursive = function(obj,cur,ind,fin){
 		DO.printRecursive(obj.children[i],ind+"|"+cur,ind,fin);
 	}
 };
+DO.tempMatrix = new Matrix2D();
+DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){
+	if(destinationElement==undefined){ destinationElement = null; }
+	var ele = sourceElement;
+	DO.tempMatrix.copy(ele.matrix);
+	while(ele != destinationElement && ele != undefined){
+		ele = ele.parent;
+		if(ele){
+			DO.tempMatrix.mult(ele.matrix,DO.tempMatrix);
+		}
+	}
+	DO.tempMatrix.multV2D(destinationPoint,sourcePoint);
+}
+DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinationElement){
+	if(destinationElement==undefined){ destinationElement = null; }
+	var ele = sourceElement;
+	DO.tempMatrix.copy(ele.matrix);
+	while(ele != destinationElement && ele != undefined){
+		ele = ele.parent;
+		DO.tempMatrix.mult(ele.matrix,DO.tempMatrix); // REVERSE?
+	}
+	DO.tempMatrix.inverse(DO.tempMatrix);
+	DO.tempMatrix.multV2D(destinationPoint,sourcePoint);
+}
 DO.winIndex = 0;
 
 function DO(parentDO){
@@ -59,6 +86,9 @@ function DO(parentDO){
 	})
 // ---------------------------------------------------------------------------------
 	this.inverseTransformPoint = function(a,b){
+		/*var inv = new Matrix2D();
+		inv.inverse(this.matrix);
+		inv.multV2D(a,b);*/
 		var inv = new Matrix2D();
 		inv.inverse(this.matrix);
 		inv.multV2D(a,b);
@@ -210,9 +240,17 @@ function DO(parentDO){
 		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
 		self.dragEnabled = false;
 	};
-	this.startDrag = function(pos){
+	this.startDrag = function(pos,ele){
 		if(!self.dragEnabled){ return; }
-		pos = pos?pos:new V2D();
+console.log("POINT: "+pos.toString());
+		/*pos = pos?pos:new V2D(); */
+		/*
+console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
+				var destinationPoint = new V2D();
+				var sourceElement = self;
+				var destinationElement = null;
+				DO.pointLocalUp(self.dragOffset,pos,ele,self);
+				*/
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
 		self.dragging = true;
@@ -224,7 +262,7 @@ function DO(parentDO){
 		//console.log("M-DOWN");
 		if(self.dragEnabled && (e[0]==self || self.dragAnyChildren)){
 			var pos = e[1];
-			self.startDrag(e[1]);
+			self.startDrag(e[1],e[0]);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE,self.mouseMoveDragCheckFxn);
 			self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.mouseMoveDragCheckFxnOutside);
 			self.addFunction(Canvas.EVENT_MOUSE_UP,self.dragMouseUpFxn);
@@ -257,7 +295,37 @@ function DO(parentDO){
 		//console.log("move "+self.dragging);
 		if(self.dragging){
 			if(e[0]==self || !check){
+				//console.log(" ++ SOURCE: "+e[0].toString()+" -> DESTINATION: "+self.toString());
 				var pos = e[1];
+				/*
+				var sourcePoint = new V2D(pos.x,pos.y);
+				var destinationPoint = new V2D();
+				var sourceElement = self;
+				var destinationElement = null;
+				DO.pointLocalUp(destinationPoint,sourcePoint,e[0],self);
+				*/
+				var diffX = pos.x - self.dragOffset.x;
+				var diffY = pos.y - self.dragOffset.y;
+				//self.matrix.translate(-diffX,-diffY);
+				self.matrix.translate(diffX,diffY);
+				/*
+				var sourcePoint = new V2D(pos.x,pos.y);
+				var destinationPoint = new V2D();
+				var sourceElement = self;
+				var destinationElement = null;
+				DO.pointLocalUp(destinationPoint,sourcePoint,sourceElement,destinationElement);
+				DO.pointLocalDown(destinationPoint,sourcePoint,sourceElement,destinationElement);
+				var diffX = sourcePoint.x - destinationPoint.x;
+				var diffY = sourcePoint.y - destinationPoint.y;
+				self.matrix.translate(diffX,diffY);
+				*/
+				/*
+				console.log(self.dragOffset.toString()+" -> "+pos.toString());
+				var diffX = pos.x - self.dragOffset.x;
+				var diffY = pos.y - self.dragOffset.y;
+				self.matrix.pretranslate(diffX,diffY);
+				*/
+				/*
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
 				// GRID ROUNDING
@@ -282,10 +350,33 @@ function DO(parentDO){
 						self.matrix.pretranslate(0,self._rangeLimitsY[1]-yNum);
 					}
 				}
+				*/
 				self.alertAll(DO.EVENT_DRAGGED,self);
 			}
 		}
 	};
+	// 
+	this.enableClickListener = function(){
+		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.onMouseDownClickCheckFxn);
+		self.addFunction(Canvas.EVENT_MOUSE_UP,self.onMouseUpClickCheckFxn);
+	}
+	this.disableClickListener = function(){
+		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.onMouseDownClickCheckFxn);
+		self.removeFunction(Canvas.EVENT_MOUSE_UP,self.onMouseUpClickCheckFxn);
+	}
+	this.click_check = false;
+	this.onMouseDownClickCheckFxn = function(o){
+		self.alertAll(DO.EVENT_DOWN,o);
+		self.click_check = true;
+	}
+	this.onMouseUpClickCheckFxn = function(o){
+		self.alertAll(DO.EVENT_UP,o);
+		if(self.click_check){
+			self.alertAll(DO.EVENT_CLICKED,o);
+		}
+		self.click_check = false;
+	}
+	//
 	this.addListeners = function(){
 		//
 	};

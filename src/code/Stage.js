@@ -20,13 +20,13 @@ self.renderCanvas.canvas.style.position="absolute";
 self.renderCanvas.canvas.style.left="0px";
 self.renderCanvas.canvas.style.top="100px";
 */
-/*
+
 var can = self._tempCanvas.getCanvas();
 document.body.appendChild(can);
 can.style.position="absolute";
 can.style.left="0px";
 can.style.top="300px";
-*/
+
 	self.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
 		self.renderCanvas.clear();
 		self.renderCanvas.setSize(wid,hei);
@@ -175,7 +175,7 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 		}else if(evt==Canvas.EVENT_MOUSE_MOVE){
 			var list = self.eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
 		}
-		if(list){
+		if(list){ // OUTSIDE ALERTING
 			var newPos, arr, mat = new Matrix2D();
 			for(var i=0;i<list.length;++i){
 				var obj = list[i][0];
@@ -193,21 +193,34 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 				}
 			}
 		}
-		// 
-		if(intersection){
+		if(intersection){ // ANCESTOR INSIDE ALERT
 			obj = intersection;
 			while(obj){ // self to ancestors - create path
 				path.push(obj);
 				obj = obj.parent;
 			}
-			var newPos = new V2D(pos.x,pos.y);
-			while(path.length>0){// run path
+var mat = new Matrix2D();
+mat.identity();
+for(var i=0;i<path.length;++i){
+	mat.postmult(path[i].matrix);
+}
+mat.inverse(mat);
+var newPos = new V2D(pos.x,pos.y);
+mat.multV2D(newPos,newPos); // GLOBAL LOCATION
+
+for(var i=0;i<path.length;++i){
+	path[i].matrix.multV2D(newPos,newPos);
+	var argPos = new V2D(newPos.x,newPos.y);
+	arr[1] = argPos;
+	path[i].alertAll(evt,arr);
+}
+			/*while(path.length>0){// run path
 				obj = path.pop();
-				obj.inverseTransformPoint(newPos,newPos);
 				var argPos = new V2D(newPos.x,newPos.y);
 				arr[1] = argPos;
 				obj.alertAll(evt,arr);
-			}
+				obj.inverseTransformPoint(newPos,newPos);
+			}*/
 		}else{
 			//
 		}

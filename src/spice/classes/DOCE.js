@@ -8,6 +8,7 @@ DOCE.TYPE_DIODE = 5;
 DOCE.TYPE_IC = 6;
 // ...
 // EVENTS
+DOCE.EVENT_ELEMENT_SELECTED = "doceelesel";
 DOCE.EVENT_PIN_SELECTED = "docepinsel";
 
 function DOCE(style){
@@ -62,16 +63,34 @@ function DOCE(style){
 			d = d.parent;
 		}
 		if(isSame){
+			console.log(cumm);
 			var x = cumm.x, y = cumm.y;
 			var obj = {
 				sourcePoint: o[1],
 				finalPoint: new V2D(x,y),
 				sourceElement: o[0],
-				finalElement: self
+				finalElement: self._display
 			};
 			self.alertAll(DOCE.EVENT_PIN_SELECTED,obj);
 		}
 	}
+	this.elementClickFxn = function(o){
+		console.log(o);
+		var srcObj = o[0];
+		var srcPnt = o[1];
+		var dstObj = self._display;
+		var dstPnt = new V2D();
+		DO.pointLocalUp(dstPnt,srcPnt,srcObj,dstObj);
+		var obj = {
+			sourcePoint: srcPnt,
+			finalPoint: dstPnt,
+			sourceElement: srcObj,
+			finalElement: dstObj
+		};
+		self.alertAll(DOCE.EVENT_ELEMENT_SELECTED,obj);
+	}
+	this._observables.enableClickListener();
+	this._observables.addFunction(DO.EVENT_CLICKED,this.elementClickFxn);
 	// BAD:
 	/*
 	this.pinDownFxn = function(o){

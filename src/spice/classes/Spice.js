@@ -125,8 +125,8 @@ return;
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MIN_ACTIVE_RED],
 			self.resource.tex[ResourceSpice.TEX_WIN_ICON_MAX_ACTIVE_RED]
 			);
-		self.doWindows.addWin( style );
-		self.doWindows.win( 0 ).matrix.translate(450,50);
+		//self.doWindows.addWin( style );
+		//self.doWindows.win( 0 ).matrix.translate(450,50);
 		
 		//self.scroller = new DOScroll();
 		//self.doRoot.addChild( self.scroller );

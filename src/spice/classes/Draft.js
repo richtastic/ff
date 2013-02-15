@@ -41,7 +41,8 @@ function Draft(style,resource){
 	this.addElement = function(ele){
 		Code.addUnique(this._elements,ele);
 		this._displays.addChild( ele.display() );
-		ele.addFunction(DOCE.EVENT_PIN_SELECTED,this._handleElementPoint);
+		ele.addFunction(DOCE.EVENT_PIN_SELECTED,this._handleElementPinPoint);
+		ele.addFunction(DOCE.EVENT_ELEMENT_SELECTED,this._handleElementElePoint);
 	}
 	this.addConnection = function(con){
 		this.addUnique(this._connections,con);
@@ -63,19 +64,31 @@ function Draft(style,resource){
 		this._scroller.graphicsIllustration.endPath();
 		this._scroller.graphicsIllustration.fill();
 	}
+/*
+MODES:
+	click-pin => WIRING
+	click-element => SELECTED-ELEMENT
+		- highlight 
+	click-wire => SELECTED-WIRE
+		- highlight wire
+*/
+// --- WIRING MODE ---------------------------------------------------------
+	this._is_wiring = false;
 	this._wirePointA = null;
-	this._handleElementPoint = function(e){
-		console.log(e);
-		//var srcP = e.sourcePoint;
+	this._handleElementPinPoint = function(e){
 		var finalPoint = e.finalPoint;
-		var x = finalPoint.x, y = finalPoint.y;
-		/*
-		var img = self._resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED];
-		var dobj = new DOImage(img);
-		dobj.drawSingle(x-img.width/2,y-img.height/2,img.width,img.height);
-		self._background.addChild(dobj);
-		*/
-		self._wirePointA = new V2D(x,y);
+		var pX = finalPoint.x, pY = finalPoint.y;
+		if(self._is_wiring){
+			// END WIRING
+		}else{ // begin wiring
+			self._wirePointA = new V2D(pX,pY);
+			//self._is_wiring = true;
+		}
+	}
+	this._handleElementElePoint = function(e){
+		console.log("YAY ------------------------------------");
+		self._wirePointA = new V2D(e.finalPoint.x,e.finalPoint.y);
+		console.log(self._wirePointA.toString());
 	}
 	this._handleWireSelected = function(o){
 		console.log(o);
@@ -95,6 +108,7 @@ function Draft(style,resource){
 			self._wires.graphics.strokeLine();
 		}
 	}
+// --- DEFAULT CONSTRUCTOR ---------------------------------------------------------
 	this._display.addFunction(Canvas.EVENT_MOUSE_MOVE,this._handleMouseMove);
 // DEFAULT ELEMENTS
 // ELEMENTS
@@ -110,7 +124,9 @@ function Draft(style,resource){
 	style[DOChip.CHIP_TEX_SIDE_PIN] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN];
 	style[DOChip.CHIP_TEX_SIDE_KEY] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY];
 	var chip = new DOChip(style);
-	chip.display().matrix.translate(30,30);
+	chip.display().matrix.rotate(Math.PI/25);
+	//chip._observables.matrix.rotate(Math.PI*0.25);
+	//chip.display().matrix.translate(30,30);
 	this.addElement(chip); // 
 }
 /*
