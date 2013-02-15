@@ -307,7 +307,8 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
 				//self.matrix.translate(-diffX,-diffY);
-				self.matrix.translate(diffX,diffY);
+				self.matrix.translate(-diffX,-diffY);
+				//self.matrix.translate(diffX,diffY);
 				/*
 				var sourcePoint = new V2D(pos.x,pos.y);
 				var destinationPoint = new V2D();

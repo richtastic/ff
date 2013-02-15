@@ -175,6 +175,7 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 		}else if(evt==Canvas.EVENT_MOUSE_MOVE){
 			var list = self.eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
 		}
+// POS IS THE GLOBAL POSITION INTERSECTION LOCATION
 		if(list){ // OUTSIDE ALERTING
 			var newPos, arr, mat = new Matrix2D();
 			for(var i=0;i<list.length;++i){
@@ -199,6 +200,7 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 				path.push(obj);
 				obj = obj.parent;
 			}
+			/*
 var mat = new Matrix2D();
 mat.identity();
 for(var i=0;i<path.length;++i){
@@ -213,7 +215,15 @@ for(var i=0;i<path.length;++i){
 	var argPos = new V2D(newPos.x,newPos.y);
 	arr[1] = argPos;
 	path[i].alertAll(evt,arr);
-}
+}*/
+	var newPos = new V2D(pos.x,pos.y);
+	while(path.length>0){// run path
+		obj = path.pop();
+		obj.matrix.multV2D(newPos,newPos);
+		var argPos = new V2D(newPos.x,newPos.y);
+		arr[1] = argPos;
+		obj.alertAll(evt,arr);
+	}
 			/*while(path.length>0){// run path
 				obj = path.pop();
 				var argPos = new V2D(newPos.x,newPos.y);
