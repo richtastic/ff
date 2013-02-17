@@ -79,13 +79,14 @@ can.style.top="300px";
 	// rendering -----------------------------------------------------------
 	this.render = function(){
 		self._canvas.clear();
-		self.alertAll(Stage.EVENT_ON_ENTER_FRAME,self.time);
+		self.alertAll(Stage.EVENT_ON_ENTER_FRAME,self._time);
+		self._canvas.matrix.identity();
 		self.root.render(self._canvas);
 //		self.root.render(self._tempCanvas);
-		self.alertAll(Stage.EVENT_ON_EXIT_FRAME,self.time);
+		self.alertAll(Stage.EVENT_ON_EXIT_FRAME,self._time);
 	};
 	this.enterFrame = function(e){
-		++self.time;
+		++self._time;
 		self.render();
 	};
 	this.start = function(){
@@ -216,14 +217,64 @@ for(var i=0;i<path.length;++i){
 	arr[1] = argPos;
 	path[i].alertAll(evt,arr);
 }*/
+if(evt==Canvas.EVENT_MOUSE_DOWN){
+	console.log("CLICKED ON: "+pos.toString());
+}
+var cum = new Matrix2D();
+var o = new V2D();
+var x = new V2D();
+var y = new V2D();
+var op = new V2D();
+var ox = new V2D();
+var oy = new V2D();
+//pos.y = -pos.y;
+for(var i=path.length-1;i>=0;--i){
+	var obj = path[i];
+	cum.mult(cum,obj.matrix);
+	//cum.mult(obj.matrix,cum);
+	o.x = 0; o.y = 0; cum.multV2D(o,o);
+	x.x = 1; x.y = 0; cum.multV2D(x,x);
+	y.x = 0; y.y = 1; cum.multV2D(y,y);
+	op.x = pos.x-o.x; op.y = pos.y-o.y;
+	ox.x = x.x-o.x; ox.y = x.y-o.y;
+	oy.x = y.x-o.x; oy.y = y.y-o.y;
+//op.x = -op.x;
+//op.y = -op.y;
+//ox.y = -ox.y;
+//oy.y = -oy.y;
+	var argPos = new V2D( V2D.dot(op,ox), V2D.dot(op,oy) );
+	arr[1] = argPos;
+	if(evt==Canvas.EVENT_MOUSE_DOWN){
+		console.log( ":::::::::::::::"+o.toString()+" "+x.toString()+":"+y.toString() );
+		//console.log(argPos.toString());
+	}
+	obj.alertAll(evt,arr);
+}
+	/*var rootPos = new V2D(pos.x,pos.y);
 	var newPos = new V2D(pos.x,pos.y);
+	var cum = new Matrix2D();
+	var mat = new Matrix2D();
+	var inv = new Matrix2D();
 	while(path.length>0){// run path
 		obj = path.pop();
-		obj.matrix.multV2D(newPos,newPos);
+		mat.copy(obj.matrix);
+		//cum.mult(mat,cum);
+		cum.mult(cum,mat);
+		//inv.inverse(mat);
+		inv.inverse(cum);
+		//inv.multV2D(newPos,newPos);
+		inv.multV2D(newPos,rootPos);
+		//mat.multV2D(newPos,newPos);
+		//obj.matrix.multV2D(newPos,newPos);
 		var argPos = new V2D(newPos.x,newPos.y);
+if(evt==Canvas.EVENT_MOUSE_DOWN){
+	//console.log(cum.toString()+" => "+inv.toString());
+	console.log(argPos.toString());
+
+}
 		arr[1] = argPos;
 		obj.alertAll(evt,arr);
-	}
+	}*/
 			/*while(path.length>0){// run path
 				obj = path.pop();
 				var argPos = new V2D(newPos.x,newPos.y);

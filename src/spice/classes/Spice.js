@@ -146,7 +146,6 @@ return;
 var img;
 var pin = new DOButton();
 self.doRoot.addChild(pin);
-
 img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_ACTIVE_RED]); img.drawSingle();
 pin.setFrameMouseOut( img );
 img = new DOImage(self.resource.tex[ResourceSpice.TEX_WIN_ICON_CLOSE_UP_RED]); img.drawSingle();
@@ -165,7 +164,6 @@ pin.graphicsIntersection.beginPath();
 pin.graphicsIntersection.arc(10,10, 10, 0,2*Math.PI, true);
 pin.graphicsIntersection.endPath();
 pin.graphicsIntersection.fill();
-
 		self.addListeners();
 	};
 	// 

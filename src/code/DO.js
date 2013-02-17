@@ -121,10 +121,16 @@ function DO(parentDO){
 		var context = canvas.getContext();
 		context.save();
 		var a = self.matrix.getParameters();
-		context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
+		//context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
+		context.transform(a[0],a[2],a[1],a[3],a[4],a[5]); 
+/*self.canvas.matrix.mult(self.canvas.matrix,self.matrix);
+var a = self.canvas.matrix.getParameters();
+context.setTransform(a[0],a[1],a[2],a[3],a[4],a[5]);*/
 		Code.emptyArray(a);
 	};
 	this.takedownRender = function(){
+//var inv = new Matrix2D(); inv.inverse(self.matrix)
+//self.canvas.matrix.mult(self.canvas.matrix,inv);
 		var context = self.canvas.getContext();
 		context.restore();
 	};
@@ -307,8 +313,7 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
 				//self.matrix.translate(-diffX,-diffY);
-				self.matrix.translate(-diffX,-diffY);
-				//self.matrix.translate(diffX,diffY);
+				self.matrix.translate(diffX,diffY);
 				/*
 				var sourcePoint = new V2D(pos.x,pos.y);
 				var destinationPoint = new V2D();

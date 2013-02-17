@@ -43,6 +43,7 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this._resource = resource;
 	this._mouseDown = false;
 	this._mousePosition = new V2D();
+	this.matrix = new Matrix2D();
 	if(canHTML){
 		this._canvas = canHTML;
 	}else{
