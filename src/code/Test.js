@@ -101,9 +101,9 @@ function Test(){
 		self.doA0a.matrix.rotate(Math.PI*0.125);
 	}
 	this.setupFunzies = function(){
-		self.doA0a.setDraggingEnabled();
-		self.doA0.setDraggingEnabled();
-		self.doA.setDraggingEnabled();
+		self.doA0a.setDraggingEnabled(20,20);
+		self.doA0.setDraggingEnabled(20,20);
+		self.doA.setDraggingEnabled(20,20);
 	}
 	this.addListeners = function(){
 		self.resource.addListeners();

@@ -36,7 +36,7 @@ DO.addToStageRecursive = function(ch,sta){
 			DO.addToStageRecursive(ch.children[i],sta);
 		} // else already has it
 	}
-};
+}
 DO.removedFromStageRecursive = function(ch){
 	ch.stage = null;
 	ch.removedFromStage(null);
@@ -45,14 +45,14 @@ DO.removedFromStageRecursive = function(ch){
 			DO.removedFromStageRecursive(ch.children[i]);
 		}
 	}
-};
+}
 DO.printRecursive = function(obj,cur,ind,fin){
 	var beg = cur;
 	console.log(""+beg+fin+obj.toString());
 	for(var i=0; i<obj.children.length; ++i){
 		DO.printRecursive(obj.children[i],ind+"|"+cur,ind,fin);
 	}
-};
+}
 DO.tempMatrix = new Matrix2D();
 DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){
 	if(destinationElement==undefined){ destinationElement = null; }
@@ -270,15 +270,7 @@ context.setTransform(a[0],a[1],a[2],a[3],a[4],a[5]);*/
 	};
 	this.startDrag = function(pos,ele){
 		if(!self.dragEnabled){ return; }
-console.log("POINT: "+pos.toString());
-		/*pos = pos?pos:new V2D(); */
-		/*
-console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
-				var destinationPoint = new V2D();
-				var sourceElement = self;
-				var destinationElement = null;
-				DO.pointLocalUp(self.dragOffset,pos,ele,self);
-				*/
+//console.log("POINT: "+pos.toString());
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
 		self.dragging = true;
@@ -326,27 +318,6 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 				var pos = e[1];
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
-				self.matrix.translate(diffX,diffY);
-				/*
-				var sourcePoint = new V2D(pos.x,pos.y);
-				var destinationPoint = new V2D();
-				var sourceElement = self;
-				var destinationElement = null;
-				DO.pointLocalUp(destinationPoint,sourcePoint,sourceElement,destinationElement);
-				DO.pointLocalDown(destinationPoint,sourcePoint,sourceElement,destinationElement);
-				var diffX = sourcePoint.x - destinationPoint.x;
-				var diffY = sourcePoint.y - destinationPoint.y;
-				self.matrix.translate(diffX,diffY);
-				*/
-				/*
-				console.log(self.dragOffset.toString()+" -> "+pos.toString());
-				var diffX = pos.x - self.dragOffset.x;
-				var diffY = pos.y - self.dragOffset.y;
-				self.matrix.pretranslate(diffX,diffY);
-				*/
-				/*
-				var diffX = pos.x - self.dragOffset.x;
-				var diffY = pos.y - self.dragOffset.y;
 				// GRID ROUNDING
 				if(self.dragRoundingX>0){
 					diffX = self.dragRoundingX*Math.round(diffX/self.dragRoundingX);
@@ -354,7 +325,8 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 				if(self.dragRoundingY>0){
 					diffY = self.dragRoundingY*Math.round(diffY/self.dragRoundingY);
 				}
-				self.matrix.pretranslate(diffX,diffY);
+				self.matrix.translate(diffX,diffY);
+				//
 				if(self._checkLimits){
 					var xNum = self.matrix.translateX();
 					var yNum = self.matrix.translateY();
@@ -369,7 +341,6 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 						self.matrix.pretranslate(0,self._rangeLimitsY[1]-yNum);
 					}
 				}
-				*/
 				self.alertAll(DO.EVENT_DRAGGED,self);
 			}
 		}
