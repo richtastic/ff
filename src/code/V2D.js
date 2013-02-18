@@ -7,17 +7,20 @@ function V2D(xP,yP){ // input is debug HTML object
     var self = this;
 	this.x = xP==undefined?0.0:xP; this.y = yP==undefined?0.0:yP;
 	this.length = function(){
-		return Math.sqrt(this.x*this.x+this.y*this.y);
+		return Math.sqrt(self.x*self.x+self.y*self.y);
+	}
+	this.lengthSquared = function(){
+		return self.x*self.x+self.y*self.y;
 	}
 	this.norm = function(){
-		dist = Math.sqrt(this.x*this.x+this.y*this.y);
-		this.x = this.x/dist; this.y = this.y/dist;
+		dist = Math.sqrt(self.x*self.x+self.y*self.y);
+		self.x = self.x/dist; self.y = self.y/dist;
 	}
 	this.toString = function(){
-		return "<"+this.x+","+this.y+">";
+		return "<"+self.x+","+self.y+">";
 	}
 	this.kill = function(){
-		this.x = undefined; this.y = undefined;
+		self.x = undefined; self.y = undefined;
 		//self = null; FF does not like
 	}
 }

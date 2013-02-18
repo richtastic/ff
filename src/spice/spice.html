@@ -29,13 +29,6 @@ function customClassesProgressFxn(o){
 	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
 }
 function customClassesLoadedFxn(){
-	/*var mat = new Matrix2D();
-	mat.identity();
-	mat.translate(200,0);
-	mat.rotate(Math.PI*0.25);
-	mat.scale(2,2);
-	console.log(mat.toString());
-return;*/
 	setFeedback( "" );
 test = new Test();
 return;
@@ -169,11 +162,7 @@ VIEWS::::::::::::::::::::::::::::::::::::::::::::::
 
 SCHEDULE:
 	CODE
-		- only use SELF for local/event uses
-		- private vars use _ prefix
 		- complete kill functions
-		- upgrade to new inheritence system
-		- extract DO graphics to GRAPHICS class
 	CIRCUIT
 		- connecting
 		- visual vs internal

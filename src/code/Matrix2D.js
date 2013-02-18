@@ -62,7 +62,6 @@ function Matrix2D(){
 		self.d = aC*bB + aD*bD;
 		self.y = aC*bX + aD*bY + aY;
 	}
-	//this.multV2D = function(bV,aV){ // a = trans(b)
 	this.multV2D = function(aV,bV){ // a = trans(b)
 		var ax = self.a*bV.x + self.b*bV.y + self.x;
 		aV.y = self.c*bV.x + self.d*bV.y + self.y;
