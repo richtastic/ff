@@ -6,6 +6,28 @@ DO.EVENT_DOWN = "do.evtdown";
 DO.EVENT_UP = "do.evtup";
 DO.EVENT_CLICKED = "do.evtclicked";
 
+
+DO._tempO = new V2D();
+DO._tempX = new V2D();
+DO._tempY = new V2D();
+DO._tempOP = new V2D();
+DO._tempOX = new V2D();
+DO._tempOY = new V2D();
+DO.getPointFromTransform = function(newPos,mat,pos){
+	DO._tempO.x = 0; DO._tempO.y = 0; mat.multV2D(DO._tempO,DO._tempO);
+	DO._tempX.x = 1; DO._tempX.y = 0; mat.multV2D(DO._tempX,DO._tempX);
+	DO._tempY.x = 0; DO._tempY.y = 1; mat.multV2D(DO._tempY,DO._tempY);
+	DO._tempOP.x = pos.x-DO._tempO.x; DO._tempOP.y = pos.y-DO._tempO.y;
+	DO._tempOX.x = DO._tempX.x-DO._tempO.x; DO._tempOX.y = DO._tempX.y-DO._tempO.y;
+	DO._tempOY.x = DO._tempY.x-DO._tempO.x; DO._tempOY.y = DO._tempY.y-DO._tempO.y;
+	var oxLen2 = DO._tempOX.lengthSquared();
+	var oyLen2 = DO._tempOY.lengthSquared();
+	newPos.x = V2D.dot(DO._tempOP,DO._tempOX)/oxLen2;
+	newPos.y = V2D.dot(DO._tempOP,DO._tempOY)/oyLen2;
+	return newPos;
+}
+
+
 DO.addToStageRecursive = function(ch,sta){
 	ch.stage = sta;
 	ch.addedToStage(sta);
@@ -301,15 +323,7 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 		//console.log("move "+self.dragging);
 		if(self.dragging){
 			if(e[0]==self || !check){
-				//console.log(" ++ SOURCE: "+e[0].toString()+" -> DESTINATION: "+self.toString());
 				var pos = e[1];
-				/*
-				var sourcePoint = new V2D(pos.x,pos.y);
-				var destinationPoint = new V2D();
-				var sourceElement = self;
-				var destinationElement = null;
-				DO.pointLocalUp(destinationPoint,sourcePoint,e[0],self);
-				*/
 				var diffX = pos.x - self.dragOffset.x;
 				var diffY = pos.y - self.dragOffset.y;
 				self.matrix.translate(diffX,diffY);
@@ -451,10 +465,17 @@ console.log("SOURCE: "+ele.toString()+" -> DESTINATION: "+self.toString());
 // ------------------------------------------------------------------ debugging
 	this.toString = function(){
 		return "[DO "+this.id+(this.stage==null?"-":"*")+"]";
-	};
+	}
 	this.print = function(){
 		DO.printRecursive(this,"","  ","-");
-	};
+	}
+
+
+
+
+
+
+
 // ------------------------------------------------------------------ constructor
 //console.log("new DO");
 	/*

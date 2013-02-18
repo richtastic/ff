@@ -176,51 +176,33 @@ context.setTransform(1,0,0,1,-pos.x,-pos.y);
 		}else if(evt==Canvas.EVENT_MOUSE_MOVE){
 			var list = self.eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
 		}
+		var cum = new Matrix2D();
+		var arr;
 		if(list){ // OUTSIDE ALERTING
-			var newPos, arr, mat = new Matrix2D();
 			for(var i=0;i<list.length;++i){
 				var obj = list[i][0];
 				if(intersection!=obj){
-					newPos = new V2D(pos.x,pos.y);
-					mat.identity();
+					cum.identity();
 					while(obj != null){
-						mat.postmult(obj.matrix);
+						//cum.mult(cum,obj.matrix);
+						cum.mult(obj.matrix,cum);
 						obj = obj.parent;
 					}
-					mat.inverse(mat);
-					mat.multV2D(newPos,newPos);
-					arr = [intersection,newPos];
-					list[i][1](arr);
+					list[i][1]([intersection,DO.getPointFromTransform(new V2D(),cum,pos)]);
 				}
 			}
 		}
 		if(intersection){ // ANCESTOR INSIDE ALERT
 			obj = intersection;
-			while(obj){ // self to ancestors - create path
+			while(obj){
 				path.push(obj);
 				obj = obj.parent;
 			}
-			var cum = new Matrix2D();
-			var o = new V2D();
-			var x = new V2D();
-			var y = new V2D();
-			var op = new V2D();
-			var ox = new V2D();
-			var oy = new V2D();
+			cum.identity();
 			while(path.length>0){// run path
 				obj = path.pop();
 				cum.mult(cum,obj.matrix);
-				o.x = 0; o.y = 0; cum.multV2D(o,o);
-				x.x = 1; x.y = 0; cum.multV2D(x,x);
-				y.x = 0; y.y = 1; cum.multV2D(y,y);
-				op.x = pos.x-o.x; op.y = pos.y-o.y;
-				ox.x = x.x-o.x; ox.y = x.y-o.y;
-				oy.x = y.x-o.x; oy.y = y.y-o.y;
-				var oxLen2 = ox.lengthSquared();
-				var oyLen2 = oy.lengthSquared();
-				var argPos = new V2D( V2D.dot(op,ox)/oxLen2, V2D.dot(op,oy)/oyLen2);
-				arr[1] = argPos;
-				obj.alertAll(evt,arr);
+				obj.alertAll(evt,[intersection,DO.getPointFromTransform(new V2D(),cum,pos)]);
 			}
 		}
 		arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
