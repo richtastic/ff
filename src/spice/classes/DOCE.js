@@ -24,6 +24,9 @@ function DOCE(style){
 	this._display.addChild(this._observables);
 	this._display.addChild(this._connections);
 	//
+	/*this.??? = function(o){
+		_handle_observables_drag();
+	}*/
 	this._handle_observables_drag = function(o){
 		self._connections.matrix.copy( self._observables.matrix );
 	}
@@ -74,7 +77,6 @@ function DOCE(style){
 		}
 	}
 	this.elementClickFxn = function(o){
-		console.log(o);
 		var srcObj = o[0];
 		var srcPnt = o[1];
 		var dstObj = self._display;

@@ -67,7 +67,7 @@ function Draft(style,resource){
 /*
 MODES:
 	click-pin => WIRING
-	click-element => SELECTED-ELEMENT
+	click-element | drag-element => SELECTED-ELEMENT
 		- highlight 
 	click-wire => SELECTED-WIRE
 		- highlight wire
@@ -124,6 +124,7 @@ MODES:
 	style[DOChip.CHIP_TEX_SIDE_PIN] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_PIN];
 	style[DOChip.CHIP_TEX_SIDE_KEY] = this._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY];
 	var chip = new DOChip(style);
+//	chip.display().matrix.translate(30,60);
 //	chip.display().matrix.rotate(Math.PI/25);
 	//chip._observables.matrix.rotate(Math.PI*0.25);
 	//chip.display().matrix.translate(30,30);
