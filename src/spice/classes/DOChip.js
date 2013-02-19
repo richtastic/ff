@@ -69,18 +69,18 @@ function DOChip(style){
 		//
 		this._chip_top_right.drawSingle(0,0,small,small);
 		this._chip_top_right.matrix.identity();
-		this._chip_top_right.matrix.rotate(-Math.PI/2);
 		this._chip_top_right.matrix.translate(countWidth*large+2*small,0);
+		this._chip_top_right.matrix.rotate(Math.PI/2);
 		// 
 		this._chip_bot_right.drawSingle(0,0,small,small);
 		this._chip_bot_right.matrix.identity();
-		this._chip_bot_right.matrix.rotate(Math.PI);
 		this._chip_bot_right.matrix.translate(countWidth*large+2*small,countHeight*large+2*small);
+		this._chip_bot_right.matrix.rotate(Math.PI);
 		//
 		this._chip_bot_left.drawSingle(0,0,small,small);
 		this._chip_bot_left.matrix.identity();
-		this._chip_bot_left.matrix.rotate(Math.PI/2);
 		this._chip_bot_left.matrix.translate(0,countHeight*large+2*small);
+		this._chip_bot_left.matrix.rotate(-Math.PI/2);
 		//
 		this._chip_center.drawPattern(0,0,countWidth*large,countHeight*large);
 		this._chip_center.matrix.identity();
@@ -124,9 +124,9 @@ function DOChip(style){
 				ele = new DOImage( style[DOChip.CHIP_TEX_SIDE_CLEAR] );
 			}
 			ele.drawSingle(0,0,small,large);
-			ele.matrix.identity();
-			ele.matrix.rotate(Math.PI/2);
+			ele.matrix.identity();			
 			ele.matrix.translate(i*large+1*small,countHeight*large+2*small);
+			ele.matrix.rotate(-Math.PI/2);
 			this._observables.addChild( ele );
 			this._chip_bots.push(ele);
 		}
@@ -145,8 +145,8 @@ function DOChip(style){
 			}
 			ele.drawSingle(0,0,small,large);
 			ele.matrix.identity();
-			ele.matrix.rotate(Math.PI);
 			ele.matrix.translate(countWidth*large+2*small,(countHeight-i)*large+small);
+			ele.matrix.rotate(Math.PI);
 			this._observables.addChild( ele );
 			this._chip_rights.push(ele);
 		}
@@ -165,8 +165,8 @@ function DOChip(style){
 			}
 			ele.drawSingle(0,0,small,large);
 			ele.matrix.identity();
-			ele.matrix.rotate(-Math.PI/2);
 			ele.matrix.translate((countWidth-i)*large+small,0);
+			ele.matrix.rotate(Math.PI/2);
 			this._observables.addChild( ele );
 			this._chip_tops.push(ele);
 		}
@@ -209,30 +209,33 @@ function DOChip(style){
 		// bot - pin
 		for(i=0;i<countWidth;++i){
 			if(this._chip_grid[1][i]==1){
-				pin = this._generate_pin(Math.PI*0.5);
+				pin = this._generate_pin();
 				pin.button().matrix.translate( small + (i+0.5)*large, 2*small + countHeight*large );
+				pin.button().matrix.rotate(-Math.PI*0.5);
 				this.addPin(pin);
 			}
 		}
 		// right - pin
 		for(i=0;i<countHeight;++i){
 			if(this._chip_grid[2][i]==1){
-				pin = this._generate_pin(Math.PI);
+				pin = this._generate_pin();
 				pin.button().matrix.translate( 2*small + countWidth*large, small + (countHeight-i-0.5)*large );
+				pin.button().matrix.rotate(-Math.PI);
 				this.addPin(pin);
 			}
 		}
 		// top - pin
 		for(i=0;i<countWidth;++i){
 			if(this._chip_grid[3][i]==1){
-				pin = this._generate_pin(Math.PI*1.5);
+				pin = this._generate_pin();
 				pin.button().matrix.translate( small + (countWidth-i-0.5)*large, 0 );
+				pin.button().matrix.rotate(-Math.PI*1.5);
 				this.addPin(pin);
 			}
 		}
 		
 	}
-	this._generate_pin = function(rot){
+	this._generate_pin = function(){
 		var pin = new DOButton();
 		img = new DOImage(self._resource.tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED]); img.drawSingle(-10,-10,20,20);
 		pin.setFrameMouseOut( img );
@@ -249,7 +252,7 @@ function DOChip(style){
 		pin.graphicsIntersection.endPath();
 		pin.graphicsIntersection.fill();
 		pin.matrix.identity();
-		pin.matrix.rotate(rot);
+		//pin.matrix.rotate(rot);
 		var pinO = new DOPin();
 		pinO.button(pin);
 		return pinO;

@@ -3,7 +3,6 @@
 function Test(){
 	var self = this;
 	this.constructor = function(){
-		console.log("MIEN BEER");
 		self.resource = new Resource();
 		self.canvas = new Canvas(self.resource,null,600,300,Canvas.STAGE_FIT_FILL);
 		self.stage = new Stage(self.canvas, 1000/20);
@@ -103,7 +102,7 @@ function Test(){
 	this.setupFunzies = function(){
 		self.doA0a.setDraggingEnabled(20,20);
 		self.doA0.setDraggingEnabled(20,20);
-		self.doA.setDraggingEnabled(20,20);
+		self.doA.setDraggingEnabled(100,100);
 	}
 	this.addListeners = function(){
 		self.resource.addListeners();

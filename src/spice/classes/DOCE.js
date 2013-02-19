@@ -63,7 +63,6 @@ function DOCE(style){
 			d = d.parent;
 		}
 		if(isSame){
-			console.log(cumm);
 			var x = cumm.x, y = cumm.y;
 			var obj = {
 				sourcePoint: o[1],
