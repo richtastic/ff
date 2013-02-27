@@ -1,13 +1,24 @@
 // ElementConnection.js
 
-function ElementConnection(style){
+function ElementConnection(){
 	var self = this;
 	this._pins = new Array();
-	this.addPin = function(p){
-		return Code.addUnique(this._pins,p);
+	this.pins = function(){
+		return self._pins;
 	}
-	this.removePin = function(p){
-		return Code.removeElement(this._pins,p);
+	this.addPin = function(p,no){
+		var ret = Code.addUnique(self._pins,p);
+		if(ret && !no){
+			p.addConnection(self,true);
+		}
+		return ret;
+	}
+	this.removePin = function(p,no){
+		var ret = Code.removeElement(self._pins,p);
+		if(ret && !no){
+			p.removeConnection(self,true);
+		}
+		return ret;
 	}
 }
 

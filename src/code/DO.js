@@ -72,7 +72,9 @@ DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinat
 	DO.tempMatrix.copy(ele.matrix);
 	while(ele != destinationElement && ele != undefined){
 		ele = ele.parent;
-		DO.tempMatrix.mult(ele.matrix,DO.tempMatrix); // REVERSE?
+		if(ele){
+			DO.tempMatrix.mult(ele.matrix,DO.tempMatrix);
+		}
 	}
 	DO.tempMatrix.inverse(DO.tempMatrix);
 	DO.tempMatrix.multV2D(destinationPoint,sourcePoint);
@@ -143,16 +145,10 @@ function DO(parentDO){
 		var context = canvas.getContext();
 		context.save();
 		var a = self.matrix.getParameters();
-		//context.transform(a[0],a[1],a[2],a[3],a[4],a[5]);
 		context.transform(a[0],a[2],a[1],a[3],a[4],a[5]); 
-/*self.canvas.matrix.mult(self.canvas.matrix,self.matrix);
-var a = self.canvas.matrix.getParameters();
-context.setTransform(a[0],a[1],a[2],a[3],a[4],a[5]);*/
 		Code.emptyArray(a);
 	};
 	this.takedownRender = function(){
-//var inv = new Matrix2D(); inv.inverse(self.matrix)
-//self.canvas.matrix.mult(self.canvas.matrix,inv);
 		var context = self.canvas.getContext();
 		context.restore();
 	};

@@ -84,17 +84,19 @@ MODES:
 	this._selectedWire = null;
 	//this._wirePointA = new V2D();
 	this._handleElementPinPoint = function(e){
-		//console.log("PIN");
+		console.log("PIN");
 		if(!e.buttonElement){ return; }
 		if(self._selectedWire){
 			console.log("END WIRING");
-			var conn = new ElementConnection();
+			self._selectedWire.addPin(e.buttonElement);
+			self._selectedWire = null;
 		}else{
 			console.log("BEGIN WIRING");
 			var style = {resource:this._resource, dispatch:this.dispatch};
-			self._selectedWire = new DOWire(style);
-
-			e.buttonElement
+			var wire = new DOWire(style);
+			wire.addPin(e.buttonElement);
+			self._wires.addChild( wire.display() );
+			self._selectedWire = wire;
 			//self._wirePointA.set(pX,pY);
 			//self._is_wiring = true;
 		}
@@ -102,6 +104,7 @@ MODES:
 	this._handleElementElePoint = function(e){
 		//console.log("ELE ------------------------------------");
 		if(self._selectedWire){
+			//self._selectedWire.kill();
 			self._selectedWire = null;
 		}else if(self._selectedElement){
 			//
@@ -130,6 +133,8 @@ MODES:
 			self._wires.graphics.strokeLine();
 		}*/
 		if(self._selectedWire){
+			var pt = o[1];
+			self._selectedWire.setTempPoint(pt.x,pt.y);
 			self._selectedWire.updateLine();
 		}
 	}

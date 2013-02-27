@@ -48,6 +48,7 @@ function DOCE(style){
 		bu.addFunction(DOButton.EVENT_BUTTON_DOWN,this.pinDownFxn);
 		this._connections.addChild( pin.display() );
 		Code.addUnique(this._pins,pin);
+		pin.element(self);
 	}
 	this.removePin = function(pin){
 		// ?
@@ -59,19 +60,17 @@ function DOCE(style){
 		var d = o[0];
 		var p = o[1];
 		var isSame = false;
-		var buDisplay = d.parent;
+		var buDisplay = d;
 		while(d!=undefined){
 			m.copy(d.matrix);
 			cumm.mult(m,cumm);
 			if(d==self._display){ isSame=true; break;}
-			//prev = d;
 			d = d.parent;
 		}
 		var i;
 		var selectedPin = null;
 		for(i=0;i<self._pins.length;++i){
-			if(self._pins[i].display()==buDisplay){
-				//console.log("SELECTED PIN:");
+			if(self._pins[i].isButton(buDisplay)){
 				selectedPin = self._pins[i];
 				break;
 			}
