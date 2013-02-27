@@ -59,11 +59,22 @@ function DOCE(style){
 		var d = o[0];
 		var p = o[1];
 		var isSame = false;
+		var buDisplay = d.parent;
 		while(d!=undefined){
 			m.copy(d.matrix);
 			cumm.mult(m,cumm);
 			if(d==self._display){ isSame=true; break;}
+			//prev = d;
 			d = d.parent;
+		}
+		var i;
+		var selectedPin = null;
+		for(i=0;i<self._pins.length;++i){
+			if(self._pins[i].display()==buDisplay){
+				//console.log("SELECTED PIN:");
+				selectedPin = self._pins[i];
+				break;
+			}
 		}
 		if(isSame){
 			var x = cumm.x, y = cumm.y;
@@ -71,7 +82,9 @@ function DOCE(style){
 				sourcePoint: o[1],
 				finalPoint: new V2D(x,y),
 				sourceElement: o[0],
-				finalElement: self._display
+				finalElement: self._display,
+				circuitElement: self,
+				buttonElement: selectedPin
 			};
 			self.alertAll(DOCE.EVENT_PIN_SELECTED,obj);
 		}
@@ -86,7 +99,8 @@ function DOCE(style){
 			sourcePoint: srcPnt,
 			finalPoint: dstPnt,
 			sourceElement: srcObj,
-			finalElement: dstObj
+			finalElement: dstObj,
+			circuitElement: self
 		};
 		self.alertAll(DOCE.EVENT_ELEMENT_SELECTED,obj);
 	}

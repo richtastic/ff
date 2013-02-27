@@ -66,37 +66,59 @@ function Draft(style,resource){
 	}
 /*
 MODES:
-	click-pin => WIRING
-	click-element | drag-element => SELECTED-ELEMENT
-		- highlight 
-	click-wire => SELECTED-WIRE
-		- highlight wire
+	N/A:
+		click-pin => WIRING
+		click-element | drag-element => SELECTED-ELEMENT
+			- highlight 
+		click-wire => SELECTED-WIRE
+			- highlight wire
+	SELECTED:
+	WIREING:
+
 */
+// --- ? MODE ---------------------------------------------------------
+	
+// --- ELEMENT MODE ---------------------------------------------------------
+	this._selectedElement = null;
 // --- WIRING MODE ---------------------------------------------------------
-	this._is_wiring = false;
-	this._wirePointA = null;
+	this._selectedWire = null;
+	//this._wirePointA = new V2D();
 	this._handleElementPinPoint = function(e){
-		var finalPoint = e.finalPoint;
-		var pX = finalPoint.x, pY = finalPoint.y;
-		if(self._is_wiring){
-			// END WIRING
-		}else{ // begin wiring
-			self._wirePointA = new V2D(pX,pY);
+		//console.log("PIN");
+		if(!e.buttonElement){ return; }
+		if(self._selectedWire){
+			console.log("END WIRING");
+			var conn = new ElementConnection();
+		}else{
+			console.log("BEGIN WIRING");
+			var style = {resource:this._resource, dispatch:this.dispatch};
+			self._selectedWire = new DOWire(style);
+
+			e.buttonElement
+			//self._wirePointA.set(pX,pY);
 			//self._is_wiring = true;
 		}
 	}
 	this._handleElementElePoint = function(e){
-		console.log("YAY ------------------------------------");
-		self._wirePointA = new V2D(e.finalPoint.x,e.finalPoint.y);
-		console.log(self._wirePointA.toString());
+		//console.log("ELE ------------------------------------");
+		if(self._selectedWire){
+			self._selectedWire = null;
+		}else if(self._selectedElement){
+			//
+		}else{
+			
+			//self._wirePointA.set(e.finalPoint.x,e.finalPoint.y);
+			//console.log(self._wirePointA.toString());
+		}
 	}
 	this._handleWireSelected = function(o){
+		console.log("WIRE");
 		console.log(o);
 	}
 	//
 	this._handleMouseMove = function(o){
 		//self._wirePointA = new V2D( Math.random()*100, Math.random()*100 );
-		if(self._wirePointA){
+		/*if(self._wirePointA){
 			var pt = o[1];
 			//var pt = new V2D(100+Math.random()*100, 100+Math.random()*100);
 			self._wires.graphics.clear();
@@ -106,6 +128,9 @@ MODES:
 			self._wires.graphics.lineTo(pt.x-self._background.matrix.x,pt.y-self._background.matrix.y);
 			self._wires.graphics.endPath();
 			self._wires.graphics.strokeLine();
+		}*/
+		if(self._selectedWire){
+			self._selectedWire.updateLine();
 		}
 	}
 // --- DEFAULT CONSTRUCTOR ---------------------------------------------------------

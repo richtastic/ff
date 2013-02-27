@@ -3,6 +3,9 @@
 function DOWire(style){
 	var self = this;
 	Code.extendClass(this,DOCE,[style]);
+	this.updateLine = function(){
+		//
+	}
 	/*
 	//
 	this._a = new V2D();

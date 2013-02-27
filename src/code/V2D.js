@@ -6,6 +6,9 @@ V2D.dot = function(a,b){
 function V2D(xP,yP){ // input is debug HTML object
     var self = this;
 	this.x = xP==undefined?0.0:xP; this.y = yP==undefined?0.0:yP;
+	this.set = function(xV,yV){
+		this.x = xV; this.y = yV;
+	}
 	this.length = function(){
 		return Math.sqrt(self.x*self.x+self.y*self.y);
 	}
