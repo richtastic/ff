@@ -10,6 +10,7 @@ DOCE.TYPE_IC = 6;
 // EVENTS
 DOCE.EVENT_ELEMENT_SELECTED = "doceelesel";
 DOCE.EVENT_PIN_SELECTED = "docepinsel";
+DOCE.EVENT_ELEMENT_MOVED = "docelemov";
 
 function DOCE(style){
 	var self = this;
@@ -29,6 +30,9 @@ function DOCE(style){
 	}*/
 	this._handle_observables_drag = function(o){
 		self._connections.matrix.copy( self._observables.matrix );
+		for(var i=0;i<self._pins.length;++i){
+			self._pins[i].updateMoved();
+		}
 	}
 	this._observables.checkIntersectionChildren(false);
 	this._observables.newGraphicsIntersection();

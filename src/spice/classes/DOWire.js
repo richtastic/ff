@@ -11,6 +11,7 @@ function DOWire(style){
 	this._gr.newGraphicsIntersection();
 	this._display.addChild(this._gr);
 	this._connection = new ElementConnection();
+	this._connection.reference(this);
 	this._tempPoint = new V2D();
 	this.setTempPoint = function(pX,pY){
 		self._tempPoint.set(pX,pY);
@@ -19,18 +20,6 @@ function DOWire(style){
 		var ptSrc = new V2D(0,0);
 		var ptDst = new V2D(0,0);
 		var pt = new V2D(0,0);
-		/*
-		var source = self._display.parent;
-		var d = obj;
-		while(d!=source && d!=null){
-			console.log(d.id+" =?= "+source.id);
-			d = d.parent;
-		}
-		if(d==source){
-			console.log("FOUND COMMON SOURCE - DISP");
-		}else{
-			console.log("NO");
-		}*/
 		DO.pointLocalUp(ptDst,ptSrc,obj);
 		DO.pointLocalDown(pt,ptDst,self._gr);
 		return pt;
@@ -38,16 +27,14 @@ function DOWire(style){
 	this.updateLine = function(){
 		var a = self._connection.pins();
 		self._gr.graphics.clear();
-		//console.log(a.length);
 		if(a.length>0){
 			self._gr.graphics.setLine(2,0xFF0000FF);
 			self._gr.graphics.beginPath();
-			//console.log(a[0].display());
-var pt = self._getRelativePoint(a[0].button());
-			self._gr.graphics.moveTo(pt.x,pt.y);//self._gr.graphics.moveTo(a[0].display().matrix.x,a[0].display().matrix.y);
+			var pt = self._getRelativePoint(a[0].button());
+			self._gr.graphics.moveTo(pt.x,pt.y);
 			if(a.length>1){
-var pt = self._getRelativePoint(a[1].button());
-				self._gr.graphics.lineTo(pt.x,pt.y);//self._gr.graphics.lineTo(a[1].display().matrix.x,a[1].display().matrix.y);
+			var pt = self._getRelativePoint(a[1].button());
+				self._gr.graphics.lineTo(pt.x,pt.y);
 			}else{
 				self._gr.graphics.lineTo(self._tempPoint.x,self._tempPoint.y);
 			}
@@ -55,8 +42,15 @@ var pt = self._getRelativePoint(a[1].button());
 			self._gr.graphics.strokeLine();
 		}
 	}
+	this._handleElementMoved = function(e){
+		self.updateLine();
+	}
 	this.addPin = function(pin){
-		return self._connection.addPin(pin);
+		var ret = self._connection.addPin(pin);
+		if(ret){
+			pin.addFunctionMoved(self._handleElementMoved);
+		}
+		return ret;
 	}
 	this.kill = Code.overrideClass(this, this.kill, function(){
 		console.log("kill me");

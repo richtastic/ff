@@ -6,6 +6,7 @@ function DOPin(style){
 	this._button = null;
 	this._connections = new Array();
 	this._element = null;
+	this._internalDispatch = new Dispatch();
 	this.isButton = function(b){
 		return self._button!=null && b==self._button;
 	}
@@ -39,5 +40,11 @@ function DOPin(style){
 			c.removePin(self,true);
 		}
 		return ret;
+	}
+	this.addFunctionMoved = function(fxn){
+		self._internalDispatch.addFunction(DOCE.EVENT_ELEMENT_MOVED,fxn);
+	}
+	this.updateMoved = function(){
+		self._internalDispatch.alertAll(DOCE.EVENT_ELEMENT_MOVED,self);
 	}
 }

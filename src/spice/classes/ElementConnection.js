@@ -3,6 +3,14 @@
 function ElementConnection(){
 	var self = this;
 	this._pins = new Array();
+	this._reference = null;
+	this.reference = function(r){
+		if(arguments.length>0){
+			self._reference = r;
+		}else{
+			return self._reference;
+		}
+	}
 	this.pins = function(){
 		return self._pins;
 	}

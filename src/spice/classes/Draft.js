@@ -89,6 +89,7 @@ MODES:
 		if(self._selectedWire){
 			console.log("END WIRING");
 			self._selectedWire.addPin(e.buttonElement);
+			self._selectedWire.updateLine();
 			self._selectedWire = null;
 		}else{
 			console.log("BEGIN WIRING");
