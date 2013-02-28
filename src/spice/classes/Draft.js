@@ -119,6 +119,7 @@ MODES:
 		console.log(o);
 	}
 	//
+	this._tempMat = new Matrix2D();
 	this._handleMouseMove = function(o){
 		//self._wirePointA = new V2D( Math.random()*100, Math.random()*100 );
 		/*if(self._wirePointA){
@@ -134,6 +135,14 @@ MODES:
 		}*/
 		if(self._selectedWire){
 			var pt = o[1];
+			self._tempMat.identity();
+			var obj = self._selectedWire.display();
+			var me = self._display;
+			while(obj!=null && obj.parent!=me){
+				self._tempMat.mult(obj.matrix,self._tempMat);
+				obj = obj.parent;
+			}
+			pt = DO.getPointFromTransform(new V2D(),self._tempMat,pt);
 			self._selectedWire.setTempPoint(pt.x,pt.y);
 			self._selectedWire.updateLine();
 		}
