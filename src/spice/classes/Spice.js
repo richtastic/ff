@@ -44,18 +44,24 @@ function Spice(){
 		sY = 0;
 		wid = wid*(1/3);
 		hei = hei;
-		self.library.graphicsIllustration.clear();
-		//self.library.graphicsIllustration.setLine(1.0,0x00FF0099);
-		self.library.graphicsIllustration.setFill(0x00FFFF66);
-		self.library.graphicsIllustration.beginPath();
-		self.library.graphicsIllustration.moveTo(sX,sY);
-		self.library.graphicsIllustration.lineTo(sX+wid,sY);
-		self.library.graphicsIllustration.lineTo(sX+wid,sY+hei);
-		self.library.graphicsIllustration.lineTo(sX,sY+hei);
-		self.library.graphicsIllustration.lineTo(sX,sY);
-		//self.library.graphicsIllustration.strokeLine();
-		self.library.graphicsIllustration.endPath();
-		self.library.graphicsIllustration.fill();
+		self.library.setSize(wid,hei);
+		var lib = self.library.display();
+		lib.matrix.identity();
+		lib.matrix.translate(sX,sY);
+		return;
+		
+		lib.graphicsIllustration.clear();
+		//lib.graphicsIllustration.setLine(1.0,0x00FF0099);
+		lib.graphicsIllustration.setFill(0x00FFFF66);
+		lib.graphicsIllustration.beginPath();
+		lib.graphicsIllustration.moveTo(sX,sY);
+		lib.graphicsIllustration.lineTo(sX+wid,sY);
+		lib.graphicsIllustration.lineTo(sX+wid,sY+hei);
+		lib.graphicsIllustration.lineTo(sX,sY+hei);
+		lib.graphicsIllustration.lineTo(sX,sY);
+		//lib.graphicsIllustration.strokeLine();
+		lib.graphicsIllustration.endPath();
+		lib.graphicsIllustration.fill();
 	}
 	this.canvasClickFxn = function(e){
 		// console.log(e);
@@ -134,8 +140,9 @@ return;
 		//self.addChild(maskee);
 		
 		// library
-		self.library = new DO();
-		self.doRoot.addChild( self.library );
+		//self.library = new DOContainer();
+		self.library = new Library();
+		self.doRoot.addChild( self.library.display() );
 
 		// doBG.addFunction(Canvas.EVENT_MOUSE_DOWN,self.puts);
 		// 

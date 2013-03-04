@@ -49,20 +49,28 @@ function Draft(style,resource){
 		this._wires.addChild( con.display() );
 		con.addFunction(DOCE.EVENT_CONNECTION_SELECTED,this._handleWireSelected);
 	}
+this._setting_scale = 2.0;
 	this.resize = function(wid,hei){
-		this._scroller.graphicsIllustration.clear();
-		this._scroller.graphicsIllustration.strokeLine();
-		//this._scroller.graphicsIllustration.setLine(8,0x00FF00FF);
-		this._scroller.graphicsIllustration.setFill(0x00000000); // 0x00000001
-		this._scroller.graphicsIllustration.beginPath();
-		this._scroller.graphicsIllustration.moveTo(0,0);
-		this._scroller.graphicsIllustration.lineTo(wid,0);
-		this._scroller.graphicsIllustration.lineTo(wid,hei);
-		this._scroller.graphicsIllustration.lineTo(0,hei);
-		this._scroller.graphicsIllustration.lineTo(0,0);
-		//this._scroller.graphicsIllustration.strokeLine();
-		this._scroller.graphicsIllustration.endPath();
-		this._scroller.graphicsIllustration.fill();
+
+self._display.matrix.identity();
+self._display.matrix.scale(self._setting_scale);
+wid = wid/self._setting_scale;
+hei = hei/self._setting_scale;
+// self._scroller.matrix.identity();
+// self._scroller.matrix.scale(self._setting_scale);
+		self._scroller.graphicsIllustration.clear();
+		self._scroller.graphicsIllustration.strokeLine();
+		//self._scroller.graphicsIllustration.setLine(8,0x00FF00FF);
+		self._scroller.graphicsIllustration.setFill(0x00000000); // 0x00000001
+		self._scroller.graphicsIllustration.beginPath();
+		self._scroller.graphicsIllustration.moveTo(0,0);
+		self._scroller.graphicsIllustration.lineTo(wid,0);
+		self._scroller.graphicsIllustration.lineTo(wid,hei);
+		self._scroller.graphicsIllustration.lineTo(0,hei);
+		self._scroller.graphicsIllustration.lineTo(0,0);
+		//self._scroller.graphicsIllustration.strokeLine();
+		self._scroller.graphicsIllustration.endPath();
+		self._scroller.graphicsIllustration.fill();
 	}
 /*
 MODES:
