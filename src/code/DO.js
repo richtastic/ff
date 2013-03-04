@@ -197,7 +197,7 @@ function DO(parentDO){
 		}
 	}
 	this.removeParent = function(){
-		this.parent.removeChild(this);
+		self.parent.removeChild(this);
 	}
 	this.removeChild = function(ch){
 		if(!ch){return;}

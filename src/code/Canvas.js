@@ -154,6 +154,16 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
 		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
+// DRAWING ------------------------------------------------------------
+	this.drawText = function(txt){
+		//console.log("DRAWING: "+txt);
+		//this._context.
+		this._context.lineWidth = 1;
+		this._context.lineStyle = "#CC00CC";
+		this._context.fillStyle = "#FF00FFF";
+		this._context.font = "18px sans-serif";
+		this._context.fillText(txt,200,200);
+	}
 // GETTERS -----------------------------------------------------------
 	this.mousePosition = function(){
 		return this._mousePosition;
