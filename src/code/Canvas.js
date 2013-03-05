@@ -155,14 +155,15 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
 // DRAWING ------------------------------------------------------------
-	this.drawText = function(txt){
-		//console.log("DRAWING: "+txt);
-		//this._context.
-		this._context.lineWidth = 1;
-		this._context.lineStyle = "#CC00CC";
-		this._context.fillStyle = "#FF00FFF";
-		this._context.font = "18px sans-serif";
-		this._context.fillText(txt,200,200);
+	this.drawText = function(txt,siz,fnt,xP,yP){
+		if(siz==undefined || siz==null){
+			siz = 12;
+		}
+		if(xP==undefined || xP==null){ xP=0; }
+		if(yP==undefined || yP==null){ yP=0; }
+		//this._context.font = siz+"px sans-serif";
+		this._context.font = siz+"px "+fnt;
+		this._context.fillText(txt,xP,yP);
 	}
 // GETTERS -----------------------------------------------------------
 	this.mousePosition = function(){

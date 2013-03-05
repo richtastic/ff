@@ -55,6 +55,9 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
+// FONTS -------------------------------------
+ResourceSpice.FNT_CIRCUITS = 0;
+ResourceSpice.FNT_X = 0;
 // MAPS ---------------------------------------
 ResourceSpice.MAP_X = 0;
 // SOUNDS -------------------------------------
@@ -125,5 +128,9 @@ function ResourceSpice(){
 	//
 	self.imgLoader.setLoadList( texdir, tex, self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
+	//
+	var fontdir = texdir+"fonts/";
+	self.fnt[ResourceSpice.FNT_CIRCUITS] = new Font('font_circuts', fontdir+'yay.ttf');
+	
 }
 

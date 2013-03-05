@@ -4,10 +4,12 @@ function Resource(){
 	var self = this;
     self.audioPlayer = new Audio();
 	self.tex = new Array();
+	self.fnt = new Array();
 	self.snd = new Array();
 	self.map = new Array();
     self.audLoader = new AudioLoader( "", new Array() );
 	self.imgLoader = new ImageLoader( "images/", new Array() );
+	self.fntLoader = new NextLoader( new Array() );
 	self.fxnLoader = new MultiLoader( new Array() );
 	Code.extendClass(this,Dispatchable);
     // audio playing -------------------------------
@@ -21,20 +23,29 @@ function Resource(){
 		self.imgLoader.load();
 	}
 	self.load2 = function(imgList){ // image complete
-		var i;
-		for(i=0;i<imgList.length;++i){
+		for(var i=0;i<imgList.length;++i){
 			self.tex[i] = imgList[i];
 		}
-		self.audLoader.load();
+		self.audLoader.load();		
 	}
 	self.load3 = function(audList){ // audio complete
-		var i;
-        for(i=0;i<audList.length;++i){
+        for(var i=0;i<audList.length;++i){
             self.snd[i] = audList[i];
         }
-        self.fxnLoader.load();
+        self.load_fonts();
 	}
-    self.load4 = function(){ // functions complete
+	self.load_fonts = function(){ // font setup
+        self.fntLoader.clearLoadList();
+        for(var i=0;i<self.fnt.length;++i){
+        	self.fnt[i].setCompleteFunction( self.fntLoader.next );
+        	self.fntLoader.pushLoadList( self.fnt[i].load, Code.newArray() );
+        }
+        self.fntLoader.load();
+    }
+	self.load4 = function(){ // font complete
+        self.fxnLoader.load();
+    }
+    self.load5 = function(){ // functions complete
         self.addListeners();
         if(fxnComplete!=null){
             fxnComplete();
@@ -66,7 +77,8 @@ function Resource(){
 // ----------------------------------------------------------------------- constructor
 	self.imgLoader.setFxnComplete(self.load2);
     self.audLoader.setFxnComplete(self.load3);
-    self.fxnLoader.setFxnComplete(self.load4);
+    self.fntLoader.setFxnComplete(self.load4);
+    self.fxnLoader.setFxnComplete(self.load5);
 	self.fxnComplete = null;
 }
 

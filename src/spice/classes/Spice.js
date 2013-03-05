@@ -141,7 +141,8 @@ return;
 		
 		// library
 		//self.library = new DOContainer();
-		self.library = new Library();
+		var style = {resource: self.resource}
+		self.library = new Library(style);
 		self.doRoot.addChild( self.library.display() );
 
 		// doBG.addFunction(Canvas.EVENT_MOUSE_DOWN,self.puts);

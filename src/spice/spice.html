@@ -3,6 +3,7 @@
 <title>FF Simulation Program with Integrated Circuit Emphasis</title>
 <script src="../code/FFLoadAll.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
 <script type="text/javascript">
 // ---------------------------------------------------------
 var ff, scriptLoader;
@@ -28,6 +29,7 @@ function customClassesProgressFxn(o){
 	var perc = 0.5 + 0.5*(o.loaded/o.total);
 	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
 }
+var fontTankmen = null;
 function customClassesLoadedFxn(){
 	setFeedback( "" );
 	console.log("loading complete");
@@ -57,7 +59,6 @@ function simulationProgressFxn(sim,perc){
 	//console.log( Math.round(perc*100)+"%" );
 	//console.log(sim);
 }
-
 </script>
 </head>
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
