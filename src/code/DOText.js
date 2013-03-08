@@ -7,6 +7,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,parentDO){
 	this._size = 12;
 	this._font = "arial";
 	this._color = 0x000000FF;
+	this._align = "center"; // start/left, center, end/right
 	//
 	this.render = Code.overrideClass(this, this.render, function(canvas){
 		//console.log("TEXT RENDER");
@@ -50,7 +51,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,parentDO){
 	this._updateGraphics = function(){
 		self.graphics.clear();
 		self.graphics.setFill(self._color);
-		self.graphics.drawText(self._text,self._size,self._font,0,0);
+		self.graphics.drawText(self._text,self._size,self._font,0,0,self._align);
 	}
 // killing ---------------------------------------------------------------------------------
 	this.kill = Code.overrideClass(this, this.kill, function(){

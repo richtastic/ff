@@ -61,8 +61,8 @@ Graphics.canvasDrawImagePattern = function(img,pX,pY,wX,hY){
 	Graphics.canvas.drawImagePattern(pat,pX,pY,wX,hY);
 }
 // ---- text
-Graphics.drawText = function(txt,siz,fnt,xP,yP){
-	Graphics.canvas.drawText(txt,siz,fnt,xP,yP);
+Graphics.drawText = function(txt,siz,fnt,xP,yP,align){
+	Graphics.canvas.drawText(txt,siz,fnt,xP,yP,align);
 }
 
 
@@ -127,8 +127,8 @@ function Graphics(){
 		this._graphics.push( Code.newArray(Graphics.canvasDrawRect,Code.newArray(pX,pY,wid,hei)) );
 	}
 	// ---- text
-	this.drawText = function(txt,siz,fnt,xP,yP){
-		this._graphics.push( Code.newArray(Graphics.drawText,Code.newArray(txt,siz,fnt,xP,yP)) );
+	this.drawText = function(txt,siz,fnt,xP,yP,align){
+		this._graphics.push( Code.newArray(Graphics.drawText,Code.newArray(txt,siz,fnt,xP,yP,align)) );
 	}
 // rendering ------------------------------------------------------------------------------------------
 	this.drawGraphics = function(canvas){

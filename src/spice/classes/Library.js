@@ -44,9 +44,9 @@ function Library(style){
 		for(i=0;i<10;++i){
 			txt = self.addListItem(null,"Yay Bacon"+(i+1));
 			txt.matrix.identity();
-			txt.matrix.scale(0.5+Math.random()*1.5);
-			txt.matrix.rotate(Math.random()*0.5);
-			txt.matrix.translate(0,25*i);
+			//txt.matrix.scale(0.5+Math.random()*1.5);
+			//txt.matrix.rotate(Math.random()*0.5);
+			txt.matrix.translate(0,25*i+25);
 		}
 	}
 	//  -----------------------------------------------------------------------
