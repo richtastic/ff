@@ -1,13 +1,16 @@
 // DOText.js
+DOText.ALIGN_LEFT = "left";
+DOText.ALIGN_CENTER = "center";
+DOText.ALIGN_RIGHT = "left";
 
-function DOText(textIN,sizeIN,fontIN,colIN,parentDO){
+function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	var self = this;
 	Code.extendClass(this,DO,[parentDO]);
 	this._text = "";
 	this._size = 12;
 	this._font = "arial";
 	this._color = 0x000000FF;
-	this._align = "center"; // start/left, center, end/right
+	this._align = DOText.ALIGN_CENTER;
 	//
 	this.render = Code.overrideClass(this, this.render, function(canvas){
 		//console.log("TEXT RENDER");
@@ -41,16 +44,30 @@ function DOText(textIN,sizeIN,fontIN,colIN,parentDO){
 			return self._color;
 		}
 	}
-	this.setText = function(txt,siz,fnt,col){
+	this.align = function(a){
+		if(arguments.length>0 && a!=undefined && a!=null){
+			self._align = a;
+		}else{
+			return self._align;
+		}
+	}
+	this.setText = function(txt,siz,fnt,col,aln){
 		self.text(txt);
 		self.size(siz);
 		self.font(fnt);
 		self.color(col);
+		self.align(aln);
 		self._updateGraphics();
+	}
+	this.callback = function(o){
+		// for(str in o){ console.log(str+": "+o[str]); }
+		console.log(o.width);
 	}
 	this._updateGraphics = function(){
 		self.graphics.clear();
 		self.graphics.setFill(self._color);
+			//self.graphics.measureText("HIA duuude",self.callback);
+			//console.log( self.graphics.measureText("HIA duuude") );
 		self.graphics.drawText(self._text,self._size,self._font,0,0,self._align);
 	}
 // killing ---------------------------------------------------------------------------------
@@ -59,7 +76,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,parentDO){
 		this.super(this.kill).kill.call(this);
 	})
 // constructor ---------------------------------------------------------------------------------
-	this.setText(textIN,sizeIN,fontIN,colIN);
+	this.setText(textIN,sizeIN,fontIN,colIN,alignIN);
 }
 
 

@@ -31,22 +31,46 @@ function Library(style){
 		}
 		Code.emptyArray(self.list);
 	}
+	this._fontSize = 20;
+	this._lineSize = this._fontSize*1.5;
 	this.addListItem = function(img,str){
 		var fnt = self._resource.fnt[ResourceSpice.FNT_CIRCUITS].name();
-		var txt = new DOText(str,25,fnt,0xFF004499);
+		var txt = new DOText(str,self._fontSize,fnt,0xFF004499,DOText.ALIGN_LEFT);
 		var dis = self.display();
-		dis.addChild(txt);
-		return txt;
+		var wid = 20;
+		var hei = 20;
+		var d = new DO();
+		var i = new DO(); // USE IMAGE INSTEAD
+			i.graphics.clear();
+			i.graphics.setFill(0x00FF0099);
+			i.graphics.setLine(1.0,0xFF000099);
+			d.graphics.beginPath();
+			i.graphics.moveTo(0,0);
+			i.graphics.lineTo(wid,0);
+			i.graphics.lineTo(wid,hei);
+			i.graphics.lineTo(0,hei);
+			i.graphics.lineTo(0,0);
+			i.graphics.strokeLine();
+			i.graphics.endPath();
+			i.graphics.fill();
+		dis.addChild(d);
+			d.addChild(i);
+			d.addChild(txt);
+		i.matrix.identity();
+		i.matrix.translate( (self._lineSize-wid)*0.5, (self._lineSize-hei)*0.5 );
+		txt.matrix.identity();
+		txt.matrix.translate(self._lineSize,self._fontSize);
+		return d;
 	}
 	this.constructor = function(){
 		self.clearListItems();
 		var i, txt;
 		for(i=0;i<10;++i){
-			txt = self.addListItem(null,"Yay Bacon"+(i+1));
+			txt = self.addListItem(null,"Yay"+Math.round(Math.random()*10000000)+"_abc_"+(i+1));
 			txt.matrix.identity();
 			//txt.matrix.scale(0.5+Math.random()*1.5);
 			//txt.matrix.rotate(Math.random()*0.5);
-			txt.matrix.translate(0,25*i+25);
+			txt.matrix.translate(0,self._lineSize*i); // +self._fontSize
 		}
 	}
 	//  -----------------------------------------------------------------------

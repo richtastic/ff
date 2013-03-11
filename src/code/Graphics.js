@@ -64,6 +64,9 @@ Graphics.canvasDrawImagePattern = function(img,pX,pY,wX,hY){
 Graphics.drawText = function(txt,siz,fnt,xP,yP,align){
 	Graphics.canvas.drawText(txt,siz,fnt,xP,yP,align);
 }
+Graphics.measureText = function(str,callback){
+	Graphics.canvas.measureText(str,callback);
+}
 
 
 
@@ -129,6 +132,10 @@ function Graphics(){
 	// ---- text
 	this.drawText = function(txt,siz,fnt,xP,yP,align){
 		this._graphics.push( Code.newArray(Graphics.drawText,Code.newArray(txt,siz,fnt,xP,yP,align)) );
+	}
+	this.measureText = function(str,callback){
+		//if(Graphics.canvas){ return Graphics.canvas.measureText(str); }
+		this._graphics.push( Code.newArray(Graphics.measureText,Code.newArray(str,callback)) );
 	}
 // rendering ------------------------------------------------------------------------------------------
 	this.drawGraphics = function(canvas){

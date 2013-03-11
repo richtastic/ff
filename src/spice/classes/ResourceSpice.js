@@ -73,7 +73,7 @@ function ResourceSpice(){
 		// .. load something else
 	};
 	// CONSTRUCTOR
-	var texdir = "../spice/images/";
+	var texdir = "../spice/source/";
 	var tex = new Array();
 	tex[ResourceSpice.TEX_DEBUG_1] = "debug_texture.png";
 	tex[ResourceSpice.TEX_BACKGROUND_GRID_1] = "circuit/background_grid.png";
@@ -130,7 +130,7 @@ function ResourceSpice(){
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
 	//
 	var fontdir = texdir+"fonts/";
-	self.fnt[ResourceSpice.FNT_CIRCUITS] = new Font('font_circuts', fontdir+'yay.ttf');
+	self.fnt[ResourceSpice.FNT_CIRCUITS] = new Font('monospice', fontdir+'monospice.ttf');
 	
 }
 

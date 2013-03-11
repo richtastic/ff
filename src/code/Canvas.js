@@ -154,16 +154,20 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
 		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
-// DRAWING ------------------------------------------------------------
+// TEXT ------------------------------------------------------------
 	this.drawText = function(txt,siz,fnt,xP,yP,align){
 		if(siz==undefined || siz==null){ siz = 12; }
 		if(xP==undefined || xP==null){ xP=0; }
 		if(yP==undefined || yP==null){ yP=0; }
 		if(align==undefined || align==null){ align="left"; }
-		this._context.font = siz+"px "+fnt;
-		this._context.textAlign=align;
-		this._context.fillText(txt,xP,yP);
+		self._context.font = siz+"px "+fnt;
+		self._context.textAlign=align;
+		self._context.fillText(txt,xP,yP);
 		// strokeText(txt,x,y [,maxWidth - not fully supported] );
+	}
+	this.measureText = function(str,callback){
+		//return Graphics.canvas.measureText(str);
+		callback( self._context.measureText(str) );
 	}
 // GETTERS -----------------------------------------------------------
 	this.mousePosition = function(){
