@@ -33,7 +33,10 @@ var fontTankmen = null;
 function customClassesLoadedFxn(){
 	setFeedback( "" );
 	console.log("loading complete");
-	spice = new Spice();
+	var a = new Ajax();
+	//a.get("test.html",getDone);
+	a.post("test.txt",getDone);
+//	spice = new Spice();
 return;
 	var netlist = new CircuitNet();
 	var sim = new CircuitSimulation();
@@ -58,6 +61,9 @@ function simulationCompleteFxn(sim){
 function simulationProgressFxn(sim,perc){
 	//console.log( Math.round(perc*100)+"%" );
 	//console.log(sim);
+}
+function getDone(e){
+	console.log(e);
 }
 </script>
 </head>

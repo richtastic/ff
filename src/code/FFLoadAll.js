@@ -8,6 +8,7 @@ function FFLoadAll(homeDir, completeFxn,  progressFxn, verbose){
 		var list = ["BinaryGrid.js","ByteData.js","Dispatch.js","Dispatchable.js","PNGImage.js","LLNode.js","Queue.js","V2D.js","Complex.js",
 		"Matrix2D.js","Code.js","Set.js","Ticker.js","Keyboard.js","ImageLoader.js","Font.js",
 		"NextLoader.js","MultiLoader.js","Resource.js","Output.js","Canvas.js","AudioLoader.js",
+		"Ajax",
 		"Voxel.js","Lattice.js","Map.js","Graphics.js","DO.js","DOContainer.js","DOText.js","DOScroll.js","Draggable.js",
 		"Video.js","Stage.js","Frame.js","DOImage.js","DOAnim.js","DOButton.js"];
 		// ,"ClassA.js","ClassB.js","ClassC.js"
