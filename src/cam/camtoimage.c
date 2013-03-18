@@ -31,6 +31,9 @@
 
 // ------------------------------------------------------------------------------------ shorthand
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
+#define MAX(a,b) a>b?a:b
+double max_double(double a,double b){ if(a>=b){ return a; } return b; }
+double min_double(double a,double b){ if(a<=b){ return a; } return b; }
 // ------------------------------------------------------------------------------------ enums
 typedef enum{
 	IO_METHOD_READ,
@@ -42,7 +45,7 @@ typedef struct buffer{
 	size_t length;
 } buffer;
 // ------------------------------------------------------------------------------------ colors
-void convertYUVtoRGB(int y, int u, int v, int& R, int& G, int& B){
+void convertYUVtoRGB(int y, int u, int v, int *R, int *G, int *B){ // HAVE NOT CHECKED C VALIDITY YET
 	double Y = y;
 	double U = u;
 	double V = v;
@@ -53,9 +56,9 @@ void convertYUVtoRGB(int y, int u, int v, int& R, int& G, int& B){
 		V = 128;
 	}
 	double Yint = 0.9;//1.150;
-	R = (int)max(min(Yint*(Y-16.0) + 2.500*(V-128), 255.0), 0.0);
-	G = (int)max(min(Yint*(Y-16.0) - 1.250*(V-128) - 0.750*(U-128), 255.0), 0.0);
-	B = (int)max(min(Yint*(Y-16.0) + 2.500*(U-128), 255.0), 0.0);
+	*R = (int)max_double(min_double(Yint*(Y-16.0) + 2.500*(V-128), 255.0), 0.0);
+	*G = (int)max_double(min_double(Yint*(Y-16.0) - 1.250*(V-128) - 0.750*(U-128), 255.0), 0.0);
+	*B = (int)max_double(min_double(Yint*(Y-16.0) + 2.500*(U-128), 255.0), 0.0);
 }
 /*
 while(y<picture.height){
@@ -81,6 +84,39 @@ if(x>=picture.width){
 	++y;
 }}
 */
+int save_image_to_ppm(char* file_name, int w, int h, char *bytes){
+	fprintf(stdout, "writing to file: '%s' ...\n", file_name);
+	int ret, image_len = w*h*3;
+	char temp[32];
+	//char *header = "P6\n";
+	//char *space = " ";
+	//char *bitmax = "\n255";
+	int fd;
+	fd = open(file_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH );
+	fprintf(stdout, "\tdescriptor: %d\n",fd);
+	if( fd <= 0 ){
+		fprintf(stdout, "\tfailed to open file for writing\n");
+		return EXIT_FAILURE;
+	}
+	printf("widxhei = %dx%d\n",w,h);
+	sprintf(temp,"P6\n%d %d\n255\n",w,h);
+	ret = write(fd, temp, strlen(temp)); // full header
+	ret = write(fd, bytes, image_len); // image
+	//
+	if( ret < image_len ){
+		fprintf(stdout, "\tfailed to write all bytes: %d/%d\n",ret, image_len);
+		return EXIT_FAILURE;
+	}else{
+		fprintf(stdout, "\tall bytes written: %d\n",ret);
+	}
+	ret = close(fd);
+	if( ret==0 ){
+		fprintf(stdout, "\tfile closed\n");
+	}else{
+		fprintf(stdout, "\tfile close failure: %d\n", ret);
+	}
+	return EXIT_SUCCESS;
+}
 // ------------------------------------------------------------------------------------ helpers
 int __nsleep(const struct timespec *req, struct timespec *rem){
 	struct timespec temp_rem;
@@ -331,22 +367,30 @@ int process_image(const void* p, size_t len, int picWidth, int picHeight){
 	int success = 0;
 	char* ptr = (char*)p;
 	int length = (int)len;
-	if(length>=picWidth*picHeight*2){//picture.width*picture.height*2){//more than half a picture
-		int i;
-		unsigned char c;
-		int x=0;
-		int y=0;
-		//picture.writeHeader();
-		for(i=0;i<length;i+=4){
-			/*
-			picture.writeY(ptr[i]);//Y0
-			picture.writeUV(ptr[i+1]);//U
-			picture.writeY(ptr[i+2]);//Y1
-			picture.writeUV(ptr[i+3]);//V
-			*/
+	int encodedLength = picWidth*picHeight*2;// two pixels are encoded with 4 values
+	int picLength = picWidth*picHeight*3;// each pixel is encoded with 3 values
+fprintf(stdout, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength, picLength, picWidth, picHeight);
+	if(length>=encodedLength){
+		int i, j;
+		unsigned char c, y0, u, y1, v;
+		int r, g, b;
+		char *image_buffer = NULL;
+		image_buffer = (char*)malloc(picLength * sizeof(char));
+		j = 0;
+		for(i=0;i<encodedLength;i+=4){
+			y0 = ptr[i];
+			u = ptr[i+1];
+			y1 = ptr[i+2];
+			v = ptr[i+3];
+			convertYUVtoRGB(y0, u, v, &r, &g, &b);
+			image_buffer[j++] = r; image_buffer[j++] = g; image_buffer[j++] = b;
+			convertYUVtoRGB(y1, u, v, &r, &g, &b);
+			image_buffer[j++] = r; image_buffer[j++] = g; image_buffer[j++] = b;
 		}
-		fprintf(stdout, "LENGTH: %d\n",i);
+		//fprintf(stdout, "LENGTH: %d\n",length);
 		success = 1;
+		save_image_to_ppm("image.ppm", picWidth,picHeight, image_buffer);
+		free(image_buffer);
 	}
 	if(success==0){
 		fprintf(stdout, "failure\n");
@@ -399,7 +443,24 @@ int main(int argc, const char **argv){
 	}
 	printf("device: %s\n",argv[1]);
 	printf("output: %s\n",argv[2]);
-	int wid=240, hei=320;
+
+char input_char;
+int continue_boolean = 1;
+	while(continue_boolean){
+		//fgets(&input_char,1,stdin);
+		input_char = fgetc(stdin);
+		printf("IN: '%c'\n",input_char);
+		if(input_char=='q'){
+			continue_boolean = 0;
+		}else{
+			//printf("nothing\n");
+			msleep(100);
+		}
+		input_char = 0;
+	}
+return 0;
+
+	int wid=320, hei=240;
 	struct buffer* buffers = NULL;
 	unsigned int n_buffers = 0;
 	// 
@@ -407,12 +468,19 @@ int main(int argc, const char **argv){
 	init_device(argv[1], &file_descriptor, wid, hei, &buffers, &n_buffers);
 	start_capturing(&file_descriptor,&n_buffers);
 	printf(" loop \n");
-	//while(1){
-		msleep(100);
+	while(1){
+		msleep(1000);
 		grab_frame(&file_descriptor, &buffers, &n_buffers, wid, hei);
-	//}
+	}
 	stop_capturing(&file_descriptor);
 	uninit_device(&buffers, &n_buffers);
 	close_device(&file_descriptor);
+time_t timeNow;
+timeNow = time(0);
+//printf("TIME: %d\n",timeNow->tm_sec);
+printf("TIME SECONDS: %ld\n",timeNow);
+struct timeval tv;
+gettimeofday(&tv,0);
+printf("TIME: %ld.%ld\n",tv.tv_sec,tv.tv_usec);
 	return EXIT_SUCCESS;
 }
