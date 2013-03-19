@@ -1,3 +1,12 @@
+// http://www.linuxtv.org/downloads/legacy/video4linux/v4l2dwgNew.html
+// http://linuxtv.org/downloads/v4l-dvb-apis/capture-example.html
+// http://linuxtv.org/downloads/v4l-dvb-apis/v4l2grab-example.html
+// http://www.google.com/url?sa=t&rct=j&q=video%204%20linux%20clear%20buffer&source=web&cd=4&ved=0CD4QFjAD&url=http%3A%2F%2Flinuxtv.org%2Fdownloads%2Fpresentations%2Fsummit_jun_2010%2FVideobuf_Helsinki_June2010.pdf&ei=VPVHUb6RHpTYyAHo4YCgBQ&usg=AFQjCNHzFEj1LlTtF8d5NtEPEvMzRNlFUw&bvm=bv.43828540,d.aWM&cad=rja
+// http://www.google.com/url?sa=t&rct=j&q=video%204%20linux%20clear%20buffer&source=web&cd=5&ved=0CEMQFjAE&url=http%3A%2F%2Fkernelbook.sourceforge.net%2Fvideobook.pdf&ei=VPVHUb6RHpTYyAHo4YCgBQ&usg=AFQjCNEMmkp-630E8cFBYMaknMaDEHuD-Q&bvm=bv.43828540,d.aWM&cad=rja
+// Video for Linux Two API Specification
+// http://v4l2spec.bytesex.org/spec/
+// http://www.thedirks.org/v4l2/
+// 
 #include <assert.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -28,7 +37,11 @@
 #include <asm/types.h>
 #include <linux/videodev2.h>
 #include <errno.h>
-
+// ------------------------------------------------------------------------------------ consts
+#define CONST_QUIT_SUCCESS 'q'
+#define CONST_QUIT_FAILURE 'Q'
+#define CONST_SAVE_SUCCESS 's'
+#define CONST_SAVE_FAILURE 'S'
 // ------------------------------------------------------------------------------------ shorthand
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 #define MAX(a,b) a>b?a:b
@@ -45,76 +58,49 @@ typedef struct buffer{
 	size_t length;
 } buffer;
 // ------------------------------------------------------------------------------------ colors
-void convertYUVtoRGB(int y, int u, int v, int *R, int *G, int *B){ // HAVE NOT CHECKED C VALIDITY YET
+void convertYUVtoRGB(int y, int u, int v, int *R, int *G, int *B){ 
 	double Y = y;
 	double U = u;
 	double V = v;
-	if(U==0){
-		U = 128;
-	}
-	if(V==0){
-		V = 128;
-	}
-	double Yint = 0.9;//1.150;
+	if(U==0){ U = 128; }
+	if(V==0){ V = 128; }
+	double Yint = 0.9; // 1.150;
 	*R = (int)max_double(min_double(Yint*(Y-16.0) + 2.500*(V-128), 255.0), 0.0);
 	*G = (int)max_double(min_double(Yint*(Y-16.0) - 1.250*(V-128) - 0.750*(U-128), 255.0), 0.0);
 	*B = (int)max_double(min_double(Yint*(Y-16.0) + 2.500*(U-128), 255.0), 0.0);
 }
-/*
-while(y<picture.height){
-y0 = picture.readY();
-u = picture.readUV();
-y1 = picture.readY();
-v = picture.readUV();
-BitPic.convertYUVtoRGB(y0, u, v, RGB);
-rgb = 0x0;
-rgb |= (RGB[0]&0xFF)<<16;
-rgb |= (RGB[1]&0xFF)<<8;
-rgb |= (RGB[2]&0xFF);
-img.setRGB(x, y, rgb);
-BitPic.convertYUVtoRGB(y1, u, v, RGB);
-rgb = 0x0;
-rgb |= RGB[0]<<16;
-rgb |= RGB[1]<<8;
-rgb |= RGB[2];
-img.setRGB(x+1, y, rgb);
-x+=2;
-if(x>=picture.width){
-	x=0;
-	++y;
-}}
-*/
-int save_image_to_ppm(char* file_name, int w, int h, char *bytes){
-	fprintf(stdout, "writing to file: '%s' ...\n", file_name);
+// ------------------------------------------------------------------------------------ image
+int save_image_to_ppm(const char* file_name, int w, int h, char *bytes){
+	fprintf(stderr, "writing to file: '%s' ...\n", file_name);
 	int ret, image_len = w*h*3;
 	char temp[32];
-	//char *header = "P6\n";
-	//char *space = " ";
-	//char *bitmax = "\n255";
 	int fd;
 	fd = open(file_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH );
-	fprintf(stdout, "\tdescriptor: %d\n",fd);
+	fprintf(stderr, "\tdescriptor: %d\n",fd);
 	if( fd <= 0 ){
-		fprintf(stdout, "\tfailed to open file for writing\n");
+		fprintf(stderr, "\tfailed to open file for writing\n");
+		printf("%c", CONST_SAVE_FAILURE);
 		return EXIT_FAILURE;
 	}
-	printf("widxhei = %dx%d\n",w,h);
+	fprintf(stderr, "widxhei = %dx%d\n",w,h);
 	sprintf(temp,"P6\n%d %d\n255\n",w,h);
 	ret = write(fd, temp, strlen(temp)); // full header
 	ret = write(fd, bytes, image_len); // image
 	//
 	if( ret < image_len ){
-		fprintf(stdout, "\tfailed to write all bytes: %d/%d\n",ret, image_len);
+		fprintf(stderr, "\tfailed to write all bytes: %d/%d\n",ret, image_len);
+		printf("%c", CONST_SAVE_FAILURE);
 		return EXIT_FAILURE;
 	}else{
-		fprintf(stdout, "\tall bytes written: %d\n",ret);
+		fprintf(stderr, "\tall bytes written: %d\n",ret);
 	}
 	ret = close(fd);
 	if( ret==0 ){
-		fprintf(stdout, "\tfile closed\n");
+		fprintf(stderr, "\tfile closed\n");
 	}else{
-		fprintf(stdout, "\tfile close failure: %d\n", ret);
+		fprintf(stderr, "\tfile close failure: %d\n", ret);
 	}
+	printf("%c", CONST_SAVE_SUCCESS);
 	return EXIT_SUCCESS;
 }
 // ------------------------------------------------------------------------------------ helpers
@@ -137,9 +123,10 @@ int msleep(unsigned long milisec){
 }
 void errno_exit (const char* s){
 	fprintf(stderr, "%s error %d, %s\n", s, errno, strerror (errno));
-	exit (EXIT_FAILURE);
+	printf("%c", CONST_QUIT_FAILURE);
+	exit(EXIT_FAILURE);
 }
-int xioctl(int fd, int request, void *arg){
+int xioctl(int fd, int request, void *arg){ // busy wait checking
 	int r;
 	do r = ioctl(fd, request, arg);
 	while (-1 == r && EINTR == errno);
@@ -147,7 +134,7 @@ int xioctl(int fd, int request, void *arg){
 }
 void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers){
 	struct buffer *buffers = *buffer_ptr;
-	fprintf(stdout, "\tmemory mapping device ...\n");
+	fprintf(stderr, "\tmemory mapping device ...\n");
 	struct v4l2_requestbuffers req;
 	CLEAR(req);
 	req.count = 4;
@@ -155,29 +142,31 @@ void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsign
 	req.memory = V4L2_MEMORY_MMAP;
 	if( -1 == xioctl(*fd, VIDIOC_REQBUFS, &req) ){
 		if(EINVAL == errno){
-			fprintf (stderr, "%s does not support memory mapping\n", dev_name);
+			fprintf(stderr, "%s does not support memory mapping\n", dev_name);
+			printf("%c", CONST_QUIT_FAILURE);
 			exit(EXIT_FAILURE);
 		}else{
 			errno_exit("VIDIOC_REQBUFS");
 		}
 	}else{
-		fprintf (stdout, "\t\t%s supports memory mapping\n", dev_name);
+		fprintf(stderr, "\t\t%s supports memory mapping\n", dev_name);
 	}
 	if(req.count < 2){
 		fprintf (stderr, "Insufficient buffer memory on %s\n", dev_name);
+		printf("%c", CONST_QUIT_FAILURE);
 		exit(EXIT_FAILURE);
 	}else{
-		fprintf (stdout, "\t\t%s sufficient memory for buffer\n", dev_name);
+		fprintf(stderr, "\t\t%s sufficient memory for buffer\n", dev_name);
 	}
-	fprintf (stdout, "\t\tsize of buffer: %ld\n", sizeof(*buffers));
+	fprintf(stderr, "\t\tsize of buffer: %ld\n", sizeof(*buffers));
 	buffers = (buffer*)calloc(req.count, sizeof (*buffers));
 	*buffer_ptr = buffers;
 	if(!buffers){
 		fprintf(stderr, "out of memory\n");
+		printf("%c", CONST_QUIT_FAILURE);
 		exit (EXIT_FAILURE);
 	}
-	fprintf (stdout, "\t\t%s  buffers allocated\n", dev_name);
-	
+	fprintf(stderr, "\t\t%s  buffers allocated\n", dev_name);
 	for(*n_buffers=0; *n_buffers<req.count; (*n_buffers=*n_buffers+1)){
 		struct v4l2_buffer buf;
 		CLEAR(buf);
@@ -193,68 +182,62 @@ void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsign
 			errno_exit("mmap");
 		}
 	}
-	fprintf(stdout, "\tsuccess\n");
+	fprintf(stderr, "\tsuccess\n");
 }
-// ------------------------------------------------------------------------------------ statics
-// static char * dev_name = NULL;
-// static int fd = -1;
-// static io_method io = IO_METHOD_MMAP;
-// struct buffer* buffers = NULL;
-// static unsigned int n_buffers = 0;
-// ------------------------------------------------------------------------------------ device functions
+// ------------------------------------------------------------------------------------ device starting
 void open_device(const char *dev_name, int *fd){
 	struct stat st;
-	fprintf(stdout, "opening %s ...\n",dev_name);
+	fprintf(stderr, "opening %s ...\n",dev_name);
 	if(-1 == stat(dev_name, &st)){
 		fprintf(stderr, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
-		exit(EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
 	}else{
-		printf("\tnlink: %ld\n", st.st_nlink);
+		fprintf(stderr, "\tnlink: %ld\n", st.st_nlink);
 	}
 	if(!S_ISCHR (st.st_mode)){
 		fprintf (stderr, "%s is no device\n", dev_name);
-		exit (EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); exit (EXIT_FAILURE);
 	}else{
-		printf("\tmode: %d\n", S_ISCHR(st.st_mode));
+		fprintf(stderr, "\tmode: %d\n", S_ISCHR(st.st_mode));
 	}
 	*fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
 	if (-1 == *fd){
 		fprintf (stderr, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror (errno));
-		exit (EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); exit (EXIT_FAILURE);
 	}else{
-		fprintf(stdout, "\tfile descriptor: %d\n",*fd);
+		fprintf(stderr, "\tfile descriptor: %d\n",*fd);
 	}
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
-void init_device(const char *dev_name, int *fd, int picWidth, int picHeight, struct buffer **buffer_ptr, unsigned int *n_buffers){
+void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, struct buffer **buffer_ptr, unsigned int *n_buffers){
 	struct v4l2_capability cap;
 	struct v4l2_cropcap cropcap;
 	struct v4l2_crop crop;
 	struct v4l2_format fmt;
 	unsigned int min;
-	fprintf(stdout, "initting device ...\n");
+	fprintf(stderr, "initting device ...\n");
 	
 	if(-1 == xioctl(*fd, VIDIOC_QUERYCAP, &cap)){
 		if(EINVAL == errno){
 			fprintf(stderr, "%s is no V4L2 device\n", dev_name);
-			exit(EXIT_FAILURE);
+			printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
 		}else{
 			errno_exit("VIDIOC_QUERYCAP");
 		}
 	}else{
-		fprintf(stdout, "\t%s is a V4L2 device\n", dev_name);
+		fprintf(stderr, "\t%s is a V4L2 device\n", dev_name);
 	}
 	if ( !(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) ){
 		fprintf(stderr, "%s is no video capture device\n", dev_name);
-		exit(EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
 	}else{
-		fprintf(stdout, "\t%s is a video capture device\n", dev_name);
+		fprintf(stderr, "\t%s is a video capture device\n", dev_name);
 	}
 	if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
 		fprintf(stderr, "%s does not support streaming i/o\n", dev_name);
-		exit(EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
 	}else{
-		fprintf(stdout, "\t%s supports streaming i/o\n", dev_name);
+		fprintf(stderr, "\t%s supports streaming i/o\n", dev_name);
 	}
 	CLEAR(cropcap);
 	cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -269,21 +252,23 @@ void init_device(const char *dev_name, int *fd, int picWidth, int picHeight, str
 				break;
 			}
 		}
-		fprintf(stdout, "\tcropping checked ...\n");
+		fprintf(stderr, "\tcropping checked ...\n");
 	}else{ // errors ignored
-		fprintf(stdout, "an error occurred with the device - ignored ...\n");
+		fprintf(stderr, "an error occurred with the device - ignored ...\n");
 	}
 	CLEAR(fmt);
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	fmt.fmt.pix.width = picWidth;
-	fmt.fmt.pix.height = picHeight;
+	fmt.fmt.pix.width = *picWidth;
+	fmt.fmt.pix.height = *picHeight;
 	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 	fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 	if( -1 == xioctl (*fd, VIDIOC_S_FMT, &fmt) ){
 		errno_exit ("VIDIOC_S_FMT");
 	}else{
-		fprintf(stdout, "\tformat set: %dx%d\n",fmt.fmt.pix.width,fmt.fmt.pix.height);
-	} // note VIDIOC_S_FMT may change width and height
+		fprintf(stderr, "\tformat set: %dx%d\n",fmt.fmt.pix.width,fmt.fmt.pix.height);
+	}
+	*picWidth = fmt.fmt.pix.width;
+	*picHeight = fmt.fmt.pix.height;
 	// buggy driver paranoia
 	min = fmt.fmt.pix.width*2;
 	if(fmt.fmt.pix.bytesperline < min){
@@ -294,10 +279,10 @@ void init_device(const char *dev_name, int *fd, int picWidth, int picHeight, str
 		fmt.fmt.pix.sizeimage = min;
 	}
 	init_mmap(dev_name, fd, buffer_ptr, n_buffers);
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
 void start_capturing(int *fd, unsigned int *n_buffers){
-	fprintf(stdout, "capturing starting ... \n");
+	fprintf(stderr, "capturing starting ... \n");
 	unsigned int i;
 	enum v4l2_buf_type type;
 	for(i=0; i<*n_buffers; ++i){
@@ -314,11 +299,35 @@ void start_capturing(int *fd, unsigned int *n_buffers){
 	if( -1 == xioctl (*fd, VIDIOC_STREAMON, &type) ){
 		errno_exit("VIDIOC_STREAMON");
 	}
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
-//
-void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight){
-	fprintf(stdout, "grabbing frame ... \n");
+// ------------------------------------------------------------------------------------ device capturing
+void clear_buffer(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
+	return;
+	printf("clearing buffer...");
+	fd_set fds;
+	struct timeval tv;
+	int r, i = 0;
+	struct buffer *buffers = *buffer_ptr;
+	struct v4l2_buffer buf;
+	while(i<2000000){
+		FD_ZERO(&fds);
+		FD_SET(*fd, &fds);
+		r = select((*fd) + 1, &fds, NULL, NULL, &tv);
+		if(r==-1){ if(EINTR == errno){continue;}
+		}else{
+			CLEAR(buf);
+			buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+			buf.memory = V4L2_MEMORY_MMAP;
+			assert (buf.index < *n_buffers);
+			// read_frame ... 
+		}
+		++i;
+	}
+	printf("done\n");
+}
+void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
+	fprintf(stderr, "grabbing frame ... \n");
 	unsigned int count;
 	struct timeval tv;
 	int r, i=0, limit=10;
@@ -326,25 +335,25 @@ void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, in
 	tv.tv_usec = 0;
 	fd_set fds;
 	while(i<limit){
-		fprintf(stdout, "attempt %d\n",i);
+		fprintf(stderr, "attempt %d\n",i);
 		FD_ZERO(&fds);
 		FD_SET(*fd, &fds);
 		r = select((*fd) + 1, &fds, NULL, NULL, &tv);
 		if(r==-1){
-			fprintf(stdout, "-1\n");
+			fprintf(stderr, "\t-1\n");
 			if(EINTR == errno){
 				continue;
 			}
 			errno_exit ("select");
-		}else if( read_frame(fd, buffer_ptr, n_buffers, picWidth, picHeight) ){
+		}else if( read_frame(fd, buffer_ptr, n_buffers, picWidth, picHeight, image_buffer, outFilename) ){
 			break;
 		}
 		++i;
 	}
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
-int read_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight){
-	fprintf(stdout, "reading frame ... \n");
+int read_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
+	fprintf(stderr, "reading frame ... \n");
 	struct buffer *buffers = *buffer_ptr;
 	struct v4l2_buffer buf;
 	unsigned int i;
@@ -352,31 +361,24 @@ int read_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int
 	CLEAR(buf);
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
-	if(-1 == xioctl(*fd, VIDIOC_DQBUF, &buf)) {
-		msleep(100);
-	}
 	assert (buf.index < *n_buffers);
-	success = process_image(buffers[buf.index].start, buffers[buf.index].length, picWidth, picHeight);
-	if (-1 == xioctl(*fd, VIDIOC_QBUF, &buf)){
-		msleep(100);
-	}
-	return success;
+	return process_image(buffers[buf.index].start, buffers[buf.index].length, picWidth, picHeight, image_buffer, outFilename);
 }
-int process_image(const void* p, size_t len, int picWidth, int picHeight){
-	fprintf(stdout, "processing image ... \n");
+//char trash[153600];
+int process_image(const void* p, size_t len, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
+	fprintf(stderr, "processing image ... \n");
 	int success = 0;
 	char* ptr = (char*)p;
 	int length = (int)len;
 	int encodedLength = picWidth*picHeight*2;// two pixels are encoded with 4 values
 	int picLength = picWidth*picHeight*3;// each pixel is encoded with 3 values
-fprintf(stdout, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength, picLength, picWidth, picHeight);
+	fprintf(stderr, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength, picLength, picWidth, picHeight);
 	if(length>=encodedLength){
 		int i, j;
 		unsigned char c, y0, u, y1, v;
 		int r, g, b;
-		char *image_buffer = NULL;
-		image_buffer = (char*)malloc(picLength * sizeof(char));
 		j = 0;
+		fprintf(stderr, "reading buffer ... \n");
 		for(i=0;i<encodedLength;i+=4){
 			y0 = ptr[i];
 			u = ptr[i+1];
@@ -387,33 +389,30 @@ fprintf(stdout, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength
 			convertYUVtoRGB(y1, u, v, &r, &g, &b);
 			image_buffer[j++] = r; image_buffer[j++] = g; image_buffer[j++] = b;
 		}
-		//fprintf(stdout, "LENGTH: %d\n",length);
+//fwrite(p, encodedLength, 8, stderr);
+		fprintf(stderr, "converted yuyv to rgb on image buffer\n");
 		success = 1;
-		save_image_to_ppm("image.ppm", picWidth,picHeight, image_buffer);
-		free(image_buffer);
+		save_image_to_ppm(outFilename, picWidth,picHeight, image_buffer);
 	}
 	if(success==0){
-		fprintf(stdout, "failure\n");
+		fprintf(stderr, "failure\n");
 	}else{
-		fprintf(stdout, "success\n");
+		fprintf(stderr, "success\n");
 	}
 	return 1;
 }
-int save_image(){
-	printf("SAVE IMAGE\n");
-}
-//
+// ------------------------------------------------------------------------------------ device stopping
 void stop_capturing(int *fd){
-	fprintf(stdout, "capturing stopping ... \n");
+	fprintf(stderr, "capturing stopping ... \n");
 	enum v4l2_buf_type type;
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if( -1 == xioctl (*fd, VIDIOC_STREAMOFF, &type) ){
 		errno_exit("VIDIOC_STREAMOFF");
 	}
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
 void uninit_device(struct buffer **buffer_ptr, int *n_buffers){
-	fprintf(stdout, "uninitting device ...\n");
+	fprintf(stderr, "uninitting device ...\n");
 	unsigned int i;
 	struct buffer *buffers = *buffer_ptr;
 	for(i=0; i<*n_buffers; ++i){
@@ -421,66 +420,57 @@ void uninit_device(struct buffer **buffer_ptr, int *n_buffers){
 			errno_exit ("munmap");
 		}
 	}
-	fprintf(stdout, "freeing ... \n");
+	fprintf(stderr, "freeing ... \n");
 	free(buffers);
 	*buffer_ptr = NULL;
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
 void close_device(int *fd){
-	printf("closing device ...\n");
+	fprintf(stderr, "closing device ...\n");
 	if(-1 == close(*fd)){
 		errno_exit("close");
 	}
 	*fd = -1;
-	fprintf(stdout, "success\n");
+	fprintf(stderr, "success\n");
 }
 // ------------------------------------------------------------------------------------ main
 int file_descriptor = -1;
 int main(int argc, const char **argv){
-	if(argc<3){
-		printf("to use: %s /dev/video# /output/folder \n",argv[0]);
-		return 0;
-	}
-	printf("device: %s\n",argv[1]);
-	printf("output: %s\n",argv[2]);
-
-char input_char;
-int continue_boolean = 1;
-	while(continue_boolean){
-		//fgets(&input_char,1,stdin);
-		input_char = fgetc(stdin);
-		printf("IN: '%c'\n",input_char);
-		if(input_char=='q'){
-			continue_boolean = 0;
-		}else{
-			//printf("nothing\n");
-			msleep(100);
-		}
-		input_char = 0;
-	}
-return 0;
-
-	int wid=320, hei=240;
+	char input_char;
+	int wid = 320, hei = 240, continue_boolean = 1;
 	struct buffer* buffers = NULL;
 	unsigned int n_buffers = 0;
-	// 
+	char *image_buffer = NULL;
+	if(argc<3){
+		fprintf(stderr, "to use: %s /dev/video# /output/file.ppm [width height]\n", argv[0]);
+		fprintf(stderr, " input: %c = quit | %c = save image\n", CONST_QUIT_SUCCESS, CONST_SAVE_SUCCESS);
+		fprintf(stderr, "output: q = quit success | Q = quit fail | s = save success | S = save fail\n", CONST_QUIT_SUCCESS, CONST_QUIT_FAILURE, CONST_SAVE_SUCCESS, CONST_SAVE_FAILURE);
+		return 0;
+	}
+	if(argc>3){ wid = atoi(argv[3]); }
+	if(argc>4){ hei = atoi(argv[4]); }
+	fprintf(stderr, "device: %s\n",argv[1]);
+	fprintf(stderr, "output: %s\n",argv[2]);
+	fprintf(stderr, " width: %d\n",wid);
+	fprintf(stderr, "height: %d\n",hei);
 	open_device(argv[1], &file_descriptor);
-	init_device(argv[1], &file_descriptor, wid, hei, &buffers, &n_buffers);
+	init_device(argv[1], &file_descriptor, &wid, &hei, &buffers, &n_buffers);
+	image_buffer = (char*)malloc(wid*hei*3 * sizeof(char));
 	start_capturing(&file_descriptor,&n_buffers);
-	printf(" loop \n");
-	while(1){
-		msleep(1000);
-		grab_frame(&file_descriptor, &buffers, &n_buffers, wid, hei);
+	while(continue_boolean){
+		input_char = fgetc(stdin);
+		if(input_char==CONST_SAVE_SUCCESS){
+			//start_capturing(&file_descriptor,&n_buffers);
+			clear_buffer(&file_descriptor, &buffers, &n_buffers, wid, hei, image_buffer, argv[2]);
+			grab_frame(&file_descriptor, &buffers, &n_buffers, wid, hei, image_buffer, argv[2]);
+			//stop_capturing(&file_descriptor);
+		}else if(input_char==CONST_QUIT_SUCCESS){
+			continue_boolean = 0;
+		}
 	}
 	stop_capturing(&file_descriptor);
 	uninit_device(&buffers, &n_buffers);
 	close_device(&file_descriptor);
-time_t timeNow;
-timeNow = time(0);
-//printf("TIME: %d\n",timeNow->tm_sec);
-printf("TIME SECONDS: %ld\n",timeNow);
-struct timeval tv;
-gettimeofday(&tv,0);
-printf("TIME: %ld.%ld\n",tv.tv_sec,tv.tv_usec);
+	printf("%c", CONST_QUIT_SUCCESS);
 	return EXIT_SUCCESS;
 }

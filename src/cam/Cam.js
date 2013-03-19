@@ -25,15 +25,19 @@ function Cam(){
 	}
 	this.timerEvent = function(o){
 		self.timer.stop();
-		self.ajax.post("camData.json", self.ajaxCompleteSuccess, self.ajaxCompleteFailure);
+		self.ajax.post("image.json", self.ajaxCompleteSuccess, self.ajaxCompleteFailure);
 		self.timer.start();
 	}
 	this.ajaxCompleteSuccess = function(o){
 		var obj = eval('('+o+')');
 		var src = obj.currentImage;
-		var tim = obj.currentTimestamp
-		if(tim){
-			tim = Number(tim);
+		var timeSec = obj.currentTimeSeconds;
+		var timeMic = obj.currentTimeMicro;
+		if(timeSec&&timeMic){
+			timeSec = Number( timeSec );
+			timeMic = Number( timeMic );
+			while(timeMic>1){ timeMic*=0.1; }
+			tim = (timeSec+timeMic)*1000;
 			var dat = new Date(tim);
 			var hr = dat.getHours(); hr = hr<12? (hr+1) : (hr-12);
 			var ampm = dat.getHours()<12 ? "am":"pm";
@@ -45,7 +49,7 @@ function Cam(){
 		}
 	}
 	this.ajaxCompleteFailure = function(o){
-		console.log("Failure");
+		//console.log("Failure");
 	}
 	this.kill = function(){
 		// 
