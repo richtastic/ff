@@ -177,7 +177,7 @@ void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsign
 			errno_exit("VIDIOC_QUERYBUF");
 		}
 		buffers[*n_buffers].length = buf.length;
-		buffers[*n_buffers].start = mmap(NULL /* start anywhere */, buf.length, PROT_READ | PROT_WRITE /* required */, MAP_SHARED /* recommended */, *fd, buf.m.offset);
+		buffers[*n_buffers].start = mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, *fd, buf.m.offset);
 		if(MAP_FAILED == buffers[*n_buffers].start){
 			errno_exit("mmap");
 		}
@@ -244,25 +244,27 @@ void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, s
 	if( xioctl(*fd, VIDIOC_CROPCAP, &cropcap)==0 ){
 		crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		crop.c = cropcap.defrect; // reset to default
-		if(-1 == xioctl(*fd, VIDIOC_S_CROP, &crop) ){
+		if( -1 == xioctl(*fd, VIDIOC_S_CROP, &crop) ){
 			switch(errno){
 				case EINVAL: // cropping not supported
 				break;
 				default: // errors ignored
 				break;
 			}
+			fprintf(stderr, "\tcropping to a rectangle failed - ignored...\n");
+		}else{
+			fprintf(stderr, "\tcropping to rectangle set ...\n");
 		}
-		fprintf(stderr, "\tcropping checked ...\n");
 	}else{ // errors ignored
-		fprintf(stderr, "an error occurred with the device - ignored ...\n");
+		fprintf(stderr, " device does not have cropping capabilities - ignored ...\n");
 	}
 	CLEAR(fmt);
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	fmt.fmt.pix.width = *picWidth;
 	fmt.fmt.pix.height = *picHeight;
-	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV; // V4L2_PIX_FMT_BGR24
 	fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
-	if( -1 == xioctl (*fd, VIDIOC_S_FMT, &fmt) ){
+	if( -1 == xioctl(*fd, VIDIOC_S_FMT, &fmt) ){
 		errno_exit ("VIDIOC_S_FMT");
 	}else{
 		fprintf(stderr, "\tformat set: %dx%d\n",fmt.fmt.pix.width,fmt.fmt.pix.height);
@@ -302,36 +304,12 @@ void start_capturing(int *fd, unsigned int *n_buffers){
 	fprintf(stderr, "success\n");
 }
 // ------------------------------------------------------------------------------------ device capturing
-void clear_buffer(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
-	return;
-	printf("clearing buffer...");
-	fd_set fds;
-	struct timeval tv;
-	int r, i = 0;
-	struct buffer *buffers = *buffer_ptr;
-	struct v4l2_buffer buf;
-	while(i<2000000){
-		FD_ZERO(&fds);
-		FD_SET(*fd, &fds);
-		r = select((*fd) + 1, &fds, NULL, NULL, &tv);
-		if(r==-1){ if(EINTR == errno){continue;}
-		}else{
-			CLEAR(buf);
-			buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-			buf.memory = V4L2_MEMORY_MMAP;
-			assert (buf.index < *n_buffers);
-			// read_frame ... 
-		}
-		++i;
-	}
-	printf("done\n");
-}
 void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
 	fprintf(stderr, "grabbing frame ... \n");
 	unsigned int count;
 	struct timeval tv;
 	int r, i=0, limit=10;
-	tv.tv_sec = 0;
+	tv.tv_sec = 2;
 	tv.tv_usec = 0;
 	fd_set fds;
 	while(i<limit){
@@ -345,10 +323,13 @@ void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, in
 				continue;
 			}
 			errno_exit ("select");
-		}else if( read_frame(fd, buffer_ptr, n_buffers, picWidth, picHeight, image_buffer, outFilename) ){
-			break;
+		}else if(r==0){
+			fprintf(stderr, "select timeout\n");
+			exit(EXIT_FAILURE);
 		}
+		read_frame(fd, buffer_ptr, n_buffers, picWidth, picHeight, image_buffer, outFilename);
 		++i;
+break;
 	}
 	fprintf(stderr, "success\n");
 }
@@ -361,8 +342,27 @@ int read_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int
 	CLEAR(buf);
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
+	if (-1 == xioctl(*fd, VIDIOC_DQBUF, &buf)) { // GIVE
+		switch(errno){
+			case EAGAIN:
+			return 0;
+			case EIO:
+			fprintf(stderr, "IGNORED EIO\n");
+			return 0;
+			// could ignore, but fall through
+			default: // EINVAL
+			fprintf(stderr, "IGNORED VIDIOC_DQBUF\n");
+			return 0;
+			//errno_exit("VIDIOC_DQBUF");
+		}
+	}
 	assert (buf.index < *n_buffers);
-	return process_image(buffers[buf.index].start, buffers[buf.index].length, picWidth, picHeight, image_buffer, outFilename);
+	//return process_image(buffers[buf.index].start, buffers[buf.index].length, picWidth, picHeight, image_buffer, outFilename);
+	int ret = process_image(buffers[buf.index].start, buf.bytesused, picWidth, picHeight, image_buffer, outFilename);
+	if (-1 == xioctl(*fd, VIDIOC_QBUF, &buf)){ // TAKE
+        errno_exit("VIDIOC_QBUF");
+    }
+    return ret;
 }
 //char trash[153600];
 int process_image(const void* p, size_t len, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
@@ -389,7 +389,6 @@ int process_image(const void* p, size_t len, int picWidth, int picHeight, char *
 			convertYUVtoRGB(y1, u, v, &r, &g, &b);
 			image_buffer[j++] = r; image_buffer[j++] = g; image_buffer[j++] = b;
 		}
-//fwrite(p, encodedLength, 8, stderr);
 		fprintf(stderr, "converted yuyv to rgb on image buffer\n");
 		success = 1;
 		save_image_to_ppm(outFilename, picWidth,picHeight, image_buffer);
@@ -461,7 +460,7 @@ int main(int argc, const char **argv){
 		input_char = fgetc(stdin);
 		if(input_char==CONST_SAVE_SUCCESS){
 			//start_capturing(&file_descriptor,&n_buffers);
-			clear_buffer(&file_descriptor, &buffers, &n_buffers, wid, hei, image_buffer, argv[2]);
+			//clear_buffer(&file_descriptor, &buffers, &n_buffers, wid, hei, image_buffer, argv[2]);
 			grab_frame(&file_descriptor, &buffers, &n_buffers, wid, hei, image_buffer, argv[2]);
 			//stop_capturing(&file_descriptor);
 		}else if(input_char==CONST_QUIT_SUCCESS){
@@ -475,6 +474,84 @@ int main(int argc, const char **argv){
 	return EXIT_SUCCESS;
 }
 /*
+
+time(7)
+nanosleep(2) - HIGH PRECISION NANO SLEEP - int nanosleep(const struct timespec *requested_sleep_time, struct timespec *remaining_time = NULL);
+ioctl(2) - I/O CONTROL - int ioctl(int open_file_descriptor, int device_request_code, void* memory_pointer)
+stat(2) - FILE STATS - int stat(const char *path_to_file, struct stat *stat_buffer)
+open(2) - OPEN FILE - int open(const char *path_to_file, int flags, mode_t mode)
+
+
+
+
+CLOCK_MONOTONIC
+CLOCK_REALTIME
+clock_nanosleep(2)
+O_NONBLOCK
+fcntl(w)
+open(2)
+sd(4)
+tty(4)
+
+ulimitq
+
+fifo
+
+sysctl
+
+void *malloc(size_t size);
+void free(void *ptr);
+void *calloc(size_t nmemb, size_t size);
+void *realloc(void *ptr, size_t size);
+
+
+times(2), getrusage(2), or clock(3) rtc(4) and hwclock(8). clock_getres(2) 
+ctime(3)
+feature_test_macros(7)
+
+
+
+
+open_device:
+	stat - does device exist
+	S_ISCHR - is it a char device
+	open - open device to get file descriptor
+init_device:
+	xioctl:
+		- ioctl(fd, VIDIOC_QUERYCAP, arg) - get video capability
+ 	cap.capabilities & V4L2_CAP_VIDEO_CAPTURE - device has video capture capability
+ 	xioctl:
+ 		- ioctl(fd, VIDIOC_CROPCAP, arg) - get device cropping capability
+ 	xioctl:
+ 		- ioctl(fd, VIDIOC_S_CROP, arg) - get device to crop 
+	xioctl:
+		- ioctl(fd, VIDIOC_S_FMT, arg) - set data format - wid/hei/pixels/...
+	init_mmap:
+		xioctl:
+			-ioctl(fd, VIDIOC_REQBUFS, arg) - initiate memory mapping
+		xioctl:
+			-ioctl(fd, VIDIOC_QUERYBUF, arg) - get buffer status
+			switch on memory mapped io
+		mmap(...) - map device to memory
+start_capturing:
+	xioctl:
+		- ioctl(fd, VIDIOC_QBUF, arg) - exchange buffer with driver
+	xioctl:
+		- ioctl(fd, VIDIOC_STREAMON, arg) - start streaming
+grab_frame: 
+	- select((*fd) + 1, &fds, NULL, NULL, &tv) - monitor/select file descriptor
+	read_frame:
+PROBLEM WAS HERE SOMEWHERE
+		xioctl:
+			-ioctl (fd, VIDIOC_DQBUF, arg) - exchange a buffer with driver
+		process_image:
+			- ?
+uninit_device:
+close_device:
+....
+
+stop_capturing:
+
 
 
 

@@ -6,7 +6,7 @@
 require "optparse"
 require 'fcntl'
 STDIN.fcntl(Fcntl::F_SETFL,Fcntl::O_NONBLOCK)
-
+# Dir["/path/to/directory/*.rb"].each {|file| require file }
 
 # # ./cam_controller.rb < in > out 
 # while(1)
@@ -105,11 +105,12 @@ firstDevice = firstDevice[0]
 options = {}
 options[:program] = "./camtoimage"
 options[:width] = 320
-options[:height] = 240
+options[:height] = 480 #240
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
 options[:output_quality] = 0.80
+options[:output_dir] = "./images/"
 options[:output_jpg] = "image.jpg"
 options[:output_json] = "image.json"
 options[:pipe_in] = "pipe_in"
@@ -156,8 +157,11 @@ end
 # --------------------------------------------------------- start
 start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
 # --------------------------------------------------------- input loop
+jpg_dir_list = ""
+clear_interval = 3
+i = 0
 while(1)
-	sleep(1/options[:rate])
+	sleep(0.5);#sleep(1/options[:rate])
 	#instr = STDIN.getc.to_s # gets.chomp # instr = STDIN.getc #instr = "w" #instr = gets
 	#STDOUT.puts "'#{instr}'"
 	STDOUT.print "...\n"
@@ -165,20 +169,37 @@ while(1)
 	cmd = "echo \"s\" >> #{options[:pipe_in]}"
 	%x[ #{cmd} ]
 #	puts "wait for s/S/Q/q on pipe_out"
-		sleep(0.25)
+		sleep(0.15)
 # --------------------------------------------------------- convert from ppm to png
-convert_image(options[:output_ppm], options[:output_jpg], options[:output_quality])
+t = Time.now.to_f
+out_seconds = t.floor
+out_micro = (1000000*(t%1)).floor
+out_name = "#{options[:output_dir]}#{out_seconds}_#{out_micro}#{options[:output_jpg]}";
+convert_image(options[:output_ppm], out_name, options[:output_quality])
 # --------------------------------------------------------- remove ppm
 cmd = "rm #{options[:output_ppm]}"
 %x[ #{cmd} ]
 # --------------------------------------------------------- save to info json file
-save_info_to_json(options[:output_json], options[:output_jpg], nil, nil)
+save_info_to_json(options[:output_json], out_name, nil, nil)
 # --------------------------------------------------------- check for quit
 	# if instr == "q"
 	# 	cmd = "echo \"q\" >> #{options[:pipe_in]}"
 	# 	%x[ #{cmd} ]
 	# 	break;
 	# end
+	if i>clear_interval
+		i = 0
+		#cmd = "rm #{options[:output_dir]}*.jpg"
+		jpg_dir_list.each do |img|
+			cmd = "rm #{options[:output_dir]}/#{img}"
+			puts %x[ #{cmd} ]
+		end
+		cmd = "ls #{options[:output_dir]}"
+		jpg_dir_list = %x[ #{cmd} ]
+		jpg_dir_list.split("\n");
+		puts "DIR LIST: #{jpg_dir_list}"
+	end
+	i = i + 1
 end
 puts "EXIT"
 sleep(0.5)

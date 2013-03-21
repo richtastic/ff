@@ -10,6 +10,8 @@ function Ajax(){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._url = "wtf.wtf";
 	this._callback = null;
 	this._errorback = null;
+	this._header = {};
+	this._binary = false;
 // --- get/set ---------------------------------------
 	this.method = function(m){
 		if(arguments.length>0 && m!==undefined && m!==null){
@@ -46,25 +48,58 @@ function Ajax(){ // http://www.w3.org/TR/XMLHttpRequest/
 	this.post = function(url,comp,err){
 		self.send(url,Ajax.METHOD_TYPE_POST,comp,err);
 	}
+	this.clearHeader = function(){
+		this._header = {}; // better way of cleaning = null ?
+	}
+	this.setHeader = function(param,value){
+		this._header[param] = value;
+	}
 	this.send = function(url,meth,comp,err){
 		self.url(url);
 		self.method(meth);
 		self.callback(comp);
 		self.errorback((err===null||err===undefined)?comp:err);
-		//self._request.setRequestHeader(); // ?
 		self._request.open(self._method,self._url,true);
+		for(o in self._header){
+			self._request.setRequestHeader(o,self._header[o]);
+		}
 		self._request.send();
 	}
 	this._stateChange = function(){
 		if(self._request.readyState==4){
-			var response = self._request.responseText;
-			if(self._request.status==200){
-				if(self._callback!==null && self._callback!==undefined){
-					self._callback( response );
+			if(self._binary){
+				var arrayBuffer = self._request.response;
+				if(arrayBuffer){
+					var i, j;
+					/*j = 1;
+					for(i=1; i!=0&&j<=32; i<<=1){
+						console.log(j+":"+i);
+						++j;
+					}*/
+					console.log(arrayBuffer.length);
+					var len = 1000;// arrayBuffer.length
+					for(j=0; j<len; ++j){
+						for(i=1; i>0; i<<=1){
+							if( arrayBuffer[j]&i != 0 ){
+								console.log(j+" - "+i);
+							}
+							//console.log(arrayBuffer[j]&i);
+						}
+					}
+					var byteArray = new Uint8Array(arrayBuffer);
+					console.log(byteArray);
 				}
+				return;
 			}else{
-				if(self._errorback!==null && self._errorback!==undefined){
-					self._errorback( response );
+				var response = self._request.responseText;
+				if(self._request.status==200){
+					if(self._callback!==null && self._callback!==undefined){
+						self._callback( response );
+					}
+				}else{
+					if(self._errorback!==null && self._errorback!==undefined){
+						self._errorback( response );
+					}
 				}
 			}
 		}

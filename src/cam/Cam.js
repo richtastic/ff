@@ -1,5 +1,5 @@
 // Cam.js
-
+// http://stackoverflow.com/questions/246801/how-can-you-encode-to-base64-using-javascript
 function Cam(){
 	var self = this;
 	this.ajax = null;
@@ -21,18 +21,40 @@ function Cam(){
 		self.output.innerHTML = s;
 	}
 	this.setImageSource = function(s){
-		self.image.src = s;
+		self.image.src = s;//+"?"+Math.floor(Math.random()*10000000);
 	}
 	this.timerEvent = function(o){
 		self.timer.stop();
+		//console.log("tick");
+		//self.ajax.setHeader("Cache-Control","no-cache");
+		//self.ajax.setHeader("Content-Type","image/jpeg");
+		//self.ajax.setHeader("Content-Type","application/octet-stream");
+		//self.ajax.setHeader("Response-Type","arraybuffer");
 		self.ajax.post("image.json", self.ajaxCompleteSuccess, self.ajaxCompleteFailure);
-		self.timer.start();
+//self.ajax.get("image.jpg", self.ajaxImageCompleteSuccess);
 	}
+this.ajaxImageCompleteSuccess = function(o){
+	//var reader = new FileReader();
+	console.log(o);
+	var b64 = btoa(o);
+	//var b64 = atob(o);
+	//var b64 = ConvertToBase64(o);
+	console.log( b64 );
+	//reader.onload = function(e){ console.log("reader loaded"); console.log(e); }
+	//console.log(reader.readAsDataURL);
+	//reader.readAsDataURL(o);
+	//console.log(reader);
+	self.setImageSource( "data:image/jpg;base64,"+b64 );
+	if(o){
+		
+	}
+	self.timer.start();
+}
 	this.ajaxCompleteSuccess = function(o){
 		var obj = eval('('+o+')');
 		var src = obj.currentImage;
 		var timeSec = obj.currentTimeSeconds;
-		var timeMic = obj.currentTimeMicro;
+		var timeMic = obj.currentTimeMicro; 
 		if(timeSec&&timeMic){
 			timeSec = Number( timeSec );
 			timeMic = Number( timeMic );
@@ -47,9 +69,11 @@ function Cam(){
 		if(src){
 			self.setImageSource( src );
 		}
+		self.timer.start();
 	}
 	this.ajaxCompleteFailure = function(o){
 		//console.log("Failure");
+		self.timer.start();
 	}
 	this.kill = function(){
 		// 
