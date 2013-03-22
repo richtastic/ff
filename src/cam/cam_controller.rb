@@ -5,50 +5,89 @@
 # http://www.wedesoft.de/hornetseye-api/file.Camera.html
 require "optparse"
 require 'fcntl'
-STDIN.fcntl(Fcntl::F_SETFL,Fcntl::O_NONBLOCK)
-# Dir["/path/to/directory/*.rb"].each {|file| require file }
+require 'coderuby'
+#require 'io/console' #DNE
+#STDIN.fcntl(Fcntl::F_SETFL,Fcntl::O_NONBLOCK)
 
-# # ./cam_controller.rb < in > out 
-# while(1)
+# puts "WRITE"
+# 	fileW = File.open("pipe_test",File::RDWR | File::NONBLOCK)
+# puts "READ"
+# 	fileR = File.open("pipe_test",File::RDWR | File::NONBLOCK)
+
+# puts "START"
+# 	begin
+# 		puts "A"
+# 		instr = fileW.write("eat\nabc\n")
+# 		fileW.flush
+# 		puts "B"
+# 	rescue Errno::EAGAIN
+# 		puts "NOTHING TO WRITE"
+# 	rescue Errno::EINTR
+# 		puts "INTERRUPTED"
+# 	end
+# puts "END"
+
+
+# sleep(0.10);
+
+
+
+# puts "START"
+# 	begin
+# 		puts "A"
+# 		instr = fileR.read(1)
+# 		puts instr
+# 		puts "B"
+# 	rescue Errno::EAGAIN
+# 		puts "NOTHING TO READ"
+# 		instr = ""# nothing to be read
+# 	rescue Errno::EINTR
+# 		puts "INTERRUPTED"
+# 		instr = ""# interrupted
+# 	end
+# puts "END"
+
+
+# sleep(5.0);
+
+
+# fileW.close
+# fileR.close
+
+
+
+# exit(1)
+
+def to_pipe (name,data)
+	cmd = "echo -n \"#{data}\" > #{name}"
+	puts cmd
+	result = %x[ #{cmd} ]
+	return result
+end
+def from_pipe (name)
+	cmd = "cat < \"#{name}\""
+	puts cmd
+	result = %x[ #{cmd} ]
+	return result
+end
+
+# pipeName = "pipe_test"
+# result = ""
+# while 1
+# 	puts "to ..."
+# 	result = to_pipe(pipeName,"s")
+# 	puts " '#{result}' "
+# 	puts "from ..."
+# 	result = from_pipe(pipeName)
+# 	puts " '#{result}' "
+# 	boo = result=="S"
+# 	puts "#{boo}"
+# 	puts "sleep ..."
 # 	sleep(1.0)
-# 	instr = gets
-# 	STDOUT.puts "#{instr}"
-# 	STDOUT.flush
 # end
-# exit(1)
 
-
-# if ARGV.length>0
-# 	puts "b"
-# 	while ARGV.length>0
-# 		ARGV.pop
-# 	end
-# 	i = 0
-# 	while(1)
-# 		sleep(1.0)
-# 		instr = gets
-# 		STDERR.puts "INPUT A: '#{instr}' "
-# 		STDERR.flush
-# 		S..TDOUT.puts "#{i}"
-# 		STDOUT.flush
-# 		i = i + 1
-# 	end
-# else
-# 	i = 99
-# 	while(1)
-# 		sleep(1.0)
-# 		instr = gets #.chomp
-# 		STDERR.puts "INPUT B: '#{instr}' "
-# 		STDERR.flush
-# 		STDOUT.puts "#{i}"
-# 		STDOUT.flush
-# 		i = i - 1
-# 	end
-# end
-# exit(1)
-# # ./cam_controller.rb a < pipe | ./cam_controller.rb >> pipe
-
-
+# --------------------------------------------------------- definitions
+INPUT_COMMAND_QUIT = "q"
 # --------------------------------------------------------- helpers
 def command(ch)
 	puts ch
@@ -73,13 +112,21 @@ def convert_image(imgA,imgB,quality)
 end
 def start_video_program(program, video, out_image, width, height, in_pipe, out_pipe)
 	if !File.exist?(in_pipe)
-		cmd = "touch #{in_pipe}"
+		cmd = "mknod #{in_pipe} p"
+		%x[ #{cmd} ]
+		cmd = "chmod 777 #{in_pipe}"
 		%x[ #{cmd} ]
 	end
 	if !File.exist?(out_pipe)
-		cmd = "touch #{out_pipe}"
+		cmd = "mknod #{out_pipe} p"
+		%x[ #{cmd} ]
+		cmd = "chmod 777 #{out_pipe}"
 		%x[ #{cmd} ]
 	end
+	cmd = "echo "" > #{in_pipe}"
+	%x[ #{cmd} ]
+	cmd = "echo "" > #{out_pipe}"
+	%x[ #{cmd} ]
 	cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} 1> #{out_pipe} 2>/dev/null &"
 	puts cmd
 	%x[ #{cmd} ]
@@ -87,7 +134,7 @@ end
 def stop_video_program(in_pipe, out_pipe)
 	puts "output q to in_pipe"
 	puts "wait for q or Q on out_pipt"
-	return;
+	sleep(0.5);
 	if File.exist?(in_pipe)
 		cmd = "rm #{in_pipe}"
 		%x[ #{cmd} ]
@@ -105,7 +152,7 @@ firstDevice = firstDevice[0]
 options = {}
 options[:program] = "./camtoimage"
 options[:width] = 320
-options[:height] = 480 #240
+options[:height] = 240 #480
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
@@ -142,54 +189,59 @@ rescue Exception=>e # no options
 	#puts "\t#{e}\n\texiting...\n"
 	#exit(1)
 end
-
+# --------------------------------------------------------- output program parameters
 options.each do |key,val|
 	puts "#{key} : #{val}"
 end
-
-
 # --------------------------------------------------------- check start
 if options[:device]==nil
 	puts "no input device specified"
 	exit(1)
 end
-
 # --------------------------------------------------------- start
-start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
+#start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
 # --------------------------------------------------------- input loop
 jpg_dir_list = ""
+result = nil
 clear_interval = 3
 i = 0
-while(1)
-	sleep(0.5);#sleep(1/options[:rate])
-	#instr = STDIN.getc.to_s # gets.chomp # instr = STDIN.getc #instr = "w" #instr = gets
-	#STDOUT.puts "'#{instr}'"
-	STDOUT.print "...\n"
-	STDOUT.flush
-	cmd = "echo \"s\" >> #{options[:pipe_in]}"
-	%x[ #{cmd} ]
-#	puts "wait for s/S/Q/q on pipe_out"
-		sleep(0.15)
+continue_loop = true
+while(continue_loop)
+# --------------------------------------------------------- pace to input rate
+	sleep(0.25) #sleep(1/options[:rate])
+# --------------------------------------------------------- ask to take a picture
+	cmd = "echo \"s\" > #{options[:pipe_in]}"
+	result = %x[ #{cmd} ]
+# --------------------------------------------------------- wait for picture complete
+	result = ""
+	while result==""
+		cmd = "cat #{options[:pipe_out]}"
+		result = %x[ #{cmd} ]
+		puts "out: '#{result}' "
+		# boo = result=="S"
+		# puts "#{boo}"
+		# boo = result=="s"
+		# puts "#{boo}"
+		# boo = result=="Q"
+		# puts "#{boo}"
+		sleep(0.5)
+	end
+break
+	sleep(0.25) # wait for s/S/Q/q on pipe_out
 # --------------------------------------------------------- convert from ppm to png
-t = Time.now.to_f
-out_seconds = t.floor
-out_micro = (1000000*(t%1)).floor
-out_name = "#{options[:output_dir]}#{out_seconds}_#{out_micro}#{options[:output_jpg]}";
-convert_image(options[:output_ppm], out_name, options[:output_quality])
-# --------------------------------------------------------- remove ppm
-cmd = "rm #{options[:output_ppm]}"
-%x[ #{cmd} ]
-# --------------------------------------------------------- save to info json file
-save_info_to_json(options[:output_json], out_name, nil, nil)
-# --------------------------------------------------------- check for quit
-	# if instr == "q"
-	# 	cmd = "echo \"q\" >> #{options[:pipe_in]}"
-	# 	%x[ #{cmd} ]
-	# 	break;
-	# end
+	t = Time.now.to_f
+	out_seconds = t.floor
+	out_micro = (1000000*(t%1)).floor
+	out_name = "#{options[:output_dir]}#{out_seconds}_#{out_micro}#{options[:output_jpg]}";
+	convert_image(options[:output_ppm], out_name, options[:output_quality])
+# --------------------------------------------------------- delete ppm
+	cmd = "rm #{options[:output_ppm]}"
+	%x[ #{cmd} ]
+# --------------------------------------------------------- save info to json file
+	save_info_to_json(options[:output_json], out_name, nil, nil)
+# --------------------------------------------------------- remove older image files
 	if i>clear_interval
 		i = 0
-		#cmd = "rm #{options[:output_dir]}*.jpg"
 		jpg_dir_list.each do |img|
 			cmd = "rm #{options[:output_dir]}/#{img}"
 			puts %x[ #{cmd} ]
@@ -200,6 +252,15 @@ save_info_to_json(options[:output_json], out_name, nil, nil)
 		puts "DIR LIST: #{jpg_dir_list}"
 	end
 	i = i + 1
+# --------------------------------------------------------- user input
+	instr = GetStringUserInputNonBlock().gsub("\n","")
+	if instr!=""
+		STDOUT.puts "input: '#{instr}'"
+		STDOUT.flush
+		if instr== INPUT_COMMAND_QUIT
+			continue_loop = false
+		end
+	end
 end
 puts "EXIT"
 sleep(0.5)
