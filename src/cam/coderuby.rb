@@ -21,3 +21,61 @@ def GetStringUserInputNonBlock()
 	end
 	return instr
 end
+
+
+def createPipeComm (name)
+	cmd = "mknod #{name} p"
+	ret = %x[ #{cmd} ]
+	cmd = "chmod 777 #{name}"
+	ret = %x[ #{cmd} ]
+end
+
+def openPipeComm (name)
+	return File.open(name,File::RDWR | File::NONBLOCK)
+end
+
+def closePipeComm (file)
+	return file.close()
+end
+
+def deletePipeComm (name)
+	cmd = "rm #{name}"
+	return %x[ #{cmd} ]
+end
+
+def writePipeComm (file,data)
+	begin
+		result = file.write(data)
+		file.flush
+		return result
+	rescue Errno::EAGAIN
+		#puts "NOTHING TO WRITE"
+	rescue Errno::EINTR
+		#puts "INTERRUPTED"
+	end
+	return nil
+end
+
+def readPipeSingleChar (file)
+	instr = ""
+	begin
+		instr = file.read(1)
+	rescue Errno::EAGAIN
+		instr = "" # puts "NOTHING TO READ"
+	rescue Errno::EINTR
+		instr = "" # puts "INTERRUPTED"
+	end
+	return instr
+end
+
+def readPipeComm (file)
+	data = ""
+	puts "single ... "
+	ch = readPipeSingleChar(file)
+	puts "ch"
+	while(ch!="")
+		data = "#{data}#{ch}"
+		ch = readPipeSingleChar(file)
+	end
+	return data
+end

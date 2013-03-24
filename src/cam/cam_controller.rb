@@ -1,93 +1,33 @@
 #!/usr/bin/ruby
 # cam_controller.rb
-# ruby /dev/video
 # http://stackoverflow.com/questions/3474586/making-sense-of-dev-video-ouput
 # http://www.wedesoft.de/hornetseye-api/file.Camera.html
 require "optparse"
 require 'fcntl'
 require 'coderuby'
-#require 'io/console' #DNE
-#STDIN.fcntl(Fcntl::F_SETFL,Fcntl::O_NONBLOCK)
-
-# puts "WRITE"
-# 	fileW = File.open("pipe_test",File::RDWR | File::NONBLOCK)
-# puts "READ"
-# 	fileR = File.open("pipe_test",File::RDWR | File::NONBLOCK)
-
-# puts "START"
-# 	begin
-# 		puts "A"
-# 		instr = fileW.write("eat\nabc\n")
-# 		fileW.flush
-# 		puts "B"
-# 	rescue Errno::EAGAIN
-# 		puts "NOTHING TO WRITE"
-# 	rescue Errno::EINTR
-# 		puts "INTERRUPTED"
-# 	end
-# puts "END"
 
 
-# sleep(0.10);
+# pipeName = "pipe_test"
+# createPipeComm( pipeName )
 
+# pipeWrite = openPipeComm( pipeName )
+# pipeRead = openPipeComm( pipeName )
 
+# writePipeComm( pipeWrite, "datum\n" )
+# puts readPipeComm( pipeRead )
 
-# puts "START"
-# 	begin
-# 		puts "A"
-# 		instr = fileR.read(1)
-# 		puts instr
-# 		puts "B"
-# 	rescue Errno::EAGAIN
-# 		puts "NOTHING TO READ"
-# 		instr = ""# nothing to be read
-# 	rescue Errno::EINTR
-# 		puts "INTERRUPTED"
-# 		instr = ""# interrupted
-# 	end
-# puts "END"
+# closePipeComm( pipeWrite )
+# closePipeComm( pipeRead )
 
-
-# sleep(5.0);
-
-
-# fileW.close
-# fileR.close
-
-
+# deletePipeComm( pipeName )
 
 # exit(1)
 
-def to_pipe (name,data)
-	cmd = "echo -n \"#{data}\" > #{name}"
-	puts cmd
-	result = %x[ #{cmd} ]
-	return result
-end
-def from_pipe (name)
-	cmd = "cat < \"#{name}\""
-	puts cmd
-	result = %x[ #{cmd} ]
-	return result
-end
-
-# pipeName = "pipe_test"
-# result = ""
-# while 1
-# 	puts "to ..."
-# 	result = to_pipe(pipeName,"s")
-# 	puts " '#{result}' "
-# 	puts "from ..."
-# 	result = from_pipe(pipeName)
-# 	puts " '#{result}' "
-# 	boo = result=="S"
-# 	puts "#{boo}"
-# 	puts "sleep ..."
-# 	sleep(1.0)
-# end
 
 # --------------------------------------------------------- definitions
 INPUT_COMMAND_QUIT = "q"
+is_child = false
+is_parent = false
 # --------------------------------------------------------- helpers
 def command(ch)
 	puts ch
@@ -110,31 +50,9 @@ def convert_image(imgA,imgB,quality)
 	com = "convert #{imgA} -quality #{quality} #{imgB}"
 	%x[ #{com} ]
 end
+inPipeHandle = nil
+outPipeHandle = nil
 def start_video_program(program, video, out_image, width, height, in_pipe, out_pipe)
-	if !File.exist?(in_pipe)
-		cmd = "mknod #{in_pipe} p"
-		%x[ #{cmd} ]
-		cmd = "chmod 777 #{in_pipe}"
-		%x[ #{cmd} ]
-	end
-	if !File.exist?(out_pipe)
-		cmd = "mknod #{out_pipe} p"
-		%x[ #{cmd} ]
-		cmd = "chmod 777 #{out_pipe}"
-		%x[ #{cmd} ]
-	end
-	cmd = "echo "" > #{in_pipe}"
-	%x[ #{cmd} ]
-	cmd = "echo "" > #{out_pipe}"
-	%x[ #{cmd} ]
-	cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} 1> #{out_pipe} 2>/dev/null &"
-	puts cmd
-	%x[ #{cmd} ]
-end
-def stop_video_program(in_pipe, out_pipe)
-	puts "output q to in_pipe"
-	puts "wait for q or Q on out_pipt"
-	sleep(0.5);
 	if File.exist?(in_pipe)
 		cmd = "rm #{in_pipe}"
 		%x[ #{cmd} ]
@@ -143,6 +61,41 @@ def stop_video_program(in_pipe, out_pipe)
 		cmd = "rm #{out_pipe}"
 		%x[ #{cmd} ]
 	end
+	createPipeComm( in_pipe )
+	createPipeComm( out_pipe )
+	inPipeHandle = openPipeComm( in_pipe )
+	puts "IN PIPE HANDLE: "
+	puts inPipeHandle
+	outPipeHandle = openPipeComm( out_pipe )
+	# --------------------------------------------------------- separate child-cam & parent-controller
+	pid = Process.fork
+	if pid.nil? then # child
+		puts "CHILD"
+		is_child = true; is_parent = false
+	else # parent
+		is_child = false; is_parent = true
+		Process.detach(pid)
+		puts "PARENT"
+	end
+	if is_parent
+		# 
+	elsif is_child
+		# DO I NEED TO CUT OFF ANOTHER PROCESS TO CAT OUT THE SHIT?
+		cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} 1> #{out_pipe} 2>/dev/null"
+		puts cmd
+		%x[ #{cmd} ]
+		exit(0)
+	end
+	return [inPipeHandle, outPipeHandle]
+end
+def stop_video_program(in_pipe, out_pipe, inPipeHandle, outPipeHandle)
+	puts "output q to in_pipe"
+	puts "wait for q or Q on out_pipe"
+	sleep(0.5)
+	closePipeComm( inPipeHandle )
+	closePipeComm( outPipeHandle )
+	deletePipeComm( in_pipe )
+	deletePipeComm( out_pipe )
 end
 # --------------------------------------------------------- find first /dev/video input
 firstDevice = %x[ ls /dev | grep -iro "video[0-9]*" | sed -r s/^/\\\\/dev\\\\//g ]
@@ -199,7 +152,11 @@ if options[:device]==nil
 	exit(1)
 end
 # --------------------------------------------------------- start
-#start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
+ret = start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
+inPipeHandle = ret[0]
+outPipeHandle = ret[1]
+puts inPipeHandle
+
 # --------------------------------------------------------- input loop
 jpg_dir_list = ""
 result = nil
@@ -207,26 +164,30 @@ clear_interval = 3
 i = 0
 continue_loop = true
 while(continue_loop)
+	puts "loop"
 # --------------------------------------------------------- pace to input rate
 	sleep(0.25) #sleep(1/options[:rate])
 # --------------------------------------------------------- ask to take a picture
-	cmd = "echo \"s\" > #{options[:pipe_in]}"
-	result = %x[ #{cmd} ]
+	puts "writing to in pipe"
+	writePipeComm( inPipeHandle, "s")
 # --------------------------------------------------------- wait for picture complete
 	result = ""
 	while result==""
-		cmd = "cat #{options[:pipe_out]}"
-		result = %x[ #{cmd} ]
-		puts "out: '#{result}' "
+		puts "reading from out pipe"
+		break
+		result = readPipeComm( outPipeHandle )
+		puts result
+		result = ""
 		# boo = result=="S"
 		# puts "#{boo}"
 		# boo = result=="s"
 		# puts "#{boo}"
 		# boo = result=="Q"
 		# puts "#{boo}"
-		sleep(0.5)
+		sleep(0.10)
 	end
-break
+	sleep(0.50)
+	puts "pause"
 	sleep(0.25) # wait for s/S/Q/q on pipe_out
 # --------------------------------------------------------- convert from ppm to png
 	t = Time.now.to_f
@@ -266,7 +227,7 @@ puts "EXIT"
 sleep(0.5)
 
 # --------------------------------------------------------- stop
-stop_video_program(options[:pipe_in], options[:pipe_out])
+stop_video_program(options[:pipe_in], options[:pipe_out], inPipeHandle, outPipeHandle)
 
 
 
