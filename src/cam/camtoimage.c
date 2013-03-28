@@ -79,7 +79,7 @@ int save_image_to_ppm(const char* file_name, int w, int h, char *bytes){
 	fprintf(stderr, "\tdescriptor: %d\n",fd);
 	if( fd <= 0 ){
 		fprintf(stderr, "\tfailed to open file for writing\n");
-		printf("%c", CONST_SAVE_FAILURE);
+		printf("%c", CONST_SAVE_FAILURE); fflush(stdout);
 		return EXIT_FAILURE;
 	}
 	fprintf(stderr, "widxhei = %dx%d\n",w,h);
@@ -89,7 +89,7 @@ int save_image_to_ppm(const char* file_name, int w, int h, char *bytes){
 	//
 	if( ret < image_len ){
 		fprintf(stderr, "\tfailed to write all bytes: %d/%d\n",ret, image_len);
-		printf("%c", CONST_SAVE_FAILURE);
+		printf("%c", CONST_SAVE_FAILURE); fflush(stdout);
 		return EXIT_FAILURE;
 	}else{
 		fprintf(stderr, "\tall bytes written: %d\n",ret);
@@ -100,7 +100,7 @@ int save_image_to_ppm(const char* file_name, int w, int h, char *bytes){
 	}else{
 		fprintf(stderr, "\tfile close failure: %d\n", ret);
 	}
-	printf("%c", CONST_SAVE_SUCCESS);
+	printf("%c", CONST_SAVE_SUCCESS); fflush(stdout);
 	return EXIT_SUCCESS;
 }
 // ------------------------------------------------------------------------------------ helpers
@@ -123,7 +123,7 @@ int msleep(unsigned long milisec){
 }
 void errno_exit (const char* s){
 	fprintf(stderr, "%s error %d, %s\n", s, errno, strerror (errno));
-	printf("%c", CONST_QUIT_FAILURE);
+	printf("%c", CONST_QUIT_FAILURE); fflush(stdout);
 	exit(EXIT_FAILURE);
 }
 int xioctl(int fd, int request, void *arg){ // busy wait checking
@@ -143,7 +143,7 @@ void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsign
 	if( -1 == xioctl(*fd, VIDIOC_REQBUFS, &req) ){
 		if(EINVAL == errno){
 			fprintf(stderr, "%s does not support memory mapping\n", dev_name);
-			printf("%c", CONST_QUIT_FAILURE);
+			printf("%c", CONST_QUIT_FAILURE); fflush(stdout);
 			exit(EXIT_FAILURE);
 		}else{
 			errno_exit("VIDIOC_REQBUFS");
@@ -153,7 +153,7 @@ void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsign
 	}
 	if(req.count < 2){
 		fprintf (stderr, "Insufficient buffer memory on %s\n", dev_name);
-		printf("%c", CONST_QUIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout);
 		exit(EXIT_FAILURE);
 	}else{
 		fprintf(stderr, "\t\t%s sufficient memory for buffer\n", dev_name);
@@ -163,7 +163,7 @@ void init_mmap(const char *dev_name, int *fd, struct buffer **buffer_ptr, unsign
 	*buffer_ptr = buffers;
 	if(!buffers){
 		fprintf(stderr, "out of memory\n");
-		printf("%c", CONST_QUIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout);
 		exit (EXIT_FAILURE);
 	}
 	fprintf(stderr, "\t\t%s  buffers allocated\n", dev_name);
@@ -190,20 +190,20 @@ void open_device(const char *dev_name, int *fd){
 	fprintf(stderr, "opening %s ...\n",dev_name);
 	if(-1 == stat(dev_name, &st)){
 		fprintf(stderr, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno));
-		printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout); exit(EXIT_FAILURE);
 	}else{
 		fprintf(stderr, "\tnlink: %ld\n", st.st_nlink);
 	}
 	if(!S_ISCHR (st.st_mode)){
 		fprintf (stderr, "%s is no device\n", dev_name);
-		printf("%c", CONST_QUIT_FAILURE); exit (EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout); exit (EXIT_FAILURE);
 	}else{
 		fprintf(stderr, "\tmode: %d\n", S_ISCHR(st.st_mode));
 	}
 	*fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
 	if (-1 == *fd){
 		fprintf (stderr, "Cannot open '%s': %d, %s\n", dev_name, errno, strerror (errno));
-		printf("%c", CONST_QUIT_FAILURE); exit (EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout); exit (EXIT_FAILURE);
 	}else{
 		fprintf(stderr, "\tfile descriptor: %d\n",*fd);
 	}
@@ -220,7 +220,7 @@ void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, s
 	if(-1 == xioctl(*fd, VIDIOC_QUERYCAP, &cap)){
 		if(EINVAL == errno){
 			fprintf(stderr, "%s is no V4L2 device\n", dev_name);
-			printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
+			printf("%c", CONST_QUIT_FAILURE); fflush(stdout); exit(EXIT_FAILURE);
 		}else{
 			errno_exit("VIDIOC_QUERYCAP");
 		}
@@ -229,13 +229,13 @@ void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, s
 	}
 	if ( !(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE) ){
 		fprintf(stderr, "%s is no video capture device\n", dev_name);
-		printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout); exit(EXIT_FAILURE);
 	}else{
 		fprintf(stderr, "\t%s is a video capture device\n", dev_name);
 	}
 	if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
 		fprintf(stderr, "%s does not support streaming i/o\n", dev_name);
-		printf("%c", CONST_QUIT_FAILURE); exit(EXIT_FAILURE);
+		printf("%c", CONST_QUIT_FAILURE); fflush(stdout); exit(EXIT_FAILURE);
 	}else{
 		fprintf(stderr, "\t%s supports streaming i/o\n", dev_name);
 	}
@@ -359,7 +359,7 @@ int read_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int
 	assert (buf.index < *n_buffers);
 	//return process_image(buffers[buf.index].start, buffers[buf.index].length, picWidth, picHeight, image_buffer, outFilename);
 	int ret = process_image(buffers[buf.index].start, buf.bytesused, picWidth, picHeight, image_buffer, outFilename);
-	if (-1 == xioctl(*fd, VIDIOC_QBUF, &buf)){ // TAKE
+	if (-1 == xioctl(*fd, VIDIOC_QBUF, &buf)){ // TAK E
         errno_exit("VIDIOC_QBUF");
     }
     return ret;
@@ -470,7 +470,7 @@ int main(int argc, const char **argv){
 	stop_capturing(&file_descriptor);
 	uninit_device(&buffers, &n_buffers);
 	close_device(&file_descriptor);
-	printf("%c", CONST_QUIT_SUCCESS);
+	printf("%c", CONST_QUIT_SUCCESS); fflush(stdout);
 	return EXIT_SUCCESS;
 }
 /*

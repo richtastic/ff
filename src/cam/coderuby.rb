@@ -70,9 +70,9 @@ end
 
 def readPipeComm (file)
 	data = ""
-	puts "single ... "
+	#puts "single ... "
 	ch = readPipeSingleChar(file)
-	puts "ch"
+	#puts "ch"
 	while(ch!="")
 		data = "#{data}#{ch}"
 		ch = readPipeSingleChar(file)
