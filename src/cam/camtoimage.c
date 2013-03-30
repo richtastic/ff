@@ -38,6 +38,7 @@
 #include <linux/videodev2.h>
 #include <errno.h>
 // ------------------------------------------------------------------------------------ consts
+#define CONST_START_SUCCESS 'a'
 #define CONST_QUIT_SUCCESS 'q'
 #define CONST_QUIT_FAILURE 'Q'
 #define CONST_SAVE_SUCCESS 's'
@@ -448,6 +449,7 @@ int main(int argc, const char **argv){
 	}
 	if(argc>3){ wid = atoi(argv[3]); }
 	if(argc>4){ hei = atoi(argv[4]); }
+	printf("%c", CONST_START_SUCCESS); fflush(stdout);
 	fprintf(stderr, "device: %s\n",argv[1]);
 	fprintf(stderr, "output: %s\n",argv[2]);
 	fprintf(stderr, " width: %d\n",wid);

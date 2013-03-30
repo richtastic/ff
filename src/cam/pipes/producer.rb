@@ -17,10 +17,12 @@ datum = ["A","B","C","D"]
 writeFileHandle = openPipeComm(writeFileName)
 i = 1000
 while i>0
-	data = datum[ rand(datum.length) ]
-	puts "write ... #{data}"
-	writePipeComm(writeFileHandle,data)
-	i = i - 1
+	data = GetStringUserInputNonBlock()
+	if data != ""
+		puts "write ... #{data}"
+		writePipeComm(writeFileHandle,data)
+		i = i - 1
+	end
 	sleep(0.50)
 end
 closePipeComm(writeFileHandle)
@@ -28,4 +30,5 @@ closePipeComm(writeFileHandle)
 
 
 # mknod pipeA p
-# ./producer pipeA
+# mknod pipeB p
+# ./producer.rb pipeA

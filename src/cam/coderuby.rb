@@ -9,6 +9,8 @@ def GetCharUserInputNonBlock()
 		instr = ""# nothing to be read
 	rescue Errno::EINTR
 		instr = ""# interrupted
+	rescue EOFError
+		instr = ""
 	end
 	return instr
 end

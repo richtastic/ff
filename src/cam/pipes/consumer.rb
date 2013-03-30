@@ -29,6 +29,6 @@ end
 closePipeComm(readFileHandle)
 
 
-# ../camtoimage /dev/video0 image.ppm 320 240 > pipeA
-# ./consumer pipeA
+# ./camtoimage /dev/video0 image.ppm 320 240 < pipes/pipeA > pipes/pipeB
+# ./consumer pipeB
 

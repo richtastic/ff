@@ -5,23 +5,35 @@ function Cam(){
 	this.ajax = null;
 	this.timer = null;
 	this.image = null;
+	this.tempimage = null;
 	this.output = null;
 	this.monthList = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 	this.constructor = function(){
 		self.image = document.createElement("img");
 		document.body.appendChild(self.image);
+		self.tempimage = document.createElement("img");
+		document.body.appendChild(self.tempimage);
+		self.tempimage.width = 0;
+		self.tempimage.height = 0;
+		self.tempimage.onload = self.tempimageLoadedFxn
 		self.output = document.createElement("div");
 		document.body.appendChild(self.output);
 		self.ajax = new Ajax();
-		self.timer = new Ticker(1000);
+		self.timer = new Ticker(250);
 		self.timer.addFunction(Ticker.EVENT_TICK,self.timerEvent);
 		self.timerEvent();
+	}
+	this.tempimageLoadedFxn = function(e){
+		//console.log("loaded");
+		//console.log(e);
+		self.image.src = self.tempimage.src;
+		self.timer.start();
 	}
 	this.setOutput = function(s){
 		self.output.innerHTML = s;
 	}
 	this.setImageSource = function(s){
-		self.image.src = s;//+"?"+Math.floor(Math.random()*10000000);
+		self.tempimage.src = s;
 	}
 	this.timerEvent = function(o){
 		self.timer.stop();
@@ -31,7 +43,7 @@ function Cam(){
 		//self.ajax.setHeader("Content-Type","application/octet-stream");
 		//self.ajax.setHeader("Response-Type","arraybuffer");
 		self.ajax.post("image.json", self.ajaxCompleteSuccess, self.ajaxCompleteFailure);
-//self.ajax.get("image.jpg", self.ajaxImageCompleteSuccess);
+		//self.ajax.get("image.jpg", self.ajaxImageCompleteSuccess);
 	}
 this.ajaxImageCompleteSuccess = function(o){
 	//var reader = new FileReader();
@@ -45,29 +57,30 @@ this.ajaxImageCompleteSuccess = function(o){
 	//reader.readAsDataURL(o);
 	//console.log(reader);
 	self.setImageSource( "data:image/jpg;base64,"+b64 );
-	if(o){
-		
-	}
-	self.timer.start();
 }
 	this.ajaxCompleteSuccess = function(o){
-		var obj = eval('('+o+')');
-		var src = obj.currentImage;
-		var timeSec = obj.currentTimeSeconds;
-		var timeMic = obj.currentTimeMicro; 
-		if(timeSec&&timeMic){
-			timeSec = Number( timeSec );
-			timeMic = Number( timeMic );
-			while(timeMic>1){ timeMic*=0.1; }
-			tim = (timeSec+timeMic)*1000;
-			var dat = new Date(tim);
-			var hr = dat.getHours(); hr = hr<12? (hr+1) : (hr-12);
-			var ampm = dat.getHours()<12 ? "am":"pm";
-			var out = self.monthList[dat.getMonth()]+" "+dat.getDate()+", "+dat.getFullYear()+"  "+hr+":"+dat.getMinutes()+":"+dat.getSeconds()+"."+dat.getMilliseconds()+" "+ampm;
-			self.setOutput(out);
-		}
-		if(src){
-			self.setImageSource( src );
+		try{
+			var obj = eval('('+o+')');
+			var src = obj.currentImage;
+			var timeSec = obj.currentTimeSeconds;
+			var timeMic = obj.currentTimeMicro; 
+			if(timeSec&&timeMic){
+				timeSec = Number( timeSec );
+				timeMic = Number( timeMic );
+				while(timeMic>1){ timeMic*=0.1; }
+				tim = (timeSec+timeMic)*1000;
+				var dat = new Date(tim);
+				var hr = dat.getHours(); hr = hr<12? (hr+1) : (hr-12);
+				var ampm = dat.getHours()<12 ? "am":"pm";
+				var out = self.monthList[dat.getMonth()]+" "+dat.getDate()+", "+dat.getFullYear()+"  "+hr+":"+dat.getMinutes()+":"+dat.getSeconds()+"."+dat.getMilliseconds()+" "+ampm;
+				self.setOutput(out);
+			}
+			if(src){
+				self.setImageSource( src );
+			}
+		}catch(e){
+			console.log("o is not a correct object:");
+			console.log(o);
 		}
 		self.timer.start();
 	}

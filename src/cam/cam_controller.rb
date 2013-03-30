@@ -61,12 +61,6 @@ def start_video_program(program, video, out_image, width, height, in_pipe, out_p
 		cmd = "rm #{out_pipe}"
 		%x[ #{cmd} ]
 	end
-	createPipeComm( in_pipe )
-	createPipeComm( out_pipe )
-	inPipeHandle = openPipeComm( in_pipe )
-	puts "IN PIPE HANDLE: "
-	puts inPipeHandle
-	outPipeHandle = openPipeComm( out_pipe )
 	# --------------------------------------------------------- separate child-cam & parent-controller
 	pid = Process.fork
 	if pid.nil? then # child
@@ -74,28 +68,37 @@ def start_video_program(program, video, out_image, width, height, in_pipe, out_p
 		is_child = true; is_parent = false
 	else # parent
 		is_child = false; is_parent = true
-		Process.detach(pid)
+		#Process.detach(pid) # this stops it
 		puts "PARENT"
 	end
 	if is_parent
 		# 
 	elsif is_child
-		# DO I NEED TO CUT OFF ANOTHER PROCESS TO CAT OUT THE SHIT?
-		cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} 1> #{out_pipe} 2>/dev/null"
+		sleep(0.50)
+		cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} > #{out_pipe} 2>/dev/null " # 2>/dev/null
 		puts cmd
 		%x[ #{cmd} ]
 		exit(0)
 	end
-	return [inPipeHandle, outPipeHandle]
-end
-def stop_video_program(in_pipe, out_pipe, inPipeHandle, outPipeHandle)
-	puts "output q to in_pipe"
-	puts "wait for q or Q on out_pipe"
-	sleep(0.5)
-	closePipeComm( inPipeHandle )
-	closePipeComm( outPipeHandle )
-	deletePipeComm( in_pipe )
-	deletePipeComm( out_pipe )
+	
+	# pid = Process.fork
+	# if pid.nil? then # child
+	# 	puts "CHILD"
+	# 	is_child = true; is_parent = false
+	# else # parent
+	# 	is_child = false; is_parent = true
+	# 	Process.detach(pid)
+	# 	puts "PARENT"
+	# end
+	# if is_parent
+	# 	# 
+	# elsif is_child
+	# 	sleep(0.50)
+	# 	cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} > #{out_pipe} 2>/dev/null"
+	# 	puts cmd
+	# 	%x[ #{cmd} ]
+	# 	exit(0)
+	# end
 end
 # --------------------------------------------------------- find first /dev/video input
 firstDevice = %x[ ls /dev | grep -iro "video[0-9]*" | sed -r s/^/\\\\/dev\\\\//g ]
@@ -103,9 +106,10 @@ firstDevice = firstDevice.split("\n")
 firstDevice = firstDevice[0]
 # --------------------------------------------------------- input arguments
 options = {}
+options[:autopilot] = true
 options[:program] = "./camtoimage"
-options[:width] = 320
-options[:height] = 240 #480
+options[:width] = 640
+options[:height] = 480
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
@@ -152,43 +156,58 @@ if options[:device]==nil
 	exit(1)
 end
 # --------------------------------------------------------- start
-ret = start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
-inPipeHandle = ret[0]
-outPipeHandle = ret[1]
-puts inPipeHandle
 
+instr = GetStringUserInputNonBlock().gsub("\n","")
+
+start_video_program(options[:program], options[:device], options[:output_ppm], options[:width], options[:height], options[:pipe_in], options[:pipe_out])
+createPipeComm( options[:pipe_in] )
+createPipeComm( options[:pipe_out] )
+inPipeHandle = openPipeComm( options[:pipe_in] )
+puts "IN PIPE HANDLE: "
+puts inPipeHandle
+outPipeHandle = openPipeComm( options[:pipe_out] )
+puts "OUT PIPE HANDLE: "
+puts inPipeHandle
+# --------------------------------------------------------- wait for sign of life
+result = ""
+while result==""
+	result = readPipeComm( outPipeHandle ).gsub(/\n/,"")
+	sleep(0.5)
+end
+puts "LIFE '#{result}'"
 # --------------------------------------------------------- input loop
 jpg_dir_list = ""
 result = nil
-clear_interval = 3
+clear_interval = 5
 i = 0
 continue_loop = true
 while(continue_loop)
-	puts "loop"
 # --------------------------------------------------------- pace to input rate
-	sleep(0.25) #sleep(1/options[:rate])
+	sleep(0.10) #sleep(1/options[:rate])
 # --------------------------------------------------------- ask to take a picture
 	puts "writing to in pipe"
 	writePipeComm( inPipeHandle, "s")
+	puts "done"
 # --------------------------------------------------------- wait for picture complete
 	result = ""
-	while result==""
-		puts "reading from out pipe"
-		break
-		result = readPipeComm( outPipeHandle )
-		puts result
-		result = ""
-		# boo = result=="S"
-		# puts "#{boo}"
-		# boo = result=="s"
-		# puts "#{boo}"
-		# boo = result=="Q"
-		# puts "#{boo}"
+	count = 0
+	puts "reading from pipe"
+	while result=="" && count<10
+		result = readPipeComm( outPipeHandle ) #.gsub(/\n/,"")
+		if result=="q" || result=="Q"
+			puts "QUIT"
+			continue_loop = false
+		elsif result=="s" || result=="S"
+			puts "SAVE"
+			break;
+		elsif result !=""
+			puts "'#{result}'"
+		end
 		sleep(0.10)
+		puts "RECHECK"
+		count = count + 1
 	end
-	sleep(0.50)
-	puts "pause"
-	sleep(0.25) # wait for s/S/Q/q on pipe_out
+	puts "done"
 # --------------------------------------------------------- convert from ppm to png
 	t = Time.now.to_f
 	out_seconds = t.floor
@@ -214,20 +233,35 @@ while(continue_loop)
 	end
 	i = i + 1
 # --------------------------------------------------------- user input
-	instr = GetStringUserInputNonBlock().gsub("\n","")
-	if instr!=""
-		STDOUT.puts "input: '#{instr}'"
-		STDOUT.flush
-		if instr== INPUT_COMMAND_QUIT
-			continue_loop = false
+	if options[:autopilot]
+		puts "forever"
+	else
+		instr = GetStringUserInputNonBlock().gsub("\n","")
+		if instr!=""
+			STDOUT.puts "input: '#{instr}'"
+			STDOUT.flush
+			if instr== INPUT_COMMAND_QUIT
+				writePipeComm( inPipeHandle, "q")
+				continue_loop = false
+			end
 		end
 	end
 end
 puts "EXIT"
-sleep(0.5)
-
 # --------------------------------------------------------- stop
-stop_video_program(options[:pipe_in], options[:pipe_out], inPipeHandle, outPipeHandle)
+puts "wait for q or Q on out_pipe"
+result = ""
+while result==""
+	result = readPipeComm( outPipeHandle ).gsub(/\n/,"")
+	sleep(0.5)
+end
+puts "got #{result} on out_pipe"
+sleep(0.10)
+closePipeComm( inPipeHandle )
+closePipeComm( outPipeHandle )
+deletePipeComm( options[:pipe_in] )
+deletePipeComm( options[:pipe_out] )
+#stop_video_program(options[:pipe_in], options[:pipe_out], inPipeHandle, outPipeHandle)
 
 
 
@@ -241,6 +275,10 @@ stop_video_program(options[:pipe_in], options[:pipe_out], inPipeHandle, outPipeH
 
 
 
+# ./cam_controller.rb < /dev/null 1&> /dev/null &
+# [1] 14140
+# alice@wonderland cam :) $ disown 14140
+# ps aux | egrep cam | awk '{print $2}' 
 
 
 
