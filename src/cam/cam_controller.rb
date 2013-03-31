@@ -6,24 +6,6 @@ require "optparse"
 require 'fcntl'
 require 'coderuby'
 
-
-# pipeName = "pipe_test"
-# createPipeComm( pipeName )
-
-# pipeWrite = openPipeComm( pipeName )
-# pipeRead = openPipeComm( pipeName )
-
-# writePipeComm( pipeWrite, "datum\n" )
-# puts readPipeComm( pipeRead )
-
-# closePipeComm( pipeWrite )
-# closePipeComm( pipeRead )
-
-# deletePipeComm( pipeName )
-
-# exit(1)
-
-
 # --------------------------------------------------------- definitions
 INPUT_COMMAND_QUIT = "q"
 is_child = false
@@ -80,25 +62,6 @@ def start_video_program(program, video, out_image, width, height, in_pipe, out_p
 		%x[ #{cmd} ]
 		exit(0)
 	end
-	
-	# pid = Process.fork
-	# if pid.nil? then # child
-	# 	puts "CHILD"
-	# 	is_child = true; is_parent = false
-	# else # parent
-	# 	is_child = false; is_parent = true
-	# 	Process.detach(pid)
-	# 	puts "PARENT"
-	# end
-	# if is_parent
-	# 	# 
-	# elsif is_child
-	# 	sleep(0.50)
-	# 	cmd = "#{program} #{video} #{out_image} #{width} #{height} < #{in_pipe} > #{out_pipe} 2>/dev/null"
-	# 	puts cmd
-	# 	%x[ #{cmd} ]
-	# 	exit(0)
-	# end
 end
 # --------------------------------------------------------- find first /dev/video input
 firstDevice = %x[ ls /dev | grep -iro "video[0-9]*" | sed -r s/^/\\\\/dev\\\\//g ]
@@ -108,13 +71,14 @@ firstDevice = firstDevice[0]
 options = {}
 options[:autopilot] = true
 options[:program] = "./camtoimage"
-options[:width] = 640
-options[:height] = 480
+options[:width] = 320
+options[:height] = 240
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
 options[:output_quality] = 0.80
 options[:output_dir] = "./images/"
+options[:timelapse_dir] = "./images/timelapse/"
 options[:output_jpg] = "image.jpg"
 options[:output_json] = "image.json"
 options[:pipe_in] = "pipe_in"
@@ -178,7 +142,8 @@ puts "LIFE '#{result}'"
 # --------------------------------------------------------- input loop
 jpg_dir_list = ""
 result = nil
-clear_interval = 5
+timelapse_interval = 100
+max_temp_images = 6
 i = 0
 continue_loop = true
 while(continue_loop)
@@ -212,7 +177,8 @@ while(continue_loop)
 	t = Time.now.to_f
 	out_seconds = t.floor
 	out_micro = (1000000*(t%1)).floor
-	out_name = "#{options[:output_dir]}#{out_seconds}_#{out_micro}#{options[:output_jpg]}";
+	out_image = "#{out_seconds}_#{out_micro}#{options[:output_jpg]}"
+	out_name = "#{options[:output_dir]}#{out_image}";
 	convert_image(options[:output_ppm], out_name, options[:output_quality])
 # --------------------------------------------------------- delete ppm
 	cmd = "rm #{options[:output_ppm]}"
@@ -220,16 +186,23 @@ while(continue_loop)
 # --------------------------------------------------------- save info to json file
 	save_info_to_json(options[:output_json], out_name, nil, nil)
 # --------------------------------------------------------- remove older image files
-	if i>clear_interval
-		i = 0
-		jpg_dir_list.each do |img|
-			cmd = "rm #{options[:output_dir]}/#{img}"
-			puts %x[ #{cmd} ]
-		end
 		cmd = "ls #{options[:output_dir]}"
 		jpg_dir_list = %x[ #{cmd} ]
-		jpg_dir_list.split("\n");
-		puts "DIR LIST: #{jpg_dir_list}"
+		jpg_dir_list = jpg_dir_list.split("\n");
+		j = 0 
+		len = [jpg_dir_list.length - max_temp_images, 0].max
+		while j < len
+			img = jpg_dir_list[j]
+			cmd = "rm #{options[:output_dir]}#{img}"
+			puts %x[ #{cmd} ]
+			j = j + 1
+		end
+# --------------------------------------------------------- save off a timelapse copy
+	if i > timelapse_interval
+		i = 0
+		img = out_image
+		cmd = "cp #{options[:output_dir]}#{img} #{options[:timelapse_dir]}#{img}"
+		puts %x[ #{cmd} ]
 	end
 	i = i + 1
 # --------------------------------------------------------- user input
@@ -261,14 +234,6 @@ closePipeComm( inPipeHandle )
 closePipeComm( outPipeHandle )
 deletePipeComm( options[:pipe_in] )
 deletePipeComm( options[:pipe_out] )
-#stop_video_program(options[:pipe_in], options[:pipe_out], inPipeHandle, outPipeHandle)
-
-
-
-
-
-
-
 
 
 
