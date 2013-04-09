@@ -71,12 +71,12 @@ firstDevice = firstDevice[0]
 options = {}
 options[:autopilot] = true
 options[:program] = "./camtoimage"
-options[:width] = 320
-options[:height] = 240
+options[:width] = 640 #320
+options[:height] = 480 #240
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
-options[:output_quality] = 0.80
+options[:output_quality] = 0.60
 options[:output_dir] = "./images/"
 options[:timelapse_dir] = "./images/timelapse/"
 options[:output_jpg] = "image.jpg"
@@ -84,6 +84,8 @@ options[:output_json] = "image.json"
 options[:pipe_in] = "pipe_in"
 options[:pipe_out] = "pipe_out"
 options[:quit] = "q"
+options[:output_width] = 480 # 320
+options[:output_height] = 360 # 240
 optparse = OptionParser.new do |opts|
 	opts.banner = "\nUsage: #{$0} [options]\n\n"
 	# -d
@@ -142,8 +144,8 @@ puts "LIFE '#{result}'"
 # --------------------------------------------------------- input loop
 jpg_dir_list = ""
 result = nil
-timelapse_interval = 100
-max_temp_images = 6
+timelapse_interval = 50 #100~40MB day
+max_temp_images = 7
 i = 0
 continue_loop = true
 while(continue_loop)
@@ -173,13 +175,20 @@ while(continue_loop)
 		count = count + 1
 	end
 	puts "done"
-# --------------------------------------------------------- convert from ppm to png
+# --------------------------------------------------------- define output image name
 	t = Time.now.to_f
 	out_seconds = t.floor
 	out_micro = (1000000*(t%1)).floor
-	out_image = "#{out_seconds}_#{out_micro}#{options[:output_jpg]}"
+	out_image = "#{out_seconds}_#{out_micro}_#{options[:output_jpg]}"
 	out_name = "#{options[:output_dir]}#{out_image}";
+# --------------------------------------------------------- convert from ppm to jpg
 	convert_image(options[:output_ppm], out_name, options[:output_quality])
+# --------------------------------------------------------- scale image
+	if (options[:width]!=options[:output_width]) || (options[:height]!= options[:output_height])
+		cmd = "convert #{out_name} -resize #{options[:output_width]}x#{options[:output_height]} #{out_name}"
+		puts cmd
+		%x[ #{cmd} ]
+	end
 # --------------------------------------------------------- delete ppm
 	cmd = "rm #{options[:output_ppm]}"
 	%x[ #{cmd} ]
@@ -190,7 +199,7 @@ while(continue_loop)
 		jpg_dir_list = %x[ #{cmd} ]
 		jpg_dir_list = jpg_dir_list.split("\n");
 		j = 0 
-		len = [jpg_dir_list.length - max_temp_images, 0].max
+		len = [jpg_dir_list.length - max_temp_images - 1, 0].max
 		while j < len
 			img = jpg_dir_list[j]
 			cmd = "rm #{options[:output_dir]}#{img}"
@@ -244,6 +253,9 @@ deletePipeComm( options[:pipe_out] )
 # [1] 14140
 # alice@wonderland cam :) $ disown 14140
 # ps aux | egrep cam | awk '{print $2}' 
-
-
+# 
+# cd images/timelapse
+# ls -1tr > temp_file.txt
+# mencoder -nosound -ovc lavc -lavcopts vcodec=mpeg4 -o timelapse.avi -mf type=jpeg:fps=30 mf://@temp_file.txt
+# rm temp_file.txt
 
