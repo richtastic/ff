@@ -1,18 +1,14 @@
 // Library.js
-
 function Library(style){
 	var self = this;
 	Code.extendClass(this,DOContainer,[style]);
 	this._resource = style.resource;
-	//console.log(this._resource);
-	//console.log(fnt);
-	//
-	this.list = new Array();
+	this.list = new Array(); // { icon, text, clas }
 	//
 	this.setSize = function(wid,hei){
 		var d = self.display();
 		d.graphicsIllustration.clear();
-		//d.graphicsIllustration.setLine(1.0,0x00FF0099);
+		d.graphicsIllustration.setLine(2.0,0xFF5500FF);
 		d.graphicsIllustration.setFill(0x00FFFF66);
 		d.graphicsIllustration.beginPath();
 		d.graphicsIllustration.moveTo(0,0);
@@ -20,9 +16,9 @@ function Library(style){
 		d.graphicsIllustration.lineTo(wid,hei);
 		d.graphicsIllustration.lineTo(0,hei);
 		d.graphicsIllustration.lineTo(0,0);
-		//d.graphicsIllustration.strokeLine();
 		d.graphicsIllustration.endPath();
 		d.graphicsIllustration.fill();
+		d.graphicsIllustration.strokeLine();
 	}
 	this.clearListItems = function(){
 		while(self.list.length>0){
@@ -33,7 +29,7 @@ function Library(style){
 	}
 	this._fontSize = 20;
 	this._lineSize = this._fontSize*1.5;
-	this.addListItem = function(img,str){
+	this.addListItem = function(img,str,cla){
 		var fnt = self._resource.fnt[ResourceSpice.FNT_CIRCUITS].name();
 		var txt = new DOText(str,self._fontSize,fnt,0xFF004499,DOText.ALIGN_LEFT);
 		var dis = self.display();
@@ -63,15 +59,7 @@ function Library(style){
 		return d;
 	}
 	this.constructor = function(){
-		self.clearListItems();
-		var i, txt;
-		for(i=0;i<10;++i){
-			txt = self.addListItem(null,"Yay"+Math.round(Math.random()*10000000)+"_abc_"+(i+1));
-			txt.matrix.identity();
-			//txt.matrix.scale(0.5+Math.random()*1.5);
-			//txt.matrix.rotate(Math.random()*0.5);
-			txt.matrix.translate(0,self._lineSize*i); // +self._fontSize
-		}
+		// 
 	}
 	//  -----------------------------------------------------------------------
 	this.kill = Code.overrideClass(this, this.kill, function(){
