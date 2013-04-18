@@ -141,18 +141,23 @@ return;
 		
 		// library
 		var circuitElementList = new Array();
-		circuitElementList.push({icon: self.resource[], text:"Resistor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED], text:"Resistor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_CIRCUIT_CAPACITOR_RED], text:"Capacitor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_CIRCUIT_INDUCTOR_RED], text:"Inductor", clas:DOResistor});
 		//self.library = new DOContainer();
 		var style = {resource: self.resource}
 		self.library = new Library(style);
 		self.doRoot.addChild( self.library.display() );
-			self.library.clearListItems();
-			var i, txt;
-			for(i=0;i<10;++i){
-				txt = self.library.addListItem(null,"Yay"+Math.round(Math.random()*10000000)+"_abc_"+(i+1));
-				txt.matrix.identity();
-				txt.matrix.translate(0,self.library._lineSize*i); // +self._fontSize
-			}
+		// INSERT LIBRARY ITEMS
+		self.library.clearListItems();
+		var i, txt, item;
+		for(i=0;i<circuitElementList.length;++i){
+			//txt = self.library.addListItem(null,"Yay"+Math.round(Math.random()*10000000)+"_abc_"+(i+1));
+			item = circuitElementList[i];
+			self.library.addListItem(item.icon, item.text, item.clas);
+			//txt.matrix.identity();
+			//txt.matrix.translate(0,self.library._lineSize*i); // +self._fontSize
+		}
 
 		// doBG.addFunction(Canvas.EVENT_MOUSE_DOWN,self.puts);
 		// 

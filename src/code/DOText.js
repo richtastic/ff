@@ -19,6 +19,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this.text = function(t){
 		if(arguments.length>0 && t!=undefined && t!=null){
 			self._text = t;
+			self._updateGraphics();
 		}else{
 			return self._text;
 		}
@@ -26,6 +27,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this.size = function(s){
 		if(arguments.length>0 && s!=undefined && s!=null){
 			self._size = s;
+			self._updateGraphics();
 		}else{
 			return self._size;
 		}
@@ -33,6 +35,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this.font = function(f){
 		if(arguments.length>0 && f!=undefined && f!=null){
 			self._font = f;
+			self._updateGraphics();
 		}else{
 			return self._font;
 		}
@@ -40,6 +43,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this.color = function(c){
 		if(arguments.length>0 && c!=undefined && c!=null){
 			self._color = c;
+			self._updateGraphics();
 		}else{
 			return self._color;
 		}
@@ -47,6 +51,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this.align = function(a){
 		if(arguments.length>0 && a!=undefined && a!=null){
 			self._align = a;
+			self._updateGraphics();
 		}else{
 			return self._align;
 		}
@@ -60,7 +65,6 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 		self._updateGraphics();
 	}
 	this.callback = function(o){
-		// for(str in o){ console.log(str+": "+o[str]); }
 		console.log(o.width);
 	}
 	this._updateGraphics = function(){
