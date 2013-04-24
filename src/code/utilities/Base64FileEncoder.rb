@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 # Base64FileEncoder
-require "ByteData.rb"
+require "./ByteData.rb"
 
 def FileToBase64(file_name)
 	# byte data
@@ -8,7 +8,7 @@ def FileToBase64(file_name)
 	bd.set_write_head(0)
 
 	# determine what file type
-	file = File.open(file_name,"r")
+	file = File.open(file_name,"rb")
 	file_type = ""
 	prefix_arr = []
 	uint = file.getc
@@ -35,19 +35,24 @@ def FileToBase64(file_name)
 		file_type = "font/ttf;charset=utf-8"
 	# UNKNOWN
 	else
+		puts "unknown file type"
 		file_type = ""
 	end
 	# end prefix
 	prefix = "data:#{file_type};base64,"
 
 	# get base64 encoding
-	file = File.open(file_name,"r")
+	file = File.open(file_name,"rb")
 	uint = file.getc
 	while uint != nil do
-		bin =  "%08b" % uint
-		#puts bin
-		#puts uint.ord
-		bd.write_uint8(uint)
+		intVal = 0
+		uint.each_byte do |c| # bullshit
+			intVal = c
+		end
+		#uint = uint.ord
+		#uint = uint.oct
+		#bd.write_uint8(uint)
+		bd.write_uint8(intVal)
 		uint = file.getc
 	end
 	#puts bd.to_s(2)
