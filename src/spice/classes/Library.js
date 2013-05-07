@@ -8,7 +8,7 @@ function Library(style){
 	this._width = 0;
 	this._height = 0;
 	this.setSize = function(wid,hei){
-		console.log(wid,hei);
+		//console.log(wid,hei);
 		self._width = wid;
 		self._height = hei;
 		var d = self.display();
