@@ -13,8 +13,8 @@ function Library(style){
 		self._height = hei;
 		var d = self.display();
 		d.graphicsIllustration.clear();
-		d.graphicsIllustration.setLine(2.0,0xFF5500FF);
-		d.graphicsIllustration.setFill(0x00FFFF66);
+		d.graphicsIllustration.setLine(0.0,0xFF550000);
+		d.graphicsIllustration.setFill(0x00000099);
 		d.graphicsIllustration.beginPath();
 		d.graphicsIllustration.moveTo(0,0);
 		d.graphicsIllustration.lineTo(wid,0);
@@ -36,6 +36,11 @@ function Library(style){
 		self._currentX = self._spacingX;
 		for(j=0;j<len;++j){
 			obj = self.list[j];
+			obj.resize(300,self._lineSize);
+			obj.display().matrix.identity();
+			obj.display().matrix.translate(self._currentX, self._currentY);
+			self._currentY += self._lineSize + self._spacingY;
+			/*
 			d = obj.element;
 			i = obj.image;
 			txt = obj.text;
@@ -60,17 +65,22 @@ function Library(style){
 			txt.matrix.identity();
 			txt.matrix.translate(self._lineSize,self._fontSize + (self._lineSize-self._fontSize)*0.25);
 			self._currentY += self._lineSize + self._spacingY;
+			*/
 		}
 	}
 	this.clearListItems = function(){
 		var obj
 		while(self.list.length>0){
 			obj = self.list.pop();
+			obj.removeFromParent();
+			obj.kill();
+			/*
 			d = obj.element;
 			i = obj.image;
 			t = obj.text;
 			d.removeFromParent(); i.removeFromParent(); t.removeFromParent();
 			d.kill(); i.kill(); t.kill();
+			*/
 		}
 		Code.emptyArray(self.list);
 	}
@@ -83,14 +93,15 @@ function Library(style){
 	this._currentY = 0;
 	this._currentX = 0;
 	this._updateRelativeDims = function(){
-		self._fontSize = Math.ceil(self._height*0.03);
-		self._imageSize = self._fontSize*1.25;
-		self._lineSize = self._fontSize*1.5;
-		self._spacingY = self._fontSize*0.25;
+		self._fontSize = 0;//Math.ceil(self._height*0.03);
+		self._imageSize = 0;//self._fontSize*1.25;
+		self._lineSize = 40;//self._fontSize*1.5;
+		self._spacingY = 5;//self._fontSize*0.25;
 		self._spacingX = self._spacingY;
 	}
-	this.addListItem = function(img,str,cla){
-		var fnt = self._resource.fnt[ResourceSpice.FNT_CIRCUITS].name();
+	this.addListItem = function(icon, string, klass){//img,str,cla){
+		/*
+		var fnt = self._resource.fnt[ResourceSpice.FNT_CIRCUITS];
 		var txt = new DOText(str,self._fontSize,fnt,self._fontColor,DOText.ALIGN_LEFT);
 		var dis = self.display();
 		var d = new DO();
@@ -100,6 +111,11 @@ function Library(style){
 		d.addChild(txt);
 		self.list.push( {element:d, image:i, text:txt} );
 		// self._updateListItems();
+		*/
+		var disp = self._display;
+		var item = new LibItem({resource:self._resource}, icon, string, klass);
+		disp.addChild( item.display() );
+		self.list.push( item );
 	}
 	this.constructor = function(){
 		self._updateRelativeDims();

@@ -52,6 +52,22 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_CIRCUIT_CHIP_SIDE_KEY = 46;
 	ResourceSpice.TEX_CIRCUIT_CHIP_PIN_OPEN = 47;
 	ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED = 48;
+	// WINDOW IMAGES ---------------------------------------
+	ResourceSpice.TEX_LIB_ITEM_LEFT = 49;
+	ResourceSpice.TEX_LIB_ITEM_MIDDLE = 50
+	ResourceSpice.TEX_LIB_ITEM_RIGHT = 51;
+	ResourceSpice.TEX_LIB_ITEM_ICON_BG = 52;
+	ResourceSpice.TEX_LIB_ITEM_ICON_BJT = 53;
+	ResourceSpice.TEX_LIB_ITEM_ICON_CAPACITOR = 54;
+	ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_DEPENDENT = 55;
+	ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_SOURCE = 56;
+	ResourceSpice.TEX_LIB_ITEM_ICON_DIODE = 57;
+	ResourceSpice.TEX_LIB_ITEM_ICON_INDUCTOR = 58;
+	ResourceSpice.TEX_LIB_ITEM_ICON_OP_AMP = 59;
+	ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR = 60;
+	ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT = 61;
+	ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_SOURCE = 62;
+	ResourceSpice.TEX_LIB_ITEM_ICON_UNKNOWN = 63;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
@@ -126,11 +142,26 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_OPEN] = "circuit/chip_pin_open.png";
 	tex[ResourceSpice.TEX_CIRCUIT_CHIP_PIN_CLOSED] = "circuit/chip_pin_closed.png";
 	//
+	tex[ResourceSpice.TEX_LIB_ITEM_LEFT] = "ui/lib_item_left.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_MIDDLE] = "ui/lib_item_middle.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_RIGHT] = "ui/lib_item_right.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_BG] = "ui/lib_icon_bg.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_BJT] = "ui/circuit_icon_bjt.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_CAPACITOR] = "ui/circuit_icon_capacitor.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_DEPENDENT] = "ui/circuit_icon_current_dependent.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_SOURCE] = "ui/circuit_icon_current_source.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_DIODE] = "ui/circuit_icon_diode.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_INDUCTOR] = "ui/circuit_icon_inductor.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_OP_AMP] = "ui/circuit_icon_op_amp.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR] = "ui/circuit_icon_resistor.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT] = "ui/circuit_icon_voltage_dependent.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_SOURCE] = "ui/circuit_icon_voltage_source.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_UNKNOWN] = "ui/lib_icon_bg.png";
+	//
 	self.imgLoader.setLoadList( texdir, tex, self );
 	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
 	//
 	var fontdir = texdir+"fonts/";
-	self.fnt[ResourceSpice.FNT_CIRCUITS] = new Font('monospice', fontdir+'monospice.ttf');
-	
+	self.fnt[ResourceSpice.FNT_CIRCUITS] = new Font('monospice', fontdir+'monospice.ttf', null, 1.0/8.0, 0.0/8.0, 2.0/8.0);
 }
 

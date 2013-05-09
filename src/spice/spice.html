@@ -22,7 +22,7 @@ function defaultClassesLoadedFxn(){
 	setFeedback( "50%" );
 	var list = ["../../code/Test.js","CircuitPin.js","CircuitNode.js","CircuitNet.js","CircuitSimulation.js","CircuitElement.js","CircuitImpedance.js","CircuitResistor.js","CircuitSourceVoltage.js",
 				"Win.js","WinManager.js","DOCE.js","DOPin.js","ElementConnection.js","DOWire.js","DO2Pin.js","DOChip.js","DOResistor.js",
-				"Draft.js","Library.js","ResourceSpice.js","Spice.js"];
+				"Draft.js","LibItem.js","Library.js","ResourceSpice.js","Spice.js"];
 	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,customClassesProgressFxn,false);
 	scriptLoader.load();
 }

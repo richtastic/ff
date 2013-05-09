@@ -154,6 +154,49 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
 		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
+	this.createLinearGradient = function(sX,sY,eX,eY, percentsAndColors){
+		gra = self._context.createLinearGradient(sX,sY,eX,eY);
+		for(var i=4; i<arguments.length-2; ++i){
+			pct = arguments[i];
+			col = arguments[i+1];
+			//alp = Code.getAlpRGBA(col);
+			col = Code.getJSRGBA(); // 0xCCDDEE99
+			//alp = //arguments[i+2];//Code.get
+			if(false){//alp==1.0){
+				gra.addColorStop();
+			}else{
+				gra.addColorStop(pct,col);
+			}
+		}
+		return gra;
+	}
+	/*
+	function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (typeof stroke == "undefined" ) {
+    stroke = true;
+  }
+  if (typeof radius === "undefined") {
+    radius = 5;
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  if (stroke) {
+    ctx.stroke();
+  }
+  if (fill) {
+    ctx.fill();
+  }        
+}
+	*/
 // TEXT ------------------------------------------------------------
 	this.drawText = function(txt,siz,fnt,xP,yP,align){
 		if(siz==undefined || siz==null){ siz = 12; }

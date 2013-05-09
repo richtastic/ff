@@ -140,10 +140,50 @@ return;
 		//self.addChild(maskee);
 		
 		// library
+		// http://www.google.com/search?q=circuit+elements&tbm=isch&tbo=u&source=univ&sa=X&ei=WSWLUbStDYWzygHh-4Fo&ved=0CDgQsAQ&biw=1393&bih=802
 		var circuitElementList = new Array();
-		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_CIRCUIT_RESISTOR_RED], text:"Resistor", clas:DOResistor});
-		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_CIRCUIT_CAPACITOR_RED], text:"Capacitor", clas:DOResistor});
-		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_CIRCUIT_INDUCTOR_RED], text:"Inductor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"GROUND", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"RESISTOR", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CAPACITOR], text:"CAPACITOR", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_INDUCTOR], text:"INDUCTOR", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_SOURCE], text:"VOLTAGE SOURCE", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_SOURCE], text:"CURRENT SOURCE", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_DIODE], text:"DIODE", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_BJT], text:"BJT", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_OP_AMP], text:"OP AMP", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_DEPENDENT], text:"DEPENDENT CURRENT (I)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_DEPENDENT], text:"DEPENDENT CURRENT (V)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT], text:"DEPENDENT VOLTAGE (I)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT], text:"DEPENDENT VOLTAGE (V)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"CHIP", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"TRANSFORMER", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"MOSFET", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"JFET", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"?", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"??", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"???", clas:DOResistor});
+		/*
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"Ground", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"Resistor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CAPACITOR], text:"Capacitor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_INDUCTOR], text:"Inductor", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_SOURCE], text:"Voltage Source", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_SOURCE], text:"Current Source", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_DIODE], text:"Diode", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_BJT], text:"BJT", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_OP_AMP], text:"Op Amp", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_DEPENDENT], text:"Dependent Current (I)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_CURRENT_DEPENDENT], text:"Dependent Current (V)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT], text:"Dependent Voltage (I)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT], text:"Dependent Voltage (V)", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"Chip", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"Transformer", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"MOSFET", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"JFET", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"?", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"??", clas:DOResistor});
+		circuitElementList.push({icon: self.resource.tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR], text:"???", clas:DOResistor});
+		*/
 		//self.library = new DOContainer();
 		var style = {resource: self.resource}
 		self.library = new Library(style);

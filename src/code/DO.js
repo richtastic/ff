@@ -181,8 +181,8 @@ function DO(parentDO){
 		return false;
 	}
 	this.addedToStage = function(stage){
-		this.alertAll(DO.EVENT_ADDED_TO_STAGE,this);
-		this.addListeners();
+		self.alertAll(DO.EVENT_ADDED_TO_STAGE,self);
+		self.addListeners();
 	}
 	this.removedFromStage = function(stage){
 		this.removeListeners();

@@ -1,15 +1,39 @@
 // Font.js
-function Font(nombre,source,complete){
+function Font(nombre,source,complete,topRatio,botRatio,outRatio){
 	var self = this;
 	this._name = null;
 	this._src = null;
 	this._completeFxn = null;
 	this._element = null;
+	this._top = topRatio?topRatio:0;
+	this._bot = botRatio?botRatio:0;
+	this._out = outRatio?outRatio:0;
 	this.name = function(n){
 		if(arguments.length>0){
 			self._name = n;
 		}else{
 			return self._name;
+		}
+	}
+	this.top = function(t){
+		if(arguments.length>0){
+			self._top = t;
+		}else{
+			return self._top;
+		}
+	}
+	this.bot = function(b){
+		if(arguments.length>0){
+			self._bot = b;
+		}else{
+			return self._bot;
+		}
+	}
+	this.out = function(o){
+		if(arguments.length>0){
+			self._out = o;
+		}else{
+			return self._out;
 		}
 	}
 	this.src = function(s){
