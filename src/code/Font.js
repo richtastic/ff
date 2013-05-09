@@ -5,6 +5,7 @@ function Font(nombre,source,complete,topRatio,botRatio,outRatio){
 	this._src = null;
 	this._completeFxn = null;
 	this._element = null;
+	this._ajax = new Ajax();
 	this._top = topRatio?topRatio:0;
 	this._bot = botRatio?botRatio:0;
 	this._out = outRatio?outRatio:0;
@@ -52,15 +53,27 @@ function Font(nombre,source,complete,topRatio,botRatio,outRatio){
 		}
 		//
 		var style = document.createElement('style');
-		style.addEventListener("load",self._loadComplete);
+		/*style.addEventListener("load",self._loadComplete);
+		style.addEventListener("onload",self._loadComplete);
+		style.addEventListener("complete",self._loadComplete);*/
 		style.innerHTML = "@font-face{ font-family:"+self.name()+"; src: url('"+self.src()+"'); }";
-		this._element = document.head.appendChild(style);
-		//this._element = document.body.appendChild(style);
+		self._element = document.head.appendChild(style);
+console.log(self._element);
+/*var link = document.createElement('link');
+link.addEventListener("load",self._loadComplete);
+link.addEventListener("onload",self._loadComplete);
+link.addEventListener("complete",self._loadComplete);
+link.href = self.src();
+this._element = document.head.appendChild(link);*/
+var src = self.src();
+console.log(src);
+self._ajax.get(src, self._loadComplete);
 	}
 	this._loadComplete = function(e){
 		if(self._completeFxn){
 			self._completeFxn(self);
 		}
+		self._completeFxn = null;
 	}
 	this.kill = function(){
 		// ...
