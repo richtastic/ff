@@ -8,7 +8,8 @@ function Draft(style,resource){
 	this._elements = new Array();
 	this._connections = new Array();
 	// SCROLLER
-	this._scroller = new DOScroll();
+	this._scroller = new DO;//Scroll();
+	this._scroller.mask = true;
 	this._display.addChild( this._scroller );
 	// BACKGROUND
 	var img = this._resource.tex[ResourceSpice.TEX_BACKGROUND_GRID_1];

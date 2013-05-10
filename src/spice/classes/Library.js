@@ -3,6 +3,8 @@ function Library(style){
 	var self = this;
 	Code.extendClass(this,DOContainer,[style]);
 	this._resource = style.resource;
+	this._dispCont = null;
+	this._dispList = null;
 	this.list = new Array(); // { icon, text, clas }
 	//
 	this._width = 0;
@@ -34,39 +36,25 @@ function Library(style){
 		var obj, d, j, txt;
 		self._currentY = self._spacingY;
 		self._currentX = self._spacingX;
+		var widN = 300;
 		for(j=0;j<len;++j){
 			obj = self.list[j];
-			obj.resize(300,self._lineSize);
+			obj.resize(widN,self._lineSize);
 			obj.display().matrix.identity();
 			obj.display().matrix.translate(self._currentX, self._currentY);
 			self._currentY += self._lineSize + self._spacingY;
-			/*
-			d = obj.element;
-			i = obj.image;
-			txt = obj.text;
-			d.graphics.clear();
-			d.graphics.setFill(0x00FF0099);
-			d.graphics.setLine(1.0,0xFF000099);
-			d.graphics.beginPath();
-			d.graphics.moveTo(0,0);
-			d.graphics.lineTo(wid,0);
-			d.graphics.lineTo(wid,hei);
-			d.graphics.lineTo(0,hei);
-			d.graphics.lineTo(0,0);
-			d.graphics.strokeLine();
-			d.graphics.endPath();
-			d.graphics.fill();
-			d.matrix.identity();
-			d.matrix.translate(self._currentX, self._currentY);
-			i.drawSingle(0,0,self._imageSize,self._imageSize);
-			i.matrix.identity();
-			i.matrix.translate((self._lineSize-self._imageSize)*0.5,(self._lineSize-self._imageSize)*0.5);
-			txt.size(self._fontSize);
-			txt.matrix.identity();
-			txt.matrix.translate(self._lineSize,self._fontSize + (self._lineSize-self._fontSize)*0.25);
-			self._currentY += self._lineSize + self._spacingY;
-			*/
 		}
+		var heiN = self._currentY;
+		self._dispList.graphicsIntersection.clear();
+		self._dispList.graphicsIntersection.setFill(0xFF0000FF);
+		self._dispList.graphicsIntersection.beginPath();
+		self._dispList.graphicsIntersection.moveTo(0,0);
+		self._dispList.graphicsIntersection.lineTo(widN,0);
+		self._dispList.graphicsIntersection.lineTo(widN,heiN);
+		self._dispList.graphicsIntersection.lineTo(0,heiN);
+		self._dispList.graphicsIntersection.lineTo(0,0);
+		self._dispList.graphicsIntersection.endPath();
+		self._dispList.graphicsIntersection.fill();
 	}
 	this.clearListItems = function(){
 		var obj
@@ -74,13 +62,6 @@ function Library(style){
 			obj = self.list.pop();
 			obj.removeFromParent();
 			obj.kill();
-			/*
-			d = obj.element;
-			i = obj.image;
-			t = obj.text;
-			d.removeFromParent(); i.removeFromParent(); t.removeFromParent();
-			d.kill(); i.kill(); t.kill();
-			*/
 		}
 		Code.emptyArray(self.list);
 	}
@@ -99,26 +80,33 @@ function Library(style){
 		self._spacingY = 5;//self._fontSize*0.25;
 		self._spacingX = self._spacingY;
 	}
-	this.addListItem = function(icon, string, klass){//img,str,cla){
-		/*
-		var fnt = self._resource.fnt[ResourceSpice.FNT_CIRCUITS];
-		var txt = new DOText(str,self._fontSize,fnt,self._fontColor,DOText.ALIGN_LEFT);
-		var dis = self.display();
-		var d = new DO();
-		var i = new DOImage(img);
-		dis.addChild(d);
-		d.addChild(i);
-		d.addChild(txt);
-		self.list.push( {element:d, image:i, text:txt} );
-		// self._updateListItems();
-		*/
-		var disp = self._display;
+	this.addListItem = function(icon, string, klass){
+		var disp = self._dispList;
 		var item = new LibItem({resource:self._resource}, icon, string, klass);
 		disp.addChild( item.display() );
 		self.list.push( item );
 	}
 	this.constructor = function(){
+		self._dispList = new DO();
+		self._dispList.newGraphicsIntersection();
+		//
+		self._dispCont = new DOScroll();
+		var w = 200;
+		var h = 500;
+		self._dispCont.graphics.clear();
+		self._dispCont.graphics.setFill(0xFF0000FF);
+		self._dispCont.graphics.beginPath();
+		self._dispCont.graphics.moveTo(0,0);
+		self._dispCont.graphics.lineTo(w,0);
+		self._dispCont.graphics.lineTo(w,h);
+		self._dispCont.graphics.lineTo(0,h);
+		self._dispCont.graphics.lineTo(0,0);
+		self._dispCont.graphics.endPath();
+		//
+		self.display().addChild(self._dispCont);
+		self._dispCont.addChild(self._dispList);
 		self._updateRelativeDims();
+//self._dispList.setDraggingEnabled();
 	}
 	//  -----------------------------------------------------------------------
 	this.kill = Code.overrideClass(this, this.kill, function(){
@@ -128,6 +116,7 @@ function Library(style){
 
 	this.constructor();
 };
+
 
 
 

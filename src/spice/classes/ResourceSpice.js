@@ -67,7 +67,10 @@ ResourceSpice.TEX_BACKGROUND_GRID_1 = 1;
 	ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR = 60;
 	ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT = 61;
 	ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_SOURCE = 62;
-	ResourceSpice.TEX_LIB_ITEM_ICON_UNKNOWN = 63;
+	ResourceSpice.TEX_LIB_ITEM_ICON_TRANSFORMER = 63;
+	ResourceSpice.TEX_LIB_ITEM_ICON_CHIP = 64;
+	ResourceSpice.TEX_LIB_ITEM_ICON_GROUND = 65;
+	ResourceSpice.TEX_LIB_ITEM_ICON_UNKNOWN = 66;
 	//ResourceSpice.TEX_CIRCUIT__RED = ;
 	//  ---------------------------------------
 ResourceSpice.TEX_X = 0;
@@ -156,6 +159,9 @@ function ResourceSpice(){
 	tex[ResourceSpice.TEX_LIB_ITEM_ICON_RESISTOR] = "ui/circuit_icon_resistor.png";
 	tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_DEPENDENT] = "ui/circuit_icon_voltage_dependent.png";
 	tex[ResourceSpice.TEX_LIB_ITEM_ICON_VOLTAGE_SOURCE] = "ui/circuit_icon_voltage_source.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_TRANSFORMER] = "ui/circuit_icon_transformer.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_CHIP] = "ui/circuit_icon_chip.png";
+	tex[ResourceSpice.TEX_LIB_ITEM_ICON_GROUND] = "ui/circuit_icon_ground.png";
 	tex[ResourceSpice.TEX_LIB_ITEM_ICON_UNKNOWN] = "ui/lib_icon_bg.png";
 	//
 	self.imgLoader.setLoadList( texdir, tex, self );

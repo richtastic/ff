@@ -268,20 +268,20 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 // TOUCH POSITIONING --------------------------------------------------------
 	// https://developer.mozilla.org/en-US/docs/DOM/TouchEvent
 	this.canvasTouchStartFxn = function(e){ // e.target.touchdata[]
-		setFeedback( "TOUCH START" );
+		//setFeedback( "TOUCH START" );
 		e.preventDefault();
 		pos = self.getTouchPosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 		pos = null;
 	}
 	this.canvasTouchMoveFxn = function(e){
-		setFeedback( "TOUCH MOVE" );
+		//setFeedback( "TOUCH MOVE" );
 		e.preventDefault();
 		pos = self.getTouchPosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 	}
 	this.canvasTouchEndFxn = function(e){
-		setFeedback( "TOUCH END" );
+		//setFeedback( "TOUCH END" );
 		e.preventDefault();
 		pos = self.getTouchPosition(e);
 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);

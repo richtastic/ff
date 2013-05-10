@@ -64,6 +64,7 @@ function LibItem(style, inIcon, inString, inClass){
 		self._right.newGraphicsIntersection();
 		self._bg.newGraphicsIntersection();
 		self._icon.newGraphicsIntersection();
+		self._text.newGraphicsIntersection();
 		self._hit.newGraphicsIntersection();
 		self._display.addChild(self._left);
 		self._display.addChild(self._middle);

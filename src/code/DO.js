@@ -258,7 +258,6 @@ function DO(parentDO){
 		if(any!==null && any!==undefined){ self.dragAnyChildren = any; }else{ self.dragAnyChildren = false; }
 		self.dragEnabled = true;
 		self.addFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
-		//self.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,self.dragMouseUpFxn);
 	};
 	this.setDraggingDisabled = function(){
 		self.removeFunction(Canvas.EVENT_MOUSE_DOWN,self.dragMouseDownFxn);
@@ -266,7 +265,6 @@ function DO(parentDO){
 	};
 	this.startDrag = function(pos,ele){
 		if(!self.dragEnabled){ return; }
-//console.log("POINT: "+pos.toString());
 		self.dragOffset.x = pos.x;
 		self.dragOffset.y = pos.y;
 		self.dragging = true;
@@ -352,6 +350,7 @@ function DO(parentDO){
 	}
 	this.click_check = false;
 	this.onMouseDownClickCheckFxn = function(o){
+		console.log("EVENT_DOWN");
 		self.alertAll(DO.EVENT_DOWN,o);
 		self.click_check = true;
 	}
@@ -397,12 +396,12 @@ function DO(parentDO){
 		if(self._checkIntersectionChildren){
 			var ret, i, len = self.children.length;
 			for(i=len-1;i>=0;--i){
-				/*if(self.mask){
+				if(self.mask){
 					self.graphicsIntersection.setupRender(can);
 					self.graphicsIntersection.render(can);
 					self.graphicsIntersection.takedownRender(can);
 					context.clip();
-				}*/
+				}
 				ret = self.children[i].getIntersection(pos, can);
 				if(ret){
 					self.takedownRender(can);
