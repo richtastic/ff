@@ -79,10 +79,10 @@ function DOScroll(parentDO){
 		pos.x = 0; pos.y = 0;
 		self._onlyChild.matrix.multV2D(newPos,pos);
 		if(newPos.x<minX){ // too far left
-			setFeedback( "LEFT: "+newPos.x+" "+minX );
+			//setFeedback( "LEFT: "+newPos.x+" "+minX );
 			self._onlyChild.matrix.translate(minX-newPos.x,0);
 		}else if(newPos.x>maxX){ // too far right
-			setFeedback( "RIGHT: "+newPos.x+" "+maxX );
+			//setFeedback( "RIGHT: "+newPos.x+" "+maxX );
 			self._onlyChild.matrix.translate(maxX-newPos.x,0);
 		}
 		
