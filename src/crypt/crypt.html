@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>FF Crypt</title>
+<script src="../code/FFLoadAll.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<script type="text/javascript">
+// ---------------------------------------------------------
+var ff, scriptLoader;
+// ---------------------------------------------------------
+function pageLoadedFxn(){
+	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+}
+function defaultClassesProgressFxn(o){
+	var perc = (o.loaded/o.total);
+}
+function defaultClassesLoadedFxn(o){
+	var list = [];
+	scriptLoader = new ScriptLoader("javascrypt/",list,customClassesLoadedFxn,customClassesProgressFxn,false);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(){
+	//
+}
+function customClassesLoadedFxn(){
+	console.log("loading complete");
+	//var a = new Ajax();
+}
+
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div style=""></div>
+</body>
+</html>
