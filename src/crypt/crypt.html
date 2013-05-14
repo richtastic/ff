@@ -25,6 +25,41 @@ function customClassesProgressFxn(){
 function customClassesLoadedFxn(){
 	console.log("loading complete");
 	//var a = new Ajax();
+	var i, len;
+	console.log(" 0 ");
+	var A = new ByteData();
+	console.log("...");
+	A.length(35);
+	A.position(2);
+	//A.length(0);
+	A.write(1);
+	A.write(0);
+	A.write(1);
+	A.write(0);
+	A.write(0);
+	A.write(1);
+	//A.length(3);
+	A.position(0);
+	var str = "";
+	len = A.length();
+	console.log(len);
+	for(i=0;i<len;++i){
+		str = str + A.read();
+	}
+	console.log(str);
+	/*
+	var B = new ByteData();
+	var C = new ByteData();
+	A.writeBit(1); A.writeBit(1); A.writeBit(0); A.writeBit(1); A.writeBit(0);
+	console.log( "   "+A.toString() );
+	B.writeBit(0); B.writeBit(0); B.writeBit(1); B.writeBit(1); B.writeBit(1);
+	console.log( " + "+B.toString() );
+	C.writeBit(0); C.writeBit(0); C.writeBit(0); C.writeBit(0); C.writeBit(0);
+	ByteData.add(C, A,B);
+	//C.copy(A);
+	//ByteData.xor(C,A,B);
+	console.log( " = "+C.toString() );
+	*/
 }
 
 </script>
