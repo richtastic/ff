@@ -353,5 +353,5 @@ function BinInt(totSize){
 		self.super(arguments.callee).kill.call(self,null);
 	});
 	//
-	self.length(totSize?totSize:256);
+	self.length(totSize?totSize:32);
 };
