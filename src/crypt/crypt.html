@@ -26,27 +26,26 @@ function customClassesLoadedFxn(){
 	console.log("loading complete");
 	//var a = new Ajax();
 	var i, len;
-	console.log(" 0 ");
-	var A = new ByteData();
-	console.log("...");
-	A.length(35);
-	A.position(2);
-	//A.length(0);
-	A.write(1);
-	A.write(0);
-	A.write(1);
-	A.write(0);
-	A.write(0);
-	A.write(1);
-	//A.length(3);
-	A.position(0);
-	var str = "";
-	len = A.length();
-	console.log(len);
-	for(i=0;i<len;++i){
-		str = str + A.read();
-	}
-	console.log(str);
+	var A = new BinInt();
+	var B = new BinInt();
+	var C = new BinInt();
+	A.setFromInt(10);
+	B.setFromInt(6);
+	//A.setFromString("01001010101");
+	//B.setFromString("11110000111");
+	//BinInt.copy(C,A);
+	//BinInt.and( C, A,B );
+	//BinInt.or( C, A,B );
+	//BinInt.xor( C, A,B );
+	//BinInt.not( C, A );
+	//BinInt.add( C, A,B );
+	//BinInt.sub( C, A,B );
+	//BinInt.left( C, A, 24, true );
+	//BinInt.right( C, B, 3, true );
+	BinInt.mul( C, A,B );
+	console.log("A: "+A.toString());
+	console.log("B: "+B.toString());
+	console.log("C: "+C.toString());
 	/*
 	var B = new ByteData();
 	var C = new ByteData();

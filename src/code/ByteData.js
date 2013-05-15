@@ -2,6 +2,17 @@
 
 ByteData.BITS_PER_INT = 32;
 ByteData.MAX_SUB_INDEX = ByteData.BITS_PER_INT - 1;
+ByteData.copy = function(c,a){ // c = a
+	var i, len = a.length(), was = a.position();
+	c.length(len);
+	a.position(0);
+	c.position(0);
+	for(i=0;i<len;++i){
+		c.write( a.read() );
+	}
+	c.position(was);
+	a.position(was);
+}
 
 function ByteData(){
 	var self = this;
@@ -15,6 +26,7 @@ function ByteData(){
 	}
 	this.position = function(p){
 		if(arguments.length>0){
+//console.log("SET: "+self._position);
 			self._position = Math.max(0,p);
 			var len = Math.floor(self._postition/ByteData.BITS_PER_INT);
 			while(self._data.length<len){
@@ -37,7 +49,6 @@ function ByteData(){
 		return self._length;
 	}
 	this.read = function(){
-		self._position >=self._length
 		if(self._position >=self._length){
 			return -1;
 		}
@@ -66,6 +77,44 @@ function ByteData(){
 		self._subIndex = ByteData.MAX_SUB_INDEX - (p % ByteData.BITS_PER_INT);
 		self._ander = 1 << self._subIndex;
 	}
+	this.toStringBin = function(){
+		var str = "", i, len = self.length();
+		var was = self.position();
+		self.position(0);
+		for(i=0;i<len;++i){
+			if ( i%8==0 && i>0){
+				str = str + "|"
+			}
+			str = str+self.read();
+		}
+		self.position(was);
+		return str;
+	}
+	/*this.toStringHex = function(){
+		var str = "";
+		var i, len = Math.ceil(getTotalBits()/4.0);
+		initRead();
+		for(i=0;i<len;++i){
+			if ( i%8==0 && i>0){
+				str = str + "|"
+			}
+			str = str+readUint4().toString(16).toUpperCase();
+		}
+		return str;
+	}*/
+	this.toString = function(){
+		return this.toStringBin();
+ 	};
+ 	this.kill = function(){
+ 		self.clear();
+		self._position = undefined;
+		self._length = undefined;
+		self._index = undefined;
+		self._subIndex = undefined;
+		self._ander = undefined;
+		self._data = null;
+ 	}
+	//
 	this.clear();
 }
 
