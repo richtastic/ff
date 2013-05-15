@@ -125,39 +125,116 @@ BinInt.mul = function(c, a,b){ // c = a * b
 };
 // DIVISOR | DIVIDEND = QUOTIENT
 BinInt.div = function(c, a,b){ // c = a / b
-	/*
-	SOR = abs( DIVISOR )
-	END = abs( DIVIDEND )
-	QUO = 0
-	repeat from i = 1 to length-1:
-		DIV = shift END right length-i
-		if DIV > SOR {
-			END -= shift SOR left length-i
-			QUO += 1
+	var sor = new BinInt(), end = new BinInt(), quo = new BinInt(), div = new BinInt(), temp = new BinInt(), temp2 = new BinInt();
+	var i, len = c.length();
+	BinInt.abs(sor,b);
+	BinInt.abs(end,a);
+	quo.zero();
+	for(i=0;i<=len;++i){
+		BinInt.left(temp, quo, 1);
+		BinInt.copy(quo, temp);
+		BinInt.right(div, end, len-i);
+		if( BinInt.gte(div,sor) ){
+			BinInt.left(temp2, sor, len-i);
+			BinInt.sub(temp, end, temp2);
+			BinInt.copy(end, temp);
+			BinInt.add(temp, quo, BinInt.ONE);
+			BinInt.copy(quo, temp);
 		}
-		shift QUO left
-	REM = DIV
-	*/
+	} // remainder = end
+	BinInt.copy(c,quo);
 };
+BinInt.mod = function(c, a,b){ // c = a % b
+	var sor = new BinInt(), end = new BinInt(), quo = new BinInt(), div = new BinInt(), temp = new BinInt(), temp2 = new BinInt();
+	var i, len = c.length();
+	BinInt.abs(sor,b);
+	BinInt.abs(end,a);
+	quo.zero();
+	for(i=0;i<=len;++i){
+		BinInt.left(temp, quo, 1);
+		BinInt.copy(quo, temp);
+		BinInt.right(div, end, len-i);
+		if( BinInt.gte(div,sor) ){
+			BinInt.left(temp2, sor, len-i);
+			BinInt.sub(temp, end, temp2);
+			BinInt.copy(end, temp);
+			BinInt.add(temp, quo, BinInt.ONE);
+			BinInt.copy(quo, temp);
+		}
+	}
+	BinInt.copy(c,end);
+};
+/*
 BinInt.mod = function(c, a,b){ // c = a % b = a - [a/b]*b
 	
-};
+};*/
 BinInt.pow = function(c, a,b){ // c = a ^ b 
 	
 };
+BinInt.gte = function(c, a){ // c >= a
+	var negC = BinInt.isNegative(c);
+	var negA = BinInt.isNegative(a);
+	if(!negA && !negC){
+		BinInt.sub(BinInt.TEMP_COMP, c,a);
+		if( BinInt.isNegative(BinInt.TEMP_COMP) ){
+			return false;
+		}else{
+			return true;
+		}
+	}else{ // fill this out
+		return false;
+	}
+};
 BinInt.gt = function(c, a){ // c > a
-	return false;
+	var negC = BinInt.isNegative(c);
+	var negA = BinInt.isNegative(a);
+	if(!negA && !negC){
+		BinInt.sub(BinInt.TEMP_COMP, c,a);
+		if( BinInt.isNegative(BinInt.TEMP_COMP) ){
+			return false;
+		}else{
+			if( BinInt.eq(c,a) ){
+				return false
+			}
+			return true;
+		}
+	}else{ // fill this out
+		return false;
+	}
 };
 BinInt.lt = function(c, a){ // c < a
 	return false;
 };
 BinInt.eq = function(c, a){ // c == a
-	return false;
+	var valA, valC, i, len = Math.max( c.length(), a.length() );
+	var wasA = a.position(), wasC = c.position();
+	a.position(0); c.position(0);
+	var eq = true;
+	for(i=0;i<len;++i){
+		valA = a.read();
+		valC = c.read();
+		if(valA!=valC){
+			eq = false;
+			break;
+		}
+	}
+	a.position(wasA); c.position(wasC);
+	return eq;
 };
+
+BinInt.sameBitLength = function(c, a){ // c.length = a.length
+	//
+};
+BinInt.LETTERS = ["0","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""];
+BinInt.get10String = function(){
+	//
+	return "";
+}
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 BinInt.INITIALIZED = false;
 BinInt.ZERO = null;
 BinInt.ONE = null;
+BinInt.TEMP_COMP = null;
 BinInt.TEMP_SUB = null;
 BinInt.TEMP_NEG = null;
 BinInt.TEMP_MUL_A_ABS = null;
@@ -172,6 +249,7 @@ BinInt.init = function(){
 		BinInt.ZERO.setFromInt(0);
 		BinInt.ONE = new BinInt();
 		BinInt.ONE.setFromInt(1);
+		BinInt.TEMP_COMP = new BinInt();
 		BinInt.TEMP_SUB = new BinInt();
 		BinInt.TEMP_NEG = new BinInt();
 		BinInt.TEMP_MUL_A_ABS = new BinInt();
@@ -240,10 +318,40 @@ function BinInt(totSize){
 		str = "["+self.length()+"]"+str;
 		return str;
 	});
+	this.toString10 = function(){
+		str = "";
+		var ten = new BinInt(), num = new BinInt(), rem = new BinInt(), temp = new BinInt();
+		BinInt.copy(ten, self);
+		BinInt.copy(num, self);
+		BinInt.copy(rem, self);
+		BinInt.copy(temp, self);
+		ten.setFromInt(10);
+		BinInt.copy(num,self);
+		while( BinInt.gt(num,BinInt.ZERO) ){
+			BinInt.mod(rem,num,ten);
+			str = rem.getIntValue()+str;
+			BinInt.div(temp,num,ten);
+			BinInt.copy(num,temp);
+		}
+		return str;
+ 	};
+ 	this.getIntValue = function(){
+ 		var was = self.position();
+ 		var i, len = self.length();
+ 		var num = 0;
+ 		self.position(0);
+ 		for(i=0;i<len;++i){
+ 			if( self.read()!=0 ){
+ 				num = num | (1<<i);
+ 			}
+ 		}
+ 		self.position(was);
+ 		return num;
+ 	}
 	this.kill = Code.overrideClass(this, this.kill, function(){
 
 		self.super(arguments.callee).kill.call(self,null);
 	});
 	//
-	self.length(totSize?totSize:16);
+	self.length(totSize?totSize:256);
 };

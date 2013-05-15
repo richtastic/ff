@@ -29,7 +29,7 @@ function customClassesLoadedFxn(){
 	var A = new BinInt();
 	var B = new BinInt();
 	var C = new BinInt();
-	A.setFromInt(10);
+	A.setFromInt(230);
 	B.setFromInt(6);
 	//A.setFromString("01001010101");
 	//B.setFromString("11110000111");
@@ -42,10 +42,16 @@ function customClassesLoadedFxn(){
 	//BinInt.sub( C, A,B );
 	//BinInt.left( C, A, 24, true );
 	//BinInt.right( C, B, 3, true );
-	BinInt.mul( C, A,B );
+	//BinInt.mul( C, A,B );
+	BinInt.div( C, A,B );
 	console.log("A: "+A.toString());
 	console.log("B: "+B.toString());
 	console.log("C: "+C.toString());
+	console.log("C: "+C.toString10());
+	A.length(256);
+	A.setFromString("0101110110101010001000110101010000010101111011010101000010000100100111000100110100000010100101010101000010001000010101010010100001001001100000000101010101100001001000010000101010001010111110110001000010101010101010001010010010010101101010111111101001010101");
+	console.log("A[2]:  "+A.toString());
+	console.log("A[10]: "+A.toString10());
 	/*
 	var B = new ByteData();
 	var C = new ByteData();
