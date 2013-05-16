@@ -1,173 +1,164 @@
 // BinInt
-BinInt.copy = function(c,a){ // c = a
-	ByteData.copy(c,a);
-};
+BinInt.copy = ByteData.copy;
 
 BinInt.and = function(c, a,b){ // c = a & b
-	var i, len = c.length();
-	var aV, bV;
-	a.position(0); b.position(0); c.position(0);
+	var datA = a._data, datB = b._data, datC = c._data;
+	var i, len = datC.length;
 	for(i=0;i<len;++i){
-		aV = a.read(); bV = b.read();
-		c.write( (aV!=0 && bV!=0)?1:0 );
+		datC[i] = datA[i] & datB[i];
 	}
 };
-BinInt.or = function(c, a,b){ // c = a & b
-	var i, len = c.length();
-	var aV, bV;
-	a.position(0); b.position(0); c.position(0);
+BinInt.or = function(c, a,b){ // c = a | b
+	var datA = a._data, datB = b._data, datC = c._data;
+	var i, len = datC.length;
 	for(i=0;i<len;++i){
-		aV = a.read(); bV = b.read();
-		c.write( (aV!=0 || bV!=0)?1:0 );
+		datC[i] = datA[i] | datB[i];
 	}
 };
-BinInt.xor = function(c, a,b){ // c = a & b
-	var i, len = c.length();
-	var aV, bV;
-	a.position(0); b.position(0); c.position(0);
+BinInt.xor = function(c, a,b){ // c = a ^ b
+	var datA = a._data, datB = b._data, datC = c._data;
+	var i, len = datC.length;
 	for(i=0;i<len;++i){
-		aV = a.read(); bV = b.read();
-		c.write( ((aV!=0 && bV==0)||(aV==0 && bV!=0))?1:0 );
+		datC[i] = datA[i] ^ datB[i];
 	}
 };
-BinInt.not = function(c, a){ // c = ~a
-	var i, len = c.length();
-	var aV;
-	a.position(0); c.position(0);
+BinInt.not = function(c, a,b){ // c = ~a
+	var datA = a._data, datC = c._data;
+	var i, len = datC.length;
 	for(i=0;i<len;++i){
-		aV = a.read();
-		c.write( (aV!=0)?0:1 );
+		datC[i] = ~datA[i];
 	}
 };
 BinInt.left = function(c, a, b, arith){ // c = a<<b [arithmetic]
-	var val, i, len = a.length();
-	for(i=len-1; i>=b;--i){
-		a.position(i-b);
-		val = a.read();
-		c.position(i);
-		c.write( val );
+	var tempC = BinInt.TEMP_C, tempA = BinInt.TEMP_A;
+	BinInt.copy(tempC, c); BinInt.copy(tempA, a);
+	var val, i, len = tempA._length;
+	for(i=len-1; i>=b; --i){
+		tempA._position = i-b;
+		val = tempA.read();
+		tempC._position = i;
+		tempC.write( val );
 	}
 	if(!arith){
 		val = 0;
 	}
-	c.position(0);
+	tempC._position = 0;
 	for(i=0;i<b;++i){
-		c.write( val );
+		tempC.write( val );
 	}
+	BinInt.copy(c,tempC)
 };
 BinInt.right = function(c, a, b, arith){ // c = a>>b [arithmetic]
-	var val, i, len = a.length();
+	var tempC = BinInt.TEMP_C, tempA = BinInt.TEMP_A;
+	BinInt.copy(tempC, c); BinInt.copy(tempA, a);
+	var val, i, len = tempA._length;
 	var lmb = len-b;
-	a.position(a.length()-1); val = a.read(); a.position(b);
-	c.position(0);
+	tempA._position = tempA._length-1; val = tempA.read(); tempA._position = b;
+	tempC._position = 0;
 	for(i=0;i<lmb;++i){
-		val = a.read();
-		c.write( val );
+		val = tempA.read();
+		tempC.write( val );
 	}
 	if(!arith){
 		val = 0;
 	}
 	for(;i<len;++i){
-		c.write( val );
+		tempC.write( val );
 	}
+	BinInt.copy(c,tempC);
 };
+
 BinInt.isNegative = function(a){ // a<0
-	var was = a.position();
-	a.position(a.length()-1)
+	var was = a._position;
+	a._position = a._length - 1;
 	var isNeg = a.read();
-	a.position(was);
+	a._position = was;
 	return isNeg;
-}
+};
+BinInt.add = function(c, a,b){ // c = a + b
+	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
+	var i, len = c.length(), aV, bV, cV = 0;
+	BinInt.copy(tempA,a); BinInt.copy(tempB,b); BinInt.copy(tempC,c);
+	tempA.position(0); tempB.position(0); tempC.position(0);
+	for(i=0;i<len;++i){
+		aV = tempA.read(); bV = tempB.read();
+		tempC.write( (aV ^ bV) ^ cV );
+		cV = (aV&&bV) || (bV&&cV) || (cV&&aV);
+	}
+	BinInt.copy(c,tempC);
+	return (cV!=0)?1:0;
+};
+
+BinInt.neg = function(c, a){ // c = -a
+	BinInt.not(c,a);
+	BinInt.add(c,BinInt.ONE,c);
+};
+BinInt.sub = function(c, a,b){ // c = a - b
+	BinInt.copy(BinInt.TEMP_C, c);
+	BinInt.neg(BinInt.TEMP_C , b );
+	return BinInt.add( c, a, BinInt.TEMP_C );
+};
 BinInt.abs = function(c, a){ // c = |a|
 	if( BinInt.isNegative(a) ){
 		BinInt.neg(c,a);
-	}else{
+	}else if(c!=a){
 		BinInt.copy(c,a);
 	}
 };
-BinInt.neg = function(c, a){ // c = -a
-	BinInt.not(BinInt.TEMP_NEG,a);
-	BinInt.add(c,BinInt.ONE,BinInt.TEMP_NEG);
-};
-BinInt.add = function(c, a,b){ // c = a + b
-	var i, len = c.length();
-	var aV, bV, cV = 0;
-	a.position(0); b.position(0); c.position(0);
-	for(i=0;i<len;++i){
-		aV = a.read(); bV = b.read();
-		c.write( res = (aV ^ bV) ^ cV );
-		cV = (aV&&bV) || (bV&&cV) || (cV&&aV);
-	}
-	return (cV!=0)?1:0;
-};
-BinInt.sub = function(c, a,b){ // c = a - b
-	BinInt.neg( BinInt.TEMP_SUB, b );
-	BinInt.add( c, a, BinInt.TEMP_SUB );
-};
+
 BinInt.mul = function(c, a,b){ // c = a * b
-	BinInt.copy(BinInt.TEMP_MUL_A_ABS, a); BinInt.abs(BinInt.TEMP_MUL_A_ABS, a);
-	BinInt.copy(BinInt.TEMP_MUL_B_ABS, b); BinInt.abs(BinInt.TEMP_MUL_B_ABS, b);
+	var tempA = BinInt.TEMP_MUL_A_ABS, tempB = BinInt.TEMP_MUL_B_ABS;
+	BinInt.abs(tempA, a); BinInt.abs(tempB, b);
 	var i, len = c.length();
 	c.zero();
+	tempA._position = 0;
 	for(i=0;i<len;++i){
-		a.position(i);
-		if(a.read()!=0){
-			BinInt.left(BinInt.TEMP_MUL_B, BinInt.TEMP_MUL_B_ABS, i);
-			BinInt.add(BinInt.TEMP_MUL_C,BinInt.TEMP_MUL_B,c);
-			BinInt.copy(c,BinInt.TEMP_MUL_C);
+		if(tempA.read()!=0){
+			BinInt.left(BinInt.TEMP_MUL_B, tempB, i);
+			BinInt.add(c,BinInt.TEMP_MUL_B,c);
+			//BinInt.add(c,tempB,tempC);
 		}
+		//BinInt.left(c, tempB, 1);
 	}
 	var isNegA = BinInt.isNegative(a), isNegB = BinInt.isNegative(b);
 	if( isNegA ^ isNegB ){
-		BinInt.neg(BinInt.TEMP_MUL_C, c)
-		BinInt.copy(c,BinInt.TEMP_MUL_C);
+		BinInt.neg(c, c)
+	}
+};
+// DIVISOR | DIVIDEND = QUOTIENT
+//
+BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
+	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
+	var i, len = c.length();
+	BinInt.abs(sor,b);
+	BinInt.abs(end,a);
+	quo.zero();
+	for(i=0;i<=len;++i){
+		BinInt.left(quo, quo, 1);
+		BinInt.right(div, end, len-i);
+		if( BinInt.gte(div,sor) ){ // div is now a temp var
+			BinInt.left(div, sor, len-i);
+			BinInt.sub(end, end, div);
+			BinInt.add(quo, quo, BinInt.ONE);
+		}
+	}
+	i = BinInt.isNegative(a);
+	len = BinInt.isNegative(b);
+	if(i && len || !i && !len){
+		if(c){ BinInt.copy(c,quo); }
+		if(r){ BinInt.copy(r,end); }
+	}else{
+		if(c){ BinInt.neg(c,quo); }
+		if(r){ BinInt.neg(r,end); }
 	}
 };
 // DIVISOR | DIVIDEND = QUOTIENT
 BinInt.div = function(c, a,b){ // c = a / b
-	var sor = new BinInt(), end = new BinInt(), quo = new BinInt(), div = new BinInt(), temp = new BinInt(), temp2 = new BinInt();
-	var i, len = c.length();
-	BinInt.abs(sor,b);
-	BinInt.abs(end,a);
-	quo.zero();
-	for(i=0;i<=len;++i){
-		BinInt.left(temp, quo, 1);
-		BinInt.copy(quo, temp);
-		BinInt.right(div, end, len-i);
-		if( BinInt.gte(div,sor) ){
-			BinInt.left(temp2, sor, len-i);
-			BinInt.sub(temp, end, temp2);
-			BinInt.copy(end, temp);
-			BinInt.add(temp, quo, BinInt.ONE);
-			BinInt.copy(quo, temp);
-		}
-	} // remainder = end
-	BinInt.copy(c,quo);
+	BinInt.rem(null,c,a,b);
 };
 BinInt.mod = function(c, a,b){ // c = a % b
-	var sor = new BinInt(), end = new BinInt(), quo = new BinInt(), div = new BinInt(), temp = new BinInt(), temp2 = new BinInt();
-	var i, len = c.length();
-	BinInt.abs(sor,b);
-	BinInt.abs(end,a);
-	quo.zero();
-	for(i=0;i<=len;++i){
-		BinInt.left(temp, quo, 1);
-		BinInt.copy(quo, temp);
-		BinInt.right(div, end, len-i);
-		if( BinInt.gte(div,sor) ){
-			BinInt.left(temp2, sor, len-i);
-			BinInt.sub(temp, end, temp2);
-			BinInt.copy(end, temp);
-			BinInt.add(temp, quo, BinInt.ONE);
-			BinInt.copy(quo, temp);
-		}
-	}
-	BinInt.copy(c,end);
+	BinInt.rem(c,null,a,b);
 };
-/*
-BinInt.mod = function(c, a,b){ // c = a % b = a - [a/b]*b
-	
-};*/
 BinInt.pow = function(c, a,b){ // c = a ^ b 
 	
 };
@@ -239,9 +230,12 @@ BinInt.TEMP_SUB = null;
 BinInt.TEMP_NEG = null;
 BinInt.TEMP_MUL_A_ABS = null;
 BinInt.TEMP_MUL_B_ABS = null;
-BinInt.TEMP_MUL_A = null;
+BinInt.TEMP_MUL_C_ABS = null;
 BinInt.TEMP_MUL_B = null;
-BinInt.TEMP_MUL_C = null;
+//
+BinInt.TEMP_C = null;
+BinInt.TEMP_B = null;
+BinInt.TEMP_A = null;
 BinInt.init = function(){
 	if(!BinInt.INITIALIZED){
 		BinInt.INITIALIZED = true;
@@ -254,8 +248,18 @@ BinInt.init = function(){
 		BinInt.TEMP_NEG = new BinInt();
 		BinInt.TEMP_MUL_A_ABS = new BinInt();
 		BinInt.TEMP_MUL_B_ABS = new BinInt();
+		BinInt.TEMP_MUL_C_ABS = new BinInt();
 		BinInt.TEMP_MUL_B = new BinInt();
-		BinInt.TEMP_MUL_C = new BinInt();
+		//
+		BinInt.TEMP_A = new BinInt();
+		BinInt.TEMP_B = new BinInt();
+		BinInt.TEMP_C = new BinInt();
+		//
+		BinInt.TEMP_REM_SOR = new BinInt();
+		BinInt.TEMP_REM_END = new BinInt();
+		BinInt.TEMP_REM_DIV = new BinInt();
+		BinInt.TEMP_REM_QUO = new BinInt();
+		BinInt.TEMP_REM_TEMP = new BinInt();
 	}
 };
 
@@ -328,10 +332,9 @@ function BinInt(totSize){
 		ten.setFromInt(10);
 		BinInt.copy(num,self);
 		while( BinInt.gt(num,BinInt.ZERO) ){
-			BinInt.mod(rem,num,ten);
+			BinInt.rem(rem,num,num,ten);
 			str = rem.getIntValue()+str;
-			BinInt.div(temp,num,ten);
-			BinInt.copy(num,temp);
+			//BinInt.copy(num,temp);
 		}
 		return str;
  	};
@@ -353,5 +356,5 @@ function BinInt(totSize){
 		self.super(arguments.callee).kill.call(self,null);
 	});
 	//
-	self.length(totSize?totSize:32);
+	self.length(totSize?totSize:128);
 };

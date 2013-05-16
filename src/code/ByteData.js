@@ -2,17 +2,18 @@
 
 ByteData.BITS_PER_INT = 32;
 ByteData.MAX_SUB_INDEX = ByteData.BITS_PER_INT - 1;
+
 ByteData.copy = function(c,a){ // c = a
-	var i, len = a.length(), was = a.position();
-	c.length(len);
-	a.position(0);
-	c.position(0);
-	for(i=0;i<len;++i){
-		c.write( a.read() );
+	var i, lenA = a._data.length, lenC = c._data.length;
+	for(i=0;i<lenA;++i){
+		c._data[i] = a._data[i];
 	}
-	c.position(was);
-	a.position(was);
-}
+	for(;i<lenC;++i){
+		c._data.pop();
+	}
+	c._length = a._length;
+	c._position = a._position;
+};
 
 function ByteData(){
 	var self = this;
