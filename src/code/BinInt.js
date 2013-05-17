@@ -108,19 +108,17 @@ BinInt.abs = function(c, a){ // c = |a|
 
 BinInt.mul = function(c, a,b){ // c = a * b
 	var tempA = BinInt.TEMP_MUL_A_ABS, tempB = BinInt.TEMP_MUL_B_ABS;
+	var isNegA = BinInt.isNegative(tempA), isNegB = BinInt.isNegative(tempA);
 	BinInt.abs(tempA, a); BinInt.abs(tempB, b);
 	var i, len = c.length();
 	c.zero();
-	tempA._position = 0;
+	tempA.position(0);
 	for(i=0;i<len;++i){
 		if(tempA.read()!=0){
 			BinInt.left(BinInt.TEMP_MUL_B, tempB, i);
 			BinInt.add(c,BinInt.TEMP_MUL_B,c);
-			//BinInt.add(c,tempB,tempC);
 		}
-		//BinInt.left(c, tempB, 1);
 	}
-	var isNegA = BinInt.isNegative(a), isNegB = BinInt.isNegative(b);
 	if( isNegA ^ isNegB ){
 		BinInt.neg(c, c)
 	}
@@ -152,6 +150,50 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 		if(r){ BinInt.neg(r,end); }
 	}
 };
+//
+
+
+
+
+BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
+	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
+	var skipped, i, len = c.length();
+	BinInt.abs(sor,b);
+	BinInt.abs(end,a);
+	var bitLenA = a._position, bitLenB = b._position;
+	for(i=len-1;i>=0;--i){ a._position = i; if( a.read()!=0 ){ a._position = bitLenA; bitLenA = i; break; } }
+	for(i=len-1;i>=0;--i){ b._position = i; if( b.read()!=0 ){ b._position = bitLenB; bitLenB = i; break; } }
+	//console.log("bitLenA: "+bitLenA);
+	//console.log("bitLenB: "+bitLenB);
+	quo.zero();
+	i = len - Math.max(bitLenA,bitLenB);
+	while(i<=len){//bitLenB){//for(i=0;i<=len;++i){
+		BinInt.left(quo, quo, 1);
+		BinInt.right(div, end, len-i);
+		// ONLY REALLY HAVE TO CHECK EVERY N-th OR N-th+1 time - 
+		if( BinInt.gte(div,sor) ){ // div is now a temp var
+			BinInt.left(div, sor, len-i);
+			BinInt.sub(end, end, div);
+			BinInt.add(quo, quo, BinInt.ONE);
+			//console.log("inside: "+i);
+		}
+		++i;
+	}
+	i = BinInt.isNegative(a);
+	len = BinInt.isNegative(b);
+	if(i && len || !i && !len){
+		if(c){ BinInt.copy(c,quo); }
+		if(r){ BinInt.copy(r,end); }
+	}else{
+		if(c){ BinInt.neg(c,quo); }
+		if(r){ BinInt.neg(r,end); }
+	}
+};
+
+
+
+
+
 // DIVISOR | DIVIDEND = QUOTIENT
 BinInt.div = function(c, a,b){ // c = a / b
 	BinInt.rem(null,c,a,b);
@@ -277,9 +319,11 @@ function BinInt(totSize){
 	});*/
 	//
 	this.zero = function(){
-		var was = self.length();
-		self.length(0);
-		self.length(was);
+		var i, len = self._data.length;
+		for(i=0;i<len;++i){
+			self._data[i] = 0;
+		}
+		self._position = 0;
 	};
 	// 
 	this.setFromString = function(str){
@@ -334,6 +378,7 @@ function BinInt(totSize){
 		while( BinInt.gt(num,BinInt.ZERO) ){
 			BinInt.rem(rem,num,num,ten);
 			str = rem.getIntValue()+str;
+			//console.log(rem.getIntValue());
 			//BinInt.copy(num,temp);
 		}
 		return str;
@@ -342,13 +387,13 @@ function BinInt(totSize){
  		var was = self.position();
  		var i, len = self.length();
  		var num = 0;
- 		self.position(0);
+ 		self._position = 0;
  		for(i=0;i<len;++i){
  			if( self.read()!=0 ){
  				num = num | (1<<i);
  			}
  		}
- 		self.position(was);
+ 		self._position = was;
  		return num;
  	}
 	this.kill = Code.overrideClass(this, this.kill, function(){

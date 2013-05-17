@@ -30,7 +30,7 @@ function customClassesLoadedFxn(){
 	var B = new BinInt();
 	var C = new BinInt();
 	A.setFromInt(231);
-	B.setFromInt(62);
+	B.setFromInt(68);
 	//A.setFromString("01001010101");
 	//B.setFromString("11110000111");
 	//BinInt.copy(C,A);
@@ -42,12 +42,34 @@ function customClassesLoadedFxn(){
 	//BinInt.sub( C, A,B );
 	//BinInt.left( C, A, 24, true );
 	//BinInt.right( C, B, 3, true );
-	BinInt.mul( C, A,B );
+
+var t1 = Code.getTimeMilliseconds();
+	for(i=0;i<100;++i){
+		//BinInt.mul( C, A,B );
+		BinInt.div( C, A,B );
+		//BinInt.sub( C, A,B );
+		//BinInt.add( C, A,B );
+	}
+var t2 = Code.getTimeMilliseconds();
+console.log( (t2-t1)/1000.0 );
+	
 	//BinInt.div( C, A,B );
 	console.log("A: "+A.toString());
 	console.log("B: "+B.toString());
 	console.log("C: "+C.toString());
 	console.log("C: "+C.toString10());
+
+return;
+
+
+/*
+128-bit x100 tests:
+add: 0.015
+sub: 0.02
+mul: 0.05
+div: 2.10
+*/
+
 	//A.length(256);
 	A.setFromString("01011101101010100010001101010100000101011110110101010000100001001001110001001101000000101001010101010000100010000101010100101000"+
 					"10101000100001001010100101101001010101010111010110001000101111101010110101010101001010100010010010101010100011010101010110101010"+
@@ -64,6 +86,7 @@ function customClassesLoadedFxn(){
 	console.log("A[10]: "+A.toString10());
 	var t2 = Code.getTimeMilliseconds();
 	console.log( (t2-t1)/1000.0 );
+return;
 	// 128-bit tests:
 	// 15.50  15.90  15.50  - ORIGINAL
 	// 12.40  11.62  12.00  - NEW COPY
@@ -74,6 +97,7 @@ function customClassesLoadedFxn(){
 	//  1.081  1.096  1.126 - REM DIV MOD
 	//  1.083  0.975  1.042 - RE-REM RE-SUB
 	//  0.964  0.945  0.879 - MUL (which isn't used anywhere)
+	// - ZERO
 	// - toString10
 	// - 	[256] = 7.249 7.365 7.409
 	// - 	[512] = 63.716 53.25 62.846
