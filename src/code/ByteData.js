@@ -73,6 +73,37 @@ function ByteData(){
 		}
 		return d;
 	}
+	// TYPES 
+	this.writeByteData = function(ba, rev){
+		var was = ba._position;
+		var i, len = ba._length;
+		if(rev){
+			for(i=0;i<len;++i){
+				ba._position = ba._length - i - 1;
+				self.write( ba.read() );
+			}
+		}else{
+			ba._position = 0;
+			for(i=0;i<len;++i){
+				self.write( ba.read() );
+			}
+		}
+		ba._position = was;
+	}
+	this.readUint4 = function(){
+		return self.readUintN(4);
+	}
+	this.readUintN = function(len){
+		var i, num = 0;
+		for(i=0;i<len;++i){
+			if( self.read() ){
+				num += 1<<i;
+			}
+		}
+		return num;
+	}
+	// 
+	//
 	this._setup_position = function(p){
 		self._index = Math.floor(p / ByteData.BITS_PER_INT);
 		self._subIndex = ByteData.MAX_SUB_INDEX - (p % ByteData.BITS_PER_INT);
@@ -91,18 +122,18 @@ function ByteData(){
 		self.position(was);
 		return str;
 	}
-	/*this.toStringHex = function(){
+	this.toStringHex = function(){
 		var str = "";
-		var i, len = Math.ceil(getTotalBits()/4.0);
-		initRead();
+		var i, len = Math.ceil( (self._length)/4.0 );
+		self._position = 0;
 		for(i=0;i<len;++i){
 			if ( i%8==0 && i>0){
 				str = str + "|"
 			}
-			str = str+readUint4().toString(16).toUpperCase();
+			str = str+self.readUint4().toString(16).toUpperCase();
 		}
 		return str;
-	}*/
+	}
 	this.toString = function(){
 		return this.toStringBin();
  	};
@@ -117,6 +148,115 @@ function ByteData(){
  	}
 	//
 	this.clear();
+}
+
+ByteData.SHA1 = function(message){
+	var mCopy = new ByteData();
+	ByteData.copy(mCopy,message);
+	var originalLen = mCopy.length();
+	// STEP 1) EXTENDIFY - EXTEND MESSAGE TO: MESSAGE|1|0...0|LENGTH -----------------------------------------
+	mCopy.position( originalLen );
+	mCopy.write(1);
+
+	console.log("MESSAGE:");
+	console.log(mCopy.toString());
+
+	var messageLen = mCopy.length();
+	var remainder = 512 - (messageLen % 512);
+	var len64 = new BinInt(64);
+	len64.setFromInt(originalLen);
+	if(remainder < 64){
+		remainder += 512;
+	}
+	for(;remainder>64;--remainder){
+		mCopy.write(0);
+	}
+	for(i=64-1;i>=0;--i){
+		len64.position(i);
+		mCopy.write( len64.read() );
+	}
+	var messageLen = mCopy.length();
+	console.log("NEW MESSAGE:");
+	console.log(mCopy.toString());
+
+	// INIT HASHING
+	var H0 = new BinInt(32); H0.setFromInt( 0x67452301 );
+	var H1 = new BinInt(32); H1.setFromInt( 0xEFCDAB89 );
+	var H2 = new BinInt(32); H2.setFromInt( 0x98BADCFE );
+	var H3 = new BinInt(32); H3.setFromInt( 0x10325476 );
+	var H4 = new BinInt(32); H4.setFromInt( 0xC3D2E1F0 );
+	var A = new BinInt(32), B = new BinInt(32), C = new BinInt(32), D = new BinInt(32), E = new BinInt(32);
+	var F = new BinInt(32), K = new BinInt(32), Z = new BinInt(32), TEMP;
+	// INIT CHUNKS
+	var chunkList = new Array();
+	var chunk;
+	for(i=0;i<16;++i){
+		chunkList.push( new BinInt(32) );
+	}
+	var chunkCount = Math.ceil(messageLen/512);
+	console.log("TOTAL LEN: "+messageLen);
+	var chunk512 = new BinInt(512);
+	// LOOP
+	for(i=0;i<chunkCount;++i){
+		// STEP 2) CHUNKIFY - SPLIT 512-CHUNK INTO 16+64=80 32-BIT SUB-CHUNKS
+		console.log("CHUNK: "+i);
+		mCopy.position(messageLen - (i+1)*512);
+		for(j=0;j<16;++j){
+			chunk = chunkList[j];
+			for(k=0;k<32;++k){
+				chunk._position = 31-k;
+				chunk.write( mCopy.read() );
+			}
+			console.log("        => "+chunk.toString());
+		}
+		// CONTINUE HASH
+		BinInt.copy(A,H0); BinInt.copy(B,H1); BinInt.copy(C,H2); BinInt.copy(D,H3); BinInt.copy(E,H4);
+		for(j=0;j<80;++j){
+			// STEP 3) MIXIFY
+			// Z = W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]
+			// BinInt.leftRotate(Z, Z, 1)
+			// W[i] = ?
+			// F = ?
+			// K = ?
+			/*
+			BinInt.leftRotate(Z,A,5);
+			BinInt.add(Z,Z,E);
+			BinInt.add(Z,Z,F);
+			BinInt.add(Z,Z,K);
+			BinInt.add(Z,Z,W[j]);
+			TEMP = E;
+			//
+			E = D;
+			D = C;
+			C = B; BinInt.leftRotate(C,C,30);
+			B = A;
+			A = Z;
+			Z = TEMP;
+			*/
+		}
+
+		//
+		// STEP 5) SUM HASH
+		BinInt.add(H0,H0,A);
+		BinInt.add(H1,H1,B);
+		BinInt.add(H2,H2,C);
+		BinInt.add(H3,H3,D);
+		BinInt.add(H4,H4,E);
+	}
+	// RETURN
+	var sha1 = new BinInt(160);
+	sha1.position(0);
+	sha1.writeByteData(H4);
+	sha1.writeByteData(H3);
+	sha1.writeByteData(H2);
+	sha1.writeByteData(H1);
+	sha1.writeByteData(H0);
+	console.log( H0.toString() );
+	console.log( H1.toString() );
+	console.log( H2.toString() );
+	console.log( H3.toString() );
+	console.log( H4.toString() );
+	return sha1;
 }
 
 // // ByteData.js

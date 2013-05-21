@@ -258,7 +258,7 @@ BinInt.eq = function(c, a){ // c == a
 BinInt.sameBitLength = function(c, a){ // c.length = a.length
 	//
 };
-BinInt.LETTERS = ["0","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""];
+BinInt.LETTERS = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
 BinInt.get10String = function(){
 	//
 	return "";
@@ -318,6 +318,10 @@ function BinInt(totSize){
 		return self.super(arguments.callee).read.call(self,null);
 	});*/
 	//
+	this._signed = true;
+	this.signed = function(s){
+		return this._signed;
+	}
 	this.zero = function(){
 		var i, len = self._data.length;
 		for(i=0;i<len;++i){
@@ -366,6 +370,19 @@ function BinInt(totSize){
 		str = "["+self.length()+"]"+str;
 		return str;
 	});
+	this.toStringHex = Code.overrideClass(this, this.toStringHex, function(){
+		var str = "";
+		var i, len = Math.ceil( (self._length)/4.0 );
+		self._position = 0;
+		for(i=0;i<len;++i){
+			if ( i%8==0 && i>0){
+				str = "|" + str;
+			}
+			str = (self.readUint4().toString(16).toUpperCase())+str;
+		}
+		str = "["+self.length()+"]"+str;
+		return str;
+	});
 	this.toString10 = function(){
 		str = "";
 		var ten = new BinInt(), num = new BinInt(), rem = new BinInt(), temp = new BinInt();
@@ -403,3 +420,134 @@ function BinInt(totSize){
 	//
 	self.length(totSize?totSize:128);
 };
+
+
+
+
+// ------------------- CRYPTOGRAPHICS
+
+
+
+
+/*
+
+
+
+
+
+
+Diffie-Hellman: 
+PUBLIC: p = prime number, g = base
+A: a = 6;  A = mod( g^a, p )
+B: b = 15; B = mod( g^b, p )
+s = sA = sB = mod( A.^b, p ) = mod( B.^a, p )
+
+p = 23;
+g = 6;
+a = 6;
+A = mod(g.^a,p);
+b = 6;
+B = mod(g.^b,p);
+sA = mod(A.^b,p);
+sB = mod(B.^a,p);
+sA
+sB
+
+isprime(127)
+
+STEPS:
+1) Alice computes random prime number [2^1024+] = p
+2) Alice computes random 
+		primitive root modulo p?
+		base number [] = g
+3) Alice shares p and g with Bob
+4) Alice computes random number [] = a	| Bob computes random number [] = b
+5) Alice computes g^a % p = A	| Bob computes g^b % p = B
+6) Alice sends A to Bob	| Bob sends B to Alice
+7) Alice computes  s = B^a % p	| Bob computes s = A^b % p
+Public: p, g, A, B
+Secret: a, s | b, s
+
+IMPLEMENTATIONS:
+0) pow function 
+1) random number generator
+2) prime number checker
+3) random prime number generator
+4) primitive root calculateion
+
+p = 23;
+g = 6;
+a = 6;
+A = mod(g.^a,p);
+b = 6;
+B = mod(g.^b,p);
+sA = mod(A.^b,p);
+sB = mod(B.^a,p);
+sA
+sB
+
+
+
+Necessary Cryptography:
+
+ANY COMMUNICATION NEEDS A KEY ---- WHERE IS THIS KEY STORED? COOKIES?
+
+REGISTERING / INITIALIZING COMMUNICATION SESSION:::::::::::::::::::::::: ECOMID != ENCRYPT(COMID)
+1) CLIENT ASKS SERVER TO INITIALIZE A SESSION
+2) SERVER GIVES CLIENT PUBLIC-KEY-1 + COMMUNICATION IDENTIFIER (COMMID)
+3) CLIENT GIVES SERVER PUBLIC-KEY-2 + ENCRYPTED PASSWORD + ENCRYPTED COMMID (ECOMID)
+4) SERVER GIVES CLIENT OK + ECOMID
+
+CONTINUING AN EXISTING SESSION:::::::::::::::::::
+1) CLIENT ASKS SERVER FOR A SERVICE + ENCRYPTED DATA/REQUEST + ECOMID
+2) SERVER ASKS CLIENT TO DECRYPT, COMPUTE, ENCRYPT, RETURN A RANDOM-FUNCTION-HASH + ECOMID
+3) CLIENT SENDS SERVER ENCRYPTED FUNCTION(HASH,...) RESULT + ECOMID
+4) SERVER GIVES CLIENT OK + ENCRYPTED DATA/RESPONSE
+
+VERIFICATION CHECKS:
+*SHORT AMOUNT OF TIME HAS PASSED (AN HOUR?)
+*INCORRECT RESPONSE
+
+page?id=
+
+OPERATIONS
+AND
+OR
+XOR
+NOT
+CSL
+CSR
+
+REPRESENTED AS 256 HEX NUMERALS
+EID  = 1024-bit encrypted random-hash
+DATA = N-bit encrypted data
+
+CHARS:
+32:   8  	6 		= 1.333
+64:   16 	11 		= 1.454
+128:  32 	22 		= 1.454
+256:  64 	42 		= 1.523
+512:  128	86 		= 1.488
+1024: 256	171 	= 1.497
+EX:
+32:   01234567
+64:   0123456789ABCDEF
+128:  0123456789ABCDEFGHIJKLMNOPQRSTUV
+256:  0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./
+512:  0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./
+1024: 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz./
+
+
+AES - 128 block size
+
+http://en.wikipedia.org/wiki/Advanced_Encryption_Standard
+
+http://en.wikipedia.org/wiki/Primality_test
+
+*/
+
+
+
+
+
+

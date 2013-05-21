@@ -24,6 +24,31 @@ function customClassesProgressFxn(){
 }
 function customClassesLoadedFxn(){
 	console.log("loading complete");
+var i, j, len;
+var message = new ByteData();
+message.clear();
+
+for(i=0; i<82; ++i){
+	message.write(1);
+	message.write(0);
+	message.write(0);
+	message.write(1);
+	message.write(0);
+}
+message.write(1);
+message.write(1);
+message.write(1);
+message.write(1);
+message.write(1);
+message.write(1);
+message.write(1);
+
+var sha1Sum = ByteData.SHA1( message );
+
+console.log(" SHA1: "+sha1Sum.toString());
+console.log(" SHA1: "+sha1Sum.toStringHex());
+
+return;
 	//var a = new Ajax();
 	var i, len;
 	var A = new BinInt();
