@@ -6,7 +6,7 @@ function FFLoadAll(homeDir, completeFxn,  progressFxn, verbose){
 	this._verbose = verbose?true:false;
 	this.startLoadingFxn = function(){
 		var list = ["BinaryGrid.js","ByteData.js","BinInt.js","Dispatch.js","Dispatchable.js","PNGImage.js","LLNode.js","Queue.js","V2D.js","Complex.js",
-		"Matrix2D.js","Code.js","Set.js","Ticker.js","Keyboard.js","ImageLoader.js","Font.js",
+		"Matrix2D.js","Code.js","LFSRNG.js","Set.js","Ticker.js","Keyboard.js","ImageLoader.js","Font.js",
 		"NextLoader.js","MultiLoader.js","Resource.js","Output.js","Canvas.js","AudioLoader.js",
 		"Ajax.js",
 		"Voxel.js","Lattice.js","Map.js","Graphics.js","DO.js","DOContainer.js","DOText.js","DOScroll.js","Draggable.js",
