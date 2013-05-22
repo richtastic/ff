@@ -24,33 +24,26 @@ function customClassesProgressFxn(){
 }
 function customClassesLoadedFxn(){
 	console.log("loading complete");
+// UNSIGNED INTEGER MATH
+var A = new BinInt(32, false);
+var B = new BinInt(32, false);
+var C = new BinInt(32, false);
 
-	var rng = new LFSRNG(10);
-	console.log( rng.toString() );
-	var i, len, num;
-	var str = "";
-	str = str + "nums = ["; 
-	var list = new Array(10);
-	var count = 500000;
-	for(i=0; i<list.length;++i){
-		list[i] = 0;
-	}
-	for(i=0; i<count;++i){
-		num = rng.next();
-		if(i<2000){
-			str = str + " " + (num);
-		}
-		list[num]++;
-	}
-	str = str + "]; plot(nums,\"-*r\");";
-	console.log(str);
-	for(i=0; i<list.length;++i){
-		list[i] /= count;
-	}
-	console.log(list);
-/*
-counts = [ sum(nums==0), sum(nums==1), sum(nums==2), sum(nums==3), sum(nums==4), sum(nums==5) sum(nums==6), sum(nums==7), sum(nums==8), sum(nums==9)];
-*/
+//               01234567890123456789012345678901234567890
+A.setFromString("10101010101101010010101011010101");
+B.setFromString("00000101011010100101010110100000");
+console.log( A.toString() );
+console.log( A.toString10() );
+console.log( B.toString() );
+console.log( B.toString10() );
+console.log( C.toString() );
+console.log( C.toString10() );
+
+
+return;
+
+
+// DIFFERNTLY-SIZED INTEGER MATH
 
 return;
 var i, j, len;

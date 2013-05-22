@@ -1,5 +1,8 @@
 // BinInt
-BinInt.copy = ByteData.copy;
+BinInt.copy = function(c, a){
+	ByteData.copy(c, a);
+	c._signed = a._signed;
+}
 
 BinInt.and = function(c, a,b){ // c = a & b
 	var datA = a._data, datB = b._data, datC = c._data;
@@ -124,12 +127,17 @@ BinInt.mul = function(c, a,b){ // c = a * b
 	}
 };
 // DIVISOR | DIVIDEND = QUOTIENT
-//
+/*
 BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
 	var i, len = c.length();
-	BinInt.abs(sor,b);
-	BinInt.abs(end,a);
+	if(a._signed && b._signed && c._signed){
+		BinInt.abs(sor,b);
+		BinInt.abs(end,a);
+	}else{
+		BinInt.copy(sor,b);
+		BinInt.copy(end,a);
+	}
 	quo.zero();
 	for(i=0;i<=len;++i){
 		BinInt.left(quo, quo, 1);
@@ -150,7 +158,7 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 		if(r){ BinInt.neg(r,end); }
 	}
 };
-//
+*/
 
 
 
@@ -158,8 +166,13 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
 	var skipped, i, len = c.length();
-	BinInt.abs(sor,b);
-	BinInt.abs(end,a);
+	if(a._signed && b._signed && c._signed){
+		BinInt.abs(sor,b);
+		BinInt.abs(end,a);
+	}else{
+		BinInt.copy(sor,b);
+		BinInt.copy(end,a);
+	}
 	var bitLenA = a._position, bitLenB = b._position;
 	for(i=len-1;i>=0;--i){ a._position = i; if( a.read()!=0 ){ a._position = bitLenA; bitLenA = i; break; } }
 	for(i=len-1;i>=0;--i){ b._position = i; if( b.read()!=0 ){ b._position = bitLenB; bitLenB = i; break; } }
@@ -307,7 +320,7 @@ BinInt.init = function(){
 
 
 
-function BinInt(totSize){
+function BinInt(totSize, signed){
 	BinInt.init();
 	Code.extendClass(this,ByteData,arguments);
 	var self = this;
@@ -318,7 +331,7 @@ function BinInt(totSize){
 		return self.super(arguments.callee).read.call(self,null);
 	});*/
 	//
-	this._signed = true;
+	this._signed = (signed===true || signed===false)?signed:true;
 	this.signed = function(s){
 		return this._signed;
 	}
@@ -418,7 +431,7 @@ function BinInt(totSize){
 		self.super(arguments.callee).kill.call(self,null);
 	});
 	//
-	self.length(totSize?totSize:128);
+	self.length(totSize?totSize:32);
 };
 
 

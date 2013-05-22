@@ -25,11 +25,11 @@ LFSRNG.seedArr = function(arr, mod, add){
 	}
 }
 
-function LFSRNG(count, coeffs, regs){
+function LFSRNG(count, coeffs, regs, mod){
 	var self = this;
 	this._registers = new Array();
 	this._coefficients = new Array();
-	this._mod = 10;
+	this._mod = mod?mod:10;
 	this.length = function(cnt, coe, reg){
 		if(arguments.length>0){
 			var i, len;
@@ -47,7 +47,7 @@ function LFSRNG(count, coeffs, regs){
 				self._coefficients.pop();
 			}
 			if(!coe){
-				LFSRNG.seedArr(self._coefficients, self._mod);
+				LFSRNG.seedArr(self._coefficients, self._mod, 10101010);
 			}
 			cnt -=1;
 			if(reg){
@@ -63,7 +63,7 @@ function LFSRNG(count, coeffs, regs){
 				self._registers.pop();
 			}
 			if(!reg){
-				LFSRNG.seedArr(self._registers, self._mod, 111111111);
+				LFSRNG.seedArr(self._registers, self._mod, 101010101);
 			}
 		}
 		return self._registers.length;
@@ -104,3 +104,31 @@ function LFSRNG(count, coeffs, regs){
 
 
 
+/*
+
+
+	var rng = new LFSRNG(10);
+	console.log( rng.toString() );
+	var i, len, num;
+	var str = "";
+	str = str + "nums = ["; 
+	var list = new Array(10);
+	var count = 500000;
+	for(i=0; i<list.length;++i){
+		list[i] = 0;
+	}
+	for(i=0; i<count;++i){
+		num = rng.next();
+		if(i<2000){
+			str = str + " " + (num);
+		}
+		list[num]++;
+	}
+	str = str + "]; plot(nums,\"-*r\");";
+	console.log(str);
+	for(i=0; i<list.length;++i){
+		list[i] /= count;
+	}
+	console.log(list);
+
+*/
