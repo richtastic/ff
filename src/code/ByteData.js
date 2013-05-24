@@ -27,7 +27,6 @@ function ByteData(){
 	}
 	this.position = function(p){
 		if(arguments.length>0){
-//console.log("SET: "+self._position);
 			self._position = Math.max(0,p);
 			var len = Math.floor(self._postition/ByteData.BITS_PER_INT);
 			while(self._data.length<len){
@@ -135,7 +134,7 @@ function ByteData(){
 		return str;
 	}
 	this.toString = function(){
-		return this.toStringBin();
+		return self.toStringBin();
  	};
  	this.kill = function(){
  		self.clear();
@@ -151,16 +150,15 @@ function ByteData(){
 }
 
 ByteData.SHA1 = function(message){
-	var mCopy = new ByteData();
+	var mCopy = new ByteData();//0, false);
 	ByteData.copy(mCopy,message);
 	var originalLen = mCopy.length();
 	// STEP 1) EXTENDIFY - EXTEND MESSAGE TO: MESSAGE|1|0...0|LENGTH -----------------------------------------
 	mCopy.position( originalLen );
 	mCopy.write(1);
-
 	console.log("MESSAGE:");
 	console.log(mCopy.toString());
-
+	// COPY TO TEMP MESSAGE
 	var messageLen = mCopy.length();
 	var remainder = 512 - (messageLen % 512);
 	var len64 = new BinInt(64);
@@ -176,9 +174,6 @@ ByteData.SHA1 = function(message){
 		mCopy.write( len64.read() );
 	}
 	var messageLen = mCopy.length();
-	console.log("NEW MESSAGE:");
-	console.log(mCopy.toString());
-
 	// INIT HASHING
 	var H0 = new BinInt(32); H0.setFromInt( 0x67452301 );
 	var H1 = new BinInt(32); H1.setFromInt( 0xEFCDAB89 );
@@ -186,56 +181,73 @@ ByteData.SHA1 = function(message){
 	var H3 = new BinInt(32); H3.setFromInt( 0x10325476 );
 	var H4 = new BinInt(32); H4.setFromInt( 0xC3D2E1F0 );
 	var A = new BinInt(32), B = new BinInt(32), C = new BinInt(32), D = new BinInt(32), E = new BinInt(32);
-	var F = new BinInt(32), K = new BinInt(32), Z = new BinInt(32), TEMP;
+	var F = new BinInt(32), K = new BinInt(32), X = new BinInt(32), Y = new BinInt(32), Z = new BinInt(32), TEMP, chunk;
+	var chunk512 = new BinInt(512);
 	// INIT CHUNKS
 	var chunkList = new Array();
-	var chunk;
 	for(i=0;i<16;++i){
 		chunkList.push( new BinInt(32) );
 	}
 	var chunkCount = Math.ceil(messageLen/512);
 	console.log("TOTAL LEN: "+messageLen);
-	var chunk512 = new BinInt(512);
 	// LOOP
 	for(i=0;i<chunkCount;++i){
 		// STEP 2) CHUNKIFY - SPLIT 512-CHUNK INTO 16+64=80 32-BIT SUB-CHUNKS
-		console.log("CHUNK: "+i);
-		mCopy.position(messageLen - (i+1)*512);
+		mCopy.position(i*512);
 		for(j=0;j<16;++j){
 			chunk = chunkList[j];
 			for(k=0;k<32;++k){
 				chunk._position = 31-k;
 				chunk.write( mCopy.read() );
 			}
-			console.log("        => "+chunk.toString());
 		}
 		// CONTINUE HASH
 		BinInt.copy(A,H0); BinInt.copy(B,H1); BinInt.copy(C,H2); BinInt.copy(D,H3); BinInt.copy(E,H4);
 		for(j=0;j<80;++j){
-			// STEP 3) MIXIFY
-			// Z = W[j-3] ^ W[j-8] ^ W[j-14] ^ W[j-16]
-			// BinInt.leftRotate(Z, Z, 1)
-			// W[i] = ?
-			// F = ?
-			// K = ?
-			/*
-			BinInt.leftRotate(Z,A,5);
-			BinInt.add(Z,Z,E);
-			BinInt.add(Z,Z,F);
-			BinInt.add(Z,Z,K);
-			BinInt.add(Z,Z,W[j]);
-			TEMP = E;
-			//
-			E = D;
-			D = C;
-			C = B; BinInt.leftRotate(C,C,30);
-			B = A;
-			A = Z;
-			Z = TEMP;
-			*/
+			chunk = chunkList[j%16];
+			// STEP 3) DEFINE KEY AND FUNCTION:
+			if(j<20){ // F = (B & C) | (!B & D)
+				K.setFromInt(0x5A827999);
+				BinInt.andFast(X,B,C);
+				BinInt.notFast(Y,B);
+				BinInt.andFast(Y,Y,D);
+				BinInt.orFast(F,X,Y);
+			}else if(j<40){ // F = B ^ C ^ D
+				K.setFromInt(0x6ED9EBA1);
+				BinInt.xorFast(X,B,C);
+				BinInt.xorFast(F,X,D);
+			}else if(j<60){ // F = (B & C) | (B & D) | (C & D)
+				K.setFromInt(0x8F1BBCDC);
+				BinInt.andFast(X,B,C);
+				BinInt.andFast(Y,B,D);
+				BinInt.andFast(Z,C,D);
+				BinInt.orFast(Y,X,Y);
+				BinInt.orFast(F,Y,Z);
+			}else{ // F = B ^ C ^ D
+				K.setFromInt(0xCA62C1D6);
+				BinInt.xorFast(X,B,C);
+				BinInt.xorFast(F,X,D);
+			}
+			// STEP 4) MIXIFY
+			// NEXT A = LC(A,5) + F + K + E + chunk
+			BinInt.leftCircular(X,A,5);
+			BinInt.add(Y,F,K);
+			BinInt.add(Z,E,chunk);
+			BinInt.add(Y,X,Y);
+			BinInt.add(Z,Y,Z);
+			// E = D  |  D = C  |  C = LR(B,30)  |  B = A
+			BinInt.copy(E,D);
+			BinInt.copy(D,C);
+			BinInt.leftCircular(C,B,30);
+			BinInt.copy(B,A);
+			BinInt.copy(A,Z);
+			// update chunk list
+			BinInt.xorFast(X,chunkList[(j+13)%16],chunkList[(j+8)%16]);
+			BinInt.xorFast(Y,chunkList[(j+2)%16],chunkList[(j+0)%16]);
+			BinInt.xorFast(Z,X,Y);
+			BinInt.leftCircular(Z,Z,1);
+			BinInt.copy(chunk,Z);
 		}
-
-		//
 		// STEP 5) SUM HASH
 		BinInt.add(H0,H0,A);
 		BinInt.add(H1,H1,B);
@@ -251,11 +263,6 @@ ByteData.SHA1 = function(message){
 	sha1.writeByteData(H2);
 	sha1.writeByteData(H1);
 	sha1.writeByteData(H0);
-	console.log( H0.toString() );
-	console.log( H1.toString() );
-	console.log( H2.toString() );
-	console.log( H3.toString() );
-	console.log( H4.toString() );
 	return sha1;
 }
 

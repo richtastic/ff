@@ -24,14 +24,40 @@ function customClassesProgressFxn(){
 }
 function customClassesLoadedFxn(){
 	console.log("loading complete");
-// UNSIGNED INTEGER MATH
-var A = new BinInt(32, false);
-var B = new BinInt(32, false);
-var C = new BinInt(32, false);
+/*
+// UNSIGNED INTEGER && DIFFERNTLY-SIZED INTEGER MATH
+var A = new BinInt(16, false);
+var B = new BinInt(100, false);
+var C = new BinInt(60, false);
 
 //               01234567890123456789012345678901234567890
-A.setFromString("10101010101101010010101011010101");
-B.setFromString("00000101011010100101010110100000");
+//A.setFromString("10101010101101010010101011010101");
+//B.setFromString("00000101011010100101010110100000");
+//               01234567890123456789012345678901234567890
+A.setFromString("10101010101101010");
+B.setFromString("1110110010000100010000101010110111111000110010101110010101000000001010101000101010100110101011010101");
+C.setFromString("111111111111111111111111111111111111111111111111111111111111111");
+//BinInt.and(C,A,B);
+//BinInt.or(C,A,B);
+//BinInt.xor(C,A,B);
+//BinInt.not(C,A);
+//BinInt.left(C,A, 4);
+//BinInt.left(C,A, 4, true);
+//BinInt.left(C,B, 56);
+//BinInt.leftCircular(C,A, 2);
+//BinInt.leftCircular(C,B, 2);
+//BinInt.right(C,A, 4);
+//BinInt.right(C,A, 4, true);
+//BinInt.right(C,B, 2);
+//BinInt.rightCircular(C,A, 2);
+//BinInt.leftCircular(C,B, 2);
+console.log( A.toString() );
+console.log( B.toString() );
+console.log( C.toString() );
+//BinInt.add(C,A,B);
+/*
+10101010101101010010101011010101 + 00000101011010100101010110100000
+2954854517
 console.log( A.toString() );
 console.log( A.toString10() );
 console.log( B.toString() );
@@ -43,13 +69,53 @@ console.log( C.toString10() );
 return;
 
 
-// DIFFERNTLY-SIZED INTEGER MATH
+*/
 
-return;
+//         00001111222233334444555566667777888899990000111122223333444455556666777788889999
+//echo -n "ABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCDABCD" | sha1sum
+// = cb3c60433b5fd6ce8e062f821b68270b6c5c8ce8
 var i, j, len;
 var message = new ByteData();
 message.clear();
-
+for(i=0; i<20; ++i){
+// A
+message.write(0);
+message.write(1);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(1);
+// B
+message.write(0);
+message.write(1);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(1);
+message.write(0);
+// C
+message.write(0);
+message.write(1);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(1);
+message.write(1);
+// D
+message.write(0);
+message.write(1);
+message.write(0);
+message.write(0);
+message.write(0);
+message.write(1);
+message.write(0);
+message.write(0);
+}
+/*
 for(i=0; i<82; ++i){
 	message.write(1);
 	message.write(0);
@@ -64,14 +130,26 @@ message.write(1);
 message.write(1);
 message.write(1);
 message.write(1);
-
+*/
 var sha1Sum = ByteData.SHA1( message );
 
 console.log(" SHA1: "+sha1Sum.toString());
 console.log(" SHA1: "+sha1Sum.toStringHex());
+console.log("CORRECT     "+"6dcd4ce2 3d88e2ee 9568ba54 6c007c63 d9131c1b");
+//console.log("CORRECT     "+"da39a3ee|5e6b4b0d|3255bfef|95601890|afd80709");
+
+/*
+echo -n "" | sha1sum
+da39a3ee5e6b4b0d3255bfef95601890afd80709
+
+echo -n "A" | sha1sum
+6dcd4ce23d88e2ee9568ba546c007c63d9131c1b
+
+*/
 
 return;
-	//var a = new Ajax();
+
+// TIMING ...
 	var i, len;
 	var A = new BinInt();
 	var B = new BinInt();
@@ -107,6 +185,7 @@ console.log( (t2-t1)/1000.0 );
 	console.log("C: "+C.toString10());
 
 return;
+
 
 
 /*
@@ -174,6 +253,7 @@ return;
 	//ByteData.xor(C,A,B);
 	console.log( " = "+C.toString() );
 	*/
+//var a = new Ajax();
 }
 
 </script>

@@ -3,38 +3,86 @@ BinInt.copy = function(c, a){
 	ByteData.copy(c, a);
 	c._signed = a._signed;
 }
-
-BinInt.and = function(c, a,b){ // c = a & b
+//////////////////////////////////////////////////////////////////////////////////////////////////// AND
+BinInt.and = function(c, a,b){ // c = a & b 
+	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
+	var i, len = c.length(), aV, bV;
+	BinInt.copy(tempA,a); BinInt.copy(tempB,b); BinInt.copy(tempC,c);
+	tempA.position(0); tempB.position(0); tempC.position(0);
+	for(i=0;i<len;++i){
+		aV = tempA.read(); bV = tempB.read();
+		tempC.write( (aV!=0) && (bV!=0) );
+	}
+	BinInt.copy(c,tempC);
+};
+BinInt.andFast = function(c, a,b){ // c = a & b   |a| = |b| = |c|
 	var datA = a._data, datB = b._data, datC = c._data;
 	var i, len = datC.length;
 	for(i=0;i<len;++i){
 		datC[i] = datA[i] & datB[i];
 	}
 };
-BinInt.or = function(c, a,b){ // c = a | b
+//////////////////////////////////////////////////////////////////////////////////////////////////// OR
+BinInt.or = function(c, a,b){ // c = a | b 
+	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
+	var i, len = c.length(), aV, bV;
+	BinInt.copy(tempA,a); BinInt.copy(tempB,b); BinInt.copy(tempC,c);
+	tempA.position(0); tempB.position(0); tempC.position(0);
+	for(i=0;i<len;++i){
+		aV = tempA.read(); bV = tempB.read();
+		tempC.write( (aV!=0) || (bV!=0) );
+	}
+	BinInt.copy(c,tempC);
+};
+BinInt.orFast = function(c, a,b){ // c = a | b   |a| = |b| = |c|
 	var datA = a._data, datB = b._data, datC = c._data;
 	var i, len = datC.length;
 	for(i=0;i<len;++i){
 		datC[i] = datA[i] | datB[i];
 	}
 };
-BinInt.xor = function(c, a,b){ // c = a ^ b
+//////////////////////////////////////////////////////////////////////////////////////////////////// XOR
+BinInt.xor = function(c, a,b){ // c = a ^ b 
+	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
+	var i, len = c.length(), aV, bV;
+	BinInt.copy(tempA,a); BinInt.copy(tempB,b); BinInt.copy(tempC,c);
+	tempA.position(0); tempB.position(0); tempC.position(0);
+	for(i=0;i<len;++i){
+		aV = tempA.read(); bV = tempB.read();
+		tempC.write( ((aV==0) && (bV!=0)) || ((aV!=0) && (bV==0)) );
+	}
+	BinInt.copy(c,tempC);
+};
+BinInt.xorFast = function(c, a,b){ // c = a ^ b   |a| = |b| = |c|
 	var datA = a._data, datB = b._data, datC = c._data;
 	var i, len = datC.length;
 	for(i=0;i<len;++i){
 		datC[i] = datA[i] ^ datB[i];
 	}
 };
-BinInt.not = function(c, a,b){ // c = ~a
+//////////////////////////////////////////////////////////////////////////////////////////////////// NOT
+BinInt.not = function(c, a){ //  c = ~a
+	var tempA = BinInt.TEMP_A, tempC = BinInt.TEMP_C;
+	var i, len = c.length(), aV;
+	BinInt.copy(tempA,a); BinInt.copy(tempC,c);
+	tempA.position(0); tempC.position(0);
+	for(i=0;i<len;++i){
+		aV = tempA.read();
+		tempC.write( aV==0 );
+	}
+	BinInt.copy(c,tempC);
+};
+BinInt.notFast = function(c, a){ // c = ~a   |a| = |c|
 	var datA = a._data, datC = c._data;
 	var i, len = datC.length;
 	for(i=0;i<len;++i){
 		datC[i] = ~datA[i];
 	}
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////// LEFT
 BinInt.left = function(c, a, b, arith){ // c = a<<b [arithmetic]
 	var tempC = BinInt.TEMP_C, tempA = BinInt.TEMP_A;
-	BinInt.copy(tempC, c); BinInt.copy(tempA, a);
+	BinInt.copy(tempC, a); BinInt.copy(tempA, a);
 	var val, i, len = tempA._length;
 	for(i=len-1; i>=b; --i){
 		tempA._position = i-b;
@@ -44,16 +92,57 @@ BinInt.left = function(c, a, b, arith){ // c = a<<b [arithmetic]
 	}
 	if(!arith){
 		val = 0;
+	}else{
+		tempA._position = 0;
+		val = tempA.read();
 	}
 	tempC._position = 0;
 	for(i=0;i<b;++i){
 		tempC.write( val );
 	}
-	BinInt.copy(c,tempC)
+	len = c._length;
+	var was = c._position;
+	if(len==tempC._length){
+		BinInt.copy(c,tempC);
+	}else{
+		c._position = 0;
+		tempC._position = 0;
+		for(i=0;i<len;++i){
+			val = tempC.read();
+			c.write( val );
+		}
+	}
+	c._position = was;
 };
+BinInt.leftCircular = function(c, a, b){ // c = a<<b [circular]
+	var tempC = BinInt.TEMP_C, tempA = BinInt.TEMP_A;
+	BinInt.copy(tempC, a); BinInt.copy(tempA, a);
+	var val, i, len = tempA._length;
+	b = b%len;
+	for(i=0; i<len; ++i){
+		tempA._position = (len+i-b)%len;
+		val = tempA.read();
+		tempC._position = i;
+		tempC.write( val );
+	}
+	len = c._length;
+	var was = c._position;
+	if(len==tempC._length){
+		BinInt.copy(c,tempC);
+	}else{
+		c._position = 0;
+		tempC._position = 0;
+		for(i=0;i<len;++i){
+			val = tempC.read();
+			c.write( val );
+		}
+	}
+	c._position = was;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// RIGHT
 BinInt.right = function(c, a, b, arith){ // c = a>>b [arithmetic]
 	var tempC = BinInt.TEMP_C, tempA = BinInt.TEMP_A;
-	BinInt.copy(tempC, c); BinInt.copy(tempA, a);
+	BinInt.copy(tempC, a); BinInt.copy(tempA, a);
 	var val, i, len = tempA._length;
 	var lmb = len-b;
 	tempA._position = tempA._length-1; val = tempA.read(); tempA._position = b;
@@ -68,10 +157,49 @@ BinInt.right = function(c, a, b, arith){ // c = a>>b [arithmetic]
 	for(;i<len;++i){
 		tempC.write( val );
 	}
-	BinInt.copy(c,tempC);
+	//
+	len = c._length;
+	var was = c._position;
+	if(len==tempC._length){
+		BinInt.copy(c,tempC);
+	}else{
+		c._position = 0;
+		tempC._position = 0;
+		for(i=0;i<len;++i){
+			val = tempC.read();
+			c.write( val );
+		}
+	}
+	c._position = was;
 };
-
+BinInt.rightCircular = function(c, a, b){ // c = a>>b [circular]
+	var tempC = BinInt.TEMP_C, tempA = BinInt.TEMP_A;
+	BinInt.copy(tempC, a); BinInt.copy(tempA, a);
+	var val, i, len = tempA._length;
+	b = b%len;
+	for(i=0; i<len; ++i){
+		tempA._position = (len-i+b)%len;
+		val = tempA.read();
+		tempC._position = i;
+		tempC.write( val );
+	}
+	len = c._length;
+	var was = c._position;
+	if(len==tempC._length){
+		BinInt.copy(c,tempC);
+	}else{
+		c._position = 0;
+		tempC._position = 0;
+		for(i=0;i<len;++i){
+			val = tempC.read();
+			c.write( val );
+		}
+	}
+	c._position = was;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// IS-NEGATIVE
 BinInt.isNegative = function(a){ // a<0
+	if(!a._signed){ return false; }
 	var was = a._position;
 	a._position = a._length - 1;
 	var isNeg = a.read();
@@ -324,14 +452,24 @@ function BinInt(totSize, signed){
 	BinInt.init();
 	Code.extendClass(this,ByteData,arguments);
 	var self = this;
-	/*this.read = Code.overrideClass(self, self.read, function(){
+	this.read = Code.overrideClass(this, this.read, function(){
+		//console.log(self._position);
 		if(self._position >=self._length){ // always return the last bit
-			--self._position;
+			/*if(self._signed){
+
+			}else{
+				return 0;
+			}
+			//--self._position;
+			*/
+			return BinInt.isNegative(self)?1:0;
+		}else{
+			return self.super(arguments.callee).read.call(self,null);
 		}
-		return self.super(arguments.callee).read.call(self,null);
-	});*/
+	});
 	//
-	this._signed = (signed===true || signed===false)?signed:true;
+	//this._signed = (signed===true || signed===false)?signed:true;
+	this._signed = false;
 	this.signed = function(s){
 		return this._signed;
 	}
