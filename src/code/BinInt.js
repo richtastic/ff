@@ -204,8 +204,100 @@ BinInt.isNegative = function(a){ // a<0
 	a._position = a._length - 1;
 	var isNeg = a.read();
 	a._position = was;
-	return isNeg;
+	return isNeg!=0?true:false;
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////// EQUAL-TO
+BinInt.eq = function(c, a){ // c == a
+	var negA = BinInt.isNegative(a), negC = BinInt.isNegative(c);
+	if( (negA && !negC) || (!negA && negC) ){
+		return false;
+	}else if( negA && negC ){
+		// 
+	}
+	var wasA = a.position(), wasC = c.position();
+	var valA, valC;
+	var retVal = true;
+	var len = Math.max( a.length(), c.length() );
+	for(i=len-1; i>=0; --i){
+		a._position = i; c._position = i;
+		valA = a.read(); valC = c.read();
+		if( valA != valC ){
+			retVal = false;
+			break;
+		}
+	}
+	a._position = wasA; c._position = wasC;
+	return retVal;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// GREATER-THAN-EQUAL-TO
+BinInt.ge = function(c, a){ // c >= a
+	var negA = BinInt.isNegative(a), negC = BinInt.isNegative(c);
+	if( negA && !negC ){
+		return true;
+	}else if( !negA && negC ){
+		return false;
+	}else if( negA && negC ){
+		// 
+	}
+	var wasA = a.position(), wasC = c.position();
+	var valA, valC, retVal = true;
+	var len = Math.max( a.length(), c.length() );
+	for(i=len-1; i>=0; --i){
+		a._position = i; c._position = i;
+		valA = a.read(); valC = c.read();
+		if( (valA==0) && (valC!=0) ){
+			retVal = true;
+			break;
+		}else if( valA != valC ){
+			retVal = false;
+			break;
+		}
+	}
+	a._position = wasA; c._position = wasC;
+	return retVal;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// GREATER-THAN
+BinInt.gt = function(c, a){ // c > a
+	var negA = BinInt.isNegative(a), negC = BinInt.isNegative(c);
+	if( negA && !negC ){
+		return true;
+	}else if( !negA && negC ){
+		return false;
+	}else if( negA && negC ){
+		// 
+	}
+	var wasA = a.position(), wasC = c.position();
+	var valA, valC, retVal = true;
+	var len = Math.max( a.length(), c.length() );
+	var eq = true;
+	for(i=len-1; i>=0; --i){
+		a._position = i; c._position = i;
+		valA = a.read(); valC = c.read();
+		if( (valA==0) && (valC!=0) ){
+			retVal = true;
+			eq = false;
+			break;
+		}else if( valA != valC ){
+			retVal = false;
+			eq = false;
+			break;
+		}
+	}
+	a._position = wasA; c._position = wasC;
+	if(eq){
+		return false;
+	}
+	return retVal;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// LESS-THAN-EQUAL-TO
+BinInt.le = function(c, a){ // c < a
+	return !BinInt.gt(c,a);
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// LESS-THAN
+BinInt.lt = function(c, a){ // c < a
+	return !BinInt.gte(c,a);
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// ADD
 BinInt.add = function(c, a,b){ // c = a + b
 	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
 	var i, len = c.length(), aV, bV, cV = 0;
@@ -289,8 +381,6 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 */
 
 
-
-
 BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
 	var skipped, i, len = c.length();
@@ -342,59 +432,29 @@ BinInt.div = function(c, a,b){ // c = a / b
 BinInt.mod = function(c, a,b){ // c = a % b
 	BinInt.rem(c,null,a,b);
 };
-BinInt.pow = function(c, a,b){ // c = a ^ b 
-	
-};
-BinInt.gte = function(c, a){ // c >= a
-	var negC = BinInt.isNegative(c);
-	var negA = BinInt.isNegative(a);
-	if(!negA && !negC){
-		BinInt.sub(BinInt.TEMP_COMP, c,a);
-		if( BinInt.isNegative(BinInt.TEMP_COMP) ){
-			return false;
-		}else{
-			return true;
-		}
-	}else{ // fill this out
-		return false;
+//////////////////////////////////////////////////////////////////////////////////////////////////// POWER
+BinInt.pow = function(c, a,b){ // c = a^b
+	c.setFromInt(1);
+	if( BinInt.eq(a,BinInt.ZERO) ){
+		c.setFromInt(0);
+		return;
+	}else if( BinInt.eq(b,BinInt.ZERO) ){
+		return;
 	}
-};
-BinInt.gt = function(c, a){ // c > a
-	var negC = BinInt.isNegative(c);
-	var negA = BinInt.isNegative(a);
-	if(!negA && !negC){
-		BinInt.sub(BinInt.TEMP_COMP, c,a);
-		if( BinInt.isNegative(BinInt.TEMP_COMP) ){
-			return false;
-		}else{
-			if( BinInt.eq(c,a) ){
-				return false
-			}
-			return true;
-		}
-	}else{ // fill this out
-		return false;
-	}
-};
-BinInt.lt = function(c, a){ // c < a
-	return false;
-};
-BinInt.eq = function(c, a){ // c == a
-	var valA, valC, i, len = Math.max( c.length(), a.length() );
-	var wasA = a.position(), wasC = c.position();
-	a.position(0); c.position(0);
-	var eq = true;
+	var n = BinInt.TEMP_POWER_N;
+	var i, len = c.length();
+	BinInt.copy(n,a);
+	n.length(len);
+	var was = b._position;
+	b.position(0);
 	for(i=0;i<len;++i){
-		valA = a.read();
-		valC = c.read();
-		if(valA!=valC){
-			eq = false;
-			break;
+		if( b.read()!=0 ){
+			console.log(i+" : 0");
+			BinInt.mul(c,c,n);
 		}
+		BinInt.mul(n,n,n);
 	}
-	a.position(wasA); c.position(wasC);
-	return eq;
-};
+}
 
 BinInt.sameBitLength = function(c, a){ // c.length = a.length
 	//
@@ -415,6 +475,7 @@ BinInt.TEMP_MUL_A_ABS = null;
 BinInt.TEMP_MUL_B_ABS = null;
 BinInt.TEMP_MUL_C_ABS = null;
 BinInt.TEMP_MUL_B = null;
+BinInt.TEMP_POWER_N = null;
 //
 BinInt.TEMP_C = null;
 BinInt.TEMP_B = null;
@@ -433,6 +494,8 @@ BinInt.init = function(){
 		BinInt.TEMP_MUL_B_ABS = new BinInt();
 		BinInt.TEMP_MUL_C_ABS = new BinInt();
 		BinInt.TEMP_MUL_B = new BinInt();
+		//
+		BinInt.TEMP_POWER_N = new BinInt();
 		//
 		BinInt.TEMP_A = new BinInt();
 		BinInt.TEMP_B = new BinInt();
@@ -455,21 +518,14 @@ function BinInt(totSize, signed){
 	this.read = Code.overrideClass(this, this.read, function(){
 		//console.log(self._position);
 		if(self._position >=self._length){ // always return the last bit
-			/*if(self._signed){
-
-			}else{
-				return 0;
-			}
-			//--self._position;
-			*/
 			return BinInt.isNegative(self)?1:0;
 		}else{
 			return self.super(arguments.callee).read.call(self,null);
 		}
 	});
 	//
-	//this._signed = (signed===true || signed===false)?signed:true;
-	this._signed = false;
+	this._signed = (signed===true || signed===false)?signed:false;
+	//this._signed = false;
 	this.signed = function(s){
 		return this._signed;
 	}
@@ -498,10 +554,13 @@ function BinInt(totSize, signed){
 			ander <<= 1;
 		}
 		if(num<0){
-			len = self.length();
-			for(;i<len;++i){
-				self.write(1);
-			}
+			num = 1;
+		}else{
+			num = 0;
+		}
+		len = self.length();	
+		for(;i<len;++i){
+			self.write(num);
 		}
 	};
 	//
@@ -575,6 +634,21 @@ function BinInt(totSize, signed){
 
 
 
+BinInt.millerRabinPrime = function(c){ // c probably isn't a composite - 1/4
+
+}
+BinInt.isPrime = function(c){ // c probably isn't a composite
+	for(var i=0;i<10;++i){
+		if(!millerRabinPrime(c)){
+			return false;
+		}
+	}
+	return true;
+}
+BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
+	//
+	// 
+}
 // ------------------- CRYPTOGRAPHICS
 
 
@@ -608,7 +682,7 @@ isprime(127)
 
 STEPS:
 1) Alice computes random prime number [2^1024+] = p
-2) Alice computes random 
+2) Alice computes random prime number [2^1024+] = g
 		primitive root modulo p?
 		base number [] = g
 3) Alice shares p and g with Bob
