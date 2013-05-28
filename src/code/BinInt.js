@@ -1,7 +1,16 @@
 // BinInt
+//////////////////////////////////////////////////////////////////////////////////////////////////// COPY
 BinInt.copy = function(c, a){
 	ByteData.copy(c, a);
 	c._signed = a._signed;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////// RANDOMIZE
+BinInt.randomize = function(c, rng){
+	var i, len = c.length();
+	c.position(0);
+	for(i=0;i<len;++i){
+		c.write( (rng.next()%2)==1?1:0 );
+	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////// AND
 BinInt.and = function(c, a,b){ // c = a & b 
@@ -260,11 +269,15 @@ BinInt.ge = function(c, a){ // c >= a
 BinInt.gt = function(c, a){ // c > a
 	var negA = BinInt.isNegative(a), negC = BinInt.isNegative(c);
 	if( negA && !negC ){
+		//console.log("-----------------------A");
 		return true;
 	}else if( !negA && negC ){
+		//console.log("-----------------------B");
 		return false;
 	}else if( negA && negC ){
-		// 
+		//console.log("-----------------------C");// 
+	}else{
+		//console.log("-----------------------D");
 	}
 	var wasA = a.position(), wasC = c.position();
 	var valA, valC, retVal = true;
@@ -295,7 +308,7 @@ BinInt.le = function(c, a){ // c < a
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////// LESS-THAN
 BinInt.lt = function(c, a){ // c < a
-	return !BinInt.gte(c,a);
+	return !BinInt.ge(c,a);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////// ADD
 BinInt.add = function(c, a,b){ // c = a + b
@@ -362,7 +375,7 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 	for(i=0;i<=len;++i){
 		BinInt.left(quo, quo, 1);
 		BinInt.right(div, end, len-i);
-		if( BinInt.gte(div,sor) ){ // div is now a temp var
+		if( BinInt.ge(div,sor) ){ // div is now a temp var
 			BinInt.left(div, sor, len-i);
 			BinInt.sub(end, end, div);
 			BinInt.add(quo, quo, BinInt.ONE);
@@ -384,7 +397,7 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
 	var skipped, i, len = c.length();
-	if(a._signed && b._signed && c._signed){
+	if(true){//a.isNegative(a)){} && b._signed && c._signed){
 		BinInt.abs(sor,b);
 		BinInt.abs(end,a);
 	}else{
@@ -392,17 +405,17 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 		BinInt.copy(end,a);
 	}
 	var bitLenA = a._position, bitLenB = b._position;
-	for(i=len-1;i>=0;--i){ a._position = i; if( a.read()!=0 ){ a._position = bitLenA; bitLenA = i; break; } }
-	for(i=len-1;i>=0;--i){ b._position = i; if( b.read()!=0 ){ b._position = bitLenB; bitLenB = i; break; } }
+	//for(i=len-1;i>=0;--i){ a._position = i; if( a.read()!=0 ){ a._position = bitLenA; bitLenA = i; break; } }
+	//for(i=len-1;i>=0;--i){ b._position = i; if( b.read()!=0 ){ b._position = bitLenB; bitLenB = i; break; } }
 	//console.log("bitLenA: "+bitLenA);
 	//console.log("bitLenB: "+bitLenB);
 	quo.zero();
-	i = len - Math.max(bitLenA,bitLenB);
+	i = 0;//len - Math.max(bitLenA,bitLenB);
 	while(i<=len){//bitLenB){//for(i=0;i<=len;++i){
 		BinInt.left(quo, quo, 1);
 		BinInt.right(div, end, len-i);
 		// ONLY REALLY HAVE TO CHECK EVERY N-th OR N-th+1 time - 
-		if( BinInt.gte(div,sor) ){ // div is now a temp var
+		if( BinInt.ge(div,sor) ){ // div is now a temp var
 			BinInt.left(div, sor, len-i);
 			BinInt.sub(end, end, div);
 			BinInt.add(quo, quo, BinInt.ONE);
@@ -602,11 +615,19 @@ function BinInt(totSize, signed){
 		BinInt.copy(temp, self);
 		ten.setFromInt(10);
 		BinInt.copy(num,self);
-		while( BinInt.gt(num,BinInt.ZERO) ){
+		if(self._signed){
+			str = str + "-";
+			BinInt.neg(num,num);
+		}
+		var gt = BinInt.gt(num,BinInt.ZERO);
+		var val;
+		while( gt ){
 			BinInt.rem(rem,num,num,ten);
-			str = rem.getIntValue()+str;
+			val = rem.getIntValue();
+			str = " |"+val+"| "+str;
 			//console.log(rem.getIntValue());
 			//BinInt.copy(num,temp);
+			gt = BinInt.gt(num,BinInt.ZERO);
 		}
 		return str;
  	};
@@ -634,8 +655,34 @@ function BinInt(totSize, signed){
 
 
 
-BinInt.millerRabinPrime = function(c){ // c probably isn't a composite - 1/4
-
+BinInt.millerRabinPrime = function(n){ // c probably isn't a composite - 1/4
+	/*var nm1 = new BinInt(), a = new BinInt(), b = new BinInt();
+	var rng = new LFSR();
+	BinInt.copy(a, n);
+	BinInt.copy(b, n);
+	BinInt.copy(nm1, n);
+	BinInt.randomize(a, rng); // random number a: 1 <= a <= n-1
+	b = a^m
+	return false;*/
+	/*
+YO HOMES:
+	nm1 = n - 1;
+	k = number of zeros from position(0) of nm1;
+	twok = 0x01 << k;
+	m = nm1/twok;
+	a = rand() % n;
+	b = (a^m) % n;
+	if( b==1 ){
+		return true;
+	}
+	for(i=0; i<k; ++i){
+		if( b==nm1 ){
+			return true;
+		}
+		b = (b*b)%n;
+	}
+	return false;
+	*/
 }
 BinInt.isPrime = function(c){ // c probably isn't a composite
 	for(var i=0;i<10;++i){
@@ -646,9 +693,20 @@ BinInt.isPrime = function(c){ // c probably isn't a composite
 	return true;
 }
 BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
-	//
-	// 
-}
+	temp = Math.max(a,b);
+	b = Math.min(a,b);
+	a = temp;
+	while(b!=0){
+		q = Math.floor(a/b);
+		r = a%b;//a - b*q;
+		if(r == 0){
+			return b;
+		}
+		a = b;
+		b = r;
+	}
+	return a;
+};
 // ------------------- CRYPTOGRAPHICS
 
 

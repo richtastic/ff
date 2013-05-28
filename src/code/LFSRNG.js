@@ -4,7 +4,7 @@ LFSRNG.seedArr = function(arr, mod, add){
 	var time = Code.getTimeMilliseconds() + (add?add:0);
 	var i, len, t = new Array();
 	i = 0;
-	while(time>0 && i<5){
+	while(time>0 && i<10){
 		t[i] = time % mod;
 		//if(t[i]==0){t[i]=1;}
 		time = Math.floor(time/10);
@@ -15,7 +15,7 @@ LFSRNG.seedArr = function(arr, mod, add){
 	len = arr.length;
 	for(i=0;i<len;++i){
 		if(i>=tLen){
-			arr[i] = ( t[i%tLen] + t[(i+Math.floor(i/tLen))%tLen] + 0) % mod;
+			arr[i] = ( t[i%tLen] + t[(i+Math.floor(i/tLen))%tLen] + 0) % mod; // this has had problems
 			/*if(arr[i]==0){
 				arr[i] = (t[i%tLen] * t[(i+Math.floor(i/tLen))%tLen] + 1) % mod;
 			}*/
@@ -47,7 +47,7 @@ function LFSRNG(count, coeffs, regs, mod){
 				self._coefficients.pop();
 			}
 			if(!coe){
-				LFSRNG.seedArr(self._coefficients, self._mod, 10101010);
+				LFSRNG.seedArr(self._coefficients, self._mod, 101010101010);
 			}
 			cnt -=1;
 			if(reg){
@@ -63,7 +63,7 @@ function LFSRNG(count, coeffs, regs, mod){
 				self._registers.pop();
 			}
 			if(!reg){
-				LFSRNG.seedArr(self._registers, self._mod, 101010101);
+				LFSRNG.seedArr(self._registers, self._mod, 1010101010101);
 			}
 		}
 		return self._registers.length;
@@ -97,7 +97,7 @@ function LFSRNG(count, coeffs, regs, mod){
 		return str;
 	}
 	 // ----- contsructor
-	this.length(count?count:5, coeffs, regs);
+	this.length(count?count:10, coeffs, regs);
 }
 
 

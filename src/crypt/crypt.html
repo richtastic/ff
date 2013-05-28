@@ -24,14 +24,13 @@ function customClassesProgressFxn(){
 }
 function customClassesLoadedFxn(){
 	console.log("loading complete");
-
 // UNSIGNED INTEGER && DIFFERNTLY-SIZED INTEGER MATH
-var A = new BinInt(16, true);
-var B = new BinInt(100, true);
-var C = new BinInt(60, true);
-// var A = new BinInt(16, false);
-// var B = new BinInt(100, false);
-// var C = new BinInt(60, false);
+// var A = new BinInt(16, true);
+// var B = new BinInt(100, true);
+// var C = new BinInt(60, true);
+var A = new BinInt(16, false);
+var B = new BinInt(100, false);
+var C = new BinInt(60, false);
 //               01234567890123456789012345678901234567890
 //A.setFromString("10101010101101010010101011010101");
 //B.setFromString("00000101011010100101010110100000");
@@ -63,9 +62,16 @@ C.setFromInt(7);
 /*A.setFromInt(5);
 B.setFromInt(7);
 C.setFromInt(0xFFFFFFFF);*/
-console.log( A.toString() );
-console.log( B.toString() );
-console.log( C.toString() );
+
+var rng = new LFSRNG();
+console.log(rng.toString());
+BinInt.randomize(A, rng);
+BinInt.randomize(B, rng);
+BinInt.randomize(C, rng);
+
+console.log( A.toString() +" ("+ A.toString10() +")" );
+console.log( B.toString() +" ("+ B.toString10() +")"  );
+console.log( C.toString() +" ("+ C.toString10() +")"  );
 //BinInt.mul(C,A,B);
 //BinInt.pow(C,A,B);
 // console.log( BinInt.eq(A,B) );

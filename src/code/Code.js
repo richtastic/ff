@@ -245,7 +245,19 @@ Code.getTimeMilliseconds = function(){
     var d = new Date();
     return d.getTime();
 };
-
+Code.gcd = function(a,b){
+	a = Math.abs(a); b = Math.abs(b);
+	temp = Math.max(a,b); b = Math.min(a,b); a = temp;
+	while(b!=0){
+		q = Math.floor(a/b);
+		r = a%b; // a - b*q;
+		if(r == 0){
+			return b;
+		}
+		a = b; b = r;
+	}
+	return Math.max(a,b);
+};
 
 
 
