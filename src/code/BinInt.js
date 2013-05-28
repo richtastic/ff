@@ -1,9 +1,15 @@
 // BinInt
 //////////////////////////////////////////////////////////////////////////////////////////////////// COPY
-BinInt.copy = function(c, a){
+BinInt.copy = function(c, a){ // exact copy - data, length, sign
 	ByteData.copy(c, a);
 	c._signed = a._signed;
-}
+};
+BinInt.copyLen = function(c, a){ // c will get same storage length as a
+	//
+};
+BinInt.copyReg = function(c, a){ // copy from |a| to fit |c| as if hardware-register
+	//
+};
 //////////////////////////////////////////////////////////////////////////////////////////////////// RANDOMIZE
 BinInt.randomize = function(c, rng){
 	var i, len = c.length();
@@ -310,6 +316,14 @@ BinInt.le = function(c, a){ // c < a
 BinInt.lt = function(c, a){ // c < a
 	return !BinInt.ge(c,a);
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////// ABS
+BinInt.abs = function(c, a){ // c = |a|
+	if( BinInt.isNegative(a) ){
+		BinInt.neg(c,a);
+	}else if(c!=a){
+		BinInt.copy(c,a);
+	}
+};
 //////////////////////////////////////////////////////////////////////////////////////////////////// ADD
 BinInt.add = function(c, a,b){ // c = a + b
 	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
@@ -324,22 +338,16 @@ BinInt.add = function(c, a,b){ // c = a + b
 	BinInt.copy(c,tempC);
 	return (cV!=0)?1:0;
 };
-
+//////////////////////////////////////////////////////////////////////////////////////////////////// NEG
 BinInt.neg = function(c, a){ // c = -a
 	BinInt.not(c,a);
 	BinInt.add(c,BinInt.ONE,c);
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////// SUB
 BinInt.sub = function(c, a,b){ // c = a - b
 	BinInt.copy(BinInt.TEMP_C, c);
 	BinInt.neg(BinInt.TEMP_C , b );
 	return BinInt.add( c, a, BinInt.TEMP_C );
-};
-BinInt.abs = function(c, a){ // c = |a|
-	if( BinInt.isNegative(a) ){
-		BinInt.neg(c,a);
-	}else if(c!=a){
-		BinInt.copy(c,a);
-	}
 };
 
 BinInt.mul = function(c, a,b){ // c = a * b
