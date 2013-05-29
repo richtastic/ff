@@ -5,10 +5,18 @@ BinInt.copy = function(c, a){ // exact copy - data, length, sign
 	c._signed = a._signed;
 };
 BinInt.copyLen = function(c, a){ // c will get same storage length as a
-	//
+	c.length( a.length() );
 };
 BinInt.copyReg = function(c, a){ // copy from |a| to fit |c| as if hardware-register
-	//
+	var wasA = a.position(), wasC = c.position();
+	var lenC = c.length();
+	var valA;
+	a.position(0); c.position(0);
+	for(i=0;i<lenC;++i){
+		valA = a.read();
+		c.write(valA);
+	}
+	a.position(wasA); c.position(wasC);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////// RANDOMIZE
 BinInt.randomize = function(c, rng){
@@ -257,6 +265,7 @@ BinInt.ge = function(c, a){ // c >= a
 	var wasA = a.position(), wasC = c.position();
 	var valA, valC, retVal = true;
 	var len = Math.max( a.length(), c.length() );
+	a.position(0); c.position(0);
 	for(i=len-1; i>=0; --i){
 		a._position = i; c._position = i;
 		valA = a.read(); valC = c.read();
@@ -275,20 +284,17 @@ BinInt.ge = function(c, a){ // c >= a
 BinInt.gt = function(c, a){ // c > a
 	var negA = BinInt.isNegative(a), negC = BinInt.isNegative(c);
 	if( negA && !negC ){
-		//console.log("-----------------------A");
 		return true;
 	}else if( !negA && negC ){
-		//console.log("-----------------------B");
 		return false;
 	}else if( negA && negC ){
-		//console.log("-----------------------C");// 
-	}else{
-		//console.log("-----------------------D");
+		//
 	}
 	var wasA = a.position(), wasC = c.position();
 	var valA, valC, retVal = true;
 	var len = Math.max( a.length(), c.length() );
 	var eq = true;
+	a.position(0); c.position(0);
 	for(i=len-1; i>=0; --i){
 		a._position = i; c._position = i;
 		valA = a.read(); valC = c.read();
@@ -316,14 +322,6 @@ BinInt.le = function(c, a){ // c < a
 BinInt.lt = function(c, a){ // c < a
 	return !BinInt.ge(c,a);
 };
-//////////////////////////////////////////////////////////////////////////////////////////////////// ABS
-BinInt.abs = function(c, a){ // c = |a|
-	if( BinInt.isNegative(a) ){
-		BinInt.neg(c,a);
-	}else if(c!=a){
-		BinInt.copy(c,a);
-	}
-};
 //////////////////////////////////////////////////////////////////////////////////////////////////// ADD
 BinInt.add = function(c, a,b){ // c = a + b
 	var tempA = BinInt.TEMP_A, tempB = BinInt.TEMP_B, tempC = BinInt.TEMP_C;
@@ -349,74 +347,43 @@ BinInt.sub = function(c, a,b){ // c = a - b
 	BinInt.neg(BinInt.TEMP_C , b );
 	return BinInt.add( c, a, BinInt.TEMP_C );
 };
-
+//////////////////////////////////////////////////////////////////////////////////////////////////// ABS
+BinInt.abs = function(c, a){ // c = |a|
+	if( BinInt.isNegative(a) ){
+		BinInt.neg(c,a);
+	}else{
+		BinInt.copyReg(c,a);
+	}
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// MUL
 BinInt.mul = function(c, a,b){ // c = a * b
-	var tempA = BinInt.TEMP_MUL_A_ABS, tempB = BinInt.TEMP_MUL_B_ABS;
-	var isNegA = BinInt.isNegative(tempA), isNegB = BinInt.isNegative(tempA);
-	BinInt.abs(tempA, a); BinInt.abs(tempB, b);
+	var tempA = BinInt.TEMP_MUL_A_ABS, tempB = BinInt.TEMP_MUL_B_ABS, tempC = BinInt.TEMP_MUL_B;
+	var isNegA = BinInt.isNegative(a), isNegB = BinInt.isNegative(b);
+	BinInt.copyLen(tempA, c); BinInt.abs(tempA, a);
+	BinInt.copyLen(tempB, c); BinInt.abs(tempB, b);
+	BinInt.copyLen(tempC, c);
 	var i, len = c.length();
 	c.zero();
 	tempA.position(0);
 	for(i=0;i<len;++i){
 		if(tempA.read()!=0){
-			BinInt.left(BinInt.TEMP_MUL_B, tempB, i);
-			BinInt.add(c,BinInt.TEMP_MUL_B,c);
+			BinInt.left(tempC, tempB, i);
+			BinInt.add(c,tempC,c);
 		}
 	}
 	if( isNegA ^ isNegB ){
 		BinInt.neg(c, c)
 	}
 };
-// DIVISOR | DIVIDEND = QUOTIENT
-/*
-BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
-	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
-	var i, len = c.length();
-	if(a._signed && b._signed && c._signed){
-		BinInt.abs(sor,b);
-		BinInt.abs(end,a);
-	}else{
-		BinInt.copy(sor,b);
-		BinInt.copy(end,a);
-	}
-	quo.zero();
-	for(i=0;i<=len;++i){
-		BinInt.left(quo, quo, 1);
-		BinInt.right(div, end, len-i);
-		if( BinInt.ge(div,sor) ){ // div is now a temp var
-			BinInt.left(div, sor, len-i);
-			BinInt.sub(end, end, div);
-			BinInt.add(quo, quo, BinInt.ONE);
-		}
-	}
-	i = BinInt.isNegative(a);
-	len = BinInt.isNegative(b);
-	if(i && len || !i && !len){
-		if(c){ BinInt.copy(c,quo); }
-		if(r){ BinInt.copy(r,end); }
-	}else{
-		if(c){ BinInt.neg(c,quo); }
-		if(r){ BinInt.neg(r,end); }
-	}
-};
-*/
-
 
 BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
 	var skipped, i, len = c.length();
-	if(true){//a.isNegative(a)){} && b._signed && c._signed){
-		BinInt.abs(sor,b);
-		BinInt.abs(end,a);
-	}else{
-		BinInt.copy(sor,b);
-		BinInt.copy(end,a);
-	}
+		BinInt.copyLen(sor,c); BinInt.abs(sor,b);
+		BinInt.copyLen(end,c); BinInt.abs(end,a);
+		BinInt.copyLen(quo,c);
+		BinInt.copyLen(div,c);
 	var bitLenA = a._position, bitLenB = b._position;
-	//for(i=len-1;i>=0;--i){ a._position = i; if( a.read()!=0 ){ a._position = bitLenA; bitLenA = i; break; } }
-	//for(i=len-1;i>=0;--i){ b._position = i; if( b.read()!=0 ){ b._position = bitLenB; bitLenB = i; break; } }
-	//console.log("bitLenA: "+bitLenA);
-	//console.log("bitLenB: "+bitLenB);
 	quo.zero();
 	i = 0;//len - Math.max(bitLenA,bitLenB);
 	while(i<=len){//bitLenB){//for(i=0;i<=len;++i){
@@ -504,9 +471,9 @@ BinInt.TEMP_A = null;
 BinInt.init = function(){
 	if(!BinInt.INITIALIZED){
 		BinInt.INITIALIZED = true;
-		BinInt.ZERO = new BinInt();
+		BinInt.ZERO = new BinInt(32);
 		BinInt.ZERO.setFromInt(0);
-		BinInt.ONE = new BinInt();
+		BinInt.ONE = new BinInt(32);
 		BinInt.ONE.setFromInt(1);
 		BinInt.TEMP_COMP = new BinInt();
 		BinInt.TEMP_SUB = new BinInt();
@@ -623,8 +590,9 @@ function BinInt(totSize, signed){
 		BinInt.copy(temp, self);
 		ten.setFromInt(10);
 		BinInt.copy(num,self);
-		if(self._signed){
-			str = str + "-";
+		var isNeg = false;
+		if(BinInt.isNegative(num)){//if(self._signed){
+			isNeg = true;
 			BinInt.neg(num,num);
 		}
 		var gt = BinInt.gt(num,BinInt.ZERO);
@@ -632,10 +600,13 @@ function BinInt(totSize, signed){
 		while( gt ){
 			BinInt.rem(rem,num,num,ten);
 			val = rem.getIntValue();
-			str = " |"+val+"| "+str;
+			str = val+str;
 			//console.log(rem.getIntValue());
 			//BinInt.copy(num,temp);
 			gt = BinInt.gt(num,BinInt.ZERO);
+		}
+		if(isNeg){
+			str = "-" + str;
 		}
 		return str;
  	};
