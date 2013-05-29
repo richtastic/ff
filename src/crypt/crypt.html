@@ -26,7 +26,6 @@ function customClassesProgressFxn(){
 function customClassesLoadedFxn(){
 	console.log("loading complete");
 
-
 // UNSIGNED INTEGER && DIFFERNTLY-SIZED INTEGER MATH
 // var A = new BinInt(16, true);
 // var B = new BinInt(100, true);
@@ -86,8 +85,23 @@ C.setFromString("111111111111111111111111111111111111111111111111111111111111111
 // BinInt.sub(C, A,B); // BinInt.not(C,C); BinInt.add(C,C,BinInt.ONE);
 //BinInt.abs(C, A);
 //BinInt.mul(C, A,B);
+//BinInt.rem(D,C, B,A);
+//BinInt.div(C, B,A);
+//BinInt.mod(C, B,A);
+// IFFY ON : UNSIGNED = NEG * POS
 
-BinInt.rem(D,C, B,A);
+//B.setFromInt(2);//34567890);
+//BinInt.pow(C, A,B);
+
+//BinInt.max(C,A,B);
+//BinInt.min(C,A,B);
+
+// A.length(16); A.setFromInt(4095);
+// B.length(16); B.setFromInt(3465);
+// C.length(32);
+// BinInt.gcd(C,A,B); // gcd(4095,3465) = 15
+
+// AND FINALLY ... CHECK TO SEE IF THE SIGN BIT SHOULD BE COPIED INTERNALLY
 
 console.log( A.toString() +" ("+ A.toString10() +")" );
 console.log( B.toString() +" ("+ B.toString10() +")" );

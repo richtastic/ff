@@ -359,9 +359,10 @@ BinInt.abs = function(c, a){ // c = |a|
 BinInt.mul = function(c, a,b){ // c = a * b
 	var tempA = BinInt.TEMP_MUL_A_ABS, tempB = BinInt.TEMP_MUL_B_ABS, tempC = BinInt.TEMP_MUL_B;
 	var isNegA = BinInt.isNegative(a), isNegB = BinInt.isNegative(b);
-	BinInt.copyLen(tempA, c); BinInt.abs(tempA, a);
-	BinInt.copyLen(tempB, c); BinInt.abs(tempB, b);
-	BinInt.copyLen(tempC, c);
+	var tempLen =  Math.max(c.length(), a.length(), b.length());
+	tempA.length(a.length()); BinInt.abs(tempA, a);
+	tempB.length(tempLen); BinInt.abs(tempB, b);
+	tempC.length(tempLen);
 	var i, len = c.length();
 	c.zero();
 	tempA.position(0);
@@ -372,17 +373,17 @@ BinInt.mul = function(c, a,b){ // c = a * b
 		}
 	}
 	if( isNegA ^ isNegB ){
-		BinInt.neg(c, c)
+		BinInt.neg(c, c); // c._signed ?
 	}
 };
-
-BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
+//////////////////////////////////////////////////////////////////////////////////////////////////// REMAINDER = DIV + MOD
+BinInt.rem = function(r,c, a,b){ // c = a/b, r = a%b 	:	DIVISOR | DIVIDEND = QUOTIENT
 	var sor = BinInt.TEMP_REM_SOR, end = BinInt.TEMP_REM_END, quo = BinInt.TEMP_REM_QUO, div = BinInt.TEMP_REM_DIV;
-	var skipped, i, len = c.length();
-		BinInt.copyLen(sor,c); BinInt.abs(sor,b);
-		BinInt.copyLen(end,c); BinInt.abs(end,a);
-		BinInt.copyLen(quo,c);
-		BinInt.copyLen(div,c);
+	var skipped, i, len = Math.max((c!=null)?c.length():0, a.length(), b.length());// r?0:r.length()
+		sor.length(len); BinInt.abs(sor,b);
+		end.length(len); BinInt.abs(end,a);
+		quo.length(len);
+		div.length(len);
 	var bitLenA = a._position, bitLenB = b._position;
 	quo.zero();
 	i = 0;//len - Math.max(bitLenA,bitLenB);
@@ -394,29 +395,24 @@ BinInt.rem = function(r,c, a,b){ // c = a / b, r = a%b
 			BinInt.left(div, sor, len-i);
 			BinInt.sub(end, end, div);
 			BinInt.add(quo, quo, BinInt.ONE);
-			//console.log("inside: "+i);
 		}
 		++i;
 	}
 	i = BinInt.isNegative(a);
 	len = BinInt.isNegative(b);
 	if(i && len || !i && !len){
-		if(c){ BinInt.copy(c,quo); }
-		if(r){ BinInt.copy(r,end); }
+		if(c){ BinInt.copyReg(c,quo); }
+		if(r){ BinInt.copyReg(r,end); }
 	}else{
-		if(c){ BinInt.neg(c,quo); }
-		if(r){ BinInt.neg(r,end); }
+		if(c){ BinInt.neg(c,quo); } // c._signed ?
+		if(r){ BinInt.neg(r,end); } // r._signed ?
 	}
 };
-
-
-
-
-
-// DIVISOR | DIVIDEND = QUOTIENT
+//////////////////////////////////////////////////////////////////////////////////////////////////// DIVISION
 BinInt.div = function(c, a,b){ // c = a / b
 	BinInt.rem(null,c,a,b);
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////// MODULIS
 BinInt.mod = function(c, a,b){ // c = a % b
 	BinInt.rem(c,null,a,b);
 };
@@ -437,16 +433,33 @@ BinInt.pow = function(c, a,b){ // c = a^b
 	b.position(0);
 	for(i=0;i<len;++i){
 		if( b.read()!=0 ){
-			console.log(i+" : 0");
 			BinInt.mul(c,c,n);
 		}
 		BinInt.mul(n,n,n);
 	}
-}
-
-BinInt.sameBitLength = function(c, a){ // c.length = a.length
-	//
+	b._position = was;
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////// MAX
+BinInt.max = function(c, a,b){ // c = max(a,b)
+	if( BinInt.gt(a,b) ){
+		BinInt.copyReg(c,a);
+	}else{
+		BinInt.copyReg(c,b);
+	}
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////// MIN
+BinInt.min = function(c, a,b){ // c = min(a,b)
+	if( BinInt.gt(b,a) ){
+		BinInt.copyReg(c,a);
+	}else{
+		BinInt.copyReg(c,b);
+	}
+};
+
+
+
+
+
 BinInt.LETTERS = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
 BinInt.get10String = function(){
 	//
@@ -465,9 +478,14 @@ BinInt.TEMP_MUL_C_ABS = null;
 BinInt.TEMP_MUL_B = null;
 BinInt.TEMP_POWER_N = null;
 //
-BinInt.TEMP_C = null;
-BinInt.TEMP_B = null;
 BinInt.TEMP_A = null;
+BinInt.TEMP_B = null;
+BinInt.TEMP_C = null;
+//
+BinInt.TEMP_GCD_A = null;
+BinInt.TEMP_GCD_B = null;
+BinInt.TEMP_GCD_C = null;
+BinInt.TEMP_GCD_D = null;
 BinInt.init = function(){
 	if(!BinInt.INITIALIZED){
 		BinInt.INITIALIZED = true;
@@ -488,6 +506,10 @@ BinInt.init = function(){
 		BinInt.TEMP_A = new BinInt();
 		BinInt.TEMP_B = new BinInt();
 		BinInt.TEMP_C = new BinInt();
+		BinInt.TEMP_GCD_A = new BinInt();
+		BinInt.TEMP_GCD_B = new BinInt();
+		BinInt.TEMP_GCD_C = new BinInt();
+		BinInt.TEMP_GCD_D = new BinInt();
 		//
 		BinInt.TEMP_REM_SOR = new BinInt();
 		BinInt.TEMP_REM_END = new BinInt();
@@ -672,26 +694,40 @@ BinInt.isPrime = function(c){ // c probably isn't a composite
 	return true;
 }
 BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
-	temp = Math.max(a,b);
-	b = Math.min(a,b);
-	a = temp;
-	while(b!=0){
-		q = Math.floor(a/b);
-		r = a%b;//a - b*q;
-		if(r == 0){
-			return b;
+	var tempA = BinInt.TEMP_GCD_A, tempB = BinInt.TEMP_GCD_B, q = BinInt.TEMP_GCD_C, r = BinInt.TEMP_GCD_D;
+	var len = Math.max( c.length(), b.length(), a.length() );
+	tempA.length(len); tempB.length(len); q.length(len); r.length(len);
+	BinInt.max(tempA, a,b);
+	BinInt.min(tempB, a,b);
+	while( !BinInt.eq(tempB,BinInt.ZERO) ){
+		BinInt.rem(r,q, tempA, tempB);
+		if( BinInt.eq(r,BinInt.ZERO) ){
+			BinInt.copyReg(c, tempB);
+			return;
 		}
-		a = b;
-		b = r;
+		BinInt.copyReg(tempA,tempB);
+		BinInt.copyReg(tempB,r);
 	}
-	return a;
+	BinInt.copyReg(c, tempA);
 };
 // ------------------- CRYPTOGRAPHICS
 
 
-
-
 /*
+Code.gcd = function(a,b){
+	a = Math.abs(a); b = Math.abs(b);
+	temp = Math.max(a,b); b = Math.min(a,b); a = temp;
+	while(b!=0){
+		q = Math.floor(a/b);
+		r = a%b; // a - b*q;
+		if(r == 0){
+			return b;
+		}
+		a = b; b = r;
+	}
+	return Math.max(a,b);
+};
+
 
 
 
