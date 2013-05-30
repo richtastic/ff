@@ -486,6 +486,7 @@ BinInt.TEMP_GCD_A = null;
 BinInt.TEMP_GCD_B = null;
 BinInt.TEMP_GCD_C = null;
 BinInt.TEMP_GCD_D = null;
+BinInt.TEMP_DH = null;
 BinInt.init = function(){
 	if(!BinInt.INITIALIZED){
 		BinInt.INITIALIZED = true;
@@ -516,6 +517,8 @@ BinInt.init = function(){
 		BinInt.TEMP_REM_DIV = new BinInt();
 		BinInt.TEMP_REM_QUO = new BinInt();
 		BinInt.TEMP_REM_TEMP = new BinInt();
+		//
+		BinInt.TEMP_DH = new BinInt(32,false);
 	}
 };
 
@@ -653,9 +656,26 @@ function BinInt(totSize, signed){
 	self.length(totSize?totSize:32);
 };
 
-
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////// GCD
+BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
+	var tempA = BinInt.TEMP_GCD_A, tempB = BinInt.TEMP_GCD_B, q = BinInt.TEMP_GCD_C, r = BinInt.TEMP_GCD_D;
+	var len = Math.max( c.length(), b.length(), a.length() );
+	tempA.length(len); tempB.length(len); q.length(len); r.length(len);
+	BinInt.max(tempA, a,b);
+	BinInt.min(tempB, a,b);
+	while( !BinInt.eq(tempB,BinInt.ZERO) ){
+		BinInt.rem(r,q, tempA, tempB);
+		if( BinInt.eq(r,BinInt.ZERO) ){
+			BinInt.copyReg(c, tempB);
+			return;
+		}
+		BinInt.copyReg(tempA,tempB);
+		BinInt.copyReg(tempB,r);
+	}
+	BinInt.copyReg(c, tempA);
+};
+// ------------------- CRYPTOGRAPHICS
+//////////////////////////////////////////////////////////////////////////////////////////////////// MILLER-RABIN PRIMALITY TEST
 BinInt.millerRabinPrime = function(n){ // c probably isn't a composite - 1/4
 	/*var nm1 = new BinInt(), a = new BinInt(), b = new BinInt();
 	var rng = new LFSR();
@@ -684,55 +704,53 @@ YO HOMES:
 	}
 	return false;
 	*/
+	return false;
 }
-BinInt.isPrime = function(c){ // c probably isn't a composite
+/*BinInt.isPrime = function(c){ // c probably isn't a composite
 	for(var i=0;i<10;++i){
 		if(!millerRabinPrime(c)){
 			return false;
 		}
 	}
 	return true;
+}*/
+BinInt.randomPrime = function(p, max){ // p = random prime number, max = maximum number of tests
+	var i, j, maxTests = (max!=null && max!=undefined)?max:255, numTests = p.length();
+	var done;
+	for(i=0; i<maxTests; ++i){
+		console.log("TEST "+i);
+		BinInt.randomize(p);
+		done = true;
+		for(j=0; j<numTests; ++j){
+			if( !millerRabinPrime(p) ){
+				done = false;
+				break;
+			}
+		}
+	}
+	return false;
 }
-BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
-	var tempA = BinInt.TEMP_GCD_A, tempB = BinInt.TEMP_GCD_B, q = BinInt.TEMP_GCD_C, r = BinInt.TEMP_GCD_D;
-	var len = Math.max( c.length(), b.length(), a.length() );
-	tempA.length(len); tempB.length(len); q.length(len); r.length(len);
-	BinInt.max(tempA, a,b);
-	BinInt.min(tempB, a,b);
-	while( !BinInt.eq(tempB,BinInt.ZERO) ){
-		BinInt.rem(r,q, tempA, tempB);
-		if( BinInt.eq(r,BinInt.ZERO) ){
-			BinInt.copyReg(c, tempB);
-			return;
-		}
-		BinInt.copyReg(tempA,tempB);
-		BinInt.copyReg(tempB,r);
-	}
-	BinInt.copyReg(c, tempA);
+BinInt.diffieHellmanPublic = function(p,g){ // out: p = random prime number, g = random base
+	p.signed(false); g.signed(false);
+	// randomPrime(p);
+	// randomPrime(g);
 };
-// ------------------- CRYPTOGRAPHICS
-
-
+BinInt.diffieHellmanPrivate = function(pri,pub, p,g){ // in: p,g | out: pri = private key, pub = public key
+	pri.signed(false); pub.signed(false);
+	//BinInt.randomize(pri);
+	BinInt.TEMP_DH.length(pub.length()*2); // ???
+	BinInt.pow(BinInt.TEMP_DH, g,pri); // may need temporary register to hold g^pri
+	BinInt.mod(pub, BinInt.TEMP_DH,p);
+};
+BinInt.diffieHellmanSecret = function(s, pri,pub, p){ // in: pri,pub, p, out: secret
+	BinInt.TEMP_DH.length(s.length()*2); // ???
+	BinInt.pow(BinInt.TEMP_DH, pub,pri); // may need temporary register to hold pub^pri
+	BinInt.mod(s, BinInt.TEMP_DH,p);
+};
 /*
-Code.gcd = function(a,b){
-	a = Math.abs(a); b = Math.abs(b);
-	temp = Math.max(a,b); b = Math.min(a,b); a = temp;
-	while(b!=0){
-		q = Math.floor(a/b);
-		r = a%b; // a - b*q;
-		if(r == 0){
-			return b;
-		}
-		a = b; b = r;
-	}
-	return Math.max(a,b);
-};
 
-
-
-
-
-
+2^2 = 4
+2^16
 
 Diffie-Hellman: 
 PUBLIC: p = prime number, g = base
@@ -741,15 +759,18 @@ B: b = 15; B = mod( g^b, p )
 s = sA = sB = mod( A.^b, p ) = mod( B.^a, p )
 
 p = 23;
-g = 6;
-a = 6;
+g = 7;
+a = 9;
 A = mod(g.^a,p);
-b = 6;
+b = 12;
 B = mod(g.^b,p);
 sA = mod(A.^b,p);
 sB = mod(B.^a,p);
 sA
 sB
+*/
+
+/*
 
 isprime(127)
 
