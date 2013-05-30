@@ -22,8 +22,14 @@ BinInt.copyReg = function(c, a){ // copy from |a| to fit |c| as if hardware-regi
 BinInt.randomize = function(c, rng){
 	var i, len = c.length();
 	c.position(0);
-	for(i=0;i<len;++i){
-		c.write( (rng.next()%2)==1?1:0 );
+	if(rng){
+		for(i=0;i<len;++i){
+			c.write( (rng.next()%2)==1?1:0 );
+		}
+	}else{
+		for(i=0;i<len;++i){
+			c.write( ( Math.floor(Math.random()*1000) %2)==1?1:0 );
+		}
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////// AND
@@ -417,7 +423,7 @@ BinInt.mod = function(c, a,b){ // c = a % b
 	BinInt.rem(c,null,a,b);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////// POWER
-BinInt.pow = function(c, a,b){ // c = a^b
+BinInt.pow = function(c, a,b, mo){ // c = a^b % n
 	c.setFromInt(1);
 	if( BinInt.eq(a,BinInt.ZERO) ){
 		c.setFromInt(0);
@@ -427,15 +433,24 @@ BinInt.pow = function(c, a,b){ // c = a^b
 	}
 	var n = BinInt.TEMP_POWER_N;
 	var i, len = c.length();
-	BinInt.copy(n,a);
-	n.length(len);
+	n.length(len*2);
+	BinInt.copyReg(n,a);
 	var was = b._position;
 	b.position(0);
 	for(i=0;i<len;++i){
 		if( b.read()!=0 ){
 			BinInt.mul(c,c,n);
+			if(mo){
+				BinInt.mod(c,c,mo);
+			}
+			//console.log(c.toString10());
+			//console.log( BinInt.eq(BinInt.ZERO,c));
 		}
 		BinInt.mul(n,n,n);
+		if(mo){
+			console.log(n.toString10());
+			BinInt.mod(n,n,mo);
+		}
 	}
 	b._position = was;
 };
@@ -487,6 +502,11 @@ BinInt.TEMP_GCD_B = null;
 BinInt.TEMP_GCD_C = null;
 BinInt.TEMP_GCD_D = null;
 BinInt.TEMP_DH = null;
+BinInt.TEMP_PRIME_A = null;
+BinInt.TEMP_PRIME_B = null;
+BinInt.TEMP_PRIME_C = null;
+BinInt.TEMP_PRIME_D = null;
+BinInt.TEMP_PRIME_E = null;
 BinInt.init = function(){
 	if(!BinInt.INITIALIZED){
 		BinInt.INITIALIZED = true;
@@ -519,6 +539,11 @@ BinInt.init = function(){
 		BinInt.TEMP_REM_TEMP = new BinInt();
 		//
 		BinInt.TEMP_DH = new BinInt(32,false);
+		BinInt.TEMP_PRIME_A = new BinInt(32,false);
+		BinInt.TEMP_PRIME_B = new BinInt(32,false);
+		BinInt.TEMP_PRIME_C = new BinInt(32,false);
+		BinInt.TEMP_PRIME_D = new BinInt(32,false);
+		BinInt.TEMP_PRIME_E = new BinInt(32,false);
 	}
 };
 
@@ -630,7 +655,9 @@ function BinInt(totSize, signed){
 			//BinInt.copy(num,temp);
 			gt = BinInt.gt(num,BinInt.ZERO);
 		}
-		if(isNeg){
+		if(str == ""){
+			str = "0";
+		}else if(isNeg){
 			str = "-" + str;
 		}
 		return str;
@@ -677,22 +704,13 @@ BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
 // ------------------- CRYPTOGRAPHICS
 //////////////////////////////////////////////////////////////////////////////////////////////////// MILLER-RABIN PRIMALITY TEST
 BinInt.millerRabinPrime = function(n){ // c probably isn't a composite - 1/4
-	/*var nm1 = new BinInt(), a = new BinInt(), b = new BinInt();
-	var rng = new LFSR();
-	BinInt.copy(a, n);
-	BinInt.copy(b, n);
-	BinInt.copy(nm1, n);
-	BinInt.randomize(a, rng); // random number a: 1 <= a <= n-1
-	b = a^m
-	return false;*/
 	/*
-YO HOMES:
-	nm1 = n - 1;
-	k = number of zeros from position(0) of nm1;
-	twok = 0x01 << k;
-	m = nm1/twok;
-	a = rand() % n;
-	b = (a^m) % n;
+x	nm1 = n - 1;
+x	k = number of zeros from position(0) of nm1;
+x	twok = 0x01 << k;
+x	m = nm1/twok;
+x	a = rand() % n;
+x	b = (a^m) % n;
 	if( b==1 ){
 		return true;
 	}
@@ -703,8 +721,46 @@ YO HOMES:
 		b = (b*b)%n;
 	}
 	return false;
+^ CHANGED A BIT
 	*/
-	return false;
+console.log( "n:    " + n.toString10() );
+	var i, len = n.length();
+	var nm1 = BinInt.TEMP_PRIME_A; nm1.length(len); BinInt.sub(nm1,n,BinInt.ONE);
+console.log( "n-1:  " + nm1.toString10() );
+	nm1._position = 0;
+	for(i=0;i<len;++i){
+		if(nm1.read()!=0){
+			break;
+		}
+	}
+console.log( "k:    " + i );
+	var m = BinInt.TEMP_PRIME_B; m.length(len); BinInt.right(m, nm1, i);
+console.log( "m:    " + m.toString10() );
+	var a = BinInt.TEMP_PRIME_D; a.length(len); a.setFromInt(0);
+a.setFromInt(9695);
+	while( BinInt.eq(a,BinInt.ZERO) ){ // le 2
+		BinInt.randomize(a); BinInt.mod(a,a,nm1); // a should be in [2?,n-2]
+	}
+console.log( "a:    " + a.toString10() );
+	var b = BinInt.TEMP_PRIME_E; b.length(len*2); BinInt.pow(b,a,m,n);
+console.log( "b:   " + b.toString10() );
+	//BinInt.mod(b,b,n);
+//console.log( "b2:   " + b.toString10() );
+	if( BinInt.eq(b,BinInt.ONE) ){// || BinInt.eq(b,nm1) ){
+		return true;
+	}
+	for(; i>0; --i){
+		if( BinInt.eq(b,BinInt.ONE) ){
+			return false;
+		}else if( BinInt.eq(b,nm1) ){
+			return true;
+		}
+		BinInt.mul(b,b,b);
+		BinInt.mod(b,b,n);
+console.log( "->b:  " + b.toString10() );
+	}
+	//
+	return true; // ?
 }
 /*BinInt.isPrime = function(c){ // c probably isn't a composite
 	for(var i=0;i<10;++i){
@@ -714,36 +770,54 @@ YO HOMES:
 	}
 	return true;
 }*/
-BinInt.randomPrime = function(p, max){ // p = random prime number, max = maximum number of tests
-	var i, j, maxTests = (max!=null && max!=undefined)?max:255, numTests = p.length();
+BinInt.randomPrime = function(p, max, num){ // p = random prime number, max = maximum number of tests
+	var i, j, maxTests = (max!=null && max!=undefined)?max:255, numTests = (num!=null && num!=undefined)?num:p.length();
 	var done;
+	var str = "";
 	for(i=0; i<maxTests; ++i){
-		console.log("TEST "+i);
+		console.log("TEST -----------------------------------"+i);
 		BinInt.randomize(p);
+		p._position = 0; p.write(1);
+		p.setFromInt(17136);//p.setFromInt(17137);//p.setFromInt(11);
+		str = str + ( "isprime( " + p.toString10() + " ) \n" );
 		done = true;
 		for(j=0; j<numTests; ++j){
-			if( !millerRabinPrime(p) ){
+			console.log(" ----------------------------------- "+j);
+			if( !BinInt.millerRabinPrime(p) ){
 				done = false;
 				break;
 			}
 		}
+		if(done){
+			console.log(str);
+			console.log("DONE");
+			return true;
+		}
 	}
+	console.log(str);
 	return false;
 }
 BinInt.diffieHellmanPublic = function(p,g){ // out: p = random prime number, g = random base
 	p.signed(false); g.signed(false);
+	
+	var ander = new BinInt(32);
+	ander.setFromString("00000000000000000000000011111111");
+	BinInt.randomize(p); BinInt.andFast(p,p,ander);
+	BinInt.randomize(g); BinInt.andFast(g,g,ander);
 	// randomPrime(p);
 	// randomPrime(g);
+	p.position(0); p.write(1);
+	g.position(0); g.write(1);
 };
 BinInt.diffieHellmanPrivate = function(pri,pub, p,g){ // in: p,g | out: pri = private key, pub = public key
 	pri.signed(false); pub.signed(false);
 	//BinInt.randomize(pri);
-	BinInt.TEMP_DH.length(pub.length()*2); // ???
-	BinInt.pow(BinInt.TEMP_DH, g,pri); // may need temporary register to hold g^pri
+	BinInt.TEMP_DH.length(pub.length()*4); // ???
+	BinInt.pow(BinInt.TEMP_DH, g,pri); // may need temporary register to hold g^pri --- NOOOOOOOOOOOOOOOOOO JUST TO POW MOD
 	BinInt.mod(pub, BinInt.TEMP_DH,p);
 };
 BinInt.diffieHellmanSecret = function(s, pri,pub, p){ // in: pri,pub, p, out: secret
-	BinInt.TEMP_DH.length(s.length()*2); // ???
+	BinInt.TEMP_DH.length(s.length()*4); // ???
 	BinInt.pow(BinInt.TEMP_DH, pub,pri); // may need temporary register to hold pub^pri
 	BinInt.mod(s, BinInt.TEMP_DH,p);
 };
