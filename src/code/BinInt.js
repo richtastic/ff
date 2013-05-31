@@ -424,35 +424,39 @@ BinInt.mod = function(c, a,b){ // c = a % b
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////// POWER
 BinInt.pow = function(c, a,b, mo){ // c = a^b % n
-	c.setFromInt(1);
 	if( BinInt.eq(a,BinInt.ZERO) ){
 		c.setFromInt(0);
 		return;
 	}else if( BinInt.eq(b,BinInt.ZERO) ){
+		c.setFromInt(1);
 		return;
 	}
-	var n = BinInt.TEMP_POWER_N;
 	var i, len = c.length();
-	n.length(len*2);
-	BinInt.copyReg(n,a);
+	var tempC = BinInt.TEMP_POWER_C; tempC.length(len*2); BinInt.copyReg(tempC,c);
+	tempC.setFromInt(1);
+	var n = BinInt.TEMP_POWER_N; n.length(len*2); BinInt.copyReg(n,a);
+//console.log("c: "+tempC.toString());
+//console.log("n: "+n.toString());
 	var was = b._position;
 	b.position(0);
 	for(i=0;i<len;++i){
 		if( b.read()!=0 ){
-			BinInt.mul(c,c,n);
+			BinInt.mul(tempC,tempC,n);
+//console.log("c: "+tempC.toString10());
 			if(mo){
-				BinInt.mod(c,c,mo);
+				BinInt.mod(tempC,tempC,mo);
 			}
-			//console.log(c.toString10());
-			//console.log( BinInt.eq(BinInt.ZERO,c));
+			//console.log(tempC.toString10());
+			//console.log( BinInt.eq(BinInt.ZERO,tempC));
 		}
 		BinInt.mul(n,n,n);
 		if(mo){
-			console.log(n.toString10());
+			//console.log(n.toString10());
 			BinInt.mod(n,n,mo);
 		}
 	}
 	b._position = was;
+	BinInt.copyReg(c,tempC);
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////// MAX
 BinInt.max = function(c, a,b){ // c = max(a,b)
@@ -492,6 +496,7 @@ BinInt.TEMP_MUL_B_ABS = null;
 BinInt.TEMP_MUL_C_ABS = null;
 BinInt.TEMP_MUL_B = null;
 BinInt.TEMP_POWER_N = null;
+BinInt.TEMP_POWER_C = null;
 //
 BinInt.TEMP_A = null;
 BinInt.TEMP_B = null;
@@ -523,6 +528,7 @@ BinInt.init = function(){
 		BinInt.TEMP_MUL_B = new BinInt();
 		//
 		BinInt.TEMP_POWER_N = new BinInt();
+		BinInt.TEMP_POWER_C = new BinInt();
 		//
 		BinInt.TEMP_A = new BinInt();
 		BinInt.TEMP_B = new BinInt();
@@ -704,52 +710,32 @@ BinInt.gcd = function(c, a,b){ // c = gcd(a,b)
 // ------------------- CRYPTOGRAPHICS
 //////////////////////////////////////////////////////////////////////////////////////////////////// MILLER-RABIN PRIMALITY TEST
 BinInt.millerRabinPrime = function(n){ // c probably isn't a composite - 1/4
-	/*
-x	nm1 = n - 1;
-x	k = number of zeros from position(0) of nm1;
-x	twok = 0x01 << k;
-x	m = nm1/twok;
-x	a = rand() % n;
-x	b = (a^m) % n;
-	if( b==1 ){
-		return true;
-	}
-	for(i=0; i<k; ++i){
-		if( b==nm1 ){
-			return true;
-		}
-		b = (b*b)%n;
-	}
-	return false;
-^ CHANGED A BIT
-	*/
-console.log( "n:    " + n.toString10() );
+//console.log( "n:    " + n.toString10() );
 	var i, len = n.length();
 	var nm1 = BinInt.TEMP_PRIME_A; nm1.length(len); BinInt.sub(nm1,n,BinInt.ONE);
-console.log( "n-1:  " + nm1.toString10() );
+//console.log( "n-1:  " + nm1.toString10() );
 	nm1._position = 0;
 	for(i=0;i<len;++i){
 		if(nm1.read()!=0){
 			break;
 		}
 	}
-console.log( "k:    " + i );
+//console.log( "k:    " + i );
 	var m = BinInt.TEMP_PRIME_B; m.length(len); BinInt.right(m, nm1, i);
-console.log( "m:    " + m.toString10() );
+//console.log( "m:    " + m.toString10() );
 	var a = BinInt.TEMP_PRIME_D; a.length(len); a.setFromInt(0);
-a.setFromInt(9695);
+//a.setFromInt(9695);
 	while( BinInt.eq(a,BinInt.ZERO) ){ // le 2
 		BinInt.randomize(a); BinInt.mod(a,a,nm1); // a should be in [2?,n-2]
 	}
-console.log( "a:    " + a.toString10() );
+//console.log( "a:    " + a.toString10() );
 	var b = BinInt.TEMP_PRIME_E; b.length(len*2); BinInt.pow(b,a,m,n);
-console.log( "b:   " + b.toString10() );
-	//BinInt.mod(b,b,n);
-//console.log( "b2:   " + b.toString10() );
+//console.log( "b:   " + b.toString10() );
+//console.log(b.toString10() + " = " + a.toString10() + "^" + m.toString10() + " % " + n.toString10());
 	if( BinInt.eq(b,BinInt.ONE) ){// || BinInt.eq(b,nm1) ){
 		return true;
 	}
-	for(; i>0; --i){
+	for(; i>=0; --i){
 		if( BinInt.eq(b,BinInt.ONE) ){
 			return false;
 		}else if( BinInt.eq(b,nm1) ){
@@ -757,10 +743,10 @@ console.log( "b:   " + b.toString10() );
 		}
 		BinInt.mul(b,b,b);
 		BinInt.mod(b,b,n);
-console.log( "->b:  " + b.toString10() );
+//console.log( "->b:  " + b.toString10() );
 	}
 	//
-	return true; // ?
+	return false; // ?
 }
 /*BinInt.isPrime = function(c){ // c probably isn't a composite
 	for(var i=0;i<10;++i){
@@ -778,7 +764,7 @@ BinInt.randomPrime = function(p, max, num){ // p = random prime number, max = ma
 		console.log("TEST -----------------------------------"+i);
 		BinInt.randomize(p);
 		p._position = 0; p.write(1);
-		p.setFromInt(17136);//p.setFromInt(17137);//p.setFromInt(11);
+		//p.setFromInt(17136);//p.setFromInt(17137);//p.setFromInt(11);
 		str = str + ( "isprime( " + p.toString10() + " ) \n" );
 		done = true;
 		for(j=0; j<numTests; ++j){
