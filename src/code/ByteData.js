@@ -266,6 +266,31 @@ ByteData.SHA1 = function(message){
 	return sha1;
 }
 
+ByteData.SHA256 = function(message){
+	return null;
+}
+ByteData.SHA512 = function(message){
+	return null;
+}
+
+// AES > BLOW > DESX > RC4 > DES   | RSA / DH
+ByteData.AESencrypt = function(encryption, key, message){
+	// yayz
+}
+
+ByteData.AESdecrypt = function(decryption, key, message){
+	// yayz
+}
+
+
+ByteData.RSA = function(pub,pri){
+	// p,q = random prime
+	// n = p*q
+	// f = (p-1)*(q-1)
+	// pub = [2,f-1] && gcd(pub,f)==1
+	// pri = d*e = 1 % f
+}
+
 // // ByteData.js
 // // ------------------------------------------------------------------------------------------------- Binary Math
 // ByteData.and = function(c,a,b){ // c = a & b

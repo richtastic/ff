@@ -745,38 +745,22 @@ BinInt.millerRabinPrime = function(n){ // c probably isn't a composite - 1/4
 		BinInt.mod(b,b,n);
 //console.log( "->b:  " + b.toString10() );
 	}
-	//
-	return false; // ?
+	return false;
 }
-/*BinInt.isPrime = function(c){ // c probably isn't a composite
-	for(var i=0;i<10;++i){
-		if(!millerRabinPrime(c)){
-			return false;
-		}
-	}
-	return true;
-}*/
 BinInt.randomPrime = function(p, max, num){ // p = random prime number, max = maximum number of tests
-	var i, j, maxTests = (max!=null && max!=undefined)?max:255, numTests = (num!=null && num!=undefined)?num:p.length();
+	var i, j, maxTests = (max!=null && max!=undefined)?max:255, numTests = (num!=null && num!=undefined)?num:Math.round( Math.log(p.length() ));
 	var done;
-	var str = "";
 	for(i=0; i<maxTests; ++i){
-		console.log("TEST -----------------------------------"+i);
 		BinInt.randomize(p);
 		p._position = 0; p.write(1);
-		//p.setFromInt(17136);//p.setFromInt(17137);//p.setFromInt(11);
-		str = str + ( "isprime( " + p.toString10() + " ) \n" );
 		done = true;
 		for(j=0; j<numTests; ++j){
-			console.log(" ----------------------------------- "+j);
 			if( !BinInt.millerRabinPrime(p) ){
 				done = false;
 				break;
 			}
 		}
 		if(done){
-			console.log(str);
-			console.log("DONE");
 			return true;
 		}
 	}
@@ -785,87 +769,23 @@ BinInt.randomPrime = function(p, max, num){ // p = random prime number, max = ma
 }
 BinInt.diffieHellmanPublic = function(p,g){ // out: p = random prime number, g = random base
 	p.signed(false); g.signed(false);
-	
-	var ander = new BinInt(32);
-	ander.setFromString("00000000000000000000000011111111");
-	BinInt.randomize(p); BinInt.andFast(p,p,ander);
-	BinInt.randomize(g); BinInt.andFast(g,g,ander);
-	// randomPrime(p);
-	// randomPrime(g);
-	p.position(0); p.write(1);
-	g.position(0); g.write(1);
+	console.log("P...");
+	BinInt.randomPrime(p);
+	console.log("G...");
+	BinInt.randomPrime(g);
 };
 BinInt.diffieHellmanPrivate = function(pri,pub, p,g){ // in: p,g | out: pri = private key, pub = public key
 	pri.signed(false); pub.signed(false);
-	//BinInt.randomize(pri);
-	BinInt.TEMP_DH.length(pub.length()*4); // ???
-	BinInt.pow(BinInt.TEMP_DH, g,pri); // may need temporary register to hold g^pri --- NOOOOOOOOOOOOOOOOOO JUST TO POW MOD
-	BinInt.mod(pub, BinInt.TEMP_DH,p);
+	BinInt.randomize(pri);
+	BinInt.pow(pub, g,pri, p);
 };
 BinInt.diffieHellmanSecret = function(s, pri,pub, p){ // in: pri,pub, p, out: secret
-	BinInt.TEMP_DH.length(s.length()*4); // ???
-	BinInt.pow(BinInt.TEMP_DH, pub,pri); // may need temporary register to hold pub^pri
-	BinInt.mod(s, BinInt.TEMP_DH,p);
+	BinInt.pow(s, pub,pri, p);
 };
-/*
 
-2^2 = 4
-2^16
-
-Diffie-Hellman: 
-PUBLIC: p = prime number, g = base
-A: a = 6;  A = mod( g^a, p )
-B: b = 15; B = mod( g^b, p )
-s = sA = sB = mod( A.^b, p ) = mod( B.^a, p )
-
-p = 23;
-g = 7;
-a = 9;
-A = mod(g.^a,p);
-b = 12;
-B = mod(g.^b,p);
-sA = mod(A.^b,p);
-sB = mod(B.^a,p);
-sA
-sB
-*/
 
 /*
-
-isprime(127)
-
-STEPS:
-1) Alice computes random prime number [2^1024+] = p
-2) Alice computes random prime number [2^1024+] = g
-		primitive root modulo p?
-		base number [] = g
-3) Alice shares p and g with Bob
-4) Alice computes random number [] = a	| Bob computes random number [] = b
-5) Alice computes g^a % p = A	| Bob computes g^b % p = B
-6) Alice sends A to Bob	| Bob sends B to Alice
-7) Alice computes  s = B^a % p	| Bob computes s = A^b % p
-Public: p, g, A, B
-Secret: a, s | b, s
-
-IMPLEMENTATIONS:
-0) pow function 
-1) random number generator
-2) prime number checker
-3) random prime number generator
 4) primitive root calculateion
-
-p = 23;
-g = 6;
-a = 6;
-A = mod(g.^a,p);
-b = 6;
-B = mod(g.^b,p);
-sA = mod(A.^b,p);
-sB = mod(B.^a,p);
-sA
-sB
-
-
 
 Necessary Cryptography:
 
