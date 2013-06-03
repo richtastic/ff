@@ -56,6 +56,7 @@ function DOImage(img, options, parentDO){
 		this._setProperties(pX,pY,w,h);
 		Code.emptyArray(self._imageQueue);
 		this._imageQueue.push( Code.newArray(self.graphicsIllustration.clear,Code.newArray()) );
+		//console.log(self._imageX,self._imageY,self._imageWidth,self._imageHeight);
 		this._imageQueue.push( Code.newArray(self._drawPatternTerminal,Code.newArray(null,self._imageX,self._imageY,self._imageWidth,self._imageHeight)) );
 		this._renderFxn = this._renderReset;
 	}

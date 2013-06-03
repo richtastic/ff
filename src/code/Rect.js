@@ -52,6 +52,12 @@ Rect.sortSmaller = function(a,b){
 	}
 	return false;
 }
+Rect.fits = function(a,b){
+	if(a.width()<=b.width() && a.height()<=b.height()){
+		return true;
+	}
+	return false;
+}
 function Rect(xPos,yPos, w,h){
 	var self = this;
 	this._x = 0;

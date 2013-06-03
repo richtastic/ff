@@ -16,7 +16,7 @@ function defaultClassesProgressFxn(o){
 }
 function defaultClassesLoadedFxn(){
 	setFeedback( "50%" );
-	var list = ["RectanglePacking.js"];
+	var list = ["ResourceRect.js","Tree.js","StackPriority.js","Memory2D.js","RectanglePacking.js"];
 	scriptLoader = new ScriptLoader("./",list,customClassesLoadedFxn,customClassesProgressFxn,false);
 	scriptLoader.load();
 }

@@ -17,10 +17,14 @@ function RectanglePacking(){
 		this.keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.keyDownFxn);*/
 		this.resource.alertLoadCompleteEvents();
 		this.stage.start();
+		//
+		this.timer = new Ticker(1); 
+		self.timer.addFunction(Ticker.EVENT_TICK, self.timerTick);
+		self.timer.start();
 	};
 	this.constructor = function(){
 		self.canvas = new Canvas(self.resource,null,600,300,Canvas.STAGE_FIT_FILL);
-		self.stage = new Stage(self.canvas, 1000/500);
+		self.stage = new Stage(self.canvas, 1000/10);
 		self.keyboard = new Keyboard();
 		self.resource.alertLoadCompleteEvents();
 		//
@@ -34,188 +38,277 @@ function RectanglePacking(){
 	this.rectangleDOList = null;
 	this.rectangleDOBound = null;
 	this.rectangleContainer = null;
+	this.process = null;
+	this.memory = null;
 	this.calc = function(){
 		var bound = new Rect(0,0, 400,400);
 		var rectList = new Array();
-		var r;
-		// TOP
-		//r = new Rect(0,0, 100,200); r.mass = -1;
-		//rectList.push( r );
 		/*
-		rectList.push( new Rect(0,0, 200,200) );
+		rectList.push( new Rect(0,0, 100,100) );
+		rectList.push( new Rect(0,0, 100,100) );
 		rectList.push( new Rect(0,0, 150,150) );
 		rectList.push( new Rect(0,0, 100,150) );
 		rectList.push( new Rect(0,0, 50,100) );
 		rectList.push( new Rect(0,0, 150,100) );
-		rectList.push( new Rect(0,0, 100,200) );
-		// // //
+		rectList.push( new Rect(0,0, 100,100) );
 		rectList.push( new Rect(0,0, 50,50) );
 		rectList.push( new Rect(0,0, 10,50) );
 		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 60,60) );
+		rectList.push( new Rect(0,0, 50,50) );
+		rectList.push( new Rect(0,0, 50,50) );
+		rectList.push( new Rect(0,0, 50,50) );
+		rectList.push( new Rect(0,0, 50,50) );
 		rectList.push( new Rect(0,0, 50,50) );
 		rectList.push( new Rect(0,0, 50,20) );
 		rectList.push( new Rect(0,0, 20,20) );
+		rectList.push( new Rect(0,0, 100,50) );
+		rectList.push( new Rect(0,0, 100,20) );
+		rectList.push( new Rect(0,0, 50,50) );
+		rectList.push( new Rect(0,0, 50,100) );
+		rectList.push( new Rect(0,0, 10,10) );
+		rectList.push( new Rect(0,0, 50,50) );
+		rectList.push( new Rect(0,0, 50,100) );
+		rectList.push( new Rect(0,0, 10,10) );
+		rectList.push( new Rect(0,0, 50,100) );
+		rectList.push( new Rect(0,0, 40,40) );
+		rectList.push( new Rect(0,0, 30,30) );
+		rectList.push( new Rect(0,0, 75,75) );
+		rectList.push( new Rect(0,0, 25,25) );
+		rectList.push( new Rect(0,0, 25,25) );
+		rectList.push( new Rect(0,0, 25,100) );
+		rectList.push( new Rect(0,0, 100,50) );
+		rectList.push( new Rect(0,0, 50,25) );
+		rectList.push( new Rect(0,0, 50,50) );
+		rectList.push( new Rect(0,0, 25,50) );
+		rectList.push( new Rect(0,0, 20,30) );
+		//rectList.push( new Rect(0,0, 10,10) );
 		*/
-		for(i=0;i<50;++i){
+		// TREX
+rectList.push( new Rect(4,4, 57,63) );
+rectList.push( new Rect(69,4, 47,95) );
+rectList.push( new Rect(124,4, 262,253) );
+rectList.push( new Rect(394,4, 34,78) );
+rectList.push( new Rect(4,265, 380,317) );
+rectList.push( new Rect(436,4, 14,23) );
+rectList.push( new Rect(458,4, 59,41) );
+rectList.push( new Rect(4,590, 181,23) );
+rectList.push( new Rect(525,4, 38,20) );
+rectList.push( new Rect(571,4, 34,34) );
+rectList.push( new Rect(4,621, 86,75) );
+rectList.push( new Rect(613,4, 221,274) );
+rectList.push( new Rect(842,4, 54,107) );
+rectList.push( new Rect(4,704, 52,80) );
+rectList.push( new Rect(4,792, 206,104) );
+rectList.push( new Rect(4,904, 214,109) );
+rectList.push( new Rect(904,4, 49,28) );
+rectList.push( new Rect(392,265, 73,67) );
+rectList.push( new Rect(392,340, 76,97) );
+rectList.push( new Rect(476,286, 248,303) );
+rectList.push( new Rect(458,597, 335,245) );
+rectList.push( new Rect(961,4, 12,9) );
+rectList.push( new Rect(436,850, 191,22) );
+rectList.push( new Rect(981,4, 39,32) );
+rectList.push( new Rect(732,286, 133,71) );
+rectList.push( new Rect(4,75, 56,49) );
+rectList.push( new Rect(576,132, 29,20) );
+rectList.push( new Rect(732,365, 138,167) );
+rectList.push( new Rect(193,590, 184,22) );
+rectList.push( new Rect(842,119, 30,35) );
+rectList.push( new Rect(436,880, 204,99) );
+rectList.push( new Rect(193,620, 31,28) );
+rectList.push( new Rect(648,850, 204,99) );
+rectList.push( new Rect(4,132, 31,38) );
+rectList.push( new Rect(576,178, 29,11) );
+rectList.push( new Rect(232,620, 108,81) );
+rectList.push( new Rect(342,709, 108,81) );
+rectList.push( new Rect(300,709, 34,34) );
+rectList.push( new Rect(392,445, 35,92) );
+rectList.push( new Rect(648,957, 171,60) );
+rectList.push( new Rect(98,621, 46,47) );
+rectList.push( new Rect(4,1021, 308,109) );
+rectList.push( new Rect(2013,1138, 31,30) );
+rectList.push( new Rect(2001,4, 43,36) );
+rectList.push( new Rect(1960,4, 33,63) );
+rectList.push( new Rect(1916,4, 36,35) );
+rectList.push( new Rect(4,1138, 181,145) );
+rectList.push( new Rect(1853,4, 55,50) );
+rectList.push( new Rect(4,1291, 230,66) );
+rectList.push( new Rect(4,1365, 221,85) );
+rectList.push( new Rect(1808,4, 37,79) );
+rectList.push( new Rect(1622,4, 178,338) );
+rectList.push( new Rect(1574,4, 40,298) );
+rectList.push( new Rect(4,1458, 99,30) );
+rectList.push( new Rect(4,1496, 38,30) );
+rectList.push( new Rect(2017,1534, 27,23) );
+rectList.push( new Rect(1028,4, 30,17) );
+rectList.push( new Rect(1066,4, 34,15) );
+var bound = new Rect(0,0, 1024,1024);
+
+		// SPINO
+// rectList.push( new Rect(4,4, 87,191) );
+// rectList.push( new Rect(99,4, 47,95) );
+// rectList.push( new Rect(154,4, 262,245) );
+// rectList.push( new Rect(4,203, 34,78) );
+// rectList.push( new Rect(424,4, 369,299) );
+// rectList.push( new Rect(4,289, 14,23) );
+// rectList.push( new Rect(4,320, 49,36) );
+// rectList.push( new Rect(4,364, 182,24) );
+// rectList.push( new Rect(4,396, 38,19) );
+// rectList.push( new Rect(4,423, 35,34) );
+// rectList.push( new Rect(4,465, 86,75) );
+// rectList.push( new Rect(801,4, 200,272) );
+// rectList.push( new Rect(4,548, 54,107) );
+// rectList.push( new Rect(4,663, 52,87) );
+// rectList.push( new Rect(4,758, 190,98) );
+// rectList.push( new Rect(4,864, 198,103) );
+// rectList.push( new Rect(4,975, 49,28) );
+// rectList.push( new Rect(424,311, 73,67) );
+// rectList.push( new Rect(505,311, 76,97) );
+// rectList.push( new Rect(589,311, 248,303) );
+// rectList.push( new Rect(639,622, 362,252) );
+// rectList.push( new Rect(4,1011, 12,9) );
+// rectList.push( new Rect(46,257, 191,22) );
+// rectList.push( new Rect(377,257, 39,29) );
+// rectList.push( new Rect(845,284, 133,71) );
+// rectList.push( new Rect(525,416, 56,49) );
+// rectList.push( new Rect(99,107, 29,20) );
+// rectList.push( new Rect(797,882, 204,99) );
+// rectList.push( new Rect(585,882, 204,99) );
+// rectList.push( new Rect(600,622, 31,38) );
+// rectList.push( new Rect(602,668, 29,11) );
+// rectList.push( new Rect(845,363, 108,81) );
+// rectList.push( new Rect(845,452, 108,81) );
+// rectList.push( new Rect(845,541, 34,34) );
+// rectList.push( new Rect(542,882, 35,92) );
+// rectList.push( new Rect(61,287, 171,60) );
+// rectList.push( new Rect(323,257, 46,47) );
+// rectList.push( new Rect(98,396, 308,109) );
+// rectList.push( new Rect(602,989, 31,30) );
+// rectList.push( new Rect(272,257, 43,36) );
+// rectList.push( new Rect(414,386, 32,60) );
+// rectList.push( new Rect(454,386, 36,33) );
+// rectList.push( new Rect(98,513, 171,117) );
+// rectList.push( new Rect(277,513, 171,117) );
+// rectList.push( new Rect(887,541, 52,39) );
+// rectList.push( new Rect(98,638, 230,66) );
+// rectList.push( new Rect(202,712, 37,79) );
+// rectList.push( new Rect(336,638, 189,338) );
+// rectList.push( new Rect(533,687, 32,117) );
+// rectList.push( new Rect(247,712, 44,80) );
+// rectList.push( new Rect(1859,4, 185,74) );
+// rectList.push( new Rect(1859,1028, 185,22) );
+// rectList.push( new Rect(1982,1058, 62,41) );
+// 		var bound = new Rect(0,0, 1024,1024);
+
+		/*
+		for(i=0;i<40;++i){
 			rectList.push( new Rect(0,0, 
-				10+Math.round(Math.random()*90),
-				10+Math.round(Math.random()*90) ) );
-				//10+,
-				//10+Math.round((Math.random()*50))
+				50+Math.round(Math.random()*5)*10,
+				50+Math.round(Math.random()*5)*10 ) );
 		}
-		//
+		*/
 		var i, len = rectList.length;
 		var area = 0;
+		var rectOrderedList = new Array();
 		for(i=0;i<len;++i){
-			// rectList[i].x( (bound.width()-rectList[i].width())*0.5 );
-			// rectList[i].y( (bound.height()-rectList[i].height())*0.5 );
-			// rectList[i].x( rectList[i].x()+Math.random() - 0.5);
-			// rectList[i].y( rectList[i].y()+Math.random() - 0.5);
-			rectList[i].x( (bound.width()-rectList[i].width())*Math.random() );
-			rectList[i].y( (bound.height()-rectList[i].height())*Math.random() );
-			rectList[i].vel = new V2D(0,0);
-			if( !rectList[i].mass ){
-				rectList[i].mass = rectList[i].area();
-			}
-			//rectList[i].mass = rectList[i].mass*rectList[i].mass;
-			//console.log( rectList[i].x() + "," + rectList[i].y() );
+//			rectList[i].x(-1); rectList[i].y(-1);
+			rectList[i].x(rectList[i].x()-4); rectList[i].y(rectList[i].y()-4);
+			rectList[i].width(rectList[i].width()+8); rectList[i].height(rectList[i].height()+8);
 			area += rectList[i].area();
 		}
-		// rectList[0].x(0); rectList[0].y(0);
-		// rectList[1].x(200); rectList[1].y(0);
-		// rectList[2].x(0); rectList[2].y(200);
-		// rectList[3].x(350); rectList[3].y(0);
-		//
-		console.log( area + " / " + bound.area() +" = " + (area/bound.area()) );
-		if(area > bound.area()){
-			window.location = window.location;
+		/*console.log( area + " / " + bound.area() +" = " + (area/bound.area()) );
+		while(area>1.95*bound.area()){
+			area -= (rectList.pop()).area();
+		}*/
+		len = rectList.length;
+		for(i=0;i<len;++i){
+			rectOrderedList[i] = rectList[i];
 		}
+		rectOrderedList.sort( Rect.sortBigger );
+		console.log( area + " / " + bound.area() +" = " + (area/bound.area()) + " [" + len+ "] " );
 		var doContainer = new DO();
 		self.doRoot.addChild( doContainer );
 		var doBound = self.doFromRect( bound, 0xFF,0x00,0x00,0xFF, 0.75);
 		doContainer.addChild(doBound);
 		var doList = new Array();
+//var src = self.resource.tex[ResourceRect.TEX_SPINO];
+var src = self.resource.tex[ResourceRect.TEX_REX];
+var context = self.canvas.getContext();
 		for(i=0;i<len;++i){
-			doList[i] = self.doFromRect(rectList[i], 0xFF,0xFF,0x00,0xFF, 0.25)
+			//doList[i] = self.doFromRect(rectList[i], 0xFF,0xFF,0x00,0xFF, 0.25);
+			var img = new DOImage( src);
+			img.graphics.clear();
+			//img.graphics.drawImagePattern(pattern, rectList[i].x(),rectList[i].y(), rectList[i].width(),rectList[i].height());
+			img.graphics.drawImage(src, rectList[i].x(),rectList[i].y(), rectList[i].width(),rectList[i].height(), 0,0, rectList[i].width(),rectList[i].height());
+			/*
+			img.graphicsIllustration.setLine(1.0,0xFF0000CC);
+			img.graphicsIllustration.setFill(0x99000099);
+			img.graphicsIllustration.beginPath();
+			img.graphicsIllustration.moveTo(0,0);
+			img.graphicsIllustration.lineTo(rectList[i].width(),0);
+			img.graphicsIllustration.lineTo(rectList[i].width(),rectList[i].height());
+			img.graphicsIllustration.lineTo(0,rectList[i].height());
+			img.graphicsIllustration.lineTo(0,0);
+			img.graphicsIllustration.endPath();
+			img.graphicsIllustration.fill();
+			img.graphicsIllustration.strokeLine();
+			*/
+			//img.matrix.translate(-rectList[i].x(), -rectList[i].y());
+			doList[i] = img;
 			doBound.addChild( doList[i] );
 		}
+		var memory = new Memory2D( bound, rectOrderedList );
+		//
+		self.rectList = rectList;
 		self.rectangleBound = bound;
-		self.rectangleList = rectList;
+		self.rectangleList = rectOrderedList;
 		self.rectangleDOList = doList;
 		self.rectangleDOBound = doBound;
 		self.rectangleContainer = doContainer;
+		self.memory = memory;
 	};
-	this.stageEnterFrameFxn = function(e){
-		if( self.iteration() ){
-			return;//this.stage.removeFunction(Stage.EVENT_ON_ENTER_FRAME,this.stageEnterFrameFxn);
-		}
-		self.visualsFromData();
-		var limit = self.rectangleList.length*self.rectangleList.length;
-		console.log(limit);
-		if(e==limit){
-			window.location = window.location;
-		}
-	}
-	this.iteration = function(){
-		var i, j, arr=self.rectangleList, len=arr.length;
-		var v=new V2D(), dist=0, rA, rB;
-		var prop;
-		for(i=0;i<len;++i){
-			rA = arr[i]; rA.vel.x = 0; rA.vel.y = 0;
-		}
-		var touch = false;
-		for(i=0;i<len;++i){
-			rA = arr[i];
-			for(j=i+1;j<len;++j){
-				rB = arr[j];
-				if( self.overlap(rA,rB) ){
-					touch = true;
-					prop = 1E-3;
-				}else{
-					prop = 1E-7;
-				}
-				v.x = (rB.x()+rB.width()*0.5) - (rA.x()+rA.width()*0.5); // center-to-center
-				v.y = (rB.y()+rB.height()*0.5) - (rA.y()+rA.height()*0.5);
-				//console.log(v.x+","+v.y);
-/*
-				if(v.length()<0.1){
-					v.x = -1;
-					v.y = -1;
-				}
-*/
-
-				v.norm();
-				dist = v.length();
-				dist = Math.max(dist,1E-6);
-				//console.log(dist);
-				dist = dist * dist;
-				// rA.vel.x -= prop*v.x/(dist*rA.mass);
-				// rA.vel.y -= prop*v.y/(dist*rA.mass);
-				// rB.vel.x += prop*v.x/(dist*rB.mass);
-				// rB.vel.y += prop*v.y/(dist*rB.mass);
-				var m = rA.mass*rB.mass;
-				// rA.vel.x -= rB.mass*prop*v.x/(dist*rA.mass);
-				// rA.vel.y -= rB.mass*prop*v.y/(dist*rA.mass);
-				// rB.vel.x += rA.mass*prop*v.x/(dist*rB.mass);
-				// rB.vel.y += rA.mass*prop*v.y/(dist*rB.mass);
-				// rA.vel.x -= rB.mass*prop*v.x/(dist*1);
-				// rA.vel.y -= rB.mass*prop*v.y/(dist*1);
-				// rB.vel.x += rA.mass*prop*v.x/(dist*1);
-				// rB.vel.y += rA.mass*prop*v.y/(dist*1);
-				// rA.vel.x -= rA.mass*prop*v.x/(dist*1);
-				// rA.vel.y -= rA.mass*prop*v.y/(dist*1);
-				// rB.vel.x += rB.mass*prop*v.x/(dist*1);
-				// rB.vel.y += rB.mass*prop*v.y/(dist*1);
-				rA.vel.x -= rB.mass*prop*v.x/(dist*1);
-				rA.vel.y -= rB.mass*prop*v.y/(dist*1);
-				rB.vel.x += rA.mass*prop*v.x/(dist*1);
-				rB.vel.y += rA.mass*prop*v.y/(dist*1);
+	this.timerTick = function(e){
+		self.timer.stop();
+//return;
+		for(var i=0;i<20000;++i){
+			if( self.iteration() ){
+				return;
 			}
-			//console.log(rA.vel.x+","+rA.vel.y);
 		}
-		if(!touch){
+		self.timer.start();
+	}
+	this.stageEnterFrameFxn = function(e){
+		self.visualsFromData();
+	}
+	this.itrCount = 0;
+	this.feedback = false;
+	this.iteration = function(){
+		self.itrCount++;
+		if(self.rectangleList.length==0){
+			console.log("DONE: "+self.itrCount);
+			//self.stage.removeFunction(Stage.EVENT_ON_ENTER_FRAME,self.stageEnterFrameFxn);
+			//self.visualsFromData();
 			return true;
 		}
-		for(i=0;i<len;++i){
-			rA = arr[i];
-			// clamp 1 pixel at a time
-				// if(v.x>0){ v.x=1; }
-				// else if(v.x<0){ v.x=-1; }
-				// if(v.y>0){ v.y=1; }
-				// else if(v.y<0){ v.y=-1; }
-			rA.x( rA.x() + rA.vel.x ); rA.y( rA.y() + rA.vel.y );
-			//console.log(rA.vel.x +","+ rA.vel.y );
-			if( rA.x() < self.rectangleBound.x() ){
-				rA.x( self.rectangleBound.x() );
-				rA.vel.x = 0;
-			}else if( rA.x() > self.rectangleBound.x()+self.rectangleBound.width()-rA.width() ){
-				rA.x( self.rectangleBound.x()+self.rectangleBound.width()-rA.width() );
-				rA.vel.x = 0;
-			}
-			if( rA.y() < self.rectangleBound.y() ){
-				rA.y( self.rectangleBound.y() );
-				rA.vel.y = 0;
-			}else if( rA.y() > self.rectangleBound.y()+self.rectangleBound.height()-rA.height() ){
-				rA.y( self.rectangleBound.y()+self.rectangleBound.height()-rA.height() );
-				rA.vel.y = 0;
-			}
-			//rA.x( Math.min( Math.max( self.rectangleBound.x(), rA.x() ), self.rectangleBound.x()+self.rectangleBound.width()-rA.width() ) );
-			//rA.y( Math.min( Math.max( self.rectangleBound.y(), rA.y() ), self.rectangleBound.y()+self.rectangleBound.height()-rA.height() ) );
-			//rA.vel.x *= 0.5; rA.vel.y *= 0.5;
+		var rSmallest = self.rectangleList[0];
+		var rNext = self.rectangleList.pop();
+		// CHECK THAT SMALLEST RECT CAN FIT
+		if( !self.memory.canFit(rSmallest) ){
+			self.rectangleList.push( rNext ); // put back
+			self.memory.pop();
+			return false;
 		}
+		// CHECK THAT NEXT RECT CAN FIT
+		if( !self.memory.canFit(rNext) ){
+			self.rectangleList.push( rNext ); // put back
+			self.memory.pop();
+			return false;
+		}
+		// PLACE RECT
+		self.memory.push( rNext );
 		return false;
 	}
 	this.overlap = function(a,b){
-		//if( a.x()<b.x() && b.x()< ){
-			//
-			// a.x()<b.x() && (a.x()+a.width())>b.x()
-		// if( (a.x()<b.x() && (a.x()+a.width())>=b.x()) || (a.x()>=b.x() && (b.x()+b.width())>=a.x()) ){
-		// 	if( (a.y()<=b.y() && (a.y()+a.height())>=b.y()) || (b.y()<=a.y() && (b.y()+b.height())>=a.y()) ){
-		// 		//console.log(true);
-		// 		return true;
-		// 	}
-		// }
 		if( !(a.x()+a.width()<b.x() || a.x()>b.x()+b.width()) ){
 			if( !(a.y()+a.height()<b.y() || a.y()>b.y()+b.height()) ){
 				return true;
@@ -224,15 +317,24 @@ function RectanglePacking(){
 		return false;
 	}
 	this.visualsFromData = function(){
-		var i, len = self.rectangleList.length;
+		var i, len = self.rectList.length;
 		for(i=0;i<len;++i){
 			self.rectangleDOList[i].matrix.identity();
-			self.rectangleDOList[i].matrix.translate( self.rectangleList[i].x(), self.rectangleList[i].y() );
+			self.rectangleDOList[i].matrix.translate( self.rectList[i].x(), self.rectList[i].y() );
+			if(self.rectList[i].x()<0){
+				if(self.rectangleDOList[i].parent!=null){
+					self.rectangleDOBound.removeChild( self.rectangleDOList[i] );
+				}
+			}else if(self.rectangleDOList[i].parent==null){
+				self.rectangleDOBound.addChild( self.rectangleDOList[i] );
+			}
 		}
 	}
+	this.mainScale = 0.50;
 	this.canvasResizeFxn = function(e){
 		self.rectangleDOBound.matrix.identity();
-		self.rectangleDOBound.matrix.translate((e.x-self.rectangleBound.width())*0.5,(e.y-self.rectangleBound.height())*0.5);
+		self.rectangleDOBound.matrix.scale(self.mainScale,self.mainScale);
+		self.rectangleDOBound.matrix.translate((e.x-self.rectangleBound.width()*self.mainScale)*0.5,(e.y-self.rectangleBound.height()*self.mainScale)*0.5);
 		//console.log(self.canvas.getWidth()+","+self.canvas.getHeight());
 	}
 	this.doFromRect = function( r, re,gr,bl,al, sc){
@@ -256,7 +358,7 @@ function RectanglePacking(){
 		d.graphicsIllustration.strokeLine();
 		return d;
 	}
-	this.resource = new Resource();
+	this.resource = new ResourceRect();
 	this.resource.setFxnComplete(this.constructor);
 	this.resource.load();
 }
