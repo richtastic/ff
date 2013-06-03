@@ -236,7 +236,7 @@ Code.generateImageFromData = function(wid,hei,imageData){
     img.src = Code.generateBMPImageSrc(wid,hei,imageData);
     return img;
 }
-Code.generateImageFrombit64encode = function(str){
+Code.generateImageFromBit64encode = function(str){
     var img = new Image();
     img.src = str;
     return img;
