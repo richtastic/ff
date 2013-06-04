@@ -18,9 +18,9 @@ function RectanglePacking(){
 		this.resource.alertLoadCompleteEvents();
 		this.stage.start();
 		//
-		this.timer = new Ticker(1); 
-		self.timer.addFunction(Ticker.EVENT_TICK, self.timerTick);
-		self.timer.start();
+		// this.timer = new Ticker(1); 
+		// self.timer.addFunction(Ticker.EVENT_TICK, self.timerTick);
+		// self.timer.start();
 	};
 	this.constructor = function(){
 		self.canvas = new Canvas(self.resource,null,600,300,Canvas.STAGE_FIT_FILL);
@@ -43,46 +43,49 @@ function RectanglePacking(){
 	this.calc = function(){
 		var bound = new Rect(0,0, 400,400);
 		var rectList = new Array();
-		/*
-		rectList.push( new Rect(0,0, 100,100) );
-		rectList.push( new Rect(0,0, 100,100) );
-		rectList.push( new Rect(0,0, 150,150) );
-		rectList.push( new Rect(0,0, 100,150) );
-		rectList.push( new Rect(0,0, 50,100) );
-		rectList.push( new Rect(0,0, 150,100) );
-		rectList.push( new Rect(0,0, 100,100) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 10,50) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,20) );
-		rectList.push( new Rect(0,0, 20,20) );
-		rectList.push( new Rect(0,0, 100,50) );
-		rectList.push( new Rect(0,0, 100,20) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,100) );
-		rectList.push( new Rect(0,0, 10,10) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 50,100) );
-		rectList.push( new Rect(0,0, 10,10) );
-		rectList.push( new Rect(0,0, 50,100) );
-		rectList.push( new Rect(0,0, 40,40) );
-		rectList.push( new Rect(0,0, 30,30) );
-		rectList.push( new Rect(0,0, 75,75) );
-		rectList.push( new Rect(0,0, 25,25) );
-		rectList.push( new Rect(0,0, 25,25) );
-		rectList.push( new Rect(0,0, 25,100) );
-		rectList.push( new Rect(0,0, 100,50) );
-		rectList.push( new Rect(0,0, 50,25) );
-		rectList.push( new Rect(0,0, 50,50) );
-		rectList.push( new Rect(0,0, 25,50) );
-		rectList.push( new Rect(0,0, 20,30) );
-		//rectList.push( new Rect(0,0, 10,10) );
-		*/
+		var src = null;
+		//
+		// rectList.push( new Rect(0,0, 100,100) );
+		// rectList.push( new Rect(0,0, 100,100) );
+		// rectList.push( new Rect(0,0, 150,150) );
+		// rectList.push( new Rect(0,0, 100,150) );
+		// rectList.push( new Rect(0,0, 50,100) );
+		// rectList.push( new Rect(0,0, 150,100) );
+		// rectList.push( new Rect(0,0, 100,100) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 10,50) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,20) );
+		// rectList.push( new Rect(0,0, 20,20) );
+		// rectList.push( new Rect(0,0, 100,50) );
+		// rectList.push( new Rect(0,0, 100,20) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,100) );
+		// rectList.push( new Rect(0,0, 10,10) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 50,100) );
+		// rectList.push( new Rect(0,0, 10,10) );
+		// rectList.push( new Rect(0,0, 50,100) );
+		// rectList.push( new Rect(0,0, 40,40) );
+		// rectList.push( new Rect(0,0, 30,30) );
+		// rectList.push( new Rect(0,0, 75,75) );
+		// rectList.push( new Rect(0,0, 25,25) );
+		// rectList.push( new Rect(0,0, 25,25) );
+		// rectList.push( new Rect(0,0, 25,100) );
+		// rectList.push( new Rect(0,0, 100,50) );
+		// rectList.push( new Rect(0,0, 50,25) );
+		// rectList.push( new Rect(0,0, 50,50) );
+		// rectList.push( new Rect(0,0, 25,50) );
+		// rectList.push( new Rect(0,0, 20,30) );
+		// rectList.push( new Rect(0,0, 25,25) );
+		// rectList.push( new Rect(0,0, 25,25) );
+		// rectList.push( new Rect(0,0, 25,25) );
+		// rectList.push( new Rect(0,0, 30,30) );
 		// TREX
 rectList.push( new Rect(4,4, 57,63) );
 rectList.push( new Rect(69,4, 47,95) );
@@ -143,6 +146,7 @@ rectList.push( new Rect(2017,1534, 27,23) );
 rectList.push( new Rect(1028,4, 30,17) );
 rectList.push( new Rect(1066,4, 34,15) );
 var bound = new Rect(0,0, 1024,1024);
+//var src = self.resource.tex[ResourceRect.TEX_REX];
 
 		// SPINO
 // rectList.push( new Rect(4,4, 87,191) );
@@ -199,62 +203,49 @@ var bound = new Rect(0,0, 1024,1024);
 // rectList.push( new Rect(1859,1028, 185,22) );
 // rectList.push( new Rect(1982,1058, 62,41) );
 // 		var bound = new Rect(0,0, 1024,1024);
+// var src = self.resource.tex[ResourceRect.TEX_SPINO];
 
-		/*
-		for(i=0;i<40;++i){
-			rectList.push( new Rect(0,0, 
-				50+Math.round(Math.random()*5)*10,
-				50+Math.round(Math.random()*5)*10 ) );
-		}
-		*/
+		
+		// for(i=0;i<40;++i){
+		// 	rectList.push( new Rect(0,0, 
+		// 		50+Math.round(Math.random()*6)*10,
+		// 		50+Math.round(Math.random()*6)*10 ) );
+		// }
+		
 		var i, len = rectList.length;
 		var area = 0;
 		var rectOrderedList = new Array();
 		for(i=0;i<len;++i){
-//			rectList[i].x(-1); rectList[i].y(-1);
-			rectList[i].x(rectList[i].x()-4); rectList[i].y(rectList[i].y()-4);
-			rectList[i].width(rectList[i].width()+8); rectList[i].height(rectList[i].height()+8);
+			if(src){
+				rectList[i].x(rectList[i].x()-4); rectList[i].y(rectList[i].y()-4);
+				rectList[i].width(rectList[i].width()+8); rectList[i].height(rectList[i].height()+8);
+			}else{
+				rectList[i].x(-1); rectList[i].y(-1);
+			}
 			area += rectList[i].area();
 		}
-		/*console.log( area + " / " + bound.area() +" = " + (area/bound.area()) );
-		while(area>1.95*bound.area()){
-			area -= (rectList.pop()).area();
-		}*/
+		// console.log( area + " / " + bound.area() +" = " + (area/bound.area()) );
+		// while(area>0.99*bound.area()){
+		// 	area -= (rectList.pop()).area();
+		// }
 		len = rectList.length;
 		for(i=0;i<len;++i){
 			rectOrderedList[i] = rectList[i];
 		}
-		rectOrderedList.sort( Rect.sortBigger );
 		console.log( area + " / " + bound.area() +" = " + (area/bound.area()) + " [" + len+ "] " );
 		var doContainer = new DO();
 		self.doRoot.addChild( doContainer );
 		var doBound = self.doFromRect( bound, 0xFF,0x00,0x00,0xFF, 0.75);
 		doContainer.addChild(doBound);
 		var doList = new Array();
-//var src = self.resource.tex[ResourceRect.TEX_SPINO];
-var src = self.resource.tex[ResourceRect.TEX_REX];
-var context = self.canvas.getContext();
 		for(i=0;i<len;++i){
-			//doList[i] = self.doFromRect(rectList[i], 0xFF,0xFF,0x00,0xFF, 0.25);
-			var img = new DOImage( src);
-			img.graphics.clear();
-			//img.graphics.drawImagePattern(pattern, rectList[i].x(),rectList[i].y(), rectList[i].width(),rectList[i].height());
-			img.graphics.drawImage(src, rectList[i].x(),rectList[i].y(), rectList[i].width(),rectList[i].height(), 0,0, rectList[i].width(),rectList[i].height());
-			/*
-			img.graphicsIllustration.setLine(1.0,0xFF0000CC);
-			img.graphicsIllustration.setFill(0x99000099);
-			img.graphicsIllustration.beginPath();
-			img.graphicsIllustration.moveTo(0,0);
-			img.graphicsIllustration.lineTo(rectList[i].width(),0);
-			img.graphicsIllustration.lineTo(rectList[i].width(),rectList[i].height());
-			img.graphicsIllustration.lineTo(0,rectList[i].height());
-			img.graphicsIllustration.lineTo(0,0);
-			img.graphicsIllustration.endPath();
-			img.graphicsIllustration.fill();
-			img.graphicsIllustration.strokeLine();
-			*/
-			//img.matrix.translate(-rectList[i].x(), -rectList[i].y());
-			doList[i] = img;
+			if(src){
+				doList[i] = new DOImage( src );
+				doList[i].graphics.clear();
+				doList[i].graphics.drawImage(src, rectList[i].x(),rectList[i].y(), rectList[i].width(),rectList[i].height(), 0,0, rectList[i].width(),rectList[i].height());
+			}else{
+				doList[i] = self.doFromRect(rectList[i], 0xFF,0xFF,0x00,0xFF, 0.25);
+			}
 			doBound.addChild( doList[i] );
 		}
 		var memory = new Memory2D( bound, rectOrderedList );
@@ -266,17 +257,30 @@ var context = self.canvas.getContext();
 		self.rectangleDOBound = doBound;
 		self.rectangleContainer = doContainer;
 		self.memory = memory;
+		//
+		self.memory.addFunction( Memory2D.EVENT_SUCCESS, self.handleMemorySuccess);
+		self.memory.addFunction( Memory2D.EVENT_SERIES, self.handleMemorySeries);
+		self.memory.addFunction( Memory2D.EVENT_FAILURE, self.handleMemoryFailure);
+		self.memory.run();
 	};
-	this.timerTick = function(e){
-		self.timer.stop();
-//return;
-		for(var i=0;i<20000;++i){
-			if( self.iteration() ){
-				return;
-			}
-		}
-		self.timer.start();
-	}
+	this.handleMemorySeries = function(mem){
+		console.log("SERIES");
+	};
+	this.handleMemorySuccess = function(mem){
+		console.log("SUCCESS");
+	};
+	this.handleMemoryFailure = function(mem){
+		console.log("FAIL");
+	};
+	// this.timerTick = function(e){
+	// 	self.timer.stop();
+	// 	/*for(var i=0;i<10;++i){
+	// 		if( self.iteration() ){
+	// 			return;
+	// 		}
+	// 	}
+	// 	self.timer.start();*/
+	// }
 	this.stageEnterFrameFxn = function(e){
 		self.visualsFromData();
 	}
@@ -284,28 +288,10 @@ var context = self.canvas.getContext();
 	this.feedback = false;
 	this.iteration = function(){
 		self.itrCount++;
-		if(self.rectangleList.length==0){
+		if( self.memory.iteration() ){
 			console.log("DONE: "+self.itrCount);
-			//self.stage.removeFunction(Stage.EVENT_ON_ENTER_FRAME,self.stageEnterFrameFxn);
-			//self.visualsFromData();
 			return true;
 		}
-		var rSmallest = self.rectangleList[0];
-		var rNext = self.rectangleList.pop();
-		// CHECK THAT SMALLEST RECT CAN FIT
-		if( !self.memory.canFit(rSmallest) ){
-			self.rectangleList.push( rNext ); // put back
-			self.memory.pop();
-			return false;
-		}
-		// CHECK THAT NEXT RECT CAN FIT
-		if( !self.memory.canFit(rNext) ){
-			self.rectangleList.push( rNext ); // put back
-			self.memory.pop();
-			return false;
-		}
-		// PLACE RECT
-		self.memory.push( rNext );
 		return false;
 	}
 	this.overlap = function(a,b){

@@ -1,52 +1,28 @@
 // Rect.js
 
-Rect.pack = function(rectList, bound){ // returns an optimized list of rect placements
+Rect.pack = function(rectList, bound){ // updates rectList to locations inside bound
 	var i, j, len = rectList.length;
 	var area = 0;
-	for(i=0;i<len;++i){
-		area += rectList[i].area();
-		//console.log( i+": "+rectList[i].area() );
-	}
-	if( area>bound.area() ){
-		return false;
-	}
+	for(i=0;i<len;++i){ area += rectList[i].area(); }
+	if( area>bound.area() ){ return false; }
 	rectList.sort(Rect.sortBigger);
 	for(i=0;i<len;++i){
 		console.log( i+": "+rectList[i].area() );
 	}
 	return true;
 }
-/*
-*) order array from largest area to shortest area
-*) place y-first, x-first position
-*) 
-*) 
-*) 
 
-graph - every rect placement subdivides region(s) into more regions - possiby et the definitions overlap area
-want to position in such a way that you maximize the rectangular-area the next block will be able to be placed in
-	-> this could leave some small gaps/strips that are prettywell unlikely to place things into
-propably want to consider what remains to be placed along with the avaiable area
-minimize x,y coord
-rectangles can reduced relatively so that the smalest rect has a dimension of 1
-*/
-Rect.optimumPlacement = function(rectList){ // ...
-
-	//
-}
-/*
-
-
-
-
-*/
 Rect.sortBigger = function(a,b){
+	//return ( a.area()+a.width() ) - ( b.area()+b.width() );
+	return a.area()-b.area();
 	if(a.area()>=b.area()){
 		return true;
 	}
 	return false;
 }
 Rect.sortSmaller = function(a,b){
+	//return ( b.area()+b.width() )-( a.area()+a.width() );
+	return b.area()-a.area();
 	if(a.area()<=b.area()){
 		return true;
 	}
