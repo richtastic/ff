@@ -274,8 +274,38 @@ ByteData.SHA512 = function(message){
 }
 
 // AES > BLOW > DESX > RC4 > DES   | RSA / DH
+/* 
+http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
+
+*/
 ByteData.AESencrypt = function(encryption, key, message){
-	// yayz
+	encryption.length(0);
+	var keyLength = key.length();
+	var rounds = (keyLength==128)?10:((keyLength==192)?12:14)
+	console.log(keyLength+" : "+rounds);
+	var chunk = new BinInt(128);
+	// sbox lookup table
+		// ...
+	// round key lookup table
+		// ...
+	while(){ // per message chunk
+		// calculate round key (expansion)
+			// ...
+		// whitening
+			// ... 
+		for(i=0;i<rounds;++i){ // per round
+			// sub bytes
+				// ...
+			// shift rows
+				// ...
+			if(i<rounds-1){
+				// mix columns
+					// ...
+			}
+			// add round key
+				// ...
+		}
+	}
 }
 
 ByteData.AESdecrypt = function(decryption, key, message){
