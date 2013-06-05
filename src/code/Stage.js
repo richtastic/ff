@@ -27,7 +27,12 @@ document.body.appendChild(can);
 can.style.position="absolute";
 can.style.left="0px";
 can.style.top="300px";
-*/
+*/self.doTrees.graphics.beginPath();
+		self.doTrees.graphics.setLine(0,0xFFFFFFFF);
+		self.doTrees.graphics.moveTo(0,0);
+		self.doTrees.graphics.lineTo(0,0);
+		self.doTrees.graphics.endPath();
+		self.doTrees.graphics.strokeLine();
 	self.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
 		self.renderCanvas.clear();
 		self.renderCanvas.setSize(wid,hei);

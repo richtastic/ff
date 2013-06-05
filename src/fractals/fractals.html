@@ -1,11 +1,11 @@
 <html>
 <head>
-<title>FF Rectangle Packing</title>
+<title>FFractals</title>
 <script src="../code/FFLoadAll.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <script type="text/javascript">
 function pageLoadedFxn(){
-	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+	var ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
 }
 function setFeedback(str){
 	document.getElementsByName("feedback")[0].innerHTML = str;
@@ -16,7 +16,7 @@ function defaultClassesProgressFxn(o){
 }
 function defaultClassesLoadedFxn(){
 	setFeedback( "50%" );
-	var list = ["ResourceRect.js","Tree.js","Memory2D.js","RectanglePacking.js"];
+	var list = ["Fractals.js"];
 	scriptLoader = new ScriptLoader("./",list,customClassesLoadedFxn,customClassesProgressFxn,false);
 	scriptLoader.load();
 }
@@ -33,7 +33,7 @@ function lt(a,b){
 function customClassesLoadedFxn(){
 	setFeedback( "" );
 	console.log("loading complete");
-	var rp = new RectanglePacking();
+	var fr = new Fractals();
 }
 </script>
 </head>

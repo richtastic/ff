@@ -13,6 +13,12 @@ Graphics.canvasSetLine = function(wid,col){
 Graphics.setLineJoinCap = function(j,c){
 	Graphics.canvas.setLineJoinCap(j,c);
 }
+Graphics.canvasSetRadialFill = function(a){
+	Graphics.canvas.setRadialFill.apply(Graphics.canvas,arguments);
+}
+Graphics.canvasSetLinearFill = function(a){
+	Graphics.canvas.setLinearFill.apply(Graphics.canvas,arguments);
+}
 Graphics.canvasSetFill = function(col){
 	Graphics.canvas.setFill(col);
 }
@@ -82,6 +88,12 @@ function Graphics(){
 	}
 	this.setLineJoinCap = function(j,c){
 		this._graphics.push( Code.newArray(Graphics.canvasSetLineJoinCap,Code.newArray(j,c)) );
+	}
+	this.setRadialFill = function(){ // ?
+		this._graphics.push( Code.newArray(Graphics.canvasSetRadialFill,arguments ) );
+	}
+	this.setLinearFill = function(){ // ?
+		this._graphics.push( Code.newArray(Graphics.canvasSetLinearFill,arguments ) );
 	}
 	this.setFill = function(col){ // 0xRRGGBBAA
 		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getJSRGBA(col))) );

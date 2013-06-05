@@ -91,6 +91,12 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._context.lineJoin = j;
 		this._context.lineCap = c;
 	}
+	this.setLinearFill = function(){
+		this._context.fillStyle = this.createLinearGradient.apply(this,arguments);
+	}
+	this.setRadialFill = function(){
+		this._context.fillStyle = this.createRadialGradient.apply(this,arguments);
+	}
 	this.setFill = function(col){
 		this._context.fillStyle = col;
 	}
@@ -155,18 +161,20 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
 	}
 	this.createLinearGradient = function(sX,sY,eX,eY, percentsAndColors){
-		gra = self._context.createLinearGradient(sX,sY,eX,eY);
-		for(var i=4; i<arguments.length-2; ++i){
+		var gra = this._context.createLinearGradient(sX,sY,eX,eY);
+		for(var i=4; i<arguments.length; i+=2){
 			pct = arguments[i];
 			col = arguments[i+1];
-			//alp = Code.getAlpRGBA(col);
-			col = Code.getJSRGBA(); // 0xCCDDEE99
-			//alp = //arguments[i+2];//Code.get
-			if(false){//alp==1.0){
-				gra.addColorStop();
-			}else{
-				gra.addColorStop(pct,col);
-			}
+			gra.addColorStop(pct,Code.getJSRGBA(col));
+		}
+		return gra;
+	}
+	this.createRadialGradient = function(sX,sY,sR, eX,eY,eR, percentsAndColors){
+		var gra = this._context.createRadialGradient(sX,sY,sR, eX,eY,eR);
+		for(var i=6; i<arguments.length; i+=2){
+			pct = arguments[i];
+			col = arguments[i+1];
+			gra.addColorStop(pct,Code.getJSRGBA(col));
 		}
 		return gra;
 	}
