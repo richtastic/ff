@@ -40,9 +40,7 @@ function Fractals(){
 		self.doContainer.addChild( self.doOrb );
 		self.doContainer.addChild( self.doCity );
 		self.doContainer.addChild( self.doTrees );
-		//self.doContainer.matrix.identity();
-		//self.doSky.matrix.identity();
-		//
+		// 
 		self.addListeners();
 		self.doContainer.addFunction(Canvas.EVENT_MOUSE_DOWN,self.handleMouseDown);
 		self.doOrb.setDraggingEnabled();
@@ -57,24 +55,51 @@ function Fractals(){
 		if(self.fractalCount<1000){
 			++self.fractalCount;
 			if(self.fractalCount%1==0){
-				self.fractalIncrement();
+				//self.fractalIncrement();
 			}
 		}
 	}
 	this.fractalBegin = function(){
+		var i, len, sX, sY;
+		var canX = self.stage.getCanvas().getWidth(), canY = self.stage.getCanvas().getHeight();
+		console.log(canX,canY);
 		self.fractalCount = 0;
 		self.doTrees.graphics.clear();
-		self.doTrees.graphics.setLine(2.0,0xFFFFFFFF);
+// self.doTrees.graphics.beginPath();
+		for(i=0;i<15;++i){
+			Math.random();
+			sX = Math.random()*canX;
+			sY = canY;
+			self.recursiveTree(self.doTrees.graphics, 3+Math.round(Math.random()*8.0), sX,sY, Math.PI*0.5, canY*0.009);
+		}
+// self.doTrees.graphics.endPath();
+// self.doTrees.graphics.strokeLine();		
+	}
+	this.recursiveTree = function(gr,n, pX,pY, ang, sca){
+		var th = Math.PI*2*0.05+(Math.random()*0.08);
+		var len = n*(sca + Math.random()*6.0);
+		var lX = len*Math.cos(ang);
+		var lY = len*Math.sin(ang);
+		var nX = pX + lX;
+		var nY = pY - lY;
+		if(n>1){
+			self.recursiveTree(gr,n-1, nX,nY, ang+th, sca);
+			self.recursiveTree(gr,n-1, nX,nY, ang-th, sca);
+		}
+		gr.setLine(n*1.5,0x000300FF);
+		gr.beginPath();
+		gr.moveTo(pX,pY);
+		gr.lineTo(nX,nY);
+		gr.endPath();
+		gr.strokeLine();
 	}
 	this.fractalIncrement = function(){
-		var canX = self.stage.getCanvas().getWidth(), canY = self.stage.getCanvas().getHeight();
-		//var rX = Math.random()*canX;
-		//console.log("TREES");
+		/*var canX = self.stage.getCanvas().getWidth(), canY = self.stage.getCanvas().getHeight();
 		self.doTrees.graphics.beginPath();
 		self.doTrees.graphics.moveTo(Math.random()*canX,Math.random()*canY);
 		self.doTrees.graphics.lineTo(Math.random()*canX,Math.random()*canY);
 		self.doTrees.graphics.endPath();
-		self.doTrees.graphics.strokeLine();
+		self.doTrees.graphics.strokeLine();*/
 	}
 	this.canvasResizeFxn = function(s){
 		var i, len;
@@ -122,7 +147,7 @@ function Fractals(){
 		var rW, rH, rX, rY;
 		self.doCity.graphics.clear();
 		self.doCity.graphics.setLine(1.0,0x22111166);
-		self.doCity.graphics.setLinearFill(0,0, 0,s.y, 0.0,0x220000FF, 1.0,0x000000FF);
+		self.doCity.graphics.setLinearFill(0,0, 0,s.y, 0.0,0x330000FF, 1.0,0x0C0000FF);
 		len = Math.floor(s.x*0.070);
 		for(i=0;i<len;++i){
 		self.doCity.graphics.beginPath();
