@@ -1,0 +1,28 @@
+# this is my test data yaml document
+%YAML ignore me
+#---
+name : Sally
+age: 	123
+double	: 10.7
+boolean :true
+boyfriend:
+	name: "Nicholai"
+	age: 68
+	double: 89.0001
+	boolean: false
+happy: 
+	- calc-ulus
+	- algebra
+	- addition
+
+#---
+
+bacon: Tastey
+grapes: Watery
+shells: Hard
+
+#---
+
+...
+
+This down here should never be processed

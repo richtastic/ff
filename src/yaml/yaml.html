@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>FF YAML Parsing</title>
+<script src="../code/FFLoadAll.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+}
+function setFeedback(str){
+	document.getElementsByName("feedback")[0].innerHTML = str;
+}
+function defaultClassesProgressFxn(o){
+	var perc = 0.0 + 0.5*(o.loaded/o.total);
+	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
+}
+function defaultClassesLoadedFxn(){
+	setFeedback( "50%" );
+	var list = ["yaml.js"];
+	scriptLoader = new ScriptLoader("./",list,customClassesLoadedFxn,customClassesProgressFxn,false);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){
+	var perc = 0.5 + 0.5*(o.loaded/o.total);
+	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
+}
+function gt(a,b){
+	return a-b;
+}
+function lt(a,b){
+	return a-b;
+}
+function customClassesLoadedFxn(){
+	setFeedback( "" );
+	console.log("loading complete");
+	var y = new yaml();
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div name="feedback" style=""></div>
+</body>
+</html>
+
