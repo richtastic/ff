@@ -24,12 +24,6 @@ function customClassesProgressFxn(o){
 	var perc = 0.5 + 0.5*(o.loaded/o.total);
 	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
 }
-function gt(a,b){
-	return a-b;
-}
-function lt(a,b){
-	return a-b;
-}
 function customClassesLoadedFxn(){
 	setFeedback( "" );
 	console.log("loading complete");

@@ -3,125 +3,196 @@
 function YAML(){
     var self = this;
     this.parse = function(blob){
-        var i, s, len, obj, index, line;
+        var i, s, table, obj, index, line, list, ref, arr, hash;
         var documentList = new Array();
         var referenceTable = new Object();
         var lineList = blob.split("\n");
-        len = lineList.length;
-        documentList.push(new Object);
-        while( lineList.length>0 ){
+        // root doclist
+        obj = documentList;
+        while( obj!=null && lineList.length>0 ){
             if( self._removeLeadingAndTrailingWhitespace(lineList[0]) == "---" ){
-                //console.log("NEW EXTERNAL: ------------------");
                 documentList.push( new Object () );
                 lineList.shift();
             }else if( self._removeLeadingAndTrailingWhitespace(lineList[0]) == "..." ){
                 lineList.shift();
                 break;
-            }else{
-                obj = self._parseObject(lineList, 0, documentList, referenceTable, self._getLastDocumentObject(documentList) );
+            }
+            obj = self._parseObject(lineList, 0, referenceTable, self._getLastDocumentObject(documentList) );
+        }
+        // clear
+        for(s in referenceTable){
+            table = referenceTable[s]; ref = table.reference; list = table.list;
+            while(list.length>0){
+                arr = list.pop(); obj = arr[0]; hash = arr[1];
+                obj[hash] = ref;
+                delete arr[0];
+                delete arr[1];
+            }
+            table.reference = null; table.list = null;
+            referenceTable[s] = null;
+            delete referenceTable[s];
+        }
+        /*var retList = new Array();
+        while(documentList.length>0){
+            obj = documentList.pop();
+            for(s in obj){
+                retList.push(obj);
+                break;
             }
         }
-        //
-        // CLEANUP NON-REFERENCED | TABLE HERE
-        // ,,,
-        //
-        for(s in referenceTable){
-            referenceTable[s] = null;
-        }
-        len = documentList.length;
-        if(len==0){
-            return null;
-        }else if(len==0){
-            return documentList.pop();
-        }
+        return retList;
+        */
         return documentList;
     };
-    /*this._parseArray = function(lines, prevIndents, docList, refTable, currArr){
-        return currArr;
-    };*/
-    this._parseObject = function(lines, prevIndents, docList, refTable, currObj){
-        var line, obj, str, tmp, obj, arr, key, value, indents;
-        indents = prevIndents;
-        while(indents>=prevIndents){
-            line = lines.shift();
-            if(!line){ break; }
-            str = self._removeComment( self._checkTag( line ) );
-            indents = self._getLeadingIndentCount(str);
-            str = self._removeLeadingAndTrailingWhitespace(str);
-            key = self._removeLeadingAndTrailingWhitespace( str.replace(/:.*/,"") );
-            //console.log(key+" = "+prevIndents+" / "+indents);
-            if(indents<prevIndents){ // this key belongs to previous object
-                lines.unshift(line);
+    this._parseObject = function(lines, prevIndents, refTable, currObj, index){
+        var line, lineNext, obj, str, tmp, tk, tv, obj, key, value, indents, isDef;
+        index = index===undefined?0:index;
+        while(true){
+            self._popBlankLines(lines);
+            if(lines.length==0){ break; }
+            line = lines[0];
+            tmp = self._removeLeadingAndTrailingWhitespace(line);
+            if(tmp=="---"){
+                //lines.shift();
+                break;
+            }else if(tmp=="..."){
+                //lines.shift();
                 break;
             }
-            tmp = self._removeLeadingAndTrailingWhitespace( str );
-            if( tmp=="---" ){
-                //console.log("NEW INTERNAL ++++++++++++++++++++++++++++++++++++++++++++");
-                docList.push( new Object() );
-                break;
-            }else if( tmp=="..." ){ 
-                lines.unshift(); 
-                break;
-                //
-            }else if( key.length==0 ){ // nothing
-                // console.log("N/A");
-            }else{
-                value = self._removeLeadingAndTrailingWhitespace( str.replace(/.*:/,"") );
-                console.log("'"+str+"' | key: '"+key+"' | value: '"+value+"'");
-                if( value.length==0 ){ // object declaration
-                    console.log("OBJECT/ARRAY DECLARATION");
-                    var nextLine, nextKey;
-                    if(lines.length>0){
-                        nextLine = lines[0];
-                        nextLine = self._removeComment( self._checkTag( nextLine ) );
-                    }else{
-                        continue; // no next line
-                    }
-                    nextIndents = self._getLeadingIndentCount(nextLine);
-                    nextKey = self._removeLeadingAndTrailingWhitespace( nextLine.replace(/:.*/,"") );
-                    if( nextKey.indexOf("-")==0 ){
-                        console.log("   ARRAY");
-                        arr = new Array();
-                        value = self._parseObject(lines, nextIndents, docList, refTable, arr);
-                    }else{
-                        console.log("   OBJECT");
-                        obj = new Object();
-                        value = self._parseObject(lines, nextIndents, docList, refTable, obj);
-                    }
-                }else if( value.indexOf("&")==0 ){ // reference table declaration
-                    console.log("REFERENCE DECLARATION");
-                }else if( value.indexOf("*")==0 ){ // reference table reference
-                    console.log("REFERENCE REFERENCE");
-                }else if( str.indexOf("-")==0){ // array item
-                    str = self._removeLeadingAndTrailingWhitespace( str.replace("-","") );
-                    console.log("ARRAY ITEM '"+str+"'");
-                    lines.unshift( line.replace("-","") );
-                    obj = new Object();
-                    var ret = self._parseObject(lines, nextIndents, docList, refTable, obj);
-                    currObj.push(ret);
-continue;
-                }else if( value.length>1 && value.charAt(0)=='"' && value.charAt(value.length-1)=='"' ){ // explicit string declaration
-                    //console.log("EXPLICIT ONE-LINE STRING");
-                    value = value.substr(1,value.length-2)
-                }else{ // primitive type
-                    //console.log("PRIMITIVE TYPE");
-                    if(value=="true" || value=="false"){ // boolean
-                        if(value=="true"){ value=true; }else{ value=false; }
-                    }else if( !isNaN(value) ){ // number
-                        if( value.indexOf(".")>=0  ){ // floating point
-                            value = parseFloat(value);
-                        }else{ // integer
-                            value = parseInt(value);
-                        }
-                    } // else - string
+            key = self._parseKey(line, refTable);
+            if(key){
+                indents = self._getLeadingIndentCount(line);
+                if(indents<prevIndents){
+                    return currObj;
                 }
-                currObj[key] = value;
-// NEED TO CHANGE THIS TO RETURN AN OBJECT - NOT ADD ...
-//return value; 
+                value = self._parseValue(line, refTable);
+                if(value.length>0 && value.charAt(0)=="&"){
+                    isDef = value.replace(/&/,"");
+                }else{
+                    isDef = null;
+                }
+                lines.shift(); // used
+                self._popBlankLines(lines);
+                lineNext = lines.length>0?lines[0]:"";
+                if(key == "-"){ // array item start - replace dash with index and redo
+                    lineNext = line.replace(/-/,"");
+                    tk = self._parseKey(lineNext, refTable);
+                    tv = self._parseValue(lineNext, refTable);
+                    tmp = index+":";
+                    ++index;
+                    if(tk!=""&&tv!=""){
+                        lines.unshift( lineNext );
+                        tmp = line.replace(/-.*/,tmp);
+                        lines.unshift( tmp );
+                    }else{
+                        tmp = line.replace(/-/,tmp);
+                        lines.unshift( tmp );
+                    }
+                    continue;
+                }else if( value=="" || isDef ){ // object or array
+                    indents = self._getLeadingIndentCount(lineNext);
+                    tmp = self._parseKey(lineNext, refTable);
+                    if(tmp=="-"){ obj = new Array(); }else{ obj = new Object(); }
+                    if(isDef){ self._setReferenceTable(isDef, obj, refTable); }
+                    obj = self._parseObject(lines, indents, refTable, obj, 0);
+                    if( currObj instanceof Array ){
+                        currObj.push( obj );
+                    }else{
+                        currObj[key] = obj;
+                    }
+                }else{ // terminal
+                    if(value.length>0 && value.charAt(0)=="*"){
+                        value = value.replace(/\*/,"");
+                        self._appendReferenceTable(value, currObj, key, refTable );
+                    }else{ // could return number 
+                        value = self._parseTerminal(value);
+                    }
+                    if( currObj instanceof Array ){
+                        currObj.push( value );
+                    }else{
+                        currObj[ key ] = value;
+                    }
+                }
+            }else{
+                break;
             }
         }
         return currObj;
     };
+    this._parseKey = function(line, refTable){
+        var str, key, i;
+        if(line==""){ return null; }
+        str = self._removeComment( self._checkTag( line ) );
+        str = self._removeLeadingAndTrailingWhitespace(str);
+        i = str.indexOf(":");
+        if(i>0){ // key = self._removeLeadingAndTrailingWhitespace( str.replace(/:.*/,"") );
+            key = self._removeLeadingAndTrailingWhitespace( str.substr(0, i) );
+        }else{
+            key = self._removeLeadingAndTrailingWhitespace( str );
+        }
+        if(key.charAt(0)=="-"){
+            return "-";
+        }
+        return key;
+    };
+    this._parseValue = function(line, refTable){
+        var str, value, i;
+        if(line==""){ return null; }
+        str = self._removeComment( self._checkTag( line ) );
+        str = self._removeLeadingAndTrailingWhitespace(str);
+        i = str.indexOf(":")+1; // value = self._removeLeadingAndTrailingWhitespace( str.replace(/.*:/,"") );
+        value = self._removeLeadingAndTrailingWhitespace( str.substr( i, str.length-i) );
+        if(value.charAt(0)=="-"){
+            value = self._removeLeadingAndTrailingWhitespace( value.replace(/-/,"") );
+        }else if(line.indexOf(":")<0){// no assignment
+            return "";
+        }
+        return value;
+    };
+    this._parseTerminal = function(value){
+        if(value=="true" || value=="false"){ // boolean
+            if(value=="true"){ value=true; }else{ value=false; }
+        }else if( !isNaN(value) ){ // number
+            if( value.indexOf(".")>=0  ){ // floating point
+                value = parseFloat(value);
+            }else{ // integer
+                value = parseInt(value);
+            }
+        /*}else if(value.length>0 && value.charAt(0)=="*"){
+            //
+        */}else if(value.length>1 && value.charAt(0)=='"' && value.charAt(value.length-1)=='"' ){ // explicit string
+            value = value.substr(1,value.length-2);
+        } // else - normal string
+        return value;
+    }
+    this._popBlankLines = function(lines){
+        var line;
+        while(lines.length>0){
+            line = lines[0];
+            line = self._removeComment( self._checkTag( line ) );
+            line = self._removeLeadingAndTrailingWhitespace( line );
+            if(line!=""){
+                return true;
+            }
+            lines.shift();
+        };
+        return false;
+    };
+    this._appendReferenceTable = function(hash, obj, key, refTable){
+        if(!refTable[hash]){
+            refTable[hash] = new Object();
+            refTable[hash].reference = null;
+            refTable[hash].list = new Array();
+        }
+        refTable[hash].list.push([obj, key] );
+    }
+    this._setReferenceTable = function(hash, obj, refTable){
+        if(!refTable[hash]){
+            refTable[hash] = new Object();
+            refTable[hash].list = new Array();
+        }
+        refTable[hash].reference = obj;
+    }
     this._getLastDocumentObject = function(docList){
         if(docList.length==0){ // ensure at least one object exists
             docList.push( new Object() );

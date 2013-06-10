@@ -1,28 +1,46 @@
 # this is my test data yaml document
 %YAML ignore me
-#---
+---
+
 name : Sally
 age: 	123
 double	: 10.7
-boolean :true
+boolean :t:r:u:e
+bool:false
 boyfriend:
 	name: "Nicholai"
 	age: 68
 	double: 89.0001
+	awesome: *id_abc
 	boolean: false
-happy: 
-	- calc-ulus
-	- algebra
-	- addition
+happy:
+	-	terminal\nline\new\nis\nyes.
+	-	*ref
+	-	OBJ1: :::V:A:L:1:
+		OBJ2: VAL2
+		OBJ3: VAL3
+		arr:
+			- 123
+			- 234
+			- 345
+	-	ANOTHER: VALUE
+	- hat
 
-#---
+ref1: *id_01
 
-bacon: Tastey
-grapes: Watery
-shells: Hard
+---
 
-#---
+reference: &ref
+	array: item
+food: &id_01
+	bacon: Tastey
+	grapes: Watery
+	shells: Hard
+skillz: &id_abc
+	cat: in the hat
+	dog: 5.456
+
 
 ...
 
-This down here should never be processed
+# This down here should never be processed
