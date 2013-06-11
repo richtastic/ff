@@ -125,7 +125,7 @@ function YAML(){
         str = self._removeComment( self._checkTag( line ) );
         str = self._removeLeadingAndTrailingWhitespace(str);
         i = str.indexOf(":");
-        if(i>0){ // key = self._removeLeadingAndTrailingWhitespace( str.replace(/:.*/,"") );
+        if(i>0){
             key = self._removeLeadingAndTrailingWhitespace( str.substr(0, i) );
         }else{
             key = self._removeLeadingAndTrailingWhitespace( str );
@@ -140,7 +140,7 @@ function YAML(){
         if(line==""){ return null; }
         str = self._removeComment( self._checkTag( line ) );
         str = self._removeLeadingAndTrailingWhitespace(str);
-        i = str.indexOf(":")+1; // value = self._removeLeadingAndTrailingWhitespace( str.replace(/.*:/,"") );
+        i = str.indexOf(":")+1;
         value = self._removeLeadingAndTrailingWhitespace( str.substr( i, str.length-i) );
         if(value.charAt(0)=="-"){
             value = self._removeLeadingAndTrailingWhitespace( value.replace(/-/,"") );
@@ -158,11 +158,12 @@ function YAML(){
             }else{ // integer
                 value = parseInt(value);
             }
-        /*}else if(value.length>0 && value.charAt(0)=="*"){
-            //
-        */}else if(value.length>1 && value.charAt(0)=='"' && value.charAt(value.length-1)=='"' ){ // explicit string
+        }else if(value.length>1 && value.charAt(0)=='"' && value.charAt(value.length-1)=='"' ){ // explicit string
             value = value.substr(1,value.length-2);
-        } // else - normal string
+            value = self._cleanUpString(value);
+        }else{
+            value = self._cleanUpString(value);
+        }
         return value;
     }
     this._popBlankLines = function(lines){
@@ -208,6 +209,9 @@ function YAML(){
         }
         return len;
     }
+    this._cleanUpString = function(str){
+        return str.replace(/\\n/g,"\n");
+    };
     this._removeLeadingAndTrailingWhitespace = function(str){
         return self._removeTrailingWhitespace( self._removeLeadingWhitespace(str) );
     };

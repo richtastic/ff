@@ -146,7 +146,7 @@ rectList.push( new Rect(2017,1534, 27,23) );
 rectList.push( new Rect(1028,4, 30,17) );
 rectList.push( new Rect(1066,4, 34,15) );
 var bound = new Rect(0,0, 1024,1024);
-//var src = self.resource.tex[ResourceRect.TEX_REX];
+var src = self.resource.tex[ResourceRect.TEX_REX];
 
 		// SPINO
 // rectList.push( new Rect(4,4, 87,191) );
