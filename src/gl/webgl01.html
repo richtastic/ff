@@ -7,7 +7,11 @@
 <script type="text/javascript">
 function pageLoadedFxn(){
 	console.log("loaded");
-	startWebGL();
+	if(window.WebGLRenderingContext){
+		startWebGL();
+	}else{
+		console.log("browser does not support webgl");
+	}
 }
 var gl;
 var triangleVertexPositionBuffer;
@@ -30,7 +34,14 @@ function startWebGL(){
 	drawScene();
 }
 function initGL(canvas){
+	console.log(canvas);
+	console.log( canvas.getContext("2d") );
+	console.log( canvas.getContext("experimental-webgl") );
+	console.log( canvas.getContext("webgl") );
+	console.log( canvas.getContext("3d") );
+	console.log( canvas.getContext("") );
 	var gl = canvas.getContext("experimental-webgl");
+	console.log(gl);
 	gl.viewportWidth = canvas.width;
 	gl.viewportHeight = canvas.height;
 	return gl;
