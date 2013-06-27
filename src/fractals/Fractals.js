@@ -61,7 +61,7 @@ function Fractals(){
 	}
 	this.fractalBegin = function(){
 		var i, len, sX, sY;
-		var canX = self.stage.getCanvas().getWidth(), canY = self.stage.getCanvas().getHeight();
+		var canX = self.stage.getCanvas().width(), canY = self.stage.getCanvas().height();
 		console.log(canX,canY);
 		self.fractalCount = 0;
 		self.doTrees.graphics.clear();

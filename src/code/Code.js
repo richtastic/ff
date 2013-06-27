@@ -133,6 +133,9 @@ Code.overrideClass = function(child,oldFxn,newFxn){
 	return newFxn;
 }
 // color functions ----------------------------------------------------
+Code.color255 = function(c){
+	return Math.min( Math.max( Math.round(c), 0), 255);
+}
 Code.getColRGBA = function(r,g,b,a){
 	return (r<<24)+(g<<16)+(b<<8)+a;
 }
@@ -236,8 +239,11 @@ Code.generateImageFromData = function(wid,hei,imageData){
     img.src = Code.generateBMPImageSrc(wid,hei,imageData);
     return img;
 }
-Code.generateImageFromBit64encode = function(str){
+Code.generateImageFromBit64encode = function(str, fxn){
     var img = new Image();
+    if(fxn!=null){
+    	img.onload = fxn;
+    }
     img.src = str;
     return img;
 };

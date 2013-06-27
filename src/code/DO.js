@@ -414,7 +414,7 @@ function DO(parentDO){
 			self.graphicsIntersection.render(can);
 			self.graphicsIntersection.takedownRender(can);
 			var context = can.getContext();
-			var imgData = can.getImageData(0,0,can.getWidth(),can.getHeight());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
+			var imgData = can.getImageData(0,0,can.width(),can.height());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 			var pix = self.getPixelRGBA( imgData, pos.x,pos.y);
 			self.takedownRender(can);
 			if(pix!=0){

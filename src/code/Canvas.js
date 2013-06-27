@@ -70,9 +70,43 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		var imgData = this._context.getImageData(a,b,c,d);
 		return imgData;
 	};
+	this.setImageData = function(imgData,c,d){
+		this._context.putImageData(imgData,c,d);
+	};
+	this.getColorArray = function(a,b,c,d){
+		var imgData = this._context.getImageData(a,b,c,d).data;
+		var i, j, w=c, h=d, index, jw, jw4;
+		var colList = new Array(w*h);
+		for(j=0;j<h;++j){
+			jw = j*w; jw4 = jw*4;
+			for(i=0;i<w;++i){
+				index = i*4 + jw4;
+				colList[i + jw] = Code.getColRGBA(imgData[index],imgData[index+1],imgData[index+2],imgData[index+3]);
+			}
+		}
+		return colList;
+	};
+	this.setColorArray = function(data, x,y, w,h){
+		var i, j, index, col;
+		var img = this._context.createImageData(w,h);//new Uint8ClampedArray(w*h*4, w,h);
+		//var colList = new Array(w*h*4);
+		for(j=0;j<h;++j){
+			jw = j*w; jw4 = jw*4;
+			for(i=0;i<w;++i){
+				index = i*4 + jw4;
+				col = data[i + jw];
+				img.data[index  ] = Code.getRedRGBA(col);
+				img.data[index+1] = Code.getGrnRGBA(col);
+				img.data[index+2] = Code.getBluRGBA(col);
+				img.data[index+3] = Code.getAlpRGBA(col);
+			}
+		}
+		this._context.putImageData(img,x,y);
+	};
 	this.toDataURL = function(){
-		return this._canvas.toDataURL.call(this.canvas,arguments);
-	}
+		//return this._canvas.toDataURL(this._canvas,arguments);
+		return this._canvas.toDataURL.call(this._canvas,arguments);
+	};
 // STYLES ------------------------------------------------------------
 	this.setClass = function(name){
 		this._canvas.setAttribute("class",name);
@@ -230,21 +264,27 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 	this.getContext = function(){
 		return this._context;
 	}
-	this.getWidth = function(){
+	this.canvas = function(){
+		return this._canvas;
+	}
+	this.context = function(){
+		return this._context;
+	}
+	this.size = function(wid,hei){
+		this._canvas.width = wid;
+		this._canvas.height = hei;
+	};
+	this.width = function(wid){
+		if(arguments.length>0){
+			this._canvas.width = wid;
+		}
 		return this._canvas.width;
-	}
-	this.getHeight = function(){
+	};
+	this.height = function(hei){
+		if(arguments.length>0){
+			this._canvas.height = hei;
+		}
 		return this._canvas.height;
-	}
-	this.setWidth = function(wid){
-		this._canvas.width = wid;
-	};
-	this.setHeight = function(hei){
-		this._canvas.height = hei;
-	};
-	this.setSize = function(wid,hei){
-		this._canvas.width = wid;
-		this._canvas.height = hei;
 	};
 // LISTENERS ----------------------------------------------------------
 	this.addListeners = function(){
