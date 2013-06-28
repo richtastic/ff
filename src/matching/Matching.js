@@ -54,18 +54,20 @@ function Matching(){
 		var ox = 0, oy = 0;
 		var wid=self.canvas.width(), hei=self.canvas.height();
 		var scale = 2.0;
-ox = 500, oy = 250, wid = 100, hei = 100, scale = 10;
+//ox = 500, oy = 250, wid = 100, hei = 100, scale = 10;
 //scale = 0.5;
 		var dat = self.canvas.getColorArray(ox,oy,wid,hei);
 		//dat = self.scaleColorArrayFloor(dat,wid,hei, scale,scale);
 		//dat = self.scaleColorArrayLinear(dat,wid,hei, scale,scale);
-		//dat = self.scaleColorArrayCubic(dat,wid,hei, scale,scale);
 		dat = self.scaleColorArrayCubic(dat,wid,hei, scale,scale);
+		//dat = self.scaleColorArrayCubic(dat,wid,hei, scale,scale);
 		wid = Math.floor(wid*scale);
 		hei = Math.floor(hei*scale);
 		self.canvas.width(wid);
 		self.canvas.height(hei);
 		self.canvas.setColorArray(dat, 0,0,wid,hei);
+
+//self.canvas.
 /*
 img = Code.generateImageFromBit64encode( self.canvas.toDataURL(), function(){
 	console.log("LOADED");
@@ -74,6 +76,36 @@ img = Code.generateImageFromBit64encode( self.canvas.toDataURL(), function(){
 	self.canvas.drawImage4(img,0,0,400,400);
 } ); // Canvas.IMAGE_TYPE_PNG
 */
+
+img = self.canvas.toDataURL();
+var i = new Image();
+i.src = img;
+/*
+i.style.position = "absolute";
+i.style.zIndex = 999;
+i.style.left = "10px";
+i.style.top = "10px";
+*/
+
+//document.body.appendChild(img);
+document.body.appendChild(i);
+/*
+img = Code.generateImageFromBit64encode( self.canvas.toDataURL(), function(dat){
+	var i = new Image();
+	i.src = dat;
+	console.log(dat)
+	//document.body.appendChild(i);
+	//document.body.appendChild(i);
+	//console.log(dat);
+	console.log("LOADED");
+	// self.canvas.clear();
+	// self.canvas.context().scale(0.5,0.5);
+	// self.canvas.drawImage4(img,0,0,400,400);
+	
+} ); // Canvas.IMAGE_TYPE_PNG
+*/
+
+
 var x = 0.5, y = 0.5;
 //console.log( self.quadric1D(x,x*x,x*x*x, 1,2,3,4) );
 // x,x*x,x*x*x, y,y*y,y*y*y
