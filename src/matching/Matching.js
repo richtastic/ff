@@ -53,10 +53,15 @@ function Matching(){
 		//var wid=200, hei=200;
 		var ox = 0, oy = 0;
 		var wid=self.canvas.width(), hei=self.canvas.height();
-		var scale = 2.0;
+		var scale = 1.0;
 //ox = 500, oy = 250, wid = 100, hei = 100, scale = 10;
 //scale = 0.5;
 		var dat = self.canvas.getColorArray(ox,oy,wid,hei);
+
+self.colorize1(dat);
+self.canvas.setColorArray(dat, 0,0,wid,hei);
+return;
+
 		//dat = self.scaleColorArrayFloor(dat,wid,hei, scale,scale);
 		//dat = self.scaleColorArrayLinear(dat,wid,hei, scale,scale);
 		dat = self.scaleColorArrayCubic(dat,wid,hei, scale,scale);
@@ -80,12 +85,12 @@ img = Code.generateImageFromBit64encode( self.canvas.toDataURL(), function(){
 img = self.canvas.toDataURL();
 var i = new Image();
 i.src = img;
-/*
+
 i.style.position = "absolute";
 i.style.zIndex = 999;
 i.style.left = "10px";
 i.style.top = "10px";
-*/
+
 
 //document.body.appendChild(img);
 document.body.appendChild(i);
@@ -283,6 +288,23 @@ var x = 0.5, y = 0.5;
 		self.imageLoader.setLoadList(self.imageURLDirectory, self.imageURLList);
 		self.imageLoader.setFxnComplete(self.handleAllImagesLoaded);
 		self.imageLoader.load();
+	}
+	self.colorize1 = function(data){
+		var i, len=data.length, col, r,g,b,a;
+		for(i=0;i<data.length;++i){
+			col = data[i];
+			r = Code.getRedRGBA(col); g = Code.getGrnRGBA(col); b = Code.getBluRGBA(col); a = Code.getAlpRGBA(col);
+			r = self.colBrightNess(r);
+			g = self.colBrightNess(g);
+			b = self.colBrightNess(b);
+			data[i] = Code.getColRGBA(r,g,b,a);
+		}
+	}
+	this.colBrightNess = function(c){
+		if(c<10){
+			return c;
+		}
+		return Code.color255( (1.0 - Math.pow(1.0-(c/255.0),1.1))*255 );
 	}
 	self.constructor();
 }

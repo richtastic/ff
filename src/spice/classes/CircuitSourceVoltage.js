@@ -3,19 +3,21 @@
 function CircuitSourceVoltage(v){
 	var self = this;
 	Code.extendClass(self,CircuitElement);
-	self.voltage = 0;
+	self._voltage = 0;
+	self.voltage = function(v){
+		if(arguments.length>0){
+			self._voltage = v;
+		}
+		return self._voltage;
+	}
 	self.toString = function(){
-		return "[CircuitSourceVoltage]";
+		return "[CircuitSourceVoltage: "+self.voltage()+" V]";
 	};
-	//
-	self.evaluatePins = function(){
-		//console.log("eval");
-		//self.super.evaluatePins.call(self);
-		//console.log("v:"+self.voltage);
-		//console.log( self.pins[1].node == self.pins[0].node );
-		self.pins[1].node().voltage = self.pins[0].node().voltage + self.voltage;
-		//console.log( self.pins[0].node().voltage );
-		//console.log( self.pins[1].node().voltage );
+	self.establishPins = function(time){
+		//
+	};
+	self.evaluatePins = function(delta, time){
+		self.pins[1].node().voltage( self.pins[0].node().voltage() + self.voltage() );
 	};
 	//
 	self.kill = function(){
@@ -23,7 +25,7 @@ function CircuitSourceVoltage(v){
 		self.super.kill.call(self);
 	};
 	// constructor
-	if(!v){ v=0; } self.voltage = v;
+	if(!v){ v=0; } self.voltage( v );
 	self.addPin("A");
 	self.addPin("B");
 };

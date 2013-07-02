@@ -20,7 +20,8 @@ function defaultClassesProgressFxn(o){
 }
 function defaultClassesLoadedFxn(){
 	setFeedback( "50%" );
-	var list = ["../../code/Test.js","CircuitPin.js","CircuitNode.js","CircuitNet.js","CircuitSimulation.js","CircuitElement.js","CircuitImpedance.js","CircuitResistor.js","CircuitSourceVoltage.js",
+	var list = ["../../code/Test.js","CircuitPin.js","CircuitNode.js","CircuitNet.js","CircuitSimulation.js","CircuitElement.js","CircuitImpedance.js",
+				"CircuitResistor.js","CircuitCapacitor.js","CircuitGround.js","CircuitSourceVoltage.js",
 				"Win.js","WinManager.js","DOCE.js","DOPin.js","ElementConnection.js","DOWire.js","DO2Pin.js","DOChip.js","DOResistor.js",
 				"Draft.js","LibItem.js","Library.js","ResourceSpice.js","Spice.js"];
 	scriptLoader = new ScriptLoader("classes/",list,customClassesLoadedFxn,customClassesProgressFxn,false);
@@ -34,24 +35,29 @@ var fontTankmen = null;
 function customClassesLoadedFxn(){
 	setFeedback( "" );
 	console.log("loading complete");
-	var a = new Ajax();
 	//a.get("test.html",getDone);
 	//a.post("test.txt",getDone);
-	spice = new Spice();
-return;
+//spice = new Spice();
+//return;
 	var netlist = new CircuitNet();
-	var sim = new CircuitSimulation();
-	var resistor = new CircuitResistor(100);
-	var source = new CircuitSourceVoltage(5);
-	netlist.addElement(resistor);
+	var resistor = new CircuitResistor(100); // 100 Ohm
+	var capacitor = new CircuitCapacitor(1E-6); // 1 uF
+	var source = new CircuitSourceVoltage(5); // 5 V
+	var ground = new CircuitGround(0); // 0 V
 	netlist.addElement(source);
-	netlist.connectElements( resistor,0, source,0 );
-	netlist.connectElements( resistor,1, source,1 );
-	// netlist.disconnectElements( resistor,0, source,0 );
-	//
-	//console.log( "Resistor: " + resistor.toString() );
-	//console.log( "Source: " + source.toString() );
-	// simulate DC
+	netlist.addElement(resistor);
+	netlist.addElement(capacitor);
+	netlist.addElement(ground);
+	netlist.connectElements( source,0, ground,0 );
+	netlist.connectElements( source,1, resistor,1 );
+	netlist.connectElements( resistor,0, capacitor,1 );
+	netlist.connectElements( capacitor,0, ground,0 );
+	console.log( "Source: " + source.toString() );
+	console.log( "Resistor: " + resistor.toString() );
+	console.log( "Capacitor: " + capacitor.toString() );
+	console.log( "Ground: " + ground.toString() );
+	// simulate circuit
+	var sim = new CircuitSimulation();
 	sim.netlist(netlist);
 	sim.simulate(simulationCompleteFxn, simulationProgressFxn);
 };

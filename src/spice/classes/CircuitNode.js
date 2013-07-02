@@ -11,7 +11,13 @@ function CircuitNode(){
 	var self = this;
 	self.id = 0;
 	self.mark = 0;
-	self.voltage = 0;
+	self._voltage = 0;
+	self.voltage = function(v){
+		if(arguments.length>0){
+			self._voltage = v;
+		}
+		return self._voltage;
+	}
 	self.pins = new Array();
 	// 
 	self.addPin = function(o){

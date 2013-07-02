@@ -1,6 +1,6 @@
 // CircuitElement.js
 
-function CircuitElement(r,i){
+function CircuitElement(){
 	var self = this;
 	self.pins = new Array();
 	self.addPin = function(name){
@@ -14,7 +14,13 @@ function CircuitElement(r,i){
 			return self.pins[i];
 		}
 	};
-	self.evaluatePins = function(){
+	self.establishPins = function(time){
+		//
+	}; 
+	self.evaluatePins = function(delta, time){
+		//
+	};
+	self.exhaustPins = function(delta, time){
 		//
 	};
 	// 

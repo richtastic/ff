@@ -9,7 +9,9 @@ function CircuitNet(){
 		Code.addUnique(self.elements,o);
 	};
 	self.connectElements = function(a,ai, b,bi){
+		console.log(a,ai,b,bi);
 		var pinA = a.pin(ai), pinB = b.pin(bi);
+		console.log(pinA,pinB)
 		var nodeA = pinA.node(), nodeB = pinB.node();
 		nodeA.uniteWith(nodeB);
 	};
@@ -33,11 +35,11 @@ function CircuitNet(){
 			}
 		}
 		return list;
-	}
+	};
 	self.setAllNodesToVoltage = function(v){
 		var i, list = self.getAllNodes();
 		for(i=0;i<list.length;++i){
-			list[i].voltage = v;
+			list[i].voltage( v );
 		}
 	};
 	/*self.addNode = function(o){
