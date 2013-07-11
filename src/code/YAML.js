@@ -2,6 +2,7 @@
 
 function YAML(){
     var self = this;
+    // -------------------------------------------------------------------------------------------- FROM YAML TO JS
     this.parse = function(blob){
         var i, s, table, obj, index, line, list, ref, arr, hash;
         var documentList = new Array();
@@ -231,6 +232,71 @@ function YAML(){
         }
         return str;
     };
+    this._indentString = "\t";
+    this._beforeString = "";
+    this._afterString = " ";
+    this._idString = "objRef";
+    this._idNumber = 0;
+    // -------------------------------------------------------------------------------------------- FROM JS TO YAML
+    this.generate = function(obj, heading){
+        if(!heading){
+            heading = "";
+        }
+        var returnString = ""+heading+"\n";
+        var referenceTable = new Array();
+        returnString = returnString + "" + self._getTerminal(obj, "", referenceTable, true);
+        return returnString;
+    };
+    this._checkTable = function(obj, table){ 
+        var i, len = table.length;
+        var found = false;
+        for(i=0; i<len; ++i){
+            if(table[i].object == obj){
+                found = true;
+                break;
+            }
+        }
+        var newID = self._idString+""+self._idNumber;
+        ++self._idNumber;
+        table.push( { "object":obj, "id":newID } );
+        return [found, table[i].object, table[i].id];
+    };
+    this._getTerminal = function(obj, indent, table, notUseRef){
+        if(typeof obj == "string"){
+            return '"'+obj+'"' + "\n";
+        }else if(typeof obj == "number"){
+            return ""+obj + "\n";
+        }else if(typeof obj == "function"){
+            console.log("function");
+            return "function_was_here";
+        }else if(typeof obj == "object"){
+            var arr = self._checkTable(obj, table);
+            var wa = arr[0], ob = arr[1], id = arr[2];
+            if( wa ){
+                return "*" + id + "\n";
+            }
+            var s, str = "&"+id+"\n";
+            if(notUseRef){ str="\n"; }
+            if( Array.isArray(obj) ){
+                for(s=0;s<obj.length;++s){
+                    str = str + indent + "-" + self._afterString + self._getTerminal(obj[s], indent+self._indentString, table) + "";
+                }
+            }else{
+                for(s in obj){
+                    str = str + indent + s + self._beforeString + ":" + self._afterString + self._getTerminal(obj[s], indent+self._indentString, table) + "";
+                }
+            }
+            return str;
+        }else{
+            console.log( "UNKNOWN:" + (typeof obj) );
+        }
+    }
+    /*
+    make a table of all references
+    
+    ignore functions?
+    */
+    // --------------------------------------------------------------------------------------------
     this.kill = function(){
         //
     };
