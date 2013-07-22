@@ -14,7 +14,7 @@ function CircuitElement(){
 			return self.pins[i];
 		}
 	};
-	self.establishPins = function(time){
+	self.establishPins = function(delta, time){
 		//
 	}; 
 	self.evaluatePins = function(delta, time){

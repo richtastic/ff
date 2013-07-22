@@ -264,6 +264,48 @@ Code.gcd = function(a,b){
 	}
 	return Math.max(a,b);
 };
-
-
-
+// -------------------------------------------------------- HTML
+Code.getID = function(id){
+	return document.getElementById(id);
+};
+Code.newElement = function(type){
+	return document.createElement(type);
+};
+Code.newDiv = function(){
+	return document.createElement("div");
+};
+Code.addChild = function(a,b){
+	a.appendChild(b);
+};
+Code.setProperty = function(ele,pro,val){
+	ele.setAttribute(pro,val);
+}
+// - CLASS
+Code.getClass = function(ele){
+	var c = ele.getAttribute("class");
+	if(c==undefined || c==null){
+		return "";
+	}
+	return c;
+};
+Code.setClass = function(ele,cla){
+	ele.setAttribute("class",cla);
+};
+Code.addClass = function(ele,cla){
+	var c = Code.getClass(ele)+" "+cla;
+	ele.setAttribute("class",c);
+};
+Code.removeClass = function(ele,cla){
+	ele.setAttribute("class",Code.getClass(ele).replace(cla,""));
+};
+// - 
+Code.getContent = function(ele){
+	return ele.innerHTML;
+}
+Code.setContent = function(ele,val){
+	ele.innerHTML = val;
+}
+Code.copyHTML = function(ele){
+	// crate new element yeppers
+	return null;
+}

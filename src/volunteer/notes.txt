@@ -1,0 +1,99 @@
+LINUX:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sudo apt-get install php5
+sudo apt-get install mysql
+sudo apt-get install php5-mysql
+service httpd restart
+
+...
+sudo /etc/init.d/apache2 stop
+sudo service apache2 restart
+
+
+
+SQL:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+mysql -u USER -p
+> PASSWORD
+mysql -u USER -h localhost -p'PASSWORD'
+
+
+create user 'richie'@'localhost' identified by 'qwerty';
+drop user 'richie'@'localhost';
+grant all privileges on * . * to 'richie'@'localhost';
+flush privileges;
+
+create database volunteering;
+use volunteering;
+
+create table users(id int not null auto_increment primary, username varchar(32) not null, password varchar(2048) not null)
+alter table users 
+
+show databases;
+use DATABASE;
+show tables;
+
+TYPES: int, bigint, float, double, date (YYYY-MM-DD), datetime (YYYY-MM-DD HH:MM:SS.fraction), timestamp (YYYY-MM-DD HH:MM:SS - seconds), varchar(0-65535), text(~2^32), mediumtext(2^24), longtext (2^32), 
+
+
+foriegn key - not used importantly
+CREATE TABLE department (id NOT NULL)
+CREATE TABLE employee (id NOT NULL, dept_id NOT NULL, FOREIGN KEY (dept_id) REFERENCES department(id))
+
+default
+ALTER TABLE `table`  ADD COLUMN `column` FLOAT(10,2) NOT NULL DEFAULT '0.00'
+
+drop table users;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------
+create database volunteering;
+use volunteering;
+show tables;
+
+
+# USERS
+create table users(id int not null auto_increment primary key, group_id int, emergency_id int, employer_id int, username varchar(32) not null, password varchar(2048) not null, email varchar(64), phone varchar(32), title varchar(255), city varchar(64), state varchar(64), photo varchar(255) );
+insert into users (username, password) values ("richie","123");
+select * from users;
+
+# EMPLOYERS
+# EMERGENCY_CONTACTS
+# POSITIONS
+id
+
+# SHIFTS
+id
+# PERMISSIONS
+# GROUPS
+# EMAILS
+
+
+
+
+alter table users 
+
