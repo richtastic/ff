@@ -1,4 +1,5 @@
 <?php
-// .php
-
+// footer.php
 ?>
+</body>
+</html>

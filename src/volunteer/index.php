@@ -1,5 +1,13 @@
 <?php
 // index.php
+include #functions.php
+include #config.php
+
+// ...
+
+include #header.php
+
+echo $_POST['a']; // action
 
 echo "...";
 
@@ -13,5 +21,5 @@ echo "END1";
 mysql_close($connection);
 
 echo "END2";
-
+include #footer.php
 ?>

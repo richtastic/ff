@@ -31,7 +31,7 @@ show databases;
 use DATABASE;
 show tables;
 
-TYPES: int, bigint, float, double, date (YYYY-MM-DD), datetime (YYYY-MM-DD HH:MM:SS.fraction), timestamp (YYYY-MM-DD HH:MM:SS - seconds), varchar(0-65535), text(~2^32), mediumtext(2^24), longtext (2^32), 
+TYPES: int, bigint, float, double, date (YYYY-MM-DD), datetime (YYYY-MM-DD HH:MM:SS.fraction), timestamp (YYYY-MM-DD HH:MM:SS - seconds), varchar(0-65535), text(~2^16), mediumtext(2^24), longtext (2^32), 
 
 
 foriegn key - not used importantly
@@ -68,32 +68,268 @@ drop table users;
 
 
 
-
+insert into users (username, password) values ("richie","123");
+select * from users;
 
 ----------------------
 create database volunteering;
 use volunteering;
 show tables;
 
-
-# USERS
-create table users(id int not null auto_increment primary key, group_id int, emergency_id int, employer_id int, username varchar(32) not null, password varchar(2048) not null, email varchar(64), phone varchar(32), title varchar(255), city varchar(64), state varchar(64), photo varchar(255) );
-insert into users (username, password) values ("richie","123");
-select * from users;
-
-# EMPLOYERS
-# EMERGENCY_CONTACTS
-# POSITIONS
-id
-
-# SHIFTS
-id
-# PERMISSIONS
-# GROUPS
-# EMAILS
-
-
-
-
 alter table users 
 
+----------------------
+# USERS
+create table users(
+id int not null auto_increment primary key,
+group_id int,
+emergency_id int,
+employer_id int,
+username varchar(32) not null,
+password varchar(2048) not null,
+email varchar(64) not null,
+phone varchar(32),
+title varchar(255),
+city varchar(64),
+state varchar(64),
+photo varchar(255),
+session_id varchar(2048),
+preferences varchar(2048), #k1=v1,k2=v2,... showfirstname=1,showlastname=0,timezone=+8,
+...
+);
+# EMPLOYERS
+id int not null auto_increment primary key,
+...
+# EMERGENCY_CONTACTS
+id int not null auto_increment primary key,
+...
+# POSITIONS
+id int not null auto_increment primary key,
+info varchar(2048),
+location varchar(64),
+...
+# SHIFTS
+id int not null auto_increment primary key,
+parent_id int,
+user_id int,
+position_id int,
+log_begin datetime,
+log_end datetime,
+time_begin datetime,
+time_end datetime,
+algorithm varchar(2048),
+...
+# PERMISSIONS
+id int not null auto_increment primary key,
+name varchar(32),
+info varchar(1024),
+...
+# GROUPS
+id int not null auto_increment primary key,
+name varchar(32),
+info varchar(1024),
+...
+# EMAILS
+id int not null auto_increment primary key,
+name varchar(64),
+template text,
+...
+
+
+
+============SHIFT-PARENT==============
+id: 123
+parent_id: 0
+user_id: 0
+position_id: 4
+log_begin: NULL
+log_end: NULL
+time_begin: 2013-07-13 00:00:00.0000
+time_end: 2013-08-15 24:00:00.0000
+algorithm: M:06:00:00.0000-08:30:00.0000&12:30:00.0000-3:00:00.0000,T,W,R,F:06:00:00.0000-08:00:00.0000,S,U
+
+
+============SHIFT-CHILD-01==============
+id: 124
+parent_id: 123
+user_id: 18
+position_id: 4
+log_begin: 2013-07-13 05:55:56.1234
+log_end: 2013-07-13 08:31:06.4321
+time_begin: 2013-07-13 06:00:00.0000
+time_end: 2013-07-13 08:30:00.0000
+algorithm: NULL
+
+
+separate algorithm by comma => array of days
+remove beginning Letter+Colon, separate day by ampersand => array of times
+separate times by dash => start time and end time
+
+
+SHIFT ACTIONS:
+- assign shift to user
+	- only assign single shift based on id to user_id
+- assign a 'set of shifts' to user
+	- assign all unassigned shifts based on parent_id to user_id
+- unassign shift to user
+	- only unassign user_id based on id
+- unassign a 'set of shifts' to user
+	- unassign all signed shifts based on parent_id from user_id
+- add 'one-time' cover-shift to a different user
+	- (same as assign shift)
+- delete a single shift
+	- delete shift based on id
+	- delete parent if no more child-shifts exist
+- delete a 'set of shifts'
+	- delete all shifts based on parent_id
+	- delete parent shift
+- alter a single shift
+	- change start/end time accordingly
+- alter a 'set of shifts'
+	- delete all shifts where user is not already assigned (in the future)
+	- add brand new set of shifts (even if )
+
+
+
+* user cannot own a parent shift, only sub-shifts
+* once a shift has been logged (begin and end), it can only be deleted/modified EXPLICTELY
+* 
+
+------------------------------------------------------------------------------------------------
+exceptions: NULL
+
+
+ | Calendar | Users | Positions | Shifts | Permissions | Groups | Emails | 
+
+
+
+
+ +---------------------------------------------+
+ |                    - 18 -                   |
+ +---------------------------------------------+
+ |   HELP WANTED - Dorm Supply 6:00AM-8:00AM   |
+ +---------------------------------------------+
+ |      HELP WANTED - Linens 5:30PM-7:00PM     |
+ +---------------------------------------------+
+ |    HELP WANTED - Dinner 1 5:00PM-7:00PM     |
+ +---------------------------------------------+
+ |       Richie - Dinner 2 5:00PM-7:00PM       |
+ +---------------------------------------------+
+ |        John - Dinner 3 5:00PM-7:00PM        |
+ +---------------------------------------------+
+ |     Maxamillion - Dinner 4 5:00PM-7:00PM    |
+ +---------------------------------------------+
+ |                                             |
+ |                                             |
+ |                                             |
+ |                                             |
+ |                                             |
+ +---------------------------------------------+
+
+ +---------------------------------------------+
+ |                 Previous                    |
+ +---------------------------------------------+
+ |    Dinner - May 15, 2013  5:00PM-7:00PM     |
+ +---------------------------------------------+
+ |                   Next                      |
+ +---------------------------------------------+
+ |  Dorm Supply - May 21, 2013  5:00PM-7:00PM  |
+ +---------------------------------------------+
+
+
+?a=calendar&s=1234567890&h=###########
+?
+
+
+
+
+ +---------------------------------------------+
+ |                                             |
+ |                                             |
+ |         Please log into your shift          |
+ |                                             |
+ |        First Name [               ]         |
+ |         Last Name [               ]         |
+ |                                             |
+ |                   [ OK ]                    |
+ |                  [ Reset ]                  |
+ |                                             |
+ +---------------------------------------------+ 
+ Check for all un-logged shifts starting/stopping within 1-2 hours from current time
+ +---------------------------------------------+
+ |                                             |
+ |           Please verify your shift          |
+ |                                             |
+ |                Richie Zirbes                |
+ |         Dorm Supply 5:00PM - 7:00PM         |
+ |                                             |
+ |                 [ Confirm ]                 |
+ |                                             |
+ |                 [ Cancel ]                  |
+ |                                             |
+ +---------------------------------------------+ 
+ Check for all un-logged shifts starting within 1 hour of previous shift finish time
+ +---------------------------------------------+
+ |                                             |
+ |   It appears you also have another shift.   |
+ |   Would you like to log in for this too?    |
+ |                                             |
+ |         Dorm Supply 7:00PM - 8:30PM         |
+ |                                             |
+ |                   [ Yes ]                   |
+ |                                             |
+ |                   [ No ]                    |
+ |                                             |
+ +---------------------------------------------+
+If no shifts are found (assigned to user) => show list of all shifts within the next day (and minus a few hours of current time)
+If no user is found => refresh to login page with error "User not found"
+
+
+
+PERMISSIONS:
+
+ADMIN:
+USERS_CREATE
+USERS_READ
+USERS_UPDATE
+USERS_DELETE
+EMAIL_SEND
+SHIFT_CREATE
+
+TERMINAL:
+LOGIN_SCREEN
+
+
+USER:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO-----------
+layout/design
+autogenerate shifts from algorithm text
+display calendar
+cookies/sessions
+send email
