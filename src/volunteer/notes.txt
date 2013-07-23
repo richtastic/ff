@@ -1,12 +1,12 @@
 LINUX:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 sudo apt-get install php5
-sudo apt-get install mysql
+sudo apt-get install mysql / sudo apt-get install mysql-client-core-5.5 / sudo apt-get install mysql-client mysql-server
 sudo apt-get install php5-mysql
 service httpd restart
-
-...
 sudo /etc/init.d/apache2 stop
 sudo service apache2 restart
+...
+
 
 
 
@@ -329,8 +329,12 @@ USER:
 
 
 TODO-----------
-layout/design
-autogenerate shifts from algorithm text
+x cookies
+x autogenerate shifts from algorithm text
 display calendar
-
 send email
+layout/design - individual pages
+integrate php + js + sql tables via server interface
+viewing pages
+editing/updating pages
+deleting
