@@ -85,6 +85,7 @@ id int not null auto_increment primary key,
 group_id int,
 emergency_id int,
 employer_id int,
+session varchar(2048),
 username varchar(32) not null,
 password varchar(2048) not null,
 email varchar(64) not null,
@@ -331,5 +332,5 @@ TODO-----------
 layout/design
 autogenerate shifts from algorithm text
 display calendar
-cookies/sessions
+
 send email

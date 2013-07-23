@@ -265,6 +265,9 @@ Code.gcd = function(a,b){
 	return Math.max(a,b);
 };
 // -------------------------------------------------------- HTML
+Code.getBody = function(){
+	return document.body;
+};
 Code.getID = function(id){
 	return document.getElementById(id);
 };
@@ -279,7 +282,13 @@ Code.addChild = function(a,b){
 };
 Code.setProperty = function(ele,pro,val){
 	ele.setAttribute(pro,val);
-}
+};
+Code.setStyleWidth = function(ele,val){
+	ele.style.width = val;
+};
+Code.setStyleBackground = function(ele,val){
+	ele.style.background = val;
+};
 // - CLASS
 Code.getClass = function(ele){
 	var c = ele.getAttribute("class");
@@ -311,22 +320,25 @@ Code.copyHTML = function(ele){
 }
 
 // -------------------------------------------------------- COOKIES
-Code.setCookie = function(c_name, value, exdays){
+Code.setCookie = function(c_name, value, seconds){
+	seconds = seconds*1000;
 	var exdate = new Date();
-	exdate.setDate(exdate.getDate() + exdays);
-	var c_value = escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+	exdate.setTime( exdate.getTime() + seconds);
+	var c_value = escape(value) + ((seconds==null) ? "" : "; expires="+exdate.toUTCString());
 	document.cookie = c_name + "=" + c_value;
+}
+Code.deleteCookie = function(name){
+	Code.setCookie(name,"x",-1);
 }
 Code.getCookie = function(c_name){
 	var c_value = document.cookie;
-	var c_start = c_value.indexOf(" " + c_name + "=");
-	if (c_start == -1){
-		c_start = c_value.indexOf(c_name + "=");
+	var c_start = c_value.indexOf(" " + c_name + "="); // not first
+	if(c_start == -1){
+		c_start = c_value.indexOf(c_name + "="); // first
 	}
-	if (c_start == -1){
+	if(c_start == -1){
 		c_value = null;
-	}
-	else{
+	}else{
 		c_start = c_value.indexOf("=", c_start) + 1;
 		var c_end = c_value.indexOf(";", c_start);
 		if (c_end == -1){
@@ -336,19 +348,4 @@ Code.getCookie = function(c_name){
 	}
 	return c_value;
 }
-// function checkCookie()
-// {
-// var username=getCookie("username");
-//   if (username!=null && username!="")
-//   {
-//   alert("Welcome again " + username);
-//   }
-// else 
-//   {
-//   username=prompt("Please enter your name:","");
-//   if (username!=null && username!="")
-//     {
-//     setCookie("username",username,365);
-//     }
-//   }
-// }
+
