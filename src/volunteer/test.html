@@ -3,6 +3,10 @@
 	<title>Test</title>
 </head>
 	<script type="text/javascript">
+	/*
+	http://book.mixu.net/ch6.html
+	http://www.2ality.com/2012/01/js-inheritance-by-example.html
+	*/
 	function extend(target, source) {
         Object.getOwnPropertyNames(source).forEach(function(propName) {
             Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
