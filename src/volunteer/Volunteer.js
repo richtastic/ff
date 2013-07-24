@@ -20,6 +20,7 @@ function Volunteer(){
 	// --------------
 	this.initialize = function(){
 		//console.log("VOLUNTEER INITIALIZED!");
+
 		self._container = Code.newDiv();
 		Code.addChild( Code.getBody(), self._container );
 		Code.addClass(self._container, "vContainer");
@@ -37,7 +38,7 @@ function Volunteer(){
 		Code.addClass(self._tabs, "vTabList");
 		Code.addChild( self._tabContainer, self._tabs );
 
-		var arr = ["Calendar","Profile","Users","Shifts","Positions","Search"];
+		var arr = ["Calendar","Profile","Users","Shifts","Positions","Email","Search"];
 		var wid = Math.round(1000*100/arr.length)/1000;
 		var i, j, div;
 		for(i=0;i<arr.length;++i){
@@ -132,8 +133,8 @@ function Volunteer(){
 		return;
 		var session = Code.getCookie(Volunteer.COOKIE_SESSION);
 		var user_id = Code.getCookie(Volunteer.COOKIE_USER_ID);
-		console.log(session);
-		console.log(user_id);
+		//console.log(session);
+		//console.log(user_id);
 		if(!session){
 			var s = "sess"+Math.round(Math.random()*10000);
 			var u = "u-"+Math.round(Math.random()*10000);
@@ -149,8 +150,8 @@ function Volunteer(){
 		var i, j, index, dow, beginDate, endDate;
 		beginDate = self.dateFromString(begin);
 		endDate = self.dateFromString(end);
-		console.log(beginDate);
-		console.log(endDate);
+		//console.log(beginDate);
+		//console.log(endDate);
 		tempList = code.split(",")
 		daysList = new Array();
 		for(i=0;i<7;++i){
@@ -188,7 +189,6 @@ function Volunteer(){
 				}
 			}
 		}
-		console.log(daysList);
 		var date = new Date();
 		var time, temp, start, stop;
 		var beginTime = beginDate.getTime();
@@ -196,7 +196,7 @@ function Volunteer(){
 		date = new Date( beginDate.getTime() );
 		date = new Date( date.getFullYear(), date.getMonth(), date.getDate() );
 		time = date.getTime();
-		console.log("START --------------");
+		//console.log("START --------------");
 		while(time<=endTime){// for each day
 			//console.log( date );
 			dow = date.getDay();
@@ -223,14 +223,14 @@ function Volunteer(){
 						j = 1;
 						stop = new Date( date.getFullYear(), date.getMonth(), date.getDate(),
 							daysList[index][i][j][0], daysList[index][i][j][1], daysList[index][i][j][2], daysList[index][i][j][3] );
-						console.log( start +" - "+ stop );
+						//console.log( start +" - "+ stop );
 				}
 			}
 			date = new Date( date.getTime() + 24*60*60*1000 );
 			date = new Date( date.getFullYear(), date.getMonth(), date.getDate() );
 			time = date.getTime();
 		}
-		console.log("DONE ===============");
+		//console.log("DONE ===============");
 
 	}
 	this.timeValuesFromString = function(str){

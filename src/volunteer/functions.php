@@ -9,12 +9,11 @@ function includeHeader($title='Title'){
 <head>
 	<title>'.$title.'</title>
 	<link rel="stylesheet" type="text/css" href="./volunteer.css">
-	<script src="../code/Code.js"></script>
-	<script src="./Volunteer.js"></script>
+	<script type="text/javascript" src="../code/Code.js"></script>
+	<script type="text/javascript" src="./Volunteer.js"></script>
 	<script>
 	handlePageLoadedFunction = function(e){
 		var vol = new Volunteer();
-		//console.log(document.body);
 	}
 	</script>
 </head>

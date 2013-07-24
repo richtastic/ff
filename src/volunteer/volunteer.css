@@ -4,7 +4,7 @@ body,div,ul,ol,li,span{
 	margin: 0;
 	padding: 0;
 	border: 0;
-	font-size: 16px;
+	font-size: 100%;
 	font-family: sans-serif;
 	text-align: center;
 }
@@ -72,7 +72,7 @@ body,div,ul,ol,li,span{
 .vCalShift{
 	border-style: solid;
 	border-width: 1px;
-	font-size: 10px;
+	font-size: 80%;
 	color: #000;
 	padding: 1px;
 	margin: 1px;
@@ -100,7 +100,7 @@ body,div,ul,ol,li,span{
 	padding-right: 5px;
 	padding-top: 0px;
 	padding-bottom: 2px;
-	font-size: 12px;
+	font-size: 100%;
 	font-weight: bold;
 }
 .vContentContainer{
