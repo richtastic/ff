@@ -2,7 +2,184 @@
 <head>
 	<title>Test</title>
 </head>
-<body>
+	<script type="text/javascript">
+	function extend(target, source) {
+        Object.getOwnPropertyNames(source).forEach(function(propName) {
+            Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
+        });
+        return target;
+    }
+    function inherits(SubC, SuperC) {
+        var subProto = Object.create(SuperC.prototype);
+        // At the very least, we keep the "constructor" property
+        // At most, we keep additions that have already been made
+        extend(subProto, SubC.prototype);
+        SubC.prototype = subProto;
+        console.log( SuperC.prototype );
+        SubC._super = SuperC.prototype;
+    };
+    // function ColorPoint(x, y, color) {
+    //     ColorPoint._super.constructor.call(this, x, y);
+    //     this.color = color;
+    // }
+    // ColorPoint.prototype.toString = function () {
+    //     return this.color+" "+ColorPoint._super.toString.call(this);
+    // };
+    // inherits(ColorPoint, Point);
+    function A(x,y){
+    	this.x = x;
+		this.y = y;
+    }
+    A.prototype.getList = function(){
+		return [this.x, this.y];
+	}
+    function B(x,y,z){
+		B._super.constructor.call(this, x, y);
+		this.z = z;
+	}
+	inherits(B, A);
+	B.prototype.getList = function(){
+		var arr = B._super.getList.call(this);
+		//console.log(B._super);
+		arr.push(this.z);
+		return arr;
+	}
+	
+	function C(x,y,z,a){
+		C._super.constructor.call(this, x, y, z);
+		this.a = a;
+	}
+	C.prototype.getList = function(){
+		var arr = C._super.getList.call(this);
+		//console.log(C._super);
+		arr.push(this.a);
+		return arr;
+	}
+	inherits(C, B);
+    function moar(){
+    	//console.log( Object.getOwnPropertyNames(A) );
+    	// Object.getOwnPropertyNames(B).forEach( function(propName){
+    	// 		console.log(propName);
+    	// 		console.log( Object.getOwnPropertyDescriptor(A, propName) );
+     //        	//Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
+     //    	}
+     //    );
+		a = new A(1,2);
+		b = new B(3,4,5);
+		c = new C(6,7,8,9);
+		console.log(a);
+		console.log(b);
+		console.log(c);
+		console.log(a.getList());
+		console.log(b.getList());
+		console.log(c.getList());
+    }
+    // ---------------------------------------------------------------------------
+	function extendClass(sup,sub){
+		// ...
+	}
+	// ---------------------------------------------------------------------------
+	function ClassA(x,y){
+		this.x = x;
+		this.y = y;
+	}
+	ClassA.CONSTANT_A = "CONSTANT_A";
+	ClassA.prototype.toString = function(){
+		return "[ ClassA: "+this.x+","+this.y+" ]";
+	}
+	ClassA.prototype.getList = function(){
+		return [this.x, this.y];
+	}
+	// ---------------------------------------------------------------------------
+	function ClassB(x,y,z){
+		ClassA.apply(this,arguments);
+		this.z = z;
+	}
+	ClassB.CONSTANT_A = "CONSTANT_B";
+	ClassB.prototype = new ClassA();
+	ClassB.prototype._ = ClassA.prototype;
+	ClassB.prototype.toString = function(){
+		return "[ ClassB: "+this.x+", "+this.y+", "+this.z+" ]";
+	}
+	ClassB.prototype.getList = function(){
+		var arr = ClassA.prototype.getList.call(this);
+		arr.push(this.z);
+		return arr;
+	}
+	// ---------------------------------------------------------------------------
+	function ClassC(x,y,z,a){
+		ClassB.apply(this,arguments); // ClassB.call(this,arguments); ?
+		this.a = a;
+	}
+	ClassC.CONSTANT_A = "CONSTANT_C";
+	ClassC.prototype = new ClassB();
+	ClassC.prototype._ = ClassB.prototype;
+	ClassC.prototype.toString = function(){
+		return "[ ClassC: "+this.x+", "+this.y+", "+this.z+", "+this.a+" ]";
+	}
+	ClassC.prototype.getList = function(){
+		console.log(this.prototype);
+		//console.log(this.prototype._);
+		var arr = ClassB.prototype.getList.call(this);
+		//var arr = this._._.getList.call(this);
+		//var arr = this._.getList.call(this);
+		arr.push(this.a);
+		return arr;
+	}
+	// ---------------------------------------------------------------------------
+	function ClassD(x,y,z,a,b){
+		ClassC.apply(this,arguments);
+		this.b = b;
+	}
+	ClassD.CONSTANT_A = "CONSTANT_D";
+	ClassD.prototype = new ClassC();
+	ClassD.prototype._ = ClassC.prototype;
+	ClassD.prototype.toString = function(){
+		return "[ ClassD: "+this.x+", "+this.y+", "+this.z+", "+this.a+", "+this.b+" ]";
+	}
+	ClassD.prototype.getList = function(){
+		var arr = this._.getList.call(this);
+		arr.push(this.b);
+		return arr;
+	}
+	// -------------------------------------------------------------
+	handlePageLoadedFunction = function(e){
+		moar();
+		return
+		console.log(ClassA.prototype);
+		console.log(ClassB.prototype);
+		console.log(ClassC.prototype);
+		console.log(ClassA.prototype._);
+		console.log(ClassB.prototype._);
+		console.log(ClassC.prototype._);
+
+		var a = new ClassA(1,2);
+		var b = new ClassB(3,4,5);
+		var c = new ClassC(6,7,8,9);
+		var d = new ClassD(10,11,12,13,14);
+
+		console.log( a instanceof ClassA );
+		console.log( a instanceof ClassB );
+		console.log( a instanceof ClassC );
+		console.log( b instanceof ClassA );
+		console.log( b instanceof ClassB );
+		console.log( b instanceof ClassC );
+		console.log( c instanceof ClassA );
+		console.log( c instanceof ClassB );
+		console.log( c instanceof ClassC );
+
+		console.log( a.toString() );
+		console.log( b.toString() );
+		console.log( c.toString() );
+		//console.log( d.toString() );
+
+		console.log( a.getList() );
+		console.log( b.getList() );
+		console.log( c.getList() );
+		//console.log( d.getList() );
+	}
+	</script>
+<body onload="handlePageLoadedFunction();">
 	Test
 </body>
 </html>
