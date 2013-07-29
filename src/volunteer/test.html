@@ -2,11 +2,16 @@
 <head>
 	<title>Test</title>
 </head>
+	<script type="text/javascript" src="classes/Code.js"></script>
+	<script type="text/javascript" src="classes/ByteData.js"></script>
+	<script type="text/javascript" src="classes/BinInt.js"></script>
+	<script type="text/javascript" src="classes/BinFast.js"></script>
 	<script type="text/javascript">
 	/*
 	http://book.mixu.net/ch6.html
 	http://www.2ality.com/2012/01/js-inheritance-by-example.html
 	*/
+	/*
 	function extend(target, source) {
         Object.getOwnPropertyNames(source).forEach(function(propName) {
             Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
@@ -146,9 +151,12 @@
 		arr.push(this.b);
 		return arr;
 	}
+	*/
 	// -------------------------------------------------------------
 	handlePageLoadedFunction = function(e){
-		moar();
+		meat();
+		//woot();
+		//moar();
 		return
 		console.log(ClassA.prototype);
 		console.log(ClassB.prototype);
@@ -181,6 +189,474 @@
 		console.log( b.getList() );
 		console.log( c.getList() );
 		//console.log( d.getList() );
+	}
+	/*
+	ClassA -> ClassA.prototype.constructor
+	ClassA.prototype
+		- constructor
+		- __proto__
+			- __defineGetter__
+			- __defineSetter__
+			- __lookupGetter__
+			- __lookupSetter__
+			- constructor
+			- hasOwnProperty
+			- isPrototypeOf
+			- propertyIsEnumerable
+			- toLocalString
+			- valueOf
+
+	*/
+	// ---------------------------------------------------------------------------
+	function extendClass(target, source) {
+        Object.getOwnPropertyNames(source).forEach(function(propName) {
+            Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
+        });
+        return target;
+    }
+    function inheritClass(SubC, SuperC) {
+        var subProto = Object.create(SuperC.prototype);
+        extendClass(subProto, SubC.prototype);
+        SubC.prototype = subProto;
+        SubC._super = SuperC.prototype; // this is actually syntactic bullshit
+        SubC.prototype._ = SubC._super; // 
+    };
+    // ---------------------------------------------------------------------------
+	function ClassA(x){
+		console.log("A CONSTRUCTOR "+x);
+		this._x = x;
+	}
+	ClassA.prototype.getX = function(){
+		return this._x;
+	}
+	ClassA.prototype.toString = function(){
+		return "[ Class A ("+this._x+") ]";
+	}
+	// ---------------------------------------------------------------------------
+	function ClassB(x,y){
+		console.log("B CONSTRUCTOR "+y);
+		console.log(ClassB._super);
+		console.log(this._);
+		console.log(ClassB._super == this._);
+		ClassA.prototype.constructor.call(this,x);//ClassB._super.constructor.call(this,x);
+		this._y = y;
+	}
+	inheritClass(ClassB, ClassA);
+	ClassB.prototype.getY = function(){
+		return this._y;
+	}
+	ClassB.prototype.toString = function(){
+		return "[ Class B ("+this._y+") "+ClassA.prototype.toString.call(this)+" ]";//return "[ Class B ("+this._y+") "+ClassB._super.toString.call(this)+" ]";
+	}
+// ---------------------------------------------------------------------------
+	function ClassC(x,y,z){
+		console.log("C CONSTRUCTOR "+z);
+		//console.log(this.__proto__.__proto__.__proto__);
+		console.log(ClassC._super);
+		console.log(this._);
+		console.log(ClassC._super == this._);
+		ClassB.prototype.constructor.call(this,x,y);//ClassC._super.constructor.call(this,x,y);
+		this._z = z;
+	}
+	inheritClass(ClassC, ClassB);
+	ClassC.prototype.getZ = function(){
+		return this._z;
+	}
+	ClassC.prototype.toString = function(){
+		return "[ Class C ("+this._z+") "+ClassB.prototype.toString.call(this)+" ]";//return "[ Class C ("+this._z+") "+ClassC._super.toString.call(this)+" ]";
+	}
+
+	function woot(){
+		console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+		console.log(ClassA);
+		console.log(ClassA.prototype);
+		console.log(ClassA.prototype.constructor);
+		console.log("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+		console.log(ClassB);
+		console.log(ClassB.prototype);
+		console.log(ClassB.prototype.constructor);
+		console.log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+		console.log(ClassC);
+		console.log(ClassC.prototype);
+		console.log(ClassC.prototype.constructor);
+		console.log();
+		console.log("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+var a = new ClassA(1);
+console.log( a );
+console.log( a.getX() );
+console.log( a.toString() );
+var b = new ClassB(2,3);
+console.log( b );
+console.log( b.getX() );
+console.log( b.getY() );
+console.log( b.toString() );
+var c = new ClassC(4,5,6);
+console.log( c );
+console.log( c.getX() );
+console.log( c.getY() );
+console.log( c.getZ() );
+console.log( c.toString() );
+		return;
+		console.log("mmmmm");
+		console.log(Object);
+		console.log(Object.create);
+		console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+		console.log(ClassA);
+		console.log(ClassA.prototype);
+		console.log(ClassA.prototype.constructor);
+		console.log("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+		console.log(ClassB);
+		console.log(ClassB.prototype);
+		console.log(ClassB.prototype.constructor);
+		console.log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+		console.log(ClassC);
+		console.log(ClassC.prototype);
+		console.log(ClassC.prototype.constructor);
+		console.log();
+		console.log("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+		var a = new ClassA(1);
+		console.log( a );
+		console.log( a.getX() );
+		console.log( a.toString() );
+		var b = new ClassB(2,3);
+		console.log( b );
+		console.log( b.getX() );
+		console.log( b.getY() );
+		console.log( b.toString() );
+		var c = new ClassC(4,5,6);
+		console.log( c );
+		console.log( c.getX() );
+		console.log( c.getY() );
+		console.log( c.getZ() );
+		console.log( c.toString() );
+	}
+	// ---------------------------------------------------------------------------
+	function meat(){
+		var num = 32;//1024;//1024;//16384;
+		var ba = new BinInt(num);
+		var bb = new BinInt(num);
+		var bc = new BinInt(num);
+		var bd = new BinInt(num);
+// ba.setFromInt(27);
+// bb.setFromInt(6);
+// BinInt.div(bc, ba,bb);
+// return;
+		var a = new BinFast(num);
+		var b = new BinFast(num);
+		var c = new BinFast(num);
+		var d = new BinFast(num);
+var val1, val2
+while(!val2){
+		var strA = "", strB = "", strD = "";
+		for(i=0;i<num;++i){
+			strA = strA + ( (Math.floor(Math.random()*1000)%2==1) ? "1" : "0");
+			//strB = strB + ( (Math.floor(Math.random()*1000)%2==1) ? "1" : "0");
+		}
+		for(i=0;i<num/2;++i){
+			strB = strB + ( (Math.floor(Math.random()*1000)%2==1) ? "1" : "0");
+		}
+		for(i=0;i<num/8;++i){
+			strD = strD + ( (Math.floor(Math.random()*1000)%2==1) ? "1" : "0");
+		}
+		//             5         4         3         2         1
+		//    987654321098765432109876543210987654321098765432109876543210
+		// strA = "1111111110111111110101010100001101";
+		//strB = "1111111101001001011";
+		//
+//strA = strA.substr(0,strA.length-1)+"1";
+		a.setFromString(strA);
+		b.setFromString(strB);
+		d.setFromString(strD);
+		ba.setFromString(strA);
+		bb.setFromString(strB);
+		bd.setFromString(strD);
+		//
+		BinFast.add (c,a,b);
+		BinInt.add (bc,ba,bb);
+		// BinFast.sub(c,a,b);
+		// BinInt.sub (bc,ba,bb);
+// 		// BinFast.mul (c,a,b);
+// 		// BinInt.mul (bc,ba,bb);
+		// BinFast.right(c,a,33);
+		// BinInt.right (bc,ba,33);
+		// BinFast.rightCircular(c,a, 33);
+		// BinInt.rightCircular (bc,ba, 33);
+		// BinFast.left(c,a,42);
+		// BinInt.left (bc,ba,42);
+		// BinFast.leftCircular(c,a,61);
+		// BinInt.leftCircular (bc,ba,61);
+		// BinFast.div(c,a,b);
+		// BinInt.div (bc,ba,bb);
+		// BinFast.pow(c,a,b);
+		// BinInt.pow (bc,ba,bb);
+		// BinFast.mod(c,a,b);
+		// BinInt.mod (bc,ba,bb);
+		// BinFast.pow(c,a,b,d);
+		// BinInt.pow (bc,ba,bb,bd);
+		// BinFast.rem(c,d,a,b);
+		// BinInt.rem (bc,bd,ba,bb);
+		// BinFast.mod(a,a,b);
+		// BinInt.mod (ba,ba,bb);
+		// BinFast.pow(c,a,b);
+		// BinInt.pow (bc,ba,bb);
+// [64]00000000|00000000|00000000|00000010|10111010|10010101|11110111|10101000 + [32]00000000|00000000|00000000|00000110 BinFast.js:365
+//  >> [64]00000000|00000000|00000000|00000000|10111010|10010101|11110111|10101110 
+		// BinFast.pow(a,a,b,d);
+		// BinInt.pow (ba,ba,bb,bd);
+		// BinFast.sub(a,a,b);
+		// BinInt.sub (ba,ba,bb);
+		//var prime = 12345678901;//104729;//18301;
+		//a.setFromInt(prime);		
+		//ba.setFromInt(prime);
+		// console.log( a.toString() );
+		// val1 = BinFast.millerRabinPrime(a);
+		// console.log( val1 );
+		// val2 = BinInt.millerRabinPrime(ba);
+		// console.log( val2 );
+		//val2 = val1;
+break;
+}
+ 		console.log( a.toString() );
+ 		console.log( ba.toString() );
+//return;
+		console.log( b.toString() );
+		console.log( bb.toString() );
+		// console.log( d.toString() );
+		// console.log( bd.toString() );
+		console.log( c.toString() );
+		console.log( bc.toString() );
+
+return;
+
+var i, j, len, tests;
+var t1, t2, dt, tot, avg;
+tests = 3;
+len = 10;
+// 
+tot = 0;
+for(j=0;j<tests;++j){
+	t1 = Code.getTimeMilliseconds();
+	for(i=0;i<len;++i){
+		//BinFast.add(c,a,b); // 1746/3.5 = 498x
+		//BinFast.sub(c,a,b); // 16842/23 = 732x
+		//BinFast.mul(c,a,b); // 12030/11 = 1093x | 116373/74 = 1572x
+		//BinFast.right(c,a,33); // 1929/20 = 96x
+		//BinFast.left(c,a,33); // 9720/115 = 84x
+		//BinFast.div(c,a,b); // 104644/463 = 226x
+		BinFast.pow(c,a,b); // /280 = ?x
+	}
+	t2 = Code.getTimeMilliseconds();
+	dt = t2-t1;
+	tot += dt;
+	console.log(dt);
+}
+console.log( "avg1: "+(tot/(1.0*tests)) );
+//
+tot = 0;
+for(j=0;j<tests;++j){
+	t1 = Code.getTimeMilliseconds();
+	for(i=0;i<len;++i){
+		//BinInt.add(bc,ba,bb);
+		//BinInt.sub(bc,ba,bb);
+		//BinInt.mul(bc,ba,bb);
+		//BinInt.right (bc,ba,33);
+		//BinInt.left (bc,ba,33);
+		//BinInt.div(bc,ba,bb);
+		BinInt.pow(bc,ba,bb);
+	}
+	t2 = Code.getTimeMilliseconds();
+	dt = t2-t1;
+	tot += dt;
+	console.log(dt);
+}
+console.log( "avg2: "+(tot/(1.0*tests)) );
+		//console.log( d.toString() );
+
+return;
+//			| A = 0000|0000|0101|0110 = 86
+//			| B = 0000|0000|0011|1101 = 61
+//			| C = 0000|0000|1001|0011 = 147
+//			| D = 0001|0100|0111|1110 = 5246
+// var A3, A2, A1, A0;
+// var B3, B2, B1, B0;
+// var C3, C2, C1, C0;
+// var R3, R2, R1, R0;
+// 	A3 = 0x0; A2 = 0x0; A1 = 0x5; A0 = 0x6;
+// 	B3 = 0x0; B2 = 0x0; B1 = 0x3; B0 = 0xD;
+// 	C3 = 0x0; C2 = 0x0; C1 = 0x9; C0 = 0x3;
+
+// R0 = A0 + B0 + 0;
+// R1 = A1 + B1 + (R0>>4)&0xF;
+// R2 = A2 + B2 + (R1>>4)&0xF;
+// R3 = A3 + B3 + (R2>>4)&0xF;
+// R3=R3&0xF; R2=R2&0xF; R1=R1&0xF; R0=R0&0xF;
+// console.log(R3+"|"+R2+"|"+R1+"|"+R0);
+// console.log(C3+"|"+C2+"|"+C1+"|"+C0);
+
+
+
+// return;
+// //BinInt.init();
+		console.log("danger");
+		console.log(Code.prototype);
+		console.log(ByteData);
+		console.log(ByteData.prototype);
+		//console.log(ByteData.copy);
+		//console.log(ByteData.prototype.copy);
+		//console.log(ByteData.prototype.BITS_PER_INT);
+		console.log(ByteData.BITS_PER_INT);
+var num = 64;
+		var a = new BinInt(num);
+		var b = new BinInt(num);
+		var c = new BinInt(num);
+		console.log(a);
+		console.log(b);
+		console.log(c);
+
+var i, j, len, tests;
+var t1, t2, dt, tot, avg;
+
+BinInt.randomize(a);
+BinInt.randomize(b);
+
+var rAdd, rSub, rMul, rDiv;
+
+tests = 3;
+len = 5000;
+// ADD
+tot = 0;
+for(j=0;j<tests;++j){
+	t1 = Code.getTimeMilliseconds();
+	for(i=0;i<len;++i){
+		BinInt.add(c,a,b);
+	}
+	t2 = Code.getTimeMilliseconds();
+	dt = t2-t1;
+	tot += dt;
+	console.log(dt);
+}
+rAdd = avg = tot/(1.0*tests);
+console.log("add: "+avg);
+// SUB
+tot = 0;
+for(j=0;j<tests;++j){
+	t1 = Code.getTimeMilliseconds();
+	for(i=0;i<len;++i){
+		BinInt.sub(c,a,b);
+	}
+	t2 = Code.getTimeMilliseconds();
+	dt = t2-t1;
+	tot += dt;
+	console.log(dt);
+}
+rSub = avg = tot/(1.0*tests);
+console.log("sub: "+avg);
+// MUL
+tot = 0;
+for(j=0;j<tests;++j){
+	t1 = Code.getTimeMilliseconds();
+	for(i=0;i<len;++i){
+		BinInt.mul(c,a,b);
+	}
+	t2 = Code.getTimeMilliseconds();
+	dt = t2-t1;
+	tot += dt;
+	console.log(dt);
+}
+rMul = avg = tot/(1.0*tests);
+console.log("mul: "+avg);
+// DIV
+tot = 0;
+for(j=0;j<tests;++j){
+	t1 = Code.getTimeMilliseconds();
+	for(i=0;i<len;++i){
+		BinInt.div(c,a,b);
+	}
+	t2 = Code.getTimeMilliseconds();
+	dt = t2-t1;
+	tot += dt;
+	console.log(dt);
+}
+rDiv = avg = tot/(1.0*tests);
+console.log("div: "+avg);
+
+rMul = rMul/rAdd;
+rDiv = rDiv/rAdd;
+rSub = rSub/rAdd;
+rAdd = rAdd/rAdd;
+console.log("add: "+rAdd+" | sub: "+rSub+" | mul: "+rMul+" | div: "+rDiv);
+
+
+return;
+
+
+// tests = 10;
+// len = 100000
+// tot = 0;
+// for(j=0;j<tests;++j){
+// 	t1 = Code.getTimeMilliseconds();
+// 	for(i=0;i<len;++i){
+// 		//a.randomize(); // 520
+// 		BinInt.randomize(a); // 524 
+// 	}
+// 	t2 = Code.getTimeMilliseconds();
+// 	dt = t2-t1;
+// 	tot += dt;
+// 	console.log(dt);
+// }
+// avg = tot/(1.0*tests);
+// console.log( a.toString() );
+// console.log(avg);
+// return;
+
+		//
+		a.write(1); a.write(1); a.write(0); a.write(0); a.write(1);
+		console.log( a.toString() );
+		//console.log(b.prototype);
+		//console.log(b.prototype.constructor);
+
+t1 = Code.getTimeMilliseconds();
+
+num = 64;
+var P = new BinInt(num, false);
+var G = new BinInt(num, false);
+var Apri = new BinInt(num, false);
+var Apub = new BinInt(num, false);
+var Bpri = new BinInt(num, false);
+var Bpub = new BinInt(num, false);
+var Sa = new BinInt(num, false);
+var Sb = new BinInt(num, false);
+
+// 1
+console.log("STEP 1:");
+BinInt.diffieHellmanPublic(P,G);
+console.log(P);
+console.log(G);
+console.log( "MODULUS:   "+ P.toString() +" ("+ P.toString10() +")" );
+console.log( "BASE:      "+ G.toString() +" ("+ G.toString10() +")" );
+//P.setFromInt(12828863395629508889);
+//G.setFromInt(7);
+// 2
+console.log("STEP 2:");
+//Apri.setFromInt(9);
+BinInt.diffieHellmanPrivate(Apri,Apub, P,G);
+console.log( "ALICE-PRI: "+ Apri.toString() +" ("+ Apri.toString10() +")" );
+console.log( "ALICE-PUB: "+ Apub.toString() +" ("+ Apub.toString10() +")" );
+//Bpri.setFromInt(12);
+BinInt.diffieHellmanPrivate(Bpri,Bpub, P,G);
+console.log( "BOB-PRI:   "+ Bpri.toString() +" ("+ Bpri.toString10() +")" );
+console.log( "BOB-PUB:   "+ Bpub.toString() +" ("+ Bpub.toString10() +")" );
+// 3
+console.log("STEP 3:");
+BinInt.diffieHellmanSecret(Sa, Apri,Bpub,P);
+BinInt.diffieHellmanSecret(Sb, Bpri,Apub,P);
+console.log( "ALICE-SEC: "+ Sa.toString() +" ("+ Sa.toString10() +")" );
+console.log( "BOB-SEC:   "+ Sb.toString() +" ("+ Sb.toString10() +")" );
+
+t2 = Code.getTimeMilliseconds();
+dt = t2-t1;
+console.log((dt/1000.0) + " (s) = " + (dt/60000.0) + " (m) " );
+
 	}
 	</script>
 <body onload="handlePageLoadedFunction();">
