@@ -131,28 +131,28 @@ var Sa = new BinInt(num, false);
 var Sb = new BinInt(num, false);
 
 // 1
-console.log("STEP 1:");
+log("STEP 1:");
 BinInt.diffieHellmanPublic(P,G);
-console.log( "MODULUS:   "+ P.toString() +" ("+ P.toString10() +")" );
-console.log( "BASE:      "+ G.toString() +" ("+ G.toString10() +")" );
+log( "MODULUS:   "+ P.toString() +" ("+ P.toString10() +")" );
+log( "BASE:      "+ G.toString() +" ("+ G.toString10() +")" );
 //P.setFromInt(12828863395629508889);
 //G.setFromInt(7);
 // 2
-console.log("STEP 2:");
+log("STEP 2:");
 //Apri.setFromInt(9);
 BinInt.diffieHellmanPrivate(Apri,Apub, P,G);
-console.log( "ALICE-PRI: "+ Apri.toString() +" ("+ Apri.toString10() +")" );
-console.log( "ALICE-PUB: "+ Apub.toString() +" ("+ Apub.toString10() +")" );
+log( "ALICE-PRI: "+ Apri.toString() +" ("+ Apri.toString10() +")" );
+log( "ALICE-PUB: "+ Apub.toString() +" ("+ Apub.toString10() +")" );
 //Bpri.setFromInt(12);
 BinInt.diffieHellmanPrivate(Bpri,Bpub, P,G);
-console.log( "BOB-PRI:   "+ Bpri.toString() +" ("+ Bpri.toString10() +")" );
-console.log( "BOB-PUB:   "+ Bpub.toString() +" ("+ Bpub.toString10() +")" );
+log( "BOB-PRI:   "+ Bpri.toString() +" ("+ Bpri.toString10() +")" );
+log( "BOB-PUB:   "+ Bpub.toString() +" ("+ Bpub.toString10() +")" );
 // 3
-console.log("STEP 3:");
+log("STEP 3:");
 BinInt.diffieHellmanSecret(Sa, Apri,Bpub,P);
 BinInt.diffieHellmanSecret(Sb, Bpri,Apub,P);
-console.log( "ALICE-SEC: "+ Sa.toString() +" ("+ Sa.toString10() +")" );
-console.log( "BOB-SEC:   "+ Sb.toString() +" ("+ Sb.toString10() +")" );
+log( "ALICE-SEC: "+ Sa.toString() +" ("+ Sa.toString10() +")" );
+log( "BOB-SEC:   "+ Sb.toString() +" ("+ Sb.toString10() +")" );
 return;
 
 
