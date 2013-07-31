@@ -22,7 +22,7 @@
 	// ---------------------------------------------------------------------------
 	function meat(){
 		var str, i, len, prime, ret, val, t1, t2, dt, avg, count;
-		var num = 256;//16384;
+		var num = 32;//16384;
 		var ba = new BinInt(num);
 		var bb = new BinInt(num);
 		var bc = new BinInt(num);
@@ -156,12 +156,11 @@
 	// log("------------------------------------------------------------------------------------------ RANDOM-PRIME");
 	// ret = BinFast.randomPrime(a);
 	// log(" prime " + a.toString() + " [" + a.toString10() + "] (" + ret + ")" );
-log( 559376679479112.0+2.0 );
-
-return;
+/*log( 1593766794791122.0+2.0 );
+return;*/
 log(num+" bits");
 avg = 0;
-len = 1;
+len = 5;
 for(i=0;i<len;++i){
 	t1 = Code.getTimeMilliseconds();
 	ret = BinFast.randomPrime(a);
@@ -178,7 +177,7 @@ return;
 32:  2, 3, 5
 64:  54, 58, 70
 128: 550, 937, 1550
-256: 13855
+256: 13855, 3065.5, 5917
 */
 
 	log("------------------------------------------------------------------------------------------ DIFFIE-HELLMAN");
