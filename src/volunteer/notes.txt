@@ -15,11 +15,14 @@ mysql -u USER -p
 > PASSWORD
 mysql -u USER -h localhost -p'PASSWORD'
 
-
 create user 'richie'@'localhost' identified by 'qwerty';
 drop user 'richie'@'localhost';
 grant all privileges on * . * to 'richie'@'localhost';
 flush privileges;
+
+...
+
+mysql -h localhost -u richie -p'qwerty';
 
 create database volunteering;
 use volunteering;
@@ -72,19 +75,25 @@ insert into users (username, password) values ("richie","123");
 select * from users;
 
 ----------------------
+mysql -h localhost -u richie -p'qwerty'
 create database volunteering;
 use volunteering;
 show tables;
 
-alter table users 
+alter table users
 
 ----------------------
+# DROP ALL TABLES
+drop table users;
+drop table emails;
+drop table emails;
+drop table emails;
+drop table emails;
+drop table emails;
 # USERS
 create table users(
 id int not null auto_increment primary key,
 group_id int,
-emergency_id int,
-employer_id int,
 session varchar(2048),
 created datetime,
 modified datetime,
@@ -336,6 +345,99 @@ USER:
 
 
 
+1024 bits / 4 = 256 chars
+256 bits / 4 = 64 chars
+         1         2         3         4         5         6
+1234567890123456789012345678901234567890123456789012345678901234567890
+0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+
+
+
+
+NEW TABLE DESIGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+# DROP ALL TABLES
+drop table if exists users;
+drop table if exists sessions;
+drop table if exists groups;
+drop table if exists shifts;
+drop table if exists requests;
+# USERS
+create table users(
+id int not null auto_increment primary key,
+group_id int,
+created datetime,
+modified datetime,
+username varchar(32) not null,
+password varchar(1024) not null,
+first_name varchar(32),
+last_name varchar(32),
+email varchar(64) not null,
+phone varchar(32),
+city varchar(64),
+state varchar(64),
+zip varchar(16),
+preferences varchar(2048) #k1=v1,k2=v2,... showfirstname=1,showlastname=0,timezone=+8,
+);
+#SESSIONS
+create table sessions(
+id int not null auto_increment primary key,
+user_id int,
+ip_remote varchar(32),
+ip_forward varchar(32),
+session_id varchar(64) #0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+);
+# GROUPS
+create table groups(
+id int not null auto_increment primary key,
+name varchar(32),
+info varchar(1024)
+);
+# SHIFTS
+create table shifts(
+id int not null auto_increment primary key,
+parent_id int,
+user_id int,
+position_id int,
+log_begin datetime,
+log_end datetime,
+time_begin datetime,
+time_end datetime,
+algorithm varchar(2048)
+);
+# REQUESTS
+create table requests(
+id int not null auto_increment primary key,
+created datetime,
+modified datetime,	# final approved/rejected date
+shift_id int,
+request_user_id int,
+fulfill_user_id int,
+approved_user_id int, # admin
+info varchar(1024) # request reasoning/explanation
+status int # 0=open, 1=closed
+);
+
+# INSERT FAKE DATA
+insert into groups (name, info) values ("admin","CRUD - everything");
+insert into groups (name, info) values ("staff","staff member");
+insert into users (username, password, email, first_name, last_name, phone, state, city, zip, group_id, created, modified) values ("richie","qwerty","zirbsster@gmail.com", "Richie", "Zirbes", "555-555-5555", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), now() );
+
+
+
+insert into sessions (user_id,session_id) values ("12","0123456789");
+
+
+
+
+REQUEST:
+1) CREATE REQUEST
+	- requestee & shift
+2) FULFILL REQUEST
+	- requester
+3) APPROVE REQUEST
+	- admin
+A) DELETE REQUEST
+	- admin 
 
 
 
@@ -345,16 +447,13 @@ USER:
 
 
 
+select * from users where modified >'2013-09-03';
 
+SELECT * FROM players WHERE DATE(us_reg_date) BETWEEN '2000-07-05' AND '2011-11-10'
 
+SELECT * FROM players WHERE us_reg_date >= '2000-07-05' AND us_reg_date < '2011-11-10' + interval 1 day
 
-
-
-
-
-
-
-
+select * from players where  us_reg_date between '2000-07-05' and DATE_ADD('2011-11-10',INTERVAL 1 DAY)
 
 
 TODO-----------

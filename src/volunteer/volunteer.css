@@ -1,12 +1,17 @@
 
 
-body,div,ul,ol,li,span{
+body,div,ul,ol,li,span,select,input{
 	margin: 0;
 	padding: 0;
 	border: 0;
 	font-size: 100%;
 	font-family: sans-serif;
 	text-align: center;
+}
+select,input{
+	border-style: solid;
+	border-width: 1px;
+	display: inline;
 }
 
 
@@ -120,4 +125,97 @@ body,div,ul,ol,li,span{
 	height: 100%;
 	background: #FFF;
 }
+
+
+
+
+
+
+
+/* ----------------------------------------------------------- */
+.scheduleStartDateContainer{
+	/* */
+}
+
+.scheduleDateRow{
+	background: #EEEEEE;
+	text-align: center;
+	clear: both;
+}
+
+.scheduleStartDateText{
+	
+}
+.scheduleStartDateLeft{
+	display: inline-block;
+	margin: 0 auto;
+	background: #DDEEFF;
+	padding: 5px;
+}
+.scheduleStartDateRight{
+	display: inline-block;
+	margin: 0 auto;
+	background: #FFDDEE;
+	padding: 5px;
+}
+
+.scheduleDateDOWTitle{
+	display: block;
+	clear: both;
+}
+
+
+.scheduleDateTODLeft{
+	background: #DDFFEE;
+	display: inline-block;
+	padding: 5px;
+}
+.scheduleDateTODRight{
+	background: #FFDDEE;
+	display: inline-block;
+	padding: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

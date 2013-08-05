@@ -82,6 +82,14 @@ Code.copyArray = function(a,b){ // a = b
 		a[i] = b[i];
 	}
 }
+// formatting functions ----------------------------------------------
+Code.prependFixed = function(start,pad,count){
+	var i, str = start;
+	while(str.length<count){
+		str = pad+str;
+	}
+}
+
 // conversion functions ----------------------------------------------
 Code.getHex = function (intVal){
 	var str = intVal.toString(16);
@@ -323,6 +331,7 @@ Code.copyHTML = function(ele){
 	// crate new element yeppers
 	return null;
 }
+
 
 // -------------------------------------------------------- COOKIES
 Code.setCookie = function(c_name, value, seconds){

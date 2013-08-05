@@ -1,8 +1,7 @@
 // Volunteer.js
-Volunteer.COOKIE_SESSION = "COOKIE_SESSION";
-Volunteer.COOKIE_USER_ID = "COOKIE_USER_ID";
-
-Volunteer.CONSTANT = null;
+// Volunteer.COOKIE_SESSION = "COOKIE_SESSION";
+// Volunteer.COOKIE_USER_ID = "COOKIE_USER_ID";
+// Volunteer.CONSTANT = null;
 
 function Volunteer(){
 	var self = this;
@@ -16,10 +15,11 @@ function Volunteer(){
 	this._tabs = null;
 	this._tabList = new Array();
 	this._calendar = null;
-
+	this.elements = new Object(); // html objects
 	// --------------
-	this.initialize = function(){
+	this.initializeX = function(){
 		//console.log("VOLUNTEER INITIALIZED!");
+		
 
 		self._container = Code.newDiv();
 		Code.addChild( Code.getBody(), self._container );
@@ -264,13 +264,271 @@ function Volunteer(){
 		return date;
 	}
 	this.constructor = function(){
-		//console.log("VOLUNTEER CONSTRUCTED!");
 		self.initialize();
 	}
 	self.constructor();
 }
+// --------------
+Volunteer.prototype.QUERY_DIRECTORY = "./";
+Volunteer.prototype.ACTION_LOGIN = "login";
+Volunteer.prototype.COOKIE_SESSION = "COOKIE_SESSION";
+Volunteer.prototype.COOKIE_USERNAME = "COOKIE_USERNAME";
+Volunteer.prototype.ELEMENT_ID_LOGIN = "login";
+Volunteer.prototype.ELEMENT_NAME_USERNAME = "login_username";
+Volunteer.prototype.ELEMENT_NAME_PASSWORD = "login_password";
+Volunteer.prototype.ELEMENT_NAME_LOGIN_SUBMIT = "login_submit";
+Volunteer.prototype.ELEMENT_ID_LOGOUT = "logout";
+Volunteer.prototype.ELEMENT_NAME_LOGOUT_SUBMIT = "logout_submit";
+Volunteer.prototype.ELEMENT_ID_SHIFTS = "section_crud_shift";
+Volunteer.prototype.COOKIE_TIME_SECONDS = 60*5;//60*60*24*365; // 1 year
+Volunteer.prototype.initialize = function(){
+	this.hookLogin();
+	this.hookShifts();
+	this.checkLogin();
+	//this.submitLogin();
+}
+Volunteer.prototype.getShiftString = function(){
+	return null;
+}
+Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
+	var i, j, sel, row, opt;
+	var monthsOfYear = new Array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+	row = Code.newDiv();
+	// DAYS
+	sel = Code.newElement("select");
+	sel.setAttribute("name","hours");
+	Code.addChild(row,sel);
+	for(j=0;j<31;++j){
+		opt = Code.newElement("option");
+		Code.addChild(sel,opt);
+		Code.setContent(opt, Code.prependFixed(""+j, "0", 2) );
+		opt.setAttribute("value",""+j);
+		if(j==0){
+			Code.setContent(opt,"");
+			opt.setAttribute("value","");
+			opt.setAttribute("selected","selected");
+		}
+	}
+	// MONTHS
+	sel = Code.newElement("select");
+	sel.setAttribute("name","hours");
+	Code.addChild(row,sel);
+	for(j=-1;j<12;++j){
+		opt = Code.newElement("option");
+		Code.addChild(sel,opt);
+		if(j==-1){
+			Code.setContent(opt,"");
+			opt.setAttribute("value","");
+			opt.setAttribute("selected","selected");
+		}else{
+			Code.setContent(opt, monthsOfYear[j] );
+			opt.setAttribute("value",""+j);
+		}
+	}
+	// YEARS
+	sel = Code.newElement("select");
+	sel.setAttribute("name","hours");
+	Code.addChild(row,sel);
+	var yearStart = 2013-1, yearEnd = 2020+1;
+	for(j=yearStart;j<yearEnd;++j){
+		opt = Code.newElement("option");
+		Code.addChild(sel,opt);
+		if(j==yearStart){
+			Code.setContent(opt,"");
+			opt.setAttribute("value","");
+			opt.setAttribute("selected","selected");
+		}else{
+			Code.setContent(opt, ""+j );
+			opt.setAttribute("value",""+j);
+		}
+	}
+	return row;
+}
+Volunteer.prototype.generateSelectionTime = function(){
+	var sel, j, opt, row = Code.newDiv();
+	// HOURS
+	sel = Code.newElement("select");
+	sel.setAttribute("name","hours");
+	Code.addChild(row,sel);
+	for(j=-1;j<24;++j){
+		opt = Code.newElement("option");
+		Code.addChild(sel,opt);
+		Code.setContent(opt, Code.prependFixed(""+j, "0", 2) );
+		opt.setAttribute("value",""+j);
+		if(j==-1){
+			Code.setContent(opt,"");
+			opt.setAttribute("value","");
+			opt.setAttribute("selected","selected");
+		}
+	}
+	sel = Code.newElement("select");
+	sel.setAttribute("name","minutes");
+	Code.addChild(row,sel);
+	for(j=-1;j<60;++j){
+		opt = Code.newElement("option");
+		Code.addChild(sel,opt);
+		Code.setContent(opt, Code.prependFixed(""+j, "0", 2) );
+		opt.setAttribute("value",""+j);
+		if(j==-1){
+			Code.setContent(opt,"");
+			opt.setAttribute("value","");
+			opt.setAttribute("selected","selected");
+		}
+	}
+	return row;
+}
+Volunteer.prototype.hookShifts = function(){
+	var shifts = Code.getID(this.ELEMENT_ID_SHIFTS);
+	this.elements.shifts = shifts;
+	Code.addClass(shifts,"scheduleStartDateContainer");
+	var daysOfWeek = new Array("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday");
+	var i, j, dow, tit, br, sel, opt, row, sta, left, right;
+var rowClass = "scheduleDateRow";
+var sdClass = "scheduleStartDateText";
+	//
+	row = Code.newDiv();
+	Code.addClass(row,rowClass);
+	Code.addChild(shifts,row);
+	//
+	left = Code.newDiv();
+	Code.addClass(left,"scheduleStartDateLeft");
+		div = Code.newDiv();
+		Code.setContent(div,"Start Date: ");
+		Code.addClass(div,sdClass);
+		Code.addChild(left,div);
+	Code.addChild(left, this.generateSelectionDate() );
+	Code.addChild(row,left);
+	
+	//
+	right = Code.newDiv();
+	Code.addClass(right,"scheduleStartDateRight");
+		div = Code.newDiv();
+		Code.setContent(div,"End Date: ");
+		Code.addClass(div,sdClass);
+		Code.addChild(right,div);
+	Code.addChild(right, this.generateSelectionDate() );
+	Code.addChild(row,right);
 
+	//
+	for(i=0;i<daysOfWeek.length;++i){
+		dow = Code.newDiv();
+		tit = Code.newDiv();
+		Code.addClass(tit,"scheduleDateDOWTitle");
+		Code.setContent(tit,daysOfWeek[i]);
+		Code.addChild(shifts,dow);
+		Code.addChild(dow,tit);
+		Code.addClass(dow,rowClass);
+		//
+		row = Code.newDiv();
+		row.setAttribute("name","start_time_i");
+		Code.addChild(dow,row);
+		dat = this.generateSelectionTime(); 
+		Code.addClass(dat,"scheduleDateTODLeft");
+		Code.addChild(row, dat );
+		dat = this.generateSelectionTime(); 
+		Code.addClass(dat,"scheduleDateTODRight");
+		Code.addChild(row, dat );
+	}
+	//
+		div = Code.newElement("input");
+		div.setAttribute("value","Create Shift");
+		div.setAttribute("type","submit");
+		row = Code.newDiv();
+		Code.addChild(shifts,row);
+		Code.addChild(row,div);
+		this.elements.shiftSubmit = div;
+		this.elements.shiftSubmit.element = this;
+	//
+	Code.addListenerClick(this.elements.shiftSubmit, this._onClickSubmitSchedulePassthrough);
+}
+Volunteer.prototype._onClickSubmitSchedulePassthrough = function(e){
+	this.element._onClickSubmitSchedule.call(this.element,e);
 
+}
+Volunteer.prototype._onClickSubmitSchedule = function(e){
+	var str = this.getShiftString();
+	if(!str){
+		console.log("inform user of invalid something");
+	}else{
+		console.log("post string to server");
+	}
+}
+
+/*
+
+"2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U"
+
+*/
+
+Volunteer.prototype.hookLogin = function(){
+	var login = Code.getID(this.ELEMENT_ID_LOGIN);
+	var logout = Code.getID(this.ELEMENT_ID_LOGOUT);
+	var fieldLogout = Code.getName(this.ELEMENT_NAME_LOGOUT_SUBMIT);
+	var fieldUsername = Code.getName(this.ELEMENT_NAME_USERNAME);
+	var fieldPassword = Code.getName(this.ELEMENT_NAME_PASSWORD);
+	var fieldSubmit = Code.getName(this.ELEMENT_NAME_LOGIN_SUBMIT);
+	this.elements.login = login;
+	this.elements.logout = logout;
+	this.elements.loginUsername = fieldUsername;
+	this.elements.loginPassword = fieldPassword;
+	this.elements.loginSubmit = fieldSubmit;
+	this.elements.logoutSubmit = fieldLogout;
+	this.elements.logoutSubmit.element = this;
+	this.elements.loginSubmit.element = this;
+	Code.addListenerClick(fieldSubmit, this._onClickSubmitLoginPassthrough);
+	Code.addListenerClick(fieldLogout, this._onClickSubmitLogoutPassthrough);
+}
+Volunteer.prototype._onClickSubmitLoginPassthrough = function(e){
+	this.element._onClickSubmitLogin.call(this.element,e);
+}
+Volunteer.prototype._onClickSubmitLogin = function(e){
+	var user = this.elements.loginUsername.value; this.elements.loginUsername.value = "";
+	var pass = this.elements.loginPassword.value; this.elements.loginPassword.value = "";
+	// hide login & logout and show processing graphic
+	this.submitLogin(user,pass);
+}
+Volunteer.prototype._onClickSubmitLogoutPassthrough = function(e){
+	this.element._onClickSubmitLogout.call(this.element,e);
+}
+Volunteer.prototype._onClickSubmitLogout = function(e){
+	Code.deleteCookie(this.COOKIE_SESSION);
+	Code.deleteCookie(this.COOKIE_USERNAME);
+	this.checkLogin();
+}
+Volunteer.prototype.checkLogin = function(){
+	var session_id = Code.getCookie(this.COOKIE_SESSION,session_id);
+	var username = Code.getCookie(this.COOKIE_USERNAME,username);
+	//console.log(session_id, username);
+	if(!session_id){
+		Code.unhide( this.elements.login );
+		Code.hide( this.elements.logout );
+	}else{
+		Code.hide( this.elements.login);
+		Code.unhide( this.elements.logout);
+	}
+}
+Volunteer.prototype.submitLogin = function(user,pass){
+	var a = new Ajax();
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_LOGIN;
+	var params = {u:user,p:pass};
+	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
+	return;
+}
+Volunteer.prototype.onAjaxLogin = function(e){
+	var obj = JSON.parse(e);
+	if(obj){
+		if(obj.status=="success"){
+			var username = obj.username, session_id = obj.session_id;
+			Code.setCookie(this.COOKIE_SESSION,session_id,this.COOKIE_TIME_SECONDS);
+			Code.setCookie(this.COOKIE_USERNAME,username,this.COOKIE_TIME_SECONDS);
+		}else{
+			// console.log("LOGIN ERROR");
+		}
+	}else{
+		// console.log("SERVER ERROR");
+	}
+	this.checkLogin();
+}
 
 
 

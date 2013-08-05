@@ -1,8 +1,9 @@
 <?
 // config.php
 
+// success | failure | error
 
-
+$ACTION_TYPE_LOGIN = 'login';
 
 // passed arguments
 $ARGUMENT_GET_ACTION = $_GET['a'];
