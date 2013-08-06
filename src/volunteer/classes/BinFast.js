@@ -475,6 +475,7 @@ BinFast.randomPrime = function(p, max, num){ // p = random prime number, max = m
 			}
 		}
 		if(done){
+			log("NUMBER OF TESTS: "+i);
 			return true;
 		}
 	}

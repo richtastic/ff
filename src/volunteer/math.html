@@ -23,10 +23,24 @@
 	function meat(){
 		var str, i, len, prime, ret, val, t1, t2, dt, avg, count;
 /*
-32: 1 2 3
-64: 50 20 17
-128: 425 237 286 153
+32:
+	TESTS: 8    38    8
+	TIME: 0.141 0.433 0.193
+64: 
+	TESTS: 2    32    16
+	TIME: 0.390 2.37  1.29
+128:
+	TESTS: 38   27    11
+	TIME: 18.53 14.39 11.233
 256
+	TESTS: 12  112  4
+	TIME: 56.5 368  31.5
+
+512
+	TESTS: 
+	TIME: 
+
+
 256 bits
 51390027989654394337352590100272178080316064125220933901322638948804407323471           true
 3698.3 seconds
@@ -40,7 +54,6 @@
 13025 seconds
 6764.6433333333325 average seconds
 
-512
 512 bits
 7243969715620260116488474803990227855008642113429275046520828269465463372593248871110773213271568843431439403462881577169694299700814248347089254939674213           true
 32587.85 seconds
@@ -52,7 +65,7 @@
 339384.55 seconds
 339384.55 average seconds
 */
-		var num = 64;//16384;
+		var num = 512;//16384;
 		var ba = new BinInt(num);
 		var bb = new BinInt(num);
 		var bc = new BinInt(num);
@@ -192,16 +205,16 @@ log(num+" bits");
 avg = 0;
 len = 1;
 for(i=0;i<len;++i){
-	t1 = Code.getTimeMilliseconds();
+	t1 = Code.getTimeMilliseconds()/1000.0;
 	ret = BinFast.randomPrime(a);
-	t2 = Code.getTimeMilliseconds();
+	t2 = Code.getTimeMilliseconds()/1000.0;
 	dt = t2-t1;
 	avg += dt;
 	log(a.toString10() + "           " + ret);
-	log((dt/60.0) + " seconds");
+	log((dt) + " seconds");
 }
 avg /= len;
-log((avg/60.0) + " average seconds");
+log((avg) + " average seconds");
 return;
 /*
 32:  2, 3, 5
