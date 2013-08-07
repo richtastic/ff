@@ -332,6 +332,11 @@ Code.copyHTML = function(ele){
 	return null;
 }
 
+Code.findName = function(eleStart,name){
+	// breadth-first-search
+	return null;
+}
+
 
 // -------------------------------------------------------- COOKIES
 Code.setCookie = function(c_name, value, seconds){

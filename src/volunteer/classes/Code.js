@@ -150,7 +150,13 @@ Code.addListenerClick = function(ele,fxn){
 	}else{ // IE
 		ele.onclick = fxn;
 	}
-	
+}
+Code.addListenerChange = function(ele,fxn){
+	if(ele.addEventListener!=null){
+		ele.addEventListener("change",fxn);
+	}else{ // IE
+		ele.onchange = fxn;
+	}
 }
 
 // -------------------------------------------------------- COOKIES
@@ -189,4 +195,5 @@ Code.getCookie = function(c_name){
 function.call(this, a, b, c);
 function.apply(this,arg);
 */
+
 

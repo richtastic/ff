@@ -16,6 +16,7 @@ function Volunteer(){
 	this._tabList = new Array();
 	this._calendar = null;
 	this.elements = new Object(); // html objects
+	this.shifts = new Array(7); // 
 	// --------------
 	this.initializeX = function(){
 		//console.log("VOLUNTEER INITIALIZED!");
@@ -288,6 +289,25 @@ Volunteer.prototype.initialize = function(){
 	//this.submitLogin();
 }
 Volunteer.prototype.getShiftString = function(){
+	//console.log(this.elements.days_of_week.children);
+	var i, day, dow, div, d, l, r, lHour, rHour;
+	dow = this.elements.days_of_week.children;
+	for(i=0; i<dow.length; ++i){
+		d = dow[i].children[dow[i].children.length-1];
+		l = d.children[0];
+		r = d.children[1];
+		lHour = l.children[0].value;
+		lMin = l.children[1].value;
+		rHour = l.children[0].value;
+		rMin = l.children[1].value;
+		console.log("'"+lHour+"' '"+lMin+"'");
+	}
+/*
+start at this.elements.shift . dow
+for each dow
+	for each dow.div.sta & sto
+		add to array
+*/
 	return null;
 }
 Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
@@ -346,8 +366,10 @@ Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
 }
 Volunteer.prototype.generateSelectionTime = function(){
 	var sel, j, opt, row = Code.newDiv();
+	var arr = new Array();
 	// HOURS
 	sel = Code.newElement("select");
+arr.push(sel);
 	sel.setAttribute("name","hours");
 	Code.addChild(row,sel);
 	for(j=-1;j<24;++j){
@@ -362,6 +384,7 @@ Volunteer.prototype.generateSelectionTime = function(){
 		}
 	}
 	sel = Code.newElement("select");
+arr.push(sel);
 	sel.setAttribute("name","minutes");
 	Code.addChild(row,sel);
 	for(j=-1;j<60;++j){
@@ -375,14 +398,73 @@ Volunteer.prototype.generateSelectionTime = function(){
 			opt.setAttribute("selected","selected");
 		}
 	}
-	return row;
+arr.push(row);
+	return arr;
+}
+Volunteer.prototype.clearShifts = function(){
+	var i, len = this.shifts.length;
+	for(i=0;i<len;++i){
+		// point to clear correctly
+		this.shifts[i] = new Array();
+	}
+}
+Volunteer.prototype._handleShiftSelectionChangePassthrough = function(e){
+	this.element._handleShiftSelectionChange.call(this.element,this,e);
+}
+Volunteer.prototype._handleShiftSelectionChange = function(o,e){
+	console.log(this);
+	console.log(o);
+	console.log(e);
+	var str, arr, i, j, k, len3, len2, len = this.shifts.length;
+	var found = null;
+	for(i=0;i<len;++i){ // DOW
+		arr = this.shifts[i];
+		len2 = arr.length;
+		for(j=0;j<len2;++j){ // START/STOP GROUP
+			if(o==arr[j][0][0]){
+				console.log(i+","+j+",0,0");
+				found = arr[j][0][0];
+				break;
+			}else if(o==arr[j][0][1]){
+				console.log(i+","+j+",0,1");
+				found = arr[j][0][1];
+				break;
+			}else if(o==arr[j][1][0]){
+				console.log(i+","+j+",1,0");
+				found = arr[j][1][0];
+				break;
+			}else if(o==arr[j][1][1]){
+				console.log(i+","+j+",1,1");
+				found = arr[j][1][1];
+				break;
+			}
+			// len3 = arr[j].length;
+			// for(k=0;k<len3;++k){
+			// 	//
+			// }
+		}
+		if(found){
+			break;
+		}
+	}
+	if(found){
+		str = arr[j][0][0].value+""+arr[j][0][1].value+""+arr[j][1][0].value+""+arr[j][1][1].value;
+		console.log(str);
+		if(str!=""){
+			console.log("ADD ANOTHER");
+		}
+		/*
+		if the last
+		*/
+	}
 }
 Volunteer.prototype.hookShifts = function(){
+	var i, j, dow, tit, br, sel, opt, row, sta, left, right, dat, arr, nxt;
 	var shifts = Code.getID(this.ELEMENT_ID_SHIFTS);
 	this.elements.shifts = shifts;
+	this.clearShifts();
 	Code.addClass(shifts,"scheduleStartDateContainer");
 	var daysOfWeek = new Array("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday");
-	var i, j, dow, tit, br, sel, opt, row, sta, left, right;
 var rowClass = "scheduleDateRow";
 var sdClass = "scheduleStartDateText";
 	//
@@ -396,7 +478,8 @@ var sdClass = "scheduleStartDateText";
 		Code.setContent(div,"Start Date: ");
 		Code.addClass(div,sdClass);
 		Code.addChild(left,div);
-	Code.addChild(left, this.generateSelectionDate() );
+		dat = this.generateSelectionDate();
+	Code.addChild(left, dat );
 	Code.addChild(row,left);
 	
 	//
@@ -406,26 +489,40 @@ var sdClass = "scheduleStartDateText";
 		Code.setContent(div,"End Date: ");
 		Code.addClass(div,sdClass);
 		Code.addChild(right,div);
-	Code.addChild(right, this.generateSelectionDate() );
+		dat = this.generateSelectionDate();
+	Code.addChild(right, dat );
 	Code.addChild(row,right);
 
 	//
+	div = Code.newDiv();
+	this.elements.days_of_week = div;
+	Code.addChild(shifts,div);
 	for(i=0;i<daysOfWeek.length;++i){
 		dow = Code.newDiv();
 		tit = Code.newDiv();
 		Code.addClass(tit,"scheduleDateDOWTitle");
 		Code.setContent(tit,daysOfWeek[i]);
-		Code.addChild(shifts,dow);
+		Code.addChild(div,dow);
 		Code.addChild(dow,tit);
 		Code.addClass(dow,rowClass);
 		//
+		nxt = new Array();
+		this.shifts[i].push(nxt);
 		row = Code.newDiv();
-		row.setAttribute("name","start_time_i");
+		row.setAttribute("name","start_time_"+i);
 		Code.addChild(dow,row);
-		dat = this.generateSelectionTime(); 
+		arr = this.generateSelectionTime(); 
+		dat = arr.pop();
+		nxt.push(arr);
+		nxt[0][0].element = this; Code.addListenerChange(nxt[0][0], this._handleShiftSelectionChangePassthrough);
+		nxt[0][1].element = this; Code.addListenerChange(nxt[0][1], this._handleShiftSelectionChangePassthrough);
 		Code.addClass(dat,"scheduleDateTODLeft");
 		Code.addChild(row, dat );
-		dat = this.generateSelectionTime(); 
+		arr = this.generateSelectionTime(); 
+		dat = arr.pop();
+		nxt.push(arr);
+		nxt[1][0].element = this; Code.addListenerChange(nxt[1][0], this._handleShiftSelectionChangePassthrough);
+		nxt[1][1].element = this; Code.addListenerChange(nxt[1][1], this._handleShiftSelectionChangePassthrough);
 		Code.addClass(dat,"scheduleDateTODRight");
 		Code.addChild(row, dat );
 	}
