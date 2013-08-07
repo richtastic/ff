@@ -1,7 +1,7 @@
 <?php
 // index.php
-include "functions.php";
-include "config.php";
+require "functions.php";
+//include "config.php";
 
 /*
 http://localhost/alice/ff/src/volunteer/index.php?a=...
@@ -12,6 +12,13 @@ LOGIN: a=login | u=USERNAME | p=PASSWORD
 ?a=shifts&page=3&start=20130701&end=20130801
 ?a=shift&key=userid&value=2&start=20130101&end=20140101
 */
+$ACTION_TYPE_LOGIN = 'login';
+$ACTION_TYPE_SHIFT_CREATE = 'shift_create';
+$ACTION_TYPE_SHIFT_CREATE_START_DATE = 'start_date';
+$ACTION_TYPE_SHIFT_CREATE_END_DATE = 'end_date';
+$ACTION_TYPE_SHIFT_CREATE_REPEATING = 'repeat';
+$ARGUMENT_GET_ACTION = $_GET['a'];
+$ARGUMENT_POST_ACTION = $_POST['a'];
 
 if($ARGUMENT_GET_ACTION!=null){
 	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }'); 
@@ -53,8 +60,19 @@ if($ARGUMENT_GET_ACTION!=null){
 		}else{
 			echo '{ "status": "error", "message": "invalid user" }';
 		}
+	}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_CREATE){
+		$startDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_START_DATE]);
+		$endDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_END_DATE]);
+		$repeating = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_REPEATING]);
+		$result = computeDatePermutations($startDate,$endDate,$repeating);
+		if($result!=null){
+			echo "yerp";
+		}else{
+			echo "narp";
+		}
+		//echo '{ "status": "success", "message": "create shift...", "start":"'.$startDate.'", "end":"'.$endDate.'", "repeat":"'.$repeating.'" }';
 	}else if(false){
-		echo "OTHER";
+		echo '{ "status": "error", "message": "not implemented" }';
 	}
 	mysql_close($connection);
 }else{

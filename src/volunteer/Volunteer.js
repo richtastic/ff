@@ -272,6 +272,7 @@ function Volunteer(){
 // --------------
 Volunteer.prototype.QUERY_DIRECTORY = "./";
 Volunteer.prototype.ACTION_LOGIN = "login";
+	Volunteer.prototype.ACTION_SHIFT_CREATE = "shift_create";
 Volunteer.prototype.COOKIE_SESSION = "COOKIE_SESSION";
 Volunteer.prototype.COOKIE_USERNAME = "COOKIE_USERNAME";
 Volunteer.prototype.ELEMENT_ID_LOGIN = "login";
@@ -289,10 +290,25 @@ Volunteer.prototype.initialize = function(){
 	//this.submitLogin();
 }
 Volunteer.prototype.getShiftString = function(){
-	//console.log(this.elements.days_of_week.children);
+	/*
+	"2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U"
+	*/
+	var startDay = this.elements.shifts_end.children[0].children[1].children[0].value;
+	var startMonth = this.elements.shifts_end.children[0].children[1].children[1].value;
+	var startYear = this.elements.shifts_end.children[0].children[1].children[2].value;
+	var endDay = this.elements.shifts_end.children[1].children[1].children[0].value;
+	var endMonth = this.elements.shifts_end.children[1].children[1].children[1].value;
+	var endYear = this.elements.shifts_end.children[1].children[1].children[2].value;
+	var startDate = ""+Code.prependFixed(startYear,"0",2)+"-"+Code.prependFixed(startMonth+1,"0",2)+"-"+Code.prependFixed(startDay,"0",2)+" 00:00:00.0000";
+	var endDate = ""+Code.prependFixed(endYear,"0",2)+"-"+Code.prependFixed(endMonth+1,"0",2)+"-"+Code.prependFixed(endDay,"0",2)+" 24:00:00.0000";
+	var validEndDates = startDay!="" && startMonth!="" && startYear!="" && endDay!="" && endMonth!="" && endYear!="";
 	var i, day, dow, div, d, l, r, lHour, rHour;
+	var str = "";
+	var daysOfWeek = new Array("M","T","W","T","F","S","U");
 	dow = this.elements.days_of_week.children;
+	var found = false;
 	for(i=0; i<dow.length; ++i){
+		str = str + daysOfWeek[i];
 		d = dow[i].children[dow[i].children.length-1];
 		l = d.children[0];
 		r = d.children[1];
@@ -300,14 +316,21 @@ Volunteer.prototype.getShiftString = function(){
 		lMin = l.children[1].value;
 		rHour = l.children[0].value;
 		rMin = l.children[1].value;
-		console.log("'"+lHour+"' '"+lMin+"'");
+		if(lHour!="" && lMin!="" && rHour!="" && rMin!=""){
+			lHour = Code.prependFixed(lHour, "0",2);
+			lMin = Code.prependFixed(lMin, "0",2);
+			rHour = Code.prependFixed(rHour, "0",2);
+			rMin = Code.prependFixed(rMin, "0",2);
+			found = true;
+			str = str + (lHour+":"+lMin+":00.0000");
+		}
+		if(i<dow.length-1){
+			str = str + ",";
+		}
 	}
-/*
-start at this.elements.shift . dow
-for each dow
-	for each dow.div.sta & sto
-		add to array
-*/
+	if(found && validEndDates){
+		return [startDate,endDate,str];
+	}
 	return null;
 }
 Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
@@ -316,7 +339,7 @@ Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
 	row = Code.newDiv();
 	// DAYS
 	sel = Code.newElement("select");
-	sel.setAttribute("name","hours");
+	sel.setAttribute("name","days");
 	Code.addChild(row,sel);
 	for(j=0;j<31;++j){
 		opt = Code.newElement("option");
@@ -331,7 +354,7 @@ Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
 	}
 	// MONTHS
 	sel = Code.newElement("select");
-	sel.setAttribute("name","hours");
+	sel.setAttribute("name","months");
 	Code.addChild(row,sel);
 	for(j=-1;j<12;++j){
 		opt = Code.newElement("option");
@@ -347,7 +370,7 @@ Volunteer.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
 	}
 	// YEARS
 	sel = Code.newElement("select");
-	sel.setAttribute("name","hours");
+	sel.setAttribute("name","years");
 	Code.addChild(row,sel);
 	var yearStart = 2013-1, yearEnd = 2020+1;
 	for(j=yearStart;j<yearEnd;++j){
@@ -412,6 +435,7 @@ Volunteer.prototype._handleShiftSelectionChangePassthrough = function(e){
 	this.element._handleShiftSelectionChange.call(this.element,this,e);
 }
 Volunteer.prototype._handleShiftSelectionChange = function(o,e){
+	return;
 	console.log(this);
 	console.log(o);
 	console.log(e);
@@ -471,6 +495,7 @@ var sdClass = "scheduleStartDateText";
 	row = Code.newDiv();
 	Code.addClass(row,rowClass);
 	Code.addChild(shifts,row);
+	this.elements.shifts_end = row;
 	//
 	left = Code.newDiv();
 	Code.addClass(left,"scheduleStartDateLeft");
@@ -543,19 +568,26 @@ Volunteer.prototype._onClickSubmitSchedulePassthrough = function(e){
 
 }
 Volunteer.prototype._onClickSubmitSchedule = function(e){
-	var str = this.getShiftString();
-	if(!str){
+	var arr = this.getShiftString();
+	if(false){//!arr){
 		console.log("inform user of invalid something");
 	}else{
-		console.log("post string to server");
+		console.log(arr);
+		arr = new Array(start = "2013-07-01 00:00:00.0000","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U");
+		this.submitShiftCreate(arr[0],arr[1],arr[2]);
 	}
 }
+Volunteer.prototype.submitShiftCreate = function(start,end,repeat){
+	var a = new Ajax();
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_CREATE;
+	var params = {start_date:start,end_date:end,repeat:repeat};
+	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
+	return;
+}
+Volunteer.prototype.onAjaxShiftCreate = function(e){
+	console.log(e);
+}
 
-/*
-
-"2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U"
-
-*/
 
 Volunteer.prototype.hookLogin = function(){
 	var login = Code.getID(this.ELEMENT_ID_LOGIN);
@@ -612,6 +644,7 @@ Volunteer.prototype.submitLogin = function(user,pass){
 	return;
 }
 Volunteer.prototype.onAjaxLogin = function(e){
+	console.log(e);
 	var obj = JSON.parse(e);
 	if(obj){
 		if(obj.status=="success"){
