@@ -129,7 +129,7 @@ function Volunteer(){
 			}
 		}
 
-		self.computePermutations("2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U");
+		self.computePermutations("2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000|12:00:00.0000-14:00:00.0000,T,F,S,U");
 
 		return;
 		var session = Code.getCookie(Volunteer.COOKIE_SESSION);
@@ -180,7 +180,7 @@ function Volunteer(){
 			}
 		}
 		for(i=0;i<daysList.length;++i){
-			daysList[i] = daysList[i].split("&");
+			daysList[i] = daysList[i].split("|");
 			if( daysList[i].length > 0 && daysList[i][0]!=null && daysList[i][0]!="" ){
 				for(j=0;j<daysList[i].length;++j){
 					daysList[i][j] = daysList[i][j].split("-");
@@ -261,7 +261,7 @@ function Volunteer(){
 			nnnn = arr[3];
 		}
 		var date = new Date(yyyy, mm, dd, hh, nn, ss, nnnn);
-		date.setUTC
+		//date.setUTC
 		return date;
 	}
 	this.constructor = function(){
@@ -569,18 +569,19 @@ Volunteer.prototype._onClickSubmitSchedulePassthrough = function(e){
 }
 Volunteer.prototype._onClickSubmitSchedule = function(e){
 	var arr = this.getShiftString();
+	var position = 123; // get this from somewhere
 	if(false){//!arr){
 		console.log("inform user of invalid something");
 	}else{
 		console.log(arr);
-		arr = new Array(start = "2013-07-01 00:00:00.0000","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U");
-		this.submitShiftCreate(arr[0],arr[1],arr[2]);
+		arr = new Array(start = "2013-07-01 00:00:00.0000","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000|12:00:00.0000-14:00:00.0000,T,F,S,U");
+		this.submitShiftCreate(arr[0],arr[1],arr[2],position);
 	}
 }
-Volunteer.prototype.submitShiftCreate = function(start,end,repeat){
+Volunteer.prototype.submitShiftCreate = function(start,end,repeat,position){
 	var a = new Ajax();
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_CREATE;
-	var params = {start_date:start,end_date:end,repeat:repeat};
+	var params = {start_date:start,end_date:end,repeat:repeat,pid:position};
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 	return;
 }

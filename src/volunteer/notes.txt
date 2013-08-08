@@ -359,9 +359,11 @@ NEW TABLE DESIGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 drop table if exists users;
 drop table if exists sessions;
 drop table if exists groups;
+drop table if exists positions;
 drop table if exists shifts;
 drop table if exists requests;
 # USERS
+drop table if exists users;
 create table users(
 id int not null auto_increment primary key,
 group_id int,
@@ -379,6 +381,7 @@ zip varchar(16),
 preferences varchar(2048) #k1=v1,k2=v2,... showfirstname=1,showlastname=0,timezone=+8,
 );
 #SESSIONS
+drop table if exists sessions;
 create table sessions(
 id int not null auto_increment primary key,
 user_id int,
@@ -387,24 +390,36 @@ ip_forward varchar(32),
 session_id varchar(64) #0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
 );
 # GROUPS
+drop table if exists groups;
 create table groups(
 id int not null auto_increment primary key,
 name varchar(32),
 info varchar(1024)
 );
+# POSITIONS
+drop table if exists positions;
+create table positions(
+id int not null auto_increment primary key,
+user_id int, # creator
+created datetime, # time created 
+modified datetime, # time modified
+name varchar(32), # short title
+info varchar(2048) # longer job description
+);
 # SHIFTS
+drop table if exists shifts;
 create table shifts(
 id int not null auto_increment primary key,
-parent_id int,
-user_id int,
-position_id int,
-log_begin datetime,
-log_end datetime,
-time_begin datetime,
-time_end datetime,
-algorithm varchar(2048)
+created datetime, # time created if parent | time assigned if child
+parent_id int, # 0 if parent | shift id generator if child
+user_id int, # creator if parent | owner if child
+position_id int, # position reference same if parent | child
+time_begin datetime, # start day if parent | start shift if child
+time_end datetime, # start day if parent | start shift if child
+algorithm varchar(2048) # string if parent | null if child
 );
 # REQUESTS
+drop table if exists requests;
 create table requests(
 id int not null auto_increment primary key,
 created datetime,
@@ -474,8 +489,11 @@ login screen
 
 
 NEW TODO-----------
-
-
-
+create new shift submit to server
+create new shidt server-generate
+week-calendar:
+	* show shifts & people assigned to shift
+	* button to delete shift [all, all assigned to userX, single shift]
+	* button to change shift assignee [all, all assigned to userX, single-shift]
 
 
