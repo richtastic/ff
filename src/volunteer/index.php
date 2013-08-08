@@ -12,7 +12,7 @@ LOGIN: a=login | u=USERNAME | p=PASSWORD
 ?a=shifts&page=3&start=20130701&end=20130801
 ?a=shift&key=userid&value=2&start=20130101&end=20140101
 */
-$ACTION_TYPE_USERID = 'uid';
+//$ACTION_TYPE_USERID = 'uid';
 $ACTION_TYPE_SESSIONID = 'sid';
 $ACTION_TYPE_LOGIN = 'login';
 $ACTION_TYPE_SHIFT_CREATE = 'shift_create';
@@ -22,9 +22,10 @@ $ACTION_TYPE_SHIFT_CREATE = 'shift_create';
 	$ACTION_TYPE_SHIFT_CREATE_POSITION = 'pid';
 $ACTION_TYPE_CALENDAR = 'calendar';
 	$ACTION_TYPE_CALENDAR_TYPE = 'type';
-	$ACTION_TYPE_CALENDAR_DAY = 'day';
-	$ACTION_TYPE_CALENDAR_WEEK = 'week';
-	$ACTION_TYPE_CALENDAR_MONTH = 'month';
+		$ACTION_TYPE_CALENDAR_DAY = 'day';
+		$ACTION_TYPE_CALENDAR_WEEK = 'week';
+		$ACTION_TYPE_CALENDAR_MONTH = 'month';
+		$ACTION_TYPE_CALENDAR_DATE = 'date';
 $ARGUMENT_GET_ACTION = $_GET['a'];
 $ARGUMENT_VALUE_USERID = null;
 $ARGUMENT_VALUE_SESSIONID = null;
@@ -33,9 +34,10 @@ $ARGUMENT_VALUE_SESSIONID = null;
 if($ARGUMENT_GET_ACTION!=null){
 	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }'); 
 	mysql_select_db("volunteering");
-	if($ARGUMENT_GET_ACTION==$ACTION_TYPE_LOGIN){ // EVERYONE
+	if($ARGUMENT_GET_ACTION==$ACTION_TYPE_LOGIN){ // EVERYONE - // echo hash('sha512','qwerty')."\n"; = 0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8
 		$username = mysql_real_escape_string($_POST['u']);
 		$password = mysql_real_escape_string($_POST['p']);
+		$password = strtoupper($password);
 		$query = 'select id,password from users where username="'.$username.'" limit 1;';
 		$result = mysql_query($query, $connection);
 		if($result){
@@ -56,7 +58,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					if(mysql_errno()){
 						echo '{ "status": "error", "message": "session fail" }';
 					}else{
-						echo '{ "status": "success", "username": "'.$username.'", "session_id": "'.$session_id.'" }';
+						echo '{ "status": "success", "session_id": "'.$session_id.'" }'; //  "username": "'.$username.'", 
 					}
 				}else{
 					echo '{ "status": "error", "message": "login fail" }';
@@ -84,37 +86,65 @@ if($ARGUMENT_GET_ACTION!=null){
 			$len = count($children);
 			if($len>0){
 				$userid = 0; // NEED REAL USER
-				$query = 'insert into shifts (created, parent_id, user_id, position_id, time_begin, time_end, algorithm) values (now(),"0","'.$userid.'","'.$position_id.'","'.standardSQLDate($startDate).'","'.standardSQLDate($endDate).'","'.$repeating.'") ;';
-				echo $query."\n";
+				$startTime = dateFromString($startDate);
+				$endTime = dateFromString($endDate);
+				$query = 'insert into shifts (created, parent_id, user_id, position_id, time_begin, time_end, algorithm) values (now(),"0","'.$userid.'","'.$position_id.'","'.standardSQLDateFromSeconds($startTime).'","'.standardSQLDateFromSeconds($endTime).'","'.$repeating.'") ;';
+				#echo $query."\n";
 				// INSERT IT
+				$result = mysql_query($query, $connection);
+				if(!$result){
+					echo "ERROR-SUP";
+					break;
+				}
 				// GET NEW PARENT ID
-				$parent_id = "123";
+				$parent_id = intval( mysql_insert_id() );
+				#echo $parent_id."\n";
 				// FOR EACH CHILD, INSERT SHIFTS:
 				for($i=0;$i<$len;++$i){
 					$startTime = $children[$i][0];
 					$endTime = $children[$i][1];
-					$query = 'insert into shifts (created, parent_id, user_id, position_id, time_begin, time_end, algorithm) values (now(),"'.$parent_id.'","0","'.$position_id.'","'.standardSQLDate($startTime).'","'.standardSQLDate($endTime).'",null) ;';
-					echo $query."\n";
-					break;
+					$query = 'insert into shifts (created, parent_id, user_id, position_id, time_begin, time_end, algorithm) values (now(),"'.$parent_id.'","0","'.$position_id.'","'.standardSQLDateFromSeconds($startTime).'","'.standardSQLDateFromSeconds($endTime).'",null) ;';
+					#echo $query."\n";
+					$result = mysql_query($query, $connection);
+					if(!$result){
+						echo "ERROR-SUB"; // need correct handling
+						break;
+					}
 				}
-				//echo '{ "status": "success", "message": "..." }';
+				echo '{ "status": "success", "message": "created '.($len).' singular shifts" }';
 			}else{
 				echo '{ "status": "error", "message": "no shifts" }';
 			}
 		}else{
 			echo '{ "status": "error", "message": "invalid shift" }';
 		}
-		//echo '{ "status": "success", "message": "create shift...", "start":"'.$startDate.'", "end":"'.$endDate.'", "repeat":"'.$repeating.'" }';
-		// $ACTION_TYPE_CALENDAR_TYPE
+	}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_CALENDAR){
+		$calType = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
+		$calDate = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
+echo $calType."\n";
+echo $calDate."\n";
+		// ?a=calendar | type=week&date=2013-07-01
+		if($calType==$ACTION_TYPE_CALENDAR_DAY){
+			// return all shifts on day: $calDate
+			echo '{ "status": "success", "message": "day" }';
+		}else if($calType==$ACTION_TYPE_CALENDAR_WEEK){
+			// return all shifts starting on the first monday before-and-including $calDate
+			echo '{ "status": "success", "message": "week" }';
+		}else if($calType==$ACTION_TYPE_CALENDAR_MONTH){
+			// return all shifts in the same month as $calDate
+			echo '{ "status": "success", "message": "month" }';
+		}else{
+			echo '{ "status": "error", "message": "invalid type" }';
+		}
 // PRIVATE -------------------------------------------------------------------
 	}else{
-		$ACTION_VALUE_USER_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_ID]);
+		// $ACTION_VALUE_USER_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_ID]);
 		$ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
-		if($ACTION_VALUE_USER_ID==null || $ACTION_VALUE_USER_ID=="" || $ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
+		if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
 			echo '{ "status": "error", "message": "no session info" }';
 			return;
 		}else{
-			$query = 'select session_id from users where username="'.$ACTION_VALUE_USER_ID.'" limit 1;';
+			$query = 'select user_id,session_id from users where session_id="'.$ACTION_VALUE_SESSION_ID.'" limit 1;';
 			$result = mysql_query($query, $connection);
 			if($result && mysql_num_rows($result)==1){
 				$row = mysql_fetch_assoc($result);

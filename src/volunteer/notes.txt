@@ -370,7 +370,7 @@ group_id int,
 created datetime,
 modified datetime,
 username varchar(32) not null,
-password varchar(1024) not null,
+password varchar(128) not null,
 first_name varchar(32),
 last_name varchar(32),
 email varchar(64) not null,
@@ -435,14 +435,11 @@ status int # 0=open, 1=closed
 # INSERT FAKE DATA
 insert into groups (name, info) values ("admin","CRUD - everything");
 insert into groups (name, info) values ("staff","staff member");
-insert into users (username, password, email, first_name, last_name, phone, state, city, zip, group_id, created, modified) values ("richie","qwerty","zirbsster@gmail.com", "Richie", "Zirbes", "555-555-5555", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), now() );
+insert into users (username, password, email, first_name, last_name, phone, state, city, zip, group_id, created, modified) values ("richie","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","zirbsster@gmail.com", "Richie", "Zirbes", "555-555-5555", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), now() );
 
 
 
 insert into sessions (user_id,session_id) values ("12","0123456789");
-
-
-
 
 REQUEST:
 1) CREATE REQUEST
@@ -489,11 +486,16 @@ login screen
 
 
 NEW TODO-----------
-create new shift submit to server
-create new shidt server-generate
 week-calendar:
 	* show shifts & people assigned to shift
 	* button to delete shift [all, all assigned to userX, single shift]
 	* button to change shift assignee [all, all assigned to userX, single-shift]
+server session/cookies?
+shift-request interface
+user-crud interface
 
 
+
+
+http://www.cs.wcupa.edu/~rkline/php/sessions.html
+http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_Functions

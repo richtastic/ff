@@ -272,9 +272,10 @@ function Volunteer(){
 // --------------
 Volunteer.prototype.QUERY_DIRECTORY = "./";
 Volunteer.prototype.ACTION_LOGIN = "login";
-	Volunteer.prototype.ACTION_SHIFT_CREATE = "shift_create";
+Volunteer.prototype.ACTION_SHIFT_CREATE = "shift_create";
+Volunteer.prototype.ACTION_CALENDAR = "calendar";
 Volunteer.prototype.COOKIE_SESSION = "COOKIE_SESSION";
-Volunteer.prototype.COOKIE_USERNAME = "COOKIE_USERNAME";
+//Volunteer.prototype.COOKIE_USERNAME = "COOKIE_USERNAME";
 Volunteer.prototype.ELEMENT_ID_LOGIN = "login";
 Volunteer.prototype.ELEMENT_NAME_USERNAME = "login_username";
 Volunteer.prototype.ELEMENT_NAME_PASSWORD = "login_password";
@@ -287,6 +288,7 @@ Volunteer.prototype.initialize = function(){
 	this.hookLogin();
 	this.hookShifts();
 	this.checkLogin();
+	this.hookCalendarWeek();
 	//this.submitLogin();
 }
 Volunteer.prototype.getShiftString = function(){
@@ -613,7 +615,9 @@ Volunteer.prototype._onClickSubmitLoginPassthrough = function(e){
 }
 Volunteer.prototype._onClickSubmitLogin = function(e){
 	var user = this.elements.loginUsername.value; this.elements.loginUsername.value = "";
-	var pass = this.elements.loginPassword.value; this.elements.loginPassword.value = "";
+	var pass = hex_sha512( this.elements.loginPassword.value ); this.elements.loginPassword.value = "";
+	pass = pass.toUpperCase();
+console.log(pass);
 	// hide login & logout and show processing graphic
 	this.submitLogin(user,pass);
 }
@@ -622,12 +626,12 @@ Volunteer.prototype._onClickSubmitLogoutPassthrough = function(e){
 }
 Volunteer.prototype._onClickSubmitLogout = function(e){
 	Code.deleteCookie(this.COOKIE_SESSION);
-	Code.deleteCookie(this.COOKIE_USERNAME);
+	//Code.deleteCookie(this.COOKIE_USERNAME);
 	this.checkLogin();
 }
 Volunteer.prototype.checkLogin = function(){
 	var session_id = Code.getCookie(this.COOKIE_SESSION,session_id);
-	var username = Code.getCookie(this.COOKIE_USERNAME,username);
+	//var username = Code.getCookie(this.COOKIE_USERNAME,username);
 	//console.log(session_id, username);
 	if(!session_id){
 		Code.unhide( this.elements.login );
@@ -649,9 +653,10 @@ Volunteer.prototype.onAjaxLogin = function(e){
 	var obj = JSON.parse(e);
 	if(obj){
 		if(obj.status=="success"){
-			var username = obj.username, session_id = obj.session_id;
+			var session_id = obj.session_id;
 			Code.setCookie(this.COOKIE_SESSION,session_id,this.COOKIE_TIME_SECONDS);
-			Code.setCookie(this.COOKIE_USERNAME,username,this.COOKIE_TIME_SECONDS);
+			//var username = obj.username;
+			//Code.setCookie(this.COOKIE_USERNAME,username,this.COOKIE_TIME_SECONDS);
 		}else{
 			// console.log("LOGIN ERROR");
 		}
@@ -661,5 +666,21 @@ Volunteer.prototype.onAjaxLogin = function(e){
 	this.checkLogin();
 }
 
+
+// ----------------------------------------------------------------------------------------------------
+Volunteer.prototype.hookCalendarWeek = function(){
+	console.log("get week");
+	this.submitCalendarRequest("week","2013-07-01");
+}
+Volunteer.prototype.submitCalendarRequest = function(type,date){
+	var a = new Ajax();
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
+	var params = {type:type,date:date};
+	a.postParams(url,params,this,this.onAjaxCalendar,this.onAjaxCalendar);
+	return;
+}
+Volunteer.prototype.onAjaxCalendar = function(e){
+	console.log(e);
+}
 
 

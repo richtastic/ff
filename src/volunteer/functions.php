@@ -11,6 +11,7 @@ function includeHeader($title='Title'){
 	<title>'.$title.'</title>
 	<link rel="stylesheet" type="text/css" href="./volunteer.css">
 	<script type="text/javascript" src="./classes/json3.min.js"></script>
+	<script type="text/javascript" src="./classes/sha512.js"></script>
 	<script type="text/javascript" src="./classes/Code.js"></script>
 	<script type="text/javascript" src="./classes/Ajax.js"></script>
 	<script type="text/javascript" src="./Volunteer.js"></script>
@@ -99,9 +100,9 @@ function timeValuesFromString($str){ // hour : minute : second . millisecond
 	array_push($arr, intval(substr($str,9,4)) );
 	return $arr;
 }
-function standardSQLDate($seconds){
-	echo "FIX THIS SHIT";
-	return "00-00-00 00:00:00";
+function standardSQLDateFromSeconds($seconds){
+	return date("Y-m-d H:i:s",$seconds);
+	//return "00-00-00 00:00:00";
 }
 
 function getNextDay($seconds){
