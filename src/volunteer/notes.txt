@@ -437,9 +437,16 @@ insert into groups (name, info) values ("admin","CRUD - everything");
 insert into groups (name, info) values ("staff","staff member");
 insert into users (username, password, email, first_name, last_name, phone, state, city, zip, group_id, created, modified) values ("richie","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","zirbsster@gmail.com", "Richie", "Zirbes", "555-555-5555", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), now() );
 
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Sunrise","Work in the morning");
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Short","Work in the evening");
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Medium","Work in the evening");
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Long","Work late");
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Overnight","Work through the night");
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Backup","Be available for work");
+insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Management Backup","Be available for management");
 
 
-insert into sessions (user_id,session_id) values ("12","0123456789");
+
 
 REQUEST:
 1) CREATE REQUEST
@@ -453,7 +460,8 @@ A) DELETE REQUEST
 
 
 
-
+select id,created,parent_id,user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
+select id,created,parent_id,user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
 
 
 

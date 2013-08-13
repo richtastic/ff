@@ -246,7 +246,7 @@ function Volunteer(){
 		return arr;
 	}
 	this.dateFromString = function(str){
-		if(str.length<11){
+		if(str.length<10){
 			return null;
 		}
 		var arr, yyyy=0, mm=0, dd=0, hh=0, nn=0, ss=0, nnnn=0;
@@ -274,7 +274,9 @@ Volunteer.prototype.QUERY_DIRECTORY = "./";
 Volunteer.prototype.ACTION_LOGIN = "login";
 Volunteer.prototype.ACTION_SHIFT_CREATE = "shift_create";
 Volunteer.prototype.ACTION_CALENDAR = "calendar";
+Volunteer.prototype.ACTION_POSITION_GET = "position_read";
 Volunteer.prototype.COOKIE_SESSION = "COOKIE_SESSION";
+Volunteer.prototype.SESSION_ID = "sid";
 //Volunteer.prototype.COOKIE_USERNAME = "COOKIE_USERNAME";
 Volunteer.prototype.ELEMENT_ID_LOGIN = "login";
 Volunteer.prototype.ELEMENT_NAME_USERNAME = "login_username";
@@ -283,30 +285,32 @@ Volunteer.prototype.ELEMENT_NAME_LOGIN_SUBMIT = "login_submit";
 Volunteer.prototype.ELEMENT_ID_LOGOUT = "logout";
 Volunteer.prototype.ELEMENT_NAME_LOGOUT_SUBMIT = "logout_submit";
 Volunteer.prototype.ELEMENT_ID_SHIFTS = "section_crud_shift";
-Volunteer.prototype.COOKIE_TIME_SECONDS = 60*5;//60*60*24*365; // 1 year
+Volunteer.prototype.ELEMENT_ID_CALENDAR_WEEK = "calendar_week";
+Volunteer.prototype.COOKIE_TIME_SECONDS = 10000*60*5;//60*60*24*365; // 1 year
 Volunteer.prototype.initialize = function(){
 	this.hookLogin();
 	this.hookShifts();
 	this.checkLogin();
 	this.hookCalendarWeek();
-	//this.submitLogin();
+	//
+}
+Volunteer.prototype.appendSessionInfo = function(o){
+	o[Volunteer.prototype.SESSION_ID] = Code.getCookie(this.COOKIE_SESSION);
+	return o;
 }
 Volunteer.prototype.getShiftString = function(){
-	/*
-	"2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000&12:00:00.0000-14:00:00.0000,T,F,S,U"
-	*/
-	var startDay = this.elements.shifts_end.children[0].children[1].children[0].value;
-	var startMonth = this.elements.shifts_end.children[0].children[1].children[1].value;
-	var startYear = this.elements.shifts_end.children[0].children[1].children[2].value;
-	var endDay = this.elements.shifts_end.children[1].children[1].children[0].value;
-	var endMonth = this.elements.shifts_end.children[1].children[1].children[1].value;
-	var endYear = this.elements.shifts_end.children[1].children[1].children[2].value;
-	var startDate = ""+Code.prependFixed(startYear,"0",2)+"-"+Code.prependFixed(startMonth+1,"0",2)+"-"+Code.prependFixed(startDay,"0",2)+" 00:00:00.0000";
-	var endDate = ""+Code.prependFixed(endYear,"0",2)+"-"+Code.prependFixed(endMonth+1,"0",2)+"-"+Code.prependFixed(endDay,"0",2)+" 24:00:00.0000";
-	var validEndDates = startDay!="" && startMonth!="" && startYear!="" && endDay!="" && endMonth!="" && endYear!="";
+	var startDay = parseInt(this.elements.shifts_end.children[0].children[1].children[0].value);
+	var startMonth = parseInt(this.elements.shifts_end.children[0].children[1].children[1].value);
+	var startYear = parseInt(this.elements.shifts_end.children[0].children[1].children[2].value);
+	var endDay = parseInt(this.elements.shifts_end.children[1].children[1].children[0].value);
+	var endMonth = parseInt(this.elements.shifts_end.children[1].children[1].children[1].value);
+	var endYear = parseInt(this.elements.shifts_end.children[1].children[1].children[2].value);
+	var startDate = ""+Code.prependFixed(startYear+"","0",2)+"-"+Code.prependFixed((startMonth+1)+"","0",2)+"-"+Code.prependFixed(startDay+"","0",2)+" 00:00:00.0000";
+	var endDate = ""+Code.prependFixed(endYear+"","0",2)+"-"+Code.prependFixed((endMonth+1)+"","0",2)+"-"+Code.prependFixed(endDay+"","0",2)+" 24:00:00.0000";
+	var validEndDates = startDay!=="" && startMonth!=="" && startYear!=="" && endDay!=="" && endMonth!=="" && endYear!=="";
 	var i, day, dow, div, d, l, r, lHour, rHour;
 	var str = "";
-	var daysOfWeek = new Array("M","T","W","T","F","S","U");
+	var daysOfWeek = new Array("M","T","W","R","F","S","U");
 	dow = this.elements.days_of_week.children;
 	var found = false;
 	for(i=0; i<dow.length; ++i){
@@ -316,15 +320,15 @@ Volunteer.prototype.getShiftString = function(){
 		r = d.children[1];
 		lHour = l.children[0].value;
 		lMin = l.children[1].value;
-		rHour = l.children[0].value;
-		rMin = l.children[1].value;
+		rHour = r.children[0].value;
+		rMin = r.children[1].value;
 		if(lHour!="" && lMin!="" && rHour!="" && rMin!=""){
+			found = true;
 			lHour = Code.prependFixed(lHour, "0",2);
 			lMin = Code.prependFixed(lMin, "0",2);
 			rHour = Code.prependFixed(rHour, "0",2);
 			rMin = Code.prependFixed(rMin, "0",2);
-			found = true;
-			str = str + (lHour+":"+lMin+":00.0000");
+			str = str + (lHour+":"+lMin+":00.0000" + "-" + rHour+":"+rMin+":00.0000");
 		}
 		if(i<dow.length-1){
 			str = str + ",";
@@ -554,6 +558,15 @@ var sdClass = "scheduleStartDateText";
 		Code.addChild(row, dat );
 	}
 	//
+		div = Code.newElement("select");
+		d = Code.newDiv();
+		Code.setContent(d,"Position: ");
+		row = Code.newDiv();
+		Code.addChild(shifts,row);
+		Code.addChild(row,d);
+		Code.addChild(row,div);
+		this.elements.shiftPositions = div;
+	//
 		div = Code.newElement("input");
 		div.setAttribute("value","Create Shift");
 		div.setAttribute("type","submit");
@@ -564,31 +577,69 @@ var sdClass = "scheduleStartDateText";
 		this.elements.shiftSubmit.element = this;
 	//
 	Code.addListenerClick(this.elements.shiftSubmit, this._onClickSubmitSchedulePassthrough);
+	this.getShiftPositionList();
+}
+Volunteer.prototype.getShiftPositionList = function(){
+	var a = new Ajax();
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_GET;
+	var params = this.appendSessionInfo({});
+	a.postParams(url,params,this,this.onAjaxShiftPositionList,this.onAjaxShiftPositionList);
+	return;
+}
+Volunteer.prototype.onAjaxShiftPositionList = function(e){
+	//console.log(e);
+	var obj = JSON.parse(e);
+	if(obj.status=="success"){
+		var arr = obj.list;
+		var j, len = arr.length;
+		sel = this.elements.shiftPositions;
+		sel.setAttribute("name","positions");
+		for(j=-1;j<len;++j){
+			opt = Code.newElement("option");
+			Code.addChild(sel,opt);
+			if(j==-1){
+				Code.setContent(opt,"");
+				opt.setAttribute("value","");
+				opt.setAttribute("selected","selected");
+			}else{
+				Code.setContent(opt, arr[j]["name"] );
+				opt.setAttribute("value",arr[j]["id"]);
+			}
+		}
+	}
 }
 Volunteer.prototype._onClickSubmitSchedulePassthrough = function(e){
 	this.element._onClickSubmitSchedule.call(this.element,e);
 
 }
 Volunteer.prototype._onClickSubmitSchedule = function(e){
-	var arr = this.getShiftString();
-	var position = 123; // get this from somewhere
-	if(false){//!arr){
-		console.log("inform user of invalid something");
+	var position = this.elements.shiftPositions.value;
+	if(position===""||position===null||position===undefined){
+		console.log("inform user of invalid position");
 	}else{
-		console.log(arr);
-		arr = new Array(start = "2013-07-01 00:00:00.0000","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000|12:00:00.0000-14:00:00.0000,T,F,S,U");
-		this.submitShiftCreate(arr[0],arr[1],arr[2],position);
+		var arr = this.getShiftString();
+		if(!arr){
+			console.log("inform user of invalid schedule");
+		}else{
+			console.log(arr);
+			//arr = new Array(start = "2013-07-01 00:00:00.0000","2013-07-31 24:00:00.0000","M:06:00:00.0000-08:30:00.0000,T,W:08:00:00.0000-10:00:00.0000|12:00:00.0000-14:00:00.0000,T,F,S,U");
+			this.submitShiftCreate(arr[0],arr[1],arr[2],position);
+		}
 	}
 }
 Volunteer.prototype.submitShiftCreate = function(start,end,repeat,position){
 	var a = new Ajax();
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_CREATE;
-	var params = {start_date:start,end_date:end,repeat:repeat,pid:position};
+	var params = this.appendSessionInfo({start_date:start,end_date:end,repeat:repeat,pid:position});
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
-	return;
 }
 Volunteer.prototype.onAjaxShiftCreate = function(e){
 	console.log(e);
+	var obj = JSON.parse(e);
+	console.log(obj.message);
+	if(obj.status=="success"){
+		//
+	}
 }
 
 
@@ -630,7 +681,7 @@ Volunteer.prototype._onClickSubmitLogout = function(e){
 	this.checkLogin();
 }
 Volunteer.prototype.checkLogin = function(){
-	var session_id = Code.getCookie(this.COOKIE_SESSION,session_id);
+	var session_id = Code.getCookie(this.COOKIE_SESSION);
 	//var username = Code.getCookie(this.COOKIE_USERNAME,username);
 	//console.log(session_id, username);
 	if(!session_id){
@@ -644,7 +695,7 @@ Volunteer.prototype.checkLogin = function(){
 Volunteer.prototype.submitLogin = function(user,pass){
 	var a = new Ajax();
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_LOGIN;
-	var params = {u:user,p:pass};
+	var params = {u:user,p:pass}; // this.appendSessionInfo(
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 	return;
 }
@@ -654,6 +705,7 @@ Volunteer.prototype.onAjaxLogin = function(e){
 	if(obj){
 		if(obj.status=="success"){
 			var session_id = obj.session_id;
+			Code.deleteCookie(this.COOKIE_SESSION);
 			Code.setCookie(this.COOKIE_SESSION,session_id,this.COOKIE_TIME_SECONDS);
 			//var username = obj.username;
 			//Code.setCookie(this.COOKIE_USERNAME,username,this.COOKIE_TIME_SECONDS);
@@ -669,18 +721,34 @@ Volunteer.prototype.onAjaxLogin = function(e){
 
 // ----------------------------------------------------------------------------------------------------
 Volunteer.prototype.hookCalendarWeek = function(){
-	console.log("get week");
-	this.submitCalendarRequest("week","2013-07-01");
+	var i, d, div, ele, dow;
+	var week = Code.getID(this.ELEMENT_ID_CALENDAR_WEEK);
+	Code.addClass(week,"calendarWeekContainer");
+	this.elements.calendarWeek = week;
+	//Code.setContent(week,"week");
+	/*for(i=0;){
+
+	}*/
+	//Code.addChild(left,div);
+	//Code.newDiv();
+	// 
+	console.log("get calendar");
+	//this.submitCalendarRequest("week","2013-07-01");
+	//this.submitCalendarRequest("week","2013-07-09 05:06:09");
+	//this.submitCalendarRequest("day","2013-07-08 05:06:09");
+	//this.submitCalendarRequest("month","2013-07-15 02:06:09");
 }
 Volunteer.prototype.submitCalendarRequest = function(type,date){
 	var a = new Ajax();
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
-	var params = {type:type,date:date};
+	var params = this.appendSessionInfo({type:type,date:date});
 	a.postParams(url,params,this,this.onAjaxCalendar,this.onAjaxCalendar);
 	return;
 }
 Volunteer.prototype.onAjaxCalendar = function(e){
-	console.log(e);
+	//console.log(e);
+	var obj = JSON.parse(e);
+	//console.log(obj);
 }
 
 

@@ -36,7 +36,9 @@ function includeBody(){
 			<input type="submit" name="logout_submit" value="Log Out" />
 		</div>
 		<div id="content">
-			<div id="section_calendar"></div>
+			<div id="section_calendar">
+				<div id="calendar_week"></div>
+			</div>
 			<div id="section_profile"></div>
 			<div id="section_crud_user"></div>
 			<div id="section_crud_shift"></div>
@@ -70,58 +72,108 @@ function stringFromDate($dat){
 	return date("Y-m-d H:i:s.0000",$dat); // YYYY-MM-DD HH:NN:SS.NNNN
 }
 function dateFromString($str){
-	if( strlen($str)<11 ){
+	if( strlen($str)<10 ){
 		return null;
 	}
 	$arr=null; $yyyy=0; $mm=0; $dd=0; $hh=0; $nn=0; $ss=0; $nnnn=0;
 	$yyyy = intval(substr($str,0,4));
 	$mm = intval(substr($str,5,2));
 	$dd = intval(substr($str,8,2));
-	if( strlen($str)>=24 ){
+	if( strlen($str)>=19 ){
 		$arr = timeValuesFromString(substr($str,11,strlen($str)));
 		$hh = $arr[0];
 		$nn = $arr[1];
 		$ss = $arr[2];
-		$nnnn = $arr[3];
+		if(count($arr)==4){
+			$nnnn = $arr[3];
+		}
 	}
 	$date = mktime($hh,$nn,$ss,$mm,$dd,$yyyy,-1);
 	// date.setUTC
 	return $date;
 }
-
 function timeValuesFromString($str){ // hour : minute : second . millisecond
-	if(strlen($str)<13){
+	if(strlen($str)<8){
 		return null;
 	}
 	$arr = array();
 	array_push($arr, intval(substr($str,0,2)) );
 	array_push($arr, intval(substr($str,3,2)) );
 	array_push($arr, intval(substr($str,6,2)) );
-	array_push($arr, intval(substr($str,9,4)) );
+	if(strlen($str)>=13){
+		array_push($arr, intval(substr($str,9,4)) );
+	}
 	return $arr;
 }
+function getDayStartFromSeconds($seconds){
+	return dateFromString( date("Y-m-d 00:00:00",$seconds) );
+}
+function getDayEndFromSeconds($seconds){
+	return dateFromString( date("Y-m-d 23:59:59",$seconds) );
+}
 function standardSQLDateFromSeconds($seconds){
-	return date("Y-m-d H:i:s",$seconds);
-	//return "00-00-00 00:00:00";
+	return date("Y-m-d H:i:s",$seconds); //return "00-00-00 00:00:00";
 }
-
+function getFirstDayOfMonth($seconds){
+	$dom = date("j",$seconds);
+	while($dom!=1){
+		$seconds = getPrevDay($seconds);
+		$dom = date("j",$seconds);
+	}
+	return $seconds;
+}
+function getLastDayOfMonth($seconds){
+	$max = date("t",$seconds);
+	$dom = date("j",$seconds);
+	while($dom!=$max){
+		$seconds = getNextDay($seconds);
+		$dom = date("j",$seconds);
+	}
+	return $seconds;
+}
+function getFirstMondayOfWeek($seconds){
+	$dow = date("w",$seconds);
+	while($dow!=1){
+		$seconds = getPrevDay($seconds);
+		$dow = date("w",$seconds);
+	}
+	return $seconds;
+}
+function getLastSundayOfWeek($seconds){
+	$dow = date("w",$seconds);
+	while($dow!=0){
+		$seconds = getNextDay($seconds);
+		$dow = date("w",$seconds);
+	}
+	return $seconds;
+}
+function getPrevDay($seconds){
+	$next = $seconds;// - 24*60*60;
+	$dat = mktime(0,0,0, intval(date("m",$next)),intval(date("d",$next))+1,intval(date("Y",$next)),-1);
+	return $dat;
+}
 function getNextDay($seconds){
-	$next = $seconds + 24*60*60;
-	$dat = mktime(0,0,0, intval(date("m",$next)),intval(date("d",$next)),intval(date("Y",$next)),-1);
-	return $dat;
+	$oH = intval(date("H",$seconds));
+	$oN = intval(date("i",$seconds));
+	$oS = intval(date("s",$seconds));
+	$oM = intval(date("m",$seconds));
+	$oD = intval(date("d",$seconds));
+	$oY = intval(date("y",$seconds));
+	return mktime($oH,$oN,$oS, $oM,$oD+1,$oY,-1);
 }
-function addTimeToSeconds($time,$yea,$mon,$day,$hou,$min,$sec,$nano){
-	$dat = $time;
-	$dat = $dat + $sec;
-	$dat = $dat + $min*60;
-	$dat = $dat + $hou*60*60;
-	// $dat = date_add($dat, date_interval_create_from_date_string($sec+" seconds") );
-	// $dat = date_add($dat, date_interval_create_from_date_string($min+" minutes") );
-	// $dat = date_add($dat, date_interval_create_from_date_string($hou+" hours") );
-	// $dat = date_add($dat, date_interval_create_from_date_string($day+" days") );
-	// $dat = date_add($dat, date_interval_create_from_date_string($mon+" months") );
-	// $dat = date_add($dat, date_interval_create_from_date_string($yea+" years") );
-	return $dat;
+function addTimeToSeconds($seconds,$yea,$mon,$day,$hou,$min,$sec,$nano){
+	// $dat = $time;
+	// $dat = $dat + $sec;
+	// $dat = $dat + $min*60;
+	// $dat = $dat + $hou*60*60;
+	// return $dat;
+	$oH = intval(date("H",$seconds));
+	$oN = intval(date("i",$seconds));
+	$oS = intval(date("s",$seconds));
+	$oM = intval(date("m",$seconds));
+	$oD = intval(date("d",$seconds));
+	$oY = intval(date("y",$seconds));
+	return mktime($oH+$hou,$oN+$min,$oS+$seconds, $oM+$mon,$oD+$day,$oY+$yea,-1);
 }
 function fullDateValid($date){
 	$pattern = '/^[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]\.[0-9][0-9][0-9][0-9]$/';
@@ -130,9 +182,23 @@ function fullDateValid($date){
 	}
 	return $matches[0]==$date;
 }
+function fullDateAlgorithmValid($code){
+	/*$pattern = '/M([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*\,
+	T([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*\,
+	W([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*\,
+	R([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*\,
+	F([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*\,
+	S([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*\,
+	U([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*';*/
+	$pattern = '/([MTWRFSU]([0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9]\-[0-9][0-9]\:[0-9][0-9]\:[0-9][0-9]\.[0-9][0-9][0-9][0-9][|]*)*,*)*/';
+	if( !preg_match($pattern, $code, $matches) ){ // 3 matches
+		return false;
+	}
+	return $matches[0]==$code;
+}
 function computeDatePermutations($begin,$end,$code){
 	$MAX_NUM_DATES = 1000;
-	if( !(fullDateValid($begin) && fullDateValid($begin)) ){ // need to check code too
+	if( !(fullDateValid($begin) && fullDateValid($begin) && fullDateAlgorithmValid($code)) ){
 		return null;
 	}
 	$i=0; $j=0; $index=0; $dow=0;
@@ -185,7 +251,11 @@ function computeDatePermutations($begin,$end,$code){
 	$beginTime = $beginDate;
 	$endTime = $endDate;
 	$time = $beginTime;
-	while($time<$endTime){// for each day
+// DO A ROUGH CALCULATION TO DETERMINE HOW MANY WILL BE GENERATED - end-start years * weeks * M,T,W,R,F,S,U
+//echo "START TIME: (".stringFromDate($time).")\n";
+//echo "END   TIME: (".stringFromDate($endTime).")\n";
+$count = 0;
+	while($time<$endTime && $count<10000){ // for each day
 		$dow = intval( date("w",$time) );
 		if($dow==1){ // monday
 			$index = 0;
@@ -213,11 +283,14 @@ function computeDatePermutations($begin,$end,$code){
 					$daysList[$index][$i][$j][0], $daysList[$index][$i][$j][1], $daysList[$index][$i][$j][2], $daysList[$index][$i][$j][3] );
 				array_push($children,array($start,$stop));
 				if( count($children) >= $MAX_NUM_DATES ){
+					echo "BAD";
 					return null;
 				}
 			}
 		}
 		$time = getNextDay($time);
+		//echo "TIME: (".stringFromDate($time).")\n";
+		++$count;
 	}
 	return $children;
 }
@@ -272,9 +345,26 @@ this.computePermutations = function(begin,end,code){
 	}
 */
 
-
+/* SQL DB SPECIFIC: */
 function doSomething($val='default'){
 	echo "doSomething ".$val;
 }
+
+	// switch($dow){
+	// 	case 0: // sunday
+	// 	$dow = 6; break;
+	// 	case 1: // monday
+	// 	$dow = 0; break;
+	// 	case 2: // tuesday
+	// 	$dow = 1; break;
+	// 	case 3: // wednesday
+	// 	$dow = 2; break;
+	// 	case 4: // thursday
+	// 	$dow = 3; break;
+	// 	case 5: // friday
+	// 	$dow = 4; break;
+	// 	case 6: // saturday
+	// 	$dow = 5; break;
+	// }
 
 ?>
