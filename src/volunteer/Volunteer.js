@@ -587,7 +587,7 @@ Volunteer.prototype.getShiftPositionList = function(){
 	return;
 }
 Volunteer.prototype.onAjaxShiftPositionList = function(e){
-	//console.log(e);
+	console.log(e);
 	var obj = JSON.parse(e);
 	if(obj.status=="success"){
 		var arr = obj.list;

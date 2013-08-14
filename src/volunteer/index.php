@@ -107,6 +107,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				mysql_free_result($result);
 			}else{
 				echo '{ "status": "error", "message": "invalid session" }';
+				return;
 			}
 		}
 		// USER -------------------------------------------------------------------
