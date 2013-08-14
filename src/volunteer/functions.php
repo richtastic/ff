@@ -13,7 +13,13 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./classes/json3.min.js"></script>
 	<script type="text/javascript" src="./classes/sha512.js"></script>
 	<script type="text/javascript" src="./classes/Code.js"></script>
+	<script type="text/javascript" src="./classes/Dispatch.js"></script>
+	<script type="text/javascript" src="./classes/Dispatchable.js"></script>
 	<script type="text/javascript" src="./classes/Ajax.js"></script>
+	<script type="text/javascript" src="./classes/PageWeb.js"></script>
+	<script type="text/javascript" src="./classes/NavWeb.js"></script>
+	<script type="text/javascript" src="./PageCalendarWeek.js"></script>
+	<script type="text/javascript" src="./PageShifts.js"></script>
 	<script type="text/javascript" src="./Volunteer.js"></script>
 	<script>
 	handlePageLoadedFunction = function(e){
@@ -26,28 +32,35 @@ function includeHeader($title='Title'){
 }
 function includeBody(){
 	echo '
-	<div>
-		<div id="login">
-			<input type="text" name="login_username" />
-			<input type="password" name="login_password" />
-			<input type="submit" name="login_submit" value="Log In" />
-		</div>
-		<div id="logout">
-			<input type="submit" name="logout_submit" value="Log Out" />
-		</div>
-		<div id="content">
-			<div id="section_calendar">
-				<div id="calendar_week"></div>
-			</div>
-			<div id="section_profile"></div>
-			<div id="section_crud_user"></div>
-			<div id="section_crud_shift"></div>
-			<div id="section_crud_"></div>
-			<div id="section_"></div>
-			<div id=""></div>
-		</div>
+	<div id="scheduler">
+		<div id="scheduler_top"></div>
+		<div id="scheduler_main"></div>
+		<div id="scheduler_bottom"></div>
 	</div>
 	';
+	// echo '
+	// <div>
+	// 	<div id="login">
+	// 		<input type="text" name="login_username" />
+	// 		<input type="password" name="login_password" />
+	// 		<input type="submit" name="login_submit" value="Log In" />
+	// 	</div>
+	// 	<div id="logout">
+	// 		<input type="submit" name="logout_submit" value="Log Out" />
+	// 	</div>
+	// 	<div id="content">
+	// 		<div id="section_calendar">
+	// 			<div id="calendar_week"></div>
+	// 		</div>
+	// 		<div id="section_profile"></div>
+	// 		<div id="section_crud_user"></div>
+	// 		<div id="section_crud_shift"></div>
+	// 		<div id="section_crud_"></div>
+	// 		<div id="section_"></div>
+	// 		<div id=""></div>
+	// 	</div>
+	// </div>
+	// ';
 }
 function includeFooter(){
 	echo '

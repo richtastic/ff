@@ -35,8 +35,40 @@ Code.log = function log(o){
 Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
 }
-
-
+Code.elementExists = function(a,o){ // O(n)
+	for(var i=0; i<a.length; ++i){
+		if(a[i]==o){ return true; }
+	}
+	return false;
+}
+Code.addUnique = function(a,o){ // O(n)
+	if( !Code.elementExists(a,o) ){ a.push(o); return true; }
+	return false;
+}
+Code.removeElement = function(a,o){ // preserves order O(n)
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		if(a[i]==o){
+			len-=1;
+			while(i<len){
+				a[i] = a[i+1];
+				++i;
+			}
+			a.pop();
+			return;
+		}
+	}
+}
+Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		if(a[i]==o){
+			a[i] = a[len-1];
+			a.pop();
+			return;
+		}
+	}
+}
 // ------------------------------------------------------------------------------------------ TIME
 Code.getTimeMilliseconds = function(){
     var d = new Date();
@@ -86,10 +118,28 @@ Code.newElement = function(type){
 	return document.createElement(type);
 };
 Code.newDiv = function(){
-	return document.createElement("div");
+	return Code.newElement("div");
+};
+Code.newTable = function(){
+	return Code.newElement("table");
+};
+Code.newTableHeader = function(){
+	return Code.newElement("th");
+};
+Code.newTableRow = function(){
+	return Code.newElement("tr");
+};
+Code.newTableCol = function(){
+	return Code.newElement("td");
 };
 Code.addChild = function(a,b){
 	a.appendChild(b);
+};
+Code.removeChild = function(a,b){
+	a.removeChild(b);
+};
+Code.removeFromParent = function(a){
+	a.parentNode.removeChild(a);
 };
 Code.setProperty = function(ele,pro,val){
 	ele.setAttribute(pro,val);
@@ -188,8 +238,30 @@ Code.getCookie = function(c_name){
 	}
 	return c_value;
 }
-
-
+// -------------------------------------------------------- DATE FUNCTIONS
+Code.getDaysInMonth = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0);
+	return d.getDate();
+}
+Code.getFirstMondayInWeek = function(milliseconds){
+	var m, d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0,0);
+	var remainder = d.getTime() - milliseconds;
+	dow = d.getDay();
+	while(dow!=1){
+		d = new Date(d.getFullYear(), d.getMonth(), d.getDate()-1, 0,0,0,0);
+		milliseconds = d.getTime();
+		d = new Date(milliseconds);
+		dow = d.getDay();
+	}
+	return milliseconds + remainder;
+}
+Code.getNextDay = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+}
 
 /*
 function.call(this, a, b, c);

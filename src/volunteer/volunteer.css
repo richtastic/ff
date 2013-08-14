@@ -1,12 +1,15 @@
 
 
-body,div,ul,ol,li,span,select,input{
+body,div,ul,ol,li,span,select,input,table,tr,td,th{
 	margin: 0;
 	padding: 0;
 	border: 0;
 	font-size: 100%;
 	font-family: sans-serif;
 	text-align: center;
+	border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 select,input{
 	border-style: solid;
@@ -178,7 +181,53 @@ select,input{
 
 /* ----------------------------------------------------------- */
 .calendarWeekContainer{
+	border: solid;
+	border-color: #F00;
+	border-width: 0px;
+}
+.calendarWeekTable{
+	border: solid;
+	border-color: #EEE;
+	border-width: 2px;
+	margin: 0 auto;
+	padding: 0;
+	background-color: #F5F5F5;
+}
+.calendarWeekHeaderDate{
+	border: none;
+	border-color: #00F;
+	border-width: 0px;
+	font-size: 80%;
+}
+.calendarWeekDateCol{
+	background-color: #FFF;
+
+}
+.calendarWeekHeader{
+	border: none;
+	border-color: #00F;
+	border-width: 0px;
+	margin: 0px;
+	background-color: #DDD;
+}
+.calendarWeekHeaderCol{
+	/*border: solid;
+	border-color: #00F;
+	border-width: 2px;*/
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.calendarWeekRow{
 	/* */
+}
+.calendarWeekCol{
+	/* */
+}
+.calendarWeekShiftDiv{
+	color: #345;
+	font-size: 70%;
 }
 
 

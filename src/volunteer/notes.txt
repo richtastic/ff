@@ -393,7 +393,7 @@ session_id varchar(64) #0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF01234567
 drop table if exists groups;
 create table groups(
 id int not null auto_increment primary key,
-name varchar(32),
+name varchar(32), # admin or user
 info varchar(1024)
 );
 # POSITIONS
