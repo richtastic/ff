@@ -18,18 +18,6 @@ function Volunteer(){
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn);
-	// this._ajax = null;
-	// this._yaml = null;
-	// // --------------
-	// this._container = null;
-	// this._headerContainer = null;
-	// this._tabContainer = null;
-	// this._contentContainer = null;
-	// this._tabs = null;
-	// this._tabList = new Array();
-	// this._calendar = null;
-	// this.elements = new Object(); // html objects
-	// this.shifts = new Array(7); //
 	this.initialize(); 
 }
 Code.inheritClass(Volunteer, Dispatchable);
@@ -69,12 +57,6 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorBot.gotoPage(Volunteer.PAGE_BOT);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFTS);
-	// 
-	// this.hookLogin();
-	// this.hookShifts();
-	// this.checkLogin();
-	// this.hookCalendarWeek();
-	//
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageTop = function(page){
