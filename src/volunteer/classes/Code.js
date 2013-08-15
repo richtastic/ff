@@ -117,8 +117,12 @@ Code.getName = function(argA,argB){
 Code.newElement = function(type){
 	return document.createElement(type);
 };
-Code.newDiv = function(){
-	return Code.newElement("div");
+Code.newDiv = function(a){
+	var div = Code.newElement("div");
+	if(a!=undefined){
+		Code.setContent(div,a);
+	}
+	return div;
 };
 Code.newTable = function(){
 	return Code.newElement("table");
@@ -132,6 +136,43 @@ Code.newTableRow = function(){
 Code.newTableCol = function(){
 	return Code.newElement("td");
 };
+Code.newSelect = function(){
+	return Code.newElement("select");
+};
+Code.newOption = function(a,b,c){
+	var opt = Code.newElement("option");
+	if(a!==true && a!==undefined && b!==true && b!==undefined){
+		Code.setContent(opt,a);
+		opt.setAttribute("value",b);
+		if(c===true){
+			opt.setAttribute("selected","selected");
+		}
+	}else if(a!==true && a!==undefined){
+		Code.setContent(opt,a);
+		opt.setAttribute("value",a);
+		if(b===true){
+			opt.setAttribute("selected","selected");
+		}
+	}else{
+		Code.setContent(opt,"");
+		opt.setAttribute("value","");
+		if(a===true){
+			opt.setAttribute("selected","selected");
+		}
+	}
+	return opt;
+};
+Code.newInput = function(){
+	return Code.newElement("input");
+};
+Code.newInputSubmit = function(a){
+	var sub = Code.newInput();
+	sub.setAttribute("type","submit");
+	if(a!==undefined){
+		sub.setAttribute("value",a);
+	}
+	return sub;
+};		
 Code.addChild = function(a,b){
 	a.appendChild(b);
 };
@@ -149,6 +190,13 @@ Code.setStyleWidth = function(ele,val){
 };
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
+};
+Code.emptyDom = function(ele){
+	var arr = ele.children;
+	var i, len = arr.length;
+	for(i=0;i<len;++i){
+		Code.removeChild(ele,arr[i]);
+	}
 };
 // - CLASS
 Code.getClass = function(ele){
@@ -194,7 +242,11 @@ Code.unhide = function(ele){
 }
 
 // -------------------------------------------------------- LISTENERS
-Code.addListenerClick = function(ele,fxn){
+Code.addListenerClick = function(ele,fxn,ctx){
+	var f = function(){ fxn.apply(ctx,arguments) }
+	Code._addListenerClick(ele,f);
+}
+Code._addListenerClick = function(ele,fxn){
 	if(ele.addEventListener!=null){
 		ele.addEventListener("click",fxn);
 	}else{ // IE

@@ -179,7 +179,7 @@ select,input{
 	padding: 5px;
 }
 
-/* ----------------------------------------------------------- */
+/* ----------------------------------------------------------- CALENDAR WEEK*/
 .calendarWeekContainer{
 	border: solid;
 	border-color: #F00;
@@ -230,10 +230,48 @@ select,input{
 	font-size: 70%;
 }
 
-
-
-
-
+/* ----------------------------------------------------------- SHIFTS */
+.shiftsEditContainer{
+	margin: 0 auto;
+	text-align: center;
+}
+.shiftsEditTable{
+	margin: 0 auto;
+	display: table;
+	text-align: center;
+	background-color: #DDD;
+	padding: 2px;
+    border-collapse: separate;
+}
+.shiftsEditRow{
+	display: table-row;
+	text-align: center;
+	background-color: #EEE;
+	margin: 5px;
+}
+.shiftsEditColLeft{
+	display: table-cell;
+	font-weight: bold;
+	text-align: right;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-left: 2px;
+	padding-right: 10px;
+}
+.shiftsEditColRight{
+	display: table-cell;
+	text-align: left;
+	padding-left: 10px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-right: 2px;
+}
+.shiftsInline{
+	display: inline;
+}
+.shiftsTiny{
+	font-size: 80%;
+}
 
 
 

@@ -85,7 +85,7 @@ Volunteer.prototype._hookPageCalendarWeek = function(page){
 }
 Volunteer.prototype._hookPageShifts = function(page){
 	this._pageShifts = page;
-	Code.setContent( page.dom(), "hia" );
+	//Code.setContent( page.dom(), "hia" );
 }
 // ----------------------------------------------------------------------------- event listeners
 Volunteer.prototype._navigatorMainPageAddedFxn = function(str,page){
