@@ -7,11 +7,14 @@ Volunteer.PAGE_CALENDAR_MONTH = "cal_month";
 Volunteer.PAGE_CALENDAR_WEEK = "cal_week";
 Volunteer.PAGE_CALENDAR_DAY = "cal_day";
 Volunteer.PAGE_SHIFTS = "shifts_crud";
-Volunteer.PAGE_TOP = "top";
+Volunteer.PAGE_LOGIN = "login";
+//Volunteer.PAGE_LOGOUT = "logout";
+//Volunteer.PAGE_TOP = "top";
 Volunteer.PAGE_BOT = "bot";
 // -------------------------------------------------------------------------------------------- constructor
 function Volunteer(){
 	Volunteer._.constructor.apply(this,arguments);
+	this._interface = new ServerVolunteerInterface();
 	this._navigatorTop = new NavWeb( Code.getID(Volunteer.PAGE_TOP_CONTAINER_ID) );
 	this._navigatorMain = new NavWeb( Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID) );
 	this._navigatorBot = new NavWeb( Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID) );
@@ -22,22 +25,6 @@ function Volunteer(){
 }
 Code.inheritClass(Volunteer, Dispatchable);
 // --------------------------------------------------------------------------------------------
-Volunteer.prototype.QUERY_DIRECTORY = "./";
-Volunteer.prototype.ACTION_LOGIN = "login";
-Volunteer.prototype.ACTION_SHIFT_CREATE = "shift_create";
-Volunteer.prototype.ACTION_CALENDAR = "calendar";
-Volunteer.prototype.ACTION_POSITION_GET = "position_read";
-Volunteer.prototype.COOKIE_SESSION = "COOKIE_SESSION";
-Volunteer.prototype.SESSION_ID = "sid";
-Volunteer.prototype.ELEMENT_ID_LOGIN = "login";
-Volunteer.prototype.ELEMENT_NAME_USERNAME = "login_username";
-Volunteer.prototype.ELEMENT_NAME_PASSWORD = "login_password";
-Volunteer.prototype.ELEMENT_NAME_LOGIN_SUBMIT = "login_submit";
-Volunteer.prototype.ELEMENT_ID_LOGOUT = "logout";
-Volunteer.prototype.ELEMENT_NAME_LOGOUT_SUBMIT = "logout_submit";
-Volunteer.prototype.ELEMENT_ID_SHIFTS = "section_crud_shift";
-Volunteer.prototype.ELEMENT_ID_CALENDAR_WEEK = "calendar_week";
-Volunteer.prototype.COOKIE_TIME_SECONDS = 60*60*24*365; // 1 year
 Volunteer.prototype.initialize = function(){
 	console.log("volunteer");
 	// create pages
@@ -45,25 +32,32 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv()) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageWeb(Code.newDiv()) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFTS, new PageShifts(Code.newDiv()) );
-	this._navigatorTop.setPage(Volunteer.PAGE_TOP, new PageWeb(Code.newDiv()) );
+	this._navigatorTop.setPage(Volunteer.PAGE_LOGIN, new PageLogin(Code.newDiv(),this._interface) );
+	//this._navigatorTop.setPage(Volunteer.PAGE_LOGOUT, new PageLogout(Code.newDiv()) );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
-	// fill pages
-	this._hookPageTop( this._navigatorTop.getPage(Volunteer.PAGE_TOP) );
-	this._hookPageBot( this._navigatorBot.getPage(Volunteer.PAGE_BOT) );
+	// fill top pages
+	this._hookPageLogin( this._navigatorMain.getPage(Volunteer.PAGE_LOGIN) );
+	//this._hookPageTop( this._navigatorTop.getPage(Volunteer.PAGE_TOP) );
+	// fill mainpages
 	this._hookPageCalendarWeek( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_WEEK) );
 	this._hookPageShifts( this._navigatorMain.getPage(Volunteer.PAGE_SHIFTS) );
+	// fill bot pages
+	this._hookPageBot( this._navigatorBot.getPage(Volunteer.PAGE_BOT) );
 	// goto default page
-	this._navigatorTop.gotoPage(Volunteer.PAGE_TOP);
+	this._navigatorTop.gotoPage(Volunteer.PAGE_LOGIN); //this._navigatorTop.gotoPage(Volunteer.PAGE_TOP);
 	this._navigatorBot.gotoPage(Volunteer.PAGE_BOT);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFTS);
 }
 // ----------------------------------------------------------------------------- page hooks
-Volunteer.prototype._hookPageTop = function(page){
-	Code.setContent(page.dom(), "top");
+Volunteer.prototype._hookPageLogin = function(page){
+	this._pageLogin = page;
 }
+// Volunteer.prototype._hookPageTop = function(page){
+// 	Code.setContent(page.dom(), "top");
+// }
 Volunteer.prototype._hookPageBot = function(page){
-	Code.setContent(page.dom(), "bot");
+	Code.setContent(page.dom(), "");
 }
 Volunteer.prototype._hookPageCalendarWeek = function(page){
 	this._pageCalendarWeek = page;

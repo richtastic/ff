@@ -17,6 +17,7 @@ function Ajax(){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._request = new XMLHttpRequest();
 	this._request.onreadystatechange = this._stateChangeCaller;
 	this._request.context = this;
+	this._autoDestroy = true;
 }
 
 // --- get/set ---------------------------------------
@@ -141,13 +142,16 @@ Ajax.prototype._stateChange = function(){
 			var response = this._request.responseText;
 			if(this._request.status==200){
 				if(this._callback!==null && this._callback!==undefined){
-					this._callback.call( this._context, response );
+					this._callback.call( this._context, response, this );
 				}
 			}else{
 				if(this._errorback!==null && this._errorback!==undefined){
-					this._errorback( this._context, response );
+					this._errorback( this._context, response, this );
 				}
 			}
+		}
+		if(this._autoDestroy){
+			this.kill();
 		}
 	}
 }
@@ -160,4 +164,10 @@ Ajax.prototype.kill = function(){
 	this._url = null;
 	this._callback = null;
 	this._errorback = null;
+	this._context = null;
+	this._header = null;
+	this._binary = null;
+	this._cache = null;
+	this._request = null;
+	this._autoDestroy = null;
 }

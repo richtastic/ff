@@ -173,11 +173,29 @@ Code.newInputSubmit = function(a){
 	}
 	return sub;
 };		
+Code.newInputText = function(a){
+	var sub = Code.newInput();
+	sub.setAttribute("type","text");
+	if(a!==undefined){
+		sub.setAttribute("value",a);
+	}
+	return sub;
+};
+Code.newInputPassword = function(a){
+	var sub = Code.newInput();
+	sub.setAttribute("type","password");
+	if(a!==undefined){
+		sub.setAttribute("value",a);
+	}
+	return sub;
+};
 Code.addChild = function(a,b){
 	a.appendChild(b);
 };
 Code.removeChild = function(a,b){
-	a.removeChild(b);
+	if(b.parentNode==a){
+		a.removeChild(b);
+	}
 };
 Code.removeFromParent = function(a){
 	a.parentNode.removeChild(a);

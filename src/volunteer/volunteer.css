@@ -273,10 +273,32 @@ select,input{
 	font-size: 80%;
 }
 
+/* ----------------------------------------------------------- LOGIN */
 
-
-
-
+.loginContainer{
+	/*background-color: #556;*/
+}
+.loginTableContainer{
+	margin: 0 auto;
+	display: table;
+}
+.loginRowContainer{
+	display: table-row;
+}
+.loginCellLabel{
+	margin: 10px 2px 6px 6px;
+	display: table-cell;
+	font-size: 80%;
+}
+.loginCellInput{
+	margin: 2px 10px 6px 6px;
+	display: table-cell;
+}
+.loginCell{
+	margin: 10px;
+	display: table-cell;
+	padding: 2px;
+}
 
 
 

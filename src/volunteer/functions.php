@@ -18,8 +18,11 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./classes/Ajax.js"></script>
 	<script type="text/javascript" src="./classes/PageWeb.js"></script>
 	<script type="text/javascript" src="./classes/NavWeb.js"></script>
+	<script type="text/javascript" src="./ServerVolunteerInterface.js"></script>
 	<script type="text/javascript" src="./PageCalendarWeek.js"></script>
 	<script type="text/javascript" src="./PageShifts.js"></script>
+	<script type="text/javascript" src="./PageLogin.js"></script>
+	<script type="text/javascript" src="./PageLogout.js"></script>
 	<script type="text/javascript" src="./Volunteer.js"></script>
 	<script>
 	handlePageLoadedFunction = function(e){
