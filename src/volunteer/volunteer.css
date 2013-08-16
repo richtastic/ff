@@ -188,14 +188,12 @@ input{
 }
 
 /* ----------------------------------------------------------- CALENDAR WEEK*/
-.calendarWeekContainer{
-height: 100px;
+/*.calendarWeekContainer{
 	border: solid;
 	margin: 0 auto;
 	border-color: #F00;
 	border-width: 0px;
-background: #F00;
-}
+}*/
 .calendarWeekTable{
 	border: solid;
 	border-color: #EEE;
@@ -203,17 +201,18 @@ background: #F00;
 	margin: 0 auto;
 	padding: 0;
 	background-color: #F5F5F5;
+	display: table;
 }
 .calendarWeekHeaderDate{
 	border: none;
 	border-color: #00F;
 	border-width: 0px;
 	font-size: 80%;
-
+	display: table-cell;
 }
-.calendarWeekDateCol{
+.calendarWeekDateCol{ /* header */
 	background-color: #FFF;
-
+	display: table-cell;
 }
 .calendarWeekHeader{
 	border: none;
@@ -221,6 +220,7 @@ background: #F00;
 	border-width: 0px;
 	margin: 0px;
 	background-color: #DDD;
+	display: table-cell;
 }
 .calendarWeekHeaderCol{
 	/*border: solid;
@@ -230,16 +230,13 @@ background: #F00;
 	padding-right: 10px;
 	padding-top: 2px;
 	padding-bottom: 2px;
+	display: table-cell;
 }
-.calendarWeekRow{
-	/* */
-}
-.calendarWeekCol{
-	/* */
-}
+
 .calendarWeekShiftDiv{
 	color: #345;
 	font-size: 70%;
+	display: block;
 }
 
 /* ----------------------------------------------------------- SHIFTS */
@@ -370,16 +367,66 @@ background: #F00;
 
 
 
+/*
+.calendarWeekContainer{
+	border: solid;
+	margin: 0 auto;
+	border-color: #F00;
+	border-width: 1px;
+	position: relative;
+}
+.table{
+	display: table;
+	margin: 0 auto;
+	background-color: #FD;
+	position: relative;
+}
+.tr{
+	display: table-row;
+	margin: 0 auto;
+	background-color: #FDD;
+	clear: both;
+	position: relative;
+}
+.td{
+	display: table-cell;
+	margin: 0 auto;
+	background-color: #DFD;
+	clear: none;
+	position: relative;
+}
+*/
+
+.calendarWeekContainer{
+	border: solid;
+	margin: 0 auto;
+	border-color: #F00;
+	border-width: 1px;
+	position: relative;
+}
+.table{
+	margin: 0 auto;
+	display: block;
+}
+.tr{
+	display: block;
+	margin: 0 auto;
+	background-color: #FDD;
+	position: relative;
+	clear: both;
+}
+.td{
+	display: block;
+	margin: 0 auto;
+	background-color: #DFD;
+	position: relative;
+	clear: none;
+	float: left;
+}
 
 
 
-
-
-
-
-
-
-
+/* direction: left; */
 
 
 

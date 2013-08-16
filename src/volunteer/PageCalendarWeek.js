@@ -6,15 +6,17 @@ function PageCalendarWeek(container){
 	PageCalendarWeek._.constructor.call(this,container);
 	//PageCalendarWeek._.constructor.apply(this,arguments);
 	Code.addClass(this._root,"calendarWeekContainer");
-	this._tableContainer = Code.newTable();
-		Code.addClass(this._tableContainer,"calendarWeekTable");
-	this._dateContainer = Code.newTableRow();
+	//this._tableContainer = Code.newDiv();//Code.newTable();
+	//	Code.addClass(this._tableContainer,"calendarWeekTable");
+
+	/*
+	this._dateContainer = Code.newDiv();//Code.newTableRow();
 		Code.addClass(this._dateContainer,"calendarWeekHeaderDate");
-	this._headerContainer = Code.newTableRow();
+	this._headerContainer = Code.newDiv();//Code.newTableRow();
 		Code.addClass(this._headerContainer,"calendarWeekHeader");
+	*/
 	this._headersContainers = new Array();
 	this._datesContainers = new Array();
-	this._rowContainers = new Array();
 	this._colContainers = new Array();
 	this._shiftContainers = new Array();
 	this._positions = new Array();
@@ -23,16 +25,35 @@ function PageCalendarWeek(container){
 Code.inheritClass(PageCalendarWeek, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype._init = function(){
+	Code.setContent( this._root,
+		'<div class="table"> \
+			<div class="tr"> \
+				<div class="td">A</div> \
+				<div class="td">B</div> \
+				<div class="td">C</div> \
+			</div> \
+			<div class="tr"> \
+				<div class="td">D</div> \
+				<div class="td">E</div> \
+				<div class="td">FFF</div> \
+			</div> \
+			<div class="tr"> \
+				<div class="td">GG</div> \
+				<div class="td">H</div> \
+				<div class="td">I</div> \
+			</div> \ \
+		');
+	/*
 	var i, len, div, d, e;
 	Code.addChild( this._root, this._tableContainer);
 	Code.addChild( this._tableContainer, this._dateContainer);
 	Code.addChild( this._tableContainer, this._headerContainer);
 	var dow = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 	for(i=-1;i<dow.length;++i){
-		d = Code.newTableHeader();
+		d = Code.newDiv();//Code.newTableHeader();
 		Code.addClass(d,"calendarWeekHeaderCol");
 		Code.addChild(this._headerContainer,d);
-		e = Code.newTableHeader();
+		e = Code.newDiv();//Code.newTableHeader();
 		Code.addClass(e,"calendarWeekDateCol");
 		Code.addChild(this._dateContainer,e);
 		this._headersContainers.push(d);
@@ -47,10 +68,11 @@ PageCalendarWeek.prototype._init = function(){
 	//
 	var timeStampNow = new Date( Code.getTimeMilliseconds() );
 	this.reset( timeStampNow.getFullYear(), timeStampNow.getMonth()+1, timeStampNow.getDate() );
-	
+	*/
 }
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype.reset = function(year,month,day){
+	/*
 	var moy = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 	var i, j, d, div, days, timeStamp;
 	var date = new Date(year, month-1, day, 0,0,0,0);
@@ -69,8 +91,10 @@ PageCalendarWeek.prototype.reset = function(year,month,day){
 			time = Code.getNextDay(time);
 		}
 	}
+	*/
 }
 PageCalendarWeek.prototype.clear = function(){
+	/*
 	var i, len;
 	len = this._rowContainers.length;
 	for(i=0;i<len;++i){
@@ -82,8 +106,10 @@ PageCalendarWeek.prototype.clear = function(){
 	}
 	Code.emptyArray(this._rowContainers);
 	Code.emptyArray(this._colContainers);
+	*/
 }
 PageCalendarWeek.prototype.setPositions = function(list,id,name){
+	/*
 	this.clear();
 	var row, col, i, j, len = list.length, len2=8;
 	Code.emptyArray(this._positions);
@@ -103,8 +129,10 @@ PageCalendarWeek.prototype.setPositions = function(list,id,name){
 			}
 		}
 	}
+	*/
 }
 PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin,end, userID,userName){
+	/*
 	var found, col, d, i, len=this._positions.length;
 	found = false;
 	for(i=0;i<len;++i){
@@ -119,6 +147,7 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 		Code.addChild(col,d);
 	}
 	return found;
+	*/
 }
 PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,uname){
 	var d = Code.newDiv();
