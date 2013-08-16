@@ -8,17 +8,55 @@ function Code(){
 
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {
-    Object.getOwnPropertyNames(source).forEach(function(propName) {
-        Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
-    });
+	if(Object && Object.getOwnPropertyNames!==undefined){
+	    Object.getOwnPropertyNames(source).forEach(function(propName) {
+	        Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
+	    });
+	}else{ // IE
+		
+		for(key in source){
+			target[key] = source[key];
+		}
+	}
     return target;
 }
 
-Code.inheritClass = function inheritClass(SubC, SuperC) {
-    var subProto = Object.create(SuperC.prototype);
-    Code.extendClass(subProto, SubC.prototype);
-    SubC.prototype = subProto;
-    SubC._ = SuperC.prototype;
+Code.inheritClass = function inheritClass(SubC, SuperC){
+	// console.log( Object.defineProperty );
+	// console.log( Object.getProperties );
+	// console.log( Object.getOwnPropertyNames );
+	// console.log( Object.getOwnPropertyDescriptor );
+//console.log( Object.hasOwnProperty ); // YES
+//console.log(SuperC); // YES
+//console.log(SuperC.prototype); // YES
+    var subProto = null;
+    if(Object && Object.create!==undefined){
+    	subProto = Object.create(SuperC.prototype);
+    	Code.extendClass(subProto, SubC.prototype);
+    	SubC.prototype = subProto;
+    	SubC._ = SuperC.prototype;
+    }else{ // IE
+		subProto = new Object();
+// console.log(subProto.constructor.prototype);
+// console.log(SuperC.constructor.prototype);
+		//subProto.prototype = SuperC.prototype;
+		//subProto.prototype = new SuperC();
+		//subProto.prototype = (new SuperC()).prototype;
+		for(var key in SuperC.prototype){
+			//subProto.prototype[key] = SuperC.prototype[key];
+			subProto.constructor.prototype[key] = SuperC.prototype[key];
+			//subProto[key] = SuperC.prototype[key];
+		}
+		//subProto.prototype = SuperC.prototype;
+		//subProto.__proto__ = SuperC.prototype;
+		//subProto.constructor.prototype = SuperC.constructor.prototype;
+		//subProto.constructor.prototype = SuperC.prototype;
+		//
+		Code.extendClass(subProto, SubC.prototype);
+    	SubC.prototype = subProto;
+    	SubC._ = SuperC.prototype;
+    	//SubC._ = SuperC.constructor.prototype;
+    }
 }
 
 // ------------------------------------------------------------------------------------------ PRINT
@@ -189,6 +227,22 @@ Code.newInputPassword = function(a){
 	}
 	return sub;
 };
+Code.newListUnordered = function(){
+	var li = Code.newElement("ul");
+	return li;
+};
+Code.newListOrdered = function(){
+	var li = Code.newElement("ol");
+	return li;
+};
+Code.newListItem = function(a){
+	var li = Code.newElement("li");
+	if(a!==undefined){
+		Code.setContent(li, a);
+	}
+	return li;
+};
+
 Code.addChild = function(a,b){
 	a.appendChild(b);
 };
@@ -232,11 +286,16 @@ Code.setClass = function(ele,cla){
 };
 Code.addClass = function(ele,cla){
 	var c = Code.getClass(ele)+" "+cla;
+	c = c.replace("  "," ");
+	c = c.replace(/^ /,"");
 	ele.setAttribute("class",c);
 	ele.className = c;
 };
 Code.removeClass = function(ele,cla){
-	ele.setAttribute("class",Code.getClass(ele).replace(cla,""));
+	var c = Code.getClass(ele)
+	c = c.replace(cla,"");
+	c = c.replace("  "," ");
+	ele.setAttribute("class",c);
 };
 // - 
 Code.getContent = function(ele){
@@ -258,10 +317,13 @@ Code.hide = function(ele){
 Code.unhide = function(ele){
 	ele.style.display = Code.IS_IE?"block":"inherit";
 }
-
+// -------------------------------------------------------- TRANSLATORS
+Code.getTargetFromMouseEvent = function(e){
+	return e.target;
+}
 // -------------------------------------------------------- LISTENERS
 Code.addListenerClick = function(ele,fxn,ctx){
-	var f = function(){ fxn.apply(ctx,arguments) }
+	var f = function(){ fxn.apply(ctx,arguments); }
 	Code._addListenerClick(ele,f);
 }
 Code._addListenerClick = function(ele,fxn){

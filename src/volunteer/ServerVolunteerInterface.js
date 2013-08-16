@@ -53,7 +53,10 @@ ServerVolunteerInterface.prototype.submitLogout = function(ctx,call){
 	Code.deleteCookie(this.COOKIE_SESSION);
 	call.call(ctx,null);
 }
-
+// -------------------------------------------------------------------------------------------------------------------------- 
+ServerVolunteerInterface.prototype.wtf = function(){
+	
+}
 // -------------------------------------------------------------------------------------------------------------------------- 
 ServerVolunteerInterface.prototype.wtf = function(){
 	

@@ -3,20 +3,29 @@ PageCalendarWeek.CONSTANT = 1;
 
 // ------------------------------------------------------------------------------ constructor
 function PageCalendarWeek(container){
+console.log(PageCalendarWeek._);
+console.log(PageCalendarWeek._.constructor);
 	PageCalendarWeek._.constructor.apply(this,arguments);
+	//PageWeb.constructor.apply(this,arguments);
+console.log("A");
+console.log(this._root);
 	Code.addClass(this._root,"calendarWeekContainer");
 	this._tableContainer = Code.newTable();
+console.log("B");
 		Code.addClass(this._tableContainer,"calendarWeekTable");
 	this._dateContainer = Code.newTableRow();
 		Code.addClass(this._dateContainer,"calendarWeekHeaderDate");
+console.log("C");
 	this._headerContainer = Code.newTableRow();
 		Code.addClass(this._headerContainer,"calendarWeekHeader");
+console.log("B");
 	this._headersContainers = new Array();
 	this._datesContainers = new Array();
 	this._rowContainers = new Array();
 	this._colContainers = new Array();
 	this._shiftContainers = new Array();
 	this._positions = new Array();
+console.log("C");
 	this._init();
 }
 Code.inheritClass(PageCalendarWeek, PageWeb);
@@ -112,7 +121,6 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 		}
 	}
 	if(found){
-		console.log(i*8+dow0to6+1);
 		col = this._colContainers[i*8+dow0to6+1];
 		d = this._createShiftContainer(shiftID,begin,end,userID,userName);
 		Code.addChild(col,d);

@@ -12,9 +12,17 @@ body,div,ul,ol,li,span,select,input,table,tr,td,th{
     table-layout: fixed;
 }
 select,input{
+	color: #000;
+	border-color: #CCC;
 	border-style: solid;
 	border-width: 1px;
 	display: inline;
+}
+input{
+	padding-top: 1px;
+	padding-bottom: 1px;
+	padding-left: 4px;
+	padding-right: 4px;
 }
 
 
@@ -300,6 +308,44 @@ select,input{
 	padding: 2px;
 }
 
+/* ----------------------------------------------------------- NAVIGATION */
+.navigationContainer{
+	margin: 2px auto;
+	display: block;
+	background-color: #EEE;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #DDD;
+}
+.navigationList{
+	border-style: solid;
+	border-width: 1px;
+	border-color: #DDD;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-left: 0px;
+	padding-right: 0px;
+	background-color: #FFF;
+	list-style-type: none;
+	margin: 2px auto;
+	display: inline-block;
+}
+.navigationItem{
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-left: 8px;
+	padding-right: 8px;
+	/*background-color: #00F;*/
+	display: inline;
+}
+.navigationItemSelected{
+	text-decoration: none;
+	font-weight: bold;
+}
+.navigationItemUnselected{
+	text-decoration: underline;
+	font-weight: normal;
+}
 
 
 
@@ -308,9 +354,13 @@ select,input{
 
 
 
-
-
-
+/* ----------------------------------------------------------- BOTTOM */
+.bottomContainer{
+	margin: 10px 10px auto auto;
+	padding: 0px 0px 10px 10px;
+	border-top: solid 1px #EEE;
+	font-size: 50%;
+}
 
 
 

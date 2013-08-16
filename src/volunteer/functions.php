@@ -18,6 +18,7 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./classes/Ajax.js"></script>
 	<script type="text/javascript" src="./classes/PageWeb.js"></script>
 	<script type="text/javascript" src="./classes/NavWeb.js"></script>
+	<script type="text/javascript" src="./classes/Navigation.js"></script>
 	<script type="text/javascript" src="./ServerVolunteerInterface.js"></script>
 	<script type="text/javascript" src="./PageCalendarWeek.js"></script>
 	<script type="text/javascript" src="./PageShifts.js"></script>
@@ -37,6 +38,7 @@ function includeBody(){
 	echo '
 	<div id="scheduler">
 		<div id="scheduler_top"></div>
+		<div id="scheduler_navigation"></div>
 		<div id="scheduler_main"></div>
 		<div id="scheduler_bottom"></div>
 	</div>

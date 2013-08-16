@@ -6,6 +6,7 @@ PageWeb.EVENT_REMOVED = "PageWeb.EVENT_REMOVED";
 // -------------------------------------------- constructor
 function PageWeb(container){
 	PageWeb._.constructor.apply(this,arguments);
+	// Dispatchable.constructor.apply(this,arguments); //
 	if(container){
 		this._root = container;
 	}else{
