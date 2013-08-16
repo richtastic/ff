@@ -36,6 +36,7 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
     	SubC.prototype = subProto;
     	SubC._ = SuperC.prototype;
     }else{ // IE
+    	/*
 		subProto = new Object();
 // console.log(subProto.constructor.prototype);
 // console.log(SuperC.constructor.prototype);
@@ -56,6 +57,9 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
     	SubC.prototype = subProto;
     	SubC._ = SuperC.prototype;
     	//SubC._ = SuperC.constructor.prototype;
+    	*/
+    	SubC.prototype = new SuperC();
+    	SubC._ = SuperC.constructor.prototype;
     }
 }
 
@@ -243,8 +247,23 @@ Code.newListItem = function(a){
 	return li;
 };
 
+ // IE error - need to use insertRow with tables
+Code.addRow = function(a){
+	return a.insertRow(a.rows);
+}
+Code.removeRow = function(a){
+	return a.deleteRow(a.rows-1);
+}
+Code.getRows = function(a){
+	return a.rows;
+}
+
 Code.addChild = function(a,b){
-	a.appendChild(b);
+	//if(a.nodeName=="table"){
+	//	a.insertRow(b);
+	//}else{
+		a.appendChild(b);
+	//}
 };
 Code.removeChild = function(a,b){
 	if(b.parentNode==a){
@@ -319,7 +338,11 @@ Code.unhide = function(ele){
 }
 // -------------------------------------------------------- TRANSLATORS
 Code.getTargetFromMouseEvent = function(e){
-	return e.target;
+	if(!e){ e = window.event; } // IE
+	if(e.target){
+		return e.target;
+	}
+	return e.srcElement; // IE
 }
 // -------------------------------------------------------- LISTENERS
 Code.addListenerClick = function(ele,fxn,ctx){

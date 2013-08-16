@@ -189,9 +189,12 @@ input{
 
 /* ----------------------------------------------------------- CALENDAR WEEK*/
 .calendarWeekContainer{
+height: 100px;
 	border: solid;
+	margin: 0 auto;
 	border-color: #F00;
 	border-width: 0px;
+background: #F00;
 }
 .calendarWeekTable{
 	border: solid;
@@ -206,6 +209,7 @@ input{
 	border-color: #00F;
 	border-width: 0px;
 	font-size: 80%;
+
 }
 .calendarWeekDateCol{
 	background-color: #FFF;

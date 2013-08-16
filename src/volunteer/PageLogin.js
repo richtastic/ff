@@ -4,7 +4,7 @@ PageLogin.CONSTANT = 1;
 // ------------------------------------------------------------------------------ constructor
 function PageLogin(container, server){
 	this._interface = server;
-	PageLogin._.constructor.apply(this,arguments);
+	PageLogin._.constructor.call(this,container);
 	Code.addClass(this._root,"loginContainer");
 	this._tableContainer = Code.newDiv();
 		Code.addClass(this._tableContainer,"loginTableContainer");

@@ -3,29 +3,21 @@ PageCalendarWeek.CONSTANT = 1;
 
 // ------------------------------------------------------------------------------ constructor
 function PageCalendarWeek(container){
-console.log(PageCalendarWeek._);
-console.log(PageCalendarWeek._.constructor);
-	PageCalendarWeek._.constructor.apply(this,arguments);
-	//PageWeb.constructor.apply(this,arguments);
-console.log("A");
-console.log(this._root);
+	PageCalendarWeek._.constructor.call(this,container);
+	//PageCalendarWeek._.constructor.apply(this,arguments);
 	Code.addClass(this._root,"calendarWeekContainer");
 	this._tableContainer = Code.newTable();
-console.log("B");
 		Code.addClass(this._tableContainer,"calendarWeekTable");
 	this._dateContainer = Code.newTableRow();
 		Code.addClass(this._dateContainer,"calendarWeekHeaderDate");
-console.log("C");
 	this._headerContainer = Code.newTableRow();
 		Code.addClass(this._headerContainer,"calendarWeekHeader");
-console.log("B");
 	this._headersContainers = new Array();
 	this._datesContainers = new Array();
 	this._rowContainers = new Array();
 	this._colContainers = new Array();
 	this._shiftContainers = new Array();
 	this._positions = new Array();
-console.log("C");
 	this._init();
 }
 Code.inheritClass(PageCalendarWeek, PageWeb);
@@ -55,6 +47,7 @@ PageCalendarWeek.prototype._init = function(){
 	//
 	var timeStampNow = new Date( Code.getTimeMilliseconds() );
 	this.reset( timeStampNow.getFullYear(), timeStampNow.getMonth()+1, timeStampNow.getDate() );
+	
 }
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype.reset = function(year,month,day){

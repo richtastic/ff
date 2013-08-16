@@ -3,7 +3,9 @@ Navigation.EVENT_ITEM_CLICKED = "EVENT_ITEM_CLICKED";
 
 // ------------------------------------------------------------------------------ constructor
 function Navigation(container,containerClass,listClass,itemClass, unselected, selected){
-	Navigation._.constructor.apply(this,arguments);
+	// var args = [container,containerClass,listClass,itemClass, unselected, selected];
+	// Navigation._.constructor.apply(this,args);
+	Navigation._.constructor.call(this,container); // Navigation._.constructor.apply(this,arguments); // not work in IE
 	Code.addClass(this._root,containerClass);
 	this._listContainer = Code.newListUnordered();
 		Code.addClass(this._listContainer,listClass);

@@ -47,25 +47,13 @@ Code.inheritClass(Volunteer, Dispatchable);
 // --------------------------------------------------------------------------------------------
 Volunteer.prototype.initialize = function(){
 	// create pages
-var pw =  new PageWeb( Code.newDiv() );
-console.log("PAGE WEB 0000000000000000000000");
-console.log(pw);
-console.log(pw._root);
-console.log(pw._dispatch);
-	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, pw );
-console.log( "FFF" );
-var cw =  new PageCalendarWeek(Code.newDiv());
-console.log( "GG" );
-	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, cw);
-console.log( "YYY" );
+	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageWeb(Code.newDiv()) );
+	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv()) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageWeb(Code.newDiv()) );
-console.log( "ZZZ" );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT, new PageShifts(Code.newDiv()) );
-console.log( "XXX" );
 	this._navigatorTop.setPage(Volunteer.PAGE_LOGIN, new PageLogin(Code.newDiv(),this._interface) );
 	this._navigatorNav.setPage(Volunteer.PAGE_NAVIGATION, new Navigation(Code.newDiv(), "navigationContainer","navigationList","navigationItem","navigationItemUnselected","navigationItemSelected") );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
-console.log( "BBB" );
 	// fill top pages
 	this._hookPageLogin( this._navigatorMain.getPage(Volunteer.PAGE_LOGIN) );
 	// fill navigation
@@ -80,8 +68,9 @@ console.log( "BBB" );
 	this._navigatorNav.gotoPage(Volunteer.PAGE_NAVIGATION);
 	this._navigatorBot.gotoPage(Volunteer.PAGE_BOT);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
-	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
-	this._navigation.setSelected(Volunteer.NAV_SHIFT);
+	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
+	//this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
+	//this._navigation.setSelected(Volunteer.NAV_SHIFT);
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
@@ -141,6 +130,7 @@ Volunteer.prototype._navigatorMainPageChangeFxn = function(newStr,pageNew,oldStr
 Volunteer.prototype._navigationItemClicked = function(name,obj){
 	switch(name){
 		case Volunteer.NAV_CAL_WEEK:
+			console.log("WEEK");
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 			break;
 		case Volunteer.NAV_CAL_DAY:
