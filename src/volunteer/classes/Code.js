@@ -297,10 +297,8 @@ Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
 Code.emptyDom = function(ele){
-	var arr = ele.children;
-	var i, len = arr.length;
-	for(i=0;i<len;++i){
-		Code.removeChild(ele,arr[i]);
+	while(ele.firstChild){
+		Code.removeChild(ele,ele.firstChild);
 	}
 };
 // - CLASS

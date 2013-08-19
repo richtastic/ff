@@ -65,11 +65,12 @@ PageShifts.prototype._init = function(){
 			Code.addClass(sel,"shiftsInline");
 		this.generateRightColumn(sel,rowContainer);
 	}
-	this.setPositions([], "id","name");
-	this._interface.getShiftPositions(this,this.serverPositionsCallback);
+	this.reset();
 }
 PageShifts.prototype.serverPositionsCallback = function(o){
-	this.setPositions(o.list, "id","name");
+	if(o.status=="success"){
+		this.setPositions(o.list, "id","name");
+	}
 }
 PageShifts.prototype.setPositions = function(list,id,name){
 	Code.emptyDom(this._positionSelection);
@@ -96,10 +97,11 @@ PageShifts.prototype.getPosition = function(){
 	return pid;
 }
 PageShifts.prototype.reset = function(){
-	// 
+	this.clear();
+	this._interface.getShiftPositions(this,this.serverPositionsCallback);
 }
 PageShifts.prototype.clear = function(){
-	//
+	this.setPositions(new Array(), "id","name");
 }
 PageShifts.prototype.generateShiftString = function(){
 	var i, len, lm1, a, d, e, h0,m0, h1,m1, found, str="";
@@ -123,7 +125,7 @@ PageShifts.prototype.generateShiftString = function(){
 	var end_year = selEndYear.value;
 	var endDate = Code.prependFixed(end_year+"","0",4)+"-"+Code.prependFixed(end_month+"","0",2)+"-"+Code.prependFixed(end_day+"","0",2) + " 24:00:00.0000";
 	// WEEKDAYS
-	// self.computePermutations("2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000+08:30:00.0000,T,W:08:00:00.0000+10:00:00.0000|12:00:00.0000+14:00:00.0000,T,F,S,U");
+// self.computePermutations("2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000+08:30:00.0000,T,W:08:00:00.0000+10:00:00.0000|12:00:00.0000+14:00:00.0000,T,F,S,U");
 	found = false; len = this._dowSelections.length; lm1 = len-1;
 	for(i=0;i<len;++i){
 		str += dow[i]+"";
@@ -134,7 +136,7 @@ PageShifts.prototype.generateShiftString = function(){
 		if(h0!=""&&m0!=""&&h1!=""&&m1!=""){
 			found = true;
 			str += Code.prependFixed(h0,"0",2)+":"+Code.prependFixed(m0,"0",2)+":00.0000";
-			str += "+";
+			str += "-";
 			str += Code.prependFixed(h1,"0",2)+":"+Code.prependFixed(m1,"0",2)+":00.0000";
 		}
 		if(i<lm1){
@@ -142,11 +144,13 @@ PageShifts.prototype.generateShiftString = function(){
 		}
 	}
 	// ERROR CHECKING
+	var error = false;
 	//console.log(position_id===undefined,position_id===null,position_id=="");
-	if(position_id==""){ console.log("empty pid"); }
-	if(start_day==""||start_month==""||start_year==""){ console.log("invalid start"); }
-	if(end_day==""||end_month==""||end_year==""){ console.log("invalid end"); }
-	if(!found){ console.log("no dates"); }
+	if(position_id==""){ console.log("empty pid"); error = true; }
+	if(start_day==""||start_month==""||start_year==""){ console.log("invalid start"); error = true; }
+	if(end_day==""||end_month==""||end_year==""){ console.log("invalid end"); error = true; }
+	if(!found){ console.log("no dates"); error = true; }
+	if(error){ return null; }
 	// RETURN LIST
 	return [startDate, endDate, str, position_id];
 }
@@ -159,11 +163,12 @@ PageShifts.prototype._onClickSubmitSchedule = function(e){
 	var a = this.generateShiftString();
 	if(a==null){ console.log("ERROR"); return; }
 	var startDate = a[0], endDate = a[1], algorithm = a[2], position_id = a[3];
-	// fake
+	/* fake
 	startDate = "2013-07-01 00:00:00.0000";
 	endDate = "2013-07-01 24:00:00.0000";
 	algorithm = "M06:00:00.0000-01:00:00.0000,T,W,R,F,S,U";
 	position_id = "1";
+	*/
 	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_id, this,this._submitScheduleCallback);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){

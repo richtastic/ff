@@ -52,7 +52,7 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorNav.setPage(Volunteer.PAGE_NAVIGATION, new Navigation(Code.newDiv(), "navigationContainer","navigationList","navigationItem","navigationItemUnselected","navigationItemSelected") );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
 	// fill top pages
-	this._hookPageLogin( this._navigatorMain.getPage(Volunteer.PAGE_LOGIN) );
+	this._hookPageLogin( this._navigatorTop.getPage(Volunteer.PAGE_LOGIN) );
 	// fill navigation
 	this._hookPageNavigation(this._navigatorNav.getPage(Volunteer.PAGE_NAVIGATION));
 	// fill mainpages
@@ -73,6 +73,8 @@ Volunteer.prototype.initialize = function(){
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
 	this._pageLogin = page;
+	page.addFunction(PageLogin.EVENT_LOGIN_SUCCESS,this._loginSuccessFxn,this);
+	page.addFunction(PageLogin.EVENT_LOGOUT_SUCCESS,this._logoutSuccessFxn,this);
 }
 Volunteer.prototype._hookPageNavigation = function(page){
 	this._navigation = page;
@@ -116,6 +118,14 @@ Volunteer.prototype._hookPageShifts = function(page){
 	this._pageShifts = page;
 }
 // ----------------------------------------------------------------------------- event listeners
+Volunteer.prototype._loginSuccessFxn = function(page){
+	var currPage = this._navigatorMain.getCurrentPage();
+	currPage.reset();
+}
+Volunteer.prototype._logoutSuccessFxn = function(page){
+	var currPage = this._navigatorMain.getCurrentPage();
+	currPage.reset();
+}
 Volunteer.prototype._navigatorMainPageAddedFxn = function(str,page){
 	//console.log("PAGE ADDED - ",str,page);
 }
@@ -128,7 +138,7 @@ Volunteer.prototype._navigatorMainPageChangeFxn = function(newStr,pageNew,oldStr
 Volunteer.prototype._navigationItemClicked = function(name,obj){
 	switch(name){
 		case Volunteer.NAV_CAL_WEEK:
-			console.log("WEEK");
+			this._pageCalendarWeek.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 			break;
 		case Volunteer.NAV_CAL_DAY:
@@ -138,6 +148,7 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
 			break;
 		case Volunteer.NAV_SHIFT:
+			this._pageShifts.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
 			break;
 		case Volunteer.NAV_USER:

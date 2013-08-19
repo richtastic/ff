@@ -27,6 +27,9 @@ NavWeb.prototype.removePage = function(name){
 	delete this._pages[name];
 	return page;
 }
+NavWeb.prototype.getCurrentPage = function(){
+	return this._currentPage;
+}
 NavWeb.prototype.getPages = function(){
 	var key, arr = new Array();
 	for(key in this._pages){

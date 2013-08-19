@@ -1,5 +1,6 @@
 // PageLogin.js < PageWeb
-PageLogin.CONSTANT = 1;
+PageLogin.EVENT_LOGIN_SUCCESS = "EVENT_LOGIN_SUCCESS";
+PageLogin.EVENT_LOGOUT_SUCCESS = "EVENT_LOGOUT_SUCCESS";
 
 // ------------------------------------------------------------------------------ constructor
 function PageLogin(container, server){
@@ -74,8 +75,11 @@ PageLogin.prototype._attemptLogin = function(){
 	this.clear();
 	this._interface.submitLogin(username,password, this,this._successLogin);
 }
-PageLogin.prototype._successLogin = function(e){
-	this.gotoState(this.STATE_IN);
+PageLogin.prototype._successLogin = function(o){
+	if(o.status=="success"){
+		this.gotoState(this.STATE_IN);
+		this.alertAll(PageLogin.EVENT_LOGIN_SUCCESS, this);
+	}
 }
 PageLogin.prototype._attemptLogout = function(){
 	this.clear();
@@ -83,6 +87,7 @@ PageLogin.prototype._attemptLogout = function(){
 }
 PageLogin.prototype._successLogout = function(e){
 	this.gotoState(this.STATE_OUT);
+	this.alertAll(PageLogin.EVENT_LOGOUT_SUCCESS, this);
 }
 // ------------------------------------------------------------------------------ 
 PageLogin.prototype._onClickSubmitLogin = function(e){

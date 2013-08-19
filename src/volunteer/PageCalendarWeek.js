@@ -30,7 +30,6 @@ PageCalendarWeek.prototype._init = function(){
 		Code.addClass(d,"calendarWeekHeaderCol");
 		e = Code.addCell(this._dateContainer);
 		Code.addClass(e,"calendarWeekDateCol");
-		
 		this._headersContainers.push(d);
 		this._datesContainers.push(e);
 		if(i>=0){
@@ -40,11 +39,16 @@ PageCalendarWeek.prototype._init = function(){
 		}
 		Code.setContent(e, "");
 	}
-	var timeStampNow = new Date( Code.getTimeMilliseconds() );
-	this.reset( timeStampNow.getFullYear(), timeStampNow.getMonth()+1, timeStampNow.getDate() );
+	this.reset();
 }
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype.reset = function(year,month,day){
+	var timeStampNow = new Date( Code.getTimeMilliseconds() );
+	if(year===undefined){ year = timeStampNow.getFullYear(); }
+	if(month===undefined){ month = timeStampNow.getMonth()+1; }
+	if(day===undefined){ day = timeStampNow.getDate(); }
+	this._selectedYear = year; this._selectedMonth = month; this._selectedDay = day;
+	//
 	var moy = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 	var i, j, d, div, days, timeStamp;
 	var date = new Date(year, month-1, day, 0,0,0,0);

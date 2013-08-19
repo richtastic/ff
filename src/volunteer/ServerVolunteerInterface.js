@@ -56,7 +56,7 @@ ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
 	}else{
 		console.log("SERVER ERROR");
 	}
-	this._checkCallback(a,null);
+	this._checkCallback(a,obj);
 }
 ServerVolunteerInterface.prototype.submitLogout = function(ctx,call){
 	Code.deleteCookie(this.COOKIE_SESSION);

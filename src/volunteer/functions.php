@@ -296,12 +296,16 @@ $count = 0;
 				$j = 0;
 				$start = addTimeToSeconds($time,0,0,0,
 					$daysList[$index][$i][$j][0], $daysList[$index][$i][$j][1], $daysList[$index][$i][$j][2], $daysList[$index][$i][$j][3] );
-				$j = 1;
-				$stop = addTimeToSeconds($time,0,0,0,
-					$daysList[$index][$i][$j][0], $daysList[$index][$i][$j][1], $daysList[$index][$i][$j][2], $daysList[$index][$i][$j][3] );
+				$k = 1;
+				//$stop = addTimeToSeconds($time,0,0,0,
+				//	$daysList[$index][$i][$j][0], $daysList[$index][$i][$j][1], $daysList[$index][$i][$j][2], $daysList[$index][$i][$j][3] );
+				$stop = addTimeToSeconds($time,0,0,0, // STOP TIME IS IN ADDITION TO START TIME
+					$daysList[$index][$i][$j][0] + $daysList[$index][$i][$k][0],
+					$daysList[$index][$i][$j][1] + $daysList[$index][$i][$k][1],
+					$daysList[$index][$i][$j][2] + $daysList[$index][$i][$k][2],
+					$daysList[$index][$i][$j][3] + $daysList[$index][$i][$k][3] );
 				array_push($children,array($start,$stop));
 				if( count($children) >= $MAX_NUM_DATES ){
-					echo "BAD";
 					return null;
 				}
 			}
