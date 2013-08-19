@@ -20,10 +20,18 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./classes/NavWeb.js"></script>
 	<script type="text/javascript" src="./classes/Navigation.js"></script>
 	<script type="text/javascript" src="./ServerVolunteerInterface.js"></script>
-	<script type="text/javascript" src="./PageCalendarWeek.js"></script>
-	<script type="text/javascript" src="./PageShifts.js"></script>
 	<script type="text/javascript" src="./PageLogin.js"></script>
-	<script type="text/javascript" src="./PageLogout.js"></script>
+	<script type="text/javascript" src="./PageCalendarDay.js"></script>
+	<script type="text/javascript" src="./PageCalendarWeek.js"></script>
+	<script type="text/javascript" src="./PageCalendarMonth.js"></script>
+	<script type="text/javascript" src="./PageRequest.js"></script>
+	<script type="text/javascript" src="./PageRequestList.js"></script>
+	<script type="text/javascript" src="./PageShifts.js"></script>
+	<script type="text/javascript" src="./PageShiftsList.js"></script>
+	<script type="text/javascript" src="./PagePosition.js"></script>
+	<script type="text/javascript" src="./PagePositionList.js"></script>
+	<script type="text/javascript" src="./PageUser.js"></script>
+	<script type="text/javascript" src="./PageUserList.js"></script>
 	<script type="text/javascript" src="./Volunteer.js"></script>
 	<script>
 	handlePageLoadedFunction = function(e){
@@ -180,18 +188,13 @@ function getNextDay($seconds){
 	return mktime($oH,$oN,$oS, $oM,$oD+1,$oY,-1);
 }
 function addTimeToSeconds($seconds,$yea,$mon,$day,$hou,$min,$sec,$nano){
-	// $dat = $time;
-	// $dat = $dat + $sec;
-	// $dat = $dat + $min*60;
-	// $dat = $dat + $hou*60*60;
-	// return $dat;
 	$oH = intval(date("H",$seconds));
 	$oN = intval(date("i",$seconds));
 	$oS = intval(date("s",$seconds));
 	$oM = intval(date("m",$seconds));
 	$oD = intval(date("d",$seconds));
 	$oY = intval(date("y",$seconds));
-	return mktime($oH+$hou,$oN+$min,$oS+$seconds, $oM+$mon,$oD+$day,$oY+$yea,-1);
+	return mktime($oH+$hou,$oN+$min,$oS+$sec, $oM+$mon,$oD+$day,$oY+$yea,-1);
 }
 function fullDateValid($date){
 	$pattern = '/^[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9] [0-9][0-9]:[0-9][0-9]:[0-9][0-9]\.[0-9][0-9][0-9][0-9]$/';
@@ -256,9 +259,10 @@ function computeDatePermutations($begin,$end,$code){
 		$len2 = count($daysList[$i]);
 		if( $len2>0 && $daysList[$i][0]!=null && $daysList[$i][0]!="" ){
 			for($j=0;$j<$len2;++$j){
-				$daysList[$i][$j] = explode("+",$daysList[$i][$j]);
+				$daysList[$i][$j] = explode("-",$daysList[$i][$j]);
 				$daysList[$i][$j][0] = timeValuesFromString( $daysList[$i][$j][0] );
 				$daysList[$i][$j][1] = timeValuesFromString( $daysList[$i][$j][1] );
+//echo print_r($daysList[$i][$j][0])." & ".print_r($daysList[$i][$j][1])."\n";
 			}
 		}
 	}
@@ -294,16 +298,18 @@ $count = 0;
 		if( $len>0 && $daysList[$index][0]!=null && $daysList[$index][0]!="" ){
 			for($i=0;$i<$len;++$i){ // start/stop list
 				$j = 0;
+				// $seconds,$yea,$mon,$day,$hou,$min,$sec,$nano
 				$start = addTimeToSeconds($time,0,0,0,
-					$daysList[$index][$i][$j][0], $daysList[$index][$i][$j][1], $daysList[$index][$i][$j][2], $daysList[$index][$i][$j][3] );
-				$k = 1;
-				//$stop = addTimeToSeconds($time,0,0,0,
-				//	$daysList[$index][$i][$j][0], $daysList[$index][$i][$j][1], $daysList[$index][$i][$j][2], $daysList[$index][$i][$j][3] );
-				$stop = addTimeToSeconds($time,0,0,0, // STOP TIME IS IN ADDITION TO START TIME
-					$daysList[$index][$i][$j][0] + $daysList[$index][$i][$k][0],
-					$daysList[$index][$i][$j][1] + $daysList[$index][$i][$k][1],
-					$daysList[$index][$i][$j][2] + $daysList[$index][$i][$k][2],
-					$daysList[$index][$i][$j][3] + $daysList[$index][$i][$k][3] );
+					intval($daysList[$index][$i][$j][0]),
+					intval($daysList[$index][$i][$j][1]),
+					intval($daysList[$index][$i][$j][2]),
+					intval($daysList[$index][$i][$j][3]) );
+				$j = 1;
+				$stop = addTimeToSeconds($start,0,0,0,
+					intval($daysList[$index][$i][$j][0]),
+					intval($daysList[$index][$i][$j][1]),
+					intval($daysList[$index][$i][$j][2]),
+					intval($daysList[$index][$i][$j][3]) );
 				array_push($children,array($start,$stop));
 				if( count($children) >= $MAX_NUM_DATES ){
 					return null;

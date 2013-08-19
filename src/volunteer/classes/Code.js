@@ -429,6 +429,43 @@ Code.getNextDay = function(milliseconds){
 	d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 	return d.getTime();
 }
+Code.formatDayString = function(year,month,day){
+	return Code.prependFixed(""+year,"0",4)+"-"+Code.prependFixed(""+month,"0",2)+"-"+Code.prependFixed(""+day,"0",2);
+}
+//
+Code.dateFromString = function(str){
+	if( str.length<10 ){
+		return null;
+	}
+	var arr=null, yyyy=0, mm=0, dd=0, hh=0, nn=0, ss=0, nnnn=0;
+	yyyy = parseInt(str.substr(0,4));
+	mm = parseInt(str.substr(5,2))-1;
+	dd = parseInt(str.substr(8,2));
+	if( str.length>=19 ){
+		arr = Code.timeValuesFromString( str.substr(11,str.length) );
+		hh = arr[0];
+		nn = arr[1];
+		ss = arr[2];
+		if( arr.length==4){
+			nnnn = arr[3];
+		}
+	}
+	var date = new Date(yyyy,mm,dd,hh,nn,ss,mm);
+	return date;
+}
+Code.timeValuesFromString = function(str){
+	if( str.length<8){
+		return null;
+	}
+	var arr = new Array();
+	arr.push(parseInt(str.substr(0,2)) );
+	arr.push(parseInt(str.substr(3,2)) );
+	arr.push(parseInt(str.substr(6,2)) );
+	if(str.length>=13){
+		arr.push( parseInt(str.substr(9,4)) );
+	}
+	return arr;
+}
 
 /*
 function.call(this, a, b, c);

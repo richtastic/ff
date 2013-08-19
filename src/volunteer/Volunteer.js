@@ -20,13 +20,13 @@ Volunteer.NAV_CAL_WEEK = "cal_week";
 Volunteer.NAV_CAL_DAY = "cal_day";
 Volunteer.NAV_CAL_MONTH = "cal_month";
 Volunteer.NAV_SHIFT = "shift"; // single
-Volunteer.NAV_SHIFTS = "shifts"; // all
+Volunteer.NAV_SHIFT_LIST = "shifts"; // all
 Volunteer.NAV_USER = "user"; // single
-Volunteer.NAV_USERS = "users"; // all
+Volunteer.NAV_USER_LIST = "users"; // all
 Volunteer.NAV_POSITION = "position"; // single
-Volunteer.NAV_POSITIONS = "positions"; // all
+Volunteer.NAV_POSITION_LIST = "positions"; // all
 Volunteer.NAV_REQUEST = "request"; // single
-Volunteer.NAV_REQUESTS = "requests"; // all
+Volunteer.NAV_REQUEST_LIST = "requests"; // all
 // -------------------------------------------------------------------------------------------- constructor
 function Volunteer(){
 	Volunteer._.constructor.apply(this,arguments);
@@ -44,10 +44,17 @@ Code.inheritClass(Volunteer, Dispatchable);
 // --------------------------------------------------------------------------------------------
 Volunteer.prototype.initialize = function(){
 	// create pages
-	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageWeb(Code.newDiv()) );
-	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv()) );
-	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageWeb(Code.newDiv()) );
+	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageCalendarMonth(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageCalendarDay(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT, new PageShifts(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT_LIST, new PageShiftsList(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_REQUEST, new PageRequest(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_REQUEST_LIST, new PageRequestList(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_USER, new PageUser(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_USER_LIST, new PageUserList(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_POSITION, new PagePosition(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_POSITION_LIST, new PagePositionList(Code.newDiv(),this._interface) );
 	this._navigatorTop.setPage(Volunteer.PAGE_LOGIN, new PageLogin(Code.newDiv(),this._interface) );
 	this._navigatorNav.setPage(Volunteer.PAGE_NAVIGATION, new Navigation(Code.newDiv(), "navigationContainer","navigationList","navigationItem","navigationItemUnselected","navigationItemSelected") );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
@@ -58,6 +65,8 @@ Volunteer.prototype.initialize = function(){
 	// fill mainpages
 	this._hookPageCalendarWeek( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_WEEK) );
 	this._hookPageShifts( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT) );
+	this._hookPageRequest( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST) );
+	this._hookPageRequestList( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST_LIST) );
 	// fill bot pages
 	this._hookPageBot( this._navigatorBot.getPage(Volunteer.PAGE_BOT) );
 	// goto default page
@@ -67,14 +76,23 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
 	//
-	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
-	this._navigation.setSelected(Volunteer.NAV_SHIFT);
+	// this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
+	// this._navigation.setSelected(Volunteer.NAV_SHIFT);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
+	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
 	this._pageLogin = page;
 	page.addFunction(PageLogin.EVENT_LOGIN_SUCCESS,this._loginSuccessFxn,this);
 	page.addFunction(PageLogin.EVENT_LOGOUT_SUCCESS,this._logoutSuccessFxn,this);
+}
+Volunteer.prototype._hookPageRequest = function(page){
+	this._pageRequest = page;
+}
+Volunteer.prototype._hookPageRequestList = function(page){
+	this._pageRequestList = page;
 }
 Volunteer.prototype._hookPageNavigation = function(page){
 	this._navigation = page;
@@ -84,13 +102,14 @@ Volunteer.prototype._hookPageNavigation = function(page){
 	page.addMenuItem(Volunteer.NAV_SHIFT,"Add Shift");
 	//page.addMenuItem(Volunteer.NAV_SHIFTS,"Shifts");
 	//page.addMenuItem(Volunteer.NAV_USER,"Add User");
-	page.addMenuItem(Volunteer.NAV_USERS,"Users");
+	page.addMenuItem(Volunteer.NAV_USER_LIST,"Users");
 	//page.addMenuItem(Volunteer.NAV_POSITION,"Add Position");
-	page.addMenuItem(Volunteer.NAV_POSITIONS,"Positions");
+	page.addMenuItem(Volunteer.NAV_POSITION_LIST,"Positions");
 	//page.addMenuItem(Volunteer.NAV_REQUEST,"Add Request");
-	page.addMenuItem(Volunteer.NAV_REQUESTS,"Requests");
+	page.addMenuItem(Volunteer.NAV_REQUEST_LIST,"Requests");
 	page.addFunction(Navigation.EVENT_ITEM_CLICKED,this._navigationItemClicked, this);
 }
+
 Volunteer.prototype._hookPageBot = function(page){
 	this._pageBottom = page;
 		Code.setContent(page.dom(), "2013");
@@ -99,11 +118,11 @@ Volunteer.prototype._hookPageBot = function(page){
 Volunteer.prototype._hookPageCalendarWeek = function(page){
 	this._pageCalendarWeek = page;
 	var arr = new Array;
-	arr.push( {id:10, name:"Mornin" } );
-	arr.push( {id:12, name:"Evnin" } );
-	arr.push( {id:2, name:"Night" } );
+	// arr.push( {id:10, name:"Mornin" } );
+	// arr.push( {id:12, name:"Evnin" } );
+	// arr.push( {id:2, name:"Night" } );
 	this._pageCalendarWeek.setPositions(arr,"id","name");
-	this._pageCalendarWeek.addShift(12,2, 1234567890,"2013-05-06 06:00:00.0000","2013-05-06 13:30:00.0000", 1,"LongPersonNameHere"); // positionID,dow0to6,shiftID,userID,userName
+	//this._pageCalendarWeek.addShift(12,2, 1234567890,"2013-05-06 06:00:00.0000","2013-05-06 13:30:00.0000", 1,"LongPersonNameHere"); // positionID,dow0to6,shiftID,userID,userName
 	//this._pageCalendarWeek.clear();
 	/*
 	A) get a list of all positions

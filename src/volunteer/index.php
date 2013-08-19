@@ -27,10 +27,28 @@ $ACTION_TYPE_CALENDAR = 'calendar';
 		$ACTION_TYPE_CALENDAR_MONTH = 'month';
 		$ACTION_TYPE_CALENDAR_DATE = 'date';
 $ACTION_TYPE_POSITION_READ = 'position_read';
+$ACTION_TYPE_USER_GET = "user";
+	$ACTION_TYPE_USER_GET_PAGE = "page";
+	$ACTION_TYPE_USER_GET_COUNT = "count";
+	$ACTION_TYPE_USER_GET_USER_ID = "uid";
+	$ACTION_TYPE_USER_GET_TYPE = "type";
+	$ACTION_TYPE_USER_GET_TYPE_SINGLE = "single";
+	$ACTION_TYPE_USER_GET_TYPE_CURRENT = "current";
+	$ACTION_TYPE_USER_GET_TYPE_LIST = "list";
+$ACTION_TYPE_REQUEST_GET = "req";
 $ARGUMENT_GET_ACTION = $_GET['a'];
 $ARGUMENT_VALUE_USERID = null;
 $ARGUMENT_VALUE_SESSIONID = null;
 //$ARGUMENT_POST_ACTION = $_POST['a'];
+/*
+	ServerVolunteerInterface.prototype.ACTION_USER_PAGE = "page";
+	ServerVolunteerInterface.prototype.ACTION_USER_COUNT = "count";
+	ServerVolunteerInterface.prototype.ACTION_USER_USER_ID = "type";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE = "type";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_SINGLE = "single";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_CURRENT = "current";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_LIST = "list";
+*/
 
 if($ARGUMENT_GET_ACTION!=null){
 	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }'); 
@@ -112,7 +130,131 @@ if($ARGUMENT_GET_ACTION!=null){
 		}
 		// USER -------------------------------------------------------------------
 		if($ARGUMENT_GET_ACTION=="thisisaprivatefxn"){
-			// ...
+			// 
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_GET){
+			$type = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_TYPE]);
+			if($type==$ACTION_TYPE_USER_GET_TYPE_CURRENT || $type==$ACTION_TYPE_USER_GET_TYPE_SINGLE){
+				$user_id = $ACTION_VALUE_USER_ID;
+				$message = "current";
+				if($type==$ACTION_TYPE_USER_GET_TYPE_SINGLE){
+					$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
+					$message = "single";
+				}
+				$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users where id="'.$user_id.'" limit 1;';
+				$result = mysql_query($query, $connection);
+				if($result && mysql_num_rows($result)==1 ){
+					$row = mysql_fetch_assoc($result);
+					$user_id = $row["id"];
+					$group_id = $row["group_id"];
+					$created = $row["created"];
+					$modified = $row["modified"];
+					$username = $row["username"];
+					$first_name = $row["first_name"];
+					$last_name = $row["last_name"];
+					$email = $row["email"];
+					$phone = $row["phone"];
+					$city = $row["city"];
+					$state = $row["state"];
+					$zip = $row["zip"];
+					echo '{"status": "success", "message": "'.$message.'", "user": '."\n".'{';
+					echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
+					echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
+					echo '"city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
+					echo '}'."\n".'}';
+					mysql_free_result($result);
+				}else{
+					echo '{ "status": "error", "message": "user not exist" }';
+					return;
+				}
+			}else if($type==$ACTION_TYPE_USER_GET_TYPE_LIST){
+				$page = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
+				$count = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
+				$count = max(min($count,100),1);
+				$offset = max(0,$count*($page));
+				$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users   order by created  limit '.$count.' offset '.$offset.';';
+				$result = mysql_query($query, $connection);
+				if($result){
+					$total = mysql_num_rows($result);
+					echo '{"status": "success", "message": "list", "page": '.$page.', "count":'.$count.', "total": '.$total.', "list": ['."\n";
+					while( $row = mysql_fetch_assoc($result) ){
+						$user_id = $row["id"];
+						$group_id = $row["group_id"];
+						$created = $row["created"];
+						$modified = $row["modified"];
+						$username = $row["username"];
+						$first_name = $row["first_name"];
+						$last_name = $row["last_name"];
+						$email = $row["email"];
+						$phone = $row["phone"];
+						$city = $row["city"];
+						$state = $row["state"];
+						$zip = $row["zip"];
+						echo '{';
+						echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
+						echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
+						echo '"city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
+						echo '}';
+						if($i<($total-1)){ echo ','; }
+						echo "\n";
+					}
+					echo '] }';
+				}else{
+					echo '{"status": "error", "message": "bad search"}';
+				}
+			}else{
+				echo '{"status": "error", "message": "unknown action"}';
+			}
+		// CREATE REQUEST
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_GET){
+			$page = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
+			$count = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
+			$count = max(min($count,100),1);
+			$offset = max(0,$count*($page));
+			$query = 'select id,created,modified,shift_id,request_user_id,fulfill_user_id,approved_user_id,info,status  from requests  order by approved_user_id asc, created desc limit '.$count.' offset '.$offset.';';
+			// select requests.
+			$result = mysql_query($query, $connection);
+			if($result){
+				$total = mysql_num_rows($result);
+				echo '{"status": "success", "message": "list", "page": '.$page.', "count":'.$count.', "total": '.$total.', "list": ['."\n";
+				while( $row = mysql_fetch_assoc($result) ){
+					$request_id = $row["id"];
+					$created = $row["created"];
+					$modified = $row["modified"];
+					$shift_id = $row["shift_id"];
+					$request_user_id = $row["request_user_id"];
+					$fulfill_user_id = $row["fulfill_user_id"];
+					$approved_user_id = $row["approved_user_id"];
+					$info = $row["info"];
+					$status = $row["status"];
+					echo '{';
+					echo '"id":"'.$request_id.'", "created":"'.$created.'","modified":"'.$modified.'", "shift_id":"'.$shift_id.'", ';
+					echo '"request_user_id ":"'.$request_user_id .'", "fulfill_user_id":"'.$fulfill_user_id.'", "approved_user_id":"'.$approved_user_id.'", ';
+					echo '"info":"'.$info.'", "status":"'.$status.'" ';
+					echo '}';
+					if($i<($total-1)){ echo ','; }
+					echo "\n";
+				}
+				echo '] }';
+			}else{
+				echo '{"status": "error", "message": "bad search"}';
+			}
+		// APPROVE/DENY REQUEST
+/*
++------------------+---------------+------+-----+---------+----------------+
+| Field            | Type          | Null | Key | Default | Extra          |
++------------------+---------------+------+-----+---------+----------------+
+| id               | int(11)       | NO   | PRI | NULL    | auto_increment |
+| created          | datetime      | YES  |     | NULL    |                |
+| modified         | datetime      | YES  |     | NULL    |                |
+| shift_id         | int(11)       | YES  |     | NULL    |                |
+| request_user_id  | int(11)       | YES  |     | NULL    |                |
+| fulfill_user_id  | int(11)       | YES  |     | NULL    |                |
+| approved_user_id | int(11)       | YES  |     | NULL    |                |
+| info             | varchar(1024) | YES  |     | NULL    |                |
+| status           | int(11)       | YES  |     | NULL    |                |
++------------------+---------------+------+-----+---------+----------------+
+
+*/
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_CREATE){
 				$startDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_START_DATE]);
 				$endDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_END_DATE]);
@@ -138,6 +280,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					if($len>0){
 						$startTime = dateFromString($startDate);
 						$endTime = dateFromString($endDate);
+						#echo $startTime." - ".$endTime."\n";
 						$userid = $ACTION_VALUE_USER_ID;
 						$query = 'insert into shifts (created, parent_id, user_id, position_id, time_begin, time_end, algorithm) values (now(),"0","'.$userid.'","'.$position_id.'","'.standardSQLDateFromSeconds($startTime).'","'.standardSQLDateFromSeconds($endTime).'","'.$repeating.'") ;';
 						#echo $query."\n";
@@ -173,7 +316,9 @@ if($ARGUMENT_GET_ACTION!=null){
 				$calType = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
 				$calDate = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
 				$calTime = dateFromString($calDate);
+#echo $calTime."\n";
 				$calTime = getDayStartFromSeconds($calTime);
+#echo $calTime."\n";
 				$startDate = null; $endDate = null;
 				$message = "";
 				if($calType==$ACTION_TYPE_CALENDAR_DAY){
@@ -196,7 +341,10 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "error", "message": "invalid type" }';
 					return;
 				}
-				$query = 'select id,parent_id,user_id,time_begin,time_end from shifts where time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
+#echo $startDate."\n";
+#echo $endDate."\n";
+				//$query = 'select id,parent_id,user_id,time_begin,time_end,position_id from shifts where time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
+				$query = 'select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts   left outer join users on users.id=shifts.user_id    where shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
 				echo '{ "status": "success", "message": "'.$message.'", ';
 				$result = mysql_query($query, $connection);
 				if($result){
@@ -205,11 +353,21 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '"total": '.$total_results.', "list": ['."\n";
 					while($row = mysql_fetch_assoc($result)){
 						$parent = $row["parent_id"];
-						$user = $row["user_id"];
+						$user_id = $row["user_id"];
+						$username = $row["username"];
+							/*$username = "";
+							if($user_id!=0){
+								$query = 'select username from users where id="'.$user_id.'" limit 1;';
+								$res = mysql_query($query, $connection);
+								$r = mysql_fetch_assoc($res);
+								$username = $r["username"];
+								mysql_free_result($res);
+							}*/
 						$begin = $row["time_begin"];
 						$end  = $row["time_end"];
 						$position_id = $row["position_id"];
-						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent.'", "user": "'.$user.'", "position" : "'.$position_id.'" }';
+						$shift_id = $row["id"];
+						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "position" : "'.$position_id.'", "id" : "'.$shift_id.'" }';
 						if($i<($total_results-1)){ echo ','; }
 						echo "\n";
 						++$i;

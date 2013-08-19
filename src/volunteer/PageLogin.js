@@ -64,9 +64,20 @@ PageLogin.prototype.gotoState = function(s){
 	if(s==this.STATE_IN){
 		Code.removeChild(this._root, this._tableContainer);
 		Code.addChild(this._root, this._loginContainer);
+		this._getUserInfo();
 	}else if(s==this.STATE_OUT){
 		Code.removeChild(this._root, this._loginContainer);
 		Code.addChild(this._root, this._tableContainer);
+	}
+}
+//
+PageLogin.prototype._getUserInfo = function(){
+	this._interface.getCurrentUserInfo(this,this._getUserInfoSuccess);
+}
+PageLogin.prototype._getUserInfoSuccess = function(o){
+	if(o.status=="success"){
+		var user = o.user;
+		Code.setContent( this._loginMessage, "Welcome "+user.username+" ["+user.first_name+" "+user.last_name+"] ");
 	}
 }
 // ------------------------------------------------------------------------------ 

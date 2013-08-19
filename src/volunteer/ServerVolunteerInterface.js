@@ -16,6 +16,20 @@ ServerVolunteerInterface.prototype.SESSION_ID = "sid";
 ServerVolunteerInterface.prototype.ACTION_POSITION_GET = "position_read";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE = "shift_create";
 ServerVolunteerInterface.prototype.ACTION_CALENDAR = "calendar";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_DATE = "date";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE = "type";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE_DAY = "day";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE_WEEK = "week";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE_MONTH = "month";
+ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
+	ServerVolunteerInterface.prototype.ACTION_USER_PAGE = "page";
+	ServerVolunteerInterface.prototype.ACTION_USER_COUNT = "count";
+	ServerVolunteerInterface.prototype.ACTION_USER_USER_ID = "uid";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE = "type";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_SINGLE = "single";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_CURRENT = "current";
+	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_LIST = "list";
+ServerVolunteerInterface.prototype.ACTION_REQUEST_GET = "req";
 // -------------------------------------------------------------------------------------------------------------------------- HELPERS
 ServerVolunteerInterface.prototype._addCallback = function(a,ctx,call){
 	a._ctx=ctx; a._call=call;
@@ -62,6 +76,45 @@ ServerVolunteerInterface.prototype.submitLogout = function(ctx,call){
 	Code.deleteCookie(this.COOKIE_SESSION);
 	call.call(ctx,null);
 }
+// -------------------------------------------------------------------------------------------------------------------------- USER INFO
+ServerVolunteerInterface.prototype.getCurrentUserInfo = function(ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_CURRENT;
+	a.postParams(url,params,this,this.onAjaxGetCurrentUserInfo,this.onAjaxGetCurrentUserInfo);
+}
+ServerVolunteerInterface.prototype.onAjaxGetCurrentUserInfo = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.getUserInfo = function(uid,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_SINGLE;
+	params[this.ACTION_USER_USER_ID] = uid;
+	console.log(params);
+	a.postParams(url,params,this,this.onAjaxGetUserInfo,this.onAjaxGetUserInfo);
+}
+ServerVolunteerInterface.prototype.onAjaxGetUserInfo = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.getUsers = function(page,perpage,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_LIST;
+	params[this.ACTION_USER_PAGE] = page;
+	params[this.ACTION_USER_COUNT] = perpage;
+	a.postParams(url,params,this,this.onAjaxGetUsers,this.onAjaxGetUsers);
+}
+ServerVolunteerInterface.prototype.onAjaxGetUsers = function(e,a){
+	console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
 // -------------------------------------------------------------------------------------------------------------------------- POSITIONS
 ServerVolunteerInterface.prototype.getShiftPositions = function(ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
@@ -81,13 +134,32 @@ ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
-	console.log(obj.message);
 	this._checkCallback(a,obj);
 }
-ServerVolunteerInterface.prototype.wtf = function(){
-	
+ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day, ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_WEEK;
+	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,day);
+	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
+}
+ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+// -------------------------------------------------------------------------------------------------------------------------- REQUESTS
+ServerVolunteerInterface.prototype.getRequests = function(page,perpage,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_GET;
+	var params = this.appendSessionInfo({});
+	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
+}
+ServerVolunteerInterface.prototype.onAjaxGetRequests = function(e,a){
+	console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
 }
 // -------------------------------------------------------------------------------------------------------------------------- 
 ServerVolunteerInterface.prototype.wtf = function(){
