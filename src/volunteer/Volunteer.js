@@ -35,9 +35,6 @@ function Volunteer(){
 	this._navigatorNav = new NavWeb( Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID) );
 	this._navigatorMain = new NavWeb( Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID) );
 	this._navigatorBot = new NavWeb( Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID) );
-console.log( this._navigatorMain );
-console.log( this._navigatorMain.setPage );
-console.log( this._navigatorMain.addFunction );
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn);
@@ -69,8 +66,9 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorBot.gotoPage(Volunteer.PAGE_BOT);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
-	//this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
-	//this._navigation.setSelected(Volunteer.NAV_SHIFT);
+	//
+	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
+	this._navigation.setSelected(Volunteer.NAV_SHIFT);
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){

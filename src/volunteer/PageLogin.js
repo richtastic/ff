@@ -10,7 +10,7 @@ function PageLogin(container, server){
 		Code.addClass(this._tableContainer,"loginTableContainer");
 	this._rowContainer = Code.newDiv();
 		Code.addClass(this._rowContainer,"loginRowContainer");
-	this._labelUsername = Code.newDiv("Username");
+	this._labelUsername = Code.newDiv("Username:");
 		Code.addClass(this._labelUsername,"loginCellLabel");
 	this._labelPassword = Code.newDiv("Password:");
 		Code.addClass(this._labelPassword,"loginCellLabel");

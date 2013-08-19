@@ -5,31 +5,30 @@ PageShifts.CONSTANT = 1;
 function PageShifts(container){
 	PageShifts._.constructor.apply(this,arguments);
 	Code.addClass(this._root,"shiftsEditContainer");
-	this._tableContainer = Code.newDiv();
+	this._tableContainer = Code.newTable();
 		Code.addClass(this._tableContainer,"shiftsEditTable");
-	this._positionContainer = Code.newDiv();
+	this._positionContainer = Code.addRow( this._tableContainer );
 		Code.addClass(this._positionContainer,"shiftsEditRow");
 		this._positionSelection = Code.newSelect();
-	this._startContainer = Code.newDiv();
+	this._startContainer = Code.addRow( this._tableContainer );
 		Code.addClass(this._startContainer,"shiftsEditRow");
 		this._startSelection = this.generateSelectionDate();
-	this._endContainer = Code.newDiv();
+	this._endContainer = Code.addRow( this._tableContainer );
 		Code.addClass(this._endContainer,"shiftsEditRow");
 		this._endSelection = this.generateSelectionDate();
 	this._dowSelections = new Array();
 	this._submitButton = Code.newInputSubmit("Submit Shift");
 	Code.addListenerClick(this._submitButton, this._onClickSubmitSchedule, this);
+
+	Code.addChild( this._root, this._tableContainer );
+	Code.addChild( this._root, this._submitButton );
+
 	this._init();
 }
 Code.inheritClass(PageShifts, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageShifts.prototype._init = function(){
 	var i, len, rowContainer, a, b, c;
-	Code.addChild( this._root, this._tableContainer );
-	Code.addChild( this._tableContainer, this._positionContainer );
-	Code.addChild( this._tableContainer, this._startContainer );
-	Code.addChild( this._tableContainer, this._endContainer );
-	Code.addChild( this._root, this._submitButton );
 	// positions
 	this.generateLeftColumn("Position:",this._positionContainer);
 	this.generateRightColumn(this._positionSelection,this._positionContainer);
@@ -43,10 +42,9 @@ PageShifts.prototype._init = function(){
 	var dow = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 	len = dow.length;
 	for(i=0;i<len;++i){
-		rowContainer = Code.newDiv();
+		rowContainer = Code.addRow( this._tableContainer );
 			Code.addClass(rowContainer,"shiftsEditRow");
 			this.generateLeftColumn(dow[i]+":",rowContainer);
-			Code.addChild( this._tableContainer, rowContainer);
 		selA = this.generateSelectionTime();
 		selB = this.generateSelectionTime();
 		this._dowSelections[i] = new Array();
@@ -105,20 +103,19 @@ PageShifts.prototype.wtf = function(){
 	this.element._onClickSubmitSchedule.call(this.element,e);
 }*/
 PageShifts.prototype._onClickSubmitSchedule = function(e){
+	//
 	console.log(this);
 }
 // ------------------------------------------------------------------------------ utilities
 PageShifts.prototype.generateLeftColumn = function(str,cont){
-	var left = Code.newDiv();
+	left = Code.addCell(cont);
 	Code.addClass(left,"shiftsEditColLeft");
-	Code.addChild(cont, left);
 	Code.setContent(left,str);
 	return left;
 }
 PageShifts.prototype.generateRightColumn = function(ele,cont){
-	right = Code.newDiv();
+	right = Code.addCell(cont);
 	Code.addClass(right,"shiftsEditColRight");
-	Code.addChild(cont, right);
 	Code.addChild(right,ele);
 	return right;
 }

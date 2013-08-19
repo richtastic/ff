@@ -248,14 +248,25 @@ Code.newListItem = function(a){
 };
 
  // IE error - need to use insertRow with tables
-Code.addRow = function(a){
-	return a.insertRow(a.rows);
+Code.addRow = function(a,i){
+	if(i===undefined){ i=-1; }
+	return a.insertRow(i);//a.rows);
 }
 Code.removeRow = function(a){
 	return a.deleteRow(a.rows-1);
 }
 Code.getRows = function(a){
 	return a.rows;
+}
+Code.addCell = function(a,i){
+	if(i===undefined){ i=-1; }
+	return a.insertCell(i);//a.cells);
+}
+Code.removeCell = function(a){
+	return a.deleteCell(a.cells-1);
+}
+Code.getCells = function(a){
+	return a.cells;
 }
 
 Code.addChild = function(a,b){
