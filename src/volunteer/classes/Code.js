@@ -276,6 +276,9 @@ Code.addChild = function(a,b){
 		a.appendChild(b);
 	//}
 };
+Code.getChild = function(a,i){
+	return a.children[i];
+};
 Code.removeChild = function(a,b){
 	if(b.parentNode==a){
 		a.removeChild(b);

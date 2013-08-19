@@ -216,7 +216,7 @@ function fullDateAlgorithmValid($code){
 }
 function computeDatePermutations($begin,$end,$code){
 	$MAX_NUM_DATES = 1000;
-	if( !(fullDateValid($begin) && fullDateValid($begin) && fullDateAlgorithmValid($code)) ){
+	if( !(fullDateValid($begin) && fullDateValid($end) && fullDateAlgorithmValid($code)) ){
 		return null;
 	}
 	$i=0; $j=0; $index=0; $dow=0;
@@ -256,7 +256,7 @@ function computeDatePermutations($begin,$end,$code){
 		$len2 = count($daysList[$i]);
 		if( $len2>0 && $daysList[$i][0]!=null && $daysList[$i][0]!="" ){
 			for($j=0;$j<$len2;++$j){
-				$daysList[$i][$j] = explode("-",$daysList[$i][$j]);
+				$daysList[$i][$j] = explode("+",$daysList[$i][$j]);
 				$daysList[$i][$j][0] = timeValuesFromString( $daysList[$i][$j][0] );
 				$daysList[$i][$j][1] = timeValuesFromString( $daysList[$i][$j][1] );
 			}

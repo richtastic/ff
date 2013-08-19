@@ -47,7 +47,7 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageWeb(Code.newDiv()) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv()) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageWeb(Code.newDiv()) );
-	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT, new PageShifts(Code.newDiv()) );
+	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT, new PageShifts(Code.newDiv(),this._interface) );
 	this._navigatorTop.setPage(Volunteer.PAGE_LOGIN, new PageLogin(Code.newDiv(),this._interface) );
 	this._navigatorNav.setPage(Volunteer.PAGE_NAVIGATION, new Navigation(Code.newDiv(), "navigationContainer","navigationList","navigationItem","navigationItemUnselected","navigationItemSelected") );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
