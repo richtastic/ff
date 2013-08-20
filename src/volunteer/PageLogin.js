@@ -51,7 +51,7 @@ PageLogin.prototype._init = function(){
 	Code.addChild(this._loginContainer, this._loginMessage);
 	Code.addChild(this._loginContainer, this._inputLogout);
 	//
-	this.gotoState( this._interface.isLoggedIn() ? this.STATE_IN : this.STATE_OUT);
+	this._checkLoggedIn();
 }
 PageLogin.prototype.clear = function(){
 	this._inputUsername.value = "";
@@ -78,6 +78,17 @@ PageLogin.prototype._getUserInfoSuccess = function(o){
 	if(o.status=="success"){
 		var user = o.user;
 		Code.setContent( this._loginMessage, "Welcome "+user.username+" ["+user.first_name+" "+user.last_name+"] ");
+	}
+}
+// ------------------------------------------------------------------------------ 
+PageLogin.prototype._checkLoggedIn = function(){
+	this._interface.isLoggedIn(this,this._checkLoggedInSuccess);
+}
+PageLogin.prototype._checkLoggedInSuccess = function(o){
+	if(o && o.status=="success"){
+		this.gotoState(this.STATE_IN);
+	}else{
+		this.gotoState(this.STATE_OUT);
 	}
 }
 // ------------------------------------------------------------------------------ 

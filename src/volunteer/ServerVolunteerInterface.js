@@ -15,6 +15,7 @@ ServerVolunteerInterface.prototype.SESSION_ID = "sid";
 //
 ServerVolunteerInterface.prototype.ACTION_POSITION_GET = "position_read";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE = "shift_create";
+ServerVolunteerInterface.prototype.ACTION_SESSION_CHECK = "session";
 ServerVolunteerInterface.prototype.ACTION_CALENDAR = "calendar";
 	ServerVolunteerInterface.prototype.ACTION_CALENDAR_DATE = "date";
 	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE = "type";
@@ -30,6 +31,8 @@ ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
 	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_CURRENT = "current";
 	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_LIST = "list";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_GET = "req";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_PAGE = "page";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_COUNT = "count";
 // -------------------------------------------------------------------------------------------------------------------------- HELPERS
 ServerVolunteerInterface.prototype._addCallback = function(a,ctx,call){
 	a._ctx=ctx; a._call=call;
@@ -46,9 +49,20 @@ ServerVolunteerInterface.prototype.appendSessionInfo = function(o){
 	return o;
 }
 // -------------------------------------------------------------------------------------------------------------------------- LOGIN
-ServerVolunteerInterface.prototype.isLoggedIn = function(){
+ServerVolunteerInterface.prototype.isLoggedIn = function(ctx,call){
 	var session_id = Code.getCookie(this.COOKIE_SESSION);
-	return session_id!==undefined && session_id!==null;
+	if(session_id!==undefined && session_id!==null){
+		var a = new Ajax(); this._addCallback(a,ctx,call);
+		var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SESSION_CHECK;
+		var params = this.appendSessionInfo({});
+		a.postParams(url,params,this,this.onAjaxIsLoggedIn,this.onAjaxIsLoggedIn);
+	}else{
+		call.call(ctx,null);
+	}
+}
+ServerVolunteerInterface.prototype.onAjaxIsLoggedIn = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
 }
 ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	pass = hex_sha512( pass );
@@ -65,10 +79,10 @@ ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
 			Code.deleteCookie(this.COOKIE_SESSION);
 			Code.setCookie(this.COOKIE_SESSION,session_id,this.COOKIE_TIME_SECONDS);
 		}else{
-			console.log("LOGIN ERROR");
+			//console.log("LOGIN ERROR");
 		}
 	}else{
-		console.log("SERVER ERROR");
+		//console.log("SERVER ERROR");
 	}
 	this._checkCallback(a,obj);
 }
@@ -154,10 +168,11 @@ ServerVolunteerInterface.prototype.getRequests = function(page,perpage,ctx,call)
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_GET;
 	var params = this.appendSessionInfo({});
+	params[this.ACTION_REQUEST_PAGE] = page;
+	params[this.ACTION_REQUEST_COUNT] = perpage;
 	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
 }
 ServerVolunteerInterface.prototype.onAjaxGetRequests = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }

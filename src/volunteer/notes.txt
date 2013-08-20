@@ -483,8 +483,6 @@ select * from players where  us_reg_date between '2000-07-05' and DATE_ADD('2011
 
 
 TODO-----------
-x cookies
-x autogenerate shifts from algorithm text
 send email
 large calendar
 medium calendar
@@ -500,13 +498,15 @@ login screen
 
 
 NEW TODO-----------
-week-calendar:
-	* show shifts & people assigned to shift
-	* button to delete shift [all, all assigned to userX, single shift]
-	* button to change shift assignee [all, all assigned to userX, single-shift]
-server session/cookies?
-shift-request interface
-user-crud interface
+x LOG IN 
+x ADD SHIFT > generate shift
+(tue) WEEK > click on shift
+(tue) EDIT SHIFT > assign to user (self)
+(tue) WEEK > click on request replacement
+(wed) REQUESTS > add self as replacement
+(wed) REQUESTS > approve shift replacement
+(wed) WEEK > (view update)
+
 
 
 

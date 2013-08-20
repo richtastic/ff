@@ -15,6 +15,7 @@ LOGIN: a=login | u=USERNAME | p=PASSWORD
 //$ACTION_TYPE_USERID = 'uid';
 $ACTION_TYPE_SESSION_ID = 'sid';
 $ACTION_TYPE_LOGIN = 'login';
+$ACTION_TYPE_SESSION_CHECK = "session";
 $ACTION_TYPE_SHIFT_CREATE = 'shift_create';
 	$ACTION_TYPE_SHIFT_CREATE_START_DATE = 'start_date';
 	$ACTION_TYPE_SHIFT_CREATE_END_DATE = 'end_date';
@@ -92,7 +93,16 @@ if($ARGUMENT_GET_ACTION!=null){
 			echo '{ "status": "error", "message": "invalid user" }';
 		}
 // PUBLIC -------------------------------------------------------------------
-	
+	}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SESSION_CHECK){
+		$session_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
+		$query = 'select session_id from sessions where session_id="'.$session_id.'" limit 1;';
+		$result = mysql_query($query, $connection);
+		if($result && mysql_num_rows($result)==1){
+			echo '{ "status": "success", "message": "valid session" }';
+			mysql_free_result($result);
+		}else{
+			echo '{ "status": "error", "message": "invalid session" }';
+		}
 // PRIVATE -------------------------------------------------------------------
 	}else{
 		$ACTION_VALUE_USER_ID = null;

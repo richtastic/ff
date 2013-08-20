@@ -352,6 +352,55 @@ input{
 }
 
 
+/* ----------------------------------------------------------- REQUESTS */
+.requestListContainer{
+	margin: 0 auto;
+	/*border: solid;
+	border-color: #00F;
+	border-width: 2px;*/
+	border-width: 0px;
+}
+.requestListTable{
+	margin: 0 auto;
+	border: solid;
+	border-color: #CCC;
+	border-width: 5px;
+}
+.requestListHeader{
+	border: solid;
+	border-color: #0FF;
+	border-width: 0px;
+}
+.requestListHeaderCell{
+	border: solid;
+	border-color: #CCC;
+	border-width: 1px;
+	font-weight: bold;
+	background-color: #DDD;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+.requestListRow{
+	border: solid;
+	border-color: #0FF;
+	border-width: 0px;
+}
+.requestListCell{
+	border: solid;
+	border-color: #CCC;
+	border-width: 1px;
+	font-size:  80%;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+
+
 
 
 

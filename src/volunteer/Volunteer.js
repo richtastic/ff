@@ -12,6 +12,10 @@ Volunteer.PAGE_CALENDAR_DAY = "cal_day";
 Volunteer.PAGE_SHIFT = "shifts_crud";
 Volunteer.PAGE_LOGIN = "login";
 Volunteer.PAGE_NAVIGATION = "nav";
+Volunteer.PAGE_REQUEST = "req";
+Volunteer.PAGE_REQUEST_LIST = "reqs";
+Volunteer.PAGE_USER = "user";
+Volunteer.PAGE_USER_LIST = "users";
 //Volunteer.PAGE_LOGOUT = "logout";
 //Volunteer.PAGE_TOP = "top";
 Volunteer.PAGE_BOT = "bot";
@@ -172,6 +176,10 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			break;
 		case Volunteer.NAV_USER:
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
+			break;
+		case Volunteer.NAV_REQUEST_LIST:
+		console.log("rl");
+			this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 			break;
 		default:
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);
