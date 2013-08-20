@@ -1,5 +1,5 @@
 // PageShifts.js < PageWeb
-PageShifts.CONSTANT = 1;
+PageShifts.EVENT_SHIFT_CREATED = "EVENT_SHIFT_CREATED";
 
 // ------------------------------------------------------------------------------ constructor
 function PageShifts(container,interface){
@@ -116,12 +116,12 @@ PageShifts.prototype.generateShiftString = function(){
 	var position_id = this._positionSelection.value;
 	// START DATE
 	var start_day = selStartDay.value;
-	var start_month = selStartMonth.value;
+	var start_month = (parseInt(selStartMonth.value)+1);
 	var start_year = selStartYear.value;
 	var startDate = Code.prependFixed(start_year+"","0",4)+"-"+Code.prependFixed(start_month+"","0",2)+"-"+Code.prependFixed(start_day+"","0",2) + " 00:00:00.0000";
 	// END DATE
 	var end_day = selEndDay.value;
-	var end_month = selEndMonth.value;
+	var end_month = (parseInt(selEndMonth.value)+1);
 	var end_year = selEndYear.value;
 	var endDate = Code.prependFixed(end_year+"","0",4)+"-"+Code.prependFixed(end_month+"","0",2)+"-"+Code.prependFixed(end_day+"","0",2) + " 24:00:00.0000";
 	// WEEKDAYS
@@ -169,10 +169,17 @@ PageShifts.prototype._onClickSubmitSchedule = function(e){
 	algorithm = "M06:00:00.0000-01:00:00.0000,T,W,R,F,S,U";
 	position_id = "1";
 	*/
+console.log(startDate,endDate,algorithm);
 	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_id, this,this._submitScheduleCallback);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){
-	console.log(o);
+	if(o.status=="success"){
+		console.log(o);
+//		this.clear();
+		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
+	}else{
+		console.log("ERROR IN SHIFT CREATION");
+	}
 }
 // ------------------------------------------------------------------------------ utilities
 PageShifts.prototype.generateLeftColumn = function(str,cont){
@@ -193,7 +200,7 @@ PageShifts.prototype.generateSelectionDate = function(ele, sta,sto,iunno){
 	row = Code.newDiv();
 	// DAYS
 	sel = Code.newElement("select"); sel.setAttribute("name","days");Code.addChild(row,sel);
-	for(j=0;j<31;++j){
+	for(j=0;j<=31;++j){
 		if(j==0){ opt = Code.newOption(true);
 		}else{ opt = Code.newOption(Code.prependFixed(""+j, "0", 2),""+j); }
 		Code.addChild(sel,opt);

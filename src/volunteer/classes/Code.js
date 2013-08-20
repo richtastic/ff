@@ -116,6 +116,9 @@ Code.getTimeMilliseconds = function(){
     var d = new Date();
     return d.getTime();
 };
+Code.getAMPMFromDate = function(date){
+	return parseInt(date.getHours())<=12?"AM":"PM";
+}
 
 // ------------------------------------------------------------------------------------------ BINARY REPRESENTATIONS
 Code.intToBinaryString = function(num,cnt){
@@ -284,12 +287,19 @@ Code.removeChild = function(a,b){
 		a.removeChild(b);
 	}
 };
+Code.getParent = function(a){
+	return a.parentNode;
+};
 Code.removeFromParent = function(a){
 	a.parentNode.removeChild(a);
 };
 Code.setProperty = function(ele,pro,val){
-	ele.setAttribute(pro,val);
+	return ele.setAttribute(pro,val);
 };
+Code.getProperty = function(ele,pro){
+	return ele.getAttribute(pro);
+}
+
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
@@ -361,6 +371,9 @@ Code.addListenerClick = function(ele,fxn,ctx){
 	var f = function(){ fxn.apply(ctx,arguments); }
 	Code._addListenerClick(ele,f);
 }
+Code.removeListenerClick = function(ele,fxn,ctx){
+	Code._removeListenerClick(ele,f);
+}
 Code._addListenerClick = function(ele,fxn){
 	if(ele.addEventListener!=null){
 		ele.addEventListener("click",fxn);
@@ -368,6 +381,14 @@ Code._addListenerClick = function(ele,fxn){
 		ele.onclick = fxn;
 	}
 }
+Code._removeListenerClick = function(ele,fxn){
+	if(ele.removeEventListener!=null){
+		ele.removeEventListener("click",fxn);
+	}else{ // IE
+		ele.onclick = null;
+	}
+}
+//
 Code.addListenerChange = function(ele,fxn){
 	if(ele.addEventListener!=null){
 		ele.addEventListener("change",fxn);

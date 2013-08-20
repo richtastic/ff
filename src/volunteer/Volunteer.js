@@ -9,7 +9,9 @@ Volunteer.PAGE_BOT_CONTAINER_ID = "scheduler_bottom";
 Volunteer.PAGE_CALENDAR_MONTH = "cal_month";
 Volunteer.PAGE_CALENDAR_WEEK = "cal_week";
 Volunteer.PAGE_CALENDAR_DAY = "cal_day";
-Volunteer.PAGE_SHIFT = "shifts_crud";
+Volunteer.PAGE_SHIFT = "shift";
+Volunteer.PAGE_SHIFT_SINGLE = "shift_single";
+Volunteer.PAGE_SHIFT_LIST = "shift_list";
 Volunteer.PAGE_LOGIN = "login";
 Volunteer.PAGE_NAVIGATION = "nav";
 Volunteer.PAGE_REQUEST = "req";
@@ -39,9 +41,9 @@ function Volunteer(){
 	this._navigatorNav = new NavWeb( Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID) );
 	this._navigatorMain = new NavWeb( Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID) );
 	this._navigatorBot = new NavWeb( Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID) );
-	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn);
-	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn);
-	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn);
+	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn, this);
+	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn, this);
+	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn, this);
 	this.initialize(); 
 }
 Code.inheritClass(Volunteer, Dispatchable);
@@ -52,6 +54,7 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageCalendarDay(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT, new PageShifts(Code.newDiv(),this._interface) );
+	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT_SINGLE, new PageShiftSingle(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT_LIST, new PageShiftsList(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_REQUEST, new PageRequest(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_REQUEST_LIST, new PageRequestList(Code.newDiv(),this._interface) );
@@ -69,6 +72,7 @@ Volunteer.prototype.initialize = function(){
 	// fill mainpages
 	this._hookPageCalendarWeek( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_WEEK) );
 	this._hookPageShifts( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT) );
+	this._hookPageShiftSingle( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT_SINGLE) );
 	this._hookPageRequest( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST) );
 	this._hookPageRequestList( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST_LIST) );
 	// fill bot pages
@@ -82,9 +86,9 @@ Volunteer.prototype.initialize = function(){
 	//
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
 	// this._navigation.setSelected(Volunteer.NAV_SHIFT);
-	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
-	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
-
+	// this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
+	// this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+	// 
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
@@ -121,11 +125,7 @@ Volunteer.prototype._hookPageBot = function(page){
 }
 Volunteer.prototype._hookPageCalendarWeek = function(page){
 	this._pageCalendarWeek = page;
-	var arr = new Array;
-	// arr.push( {id:10, name:"Mornin" } );
-	// arr.push( {id:12, name:"Evnin" } );
-	// arr.push( {id:2, name:"Night" } );
-	this._pageCalendarWeek.setPositions(arr,"id","name");
+	page.addFunction(PageCalendarWeek.EVENT_SHIFT_CLICK,this._handleWeekShiftClickFxn,this);
 	//this._pageCalendarWeek.addShift(12,2, 1234567890,"2013-05-06 06:00:00.0000","2013-05-06 13:30:00.0000", 1,"LongPersonNameHere"); // positionID,dow0to6,shiftID,userID,userName
 	//this._pageCalendarWeek.clear();
 	/*
@@ -139,6 +139,10 @@ Volunteer.prototype._hookPageCalendarWeek = function(page){
 }
 Volunteer.prototype._hookPageShifts = function(page){
 	this._pageShifts = page;
+	page.addFunction(PageShifts.EVENT_SHIFT_CREATED,this._handleShiftCreatedFxn,this);
+}
+Volunteer.prototype._hookPageShiftSingle = function(page){
+	this._pageShiftSingle = page;
 }
 // ----------------------------------------------------------------------------- event listeners
 Volunteer.prototype._loginSuccessFxn = function(page){
@@ -148,6 +152,20 @@ Volunteer.prototype._loginSuccessFxn = function(page){
 Volunteer.prototype._logoutSuccessFxn = function(page){
 	var currPage = this._navigatorMain.getCurrentPage();
 	currPage.reset();
+}
+Volunteer.prototype._handleShiftCreatedFxn = function(o){
+	var date = new Date(parseInt(o.first)*1000);
+	var year = date.getFullYear();
+	var month = date.getMonth()+1;
+	var day = date.getDate();
+	this._pageCalendarWeek.reset(year,month,day);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
+	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
+}
+Volunteer.prototype._handleWeekShiftClickFxn = function(o){
+	this._pageShiftSingle.reset(o);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
+	this._navigation.setSelectedNone();
 }
 Volunteer.prototype._navigatorMainPageAddedFxn = function(str,page){
 	//console.log("PAGE ADDED - ",str,page);

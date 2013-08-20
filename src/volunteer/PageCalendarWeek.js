@@ -1,5 +1,5 @@
 // PageCalendarWeek.js < PageWeb
-PageCalendarWeek.CONSTANT = 1;
+PageCalendarWeek.EVENT_SHIFT_CLICK = "EVENT_SHIFT_CLICK";
 
 // ------------------------------------------------------------------------------ constructor
 function PageCalendarWeek(container,interface){
@@ -16,12 +16,22 @@ function PageCalendarWeek(container,interface){
 	this._headersContainers = new Array();
 	this._datesContainers = new Array();
 	this._colContainers = new Array();
-	this._shiftContainers = new Array();
+	this._shiftElements = new Array();
 	this._positions = new Array();
+	this._nextContainer = Code.newDiv("Next");
+		Code.addClass(this._nextContainer,"calendarWeekNext");
+		Code.addListenerClick(this._nextContainer,this._nextClickFxn,this);
+	this._prevContainer = Code.newDiv("Prev");
+		Code.addClass(this._prevContainer,"calendarWeekPrev");
+		Code.addListenerClick(this._prevContainer,this._prevClickFxn,this);
+	Code.addChild( this._root, this._prevContainer);
+	Code.addChild( this._root, this._nextContainer);
 	Code.addChild( this._root, this._tableContainer);
 	this._init();
 }
 Code.inheritClass(PageCalendarWeek, PageWeb);
+// ------------------------------------------------------------------------------ 
+PageCalendarWeek.prototype.PROPERTY_SHIFT_ID="shift_id";
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype._init = function(){
 	var i, len, div, d, e;
@@ -49,11 +59,10 @@ PageCalendarWeek.prototype.reset = function(year,month,day){
 	if(year===undefined){ year = timeStampNow.getFullYear(); }
 	if(month===undefined){ month = timeStampNow.getMonth()+1; }
 	if(day===undefined){ day = timeStampNow.getDate(); }
-	this._selectedYear = year; this._selectedMonth = month; this._selectedDay = day;
-	//
 	var moy = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 	var i, j, d, div, days, timeStamp;
 	var date = new Date(year, month-1, day, 0,0,0,0);
+	this._selectedYear = date.getFullYear(); this._selectedMonth = date.getMonth()+1; this._selectedDay = date.getDate();
 	timeStamp = date.getTime();
 	firstDOW = Code.getFirstMondayInWeek(timeStamp);
 	timeStamp = new Date(firstDOW);
@@ -67,6 +76,7 @@ PageCalendarWeek.prototype.reset = function(year,month,day){
 		}else{
 			d = new Date(time);
 			Code.setContent( this._datesContainers[i], d.getDate()+" - "+moy[d.getMonth()]+"" );
+			Code.removeClass(this._datesContainers[i],"calendarWeekToday");
 			if(d.getDate()===todayDay && d.getMonth()===todayMonth && d.getFullYear()===todayYear){
 				Code.addClass(this._datesContainers[i],"calendarWeekToday");
 			}
@@ -98,6 +108,7 @@ PageCalendarWeek.prototype.setPositions = function(list,id,name){
 		this._rowContainers.push(row);
 		for(j=0;j<len2;++j){
 			col = Code.addCell(row);
+			Code.addClass(col,"calendarWeekCol");
 			this._colContainers.push(col);
 			if(j==0){
 				Code.setContent(col, this._positions[i]["name"]);
@@ -122,18 +133,47 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 		col = this._colContainers[i*8+dow0to6+1];
 		d = this._createShiftContainer(shiftID,begin,end,userID,userName);
 		Code.addChild(col,d);
+		this._addListenShift(col);
 	}
 	return found;
 }
+PageCalendarWeek.prototype._addListenShift = function(col){
+	Code.addListenerClick(col,this._shiftClickFxn,this);
+	this._shiftElements.push(col);
+}
+PageCalendarWeek.prototype._removeListenShift = function(col){
+	Code.removeListenerClick(col,this._shiftClickFxn,this);
+	Code.removeElementSimple(this._shiftElements, col);
+}
+PageCalendarWeek.prototype._shiftClickFxn = function(e){
+	var col = Code.getTargetFromMouseEvent(e);
+	var sid = Code.getProperty(col,this.PROPERTY_SHIFT_ID);
+	while(sid==null){
+		col = Code.getParent(col);
+		sid = Code.getProperty(col,this.PROPERTY_SHIFT_ID);
+	}
+	this.alertAll(PageCalendarWeek.EVENT_SHIFT_CLICK,sid);
+}
 PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,uname){
+	if(uname==""){
+		uname = "(empty)";
+	}
 	var d = Code.newDiv();
 	Code.addClass(d,"calendarWeekShiftDiv");
-	Code.setContent(d, "<u>"+uname+"</u><br/>"+begin+" to "+end+"<br/>"+"("+sid+")");
+	Code.setProperty(d,this.PROPERTY_SHIFT_ID,""+sid);
+	Code.setContent(d, "<u>"+uname+"</u>"+"<br/>"+" "+begin+" - "+end+"");
 	return d;
 }
 PageCalendarWeek.prototype.kill = function(){
 	//
 	PageCalendarWeek._.kill.call(this);
+}
+// ------------------------------------------------------------------------- next/prev clicks
+PageCalendarWeek.prototype._prevClickFxn = function(e){
+	this.reset(this._selectedYear,this._selectedMonth,this._selectedDay-7);
+}
+PageCalendarWeek.prototype._nextClickFxn = function(e){
+	this.reset(this._selectedYear,this._selectedMonth,this._selectedDay+7);
 }
 // ------------------------------------------------------------------------- server events
 PageCalendarWeek.prototype._getRequiredInfo = function(){
@@ -147,7 +187,7 @@ PageCalendarWeek.prototype._getRequiredInfo = function(){
 PageCalendarWeek.prototype._checkRequiredInfo = function(){
 	this._requiredCount++;
 	if(this._requiredCount==this._requiredMax){
-		this._fillInShifts();
+		this._fillInShifts(this._requiredPositions, this._requiredShifts.positions);
 	}
 }
 PageCalendarWeek.prototype._fillInShifts = function(){
@@ -183,9 +223,9 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 		}*/
 		date = Code.dateFromString(shift.begin);
 		dow0to6 = (date.getDay()+6)%7;
-		begin = Code.prependFixed(date.getHours()+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2);
+		begin = Code.prependFixed((date.getHours()%13)+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+" "+Code.getAMPMFromDate(date);
 		date = Code.dateFromString(shift.end);
-		end = Code.prependFixed(date.getHours()+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2);
+		end = Code.prependFixed((date.getHours()%13)+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+" "+Code.getAMPMFromDate(date);
 //console.log(shift);
 		this.addShift( shift.position,dow0to6, shift.id,begin,end, shift.user_id,shift.username );
 	}

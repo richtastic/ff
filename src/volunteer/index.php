@@ -36,6 +36,8 @@ $ACTION_TYPE_USER_GET = "user";
 	$ACTION_TYPE_USER_GET_TYPE_SINGLE = "single";
 	$ACTION_TYPE_USER_GET_TYPE_CURRENT = "current";
 	$ACTION_TYPE_USER_GET_TYPE_LIST = "list";
+$ACTION_TYPE_SHIFT_INFO = "shift";
+	$ACTION_TYPE_SHIFT_INFO_ID = "id";
 $ACTION_TYPE_REQUEST_GET = "req";
 $ARGUMENT_GET_ACTION = $_GET['a'];
 $ARGUMENT_VALUE_USERID = null;
@@ -150,12 +152,14 @@ if($ARGUMENT_GET_ACTION!=null){
 					$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
 					$message = "single";
 				}
-				$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users where id="'.$user_id.'" limit 1;';
+				//$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users where id="'.$user_id.'" limit 1;';
+				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="1" limit 1;';
 				$result = mysql_query($query, $connection);
 				if($result && mysql_num_rows($result)==1 ){
 					$row = mysql_fetch_assoc($result);
 					$user_id = $row["id"];
 					$group_id = $row["group_id"];
+						$group_name = $row["group_name"];
 					$created = $row["created"];
 					$modified = $row["modified"];
 					$username = $row["username"];
@@ -167,7 +171,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$state = $row["state"];
 					$zip = $row["zip"];
 					echo '{"status": "success", "message": "'.$message.'", "user": '."\n".'{';
-					echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
+					echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
 					echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
 					echo '"city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
 					echo '}'."\n".'}';
@@ -265,6 +269,61 @@ if($ARGUMENT_GET_ACTION!=null){
 +------------------+---------------+------+-----+---------+----------------+
 
 */
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_INFO){
+			$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_INFO_ID]);
+			//$query = 'select id,created,parent_id,user_id,position_id,time_begin,time_end,algorithm from positions where id="'.$shift_id.'" limit 1;';
+			$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.position_id,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username,positions.name as position_name from shifts  left outer join users on users.id=shifts.user_id    left outer join positions on positions.id=shifts.position_id   where shifts.id="'.$shift_id.'"  limit 1;';
+			$result = mysql_query($query, $connection);
+			if($result){
+				if( mysql_num_rows($result)==1 ){
+					$row = mysql_fetch_assoc($result);
+					$shift_id = $row["id"];
+					$user_id = $row["user_id"];
+						$username = $row["username"];
+					$created = $row["created"];
+					$parent_id = $row["parent_id"];
+					$position_id = $row["position_id"];
+						$position_name = $row["position_name"];
+					$time_begin = $row["time_begin"];
+					$time_end = $row["time_end"];
+					$algorithm = $row["algorithm"];
+					echo '{ "status": "success", "message": "shift", "shift": {'."\n";
+					echo '"id": "'.$shift_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "created": "'.$created.'", "position_id": "'.$position_id.'", "position_name": "'.$position_name.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'", "algorithm": "'.$algorithm.'", "parent_id": "'.$parent_id.'", '."\n";
+					mysql_free_result($result);
+					if($parent_id!=0){ // next search - same query on parent
+						$shift_id = $parent_id;
+						$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.position_id,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username,positions.name as position_name from shifts  left outer join users on users.id=shifts.user_id    left outer join positions on positions.id=shifts.position_id   where shifts.id="'.$shift_id.'"  limit 1;';
+						$result = mysql_query($query, $connection);
+						if($result && mysql_num_rows($result)==1){
+							$row = mysql_fetch_assoc($result);
+							$shift_id = $row["id"];
+							$user_id = $row["user_id"];
+								$username = $row["username"];
+							$created = $row["created"];
+							$parent_id = $row["parent_id"];
+							$position_id = $row["position_id"];
+								$position_name = $row["position_name"];
+							$time_begin = $row["time_begin"];
+							$time_end = $row["time_end"];
+							$algorithm = $row["algorithm"];
+							echo '"parent": { ';
+							echo '"id": "'.$shift_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "created": "'.$created.'", "position_id": "'.$position_id.'", "position_name": "'.$position_name.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'", "algorithm": "'.$algorithm.'", "parent_id": "'.$parent_id.'" '."\n";
+							echo ' }'."\n";
+							mysql_free_result($result);
+						}else{
+							echo '"parent": null '."\n";
+						}
+					}else{
+						echo '"parent": null '."\n";
+					}
+					echo '} }';
+				}else{
+					echo '{ "status": "error", "message": "unknown shift id" }';
+				}
+				
+			}else{
+				echo '{ "status": "error", "message": "bad search" }';
+			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_CREATE){
 				$startDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_START_DATE]);
 				$endDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_END_DATE]);
@@ -273,7 +332,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				if( !($startDate&&$endDate&&$repeating&&$position_id) ){
 					echo '{ "status": "error", "message": "missing arguments" }';
 				}
-				// MAKE SURE POSITOIN EXISTS
+				// MAKE SURE POSITION EXISTS
 				$query = 'select id from positions where id="'.$position_id.'" ;';
 				$result = mysql_query($query, $connection);
 				if($result && mysql_num_rows($result)==1 ){
@@ -286,6 +345,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$children = computeDatePermutations($startDate,$endDate,$repeating);
 //echo print_r($children),"\n";
 				if($children!==null){
+					$firstChildStartTime = "";
 					$len = count($children);
 					if($len>0){
 						$startTime = dateFromString($startDate);
@@ -307,6 +367,9 @@ if($ARGUMENT_GET_ACTION!=null){
 						for($i=0;$i<$len;++$i){
 							$startTime = $children[$i][0];
 							$endTime = $children[$i][1];
+							if($i==0){
+								$firstChildStartTime = $startTime;//stringFromDate($startTime);
+							}
 							$query = 'insert into shifts (created, parent_id, user_id, position_id, time_begin, time_end, algorithm) values (now(),"'.$parent_id.'","0","'.$position_id.'","'.standardSQLDateFromSeconds($startTime).'","'.standardSQLDateFromSeconds($endTime).'",null) ;';
 							#echo $query."\n";
 							$result = mysql_query($query, $connection);
@@ -315,7 +378,7 @@ if($ARGUMENT_GET_ACTION!=null){
 								break;
 							}
 						}
-						echo '{ "status": "success", "message": "created '.($len).' singular shifts", "start": "'.$startTime.'" }';
+						echo '{ "status": "success", "message": "created '.($len).' singular shifts", "start": "'.$startTime.'", "first": "'.$firstChildStartTime.'" }';
 					}else{
 						echo '{ "status": "error", "message": "no shifts" }';
 					}
@@ -326,9 +389,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$calType = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
 				$calDate = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
 				$calTime = dateFromString($calDate);
-#echo $calTime."\n";
 				$calTime = getDayStartFromSeconds($calTime);
-#echo $calTime."\n";
 				$startDate = null; $endDate = null;
 				$message = "";
 				if($calType==$ACTION_TYPE_CALENDAR_DAY){
@@ -354,7 +415,7 @@ if($ARGUMENT_GET_ACTION!=null){
 #echo $startDate."\n";
 #echo $endDate."\n";
 				//$query = 'select id,parent_id,user_id,time_begin,time_end,position_id from shifts where time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
-				$query = 'select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts   left outer join users on users.id=shifts.user_id    where shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
+				$query = 'select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts   left outer join users on shifts.user_id=users.id    where parent_id!=0 and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
 				echo '{ "status": "success", "message": "'.$message.'", ';
 				$result = mysql_query($query, $connection);
 				if($result){
@@ -362,7 +423,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$i = 0;
 					echo '"total": '.$total_results.', "list": ['."\n";
 					while($row = mysql_fetch_assoc($result)){
-						$parent = $row["parent_id"];
+						$parent_id = $row["parent_id"];
 						$user_id = $row["user_id"];
 						$username = $row["username"];
 							/*$username = "";
@@ -377,7 +438,7 @@ if($ARGUMENT_GET_ACTION!=null){
 						$end  = $row["time_end"];
 						$position_id = $row["position_id"];
 						$shift_id = $row["id"];
-						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "position" : "'.$position_id.'", "id" : "'.$shift_id.'" }';
+						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "position" : "'.$position_id.'", "id" : "'.$shift_id.'" }';
 						if($i<($total_results-1)){ echo ','; }
 						echo "\n";
 						++$i;

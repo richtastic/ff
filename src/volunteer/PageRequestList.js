@@ -72,7 +72,6 @@ PageRequestList.prototype.addRequest = function(original_id,original_name, fulfi
 | info             | varchar(1024) | YES  |     | NULL    |                |
 | status           | int(11)       | YES  |     | NULL    |                |
 +------------------+---------------+------+-----+---------+----------------+
-
 */
 // ------------------------------------------------------------------------------ 
 PageRequestList.prototype._checkRequests = function(){

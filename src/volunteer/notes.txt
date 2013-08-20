@@ -413,6 +413,7 @@ drop table if exists shifts;
 create table shifts(
 id int not null auto_increment primary key,
 created datetime, # time created if parent | time assigned if child
+# modified datetime, # not used
 parent_id int, # 0 if parent | shift id generator if child
 user_id int, # creator if parent | owner if child
 position_id int, # position reference same if parent | child
@@ -500,11 +501,11 @@ login screen
 NEW TODO-----------
 x LOG IN 
 x ADD SHIFT > generate shift
-(tue) WEEK > click on shift
-(tue) EDIT SHIFT > assign to user (self)
-(tue) WEEK > click on request replacement
-(wed) REQUESTS > add self as replacement
-(wed) REQUESTS > approve shift replacement
+x WEEK > click on shift (bring up edit shift page)
+(tue) EDIT SHIFT > assign to user [self] (update/refresh own page)
+(tue) WEEK > click on request replacement (bring up request page)
+(wed) REQUESTS > add self as replacement (update/refresh own page)
+(wed) REQUESTS > approve shift replacement (update/refresh own page)
 (wed) WEEK > (view update)
 
 

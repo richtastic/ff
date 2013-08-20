@@ -1,14 +1,40 @@
 <?php
 // functions.php
 
+// iOS icons
+// <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+// <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+// <link rel="apple-touch-icon" href="/apple-touch-icon-57x57.png">
+// <link rel="apple-touch-startup-image" href="/splash-startup.png"> exactly 320x460
+// IE+
+// <meta http-equiv="X-UA-Compatible" content="IE=edge">
+// Palm+BlackBerry
+// <meta name="HandheldFriendly" content="true">
+// WindowsMobilePhone
+// <meta name="MobileOptimized" content="width">
+
 
 
 function includeHeader($title='Title'){
 	echo '
 <html>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <head>
 	<title>'.$title.'</title>
+	<!-- SEO -->
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta property="og:type" content="website" />
+	<meta name="description" content="Scheduling Interface BSFTH." />
+	<meta property="og:description" content="Scheduling Interface BSFTH." />
+	<meta name="keywords" content="boulder, shelter, homeless" />
+	<meta property="og:url" content="http://www.whatevs.com/" />
+	<link rel="canonical" href="http://www.whatevs.com/" />
+	<!-- mobile -->
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+	<!-- safari -->
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<!-- externals -->
 	<link rel="stylesheet" type="text/css" href="./volunteer.css">
 	<script type="text/javascript" src="./classes/json3.min.js"></script>
 	<script type="text/javascript" src="./classes/sha512.js"></script>
@@ -28,6 +54,7 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./PageRequestList.js"></script>
 	<script type="text/javascript" src="./PageShifts.js"></script>
 	<script type="text/javascript" src="./PageShiftsList.js"></script>
+	<script type="text/javascript" src="./PageShiftSingle.js"></script>
 	<script type="text/javascript" src="./PagePosition.js"></script>
 	<script type="text/javascript" src="./PagePositionList.js"></script>
 	<script type="text/javascript" src="./PageUser.js"></script>
@@ -103,7 +130,7 @@ function dateFromString($str){
 	}
 	$arr=null; $yyyy=0; $mm=0; $dd=0; $hh=0; $nn=0; $ss=0; $nnnn=0;
 	$yyyy = intval(substr($str,0,4));
-	$mm = intval(substr($str,5,2));
+	$mm = intval(substr($str,5,2)); // +1
 	$dd = intval(substr($str,8,2));
 	if( strlen($str)>=19 ){
 		$arr = timeValuesFromString(substr($str,11,strlen($str)));
@@ -174,9 +201,16 @@ function getLastSundayOfWeek($seconds){
 	return $seconds;
 }
 function getPrevDay($seconds){
-	$next = $seconds;// - 24*60*60;
-	$dat = mktime(0,0,0, intval(date("m",$next)),intval(date("d",$next))+1,intval(date("Y",$next)),-1);
-	return $dat;
+	/*$next = $seconds;// - 24*60*60;
+	$dat = mktime(0,0,0, intval(date("m",$next)),intval(date("d",$next))-1,intval(date("Y",$next)),-1);
+	return $dat;*/
+	$oH = intval(date("H",$seconds));
+	$oN = intval(date("i",$seconds));
+	$oS = intval(date("s",$seconds));
+	$oM = intval(date("m",$seconds));
+	$oD = intval(date("d",$seconds));
+	$oY = intval(date("y",$seconds));
+	return mktime($oH,$oN,$oS, $oM,intval($oD)-1,$oY,-1);
 }
 function getNextDay($seconds){
 	$oH = intval(date("H",$seconds));
@@ -185,7 +219,7 @@ function getNextDay($seconds){
 	$oM = intval(date("m",$seconds));
 	$oD = intval(date("d",$seconds));
 	$oY = intval(date("y",$seconds));
-	return mktime($oH,$oN,$oS, $oM,$oD+1,$oY,-1);
+	return mktime($oH,$oN,$oS, $oM,intval($oD)+1,$oY,-1);
 }
 function addTimeToSeconds($seconds,$yea,$mon,$day,$hou,$min,$sec,$nano){
 	$oH = intval(date("H",$seconds));

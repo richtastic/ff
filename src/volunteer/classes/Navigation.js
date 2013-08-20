@@ -31,14 +31,19 @@ Navigation.prototype.addMenuItem = function(referenceName,displayText){
 Navigation.prototype.removeMenuItem = function(referenceName){
 	//
 }
+Navigation.prototype.setSelectedNone = function(){
+	this.setSelected(null);
+}
 Navigation.prototype.setSelected = function(name){
 	for(key in this._navList){
 		Code.removeClass(this._navList[key], this._itemClassUnselected);
 		Code.removeClass(this._navList[key], this._itemClassSelected);
 		Code.addClass(this._navList[key], this._itemClassUnselected);
 	}
-	Code.removeClass(this._navList[name], this._itemClassUnselected);
-	Code.addClass(this._navList[name], this._itemClassSelected);
+	if(name){
+		Code.removeClass(this._navList[name], this._itemClassUnselected);
+		Code.addClass(this._navList[name], this._itemClassSelected);
+	}
 }
 // ------------------------------------------------------------------------------ events
 Navigation.prototype._itemClicked = function(e){

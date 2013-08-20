@@ -33,6 +33,8 @@ ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_GET = "req";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_PAGE = "page";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_COUNT = "count";
+ServerVolunteerInterface.prototype.ACTION_SHIFT_INFO = "shift";
+	ServerVolunteerInterface.prototype.ACTION_SHIFT_INFO_ID = "id";
 // -------------------------------------------------------------------------------------------------------------------------- HELPERS
 ServerVolunteerInterface.prototype._addCallback = function(a,ctx,call){
 	a._ctx=ctx; a._call=call;
@@ -91,6 +93,16 @@ ServerVolunteerInterface.prototype.submitLogout = function(ctx,call){
 	call.call(ctx,null);
 }
 // -------------------------------------------------------------------------------------------------------------------------- USER INFO
+ServerVolunteerInterface.prototype.isAdmin = function(o){
+	if(!o){ return false; }
+	if(o.status){ o = o.user; } // container
+	if(!o){ return false; }
+	var group = o.group_name;
+	if(group){
+		return !!group.match(/admin/g);
+	}
+	return false;
+}
 ServerVolunteerInterface.prototype.getCurrentUserInfo = function(ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
@@ -108,7 +120,6 @@ ServerVolunteerInterface.prototype.getUserInfo = function(uid,ctx,call){
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_SINGLE;
 	params[this.ACTION_USER_USER_ID] = uid;
-	console.log(params);
 	a.postParams(url,params,this,this.onAjaxGetUserInfo,this.onAjaxGetUserInfo);
 }
 ServerVolunteerInterface.prototype.onAjaxGetUserInfo = function(e,a){
@@ -125,7 +136,6 @@ ServerVolunteerInterface.prototype.getUsers = function(page,perpage,ctx,call){
 	a.postParams(url,params,this,this.onAjaxGetUsers,this.onAjaxGetUsers);
 }
 ServerVolunteerInterface.prototype.onAjaxGetUsers = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -148,6 +158,7 @@ ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -160,6 +171,19 @@ ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day, ctx,c
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
+	//console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.getShiftInfo = function(shift_id, ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_INFO;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_SHIFT_INFO_ID] = parseInt(shift_id);
+	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
+}
+ServerVolunteerInterface.prototype.onAjaxGetShiftInfo = function(e,a){
+	//console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
