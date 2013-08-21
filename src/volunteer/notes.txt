@@ -355,6 +355,8 @@ USER:
 
 
 NEW TABLE DESIGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+drop database volunteering;
+create database volunteering;
 mysql -h localhost -u richie -p'qwerty';
 use volunteering;
 # DROP ALL TABLES
@@ -451,6 +453,8 @@ insert into positions (user_id,created,modified,name,info) values ((select id fr
 insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Overnight","Work through the night");
 insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Backup","Be available for work");
 insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Management Backup","Be available for management");
+
+# SHIFTS
 # REQUESTS
 
 
@@ -504,6 +508,8 @@ x ADD SHIFT > generate shift
 x WEEK > click on shift (bring up edit shift page)
 (tue) EDIT SHIFT > assign to user [self] (update/refresh own page)
 (tue) WEEK > click on request replacement (bring up request page)
+	- need a list of users (just ids & usernames)
+	- need to know if request exists
 (wed) REQUESTS > add self as replacement (update/refresh own page)
 (wed) REQUESTS > approve shift replacement (update/refresh own page)
 (wed) WEEK > (view update)

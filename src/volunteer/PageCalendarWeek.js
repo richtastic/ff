@@ -35,7 +35,7 @@ PageCalendarWeek.prototype.PROPERTY_SHIFT_ID="shift_id";
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype._init = function(){
 	var i, len, div, d, e;
-	var dow = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+	var dow = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; //var dow = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 	for(i=-1;i<dow.length;++i){
 		d = Code.addCell(this._headerContainer);
 		Code.addClass(d,"calendarWeekHeaderCol");
@@ -108,23 +108,24 @@ PageCalendarWeek.prototype.setPositions = function(list,id,name){
 		this._rowContainers.push(row);
 		for(j=0;j<len2;++j){
 			col = Code.addCell(row);
-			Code.addClass(col,"calendarWeekCol");
 			this._colContainers.push(col);
 			if(j==0){
 				Code.setContent(col, this._positions[i]["name"]);
+				Code.addClass(col,"calendarWeekColPosition");
 			}else{
 				Code.setContent(col, "");
+				Code.addClass(col,"calendarWeekCol");
 			}
 		}
 	}
 }
 PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin,end, userID,userName){
-	positionID = parseInt(positionID);
-	shiftID = parseInt(shiftID);
+	positionID = parseInt(positionID,10);
+	shiftID = parseInt(shiftID,10);
 	var found, col, d, i, len=this._positions.length;
 	found = false;
 	for(i=0;i<len;++i){
-		if(parseInt(this._positions[i].id)==positionID){
+		if(parseInt(this._positions[i].id,10)==positionID){
 			found = true;
 			break;
 		}
@@ -223,9 +224,9 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 		}*/
 		date = Code.dateFromString(shift.begin);
 		dow0to6 = (date.getDay()+6)%7;
-		begin = Code.prependFixed((date.getHours()%13)+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+" "+Code.getAMPMFromDate(date);
+		begin = Code.getHourStringFromDate(date);
 		date = Code.dateFromString(shift.end);
-		end = Code.prependFixed((date.getHours()%13)+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+" "+Code.getAMPMFromDate(date);
+		end = Code.getHourStringFromDate(date);
 //console.log(shift);
 		this.addShift( shift.position,dow0to6, shift.id,begin,end, shift.user_id,shift.username );
 	}

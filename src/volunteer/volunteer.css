@@ -206,10 +206,10 @@ input{
 	border: none;
 	border-color: #00F;
 	border-width: 0px;
-	font-size: 80%;
 }
 .calendarWeekDateCol{ /* header */
 	background-color: #FFF;
+	font-size: 80%;
 }
 .calendarWeekHeader{
 	border: none;
@@ -217,22 +217,39 @@ input{
 	border-width: 0px;
 	margin: 0px;
 	background-color: #DDD;
-
 }
 .calendarWeekHeaderCol{
 	border: solid;
 	border-color: #CCC;
 	border-width: 1px;
-	padding-left: 10px;
-	padding-right: 10px;
+	padding-left: 6px;
+	padding-right: 6px;
 	padding-top: 2px;
 	padding-bottom: 2px;
+	font-size: 90%;
+	font-weight: bold;
+}
+.calendarWeekColPosition{
+	vertical-align: top;
+	border: solid;
+	border-color: #DDD;
+	border-width: 1px;
+	padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	font-size: 90%;
 }
 .calendarWeekCol{
 	vertical-align: top;
 	border: solid;
 	border-color: #DDD;
 	border-width: 1px;
+	padding-left: 0px;
+	padding-right: 0px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	font-size: 100%;
 }
 .calendarWeekShiftDiv{
 	color: #123;
@@ -242,6 +259,8 @@ input{
 	border: solid;
 	border-color: #ABC;
 	border-width: 1px;
+	padding-left: 1px;
+	padding-right: 1px;
 	border-radius: 4px;
 	-moz-border-radius: 4px;
 }
@@ -311,11 +330,94 @@ input{
 }
 
 /* ----------------------------------------------------------- SINGLE SHIFT - EDITING */
-.shiftSingleContainer{
-	border-style: solid;
-	border-width: 1px;
-	border-color: #F00;
+.shiftSingleContainerRoot{
+	
 }
+.shiftSingleContainer{
+	position: relative;
+	margin: 0 auto;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #CCC;
+	background-color: #EEE;
+	padding-left: 2px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	padding-right: 2px;
+	text-align: left;
+	display: inline-block;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+}
+.shiftSingleRow{
+	padding-left: 1px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	padding-right: 1px;
+	background-color: #FFF;
+}
+.shiftSinglePosition{
+	text-align: left;
+	text-decoration: underline;
+	font-weight: bold;
+	color: #FFF;
+	background-color: #223;
+	font-size: 120%;
+	text-indent: 10px;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+}
+.shiftSingleDate{
+	text-align: left;
+}
+.shiftSingleTime{
+	text-align: left;
+}
+.shiftSingleUser{
+	text-align: left;
+	text-indent: 4px;
+	font-style: italic;
+}
+.shiftSingleAlgorithm{
+	text-align: left;
+	font-size: 70%;
+	padding-bottom: 8px;
+}
+.shiftSingleButtonContainer{
+	text-align: center;
+	
+}
+.shiftSingleUserListContainer{
+	text-align: center;
+	
+}
+.shiftSingleButton{
+	margin: 2px;
+}
+.shiftSingleUserList{
+	/* */
+}
+.shiftSingleOptionTable{
+	margin 0 auto;
+}
+.shiftSingleOptionRow{
+	
+}
+.shiftSingleOptionCell{
+	padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	vertical-align: middle;
+}
+.shiftSingleAssign{
+	text-align: right;
+}
+.shiftSingleApply{
+	
+}
+
+
 
 /* ----------------------------------------------------------- LOGIN */
 
@@ -431,10 +533,6 @@ input{
 	padding-top: 1px;
 	padding-bottom: 1px;
 }
-
-
-
-
 
 
 

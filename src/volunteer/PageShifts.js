@@ -163,7 +163,7 @@ PageShifts.prototype._onClickSubmitSchedule = function(e){
 	var a = this.generateShiftString();
 	if(a==null){ console.log("ERROR"); return; }
 	var startDate = a[0], endDate = a[1], algorithm = a[2], position_id = a[3];
-	/* fake
+	/*
 	startDate = "2013-07-01 00:00:00.0000";
 	endDate = "2013-07-01 24:00:00.0000";
 	algorithm = "M06:00:00.0000-01:00:00.0000,T,W,R,F,S,U";

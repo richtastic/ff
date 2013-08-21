@@ -153,7 +153,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$message = "single";
 				}
 				//$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users where id="'.$user_id.'" limit 1;';
-				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="1" limit 1;';
+				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="'.$user_id.'" limit 1;';
 				$result = mysql_query($query, $connection);
 				if($result && mysql_num_rows($result)==1 ){
 					$row = mysql_fetch_assoc($result);
@@ -450,7 +450,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				}
 				echo ' }';
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_READ){
-				$query = "select id,user_id,created,modified,name,info from positions order by created desc";
+				$query = "select id,user_id,created,modified,name,info from positions order by created asc, id asc;";
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total_results = mysql_num_rows($result);

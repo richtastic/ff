@@ -117,9 +117,15 @@ Code.getTimeMilliseconds = function(){
     return d.getTime();
 };
 Code.getAMPMFromDate = function(date){
-	return parseInt(date.getHours())<=12?"AM":"PM";
+	return parseInt(date.getHours(),10)<=12?"AM":"PM";
 }
-
+Code.getHourStringFromDate = function(date){
+	var hour = (date.getHours()%13);
+	if(hour==0){
+		hour = 12; // 12 AM
+	}
+	return Code.prependFixed(hour+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+""+Code.getAMPMFromDate(date);
+}
 // ------------------------------------------------------------------------------------------ BINARY REPRESENTATIONS
 Code.intToBinaryString = function(num,cnt){
 	var i, len = (cnt!=null)?cnt:32, ander = 1;
@@ -459,9 +465,9 @@ Code.dateFromString = function(str){
 		return null;
 	}
 	var arr=null, yyyy=0, mm=0, dd=0, hh=0, nn=0, ss=0, nnnn=0;
-	yyyy = parseInt(str.substr(0,4));
-	mm = parseInt(str.substr(5,2))-1;
-	dd = parseInt(str.substr(8,2));
+	yyyy = parseInt(str.substr(0,4),10);
+	mm = parseInt(str.substr(5,2),10)-1;
+	dd = parseInt(str.substr(8,2),10);
 	if( str.length>=19 ){
 		arr = Code.timeValuesFromString( str.substr(11,str.length) );
 		hh = arr[0];
@@ -471,7 +477,7 @@ Code.dateFromString = function(str){
 			nnnn = arr[3];
 		}
 	}
-	var date = new Date(yyyy,mm,dd,hh,nn,ss,mm);
+	var date = new Date(yyyy,mm,dd,hh,nn,ss,nnnn);
 	return date;
 }
 Code.timeValuesFromString = function(str){
@@ -479,13 +485,92 @@ Code.timeValuesFromString = function(str){
 		return null;
 	}
 	var arr = new Array();
-	arr.push(parseInt(str.substr(0,2)) );
-	arr.push(parseInt(str.substr(3,2)) );
-	arr.push(parseInt(str.substr(6,2)) );
+	arr.push(parseInt(str.substr(0,2),10) );
+	arr.push(parseInt(str.substr(3,2),10) );
+	arr.push(parseInt(str.substr(6,2),10) );
 	if(str.length>=13){
-		arr.push( parseInt(str.substr(9,4)) );
+		arr.push( parseInt(str.substr(9,4),10) );
 	}
 	return arr;
+}
+Code.getArrayListFromTimeString = function(str){ // separates hour,minute,second,milli from HH:MM:SS[.NNNN]
+	var arr = new Array();
+	arr.push( parseInt(str.substr(0,2),10) );
+	arr.push( parseInt(str.substr(3,2),10) );
+	arr.push( parseInt(str.substr(6,2),10) );
+	if(str.length>8){
+		arr.push( parseInt(str.substr(9,4),10) );
+	}else{
+		arr.push(0);
+	}
+	return arr;
+}
+Code.getLogicalArrayFromRepeatString = function(alg){ // separates alg into usable array
+	var i, index, str, arr, letter, rep, tmp, stasto;
+	var daySplit = alg.split(",");
+	var daysOfWeek = new Array(7);
+	for(i=0;i<daysOfWeek.length;++i){
+		daysOfWeek[i] = new Array();
+	}
+	for(i=0;i<daySplit.length;++i){
+		str = daySplit[i];
+		if(str.length<=1){ continue; }
+		letter = str.substr(0,1);
+		if(letter=="M"){ index = 0;
+		}else if(letter=="T"){ index = 1;
+		}else if(letter=="W"){ index = 2;
+		}else if(letter=="R"){ index = 3;
+		}else if(letter=="F"){ index = 4;
+		}else if(letter=="S"){ index = 5;
+		}else if(letter=="U"){ index = 6;
+		}else{ continue; }
+		arr = daysOfWeek[index];
+		str = str.substr(1,str.length);
+		rep = str.split("|");
+		for(j=0;j<rep.length;++j){
+			stasto = rep[j].split("-");
+			tmp = new Array();
+			tmp.push( Code.getArrayListFromTimeString(stasto[0]) ); // start time
+			tmp.push( Code.getArrayListFromTimeString(stasto[1]) ); // plus time
+			arr.push(tmp);
+		}
+	}
+	return daysOfWeek; // DAYSOFWEEK[ PAIRS[ START[HH,MM,SS,NNNN],STOP[HH,MM,SS,NNNN] ], ... ]
+}
+
+Code.humanReadableRepeatString = function(alg){
+	var i, j, lm1, pairs, begin, add, str="";
+	var dow = ["M","T","W","R","F","S","U"];
+	var daysOfWeek = Code.getLogicalArrayFromRepeatString(alg);
+	var count = 0, found = 0;
+	for(i=0;i<daysOfWeek.length;++i){
+		if(daysOfWeek[i].length>0){
+			++count;
+		}
+	}
+	for(i=0;i<daysOfWeek.length;++i){
+		pairs = daysOfWeek[i];
+		if(pairs.length>0){
+			str += dow[i]+"[";
+			var lm1 = pairs.length-1;
+			for(j=0;j<=lm1;++j){
+				begin = pairs[j][0];
+				add = pairs[j][1];
+				str += Code.prependFixed(begin[0]+"","0",2)+":"+Code.prependFixed(begin[1]+"","0",2); // ignore ss,nnn
+				str += " +"+Code.prependFixed(add[0]+"","0",2)+":"+Code.prependFixed(add[1]+"","0",2); // ignore ss,nnn
+				if(j<lm1){
+					str += " | ";
+				}
+			}
+			str += "]";
+			//
+			++found;
+			if(found<count){
+				str += ", ";
+			}
+		}
+	}
+	return str;
 }
 
 /*

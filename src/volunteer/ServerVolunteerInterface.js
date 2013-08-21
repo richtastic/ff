@@ -74,6 +74,7 @@ ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 }
 ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	if(obj){
 		if(obj.status=="success"){
@@ -179,7 +180,7 @@ ServerVolunteerInterface.prototype.getShiftInfo = function(shift_id, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_INFO;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_INFO_ID] = parseInt(shift_id);
+	params[this.ACTION_SHIFT_INFO_ID] = parseInt(shift_id,10);
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftInfo = function(e,a){
