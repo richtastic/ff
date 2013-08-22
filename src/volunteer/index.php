@@ -731,9 +731,27 @@ else => blue [normal covered]
 						$end  = $row["time_end"];
 						$position_id = $row["position_id"];
 						$shift_id = $row["id"];
-						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "position" : "'.$position_id.'", "id" : "'.$shift_id.'" }';
-						if($i<($total_results-1)){ echo ','; }
+							$request_open_exists = "false";
+							$request_fillin_exists = "false";
+							$fulfill_user_id = 0;
+							$subquery = 'select status,fulfill_user_id from requests where shift_id="'.$shift_id.'" order by fulfill_user_id asc limit 1;';
+							$subresult = mysql_query($subquery, $connection);
+							if($subresult){
+								if(mysql_num_rows($subresult)==1){
+									$request_open_exists = "true";
+									$subrow = mysql_fetch_assoc($subresult);
+									$fulfill_user_id = intval($subrow["fulfill_user_id"]);
+									if($fulfill_user_id!=0){
+										$request_fillin_exists = "true";
+									}
+								}
+								mysql_free_result($subresult);
+							}
+						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", ';
+						echo ' "position" : "'.$position_id.'", "id" : "'.$shift_id.'", "request_open_exists": "'.$request_open_exists.'", "fulfill_user_id": "'.$fulfill_user_id.'" }';
+						if( $i<($total_results-1) ){ echo ','; }
 						echo "\n";
+						//echo $i." ".($total_results-1)." ".($i<($total_results-1))."\n";
 						++$i;
 					}
 					echo ']'."\n";

@@ -119,7 +119,7 @@ PageCalendarWeek.prototype.setPositions = function(list,id,name){
 		}
 	}
 }
-PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin,end, userID,userName){
+PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin,end, userID,userName, reqExist,fillUID){
 	positionID = parseInt(positionID,10);
 	shiftID = parseInt(shiftID,10);
 	var found, col, d, i, len=this._positions.length;
@@ -132,7 +132,7 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 	}
 	if(found){
 		col = this._colContainers[i*8+dow0to6+1];
-		d = this._createShiftContainer(shiftID,begin,end,userID,userName);
+		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID);
 		Code.addChild(col,d);
 		this._addListenShift(col);
 	}
@@ -155,12 +155,22 @@ PageCalendarWeek.prototype._shiftClickFxn = function(e){
 	}
 	this.alertAll(PageCalendarWeek.EVENT_SHIFT_CLICK,sid);
 }
-PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,uname){
-	if(uname==""){
-		uname = "(empty)";
-	}
+PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,uname, pend,fid){
 	var d = Code.newDiv();
 	Code.addClass(d,"calendarWeekShiftDiv");
+	if(uname==""){
+		uname = "(empty)";
+		Code.addClass(d,"calendarWeekShiftDivEmpty");
+		//console.log("A");
+	}else if(pend){
+		if(fid==0){
+			Code.addClass(d,"calendarWeekShiftDivOpen");
+			//console.log("B");
+		}else{
+			//console.log("C");
+			Code.addClass(d,"calendarWeekShiftDivPending");
+		}
+	}
 	Code.setProperty(d,this.PROPERTY_SHIFT_ID,""+sid);
 	Code.setContent(d, "<u>"+uname+"</u>"+"<br/>"+" "+begin+" - "+end+"");
 	return d;
@@ -232,7 +242,7 @@ var tmp = date;
 
 //end = tmp.getHours();
 //console.log(shift);
-		this.addShift( shift.position,dow0to6, shift.id,begin,end, shift.user_id,shift.username );
+		this.addShift( shift.position,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
 	}
 	/*var begin, end, pid, uid, parent, e, i, len;
 	for(i=0;i<len;++i){

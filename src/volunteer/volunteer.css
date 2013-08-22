@@ -266,6 +266,18 @@ input{
 	border-radius: 4px;
 	-moz-border-radius: 4px;
 }
+.calendarWeekShiftDivEmpty{
+	background: #DDCCDD;
+	border-color: #CBA;
+}
+.calendarWeekShiftDivOpen{
+	background: #EEEEDD;
+	border-color: #CBA;
+}
+.calendarWeekShiftDivPending{
+	background: #FFFFCC;
+	border-color: #CBA;
+}
 .calendarWeekToday{
 	background-color: #ACF;
 }
