@@ -34,10 +34,14 @@ ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_GET = "req";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_CREATE = "request_create";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_UPDATE_ANSWER = "request_answer";
-ServerVolunteerInterface.prototype.ACTION_REQUEST_SHIFT_ID = "shift_id";
-ServerVolunteerInterface.prototype.ACTION_REQUEST_USER_ID = "user_id";
+ServerVolunteerInterface.prototype.ACTION_REQUEST_UPDATE_DECIDE = "request_decide";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_SHIFT_ID = "shift_id";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_REQUEST_ID = "request_id";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_PAGE = "page";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_COUNT = "count";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_TYPE = "type";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_YES = "yes";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_NO = "no";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_INFO = "shift";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_INFO_ID = "id";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_SINGLE = "shift_user_single";
@@ -86,7 +90,6 @@ ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 }
 ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	if(obj){
 		if(obj.status=="success"){
@@ -261,7 +264,6 @@ ServerVolunteerInterface.prototype.createShiftRequest = function(user_id,shift_i
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_CREATE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_USER_ID] = user_id;
 	params[this.ACTION_REQUEST_SHIFT_ID] = shift_id;
 	a.postParams(url,params,this,this.onAjaxCreateShiftRequest,this.onAjaxCreateShiftRequest);
 }
@@ -270,12 +272,11 @@ ServerVolunteerInterface.prototype.onAjaxCreateShiftRequest = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
-ServerVolunteerInterface.prototype.updateShiftRequestAnswer = function(user_id,shift_id,ctx,call){
+ServerVolunteerInterface.prototype.updateShiftRequestAnswer = function(user_id,request_id,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_UPDATE_ANSWER;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_USER_ID] = user_id;
-	params[this.ACTION_REQUEST_SHIFT_ID] = shift_id;
+	params[this.ACTION_REQUEST_REQUEST_ID] = request_id;
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestAnswer,this.onAjaxUpdateShiftRequestAnswer);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestAnswer = function(e,a){
@@ -283,6 +284,33 @@ ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestAnswer = function(e,a
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
+ServerVolunteerInterface.prototype.updateShiftRequestDecideNo = function(request_id,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_UPDATE_DECIDE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_REQUEST_REQUEST_ID] = request_id;
+	params[this.ACTION_REQUEST_TYPE] = this.ACTION_REQUEST_NO;
+	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestDecideNo,this.onAjaxUpdateShiftRequestDecideNo);
+}
+ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideNo = function(e,a){
+	console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.updateShiftRequestDecideYes = function(request_id,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_UPDATE_DECIDE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_REQUEST_REQUEST_ID] = request_id;
+	params[this.ACTION_REQUEST_TYPE] = this.ACTION_REQUEST_YES;
+	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestDecideYes,this.onAjaxUpdateShiftRequestDecideYes);
+}
+ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideYes = function(e,a){
+	console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+
 // -------------------------------------------------------------------------------------------------------------------------- 
 ServerVolunteerInterface.prototype.wtf = function(){
 	

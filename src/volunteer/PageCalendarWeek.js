@@ -35,7 +35,7 @@ PageCalendarWeek.prototype.PROPERTY_SHIFT_ID="shift_id";
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype._init = function(){
 	var i, len, div, d, e;
-	var dow = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; //var dow = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+	var dow = Code.daysOfWeekShort;
 	for(i=-1;i<dow.length;++i){
 		d = Code.addCell(this._headerContainer);
 		Code.addClass(d,"calendarWeekHeaderCol");
@@ -217,6 +217,7 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 	len2 = positions_final.length;
 	for(i=0;i<len;++i){
 		shift = shifts[i];
+console.log(shift);
 		/*for(j=0;j<len2;++j){
 			if(positions_final[j].id==shift.position){
 				break;

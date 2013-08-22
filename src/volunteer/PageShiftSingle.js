@@ -1,5 +1,7 @@
 // PageShiftSingle.js < PageWeb
 PageShiftSingle.EVENT_SHIFT_UPDATED = "EVENT_SHIFT_UPDATED";
+PageShiftSingle.EVENT_REQUEST_CREATED = "EVENT_REQUEST_CREATED";
+PageShiftSingle.EVENT_REQUEST_UPDATED = "EVENT_REQUEST_UPDATED";
 
 // ------------------------------------------------------------------------------ constructor
 function PageShiftSingle(container, interface){
@@ -167,8 +169,7 @@ PageShiftSingle.prototype._getShiftInfo = function(shift_id){
 }
 PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
 	if(o && o.status=="success"){
-		var dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-		var moy = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+		var dow = Code.daysOfWeekShort, moy = Code.monthsShort;
 		this._shiftInfo = o.shift;
 		var shift = this._shiftInfo;
 		var parent = shift.parent;
@@ -176,7 +177,7 @@ PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
 		var dateBegin = Code.dateFromString(shift.time_begin);
 		var dateEnd = Code.dateFromString(shift.time_end);
 		var time = Code.getHourStringFromDate(dateBegin)+" - "+Code.getHourStringFromDate(dateEnd);
-		var date = " "+dow[dateBegin.getDay()]+" "+moy[dateBegin.getMonth()]+" "+dateBegin.getDay()+", "+dateBegin.getFullYear();
+		var date = " "+dow[dateBegin.getDay()]+" "+moy[dateBegin.getMonth()]+" "+dateBegin.getDate()+", "+dateBegin.getFullYear();
 		var user = "&rarr;"+(shift.username?shift.username:"(unassigned)");
 		var alg = Code.humanReadableRepeatString(parent.algorithm);
 		this._setShift(shift.position_name, time, date, user, alg);
@@ -215,14 +216,14 @@ PageShiftSingle.prototype._checkComplete = function(){
 		var isAdmin = this._interface.isAdmin(this._userInfo);
 		var belongsTo = this._userInfo.id==this._shiftInfo.user_id;
 		var isRequest = parseInt(this._shiftInfo.request_id,10)>0;
-console.log(isAdmin,belongsTo,isRequest);
+		var isFilled = this._shiftInfo.request_filled===true;
 		if(isAdmin){
 			this._showAdminInfo();
 		}
 		if((belongsTo || isAdmin) && !isRequest){
 			this._showRequestInfo();
 		}
-		if(isRequest){
+		if(isRequest && !isFilled){
 			this._showAnswerInfo();
 		}
 		if(isAdmin){ // fill in user list
@@ -264,27 +265,37 @@ PageShiftSingle.prototype._createShiftRequest = function(user_id,shift_id){
 	this._interface.createShiftRequest(user_id,shift_id,this,this._createShiftRequestSuccess);
 }
 PageShiftSingle.prototype._createShiftRequestSuccess = function(o){
-	console.log(o);
+	if(o && o.status=="success"){
+		var request_id = o.request.id;
+		this.alertAll(PageShiftSingle.EVENT_REQUEST_CREATED,request_id);
+	}else if(o && o.status=="error"){
+		alert(o.message);
+	}
 }
-PageShiftSingle.prototype._updateShiftRequestAnswer = function(user_id,shift_id){
-	this._interface.updateShiftRequestAnswer(user_id,shift_id,this,this._updateShiftRequestAnswerSuccess);
+PageShiftSingle.prototype._updateShiftRequestAnswer = function(user_id,request_id){
+	this._interface.updateShiftRequestAnswer(user_id,request_id,this,this._updateShiftRequestAnswerSuccess);
 }
 PageShiftSingle.prototype._updateShiftRequestAnswerSuccess = function(o){
-	console.log(o);
+	if(o && o.status=="success"){
+		var request_id = o.request.id;
+		this.alertAll(PageShiftSingle.EVENT_REQUEST_UPDATED,request_id);
+	}else if(o && o.status=="error"){
+		alert(o.message);
+	}
 }
 // ------------------------------------------------------------------------------ 
 PageShiftSingle.prototype._handleRequestClickFxn = function(e){ // request fill-in
 	this._createShiftRequest(this._userInfo.id,this._shiftInfo.id);
 }
 PageShiftSingle.prototype._handleAnswerClickFxn = function(e){ // answer fill-in
-	this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.id);
+	this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
 }
 PageShiftSingle.prototype._handleApply0ClickFxn = function(e){ // only this shift
 	var user_id = this._getSelectedUserID();
 	if(user_id>0){
 		this._applyUserToSingleShift(user_id,this._shiftInfo.id); // self
 	}else{
-		console.log("user not selected");
+		alert("user not selected");
 	}
 }
 PageShiftSingle.prototype._handleApply1ClickFxn = function(e){ // only empty
@@ -292,7 +303,7 @@ PageShiftSingle.prototype._handleApply1ClickFxn = function(e){ // only empty
 	if(user_id>0){
 		this._applyUserToEmptyShifts(user_id,this._shiftInfo.id); // parent
 	}else{
-		console.log("user not selected");
+		alert("user not selected");
 	}
 }
 PageShiftSingle.prototype._handleApply2ClickFxn = function(e){ // all
@@ -300,32 +311,6 @@ PageShiftSingle.prototype._handleApply2ClickFxn = function(e){ // all
 	if(user_id>0){
 		this._applyUserToAllShifts(user_id,this._shiftInfo.id); // parent
 	}else{
-		console.log("user not selected");
+		alert("user not selected");
 	}
 }
-
-/*
-ALL:
-position name
-shift start - end time
-current owner of single shift
-position repeat info (M/T/W/...)
-
-ADMIN:
-assign all related shifts to user [override all]
-assign only unassigned shifts to user [user_id=0]
-assign only this single shift to user [override single]
-user to assign to [drop-down menu]
-[APPLY] => goto week view
-----------------------------
-remove single shift: [DELETE] => [ARE YOU SURE] => goto week view
-remove all occurrences of shift: [DELETE] => [ARE YOU SURE] => goto week view
-
-OWNER:
-request substitute to fill single shift => goto week view
-
-VIEWER:
-request to fill this shift [if request exists] => goto week view
-
-
-*/

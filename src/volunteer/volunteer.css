@@ -209,6 +209,8 @@ input{
 }
 .calendarWeekDateCol{ /* header */
 	background-color: #FFF;
+	padding-left: 2px;
+	padding-right: 2px;
 	font-size: 80%;
 }
 .calendarWeekHeader{

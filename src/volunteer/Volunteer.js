@@ -144,6 +144,8 @@ Volunteer.prototype._hookPageShifts = function(page){
 Volunteer.prototype._hookPageShiftSingle = function(page){
 	this._pageShiftSingle = page;
 	page.addFunction(PageShiftSingle.EVENT_SHIFT_UPDATED,this._handleShiftUpdatedFxn,this);
+	page.addFunction(PageShiftSingle.EVENT_REQUEST_CREATED,this._handleRequestCreatedFxn,this);
+	page.addFunction(PageShiftSingle.EVENT_REQUEST_UPDATED,this._handleRequestUpdatedFxn,this);
 }
 // ----------------------------------------------------------------------------- event listeners
 Volunteer.prototype._loginSuccessFxn = function(page){
@@ -168,6 +170,16 @@ Volunteer.prototype._handleShiftCreatedFxn = function(o){
 }
 Volunteer.prototype._handleShiftUpdatedFxn = function(o){
 	this._gotoDateFxn(o);
+}
+Volunteer.prototype._handleRequestCreatedFxn = function(request_id){
+	this._pageRequestList.reset();
+	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
+	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+}
+Volunteer.prototype._handleRequestUpdatedFxn = function(request_id){
+	this._pageRequestList.reset();
+	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
+	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
 }
 Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._pageShiftSingle.reset(o);

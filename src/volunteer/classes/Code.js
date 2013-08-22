@@ -2,6 +2,8 @@
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+Code.daysOfWeekLong = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // ------------------------------------------------------------------------------------------
 function Code(){
 	this.www = 234;
@@ -263,10 +265,13 @@ Code.addRow = function(a,i){
 	return a.insertRow(i);//a.rows);
 }
 Code.removeRow = function(a){
-	return a.deleteRow(a.rows-1);
+	return a.deleteRow(a.rows.length-1);
 }
 Code.getRows = function(a){
 	return a.rows;
+}
+Code.getRowCount = function(a){
+	return a.rows.length;
 }
 Code.addCell = function(a,i){
 	if(i===undefined){ i=-1; }
