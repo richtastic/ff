@@ -123,9 +123,12 @@ Code.getAMPMFromDate = function(date){
 	return parseInt(date.getHours(),10)<=12?"AM":"PM";
 }
 Code.getHourStringFromDate = function(date){
-	var hour = (date.getHours()%13);
-	if(hour==0){
-		hour = 12; // 12 AM
+	hour = date.getHours();
+	if(hour>12){
+		hour -= 12; 
+	}
+	if(hour==0){ // 12 AM || PM
+		hour = 12;
 	}
 	return Code.prependFixed(hour+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+""+Code.getAMPMFromDate(date);
 }

@@ -146,10 +146,10 @@ PageShifts.prototype.generateShiftString = function(){
 	// ERROR CHECKING
 	var error = false;
 	//console.log(position_id===undefined,position_id===null,position_id=="");
-	if(position_id==""){ console.log("empty pid"); error = true; }
-	if(start_day==""||start_month==""||start_year==""){ console.log("invalid start"); error = true; }
-	if(end_day==""||end_month==""||end_year==""){ console.log("invalid end"); error = true; }
-	if(!found){ console.log("no dates"); error = true; }
+	if(position_id==""){ alert("empty pid"); error = true; }
+	if(start_day==""||start_month==""||start_year==""){ alert("invalid start"); error = true; }
+	if(end_day==""||end_month==""||end_year==""){ alert("invalid end"); error = true; }
+	if(!found){ alert("no dates"); error = true; }
 	if(error){ return null; }
 	// RETURN LIST
 	return [startDate, endDate, str, position_id];
@@ -161,7 +161,7 @@ PageShifts.prototype.generateShiftString = function(){
 }*/
 PageShifts.prototype._onClickSubmitSchedule = function(e){
 	var a = this.generateShiftString();
-	if(a==null){ console.log("ERROR"); return; }
+	if(a==null){ return; }
 	var startDate = a[0], endDate = a[1], algorithm = a[2], position_id = a[3];
 	/*
 	startDate = "2013-07-01 00:00:00.0000";
@@ -169,7 +169,7 @@ PageShifts.prototype._onClickSubmitSchedule = function(e){
 	algorithm = "M06:00:00.0000-01:00:00.0000,T,W,R,F,S,U";
 	position_id = "1";
 	*/
-console.log(startDate,endDate,algorithm);
+//console.log(startDate,endDate,algorithm);
 	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_id, this,this._submitScheduleCallback);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){
@@ -177,7 +177,7 @@ PageShifts.prototype._submitScheduleCallback = function(o){
 //		this.clear();
 		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
 	}else{
-		console.log("ERROR IN SHIFT CREATION");
+		//console.log("ERROR IN SHIFT CREATION");
 	}
 }
 // ------------------------------------------------------------------------------ utilities

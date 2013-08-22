@@ -184,6 +184,7 @@ ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
+	console.log("....");
 	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);

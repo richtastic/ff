@@ -217,17 +217,20 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 	len2 = positions_final.length;
 	for(i=0;i<len;++i){
 		shift = shifts[i];
-console.log(shift);
+//console.log(shift);
 		/*for(j=0;j<len2;++j){
 			if(positions_final[j].id==shift.position){
 				break;
 			}
 		}*/
 		date = Code.dateFromString(shift.begin);
+var tmp = date;
 		dow0to6 = (date.getDay()+6)%7;
 		begin = Code.getHourStringFromDate(date);
 		date = Code.dateFromString(shift.end);
 		end = Code.getHourStringFromDate(date);
+
+//end = tmp.getHours();
 //console.log(shift);
 		this.addShift( shift.position,dow0to6, shift.id,begin,end, shift.user_id,shift.username );
 	}

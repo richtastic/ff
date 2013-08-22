@@ -150,11 +150,13 @@ function timeValuesFromString($str){ // hour : minute : second . millisecond
 		return null;
 	}
 	$arr = array();
-	array_push($arr, intval(substr($str,0,2)) );
-	array_push($arr, intval(substr($str,3,2)) );
-	array_push($arr, intval(substr($str,6,2)) );
+	array_push($arr, intval(substr($str,0,2),10) );
+	array_push($arr, intval(substr($str,3,2),10) );
+	array_push($arr, intval(substr($str,6,2),10) );
 	if(strlen($str)>=13){
-		array_push($arr, intval(substr($str,9,4)) );
+		array_push($arr, intval(substr($str,9,4),10) );
+	}else{
+		array_push($arr, 0 );
 	}
 	return $arr;
 }
@@ -284,7 +286,7 @@ function computeDatePermutations($begin,$end,$code){
 			$index = -1;
 		}
 		if($index>=0 && $index<$len2 ){
-			$daysList[$index] = substr($tempList[$i],2, strlen($tempList[$i]) );
+			$daysList[$index] = substr($tempList[$i],1, strlen($tempList[$i]) );
 		}
 	}
 	$len = count($daysList);
