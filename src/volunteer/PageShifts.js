@@ -175,7 +175,7 @@ PageShifts.prototype._submitScheduleCallback = function(o){
 	if(o.status=="success"){
 //		this.clear();
 		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
-	}else if(o{
+	}else if(o){
 		alert(o.message);
 	}else{
 		alert("error in shift creation");
