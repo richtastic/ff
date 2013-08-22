@@ -1,6 +1,7 @@
 // Code.js 
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
-
+Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 // ------------------------------------------------------------------------------------------
 function Code(){
 	this.www = 234;
@@ -297,7 +298,9 @@ Code.getParent = function(a){
 	return a.parentNode;
 };
 Code.removeFromParent = function(a){
-	a.parentNode.removeChild(a);
+	if(a.parentNode){
+		a.parentNode.removeChild(a);
+	}
 };
 Code.setProperty = function(ele,pro,val){
 	return ele.setAttribute(pro,val);
@@ -573,6 +576,11 @@ Code.humanReadableRepeatString = function(alg){
 	return str;
 }
 
+Code.getShortDateDescriptiveString = function(date){
+	var hrs = date.getHours()%13;
+	if(hrs==0){ hrs=12; }
+	return (date.getMonth()+1)+"/"+date.getDate()+"/"+((date.getFullYear()+"").substr(2,2))+" "+hrs+":"+Code.prependFixed(date.getMinutes()+"","0",2)+Code.getAMPMFromDate(date);
+}
 /*
 function.call(this, a, b, c);
 function.apply(this,arg);

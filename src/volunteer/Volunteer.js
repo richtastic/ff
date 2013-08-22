@@ -143,6 +143,7 @@ Volunteer.prototype._hookPageShifts = function(page){
 }
 Volunteer.prototype._hookPageShiftSingle = function(page){
 	this._pageShiftSingle = page;
+	page.addFunction(PageShiftSingle.EVENT_SHIFT_UPDATED,this._handleShiftUpdatedFxn,this);
 }
 // ----------------------------------------------------------------------------- event listeners
 Volunteer.prototype._loginSuccessFxn = function(page){
@@ -153,14 +154,20 @@ Volunteer.prototype._logoutSuccessFxn = function(page){
 	var currPage = this._navigatorMain.getCurrentPage();
 	currPage.reset();
 }
-Volunteer.prototype._handleShiftCreatedFxn = function(o){
-	var date = new Date(parseInt(o.first)*1000);
+Volunteer.prototype._gotoDateFxn = function(seconds){
+	var date = new Date(parseInt(seconds)*1000);
 	var year = date.getFullYear();
 	var month = date.getMonth()+1;
 	var day = date.getDate();
 	this._pageCalendarWeek.reset(year,month,day);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
+}
+Volunteer.prototype._handleShiftCreatedFxn = function(o){
+	this._gotoDateFxn(o.first);
+}
+Volunteer.prototype._handleShiftUpdatedFxn = function(o){
+	this._gotoDateFxn(o);
 }
 Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._pageShiftSingle.reset(o);
@@ -196,7 +203,7 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 			break;
 		case Volunteer.NAV_REQUEST_LIST:
-		console.log("rl");
+			this._pageRequestList.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 			break;
 		default:

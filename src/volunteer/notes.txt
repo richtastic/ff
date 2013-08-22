@@ -434,7 +434,7 @@ request_user_id int,
 fulfill_user_id int,
 approved_user_id int, # admin
 info varchar(1024), # request reasoning explanation
-status int # 0=rejected, 1=approved
+status int # 0=open, 1=closed
 );
 
 # GROUPS

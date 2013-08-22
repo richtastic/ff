@@ -59,7 +59,7 @@ PageCalendarWeek.prototype.reset = function(year,month,day){
 	if(year===undefined){ year = timeStampNow.getFullYear(); }
 	if(month===undefined){ month = timeStampNow.getMonth()+1; }
 	if(day===undefined){ day = timeStampNow.getDate(); }
-	var moy = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	var moy = Code.monthsShort;
 	var i, j, d, div, days, timeStamp;
 	var date = new Date(year, month-1, day, 0,0,0,0);
 	this._selectedYear = date.getFullYear(); this._selectedMonth = date.getMonth()+1; this._selectedDay = date.getDate();

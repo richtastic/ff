@@ -174,7 +174,6 @@ console.log(startDate,endDate,algorithm);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){
 	if(o.status=="success"){
-		console.log(o);
 //		this.clear();
 		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
 	}else{

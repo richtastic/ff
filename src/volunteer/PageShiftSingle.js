@@ -1,5 +1,5 @@
 // PageShiftSingle.js < PageWeb
-PageShiftSingle.CONSTANT = 1;
+PageShiftSingle.EVENT_SHIFT_UPDATED = "EVENT_SHIFT_UPDATED";
 
 // ------------------------------------------------------------------------------ constructor
 function PageShiftSingle(container, interface){
@@ -82,33 +82,30 @@ function PageShiftSingle(container, interface){
 	Code.addChild(this._shiftContainer, this._shiftUser);
 	Code.addChild(this._shiftContainer, this._shiftAlgorithm);
 	Code.addChild(this._shiftContainer, this._shiftActionButtonContainer);
-		Code.addChild(this._shiftActionButtonContainer, this._shiftRequestButton);
-		Code.addChild(this._shiftActionButtonContainer, this._shiftAnswerButton);
+		// Code.addChild(this._shiftActionButtonContainer, this._shiftRequestButton);
+		// Code.addChild(this._shiftActionButtonContainer, this._shiftAnswerButton);
 	Code.addChild(this._shiftContainer, this._shiftUserListContainer);
-		Code.addChild(this._shiftUserListContainer, this._shiftUserList);
+		//Code.addChild(this._shiftUserListContainer, this._shiftUserList);
 	Code.addChild(this._shiftContainer, this._shiftOptionTableContainer);
-		Code.addChild(this._shiftOptionTableContainer, this._shiftOptionTable);
-			//Code.addChild(this._shiftOptionTable, this._shiftOption0);
-				Code.addChild(this._shiftOptionCell00, this._shiftAssign0);
-				Code.addChild(this._shiftOptionCell01, this._shiftApply0);
-			//Code.addChild(this._shiftContainer, this._shiftOption1);
-				Code.addChild(this._shiftOptionCell10, this._shiftAssign1);
-				Code.addChild(this._shiftOptionCell11, this._shiftApply1);
-			//Code.addChild(this._shiftContainer, this._shiftOption2);
-				Code.addChild(this._shiftOptionCell20, this._shiftAssign2);
-				Code.addChild(this._shiftOptionCell21, this._shiftApply2);
-	Code.addListenerClick(this._shiftRequestButton, this._handleClickFxn, this);
-	Code.addListenerClick(this._shiftAnswerButton, this._handleClickFxn, this);
-	Code.addListenerClick(this._shiftApply0, this._handleClickFxn, this);
-	Code.addListenerClick(this._shiftApply1, this._handleClickFxn, this);
-	Code.addListenerClick(this._shiftApply2, this._handleClickFxn, this);
-	this._shiftID = null;
+		//Code.addChild(this._shiftOptionTableContainer, this._shiftOptionTable);
+			// admin stuff
+			Code.addChild(this._shiftOptionCell00, this._shiftAssign0);
+			Code.addChild(this._shiftOptionCell01, this._shiftApply0);
+			Code.addChild(this._shiftOptionCell10, this._shiftAssign1);
+			Code.addChild(this._shiftOptionCell11, this._shiftApply1);
+			Code.addChild(this._shiftOptionCell20, this._shiftAssign2);
+			Code.addChild(this._shiftOptionCell21, this._shiftApply2);
+	Code.addListenerClick(this._shiftRequestButton, this._handleRequestClickFxn, this);
+	Code.addListenerClick(this._shiftAnswerButton, this._handleAnswerClickFxn, this);
+	Code.addListenerClick(this._shiftApply0, this._handleApply0ClickFxn, this);
+	Code.addListenerClick(this._shiftApply1, this._handleApply1ClickFxn, this);
+	Code.addListenerClick(this._shiftApply2, this._handleApply2ClickFxn, this);
 	this._init();
 }
 Code.inheritClass(PageShiftSingle, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageShiftSingle.prototype._init = function(){
-
+	this.clear();
 }
 PageShiftSingle.prototype.clear = function(){
 	Code.setContent(this._shiftPosition,"");
@@ -116,33 +113,64 @@ PageShiftSingle.prototype.clear = function(){
 	Code.setContent(this._shiftTime,"");
 	Code.setContent(this._shiftUser,"");
 	Code.setContent(this._shiftAlgorithm,"");
-	//Code.setContent(this._shiftActionButtonContainer,"");
-	//Code.setContent(this._shiftPosition,"");
+	this._hideRequestInfo();
+	this._hideAnswerInfo();
+	this._hideAdminInfo();
+	this._shiftInfo = null;
+	this._userInfo = null;
+	this._usersListInfo = null;
 }
 PageShiftSingle.prototype.reset = function(shift_id){
-	this._shiftID = shift_id;
-	//console.log(this._shiftID);
-	this._getShiftInfo(this._shiftID);
+	this.clear();
+	this._getShiftInfo(shift_id);
 	this._getUserInfo();
 }
+// ------------------------------------------------------------------------------ 
+PageShiftSingle.prototype._hideRequestInfo = function(){
+	Code.removeFromParent(this._shiftRequestButton);
+}
+PageShiftSingle.prototype._showRequestInfo = function(){
+	Code.addChild(this._shiftActionButtonContainer, this._shiftRequestButton);
+}
+PageShiftSingle.prototype._hideAnswerInfo = function(){
+	Code.removeFromParent(this._shiftAnswerButton);
+}
+PageShiftSingle.prototype._showAnswerInfo = function(){
+	Code.addChild(this._shiftActionButtonContainer, this._shiftAnswerButton);
+}
+PageShiftSingle.prototype._hideAdminInfo = function(){
+	Code.removeFromParent(this._shiftUserList);
+	Code.removeFromParent(this._shiftOptionTable);
+}
+PageShiftSingle.prototype._showAdminInfo = function(){
+	Code.addChild(this._shiftUserListContainer, this._shiftUserList);
+	Code.addChild(this._shiftOptionTableContainer, this._shiftOptionTable);
+}
+// ------------------------------------------------------------------------------ 
 PageShiftSingle.prototype._setShift = function(position, time, date, user, alg){
-	console.log("set");
 	Code.setContent(this._shiftPosition,""+position);
 	Code.setContent(this._shiftDate,""+time);
 	Code.setContent(this._shiftTime,""+date);
 	Code.setContent(this._shiftUser,""+user);
 	Code.setContent(this._shiftAlgorithm,""+alg);
 }
+PageShiftSingle.prototype._getSelectedUserID = function(){
+	var userid = this._shiftUserList.value;
+	if(userid==""){
+		return 0;
+	}
+	return parseInt(userid,10);
+}
 // ------------------------------------------------------------------------------ server info
 PageShiftSingle.prototype._getShiftInfo = function(shift_id){
 	this._interface.getShiftInfo(shift_id,this,this._getShiftInfoSuccess);
 }
 PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
-	console.log(o);
 	if(o && o.status=="success"){
 		var dow = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 		var moy = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-		var shift = o.shift;
+		this._shiftInfo = o.shift;
+		var shift = this._shiftInfo;
 		var parent = shift.parent;
 		if(parent==null){ parent = shift; }
 		var dateBegin = Code.dateFromString(shift.time_begin);
@@ -153,19 +181,127 @@ PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
 		var alg = Code.humanReadableRepeatString(parent.algorithm);
 		this._setShift(shift.position_name, time, date, user, alg);
 	}
+	this._checkComplete();
 }
 PageShiftSingle.prototype._getUserInfo = function(shift_id){
 	this._interface.getCurrentUserInfo(this,this._getUserInfoSuccess);
 }
 PageShiftSingle.prototype._getUserInfoSuccess = function(o){
-	var user = o.user;
-	var isAdmin = this._interface.isAdmin(user);
-	//console.log( user );
-	//console.log( !!user.group_name.match(/bacon/) );
+	this._userInfo = o.user;
+	this._checkComplete();
+}
+PageShiftSingle.prototype._getUsersListInfo = function(){
+	this._interface.getSimpleUserList(this,this._getUsersListInfoSuccess);
+}
+PageShiftSingle.prototype._getUsersListInfoSuccess = function(o){
+	if(o && o.status=="success"){
+		Code.emptyDom(this._shiftUserList);
+		this._usersListInfo = o.list;
+		var i, user, opt, list = this._usersListInfo;
+		for(i=-1;i<list.length;++i){
+			if(i==-1){
+				opt = Code.newOption("","",true);
+			}else{
+				user = list[i];
+				opt = Code.newOption(user.username+"",user.id);
+			}
+			Code.addChild(this._shiftUserList,opt);
+		}
+	}
 }
 // ------------------------------------------------------------------------------ 
-PageShiftSingle.prototype._handleClickFxn = function(e){
-	console.log(e);
+PageShiftSingle.prototype._checkComplete = function(){
+	if(this._userInfo && this._shiftInfo){ // can do remainder of work
+		var isAdmin = this._interface.isAdmin(this._userInfo);
+		var belongsTo = this._userInfo.id==this._shiftInfo.user_id;
+		var isRequest = parseInt(this._shiftInfo.request_id,10)>0;
+console.log(isAdmin,belongsTo,isRequest);
+		if(isAdmin){
+			this._showAdminInfo();
+		}
+		if((belongsTo || isAdmin) && !isRequest){
+			this._showRequestInfo();
+		}
+		if(isRequest){
+			this._showAnswerInfo();
+		}
+		if(isAdmin){ // fill in user list
+			this._getUsersListInfo();
+		}
+	}
+}
+// ------------------------------------------------------------------------------ response-click server info
+PageShiftSingle.prototype._alertWithTime = function(o){
+	if(o && o.status=="success"){
+		var shift = o.shift;
+		var time = shift.time_begin;
+		var date = Code.dateFromString(time);
+		var seconds = date.getTime()/1000;
+		this.alertAll(PageShiftSingle.EVENT_SHIFT_UPDATED,seconds);
+	}else if(o && o.status=="error"){
+		alert(o.message);
+	}
+}
+PageShiftSingle.prototype._applyUserToSingleShift = function(user_id,shift_id){
+	this._interface.applyUserToSingleShift(user_id,shift_id,this,this._applyUserToSingleShiftSuccess);
+}
+PageShiftSingle.prototype._applyUserToSingleShiftSuccess = function(o){
+	this._alertWithTime(o);
+}
+PageShiftSingle.prototype._applyUserToEmptyShifts = function(user_id,shift_id){
+	this._interface.applyUserToEmptyShifts(user_id,shift_id,this,this._applyUserToEmptyShiftsSuccess);
+}
+PageShiftSingle.prototype._applyUserToEmptyShiftsSuccess = function(o){
+	this._alertWithTime(o);
+}
+PageShiftSingle.prototype._applyUserToAllShifts = function(user_id,shift_id){
+	this._interface.applyUserToAllShifts(user_id,shift_id,this,this._applyUserToAllShiftsSuccess);
+}
+PageShiftSingle.prototype._applyUserToAllShiftsSuccess = function(o){
+	this._alertWithTime(o);
+}
+PageShiftSingle.prototype._createShiftRequest = function(user_id,shift_id){
+	this._interface.createShiftRequest(user_id,shift_id,this,this._createShiftRequestSuccess);
+}
+PageShiftSingle.prototype._createShiftRequestSuccess = function(o){
+	console.log(o);
+}
+PageShiftSingle.prototype._updateShiftRequestAnswer = function(user_id,shift_id){
+	this._interface.updateShiftRequestAnswer(user_id,shift_id,this,this._updateShiftRequestAnswerSuccess);
+}
+PageShiftSingle.prototype._updateShiftRequestAnswerSuccess = function(o){
+	console.log(o);
+}
+// ------------------------------------------------------------------------------ 
+PageShiftSingle.prototype._handleRequestClickFxn = function(e){ // request fill-in
+	this._createShiftRequest(this._userInfo.id,this._shiftInfo.id);
+}
+PageShiftSingle.prototype._handleAnswerClickFxn = function(e){ // answer fill-in
+	this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.id);
+}
+PageShiftSingle.prototype._handleApply0ClickFxn = function(e){ // only this shift
+	var user_id = this._getSelectedUserID();
+	if(user_id>0){
+		this._applyUserToSingleShift(user_id,this._shiftInfo.id); // self
+	}else{
+		console.log("user not selected");
+	}
+}
+PageShiftSingle.prototype._handleApply1ClickFxn = function(e){ // only empty
+	var user_id = this._getSelectedUserID();
+	if(user_id>0){
+		this._applyUserToEmptyShifts(user_id,this._shiftInfo.id); // parent
+	}else{
+		console.log("user not selected");
+	}
+}
+PageShiftSingle.prototype._handleApply2ClickFxn = function(e){ // all
+	var user_id = this._getSelectedUserID();
+	if(user_id>0){
+		this._applyUserToAllShifts(user_id,this._shiftInfo.id); // parent
+	}else{
+		console.log("user not selected");
+	}
 }
 
 /*
