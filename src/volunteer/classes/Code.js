@@ -68,12 +68,14 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
 
 // ------------------------------------------------------------------------------------------ PRINT
 Code.log = function log(o){
-	if(typeof o == Code.TYPE_STRING){
-		console.log( o );
-	}else if(typeof o == Code.TYPE_FUNCTION){
-		console.log( o );
-	}else{
-		console.log( o.toString() );
+	if(console && console.log!==null && console.log!==undefined){
+		if(typeof o == Code.TYPE_STRING){
+			console.log( o );
+		}else if(typeof o == Code.TYPE_FUNCTION){
+			console.log( o );
+		}else{
+			console.log( o.toString() );
+		}
 	}
 }
 // ------------------------------------------------------------------------------------------ ARRAY
@@ -120,7 +122,7 @@ Code.getTimeMilliseconds = function(){
     return d.getTime();
 };
 Code.getAMPMFromDate = function(date){
-	return parseInt(date.getHours(),10)<=12?"AM":"PM";
+	return parseInt(date.getHours(),10)<12?"AM":"PM";
 }
 Code.getHourStringFromDate = function(date){
 	hour = date.getHours();

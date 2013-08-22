@@ -170,10 +170,8 @@ PageRequestList.prototype._handleApproveClickFxnSuccess = function(o){
 PageRequestList.prototype._handleDenyClickFxn = function(e){
 	var target = Code.getTargetFromMouseEvent(e);
 	var request_id = Code.getProperty(target,"request_id");
-	console.log(request_id);
 	var target = Code.getTargetFromMouseEvent(e);
 	var request_id = parseInt(Code.getProperty(target,"request_id"),10);
-	console.log(request_id);
 	if(request_id>0){
 		this._interface.updateShiftRequestDecideNo(request_id,this,this._handleApproveClickFxnSuccess);
 	}

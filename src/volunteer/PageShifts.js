@@ -145,7 +145,6 @@ PageShifts.prototype.generateShiftString = function(){
 	}
 	// ERROR CHECKING
 	var error = false;
-	//console.log(position_id===undefined,position_id===null,position_id=="");
 	if(position_id==""){ alert("empty pid"); error = true; }
 	if(start_day==""||start_month==""||start_year==""){ alert("invalid start"); error = true; }
 	if(end_day==""||end_month==""||end_year==""){ alert("invalid end"); error = true; }
@@ -176,8 +175,10 @@ PageShifts.prototype._submitScheduleCallback = function(o){
 	if(o.status=="success"){
 //		this.clear();
 		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
+	}else if(o{
+		alert(o.message);
 	}else{
-		//console.log("ERROR IN SHIFT CREATION");
+		alert("error in shift creation");
 	}
 }
 // ------------------------------------------------------------------------------ utilities

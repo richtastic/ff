@@ -184,8 +184,6 @@ ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
-	console.log("....");
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -269,7 +267,6 @@ ServerVolunteerInterface.prototype.createShiftRequest = function(user_id,shift_i
 	a.postParams(url,params,this,this.onAjaxCreateShiftRequest,this.onAjaxCreateShiftRequest);
 }
 ServerVolunteerInterface.prototype.onAjaxCreateShiftRequest = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -281,7 +278,6 @@ ServerVolunteerInterface.prototype.updateShiftRequestAnswer = function(user_id,r
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestAnswer,this.onAjaxUpdateShiftRequestAnswer);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestAnswer = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -294,7 +290,6 @@ ServerVolunteerInterface.prototype.updateShiftRequestDecideNo = function(request
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestDecideNo,this.onAjaxUpdateShiftRequestDecideNo);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideNo = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -307,7 +302,6 @@ ServerVolunteerInterface.prototype.updateShiftRequestDecideYes = function(reques
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestDecideYes,this.onAjaxUpdateShiftRequestDecideYes);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideYes = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
