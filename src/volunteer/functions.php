@@ -55,8 +55,8 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./PageShifts.js"></script>
 	<script type="text/javascript" src="./PageShiftsList.js"></script>
 	<script type="text/javascript" src="./PageShiftSingle.js"></script>
-	<script type="text/javascript" src="./PagePosition.js"></script>
 	<script type="text/javascript" src="./PagePositionList.js"></script>
+	<script type="text/javascript" src="./PagePosition.js"></script>
 	<script type="text/javascript" src="./PageUser.js"></script>
 	<script type="text/javascript" src="./PageUserList.js"></script>
 	<script type="text/javascript" src="./Volunteer.js"></script>

@@ -360,7 +360,7 @@ else => blue [normal covered]
 				$total = mysql_num_rows($result);
 				mysql_free_result($result);
 				if($total==0){
-					$query = 'insert into requests (created,modified,shift_id,request_user_id,fulfill_user_id,approved_user_id,info,status,decision) values (now(),now(),"'.$shift_id.'","'.$user_id.'","0","0","","0","0"); ';
+					$query = 'insert into requests (created,shift_id,request_user_id,fulfill_user_id,fulfill_date,approved_user_id,approved_date,info,status,decision) values (now(),"'.$shift_id.'","'.$user_id.'","0",NULL,"0",NULL,"","0","0"); ';
 					$result = mysql_query($query,$connection);
 					if($result){
 						$request_id = intval( mysql_insert_id() );
@@ -401,7 +401,7 @@ else => blue [normal covered]
 					mysql_free_result($result);
 					if($request_status==0){
 						if($fulfill_user_id==0){
-							$query = 'update requests set fulfill_user_id="'.$user_id.'" where id="'.$request_id.'";';
+							$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date=now() where id="'.$request_id.'";';
 							$result = mysql_query($query);
 							if($result){
 								echo '{"status": "success", "message": "request filled", "request": {"id": "'.$request_id.'", "shift_id": "'.$shift_id.'", ';
@@ -438,7 +438,7 @@ else => blue [normal covered]
 					mysql_free_result($result);
 					if($request_status==0){
 						if($decide_type==$ACTION_TYPE_REQUEST_NO){ ////////////////////////////////////////////////////////////////////////////////////////////
-							$query = 'update requests set approved_user_id="'.$user_id.'", status="1", decision="0" where id="'.$request_id.'";';
+							$query = 'update requests set approved_user_id="'.$user_id.'",approved_date=now() status="1", decision="0" where id="'.$request_id.'";';
 							$result = mysql_query($query);
 							if($result){
 								mysql_free_result($result);

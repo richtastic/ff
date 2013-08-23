@@ -240,6 +240,22 @@ Code.newInputText = function(a){
 	}
 	return sub;
 };
+Code.newInputTextArea = function(a, r,c){
+	var sub = Code.newElement("textarea");
+	if(a!==undefined){
+		sub.value = a ;//Code.setContent(a,"value");sub.setAttribute("value",a);
+	}
+	if(r!==undefined){
+		sub.setAttribute("rows",r);
+	}
+	if(c!==undefined){
+		sub.setAttribute("cols",c);
+	}
+	return sub;
+};
+Code.getTextAreaValue = function(a){
+	return a.value;
+}
 Code.newInputPassword = function(a){
 	var sub = Code.newInput();
 	sub.setAttribute("type","password");
@@ -281,6 +297,9 @@ Code.getRowCount = function(a){
 Code.addCell = function(a,i){
 	if(i===undefined){ i=-1; }
 	return a.insertCell(i);//a.cells);
+}
+Code.spanCell = function(a,i){
+	return Code.setProperty(a,"colspan",""+i);
 }
 Code.removeCell = function(a){
 	return a.deleteCell(a.cells-1);

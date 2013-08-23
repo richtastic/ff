@@ -18,6 +18,7 @@ Volunteer.PAGE_REQUEST = "req";
 Volunteer.PAGE_REQUEST_LIST = "reqs";
 Volunteer.PAGE_USER = "user";
 Volunteer.PAGE_USER_LIST = "users";
+Volunteer.PAGE_POSITION = "position";
 //Volunteer.PAGE_LOGOUT = "logout";
 //Volunteer.PAGE_TOP = "top";
 Volunteer.PAGE_BOT = "bot";
@@ -61,7 +62,7 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.setPage(Volunteer.PAGE_USER, new PageUser(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_USER_LIST, new PageUserList(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_POSITION, new PagePosition(Code.newDiv(),this._interface) );
-	this._navigatorMain.setPage(Volunteer.PAGE_POSITION_LIST, new PagePositionList(Code.newDiv(),this._interface) );
+	//this._navigatorMain.setPage(Volunteer.PAGE_POSITION_LIST, new PagePositionList(Code.newDiv(),this._interface) );
 	this._navigatorTop.setPage(Volunteer.PAGE_LOGIN, new PageLogin(Code.newDiv(),this._interface) );
 	this._navigatorNav.setPage(Volunteer.PAGE_NAVIGATION, new Navigation(Code.newDiv(), "navigationContainer","navigationList","navigationItem","navigationItemUnselected","navigationItemSelected") );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
@@ -73,6 +74,7 @@ Volunteer.prototype.initialize = function(){
 	this._hookPageCalendarWeek( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_WEEK) );
 	this._hookPageShifts( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT) );
 	this._hookPageShiftSingle( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT_SINGLE) );
+	this._hookPagePosition( this._navigatorMain.getPage(Volunteer.PAGE_POSITION) );
 	this._hookPageRequest( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST) );
 	this._hookPageRequestList( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST_LIST) );
 	// fill bot pages
@@ -88,6 +90,8 @@ Volunteer.prototype.initialize = function(){
 	// this._navigation.setSelected(Volunteer.NAV_SHIFT);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	// this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_POSITION);
+	this._navigation.setSelected(Volunteer.NAV_POSITION);
 	// 
 }
 // ----------------------------------------------------------------------------- page hooks
@@ -102,6 +106,9 @@ Volunteer.prototype._hookPageRequest = function(page){
 Volunteer.prototype._hookPageRequestList = function(page){
 	this._pageRequestList = page;
 }
+Volunteer.prototype._hookPagePosition = function(page){
+	this._pagePosition = page;
+}
 Volunteer.prototype._hookPageNavigation = function(page){
 	this._navigation = page;
 	page.addMenuItem(Volunteer.NAV_CAL_WEEK,"Week");
@@ -111,8 +118,8 @@ Volunteer.prototype._hookPageNavigation = function(page){
 	//page.addMenuItem(Volunteer.NAV_SHIFTS,"Shifts");
 	//page.addMenuItem(Volunteer.NAV_USER,"Add User");
 	page.addMenuItem(Volunteer.NAV_USER_LIST,"Users");
-	//page.addMenuItem(Volunteer.NAV_POSITION,"Add Position");
-	page.addMenuItem(Volunteer.NAV_POSITION_LIST,"Positions");
+	page.addMenuItem(Volunteer.NAV_POSITION,"Positions");
+	//page.addMenuItem(Volunteer.NAV_POSITION_LIST,"Positions");
 	//page.addMenuItem(Volunteer.NAV_REQUEST,"Add Request");
 	page.addMenuItem(Volunteer.NAV_REQUEST_LIST,"Requests");
 	page.addFunction(Navigation.EVENT_ITEM_CLICKED,this._navigationItemClicked, this);
@@ -217,6 +224,10 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 		case Volunteer.NAV_REQUEST_LIST:
 			this._pageRequestList.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
+			break;
+		case Volunteer.NAV_POSITION:
+			this._pagePosition.reset();
+			this._navigatorMain.gotoPage(Volunteer.PAGE_POSITION);
 			break;
 		default:
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);

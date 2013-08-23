@@ -24,6 +24,12 @@ input{
 	padding-left: 4px;
 	padding-right: 4px;
 }
+textarea{
+	border-color: #CCC;
+	border-style: solid;
+	border-width: 1px;
+	display: inline;
+}
 
 
 .vTab{
@@ -547,6 +553,51 @@ input{
 	padding-top: 1px;
 	padding-bottom: 1px;
 }
+
+/* ----------------------------------------------------------- POSITION SINGLE */
+.positionContainer{
+	/*background-color: #F00;*/
+}
+.positionTableContainer{
+	/*background-color: #0F0;*/
+	margin: 0 auto;
+}
+.positionTable{
+	/*background-color: #00F;*/
+	margin: 0 auto;
+	border: solid;
+	border-color: #EEE;
+	border-width: 4px;
+}
+.positionTableRow{
+	border: solid;
+	border-color: #CCC;
+	border-width: 1px;
+}
+.positionTableCol{
+	text-align: center;
+	border: solid;
+	border-color: #EEE;
+	border-width: 1px;
+}
+.positionSubmit{
+
+}
+.positionSpacer{
+	
+}
+/* ----------------------------------------------------------- POSITION LIST */
+.positionListContainer{
+	/* */
+}
+.positionTableContainer{
+
+}
+.positionListTable{
+
+}
+
+
 
 
 

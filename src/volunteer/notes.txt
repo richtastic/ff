@@ -82,166 +82,6 @@ show tables;
 
 alter table users
 
-----------------------
-# DROP ALL TABLES
-drop table users;
-drop table emails;
-drop table emails;
-drop table emails;
-drop table emails;
-drop table emails;
-# USERS
-create table users(
-id int not null auto_increment primary key,
-group_id int,
-session varchar(2048),
-created datetime,
-modified datetime,
-username varchar(32) not null,
-password varchar(2048) not null,
-first_name: varchar(32),
-last_name: varchar(32),
-email varchar(64) not null,
-phone varchar(32),
-title varchar(255),
-city varchar(64),
-state varchar(64),
-zip varchar(16),
-photo varchar(255),
-session_id varchar(2048),
-preferences varchar(2048) #k1=v1,k2=v2,... showfirstname=1,showlastname=0,timezone=+8,
-);
-# EMPLOYERS
-create table employers(
-id int not null auto_increment primary key,
-name varchar(255)
-);
-# EMERGENCY_CONTACTS
-create table emergency_contacts(
-id int not null auto_increment primary key,
-name varchar(255)
-);
-# POSITIONS
-create table positions(
-id int not null auto_increment primary key,
-info varchar(2048),
-location varchar(64)
-);
-# SHIFTS
-create table shifts(
-id int not null auto_increment primary key,
-parent_id int,
-user_id int,
-position_id int,
-log_begin datetime,
-log_end datetime,
-time_begin datetime,
-time_end datetime,
-algorithm varchar(2048)
-);
-# PERMISSIONS
-create table permissions(
-id int not null auto_increment primary key,
-name varchar(32),
-info varchar(1024)
-);
-# GROUPS
-create table groups(
-id int not null auto_increment primary key,
-name varchar(32),
-info varchar(1024)
-);
-# EMAILS
-create table emails(
-id int not null auto_increment primary key,
-user_id int not null,
-name varchar(64),
-template text
-);
-# FAKE DATA
-insert into groups (name, info) values ("admin","god");
-insert into groups (name, info) values ("staff","staff member");
-insert into groups (name, info) values ("volunteer","by-the-by");
-insert into users (username, password, email, first_name, last_name, phone, title, state, city, zip, group_id, created, modified) values ("richie","123","zirbsster@gmail.com", "Richie", "Zirbes", "555-555-5555", "software dude", "CO", "Boulder", "12345", (select id from groups where name="volunteer"), now(), now() );
-insert into users (username, password, email, group_id) values ("smith","qwe","bacon@bacon.com", (select id from groups where name="staff") );
-insert into users (username, password, email, group_id) values ("tareva","123","joeboxes@gmail.com", (select id from groups where name="admin") );
-# DROP ALL TABLES
-drop table users;
-drop table employers;
-drop table emergency_contacts;
-drop table positions;
-drop table shifts;
-drop table permissions;
-drop table groups;
-drop table emails;
-
-
-============SHIFT-PARENT==============
-id: 123
-parent_id: 0
-user_id: 0
-position_id: 4
-log_begin: NULL
-log_end: NULL
-time_begin: 2013-07-13 00:00:00.0000
-time_end: 2013-08-15 24:00:00.0000
-algorithm: M:06:00:00.0000-08:30:00.0000&12:30:00.0000-3:00:00.0000,T,W,R,F:06:00:00.0000-08:00:00.0000,S,U
-
-
-============SHIFT-CHILD-01==============
-id: 124
-parent_id: 123
-user_id: 18
-position_id: 4
-log_begin: 2013-07-13 05:55:56.1234
-log_end: 2013-07-13 08:31:06.4321
-time_begin: 2013-07-13 06:00:00.0000
-time_end: 2013-07-13 08:30:00.0000
-algorithm: NULL
-
-
-separate algorithm by comma => array of days
-remove beginning Letter+Colon, separate day by ampersand => array of times
-separate times by dash => start time and end time
-
-
-SHIFT ACTIONS:
-- assign shift to user
-	- only assign single shift based on id to user_id
-- assign a 'set of shifts' to user
-	- assign all unassigned shifts based on parent_id to user_id
-- unassign shift to user
-	- only unassign user_id based on id
-- unassign a 'set of shifts' to user
-	- unassign all signed shifts based on parent_id from user_id
-- add 'one-time' cover-shift to a different user
-	- (same as assign shift)
-- delete a single shift
-	- delete shift based on id
-	- delete parent if no more child-shifts exist
-- delete a 'set of shifts'
-	- delete all shifts based on parent_id
-	- delete parent shift
-- alter a single shift
-	- change start/end time accordingly
-- alter a 'set of shifts'
-	- delete all shifts where user is not already assigned (in the future)
-	- add brand new set of shifts (even if )
-
-
-
-* user cannot own a parent shift, only sub-shifts
-* once a shift has been logged (begin and end), it can only be deleted/modified EXPLICTELY
-* 
-
-------------------------------------------------------------------------------------------------
-exceptions: NULL
-
-
- | Calendar | Users | Positions | Shifts | Permissions | Groups | Emails | 
-
-
-
 
  +---------------------------------------------+
  |                    - 18 -                   |
@@ -274,11 +114,6 @@ exceptions: NULL
  +---------------------------------------------+
  |  Dorm Supply - May 21, 2013  5:00PM-7:00PM  |
  +---------------------------------------------+
-
-
-?a=calendar&s=1234567890&h=###########
-?
-
 
 
 
@@ -404,8 +239,9 @@ info varchar(1024)
 drop table if exists positions;
 create table positions(
 id int not null auto_increment primary key,
-user_id int, # creator
-created datetime, # time created 
+created_user_id int, # creator
+created datetime, # time created
+modified_user_id int, # creator
 modified datetime, # time modified
 name varchar(32), # short title
 info varchar(2048) # longer job description
@@ -423,16 +259,17 @@ time_begin datetime, # start day if parent | start shift if child
 time_end datetime, # start day if parent | start shift if child
 algorithm varchar(2048) # string if parent | null if child
 );
-# REQUESTS
+# REQUESTS - AKA SWAPS
 drop table if exists requests;
 create table requests(
 id int not null auto_increment primary key,
-created datetime,
-modified datetime,# final approved rejected date
+created datetime, # requested
 shift_id int,
 request_user_id int,
 fulfill_user_id int,
+fulfill_date datetime, # filled
 approved_user_id int, # admin
+approved_date datetime, # decided
 info varchar(1024), # request reasoning explanation
 status int, # 0=open, 1=closed
 decision int # 0=deny, 1=accept
