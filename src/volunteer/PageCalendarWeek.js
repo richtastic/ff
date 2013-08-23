@@ -130,6 +130,7 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 			break;
 		}
 	}
+console.log(shiftID, reqExist, fillUID);
 	if(found){
 		col = this._colContainers[i*8+dow0to6+1];
 		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID);
@@ -163,6 +164,7 @@ PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,un
 		Code.addClass(d,"calendarWeekShiftDivEmpty");
 		//console.log("A");
 	}else if(pend){
+		//console.log(fid);
 		if(fid==0){
 			Code.addClass(d,"calendarWeekShiftDivOpen");
 			//console.log("B");

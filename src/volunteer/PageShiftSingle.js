@@ -177,7 +177,7 @@ PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
 		var dateBegin = Code.dateFromString(shift.time_begin);
 		var dateEnd = Code.dateFromString(shift.time_end);
 		var time = Code.getHourStringFromDate(dateBegin)+" - "+Code.getHourStringFromDate(dateEnd);
-		var date = " "+dow[dateBegin.getDay()]+" "+moy[dateBegin.getMonth()]+" "+dateBegin.getDate()+", "+dateBegin.getFullYear();
+		var date = " "+dow[ (dateBegin.getDay()+6)%7 ]+" "+moy[dateBegin.getMonth()]+" "+dateBegin.getDate()+", "+dateBegin.getFullYear();
 		var user = "&rarr;"+(shift.username?shift.username:"(unassigned)");
 		var alg = Code.humanReadableRepeatString(parent.algorithm);
 		this._setShift(shift.position_name, time, date, user, alg);

@@ -734,7 +734,7 @@ else => blue [normal covered]
 							$request_open_exists = "false";
 							$request_fillin_exists = "false";
 							$fulfill_user_id = 0;
-							$subquery = 'select status,fulfill_user_id from requests where shift_id="'.$shift_id.'" order by fulfill_user_id asc limit 1;';
+							$subquery = 'select status,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status="0" order by status asc limit 1;'; // open requests
 							$subresult = mysql_query($subquery, $connection);
 							if($subresult){
 								if(mysql_num_rows($subresult)==1){

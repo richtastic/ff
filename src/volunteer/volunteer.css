@@ -257,7 +257,7 @@ input{
 	color: #123;
 	font-size: 70%;
 	display: block;
-	background: #CCD6DD;
+	background: #CCD6FF;
 	border: solid;
 	border-color: #ABC;
 	border-width: 1px;
@@ -267,16 +267,16 @@ input{
 	-moz-border-radius: 4px;
 }
 .calendarWeekShiftDivEmpty{
-	background: #DDCCDD;
-	border-color: #CBA;
+	background: #FFBBBB;
+	border-color: #DDAA99;
 }
 .calendarWeekShiftDivOpen{
-	background: #EEEEDD;
+	background: #FFCC99;
 	border-color: #CBA;
 }
 .calendarWeekShiftDivPending{
-	background: #FFFFCC;
-	border-color: #CBA;
+	background: #FFFF99;
+	border-color: #DDCC99;
 }
 .calendarWeekToday{
 	background-color: #ACF;
