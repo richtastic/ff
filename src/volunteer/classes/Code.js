@@ -228,10 +228,13 @@ Code.newInputSubmit = function(a){
 	var sub = Code.newInput();
 	sub.setAttribute("type","submit");
 	if(a!==undefined){
-		sub.setAttribute("value",a);
+		Code.setInputLabel(sub,a);//sub.setAttribute("value",a);
 	}
 	return sub;
-};		
+};
+Code.setInputLabel = function(a,b){
+	a.setAttribute("value",b);
+}
 Code.newInputText = function(a){
 	var sub = Code.newInput();
 	sub.setAttribute("type","text");
@@ -299,6 +302,7 @@ Code.addCell = function(a,i){
 	return a.insertCell(i);//a.cells);
 }
 Code.spanCell = function(a,i){
+	a.colSpan = ""+i;
 	return Code.setProperty(a,"colspan",""+i);
 }
 Code.removeCell = function(a){
@@ -337,7 +341,12 @@ Code.setProperty = function(ele,pro,val){
 Code.getProperty = function(ele,pro){
 	return ele.getAttribute(pro);
 }
-
+Code.setDisabled = function(a){
+	a.disabled = true;
+}
+Code.setEnabled = function(a){
+	a.disabled = false;
+}
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
@@ -375,6 +384,24 @@ Code.removeClass = function(ele,cla){
 	c = c.replace(cla,"");
 	c = c.replace("  "," ");
 	ele.setAttribute("class",c);
+};
+/*
+Code.getStyle = function(ele){
+	var c = ele.getAttribute("style");
+	if(c==undefined || c==null){
+		c = ele.style;
+		if(c==undefined || c==null){
+			return "";
+		}
+	}
+	return c;
+}*/
+Code.addStyle = function(ele,cla){
+	/*var c = Code.getClass(ele)+" "+cla;
+	c = c.replace("  "," ");
+	c = c.replace(/^ /,"");
+	ele.setAttribute("class",c);
+	ele.className = c;*/
 };
 // - 
 Code.getContent = function(ele){

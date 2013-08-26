@@ -276,9 +276,9 @@ else => blue [normal covered]
 			$offset = max(0,$count*($page));
 			//$query = 'select id,created,modified,shift_id,request_user_id,fulfill_user_id,approved_user_id,info,status  from requests  order by approved_user_id asc, created desc limit '.$count.' offset '.$offset.';';
 			$query =
-			'select request_id, created, modified, shift_id, shift_begin, shift_end, position_id, position_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
+			'select request_id, created, shift_id, shift_begin, shift_end, position_id, position_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
 			' (select * from'.
-			' (select id as request_id, created, modified, shift_id, decision, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests) as R0'.
+			' (select id as request_id, created, shift_id, decision, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests) as R0'.
 			' left outer join'.
 			' (select id, user_id as owner_id, time_begin as shift_begin, time_end as shift_end, position_id as position_id from shifts) as S0'.
 			' on R0.shift_id=S0.id)'.
@@ -306,6 +306,8 @@ else => blue [normal covered]
 
 			' order by status asc, created desc limit '.$count.' offset '.$offset.';';
 			// select requests.
+// echo $query;
+// return;
 			$result = mysql_query($query, $connection);
 			if($result){
 				$total = mysql_num_rows($result);
@@ -314,7 +316,7 @@ else => blue [normal covered]
 				while( $row = mysql_fetch_assoc($result) ){
 					$request_id = $row["request_id"];
 					$created = $row["created"];
-					$modified = $row["modified"];
+					//$modified = $row["modified"];
 					$shift_id = $row["shift_id"];
 					$shift_begin = $row["shift_begin"];
 					$shift_end = $row["shift_end"];
@@ -331,8 +333,9 @@ else => blue [normal covered]
 					$approver_username = $row["approver_username"];
 					$info = $row["info"];
 					$status = $row["status"];
+					// ","modified":"'.$modified.'", 
 					echo '{';
-					echo '"request_id":"'.$request_id.'", "created":"'.$created.'","modified":"'.$modified.'", "shift_id":"'.$shift_id.'", "shift_begin":"'.$shift_begin.'", "shift_end":"'.$shift_end.'", ';
+					echo '"request_id":"'.$request_id.'", "created":"'.$created.' "shift_id":"'.$shift_id.'", "shift_begin":"'.$shift_begin.'", "shift_end":"'.$shift_end.'", ';
 					echo '"position_id":"'.$position_id.'", "position_name":"'.$position_name.'", ';
 					echo '"owner_id":"'.$owner_id.'", "requester_id":"'.$requester_id .'", "fulfiller_id":"'.$fulfiller_id.'", "approver_id":"'.$approver_id.'", ';
 					echo '"owner_username":"'.$owner_username.'", "requester_username":"'.$requester_username .'", "fulfiller_username":"'.$fulfiller_username.'", "approver_username":"'.$approver_username.'", ';
@@ -761,18 +764,28 @@ else => blue [normal covered]
 				}
 				echo ' }';
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_READ){
-				$query = "select id,user_id,created,modified,name,info from positions order by created asc, id asc;";
+				$query = 'select positions.id,positions.created_user_id,positions.created,positions.modified,positions.modified_user_id,positions.name,positions.info, '
+				.'usersA.username as created_username, usersB.username as modified_username from positions '
+				.'left outer join (users as usersA) on positions.created_user_id=usersA.id '
+				.'left outer join (users as usersB) on positions.modified_user_id=usersB.id '
+				.'order by created asc, id asc ;';
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total_results = mysql_num_rows($result);
 					$i = 0;
 					echo '{ "status": "success", "message": "positions", "total": '.$total_results.', "list" : ['."\n";
-
 					while($row = mysql_fetch_assoc($result)){
 						$position_id = $row["id"];
 						$name = $row["name"];
 						$desc = $row["info"];
-						echo '{ "name": "'.$name.'", "description": "'.$desc.'", "id": "'.$position_id.'"  }';
+						$created = $row["created"];
+						$created_user_id = $row["created_user_id"];
+						$created_username = $row["created_username"];
+						$modified = $row["modified"];
+						$modified_username = $row["modified_username"];
+						echo '{ "name": "'.$name.'", "description": "'.$desc.'", "id": "'.$position_id.'", "created": "'.$created.'", "created_user_id": "'.$created_user_id.'", ';
+						echo '"modified": "'.$modified.'", "modified_user_id": "'.$modified_user_id.'", ';
+						echo '"created_username": "'.$created_username.'", "modified_username": "'.$modified_username.'" }';
 						if($i<($total_results-1)){ echo ','; }
 						echo "\n";
 						++$i;
@@ -782,7 +795,33 @@ else => blue [normal covered]
 				}else{
 					echo '{ "status": "success", "message": "empty", "total": 0, "list" : [] }';
 				}
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_READ){
 
+// HERE
+				$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
+				if($position_id && $position_id>0){
+					// $query = "select id,created_user_id,created,modified,modified_user_id,name,info from positions where id="'.$position_id.'";";
+					// $result = mysql_query($query, $connection);
+					// if($result){
+					// 	$total_results = mysql_num_rows($result);
+					// 	$i = 0;
+					// 	echo '{ "status": "success", "message": "positions", "total": '.$total_results.', "list" : ['."\n";
+					// 	while($row = mysql_fetch_assoc($result)){
+					// 		$position_id = $row["id"];
+					// 		$name = $row["name"];
+					// 		$desc = $row["info"];
+					// 		echo '{ "name": "'.$name.'", "description": "'.$desc.'", "id": "'.$position_id.'"  }';
+					// 		if($i<($total_results-1)){ echo ','; }
+					// 		echo "\n";
+					// 		++$i;
+					// 	}
+					// 	echo '] }';
+					// 	mysql_free_result($result);
+					// }else{
+					// 	echo '{ "status": "success", "message": "empty", "total": 0, "list" : [] }';
+					// }
+				}
+				
 
 
 

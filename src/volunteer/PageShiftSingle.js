@@ -32,10 +32,10 @@ function PageShiftSingle(container, interface){
 		Code.addClass(this._shiftUserListContainer,"shiftSingleUserListContainer");
 	this._shiftUserList = Code.newSelect();
 		Code.addClass(this._shiftUserList,"shiftSingleUserList");
-	this._shiftOptionTableContainer = Code.newTable();
+	this._shiftOptionTableContainer = Code.newDiv();
 	this._shiftOptionTable = Code.newTable();
 		Code.addClass(this._shiftOptionTable,"shiftSingleOptionTable");
-	this._shiftOptionRow0 = Code.addRow(this._shiftOptionTable);//Code.newDiv();
+	this._shiftOptionRow0 = Code.addRow(this._shiftOptionTable);
 		Code.addClass(this._shiftOptionRow0,"shiftSingleOptionRow");
 		this._shiftOptionCell00 = Code.addCell(this._shiftOptionRow0);
 			Code.addClass(this._shiftOptionCell00,"shiftSingleOptionCell");
@@ -45,7 +45,7 @@ function PageShiftSingle(container, interface){
 				Code.addClass(this._shiftAssign0,"shiftSingleAssign");
 			this._shiftApply0 = Code.newInputSubmit("Apply");
 				Code.addClass(this._shiftApply0,"shiftSingleApply");
-	this._shiftOptionRow1 = Code.addRow(this._shiftOptionTable);//Code.newDiv();
+	this._shiftOptionRow1 = Code.addRow(this._shiftOptionTable);
 		Code.addClass(this._shiftOptionRow1,"shiftSingleOptionRow");
 		this._shiftOptionCell10 = Code.addCell(this._shiftOptionRow1);
 			Code.addClass(this._shiftOptionCell10,"shiftSingleOptionCell");
@@ -66,6 +66,8 @@ function PageShiftSingle(container, interface){
 			this._shiftApply2 = Code.newInputSubmit("Apply");
 				Code.addClass(this._shiftApply2,"shiftSingleApply");
 	//
+	//this._shiftAssign? = Code.newDiv("Assign all future shift to user"); + need a start date
+	//
 	Code.addClass(this._shiftPosition,"shiftSingleRow");
 	Code.addClass(this._shiftDate,"shiftSingleRow");
 	Code.addClass(this._shiftTime,"shiftSingleRow");
@@ -73,7 +75,7 @@ function PageShiftSingle(container, interface){
 	Code.addClass(this._shiftAlgorithm,"shiftSingleRow");
 	Code.addClass(this._shiftActionButtonContainer,"shiftSingleRow");
 	Code.addClass(this._shiftUserListContainer,"shiftSingleRow");
-	Code.addClass(this._shiftOptionTableContainer,"shiftSingleRow");
+	Code.addClass(this._shiftOptionTableContainer,"shiftSingleTableContainer");
 	//Code.addClass(this._shiftOption0,"shiftSingleRow");
 	//Code.addClass(this._shift,"shiftSingleRow");
 	//

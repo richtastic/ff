@@ -284,13 +284,13 @@ insert into users (username, password, email, first_name, last_name, phone, stat
 insert into users (username, password, email, first_name, last_name, phone, state, city, zip, group_id, created, modified) values ("john","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","john.smith@gmail.com", "John", "Smith", "555-555-5555", "WY", "Cheyenne", "56789", (select id from groups where name="staff"), now(), now() );
 insert into users (username, password, email, first_name, last_name, phone, state, city, zip, group_id, created, modified) values ("greg","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","gregg@yahoo.net", "Greg", "Garner", "303-333-5555", "UT", "Salt Lake City", "12121", (select id from groups where name="volunteer"), now(), now() );
 # POSITIONS
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Sunrise","Work in the morning");
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Short","Work in the evening");
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Medium","Work in the evening");
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Long","Work late");
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Overnight","Work through the night");
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Backup","Be available for work");
-insert into positions (user_id,created,modified,name,info) values ((select id from users where username="richie"),now(),now(),"Management Backup","Be available for management");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Sunrise","Work in the morning");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Short","Work in the evening");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Medium","Work in the evening");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Long","Work late");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Overnight","Work through the night");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Backup","Be available for work");
+insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Management Backup","Be available for management");
 
 # SHIFTS
 # REQUESTS
@@ -309,8 +309,8 @@ A) DELETE REQUEST
 
 
 
-select id,created,parent_id,user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
-select id,created,parent_id,user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
+select id,created,parent_id,created_user_id,modified_user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
+select id,created,parent_id,created_user_id,modified_user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
 
 
 
@@ -357,4 +357,4 @@ http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_
 // select groups.name, users.username, users.id   from users   inner join groups   on   users.group_id=groups.id;
 
 
-select id,created,modified,shift_id,request_user_id,fulfill_user_id,approved_user_id,info,status   from requests   order by approved_user_id asc, created desc;
+select id,created,modified,shift_id,request_created_user_id,modified_user_id,fulfill_created_user_id,modified_user_id,approved_created_user_id,modified_user_id,info,status   from requests   order by approved_user_id asc, created desc;

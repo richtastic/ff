@@ -351,11 +351,12 @@ textarea{
 
 /* ----------------------------------------------------------- SINGLE SHIFT - EDITING */
 .shiftSingleContainerRoot{
-	
+	margin: 0 auto;
 }
 .shiftSingleContainer{
-	position: relative;
+	/*position: relative;*/
 	margin: 0 auto;
+	width: auto;
 	border-style: solid;
 	border-width: 2px;
 	border-color: #CCC;
@@ -369,12 +370,19 @@ textarea{
 	border-radius: 6px;
 	-moz-border-radius: 6px;
 }
+.shiftSingleTableContainer{
+	/*position: relative;*/
+	width: auto;
+	margin: 0 auto;
+}
 .shiftSingleRow{
 	padding-left: 1px;
 	padding-top: 1px;
 	padding-bottom: 1px;
 	padding-right: 1px;
 	background-color: #FFF;
+	width: auto;
+	margin: 0 auto;
 }
 .shiftSinglePosition{
 	text-align: left;
@@ -588,17 +596,35 @@ textarea{
 }
 /* ----------------------------------------------------------- POSITION LIST */
 .positionListContainer{
-	/* */
+	margin: 0 auto;
 }
 .positionTableContainer{
-
+	margin: 0 auto;
 }
 .positionListTable{
+	margin: 0 auto;
+	border: solid;
+	border-color: #EEE;
+	border-width: 3px;
+}
+.positionListHeaderRow{
 
 }
+.positionListHeaderCell{
+	border: solid;
+	border-color: #CCC;
+	border-width: 1px;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+.positionListRow{
 
-
-
+}
+.positionListCell{
+	
+}
 
 
 

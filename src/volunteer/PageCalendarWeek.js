@@ -130,7 +130,6 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 			break;
 		}
 	}
-console.log(shiftID, reqExist, fillUID);
 	if(found){
 		col = this._colContainers[i*8+dow0to6+1];
 		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID);
