@@ -243,6 +243,9 @@ Code.newInputText = function(a){
 	}
 	return sub;
 };
+Code.setInputTextValue = function(a,b){
+	return a.setAttribute("value",b);
+};
 Code.newInputTextArea = function(a, r,c){
 	var sub = Code.newElement("textarea");
 	if(a!==undefined){
@@ -258,6 +261,9 @@ Code.newInputTextArea = function(a, r,c){
 };
 Code.getTextAreaValue = function(a){
 	return a.value;
+}
+Code.setTextAreaValue = function(a,b){
+	return a.value = b;
 }
 Code.newInputPassword = function(a){
 	var sub = Code.newInput();
@@ -641,5 +647,10 @@ Code.getShortDateDescriptiveString = function(date){
 function.call(this, a, b, c);
 function.apply(this,arg);
 */
+
+
+
+
+// base64
 
 

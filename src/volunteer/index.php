@@ -19,6 +19,8 @@ $ACTION_TYPE_CALENDAR = 'calendar';
 		$ACTION_TYPE_CALENDAR_MONTH = 'month';
 		$ACTION_TYPE_CALENDAR_DATE = 'date';
 $ACTION_TYPE_POSITION_READ = 'position_read';
+$ACTION_TYPE_POSITION_SINGLE_READ = "position_single_read";
+$ACTION_TYPE_POSITION_SINGLE_ID = "id";
 $ACTION_TYPE_USER_SIMPLE_GET= "user_simple";
 $ACTION_TYPE_USER_GET = "user";
 	$ACTION_TYPE_USER_GET_PAGE = "page";
@@ -796,30 +798,34 @@ else => blue [normal covered]
 					echo '{ "status": "success", "message": "empty", "total": 0, "list" : [] }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_READ){
-
-// HERE
-				$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
+				$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_ID]);
 				if($position_id && $position_id>0){
-					// $query = "select id,created_user_id,created,modified,modified_user_id,name,info from positions where id="'.$position_id.'";";
-					// $result = mysql_query($query, $connection);
-					// if($result){
-					// 	$total_results = mysql_num_rows($result);
-					// 	$i = 0;
-					// 	echo '{ "status": "success", "message": "positions", "total": '.$total_results.', "list" : ['."\n";
-					// 	while($row = mysql_fetch_assoc($result)){
-					// 		$position_id = $row["id"];
-					// 		$name = $row["name"];
-					// 		$desc = $row["info"];
-					// 		echo '{ "name": "'.$name.'", "description": "'.$desc.'", "id": "'.$position_id.'"  }';
-					// 		if($i<($total_results-1)){ echo ','; }
-					// 		echo "\n";
-					// 		++$i;
-					// 	}
-					// 	echo '] }';
-					// 	mysql_free_result($result);
-					// }else{
-					// 	echo '{ "status": "success", "message": "empty", "total": 0, "list" : [] }';
-					// }
+					$query = 'select positions.id,positions.created,positions.created_user_id,positions.modified,positions.modified_user_id,positions.name,positions.info '
+					.'from positions where id="'.$position_id.'";';
+					// outer join
+					$result = mysql_query($query, $connection);
+					if($result){
+						$total_results = mysql_num_rows($result);
+						if($total_results==1){
+							$row = mysql_fetch_assoc($result);
+							$position_id = $row["id"];
+					 		$created = $row["created"];
+					 		$created_user_id = $row["created_user_id"];
+					 		$modified = $row["modified"];
+					 		$modified_user_id = $row["modified_user_id"];
+					 		$name = $row["name"];
+					 		$desc = $row["info"];
+					 		echo '{ "status": "success", "message": "position found", "position" : {';
+					 		echo '"id": "'.$position_id.'", "created": "'.$created.'", "modified": "'.$modified.'", ';
+					 		echo '"created_user_id": "'.$created_user_id.'", "modified_user_id": "'.$modified_user_id.'", ';
+					 		echo '"name": "'.$name.'", "description": "'.$desc.'" } }';
+						}else{
+							echo '{ "status": "error", "message": "no results" }';
+						}
+						mysql_free_result($result);
+					}else{
+						echo '{ "status": "error", "message": "bad search" }';
+					}
 				}
 				
 

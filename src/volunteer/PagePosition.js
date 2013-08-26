@@ -52,8 +52,11 @@ PagePosition.prototype._init = function(){
 // ------------------------------------------------------------------------------ 
 PagePosition.prototype.clear = function(){
 	this._loading = false;
+	this._positionInfo = null;
 	Code.removeFromParent(this._inputDelete);
 	Code.removeFromParent(this._inputSubmit);
+	Code.setInputTextValue(this._inputPositionName,"");
+	Code.setTextAreaValue(this._inputPositionDesc,"");
 }
 PagePosition.prototype.reset = function(id){
 	this.clear();
@@ -77,11 +80,11 @@ PagePosition.prototype._getPositionInfo = function(id){
 }
 PagePosition.prototype._getPositionInfoSuccess = function(o){
 	if(o && o.status=="success"){
-		console.log(o);
-		/*
+		this._positionInfo = o.position;
 		Code.setEnabled(this._inputPositionName);
 		Code.setEnabled(this._inputPositionDesc);
-		*/
+		Code.setInputTextValue(this._inputPositionName,this._positionInfo.name);
+		Code.setTextAreaValue(this._inputPositionDesc,this._positionInfo.description);
 	}
 }
 // ------------------------------------------------------------------------------ 
@@ -89,4 +92,7 @@ PagePosition.prototype._handlePositionClicked = function(id){
 	console.log(id);
 	this.reset(id);
 }
-
+PagePosition.prototype._handlePositionClicked = function(id){
+	console.log(id);
+	this.reset(id);
+}

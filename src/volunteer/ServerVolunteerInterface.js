@@ -185,7 +185,7 @@ ServerVolunteerInterface.prototype.getPositionInfo = function(id,ctx,call){
 	params[this.ACTION_POSITION_SINGLE_ID] = id;
 	a.postParams(url,params,this,this.onAjaxGetPositionInfo,this.onAjaxGetPositionInfo);
 }
-ServerVolunteerInterface.prototype.onAjaxGetPositionInfo = function(e){
+ServerVolunteerInterface.prototype.onAjaxGetPositionInfo = function(e,a){
 	console.log(e);var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
