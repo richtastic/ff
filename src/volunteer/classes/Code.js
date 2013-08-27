@@ -652,6 +652,10 @@ function.apply(this,arg);
 */
 
 
+// ENCODE URL STRING SAFE FOR SENDING:
+// encodeURIComponent(str)
+// encodeURI(str)
+// escape(str)
 
 
 // base64

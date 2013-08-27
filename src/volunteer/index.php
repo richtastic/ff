@@ -848,7 +848,7 @@ else => blue [normal covered]
 
 
 
- // output = htmlspecialchars()
+ // output = htmlentities(input)
 
 
 
@@ -872,7 +872,9 @@ includeHeader("Volunteering");
 includeBody();
 
 // TEST EMAIL
-// output = htmlspecialchars()
+
+// output = htmlentities(input)
+// out = urldecode(in)
 
 includeFooter();
 }
