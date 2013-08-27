@@ -246,6 +246,9 @@ Code.newInputText = function(a){
 Code.setInputTextValue = function(a,b){
 	return a.setAttribute("value",b);
 };
+Code.getInputTextValue = function(a){
+	return a.value;//Code.getProperty(a,"value");
+};
 Code.newInputTextArea = function(a, r,c){
 	var sub = Code.newElement("textarea");
 	if(a!==undefined){

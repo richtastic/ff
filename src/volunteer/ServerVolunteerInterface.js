@@ -15,7 +15,10 @@ ServerVolunteerInterface.prototype.SESSION_ID = "sid";
 //
 ServerVolunteerInterface.prototype.ACTION_POSITION_GET = "position_read";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_GET = "position_single_read";
+ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_CREATE = "position_single_create";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_ID = "id";
+ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_NAME = "name";
+ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_INFO = "info";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE = "shift_create";
 ServerVolunteerInterface.prototype.ACTION_SESSION_CHECK = "session";
 ServerVolunteerInterface.prototype.ACTION_CALENDAR = "calendar";
@@ -188,6 +191,21 @@ ServerVolunteerInterface.prototype.getPositionInfo = function(id,ctx,call){
 ServerVolunteerInterface.prototype.onAjaxGetPositionInfo = function(e,a){
 	console.log(e);var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.createNewPosition = function(name,info,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_CREATE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_POSITION_SINGLE_NAME] = name;
+	params[this.ACTION_POSITION_SINGLE_INFO] = info;
+	a.postParams(url,params,this,this.onAjaxCreateNewPosition,this.onAjaxCreateNewPosition);
+}
+ServerVolunteerInterface.prototype.onAjaxCreateNewPosition = function(e,a){
+	console.log("---------------------------------");
+	console.log(e);
+	console.log("---------------------------------");
+	//var obj = JSON.parse(e);
+	//this._checkCallback(a,obj);
 }
 // -------------------------------------------------------------------------------------------------------------------------- SHIFTS
 ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat,position, ctx,call){

@@ -190,6 +190,8 @@ USER:
 
 
 NEW TABLE DESIGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+mysqldump -u "richie" -p"qwerty" volunteering 
+
 drop database volunteering;
 create database volunteering;
 mysql -h localhost -u richie -p'qwerty';

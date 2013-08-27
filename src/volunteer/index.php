@@ -20,7 +20,10 @@ $ACTION_TYPE_CALENDAR = 'calendar';
 		$ACTION_TYPE_CALENDAR_DATE = 'date';
 $ACTION_TYPE_POSITION_READ = 'position_read';
 $ACTION_TYPE_POSITION_SINGLE_READ = "position_single_read";
+$ACTION_TYPE_POSITION_SINGLE_CREATE = "position_single_create";
 $ACTION_TYPE_POSITION_SINGLE_ID = "id";
+$ACTION_TYPE_POSITION_SINGLE_NAME = "name";
+$ACTION_TYPE_POSITION_SINGLE_INFO = "info";
 $ACTION_TYPE_USER_SIMPLE_GET= "user_simple";
 $ACTION_TYPE_USER_GET = "user";
 	$ACTION_TYPE_USER_GET_PAGE = "page";
@@ -827,7 +830,13 @@ else => blue [normal covered]
 						echo '{ "status": "error", "message": "bad search" }';
 					}
 				}
-				
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_CREATE){
+				//$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_ID]);
+				$position_name = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_NAME]);
+				$position_info = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_INFO]);
+				echo "CREATE:"."\n";
+				echo "'".$position_name."'\n";
+				echo "'".$position_info."'\n";
 
 
 
@@ -839,10 +848,7 @@ else => blue [normal covered]
 
 
 
-
-
-
-
+ // output = htmlspecialchars()
 
 
 
@@ -866,7 +872,7 @@ includeHeader("Volunteering");
 includeBody();
 
 // TEST EMAIL
-
+// output = htmlspecialchars()
 
 includeFooter();
 }

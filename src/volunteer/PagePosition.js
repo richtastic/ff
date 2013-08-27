@@ -27,6 +27,9 @@ function PagePosition(container, interface){
 	Code.addChild(this._root, this._positionList.dom());
 	this._positionList.addFunction(PagePositionList.EVENT_POSITION_CLICK,this._handlePositionClicked, this);
 	//
+	Code.addListenerClick(this._inputSubmit,this._handleSubmitClickedFxn,this);
+	Code.addListenerClick(this._inputDelete,this._handleDeleteClickedFxn,this);
+	//
 	this._init();
 }
 Code.inheritClass(PagePosition, PageWeb);
@@ -92,7 +95,38 @@ PagePosition.prototype._handlePositionClicked = function(id){
 	console.log(id);
 	this.reset(id);
 }
-PagePosition.prototype._handlePositionClicked = function(id){
-	console.log(id);
-	this.reset(id);
+PagePosition.prototype._handleSubmitClickedFxn = function(e){
+	//console.log(e);
+	var name = Code.getInputTextValue(this._inputPositionName);
+	var info = Code.getTextAreaValue(this._inputPositionDesc);
+	console.log(name);
+	console.log(info);
+	if(this._positionInfo){
+		console.log("update");
+		//this._interface.updatePosition(id,name,info,this,this._onUpdateSuccessFxn);
+	}else{
+		console.log("create");
+		this._interface.createNewPosition(name,info,this,this._onCreateSuccessFxn);
+	}
 }
+PagePosition.prototype._handleDeleteClickedFxn = function(e){
+	//console.log(e);
+	if(this._positionInfo){
+		console.log("delete");
+		//this._interface.deletePosition(id,this,this._onUpdateSuccessFxn);
+	}else{
+		console.log("?");
+	}
+}
+// ------------------------------------------------------------------------------ 
+PagePosition.prototype._onCreateSuccessFxn = function(e){
+	console.log("create success");
+}
+PagePosition.prototype._onUpdateSuccessFxn = function(e){
+	console.log("update success");
+}
+PagePosition.prototype._onDeleteSuccessFxn = function(e){
+	console.log("delete success");
+}
+
+// ------------------------------------------------------------------------------ 
