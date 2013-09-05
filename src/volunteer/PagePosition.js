@@ -11,11 +11,13 @@ function PagePosition(container, interface){
 	this._positionTable = Code.newTable();
 		Code.addClass(this._positionTable,"positionTable");
 	this._inputSubmit = Code.newInputSubmit();
+	this._inputDelete = Code.newInputSubmit();
+	this._inputCancel = Code.newInputSubmit();
 	this._inputCreateLabel = "Create";
 	this._inputEditLabel = "Edit";
-		Code.addClass(this._positionTable,"positionSubmit");
-	this._inputDelete = Code.newInputSubmit();
+	this._inputCancelLabel = "Cancel";
 	this._inputDeleteLabel = "Delete";
+	
 		Code.addClass(this._positionTable,"positionSubmit");
 	this._spacer = Code.newDiv();
 		Code.addClass(this._positionTable,"positionSpacer");
@@ -29,6 +31,7 @@ function PagePosition(container, interface){
 	//
 	Code.addListenerClick(this._inputSubmit,this._handleSubmitClickedFxn,this);
 	Code.addListenerClick(this._inputDelete,this._handleDeleteClickedFxn,this);
+	Code.addListenerClick(this._inputCancel,this._handleCancelClickedFxn,this);
 	//
 	this._init();
 }
@@ -56,10 +59,11 @@ PagePosition.prototype._init = function(){
 PagePosition.prototype.clear = function(){
 	this._loading = false;
 	this._positionInfo = null;
-	Code.removeFromParent(this._inputDelete);
-	Code.removeFromParent(this._inputSubmit);
 	Code.setInputTextValue(this._inputPositionName,"");
 	Code.setTextAreaValue(this._inputPositionDesc,"");
+	Code.removeFromParent(this._inputDelete);
+	Code.removeFromParent(this._inputSubmit);
+	Code.removeFromParent(this._inputCancel);
 }
 PagePosition.prototype.reset = function(id){
 	this.clear();
@@ -67,8 +71,10 @@ PagePosition.prototype.reset = function(id){
 		this._loading = true;
 		Code.addChild( this._positionTableContainer, this._inputSubmit);
 		Code.addChild( this._positionTableContainer, this._inputDelete);
+		Code.addChild( this._positionTableContainer, this._inputCancel);
 		Code.setInputLabel(this._inputSubmit,this._inputEditLabel);
 		Code.setInputLabel(this._inputDelete,this._inputDeleteLabel);
+		Code.setInputLabel(this._inputCancel,this._inputCancelLabel);
 		Code.setDisabled(this._inputPositionName);
 		Code.setDisabled(this._inputPositionDesc);
 		this._getPositionInfo(id);
@@ -91,42 +97,75 @@ PagePosition.prototype._getPositionInfoSuccess = function(o){
 	}
 }
 // ------------------------------------------------------------------------------ 
+PagePosition.prototype._disableAll = function(){
+	Code.setDisabled(this._inputPositionName);
+	Code.setDisabled(this._inputPositionDesc);
+	Code.setDisabled(this._inputSubmit);
+	Code.setDisabled(this._inputDelete);
+	Code.setDisabled(this._inputCancel);
+}
+PagePosition.prototype._enableAll = function(){
+	Code.setEnabled(this._inputPositionName);
+	Code.setEnabled(this._inputPositionDesc);
+	Code.setEnabled(this._inputSubmit);
+	Code.setEnabled(this._inputDelete);
+	Code.setEnabled(this._inputCancel);
+}
+// ------------------------------------------------------------------------------ 
 PagePosition.prototype._handlePositionClicked = function(id){
-	console.log(id);
 	this.reset(id);
 }
 PagePosition.prototype._handleSubmitClickedFxn = function(e){
-	//console.log(e);
 	var name = Code.getInputTextValue(this._inputPositionName);
 	var info = Code.getTextAreaValue(this._inputPositionDesc);
-	console.log(name);
-	console.log(info);
+	this._disableAll();
 	if(this._positionInfo){
-		console.log("update");
-		//this._interface.updatePosition(id,name,info,this,this._onUpdateSuccessFxn);
+		var id = this._positionInfo.id;
+		this._interface.updatePosition(id,name,info,this,this._onUpdateSuccessFxn);
 	}else{
-		console.log("create");
 		this._interface.createNewPosition(name,info,this,this._onCreateSuccessFxn);
 	}
 }
 PagePosition.prototype._handleDeleteClickedFxn = function(e){
-	//console.log(e);
 	if(this._positionInfo){
-		console.log("delete");
-		//this._interface.deletePosition(id,this,this._onUpdateSuccessFxn);
-	}else{
-		console.log("?");
-	}
+		var val = confirm("Are you sure you want to delete '"+this._positionInfo.name+"' ?",this._handleConfirmedDeleteClickedFxn);
+		if(val){
+			this._disableAll();
+			var id = this._positionInfo.id;
+			this._interface.deletePosition(id,this,this._onDeleteSuccessFxn);
+		}
+	}else{ /* console.log("?"); */ }
+}
+PagePosition.prototype._handleCancelClickedFxn = function(e){
+	this.reset();
 }
 // ------------------------------------------------------------------------------ 
 PagePosition.prototype._onCreateSuccessFxn = function(e){
-	console.log("create success");
+	this._enableAll();
+	if(e.status=="success"){
+		this.reset();
+		this._positionList.reset();
+	}else{
+		alert(e.message);
+	}
 }
 PagePosition.prototype._onUpdateSuccessFxn = function(e){
-	console.log("update success");
+	this._enableAll();
+	if(e.status=="success"){
+		this.reset();
+		this._positionList.reset();
+	}else{
+		alert(e.message);
+	}
 }
 PagePosition.prototype._onDeleteSuccessFxn = function(e){
-	console.log("delete success");
+	this._enableAll();
+	if(e.status=="success"){
+		this.reset();
+		this._positionList.reset();
+	}else{
+		alert(e.message);
+	}
 }
 
 // ------------------------------------------------------------------------------ 

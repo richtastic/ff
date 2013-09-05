@@ -14,8 +14,10 @@ ServerVolunteerInterface.prototype.COOKIE_TIME_SECONDS = 60*60*24*365;
 ServerVolunteerInterface.prototype.SESSION_ID = "sid";
 //
 ServerVolunteerInterface.prototype.ACTION_POSITION_GET = "position_read";
-ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_GET = "position_single_read";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_CREATE = "position_single_create";
+ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_READ = "position_single_read";
+ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_UPDATE = "position_single_update";
+ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_DELETE = "position_single_delete";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_ID = "id";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_NAME = "name";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_INFO = "info";
@@ -183,7 +185,7 @@ ServerVolunteerInterface.prototype.onAjaxShiftPositions = function(e,a){
 }
 ServerVolunteerInterface.prototype.getPositionInfo = function(id,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
-	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_GET;
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_READ;
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_POSITION_SINGLE_ID] = id;
 	a.postParams(url,params,this,this.onAjaxGetPositionInfo,this.onAjaxGetPositionInfo);
@@ -196,16 +198,37 @@ ServerVolunteerInterface.prototype.createNewPosition = function(name,info,ctx,ca
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_CREATE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_POSITION_SINGLE_NAME] = name;
-	params[this.ACTION_POSITION_SINGLE_INFO] = info;
+	params[this.ACTION_POSITION_SINGLE_NAME] = this.encodeString(name);
+	params[this.ACTION_POSITION_SINGLE_INFO] = this.encodeString(info);
 	a.postParams(url,params,this,this.onAjaxCreateNewPosition,this.onAjaxCreateNewPosition);
 }
 ServerVolunteerInterface.prototype.onAjaxCreateNewPosition = function(e,a){
-	console.log("---------------------------------");
-	console.log(e);
-	console.log("---------------------------------");
-	//var obj = JSON.parse(e);
-	//this._checkCallback(a,obj);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.updatePosition = function(id,name,info,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_UPDATE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_POSITION_SINGLE_ID] = id;
+	params[this.ACTION_POSITION_SINGLE_NAME] = this.encodeString(name);
+	params[this.ACTION_POSITION_SINGLE_INFO] = this.encodeString(info);
+	a.postParams(url,params,this,this.onAjaxUpdatePosition,this.onAjaxUpdatePosition);
+}
+ServerVolunteerInterface.prototype.onAjaxUpdatePosition = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.deletePosition = function(id,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_DELETE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_POSITION_SINGLE_ID] = id;
+	a.postParams(url,params,this,this.onAjaxDeletePosition,this.onAjaxDeletePosition);
+}
+ServerVolunteerInterface.prototype.onAjaxDeletePosition = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
 }
 // -------------------------------------------------------------------------------------------------------------------------- SHIFTS
 ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat,position, ctx,call){
@@ -338,9 +361,12 @@ ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideYes = function(
 }
 
 // -------------------------------------------------------------------------------------------------------------------------- 
-ServerVolunteerInterface.prototype.wtf = function(){
-	
+ServerVolunteerInterface.prototype.encodeString = function(str){
+	return encodeURIComponent(str);
 }
+// encodeURIComponent("!@#$%^&*()_+")
+// decodeURIComponent( encodeURIComponent("!@#$%^&*()_+") )
+// !@#$%^&*()_+":{}
 /*
 Volunteer.prototype.onAjaxShiftPositionList = function(e){
 	//console.log(e);

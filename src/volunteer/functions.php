@@ -409,7 +409,31 @@ this.computePermutations = function(begin,end,code){
 	}
 */
 
+function decodeString($str){
+	//return urldecode($str);
+	return rawurldecode($str);
+}
+
+function decode_real_escape_string($str){
+	//return rawurldecode($str);
+	return mysql_real_escape_string( decodeString($str) );
+}
+
 /* SQL DB SPECIFIC: */
+function isValidPositionData($name,$info){
+	$MAX_NAME_LENGTH = 32; $MAX_INFO_LENGTH = 1024;
+	$nameLen = strlen($name);
+	$infoLen = strlen($info);
+	if( 0<$nameLen && $nameLen<=$MAX_NAME_LENGTH ){
+		if( 0<$infoLen && $infoLen<=$MAX_INFO_LENGTH ){
+			return true;
+		}
+	}
+	return false;
+}
+
+// --------------------------------------------------------------------------------
+
 function doSomething($val='default'){
 	echo "doSomething ".$val;
 }

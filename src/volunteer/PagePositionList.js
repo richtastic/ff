@@ -31,7 +31,7 @@ PagePositionList.prototype._init = function(){
 }
 // ------------------------------------------------------------------------------ 
 PagePositionList.prototype.clear = function(){
-	while( Code.getRows(this._positionListTable)>1 ){
+	while( Code.getRowCount(this._positionListTable)>1 ){
 		Code.removeRow(this._positionListTable);
 	}
 }
@@ -45,7 +45,7 @@ PagePositionList.prototype._getPositionsList = function(){
 }
 PagePositionList.prototype._getPositionsListSuccess = function(o){
 	if(o.status=="success"){
-		var row, col, dat, usr, dis, pid, positions = o.list;
+		var row, col, div, dat, usr, dis, pid, positions = o.list;
 		for(i=0;i<positions.length;++i){
 			row = Code.addRow(this._positionListTable);
 				Code.addClass(row,"positionListRow");
@@ -57,21 +57,36 @@ PagePositionList.prototype._getPositionsListSuccess = function(o){
 				dat = Code.dateFromString(positions[i].created);
 				dat = Code.getShortDateDescriptiveString(dat);
 				usr = positions[i].created_username;
-				if(usr){ dis=usr+"<br/>"+dat; }else{ dis=" - "; }
-				Code.setContent(col,dis);
+				//if(usr){ dis=usr+"<br/>"+dat; }else{ dis=" - "; }
+				//Code.setContent(col,dis);
+					div = Code.newDiv(usr?usr:"-");
+					Code.addClass(div,"positionListDivUser");
+					Code.addChild(col,div);
+					div = Code.newDiv(usr?dat:"");
+					Code.addClass(div,"positionListDivDate");
+					Code.addChild(col,div);
 			col = Code.addCell(row);
 				Code.addClass(col,"positionListCell");
 				dat = Code.dateFromString(positions[i].modified);
 				dat = Code.getShortDateDescriptiveString(dat);
 				usr = positions[i].modified_username;
-				if(usr){ dis=usr+"<br/>"+dat; }else{ dis=" - "; }
-				Code.setContent(col, dis);
+				//if(usr){ dis=usr+"<br/>"+dat; }else{ dis=" - "; }
+				//Code.setContent(col, dis);
+					div = Code.newDiv(usr?usr:"-");
+					Code.addClass(div,"positionListDivUser");
+					Code.addChild(col,div);
+					div = Code.newDiv(usr?dat:"");
+					Code.addClass(div,"positionListDivDate");
+					Code.addChild(col,div);
 			col = Code.addCell(row);
 				Code.addClass(col,"positionListCell");
-				Code.setContent(col, positions[i].name);
+				//Code.setContent(col, positions[i].name);
+					div = Code.newDiv(  Code.escapeHTML(positions[i].name) );
+					Code.addClass(div,"positionListDivName");
+					Code.addChild(col,div);
 			col = Code.addCell(row);
 				Code.addClass(col,"positionListCell");
-				Code.setContent(col, positions[i].description);
+				Code.setContent(col, Code.escapeHTML(positions[i].description) );
 			//
 			pid = positions[i].id;
 			Code.setProperty(row,"pid",pid);

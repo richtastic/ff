@@ -192,6 +192,8 @@ USER:
 NEW TABLE DESIGNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 mysqldump -u "richie" -p"qwerty" volunteering 
 
+set @@session.time_zone='+06:00';
+
 drop database volunteering;
 create database volunteering;
 mysql -h localhost -u richie -p'qwerty';
@@ -246,7 +248,7 @@ created datetime, # time created
 modified_user_id int, # creator
 modified datetime, # time modified
 name varchar(32), # short title
-info varchar(2048) # longer job description
+info varchar(1024) # longer job description
 );
 # SHIFTS
 drop table if exists shifts;
@@ -332,7 +334,6 @@ send email
 large calendar
 mini calendar
 vertical calendar
-integrate php + js + sql tables via server interface
 viewing pages
 editing/updating pages
 deleting
@@ -341,6 +342,18 @@ login screen
 
 
 NEW TODO-----------
+*) cascading foriegn key deleting tables
+*) user list (with paging)
+*) user CUD form
+*) shift form
+	*) 'assign user to all dates before/after date [M][D][Y]'
+	*) form clearing on .clear()
+*) shift list
+	*) delete
+*) replace all display data with Code.escapeHTML();
+*) 
+*) statistics page
+*) 
 remove all console.log() and replace errors with alert()s
 
 

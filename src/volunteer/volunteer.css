@@ -623,7 +623,27 @@ textarea{
 
 }
 .positionListCell{
-	
+	font-size: 80%;
+	background-color: #EEE;
+	border: solid;
+	border-color: #FFF;
+	border-width: 2px;
+	padding-left: 4px;
+	padding-right: 4px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+.positionListDivUser{
+	font-size: 90%;
+	font-weight: bold;
+}
+.positionListDivName{
+	font-size: 100%;
+	font-weight: bold;
+}
+.positionListDivDate{
+	font-size: 80%;
+	font-style: italic;
 }
 
 

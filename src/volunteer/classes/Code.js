@@ -244,7 +244,8 @@ Code.newInputText = function(a){
 	return sub;
 };
 Code.setInputTextValue = function(a,b){
-	return a.setAttribute("value",b);
+	//a.setAttribute("value",b);
+	a.value = b;
 };
 Code.getInputTextValue = function(a){
 	return a.value;//Code.getProperty(a,"value");
@@ -642,7 +643,8 @@ Code.humanReadableRepeatString = function(alg){
 }
 
 Code.getShortDateDescriptiveString = function(date){
-	var hrs = date.getHours()%13;
+	var hrs = date.getHours();
+	if(hrs>=13){ hrs -= 12; }
 	if(hrs==0){ hrs=12; }
 	return (date.getMonth()+1)+"/"+date.getDate()+"/"+((date.getFullYear()+"").substr(2,2))+" "+hrs+":"+Code.prependFixed(date.getMinutes()+"","0",2)+Code.getAMPMFromDate(date);
 }
@@ -652,12 +654,23 @@ function.apply(this,arg);
 */
 
 
+Code.escapeHTML = function(str){
+	return str
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
+
 // ENCODE URL STRING SAFE FOR SENDING:
 // encodeURIComponent(str)
 // encodeURI(str)
 // escape(str)
 
 
-// base64
 
+
+// base64
 

@@ -19,8 +19,10 @@ $ACTION_TYPE_CALENDAR = 'calendar';
 		$ACTION_TYPE_CALENDAR_MONTH = 'month';
 		$ACTION_TYPE_CALENDAR_DATE = 'date';
 $ACTION_TYPE_POSITION_READ = 'position_read';
-$ACTION_TYPE_POSITION_SINGLE_READ = "position_single_read";
 $ACTION_TYPE_POSITION_SINGLE_CREATE = "position_single_create";
+$ACTION_TYPE_POSITION_SINGLE_READ = "position_single_read";
+$ACTION_TYPE_POSITION_SINGLE_UPDATE = "position_single_update";
+$ACTION_TYPE_POSITION_SINGLE_DELETE = "position_single_delete";
 $ACTION_TYPE_POSITION_SINGLE_ID = "id";
 $ACTION_TYPE_POSITION_SINGLE_NAME = "name";
 $ACTION_TYPE_POSITION_SINGLE_INFO = "info";
@@ -831,29 +833,66 @@ else => blue [normal covered]
 					}
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_CREATE){
-				//$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_ID]);
-				$position_name = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_NAME]);
-				$position_info = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_INFO]);
-				echo "CREATE:"."\n";
-				echo "'".$position_name."'\n";
-				echo "'".$position_info."'\n";
-
-
-
-
-
-
-
-
-
-
-
- // output = htmlentities(input)
-
-
-
-
-
+				$position_name = decode_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_NAME]);
+				$position_info = decode_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_INFO]);
+				$user_id = $ACTION_VALUE_USER_ID;
+				if( isValidPositionData($position_name,$position_info) ){
+					$query = 'insert into positions (created_user_id, created, modified_user_id, modified, name, info) values ("'
+					.$user_id.'",now(),"0",now(),"'.$position_name.'","'.$position_info.'");';
+					$result = mysql_query($query, $connection);
+					if($result){
+						$position_id = intval( mysql_insert_id() );
+						mysql_free_result($result);
+						echo '{ "status": "success", "message": "create success", "position": {"id": "'.$position_id.'"} }';
+					}else{
+						echo '{ "status": "error", "message": "create error" }';
+					}
+				}else{
+					echo '{ "status": "error", "message": "invalid parameters" }';
+				}
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_UPDATE){
+				$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_ID]);
+				$position_name = decode_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_NAME]);
+				$position_info = decode_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_INFO]);
+				$user_id = $ACTION_VALUE_USER_ID;
+				if( isValidPositionData($position_name,$position_info) ){
+					$query = 'update positions set name="'.$position_name.'", info="'.$position_info.'", modified_user_id="'.$user_id.'", modified=now() where id="'.$position_id.'";';
+					$result = mysql_query($query, $connection);
+					if($result){
+						mysql_free_result($result);
+						echo '{ "status": "success", "message": "update success", "position": {"id": "'.$position_id.'"} }';
+					}else{
+						echo '{ "status": "error", "message": "update error" }';
+					}
+				}else{
+					echo '{ "status": "error", "message": "invalid parameters" }';
+				}
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_DELETE){
+				$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_ID]);
+				$query = 'delete from positions where id="'.$position_id.'" limit 1;';
+				$result = mysql_query($query, $connection);
+				if($result){
+					mysql_free_result($result);
+// ALSO NEED TO DELETE POSSIBLY EXISTING REQUESTS
+					$total_parent = 0;
+					$total_children = 0;
+					$query = 'delete from shifts where position_id="'.$position_id.'" and parent_id="0";';
+					$result = mysql_query($query, $connection);
+					if($result){
+						$total_parent = mysql_affected_rows();
+						mysql_free_result($result);
+					}
+					$query = 'delete from shifts where position_id="'.$position_id.'";';
+					$result = mysql_query($query, $connection);
+					if($result){
+						$total_children = mysql_affected_rows();
+						mysql_free_result($result);
+					}
+					echo '{ "status": "success", "message": "delete successful", "position": {"id": "'.$position_id.'"}, "total_parent": "'.$total_parent.'", "total_children": "'.$total_children.'" }';
+				}else{
+					echo '{ "status": "error", "message": "position does not exist" }';
+				}
+			}else if($ARGUMENT_GET_ACTION=="MOAR_USER_PARAMS"){
 			//
 		// ADMIN -------------------------------------------------------------------			
 		}else{
