@@ -52,6 +52,8 @@ $ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY = "shift_user_empty";
 $ACTION_TYPE_SHIFT_UPDATE_USER_ALL = "shift_user_all";
 	$ACTION_TYPE_SHIFT_UPDATE_USER_ID = "user_id";
 	$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID = "shift_id";
+
+$ACTION_TYPE_GROUP_GET = "group";
 //
 
 $ARGUMENT_GET_ACTION = $_GET['a'];
@@ -880,6 +882,27 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "success", "message": "delete successful", "position": {"id": "'.$position_id.'"}, "total_parent": "'.$total_parent.'", "total_children": "'.$total_children.'" }';
 				}else{
 					echo '{ "status": "error", "message": "position does not exist" }';
+				}
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_GROUP_GET){
+				$query = 'select id, name, info from groups;';
+				$result = mysql_query($query, $connection);
+				if($result){
+					$total_results = mysql_num_rows($result);
+					$i = 0;
+					echo '{ "status": "success", "message": "groups", "total": '.$total_results.', "list" : ['."\n";
+					while($row = mysql_fetch_assoc($result)){
+						$id = $row["id"];
+						$name = $row["name"];
+						$info = $row["info"];
+						echo '{ "id": "'.$id.'", "name": "'.$name.'", "info": "'.$info.'" }';
+						if($i<($total_results-1)){ echo ','; }
+						echo "\n";
+						++$i;
+					}
+					echo '] }';
+					mysql_free_result($result);
+				}else{
+					echo '{ "status": "error", "message": "bad search" }';
 				}
 			}else if($ARGUMENT_GET_ACTION=="MOAR_USER_PARAMS"){
 			//

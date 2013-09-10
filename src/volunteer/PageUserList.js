@@ -61,7 +61,6 @@ PageUserList.prototype._getUserPageSuccess = function(e){
 	this._userCurrentPage = e.page;
 	this._userTotalPage = Math.ceil(e.absolute/this._userPerPage);
 	this._refreshPagingDiv();
-	//
 	this._refreshTable(e.list);
 	this._loading = false;
 }

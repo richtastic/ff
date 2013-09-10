@@ -56,6 +56,7 @@ ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_EMPTY = "shift_user_
 ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_ALL = "shift_user_all";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_ID = "user_id";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_SHIFT_ID = "shift_id";
+ServerVolunteerInterface.prototype.ACTION_GROUP_GET = "group";
 
 //
 // -------------------------------------------------------------------------------------------------------------------------- HELPERS
@@ -359,7 +360,17 @@ ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideYes = function(
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
-
+// -------------------------------------------------------------------------------------------------------------------------- groups
+ServerVolunteerInterface.prototype.getGroupList = function(ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_GROUP_GET;
+	var params = this.appendSessionInfo({});
+	a.postParams(url,params,this,this.onAjaxGetGroupList,this.onAjaxGetGroupList);
+}
+ServerVolunteerInterface.prototype.onAjaxGetGroupList = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
 // -------------------------------------------------------------------------------------------------------------------------- 
 ServerVolunteerInterface.prototype.encodeString = function(str){
 	return encodeURIComponent(str);

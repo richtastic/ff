@@ -47,6 +47,7 @@ PageUser.prototype._init = function(){
 			Code.addClass(col,"userEditTableCol");
 			Code.addClass(col,"userEditTableColLeft");
 		div = Code.newDiv(fields[i]);
+		fields[i] = div;
 			Code.addClass(div,"userEditTableContentLeft");
 		Code.addChild(col,div);
 		col = Code.addCell(row);
@@ -56,6 +57,18 @@ PageUser.prototype._init = function(){
 			Code.addClass(txt,"userEditTableContentLeft");
 		Code.addChild(col,txt);
 	}
+	this._fieldUsername = fields[0];
+	this._fieldFirstName = fields[1];
+	this._fieldLastName = fields[2];
+	this._fieldEmail = fields[3];
+	this._fieldPhone = fields[4];
+	this._fieldCity = fields[5];
+	this._fieldState = fields[6];
+	this._fieldZip = fields[7];
+	this._fieldGroup = fields[8];
+	this._fieldOldPassword = fields[9];
+	this._fieldNewPassword = fields[10];
+	this._fieldConfirmPassword = fields[11];
 	row = Code.addRow(this._formTable);
 		Code.addClass(row,"userEditTableRow");
 	col = Code.addCell(row);
@@ -65,7 +78,8 @@ PageUser.prototype._init = function(){
 	Code.addChild(col, this._buttonUpdate);
 	Code.addChild(col, this._buttonDelete);
 	//
-	Code.addChild(this._root,this._generateSelectList([{"id":"1","name":"admin"},{"id":"2","name":"user"}],"name","id"));
+	//Code.addChild(this._root,this._generateSelectList([{"id":"1","name":"admin"},{"id":"2","name":"user"}],"name","id"));
+	this._getGroupList();
 	//
 	this.reset();
 }
@@ -109,6 +123,12 @@ PageUser.prototype._generateSelectList = function(list,a,b){
 	}
 	return sel;
 }
-
+// ------------------------------------------------------------------------------ 
+PageUser.prototype._getGroupList = function(){
+	this._interface.getGroupList(this,this._getGroupListSuccess);
+}
+PageUser.prototype._getGroupListSuccess = function(e){
+	console.log(e);
+}
 
 
