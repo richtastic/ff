@@ -65,6 +65,8 @@ PageUser.prototype._init = function(){
 	Code.addChild(col, this._buttonUpdate);
 	Code.addChild(col, this._buttonDelete);
 	//
+	Code.addChild(this._root,this._generateSelectList([{"id":"1","name":"admin"},{"id":"2","name":"user"}],"name","id"));
+	//
 	this.reset();
 }
 PageUser.prototype.clear = function(){
@@ -99,4 +101,14 @@ PageUser.prototype._handleDeleteClickFxn = function(e){
 PageUser.prototype._handleUserListRowClickFxn = function(uid){
 	console.log(uid);
 }
+PageUser.prototype._generateSelectList = function(list,a,b){
+	var sel = Code.newElement("select");
+	Code.addChild(sel,Code.newOption("","",true));
+	for(var i=0; i<list.length;++i){
+		Code.addChild(sel, Code.newOption(list[i][a],list[i][b]) );
+	}
+	return sel;
+}
+
+
 
