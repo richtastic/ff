@@ -649,6 +649,103 @@ textarea{
 
 
 
+/* ----------------------------------------------------------- USER PAGING-LIST */
+.userListPagingContainer{
+	margin: 0 auto;
+}
+/* */
+.userListContainer{
+	margin: 0 auto;
+}
+.userListTable{
+	margin: 0 auto;
+}
+.userListHeader{
+	background-color: #EEE;
+	
+}
+.userListHeaderCell{
+	padding-left: 4px;
+	padding-right: 4px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	border: solid;
+	border-color: #FFF;
+	border-width: 2px;
+	font-size: 100%;
+	font-weight: bold;
+}
+.userListRow{
+	margin: 0 auto;
+	border: solid;
+	border-color: #FFF;
+	border-width: 2px;
+}
+.userListCell{
+	padding-left: 4px;
+	padding-right: 4px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	font-size: 80%;
+	margin: 0 auto;
+}
+.userListCellPhone{
+	font-style: italic;
+}
+.userListPage{
+	color: #99A;
+	display: inline;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 4px;
+	padding-bottom: 4px;
+	text-decoration: underline;
+}
+.userListPageCurrent{
+	color: #33C;
+	text-decoration: none;
+}
+
+/* ----------------------------------------------------------- SINGLE USER EDIT */
+.userEditContainer{
+	margin: 0 auto;
+}
+.userEditTable{
+	margin: 0 auto;
+}
+.userEditTableRow{
+
+}
+.userEditTableCol{
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+}
+
+.userEditTableColLeft{
+	text-align: right;
+}
+.userEditTableColRight{
+
+}
+.userEditTableContentLeft{
+	font-weight: bold;
+	display: inline;
+}
+.userEditTableContentRight{
+	font-weight: bold;
+	display: inline;
+}
+.userEditTitle{
+	font-weight: bold;
+	text-decoration: underline;
+}
+.userEditSpacer{
+	padding-bottom: 10px;
+}
+
+
 /* ----------------------------------------------------------- BOTTOM */
 .bottomContainer{
 	margin: 10px 10px auto auto;

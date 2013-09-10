@@ -187,29 +187,6 @@ if($ARGUMENT_GET_ACTION!=null){
 					$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
 					$message = "single";
 				}
-				//$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users where id="'.$user_id.'" limit 1;';
-/*
-
-select * from
-(select * from
-(select id as shift_id,parent_id,user_id,time_begin,time_end,position_id from shifts where parent_id!="0") as S0
-left outer join
-(select id as user_id2, username from users) as U0
-on S0.user_id=U0.user_id2)
-as T0
-
-left outer join
-(select distinct(shift_id) as shift_id2, status as request_status from requests order by status asc) as R0
-on T0.shift_id=R0.shift_id2
-;
-
-WANT: status & fulfill_user_id
-user_id==0 => red [unassigned]
-request.status=open:
-fill-in==0 => orange [wanting filler]
- fill-in!=0=> yellow [waiting approval]
-else => blue [normal covered]
-*/
 				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="'.$user_id.'" limit 1;';
 				$result = mysql_query($query, $connection);
 				if($result && mysql_num_rows($result)==1 ){
@@ -239,10 +216,12 @@ else => blue [normal covered]
 				}
 			}else if($type==$ACTION_TYPE_USER_GET_TYPE_LIST){
 				$page = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
+					$page = intval($page);
 				$count = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
+					$count = intval($count);
 				$count = max(min($count,100),1);
 				$offset = max(0,$count*($page));
-				$query = 'select id,group_id,created,modified,username,first_name,last_name,email,phone,city,state,zip from users   order by created  limit '.$count.' offset '.$offset.';';
+				$query = 'select users.id as id,group_id,name as group_name,created,modified,username,first_name,last_name,email,phone,city,state,zip from users right outer join groups on users.group_id=groups.id   order by created asc, id asc  limit '.$count.' offset '.$offset.';';
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total = mysql_num_rows($result);
@@ -250,6 +229,7 @@ else => blue [normal covered]
 					while( $row = mysql_fetch_assoc($result) ){
 						$user_id = $row["id"];
 						$group_id = $row["group_id"];
+						$group_name = $row["group_name"];
 						$created = $row["created"];
 						$modified = $row["modified"];
 						$username = $row["username"];
@@ -261,14 +241,23 @@ else => blue [normal covered]
 						$state = $row["state"];
 						$zip = $row["zip"];
 						echo '{';
-						echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
+						echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
 						echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
 						echo '"city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
 						echo '}';
 						if($i<($total-1)){ echo ','; }
+						++$i;
 						echo "\n";
 					}
-					echo '] }';
+					mysql_free_result($result);
+					$query = 'select count(*) as count from users;';
+					$result = mysql_query($query, $connection);
+					$row = mysql_fetch_assoc($result);
+					$total_rows = $row["count"];
+					mysql_free_result($result);
+					echo '], ';
+					echo '"absolute": "'.$total_rows.'"';
+					echo '}';
 				}else{
 					echo '{"status": "error", "message": "bad search"}';
 				}
