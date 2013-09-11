@@ -340,6 +340,11 @@ Code.removeChild = function(a,b){
 		a.removeChild(b);
 	}
 };
+Code.removeAllChildren = function(a){
+	while(Code.numChildren(a)>0){
+		Code.removeChild(a,Code.getChild(a,0));
+	}
+};
 Code.getParent = function(a){
 	return a.parentNode;
 };

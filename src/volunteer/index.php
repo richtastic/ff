@@ -35,6 +35,19 @@ $ACTION_TYPE_USER_GET = "user";
 	$ACTION_TYPE_USER_GET_TYPE_SINGLE = "single";
 	$ACTION_TYPE_USER_GET_TYPE_CURRENT = "current";
 	$ACTION_TYPE_USER_GET_TYPE_LIST = "list";
+$ACTION_TYPE_USER_CREATE = "user_create";
+	$ACTION_TYPE_USER_USERNAME = "username";
+	$ACTION_TYPE_USER_FIRST_NAME = "first_name";
+	$ACTION_TYPE_USER_LAST_NAME = "last_name";
+	$ACTION_TYPE_USER_EMAIL = "email";
+	$ACTION_TYPE_USER_PHONE = "phone";
+	$ACTION_TYPE_USER_CITY = "city";
+	$ACTION_TYPE_USER_STATE = "state";
+	$ACTION_TYPE_USER_ZIP = "zip";
+	$ACTION_TYPE_USER_GROUP_ID = "group_id";
+	$ACTION_TYPE_USER_ADMIN_PASSWORD = "admin_password";
+	$ACTION_TYPE_USER_NEW_PASSWORD = "new_password";
+	$ACTION_TYPE_USER_CONFIRM_PASSWORD = "confirm_password";
 $ACTION_TYPE_SHIFT_INFO = "shift";
 	$ACTION_TYPE_SHIFT_INFO_ID = "id";
 $ACTION_TYPE_REQUEST_GET = "req";
@@ -61,21 +74,21 @@ $ARGUMENT_GET_ACTION = $_GET['a'];
 //$ARGUMENT_VALUE_SESSIONID = null;
 //$ARGUMENT_POST_ACTION = $_POST['a'];
 /*
-	ServerVolunteerInterface.prototype.ACTION_USER_PAGE = "page";
-	ServerVolunteerInterface.prototype.ACTION_USER_COUNT = "count";
-	ServerVolunteerInterface.prototype.ACTION_USER_USER_ID = "type";
-	ServerVolunteerInterface.prototype.ACTION_USER_TYPE = "type";
-	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_SINGLE = "single";
-	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_CURRENT = "current";
-	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_LIST = "list";
+	$ACTION_TYPE_USER_PAGE = "page";
+	$ACTION_TYPE_USER_COUNT = "count";
+	$ACTION_TYPE_USER_USER_ID = "type";
+	$ACTION_TYPE_USER_TYPE = "type";
+	$ACTION_TYPE_USER_TYPE_SINGLE = "single";
+	$ACTION_TYPE_USER_TYPE_CURRENT = "current";
+	$ACTION_TYPE_USER_TYPE_LIST = "list";
 */
 
 if($ARGUMENT_GET_ACTION!=null){
 	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }'); 
 	mysql_select_db("volunteering");
 	if($ARGUMENT_GET_ACTION==$ACTION_TYPE_LOGIN){ // EVERYONE - // echo hash('sha512','qwerty')."\n"; = 0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8
-		$username = mysql_real_escape_string($_POST['u']);
-		$password = mysql_real_escape_string($_POST['p']);
+		$username = decode_real_escape_string($_POST['u']);
+		$password = decode_real_escape_string($_POST['p']);
 		$password = strtoupper($password);
 		$query = 'select id,password from users where username="'.$username.'" limit 1;';
 		$result = mysql_query($query, $connection);
@@ -903,12 +916,14 @@ if($ARGUMENT_GET_ACTION!=null){
 					mysql_free_result($result);
 				}else{
 					echo '{ "status": "error", "message": "bad search" }';
-				}
+				}	
 			}else if($ARGUMENT_GET_ACTION=="MOAR_USER_PARAMS"){
 			//
 		// ADMIN -------------------------------------------------------------------			
 		}else{
-			//
+			if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_CREATE){
+				echo '{ "status": "error", "message": "could not create user" }';
+			}
 		}
 	}
 	mysql_close($connection);

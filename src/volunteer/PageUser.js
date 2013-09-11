@@ -47,7 +47,6 @@ PageUser.prototype._init = function(){
 			Code.addClass(col,"userEditTableCol");
 			Code.addClass(col,"userEditTableColLeft");
 		div = Code.newDiv(fields[i]);
-		fields[i] = div;
 			Code.addClass(div,"userEditTableContentLeft");
 		Code.addChild(col,div);
 		col = Code.addCell(row);
@@ -56,6 +55,7 @@ PageUser.prototype._init = function(){
 		txt = Code.newInputText();
 			Code.addClass(txt,"userEditTableContentLeft");
 		Code.addChild(col,txt);
+		fields[i] = txt;
 	}
 	this._fieldUsername = fields[0];
 	this._fieldFirstName = fields[1];
@@ -66,6 +66,7 @@ PageUser.prototype._init = function(){
 	this._fieldState = fields[6];
 	this._fieldZip = fields[7];
 	this._fieldGroup = fields[8];
+		this._fieldGroupParent = Code.getParent(this._fieldGroup);
 	this._fieldOldPassword = fields[9];
 	this._fieldNewPassword = fields[10];
 	this._fieldConfirmPassword = fields[11];
@@ -85,6 +86,18 @@ PageUser.prototype._init = function(){
 }
 PageUser.prototype.clear = function(){
 	// set all inputs to clear / unselected / create
+	Code.setInputTextValue(this._fieldUsername,"");
+	Code.setInputTextValue(this._fieldFirstName,"");
+	Code.setInputTextValue(this._fieldLastName,"");
+	Code.setInputTextValue(this._fieldEmail,"");
+	Code.setInputTextValue(this._fieldPhone,"");
+	Code.setInputTextValue(this._fieldCity,"");
+	Code.setInputTextValue(this._fieldState,"");
+	Code.setInputTextValue(this._fieldZip,"");
+	//Code.setProperty(Code.getChild(this._field,0),"selected","selected");
+	Code.setInputTextValue(this._fieldOldPassword,"");
+	Code.setInputTextValue(this._fieldNewPassword,"");
+	Code.setInputTextValue(this._fieldConfirmPassword,"");
 }
 PageUser.prototype.reset = function(){
 	this.clear();
@@ -103,13 +116,30 @@ PageUser.prototype._getUserSuccess = function(e){
 }
 // ------------------------------------------------------------------------------ 
 PageUser.prototype._handleCreateClickFxn = function(e){
-	console.log(e);
+	var username = Code.getInputTextValue(this._fieldUsername);
+	var firstname = Code.getInputTextValue(this._fieldFirstName);
+	var lastname = Code.getInputTextValue(this._fieldLastName);
+	var email = Code.getInputTextValue(this._fieldEmail);
+	var phone = Code.getInputTextValue(this._fieldPhone);
+	var city = Code.getInputTextValue(this._fieldCity);
+	var state = Code.getInputTextValue(this._fieldState);
+	var zip = Code.getInputTextValue(this._fieldZip);
+	var group = this._fieldGroup.value;
+	var oldPW = Code.getInputTextValue(this._fieldOldPassword); // logged-in user password
+	var newPW = Code.getInputTextValue(this._fieldNewPassword);
+	var conPW = Code.getInputTextValue(this._fieldConfirmPassword);
+	this._interface.createUser(username,firstname,lastname,email,phone,city,state,zip,group,oldPW,newPW,conPW);
 }
 PageUser.prototype._handleUpdateClickFxn = function(e){
 	console.log(e);
 }
 PageUser.prototype._handleDeleteClickFxn = function(e){
 	console.log(e);
+}
+// ------------------------------------------------------------------------------ 
+PageUser.prototype._handleCreateSuccess = function(e){
+	console.log(e);
+	this.clear();
 }
 // ------------------------------------------------------------------------------ 
 PageUser.prototype._handleUserListRowClickFxn = function(uid){
@@ -128,7 +158,13 @@ PageUser.prototype._getGroupList = function(){
 	this._interface.getGroupList(this,this._getGroupListSuccess);
 }
 PageUser.prototype._getGroupListSuccess = function(e){
-	console.log(e);
+	if(e && e.status=="success"){
+		this._fieldGroup = this._generateSelectList(e.list,"name","id");
+		Code.removeAllChildren(this._fieldGroupParent);
+		Code.addChild(this._fieldGroupParent,this._fieldGroup);
+	}else{
+		alert(e.status);
+	}
 }
 
 

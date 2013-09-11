@@ -38,6 +38,21 @@ ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
 	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_SINGLE = "single";
 	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_CURRENT = "current";
 	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_LIST = "list";
+
+ServerVolunteerInterface.prototype.ACTION_USER_CREATE = "user_create";
+	ServerVolunteerInterface.prototype.ACTION_USER_USERNAME = "username";
+	ServerVolunteerInterface.prototype.ACTION_USER_FIRST_NAME = "first_name";
+	ServerVolunteerInterface.prototype.ACTION_USER_LAST_NAME = "last_name";
+	ServerVolunteerInterface.prototype.ACTION_USER_EMAIL = "email";
+	ServerVolunteerInterface.prototype.ACTION_USER_PHONE = "phone";
+	ServerVolunteerInterface.prototype.ACTION_USER_CITY = "city";
+	ServerVolunteerInterface.prototype.ACTION_USER_STATE = "state";
+	ServerVolunteerInterface.prototype.ACTION_USER_ZIP = "zip";
+	ServerVolunteerInterface.prototype.ACTION_USER_GROUP_ID = "group_id";
+	ServerVolunteerInterface.prototype.ACTION_USER_ADMIN_PASSWORD = "admin_password";
+	ServerVolunteerInterface.prototype.ACTION_USER_NEW_PASSWORD = "new_password";
+	ServerVolunteerInterface.prototype.ACTION_USER_CONFIRM_PASSWORD = "confirm_password";
+
 ServerVolunteerInterface.prototype.ACTION_REQUEST_GET = "req";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_CREATE = "request_create";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_UPDATE_ANSWER = "request_answer";
@@ -94,7 +109,7 @@ ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	pass = hex_sha512( pass );
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_LOGIN;
-	var params = {u:user,p:pass};
+	var params = {u:this.encodeString(user),p:this.encodeString(pass)};
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 }
 ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
@@ -167,9 +182,36 @@ ServerVolunteerInterface.prototype.getSimpleUserList = function(ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_SIMPLE_GET;
 	var params = this.appendSessionInfo({});
-	a.postParams(url,params,this,this.onAjaxGetSimpleUserList,this.onAjaxGetSimpleUserList );
+	a.postParams(url,params,this,this.onAjaxGetSimpleUserList,this.onAjaxGetSimpleUserList);
 }
 ServerVolunteerInterface.prototype.onAjaxGetSimpleUserList = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+// -------------------------------------------------------------------------------------------------------------------------- USER CRUD
+ServerVolunteerInterface.prototype.createUser = function(username,firstname,lastname,email,phone,city,state,zip,group,adminPW,newPW,conPW,ctx,call){
+	adminPW = this.encodeString(adminPW);
+	newPW = this.encodeString(newPW);
+	conPW = this.encodeString(conPW);
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_CREATE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_USER_USERNAME] = this.encodeString(username);
+	params[this.ACTION_USER_FIRST_NAME] = this.encodeString(firstname);
+	params[this.ACTION_USER_LAST_NAME] = this.encodeString(lastname);
+	params[this.ACTION_USER_EMAIL] = this.encodeString(email);
+	params[this.ACTION_USER_PHONE] = this.encodeString(phone);
+	params[this.ACTION_USER_CITY] = this.encodeString(city);
+	params[this.ACTION_USER_STATE] = this.encodeString(state);
+	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
+	params[this.ACTION_USER_GROUP_ID] = this.encodeString(group);
+	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
+	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString(newPW);
+	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString(conPW);
+	a.postParams(url,params,this,this.onAjaxCreateUser,this.onAjaxCreateUser);
+}
+ServerVolunteerInterface.prototype.onAjaxCreateUser = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
