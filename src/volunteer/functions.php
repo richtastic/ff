@@ -13,6 +13,7 @@
 // WindowsMobilePhone
 // <meta name="MobileOptimized" content="width">
 
+$SUCCESS_STRING_VALUE="success";
 
 
 function includeHeader($title='Title'){
@@ -430,6 +431,66 @@ function isValidPositionData($name,$info){
 		}
 	}
 	return false;
+}
+function isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$user_pw,$new_pw,$confirm_pw, $isUpdate){
+	if($isUpdate){
+		// don't care about username
+	}else{
+		if( !($username!=null && strlen($username)>=3) ){
+			return "username invalid";
+		}
+	}
+	if( !($first_name!=null && strlen($first_name)>=2) ){
+		return "first name invalid";
+	}
+	if( !($last_name!=null && strlen($last_name)>=2) ){
+		return "last name invalid";
+	}
+	if( !(strlen($email)>=0) ){ // $email!=null && 
+		return "email invalid";
+	}
+	if( !(strlen($phone)>=0) ){ // $phone!=null && 
+		return "phone number invalid";
+	}
+	if( !(strlen($address)>=0) ){ // $address!=null && 
+		return "address invalid:".$address;
+	}
+	if( !(strlen($city)>=0) ){ // $city!=null && 
+		return "city invalid";
+	}
+	if( !(strlen($state)>=0) ){ // $state!=null && 
+		return "state invalid";
+	}
+	if( !(strlen($zip)>=0) ){ // $zip!=null && 
+		return "zip invalid";
+	}
+	if( !($group_id!=null && strlen($group_id)>=1 && intval($group_id)>0) ){
+		return "group id invalid";
+	}
+	if( !($user_pw!=null && strlen($user_pw)>=1) ){
+		return "password invalid";
+	}
+	if( !($new_pw!=null && strlen($new_pw)>=1) ){
+		return "new password invalid";
+	}
+	if( !($confirm_pw!=null && strlen($confirm_pw)>=1) ){
+		return "confirmed password invalid";
+	}
+	if( $new_pw!=$confirm_pw ){
+		return "passwords unequal";
+	}
+	return "success";
+}
+function getPhoneAsNumbers($phone){
+	$i; $ch; $re; $result = ""; $len = strlen($phone);
+	for($i=0;$i<$len;++$i){
+		$ch = substr($phone,$i,1);
+		$re = preg_replace('/[0-9]/',"",$ch);
+		if($re==""){
+			$result = $result."".$ch;
+		}
+	}
+	return $result;
 }
 
 // --------------------------------------------------------------------------------

@@ -732,6 +732,7 @@ textarea{
 .userEditTableContentLeft{
 	font-weight: bold;
 	display: inline;
+	text-align: left;
 }
 .userEditTableContentRight{
 	font-weight: bold;

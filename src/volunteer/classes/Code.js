@@ -243,6 +243,14 @@ Code.newInputText = function(a){
 	}
 	return sub;
 };
+Code.newInputPassword = function(a){
+	var sub = Code.newInput();
+	sub.setAttribute("type","password");
+	if(a!==undefined){
+		sub.setAttribute("value",a);
+	}
+	return sub;
+};
 Code.setInputTextValue = function(a,b){
 	//a.setAttribute("value",b);
 	a.value = b;
@@ -269,14 +277,7 @@ Code.getTextAreaValue = function(a){
 Code.setTextAreaValue = function(a,b){
 	return a.value = b;
 }
-Code.newInputPassword = function(a){
-	var sub = Code.newInput();
-	sub.setAttribute("type","password");
-	if(a!==undefined){
-		sub.setAttribute("value",a);
-	}
-	return sub;
-};
+
 Code.newListUnordered = function(){
 	var li = Code.newElement("ul");
 	return li;
@@ -656,6 +657,24 @@ Code.getShortDateDescriptiveString = function(date){
 	if(hrs==0){ hrs=12; }
 	return (date.getMonth()+1)+"/"+date.getDate()+"/"+((date.getFullYear()+"").substr(2,2))+" "+hrs+":"+Code.prependFixed(date.getMinutes()+"","0",2)+Code.getAMPMFromDate(date);
 }
+
+
+Code.phoneAsNumbersToHuman = function(phone){
+	var len = phone.length;
+	var lm1 = len-1;
+	if(len<=4){
+		return phone;
+	}else if(len<=7){
+		return phone.substring(0,lm1-3)+"-"+phone.substring(lm1-3,len);
+	}else if(len<=10){
+		return "("+phone.substring(0,lm1-6)+")"+phone.substring(lm1-6,lm1-3)+"-"+phone.substring(lm1-3,len);
+	}
+	return phone.substring(0,lm1-9)+"-"+phone.substring(lm1-9,lm1-6)+"-"+phone.substring(lm1-6,lm1-3)+"-"+phone.substring(lm1-3,len);
+}
+
+
+
+
 /*
 function.call(this, a, b, c);
 function.apply(this,arg);

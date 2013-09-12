@@ -40,11 +40,14 @@ ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
 	ServerVolunteerInterface.prototype.ACTION_USER_TYPE_LIST = "list";
 
 ServerVolunteerInterface.prototype.ACTION_USER_CREATE = "user_create";
+ServerVolunteerInterface.prototype.ACTION_USER_UPDATE = "user_update";
+ServerVolunteerInterface.prototype.ACTION_USER_DELETE = "user_delete";
 	ServerVolunteerInterface.prototype.ACTION_USER_USERNAME = "username";
 	ServerVolunteerInterface.prototype.ACTION_USER_FIRST_NAME = "first_name";
 	ServerVolunteerInterface.prototype.ACTION_USER_LAST_NAME = "last_name";
 	ServerVolunteerInterface.prototype.ACTION_USER_EMAIL = "email";
 	ServerVolunteerInterface.prototype.ACTION_USER_PHONE = "phone";
+	ServerVolunteerInterface.prototype.ACTION_USER_ADDRESS = "address";
 	ServerVolunteerInterface.prototype.ACTION_USER_CITY = "city";
 	ServerVolunteerInterface.prototype.ACTION_USER_STATE = "state";
 	ServerVolunteerInterface.prototype.ACTION_USER_ZIP = "zip";
@@ -189,10 +192,10 @@ ServerVolunteerInterface.prototype.onAjaxGetSimpleUserList = function(e,a){
 	this._checkCallback(a,obj);
 }
 // -------------------------------------------------------------------------------------------------------------------------- USER CRUD
-ServerVolunteerInterface.prototype.createUser = function(username,firstname,lastname,email,phone,city,state,zip,group,adminPW,newPW,conPW,ctx,call){
-	adminPW = this.encodeString(adminPW);
-	newPW = this.encodeString(newPW);
-	conPW = this.encodeString(conPW);
+ServerVolunteerInterface.prototype.createUser = function(username,firstname,lastname,email,phone,address,city,state,zip,group,adminPW,newPW,conPW,ctx,call){
+	adminPW = hex_sha512( adminPW );
+	newPW = hex_sha512( newPW );
+	conPW = hex_sha512( conPW );
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_CREATE;
 	var params = this.appendSessionInfo({});
@@ -201,6 +204,7 @@ ServerVolunteerInterface.prototype.createUser = function(username,firstname,last
 	params[this.ACTION_USER_LAST_NAME] = this.encodeString(lastname);
 	params[this.ACTION_USER_EMAIL] = this.encodeString(email);
 	params[this.ACTION_USER_PHONE] = this.encodeString(phone);
+	params[this.ACTION_USER_ADDRESS] = this.encodeString(address);
 	params[this.ACTION_USER_CITY] = this.encodeString(city);
 	params[this.ACTION_USER_STATE] = this.encodeString(state);
 	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
@@ -211,6 +215,47 @@ ServerVolunteerInterface.prototype.createUser = function(username,firstname,last
 	a.postParams(url,params,this,this.onAjaxCreateUser,this.onAjaxCreateUser);
 }
 ServerVolunteerInterface.prototype.onAjaxCreateUser = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,lastname,email,phone,address,city,state,zip,group,adminPW,newPW,conPW,ctx,call){
+	adminPW = hex_sha512( adminPW );
+	if(newPW!=""){ newPW = hex_sha512( newPW ); }
+	if(conPW!=""){ conPW = hex_sha512( conPW ); }
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_UPDATE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_USER_USER_ID] = this.encodeString(uid);
+	params[this.ACTION_USER_USERNAME] = this.encodeString(username);
+	params[this.ACTION_USER_FIRST_NAME] = this.encodeString(firstname);
+	params[this.ACTION_USER_LAST_NAME] = this.encodeString(lastname);
+	params[this.ACTION_USER_EMAIL] = this.encodeString(email);
+	params[this.ACTION_USER_PHONE] = this.encodeString(phone);
+	params[this.ACTION_USER_ADDRESS] = this.encodeString(address);
+	params[this.ACTION_USER_CITY] = this.encodeString(city);
+	params[this.ACTION_USER_STATE] = this.encodeString(state);
+	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
+	params[this.ACTION_USER_GROUP_ID] = this.encodeString(group);
+	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
+	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString(newPW);
+	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString(conPW);
+	a.postParams(url,params,this,this.onAjaxUpdateUser,this.onAjaxUpdateUser);
+}
+ServerVolunteerInterface.prototype.onAjaxUpdateUser = function(e,a){
+	console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.deleteUser = function(uid,adminPW,ctx,call){
+	adminPW = hex_sha512( adminPW );
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_DELETE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_USER_USER_ID] = this.encodeString(uid);
+	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
+	a.postParams(url,params,this,this.onAjaxDeleteUser,this.onAjaxDeleteUser);
+}
+ServerVolunteerInterface.prototype.onAjaxDeleteUser = function(e,a){
 	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);

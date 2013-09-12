@@ -36,11 +36,14 @@ $ACTION_TYPE_USER_GET = "user";
 	$ACTION_TYPE_USER_GET_TYPE_CURRENT = "current";
 	$ACTION_TYPE_USER_GET_TYPE_LIST = "list";
 $ACTION_TYPE_USER_CREATE = "user_create";
+$ACTION_TYPE_USER_UPDATE = "user_update";
+$ACTION_TYPE_USER_DELETE = "user_delete";
 	$ACTION_TYPE_USER_USERNAME = "username";
 	$ACTION_TYPE_USER_FIRST_NAME = "first_name";
 	$ACTION_TYPE_USER_LAST_NAME = "last_name";
 	$ACTION_TYPE_USER_EMAIL = "email";
 	$ACTION_TYPE_USER_PHONE = "phone";
+	$ACTION_TYPE_USER_ADDRESS = "address";
 	$ACTION_TYPE_USER_CITY = "city";
 	$ACTION_TYPE_USER_STATE = "state";
 	$ACTION_TYPE_USER_ZIP = "zip";
@@ -97,7 +100,7 @@ if($ARGUMENT_GET_ACTION!=null){
 			while($row = mysql_fetch_assoc($result)){
 				if( $password == $row["password"] ){ // update sessions
 					$id = $row["id"];
-					// delete old session
+					// delete all old sessions
 					$query = 'delete from sessions where user_id = "'.$id.'";';
 					$delete_result = mysql_query($query, $connection);
 					if(mysql_errno()){ /* error */ }
@@ -105,7 +108,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$session_id = randomSessionID();
 					$ip_forward = $_SERVER['HTTP_X_FORWARDED_FOR'];
 					$ip_remote = $_SERVER['REMOTE_ADDR'];
-					$query = 'insert into sessions (user_id,session_id,ip_remote,ip_forward) values ("'.$id.'","'.$session_id.'","'.$ip_remote.'","'.$ip_forward.'");';
+					$query = 'insert into sessions (created, user_id,session_id,ip_remote,ip_forward) values (now(), "'.$id.'","'.$session_id.'","'.$ip_remote.'","'.$ip_forward.'");';
 					$insert_result = mysql_query($query, $connection);
 					if(mysql_errno()){
 						echo '{ "status": "error", "message": "session fail" }';
@@ -136,8 +139,9 @@ if($ARGUMENT_GET_ACTION!=null){
 			echo '{ "status": "error", "message": "invalid session" }';
 		}
 // PRIVATE -------------------------------------------------------------------
-	}else{
+	}else{ // MUST BE LOGGED IN
 		$ACTION_VALUE_USER_ID = null;
+		$ACTION_VALUE_IS_ADMIN = false;
 		$ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
 		if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
 			echo '{ "status": "error", "message": "no session info" }';
@@ -165,6 +169,17 @@ if($ARGUMENT_GET_ACTION!=null){
 					return;
 				}*/
 				mysql_free_result($result);
+				//
+				$query = 'select name from groups where id=(select group_id from users where id="'.$ACTION_VALUE_USER_ID.'");';
+				$result = mysql_query($query, $connection);
+				if($result && mysql_num_rows($result)==1){
+					$row = mysql_fetch_assoc($result);
+					$group_name = $row["name"];
+					$ACTION_VALUE_IS_ADMIN = $group_name=="admin";
+					mysql_free_result($result);
+				}else{
+					echo '{ "status": "error", "message": "invalid group" }';
+				}
 			}else{
 				echo '{ "status": "error", "message": "invalid session" }';
 				return;
@@ -202,7 +217,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
 					$message = "single";
 				}
-				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="'.$user_id.'" limit 1;';
+				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.address,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="'.$user_id.'" limit 1;';
 				$result = mysql_query($query, $connection);
 				if($result && mysql_num_rows($result)==1 ){
 					$row = mysql_fetch_assoc($result);
@@ -216,13 +231,14 @@ if($ARGUMENT_GET_ACTION!=null){
 					$last_name = $row["last_name"];
 					$email = $row["email"];
 					$phone = $row["phone"];
+					$address = $row["address"];
 					$city = $row["city"];
 					$state = $row["state"];
 					$zip = $row["zip"];
 					echo '{"status": "success", "message": "'.$message.'", "user": '."\n".'{';
 					echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
 					echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
-					echo '"city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
+					echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
 					echo '}'."\n".'}';
 					mysql_free_result($result);
 				}else{
@@ -236,7 +252,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$count = intval($count);
 				$count = max(min($count,100),1);
 				$offset = max(0,$count*($page));
-				$query = 'select users.id as id,group_id,name as group_name,created,modified,username,first_name,last_name,email,phone,city,state,zip from users right outer join groups on users.group_id=groups.id   order by created asc, id asc  limit '.$count.' offset '.$offset.';';
+				$query = 'select users.id as id,group_id,name as group_name,created,modified,username,first_name,last_name,email,phone,address,city,state,zip from users right outer join groups on users.group_id=groups.id   order by created asc, id asc  limit '.$count.' offset '.$offset.';';
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total = mysql_num_rows($result);
@@ -252,13 +268,14 @@ if($ARGUMENT_GET_ACTION!=null){
 						$last_name = $row["last_name"];
 						$email = $row["email"];
 						$phone = $row["phone"];
+						$address = $row["address"];
 						$city = $row["city"];
 						$state = $row["state"];
 						$zip = $row["zip"];
 						echo '{';
 						echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
 						echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
-						echo '"city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
+						echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
 						echo '}';
 						if($i<($total-1)){ echo ','; }
 						++$i;
@@ -631,7 +648,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				}else{
 					echo '{ "status": "error", "message": "unknown shift" }';
 				}
-		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_CREATE){
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_CREATE){
 				$startDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_START_DATE]);
 				$endDate = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_END_DATE]);
 				$repeating = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_REPEATING]);
@@ -916,16 +933,91 @@ if($ARGUMENT_GET_ACTION!=null){
 					mysql_free_result($result);
 				}else{
 					echo '{ "status": "error", "message": "bad search" }';
-				}	
+				}
+			
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_CREATE || $ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_UPDATE){
+				$isUpdate=($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_UPDATE);
+				$user_id = decode_real_escape_string($_POST[$ACTION_TYPE_USER_USER_ID]);
+				$username = decode_real_escape_string($_POST[$ACTION_TYPE_USER_USERNAME]);
+				$first_name = decode_real_escape_string($_POST[$ACTION_TYPE_USER_FIRST_NAME]);
+				$last_name = decode_real_escape_string($_POST[$ACTION_TYPE_USER_LAST_NAME]);
+				$email = decode_real_escape_string($_POST[$ACTION_TYPE_USER_EMAIL]);
+				$phone = decode_real_escape_string($_POST[$ACTION_TYPE_USER_PHONE]);
+					$phone = getPhoneAsNumbers($phone);
+				$address = decode_real_escape_string($_POST[$ACTION_TYPE_USER_ADDRESS]);
+				$city = decode_real_escape_string($_POST[$ACTION_TYPE_USER_CITY]);
+				$state = decode_real_escape_string($_POST[$ACTION_TYPE_USER_STATE]);
+				$zip = decode_real_escape_string($_POST[$ACTION_TYPE_USER_ZIP]);
+				$group_id = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GROUP_ID]);
+				$admin_password = strtoupper(decode_real_escape_string($_POST[$ACTION_TYPE_USER_ADMIN_PASSWORD]));
+				$new_password = strtoupper(decode_real_escape_string($_POST[$ACTION_TYPE_USER_NEW_PASSWORD]));
+				$confirm_password = strtoupper(decode_real_escape_string($_POST[$ACTION_TYPE_USER_CONFIRM_PASSWORD]));
+				//
+				if($isUpdate){
+					$isValid = isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$admin_password,$new_password,$confirm_password,true);
+					// can insert if the same as logged-in user or if admin
+					echo '{ "status": "error", "message": "update error" }';
+				}else if($ACTION_VALUE_IS_ADMIN){
+					$isValid = isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$admin_password,$new_password,$confirm_password);
+					if($isValid=="success"){
+						$query = 'select id from users where username="'.$username.'";';
+						$result = mysql_query($query,$connection);
+						if($result){
+							$total_results = mysql_num_rows($result);
+							mysql_free_result($result);
+							if($total_results==0){
+								$query = 'select password from users where id=(select user_id from sessions where session_id="'.$ACTION_VALUE_SESSION_ID.'");';
+								$result = mysql_query($query,$connection);
+								if($result){
+									$total_results = mysql_num_rows($result);
+									if($total_results==1){
+										$row = mysql_fetch_assoc($result);
+										$password = $row["password"];
+										mysql_free_result($result);
+										if($password==$admin_password){
+											$query = 'insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, modified) '.
+											'values ("'.$username.'","'.$new_password.'","'.$email.'", "'.$first_name.'", "'.$last_name.'","'.$phone.'", "'.$address.'", "'
+											.$state.'", "'.$city.'", "'.$zip.'", "'.$group_id.'", now(), now() );';
+											$result = mysql_query($query,$connection);
+											if($result){
+												$user_id = intval( mysql_insert_id() );
+												echo '{ "status": "success", "message": "user created", "user": {"id":"'.$user_id.'"} }';
+											}else{
+												echo '{ "status": "error", "message": "could not create user" }';
+											}
+										}else{
+											echo '{ "status": "error", "message": "incorrect admin password" }';
+										}
+									}else{
+										echo '{ "status": "error", "message": "invalid user" }';
+									}
+								}else{
+									echo '{ "status": "error", "message": "bad search" }';
+								}
+							}else{
+								echo '{ "status": "error", "message": "username already exists" }';
+							}
+						}else{
+							echo '{ "status": "error", "message": "username error" }';
+						}
+					}else{
+						echo '{ "status": "error", "message": "'.$isValid.'" }';
+					}
+				}else{
+					echo '{ "status": "error", "message": "permissions" }';
+				}
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_DELETE){
+				// at least 2 admin users must exist if deleted user is an admin
+				// cannot delete self?
+				// delete user from all other locations?
+				echo '{ "status": "error", "message": "could not delete user" }';
 			}else if($ARGUMENT_GET_ACTION=="MOAR_USER_PARAMS"){
-			//
-		// ADMIN -------------------------------------------------------------------			
-		}else{
-			if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_CREATE){
-				echo '{ "status": "error", "message": "could not create user" }';
+				echo '{ "status": "error", "message": "?" }';
+			// PURELY ADMIN -------------------------------------------------------------------			
+			}else if($ACTION_VALUE_IS_ADMIN){
+				//
 			}
 		}
-	}
 	mysql_close($connection);
 }else{
 

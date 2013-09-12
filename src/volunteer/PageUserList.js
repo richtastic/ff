@@ -89,7 +89,7 @@ PageUserList.prototype._refreshTable = function(list){
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
 			Code.addClass(col,"userListCellPhone");
-			Code.setContent(col,list[i].phone);
+			Code.setContent(col,Code.phoneAsNumbersToHuman(list[i].phone));
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
 			Code.setContent(col,list[i].group_name);
