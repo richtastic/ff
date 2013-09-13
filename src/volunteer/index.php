@@ -38,6 +38,7 @@ $ACTION_TYPE_USER_GET = "user";
 $ACTION_TYPE_USER_CREATE = "user_create";
 $ACTION_TYPE_USER_UPDATE = "user_update";
 $ACTION_TYPE_USER_DELETE = "user_delete";
+	$ACTION_TYPE_USER_USER_ID = "uid";
 	$ACTION_TYPE_USER_USERNAME = "username";
 	$ACTION_TYPE_USER_FIRST_NAME = "first_name";
 	$ACTION_TYPE_USER_LAST_NAME = "last_name";
@@ -955,8 +956,47 @@ if($ARGUMENT_GET_ACTION!=null){
 				//
 				if($isUpdate){
 					$isValid = isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$admin_password,$new_password,$confirm_password,true);
-					// can insert if the same as logged-in user or if admin
-					echo '{ "status": "error", "message": "update error" }';
+					$isSameUser = $user_id==$ACTION_VALUE_USER_ID;
+					if($isSameUser||$ACTION_VALUE_IS_ADMIN){ // can insert if the same as logged-in user or if admin
+						$query = 'select password from users where id=(select user_id from sessions where session_id="'.$ACTION_VALUE_SESSION_ID.'");';
+						$result = mysql_query($query,$connection);
+						if($result){
+							$total_results = mysql_num_rows($result);
+							if($total_results==1){
+								$row = mysql_fetch_assoc($result);
+								$password = $row["password"];
+								mysql_free_result($result);
+								if($password==$admin_password){
+									if($new_password==$confirm_password){
+										$pw = '';
+										//echo $new_password."\n";
+										if($new_password!=""){ // changed pw
+											$pw = 'password="'.$new_password.'",';
+										}
+										// username="'.$username.'",
+										$query = 'update users set '.$pw.' email="'.$email.'", first_name="'.$first_name.'", last_name="'.$last_name.'", phone="'.$phone.'", '.
+											'address="'.$address.'", state="'.$state.'", city="'.$city.'", zip="'.$zip.'", group_id="'.$group_id.'", modified=now() where id="'.$user_id.'";';
+										$result = mysql_query($query,$connection);
+										if($result){
+											echo '{ "status": "success", "message": "user updated", "user": {"id":"'.$user_id.'"} }';
+										}else{
+											echo '{ "status": "error", "message": "could not update user" }';
+										}
+									}else{
+										echo '{ "status": "error", "message": "new and confirm passwords do not match" }';
+									}
+								}else{
+									echo '{ "status": "error", "message": "incorrect password" }';
+								}
+							}else{
+								echo '{ "status": "error", "message": "invalid user" }';
+							}
+						}else{
+							echo '{ "status": "error", "message": "bad search" }';
+						}
+					}else{
+						echo '{ "status": "error", "message": "permissions" }';
+					}
 				}else if($ACTION_VALUE_IS_ADMIN){
 					$isValid = isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$admin_password,$new_password,$confirm_password);
 					if($isValid=="success"){
@@ -1007,10 +1047,54 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "error", "message": "permissions" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_DELETE){
-				// at least 2 admin users must exist if deleted user is an admin
-				// cannot delete self?
-				// delete user from all other locations?
-				echo '{ "status": "error", "message": "could not delete user" }';
+				if($ACTION_VALUE_IS_ADMIN){
+					$user_id = decode_real_escape_string($_POST[$ACTION_TYPE_USER_USER_ID]);
+					if($user_id!=$ACTION_VALUE_USER_ID){
+						$query = 'select username from users where id="'.$user_id.'";';
+						$result = mysql_query($query,$connection);
+						if($result && mysql_num_rows($result)==1){
+							mysql_free_result($result);
+							$query = 'select name from groups where id=(select group_id from users where id="'.$user_id.'");';
+							$result = mysql_query($query,$connection);
+							if($result && mysql_num_rows($result)==1){
+								$row = mysql_fetch_assoc($result);
+								$group_name = $row["group"];
+								$userIsAdmin = false;
+								if( $group_name=="admin" ){
+									$userIsAdmin = true;
+								}
+								mysql_free_result($result);
+								$query='select count(*) as count from users where group_id=(select id from groups where name like "admin");';
+								$result = mysql_query($query,$connection);
+								if($result && mysql_num_rows($result)==1){
+									$count = intval( $row["count"] );
+									mysql_free_result($result);
+									if( !($count<=1 && $userIsAdmin) ){ // at least 1 admin users must exist if deleted user is an admin
+										$query = 'delete from users where id="'.$user_id.'";';
+										$result = mysql_query($query,$connection);
+										if($result){
+											echo '{ "status": "success", "message": "user deleted", "user": {"id":"'.$user_id.'"} }';
+										}else{
+											echo '{ "status": "error", "message": "could not delete user" }';
+										}
+									}else{
+										echo '{ "status": "error", "message": "at least 1 admin must exist" }';
+									}
+								}else{
+									echo '{ "status": "error", "message": "bad count" }';
+								}
+							}else{
+								echo '{ "status": "error", "message": "bad group search" }';
+							}
+						}else{
+							echo '{ "status": "error", "message": "user does not exist '.$user_id.'" }';
+						}
+					}else{
+						echo '{ "status": "error", "message": "cannot delete self" }';
+					}
+				}else{
+					echo '{ "status": "error", "message": "permissions" }';
+				}
 			}else if($ARGUMENT_GET_ACTION=="MOAR_USER_PARAMS"){
 				echo '{ "status": "error", "message": "?" }';
 			// PURELY ADMIN -------------------------------------------------------------------			

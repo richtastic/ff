@@ -178,8 +178,12 @@ PageUser.prototype._handleCreateClickFxn = function(e){
 }
 PageUser.prototype._handleUpdateClickFxn = function(e){
 	if(this._loading){ return; }
+	var d = this._getDataValues();
+	if(d[11].length>0 && (d[11].length<6 || d[12].length<6)){
+		alert("New password length too short");
+		return;
+	}
 	if(this._userInfo){
-		var d = this._getDataValues();
 		this._interface.updateUser(this._userInfo.id,d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],this,this._handleUpdateSuccess);
 	}
 }

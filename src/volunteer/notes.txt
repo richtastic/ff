@@ -356,17 +356,17 @@ login screen
 
 
 NEW TODO-----------
-*) cascading foriegn key deleting tables
-*) user list (with paging)
 *) user CUD form
+	- update
+		- delete
 *) shift form
 	*) 'assign user to all dates befor e/after date [M][D][Y]'
 	*) form clearing on .clear()
 *) shift list
 	*) delete
-*) replace all display data with Code.escapeHTML();
-*) 
+*) replace all display data with Code.escapeHTML() && encode/decode;
 *) statistics page
+*) cascading foriegn key deleting tables
 *) 
 remove all console.log() and replace errors with alert()s
 
