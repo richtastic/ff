@@ -432,6 +432,11 @@ function isValidPositionData($name,$info){
 	}
 	return false;
 }
+function autoSetRequestToEmptyOnTimePass($connection){
+	$query = 'update requests set status="4" where id in (select id from (select requests.id as id, time_begin from requests left outer join shifts on requests.shift_id=shifts.id where requests.status<=1) as temp where time_begin<adddate(now(),interval 30 minute));';
+	$result = mysql_query($query, $connection);
+	mysql_free_result($result);
+}
 function isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$user_pw,$new_pw,$confirm_pw, $isUpdate){
 	if($isUpdate){
 		// don't care about username

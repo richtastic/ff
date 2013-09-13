@@ -23,7 +23,7 @@ function PageShiftSingle(container, interface){
 	this._shiftActionButtonContainer = Code.newDiv();
 		Code.addClass(this._shiftActionButtonContainer,"shiftSingleButtonContainer");
 	//
-	this._shiftRequestButton = Code.newInputSubmit("Request Fill-In");
+	this._shiftRequestButton = Code.newInputSubmit("Request Swap (Fill-In)");
 		Code.addClass(this._shiftRequestButton,"shiftSingleButton");
 	this._shiftAnswerButton = Code.newInputSubmit("Answer Fill-In");
 		Code.addClass(this._shiftAnswerButton,"shiftSingleButton");

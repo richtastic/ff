@@ -124,10 +124,10 @@ Volunteer.prototype._hookPageNavigation = function(page){
 	//page.addMenuItem(Volunteer.NAV_SHIFTS,"Shifts");
 	page.addMenuItem(Volunteer.NAV_USER,"Users");
 	//page.addMenuItem(Volunteer.NAV_USER_LIST,"Users");
-	page.addMenuItem(Volunteer.NAV_POSITION,"Positions");
+	page.addMenuItem(Volunteer.NAV_POSITION,"Shifts");
 	//page.addMenuItem(Volunteer.NAV_POSITION_LIST,"Positions");
 	//page.addMenuItem(Volunteer.NAV_REQUEST,"Add Request");
-	page.addMenuItem(Volunteer.NAV_REQUEST_LIST,"Requests");
+	page.addMenuItem(Volunteer.NAV_REQUEST_LIST,"Swaps");
 	page.addFunction(Navigation.EVENT_ITEM_CLICKED,this._navigationItemClicked, this);
 }
 

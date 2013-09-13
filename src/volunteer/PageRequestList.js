@@ -19,7 +19,7 @@ function PageRequestList(container, interface){
 Code.inheritClass(PageRequestList, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageRequestList.prototype._init = function(){
-	var head = ["","Position","Owner","Requested","Filled","Decided","Time","Modified","Status","Options"];
+	var head = ["","Position","Owner","Requested","Filled","Decided","Shift Time","Status","Options"];
 	var i, col, len = head.length;
 	for(i=0;i<len;++i){
 		col = Code.addCell(this._requestHeader);
@@ -44,7 +44,7 @@ PageRequestList.prototype.reset = function(){
 	this.clear();
 	this._checkRequests();
 }
-PageRequestList.prototype.addRequest = function(index,requestID,shiftID,posID,posName,ownID,ownName,reqID,reqName,filID,filName,appID,appName,time,created,modified,status, btn){
+PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftID,posID,posName,ownID,ownName,reqID,reqName,filID,filName,filled,appID,appName,approved,time,status, btn){
 	var row, col;
 	row = Code.addRow(this._requestTable);
 		Code.addClass(row, "requestListRow");
@@ -62,22 +62,19 @@ PageRequestList.prototype.addRequest = function(index,requestID,shiftID,posID,po
 		Code.setProperty(col, "owner_id", ownID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		Code.setContent( col, reqName==""?"(unknown)":reqName );
+		Code.setContent( col, reqName==""?"(unknown)":(reqName+"<br />"+requested) );
 		Code.setProperty(col, "requester_id", reqID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		Code.setContent( col, filName==""?" - ":filName );
+		Code.setContent( col, filName==""?" - ":(filName+"<br />"+filled) );
 		Code.setProperty(col, "fulfiller_id", filID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		Code.setContent( col, appName==""?" - ":appName );
-		Code.setProperty(col, "fulfiller_id", appID);
+		Code.setContent( col, appName==""?" - ":(appName+"<br />"+approved) );
+		Code.setProperty(col, "approved_id", appID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
 		Code.setContent( col, time );
-	col = Code.addCell(row);
-		Code.addClass(col, "requestListCell");
-		Code.setContent( col, modified );
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
 		Code.setContent( col, status );
@@ -104,9 +101,10 @@ PageRequestList.prototype._checkRequests = function(){
 	this._interface.getRequests(0,10, this, this._checkRequestsComplete);	
 }
 PageRequestList.prototype._checkRequestsComplete = function(o){
+	console.log(o);
 	if(o.status=="success"){
 		var moy = Code.monthsShort;
-		var i, btn, req, request_id, created, modified, shift_id, shift_begin, shift_end, position_id, position_name;
+		var i, btn, req, request_id, created, filled, approved, shift_id, shift_begin, shift_end, position_id, position_name;
 		var owner_id, owner_name, requester_id, requester_name, fulfiller_id, fulfiller_name, approver_id, approved_name, info, status;
 		var page = parseInt(o.page,10);
 		var perpage = parseInt(o.count,10);
@@ -116,7 +114,8 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 			req = list[i];
 			request_id = req["request_id"];
 			created = req["created"];
-			modified = req["modified"];
+			filled = req["fulfilled_date"];
+			approved = req["approved_date"];
 			shift_id = req["shift_id"];
 			shift_begin = req["shift_begin"];
 			shift_end = req["shift_end"];
@@ -138,19 +137,34 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 				shift_end = Code.getShortDateDescriptiveString(shift_end);
 				created = Code.dateFromString(created);
 				created = Code.getShortDateDescriptiveString(created);
-				modified = Code.dateFromString(modified);
-				modified = Code.getShortDateDescriptiveString(modified);
+				if(filled){
+					filled = Code.dateFromString(filled);
+					filled = Code.getShortDateDescriptiveString(filled);
+				}
+				if(approved){
+					approved = Code.dateFromString(approved);
+					approved = Code.getShortDateDescriptiveString(approved);
+				}
 			shift_time = shift_begin+" - "+shift_end;
 			status = parseInt(status,10);
 			if(status==0){
 				btn = true;
 				status = "open";
-			}else{
+			}else if(status==1){
+				btn = true;
+				status = "answered";
+			}else if(status==2){
 				btn = false;
-				status = "closed";
+				status = "approved";
+			}else if(status==3){
+				btn = false;
+				status = "denied";
+			}else if(status==4){
+				btn = false;
+				status = "empty";
 			}
-			this.addRequest(offset+i, request_id, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
-				fulfiller_id,fulfiller_name, approver_id,approver_name, shift_time, created,modified, status, btn);
+			this.addRequest(offset+i, request_id,created, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
+				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, btn);
 		}
 	}
 }
@@ -163,6 +177,7 @@ PageRequestList.prototype._handleApproveClickFxn = function(e){
 	}
 }
 PageRequestList.prototype._handleApproveClickFxnSuccess = function(o){
+	console.log(o);
 	if(o && o.status=="success"){
 		this.reset(); // less half-assed
 	}

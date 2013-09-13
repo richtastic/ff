@@ -299,15 +299,15 @@ if($ARGUMENT_GET_ACTION!=null){
 			}
 		// CREATE REQUEST
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_GET){
+			autoSetRequestToEmptyOnTimePass($connection);
 			$page = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
 			$count = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
 			$count = max(min($count,100),1);
 			$offset = max(0,$count*($page));
-			//$query = 'select id,created,modified,shift_id,request_user_id,fulfill_user_id,approved_user_id,info,status  from requests  order by approved_user_id asc, created desc limit '.$count.' offset '.$offset.';';
 			$query =
-			'select request_id, created, shift_id, shift_begin, shift_end, position_id, position_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
+			'select request_id, created,fulfill_date,approved_date, shift_id, shift_begin, shift_end, position_id, position_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
 			' (select * from'.
-			' (select id as request_id, created, shift_id, decision, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests) as R0'.
+			' (select id as request_id, created,fulfill_date,approved_date, shift_id, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests) as R0'.
 			' left outer join'.
 			' (select id, user_id as owner_id, time_begin as shift_begin, time_end as shift_end, position_id as position_id from shifts) as S0'.
 			' on R0.shift_id=S0.id)'.
@@ -332,11 +332,7 @@ if($ARGUMENT_GET_ACTION!=null){
 			' left outer join'.
 			' (select id, name as position_name from positions) as P1'.
 			' on R1.position_id=P1.id'.
-
 			' order by status asc, created desc limit '.$count.' offset '.$offset.';';
-			// select requests.
-// echo $query;
-// return;
 			$result = mysql_query($query, $connection);
 			if($result){
 				$total = mysql_num_rows($result);
@@ -344,18 +340,18 @@ if($ARGUMENT_GET_ACTION!=null){
 				$i = 0;
 				while( $row = mysql_fetch_assoc($result) ){
 					$request_id = $row["request_id"];
-					$created = $row["created"];
-					//$modified = $row["modified"];
 					$shift_id = $row["shift_id"];
 					$shift_begin = $row["shift_begin"];
 					$shift_end = $row["shift_end"];
 					$position_id = $row["position_id"];
 					$position_name = $row["position_name"];
 					$owner_id = $row["owner_id"];
-// descision, 
 					$requester_id = $row["requester_id"];
+						$created = $row["created"];
 					$fulfiller_id = $row["fulfiller_id"];
+						$filled = $row["fulfill_date"];
 					$approver_id = $row["approver_id"];
+						$approved = $row["approved_date"];
 					$owner_username = $row["owner_username"];
 					$requester_username = $row["requester_username"];
 					$fulfiller_username = $row["fulfiller_username"];
@@ -364,9 +360,10 @@ if($ARGUMENT_GET_ACTION!=null){
 					$status = $row["status"];
 					// ","modified":"'.$modified.'", 
 					echo '{';
-					echo '"request_id":"'.$request_id.'", "created":"'.$created.' "shift_id":"'.$shift_id.'", "shift_begin":"'.$shift_begin.'", "shift_end":"'.$shift_end.'", ';
+					echo '"request_id":"'.$request_id.'", "created":"'.$created.'", "shift_id":"'.$shift_id.'", "shift_begin":"'.$shift_begin.'", "shift_end":"'.$shift_end.'", ';
 					echo '"position_id":"'.$position_id.'", "position_name":"'.$position_name.'", ';
 					echo '"owner_id":"'.$owner_id.'", "requester_id":"'.$requester_id .'", "fulfiller_id":"'.$fulfiller_id.'", "approver_id":"'.$approver_id.'", ';
+					echo '"approved_date":"'.$approved.'", "fulfilled_date":"'.$filled.'", ';
 					echo '"owner_username":"'.$owner_username.'", "requester_username":"'.$requester_username .'", "fulfiller_username":"'.$fulfiller_username.'", "approver_username":"'.$approver_username.'", ';
 					echo '"info":"'.$info.'", "status":"'.$status.'" ';
 					echo '}';
@@ -392,7 +389,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$total = mysql_num_rows($result);
 				mysql_free_result($result);
 				if($total==0){
-					$query = 'insert into requests (created,shift_id,request_user_id,fulfill_user_id,fulfill_date,approved_user_id,approved_date,info,status,decision) values (now(),"'.$shift_id.'","'.$user_id.'","0",NULL,"0",NULL,"","0","0"); ';
+					$query = 'insert into requests (created,shift_id,request_user_id,fulfill_user_id,fulfill_date,approved_user_id,approved_date,info,status) values (now(),"'.$shift_id.'","'.$user_id.'","0",NULL,"0",NULL,"","0"); ';
 					$result = mysql_query($query,$connection);
 					if($result){
 						$request_id = intval( mysql_insert_id() );
@@ -403,7 +400,7 @@ if($ARGUMENT_GET_ACTION!=null){
 							$row = mysql_fetch_assoc($result);
 							$time_begin = $row["time_begin"];
 							$time_end = $row["time_end"];
-							$result = mysql_query($query,$connection);
+							mysql_free_result($result);
 							echo '{"status": "success", "message": "request created", "request": { "id": "'.$request_id.'", "request_user_id": "'.$user_id.'", ';
 							echo '"shift_id": "'.$shift_id.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'" } }';
 						}else{
@@ -433,7 +430,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					mysql_free_result($result);
 					if($request_status==0){
 						if($fulfill_user_id==0){
-							$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date=now() where id="'.$request_id.'";';
+							$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date=now(), status="1", where id="'.$request_id.'";';
 							$result = mysql_query($query);
 							if($result){
 								echo '{"status": "success", "message": "request filled", "request": {"id": "'.$request_id.'", "shift_id": "'.$shift_id.'", ';
@@ -470,7 +467,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					mysql_free_result($result);
 					if($request_status==0){
 						if($decide_type==$ACTION_TYPE_REQUEST_NO){ ////////////////////////////////////////////////////////////////////////////////////////////
-							$query = 'update requests set approved_user_id="'.$user_id.'",approved_date=now() status="1", decision="0" where id="'.$request_id.'";';
+							$query = 'update requests set approved_user_id="'.$user_id.'", approved_date=now(), status="3" where id="'.$request_id.'";';
 							$result = mysql_query($query);
 							if($result){
 								mysql_free_result($result);
@@ -484,7 +481,7 @@ if($ARGUMENT_GET_ACTION!=null){
 								$result = mysql_query($query);
 								if($result){
 									mysql_free_result($result);
-									$query = 'update requests set approved_user_id="'.$user_id.'", status="1", decision="1" where id="'.$request_id.'";';
+									$query = 'update requests set approved_user_id="'.$user_id.'", approved_date=now(), status="2" where id="'.$request_id.'";';
 									$result = mysql_query($query);
 									if($result){
 										mysql_free_result($result);
@@ -510,7 +507,6 @@ if($ARGUMENT_GET_ACTION!=null){
 			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_INFO){
 			$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_INFO_ID]);
-			//$query = 'select id,created,parent_id,user_id,position_id,time_begin,time_end,algorithm from positions where id="'.$shift_id.'" limit 1;';
 			$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.position_id,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username,positions.name as position_name from shifts  left outer join users on users.id=shifts.user_id    left outer join positions on positions.id=shifts.position_id   where shifts.id="'.$shift_id.'"  limit 1;';
 			$result = mysql_query($query, $connection);
 			if($result){
@@ -975,7 +971,8 @@ if($ARGUMENT_GET_ACTION!=null){
 										}
 										// username="'.$username.'",
 										$query = 'update users set '.$pw.' email="'.$email.'", first_name="'.$first_name.'", last_name="'.$last_name.'", phone="'.$phone.'", '.
-											'address="'.$address.'", state="'.$state.'", city="'.$city.'", zip="'.$zip.'", group_id="'.$group_id.'", modified=now() where id="'.$user_id.'";';
+											'address="'.$address.'", state="'.$state.'", city="'.$city.'", zip="'.$zip.'", group_id="'.$group_id.'", modified=now(), modified_user_id="'.$ACTION_VALUE_USER_ID.'" '.
+											'where id="'.$user_id.'";';
 										$result = mysql_query($query,$connection);
 										if($result){
 											echo '{ "status": "success", "message": "user updated", "user": {"id":"'.$user_id.'"} }';
@@ -1015,9 +1012,9 @@ if($ARGUMENT_GET_ACTION!=null){
 										$password = $row["password"];
 										mysql_free_result($result);
 										if($password==$admin_password){
-											$query = 'insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, modified) '.
+											$query = 'insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, modified, created_user_id, modified_user_id) '.
 											'values ("'.$username.'","'.$new_password.'","'.$email.'", "'.$first_name.'", "'.$last_name.'","'.$phone.'", "'.$address.'", "'
-											.$state.'", "'.$city.'", "'.$zip.'", "'.$group_id.'", now(), now() );';
+											.$state.'", "'.$city.'", "'.$zip.'", "'.$group_id.'", now(), now(), "'.$ACTION_VALUE_USER_ID.'", "'.$ACTION_VALUE_USER_ID.'");';
 											$result = mysql_query($query,$connection);
 											if($result){
 												$user_id = intval( mysql_insert_id() );
