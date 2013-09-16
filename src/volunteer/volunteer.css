@@ -247,6 +247,7 @@ textarea{
 	padding-top: 2px;
 	padding-bottom: 2px;
 	font-size: 90%;
+	max-width: 10%;
 }
 .calendarWeekCol{
 	vertical-align: top;
@@ -304,6 +305,20 @@ textarea{
 	padding-top: 2px;
 	padding-bottom: 2px;
 	text-decoration: underline;
+}
+.calendarWeekRadioContainer{
+	text-align: center;
+	vertical-align: middle;
+}
+.calendarWeekRadio{
+	display: inline-block;
+	padding-left: 4px;
+	padding-right: 1px;
+}
+.calendarWeekRadioLabel{
+	display: inline-block;
+	padding-left: 1px;
+	padding-right: 4px;
 }
 
 /* ----------------------------------------------------------- SHIFTS */
@@ -688,6 +703,7 @@ textarea{
 	padding-bottom: 0px;
 	font-size: 80%;
 	margin: 0 auto;
+
 }
 .userListCellPhone{
 	font-style: italic;
@@ -744,6 +760,50 @@ textarea{
 }
 .userEditSpacer{
 	padding-bottom: 10px;
+}
+
+/* ----------------------------------------------------------- SHIFT LIST */
+.shiftListContainer{
+	margin: 0 auto;
+}
+.shiftListTable{
+	margin: 0 auto;
+}
+.shiftListHeaderRow{
+	background-color: #EEE;
+}
+.shiftListHeaderCol{
+	padding-left: 4px;
+	padding-right: 4px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	border: solid;
+	border-color: #FFF;
+	border-width: 2px;
+	font-size: 100%;
+	font-weight: bold;
+}
+.shiftListRow{
+	margin: 0 auto;
+	border: solid;
+	border-color: #FFF;
+	border-width: 2px;
+}
+.shiftListCol{
+	padding-left: 4px;
+	padding-right: 4px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	font-size: 80%;
+	margin: 0 auto;
+	background-color: #EEE;
+}
+.shiftListDivDate{
+	font-size: 90%;
+	font-style: italic;
+}
+.shiftListDivAlgorithm{
+	font-size: 80%;
 }
 
 

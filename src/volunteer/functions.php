@@ -437,6 +437,14 @@ function autoSetRequestToEmptyOnTimePass($connection){
 	$result = mysql_query($query, $connection);
 	mysql_free_result($result);
 }
+function logEventDB($connection, $uid,$type,$info){
+	$uid = mysql_real_escape_string($uid);
+	$type = substr( mysql_real_escape_string($type), 0, 32);
+	$info = $info?substr( mysql_real_escape_string($info), 0, 64):"";
+	$query = 'insert into logs (created, user_id, type, info) values (now(), "'.$uid.'", "'.$type.'", "'.$info.'");';
+	$result = mysql_query($query, $connection);
+	mysql_free_result($result);
+}
 function isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$user_pw,$new_pw,$confirm_pw, $isUpdate){
 	if($isUpdate){
 		// don't care about username

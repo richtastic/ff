@@ -251,6 +251,25 @@ Code.newInputPassword = function(a){
 	}
 	return sub;
 };
+Code.newInputRadio = function(name,value){
+	ele = Code.newElement("input");
+	Code.setProperty(ele,"type","radio");
+	Code.setProperty(ele,"name",name);
+	Code.setProperty(ele,"value",value);
+	return ele;
+}
+Code.setChecked = function(e){
+	e.checked = true;
+}
+Code.setUnchecked = function(e){
+	e.checked = false;
+}
+Code.isChecked = function(e){
+	if(e.checked){
+		return true;
+	}
+	return false;
+}
 Code.setInputTextValue = function(a,b){
 	//a.setAttribute("value",b);
 	a.value = b;

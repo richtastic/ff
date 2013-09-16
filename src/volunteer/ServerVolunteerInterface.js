@@ -29,6 +29,9 @@ ServerVolunteerInterface.prototype.ACTION_CALENDAR = "calendar";
 	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE_DAY = "day";
 	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE_WEEK = "week";
 	ServerVolunteerInterface.prototype.ACTION_CALENDAR_TYPE_MONTH = "month";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_OPTION = "option";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_OPTION_SELF = "self";
+	ServerVolunteerInterface.prototype.ACTION_CALENDAR_OPTION_NONE = "none";
 ServerVolunteerInterface.prototype.ACTION_USER_SIMPLE_GET = "user_simple";
 ServerVolunteerInterface.prototype.ACTION_USER_GET = "user";
 	ServerVolunteerInterface.prototype.ACTION_USER_PAGE = "page";
@@ -69,9 +72,11 @@ ServerVolunteerInterface.prototype.ACTION_REQUEST_UPDATE_DECIDE = "request_decid
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_NO = "no";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_INFO = "shift";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_INFO_ID = "id";
+ServerVolunteerInterface.prototype.ACTION_SHIFT_LIST = "shift_list";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_SINGLE = "shift_user_single";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_EMPTY = "shift_user_empty";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_ALL = "shift_user_all";
+ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_FUTURE = "shift_user_future";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_ID = "user_id";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_SHIFT_ID = "shift_id";
 ServerVolunteerInterface.prototype.ACTION_GROUP_GET = "group";
@@ -242,7 +247,6 @@ ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,
 	a.postParams(url,params,this,this.onAjaxUpdateUser,this.onAjaxUpdateUser);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateUser = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -256,7 +260,6 @@ ServerVolunteerInterface.prototype.deleteUser = function(uid,adminPW,ctx,call){
 	a.postParams(url,params,this,this.onAjaxDeleteUser,this.onAjaxDeleteUser);
 }
 ServerVolunteerInterface.prototype.onAjaxDeleteUser = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -329,12 +332,13 @@ ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
-ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day, ctx,call){
+ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day,self, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_WEEK;
 	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,day);
+	params[this.ACTION_CALENDAR_OPTION] = self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE;
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
@@ -352,13 +356,26 @@ ServerVolunteerInterface.prototype.onAjaxGetShiftInfo = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
+
+ServerVolunteerInterface.prototype.getShiftList = function(ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_LIST;
+	var params = this.appendSessionInfo({});
+	a.postParams(url,params,this,this.onAjaxGetShiftList,this.onAjaxGetShiftList);
+}
+ServerVolunteerInterface.prototype.onAjaxGetShiftList = function(e,a){
+	//console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+
 ServerVolunteerInterface.prototype.applyUserToSingleShift = function(user_id,shift_id,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_UPDATE_USER_SINGLE;
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
 	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
-	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
+	a.postParams(url,params,this,this.onAjaxApplyUserToSingleShift,this.onAjaxApplyUserToSingleShift);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToSingleShift = function(e,a){
 	var obj = JSON.parse(e);
@@ -370,7 +387,7 @@ ServerVolunteerInterface.prototype.applyUserToEmptyShifts = function(user_id,shi
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
 	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
-	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
+	a.postParams(url,params,this,this.applyUserToEmptyShifts,this.applyUserToEmptyShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToEmptyShifts = function(e,a){
 	var obj = JSON.parse(e);
@@ -382,9 +399,22 @@ ServerVolunteerInterface.prototype.applyUserToAllShifts = function(user_id,shift
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
 	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
-	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
+	a.postParams(url,params,this,this.onAjaxApplyUserToAllShifts,this.onAjaxApplyUserToAllShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToAllShifts = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.applyUserToFutureShifts = function(user_id,shift_id,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_UPDATE_USER_FUTURE;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
+	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
+	a.postParams(url,params,this,this.onAjaxApplyUserToFutureShifts,this.onAjaxApplyUserToFutureShifts);
+}
+ServerVolunteerInterface.prototype.onAjaxApplyUserToFutureShifts = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -398,7 +428,6 @@ ServerVolunteerInterface.prototype.getRequests = function(page,perpage,ctx,call)
 	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
 }
 ServerVolunteerInterface.prototype.onAjaxGetRequests = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }

@@ -65,6 +65,16 @@ function PageShiftSingle(container, interface){
 				Code.addClass(this._shiftAssign2,"shiftSingleAssign");
 			this._shiftApply2 = Code.newInputSubmit("Apply");
 				Code.addClass(this._shiftApply2,"shiftSingleApply");
+	this._shiftOptionRow3 = Code.addRow(this._shiftOptionTable);//Code.newDiv();
+		Code.addClass(this._shiftOptionRow3,"shiftSingleOptionRow");
+		this._shiftOptionCell30 = Code.addCell(this._shiftOptionRow3);
+			Code.addClass(this._shiftOptionCell30,"shiftSingleOptionCell");
+		this._shiftOptionCell31 = Code.addCell(this._shiftOptionRow3);
+			Code.addClass(this._shiftOptionCell31,"shiftSingleOptionCell");
+			this._shiftAssign3 = Code.newDiv("Assign all future (inclusive) shifts to user");
+				Code.addClass(this._shiftAssign3,"shiftSingleAssign");
+			this._shiftApply3 = Code.newInputSubmit("Apply");
+				Code.addClass(this._shiftApply3,"shiftSingleApply");
 	//
 	//this._shiftAssign? = Code.newDiv("Assign all future shift to user"); + need a start date
 	//
@@ -99,11 +109,14 @@ function PageShiftSingle(container, interface){
 			Code.addChild(this._shiftOptionCell11, this._shiftApply1);
 			Code.addChild(this._shiftOptionCell20, this._shiftAssign2);
 			Code.addChild(this._shiftOptionCell21, this._shiftApply2);
+			Code.addChild(this._shiftOptionCell30, this._shiftAssign3);
+			Code.addChild(this._shiftOptionCell31, this._shiftApply3);
 	Code.addListenerClick(this._shiftRequestButton, this._handleRequestClickFxn, this);
 	Code.addListenerClick(this._shiftAnswerButton, this._handleAnswerClickFxn, this);
 	Code.addListenerClick(this._shiftApply0, this._handleApply0ClickFxn, this);
 	Code.addListenerClick(this._shiftApply1, this._handleApply1ClickFxn, this);
 	Code.addListenerClick(this._shiftApply2, this._handleApply2ClickFxn, this);
+	Code.addListenerClick(this._shiftApply3, this._handleApply3ClickFxn, this);
 	this._init();
 }
 Code.inheritClass(PageShiftSingle, PageWeb);
@@ -263,6 +276,12 @@ PageShiftSingle.prototype._applyUserToAllShifts = function(user_id,shift_id){
 PageShiftSingle.prototype._applyUserToAllShiftsSuccess = function(o){
 	this._alertWithTime(o);
 }
+PageShiftSingle.prototype._applyUserToFutureShifts = function(user_id,shift_id){
+	this._interface.applyUserToFutureShifts(user_id,shift_id,this,this._applyUserToFutureShiftsSuccess);
+}
+PageShiftSingle.prototype._applyUserToFutureShiftsSuccess = function(o){
+	this._alertWithTime(o);
+}
 PageShiftSingle.prototype._createShiftRequest = function(user_id,shift_id){
 	this._interface.createShiftRequest(user_id,shift_id,this,this._createShiftRequestSuccess);
 }
@@ -312,6 +331,14 @@ PageShiftSingle.prototype._handleApply2ClickFxn = function(e){ // all
 	var user_id = this._getSelectedUserID();
 	if(user_id>0){
 		this._applyUserToAllShifts(user_id,this._shiftInfo.id); // parent
+	}else{
+		alert("user not selected");
+	}
+}
+PageShiftSingle.prototype._handleApply3ClickFxn = function(e){ // future
+	var user_id = this._getSelectedUserID();
+	if(user_id>0){
+		this._applyUserToFutureShifts(user_id,this._shiftInfo.id); // parent
 	}else{
 		alert("user not selected");
 	}

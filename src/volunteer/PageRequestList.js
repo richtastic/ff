@@ -101,7 +101,6 @@ PageRequestList.prototype._checkRequests = function(){
 	this._interface.getRequests(0,10, this, this._checkRequestsComplete);	
 }
 PageRequestList.prototype._checkRequestsComplete = function(o){
-	console.log(o);
 	if(o.status=="success"){
 		var moy = Code.monthsShort;
 		var i, btn, req, request_id, created, filled, approved, shift_id, shift_begin, shift_end, position_id, position_name;
@@ -162,6 +161,9 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 			}else if(status==4){
 				btn = false;
 				status = "empty";
+			}else{ // no
+				btn = false;
+				status = "?";
 			}
 			this.addRequest(offset+i, request_id,created, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
 				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, btn);

@@ -204,6 +204,7 @@ drop table if exists groups;
 drop table if exists positions;
 drop table if exists shifts;
 drop table if exists requests;
+drop table if exists logs;
 # USERS
 drop table if exists users;
 create table users(
@@ -258,7 +259,6 @@ drop table if exists shifts;
 create table shifts(
 id int not null auto_increment primary key,
 created datetime, # time created if parent | time assigned if child
-# modified datetime, # not used
 parent_id int, # 0 if parent | shift id generator if child
 user_id int, # creator if parent | owner if child
 position_id int, # position reference same if parent | child
@@ -279,6 +279,15 @@ approved_user_id int, # admin
 approved_date datetime, # decided
 info varchar(1024), # request reasoning explanation
 status int # 0=opened, 1=answered, 2=approved, 3=denied, 4=empty
+);
+# LOGGING
+drop table if exists logs;
+create table logs(
+id int not null auto_increment primary key,
+created datetime, # 
+user_id int, # session user
+type varchar(32), # indexing criteria
+info varchar(64) # extra info 
 );
 
 # GROUPS
@@ -357,17 +366,16 @@ login screen
 
 
 NEW TODO-----------
-*) user CUD form
-	- update
-		- delete
 *) shift form
-	*) 'assign user to all dates befor e/after date [M][D][Y]'
 	*) form clearing on .clear()
 *) shift list
 	*) delete
 *) replace all display data with Code.escapeHTML() && encode/decode;
+*) day view
+*) month view
 *) statistics page
-*) cascading foriegn key deleting tables
+*) logging date (log in/out | updates | etc ...)
+*) cascading foriegn key deleting tables - user/etc
 *) 
 remove all console.log() and replace errors with alert()s
 

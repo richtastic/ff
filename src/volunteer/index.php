@@ -18,6 +18,9 @@ $ACTION_TYPE_CALENDAR = 'calendar';
 		$ACTION_TYPE_CALENDAR_WEEK = 'week';
 		$ACTION_TYPE_CALENDAR_MONTH = 'month';
 		$ACTION_TYPE_CALENDAR_DATE = 'date';
+	$ACTION_TYPE_CALENDAR_OPTION = 'option';
+		$ACTION_TYPE_CALENDAR_OPTION_SELF = 'self';
+		$ACTION_TYPE_CALENDAR_OPTION_NONE = 'none';
 $ACTION_TYPE_POSITION_READ = 'position_read';
 $ACTION_TYPE_POSITION_SINGLE_CREATE = "position_single_create";
 $ACTION_TYPE_POSITION_SINGLE_READ = "position_single_read";
@@ -54,6 +57,7 @@ $ACTION_TYPE_USER_DELETE = "user_delete";
 	$ACTION_TYPE_USER_CONFIRM_PASSWORD = "confirm_password";
 $ACTION_TYPE_SHIFT_INFO = "shift";
 	$ACTION_TYPE_SHIFT_INFO_ID = "id";
+$ACTION_TYPE_SHIFT_LIST = "shift_list";
 $ACTION_TYPE_REQUEST_GET = "req";
 $ACTION_TYPE_REQUEST_CREATE = "request_create";
 $ACTION_TYPE_REQUEST_UPDATE_ANSWER = "request_answer";
@@ -67,25 +71,16 @@ $ACTION_TYPE_REQUEST_UPDATE_DECIDE = "request_decide";
 $ACTION_TYPE_SHIFT_UPDATE_USER_SINGLE = "shift_user_single";
 $ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY = "shift_user_empty";
 $ACTION_TYPE_SHIFT_UPDATE_USER_ALL = "shift_user_all";
+$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE = "shift_user_future";
 	$ACTION_TYPE_SHIFT_UPDATE_USER_ID = "user_id";
 	$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID = "shift_id";
-
 $ACTION_TYPE_GROUP_GET = "group";
 //
-
 $ARGUMENT_GET_ACTION = $_GET['a'];
-//$ARGUMENT_VALUE_USERID = null;
-//$ARGUMENT_VALUE_SESSIONID = null;
-//$ARGUMENT_POST_ACTION = $_POST['a'];
-/*
-	$ACTION_TYPE_USER_PAGE = "page";
-	$ACTION_TYPE_USER_COUNT = "count";
-	$ACTION_TYPE_USER_USER_ID = "type";
-	$ACTION_TYPE_USER_TYPE = "type";
-	$ACTION_TYPE_USER_TYPE_SINGLE = "single";
-	$ACTION_TYPE_USER_TYPE_CURRENT = "current";
-	$ACTION_TYPE_USER_TYPE_LIST = "list";
-*/
+//
+$LOG_TYPE_LOGIN = "login";
+$LOG_TYPE_LOGOUT = "logout";
+
 
 if($ARGUMENT_GET_ACTION!=null){
 	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }'); 
@@ -100,21 +95,22 @@ if($ARGUMENT_GET_ACTION!=null){
 			$total_results = mysql_num_rows($result);
 			while($row = mysql_fetch_assoc($result)){
 				if( $password == $row["password"] ){ // update sessions
-					$id = $row["id"];
+					$uid = $row["id"];
 					// delete all old sessions
-					$query = 'delete from sessions where user_id = "'.$id.'";';
+					$query = 'delete from sessions where user_id = "'.$uid.'";';
 					$delete_result = mysql_query($query, $connection);
 					if(mysql_errno()){ /* error */ }
 					// set new session
 					$session_id = randomSessionID();
 					$ip_forward = $_SERVER['HTTP_X_FORWARDED_FOR'];
 					$ip_remote = $_SERVER['REMOTE_ADDR'];
-					$query = 'insert into sessions (created, user_id,session_id,ip_remote,ip_forward) values (now(), "'.$id.'","'.$session_id.'","'.$ip_remote.'","'.$ip_forward.'");';
+					$query = 'insert into sessions (created, user_id,session_id,ip_remote,ip_forward) values (now(), "'.$uid.'","'.$session_id.'","'.$ip_remote.'","'.$ip_forward.'");';
 					$insert_result = mysql_query($query, $connection);
 					if(mysql_errno()){
 						echo '{ "status": "error", "message": "session fail" }';
 					}else{
-						echo '{ "status": "success", "session_id": "'.$session_id.'" }'; //  "username": "'.$username.'", 
+						echo '{ "status": "success", "session_id": "'.$session_id.'" }';
+						logEventDB($connection, $uid,$LOG_TYPE_LOGIN,$ip_forward."|".$ip_remote);
 					}
 				}else{
 					echo '{ "status": "error", "message": "login fail" }';
@@ -306,7 +302,8 @@ if($ARGUMENT_GET_ACTION!=null){
 			$offset = max(0,$count*($page));
 			$query =
 			'select request_id, created,fulfill_date,approved_date, shift_id, shift_begin, shift_end, position_id, position_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
-			' (select * from'.
+			' (select * from'
+				.
 			' (select id as request_id, created,fulfill_date,approved_date, shift_id, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests) as R0'.
 			' left outer join'.
 			' (select id, user_id as owner_id, time_begin as shift_begin, time_end as shift_end, position_id as position_id from shifts) as S0'.
@@ -505,6 +502,38 @@ if($ARGUMENT_GET_ACTION!=null){
 			}else{
 				echo '{ "status": "error", "message": "unknown type" }';
 			}
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_LIST){
+			$query = 'select S.id, S.created, S.user_id, S.time_begin, S.time_end, S.algorithm, S.position_id, S.position_name, users.username as username '
+			.'from (select shifts.id as id, shifts.created as created, shifts.user_id as user_id, shifts.time_begin as time_begin, shifts.time_end as time_end, shifts.algorithm as algorithm, positions.id as position_id, positions.name as position_name '
+				.'from shifts left outer join positions on shifts.position_id=positions.id where shifts.parent_id=0 order by shifts.id asc) as S '
+				.'left outer join users on S.user_id=users.id;';
+			$result = mysql_query($query);
+			if($result){
+				$total = mysql_num_rows($result);
+				$i = 0;
+				echo '{ "status": "success", "message": "list", "total":"'.$total.'", "list": ['."\n";
+				while($row = mysql_fetch_assoc($result)){
+					$shift_id = $row["id"];
+					$created = $row["created"];
+					$user_id = $row["user_id"];
+					$username = $row["username"];
+					$time_begin = $row["time_begin"];
+					$time_end = $row["time_end"];
+					$algorithm = $row["algorithm"];
+					$position_id = $row["position_id"];
+					$position_name = $row["position_name"];
+					echo '{ "id":"'.$shift_id.'", "created": "'.$created.'", "user_id": "'.$user_id.'", "username":"'.$username.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'", ';
+					echo ' "algorithm":"'.$algorithm.'", "position_id":"'.$position_id.'", "position_name":"'.$position_name.'", "created": "'.$created.'" }';
+					$i += 1;
+					if($i<$total){
+						echo ',';
+					}
+					echo "\n";
+				}
+				echo '] }';
+			}else{
+				echo '{ "status": "error", "message": "bad search" }';
+			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_INFO){
 			$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_INFO_ID]);
 			$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.position_id,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username,positions.name as position_name from shifts  left outer join users on users.id=shifts.user_id    left outer join positions on positions.id=shifts.position_id   where shifts.id="'.$shift_id.'"  limit 1;';
@@ -577,8 +606,9 @@ if($ARGUMENT_GET_ACTION!=null){
 			}else{
 				echo '{ "status": "error", "message": "bad search" }';
 			}
-		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_SINGLE || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL){
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_SINGLE || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){
 				$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID]);
+				$was_shift_id = $shift_id;
 				$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_USER_ID]);
 				if($user_id<=0 || $shift_id<=0){
 					echo '{ "status": "error", "message": "invalid id" }';
@@ -616,7 +646,7 @@ if($ARGUMENT_GET_ACTION!=null){
 								echo '{ "status": "error", "message": "unknown" }';
 							}
 						}
-					}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL){ // expect parent
+					}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){ // expect parent
 						if($parent_id!=0){ // get parent info
 							$shift_id = $parent_id;
 							$query = 'select time_begin from shifts where id="'.$shift_id.'"; ';
@@ -633,6 +663,10 @@ if($ARGUMENT_GET_ACTION!=null){
 						}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL){
 							$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'";';
 							$message = 'all shifts updated';
+						}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){
+							//$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and time_begin>now();'; // future = NOW
+							$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and time_begin>=(select time_begin from (select time_begin from shifts where id="'.$was_shift_id.'") as S);'; // future = NEXT SHIFTS
+							$message = 'future shifts updated';
 						}
 						$result = mysql_query($query, $connection);
 						if($result){
@@ -707,6 +741,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "error", "message": "invalid shift" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_CALENDAR){ // ?a=calendar | type=week&date=2013-07-01
+				$calOption = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_OPTION]);
 				$calType = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
 				$calDate = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
 				$calTime = dateFromString($calDate);
@@ -733,10 +768,12 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "error", "message": "invalid type" }';
 					return;
 				}
-#echo $startDate."\n";
-#echo $endDate."\n";
-				//$query = 'select id,parent_id,user_id,time_begin,time_end,position_id from shifts where time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
-				$query = 'select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts   left outer join users on shifts.user_id=users.id    where parent_id!=0 and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
+				if($calOption==$ACTION_TYPE_CALENDAR_OPTION_SELF && $ACTION_VALUE_USER_ID>0){
+					$calOption = ' and shifts.user_id="'.$ACTION_VALUE_USER_ID.'" ';
+				}else{
+					$calOption = '';
+				}
+				$query = 'select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts   left outer join users on shifts.user_id=users.id    where parent_id!=0 '.$calOption.' and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
 				echo '{ "status": "success", "message": "'.$message.'", ';
 				$result = mysql_query($query, $connection);
 				if($result){
@@ -747,14 +784,6 @@ if($ARGUMENT_GET_ACTION!=null){
 						$parent_id = $row["parent_id"];
 						$user_id = $row["user_id"];
 						$username = $row["username"];
-							/*$username = "";
-							if($user_id!=0){
-								$query = 'select username from users where id="'.$user_id.'" limit 1;';
-								$res = mysql_query($query, $connection);
-								$r = mysql_fetch_assoc($res);
-								$username = $r["username"];
-								mysql_free_result($res);
-							}*/
 						$begin = $row["time_begin"];
 						$end  = $row["time_end"];
 						$position_id = $row["position_id"];

@@ -21,10 +21,14 @@ function PageShifts(container,interface){
 	this._dowSelections = new Array();
 	this._submitButton = Code.newInputSubmit("Submit Shift");
 	Code.addListenerClick(this._submitButton, this._onClickSubmitSchedule, this);
-
 	Code.addChild( this._root, this._tableContainer );
 	Code.addChild( this._root, this._submitButton );
+	//
+	this._shiftList = new PageShiftsList(Code.newDiv(), this._interface);
+	this._shiftList.addFunction(PageShiftsList.EVENT_DELETE_SELECT,this._handleShiftListClickFxn,this);
+	Code.addChild(this._root,this._shiftList.dom());
 
+	//
 	this._init();
 }
 Code.inheritClass(PageShifts, PageWeb);
@@ -242,3 +246,8 @@ PageShifts.prototype.generateSelectionTime = function(){
 	Code.addClass(row,"shiftsInline");
 	return row;
 }
+// ------------------------------------------------------------------------------ list clicking
+PageShifts.prototype._handleShiftListClickFxn = function(o){
+	console.log(o);
+}
+

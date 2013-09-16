@@ -1,5 +1,10 @@
 // PageCalendarWeek.js < PageWeb
 PageCalendarWeek.EVENT_SHIFT_CLICK = "EVENT_SHIFT_CLICK";
+PageCalendarWeek.RADIO_TYPE_CHOICE = "radio_type_choice";
+PageCalendarWeek.RADIO_TYPE_CHOICE_0 = 0;
+PageCalendarWeek.RADIO_TYPE_CHOICE_1 = 1;
+PageCalendarWeek.RADIO_TYPE_CHOICE_0_LABEL = "All";
+PageCalendarWeek.RADIO_TYPE_CHOICE_1_LABEL = "Self";
 
 // ------------------------------------------------------------------------------ constructor
 function PageCalendarWeek(container,interface){
@@ -24,9 +29,28 @@ function PageCalendarWeek(container,interface){
 	this._prevContainer = Code.newDiv("Prev");
 		Code.addClass(this._prevContainer,"calendarWeekPrev");
 		Code.addListenerClick(this._prevContainer,this._prevClickFxn,this);
+	this._radioSelectionContainer = Code.newDiv();
+		Code.addClass(this._radioSelectionContainer,"calendarWeekRadioContainer");
+		this._radioSelection0 = Code.newInputRadio(PageCalendarWeek.RADIO_TYPE_CHOICE,PageCalendarWeek.RADIO_TYPE_CHOICE_0,PageCalendarWeek.RADIO_TYPE_CHOICE_0);
+		this._radioSelection1 = Code.newInputRadio(PageCalendarWeek.RADIO_TYPE_CHOICE,PageCalendarWeek.RADIO_TYPE_CHOICE_1,PageCalendarWeek.RADIO_TYPE_CHOICE_1);
+			Code.addClass(this._radioSelection0,"calendarWeekRadio");
+			Code.addClass(this._radioSelection1,"calendarWeekRadio");
+		this._radioSelection0Label = Code.newDiv(PageCalendarWeek.RADIO_TYPE_CHOICE_0_LABEL);
+		this._radioSelection1Label = Code.newDiv(PageCalendarWeek.RADIO_TYPE_CHOICE_1_LABEL);
+			Code.addClass(this._radioSelection0Label,"calendarWeekRadioLabel");
+			Code.addClass(this._radioSelection1Label,"calendarWeekRadioLabel");
+		Code.addChild(this._radioSelectionContainer,this._radioSelection0);
+		Code.addChild(this._radioSelectionContainer,this._radioSelection0Label);
+		Code.addChild(this._radioSelectionContainer,this._radioSelection1);
+		Code.addChild(this._radioSelectionContainer,this._radioSelection1Label);
 	Code.addChild( this._root, this._prevContainer);
 	Code.addChild( this._root, this._nextContainer);
 	Code.addChild( this._root, this._tableContainer);
+	Code.addChild(this._root,this._radioSelectionContainer);
+	//
+	Code.addListenerClick(this._radioSelection0,this._handleRadioClickFxn,this);
+	Code.addListenerClick(this._radioSelection1,this._handleRadioClickFxn,this);
+	//
 	this._init();
 }
 Code.inheritClass(PageCalendarWeek, PageWeb);
@@ -50,7 +74,25 @@ PageCalendarWeek.prototype._init = function(){
 		}
 		Code.setContent(e, "");
 	}
+	Code.setChecked(this._radioSelection0);
+	this._checkedValue = 0;
 	this.reset();
+}
+PageCalendarWeek.prototype._updateCheckedRadio = function(){
+	var checked_radio = 0, changed = false;
+	if( Code.isChecked(this._radioSelection0) ){
+		checked_radio = 0;
+	}else if( Code.isChecked(this._radioSelection1) ){
+		checked_radio = 1;
+	}
+	if(this._checkedValue!=checked_radio){
+		changed = true;
+	}
+	this._checkedValue = checked_radio;
+	if(changed){
+		this.reset(this._selectedYear,this._selectedMonth,this._selectedDay);
+	}
+	return this._checkedValue;
 }
 // ------------------------------------------------------------------------------ 
 PageCalendarWeek.prototype.reset = function(year,month,day){
@@ -131,6 +173,12 @@ PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin
 		}
 	}
 	if(found){
+		// var checked = this._checkedValue;
+		// if(checked==PageCalendarWeek.RADIO_TYPE_CHOICE_1_LABEL){
+		// 	if(this._userInfo){
+		// 		console.log(userID==this._interface.getUser);
+		// 	}
+		// }
 		col = this._colContainers[i*8+dow0to6+1];
 		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID);
 		Code.addChild(col,d);
@@ -269,7 +317,13 @@ PageCalendarWeek.prototype._getPositionsListSuccess = function(o){
 }
 
 PageCalendarWeek.prototype._getWeekShiftList = function(){
-	this._interface.getShiftWeek(this._selectedYear,this._selectedMonth,this._selectedDay, this,this._getWeekShiftListSuccess);
+	var checked = this._checkedValue;
+	if(checked==PageCalendarWeek.RADIO_TYPE_CHOICE_1){
+		this._interface.getShiftWeek(this._selectedYear,this._selectedMonth,this._selectedDay,true, this,this._getWeekShiftListSuccess);
+	}else{
+		this._interface.getShiftWeek(this._selectedYear,this._selectedMonth,this._selectedDay,false, this,this._getWeekShiftListSuccess);
+	}
+	
 }
 PageCalendarWeek.prototype._getWeekShiftListSuccess = function(o){
 	if(o && o.status=="success"){
@@ -286,4 +340,7 @@ PageCalendarWeek.prototype._getWeekShiftListSuccess = function(o){
 	}
 }
 
+PageCalendarWeek.prototype._handleRadioClickFxn = function(e){
+	this._updateCheckedRadio();
+}
 

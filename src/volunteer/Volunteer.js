@@ -87,14 +87,14 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
 	//
-	// this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
-	// this._navigation.setSelected(Volunteer.NAV_SHIFT);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
+	this._navigation.setSelected(Volunteer.NAV_SHIFT);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	// this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_POSITION);
 	// this._navigation.setSelected(Volunteer.NAV_POSITION);
-	this._navigatorMain.gotoPage(Volunteer.PAGE_USER);
-	this._navigation.setSelected(Volunteer.NAV_USER);
+	// this._navigatorMain.gotoPage(Volunteer.PAGE_USER);
+	// this._navigation.setSelected(Volunteer.NAV_USER);
 	// 
 }
 // ----------------------------------------------------------------------------- page hooks
@@ -120,7 +120,7 @@ Volunteer.prototype._hookPageNavigation = function(page){
 	page.addMenuItem(Volunteer.NAV_CAL_WEEK,"Week");
 	page.addMenuItem(Volunteer.NAV_CAL_DAY,"Day");
 	page.addMenuItem(Volunteer.NAV_CAL_MONTH,"Month");
-	page.addMenuItem(Volunteer.NAV_SHIFT,"Add Shift");
+	page.addMenuItem(Volunteer.NAV_SHIFT,"Shifts");
 	//page.addMenuItem(Volunteer.NAV_SHIFTS,"Shifts");
 	page.addMenuItem(Volunteer.NAV_USER,"Users");
 	//page.addMenuItem(Volunteer.NAV_USER_LIST,"Users");
