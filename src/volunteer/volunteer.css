@@ -247,7 +247,7 @@ textarea{
 	padding-top: 2px;
 	padding-bottom: 2px;
 	font-size: 90%;
-	max-width: 10%;
+	max-width: 14%; /* 1/7 = 0.1428 */
 }
 .calendarWeekCol{
 	vertical-align: top;

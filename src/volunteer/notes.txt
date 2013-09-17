@@ -370,6 +370,8 @@ NEW TODO-----------
 	*) form clearing on .clear()
 *) shift list
 	*) delete
+*) check IE compatability
+
 *) replace all display data with Code.escapeHTML() && encode/decode;
 *) day view
 *) month view

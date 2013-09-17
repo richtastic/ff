@@ -28,7 +28,7 @@ PageShiftsList.prototype._init = function(){
 }
 PageShiftsList.prototype._updateRows = function(list){
 	this._listInfo = list;
-	var uid, row, col, div, i, len = list.length;
+	var uid, row, col, div, bu, i, len = list.length;
 	var rowClass = "shiftListRow", colClass = "shiftListCol";
 	for(i=0;i<len;++i){
 		row = Code.addRow(this._table);
@@ -49,7 +49,7 @@ PageShiftsList.prototype._updateRows = function(list){
 			Code.setContent(col,Code.getShortDateDescriptiveString(Code.dateFromString(list[i].time_begin)));
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
-			Code.setContent(col,Code.getShortDateDescriptiveString(Code.dateFromString(list[i].time_begin)));
+			Code.setContent(col,Code.getShortDateDescriptiveString(Code.dateFromString(list[i].time_end)));
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
 			div = Code.newDiv( Code.humanReadableRepeatString(list[i].algorithm).replace(/,/,"<br/>") );
@@ -57,9 +57,11 @@ PageShiftsList.prototype._updateRows = function(list){
 				Code.addChild(col,div);
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
-			Code.setContent(col,"Delete");
+			bu = Code.newInputSubmit("Delete");
+			Code.addChild(col,bu);
 		Code.setProperty(row,"row",""+i);
 		Code.addListenerClick(row,this._handleRowClickFxn,this);
+		Code.addListenerClick(bu,this._handleDeleteClickFxn,this);
 	}
 }
 // ------------------------------------------------------------------------------ 
@@ -92,6 +94,7 @@ PageShiftsList.prototype._handleGetShiftListSuccess = function(e){
 PageShiftsList.prototype._handleRowClickFxn = function(e){
 	if(this._listInfo){
 		var target = Code.getTargetFromMouseEvent(e);
+
 		var row_id = Code.getProperty(target,"row");
 		while(target && !row_id){
 			target = target.parentNode;
@@ -100,5 +103,11 @@ PageShiftsList.prototype._handleRowClickFxn = function(e){
 		row_id = parseInt(row_id);
 		this.alertAll(PageShiftsList.EVENT_DELETE_SELECT,this._listInfo[row_id]);
 	}
+	
+}
+PageShiftsList.prototype._handleDeleteClickFxn = function(e){
+	Code.stopEventPropagation(e);
+	console.log("delete ...");
+	var target = Code.getTargetFromMouseEvent(e);
 	
 }

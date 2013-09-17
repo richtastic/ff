@@ -499,7 +499,9 @@ Code.addListenerChange = function(ele,fxn){
 		ele.onchange = fxn;
 	}
 }
-
+Code.stopEventPropagation = function(e){
+	e.stopPropagation();
+}
 // -------------------------------------------------------- COOKIES
 Code.setCookie = function(c_name, value, seconds){
 	seconds = seconds*1000;

@@ -20,9 +20,12 @@ function PageShifts(container,interface){
 		this._endSelection = this.generateSelectionDate();
 	this._dowSelections = new Array();
 	this._submitButton = Code.newInputSubmit("Submit Shift");
+	this._clearButton = Code.newInputSubmit("Clear");
 	Code.addListenerClick(this._submitButton, this._onClickSubmitSchedule, this);
+	Code.addListenerClick(this._clearButton, this._onClickClearSchedule, this);
 	Code.addChild( this._root, this._tableContainer );
 	Code.addChild( this._root, this._submitButton );
+	Code.addChild( this._root, this._clearButton );
 	//
 	this._shiftList = new PageShiftsList(Code.newDiv(), this._interface);
 	this._shiftList.addFunction(PageShiftsList.EVENT_DELETE_SELECT,this._handleShiftListClickFxn,this);
@@ -73,6 +76,7 @@ PageShifts.prototype._init = function(){
 }
 PageShifts.prototype.serverPositionsCallback = function(o){
 	if(o.status=="success"){
+		this.setPositions(new Array(), "id","name");
 		this.setPositions(o.list, "id","name");
 	}
 }
@@ -89,8 +93,45 @@ PageShifts.prototype.setPositions = function(list,id,name){
 		Code.addChild(this._positionSelection,d);
 	}
 }
-PageShifts.prototype.setFromAlgorithmAndPosition = function(code,pid){
-	//
+PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
+	var arr = Code.getLogicalArrayFromRepeatString(code);
+	if(arr){
+		var sta, sto, h, m, s, n, i, len;
+		var startDate = Code.dateFromString(start);
+		var endDate = Code.dateFromString(end);
+		var selStartDay = Code.getChild(this._startSelection,0);
+		var selStartMonth = Code.getChild(this._startSelection,1);
+		var selStartYear = Code.getChild(this._startSelection,2);
+		var selEndDay = Code.getChild(this._endSelection,0);
+		var selEndMonth = Code.getChild(this._endSelection,1);
+		var selEndYear = Code.getChild(this._endSelection,2);
+		this._positionSelection.value = ""+pid;
+		selStartDay.value = ""+startDate.getDate();
+		selStartMonth.value = ""+(startDate.getMonth());
+		selStartYear.value = ""+startDate.getFullYear();
+		selEndDay.value = ""+endDate.getDate();
+		selEndMonth.value = ""+(endDate.getMonth());
+		selEndYear.value = ""+endDate.getFullYear();
+		//
+		console.log(this._dowSelections[0]);
+		for(i=0;i<arr.length;++i){
+			if(arr[i].length>0){ // only assume 1 entry per day
+				sta = arr[i][0][0];
+				sto = arr[i][0][1];
+				h = sta[0]; m = sta[1]; s = sta[2]; n = sta[3];
+				Code.getChild(this._dowSelections[i][0],0).value = ""+h;
+				Code.getChild(this._dowSelections[i][0],1).value = ""+m;
+				h = sto[0]; m = sto[1]; s = sto[2]; n = sto[3];
+				Code.getChild(this._dowSelections[i][1],0).value = ""+h;
+				Code.getChild(this._dowSelections[i][1],1).value = ""+m;
+			}else{
+				Code.getChild(this._dowSelections[i][0],0).value = "";
+				Code.getChild(this._dowSelections[i][0],1).value = "";
+				Code.getChild(this._dowSelections[i][1],0).value = "";
+				Code.getChild(this._dowSelections[i][1],1).value = "";
+			}
+		}
+	}
 }
 PageShifts.prototype.getAlgorithm = function(){
 	var code = "";
@@ -105,7 +146,26 @@ PageShifts.prototype.reset = function(){
 	this._interface.getShiftPositions(this,this.serverPositionsCallback);
 }
 PageShifts.prototype.clear = function(){
-	this.setPositions(new Array(), "id","name");
+	var i;
+	var selStartDay = Code.getChild(this._startSelection,0);
+	var selStartMonth = Code.getChild(this._startSelection,1);
+	var selStartYear = Code.getChild(this._startSelection,2);
+	var selEndDay = Code.getChild(this._endSelection,0);
+	var selEndMonth = Code.getChild(this._endSelection,1);
+	var selEndYear = Code.getChild(this._endSelection,2);
+	this._positionSelection.value = "";
+	selStartDay.value = "";
+	selStartMonth.value = "";
+	selStartYear.value = "";
+	selEndDay.value = "";
+	selEndMonth.value = "";
+	selEndYear.value = "";
+	for(i=0;i<this._dowSelections.length;++i){
+		Code.getChild(this._dowSelections[i][0],0).value = "";
+		Code.getChild(this._dowSelections[i][0],1).value = "";
+		Code.getChild(this._dowSelections[i][1],0).value = "";
+		Code.getChild(this._dowSelections[i][1],1).value = "";
+	}
 }
 PageShifts.prototype.generateShiftString = function(){
 	var i, len, lm1, a, d, e, h0,m0, h1,m1, found, str="";
@@ -129,7 +189,6 @@ PageShifts.prototype.generateShiftString = function(){
 	var end_year = selEndYear.value;
 	var endDate = Code.prependFixed(end_year+"","0",4)+"-"+Code.prependFixed(end_month+"","0",2)+"-"+Code.prependFixed(end_day+"","0",2) + " 24:00:00.0000";
 	// WEEKDAYS
-// self.computePermutations("2013-07-01 14:02:01.1234","2013-07-31 24:00:00.0000","M:06:00:00.0000+08:30:00.0000,T,W:08:00:00.0000+10:00:00.0000|12:00:00.0000+14:00:00.0000,T,F,S,U");
 	found = false; len = this._dowSelections.length; lm1 = len-1;
 	for(i=0;i<len;++i){
 		str += dow[i]+"";
@@ -159,25 +218,17 @@ PageShifts.prototype.generateShiftString = function(){
 }
 
 // ------------------------------------------------------------------------------ events
-/*PageShifts.prototype._onClickSubmitSchedulePassthrough = function(e){
-	this.element._onClickSubmitSchedule.call(this.element,e);
-}*/
+PageShifts.prototype._onClickClearSchedule = function(e){
+	this.clear();
+}
 PageShifts.prototype._onClickSubmitSchedule = function(e){
 	var a = this.generateShiftString();
 	if(a==null){ return; }
 	var startDate = a[0], endDate = a[1], algorithm = a[2], position_id = a[3];
-	/*
-	startDate = "2013-07-01 00:00:00.0000";
-	endDate = "2013-07-01 24:00:00.0000";
-	algorithm = "M06:00:00.0000-01:00:00.0000,T,W,R,F,S,U";
-	position_id = "1";
-	*/
-//console.log(startDate,endDate,algorithm);
 	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_id, this,this._submitScheduleCallback);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){
 	if(o.status=="success"){
-//		this.clear();
 		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
 	}else if(o){
 		alert(o.message);
@@ -248,6 +299,6 @@ PageShifts.prototype.generateSelectionTime = function(){
 }
 // ------------------------------------------------------------------------------ list clicking
 PageShifts.prototype._handleShiftListClickFxn = function(o){
-	console.log(o);
+	this.setFromAlgorithmAndPosition(o.algorithm, o.time_begin, o.time_end, o.position_id);
 }
 

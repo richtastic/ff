@@ -427,13 +427,13 @@ if($ARGUMENT_GET_ACTION!=null){
 					mysql_free_result($result);
 					if($request_status==0){
 						if($fulfill_user_id==0){
-							$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date=now(), status="1", where id="'.$request_id.'";';
+							$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date=now(), status="1" where id="'.$request_id.'";';
 							$result = mysql_query($query);
 							if($result){
 								echo '{"status": "success", "message": "request filled", "request": {"id": "'.$request_id.'", "shift_id": "'.$shift_id.'", ';
 								echo '"request_user_id": "'.$request_user_id.'", "fulfill_user_id": "'.$user_id.'" }}';
 							}else{
-								echo '{"status": "error", "message": "update failed"}';
+								echo '{"status": "error", "message": "update failed '.mysql_real_escape_string($query).' "}';
 							}
 						}else{
 							echo '{"status": "error", "message": "request has been filled"}';
@@ -920,7 +920,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$result = mysql_query($query, $connection);
 				if($result){
 					mysql_free_result($result);
-// ALSO NEED TO DELETE POSSIBLY EXISTING REQUESTS
+// ALSO NEED TO UPDATE/DELETE POSSIBLY EXISTING REQUESTS
 					$total_parent = 0;
 					$total_children = 0;
 					$query = 'delete from shifts where position_id="'.$position_id.'" and parent_id="0";';
@@ -1100,6 +1100,7 @@ if($ARGUMENT_GET_ACTION!=null){
 										$result = mysql_query($query,$connection);
 										if($result){
 											echo '{ "status": "success", "message": "user deleted", "user": {"id":"'.$user_id.'"} }';
+// NOW NEED TO DELETE EVERYTHING ATTACHED TO THIS USER THAT HAS LOGICAL EFFECTS
 										}else{
 											echo '{ "status": "error", "message": "could not delete user" }';
 										}
