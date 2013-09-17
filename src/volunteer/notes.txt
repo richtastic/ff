@@ -366,10 +366,6 @@ login screen
 
 
 NEW TODO-----------
-*) shift form
-	*) form clearing on .clear()
-*) shift list
-	*) delete
 *) check IE compatability
 
 *) replace all display data with Code.escapeHTML() && encode/decode;

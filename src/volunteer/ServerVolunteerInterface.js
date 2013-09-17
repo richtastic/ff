@@ -79,6 +79,8 @@ ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_ALL = "shift_user_al
 ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_FUTURE = "shift_user_future";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_ID = "user_id";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_SHIFT_ID = "shift_id";
+ServerVolunteerInterface.prototype.ACTION_SHIFT_DELETE_SHIFT = "shift_delete";
+	ServerVolunteerInterface.prototype.ACTION_SHIFT_DELETE_SHIFT_ID = "shift_id";
 ServerVolunteerInterface.prototype.ACTION_GROUP_GET = "group";
 
 //
@@ -364,7 +366,6 @@ ServerVolunteerInterface.prototype.getShiftList = function(ctx,call){
 	a.postParams(url,params,this,this.onAjaxGetShiftList,this.onAjaxGetShiftList);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftList = function(e,a){
-	//console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -414,7 +415,17 @@ ServerVolunteerInterface.prototype.applyUserToFutureShifts = function(user_id,sh
 	a.postParams(url,params,this,this.onAjaxApplyUserToFutureShifts,this.onAjaxApplyUserToFutureShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToFutureShifts = function(e,a){
-	console.log(e);
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+ServerVolunteerInterface.prototype.deleteShift = function(shift_id,ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_DELETE_SHIFT;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_SHIFT_DELETE_SHIFT_ID] = shift_id;
+	a.postParams(url,params,this,this.onAjaxDeleteShift,this.onAjaxDeleteShift);
+}
+ServerVolunteerInterface.prototype.onAjaxDeleteShift = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }

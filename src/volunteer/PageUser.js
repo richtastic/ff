@@ -191,7 +191,10 @@ PageUser.prototype._handleDeleteClickFxn = function(e){
 	if(this._loading){ return; }
 	if(this._userInfo){
 		var d = this._getDataValues();
-		this._interface.deleteUser(this._userInfo.id,d[10],this,this._handleDeleteSuccess);
+		var val = confirm("Are you sure you want to delete '"+this._userInfo.username+"' ?");
+		if(val){
+			this._interface.deleteUser(this._userInfo.id,d[10],this,this._handleDeleteSuccess);
+		}
 	}
 }
 PageUser.prototype._handleClearClickFxn = function(e){

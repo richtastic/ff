@@ -58,18 +58,19 @@ PageShiftsList.prototype._updateRows = function(list){
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
 			bu = Code.newInputSubmit("Delete");
+				Code.setProperty(bu,"sid",list[i].id);
+				Code.addListenerClick(bu,this._handleDeleteClickFxn,this);
 			Code.addChild(col,bu);
 		Code.setProperty(row,"row",""+i);
 		Code.addListenerClick(row,this._handleRowClickFxn,this);
-		Code.addListenerClick(bu,this._handleDeleteClickFxn,this);
 	}
 }
 // ------------------------------------------------------------------------------ 
 PageShiftsList.prototype.clear = function(){
 	this._loading = false;
 	this._listInfo = null;
-	while( Code.numChildren(this._table)>1 ){
-		Code.removeChild(this._table,Code.getChild(this._table,0));
+	while( Code.getRowCount(this._table)>1 ){
+		Code.removeRow(this._table);
 	}
 }
 PageShiftsList.prototype.reset = function(){
@@ -85,6 +86,7 @@ PageShiftsList.prototype._getShiftList = function(){
 PageShiftsList.prototype._handleGetShiftListSuccess = function(e){
 	this._loading = false;
 	if(e && e.status=="success"){
+		this.clear();
 		this._updateRows(e.list);
 	}else{
 		alert(e.message);
@@ -107,7 +109,19 @@ PageShiftsList.prototype._handleRowClickFxn = function(e){
 }
 PageShiftsList.prototype._handleDeleteClickFxn = function(e){
 	Code.stopEventPropagation(e);
-	console.log("delete ...");
-	var target = Code.getTargetFromMouseEvent(e);
-	
+	if(this._listInfo){
+		var target = Code.getTargetFromMouseEvent(e);
+		var sid = Code.getProperty(target,"sid");
+		var val = confirm("Are you sure you want to delete this shift?");
+		if(val){
+			this._interface.deleteShift(sid,this,this._handleShiftDeleteSuccess);
+		}
+	}
+}
+PageShiftsList.prototype._handleShiftDeleteSuccess = function(e){
+	if(e.status=="success"){
+		this.reset();
+	}else{
+		alert(e.message);
+	}
 }

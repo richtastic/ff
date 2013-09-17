@@ -112,8 +112,6 @@ PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
 		selEndDay.value = ""+endDate.getDate();
 		selEndMonth.value = ""+(endDate.getMonth());
 		selEndYear.value = ""+endDate.getFullYear();
-		//
-		console.log(this._dowSelections[0]);
 		for(i=0;i<arr.length;++i){
 			if(arr[i].length>0){ // only assume 1 entry per day
 				sta = arr[i][0][0];
@@ -144,6 +142,7 @@ PageShifts.prototype.getPosition = function(){
 PageShifts.prototype.reset = function(){
 	this.clear();
 	this._interface.getShiftPositions(this,this.serverPositionsCallback);
+	this._shiftList.reset();
 }
 PageShifts.prototype.clear = function(){
 	var i;

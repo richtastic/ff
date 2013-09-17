@@ -128,7 +128,7 @@ PagePosition.prototype._handleSubmitClickedFxn = function(e){
 }
 PagePosition.prototype._handleDeleteClickedFxn = function(e){
 	if(this._positionInfo){
-		var val = confirm("Are you sure you want to delete '"+this._positionInfo.name+"' ?",this._handleConfirmedDeleteClickedFxn);
+		var val = confirm("Are you sure you want to delete '"+this._positionInfo.name+"' ?");
 		if(val){
 			this._disableAll();
 			var id = this._positionInfo.id;

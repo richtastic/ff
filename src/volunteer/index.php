@@ -74,6 +74,10 @@ $ACTION_TYPE_SHIFT_UPDATE_USER_ALL = "shift_user_all";
 $ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE = "shift_user_future";
 	$ACTION_TYPE_SHIFT_UPDATE_USER_ID = "user_id";
 	$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID = "shift_id";
+
+$ACTION_TYPE_SHIFT_DELETE_SHIFT = "shift_delete";
+	$ACTION_TYPE_SHIFT_DELETE_SHIFT_ID = "shift_id";
+
 $ACTION_TYPE_GROUP_GET = "group";
 //
 $ARGUMENT_GET_ACTION = $_GET['a'];
@@ -740,7 +744,38 @@ if($ARGUMENT_GET_ACTION!=null){
 				}else{
 					echo '{ "status": "error", "message": "invalid shift" }';
 				}
-			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_CALENDAR){ // ?a=calendar | type=week&date=2013-07-01
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_DELETE_SHIFT){
+				$shift_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_DELETE_SHIFT_ID]);
+				$query = 'select * from shifts where id="'.$shift_id.'";';
+				$result = mysql_query($query);
+				if($result && mysql_num_rows($result)==1){
+					$row = mysql_fetch_row($result);
+					$parent_id = intval($row["parent_id"]);
+					mysql_free_result($result);
+					if($parent_id==0){
+						$query = 'delete from shifts where parent_id="'.$shift_id.'";';
+// delete from requests WHERE IN
+						$result = mysql_query($query);
+						if($result){
+							mysql_free_result($result);
+							$query = 'delete from shifts where id="'.$shift_id.'";';
+							$result = mysql_query($query);
+							if($result){
+								mysql_free_result($result);
+								echo '{ "status": "success", "message": "deleted shift successfully" }';
+							}else{
+								echo '{ "status": "error", "message": "could not delete source entry" }';
+							}
+						}else{
+							echo '{ "status": "error", "message": "could not delete children entries" }';
+						}
+					}else{
+						echo '{ "status": "error", "message": "cannot delete sub-shift (for now)" }';
+					}
+				}else{
+					echo '{ "status": "error", "message": "invalid shift '.mysql_real_escape_string($query).' " }';
+				}
+			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_CALENDAR){
 				$calOption = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_OPTION]);
 				$calType = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
 				$calDate = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
