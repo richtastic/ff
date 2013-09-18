@@ -100,6 +100,13 @@ ServerVolunteerInterface.prototype.appendSessionInfo = function(o){
 	return o;
 }
 // -------------------------------------------------------------------------------------------------------------------------- LOGIN
+ServerVolunteerInterface.prototype.isImmediateLoggedIn = function(ctx,call){
+	var session_id = Code.getCookie(this.COOKIE_SESSION);
+	if(session_id!==undefined && session_id!==null){
+		return true;
+	}
+	return false;
+}
 ServerVolunteerInterface.prototype.isLoggedIn = function(ctx,call){
 	var session_id = Code.getCookie(this.COOKIE_SESSION);
 	if(session_id!==undefined && session_id!==null){
@@ -347,6 +354,21 @@ ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
+
+ServerVolunteerInterface.prototype.getShiftMonth = function(year,month,self, ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_MONTH;
+	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,1);
+	params[this.ACTION_CALENDAR_OPTION] = self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE;
+	a.postParams(url,params,this,this.onAjaxGetShiftMonth,this.onAjaxGetShiftMonth);
+}
+ServerVolunteerInterface.prototype.onAjaxGetShiftMonth = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
+
 ServerVolunteerInterface.prototype.getShiftInfo = function(shift_id, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_INFO;

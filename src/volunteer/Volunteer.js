@@ -71,7 +71,9 @@ Volunteer.prototype.initialize = function(){
 	// fill navigation
 	this._hookPageNavigation(this._navigatorNav.getPage(Volunteer.PAGE_NAVIGATION));
 	// fill mainpages
+	this._hookPageCalendarDay( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_DAY) );
 	this._hookPageCalendarWeek( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_WEEK) );
+	this._hookPageCalendarMonth( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_MONTH) );
 	this._hookPageShifts( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT) );
 	this._hookPageShiftSingle( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT_SINGLE) );
 	this._hookPageUser( this._navigatorMain.getPage(Volunteer.PAGE_USER) );
@@ -87,15 +89,16 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
 	//
-	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
-	this._navigation.setSelected(Volunteer.NAV_SHIFT);
+	// this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
+	// this._navigation.setSelected(Volunteer.NAV_SHIFT);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	// this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_POSITION);
 	// this._navigation.setSelected(Volunteer.NAV_POSITION);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_USER);
 	// this._navigation.setSelected(Volunteer.NAV_USER);
-	// 
+	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
+	this._navigation.setSelected(Volunteer.NAV_CAL_MONTH);
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
@@ -124,7 +127,7 @@ Volunteer.prototype._hookPageNavigation = function(page){
 	//page.addMenuItem(Volunteer.NAV_SHIFTS,"Shifts");
 	page.addMenuItem(Volunteer.NAV_USER,"Users");
 	//page.addMenuItem(Volunteer.NAV_USER_LIST,"Users");
-	page.addMenuItem(Volunteer.NAV_POSITION,"Shifts");
+	page.addMenuItem(Volunteer.NAV_POSITION,"Roles");
 	//page.addMenuItem(Volunteer.NAV_POSITION_LIST,"Positions");
 	//page.addMenuItem(Volunteer.NAV_REQUEST,"Add Request");
 	page.addMenuItem(Volunteer.NAV_REQUEST_LIST,"Swaps");
@@ -136,19 +139,16 @@ Volunteer.prototype._hookPageBot = function(page){
 		Code.setContent(page.dom(), "2013");
 		Code.addClass(page.dom(),"bottomContainer");
 }
+Volunteer.prototype._hookPageCalendarDay = function(page){
+	this._pageCalendarDay = page;
+}
 Volunteer.prototype._hookPageCalendarWeek = function(page){
 	this._pageCalendarWeek = page;
 	page.addFunction(PageCalendarWeek.EVENT_SHIFT_CLICK,this._handleWeekShiftClickFxn,this);
-	//this._pageCalendarWeek.addShift(12,2, 1234567890,"2013-05-06 06:00:00.0000","2013-05-06 13:30:00.0000", 1,"LongPersonNameHere"); // positionID,dow0to6,shiftID,userID,userName
-	//this._pageCalendarWeek.clear();
-	/*
-	A) get a list of all positions
-	B) get a list of all shifts in this week
-	E) order all shifts by starting time
-	C) for each shift, if position is not already in existingPositions: add it
-	D) SET POSITIONS as existingPositions
-	F) ADD SHIFTS 1 BY 1
-	*/
+}
+Volunteer.prototype._hookPageCalendarMonth = function(page){
+	this._pageCalendarMonth = page;
+	page.addFunction(PageCalendarMonth.EVENT_SHIFT_CLICK,this._handleMonthShiftClickFxn,this);
 }
 Volunteer.prototype._hookPageShifts = function(page){
 	this._pageShifts = page;
@@ -199,6 +199,12 @@ Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
 	this._navigation.setSelectedNone();
 }
+Volunteer.prototype._handleMonthShiftClickFxn = function(o){
+	console.log(o);
+	this._pageShiftSingle.reset(o);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
+	this._navigation.setSelectedNone();
+}
 Volunteer.prototype._navigatorMainPageAddedFxn = function(str,page){
 	//console.log("PAGE ADDED - ",str,page);
 }
@@ -215,9 +221,11 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 			break;
 		case Volunteer.NAV_CAL_DAY:
+			this._pageCalendarDay.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);
 			break;
 		case Volunteer.NAV_CAL_MONTH:
+			this._pageCalendarMonth.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
 			break;
 		case Volunteer.NAV_SHIFT:
@@ -225,6 +233,7 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
 			break;
 		case Volunteer.NAV_USER:
+			this._pageUser.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_USER);
 			break;
 		case Volunteer.NAV_REQUEST_LIST:

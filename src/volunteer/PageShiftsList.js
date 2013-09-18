@@ -52,7 +52,7 @@ PageShiftsList.prototype._updateRows = function(list){
 			Code.setContent(col,Code.getShortDateDescriptiveString(Code.dateFromString(list[i].time_end)));
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
-			div = Code.newDiv( Code.humanReadableRepeatString(list[i].algorithm).replace(/,/,"<br/>") );
+			div = Code.newDiv( Code.humanReadableRepeatString(list[i].algorithm).replace(/,/g,"<br/>") );
 				Code.addClass(div, "shiftListDivAlgorithm");
 				Code.addChild(col,div);
 		col = Code.addCell(row);
@@ -88,8 +88,8 @@ PageShiftsList.prototype._handleGetShiftListSuccess = function(e){
 	if(e && e.status=="success"){
 		this.clear();
 		this._updateRows(e.list);
-	}else{
-		alert(e.message);
+	}else if( !this._interface.isImmediateLoggedIn() ){
+		alert("Shift List: "+e.message);
 	}
 }
 // ------------------------------------------------------------------------------ 
@@ -122,6 +122,6 @@ PageShiftsList.prototype._handleShiftDeleteSuccess = function(e){
 	if(e.status=="success"){
 		this.reset();
 	}else{
-		alert(e.message);
+		alert("Shift List: "+e.message);
 	}
 }

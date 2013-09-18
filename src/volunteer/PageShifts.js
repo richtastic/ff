@@ -1,5 +1,7 @@
 // PageShifts.js < PageWeb
 PageShifts.EVENT_SHIFT_CREATED = "EVENT_SHIFT_CREATED";
+PageShifts.SUBMIT_READY_TEXT = "Submit Shift";
+PageShifts.SUBMIT_WORKING_TEXT = "......";
 
 // ------------------------------------------------------------------------------ constructor
 function PageShifts(container,interface){
@@ -19,7 +21,7 @@ function PageShifts(container,interface){
 		Code.addClass(this._endContainer,"shiftsEditRow");
 		this._endSelection = this.generateSelectionDate();
 	this._dowSelections = new Array();
-	this._submitButton = Code.newInputSubmit("Submit Shift");
+	this._submitButton = Code.newInputSubmit(PageShifts.SUBMIT_READY_TEXT);
 	this._clearButton = Code.newInputSubmit("Clear");
 	Code.addListenerClick(this._submitButton, this._onClickSubmitSchedule, this);
 	Code.addListenerClick(this._clearButton, this._onClickClearSchedule, this);
@@ -57,7 +59,6 @@ PageShifts.prototype._init = function(){
 		selA = this.generateSelectionTime();
 		selB = this.generateSelectionTime();
 		this._dowSelections[i] = new Array(selA,selB);
-		//this._dowSelections[i].push([]);
 			a = Code.newDiv("Start:&nbsp;");
 			b = Code.newDiv("&nbsp;Length:&nbsp;");
 			Code.addClass(a,"shiftsInline");
@@ -223,14 +224,18 @@ PageShifts.prototype._onClickClearSchedule = function(e){
 PageShifts.prototype._onClickSubmitSchedule = function(e){
 	var a = this.generateShiftString();
 	if(a==null){ return; }
+Code.setDisabled(this._submitButton);
+Code.setInputLabel(this._submitButton,PageShifts.SUBMIT_WORKING_TEXT);
 	var startDate = a[0], endDate = a[1], algorithm = a[2], position_id = a[3];
 	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_id, this,this._submitScheduleCallback);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){
+Code.setEnabled(this._submitButton);
+Code.setInputLabel(this._submitButton,PageShifts.SUBMIT_READY_TEXT);
 	if(o.status=="success"){
 		this.alertAll(PageShifts.EVENT_SHIFT_CREATED,o);
 	}else if(o){
-		alert(o.message);
+		alert("Page Shifts: "+o.message);
 	}else{
 		alert("error in shift creation");
 	}

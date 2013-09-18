@@ -64,8 +64,10 @@ PagePosition.prototype.clear = function(){
 	Code.removeFromParent(this._inputDelete);
 	Code.removeFromParent(this._inputSubmit);
 	Code.removeFromParent(this._inputCancel);
+	this._positionList.clear();
 }
 PagePosition.prototype.reset = function(id){
+	this._positionList.reset();
 	this.clear();
 	if(id!==undefined && id!==null && id>0){ // edit
 		this._loading = true;
@@ -146,7 +148,7 @@ PagePosition.prototype._onCreateSuccessFxn = function(e){
 		this.reset();
 		this._positionList.reset();
 	}else{
-		alert(e.message);
+		alert("Page Position: "+e.message);
 	}
 }
 PagePosition.prototype._onUpdateSuccessFxn = function(e){
@@ -155,7 +157,7 @@ PagePosition.prototype._onUpdateSuccessFxn = function(e){
 		this.reset();
 		this._positionList.reset();
 	}else{
-		alert(e.message);
+		alert("Page Position: "+e.message);
 	}
 }
 PagePosition.prototype._onDeleteSuccessFxn = function(e){
@@ -164,7 +166,7 @@ PagePosition.prototype._onDeleteSuccessFxn = function(e){
 		this.reset();
 		this._positionList.reset();
 	}else{
-		alert(e.message);
+		alert("Page Position: "+e.message);
 	}
 }
 

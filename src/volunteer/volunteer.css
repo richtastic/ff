@@ -321,6 +321,130 @@ textarea{
 	padding-right: 4px;
 }
 
+/* ----------------------------------------------------------- CALENDAR MONTH */
+.pageMonthContainer{
+	margin: 0 auto;
+}
+.pageMonthTableContainer{
+	width: 0 auto;
+}
+.pageMonthTitle{
+	font-size: 120%;
+	font-weight: bold;
+	display: inline-block;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+.pageMonthPrev{
+	font-size: 90%;
+	display: inline-block;
+	padding: 4px;
+	text-decoration: underline;
+}
+.pageMonthNext{
+	font-size: 90%;
+	display: inline-block;
+	padding: 4px;
+	text-decoration: underline;
+}
+.pageMonthTable{
+	margin: 0 auto;
+	border: solid;
+	border-color: #CCC;
+	border-width: 2px;
+}
+.pageMonthHeaderRow{
+	padding: 2px;
+	background: #EEE;
+}
+.pageMonthHeaderCol{
+	padding: 2px;
+}
+.pageMonthRow{
+	padding: 1px;
+}
+.pageMonthCol{
+	max-width: 14%;
+	margin-bottom: 2px;
+	vertical-align: top;
+	padding: 2px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #EEE;
+	/*background-color: #678;*/
+}
+.pageMonthDate{
+	font-size: 80%;
+	font-style: italic;
+	border-width: 0px;
+	border-color: #CCC;
+	border-style: solid;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	text-align: left;
+	background-color: #EEE;
+	color: #000;
+}
+.pageMonthDateInactive{
+	font-size: 80%;
+	font-style: italic;
+	border-width: 0px;
+	border-color: #DDD;
+	border-style: solid;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	text-align: left;
+	background-color: #F6F6F6;
+	color: #CCC;
+}
+.pageMonthContent{
+	/* float: left; */
+}
+.pageMonthShiftContainer{
+	float: left;
+	font-size: 70%;
+	color: #003;
+	background: #CCD6FF;
+	border: solid;
+	border-color: #ABC;
+	border-radius: 4px;
+	-moz-border-radius: 4px;
+	padding: 0px;
+	border-width: 1px;
+}
+.pageMonthShiftTypeEmpty{
+	background: #FFBBBB;
+	border-color: #DDAA99;
+}
+.pageMonthShiftTypeOpen{
+	background: #FFCC99;
+	border-color: #CBA;
+}
+.pageMonthShiftTypePending{
+	background: #FFFF99;
+	border-color: #DDCC99;
+}
+.calendarMonthRadioContainer{
+
+}
+.calendarMonthRadio{
+	display: inline-block;
+	padding: 2px;
+}
+.calendarMonthRadioLabel{
+	display: inline-block;
+	padding: 2px;
+	padding-left: 2px;
+	padding-right: 10px;
+}
+.pageMonthCurrentDayCol{
+	background-color: #BDF;
+}
+.pageMonthCurrentDayDiv{
+	background-color: #ACE;
+	border-color: #9BD;
+}
+
 /* ----------------------------------------------------------- SHIFTS */
 .shiftsEditContainer{
 	margin: 0 auto;

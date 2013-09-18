@@ -255,7 +255,7 @@ PageShiftSingle.prototype._alertWithTime = function(o){
 		var seconds = date.getTime()/1000;
 		this.alertAll(PageShiftSingle.EVENT_SHIFT_UPDATED,seconds);
 	}else if(o && o.status=="error"){
-		alert(o.message);
+		alert("Shift Single: "+o.message);
 	}
 }
 PageShiftSingle.prototype._applyUserToSingleShift = function(user_id,shift_id){
@@ -290,7 +290,7 @@ PageShiftSingle.prototype._createShiftRequestSuccess = function(o){
 		var request_id = o.request.id;
 		this.alertAll(PageShiftSingle.EVENT_REQUEST_CREATED,request_id);
 	}else if(o && o.status=="error"){
-		alert(o.message);
+		alert("Shift Single: "+o.message);
 	}
 }
 PageShiftSingle.prototype._updateShiftRequestAnswer = function(user_id,request_id){
@@ -301,7 +301,7 @@ PageShiftSingle.prototype._updateShiftRequestAnswerSuccess = function(o){
 		var request_id = o.request.id;
 		this.alertAll(PageShiftSingle.EVENT_REQUEST_UPDATED,request_id);
 	}else if(o && o.status=="error"){
-		alert(o.message);
+		alert("Shift Single: "+o.message);
 	}
 }
 // ------------------------------------------------------------------------------ 

@@ -672,13 +672,17 @@ Code.humanReadableRepeatString = function(alg){
 	return str;
 }
 
-Code.getShortDateDescriptiveString = function(date){
+Code.getShortDateDescriptiveString = function(date,timeOnly){
 	var hrs = date.getHours();
 	if(hrs>=13){ hrs -= 12; }
 	if(hrs==0){ hrs=12; }
-	return (date.getMonth()+1)+"/"+date.getDate()+"/"+((date.getFullYear()+"").substr(2,2))+" "+hrs+":"+Code.prependFixed(date.getMinutes()+"","0",2)+Code.getAMPMFromDate(date);
+	var str = hrs+":"+Code.prependFixed(date.getMinutes()+"","0",2)+Code.getAMPMFromDate(date);
+	if(timeOnly){ return str; }
+	return (date.getMonth()+1)+"/"+date.getDate()+"/"+((date.getFullYear()+"").substr(2,2))+" "+str;
 }
-
+Code.getShortDateDescriptiveStringTime = function(date){
+	return Code.getShortDateDescriptiveString(date,true);
+}
 
 Code.phoneAsNumbersToHuman = function(phone){
 	var len = phone.length;

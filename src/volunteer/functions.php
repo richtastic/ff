@@ -47,6 +47,7 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./classes/NavWeb.js"></script>
 	<script type="text/javascript" src="./classes/Navigation.js"></script>
 	<script type="text/javascript" src="./ServerVolunteerInterface.js"></script>
+	<script type="text/javascript" src="./PageMonthBlock.js"></script>
 	<script type="text/javascript" src="./PageLogin.js"></script>
 	<script type="text/javascript" src="./PageCalendarDay.js"></script>
 	<script type="text/javascript" src="./PageCalendarWeek.js"></script>

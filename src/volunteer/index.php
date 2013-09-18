@@ -651,6 +651,7 @@ if($ARGUMENT_GET_ACTION!=null){
 							}
 						}
 					}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){ // expect parent
+						$old_time_begin = $time_begin; $old_shift_id = $shift_id;
 						if($parent_id!=0){ // get parent info
 							$shift_id = $parent_id;
 							$query = 'select time_begin from shifts where id="'.$shift_id.'"; ';
@@ -671,6 +672,8 @@ if($ARGUMENT_GET_ACTION!=null){
 							//$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and time_begin>now();'; // future = NOW
 							$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and time_begin>=(select time_begin from (select time_begin from shifts where id="'.$was_shift_id.'") as S);'; // future = NEXT SHIFTS
 							$message = 'future shifts updated';
+							$shift_id = $old_shift_id;
+							$time_begin = $old_time_begin;
 						}
 						$result = mysql_query($query, $connection);
 						if($result){
@@ -753,27 +756,32 @@ if($ARGUMENT_GET_ACTION!=null){
 					$parent_id = intval($row["parent_id"]);
 					mysql_free_result($result);
 					if($parent_id==0){
-						$query = 'delete from shifts where parent_id="'.$shift_id.'";';
-// delete from requests WHERE IN
+						$query = 'delete from requests where shift_id in (select id from shifts where parent_id="'.$shift_id.'") or shift_id="'.$shift_id.'";';
 						$result = mysql_query($query);
 						if($result){
-							mysql_free_result($result);
-							$query = 'delete from shifts where id="'.$shift_id.'";';
+							$query = 'delete from shifts where parent_id="'.$shift_id.'";';
 							$result = mysql_query($query);
 							if($result){
 								mysql_free_result($result);
-								echo '{ "status": "success", "message": "deleted shift successfully" }';
+								$query = 'delete from shifts where id="'.$shift_id.'";';
+								$result = mysql_query($query);
+								if($result){
+									mysql_free_result($result);
+									echo '{ "status": "success", "message": "deleted shift successfully" }';
+								}else{
+									echo '{ "status": "error", "message": "could not delete source entry" }';
+								}
 							}else{
-								echo '{ "status": "error", "message": "could not delete source entry" }';
+								echo '{ "status": "error", "message": "could not delete children entries" }';
 							}
 						}else{
-							echo '{ "status": "error", "message": "could not delete children entries" }';
+							echo '{ "status": "error", "message": "cannot delete sub-shift" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "cannot delete sub-shift (for now)" }';
+						echo '{ "status": "error", "message": "cannot delete related requests" }';
 					}
 				}else{
-					echo '{ "status": "error", "message": "invalid shift '.mysql_real_escape_string($query).' " }';
+					echo '{ "status": "error", "message": "invalid shift" }'; // '.mysql_real_escape_string($query).'
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_CALENDAR){
 				$calOption = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_OPTION]);
@@ -808,7 +816,10 @@ if($ARGUMENT_GET_ACTION!=null){
 				}else{
 					$calOption = '';
 				}
-				$query = 'select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts   left outer join users on shifts.user_id=users.id    where parent_id!=0 '.$calOption.' and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc; ';
+				$query = 'select S.id, S.parent_id, S.user_id, S.time_begin, S.time_end, S.position_id, S.username, positions.name as position_name from'
+					.' (select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts'
+					.' left outer join users on shifts.user_id=users.id    where parent_id!=0 '.$calOption.' and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc) as S '
+					.' left outer join positions on S.position_id=positions.id;';
 				echo '{ "status": "success", "message": "'.$message.'", ';
 				$result = mysql_query($query, $connection);
 				if($result){
@@ -822,6 +833,7 @@ if($ARGUMENT_GET_ACTION!=null){
 						$begin = $row["time_begin"];
 						$end  = $row["time_end"];
 						$position_id = $row["position_id"];
+						$position_name = $row["position_name"];
 						$shift_id = $row["id"];
 							$request_open_exists = "false";
 							$request_fillin_exists = "false";
@@ -840,7 +852,8 @@ if($ARGUMENT_GET_ACTION!=null){
 								mysql_free_result($subresult);
 							}
 						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", ';
-						echo ' "position" : "'.$position_id.'", "id" : "'.$shift_id.'", "request_open_exists": "'.$request_open_exists.'", "fulfill_user_id": "'.$fulfill_user_id.'" }';
+						echo ' "position_id" : "'.$position_id.'", "position_name": "'.$position_name.'", "id" : "'.$shift_id.'", ';
+						echo ' "request_open_exists": "'.$request_open_exists.'", "fulfill_user_id": "'.$fulfill_user_id.'" }';
 						if( $i<($total_results-1) ){ echo ','; }
 						echo "\n";
 						//echo $i." ".($total_results-1)." ".($i<($total_results-1))."\n";
@@ -951,26 +964,41 @@ if($ARGUMENT_GET_ACTION!=null){
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_POSITION_SINGLE_DELETE){
 				$position_id = mysql_real_escape_string($_POST[$ACTION_TYPE_POSITION_SINGLE_ID]);
-				$query = 'delete from positions where id="'.$position_id.'" limit 1;';
+				$query = 'select id from positions where id="'.$position_id.'";';
 				$result = mysql_query($query, $connection);
-				if($result){
+				if($result && mysql_num_rows($result)==1){
 					mysql_free_result($result);
-// ALSO NEED TO UPDATE/DELETE POSSIBLY EXISTING REQUESTS
-					$total_parent = 0;
-					$total_children = 0;
-					$query = 'delete from shifts where position_id="'.$position_id.'" and parent_id="0";';
+					// ALSO NEED TO UPDATE/DELETE POSSIBLY EXISTING REQUESTS
+					$query = 'delete from requests where shift_id in (select id from shifts where id in (select id from shifts where position_id="'.$position_id.'"));';
 					$result = mysql_query($query, $connection);
 					if($result){
-						$total_parent = mysql_affected_rows();
+						$total_requests = mysql_affected_rows();
 						mysql_free_result($result);
+						// ALSO NEED TO UPDATE/DELETE POSSIBLY EXISTING SHIFTS
+						$total_parent = 0;
+						$total_children = 0;
+						$query = 'delete from shifts where position_id="'.$position_id.'" and parent_id="0";';
+						$result = mysql_query($query, $connection);
+						if($result){
+							$total_parent = mysql_affected_rows();
+							mysql_free_result($result);
+						}
+						$query = 'delete from shifts where position_id="'.$position_id.'";';
+						$result = mysql_query($query, $connection);
+						if($result){
+							$total_children = mysql_affected_rows();
+							mysql_free_result($result);
+						}
+						$query = 'delete from positions where id="'.$position_id.'" limit 1;';
+						$result = mysql_query($query, $connection);
+						if($result){
+							echo '{ "status": "success", "message": "delete successful", "position": {"id": "'.$position_id.'"}, "total_parent": "'.$total_parent.'", "total_children": "'.$total_children.'" }';
+						}else{
+							echo '{ "status": "error", "message": "could not delete position" }';
+						}
+					}else{
+						echo '{ "status": "error", "message": "could not delete relates requests" }';
 					}
-					$query = 'delete from shifts where position_id="'.$position_id.'";';
-					$result = mysql_query($query, $connection);
-					if($result){
-						$total_children = mysql_affected_rows();
-						mysql_free_result($result);
-					}
-					echo '{ "status": "success", "message": "delete successful", "position": {"id": "'.$position_id.'"}, "total_parent": "'.$total_parent.'", "total_children": "'.$total_children.'" }';
 				}else{
 					echo '{ "status": "error", "message": "position does not exist" }';
 				}
@@ -1029,11 +1057,9 @@ if($ARGUMENT_GET_ACTION!=null){
 								if($password==$admin_password){
 									if($new_password==$confirm_password){
 										$pw = '';
-										//echo $new_password."\n";
 										if($new_password!=""){ // changed pw
 											$pw = 'password="'.$new_password.'",';
 										}
-										// username="'.$username.'",
 										$query = 'update users set '.$pw.' email="'.$email.'", first_name="'.$first_name.'", last_name="'.$last_name.'", phone="'.$phone.'", '.
 											'address="'.$address.'", state="'.$state.'", city="'.$city.'", zip="'.$zip.'", group_id="'.$group_id.'", modified=now(), modified_user_id="'.$ACTION_VALUE_USER_ID.'" '.
 											'where id="'.$user_id.'";';
@@ -1041,7 +1067,7 @@ if($ARGUMENT_GET_ACTION!=null){
 										if($result){
 											echo '{ "status": "success", "message": "user updated", "user": {"id":"'.$user_id.'"} }';
 										}else{
-											echo '{ "status": "error", "message": "could not update user" }';
+											echo '{ "status": "error", "message": "could not update user" }'; // '.mysql_real_escape_string($query).'
 										}
 									}else{
 										echo '{ "status": "error", "message": "new and confirm passwords do not match" }';
@@ -1131,14 +1157,27 @@ if($ARGUMENT_GET_ACTION!=null){
 									$count = intval( $row["count"] );
 									mysql_free_result($result);
 									if( !($count<=1 && $userIsAdmin) ){ // at least 1 admin users must exist if deleted user is an admin
+										// log em out
+										$query = 'delete from sessions where user_id="'.$user_id.'";';
+										$result = mysql_query($query,$connection);
+										mysql_free_result($result);
+										// close requests filled by em
+										$query = 'update requests set status="3" where status<=1 and fulfill_user_id="'.$user_id.'";';
+										$result = mysql_query($query,$connection);
+										mysql_free_result($result); 
+										// unassign shifts from em
+										$query = 'update shifts set user_id="0" where user_id="'.$user_id.'";';
+										$result = mysql_query($query,$connection);
+										mysql_free_result($result); 
+										// delete em
 										$query = 'delete from users where id="'.$user_id.'";';
 										$result = mysql_query($query,$connection);
 										if($result){
 											echo '{ "status": "success", "message": "user deleted", "user": {"id":"'.$user_id.'"} }';
-// NOW NEED TO DELETE EVERYTHING ATTACHED TO THIS USER THAT HAS LOGICAL EFFECTS
 										}else{
 											echo '{ "status": "error", "message": "could not delete user" }';
 										}
+										// shots
 									}else{
 										echo '{ "status": "error", "message": "at least 1 admin must exist" }';
 									}
@@ -1170,7 +1209,7 @@ if($ARGUMENT_GET_ACTION!=null){
 // ...
 
 include "header.php";
-includeHeader("Volunteering");
+includeHeader("carpe diem"); // provehito in altum  |  carpe diem
 
 
 includeBody();

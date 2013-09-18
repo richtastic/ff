@@ -366,14 +366,13 @@ login screen
 
 
 NEW TODO-----------
-*) check IE compatability
-
+*) allow non-login viewing = rearrange index.php code
 *) replace all display data with Code.escapeHTML() && encode/decode;
 *) day view
 *) month view
 *) statistics page
 *) logging date (log in/out | updates | etc ...)
-*) cascading foriegn key deleting tables - user/etc
+
 *) 
 remove all console.log() and replace errors with alert()s
 

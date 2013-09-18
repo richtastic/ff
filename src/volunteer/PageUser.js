@@ -132,7 +132,6 @@ PageUser.prototype.getUser = function(uid){
 	this._interface.getUserInfo(uid,this,this._getUserSuccess);
 }
 PageUser.prototype._getUserSuccess = function(e){
-	console.log(e);
 	this._userInfo = e.user;
 	e = e.user;
 	Code.setInputTextValue(this._fieldUsername, e.username);
@@ -208,7 +207,7 @@ PageUser.prototype._handleCreateSuccess = function(e){
 		this.reset();
 		this._userList.reset();
 	}else{
-		alert(e.message);
+		alert("Shift User: "+e.message);
 	}
 }
 PageUser.prototype._handleUpdateSuccess = function(e){
@@ -219,7 +218,6 @@ PageUser.prototype._handleDeleteSuccess = function(e){
 }
 // ------------------------------------------------------------------------------ 
 PageUser.prototype._handleUserListRowClickFxn = function(uid){
-	console.log(uid);
 	this.reset(uid);
 }
 PageUser.prototype._generateSelectList = function(list,a,b){
@@ -239,8 +237,8 @@ PageUser.prototype._getGroupListSuccess = function(e){
 		this._fieldGroup = this._generateSelectList(e.list,"name","id");
 		Code.removeAllChildren(this._fieldGroupParent);
 		Code.addChild(this._fieldGroupParent,this._fieldGroup);
-	}else{
-		alert(e.status);
+	}else if( !this._interface.isImmediateLoggedIn() ){
+		alert("Shift User: "+e.status);
 	}
 }
 

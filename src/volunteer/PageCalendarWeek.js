@@ -209,14 +209,10 @@ PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,un
 	if(uname==""){
 		uname = "(empty)";
 		Code.addClass(d,"calendarWeekShiftDivEmpty");
-		//console.log("A");
 	}else if(pend){
-		//console.log(fid);
 		if(fid==0){
 			Code.addClass(d,"calendarWeekShiftDivOpen");
-			//console.log("B");
 		}else{
-			//console.log("C");
 			Code.addClass(d,"calendarWeekShiftDivPending");
 		}
 	}
@@ -276,35 +272,13 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 	len2 = positions_final.length;
 	for(i=0;i<len;++i){
 		shift = shifts[i];
-//console.log(shift);
-		/*for(j=0;j<len2;++j){
-			if(positions_final[j].id==shift.position){
-				break;
-			}
-		}*/
 		date = Code.dateFromString(shift.begin);
-var tmp = date;
 		dow0to6 = (date.getDay()+6)%7;
 		begin = Code.getHourStringFromDate(date);
 		date = Code.dateFromString(shift.end);
 		end = Code.getHourStringFromDate(date);
-
-//end = tmp.getHours();
-//console.log(shift);
-		this.addShift( shift.position,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
+		this.addShift( shift.position_id,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
 	}
-	/*var begin, end, pid, uid, parent, e, i, len;
-	for(i=0;i<len;++i){
-		e = list[i];
-		begin = e.begin;
-		end = e.end;
-		uid = e.user;
-		pid = e.position;
-		parent = e.parent;
-		positions_used[""+pid] = true;
-		//console.log(e);
-		console.log(begin+" | "+end);
-	}*/
 }
 PageCalendarWeek.prototype._getPositionsList = function(){
 	this._interface.getShiftPositions(this,this._getPositionsListSuccess);
@@ -331,7 +305,7 @@ PageCalendarWeek.prototype._getWeekShiftListSuccess = function(o){
 		var list = o.list;
 		var e, i, len = list.length;
 		for(i=0;i<len;++i){
-			pid = list[i].position;
+			pid = list[i].position_id;
 			positions_used[""+pid] = true;
 		}
 		//this.setPositions(positions_used);

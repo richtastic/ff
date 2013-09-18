@@ -11,7 +11,7 @@ function PageCalendarDay(container, interface){
 Code.inheritClass(PageCalendarDay, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageCalendarDay.prototype._init = function(){
-
+	Code.setContent(this._root,"DAY");
 }
 // ------------------------------------------------------------------------------ 
 PageCalendarDay.prototype.wtf = function(){
