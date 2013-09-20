@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ERROR); // mysql warnings
 // index.php
 require "functions.php";
 //include "config.php";
@@ -87,8 +88,37 @@ $LOG_TYPE_LOGOUT = "logout";
 
 
 if($ARGUMENT_GET_ACTION!=null){
-	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }'); 
-	mysql_select_db("volunteering");
+	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }');  mysql_select_db("volunteering");
+	//
+	$ACTION_VALUE_USER_ID = null;
+	$ACTION_VALUE_IS_ADMIN = false;
+	$ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
+	if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
+		//
+	}else{
+		$query = 'select session_id,user_id from sessions where session_id="'.$ACTION_VALUE_SESSION_ID.'" limit 1;';
+		$result = mysql_query($query, $connection);
+		if($result && mysql_num_rows($result)==1){
+			$row = mysql_fetch_assoc($result);
+			$user_id = $row["user_id"];
+			mysql_free_result($result);
+			$ACTION_VALUE_USER_ID = intval($user_id); // valid session
+			mysql_free_result($result);
+			$query = 'select name from groups where id=(select group_id from users where id="'.$ACTION_VALUE_USER_ID.'");';
+			$result = mysql_query($query, $connection);
+			if($result && mysql_num_rows($result)==1){
+				$row = mysql_fetch_assoc($result);
+				$group_name = $row["name"];
+				$ACTION_VALUE_IS_ADMIN = $group_name=="admin";
+				mysql_free_result($result);
+			}else{
+				//echo '{ "status": "error", "message": "invalid group" }';
+			}
+		}else{
+			//echo '{ "status": "error", "message": "invalid session" }';
+		}
+	}
+	//
 	if($ARGUMENT_GET_ACTION==$ACTION_TYPE_LOGIN){ // EVERYONE - // echo hash('sha512','qwerty')."\n"; = 0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8
 		$username = decode_real_escape_string($_POST['u']);
 		$password = decode_real_escape_string($_POST['p']);
@@ -194,7 +224,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				// sub-query - open request
 				$request_id = 0;
 				$request_filled = "false";
-				$query = 'select id,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status="0" ;'; // open request
+				$query = 'select id,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status<=1 ;'; // open request
 				$result = mysql_query($query, $connection);
 				if($result){
 					$count = mysql_num_rows($result);
@@ -300,7 +330,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$request_open_exists = "false";
 					$request_fillin_exists = "false";
 					$fulfill_user_id = 0;
-					$subquery = 'select status,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status="0" order by status asc limit 1;'; // open requests
+					$subquery = 'select status,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status<=1 order by status asc limit 1;'; // open requests
 					$subresult = mysql_query($subquery, $connection);
 					if($subresult){
 						if(mysql_num_rows($subresult)==1){
@@ -413,35 +443,39 @@ if($ARGUMENT_GET_ACTION!=null){
 	
 // PRIVATE -------------------------------------------------------------------
 	}else{ // MUST BE LOGGED IN
-		$ACTION_VALUE_USER_ID = null;
-		$ACTION_VALUE_IS_ADMIN = false;
-		$ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
-		if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
-			echo '{ "status": "error", "message": "no session info" }';
+		// $ACTION_VALUE_USER_ID = null;
+		// $ACTION_VALUE_IS_ADMIN = false;
+		// $ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
+		// if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
+		// 	echo '{ "status": "error", "message": "no session info" }';
+		// 	return;
+		// }else{
+		// 	$query = 'select session_id,user_id from sessions where session_id="'.$ACTION_VALUE_SESSION_ID.'" limit 1;';
+		// 	$result = mysql_query($query, $connection);
+		// 	if($result && mysql_num_rows($result)==1){
+		// 		$row = mysql_fetch_assoc($result);
+		// 		$user_id = $row["user_id"];
+		// 		mysql_free_result($result);
+		// 		$ACTION_VALUE_USER_ID = intval($user_id); // valid session
+		// 		mysql_free_result($result);
+		// 		$query = 'select name from groups where id=(select group_id from users where id="'.$ACTION_VALUE_USER_ID.'");';
+		// 		$result = mysql_query($query, $connection);
+		// 		if($result && mysql_num_rows($result)==1){
+		// 			$row = mysql_fetch_assoc($result);
+		// 			$group_name = $row["name"];
+		// 			$ACTION_VALUE_IS_ADMIN = $group_name=="admin";
+		// 			mysql_free_result($result);
+		// 		}else{
+		// 			echo '{ "status": "error", "message": "invalid group" }';
+		// 		}
+		// 	}else{
+		// 		echo '{ "status": "error", "message": "invalid session" }';
+		// 		return;
+		// 	}
+		// }
+		if($ACTION_VALUE_USER_ID==null){
+			echo '{ "status": "error", "message": "invalid session" }';
 			return;
-		}else{
-			$query = 'select session_id,user_id from sessions where session_id="'.$ACTION_VALUE_SESSION_ID.'" limit 1;';
-			$result = mysql_query($query, $connection);
-			if($result && mysql_num_rows($result)==1){
-				$row = mysql_fetch_assoc($result);
-				$user_id = $row["user_id"];
-				mysql_free_result($result);
-				$ACTION_VALUE_USER_ID = $user_id; // valid session
-				mysql_free_result($result);
-				$query = 'select name from groups where id=(select group_id from users where id="'.$ACTION_VALUE_USER_ID.'");';
-				$result = mysql_query($query, $connection);
-				if($result && mysql_num_rows($result)==1){
-					$row = mysql_fetch_assoc($result);
-					$group_name = $row["name"];
-					$ACTION_VALUE_IS_ADMIN = $group_name=="admin";
-					mysql_free_result($result);
-				}else{
-					echo '{ "status": "error", "message": "invalid group" }';
-				}
-			}else{
-				echo '{ "status": "error", "message": "invalid session" }';
-				return;
-			}
 		}
 		// USER -------------------------------------------------------------------
 		if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_SIMPLE_GET){
@@ -641,7 +675,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				echo '{ "status": "error", "message": "invalid id" }';
 				return;
 			}
-			$query = 'select id from requests where shift_id="'.$shift_id.'" and status="0";';
+			$query = 'select id from requests where shift_id="'.$shift_id.'" and status<=1;';
 			$result = mysql_query($query,$connection);
 			if($result){
 				$total = mysql_num_rows($result);
@@ -708,7 +742,7 @@ if($ARGUMENT_GET_ACTION!=null){
 			}else{
  				echo '{ "status": "error", "message": "invalid id" }';
  			}
-		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_DECIDE){
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_DECIDE && $ACTION_VALUE_IS_ADMIN){
 			$user_id = $ACTION_VALUE_USER_ID;
 			$request_id = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
 			$decide_type = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_TYPE]);
@@ -1199,7 +1233,6 @@ if($ARGUMENT_GET_ACTION!=null){
 
 // ...
 
-include "header.php";
 includeHeader("carpe diem"); // provehito in altum  |  carpe diem
 
 

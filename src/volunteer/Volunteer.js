@@ -200,7 +200,6 @@ Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._navigation.setSelectedNone();
 }
 Volunteer.prototype._handleMonthShiftClickFxn = function(o){
-	console.log(o);
 	this._pageShiftSingle.reset(o);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
 	this._navigation.setSelectedNone();

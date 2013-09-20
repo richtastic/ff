@@ -179,7 +179,6 @@ PageRequestList.prototype._handleApproveClickFxn = function(e){
 	}
 }
 PageRequestList.prototype._handleApproveClickFxnSuccess = function(o){
-	console.log(o);
 	if(o && o.status=="success"){
 		this.reset(); // less half-assed
 	}

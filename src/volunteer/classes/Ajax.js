@@ -124,18 +124,18 @@ Ajax.prototype._stateChange = function(){
 			var arrayBuffer = this._request.response;
 			if(arrayBuffer){
 				var i, j;
-				console.log(arrayBuffer.length);
+				//console.log(arrayBuffer.length);
 				var len = 1000;// arrayBuffer.length
 				for(j=0; j<len; ++j){
 					for(i=1; i>0; i<<=1){
 						if( arrayBuffer[j]&i != 0 ){
-							console.log(j+" - "+i);
+							//console.log(j+" - "+i);
 						}
 						//console.log(arrayBuffer[j]&i);
 					}
 				}
 				var byteArray = new Uint8Array(arrayBuffer);
-				console.log(byteArray);
+				//console.log(byteArray);
 			}
 			return;
 		}else{

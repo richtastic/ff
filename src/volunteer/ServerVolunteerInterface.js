@@ -149,7 +149,6 @@ ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 }
 ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	if(obj){
 		if(obj.status=="success"){
@@ -164,7 +163,7 @@ ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
 			Code.deleteCookie(this.COOKIE_GROUP_NAME);
 		}
 	}else{
-		//console.log("SERVER ERROR");
+		// 
 	}
 	this._checkCallback(a,obj);
 }
@@ -550,48 +549,3 @@ ServerVolunteerInterface.prototype.onAjaxGetGroupList = function(e,a){
 ServerVolunteerInterface.prototype.encodeString = function(str){
 	return encodeURIComponent(str);
 }
-// encodeURIComponent("!@#$%^&*()_+")
-// decodeURIComponent( encodeURIComponent("!@#$%^&*()_+") )
-// !@#$%^&*()_+":{}
-/*
-Volunteer.prototype.onAjaxShiftPositionList = function(e){
-	//console.log(e);
-	var obj = JSON.parse(e);
-	if(obj.status=="success"){
-		var arr = obj.list;
-		var j, len = arr.length;
-		sel = this.elements.shiftPositions;
-		sel.setAttribute("name","positions");
-		for(j=-1;j<len;++j){
-			opt = Code.newElement("option");
-			Code.addChild(sel,opt);
-			if(j==-1){
-				Code.setContent(opt,"");
-				opt.setAttribute("value","");
-				opt.setAttribute("selected","selected");
-			}else{
-				Code.setContent(opt, arr[j]["name"] );
-				opt.setAttribute("value",arr[j]["id"]);
-			}
-		}
-	}
-}
-*/
-
-/*
-
-
-
-
-ServerVolunteerInterface.prototype.COOKIE_SESSION = "COOKIE_SESSION";
-ServerVolunteerInterface.prototype.SESSION_ID = "sid";
-ServerVolunteerInterface.prototype.ELEMENT_ID_LOGIN = "login";
-ServerVolunteerInterface.prototype.ELEMENT_NAME_USERNAME = "login_username";
-ServerVolunteerInterface.prototype.ELEMENT_NAME_PASSWORD = "login_password";
-ServerVolunteerInterface.prototype.ELEMENT_NAME_LOGIN_SUBMIT = "login_submit";
-ServerVolunteerInterface.prototype.ELEMENT_ID_LOGOUT = "logout";
-ServerVolunteerInterface.prototype.ELEMENT_NAME_LOGOUT_SUBMIT = "logout_submit";
-ServerVolunteerInterface.prototype.ELEMENT_ID_SHIFTS = "section_crud_shift";
-ServerVolunteerInterface.prototype.ELEMENT_ID_CALENDAR_WEEK = "calendar_week";
-
-*/
