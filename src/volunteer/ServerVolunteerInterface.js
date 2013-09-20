@@ -12,6 +12,9 @@ ServerVolunteerInterface.prototype.QUERY_DIRECTORY = "./";
 ServerVolunteerInterface.prototype.ACTION_LOGIN = "login";
 ServerVolunteerInterface.prototype.COOKIE_TIME_SECONDS = 60*60*24*365;
 ServerVolunteerInterface.prototype.SESSION_ID = "sid";
+ServerVolunteerInterface.prototype.GROUP_NAME = "gname";
+ServerVolunteerInterface.prototype.COOKIE_SESSION = "c_s_i";
+ServerVolunteerInterface.prototype.COOKIE_GROUP_NAME = "c_g_n";
 //
 ServerVolunteerInterface.prototype.ACTION_POSITION_GET = "position_read";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_CREATE = "position_single_create";
@@ -82,6 +85,8 @@ ServerVolunteerInterface.prototype.ACTION_SHIFT_UPDATE_USER_FUTURE = "shift_user
 ServerVolunteerInterface.prototype.ACTION_SHIFT_DELETE_SHIFT = "shift_delete";
 	ServerVolunteerInterface.prototype.ACTION_SHIFT_DELETE_SHIFT_ID = "shift_id";
 ServerVolunteerInterface.prototype.ACTION_GROUP_GET = "group";
+ServerVolunteerInterface.prototype.GROUP_ADMIN = "admin";
+ServerVolunteerInterface.prototype.GROUP_USER = "user";
 
 //
 // -------------------------------------------------------------------------------------------------------------------------- HELPERS
@@ -100,6 +105,20 @@ ServerVolunteerInterface.prototype.appendSessionInfo = function(o){
 	return o;
 }
 // -------------------------------------------------------------------------------------------------------------------------- LOGIN
+ServerVolunteerInterface.prototype.isImmediateAdmin = function(){
+	var group_name = Code.getCookie(this.COOKIE_GROUP_NAME);
+	if(group_name!==undefined && group_name!==null){
+		return group_name==this.GROUP_ADMIN;
+	}
+	return false;
+}
+ServerVolunteerInterface.prototype.isImmediateUser = function(){
+	var group_name = Code.getCookie(this.COOKIE_GROUP_NAME);
+	if(group_name!==undefined && group_name!==null){
+		return group_name==this.GROUP_USER;
+	}
+	return false;
+}
 ServerVolunteerInterface.prototype.isImmediateLoggedIn = function(ctx,call){
 	var session_id = Code.getCookie(this.COOKIE_SESSION);
 	if(session_id!==undefined && session_id!==null){
@@ -130,14 +149,19 @@ ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 }
 ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	if(obj){
 		if(obj.status=="success"){
 			var session_id = obj.session_id;
+			var group_name = obj.group_name;
 			Code.deleteCookie(this.COOKIE_SESSION);
+			Code.deleteCookie(this.COOKIE_GROUP_NAME);
 			Code.setCookie(this.COOKIE_SESSION,session_id,this.COOKIE_TIME_SECONDS);
+			Code.setCookie(this.COOKIE_GROUP_NAME,group_name,this.COOKIE_TIME_SECONDS);
 		}else{
-			//console.log("LOGIN ERROR");
+			Code.deleteCookie(this.COOKIE_SESSION);
+			Code.deleteCookie(this.COOKIE_GROUP_NAME);
 		}
 	}else{
 		//console.log("SERVER ERROR");
@@ -146,6 +170,7 @@ ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
 }
 ServerVolunteerInterface.prototype.submitLogout = function(ctx,call){
 	Code.deleteCookie(this.COOKIE_SESSION);
+	Code.deleteCookie(this.COOKIE_GROUP_NAME);
 	call.call(ctx,null);
 }
 // -------------------------------------------------------------------------------------------------------------------------- USER INFO

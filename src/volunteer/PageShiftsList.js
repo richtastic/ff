@@ -60,7 +60,9 @@ PageShiftsList.prototype._updateRows = function(list){
 			bu = Code.newInputSubmit("Delete");
 				Code.setProperty(bu,"sid",list[i].id);
 				Code.addListenerClick(bu,this._handleDeleteClickFxn,this);
-			Code.addChild(col,bu);
+			if( this._interface.isImmediateAdmin() ){
+				Code.addChild(col,bu);
+			}
 		Code.setProperty(row,"row",""+i);
 		Code.addListenerClick(row,this._handleRowClickFxn,this);
 	}
@@ -85,8 +87,8 @@ PageShiftsList.prototype._getShiftList = function(){
 }
 PageShiftsList.prototype._handleGetShiftListSuccess = function(e){
 	this._loading = false;
+	this.clear();
 	if(e && e.status=="success"){
-		this.clear();
 		this._updateRows(e.list);
 	}else if( !this._interface.isImmediateLoggedIn() ){
 		alert("Shift List: "+e.message);

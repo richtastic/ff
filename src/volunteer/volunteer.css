@@ -940,6 +940,10 @@ textarea{
 }
 
 
+/* ----------------------------------------------------------- DISPLAY:NONE|USER|ADMIN */
+.displayNone{
+	display: none;
+}
 
 
 

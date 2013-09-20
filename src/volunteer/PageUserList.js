@@ -36,9 +36,11 @@ PageUserList.prototype._init = function(){
 	this.reset();
 }
 PageUserList.prototype.clear = function(){
+	this._clearPagingDiv();
 	this._clearTable();
 }
 PageUserList.prototype.reset = function(){
+	this.clear();
 	this._loading = false;
 	this._getUserPage(this._userCurrentPage);
 }
@@ -58,10 +60,13 @@ PageUserList.prototype._getUserPage = function(next){
 	
 }
 PageUserList.prototype._getUserPageSuccess = function(e){
-	this._userCurrentPage = e.page;
-	this._userTotalPage = Math.ceil(e.absolute/this._userPerPage);
-	this._refreshPagingDiv();
-	this._refreshTable(e.list);
+	//console.log(e);
+	if(e && e.status=="success"){
+		this._userCurrentPage = e.page;
+		this._userTotalPage = Math.ceil(e.absolute/this._userPerPage);
+		this._refreshPagingDiv();
+		this._refreshTable(e.list);
+	}
 	this._loading = false;
 }
 
@@ -111,12 +116,15 @@ PageUserList.prototype._handleRowClickFxn = function(e){
 	this.alertAll(PageUserList.EVENT_USER_CLICK,uid);
 }
 // ------------------------------------------------------------------------------ 
-PageUserList.prototype._refreshPagingDiv = function(){
-	var i, len, div;
-	len = this._userTotalPage;
+PageUserList.prototype._clearPagingDiv = function(){
 	while( Code.numChildren(this._pagingDiv)>0 ){
 		Code.removeFromParent( Code.getChild(this._pagingDiv,0) );
 	}
+}
+PageUserList.prototype._refreshPagingDiv = function(){
+	var i, len, div;
+	len = this._userTotalPage;
+	this._clearPagingDiv();
 	for(i=0; i<len; ++i){
 		div = Code.newDiv((i+1)+"");
 		Code.setProperty(div,"page",i);

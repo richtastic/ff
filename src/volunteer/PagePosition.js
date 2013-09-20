@@ -67,6 +67,21 @@ PagePosition.prototype.clear = function(){
 	this._positionList.clear();
 }
 PagePosition.prototype.reset = function(id){
+	if( this._interface.isImmediateAdmin() ){
+		Code.removeClass(this._inputSubmit,"displayNone");
+		Code.removeClass(this._inputDelete,"displayNone");
+		Code.removeClass(this._inputCancel,"displayNone");
+		Code.removeClass(this._positionTable,"displayNone");
+	}else{
+		Code.removeClass(this._inputSubmit,"displayNone");
+		Code.removeClass(this._inputDelete,"displayNone");
+		Code.removeClass(this._inputCancel,"displayNone");
+		Code.removeClass(this._positionTable,"displayNone");
+		Code.addClass(this._inputSubmit,"displayNone");
+		Code.addClass(this._inputDelete,"displayNone");
+		Code.addClass(this._inputCancel,"displayNone");
+		Code.addClass(this._positionTable,"displayNone");
+	}
 	this._positionList.reset();
 	this.clear();
 	if(id!==undefined && id!==null && id>0){ // edit
@@ -115,7 +130,9 @@ PagePosition.prototype._enableAll = function(){
 }
 // ------------------------------------------------------------------------------ 
 PagePosition.prototype._handlePositionClicked = function(id){
-	this.reset(id);
+	if( this._interface.isImmediateAdmin() ){
+		this.reset(id);
+	}
 }
 PagePosition.prototype._handleSubmitClickedFxn = function(e){
 	var name = Code.getInputTextValue(this._inputPositionName);

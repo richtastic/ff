@@ -142,7 +142,19 @@ PageShifts.prototype.getPosition = function(){
 }
 PageShifts.prototype.reset = function(){
 	this.clear();
-	this._interface.getShiftPositions(this,this.serverPositionsCallback);
+	if( this._interface.isImmediateAdmin() ){
+		Code.removeClass(this._tableContainer,"displayNone");
+		Code.removeClass(this._submitButton,"displayNone");
+		Code.removeClass(this._clearButton,"displayNone");
+		this._interface.getShiftPositions(this,this.serverPositionsCallback);
+	}else{
+		Code.removeClass(this._tableContainer,"displayNone");
+		Code.removeClass(this._submitButton,"displayNone");
+		Code.removeClass(this._clearButton,"displayNone");
+		Code.addClass(this._tableContainer,"displayNone");
+		Code.addClass(this._submitButton,"displayNone");
+		Code.addClass(this._clearButton,"displayNone");
+	}
 	this._shiftList.reset();
 }
 PageShifts.prototype.clear = function(){

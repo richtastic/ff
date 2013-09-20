@@ -14,10 +14,12 @@ function PageUser(container, interface){
 	this._buttonUpdate = Code.newInputSubmit("Update");
 	this._buttonDelete = Code.newInputSubmit("Delete");
 	this._buttonClear = Code.newInputSubmit("Reset");
+	this._buttonSelf = Code.newInputSubmit("Self");
 	Code.addListenerClick(this._buttonCreate,this._handleCreateClickFxn,this);
 	Code.addListenerClick(this._buttonUpdate,this._handleUpdateClickFxn,this);
 	Code.addListenerClick(this._buttonDelete,this._handleDeleteClickFxn,this);
 	Code.addListenerClick(this._buttonClear,this._handleClearClickFxn,this);
+	Code.addListenerClick(this._buttonSelf,this._handleSelfClickFxn,this);
 	//
 	this._spacer = Code.newDiv();
 		Code.addClass(this._spacer,"userEditSpacer");
@@ -88,7 +90,7 @@ PageUser.prototype._init = function(){
 	this._getGroupList();
 	this.reset();
 }
-PageUser.prototype.clear = function(){
+PageUser.prototype.clear = function(nope){
 	// set all inputs to clear / unselected / create
 	Code.setInputTextValue(this._fieldUsername,"");
 	Code.setInputTextValue(this._fieldFirstName,"");
@@ -108,11 +110,16 @@ PageUser.prototype.clear = function(){
 	Code.removeFromParent(this._buttonUpdate);
 	Code.removeFromParent(this._buttonDelete);
 	Code.removeFromParent(this._buttonClear);
+	Code.removeFromParent(this._buttonSelf);
 	Code.setContent(this._userTitleType,"");
 	this._userInfo = null;
+	if(!nope){
+		this._userList.clear();
+	}
 }
 PageUser.prototype.reset = function(uid){
-	this.clear();
+	this.clear(true);
+	this._userList.reset();
 	if(uid && uid>0){
 		Code.setContent(this._userTitleType,"Update User");
 		Code.addChild(this._buttonCell,this._buttonUpdate);
@@ -122,6 +129,24 @@ PageUser.prototype.reset = function(uid){
 	}else{
 		Code.setContent(this._userTitleType,"Create User");
 		Code.addChild(this._buttonCell,this._buttonCreate);
+		Code.addChild(this._buttonCell,this._buttonSelf);
+	}
+	if( this._interface.isImmediateAdmin() ){
+		Code.removeClass(this._userList.dom(),"displayNone");
+	}else{
+		Code.removeClass(this._userList.dom(),"displayNone");
+		Code.addClass(this._userList.dom(),"displayNone");
+	}
+}
+PageUser.prototype._resetCurrentUser = function(){
+	this._interface.getCurrentUserInfo(this,this._resetCurrentUserSuccess);
+}
+PageUser.prototype._resetCurrentUserSuccess = function(e){
+	if(e && e.status=="success"){
+		//this._getUserSuccess(e);
+		this.reset(e.user.id);
+	}else{
+
 	}
 }
 PageUser.prototype.getUser = function(uid){
@@ -133,20 +158,22 @@ PageUser.prototype.getUser = function(uid){
 }
 PageUser.prototype._getUserSuccess = function(e){
 	this._userInfo = e.user;
-	e = e.user;
-	Code.setInputTextValue(this._fieldUsername, e.username);
-	Code.setInputTextValue(this._fieldFirstName, e.first_name);
-	Code.setInputTextValue(this._fieldLastName, e.last_name);
-	Code.setInputTextValue(this._fieldEmail, e.email);
-	Code.setInputTextValue(this._fieldPhone, Code.phoneAsNumbersToHuman(e.phone) );
-	Code.setInputTextValue(this._fieldAddress, e.address);
-	Code.setInputTextValue(this._fieldCity, e.city);
-	Code.setInputTextValue(this._fieldState, e.state);
-	Code.setInputTextValue(this._fieldZip, e.zip);
-	this._fieldGroup.value = e.group_id;
-	Code.setInputTextValue(this._fieldOldPassword,"");
-	Code.setInputTextValue(this._fieldNewPassword,"");
-	Code.setInputTextValue(this._fieldConfirmPassword,"");
+	if(e && e.status=="success"){
+		e = e.user;
+		Code.setInputTextValue(this._fieldUsername, e.username);
+		Code.setInputTextValue(this._fieldFirstName, e.first_name);
+		Code.setInputTextValue(this._fieldLastName, e.last_name);
+		Code.setInputTextValue(this._fieldEmail, e.email);
+		Code.setInputTextValue(this._fieldPhone, Code.phoneAsNumbersToHuman(e.phone) );
+		Code.setInputTextValue(this._fieldAddress, e.address);
+		Code.setInputTextValue(this._fieldCity, e.city);
+		Code.setInputTextValue(this._fieldState, e.state);
+		Code.setInputTextValue(this._fieldZip, e.zip);
+		this._fieldGroup.value = e.group_id;
+		Code.setInputTextValue(this._fieldOldPassword,"");
+		Code.setInputTextValue(this._fieldNewPassword,"");
+		Code.setInputTextValue(this._fieldConfirmPassword,"");
+	}
 	this._loading = false;
 }
 PageUser.prototype._getDataValues = function(){
@@ -200,9 +227,12 @@ PageUser.prototype._handleClearClickFxn = function(e){
 	if(this._loading){ return; }
 	this.reset();
 }
+PageUser.prototype._handleSelfClickFxn = function(e){
+	if(this._loading){ return; }
+	this._resetCurrentUser();
+}
 // ------------------------------------------------------------------------------ 
 PageUser.prototype._handleCreateSuccess = function(e){
-	console.log(e);
 	if(e.status=="success"){
 		this.reset();
 		this._userList.reset();
