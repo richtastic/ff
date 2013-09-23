@@ -757,7 +757,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$request_user_id = intval($row["request_user_id"]);
 					$fulfill_user_id = intval($row["fulfill_user_id"]);
 					mysql_free_result($result);
-					if($request_status==0){
+					if($request_status==0 || $request_status==1){ // open or answered
 						if($decide_type==$ACTION_TYPE_REQUEST_NO){ ////////////////////////////////////////////////////////////////////////////////////////////
 							$query = 'update requests set approved_user_id="'.$user_id.'", approved_date=now(), status="3" where id="'.$request_id.'";';
 							$result = mysql_query($query);
