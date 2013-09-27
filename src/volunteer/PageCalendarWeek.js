@@ -292,12 +292,7 @@ PageCalendarWeek.prototype._getPositionsListSuccess = function(o){
 
 PageCalendarWeek.prototype._getWeekShiftList = function(){
 	var checked = this._checkedValue;
-	if(checked==PageCalendarWeek.RADIO_TYPE_CHOICE_1){
-		this._interface.getShiftWeek(this._selectedYear,this._selectedMonth,this._selectedDay,true, this,this._getWeekShiftListSuccess);
-	}else{
-		this._interface.getShiftWeek(this._selectedYear,this._selectedMonth,this._selectedDay,false, this,this._getWeekShiftListSuccess);
-	}
-	
+	this._interface.getShiftWeek(this._selectedYear,this._selectedMonth,this._selectedDay,checked==PageCalendarWeek.RADIO_TYPE_CHOICE_1, this,this._getWeekShiftListSuccess);
 }
 PageCalendarWeek.prototype._getWeekShiftListSuccess = function(o){
 	if(o && o.status=="success"){

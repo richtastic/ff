@@ -365,6 +365,19 @@ ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
+ServerVolunteerInterface.prototype.getShiftDay = function(year,month,day,self, ctx,call){
+	var a = new Ajax(); this._addCallback(a,ctx,call);
+	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_DAY;
+	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,day);
+	params[this.ACTION_CALENDAR_OPTION] = self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE;
+	a.postParams(url,params,this,this.onAjaxGetShiftDay,this.onAjaxGetShiftDay);
+}
+ServerVolunteerInterface.prototype.onAjaxGetShiftDay = function(e,a){
+	var obj = JSON.parse(e);
+	this._checkCallback(a,obj);
+}
 ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day,self, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;

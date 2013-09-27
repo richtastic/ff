@@ -73,12 +73,12 @@ PageMonthBlock.prototype.reset = function(year,month){
 			Code.addClass(con,"pageMonthContent");
 			this._containers.push(con);
 			Code.addChild(col, con );
+			if(todayYear==year&&todayMonth==month&&todayDay==date.getDate()){
+				Code.addClass(col,"pageMonthCurrentDayCol");
+				Code.addClass(div,"pageMonthCurrentDayDiv");
+			}
 		}else{
 			Code.addClass(div,"pageMonthDateInactive");
-		}
-		if(todayYear==year&&todayMonth==month&&todayDay==date.getDate()){
-			Code.addClass(col,"pageMonthCurrentDayCol");
-			Code.addClass(div,"pageMonthCurrentDayDiv");
 		}
 		j++;
 	}

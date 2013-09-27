@@ -379,6 +379,24 @@ remove all console.log() and replace errors with alert()s
 
 
 
+
+NEWEST TODO-----------
+*) no 'Day'
+*) no visuals unless logged in
+*) ignore assignment conflicts and old-date-swaps (empty)
+*) unite/consolidate shifts & positions
+*) no dates inside calendars - clean up - shifts are on left
+*) swap columns "Requested By", "Filled By", "Approved By", remove "owner"
+*) swap ordering: closest in future coming up - shift.begin_time
+*) users only see open shifts
+*) add reason to shift swap
+*) add user column: recieve notifivations of swaps
+*) send emails on: A) swap made, B) swap filled C) swap approved
+*) 
+*) 
+*) 
+*) 
+
 http://www.cs.wcupa.edu/~rkline/php/sessions.html
 http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_Functions
 

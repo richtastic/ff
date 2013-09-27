@@ -97,8 +97,10 @@ Volunteer.prototype.initialize = function(){
 	// this._navigation.setSelected(Volunteer.NAV_POSITION);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_USER);
 	// this._navigation.setSelected(Volunteer.NAV_USER);
-	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
-	this._navigation.setSelected(Volunteer.NAV_CAL_MONTH);
+	// this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
+	// this._navigation.setSelected(Volunteer.NAV_CAL_MONTH);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);
+	this._navigation.setSelected(Volunteer.NAV_CAL_DAY);
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
@@ -141,6 +143,7 @@ Volunteer.prototype._hookPageBot = function(page){
 }
 Volunteer.prototype._hookPageCalendarDay = function(page){
 	this._pageCalendarDay = page;
+	page.addFunction(PageCalendarDay.EVENT_SHIFT_CLICK,this._handleDayShiftClickFxn,this);
 }
 Volunteer.prototype._hookPageCalendarWeek = function(page){
 	this._pageCalendarWeek = page;
@@ -193,6 +196,11 @@ Volunteer.prototype._handleRequestUpdatedFxn = function(request_id){
 	this._pageRequestList.reset();
 	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+}
+Volunteer.prototype._handleDayShiftClickFxn = function(o){
+	this._pageShiftSingle.reset(o);
+	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
+	this._navigation.setSelectedNone();
 }
 Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._pageShiftSingle.reset(o);
