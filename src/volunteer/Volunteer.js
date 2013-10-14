@@ -8,7 +8,6 @@ Volunteer.PAGE_BOT_CONTAINER_ID = "scheduler_bottom";
 // PAGE REFS
 Volunteer.PAGE_CALENDAR_MONTH = "cal_month";
 Volunteer.PAGE_CALENDAR_WEEK = "cal_week";
-Volunteer.PAGE_CALENDAR_DAY = "cal_day";
 Volunteer.PAGE_SHIFT = "shift";
 Volunteer.PAGE_SHIFT_SINGLE = "shift_single";
 Volunteer.PAGE_SHIFT_LIST = "shift_list";
@@ -18,20 +17,16 @@ Volunteer.PAGE_REQUEST = "req";
 Volunteer.PAGE_REQUEST_LIST = "reqs";
 Volunteer.PAGE_USER = "user";
 Volunteer.PAGE_USER_LIST = "users";
-Volunteer.PAGE_POSITION = "position";
 //Volunteer.PAGE_LOGOUT = "logout";
 //Volunteer.PAGE_TOP = "top";
 Volunteer.PAGE_BOT = "bot";
 // NAV REFS
 Volunteer.NAV_CAL_WEEK = "cal_week";
-Volunteer.NAV_CAL_DAY = "cal_day";
 Volunteer.NAV_CAL_MONTH = "cal_month";
 Volunteer.NAV_SHIFT = "shift"; // single
 Volunteer.NAV_SHIFT_LIST = "shifts"; // all
 Volunteer.NAV_USER = "user"; // single
 Volunteer.NAV_USER_LIST = "users"; // all
-Volunteer.NAV_POSITION = "position"; // single
-Volunteer.NAV_POSITION_LIST = "positions"; // all
 Volunteer.NAV_REQUEST = "request"; // single
 Volunteer.NAV_REQUEST_LIST = "requests"; // all
 // -------------------------------------------------------------------------------------------- constructor
@@ -53,7 +48,6 @@ Volunteer.prototype.initialize = function(){
 	// create pages
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageCalendarMonth(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv(),this._interface) );
-	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_DAY, new PageCalendarDay(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT, new PageShifts(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT_SINGLE, new PageShiftSingle(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_SHIFT_LIST, new PageShiftsList(Code.newDiv(),this._interface) );
@@ -61,8 +55,6 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorMain.setPage(Volunteer.PAGE_REQUEST_LIST, new PageRequestList(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_USER, new PageUser(Code.newDiv(),this._interface) );
 	//this._navigatorMain.setPage(Volunteer.PAGE_USER_LIST, new PageUserList(Code.newDiv(),this._interface) );
-	this._navigatorMain.setPage(Volunteer.PAGE_POSITION, new PagePosition(Code.newDiv(),this._interface) );
-	//this._navigatorMain.setPage(Volunteer.PAGE_POSITION_LIST, new PagePositionList(Code.newDiv(),this._interface) );
 	this._navigatorTop.setPage(Volunteer.PAGE_LOGIN, new PageLogin(Code.newDiv(),this._interface) );
 	this._navigatorNav.setPage(Volunteer.PAGE_NAVIGATION, new Navigation(Code.newDiv(), "navigationContainer","navigationList","navigationItem","navigationItemUnselected","navigationItemSelected") );
 	this._navigatorBot.setPage(Volunteer.PAGE_BOT, new PageWeb(Code.newDiv()) );
@@ -71,13 +63,11 @@ Volunteer.prototype.initialize = function(){
 	// fill navigation
 	this._hookPageNavigation(this._navigatorNav.getPage(Volunteer.PAGE_NAVIGATION));
 	// fill mainpages
-	this._hookPageCalendarDay( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_DAY) );
 	this._hookPageCalendarWeek( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_WEEK) );
 	this._hookPageCalendarMonth( this._navigatorMain.getPage(Volunteer.PAGE_CALENDAR_MONTH) );
 	this._hookPageShifts( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT) );
 	this._hookPageShiftSingle( this._navigatorMain.getPage(Volunteer.PAGE_SHIFT_SINGLE) );
 	this._hookPageUser( this._navigatorMain.getPage(Volunteer.PAGE_USER) );
-	this._hookPagePosition( this._navigatorMain.getPage(Volunteer.PAGE_POSITION) );
 	this._hookPageRequest( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST) );
 	this._hookPageRequestList( this._navigatorMain.getPage(Volunteer.PAGE_REQUEST_LIST) );
 	// fill bot pages
@@ -99,8 +89,6 @@ Volunteer.prototype.initialize = function(){
 	// this._navigation.setSelected(Volunteer.NAV_USER);
 	// this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
 	// this._navigation.setSelected(Volunteer.NAV_CAL_MONTH);
-	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);
-	this._navigation.setSelected(Volunteer.NAV_CAL_DAY);
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
@@ -117,20 +105,14 @@ Volunteer.prototype._hookPageRequestList = function(page){
 Volunteer.prototype._hookPageUser = function(page){
 	this._pageUser = page;
 }
-Volunteer.prototype._hookPagePosition = function(page){
-	this._pagePosition = page;
-}
 Volunteer.prototype._hookPageNavigation = function(page){
 	this._navigation = page;
 	page.addMenuItem(Volunteer.NAV_CAL_WEEK,"Week");
-	page.addMenuItem(Volunteer.NAV_CAL_DAY,"Day");
 	page.addMenuItem(Volunteer.NAV_CAL_MONTH,"Month");
 	page.addMenuItem(Volunteer.NAV_SHIFT,"Shifts");
 	//page.addMenuItem(Volunteer.NAV_SHIFTS,"Shifts");
 	page.addMenuItem(Volunteer.NAV_USER,"Users");
 	//page.addMenuItem(Volunteer.NAV_USER_LIST,"Users");
-	page.addMenuItem(Volunteer.NAV_POSITION,"Roles");
-	//page.addMenuItem(Volunteer.NAV_POSITION_LIST,"Positions");
 	//page.addMenuItem(Volunteer.NAV_REQUEST,"Add Request");
 	page.addMenuItem(Volunteer.NAV_REQUEST_LIST,"Swaps");
 	page.addFunction(Navigation.EVENT_ITEM_CLICKED,this._navigationItemClicked, this);
@@ -140,10 +122,6 @@ Volunteer.prototype._hookPageBot = function(page){
 	this._pageBottom = page;
 		Code.setContent(page.dom(), "2013");
 		Code.addClass(page.dom(),"bottomContainer");
-}
-Volunteer.prototype._hookPageCalendarDay = function(page){
-	this._pageCalendarDay = page;
-	page.addFunction(PageCalendarDay.EVENT_SHIFT_CLICK,this._handleDayShiftClickFxn,this);
 }
 Volunteer.prototype._hookPageCalendarWeek = function(page){
 	this._pageCalendarWeek = page;
@@ -176,8 +154,6 @@ Volunteer.prototype._gotoDateFxn = function(seconds){
 	var date = new Date(parseInt(seconds)*1000);
 	var year = date.getFullYear();
 	var month = date.getMonth()+1;
-	var day = date.getDate();
-	this._pageCalendarWeek.reset(year,month,day);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
 }
@@ -196,11 +172,6 @@ Volunteer.prototype._handleRequestUpdatedFxn = function(request_id){
 	this._pageRequestList.reset();
 	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
-}
-Volunteer.prototype._handleDayShiftClickFxn = function(o){
-	this._pageShiftSingle.reset(o);
-	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
-	this._navigation.setSelectedNone();
 }
 Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._pageShiftSingle.reset(o);
@@ -227,10 +198,6 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			this._pageCalendarWeek.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 			break;
-		case Volunteer.NAV_CAL_DAY:
-			this._pageCalendarDay.reset();
-			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);
-			break;
 		case Volunteer.NAV_CAL_MONTH:
 			this._pageCalendarMonth.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
@@ -247,12 +214,8 @@ Volunteer.prototype._navigationItemClicked = function(name,obj){
 			this._pageRequestList.reset();
 			this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 			break;
-		case Volunteer.NAV_POSITION:
-			this._pagePosition.reset();
-			this._navigatorMain.gotoPage(Volunteer.PAGE_POSITION);
-			break;
 		default:
-			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_DAY);
+			this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 			break;
 	}
 }

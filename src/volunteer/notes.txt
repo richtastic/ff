@@ -243,17 +243,6 @@ id int not null auto_increment primary key,
 name varchar(32), # admin or user
 info varchar(1024)
 );
-# POSITIONS
-drop table if exists positions;
-create table positions(
-id int not null auto_increment primary key,
-created_user_id int, # creator
-created datetime, # time created
-modified_user_id int, # creator
-modified datetime, # time modified
-name varchar(32), # short title
-info varchar(1024) # longer job description
-);
 # SHIFTS
 drop table if exists shifts;
 create table shifts(
@@ -261,10 +250,10 @@ id int not null auto_increment primary key,
 created datetime, # time created if parent | time assigned if child
 parent_id int, # 0 if parent | shift id generator if child
 user_id int, # creator if parent | owner if child
-position_id int, # position reference same if parent | child
 time_begin datetime, # start day if parent | start shift if child
 time_end datetime, # start day if parent | start shift if child
 algorithm varchar(2048) # string if parent | null if child
+name varchar(32), # short title
 );
 # REQUESTS - AKA SWAPS
 drop table if exists requests;
@@ -311,17 +300,8 @@ insert into users (username, password, email, first_name, last_name, phone, addr
 insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("supa","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","zirbsster@gmail.com", "Richie", "Zirbes", "5555555555", "123 Fake Street", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), 1, now(), 1 );
 insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("minimum","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","john.smith@gmail.com", "John", "Smith", "5555555555", "123 Fake Street", "WY", "Cheyenne", "56789", (select id from groups where name="user"), now(), 1, now(), 1 );
 insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("maximum","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","gregg@yahoo.net", "Greg", "Garner", "3033335555", "123 Fake Street", "UT", "Salt Lake City", "12121", (select id from groups where name="user"), now(), 1, now(), 1 );
-# POSITIONS
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Sunrise","Work in the morning");
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Short","Work in the evening");
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Medium","Work in the evening");
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Long","Work late");
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Overnight","Work through the night");
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Backup","Be available for work");
-insert into positions (created_user_id,modified_user_id,created,modified,name,info) values ((select id from users where username="richie"),0,now(),now(),"Management Backup","Be available for work");
 
-# SHIFTS
-# REQUESTS
+
 
 
 

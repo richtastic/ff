@@ -13,7 +13,7 @@ function PageShifts(container,interface){
 		Code.addClass(this._tableContainer,"shiftsEditTable");
 	this._positionContainer = Code.addRow( this._tableContainer );
 		Code.addClass(this._positionContainer,"shiftsEditRow");
-		this._positionSelection = Code.newSelect();
+		this._positionText = Code.newInputText();
 	this._startContainer = Code.addRow( this._tableContainer );
 		Code.addClass(this._startContainer,"shiftsEditRow");
 		this._startSelection = this.generateSelectionDate();
@@ -42,7 +42,7 @@ PageShifts.prototype._init = function(){
 	var i, len, rowContainer, a, b, c;
 	// positions
 	this.generateLeftColumn("Position:",this._positionContainer);
-	this.generateRightColumn(this._positionSelection,this._positionContainer);
+	this.generateRightColumn(this._positionText,this._positionContainer);
 	// start
 	this.generateLeftColumn("Start Date:",this._startContainer);
 	this.generateRightColumn(this._startSelection,this._startContainer);
@@ -81,19 +81,6 @@ PageShifts.prototype.serverPositionsCallback = function(o){
 		this.setPositions(o.list, "id","name");
 	}
 }
-PageShifts.prototype.setPositions = function(list,id,name){
-	Code.emptyDom(this._positionSelection);
-	var d, i, len = list.length;
-	for(i=-1;i<len;++i){
-		if(i<0){
-			d = Code.newOption(true);
-		}else{
-			d = Code.newOption(list[i][name], list[i][id]);
-		}
-		Code.addClass(d,"shiftsInline");
-		Code.addChild(this._positionSelection,d);
-	}
-}
 PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
 	var arr = Code.getLogicalArrayFromRepeatString(code);
 	if(arr){
@@ -106,7 +93,7 @@ PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
 		var selEndDay = Code.getChild(this._endSelection,0);
 		var selEndMonth = Code.getChild(this._endSelection,1);
 		var selEndYear = Code.getChild(this._endSelection,2);
-		this._positionSelection.value = ""+pid;
+		this._positionSelection.value = "?";
 		selStartDay.value = ""+startDate.getDate();
 		selStartMonth.value = ""+(startDate.getMonth());
 		selStartYear.value = ""+startDate.getFullYear();
@@ -136,17 +123,12 @@ PageShifts.prototype.getAlgorithm = function(){
 	var code = "";
 	return code;
 }
-PageShifts.prototype.getPosition = function(){
-	var pid = -1;
-	return pid;
-}
 PageShifts.prototype.reset = function(){
 	this.clear();
 	if( this._interface.isImmediateAdmin() ){
 		Code.removeClass(this._tableContainer,"displayNone");
 		Code.removeClass(this._submitButton,"displayNone");
 		Code.removeClass(this._clearButton,"displayNone");
-		this._interface.getShiftPositions(this,this.serverPositionsCallback);
 	}else{
 		Code.removeClass(this._tableContainer,"displayNone");
 		Code.removeClass(this._submitButton,"displayNone");
@@ -165,7 +147,7 @@ PageShifts.prototype.clear = function(){
 	var selEndDay = Code.getChild(this._endSelection,0);
 	var selEndMonth = Code.getChild(this._endSelection,1);
 	var selEndYear = Code.getChild(this._endSelection,2);
-	this._positionSelection.value = "";
+	Code.setInputTextValue(this._positionText,"");
 	selStartDay.value = "";
 	selStartMonth.value = "";
 	selStartYear.value = "";
@@ -226,7 +208,7 @@ PageShifts.prototype.generateShiftString = function(){
 	if(!found){ alert("no dates"); error = true; }
 	if(error){ return null; }
 	// RETURN LIST
-	return [startDate, endDate, str, position_id];
+	return [startDate, endDate, str, position_name];
 }
 
 // ------------------------------------------------------------------------------ events
@@ -238,8 +220,8 @@ PageShifts.prototype._onClickSubmitSchedule = function(e){
 	if(a==null){ return; }
 Code.setDisabled(this._submitButton);
 Code.setInputLabel(this._submitButton,PageShifts.SUBMIT_WORKING_TEXT);
-	var startDate = a[0], endDate = a[1], algorithm = a[2], position_id = a[3];
-	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_id, this,this._submitScheduleCallback);
+	var startDate = a[0], endDate = a[1], algorithm = a[2], position_name = a[3];
+	this._interface.submitShiftCreate(startDate,endDate,algorithm,position_name, this,this._submitScheduleCallback);
 }
 PageShifts.prototype._submitScheduleCallback = function(o){
 Code.setEnabled(this._submitButton);

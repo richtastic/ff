@@ -12,7 +12,6 @@ $ACTION_TYPE_SHIFT_CREATE = 'shift_create';
 	$ACTION_TYPE_SHIFT_CREATE_START_DATE = 'start_date';
 	$ACTION_TYPE_SHIFT_CREATE_END_DATE = 'end_date';
 	$ACTION_TYPE_SHIFT_CREATE_REPEATING = 'repeat';
-	$ACTION_TYPE_SHIFT_CREATE_POSITION = 'pid';
 $ACTION_TYPE_CALENDAR = 'calendar';
 	$ACTION_TYPE_CALENDAR_TYPE = 'type';
 		$ACTION_TYPE_CALENDAR_DAY = 'day';
@@ -22,14 +21,6 @@ $ACTION_TYPE_CALENDAR = 'calendar';
 	$ACTION_TYPE_CALENDAR_OPTION = 'option';
 		$ACTION_TYPE_CALENDAR_OPTION_SELF = 'self';
 		$ACTION_TYPE_CALENDAR_OPTION_NONE = 'none';
-$ACTION_TYPE_POSITION_READ = 'position_read';
-$ACTION_TYPE_POSITION_SINGLE_CREATE = "position_single_create";
-$ACTION_TYPE_POSITION_SINGLE_READ = "position_single_read";
-$ACTION_TYPE_POSITION_SINGLE_UPDATE = "position_single_update";
-$ACTION_TYPE_POSITION_SINGLE_DELETE = "position_single_delete";
-$ACTION_TYPE_POSITION_SINGLE_ID = "id";
-$ACTION_TYPE_POSITION_SINGLE_NAME = "name";
-$ACTION_TYPE_POSITION_SINGLE_INFO = "info";
 $ACTION_TYPE_USER_SIMPLE_GET= "user_simple";
 $ACTION_TYPE_USER_GET = "user";
 	$ACTION_TYPE_USER_GET_PAGE = "page";
@@ -308,10 +299,9 @@ if($ARGUMENT_GET_ACTION!=null){
 		}else{
 			$calOption = '';
 		}
-		$query = 'select S.id, S.parent_id, S.user_id, S.time_begin, S.time_end, S.position_id, S.username, positions.name as position_name from'
-			.' (select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.position_id,users.username from shifts'
-			.' left outer join users on shifts.user_id=users.id    where parent_id!=0 '.$calOption.' and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc) as S '
-			.' left outer join positions on S.position_id=positions.id;';
+		$query = 'select S.id, S.parent_id, S.user_id, S.time_begin, S.time_end, S.name, S.username from'
+			.' (select shifts.id,shifts.parent_id,shifts.user_id,shifts.time_begin,shifts.time_end,shifts.name,users.username from shifts'
+			.' left outer join users on shifts.user_id=users.id    where parent_id!=0 '.$calOption.' and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by time_begin asc) as S ';
 		echo '{ "status": "success", "message": "'.$message.'", ';
 		$result = mysql_query($query, $connection);
 		if($result){

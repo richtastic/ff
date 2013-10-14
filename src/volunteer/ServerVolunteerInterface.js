@@ -296,64 +296,6 @@ ServerVolunteerInterface.prototype.onAjaxDeleteUser = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
-// -------------------------------------------------------------------------------------------------------------------------- POSITIONS
-ServerVolunteerInterface.prototype.getShiftPositions = function(ctx,call){
-	var a = new Ajax(); this._addCallback(a,ctx,call);
-	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_GET;
-	var params = this.appendSessionInfo({});
-	a.postParams(url,params,this,this.onAjaxShiftPositions,this.onAjaxShiftPositions);
-}
-ServerVolunteerInterface.prototype.onAjaxShiftPositions = function(e,a){
-	var obj = JSON.parse(e);
-	this._checkCallback(a,obj);
-}
-ServerVolunteerInterface.prototype.getPositionInfo = function(id,ctx,call){
-	var a = new Ajax(); this._addCallback(a,ctx,call);
-	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_READ;
-	var params = this.appendSessionInfo({});
-	params[this.ACTION_POSITION_SINGLE_ID] = id;
-	a.postParams(url,params,this,this.onAjaxGetPositionInfo,this.onAjaxGetPositionInfo);
-}
-ServerVolunteerInterface.prototype.onAjaxGetPositionInfo = function(e,a){
-	var obj = JSON.parse(e);
-	this._checkCallback(a,obj);
-}
-ServerVolunteerInterface.prototype.createNewPosition = function(name,info,ctx,call){
-	var a = new Ajax(); this._addCallback(a,ctx,call);
-	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_CREATE;
-	var params = this.appendSessionInfo({});
-	params[this.ACTION_POSITION_SINGLE_NAME] = this.encodeString(name);
-	params[this.ACTION_POSITION_SINGLE_INFO] = this.encodeString(info);
-	a.postParams(url,params,this,this.onAjaxCreateNewPosition,this.onAjaxCreateNewPosition);
-}
-ServerVolunteerInterface.prototype.onAjaxCreateNewPosition = function(e,a){
-	var obj = JSON.parse(e);
-	this._checkCallback(a,obj);
-}
-ServerVolunteerInterface.prototype.updatePosition = function(id,name,info,ctx,call){
-	var a = new Ajax(); this._addCallback(a,ctx,call);
-	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_UPDATE;
-	var params = this.appendSessionInfo({});
-	params[this.ACTION_POSITION_SINGLE_ID] = id;
-	params[this.ACTION_POSITION_SINGLE_NAME] = this.encodeString(name);
-	params[this.ACTION_POSITION_SINGLE_INFO] = this.encodeString(info);
-	a.postParams(url,params,this,this.onAjaxUpdatePosition,this.onAjaxUpdatePosition);
-}
-ServerVolunteerInterface.prototype.onAjaxUpdatePosition = function(e,a){
-	var obj = JSON.parse(e);
-	this._checkCallback(a,obj);
-}
-ServerVolunteerInterface.prototype.deletePosition = function(id,ctx,call){
-	var a = new Ajax(); this._addCallback(a,ctx,call);
-	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_POSITION_SINGLE_DELETE;
-	var params = this.appendSessionInfo({});
-	params[this.ACTION_POSITION_SINGLE_ID] = id;
-	a.postParams(url,params,this,this.onAjaxDeletePosition,this.onAjaxDeletePosition);
-}
-ServerVolunteerInterface.prototype.onAjaxDeletePosition = function(e,a){
-	var obj = JSON.parse(e);
-	this._checkCallback(a,obj);
-}
 // -------------------------------------------------------------------------------------------------------------------------- SHIFTS
 ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat,position, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);

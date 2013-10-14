@@ -237,7 +237,6 @@ PageCalendarWeek.prototype._getRequiredInfo = function(){
 	this._requiredCount = 0;
 	this._requiredPositions = null;
 	this._requiredShifts = null;
-	this._getPositionsList();
 	this._getWeekShiftList();
 }
 PageCalendarWeek.prototype._checkRequiredInfo = function(){
@@ -278,15 +277,6 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 		date = Code.dateFromString(shift.end);
 		end = Code.getHourStringFromDate(date);
 		this.addShift( shift.position_id,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
-	}
-}
-PageCalendarWeek.prototype._getPositionsList = function(){
-	this._interface.getShiftPositions(this,this._getPositionsListSuccess);
-}
-PageCalendarWeek.prototype._getPositionsListSuccess = function(o){
-	if(o.status=="success"){
-		this._requiredPositions = o.list;
-		this._checkRequiredInfo();
 	}
 }
 
