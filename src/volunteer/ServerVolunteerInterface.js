@@ -25,6 +25,10 @@ ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_ID = "id";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_NAME = "name";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_INFO = "info";
 ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE = "shift_create";
+	ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE_START_DATE = "start_date";
+	ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE_END_DATE = "end_date";
+	ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE_REPEAT = "repeat";
+	ServerVolunteerInterface.prototype.ACTION_SHIFT_CREATE_NAME = "name";
 ServerVolunteerInterface.prototype.ACTION_SESSION_CHECK = "session";
 ServerVolunteerInterface.prototype.ACTION_CALENDAR = "calendar";
 	ServerVolunteerInterface.prototype.ACTION_CALENDAR_DATE = "date";
@@ -297,13 +301,18 @@ ServerVolunteerInterface.prototype.onAjaxDeleteUser = function(e,a){
 	this._checkCallback(a,obj);
 }
 // -------------------------------------------------------------------------------------------------------------------------- SHIFTS
-ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat,position, ctx,call){
+ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat,name, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_CREATE;
-	var params = this.appendSessionInfo({start_date:start,end_date:end,repeat:repeat,pid:position});
+	var params = this.appendSessionInfo({});
+	params[this.ACTION_SHIFT_CREATE_START_DATE] = this.encodeString(start);
+	params[this.ACTION_SHIFT_CREATE_END_DATE] = this.encodeString(end);
+	params[this.ACTION_SHIFT_CREATE_REPEAT] = this.encodeString(repeat);
+	params[this.ACTION_SHIFT_CREATE_NAME] = this.encodeString(name)
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -330,6 +339,7 @@ ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day,self, 
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -356,6 +366,7 @@ ServerVolunteerInterface.prototype.getShiftInfo = function(shift_id, ctx,call){
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftInfo = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }

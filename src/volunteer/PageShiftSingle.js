@@ -10,8 +10,8 @@ function PageShiftSingle(container, interface){
 	Code.addClass(this._root,"shiftSingleContainerRoot");
 	this._shiftContainer = Code.newDiv();
 		Code.addClass(this._shiftContainer,"shiftSingleContainer");
-	this._shiftPosition = Code.newDiv();
-		Code.addClass(this._shiftPosition,"shiftSinglePosition");
+	this._shiftName = Code.newDiv();
+		Code.addClass(this._shiftName,"shiftSinglePosition");
 	this._shiftDate = Code.newDiv();
 		Code.addClass(this._shiftDate,"shiftSingleDate");
 	this._shiftTime = Code.newDiv();
@@ -78,7 +78,7 @@ function PageShiftSingle(container, interface){
 	//
 	//this._shiftAssign? = Code.newDiv("Assign all future shift to user"); + need a start date
 	//
-	Code.addClass(this._shiftPosition,"shiftSingleRow");
+	Code.addClass(this._shiftName,"shiftSingleRow");
 	Code.addClass(this._shiftDate,"shiftSingleRow");
 	Code.addClass(this._shiftTime,"shiftSingleRow");
 	Code.addClass(this._shiftUser,"shiftSingleRow");
@@ -90,7 +90,7 @@ function PageShiftSingle(container, interface){
 	//Code.addClass(this._shift,"shiftSingleRow");
 	//
 	Code.addChild(this._root, this._shiftContainer);
-	Code.addChild(this._shiftContainer, this._shiftPosition);
+	Code.addChild(this._shiftContainer, this._shiftName);
 	Code.addChild(this._shiftContainer, this._shiftDate);
 	Code.addChild(this._shiftContainer, this._shiftTime);
 	Code.addChild(this._shiftContainer, this._shiftUser);
@@ -125,7 +125,7 @@ PageShiftSingle.prototype._init = function(){
 	this.clear();
 }
 PageShiftSingle.prototype.clear = function(){
-	Code.setContent(this._shiftPosition,"");
+	Code.setContent(this._shiftName,"");
 	Code.setContent(this._shiftDate,"");
 	Code.setContent(this._shiftTime,"");
 	Code.setContent(this._shiftUser,"");
@@ -164,8 +164,8 @@ PageShiftSingle.prototype._showAdminInfo = function(){
 	Code.addChild(this._shiftOptionTableContainer, this._shiftOptionTable);
 }
 // ------------------------------------------------------------------------------ 
-PageShiftSingle.prototype._setShift = function(position, time, date, user, alg){
-	Code.setContent(this._shiftPosition,""+position);
+PageShiftSingle.prototype._setShift = function(name, time, date, user, alg){
+	Code.setContent(this._shiftName,""+name);
 	Code.setContent(this._shiftDate,""+time);
 	Code.setContent(this._shiftTime,""+date);
 	Code.setContent(this._shiftUser,""+user);
@@ -195,7 +195,7 @@ PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
 		var date = " "+dow[ (dateBegin.getDay()+6)%7 ]+" "+moy[dateBegin.getMonth()]+" "+dateBegin.getDate()+", "+dateBegin.getFullYear();
 		var user = "&rarr;"+(shift.username?shift.username:"(unassigned)");
 		var alg = Code.humanReadableRepeatString(parent.algorithm);
-		this._setShift(shift.position_name, time, date, user, alg);
+		this._setShift(shift.name, time, date, user, alg);
 	}
 	this._checkComplete();
 }

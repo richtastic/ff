@@ -252,8 +252,8 @@ parent_id int, # 0 if parent | shift id generator if child
 user_id int, # creator if parent | owner if child
 time_begin datetime, # start day if parent | start shift if child
 time_end datetime, # start day if parent | start shift if child
-algorithm varchar(2048) # string if parent | null if child
-name varchar(32), # short title
+algorithm varchar(2048), # string if parent | null if child
+name varchar(32) # short title
 );
 # REQUESTS - AKA SWAPS
 drop table if exists requests;
@@ -361,17 +361,18 @@ remove all console.log() and replace errors with alert()s
 
 
 NEWEST TODO-----------
-*) no 'Day'
+x) no 'Day'
 *) no visuals unless logged in
-*) ignore assignment conflicts and old-date-swaps (empty)
-*) unite/consolidate shifts & positions
-*) no dates inside calendars - clean up - shifts are on left
-*) swap columns "Requested By", "Filled By", "Approved By", remove "owner"
+x) ignore assignment conflicts and old-date-swaps (empty)
+x) unite/consolidate shifts & positions
+x) no dates inside calendars - clean up - shifts are on left
+x) swap columns "Requested By", "Filled By", "Approved By", remove "owner"
 *) swap ordering: closest in future coming up - shift.begin_time
 *) users only see open shifts
 *) add reason to shift swap
 *) add user column: recieve notifivations of swaps
 *) send emails on: A) swap made, B) swap filled C) swap approved
+	- send user email on create and on any time email changes [to check that they are not getting sent to spam box]
 *) 
 *) 
 *) 

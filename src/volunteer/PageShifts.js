@@ -43,6 +43,7 @@ PageShifts.prototype._init = function(){
 	// positions
 	this.generateLeftColumn("Position:",this._positionContainer);
 	this.generateRightColumn(this._positionText,this._positionContainer);
+	Code.addClass(this._positionText,"shiftsPositionText");
 	// start
 	this.generateLeftColumn("Start Date:",this._startContainer);
 	this.generateRightColumn(this._startSelection,this._startContainer);
@@ -171,7 +172,7 @@ PageShifts.prototype.generateShiftString = function(){
 	var selEndMonth = Code.getChild(this._endSelection,1);
 	var selEndYear = Code.getChild(this._endSelection,2);
 	// POSITION
-	var position_id = this._positionSelection.value;
+	var position_name = Code.getInputTextValue(this._positionText);
 	// START DATE
 	var start_day = selStartDay.value;
 	var start_month = (parseInt(selStartMonth.value)+1);
@@ -202,7 +203,7 @@ PageShifts.prototype.generateShiftString = function(){
 	}
 	// ERROR CHECKING
 	var error = false;
-	if(position_id==""){ alert("empty pid"); error = true; }
+	if(position_name==""){ alert("empty position name"); error = true; }
 	if(start_day==""||start_month==""||start_year==""){ alert("invalid start"); error = true; }
 	if(end_day==""||end_month==""||end_year==""){ alert("invalid end"); error = true; }
 	if(!found){ alert("no dates"); error = true; }

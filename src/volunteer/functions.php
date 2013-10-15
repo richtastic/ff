@@ -446,6 +446,22 @@ function isValidUserData($username,$first_name,$last_name,$email,$phone,$address
 	}
 	return "success";
 }
+
+
+function sendEmail($toEmail, $fromEmail, $subject, $body){
+	$headers = "From: ".$fromEmail."\r\nReply-To: ".$fromEmail."";
+	$didSend = mail($toEmail, $subject, $body, $headers);
+	return $didSend;
+}
+
+function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com
+	$fromEmail = "noreply@bouldershelter.org";
+	return sendEmail($toEmail, $fromEmail, $subject, $body);
+}
+
+
+
+
 function getPhoneAsNumbers($phone){
 	$i; $ch; $re; $result = ""; $len = strlen($phone);
 	for($i=0;$i<$len;++$i){

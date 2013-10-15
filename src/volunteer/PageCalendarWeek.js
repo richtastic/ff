@@ -125,7 +125,7 @@ PageCalendarWeek.prototype.reset = function(year,month,day){
 			time = Code.getNextDay(time);
 		}
 	}
-	this._getRequiredInfo();
+	this._getWeekShiftList();
 }
 PageCalendarWeek.prototype.clear = function(){
 	var i, len;
@@ -140,19 +140,25 @@ PageCalendarWeek.prototype.clear = function(){
 	Code.emptyArray(this._rowContainers);
 	Code.emptyArray(this._colContainers);
 }
-PageCalendarWeek.prototype.setPositions = function(list,id,name){
+PageCalendarWeek.prototype.setPositions = function(list){
 	this.clear();
 	var row, col, i, j, len = list.length, len2=8;
+	var date, begin, end;
 	Code.emptyArray(this._positions);
 	for(i=0;i<len;++i){
-		this._positions[i] = {id:list[i][id], name:list[i][name]};
+		console.log(list[i]);
+		this._positions[i] = list[i];
 		row = Code.addRow(this._tableContainer);
 		this._rowContainers.push(row);
 		for(j=0;j<len2;++j){
 			col = Code.addCell(row);
 			this._colContainers.push(col);
 			if(j==0){
-				Code.setContent(col, this._positions[i]["name"]);
+				date = Code.dateFromString(this._positions[i]["begin"]);
+				begin = Code.getHourStringFromDate(date);
+				date = Code.dateFromString(this._positions[i]["end"]);
+				end = Code.getHourStringFromDate(date);
+				Code.setContent(col, this._positions[i]["name"]+"<br />"+begin+" - "+end);
 				Code.addClass(col,"calendarWeekColPosition");
 			}else{
 				Code.setContent(col, "");
@@ -161,24 +167,18 @@ PageCalendarWeek.prototype.setPositions = function(list,id,name){
 		}
 	}
 }
-PageCalendarWeek.prototype.addShift = function(positionID,dow0to6, shiftID,begin,end, userID,userName, reqExist,fillUID){
-	positionID = parseInt(positionID,10);
+PageCalendarWeek.prototype.addShift = function(name,dow0to6, shiftID,begin,end, userID,userName, reqExist,fillUID){
+	shiftName = parseInt(name,10);
 	shiftID = parseInt(shiftID,10);
 	var found, col, d, i, len=this._positions.length;
 	found = false;
 	for(i=0;i<len;++i){
-		if(parseInt(this._positions[i].id,10)==positionID){
+		if( this._positions[i].name==name){
 			found = true;
 			break;
 		}
 	}
 	if(found){
-		// var checked = this._checkedValue;
-		// if(checked==PageCalendarWeek.RADIO_TYPE_CHOICE_1_LABEL){
-		// 	if(this._userInfo){
-		// 		console.log(userID==this._interface.getUser);
-		// 	}
-		// }
 		col = this._colContainers[i*8+dow0to6+1];
 		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID);
 		Code.addChild(col,d);
@@ -217,7 +217,7 @@ PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,un
 		}
 	}
 	Code.setProperty(d,this.PROPERTY_SHIFT_ID,""+sid);
-	Code.setContent(d, "<u>"+uname+"</u>"+"<br/>"+" "+begin+" - "+end+"");
+	Code.setContent(d, "<u>"+uname+"</u>");//+"<br/>"+" "+begin+" - "+end+"");
 	return d;
 }
 PageCalendarWeek.prototype.kill = function(){
@@ -232,43 +232,13 @@ PageCalendarWeek.prototype._nextClickFxn = function(e){
 	this.reset(this._selectedYear,this._selectedMonth,this._selectedDay+7);
 }
 // ------------------------------------------------------------------------- server events
-PageCalendarWeek.prototype._getRequiredInfo = function(){
-	this._requiredMax = 2;
-	this._requiredCount = 0;
-	this._requiredPositions = null;
-	this._requiredShifts = null;
-	this._getWeekShiftList();
-}
-PageCalendarWeek.prototype._checkRequiredInfo = function(){
-	this._requiredCount++;
-	if(this._requiredCount==this._requiredMax){
-		this._fillInShifts(this._requiredPositions, this._requiredShifts.positions);
-	}
-}
 PageCalendarWeek.prototype._fillInShifts = function(){
-	if(!(this._requiredPositions && this._requiredShifts)){
-		return;
-	}
 	var i, j, len, len2, key, index, found, shift, pos, date, dow0to6, begin, end;
-	var positions = this._requiredPositions;
-	var positions_used = this._requiredShifts.positions;
-	var positions_final = new Array();
+	var positions = this._requiredShifts.positions;
 	var shifts = this._requiredShifts.shifts;
-	len = positions.length;
-	for(key in positions_used){
-		index = (key)+"";
-		found = false;
-		for(i=0;i<len;++i){
-			if(positions[i].id==index){
-				positions_final.push(positions[i]);
-				break;
-			}
-		}
-	}
-	positions_final = positions; // reset to all
-	this.setPositions(positions_final,"id","name");
+	this.setPositions(positions,"id","name");
 	len = shifts.length;
-	len2 = positions_final.length;
+	len2 = positions.length;
 	for(i=0;i<len;++i){
 		shift = shifts[i];
 		date = Code.dateFromString(shift.begin);
@@ -276,7 +246,7 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 		begin = Code.getHourStringFromDate(date);
 		date = Code.dateFromString(shift.end);
 		end = Code.getHourStringFromDate(date);
-		this.addShift( shift.position_id,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
+		this.addShift( shift.name,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
 	}
 }
 
@@ -286,16 +256,24 @@ PageCalendarWeek.prototype._getWeekShiftList = function(){
 }
 PageCalendarWeek.prototype._getWeekShiftListSuccess = function(o){
 	if(o && o.status=="success"){
-		var positions_used = {};
 		var list = o.list;
-		var e, i, len = list.length;
+		var name, val, begin, end, e, i, len = list.length;
+		positionHash = new Array();
+		positionList = new Array();
 		for(i=0;i<len;++i){
-			pid = list[i].position_id;
-			positions_used[""+pid] = true;
+			name = list[i].name;
+			begin = list[i].begin;
+			end = list[i].end;
+			val = positionHash[name];
+			val = val?val:{begin:begin, end:end};
+			positionHash[name] = val;
 		}
-		//this.setPositions(positions_used);
-		this._requiredShifts = { shifts: o.list, positions: positions_used };
-		this._checkRequiredInfo();
+		for(key in positionHash){
+			val = positionHash[key];
+			positionList.push( {name:key, begin:val.begin, end:val.end} );
+		}
+		this._requiredShifts = { shifts: o.list, positions: positionList };
+		this._fillInShifts();
 	}
 }
 

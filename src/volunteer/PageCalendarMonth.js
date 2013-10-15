@@ -85,7 +85,7 @@ PageCalendarMonth.prototype._getMonthShiftListSuccess = function(e){
 		for(i=0;i<len;++i){
 			shift = list[i];
 			sta = Code.dateFromString(shift.begin);
-			this.addShift(sta.getDate(), shift["position_name"], Code.getShortDateDescriptiveStringTime(sta), parseInt(shift["id"],10),
+			this.addShift(sta.getDate(), shift["name"], Code.getShortDateDescriptiveStringTime(sta), parseInt(shift["id"],10),
 				parseInt(shift["user_id"],10), shift["request_open_exists"]==="true", parseInt(shift["fulfill_user_id"],10));
 		}
 	}
@@ -97,7 +97,7 @@ PageCalendarMonth.prototype.addShift = function(dom, title, time, sid, uid, req,
 		title = title.substr(0,3);
 	}
 	var div = Code.newDiv();
-	Code.setContent(div,title+"<br />"+time);
+	Code.setContent(div,title);//+"<br />"+time);
 	this._table.addItem(dom,div);
 	Code.addClass(div,"pageMonthShiftContainer");
 	if(uid>0){

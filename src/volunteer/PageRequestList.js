@@ -19,7 +19,7 @@ function PageRequestList(container, interface){
 Code.inheritClass(PageRequestList, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageRequestList.prototype._init = function(){
-	var head = ["","Position","Owner","Requested","Filled","Decided","Shift Time","Status","Options"];
+	var head = ["","Shift","Requested By","Filled By","Approved By","Status","Options"];
 	var i, col, len = head.length;
 	for(i=0;i<len;++i){
 		col = Code.addCell(this._requestHeader);
@@ -54,12 +54,12 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 		Code.setProperty(col, "shift_id", shiftID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		Code.setContent( col, posName );
+		Code.setContent( col, posName + " " + time );
 		Code.setProperty(col, "position_id", posID);
-	col = Code.addCell(row);
-		Code.addClass(col, "requestListCell");
-		Code.setContent( col, ownName==""?" - ":ownName );
-		Code.setProperty(col, "owner_id", ownID);
+	// col = Code.addCell(row);
+	// 	Code.addClass(col, "requestListCell");
+	// 	Code.setContent( col, ownName==""?" - ":ownName );
+	// 	Code.setProperty(col, "owner_id", ownID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
 		Code.setContent( col, reqName==""?"(unknown)":(reqName+"<br />"+requested) );
@@ -72,9 +72,9 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 		Code.addClass(col, "requestListCell");
 		Code.setContent( col, appName==""?" - ":(appName+"<br />"+approved) );
 		Code.setProperty(col, "approved_id", appID);
-	col = Code.addCell(row);
-		Code.addClass(col, "requestListCell");
-		Code.setContent( col, time );
+	// col = Code.addCell(row);
+	// 	Code.addClass(col, "requestListCell");
+	// 	Code.setContent( col, time );
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
 		Code.setContent( col, status );

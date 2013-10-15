@@ -541,6 +541,9 @@ textarea{
 	background-color: #EEE;
 	margin: 5px;
 }
+.shiftsPositionText{
+	text-align: left;
+}
 .shiftsEditColLeft{
 /*	display: table-cell;*/
 	font-weight: bold;
