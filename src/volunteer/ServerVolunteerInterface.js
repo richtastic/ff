@@ -65,6 +65,10 @@ ServerVolunteerInterface.prototype.ACTION_USER_DELETE = "user_delete";
 	ServerVolunteerInterface.prototype.ACTION_USER_ADMIN_PASSWORD = "admin_password";
 	ServerVolunteerInterface.prototype.ACTION_USER_NEW_PASSWORD = "new_password";
 	ServerVolunteerInterface.prototype.ACTION_USER_CONFIRM_PASSWORD = "confirm_password";
+	ServerVolunteerInterface.prototype.ACTION_USER_PREF_EMAIL_UPDATES = "email_updates";
+	ServerVolunteerInterface.prototype.ACTION_USER_PREF_EMAIL_SHIFT_SELF = "email_shift_self";
+	ServerVolunteerInterface.prototype.ACTION_USER_PREF_EMAIL_SHIFT_OTHER = "email_shift_other";
+	ServerVolunteerInterface.prototype.ACTION_USER_PREF_EMAIL_SCHEDULE = "email_schedule";
 
 ServerVolunteerInterface.prototype.ACTION_REQUEST_GET = "req";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_CREATE = "request_create";
@@ -234,7 +238,7 @@ ServerVolunteerInterface.prototype.onAjaxGetSimpleUserList = function(e,a){
 	this._checkCallback(a,obj);
 }
 // -------------------------------------------------------------------------------------------------------------------------- USER CRUD
-ServerVolunteerInterface.prototype.createUser = function(username,firstname,lastname,email,phone,address,city,state,zip,group,adminPW,newPW,conPW,ctx,call){
+ServerVolunteerInterface.prototype.createUser = function(username,firstname,lastname,email,phone,address,city,state,zip,group, emailupdates,emailself,emailother, adminPW,newPW,conPW,ctx,call){
 	adminPW = hex_sha512( adminPW );
 	newPW = hex_sha512( newPW );
 	conPW = hex_sha512( conPW );
@@ -251,6 +255,10 @@ ServerVolunteerInterface.prototype.createUser = function(username,firstname,last
 	params[this.ACTION_USER_STATE] = this.encodeString(state);
 	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
 	params[this.ACTION_USER_GROUP_ID] = this.encodeString(group);
+	params[this.ACTION_USER_PREF_EMAIL_UPDATES] = this.encodeString( Code.booleanToString(emailupdates) );
+	params[this.ACTION_USER_PREF_EMAIL_SHIFT_SELF] = this.encodeString( Code.booleanToString(emailself) );
+	params[this.ACTION_USER_PREF_EMAIL_SHIFT_OTHER] = this.encodeString( Code.booleanToString(emailother) );
+	//params[this.ACTION_USER_PREF_EMAIL_SCHEDULE] = this.encodeString(emailsched); // not currently used
 	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
 	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString(newPW);
 	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString(conPW);
@@ -260,7 +268,7 @@ ServerVolunteerInterface.prototype.onAjaxCreateUser = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
-ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,lastname,email,phone,address,city,state,zip,group,adminPW,newPW,conPW,ctx,call){
+ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,lastname,email,phone,address,city,state,zip,group, emailupdates,emailself,emailother, adminPW,newPW,conPW,ctx,call){
 	adminPW = hex_sha512( adminPW );
 	if(newPW!=""){ newPW = hex_sha512( newPW ); }
 	if(conPW!=""){ conPW = hex_sha512( conPW ); }
@@ -278,12 +286,17 @@ ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,
 	params[this.ACTION_USER_STATE] = this.encodeString(state);
 	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
 	params[this.ACTION_USER_GROUP_ID] = this.encodeString(group);
+	params[this.ACTION_USER_PREF_EMAIL_UPDATES] = this.encodeString( Code.booleanToString(emailupdates) );
+	params[this.ACTION_USER_PREF_EMAIL_SHIFT_SELF] = this.encodeString( Code.booleanToString(emailself) );
+	params[this.ACTION_USER_PREF_EMAIL_SHIFT_OTHER] = this.encodeString( Code.booleanToString(emailother) );
+	//params[this.ACTION_USER_PREF_EMAIL_SCHEDULE] = this.encodeString(emailsched); // not currently used
 	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
 	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString(newPW);
 	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString(conPW);
 	a.postParams(url,params,this,this.onAjaxUpdateUser,this.onAjaxUpdateUser);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateUser = function(e,a){
+	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -312,7 +325,6 @@ ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -339,7 +351,6 @@ ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day,self, 
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -366,7 +377,6 @@ ServerVolunteerInterface.prototype.getShiftInfo = function(shift_id, ctx,call){
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftInfo = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }

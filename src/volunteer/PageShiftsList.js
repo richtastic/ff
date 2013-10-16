@@ -90,7 +90,8 @@ PageShiftsList.prototype._handleGetShiftListSuccess = function(e){
 	this.clear();
 	if(e && e.status=="success"){
 		this._updateRows(e.list);
-	}else if( !this._interface.isImmediateLoggedIn() ){
+	}else if( this._interface.isImmediateLoggedIn() ){
+		//alert(""+this._interface.isImmediateLoggedIn());
 		alert("Shift List: "+e.message);
 	}
 }

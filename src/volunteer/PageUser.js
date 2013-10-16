@@ -34,7 +34,8 @@ function PageUser(container, interface){
 Code.inheritClass(PageUser, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageUser.prototype._init = function(){
-	var fields = ["username","first name","last name","email","phone","address","city","state","zip","group","old password","new password","confirm password"];
+	var fields = ["username","first name","last name","email","phone","address","city","state","zip","group", "email account updates","email self swaps","email others swaps",
+	"old password","new password","confirm password"];
 	var div, txt, row, col, i, len = fields.length;
 	row = Code.addRow(this._formTable);
 		Code.addClass(row,"userEditTableRow");
@@ -58,6 +59,8 @@ PageUser.prototype._init = function(){
 			Code.addClass(col,"userEditTableCol");
 			Code.addClass(col,"userEditTableColRight");
 			if(i==10||i==11||i==12){
+				txt = Code.newInputCheckbox("check","true");
+			}else if(i==13||i==14||i==15){
 				txt = Code.newInputPassword();
 			}else{
 				txt = Code.newInputText();
@@ -66,19 +69,22 @@ PageUser.prototype._init = function(){
 		Code.addChild(col,txt);
 		fields[i] = [div,txt];
 	}
-	this._titleUsername = fields[0][0];			this._fieldUsername = fields[0][1];
-	this._titleFirstName = fields[1][0];		this._fieldFirstName = fields[1][1];
-	this._titleLastName = fields[2][0];			this._fieldLastName = fields[2][1];
-	this._titleEmail = fields[3][0];			this._fieldEmail = fields[3][1];
-	this._titlePhone = fields[4][0];			this._fieldPhone = fields[4][1];
-	this._titleAddress = fields[5][0];			this._fieldAddress = fields[5][1];
-	this._titleCity = fields[6][0];				this._fieldCity = fields[6][1];
-	this._titleState = fields[7][0];			this._fieldState = fields[7][1];
-	this._titleZip = fields[8][0];				this._fieldZip = fields[8][1];
-	this._titleGroup = fields[9][0];			this._fieldGroup = fields[9][1];
-	this._titleOldPassword = fields[10][0];		this._fieldOldPassword = fields[10][1];
-	this._titleNewPassword = fields[11][0];		this._fieldNewPassword = fields[11][1];
-	this._titleConfirmPassword = fields[12][0];	this._fieldConfirmPassword = fields[12][1];
+	this._titleUsername = fields[0][0];					this._fieldUsername = fields[0][1];
+	this._titleFirstName = fields[1][0];				this._fieldFirstName = fields[1][1];
+	this._titleLastName = fields[2][0];					this._fieldLastName = fields[2][1];
+	this._titleEmail = fields[3][0];					this._fieldEmail = fields[3][1];
+	this._titlePhone = fields[4][0];					this._fieldPhone = fields[4][1];
+	this._titleAddress = fields[5][0];					this._fieldAddress = fields[5][1];
+	this._titleCity = fields[6][0];						this._fieldCity = fields[6][1];
+	this._titleState = fields[7][0];					this._fieldState = fields[7][1];
+	this._titleZip = fields[8][0];						this._fieldZip = fields[8][1];
+	this._titleGroup = fields[9][0];					this._fieldGroup = fields[9][1];
+	this._titleEmailAccount = fields[10][0];			this._fieldEmailAccount = fields[10][1];
+	this._titleEmailSelf = fields[11][0];				this._fieldEmailSelf = fields[11][1];
+	this._titleEmailOther = fields[12][0];				this._fieldEmailOther = fields[12][1];
+	this._titleOldPassword = fields[13][0];				this._fieldOldPassword = fields[13][1];
+	this._titleNewPassword = fields[14][0];				this._fieldNewPassword = fields[14][1];
+	this._titleConfirmPassword = fields[15][0];		this._fieldConfirmPassword = fields[15][1];
 	this._fieldGroupParent = Code.getParent(this._fieldGroup);
 	row = Code.addRow(this._formTable);
 		Code.addClass(row,"userEditTableRow");
@@ -102,9 +108,13 @@ PageUser.prototype.clear = function(nope){
 	Code.setInputTextValue(this._fieldState,"");
 	Code.setInputTextValue(this._fieldZip,"");
 	this._fieldGroup.value = 0;
+	Code.setInputCheckboxValue(this._fieldEmailAccount,false);
+	Code.setInputCheckboxValue(this._fieldEmailSelf,false);
+	Code.setInputCheckboxValue(this._fieldEmailOther,false);
 	Code.setInputTextValue(this._fieldOldPassword,"");
 	Code.setInputTextValue(this._fieldNewPassword,"");
 	Code.setInputTextValue(this._fieldConfirmPassword,"");
+	Code.getInputCheckboxValue
 	//
 	Code.removeFromParent(this._buttonCreate);
 	Code.removeFromParent(this._buttonUpdate);
@@ -169,6 +179,9 @@ PageUser.prototype._getUserSuccess = function(e){
 		Code.setInputTextValue(this._fieldCity, e.city);
 		Code.setInputTextValue(this._fieldState, e.state);
 		Code.setInputTextValue(this._fieldZip, e.zip);
+			Code.setInputCheckboxValue(this._fieldEmailAccount, e.preference_email_updates=="true");
+			Code.setInputCheckboxValue(this._fieldEmailSelf, e.preference_email_shift_self=="true");
+			Code.setInputCheckboxValue(this._fieldEmailOther, e.preference_email_shift_other=="true");
 		this._fieldGroup.value = e.group_id;
 		Code.setInputTextValue(this._fieldOldPassword,"");
 		Code.setInputTextValue(this._fieldNewPassword,"");
@@ -187,10 +200,13 @@ PageUser.prototype._getDataValues = function(){
 	var state = Code.getInputTextValue(this._fieldState);			// 7
 	var zip = Code.getInputTextValue(this._fieldZip);				// 8
 	var group = this._fieldGroup.value;								// 9
+	var prefAccount = Code.getInputCheckboxValue(this._fieldEmailAccount);	// 10
+	var prefSelf = Code.getInputCheckboxValue(this._fieldEmailSelf);		// 11
+	var prefOther = Code.getInputCheckboxValue(this._fieldEmailOther);		// 12
 	var oldPW = Code.getInputTextValue(this._fieldOldPassword);		// 10
 	var newPW = Code.getInputTextValue(this._fieldNewPassword);		// 11
 	var conPW = Code.getInputTextValue(this._fieldConfirmPassword);	// 12
-	return [username,firstname,lastname,email,phone,address,city,state,zip,group,oldPW,newPW,conPW];
+	return [username,firstname,lastname,email,phone,address,city,state,zip,group, prefAccount,prefSelf,prefOther, oldPW,newPW,conPW];
 }
 // ------------------------------------------------------------------------------ 
 PageUser.prototype._handleCreateClickFxn = function(e){
@@ -200,7 +216,7 @@ PageUser.prototype._handleCreateClickFxn = function(e){
 		alert("New password length too short");
 		return;
 	}
-	this._interface.createUser(d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],this,this._handleCreateSuccess);
+	this._interface.createUser(d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9], d[10],d[11],d[12], d[13],d[14],d[15],this,this._handleCreateSuccess);
 }
 PageUser.prototype._handleUpdateClickFxn = function(e){
 	if(this._loading){ return; }
@@ -210,7 +226,7 @@ PageUser.prototype._handleUpdateClickFxn = function(e){
 		return;
 	}
 	if(this._userInfo){
-		this._interface.updateUser(this._userInfo.id,d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],this,this._handleUpdateSuccess);
+		this._interface.updateUser(this._userInfo.id,d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8],d[9],d[10],d[11],d[12],d[13],d[14],d[15],this,this._handleUpdateSuccess);
 	}
 }
 PageUser.prototype._handleDeleteClickFxn = function(e){
@@ -268,7 +284,7 @@ PageUser.prototype._getGroupListSuccess = function(e){
 		Code.removeAllChildren(this._fieldGroupParent);
 		Code.addChild(this._fieldGroupParent,this._fieldGroup);
 	}else if( !this._interface.isImmediateLoggedIn() ){
-		alert("Shift User: "+e.status);
+		alert("Shift User: "+e.message);
 	}
 }
 

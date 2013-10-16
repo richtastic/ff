@@ -78,7 +78,17 @@ Code.log = function log(o){
 		}
 	}
 }
+
+
+Code.booleanToString = function(b){
+	if(b===true || b==="true" || b==="t"){ // b===1 || b==="1"
+		return "true";
+	}
+	return "false";
+}
 // ------------------------------------------------------------------------------------------ ARRAY
+
+
 Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
 }
@@ -251,12 +261,29 @@ Code.newInputPassword = function(a){
 	}
 	return sub;
 };
+Code.newInputCheckbox = function(name,value){
+	ele = Code.newElement("input");
+	Code.setProperty(ele,"type","checkbox");
+	Code.setProperty(ele,"name",name);
+	Code.setProperty(ele,"value",value);
+	return ele;
+}
 Code.newInputRadio = function(name,value){
 	ele = Code.newElement("input");
 	Code.setProperty(ele,"type","radio");
 	Code.setProperty(ele,"name",name);
 	Code.setProperty(ele,"value",value);
 	return ele;
+}
+Code.getInputCheckboxValue = function(e){
+	return e.checked;//Code.getProperty(e,"value");//e.checked;
+}
+Code.setInputCheckboxValue = function(e,v){
+	if(v){
+		e.checked = true;
+	}else{
+		e.checked = false;
+	}
 }
 Code.setChecked = function(e){
 	e.checked = true;

@@ -224,7 +224,10 @@ address varchar(66),
 city varchar(64),
 state varchar(64),
 zip varchar(16),
-preferences varchar(2048) #k1=v1,k2=v2,... showfirstname=1,showlastname=0,timezone=+8,
+preference_email_updates int, # 0=no 1=yes - user account changes
+preference_email_shift_self int, # 0=no 1=yes - changes to self shifts
+preference_email_shift_other int, # 0=no 1=yes - changes to any shift
+preference_email_schedule int # 0=no 1=yes - scheduled shifts approaching
 );
 #SESSIONS
 drop table if exists sessions;
@@ -371,9 +374,19 @@ x) swap columns "Requested By", "Filled By", "Approved By", remove "owner"
 *) users only see open shifts
 *) add reason to shift swap
 *) add user column: recieve notifivations of swaps
-*) send emails on: A) swap made, B) swap filled C) swap approved
-	- send user email on create and on any time email changes [to check that they are not getting sent to spam box]
-*) 
+x) send emails on:
+	A) swap made
+	B) swap filled
+	C) swap approved
+	- send user email on
+		x user created
+		x password changed
+		x username changed
+		x email changed
+	- EMAIL THREADING
+	ignore_user_abort(true); 
+	set_time_limit(0);
+*) encode/decode all data in url
 *) 
 *) 
 *) 

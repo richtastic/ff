@@ -48,6 +48,10 @@ $ACTION_TYPE_USER_DELETE = "user_delete";
 	$ACTION_TYPE_USER_ADMIN_PASSWORD = "admin_password";
 	$ACTION_TYPE_USER_NEW_PASSWORD = "new_password";
 	$ACTION_TYPE_USER_CONFIRM_PASSWORD = "confirm_password";
+	$ACTION_TYPE_USER_PREF_EMAIL_UPDATES = "email_updates";
+	$ACTION_TYPE_USER_PREF_EMAIL_SHIFT_SELF = "email_shift_self";
+	$ACTION_TYPE_USER_PREF_EMAIL_SHIFT_OTHER = "email_shift_other";
+	$ACTION_TYPE_USER_PREF_EMAIL_SCHEDULE = "email_schedule";
 $ACTION_TYPE_SHIFT_INFO = "shift";
 	$ACTION_TYPE_SHIFT_INFO_ID = "id";
 $ACTION_TYPE_SHIFT_LIST = "shift_list";
@@ -164,10 +168,7 @@ if($ARGUMENT_GET_ACTION!=null){
 			echo '{ "status": "error", "message": "invalid session" }';
 		}
 	}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_LIST){
-		$query = 'select S.id, S.created, S.user_id, S.time_begin, S.time_end, S.algorithm, S.position_id, S.position_name, users.username as username '
-		.'from (select shifts.id as id, shifts.created as created, shifts.user_id as user_id, shifts.time_begin as time_begin, shifts.time_end as time_end, shifts.algorithm as algorithm, positions.id as position_id, positions.name as position_name '
-			.'from shifts left outer join positions on shifts.position_id=positions.id where shifts.parent_id=0 order by shifts.id asc) as S '
-			.'left outer join users on S.user_id=users.id;';
+		$query = 'select shifts.id, shifts.created, shifts.user_id, shifts.time_begin, shifts.time_end, shifts.algorithm, shifts.name, users.username as username from shifts left outer join users on shifts.user_id=users.id;';
 		$result = mysql_query($query);
 		if($result){
 			$total = mysql_num_rows($result);
@@ -496,7 +497,8 @@ if($ARGUMENT_GET_ACTION!=null){
 					$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
 					$message = "single";
 				}
-				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.address,users.city,users.state,users.zip,groups.name as group_name   from users right outer join groups on users.group_id=groups.id  where users.id="'.$user_id.'" limit 1;';
+				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.address,users.city,users.state,users.zip,groups.name as group_name,'.
+				'users.preference_email_updates,users.preference_email_shift_self,users.preference_email_shift_other,users.preference_email_schedule   from users right outer join groups on users.group_id=groups.id  where users.id="'.$user_id.'" limit 1;';
 				$result = mysql_query($query, $connection);
 				if($result && mysql_num_rows($result)==1 ){
 					$row = mysql_fetch_assoc($result);
@@ -514,10 +516,17 @@ if($ARGUMENT_GET_ACTION!=null){
 					$city = $row["city"];
 					$state = $row["state"];
 					$zip = $row["zip"];
+					$pref_email_updates = boolean01ToString($row["preference_email_updates"]);
+					$pref_email_shift_self = boolean01ToString($row["preference_email_shift_self"]);
+					$pref_email_shift_other = boolean01ToString($row["preference_email_shift_other"]);
+					$pref_email_schedule = boolean01ToString($row["preference_email_schedule"]);
+					// boolean01ToString
 					echo '{"status": "success", "message": "'.$message.'", "user": '."\n".'{';
 					echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
 					echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
-					echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
+					echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'", ';
+					echo '"preference_email_updates":"'.$pref_email_updates.'", "preference_email_shift_self":"'.$pref_email_shift_self.'", ';
+					echo '"preference_email_shift_other":"'.$pref_email_shift_other.'", "preference_email_schedule":"'.$pref_email_schedule.'" ';
 					echo '}'."\n".'}';
 					mysql_free_result($result);
 				}else{
@@ -551,10 +560,16 @@ if($ARGUMENT_GET_ACTION!=null){
 						$city = $row["city"];
 						$state = $row["state"];
 						$zip = $row["zip"];
+						$pref_email_updates = boolean01ToString($row["preference_email_updates"]);
+						$pref_email_shift_self = boolean01ToString($row["preference_email_shift_self"]);
+						$pref_email_shift_other = boolean01ToString($row["preference_email_shift_other"]);
+						$pref_email_schedule = boolean01ToString($row["preference_email_schedule"]);
 						echo '{';
 						echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
 						echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
-						echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'" ';
+						echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'", ';
+						echo '"preference_email_updates":"'.$pref_email_updates.'", "preference_email_shift_self":"'.$pref_email_shift_self.'", ';
+						echo '"preference_email_shift_other":"'.$pref_email_shift_other.'", "preference_email_schedule":"'.$pref_email_schedule.'" ';
 						echo '}';
 						if($i<($total-1)){ echo ','; }
 						++$i;
@@ -1036,6 +1051,14 @@ if($ARGUMENT_GET_ACTION!=null){
 				$state = decode_real_escape_string($_POST[$ACTION_TYPE_USER_STATE]);
 				$zip = decode_real_escape_string($_POST[$ACTION_TYPE_USER_ZIP]);
 				$group_id = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GROUP_ID]);
+				$pref_email_updates = decode_real_escape_string($_POST[$ACTION_TYPE_USER_PREF_EMAIL_UPDATES]);
+				$pref_email_shift_self = decode_real_escape_string($_POST[$ACTION_TYPE_USER_PREF_EMAIL_SHIFT_SELF]);
+				$pref_email_shift_other = decode_real_escape_string($_POST[$ACTION_TYPE_USER_PREF_EMAIL_SHIFT_OTHER]);
+				$pref_email_schedule = "false"; // decode_real_escape_string($_POST[$ACTION_TYPE_USER_PREF_EMAIL_SCHEDULE]);
+					$pref_email_updates = booleanStringTo01($pref_email_updates);
+					$pref_email_shift_self = booleanStringTo01($pref_email_shift_self);
+					$pref_email_shift_other = booleanStringTo01($pref_email_shift_other);
+					$pref_email_schedule = booleanStringTo01($pref_email_schedule);
 				$admin_password = strtoupper(decode_real_escape_string($_POST[$ACTION_TYPE_USER_ADMIN_PASSWORD]));
 				$new_password = strtoupper(decode_real_escape_string($_POST[$ACTION_TYPE_USER_NEW_PASSWORD]));
 				$confirm_password = strtoupper(decode_real_escape_string($_POST[$ACTION_TYPE_USER_CONFIRM_PASSWORD]));
@@ -1052,6 +1075,15 @@ if($ARGUMENT_GET_ACTION!=null){
 								$row = mysql_fetch_assoc($result);
 								$password = $row["password"];
 								mysql_free_result($result);
+								//
+									$query = 'select username,email,password from users where id="'.$user_id.'";';
+									$result = mysql_query($query,$connection);
+									$row = mysql_fetch_assoc($result);
+									$oldPassword = $row["password"];
+									$oldUsername = $row["username"];
+									$oldEmail = $row["email"];
+									mysql_free_result($result);
+								//
 								if($password==$admin_password){
 									if($new_password==$confirm_password){
 										$pw = '';
@@ -1063,11 +1095,14 @@ if($ARGUMENT_GET_ACTION!=null){
 											$group_query = 'group_id="'.$group_id.'",';
 										}
 										$query = 'update users set '.$pw.' email="'.$email.'", first_name="'.$first_name.'", last_name="'.$last_name.'", phone="'.$phone.'", '.
-											'address="'.$address.'", state="'.$state.'", city="'.$city.'", zip="'.$zip.'", '.$group_query.' modified=now(), modified_user_id="'.$ACTION_VALUE_USER_ID.'" '.
+											'address="'.$address.'", state="'.$state.'", city="'.$city.'", zip="'.$zip.'",'.
+											'preference_email_updates="'.$pref_email_updates.'", preference_email_shift_self="'.$pref_email_shift_self.'", preference_email_shift_other="'.$pref_email_shift_other.'", preference_email_schedule="'.$pref_email_schedule.'", '.
+											' '.$group_query.' modified=now(), modified_user_id="'.$ACTION_VALUE_USER_ID.'" '.
 											'where id="'.$user_id.'";';
 										$result = mysql_query($query,$connection);
 										if($result){
 											echo '{ "status": "success", "message": "user updated", "user": {"id":"'.$user_id.'"} }';
+											emailOnUserUpdate($username, $oldUsername, $email, $oldEmail, $new_password, $oldPassword);
 										}else{
 											echo '{ "status": "error", "message": "could not update user '.mysql_real_escape_string($query).' " }'; // '.mysql_real_escape_string($query).'
 										}
@@ -1104,13 +1139,16 @@ if($ARGUMENT_GET_ACTION!=null){
 										$password = $row["password"];
 										mysql_free_result($result);
 										if($password==$admin_password){
-											$query = 'insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, modified, created_user_id, modified_user_id) '.
-											'values ("'.$username.'","'.$new_password.'","'.$email.'", "'.$first_name.'", "'.$last_name.'","'.$phone.'", "'.$address.'", "'
-											.$state.'", "'.$city.'", "'.$zip.'", "'.$group_id.'", now(), now(), "'.$ACTION_VALUE_USER_ID.'", "'.$ACTION_VALUE_USER_ID.'");';
+											$query = 'insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, preference_email_updates, preference_email_shift_self, '.
+												'preference_email_shift_other, preference_email_schedule, group_id, created, modified, created_user_id, modified_user_id) '.
+											' values ("'.$username.'","'.$new_password.'","'.$email.'", "'.$first_name.'", "'.$last_name.'","'.$phone.'", "'.$address.'", '.
+											' "'.$state.'", "'.$city.'", "'.$zip.'", "'.$pref_email_updates.'", "'.$pref_email_shift_self.'", "'.$pref_email_shift_other.'", "'.$pref_email_schedule.'",'.
+											' "'.$group_id.'", now(), now(), "'.$ACTION_VALUE_USER_ID.'", "'.$ACTION_VALUE_USER_ID.'");';
 											$result = mysql_query($query,$connection);
 											if($result){
 												$user_id = intval( mysql_insert_id() );
 												echo '{ "status": "success", "message": "user created", "user": {"id":"'.$user_id.'"} }';
+												emailOnUserCreate($username, $email);
 											}else{
 												echo '{ "status": "error", "message": "could not create user" }';
 											}

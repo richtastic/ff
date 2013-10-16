@@ -447,19 +447,18 @@ function isValidUserData($username,$first_name,$last_name,$email,$phone,$address
 	return "success";
 }
 
-
-function sendEmail($toEmail, $fromEmail, $subject, $body){
-	$headers = "From: ".$fromEmail."\r\nReply-To: ".$fromEmail."";
-	$didSend = mail($toEmail, $subject, $body, $headers);
-	return $didSend;
+function booleanStringTo01($str){
+	if($str===true || $str=="true" || $str=="t"){
+		return 1;
+	}
+	return 0;
 }
-
-function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com
-	$fromEmail = "noreply@bouldershelter.org";
-	return sendEmail($toEmail, $fromEmail, $subject, $body);
+function boolean01ToString($val){
+	if($val!=null && ( intval($val)>0 || $val>0)){
+		return "true";
+	}
+	return "false";
 }
-
-
 
 
 function getPhoneAsNumbers($phone){
@@ -472,6 +471,67 @@ function getPhoneAsNumbers($phone){
 		}
 	}
 	return $result;
+}
+
+function sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body){
+	if( $toEmail==null || count($toEmail)<1 ){
+		return 0;
+	}
+	//return 0; // uncomment out to stop all emails
+	$headers = "From: ".$fromEmail."\r\nReply-To: ".$replyEmail."";
+	if($toEmail=="zirbsster@gmail.com"){
+		return mail($toEmail, $subject, $body, $headers);
+	}
+}
+
+function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com
+	$fromEmail = "noreply@bouldershelter.org";
+	$replyEmail = "noreply@bouldershelter.org";
+	return sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body);
+}
+
+function emailOnUserCreate($username, $email){
+	$subject = 'BSFTH User Created';
+	$body = 'You are receiving this because "'.$email.'" has been used to create an account on bouldershelter.org, '. 
+		'under the username "'.$username.'" .';
+	sendEmailBSFTH($email, $subject, $body);
+}
+function emailOnUserUpdate($username, $oldUsername, $email, $oldEmail, $password, $oldPassword){
+	$isNewUsername = $username!=$oldUsername;
+	$isNewEmail = $email!=$oldEmail;
+	$isNewPassword = $password!=$oldPassword;
+	$subject = 'BSFTH User Updated';
+	$body = 'You are receiving this because:\n';
+	if($isNewUsername){
+		$body = $body.'*) The username with this email was changed from "'.$oldUsername.'" to "'.$username.'"\n';
+	}
+	if($isNewPassword){
+		$body = $body.'*) The password with this email was changed\n';
+	}
+	if($isNewEmail){
+		$body = $body.'*) The email address was changed\n';
+		$b = 'You are receiving this because the account with this email was changed to a new address.';
+		sendEmailBSFTH($oldEmail, $subject, $b);
+	}
+	sendEmailBSFTH($email, $subject, $body);
+}
+function emailOnShiftSwapCreated($username, $email){
+	$subject = 'BSFTH Swap Request';
+	$body = 'The following Shift Swap has been requested:\n'.
+			'';
+	sendEmailBSFTH($email, $subject, $body);
+}
+function emailOnShiftSwapFilled($username, $email){
+	$subject = 'BSFTH Swap Filled';
+	$body = 'The following Shift Swap has been filled:\n'.
+			'';
+	sendEmailBSFTH($email, $subject, $body);
+}
+function emailOnShiftSwapApproved($username, $email){
+	$subject = 'BSFTH Swap Approved';
+	$body = 'The following Shift Swap has been approved:\n'.
+			'';
+	sendEmailBSFTH($email, $subject, $body);
 }
 
 // --------------------------------------------------------------------------------
