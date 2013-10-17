@@ -29,6 +29,56 @@ Volunteer.NAV_USER = "user"; // single
 Volunteer.NAV_USER_LIST = "users"; // all
 Volunteer.NAV_REQUEST = "request"; // single
 Volunteer.NAV_REQUEST_LIST = "requests"; // all
+// -------------------------------------------------------------------------------------------- helpers
+Volunteer.generateLegend = function(){
+	var blk, trash="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+	var legend = Code.newDiv();
+		Code.addClass(legend, "legendContainer");
+	blk = Code.newDiv(trash);
+		Code.addClass(blk, "legendBlockNormal");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv("Covered");
+		Code.addClass(blk, "legendBlockLabel");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv(trash);
+		Code.addClass(blk, "legendBlockEmpty");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv("Unassigned");
+		Code.addClass(blk, "legendBlockLabel");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv(trash);
+		Code.addClass(blk, "legendBlockRequested");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv("Swap Requested");
+		Code.addClass(blk, "legendBlockLabel");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv(trash);
+		Code.addClass(blk, "legendBlockAnswered");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv("Swap Answered");
+		Code.addClass(blk, "legendBlockLabel");
+		Code.addChild(legend,blk);
+	return legend;
+}
+Volunteer.prototype._showVisuals = function(){
+	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+}
+Volunteer.prototype._hideVisuals = function(){
+	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	Code.addClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	Code.addClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	Code.addClass(nav,"hidden");
+}
 // -------------------------------------------------------------------------------------------- constructor
 function Volunteer(){
 	Volunteer._.constructor.apply(this,arguments);
@@ -40,6 +90,7 @@ function Volunteer(){
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn, this);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn, this);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn, this);
+	this._hideVisuals();
 	this.initialize(); 
 }
 Code.inheritClass(Volunteer, Dispatchable);
@@ -143,10 +194,12 @@ Volunteer.prototype._hookPageShiftSingle = function(page){
 }
 // ----------------------------------------------------------------------------- event listeners
 Volunteer.prototype._loginSuccessFxn = function(page){
+	this._showVisuals();
 	var currPage = this._navigatorMain.getCurrentPage();
 	currPage.reset();
 }
 Volunteer.prototype._logoutSuccessFxn = function(page){
+	this._hideVisuals();
 	var currPage = this._navigatorMain.getCurrentPage();
 	currPage.reset();
 }

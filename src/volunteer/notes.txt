@@ -220,7 +220,7 @@ first_name varchar(32),
 last_name varchar(32),
 email varchar(64) not null,
 phone varchar(32),
-address varchar(66),
+address varchar(64),
 city varchar(64),
 state varchar(64),
 zip varchar(16),
@@ -365,15 +365,15 @@ remove all console.log() and replace errors with alert()s
 
 NEWEST TODO-----------
 x) no 'Day'
-*) no visuals unless logged in
 x) ignore assignment conflicts and old-date-swaps (empty)
 x) unite/consolidate shifts & positions
 x) no dates inside calendars - clean up - shifts are on left
 x) swap columns "Requested By", "Filled By", "Approved By", remove "owner"
-*) swap ordering: closest in future coming up - shift.begin_time
-*) users only see open shifts
-*) add reason to shift swap
-*) add user column: recieve notifivations of swaps
+x) add reason to shift swap
+x) adjusted timezone times
+x) swap ordering: closest in future coming up - shift.begin_time
+x) users only see open shifts in SWAP LIST
+x) add user column: recieve notifivations of swaps
 x) send emails on:
 	A) swap made
 	B) swap filled
@@ -387,7 +387,9 @@ x) send emails on:
 	ignore_user_abort(true); 
 	set_time_limit(0);
 *) encode/decode all data in url
-*) 
+*) no visuals unless logged in
+	*) no data on server side either
+x) LEGEND FOR SHIFT COLORS
 *) 
 *) 
 

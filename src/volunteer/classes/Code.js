@@ -231,6 +231,9 @@ Code.newOption = function(a,b,c){
 	}
 	return opt;
 };
+Code.setMaxLength = function(v,m){
+	Code.setProperty(v,"maxlength",m);
+};
 Code.newInput = function(){
 	return Code.newElement("input");
 };

@@ -50,6 +50,8 @@ function PageCalendarMonth(container, interface){
 	Code.addListenerClick(this._monthNext,this._nextClickFxn,this);
 	Code.addListenerClick(this._radioSelection0,this._handleRadioClickFxn,this);
 	Code.addListenerClick(this._radioSelection1,this._handleRadioClickFxn,this);
+	this._legend = Volunteer.generateLegend();
+	Code.addChild(this._root,this._legend);
 	this._init();
 }
 Code.inheritClass(PageCalendarMonth, PageWeb);

@@ -22,9 +22,15 @@ function PageShiftSingle(container, interface){
 		Code.addClass(this._shiftAlgorithm,"shiftSingleAlgorithm");
 	this._shiftActionButtonContainer = Code.newDiv();
 		Code.addClass(this._shiftActionButtonContainer,"shiftSingleButtonContainer");
+	this._shiftActionTextContainer = Code.newDiv();
+		Code.addClass(this._shiftActionTextContainer,"shiftSingleButtonContainer");
 	//
 	this._shiftRequestButton = Code.newInputSubmit("Request Swap (Fill-In)");
 		Code.addClass(this._shiftRequestButton,"shiftSingleButton");
+	this._shiftRequestText = Code.newInputTextArea("", 3,20);
+		Code.addClass(this._shiftRequestText,"shiftSingleText");
+		Code.setMaxLength(this._shiftRequestText,1024);
+
 	this._shiftAnswerButton = Code.newInputSubmit("Answer Fill-In");
 		Code.addClass(this._shiftAnswerButton,"shiftSingleButton");
 	//
@@ -84,6 +90,7 @@ function PageShiftSingle(container, interface){
 	Code.addClass(this._shiftUser,"shiftSingleRow");
 	Code.addClass(this._shiftAlgorithm,"shiftSingleRow");
 	Code.addClass(this._shiftActionButtonContainer,"shiftSingleRow");
+	Code.addClass(this._shiftActionTextContainer,"shiftSingleRow");
 	Code.addClass(this._shiftUserListContainer,"shiftSingleRow");
 	Code.addClass(this._shiftOptionTableContainer,"shiftSingleTableContainer");
 	//Code.addClass(this._shiftOption0,"shiftSingleRow");
@@ -96,6 +103,7 @@ function PageShiftSingle(container, interface){
 	Code.addChild(this._shiftContainer, this._shiftUser);
 	Code.addChild(this._shiftContainer, this._shiftAlgorithm);
 	Code.addChild(this._shiftContainer, this._shiftActionButtonContainer);
+	Code.addChild(this._shiftContainer, this._shiftActionTextContainer);
 		// Code.addChild(this._shiftActionButtonContainer, this._shiftRequestButton);
 		// Code.addChild(this._shiftActionButtonContainer, this._shiftAnswerButton);
 	Code.addChild(this._shiftContainer, this._shiftUserListContainer);
@@ -130,6 +138,7 @@ PageShiftSingle.prototype.clear = function(){
 	Code.setContent(this._shiftTime,"");
 	Code.setContent(this._shiftUser,"");
 	Code.setContent(this._shiftAlgorithm,"");
+	Code.setTextAreaValue(this._shiftRequestText,"");
 	this._hideRequestInfo();
 	this._hideAnswerInfo();
 	this._hideAdminInfo();
@@ -145,9 +154,11 @@ PageShiftSingle.prototype.reset = function(shift_id){
 // ------------------------------------------------------------------------------ 
 PageShiftSingle.prototype._hideRequestInfo = function(){
 	Code.removeFromParent(this._shiftRequestButton);
+	Code.removeFromParent(this._shiftRequestText);
 }
 PageShiftSingle.prototype._showRequestInfo = function(){
 	Code.addChild(this._shiftActionButtonContainer, this._shiftRequestButton);
+	Code.addChild(this._shiftActionTextContainer, this._shiftRequestText);
 }
 PageShiftSingle.prototype._hideAnswerInfo = function(){
 	Code.removeFromParent(this._shiftAnswerButton);
@@ -282,8 +293,8 @@ PageShiftSingle.prototype._applyUserToFutureShifts = function(user_id,shift_id){
 PageShiftSingle.prototype._applyUserToFutureShiftsSuccess = function(o){
 	this._alertWithTime(o);
 }
-PageShiftSingle.prototype._createShiftRequest = function(user_id,shift_id){
-	this._interface.createShiftRequest(user_id,shift_id,this,this._createShiftRequestSuccess);
+PageShiftSingle.prototype._createShiftRequest = function(user_id,shift_id,reason){
+	this._interface.createShiftRequest(user_id,shift_id,reason,this,this._createShiftRequestSuccess);
 }
 PageShiftSingle.prototype._createShiftRequestSuccess = function(o){
 	if(o && o.status=="success"){
@@ -306,7 +317,12 @@ PageShiftSingle.prototype._updateShiftRequestAnswerSuccess = function(o){
 }
 // ------------------------------------------------------------------------------ 
 PageShiftSingle.prototype._handleRequestClickFxn = function(e){ // request fill-in
-	this._createShiftRequest(this._userInfo.id,this._shiftInfo.id);
+	var reason = Code.getTextAreaValue(this._shiftRequestText);
+	if( reason.length==0 ){
+		alert("You must specify a reason");
+	}else{
+		this._createShiftRequest(this._userInfo.id,this._shiftInfo.id, reason);
+	}
 }
 PageShiftSingle.prototype._handleAnswerClickFxn = function(e){ // answer fill-in
 	this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);

@@ -639,7 +639,11 @@ textarea{
 	
 }
 .shiftSingleButton{
-	margin: 2px;
+	
+}
+.shiftSingleText{
+	display: inline-block;
+	clear: both;
 }
 .shiftSingleUserList{
 	/* */
@@ -1024,7 +1028,43 @@ textarea{
 .displayNone{
 	display: none;
 }
+.hidden{
+	display: none;
+}
 
+
+.legendContainer{
+	display: inline-block;
+	clear: both;
+	text-align: center;
+	vertical-align: middle;
+}
+.legendBlockNormal{
+	display: inline-block;
+	font-size: 80%;
+	background: #CCD6FF;
+}
+.legendBlockEmpty{
+	display: inline-block;
+	font-size: 80%;
+	background: #FFBBBB;
+}
+.legendBlockRequested{
+	display: inline-block;
+	font-size: 80%;
+	background: #FFCC99;
+}
+.legendBlockAnswered{
+	display: inline-block;
+	font-size: 80%;
+	background: #FFFF99;
+}
+.legendBlockLabel{
+	display: inline-block;
+	color:#000000;
+	font-size: 80%;
+	padding-right: 10px;
+}
 
 
 /*

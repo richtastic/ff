@@ -14,7 +14,7 @@ function PageShiftsList(container, interface){
 Code.inheritClass(PageShiftsList, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageShiftsList.prototype._init = function(){
-	var head = ["","Position","Created","Begin Date","End Date","Algorithm","Action"];
+	var head = ["","Name","Created","Begin Date","End Date","Algorithm","Action"];
 	var col, i, len = head.length;
 	var rowClass = "shiftListHeaderRow", colClass = "shiftListHeaderCol";
 	this._headerRow = Code.addRow(this._table);
@@ -38,7 +38,7 @@ PageShiftsList.prototype._updateRows = function(list){
 			Code.setContent(col,""+(i+1));
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
-			Code.setContent(col,list[i].position_name);
+			Code.setContent(col,list[i].name);
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
 			div = Code.newDiv( list[i].username+"<br />"+Code.getShortDateDescriptiveString(Code.dateFromString(list[i].created)) );

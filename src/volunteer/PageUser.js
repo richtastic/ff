@@ -69,22 +69,22 @@ PageUser.prototype._init = function(){
 		Code.addChild(col,txt);
 		fields[i] = [div,txt];
 	}
-	this._titleUsername = fields[0][0];					this._fieldUsername = fields[0][1];
-	this._titleFirstName = fields[1][0];				this._fieldFirstName = fields[1][1];
-	this._titleLastName = fields[2][0];					this._fieldLastName = fields[2][1];
-	this._titleEmail = fields[3][0];					this._fieldEmail = fields[3][1];
-	this._titlePhone = fields[4][0];					this._fieldPhone = fields[4][1];
-	this._titleAddress = fields[5][0];					this._fieldAddress = fields[5][1];
-	this._titleCity = fields[6][0];						this._fieldCity = fields[6][1];
-	this._titleState = fields[7][0];					this._fieldState = fields[7][1];
-	this._titleZip = fields[8][0];						this._fieldZip = fields[8][1];
-	this._titleGroup = fields[9][0];					this._fieldGroup = fields[9][1];
-	this._titleEmailAccount = fields[10][0];			this._fieldEmailAccount = fields[10][1];
-	this._titleEmailSelf = fields[11][0];				this._fieldEmailSelf = fields[11][1];
-	this._titleEmailOther = fields[12][0];				this._fieldEmailOther = fields[12][1];
-	this._titleOldPassword = fields[13][0];				this._fieldOldPassword = fields[13][1];
-	this._titleNewPassword = fields[14][0];				this._fieldNewPassword = fields[14][1];
-	this._titleConfirmPassword = fields[15][0];		this._fieldConfirmPassword = fields[15][1];
+	this._titleUsername = fields[0][0];					this._fieldUsername = fields[0][1];			Code.setMaxLength( this._fieldUsername, 32);
+	this._titleFirstName = fields[1][0];				this._fieldFirstName = fields[1][1];		Code.setMaxLength( this._fieldFirstName, 32);
+	this._titleLastName = fields[2][0];					this._fieldLastName = fields[2][1];			Code.setMaxLength( this._fieldLastName, 32);
+	this._titleEmail = fields[3][0];					this._fieldEmail = fields[3][1];			Code.setMaxLength( this._fieldEmail, 64);
+	this._titlePhone = fields[4][0];					this._fieldPhone = fields[4][1];			Code.setMaxLength( this._fieldPhone, 32);
+	this._titleAddress = fields[5][0];					this._fieldAddress = fields[5][1];			Code.setMaxLength( this._fieldAddress, 64);
+	this._titleCity = fields[6][0];						this._fieldCity = fields[6][1];				Code.setMaxLength( this._fieldCity, 64);
+	this._titleState = fields[7][0];					this._fieldState = fields[7][1];			Code.setMaxLength( this._fieldState, 64);
+	this._titleZip = fields[8][0];						this._fieldZip = fields[8][1];				Code.setMaxLength( this._fieldZip, 16);
+	this._titleGroup = fields[9][0];					this._fieldGroup = fields[9][1];			
+	this._titleEmailAccount = fields[10][0];			this._fieldEmailAccount = fields[10][1];	
+	this._titleEmailSelf = fields[11][0];				this._fieldEmailSelf = fields[11][1];		
+	this._titleEmailOther = fields[12][0];				this._fieldEmailOther = fields[12][1];		
+	this._titleOldPassword = fields[13][0];				this._fieldOldPassword = fields[13][1];		Code.setMaxLength( this._fieldOldPassword, 32);
+	this._titleNewPassword = fields[14][0];				this._fieldNewPassword = fields[14][1];		Code.setMaxLength( this._fieldNewPassword, 32);
+	this._titleConfirmPassword = fields[15][0];		this._fieldConfirmPassword = fields[15][1];		Code.setMaxLength( this._fieldConfirmPassword, 32);
 	this._fieldGroupParent = Code.getParent(this._fieldGroup);
 	row = Code.addRow(this._formTable);
 		Code.addClass(row,"userEditTableRow");
@@ -133,12 +133,16 @@ PageUser.prototype.reset = function(uid){
 	if(uid && uid>0){
 		Code.setContent(this._userTitleType,"Update User");
 		Code.addChild(this._buttonCell,this._buttonUpdate);
-		Code.addChild(this._buttonCell,this._buttonDelete);
-		Code.addChild(this._buttonCell,this._buttonClear);
+		if(this._interface.isImmediateAdmin()){
+			Code.addChild(this._buttonCell,this._buttonDelete);
+			Code.addChild(this._buttonCell,this._buttonClear);
+		}
 		this.getUser(uid);
 	}else{
 		Code.setContent(this._userTitleType,"Create User");
-		Code.addChild(this._buttonCell,this._buttonCreate);
+		if(this._interface.isImmediateAdmin()){
+			Code.addChild(this._buttonCell,this._buttonCreate);
+		}
 		Code.addChild(this._buttonCell,this._buttonSelf);
 	}
 	if( this._interface.isImmediateAdmin() ){
@@ -212,7 +216,7 @@ PageUser.prototype._getDataValues = function(){
 PageUser.prototype._handleCreateClickFxn = function(e){
 	if(this._loading){ return; }
 	var d = this._getDataValues();
-	if(d[11].length<6 || d[12].length<6){
+	if(d[14].length<6 || d[15].length<6){
 		alert("New password length too short");
 		return;
 	}
@@ -221,7 +225,7 @@ PageUser.prototype._handleCreateClickFxn = function(e){
 PageUser.prototype._handleUpdateClickFxn = function(e){
 	if(this._loading){ return; }
 	var d = this._getDataValues();
-	if(d[11].length>0 && (d[11].length<6 || d[12].length<6)){
+	if(d[14].length>0 && (d[14].length<6 || d[15].length<6)){
 		alert("New password length too short");
 		return;
 	}

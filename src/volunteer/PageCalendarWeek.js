@@ -47,6 +47,8 @@ function PageCalendarWeek(container,interface){
 	Code.addChild( this._root, this._nextContainer);
 	Code.addChild( this._root, this._tableContainer);
 	Code.addChild(this._root,this._radioSelectionContainer);
+	this._legend = Volunteer.generateLegend();
+	Code.addChild(this._root,this._legend);
 	//
 	Code.addListenerClick(this._radioSelection0,this._handleRadioClickFxn,this);
 	Code.addListenerClick(this._radioSelection1,this._handleRadioClickFxn,this);
@@ -146,7 +148,6 @@ PageCalendarWeek.prototype.setPositions = function(list){
 	var date, begin, end;
 	Code.emptyArray(this._positions);
 	for(i=0;i<len;++i){
-		console.log(list[i]);
 		this._positions[i] = list[i];
 		row = Code.addRow(this._tableContainer);
 		this._rowContainers.push(row);

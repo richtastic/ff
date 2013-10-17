@@ -75,6 +75,7 @@ ServerVolunteerInterface.prototype.ACTION_REQUEST_CREATE = "request_create";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_UPDATE_ANSWER = "request_answer";
 ServerVolunteerInterface.prototype.ACTION_REQUEST_UPDATE_DECIDE = "request_decide";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_SHIFT_ID = "shift_id";
+	ServerVolunteerInterface.prototype.ACTION_REQUEST_REASON = "reason";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_REQUEST_ID = "request_id";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_PAGE = "page";
 	ServerVolunteerInterface.prototype.ACTION_REQUEST_COUNT = "count";
@@ -296,7 +297,6 @@ ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,
 	a.postParams(url,params,this,this.onAjaxUpdateUser,this.onAjaxUpdateUser);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateUser = function(e,a){
-	console.log(e);
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
@@ -464,11 +464,12 @@ ServerVolunteerInterface.prototype.onAjaxGetRequests = function(e,a){
 	var obj = JSON.parse(e);
 	this._checkCallback(a,obj);
 }
-ServerVolunteerInterface.prototype.createShiftRequest = function(user_id,shift_id,ctx,call){
+ServerVolunteerInterface.prototype.createShiftRequest = function(user_id,shift_id,reason,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_CREATE;
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_REQUEST_SHIFT_ID] = shift_id;
+	params[this.ACTION_REQUEST_REASON] = reason;
 	a.postParams(url,params,this,this.onAjaxCreateShiftRequest,this.onAjaxCreateShiftRequest);
 }
 ServerVolunteerInterface.prototype.onAjaxCreateShiftRequest = function(e,a){

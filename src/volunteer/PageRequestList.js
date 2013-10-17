@@ -19,7 +19,7 @@ function PageRequestList(container, interface){
 Code.inheritClass(PageRequestList, PageWeb);
 // ------------------------------------------------------------------------------ 
 PageRequestList.prototype._init = function(){
-	var head = ["","Shift","Requested By","Filled By","Approved By","Status","Options"];
+	var head = ["","Shift","Requested By","Filled By","Approved By","Status","Reason","Options"];
 	var i, col, len = head.length;
 	for(i=0;i<len;++i){
 		col = Code.addCell(this._requestHeader);
@@ -44,7 +44,7 @@ PageRequestList.prototype.reset = function(){
 	this.clear();
 	this._checkRequests();
 }
-PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftID,posID,posName,ownID,ownName,reqID,reqName,filID,filName,filled,appID,appName,approved,time,status, btn){
+PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftID,posID,posName,ownID,ownName,reqID,reqName,filID,filName,filled,appID,appName,approved,time,status,reason, btn){
 	var row, col;
 	row = Code.addRow(this._requestTable);
 		Code.addClass(row, "requestListRow");
@@ -54,8 +54,8 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 		Code.setProperty(col, "shift_id", shiftID);
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		Code.setContent( col, posName + " " + time );
-		Code.setProperty(col, "position_id", posID);
+		Code.setContent( col, posName + "<br />" + time );
+		//Code.setProperty(col, "position_id", posID);
 	// col = Code.addCell(row);
 	// 	Code.addClass(col, "requestListCell");
 	// 	Code.setContent( col, ownName==""?" - ":ownName );
@@ -80,6 +80,9 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 		Code.setContent( col, status );
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
+		Code.setContent( col, reason );
+	col = Code.addCell(row);
+		Code.addClass(col, "requestListCell");
 		if(btn){
 			var approve = Code.newInputSubmit("Approve");
 				Code.addClass(approve, "requestListButton");
@@ -98,7 +101,7 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 }
 // ------------------------------------------------------------------------------ 
 PageRequestList.prototype._checkRequests = function(){
-	this._interface.getRequests(0,10, this, this._checkRequestsComplete);	
+	this._interface.getRequests(0,25, this, this._checkRequestsComplete);	// only show 25 ...
 }
 PageRequestList.prototype._checkRequestsComplete = function(o){
 	if(o.status=="success"){
@@ -118,8 +121,7 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 			shift_id = req["shift_id"];
 			shift_begin = req["shift_begin"];
 			shift_end = req["shift_end"];
-			position_id = req["position_id"];
-			position_name = req["position_name"];
+			position_name = req["name"];
 			owner_id = req["owner_id"];
 			owner_name = req["owner_username"];
 			requester_id = req["requester_id"];
@@ -165,8 +167,11 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 				btn = false;
 				status = "?";
 			}
-			this.addRequest(offset+i, request_id,created, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
-				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, btn);
+			if(!this._interface.isImmediateAdmin()){
+				btn = false;
+			}
+			this.addRequest(offset+i+1, request_id,created, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
+				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, info, btn);
 		}
 	}
 }
@@ -181,6 +186,8 @@ PageRequestList.prototype._handleApproveClickFxn = function(e){
 PageRequestList.prototype._handleApproveClickFxnSuccess = function(o){
 	if(o && o.status=="success"){
 		this.reset(); // less half-assed
+	}else{
+		alert("RequestList: "+e.message);
 	}
 }
 PageRequestList.prototype._handleDenyClickFxn = function(e){
@@ -195,6 +202,8 @@ PageRequestList.prototype._handleDenyClickFxn = function(e){
 PageRequestList.prototype._handleDenyClickFxnSuccess = function(o){
 	if(o && o.status=="success"){
 		this.reset(); // less half-assed
+	}else{
+		alert("RequestList: "+e.message);
 	}
 }
 // ------------------------------------------------------------------------------ 

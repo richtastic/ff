@@ -44,6 +44,7 @@ PageShifts.prototype._init = function(){
 	this.generateLeftColumn("Position:",this._positionContainer);
 	this.generateRightColumn(this._positionText,this._positionContainer);
 	Code.addClass(this._positionText,"shiftsPositionText");
+	Code.setMaxLength( this._positionText, 32);
 	// start
 	this.generateLeftColumn("Start Date:",this._startContainer);
 	this.generateRightColumn(this._startSelection,this._startContainer);
