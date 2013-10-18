@@ -49,7 +49,6 @@ function includeHeader($title='Title'){
 	<script type="text/javascript" src="./ServerVolunteerInterface.js"></script>
 	<script type="text/javascript" src="./PageMonthBlock.js"></script>
 	<script type="text/javascript" src="./PageLogin.js"></script>
-	<script type="text/javascript" src="./PageCalendarDay.js"></script>
 	<script type="text/javascript" src="./PageCalendarWeek.js"></script>
 	<script type="text/javascript" src="./PageCalendarMonth.js"></script>
 	<script type="text/javascript" src="./PageRequest.js"></script>
@@ -486,7 +485,8 @@ function sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body){
 		return 0;
 	}
 	$headers = "From: ".$fromEmail."\r\nReply-To: ".$replyEmail."";
-	error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
+	return mail($toEmail, $subject, $body, $headers);
+	//error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
 }
 
 function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com
@@ -505,20 +505,22 @@ function emailOnUserUpdate($username, $oldUsername, $email, $oldEmail, $password
 	$isNewUsername = $username!=$oldUsername;
 	$isNewEmail = $email!=$oldEmail;
 	$isNewPassword = $password!=$oldPassword;
-	$subject = 'BSFTH User Updated';
-	$body = 'You are receiving this because:\n';
-	if($isNewUsername){
-		$body = $body.'*) The username with this email was changed from "'.$oldUsername.'" to "'.$username.'"\n';
+	if($isNewUsername || $isNewEmail || $isNewPassword){
+		$subject = 'BSFTH User Updated';
+		$body = 'You are receiving this because: ';
+		if($isNewUsername){
+			$body = $body.'*) The username with this email was changed from "'.$oldUsername.'" to "'.$username.'" ';
+		}
+		if($isNewPassword){
+			$body = $body.'*) The password with this email was changed ';
+		}
+		if($isNewEmail){
+			$body = $body.'*) The email address was changed ';
+			$b = 'You are receiving this because the account with this email was changed to a new address.';
+			sendEmailBSFTH($oldEmail, $subject, $b);
+		}
+		sendEmailBSFTH($email, $subject, $body);
 	}
-	if($isNewPassword){
-		$body = $body.'*) The password with this email was changed\n';
-	}
-	if($isNewEmail){
-		$body = $body.'*) The email address was changed\n';
-		$b = 'You are receiving this because the account with this email was changed to a new address.';
-		sendEmailBSFTH($oldEmail, $subject, $b);
-	}
-	sendEmailBSFTH($email, $subject, $body);
 }
 function emailOnShiftSwapCreated($connection, $request_id){
 	$request_id = mysql_real_escape_string($request_id);
@@ -533,7 +535,7 @@ function emailOnShiftSwapCreated($connection, $request_id){
 		$shift_begin = dateFromString($row["shift_begin"]);
 		$shift_end = dateFromString($row["shift_end"]);
 		$subject = 'BSFTH Swap Request';
-		$body = 'The following Shift Swap has been requested (at '.getHumanFullDateFromDate($request_created).'): \n'.
+		$body = 'The following Shift Swap has been requested (at '.getHumanFullDateFromDate($request_created).'):  '.
 		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
 		mysql_free_result($result);
 		$query = 'select id,username,email from users where (id="'.$owner_id.'" and preference_email_shift_self="1") or preference_email_shift_other="1";';
@@ -566,7 +568,7 @@ function emailOnShiftSwapFilled($connection, $request_id){
 		$shift_begin = dateFromString($row["shift_begin"]);
 		$shift_end = dateFromString($row["shift_end"]);
 		$subject = 'BSFTH Swap Filled';
-		$body = 'The following Shift Swap has been filled (at '.getHumanFullDateFromDate($request_fulfilled).'): \n'.
+		$body = 'The following Shift Swap has been filled (at '.getHumanFullDateFromDate($request_fulfilled).'):  '.
 		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
 		mysql_free_result($result);
 		$query = 'select id,username,email from users where (id in ("'.$owner_id.'","'.$filler_id.'") and preference_email_shift_self="1") or preference_email_shift_other="1";';
@@ -601,7 +603,7 @@ function emailOnShiftSwapDecided($connection, $request_id, $approved){
 		$shift_begin = dateFromString($row["shift_begin"]);
 		$shift_end = dateFromString($row["shift_end"]);
 		$subject = 'BSFTH Swap '.$decisionUpper;
-		$body = 'The following Shift Swap has been '.$decision.' (at '.getHumanFullDateFromDate($request_approved).'): \n'.
+		$body = 'The following Shift Swap has been '.$decision.' (at '.getHumanFullDateFromDate($request_approved).'):  '.
 		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
 		mysql_free_result($result);
 		$query = 'select id,username,email from users where (id in ("'.$owner_id.'","'.$filler_id.'") and preference_email_shift_self="1") or preference_email_shift_other="1";';

@@ -286,9 +286,12 @@ info varchar(64) # extra info
 insert into groups (name, info) values ("admin","CRUD - everything");
 insert into groups (name, info) values ("user","staff member");
 # USERS
-insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("richie","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","zirbsster@gmail.com", "Richie", "Zirbes", "5555555555", "123 Fake Street", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), 1, now(), 1 );
-insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("tareva","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","tareva@bouldershelter.org", "TaReva", "", "5555555555", "123 Fake Street", "CO", "Boulder", "56789", (select id from groups where name="admin"), now(), 1, now(), 1 );
-insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("chad","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","chad@bouldershelter.org", "Chad", "", "5555555555", "123 Fake Street", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), 1, now(), 1 );
+insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id, preference_email_updates, preference_email_shift_self, preference_email_shift_other, preference_email_schedule) values ("richie","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","zirbsster@gmail.com", "Richie", "Zirbes", "5555555555", "123 Fake Street", "CA", "Glendale", "12345", (select id from groups where name="admin"), now(), 1, now(), 1, 0,0,0,0 );
+insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id, preference_email_updates, preference_email_shift_self, preference_email_shift_other, preference_email_schedule) values ("tareva","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","tareva@bouldershelter.org", "TaReva", "", "5555555555", "123 Fake Street", "CO", "Boulder", "56789", (select id from groups where name="admin"), now(), 1, now(), 1, 0,0,0,0 );
+insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id, preference_email_updates, preference_email_shift_self, preference_email_shift_other, preference_email_schedule) values ("chad","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","chad@bouldershelter.org", "Chad", "", "5555555555", "123 Fake Street", "CO", "Boulder", "12345", (select id from groups where name="admin"), now(), 1, now(), 1, 0,0,0,0 );
+
+
+
 
 insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("tim","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","tim@gmail.com", "Tim", "Zuckerberg", "5555555555", "123 Fake Street", "CO", "Boulder", "12345", (select id from groups where name="user"), now(), 1, now(), 1 );
 insert into users (username, password, email, first_name, last_name, phone, address, state, city, zip, group_id, created, created_user_id, modified, modified_user_id) values ("john","0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8","john.smith@gmail.com", "John", "Smith", "5555555555", "123 Fake Street", "WY", "Cheyenne", "56789", (select id from groups where name="user"), now(), 1, now(), 1 );
@@ -391,7 +394,7 @@ x) no visuals unless logged in
 	*) no data on server side either
 x) LEGEND FOR SHIFT COLORS
 *) check on deleting shifts still works
-*) 
+*) logging into database logging table
 
 http://www.cs.wcupa.edu/~rkline/php/sessions.html
 http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_Functions
@@ -399,6 +402,14 @@ http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_
 
 
 
+TODO:
+PROBABLY EMAIL "CRON" JOB & LAUNCHER
+DATA TRANSFER
+	ENCODE/DECODE ALL DATA(TO SERVER)
+	DOUBLEQUOTE-ESCAPING(TO CLIENT)
+DATA DISPLAY
+	SAFE HTML ON CLIENT (GET)
+CHECK OPERABILITY IN IE
 
 
 

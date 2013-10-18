@@ -61,6 +61,7 @@ Volunteer.generateLegend = function(){
 	return legend;
 }
 Volunteer.prototype._showVisuals = function(){
+	//console.log("SHOW");
 	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
 	Code.removeClass(nav,"hidden");
 	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
@@ -69,6 +70,7 @@ Volunteer.prototype._showVisuals = function(){
 	Code.removeClass(nav,"hidden");
 }
 Volunteer.prototype._hideVisuals = function(){
+	//console.log("HIDE");
 	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
 	Code.removeClass(nav,"hidden");
 	Code.addClass(nav,"hidden");

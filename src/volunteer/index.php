@@ -6,7 +6,7 @@ require "functions.php";
 
 // 22:30 -> 01:30 = ahead by 3 hours 
 $TIME_ZONE_OFFSET = -3*60; // in minutes
-$TIME_NOW = ' adddate(now(),interval 60 minute) ';
+$TIME_NOW = ' adddate(now(),interval '.$TIME_ZONE_OFFSET.' minute) ';
 
 //$ACTION_TYPE_USERID = 'uid';
 $ACTION_TYPE_SESSION_ID = 'sid';
@@ -484,7 +484,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$count = intval($count);
 				$count = max(min($count,100),1);
 				$offset = max(0,$count*($page));
-				$query = 'select users.id as id,group_id,name as group_name,created,modified,username,first_name,last_name,email,phone,address,city,state,zip from users right outer join groups on users.group_id=groups.id   order by created asc, id asc  limit '.$count.' offset '.$offset.';';
+				$query = 'select users.id as id,group_id,name as group_name,created,modified,username,first_name,last_name,email,phone,address,city,state,zip from users left outer join groups on users.group_id=groups.id   order by created asc, id asc  limit '.$count.' offset '.$offset.';';
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total = mysql_num_rows($result);
