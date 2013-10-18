@@ -60,27 +60,7 @@ Volunteer.generateLegend = function(){
 		Code.addChild(legend,blk);
 	return legend;
 }
-Volunteer.prototype._showVisuals = function(){
-	//console.log("SHOW");
-	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-}
-Volunteer.prototype._hideVisuals = function(){
-	//console.log("HIDE");
-	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	Code.addClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	Code.addClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	Code.addClass(nav,"hidden");
-}
+
 // -------------------------------------------------------------------------------------------- constructor
 function Volunteer(){
 	Volunteer._.constructor.apply(this,arguments);
@@ -92,15 +72,37 @@ function Volunteer(){
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn, this);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn, this);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn, this);
-	this._hideVisuals();
 	this.initialize(); 
-	if(this._interface.isImmediateLoggedIn()){
-		this._showVisuals();
-	}
 }
 Code.inheritClass(Volunteer, Dispatchable);
 // --------------------------------------------------------------------------------------------
+Volunteer.prototype._showVisuals = function(){
+	//console.log("SHOW");
+	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+}
+Volunteer.prototype._hideVisuals = function(){
+	return;
+	//console.log("HIDE");
+	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	Code.addClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	Code.addClass(nav,"hidden");
+	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
+	Code.removeClass(nav,"hidden");
+	Code.addClass(nav,"hidden");
+}
 Volunteer.prototype.initialize = function(){
+	this._hideVisuals();
+	if(this._interface.isImmediateLoggedIn()){
+		this._showVisuals();
+	}
 	// create pages
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageCalendarMonth(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv(),this._interface) );
