@@ -187,7 +187,7 @@ PageRequestList.prototype._handleApproveClickFxnSuccess = function(o){
 	if(o && o.status=="success"){
 		this.reset(); // less half-assed
 	}else{
-		alert("RequestList: "+e.message);
+		alert("RequestList: "+o.message);
 	}
 }
 PageRequestList.prototype._handleDenyClickFxn = function(e){
@@ -203,7 +203,7 @@ PageRequestList.prototype._handleDenyClickFxnSuccess = function(o){
 	if(o && o.status=="success"){
 		this.reset(); // less half-assed
 	}else{
-		alert("RequestList: "+e.message);
+		alert("RequestList: "+o.message);
 	}
 }
 // ------------------------------------------------------------------------------ 

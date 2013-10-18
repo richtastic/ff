@@ -94,7 +94,7 @@ textarea{
 .vCalShift{
 	border-style: solid;
 	border-width: 1px;
-	font-size: 80%;
+	font-size: 0%;
 	color: #000;
 	padding: 1px;
 	margin: 1px;
@@ -339,7 +339,7 @@ textarea{
 }
 .calendarWeekShiftDiv{
 	color: #123;
-	font-size: 70%;
+	font-size: 80%;
 	display: block;
 	background: #CCD6FF;
 	border: solid;
@@ -479,7 +479,7 @@ textarea{
 }
 .pageMonthShiftContainer{
 	float: left;
-	font-size: 70%;
+	font-size: 80%;
 	color: #003;
 	background: #CCD6FF;
 	border: solid;
@@ -488,6 +488,8 @@ textarea{
 	-moz-border-radius: 4px;
 	padding: 0px;
 	border-width: 1px;
+	padding-left: 1px;
+	padding-right: 1px;
 }
 .pageMonthShiftTypeEmpty{
 	background: #FFBBBB;

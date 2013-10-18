@@ -89,6 +89,8 @@ $LOG_TYPE_LOGOUT = "logout";
 
 
 if($ARGUMENT_GET_ACTION!=null){
+	ignore_user_abort(true); 
+	set_time_limit(0);
 	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }');  mysql_select_db("volunteering");
 	//
 	$ACTION_VALUE_USER_ID = null;
@@ -641,6 +643,7 @@ if($ARGUMENT_GET_ACTION!=null){
 							mysql_free_result($result);
 							echo '{"status": "success", "message": "request created", "request": { "id": "'.$request_id.'", "request_user_id": "'.$user_id.'", ';
 							echo '"shift_id": "'.$shift_id.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'" } }';
+							emailOnShiftSwapCreated($connection, $request_id);
 						}else{
 							echo '{"status": "error", "message": "recheck failed"}';
 						}
@@ -673,6 +676,7 @@ if($ARGUMENT_GET_ACTION!=null){
 							if($result){
 								echo '{"status": "success", "message": "request filled", "request": {"id": "'.$request_id.'", "shift_id": "'.$shift_id.'", ';
 								echo '"request_user_id": "'.$request_user_id.'", "fulfill_user_id": "'.$user_id.'" }}';
+								emailOnShiftSwapFilled($connection, $request_id);
 							}else{
 								echo '{"status": "error", "message": "update failed '.mysql_real_escape_string($query).' "}';
 							}
@@ -711,6 +715,7 @@ if($ARGUMENT_GET_ACTION!=null){
 								if($result){
 									mysql_free_result($result);
 									echo '{ "status": "success", "message": "request denied" }';
+									emailOnShiftSwapDenied($connection, $request_id);
 								}else{
 									echo '{ "status": "error", "message": "bad no update" }';
 								}
@@ -725,6 +730,7 @@ if($ARGUMENT_GET_ACTION!=null){
 										if($result){
 											mysql_free_result($result);
 											echo '{ "status": "success", "message": "request approved" }';
+											emailOnShiftSwapApproved($connection, $request_id);
 										}else{
 											echo '{ "status": "error", "message": "bad yes update" }';
 										}
@@ -973,6 +979,8 @@ if($ARGUMENT_GET_ACTION!=null){
 										$pw = '';
 										if($new_password!=""){ // changed pw
 											$pw = 'password="'.$new_password.'",';
+										}else{
+											$new_password = $oldPassword; // this is just so that the email $new_password value is consistent
 										}
 										$group_query = ''; // can only change group if admin
 										if($ACTION_VALUE_IS_ADMIN){
@@ -986,6 +994,7 @@ if($ARGUMENT_GET_ACTION!=null){
 										$result = mysql_query($query,$connection);
 										if($result){
 											echo '{ "status": "success", "message": "user updated", "user": {"id":"'.$user_id.'"} }';
+											$username = $oldUsername; // usernames can't be changed
 											emailOnUserUpdate($username, $oldUsername, $email, $oldEmail, $new_password, $oldPassword);
 										}else{
 											echo '{ "status": "error", "message": "could not update user '.mysql_real_escape_string($query).' " }'; // '.mysql_real_escape_string($query).'
@@ -1147,8 +1156,23 @@ includeBody();
 includeFooter();
 
 
-
-
-
 }
+
+
+// ignore_user_abort(true); 
+// set_time_limit(0);
+// $res = shell_exec("sleep 60");
+
+/*
+// 
+ignore_user_abort(1); // run script in background 
+set_time_limit(0); // run script forever 
+$interval=60*15; // do every 15 minutes... 
+do{ 
+   // add the script that has to be ran every 15 minutes here 
+   // ... 
+   sleep($interval); // wait 15 minutes 
+}while(true); 
+*/
+
 ?>

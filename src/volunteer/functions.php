@@ -360,7 +360,15 @@ $count = 0;
 	}
 	return $children;
 }
-
+function getHumanFullDateFromDate($seconds){
+	return date("D j M Y, g:i A",$seconds); // Sat 11 Mar 2013, 11:25 PM
+}
+function getHumanDayFromDate($seconds){
+	return date("D, M j, Y",$seconds); // Sat, Mar 12, 2013
+}
+function getHumanTimeOfDayFromDate($seconds){
+	return date("g:i A",$seconds); // 11:26 PM
+}
 
 function decodeString($str){
 	//return urldecode($str);
@@ -477,11 +485,8 @@ function sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body){
 	if( $toEmail==null || count($toEmail)<1 ){
 		return 0;
 	}
-	//return 0; // uncomment out to stop all emails
 	$headers = "From: ".$fromEmail."\r\nReply-To: ".$replyEmail."";
-	if($toEmail=="zirbsster@gmail.com"){
-		return mail($toEmail, $subject, $body, $headers);
-	}
+	error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
 }
 
 function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com
@@ -515,23 +520,119 @@ function emailOnUserUpdate($username, $oldUsername, $email, $oldEmail, $password
 	}
 	sendEmailBSFTH($email, $subject, $body);
 }
-function emailOnShiftSwapCreated($username, $email){
-	$subject = 'BSFTH Swap Request';
-	$body = 'The following Shift Swap has been requested:\n'.
-			'';
-	sendEmailBSFTH($email, $subject, $body);
+function emailOnShiftSwapCreated($connection, $request_id){
+	$request_id = mysql_real_escape_string($request_id);
+	$query = 'select requests.created as request_created,shifts.user_id as owner_id, shifts.name as shift_name,shifts.time_begin as shift_begin,shifts.time_end as shift_end '.
+			' from requests left outer join shifts on requests.shift_id=shifts.id where requests.id="'.$request_id.'";';
+	$result = mysql_query($query);
+	if($result && mysql_num_rows($result)==1){
+		$row = mysql_fetch_assoc($result);
+		$owner_id = $row["owner_id"];
+		$shift_name = $row["shift_name"];
+		$request_created = dateFromString($row["request_created"]);
+		$shift_begin = dateFromString($row["shift_begin"]);
+		$shift_end = dateFromString($row["shift_end"]);
+		$subject = 'BSFTH Swap Request';
+		$body = 'The following Shift Swap has been requested (at '.getHumanFullDateFromDate($request_created).'): \n'.
+		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
+		mysql_free_result($result);
+		$query = 'select id,username,email from users where (id="'.$owner_id.'" and preference_email_shift_self="1") or preference_email_shift_other="1";';
+		$result = mysql_query($query);
+		if($result){
+			while($row = mysql_fetch_assoc($result)){
+				$email = $row["email"];
+				if( isValidEmail($email) ){
+					sendEmailBSFTH($email, $subject, $body);
+				}
+			}
+			mysql_free_result($result);
+		}else{
+			//error_log("could not send users data");
+		}
+		mysql_free_result($result);
+	}
 }
-function emailOnShiftSwapFilled($username, $email){
-	$subject = 'BSFTH Swap Filled';
-	$body = 'The following Shift Swap has been filled:\n'.
-			'';
-	sendEmailBSFTH($email, $subject, $body);
+function emailOnShiftSwapFilled($connection, $request_id){
+	$request_id = mysql_real_escape_string($request_id);
+	$query = 'select requests.fulfill_date as request_fulfilled,requests.fulfill_user_id as filler_id,shifts.user_id as owner_id,shifts.name as shift_name,shifts.time_begin as shift_begin,shifts.time_end as shift_end '.
+			' from requests left outer join shifts on requests.shift_id=shifts.id where requests.id="'.$request_id.'";';
+	$result = mysql_query($query);
+	if($result && mysql_num_rows($result)==1){
+		$row = mysql_fetch_assoc($result);
+		$owner_id = $row["owner_id"];
+		$filler_id = $row["filler_id"];
+		$shift_name = $row["shift_name"];
+		$request_fulfilled = dateFromString($row["request_fulfilled"]);
+		$shift_begin = dateFromString($row["shift_begin"]);
+		$shift_end = dateFromString($row["shift_end"]);
+		$subject = 'BSFTH Swap Filled';
+		$body = 'The following Shift Swap has been filled (at '.getHumanFullDateFromDate($request_fulfilled).'): \n'.
+		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
+		mysql_free_result($result);
+		$query = 'select id,username,email from users where (id in ("'.$owner_id.'","'.$filler_id.'") and preference_email_shift_self="1") or preference_email_shift_other="1";';
+		$result = mysql_query($query);
+		if($result){
+			while($row = mysql_fetch_assoc($result)){
+				$email = $row["email"];
+				if( isValidEmail($email) ){
+					sendEmailBSFTH($email, $subject, $body);
+				}
+			}
+			mysql_free_result($result);
+		}else{
+			//error_log("could not send users data on filled");
+		}
+		mysql_free_result($result);
+	}
 }
-function emailOnShiftSwapApproved($username, $email){
-	$subject = 'BSFTH Swap Approved';
-	$body = 'The following Shift Swap has been approved:\n'.
-			'';
-	sendEmailBSFTH($email, $subject, $body);
+function emailOnShiftSwapDecided($connection, $request_id, $approved){
+	$decisionUpper = $approved==true?"Approved":"Declined";
+	$decision = $approved==true?"approved":"declined";
+	$request_id = mysql_real_escape_string($request_id);
+	$query = 'select requests.approved_date as request_approved,requests.fulfill_user_id as filler_id,shifts.user_id as owner_id,shifts.name as shift_name,shifts.time_begin as shift_begin,shifts.time_end as shift_end '.
+			' from requests left outer join shifts on requests.shift_id=shifts.id where requests.id="'.$request_id.'";';
+	$result = mysql_query($query);
+	if($result && mysql_num_rows($result)==1){
+		$row = mysql_fetch_assoc($result);
+		$owner_id = $row["owner_id"];
+		$filler_id = $row["filler_id"];
+		$shift_name = $row["shift_name"];
+		$request_approved = dateFromString($row["request_approved"]);
+		$shift_begin = dateFromString($row["shift_begin"]);
+		$shift_end = dateFromString($row["shift_end"]);
+		$subject = 'BSFTH Swap '.$decisionUpper;
+		$body = 'The following Shift Swap has been '.$decision.' (at '.getHumanFullDateFromDate($request_approved).'): \n'.
+		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
+		mysql_free_result($result);
+		$query = 'select id,username,email from users where (id in ("'.$owner_id.'","'.$filler_id.'") and preference_email_shift_self="1") or preference_email_shift_other="1";';
+		$result = mysql_query($query);
+		if($result){
+			while($row = mysql_fetch_assoc($result)){
+				$email = $row["email"];
+				if( isValidEmail($email) ){
+					sendEmailBSFTH($email, $subject, $body);
+				}
+			}
+			mysql_free_result($result);
+		}else{
+			//error_log("could not send users data on approve");
+		}
+		mysql_free_result($result);
+	}
+	// notify owner of shift where preference_email_shift_self=1
+	// notify filler of request where preference_email_shift_self=1
+	// notify all users where preference_email_shift_other=1
+	//sendEmailBSFTH($email, $subject, $body);
+}
+function emailOnShiftSwapApproved($connection, $request_id){
+	emailOnShiftSwapDecided($connection, $request_id, true);
+}
+function emailOnShiftSwapDenied($connection, $request_id){
+	emailOnShiftSwapDecided($connection, $request_id, false);
+}
+function isValidEmail($email){
+	$match = preg_match('/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{1,4}$/', strtoupper($email) );
+	return ($match==1)?true:false;
 }
 
 // --------------------------------------------------------------------------------

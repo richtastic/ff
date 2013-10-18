@@ -375,9 +375,9 @@ x) swap ordering: closest in future coming up - shift.begin_time
 x) users only see open shifts in SWAP LIST
 x) add user column: recieve notifivations of swaps
 x) send emails on:
-	A) swap made
-	B) swap filled
-	C) swap approved
+	x) swap made
+	x) swap filled
+	x) swap approved
 	- send user email on
 		x user created
 		x password changed
@@ -387,10 +387,10 @@ x) send emails on:
 	ignore_user_abort(true); 
 	set_time_limit(0);
 *) encode/decode all data in url
-*) no visuals unless logged in
+x) no visuals unless logged in
 	*) no data on server side either
 x) LEGEND FOR SHIFT COLORS
-*) 
+*) check on deleting shifts still works
 *) 
 
 http://www.cs.wcupa.edu/~rkline/php/sessions.html

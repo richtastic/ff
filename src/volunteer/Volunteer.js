@@ -92,6 +92,9 @@ function Volunteer(){
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn, this);
 	this._hideVisuals();
 	this.initialize(); 
+	if(this._interface.isImmediateLoggedIn()){
+		this._showVisuals();
+	}
 }
 Code.inheritClass(Volunteer, Dispatchable);
 // --------------------------------------------------------------------------------------------
