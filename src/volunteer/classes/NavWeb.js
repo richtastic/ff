@@ -16,7 +16,6 @@ function NavWeb(container){
 Code.inheritClass(NavWeb, Dispatchable);
 // -------------------------------------------- show/hide
 NavWeb.prototype.hide = function(){
-	// console.log("hide");
 	// var parent = Code.getParent(this._container);
 	// if(parent!=null){
 	// 	this._hidden = parent;
@@ -24,10 +23,7 @@ NavWeb.prototype.hide = function(){
 	// }
 }
 NavWeb.prototype.show = function(){
-	// console.log("show");
 	// if(this._hidden!=null){// && this._container!=null){
-	// 	console.log(this._hidden);
-	// 	console.log(this._container);
 	// 	Code.addChild(this._hidden, this._contaner);
 	// }
 }
