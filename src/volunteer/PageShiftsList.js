@@ -8,6 +8,7 @@ function PageShiftsList(container, interface){
 		Code.addClass(this._root,"shiftListContainer");
 	this._table = Code.newTable();
 		Code.addClass(this._table,"shiftListTable");
+	console.log(this._table);
 	Code.addChild(this._root, this._table);
 	this._init();
 }

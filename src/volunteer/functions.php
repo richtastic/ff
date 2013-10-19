@@ -79,29 +79,6 @@ function includeBody(){
 		<div id="scheduler_bottom"></div>
 	</div>
 	';
-	// echo '
-	// <div>
-	// 	<div id="login">
-	// 		<input type="text" name="login_username" />
-	// 		<input type="password" name="login_password" />
-	// 		<input type="submit" name="login_submit" value="Log In" />
-	// 	</div>
-	// 	<div id="logout">
-	// 		<input type="submit" name="logout_submit" value="Log Out" />
-	// 	</div>
-	// 	<div id="content">
-	// 		<div id="section_calendar">
-	// 			<div id="calendar_week"></div>
-	// 		</div>
-	// 		<div id="section_profile"></div>
-	// 		<div id="section_crud_user"></div>
-	// 		<div id="section_crud_shift"></div>
-	// 		<div id="section_crud_"></div>
-	// 		<div id="section_"></div>
-	// 		<div id=""></div>
-	// 	</div>
-	// </div>
-	// ';
 }
 function includeFooter(){
 	echo '
@@ -485,8 +462,8 @@ function sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body){
 		return 0;
 	}
 	$headers = "From: ".$fromEmail."\r\nReply-To: ".$replyEmail."";
-	return mail($toEmail, $subject, $body, $headers);
-	//error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
+	//return mail($toEmail, $subject, $body, $headers);
+	error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
 }
 
 function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com

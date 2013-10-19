@@ -389,12 +389,18 @@ x) send emails on:
 	- EMAIL THREADING
 	ignore_user_abort(true); 
 	set_time_limit(0);
-*) encode/decode all data in url
+
 x) no visuals unless logged in
-	*) no data on server side either
 x) LEGEND FOR SHIFT COLORS
-*) check on deleting shifts still works
+x) check on deleting shifts still works
+x) after makign a shift, week now resets to date
+
+*) SHIFT CREATOR DOES NOT SHOW UP IN IE UNLESS PAGE IS RELOADED
+*) SHIFT LIST HAS DUPLICATE ENTRIES ON IE LOAD
+*) encode/decode all data in url
+*) no data on server side either
 *) logging into database logging table
+
 
 http://www.cs.wcupa.edu/~rkline/php/sessions.html
 http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_Functions

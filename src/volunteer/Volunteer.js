@@ -1,6 +1,7 @@
 // Volunteer.js < Dispatchable
 Volunteer.CONSTANT = 1;
 // IDs
+Volunteer.CONTAINER_MAIN_ID = "scheduler";
 Volunteer.PAGE_TOP_CONTAINER_ID = "scheduler_top";
 Volunteer.PAGE_NAV_CONTAINER_ID = "scheduler_navigation";
 Volunteer.PAGE_MAIN_CONTAINER_ID = "scheduler_main";
@@ -72,37 +73,36 @@ function Volunteer(){
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_ADDED, this._navigatorMainPageAddedFxn, this);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_REMOVED, this._navigatorMainPageRemovedFxn, this);
 	this._navigatorMain.addFunction(NavWeb.EVENT_PAGE_CHANGED, this._navigatorMainPageChangeFxn, this);
+	this._container = Code.getID(Volunteer.CONTAINER_MAIN_ID);
+	this._hiddenElements = new Array();
+	this._hideVisuals();
+	if(this._interface.isImmediateLoggedIn()){
+		this._showVisuals();
+	}
 	this.initialize(); 
 }
 Code.inheritClass(Volunteer, Dispatchable);
 // --------------------------------------------------------------------------------------------
 Volunteer.prototype._showVisuals = function(){
-	//console.log("SHOW");
-	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
+	while( this._hiddenElements.length>0 ){
+		Code.addChild(this._container,this._hiddenElements.shift());
+	}
 }
 Volunteer.prototype._hideVisuals = function(){
-	return;
-	//console.log("HIDE");
-	nav = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	Code.addClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	Code.addClass(nav,"hidden");
-	nav = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
-	Code.removeClass(nav,"hidden");
-	Code.addClass(nav,"hidden");
+	if( Code.numChildren(this._container)>1 ){ // login is always present
+		var child;
+		child = Code.getID(Volunteer.PAGE_NAV_CONTAINER_ID);
+			this._hiddenElements.push( child );
+			Code.removeChild(this._container, child );
+		child = Code.getID(Volunteer.PAGE_MAIN_CONTAINER_ID);
+			this._hiddenElements.push( child );
+			Code.removeChild(this._container, child );
+		child = Code.getID(Volunteer.PAGE_BOT_CONTAINER_ID);
+			this._hiddenElements.push( child );
+			Code.removeChild(this._container, child );
+	}
 }
 Volunteer.prototype.initialize = function(){
-	this._hideVisuals();
-	if(this._interface.isImmediateLoggedIn()){
-		this._showVisuals();
-	}
 	// create pages
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_MONTH, new PageCalendarMonth(Code.newDiv(),this._interface) );
 	this._navigatorMain.setPage(Volunteer.PAGE_CALENDAR_WEEK, new PageCalendarWeek(Code.newDiv(),this._interface) );
@@ -136,17 +136,6 @@ Volunteer.prototype.initialize = function(){
 	this._navigatorBot.gotoPage(Volunteer.PAGE_BOT);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
-	//
-	// this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT);
-	// this._navigation.setSelected(Volunteer.NAV_SHIFT);
-	// this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
-	// this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
-	// this._navigatorMain.gotoPage(Volunteer.PAGE_POSITION);
-	// this._navigation.setSelected(Volunteer.NAV_POSITION);
-	// this._navigatorMain.gotoPage(Volunteer.PAGE_USER);
-	// this._navigation.setSelected(Volunteer.NAV_USER);
-	// this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_MONTH);
-	// this._navigation.setSelected(Volunteer.NAV_CAL_MONTH);
 }
 // ----------------------------------------------------------------------------- page hooks
 Volunteer.prototype._hookPageLogin = function(page){
@@ -214,8 +203,10 @@ Volunteer.prototype._gotoDateFxn = function(seconds){
 	var date = new Date(parseInt(seconds)*1000);
 	var year = date.getFullYear();
 	var month = date.getMonth()+1;
+	var day = date.getDate();
 	this._navigatorMain.gotoPage(Volunteer.PAGE_CALENDAR_WEEK);
 	this._navigation.setSelected(Volunteer.NAV_CAL_WEEK);
+	this._pageCalendarWeek.reset(year,month,day);
 }
 Volunteer.prototype._handleShiftCreatedFxn = function(o){
 	this._gotoDateFxn(o.first);
@@ -224,14 +215,14 @@ Volunteer.prototype._handleShiftUpdatedFxn = function(o){
 	this._gotoDateFxn(o);
 }
 Volunteer.prototype._handleRequestCreatedFxn = function(request_id){
-	this._pageRequestList.reset();
 	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+	this._pageRequestList.reset();
 }
 Volunteer.prototype._handleRequestUpdatedFxn = function(request_id){
-	this._pageRequestList.reset();
 	this._navigatorMain.gotoPage(Volunteer.PAGE_REQUEST_LIST);
 	this._navigation.setSelected(Volunteer.NAV_REQUEST_LIST);
+	this._pageRequestList.reset();
 }
 Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._pageShiftSingle.reset(o);
@@ -239,9 +230,9 @@ Volunteer.prototype._handleWeekShiftClickFxn = function(o){
 	this._navigation.setSelectedNone();
 }
 Volunteer.prototype._handleMonthShiftClickFxn = function(o){
-	this._pageShiftSingle.reset(o);
 	this._navigatorMain.gotoPage(Volunteer.PAGE_SHIFT_SINGLE);
 	this._navigation.setSelectedNone();
+	this._pageShiftSingle.reset(o);
 }
 Volunteer.prototype._navigatorMainPageAddedFxn = function(str,page){
 	//console.log("PAGE ADDED - ",str,page);

@@ -365,9 +365,12 @@ textarea{
 .calendarWeekToday{
 	background-color: #ACF;
 }
+.calendarWeekNavContainer{
+	display: inline-block;
+}
 .calendarWeekPrev{
 	background-color: #EEE;
-	display: inline-block;
+	display: inline;
 	padding-left: 4px;
 	padding-right: 4px;
 	padding-top: 2px;
@@ -376,7 +379,7 @@ textarea{
 }
 .calendarWeekNext{
 	background-color: #EEE;
-	display: inline-block;
+	display: inline;
 	padding-left: 4px;
 	padding-right: 4px;
 	padding-top: 2px;
@@ -388,12 +391,12 @@ textarea{
 	vertical-align: middle;
 }
 .calendarWeekRadio{
-	display: inline-block;
+	display: inline;
 	padding-left: 4px;
 	padding-right: 1px;
 }
 .calendarWeekRadioLabel{
-	display: inline-block;
+	display: inline;
 	padding-left: 1px;
 	padding-right: 4px;
 }
@@ -408,19 +411,19 @@ textarea{
 .pageMonthTitle{
 	font-size: 120%;
 	font-weight: bold;
-	display: inline-block;
+	display: inline;
 	padding-left: 10px;
 	padding-right: 10px;
 }
 .pageMonthPrev{
 	font-size: 90%;
-	display: inline-block;
+	display: inline;
 	padding: 4px;
 	text-decoration: underline;
 }
 .pageMonthNext{
 	font-size: 90%;
-	display: inline-block;
+	display: inline;
 	padding: 4px;
 	text-decoration: underline;
 }
@@ -507,11 +510,11 @@ textarea{
 
 }
 .calendarMonthRadio{
-	display: inline-block;
+	display: inline;
 	padding: 2px;
 }
 .calendarMonthRadioLabel{
-	display: inline-block;
+	display: inline;
 	padding: 2px;
 	padding-left: 2px;
 	padding-right: 10px;
@@ -1033,6 +1036,16 @@ textarea{
 .hidden{
 	display: none;
 }
+.shown{
+	display: block;
+}
+.invisible{
+	visibility: hidden;
+}
+.isvisible{
+	visibility: visible;
+}
+
 
 
 .legendContainer{
@@ -1042,27 +1055,27 @@ textarea{
 	vertical-align: middle;
 }
 .legendBlockNormal{
-	display: inline-block;
+	display: inline;
 	font-size: 80%;
 	background: #CCD6FF;
 }
 .legendBlockEmpty{
-	display: inline-block;
+	display: inline;
 	font-size: 80%;
 	background: #FFBBBB;
 }
 .legendBlockRequested{
-	display: inline-block;
+	display: inline;
 	font-size: 80%;
 	background: #FFCC99;
 }
 .legendBlockAnswered{
-	display: inline-block;
+	display: inline;
 	font-size: 80%;
 	background: #FFFF99;
 }
 .legendBlockLabel{
-	display: inline-block;
+	display: inline;
 	color:#000000;
 	font-size: 80%;
 	padding-right: 10px;

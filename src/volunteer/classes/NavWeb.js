@@ -11,8 +11,26 @@ function NavWeb(container){
 	this._pages = new Array();
 	this._currentPage = null;
 	this._currentPageName = null;
+	this._hidden = null;
 }
 Code.inheritClass(NavWeb, Dispatchable);
+// -------------------------------------------- show/hide
+NavWeb.prototype.hide = function(){
+	// console.log("hide");
+	// var parent = Code.getParent(this._container);
+	// if(parent!=null){
+	// 	this._hidden = parent;
+	// 	Code.removeChild(parent, this._container);
+	// }
+}
+NavWeb.prototype.show = function(){
+	// console.log("show");
+	// if(this._hidden!=null){// && this._container!=null){
+	// 	console.log(this._hidden);
+	// 	console.log(this._container);
+	// 	Code.addChild(this._hidden, this._contaner);
+	// }
+}
 // -------------------------------------------- get/set
 NavWeb.prototype.setPage = function(name,page){
 	this._pages[name] = page;

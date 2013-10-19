@@ -421,6 +421,9 @@ Code.setStyleWidth = function(ele,val){
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
+Code.getDomBody = function(){
+	return document.body;
+}
 Code.emptyDom = function(ele){
 	while(ele.firstChild){
 		Code.removeChild(ele,ele.firstChild);

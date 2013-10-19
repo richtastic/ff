@@ -32,7 +32,6 @@ function PageShifts(container,interface){
 	this._shiftList = new PageShiftsList(Code.newDiv(), this._interface);
 	this._shiftList.addFunction(PageShiftsList.EVENT_DELETE_SELECT,this._handleShiftListClickFxn,this);
 	Code.addChild(this._root,this._shiftList.dom());
-
 	//
 	this._init();
 }
@@ -95,7 +94,7 @@ PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
 		var selEndDay = Code.getChild(this._endSelection,0);
 		var selEndMonth = Code.getChild(this._endSelection,1);
 		var selEndYear = Code.getChild(this._endSelection,2);
-		this._positionSelection.value = "?";
+		//this._positionSelection.value = "?";
 		selStartDay.value = ""+startDate.getDate();
 		selStartMonth.value = ""+(startDate.getMonth());
 		selStartYear.value = ""+startDate.getFullYear();
