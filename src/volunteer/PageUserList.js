@@ -10,11 +10,8 @@ function PageUserList(container, interface){
 		Code.addClass(this._listTable,"userListTable");
 	this._pagingDiv = Code.newDiv();
 		Code.addClass(this._pagingDiv,"userListPagingContainer");
-	//
 	Code.addChild(this._root,this._pagingDiv);
 	Code.addChild(this._root,this._listTable);
-	
-	//
 	this._userCurrentPage = 0;
 	this._userPerPage = 10;
 	this._userTotalPage = 1;
@@ -84,20 +81,20 @@ PageUserList.prototype._refreshTable = function(list){
 			Code.setContent(col,(this._userCurrentPage*this._userPerPage + i+1)+"");
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
-			Code.setContent(col,list[i].username);
+			Code.setContent(col,Code.escapeHTML( list[i].username ));
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
-			Code.setContent(col,list[i].first_name+" "+list[i].last_name);
+			Code.setContent(col,Code.escapeHTML( list[i].first_name+" "+list[i].last_name ));
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
-			Code.setContent(col,list[i].email);
+			Code.setContent(col,Code.escapeHTML( list[i].email ));
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
 			Code.addClass(col,"userListCellPhone");
-			Code.setContent(col,Code.phoneAsNumbersToHuman(list[i].phone));
+			Code.setContent(col,Code.escapeHTML( Code.phoneAsNumbersToHuman(list[i].phone) ));
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
-			Code.setContent(col,list[i].group_name);
+			Code.setContent(col,Code.escapeHTML( list[i].group_name ));
 		col = Code.addCell(row);
 			Code.addClass(col,colClass);
 			Code.setContent(col, Code.getShortDateDescriptiveString( Code.dateFromString(list[i].created) ) );

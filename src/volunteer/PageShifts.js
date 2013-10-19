@@ -82,7 +82,7 @@ PageShifts.prototype.serverPositionsCallback = function(o){
 		this.setPositions(o.list, "id","name");
 	}
 }
-PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
+PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid, nam){
 	var arr = Code.getLogicalArrayFromRepeatString(code);
 	if(arr){
 		var sta, sto, h, m, s, n, i, len;
@@ -94,7 +94,7 @@ PageShifts.prototype.setFromAlgorithmAndPosition = function(code,start,end,pid){
 		var selEndDay = Code.getChild(this._endSelection,0);
 		var selEndMonth = Code.getChild(this._endSelection,1);
 		var selEndYear = Code.getChild(this._endSelection,2);
-		//this._positionSelection.value = "?";
+		Code.setInputTextValue(this._positionText, nam);
 		selStartDay.value = ""+startDate.getDate();
 		selStartMonth.value = ""+(startDate.getMonth());
 		selStartYear.value = ""+startDate.getFullYear();
@@ -298,6 +298,5 @@ PageShifts.prototype.generateSelectionTime = function(){
 }
 // ------------------------------------------------------------------------------ list clicking
 PageShifts.prototype._handleShiftListClickFxn = function(o){
-	this.setFromAlgorithmAndPosition(o.algorithm, o.time_begin, o.time_end, o.position_id);
+	this.setFromAlgorithmAndPosition(o.algorithm, o.time_begin, o.time_end, o.position_id, o.name);
 }
-

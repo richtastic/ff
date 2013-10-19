@@ -77,7 +77,7 @@ PageLogin.prototype._getUserInfo = function(){
 PageLogin.prototype._getUserInfoSuccess = function(o){
 	if(o.status=="success"){
 		var user = o.user;
-		Code.setContent( this._loginMessage, "Welcome "+user.username); // +" ["+user.first_name+" "+user.last_name+"] "
+		Code.setContent( this._loginMessage, "Welcome "+Code.escapeHTML( user.username )); // +" ["+user.first_name+" "+user.last_name+"] "
 	}
 }
 // ------------------------------------------------------------------------------ 

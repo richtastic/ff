@@ -162,7 +162,7 @@ PageCalendarWeek.prototype.setPositions = function(list){
 				begin = Code.getHourStringFromDate(date);
 				date = Code.dateFromString(this._positions[i]["end"]);
 				end = Code.getHourStringFromDate(date);
-				Code.setContent(col, this._positions[i]["name"]+"<br />"+begin+" - "+end);
+				Code.setContent(col, Code.escapeHTML( this._positions[i]["name"] )+"<br />"+Code.escapeHTML( begin+" - "+end ));
 				Code.addClass(col,"calendarWeekColPosition");
 			}else{
 				Code.setContent(col, "");
@@ -220,8 +220,8 @@ PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,un
 			Code.addClass(d,"calendarWeekShiftDivPending");
 		}
 	}
-	Code.setProperty(d,this.PROPERTY_SHIFT_ID,""+sid);
-	Code.setContent(d, "<u>"+uname+"</u>");//+"<br/>"+" "+begin+" - "+end+"");
+	Code.setProperty(d,this.PROPERTY_SHIFT_ID,""+Code.escapeHTML( sid+"" ));
+	Code.setContent(d, "<u>"+Code.escapeHTML( uname )+"</u>");//+"<br/>"+" "+begin+" - "+end+"");
 	return d;
 }
 PageCalendarWeek.prototype.kill = function(){

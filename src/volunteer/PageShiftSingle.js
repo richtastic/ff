@@ -176,11 +176,11 @@ PageShiftSingle.prototype._showAdminInfo = function(){
 }
 // ------------------------------------------------------------------------------ 
 PageShiftSingle.prototype._setShift = function(name, time, date, user, alg){
-	Code.setContent(this._shiftName,""+name);
-	Code.setContent(this._shiftDate,""+time);
-	Code.setContent(this._shiftTime,""+date);
-	Code.setContent(this._shiftUser,""+user);
-	Code.setContent(this._shiftAlgorithm,""+alg);
+	Code.setContent(this._shiftName,Code.escapeHTML( ""+name ));
+	Code.setContent(this._shiftDate,Code.escapeHTML( ""+time ));
+	Code.setContent(this._shiftTime,Code.escapeHTML( ""+date ));
+	Code.setContent(this._shiftUser,Code.escapeHTML( ""+user ));
+	Code.setContent(this._shiftAlgorithm,Code.escapeHTML( ""+alg ));
 }
 PageShiftSingle.prototype._getSelectedUserID = function(){
 	var userid = this._shiftUserList.value;
@@ -230,7 +230,7 @@ PageShiftSingle.prototype._getUsersListInfoSuccess = function(o){
 				opt = Code.newOption("","",true);
 			}else{
 				user = list[i];
-				opt = Code.newOption(user.username+"",user.id);
+				opt = Code.newOption(Code.escapeHTML( user.username+"" ),user.id);
 			}
 			Code.addChild(this._shiftUserList,opt);
 		}

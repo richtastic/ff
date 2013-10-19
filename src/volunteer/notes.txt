@@ -310,94 +310,12 @@ insert into users (username, password, email, first_name, last_name, phone, addr
 
 
 
-
-REQUEST:
-1) CREATE REQUEST
-	- requestee & shift
-2) FULFILL REQUEST
-	- requester
-3) APPROVE REQUEST
-	- admin
-A) DELETE REQUEST
-	- admin 
-
-
-
-select id,created,parent_id,created_user_id,modified_user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
-select id,created,parent_id,created_user_id,modified_user_id,position_id,time_begin,time_end from shifts where time_begin between "2013-07-10" and "2013-07-15" and parent_id!=0;
-
-
-
-
-
-select * from users where modified >'2013-09-03';
-
-SELECT * FROM players WHERE DATE(us_reg_date) BETWEEN '2000-07-05' AND '2011-11-10'
-
-SELECT * FROM players WHERE us_reg_date >= '2000-07-05' AND us_reg_date < '2011-11-10' + interval 1 day
-
-select * from players where  us_reg_date between '2000-07-05' and DATE_ADD('2011-11-10',INTERVAL 1 DAY)
-
-
-TODO-----------
-send email
-large calendar
-mini calendar
-vertical calendar
-viewing pages
-editing/updating pages
-deleting
-login screen
-
-
-
-NEW TODO-----------
-*) allow non-login viewing = rearrange index.php code
-*) replace all display data with Code.escapeHTML() && encode/decode;
-*) day view
-*) month view
-*) statistics page
-*) logging date (log in/out | updates | etc ...)
-
-*) 
-remove all console.log() and replace errors with alert()s
-
-
-
-
-
 NEWEST TODO-----------
-x) no 'Day'
-x) ignore assignment conflicts and old-date-swaps (empty)
-x) unite/consolidate shifts & positions
-x) no dates inside calendars - clean up - shifts are on left
-x) swap columns "Requested By", "Filled By", "Approved By", remove "owner"
-x) add reason to shift swap
-x) adjusted timezone times
-x) swap ordering: closest in future coming up - shift.begin_time
-x) users only see open shifts in SWAP LIST
-x) add user column: recieve notifivations of swaps
-x) send emails on:
-	x) swap made
-	x) swap filled
-	x) swap approved
-	- send user email on
-		x user created
-		x password changed
-		x username changed
-		x email changed
-	- EMAIL THREADING
-	ignore_user_abort(true); 
-	set_time_limit(0);
-
 x) no visuals unless logged in
-x) LEGEND FOR SHIFT COLORS
-x) check on deleting shifts still works
 x) after makign a shift, week now resets to date
 x) SHIFT CREATOR DOES NOT SHOW UP IN IE UNLESS PAGE IS RELOADED
 x) SHIFT LIST HAS DUPLICATE ENTRIES ON IE LOAD
 x) no data on server side either
-*) logging into database logging table
 *) encode/decode all data in url
 	x client: send request
 		- encode variables (+/-\ invalid URL chars)
@@ -409,7 +327,7 @@ x) no data on server side either
 	client: recieve request
 		- create json
 		- clean data for HTML display (<>/\)
-
+*) logging into database logging table
 
 http://www.cs.wcupa.edu/~rkline/php/sessions.html
 http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_Functions
@@ -419,17 +337,4 @@ http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_
 
 TODO:
 PROBABLY EMAIL "CRON" JOB & LAUNCHER
-DATA TRANSFER
-	ENCODE/DECODE ALL DATA(TO SERVER)
-	DOUBLEQUOTE-ESCAPING(TO CLIENT)
-DATA DISPLAY
-	SAFE HTML ON CLIENT (GET)
-CHECK OPERABILITY IN IE
 
-
-
-
-// select groups.name, users.username, users.id   from users   inner join groups   on   users.group_id=groups.id;
-
-
-select id,created,modified,shift_id,request_created_user_id,modified_user_id,fulfill_created_user_id,modified_user_id,approved_created_user_id,modified_user_id,info,status   from requests   order by approved_user_id asc, created desc;

@@ -38,10 +38,10 @@ PageShiftsList.prototype._updateRows = function(list){
 			Code.setContent(col,""+(i+1));
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
-			Code.setContent(col,list[i].name);
+			Code.setContent(col,Code.escapeHTML( list[i].name ));
 		col = Code.addCell(row);
 			Code.addClass(col, colClass);
-			div = Code.newDiv( list[i].username+"<br />"+Code.getShortDateDescriptiveString(Code.dateFromString(list[i].created)) );
+			div = Code.newDiv( Code.escapeHTML( list[i].username )+"<br />"+Code.getShortDateDescriptiveString(Code.dateFromString(list[i].created)) );
 				Code.addClass(div, "shiftListDivDate");
 				Code.addChild(col,div);
 		col = Code.addCell(row);

@@ -730,17 +730,8 @@ Code.phoneAsNumbersToHuman = function(phone){
 	return phone.substring(0,lm1-9)+"-"+phone.substring(lm1-9,lm1-6)+"-"+phone.substring(lm1-6,lm1-3)+"-"+phone.substring(lm1-3,len);
 }
 
-
-
-
-/*
-function.call(this, a, b, c);
-function.apply(this,arg);
-*/
-
-
 Code.escapeHTML = function(str){
-	return str
+	return (str+"")
          .replace(/&/g, "&amp;")
          .replace(/</g, "&lt;")
          .replace(/>/g, "&gt;")
@@ -748,11 +739,16 @@ Code.escapeHTML = function(str){
          .replace(/'/g, "&#039;");
 }
 
-
 // ENCODE URL STRING SAFE FOR SENDING:
 // encodeURIComponent(str)
 // encodeURI(str)
 // escape(str)
+
+
+/*
+function.call(this, a, b, c);
+function.apply(this,arg);
+*/
 
 
 

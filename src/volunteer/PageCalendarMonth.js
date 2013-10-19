@@ -99,7 +99,7 @@ PageCalendarMonth.prototype.addShift = function(dom, title, time, sid, uid, req,
 		title = title.substr(0,3);
 	}
 	var div = Code.newDiv();
-	Code.setContent(div,title);//+"<br />"+time);
+	Code.setContent(div,Code.escapeHTML( title ) );
 	this._table.addItem(dom,div);
 	Code.addClass(div,"pageMonthShiftContainer");
 	if(uid>0){
@@ -113,7 +113,7 @@ PageCalendarMonth.prototype.addShift = function(dom, title, time, sid, uid, req,
 	}else{
 		Code.addClass(div,"pageMonthShiftTypeEmpty");
 	}
-	Code.setProperty(div,this.PROPERTY_SHIFT_ID,sid);
+	Code.setProperty(div,this.PROPERTY_SHIFT_ID,Code.escapeHTML( sid+"" ));
 	Code.addListenerClick(div,this._handleShiftClickFxn,this);
 }
 PageCalendarMonth.prototype._handleShiftClickFxn = function(e){
