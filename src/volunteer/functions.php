@@ -346,13 +346,16 @@ function getHumanTimeOfDayFromDate($seconds){
 	return date("g:i A",$seconds); // 11:26 PM
 }
 
+function encodeJSONString($str){
+	//return json_encode($str);
+	return str_replace('"','\"',$str);
+}
 function decodeString($str){
 	//return urldecode($str);
-	return rawurldecode($str);
+	return rawurldecode($str."");
 }
 
 function decode_real_escape_string($str){
-	//return rawurldecode($str);
 	return mysql_real_escape_string( decodeString($str) );
 }
 

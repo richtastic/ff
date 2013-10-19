@@ -1,13 +1,8 @@
 // ServerVolunteerInterface.js
-ServerVolunteerInterface.EVENT_LOGGED_IN = "LOG_IN";
-ServerVolunteerInterface.EVENT_LOGGED_OUT = "LOG_OUT";
-
-// -------------------------------------------------------------------------------------------------------------------------- constructor
 function ServerVolunteerInterface(c){
 	//ServerVolunteerInterface._.constructor.apply(this,arguments);
-	
 }
-//Code.inheritClass(ServerVolunteerInterface, PageWeb);
+// -------------------------------------------------------------------------------------------------------------------------- constructor
 ServerVolunteerInterface.prototype.QUERY_DIRECTORY = "./";
 ServerVolunteerInterface.prototype.ACTION_LOGIN = "login";
 ServerVolunteerInterface.prototype.COOKIE_TIME_SECONDS = 60*60*24*365;
@@ -15,7 +10,7 @@ ServerVolunteerInterface.prototype.SESSION_ID = "sid";
 ServerVolunteerInterface.prototype.GROUP_NAME = "gname";
 ServerVolunteerInterface.prototype.COOKIE_SESSION = "c_s_i";
 ServerVolunteerInterface.prototype.COOKIE_GROUP_NAME = "c_g_n";
-//
+
 ServerVolunteerInterface.prototype.ACTION_POSITION_GET = "position_read";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_CREATE = "position_single_create";
 ServerVolunteerInterface.prototype.ACTION_POSITION_SINGLE_READ = "position_single_read";
@@ -97,7 +92,6 @@ ServerVolunteerInterface.prototype.ACTION_GROUP_GET = "group";
 ServerVolunteerInterface.prototype.GROUP_ADMIN = "admin";
 ServerVolunteerInterface.prototype.GROUP_USER = "user";
 
-//
 // -------------------------------------------------------------------------------------------------------------------------- HELPERS
 ServerVolunteerInterface.prototype._addCallback = function(a,ctx,call){
 	a._ctx=ctx; a._call=call;
@@ -110,7 +104,7 @@ ServerVolunteerInterface.prototype._checkCallback = function(a,o){
 	}
 }
 ServerVolunteerInterface.prototype.appendSessionInfo = function(o){
-	o[ServerVolunteerInterface.prototype.SESSION_ID] = Code.getCookie(this.COOKIE_SESSION);
+	o[ServerVolunteerInterface.prototype.SESSION_ID] = this.encodeString( Code.getCookie(this.COOKIE_SESSION) );
 	return o;
 }
 // -------------------------------------------------------------------------------------------------------------------------- LOGIN
@@ -154,7 +148,7 @@ ServerVolunteerInterface.prototype.submitLogin = function(user,pass, ctx,call){
 	pass = hex_sha512( pass );
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_LOGIN;
-	var params = {u:this.encodeString(user),p:this.encodeString(pass)};
+	var params = {u:this.encodeString( user ),p:this.encodeString( pass )};
 	a.postParams(url,params,this,this.onAjaxLogin,this.onAjaxLogin);
 }
 ServerVolunteerInterface.prototype.onAjaxLogin = function(e,a){
@@ -196,7 +190,7 @@ ServerVolunteerInterface.prototype.getCurrentUserInfo = function(ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_CURRENT;
+	params[this.ACTION_USER_TYPE] = this.encodeString( this.ACTION_USER_TYPE_CURRENT );
 	a.postParams(url,params,this,this.onAjaxGetCurrentUserInfo,this.onAjaxGetCurrentUserInfo);
 }
 ServerVolunteerInterface.prototype.onAjaxGetCurrentUserInfo = function(e,a){
@@ -207,8 +201,8 @@ ServerVolunteerInterface.prototype.getUserInfo = function(uid,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_SINGLE;
-	params[this.ACTION_USER_USER_ID] = uid;
+	params[this.ACTION_USER_TYPE] = this.encodeString( this.ACTION_USER_TYPE_SINGLE );
+	params[this.ACTION_USER_USER_ID] = this.encodeString( uid );
 	a.postParams(url,params,this,this.onAjaxGetUserInfo,this.onAjaxGetUserInfo);
 }
 ServerVolunteerInterface.prototype.onAjaxGetUserInfo = function(e,a){
@@ -219,9 +213,9 @@ ServerVolunteerInterface.prototype.getUsers = function(page,perpage,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_GET;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_USER_TYPE] = this.ACTION_USER_TYPE_LIST;
-	params[this.ACTION_USER_PAGE] = page;
-	params[this.ACTION_USER_COUNT] = perpage;
+	params[this.ACTION_USER_TYPE] = this.encodeString( this.ACTION_USER_TYPE_LIST );
+	params[this.ACTION_USER_PAGE] = this.encodeString( page );
+	params[this.ACTION_USER_COUNT] = this.encodeString( perpage );
 	a.postParams(url,params,this,this.onAjaxGetUsers,this.onAjaxGetUsers);
 }
 ServerVolunteerInterface.prototype.onAjaxGetUsers = function(e,a){
@@ -246,23 +240,22 @@ ServerVolunteerInterface.prototype.createUser = function(username,firstname,last
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_CREATE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_USER_USERNAME] = this.encodeString(username);
-	params[this.ACTION_USER_FIRST_NAME] = this.encodeString(firstname);
-	params[this.ACTION_USER_LAST_NAME] = this.encodeString(lastname);
-	params[this.ACTION_USER_EMAIL] = this.encodeString(email);
-	params[this.ACTION_USER_PHONE] = this.encodeString(phone);
-	params[this.ACTION_USER_ADDRESS] = this.encodeString(address);
-	params[this.ACTION_USER_CITY] = this.encodeString(city);
-	params[this.ACTION_USER_STATE] = this.encodeString(state);
-	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
-	params[this.ACTION_USER_GROUP_ID] = this.encodeString(group);
+	params[this.ACTION_USER_USERNAME] = this.encodeString( username );
+	params[this.ACTION_USER_FIRST_NAME] = this.encodeString( firstname );
+	params[this.ACTION_USER_LAST_NAME] = this.encodeString( lastname );
+	params[this.ACTION_USER_EMAIL] = this.encodeString( email );
+	params[this.ACTION_USER_PHONE] = this.encodeString( phone );
+	params[this.ACTION_USER_ADDRESS] = this.encodeString( address );
+	params[this.ACTION_USER_CITY] = this.encodeString( city );
+	params[this.ACTION_USER_STATE] = this.encodeString( state );
+	params[this.ACTION_USER_ZIP] = this.encodeString( zip );
+	params[this.ACTION_USER_GROUP_ID] = this.encodeString( group );
 	params[this.ACTION_USER_PREF_EMAIL_UPDATES] = this.encodeString( Code.booleanToString(emailupdates) );
 	params[this.ACTION_USER_PREF_EMAIL_SHIFT_SELF] = this.encodeString( Code.booleanToString(emailself) );
 	params[this.ACTION_USER_PREF_EMAIL_SHIFT_OTHER] = this.encodeString( Code.booleanToString(emailother) );
-	//params[this.ACTION_USER_PREF_EMAIL_SCHEDULE] = this.encodeString(emailsched); // not currently used
-	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
-	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString(newPW);
-	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString(conPW);
+	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString( adminPW );
+	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString( newPW );
+	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString( conPW );
 	a.postParams(url,params,this,this.onAjaxCreateUser,this.onAjaxCreateUser);
 }
 ServerVolunteerInterface.prototype.onAjaxCreateUser = function(e,a){
@@ -276,24 +269,23 @@ ServerVolunteerInterface.prototype.updateUser = function(uid,username,firstname,
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_UPDATE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_USER_USER_ID] = this.encodeString(uid);
-	params[this.ACTION_USER_USERNAME] = this.encodeString(username);
-	params[this.ACTION_USER_FIRST_NAME] = this.encodeString(firstname);
-	params[this.ACTION_USER_LAST_NAME] = this.encodeString(lastname);
-	params[this.ACTION_USER_EMAIL] = this.encodeString(email);
-	params[this.ACTION_USER_PHONE] = this.encodeString(phone);
-	params[this.ACTION_USER_ADDRESS] = this.encodeString(address);
-	params[this.ACTION_USER_CITY] = this.encodeString(city);
-	params[this.ACTION_USER_STATE] = this.encodeString(state);
-	params[this.ACTION_USER_ZIP] = this.encodeString(zip);
-	params[this.ACTION_USER_GROUP_ID] = this.encodeString(group);
+	params[this.ACTION_USER_USER_ID] = this.encodeString( uid );
+	params[this.ACTION_USER_USERNAME] = this.encodeString( username );
+	params[this.ACTION_USER_FIRST_NAME] = this.encodeString( firstname );
+	params[this.ACTION_USER_LAST_NAME] = this.encodeString( lastname );
+	params[this.ACTION_USER_EMAIL] = this.encodeString( email );
+	params[this.ACTION_USER_PHONE] = this.encodeString( phone );
+	params[this.ACTION_USER_ADDRESS] = this.encodeString( address );
+	params[this.ACTION_USER_CITY] = this.encodeString( city );
+	params[this.ACTION_USER_STATE] = this.encodeString( state );
+	params[this.ACTION_USER_ZIP] = this.encodeString( zip );
+	params[this.ACTION_USER_GROUP_ID] = this.encodeString( group );
 	params[this.ACTION_USER_PREF_EMAIL_UPDATES] = this.encodeString( Code.booleanToString(emailupdates) );
 	params[this.ACTION_USER_PREF_EMAIL_SHIFT_SELF] = this.encodeString( Code.booleanToString(emailself) );
 	params[this.ACTION_USER_PREF_EMAIL_SHIFT_OTHER] = this.encodeString( Code.booleanToString(emailother) );
-	//params[this.ACTION_USER_PREF_EMAIL_SCHEDULE] = this.encodeString(emailsched); // not currently used
-	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
-	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString(newPW);
-	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString(conPW);
+	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString( adminPW );
+	params[this.ACTION_USER_NEW_PASSWORD] = this.encodeString( newPW );
+	params[this.ACTION_USER_CONFIRM_PASSWORD] = this.encodeString( conPW );
 	a.postParams(url,params,this,this.onAjaxUpdateUser,this.onAjaxUpdateUser);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateUser = function(e,a){
@@ -305,8 +297,8 @@ ServerVolunteerInterface.prototype.deleteUser = function(uid,adminPW,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_USER_DELETE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_USER_USER_ID] = this.encodeString(uid);
-	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString(adminPW);
+	params[this.ACTION_USER_USER_ID] = this.encodeString( uid );
+	params[this.ACTION_USER_ADMIN_PASSWORD] = this.encodeString( adminPW );
 	a.postParams(url,params,this,this.onAjaxDeleteUser,this.onAjaxDeleteUser);
 }
 ServerVolunteerInterface.prototype.onAjaxDeleteUser = function(e,a){
@@ -318,10 +310,10 @@ ServerVolunteerInterface.prototype.submitShiftCreate = function(start,end,repeat
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_CREATE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_CREATE_START_DATE] = this.encodeString(start);
-	params[this.ACTION_SHIFT_CREATE_END_DATE] = this.encodeString(end);
-	params[this.ACTION_SHIFT_CREATE_REPEAT] = this.encodeString(repeat);
-	params[this.ACTION_SHIFT_CREATE_NAME] = this.encodeString(name)
+	params[this.ACTION_SHIFT_CREATE_START_DATE] = this.encodeString( start );
+	params[this.ACTION_SHIFT_CREATE_END_DATE] = this.encodeString( end );
+	params[this.ACTION_SHIFT_CREATE_REPEAT] = this.encodeString( repeat );
+	params[this.ACTION_SHIFT_CREATE_NAME] = this.encodeString( name );
 	a.postParams(url,params,this,this.onAjaxShiftCreate,this.onAjaxShiftCreate);
 }
 ServerVolunteerInterface.prototype.onAjaxShiftCreate = function(e,a){
@@ -332,9 +324,9 @@ ServerVolunteerInterface.prototype.getShiftDay = function(year,month,day,self, c
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_DAY;
-	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,day);
-	params[this.ACTION_CALENDAR_OPTION] = self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE;
+	params[this.ACTION_CALENDAR_TYPE] = this.encodeString( this.ACTION_CALENDAR_TYPE_DAY );
+	params[this.ACTION_CALENDAR_DATE] = this.encodeString( Code.formatDayString(year,month,day) );
+	params[this.ACTION_CALENDAR_OPTION] = this.encodeString( self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE );
 	a.postParams(url,params,this,this.onAjaxGetShiftDay,this.onAjaxGetShiftDay);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftDay = function(e,a){
@@ -345,9 +337,9 @@ ServerVolunteerInterface.prototype.getShiftWeek = function(year,month,day,self, 
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_WEEK;
-	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,day);
-	params[this.ACTION_CALENDAR_OPTION] = self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE;
+	params[this.ACTION_CALENDAR_TYPE] = this.encodeString( this.ACTION_CALENDAR_TYPE_WEEK );
+	params[this.ACTION_CALENDAR_DATE] = this.encodeString( Code.formatDayString(year,month,day) );
+	params[this.ACTION_CALENDAR_OPTION] = this.encodeString( self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE );
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftWeek = function(e,a){
@@ -359,9 +351,9 @@ ServerVolunteerInterface.prototype.getShiftMonth = function(year,month,self, ctx
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_CALENDAR;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_CALENDAR_TYPE] = this.ACTION_CALENDAR_TYPE_MONTH;
-	params[this.ACTION_CALENDAR_DATE] = Code.formatDayString(year,month,1);
-	params[this.ACTION_CALENDAR_OPTION] = self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE;
+	params[this.ACTION_CALENDAR_TYPE] = this.encodeString( this.ACTION_CALENDAR_TYPE_MONTH );
+	params[this.ACTION_CALENDAR_DATE] = this.encodeString( Code.formatDayString(year,month,1) );
+	params[this.ACTION_CALENDAR_OPTION] = this.encodeString( self?this.ACTION_CALENDAR_OPTION_SELF:this.ACTION_CALENDAR_OPTION_NONE );
 	a.postParams(url,params,this,this.onAjaxGetShiftMonth,this.onAjaxGetShiftMonth);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftMonth = function(e,a){
@@ -373,7 +365,7 @@ ServerVolunteerInterface.prototype.getShiftInfo = function(shift_id, ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_INFO;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_INFO_ID] = parseInt(shift_id,10);
+	params[this.ACTION_SHIFT_INFO_ID] = this.encodeString( parseInt(shift_id,10) );
 	a.postParams(url,params,this,this.onAjaxGetShiftWeek,this.onAjaxGetShiftWeek);
 }
 ServerVolunteerInterface.prototype.onAjaxGetShiftInfo = function(e,a){
@@ -396,8 +388,8 @@ ServerVolunteerInterface.prototype.applyUserToSingleShift = function(user_id,shi
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_UPDATE_USER_SINGLE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
-	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
+	params[this.ACTION_SHIFT_UPDATE_USER_ID] = this.encodeString( user_id );
+	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = this.encodeString( shift_id );
 	a.postParams(url,params,this,this.onAjaxApplyUserToSingleShift,this.onAjaxApplyUserToSingleShift);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToSingleShift = function(e,a){
@@ -408,8 +400,8 @@ ServerVolunteerInterface.prototype.applyUserToEmptyShifts = function(user_id,shi
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_UPDATE_USER_EMPTY;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
-	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
+	params[this.ACTION_SHIFT_UPDATE_USER_ID] = this.encodeString( user_id );
+	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = this.encodeString( shift_id );
 	a.postParams(url,params,this,this.applyUserToEmptyShifts,this.applyUserToEmptyShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToEmptyShifts = function(e,a){
@@ -420,8 +412,8 @@ ServerVolunteerInterface.prototype.applyUserToAllShifts = function(user_id,shift
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_UPDATE_USER_ALL;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
-	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
+	params[this.ACTION_SHIFT_UPDATE_USER_ID] = this.encodeString( user_id );
+	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = this.encodeString( shift_id );
 	a.postParams(url,params,this,this.onAjaxApplyUserToAllShifts,this.onAjaxApplyUserToAllShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToAllShifts = function(e,a){
@@ -432,8 +424,8 @@ ServerVolunteerInterface.prototype.applyUserToFutureShifts = function(user_id,sh
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_UPDATE_USER_FUTURE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_UPDATE_USER_ID] = user_id;
-	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = shift_id;
+	params[this.ACTION_SHIFT_UPDATE_USER_ID] = this.encodeString( user_id );
+	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = this.encodeString( shift_id );
 	a.postParams(url,params,this,this.onAjaxApplyUserToFutureShifts,this.onAjaxApplyUserToFutureShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToFutureShifts = function(e,a){
@@ -444,7 +436,7 @@ ServerVolunteerInterface.prototype.deleteShift = function(shift_id,ctx,call){
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_SHIFT_DELETE_SHIFT;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_SHIFT_DELETE_SHIFT_ID] = shift_id;
+	params[this.ACTION_SHIFT_DELETE_SHIFT_ID] = this.encodeString( shift_id );
 	a.postParams(url,params,this,this.onAjaxDeleteShift,this.onAjaxDeleteShift);
 }
 ServerVolunteerInterface.prototype.onAjaxDeleteShift = function(e,a){
@@ -456,8 +448,8 @@ ServerVolunteerInterface.prototype.getRequests = function(page,perpage,ctx,call)
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_GET;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_PAGE] = page;
-	params[this.ACTION_REQUEST_COUNT] = perpage;
+	params[this.ACTION_REQUEST_PAGE] = this.encodeString( page );
+	params[this.ACTION_REQUEST_COUNT] = this.encodeString( perpage );
 	a.postParams(url,params,this,this.onAjaxGetRequests,this.onAjaxGetRequests);
 }
 ServerVolunteerInterface.prototype.onAjaxGetRequests = function(e,a){
@@ -468,8 +460,8 @@ ServerVolunteerInterface.prototype.createShiftRequest = function(user_id,shift_i
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_CREATE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_SHIFT_ID] = shift_id;
-	params[this.ACTION_REQUEST_REASON] = reason;
+	params[this.ACTION_REQUEST_SHIFT_ID] = this.encodeString( shift_id );
+	params[this.ACTION_REQUEST_REASON] = this.encodeString( reason );
 	a.postParams(url,params,this,this.onAjaxCreateShiftRequest,this.onAjaxCreateShiftRequest);
 }
 ServerVolunteerInterface.prototype.onAjaxCreateShiftRequest = function(e,a){
@@ -480,7 +472,7 @@ ServerVolunteerInterface.prototype.updateShiftRequestAnswer = function(user_id,r
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_UPDATE_ANSWER;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_REQUEST_ID] = request_id;
+	params[this.ACTION_REQUEST_REQUEST_ID] = this.encodeString( request_id );
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestAnswer,this.onAjaxUpdateShiftRequestAnswer);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestAnswer = function(e,a){
@@ -491,8 +483,8 @@ ServerVolunteerInterface.prototype.updateShiftRequestDecideNo = function(request
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_UPDATE_DECIDE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_REQUEST_ID] = request_id;
-	params[this.ACTION_REQUEST_TYPE] = this.ACTION_REQUEST_NO;
+	params[this.ACTION_REQUEST_REQUEST_ID] = this.encodeString( request_id );
+	params[this.ACTION_REQUEST_TYPE] = this.encodeString( this.ACTION_REQUEST_NO );
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestDecideNo,this.onAjaxUpdateShiftRequestDecideNo);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideNo = function(e,a){
@@ -503,8 +495,8 @@ ServerVolunteerInterface.prototype.updateShiftRequestDecideYes = function(reques
 	var a = new Ajax(); this._addCallback(a,ctx,call);
 	var url = this.QUERY_DIRECTORY+"?a="+this.ACTION_REQUEST_UPDATE_DECIDE;
 	var params = this.appendSessionInfo({});
-	params[this.ACTION_REQUEST_REQUEST_ID] = request_id;
-	params[this.ACTION_REQUEST_TYPE] = this.ACTION_REQUEST_YES;
+	params[this.ACTION_REQUEST_REQUEST_ID] = this.encodeString( request_id );
+	params[this.ACTION_REQUEST_TYPE] = this.encodeString( this.ACTION_REQUEST_YES );
 	a.postParams(url,params,this,this.onAjaxUpdateShiftRequestDecideYes,this.onAjaxUpdateShiftRequestDecideYes);
 }
 ServerVolunteerInterface.prototype.onAjaxUpdateShiftRequestDecideYes = function(e,a){

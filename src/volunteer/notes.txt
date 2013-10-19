@@ -394,12 +394,21 @@ x) no visuals unless logged in
 x) LEGEND FOR SHIFT COLORS
 x) check on deleting shifts still works
 x) after makign a shift, week now resets to date
-
-*) SHIFT CREATOR DOES NOT SHOW UP IN IE UNLESS PAGE IS RELOADED
-*) SHIFT LIST HAS DUPLICATE ENTRIES ON IE LOAD
-*) encode/decode all data in url
-*) no data on server side either
+x) SHIFT CREATOR DOES NOT SHOW UP IN IE UNLESS PAGE IS RELOADED
+x) SHIFT LIST HAS DUPLICATE ENTRIES ON IE LOAD
+x) no data on server side either
 *) logging into database logging table
+*) encode/decode all data in url
+	x client: send request
+		- encode variables (+/-\ invalid URL chars)
+	x server: receive request
+		- decode variables
+		- assume tanted - escape data
+	x server: perform url query
+		- clean variables for json (")
+	client: recieve request
+		- create json
+		- clean data for HTML display (<>/\)
 
 
 http://www.cs.wcupa.edu/~rkline/php/sessions.html

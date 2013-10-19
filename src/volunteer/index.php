@@ -1,7 +1,7 @@
 <?php
+// index.php
 //error_reporting(E_WARNING);
 error_reporting(E_ERROR); // mysql warnings
-// index.php
 require "functions.php";
 
 // 22:30 -> 01:30 = ahead by 3 hours 
@@ -95,7 +95,7 @@ if($ARGUMENT_GET_ACTION!=null){
 	//
 	$ACTION_VALUE_USER_ID = null;
 	$ACTION_VALUE_IS_ADMIN = false;
-	$ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
+	$ACTION_VALUE_SESSION_ID = decode_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
 	if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
 		//
 	}else{
@@ -122,7 +122,7 @@ if($ARGUMENT_GET_ACTION!=null){
 		}
 	}
 // PUBLIC -------------------------------------------------------------------
-	if($ARGUMENT_GET_ACTION==$ACTION_TYPE_LOGIN){ // EVERYONE - // echo hash('sha512','qwerty')."\n"; = 0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8
+	if($ARGUMENT_GET_ACTION==$ACTION_TYPE_LOGIN){ // echo hash('sha512','qwerty')."\n"; = 0DD3E512642C97CA3F747F9A76E374FBDA73F9292823C0313BE9D78ADD7CDD8F72235AF0C553DD26797E78E1854EDEE0AE002F8ABA074B066DFCE1AF114E32F8
 		$username = decode_real_escape_string($_POST['u']);
 		$password = decode_real_escape_string($_POST['p']);
 		$password = strtoupper($password);
@@ -148,7 +148,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					if(mysql_errno()){
 						echo '{ "status":"error", "message":"session fail" }';
 					}else{
-						echo '{ "status":"success", "session_id":"'.$session_id.'", "group_name":"'.$group_name.'" }';
+						echo '{ "status":"success", "session_id":"'.encodeJSONString($session_id).'", "group_name":"'.encodeJSONString($group_name).'" }';
 						logEventDB($connection, $user_id, $LOG_TYPE_LOGIN, decode_real_escape_string($username."|".$ip_forward."|".$ip_remote) );
 					}
 				}else{
@@ -161,10 +161,10 @@ if($ARGUMENT_GET_ACTION!=null){
 			}
 			mysql_free_result($result);
 		}else{
-			echo '{ "status": "error", "message": "invalid user '.mysql_real_escape_string($query).' " }';
+			echo '{ "status": "error", "message": "invalid user" }';
 		}
 	}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SESSION_CHECK){
-			$session_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
+			$session_id = decode_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
 			$query = 'select session_id from sessions where session_id="'.$session_id.'" limit 1;';
 			$result = mysql_query($query, $connection);
 			if($result && mysql_num_rows($result)==1){
@@ -179,12 +179,12 @@ if($ARGUMENT_GET_ACTION!=null){
 		if($result){
 			$total_results = mysql_num_rows($result);
 			$i = 0;
-			echo '{ "status": "success", "message": "groups", "total": '.$total_results.', "list" : ['."\n";
+			echo '{ "status": "success", "message": "groups", "total":"'.encodeJSONString($total_results).'", "list" : ['."\n";
 			while($row = mysql_fetch_assoc($result)){
 				$id = $row["id"];
 				$name = $row["name"];
 				$info = $row["info"];
-				echo '{ "id": "'.$id.'", "name": "'.$name.'", "info": "'.$info.'" }';
+				echo '{ "id": "'.$id.'", "name": "'.encodeJSONString($name).'", "info": "'.encodeJSONString($info).'" }';
 				if($i<($total_results-1)){ echo ','; }
 				echo "\n";
 				++$i;
@@ -196,36 +196,6 @@ if($ARGUMENT_GET_ACTION!=null){
 		}
 // PRIVATE -------------------------------------------------------------------
 	}else{ // MUST BE LOGGED IN
-		// $ACTION_VALUE_USER_ID = null;
-		// $ACTION_VALUE_IS_ADMIN = false;
-		// $ACTION_VALUE_SESSION_ID = mysql_real_escape_string($_POST[$ACTION_TYPE_SESSION_ID]);
-		// if($ACTION_VALUE_SESSION_ID==null || $ACTION_VALUE_SESSION_ID==""){
-		// 	echo '{ "status": "error", "message": "no session info" }';
-		// 	return;
-		// }else{
-		// 	$query = 'select session_id,user_id from sessions where session_id="'.$ACTION_VALUE_SESSION_ID.'" limit 1;';
-		// 	$result = mysql_query($query, $connection);
-		// 	if($result && mysql_num_rows($result)==1){
-		// 		$row = mysql_fetch_assoc($result);
-		// 		$user_id = $row["user_id"];
-		// 		mysql_free_result($result);
-		// 		$ACTION_VALUE_USER_ID = intval($user_id); // valid session
-		// 		mysql_free_result($result);
-		// 		$query = 'select name from groups where id=(select group_id from users where id="'.$ACTION_VALUE_USER_ID.'");';
-		// 		$result = mysql_query($query, $connection);
-		// 		if($result && mysql_num_rows($result)==1){
-		// 			$row = mysql_fetch_assoc($result);
-		// 			$group_name = $row["name"];
-		// 			$ACTION_VALUE_IS_ADMIN = $group_name=="admin";
-		// 			mysql_free_result($result);
-		// 		}else{
-		// 			echo '{ "status": "error", "message": "invalid group" }';
-		// 		}
-		// 	}else{
-		// 		echo '{ "status": "error", "message": "invalid session" }';
-		// 		return;
-		// 	}
-		// }
 		if($ACTION_VALUE_USER_ID==null){
 			echo '{ "status": "error", "message": "invalid session" }';
 			return;
@@ -237,7 +207,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				if($result){
 					$total = mysql_num_rows($result);
 					$i = 0;
-					echo '{ "status": "success", "message": "list", "total":"'.$total.'", "list": ['."\n";
+					echo '{ "status": "success", "message": "list", "total":"'.encodeJSONString($total).'", "list": ['."\n";
 					while($row = mysql_fetch_assoc($result)){
 						$shift_id = $row["id"];
 						$created = $row["created"];
@@ -247,8 +217,9 @@ if($ARGUMENT_GET_ACTION!=null){
 						$time_end = $row["time_end"];
 						$algorithm = $row["algorithm"];
 						$shift_name = $row["name"];
-						echo '{ "id":"'.$shift_id.'", "created": "'.$created.'", "user_id": "'.$user_id.'", "username":"'.$username.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'", ';
-						echo ' "algorithm":"'.$algorithm.'", "name":"'.$shift_name.'", "created": "'.$created.'" }';
+						echo '{ "id":"'.encodeJSONString($shift_id).'", "created":"'.encodeJSONString($created).'", "user_id":"'.encodeJSONString($user_id).'",';
+						echo ' "username":"'.encodeJSONString($username).'", "time_begin":"'.encodeJSONString($time_begin).'", "time_end":"'.encodeJSONString($time_end).'",';
+						echo ' "algorithm":"'.encodeJSONString($algorithm).'", "name":"'.encodeJSONString($shift_name).'", "created":"'.encodeJSONString($created).'" }';
 						$i += 1;
 						if($i<$total){
 							echo ',';
@@ -260,7 +231,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "error", "message": "bad search" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_INFO){
-				$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_INFO_ID]);
+				$shift_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_INFO_ID]);
 				$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.name,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username from shifts  left outer join users on users.id=shifts.user_id  where shifts.id="'.$shift_id.'"  limit 1;';
 				$result = mysql_query($query, $connection);
 				if($result){
@@ -293,9 +264,10 @@ if($ARGUMENT_GET_ACTION!=null){
 							}
 							mysql_free_result($result);
 						}
-						echo '{ "status": "success", "message": "shift", "shift": {'."\n";
-						echo '"id": "'.$shift_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "created": "'.$created.'", "name": "'.$shift_name.'", ';
-						echo '"time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'", "algorithm": "'.$algorithm.'", "request_id": "'.$request_id.'", "request_filled": '.$request_filled.', "parent_id": "'.$parent_id.'", '."\n";
+						echo '{ "status":"success", "message":"shift", "shift": {'."\n";
+						echo '"id":"'.encodeJSONString($shift_id).'", "user_id":"'.encodeJSONString($user_id).'", "username":"'.encodeJSONString($username).'", "created":"'.encodeJSONString($created).'", ';
+						echo '"name":"'.encodeJSONString($shift_name).'", "time_begin":"'.encodeJSONString($time_begin).'", "time_end":"'.encodeJSONString($time_end).'", "algorithm":"'.encodeJSONString($algorithm).'", ';
+						echo '"request_id":"'.encodeJSONString($request_id).'","request_filled":"'.encodeJSONString($request_filled).'", "parent_id":"'.encodeJSONString($parent_id).'", '."\n";
 						if($parent_id!=0){ // next search - same query on parent
 							$shift_id = $parent_id;
 							$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.name,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username from shifts  left outer join users on users.id=shifts.user_id   where shifts.id="'.$shift_id.'"  limit 1;';
@@ -313,26 +285,28 @@ if($ARGUMENT_GET_ACTION!=null){
 								$algorithm = $row["algorithm"];
 								mysql_free_result($result);
 								echo '"parent": { ';
-								echo '"id": "'.$shift_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", "created": "'.$created.'", "name": "'.$shift_name.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'", "algorithm": "'.$algorithm.'", "parent_id": "'.$parent_id.'" '."\n";
+								echo '"id":"'.encodeJSONString($shift_id).'", "user_id":"'.encodeJSONString($user_id).'", "username":"'.encodeJSONString($username).'", "created":"'.encodeJSONString($created).'", ';
+								echo '"name":"'.encodeJSONString($shift_name).'", "time_begin":"'.encodeJSONString($time_begin).'", "time_end":"'.encodeJSONString($time_end).'", ';
+								echo '"algorithm":"'.encodeJSONString($algorithm).'", "parent_id":"'.encodeJSONString($parent_id).'" '."\n";
 								echo ' }'."\n";
 							}else{
-								echo '"parent": null '."\n";
+								echo '"parent":null '."\n";
 							}
 						}else{
-							echo '"parent": null '."\n";
+							echo '"parent":null '."\n";
 						}
 						echo '} }';
 					}else{
-						echo '{ "status": "error", "message": "unknown shift id" }';
+						echo '{ "status":"error", "message":"unknown shift id" }';
 					}
 					
 				}else{
-					echo '{ "status": "error", "message": "bad search" }';
+					echo '{ "status":"error", "message":"bad search" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_CALENDAR){
-				$calOption = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_OPTION]);
-				$calType = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
-				$calDate = mysql_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
+				$calOption = decode_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_OPTION]);
+				$calType = decode_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_TYPE]);
+				$calDate = decode_real_escape_string($_POST[$ACTION_TYPE_CALENDAR_DATE]);
 				$calTime = dateFromString($calDate);
 				$calTime = getDayStartFromSeconds($calTime);
 				$startDate = null; $endDate = null;
@@ -354,7 +328,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					$endDate = standardSQLDateFromSeconds( getDayEndFromSeconds($lastDayOfMonth) );
 					$message = "month";
 				}else{
-					echo '{ "status": "error", "message": "invalid type" }';
+					echo '{ "status":"error", "message":"invalid type" }';
 					return;
 				}
 				if($calOption==$ACTION_TYPE_CALENDAR_OPTION_SELF && $ACTION_VALUE_USER_ID>0){
@@ -364,12 +338,12 @@ if($ARGUMENT_GET_ACTION!=null){
 				}
 				$query = 'select shifts.id, parent_id, user_id, time_begin, time_end, name, username from shifts left outer join users on shifts.user_id=users.id'
 						.' where shifts.parent_id!=0 '.$calOption.' and shifts.time_begin between "'.$startDate.'" and "'.$endDate.'" order by shifts.time_begin asc';
-				echo '{ "status": "success", "message": "'.$message.'", ';
+				echo '{ "status": "success", "message": "'.encodeJSONString($message).'", ';
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total_results = mysql_num_rows($result);
 					$i = 0;
-					echo '"total": '.$total_results.', "list": ['."\n";
+					echo '"total":"'.encodeJSONString($total_results).'", "list": ['."\n";
 					while($row = mysql_fetch_assoc($result)){
 						$parent_id = $row["parent_id"];
 						$user_id = $row["user_id"];
@@ -394,18 +368,17 @@ if($ARGUMENT_GET_ACTION!=null){
 								}
 								mysql_free_result($subresult);
 							}
-						echo '{ "begin": "'.$begin.'", "end": "'.$end.'", "parent": "'.$parent_id.'", "user_id": "'.$user_id.'", "username": "'.$username.'", ';
-						echo ' "name": "'.$shift_name.'", "id" : "'.$shift_id.'", ';
-						echo ' "request_open_exists": "'.$request_open_exists.'", "fulfill_user_id": "'.$fulfill_user_id.'" }';
+						echo '{ "begin":"'.encodeJSONString($begin).'", "end":"'.encodeJSONString($end).'", "parent":"'.encodeJSONString($parent_id).'", "user_id":"'.encodeJSONString($user_id).'", ';
+						echo '"username": "'.$username.'", "name":"'.encodeJSONString($shift_name).'", "id":"'.encodeJSONString($shift_id).'", ';
+						echo '"request_open_exists":"'.encodeJSONString($request_open_exists).'", "fulfill_user_id":"'.encodeJSONString($fulfill_user_id).'" }';
 						if( $i<($total_results-1) ){ echo ','; }
 						echo "\n";
-						//echo $i." ".($total_results-1)." ".($i<($total_results-1))."\n";
 						++$i;
 					}
 					echo ']'."\n";
 					mysql_free_result($result);
 				}else{
-					echo '"total": 0, "list": []';
+					echo '"total":"0", "list":[]';
 				}
 				echo ' }';
 		}else 
@@ -416,11 +389,11 @@ if($ARGUMENT_GET_ACTION!=null){
 			if($result){
 				$total = mysql_num_rows($result);
 				$i = 0;
-				echo '{ "status": "success", "message": "users found", "total":"'.$total.'", "list": ['."\n";
+				echo '{ "status":"success", "message":"users found", "total":"'.encodeJSONString($total).'", "list": ['."\n";
 				while( $row = mysql_fetch_assoc($result) ){
 					$user_id = $row["id"];
 					$username = $row["username"];
-					echo '{ "id": "'.$user_id.'", "username": "'.$username.'" }';
+					echo '{ "id":"'.encodeJSONString($user_id).'", "username":"'.encodeJSONString($username).'" }';
 					if($count<$total-1){
 						echo ',';
 					}
@@ -430,15 +403,15 @@ if($ARGUMENT_GET_ACTION!=null){
 				echo '] }';
 				mysql_free_result($result);
 			}else{
-				echo '{ "status": "error", "message": "bad search" }';
+				echo '{ "status":"error", "message":"bad search" }';
 			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_GET){
-			$type = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_TYPE]);
+			$type = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_TYPE]);
 			if($type==$ACTION_TYPE_USER_GET_TYPE_CURRENT || $type==$ACTION_TYPE_USER_GET_TYPE_SINGLE){
 				$user_id = $ACTION_VALUE_USER_ID;
 				$message = "current";
 				if($type==$ACTION_TYPE_USER_GET_TYPE_SINGLE){
-					$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
+					$user_id = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_USER_ID]);
 					$message = "single";
 				}
 				$query = 'select users.id,users.group_id,users.created,users.modified,users.username,users.first_name,users.last_name,users.email,users.phone,users.address,users.city,users.state,users.zip,groups.name as group_name,'.
@@ -465,22 +438,23 @@ if($ARGUMENT_GET_ACTION!=null){
 					$pref_email_shift_other = boolean01ToString($row["preference_email_shift_other"]);
 					$pref_email_schedule = boolean01ToString($row["preference_email_schedule"]);
 					// boolean01ToString
-					echo '{"status": "success", "message": "'.$message.'", "user": '."\n".'{';
-					echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
-					echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
-					echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'", ';
-					echo '"preference_email_updates":"'.$pref_email_updates.'", "preference_email_shift_self":"'.$pref_email_shift_self.'", ';
-					echo '"preference_email_shift_other":"'.$pref_email_shift_other.'", "preference_email_schedule":"'.$pref_email_schedule.'" ';
+					echo '{"status":"success", "message":"'.encodeJSONString($message).'", "user": '."\n".'{';
+					echo '"id":"'.encodeJSONString($user_id).'", "group_id":"'.encodeJSONString($group_id).'", "group_name":"'.encodeJSONString($group_name).'", "created":"'.encodeJSONString($created).'", ';
+					echo '"modified":"'.encodeJSONString($modified).'", "username":"'.encodeJSONString($username).'", ';
+					echo '"first_name":"'.encodeJSONString($first_name).'","last_name":"'.encodeJSONString($last_name).'","email":"'.encodeJSONString($email).'","phone":"'.encodeJSONString($phone).'", ';
+					echo '"address":"'.encodeJSONString($address).'","city":"'.encodeJSONString($city).'","state":"'.encodeJSONString($state).'","zip":"'.encodeJSONString($zip).'", ';
+					echo '"preference_email_updates":"'.encodeJSONString($pref_email_updates).'", "preference_email_shift_self":"'.encodeJSONString($pref_email_shift_self).'", ';
+					echo '"preference_email_shift_other":"'.encodeJSONString($pref_email_shift_other).'", "preference_email_schedule":"'.encodeJSONString($pref_email_schedule).'" ';
 					echo '}'."\n".'}';
 					mysql_free_result($result);
 				}else{
-					echo '{ "status": "error", "message": "user not exist" }';
+					echo '{ "status":"error", "message":"user not exist" }';
 					return;
 				}
 			}else if($type==$ACTION_TYPE_USER_GET_TYPE_LIST){
-				$page = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
+				$page = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
 					$page = intval($page);
-				$count = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
+				$count = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
 					$count = intval($count);
 				$count = max(min($count,100),1);
 				$offset = max(0,$count*($page));
@@ -488,7 +462,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$result = mysql_query($query, $connection);
 				if($result){
 					$total = mysql_num_rows($result);
-					echo '{"status": "success", "message": "list", "page": '.$page.', "count":'.$count.', "total": '.$total.', "list": ['."\n";
+					echo '{"status":"success", "message":"list","page":"'.encodeJSONString($page).'", "count":"'.encodeJSONString($count).'", "total":"'.encodeJSONString($total).'", "list": ['."\n";
 					while( $row = mysql_fetch_assoc($result) ){
 						$user_id = $row["id"];
 						$group_id = $row["group_id"];
@@ -509,11 +483,12 @@ if($ARGUMENT_GET_ACTION!=null){
 						$pref_email_shift_other = boolean01ToString($row["preference_email_shift_other"]);
 						$pref_email_schedule = boolean01ToString($row["preference_email_schedule"]);
 						echo '{';
-						echo '"id":"'.$user_id.'", "group_id":"'.$group_id.'", "group_name":"'.$group_name.'", "created":"'.$created.'","modified":"'.$modified.'", "username":"'.$username.'", ';
-						echo '"first_name":"'.$first_name.'","last_name":"'.$last_name.'","email":"'.$email.'","phone":"'.$phone.'", ';
-						echo '"address":"'.$address.'","city":"'.$city.'","state":"'.$state.'","zip":"'.$zip.'", ';
-						echo '"preference_email_updates":"'.$pref_email_updates.'", "preference_email_shift_self":"'.$pref_email_shift_self.'", ';
-						echo '"preference_email_shift_other":"'.$pref_email_shift_other.'", "preference_email_schedule":"'.$pref_email_schedule.'" ';
+						echo '"id":"'.encodeJSONString($user_id).'", "group_id":"'.encodeJSONString($group_id).'", "group_name":"'.encodeJSONString($group_name).'", ';
+						echo '"created":"'.encodeJSONString($created).'","modified":"'.encodeJSONString($modified).'", "username":"'.encodeJSONString($username).'", ';
+						echo '"first_name":"'.encodeJSONString($first_name).'","last_name":"'.encodeJSONString($last_name).'","email":"'.encodeJSONString($email).'","phone":"'.encodeJSONString($phone).'", ';
+						echo '"address":"'.encodeJSONString($address).'","city":"'.encodeJSONString($city).'","state":"'.encodeJSONString($state).'","zip":"'.encodeJSONString($zip).'", ';
+						echo '"preference_email_updates":"'.encodeJSONString($pref_email_updates).'", "preference_email_shift_self":"'.encodeJSONString($pref_email_shift_self).'", ';
+						echo '"preference_email_shift_other":"'.encodeJSONString($pref_email_shift_other).'", "preference_email_schedule":"'.encodeJSONString($pref_email_schedule).'" ';
 						echo '}';
 						if($i<($total-1)){ echo ','; }
 						++$i;
@@ -526,19 +501,19 @@ if($ARGUMENT_GET_ACTION!=null){
 					$total_rows = $row["count"];
 					mysql_free_result($result);
 					echo '], ';
-					echo '"absolute": "'.$total_rows.'"';
+					echo '"absolute":"'.encodeJSONString($total_rows).'"';
 					echo '}';
 				}else{
-					echo '{"status": "error", "message": "bad search"}';
+					echo '{"status":"error", "message":"bad search"}';
 				}
 			}else{
-				echo '{"status": "error", "message": "unknown action"}';
+				echo '{"status":"error", "message":"unknown action"}';
 			}
 		// CREATE REQUEST
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_GET){
 			//autoSetRequestToEmptyOnTimePass($connection);
-			$page = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
-			$count = mysql_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
+			$page = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
+			$count = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
 			$count = max(min($count,100),1);
 			$offset = max(0,$count*($page));
 			$statusCheck = '';
@@ -575,7 +550,7 @@ if($ARGUMENT_GET_ACTION!=null){
 			$result = mysql_query($query, $connection);
 			if($result){
 				$total = mysql_num_rows($result);
-				echo '{"status": "success", "message": "list", "page": '.$page.', "count":'.$count.', "total": '.$total.', "list": ['."\n";
+				echo '{"status":"success", "message":"list", "page":"'.encodeJSONString($page).'", "count":"'.encodeJSONString($count).'", "total":"'.encodeJSONString($total).'", "list": ['."\n";
 				$i = 0;
 				while( $row = mysql_fetch_assoc($result) ){
 					$request_id = $row["request_id"];
@@ -598,12 +573,12 @@ if($ARGUMENT_GET_ACTION!=null){
 					$status = $row["status"];
 					// ","modified":"'.$modified.'", 
 					echo '{';
-					echo '"request_id":"'.$request_id.'", "created":"'.$created.'", "shift_id":"'.$shift_id.'", "shift_begin":"'.$shift_begin.'", "shift_end":"'.$shift_end.'", ';
-					echo '"name":"'.$shift_name.'", ';
-					echo '"owner_id":"'.$owner_id.'", "requester_id":"'.$requester_id .'", "fulfiller_id":"'.$fulfiller_id.'", "approver_id":"'.$approver_id.'", ';
-					echo '"approved_date":"'.$approved.'", "fulfilled_date":"'.$filled.'", ';
-					echo '"owner_username":"'.$owner_username.'", "requester_username":"'.$requester_username .'", "fulfiller_username":"'.$fulfiller_username.'", "approver_username":"'.$approver_username.'", ';
-					echo '"info":"'.$info.'", "status":"'.$status.'" ';
+					echo '"request_id":"'.encodeJSONString($request_id).'", "created":"'.encodeJSONString($created).'", "shift_id":"'.encodeJSONString($shift_id).'", "shift_begin":"'.encodeJSONString($shift_begin).'", ';
+					echo '"shift_end":"'.encodeJSONString($shift_end).'", "name":"'.encodeJSONString($shift_name).'", "owner_id":"'.encodeJSONString($owner_id).'", "requester_id":"'.encodeJSONString($requester_id).'", ';
+					echo '"fulfiller_id":"'.encodeJSONString($fulfiller_id).'", "approver_id":"'.encodeJSONString($approver_id).'", "approved_date":"'.encodeJSONString($approved).'", ';
+					echo '"fulfilled_date":"'.encodeJSONString($filled).'", "owner_username":"'.encodeJSONString($owner_username).'", "requester_username":"'.encodeJSONString($requester_username).'", ';
+					echo '"fulfiller_username":"'.encodeJSONString($fulfiller_username).'", "approver_username":"'.encodeJSONString($approver_username).'", ';
+					echo '"info":"'.encodeJSONString($info).'", "status":"'.encodeJSONString($status).'" ';
 					echo '}';
 					if($i<($total-1)){ echo ','; }
 					echo "\n";
@@ -611,16 +586,15 @@ if($ARGUMENT_GET_ACTION!=null){
 				}
 				echo '] }';
 			}else{
-				echo '{"status": "error", "message": "bad search"}';
+				echo '{"status":"error", "message":"bad search"}';
 			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_CREATE){
-			$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_SHIFT_ID]);
-			$request_reason = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REASON]);
+			$shift_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_SHIFT_ID]);
+			$request_reason = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REASON]);
 				$request_reason = substr($request_reason,0,1024);
-			//$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_USER_ID]);
 			$user_id = $ACTION_VALUE_USER_ID; // use logged-in value
 			if($user_id<=0 || $shift_id<=0){
-				echo '{ "status": "error", "message": "invalid id" }';
+				echo '{ "status":"error", "message":"invalid id" }';
 				return;
 			}
 			$query = 'select id from requests where shift_id="'.$shift_id.'" and status<=1;';
@@ -641,23 +615,23 @@ if($ARGUMENT_GET_ACTION!=null){
 							$time_begin = $row["time_begin"];
 							$time_end = $row["time_end"];
 							mysql_free_result($result);
-							echo '{"status": "success", "message": "request created", "request": { "id": "'.$request_id.'", "request_user_id": "'.$user_id.'", ';
-							echo '"shift_id": "'.$shift_id.'", "time_begin": "'.$time_begin.'", "time_end": "'.$time_end.'" } }';
-							emailOnShiftSwapCreated($connection, $request_id);
+							echo '{"status":"success", "message":"request created", "request": { "id":"'.encodeJSONString($request_id).'", "request_user_id":"'.encodeJSONString($user_id).'", ';
+							echo '"shift_id":"'.encodeJSONString($shift_id).'","time_begin":"'.encodeJSONString($time_begin).'", "time_end":"'.encodeJSONString($time_end).'" } }';
+							emailOnShiftSwapCrated($connection, $request_id);
 						}else{
-							echo '{"status": "error", "message": "recheck failed"}';
+							echo '{"status":"error", "message":"recheck failed"}';
 						}
 					}else{
-						echo '{"status": "error", "message": "create failed"}';
+						echo '{"status":"error", "message":"create failed"}';
 					}
 				}else{
-					echo '{"status": "error", "message": "only one open request per shift allowed"}';
+					echo '{"status":"error", "message":"only one open request per shift allowed"}';
 				}
 			}else{
-				echo '{"status": "error", "message": "unknown"}';
+				echo '{"status":"error", "message":"unknown"}';
 			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_ANSWER){
-			$request_id = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
+			$request_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
 			$user_id = $ACTION_VALUE_USER_ID;
 			if($user_id>0 || $shift_id>0){
 				$query = 'select shift_id,request_user_id,fulfill_user_id,approved_user_id,status from requests where id="'.$request_id.'" limit 1;';
@@ -674,30 +648,29 @@ if($ARGUMENT_GET_ACTION!=null){
 							$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date='.$TIME_NOW.', status="1" where id="'.$request_id.'";';
 							$result = mysql_query($query);
 							if($result){
-								echo '{"status": "success", "message": "request filled", "request": {"id": "'.$request_id.'", "shift_id": "'.$shift_id.'", ';
-								echo '"request_user_id": "'.$request_user_id.'", "fulfill_user_id": "'.$user_id.'" }}';
+								echo '{"status":"success", "message":"request filled", "request": {"id":"'.encodeJSONString($request_id).'", "shift_id":"'.encodeJSONString($shift_id).'", ';
+								echo '"request_user_id":"'.encodeJSONString($request_user_id).'", "fulfill_user_id":"'.encodeJSONString($user_id).'" }}';
 								emailOnShiftSwapFilled($connection, $request_id);
 							}else{
-								echo '{"status": "error", "message": "update failed '.mysql_real_escape_string($query).' "}';
+								echo '{"status":"error", "message":"update failed '.decode_real_escape_string($query).' "}';
 							}
 						}else{
-							echo '{"status": "error", "message": "request has been filled"}';
+							echo '{"status":"error", "message":"request has been filled"}';
 						}
 					}else{
-						echo '{"status": "error", "message": "request closed"}';
+						echo '{"status":"error", "message":"request closed"}';
 					}
 				}else{
-					echo '{"status": "error", "message": "request does not exist"}';
+					echo '{"status":"error", "message":"request does not exist"}';
 				}
 			}else{
- 				echo '{ "status": "error", "message": "invalid id" }';
+ 				echo '{ "status":"error", "message":"invalid id" }';
  			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_DECIDE){
 			if($ACTION_VALUE_IS_ADMIN){
 				$user_id = $ACTION_VALUE_USER_ID;
-				$request_id = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
-				$decide_type = mysql_real_escape_string($_POST[$ACTION_TYPE_REQUEST_TYPE]);
-				//if($user_id>0 || $request_id>0){
+				$request_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
+				$decide_type = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_TYPE]);
 				if($decide_type==$ACTION_TYPE_REQUEST_YES || $decide_type==$ACTION_TYPE_REQUEST_NO){
 					$query = 'select shift_id,request_user_id,fulfill_user_id,approved_user_id,status from requests where id="'.$request_id.'" limit 1;';
 					$result = mysql_query($query);
@@ -714,10 +687,10 @@ if($ARGUMENT_GET_ACTION!=null){
 								$result = mysql_query($query);
 								if($result){
 									mysql_free_result($result);
-									echo '{ "status": "success", "message": "request denied" }';
+									echo '{ "status":"success", "message":"request denied" }';
 									emailOnShiftSwapDenied($connection, $request_id);
 								}else{
-									echo '{ "status": "error", "message": "bad no update" }';
+									echo '{ "status":"error", "message":"bad no update" }';
 								}
 							}else if($decide_type==$ACTION_TYPE_REQUEST_YES){
 								if($fulfill_user_id>0){
@@ -729,36 +702,36 @@ if($ARGUMENT_GET_ACTION!=null){
 										$result = mysql_query($query);
 										if($result){
 											mysql_free_result($result);
-											echo '{ "status": "success", "message": "request approved" }';
+											echo '{ "status":"success", "message":"request approved" }';
 											emailOnShiftSwapApproved($connection, $request_id);
 										}else{
-											echo '{ "status": "error", "message": "bad yes update" }';
+											echo '{ "status":"error", "message":"bad yes update" }';
 										}
 									}else{
-										echo '{ "status": "error", "message": "shift update fail" }';
+										echo '{ "status":"error", "message":"shift update fail" }';
 									}
 								}else{
-									echo '{ "status": "error", "message": "cannot approve without fill-in" }';
+									echo '{ "status":"error", "message":"cannot approve without fill-in" }';
 								}
 							}
 						}else{
-							echo '{ "status": "error", "message": "request closed" }';
+							echo '{ "status":"error", "message":"request closed" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "request does not exist" }';
+						echo '{ "status":"error", "message":"request does not exist" }';
 					}
 				}else{
-					echo '{ "status": "error", "message": "unknown type" }';
+					echo '{ "status":"error", "message":"unknown type" }';
 				}
 			}else{
-					echo '{ "status": "error", "message": "invalid action" }';
+					echo '{ "status":"error", "message":"invalid action" }';
 				}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_SINGLE || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){
-				$shift_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID]);
+				$shift_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID]);
 				$was_shift_id = $shift_id;
-				$user_id = mysql_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_USER_ID]);
+				$user_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_USER_ID]);
 				if($user_id<=0 || $shift_id<=0){
-					echo '{ "status": "error", "message": "invalid id" }';
+					echo '{ "status":"error", "message":"invalid user" }';
 					return;
 				}
 				$query = 'select id,parent_id,time_begin from shifts where id="'.$shift_id.'"; '; // get parent
@@ -770,7 +743,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					mysql_free_result($result);
 					if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_SINGLE){ // expect child
 						if($parent_id==0){
-							echo '{ "status": "error", "message": "cannot apply to parent shift" }';
+							echo '{ "status":"error", "message":"cannot apply to parent shift" }';
 						}else{
 							$query = 'select id, user_id from shifts where id="'.$shift_id.'"; ';
 							$result = mysql_query($query, $connection);
@@ -782,15 +755,15 @@ if($ARGUMENT_GET_ACTION!=null){
 									$query = 'update shifts set user_id="'.$user_id.'" where id="'.$shift_id.'"; ';
 									$result = mysql_query($query, $connection);
 									if($result){
-										echo '{ "status": "success", "message": "single shift updated", "shift": { "id":"'.$shift_id.'", "time_begin": "'.$time_begin.'" } }';
+										echo '{ "status":"success", "message":"single shift updated", "shift": { "id":"'.encodeJSONString($shift_id).'", "time_begin":"'.encodeJSONString($time_begin).'" } }';
 									}else{
-										echo '{ "status": "error", "message": "update failed" }';
+										echo '{ "status":"error", "message":"update failed" }';
 									}
 								}else{
-									echo '{ "status": "error", "message": "user already assigned" }';
+									echo '{ "status":"error", "message":"user already assigned" }';
 								}
 							}else{
-								echo '{ "status": "error", "message": "unknown" }';
+								echo '{ "status":"error", "message":"unknown" }';
 							}
 						}
 					}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){ // expect parent
@@ -819,9 +792,9 @@ if($ARGUMENT_GET_ACTION!=null){
 						}
 						$result = mysql_query($query, $connection);
 						if($result){
-							echo '{ "status": "success", "message": "'.$message.'", "shift": { "id":"'.$shift_id.'", "time_begin": "'.$time_begin.'" } }';
+							echo '{ "status":"success", "message":"'.encodeJSONString($message).'", "shift": { "id":"'.encodeJSONString($shift_id).'", "time_begin":"'.encodeJSONString($time_begin).'" } }';
 						}else{
-							echo '{ "status": "error", "message": "update failed" }';
+							echo '{ "status":"error", "message":"update failed" }';
 						}
 					}
 					
@@ -836,7 +809,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$shift_name = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_NAME]);
 					$shift_name = substr($shift_name,0,32);
 				if( !($startDate&&$endDate&&$repeating&&$shift_name) ){
-					echo '{ "status": "error", "message": "missing arguments" }';
+					echo '{ "status":"error", "message":"missing arguments" }';
 				}else{
 					$children = computeDatePermutations($startDate,$endDate,$repeating);
 					if($children!==null){
@@ -845,14 +818,12 @@ if($ARGUMENT_GET_ACTION!=null){
 						if($len>0){
 							$startTime = dateFromString($startDate);
 							$endTime = dateFromString($endDate);
-							#echo $startTime." - ".$endTime."\n";
 							$userid = $ACTION_VALUE_USER_ID;
 							$query = 'insert into shifts (created, parent_id, user_id, name, time_begin, time_end, algorithm) values ('.$TIME_NOW.',"0","'.$userid.'","'.$shift_name.'","'.standardSQLDateFromSeconds($startTime).'","'.standardSQLDateFromSeconds($endTime).'","'.$repeating.'") ;';
-							#echo $query."\n";
 							// INSERT IT
 							$result = mysql_query($query, $connection);
 							if(!$result){
-								echo "ERROR-SUP";
+								echo '{ "status":"error", "message":"error creating parent shift" }';
 								break;
 							}
 							// GET NEW PARENT ID
@@ -865,19 +836,18 @@ if($ARGUMENT_GET_ACTION!=null){
 									$firstChildStartTime = $startTime;//stringFromDate($startTime);
 								}
 								$query = 'insert into shifts (created, parent_id, user_id, name, time_begin, time_end, algorithm) values ('.$TIME_NOW.',"'.$parent_id.'","0","'.$shift_name.'","'.standardSQLDateFromSeconds($startTime).'","'.standardSQLDateFromSeconds($endTime).'",null) ;';
-								#echo $query."\n";
 								$result = mysql_query($query, $connection);
 								if(!$result){
-									echo "ERROR-SUB"; // need correct handling
+									echo '{ "status":"error", "message":"error creating child shift" }';
 									break;
 								}
 							}
-							echo '{ "status": "success", "message": "created '.($len).' singular shifts", "start": "'.$startTime.'", "first": "'.$firstChildStartTime.'" }';
+							echo '{ "status":"success", "message":"created'.encodeJSONString($len).' singular shifts", "start":"'.encodeJSONString($startTime).'", "first":"'.encodeJSONString($firstChildStartTime).'" }';
 						}else{
-							echo '{ "status": "error", "message": "no shifts" }';
+							echo '{ "status":"error", "message":"no shifts" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "invalid shift" }';
+						echo '{ "status":"error", "message":"invalid shift" }';
 					}
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_DELETE_SHIFT){
@@ -900,21 +870,21 @@ if($ARGUMENT_GET_ACTION!=null){
 								$result = mysql_query($query);
 								if($result){
 									mysql_free_result($result);
-									echo '{ "status": "success", "message": "deleted shift successfully" }';
+									echo '{ "status":"success", "message":"deleted shift successfully" }';
 								}else{
-									echo '{ "status": "error", "message": "could not delete source entry" }';
+									echo '{ "status":"error", "message":"could not delete source entry" }';
 								}
 							}else{
-								echo '{ "status": "error", "message": "could not delete children entries" }';
+								echo '{ "status":"error", "message":"could not delete children entries" }';
 							}
 						}else{
-							echo '{ "status": "error", "message": "cannot delete sub-shift" }';
+							echo '{ "status":"error", "message":"cannot delete sub-shift" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "cannot delete related requests" }';
+						echo '{ "status":"error", "message":"cannot delete related requests" }';
 					}
 				}else{
-					echo '{ "status": "error", "message": "invalid shift" }'; // '.mysql_real_escape_string($query).'
+					echo '{ "status":"error", "message":"invalid shift" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_CREATE || $ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_UPDATE){
 				$isUpdate=($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_UPDATE);
@@ -965,7 +935,6 @@ if($ARGUMENT_GET_ACTION!=null){
 								$row = mysql_fetch_assoc($result);
 								$password = $row["password"];
 								mysql_free_result($result);
-								//
 									$query = 'select username,email,password from users where id="'.$user_id.'";';
 									$result = mysql_query($query,$connection);
 									$row = mysql_fetch_assoc($result);
@@ -973,7 +942,6 @@ if($ARGUMENT_GET_ACTION!=null){
 									$oldUsername = $row["username"];
 									$oldEmail = $row["email"];
 									mysql_free_result($result);
-								//
 								if($password==$admin_password){
 									if($new_password==$confirm_password){
 										$pw = '';
@@ -993,26 +961,26 @@ if($ARGUMENT_GET_ACTION!=null){
 											'where id="'.$user_id.'";';
 										$result = mysql_query($query,$connection);
 										if($result){
-											echo '{ "status": "success", "message": "user updated", "user": {"id":"'.$user_id.'"} }';
+											echo '{ "status":"success", "message":"user updated", "user": {"id":"'.encodeJSONString($user_id).'"} }';
 											$username = $oldUsername; // usernames can't be changed
 											emailOnUserUpdate($username, $oldUsername, $email, $oldEmail, $new_password, $oldPassword);
 										}else{
-											echo '{ "status": "error", "message": "could not update user '.mysql_real_escape_string($query).' " }'; // '.mysql_real_escape_string($query).'
+											echo '{ "status":"error", "message":"could not update user '.encodeJSONString($username).' " }';
 										}
 									}else{
-										echo '{ "status": "error", "message": "new and confirm passwords do not match" }';
+										echo '{ "status":"error", "message":"new and confirm passwords do not match" }';
 									}
 								}else{
-									echo '{ "status": "error", "message": "incorrect password" }';
+									echo '{ "status":"error", "message":"incorrect password" }';
 								}
 							}else{
-								echo '{ "status": "error", "message": "invalid user" }';
+								echo '{ "status":"error", "message":"invalid user" }';
 							}
 						}else{
-							echo '{ "status": "error", "message": "bad search" }';
+							echo '{ "status":"error", "message":"bad search" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "permissions" }';
+						echo '{ "status":"error", "message":"permissions" }';
 					}
 				}else if($ACTION_VALUE_IS_ADMIN){
 					$isValid = isValidUserData($username,$first_name,$last_name,$email,$phone,$address,$city,$state,$zip,$group_id,$admin_password,$new_password,$confirm_password);
@@ -1040,31 +1008,31 @@ if($ARGUMENT_GET_ACTION!=null){
 											$result = mysql_query($query,$connection);
 											if($result){
 												$user_id = intval( mysql_insert_id() );
-												echo '{ "status": "success", "message": "user created", "user": {"id":"'.$user_id.'"} }';
+												echo '{ "status":"success", "message":"user created", "user": {"id":"'.encodeJSONString($user_id).'"} }';
 												emailOnUserCreate($username, $email);
 											}else{
-												echo '{ "status": "error", "message": "could not create user" }';
+												echo '{ "status":"error", "message":"could not create user" }';
 											}
 										}else{
-											echo '{ "status": "error", "message": "incorrect admin password" }';
+											echo '{ "status":"error", "message":"incorrect admin password" }';
 										}
 									}else{
-										echo '{ "status": "error", "message": "invalid user" }';
+										echo '{ "status":"error", "message":"invalid user" }';
 									}
 								}else{
-									echo '{ "status": "error", "message": "bad search" }';
+									echo '{ "status":"error", "message":"bad search" }';
 								}
 							}else{
-								echo '{ "status": "error", "message": "username already exists" }';
+								echo '{ "status":"error", "message":"username already exists" }';
 							}
 						}else{
-							echo '{ "status": "error", "message": "username error" }';
+							echo '{ "status":"error", "message":"username error" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "'.$isValid.'" }';
+						echo '{ "status":"error", "message":"invalid: '.encodeJSONString($isValid).'" }';
 					}
 				}else{
-					echo '{ "status": "error", "message": "permissions" }';
+					echo '{ "status":"error", "message":"permissions" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_USER_DELETE){
 				if($ACTION_VALUE_IS_ADMIN){
@@ -1106,28 +1074,28 @@ if($ARGUMENT_GET_ACTION!=null){
 										$query = 'delete from users where id="'.$user_id.'";';
 										$result = mysql_query($query,$connection);
 										if($result){
-											echo '{ "status": "success", "message": "user deleted", "user": {"id":"'.$user_id.'"} }';
+											echo '{ "status":"success", "message":"user deleted", "user": {"id":"'.encodeJSONString($user_id).'"} }';
 										}else{
-											echo '{ "status": "error", "message": "could not delete user" }';
+											echo '{ "status":"error", "message":"could not delete user" }';
 										}
 										// shots
 									}else{
-										echo '{ "status": "error", "message": "at least 1 admin must exist" }';
+										echo '{ "status":"error", "message":"at least 1 admin must exist" }';
 									}
 								}else{
-									echo '{ "status": "error", "message": "bad count" }';
+									echo '{ "status":"error", "message":"bad count" }';
 								}
 							}else{
-								echo '{ "status": "error", "message": "bad group search" }';
+								echo '{ "status":"error", "message":"bad group search" }';
 							}
 						}else{
-							echo '{ "status": "error", "message": "user does not exist '.$user_id.'" }';
+							echo '{ "status":"error", "message":"user does not exist '.encodeJSONString($user_id).'" }';
 						}
 					}else{
-						echo '{ "status": "error", "message": "cannot delete self" }';
+						echo '{ "status":"error", "message":"cannot delete self" }';
 					}
 				}else{
-					echo '{ "status": "error", "message": "permissions" }';
+					echo '{ "status":"error", "message":"permissions" }';
 				}
 			}else if($ARGUMENT_GET_ACTION=="MOAR_USER_PARAMS"){
 				echo '{ "status": "error", "message": "?" }';
@@ -1135,44 +1103,14 @@ if($ARGUMENT_GET_ACTION!=null){
 			}else if($ACTION_VALUE_IS_ADMIN){
 				//
 			}else{
-				echo '{ "status": "error", "message": "error" }';
+				echo '{ "status":"error", "message":"error" }';
 			}
 		}
 	mysql_close($connection);
 }else{
-
-// ...
-
-includeHeader("carpe diem"); // provehito in altum  |  carpe diem
-
-
-includeBody();
-
-// TEST EMAIL
-
-// output = htmlentities(input)
-// out = urldecode(in)
-
-includeFooter();
-
-
+	includeHeader("Staff"); // provehito in altum  |  carpe diem
+	includeBody();
+	includeFooter();
 }
-
-
-// ignore_user_abort(true); 
-// set_time_limit(0);
-// $res = shell_exec("sleep 60");
-
-/*
-// 
-ignore_user_abort(1); // run script in background 
-set_time_limit(0); // run script forever 
-$interval=60*15; // do every 15 minutes... 
-do{ 
-   // add the script that has to be ran every 15 minutes here 
-   // ... 
-   sleep($interval); // wait 15 minutes 
-}while(true); 
-*/
 
 ?>
