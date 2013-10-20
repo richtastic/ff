@@ -335,3 +335,5 @@ x) logging into database logging table
 TODO:
 PROBABLY EMAIL "CRON" JOB & LAUNCHER
 
+
+ON ASSIGN ONLY EMPTY SHIFTS -> NO ACTION TAKEN

@@ -402,7 +402,7 @@ ServerVolunteerInterface.prototype.applyUserToEmptyShifts = function(user_id,shi
 	var params = this.appendSessionInfo({});
 	params[this.ACTION_SHIFT_UPDATE_USER_ID] = this.encodeString( user_id );
 	params[this.ACTION_SHIFT_UPDATE_SHIFT_ID] = this.encodeString( shift_id );
-	a.postParams(url,params,this,this.applyUserToEmptyShifts,this.applyUserToEmptyShifts);
+	a.postParams(url,params,this,this.onAjaxApplyUserToEmptyShifts,this.onAjaxApplyUserToEmptyShifts);
 }
 ServerVolunteerInterface.prototype.onAjaxApplyUserToEmptyShifts = function(e,a){
 	var obj = JSON.parse(e);

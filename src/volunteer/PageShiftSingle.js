@@ -179,7 +179,7 @@ PageShiftSingle.prototype._setShift = function(name, time, date, user, alg){
 	Code.setContent(this._shiftName,Code.escapeHTML( ""+name ));
 	Code.setContent(this._shiftDate,Code.escapeHTML( ""+time ));
 	Code.setContent(this._shiftTime,Code.escapeHTML( ""+date ));
-	Code.setContent(this._shiftUser,Code.escapeHTML( ""+user ));
+	Code.setContent(this._shiftUser,"&rarr;"+Code.escapeHTML( ""+user ));
 	Code.setContent(this._shiftAlgorithm,Code.escapeHTML( ""+alg ));
 }
 PageShiftSingle.prototype._getSelectedUserID = function(){
@@ -204,7 +204,7 @@ PageShiftSingle.prototype._getShiftInfoSuccess = function(o){
 		var dateEnd = Code.dateFromString(shift.time_end);
 		var time = Code.getHourStringFromDate(dateBegin)+" - "+Code.getHourStringFromDate(dateEnd);
 		var date = " "+dow[ (dateBegin.getDay()+6)%7 ]+" "+moy[dateBegin.getMonth()]+" "+dateBegin.getDate()+", "+dateBegin.getFullYear();
-		var user = "&rarr;"+(shift.username?shift.username:"(unassigned)");
+		var user = (shift.username?shift.username:"(unassigned)");
 		var alg = Code.humanReadableRepeatString(parent.algorithm);
 		this._setShift(shift.name, time, date, user, alg);
 	}
