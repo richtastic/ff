@@ -83,10 +83,17 @@ $ACTION_TYPE_SHIFT_DELETE_SHIFT = "shift_delete";
 $ACTION_TYPE_GROUP_GET = "group";
 //
 $ARGUMENT_GET_ACTION = $_GET['a'];
-//
-$LOG_TYPE_LOGIN = "login";
-$LOG_TYPE_LOGOUT = "logout";
-
+$ACTION_VALUE_IP_FORWARD = $_SERVER['HTTP_X_FORWARDED_FOR'];
+$ACTION_VALUE_IP_REMOTE = $_SERVER['REMOTE_ADDR'];
+// logEventDB
+$LOG_TYPE_LOGIN_ATTEMPT = "login_attempt";
+$LOG_TYPE_LOGIN_SUCCESS = "login_success";
+$LOG_TYPE_REQUEST_CREATE_ATTEMPT = "request_create_attempt";
+$LOG_TYPE_REQUEST_ANWSER_ATTEMPT = "request_answer_attempt";
+$LOG_TYPE_REQUEST_DECIDE_ATTEMPT = "request_decide_attempt";
+$LOG_TYPE_USER_ATTEMPT = "user_attempt";
+$LOG_TYPE_SHIFT_CREATE_ATTEMPT = "shift_create_attempt";
+//$LOG_TYPE_LOGOUT = "logout";
 
 if($ARGUMENT_GET_ACTION!=null){
 	ignore_user_abort(true); 
@@ -126,6 +133,7 @@ if($ARGUMENT_GET_ACTION!=null){
 		$username = decode_real_escape_string($_POST['u']);
 		$password = decode_real_escape_string($_POST['p']);
 		$password = strtoupper($password);
+		logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_LOGIN_ATTEMPT, $username );
 		//$query = 'select id,password from users where username="'.$username.'" limit 1;';
 		$query = 'select U.id as id, U.password as password, groups.name as group_name from (select * from users where username="'.$username.'" limit 1) as U left outer join groups on U.group_id=groups.id;';
 		$result = mysql_query($query, $connection);
@@ -141,15 +149,13 @@ if($ARGUMENT_GET_ACTION!=null){
 					if(mysql_errno()){ /* error */ }
 					// set new session
 					$session_id = randomSessionID();
-					$ip_forward = $_SERVER['HTTP_X_FORWARDED_FOR'];
-					$ip_remote = $_SERVER['REMOTE_ADDR'];
-					$query = 'insert into sessions (created, user_id,session_id,ip_remote,ip_forward) values ('.$TIME_NOW.', "'.$user_id.'","'.$session_id.'","'.$ip_remote.'","'.$ip_forward.'");';
+					$query = 'insert into sessions (created, user_id,session_id,ip_remote,ip_forward) values ('.$TIME_NOW.', "'.$user_id.'","'.$session_id.'","'.$ACTION_VALUE_IP_REMOTE.'","'.$ACTION_VALUE_IP_FORWARD.'");';
 					$insert_result = mysql_query($query, $connection);
 					if(mysql_errno()){
 						echo '{ "status":"error", "message":"session fail" }';
 					}else{
 						echo '{ "status":"success", "session_id":"'.encodeJSONString($session_id).'", "group_name":"'.encodeJSONString($group_name).'" }';
-						logEventDB($connection, $user_id, $LOG_TYPE_LOGIN, decode_real_escape_string($username."|".$ip_forward."|".$ip_remote) );
+						logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_LOGIN_SUCCESS, $username );
 					}
 				}else{
 					echo '{ "status": "error", "message": "login fail" }';
@@ -437,7 +443,6 @@ if($ARGUMENT_GET_ACTION!=null){
 					$pref_email_shift_self = boolean01ToString($row["preference_email_shift_self"]);
 					$pref_email_shift_other = boolean01ToString($row["preference_email_shift_other"]);
 					$pref_email_schedule = boolean01ToString($row["preference_email_schedule"]);
-					// boolean01ToString
 					echo '{"status":"success", "message":"'.encodeJSONString($message).'", "user": '."\n".'{';
 					echo '"id":"'.encodeJSONString($user_id).'", "group_id":"'.encodeJSONString($group_id).'", "group_name":"'.encodeJSONString($group_name).'", "created":"'.encodeJSONString($created).'", ';
 					echo '"modified":"'.encodeJSONString($modified).'", "username":"'.encodeJSONString($username).'", ';
@@ -509,7 +514,6 @@ if($ARGUMENT_GET_ACTION!=null){
 			}else{
 				echo '{"status":"error", "message":"unknown action"}';
 			}
-		// CREATE REQUEST
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_GET){
 			//autoSetRequestToEmptyOnTimePass($connection);
 			$page = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
@@ -593,6 +597,7 @@ if($ARGUMENT_GET_ACTION!=null){
 			$request_reason = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REASON]);
 				$request_reason = substr($request_reason,0,1024);
 			$user_id = $ACTION_VALUE_USER_ID; // use logged-in value
+			logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_REQUEST_CREATE_ATTEMPT, $request_reason);
 			if($user_id<=0 || $shift_id<=0){
 				echo '{ "status":"error", "message":"invalid id" }';
 				return;
@@ -617,7 +622,7 @@ if($ARGUMENT_GET_ACTION!=null){
 							mysql_free_result($result);
 							echo '{"status":"success", "message":"request created", "request": { "id":"'.encodeJSONString($request_id).'", "request_user_id":"'.encodeJSONString($user_id).'", ';
 							echo '"shift_id":"'.encodeJSONString($shift_id).'","time_begin":"'.encodeJSONString($time_begin).'", "time_end":"'.encodeJSONString($time_end).'" } }';
-							emailOnShiftSwapCrated($connection, $request_id);
+							emailOnShiftSwapCreated($connection, $request_id);
 						}else{
 							echo '{"status":"error", "message":"recheck failed"}';
 						}
@@ -633,6 +638,7 @@ if($ARGUMENT_GET_ACTION!=null){
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_ANSWER){
 			$request_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
 			$user_id = $ACTION_VALUE_USER_ID;
+			logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_REQUEST_ANWSER_ATTEMPT, $request_id);
 			if($user_id>0 || $shift_id>0){
 				$query = 'select shift_id,request_user_id,fulfill_user_id,approved_user_id,status from requests where id="'.$request_id.'" limit 1;';
 				$result = mysql_query($query);
@@ -667,10 +673,11 @@ if($ARGUMENT_GET_ACTION!=null){
  				echo '{ "status":"error", "message":"invalid id" }';
  			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_DECIDE){
+			$user_id = $ACTION_VALUE_USER_ID;
+			$request_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
+			$decide_type = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_TYPE]);
+			logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_REQUEST_DECIDE_ATTEMPT, $request_id."|".$decide_type);
 			if($ACTION_VALUE_IS_ADMIN){
-				$user_id = $ACTION_VALUE_USER_ID;
-				$request_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
-				$decide_type = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_TYPE]);
 				if($decide_type==$ACTION_TYPE_REQUEST_YES || $decide_type==$ACTION_TYPE_REQUEST_NO){
 					$query = 'select shift_id,request_user_id,fulfill_user_id,approved_user_id,status from requests where id="'.$request_id.'" limit 1;';
 					$result = mysql_query($query);
@@ -730,6 +737,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$shift_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID]);
 				$was_shift_id = $shift_id;
 				$user_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_USER_ID]);
+				logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_USER_ATTEMPT, $shift_id."|".$ARGUMENT_GET_ACTION);
 				if($user_id<=0 || $shift_id<=0){
 					echo '{ "status":"error", "message":"invalid user" }';
 					return;
@@ -802,12 +810,12 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status": "error", "message": "unknown shift" }';
 				}
 			}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_CREATE){
-
 				$startDate = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_START_DATE]);
 				$endDate = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_END_DATE]);
 				$repeating = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_REPEATING]);
 				$shift_name = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_CREATE_NAME]);
 					$shift_name = substr($shift_name,0,32);
+				logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_SHIFT_CREATE_ATTEMPT, $startDate."|".$endDate."|".$shift_name."|".$repeating );
 				if( !($startDate&&$endDate&&$repeating&&$shift_name) ){
 					echo '{ "status":"error", "message":"missing arguments" }';
 				}else{

@@ -376,11 +376,14 @@ function autoSetRequestToEmptyOnTimePass($connection){
 	$result = mysql_query($query, $connection);
 	mysql_free_result($result);
 }
-function logEventDB($connection, $uid,$type,$info){
+function logEventDB($connection,$time_offset_min,$ip_remote,$ip_forward, $uid,$type,$info){
+	$time_now = ' adddate(now(),interval '. mysql_real_escape_string($time_offset_min).' minute) ';
+	$ip_remote = mysql_real_escape_string($ip_remote);
+	$ip_forward = mysql_real_escape_string($ip_forward);
 	$uid = mysql_real_escape_string($uid);
 	$type = substr( mysql_real_escape_string($type), 0, 32);
-	$info = $info?substr( mysql_real_escape_string($info), 0, 64):"";
-	$query = 'insert into logs (created, user_id, type, info) values (now(), "'.$uid.'", "'.$type.'", "'.$info.'");';
+	$info = ($info!=null)?substr( mysql_real_escape_string($info), 0, 128):"";
+	$query = 'insert into logs (created, ip_remote, ip_forward, user_id, type, info) values ('.$time_now.', "'.$ip_remote.'", "'.$ip_forward.'", "'.$uid.'", "'.$type.'", "'.$info.'");';
 	$result = mysql_query($query, $connection);
 	mysql_free_result($result);
 }

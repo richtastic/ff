@@ -277,9 +277,11 @@ drop table if exists logs;
 create table logs(
 id int not null auto_increment primary key,
 created datetime, # 
+ip_remote varchar(32), # 
+ip_forward varchar(32), # 
 user_id int, # session user
 type varchar(32), # indexing criteria
-info varchar(64) # extra info 
+info varchar(128) # extra info 
 );
 
 # GROUPS
@@ -316,7 +318,7 @@ x) after makign a shift, week now resets to date
 x) SHIFT CREATOR DOES NOT SHOW UP IN IE UNLESS PAGE IS RELOADED
 x) SHIFT LIST HAS DUPLICATE ENTRIES ON IE LOAD
 x) no data on server side either
-*) encode/decode all data in url
+x) encode/decode all data in url
 	x client: send request
 		- encode variables (+/-\ invalid URL chars)
 	x server: receive request
@@ -324,15 +326,10 @@ x) no data on server side either
 		- assume tanted - escape data
 	x server: perform url query
 		- clean variables for json (")
-	client: recieve request
+	x client: recieve request
 		- create json
 		- clean data for HTML display (<>/\)
-*) logging into database logging table
-
-http://www.cs.wcupa.edu/~rkline/php/sessions.html
-http://www.wikihow.com/Create-a-Secure-Login-Script-in-PHP-and-MySQL#Create_PHP_Functions
-
-
+x) logging into database logging table
 
 
 TODO:
