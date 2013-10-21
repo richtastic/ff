@@ -3,8 +3,7 @@ Dispatch.EVENT_START = "disevtsta";
 Dispatch.EVENT_STOP = "disevtsto";
 Dispatch.EVENT_LOAD = "disevtloa";
 Dispatch.EVENT_COMPLETE = "disevtcmp";
-// -----------------------------
-
+// ---------------------------------------------------------------------
 function Dispatch(){
 	this.list = new Array();
 }

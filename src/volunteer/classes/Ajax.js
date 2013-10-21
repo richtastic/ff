@@ -19,7 +19,6 @@ function Ajax(){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._request.context = this;
 	this._autoDestroy = true;
 }
-
 // --- get/set ---------------------------------------
 Ajax.prototype.cache = function(c){
 	if(arguments.length>0 && c!==undefined && c!==null){
@@ -114,7 +113,6 @@ Ajax.prototype.send = function(url,meth,comp,err){
 	}
 	this._request.send(this._params);
 }
-
 Ajax.prototype._stateChangeCaller = function(e){
 	this.context._stateChange.call(this.context, e);
 }

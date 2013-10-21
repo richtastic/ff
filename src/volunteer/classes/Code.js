@@ -87,8 +87,22 @@ Code.booleanToString = function(b){
 	return "false";
 }
 // ------------------------------------------------------------------------------------------ ARRAY
-
-
+Code.newArray = function(){
+	var arr = new Array();
+	var i, len = arguments.length;
+	for(i=0;i<len;++i){
+		arr.push(arguments[i]);
+	}
+	return arr;
+}
+Code.copyArray = function(a,b){ // a = b
+	if(a==b){return;}
+	Code.emptyArray(a);
+	var i, len = b.length;
+	for(i=0;i<len;++i){
+		a[i] = b[i];
+	}
+}
 Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
 }
@@ -153,6 +167,45 @@ Code.intToBinaryString = function(num,cnt){
 		ander <<= 1;
 	}
 	return str;
+}
+// color functions ----------------------------------------------------
+Code.color255 = function(c){
+	return Math.min( Math.max( Math.round(c), 0), 255);
+}
+Code.getColRGBA = function(r,g,b,a){
+	return (r<<24)+(g<<16)+(b<<8)+a;
+}
+Code.getRedRGBA = function(col){
+	return (col>>24)&0xFF;
+}
+Code.getGrnRGBA = function(col){
+	return (col>>16)&0xFF;
+}
+Code.getBluRGBA = function(col){
+	return (col>>8)&0xFF;
+}
+Code.getAlpRGBA = function(col){
+	return col&0xFF;
+}
+// color functions ----------------------------------------------------
+Code.getColARGB = function(a,r,g,b){
+	return (a<<24)+(r<<16)+(g<<8)+b;
+}
+Code.getRedARGB = function(col){
+	return (col>>16)&0xFF;
+}
+Code.getGrnARGB = function(col){
+	return (col>>8)&0xFF;
+}
+Code.getBluARGB = function(col){
+	return (col)&0xFF;
+}
+Code.getAlpARGB = function(col){
+	return (col>>24)&0xFF;
+}
+// color functions ----------------------------------------------------
+Code.getJSRGBA = function(col){
+	return "rgba("+Code.getRedRGBA(col)+","+Code.getGrnRGBA(col)+","+Code.getBluRGBA(col)+","+Code.getAlpRGBA(col)/255.0+")";
 }
 // formatting functions ----------------------------------------------
 Code.prependFixed = function(start,pad,count){
