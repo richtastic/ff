@@ -102,6 +102,7 @@ Code.copyArray = function(a,b){ // a = b
 	for(i=0;i<len;++i){
 		a[i] = b[i];
 	}
+	return a;
 }
 Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
