@@ -70,6 +70,14 @@ ImageMat.zero255FromFloat = function(data){
 	}
 	return a;
 }
+ImageMat.FloatFromZero255 = function(data){
+	var i, len = data.length;
+	var col, a = new Array(len);
+	for(i=0;i<len;++i){
+		a[i] = data[i]/255.0;
+	}
+	return a;
+}
 ImageMat.ARGBFromFloat = function(data){
 	var i, len = data.length;
 	var col, a = new Array(len);
@@ -113,7 +121,69 @@ ImageMat.colorize = function(c, rnd){ // var rnd = 50;
 	return Math.round(Math.round(c/rnd)*rnd);
 }
 
-
+ImageMat.expandBlob = function(a,wid,hei){
+	var i, j, tl,to,tr, lf,se,rg, bl,bo,br, index;
+	var len = wid*hei;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = 0;
+	}
+	for(i=1;i<wid-1;++i){
+		for(j=1;j<hei-1;++j){
+			index = j*wid + i;
+			tl = a[(j-1)*wid + (i-1)];
+			to = a[(j-1)*wid + i];
+			tr = a[(j-1)*wid + (i+1)];
+			le = a[j*wid + (i-1)];
+			se = a[j*wid + i];
+			ri = a[j*wid + (i+1)];
+			bl = a[(j+1)*wid + (i-1)];
+			bo = a[(j+1)*wid + i];
+			br = a[(j+1)*wid + (i+1)];
+			if( tl||to||tr|| le||se||ri|| bl||br||br ){
+				result[index] = 1;
+			}
+		}
+	}
+	return result;
+}
+ImageMat.retractBlob = function(a,wid,hei){
+	var i, j, tl,to,tr, lf,se,rg, bl,bo,br, index;
+	var len = wid*hei;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = 0;
+	}
+	for(i=1;i<wid-1;++i){
+		for(j=1;j<hei-1;++j){
+			index = j*wid + i;
+			tl = a[(j-1)*wid + (i-1)];
+			to = a[(j-1)*wid + i];
+			tr = a[(j-1)*wid + (i+1)];
+			le = a[j*wid + (i-1)];
+			se = a[j*wid + i];
+			ri = a[j*wid + (i+1)];
+			bl = a[(j+1)*wid + (i-1)];
+			bo = a[(j+1)*wid + i];
+			br = a[(j+1)*wid + (i+1)];
+			if( tl&&to&&tr&& le&&se&&ri&& bl&&br&&br ){
+				result[index] = 1;
+			}
+		}
+	}
+	return result;
+}
+ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
+	var blobs = new Array();
+	// A:
+	// count all blobs (init to -1, then go thru using max(tl,to,tr,le,se,ri,bl,bo,br) ), record center of mass
+	// shrink until the number of blobs is inside the desired range => remaining blobs will be the biggest
+	// B:
+	// until there is nothing left:
+	// OR when a blob goes to nothing, record point => largest blobs will die off last
+	// shrink
+	return blobs;
+}
 // ------------------------------------------------------------------------------------------------------------------------ fxns
 ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
@@ -163,6 +233,22 @@ ImageMat.rangeStretch0255 = function(data){
 	var range = max-min;
 	for(i=0;i<len;++i){ 
 		result[i] = Math.round(255.0*(data[i]-min)/range);
+	}
+	return result;
+}
+ImageMat.gtFloat = function(data, val){
+	var i, len = data.length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = data[i]>val;
+	}
+	return result;
+}
+ImageMat.ltFloat = function(data, val){
+	var i, len = data.length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = data[i]<val;
 	}
 	return result;
 }
@@ -242,5 +328,11 @@ ImageMat.applyFxnFloat = function(data,fxn){
 
 
 
-
+/*
+		RETRACT
+	* *		*
+	***		
+	***		
+	 * 		
+*/
 

@@ -1,8 +1,42 @@
 // Match.js
+/*
+STEPS:
+
+A) find points/areas of most uniqueness - use corners, edges, colors, and find local maxima: 100~1000 points
+
+B) describe each point as some combination of:
+	gray(base)/red/green/blue orientations
+	gray(base)/red/green/blue relative intensities (local/global)?
+	overall scale - (at what size is it most corner like?)
+
+C) assign some useful/unique-ness score to each point based on all properties, to order obtain final best comparable points: 10~100
+	* large gradients (more edge/corner-like)
+	* large color volume [sum of intensities: minima to maxima] - high variation in color
+
+D) compare points from seperate pictures and assign comparrison score:
+	compare in small number of combinations and use best score
+	* relative orientation
+		- eg is red CCW or CW from gray
+	* relative color intensities
+		- eg is red brighter than green
+	if initial scores are obviously bad, don't bother detailed comparrison
+	* orientation [-1,0,1]
+	* scale [0.9,1.0,1.1]
+	* SoSD [4x4,5x5,6x6]
+	* correlation [4x4,5x5,6x6]
+	* other?
+
+E) decide best matches for each point by sorting by best match (pt.matchest[0].score), and going down list as posibilities dwindle
+	ptA.matches = [{ptX,score},{ptY,score},..{ptZ,score}]
+	ptB.matches = [{ptI,score},{ptJ,score},..,{ptA,score}]
+	...
+
+*/
 function Match(){
-	this._canvas = new Canvas(null, null, 1600,600, Canvas.STAGE_FIT_FIXED, false);
+	this._canvas = new Canvas(null, null, 2400,600, Canvas.STAGE_FIT_FIXED, false);
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/",["FL.png","FLT.png"],this,this._imageCompleteFxn,this._imageProgressFxn);
+	var imageLoader = new ImageLoader("./images/medium/",["FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
 Match.prototype._imageProgressFxn = function(o){
@@ -20,12 +54,18 @@ Match.prototype._imageCompleteFxn = function(o){
  	var dat = this._canvas.getColorArrayARGB(ox,oy,wid,hei);
  	var img = new ImageMat(wid,hei);
  	img.setFromArrayARGB(dat);
-	 	var normR = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
-	 	var normG = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getGrnFloat()) );
-	 	var normB = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getBluFloat()) );
-	 	// var normR = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
-	 	// var normG = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getGrnFloat()) );
-	 	// var normB = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getBluFloat()) );
+ 		// historize introduces a lot of noise
+	 	// var normR = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
+	 	// var normG = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getGrnFloat()) );
+	 	// var normB = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getBluFloat()) );
+	 	// minimal noise
+	 	var normR = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
+	 	var normG = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getGrnFloat()) );
+	 	var normB = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getBluFloat()) );
+	 	// original
+	 	// var normR = ImageMat.zero255FromFloat(img.getRedFloat());
+	 	// var normG = ImageMat.zero255FromFloat(img.getGrnFloat());
+	 	// var normB = ImageMat.zero255FromFloat(img.getBluFloat());
 	 	dat = ImageMat.ARGBFromRGBArrays(normR,normG,normB);
  	ImageMat.colorArrayFxnRGB_ARGB(dat,this.colBrightNess);
  	this._canvas.setColorArrayARGB(dat, ox,oy,wid,hei);
@@ -47,9 +87,12 @@ Match.prototype._imageCompleteFxn = function(o){
  	//gray = grn;
  	//gray = blu;
  	var grad = ImageMat.convolve(gray,wid,hei, [0,-0.5,0, -0.5,0,0.5, 0,0.5,0], 3,3); // grad
- 	var dx = ImageMat.convolve(gray,wid,hei, [-0.5,0,0.5], 3,1); // dx
- 	var dy = ImageMat.convolve(gray,wid,hei, [-0.5,0,0.5], 1,3); // dy
+ 	// var dx = ImageMat.convolve(gray,wid,hei, [-0.5,0.5], 2,1); // dx - 2
+ 	// var dy = ImageMat.convolve(gray,wid,hei, [-0.5,0.5], 2,1);// dy - 2
+	var dx = ImageMat.convolve(gray,wid,hei, [-0.5,0,0.5], 3,1); // dx - 3
+	var dy = ImageMat.convolve(gray,wid,hei, [-0.5,0,0.5], 1,3); // dy - 3
  	var corner = ImageMat.convolve(gray,wid,hei, [0.25,-0.5,0.25, -0.5,1,-0.5, 0.25,-0.5,0.25], 1,3); // corner
+ 	ImageMat.normalFloat01(corner);
  		var vectorSum = ImageMat.vectorSumFloat(dx,dy);
  			ImageMat.normalFloat01(vectorSum);
  		var phase = ImageMat.phaseFloat(dx,dy);
@@ -60,44 +103,112 @@ Match.prototype._imageCompleteFxn = function(o){
  		 	//dat = ImageMat.mulFloat(vectorSum,phase);
 
  	// ImageMat.applyFxnFloat(dat,this.fxnOp1);
-
- 	// 1
+var vectorSumFloat = Code.copyArray(new Array(), vectorSum); ImageMat.normalFloat01(vectorSumFloat);
+ 	// 1 - ||dx + dy||
  	dat = vectorSum;
  	ImageMat.normalFloat01(dat);
+ 	ImageMat.applyFxnFloat(dat,this.fxnOpOp);
  	dat = ImageMat.ARGBFromFloat(dat);
- 	this._canvas.setColorArrayARGB(dat, ox+wid-150,oy+0,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+1*wid,oy+0,wid,hei);
 	
-	// 2
+	// 2 - |dx| + |dy|
 	dat = ImageMat.addFloat(ImageMat.absFloat(dx),ImageMat.absFloat(dy));
 	ImageMat.normalFloat01(dat);
-var r1 = dat;
+var addAbsFloat = Code.copyArray(new Array(), dat);
+	ImageMat.applyFxnFloat(dat,this.fxnOpOp);
  	dat = ImageMat.ARGBFromFloat(dat);
- 	this._canvas.setColorArrayARGB(dat, ox+2*(wid-150),oy+0,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+2*wid,oy+0,wid,hei);
 
- 	// 3
+ 	// 3 - gradient
+var gradFloat = Code.copyArray(new Array(), grad); ImageMat.normalFloat01(gradFloat);
 	dat = grad;
 	ImageMat.normalFloat01(dat);
-		//ImageMat.applyFxnFloat(dat,this.fxnOp0);
-		//ImageMat.normalFloat01(dat);
  	dat = ImageMat.ARGBFromFloat(dat);
- 	this._canvas.setColorArrayARGB(dat, ox+3*(wid-150),oy+0,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+3*wid,oy+0,wid,hei);
  	
- 	// 4
+ 	// 4 - corner
+var cornerFloat = Code.copyArray(new Array(), corner);
 	dat = corner;
 	ImageMat.normalFloat01(dat);
 		ImageMat.applyFxnFloat(dat,this.fxnOp0);
 		ImageMat.normalFloat01(dat);
-var r2 = dat;
  	dat = ImageMat.ARGBFromFloat(dat);
- 	this._canvas.setColorArrayARGB(dat, ox+4*(wid-150),oy+0,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+4*wid,oy+0,wid,hei);
 
- 	// 5
-	dat = ImageMat.mulFloat(r1,r2);
+ 	// 5 - grad normal
+	dat = gradFloat;
+	ImageMat.applyFxnFloat(dat,this.fxnOp0);
 	ImageMat.normalFloat01(dat);
 		// ImageMat.squareFloat(dat);
 		// ImageMat.normalFloat01(dat);
  	dat = ImageMat.ARGBFromFloat(dat);
- 	this._canvas.setColorArrayARGB(dat, ox+5*(wid-150),oy+0,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+5*wid,oy+0,wid,hei);
+
+ 	//
+var addAbs255 = ImageMat.zero255FromFloat(addAbsFloat);
+	dat = ImageMat.historize0255(addAbs255);
+	dat = ImageMat.FloatFromZero255(dat);
+	ImageMat.normalFloat01(dat);
+var addAbsThresh = ImageMat.gtFloat(dat, 0.50);
+
+var grad255 = ImageMat.zero255FromFloat(grad);
+	dat = ImageMat.historize0255(grad255);
+	dat = ImageMat.FloatFromZero255(dat);
+	ImageMat.normalFloat01(dat);
+var gradThresh = ImageMat.gtFloat(dat, 0.50);
+
+var corner255 = ImageMat.zero255FromFloat(corner);
+	dat = ImageMat.historize0255(corner255);
+	dat = ImageMat.FloatFromZero255(dat);
+	ImageMat.normalFloat01(dat);
+var cornerThresh = ImageMat.gtFloat(dat, 0.50);
+
+dat = Code.copyArray(new Array(), gradFloat);
+ImageMat.applyFxnFloat(dat,this.fxnOp0); ImageMat.normalFloat01(dat);
+var gradEdgeFloat = dat;
+
+	dat = ImageMat.mulFloat(gradEdgeFloat,vectorSumFloat);
+	dat = ImageMat.mulFloat(addAbsFloat,dat);
+	dat = ImageMat.mulFloat(cornerFloat,dat);
+//dat = ImageMat.mulFloat(cornerFloat,dat); // double
+ 	ImageMat.normalFloat01(dat);
+
+ 	dat = ImageMat.FloatFromZero255( ImageMat.historize0255( ImageMat.zero255FromFloat(dat) ) );
+ //dat = cornerFloat;
+//dat = vectorSumFloat;
+	ImageMat.normalFloat01(dat);
+	dat = ImageMat.gtFloat(dat, 0.50);
+var baseBlob = Code.copyArray(new Array(), dat);
+	dat = ImageMat.ARGBFromFloat(dat);
+ 	this._canvas.setColorArrayARGB(dat, ox+0*wid,oy+hei,wid,hei);
+
+
+ 	// 1 - expand
+ 	dat = ImageMat.retractBlob(baseBlob, wid,hei);
+var pts = Code.copyArray(new Array(), dat);
+ 	//dat = ImageMat.expandBlob(dat, wid,hei);
+ 	dat = ImageMat.ARGBFromFloat(dat);
+ 	this._canvas.setColorArrayARGB(dat, ox+1*wid,oy+hei,wid,hei);
+
+ 	// 2 - retract
+ 	dat = ImageMat.expandBlob(baseBlob, wid,hei);
+ 	dat = ImageMat.retractBlob(dat, wid,hei);
+//var pts = Code.copyArray(new Array(), dat);
+ 	dat = ImageMat.ARGBFromFloat(dat);
+ 	this._canvas.setColorArrayARGB(dat, ox+2*wid,oy+hei,wid,hei);
+
+ 	// original superimposed with points
+//pts = ImageMat.retractBlob(pts, wid,hei);
+//pts = ImageMat.retractBlob(pts, wid,hei);
+var nR = ImageMat.addFloat(red,pts); ImageMat.normalFloat01(nR);
+var nG = ImageMat.addFloat(grn,pts); ImageMat.normalFloat01(nG);
+var nB = ImageMat.addFloat(blu,pts); ImageMat.normalFloat01(nB);
+var sup = new ImageMat(wid,hei);
+	sup.setRedFromFloat(nR);
+	sup.setGrnFromFloat(nG);
+	sup.setBluFromFloat(nB);
+ 	dat = sup.getArrayARGB();
+ 	this._canvas.setColorArrayARGB(dat, ox+3*wid,oy+hei,wid,hei);
 }
 Match.prototype.colBrightNess = function(c){ //c = Math.round(c/10)*10;
 	return c;
@@ -112,6 +223,10 @@ Match.prototype.fxnOp1 = function(f){
 	return 10000 - Math.pow((f-0.5)*100,2);
 }
 
+Match.prototype.fxnOpOp = function(f){ 
+	return Math.abs(f-1);
+}
+
 /*
 
 local maxima
@@ -124,3 +239,4 @@ convolution
 sum of squared differences
 
 */
+
