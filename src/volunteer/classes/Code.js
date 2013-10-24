@@ -141,6 +141,31 @@ Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 		}
 	}
 }
+// ------------------------------------------------------------------------------------------ 
+Code.isUnique = function(val){ // val, ...array
+	for(i=1;i<arguments.length;++i){
+		if(val==arguments[i]){
+			return false;
+		}
+	}
+	return true;
+}
+Code.secondMax = function(){
+	var a;
+	var max = Math.max.apply(this,arguments);
+	var nextMax = Math.min.apply(this,arguments);
+	for(var i=0;i<arguments.length;++i){
+		a = arguments[i];
+		if( nextMax>a && a!=max){
+			nextMax = a;
+		}
+	}
+	return nextMax;
+}
+//console.log( Code.secondMax(1,2,42,34,23,7) );
+	//console.log( Math.max([1,2,42,34,23,7]) ); // NO
+	//console.log( Math.max.call(this,[1,2,42,34,23,7]) ); // NO
+	//console.log( Math.max.apply(this,[1,2,42,34,23,7]) ); // WORKS
 // ------------------------------------------------------------------------------------------ TIME
 Code.getTimeMilliseconds = function(){
     var d = new Date();

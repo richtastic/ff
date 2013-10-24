@@ -122,7 +122,8 @@ ImageMat.colorize = function(c, rnd){ // var rnd = 50;
 }
 
 ImageMat.expandBlob = function(a,wid,hei){
-	var i, j, tl,to,tr, lf,se,rg, bl,bo,br, index;
+	var i, j, tl,to,tr, lf,se,ri, bl,bo,br, index;
+	var wm1 = wid-1, hm1 = hei-1;
 	var len = wid*hei;
 	var result = new Array(len);
 	for(i=0;i<len;++i){
@@ -134,47 +135,124 @@ ImageMat.expandBlob = function(a,wid,hei){
 			tl = a[(j-1)*wid + (i-1)];
 			to = a[(j-1)*wid + i];
 			tr = a[(j-1)*wid + (i+1)];
-			le = a[j*wid + (i-1)];
+			lf = a[j*wid + (i-1)];
 			se = a[j*wid + i];
 			ri = a[j*wid + (i+1)];
 			bl = a[(j+1)*wid + (i-1)];
 			bo = a[(j+1)*wid + i];
 			br = a[(j+1)*wid + (i+1)];
-			if( tl||to||tr|| le||se||ri|| bl||br||br ){
+			if( tl||to||tr|| lf||se||ri|| bl||br||br ){
 				result[index] = 1;
+			}else{
+				result[index] = 0;
 			}
 		}
 	}
 	return result;
 }
 ImageMat.retractBlob = function(a,wid,hei){
-	var i, j, tl,to,tr, lf,se,rg, bl,bo,br, index;
+	var i, j, tl,to,tr, lf,se,ri, bl,bo,br, index;
+	var wm1 = wid-1, hm1 = hei-1;
 	var len = wid*hei;
 	var result = new Array(len);
-	for(i=0;i<len;++i){
-		result[i] = 0;
-	}
-	for(i=1;i<wid-1;++i){
-		for(j=1;j<hei-1;++j){
+	for(i=0;i<wid;++i){
+		for(j=0;j<hei;++j){
 			index = j*wid + i;
-			tl = a[(j-1)*wid + (i-1)];
-			to = a[(j-1)*wid + i];
-			tr = a[(j-1)*wid + (i+1)];
-			le = a[j*wid + (i-1)];
-			se = a[j*wid + i];
-			ri = a[j*wid + (i+1)];
-			bl = a[(j+1)*wid + (i-1)];
-			bo = a[(j+1)*wid + i];
-			br = a[(j+1)*wid + (i+1)];
-			if( tl&&to&&tr&& le&&se&&ri&& bl&&br&&br ){
+			se = a[index];
+			tl=0; to=0; tr=0; lf=0; ri=0; bl=0; bo=0; br=0;
+			if(i>0){ // lefts
+				lf = a[j*wid + (i-1)];
+				if(j>0){
+					tl = a[(j-1)*wid + (i-1)];
+				}
+				if(j<wm1){
+					bl = a[(j+1)*wid + (i-1)];
+				}
+			}
+			if(i<wm1){ // rights
+				ri = a[j*wid + (i+1)];
+				if(j<hm1){
+					br = a[(j+1)*wid + (i+1)];
+				}
+				if(j>0){
+					tr = a[(j-1)*wid + (i+1)];
+				}
+			}
+			if(j>0){ // tops
+				to = a[(j-1)*wid + i];
+			}
+			if(j<hm1){ // bots
+				bo = a[(j+1)*wid + i];
+			}
+			if( tl&&to&&tr&& lf&&se&&ri&& bl&&bo&&br ){
 				result[index] = 1;
+			}else{
+				result[index] = 0;
 			}
 		}
 	}
 	return result;
 }
 ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
-	var blobs = new Array();
+	var i, j, im1, ip1, jm1, jp1, tl,to,tr, lf,se,ri, bl,bo,br, index;
+	var wm1 = wid-1, hm1 = hei-1;
+	var len = wid*hei;
+	var result = a;
+	var loops = 0;
+	var reached = 0;
+	var count = 0;
+	var found = true;
+	var sumResult = Code.copyArray(new Array(), a);
+	do{
+		count = 0;
+		reached = 0;
+		a = result;
+		result = new Array(len);
+		found = false;
+		for(i=0;i<wid;++i){
+			for(j=0;j<hei;++j){
+				index = j*wid + i;
+				se = a[index];
+				tl=0; to=0; tr=0; lf=0; ri=0; bl=0; bo=0; br=0;
+				if(i>0){ // lefts
+					lf = a[j*wid + (i-1)];
+					if(j>0){
+						tl = a[(j-1)*wid + (i-1)];
+					}
+					if(j<wm1){
+						bl = a[(j+1)*wid + (i-1)];
+					}
+				}
+				if(i<wm1){ // rights
+					ri = a[j*wid + (i+1)];
+					if(j<hm1){
+						br = a[(j+1)*wid + (i+1)];
+					}
+					if(j>0){
+						tr = a[(j-1)*wid + (i+1)];
+					}
+				}
+				if(j>0){ // tops
+					to = a[(j-1)*wid + i];
+				}
+				if(j<hm1){ // bots
+					bo = a[(j+1)*wid + i];
+				}
+				if( tl&&to&&tr&& lf&&se&&ri&& bl&&bo&&br ){
+					++reached;
+					result[index] = 1;
+				}else{
+					result[index] = 0;
+				}
+			}
+		}
+		console.log(loops+": "+reached);
+		++loops;
+		if(reached>0){
+			sumResult = ImageMat.addFloat(sumResult, result);
+		}
+	}while(reached>0 && loops<5);
+	//console.log(((count/len)*100) + "%");
 	// A:
 	// count all blobs (init to -1, then go thru using max(tl,to,tr,le,se,ri,bl,bo,br) ), record center of mass
 	// shrink until the number of blobs is inside the desired range => remaining blobs will be the biggest
@@ -182,6 +260,132 @@ ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
 	// until there is nothing left:
 	// OR when a blob goes to nothing, record point => largest blobs will die off last
 	// shrink
+	//return new Array();
+	return ImageMat.getPeaks(sumResult, wid,hei);
+}
+ImageMat.getPeaks = function(peaks, wid,hei){ // the problem with this is it misses maxima that are erased by the retracting process - poor resolution (2-3 pixels?)
+	var i, j, tl,to,tr, lf,se,ri, bl,bo,br, index;
+	var wm1 = wid-1, hm1 = hei-1;
+	var len = wid*hei;
+	var vals = new Array();
+	var max;
+	var a = Code.copyArray(new Array(), peaks);
+	for(i=0;i<wid;++i){
+		for(j=0;j<hei;++j){
+			index = j*wid + i;
+			se = a[index];
+			tl=0; to=0; tr=0; lf=0; ri=0; bl=0; bo=0; br=0;
+			if(i>0){ // lefts
+				lf = a[j*wid + (i-1)];
+				if(j>0){
+					tl = a[(j-1)*wid + (i-1)];
+				}
+				if(j<wm1){
+					bl = a[(j+1)*wid + (i-1)];
+				}
+			}
+			if(i<wm1){ // rights
+				ri = a[j*wid + (i+1)];
+				if(j<hm1){
+					br = a[(j+1)*wid + (i+1)];
+				}
+				if(j>0){
+					tr = a[(j-1)*wid + (i+1)];
+				}
+			}
+			if(j>0){ // tops
+				to = a[(j-1)*wid + i];
+			}
+			if(j<hm1){ // bots
+				bo = a[(j+1)*wid + i];
+			}
+			max = Math.max(tl,to,tr, lf,ri, bl,bo,br);
+			min = Math.min(tl,to,tr, lf,ri, bl,bo,br);
+			if( se>max ){//Code.isUniqueValue(se, tl,to,tr, lf,se,ri, bl,bo,br) ){
+				vals.push( {x:i, y:j, value:se } );
+			}else if(se==max){// if(se>min){
+				//a[index] = Math.min(tl,to,tr, lf,se,ri, bl,bo,br);//Code.secondMax(tl,to,tr, lf,se,rg, bl,bo,br);
+				//a[index] = Code.secondMax(tl,to,tr, lf,se,ri, bl,bo,br);
+				//a[index] = min;
+				a[index] = min;
+			}
+		}
+	}
+	return vals;
+}
+ImageMat.findBlobs2 = function(a,wid,hei){ // px,py,area
+	var blobs = new Array();
+	var i, j, tl,to,tr, lf,se,rg, bl,bo,br, index;
+	var wm1 = wid-1, hm1 = hei-1;
+	var len = wid*hei;
+	var result = a;
+	var loops = 0;
+	var reached = 0;
+	var count = 0;
+	var found = true;
+// the problem is that I want the behavior of the , but I'm deleting my object as I go
+	do{
+		count = 0;
+		reached = 0;
+		a = result;
+		result = new Array(len);
+		found = false;
+		for(i=0;i<wid-0;++i){
+			for(j=0;j<hei-0;++j){
+				index = j*wid + i;
+				result[index] = a[index];
+				se = a[index];
+				tl=0; to=0; tr=0; le=0; ri=0; bl=0; bo=0; br=0;
+				if(i>0){ // lefts
+					le = a[j*wid + (i-1)];
+					if(j>0){
+						tl = a[(j-1)*wid + (i-1)];
+					}
+					if(j<wm1){
+						bl = a[(j+1)*wid + (i-1)];
+					}
+				}
+				if(i<wm1){ // rights
+					ri = a[j*wid + (i+1)];
+					if(j<hm1){
+						br = a[(j+1)*wid + (i+1)];
+					}
+					if(j>0){
+						tr = a[(j-1)*wid + (i+1)];
+					}
+				}
+				if(j>0){ // tops
+					to = a[(j-1)*wid + i];
+				}
+				if(j<hm1){ // bots
+					bo = a[(j+1)*wid + i];
+				}
+				if( tl&&to&&tr&& le&&se&&ri&& bl&&bo&&br ){ // all
+					// stays
+				}else if(se){
+					result[index] = 0;
+					++reached;
+					if( !(tl||to||tr|| le||ri|| bl||bo||br) ){ // last one
+					//if( !(to||le||ri||bo) ){ // last one
+						++count;
+						found = true;
+						blobs.push( {x:i, y:j, radius:(loops+1)} );
+					}
+				}
+			}
+		}
+		console.log(loops+": "+count+" / "+reached);
+		++loops;
+	}while(found && loops<1);
+	//console.log(((count/len)*100) + "%");
+	// A:
+	// count all blobs (init to -1, then go thru using max(tl,to,tr,le,se,ri,bl,bo,br) ), record center of mass
+	// shrink until the number of blobs is inside the desired range => remaining blobs will be the biggest
+	// B:
+	// until there is nothing left:
+	// OR when a blob goes to nothing, record point => largest blobs will die off last
+	// shrink
+	//return new Array();
 	return blobs;
 }
 // ------------------------------------------------------------------------------------------------------------------------ fxns

@@ -45,8 +45,8 @@ Match.prototype._imageCompleteFxn = function(o){
 	Code.copyArray(this._imageList,o.images);
 	var images = o.images;
 	var img = images[0];
-	var ox = 0;
-	var oy = 0;
+	var ox = 0, oy = 0;
+	var i, j, len, obj, index;
 	var wid = img.width;
 	var hei = img.height;
 	this._canvas.drawImage2(img, 0,0);
@@ -185,30 +185,58 @@ var baseBlob = Code.copyArray(new Array(), dat);
 
  	// 1 - expand
  	dat = ImageMat.retractBlob(baseBlob, wid,hei);
-var pts = Code.copyArray(new Array(), dat);
+//var pts = Code.copyArray(new Array(), dat);
  	//dat = ImageMat.expandBlob(dat, wid,hei);
  	dat = ImageMat.ARGBFromFloat(dat);
  	this._canvas.setColorArrayARGB(dat, ox+1*wid,oy+hei,wid,hei);
 
  	// 2 - retract
  	dat = ImageMat.expandBlob(baseBlob, wid,hei);
+var baseBlob = Code.copyArray(new Array(), dat);
  	dat = ImageMat.retractBlob(dat, wid,hei);
-//var pts = Code.copyArray(new Array(), dat);
+var retBlob = Code.copyArray(new Array(), dat);
  	dat = ImageMat.ARGBFromFloat(dat);
  	this._canvas.setColorArrayARGB(dat, ox+2*wid,oy+hei,wid,hei);
 
+var blobs1 = ImageMat.findBlobs(baseBlob, wid,hei); // 457 - 521
+var blobs2 = ImageMat.findBlobs2(baseBlob, wid,hei); // 172
+var blobs = new Array(); // more correct ...
+	len = blobs1.length; for(i=0;i<len;++i){ blobs.push(blobs1[i]);}
+	//len = blobs2.length; for(i=0;i<len;++i){ blobs.push(blobs2[i]);}
+console.log(blobs.length+" | "+(100*blobs.length/(wid*hei))+"%");
+var maxims = new Array(wid*hei);
+len = maxims.length;
+for(i=0;i<len;++i){
+	maxims[i] = 0;
+}
+len = blobs.length;
+for(i=0;i<len;++i){
+	obj = blobs[i];
+	index = obj.y*wid + obj.x;
+	maxims[index] = (1+obj.value/2)/2;
+}
+
+
+var dur = baseBlob;
  	// original superimposed with points
-//pts = ImageMat.retractBlob(pts, wid,hei);
-//pts = ImageMat.retractBlob(pts, wid,hei);
-var nR = ImageMat.addFloat(red,pts); ImageMat.normalFloat01(nR);
-var nG = ImageMat.addFloat(grn,pts); ImageMat.normalFloat01(nG);
-var nB = ImageMat.addFloat(blu,pts); ImageMat.normalFloat01(nB);
+var nR = ImageMat.addFloat(red,maxims);
+	//nR = ImageMat.addFloat(nR,baseBlob);
+	//nR = ImageMat.addFloat(nR,dur);
+	ImageMat.normalFloat01(nR);
+var nG = ImageMat.addFloat(grn,maxims);
+	//nG = ImageMat.addFloat(nG,baseBlob);
+	//nG = ImageMat.addFloat(nG,dur);
+	ImageMat.normalFloat01(nG);
+var nB = ImageMat.addFloat(blu,maxims);
+	//nB = ImageMat.addFloat(nB,baseBlob);
+	//nB = ImageMat.addFloat(nB,dur);
+	ImageMat.normalFloat01(nB);
 var sup = new ImageMat(wid,hei);
 	sup.setRedFromFloat(nR);
 	sup.setGrnFromFloat(nG);
 	sup.setBluFromFloat(nB);
  	dat = sup.getArrayARGB();
- 	this._canvas.setColorArrayARGB(dat, ox+3*wid,oy+hei,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+0*wid,oy+1*hei,wid,hei);
 }
 Match.prototype.colBrightNess = function(c){ //c = Math.round(c/10)*10;
 	return c;
