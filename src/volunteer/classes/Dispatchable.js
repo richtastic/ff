@@ -1,8 +1,8 @@
-// Dispatchable.js
-
+// Dispatchable.js < JSDispatchable.js
 function Dispatchable(){
 	this._dispatch = new Dispatch();
 }
+// -------------------------------------------------------------
 Dispatchable.prototype.addFunction = function(str,fxn,ctx){
 	this._dispatch.addFunction(str,fxn,ctx);
 }

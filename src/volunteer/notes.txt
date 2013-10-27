@@ -313,23 +313,6 @@ insert into users (username, password, email, first_name, last_name, phone, addr
 
 
 NEWEST TODO-----------
-x) no visuals unless logged in
-x) after makign a shift, week now resets to date
-x) SHIFT CREATOR DOES NOT SHOW UP IN IE UNLESS PAGE IS RELOADED
-x) SHIFT LIST HAS DUPLICATE ENTRIES ON IE LOAD
-x) no data on server side either
-x) encode/decode all data in url
-	x client: send request
-		- encode variables (+/-\ invalid URL chars)
-	x server: receive request
-		- decode variables
-		- assume tanted - escape data
-	x server: perform url query
-		- clean variables for json (")
-	x client: recieve request
-		- create json
-		- clean data for HTML display (<>/\)
-x) logging into database logging table
 
 
 TODO:

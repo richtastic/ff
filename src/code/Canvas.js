@@ -19,24 +19,26 @@ Canvas.CURSOR_STYLE_POINT = "point";					// ^ / |m
 Canvas.CURSOR_STYLE_WAIT = "progress";					// tick
 Canvas.CURSOR_STYLE_TYPE = "text";						// I
 // these propagate up/down the display/list
-Canvas.EVENT_MOUSE_DOWN = "canevtmdn";
-Canvas.EVENT_MOUSE_UP = "canevtmup";
-Canvas.EVENT_MOUSE_CLICK = "canevtclk";
-Canvas.EVENT_MOUSE_MOVE = "canevtmov";
+Canvas.EVENT_MOUSE_DOWN = "canevtmoudwn";
+Canvas.EVENT_MOUSE_UP = "canevtmouup";
+Canvas.EVENT_MOUSE_CLICK = "canevtmouclk";
+Canvas.EVENT_MOUSE_MOVE = "canevtmoumov";
+Canvas.EVENT_TOUCH_START = "canevttousta";
+Canvas.EVENT_TOUCH_MOVE = "canevttoumov";
+Canvas.EVENT_TOUCH_END = "canevttouend";
 // these are only sent to DOs who have registered listeners
-Canvas.EVENT_MOUSE_DOWN_OUTSIDE = "canevtmdnout";
-Canvas.EVENT_MOUSE_UP_OUTSIDE = "canevtmupout";
-Canvas.EVENT_MOUSE_CLICK_OUTSIDE = "canevtclkout";
-Canvas.EVENT_MOUSE_MOVE_OUTSIDE = "canevtmovout";
+Canvas.EVENT_MOUSE_DOWN_OUTSIDE = "canevtmoudwnout";
+Canvas.EVENT_MOUSE_UP_OUTSIDE = "canevtmouupout";
+Canvas.EVENT_MOUSE_CLICK_OUTSIDE = "canevtmouclkout";
+Canvas.EVENT_MOUSE_MOVE_OUTSIDE = "canevtmoumovout";
 // 
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 Canvas.IMAGE_TYPE_PNG = "png";
 Canvas.IMAGE_TYPE_JPG = "jpg";
-Canvas._id = 0;
-function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
+Canvas._ID = 0;
+function Canvas(canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
 	Canvas._.constructor.call(this);
-	this._id = Canvas._id++;
-	this._resource = resource;
+	this._jsDispatch = new Dispatch();
 	this._mouseDown = false;
 	this._mousePosition = new V2D();
 	this.matrix = new Matrix2D();
@@ -61,9 +63,48 @@ function Canvas(resource,canHTML,canWid,canHei,fitStyle,hidden){ // input is can
 		this._stageFit = fitStyle;
 	}
 	this._context = this._canvas.getContext("2d");
+	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
+	this.id(Canvas._ID++);
+	this._handleWindowResizedFxn();
 }
-Code.inheritClass(Canvas, Dispatchable);
-//  ------------------------------------------------------------------------------------------------------------------------
+Code.inheritClass(Canvas, JSDispatchable);
+// ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES
+Canvas.prototype.id = function(id){
+	if(id!==undefined){ this._id = id; }
+	return this._id;
+}
+Canvas.prototype.mousePosition = function(){
+	return this._mousePosition;
+}
+Canvas.prototype.getCanvas = function(){
+	return this._canvas;
+}
+Canvas.prototype.getContext = function(){
+	return this._context;
+}
+Canvas.prototype.canvas = function(){
+	return this._canvas;
+}
+Canvas.prototype.context = function(){
+	return this._context;
+}
+Canvas.prototype.size = function(wid,hei){
+	this._canvas.width = wid;
+	this._canvas.height = hei;
+}
+Canvas.prototype.width = function(wid){
+	if(arguments.length>0){
+		this._canvas.width = wid;
+	}
+	return this._canvas.width;
+}
+Canvas.prototype.height = function(hei){
+	if(arguments.length>0){
+		this._canvas.height = hei;
+	}
+	return this._canvas.height;
+}
+//  ------------------------------------------------------------------------------------------------------------------------ CANVAS OPERATIONS
 Canvas.prototype.getColorArrayARGB = function(a,b,c,d){
 	var imgData = this._context.getImageData(a,b,c,d).data;
 	var i, j, w=c, h=d, index, jw, jw4;
@@ -95,11 +136,27 @@ Canvas.prototype.setColorArrayARGB = function(data, x,y, w,h){
 	this._context.putImageData(img,x,y);
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+//  ------------------------------------------------------------------------------------------------------------------------ IMAGE
+Canvas.prototype.getImageData = function(a,b,c,d){ // pixel copying
+	var imgData = this._context.getImageData(a,b,c,d);
+	return imgData;
+}
+Canvas.prototype.setImageData = function(imgData,c,d){ // pixel setting
+	this._context.putImageData(imgData,c,d);
+}
+Canvas.prototype.toDataURL = function(){
+	return this._canvas.toDataURL.call(this._canvas,arguments);
+}
+//  ------------------------------------------------------------------------------------------------------------------------ STYLES
+Canvas.prototype.setClass = function(name){
+	Code.setProperty(this._canvas,name);
+}
+Canvas.prototype.setCursorStyle = function(style){
+	Code.setStyleCursor(this._canvas,style);
+}
+// ------------------------------------------------------------------------------------------------------------------------ context drawing passthrough functions
 Canvas.prototype.drawImage0 = function(img){
-	if(img){
-		this._context.drawImage(img);
-	}
+	this._context.drawImage(img);
 }
 Canvas.prototype.drawImage2 = function(img,px,py){
 	this._context.drawImage(img,px,py);
@@ -110,330 +167,223 @@ Canvas.prototype.drawImage4 = function(img,pX,pY,wX,hY){
 Canvas.prototype.drawImage8 = function(img,sx,sy,swid,shei,x,y,wid,hei){
 	this._context.drawImage(img,sx,sy,swid,shei,x,y,wid,hei);
 }
-//  ------------------------------------------------------------------------------------------------------------------------
-//  ------------------------------------------------------------------------------------------------------------------------
-//  ------------------------------------------------------------------------------------------------------------------------
-//  ------------------------------------------------------------------------------------------------------------------------
-//  ------------------------------------------------------------------------------------------------------------------------
-// // IMAGE ------------------------------------------------------------
-// 	this.getImageData = function(a,b,c,d){
-// 		var imgData = this._context.getImageData(a,b,c,d);
-// 		return imgData;
-// 	};
-// 	this.setImageData = function(imgData,c,d){
-// 		this._context.putImageData(imgData,c,d);
-// 	};
+Canvas.prototype.setLine = function(wid,col){
+	this._context.lineWidth = wid;
+	this._context.strokeStyle = col;
+	this._context.lineJoin = 'bevel';
+	this._context.lineCap = 'round';
+}
+Canvas.prototype.setLineJoinCap = function(j,c){
+	this._context.lineJoin = j;
+	this._context.lineCap = c;
+}
+Canvas.prototype.setLinearFill = function(){
+	this._context.fillStyle = this.createLinearGradient.apply(this,arguments);
+}
+Canvas.prototype.setRadialFill = function(){
+	this._context.fillStyle = this.createRadialGradient.apply(this,arguments);
+}
+Canvas.prototype.setFill = function(col){
+	this._context.fillStyle = col;
+}
+Canvas.prototype.beginPath = function(){
+	this._context.beginPath();
+}
+Canvas.prototype.moveTo = function(pX,pY){
+	this._context.moveTo(pX,pY);
+}
+Canvas.prototype.lineTo = function(pX,pY){
+	this._context.lineTo(pX,pY);
+}
+Canvas.prototype.strokeLine = function(){
+	this._context.stroke();
+}
+Canvas.prototype.arc = function(pX,pY, rad, sA,eA, cw){
+	this._context.arc(pX,pY, rad, sA,eA, cw);
+}
+Canvas.prototype.fill = function(){
+	this._context.fill();
+}
+Canvas.prototype.endPath = function(){
+	this._context.closePath();
+}
+Canvas.prototype.drawRect = function(sX,sY,wX,hY){
+	this._context.fillRect(sX,sY,wX,hY);
+}
+Canvas.prototype.strokeRect = function(sX,sY,wX,hY){
+	this._context.fillRect(sX,sY,wX,hY);
+}
+// ------------------------------------------------------------------------------------------------------------------------ 
+Canvas.prototype.clear = function(){
+	var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
+}
+Canvas.prototype.createLinearGradient = function(sX,sY,eX,eY, percentsAndColors){
+	var gra = this._context.createLinearGradient(sX,sY,eX,eY);
+	for(var i=4; i<arguments.length; i+=2){
+		pct = arguments[i];
+		col = arguments[i+1];
+		gra.addColorStop(pct,Code.getJSRGBA(col));
+	}
+	return gra;
+}
+Canvas.prototype.createRadialGradient = function(sX,sY,sR, eX,eY,eR, percentsAndColors){
+	var gra = this._context.createRadialGradient(sX,sY,sR, eX,eY,eR);
+	for(var i=6; i<arguments.length; i+=2){
+		pct = arguments[i];
+		col = arguments[i+1];
+		gra.addColorStop(pct,Code.getJSRGBA(col));
+	}
+	return gra;
+}
+//  ------------------------------------------------------------------------------------------------------------------------ TEXT
+Canvas.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
+	if(siz==undefined || siz==null){ siz = 12; }
+	if(xP==undefined || xP==null){ xP=0; }
+	if(yP==undefined || yP==null){ yP=0; }
+	if(align==undefined || align==null){ align="left"; }
+	this._context.font = siz+"px "+fnt;
+	this._context.textAlign=align;
+	this._context.fillText(txt,xP,yP);
+}
+Canvas.prototype.measureText = function(str){
+	return this._context.measureText(str);
+}
+//  ------------------------------------------------------------------------------------------------------------------------ LISTENERS
+Canvas.prototype.addListeners = function(){
+	this.addJSEventListener(window, Code.JS_EVENT_RESIZE, this._handleWindowResizedFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_CLICK, this._canvasClickFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_DOWN, this._canvasMouseDownFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
+	this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
+}
+Canvas.prototype.removeListeners = function(){
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_CLICK, this._canvasClickFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_DOWN, this._canvasMouseDownFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
+	this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
+}
+//  ------------------------------------------------------------------------------------------------------------------------ MOUSE POSITIONING
+Canvas.prototype.getMousePosition = function(e){
+	var pos = new V2D(0,0);
+	var ele = this._canvas;
+	while(ele != null){
+		pos.x += ele.offsetLeft;
+		pos.y += ele.offsetTop;
+		ele = ele.offsetParent;
+	}
+	pos.x = e.pageX - pos.x;
+	pos.y = e.pageY - pos.y;
+	return pos;
+}
+Canvas.prototype._canvasClickFxn = function(e){
+	e.preventDefault();
+	pos = this.getMousePosition(e);
+	this.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+}
+Canvas.prototype._canvasMouseDownFxn = function(e){
+	e.preventDefault();
+	this._mouseDown = true;
+	pos = this.getMousePosition(e);
+	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+}
+Canvas.prototype._canvasMouseUpFxn = function(e){
+	e.preventDefault();
+	this._mouseDown = false;
+	pos = this.getMousePosition(e);
+	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+}
+Canvas.prototype._canvasMouseMoveFxn = function(e){
+	e.preventDefault();
+	pos = this.getMousePosition(e);
+	this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
+	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+}
+Canvas.prototype._canvasMouseOutFxn = function(e){
+	e.preventDefault();
+	pos = this.getMousePosition(e);
+	this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
+	//this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...
+	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+}
+//  ------------------------------------------------------------------------------------------------------------------------ TOUCH POSITIONING
+// https://developer.mozilla.org/en-US/docs/DOM/TouchEvent
+Canvas.prototype.getTouchPosition = function(e){
+	return this.getMousePosition(e);
+}
+Canvas.prototype._canvasTouchStartFxn = function(e){ // e.target.touchdata[]
+	//setFeedback( "TOUCH START" );
+	e.preventDefault();
+	pos = this.getTouchPosition(e);
+	this.alertAll(Canvas.EVENT_TOUCH_START,pos);
+	pos = null;
+}
+Canvas.prototype._canvasTouchMoveFxn = function(e){
+	//setFeedback( "TOUCH MOVE" );
+	e.preventDefault();
+	pos = this.getTouchPosition(e);
+	this.alertAll(Canvas.EVENT_TOUCH_MOVE,pos);
+}
+Canvas.prototype._canvasTouchEndFxn = function(e){
+	//setFeedback( "TOUCH END" );
+	e.preventDefault();
+	pos = this.getTouchPosition(e);
+	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+}
 
-// 	this.toDataURL = function(){
-// 		//return this._canvas.toDataURL(this._canvas,arguments);
-// 		return this._canvas.toDataURL.call(this._canvas,arguments);
-// 	};
-// // STYLES ------------------------------------------------------------
-// 	this.setClass = function(name){
-// 		this._canvas.setAttribute("class",name);
-// 	};
-// 	this.setCursorStyle = function(style){
-// 		this._canvas.style.cursor = style;
-// 	};
-// // DRAWING ------------------------------------------------------------
-// 	this.setLine = function(wid,col){
-// 		this._context.lineWidth = wid;
-// 		this._context.strokeStyle = col;
-// 		this._context.lineJoin = 'bevel';
-// 		this._context.lineCap = 'round';
-// 	}
-// 	this.setLineJoinCap = function(j,c){
-// 		this._context.lineJoin = j;
-// 		this._context.lineCap = c;
-// 	}
-// 	this.setLinearFill = function(){
-// 		this._context.fillStyle = this.createLinearGradient.apply(this,arguments);
-// 	}
-// 	this.setRadialFill = function(){
-// 		this._context.fillStyle = this.createRadialGradient.apply(this,arguments);
-// 	}
-// 	this.setFill = function(col){
-// 		this._context.fillStyle = col;
-// 	}
-// 	this.beginPath = function(){
-// 		this._context.beginPath();
-// 	}
-// 	this.moveTo = function(pX,pY){
-// 		this._context.moveTo(pX,pY);
-// 	}
-// 	this.lineTo = function(pX,pY){
-// 		this._context.lineTo(pX,pY);
-// 	}
-// 	this.strokeLine = function(){
-// 		this._context.stroke();
-// 	}
-// 	this.arc = function(pX,pY, rad, sA,eA, cw){
-// 		this._context.arc(pX,pY, rad, sA,eA, cw);
-// 	}
-// 	this.fill = function(){
-// 		this._context.fill();
-// 	}
-// 	this.endPath = function(){
-// 		this._context.closePath();
-// 	}
-// 	this.drawRect = function(sX,sY,wX,hY){
-// 		this._context.fillRect(sX,sY,wX,hY);
-// 	}
-// 	this.strokeRect = function(sX,sY,wX,hY){
-// 		this._context.fillRect(sX,sY,wX,hY);
-// 	}
+// ------------------------------------------------------------------------------------------------------------------------ SCREEN OPERATIONS
+Canvas.prototype._handleWindowResizedFxn = function(e){
+	var p = new V2D(window.innerWidth,window.innerHeight);
+	if(this._stageFit==Canvas.STAGE_FIT_FILL){
+		this.width(p.x); this.height(p.y);
+	}else if(this._stageFit==Canvas.STAGE_FIT_SCALE){
+		Code.preserveAspectRatio2D(p,this.width(),this.height(),p.x,p.y);
+		this.width( Math.floor(p.x) ); this.height( Math.floor(p.y) );
+	} // Canvas.STAGE_FIT_FIXED
+	this.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
+}
 
-// 	/*this.drawImage = function(img,pX,pY,wX,hY,mX,mY,dX,dY){
-// 		if(pX!==undefined && pY!==undefined){
-// 			if(wX!==undefined && hY!==undefined){
-// 				if(dX!==undefined && dY!==undefined){
-// 					self.drawImage8(img,pX,pY, wX,hY, mX,mY, dX,dY);
-// 				}else{
-// 					self.drawImage4(img,pX,pY,wX,hY);
-// 				}
-// 			}else{
-// 				self.drawImage2(img,pX,pY);
-// 			}
-// 		}else{
-// 			self.drawImage0(img);
-// 		}
-// 	}*/
-// 	this.clear = function(){
-// 		var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
-// 		//this._context.clearRect(0,0,this._canvas.width,this._canvas.height);
-// 	}
-// 	this.createLinearGradient = function(sX,sY,eX,eY, percentsAndColors){
-// 		var gra = this._context.createLinearGradient(sX,sY,eX,eY);
-// 		for(var i=4; i<arguments.length; i+=2){
-// 			pct = arguments[i];
-// 			col = arguments[i+1];
-// 			gra.addColorStop(pct,Code.getJSRGBA(col));
-// 		}
-// 		return gra;
-// 	}
-// 	this.createRadialGradient = function(sX,sY,sR, eX,eY,eR, percentsAndColors){
-// 		var gra = this._context.createRadialGradient(sX,sY,sR, eX,eY,eR);
-// 		for(var i=6; i<arguments.length; i+=2){
-// 			pct = arguments[i];
-// 			col = arguments[i+1];
-// 			gra.addColorStop(pct,Code.getJSRGBA(col));
-// 		}
-// 		return gra;
-// 	}
-// 	/*
-// 	function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-//   if (typeof stroke == "undefined" ) {
-//     stroke = true;
-//   }
-//   if (typeof radius === "undefined") {
-//     radius = 5;
-//   }
-//   ctx.beginPath();
-//   ctx.moveTo(x + radius, y);
-//   ctx.lineTo(x + width - radius, y);
-//   ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-//   ctx.lineTo(x + width, y + height - radius);
-//   ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-//   ctx.lineTo(x + radius, y + height);
-//   ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-//   ctx.lineTo(x, y + radius);
-//   ctx.quadraticCurveTo(x, y, x + radius, y);
-//   ctx.closePath();
-//   if (stroke) {
-//     ctx.stroke();
-//   }
-//   if (fill) {
-//     ctx.fill();
-//   }        
-// }
-// 	*/
-// // TEXT ------------------------------------------------------------
-// 	this.drawText = function(txt,siz,fnt,xP,yP,align){
-// 		if(siz==undefined || siz==null){ siz = 12; }
-// 		if(xP==undefined || xP==null){ xP=0; }
-// 		if(yP==undefined || yP==null){ yP=0; }
-// 		if(align==undefined || align==null){ align="left"; }
-// 		self._context.font = siz+"px "+fnt;
-// 		self._context.textAlign=align;
-// 		self._context.fillText(txt,xP,yP);
-// 		// strokeText(txt,x,y [,maxWidth - not fully supported] );
-// 	}
-// 	this.measureText = function(str,callback){
-// 		//return Graphics.canvas.measureText(str);
-// 		callback( self._context.measureText(str) );
-// 	}
-// // GETTERS -----------------------------------------------------------
-// 	this.mousePosition = function(){
-// 		return this._mousePosition;
-// 	}
-// 	this.getCanvas = function(){
-// 		return this._canvas;
-// 	}
-// 	this.getContext = function(){
-// 		return this._context;
-// 	}
-// 	this.canvas = function(){
-// 		return this._canvas;
-// 	}
-// 	this.context = function(){
-// 		return this._context;
-// 	}
-// 	this.size = function(wid,hei){
-// 		this._canvas.width = wid;
-// 		this._canvas.height = hei;
-// 	};
-// 	this.width = function(wid){
-// 		if(arguments.length>0){
-// 			this._canvas.width = wid;
-// 		}
-// 		return this._canvas.width;
-// 	};
-// 	this.height = function(hei){
-// 		if(arguments.length>0){
-// 			this._canvas.height = hei;
-// 		}
-// 		return this._canvas.height;
-// 	};
-// // LISTENERS ----------------------------------------------------------
-// 	this.addListeners = function(){
-// 		this._canvas.addEventListener('click', this.canvasClickFxn);
-// 		this._canvas.addEventListener('mousedown', this.canvasMouseDownFxn);
-// 		this._canvas.addEventListener('mouseup', this.canvasMouseUpFxn);
-// 		this._canvas.addEventListener('mousemove', this.canvasMouseMoveFxn);
-// 		this._canvas.addEventListener("mouseout",this.canvasMouseOutFxn);
-// 		this._canvas.addEventListener('touchstart', this.canvasTouchStartFxn);
-// 		this._canvas.addEventListener('touchmove', this.canvasTouchMoveFxn);
-// 		this._canvas.addEventListener('touchend', this.canvasTouchEndFxn);
-// 		this._canvas.addEventListener('touchenter', this.canvasTouchEnterFxn);
-// 		this._canvas.addEventListener('touchleave', this.canvasTouchLeaveFxn);
-// 		this._canvas.addEventListener('touchcancel', this.canvasTouchCancelFxn);
-// 	}
-// 	this.removeListeners = function(){
-// 		this._canvas.removeEventListener('click', this.canvasClickFxn);
-// 		this._canvas.removeEventListener('mousedown', this.canvasMouseDownFxn);
-// 		this._canvas.removeEventListener('mouseup', this.canvasMouseUpFxn);
-// 		this._canvas.removeEventListener('mousemove', this.canvasMouseMoveFxn);
-// 		this._canvas.removeEventListener("mouseout",this.canvasMouseOutFxn);
-// 		this._canvas.removeEventListener('touchstart', this.canvasTouchStartFxn);
-// 		this._canvas.removeEventListener('touchmove', this.canvasTouchMoveFxn);
-// 		this._canvas.removeEventListener('touchend', this.canvasTouchEndFxn);
-// 		this._canvas.removeEventListener('touchenter', this.canvasTouchEnterFxn);
-// 		this._canvas.removeEventListener('touchleave', this.canvasTouchLeaveFxn);
-// 		this._canvas.removeEventListener('touchcancel', this.canvasTouchCancelFxn);
-// 	}
-// // TOUCH POSITIONING --------------------------------------------------------
-// 	// https://developer.mozilla.org/en-US/docs/DOM/TouchEvent
-// 	this.canvasTouchStartFxn = function(e){ // e.target.touchdata[]
-// 		//setFeedback( "TOUCH START" );
-// 		e.preventDefault();
-// 		pos = self.getTouchPosition(e);
-// 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
-// 		pos = null;
-// 	}
-// 	this.canvasTouchMoveFxn = function(e){
-// 		//setFeedback( "TOUCH MOVE" );
-// 		e.preventDefault();
-// 		pos = self.getTouchPosition(e);
-// 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
-// 	}
-// 	this.canvasTouchEndFxn = function(e){
-// 		//setFeedback( "TOUCH END" );
-// 		e.preventDefault();
-// 		pos = self.getTouchPosition(e);
-// 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
-// 	}
-// 	this.canvasTouchEnterFxn = function(e){
-// 		//
-// 	}
-// 	this.canvasTouchLeaveFxn = function(e){
-// 		//
-// 	}
-// 	this.canvasTouchCancelFxn = function(e){
-// 		//
-// 	}
-// 	this.getTouchPosition = function(e){
-// 		var pos = new V2D(0,0);
-// 		var ele = self._canvas;
-// 		while(ele != null){
-// 			pos.x += ele.offsetLeft;
-// 			pos.y += ele.offsetTop;
-// 			ele = ele.offsetParent;
-// 		}
-// 		pos.x = e.pageX - pos.x;
-// 		pos.y = e.pageY - pos.y;
-// 		return pos;
-// 	}
-// // MOUSE POSITIONING --------------------------------------------------------
-// 	this.canvasClickFxn = function(e){
-// 		e.preventDefault();
-// 		pos = self.getTouchPosition(e);
-// 		self.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
-// 		pos = null;
-// 	}
-// 	this.canvasMouseDownFxn = function(e){
-// 		e.preventDefault();
-// 		self._mouseDown = true;
-// 		pos = self.getMousePosition(e);
-// 		self.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
-// 		pos = null;
-// 	}
-// 	this.canvasMouseUpFxn = function(e){
-// 		e.preventDefault();
-// 		self._mouseDown = false;
-// 		pos = self.getMousePosition(e);
-// 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
-// 		pos = null;
-// 	}
-// 	this.canvasMouseMoveFxn = function(e){
-// 		e.preventDefault();
-// 		pos = self.getMousePosition(e);
-// 		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
-// 		self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
-// 		//pos = null;
-// 	}
-// 	this.canvasMouseOutFxn = function(e){
-// 		e.preventDefault();
-// 		pos = self.getMousePosition(e);
-// 		self._mousePosition.x = pos.x; self._mousePosition.y = pos.y;
-// 		//self.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...
-// 		self.alertAll(Canvas.EVENT_MOUSE_UP,pos);
-// 	}
-// 	this.getMousePosition = function(e){
-// 		var pos = new V2D(0,0);
-// 		var ele = self._canvas;
-// 		while(ele != null){
-// 			pos.x += ele.offsetLeft;
-// 			pos.y += ele.offsetTop;
-// 			ele = ele.offsetParent;
-// 		}
-// 		pos.x = e.pageX - pos.x;
-// 		pos.y = e.pageY - pos.y;
-// 		return pos;
-// 	}
-// // ... --------------------------------------------------------
-// 	this.windowResizedFxn = function(o){
-// 		var p = new V2D(o.x,o.y);
-// 		if(self._stageFit==Canvas.STAGE_FIT_FILL){
-// 			self._canvas.width = o.x; self._canvas.height = o.y;
-// 		}else if(self._stageFit==Canvas.STAGE_FIT_SCALE){
-// 			Code.preserveAspectRatio2D(p,canvasWidth,canvasHeight,o.x,o.y);
-// 			self._canvas.width = Math.floor(p.x); self._canvas.height = Math.floor(self._canvas.height = p.y);
-// 		}else{ // Canvas.STAGE_FIT_FIXED
-// 			//
-// 		}
-// 		self.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
-// 	};
-// // -------------------------------------------------------------- constructor
-// 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
-// 	if(this._resource){ // may not get one
-// 		this._resource.addFunction(Dispatch.EVENT_WINDOW_RESIZE,this.windowResizedFxn);
-// 	}
-// }
 
-// /*var fill = context.createRadialGradient(canvas.width/2,canvas.height/2,0, canvas.width/2,canvas.height/2,500);
-// 		fill.addColorStop(0,'rgba(255,0,0,1.0)');
-// 		fill.addColorStop(0.25,'rgba(0,255,0,1.0)');
-// 		fill.addColorStop(0.5,'rgba(0,0,255,1.0)');
-// 		*/
-// 		//var fill = '#FF0000';
-// 		//var fill = 'rgba(255,0,0,0.10)';
+/*var fill = context.createRadialGradient(canvas.width/2,canvas.height/2,0, canvas.width/2,canvas.height/2,500);
+		fill.addColorStop(0,'rgba(255,0,0,1.0)');
+		fill.addColorStop(0.25,'rgba(0,255,0,1.0)');
+		fill.addColorStop(0.5,'rgba(0,0,255,1.0)');
+		*/
+		//var fill = '#FF0000';
+		//var fill = 'rgba(255,0,0,0.10)';
+
+
+	/*
+	function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (typeof stroke == "undefined" ) {
+    stroke = true;
+  }
+  if (typeof radius === "undefined") {
+    radius = 5;
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+  if (stroke) {
+    ctx.stroke();
+  }
+  if (fill) {
+    ctx.fill();
+  }        
+}
+	*/

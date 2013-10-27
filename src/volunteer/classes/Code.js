@@ -1,5 +1,50 @@
 // Code.js 
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
+// http://www.quirksmode.org/dom/events/index.html
+Code.JS_EVENT_CLICK = "click";
+Code.JS_EVENT_RESIZE = "resize";
+Code.JS_EVENT_MOUSE_UP = "mouseup";
+Code.JS_EVENT_MOUSE_DOWN = "mousedown";
+Code.JS_EVENT_MOUSE_MOVE = "mousemove";
+Code.JS_EVENT_MOUSE_OUT = "mouseout";
+	//Code.JS_EVENT_MOUSE_ENTER = "mouseenter";
+	//Code.JS_EVENT_MOUSE_LEAVE = "mouseleave";
+Code.JS_EVENT_MOUSE_OVER = "mouseover";
+Code.JS_EVENT_MOUSE_WHEEL = "mousewheel";
+	//Code.JS_EVENT_WHEEL = "wheel";
+Code.JS_EVENT_TOUCH_START = "touchstart";
+Code.JS_EVENT_TOUCH_MOVE = "touchmove";
+Code.JS_EVENT_TOUCH_END = "touchend";
+Code.JS_EVENT_TOUCH_ENTER = "touchenter";
+Code.JS_EVENT_TOUCH_LEAVE = "touchleave";
+Code.JS_EVENT_TOUCH_CANCEL = "touchcancel";
+Code.JS_EVENT_SCROLL = "scroll"; // window.onscroll
+Code.JS_EVENT_BLUR = "blur";
+Code.JS_EVENT_CHANGE = "change";
+Code.JS_EVENT_RIGHT_CLICK = "contextmenu";
+Code.JS_EVENT_COPY = "copy";
+Code.JS_EVENT_CUT = "cut";
+Code.JS_EVENT_PASTE = "paste";
+Code.JS_EVENT_DOUBLE_CLICK = "dblclick";
+Code.JS_EVENT_ERROR = "error";
+Code.JS_EVENT_FOCUS = "focus";
+Code.JS_EVENT_FOCUS_IN = "focusin";
+Code.JS_EVENT_FOCUS_OUT = "focusout";
+Code.JS_EVENT_LOCATION = "hashchange";
+Code.JS_EVENT_KEY_DOWN = "keydown";
+Code.JS_EVENT_KEY_PRESS = "keypress";
+Code.JS_EVENT_KEY_UP = "keyup";
+Code.JS_EVENT_LOAD = "load";
+Code.JS_EVENT_RESET = "reset";
+Code.JS_EVENT_SCROLL = "scroll";
+Code.JS_EVENT_SELECT = "select";
+Code.JS_EVENT_SUBMIT = "submit";
+Code.JS_EVENT_UNLOAD = "textinput";
+//
+Code.TYPE_FUNCTION = 'function';
+Code.TYPE_OBJECT = 'object';
+Code.TYPE_STRING = 'string';
+Code.TYPE_ARRAY = 'array';
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -16,7 +61,6 @@ Code.extendClass = function extendClass(target, source) {
 	        Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));
 	    });
 	}else{ // IE
-		
 		for(key in source){
 			target[key] = source[key];
 		}
@@ -73,8 +117,10 @@ Code.log = function log(o){
 			console.log( o );
 		}else if(typeof o == Code.TYPE_FUNCTION){
 			console.log( o );
-		}else{
+		}else if(false){//typeof o == Code.TYPE_OBJECT && o.toString!==null && o.toString!==undefined){
 			console.log( o.toString() );
+		}else{
+			console.log( o );
 		}
 	}
 }
@@ -500,6 +546,9 @@ Code.setStyleWidth = function(ele,val){
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
+Code.setStyleCursor = function(ele,style){
+	ele.style.cursor = style;
+};
 Code.getDomBody = function(){
 	return document.body;
 }
@@ -574,12 +623,25 @@ Code.unhide = function(ele){
 	ele.style.display = Code.IS_IE?"block":"inherit";
 }
 // -------------------------------------------------------- TRANSLATORS
+Code.getTypeFromEvent = function(e){
+	if(!e){ e = window.event; } // IE
+	return e.type;
+}
 Code.getTargetFromMouseEvent = function(e){
 	if(!e){ e = window.event; } // IE
 	if(e.target){
 		return e.target;
 	}
 	return e.srcElement; // IE
+}
+// -------------------------------------------------------- LISTENING
+Code.addEventListener = function(ele,str,fxn){
+	if(Code.IS_IE){
+		// ele["on"+str]
+		ele.attachEvent("on"+str,fxn);
+	}else{
+		ele.addEventListener(str,fxn);
+	}
 }
 // -------------------------------------------------------- LISTENERS
 Code.addListenerClick = function(ele,fxn,ctx){
@@ -614,6 +676,16 @@ Code.addListenerChange = function(ele,fxn){
 Code.stopEventPropagation = function(e){
 	e.stopPropagation();
 }
+
+
+Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
+	var ar = wid/hei;
+	v.x = fitWid; v.y = fitWid/ar;
+	if(v.y>fitHei){
+		v.x = fitHei*ar; v.y = fitHei;
+	}
+}
+
 // -------------------------------------------------------- COOKIES
 Code.setCookie = function(c_name, value, seconds){
 	seconds = seconds*1000;

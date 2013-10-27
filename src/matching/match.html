@@ -10,7 +10,7 @@ function pageLoadedFxn(){
 	ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["Match.js"];
+	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","ImageFeature.js","Match.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,false);
 	scriptLoader.load();
 }

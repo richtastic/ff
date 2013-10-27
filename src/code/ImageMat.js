@@ -87,6 +87,17 @@ ImageMat.ARGBFromFloat = function(data){
 	}
 	return a;
 }
+ImageMat.ARGBFromFloats = function(rF,gF,bF){
+	var i, len = rF.length;
+	var col, r,g,b,a = new Array(len);
+	for(i=0;i<len;++i){
+		r = Math.round(rF[i]*255.0);
+		g = Math.round(gF[i]*255.0);
+		b = Math.round(bF[i]*255.0);
+		a[i] = Code.getColARGB( 0xFF, r,g,b);
+	}
+	return a;
+}
 ImageMat.ARGBFromRGBArrays = function(r,g,b){
 	var i, len = r.length;
 	var col, a = new Array(len);
@@ -246,7 +257,7 @@ ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
 				}
 			}
 		}
-		console.log(loops+": "+reached);
+		//Code.log(loops+": "+reached);
 		++loops;
 		if(reached>0){
 			sumResult = ImageMat.addFloat(sumResult, result);
@@ -374,7 +385,7 @@ ImageMat.findBlobs2 = function(a,wid,hei){ // px,py,area
 				}
 			}
 		}
-		console.log(loops+": "+count+" / "+reached);
+		//console.log(loops+": "+count+" / "+reached);
 		++loops;
 	}while(found && loops<1);
 	//console.log(((count/len)*100) + "%");

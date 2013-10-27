@@ -31,9 +31,11 @@ E) decide best matches for each point by sorting by best match (pt.matchest[0].s
 	ptB.matches = [{ptI,score},{ptJ,score},..,{ptA,score}]
 	...
 
+
 */
 function Match(){
-	this._canvas = new Canvas(null, null, 2400,600, Canvas.STAGE_FIT_FIXED, false);
+	this._canvas = new Canvas(null, 2400,600, Canvas.STAGE_FIXED, false);
+	this._canvas.addListeners();
 	this._imageList = new Array();
 	var imageLoader = new ImageLoader("./images/medium/",["FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
@@ -53,6 +55,7 @@ Match.prototype._imageCompleteFxn = function(o){
 	// 
  	var dat = this._canvas.getColorArrayARGB(ox,oy,wid,hei);
  	var img = new ImageMat(wid,hei);
+var originalImage = img;
  	img.setFromArrayARGB(dat);
  		// historize introduces a lot of noise
 	 	// var normR = ImageMat.historize0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
@@ -203,7 +206,7 @@ var blobs2 = ImageMat.findBlobs2(baseBlob, wid,hei); // 172
 var blobs = new Array(); // more correct ...
 	len = blobs1.length; for(i=0;i<len;++i){ blobs.push(blobs1[i]);}
 	//len = blobs2.length; for(i=0;i<len;++i){ blobs.push(blobs2[i]);}
-console.log(blobs.length+" | "+(100*blobs.length/(wid*hei))+"%");
+//console.log(blobs.length+" | "+(100*blobs.length/(wid*hei))+"%");
 var maxims = new Array(wid*hei);
 len = maxims.length;
 for(i=0;i<len;++i){
@@ -216,6 +219,11 @@ for(i=0;i<len;++i){
 	maxims[index] = (1+obj.value/2)/2;
 }
 
+//
+var pnt0 = blobs[113];
+Code.log(pnt0);
+maxims[wid*pnt0.y + pnt0.x] += 3;
+//
 
 var dur = baseBlob;
  	// original superimposed with points
@@ -227,7 +235,7 @@ var nG = ImageMat.addFloat(grn,maxims);
 	//nG = ImageMat.addFloat(nG,baseBlob);
 	//nG = ImageMat.addFloat(nG,dur);
 	ImageMat.normalFloat01(nG);
-var nB = ImageMat.addFloat(blu,maxims);
+var nB = ImageMat.addFloat(blu,maxims);1
 	//nB = ImageMat.addFloat(nB,baseBlob);
 	//nB = ImageMat.addFloat(nB,dur);
 	ImageMat.normalFloat01(nB);
@@ -236,7 +244,15 @@ var sup = new ImageMat(wid,hei);
 	sup.setGrnFromFloat(nG);
 	sup.setBluFromFloat(nB);
  	dat = sup.getArrayARGB();
- 	this._canvas.setColorArrayARGB(dat, ox+0*wid,oy+1*hei,wid,hei);
+ 	this._canvas.setColorArrayARGB(dat, ox+0*wid,oy+0*hei,wid,hei);
+
+var feat0 = this.describePoint(pnt0.x,pnt0.y, wid,hei, red,grn,blu,gray);
+Code.log(feat0);
+
+dat = ImageMat.ARGBFromFloats( feat0._bitmap.red(), feat0._bitmap.grn(), feat0._bitmap.blu() );
+//dat = ImageMat.ARGBFromFloat( feat0._bitmap.gry() );
+this._canvas.setColorArrayARGB(dat, 10,10, feat0._bitmap.width(),feat0._bitmap.height());
+
 }
 Match.prototype.colBrightNess = function(c){ //c = Math.round(c/10)*10;
 	return c;
@@ -254,7 +270,11 @@ Match.prototype.fxnOp1 = function(f){
 Match.prototype.fxnOpOp = function(f){ 
 	return Math.abs(f-1);
 }
-
+Match.prototype.describePoint = function(x,y, wid,hei, origR,origG,origB,origY, gradRX,gradRY, gradGX,gradGY, gradBX,gradBY, gradYX,gradYY){
+	// HERE
+	var feature = new ImageFeature(x,y, wid,hei, origR,origG,origB,origY, gradRX,gradRY, gradGX,gradGY, gradBX,gradBY, gradYX,gradYY);
+	return feature;
+}
 /*
 
 local maxima

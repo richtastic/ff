@@ -27,29 +27,51 @@ Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arg
 		}
 	}
 }
-Dispatch.prototype.addFunction = function(str,fxn,ctx){
+Dispatch.prototype.addFunction = function(str,fxn,ctx,obj){
 	if(this.list[str] == undefined){
 		this.list[str] = new Array();
 	}
 	if(ctx!==undefined){
-		Code.addUnique(this.list[str],[fxn,ctx]);
+		if(obj!==undefined){
+			this.list[str].push([fxn,ctx,obj]);
+		}else{
+			this.list[str].push([fxn,ctx]);
+		}
 	}else{
-		Code.addUnique(this.list[str],fxn);
+		this.list[str].push(fxn);
 	}
 }
-Dispatch.prototype.removeFunction = function(str,fxn,ctx){
+Dispatch.prototype.removeFunction = function(str,fxn,ctx,obj){
 	if( this.list[str] == undefined){ return; }
-	// ctx
-	Code.removeElementSimple(this.list[str],fxn);
+	var arr = this.list[str];
+	if(!arr){ return; }
+	var i, len = arr.length;
+	for(i=0;i<len;++i){
+		if(arr[i] instanceof Array){
+			if(arr[i][0]==fxn && arr[i][1]==ctx && arr[i][2]==obj){
+				arr[i].pop(); arr[i].pop(); arr[i].pop();
+				arr[i] = arr[len-1];
+				arr.pop();
+				break;
+			}
+		}else{
+			if(arr[i]==fxn){
+				arr[i] = arr[len-1];
+				arr.pop();
+				break;
+			}
+		}
+	}
 	if(this.list[str].length == 0){
 		this.list[str] = undefined;
+		delete this.list[str];
 	}
 }
 Dispatch.prototype.kill = function(){
 	for(var key in this.list){
-		// ctx
 		Code.emptyArray(this.list[key]);
 		this.list[key] = undefined;
+		delete this.list[key];
 	}
 	this.list = null;
 }
