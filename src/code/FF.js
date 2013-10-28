@@ -15,7 +15,8 @@ function FF(homeDir, completeFxn,  progressFxn){
 	head.appendChild(this._script);
 }
 FF.prototype._startLoadingFxn = function(){
-	var list = ["Code.js","ScriptLoader.js","ImageLoader.js","V2D.js","V3D.js","Matrix2D.js","Dispatch.js","Dispatchable.js","JSDispatchable.js","Ajax.js","ImageMat.js","Canvas.js","DO.js","Stage.js"];
+	var list = ["Code.js","ScriptLoader.js","ImageLoader.js","V2D.js","V3D.js","Matrix2D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatchable.js","Ajax.js","ImageMat.js",
+				"Canvas.js","Graphics.js","DO.js","Stage.js"];
 	var ctx = this.context;
 	this.context = null;
 	var scriptLoader = new ScriptLoader(ctx._homeDir,list,ctx,ctx._classesLoadedFxn,ctx._classesProgressFxn);

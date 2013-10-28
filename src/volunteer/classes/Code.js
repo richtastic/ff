@@ -276,8 +276,11 @@ Code.getAlpARGB = function(col){
 	return (col>>24)&0xFF;
 }
 // color functions ----------------------------------------------------
-Code.getJSRGBA = function(col){
+Code.getJSColorFromRGBA = function(col){
 	return "rgba("+Code.getRedRGBA(col)+","+Code.getGrnRGBA(col)+","+Code.getBluRGBA(col)+","+Code.getAlpRGBA(col)/255.0+")";
+}
+Code.getJSColorFromARGB = function(col){
+	return "rgba("+Code.getRedARGB(col)+","+Code.getGrnARGB(col)+","+Code.getBluARGB(col)+","+Code.getAlpARGB(col)/255.0+")";
 }
 // formatting functions ----------------------------------------------
 Code.prependFixed = function(start,pad,count){
@@ -623,6 +626,10 @@ Code.unhide = function(ele){
 	ele.style.display = Code.IS_IE?"block":"inherit";
 }
 // -------------------------------------------------------- TRANSLATORS
+Code.getJSEvent = function(e){
+	if(!e){ e = window.event; } // IE
+	return e;
+}
 Code.getTypeFromEvent = function(e){
 	if(!e){ e = window.event; } // IE
 	return e.type;

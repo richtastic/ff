@@ -35,15 +35,32 @@ E) decide best matches for each point by sorting by best match (pt.matchest[0].s
 */
 function Match(){
 	this._canvas = new Canvas(null, 2400,600, Canvas.STAGE_FIXED, false);
-	this._canvas.addListeners();
+	//this._canvas.addListeners();
+	this._stage = new Stage(this._canvas, (1/10)*1000);
+	this._stage.start();
+
+var root = new DO();
+this._stage.addChild(root);
+root.graphics().setLine(2,0xFF0000FF);
+root.graphics().beginPath();
+root.graphics().moveTo(0,0);
+root.graphics().lineTo(10,100);
+root.graphics().endPath();
+root.graphics().strokeLine();
+
+
+	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/",["FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/",["FT.png"], //"FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
 Match.prototype._imageProgressFxn = function(o){
 }
 Match.prototype._imageCompleteFxn = function(o){
+	console.log("LOADED");
+}
+Match.prototype._imageCompleteFxn2 = function(o){
 	Code.copyArray(this._imageList,o.images);
 	var images = o.images;
 	var img = images[0];

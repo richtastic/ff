@@ -126,7 +126,10 @@ ImageMat.colorArrayFxnARGB_ARGB = function(data, fxnA, fxnR, fxnG, fxnB){
 		data[i] = Code.getColARGB(fxnA(a),fxnR(r),fxnG(g),fxnB(b));
 	}
 }
-
+// ------------------------------------------------------------------------------------------------------------------------ interpolations
+ImageMat.rotateImage = function(){
+	
+}
 // ------------------------------------------------------------------------------------------------------------------------ image operations
 ImageMat.colorize = function(c, rnd){ // var rnd = 50;
 	return Math.round(Math.round(c/rnd)*rnd);
