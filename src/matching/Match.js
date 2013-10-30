@@ -40,7 +40,6 @@ function Match(){
 	this._stage.start();
 
 var root = new DO();
-this._stage.addChild(root);
 root.graphics().setLine(2,0xFF0000FF);
 root.graphics().beginPath();
 root.graphics().moveTo(0,0);
@@ -48,19 +47,213 @@ root.graphics().lineTo(10,100);
 root.graphics().endPath();
 root.graphics().strokeLine();
 
+var square = new DO();
+	square.graphics().setLine(3.0,0xFFFF0000);
+	square.graphics().beginPath();
+	square.graphics().setFill(0x99FF0000);
+	square.graphics().moveTo(0,0);
+	square.graphics().lineTo(100,0);
+	square.graphics().lineTo(100,100);
+	square.graphics().lineTo(0,100);
+	square.graphics().lineTo(0,0);
+	square.graphics().endPath();
+	square.graphics().fill();
+	square.graphics().strokeLine();
+var circle = new DO();
+	circle.graphics().setLine(3.0,0xFF0000FF);
+	circle.graphics().beginPath();
+	circle.graphics().setFill(0x990000FF);
+	circle.graphics().moveTo(0,0);
+	circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
+	circle.graphics().endPath();
+	circle.graphics().fill();
+	circle.graphics().strokeLine();
+	circle.matrix().identity();
+	circle.matrix().rotate(Math.PI/10);
+	circle.matrix().translate(100,100);
+	//circle.addFunction(Stage.EVENT_ON_ENTER_FRAME, function(e){ console.log("I HAVE EFF"); }); // this._stage
 
+var triangle = new DO();
+	triangle.graphics().setLine(3.0,0xFF00FF00);
+	triangle.graphics().beginPath();
+	triangle.graphics().setFill(0x9900FF00);
+	triangle.graphics().moveTo(-30,30);
+	triangle.graphics().lineTo(30,30);
+	triangle.graphics().lineTo(0,-30);
+	triangle.graphics().lineTo(-30,30);
+	triangle.graphics().endPath();
+	triangle.graphics().fill();
+	triangle.graphics().strokeLine();
+	triangle.matrix().identity();
+	triangle.matrix().rotate(-Math.PI/10);
+	triangle.matrix().translate(50,0);
+this._stage.addChild(root);
+	root.addChild(square);
+		square.addChild(circle);
+			circle.addChild(triangle);
+	//
 	//
 	this._imageList = new Array();
 	var imageLoader = new ImageLoader("./images/medium/",["FT.png"], //"FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
-Match.prototype._imageProgressFxn = function(o){
+Match.prototype._imageProgressFxn0 = function(o){
+}
+Match.prototype._imageCompleteFxn3 = function(o){
+	var images = o.images;
+	var img = images[0];
+	//
+	Code.copyArray(this._imageList,o.images);
+	var image = new DOImage(img);
+	image.matrix().identity();
+	//image.matrix().rotate(Math.PI/10);
+	image.matrix().translate(0,0);
+	this._stage.root().getChildAt(0).getChildAt(0).getChildAt(0).getChildAt(0).addChild(image);
+	//this._stage.stop();
+	console.log("LOADED");
+
+	var x, y, angle, dir, col, base, percent;
+
+	var dirRed = new V2D(1,1); dirRed.norm();
+	var dirGrn = new V2D(0.5,1); dirGrn.norm();
+	var dirBlu = new V2D(1,-0.5); dirBlu.norm();
+	var dirGry = new V2D(1,0); ; dirGry.norm();
+	var dirRadius = 20.0;
+
+
+	// ---------------------------------------------------------------------- gradient orientation
+	var direction = new DO();
+	dir = dirRed;
+	direction.graphics().setLine(1.0,0xFFFF0000);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+	dir = dirGrn;
+	direction.graphics().setLine(1.0,0xFF00FF00);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+	dir = dirBlu;
+	direction.graphics().setLine(1.0,0xFF0000FF);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+	dir = dirGry;
+	direction.graphics().setLine(1.0,0xFFCCCCCC);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+
+	direction.matrix().identity();
+	direction.matrix().translate(100,-50);
+
+	// ---------------------------------------------------------------------- gradient intensity
+
+
+	// ---------------------------------------------------------------------- color intensity
+	var colRed = 0.35;
+	var colGrn = 0.60;
+	var colBlu = 0.95;
+	var colGry = (colRed+colGrn+colBlu)/3.0;
+	var range = Math.max(colRed,colGrn,colBlu) - Math.min(colRed,colGrn,colBlu);
+
+	var block = 30;
+	base = colGry;
+
+	var intensity = new DO();
+	x = 0*block;
+	col = colRed; percent = (col-base)/range;
+	intensity.graphics().beginPath();
+	intensity.graphics().setFill(0xCCFF0000);
+	intensity.graphics().moveTo(x,0);
+	intensity.graphics().lineTo(x+block,0);
+	intensity.graphics().lineTo(x+block,block*percent);
+	intensity.graphics().lineTo(x,block*percent);
+	intensity.graphics().lineTo(x,0);
+	intensity.graphics().endPath();
+	intensity.graphics().fill();
+
+	x = 1*block;
+	col = colGrn; percent = (col-base)/range;
+	intensity.graphics().beginPath();
+	intensity.graphics().setFill(0xCC00FF00);
+	intensity.graphics().moveTo(x,0);
+	intensity.graphics().lineTo(x+block,0);
+	intensity.graphics().lineTo(x+block,block*percent);
+	intensity.graphics().lineTo(x,block*percent);
+	intensity.graphics().lineTo(x,0);
+	intensity.graphics().endPath();
+	intensity.graphics().fill();
+
+	x = 2*block;
+	col = colBlu; percent = (col-base)/range;
+	intensity.graphics().beginPath();
+	intensity.graphics().setFill(0xCC0000FF);
+	intensity.graphics().moveTo(x,0);
+	intensity.graphics().lineTo(x+block,0);
+	intensity.graphics().lineTo(x+block,block*percent);
+	intensity.graphics().lineTo(x,block*percent);
+	intensity.graphics().lineTo(x,0);
+	intensity.graphics().endPath();
+	intensity.graphics().fill();
+
+
+	intensity.matrix().identity();
+	intensity.matrix().translate(150,-50);
+	//intensity.graphics().strokeLine();
+	// ---------------------------------------------------------------------- 
+
+	/*
+	circle.graphics().setLine(3.0,0xFF0000FF);
+	circle.graphics().beginPath();
+	circle.graphics().setFill(0x990000FF);
+	circle.graphics().moveTo(0,0);
+	circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
+	circle.graphics().endPath();
+	circle.graphics().fill();
+	circle.graphics().strokeLine();
+	*/
+
+
+	// 
+	image.addChild(direction);
+	image.addChild(intensity);
+	image.matrix().identity();
+	image.matrix().scale(1.5,0.5);
+
+	var p;
+	//
+	
+	var colA = new V3D(0.5,0.9,0.8); avg = (colA.x+colA.y+colA.z)/3; var colAN = new V3D(colA.x-avg,colA.y-avg,colA.z-avg); colAN.norm();
+	var colB = new V3D(0.4,0.7,0.6); avg = (colB.x+colB.y+colB.z)/3; var colBN = new V3D(colB.x-avg,colB.y-avg,colB.z-avg); colBN.norm();
+	var colC = new V3D(0.5,0.5,0.5); avg = (colC.x+colC.y+colC.z)/3; var colCN = new V3D(colC.x-avg,colC.y-avg,colC.z-avg); colCN.norm();
+	console.log(colAN.toString());
+	console.log(colBN.toString());
+	console.log(colCN.toString());
+	// colorful ranking - 
+	console.log(V3D.dot(colAN,colBN));
+	console.log(V3D.dot(colAN,colCN));
+	console.log("-----------------------------");
+	// 0(best) to 3 ranking
+	p = new V3D(colA.x-colB.x, colA.y-colB.y, colA.z-colB.z);
+	console.log(p.toString());
+	console.log(p.length());
+	p = new V3D(colA.x-colC.x, colA.y-colC.y, colA.z-colC.z);
+	console.log(p.toString());
+	console.log(p.length());
 }
 Match.prototype._imageCompleteFxn = function(o){
-	console.log("LOADED");
-}
-Match.prototype._imageCompleteFxn2 = function(o){
+	var imageDO = new DO();
+	//this._stage.stop();
 	Code.copyArray(this._imageList,o.images);
 	var images = o.images;
 	var img = images[0];
@@ -69,6 +262,21 @@ Match.prototype._imageCompleteFxn2 = function(o){
 	var wid = img.width;
 	var hei = img.height;
 	this._canvas.drawImage2(img, 0,0);
+
+	var matrix = new Matrix2D();
+	var imgDO;
+	imgDO = new DOImage( img );
+		matrix.identity();
+		matrix.translate(-100,-100);
+	img = this._stage.renderImage(50,50, imgDO, matrix, Canvas.IMAGE_TYPE_PNG);
+
+	imgDO.image( img );
+	this._stage.root().addChild(imgDO);
+	imgDO.matrix().identity();
+	//imgDO.matrix().scale(0.25,0.25);
+	imgDO.matrix().translate(10,10);
+
+return;
 	// 
  	var dat = this._canvas.getColorArrayARGB(ox,oy,wid,hei);
  	var img = new ImageMat(wid,hei);

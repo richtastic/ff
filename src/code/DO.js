@@ -103,6 +103,9 @@ DO.prototype.parent = function(parent){
 	}
 	return this._parent;
 }
+DO.prototype.matrix = function(){ // get only
+	return this._matrix;
+}
 DO.prototype.graphics = function(){
 	return this._graphics;
 }
@@ -204,6 +207,9 @@ DO.prototype.removedFromStage = function(stage){
 	this.removeListeners();
 	this.alertAll(DO.EVENT_REMOVED_FROM_STAGE,this);
 }
+DO.prototype.getChildAt = function(i){
+	return this._children[i];
+}
 DO.prototype.addChild = function(ch){
 	if(!ch){return;}
 	ch.parent(this);
@@ -232,15 +238,14 @@ DO.prototype.kill = function(ch){
 	Code.killArray(this._children);
 	this._matrix.kill();
 	this.parent = null;
-	
+	DO._.kill.call(this);
 }
 // ------------------------------------------------------------------------------------------------------------------------ INTERSECTION
-this.checkIntersectionChildren = function(b){
+DO.prototype.checkIntersectionChildren = function(b){
 	if(b!==undefined){
 		this._checkIntersectionChildren = b;
-	}else{
-		return this._checkIntersectionChildren;
 	}
+	return this._checkIntersectionChildren;
 }
 this._checkIntersectionChildren = true;
 this._checkIntersectionThis = true;

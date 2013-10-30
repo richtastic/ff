@@ -12,7 +12,7 @@ function Ticker(delta){
 	}
 }
 Code.inheritClass(Ticker, Dispatchable);
-// ------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------ LIFE
 Ticker.prototype.isRunning = function (){
 	return this._running;
 }
@@ -49,5 +49,12 @@ Ticker.prototype._next = function(){
 		this._timer = setTimeout(this._handleNextExternal,Math.max(this._delta-nextTime+prevTime,10) );
 	}
 }
-
-
+// ------------------------------------------------------------------------------------------------------------------------ DEATH
+Ticker.prototype.kill = function(){
+	this._stop();
+	this._timer = null;
+	this._running = false;
+	this._delta = undefined;
+	this._handleNextExternal = null;
+	Ticker._.kill.call(this);
+}

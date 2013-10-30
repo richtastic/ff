@@ -41,7 +41,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML 
 	this._jsDispatch = new Dispatch();
 	this._mouseDown = false;
 	this._mousePosition = new V2D();
-	this.matrix = new Matrix2D();
+	this._matrix = new Matrix2D();
 	if(canHTML){
 		this._canvas = canHTML;
 	}else{
@@ -82,6 +82,13 @@ Canvas.prototype.canvas = function(){
 }
 Canvas.prototype.context = function(){
 	return this._context;
+}
+Canvas.prototype.contextIdentity = function(){
+	this._context.setTransform(1,0,0,1,0,0);
+}
+Canvas.prototype.contextTransform = function(matrix){
+	var a = matrix.get();
+	this._context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
 }
 Canvas.prototype.size = function(wid,hei){
 	this._canvas.width = wid;
@@ -141,6 +148,12 @@ Canvas.prototype.setImageData = function(imgData,c,d){ // pixel setting
 }
 Canvas.prototype.toDataURL = function(){
 	return this._canvas.toDataURL.call(this._canvas,arguments);
+}
+Canvas.prototype.getAsImage = function(x,y,w,h){
+	var image = new Image();
+	// copy canvas image data to temp canvas
+	image.src = this._canvas.toDataURL.call(this._canvas,arguments);
+	return image;
 }
 //  ------------------------------------------------------------------------------------------------------------------------ STYLES
 Canvas.prototype.setClass = function(name){
@@ -351,6 +364,10 @@ Canvas.prototype._handleWindowResizedFxn = function(e){
 	this.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
 }
 
+Canvas.prototype.kill = function(e){
+	// ...
+	Canvas._.kill.call(this);
+}
 
 /*var fill = context.createRadialGradient(canvas.width/2,canvas.height/2,0, canvas.width/2,canvas.height/2,500);
 		fill.addColorStop(0,'rgba(255,0,0,1.0)');

@@ -1,4 +1,4 @@
-// Dispatchable.js < JSDispatchable.js
+// Dispatchable.js
 function Dispatchable(){
 	this._dispatch = new Dispatch();
 }

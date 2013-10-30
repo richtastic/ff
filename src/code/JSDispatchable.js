@@ -25,6 +25,7 @@ JSDispatchable.prototype.removeJSEventListener = function(){
 JSDispatchable.prototype.kill = function(){
 	this._dispatchJSDispatchable.kill();
 	this._dispatchJSDispatchable = null;
+	JSDispatchable._.kill.call(this);
 }
 
 // NEXT STEP IS TO DEAL WITH OLD IE WITH object.onclick - via some code-global fxn array

@@ -8,8 +8,8 @@ function Stage(can, fr){
 	this.canvas(can);
 	this._timer = new Ticker(fr);
 	this._time = 0;
-	this._tempCanvas = new Canvas(null,null,100,100,Canvas.STAGE_FIT_FIXED,true);
-	this._renderCanvas = new Canvas(null,null,100,100,Canvas.STAGE_FIT_FIXED,true);
+	this._tempCanvas = new Canvas(null,100,100,Canvas.STAGE_FIT_FIXED,true);
+	this._renderCanvas = new Canvas(null,100,100,Canvas.STAGE_FIT_FIXED,true);
 	this._eventList = new Object(); // hash
 	var evts = [Canvas.EVENT_MOUSE_UP,Canvas.EVENT_MOUSE_DOWN,Canvas.EVENT_MOUSE_CLICK,Canvas.EVENT_MOUSE_MOVE,
 			Canvas.EVENT_MOUSE_UP_OUTSIDE,Canvas.EVENT_MOUSE_DOWN_OUTSIDE,Canvas.EVENT_MOUSE_CLICK_OUTSIDE,Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
@@ -78,22 +78,28 @@ Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
-	this.renderCanvas.clear();
-	this.renderCanvas.setSize(wid,hei);
-	obj.render(this.renderCanvas);
+	this._renderCanvas.clear();
+	this._renderCanvas.size(wid,hei);
+	this._renderCanvas.contextIdentity();
+	this._renderCanvas.contextTransform(matrix); 
+	obj.render(this._renderCanvas);
 	var img;
 	if(type==null||type==Canvas.IMAGE_TYPE_PNG){
-		img = this.renderCanvas.toDataURL();
+		img = this._renderCanvas.toDataURL();
 	}else{
-		img = this.renderCanvas.toDataURL('image/jpeg');
+		img = this._renderCanvas.toDataURL('image/jpeg');
 	}
-	return img;
+	var image = new Image();
+	image.width = wid;
+	image.height = hei;
+	image.src = img;
+	return image;
 }
 Stage.prototype.render = function(){
 	//console.log("render");
 	this._canvas.clear();
 	this.alertAll(Stage.EVENT_ON_ENTER_FRAME,this._time);
-	this._canvas.matrix.identity();
+	//this._canvas.matrix.identity();
 	this._root.render(this._canvas);
 	this.alertAll(Stage.EVENT_ON_EXIT_FRAME,this._time);
 }
@@ -227,6 +233,11 @@ Stage.prototype._canvasMouseClick = function(pos){
 Stage.prototype._canvasMouseMove = function(pos){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
 	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+}
+
+
+Stage.prototype.kill = function(){
+	Stage._.kill.call(this);
 }
 /*
 this.canvasMouseDownOutside = function(pos){

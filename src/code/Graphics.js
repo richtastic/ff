@@ -168,6 +168,7 @@ Graphics.prototype.render = function(canvas){
 Graphics.prototype.kill = function(){
 	this.clear();
 	this._graphics = null;
+	Graphics._.kill.call(this);
 }
 
 
