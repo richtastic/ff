@@ -240,6 +240,27 @@ Code.intToBinaryString = function(num,cnt){
 	}
 	return str;
 }
+// angles ----------------------------------------------------
+Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
+	var nB = a-b;
+	if(nB>Math.PI){
+		return nB - 2*Math.PI;
+	}else if(nB<-Math.PI){
+		return nB + 2*Math.PI;
+	}
+	return nB;
+}
+Code.zeroTwoPi = function(ang){
+	var pi2 = Math.PI*2;
+	while(ang>pi2){
+		ang -= pi2;
+	}
+	pi2 = -pi2;
+	while(ang<pi2){
+		ang -= pi2;
+	}
+	return ang;
+}
 // color functions ----------------------------------------------------
 Code.color255 = function(c){
 	return Math.min( Math.max( Math.round(c), 0), 255);

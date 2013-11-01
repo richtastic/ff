@@ -1,8 +1,8 @@
 // ColorAngle.js
 function ColorAngle(r,g,b,y){
-	this._red = 0;
-	this._grn = 0;
-	this._blu = 0;
+	this._red = r;
+	this._grn = g;
+	this._blu = b;
 	this._gry = y;
 }
 ColorAngle.prototype.red = function(r){

@@ -34,10 +34,12 @@ E) decide best matches for each point by sorting by best match (pt.matchest[0].s
 
 */
 function Match(){
-	this._canvas = new Canvas(null, 2400,600, Canvas.STAGE_FIXED, false);
+	this._canvas = new Canvas(null, 400,600, Canvas.STAGE_FIT_FILL, false);
 	//this._canvas.addListeners();
 	this._stage = new Stage(this._canvas, (1/10)*1000);
 	this._stage.start();
+
+	this.exp();
 
 var root = new DO();
 root.graphics().setLine(2,0xFF0000FF);
@@ -100,7 +102,7 @@ this._stage.addChild(root);
 }
 Match.prototype._imageProgressFxn0 = function(o){
 }
-Match.prototype._imageCompleteFxn3 = function(o){
+Match.prototype._imageCompleteFxn = function(o){
 	var images = o.images;
 	var img = images[0];
 	//
@@ -230,26 +232,199 @@ Match.prototype._imageCompleteFxn3 = function(o){
 	image.matrix().identity();
 	image.matrix().scale(1.5,0.5);
 
-	var p;
-	//
+	// 
+
+	// console.log(colAN.toString());
+	// console.log(colBN.toString());
+	// console.log(colCN.toString());
+	// // colorful ranking - 
+	// console.log(V3D.dot(colAN,colBN));
+	// console.log(V3D.dot(colAN,colCN));
+	// console.log("-----------------------------");
+	// // 0(best) to 3 ranking
+	// p = new V3D(colA.x-colB.x, colA.y-colB.y, colA.z-colB.z);
+	// console.log(p.toString());
+	// console.log(p.length());
+	// p = new V3D(colA.x-colC.x, colA.y-colC.y, colA.z-colC.z);
+	// console.log(p.toString());
+	// console.log(p.length());
+}
+Match.prototype.exp = function(){
+	var font = new Font("arial","../spice/source/fonts/monospice.ttf",null,0.1,0.5,1.0);
+	font.load();
+	//var angA = new ColorAngle(Math.PI*1/8,Math.PI*7/8,Math.PI*2/8,Math.PI*3/8);
+	//var angB = new ColorAngle(angA.red()+0.5,angA.grn()+0.5,angA.blu()+0.5,angA.gry()+0.5);
+	var angA = new ColorAngle(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
+	// viz
+	var txt, doA, doB, angB, score;
+	var dX = 80, sX = 0, sY = 210, dA = 1.0;
+	var i, len = 18;
+	for(i=0;i<len;++i){
+		angB = new ColorAngle(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
+		angB = new ColorAngle(	Code.zeroTwoPi(angA.red() + Math.random()*dA - dA/2),
+								Code.zeroTwoPi(angA.grn() + Math.random()*dA - dA/2),
+								Code.zeroTwoPi(angA.blu() + Math.random()*dA - dA/2),
+								Code.zeroTwoPi(angA.gry() + Math.random()*dA - dA/2) );
+		score = this.compareAngles(angA,angB);
+		doB = this.describeAngleDO(angB, dX*0.5);
+			doB.matrix().identity();
+			doB.matrix().rotate(-angB.gry());
+			doB.matrix().translate(sX+(i+1)*dX,sY);
+			this._stage.addChild( doB );
+		doA = this.describeAngleDO(angA, dX*0.5);
+			doA.matrix().identity();
+			doA.matrix().rotate(-angA.gry());
+			doA.matrix().translate(sX+(i+1)*dX,sY + dX);
+			this._stage.addChild( doA );
+		txt = new DOText(""+(Math.round(score*1000)/1000),12,font,0xFFFF0000,DOText.ALIGN_CENTER);
+			txt.matrix().identity();
+			txt.matrix().rotate(0);
+			txt.matrix().translate(sX+(i+1)*dX,sY-dX/2);
+		this._stage.addChild( txt );
+	}
 	
-	var colA = new V3D(0.5,0.9,0.8); avg = (colA.x+colA.y+colA.z)/3; var colAN = new V3D(colA.x-avg,colA.y-avg,colA.z-avg); colAN.norm();
-	var colB = new V3D(0.4,0.7,0.6); avg = (colB.x+colB.y+colB.z)/3; var colBN = new V3D(colB.x-avg,colB.y-avg,colB.z-avg); colBN.norm();
-	var colC = new V3D(0.5,0.5,0.5); avg = (colC.x+colC.y+colC.z)/3; var colCN = new V3D(colC.x-avg,colC.y-avg,colC.z-avg); colCN.norm();
-	console.log(colAN.toString());
-	console.log(colBN.toString());
-	console.log(colCN.toString());
-	// colorful ranking - 
-	console.log(V3D.dot(colAN,colBN));
-	console.log(V3D.dot(colAN,colCN));
-	console.log("-----------------------------");
-	// 0(best) to 3 ranking
-	p = new V3D(colA.x-colB.x, colA.y-colB.y, colA.z-colB.z);
-	console.log(p.toString());
-	console.log(p.length());
-	p = new V3D(colA.x-colC.x, colA.y-colC.y, colA.z-colC.z);
-	console.log(p.toString());
-	console.log(p.length());
+	
+	
+}
+Match.prototype.compareAngles = function(angA,angB){
+	//console.log("-----------------------------");
+	// var angA_grayRed = angA.gry() - angA.red();
+	// var angA_grayGrn = angA.gry() - angA.grn();
+	// var angA_grayBlu = angA.gry() - angA.blu();
+	// console.log(angA_grayRed);
+	// console.log(angA_grayGrn);
+	// console.log(angA_grayBlu);
+	var angA_grayRed = Code.minAngle(angA.gry(),angA.red());
+	var angA_grayBlu = Code.minAngle(angA.gry(),angA.grn());
+	var angA_grayGrn = Code.minAngle(angA.gry(),angA.blu());
+	var angB_grayRed = Code.minAngle(angB.gry(),angB.red());
+	var angB_grayBlu = Code.minAngle(angB.gry(),angB.grn());
+	var angB_grayGrn = Code.minAngle(angB.gry(),angB.blu());
+	//console.log("============================");
+	// console.log(angA_grayRed);
+	// console.log(angA_grayGrn);
+	// console.log(angA_grayBlu);
+	// console.log("============================");
+	var diffRed = angA_grayRed - angB_grayRed;
+	var diffGrn = angA_grayGrn - angB_grayGrn;
+	var diffBlu = angA_grayBlu - angB_grayBlu;
+	//console.log(diffRed,diffGrn,diffBlu);
+	var score = Math.abs(diffRed) + Math.abs(diffBlu) + Math.abs(diffGrn);
+	return score;
+}
+
+Match.prototype.describeAngleDO = function(ang,rad){
+	rad = rad===undefined?35:rad;
+	var square = new DO();
+		square.graphics().clear();
+		square.graphics().setLine(1.0,0x99000000);
+		square.graphics().beginPath();
+		square.graphics().setFill(0x66000000);
+		square.graphics().moveTo(rad,0);
+		square.graphics().arc(0,0, rad, 0,Math.PI*2, false);
+		square.graphics().endPath();
+		square.graphics().fill();
+		square.graphics().strokeLine();
+	var redA = ang.red();
+		square.graphics().setLine(1.0,0xFFFF0000);
+		square.graphics().beginPath();
+		square.graphics().moveTo(0,0);
+		square.graphics().lineTo(rad*Math.cos(redA),rad*Math.sin(redA));
+		square.graphics().endPath();
+		square.graphics().strokeLine();
+	var redG = ang.grn();
+		square.graphics().setLine(1.0,0xFF00FF00);
+		square.graphics().beginPath();
+		square.graphics().moveTo(0,0);
+		square.graphics().lineTo(rad*Math.cos(redG),rad*Math.sin(redG));
+		square.graphics().endPath();
+		square.graphics().strokeLine();
+	var redB = ang.blu();
+		square.graphics().setLine(1.0,0xFF0000FF);
+		square.graphics().beginPath();
+		square.graphics().moveTo(0,0);
+		square.graphics().lineTo(rad*Math.cos(redB),rad*Math.sin(redB));
+		square.graphics().endPath();
+		square.graphics().strokeLine();
+	var redY = ang.gry();
+		square.graphics().setLine(1.0,0xFFCCCCCC);
+		square.graphics().beginPath();
+		square.graphics().moveTo(0,0);
+		square.graphics().lineTo(rad*Math.cos(redY),rad*Math.sin(redY));
+		square.graphics().endPath();
+		square.graphics().strokeLine();
+	return square;
+}
+Match.prototype.exp0 = function(){
+
+	var p;
+	
+	//var colA = new V3D(0.5,0.9,0.8);
+	// var colB = new V3D(0.4,0.7,0.6);
+	// var colC = new V3D(0.5,0.5,0.5);
+	var colA = new V3D(Math.random(),Math.random(),Math.random());
+	var colB = new V3D(Math.random(),Math.random(),Math.random());
+	var colC = new V3D(Math.random(),Math.random(),Math.random());
+	// var colB = new V3D(0.036793767008930445,0.08767530764453113,0.0865488569252193); //
+	// var colC = new V3D(0.025423486484214664,0.7779278077650815,0.7668401680421084); // CLOSER
+
+	this.makeBlock(colA);
+	this.makeBlock(colB);
+	this.makeBlock(colC);
+	console.log( colA.toString() );
+	console.log( colB.toString() );
+	console.log( colC.toString() );
+	console.log( ".................." );
+	// console.log( this.compareColorScale(colA,colB) , this.compareColorScale(colB,colA) );
+	// console.log( this.compareColorScale(colA,colC) , this.compareColorScale(colC,colA) );
+	// console.log( this.compareColorDifference(colA,colB) , this.compareColorScale(colA,colB), this.compareColorDifference(colA,colB)+this.compareColorScale(colA,colB)*.1 );
+	// console.log( this.compareColorDifference(colA,colC) , this.compareColorScale(colA,colC), this.compareColorDifference(colA,colC)+this.compareColorScale(colA,colC)*.1 );
+	console.log( this.compareFlatColors(colA,colB) );
+	console.log( this.compareFlatColors(colA,colC) );
+}
+Match.prototype.makeBlock = function(v){
+	var r = Math.round(v.x*255.0);
+	var g = Math.round(v.y*255.0);
+	var b = Math.round(v.z*255.0);
+	var col = Code.getColARGB(255,r,g,b);
+	col = Code.getJSColorFromARGB(col);
+	var div = Code.newDiv("---");
+	Code.setStyleBackground(div,col);
+	Code.addChild(document.body,div);
+}
+Match.prototype.compareFlatColors = function(colA, colB){
+	return this.compareColorDifference(colA,colB)+this.compareColorScale(colA,colB)*.1;
+}
+Match.prototype.compareColorDifference = function(colA, colB){ // best [0, inf] 
+	//console.log("COMPARE --------------------------- ");
+	var a = colA.x-colB.x; a = Math.abs(a) + 1;
+	var b = colA.y-colB.y; b = Math.abs(b) + 1;
+	var c = colA.z-colB.z; c = Math.abs(c) + 1;
+	//console.log(a,b,c);
+	var errA = (a*a)-1;
+	var errB = (b*b)-1;
+	var errC = (c*c)-1;
+	score = errA + errB + errC;
+	return score;
+}
+Match.prototype.compareColorScale = function(colA, colB){
+	var briA = colA.x + colA.y + colA.z;
+	var briB = colB.x + colB.y + colB.z;
+	if(briA>briB){
+		return this.compareColorScaleSingle(colB,colA);
+	}
+	return this.compareColorScaleSingle(colA,colB);
+}
+Match.prototype.compareColorScaleSingle = function(colA, colB){
+	var a = colA.x/colB.x - 1; a = Math.min(a, 1000);
+	var b = colA.y/colB.y - 1; b = Math.min(b, 1000);
+	var c = colA.z/colB.z - 1; c = Math.min(c, 1000);
+	var min = Math.min(a,b,c);
+	var errA = Math.pow(Math.abs(a-min)+1,2)-1;
+	var errB = Math.pow(Math.abs(b-min)+1,2)-1;
+	var errC = Math.pow(Math.abs(c-min)+1,2)-1;
+	score = errA + errB + errC;
+	return score;
 }
 Match.prototype._imageCompleteFxn = function(o){
 	var imageDO = new DO();
