@@ -1,6 +1,7 @@
 // Cam.js
 // http://stackoverflow.com/questions/246801/how-can-you-encode-to-base64-using-javascript
 function Cam(){
+	console.log("...");
 	var self = this;
 	this.ajax = null;
 	this.timer = null;
@@ -9,6 +10,7 @@ function Cam(){
 	this.output = null;
 	this.monthList = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 	this.constructor = function(){
+		console.log("...");
 		self.image = document.createElement("img");
 		document.body.appendChild(self.image);
 		self.tempimage = document.createElement("img");
@@ -42,7 +44,7 @@ function Cam(){
 		//self.ajax.setHeader("Content-Type","image/jpeg");
 		//self.ajax.setHeader("Content-Type","application/octet-stream");
 		//self.ajax.setHeader("Response-Type","arraybuffer");
-		self.ajax.post("image.json", self.ajaxCompleteSuccess, self.ajaxCompleteFailure);
+		self.ajax.post("image.json", self, self.ajaxCompleteSuccess, self.ajaxCompleteFailure);
 		//self.ajax.get("image.jpg", self.ajaxImageCompleteSuccess);
 	}
 this.ajaxImageCompleteSuccess = function(o){
@@ -59,6 +61,7 @@ this.ajaxImageCompleteSuccess = function(o){
 	self.setImageSource( "data:image/jpg;base64,"+b64 );
 }
 	this.ajaxCompleteSuccess = function(o){
+		console.log("Success");
 		try{
 			var obj = eval('('+o+')');
 			var src = obj.currentImage;
@@ -85,7 +88,7 @@ this.ajaxImageCompleteSuccess = function(o){
 		self.timer.start();
 	}
 	this.ajaxCompleteFailure = function(o){
-		//console.log("Failure");
+		console.log("Failure");
 		self.timer.start();
 	}
 	this.kill = function(){

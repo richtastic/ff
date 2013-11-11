@@ -4,7 +4,7 @@
 # http://www.wedesoft.de/hornetseye-api/file.Camera.html
 require "optparse"
 require 'fcntl'
-require 'coderuby'
+require './coderuby'
 
 # --------------------------------------------------------- definitions
 INPUT_COMMAND_QUIT = "q"
@@ -67,6 +67,9 @@ end
 firstDevice = %x[ ls /dev | grep -iro "video[0-9]*" | sed -r s/^/\\\\/dev\\\\//g ]
 firstDevice = firstDevice.split("\n")
 firstDevice = firstDevice[0]
+firstDevice = "/dev/video0"
+puts " firstDevice ::::"
+puts firstDevice
 # --------------------------------------------------------- input arguments
 options = {}
 options[:autopilot] = true
@@ -138,6 +141,7 @@ puts inPipeHandle
 result = ""
 while result==""
 	result = readPipeComm( outPipeHandle ).gsub(/\n/,"")
+	puts "waiting ..."
 	sleep(0.5)
 end
 puts "LIFE '#{result}'"

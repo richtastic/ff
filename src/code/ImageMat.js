@@ -6,7 +6,92 @@ function ImageMat(wid, hei){
 	this._g = new Array(wid*hei);
 	this._b = new Array(wid*hei);
 }
+// ------------------------------------------------------------------------------------------------------------------------ funziez
+ImageMat.prototype.setPoint = function(x,y, val){
+	var index = y*this.width() + x;
+	this._r[index] = val.x;
+	this._g[index] = val.y;
+	this._b[index] = val.z;
+}
+ImageMat.prototype.getPoint = function(val, x,y){ // INTERPOLATION MADNESS
+
+	var minX = Math.max(Math.floor(x), 0);
+	var miiX = Math.max(minX-1, 0);
+	var maxX = Math.min(Math.ceil(x), this._width-1);
+	var maaX = Math.min(maxX+1, this._width-1);
+	var minY = Math.max(Math.floor(y),0);
+	var miiY = Math.max(minY-1,0);
+	var maxY = Math.min(Math.ceil(y), this._height-1);
+	var maaY = Math.min(maxY+1, this._height-1);
+	var indexA = miiY*this._width + miiX; var colA = new V3D(this._r[indexA],this._g[indexA],this._b[indexA]);
+	var indexB = miiY*this._width + minX; var colB = new V3D(this._r[indexB],this._g[indexB],this._b[indexB]);
+	var indexC = miiY*this._width + maxX; var colC = new V3D(this._r[indexC],this._g[indexC],this._b[indexC]);
+	var indexD = miiY*this._width + maaX; var colD = new V3D(this._r[indexD],this._g[indexD],this._b[indexD]);
+	var indexE = minY*this._width + miiX; var colE = new V3D(this._r[indexE],this._g[indexE],this._b[indexE]);
+	var indexF = minY*this._width + minX; var colF = new V3D(this._r[indexF],this._g[indexF],this._b[indexF]);
+	var indexG = minY*this._width + maxX; var colG = new V3D(this._r[indexG],this._g[indexG],this._b[indexG]);
+	var indexH = minY*this._width + maaX; var colH = new V3D(this._r[indexH],this._g[indexH],this._b[indexH]);
+	var indexI = maxY*this._width + miiX; var colI = new V3D(this._r[indexI],this._g[indexI],this._b[indexI]);
+	var indexJ = maxY*this._width + minX; var colJ = new V3D(this._r[indexJ],this._g[indexJ],this._b[indexJ]);
+	var indexK = maxY*this._width + maxX; var colK = new V3D(this._r[indexK],this._g[indexK],this._b[indexK]);
+	var indexL = maxY*this._width + maaX; var colL = new V3D(this._r[indexL],this._g[indexL],this._b[indexL]);
+	var indexM = maaY*this._width + miiX; var colM = new V3D(this._r[indexM],this._g[indexM],this._b[indexM]);
+	var indexN = maaY*this._width + minX; var colN = new V3D(this._r[indexN],this._g[indexN],this._b[indexN]);
+	var indexO = maaY*this._width + maxX; var colO = new V3D(this._r[indexO],this._g[indexO],this._b[indexO]);
+	var indexP = maaY*this._width + maaX; var colP = new V3D(this._r[indexP],this._g[indexP],this._b[indexP]);
+	minX = x - minX;
+	minY = y - minY;
+	this.quadricColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
+	return;
+
+	// rounding
+	x = Math.min(Math.max(Math.round(x),0),this._width-1);
+	y = Math.min(Math.max(Math.round(y),0),this._height-1);
+	index = y*this._width + x;
+	val.x = this._r[index];
+	val.y = this._g[index];
+	val.z = this._b[index];
+}
+ImageMat.prototype.quadricColor = function(colR, x,y, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP){
+	var r = this.quadric2D(x,y, colA.x,colB.x,colC.x,colD.x,colE.x,colF.x,colG.x,colH.x,colI.x,colJ.x,colK.x,colL.x,colM.x,colM.x,colN.x,colO.x,colP.x);
+	var g = this.quadric2D(x,y, colA.y,colB.y,colC.y,colD.y,colE.y,colF.y,colG.y,colH.y,colI.y,colJ.y,colK.y,colL.y,colM.y,colM.y,colN.y,colO.y,colP.y);
+	var b = this.quadric2D(x,y, colA.z,colB.z,colC.z,colD.z,colE.z,colF.z,colG.z,colH.z,colI.z,colJ.z,colK.z,colL.z,colM.z,colM.z,colN.z,colO.z,colP.z);
+	colR.x = Math.min(Math.max(r,0.0),1.0);
+	colR.y = Math.min(Math.max(g,0.0),1.0);
+	colR.z = Math.min(Math.max(b,0.0),1.0);
+}
+ImageMat.prototype.quadric2D = function(x,y, A,B,C,D, E,F,G,H, I,J,K,L, M,N,O,P){
+	var xx = x*x; var xxx = xx*x;
+	var yy = y*y; var yyy = yy*y;
+	var a = this.quadric1D(x,xx,xxx, A,B,C,D);
+	var b = this.quadric1D(x,xx,xxx, E,F,G,H);
+	var c = this.quadric1D(x,xx,xxx, I,J,K,L);
+	var d = this.quadric1D(x,xx,xxx, M,N,O,P);
+	return this.quadric1D(y,yy,yyy, a,b,c,d);
+}
+ImageMat.prototype.quadric1D = function(t,tt,ttt,A,B,C,D){
+	var a = 3*B - 3*C + D - A;
+	var b = 2*A - 5*B + 4*C - D;
+	var c = B - A;
+	var d = B;
+	return ( a*ttt + b*tt + c*t + d );
+}
 // ------------------------------------------------------------------------------------------------------------------------ get
+ImageMat.prototype.red = function(){
+	return this._r;
+}
+ImageMat.prototype.grn = function(){
+	return this._g;
+}
+ImageMat.prototype.blu = function(){
+	return this._b;
+}
+ImageMat.prototype.width = function(){
+	return this._width;
+}
+ImageMat.prototype.height = function(){
+	return this._height;
+}
 ImageMat.prototype.getRedFloat = function(){
 	return Code.copyArray(new Array(), this._r);
 }
@@ -58,7 +143,7 @@ ImageMat.prototype.setBluFromFloat = function(a){
 }
 ImageMat.prototype.setFromFloats = function(r,g,b){
 	this.setRedFromFloat(r);
-	this.setGrbFromFloat(g);
+	this.setGrnFromFloat(g);
 	this.setBluFromFloat(b);
 }
 // ------------------------------------------------------------------------------------------------------------------------ utilities
@@ -543,7 +628,9 @@ ImageMat.applyFxnFloat = function(data,fxn){
 		data[i] = fxn(data[i]);
 	}
 }
-
+ImageMat.flipAbsFxn = function(f){ 
+	return Math.abs(f-0.5);
+}
 
 
 /*
@@ -554,3 +641,51 @@ ImageMat.applyFxnFloat = function(data,fxn){
 	 * 		
 */
 
+
+
+
+this.colorQuadrantCubic = function(colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP, x,y){
+	var r = this.quadric2D(x,y, Code.getRedRGBA(colA), Code.getRedRGBA(colB), Code.getRedRGBA(colC), Code.getRedRGBA(colD), 
+						Code.getRedRGBA(colE), Code.getRedRGBA(colF), Code.getRedRGBA(colG), Code.getRedRGBA(colH), 
+						Code.getRedRGBA(colI), Code.getRedRGBA(colJ), Code.getRedRGBA(colK), Code.getRedRGBA(colL), 
+						Code.getRedRGBA(colM), Code.getRedRGBA(colN), Code.getRedRGBA(colO), Code.getRedRGBA(colP) );
+	var g = this.quadric2D(x,y, Code.getGrnRGBA(colA), Code.getGrnRGBA(colB), Code.getGrnRGBA(colC), Code.getGrnRGBA(colD), 
+						Code.getGrnRGBA(colE), Code.getGrnRGBA(colF), Code.getGrnRGBA(colG), Code.getGrnRGBA(colH), 
+						Code.getGrnRGBA(colI), Code.getGrnRGBA(colJ), Code.getGrnRGBA(colK), Code.getGrnRGBA(colL), 
+						Code.getGrnRGBA(colM), Code.getGrnRGBA(colN), Code.getGrnRGBA(colO), Code.getGrnRGBA(colP) );
+	var b = this.quadric2D(x,y, Code.getBluRGBA(colA), Code.getBluRGBA(colB), Code.getBluRGBA(colC), Code.getBluRGBA(colD), 
+						Code.getBluRGBA(colE), Code.getBluRGBA(colF), Code.getBluRGBA(colG), Code.getBluRGBA(colH), 
+						Code.getBluRGBA(colI), Code.getBluRGBA(colJ), Code.getBluRGBA(colK), Code.getBluRGBA(colL), 
+						Code.getBluRGBA(colM), Code.getBluRGBA(colN), Code.getBluRGBA(colO), Code.getBluRGBA(colP) );
+	var a = this.quadric2D(x,y, Code.getAlpRGBA(colA), Code.getAlpRGBA(colB), Code.getAlpRGBA(colC), Code.getAlpRGBA(colD), 
+						Code.getAlpRGBA(colE), Code.getAlpRGBA(colF), Code.getAlpRGBA(colG), Code.getAlpRGBA(colH), 
+						Code.getAlpRGBA(colI), Code.getAlpRGBA(colJ), Code.getAlpRGBA(colK), Code.getAlpRGBA(colL), 
+						Code.getAlpRGBA(colM), Code.getAlpRGBA(colN), Code.getAlpRGBA(colO), Code.getAlpRGBA(colP) );
+	r = Code.color255(r); g = Code.color255(g); b = Code.color255(b); a = Code.color255(a);
+	return Code.getColRGBA(r,g,b,a);
+}
+this.quadric2D = function(x,y, A,B,C,D, E,F,G,H, I,J,K,L, M,N,O,P){
+	var xx = x*x; var xxx = xx*x;
+	var yy = y*y; var yyy = yy*y;
+	var a = this.quadric1D(x,xx,xxx, A,B,C,D);
+	var b = this.quadric1D(x,xx,xxx, E,F,G,H);
+	var c = this.quadric1D(x,xx,xxx, I,J,K,L);
+	var d = this.quadric1D(x,xx,xxx, M,N,O,P);
+	return this.quadric1D(y,yy,yyy, a,b,c,d);
+}
+this.quadric1D = function(t,tt,ttt,A,B,C,D){
+	var a = 3*B - 3*C + D - A;
+	var b = 2*A - 5*B + 4*C - D;
+	var c = B - A;
+	var d = B;
+	return ( a*ttt + b*tt + c*t + d );
+}
+this.quadric1DBAD = function(t,tt,ttt,A,B,C,D){ // less clear
+	var mB = (C-A)/2;
+	var mC = (D-B)/2;
+	var a = mC + mB - 2*C + 2*B;
+	var b = 3*C - mC - 2*mB - 3*B;
+	var c = mB;
+	var d = B;
+	return ( a*ttt + b*tt + c*t + d );
+}

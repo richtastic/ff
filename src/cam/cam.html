@@ -1,19 +1,19 @@
 <html>
 <head>
 <title>Cam</title>
-<script src="../code/FFLoadAll.js"></script>
+<script src="../code/FF.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <script type="text/javascript">
 // ---------------------------------------------------------
 var ff, scriptLoader, cam;
 // ---------------------------------------------------------
 function pageLoadedFxn(){
-	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
 	var list = ["Cam.js"];
-	scriptLoader = new ScriptLoader("./",list,customClassesLoadedFxn,customClassesProgressFxn,false);
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(o){}

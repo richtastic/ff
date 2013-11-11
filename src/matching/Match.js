@@ -39,8 +39,8 @@ function Match(){
 	this._stage = new Stage(this._canvas, (1/10)*1000);
 	this._stage.start();
 
-	this.exp();
-
+	//this.exp();
+/*
 var root = new DO();
 root.graphics().setLine(2,0xFF0000FF);
 root.graphics().beginPath();
@@ -93,19 +93,20 @@ this._stage.addChild(root);
 	root.addChild(square);
 		square.addChild(circle);
 			circle.addChild(triangle);
-	//
+*/
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/",["FT.png"], //"FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/",["FT.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
 Match.prototype._imageProgressFxn0 = function(o){
 }
-Match.prototype._imageCompleteFxn = function(o){
+Match.prototype._imageCompleteFxn1 = function(o){
 	var images = o.images;
 	var img = images[0];
 	//
+
 	Code.copyArray(this._imageList,o.images);
 	var image = new DOImage(img);
 	image.matrix().identity();
@@ -214,16 +215,15 @@ Match.prototype._imageCompleteFxn = function(o){
 	//intensity.graphics().strokeLine();
 	// ---------------------------------------------------------------------- 
 
-	/*
-	circle.graphics().setLine(3.0,0xFF0000FF);
-	circle.graphics().beginPath();
-	circle.graphics().setFill(0x990000FF);
-	circle.graphics().moveTo(0,0);
-	circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
-	circle.graphics().endPath();
-	circle.graphics().fill();
-	circle.graphics().strokeLine();
-	*/
+	// circle.graphics().setLine(3.0,0xFF0000FF);
+	// circle.graphics().beginPath();
+	// circle.graphics().setFill(0x990000FF);
+	// circle.graphics().moveTo(0,0);
+	// circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
+	// circle.graphics().endPath();
+	// circle.graphics().fill();
+	// circle.graphics().strokeLine();
+	
 
 
 	// 
@@ -231,8 +231,6 @@ Match.prototype._imageCompleteFxn = function(o){
 	image.addChild(intensity);
 	image.matrix().identity();
 	image.matrix().scale(1.5,0.5);
-
-	// 
 
 	// console.log(colAN.toString());
 	// console.log(colBN.toString());
@@ -249,26 +247,362 @@ Match.prototype._imageCompleteFxn = function(o){
 	// console.log(p.toString());
 	// console.log(p.length());
 }
-Match.prototype.exp = function(){
+Match.prototype._imageCompleteFxn = function(o){
+	var images = new Array();
+	Code.copyArray(images,o.images);
+	var image = images[0];
+	/*
+	- turn images into DO
+	- 
+	- interpolation:
+		- enlarge sections of source
+		- rotate source
+	- 
+	- 
+	- 
+	*/
+	var root = new DO(); this._stage.root().addChild(root);
+		root.matrix().identity();
+		root.matrix().scale(1.0);//,0.5);
+	var filters = this.getImageFilters(image);
+	
+
+	var i, row, col, len = filters.length;
+	row = 0;
+	col = 0;
+	for(i=0;i<len;++i){
+		var img = filters[i];
+		var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
+		var src = this._stage.getRGBAAsImage(argb, img.width(), img.height());
+		var doi = new DOImage( src );
+			doi.matrix().identity();
+			doi.matrix().translate(col*img.width(), row*img.height());
+		root.addChild(doi);
+		col++;
+		if(col%5==0 && col>0){
+			row++;
+			col = 0;
+		}
+	}
+
+	var originalImage = filters.shift();
+	//var pt = new V2D(147,135); // OO
+	var pt = new V2D(99,215); // EYE
+
+	var ptA = new V2D(160,55);
+	var ptB = new V2D(195,215);
+	var ptC = new V2D(145,240);
+	var ptD = new V2D(125,90);
+
+	var doPoint = new DO();
+	var xDim = 15;
+	doPoint.graphics().clear();
+	doPoint.graphics().setLine(1.0,0x99FF0000);
+	doPoint.graphics().beginPath();
+	doPoint.graphics().setFill(0x9900FF00);
+	// doPoint.graphics().moveTo(-xDim,-xDim);
+	// doPoint.graphics().lineTo(xDim,-xDim);
+	// doPoint.graphics().lineTo(xDim,xDim);
+	// doPoint.graphics().lineTo(-xDim,xDim);
+	// doPoint.graphics().lineTo(-xDim,-xDim);
+doPoint.graphics().moveTo(ptA.x,ptA.y);
+doPoint.graphics().lineTo(ptB.x,ptB.y);
+doPoint.graphics().lineTo(ptC.x,ptC.y);
+doPoint.graphics().lineTo(ptD.x,ptD.y);
+doPoint.graphics().lineTo(ptA.x,ptA.y);
+	doPoint.graphics().endPath();
+	doPoint.graphics().fill();
+	doPoint.graphics().strokeLine();
+		doPoint.matrix().identity();
+		//doPoint.matrix().translate(pt.x,pt.y);
+	root.addChild(doPoint);
+
+	var source = originalImage;//filters[0];
+	//var result = this.extractRect(source, pt.x-xDim,pt.y-xDim, pt.x+xDim,pt.y-xDim, pt.x+xDim,pt.y+xDim, pt.x-xDim,pt.y+xDim, Math.floor(7*xDim),Math.floor(7*xDim) );
+	var result = this.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,100 );
+
+	img = result;
+	argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
+	src = this._stage.getRGBAAsImage(argb, img.width(), img.height());
+	doi = new DOImage( src );
+		doi.matrix().identity();
+		doi.matrix().translate(source.width(),source.height());
+	root.addChild(doi);
+
+
+	//console.log( (new Array(1,2,3,4,5,6)).shift() )
+	
+	/*
+
+	var matrix = new Matrix2D();
+	var imgDO;
+	imgDO = new DOImage( img );
+		matrix.identity();
+		matrix.translate(-100,-100);
+	img = this._stage.renderImage(50,50, imgDO, matrix, Canvas.IMAGE_TYPE_PNG);
+
+
+	*/
+}
+Match.prototype.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, w,h){
+	var destination = new ImageMat(w,h);
+	var ab = new V2D(bX-aX,bY-aY);
+	var bc = new V2D(cX-bX,cY-bY);
+	var dc = new V2D(cX-dX,cY-dY);
+	var ad = new V2D(dX-aX,dY-aY);
+	var delX = new V2D(dc.x-ab.y.dc.x-ab.y);
+	var delY = new V2D(bc.x-ad.y.bc.x-ad.y);
+	var vX = new V2D(), vY = new V2D();
+	var i, j, val = new V3D(), pt = new V2D();
+	var pI, pJ, pI1, pJ1;
+	var wid = w-1, hei = h-1;
+	for(i=0;i<=wid;++i){
+		for(j=0;j<=hei;++j){
+			pI = 1.0*i/wid;
+			pI1 = 1.0 - pI;
+			pJ = 1.0*j/hei;
+			pJ1 = 1.0 - pJ;
+			// vX.x = pJ1*ab.x + pJ*dc.x; vX.y = pJ1*ab.y + pJ*dc.y;
+			// vY.x = pI1*ad.x + pI*bc.x; vY.y = pI1*ad.y + pI*bc.y;
+			vX.x = ab.x + 
+			// pt.x = aX + pI*vX.x + pJ*vY.x;
+			// pt.y = aY + pI*vX.y + pJ*vY.y;
+			pt.x = aX + vX.x + vY.x;
+			pt.y = aY + vX.y + vY.y;
+			source.getPoint(val, pt.x,pt.y);
+			destination.setPoint(i,j, val);
+		}
+	}
+	return destination;
+}
+Match.prototype.extractRectNoMatrixNotQuiteCorrect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, w,h){
+	var destination = new ImageMat(w,h);
+	var ab = new V2D(bX-aX,bY-aY);
+	var bc = new V2D(cX-bX,cY-bY);
+	var dc = new V2D(cX-dX,cY-dY);
+	var ad = new V2D(dX-aX,dY-aY);
+	var vX = new V2D(), vY = new V2D();
+	var i, j, val = new V3D(), pt = new V2D();
+	var pI, pJ, pI1, pJ1;
+	var wid = w-1, hei = h-1;
+	for(i=0;i<=wid;++i){
+		for(j=0;j<=hei;++j){
+			pI = 1.0*i/wid;
+			pI1 = 1.0 - pI;
+			pJ = 1.0*j/hei;
+			pJ1 = 1.0 - pJ;
+			vX.x = pJ1*ab.x + pJ*dc.x; vX.y = pJ1*ab.y + pJ*dc.y;
+			vY.x = pI1*ad.x + pI*bc.x; vY.y = pI1*ad.y + pI*bc.y;
+			pt.x = aX + pI*vX.x + pJ*vY.x;
+			pt.y = aY + pI*vX.y + pJ*vY.y;
+			source.getPoint(val, pt.x,pt.y);
+			destination.setPoint(i,j, val);
+		}
+	}
+	return destination;
+}
+Match.prototype.getImageFilters = function(originalImage){
+	var wid = originalImage.width, hei = originalImage.height;
+	var doImage = new DOImage(originalImage);
+	var dat, img;
+	var imageOriginal = new ImageMat(wid,hei);
+	var imageGradientRGB = new ImageMat(wid,hei);
+	var imageGradientGry = new ImageMat(wid,hei);
+	var imagePhaseRGB = new ImageMat(wid,hei);
+	var imagePhaseGry = new ImageMat(wid,hei);
+	var imageCornerRGB = new ImageMat(wid,hei);
+	var imageCornerGry = new ImageMat(wid,hei);
+	var imageBestRGB = new ImageMat(wid,hei);
+	var imageBestGry = new ImageMat(wid,hei);
+
+ 	// original image
+ 	dat = this._stage.getDOAsARGB(doImage, wid,hei);
+ 	img = new ImageMat(wid,hei);
+ 	img.setFromArrayARGB(dat);
+ 	var normR = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
+ 	var normG = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getGrnFloat()) );
+ 	var normB = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getBluFloat()) );
+ 	dat = ImageMat.ARGBFromRGBArrays(normR,normG,normB);
+ 	imageOriginal.setFromArrayARGB(dat);
+ 	var red = imageOriginal.getRedFloat();
+ 	var grn = imageOriginal.getGrnFloat();
+ 	var blu = imageOriginal.getBluFloat();
+ 	var gry = imageOriginal.getGrayFloat();
+
+ 	// gradients
+ 	var dxRed = ImageMat.convolve(red,wid,hei, [-0.5,0,0.5], 3,1);
+	var dyRed = ImageMat.convolve(red,wid,hei, [-0.5,0,0.5], 1,3);
+	var dxGrn = ImageMat.convolve(grn,wid,hei, [-0.5,0,0.5], 3,1);
+	var dyGrn = ImageMat.convolve(grn,wid,hei, [-0.5,0,0.5], 1,3);
+	var dxBlu = ImageMat.convolve(blu,wid,hei, [-0.5,0,0.5], 3,1);
+	var dyBlu = ImageMat.convolve(blu,wid,hei, [-0.5,0,0.5], 1,3);
+	var dxGry = ImageMat.convolve(gry,wid,hei, [-0.5,0,0.5], 3,1);
+	var dyGry = ImageMat.convolve(gry,wid,hei, [-0.5,0,0.5], 1,3);
+	var gradRed = ImageMat.vectorSumFloat(dxRed,dyRed); ImageMat.normalFloat01(gradRed);
+	var gradGrn = ImageMat.vectorSumFloat(dxGrn,dyGrn); ImageMat.normalFloat01(gradGrn);
+	var gradBlu = ImageMat.vectorSumFloat(dxBlu,dyBlu); ImageMat.normalFloat01(gradBlu);
+	var gradGry = ImageMat.vectorSumFloat(dxGry,dyGry); ImageMat.normalFloat01(gradGry);
+	imageGradientRGB.setFromFloats( gradRed, gradGrn, gradBlu );
+	imageGradientGry.setFromFloats( gradGry, gradGry, gradGry );
+	
+	// phase/angles
+	var phaseRed = ImageMat.phaseFloat(dxRed,dyRed); ImageMat.normalFloat01(phaseRed);
+	var phaseGrn = ImageMat.phaseFloat(dxGrn,dyGrn); ImageMat.normalFloat01(phaseGrn);
+	var phaseBlu = ImageMat.phaseFloat(dxBlu,dyBlu); ImageMat.normalFloat01(phaseBlu);
+	var phaseGry = ImageMat.phaseFloat(dxGry,dyGry); ImageMat.normalFloat01(phaseGry);
+	imagePhaseRGB.setFromFloats(phaseRed, phaseGrn, phaseBlu);
+	imagePhaseGry.setFromFloats(phaseGry, phaseGry, phaseGry);
+
+	// corners
+	var cornerThreshold = 0.55;
+	var cornerMat = [0.25,-0.5,0.25, -0.5,1,-0.5, 0.25,-0.5,0.25];
+	var cornerRed = ImageMat.convolve(red,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerRed); ImageMat.applyFxnFloat(cornerRed, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerRed);
+	var cornerGrn = ImageMat.convolve(grn,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerGrn); ImageMat.applyFxnFloat(cornerGrn, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerGrn);
+	var cornerBlu = ImageMat.convolve(blu,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerBlu); ImageMat.applyFxnFloat(cornerBlu, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerBlu);
+	var cornerGry = ImageMat.convolve(gry,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerGry); ImageMat.applyFxnFloat(cornerGry, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerGry);
+	imageCornerRGB.setFromFloats(cornerRed, cornerGrn, cornerBlu);
+	imageCornerGry.setFromFloats(cornerGry, cornerGry, cornerGry);
+	// cornerRedThresh = ImageMat.mulFloat( ImageMat.gtFloat(cornerRed, cornerThreshold), cornerRed ); ImageMat.normalFloat01(cornerRedThresh);
+	// cornerGrnThresh = ImageMat.mulFloat( ImageMat.gtFloat(cornerGrn, cornerThreshold), cornerGrn ); ImageMat.normalFloat01(cornerGrnThresh);
+	// cornerBluThresh = ImageMat.mulFloat( ImageMat.gtFloat(cornerBlu, cornerThreshold), cornerBlu ); ImageMat.normalFloat01(cornerBluThresh);
+	// cornerGryThresh = ImageMat.mulFloat( ImageMat.gtFloat(cornerGry, cornerThreshold), cornerGry ); ImageMat.normalFloat01(cornerGryThresh);
+	//imageCornerRGB.setFromFloats(cornerRedThresh, cornerGrnThresh, cornerBluThresh);
+	//imageCornerGry.setFromFloats(cornerGryThresh, cornerGryThresh, cornerGryThresh);
+
+ 	// flat-gradient
+ 	var gradFlatMat = [0,-0.5,0, -0.5,0,0.5, 0,0.5,0];
+ 	var gradFlatRed = ImageMat.convolve(red,wid,hei, gradFlatMat, 3,3); ImageMat.normalFloat01(gradFlatRed);
+ 	var gradFlatGrn = ImageMat.convolve(grn,wid,hei, gradFlatMat, 3,3); ImageMat.normalFloat01(gradFlatGrn);
+ 	var gradFlatBlu = ImageMat.convolve(blu,wid,hei, gradFlatMat, 3,3); ImageMat.normalFloat01(gradFlatBlu);
+ 	var gradFlatGry = ImageMat.convolve(gry,wid,hei, gradFlatMat, 3,3); ImageMat.normalFloat01(gradFlatGry);
+
+	// best matchings
+	var addAbsFloatRed = ImageMat.addFloat(ImageMat.absFloat(dxRed),ImageMat.absFloat(dyRed)); ImageMat.normalFloat01(addAbsFloatRed);
+	var addAbsFloatGrn = ImageMat.addFloat(ImageMat.absFloat(dxGrn),ImageMat.absFloat(dyGrn)); ImageMat.normalFloat01(addAbsFloatGrn);
+	var addAbsFloatBlu = ImageMat.addFloat(ImageMat.absFloat(dxBlu),ImageMat.absFloat(dyBlu)); ImageMat.normalFloat01(addAbsFloatBlu);
+	var addAbsFloatGry = ImageMat.addFloat(ImageMat.absFloat(dxGry),ImageMat.absFloat(dyGry)); ImageMat.normalFloat01(addAbsFloatGry);
+	var gradEdgeRed = Code.copyArray(new Array(), gradFlatRed); ImageMat.applyFxnFloat(gradEdgeRed,ImageMat.flipAbsFxn); ImageMat.normalFloat01(gradEdgeRed);
+	var gradEdgeGrn = Code.copyArray(new Array(), gradFlatGrn); ImageMat.applyFxnFloat(gradEdgeGrn,ImageMat.flipAbsFxn); ImageMat.normalFloat01(gradEdgeGrn);
+	var gradEdgeBlu = Code.copyArray(new Array(), gradFlatBlu); ImageMat.applyFxnFloat(gradEdgeBlu,ImageMat.flipAbsFxn); ImageMat.normalFloat01(gradEdgeBlu);
+	var gradEdgeGry = Code.copyArray(new Array(), gradFlatGry); ImageMat.applyFxnFloat(gradEdgeGry,ImageMat.flipAbsFxn); ImageMat.normalFloat01(gradEdgeGry);
+
+	// blobs setup
+	var bestThreshold = 0.10;
+
+	var bestRed = gradEdgeRed;
+	//bestRed = ImageMat.mulFloat(bestRed,gradRed); ImageMat.normalFloat01(bestRed);
+	bestRed = ImageMat.mulFloat(bestRed,addAbsFloatRed); ImageMat.normalFloat01(bestRed);
+	bestRed = ImageMat.mulFloat(bestRed,cornerRed); ImageMat.normalFloat01(bestRed);
+	bestRed = ImageMat.gtFloat(bestRed, bestThreshold); ImageMat.normalFloat01(bestRed);
+
+	var bestGrn = gradEdgeGrn;
+	//bestGrn = ImageMat.mulFloat(bestGrn,gradGrn); ImageMat.normalFloat01(bestGrn);
+	bestGrn = ImageMat.mulFloat(bestGrn,addAbsFloatGrn); ImageMat.normalFloat01(bestGrn);
+	bestGrn = ImageMat.mulFloat(bestGrn,cornerGrn); ImageMat.normalFloat01(bestGrn);
+	bestGrn = ImageMat.gtFloat(bestGrn, bestThreshold); ImageMat.normalFloat01(bestGrn);
+
+	var bestBlu = gradEdgeBlu;
+	//bestBlu = ImageMat.mulFloat(bestBlu,gradBlu); ImageMat.normalFloat01(bestBlu);
+	bestBlu = ImageMat.mulFloat(bestBlu,addAbsFloatBlu); ImageMat.normalFloat01(bestBlu);
+	bestBlu = ImageMat.mulFloat(bestBlu,cornerBlu); ImageMat.normalFloat01(bestBlu);
+	bestBlu = ImageMat.gtFloat(bestBlu, bestThreshold); ImageMat.normalFloat01(bestBlu);
+
+	var bestGry = gradGry; //cornerGry; // gradGry; gradEdgeGry;
+	bestGry = ImageMat.mulFloat(bestGry,cornerGry); ImageMat.normalFloat01(bestGry);
+	//bestGry = ImageMat.mulFloat(bestGry,gradGry); ImageMat.normalFloat01(bestGry);
+	bestGry = ImageMat.mulFloat(bestGry,addAbsFloatGry); ImageMat.normalFloat01(bestGry);
+	ImageMat.normalFloat01(bestGry);
+	bestGry = ImageMat.gtFloat(bestGry, bestThreshold);
+
+	// 
+ 	imageBestRGB.setFromFloats(bestRed, bestGrn, bestBlu);
+	imageBestGry.setFromFloats(bestGry, bestGry, bestGry);
+	
+
+ 	/*
+
+ 	// 1 - expand
+ 	dat = ImageMat.retractBlob(baseBlob, wid,hei);
+//var pts = Code.copyArray(new Array(), dat);
+ 	//dat = ImageMat.expandBlob(dat, wid,hei);
+ 	dat = ImageMat.ARGBFromFloat(dat);
+ 	this._canvas.setColorArrayARGB(dat, ox+1*wid,oy+hei,wid,hei);
+
+ 	// 2 - retract
+ 	dat = ImageMat.expandBlob(baseBlob, wid,hei);
+var baseBlob = Code.copyArray(new Array(), dat);
+ 	dat = ImageMat.retractBlob(dat, wid,hei);
+var retBlob = Code.copyArray(new Array(), dat);
+ 	dat = ImageMat.ARGBFromFloat(dat);
+ 	this._canvas.setColorArrayARGB(dat, ox+2*wid,oy+hei,wid,hei);
+
+var blobs1 = ImageMat.findBlobs(baseBlob, wid,hei); // 457 - 521
+var blobs2 = ImageMat.findBlobs2(baseBlob, wid,hei); // 172
+var blobs = new Array(); // more correct ...
+	len = blobs1.length; for(i=0;i<len;++i){ blobs.push(blobs1[i]);}
+	//len = blobs2.length; for(i=0;i<len;++i){ blobs.push(blobs2[i]);}
+//console.log(blobs.length+" | "+(100*blobs.length/(wid*hei))+"%");
+var maxims = new Array(wid*hei);
+len = maxims.length;
+for(i=0;i<len;++i){
+	maxims[i] = 0;
+}
+len = blobs.length;
+for(i=0;i<len;++i){
+	obj = blobs[i];
+	index = obj.y*wid + obj.x;
+	maxims[index] = (1+obj.value/2)/2;
+}
+
+	*/
+	//console.log("getImageFilters");
+	return new Array(imageOriginal, imageGradientRGB, imageGradientGry, imagePhaseRGB, imagePhaseGry, imageCornerRGB, imageCornerGry, imageBestRGB, imageBestGry);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+Match.prototype.exp1 = function(){
 	var font = new Font("arial","../spice/source/fonts/monospice.ttf",null,0.1,0.5,1.0);
 	font.load();
 	//var angA = new ColorAngle(Math.PI*1/8,Math.PI*7/8,Math.PI*2/8,Math.PI*3/8);
 	//var angB = new ColorAngle(angA.red()+0.5,angA.grn()+0.5,angA.blu()+0.5,angA.gry()+0.5);
 	var angA = new ColorAngle(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
 	// viz
-	var txt, doA, doB, angB, score;
+	var txt, doA, doB, angB, angC, score;
 	var dX = 80, sX = 0, sY = 210, dA = 1.0;
-	var i, len = 18;
-	for(i=0;i<len;++i){
-		angB = new ColorAngle(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
-		angB = new ColorAngle(	Code.zeroTwoPi(angA.red() + Math.random()*dA - dA/2),
+	var i, len = 24;
+	angC = new ColorAngle(	Code.zeroTwoPi(angA.red() + Math.random()*dA - dA/2),
+							Code.zeroTwoPi(angA.grn() + Math.random()*dA - dA/2),
+							Code.zeroTwoPi(angA.blu() + Math.random()*dA - dA/2),
+							Code.zeroTwoPi(angA.gry() + Math.random()*dA - dA/2) );
+	angB = new ColorAngle(	Code.zeroTwoPi(angA.red() + Math.random()*dA - dA/2),
 								Code.zeroTwoPi(angA.grn() + Math.random()*dA - dA/2),
 								Code.zeroTwoPi(angA.blu() + Math.random()*dA - dA/2),
 								Code.zeroTwoPi(angA.gry() + Math.random()*dA - dA/2) );
-		score = this.compareAngles(angA,angB);
+	var dA = 0.05;
+	var mA = -dA*len/2;
+	for(i=0;i<len;++i){
+		//angB = new ColorAngle(angC.red()+i*0*dA,angC.grn()+i*0*dA,angC.blu()+i*0*dA,angC.gry()+i*dA);
+		//angB = new ColorAngle(Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2,Math.random()*Math.PI*2);
+		// angB = new ColorAngle(	Code.zeroTwoPi(angA.red() + Math.random()*dA - dA/2),
+		// 						Code.zeroTwoPi(angA.grn() + Math.random()*dA - dA/2),
+		// 						Code.zeroTwoPi(angA.blu() + Math.random()*dA - dA/2),
+		// 						Code.zeroTwoPi(angA.gry() + Math.random()*dA - dA/2) );
+		//score = this.compareAngles(angA,angB);
+		off = i*dA + mA;
+		score = this.compareAngles(angA,angB, off);
 		doB = this.describeAngleDO(angB, dX*0.5);
 			doB.matrix().identity();
-			doB.matrix().rotate(-angB.gry());
+			doB.matrix().rotate(-angB.gry()-off);
 			doB.matrix().translate(sX+(i+1)*dX,sY);
 			this._stage.addChild( doB );
 		doA = this.describeAngleDO(angA, dX*0.5);
@@ -276,7 +610,7 @@ Match.prototype.exp = function(){
 			doA.matrix().rotate(-angA.gry());
 			doA.matrix().translate(sX+(i+1)*dX,sY + dX);
 			this._stage.addChild( doA );
-		txt = new DOText(""+(Math.round(score*1000)/1000),12,font,0xFFFF0000,DOText.ALIGN_CENTER);
+		txt = new DOText(""+(Math.round(score*1000)/1000)+"("+(Math.round(off*1000)/1000)+")",10,font,0xFFFF0000,DOText.ALIGN_CENTER);
 			txt.matrix().identity();
 			txt.matrix().rotate(0);
 			txt.matrix().translate(sX+(i+1)*dX,sY-dX/2);
@@ -286,8 +620,9 @@ Match.prototype.exp = function(){
 	
 	
 }
-Match.prototype.compareAngles = function(angA,angB){
-	//console.log("-----------------------------");
+Match.prototype.compareAngles = function(angA,angB, ang){ // but is this the LOWEST POSSIBLE SCORE => NO, use binary search, etc...
+	ang = ang===undefined?0:ang;
+	//console.log("-----------------------------"+ang);
 	// var angA_grayRed = angA.gry() - angA.red();
 	// var angA_grayGrn = angA.gry() - angA.grn();
 	// var angA_grayBlu = angA.gry() - angA.blu();
@@ -295,21 +630,26 @@ Match.prototype.compareAngles = function(angA,angB){
 	// console.log(angA_grayGrn);
 	// console.log(angA_grayBlu);
 	var angA_grayRed = Code.minAngle(angA.gry(),angA.red());
-	var angA_grayBlu = Code.minAngle(angA.gry(),angA.grn());
-	var angA_grayGrn = Code.minAngle(angA.gry(),angA.blu());
+	var angA_grayGrn = Code.minAngle(angA.gry(),angA.grn());
+	var angA_grayBlu = Code.minAngle(angA.gry(),angA.blu());
 	var angB_grayRed = Code.minAngle(angB.gry(),angB.red());
-	var angB_grayBlu = Code.minAngle(angB.gry(),angB.grn());
-	var angB_grayGrn = Code.minAngle(angB.gry(),angB.blu());
+	var angB_grayGrn = Code.minAngle(angB.gry(),angB.grn());
+	var angB_grayBlu = Code.minAngle(angB.gry(),angB.blu());
 	//console.log("============================");
 	// console.log(angA_grayRed);
 	// console.log(angA_grayGrn);
 	// console.log(angA_grayBlu);
 	// console.log("============================");
-	var diffRed = angA_grayRed - angB_grayRed;
-	var diffGrn = angA_grayGrn - angB_grayGrn;
-	var diffBlu = angA_grayBlu - angB_grayBlu;
+	// var diffRed = angA_grayRed - angB_grayRed - ang;
+	// var diffGrn = angA_grayGrn - angB_grayGrn - ang;
+	// var diffBlu = angA_grayBlu - angB_grayBlu - ang;
+	// var diffGry = ang;
 	//console.log(diffRed,diffGrn,diffBlu);
-	var score = Math.abs(diffRed) + Math.abs(diffBlu) + Math.abs(diffGrn);
+	var diffRed = angA_grayRed - angB_grayRed - ang;
+	var diffGrn = angA_grayGrn - angB_grayGrn - ang;
+	var diffBlu = angA_grayBlu - angB_grayBlu - ang;
+	var diffGry = ang;
+	var score = Math.abs(diffRed) + Math.abs(diffBlu) + Math.abs(diffGrn) + Math.abs(diffGry);
 	return score;
 }
 
@@ -426,7 +766,7 @@ Match.prototype.compareColorScaleSingle = function(colA, colB){
 	score = errA + errB + errC;
 	return score;
 }
-Match.prototype._imageCompleteFxn = function(o){
+Match.prototype._imageCompleteFxn3 = function(o){
 	var imageDO = new DO();
 	//this._stage.stop();
 	Code.copyArray(this._imageList,o.images);
@@ -451,7 +791,6 @@ Match.prototype._imageCompleteFxn = function(o){
 	//imgDO.matrix().scale(0.25,0.25);
 	imgDO.matrix().translate(10,10);
 
-return;
 	// 
  	var dat = this._canvas.getColorArrayARGB(ox,oy,wid,hei);
  	var img = new ImageMat(wid,hei);

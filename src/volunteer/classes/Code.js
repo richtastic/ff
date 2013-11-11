@@ -928,7 +928,25 @@ Code.escapeHTML = function(str){
 function.call(this, a, b, c);
 function.apply(this,arg);
 */
-
+Code.padString = function(val,wid,filler){
+	return Code.padStringLeft(val,wid,filler);
+}
+Code.padStringLeft = function(val,wid,filler){
+	filler = filler!==undefined?filler:" ";
+	var str = val;
+	while(str.length<wid){
+		str = str + filler;
+	}
+	return str;
+}
+Code.padStringRight = function(val,wid,filler){
+	filler = filler!==undefined?filler:" ";
+	var str = val;
+	while(str.length<wid){
+		str = filler + str;
+	}
+	return str;
+}
 
 
 

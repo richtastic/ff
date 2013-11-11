@@ -28,20 +28,20 @@ DO.getPointFromTransform = function(newPos,mat,pos){
 	return newPos;
 }
 DO.addToStageRecursive = function(ch,sta){
-	ch.stage = sta;
+	ch._stage = sta;
 	ch.addedToStage(sta);
 	for(var i=0;i<ch._children.length;++i){
-		if(ch.children[i].stage != sta){ 
+		if(ch._children[i]._stage != sta){ 
 			DO.addToStageRecursive(ch.children[i],sta);
 		} // else already has it
 	}
 }
 DO.removedFromStageRecursive = function(ch){
-	ch.stage = null;
+	ch._stage = null;
 	ch.removedFromStage(null);
-	for(i=0;i<ch.children.length;++i){
-		if(ch.children[i].stage != null){
-			DO.removedFromStageRecursive(ch.children[i]);
+	for(i=0;i<ch._children.length;++i){
+		if(ch._children[i].stage() != null){
+			DO.removedFromStageRecursive(ch._children[i]);
 		}
 	}
 }

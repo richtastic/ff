@@ -115,7 +115,6 @@ Canvas.prototype.getColorArrayARGB = function(a,b,c,d){
 		jw = j*w; jw4 = jw*4;
 		for(i=0;i<w;++i){
 			index = i*4 + jw4;
-			//colList[i + jw] = Code.getColRGBA(imgData[index],imgData[index+1],imgData[index+2],imgData[index+3]);
 			colList[i + jw] = Code.getColARGB(imgData[index+3],imgData[index],imgData[index+1],imgData[index+2]);
 		}
 	}
@@ -137,13 +136,13 @@ Canvas.prototype.setColorArrayARGB = function(data, x,y, w,h){
 	}
 	this._context.putImageData(img,x,y);
 }
-
 //  ------------------------------------------------------------------------------------------------------------------------ IMAGE
 Canvas.prototype.getImageData = function(a,b,c,d){ // pixel copying
 	var imgData = this._context.getImageData(a,b,c,d);
 	return imgData;
 }
 Canvas.prototype.setImageData = function(imgData,c,d){ // pixel setting
+	console.log(imgData,c,d);
 	this._context.putImageData(imgData,c,d);
 }
 Canvas.prototype.toDataURL = function(){

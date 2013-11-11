@@ -252,6 +252,7 @@ void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, s
 				default: // errors ignored
 				break;
 			}
+			fprintf(stderr, "\t\terror %d, %s\n", errno, strerror (errno));
 			fprintf(stderr, "\tcropping to a rectangle failed - ignored...\n");
 		}else{
 			fprintf(stderr, "\tcropping to rectangle set ...\n");
@@ -263,7 +264,7 @@ void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, s
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	fmt.fmt.pix.width = *picWidth;
 	fmt.fmt.pix.height = *picHeight;
-	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV; // V4L2_PIX_FMT_BGR24
+	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_BGR24;//V4L2_PIX_FMT_YUYV; // V4L2_PIX_FMT_YUYV; // V4L2_PIX_FMT_BGR24; // V4L2_PIX_FMT_MJPEG
 	fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 	if( -1 == xioctl(*fd, VIDIOC_S_FMT, &fmt) ){
 		errno_exit ("VIDIOC_S_FMT");
@@ -290,13 +291,15 @@ void start_capturing(int *fd, unsigned int *n_buffers){
 	enum v4l2_buf_type type;
 	for(i=0; i<*n_buffers; ++i){
 		struct v4l2_buffer buf;
-		CLEAR(buf);
+		//CLEAR(buf);
+		//buf.time
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
 		buf.index = i;
 		if( -1 == xioctl (*fd, VIDIOC_QBUF, &buf) ){
 			errno_exit("VIDIOC_QBUF");
 		}
+		fprintf(stderr, "success BUFFER\n");
 	}
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	if( -1 == xioctl (*fd, VIDIOC_STREAMON, &type) ){
@@ -374,13 +377,13 @@ int process_image(const void* p, size_t len, int picWidth, int picHeight, char *
 	int encodedLength = picWidth*picHeight*2;// two pixels are encoded with 4 values
 	int picLength = picWidth*picHeight*3;// each pixel is encoded with 3 values
 	fprintf(stderr, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength, picLength, picWidth, picHeight);
-	if(length>=encodedLength){
+	if(1){//length>=encodedLength){
 		int i, j;
 		unsigned char c, y0, u, y1, v;
 		int r, g, b;
 		j = 0;
 		fprintf(stderr, "reading buffer ... \n");
-		for(i=0;i<encodedLength;i+=4){
+		for(i=0;i<length;i+=4){
 			y0 = ptr[i];
 			u = ptr[i+1];
 			y1 = ptr[i+2];
@@ -457,6 +460,7 @@ int main(int argc, const char **argv){
 	open_device(argv[1], &file_descriptor);
 	init_device(argv[1], &file_descriptor, &wid, &hei, &buffers, &n_buffers);
 	image_buffer = (char*)malloc(wid*hei*3 * sizeof(char));
+	//sleep(1.0);
 	start_capturing(&file_descriptor,&n_buffers);
 	while(continue_boolean){
 		input_char = fgetc(stdin);

@@ -77,23 +77,52 @@ Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
-Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64 image from OBJ 
+Stage.prototype.getRGBAAsImage = function(argb, wid,hei, matrix, type){
+	this._setupRenderCanvas(wid,hei, matrix);
+	this._renderCanvas.setColorArrayARGB(argb, 0,0, wid,hei);
+	return this._toImage(wid,hei, type);
+}
+Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64(src) image from OBJ 
+	// this._renderCanvas.clear();
+	// this._renderCanvas.size(wid,hei);
+	// this._renderCanvas.contextIdentity();
+	// if(matrix){
+	// 	this._renderCanvas.contextTransform(matrix); 
+	// }
+	this._setupRenderCanvas(wid,hei, matrix);
+	obj.render(this._renderCanvas);
+	return this._toImage(wid,hei, type);
+}
+Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
 	this._renderCanvas.clear();
 	this._renderCanvas.size(wid,hei);
 	this._renderCanvas.contextIdentity();
-	this._renderCanvas.contextTransform(matrix); 
-	obj.render(this._renderCanvas);
-	var img;
-	if(type==null||type==Canvas.IMAGE_TYPE_PNG){
-		img = this._renderCanvas.toDataURL();
-	}else{
-		img = this._renderCanvas.toDataURL('image/jpeg');
+	if(matrix){
+		this._renderCanvas.contextTransform(matrix); 
 	}
+}
+Stage.prototype._toImage = function(wid,hei, type){
 	var image = new Image();
 	image.width = wid;
 	image.height = hei;
-	image.src = img;
+	image.src = this._toDataURL(type);
 	return image;
+}
+Stage.prototype._toDataURL = function(type){
+	if(type==null||type==Canvas.IMAGE_TYPE_PNG){
+		return this._renderCanvas.toDataURL();
+	}
+	return this._renderCanvas.toDataURL('image/jpeg');
+}
+Stage.prototype.getDOAsARGB = function(obj, wid,hei, matrix){
+	this._renderCanvas.clear();
+	this._renderCanvas.size(wid,hei);
+	this._renderCanvas.contextIdentity();
+	if(matrix){
+		this._renderCanvas.contextTransform(matrix); 
+	}
+	obj.render(this._renderCanvas);
+	return this._renderCanvas.getColorArrayARGB(0,0,wid,hei);
 }
 Stage.prototype.render = function(){
 	//console.log("render");
