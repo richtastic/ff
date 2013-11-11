@@ -34,6 +34,7 @@ end
 
 def openPipeComm (name)
 	return File.open(name,File::RDWR | File::NONBLOCK)
+	# file = File.open(filename,File::RDONLY | File::NONBLOCK)
 end
 
 def closePipeComm (file)
@@ -47,7 +48,7 @@ end
 
 def writePipeComm (file,data)
 	begin
-		result = file.write(data)
+		result = file.write_nonblock(data)
 		file.flush
 		return result
 	rescue Errno::EAGAIN
@@ -61,7 +62,7 @@ end
 def readPipeSingleChar (file)
 	instr = ""
 	begin
-		instr = file.read(1)
+		instr = file.read_nonblock(1)
 	rescue Errno::EAGAIN
 		instr = "" # puts "NOTHING TO READ"
 	rescue Errno::EINTR
@@ -74,11 +75,9 @@ def readPipeComm (file)
 	data = ""
 	puts "single ... "
 	ch = readPipeSingleChar(file)
-	puts "ch"
-	while(ch!="")
+	while ch != ""
 		data = "#{data}#{ch}"
 		ch = readPipeSingleChar(file)
-		puts "single ... "
 	end
 	return data
 end

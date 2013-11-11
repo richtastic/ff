@@ -64,12 +64,9 @@ def start_video_program(program, video, out_image, width, height, in_pipe, out_p
 	end
 end
 # --------------------------------------------------------- find first /dev/video input
-firstDevice = %x[ ls /dev | grep -iro "video[0-9]*" | sed -r s/^/\\\\/dev\\\\//g ]
+firstDevice = %x[ ls /dev/ | grep "video[0-9]*" | sed -r s/^/\\\\/dev\\\\//g ]
 firstDevice = firstDevice.split("\n")
 firstDevice = firstDevice[0]
-firstDevice = "/dev/video0"
-puts " firstDevice ::::"
-puts firstDevice
 # --------------------------------------------------------- input arguments
 options = {}
 options[:autopilot] = true
@@ -149,7 +146,7 @@ puts "LIFE '#{result}'"
 jpg_dir_list = ""
 result = nil
 timelapse_interval = 50 #100~40MB day
-max_temp_images = 7
+max_temp_images = 20
 i = 0
 continue_loop = true
 while(continue_loop)

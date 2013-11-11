@@ -3,7 +3,7 @@ Ajax.METHOD_TYPE_GET = "GET";
 Ajax.METHOD_TYPE_POST = "POST";
 
 // ------------ instance
-function Ajax(){ // http://www.w3.org/TR/XMLHttpRequest/
+function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._request = null;
 	this._method = Ajax.METHOD_TYPE_GET;
 	this._params = null;
@@ -18,6 +18,9 @@ function Ajax(){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._request.onreadystatechange = this._stateChangeCaller;
 	this._request.context = this;
 	this._autoDestroy = true;
+	if(auto){
+		this._autoDestroy = false;
+	}
 }
 // --- get/set ---------------------------------------
 Ajax.prototype.cache = function(c){

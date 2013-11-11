@@ -22,13 +22,17 @@ Ticker.prototype.frameSpeed = function (delta){
 	}
 	return this._delta;
 }
-Ticker.prototype.start = function(){
+Ticker.prototype.start = function(immediate){
 	if(this._timer!=null){
 		clearTimeout(this._timer);
 		this._timer = null;
 	}
 	this._running = true;
-	this._next(null);
+	if(immediate){
+		this._next(null);
+	}else{
+		this._timer = setTimeout(this._handleNextExternal,this._delta );
+	}
 }
 Ticker.prototype.stop = function(){
 	if(this._timer!=null){
