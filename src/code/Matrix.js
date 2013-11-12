@@ -38,10 +38,10 @@ Matrix.prototype.cols = function(){
 	return this._colCount;
 }
 Matrix.prototype.set = function(row,col,val){
-	this.rows[row][col] = val;
+	this._rows[row][col] = val;
 }
 Matrix.prototype.get = function(row,col){
-	return this.rows[row][col];
+	return this._rows[row][col];
 }
 // ------------------------------------------------------------------------------------------------------------------------ BASIC SETTING
 Matrix.prototype.zero = function(){
@@ -51,6 +51,7 @@ Matrix.prototype.zero = function(){
 			this._rows[j][i] = 0.0;
 		}
 	}
+	return this;
 }
 Matrix.prototype.identity = function(){
 	var i, j, row = this._rowCount, col = this._colCount;
@@ -63,6 +64,34 @@ Matrix.prototype.identity = function(){
 			}
 		}
 	}
+	return this;
+}
+Matrix.prototype.closeToIdentity = function(thresh){
+	thresh = thresh===undefined?(1E-6):thresh;
+	var i, j, row = this._rowCount, col = this._colCount;
+	for(j=0;j<row;++j){
+		for(i=0;i<col;++i){
+			if(i==j){
+				if( Math.abs(this._rows[j][i]-1.0 )>thresh ){
+					console.log(j,i,"==");
+					return false;
+				}
+			}else if( Math.abs(this._rows[j][i])>thresh ){
+				console.log(j,i,"!=");
+				return false;
+			}
+		}
+	}
+	return true;
+}
+Matrix.prototype.getSubMatrix = function(offRow,offCol, rows,cols){
+	var i,j, m = new Matrix(rows,cols);
+	for(j=0;j<rows;++j){
+		for(i=0;i<cols;++i){
+			m._rows[j][i] = this._rows[j+offRow][i+offCol];
+		}
+	}
+	return m;
 }
 Matrix.prototype.randomize = function(mul,rnd){
 	var i, j, row = this._rowCount, col = this._colCount;
@@ -74,6 +103,7 @@ Matrix.prototype.randomize = function(mul,rnd){
 			}
 		}
 	}
+	return this;
 }
 // ------------------------------------------------------------------------------------------------------------------------ FXN
 Matrix.prototype.swapRows = function(rowA,rowB){
@@ -100,6 +130,7 @@ Matrix.prototype.copy = function(m){ // this = m || return copy
 				this._rows[j][i] = m._rows[j][i];
 			}
 		}
+		return this;
 	}else{
 		var j,i, row=this._rowCount, col=this._colCount;
 		m = new Matrix(row,col);
@@ -149,8 +180,42 @@ for each col
 */
 // ------------------------------------------------------------------------------------------------------------------------ MATHS
 // assumes all sizes have been set beforehand
+Matrix.transpose = function(B, Ain){ // B = A^T
+	var A = Ain, C = Matrix._temp;
+	if(Ain===undefined){ A = B; }
+	var i, j, temp, row = A._rowCount, col = A._colCount;
+	C.setSize(col,row);
+	for(j=0;j<row;++j){
+		for(i=0;i<col;++i){
+			C._rows[i][j] = A._rows[j][i];
+		}
+	}
+	if(Ain==undefined){ return C.copy(); }
+	B.copy(C);
+	return B;
+}
+Matrix.augment = function(A,B){
+	var rowsA = A._rowCount, rowsB = B._rowCount, colsA = A._colCount, colsB = B._colCount;
+	var i, j, temp, row = Math.max(rowsA,rowsB), col = colsA+colsB;
+	var C = new Matrix(row,col);
+	for(j=0;j<rowsA;++j){
+		for(i=0;i<colsA;++i){
+			C._rows[j][i] = A._rows[j][i];
+		}
+	}
+	for(j=0;j<rowsB;++j){
+		for(i=0;i<colsB;++i){
+			C._rows[j][i+colsA] = B._rows[j][i];
+		}
+	}
+	return C;
+}
 Matrix.RREF = function(B, A){ // B = rowReducedEchelonForm(A)
-	B.copy(A);
+	if(A!==undefined){
+		if(B!=A){ B.copy(A); }
+	}else{
+		B = B.copy();
+	}
 	var i, j, jm1, row = B._rowCount, col = B._colCount;
 	var thi, pre, nex, c;
 	var pivotRow, pivotCol, pivotCell;
@@ -185,12 +250,32 @@ Matrix.RREF = function(B, A){ // B = rowReducedEchelonForm(A)
 			}
 		}
 	}
+	return B;
 }
-/*
-[ 1.0000E+0  2.0000E+0  3.0000E+0  4.0000E+0  5.0000E+0   ]
-[ 0.0000E+0  1.0000E+0  -2.0000E+0 -8.0000E+0 -9.0000E+0  ]
-[ 0.0000E+0  0.0000E+0  0.0000E+0  -1.1000E+1 -1.4000E+1  ] 
-*/
+Matrix.inverse = function(A){ // assumed square
+	C = Matrix.augment(A,(new Matrix(A._rowCount,A._colCount)).identity());
+	Matrix.RREF(C,C);
+	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
+	C = C.getSubMatrix(0,A._colCount, A._rowCount,A._colCount);
+	if( !B.closeToIdentity() ){
+		return null;
+	}
+	return C;
+}
+Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square 
+	var a = ain;
+	if(ain===undefined){
+		a = cin;
+	}
+	var at = Matrix.transpose(a);
+	var c = Matrix.mult(at,a);
+	c = Matrix.inverse(c);
+	c = Matrix.mult(c,at);
+	if(ain===undefined){
+		return c;
+	}
+	return cin.copy(c);
+}
 Matrix.nullSpace = function(A){ // nul(A)
 	
 }
@@ -212,14 +297,27 @@ Matrix.LU = function(A){ // this = A^
 Matrix.scale = function(c, a,b){ // c = a*b(constant)
 	//
 }
-Matrix.mult = function(c, a,b){ // c = a*b 
-	//
-}
-Matrix.inverse = function(c, a){ // c = a^-1  square inverse via gauss-jordan
-	// via euler 
-}
-Matrix.pseudoinverse = function(c, a){ // c = aa^at non-square 
-	// via euler 
+Matrix.mult = function(r, ain,bin){ // c = a*b 
+	var b = bin, a = ain;
+	if(bin===undefined){
+		a = r; b = ain;
+	}
+	var c = Matrix._temp;
+	var i,j,k, v, rowsA=a._rowCount,rowsB=b._rowCount, colsA=a._colCount,colsB=b._colCount;
+	c.setSize(rowsA,colsB);
+	for(j=0;j<rowsA;++j){
+		for(i=0;i<colsB;++i){
+			v = 0;
+			for(k=0;k<colsA;++k){ // rowsB
+				v += a._rows[j][k]*b._rows[k][i];
+			}
+			c._rows[j][i] = v;
+		}
+	}
+	if(bin===undefined){
+		return c.copy();
+	}
+	r.copy(c);
 }
 Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
 	// 
@@ -227,7 +325,7 @@ Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D
 Matrix.a = function(c, a){ // 
 	// 
 }
-
+Matrix._temp = new Matrix(1,1);
 
 
 /*

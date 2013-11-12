@@ -21,6 +21,8 @@ function customClassesLoadedFxn(){
 	var A = new Matrix(m,n);
 	var B = new Matrix(n,p);
 	var C = new Matrix(m,p);
+	var b = new Matrix(1,1);
+	var x = new Matrix(1,1);
 	//A.identity();
 	// for(i=0;i<m;++i){
 
@@ -29,18 +31,60 @@ function customClassesLoadedFxn(){
 	//A.setSize(3,5).setFromArray([1,2,3,4,5, 3,6,9,1,1, 2,5,4,0,1]);
 	//A.setSize(3,5).setFromArray([1,2,3,5,7, 2,4,4,1,1, 2,3,0,0,1]);
 	//A.setSize(3,4).setFromArray([1,2,1,1, 1,2,2,-1, 2,4,0,6]);
-	A.setSize(3,4).setFromArray([2,1,-1,8, -3,-1,2,-11, -2,1,2,-3]);
+	//A.setSize(3,4).setFromArray([2,1,-1,8, -3,-1,2,-11, -2,1,2,-3]);
+	//console.log( Matrix.transpose(B).toString() );
+	//console.log( C.toString() );
+	//var s = 4/0;
 	//A.randomize(100,true);
 	//B.randomize(100,true);
 	//C.randomize(100,true);
 	//B = A.copy();
 	//B = A.copySize();
-	Matrix.RREF(B,A);
+	//Matrix.RREF(B,A);
+	//Matrix.transpose(C,A);
+	// A.setSize(3,3).setFromArray([1,3,3, 1,4,3, 1,3,4]);
+	// B.setSize(3,3).identity();
+	//A.setSize(3,3).setFromArray([1,3,3, 1,4,3, 1,3,4]);
+	//A.setSize(2,2).setFromArray([3,3.5, 3.2,3.6]);
+	//A.setSize(2,2).setFromArray([4,3, 3,2]);
+	//A.setSize(2,2).setFromArray([1,2, 3,4]);
+	//B = Matrix.inverse(A);
+// A.setSize(3,2).setFromArray([1,2, 3,4, 5,6]);
+// B.setSize(2,3).setFromArray([1,1, 2,3, 0,1]);
+// A.setSize(3,3).setFromArray([6,3,0, 2,5,1, 9,8,6]);
+// B.setSize(3,2).setFromArray([7,4, 6,7, 5,0]);
+// A.setSize(2,3).setFromArray([1,2,3, 4,5,6]);
+// B.setSize(3,2).setFromArray([7,8, 9,10, 11,12]);
+// A.setSize(???).setFromArray([1,2, 3,5, 6,7]);
+// Matrix.mult(C,A,B);
+//C = Matrix.mult(A,B);
+var pointList = [new V2D(3,3), new V2D(4,5), new V2D(7,7), new V2D(1,3), new V2D(3,2)];
+	b.setSize(pointList.length,1);
+	A.setSize(pointList.length,2);
+	for(i=0;i<pointList.length;++i){
+		b.set(i,0, pointList[i].y);
+		A.set(i,0, pointList[i].x); A.set(i,1, 1.0);
+	}
+	
 	console.log( A.toString() );
 	console.log( " " );
-	console.log( B.toString() );
-	//console.log( C.toString() );
-	//var s = 4/0;
+	console.log( b.toString() );
+	console.log( " " );
+	Matrix.mult( x, Matrix.pseudoInverse(A), b);
+	console.log( x.toString() );
+	var pt = new V2D( x.get(0,0), x.get(1,0) );
+	console.log( pt.toString() );
+	/*
+	hold off;
+	plot([3,4,7,1,3],[3,5,7,3,2],"b*");
+	hold on;
+	x = [-4:1:10];
+	m = 0.78125;
+	b = 1.1875000000000007;
+	y = m*x + b;
+	plot(x,y,"r-");
+
+	*/
 
 }
 </script>
