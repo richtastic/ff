@@ -13,8 +13,10 @@ ImageMat.prototype.setPoint = function(x,y, val){
 	this._g[index] = val.y;
 	this._b[index] = val.z;
 }
-ImageMat.prototype.getPoint = function(val, x,y){ // INTERPOLATION MADNESS
-
+ImageMat.prototype.getPoint = function(val, x,y){
+	return this.getPointInterpolateCubic(val,x,y);
+}
+ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 points
 	var minX = Math.max(Math.floor(x), 0);
 	var miiX = Math.max(minX-1, 0);
 	var maxX = Math.min(Math.ceil(x), this._width-1);
@@ -42,9 +44,14 @@ ImageMat.prototype.getPoint = function(val, x,y){ // INTERPOLATION MADNESS
 	minX = x - minX;
 	minY = y - minY;
 	this.quadricColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
-	return;
-
-	// rounding
+}
+ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^3 = 9 points
+	// this maaaaaaaay not be useful
+}
+ImageMat.prototype.getPointInterpolateLinear = function(val, x,y){ // 2^2 = 4 points [BiLinear]
+	// do this
+}
+ImageMat.prototype.getPointInterpolateNearest = function(val, x,y){ // 1 point
 	x = Math.min(Math.max(Math.round(x),0),this._width-1);
 	y = Math.min(Math.max(Math.round(y),0),this._height-1);
 	index = y*this._width + x;

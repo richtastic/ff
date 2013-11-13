@@ -163,6 +163,18 @@ Matrix.prototype.toString = function(exp){
 	}
 	return str.replace(/e/g,"E");
 }
+// ------------------------------------------------------------------------------------------------------------------------ INSTANCE MATHS
+Matrix.prototype.multV2DtoV2D = function(out, inn){
+	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
+	out.y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
+	out.x = x;
+}
+Matrix.prototype.multV2DtoV3D = function(out, inn){
+	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
+	var y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
+	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2];
+	out.x = x; out.y = y;
+}
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
 /*
 RREF:
@@ -326,6 +338,44 @@ Matrix.a = function(c, a){ //
 	// 
 }
 Matrix._temp = new Matrix(1,1);
+
+
+Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
+	var i, fr, to;
+	var len = fromPoints.length;
+	var matA = new Matrix(2*len,8);
+	var matB = new Matrix(2*len,1);
+	for(i=0;i<len;++i){
+		fr = fromPoints[i];
+		to = toPoints[i];
+		matA.set(2*i,0,   fr.x);
+		matA.set(2*i,1,   fr.y);
+		matA.set(2*i,2,   1);
+		matA.set(2*i,3,   0);
+		matA.set(2*i,4,   0);
+		matA.set(2*i,5,   0);
+		matA.set(2*i,6,   -fr.x*to.x);
+		matA.set(2*i,7,   -fr.y*to.x);
+		matA.set(2*i+1,0, 0);
+		matA.set(2*i+1,1, 0);
+		matA.set(2*i+1,2, 0);
+		matA.set(2*i+1,3, fr.x);
+		matA.set(2*i+1,4, fr.y);
+		matA.set(2*i+1,5, 1);
+		matA.set(2*i+1,6, -fr.x*to.y);
+		matA.set(2*i+1,7, -fr.y*to.y);
+		matB.set(2*i  ,0, to.x);
+		matB.set(2*i+1,0, to.y);
+	}
+	var x = Matrix.mult(Matrix.pseudoInverse(matA), matB);
+	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1]);
+	// var pt = new V3D(0,0,0);
+	// projection.multV2DtoV3D(pt,pt);
+	// console.log(pt.toString());
+	// projection.set(0,0, projection.get(0,0)/pt.z );
+	// projection.set(1,1, projection.get(1,1)/pt.z );
+	return projection;
+}
 
 
 /*

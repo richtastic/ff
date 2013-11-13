@@ -288,11 +288,18 @@ Match.prototype._imageCompleteFxn = function(o){
 	var originalImage = filters.shift();
 	//var pt = new V2D(147,135); // OO
 	var pt = new V2D(99,215); // EYE
-
-	var ptA = new V2D(160,55);
-	var ptB = new V2D(195,215);
-	var ptC = new V2D(145,240);
-	var ptD = new V2D(125,90);
+var ptA = new V2D(245,25); // BOX
+var ptB = new V2D(250,296);
+var ptC = new V2D(63,241);
+var ptD = new V2D(58,58);
+// var ptA = new V2D(180,-10); // FUN
+// var ptB = new V2D(290,310);
+// var ptC = new V2D(63,230);
+// var ptD = new V2D(58,150);
+	// var ptA = new V2D(160,55); // LOGO
+	// var ptB = new V2D(195,215);
+	// var ptC = new V2D(145,240);
+	// var ptD = new V2D(125,90);
 
 	var doPoint = new DO();
 	var xDim = 15;
@@ -319,7 +326,7 @@ doPoint.graphics().lineTo(ptA.x,ptA.y);
 
 	var source = originalImage;//filters[0];
 	//var result = this.extractRect(source, pt.x-xDim,pt.y-xDim, pt.x+xDim,pt.y-xDim, pt.x+xDim,pt.y+xDim, pt.x-xDim,pt.y+xDim, Math.floor(7*xDim),Math.floor(7*xDim) );
-	var result = this.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,100 );
+	var result = this.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,200 );
 
 	img = result;
 	argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
@@ -344,32 +351,19 @@ doPoint.graphics().lineTo(ptA.x,ptA.y);
 
 	*/
 }
-Match.prototype.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, w,h){
-	var destination = new ImageMat(w,h);
-	var ab = new V2D(bX-aX,bY-aY);
-	var bc = new V2D(cX-bX,cY-bY);
-	var dc = new V2D(cX-dX,cY-dY);
-	var ad = new V2D(dX-aX,dY-aY);
-	var delX = new V2D(dc.x-ab.y.dc.x-ab.y);
-	var delY = new V2D(bc.x-ad.y.bc.x-ad.y);
-	var vX = new V2D(), vY = new V2D();
-	var i, j, val = new V3D(), pt = new V2D();
-	var pI, pJ, pI1, pJ1;
-	var wid = w-1, hei = h-1;
-	for(i=0;i<=wid;++i){
-		for(j=0;j<=hei;++j){
-			pI = 1.0*i/wid;
-			pI1 = 1.0 - pI;
-			pJ = 1.0*j/hei;
-			pJ1 = 1.0 - pJ;
-			// vX.x = pJ1*ab.x + pJ*dc.x; vX.y = pJ1*ab.y + pJ*dc.y;
-			// vY.x = pI1*ad.x + pI*bc.x; vY.y = pI1*ad.y + pI*bc.y;
-			vX.x = ab.x + 
-			// pt.x = aX + pI*vX.x + pJ*vY.x;
-			// pt.y = aY + pI*vX.y + pJ*vY.y;
-			pt.x = aX + vX.x + vY.x;
-			pt.y = aY + vX.y + vY.y;
-			source.getPoint(val, pt.x,pt.y);
+Match.prototype.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei){
+	var destination = new ImageMat(wid,hei);
+	var fr = new V3D();
+	var val = new V3D()
+	var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
+	var toPoints = [new V2D(aX,aY), new V2D(bX,bY), new V2D(cX,cY), new V2D(dX,dY)];
+	var projection = Matrix.get2DProjectiveMatrix(fromPoints,toPoints);
+	for(j=0;j<=hei;++j){
+		for(i=0;i<=wid;++i){
+			fr.x = i; fr.y = j;
+			projection.multV2DtoV3D(fr,fr);
+			fr.x /= fr.z; fr.y /= fr.z;
+			source.getPoint(val, fr.x,fr.y);
 			destination.setPoint(i,j, val);
 		}
 	}
@@ -385,8 +379,8 @@ Match.prototype.extractRectNoMatrixNotQuiteCorrect = function(source, aX,aY,bX,b
 	var i, j, val = new V3D(), pt = new V2D();
 	var pI, pJ, pI1, pJ1;
 	var wid = w-1, hei = h-1;
-	for(i=0;i<=wid;++i){
-		for(j=0;j<=hei;++j){
+	for(j=0;j<=hei;++j){
+		for(i=0;i<=wid;++i){
 			pI = 1.0*i/wid;
 			pI1 = 1.0 - pI;
 			pJ = 1.0*j/hei;
