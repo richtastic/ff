@@ -122,14 +122,18 @@ Canvas.prototype.linkProgram = function(){
 		return null;
 	}
 	this._context.useProgram(this._program);
-	this._program.vertexPositionAttribute = this._context.getAttribLocation(this._program, "aVertexPosition");
-	this._context.enableVertexAttribArray(this._program.vertexPositionAttribute);
-	this._program.pMatrixUniform = this._context.getUniformLocation(this._program, "uPMatrix");
-	this._program.mvMatrixUniform = this._context.getUniformLocation(this._program, "uMVMatrix");
+	this._program.projectionMatrixUniform = this._context.getUniformLocation(this._program, "uPMatrix");
+	this._program.modelViewMatrixUniform = this._context.getUniformLocation(this._program, "uMVMatrix");
+}
+Canvas.prototype.enableVertexAttribute = function(attribName){
+	var attr = this._context.getAttribLocation(this._program, attribName);
+	this._context.enableVertexAttribArray(attr);
+	this._program[attribName] = attr;
+	return attr;
 }
 Canvas.prototype.uniformMatrices = function(pMatrix, mvMatrix){
-	this._context.uniformMatrix4fv(this._program.pMatrixUniform, false, pMatrix);// this._pMatrix);
-	this._context.uniformMatrix4fv(this._program.mvMatrixUniform, false, mvMatrix);// this._mvMatrix);
+	this._context.uniformMatrix4fv(this._program.projectionMatrixUniform, false, pMatrix);
+	this._context.uniformMatrix4fv(this._program.modelViewMatrixUniform, false, mvMatrix);
 }
 Canvas.prototype.setBackgroundColor = function (r,g,b,a){
 	this._context.clearColor(r,g,b,a);
@@ -138,9 +142,9 @@ Canvas.prototype.enableDepthTest = function(){
 	this._context.enable(this._context.DEPTH_TEST);
 }
 
-Canvas.prototype.getBufferFloat32Array = function(vertexList){
+Canvas.prototype.getBufferFloat32Array = function(vertexList, lengthOfIndividual){
 	var buffer = this._context.createBuffer();
-	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer);
+	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer, lengthOfIndividual);
 	this._context.bufferData(this._context.ARRAY_BUFFER, new Float32Array(vertexList), this._context.STATIC_DRAW);
 	return buffer;
 }
@@ -150,17 +154,17 @@ Canvas.prototype.setViewport = function(xPos,yPos,wid,hei){
 Canvas.prototype.clearViewport = function(){
 	this._context.clear(this._context.COLOR_BUFFER_BIT | this._context.DEPTH_BUFFER_BIT);
 }
-Canvas.prototype.bindFloatBuffer = function(buffer){
-// 	mat4.identity(this._mvMatrix);
-// 	mat4.translate(this._mvMatrix, [-1.5,0.0,-7.0]);
+Canvas.prototype.bindFloatBuffer = function(attr, buffer, lengthOfIndividual){
 	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer);
-	this._context.vertexAttribPointer(this._program.vertexPositionAttribute, 3, this._context.FLOAT, false, 0,0);
+	this._context.vertexAttribPointer(attr, lengthOfIndividual, this._context.FLOAT, false, 0,0);
 }
 Canvas.prototype.drawTriangles = function(count, offset){
-	this._context.drawArrays(this._context.TRIANGLES, 0, count);
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.TRIANGLES, offset, count);
 }
 Canvas.prototype.drawTriangleList = function(count, offset){
-	this._context.drawArrays(this._context.TRIANGLE_STRIP, 0, count);
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.TRIANGLE_STRIP, offset, count);
 }
 // ------------------------------------------------------------------------------------------------------------------------ ------------------
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES

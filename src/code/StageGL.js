@@ -15,8 +15,8 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
     this._canvas.setFragmentShaders(fragmentShaders);
     this._canvas.linkProgram();
     //  matrices
-	this._pMatrix = mat4.create();
-	this._mvMatrix = mat4.create();
+	this._projectionMatrix = mat4.create();
+	this._modelViewMatrix = mat4.create();
 	//
 	this.addListeners();
 }
@@ -29,9 +29,10 @@ StageGL.prototype.canvas = function(canvas){
 	}
 	return this._canvas;
 }
-StageGL.prototype.getBufferFloat32Array = function(list){
-	var buffer = this._canvas.getBufferFloat32Array(list);
-	buffer.length = list.length/3;
+StageGL.prototype.getBufferFloat32Array = function(list, itemSize){
+	var buffer = this._canvas.getBufferFloat32Array(list,itemSize);
+	buffer.length = list.length/itemSize;
+	buffer.size = itemSize;
 	return buffer;
 }
 StageGL.prototype.setBackgroundColor = function(r,g,b,a){
@@ -40,6 +41,10 @@ StageGL.prototype.setBackgroundColor = function(r,g,b,a){
 StageGL.prototype.enableDepthTest = function(){
 	return this._canvas.enableDepthTest();
 }
+StageGL.prototype.enableVertexAttribute = function(attrib){
+	return this._canvas.enableVertexAttribute(attrib);
+}
+
 StageGL.prototype.setViewport = function(mode,a,b,c,d){
 	var xPos=0, yPos=0, wid = this._canvas.width(), hei = this._canvas.height(); // default
 	if(mode==StageGL.VIEWPORT_MODE_FULL_CENTER){
@@ -53,29 +58,32 @@ StageGL.prototype.clear = function(){
 	var ratio = this._canvas.width()/this._canvas.height();
 	var cutClose = 0.1;
 	var cutFar = 100.0;
-	this.setPerspective(angle,ratio, cutClose,cutFar, this._pMatrix);
+	this.setPerspective(angle,ratio, cutClose,cutFar, this._projectionMatrix);
 }
 StageGL.prototype.setPerspective = function(angle, ratio, cutClose, cutFar, matrix){
 	mat4.perspective(angle, ratio, cutClose, cutFar, matrix);
 }
 StageGL.prototype.matrixIdentity = function(){
-	mat4.identity(this._mvMatrix);
+	mat4.identity(this._modelViewMatrix);
 }
 StageGL.prototype.matrixTranslate = function(x,y,z){
-	mat4.translate(this._mvMatrix, [x,y,z]);
+	mat4.translate(this._modelViewMatrix, [x,y,z]);
 }
-StageGL.prototype.drawTriangles = function(buffer){
-	this._canvas.bindFloatBuffer(buffer);
+StageGL.prototype.bindFloatBuffer = function(attr,buffer){
+	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
+}
+StageGL.prototype.drawTriangles = function(attr,buffer){
 	this.matrixReset();
+	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
 	this._canvas.drawTriangles(buffer.length);
 }
-StageGL.prototype.drawTriangleList = function(buffer){
-	this._canvas.bindFloatBuffer(buffer);
+StageGL.prototype.drawTriangleList = function(attr,buffer){
 	this.matrixReset();
+	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
 	this._canvas.drawTriangleList(buffer.length);
 }
 StageGL.prototype.matrixReset = function(){
-	this._canvas.uniformMatrices(this._pMatrix, this._mvMatrix);
+	this._canvas.uniformMatrices(this._projectionMatrix, this._modelViewMatrix);
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 StageGL.prototype.render = function(){

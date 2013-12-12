@@ -7,59 +7,17 @@ function handleOnLoad(){
 	var ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["glMatrix-0.9.5.min.js"];
+	var list = ["glMatrix-0.9.5.min.js","WebEx1.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
 	scriptLoader.load();
 }
-var globalCanvas;
-var globalTriBuffer;
-var globalSquBuffer;
 function customClassesLoadedFxn(){
-    var vertexShader = "\
-		attribute vec3 aVertexPosition; \
-		uniform mat4 uMVMatrix; \
-		uniform mat4 uPMatrix; \
-		void main(void) { \
-			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
-		} \
-    ";
-    var fragmentShader = "\
-		precision mediump float; \
-		void main(void){ \
-			gl_FragColor = vec4(1.0,1.0,1.0,1.0); \
-		} \
-    ";
-  	var canvas = new Canvas(null,600,400,Canvas.STAGE_FIT_FIXED,false,true);
-    var stage = new StageGL(canvas, 500, [vertexShader], [fragmentShader]);
-  	stage.setBackgroundColor(0.0,0.0,0.0,1.0);
-	stage.enableDepthTest();
-    globalTriBuffer = stage.getBufferFloat32Array([0.0,1.0,0.0, -1.0,-1.0,0.0, 1.0,-1.0,0.0]);
-	globalSquBuffer = stage.getBufferFloat32Array([1.0,1.0,0.0, -1.0,1.0,0.0, 1.0,-1.0,0.0, -1.0,-1.0,0.0]);
-	globalStage = stage;
-    //
-    stage.addFunction(StageGL.EVENT_ON_ENTER_FRAME, onEnterFrameFxn);
-    stage.start();
+	var webEx001 = new WebEx1();
+    
 }
-function onEnterFrameFxn(e){
-	var stage = globalStage;
-	var triBuffer = globalTriBuffer;
-	var squBuffer = globalSquBuffer;
-	// RESET
-	stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
-	stage.clear();
-	// TRIANGLE
-	stage.matrixIdentity();
-	stage.matrixTranslate(-1.5,0.0,-7.0);
-	stage.drawTriangles(triBuffer);
-	// SQUARE
-	stage.matrixIdentity();
-	stage.matrixTranslate(1.5,0.0,-7.0);
-//	stage.matrixTranslate(3.0,0.0,0.0);
-	stage.drawTriangleList(squBuffer);
-}
+
 </script>
 </head>
 <body onload="handleOnLoad();">
 </body>
-var out = new GLMAT_ARRAY_TYPE(16);
 </html>
