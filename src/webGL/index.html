@@ -7,7 +7,7 @@ function handleOnLoad(){
 	var ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["glMatrix-0.9.5.min.js","WebEx1.js"];
+	var list = ["WebEx1.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
 	scriptLoader.load();
 }

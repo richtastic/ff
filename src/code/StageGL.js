@@ -16,7 +16,8 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
     this._canvas.linkProgram();
     //  matrices
 	this._projectionMatrix = mat4.create();
-	this._modelViewMatrix = mat4.create();
+	this._modelViewMatrixStack = new MatrixStackGL();
+	//this._modelViewMatrix = mat4.create();
 	//
 	this.addListeners();
 }
@@ -63,11 +64,20 @@ StageGL.prototype.clear = function(){
 StageGL.prototype.setPerspective = function(angle, ratio, cutClose, cutFar, matrix){
 	mat4.perspective(angle, ratio, cutClose, cutFar, matrix);
 }
+StageGL.prototype.matrixPush = function(){
+	this._modelViewMatrixStack.push();
+}
+StageGL.prototype.matrixPop = function(){
+	this._modelViewMatrixStack.pop();
+}
 StageGL.prototype.matrixIdentity = function(){
-	mat4.identity(this._modelViewMatrix);
+	mat4.identity(this._modelViewMatrixStack.matrix());
 }
 StageGL.prototype.matrixTranslate = function(x,y,z){
-	mat4.translate(this._modelViewMatrix, [x,y,z]);
+	mat4.translate(this._modelViewMatrixStack.matrix(), [x,y,z]);
+}
+StageGL.prototype.matrixRotate = function(theta, x,y,z){
+	mat4.rotate(this._modelViewMatrixStack.matrix(), theta, [x,y,z]);
 }
 StageGL.prototype.bindFloatBuffer = function(attr,buffer){
 	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
@@ -83,7 +93,7 @@ StageGL.prototype.drawTriangleList = function(attr,buffer){
 	this._canvas.drawTriangleList(buffer.length);
 }
 StageGL.prototype.matrixReset = function(){
-	this._canvas.uniformMatrices(this._projectionMatrix, this._modelViewMatrix);
+	this._canvas.uniformMatrices(this._projectionMatrix, this._modelViewMatrixStack.matrix());
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 StageGL.prototype.render = function(){
