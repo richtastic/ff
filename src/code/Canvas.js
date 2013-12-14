@@ -142,10 +142,16 @@ Canvas.prototype.enableDepthTest = function(){
 	this._context.enable(this._context.DEPTH_TEST);
 }
 
-Canvas.prototype.getBufferFloat32Array = function(vertexList, lengthOfIndividual){
+Canvas.prototype.getBufferFloat32Array = function(list, lengthOfIndividual){
 	var buffer = this._context.createBuffer();
 	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer, lengthOfIndividual);
-	this._context.bufferData(this._context.ARRAY_BUFFER, new Float32Array(vertexList), this._context.STATIC_DRAW);
+	this._context.bufferData(this._context.ARRAY_BUFFER, new Float32Array(list), this._context.STATIC_DRAW);
+	return buffer;
+}
+Canvas.prototype.getBufferUint16ArrayElement = function(list, lengthOfIndividual){
+	var buffer = this._context.createBuffer();
+	this._context.bindBuffer(this._context.ELEMENT_ARRAY_BUFFER, buffer, lengthOfIndividual);
+	this._context.bufferData(this._context.ELEMENT_ARRAY_BUFFER, new Uint16Array(list), this._context.STATIC_DRAW);
 	return buffer;
 }
 Canvas.prototype.setViewport = function(xPos,yPos,wid,hei){
@@ -154,9 +160,15 @@ Canvas.prototype.setViewport = function(xPos,yPos,wid,hei){
 Canvas.prototype.clearViewport = function(){
 	this._context.clear(this._context.COLOR_BUFFER_BIT | this._context.DEPTH_BUFFER_BIT);
 }
-Canvas.prototype.bindFloatBuffer = function(attr, buffer, lengthOfIndividual){
+Canvas.prototype.bindArrayFloatBuffer = function(attr, buffer, lengthOfIndividual){
 	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer);
 	this._context.vertexAttribPointer(attr, lengthOfIndividual, this._context.FLOAT, false, 0,0);
+}
+Canvas.prototype.bindElementArrayBuffer = function(buffer, lengthOfIndividual){
+	this._context.bindBuffer(this._context.ELEMENT_ARRAY_BUFFER, buffer);
+}
+Canvas.prototype.drawElementArrayUint16Buffer = function(buffer, lengthOfTotal){
+	this._context.drawElements(this._context.TRIANGLES, lengthOfTotal, this._context.UNSIGNED_SHORT, 0);
 }
 Canvas.prototype.drawTriangles = function(count, offset){
 	offset = offset===undefined? 0 : offset;
@@ -166,6 +178,18 @@ Canvas.prototype.drawTriangleList = function(count, offset){
 	offset = offset===undefined? 0 : offset;
 	this._context.drawArrays(this._context.TRIANGLE_STRIP, offset, count);
 }
+
+Canvas.prototype.bindTextureImageRGBA = function(image){
+	var texture = this._context.createTexture(image);
+	this._context.bindTexture(this._context.TEXTURE_2D,texture);
+	this._context.pixelStorei(this._context.UNPACK_FLIP_Y_WEBGL, true);
+	this._context.texImage2D(this._context.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
+	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST);
+	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
+	this._context.bindTexture(this._context.TEXTURE_2D,null);
+	return texture;
+}
+
 // ------------------------------------------------------------------------------------------------------------------------ ------------------
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES
 Canvas.prototype.id = function(id){

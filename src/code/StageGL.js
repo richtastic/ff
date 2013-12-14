@@ -7,7 +7,9 @@ StageGL.VIEWPORT_MODE_FULL_CENTER="center";
 function StageGL(can, fr, vertexShaders, fragmentShaders){
 	StageGL._.constructor.call(this);
 	this._timer = new Ticker(fr);
+	this._dateTime = Code.getTimeMilliseconds();
 	this._time = 0;
+	this._countTime = 0;
 	// 
 	this.canvas(can);
 	this._canvas.startProgram();
@@ -36,6 +38,13 @@ StageGL.prototype.getBufferFloat32Array = function(list, itemSize){
 	buffer.size = itemSize;
 	return buffer;
 }
+StageGL.prototype.getBufferUint16ArrayElement = function(list, itemSize){
+	var buffer = this._canvas.getBufferUint16ArrayElement(list,itemSize);
+	buffer.length = list.length/itemSize;
+	buffer.size = itemSize;
+	return buffer;
+}
+
 StageGL.prototype.setBackgroundColor = function(r,g,b,a){
     return this._canvas.setBackgroundColor(r,g,b,a);
 }
@@ -79,17 +88,23 @@ StageGL.prototype.matrixTranslate = function(x,y,z){
 StageGL.prototype.matrixRotate = function(theta, x,y,z){
 	mat4.rotate(this._modelViewMatrixStack.matrix(), theta, [x,y,z]);
 }
-StageGL.prototype.bindFloatBuffer = function(attr,buffer){
-	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
+StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
+	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
+}
+StageGL.prototype.bindElementArrayBuffer = function(attr,buffer){
+	this._canvas.bindElementArrayBuffer(attr,buffer,buffer.size);
+}
+StageGL.prototype.drawElementArrayUint16Buffer = function(buffer){
+	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.length);
 }
 StageGL.prototype.drawTriangles = function(attr,buffer){
-	this.matrixReset();
-	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
+//	this.matrixReset();
+//	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
 	this._canvas.drawTriangles(buffer.length);
 }
 StageGL.prototype.drawTriangleList = function(attr,buffer){
-	this.matrixReset();
-	this._canvas.bindFloatBuffer(attr,buffer,buffer.size);
+//	this.matrixReset();
+//	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
 	this._canvas.drawTriangleList(buffer.length);
 }
 StageGL.prototype.matrixReset = function(){
@@ -97,10 +112,15 @@ StageGL.prototype.matrixReset = function(){
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 StageGL.prototype.render = function(){
+	++this._countTime;
+	var newDateTime = Code.getTimeMilliseconds();
+	var deltaTime = newDateTime - this._dateTime;
+	this._dateTime = newDateTime;
+	this._time += deltaTime
 	//this._canvas.clear();
-	this.alertAll(Stage.EVENT_ON_ENTER_FRAME,this._time);
+	this.alertAll(Stage.EVENT_ON_ENTER_FRAME,this._countTime, this._time);
 	//this._root.render(this._canvas);
-	this.alertAll(Stage.EVENT_ON_EXIT_FRAME,this._time);
+	this.alertAll(Stage.EVENT_ON_EXIT_FRAME,this._countTime, this._time);
 }
 // ------------------------------------------------------------------------------------------------------------------------ EVENTS
 StageGL.prototype.start = function(){
