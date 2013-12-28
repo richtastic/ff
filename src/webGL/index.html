@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>Web GL</title>
+<script src="../code/FF.js"></script>
+<script type="text/javascript">
+function handleOnLoad(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
+}
+function defaultClassesLoadedFxn(){
+	var list = ["WebEx1.js"];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	var webEx001 = new WebEx1();
+    
+}
+
+</script>
+</head>
+<body onload="handleOnLoad();">
+</body>
+</html>

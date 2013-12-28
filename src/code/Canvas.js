@@ -36,7 +36,10 @@ Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 Canvas.IMAGE_TYPE_PNG = "png";
 Canvas.IMAGE_TYPE_JPG = "jpg";
 Canvas._ID = 0;
-function Canvas(canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML object
+// 3D
+Canvas.WEBGL_SHADER_TYPE_VERTEX = "vertex";
+Canvas.WEBGL_SHADER_TYPE_FRAGMENT = "fragment";
+function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas HTML object
 	Canvas._.constructor.call(this);
 	this._jsDispatch = new Dispatch();
 	this._mouseDown = false;
@@ -62,13 +65,132 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden){ // input is canvas HTML 
 	if(fitStyle){
 		this._stageFit = fitStyle;
 	}
-	this._context = this._canvas.getContext("2d");
+	if(is3D){
+		try{
+			this._program = null;
+// 			this._pMatrix = mat4.create();
+// 			this._mvMatrix = mat4.create();
+			this._context = this._canvas.getContext("experimental-webgl");
+		}catch(e){
+			console.log("could not initialize webGL");
+		}
+	}else{
+		this._context = this._canvas.getContext("2d");
+	}
 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 	this.id(Canvas._ID++);
 	this._listening = false;
 	this._handleWindowResizedFxn();
 }
 Code.inheritClass(Canvas, JSDispatchable);
+// ------------------------------------------------------------------------------------------------------------------------ CANVAS 3D - WEB GL
+Canvas.prototype.createShaderFromString = function(str, type){
+	if(type==Canvas.WEBGL_SHADER_TYPE_FRAGMENT){
+		return this._context.createShader(this._context.FRAGMENT_SHADER)
+	}else if(type==Canvas.WEBGL_SHADER_TYPE_VERTEX){
+		return this._context.createShader(this._context.VERTEX_SHADER)
+	}
+	return null;
+}
+Canvas.prototype.compileAndAttachShaderFromString = function(str,type){
+	var shader = this.createShaderFromString(str,type);
+	this._context.shaderSource(shader, str);
+	this._context.compileShader(shader);
+	this._context.attachShader(this._program, shader);
+	if(!this._context.getShaderParameter(shader, this._context.COMPILE_STATUS)){
+		console.log("could not compile shader: "+this._context.getShaderInfoLog(shader));
+		return null;
+	}
+}
+Canvas.prototype.setVertexShaders = function(list){
+	for(var i=0; i<list.length; ++i){
+		this.compileAndAttachShaderFromString(list[i],Canvas.WEBGL_SHADER_TYPE_VERTEX);
+	}
+}
+Canvas.prototype.setFragmentShaders = function(list){
+	for(var i=0; i<list.length; ++i){
+		this.compileAndAttachShaderFromString(list[i],Canvas.WEBGL_SHADER_TYPE_FRAGMENT);
+	}
+}
+Canvas.prototype.startProgram = function(){
+	this._program = this._context.createProgram();
+}
+Canvas.prototype.linkProgram = function(){
+	this._context.linkProgram(this._program);
+	if(!this._context.getProgramParameter(this._program, this._context.LINK_STATUS)){
+		console.log("could not initialize shaders");
+		return null;
+	}
+	this._context.useProgram(this._program);
+	this._program.projectionMatrixUniform = this._context.getUniformLocation(this._program, "uPMatrix");
+	this._program.modelViewMatrixUniform = this._context.getUniformLocation(this._program, "uMVMatrix");
+}
+Canvas.prototype.enableVertexAttribute = function(attribName){
+	var attr = this._context.getAttribLocation(this._program, attribName);
+	this._context.enableVertexAttribArray(attr);
+	this._program[attribName] = attr;
+	return attr;
+}
+Canvas.prototype.uniformMatrices = function(pMatrix, mvMatrix){
+	this._context.uniformMatrix4fv(this._program.projectionMatrixUniform, false, pMatrix);
+	this._context.uniformMatrix4fv(this._program.modelViewMatrixUniform, false, mvMatrix);
+}
+Canvas.prototype.setBackgroundColor = function (r,g,b,a){
+	this._context.clearColor(r,g,b,a);
+}
+Canvas.prototype.enableDepthTest = function(){
+	this._context.enable(this._context.DEPTH_TEST);
+}
+
+Canvas.prototype.getBufferFloat32Array = function(list, lengthOfIndividual){
+	var buffer = this._context.createBuffer();
+	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer, lengthOfIndividual);
+	this._context.bufferData(this._context.ARRAY_BUFFER, new Float32Array(list), this._context.STATIC_DRAW);
+	return buffer;
+}
+Canvas.prototype.getBufferUint16ArrayElement = function(list, lengthOfIndividual){
+	var buffer = this._context.createBuffer();
+	this._context.bindBuffer(this._context.ELEMENT_ARRAY_BUFFER, buffer, lengthOfIndividual);
+	this._context.bufferData(this._context.ELEMENT_ARRAY_BUFFER, new Uint16Array(list), this._context.STATIC_DRAW);
+	return buffer;
+}
+Canvas.prototype.setViewport = function(xPos,yPos,wid,hei){
+	return this._context.viewport(xPos,yPos,wid,hei);
+}
+Canvas.prototype.clearViewport = function(){
+	this._context.clear(this._context.COLOR_BUFFER_BIT | this._context.DEPTH_BUFFER_BIT);
+}
+Canvas.prototype.bindArrayFloatBuffer = function(attr, buffer, lengthOfIndividual){
+	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer);
+	this._context.vertexAttribPointer(attr, lengthOfIndividual, this._context.FLOAT, false, 0,0);
+}
+Canvas.prototype.bindElementArrayBuffer = function(buffer, lengthOfIndividual){
+	this._context.bindBuffer(this._context.ELEMENT_ARRAY_BUFFER, buffer);
+}
+Canvas.prototype.drawElementArrayUint16Buffer = function(buffer, lengthOfTotal){
+	this._context.drawElements(this._context.TRIANGLES, lengthOfTotal, this._context.UNSIGNED_SHORT, 0);
+}
+Canvas.prototype.drawTriangles = function(count, offset){
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.TRIANGLES, offset, count);
+}
+Canvas.prototype.drawTriangleList = function(count, offset){
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.TRIANGLE_STRIP, offset, count);
+}
+
+Canvas.prototype.bindTextureImageRGBA = function(image){
+	var texture = this._context.createTexture(image);
+	this._context.bindTexture(this._context.TEXTURE_2D,texture);
+	this._context.pixelStorei(this._context.UNPACK_FLIP_Y_WEBGL, true);
+	this._context.texImage2D(this._context.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
+	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST);
+	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
+	this._context.bindTexture(this._context.TEXTURE_2D,null);
+	return texture;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------ ------------------
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES
 Canvas.prototype.id = function(id){
 	if(id!==undefined){ this._id = id; }
@@ -404,3 +526,48 @@ Canvas.prototype.kill = function(e){
   }        
 }
 	*/
+
+// Canvas.prototype.createFragmentShader = function(insides){
+// 	var scriptDOM = Code.newScript();
+// 	scriptDOM.type = "x-shader/x-fragment";
+// 	scriptDOM.text = ""+insides;
+// 	document.head.appendChild(scriptDOM);
+// 	return scriptDOM;
+// }
+// Canvas.prototype.createVertexShader = function(insides){
+// 	var scriptDOM = Code.newScript();
+// 	scriptDOM.type = "x-shader/x-vertex";
+// 	scriptDOM.text = ""+insides;
+// 	document.head.appendChild(scriptDOM);
+// 	return scriptDOM;
+// }
+// Canvas.prototype.getShaderFromDOM = function(dom){
+// 	var str = "";
+// 	var k = dom.firstChild;
+// 	while(k){
+// 		if(k.nodeType==3){
+// 			str += k.textContent;
+// 		}
+// 		k = k.nextSibling;
+// 	}
+// 	return str;
+// }
+// Canvas.prototype.createShaderFromDOM = function(dom){
+// 	if(dom.type=="x-shader/x-fragment"){
+// 		return this._context.createShader(this._context.FRAGMENT_SHADER)
+// 	}else if(dom.type=="x-shader/x-vertex"){
+// 		return this._context.createShader(this._context.VERTEX_SHADER)
+// 	}
+// 	return null;
+// }
+// Canvas.prototype.compileAndAttachShaderFromDOM = function(dom){
+// 	var str = this.getShaderFromDOM(dom);
+// 	var shader = this.createShaderFromDOM(dom);
+// 	this._context.shaderSource(shader, str);
+// 	this._context.compileShader(shader);
+// 	this._context.attachShader(this._program, shader);
+// 	if(!this._context.getShaderParameter(shader, this._context.COMPILE_STATUS)){
+// 		console.log("could not compile shader: "+this._context.getShaderInfoLog(shader));
+// 		return null;
+// 	}
+// }

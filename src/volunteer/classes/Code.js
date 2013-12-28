@@ -335,6 +335,9 @@ Code.getName = function(argA,argB){
 Code.newElement = function(type){
 	return document.createElement(type);
 };
+Code.newScript = function(type){
+	return Code.newElement("script");
+};
 Code.newDiv = function(a){
 	var div = Code.newElement("div");
 	if(a!=undefined){
