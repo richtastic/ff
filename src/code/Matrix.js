@@ -16,13 +16,29 @@ Matrix.prototype._init = function(r,c){
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
-Matrix.prototype.setFromArray = function(list){
+Matrix.prototype.setFromArray = function(list, newRow,newCol){
+	if(newRow!==undefined){
+		this.setSize(newRow,newCol);
+	}
 	var i, j, row = this._rowCount, col = this._colCount;
 	var index = 0, len = list.length;
 	for(j=0;j<row;++j){
 		for(i=0;i<col && index<len;++i){
 			this._rows[j][i] = list[index];
 			++index;
+		}
+	}
+	return this;
+}
+Matrix.prototype.setFromArrayMatrix = function(list, newRow,newCol){
+	if(newRow!==undefined){
+		this.setSize(newRow,newCol);
+	}
+	var i, j, row = this._rowCount, col = this._colCount;
+	var len = row*col;
+	for(j=0;j<row;++j){
+		for(i=0;i<col;++i){
+			this._rows[j][i] = list[j][i];
 		}
 	}
 	return this;
@@ -175,6 +191,23 @@ Matrix.prototype.multV2DtoV3D = function(out, inn){
 	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2];
 	out.x = x; out.y = y;
 }
+Matrix.prototype.scale = function(c){
+	var row, rows = this._rowCount, cols = this._colCount;
+	for(j=0;j<rows;++j){
+		row = this._rows[j];
+		for(i=0;i<cols;++i){
+			row[i] = row[i]*c;
+		}
+	}
+	return this;
+}
+Matrix.prototype.getNorm = function(){
+	return Matrix.norm2D(this);
+}
+Matrix.prototype.normalize = function(){
+	this.scale( 1.0/Matrix.norm2D(this) );
+	return this;
+}
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
 /*
 RREF:
@@ -191,6 +224,7 @@ for each col
 
 */
 // ------------------------------------------------------------------------------------------------------------------------ MATHS
+Matrix.epsilon = 1.0E-15;
 // assumes all sizes have been set beforehand
 Matrix.transpose = function(B, Ain){ // B = A^T
 	var A = Ain, C = Matrix._temp;
@@ -231,17 +265,21 @@ Matrix.RREF = function(B, A){ // B = rowReducedEchelonForm(A)
 	var i, j, jm1, row = B._rowCount, col = B._colCount;
 	var thi, pre, nex, c;
 	var pivotRow, pivotCol, pivotCell;
+var det = 1.0;
 	for(pivotCol=0,pivotRow=0;pivotCol<col&&pivotRow<row;++pivotCol){ // ,++pivotRow
 		for(j=pivotRow;j<row;++j){ // swap rows so first pivot-row entry is not zero
-			if( B._rows[j][pivotCol] != 0 ){ // 
+			if( Math.abs(B._rows[j][pivotCol]) > Matrix.epsilon ){ // 
 				if(j>pivotRow){
 					B.swapRows(j,pivotRow);
+det *= -1; // row swapping
 				}
 				pivotCell = B._rows[pivotRow][pivotCol];
 				for(j=pivotRow+1;j<row;++j){ // 
 					c = B._rows[j][pivotCol]/pivotCell;
-					for(i=pivotCol;i<col;++i){
-						B._rows[j][i] -= c*B._rows[pivotRow][i];
+					if(c!=0){ // skip useless iterations
+						for(i=pivotCol;i<col;++i){
+							B._rows[j][i] -= c*B._rows[pivotRow][i];
+						}
 					}
 				}
 				for(j=0;j<row;++j){ // zero all entries in pivot column
@@ -254,6 +292,9 @@ Matrix.RREF = function(B, A){ // B = rowReducedEchelonForm(A)
 						}
 					}
 				}
+if(pivotCol<col){
+	det *= pivotCell; // multiplying row
+}
 				for(i=pivotCol;i<col;++i){ // scale pivot-row to first-entry = 1 => /pivotCell
 					B._rows[pivotRow][i] /= pivotCell;
 				}
@@ -261,8 +302,115 @@ Matrix.RREF = function(B, A){ // B = rowReducedEchelonForm(A)
 				break;
 			}
 		}
+		// console.log("B:"+pivotCol);
+		// console.log(B.toString());
+		// console.log("");
 	}
+//console.log("DETERMINANT: "+det)
 	return B;
+}
+Matrix.RREF2 = function(B, A){ // B = rowReducedEchelonForm(A)
+	if(A!==undefined){
+		if(B!=A){ B.copy(A); }
+	}else{
+		B = B.copy();
+	}
+	var i, j, jm1, row = B._rowCount, col = B._colCount;
+	var thi, pre, nex, c;
+	var pivotRow, pivotCol, pivotCell;
+
+var det = 1.0;
+	for(pivotCol=0,pivotRow=0;pivotCol<col&&pivotRow<row;++pivotCol){ // ,++pivotRow
+		for(j=pivotRow;j<row;++j){ // swap rows so first pivot-row entry is not zero
+			if( Math.abs(B._rows[j][pivotCol]) > Matrix.epsilon ){ // 
+				if(j>pivotRow){
+					B.swapRows(j,pivotRow);
+det *= -1; // row swapping
+				}
+				pivotCell = B._rows[pivotRow][pivotCol];
+				for(j=pivotRow+1;j<row;++j){ // 
+					c = B._rows[j][pivotCol]/pivotCell;
+					if(c!=0){ // skip useless iterations
+						for(i=pivotCol;i<col;++i){
+							B._rows[j][i] -= c*B._rows[pivotRow][i];
+						}
+					}
+				}
+				for(j=0;j<row;++j){ // zero all entries in pivot column
+					c = B._rows[j][pivotCol]/pivotCell;
+					if(c!=0){ // skip useless iterations
+						for(i=pivotCol;i<col;++i){
+							if(j!=pivotRow){
+								B._rows[j][i] -= c*B._rows[pivotRow][i];
+							}
+						}
+					}
+				}
+if(false){ // do this for RREF, don't do for REF=lambda
+if(pivotCol<col){
+	det *= pivotCell; // multiplying row
+}
+				for(i=pivotCol;i<col;++i){ // scale pivot-row to first-entry = 1 => /pivotCell
+					B._rows[pivotRow][i] /= pivotCell;
+				}
+}
+				++pivotRow;
+				break;
+			}
+		}
+	}
+//console.log("DETERMINANT: "+det)
+	return B;
+}
+Matrix.backPropagate = function(A,b){ // A*b = b0 => start with bottom-most variables, and solve upward
+	// assumes A is nxn upper triangular
+	var i, j, val, rows = A.rows(), cols = A.cols();
+	for(i=cols-1;i>=0;--i){
+		val = b._rows[i][0];
+		for(j=rows-1;j>i;--j){
+			console.log("["+i+"]["+j+"] = "+ A._rows[i][j]);
+			val -= A._rows[i][j] * b._rows[j][0];
+		}
+		if( Math.abs(A._rows[i][j]) > Matrix.epsilon ){
+			val /= A._rows[i][j]; // pivot if not 1.0 ... 
+		}
+		b._rows[i][0] = val;
+	}
+	return b;
+}
+Matrix.norm2D = function(A){
+	var rows = A.rows(), cols = A.cols(), u, t;
+	var i, n = 0;
+	for(j=0;j<rows;++j){
+		row = A._rows[j];
+		for(i=0;i<cols;++i){
+			x = row[i];
+			n += x*x;
+		}
+	}
+	return Math.sqrt(n);
+}
+Matrix.normInfinite = function(x){ // x is a vector
+	var rows = x.rows(), cols = x.cols(), u, t;
+	var max = x.get(0,0);
+	var maxAbs = Math.abs(max);
+	var i, len = Math.max(rows,cols);
+	if(rows>cols){ // vertical
+		for(i=0;i<len;++i){
+			u = x.get(i,0); t = Math.abs(u);
+			if(t>maxAbs){
+				max = u; maxAbs = t;
+			}
+		}
+	}else{ // horizontal
+		for(i=0;i<len;++i){
+			u = x.get(0,i); t = Math.abs(u);
+			if(t>maxAbs){
+				max = u; maxAbs = t;
+			}
+		}
+	}
+	return maxAbs; // return max;
 }
 Matrix.inverse = function(A){ // assumed square
 	C = Matrix.augment(A,(new Matrix(A._rowCount,A._colCount)).identity());
@@ -274,7 +422,7 @@ Matrix.inverse = function(A){ // assumed square
 	}
 	return C;
 }
-Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square 
+Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square
 	var a = ain;
 	if(ain===undefined){
 		a = cin;
@@ -288,23 +436,144 @@ Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square
 	}
 	return cin.copy(c);
 }
+Matrix.solve = function(A,b){ // Ax = b => solve for x
+	return Matrix.mult(Matrix.pseudoInverse(A), b);
+}
 Matrix.nullSpace = function(A){ // nul(A)
 	
 }
-Matrix.eigenVectors = function(B, A){ // 
-	//
+// Matrix.eigenValuesAndVectors = function(A){
+// 	var values = new Array(), vectors = new Array();
+// 	var arr = new Array(values,vectors);
+// 	var rows = A.rows(), cols = A.cols();
+// 	// 
+// 	var x = new Matrix(cols,1), y = new Matrix(cols,1);
+// 	var i, len=15, temp, lambda, p, convergence;
+// 	x.set(0,0, 1);
+// 	p = Matrix.normInfinite(x);
+// 	lambda = x.get(0,0);
+// 	convergence = lambda;
+// 	for(i=0;i<len;++i){
+// convergence = lambda;
+// 		console.log( i+"  "+Matrix.transpose(x).toString() + " | " + lambda );//+ " | " + p );
+// 		Matrix.mult(y, A,x);
+// 		p = Matrix.normInfinite(x); // this is suppossed to be an index, not a value
+// 		lambda = -p;
+// 		temp = x; x = y; y = temp;
+// 		x.scale(1.0/p);
+// convergence -= lambda;
+// 		if( Math.abs(convergence/lambda) < 1E-6 ){
+// 			break;
+// 		}
+// 	}
+// 	values.push(lambda);
+// 	vectors.push( x.scale(1.0/p) );
+// 	return arr;
+// }
+Matrix.upperHessenberg = function(A){
+var me = A;
+    var s = numeric.dim(A);
+    if(s.length !== 2 || s[0] !== s[1]) { throw new Error('numeric: toUpperHessenberg() only works on square matrices'); }
+    var m = s[0], i,j,k,x,v,A = numeric.clone(me),B,C,Ai,Ci,Q = numeric.identity(m),Qi;
+    for(j=0;j<m-2;j++) {
+        x = Array(m-j-1);
+        for(i=j+1;i<m;i++) { x[i-j-1] = A[i][j]; }
+        if(numeric.norm2(x)>0) {
+            v = numeric.house(x);
+            B = numeric.getBlock(A,[j+1,j],[m-1,m-1]);
+            C = numeric.tensor(v,numeric.dot(v,B));
+            for(i=j+1;i<m;i++) { Ai = A[i]; Ci = C[i-j-1]; for(k=j;k<m;k++) Ai[k] -= 2*Ci[k-j]; }
+            B = numeric.getBlock(A,[0,j+1],[m-1,m-1]);
+            C = numeric.tensor(numeric.dot(B,v),v);
+            for(i=0;i<m;i++) { Ai = A[i]; Ci = C[i]; for(k=j+1;k<m;k++) Ai[k] -= 2*Ci[k-j-1]; }
+            B = Array(m-j-1);
+            for(i=j+1;i<m;i++) B[i-j-1] = Q[i];
+            C = numeric.tensor(v,numeric.dot(v,B));
+            for(i=j+1;i<m;i++) { Qi = Q[i]; Ci = C[i-j-1]; for(k=0;k<m;k++) Qi[k] -= 2*Ci[k]; }
+        }
+    }
+    return {H:A, Q:Q};
 }
-Matrix.eigenValues = function(B, A){ // 
-	//
+Matrix.eigenValues = function(A){ // eigenValues[]
+	var arr = new Array();
+	// upper hessian
+	// QR 
+	return arr;
+}
+Matrix.eigenVectorsFromValues = function(A,values){ // eigenVectors[ [] ]
+	// solve equation given lambdas
+	var i, j, k, len = values.length;
+	var lambda, vector, repeated, rows = A.rows(), cols = A.cols();
+	var vectors = new Array();
+	var AI = new Matrix(rows,cols);
+	for(k=0;k<len;++k){ // for each eigenvalue
+		lambda = values[k]; // ignore repeated value, because the vector should have been discovered in the previous iteration(s) ?????
+		repeated = 0;
+		for(i=0;i<k;++i){
+			if(values[i]==lambda){
+				++repeated;
+				console.log("REPEATED");
+			}
+		}
+		for(j=0;j<rows;++j){ // A - lambda*I
+			for(i=0;i<cols;++i){
+				AI._rows[j][i] = A._rows[j][i];
+				if(i==j){
+					 AI._rows[j][i] -= lambda;
+				}
+			}
+		}
+		console.log("--------------------------------------------------------------------------------------------------");
+		//console.log( AI.toString() );
+		AI = Matrix.RREF(AI);
+		vector = new Matrix(rows,1);
+		// do this once for every zero row
+		vector.set(rows-1-repeated,0, 1.0); //  this assumes only one value to set - wont work for repeated eigenvalues`
+		// http://tutorial.math.lamar.edu/Classes/DE/RepeatedEigenvalues.aspx 
+		Matrix.backPropagate(AI,vector);
+		vector.normalize();
+		console.log( AI.toString() );
+		console.log( vector.toString() );
+		// vectors.push();
+	}
+	return vectors;
+}
+Matrix.eigenVectors = function(A){
+	return Matrix.eigenVectorsFromValues(A, Matrix.eigenValues(A));
+}
+Matrix.eigenValuesAndVectors = function(A){
+	var values = Matrix.eigenValues(A);
+	var vectors = Matrix.eigenVectorsFromValues(A,values);
+	return [values, vectors];
+}
+Matrix.trace = function(){ // 
+	// = sum of main diagonals
+}
+Matrix.QRCore = function(){ // 
+	// gram-schmidt process
 }
 Matrix.QR = function(){ // 
-	
+	// factorization - eigenvalues?
+	// requires 'CORE' QR decomposition
 }
-Matrix.SVD = function(){ // 
-	
+Matrix.SVD = function(U,S,V, A){ // A = UEV^t
+	// REQUIRES FINDING EIGEN VECTORS
+	// ui of U = kth singular value = 
+	// s1 >= s2 >= s3 >= .. sn/m
+	// 
+	//
 }
-Matrix.LU = function(A){ // this = A^ 
-	
+Matrix.LU = function(P,L,U, A, pivot){ // [P,L,U] = A : LU Decomposition (Factorization)
+	/*
+	P = pivot matrix (if necessary) - [0,1,2,..,n]
+	L = lower left [nxm]
+	U = upper right, 1 diagonals [mxn]
+
+	li1 = ai1
+		lij = aij/li1
+
+	if a pivot is ~0, then row interchange must be done
+	*/
 }
 Matrix.scale = function(c, a,b){ // c = a*b(constant)
 	//
@@ -330,6 +599,7 @@ Matrix.mult = function(r, ain,bin){ // c = a*b
 		return c.copy();
 	}
 	r.copy(c);
+	return r;
 }
 Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
 	// 
@@ -367,7 +637,7 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 		matB.set(2*i  ,0, to.x);
 		matB.set(2*i+1,0, to.y);
 	}
-	var x = Matrix.mult(Matrix.pseudoInverse(matA), matB);
+	var x = solve(matA,matB);//Matrix.mult(Matrix.pseudoInverse(matA), matB);
 	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1]);
 	// var pt = new V3D(0,0,0);
 	// projection.multV2DtoV3D(pt,pt);
@@ -377,7 +647,81 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 	return projection;
 }
 
-
+Matrix.eigenValues2D = function(a,b,c,d){
+	var trace = a + d;
+	var det = a*d - b*c;
+	var left = trace*0.5;
+	var right = Math.sqrt(trace*trace*0.25 - det);
+	var l1 = left - right;
+	var l2 = left + right;
+	return [l1, l2];
+}
+Matrix.eigenVectors2D = function(a,b,c,d){
+	var values = Matrix.eigenValues2D(a,b,c,d);
+	var l1 = values[0], l2 = values[1];
+	// a*(-l1)*A + b = 0;
+	// c + d*(-l1)*B = 0;
+	return null;
+}
+Matrix.eigen = function(A){ // eigenValues[], eigenVectors[[]] 
+	var ret = numeric.eig(A._rows);
+	var lambda = ret.lambda.x;
+	var v = ret.E.x;
+	var eigVec = new Array();
+	wid = A.rows(); hei = A.cols();
+	for(i=0;i<wid;++i){ // col
+		eigVec.push(new Array(hei));
+		for(j=0;j<hei;++j){ // row
+			eigVec[i][j] = v[j][i];
+		}
+	}
+	return [lambda, eigVec];
+}
+Matrix.power = function(A,power){
+	var ret = Matrix.eigen(A);
+	var lambda = ret[0];
+	var eigVec = ret[1];
+	var i, j, k, l, q, r, wid, hei, len;
+	wid = A.cols();
+	hei = A.rows();
+	len = wid*hei;
+	var B = new Array(len);
+	var b = new Array(len);
+	var col;
+	for(k=0;k<hei;++k){ // eig
+		l = Math.pow(lambda[k],power);
+		v = eigVec[k];
+		for(i=0;i<hei;++i){ // row
+			col = k*wid+i;
+			b[col] = new Array();
+			b[col][0] = l*v[i];
+			B[col] = new Array();
+			for(j=0;j<hei;++j){ // row
+				for(q=0;q<wid;++q){ // col
+					r = j*wid+q;
+					B[col][r] = 0.0;
+					if(i==j){
+						B[col][r] = v[q];
+					}
+				}
+			}
+		}
+	}
+	// convert to matrix problem
+	var matB = (new Matrix(len,len)).setFromArrayMatrix(B);
+	var matb = (new Matrix(len,1)).setFromArrayMatrix(b);
+	res = Matrix.solve(matB,matb);//Matrix.mult(Matrix.pseudoInverse(matB), matb);
+	var Apow = new Array(hei);
+	var index = 0;
+	for(i=0;i<hei;++i){
+		Apow[i] = new Array(wid);
+		for(j=0;j<wid;++j){
+			Apow[i][j] = res.get([index],0);
+			++index;
+		}
+	}
+	return (new Matrix(A.rows(),A.cols())).setFromArrayMatrix(Apow);
+}
 /*
 Matrix.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_inv.html
 	var det = 1/(m.a*m.d - m.b*m.c);

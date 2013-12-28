@@ -1,4 +1,4 @@
-// 3D.js
+// V3D.js
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }

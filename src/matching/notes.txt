@@ -1,0 +1,369 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+?
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+GROUP						INVARIANT
+projective					- relations of incidence, - collinearity, - tangency, - cross-ratio 
+[a b c d] [X]				- (projective mappings preserve cross-ratio between points && lines, -adjoint)
+[e f g h] [Y]
+[i j k l] [Z]
+[m n o p] [?]
+DEFINED UP TO SCALE
+= 15 DOF
+
+| find plane at infinity
+v
+
+affine
+[a b c d] [X]				- parallelism, - ratio of lengths along a direction (cross ratio with point at infiniy)
+[e f g h] [Y]
+[i j k l] [Z]
+[0 0 0 1] [1]
+* [X Y Z 1] => [X Y Z 1]
+* plane at infinity (W = 0, PI = [0 0 0 1])
+= 12 DOF
+
+| find absolute conic (known angle, or ratio of lengths)
+v
+
+metric (similiarity)
+same						- relative lengths and angles
+valid rotation matrix R:
+[a b c | e f g | i j k]
+a*a + b*b + c*c = 1
+e*e + f*f + g*g = 1
+i*i + j*j + k*k = 1
+a*e + b*f + c*g = 0
+a*i + b*j + c*k = 0
+e*i + f*j + g*k = 0
+R*R^T = R^T*R : R^-1 = R^T
+= 3 RDOF + 3 TDOF + 1 SDOF
+= 7 DOF
+
+| find absolute yardstick (scale)
+v
+
+euclidean
+= 6 DOF
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Projective Geometry for Image Analysis | Roger Mohr and Bill Triggs | September 25, 1996
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+2D image position: p
+[x]
+[y]
+[1]
+3D real-world position: P
+[X]
+[Y]
+[Z]
+[1]
+intrinsic camera matrix: K  (camera description)
+[sx s  u]
+[0  sy v]
+[0  0  1]
+extrinsic camera matric: M  (camera orientation)
+[Ra Rb Rc Tx]
+[Rd Re Rf Ty]
+[Rg Rh Ri Tz]
+[0  0  0  1 ]
+
+p ~ K [I3|0] M P
+
+higher order image calibration::::::::::::::::::::::::::::::::::::::
+x := x - u (offset all image positions to top-left location)
+y := y - v
+P1,P2 = correct lattice(grid) positions
+r = sqrt(x*x+y*y) ?OR? x*x+y*y
+x' = x + k1*x*r^2 + k2*x*r^4 + k3*x*r^6 + P1*(2*x^2 + r^2) + 2*P2*x*y
+y' = y + k1*y*r^2 + k2*y*r^4 + k3*y*r^6 + P2*(2*x^2 + r^2) + 2*P1*x*y
+
+
+
+projective space:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+AFFINE-SPACE in Rn
+PROJECTIVE-SPACE in Rn+1 = Pn, x and c*x are same point
+T = 0 => point at infinity
+all points at infinity is the hyperplane at infinity
+collineation ~ translation
+
+hyperplane: a1X1 + ... + anXn + an+1 = 0
+
+
+duality: 2 points define line, 2 lines define point
+pencil: all lines eminating from a single point?
+
+cross product
+[0  z -y]
+[-z 0  x]
+[y -x  0]
+
+2D: U (x) V = UxVy-UyVx
+
+cross ratio (preserved by Pn transform) 
+A = line = l*M + u*N   [eg M = 1,0 | N = 0,1]
+4 points A1,A2,A3,A4
+{A1,A2:A3,A4} = [ (l1*u3 - l3*u1)(l2*u4 - l4*u2) ]/[ (l1*u4 - l4*u1)(l2*u3 - l3*u2) ]
+
+DISTANCES - A CORRECT WAY TO SAY THIS IS: CROSS PRODUCT RATIO
+(CROSS PT1,PT3)*(CROSS PT2,PT4) / (CROSS PT1,PT4)*(CROSS PT2,PT3)
+(pt1.x*pt3.y - pt1.y*pt3.x) * (pt2.x*pt4.y - pt2.y*pt4.x) / (pt1.x*pt4.y - pt1.y*pt4.x) * (pt2.x*pt3.y - pt2.y*pt3.x)
+(1-3|2-4/1-4|2-3)
+
+right/left eigen vectors
+
+* convexity and order preserved
+* midpoint does not exist
+
+
+Projective to Affine: distinguish set of points at infinity
+
+map horizon line to ‘dual’ coordinate vector [0 0 1]
+:Parallel lines in 3D that intersect in 2D image is a point at infinity
+
+absolute conic (euclidean~metric): x^2+y^2+z^2=0; t=0
+is mapped onto itself in metric transformations
+:Reconstruct known circles in 3D space
+:angle between two coplanar lines (need 5 known angles)
+
+projective space: 8DOF in 2D, 15DOF in 3D
+
+Fundamental Matrix (F)
+det(F) = 0 [a b c | d e f | g h i]
+* 8 (or 7 with 3 possible solutions) independent point correspondences
+
+—matching points x,y,1=>u,v,1 : x*u*a + x*v*b + x*c + y*u*d + y*v*e + y*f + u*g + v*h + i = 0
+=> least squares solution for F
+=> SVD and force rank 2 contstraint: F = QDR, set smallest D element to 0
+—should normalize pixels from [0,N] to [-1,1]
+
+Epipolar Geometry
+
+Self Calibration - apparently required for metric/euclidean reconstruction
+Choleski factorization
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Scale & Affine Invariant Interest Point Detectors | KRYSTIAN MIKOLAJCZYK AND CORDELIA SCHMID | September 24, 2003
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Harris Detector: 1st or second? derivative
+
+* should extend scale space to reject edges (fg/bg change)
+
+Hessian matrix, use at scale: trace(H) && det(H) extrema
+ * second moment matrix (autocorrelation matrix)
+ * scale adapted:
+     u(x,oi,od) = [u11 u12 ; u21 u22]
+     = od*od*guass(oi) conv [Lx*Lx(x,od) Lx*Ly(x,od) ; Lx*Ly(x,od) Ly*Ly(x,od)]
+ * 
+
+Harris measure of cornerness: det(u(x,oi,od)) - a*trace(u(x,oi,od))
+ * oi = integration scale
+ * od = differentiation scale
+
+* reject scale-space points (Laplacian) that do not reach a maxima, or response below low threshold
+
+ALGORITHM::::::::::::::::::::::::::::::HARRIS-LAPLACE
+* build scale space with harris function 
+	on = E^n * o0; E = 1.4
+	* at each level, interest point is 8-neighbor maxima; thresholded to reject small cornerness
+	* u(x,on) is computed via oi = on, od = s*on; s = 0.7
+* iterative for each (potential) point find interest point:
+	* location
+	* scale (LoG extrema) : must be an extrema over some threshold = ?
+	for pt x(k):
+		A) Find local extremum over scale of LoG, else reject
+			* search in 0.7 to 1.4 of oi [oi(k+1) = t*oi(k)]
+		B) Detect spatial location x(k+1) of maximum of Harris measure nearest to x(k)
+		C) LOOP with: exit on t ~ 1.0 and x(k+1) ~ x(k)
+		* small scale change = 1.1
+* spatial localization
+	* at a given scale
+		* shape matrix via local maximum of harris function
+* auto select integration scale via extremum of normalized laplacian
+* auso select differentation scales at maximum of normalized isotropy
+* shape adaptation matrix via SMM
+	* then normalizew point neighborhood
+
+
+
+SHAPE ADAPTATION
+	* transform image to 'transformed image domain'
+	* apply circular kernel (not gaussian)
+	* compute SMM: 
+	* local window W centered on interest point x
+		* transformed at step k by U = product((u^-1/2)^k)U(0)	[U-Transformation]
+			- a new u is computed at each iteration
+			- U is concatenation of square roots of SMMatrices
+		* set larger eigenvalue of U = 1
+
+---
+
+INTEGRATION SCALE oi
+	* selcet oi = normalized laplacian attains a local maximum over scale
+	- the characteristic scale in original image vs U-transformed can be different
+	- must select oi at each iteration after U-transform
+
+DIFFERENTIATION SCALE od
+	- based on integration scale and isotropy measure Q
+	* od = s*oi
+	* s in [0.5,0.7] which maximizes min(eig)/max(eig)
+	- some points will not converge if eigenvalues are largely different
+
+SPATIAL LOCALIZATION x(w)(k) [from eq 2]
+	- apply same scale applied in both directions
+	- redetect maximum in affine normalized window W
+	* obtain vector of displacement to bearest maximum in U-normalized window W
+	* back-transformed to original image domain:
+		x(k) = x(k-1) + U(k-1)*[ x(w)(k) - x(w)(k-1) ]
+		x(w) is coordinate in Utransformed image
+
+CONVERGENCE CRITERIA
+	* stop when matrix clsoe to pure rotation eigevalues about equal
+		1 - max(eig)/min(eig) < epsilon
+	* or divergence: ratio too large: max(eig)/min(eig) > epsLarge
+
+---
+
+DETECTION ALGORITHM
+	* initial interest point x0 (via multi-scale Harris detector)
+	1) U(0) = I
+	2) normalize window W(x(w)) = I(X) centered on U(k-1)*x(w) = x(k-1)
+	3) select integration scale oi at x(w)(k-1)
+	4) select differentiation scale od = s*si that maximizes min(eig)/max(eig) ; s in [0.5,0.75] ; u = u(x(w)(k-1),oi,od)
+	5) detect spatial localization x(w)(k) of a maximum of harris measure nearest to x(w)(k-1)
+		and compute location of interest point x(k)
+	6) compute ui(k) = u^-(1/2) (x(w)(k),oi,od)
+	7) concatenate transformation U(k) = u(i)(k) * U(k-1)
+		and normalize U(k) to max(eig)(U(k)) = 1
+	8) goto (2) if 1 - min(eig)(u(i)(k))/max(eig)(u(i)(k)) >= epsilon
+
+
+iterating x(w) over k
+trying to calculate U
+
+
+
+
+problem: computing second moment matrix in affine gaussian scale-space wher circular neighborhood is replaced with an ellipse
+
+
+SECOND MOMENT MATRIX::::::::::::::::::::: SMM
+* used to estimate anisotrpic shape of local image structure
+* isotropy measure
+
+want to find the transformation that projects anisopatric pattern to isotropic one
+- eigen values of SMM
+Q = min(eig)/max(eig)
+
+
+
+
+
+
+
+Lx = ? = ()/h 
+Lx^2 = ?
+LxLy = ?
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Distinctive Image Features | from Scale-Invariant Keypoints | David G. Lowe | Jan 5, 2006
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+A Comparison of Affine Region Detectors | K. MIKOLAJCZYK | et al | May 3, 2005
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+OTHER
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+A = U*D*V^T
+U(mxm) - column vectors ui are 'principal components' of A
+D(mxn) - diagonal singular values sigma o1>=o2>=...on>=0
+V(nxn)
+
+can drop non-positive singular values by dropping last columns in U and V
+
+A*A^T = ULU^T 	=> li = oi^2
+A^T*A = VLV^T 	=> li = oi^2
+
+enforce constraints::::::::::::::::::::
+
+throw away D, and use different singular values
+
+
+
+|A*x|^2 = (A*x)^T*(A*x)
+
+
+A = [3 1; 2 2];
+[U D V] = svd(A);
+Dmax = max(max(D));
+d = D./Dmax;
+U*D*V
+U*d*V
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Harris Corner Detector
+Ix = image gradient in x direction
+Iy = image gradient in y direction
+IxIy = Ix*Iy
+
+Instructions that suck less:
+1) Compute windowed (blurred) derivatives of image:
+Ix = gaussian(sigma) -convolved- (Image -convolved- sobel-in-x-direction)
+Iy = gaussian(sigma) -convolved- (Image -convolved- sobel-in-y-direction)
+
+2) Obtain full-sized images which store:
+Ix2 = Ix*Ix ; Iy2 = Iy*Iy ; Iy2 = Ix*Iy
+
+3) Compute gaussian-window (blurred) full-sized images which store:
+Sx2 = gaussian(sigma) -convolved- Ix2 ; 
+Sy2 = gaussian(sigma) -convolved- Iy2 ; 
+Sxy = gaussian(sigma) -convolved- Ixy ; 
+
+4) The H(x,y) matrix is now definable at each point:
+[ Sx2 Sxy ]  =  [a b]
+[ Sxy Sy2 ]     [c d]
+
+5) compute detector using the obtained images
+R = det(H) - k*trace(H)^2
+  = (a*d-b*c) - k*(a*d)^2
+k is some random number determined experimentally to be ~ ???
+
+6) Threshold R
+
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+

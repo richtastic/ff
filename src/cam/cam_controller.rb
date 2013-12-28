@@ -71,12 +71,12 @@ firstDevice = firstDevice[0]
 options = {}
 options[:autopilot] = true
 options[:program] = "./camtoimage"
-options[:width] = 640 #320
-options[:height] = 480 #240
+options[:width] = 640 # 320
+options[:height] = 480 # 240
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
-options[:output_quality] = 0.60
+options[:output_quality] = 0.75
 options[:output_dir] = "./images/"
 options[:timelapse_dir] = "./images/timelapse/"
 options[:output_jpg] = "image.jpg"
@@ -259,4 +259,8 @@ deletePipeComm( options[:pipe_out] )
 # ls -1tr > temp_file.txt
 # mencoder -nosound -ovc lavc -lavcopts vcodec=mpeg4 -o timelapse.avi -mf type=jpeg:fps=30 mf://@temp_file.txt
 # rm temp_file.txt
+
+
+# UNCOMPRESSED
+# mencoder -nosound -ovc copy -lavcopts vcodec=mpeg4 -o timelapse.avi -mf type=jpeg:fps=60 mf://@temp_file.txt
 

@@ -333,7 +333,6 @@ void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, in
 		}
 		read_frame(fd, buffer_ptr, n_buffers, picWidth, picHeight, image_buffer, outFilename);
 		++i;
-break;
 	}
 	fprintf(stderr, "success\n");
 }
@@ -377,7 +376,7 @@ int process_image(const void* p, size_t len, int picWidth, int picHeight, char *
 	int encodedLength = picWidth*picHeight*2;// two pixels are encoded with 4 values
 	int picLength = picWidth*picHeight*3;// each pixel is encoded with 3 values
 	fprintf(stderr, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength, picLength, picWidth, picHeight);
-	if(1){//length>=encodedLength){
+	if(length>=encodedLength){
 		int i, j;
 		unsigned char c, y0, u, y1, v;
 		int r, g, b;

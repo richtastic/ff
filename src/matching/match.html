@@ -10,12 +10,180 @@ function pageLoadedFxn(){
 	ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","ImageFeature.js","Match.js"];
+	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","ImageFeature.js","ImageDescriptor.js","Match.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
 	scriptLoader.load();
 }
 function customClassesLoadedFxn(){
+	// var A = (new Matrix(3,3)).setFromArray([1,2,1, 6,-1,0, -1,-2,-1]);
+	// var values = [-4, 0, 3];
+	// var A = (new Matrix(3,3)).setFromArray([1,0,0, 0,1,0, 0,0,1]);
+	// var values = [0, 0, 0];
+	var A = (new Matrix(2,2)).setFromArray([7,1, -4,3]);
+	var values = [5, 5];
+	console.log( A.toString() );
+	console.log("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+	var vectors = Matrix.eigenVectorsFromValues(A,values);
+	console.log("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+	console.log( vectors );
+return;
+	// 
 	var match = new Match();
+	return;
+// 	var A = (new Matrix(2,2)).setFromArray([3,1, 2,2]);
+// 	console.log( A.toString() );
+// 	console.log( (Matrix.power(A,0.5)).toString() );
+// return;
+// 	var A = [[3,1],[2,2]];
+// 	var ret = numeric.eig(A);
+// 	var lambda = ret.lambda.x;
+// 	var v = ret.E.x;
+// 	var i, j, k, l, q, r, wid, hei, len;
+// 	var eigVec = new Array();
+// 	wid = 2; hei = 2;
+// 	for(i=0;i<wid;++i){ // col
+// 		eigVec.push(new Array(hei));
+// 		for(j=0;j<hei;++j){ // row
+// 			eigVec[i][j] = v[j][i];
+// 		}
+// 	}
+// 	// find A^pow
+// 	var power = -0.5;
+// 	len = wid*hei;
+// 	var B = new Array(len);
+// 	var b = new Array(len);
+// 	var col;
+// 	for(k=0;k<hei;++k){ // eig
+// 		l = Math.pow(lambda[k],power);
+// 		v = eigVec[k];
+// 		for(i=0;i<hei;++i){ // row
+// 			col = k*wid+i;
+// 			b[col] = new Array();
+// 			b[col][0] = l*v[i];
+// 			B[col] = new Array();
+// 			for(j=0;j<hei;++j){ // row
+// 				for(q=0;q<wid;++q){ // col
+// 					r = j*wid+q;
+// 					B[col][r] = 0.0;
+// 					if(i==j){
+// 						B[col][r] = v[q];
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	res = numeric.solve(B,b);
+// 	var Apow = new Array(hei);
+// 	var index = 0;
+// 	for(i=0;i<hei;++i){
+// 		Apow[i] = new Array(wid);
+// 		for(j=0;j<wid;++j){
+// 			Apow[i][j] = res[index];
+// 			++index;
+// 		}
+// 	}
+// 	console.log("------------------------");
+// 		console.log( numeric.prettyPrint(Apow) );
+// 	//console.log( numeric.prettyPrint( numeric.dot(Apow,Apow) ) );
+
+// 	/*
+// 	for(k=0;k<wid;++k){ // eig
+// 		for(i=0;i<hei;++i){ // row
+// 			B[i] = new Array(wid);
+// 			for(j=0;j<wid;++j){ // col
+// 				B[i][j] = A[i][j];
+// 				if(i==j){
+// 					B[i][j] -= lambda[i];
+// 				}
+// 			}
+// 			b[i] = new Array(1);
+// 			console.log(lambda[i]);
+// 			b[i][0] = Math.sqrt( lambda[k] )*eigVec[k][i];
+// 		}
+// 		console.log("------------------------");
+// 		console.log( numeric.prettyPrint(B) );
+// 		console.log( numeric.prettyPrint(b) );
+// 		res = numeric.solve(B,b);
+// 		console.log("------------------------");
+// 		console.log( res );
+// 		Apow[k] = new Array(hei);
+// 		for(i=0;i<hei;++i){
+// 			Apow[k][i] = res[i];
+// 		}
+// 	}
+// 	console.log("===============================");
+// 	console.log( numeric.prettyPrint(Apow) );
+// 	console.log( Apow );
+// 	red = numeric.mul(Apow,Apow);
+// 	console.log( numeric.prettyPrint(  res  ) );
+// 	/*
+// 	[    0.2357,     -1.179 ;
+//         -0.5963,     0.2981] 
+// 	*/
+// return;
+// 	var A = (new Matrix(2,2)).setFromArray([1,2, 5,8]);
+// 	var a = A.get(0,0);
+// 	var b = A.get(0,1);
+// 	var c = A.get(1,0);
+// 	var d = A.get(1,1);
+// 	console.log(Matrix.eigenValues2D(a,b,c,d));
+// return;
+	// var a = new Matrix(), b = new Matrix(), c = new Matrix();
+	// a.setFromArray([-2,-2,3, -10,-1,6, 10,-2,-9], 3,3); // 4.2
+	// // a.setFromArray([11,-6,4,-2, 4,1,0,0,-9,9,-6,5, -6,6,-6,7], 4,4); // 4.6?
+	// console.log( a.toString() );
+	// var arr = Matrix.eigenValuesAndVectors(a);
+
+	// console.log("VALUES: ");
+	// console.log( arr[0] );
+	// console.log("VECTORS: ");
+	// console.log( arr[1].toString() );
+	// arr[1][0].normalize();
+	// console.log( arr[1][0].toString() );
+	// return;
+	
+	/*
+	affine comparrison (up to rotation)
+	Q = LminLlmax = eigen value ratio of the eigen values of the second moment matrix 
+	U = R^t*D*R
+	*/
+	// var mat = ImageMat.getGaussianWindow(3,3, 1);
+	// console.log(mat);
+	// return;
+	
+	// http://homepages.inf.ed.ac.uk/rbf/HIPR2/fourier.htm
+	// taylor series 2D: f(x+u,y+v) = f + (1/1!)[u*fx + v*fy] + (1/2!)[u*u*fxx + u*v*fxy + v*v*fyy] + (1/3!)[u*u*u + u*u*vfxxy + u*v*v*fxyy + v*v*v*fyyy] + ...		[f = f(x,y)]
+
+	// http://en.wikipedia.org/wiki/Eigenvalue_algorithm
+	var matA, matAInv, matAA, matB, matC;
+	//matA = (new Matrix(3,3)).setFromArray([1,-3,3, 3,-5,3, 6,-6,4]); // ?
+	matA = (new Matrix(2,2)).setFromArray([0,1, -6,5]); // 2,3
+	matA = Matrix.RREF2(matA);
+	matAInv = Matrix.inverse(matA);
+	//matA = (new Matrix(3,3)).setFromArray([3,2,3, 0,6,10, 0,0,2]); // 3,6,2
+	
+	console.log(matA.toString());
+	console.log(matAInv.toString());
+
+	matAA = Matrix.augment(matAInv,matA);
+	console.log(matAA.toString());
+	matAA = Matrix.RREF2(matAA);
+	console.log(matAA.toString());
+
+	var matB = Matrix.RREF(matA);
+	console.log(matB.toString());
+
+	// EIGEN VALUEs
+	// SVD
+	/*
+	http://math.stackexchange.com/questions/92171/what-do-eigenvalues-have-to-do-with-pictures
+	http://www.sosmath.com/diffeq/system/linear/eigenvalue/eigenvalue.html
+
+Affine Second Moment Matrix
+
+
+	*/
+
 	return;
 	var a = new V2D(160,55);
 	var b = new V2D(195,215);
@@ -154,6 +322,17 @@ var pointList = [new V2D(3,3), new V2D(4,5), new V2D(7,7), new V2D(1,3), new V2D
 	y = m*x + b;
 	plot(x,y,"r-");
 
+	*/
+	/*
+	var a = new Complex(), b = new Complex(), c = new Complex();
+	a.set(1,2);
+	Complex.exp(b,a);
+	a.set(2,1);
+	Complex.exp(c,a);
+	console.log(a.toString());
+	console.log(b.toString());
+	console.log(c.toString());
+	return;
 	*/
 /*
 HOMOGRAPHY = H = K * R * K^-1
