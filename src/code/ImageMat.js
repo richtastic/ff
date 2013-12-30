@@ -232,6 +232,20 @@ ImageMat.ARGBFromRGBArrays = function(r,g,b){
 	}
 	return a;
 }
+ImageMat.getFloats01FromARGB255 = function(argb){
+	var i, len = argb.length;
+	var a = new Array();
+	var r = new Array();
+	var g = new Array();
+	var b = new Array();
+	for(i=0;i<len;++i){
+		a[i] = Code.getAlpARGB(argb[i])/255.0;
+		r[i] = Code.getRedARGB(argb[i])/255.0;
+		g[i] = Code.getGrnARGB(argb[i])/255.0;
+		b[i] = Code.getBluARGB(argb[i])/255.0;
+	}
+	return [a,r,g,b];
+}
 // ------------------------------------------------------------------------------------------------------------------------ utilities
 ImageMat.colorArrayFxnRGB_ARGB = function(data, fxn){
 	var i, len=data.length, col, r,g,b,a;
@@ -917,6 +931,21 @@ ImageMat.addFloat = function(a,b){
 	}
 	return result;
 }
+ImageMat.maxFloat = function(a,b){
+	var i, len = a.length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = Math.max(a[i],b[i]);
+	}
+	return result;
+}
+ImageMat.addConst = function(a,b){
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		a[i] += b;
+	}
+	return a;
+}
 ImageMat.subFloat = function(a,b){
 	var i, len = a.length;
 	var result = new Array(len);
@@ -933,6 +962,13 @@ ImageMat.mulFloat = function(a,b){
 	}
 	return result;
 }
+ImageMat.mulConst = function(a,b){
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		a[i] *= b;
+	}
+	return a;
+}
 ImageMat.scaleFloat = function(a,b){
 	var i, len = b.length;
 	var result = new Array(len);
@@ -948,6 +984,18 @@ ImageMat.phaseFloat = function(a,b){
 		result[i] = Math.atan2(b[i],a[i]);
 	}
 	return result;
+}
+ImageMat.normFloats3D = function(x,y,z){
+	var i, len = x.length, length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		length = Math.sqrt(x[i]*x[i]+y[i]*y[i]+z[i]*z[i]);
+		if(length!=0){
+			x[i] /= length;
+			y[i] /= length;
+			z[i] /= length;
+		}
+	}
 }
 ImageMat.normalFloat01 = function(data){
 	var i, len = data.length;
@@ -970,6 +1018,13 @@ ImageMat.applyFxnFloat = function(data,fxn){
 	for(i=0;i<len;++i){
 		data[i] = fxn(data[i]);
 	}
+}
+ImageMat.randomFloat01 = function(data){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		data[i] = Math.random();
+	}
+	return data;
 }
 ImageMat.flipAbsFxn = function(f){ 
 	return Math.abs(f-0.5);

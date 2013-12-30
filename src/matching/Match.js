@@ -438,7 +438,7 @@ doPoint.graphics().lineTo(ptA.x,ptA.y);
 	var source = originalImage;//filters[0];
 	//var result = this.extractRect(source, pt.x-xDim,pt.y-xDim, pt.x+xDim,pt.y-xDim, pt.x+xDim,pt.y+xDim, pt.x-xDim,pt.y+xDim, Math.floor(7*xDim),Math.floor(7*xDim) );
 	//var result = this.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,200 );
-	var result = ImageMat.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,150 );
+	var result = ImageMat.extractRec01t(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,150 );
 
 	img = result;
 	argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());

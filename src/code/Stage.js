@@ -77,7 +77,7 @@ Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
-Stage.prototype.getRGBAAsImage = function(argb, wid,hei, matrix, type){
+Stage.prototype.getARGBAsImage = function(argb, wid,hei, matrix, type){//Stage.prototype.getRGBAAsImage = function(argb, wid,hei, matrix, type){
 	this._setupRenderCanvas(wid,hei, matrix);
 	this._renderCanvas.setColorArrayARGB(argb, 0,0, wid,hei);
 	return this._toImage(wid,hei, type);
