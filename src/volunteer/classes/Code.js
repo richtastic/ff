@@ -472,6 +472,7 @@ Code.newInputTextArea = function(a, r,c){
 	}
 	return sub;
 };
+
 Code.getTextAreaValue = function(a){
 	return a.value;
 }

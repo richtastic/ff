@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>FF Minification | Tini</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){ /* don't care */ }
+function defaultClassesLoadedFxn(){
+	var list = [];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,null);
+	scriptLoader.load();
+}
+function handleAJ(e){
+	//console.log(e);
+	var originalCode = e;
+	var minifiedCode = Minify.minifyJSString(e,false);
+	console.log(" ... ");
+	console.log( minifiedCode );
+}
+function customClassesLoadedFxn(){
+	console.log("loaded");
+	var i, len;
+	var ajax = new Ajax();
+	ajax.get("../code/FF.js",this,handleAJ,handleAJ);
+	//console.log( Minify.stringFromDOM( {} ) );
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div name="feedback" style=""></div>
+</body>
+</html>
+

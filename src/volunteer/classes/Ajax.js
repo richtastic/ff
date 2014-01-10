@@ -120,7 +120,7 @@ Ajax.prototype._stateChangeCaller = function(e){
 	this.context._stateChange.call(this.context, e);
 }
 Ajax.prototype._stateChange = function(){
-	if(this._request.readyState==4){
+	if(this._request.readyState==4){ // should also look at 400, 304, ... differentiate types 
 		if(this._binary){
 			var arrayBuffer = this._request.response;
 			if(arrayBuffer){
