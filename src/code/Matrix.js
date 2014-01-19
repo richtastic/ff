@@ -495,12 +495,14 @@ var me = A;
     return {H:A, Q:Q};
 }
 Matrix.eigenValues = function(A){ // eigenValues[]
-	var arr = new Array();
+	return eigenValuesAndVectors(A).values;
+	/*var arr = new Array();
 	// upper hessian
 	// QR 
-	return arr;
+	return arr;*/
 }
 Matrix.eigenVectorsFromValues = function(A,values){ // eigenVectors[ [] ]
+	/*
 	// solve equation given lambdas
 	var i, j, k, len = values.length;
 	var lambda, vector, repeated, rows = A.rows(), cols = A.cols();
@@ -537,14 +539,28 @@ Matrix.eigenVectorsFromValues = function(A,values){ // eigenVectors[ [] ]
 		// vectors.push();
 	}
 	return vectors;
+	*/
+	return null;
 }
 Matrix.eigenVectors = function(A){
+	return eigenValuesAndVectors(A).vectors;
+	/*
 	return Matrix.eigenVectorsFromValues(A, Matrix.eigenValues(A));
+	*/
 }
 Matrix.eigenValuesAndVectors = function(A){
+	var x = numeric.eig(A._rows);
+	var values = x.lambda.x;
+	var vectors = x.E.x;
+	for(var i = vectors.length; i--;){
+		vectors[i] = new Matrix(1,vectors.length).setFromArray(vectors[i]);
+	}
+	return {values:values, vectors:vectors};
+	/*
 	var values = Matrix.eigenValues(A);
 	var vectors = Matrix.eigenVectorsFromValues(A,values);
 	return [values, vectors];
+	*/
 }
 Matrix.trace = function(){ // 
 	// = sum of main diagonals
@@ -637,7 +653,7 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 		matB.set(2*i  ,0, to.x);
 		matB.set(2*i+1,0, to.y);
 	}
-	var x = solve(matA,matB);//Matrix.mult(Matrix.pseudoInverse(matA), matB);
+	var x = Matrix.solve(matA,matB);//Matrix.mult(Matrix.pseudoInverse(matA), matB);
 	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1]);
 	// var pt = new V3D(0,0,0);
 	// projection.multV2DtoV3D(pt,pt);

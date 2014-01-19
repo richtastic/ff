@@ -288,23 +288,23 @@ Match.prototype._imageCompleteFxn = function(o){
 
 	var params = this.getDescriptorParameters( images[0] );
 
-	// var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
-	// descriptor.processScaleSpace();
+	var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
+	descriptor.processScaleSpace();
 	// descriptor.processAffineSpace();
 	// descriptor.describeFeatures();
 	// 
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
-	// var filters = descriptor.getImageDefinition();
+	var filters = descriptor.getImageDefinition();
 
 
-filters = new Array();
+// filters = new Array();
 var wid = params[0];
 var hei = params[1];
 var gry = ImageMat.grayFromRGBFloat(params[2],params[3],params[4]);
 var src = gry;
 var SMM = new Array();
 var res = ImageMat.harrisDetector(src,wid,hei, SMM); // , threshold, sigma, kMult
-
+res = ImageMat.addFloat(gry,res);
 
 
 /*
@@ -313,9 +313,7 @@ get eigenvectors
 display eigenvectors visually
 */
 
-res = ImageMat.addFloat(gry,res);
-
-filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res) ) );
+//filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res) ) );
 
 
 	var root = new DO(); this._stage.root().addChild(root);
@@ -330,7 +328,7 @@ filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(r
 	for(i=0;i<len;++i){
 		var img = filters[i];
 		var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
-		var src = this._stage.getRGBAAsImage(argb, img.width(), img.height());
+		var src = this._stage.getARGBAsImage(argb, img.width(), img.height());
 		var doi = new DOImage( src );
 			doi.matrix().identity();
 			doi.matrix().translate(col*img.width(), row*img.height());

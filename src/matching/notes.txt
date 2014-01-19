@@ -361,6 +361,13 @@ k is some random number determined experimentally to be ~ ???
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+TENSOR: fat grouping of scalars, arranges to be used AS A SINGLE UNIT in matrix equations - typically(always?) nxn(xn[xn...]) - can have as many indices as desired
+* can be used (in correct context) to transform to various dimensions (matrix, tensor, vector, scalar)
+http://mathforum.org/library/drmath/view/51503.html
+http://math.stackexchange.com/questions/412423/differences-between-a-matrix-and-a-tensor
+http://physics.stackexchange.com/questions/20437/are-matrices-and-second-rank-tensors-the-same-thing
+http://www.mat.univie.ac.at/~neum/physfaq/physics-faq.html
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
