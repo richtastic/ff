@@ -291,7 +291,8 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
 			sum += val;
 		}
 	}
-	for(i=0;i<len;++i){
+	//console.log(sum);
+	for(i=0;i<len;++i){ // this is necessary for scale space extrema calculations
 		matrix[i] /= sum;
 	}
 	return matrix;
@@ -751,7 +752,7 @@ ImageMat.findExtrema3DFloat = function(a,b,c, wid,hei, delX,delY,delZ, r){ // a=
 			}
 		}
 	}
-	console.log("EXTREMA: "+count);
+	//console.log("EXTREMA: "+count);
 	return list;
 }
 ImageMat._tempMatrix3_3 = new Matrix(3,3);
@@ -760,16 +761,15 @@ ImageMat._tempMatrix3_1_2 = new Matrix(3,1);
 ImageMat.extrema3DFloatInterpolate = function(loc, delX,delY,delZ, a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8, r){ // a is bot, b is middle, c is top
 	// increasing x, increasing y, increasing z
 	// unused: a0 a2 16 a8 c0 c2 c6 c8
-	var val;
 	var dx = (b5-b3)/(2.0*delX);
 	var dy = (b7-b1)/(2.0*delY);
 	var dz = (c4-a4)/(2.0*delZ);
 	var dxdx = (b5-2.0*b4+b3)/(delX*delX);
-	var dxdy = (b8-b6-b2+b0)/(4.0*delX*delY);
-	var dxdz = (c5-c3-a5+a3)/(4.0*delX*delZ);
+	var dxdy = (b8-b6-b2+b0)/(2.0*delX*delY);
+	var dxdz = (c5-c3-a5+a3)/(2.0*delX*delZ);
 	var dydx = dxdy;
 	var dydy = (b7-2.0*b4+b1)/(delY*delY);
-	var dydz = (c7-c1-a7+a1)/(4.0*delY*delZ);
+	var dydz = (c7-c1-a7+a1)/(2.0*delY*delZ);
 	var dzdx = dxdz;
 	var dzdy = dydz;
 	var dzdz = (c4-2.0*b4+a4)/(delZ*delZ);
@@ -777,11 +777,12 @@ ImageMat.extrema3DFloatInterpolate = function(loc, delX,delY,delZ, a0,a1,a2,a3,a
 	var H = ImageMat._tempMatrix3_3.setFromArray([dxdx,dxdy,dxdz, dydx,dydy,dydz, dzdx,dzdy,dzdz]);
 	var Hinv = Matrix.inverse(H);
 	var temp = Matrix.mult(ImageMat._tempMatrix3_1_2, Hinv,dD);
-	loc.x = temp.get(0,0); loc.y = temp.get(1,0); loc.z = temp.get(2,0);
+	loc.x = -temp.get(0,0); loc.y = -temp.get(1,0); loc.z = -temp.get(2,0);
 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
-	if(r!==undefined){
+	// === loc.t = b4 + (dx*loc.x + dy*loc.y + dz*loc.z) + 0.5*((dxdx*loc.x+dxdy*loc.y+dxdz*loc.z)*loc.x + (dydx*loc.x+dydy*loc.y+dydz*loc.z)*loc.y + (dzdx*loc.x+dzdy*loc.y+dzdz*loc.z)*loc.z);
+	if(r!==undefined){ // lowe 2x2 hessian criteria tr^2(H)/det(H) < (r+1)^2/r
 		var det = dxdx*dydy - dxdy*dxdy;
-		if (  (dxdx + dydy)*(dxdx + dydy)/det > (r + 1)*(r + 1)/r ){
+		if (  Math.pow((dxdx + dydy),2)/det > r ){
 			return null;
 		}
 	}
@@ -1096,9 +1097,9 @@ ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH)
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
 				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
-				if( isNaN(destination[wid*j+i]) ){
-					console.log("                                    "+i+","+j+" "+fr);
-				}
+				// if( isNaN(destination[wid*j+i]) ){
+				// 	console.log("                                    "+i+","+j+" "+fr);
+				// }
 			}
 		}
 	}
@@ -1143,48 +1144,50 @@ ImageMat.derivativeY = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
 }
 ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
+	// A(x) = autocorrelation = [gaussian window]*[Ixx(x) Ixy(x) ; Ixy(x) Iyy(x)]
+	// H(x) = harris measure = det(A) - alpha*trace^2(A)
 	var temp, padding, gaussSource, Ix, Iy, IxIx, IxIy, IyIy, Sxx, Sxy, Syy;
 	var determinant, trace, result;
 	sigma = sigma!==undefined?sigma:1.0;
-	threshold = threshold!==undefined?threshold:0;
+	threshold = threshold!==undefined?threshold:0.1;
 	kMult = kMult!==undefined?kMult:0.05; // [0.04,0.06]
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	// padded gaussian source
 	padding = Math.floor(gaussSize/2.0);
 	gaussSource = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
-//	gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D);
-//	gaussSource = ImageMat.unpadFloat(gaussSource, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
-//gaussSource = src;
-	// get derivative images
+	gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D); // now it's actually a gaussian
+	// image derivatives
 	Ix = ImageMat.derivativeX(gaussSource, wid+2*padding,hei+2*padding);
 	Iy = ImageMat.derivativeY(gaussSource, wid+2*padding,hei+2*padding);
-	// Ix = ImageMat.derivativeX(gaussSource, wid,hei);
-	// Iy = ImageMat.derivativeY(gaussSource, wid,hei);
 	IxIx = ImageMat.mulFloat(Ix,Ix);
 	IxIy = ImageMat.mulFloat(Ix,Iy);
 	IyIy = ImageMat.mulFloat(Iy,Iy);
 	// sum of products - whatever that means
-	// Sxx = ImageMat.padFloat(IxIx, wid,hei, padding,padding,padding,padding);
-	// Sxy = ImageMat.padFloat(IxIy, wid,hei, padding,padding,padding,padding);
-	// Syy = ImageMat.padFloat(IyIy, wid,hei, padding,padding,padding,padding);
 	Sxx = IxIx;
 	Sxy = IxIy;
 	Syy = IyIy;
 	Sxx = ImageMat.gaussian2DFrom1DFloat(Sxx, wid+2*padding,hei+2*padding, gauss1D);
 	Sxy = ImageMat.gaussian2DFrom1DFloat(Sxy, wid+2*padding,hei+2*padding, gauss1D);
 	Syy = ImageMat.gaussian2DFrom1DFloat(Syy, wid+2*padding,hei+2*padding, gauss1D);
+	// unpad results for usage
+	//gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D); // now it's actually a gaussian
+	gaussSource = ImageMat.unpadFloat(gaussSource, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
 	Sxx = ImageMat.unpadFloat(Sxx, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
 	Sxy = ImageMat.unpadFloat(Sxy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
 	Syy = ImageMat.unpadFloat(Syy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
-	// Sxx = ImageMat.gaussian2DFrom1DFloat(IxIx, wid,hei, gauss1D);
-	// Sxy = ImageMat.gaussian2DFrom1DFloat(IxIy, wid,hei, gauss1D);
-	// Syy = ImageMat.gaussian2DFrom1DFloat(IyIy, wid,hei, gauss1D);
+	IxIx = ImageMat.unpadFloat(IxIx, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	IxIy = ImageMat.unpadFloat(IxIy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	IyIy = ImageMat.unpadFloat(IyIy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
 	// calculate H(x,y) - to get eigenvalues
 	var arr, l1,l2, i, len = wid*hei;
 response = ImageMat.newZeroFloat(wid,hei);
+var A = new Array();
+var alpha = 0.01;
+var sum = 0;
+var minL = 1E-15;
 	for(i=0;i<len;++i){
-SMM[i] = new Array( Sxx[i], Sxy[i], Sxy[i], Syy[i] );
+SMM[i] = [ Sxx[i], Sxy[i], Sxy[i], Syy[i] ];
 		// arr = Matrix.eigenValues2D(Sxx[i],Sxy[i],Sxy[i],Syy[i]);
 		// l1 = arr[0]; l2 = arr[1];
 		// //console.log(arr[0],arr[1], " - ", Sxx[i],Sxy[i],Sxy[i],Syy[i] );
@@ -1192,12 +1195,33 @@ SMM[i] = new Array( Sxx[i], Sxy[i], Sxy[i], Syy[i] );
 		// if(i%10000==0){
 		// 	console.log(l1,l2);
 		// }
-		response[i] = (Sxx[i]*Syy[i] - Sxy[i]*Sxy[i]) - kMult*Math.pow(Sxx[i],2);
+A[i] = [gaussSource[i]*IxIx[i], gaussSource[i]*IxIy[i], gaussSource[i]*IxIy[i], gaussSource[i]*IyIy[i]];
+//A[i] = [IxIx[i], IxIy[i], IxIy[i], IyIy[i]];
+arr = Matrix.eigenValues2D(A[i][0],A[i][1],A[i][2],A[i][3])
+response[i] = (A[i][0]*A[i][3] - A[i][1]*A[i][2]) - alpha*(Math.pow((A[i][0]+A[i][3]),2));//*(IxIx[i]*IyIy[i] - IxIy[i]*IxIy[i]) - kMult*Math.pow(IxIx[i],2);
+//response[i] = arr[0]*arr[1] - alpha*Math.pow(arr[0]+arr[1],2);
+	if( Math.round(Math.random()*10000)%5000==0 ){
+		//console.log(response[i]);
+		//console.log( (A[0],A[1],A[2],A[3]) );
+		//console.log( Matrix.eigenValues2D(A[i][0],A[i][1],A[i][2],A[i][3]) );
+		//console.log(arr);
 	}
+	if(Math.abs(arr[0])>minL && Math.abs(arr[1])>minL){
+		++sum;
+	}
+//SMM[i] = A[i];
+	//response[i] = arr[0]*arr[1];
+
+//		response[i] = (Sxx[i]*Syy[i] - Sxy[i]*Sxy[i]) - kMult*Math.pow(Sxx[i],2);
+	}
+console.log(sum);
 response = ImageMat.absFloat(response);
+console.log(Math.max.apply(this,response));
 response = ImageMat.getNormalFloat01(response);
+//response = ImageMat.mulConst(response,5.0);
 //response = ImageMat.gtFloat(response,0.143);
-response = ImageMat.gtFloat(response,0.01);
+//response = ImageMat.gtFloat(response,threshold);
+//response = ImageMat.normalFloat01(response);
 return response;
 	// calculate response at each pixel
 	trace = ImageMat.addFloat(Sxx,Syy); // l1 + l2

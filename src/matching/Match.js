@@ -96,7 +96,7 @@ this._stage.addChild(root);
 */
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["FT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BRB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
@@ -290,35 +290,43 @@ Match.prototype._imageCompleteFxn = function(o){
 
 	var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
 	descriptor.processScaleSpace();
-	// descriptor.processAffineSpace();
+	descriptor.processAffineSpace();
 	// descriptor.describeFeatures();
 	// 
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
-
-
-// filters = new Array();
 var wid = params[0];
 var hei = params[1];
-var gry = ImageMat.grayFromRGBFloat(params[2],params[3],params[4]);
-var src = gry;
-var SMM = new Array();
-var res = ImageMat.harrisDetector(src,wid,hei, SMM); // , threshold, sigma, kMult
-res = ImageMat.addFloat(gry,res);
+//filters.shift(); // first image ...
+
+
+// var tmp;
+// filters = new Array();
+// var gry = ImageMat.grayFromRGBFloat(params[2],params[3],params[4]);
+// var src = gry;
+// var SMM = new Array();
+// tmp = src;
+// //tmp = ImageMat.mulConst(src,255.0)
+// var res = ImageMat.harrisDetector(tmp,wid,hei, SMM); // , threshold, sigma, kMult
+// tmp = ImageMat.mulConst(gry,0.50)
+// res = ImageMat.addFloat(tmp,res);
 
 
 /*
-pick a point
-get eigenvectors
+pick a valid scale-space point
+get image at specific scale-space and location
+get eigenvectors at scale-space point x,y,s
 display eigenvectors visually
+::::
+apply iterative solution for single point to get forward/reverse isotropic transformation
 */
 
-//filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res) ) );
+// filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res) ) );
 
 
 	var root = new DO(); this._stage.root().addChild(root);
 	root.matrix().identity();
-	root.matrix().scale(1.0);//,0.5);
+	root.matrix().scale(1.5);//,0.5);
 
 	
 	var imgPerRow = 4;
@@ -341,10 +349,27 @@ display eigenvectors visually
 	}
 
 
-var pt = new V2D(143,151);
-
+var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(200,100),new V2D(130,130)];
+/*for(i=0;i<12;++i){
+	for(j=0;j<9;++j){
+		ptList.push( new V2D((i+1)*30,(j+1)*30) );
+	}
+}*/
+var scaleSpace = descriptor.getScaleSpaceExtrema();
+for(i=0;i<scaleSpace.length;++i){
+	ptList.push( scaleSpace[i] );
+}
+//ptList.push( scaleSpace[232] );
+// BIG: 231, 232, 233, 
+// BRT: 40
+// 106, 107, 108, 109, 110, 111, 112
+for(i=0;i<ptList.length;++i){
+var pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
+console.log(pt);
 var d = new DO();
-var rad = 10;
+var rad;
+rad = 2.0;
+rad *= pt.z;
 
 //main
 d.graphics().clear();
@@ -357,32 +382,77 @@ d.graphics().endPath();
 d.graphics().fill();
 d.graphics().strokeLine();
 // dot
-rad = 1.0;
+rad2 = 1.0;
 d.graphics().beginPath();
 d.graphics().setFill(0xFFFF0000);
-d.graphics().moveTo(rad,0);
-d.graphics().arc(0,0, rad, 0,Math.PI*2, false);
+d.graphics().moveTo(rad2,0);
+d.graphics().arc(0,0, rad2, 0,Math.PI*2, false);
 d.graphics().endPath();
 d.graphics().fill();
-// orientation / direction
-var smmPt = SMM[pt.y*wid + pt.x];
-console.log(smmPt);
-var ma = smmPt[0];
-var mb = smmPt[1];
-var mc = smmPt[2];
-var md = smmPt[3];
-var M = (new Matrix(2,2)).setFromArray(smmPt);
-var eigVals = Matrix.eigenValues2D(ma,mb,mc,md);
-var eigVects = Matrix.eigenVectors2D(ma,mb,mc,md);
-console.log(eigVals);
-console.log(eigVects);
 
-//
+// orientation / direction
+// var smmPt = SMM[pt.y*wid + pt.x];
+// console.log("-------------------------------------------------------");
+// console.log(smmPt);
+// var ma = smmPt[0];
+// var mb = smmPt[1];
+// var mc = smmPt[2];
+// var md = smmPt[3];
+// var M = (new Matrix(2,2)).setFromArray(smmPt);
+// var vAv = Matrix.eigenValuesAndVectors(M);
+// var eigValues = vAv.values;
+// var eigVectors = vAv.vectors;
+
+// var eigenValueA = eigValues[0];
+// var eigenValueB = eigValues[1];
+// var eigenVectorA = eigVectors[0]._rows[0];
+// var eigenVectorB = eigVectors[1]._rows[0];
+// var Q = eigenValueA/eigenValueB;
+// console.log(eigenValueA);
+// console.log(eigenVectorA);
+// console.log(eigenValueB);
+// console.log(eigenVectorB);
+// console.log(Q);
+
+
+// // EV A
+// d.graphics().setLine(1.0,0xFF00FF00);
+// d.graphics().beginPath();
+// d.graphics().moveTo(0,0);
+// d.graphics().lineTo(rad*eigenVectorA[0],rad*eigenVectorA[1]);
+// d.graphics().endPath();
+// d.graphics().strokeLine();
+// // EV B
+// d.graphics().setLine(1.0,0xFF0000FF);
+// d.graphics().beginPath();
+// d.graphics().moveTo(0,0);
+// d.graphics().lineTo(rad*eigenVectorB[0],rad*eigenVectorB[1]);
+// d.graphics().endPath();
+// d.graphics().strokeLine();
 
 d.matrix().identity();
 d.matrix().translate(pt.x,pt.y);
 
 root.addChild(d);
+
+/*
+// GET IMAGE AT POINT GAUSSIAN SPACE
+pt = ptList[i];
+console.log(pt.z);
+var w = 100;
+var h = 100;
+var matrix = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,1]);
+// call feature to get image a described point:
+var imgFloat = descriptor.getScaleSpacePoint(pt.x,pt.y,pt.z, w,h, matrix);
+var imgARGB = ImageMat.ARGBFromFloat(imgFloat);
+var imgImage = this._stage.getARGBAsImage(imgARGB, w,h);
+
+doImage = new DOImage(imgImage);
+doImage.matrix().translate(400,200);
+root.addChild(doImage);
+*/
+
+}
 
 
 return;

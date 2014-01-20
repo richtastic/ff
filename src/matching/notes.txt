@@ -257,7 +257,22 @@ Q = min(eig)/max(eig)
 
 
 
+HARRIS CORNER DETECTION:
 
+HARRIS DETECTOR:
+USES second moment matrix
+defined as affine-invariant (scale, rotate, shear)
+
+p,q = values??
+w(p,q) = local window => uniform or circular gaussian: w(x,y) = g(x,y,s) = (1/[2*pi*s*s])exp(-[x*x+y*y]/[2*s*s])
+A = autocorrelation matrix
+Ix(x) = derifative of intensity in x
+Iy(x) = derifative of intensity in y
+A(x) = SUM(p,q) w(p,q)*[Ix(x)*Ix(x) Ix(x)*Iy(x) ; Ix(x)*Iy(x) Iy(x)*Iy(x)]
+alpha = ???? some constant
+R = harris measure = det(A) - alpha*trace^2(A) = l1*l2 - alpha*(l1+l2)^2
+
+local maxima of R are corner points
 
 
 
@@ -268,6 +283,10 @@ LxLy = ?
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+HESSIAN MATRIX:
+[ ]
+[ ]
+[ ]
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
