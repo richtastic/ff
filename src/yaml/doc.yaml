@@ -1,0 +1,26 @@
+# doc.yaml
+
+document: # array list of sections
+	-
+		type: segment
+		toc: &TABLEOFCONTENTS 
+		h1: 
+	- references: # 
+
+
+
+
+# Richie Zirbes
+:Projective Geometry
+--subtitle
+
+::Table of Contents
+
+
+
+
+
+
+
+
+

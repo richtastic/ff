@@ -324,6 +324,12 @@ Canvas.prototype.moveTo = function(pX,pY){
 Canvas.prototype.lineTo = function(pX,pY){
 	this._context.lineTo(pX,pY);
 }
+Canvas.prototype.quadraticCurveTo = function(a,b,c,d){
+	this._context.quadraticCurveTo(a,b,c,d)
+}
+Canvas.prototype.bezierCurveTo = function(a,b,c,d,e,f){
+	this._context.bezierCurveTo(a,b,c,d,e,f)
+}
 Canvas.prototype.strokeLine = function(){
 	this._context.stroke();
 }

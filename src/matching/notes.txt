@@ -283,11 +283,26 @@ LxLy = ?
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-HESSIAN MATRIX:
+HESSIAN MATRIX: second moment matrix
 [ ]
 [ ]
 [ ]
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COVARIANCE MATRIX:
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+MIKOLAJCZYK04:
+Harris measure rarely attains maxima over scales in a scale-space representa-tion
+6
+* the points found use an iteritive process utilizing (Harrice-Laplace Detector):
+	1 find LoG extremum x,y,s
+	2 find closest Harris measure maxium nearest to x,y,s
+	3 goto 1 if non-convergence on sI or x,y,s
+8
+SMM - anisotropic definition of point
+10
+shape adaptation matrix
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

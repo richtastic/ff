@@ -28,6 +28,12 @@ Graphics.canvasMoveTo = function(pX,pY){
 Graphics.canvasLineTo = function(pX,pY){
 	Graphics._canvas.lineTo(pX,pY);
 }
+Graphics.canvasQuadraticCurveTo = function(a,b,c,d){
+	Graphics._canvas.quadraticCurveTo(a,b,c,d);
+}
+Graphics.canvasBezierCurveTo = function(a,b,c,d,e,f){
+	Graphics._canvas.bezierCurveTo(a,b,c,d,e,f);
+}
 Graphics.arc = function(pX,pY, rad, sA,eA, cw){
 	Graphics._canvas.arc(pX,pY, rad, sA,eA, cw);
 }
@@ -118,6 +124,39 @@ Graphics.prototype.drawRect = function(sX,sY,wX,hY){
 }
 Graphics.prototype.strokeRect = function(sX,sY,wX,hY){
 	this._graphics.push( Code.newArray(Graphics.canvasStrokeRect,Code.newArray(sX,sY,wX,hY)) );
+}
+// ------------------------------------------------------------------------------------------------------------------------ COMPOUND STATEMENTS
+Graphics._mat = new Matrix2D();
+Graphics._u = new V2D();
+Graphics._v = new V2D();
+
+Graphics.prototype.drawEllipse = function(x,y, w,h, ang){
+	w *= 0.5 * 0.99; h *= 0.6666666666666 * 0.99;
+	var staX = -w, staY = 0;
+	var endX = w, endY = 0;
+	var cn1X = -w, cn1Y = -h;
+	var cn2X = w, cn2Y = -h;
+	var cn3X = w, cn3Y = h;
+	var cn4X = -w, cn4Y = h;
+	if(ang!==undefined){
+		var mat = Graphics._mat; var v = Graphics._v;
+		mat.identity(); mat.rotate(-ang);
+		v.set(staX,staY); mat.multV2D(v,v); staX = v.x; staY = v.y;
+		v.set(endX,endY); mat.multV2D(v,v); endX = v.x; endY = v.y;
+		v.set(cn1X,cn1Y); mat.multV2D(v,v); cn1X = v.x; cn1Y = v.y;
+		v.set(cn2X,cn2Y); mat.multV2D(v,v); cn2X = v.x; cn2Y = v.y;
+		v.set(cn3X,cn3Y); mat.multV2D(v,v); cn3X = v.x; cn3Y = v.y;
+		v.set(cn4X,cn4Y); mat.multV2D(v,v); cn4X = v.x; cn4Y = v.y;
+	}
+	staX += x; endX += x; cn1X += x; cn2X += x; cn3X += x; cn4X += x;
+	staY += y; endY += y; cn1Y += y; cn2Y += y; cn3Y += y; cn4Y += y;
+	this._graphics.push( Code.newArray(Graphics.canvasMoveTo,Code.newArray(staX,staY)) );
+	this._graphics.push( Code.newArray(Graphics.canvasBezierCurveTo,Code.newArray(cn1X,cn1Y,cn2X,cn2Y,endX,endY)) );
+	this._graphics.push( Code.newArray(Graphics.canvasBezierCurveTo,Code.newArray(cn3X,cn3Y,cn4X,cn4Y,staX,staY)) );
+	// this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(cn1X,cn1Y,mi1X,mi1Y)) );
+	// this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(cn2X,cn2Y,endX,endY)) );
+	// this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(cn3X,cn3Y,mi2X,mi2Y)) );
+	// this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(cn4X,cn4Y,staX,staY)) );
 }
 // ------------------------------------------------------------------------------------------------------------------------ IMAGES
 Graphics.prototype.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch to fit

@@ -3,6 +3,16 @@
 V2D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y;
 }
+V2D.angle = function(a,b){
+	lenA = a.length();
+	lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return Math.acos(V2D.dot(a,b))/(lenA*lenB);
+	}
+	return 0;
+}
+//Code.inheritClass(Ticker, Dispatchable);
+
 function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;

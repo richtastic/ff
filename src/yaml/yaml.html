@@ -1,34 +1,115 @@
 <html>
 <head>
 <title>FF YAML Parsing</title>
-<script src="../code/FFLoadAll.js"></script>
+<script src="../code/FF.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <script type="text/javascript">
 function pageLoadedFxn(){
-	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
-}
-function setFeedback(str){
-	document.getElementsByName("feedback")[0].innerHTML = str;
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
 }
 function defaultClassesProgressFxn(o){
-	var perc = 0.0 + 0.5*(o.loaded/o.total);
-	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
+	console.log(o);
 }
-function defaultClassesLoadedFxn(){
-	setFeedback( "50%" );
+function defaultClassesLoadedFxn(o){
+	console.log(o);
 	var list = ["yaml.js"];
-	scriptLoader = new ScriptLoader("./",list,customClassesLoadedFxn,customClassesProgressFxn,false);
+	scriptLoader = new ScriptLoader("./",list, this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(o){
-	var perc = 0.5 + 0.5*(o.loaded/o.total);
-	setFeedback( o.next+" | "+(Math.round(perc*100))+"%" );
+	console.log(o);
 }
-function customClassesLoadedFxn(){
-	setFeedback( "" );
+function customClassesLoadedFxn(o){
+	console.log(o);
 	console.log("loading complete");
-	var y = new yaml();
+	var ajax = new Ajax();
+	ajax.load("");
 }
+function main(){
+	console.log("DO");
+}
+/*
+html page title
+
+main heading: H1
+segment heading: H2
+: H3
+: H4
+subtitle
+text-styling: underline, line-through, italic, bold
+self-page-references
+data-references, for re-use/
+unordered list: 1,2,3 / A,B,C, a,b,c, i,ii,iii
+ordered list: -, *, 
+check list: [] [x]
+
+code segment
+code inline
+
+
+graph scatter: bar, line, point, colors, logx, logy, loglog, title, xlabel, ylabel, legend
+
+
+
+MATH:::::::::::::::::::::::::::::::::::::::::::
+various degrees of divisions:
+(d^2 D)   (d^2 D)
+(-----) - (-----)
+(dx dy)   (dy dz)
+-----------------
+(d^2 D)   (d^2 D)
+(-----) - (-----)
+(dx dy)   (dy dz)
+
+inserting blobs into matrices (blob = number, variable, equation, ...)
+
+vector arrow
+vector hat
+convolution
+integral
+
+bold - indicate vector
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/
 </script>
 </head>
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">

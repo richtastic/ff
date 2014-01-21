@@ -1148,7 +1148,7 @@ ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
 	// H(x) = harris measure = det(A) - alpha*trace^2(A)
 	var temp, padding, gaussSource, Ix, Iy, IxIx, IxIy, IyIy, Sxx, Sxy, Syy;
 	var determinant, trace, result;
-	sigma = sigma!==undefined?sigma:1.0;
+	sigma = sigma!==undefined?sigma:1.6;
 	threshold = threshold!==undefined?threshold:0.1;
 	kMult = kMult!==undefined?kMult:0.05; // [0.04,0.06]
 	var gaussSize = Math.round(2+sigma)*2+1;

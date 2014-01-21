@@ -113,14 +113,18 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
 // ------------------------------------------------------------------------------------------ PRINT
 Code.log = function log(o){
 	if(console && console.log!==null && console.log!==undefined){
-		if(typeof o == Code.TYPE_STRING){
-			console.log( o );
-		}else if(typeof o == Code.TYPE_FUNCTION){
-			console.log( o );
-		}else if(false){//typeof o == Code.TYPE_OBJECT && o.toString!==null && o.toString!==undefined){
-			console.log( o.toString() );
-		}else{
-			console.log( o );
+		if(o!==undefined && o!==null){
+			if(typeof o.toString == Code.TYPE_FUNCTION){
+				console.log( o.toString() );
+			}else if(typeof o == Code.TYPE_STRING){
+				console.log( o );
+			}else if(typeof o == Code.TYPE_FUNCTION){
+				console.log( o );
+			}else if(false){//typeof o == Code.TYPE_OBJECT && o.toString!==null && o.toString!==undefined){
+				console.log( o.toString() );
+			}else{
+				console.log( o );
+			}
 		}
 	}
 }
@@ -317,6 +321,13 @@ Code.prependFixed = function(start,pad,count){
 Code.getBody = function(){
 	return document.body;
 };
+Code.getHead = function(){
+	return document.head;
+};
+Code.setPageTitle = function(str){
+	document.head.getElementsByTagName("title")[0].innerHTML = str;
+	// if title DNE - make it
+}
 Code.getID = function(argA,argB){
 	if(arguments.length>1){
 		return argA.getElementById(argB);

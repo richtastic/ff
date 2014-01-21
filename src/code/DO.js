@@ -32,7 +32,7 @@ DO.addToStageRecursive = function(ch,sta){
 	ch.addedToStage(sta);
 	for(var i=0;i<ch._children.length;++i){
 		if(ch._children[i]._stage != sta){ 
-			DO.addToStageRecursive(ch.children[i],sta);
+			DO.addToStageRecursive(ch._children[i],sta);
 		} // else already has it
 	}
 }

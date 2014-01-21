@@ -1,38 +1,76 @@
 // Match.js
 /*
-STEPS:
+NEW POINT-MATCHING STEPS:
 
-A) find points/areas of most uniqueness - use corners, edges, colors, and find local maxima: 100~1000 points
+A) find points of most uniqueness - use corners, edges, colors, (find local maxima if clustered): 100~1000 points
 
-B) describe each point as some combination of:
+B) find scale-space of image: (100~200)
+	find maxima for eatch feature in scale space
+		- use this as characteristic scale
+	discard features that don't have a maxima(minima?) in scale-space or have repeated extrema
+
+C) find affine transformation of each point/area
+	iterative method mikaokovichk
+	matrix := skew and non-proportional 2D scale
+	rotation = primary direction of gradient
+
+D) describe each point as some combination of: (50~100)
 	gray(base)/red/green/blue orientations
 	gray(base)/red/green/blue relative intensities (local/global)?
-	overall scale - (at what size is it most corner like?)
+	histogram of orientations (SIFT)
+	* if too many points, discard points that
+		dont have large gradients (more edge/corner-like)
+		don't have large color volume [sum of intensities: minima to maxima] - high variation in color
+		are fairly bland in each/all r/g/b/y
 
-C) assign some useful/unique-ness score to each point based on all properties, to order obtain final best comparable points: 10~100
-	* large gradients (more edge/corner-like)
-	* large color volume [sum of intensities: minima to maxima] - high variation in color
-
-D) compare points from seperate pictures and assign comparrison score:
+E) compare points from seperate pictures and assign comparrison score:
 	compare in small number of combinations and use best score
 	* relative orientation
 		- eg is red CCW or CW from gray
 	* relative color intensities
 		- eg is red brighter than green
 	if initial scores are obviously bad, don't bother detailed comparrison
-	* orientation [-1,0,1]
-	* scale [0.9,1.0,1.1]
-	* SoSD [4x4,5x5,6x6]
-	* correlation [4x4,5x5,6x6]
-	* other?
+		* best orientation [-1,0,1]
+		* SoSD
+		* correlation
 
-E) decide best matches for each point by sorting by best match (pt.matchest[0].score), and going down list as posibilities dwindle
+F) decide best matches for each point by sorting by best match (pt.matchest[0].score), and going down list as posibilities dwindle
 	ptA.matches = [{ptX,score},{ptY,score},..{ptZ,score}]
 	ptB.matches = [{ptI,score},{ptJ,score},..,{ptA,score}]
-	...
+	* if a point point group is found (set of point match eachother well)
+		A: half (or less - zoom out) each of these characteristic-scales to better separate eachother
+		B: discard each point, as they cannot be told apart
+
+-----------
+3D SPARSE POINT LOCALIZATION
+
+* need to find 3D location of cameras
+
+A) ass-load of projective geometry reduction to affine to metric
+
+* find 3D location of several feature points
+
+=> refinement of camera matrices
+
+-----------
+DENSE 3D POINT LOCALIZATION
+
+searching along epipolar-type lines? => 1D searching
+
+-----------
+TRIANGULATION
+
+use point cloud to figure out triangle mapping
+
+-----------
+TEXTURING
+
+blend images from different perspectives to get best
+- best images have largest area 
 
 
 */
+
 function Match(){
 	this._canvas = new Canvas(null, 400,600, Canvas.STAGE_FIT_FILL, false);
 	//this._canvas.addListeners();
@@ -96,7 +134,7 @@ this._stage.addChild(root);
 */
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BRB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
@@ -282,21 +320,151 @@ Match.prototype.scaleImage = function(originalImage, scale){
 	imageElement.style.position = "absolute";
 	Code.addChild(document.body, imageElement );
 }
+Match.prototype.drawDot = function(pt, v1,v2, e1,e2){
+	var d = new DO();
+	var rad = 10.0;
+	var ratioA = 1.0, ratioB = 1.0;
+	if(e1!==undefined && e2!==undefined){
+		if(e1>e2){
+			ratioA = e1/e2;
+		}else{
+			ratioB = e2/e1;
+		}
+	}
+	var angle = 0;
+	if(v1!==undefined && v2!==undefined){
+		angle = V2D.angle(v1,new V2D(1,0));
+	}
+	//main
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().setFill(0x33FF0000);
+	d.graphics().moveTo(rad,0);
+	//d.graphics().arc(0,0, rad*Math.max(ratioA,ratioB), 0,Math.PI*2, false);
+	d.graphics().drawEllipse(0,0, rad*2*ratioA,rad*2*ratioB, angle);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	// dot
+	rad2 = 1.0;
+	d.graphics().beginPath();
+	d.graphics().setFill(0xFFFF0000);
+	d.graphics().moveTo(rad2,0);
+	d.graphics().arc(0,0, rad2, 0,Math.PI*2, false);
+	d.graphics().endPath();
+	d.graphics().fill();
+	if(v1!==undefined && v2!==undefined){
+		d.graphics().setLine(1.0,0xFF00FF00);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(rad*ratioA*v1.x,rad*ratioA*v1.y);
+		//d.graphics().lineTo(rad,0);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		// EV B
+		d.graphics().setLine(1.0,0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(rad*ratioB*v2.x,rad*ratioB*v2.y);
+		//d.graphics().lineTo(0,rad);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	}
+	// var container = new DO();
+	// container.addChild(d);
+	var container = d;
+	container.matrix().identity();
+	container.matrix().translate(pt.x,pt.y);
+	return container;
+}
 Match.prototype._imageCompleteFxn = function(o){
 	var images = new Array();
 	Code.copyArray(images,o.images);
 
 	var params = this.getDescriptorParameters( images[0] );
+	var wid = params[0];
+	var hei = params[1];
+	var imageSourceRed = params[2];
+	var imageSourceGrn = params[3];
+	var imageSourceBlu = params[4];
+	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 
-	var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
+	var root = new DO(); this._stage.root().addChild(root);
+	root.matrix().identity();
+	root.matrix().scale(1.5);//,0.5);
+var i, j, k, len;
+var imgFloat, imgARGB, imgImage, doi;
+
+imgARGB = ImageMat.ARGBFromFloats(imageSourceRed,imageSourceGrn,imageSourceBlu);
+imgImage = this._stage.getARGBAsImage(imgARGB, wid,hei);
+doi = new DOImage( imgImage );
+doi.matrix().identity();
+root.addChild(doi);
+
+// WHOLE BUNCH OF FUN IMAGE TRANSFORMING
+// 90.5,206.5 | 
+var point = new V2D(90.5,206.5);
+var iconWid = 50;
+var iconHei = 50;
+var left = point.x - iconWid*0.5;
+var right = point.x + iconWid*0.5;
+var top = point.y - iconHei*0.5;
+var bot = point.y + iconHei*0.5;
+var icon = ImageMat.extractRect(imageSourceGray, left,top, right,top, right,bot, left,bot, iconWid,iconHei, wid,hei);
+imgFloat = icon;
+imgARGB = ImageMat.ARGBFromFloat(imgFloat);
+imgImage = this._stage.getARGBAsImage(imgARGB, iconWid,iconHei);
+doi = new DOImage( imgImage );
+doi.matrix().identity();
+doi.matrix().scale(2.0);
+doi.matrix().translate(wid, 100);
+root.addChild(doi);
+
+// eigens
+
+var SMM = new Array();
+var threshold = 1.0;
+var sigma = 1.0;
+ImageMat.harrisDetector(icon,iconWid,iconHei, SMM);//, threshold, sigma);
+//console.log(SMM);
+
+i = Math.floor(iconWid*0.5);
+j = Math.floor(iconHei*0.5);
+var mat = new Matrix(2,2).setFromArray( SMM[iconWid*j + i] );
+//console.log(mat._rows);
+var eig = Matrix.eigenValuesAndVectors(mat)
+var eigValues = eig.values;
+var eigVectors = eig.vectors;
+console.log(eigValues);
+console.log(eigVectors[0]._rows[0],eigVectors[1]._rows[0]);
+
+
+var dot = this.drawDot(point,
+	new V2D( eigVectors[0]._rows[0][0],eigVectors[0]._rows[0][1] ),
+	new V2D( eigVectors[1]._rows[0][0],eigVectors[1]._rows[0][1] ),
+	eigValues[0], eigValues[1]
+	);
+doi.addChild( dot );
+dot.matrix().identity();
+dot.matrix().scale(0.25);
+dot.matrix().translate(iconWid*0.5,iconHei*0.5);
+//root.addChild( dot );
+
+
+
+
+
+return;
+
+var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
 	descriptor.processScaleSpace();
 	descriptor.processAffineSpace();
 	// descriptor.describeFeatures();
 	// 
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
-var wid = params[0];
-var hei = params[1];
+
 //filters.shift(); // first image ...
 
 
@@ -323,10 +491,6 @@ apply iterative solution for single point to get forward/reverse isotropic trans
 
 // filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res) ) );
 
-
-	var root = new DO(); this._stage.root().addChild(root);
-	root.matrix().identity();
-	root.matrix().scale(1.5);//,0.5);
 
 	
 	var imgPerRow = 4;
