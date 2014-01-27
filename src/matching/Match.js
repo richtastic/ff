@@ -134,7 +134,7 @@ this._stage.addChild(root);
 */
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BRB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
@@ -334,6 +334,13 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2){
 	var angle = 0;
 	if(v1!==undefined && v2!==undefined){
 		angle = V2D.angle(v1,new V2D(1,0));
+		//angle = Math.PI/2 + V2D.angle(v2,new V2D(1,0));
+		//if(Math.abs(angle)>Math.PI*0.5){
+		//if(ratioA>ratioB){
+		if(false){
+		 	angle = V2D.angle(v1,new V2D(-1,0));
+		}
+		console.log((angle)*180/Math.PI);
 	}
 	//main
 	d.graphics().clear();
@@ -403,10 +410,13 @@ doi.matrix().identity();
 root.addChild(doi);
 
 // WHOLE BUNCH OF FUN IMAGE TRANSFORMING
-// 90.5,206.5 | 
-var point = new V2D(90.5,206.5);
-var iconWid = 50;
-var iconHei = 50;
+// BLT: 90.5,206.5
+// BRB: 261,211 | 259,126 | 264,258
+var point = new V2D(261,211);
+var sigma = 1.6;
+var threshold = 0.01;
+var iconWid = 100;
+var iconHei = 100;
 var left = point.x - iconWid*0.5;
 var right = point.x + iconWid*0.5;
 var top = point.y - iconHei*0.5;
@@ -426,18 +436,37 @@ root.addChild(doi);
 var SMM = new Array();
 var threshold = 1.0;
 var sigma = 1.0;
-ImageMat.harrisDetector(icon,iconWid,iconHei, SMM);//, threshold, sigma);
+ImageMat.harrisDetector(icon,iconWid,iconHei, SMM, threshold, sigma);
 //console.log(SMM);
 
 i = Math.floor(iconWid*0.5);
 j = Math.floor(iconHei*0.5);
+// var mat = new Matrix(2,2).setFromArray( [1,2, 4,3] );
 var mat = new Matrix(2,2).setFromArray( SMM[iconWid*j + i] );
-//console.log(mat._rows);
+var svd = Matrix.SVD(mat);
+// console.log("----------------------");
+// console.log(mat.toString());
+// console.log("---------------------- SVD:");
+// console.log("U: ");
+// console.log(svd.U.toString());
+// FORCE TO BE 1
+svd.S._rows[1][1] /= svd.S._rows[0][0];
+svd.S._rows[0][0] = 1.0;
+// console.log("S: ");
+// console.log(svd.S.toString());
+// console.log("V: ");
+// console.log(svd.V.toString());
+// console.log("----------------------===========");
+mat = Matrix.fromSVD(svd.U,svd.S,svd.V);
+console.log(mat.toString());
+// [  5.2873E-4  0.0000E+0  ]
+// [  0.0000E+0  1.7425E-4  ] 
+
 var eig = Matrix.eigenValuesAndVectors(mat)
 var eigValues = eig.values;
 var eigVectors = eig.vectors;
-console.log(eigValues);
-console.log(eigVectors[0]._rows[0],eigVectors[1]._rows[0]);
+//console.log(eigValues);
+//console.log(eigVectors[0]._rows[0],eigVectors[1]._rows[0]);
 
 
 var dot = this.drawDot(point,

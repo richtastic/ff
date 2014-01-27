@@ -43,6 +43,13 @@ Matrix.prototype.setFromArrayMatrix = function(list, newRow,newCol){
 	}
 	return this;
 }
+Matrix.prototype.setDiagonalsFromArray = function(list){
+	var i, len = Math.min(this.rows(), this.cols(), list.length);
+	for(i=0;i<len;++i){
+		this._rows[i][i] = list[i];
+	}
+	return this;
+}
 Matrix.prototype.setSize = function(rows,cols){
 	this._init(rows,cols);
 	return this;
@@ -572,12 +579,20 @@ Matrix.QR = function(){ //
 	// factorization - eigenvalues?
 	// requires 'CORE' QR decomposition
 }
-Matrix.SVD = function(U,S,V, A){ // A = UEV^t
+Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
+	var val = numeric.svd(A._rows);
+	var U = new Matrix(A.rows(),A.rows()).setFromArrayMatrix(val.U);
+	var S = new Matrix(A.rows(),A.cols()).zero().setDiagonalsFromArray(val.S);
+	var V = new Matrix(A.cols(),A.cols()).setFromArrayMatrix(val.V);
+	return {U:U, S:S, V:V};
 	// REQUIRES FINDING EIGEN VECTORS
 	// ui of U = kth singular value = 
 	// s1 >= s2 >= s3 >= .. sn/m
 	// 
 	//
+}
+Matrix.fromSVD = function(U,S,V){ // USV
+	return Matrix.mult(U, Matrix.mult(S,Matrix.transpose(V)) );
 }
 Matrix.LU = function(P,L,U, A, pivot){ // [P,L,U] = A : LU Decomposition (Factorization)
 	/*

@@ -406,5 +406,68 @@ http://www.mat.univie.ac.at/~neum/physfaq/physics-faq.html
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+RANSAC - Random sampling and aquisition
+ - iteritive method to reduce effect on outliers in obtaining a mathematical model
+ - 
+
+http://en.wikipedia.org/wiki/RANSAC
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Bundle Adjustment
+
+- refine 3D points while refining camera position
+
+http://courses.cs.washington.edu/courses/cse576/05sp/projects/proj3/artifacts/yongjoon/index.html
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+marc pollefeys
+
+http://www.inf.ethz.ch/personal/pomarc/
+http://www.inf.ethz.ch/personal/pomarc/research.html
+http://www.cs.unc.edu/~marc/
+
+http://www.youtube.com/watch?v=d-JDux62wUY
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+PollefeysIJC04 method
+
+*) Feature Match
+	- SSD dissimilarity
+*) Fundamental matrix
+	- normalize image correspondence coordinates (such that image center at origin and coords have std dev = 1)
+	- Ax = 0 && linear solve
+	- enforce rank 2
+	- RANSAC to test for outliers
+*) close-to-epipolar feature matching
+	- 
+*) magical metric reconstruction via 'structure from motion'
+	- pose of first two cameras is determinged
+	- repeated refinement and extending to more frames
+	- self calibration
+		- p 18
+11
+*) Dense surface
+	- rectified images
+	- stereo matching
+	- depth fusion
+*) 3D surface triangulation (reconstruction)
+	- 
+	- texturing
+		- image blending?
+*) 
+	- 
+*) 
+	- 
+
+STEPS: p 10, 18
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
