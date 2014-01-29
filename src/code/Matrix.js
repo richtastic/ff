@@ -641,6 +641,15 @@ Matrix.a = function(c, a){ //
 Matrix._temp = new Matrix(1,1);
 
 
+Matrix.getFundamentalMatrix = function(normPointsA, normPointsB){ // x^T * F * x = 0 | [a b c; d e f; g h i]
+	var len = fromPoints.length;
+	var matA = new Matrix(2*len,8);
+	var matB = new Matrix(2*len,1);
+	var mat = new Matrix(3,3);
+	// force rank 2
+	return mat;
+}
+
 Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 	var i, fr, to;
 	var len = fromPoints.length;

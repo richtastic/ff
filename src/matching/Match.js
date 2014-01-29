@@ -134,7 +134,7 @@ this._stage.addChild(root);
 */
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BRB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
@@ -400,91 +400,9 @@ Match.prototype._imageCompleteFxn = function(o){
 	var root = new DO(); this._stage.root().addChild(root);
 	root.matrix().identity();
 	root.matrix().scale(1.5);//,0.5);
-var i, j, k, len;
-var imgFloat, imgARGB, imgImage, doi;
 
-imgARGB = ImageMat.ARGBFromFloats(imageSourceRed,imageSourceGrn,imageSourceBlu);
-imgImage = this._stage.getARGBAsImage(imgARGB, wid,hei);
-doi = new DOImage( imgImage );
-doi.matrix().identity();
-root.addChild(doi);
+// was here
 
-// WHOLE BUNCH OF FUN IMAGE TRANSFORMING
-// BLT: 90.5,206.5
-// BRB: 261,211 | 259,126 | 264,258
-var point = new V2D(261,211);
-var sigma = 1.6;
-var threshold = 0.01;
-var iconWid = 100;
-var iconHei = 100;
-var left = point.x - iconWid*0.5;
-var right = point.x + iconWid*0.5;
-var top = point.y - iconHei*0.5;
-var bot = point.y + iconHei*0.5;
-var icon = ImageMat.extractRect(imageSourceGray, left,top, right,top, right,bot, left,bot, iconWid,iconHei, wid,hei);
-imgFloat = icon;
-imgARGB = ImageMat.ARGBFromFloat(imgFloat);
-imgImage = this._stage.getARGBAsImage(imgARGB, iconWid,iconHei);
-doi = new DOImage( imgImage );
-doi.matrix().identity();
-doi.matrix().scale(2.0);
-doi.matrix().translate(wid, 100);
-root.addChild(doi);
-
-// eigens
-
-var SMM = new Array();
-var threshold = 1.0;
-var sigma = 1.0;
-ImageMat.harrisDetector(icon,iconWid,iconHei, SMM, threshold, sigma);
-//console.log(SMM);
-
-i = Math.floor(iconWid*0.5);
-j = Math.floor(iconHei*0.5);
-// var mat = new Matrix(2,2).setFromArray( [1,2, 4,3] );
-var mat = new Matrix(2,2).setFromArray( SMM[iconWid*j + i] );
-var svd = Matrix.SVD(mat);
-// console.log("----------------------");
-// console.log(mat.toString());
-// console.log("---------------------- SVD:");
-// console.log("U: ");
-// console.log(svd.U.toString());
-// FORCE TO BE 1
-svd.S._rows[1][1] /= svd.S._rows[0][0];
-svd.S._rows[0][0] = 1.0;
-// console.log("S: ");
-// console.log(svd.S.toString());
-// console.log("V: ");
-// console.log(svd.V.toString());
-// console.log("----------------------===========");
-mat = Matrix.fromSVD(svd.U,svd.S,svd.V);
-console.log(mat.toString());
-// [  5.2873E-4  0.0000E+0  ]
-// [  0.0000E+0  1.7425E-4  ] 
-
-var eig = Matrix.eigenValuesAndVectors(mat)
-var eigValues = eig.values;
-var eigVectors = eig.vectors;
-//console.log(eigValues);
-//console.log(eigVectors[0]._rows[0],eigVectors[1]._rows[0]);
-
-
-var dot = this.drawDot(point,
-	new V2D( eigVectors[0]._rows[0][0],eigVectors[0]._rows[0][1] ),
-	new V2D( eigVectors[1]._rows[0][0],eigVectors[1]._rows[0][1] ),
-	eigValues[0], eigValues[1]
-	);
-doi.addChild( dot );
-dot.matrix().identity();
-dot.matrix().scale(0.25);
-dot.matrix().translate(iconWid*0.5,iconHei*0.5);
-//root.addChild( dot );
-
-
-
-
-
-return;
 
 var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
 	descriptor.processScaleSpace();
@@ -550,15 +468,23 @@ var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(20
 }*/
 var scaleSpace = descriptor.getScaleSpaceExtrema();
 for(i=0;i<scaleSpace.length;++i){
-	ptList.push( scaleSpace[i] );
+	//ptList.push( scaleSpace[i] );
 }
-//ptList.push( scaleSpace[232] );
+ptList.push( scaleSpace[55] );
+// BLT: 55
+// BRB: 200
+
+getScaleSpacePoint
+
+...
+
+
 // BIG: 231, 232, 233, 
 // BRT: 40
 // 106, 107, 108, 109, 110, 111, 112
 for(i=0;i<ptList.length;++i){
 var pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
-console.log(pt);
+//console.log(pt);
 var d = new DO();
 var rad;
 rad = 2.0;
