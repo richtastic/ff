@@ -14,8 +14,16 @@ V2D.angle = function(a,b){
 //Code.inheritClass(Ticker, Dispatchable);
 
 function V2D(xP,yP){
-	this.x = xP==undefined?0.0:xP;
-	this.y = yP==undefined?0.0:yP;
+	// if( Code.isa(xP,V2D) ){
+	// 	this.x = xP.x;
+	// 	this.y = xP.y;
+	// }else{
+		this.x = xP==undefined?0.0:xP;
+		this.y = yP==undefined?0.0:yP;
+	// }
+}
+V2D.prototype.copy = function(a){
+	this.x = a.x; this.y = a.y;
 }
 V2D.prototype.set = function(xV,yV){
 	this.x = xV; this.y = yV;

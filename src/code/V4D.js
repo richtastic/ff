@@ -4,9 +4,19 @@ V4D.dot = function(a,b){
 }
 function V4D(xP,yP,zP,tP){
 	V4D._.constructor.call(this,xP,yP,zP);
+	// if( Code.isa(xP,V4D) ){
+	// 	this.x = xP.x;
+	// 	this.y = xP.y;
+	// 	this.z = xP.z;
+	// 	this.t = xP.t;
+	// }else{
 	this.t = tP==undefined?0.0:tP;
+	// }
 }
 Code.inheritClass(V4D, V3D);
+V4D.prototype.copy = function(a){
+	this.x = a.x; this.y = a.y; this.z = a.z; this.t = a.t;
+}
 V4D.prototype.set = function(xV,yV,zV,tV){
 	this.x = xV;
 	this.y = yV;

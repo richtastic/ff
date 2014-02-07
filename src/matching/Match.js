@@ -469,22 +469,41 @@ var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(20
 var scaleSpace = descriptor.getScaleSpaceExtrema();
 for(i=0;i<scaleSpace.length;++i){
 	//ptList.push( scaleSpace[i] );
+//	console.log(scaleSpace[i].z + "  " + scaleSpace[i].a);
 }
-ptList.push( scaleSpace[55] );
-// BLT: 55
-// BRB: 200
+ptList.push( scaleSpace[28] );
+// BLT: 28
 
-getScaleSpacePoint
-
-...
-
-
-// BIG: 231, 232, 233, 
-// BRT: 40
-// 106, 107, 108, 109, 110, 111, 112
 for(i=0;i<ptList.length;++i){
-var pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
+	var pt = ptList[i];
+
 //console.log(pt);
+
+// getScaleSpacePoint
+var object = descriptor.getStableAffinePoint(pt);
+var affine = object.matrix;
+var newPoint = object.point;
+console.log(object);
+console.log(affine);
+console.log(newPoint);
+
+var ssWid = 105;
+var ssHei = 105;
+var matrix = new Matrix(3,3); matrix.identity(); matrix.scale(1.5);
+var grayFloat = descriptor.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, ssWid,ssHei, matrix);
+argb = ImageMat.ARGBFromFloats(grayFloat,grayFloat,grayFloat);
+src = this._stage.getARGBAsImage(argb, ssWid,ssHei);
+doi = new DOImage( src );
+doi.matrix().identity();
+doi.matrix().scale(1.0);
+//doi.matrix().translate(source.width(),source.height());
+//doi.matrix().translate(source.width()*0.5,source.height()*0.5);
+root.addChild(doi);
+
+//
+pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
+
+
 var d = new DO();
 var rad;
 rad = 2.0;
@@ -575,6 +594,8 @@ root.addChild(doImage);
 
 
 return;
+
+
 	var originalImage = filters.shift();
 	//var pt = new V2D(147,135); // OO
 	var pt = new V2D(99,215); // EYE
@@ -625,11 +646,11 @@ doPoint.graphics().lineTo(ptA.x,ptA.y);
 	var source = originalImage;//filters[0];
 	//var result = this.extractRect(source, pt.x-xDim,pt.y-xDim, pt.x+xDim,pt.y-xDim, pt.x+xDim,pt.y+xDim, pt.x-xDim,pt.y+xDim, Math.floor(7*xDim),Math.floor(7*xDim) );
 	//var result = this.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,200 );
-	var result = ImageMat.extractRec01t(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,150 );
+	var result = ImageMat.extractRect(source, ptA.x,ptA.y,ptB.x,ptB.y,ptC.x,ptC.y,ptD.x,ptD.y, 150,150 );
 
 	img = result;
 	argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
-	src = this._stage.getRGBAAsImage(argb, img.width(), img.height());
+	src = this._stage.getARGBAsImage(argb, img.width(), img.height());
 	doi = new DOImage( src );
 		doi.matrix().identity();
 		//doi.matrix().translate(source.width(),source.height());

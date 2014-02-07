@@ -4,9 +4,18 @@ V3D.dot = function(a,b){
 }
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
+	// if( Code.isa(xP,V3D) ){
+	// 	this.x = xP.x;
+	// 	this.y = xP.y;
+	// 	this.z = xP.z;
+	// }else{
 	this.z = zP==undefined?0.0:zP;
+	// }
 }
 Code.inheritClass(V3D, V2D);
+V3D.prototype.copy = function(a){
+	this.x = a.x; this.y = a.y; this.z = a.z;
+}
 V3D.prototype.set = function(xV,yV,zV){
 	this.x = xV;
 	this.y = yV;

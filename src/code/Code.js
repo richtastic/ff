@@ -110,6 +110,12 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
     }
 }
 
+Code.isa = function(obj, klass){ // only this?
+	return (obj && obj.constructor && obj.constructor==klass);
+}
+Code.ofa = function(obj, klass){ // inherits?
+	return (obj && obj.constructor && obj.constructor==klass) || Code.ofa(obj.constructor._, klass);
+}
 // ------------------------------------------------------------------------------------------ PRINT
 Code.log = function log(o){
 	if(console && console.log!==null && console.log!==undefined){

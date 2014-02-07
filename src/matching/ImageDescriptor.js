@@ -75,7 +75,7 @@ ImageDescriptor.prototype.getImageDefinition = function(){
 		extremaBase[ Math.round(ar[j].y*hei)*wid + Math.round(ar[j].x*wid) ] += 1.0;
 		//console.log(Math.round(ar[j].y) + " " + Math.round(ar[j].x));
 	}
-	arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(extremaBase),ImageMat.getNormalFloat01(extremaBase),ImageMat.getNormalFloat01(extremaBase) ) );
+//	arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(extremaBase),ImageMat.getNormalFloat01(extremaBase),ImageMat.getNormalFloat01(extremaBase) ) );
 	//arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(this._bestPoints),ImageMat.getNormalFloat01(this._bestPoints),ImageMat.getNormalFloat01(this._bestPoints) ) );
 	return arr;
 }
@@ -86,6 +86,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var scalesPerOctave = 5; // 5
 	var sConstant = scalesPerOctave-3;
 	var kConstant = Math.pow(2.0,1/sConstant);
+// 9 :=> Math.pow(2.0,1/4) NOT 1/(9-3) = 1/6
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
 	var minThresholdIntensity = 0.03; // 0.03
@@ -111,6 +112,8 @@ this._sourceImageSigma = sigma;
 		for(j=0;j<scalesPerOctave-1;++j){
 			// calculate gaussian settings 
 			sig = sigma*Math.pow(kConstant,j);
+			console.log(j, Math.pow(kConstant,j));
+			//console.log(sig + "  " + j + "   " + sigma +"    "+Math.pow(kConstant,j));
 			//sig = sigma*Math.sqrt( Math.pow(kConstant,(j+1))-Math.pow(kConstant,j) );
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
 			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
@@ -128,8 +131,20 @@ this._sourceImageSigma = sigma;
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = ImageMat.findExtrema3DFloat(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 1.0,1.0,1.0, edgeResponseEigenRatioR);
+			console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
+			// console.log( 0.5*( j + (dogList.length-1)*(-1+1)/(dogList.length-2) ) );
+			// console.log( 0.5*( j + (dogList.length-1)*(1+1)/(dogList.length-2) ) );
+			// console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
+			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1-1)/(dogList.length-2) ) );
+			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1+1)/(dogList.length-2) ) );
+			//console.log( Math.pow(2,i), Math.pow(2,i+1) );
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
-				ext[k].z = 1 + i*sConstant + j + ext[k].z;
+				ext[k].a = sigma*Math.pow(2,     (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) ); // Math.pow( kConstant, 0.5*(j + (dogList.length-1)*(ext[k].z+1)/(dogList.length-2)) );
+				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
+				//ext[k].z = (1 + i*sConstant + j + ext[k].z);
+				//ext[k].z = Math.pow(2,ext[k].z);
+				//ext[k].t = Math.pow(2,ext[k].z);//Math.pow(kConstant,ext[k].z);
+				//ext[k].z = Math.pow(kConstant,ext[k].z);
 			}
 			extremaList.push(ext);
 		}
@@ -142,58 +157,115 @@ this._sourceImageSigma = sigma;
 	}
 	Code.emptyArray(this._scaleSpaceExtrema);
 	len = extremaList.length;
+	var temp = new Array();
 	for(i=0;i<len;++i){
 		arr = extremaList[i];
 		len2 = arr.length;
 		for(j=0;j<len2;++j){
 			pt = arr[j];
-			if( Math.abs(pt.t) >= minThresholdIntensity ){
-				this._scaleSpaceExtrema.push(pt);
-			}
+			// if( Math.abs(pt.t) >= minThresholdIntensity ){
+			// 	this._scaleSpaceExtrema.push(pt);
+			// }
+			pt.t = Math.abs(pt.t);
+			temp.push(pt);
 		}
 		Code.emptyArray(arr);
 	}
-	this._scaleSpaceExtrema.sort(function(a,b){ if(a.z>b.z){return 1;}else if(a.z<b.z){return -1;} return 0; });
+	//temp.sort(function(a,b){ if(a.t>b.t){return 1;}else if(a.t<b.t){return -1;} return 0; });
+	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; });
+	len = Math.min(100,temp.length);
+	for(i=0;i<len;++i){
+		this._scaleSpaceExtrema.push(temp[i]);
+	}
+	//this._scaleSpaceExtrema.sort(function(a,b){ if(a.z>b.z){return 1;}else if(a.z<b.z){return -1;} return 0; });
 	Code.emptyArray(extremaList);
 }
-ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
-	console.log(Math.log(s)/Math.log(2));
+ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
+	//console.log(Math.log(s)/Math.log(2));
 	var img = new Array();
 	// FIND REMAINDER GAUSSIAN BLUR
-	var scale = 1.0;
-	var sca = s;
+	var scale = s;
+	var sca = u; //var sca = Math.pow(this._sourceImageConstant,s);
 	// while( sca>4.0 ){
 	// 	sca /= 4.0;
 	// 	scale *= 2.0;
 	// }
-scale = 0.0 + s;
-scale *= 0.5;
-sca = 1.0;
+scale = 1.0;
+//scale *= 0.5;
+//sca = 1.0;
 	var sigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,sca); // adjust s based on possible scale
 	var gaussSize = Math.round(5 + sigma*2)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	console.log("s: "+s);
-	console.log("sca: "+sca);
-	console.log("scale: "+scale);
-	console.log("sigma: "+sigma);
-	console.log("padding: "+padding);
+	// console.log("s: "+s);
+	// console.log("sca: "+sca);
+	 console.log("scale: "+scale);
+	// console.log("sigma: "+sigma);
+	// console.log("padding: "+padding);
 	// SCALE IMAGE UP and pad
-	scale = 1/scale;
+	//scale = 1/scale;
 	var left = (this._sourceImageWidth*x) - (w*0.5)*scale - padding*scale;
 	var right = (this._sourceImageWidth*x) + (w*0.5)*scale + padding*scale;
 	var top = (this._sourceImageHeight*y) - (h*0.5)*scale - padding*scale;
 	var bot = (this._sourceImageHeight*y) + (h*0.5)*scale + padding*scale;
-	// 
+	var O = new V2D(0,0);
+	var TL = new V2D(left,top);
+	var TR = new V2D(right,top);
+	var BR = new V2D(right,bot);
+	var BL = new V2D(left,bot);
+	if(matrix){
+		matrix = matrix.copy();
+		var m;
+fuuuuuuuuuuuuuu
+		m = new Matrix(3,3); m.setFromArray([1,0, -(w*0.5)*scale, 0,1, -(h*0.5)*scale, 0,0,1]);
+		//matrix = Matrix.mult(matrix,m);
+		matrix = Matrix.mult(m,matrix);
+		m = new Matrix(3,3); m.setFromArray([1,0, (w*0.5)*scale, 0,1, (h*0.5)*scale, 0,0,1]);
+		matrix = Matrix.mult(m,matrix);
+		//matrix = Matrix.mult(matrix,m);
+
+		matrix.multV2DtoV2D(TL,TL);
+		matrix.multV2DtoV2D(TR,TR);
+		matrix.multV2DtoV2D(BR,BR);
+		matrix.multV2DtoV2D(BL,BL);
+
+		
+	}
 	// EXTRACT AROUND SOURCE POINT
 	var wid = w+2*padding;
 	var hei = h+2*padding;
-	img = ImageMat.extractRect(this._sourceImageMaximum, left,top, right,top, right,bot, left,bot, wid,hei, this._sourceImageWidth,this._sourceImageHeight);
+	img = ImageMat.extractRect(this._sourceImageMaximum, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, this._sourceImageWidth,this._sourceImageHeight);
 	// BLUR IMAGE
 	//img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
 	// DE-PAD IMAGE
 	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
 	return img;
+}
+ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 
+	var transform = new Matrix(3,3); transform.identity();
+	var outPoint = new V4D(); outPoint.copy(inPoint);
+	var countMax = 10;
+	//
+	var i, xNext, xPrev, xWin, lambdaMax, lambdaMin, epsilon = 1E-6;
+	var sigmaI, sigmaD, mu;
+	var windowWid = 25; windowHei = 25;
+	var U = new Matrix(3,3); U.identity();
+	for(i=countMax; i--; ){
+		console.log("i: "+i);
+		lambdaMax = 1.0;
+		lambdaMin = 1.0;
+
+		//this.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, windowWid, windowHei, matrix);
+		
+		if(false){ // (1-lambdaMin/lambdaMax) < epsilon
+			console.log("reached criteria");
+			break;
+		}
+	}
+	// 
+	//transform.copy(U);
+	var output = {matrix:transform, point:outPoint};
+	return output;
 }
 ImageDescriptor.prototype.processAffineSpace = function(){
 	// this finds the most affine-invariant transformation to compare the points
