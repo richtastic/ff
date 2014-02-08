@@ -112,7 +112,7 @@ this._sourceImageSigma = sigma;
 		for(j=0;j<scalesPerOctave-1;++j){
 			// calculate gaussian settings 
 			sig = sigma*Math.pow(kConstant,j);
-			console.log(j, Math.pow(kConstant,j));
+//			console.log(j, Math.pow(kConstant,j));
 			//console.log(sig + "  " + j + "   " + sigma +"    "+Math.pow(kConstant,j));
 			//sig = sigma*Math.sqrt( Math.pow(kConstant,(j+1))-Math.pow(kConstant,j) );
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
@@ -131,7 +131,7 @@ this._sourceImageSigma = sigma;
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = ImageMat.findExtrema3DFloat(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 1.0,1.0,1.0, edgeResponseEigenRatioR);
-			console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
+//			console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
 			// console.log( 0.5*( j + (dogList.length-1)*(-1+1)/(dogList.length-2) ) );
 			// console.log( 0.5*( j + (dogList.length-1)*(1+1)/(dogList.length-2) ) );
 			// console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
@@ -183,53 +183,46 @@ this._sourceImageSigma = sigma;
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
 	//console.log(Math.log(s)/Math.log(2));
 	var img = new Array();
-	// FIND REMAINDER GAUSSIAN BLUR
 	var scale = s;
-	var sca = u; //var sca = Math.pow(this._sourceImageConstant,s);
-	// while( sca>4.0 ){
-	// 	sca /= 4.0;
-	// 	scale *= 2.0;
-	// }
-scale = 1.0;
-//scale *= 0.5;
-//sca = 1.0;
+	var sca = u;
 	var sigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,sca); // adjust s based on possible scale
 	var gaussSize = Math.round(5 + sigma*2)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	// console.log("s: "+s);
+	passing = 0;
 	// console.log("sca: "+sca);
-	 console.log("scale: "+scale);
+	// console.log("scale: "+scale);
 	// console.log("sigma: "+sigma);
 	// console.log("padding: "+padding);
-	// SCALE IMAGE UP and pad
-	//scale = 1/scale;
-	var left = (this._sourceImageWidth*x) - (w*0.5)*scale - padding*scale;
-	var right = (this._sourceImageWidth*x) + (w*0.5)*scale + padding*scale;
-	var top = (this._sourceImageHeight*y) - (h*0.5)*scale - padding*scale;
-	var bot = (this._sourceImageHeight*y) + (h*0.5)*scale + padding*scale;
+	var fullX = (this._sourceImageWidth*x);
+	var fullY = (this._sourceImageHeight*y);
+	var left = fullX - (w*0.5)*scale - padding*scale;
+	var right = fullX + (w*0.5)*scale + padding*scale;
+	var top = fullY - (h*0.5)*scale - padding*scale;
+	var bot = fullY + (h*0.5)*scale + padding*scale;
 	var O = new V2D(0,0);
 	var TL = new V2D(left,top);
 	var TR = new V2D(right,top);
 	var BR = new V2D(right,bot);
 	var BL = new V2D(left,bot);
 	if(matrix){
-		matrix = matrix.copy();
-		var m;
-fuuuuuuuuuuuuuu
-		m = new Matrix(3,3); m.setFromArray([1,0, -(w*0.5)*scale, 0,1, -(h*0.5)*scale, 0,0,1]);
-		//matrix = Matrix.mult(matrix,m);
-		matrix = Matrix.mult(m,matrix);
-		m = new Matrix(3,3); m.setFromArray([1,0, (w*0.5)*scale, 0,1, (h*0.5)*scale, 0,0,1]);
-		matrix = Matrix.mult(m,matrix);
-		//matrix = Matrix.mult(matrix,m);
-
+		matinv = matrix;
+		matrix = Matrix.inverse(matrix);
+		var center1 = new V2D(fullX,fullY);
+		var center2 = new V2D();
+		matinv.multV2DtoV2D(center2,center1);
+		// to origin
+		var m = new Matrix(3,3);
+		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
+		matrix = Matrix.mult(matrix,m);
+		// to updated center
+		m.setFromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
+		matrix = Matrix.mult(matrix,m);
+		// apply to all points
 		matrix.multV2DtoV2D(TL,TL);
 		matrix.multV2DtoV2D(TR,TR);
 		matrix.multV2DtoV2D(BR,BR);
 		matrix.multV2DtoV2D(BL,BL);
-
-		
 	}
 	// EXTRACT AROUND SOURCE POINT
 	var wid = w+2*padding;
@@ -247,16 +240,30 @@ ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ //
 	var countMax = 10;
 	//
 	var i, xNext, xPrev, xWin, lambdaMax, lambdaMin, epsilon = 1E-6;
-	var sigmaI, sigmaD, mu;
+	var sigmaI, sigmaD, u;
 	var windowWid = 25; windowHei = 25;
-	var U = new Matrix(3,3); U.identity();
+	var U = new Matrix(2,2); U.identity();
+	var u = new Matrix(2,2); u.identity();
 	for(i=countMax; i--; ){
-		console.log("i: "+i);
+		console.log("i: "+(countMax-i-1));
+		// normalize window on x<x,y,s>
+
+		// select integration scale
+		sigmaI = 0;
+		// select differntation scale: maximize lmin/lmax
 		lambdaMax = 1.0;
 		lambdaMin = 1.0;
-
-		//this.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, windowWid, windowHei, matrix);
-		
+		sigmaD = 0;
+		// find location of local maximum of harris
+// ?
+//this.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, windowWid, windowHei, matrix);
+		// compuate newest mu
+		u = 0;
+		// accumulate transform
+		U = u*U;
+		// normalize eigenvalues: U_lmax = 1
+		U = U+1;
+		// check limit criteria
 		if(false){ // (1-lambdaMin/lambdaMax) < epsilon
 			console.log("reached criteria");
 			break;

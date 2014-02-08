@@ -487,9 +487,23 @@ console.log(object);
 console.log(affine);
 console.log(newPoint);
 
-var ssWid = 105;
-var ssHei = 105;
-var matrix = new Matrix(3,3); matrix.identity(); matrix.scale(1.5);
+
+
+// TESTING ...
+/*
+
+
+var ssWid = 55;
+var ssHei = 55;
+var matrix = new Matrix(3,3); matrix.identity();
+	// var m = new Matrix(3,3);
+	// // 1
+	// var ang = -Math.PI/4;
+	// m.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
+	// matrix = Matrix.mult(m,matrix);
+	// // 2
+	// m.setFromArray([2.0,0,0, 0,1.0,0, 0,0,1]);
+	// matrix = Matrix.mult(m,matrix);
 var grayFloat = descriptor.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, ssWid,ssHei, matrix);
 argb = ImageMat.ARGBFromFloats(grayFloat,grayFloat,grayFloat);
 src = this._stage.getARGBAsImage(argb, ssWid,ssHei);
@@ -499,6 +513,9 @@ doi.matrix().scale(1.0);
 //doi.matrix().translate(source.width(),source.height());
 //doi.matrix().translate(source.width()*0.5,source.height()*0.5);
 root.addChild(doi);
+
+
+*/
 
 //
 pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);

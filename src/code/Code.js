@@ -45,6 +45,7 @@ Code.TYPE_FUNCTION = 'function';
 Code.TYPE_OBJECT = 'object';
 Code.TYPE_STRING = 'string';
 Code.TYPE_ARRAY = 'array';
+Code.TYPE_NUMBER = 'number';
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -53,7 +54,21 @@ Code.daysOfWeekLong = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "
 function Code(){
 	this.www = 234;
 }
-
+Code.isNumber = function(obj){
+	return (typeof obj)==Code.TYPE_NUMBER;
+}
+Code.isString = function(obj){
+	return (typeof obj)==Code.TYPE_STRING;
+}
+Code.isObject = function(obj){
+	return (typeof obj)==Code.TYPE_OBJECT;
+}
+Code.isFunction = function(obj){
+	return (typeof obj)==Code.TYPE_FUNCTION;
+}
+Code.isArray = function(obj){
+	return (typeof obj)==Code.TYPE_ARRAY;
+}
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {
 	if(Object && Object.getOwnPropertyNames!==undefined){
