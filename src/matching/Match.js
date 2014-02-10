@@ -472,8 +472,8 @@ for(i=0;i<scaleSpace.length;++i){
 	//ptList.push( scaleSpace[i] );
 //	console.log(scaleSpace[i].z + "  " + scaleSpace[i].a);
 }
-ptList.push( scaleSpace[27] );
-// BLT: 13 22 25 27 28 32
+ptList.push( scaleSpace[50] );
+// BLT: 6 8 9 13 22 25 27 28 32 39 FROOTLOOPS:44
 // 24
 
 for(i=0;i<ptList.length;++i){
@@ -520,6 +520,7 @@ for(var xx=0;xx<object.list.length;++xx){
 
 var dir=new V2D(), ix, iy, d, x, y, l0, l1, lRatio, e0, e1, xInc=11, yInc=11, gRad=100*4.0/2.0, sRad=5.0/2.0;
 for(var xx=0;xx<object.Ix.length;++xx){
+	//break;
 	for(x=xInc/2; x<windowWid; x+=xInc){
 		for(y=yInc/2; y<windowHei; y+=yInc){
 			ix = object.Ix[xx][windowWid*y+x];
@@ -560,7 +561,7 @@ for(var xx=0;xx<object.Ix.length;++xx){
 			d.graphics().strokeLine();
 			//
 			d.matrix().identity();
-			d.matrix().translate((xx*4+2)*windowWid,0);
+			d.matrix().translate((xx*3+2)*windowWid,0);
 			root.addChild(d);
 		}
 	}

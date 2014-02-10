@@ -344,14 +344,31 @@ var com=new Matrix(3,3), rot=new Matrix(3,3), sca=new Matrix(3,3);
 var mat=new Matrix(2,2);
 var Ix, Iy, SMM, W0, W1, ang, s, eig, l0, l1, e0, e1;
 var list = new Array(), IxList = new Array(), IyList = new Array(), smmList = new Array();
-for(i=0;i<3;++i){
+var thisScale = 1.25;
+var prevTransform = transform;
+var prevRatio = null;
+for(i=0;i<5;++i){
+// SHOULD ALSO TRY TO LOCALIZE THE POINT INSIDE THE BLOB - AT SOME LOCAL MAXIMA/MINIMA OF BLOBNESS ... SCALE SPACE AGAIN?
+// APPARENTLY ALSO NEED TO CHECK IF TRANSFORMATION IS OUTRAGOUS
+	var centerIndex = windowWid*centerY+centerX;
+	// 1. copy rotation/scale matrix to full 2D matrix
+	/*transform.set(0,0, U.get(0,0));
+	transform.set(0,1, U.get(0,1));
+	transform.set(1,0, U.get(1,0));
+	transform.set(1,1, U.get(1,1));*/
 	console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- "+ i);
-	scale = xPrev.z;// scale *= 0.5;
+	scale = xPrev.z; scale *= 0.5;
 	sigma = this.sigmaFromScale(scale);	
-	console.log("scale: "+scale+"  sigma: "+sigma);
+	//console.log("scale: "+scale+"  sigma: "+sigma);
+	// 2. normalize window
 	W0 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
 	list.push(W0);
-	var gauss1D = ImageMat.getGaussianWindow(15,1, 1.9);//sigma);
+	// 3. select integration scale
+	sigmaI = sigma;
+	// 4. select differentation scale
+	sigmaD = 0.7*sigmaI;
+	var gauss1D = ImageMat.getGaussianWindow(15,1, 1.6*2);//sigma);
+	// ...
 	W1 = ImageMat.gaussian2DFrom1DFloat(W0, windowWid,windowHei, gauss1D);
 W1 = W0;
 	list.push(W1);
@@ -369,7 +386,12 @@ W1 = W0;
 	SMM = new Array();
 	len = Ix.length;
 	for(k=0;k<len;++k){
-		SMM[k] = [ Sxx[k], Sxy[k], Sxy[k], Syy[k] ];
+		if(i%2==0){
+			s = 11600.0;
+		}else{
+			s = 40000.0;
+		}
+		SMM[k] = [ s*Sxx[k], s*Sxy[k], s*Sxy[k], s*Syy[k] ];
 		mat.setFromArray(SMM[k]);
 		eig = Matrix.eigenValuesAndVectors(mat);
 		if(eig.values[0]>eig.values[1]){
@@ -385,42 +407,92 @@ W1 = W0;
 		}
 	}
 	smmList.push(SMM);
-	var grad = new V2D(Ix[windowWid*centerY+centerX],Iy[windowWid*centerY+centerX]);
+	var grad = new V2D(Ix[centerIndex],Iy[centerIndex]);
 	grad.norm();
 	var angleYGrad = V2D.angleDirection(vectorY,grad);
-	console.log("grad: "+grad.toString()+"  grad-to-y: "+angleYGrad*180/Math.PI);
-	l0 = SMM[windowWid*centerY+centerX][4];
-	l1 = SMM[windowWid*centerY+centerX][5];
-	e0 = SMM[windowWid*centerY+centerX][6];
-	e1 = SMM[windowWid*centerY+centerX][7];
+	//console.log("grad: "+grad.toString()+"  grad-to-y: "+angleYGrad*180/Math.PI);
+	l0 = SMM[centerIndex][4];
+	l1 = SMM[centerIndex][5];
+	e0 = SMM[centerIndex][6];
+	e1 = SMM[centerIndex][7];
 	var eigVecA = new V2D(e0[0],e0[1]);
 	var eigVecB = new V2D(e1[0],e1[1]);
 	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
 	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
 	var eigRatio = l0/l1;
 	console.log(" ratio: "+eigRatio+"  A: "+eigVecA.toString()+"  B:"+eigVecB.toString());
+	// 4. - cont
+	u.setFromArray([SMM[centerIndex][0],SMM[centerIndex][1],SMM[centerIndex][2],SMM[centerIndex][3]]);
+	// 5. spatial localization
+		// ?
+	// 6. compute u^-1/2
+	u = Matrix.power(u,-0.5);
+	// 7. concatenate transform
+	U = Matrix.mult(U,u);
+	//U = Matrix.mult(u,U);
+	// 7. - cont normalize lambda_max = 1
+	var svd = Matrix.SVD(U);
+		lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+		lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+			if(lambdaMax==svd.S.get(0,0)){
+				svd.S.set(0,0, 1.0);
+			}else{
+				svd.S.set(1,1, 1.0);
+			}
+			// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+			// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+			U = Matrix.fromSVD(svd.U,svd.S,svd.V);
+/*
+	transform.set(0,0, U.get(0,0));
+	transform.set(0,1, U.get(0,1));
+	transform.set(1,0, U.get(1,0));
+	transform.set(1,1, U.get(1,1));
+*/
+
 	// new orientation
-	com.identity();
-s = Math.min(Math.sqrt(eigRatio),1.5);
+//com.identity();
+if(prevRatio===null || prevRatio>eigRatio){
+	console.log(prevRatio+" > "+eigRatio+"  =>  "+" continue");
+	prevTransform = transform;
+	com = transform;
+	prevRatio = eigRatio;
+}else{  // go back
+	console.log(prevRatio+" <= "+eigRatio+"  =>  "+" go back");
+	transform = prevTransform;
+	com = transform;
+	thisScale /= 2.0;
+	console.log(1);
+}
+	//s = 1.5;//Math.log(eigRatio);//Math.min(Math.log(eigRatio),1.1);
+	s = thisScale;
+	console.log(s);
 	ang = -angleYGrad;
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
-	sca.setFromArray([1/s,0,0, 0,s,0, 0,0,1]);
+	//sca.setFromArray([1/s,0,0, 0,s,0, 0,0,1]);
+	sca.setFromArray([s,0,0, 0,1/s,0, 0,0,1]);
 	com = Matrix.mult(rot,com);
+// W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+// list.push(W2);
 	com = Matrix.mult(sca,com);
 	ang = -ang;
-	rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
 	com = Matrix.mult(rot,com);
-	transform = Matrix.mult(transform,com);
+	//transform = Matrix.mult(transform,com);
+	//transform = Matrix.mult(com,transform);
+transform = com;
+	//console.log(transform.toString());
+
+
 	// 
-	W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+	W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, prevTransform);
 	list.push(W2);
 Ix = ImageMat.derivativeX(W2, windowWid,windowHei);
 Iy = ImageMat.derivativeY(W2, windowWid,windowHei);
 // IxList.push(Ix);
 // IyList.push(Iy);
 	// W = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
-Imag = ImageMat.normalFloat01(Imag);
-list.push(Imag);
+// Imag = ImageMat.normalFloat01(Imag);
+// list.push(Imag);
 // Ix = ImageMat.derivativeX(Imag, windowWid,windowHei);
 // Iy = ImageMat.derivativeY(Imag, windowWid,windowHei);
 // Ix = ImageMat.normalFloat01(Ix);
@@ -434,6 +506,8 @@ list.push(Imag);
 // Imag = ImageMat.normalFloat01(Imag);
 // list.push(Imag);
 }
+transform = prevTransform;
+W0 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
 return {matrix:transform, window:W0, windowWidth:windowWid, windowHeight:windowHei, list:list, Ix:IxList, Iy:IyList, smmList:smmList}
 
 
