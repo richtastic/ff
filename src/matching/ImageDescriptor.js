@@ -112,8 +112,7 @@ this._sourceImageSigma = sigma;
 		for(j=0;j<scalesPerOctave-1;++j){
 			// calculate gaussian settings 
 			sig = sigma*Math.pow(kConstant,j);
-//			console.log(j, Math.pow(kConstant,j));
-			//console.log(sig + "  " + j + "   " + sigma +"    "+Math.pow(kConstant,j));
+			//console.log(i + "  " + j + "   " + sigma +"    "+Math.pow(kConstant,j)+"   "+sig);
 			//sig = sigma*Math.sqrt( Math.pow(kConstant,(j+1))-Math.pow(kConstant,j) );
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
 			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
@@ -138,9 +137,17 @@ this._sourceImageSigma = sigma;
 			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1-1)/(dogList.length-2) ) );
 			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1+1)/(dogList.length-2) ) );
 			//console.log( Math.pow(2,i), Math.pow(2,i+1) );
+// var cScale = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(-1.0000+1.0)/(dogList.length-2) );
+// var cExponent = Math.log(cScale)/Math.log(2);
+// var cSigma = sigma*Math.pow(kConstant,(cExponent*2)%2);
+// console.log( cScale, cExponent, cSigma );
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
-				ext[k].a = sigma*Math.pow(2,     (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) ); // Math.pow( kConstant, 0.5*(j + (dogList.length-1)*(ext[k].z+1)/(dogList.length-2)) );
+				//ext[k].a = sigma*Math.pow(2,     (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
 				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
+// var cScale = ext[k].z;
+// var cExponent = Math.log(cScale)/Math.log(2);
+// var cSigma = sigma*Math.pow(kConstant,(cExponent*2)%2);
+// console.log(ext[k].a, cSigma);
 				//ext[k].z = (1 + i*sConstant + j + ext[k].z);
 				//ext[k].z = Math.pow(2,ext[k].z);
 				//ext[k].t = Math.pow(2,ext[k].z);//Math.pow(kConstant,ext[k].z);
@@ -163,9 +170,6 @@ this._sourceImageSigma = sigma;
 		len2 = arr.length;
 		for(j=0;j<len2;++j){
 			pt = arr[j];
-			// if( Math.abs(pt.t) >= minThresholdIntensity ){
-			// 	this._scaleSpaceExtrema.push(pt);
-			// }
 			pt.t = Math.abs(pt.t);
 			temp.push(pt);
 		}
@@ -177,19 +181,34 @@ this._sourceImageSigma = sigma;
 	for(i=0;i<len;++i){
 		this._scaleSpaceExtrema.push(temp[i]);
 	}
+	// ALSO COPY REMAINING POINTS THAT FIT CRITERIA
+	len = temp.length;
+	for(;i<len;++i){
+		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
+			this._scaleSpaceExtrema.push(temp[i]);
+		}else{
+			break;
+		}
+	}
 	//this._scaleSpaceExtrema.sort(function(a,b){ if(a.z>b.z){return 1;}else if(a.z<b.z){return -1;} return 0; });
 	Code.emptyArray(extremaList);
+}
+ImageDescriptor.prototype.sigmaFromScale = function(cScale){
+	var cExponent = Math.log(cScale)/Math.log(2);
+	var cSigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,(cExponent*2)%2);
+	return cSigma;
 }
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
 	//console.log(Math.log(s)/Math.log(2));
 	var img = new Array();
 	var scale = s;
-	var sca = u;
-	var sigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,sca); // adjust s based on possible scale
+	//var sca = u;
+	var sigma = u;//this._sourceImageSigma*Math.pow(this._sourceImageConstant,sca); // adjust s based on possible scale
 	var gaussSize = Math.round(5 + sigma*2)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	passing = 0;
+	
+	//passing = 0;
 	// console.log("sca: "+sca);
 	// console.log("scale: "+scale);
 	// console.log("sigma: "+sigma);
@@ -229,49 +248,462 @@ ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ /
 	var hei = h+2*padding;
 	img = ImageMat.extractRect(this._sourceImageMaximum, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, this._sourceImageWidth,this._sourceImageHeight);
 	// BLUR IMAGE
-	//img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
+img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
 	// DE-PAD IMAGE
 	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
 	return img;
 }
+ImageDescriptor.prototype.harrisMatrix = function(img,wid,hei, sigmaI,sigmaD){
+	var ptLx, ptLy, u00, u01, u10, u11, det, tra, alpha, harris;
+	var i, j, len, gaussSize, gauss1D, padding=0;
+	// blurr with sigmaD
+	imgPad = img;
+//imgPad = ImageMat.mulConst(imgPad,1000);
+	if(sigmaD!==undefined){
+		gaussSize = Math.round(5 + sigmaD*2)*2+1;
+		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigmaD);
+		padding = Math.floor(gaussSize/2.0);
+		imgPad = ImageMat.padFloat(imgPad, wid,hei, padding,padding,padding,padding);
+	}
+	widPad = wid+padding*2;
+	heiPad = hei+padding*2;
+	if(sigmaD!==undefined){
+		imgPad = ImageMat.gaussian2DFrom1DFloat(imgPad, widPad,heiPad, gauss1D);
+	}
+	// take derivatives
+	var Lx = ImageMat.derivativeX(imgPad,widPad,heiPad);
+	var Ly = ImageMat.derivativeY(imgPad,widPad,heiPad);
+	// blurr with sigmaI
+	LxPad = Lx; LyPad = Ly;
+	if(sigmaI!==undefined){
+		gaussSize = Math.round(5 + sigmaI*2)*2+1;
+		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigmaI);
+		if(padding<=0){ // not already padded
+			padding = Math.floor(gaussSize/2.0);
+			LxPad = ImageMat.padFloat(Lx, widPad,heiPad, padding,padding,padding,padding);
+			LyPad = ImageMat.padFloat(Ly, widPad,heiPad, padding,padding,padding,padding);
+			widPad = wid+padding*2;
+			heiPad = hei+padding*2;
+		}
+		LxPad = ImageMat.gaussian2DFrom1DFloat(LxPad, widPad,heiPad, gauss1D);
+		LyPad = ImageMat.gaussian2DFrom1DFloat(LyPad, widPad,heiPad, gauss1D);
+	}
+	// original size
+	if(padding>0){
+		Lx = ImageMat.unpadFloat(LxPad, widPad,heiPad, padding,padding,padding,padding);
+		Ly = ImageMat.unpadFloat(LyPad, widPad,heiPad, padding,padding,padding,padding);
+	}else{
+		Lx = LxPad;
+		Ly = LyPad;
+	}
+	// harris matrix & measure
+	len = wid*hei;
+	u = new Array(len);
+	harris = new Array(len);
+var e,e1,e2;
+eigMin = new Array(len);
+eigMax = new Array(len);
+var sD = (sigmaD===undefined)?1:sigmaD;
+//sD *= 100000;
+sD = sD*sD;
+	alpha = 0.01;
+	for(i=0;i<len;++i){
+		ptLx = Lx[i]; ptLy = Ly[i];
+		u00 = ptLx*ptLx;
+		u01 = ptLx*ptLy;
+		u10 = ptLx*ptLy;
+		u11 = ptLy*ptLy;
+		det = u00*u11 - u01*u10;
+		tra = u00+u11;
+		u[i] = [sD*u00,sD*u01,sD*u10,sD*u11];
+e = Matrix.eigenValuesAndVectors2D( u00, u01, u10, u11 );
+e1 = Math.abs(e.values[0]);
+e2 = Math.abs(e.values[1]);
+eigMax[i] = Math.max(e1,e2);
+eigMin[i] = Math.min(e1,e2);
+		harris[i] = Math.abs(det-alpha*tra*tra);
+	}
+	return {matrix:u, harris:harris, e:eigMax, f:eigMin, b:Lx, c:Ly};
+}
 ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 
+	var countMax = 2;
 	var transform = new Matrix(3,3); transform.identity();
-	var outPoint = new V4D(); outPoint.copy(inPoint);
-	var countMax = 10;
-	//
-	var i, xNext, xPrev, xWin, lambdaMax, lambdaMin, epsilon = 1E-6;
-	var sigmaI, sigmaD, u;
-	var windowWid = 25; windowHei = 25;
+	var i, xWin, vals, ratio, lambdaMax, lambdaMin, epsilon = 1E-6;
+	var scale, sigma, sigmaI, sigmaD, u, W;
+	var windowWid = 75; windowHei = 75;
+	var centerX = Math.floor(windowWid*0.5), centerY = Math.floor(windowHei*0.5);
+	var harris;
 	var U = new Matrix(2,2); U.identity();
 	var u = new Matrix(2,2); u.identity();
+	var xNext = new V4D(), xPrev = new V4D();
+	xPrev.copy(inPoint);
+
+
+var vectorX = new V2D(1,0), vectorY = new V2D(0,1);
+var com=new Matrix(3,3), rot=new Matrix(3,3), sca=new Matrix(3,3);
+var mat=new Matrix(2,2);
+var Ix, Iy, SMM, W0, W1, ang, s, eig, l0, l1, e0, e1;
+var list = new Array(), IxList = new Array(), IyList = new Array(), smmList = new Array();
+for(i=0;i<3;++i){
+	console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- "+ i);
+	scale = xPrev.z;// scale *= 0.5;
+	sigma = this.sigmaFromScale(scale);	
+	console.log("scale: "+scale+"  sigma: "+sigma);
+	W0 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+	list.push(W0);
+	var gauss1D = ImageMat.getGaussianWindow(15,1, 1.9);//sigma);
+	W1 = ImageMat.gaussian2DFrom1DFloat(W0, windowWid,windowHei, gauss1D);
+W1 = W0;
+	list.push(W1);
+	Ix = ImageMat.derivativeX(W1, windowWid,windowHei);
+	Iy = ImageMat.derivativeY(W1, windowWid,windowHei);
+	IxList.push(Ix);
+	IyList.push(Iy);
+	IxIx = ImageMat.mulFloat(Ix,Ix);
+	IxIy = ImageMat.mulFloat(Ix,Iy);
+	IyIy = ImageMat.mulFloat(Iy,Iy);
+	Imag = ImageMat.sqrtFloat( ImageMat.addFloat(IxIx,IyIy) );
+	Sxx = ImageMat.gaussian2DFrom1DFloat(IxIx, windowWid,windowHei, gauss1D);
+	Sxy = ImageMat.gaussian2DFrom1DFloat(IxIy, windowWid,windowHei, gauss1D);
+	Syy = ImageMat.gaussian2DFrom1DFloat(IyIy, windowWid,windowHei, gauss1D);
+	SMM = new Array();
+	len = Ix.length;
+	for(k=0;k<len;++k){
+		SMM[k] = [ Sxx[k], Sxy[k], Sxy[k], Syy[k] ];
+		mat.setFromArray(SMM[k]);
+		eig = Matrix.eigenValuesAndVectors(mat);
+		if(eig.values[0]>eig.values[1]){
+			SMM[k].push(eig.values[0]);
+			SMM[k].push(eig.values[1]);
+			SMM[k].push([eig.vectors[0].get(0,0),eig.vectors[0].get(1,0)]);
+			SMM[k].push([eig.vectors[1].get(0,0),eig.vectors[1].get(1,0)]);
+		}else{
+			SMM[k].push(eig.values[1]);
+			SMM[k].push(eig.values[0]);
+			SMM[k].push([eig.vectors[1].get(0,0),eig.vectors[1].get(1,0)]);
+			SMM[k].push([eig.vectors[0].get(0,0),eig.vectors[0].get(1,0)]);
+		}
+	}
+	smmList.push(SMM);
+	var grad = new V2D(Ix[windowWid*centerY+centerX],Iy[windowWid*centerY+centerX]);
+	grad.norm();
+	var angleYGrad = V2D.angleDirection(vectorY,grad);
+	console.log("grad: "+grad.toString()+"  grad-to-y: "+angleYGrad*180/Math.PI);
+	l0 = SMM[windowWid*centerY+centerX][4];
+	l1 = SMM[windowWid*centerY+centerX][5];
+	e0 = SMM[windowWid*centerY+centerX][6];
+	e1 = SMM[windowWid*centerY+centerX][7];
+	var eigVecA = new V2D(e0[0],e0[1]);
+	var eigVecB = new V2D(e1[0],e1[1]);
+	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
+	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
+	var eigRatio = l0/l1;
+	console.log(" ratio: "+eigRatio+"  A: "+eigVecA.toString()+"  B:"+eigVecB.toString());
+	// new orientation
+	com.identity();
+s = Math.min(Math.sqrt(eigRatio),1.5);
+	ang = -angleYGrad;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
+	sca.setFromArray([1/s,0,0, 0,s,0, 0,0,1]);
+	com = Matrix.mult(rot,com);
+	com = Matrix.mult(sca,com);
+	ang = -ang;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+	com = Matrix.mult(rot,com);
+	transform = Matrix.mult(transform,com);
+	// 
+	W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+	list.push(W2);
+Ix = ImageMat.derivativeX(W2, windowWid,windowHei);
+Iy = ImageMat.derivativeY(W2, windowWid,windowHei);
+// IxList.push(Ix);
+// IyList.push(Iy);
+	// W = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+Imag = ImageMat.normalFloat01(Imag);
+list.push(Imag);
+// Ix = ImageMat.derivativeX(Imag, windowWid,windowHei);
+// Iy = ImageMat.derivativeY(Imag, windowWid,windowHei);
+// Ix = ImageMat.normalFloat01(Ix);
+// Iy = ImageMat.normalFloat01(Iy);
+// list.push(Ix);
+// list.push(Iy);
+// IxIx = ImageMat.mulFloat(Ix,Ix);
+// IxIy = ImageMat.mulFloat(Ix,Iy);
+// IyIy = ImageMat.mulFloat(Iy,Iy);
+// Imag = ImageMat.sqrtFloat( ImageMat.addFloat(IxIx,IyIy) );
+// Imag = ImageMat.normalFloat01(Imag);
+// list.push(Imag);
+}
+return {matrix:transform, window:W0, windowWidth:windowWid, windowHeight:windowHei, list:list, Ix:IxList, Iy:IyList, smmList:smmList}
+
+
+
+// var list = new Array();
+// for(i=0;i<10;++i){
+// console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- "+ i);
+// 		scale = xPrev.z;
+// scale *= 0.5;
+// 		sigma = this.sigmaFromScale(scale);
+// 		//console.log(xPrev.x,xPrev.y,scale,sigma);
+// 		W = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+// list.push(W);
+// 		var gauss1D = ImageMat.getGaussianWindow(10,1, 1.6);
+// 		//W = ImageMat.gaussian2DFrom1DFloat(W, windowWid,windowHei, gauss1D);
+// 		var SMM = new Array();
+// 		var response = ImageMat.harrisDetector(W,windowWid,windowHei, SMM);
+// 		var mat = new Matrix(2,2).setFromArray( SMM[windowWid*centerY+centerX] );
+// var Lx = response.Lx[windowWid*centerY+centerX];
+// var Ly = response.Ly[windowWid*centerY+centerX];
+// // mat = new Matrix(2,2).setFromArray( [Lx,0, 0,Ly] );
+// 		//console.log(mat.toString());
+// 		var obj = Matrix.eigenValuesAndVectors(mat);
+// 		var val = obj.values;
+// 		var vecs = obj.vectors;
+// 		var eigValueA = Math.max(val[0],val[1]);
+// 		var eigValueB = Math.min(val[0],val[1]);
+// 		var eigRatio = eigValueA/eigValueB;
+// 		var eigVectorA, eigVectorB;
+// 		if(eigValueA==val[0]){
+// 			eigVectorA = vecs[0];
+// 			eigVectorB = vecs[1];
+// 		}else{
+// 			eigVectorA = vecs[1];
+// 			eigVectorB = vecs[0];
+// 		}
+// console.log( Matrix.eigenValuesAndVectors2D(mat.get(0,0),mat.get(0,1),mat.get(1,0),mat.get(1,1)) );
+// 		// console.log(eigVectorA.toString());
+// 		// console.log(eigVectorB.toString());
+// 		var eigV2DA = new V2D(eigVectorA.get(0,0),eigVectorA.get(1,0));
+// 		var eigV2DB = new V2D(eigVectorB.get(0,0),eigVectorB.get(1,0));
+// 		var vectorX = new V2D(1,0);
+// 		var vectorY = new V2D(0,1);
+// 		console.log( eigRatio );
+// 		var vectorGrad = new V2D(Lx,Ly);
+// 		vectorGrad.norm();
+// 		// console.log( eigValueA );
+// 		// console.log( eigVectorA.toString() );
+// 		// console.log( eigValueB );
+// 		// console.log( eigVectorB.toString() );
+// 		console.log( vectorGrad.toString() )
+// 		var angleXA = V2D.angleDirection(vectorX,eigV2DA);
+// 		var angleYA = V2D.angleDirection(vectorY,eigV2DA);
+// 		//console.log(angleXA*180/Math.PI, angleYA*180/Math.PI);
+// 		var angleXB = V2D.angleDirection(vectorX,eigV2DB);
+// 		var angleYB = V2D.angleDirection(vectorY,eigV2DB);
+// 		//console.log(angleXB*180/Math.PI, angleYB*180/Math.PI);
+// 		var angleXG = V2D.angleDirection(vectorX,vectorGrad);
+// 		var angleYG = V2D.angleDirection(vectorY,vectorGrad);
+// console.log(angleYG*180/Math.PI+" deg");
+// ang = -angleYG;
+// var trans = new Matrix(3,3);
+// trans.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
+// W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, trans);
+// //list.push(W2);
+// var smm = new Array();
+// var r2 = ImageMat.harrisDetector(W2,windowWid,windowHei, smm);
+// var Lx2 = r2.Lx[windowWid*centerY+centerX];
+// var Ly2 = r2.Ly[windowWid*centerY+centerX];
+// var vectorGrad2 = new V2D(Lx2,Ly2);
+// //vectorGrad2.norm();
+// console.log("GRAD2: "+vectorGrad2.toString());
+// 		// 
+// 		var ang;
+// 		var s = Math.min(eigRatio,2.0);//eigRatio*0.1;//*(1/(i+1)); //Math.min(eigRatio,3.0);
+// 		s = Math.abs(s);
+// 		s = Math.max(s,1.0);
+// 		s = 1+((s-1)*0.5);
+// 		var com=new Matrix(2,2), rot=new Matrix(2,2), sca=new Matrix(2,2);
+// 		//com.identity();
+// 		com.setFromArray([transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1)]);
+// 		// +y
+// 		// ang = -angleYA;
+// 		// rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+// 		// sca.setFromArray([1,0, 0,1/s]); // *((i%2==0)?1.0:1.1)
+// 		// com = Matrix.mult(rot,com);
+// 		// com = Matrix.mult(sca,com);
+// 		// ang = -ang;
+// 		// rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+// 		// com = Matrix.mult(rot,com);
+// 		// // -y
+// 		// ang = -angleYB;
+// 		// rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+// 		// sca.setFromArray([1,0, 0,s]); // *((i%2==1)?1.0:1.1))
+// 		// com = Matrix.mult(rot,com);
+// 		// com = Matrix.mult(sca,com);
+// 		// ang = -ang;
+// 		// rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+// 		// com = Matrix.mult(rot,com);
+
+// 		// +y grad
+// 		// s = Math.abs( vectorGrad2.x/vectorGrad2.y );
+// 		// if(s<0){
+// 		// 	s = 1/s;
+// 		// }
+// 		// console.log("SCALE: "+s);
+// 		// ang = -angleYG;
+// 		// rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+// 		// sca.setFromArray([s,0, 0,1/s]);
+// 		// com = Matrix.mult(rot,com);
+// 		// com = Matrix.mult(sca,com);
+// 		// ang = -ang;
+// 		// rot.setFromArray([Math.cos(ang),Math.sin(ang), -Math.sin(ang),Math.cos(ang)]);
+// 		// com = Matrix.mult(rot,com);
+
+// 		// set SVD = 1
+// 		// var svd = Matrix.SVD(com);
+// 		// var lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+// 		// var lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+// 		// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+// 		// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+// 		// com = Matrix.fromSVD(svd.U,svd.S,svd.V);
+// 		// copy
+// 		transform.set(0,0, com.get(0,0));
+// 		transform.set(0,1, com.get(0,1));
+// 		transform.set(1,0, com.get(1,0));
+// 		transform.set(1,1, com.get(1,1));
+// }
+// W = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+// list.push(W);
+
+// console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+// return {matrix:transform, window:W, windowWidth:windowWid, windowHeight:windowHei, list:list}
+
+
+
+var harrisMaxima;
 	for(i=countMax; i--; ){
 		console.log("i: "+(countMax-i-1));
+		transform.set(0,0, U.get(0,0)); // copy rotation/scale matrix to full 2D matrix
+		transform.set(0,1, U.get(0,1));
+		transform.set(1,0, U.get(1,0));
+		transform.set(1,1, U.get(1,1));
 		// normalize window on x<x,y,s>
-
+		scale = xPrev.z;
+//scale *= 0.4;
+console.log("A");
+		sigma = this.sigmaFromScale(scale);
+		console.log(xPrev.x,xPrev.y,scale,sigma);
+		W = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
+var gauss1D = ImageMat.getGaussianWindow(10,1, 1.6);
+//W = ImageMat.gaussian2DFrom1DFloat(W, windowWid,windowHei, gauss1D);
+var SMM = new Array();
+var response = ImageMat.harrisDetector(W,windowWid,windowHei, SMM);
+var mat = new Matrix(2,2).setFromArray( SMM[windowWid*centerY+centerX] );
+console.log("===============");
+console.log(mat.toString());
+var obj = Matrix.eigenValuesAndVectors(mat);
+var val = obj.values;
+var vecs = obj.vectors;
+console.log( val.toString() );
+console.log( val[0]/val[1] );
+console.log( vecs[0].toString() );
+console.log( vecs[1].toString() );
+console.log("===============");
+// var gauss1D = ImageMat.getGaussianWindow(10,1, 1.6);
+// W = ImageMat.gaussian2DFrom1DFloat(W, windowWid,windowHei, gauss1D);
+// var Lx = ImageMat.derivativeX(W,windowWid,windowHei);
+// var Ly = ImageMat.derivativeY(W,windowWid,windowHei);
+// console.log(Lx);
+// var lx = Lx[windowWid*centerY+centerX];
+// var ly = Ly[windowWid*centerY+centerX];
+// var mat = new Matrix(2,2).setFromArray( [lx*lx,lx*ly,lx*ly,ly*ly] );
+// console.log("===============");
+// console.log(mat.toString());
+// var obj = Matrix.eigenValuesAndVectors(mat);
+// var val = obj.values;
+// var vecs = obj.vectors;
+// console.log( val.toString() );
+// console.log( vecs[0].toString() );
+// console.log( vecs[1].toString() );
+// console.log("===============");
 		// select integration scale
-		sigmaI = 0;
-		// select differntation scale: maximize lmin/lmax
-		lambdaMax = 1.0;
-		lambdaMin = 1.0;
-		sigmaD = 0;
+console.log("B");
+		sigmaI = sigma;
+			sigmaD = 0.7*sigmaI;
+			harris = this.harrisMatrix(W,windowWid,windowHei, sigmaI,sigmaD);
+harris.harris = response;
+//console.log( harris.matrix[windowWid*centerY+centerX] );
+// var mat = new Matrix(2,2).setFromArray( harris.matrix[windowWid*centerY+centerX] );
+// console.log("===============");
+// console.log(mat.toString());
+// var obj = Matrix.eigenValuesAndVectors(mat);
+// var val = obj.values;
+// var vecs = obj.vectors;
+// console.log( val.toString() );
+// console.log( vecs[0].toString() );
+// console.log( vecs[1].toString() );
+// console.log("===============");
+			u.setFromArray( harris.matrix[windowWid*centerY+centerX] );
+		// select differentiation scale: maximize lmin/lmax
+		//vals = Matrix.eigenValuesAndVectors2D( u.get(0,0),u.get(0,1), u.get(1,0), u.get(1,1) );
+		vals = Matrix.eigenValuesAndVectors(u);
+		lambdaMax = Code.maxArray(vals.values);
+		lambdaMin = Code.minArray(vals.values);
+		ratio = lambdaMin/lambdaMax;
+		console.log(lambdaMax+" "+lambdaMin+" ratio: "+ratio);
+		sigmaD = 0.7*sigmaI;
 		// find location of local maximum of harris
-// ?
-//this.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, windowWid, windowHei, matrix);
+// harris.harris = ImageMat.normalFloat01(harris.harris);
+// harris.harris = ImageMat.addConst(harris.harris,-1.0);
+// harris.harris = ImageMat.absFloat(harris.harris);
+// harris.harris = ImageMat.dropBelow(harris.harris,0.95);
+			var maxs = ImageMat.getPeaks(harris.harris, windowWid,windowHei); // ImageMat.normalFloat01(harris.harris)
+			var lens = maxs.length;
+//console.log(maxs);
+			var l;
+			harrisMaxima = ImageMat.newZeroFloat(windowWid,windowHei);
+//harris.harris = ImageMat.normalFloat01(harris.harris);
+			for(l=0;l<lens;++l){
+				//console.log(maxs[l].x,maxs[l].y);
+				harrisMaxima[windowWid*maxs[l].y + maxs[l].x] = 1;
+//harris.harris[windowWid*maxs[l].y + maxs[l].x] += .24;
+			}
+			// harris measure ... 
+			// displacement vector for xNext
 		// compuate newest mu
-		u = 0;
+		//u = 0;
 		// accumulate transform
-		U = u*U;
+//console.log(u.toString());
+		u = Matrix.power(u,0.5);
+//console.log(u.toString());
+		U = Matrix.mult(u,U);
 		// normalize eigenvalues: U_lmax = 1
-		U = U+1;
+		var svd = Matrix.SVD(U);
+		lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+		lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+			svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+			svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+			U = Matrix.fromSVD(svd.U,svd.S,svd.V);
+console.log( Matrix.SVD(U).S.toString() );
 		// check limit criteria
 		if(false){ // (1-lambdaMin/lambdaMax) < epsilon
 			console.log("reached criteria");
 			break;
 		}
+		// next iteration
+		//xPrev.copy(xNext);
+		break;
 	}
 	// 
+	transform.set(0,0, U.get(0,0)); // copy rotation/scale matrix to full 2D matrix
+	transform.set(0,1, U.get(0,1));
+	transform.set(1,0, U.get(1,0));
+	transform.set(1,1, U.get(1,1));
 	//transform.copy(U);
-	var output = {matrix:transform, point:outPoint};
+var a = ImageMat.normalFloat01(harris.harris);
+var b = ImageMat.normalFloat01(harris.b);
+var c = ImageMat.normalFloat01(harris.c);
+var d = ImageMat.normalFloat01(harrisMaxima);
+var e = ImageMat.normalFloat01(harris.e);
+var f = ImageMat.normalFloat01(harris.f);
+	var output = {matrix:transform, point:xNext,
+		window:W, windowWidth:windowWid, windowHeight:windowHei,
+		a:a,
+		b:b,
+		c:c,
+		d:d,
+		e:e,
+		f:f};
 	return output;
 }
 ImageDescriptor.prototype.processAffineSpace = function(){

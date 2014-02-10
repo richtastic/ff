@@ -2,6 +2,15 @@
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
+V3D.cross = function(a,b,c){ // axb
+	if(c!==undefined){ // a = bxc
+		a.set(b.y*c.z-b.z*c.y, b.z*c.x-b.x*c.z, b.x*c.y-b.y*c.x);
+		return a;
+	} // axb
+	c = new V3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+	return c;
+}
+
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
 	// if( Code.isa(xP,V3D) ){

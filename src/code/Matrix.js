@@ -425,6 +425,7 @@ Matrix.inverse = function(A){ // assumed square
 	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
 	C = C.getSubMatrix(0,A._colCount, A._rowCount,A._colCount);
 	if( !B.closeToIdentity() ){
+//return C;
 		return null;
 	}
 	return C;
@@ -559,10 +560,22 @@ Matrix.eigenValuesAndVectors = function(A){
 	var x = numeric.eig(A._rows);
 	var values = x.lambda.x;
 	var vectors = x.E.x;
-	for(var i = vectors.length; i--;){
-		vectors[i] = new Matrix(1,vectors.length).setFromArray(vectors[i]);
+	var vects = new Array();
+	//console.log(vectors);
+	//console.log( numeric.prettyPrint(vectors) );
+	var i, j;
+	var rows = vectors.length;
+	var cols = vectors[0].length;
+	for(i=0; i<cols; ++i){
+		vects[i] = new Matrix(rows,1);
+		for(j=0; j<rows; ++j){
+			vects[i].set(j,0, vectors[j][i]);
+		}
 	}
-	return {values:values, vectors:vectors};
+	// for(var i = vectors.length; i--;){
+	// 	//vectors[i] = new Matrix(1,vectors.length).setFromArray(vectors[i]);
+	// }
+	return {values:values, vectors:vects};
 	/*
 	var values = Matrix.eigenValues(A);
 	var vectors = Matrix.eigenVectorsFromValues(A,values);
@@ -686,7 +699,43 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 	// projection.set(1,1, projection.get(1,1)/pt.z );
 	return projection;
 }
+Matrix.eigenValuesAndVectors2D = function(a,b,c,d){
+	var trace = a + d;
+	var det = a*d - b*c;
+	var left = trace*0.5;
+	var right = Math.sqrt(trace*trace*0.25 - det);
+	var l1 = left - right;
+	var l2 = left + right;
 
+	var a1 = (a-l1);
+	var v1x = 0, v1y = 1;
+	if(a1!=0){
+		v1x = -b/a1;
+	}else{
+		var d1 = (d-l1);
+		if(d1!=0){
+			v1x = -c/d1;
+		}else{
+			v1x = 1; v1y = 0;
+		}
+	}
+	var m1 = Math.sqrt(v1x*v1x + v1y*v1y);
+
+	var a2 = (a-l2);
+	var v2x = 0, v2y = 1;
+	if(a2!=0){
+		v2x = -b/a2;
+	}else{
+		var d2 = (d-l2);
+		if(d2!=0){
+			v2x = -c/d2;
+		}else{
+			v2x = 0; v2y = 1;
+		}
+	}
+	var m2 = Math.sqrt(v2x*v2x + v2y*v2y);
+	return {values:[l1,l2], vectors:[[v1x/m1,v1y/m1],[v2x/m2,v2y/m2]]};
+}
 Matrix.eigenValues2D = function(a,b,c,d){
 	var trace = a + d;
 	var det = a*d - b*c;
@@ -697,11 +746,7 @@ Matrix.eigenValues2D = function(a,b,c,d){
 	return [l1, l2];
 }
 Matrix.eigenVectors2D = function(a,b,c,d){
-	var values = Matrix.eigenValues2D(a,b,c,d);
-	var l1 = values[0], l2 = values[1];
-	// a*(-l1)*A + b = 0;
-	// c + d*(-l1)*B = 0;
-	return null;
+	return eigenValuesAndVectors2D(a,b,c,d).vectors;
 }
 Matrix.eigen = function(A){ // eigenValues[], eigenVectors[[]] 
 	var ret = numeric.eig(A._rows);
@@ -730,6 +775,7 @@ Matrix.power = function(A,power){
 	var col;
 	for(k=0;k<hei;++k){ // eig
 		l = Math.pow(lambda[k],power);
+		if(isNaN(l)){ l = Math.pow(-lambda[k],power); } // negative root-powers ... damn
 		v = eigVec[k];
 		for(i=0;i<hei;++i){ // row
 			col = k*wid+i;
@@ -750,7 +796,8 @@ Matrix.power = function(A,power){
 	// convert to matrix problem
 	var matB = (new Matrix(len,len)).setFromArrayMatrix(B);
 	var matb = (new Matrix(len,1)).setFromArrayMatrix(b);
-	res = Matrix.solve(matB,matb);//Matrix.mult(Matrix.pseudoInverse(matB), matb);
+	// res = Matrix.mult(Matrix.pseudoInverse(matB), matb);
+	res = Matrix.solve(matB,matb);
 	var Apow = new Array(hei);
 	var index = 0;
 	for(i=0;i<hei;++i){

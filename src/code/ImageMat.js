@@ -575,7 +575,18 @@ for each blob, calculate com(x) = SUM OF X / TOTAL COUNT
 	*/
 	// 
 }
-
+ImageMat.dropBelow = function(img,value){
+	var i, len = img.length;
+	var a = new Array(len);
+	for(i=0;i<a.length;++i){
+		if(img[i]<value){
+			a[i] = 0;
+		}else{
+			a[i] = img[i];
+		}
+	}
+	return a;
+}
 
 ImageMat.getPeaks = function(peaks, wid,hei){ // the problem with this is it misses maxima that are erased by the retracting process - poor resolution (2-3 pixels?)
 	var i, j, tl,to,tr, lf,se,ri, bl,bo,br, index;
@@ -900,6 +911,14 @@ ImageMat.vectorSumFloat = function(a,b){
 	}
 	return result;
 }
+ImageMat.sqrtFloat = function(a){
+	var i, len = a.length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = Math.sqrt(a[i]);
+	}
+	return result;
+}
 ImageMat.vectorSquaredSumFloat = function(a,b){
 	var i, len = a.length;
 	var result = new Array(len);
@@ -1145,7 +1164,7 @@ ImageMat.derivativeY = function(src,wid,hei){
 }
 ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
 	// A(x) = autocorrelation = [gaussian window]*[Ixx(x) Ixy(x) ; Ixy(x) Iyy(x)]
-	// H(x) = harris measure = det(A) - alpha*trace^2(A)
+	// H(x) = harris measure = det^2(A) - alpha*trace^2(A)
 	var temp, padding, gaussSource, Ix, Iy, IxIx, IxIy, IyIy, Sxx, Sxy, Syy;
 	var determinant, trace, result;
 	sigma = sigma!==undefined?sigma:1.6;//1.6;
@@ -1214,15 +1233,16 @@ response[i] = (A[i][0]*A[i][3] - A[i][1]*A[i][2]) - alpha*(Math.pow((A[i][0]+A[i
 
 //		response[i] = (Sxx[i]*Syy[i] - Sxy[i]*Sxy[i]) - kMult*Math.pow(Sxx[i],2);
 	}
-console.log(sum);
+//console.log(sum);
 response = ImageMat.absFloat(response);
-console.log(Math.max.apply(this,response));
+//console.log(Math.max.apply(this,response));
 response = ImageMat.getNormalFloat01(response);
 //response = ImageMat.mulConst(response,5.0);
 //response = ImageMat.gtFloat(response,0.143);
 //response = ImageMat.gtFloat(response,threshold);
 //response = ImageMat.normalFloat01(response);
-return response;
+//return response;
+return {response:response,Lx:Ix,Ly:Iy};
 	// calculate response at each pixel
 	trace = ImageMat.addFloat(Sxx,Syy); // l1 + l2
 	determinant = ImageMat.subFloat(ImageMat.mulFloat(Sxx,Syy), ImageMat.mulFloat(Sxy,Sxy)); // l1*l2

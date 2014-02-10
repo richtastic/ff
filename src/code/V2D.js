@@ -3,16 +3,25 @@
 V2D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y;
 }
+V2D.cross = function(a,b){ // z direction
+	return a.x*b.y-a.y*b.x;
+}
 V2D.angle = function(a,b){
-	lenA = a.length();
-	lenB = b.length();
+	var lenA = a.length();
+	var lenB = b.length();
 	if(lenA!=0 && lenB!=0){
 		return Math.acos(V2D.dot(a,b))/(lenA*lenB);
 	}
 	return 0;
 }
-//Code.inheritClass(Ticker, Dispatchable);
-
+V2D.angleDirection = function(a,b){
+	var angle = V2D.angle(a,b);
+	var cross = V2D.cross(a,b);
+	if(cross>=0){
+		return angle;
+	}
+	return -angle;
+}
 function V2D(xP,yP){
 	// if( Code.isa(xP,V2D) ){
 	// 	this.x = xP.x;

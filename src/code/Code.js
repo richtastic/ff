@@ -233,6 +233,12 @@ Code.secondMax = function(){
 	}
 	return nextMax;
 }
+Code.maxArray = function(a){
+	return Math.max.apply(this,a);
+}
+Code.minArray = function(a){
+	return Math.min.apply(this,a);
+}
 //console.log( Code.secondMax(1,2,42,34,23,7) );
 	//console.log( Math.max([1,2,42,34,23,7]) ); // NO
 	//console.log( Math.max.call(this,[1,2,42,34,23,7]) ); // NO

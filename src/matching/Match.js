@@ -398,6 +398,7 @@ Match.prototype._imageCompleteFxn = function(o){
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 
 	var root = new DO(); this._stage.root().addChild(root);
+	this._root = root;
 	root.matrix().identity();
 	root.matrix().scale(1.5);//,0.5);
 
@@ -471,8 +472,9 @@ for(i=0;i<scaleSpace.length;++i){
 	//ptList.push( scaleSpace[i] );
 //	console.log(scaleSpace[i].z + "  " + scaleSpace[i].a);
 }
-ptList.push( scaleSpace[28] );
-// BLT: 28
+ptList.push( scaleSpace[27] );
+// BLT: 13 22 25 27 28 32
+// 24
 
 for(i=0;i<ptList.length;++i){
 	var pt = ptList[i];
@@ -480,19 +482,95 @@ for(i=0;i<ptList.length;++i){
 //console.log(pt);
 
 // getScaleSpacePoint
+//pt.t = pt.a
 var object = descriptor.getStableAffinePoint(pt);
 var affine = object.matrix;
 var newPoint = object.point;
+var windowPic = object.window;
+var windowHei = object.windowHeight;
+var windowWid = object.windowWidth;
 console.log(object);
 console.log(affine);
 console.log(newPoint);
 
+this.addFloatPic(windowPic,windowWid,windowHei);
+
+for(var xx=0;xx<object.list.length;++xx){
+	this.addFloatPic(object.list[xx],windowWid,windowHei);
+}
+
+// this.addFloatPic(object.b,windowWid,windowHei); // lx
+// this.addFloatPic(object.c,windowWid,windowHei); // ly
+// this.addFloatPic(object.a,windowWid,windowHei); // HARRIS
+// this.addFloatPic(object.d,windowWid,windowHei); // HARRIS MAXIMA
+// this.addFloatPic(object.e,windowWid,windowHei); // EIGENVALUE MAX
+// this.addFloatPic(object.f,windowWid,windowHei); // EIGENVALUE MIN
+
+// var dd = new DO();
+// dd.graphics().clear();
+// dd.graphics().setLine(1.0,0xFFFF0000);
+// dd.graphics().beginPath();
+// //dd.graphics().setFill(0x22FF0000);
+// dd.graphics().moveTo(75/2,0);
+// dd.graphics().lineTo(75/2,75/2);
+// dd.graphics().endPath();
+// //dd.graphics().fill();
+// dd.graphics().strokeLine();
+// root.addChild(dd);
+
+var dir=new V2D(), ix, iy, d, x, y, l0, l1, lRatio, e0, e1, xInc=11, yInc=11, gRad=100*4.0/2.0, sRad=5.0/2.0;
+for(var xx=0;xx<object.Ix.length;++xx){
+	for(x=xInc/2; x<windowWid; x+=xInc){
+		for(y=yInc/2; y<windowHei; y+=yInc){
+			ix = object.Ix[xx][windowWid*y+x];
+			iy = object.Iy[xx][windowWid*y+x];
+			dir.set(ix,iy);
+			//dir.norm();
+			d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(2.0,0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().moveTo(x-dir.x*gRad,y-dir.y*gRad);
+			d.graphics().lineTo(x+dir.x*gRad,y+dir.y*gRad);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			// 
+			l0 = object.smmList[xx][windowWid*y+x][4];
+			l1 = object.smmList[xx][windowWid*y+x][5];
+			lRatio = l0/l1;
+			lRatio = 1 + Math.log(lRatio)/2;///1000;
+			//
+			e0 = object.smmList[xx][windowWid*y+x][6];
+			dir.set(e0[0],e0[1]); dir.norm();
+			d.graphics().setLine(1.0,0xFF00FF00);
+			d.graphics().beginPath();
+			d.graphics().moveTo(x-dir.x*sRad*lRatio,y-dir.y*sRad*lRatio -1);
+			d.graphics().lineTo(x+dir.x*sRad*lRatio,y+dir.y*sRad*lRatio -1);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			//
+			//
+			e1 = object.smmList[xx][windowWid*y+x][7];
+			dir.set(e1[0],e1[1]); dir.norm();
+			d.graphics().setLine(1.0,0xFF9999FF);
+			d.graphics().beginPath();
+			d.graphics().moveTo(x-dir.x*sRad,y-dir.y*sRad -1);
+			d.graphics().lineTo(x+dir.x*sRad,y+dir.y*sRad -1);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			//
+			d.matrix().identity();
+			d.matrix().translate((xx*4+2)*windowWid,0);
+			root.addChild(d);
+		}
+	}
+}
 
 
 // TESTING ...
+
+
 /*
-
-
 var ssWid = 55;
 var ssHei = 55;
 var matrix = new Matrix(3,3); matrix.identity();
@@ -504,18 +582,18 @@ var matrix = new Matrix(3,3); matrix.identity();
 	// // 2
 	// m.setFromArray([2.0,0,0, 0,1.0,0, 0,0,1]);
 	// matrix = Matrix.mult(m,matrix);
-var grayFloat = descriptor.getScaleSpacePoint(pt.x,pt.y,pt.z,pt.a, ssWid,ssHei, matrix);
+matrix = affine;
+console.log(matrix.toString());
+var grayFloat = descriptor.getScaleSpacePoint(pt.x,pt.y,pt.z,descriptor.sigmaFromScale(pt.z), ssWid,ssHei, matrix);
 argb = ImageMat.ARGBFromFloats(grayFloat,grayFloat,grayFloat);
 src = this._stage.getARGBAsImage(argb, ssWid,ssHei);
 doi = new DOImage( src );
 doi.matrix().identity();
 doi.matrix().scale(1.0);
-//doi.matrix().translate(source.width(),source.height());
-//doi.matrix().translate(source.width()*0.5,source.height()*0.5);
 root.addChild(doi);
-
-
 */
+
+
 
 //
 pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
@@ -689,6 +767,24 @@ doPoint.graphics().lineTo(ptA.x,ptA.y);
 
 	*/
 }
+
+Match.prototype.addFloatPic = function(windowPic, windowWid, windowHei){
+	if(this.qweasd!==undefined){
+		this.qweasd += windowWid;
+	}else{
+		this.qweasd = 0;
+	}
+	var argb = ImageMat.ARGBFromFloats(windowPic,windowPic,windowPic);
+	var src = this._stage.getARGBAsImage(argb, windowWid,windowHei);
+	var doi = new DOImage( src );
+	doi.matrix().identity();
+	doi.matrix().scale(1.0);
+	doi.matrix().translate(this.qweasd,0);
+	//doi.matrix().translate(source.width(),source.height());
+	//doi.matrix().translate(source.width()*0.5,source.height()*0.5);
+	this._root.addChild(doi);
+}
+
 Match.prototype.extractRectNoMatrixNotQuiteCorrect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, w,h){
 	var destination = new ImageMat(w,h);
 	var ab = new V2D(bX-aX,bY-aY);
