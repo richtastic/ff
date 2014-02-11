@@ -95,8 +95,12 @@ Graphics.prototype.setRadialFill = function(){ // ?
 Graphics.prototype.setLinearFill = function(){ // ?
 	this._graphics.push( Code.newArray(Graphics.canvasSetLinearFill,arguments ) );
 }
-Graphics.prototype.setFill = function(col){ // 0xRRGGBBAA
-	this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getJSColorFromARGB(col))) );
+Graphics.prototype.setFill = function(col){ // 0xRRGGBBAA OR GRADIENT OBJECT
+	if( Code.isObject(col) ){
+		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(col)) );
+	}else{
+		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getJSColorFromARGB(col))) );
+	}
 }
 Graphics.prototype.beginPath = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasBeginPath,Code.newArray()) );

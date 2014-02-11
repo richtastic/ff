@@ -386,6 +386,150 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2){
 	return container;
 }
 Match.prototype._imageCompleteFxn = function(o){
+	var root = new DO(); this._stage.root().addChild(root);
+	this._root = root;
+	root.matrix().identity();
+	root.matrix().scale(1.0);//,0.5);
+// NEW TESTING ...
+	var i, d, rad, wid, hei, img, rMin, rMax, eccentricity, radGrad;
+	// 1. draw gradient oval @ angle
+	wid = 101; hei = 101;
+	rMin = 20; rMax = 40;
+	ang = 0*Math.PI*(1/2);
+	radGrad = this._canvas.createRadialGradient(0,0,0, 0,0,rMax, 0.0,0xFF000000, 0.5,0x66000000, 1.0,0x00000000);
+	eccentricity = Math.sqrt(rMax*rMax-rMin*rMin)/rMax;
+	console.log(rMax/rMin,eccentricity);
+	var dBG = new DO();
+	d = dBG;
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0x00000000);
+	d.graphics().beginPath();
+	d.graphics().setFill(0xFFFFFFFF);
+	d.graphics().drawRect(0,0,wid,hei);
+	d.graphics().endPath();
+	d.graphics().fill();
+
+	var dOval = new DO();
+	d = dOval;
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0x00000000);
+	d.graphics().beginPath();
+	d.graphics().setFill(radGrad);
+	d.graphics().moveTo(0,0);
+	d.graphics().arc(0,0, rMax, 0,Math.PI*2, false);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	d.matrix().identity();
+	d.matrix().scale(rMin/rMax,1);
+	d.matrix().rotate(ang);
+	d.matrix().translate(wid/2,hei/2);
+	root.addChild(dBG);
+	root.addChild(dOval);
+	// 2. convert to image float
+	var matrix = new Matrix2D(); matrix.identity();
+	// img = this._stage.renderImage(wid,hei,d, matrix, Canvas.IMAGE_TYPE_PNG);
+	// d = new DOImage(img);
+	// root.addChild(d);
+	var colargb = this._stage.getDOAsARGB(root, wid,hei, matrix);
+		dBG.removeParent();
+		dOval.removeParent();
+	var imgMat = new ImageMat(wid,hei);
+	imgMat.setFromArrayARGB(colargb);
+	var gray = imgMat.getGrayFloat();
+	var argb = ImageMat.ARGBFromFloat(gray);
+	var src = this._stage.getARGBAsImage(argb, wid,hei);
+	var doi = new DOImage( src );
+		doi.matrix().identity();
+	root.addChild(doi);
+	
+	// get SMM
+	var eigRatio;
+	var SMM = new Array();
+	var res = ImageMat.harrisDetector(gray,wid,hei, SMM); //console.log(res); response Lx Ly
+	var centerX = Math.floor(wid*0.5), centerY = Math.floor(hei*0.5);
+	var centerIndex = wid*centerY+centerX;
+	var smm = SMM[centerIndex];
+	// get eigen values/vectors
+	var mat = new Matrix(2,2);
+	mat.setFromArray(smm);
+	eig = Matrix.eigenValuesAndVectors(mat);
+	l0 = eig.values[0];
+	l1 = eig.values[1];
+	eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
+	e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	var eigVecA = new V2D(e0[0],e0[1]);
+	var eigVecB = new V2D(e1[0],e1[1]);
+	console.log(eigRatio);
+	console.log(l0,eigVecA.toString());
+	console.log(l1,eigVecB.toString());
+	//
+	var matinv = Matrix.power(mat,0.5);//Matrix.inverse(mat);
+	matinv = Matrix.inverse(matinv);
+	console.log("INVERSE");
+	eig = Matrix.eigenValuesAndVectors(matinv);
+	l0 = eig.values[0];
+	l1 = eig.values[1];
+	eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
+	e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	var eigVecA = new V2D(e0[0],e0[1]);
+	var eigVecB = new V2D(e1[0],e1[1]);
+	console.log(eigRatio);
+	console.log(l0,eigVecA.toString());
+	console.log(l1,eigVecB.toString());
+
+	// 
+	var svd = Matrix.SVD(mat);
+	var lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+	var lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+	console.log(lambdaMax,lambdaMin,lambdaMax/lambdaMin);
+	// if(lambdaMax==svd.S.get(0,0)){
+	// 	svd.S.set(0,0, 1.0);
+	// }else{
+	// 	svd.S.set(1,1, 1.0);
+	// }
+	svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+	svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+	mat = Matrix.fromSVD(svd.U,svd.S,svd.V);
+	//
+	eig = Matrix.eigenValuesAndVectors(mat);
+	l0 = eig.values[0];
+	l1 = eig.values[1];
+	eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
+	e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	console.log(eigRatio);
+	console.log(l0,eigVecA.toString());
+	console.log(l1,eigVecB.toString());
+
+	// 
+	var vectorX = new V2D(1,0), vectorY = new V2D(0,1);
+	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
+	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
+	
+	
+	// find transformation to affine
+
+/*
+
+var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
+		var src = this._stage.getARGBAsImage(argb, img.width(), img.height());
+		var doi = new DOImage( src );
+			doi.matrix().identity();
+			doi.matrix().translate(col*img.width(), row*img.height());
+		root.addChild(doi);
+
+		//d.graphics().drawEllipse(0,0, rMin*2,rMax*2, 0);
+	//d.graphics().drawCircle(0,0, rMax);
+	
+	
+	
+*/
+	console.log("done");
+	return;
+// ...
 	var images = new Array();
 	Code.copyArray(images,o.images);
 
@@ -396,11 +540,6 @@ Match.prototype._imageCompleteFxn = function(o){
 	var imageSourceGrn = params[3];
 	var imageSourceBlu = params[4];
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
-
-	var root = new DO(); this._stage.root().addChild(root);
-	this._root = root;
-	root.matrix().identity();
-	root.matrix().scale(1.5);//,0.5);
 
 // was here
 

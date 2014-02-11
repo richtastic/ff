@@ -357,7 +357,7 @@ Canvas.prototype.createLinearGradient = function(sX,sY,eX,eY, percentsAndColors)
 	for(var i=4; i<arguments.length; i+=2){
 		pct = arguments[i];
 		col = arguments[i+1];
-		gra.addColorStop(pct,Code.getJSRGBA(col));
+		gra.addColorStop(pct,Code.getJSColorFromARGB(col));
 	}
 	return gra;
 }
@@ -366,7 +366,7 @@ Canvas.prototype.createRadialGradient = function(sX,sY,sR, eX,eY,eR, percentsAnd
 	for(var i=6; i<arguments.length; i+=2){
 		pct = arguments[i];
 		col = arguments[i+1];
-		gra.addColorStop(pct,Code.getJSRGBA(col));
+		gra.addColorStop(pct,Code.getJSColorFromARGB(col));
 	}
 	return gra;
 }

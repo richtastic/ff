@@ -131,7 +131,7 @@ ImageMat.prototype.getBluFloat = function(){
 	return Code.copyArray(new Array(), this._b);
 }
 ImageMat.prototype.getGrayFloat = function(){
-	return ImageMat.grayFromRGBFloat(this._r[i], this._g[i], this._b[i]);
+	return ImageMat.grayFromRGBFloat(this._r, this._g, this._b);
 }
 ImageMat.prototype.getArrayARGB = function(){
 	var i, len = this._r.length;
