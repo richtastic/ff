@@ -1046,6 +1046,14 @@ ImageMat.randomFloat01 = function(data){
 	}
 	return data;
 }
+ImageMat.randomAdd = function(data,mag,off){
+	var i, len = data.length;
+	var result = new Array();
+	for(i=0;i<len;++i){
+		result[i] = data[i] + Math.random()*mag - off;
+	}
+	return result;
+}
 ImageMat.flipAbsFxn = function(f){ 
 	return Math.abs(f-0.5);
 }

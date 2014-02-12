@@ -253,6 +253,103 @@ img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
 	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
 	return img;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ImageDescriptor.exRect = function(x,y,s,u, w,h, imgSource,imgWid,imgHei, matrix){
+	var img = new Array();
+	var scale = s;
+	var sigma = u;
+	var gaussSize = Math.round(5 + sigma*2)*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	var padding = Math.floor(gaussSize/2.0);
+	
+	var fullX = (imgWid*x);
+	var fullY = (imgHei*y);
+	var left = fullX - (w*0.5)*scale - padding*scale;
+	var right = fullX + (w*0.5)*scale + padding*scale;
+	var top = fullY - (h*0.5)*scale - padding*scale;
+	var bot = fullY + (h*0.5)*scale + padding*scale;
+	var O = new V2D(0,0);
+	var TL = new V2D(left,top);
+	var TR = new V2D(right,top);
+	var BR = new V2D(right,bot);
+	var BL = new V2D(left,bot);
+	if(matrix){
+		matinv = matrix;
+		matrix = Matrix.inverse(matrix);
+		var center1 = new V2D(fullX,fullY);
+		var center2 = new V2D();
+		matinv.multV2DtoV2D(center2,center1);
+		// to origin
+		var m = new Matrix(3,3);
+		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
+		matrix = Matrix.mult(matrix,m);
+		// to updated center
+		m.setFromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
+		matrix = Matrix.mult(matrix,m);
+		// apply to all points
+		matrix.multV2DtoV2D(TL,TL);
+		matrix.multV2DtoV2D(TR,TR);
+		matrix.multV2DtoV2D(BR,BR);
+		matrix.multV2DtoV2D(BL,BL);
+	}
+	// EXTRACT AROUND SOURCE POINT
+	var wid = w+2*padding;
+	var hei = h+2*padding;
+	img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
+	// BLUR IMAGE
+	//img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
+	// DE-PAD IMAGE
+	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
+	return img;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ImageDescriptor.prototype.harrisMatrix = function(img,wid,hei, sigmaI,sigmaD){
 	var ptLx, ptLy, u00, u01, u10, u11, det, tra, alpha, harris;
 	var i, j, len, gaussSize, gauss1D, padding=0;

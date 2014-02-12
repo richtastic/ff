@@ -393,10 +393,10 @@ Match.prototype._imageCompleteFxn = function(o){
 // NEW TESTING ...
 	var i, d, rad, wid, hei, img, rMin, rMax, eccentricity, radGrad;
 	// 1. draw gradient oval @ angle
-	wid = 101; hei = 101;
-	rMin = 20; rMax = 40;
-	ang = 0*Math.PI*(1/2);
-	radGrad = this._canvas.createRadialGradient(0,0,0, 0,0,rMax, 0.0,0xFF000000, 0.5,0x66000000, 1.0,0x00000000);
+	wid = 201; hei = 201;
+	rMin = 30; rMax = 70;
+	ang = 1*Math.PI*(1/8);
+	radGrad = this._canvas.createRadialGradient(0,0,0, 0,0,rMax, 0.0,0xFF000000, 1.0,0x00000000); //  0.5,0x66000000,
 	eccentricity = Math.sqrt(rMax*rMax-rMin*rMin)/rMax;
 	console.log(rMax/rMin,eccentricity);
 	var dBG = new DO();
@@ -408,7 +408,6 @@ Match.prototype._imageCompleteFxn = function(o){
 	d.graphics().drawRect(0,0,wid,hei);
 	d.graphics().endPath();
 	d.graphics().fill();
-
 	var dOval = new DO();
 	d = dOval;
 	d.graphics().clear();
@@ -424,7 +423,26 @@ Match.prototype._imageCompleteFxn = function(o){
 	d.matrix().scale(rMin/rMax,1);
 	d.matrix().rotate(ang);
 	d.matrix().translate(wid/2,hei/2);
+	//
+	var dTrash1 = new DO();
+	d = dTrash1;
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0x00000000);
+	d.graphics().beginPath();
+	radGrad2 = this._canvas.createRadialGradient(0,0,0, 0,0,50, 0.0,0xFF000000, 1.0,0x00000000);
+	d.graphics().setFill(radGrad2);
+	d.graphics().moveTo(0,0);
+	d.graphics().arc(0,0, 50, 0,Math.PI*2, false);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	d.matrix().identity();
+	d.matrix().scale(2,1);
+	d.matrix().rotate(Math.PI/8);
+	d.matrix().translate(wid/2,35);
+	//
 	root.addChild(dBG);
+	root.addChild(dTrash1);
 	root.addChild(dOval);
 	// 2. convert to image float
 	var matrix = new Matrix2D(); matrix.identity();
@@ -436,19 +454,48 @@ Match.prototype._imageCompleteFxn = function(o){
 		dOval.removeParent();
 	var imgMat = new ImageMat(wid,hei);
 	imgMat.setFromArrayARGB(colargb);
-	var gray = imgMat.getGrayFloat();
+	var gray = imgMat.getGrayFloat();// gray = ImageMat.normalFloat01(gray);
+	// NOISE
+var noiseMax = 1.0;
+var noiseOff = noiseMax*0.5;
+	gray = ImageMat.randomAdd(gray,noiseMax,noiseOff);
+	gray = ImageMat.normalFloat01(gray);
+
 	var argb = ImageMat.ARGBFromFloat(gray);
 	var src = this._stage.getARGBAsImage(argb, wid,hei);
 	var doi = new DOImage( src );
 		doi.matrix().identity();
 	root.addChild(doi);
+
+	var transform = new Matrix(3,3);
+	transform.identity();
+	// recursive time ... 
+	var currentWid = 75;
+	var currentHei = 75;
+	var currentScale = 1.0;
+	var currentSigma = 1.6;
+	var currentImage; //= ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
+	//console.log(currentImage);
+	//var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
+var totalScale = 1.0;
+var i, len;
+for(i=0;i<10;++i){
+	currentImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
 	
+	
+
+
+	//console.log(currentImage.length,currentWid*currentHei);
 	// get SMM
 	var eigRatio;
 	var SMM = new Array();
-	var res = ImageMat.harrisDetector(gray,wid,hei, SMM); //console.log(res); response Lx Ly
-	var centerX = Math.floor(wid*0.5), centerY = Math.floor(hei*0.5);
-	var centerIndex = wid*centerY+centerX;
+var gaussSize = Math.round(2+currentSigma)*2+1;
+//console.log("gauss size: "+gaussSize);
+var gaussian = ImageMat.getGaussianWindow(gaussSize,1, currentSigma);
+var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, currentWid,currentHei, gaussian);
+	var res = ImageMat.harrisDetector(blurredImage,currentWid,currentHei, SMM, undefined, currentSigma); //console.log(res); response Lx Ly
+	var centerX = Math.floor(currentWid*0.5), centerY = Math.floor(currentHei*0.5);
+	var centerIndex = currentWid*centerY+centerX;
 	var smm = SMM[centerIndex];
 	// get eigen values/vectors
 	var mat = new Matrix(2,2);
@@ -461,56 +508,107 @@ Match.prototype._imageCompleteFxn = function(o){
 	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
 	var eigVecA = new V2D(e0[0],e0[1]);
 	var eigVecB = new V2D(e1[0],e1[1]);
-	console.log(eigRatio);
+	console.log("eigenValue ratio: "+eigRatio);
+	//var antiVariance = Math.sqrt(eigRatio); // Math.sqrt(eigRatio/2);
+	//console.log("antiVariance:"+antiVariance+"      "+(Math.sqrt(eigRatio/2)));
 	console.log(l0,eigVecA.toString());
 	console.log(l1,eigVecB.toString());
 	//
-	var matinv = Matrix.power(mat,0.5);//Matrix.inverse(mat);
-	matinv = Matrix.inverse(matinv);
-	console.log("INVERSE");
-	eig = Matrix.eigenValuesAndVectors(matinv);
-	l0 = eig.values[0];
-	l1 = eig.values[1];
-	eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
-	e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
-	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
-	var eigVecA = new V2D(e0[0],e0[1]);
-	var eigVecB = new V2D(e1[0],e1[1]);
-	console.log(eigRatio);
-	console.log(l0,eigVecA.toString());
-	console.log(l1,eigVecB.toString());
+	// //var matinv = Matrix.power(mat,0.5);//Matrix.inverse(mat);
+	// var matinv = Matrix.inverse(mat);
+	// // console.log("INVERSE");
+	// // console.log(matinv.toString());
+	// eig = Matrix.eigenValuesAndVectors(matinv);
+	// l0 = eig.values[0];
+	// l1 = eig.values[1];
+	// eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
+	// e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+	// e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	// var eigVecA = new V2D(e0[0],e0[1]);
+	// var eigVecB = new V2D(e1[0],e1[1]);
+	// console.log(eigRatio);
+	// console.log(l0,eigVecA.toString());
+	// console.log(l1,eigVecB.toString());
 
-	// 
-	var svd = Matrix.SVD(mat);
-	var lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
-	var lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
-	console.log(lambdaMax,lambdaMin,lambdaMax/lambdaMin);
-	// if(lambdaMax==svd.S.get(0,0)){
-	// 	svd.S.set(0,0, 1.0);
-	// }else{
-	// 	svd.S.set(1,1, 1.0);
-	// }
-	svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
-	svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
-	mat = Matrix.fromSVD(svd.U,svd.S,svd.V);
-	//
-	eig = Matrix.eigenValuesAndVectors(mat);
-	l0 = eig.values[0];
-	l1 = eig.values[1];
-	eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
-	e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
-	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
-	console.log(eigRatio);
-	console.log(l0,eigVecA.toString());
-	console.log(l1,eigVecB.toString());
+	// // SVD
+	// var svd = Matrix.SVD(mat);
+	// var lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+	// var lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+	// console.log(lambdaMax,lambdaMin,lambdaMax/lambdaMin);
+	// // if(lambdaMax==svd.S.get(0,0)){
+	// // 	svd.S.set(0,0, 1.0);
+	// // }else{
+	// // 	svd.S.set(1,1, 1.0);
+	// // }
+	// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+	// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+	// mat = Matrix.fromSVD(svd.U,svd.S,svd.V);
+	// //
+	// eig = Matrix.eigenValuesAndVectors(mat);
+	// l0 = eig.values[0];
+	// l1 = eig.values[1];
+	// eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
+	// e0 = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+	// e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	// console.log(eigRatio);
+	// console.log(l0,eigVecA.toString());
+	// console.log(l1,eigVecB.toString());
 
 	// 
 	var vectorX = new V2D(1,0), vectorY = new V2D(0,1);
 	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
 	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
+	console.log("AtoY: "+(angleYVecA*180/Math.PI));
+	console.log("BtoY: "+(angleYVecB*180/Math.PI));
 	
-	
+
+	// SHOW FOR FUNNESS
+	var newArgb, newImg;
+	newArgb = ImageMat.ARGBFromFloat(currentImage);
+	newImg = this._stage.getARGBAsImage(newArgb, currentWid,currentHei);
+	doi = new DOImage( newImg );
+	doi.matrix().identity(); doi.matrix().translate(currentWid*(i*1+0),hei);
+	root.addChild(doi);
+
+	var rot = new Matrix(3,3);
+	var sca = new Matrix(3,3);
+	var cum = new Matrix(3,3); cum.identity();
+	var ang, amt;
+	//
+	ang = -angleYVecA;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
+	cum = Matrix.mult(cum,rot);
+	amt = Math.pow(eigRatio,0.25);
+	console.log("scaling by: "+amt);
+	totalScale *= amt;
+// NEED TO TRACK AN EDGE POINT, AND SCALE IN INVERSE DIRECTION BY THE RESULTING POSITION-DIFFERENCE RATIO [edge-of-box-or-gaussian-edge-radius / current-transformec-position-of-above ]
+var amt2 = Math.pow(amt,0.2);
+totalScale /= amt2;
+	sca.setFromArray([1/amt,0,0, 0,amt2,0, 0,0,1]);
+	cum = Matrix.mult(cum,sca);
+	ang = angleYVecA;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
+	cum = Matrix.mult(cum,rot);
+	transform = Matrix.mult(transform,cum);
+
+
+	transformImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
+	newArgb = ImageMat.ARGBFromFloat(transformImage);
+	newImg = this._stage.getARGBAsImage(newArgb, currentWid,currentHei);
+	doi = new DOImage( newImg );
+	doi.matrix().identity(); doi.matrix().translate(currentWid*(i*2+1),hei);
+	//root.addChild(doi);
+
+	// 
+	//transform.identity();
+
+
 	// find transformation to affine
+
+console.log("totalScale: "+totalScale+"..............................................");
+
+}
+console.log("totalScale: "+totalScale);
 
 /*
 
