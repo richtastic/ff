@@ -394,7 +394,7 @@ Match.prototype._imageCompleteFxn = function(o){
 	var i, d, rad, wid, hei, img, rMin, rMax, eccentricity, radGrad;
 	// 1. draw gradient oval @ angle
 	wid = 201; hei = 201;
-	rMin = 30; rMax = 70;
+	rMin = 20; rMax = 100;
 	ang = 1*Math.PI*(1/8);
 	radGrad = this._canvas.createRadialGradient(0,0,0, 0,0,rMax, 0.0,0xFF000000, 1.0,0x00000000); //  0.5,0x66000000,
 	eccentricity = Math.sqrt(rMax*rMax-rMin*rMin)/rMax;
@@ -456,7 +456,7 @@ Match.prototype._imageCompleteFxn = function(o){
 	imgMat.setFromArrayARGB(colargb);
 	var gray = imgMat.getGrayFloat();// gray = ImageMat.normalFloat01(gray);
 	// NOISE
-var noiseMax = 1.0;
+var noiseMax = 2.0;
 var noiseOff = noiseMax*0.5;
 	gray = ImageMat.randomAdd(gray,noiseMax,noiseOff);
 	gray = ImageMat.normalFloat01(gray);
@@ -472,14 +472,26 @@ var noiseOff = noiseMax*0.5;
 	// recursive time ... 
 	var currentWid = 75;
 	var currentHei = 75;
+	var eigenMinimaDim = 75; // .. end of scale-space-edge - this actually doesn't seem to matter at all...
 	var currentScale = 1.0;
-	var currentSigma = 1.6;
+	var currentSigma = 5.0; // bigger is better .. to a point
 	var currentImage; //= ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
 	//console.log(currentImage);
 	//var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
+var originalMinimum = null;
 var totalScale = 1.0;
 var i, len;
-for(i=0;i<10;++i){
+var bestIteration = -1;
+var bestRatio = 666;
+var bestTransform = new Matrix(3,3);
+
+
+
+// LAST STEP - CONVERGE TO LOCAL GAUSSIAN MAXIMA POINT
+// maximum distance tolerance?
+var badOffsetX = 0; var badOffsetY = 0;
+
+for(i=0;i<20;++i){
 	currentImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
 	
 	
@@ -494,13 +506,14 @@ var gaussSize = Math.round(2+currentSigma)*2+1;
 var gaussian = ImageMat.getGaussianWindow(gaussSize,1, currentSigma);
 var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, currentWid,currentHei, gaussian);
 	var res = ImageMat.harrisDetector(blurredImage,currentWid,currentHei, SMM, undefined, currentSigma); //console.log(res); response Lx Ly
-	var centerX = Math.floor(currentWid*0.5), centerY = Math.floor(currentHei*0.5);
+	var centerX = Math.floor(currentWid*0.5) + badOffsetX, centerY = Math.floor(currentHei*0.5) + badOffsetY;
 	var centerIndex = currentWid*centerY+centerX;
 	var smm = SMM[centerIndex];
 	// get eigen values/vectors
 	var mat = new Matrix(2,2);
 	mat.setFromArray(smm);
 	eig = Matrix.eigenValuesAndVectors(mat);
+	if(eig.values[0]<eig.values[1]){ console.log("...................................................................BAAAAAAAAAAAAAAAAAAAAAAAA"); }
 	l0 = eig.values[0];
 	l1 = eig.values[1];
 	eigRatio = Math.max(l1,l0)/Math.min(l1,l0);
@@ -508,11 +521,14 @@ var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, 
 	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
 	var eigVecA = new V2D(e0[0],e0[1]);
 	var eigVecB = new V2D(e1[0],e1[1]);
-	console.log("eigenValue ratio: "+eigRatio);
+	console.log("eigenValue ratio: "+eigRatio+"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "+i);
 	//var antiVariance = Math.sqrt(eigRatio); // Math.sqrt(eigRatio/2);
 	//console.log("antiVariance:"+antiVariance+"      "+(Math.sqrt(eigRatio/2)));
-	console.log(l0,eigVecA.toString());
-	console.log(l1,eigVecB.toString());
+	//console.log(l0,eigVecA.toString());
+	//console.log(l1,eigVecB.toString());
+	if(originalMinimum==null){
+		originalMinimum = new V2D(eigVecA.x*eigenMinimaDim,eigVecA.y*eigenMinimaDim);
+	}
 	//
 	// //var matinv = Matrix.power(mat,0.5);//Matrix.inverse(mat);
 	// var matinv = Matrix.inverse(mat);
@@ -558,8 +574,8 @@ var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, 
 	var vectorX = new V2D(1,0), vectorY = new V2D(0,1);
 	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
 	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
-	console.log("AtoY: "+(angleYVecA*180/Math.PI));
-	console.log("BtoY: "+(angleYVecB*180/Math.PI));
+	//console.log("AtoY: "+(angleYVecA*180/Math.PI));
+	//console.log("BtoY: "+(angleYVecB*180/Math.PI));
 	
 
 	// SHOW FOR FUNNESS
@@ -581,9 +597,9 @@ var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, 
 	amt = Math.pow(eigRatio,0.25);
 	console.log("scaling by: "+amt);
 	totalScale *= amt;
-// NEED TO TRACK AN EDGE POINT, AND SCALE IN INVERSE DIRECTION BY THE RESULTING POSITION-DIFFERENCE RATIO [edge-of-box-or-gaussian-edge-radius / current-transformec-position-of-above ]
-var amt2 = Math.pow(amt,0.2);
-totalScale /= amt2;
+// var amt2 = Math.pow(amt,0.5);
+// totalScale /= amt2;
+	amt2 = 1.0;
 	sca.setFromArray([1/amt,0,0, 0,amt2,0, 0,0,1]);
 	cum = Matrix.mult(cum,sca);
 	ang = angleYVecA;
@@ -602,13 +618,39 @@ totalScale /= amt2;
 	// 
 	//transform.identity();
 
+	// recheck on scale
+	var t = new V2D();
+	transform.multV2DtoV2D(t,originalMinimum);
+	var correctScale = ( (t.length()/eigenMinimaDim) );
+	console.log("DIFFERENCE: "+correctScale);
+	correctScale = 1/correctScale;
+	totalScale *= 1/correctScale;
+	// correct to maximum scale
+	sca.setFromArray([correctScale,0,0, 0,correctScale,0, 0,0,1]);
+	//transform = Matrix.mult(transform,sca);
+	transform = Matrix.mult(sca,transform);
+	// correct only in 1 direction
 
 	// find transformation to affine
+if(eigRatio<bestRatio){
+	bestIteration = i
+	bestRatio = eigRatio;
+	bestTransform.copy(transform);
+}
 
-console.log("totalScale: "+totalScale+"..............................................");
+//console.log("totalScale: "+totalScale+"..............................................");
 
 }
 console.log("totalScale: "+totalScale);
+
+console.log(bestRatio+" | "+bestIteration);
+transformImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, bestTransform);
+	newArgb = ImageMat.ARGBFromFloat(transformImage);
+	newImg = this._stage.getARGBAsImage(newArgb, currentWid,currentHei);
+	doi = new DOImage( newImg );
+	doi.matrix().identity(); doi.matrix().translate(currentWid*(i*2+1),hei);
+root.addChild(doi);
+
 
 /*
 
