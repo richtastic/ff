@@ -89,3 +89,10 @@ Matrix2D.prototype.kill = function(){
 }
 // -----------------------------------------------------------------------------------------------
 Matrix2D.temp = new Matrix2D();
+
+
+Matrix2D.matrix2DfromMatrix = function(mat){
+	var m2D = new Matrix2D();
+	m2D.set(mat.get(0,0),mat.get(0,1), mat.get(1,0),mat.get(1,1), mat.get(0,1),mat.get(1,1));
+	return m2D;
+}

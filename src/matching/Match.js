@@ -76,215 +76,18 @@ function Match(){
 	//this._canvas.addListeners();
 	this._stage = new Stage(this._canvas, (1/10)*1000);
 	this._stage.start();
-
-	//this.exp();
-/*
-var root = new DO();
-root.graphics().setLine(2,0xFF0000FF);
-root.graphics().beginPath();
-root.graphics().moveTo(0,0);
-root.graphics().lineTo(10,100);
-root.graphics().endPath();
-root.graphics().strokeLine();
-
-var square = new DO();
-	square.graphics().setLine(3.0,0xFFFF0000);
-	square.graphics().beginPath();
-	square.graphics().setFill(0x99FF0000);
-	square.graphics().moveTo(0,0);
-	square.graphics().lineTo(100,0);
-	square.graphics().lineTo(100,100);
-	square.graphics().lineTo(0,100);
-	square.graphics().lineTo(0,0);
-	square.graphics().endPath();
-	square.graphics().fill();
-	square.graphics().strokeLine();
-var circle = new DO();
-	circle.graphics().setLine(3.0,0xFF0000FF);
-	circle.graphics().beginPath();
-	circle.graphics().setFill(0x990000FF);
-	circle.graphics().moveTo(0,0);
-	circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
-	circle.graphics().endPath();
-	circle.graphics().fill();
-	circle.graphics().strokeLine();
-	circle.matrix().identity();
-	circle.matrix().rotate(Math.PI/10);
-	circle.matrix().translate(100,100);
-	//circle.addFunction(Stage.EVENT_ON_ENTER_FRAME, function(e){ console.log("I HAVE EFF"); }); // this._stage
-
-var triangle = new DO();
-	triangle.graphics().setLine(3.0,0xFF00FF00);
-	triangle.graphics().beginPath();
-	triangle.graphics().setFill(0x9900FF00);
-	triangle.graphics().moveTo(-30,30);
-	triangle.graphics().lineTo(30,30);
-	triangle.graphics().lineTo(0,-30);
-	triangle.graphics().lineTo(-30,30);
-	triangle.graphics().endPath();
-	triangle.graphics().fill();
-	triangle.graphics().strokeLine();
-	triangle.matrix().identity();
-	triangle.matrix().rotate(-Math.PI/10);
-	triangle.matrix().translate(50,0);
-this._stage.addChild(root);
-	root.addChild(square);
-		square.addChild(circle);
-			circle.addChild(triangle);
-*/
+	var root = new DO(); this._stage.root().addChild(root);
+	this._root = root;
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+// BLT.png
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
 Match.prototype._imageProgressFxn0 = function(o){
 }
-Match.prototype._imageCompleteFxn1 = function(o){
-	var images = o.images;
-	var img = images[0];
-	//
 
-	Code.copyArray(this._imageList,o.images);
-	var image = new DOImage(img);
-	image.matrix().identity();
-	//image.matrix().rotate(Math.PI/10);
-	image.matrix().translate(0,0);
-	this._stage.root().getChildAt(0).getChildAt(0).getChildAt(0).getChildAt(0).addChild(image);
-	//this._stage.stop();
-	console.log("LOADED");
-
-	var x, y, angle, dir, col, base, percent;
-
-	var dirRed = new V2D(1,1); dirRed.norm();
-	var dirGrn = new V2D(0.5,1); dirGrn.norm();
-	var dirBlu = new V2D(1,-0.5); dirBlu.norm();
-	var dirGry = new V2D(1,0); ; dirGry.norm();
-	var dirRadius = 20.0;
-
-
-	// ---------------------------------------------------------------------- gradient orientation
-	var direction = new DO();
-	dir = dirRed;
-	direction.graphics().setLine(1.0,0xFFFF0000);
-	direction.graphics().beginPath();
-	direction.graphics().moveTo(0,0);
-	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
-	direction.graphics().endPath();
-	direction.graphics().strokeLine();
-	dir = dirGrn;
-	direction.graphics().setLine(1.0,0xFF00FF00);
-	direction.graphics().beginPath();
-	direction.graphics().moveTo(0,0);
-	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
-	direction.graphics().endPath();
-	direction.graphics().strokeLine();
-	dir = dirBlu;
-	direction.graphics().setLine(1.0,0xFF0000FF);
-	direction.graphics().beginPath();
-	direction.graphics().moveTo(0,0);
-	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
-	direction.graphics().endPath();
-	direction.graphics().strokeLine();
-	dir = dirGry;
-	direction.graphics().setLine(1.0,0xFFCCCCCC);
-	direction.graphics().beginPath();
-	direction.graphics().moveTo(0,0);
-	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
-	direction.graphics().endPath();
-	direction.graphics().strokeLine();
-
-	direction.matrix().identity();
-	direction.matrix().translate(100,-50);
-
-	// ---------------------------------------------------------------------- gradient intensity
-
-
-	// ---------------------------------------------------------------------- color intensity
-	var colRed = 0.35;
-	var colGrn = 0.60;
-	var colBlu = 0.95;
-	var colGry = (colRed+colGrn+colBlu)/3.0;
-	var range = Math.max(colRed,colGrn,colBlu) - Math.min(colRed,colGrn,colBlu);
-
-	var block = 30;
-	base = colGry;
-
-	var intensity = new DO();
-	x = 0*block;
-	col = colRed; percent = (col-base)/range;
-	intensity.graphics().beginPath();
-	intensity.graphics().setFill(0xCCFF0000);
-	intensity.graphics().moveTo(x,0);
-	intensity.graphics().lineTo(x+block,0);
-	intensity.graphics().lineTo(x+block,block*percent);
-	intensity.graphics().lineTo(x,block*percent);
-	intensity.graphics().lineTo(x,0);
-	intensity.graphics().endPath();
-	intensity.graphics().fill();
-
-	x = 1*block;
-	col = colGrn; percent = (col-base)/range;
-	intensity.graphics().beginPath();
-	intensity.graphics().setFill(0xCC00FF00);
-	intensity.graphics().moveTo(x,0);
-	intensity.graphics().lineTo(x+block,0);
-	intensity.graphics().lineTo(x+block,block*percent);
-	intensity.graphics().lineTo(x,block*percent);
-	intensity.graphics().lineTo(x,0);
-	intensity.graphics().endPath();
-	intensity.graphics().fill();
-
-	x = 2*block;
-	col = colBlu; percent = (col-base)/range;
-	intensity.graphics().beginPath();
-	intensity.graphics().setFill(0xCC0000FF);
-	intensity.graphics().moveTo(x,0);
-	intensity.graphics().lineTo(x+block,0);
-	intensity.graphics().lineTo(x+block,block*percent);
-	intensity.graphics().lineTo(x,block*percent);
-	intensity.graphics().lineTo(x,0);
-	intensity.graphics().endPath();
-	intensity.graphics().fill();
-
-
-	intensity.matrix().identity();
-	intensity.matrix().translate(150,-50);
-	//intensity.graphics().strokeLine();
-	// ---------------------------------------------------------------------- 
-
-	// circle.graphics().setLine(3.0,0xFF0000FF);
-	// circle.graphics().beginPath();
-	// circle.graphics().setFill(0x990000FF);
-	// circle.graphics().moveTo(0,0);
-	// circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
-	// circle.graphics().endPath();
-	// circle.graphics().fill();
-	// circle.graphics().strokeLine();
-	
-
-
-	// 
-	image.addChild(direction);
-	image.addChild(intensity);
-	image.matrix().identity();
-	image.matrix().scale(1.5,0.5);
-
-	// console.log(colAN.toString());
-	// console.log(colBN.toString());
-	// console.log(colCN.toString());
-	// // colorful ranking - 
-	// console.log(V3D.dot(colAN,colBN));
-	// console.log(V3D.dot(colAN,colCN));
-	// console.log("-----------------------------");
-	// // 0(best) to 3 ranking
-	// p = new V3D(colA.x-colB.x, colA.y-colB.y, colA.z-colB.z);
-	// console.log(p.toString());
-	// console.log(p.length());
-	// p = new V3D(colA.x-colC.x, colA.y-colC.y, colA.z-colC.z);
-	// console.log(p.toString());
-	// console.log(p.length());
-}
 Match.prototype.getDescriptorParameters = function(originalImage){
 	var i, j, dat, img;
 	var wid = originalImage.width, hei = originalImage.height;
@@ -385,16 +188,15 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2){
 	container.matrix().translate(pt.x,pt.y);
 	return container;
 }
-Match.prototype._imageCompleteFxn = function(o){
-	var root = new DO(); this._stage.root().addChild(root);
-	this._root = root;
+Match.prototype._imageCompleteFxnOLD = function(o){
+	var root = this._root;
 	root.matrix().identity();
 	root.matrix().scale(1.0);//,0.5);
 // NEW TESTING ...
 	var i, d, rad, wid, hei, img, rMin, rMax, eccentricity, radGrad;
 	// 1. draw gradient oval @ angle
 	wid = 201; hei = 201;
-	rMin = 20; rMax = 100;
+	rMin = 10; rMax = 100;
 	ang = 1*Math.PI*(1/8);
 	radGrad = this._canvas.createRadialGradient(0,0,0, 0,0,rMax, 0.0,0xFF000000, 1.0,0x00000000); //  0.5,0x66000000,
 	eccentricity = Math.sqrt(rMax*rMax-rMin*rMin)/rMax;
@@ -456,7 +258,7 @@ Match.prototype._imageCompleteFxn = function(o){
 	imgMat.setFromArrayARGB(colargb);
 	var gray = imgMat.getGrayFloat();// gray = ImageMat.normalFloat01(gray);
 	// NOISE
-var noiseMax = 2.0;
+var noiseMax = 1.0;
 var noiseOff = noiseMax*0.5;
 	gray = ImageMat.randomAdd(gray,noiseMax,noiseOff);
 	gray = ImageMat.normalFloat01(gray);
@@ -491,13 +293,10 @@ var bestTransform = new Matrix(3,3);
 // maximum distance tolerance?
 var badOffsetX = 0; var badOffsetY = 0;
 
-for(i=0;i<20;++i){
-	currentImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
+for(i=0;i<10;++i){
+	currentImage = ImageMat.extractRectFromFloatImage(wid/2/wid,hei/2/hei,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
 	
 	
-
-
-	//console.log(currentImage.length,currentWid*currentHei);
 	// get SMM
 	var eigRatio;
 	var SMM = new Array();
@@ -521,7 +320,8 @@ var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, 
 	e1 = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
 	var eigVecA = new V2D(e0[0],e0[1]);
 	var eigVecB = new V2D(e1[0],e1[1]);
-	console.log("eigenValue ratio: "+eigRatio+"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "+i);
+	//console.log("eigenValue ratio: "+eigRatio+"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "+i);
+	console.log(eigRatio);
 	//var antiVariance = Math.sqrt(eigRatio); // Math.sqrt(eigRatio/2);
 	//console.log("antiVariance:"+antiVariance+"      "+(Math.sqrt(eigRatio/2)));
 	//console.log(l0,eigVecA.toString());
@@ -595,10 +395,7 @@ var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, 
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
 	cum = Matrix.mult(cum,rot);
 	amt = Math.pow(eigRatio,0.25);
-	console.log("scaling by: "+amt);
 	totalScale *= amt;
-// var amt2 = Math.pow(amt,0.5);
-// totalScale /= amt2;
 	amt2 = 1.0;
 	sca.setFromArray([1/amt,0,0, 0,amt2,0, 0,0,1]);
 	cum = Matrix.mult(cum,sca);
@@ -607,22 +404,18 @@ var blurredImage = currentImage; //ImageMat.gaussian2DFrom1DFloat(currentImage, 
 	cum = Matrix.mult(cum,rot);
 	transform = Matrix.mult(transform,cum);
 
-
-	transformImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
+	transformImage = ImageMat.extractRectFromFloatImage(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
 	newArgb = ImageMat.ARGBFromFloat(transformImage);
 	newImg = this._stage.getARGBAsImage(newArgb, currentWid,currentHei);
 	doi = new DOImage( newImg );
 	doi.matrix().identity(); doi.matrix().translate(currentWid*(i*2+1),hei);
 	//root.addChild(doi);
 
-	// 
-	//transform.identity();
-
 	// recheck on scale
 	var t = new V2D();
 	transform.multV2DtoV2D(t,originalMinimum);
 	var correctScale = ( (t.length()/eigenMinimaDim) );
-	console.log("DIFFERENCE: "+correctScale);
+//	console.log("DIFFERENCE: "+correctScale);
 	correctScale = 1/correctScale;
 	totalScale *= 1/correctScale;
 	// correct to maximum scale
@@ -638,41 +431,27 @@ if(eigRatio<bestRatio){
 	bestTransform.copy(transform);
 }
 
-//console.log("totalScale: "+totalScale+"..............................................");
 
 }
-console.log("totalScale: "+totalScale);
+//console.log("totalScale: "+totalScale);
 
 console.log(bestRatio+" | "+bestIteration);
-transformImage = ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, bestTransform);
+transformImage = ImageMat.extractRectFromFloatImage(wid/2/wid,hei/2/hei,currentScale,undefined, currentWid,currentHei, gray,wid,hei, bestTransform);
 	newArgb = ImageMat.ARGBFromFloat(transformImage);
 	newImg = this._stage.getARGBAsImage(newArgb, currentWid,currentHei);
 	doi = new DOImage( newImg );
-	doi.matrix().identity(); doi.matrix().translate(currentWid*(i*2+1),hei);
+	doi.matrix().identity(); doi.matrix().translate(currentWid*i,hei);
 root.addChild(doi);
 
-
-/*
-
-var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
-		var src = this._stage.getARGBAsImage(argb, img.width(), img.height());
-		var doi = new DOImage( src );
-			doi.matrix().identity();
-			doi.matrix().translate(col*img.width(), row*img.height());
-		root.addChild(doi);
-
-		//d.graphics().drawEllipse(0,0, rMin*2,rMax*2, 0);
-	//d.graphics().drawCircle(0,0, rMax);
-	
-	
-	
-*/
 	console.log("done");
 	return;
-// ...
+}
+
+Match.prototype._imageCompleteFxn = function(o){
+	var root = this._root;
 	var images = new Array();
 	Code.copyArray(images,o.images);
-
+console.log(this);
 	var params = this.getDescriptorParameters( images[0] );
 	var wid = params[0];
 	var hei = params[1];
@@ -680,9 +459,6 @@ var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
 	var imageSourceGrn = params[3];
 	var imageSourceBlu = params[4];
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
-
-// was here
-
 
 var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
 	descriptor.processScaleSpace();
@@ -748,12 +524,28 @@ var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(20
 }*/
 var scaleSpace = descriptor.getScaleSpaceExtrema();
 for(i=0;i<scaleSpace.length;++i){
-	//ptList.push( scaleSpace[i] );
-//	console.log(scaleSpace[i].z + "  " + scaleSpace[i].a);
+	ptList.push( scaleSpace[i] );
 }
-ptList.push( scaleSpace[50] );
+//ptList.push( scaleSpace[18] );
+//ptList.push( scaleSpace[19] );
+//ptList.push( scaleSpace[20] ); // circ
+//ptList.push( scaleSpace[23] ); // line
+//ptList.push( scaleSpace[1] );
+//ptList.push( scaleSpace[3] ); //black dot
+//ptList.push( scaleSpace[4] ); // nutrition
+//ptList.push( scaleSpace[5] ); // corner
+//ptList.push( scaleSpace[7] ); // white corner
+
+//ptList.push( scaleSpace[9] );
+// for(i=0;i<40;++i){
+// 	ptList.push( scaleSpace[i] );
+// }
+
 // BLT: 6 8 9 13 22 25 27 28 32 39 FROOTLOOPS:44
-// 24
+// 11 24 50
+// SMALL: 90
+// LARGE: 80
+// UNSTABLE: 70, 21
 
 for(i=0;i<ptList.length;++i){
 	var pt = ptList[i];
@@ -763,119 +555,27 @@ for(i=0;i<ptList.length;++i){
 // getScaleSpacePoint
 //pt.t = pt.a
 var object = descriptor.getStableAffinePoint(pt);
+if(!object){ // unstable
+	console.log("UNSTABLE");
+	continue;
+}
 var affine = object.matrix;
 var newPoint = object.point;
 var windowPic = object.window;
 var windowHei = object.windowHeight;
 var windowWid = object.windowWidth;
-console.log(object);
-console.log(affine);
-console.log(newPoint);
+// console.log(object);
+// console.log(affine);
+// console.log(newPoint);
 
-this.addFloatPic(windowPic,windowWid,windowHei);
+// this.qweasd = 300;
+// this.addFloatPic(windowPic,windowWid,windowHei);
+// for(var xx=0;xx<object.list.length;++xx){
+// 	this.addFloatPic(object.list[xx],windowWid,windowHei);
+// }
+// this.qweasdY += windowHei;
 
-for(var xx=0;xx<object.list.length;++xx){
-	this.addFloatPic(object.list[xx],windowWid,windowHei);
-}
-
-// this.addFloatPic(object.b,windowWid,windowHei); // lx
-// this.addFloatPic(object.c,windowWid,windowHei); // ly
-// this.addFloatPic(object.a,windowWid,windowHei); // HARRIS
-// this.addFloatPic(object.d,windowWid,windowHei); // HARRIS MAXIMA
-// this.addFloatPic(object.e,windowWid,windowHei); // EIGENVALUE MAX
-// this.addFloatPic(object.f,windowWid,windowHei); // EIGENVALUE MIN
-
-// var dd = new DO();
-// dd.graphics().clear();
-// dd.graphics().setLine(1.0,0xFFFF0000);
-// dd.graphics().beginPath();
-// //dd.graphics().setFill(0x22FF0000);
-// dd.graphics().moveTo(75/2,0);
-// dd.graphics().lineTo(75/2,75/2);
-// dd.graphics().endPath();
-// //dd.graphics().fill();
-// dd.graphics().strokeLine();
-// root.addChild(dd);
-
-var dir=new V2D(), ix, iy, d, x, y, l0, l1, lRatio, e0, e1, xInc=11, yInc=11, gRad=100*4.0/2.0, sRad=5.0/2.0;
-for(var xx=0;xx<object.Ix.length;++xx){
-	//break;
-	for(x=xInc/2; x<windowWid; x+=xInc){
-		for(y=yInc/2; y<windowHei; y+=yInc){
-			ix = object.Ix[xx][windowWid*y+x];
-			iy = object.Iy[xx][windowWid*y+x];
-			dir.set(ix,iy);
-			//dir.norm();
-			d = new DO();
-			d.graphics().clear();
-			d.graphics().setLine(2.0,0xFFFF0000);
-			d.graphics().beginPath();
-			d.graphics().moveTo(x-dir.x*gRad,y-dir.y*gRad);
-			d.graphics().lineTo(x+dir.x*gRad,y+dir.y*gRad);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-			// 
-			l0 = object.smmList[xx][windowWid*y+x][4];
-			l1 = object.smmList[xx][windowWid*y+x][5];
-			lRatio = l0/l1;
-			lRatio = 1 + Math.log(lRatio)/2;///1000;
-			//
-			e0 = object.smmList[xx][windowWid*y+x][6];
-			dir.set(e0[0],e0[1]); dir.norm();
-			d.graphics().setLine(1.0,0xFF00FF00);
-			d.graphics().beginPath();
-			d.graphics().moveTo(x-dir.x*sRad*lRatio,y-dir.y*sRad*lRatio -1);
-			d.graphics().lineTo(x+dir.x*sRad*lRatio,y+dir.y*sRad*lRatio -1);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-			//
-			//
-			e1 = object.smmList[xx][windowWid*y+x][7];
-			dir.set(e1[0],e1[1]); dir.norm();
-			d.graphics().setLine(1.0,0xFF9999FF);
-			d.graphics().beginPath();
-			d.graphics().moveTo(x-dir.x*sRad,y-dir.y*sRad -1);
-			d.graphics().lineTo(x+dir.x*sRad,y+dir.y*sRad -1);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-			//
-			d.matrix().identity();
-			d.matrix().translate((xx*3+2)*windowWid,0);
-			root.addChild(d);
-		}
-	}
-}
-
-
-// TESTING ...
-
-
-/*
-var ssWid = 55;
-var ssHei = 55;
-var matrix = new Matrix(3,3); matrix.identity();
-	// var m = new Matrix(3,3);
-	// // 1
-	// var ang = -Math.PI/4;
-	// m.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
-	// matrix = Matrix.mult(m,matrix);
-	// // 2
-	// m.setFromArray([2.0,0,0, 0,1.0,0, 0,0,1]);
-	// matrix = Matrix.mult(m,matrix);
-matrix = affine;
-console.log(matrix.toString());
-var grayFloat = descriptor.getScaleSpacePoint(pt.x,pt.y,pt.z,descriptor.sigmaFromScale(pt.z), ssWid,ssHei, matrix);
-argb = ImageMat.ARGBFromFloats(grayFloat,grayFloat,grayFloat);
-src = this._stage.getARGBAsImage(argb, ssWid,ssHei);
-doi = new DOImage( src );
-doi.matrix().identity();
-doi.matrix().scale(1.0);
-root.addChild(doi);
-*/
-
-
-
-//
+// //
 pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
 
 
@@ -886,7 +586,7 @@ rad *= pt.z;
 
 //main
 d.graphics().clear();
-d.graphics().setLine(1.0,0xFFFF0000);
+d.graphics().setLine(1.0,0xFFFFFF00);
 d.graphics().beginPath();
 d.graphics().setFill(0x22FF0000);
 d.graphics().moveTo(rad,0);
@@ -897,11 +597,34 @@ d.graphics().strokeLine();
 // dot
 rad2 = 1.0;
 d.graphics().beginPath();
-d.graphics().setFill(0xFFFF0000);
+d.graphics().setFill(0xFF00FF00);
 d.graphics().moveTo(rad2,0);
 d.graphics().arc(0,0, rad2, 0,Math.PI*2, false);
 d.graphics().endPath();
 d.graphics().fill();
+//
+d.matrix().identity();
+d.matrix().translate(pt.x,pt.y);
+
+root.addChild(d);
+
+var d = new DO();
+d.graphics().clear();
+d.graphics().setLine(1.0,0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().setFill(0x660000FF);
+d.graphics().moveTo(rad,0);
+d.graphics().arc(0,0, rad, 0,Math.PI*2, false);
+d.graphics().endPath();
+d.graphics().fill();
+d.graphics().strokeLine();
+var aInv = Matrix.inverse(affine);
+var m2D = Matrix2D.matrix2DfromMatrix(aInv);
+d.matrix().copy(m2D);
+d.matrix().translate(pt.x,pt.y);
+root.addChild(d);
+
+
 
 // orientation / direction
 // var smmPt = SMM[pt.y*wid + pt.x];
@@ -943,10 +666,9 @@ d.graphics().fill();
 // d.graphics().endPath();
 // d.graphics().strokeLine();
 
-d.matrix().identity();
-d.matrix().translate(pt.x,pt.y);
 
-root.addChild(d);
+
+
 
 /*
 // GET IMAGE AT POINT GAUSSIAN SPACE
@@ -1054,12 +776,15 @@ Match.prototype.addFloatPic = function(windowPic, windowWid, windowHei){
 	}else{
 		this.qweasd = 0;
 	}
+	if(this.qweasdY===undefined){
+		this.qweasdY = 0;
+	}
 	var argb = ImageMat.ARGBFromFloats(windowPic,windowPic,windowPic);
 	var src = this._stage.getARGBAsImage(argb, windowWid,windowHei);
 	var doi = new DOImage( src );
 	doi.matrix().identity();
 	doi.matrix().scale(1.0);
-	doi.matrix().translate(this.qweasd,0);
+	doi.matrix().translate(this.qweasd,this.qweasdY);
 	//doi.matrix().translate(source.width(),source.height());
 	//doi.matrix().translate(source.width()*0.5,source.height()*0.5);
 	this._root.addChild(doi);
@@ -1737,3 +1462,207 @@ sum of squared differences
 
 */
 
+/*
+
+
+	//this.exp();
+var root = new DO();
+root.graphics().setLine(2,0xFF0000FF);
+root.graphics().beginPath();
+root.graphics().moveTo(0,0);
+root.graphics().lineTo(10,100);
+root.graphics().endPath();
+root.graphics().strokeLine();
+
+var square = new DO();
+	square.graphics().setLine(3.0,0xFFFF0000);
+	square.graphics().beginPath();
+	square.graphics().setFill(0x99FF0000);
+	square.graphics().moveTo(0,0);
+	square.graphics().lineTo(100,0);
+	square.graphics().lineTo(100,100);
+	square.graphics().lineTo(0,100);
+	square.graphics().lineTo(0,0);
+	square.graphics().endPath();
+	square.graphics().fill();
+	square.graphics().strokeLine();
+var circle = new DO();
+	circle.graphics().setLine(3.0,0xFF0000FF);
+	circle.graphics().beginPath();
+	circle.graphics().setFill(0x990000FF);
+	circle.graphics().moveTo(0,0);
+	circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
+	circle.graphics().endPath();
+	circle.graphics().fill();
+	circle.graphics().strokeLine();
+	circle.matrix().identity();
+	circle.matrix().rotate(Math.PI/10);
+	circle.matrix().translate(100,100);
+	//circle.addFunction(Stage.EVENT_ON_ENTER_FRAME, function(e){ console.log("I HAVE EFF"); }); // this._stage
+
+var triangle = new DO();
+	triangle.graphics().setLine(3.0,0xFF00FF00);
+	triangle.graphics().beginPath();
+	triangle.graphics().setFill(0x9900FF00);
+	triangle.graphics().moveTo(-30,30);
+	triangle.graphics().lineTo(30,30);
+	triangle.graphics().lineTo(0,-30);
+	triangle.graphics().lineTo(-30,30);
+	triangle.graphics().endPath();
+	triangle.graphics().fill();
+	triangle.graphics().strokeLine();
+	triangle.matrix().identity();
+	triangle.matrix().rotate(-Math.PI/10);
+	triangle.matrix().translate(50,0);
+this._stage.addChild(root);
+	root.addChild(square);
+		square.addChild(circle);
+			circle.addChild(triangle);
+
+
+Match.prototype._imageCompleteFxn1 = function(o){
+	var images = o.images;
+	var img = images[0];
+	//
+
+	Code.copyArray(this._imageList,o.images);
+	var image = new DOImage(img);
+	image.matrix().identity();
+	//image.matrix().rotate(Math.PI/10);
+	image.matrix().translate(0,0);
+	this._stage.root().getChildAt(0).getChildAt(0).getChildAt(0).getChildAt(0).addChild(image);
+	//this._stage.stop();
+	console.log("LOADED");
+
+	var x, y, angle, dir, col, base, percent;
+
+	var dirRed = new V2D(1,1); dirRed.norm();
+	var dirGrn = new V2D(0.5,1); dirGrn.norm();
+	var dirBlu = new V2D(1,-0.5); dirBlu.norm();
+	var dirGry = new V2D(1,0); ; dirGry.norm();
+	var dirRadius = 20.0;
+
+
+	// ---------------------------------------------------------------------- gradient orientation
+	var direction = new DO();
+	dir = dirRed;
+	direction.graphics().setLine(1.0,0xFFFF0000);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+	dir = dirGrn;
+	direction.graphics().setLine(1.0,0xFF00FF00);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+	dir = dirBlu;
+	direction.graphics().setLine(1.0,0xFF0000FF);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+	dir = dirGry;
+	direction.graphics().setLine(1.0,0xFFCCCCCC);
+	direction.graphics().beginPath();
+	direction.graphics().moveTo(0,0);
+	direction.graphics().lineTo(dirRadius*dir.x,dirRadius*dir.y);
+	direction.graphics().endPath();
+	direction.graphics().strokeLine();
+
+	direction.matrix().identity();
+	direction.matrix().translate(100,-50);
+
+	// ---------------------------------------------------------------------- gradient intensity
+
+
+	// ---------------------------------------------------------------------- color intensity
+	var colRed = 0.35;
+	var colGrn = 0.60;
+	var colBlu = 0.95;
+	var colGry = (colRed+colGrn+colBlu)/3.0;
+	var range = Math.max(colRed,colGrn,colBlu) - Math.min(colRed,colGrn,colBlu);
+
+	var block = 30;
+	base = colGry;
+
+	var intensity = new DO();
+	x = 0*block;
+	col = colRed; percent = (col-base)/range;
+	intensity.graphics().beginPath();
+	intensity.graphics().setFill(0xCCFF0000);
+	intensity.graphics().moveTo(x,0);
+	intensity.graphics().lineTo(x+block,0);
+	intensity.graphics().lineTo(x+block,block*percent);
+	intensity.graphics().lineTo(x,block*percent);
+	intensity.graphics().lineTo(x,0);
+	intensity.graphics().endPath();
+	intensity.graphics().fill();
+
+	x = 1*block;
+	col = colGrn; percent = (col-base)/range;
+	intensity.graphics().beginPath();
+	intensity.graphics().setFill(0xCC00FF00);
+	intensity.graphics().moveTo(x,0);
+	intensity.graphics().lineTo(x+block,0);
+	intensity.graphics().lineTo(x+block,block*percent);
+	intensity.graphics().lineTo(x,block*percent);
+	intensity.graphics().lineTo(x,0);
+	intensity.graphics().endPath();
+	intensity.graphics().fill();
+
+	x = 2*block;
+	col = colBlu; percent = (col-base)/range;
+	intensity.graphics().beginPath();
+	intensity.graphics().setFill(0xCC0000FF);
+	intensity.graphics().moveTo(x,0);
+	intensity.graphics().lineTo(x+block,0);
+	intensity.graphics().lineTo(x+block,block*percent);
+	intensity.graphics().lineTo(x,block*percent);
+	intensity.graphics().lineTo(x,0);
+	intensity.graphics().endPath();
+	intensity.graphics().fill();
+
+
+	intensity.matrix().identity();
+	intensity.matrix().translate(150,-50);
+	//intensity.graphics().strokeLine();
+	// ---------------------------------------------------------------------- 
+
+	// circle.graphics().setLine(3.0,0xFF0000FF);
+	// circle.graphics().beginPath();
+	// circle.graphics().setFill(0x990000FF);
+	// circle.graphics().moveTo(0,0);
+	// circle.graphics().arc(0,0, 50, 0,Math.PI*3/2, false);
+	// circle.graphics().endPath();
+	// circle.graphics().fill();
+	// circle.graphics().strokeLine();
+	
+
+
+	// 
+	image.addChild(direction);
+	image.addChild(intensity);
+	image.matrix().identity();
+	image.matrix().scale(1.5,0.5);
+
+	// console.log(colAN.toString());
+	// console.log(colBN.toString());
+	// console.log(colCN.toString());
+	// // colorful ranking - 
+	// console.log(V3D.dot(colAN,colBN));
+	// console.log(V3D.dot(colAN,colCN));
+	// console.log("-----------------------------");
+	// // 0(best) to 3 ranking
+	// p = new V3D(colA.x-colB.x, colA.y-colB.y, colA.z-colB.z);
+	// console.log(p.toString());
+	// console.log(p.length());
+	// p = new V3D(colA.x-colC.x, colA.y-colC.y, colA.z-colC.z);
+	// console.log(p.toString());
+	// console.log(p.length());
+}
+*/

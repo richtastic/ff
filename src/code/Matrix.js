@@ -186,6 +186,7 @@ Matrix.prototype.toString = function(exp){
 	}
 	return str.replace(/e/g,"E");
 }
+
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE MATHS
 Matrix.prototype.multV2DtoV2D = function(out, inn){
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];

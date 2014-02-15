@@ -1266,6 +1266,106 @@ console.log( Math.min.apply(this,response) );
 }
 
 
+ImageMat.harrisDetectorSMM = function(src,wid,hei, sigma){
+	var temp, padding, gaussSource, Ix, Iy, IxIx, IxIy, IyIy, Sxx, Sxy, Syy;
+	var determinant, trace, result;
+	sigma = sigma!==undefined?sigma:1.6;//1.6;
+	kMult = 0.05; // [0.04,0.06]
+	var gaussSize = Math.round(2+sigma)*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	// padded gaussian source
+	padding = Math.floor(gaussSize/2.0);
+	gaussSource = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
+	gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D); // now it's actually a gaussian
+	// image derivatives
+	Ix = ImageMat.derivativeX(gaussSource, wid+2*padding,hei+2*padding);
+	Iy = ImageMat.derivativeY(gaussSource, wid+2*padding,hei+2*padding);
+	IxIx = ImageMat.mulFloat(Ix,Ix);
+	IxIy = ImageMat.mulFloat(Ix,Iy);
+	IyIy = ImageMat.mulFloat(Iy,Iy);
+	// sum of products - whatever that means
+	Sxx = IxIx;
+	Sxy = IxIy;
+	Syy = IyIy;
+	Sxx = ImageMat.gaussian2DFrom1DFloat(Sxx, wid+2*padding,hei+2*padding, gauss1D);
+	Sxy = ImageMat.gaussian2DFrom1DFloat(Sxy, wid+2*padding,hei+2*padding, gauss1D);
+	Syy = ImageMat.gaussian2DFrom1DFloat(Syy, wid+2*padding,hei+2*padding, gauss1D);
+	// unpad results for usage
+	//gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D); // now it's actually a gaussian
+	gaussSource = ImageMat.unpadFloat(gaussSource, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	Sxx = ImageMat.unpadFloat(Sxx, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	Sxy = ImageMat.unpadFloat(Sxy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	Syy = ImageMat.unpadFloat(Syy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	IxIx = ImageMat.unpadFloat(IxIx, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	IxIy = ImageMat.unpadFloat(IxIy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	IyIy = ImageMat.unpadFloat(IyIy, wid+2*padding,hei+2*padding, padding,padding,padding,padding);
+	var len = wid*hei;
+	var SMM = new Array();
+	for(i=0;i<len;++i){
+		SMM[i] = [ Sxx[i], Sxy[i], Sxy[i], Syy[i] ];
+	}
+	return SMM;
+}
+
+
+
+ImageMat._center1 = new V2D();
+ImageMat._center2 = new V2D();
+ImageMat._O = new V2D();
+ImageMat._TL = new V2D();
+ImageMat._TR = new V2D();
+ImageMat._BR = new V2D();
+ImageMat._BL = new V2D();
+
+ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){
+	var blurr = (sigma!==undefined) && (sigma!=null);
+	var gaussSize, gauss1D, padding=0, fullX=(imgWid*x), fullY=(imgHei*y);
+	var m, left, right, top, bot, center1, center2, wid, hei, img = new Array();
+	if(blurr){
+		gaussSize = Math.round(5 + sigma*2)*2+1;
+		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+		padding = Math.floor(gaussSize/2.0);
+	}
+	left = fullX - (w*0.5)*scale - padding*scale;
+	right = fullX + (w*0.5)*scale + padding*scale;
+	top = fullY - (h*0.5)*scale - padding*scale;
+	bot = fullY + (h*0.5)*scale + padding*scale;
+	O = ImageMat._O; O.set(0,0);
+	TL = ImageMat._TL; TL.set(left,top);
+	TR = ImageMat._TR; TR.set(right,top);
+	BR = ImageMat._BR; BR.set(right,bot);
+	BL = ImageMat._BL; BL.set(left,bot);
+	if(matrix){
+		matinv = matrix;
+		matrix = Matrix.inverse(matrix);
+		center1 = ImageMat._center1; center1.set(fullX,fullY);
+		center2 = ImageMat._center2; center2.set(0,0);
+		matinv.multV2DtoV2D(center2,center1);
+		// to origin
+		m = new Matrix(3,3);
+		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
+		matrix = Matrix.mult(matrix,m);
+		// to updated center
+		m.setFromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
+		matrix = Matrix.mult(matrix,m);
+		// apply to all points
+		matrix.multV2DtoV2D(TL,TL);
+		matrix.multV2DtoV2D(TR,TR);
+		matrix.multV2DtoV2D(BR,BR);
+		matrix.multV2DtoV2D(BL,BL);
+	}
+	// EXTRACT AROUND SOURCE POINT
+	wid = w+2*padding;
+	hei = h+2*padding;
+	img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
+	// BLUR IMAGE
+	if(blurr){
+		img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
+	}
+	// DE-PAD IMAGE
+	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
+	return img;
+}
 
 
 

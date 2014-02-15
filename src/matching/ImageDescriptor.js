@@ -198,148 +198,10 @@ ImageDescriptor.prototype.sigmaFromScale = function(cScale){
 	var cSigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,(cExponent*2)%2);
 	return cSigma;
 }
+
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
-	//console.log(Math.log(s)/Math.log(2));
-	var img = new Array();
-	var scale = s;
-	//var sca = u;
-	var sigma = u;//this._sourceImageSigma*Math.pow(this._sourceImageConstant,sca); // adjust s based on possible scale
-	var gaussSize = Math.round(5 + sigma*2)*2+1;
-	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
-	var padding = Math.floor(gaussSize/2.0);
-	
-	//passing = 0;
-	// console.log("sca: "+sca);
-	// console.log("scale: "+scale);
-	// console.log("sigma: "+sigma);
-	// console.log("padding: "+padding);
-	var fullX = (this._sourceImageWidth*x);
-	var fullY = (this._sourceImageHeight*y);
-	var left = fullX - (w*0.5)*scale - padding*scale;
-	var right = fullX + (w*0.5)*scale + padding*scale;
-	var top = fullY - (h*0.5)*scale - padding*scale;
-	var bot = fullY + (h*0.5)*scale + padding*scale;
-	var O = new V2D(0,0);
-	var TL = new V2D(left,top);
-	var TR = new V2D(right,top);
-	var BR = new V2D(right,bot);
-	var BL = new V2D(left,bot);
-	if(matrix){
-		matinv = matrix;
-		matrix = Matrix.inverse(matrix);
-		var center1 = new V2D(fullX,fullY);
-		var center2 = new V2D();
-		matinv.multV2DtoV2D(center2,center1);
-		// to origin
-		var m = new Matrix(3,3);
-		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
-		matrix = Matrix.mult(matrix,m);
-		// to updated center
-		m.setFromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
-		matrix = Matrix.mult(matrix,m);
-		// apply to all points
-		matrix.multV2DtoV2D(TL,TL);
-		matrix.multV2DtoV2D(TR,TR);
-		matrix.multV2DtoV2D(BR,BR);
-		matrix.multV2DtoV2D(BL,BL);
-	}
-	// EXTRACT AROUND SOURCE POINT
-	var wid = w+2*padding;
-	var hei = h+2*padding;
-	img = ImageMat.extractRect(this._sourceImageMaximum, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, this._sourceImageWidth,this._sourceImageHeight);
-	// BLUR IMAGE
-img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
-	// DE-PAD IMAGE
-	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
-	return img;
+	return ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, this._sourceImageMaximum,this._sourceImageWidth,this._sourceImageHeight, matrix);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ImageDescriptor.exRect = function(x,y,s,u, w,h, imgSource,imgWid,imgHei, matrix){
-	var img = new Array();
-	var scale = s;
-	var sigma = u;
-	var gaussSize = Math.round(5 + sigma*2)*2+1;
-	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
-	var padding = Math.floor(gaussSize/2.0);
-	
-	var fullX = (imgWid*x);
-	var fullY = (imgHei*y);
-	var left = fullX - (w*0.5)*scale - padding*scale;
-	var right = fullX + (w*0.5)*scale + padding*scale;
-	var top = fullY - (h*0.5)*scale - padding*scale;
-	var bot = fullY + (h*0.5)*scale + padding*scale;
-	var O = new V2D(0,0);
-	var TL = new V2D(left,top);
-	var TR = new V2D(right,top);
-	var BR = new V2D(right,bot);
-	var BL = new V2D(left,bot);
-	if(matrix){
-		matinv = matrix;
-		matrix = Matrix.inverse(matrix);
-		var center1 = new V2D(fullX,fullY);
-		var center2 = new V2D();
-		matinv.multV2DtoV2D(center2,center1);
-		// to origin
-		var m = new Matrix(3,3);
-		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
-		matrix = Matrix.mult(matrix,m);
-		// to updated center
-		m.setFromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
-		matrix = Matrix.mult(matrix,m);
-		// apply to all points
-		matrix.multV2DtoV2D(TL,TL);
-		matrix.multV2DtoV2D(TR,TR);
-		matrix.multV2DtoV2D(BR,BR);
-		matrix.multV2DtoV2D(BL,BL);
-	}
-	// EXTRACT AROUND SOURCE POINT
-	var wid = w+2*padding;
-	var hei = h+2*padding;
-	img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
-	// BLUR IMAGE
-	//img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
-	// DE-PAD IMAGE
-	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
-	return img;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -422,8 +284,105 @@ eigMin[i] = Math.min(e1,e2);
 	}
 	return {matrix:u, harris:harris, e:eigMax, f:eigMin, b:Lx, c:Ly};
 }
-ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 
-	var countMax = 2;
+ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
+	var unstableMax = 25.0;
+	var inScale = inPoint.z;
+	var inSigma = this.sigmaFromScale(inScale);
+	var transform = new Matrix(3,3); transform.identity();
+	var currentWid = 15, currentHei = 15;
+	var currentScale = 0.25*( inScale );
+	var currentSigma = 1.6;
+	var currentImage; //= ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
+	var originalMinimum = null;
+	var i, SMM, smm, ang, amt;
+	var eigRatio, convergeMin = 1E-6;
+	var bestIteration = -1, bestRatio = 666;
+	var bestTransform = new Matrix(3,3);
+var wid = this._sourceImageWidth;
+var hei = this._sourceImageHeight;
+var gray = this._sourceImageMaximum;
+var list = new Array();
+var mat = new Matrix(2,2), rot = new Matrix(3,3), sca = new Matrix(3,3), cum = new Matrix(3,3);
+var eig, lA, lB, temp, eA, eB;
+var scaledTotal = 1.0;
+	for(i=0;i<10;++i){
+		currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
+list.push(currentImage);
+		SMM = ImageMat.harrisDetectorSMM(currentImage,currentWid,currentHei, currentSigma);
+		var centerX = Math.floor(currentWid*0.5), centerY = Math.floor(currentHei*0.5);
+		var centerIndex = currentWid*centerY+centerX;
+		smm = SMM[centerIndex];
+		// get eigen values/vectors
+		mat.setFromArray(smm);
+		eig = Matrix.eigenValuesAndVectors(mat);
+		lA = Math.max(eig.values[0],eig.values[1]);
+		lB = Math.min(eig.values[0],eig.values[1]);
+		if(lA>lB){
+			eigRatio = lA/lB;
+			eA = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+			eB = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+		}else{
+			temp = lA; lA = lB; lB = temp;
+			eigRatio = lA/lB;
+			eA = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+			eB = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+		}
+		//console.log("eigenValue ratio: "+eigRatio+"      <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "+i);
+		// check stability
+		if(eigRatio>unstableMax){
+			return null;
+		}
+		// form useful vectors
+		var eigVecA = new V2D(eA[0],eA[1]);
+		var eigVecB = new V2D(eA[0],eB[1]);
+		var vectorX = new V2D(1,0), vectorY = new V2D(0,1);
+		var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
+		var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
+		// first record of direction of minima
+		if(originalMinimum==null){
+			originalMinimum = new V2D(eigVecA.x,eigVecA.y);
+		}
+		// keep best transform
+		if(eigRatio<bestRatio){
+			bestIteration = i
+			bestRatio = eigRatio;
+			bestTransform.copy(transform);
+		}
+		// convergence criteria
+		if( (eigRatio-1.0)<convergeMin ){
+			break;
+		}
+		// non-proportional scaling
+		cum.identity();
+		ang = -angleYVecA;
+		rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+		cum = Matrix.mult(cum,rot);
+		amt = Math.pow(eigRatio,0.25);
+		sca.setFromArray([1/amt,0,0, 0,1.0,0, 0,0,1.0]);
+scaledTotal*=amt;
+		cum = Matrix.mult(cum,sca);
+		ang = angleYVecA;
+		rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+		cum = Matrix.mult(cum,rot);
+		transform = Matrix.mult(transform,cum);
+		// recheck on scale
+		var t = new V2D();
+		transform.multV2DtoV2D(t,originalMinimum);
+		var correctScale = t.length();
+scaledTotal*=correctScale;
+		correctScale = 1/correctScale;
+		sca.setFromArray([correctScale,0,0, 0,correctScale,0, 0,0,1]);
+		transform = Matrix.mult(sca,transform);
+		// check stability 2
+		if(scaledTotal>unstableMax){
+			return null;
+		}
+	}
+	var W0 = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale*4.0,null, currentWid,currentHei, gray,wid,hei, transform);
+	return {matrix:transform, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
+}
+ImageDescriptor.prototype.getStableAffinePoint2 = function(inPoint){ // 
+	var countMax = 10;
 	var transform = new Matrix(3,3); transform.identity();
 	var i, xWin, vals, ratio, lambdaMax, lambdaMin, epsilon = 1E-6;
 	var scale, sigma, sigmaI, sigmaD, u, W;
@@ -444,16 +403,11 @@ var list = new Array(), IxList = new Array(), IyList = new Array(), smmList = ne
 var thisScale = 1.25;
 var prevTransform = transform;
 var prevRatio = null;
-for(i=0;i<5;++i){
+var originalMinimum=null;
+for(i=0;i<countMax;++i){
 // SHOULD ALSO TRY TO LOCALIZE THE POINT INSIDE THE BLOB - AT SOME LOCAL MAXIMA/MINIMA OF BLOBNESS ... SCALE SPACE AGAIN?
 // APPARENTLY ALSO NEED TO CHECK IF TRANSFORMATION IS OUTRAGOUS
 	var centerIndex = windowWid*centerY+centerX;
-	// 1. copy rotation/scale matrix to full 2D matrix
-	/*transform.set(0,0, U.get(0,0));
-	transform.set(0,1, U.get(0,1));
-	transform.set(1,0, U.get(1,0));
-	transform.set(1,1, U.get(1,1));*/
-	console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- "+ i);
 	scale = xPrev.z; scale *= 0.5;
 	sigma = this.sigmaFromScale(scale);	
 	//console.log("scale: "+scale+"  sigma: "+sigma);
@@ -517,28 +471,33 @@ W1 = W0;
 	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
 	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
 	var eigRatio = l0/l1;
-	console.log(" ratio: "+eigRatio+"  A: "+eigVecA.toString()+"  B:"+eigVecB.toString());
+	console.log(" ratio: "+eigRatio+"    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- "+ i);//+"  A: "+eigVecA.toString()+"  B:"+eigVecB.toString());
+
+var eigenMinimaDim = 10;
+if(originalMinimum==null){
+	originalMinimum = new V2D(eigVecA.x*eigenMinimaDim,eigVecA.y*eigenMinimaDim);
+}
 	// 4. - cont
-	u.setFromArray([SMM[centerIndex][0],SMM[centerIndex][1],SMM[centerIndex][2],SMM[centerIndex][3]]);
+	// u.setFromArray([SMM[centerIndex][0],SMM[centerIndex][1],SMM[centerIndex][2],SMM[centerIndex][3]]);
 	// 5. spatial localization
 		// ?
 	// 6. compute u^-1/2
-	u = Matrix.power(u,-0.5);
+	// u = Matrix.power(u,-0.5);
 	// 7. concatenate transform
-	U = Matrix.mult(U,u);
+	// U = Matrix.mult(U,u);
 	//U = Matrix.mult(u,U);
 	// 7. - cont normalize lambda_max = 1
-	var svd = Matrix.SVD(U);
-		lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
-		lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
-			if(lambdaMax==svd.S.get(0,0)){
-				svd.S.set(0,0, 1.0);
-			}else{
-				svd.S.set(1,1, 1.0);
-			}
-			// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
-			// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
-			U = Matrix.fromSVD(svd.U,svd.S,svd.V);
+	// var svd = Matrix.SVD(U);
+	// 	lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+	// 	lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+	// 		if(lambdaMax==svd.S.get(0,0)){
+	// 			svd.S.set(0,0, 1.0);
+	// 		}else{
+	// 			svd.S.set(1,1, 1.0);
+	// 		}
+	// 		// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+	// 		// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+	// 		U = Matrix.fromSVD(svd.U,svd.S,svd.V);
 /*
 	transform.set(0,0, U.get(0,0));
 	transform.set(0,1, U.get(0,1));
@@ -546,45 +505,49 @@ W1 = W0;
 	transform.set(1,1, U.get(1,1));
 */
 
-	// new orientation
-//com.identity();
-if(prevRatio===null || prevRatio>eigRatio){
-	console.log(prevRatio+" > "+eigRatio+"  =>  "+" continue");
-	prevTransform = transform;
-	com = transform;
-	prevRatio = eigRatio;
-}else{  // go back
-	console.log(prevRatio+" <= "+eigRatio+"  =>  "+" go back");
-	transform = prevTransform;
-	com = transform;
-	thisScale /= 2.0;
-	console.log(1);
-}
-	//s = 1.5;//Math.log(eigRatio);//Math.min(Math.log(eigRatio),1.1);
-	s = thisScale;
-	console.log(s);
-	ang = -angleYGrad;
+/*
+	ang = -angleYVecA;
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
-	//sca.setFromArray([1/s,0,0, 0,s,0, 0,0,1]);
-	sca.setFromArray([s,0,0, 0,1/s,0, 0,0,1]);
-	com = Matrix.mult(rot,com);
-// W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
-// list.push(W2);
-	com = Matrix.mult(sca,com);
-	ang = -ang;
+	cum = Matrix.mult(cum,rot);
+	amt = Math.pow(eigRatio,0.25);
+	totalScale *= amt;
+	amt2 = 1.0;
+	sca.setFromArray([1/amt,0,0, 0,amt2,0, 0,0,1]);
+	cum = Matrix.mult(cum,sca);
+	ang = angleYVecA;
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1]);
-	com = Matrix.mult(rot,com);
-	//transform = Matrix.mult(transform,com);
-	//transform = Matrix.mult(com,transform);
-transform = com;
-	//console.log(transform.toString());
+	cum = Matrix.mult(cum,rot);
+	transform = Matrix.mult(transform,cum);
+*/
 
+	com.identity();
+	s = Math.pow(eigRatio,0.25);
+	ang = angleYGrad;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	com = Matrix.mult(com,rot);
+	sca.setFromArray([1.0/s,0,0, 0,1.0,0, 0,0,1.0]);
+	com = Matrix.mult(com,sca);
+	ang = -ang;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	com = Matrix.mult(com,rot);
+	transform = Matrix.mult(transform,com);
+
+	// recheck on scale
+	var t = new V2D();
+	transform.multV2DtoV2D(t,originalMinimum);
+	var correctScale = ( (t.length()/eigenMinimaDim) );
+	correctScale = 1/correctScale;
+	sca.setFromArray([correctScale,0,0, 0,correctScale,0, 0,0,1]);
+	transform = Matrix.mult(sca,transform);
+	
+
+prevTransform = transform;
 
 	// 
-	W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, prevTransform);
-	list.push(W2);
-Ix = ImageMat.derivativeX(W2, windowWid,windowHei);
-Iy = ImageMat.derivativeY(W2, windowWid,windowHei);
+	// W2 = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, prevTransform);
+	// list.push(W2);
+// Ix = ImageMat.derivativeX(W2, windowWid,windowHei);
+// Iy = ImageMat.derivativeY(W2, windowWid,windowHei);
 // IxList.push(Ix);
 // IyList.push(Iy);
 	// W = this.getScaleSpacePoint(xPrev.x,xPrev.y,scale,sigma, windowWid, windowHei, transform);
@@ -878,6 +841,10 @@ var f = ImageMat.normalFloat01(harris.f);
 	return output;
 }
 ImageDescriptor.prototype.processAffineSpace = function(){
+// need to merge points that are real close to eachoter
+	// dropping
+	// merging to nearby harris maxima
+
 	// this finds the most affine-invariant transformation to compare the points
 	var i, j, k, len, len2, pt;
 	var startPoints = this._scaleSpaceExtrema;
