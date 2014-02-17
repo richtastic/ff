@@ -1,5 +1,5 @@
 // ImageDescriptor.js
-
+ImageDescriptor.SCALE_MULTIPLIER = 0.125;
 function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	var i, len, len = wid*hei;
 	// stored data
@@ -36,7 +36,7 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	this._cornerGrn = null;
 	this._cornerBlu = null;
 	this._cornerGry = null;
-	this._scaleSpaceExtrema = new Array(); //  x=x, y=y, z=sigma, t=value
+	//this._scaleSpaceExtrema = new Array(); //  x=x, y=y, z=sigma, t=value
 	//this._extremaList = new Array();
 }
 
@@ -49,28 +49,24 @@ ImageDescriptor.prototype.loadFromYAML = function(yaml){
 	console.log(yaml);
 }
 
+ImageDescriptor.prototype._clearFeatureList = function(){
+	Code.emptyArray(this._features);
+}
 ImageDescriptor.prototype.getFeatureList = function(){
 	return this._features;
 }
 ImageDescriptor.prototype.getScaleSpaceExtrema = function(){
-	return this._scaleSpaceExtrema;
+	var list = new Array(), arr = this._features;
+	var i, len = arr.length;
+	for(i=0;i<len;++i){
+		list.push( new V3D(arr[i].x(),arr[i].y(),arr[i].scale()) );
+	}
+	return list;
 }
 ImageDescriptor.prototype.getImageDefinition = function(){ // LEGACY
 	var wid = this._width, hei = this._height;
 	var arr = new Array();
 	arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(this._flatRed),ImageMat.getNormalFloat01(this._flatGrn),ImageMat.getNormalFloat01(this._flatBlu) ) );
-	// 
-	var extremaBase =  ImageMat.getNormalFloat01(this._flatGry);
-	var ar = this._scaleSpaceExtrema;
-	console.log(" remaining: "+ar.length);
-	for(j=0;j<ar.length;++j){
-		ar[j].y = Math.max(Math.min(ar[j].y,hei-1),0);
-		ar[j].x = Math.max(Math.min(ar[j].x,wid-1),0);
-		extremaBase[ Math.round(ar[j].y*hei)*wid + Math.round(ar[j].x*wid) ] += 1.0;
-		//console.log(Math.round(ar[j].y) + " " + Math.round(ar[j].x));
-	}
-//	arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(extremaBase),ImageMat.getNormalFloat01(extremaBase),ImageMat.getNormalFloat01(extremaBase) ) );
-	//arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(this._bestPoints),ImageMat.getNormalFloat01(this._bestPoints),ImageMat.getNormalFloat01(this._bestPoints) ) );
 	return arr;
 }
 ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a list of potential scale-space points: _scaleSpaceExtrema
@@ -80,7 +76,6 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var scalesPerOctave = 5; // 5
 	var sConstant = scalesPerOctave-3;
 	var kConstant = Math.pow(2.0,1/sConstant);
-// 9 :=> Math.pow(2.0,1/4) NOT 1/(9-3) = 1/6
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
 	var minThresholdIntensity = 0.03; // 0.03
@@ -94,11 +89,6 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized 
 	var nextWid, nextHei;
 	var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
-this._sourceImageMaximum = Code.copyArray(new Array(),currentImage);//currentImage;
-this._sourceImageWidth = currentWid;
-this._sourceImageHeight = currentHei;
-this._sourceImageConstant = kConstant;
-this._sourceImageSigma = sigma;
 	var nextImage, dog, img, ext, sig, padding, tmp;
 	for(i=0;i<totalOctaves;++i){
 		console.log( "octave: "+(i+1)+"/"+totalOctaves+" ... size "+currentWid+", "+currentHei+" . . . . . . . . . . . . . . . . . . . . . . . . . . .");
@@ -106,8 +96,6 @@ this._sourceImageSigma = sigma;
 		for(j=0;j<scalesPerOctave-1;++j){
 			// calculate gaussian settings 
 			sig = sigma*Math.pow(kConstant,j);
-			//console.log(i + "  " + j + "   " + sigma +"    "+Math.pow(kConstant,j)+"   "+sig);
-			//sig = sigma*Math.sqrt( Math.pow(kConstant,(j+1))-Math.pow(kConstant,j) );
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
 			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
 			// add padding for blur, then remove
@@ -124,28 +112,8 @@ this._sourceImageSigma = sigma;
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = ImageMat.findExtrema3DFloat(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 1.0,1.0,1.0, edgeResponseEigenRatioR);
-//			console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
-			// console.log( 0.5*( j + (dogList.length-1)*(-1+1)/(dogList.length-2) ) );
-			// console.log( 0.5*( j + (dogList.length-1)*(1+1)/(dogList.length-2) ) );
-			// console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
-			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1-1)/(dogList.length-2) ) );
-			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1+1)/(dogList.length-2) ) );
-			//console.log( Math.pow(2,i), Math.pow(2,i+1) );
-// var cScale = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(-1.0000+1.0)/(dogList.length-2) );
-// var cExponent = Math.log(cScale)/Math.log(2);
-// var cSigma = sigma*Math.pow(kConstant,(cExponent*2)%2);
-// console.log( cScale, cExponent, cSigma );
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
-				//ext[k].a = sigma*Math.pow(2,     (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
 				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
-// var cScale = ext[k].z;
-// var cExponent = Math.log(cScale)/Math.log(2);
-// var cSigma = sigma*Math.pow(kConstant,(cExponent*2)%2);
-// console.log(ext[k].a, cSigma);
-				//ext[k].z = (1 + i*sConstant + j + ext[k].z);
-				//ext[k].z = Math.pow(2,ext[k].z);
-				//ext[k].t = Math.pow(2,ext[k].z);//Math.pow(kConstant,ext[k].z);
-				//ext[k].z = Math.pow(kConstant,ext[k].z);
 			}
 			extremaList.push(ext);
 		}
@@ -156,7 +124,7 @@ this._sourceImageSigma = sigma;
 			currentWid = nextWid; currentHei = nextHei;
 		}
 	}
-	Code.emptyArray(this._scaleSpaceExtrema);
+	this._clearFeatureList();
 	len = extremaList.length;
 	var temp = new Array();
 	for(i=0;i<len;++i){
@@ -171,22 +139,66 @@ this._sourceImageSigma = sigma;
 	}
 	//temp.sort(function(a,b){ if(a.t>b.t){return 1;}else if(a.t<b.t){return -1;} return 0; });
 	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; });
+	//temp.sort(function(a,b){ if(a.u<b.u){return 1;}else if(a.u>b.u){return -1;} return 0; });
+	//temp.sort(function(a,b){ if(a.u>b.u){return 1;}else if(a.u<b.u){return -1;} return 0; });
 	len = Math.min(100,temp.length);
 	for(i=0;i<len;++i){
-		this._scaleSpaceExtrema.push(temp[i]);
+		this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
 	}
 	// ALSO COPY REMAINING POINTS THAT FIT CRITERIA
 	len = temp.length;
 	for(;i<len;++i){
 		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
-			this._scaleSpaceExtrema.push(temp[i]);
+			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
 		}else{
 			break;
 		}
 	}
-	//this._scaleSpaceExtrema.sort(function(a,b){ if(a.z>b.z){return 1;}else if(a.z<b.z){return -1;} return 0; });
+	console.log("scale space count: "+this._features.length);
 	Code.emptyArray(extremaList);
 }
+
+ImageDescriptor.prototype.processAffineSpace = function(){ // this finds the most affine-invariant transformation to compare points
+// need to merge points that are real close to eachother
+	// dropping
+	// merging/localizing to nearby harris maxima
+	var i, j, k, len, len2, pt, obj, feature;
+	var startPoints = this._features;
+	var newFeatures = new Array();
+	var endPoints = new Array();
+	len = startPoints.length;
+	for(k=0;k<len;++k){
+		pt = new V3D(startPoints[k].x(),startPoints[k].y(),startPoints[k].scale()); // initial interest point
+		obj = this.getStableAffinePoint(pt);
+		if(obj){
+			startPoints[k].affine();
+			feature = new ImageFeature(obj.x,obj.y,obj.z, pt.scaleSpaceCornerness(), obj.matrix);
+			endPoints.push(feature);
+		}
+	}
+	this._features = endPoints;
+}
+ImageDescriptor.prototype.describeFeatures = function(){ // features are now fully defined on a point-by-point basis
+	var list = this._features;
+	var feature, i, len=list.length;
+	for(i=0;i<len;++i){
+		feature = list[i];
+		feature.findDescriptorData(this._flatRed,this._flatGrn,this._flatBlu,this._flatGry, this._width,this._height);
+	}
+}
+ImageDescriptor.prototype.compareFeatures = function(){ // this finds best-matching lists for each featuring
+	var list = this._features;
+	var i, len=list.length;
+	for(i=0;i<len;++i){
+		for(j=i+1;j<len;++j){
+			ImageFeature.compareFeatures(list[i],list[j]);
+		}
+	}
+}
+
+
+
+
 ImageDescriptor.prototype.sigmaFromScale = function(cScale){
 	var cExponent = Math.log(cScale)/Math.log(2);
 	var cSigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,(cExponent*2)%2);
@@ -195,7 +207,6 @@ ImageDescriptor.prototype.sigmaFromScale = function(cScale){
 
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
 	return ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, this._flatGry,this._width,this._height, matrix);
-	//return ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, this._sourceImageMaximum,this._sourceImageWidth,this._sourceImageHeight, matrix);
 }
 
 
@@ -280,21 +291,21 @@ eigMin[i] = Math.min(e1,e2);
 	return {matrix:u, harris:harris, e:eigMax, f:eigMin, b:Lx, c:Ly};
 }
 ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
-	var unstableMax = 25.0;
+	var unstableMax = 100.0;
 	var inScale = inPoint.z;
 	var inSigma = this.sigmaFromScale(inScale);
 	var currentWid = 15, currentHei = 15;
-	var currentScale = 0.125*( inScale );
+	var currentScale = ImageDescriptor.SCALE_MULTIPLIER*( inScale );
 	var currentSigma = 1.6;
 	var currentImage;
 	var originalMinimum = null;
+	var originalGradient = null;
 	var i, SMM, smm, ang, amt;
 	var eig, lA, lB, temp, eA, eB;
 	var eigRatio, convergeMin = 1E-6;
 	var bestIteration = -1, bestRatio = 666;
 	var bestTransform = new Matrix(3,3);
-	// var wid = this._sourceImageWidth, hei = this._sourceImageHeight;
-	// var gray = this._sourceImageMaximum;
+	var t = new V2D(), vectorX = new V2D(1,0), vectorY = new V2D(0,1);
 	var wid = this._width, hei = this._height;
 	var gray = this._flatGry;
 	var mat = new Matrix(2,2), rot = new Matrix(3,3), sca = new Matrix(3,3), cum = new Matrix(3,3);
@@ -305,6 +316,10 @@ var list = new Array();
 		currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
 list.push(currentImage);
 		SMM = ImageMat.harrisDetectorSMM(currentImage,currentWid,currentHei, currentSigma);
+		if(originalGradient==null){
+			originalGradient = new V2D(SMM.gradientX,SMM.gradientY);
+		}
+		SMM = SMM.SMM;
 		var centerX = Math.floor(currentWid*0.5), centerY = Math.floor(currentHei*0.5);
 		var centerIndex = currentWid*centerY+centerX;
 		smm = SMM[centerIndex];
@@ -331,7 +346,7 @@ list.push(currentImage);
 		// form useful vectors
 		var eigVecA = new V2D(eA[0],eA[1]);
 		var eigVecB = new V2D(eA[0],eB[1]);
-		var vectorX = new V2D(1,0), vectorY = new V2D(0,1);
+		
 		var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
 		var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
 		// first record of direction of minima
@@ -362,7 +377,6 @@ scaledTotal*=amt;
 		cum = Matrix.mult(cum,rot);
 		transform = Matrix.mult(transform,cum);
 		// recheck on scale
-		var t = new V2D();
 		transform.multV2DtoV2D(t,originalMinimum);
 		var correctScale = t.length();
 scaledTotal*=correctScale;
@@ -374,9 +388,151 @@ scaledTotal*=correctScale;
 			return null;
 		}
 	}
+	// scale back to primay gradient direction
+	bestTransform.multV2DtoV2D(t,originalMinimum);
+	ang = V2D.angleDirection(t,originalMinimum);
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	bestTransform = Matrix.mult(bestTransform,rot);
+	// return
 	var W0 = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale*4.0,null, currentWid,currentHei, gray,wid,hei, transform);
-	return {matrix:transform, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
+	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:bestTransform, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }
+
+
+
+
+
+
+
+
+
+
+
+
+ImageDescriptor.prototype.processFilters = function(){ //////////////////////////// these should be done on a point-basis
+	var i, j, index, wid = this._width, hei = this._height;
+	this._dxRed = ImageMat.convolve(this._flatRed,wid,hei, [-0.5,0,0.5], 3,1);
+	this._dyRed = ImageMat.convolve(this._flatRed,wid,hei, [-0.5,0,0.5], 1,3);
+	this._dxGrn = ImageMat.convolve(this._flatGrn,wid,hei, [-0.5,0,0.5], 3,1);
+	this._dyGrn = ImageMat.convolve(this._flatGrn,wid,hei, [-0.5,0,0.5], 1,3);
+	this._dxBlu = ImageMat.convolve(this._flatBlu,wid,hei, [-0.5,0,0.5], 3,1);
+	this._dyBlu = ImageMat.convolve(this._flatBlu,wid,hei, [-0.5,0,0.5], 1,3);
+	this._dxGry = ImageMat.convolve(this._flatGry,wid,hei, [-0.5,0,0.5], 3,1);
+	this._dyGry = ImageMat.convolve(this._flatGry,wid,hei, [-0.5,0,0.5], 1,3);
+	// gradient magnitudes
+	this._gradRed = ImageMat.vectorSumFloat(this._dxRed,this._dyRed);
+	this._gradGrn = ImageMat.vectorSumFloat(this._dxGrn,this._dyGrn);
+	this._gradBlu = ImageMat.vectorSumFloat(this._dxBlu,this._dyBlu);
+	this._gradGry = ImageMat.vectorSumFloat(this._dxGry,this._dyGry);
+	//var dxWinGry = ImageMat.convolve(gry,wid,hei, [-3,0,3, -10,0,10, -3,0,3], 3,3);
+	//var dyWinGry = ImageMat.convolve(gry,wid,hei, [-3,-10,-3, 0,0,0, 3,10,3], 3,3);
+	// phase/angles
+	this._phaseRed = ImageMat.phaseFloat(this._dxRed,this._dyRed);
+	this._phaseGrn = ImageMat.phaseFloat(this._dxGrn,this._dyGrn);
+	this._phaseBlu = ImageMat.phaseFloat(this._dxBlu,this._dyBlu);
+	this._phaseGry = ImageMat.phaseFloat(this._dxGry,this._dyGry);
+	// second moments
+	this._dxxGry = ImageMat.mulFloat( this._dxGry, this._dxGry );
+	this._dxyGry = ImageMat.mulFloat( this._dxGry, this._dyGry );
+	this._dyyGry = ImageMat.mulFloat( this._dyGry, this._dyGry );
+	// ?
+	var gaussWid = 3, gaussHei = 3;
+	var gaussian = ImageMat.getGaussianWindow(gaussWid,gaussHei, 1.0);
+	this._sxxGry = ImageMat.convolve(this._dxxGry, wid,hei, gaussian,gaussWid,gaussHei);
+	this._sxyGry = ImageMat.convolve(this._dxyGry, wid,hei, gaussian,gaussWid,gaussHei);
+	this._syyGry = ImageMat.convolve(this._dyyGry, wid,hei, gaussian,gaussWid,gaussHei);
+	// harris
+	this._harrisGry = new Array(wid*hei);
+	var sxx = this._sxxGry, sxy = this._sxyGry, syy = this._syyGry;
+	var harris = this._harrisGry;
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i){
+			index = j*wid + i;
+			harris[index] = sxx[index]*syy[index] - sxy[index]*sxy[index];
+		}
+	}
+	// corners
+	var cornerThreshold = 0.55;
+	var cornerMat = [0.25,-0.5,0.25, -0.5,1,-0.5, 0.25,-0.5,0.25];
+	this._cornerRed = ImageMat.convolve(this._flatRed, wid,hei, cornerMat, 3,3);
+	this._cornerGrn = ImageMat.convolve(this._flatGrn, wid,hei, cornerMat, 3,3);
+	this._cornerBlu = ImageMat.convolve(this._flatBlu, wid,hei, cornerMat, 3,3);
+	this._cornerGry = ImageMat.convolve(this._flatGry, wid,hei, cornerMat, 3,3);
+}
+ImageDescriptor.prototype.findFeatures = function(){
+	var i, j, wid = this._width, hei = this._height;
+	// best matchings
+	var cornerGry = Code.copyArray(new Array(), this._cornerGry);
+		ImageMat.normalFloat01(cornerGry);
+		ImageMat.applyFxnFloat(cornerGry, ImageMat.flipAbsFxn);
+		ImageMat.normalFloat01(cornerGry);
+	var absGry = ImageMat.absFloat(this._gradGry);
+		ImageMat.normalFloat01(absGry);
+	var addAbsFloatGry = ImageMat.addFloat(absGry,absGry);
+		ImageMat.normalFloat01(addAbsFloatGry);
+
+	// create best matching image
+	var bestThreshold = 0.10;
+	var bestGry = Code.copyArray(new Array(), cornerGry);//ImageMat.newZeroFloat(wid,hei);
+	bestGry = ImageMat.mulFloat(bestGry,cornerGry);
+		ImageMat.normalFloat01(bestGry);
+	bestGry = ImageMat.mulFloat(bestGry,addAbsFloatGry);
+		ImageMat.normalFloat01(bestGry);
+	bestGry = ImageMat.gtFloat(bestGry, bestThreshold);
+	// find blobs
+	var blobGry = bestGry;
+	// blobGry = ImageMat.expandBlob(blobGry, wid,hei);
+	// blobGry = ImageMat.retractBlob(blobGry, wid,hei);
+	//imageBlobGry.setFromFloats(blobGry, blobGry, blobGry);
+	// find centers
+	var blobListGry = ImageMat.findBlobsCOM(blobGry, wid,hei);
+this._bestPoints = ImageMat.newZeroFloat(wid,hei);
+	console.log("FOUND: "+blobListGry.length+" FEATURE POINTS");
+	// get features from blob points
+	var feature, blob;
+	var featureList = new Array();
+	for(i=0;i<blobListGry.length;++i){
+		blob = blobListGry[i];
+		feature = new ImageFeature(this, blob.x,blob.y, blob.count, 1.0,1.0);
+		featureList.push(feature);
+		this._bestPoints[wid*blob.y+blob.x] = 1.0;
+	}
+	this._features = featureList;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ImageDescriptor.prototype.getStableAffinePointOLD = function(inPoint){ // 
 	var countMax = 10;
 	var transform = new Matrix(3,3); transform.identity();
@@ -836,154 +992,24 @@ var f = ImageMat.normalFloat01(harris.f);
 		f:f};
 	return output;
 }
-ImageDescriptor.prototype.processAffineSpace = function(){
-// need to merge points that are real close to eachoter
-	// dropping
-	// merging to nearby harris maxima
-
-	// this finds the most affine-invariant transformation to compare the points
-	var i, j, k, len, len2, pt, obj;
-	var startPoints = this._scaleSpaceExtrema;
-	var endPoints = new Array();
-	len = startPoints.length;
-	for(k=0;k<len;++k){
-		pt = startPoints[k]; // initial interest point
-		obj = this.getStableAffinePoint(pt);
-		if(obj){
-			endPoints.push(obj);
-		}
-// store affine along with points
-	}
-}
-ImageDescriptor.prototype.describeFeatures = function(){
-	// this uses the scale-space and affine-transformation to pin-point the features in space
-	// 1) get characteristic window
-	//		- scale point up/down to characteristic size
-	//		- affine-transform to isotropic-scale
-	//		- rotate to primary gradient
-	// 2) get gradient descriptor (lowe)
-	//		- 3x3
-	// 3) R,G,B
-	// 		- gradient descriptor, gradient magnitude, gradient angle, 
-	// ) 
-	// ) 
-	// the features are now fully defined on a point-by-point basis
-}
-ImageDescriptor.prototype.compareFeatures = function(){
-	// this finds best-matching lists for each featuring
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ImageDescriptor.prototype.processFilters = function(){ //////////////////////////// these should be done on a point-basis
-	var i, j, index, wid = this._width, hei = this._height;
-	this._dxRed = ImageMat.convolve(this._flatRed,wid,hei, [-0.5,0,0.5], 3,1);
-	this._dyRed = ImageMat.convolve(this._flatRed,wid,hei, [-0.5,0,0.5], 1,3);
-	this._dxGrn = ImageMat.convolve(this._flatGrn,wid,hei, [-0.5,0,0.5], 3,1);
-	this._dyGrn = ImageMat.convolve(this._flatGrn,wid,hei, [-0.5,0,0.5], 1,3);
-	this._dxBlu = ImageMat.convolve(this._flatBlu,wid,hei, [-0.5,0,0.5], 3,1);
-	this._dyBlu = ImageMat.convolve(this._flatBlu,wid,hei, [-0.5,0,0.5], 1,3);
-	this._dxGry = ImageMat.convolve(this._flatGry,wid,hei, [-0.5,0,0.5], 3,1);
-	this._dyGry = ImageMat.convolve(this._flatGry,wid,hei, [-0.5,0,0.5], 1,3);
-	// gradient magnitudes
-	this._gradRed = ImageMat.vectorSumFloat(this._dxRed,this._dyRed);
-	this._gradGrn = ImageMat.vectorSumFloat(this._dxGrn,this._dyGrn);
-	this._gradBlu = ImageMat.vectorSumFloat(this._dxBlu,this._dyBlu);
-	this._gradGry = ImageMat.vectorSumFloat(this._dxGry,this._dyGry);
-	//var dxWinGry = ImageMat.convolve(gry,wid,hei, [-3,0,3, -10,0,10, -3,0,3], 3,3);
-	//var dyWinGry = ImageMat.convolve(gry,wid,hei, [-3,-10,-3, 0,0,0, 3,10,3], 3,3);
-	// phase/angles
-	this._phaseRed = ImageMat.phaseFloat(this._dxRed,this._dyRed);
-	this._phaseGrn = ImageMat.phaseFloat(this._dxGrn,this._dyGrn);
-	this._phaseBlu = ImageMat.phaseFloat(this._dxBlu,this._dyBlu);
-	this._phaseGry = ImageMat.phaseFloat(this._dxGry,this._dyGry);
-	// second moments
-	this._dxxGry = ImageMat.mulFloat( this._dxGry, this._dxGry );
-	this._dxyGry = ImageMat.mulFloat( this._dxGry, this._dyGry );
-	this._dyyGry = ImageMat.mulFloat( this._dyGry, this._dyGry );
-	// ?
-	var gaussWid = 3, gaussHei = 3;
-	var gaussian = ImageMat.getGaussianWindow(gaussWid,gaussHei, 1.0);
-	this._sxxGry = ImageMat.convolve(this._dxxGry, wid,hei, gaussian,gaussWid,gaussHei);
-	this._sxyGry = ImageMat.convolve(this._dxyGry, wid,hei, gaussian,gaussWid,gaussHei);
-	this._syyGry = ImageMat.convolve(this._dyyGry, wid,hei, gaussian,gaussWid,gaussHei);
-	// harris
-	this._harrisGry = new Array(wid*hei);
-	var sxx = this._sxxGry, sxy = this._sxyGry, syy = this._syyGry;
-	var harris = this._harrisGry;
-	for(j=0;j<hei;++j){
-		for(i=0;i<wid;++i){
-			index = j*wid + i;
-			harris[index] = sxx[index]*syy[index] - sxy[index]*sxy[index];
-		}
-	}
-	// corners
-	var cornerThreshold = 0.55;
-	var cornerMat = [0.25,-0.5,0.25, -0.5,1,-0.5, 0.25,-0.5,0.25];
-	this._cornerRed = ImageMat.convolve(this._flatRed, wid,hei, cornerMat, 3,3);
-	this._cornerGrn = ImageMat.convolve(this._flatGrn, wid,hei, cornerMat, 3,3);
-	this._cornerBlu = ImageMat.convolve(this._flatBlu, wid,hei, cornerMat, 3,3);
-	this._cornerGry = ImageMat.convolve(this._flatGry, wid,hei, cornerMat, 3,3);
-}
-ImageDescriptor.prototype.findFeatures = function(){
-	var i, j, wid = this._width, hei = this._height;
-	// best matchings
-	var cornerGry = Code.copyArray(new Array(), this._cornerGry);
-		ImageMat.normalFloat01(cornerGry);
-		ImageMat.applyFxnFloat(cornerGry, ImageMat.flipAbsFxn);
-		ImageMat.normalFloat01(cornerGry);
-	var absGry = ImageMat.absFloat(this._gradGry);
-		ImageMat.normalFloat01(absGry);
-	var addAbsFloatGry = ImageMat.addFloat(absGry,absGry);
-		ImageMat.normalFloat01(addAbsFloatGry);
-
-	// create best matching image
-	var bestThreshold = 0.10;
-	var bestGry = Code.copyArray(new Array(), cornerGry);//ImageMat.newZeroFloat(wid,hei);
-	bestGry = ImageMat.mulFloat(bestGry,cornerGry);
-		ImageMat.normalFloat01(bestGry);
-	bestGry = ImageMat.mulFloat(bestGry,addAbsFloatGry);
-		ImageMat.normalFloat01(bestGry);
-	bestGry = ImageMat.gtFloat(bestGry, bestThreshold);
-	// find blobs
-	var blobGry = bestGry;
-	// blobGry = ImageMat.expandBlob(blobGry, wid,hei);
-	// blobGry = ImageMat.retractBlob(blobGry, wid,hei);
-	//imageBlobGry.setFromFloats(blobGry, blobGry, blobGry);
-	// find centers
-	var blobListGry = ImageMat.findBlobsCOM(blobGry, wid,hei);
-this._bestPoints = ImageMat.newZeroFloat(wid,hei);
-	console.log("FOUND: "+blobListGry.length+" FEATURE POINTS");
-	// get features from blob points
-	var feature, blob;
-	var featureList = new Array();
-	for(i=0;i<blobListGry.length;++i){
-		blob = blobListGry[i];
-		feature = new ImageFeature(this, blob.x,blob.y, blob.count, 1.0,1.0);
-		featureList.push(feature);
-		this._bestPoints[wid*blob.y+blob.x] = 1.0;
-	}
-	this._features = featureList;
-}
-
-ImageDescriptor.prototype.descriptorFromImage = function(sourceImage){
-
- 
-}
-
-
-
 // -----------------------------
+//			console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
+			// console.log( 0.5*( j + (dogList.length-1)*(-1+1)/(dogList.length-2) ) );
+			// console.log( 0.5*( j + (dogList.length-1)*(1+1)/(dogList.length-2) ) );
+			// console.log( "-------------------------" + Math.pow(2,i+((j)/(dogList.length-2))) );
+			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1-1)/(dogList.length-2) ) );
+			// console.log( Math.pow(2,i+(j/(dogList.length-2)) + 0.5*(1+1)/(dogList.length-2) ) );
+			//console.log( Math.pow(2,i), Math.pow(2,i+1) );
+// var cScale = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(-1.0000+1.0)/(dogList.length-2) );
+// var cExponent = Math.log(cScale)/Math.log(2);
+// var cSigma = sigma*Math.pow(kConstant,(cExponent*2)%2);
+// console.log( cScale, cExponent, cSigma );
+// var cScale = ext[k].z;
+// var cExponent = Math.log(cScale)/Math.log(2);
+// var cSigma = sigma*Math.pow(kConstant,(cExponent*2)%2);
+// console.log(ext[k].a, cSigma);
+				//ext[k].z = (1 + i*sConstant + j + ext[k].z);
+				//ext[k].z = Math.pow(2,ext[k].z);
+				//ext[k].t = Math.pow(2,ext[k].z);//Math.pow(kConstant,ext[k].z);
+				//ext[k].z = Math.pow(kConstant,ext[k].z);
+//ext[k].a = sigma*Math.pow(2,     (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );

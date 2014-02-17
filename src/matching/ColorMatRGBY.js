@@ -1,5 +1,5 @@
 // ColorMatRGBY.js
-function ColorMatRGBY(wid,hei, r,g,b,y, ptX,ptY, nW,nH){
+function ColorMatRGBY(ptX,ptY, wid,hei, r,g,b,y, nW,nH){
 	this._wid = nW;
 	this._hei = nH;
 	var len = nW*nH;

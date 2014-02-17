@@ -1,15 +1,20 @@
 // ImageFeature.js
 ImageFeature.MAX_POINT_LIST = 5;
-function ImageFeature(x,y,scale, matrix){
+ImageFeature.SQUARE_SIZE_SELECT = 9;
+ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16
+function ImageFeature(x,y,scale,ssValue, matrix){
 	this._x = x;
 	this._y = y;
-	this._scale = s;
+	this._scale = scale;
+	this._ssValue = ssValue;
 	this._affine = matrix;
 	this._pointList = []; // ordered list of other points [BEST,..,WORST] [{point:ptX,score:0}]
-	// this._bitmap = new ColorMatRGBY(x,y, wid,hei, origR,origG,origB,origY, ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT); // NxN bitmap of original point
+	this._colorAngles = null; // red,grn,blu,gry [0,2pi]
+	this._bins = null;
+	// non-processed objects:
+	// this._bitmap = null;
 	// this._colorBase = new ColorFloat();
 	// this._colorGradient = new ColorGradient(); // R,G,B,A -inf,+inf
-	// this._colorAngles = new ColorAngle(); // red,grn,blu,gry [0,2pi]
 	// this._colorScale = 0.0; // scale at which is is most comperable? most corner like?
 	// this._score = this._calculateScore(); // uniqueness/usefulness score
 }
@@ -26,9 +31,60 @@ ImageFeature.prototype.scale = function(scale){
 	if(scale!==undefined){ this._scale = scale; }
 	return this._scale;
 }
+ImageFeature.prototype.scaleSpaceCornerness = function(ssc){
+	if(ssc!==undefined){ this._ssValue = ssc; }
+	return this._ssValue;
+}
 ImageFeature.prototype.transform = function(trans){
 	if(trans!==undefined){ this._affine = trans; }
 	return this._affine;
+}
+// --------------------------------------------------------------------------------------------------------- DERIVED DATA
+ImageFeature.prototype.findDescriptorData = function(origR,origG,origB,origY, wid,hei){
+	var rect;
+	// extract a square
+	var sigma = undefined;
+	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma,
+		ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT, origY,wid,hei, this.transform());
+	// find gradient
+	// angle with x-axis
+
+	// primary gradients
+	this._colorAngles = new ColorAngle(angR,angG,angB,angY);
+
+	// gradient magnitude?
+
+
+	// descriptor
+	this._bins = new GradBinDescriptor();
+
+	// findAnglesRGBY
+	// 1) get characteristic window
+	//		- scale point up/down to characteristic size
+	//		- affine-transform to isotropic-scale
+	//		- rotate to primary gradient
+	// 2) get gradient descriptor (lowe)
+	//		- 3x3
+	// 3) R,G,B
+	// 		- gradient descriptor, gradient magnitude, gradient angle, 
+	// ) 
+	// ) 
+}
+
+ImageFeature.prototype.findAnglesRGBY = function(origR,origG,origB,origY, wid,hei){
+	var angR, angG, angB, angY;
+	this._colorAngles = new ColorAngle(angR,angG,angB,angY);
+}
+ImageFeature.prototype.findDescriptorRGBY = function(origR,origG,origB,origY, wid,hei){
+	// rotate to primary direction
+	// extract image squares
+	// calculate gradient
+	// bin gradients into features
+}
+
+
+ImageFeature.prototype.setCompare = function(x,y, wid,hei, origR,origG,origB,origY, angle){
+	this._bitmap = new ColorMatRGBY(x,y, wid,hei, origR,origG,origB,origY, angle, ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT);
 }
 // --------------------------------------------------------------------------------------------------------- OPERATIONAL
 ImageFeature.prototype.addPointList = function(feature,score){
@@ -50,6 +106,9 @@ ImageFeature.prototype._calculateScore = function(){
 ImageFeature.compareFeatures = function(featureA, featureB){
 	// calculate their relative score and place features in respective list
 	var score = 0;
+	// 
+	featureA.addPointList(featureB,score);
+	featureB.addPointList(featureA,score);
 	return score;
 	/*
 	* relative orientation

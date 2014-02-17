@@ -36,3 +36,9 @@ ColorAngle.compareAngles = function(angA,angB, ang){ // but is this the LOWEST P
 	var score = Math.abs(diffRed) + Math.abs(diffBlu) + Math.abs(diffGrn) + Math.abs(diffGry);
 	return score;
 }
+
+ColorAngle._temp = new ColorAngle();
+ColorAngle.optimumAngle = function(angA,angB){ 
+
+	ColorAngle.compareAngles(angA,angB, ang);
+}

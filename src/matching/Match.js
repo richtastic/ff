@@ -451,7 +451,6 @@ Match.prototype._imageCompleteFxn = function(o){
 	var root = this._root;
 	var images = new Array();
 	Code.copyArray(images,o.images);
-console.log(this);
 	var params = this.getDescriptorParameters( images[0] );
 	var wid = params[0];
 	var hei = params[1];

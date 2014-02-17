@@ -770,8 +770,7 @@ ImageMat._tempMatrix3_3 = new Matrix(3,3);
 ImageMat._tempMatrix3_1 = new Matrix(3,1);
 ImageMat._tempMatrix3_1_2 = new Matrix(3,1);
 ImageMat.extrema3DFloatInterpolate = function(loc, delX,delY,delZ, a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8, r){ // a is bot, b is middle, c is top
-	// increasing x, increasing y, increasing z
-	// unused: a0 a2 16 a8 c0 c2 c6 c8
+	// increasing x, increasing y, increasing z // unused: a0 a2 16 a8 c0 c2 c6 c8
 	var dx = (b5-b3)/(2.0*delX);
 	var dy = (b7-b1)/(2.0*delY);
 	var dz = (c4-a4)/(2.0*delZ);
@@ -790,10 +789,12 @@ ImageMat.extrema3DFloatInterpolate = function(loc, delX,delY,delZ, a0,a1,a2,a3,a
 	var temp = Matrix.mult(ImageMat._tempMatrix3_1_2, Hinv,dD);
 	loc.x = -temp.get(0,0); loc.y = -temp.get(1,0); loc.z = -temp.get(2,0);
 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
+	var det = dxdx*dydy - dxdy*dxdy;
+	var mag = Math.pow((dxdx + dydy),2)/det;
+//	loc.u = mag; // ?
 	// === loc.t = b4 + (dx*loc.x + dy*loc.y + dz*loc.z) + 0.5*((dxdx*loc.x+dxdy*loc.y+dxdz*loc.z)*loc.x + (dydx*loc.x+dydy*loc.y+dydz*loc.z)*loc.y + (dzdx*loc.x+dzdy*loc.y+dzdz*loc.z)*loc.z);
 	if(r!==undefined){ // lowe 2x2 hessian criteria tr^2(H)/det(H) < (r+1)^2/r
-		var det = dxdx*dydy - dxdy*dxdy;
-		if (  Math.pow((dxdx + dydy),2)/det > r ){
+		if ( mag > r ){
 			return null;
 		}
 	}
@@ -1276,6 +1277,7 @@ ImageMat.harrisDetectorSMM = function(src,wid,hei, sigma){
 	// padded gaussian source
 	padding = Math.floor(gaussSize/2.0);
 	gaussSource = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
+	var w2pad = wid+2*padding, h2pad = hei+2*padding;
 	gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D); // now it's actually a gaussian
 	// image derivatives
 	Ix = ImageMat.derivativeX(gaussSource, wid+2*padding,hei+2*padding);
@@ -1304,7 +1306,9 @@ ImageMat.harrisDetectorSMM = function(src,wid,hei, sigma){
 	for(i=0;i<len;++i){
 		SMM[i] = [ Sxx[i], Sxy[i], Sxy[i], Syy[i] ];
 	}
-	return SMM;
+	var cen = w2pad*Math.floor(h2pad*0.5) + w2pad;
+	var ret = {gradientX:Ix[cen] ,gradientY:Iy[cen], SMM:SMM}
+	return ret;
 }
 
 
