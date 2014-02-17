@@ -80,7 +80,7 @@ function Match(){
 	this._root = root;
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 // BLT.png
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
@@ -462,39 +462,10 @@ console.log(this);
 
 var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
 	descriptor.processScaleSpace();
-	descriptor.processAffineSpace();
+//	descriptor.processAffineSpace();
 	// descriptor.describeFeatures();
-	// 
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
-
-//filters.shift(); // first image ...
-
-
-// var tmp;
-// filters = new Array();
-// var gry = ImageMat.grayFromRGBFloat(params[2],params[3],params[4]);
-// var src = gry;
-// var SMM = new Array();
-// tmp = src;
-// //tmp = ImageMat.mulConst(src,255.0)
-// var res = ImageMat.harrisDetector(tmp,wid,hei, SMM); // , threshold, sigma, kMult
-// tmp = ImageMat.mulConst(gry,0.50)
-// res = ImageMat.addFloat(tmp,res);
-
-
-/*
-pick a valid scale-space point
-get image at specific scale-space and location
-get eigenvectors at scale-space point x,y,s
-display eigenvectors visually
-::::
-apply iterative solution for single point to get forward/reverse isotropic transformation
-*/
-
-// filters.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res),ImageMat.getNormalFloat01(res) ) );
-
-
 	
 	var imgPerRow = 4;
 	var i, row, col, len = filters.length;
@@ -516,6 +487,19 @@ apply iterative solution for single point to get forward/reverse isotropic trans
 	}
 
 
+
+// affine space is processed
+
+// var affineList = descriptor.getFeatureList();
+// for(i=0;i<affineList.length;++i){
+// 	//show point
+// }
+
+// return;
+
+
+
+
 var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(200,100),new V2D(130,130)];
 /*for(i=0;i<12;++i){
 	for(j=0;j<9;++j){
@@ -523,9 +507,9 @@ var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(20
 	}
 }*/
 var scaleSpace = descriptor.getScaleSpaceExtrema();
-for(i=0;i<scaleSpace.length;++i){
-	ptList.push( scaleSpace[i] );
-}
+// for(i=0;i<scaleSpace.length;++i){
+// 	ptList.push( scaleSpace[i] );
+// }
 //ptList.push( scaleSpace[18] );
 //ptList.push( scaleSpace[19] );
 //ptList.push( scaleSpace[20] ); // circ
@@ -537,9 +521,9 @@ for(i=0;i<scaleSpace.length;++i){
 //ptList.push( scaleSpace[7] ); // white corner
 
 //ptList.push( scaleSpace[9] );
-// for(i=0;i<40;++i){
-// 	ptList.push( scaleSpace[i] );
-// }
+for(i=0;i<10;++i){
+	ptList.push( scaleSpace[i] );
+}
 
 // BLT: 6 8 9 13 22 25 27 28 32 39 FROOTLOOPS:44
 // 11 24 50
@@ -568,12 +552,12 @@ var windowWid = object.windowWidth;
 // console.log(affine);
 // console.log(newPoint);
 
-// this.qweasd = 300;
-// this.addFloatPic(windowPic,windowWid,windowHei);
-// for(var xx=0;xx<object.list.length;++xx){
-// 	this.addFloatPic(object.list[xx],windowWid,windowHei);
-// }
-// this.qweasdY += windowHei;
+this.qweasd = 300;
+this.addFloatPic(windowPic,windowWid,windowHei);
+for(var xx=0;xx<object.list.length;++xx){
+	this.addFloatPic(object.list[xx],windowWid,windowHei);
+}
+this.qweasdY += windowHei;
 
 // //
 pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);

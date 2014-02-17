@@ -67,7 +67,8 @@ Code.isFunction = function(obj){
 	return (typeof obj)==Code.TYPE_FUNCTION;
 }
 Code.isArray = function(obj){
-	return (typeof obj)==Code.TYPE_ARRAY;
+	return (obj && obj.constructor==Array); // instanceofArray
+	//return (typeof obj)==Code.TYPE_ARRAY;
 }
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {

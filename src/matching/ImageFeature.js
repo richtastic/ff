@@ -1,16 +1,11 @@
 // ImageFeature.js
-// ImageFeature.MAX_ = 0;
-// ImageFeature.SQUARE_SIZE = 5; // NxN comparable point
-// ImageFeature.SQUARE_SIZE_SELECT = Math.ceil(ImageFeature.SQUARE_SIZE*2);//1.414); // NxN before rotation
-
-function ImageFeature(img, x,y,w, matrix){
-	this._image = img;
+ImageFeature.MAX_POINT_LIST = 5;
+function ImageFeature(x,y,scale, matrix){
 	this._x = x;
 	this._y = y;
-	this._weight = w;
-	this._matrix = matrix;
+	this._scale = s;
+	this._affine = matrix;
 	this._pointList = []; // ordered list of other points [BEST,..,WORST] [{point:ptX,score:0}]
-	return;
 	// this._bitmap = new ColorMatRGBY(x,y, wid,hei, origR,origG,origB,origY, ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT); // NxN bitmap of original point
 	// this._colorBase = new ColorFloat();
 	// this._colorGradient = new ColorGradient(); // R,G,B,A -inf,+inf
@@ -18,9 +13,37 @@ function ImageFeature(img, x,y,w, matrix){
 	// this._colorScale = 0.0; // scale at which is is most comperable? most corner like?
 	// this._score = this._calculateScore(); // uniqueness/usefulness score
 }
+// --------------------------------------------------------------------------------------------------------- GETTER/SETTER
+ImageFeature.prototype.x = function(x){
+	if(x!==undefined){ this._x = x; }
+	return this._x;
+}
+ImageFeature.prototype.y = function(y){
+	if(y!==undefined){ this._y = y; }
+	return this._y;
+}
+ImageFeature.prototype.scale = function(scale){
+	if(scale!==undefined){ this._scale = scale; }
+	return this._scale;
+}
+ImageFeature.prototype.transform = function(trans){
+	if(trans!==undefined){ this._affine = trans; }
+	return this._affine;
+}
+// --------------------------------------------------------------------------------------------------------- OPERATIONAL
+ImageFeature.prototype.addPointList = function(feature,score){
+	this._pointList.push([feature,score]);
+	this._pointList.sort(this._sortPointList);
+	if(this._pointList.length>ImageFeature.MAX_POINT_LIST){
+		this._pointList.pop();
+	}
+}
+ImageFeature.prototype._sortPointList = function(a,b){
+	return a[1]-b[1];
+}
 ImageFeature.prototype._calculateScore = function(){
 	return 0.0;
-	var score = base + gradient + angle + scale ; // large gradient = better, large color volume, ...
+	var score = base + gradient + angle + scale; // large gradient = better, large color volume, ...
 	return score;
 }
 // --------------------------------------------------------------------------------------------------------- CLASS
@@ -41,4 +64,7 @@ ImageFeature.compareFeatures = function(featureA, featureB){
 	* other?
 	*/
 }
+
+
+
 

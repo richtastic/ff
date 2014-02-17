@@ -1,7 +1,11 @@
 // ImageDescriptor.js
 
-function ImageDescriptor(wid,hei, origR,origG,origB){
+function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	var i, len, len = wid*hei;
+	// stored data
+	this._filename = filename;
+	this._features = new Array();
+	//
 	this._width = wid;
 	this._height = hei;
 	this._flatRed = origR;
@@ -11,7 +15,6 @@ function ImageDescriptor(wid,hei, origR,origG,origB){
 	for(i=0;i<len;++i){
 		this._flatGry[i] = (this._flatRed[i]+this._flatGrn[i]+this._flatBlu[i])/3.0;
 	}
-	//ImageMat.printBadData(this._flatGry);
 	this._features = new Array();
 	this._dxRed = null;
 	this._dyRed = null;
@@ -36,35 +39,26 @@ function ImageDescriptor(wid,hei, origR,origG,origB){
 	this._scaleSpaceExtrema = new Array(); //  x=x, y=y, z=sigma, t=value
 	//this._extremaList = new Array();
 }
+
+ImageDescriptor.prototype.saveToYAML = function(yaml){
+	console.log("SAVE TO YAML..");
+	console.log(yaml);
+}
+ImageDescriptor.prototype.loadFromYAML = function(yaml){
+	console.log("LOAD FROM YAML..");
+	console.log(yaml);
+}
+
+ImageDescriptor.prototype.getFeatureList = function(){
+	return this._features;
+}
 ImageDescriptor.prototype.getScaleSpaceExtrema = function(){
 	return this._scaleSpaceExtrema;
 }
-ImageDescriptor.prototype.getImageDefinition = function(){
+ImageDescriptor.prototype.getImageDefinition = function(){ // LEGACY
 	var wid = this._width, hei = this._height;
 	var arr = new Array();
 	arr.push( (new ImageMat(wid,hei)).setFromFloats( ImageMat.getNormalFloat01(this._flatRed),ImageMat.getNormalFloat01(this._flatGrn),ImageMat.getNormalFloat01(this._flatBlu) ) );
-
-	/*
-	// dog
-	var i, j, w, h, s, len = this._dogList.length;
-	len = Math.min(len,4);
-	for(i=0;i<len;++i){
-		//w = Math.floor(wid*Math.pow(0.5,i));
-		//h = Math.floor(hei*Math.pow(0.5,i));
-		s = this._dogList[i].length/(wid*hei);
-		s = Math.sqrt(s);
-		w = Math.round( s*wid ); h = Math.round( s*hei);
-// console.log( Math.min.apply(this,this._dogList[i]), Math.max.apply(this,this._dogList[i]) );
-// this._dogList[i] = ImageMat.absFloat( this._dogList[i] );
-		arr.push( (new ImageMat(w,h)).setFromFloats(
-			ImageMat.getNormalFloat01(this._dogList[i]),
-			ImageMat.getNormalFloat01(this._dogList[i]),
-			ImageMat.getNormalFloat01(this._dogList[i]) ) );
-			// this._dogList[i],
-			// this._dogList[i],
-			// this._dogList[i]));
-	}
-	*/
 	// 
 	var extremaBase =  ImageMat.getNormalFloat01(this._flatGry);
 	var ar = this._scaleSpaceExtrema;
@@ -200,7 +194,8 @@ ImageDescriptor.prototype.sigmaFromScale = function(cScale){
 }
 
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present
-	return ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, this._sourceImageMaximum,this._sourceImageWidth,this._sourceImageHeight, matrix);
+	return ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, this._flatGry,this._width,this._height, matrix);
+	//return ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, this._sourceImageMaximum,this._sourceImageWidth,this._sourceImageHeight, matrix);
 }
 
 
@@ -288,23 +283,24 @@ ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.
 	var unstableMax = 25.0;
 	var inScale = inPoint.z;
 	var inSigma = this.sigmaFromScale(inScale);
-	var transform = new Matrix(3,3); transform.identity();
 	var currentWid = 15, currentHei = 15;
-	var currentScale = 0.25*( inScale );
+	var currentScale = 0.125*( inScale );
 	var currentSigma = 1.6;
-	var currentImage; //= ImageDescriptor.exRect(wid/2/wid,hei/2/hei,currentScale,currentSigma, currentWid,currentHei, gray,wid,hei, transform);
+	var currentImage;
 	var originalMinimum = null;
 	var i, SMM, smm, ang, amt;
+	var eig, lA, lB, temp, eA, eB;
 	var eigRatio, convergeMin = 1E-6;
 	var bestIteration = -1, bestRatio = 666;
 	var bestTransform = new Matrix(3,3);
-var wid = this._sourceImageWidth;
-var hei = this._sourceImageHeight;
-var gray = this._sourceImageMaximum;
+	// var wid = this._sourceImageWidth, hei = this._sourceImageHeight;
+	// var gray = this._sourceImageMaximum;
+	var wid = this._width, hei = this._height;
+	var gray = this._flatGry;
+	var mat = new Matrix(2,2), rot = new Matrix(3,3), sca = new Matrix(3,3), cum = new Matrix(3,3);
+	var transform = new Matrix(3,3); transform.identity();
+	var scaledTotal = 1.0;
 var list = new Array();
-var mat = new Matrix(2,2), rot = new Matrix(3,3), sca = new Matrix(3,3), cum = new Matrix(3,3);
-var eig, lA, lB, temp, eA, eB;
-var scaledTotal = 1.0;
 	for(i=0;i<10;++i){
 		currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
 list.push(currentImage);
@@ -381,7 +377,7 @@ scaledTotal*=correctScale;
 	var W0 = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale*4.0,null, currentWid,currentHei, gray,wid,hei, transform);
 	return {matrix:transform, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }
-ImageDescriptor.prototype.getStableAffinePoint2 = function(inPoint){ // 
+ImageDescriptor.prototype.getStableAffinePointOLD = function(inPoint){ // 
 	var countMax = 10;
 	var transform = new Matrix(3,3); transform.identity();
 	var i, xWin, vals, ratio, lambdaMax, lambdaMin, epsilon = 1E-6;
@@ -846,25 +842,17 @@ ImageDescriptor.prototype.processAffineSpace = function(){
 	// merging to nearby harris maxima
 
 	// this finds the most affine-invariant transformation to compare the points
-	var i, j, k, len, len2, pt;
+	var i, j, k, len, len2, pt, obj;
 	var startPoints = this._scaleSpaceExtrema;
+	var endPoints = new Array();
 	len = startPoints.length;
 	for(k=0;k<len;++k){
 		pt = startPoints[k]; // initial interest point
-		/*
-		DETECTION ALGORITHM
-		* initial interest point x0 (via multi-scale Harris detector)
-		1) U(0) = I
-		2) normalize window W(x(w)) = I(X) centered on U(k-1)*x(w) = x(k-1)
-		3) select integration scale oi at x(w)(k-1)
-		4) select differentiation scale od = s*si that maximizes min(eig)/max(eig) ; s in [0.5,0.75] ; u = u(x(w)(k-1),oi,od)
-		5) detect spatial localization x(w)(k) of a maximum of harris measure nearest to x(w)(k-1)
-			and compute location of interest point x(k)
-		6) compute ui(k) = u^-(1/2) (x(w)(k),oi,od)
-		7) concatenate transformation U(k) = u(i)(k) * U(k-1)
-			and normalize U(k) to max(eig)(U(k)) = 1
-		8) goto (2) if 1 - min(eig)(u(i)(k))/max(eig)(u(i)(k)) >= epsilon
-		*/
+		obj = this.getStableAffinePoint(pt);
+		if(obj){
+			endPoints.push(obj);
+		}
+// store affine along with points
 	}
 }
 ImageDescriptor.prototype.describeFeatures = function(){

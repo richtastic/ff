@@ -16,6 +16,63 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesLoadedFxn(){
 	Code.setPageTitle("fantastic");
+	var match = new Match();
+	return;
+/*
+	var yaml = new YAML();
+
+	yaml.startWrite();
+	yaml.writeComment("document");
+	yaml.writeString("name","skippy dipidy");
+	yaml.writeNumber("a",26);
+	yaml.writeBoolean("b",true);
+	yaml.writeObjectStart("o1");
+		yaml.writeNumber("n",123);
+	yaml.writeObjectEnd();
+	yaml.writeArrayStart("list");
+		yaml.writeNumber(1);
+		yaml.writeNumber(2);
+		yaml.writeObjectStart("o2");
+			yaml.writeNumber("n",123);
+		yaml.writeObjectEnd();
+	yaml.writeArrayEnd();
+	yaml.writeString("string","this is a longer string with\" quotes\" ");
+
+	yaml.writeDocument();
+
+	yaml.writeNumber("a",26);
+	yaml.writeBoolean("b",true);
+	yaml.writeObjectStart("date");
+	yaml.writeString("timestamp","20140214_22:33:10.1234");
+	yaml.writeArrayStart("list");
+		yaml.writeNumber("x",1.2345);
+		yaml.writeNumber("y",26);
+		yaml.writeNumber("z",3.141);
+		yaml.writeComment("an array object");
+		yaml.writeObjectStart("wootness");
+			yaml.writeNumber("x",1.2345);
+			yaml.writeNumber("y",26);
+			yaml.writeNumber("z",3.141);
+		yaml.writeObjectEnd();
+	yaml.writeArrayEnd();
+	yaml.writeBoolean("booleanValued",true);
+	yaml.writeObjectEnd();
+
+	yaml.writeIgnore();
+	
+	yaml.writeBlank();
+	yaml.writeBlank();
+	yaml.writeNumber("a",26);
+	yaml.writeBoolean("b",true);	
+	//yaml.writeString("string","this is\na multi-line\n string. mk.");
+	var str = yaml.toString();
+	console.log( str );
+	obj = yaml.parse(str);
+	console.log( obj );
+
+return;
+*/
+
 	// var scale;
 	// var out = new V2D();
 	// var mat = new Matrix(3,3);
@@ -39,8 +96,7 @@ function customClassesLoadedFxn(){
 	// console.log(pt11.length()+" => "+out.length()+"    "+scale);
 	// console.log(pt11.toString()+" => "+out.toString());
 
-	var match = new Match();
-	return;
+	
 // 	var A = (new Matrix(2,2)).setFromArray([3,1, 2,2]);
 // 	console.log( A.toString() );
 // 	console.log( (Matrix.power(A,0.5)).toString() );
