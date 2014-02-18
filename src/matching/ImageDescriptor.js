@@ -3,6 +3,7 @@ ImageDescriptor.SCALE_MULTIPLIER = 0.125;
 ImageDescriptor.YAML = {
 	FILENAME: "filename",
 	CREATED: "created",
+	FEATURES: "features",
 	}
 function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	var i, len, len = wid*hei;
@@ -45,13 +46,22 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 }
 
 ImageDescriptor.prototype.saveToYAML = function(yaml){
+	var i, len, feature;
 	var DATA = ImageDescriptor.YAML;
 	console.log("SAVE TO YAML..");
 	console.log(yaml);
-	//yaml.writeObjectStart("");
 	yaml.writeString(DATA.FILENAME,this._filename);
-	//yaml.writeString(DATA.CREATED,""+Code.getTimeMilliseconds());
 	yaml.writeString(DATA.CREATED,""+Code.getTimeStamp());
+	yaml.writeArrayStart(DATA.FEATURES);
+		len = this._features.length;
+		for(i=0;i<len;++i){
+			feature = this._features[i];
+			yaml.writeObjectStart();
+				feature.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+		}
+	yaml.writeArrayEnd();
+	//yaml.writeObjectStart("");
 	//yaml.writeObjectEnd();
 }
 ImageDescriptor.prototype.loadFromYAML = function(yaml){
@@ -198,8 +208,6 @@ ImageDescriptor.prototype.describeFeatures = function(){ // features are now ful
 	var list = this._features;
 	var feature, i, len=list.length;
 	for(i=0;i<len;++i){
-	//for(i=3;i<6;++i){
-		console.log(i+" / "+len);
 		feature = list[i];
 		feature.findDescriptorData(this._flatRed,this._flatGrn,this._flatBlu,this._flatGry, this._width,this._height);
 	}

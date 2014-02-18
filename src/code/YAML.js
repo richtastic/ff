@@ -11,6 +11,7 @@ YAML.ARRAY_SEPARATOR="-";
 YAML.DOCUMENT_SEPARATOR="---";
 YAML.IGNORE="...";
 YAML.NEWLINE="\n";
+YAML.NULL="null";
 YAML.REFERENCE_SUFFIX="ref";
 // functional
 YAML.STACK_UNKNOWN=0;
@@ -270,6 +271,8 @@ this._gotoNextLine();
 YAML.prototype._getTerminal = function(value){
     if(value=="true" || value=="false"){ // boolean
         if(value=="true"){ value=true; }else{ value=false; }
+    }else if(value==YAML.NULL){
+    	return null;
     }else if( !isNaN(value) ){ // number
         if( value.indexOf(".")>=0  ){ // floating point
             value = parseFloat(value);
@@ -341,6 +344,13 @@ YAML.prototype.writeComment = function(comment){
 	this._lines[this._lineNumber++] = this._prefixIndent()+YAML.COMMENT+" "+comment;
 }
 // -------------------------------------------------------------------------------------------------- PRIMITIVES
+YAML.prototype.writeNull = function(name){
+	if(this._stackIsArray()){
+		this._lines[this._lineNumber++] = this._prefixIndent()+YAML.ARRAY_SEPARATOR+YAML.SPACE+YAML.NULL;
+	}else{
+		this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR+YAML.SPACE+YAML.NULL;
+	}
+}
 YAML.prototype.writeBoolean = function(name,value){
 	if(value===undefined){ value = name; name = null; }
 	if(this._stackIsArray()){

@@ -4,6 +4,16 @@ ImageFeature.DESCRIPTOR_SIZE_P4 = 12; // before gradient
 ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16 after gradient
 ImageFeature.SQUARE_SIZE_SELECT = 9; // before gauss
 ImageFeature.SSD_SIZE = 7; // flat
+ImageFeature.YAML = {
+	X:"x",
+	Y:"y",
+	SCALE:"scale",
+	AFFINE:"affine",
+		A:"a",
+		B:"b",
+		C:"c",
+		D:"d"
+}
 function ImageFeature(x,y,scale,ssValue, matrix){
 	this._x = x;
 	this._y = y;
@@ -19,6 +29,30 @@ function ImageFeature(x,y,scale,ssValue, matrix){
 	// this._colorGradient = new ColorGradient(); // R,G,B,A -inf,+inf
 	// this._colorScale = 0.0; // scale at which is is most comperable? most corner like?
 	// this._score = this._calculateScore(); // uniqueness/usefulness score
+}
+ImageFeature.prototype.saveToYAML = function(yaml){
+	var DATA = ImageFeature.YAML;
+	yaml.writeNumber(DATA.X, this._x );
+	yaml.writeNumber(DATA.Y, this._y );
+	yaml.writeNumber(DATA.SCALE, this._scale );
+		if(this._affine!=null){
+			yaml.writeObjectStart(DATA.AFFINE);
+				yaml.writeNumber(DATA.A,this._affine.get(0,0));
+				yaml.writeNumber(DATA.B,this._affine.get(0,1));
+				yaml.writeNumber(DATA.C,this._affine.get(1,0));
+				yaml.writeNumber(DATA.D,this._affine.get(1,1));
+			yaml.writeObjectEnd();
+			// yaml.writeObjectStart(DATA.AFFINE);
+			// 	this._affine.saveToYAML(yaml);
+			// yaml.writeObjectEnd();
+		}else{
+			yaml.writeNull(DATA.AFFINE);
+		}
+	//yaml.writeNumber(DATA.AFFINE, this._scale );
+}
+ImageFeature.prototype.loadFromYAML = function(yaml){
+	console.log("LOAD FROM YAML..");
+	console.log(yaml);
 }
 // --------------------------------------------------------------------------------------------------------- GETTER/SETTER
 ImageFeature.prototype.x = function(x){
@@ -63,7 +97,7 @@ ImageFeature.prototype.findDescriptorData = function(origR,origG,origB,origY, wi
 	// angle with x-axis
 	mag = g.length()
 	ang = V2D.angleDirection(x,g);
-	console.log(ang*180/Math.PI);
+	//console.log(ang*180/Math.PI);
 
 
 	// bins

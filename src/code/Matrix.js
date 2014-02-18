@@ -1,4 +1,9 @@
 // Matrix.js
+Matrix.YAML = {
+	ROWS:"row",
+	COLS:"col",
+	DATA:"data"
+}
 function Matrix(r,c){
 	this._init(r,c);
 }
@@ -14,6 +19,20 @@ Matrix.prototype._init = function(r,c){
 			this._rows[j][i] = 0.0;
 		}
 	}
+}
+Matrix.prototype.saveToYAML = function(yaml){
+	var i, j, r, row=this._rowCount, col=this._colCount;
+	var DATA = Matrix.YAML;
+	yaml.writeNumber(DATA.ROWS, this._rowCount);
+	yaml.writeNumber(DATA.COLS, this._colCount);
+	yaml.writeArrayStart(DATA.DATA);
+		for(j=0;j<row;++j){
+			r = this._rows[j];
+			for(i=0;i<col;++i){
+				yaml.writeNumber(r[i]);
+			}
+		}
+	yaml.writeArrayEnd();
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 Matrix.prototype.setFromArray = function(list, newRow,newCol){

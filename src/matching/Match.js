@@ -473,6 +473,8 @@ yaml.writeObjectStart("descriptor");
 	descriptor.saveToYAML(yaml);
 yaml.writeObjectEnd();
 console.log(yaml.toString());
+var obj = yaml.parse(yaml.toString());
+console.log(obj);
 return;
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();

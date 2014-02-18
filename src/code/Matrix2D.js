@@ -1,8 +1,23 @@
 // Matrix2D.js
-
+Matrix2D.YAML = {
+	A:"a",
+	B:"b",
+	C:"c",
+	D:"d",
+	X:"x",
+	Y:"y"
+}
 function Matrix2D(){
 	this.a=0; this.b=0; this.c=0; this.d=0; this.x=0; this.y=0;
 	this.identity();
+}
+Matrix.prototype.saveToYAML = function(yaml){
+	yaml.writeNumber(DATA.A, this._a);
+	yaml.writeNumber(DATA.B, this._b);
+	yaml.writeNumber(DATA.C, this._c);
+	yaml.writeNumber(DATA.D, this._d);
+	yaml.writeNumber(DATA.X, this._x);
+	yaml.writeNumber(DATA.Y, this._y);
 }
 Matrix2D.prototype.identity = function(){
 	this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.x = 0; this.y = 0;
