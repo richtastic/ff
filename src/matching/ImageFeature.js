@@ -50,9 +50,9 @@ ImageFeature.prototype.saveToYAML = function(yaml){
 		}
 	//yaml.writeNumber(DATA.AFFINE, this._scale );
 }
-ImageFeature.prototype.loadFromYAML = function(yaml){
-	console.log("LOAD FROM YAML..");
-	console.log(yaml);
+ImageFeature.prototype.loadFromObject = function(obj){
+	console.log("LOAD FROM YAML OBJECT");
+	console.log(obj);
 }
 // --------------------------------------------------------------------------------------------------------- GETTER/SETTER
 ImageFeature.prototype.x = function(x){

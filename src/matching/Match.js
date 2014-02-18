@@ -472,9 +472,17 @@ yaml.startWrite();
 yaml.writeObjectStart("descriptor");
 	descriptor.saveToYAML(yaml);
 yaml.writeObjectEnd();
-console.log(yaml.toString());
-var obj = yaml.parse(yaml.toString());
+var str = yaml.toString();
+//console.log(str);
+var obj = yaml.parse(str);
 console.log(obj);
+descriptor.loadFromObject(obj[0].descriptor);
+
+/*
+* saving complete objects
+* loading complete objects
+* comparing features across multiple image-descriptors
+*/
 return;
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
