@@ -6,11 +6,15 @@ V2D.dot = function(a,b){
 V2D.cross = function(a,b){ // z direction
 	return a.x*b.y-a.y*b.x;
 }
+// V2D.crossNorm = function(a,b){ // z direction
+// 	return (a.x*b.y-a.y*b.x)/(a.length()*b.length());
+// }
 V2D.angle = function(a,b){
 	var lenA = a.length();
 	var lenB = b.length();
 	if(lenA!=0 && lenB!=0){
-		return Math.acos(V2D.dot(a,b))/(lenA*lenB);
+		//return Math.acos(V2D.dot(a,b)/(lenA*lenB));
+		return Math.acos( Math.max(Math.min( V2D.dot(a,b)/(lenA*lenB),1.0 ),-1.0) );
 	}
 	return 0;
 }

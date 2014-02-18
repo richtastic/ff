@@ -450,7 +450,10 @@ root.addChild(doi);
 Match.prototype._imageCompleteFxn = function(o){
 	var root = this._root;
 	var images = new Array();
+	var fileNames = new Array();
+	Code.copyArray(fileNames,o.files);
 	Code.copyArray(images,o.images);
+	var imageFileName = fileNames[0];
 	var params = this.getDescriptorParameters( images[0] );
 	var wid = params[0];
 	var hei = params[1];
@@ -459,10 +462,18 @@ Match.prototype._imageCompleteFxn = function(o){
 	var imageSourceBlu = params[4];
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 
-var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4] );
+var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4], imageFileName );
 	descriptor.processScaleSpace();
-//	descriptor.processAffineSpace();
-	// descriptor.describeFeatures();
+	descriptor.processAffineSpace();
+	descriptor.describeFeatures();
+
+var yaml = new YAML();
+yaml.startWrite();
+yaml.writeObjectStart("descriptor");
+	descriptor.saveToYAML(yaml);
+yaml.writeObjectEnd();
+console.log(yaml.toString());
+return;
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
 	
@@ -532,11 +543,6 @@ for(i=0;i<10;++i){
 
 for(i=0;i<ptList.length;++i){
 	var pt = ptList[i];
-
-//console.log(pt);
-
-// getScaleSpacePoint
-//pt.t = pt.a
 var object = descriptor.getStableAffinePoint(pt);
 if(!object){ // unstable
 	console.log("UNSTABLE");

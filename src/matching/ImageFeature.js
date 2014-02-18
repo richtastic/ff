@@ -1,7 +1,9 @@
 // ImageFeature.js
 ImageFeature.MAX_POINT_LIST = 5;
-ImageFeature.SQUARE_SIZE_SELECT = 9;
-ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16
+ImageFeature.DESCRIPTOR_SIZE_P4 = 12; // before gradient
+ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16 after gradient
+ImageFeature.SQUARE_SIZE_SELECT = 9; // before gauss
+ImageFeature.SSD_SIZE = 7; // flat
 function ImageFeature(x,y,scale,ssValue, matrix){
 	this._x = x;
 	this._y = y;
@@ -41,13 +43,42 @@ ImageFeature.prototype.transform = function(trans){
 }
 // --------------------------------------------------------------------------------------------------------- DERIVED DATA
 ImageFeature.prototype.findDescriptorData = function(origR,origG,origB,origY, wid,hei){
-	var rect;
-	// extract a square
-	var sigma = undefined;
-	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma,
-		ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT, origY,wid,hei, this.transform());
+	var rectRed, rectGrn, rectBlu, rectGry;
+	var gradRedX, gradGrnX, gradBluX, gradGryX, gradRedY, gradGrnY, gradBluY, gradGryY;
+	var Ix, Iy, src, mag, ang, sigma, g = new V2D(), x = new V2D(1,0);
+	var w = ImageFeature.SQUARE_SIZE_SELECT, h = ImageFeature.SQUARE_SIZE_SELECT;
+	var cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
+
+
 	// find gradient
+	sigma = undefined;
+	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei, this.transform());
+	sigma = 1.0;
+	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
+	src = ImageMat.gaussian2DFrom1DFloat(rectGry, w,h, gauss1D);
+	//src = rectGry;
+	Ix = ImageMat.derivativeX(src, w,h);
+	Iy = ImageMat.derivativeY(src, w,h);
+	g.set(Ix[w*cenY + cenX], Iy[w*cenY + cenX]);
 	// angle with x-axis
+	mag = g.length()
+	ang = V2D.angleDirection(x,g);
+	console.log(ang*180/Math.PI);
+
+
+	// bins
+	w = ImageFeature.DESCRIPTOR_SIZE_P4; h = ImageFeature.DESCRIPTOR_SIZE_P4;
+	cenX = Math.floor(w*0.5); cenY = Math.floor(h*0.5);
+	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei);
+	src = rectGry;
+	Ix = ImageMat.derivativeX(src, w,h);
+	Iy = ImageMat.derivativeY(src, w,h);
+	
+	this._bins = new SIFTDescriptor();
+	this._bins.fromGradients(Ix,Iy,w,h);
+//	console.log(this._bins.toString());
+
+return;
 
 	// primary gradients
 	this._colorAngles = new ColorAngle(angR,angG,angB,angY);
@@ -70,7 +101,46 @@ ImageFeature.prototype.findDescriptorData = function(origR,origG,origB,origY, wi
 	// ) 
 	// ) 
 }
-
+// ImageFeature.prototype._collectBins = function(Ix,Iy,w,h){
+// 	console.log( "---------------------------------------------------------" );
+// 	var i, j, bin, cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5), v = new V2D(), x = new V2D(1,0);
+// 	bin = new GradBinDescriptor(); bin.clear();
+// 	for(i=cenX-4;i<cenX;++i){ // TL
+// 		for(j=cenY-4;j<cenY;++j){
+// 			v.set(Ix[w*j + i], Iy[w*j + i]);
+// 			ang = V2D.angleDirection(x,v);
+// 			bin.addAngle(ang);
+// 		}
+// 	}
+// 	console.log( bin.toString() );
+// 	bin = new GradBinDescriptor(); bin.clear();
+// 	for(i=cenX;i<cenX+4;++i){ // TR
+// 		for(j=cenY-4;j<cenY;++j){
+// 			v.set(Ix[w*j + i], Iy[w*j + i]);
+// 			ang = V2D.angleDirection(x,v);
+// 			bin.addAngle(ang);
+// 		}
+// 	}
+// 	console.log( bin.toString() );
+// 	bin = new GradBinDescriptor(); bin.clear();
+// 	for(i=cenX-4;i<cenX;++i){ // BL
+// 		for(j=cenY;j<cenY+4;++j){
+// 			v.set(Ix[w*j + i], Iy[w*j + i]);
+// 			ang = V2D.angleDirection(x,v);
+// 			bin.addAngle(ang);
+// 		}
+// 	}
+// 	console.log( bin.toString() );
+// 	bin = new GradBinDescriptor(); bin.clear();
+// 	for(i=cenX;i<cenX+4;++i){ // BR
+// 		for(j=cenY;j<cenY+4;++j){
+// 			v.set(Ix[w*j + i], Iy[w*j + i]);
+// 			ang = V2D.angleDirection(x,v);
+// 			bin.addAngle(ang);
+// 		}
+// 	}
+// 	console.log( bin.toString() );
+// }
 ImageFeature.prototype.findAnglesRGBY = function(origR,origG,origB,origY, wid,hei){
 	var angR, angG, angB, angY;
 	this._colorAngles = new ColorAngle(angR,angG,angB,angY);

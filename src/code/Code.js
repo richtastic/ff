@@ -70,6 +70,7 @@ Code.isArray = function(obj){
 	return (obj && obj.constructor==Array); // instanceofArray
 	//return (typeof obj)==Code.TYPE_ARRAY;
 }
+
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {
 	if(Object && Object.getOwnPropertyNames!==undefined){
@@ -243,12 +244,37 @@ Code.minArray = function(a){
 //console.log( Code.secondMax(1,2,42,34,23,7) );
 	//console.log( Math.max([1,2,42,34,23,7]) ); // NO
 	//console.log( Math.max.call(this,[1,2,42,34,23,7]) ); // NO
-	//console.log( Math.max.apply(this,[1,2,42,34,23,7]) ); // WORKS
+	//console.log( Math.max.apply(this,[1,2,42,34,23,7]) ); // WORKS\
 // ------------------------------------------------------------------------------------------ TIME
+Code._timerDateA = 0;
+Code._timerDateB = 0;
+Code.timerStart = function(){
+	Code._timerDateA = Code.getTimeMilliseconds();
+}
+Code.timerStop = function(){
+	Code._timerDateB = Code.getTimeMilliseconds();
+}
+Code.timerDifference = function(){
+	return Code._timerDateB - Code._timerDateA;
+}
+Code.timerDifferenceSeconds = function(){
+	return Code.timerDifference()/1000.0;
+}
 Code.getTimeMilliseconds = function(){
     var d = new Date();
     return d.getTime();
-};
+}
+Code.getTimeStamp = function(){
+    var d = new Date( Code.getTimeMilliseconds() );
+	var str = d.getFullYear()
+	+"-"+Code.prependFixed(""+d.getMonth(),"0",2)
+	+"-"+Code.prependFixed(""+(d.getDate()+1),"0",2)
+	+" "+Code.prependFixed(""+d.getHours(),"0",2)
+	+":"+Code.prependFixed(""+d.getMinutes(),"0",2)
+	+":"+Code.prependFixed(""+d.getSeconds(),"0",2)
+	+"."+Code.postpendFixed(""+d.getMilliseconds(),"0",4);
+	return str;
+}
 Code.getAMPMFromDate = function(date){
 	return parseInt(date.getHours(),10)<12?"AM":"PM";
 }
@@ -282,7 +308,19 @@ Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
 	}
 	return nB;
 }
-Code.zeroTwoPi = function(ang){
+
+Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]
+	var pi2 = Math.PI*2;
+	while(ang>pi2){
+		ang -= pi2;
+	}
+	while(ang<0){
+		ang += pi2;
+	}
+	return ang;
+}
+
+Code.angleTwoPi = function(ang){ // [-inf,inf] => [-2pi,2pi]
 	var pi2 = Math.PI*2;
 	while(ang>pi2){
 		ang -= pi2;
@@ -343,7 +381,13 @@ Code.prependFixed = function(start,pad,count){
 	}
 	return str;
 }
-
+Code.postpendFixed = function(start,pad,count){
+	var str = start;
+	while(str.length<count){
+		str = str+pad;
+	}
+	return str;
+}
 
 // -------------------------------------------------------- HTML
 Code.getBody = function(){

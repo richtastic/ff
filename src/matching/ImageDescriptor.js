@@ -1,5 +1,9 @@
 // ImageDescriptor.js
 ImageDescriptor.SCALE_MULTIPLIER = 0.125;
+ImageDescriptor.YAML = {
+	FILENAME: "filename",
+	CREATED: "created",
+	}
 function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	var i, len, len = wid*hei;
 	// stored data
@@ -41,8 +45,14 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 }
 
 ImageDescriptor.prototype.saveToYAML = function(yaml){
+	var DATA = ImageDescriptor.YAML;
 	console.log("SAVE TO YAML..");
 	console.log(yaml);
+	//yaml.writeObjectStart("");
+	yaml.writeString(DATA.FILENAME,this._filename);
+	//yaml.writeString(DATA.CREATED,""+Code.getTimeMilliseconds());
+	yaml.writeString(DATA.CREATED,""+Code.getTimeStamp());
+	//yaml.writeObjectEnd();
 }
 ImageDescriptor.prototype.loadFromYAML = function(yaml){
 	console.log("LOAD FROM YAML..");
@@ -70,6 +80,7 @@ ImageDescriptor.prototype.getImageDefinition = function(){ // LEGACY
 	return arr;
 }
 ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a list of potential scale-space points: _scaleSpaceExtrema
+	Code.timerStart();
 	var i, j, k, ss, len, len2, pt;
 	var wid = this._width, hei = this._height;
 	var sigma = 1.6; // 1.6
@@ -156,9 +167,12 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	}
 	console.log("scale space count: "+this._features.length);
 	Code.emptyArray(extremaList);
+	Code.timerStop();
+	console.log( "time: "+Code.timerDifferenceSeconds() );
 }
 
 ImageDescriptor.prototype.processAffineSpace = function(){ // this finds the most affine-invariant transformation to compare points
+	Code.timerStart();
 // need to merge points that are real close to eachother
 	// dropping
 	// merging/localizing to nearby harris maxima
@@ -171,20 +185,26 @@ ImageDescriptor.prototype.processAffineSpace = function(){ // this finds the mos
 		pt = new V3D(startPoints[k].x(),startPoints[k].y(),startPoints[k].scale()); // initial interest point
 		obj = this.getStableAffinePoint(pt);
 		if(obj){
-			startPoints[k].affine();
-			feature = new ImageFeature(obj.x,obj.y,obj.z, pt.scaleSpaceCornerness(), obj.matrix);
+			feature = new ImageFeature(obj.x,obj.y,obj.scale, startPoints[k].scaleSpaceCornerness(), obj.matrix);
 			endPoints.push(feature);
 		}
 	}
 	this._features = endPoints;
+	Code.timerStop();
+	console.log( "time: "+Code.timerDifferenceSeconds() );
 }
 ImageDescriptor.prototype.describeFeatures = function(){ // features are now fully defined on a point-by-point basis
+	Code.timerStart();
 	var list = this._features;
 	var feature, i, len=list.length;
 	for(i=0;i<len;++i){
+	//for(i=3;i<6;++i){
+		console.log(i+" / "+len);
 		feature = list[i];
 		feature.findDescriptorData(this._flatRed,this._flatGrn,this._flatBlu,this._flatGry, this._width,this._height);
 	}
+	Code.timerStop();
+	console.log( "time: "+Code.timerDifferenceSeconds() );
 }
 ImageDescriptor.prototype.compareFeatures = function(){ // this finds best-matching lists for each featuring
 	var list = this._features;
@@ -388,9 +408,10 @@ scaledTotal*=correctScale;
 			return null;
 		}
 	}
-	// scale back to primay gradient direction
-	bestTransform.multV2DtoV2D(t,originalMinimum);
-	ang = V2D.angleDirection(t,originalMinimum);
+	// scale back to primary gradient direction
+	bestTransform.multV2DtoV2D(t,originalGradient);
+	ang = V2D.angleDirection(t,originalGradient);
+	// console.log(ang*180/Math.PI);
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	bestTransform = Matrix.mult(bestTransform,rot);
 	// return

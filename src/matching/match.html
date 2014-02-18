@@ -10,41 +10,39 @@ function pageLoadedFxn(){
 	ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","ImageFeature.js","ImageDescriptor.js","Match.js"];
+	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ImageFeature.js","ImageDescriptor.js","Match.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
 	scriptLoader.load();
 }
 function customClassesLoadedFxn(){
 	Code.setPageTitle("fantastic");
-	// var match = new Match();
-	// return;
+	var match = new Match();
+	return;
 
-	var yaml = new YAML();
-
-	var object3 = {item1:123, item2:"string"}
-
-	yaml.startWrite();
-	yaml.writeComment("document");
-	yaml.writeObjectStart("o1","def");
-		yaml.writeNumber("n",123);
-	yaml.writeObjectEnd();
-	yaml.writeObjectReference("o2","def");
-	yaml.writeArrayStart("a1");
-		yaml.writeNumber(0);
-		yaml.writeObjectStart("obj");
-			yaml.writeString("cat","hat");
-		yaml.writeObjectEnd();
-		yaml.writeNumber(2);
-		yaml.writeObjectReference("o1","def");
-	yaml.writeArrayEnd();
-	yaml.writeObjectStart("o3",object3);
-		yaml.writeNumber("item1",object3.item1);
-		yaml.writeString("item2",object3.item2);
-	yaml.writeObjectEnd();
-	yaml.writeObjectReference("o4",object3);
-	yaml.writeArrayStart("a2");
-		yaml.writeObjectReference("o3",object3);
-	yaml.writeArrayEnd();
+	// var yaml = new YAML();
+	// var object3 = {item1:123, item2:"string"}
+	// yaml.startWrite();
+	// yaml.writeComment("document");
+	// yaml.writeObjectStart("o1","def");
+	// 	yaml.writeNumber("n",123);
+	// yaml.writeObjectEnd();
+	// yaml.writeObjectReference("o2","def");
+	// yaml.writeArrayStart("a1");
+	// 	yaml.writeNumber(0);
+	// 	yaml.writeObjectStart("obj");
+	// 		yaml.writeString("cat","hat");
+	// 	yaml.writeObjectEnd();
+	// 	yaml.writeNumber(2);
+	// 	yaml.writeObjectReference("o1","def");
+	// yaml.writeArrayEnd();
+	// yaml.writeObjectStart("o3",object3);
+	// 	yaml.writeNumber("item1",object3.item1);
+	// 	yaml.writeString("item2",object3.item2);
+	// yaml.writeObjectEnd();
+	// yaml.writeObjectReference("o4",object3);
+	// yaml.writeArrayStart("a2");
+	// 	yaml.writeObjectReference("o3",object3);
+	// yaml.writeArrayEnd();
 
 
 	// yaml.writeString("name","skippy dipidy");
