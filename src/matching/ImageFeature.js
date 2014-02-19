@@ -8,6 +8,7 @@ ImageFeature.YAML = {
 	X:"x",
 	Y:"y",
 	SCALE:"scale",
+	VALUE:"value",
 	AFFINE:"affine",
 		A:"a",
 		B:"b",
@@ -35,24 +36,34 @@ ImageFeature.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.X, this._x );
 	yaml.writeNumber(DATA.Y, this._y );
 	yaml.writeNumber(DATA.SCALE, this._scale );
-		if(this._affine!=null){
-			yaml.writeObjectStart(DATA.AFFINE);
-				yaml.writeNumber(DATA.A,this._affine.get(0,0));
-				yaml.writeNumber(DATA.B,this._affine.get(0,1));
-				yaml.writeNumber(DATA.C,this._affine.get(1,0));
-				yaml.writeNumber(DATA.D,this._affine.get(1,1));
-			yaml.writeObjectEnd();
-			// yaml.writeObjectStart(DATA.AFFINE);
-			// 	this._affine.saveToYAML(yaml);
-			// yaml.writeObjectEnd();
-		}else{
-			yaml.writeNull(DATA.AFFINE);
-		}
-	//yaml.writeNumber(DATA.AFFINE, this._scale );
+	yaml.writeNumber(DATA.VALUE, this._ssValue );
+	if(this._affine!=null){
+		yaml.writeObjectStart(DATA.AFFINE);
+			yaml.writeNumber(DATA.A,this._affine.get(0,0));
+			yaml.writeNumber(DATA.B,this._affine.get(0,1));
+			yaml.writeNumber(DATA.C,this._affine.get(1,0));
+			yaml.writeNumber(DATA.D,this._affine.get(1,1));
+		yaml.writeObjectEnd();
+	}else{
+		yaml.writeNull(DATA.AFFINE);
+	}
 }
-ImageFeature.prototype.loadFromObject = function(obj){
-	console.log("LOAD FROM YAML OBJECT");
-	console.log(obj);
+ImageFeature.prototype.loadFromYAML = function(yaml){
+	var DATA = ImageFeature.YAML;
+	this._x = yaml[DATA.X];
+	this._y = yaml[DATA.Y];
+	this._scale = yaml[DATA.SCALE];
+	this._ssValue = yaml[DATA.VALUE];
+	var obj = yaml[DATA.AFFINE];
+	if(obj!=null){
+		this._affine = new Matrix(3,3);
+		this._affine.set(0,0, yaml[DATA.A]);
+		this._affine.set(0,1, yaml[DATA.B]);
+		this._affine.set(1,0, yaml[DATA.C]);
+		this._affine.set(1,1, yaml[DATA.D]);
+	}else{
+		this._affine = null;
+	}
 }
 // --------------------------------------------------------------------------------------------------------- GETTER/SETTER
 ImageFeature.prototype.x = function(x){

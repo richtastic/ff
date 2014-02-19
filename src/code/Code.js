@@ -70,7 +70,13 @@ Code.isArray = function(obj){
 	return (obj && obj.constructor==Array); // instanceofArray
 	//return (typeof obj)==Code.TYPE_ARRAY;
 }
-
+Code.copyToClipboardPrompt = function(str){
+	var txt = Code.newInputTextArea(str, 5,80);
+	Code.setStyleZIndex(txt,"9999");
+	Code.setStylePosition(txt,"absolute");
+	document.body.appendChild(txt);
+	txt.ondblclick = function(e){ document.body.removeChild(e.target); e.ondblclick=null; }
+}
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {
 	if(Object && Object.getOwnPropertyNames!==undefined){
@@ -659,6 +665,12 @@ Code.setStyleBackground = function(ele,val){
 };
 Code.setStyleCursor = function(ele,style){
 	ele.style.cursor = style;
+};
+Code.setStyleZIndex = function(ele,style){
+	ele.style.zIndex = style;
+};
+Code.setStylePosition = function(ele,style){
+	ele.style.position = style;
 };
 Code.getDomBody = function(){
 	return document.body;

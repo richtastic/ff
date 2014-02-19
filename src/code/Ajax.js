@@ -147,7 +147,7 @@ Ajax.prototype._stateChange = function(){
 				}
 			}else{
 				if(this._errorback!==null && this._errorback!==undefined){
-					this._errorback( this._context, response, this );
+					this._errorback.call( this._context, response, this );
 				}
 			}
 		}

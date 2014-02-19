@@ -8,19 +8,17 @@ ImageDescriptor.YAML = {
 function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	var i, len, len = wid*hei;
 	// stored data
-	this._filename = filename;
+	this._filename = (filename!==undefined)?filename:null;
 	this._features = new Array();
-	//
-	this._width = wid;
-	this._height = hei;
-	this._flatRed = origR;
-	this._flatGrn = origG;
-	this._flatBlu = origB;
+	this._width = (wid!==undefined)?wid:0;
+	this._height = (hei!==undefined)?hei:0;
+	this._flatRed = (origR!==undefined)?origR:null;
+	this._flatGrn = (origG!==undefined)?origG:null;
+	this._flatBlu = (origB!==undefined)?origB:null;
 	this._flatGry = new Array();
 	for(i=0;i<len;++i){
 		this._flatGry[i] = (this._flatRed[i]+this._flatGrn[i]+this._flatBlu[i])/3.0;
 	}
-	this._features = new Array();
 	this._dxRed = null;
 	this._dyRed = null;
 	this._dxGrn = null;
@@ -44,10 +42,14 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	//this._scaleSpaceExtrema = new Array(); //  x=x, y=y, z=sigma, t=value
 	//this._extremaList = new Array();
 }
-
+ImageDescriptor.prototype.clearData = function(){
+	this._filename = null;
+	this._features = new Array(); // properly kill and release
+	this._width = null;
+	this._height = null;
+}
 ImageDescriptor.prototype.saveToYAML = function(yaml){
-	var i, len, feature;
-	var DATA = ImageDescriptor.YAML;
+	var i, len, feature, DATA = ImageDescriptor.YAML;
 	console.log("SAVE TO YAML..");
 	console.log(yaml);
 	yaml.writeString(DATA.FILENAME,this._filename);
@@ -64,9 +66,26 @@ ImageDescriptor.prototype.saveToYAML = function(yaml){
 	//yaml.writeObjectStart("");
 	//yaml.writeObjectEnd();
 }
+ImageDescriptor.prototype.imageLoadedCompleteFxn = function(obj){
+	console.log(obj.images);
+	console.log(obj.files);
+}
 ImageDescriptor.prototype.loadFromYAML = function(yaml){
-	console.log("LOAD FROM YAML..");
-	console.log(yaml);
+	this.clearData();
+	var i, len, feature, DATA = ImageDescriptor.YAML
+	this._filename = yaml[DATA.FILENAME];
+	var timestamp = yaml[DATA.CREATED];
+	console.log(timestamp);
+	var imageLoader = new ImageLoader();//"",[this._filename], this,this.imageLoadedCompleteFxn,null);
+	imageLoader.setLoadList("",[this._filename], this,this.imageLoadedCompleteFxn,null);
+	imageLoader.load();
+	var arr = yaml[DATA.FEATURES];
+	len = arr.length;
+	for(i=0;i<len;++i){
+		feature = new ImageFeature();
+		feature.loadFromYAML(arr[i]);
+		this._features.push(feature);
+	}
 }
 
 ImageDescriptor.prototype._clearFeatureList = function(){

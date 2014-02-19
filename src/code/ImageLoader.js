@@ -10,7 +10,7 @@ function ImageLoader(base,arr, ctx,cmp,pro){
 	this.setLoadList(base,arr, ctx,cmp,pro);
 }
 ImageLoader.prototype.setLoadList = function(base,arr, ctx,cmp,pro){
-	if(!base || !arr){ return; }
+	if(base===null || base===undefined || !arr){ return; }
 	Code.emptyArray(this._files);
 	Code.emptyArray(this._images);
 	this._context = ctx;

@@ -71,6 +71,11 @@ blend images from different perspectives to get best
 
 */
 
+Match.YAML = {
+	DESCRIPTORS: "descriptors",
+	DESCRIPTOR: "descriptor",
+}
+
 function Match(){
 	this._canvas = new Canvas(null, 400,600, Canvas.STAGE_FIT_FILL, false);
 	//this._canvas.addListeners();
@@ -447,12 +452,26 @@ root.addChild(doi);
 	return;
 }
 
+Match.prototype._onYAMLCompleteFxn = function(o){
+	console.log(o.files);
+	console.log(o.contents);
+	Code.copyToClipboardPrompt(o.contents[0]);
+}
+
 Match.prototype._imageCompleteFxn = function(o){
 	var root = this._root;
 	var images = new Array();
 	var fileNames = new Array();
 	Code.copyArray(fileNames,o.files);
 	Code.copyArray(images,o.images);
+
+var comparing = true;
+if(comparing){
+	var fileLoader = new FileLoader();
+	fileLoader.setLoadList("./descriptors/",["BLT.yaml","BLB.yaml"], this, this._onYAMLCompleteFxn);
+	fileLoader.load();
+	return;
+}
 	var imageFileName = fileNames[0];
 	var params = this.getDescriptorParameters( images[0] );
 	var wid = params[0];
@@ -468,19 +487,22 @@ var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],p
 	descriptor.describeFeatures();
 
 var yaml = new YAML();
+var DATA = Match.YAML;
+
 yaml.startWrite();
+yaml.writeComment("Match: "+imageFileName);
 yaml.writeObjectStart("descriptor");
 	descriptor.saveToYAML(yaml);
 yaml.writeObjectEnd();
 var str = yaml.toString();
-//console.log(str);
 var obj = yaml.parse(str);
-console.log(obj);
-descriptor.loadFromObject(obj[0].descriptor);
+var descriptor = new ImageDescriptor();
+descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
+
+Code.copyToClipboardPrompt(str);
+
 
 /*
-* saving complete objects
-* loading complete objects
 * comparing features across multiple image-descriptors
 */
 return;
