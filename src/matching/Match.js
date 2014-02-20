@@ -81,11 +81,10 @@ function Match(){
 	//this._canvas.addListeners();
 	this._stage = new Stage(this._canvas, (1/10)*1000);
 	this._stage.start();
-	var root = new DO(); this._stage.root().addChild(root);
-	this._root = root;
+	this._root = new DO(); this._stage.root().addChild(this._root);
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png", "BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 // BLT.png
 		this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
@@ -109,7 +108,7 @@ Match.prototype.getDescriptorParameters = function(originalImage){
 	var grn = img.getGrnFloat();
 	var blu = img.getBluFloat();
 	img.unset();
-	return [wid, hei, red, grn, blu];
+	return {width:wid, height:hei, red:red, grn:grn, blu:blu};//[wid, hei, red, grn, blu];
 }
 Match.prototype.scaleImage = function(originalImage, scale){
 	var wid = originalImage.width;
@@ -453,9 +452,150 @@ root.addChild(doi);
 }
 
 Match.prototype._onYAMLCompleteFxn = function(o){
-	console.log(o.files);
-	console.log(o.contents);
-	Code.copyToClipboardPrompt(o.contents[0]);
+	var DATA = Match.YAML;
+	var i, j, len, len2, d, f, descriptor, list, img, obj, yaml=new YAML(), hash=new Object();
+	var currentWidth = 0, currentHeight = 0;
+	var files = o.files;
+	var contents = o.contents;
+	var descriptors = new Array();
+	len = files.length;
+	for(i=0;i<len;++i){
+		hash[this._fileList[i]] = this._imageList[i];
+	}
+	for(i=0;i<len;++i){
+		obj = yaml.parse(contents[i]); // documents
+		descriptor = new ImageDescriptor();
+		descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
+		descriptors.push( descriptor );
+		img = hash[ descriptor.imageFileName() ];
+		obj = this.getDescriptorParameters( img );
+		descriptor.setImageData( obj.width,obj.height,obj.red,obj.grn,obj.blu );
+	}
+	// draw images on screen
+	var container = new DO(); this._root.addChild(container);
+	container.matrix().identity(); container.matrix().scale(1.0);
+	for(i=0;i<len;++i){
+		img = hash[ descriptors[i].imageFileName() ];
+		d = new DOImage( img );
+		d.matrix().identity();
+		d.matrix().translate(currentWidth,currentHeight);
+		currentWidth += d.width();
+		container.addChild(d);
+	}
+	// compare features 
+	//var matcher = new ImageMatcher();
+	//matcher.matchDescriptors(descriptors[0],descriptors[1]);
+	//matcher.chooseBestMatches;
+	//matcher.consolidateMatches();
+var dA = descriptors[0];
+var dB = descriptors[1];
+	// draw features on screen
+//var indexA = 6, indexB = 25;
+//var indexA = 52, indexB = 152;
+//80&59
+var indexA = 79, indexB = 71;
+//var indexA = 6, indexB = 25;
+//var indexA = Math.floor(Math.random()*dA.getFeatureList().length), indexB = Math.floor(Math.random()*dB.getFeatureList().length);
+	var rad = 2.0, x, y, s, w, h;
+	currentWidth = 0; currentHeight = 0;
+	for(i=0;i<len;++i){
+		img = hash[ descriptors[i].imageFileName() ];
+		w = descriptors[i].width(); h = descriptors[i].height();
+		list = descriptors[i].getFeatureList();
+		len2 = list.length;
+		d = new DO();
+		d.matrix().identity();
+		d.matrix().translate(currentWidth,currentHeight);
+		container.addChild(d);
+		d.graphics().clear();
+		for(j=0;j<len2;++j){
+//if(j>80){break;}
+			f = list[j];
+			x = f.x()*w; y = f.y()*h; s = f.scale();
+			d.graphics().setLine(1.0,0xFFFFFF00);
+			d.graphics().beginPath();
+			d.graphics().setFill(0x66FFFFFF);
+			if(i==0&&j==indexA){
+				d.graphics().setLine(1.0,0xFF00FF00);
+				d.graphics().setFill(0xFFFF00000);
+			}else if(i==1&&j==indexB){
+				d.graphics().setLine(1.0,0xFF00FF00);
+				d.graphics().setFill(0xFFFF00000);
+			}
+			d.graphics().moveTo(x+rad*s,y);
+			d.graphics().arc(x,y, rad*s, 0,Math.PI*2.0, false);
+			d.graphics().endPath();
+			d.graphics().fill();
+			d.graphics().strokeLine();
+		}
+		currentWidth += w;
+	}
+	
+	var fA = dA.getFeatureList()[indexA];
+	var fB = dB.getFeatureList()[indexB];
+
+	fA.descriptor(dA);
+	fA.findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
+
+	fB.descriptor(dB);
+	fB.findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
+
+	// findDescriptor - USING ANGLE
+	// findSurface - USING ANGLE
+
+//findFlatBitmap();
+
+	var ang = ImageFeature.bestRotation(fA,fB);
+	var grys = fA.colorAngle().gry()-fB.colorAngle().gry();
+	console.log(ang);
+	console.log(grys);
+	ang = grys-ang;
+//ang = grys;
+	//fA.findDescriptorData(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.redFlat(),dA.width(),dA.height());
+
+	//ImageFeature.compareFeatures(fA,fB);
+
+// fA.transform(null);
+// fB.transform(null);
+	var imgWid = 125, imgHei = 125;
+	var floatRed, floatGrn, floatBlu, floaGry, argb;
+	floatRed = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dA.redFlat(),dA.width(),dA.height(), fA.transform());
+	floatGrn = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dA.greenFlat(),dA.width(),dA.height(), fA.transform());
+	floatBlu = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dA.blueFlat(),dA.width(),dA.height(), fA.transform());
+	// floatGry = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale(),undefined, imgWid,imgHei, dA.grayFlat(),dA.width(),dA.height(), fA.affine());
+	argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
+	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
+	d = new DOImage(img);
+	d.matrix().identity();
+	container.addChild(d);
+	//
+	floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
+	floatGrn = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dB.greenFlat(),dB.width(),dB.height(), fB.transform());
+	floatBlu = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dB.blueFlat(),dB.width(),dB.height(), fB.transform());
+	// floatGry = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale(),undefined, imgWid,imgHei, dB.grayFlat(),dB.width(),dB.height(), fB.affine());
+	argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
+	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
+	d = new DOImage(img);
+	d.matrix().identity();
+	d.matrix().translate(-imgWid*0.5,-imgHei*0.5);
+	d.matrix().rotate(ang);
+	d.matrix().translate(imgWid*0.5,imgHei*0.5);
+	d.matrix().translate(imgWid,0);
+	container.addChild(d);
+	
+	rad = 10;
+	d = this.describeAngleDO(fA.colorAngle(),rad);
+	d.matrix().translate(imgWid*0.5,imgHei*0.5);
+	container.addChild(d);
+
+	d = this.describeAngleDO(fB.colorAngle(),rad);
+	d.matrix().rotate(ang);
+	d.matrix().translate(imgWid*0.5,imgHei*0.5);
+	d.matrix().translate(imgWid,0);
+	container.addChild(d);
+
+
+	//Code.copyToClipboardPrompt(o.contents[0]);
 }
 
 Match.prototype._imageCompleteFxn = function(o){
@@ -464,6 +604,8 @@ Match.prototype._imageCompleteFxn = function(o){
 	var fileNames = new Array();
 	Code.copyArray(fileNames,o.files);
 	Code.copyArray(images,o.images);
+	this._imageList = images;
+	this._fileList = fileNames;
 
 var comparing = true;
 if(comparing){
@@ -474,11 +616,11 @@ if(comparing){
 }
 	var imageFileName = fileNames[0];
 	var params = this.getDescriptorParameters( images[0] );
-	var wid = params[0];
-	var hei = params[1];
-	var imageSourceRed = params[2];
-	var imageSourceGrn = params[3];
-	var imageSourceBlu = params[4];
+	var wid = params.width;
+	var hei = params.height;
+	var imageSourceRed = params.red;
+	var imageSourceGrn = params.grn;
+	var imageSourceBlu = params.blu;
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 
 var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4], imageFileName );

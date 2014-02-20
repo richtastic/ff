@@ -112,7 +112,6 @@ YAML.prototype._parse = function(inputString){
 		if( this._removeLeadingAndTrailingWhitespace(this._thisLine())==YAML.IGNORE ){
 			break;
 		}
-		console.log("...............> ");
 		doc = new Object();
 		this._documents.push(doc);
 		this._parseNextItem(doc,0);

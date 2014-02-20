@@ -38,7 +38,37 @@ ColorAngle.compareAngles = function(angA,angB, ang){ // but is this the LOWEST P
 }
 
 ColorAngle._temp = new ColorAngle();
-ColorAngle.optimumAngle = function(angA,angB){ 
-
-	ColorAngle.compareAngles(angA,angB, ang);
+ColorAngle.optimumAngle = function(angA,angB){
+	var ang = 0, dir = 1, i, len=1000, delta = .1;
+	var scoreA, scoreB = ColorAngle.compareAngles(angA,angB, ang);
+	for(i=0;i<len;++i){
+		scoreA = ColorAngle.compareAngles(angA,angB, ang+delta*dir);
+		//console.log(scoreA,scoreB);
+		if(scoreA<scoreB){ // continue this way
+			scoreB = scoreA;
+			ang += delta*dir;
+		}else{ // switch direction and half delta
+			delta = delta*0.5;
+			dir = -dir;
+		}
+		if(delta<1E-5){
+			break;
+		}
+	}
+	return ang;
 }
+/*
+var maxScore = 1E10, maxAng=0, score, ang;
+	var i=0, len=10000;
+	var delta = 0.01;
+	var sta = len*delta*0.5;
+	for(i=0;i<len;++i){
+		ang = i*delta - sta;
+		score = ColorAngle.compareAngles(angA,angB, ang);
+		if(score<maxScore){
+			maxScore = score;
+			maxAng = ang;
+		}
+	}
+	return ang;
+*/

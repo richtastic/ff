@@ -6,7 +6,7 @@ ImageDescriptor.YAML = {
 	FEATURES: "features",
 	}
 function ImageDescriptor(wid,hei, origR,origG,origB, filename){
-	var i, len, len = wid*hei;
+	var i, len = wid*hei;
 	// stored data
 	this._filename = (filename!==undefined)?filename:null;
 	this._features = new Array();
@@ -39,8 +39,15 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	this._cornerGrn = null;
 	this._cornerBlu = null;
 	this._cornerGry = null;
-	//this._scaleSpaceExtrema = new Array(); //  x=x, y=y, z=sigma, t=value
-	//this._extremaList = new Array();
+}
+ImageDescriptor.prototype.imageFileName = function(){
+	return this._filename;
+}
+ImageDescriptor.prototype.width = function(){
+	return this._width;
+}
+ImageDescriptor.prototype.height = function(){
+	return this._height;
 }
 ImageDescriptor.prototype.clearData = function(){
 	this._filename = null;
@@ -48,10 +55,36 @@ ImageDescriptor.prototype.clearData = function(){
 	this._width = null;
 	this._height = null;
 }
+ImageDescriptor.prototype.setImageData = function(wid,hei,red,grn,blu){
+	var i, len = wid*hei;
+	this._width = wid;
+	this._height = hei;
+	this._flatRed = red;
+	this._flatGrn = grn;
+	this._flatBlu = blu;
+	this._flatGry = new Array();
+	for(i=0;i<len;++i){
+		this._flatGry[i] = (this._flatRed[i]+this._flatGrn[i]+this._flatBlu[i])/3.0;
+	}
+	// this._flatRed = ImageMat.normalFloat01(this._flatRed);
+	// this._flatGrn = ImageMat.normalFloat01(this._flatGrn);
+	// this._flatBlu = ImageMat.normalFloat01(this._flatBlu);
+	// this._flatGry = ImageMat.normalFloat01(this._flatGry);
+}
+ImageDescriptor.prototype.redFlat = function(){
+	return this._flatRed;
+}
+ImageDescriptor.prototype.greenFlat = function(){
+	return this._flatGrn;
+}
+ImageDescriptor.prototype.blueFlat = function(){
+	return this._flatBlu;
+}
+ImageDescriptor.prototype.grayFlat = function(){
+	return this._flatGry;
+}
 ImageDescriptor.prototype.saveToYAML = function(yaml){
 	var i, len, feature, DATA = ImageDescriptor.YAML;
-	console.log("SAVE TO YAML..");
-	console.log(yaml);
 	yaml.writeString(DATA.FILENAME,this._filename);
 	yaml.writeString(DATA.CREATED,""+Code.getTimeStamp());
 	yaml.writeArrayStart(DATA.FEATURES);
@@ -63,22 +96,19 @@ ImageDescriptor.prototype.saveToYAML = function(yaml){
 			yaml.writeObjectEnd();
 		}
 	yaml.writeArrayEnd();
-	//yaml.writeObjectStart("");
-	//yaml.writeObjectEnd();
 }
-ImageDescriptor.prototype.imageLoadedCompleteFxn = function(obj){
-	console.log(obj.images);
-	console.log(obj.files);
-}
+// ImageDescriptor.prototype.imageLoadedCompleteFxn = function(obj){
+// 	console.log(obj.images);
+// 	console.log(obj.files);
+// }
 ImageDescriptor.prototype.loadFromYAML = function(yaml){
 	this.clearData();
 	var i, len, feature, DATA = ImageDescriptor.YAML
 	this._filename = yaml[DATA.FILENAME];
 	var timestamp = yaml[DATA.CREATED];
-	console.log(timestamp);
-	var imageLoader = new ImageLoader();//"",[this._filename], this,this.imageLoadedCompleteFxn,null);
-	imageLoader.setLoadList("",[this._filename], this,this.imageLoadedCompleteFxn,null);
-	imageLoader.load();
+	// var imageLoader = new ImageLoader();//"",[this._filename], this,this.imageLoadedCompleteFxn,null);
+	// imageLoader.setLoadList("",[this._filename], this,this.imageLoadedCompleteFxn,null);
+	// imageLoader.load();
 	var arr = yaml[DATA.FEATURES];
 	len = arr.length;
 	for(i=0;i<len;++i){

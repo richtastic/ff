@@ -1,8 +1,8 @@
 // ImageFeature.js
-ImageFeature.MAX_POINT_LIST = 5;
+ImageFeature.MAX_POINT_LIST = 10;
 ImageFeature.DESCRIPTOR_SIZE_P4 = 12; // before gradient
 ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16 after gradient
-ImageFeature.SQUARE_SIZE_SELECT = 9; // before gauss
+ImageFeature.SQUARE_SIZE_SELECT = 11; // before gauss
 ImageFeature.SSD_SIZE = 7; // flat
 ImageFeature.YAML = {
 	X:"x",
@@ -25,6 +25,7 @@ function ImageFeature(x,y,scale,ssValue, matrix){
 	this._colorAngles = null; // red,grn,blu,gry [0,2pi]
 	this._bins = null;
 	// non-processed objects:
+	this._descriptor = null;
 	// this._bitmap = null;
 	// this._colorBase = new ColorFloat();
 	// this._colorGradient = new ColorGradient(); // R,G,B,A -inf,+inf
@@ -57,10 +58,12 @@ ImageFeature.prototype.loadFromYAML = function(yaml){
 	var obj = yaml[DATA.AFFINE];
 	if(obj!=null){
 		this._affine = new Matrix(3,3);
-		this._affine.set(0,0, yaml[DATA.A]);
-		this._affine.set(0,1, yaml[DATA.B]);
-		this._affine.set(1,0, yaml[DATA.C]);
-		this._affine.set(1,1, yaml[DATA.D]);
+		this._affine.set(0,0, obj[DATA.A]);
+		this._affine.set(0,1, obj[DATA.B]);
+		this._affine.set(1,0, obj[DATA.C]);
+		this._affine.set(1,1, obj[DATA.D]);
+		this._affine.set(2,2, 1.0);
+//this._affine.identity();
 	}else{
 		this._affine = null;
 	}
@@ -87,29 +90,48 @@ ImageFeature.prototype.transform = function(trans){
 	return this._affine;
 }
 // --------------------------------------------------------------------------------------------------------- DERIVED DATA
-ImageFeature.prototype.findDescriptorData = function(origR,origG,origB,origY, wid,hei){
-	var rectRed, rectGrn, rectBlu, rectGry;
-	var gradRedX, gradGrnX, gradBluX, gradGryX, gradRedY, gradGrnY, gradBluY, gradGryY;
-	var Ix, Iy, src, mag, ang, sigma, g = new V2D(), x = new V2D(1,0);
+ImageFeature.prototype.angleFromColors = function(color, wid,hei){
+	var rect, gradX, gradY;
+	var Ix, Iy, src, mag, ang, sigma, scaler, g = new V2D(), x = new V2D(1,0);
 	var w = ImageFeature.SQUARE_SIZE_SELECT, h = ImageFeature.SQUARE_SIZE_SELECT;
 	var cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
-
-
-	// find gradient
+	// get zoomed rectangle
 	sigma = undefined;
-	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei, this.transform());
-	sigma = 1.0;
+	scaler = ImageDescriptor.SCALE_MULTIPLIER*2.0; // increase the gaussian effect
+	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, null); // iso-affine is unstable
+	//rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, this.transform());
+	// blur
+	sigma = 1.6;
 	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
-	src = ImageMat.gaussian2DFrom1DFloat(rectGry, w,h, gauss1D);
-	//src = rectGry;
+	src = ImageMat.gaussian2DFrom1DFloat(rect, w,h, gauss1D);
+	//src = rect;
+	// find gradient
 	Ix = ImageMat.derivativeX(src, w,h);
 	Iy = ImageMat.derivativeY(src, w,h);
 	g.set(Ix[w*cenY + cenX], Iy[w*cenY + cenX]);
 	// angle with x-axis
 	mag = g.length()
 	ang = V2D.angleDirection(x,g);
-	//console.log(ang*180/Math.PI);
-
+	return ang;
+}
+ImageFeature.prototype.colorAngle = function(){
+	return this._colorAngles;
+}
+ImageFeature.prototype.findOrientations = function(origR,origG,origB,origY, wid,hei){
+	var angRed, angGrn, angBlu, angGry;
+	angRed = this.angleFromColors(origR,wid,hei);
+	angGrn = this.angleFromColors(origG,wid,hei);
+	angBlu = this.angleFromColors(origB,wid,hei);
+	angGry = this.angleFromColors(origY,wid,hei);
+	this._colorAngles = new ColorAngle(angRed,angGrn,angBlu,angGry);
+}
+ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,hei, ang){
+	// findDescriptor - USING ANGLE
+	var rectRed, rectGrn, rectBlu, rectGry;
+	var gradRedX, gradGrnX, gradBluX, gradGryX, gradRedY, gradGrnY, gradBluY, gradGryY;
+	var Ix, Iy, src, mag, ang, sigma, g = new V2D(), x = new V2D(1,0);
+	var w = ImageFeature.SQUARE_SIZE_SELECT, h = ImageFeature.SQUARE_SIZE_SELECT;
+	var cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
 
 	// bins
 	w = ImageFeature.DESCRIPTOR_SIZE_P4; h = ImageFeature.DESCRIPTOR_SIZE_P4;
@@ -117,91 +139,20 @@ ImageFeature.prototype.findDescriptorData = function(origR,origG,origB,origY, wi
 	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei);
 	src = rectGry;
 	Ix = ImageMat.derivativeX(src, w,h);
-	Iy = ImageMat.derivativeY(src, w,h);
-	
+	Iy = ImageMat.derivativeY(src, w,h);	
 	this._bins = new SIFTDescriptor();
 	this._bins.fromGradients(Ix,Iy,w,h);
-//	console.log(this._bins.toString());
-
-return;
-
-	// primary gradients
-	this._colorAngles = new ColorAngle(angR,angG,angB,angY);
-
 	// gradient magnitude?
-
-
-	// descriptor
-	this._bins = new GradBinDescriptor();
-
-	// findAnglesRGBY
-	// 1) get characteristic window
-	//		- scale point up/down to characteristic size
-	//		- affine-transform to isotropic-scale
-	//		- rotate to primary gradient
-	// 2) get gradient descriptor (lowe)
-	//		- 3x3
-	// 3) R,G,B
-	// 		- gradient descriptor, gradient magnitude, gradient angle, 
-	// ) 
-	// ) 
 }
-// ImageFeature.prototype._collectBins = function(Ix,Iy,w,h){
-// 	console.log( "---------------------------------------------------------" );
-// 	var i, j, bin, cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5), v = new V2D(), x = new V2D(1,0);
-// 	bin = new GradBinDescriptor(); bin.clear();
-// 	for(i=cenX-4;i<cenX;++i){ // TL
-// 		for(j=cenY-4;j<cenY;++j){
-// 			v.set(Ix[w*j + i], Iy[w*j + i]);
-// 			ang = V2D.angleDirection(x,v);
-// 			bin.addAngle(ang);
-// 		}
-// 	}
-// 	console.log( bin.toString() );
-// 	bin = new GradBinDescriptor(); bin.clear();
-// 	for(i=cenX;i<cenX+4;++i){ // TR
-// 		for(j=cenY-4;j<cenY;++j){
-// 			v.set(Ix[w*j + i], Iy[w*j + i]);
-// 			ang = V2D.angleDirection(x,v);
-// 			bin.addAngle(ang);
-// 		}
-// 	}
-// 	console.log( bin.toString() );
-// 	bin = new GradBinDescriptor(); bin.clear();
-// 	for(i=cenX-4;i<cenX;++i){ // BL
-// 		for(j=cenY;j<cenY+4;++j){
-// 			v.set(Ix[w*j + i], Iy[w*j + i]);
-// 			ang = V2D.angleDirection(x,v);
-// 			bin.addAngle(ang);
-// 		}
-// 	}
-// 	console.log( bin.toString() );
-// 	bin = new GradBinDescriptor(); bin.clear();
-// 	for(i=cenX;i<cenX+4;++i){ // BR
-// 		for(j=cenY;j<cenY+4;++j){
-// 			v.set(Ix[w*j + i], Iy[w*j + i]);
-// 			ang = V2D.angleDirection(x,v);
-// 			bin.addAngle(ang);
-// 		}
-// 	}
-// 	console.log( bin.toString() );
-// }
-ImageFeature.prototype.findAnglesRGBY = function(origR,origG,origB,origY, wid,hei){
-	var angR, angG, angB, angY;
-	this._colorAngles = new ColorAngle(angR,angG,angB,angY);
-}
-ImageFeature.prototype.findDescriptorRGBY = function(origR,origG,origB,origY, wid,hei){
-	// rotate to primary direction
-	// extract image squares
-	// calculate gradient
-	// bin gradients into features
-}
-
-
-ImageFeature.prototype.setCompare = function(x,y, wid,hei, origR,origG,origB,origY, angle){
-	this._bitmap = new ColorMatRGBY(x,y, wid,hei, origR,origG,origB,origY, angle, ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT);
+ImageFeature.prototype.findSurface = function(origR,origG,origB,origY, wid,hei, ang){
+	// findSurface - USING ANGLE
+	var rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei);
+	//this._bitmap = new ColorMatRGBY(x,y, wid,hei, origR,origG,origB,origY, angle, ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT);
 }
 // --------------------------------------------------------------------------------------------------------- OPERATIONAL
+ImageFeature.prototype.clearPointList = function(){
+	Code.clearArrau(this._pointList);
+}
 ImageFeature.prototype.addPointList = function(feature,score){
 	this._pointList.push([feature,score]);
 	this._pointList.sort(this._sortPointList);
@@ -217,8 +168,20 @@ ImageFeature.prototype._calculateScore = function(){
 	var score = base + gradient + angle + scale; // large gradient = better, large color volume, ...
 	return score;
 }
+ImageFeature.prototype.descriptor = function(d){
+	if(d!==undefined){ this._descriptor=d; }
+	return this._descriptor;
+}
 // --------------------------------------------------------------------------------------------------------- CLASS
+ImageFeature.bestRotation = function(featureA, featureB){ // how far to rotate B to best match A
+	return ColorAngle.optimumAngle( featureA.colorAngle(), featureB.colorAngle() );
+}
 ImageFeature.compareFeatures = function(featureA, featureB){
+
+	featureA.findDescriptorData(origR,origG,origB,origY, wid,hei);
+
+
+
 	// calculate their relative score and place features in respective list
 	var score = 0;
 	// 
