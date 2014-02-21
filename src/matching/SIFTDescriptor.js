@@ -37,7 +37,7 @@ SIFTDescriptor.compare = function(descA,descB){
 	score += GradBinDescriptor.compare(descA._binTR,descB._binTR);
 	score += GradBinDescriptor.compare(descA._binBL,descB._binBL);
 	score += GradBinDescriptor.compare(descA._binBR,descB._binBR);
-	return score*0.25;
+	return score;//*0.25;
 }
 SIFTDescriptor.prototype.clear = function(){
 	this._binTL.clear();
@@ -46,10 +46,23 @@ SIFTDescriptor.prototype.clear = function(){
 	this._binBR.clear();
 }
 SIFTDescriptor.prototype.toString = function(){
-	var str = "[SIFTDescriptor]++++++++++++++++++++++++++++++++++++++++\n";
-	str += this._binTL.toString();
-	str += this._binTR.toString();
-	str += this._binBL.toString();
-	str += this._binBR.toString();
+	var b = [this._binTL,this._binTR,this._binBR,this._binBL];
+	var i, len, j, bin, max = 16;
+	var str = "";
+	len = b[0]._bin.length;
+	for(j=0;j<len;++j){
+		str += "|"+Code.prependFixed(" "+(j*360.0/(len))+" "," ",5);
+		for(i=0;i<b.length;++i){
+			bin = b[i]._bin;
+			str += "|";
+			str += Code.postpendFixed(Code.prependFixed("","*",bin[j])," ",max);
+		}
+		str += "\n";
+	}
+	// var str = "[SIFTDescriptor]++++++++++++++++++++++++++++++++++++++++\n";
+	// str += this._binTL.toString();
+	// str += this._binTR.toString();
+	// str += this._binBL.toString();
+	// str += this._binBR.toString();
 	return str;
 }

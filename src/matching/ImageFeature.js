@@ -1,9 +1,13 @@
 // ImageFeature.js
 ImageFeature.MAX_POINT_LIST = 10;
-ImageFeature.DESCRIPTOR_SIZE_P4 = 12; // before gradient
-ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16 after gradient
-ImageFeature.SQUARE_SIZE_SELECT = 11; // before gauss
-ImageFeature.SSD_SIZE = 7; // flat
+// CENTRAL POINT GRADIENT
+ImageFeature.SQUARE_SIZE_SELECT = 7;
+// SIFT FEATURE 8x8
+ImageFeature.DESCRIPTOR_SIZE_P4 = 16; // before gradient
+ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16 after gradient [padding=4]
+// SSD CENTERED ON POINT
+ImageFeature.SSD_SIZE_B4 = 15; // before gauss
+ImageFeature.SSD_SIZE = 7; // flat [padding=4]
 ImageFeature.YAML = {
 	X:"x",
 	Y:"y",
@@ -23,14 +27,13 @@ function ImageFeature(x,y,scale,ssValue, matrix){
 	this._affine = matrix;
 	this._pointList = []; // ordered list of other points [BEST,..,WORST] [{point:ptX,score:0}]
 	this._colorAngles = null; // red,grn,blu,gry [0,2pi]
-	this._bins = null;
+	this._bins = null; // gradient
+	this._flat = null; // flatness
 	// non-processed objects:
 	this._descriptor = null;
 	// this._bitmap = null;
 	// this._colorBase = new ColorFloat();
 	// this._colorGradient = new ColorGradient(); // R,G,B,A -inf,+inf
-	// this._colorScale = 0.0; // scale at which is is most comperable? most corner like?
-	// this._score = this._calculateScore(); // uniqueness/usefulness score
 }
 ImageFeature.prototype.saveToYAML = function(yaml){
 	var DATA = ImageFeature.YAML;
@@ -110,44 +113,85 @@ ImageFeature.prototype.angleFromColors = function(color, wid,hei){
 	Iy = ImageMat.derivativeY(src, w,h);
 	g.set(Ix[w*cenY + cenX], Iy[w*cenY + cenX]);
 	// angle with x-axis
-	mag = g.length()
+	mag = g.length();
 	ang = V2D.angleDirection(x,g);
-	return ang;
+	return {angle:ang, magnitude:mag};
 }
 ImageFeature.prototype.colorAngle = function(){
 	return this._colorAngles;
 }
 ImageFeature.prototype.findOrientations = function(origR,origG,origB,origY, wid,hei){
-	var angRed, angGrn, angBlu, angGry;
-	angRed = this.angleFromColors(origR,wid,hei);
-	angGrn = this.angleFromColors(origG,wid,hei);
-	angBlu = this.angleFromColors(origB,wid,hei);
-	angGry = this.angleFromColors(origY,wid,hei);
-	this._colorAngles = new ColorAngle(angRed,angGrn,angBlu,angGry);
+	var obj, angRed, angGrn, angBlu, angGry;
+	obj = this.angleFromColors(origR,wid,hei);
+	angRed = obj.angle;
+	magRed = obj.magnitude;
+	obj = this.angleFromColors(origG,wid,hei);
+	angGrn = obj.angle;
+	magGrn = obj.magnitude;
+	obj = this.angleFromColors(origB,wid,hei);
+	angBlu = obj.angle;
+	magBlu = obj.magnitude;
+	obj = this.angleFromColors(origY,wid,hei);
+	angGry = obj.angle;
+	magGry = obj.magnitude;
+	this._colorAngles = new ColorAngle(angRed,angGrn,angBlu,angGry, magRed,magGrn,magBlu,magGry);
 }
 ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,hei, ang){
-	// findDescriptor - USING ANGLE
 	var rectRed, rectGrn, rectBlu, rectGry;
 	var gradRedX, gradGrnX, gradBluX, gradGryX, gradRedY, gradGrnY, gradBluY, gradGryY;
-	var Ix, Iy, src, mag, ang, sigma, g = new V2D(), x = new V2D(1,0);
-	var w = ImageFeature.SQUARE_SIZE_SELECT, h = ImageFeature.SQUARE_SIZE_SELECT;
-	var cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
+	var Ix, Iy, src, mag, sigma, w, h, g=new V2D(), x=new V2D(1,0), rot = new Matrix(3,3); 
+
+// LOOK AT GRADIENT SUMMED - MAGNITUDES
+// WOULD THAT BY DEFNITION EQUAL THE GRAY
 
 	// bins
+	scaler = ImageDescriptor.SCALE_MULTIPLIER*1.0;
 	w = ImageFeature.DESCRIPTOR_SIZE_P4; h = ImageFeature.DESCRIPTOR_SIZE_P4;
-	cenX = Math.floor(w*0.5); cenY = Math.floor(h*0.5);
-	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei);
-	src = rectGry;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	rot = Matrix.mult(rot,this.transform());
+	sigma = undefined;
+	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, rot);
+	sigma = 1.6;
+	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
+	src = ImageMat.gaussian2DFrom1DFloat(rectGry, w,h, gauss1D);
+	//src = rectGry;
 	Ix = ImageMat.derivativeX(src, w,h);
 	Iy = ImageMat.derivativeY(src, w,h);	
 	this._bins = new SIFTDescriptor();
 	this._bins.fromGradients(Ix,Iy,w,h);
-	// gradient magnitude?
+}
+ImageFeature.prototype.bins = function(){
+	return this._bins;
 }
 ImageFeature.prototype.findSurface = function(origR,origG,origB,origY, wid,hei, ang){
-	// findSurface - USING ANGLE
-	var rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*ImageDescriptor.SCALE_MULTIPLIER,sigma, w,h, origY,wid,hei);
-	//this._bitmap = new ColorMatRGBY(x,y, wid,hei, origR,origG,origB,origY, angle, ImageFeature.SQUARE_SIZE_SELECT,ImageFeature.SQUARE_SIZE_SELECT);
+	var rot = new Matrix(3,3);
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	rot = Matrix.mult(rot,this.transform());
+// WAYS TO FIX: larger scale
+	var scaler = ImageDescriptor.SCALE_MULTIPLIER*4.0;
+	var sigma = 1.6;
+	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
+	var w1 = ImageFeature.SSD_SIZE_B4, h1 = ImageFeature.SSD_SIZE_B4;
+	var w2 = ImageFeature.SSD_SIZE, h2 = ImageFeature.SSD_SIZE;
+	var padding = Math.floor((ImageFeature.SSD_SIZE_B4 - ImageFeature.SSD_SIZE)*0.5);
+	var rectRed, rectGrn, rectBlu, rectGry;
+	sigma = undefined;
+	rectRed = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origR,wid,hei, rot);
+	// rectRed = ImageMat.gaussian2DFrom1DFloat(rectRed, w1,h1, gauss1D);
+	rectRed = ImageMat.unpadFloat(rectRed,w1,h1, padding,padding,padding,padding);
+	rectGrn = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origG,wid,hei, rot);
+	// rectGrn = ImageMat.gaussian2DFrom1DFloat(rectGrn, w1,h1, gauss1D);
+	rectGrn = ImageMat.unpadFloat(rectGrn,w1,h1, padding,padding,padding,padding);
+	rectBlu = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origB,wid,hei, rot);
+	// rectBlu = ImageMat.gaussian2DFrom1DFloat(rectBlu, w1,h1, gauss1D);
+	rectBlu = ImageMat.unpadFloat(rectBlu,w1,h1, padding,padding,padding,padding);
+	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origY,wid,hei, rot);
+	// rectGry = ImageMat.gaussian2DFrom1DFloat(rectGry, w1,h1, gauss1D);
+	rectGry = ImageMat.unpadFloat(rectGry,w1,h1, padding,padding,padding,padding);
+	this._flat = new ColorMatRGBY(rectRed,rectGrn,rectBlu,rectGry, w2,h2);
+}
+ImageFeature.prototype.flat = function(){
+	return this._flat;
 }
 // --------------------------------------------------------------------------------------------------------- OPERATIONAL
 ImageFeature.prototype.clearPointList = function(){

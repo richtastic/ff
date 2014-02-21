@@ -50,8 +50,6 @@ GradBinDescriptor.prototype.toString = function(){
 	for(i=0;i<len;++i){
 		str += "|"+Code.prependFixed(" "+(i*360.0/(len))+" "," ",5);
 		str += "|"+Code.prependFixed("","*",this._bin[i]);
-		// str += "\n";
-		// str += "-";
 		str += "\n";
 	}
 	str += "-------\n";

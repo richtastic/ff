@@ -10,7 +10,7 @@ function pageLoadedFxn(){
 	ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ImageFeature.js","ImageDescriptor.js","ImageMatcher.js","Match.js"];
+	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ColorMatRGBY.js","ImageFeature.js","ImageDescriptor.js","ImageMatcher.js","Match.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
 	scriptLoader.load();
 }

@@ -490,12 +490,16 @@ Match.prototype._onYAMLCompleteFxn = function(o){
 var dA = descriptors[0];
 var dB = descriptors[1];
 	// draw features on screen
-//var indexA = 6, indexB = 25;
+var indexA = 6, indexB = 25; // worst
 //var indexA = 52, indexB = 152;
 //80&59
-var indexA = 79, indexB = 71;
+//var indexA = 79, indexB = 71; // best
 //var indexA = 6, indexB = 25;
-//var indexA = Math.floor(Math.random()*dA.getFeatureList().length), indexB = Math.floor(Math.random()*dB.getFeatureList().length);
+var indexA = Math.floor(Math.random()*dA.getFeatureList().length), indexB = Math.floor(Math.random()*dB.getFeatureList().length);
+//indexA = 6; // 98 99 115 148 161 184 | 25
+indexA = 79; // 117 152
+//indexB = 71;
+console.log(indexA,indexB);
 	var rad = 2.0, x, y, s, w, h;
 	currentWidth = 0; currentHeight = 0;
 	for(i=0;i<len;++i){
@@ -530,26 +534,34 @@ var indexA = 79, indexB = 71;
 		}
 		currentWidth += w;
 	}
-	
 	var fA = dA.getFeatureList()[indexA];
 	var fB = dB.getFeatureList()[indexB];
-
 	fA.descriptor(dA);
 	fA.findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
-
 	fB.descriptor(dB);
 	fB.findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
-
-	// findDescriptor - USING ANGLE
-	// findSurface - USING ANGLE
-
-//findFlatBitmap();
-
 	var ang = ImageFeature.bestRotation(fA,fB);
 	var grys = fA.colorAngle().gry()-fB.colorAngle().gry();
-	console.log(ang);
-	console.log(grys);
-	ang = grys-ang;
+	// console.log(ang);
+	// console.log(grys);
+	ang = grys+ang;
+	// console.log(ang);
+	fA.findDescriptor(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
+	fB.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
+	// console.log(fA._bins.toString());
+	// console.log(fB._bins.toString());
+	console.log( "SIFT: "+SIFTDescriptor.compare(fA.bins(),fB.bins()) );
+	fA.findSurface(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
+	fB.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
+	// console.log(fA._flat);
+	// console.log(fB._flat);
+	console.log( "SSD:  "+ColorMatRGBY.SSD(fA.flat(),fB.flat()) );
+	console.log( "conv: "+ColorMatRGBY.convolution(fA.flat(),fB.flat()) );
+	
+ console.log(fA._bins.toString());
+ console.log(fB._bins.toString());
+
+	
 //ang = grys;
 	//fA.findDescriptorData(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.redFlat(),dA.width(),dA.height());
 
@@ -559,9 +571,10 @@ var indexA = 79, indexB = 71;
 // fB.transform(null);
 	var imgWid = 125, imgHei = 125;
 	var floatRed, floatGrn, floatBlu, floaGry, argb;
-	floatRed = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dA.redFlat(),dA.width(),dA.height(), fA.transform());
-	floatGrn = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dA.greenFlat(),dA.width(),dA.height(), fA.transform());
-	floatBlu = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dA.blueFlat(),dA.width(),dA.height(), fA.transform());
+	var rr = 1.0;
+	floatRed = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dA.redFlat(),dA.width(),dA.height(), fA.transform());
+	floatGrn = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dA.greenFlat(),dA.width(),dA.height(), fA.transform());
+	floatBlu = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dA.blueFlat(),dA.width(),dA.height(), fA.transform());
 	// floatGry = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale(),undefined, imgWid,imgHei, dA.grayFlat(),dA.width(),dA.height(), fA.affine());
 	argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
 	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
@@ -569,9 +582,9 @@ var indexA = 79, indexB = 71;
 	d.matrix().identity();
 	container.addChild(d);
 	//
-	floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
-	floatGrn = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dB.greenFlat(),dB.width(),dB.height(), fB.transform());
-	floatBlu = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*1.5,undefined, imgWid,imgHei, dB.blueFlat(),dB.width(),dB.height(), fB.transform());
+	floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
+	floatGrn = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dB.greenFlat(),dB.width(),dB.height(), fB.transform());
+	floatBlu = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dB.blueFlat(),dB.width(),dB.height(), fB.transform());
 	// floatGry = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale(),undefined, imgWid,imgHei, dB.grayFlat(),dB.width(),dB.height(), fB.affine());
 	argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
 	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
@@ -583,7 +596,7 @@ var indexA = 79, indexB = 71;
 	d.matrix().translate(imgWid,0);
 	container.addChild(d);
 	
-	rad = 10;
+	rad = 20;
 	d = this.describeAngleDO(fA.colorAngle(),rad);
 	d.matrix().translate(imgWid*0.5,imgHei*0.5);
 	container.addChild(d);
@@ -1253,6 +1266,8 @@ Match.prototype.exp1 = function(){
 
 Match.prototype.describeAngleDO = function(ang,rad){
 	rad = rad===undefined?35:rad;
+	var rr;
+	var max = Math.max(ang._redM,ang._grnM,ang._bluM,ang._gryM);
 	var square = new DO();
 		square.graphics().clear();
 		square.graphics().setLine(1.0,0x99000000);
@@ -1264,31 +1279,35 @@ Match.prototype.describeAngleDO = function(ang,rad){
 		square.graphics().fill();
 		square.graphics().strokeLine();
 	var redA = ang.red();
+	rr = ang.redMag()/max;
 		square.graphics().setLine(1.0,0xFFFF0000);
 		square.graphics().beginPath();
 		square.graphics().moveTo(0,0);
-		square.graphics().lineTo(rad*Math.cos(redA),rad*Math.sin(redA));
+		square.graphics().lineTo(rad*Math.cos(redA)*rr,rad*Math.sin(redA)*rr);
 		square.graphics().endPath();
 		square.graphics().strokeLine();
 	var redG = ang.grn();
+	rr = ang.grnMag()/max;
 		square.graphics().setLine(1.0,0xFF00FF00);
 		square.graphics().beginPath();
 		square.graphics().moveTo(0,0);
-		square.graphics().lineTo(rad*Math.cos(redG),rad*Math.sin(redG));
+		square.graphics().lineTo(rad*Math.cos(redG)*rr,rad*Math.sin(redG)*rr);
 		square.graphics().endPath();
 		square.graphics().strokeLine();
 	var redB = ang.blu();
+	rr = ang.bluMag()/max;
 		square.graphics().setLine(1.0,0xFF0000FF);
 		square.graphics().beginPath();
 		square.graphics().moveTo(0,0);
-		square.graphics().lineTo(rad*Math.cos(redB),rad*Math.sin(redB));
+		square.graphics().lineTo(rad*Math.cos(redB)*rr,rad*Math.sin(redB)*rr);
 		square.graphics().endPath();
 		square.graphics().strokeLine();
 	var redY = ang.gry();
+	rr = ang.gryMag()/max;
 		square.graphics().setLine(1.0,0xFFCCCCCC);
 		square.graphics().beginPath();
 		square.graphics().moveTo(0,0);
-		square.graphics().lineTo(rad*Math.cos(redY),rad*Math.sin(redY));
+		square.graphics().lineTo(rad*Math.cos(redY)*rr,rad*Math.sin(redY)*rr);
 		square.graphics().endPath();
 		square.graphics().strokeLine();
 	return square;
