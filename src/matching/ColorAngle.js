@@ -84,6 +84,7 @@ ColorAngle.compareAngles = function(angA,angB, ang){ // but is this the LOWEST P
 
 ColorAngle._temp = new ColorAngle();
 ColorAngle.optimumAngle = function(angA,angB){
+return 0;
 	var ang = 0, dir = 1, i, len=100, delta = .1;
 	var scoreA, scoreB = ColorAngle.compareAngles(angA,angB, ang);
 	for(i=0;i<len;++i){

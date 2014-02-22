@@ -32,6 +32,15 @@ ColorMatRGBY.prototype.blu = function(){
 ColorMatRGBY.prototype.gry = function(){
 	return this._gry;
 }
+ColorMatRGBY.prototype.uniqueness = function(){
+	return this._ranger(this._red) * this._ranger(this._grn) * this._ranger(this._blu);
+}
+ColorMatRGBY.prototype._ranger = function(a){
+	var maxA = Math.max.apply(this,a);
+	var minA = Math.min.apply(this,a);
+	var rangeA = (maxA-minA);
+	return rangeA;
+}
 ColorMatRGBY.SSD = function(a,b){
 	var rA = a.red(), rB = b.red();
 	var gA = a.grn(), gB = b.grn();
@@ -42,11 +51,19 @@ ColorMatRGBY.SSD = function(a,b){
 	var ssdB = ColorMatRGBY._SSD(bA,bB);
 	var ssdY = ColorMatRGBY._SSD(yA,yB);
 	return (ssdR + ssdG + ssdB + ssdY)*0.25;
+	//return ssdY;
 }
 ColorMatRGBY._SSD = function(a,b){
 	var ssd = 0;
+	var maxA = Math.max.apply(this,a);
+	var minA = Math.min.apply(this,a);
+	var rangeA = 1/(maxA-minA);
+	var maxB = Math.max.apply(this,b);
+	var minB = Math.min.apply(this,b);
+	var rangeB = 1/(maxB-minB);
 	for(var i=a.length;i--;){
-		ssd += Math.pow(a[i]-b[i],2);
+		ssd += Math.pow( rangeA*(a[i]-minA) - rangeB*(b[i]-minB),2);
+		//ssd += Math.pow(a[i]-b[i],2);
 	}
 	return ssd;
 }
@@ -63,12 +80,20 @@ ColorMatRGBY.convolution = function(a,b){
 	return (convR + convG + convB + convY)*0.25;
 }
 ColorMatRGBY._conv = function(a,b){
-	var maxA=0, maxB=0, sumA=0, sumB=0, conv=0;
+	var maxA = Math.max.apply(this,a);
+	var minA = Math.min.apply(this,a);
+	var rangeA = 1/(maxA-minA);
+	var maxB = Math.max.apply(this,b);
+	var minB = Math.min.apply(this,b);
+	var rangeB = 1/(maxB-minB);
+	//var maxA=0, maxB=0, sumA=0, sumB=0;
+	var conv=0;
 	for(var i=a.length;i--;){
 		//sumA += a[i]; sumB += b[i];
-		maxA = Math.max(maxA,a[i]); maxB = Math.max(maxB,b[i]);
-		conv += a[i]*b[i];
+		//maxA = Math.max(maxA,a[i]); maxB = Math.max(maxB,b[i]);
+		conv +=  rangeA*(a[i]-minA) * rangeB*(b[i]-minB);
 	}
-	return conv/(maxA*maxB);
+	return conv;
+	//return conv/(maxA*maxB);
 	//return conv/(sumA*sumB);
 }

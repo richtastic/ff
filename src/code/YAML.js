@@ -171,7 +171,10 @@ YAML.prototype._parseNextItem = function(object,indents){
 		while(lineIndents>=thisItemIndentCount){
 //console.log(this._prefixIndent(lineIndents)+"indents: "+lineIndents);
 			thisLine = this._thisLine();
-if( this._removeLeadingAndTrailingWhitespace(this._thisLine())==YAML.DOCUMENT_SEPARATOR ){
+var removed = this._removeLeadingAndTrailingWhitespace(this._thisLine());
+if( removed ==YAML.DOCUMENT_SEPARATOR ){
+	return object;
+}else if(removed==YAML.IGNORE){
 	return object;
 }
 			lineIndents = this._countLineIndents(thisLine);

@@ -29,7 +29,7 @@ GradBinDescriptor.prototype.addBin = function(bin){
 	this._bin[bin]++;
 }
 GradBinDescriptor.prototype.addAngleBin = function(angle){
-	angle = Code.angleZeroTwoPi(angle-GradBinDescriptor.BIN_COUNT/(2.0*Math.PI));
+	//angle = Code.angleZeroTwoPi(angle-GradBinDescriptor.BIN_COUNT/(2.0*Math.PI));
 	var bin = Math.floor(GradBinDescriptor.BIN_COUNT*(angle/(2.0*Math.PI)));
 	this.addBin(bin);
 }

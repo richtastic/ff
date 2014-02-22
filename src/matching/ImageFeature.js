@@ -7,7 +7,9 @@ ImageFeature.DESCRIPTOR_SIZE_P4 = 16; // before gradient
 ImageFeature.DESCRIPTOR_SIZE = 8; // 8x8=64, 4x4=16 after gradient [padding=4]
 // SSD CENTERED ON POINT
 ImageFeature.SSD_SIZE_B4 = 15; // before gauss
-ImageFeature.SSD_SIZE = 7; // flat [padding=4]
+ImageFeature.SSD_SIZE = 13; // flat [padding=4]
+// ImageFeature.SSD_SIZE_B4 = 15; // before gauss
+// ImageFeature.SSD_SIZE = 7; // flat [padding=4]
 ImageFeature.YAML = {
 	X:"x",
 	Y:"y",
@@ -66,9 +68,10 @@ ImageFeature.prototype.loadFromYAML = function(yaml){
 		this._affine.set(1,0, obj[DATA.C]);
 		this._affine.set(1,1, obj[DATA.D]);
 		this._affine.set(2,2, 1.0);
-//this._affine.identity();
+this._affine.identity();
 	}else{
-		this._affine = null;
+		this._affine = new Matrix(3,3);
+		this._affine.identity();
 	}
 }
 // --------------------------------------------------------------------------------------------------------- GETTER/SETTER
@@ -100,7 +103,7 @@ ImageFeature.prototype.angleFromColors = function(color, wid,hei){
 	var cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
 	// get zoomed rectangle
 	sigma = undefined;
-	scaler = ImageDescriptor.SCALE_MULTIPLIER*2.0; // increase the gaussian effect
+	scaler = ImageDescriptor.SCALE_MULTIPLIER*8.0; // increase the gaussian effect
 	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, null); // iso-affine is unstable
 	//rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, this.transform());
 	// blur
@@ -151,10 +154,10 @@ ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,he
 	rot = Matrix.mult(rot,this.transform());
 	sigma = undefined;
 	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, rot);
-	sigma = 1.6;
-	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
-	src = ImageMat.gaussian2DFrom1DFloat(rectGry, w,h, gauss1D);
-	//src = rectGry;
+	// sigma = 1.6;
+	// var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
+	// src = ImageMat.gaussian2DFrom1DFloat(rectGry, w,h, gauss1D);
+	src = rectGry;
 	Ix = ImageMat.derivativeX(src, w,h);
 	Iy = ImageMat.derivativeY(src, w,h);	
 	this._bins = new SIFTDescriptor();
@@ -168,7 +171,7 @@ ImageFeature.prototype.findSurface = function(origR,origG,origB,origY, wid,hei, 
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	rot = Matrix.mult(rot,this.transform());
 // WAYS TO FIX: larger scale
-	var scaler = ImageDescriptor.SCALE_MULTIPLIER*4.0;
+	var scaler = ImageDescriptor.SCALE_MULTIPLIER*16.0;
 	var sigma = 1.6;
 	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
 	var w1 = ImageFeature.SSD_SIZE_B4, h1 = ImageFeature.SSD_SIZE_B4;
@@ -176,18 +179,22 @@ ImageFeature.prototype.findSurface = function(origR,origG,origB,origY, wid,hei, 
 	var padding = Math.floor((ImageFeature.SSD_SIZE_B4 - ImageFeature.SSD_SIZE)*0.5);
 	var rectRed, rectGrn, rectBlu, rectGry;
 	sigma = undefined;
-	rectRed = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origR,wid,hei, rot);
+	// rectRed = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origR,wid,hei, rot);
 	// rectRed = ImageMat.gaussian2DFrom1DFloat(rectRed, w1,h1, gauss1D);
-	rectRed = ImageMat.unpadFloat(rectRed,w1,h1, padding,padding,padding,padding);
-	rectGrn = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origG,wid,hei, rot);
+	// rectRed = ImageMat.unpadFloat(rectRed,w1,h1, padding,padding,padding,padding);
+	// rectGrn = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origG,wid,hei, rot);
 	// rectGrn = ImageMat.gaussian2DFrom1DFloat(rectGrn, w1,h1, gauss1D);
-	rectGrn = ImageMat.unpadFloat(rectGrn,w1,h1, padding,padding,padding,padding);
-	rectBlu = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origB,wid,hei, rot);
+	// rectGrn = ImageMat.unpadFloat(rectGrn,w1,h1, padding,padding,padding,padding);
+	// rectBlu = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origB,wid,hei, rot);
 	// rectBlu = ImageMat.gaussian2DFrom1DFloat(rectBlu, w1,h1, gauss1D);
-	rectBlu = ImageMat.unpadFloat(rectBlu,w1,h1, padding,padding,padding,padding);
-	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origY,wid,hei, rot);
+	// rectBlu = ImageMat.unpadFloat(rectBlu,w1,h1, padding,padding,padding,padding);
+	// rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w1,h1, origY,wid,hei, rot);
 	// rectGry = ImageMat.gaussian2DFrom1DFloat(rectGry, w1,h1, gauss1D);
-	rectGry = ImageMat.unpadFloat(rectGry,w1,h1, padding,padding,padding,padding);
+	// rectGry = ImageMat.unpadFloat(rectGry,w1,h1, padding,padding,padding,padding);
+	rectRed = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origR,wid,hei, rot);
+	rectGrn = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origG,wid,hei, rot);
+	rectBlu = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origB,wid,hei, rot);
+	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origY,wid,hei, rot);
 	this._flat = new ColorMatRGBY(rectRed,rectGrn,rectBlu,rectGry, w2,h2);
 }
 ImageFeature.prototype.flat = function(){
@@ -195,17 +202,18 @@ ImageFeature.prototype.flat = function(){
 }
 // --------------------------------------------------------------------------------------------------------- OPERATIONAL
 ImageFeature.prototype.clearPointList = function(){
-	Code.clearArrau(this._pointList);
+	Code.emptyArray(this._pointList);
 }
 ImageFeature.prototype.addPointList = function(feature,score){
 	this._pointList.push([feature,score]);
-	this._pointList.sort(this._sortPointList);
+	this._pointList.sort(ImageFeature._sortPointList);
 	if(this._pointList.length>ImageFeature.MAX_POINT_LIST){
 		this._pointList.pop();
 	}
 }
-ImageFeature.prototype._sortPointList = function(a,b){
+ImageFeature._sortPointList = function(a,b){
 	return a[1]-b[1];
+	//return a[1]-b[1]; //
 }
 ImageFeature.prototype._calculateScore = function(){
 	return 0.0;
@@ -221,14 +229,14 @@ ImageFeature.bestRotation = function(featureA, featureB){ // how far to rotate B
 	return ColorAngle.optimumAngle( featureA.colorAngle(), featureB.colorAngle() );
 }
 ImageFeature.compareFeatures = function(featureA, featureB){
-
-	featureA.findDescriptorData(origR,origG,origB,origY, wid,hei);
-
-
-
+	// assume features are already in best comperable orientation
+	// console.log( "SIFT: "+SIFTDescriptor.compare(featureA.bins(),featureB.bins()) );
+	// console.log( "SSD:  "+ColorMatRGBY.SSD(featureA.flat(),featureB.flat()) );
+	// console.log( "conv: "+ColorMatRGBY.convolution(featureA.flat(),featureB.flat()) );
 	// calculate their relative score and place features in respective list
-	var score = 0;
-	// 
+//var score = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+//var score = 1/ColorMatRGBY.convolution(featureA.flat(),featureB.flat());
+var score = 16 - SIFTDescriptor.compare(featureA.bins(),featureB.bins());
 	featureA.addPointList(featureB,score);
 	featureB.addPointList(featureA,score);
 	return score;

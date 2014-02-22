@@ -482,13 +482,9 @@ Match.prototype._onYAMLCompleteFxn = function(o){
 		currentWidth += d.width();
 		container.addChild(d);
 	}
-	// compare features 
-	//var matcher = new ImageMatcher();
-	//matcher.matchDescriptors(descriptors[0],descriptors[1]);
-	//matcher.chooseBestMatches;
-	//matcher.consolidateMatches();
 var dA = descriptors[0];
 var dB = descriptors[1];
+
 	// draw features on screen
 var indexA = 6, indexB = 25; // worst
 //var indexA = 52, indexB = 152;
@@ -499,7 +495,9 @@ var indexA = Math.floor(Math.random()*dA.getFeatureList().length), indexB = Math
 //indexA = 6; // 98 99 115 148 161 184 | 25
 indexA = 79; // 117 152
 //indexB = 71;
-console.log(indexA,indexB);
+//console.log(indexA,indexB);
+
+indexA = 0; indexB = 146;
 	var rad = 2.0, x, y, s, w, h;
 	currentWidth = 0; currentHeight = 0;
 	for(i=0;i<len;++i){
@@ -513,7 +511,7 @@ console.log(indexA,indexB);
 		container.addChild(d);
 		d.graphics().clear();
 		for(j=0;j<len2;++j){
-//if(j>80){break;}
+//if(j>145){break;}
 			f = list[j];
 			x = f.x()*w; y = f.y()*h; s = f.scale();
 			d.graphics().setLine(1.0,0xFFFFFF00);
@@ -534,6 +532,8 @@ console.log(indexA,indexB);
 		}
 		currentWidth += w;
 	}
+
+
 	var fA = dA.getFeatureList()[indexA];
 	var fB = dB.getFeatureList()[indexB];
 	fA.descriptor(dA);
@@ -542,10 +542,10 @@ console.log(indexA,indexB);
 	fB.findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
 	var ang = ImageFeature.bestRotation(fA,fB);
 	var grys = fA.colorAngle().gry()-fB.colorAngle().gry();
-	// console.log(ang);
-	// console.log(grys);
+	console.log(ang*180/Math.PI);
+	console.log(grys*180/Math.PI);
 	ang = grys+ang;
-	// console.log(ang);
+	console.log(ang*180/Math.PI);
 	fA.findDescriptor(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
 	fB.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
 	// console.log(fA._bins.toString());
@@ -558,33 +558,51 @@ console.log(indexA,indexB);
 	console.log( "SSD:  "+ColorMatRGBY.SSD(fA.flat(),fB.flat()) );
 	console.log( "conv: "+ColorMatRGBY.convolution(fA.flat(),fB.flat()) );
 	
- console.log(fA._bins.toString());
- console.log(fB._bins.toString());
+i = 0;
+d = this._showFeature(fA,null,dA);
+this._root.addChild(d);
+d.matrix().translate(0 + 125*2*i,0);
+d = this._showFeature(fB,fA,dB);
+this._root.addChild(d);
+d.matrix().translate(125 + 125*2*i,0);
 
-	
-//ang = grys;
-	//fA.findDescriptorData(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.redFlat(),dA.width(),dA.height());
+//return;
 
-	//ImageFeature.compareFeatures(fA,fB);
-
-// fA.transform(null);
-// fB.transform(null);
-	var imgWid = 125, imgHei = 125;
+	// compare features
+	var matcher = new ImageMatcher();
+	matcher.matchDescriptors(descriptors[0],descriptors[1]);
+	matcher.chooseBestMatches();
+	matcher.consolidateMatches();
+	var best = matcher._matches;
+	var fA, fB;
+	for(i=0;i<10&&i<best.length;++i){
+		fA = best[i][0];
+		fB = best[i][1];
+		console.log(best[i][2]);
+		d = this._showFeature(fA,null,dA);
+		this._root.addChild(d);
+		d.matrix().translate(0 + 125*2*i,0);
+		d = this._showFeature(fB,fA,dB);
+		this._root.addChild(d);
+		d.matrix().translate(125 + 125*2*i,0);
+	}
+	//Code.copyToClipboardPrompt(o.contents[0]);
+}
+Match.prototype._showFeature = function(fB,fA,dB){
+	var ang = 0;
+	if(fA!==undefined&&fA!==null){
+		ang = ImageFeature.bestRotation(fA,fB);
+		ang += fA.colorAngle().gry()-fB.colorAngle().gry();
+	}
+	var container = new DO();
 	var floatRed, floatGrn, floatBlu, floaGry, argb;
-	var rr = 1.0;
-	floatRed = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dA.redFlat(),dA.width(),dA.height(), fA.transform());
-	floatGrn = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dA.greenFlat(),dA.width(),dA.height(), fA.transform());
-	floatBlu = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dA.blueFlat(),dA.width(),dA.height(), fA.transform());
-	// floatGry = ImageMat.extractRectFromFloatImage(fA.x(),fA.y(),fA.scale(),undefined, imgWid,imgHei, dA.grayFlat(),dA.width(),dA.height(), fA.affine());
-	argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
-	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
-	d = new DOImage(img);
-	d.matrix().identity();
-	container.addChild(d);
-	//
-	floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
-	floatGrn = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dB.greenFlat(),dB.width(),dB.height(), fB.transform());
-	floatBlu = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,undefined, imgWid,imgHei, dB.blueFlat(),dB.width(),dB.height(), fB.transform());
+	var imgWid = 125, imgHei = 125;
+	var rr = 2.0;
+	var sigma = undefined;
+	var rad = 20;
+	floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
+	floatGrn = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.greenFlat(),dB.width(),dB.height(), fB.transform());
+	floatBlu = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.blueFlat(),dB.width(),dB.height(), fB.transform());
 	// floatGry = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale(),undefined, imgWid,imgHei, dB.grayFlat(),dB.width(),dB.height(), fB.affine());
 	argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
 	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
@@ -593,22 +611,15 @@ console.log(indexA,indexB);
 	d.matrix().translate(-imgWid*0.5,-imgHei*0.5);
 	d.matrix().rotate(ang);
 	d.matrix().translate(imgWid*0.5,imgHei*0.5);
-	d.matrix().translate(imgWid,0);
-	container.addChild(d);
-	
-	rad = 20;
-	d = this.describeAngleDO(fA.colorAngle(),rad);
-	d.matrix().translate(imgWid*0.5,imgHei*0.5);
+	//d.matrix().translate(imgWid,0);
 	container.addChild(d);
 
 	d = this.describeAngleDO(fB.colorAngle(),rad);
 	d.matrix().rotate(ang);
 	d.matrix().translate(imgWid*0.5,imgHei*0.5);
-	d.matrix().translate(imgWid,0);
+	//d.matrix().translate(imgWid,0);
 	container.addChild(d);
-
-
-	//Code.copyToClipboardPrompt(o.contents[0]);
+	return container;
 }
 
 Match.prototype._imageCompleteFxn = function(o){
