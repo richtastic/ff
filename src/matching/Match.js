@@ -84,9 +84,15 @@ function Match(){
 	this._root = new DO(); this._stage.root().addChild(this._root);
 	//
 	this._imageList = new Array();
-	var imageLoader = new ImageLoader("./images/medium/", ["BLT.png", "BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	//var imageLoader = new ImageLoader("./images/medium/", ["BLT.png", "BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+		//this,this._imageCompleteFxn,this._imageProgressFxn);
 // BLT.png
-		this,this._imageCompleteFxn,this._imageProgressFxn);
+	var list = [];
+	list.push("original.png");
+	//list.push("scalexy.png");
+	//list.push("scalex.png");
+	list.push("scalexrotateskew.png");
+	var imageLoader = new ImageLoader("./images/test/", list, this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
 Match.prototype._imageProgressFxn0 = function(o){
@@ -588,7 +594,7 @@ d.matrix().translate(125 + 125*2*i,0);
 	}
 	//Code.copyToClipboardPrompt(o.contents[0]);
 }
-Match.prototype._showFeature = function(fB,fA,dB){
+Match.prototype._showFeature = function(fB,fA,dB, size){
 	var ang = 0;
 	if(fA!==undefined&&fA!==null){
 		ang = ImageFeature.bestRotation(fA,fB);
@@ -597,7 +603,11 @@ Match.prototype._showFeature = function(fB,fA,dB){
 	var container = new DO();
 	var floatRed, floatGrn, floatBlu, floaGry, argb;
 	var imgWid = 125, imgHei = 125;
-	var rr = 2.0;
+	if(size!==undefined){
+		imgWid = size; imgHei = size;
+	}
+	var rr = 1.0;
+//rr = ()/();
 	var sigma = undefined;
 	var rad = 20;
 	floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
@@ -613,7 +623,6 @@ Match.prototype._showFeature = function(fB,fA,dB){
 	d.matrix().translate(imgWid*0.5,imgHei*0.5);
 	//d.matrix().translate(imgWid,0);
 	container.addChild(d);
-
 	d = this.describeAngleDO(fB.colorAngle(),rad);
 	d.matrix().rotate(ang);
 	d.matrix().translate(imgWid*0.5,imgHei*0.5);
@@ -622,14 +631,135 @@ Match.prototype._showFeature = function(fB,fA,dB){
 	return container;
 }
 
+Match.prototype.testA = function(){
+	var i, len, j, len2, list, x, y, s;
+	var images = this._imageList;
+	var files = this._fileList;
+	var root = this._root;
+	var currentWidth = 0, currentHeight = 0;
+	len = images.length;
+	// find points
+	for(i=0;i<len;++i){
+		var filename = files[i];
+		var params = this.getDescriptorParameters( images[i] );
+		var wid = params.width;
+		var hei = params.height;
+		var imageSourceRed = params.red;
+		var imageSourceGrn = params.grn;
+		var imageSourceBlu = params.blu;
+		var imageSourceGry = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
+		var descriptor = new ImageDescriptor(wid,hei, imageSourceRed,imageSourceGrn,imageSourceBlu,imageSourceGry, filename);
+		//descriptor.processScaleSpace();
+		if(i==0){ // original
+			descriptor._features.push(  new ImageFeature(0.355,0.925,1.2,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.508,0.538,1.2,0,null) ); // nose point
+			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
+			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow
+			//descriptor._features.push(  new ImageFeature(0.65,0.538,1.2,0,null) ); // nose
+		}
+		// if(i==1){ // scalexy
+		// 	descriptor._features.push(  new ImageFeature(0.60,0.89,2.0,0,null) ); // purple
+		// }
+		// if(i==1){ // scalex
+		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
+		// }
+		if(i==1){ // scalexrotateskew
+			descriptor._features.push(  new ImageFeature(0.662,0.07,1.5,0,null) ); // purple
+		}
+		// descriptor.processAffineSpace();
+		// descriptor.describeFeatures();
+		// show image
+		d = new DOImage(images[i]);
+		d.matrix().translate(currentWidth,currentHeight);
+		root.addChild(d);
+		// show points
+		list = descriptor.getFeatureList();
+		len2 = list.length;
+		var container = new DO();
+		var rad = 4.0;
+		for(j=0;j<len2;++j){
+			d = new DO();
+			f = list[j];
+			x = f.x()*wid; y = f.y()*hei; s = f.scale();
+			d.graphics().setLine(1.0,0xFF000000);
+			d.graphics().beginPath();
+			d.graphics().setFill(0x66FFFFFF);
+			// if(i==0&&j==indexA){
+			// 	d.graphics().setLine(1.0,0xFF00FF00);
+			// 	d.graphics().setFill(0xFFFF00000);
+			// }else if(i==1&&j==indexB){
+			// 	d.graphics().setLine(1.0,0xFF00FF00);
+			// 	d.graphics().setFill(0xFFFF00000);
+			// }
+			d.graphics().moveTo(0+rad*s,0);
+			d.graphics().arc(0,0, rad*s, 0,Math.PI*2.0, false);
+			d.graphics().endPath();
+			d.graphics().fill();
+			d.graphics().strokeLine();
+			//
+d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
+d.matrix().translate(x,y);
+			//
+			container.addChild(d);
+			// show feature
+/*
+var dB = descriptor;
+var ang = 0;
+f.clearPointList();
+f.descriptor(dB);
+f.findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
+f.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
+f.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
+var size = 50;
+			d = this._showFeature(f,null,descriptor, size);
+			d.matrix().translate(j*size+currentWidth,hei);
+			root.addChild(d);
+*/
+			//descriptor.getStableAffinePoint(f.x(),f.y());
+			var val = descriptor.doesPointHaveScaleExtrema(f.x(),f.y());
+			var arr = val.images;
+			var data = val.values;
+			var wi = val.width;
+			var he = val.height;
+			var k;
+			var str = "data = [";
+			for(k=0;k<arr.length;++k){
+				//console.log(data[k]);
+				var img = arr[k];
+				//var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
+				var argb = ImageMat.ARGBFromFloat(img);
+				var src = this._stage.getARGBAsImage(argb, wi,he);
+				str = str + data[k] +" ";
+				d = new DOImage(src);
+				root.addChild(d);
+				d.matrix().translate(currentWidth + k*wi, hei + i*he);
+			}
+			str = str +"];\n";
+console.log(str);
+Code.copyToClipboardPrompt(str);
+		}
+		root.addChild(container);
+		container.matrix().translate(currentWidth,currentHeight);
+		currentWidth += wid;
+
+//break;
+	}
+}
+
 Match.prototype._imageCompleteFxn = function(o){
 	var root = this._root;
 	var images = new Array();
 	var fileNames = new Array();
-	Code.copyArray(fileNames,o.files);
-	Code.copyArray(images,o.images);
-	this._imageList = images;
-	this._fileList = fileNames;
+	this._fileList = Code.copyArray(fileNames,o.files);
+	this._imageList = Code.copyArray(images,o.images);
+	
+
+var testing = true;
+if(testing){
+	this.testA();
+	return
+}
+
 
 var comparing = true;
 if(comparing){

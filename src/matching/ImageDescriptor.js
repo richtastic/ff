@@ -145,7 +145,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var sigma = 1.6; // 1.6
 	var scalesPerOctave = 5; // 5
 	var sConstant = scalesPerOctave-3;
-	var kConstant = Math.pow(2.0,1/sConstant);
+	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // var kConstant = Math.pow(2.0,1/sConstant);
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
 	var minThresholdIntensity = 0.03; // 0.03
@@ -218,6 +218,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	// ALSO COPY REMAINING POINTS THAT FIT CRITERIA
 	len = temp.length;
 	for(;i<len;++i){
+break; // just keep 100
 		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
 			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
 		}else{
@@ -367,7 +368,112 @@ eigMin[i] = Math.min(e1,e2);
 	}
 	return {matrix:u, harris:harris, e:eigMax, f:eigMin, b:Lx, c:Ly};
 }
+ImageDescriptor.prototype.doesPointHaveScaleExtrema = function(x,y,s){ // only care about x and y position => scale space is determined around s
+console.log("doesPointHaveScaleExtre");
+	s = (s!==undefined)?s:1.0;
+	var w, prevW, diff, i, len, scale, cen;
+	var gray = this._flatGry, wid = this._width, hei = this._height;
+	var transform = new Matrix(3,3).identity();
+	var windowWid = windowHei = 51;
+	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
+	var center = windowWid*cenH + cenW;
+	var m = Math.sqrt(2);
+	var mm = m*m, mmm = m*m*m; 
+	var scales = [s/mm, s/m, s, s*m, s*mm];
+	var values = [];
+	var images = [];
+	var prevW = null;
+	/*
+	for(i=0;i<scales.length;++i){
+		scale = scales[i];
+		w = ImageMat.extractRectFromFloatImage(x,y,scale,null, windowWid,windowHei, gray,wid,hei, transform);
+		if(prevW){
+			diff = ImageMat.subFloat(w,prevW);
+			cen = diff[center];
+			console.log(center);
+			console.log(cen);
+			values.push(cen);
+			diff = ImageMat.normalFloat01(diff);
+			images.push(diff);
+		}
+		prevW = w;
+	}*/
+	var startScale = 0.25;
+	var sigma = 1.6; // input - blur
+	var scalesPerOctave = 5; // input - divisions
+	var totalOctaves = 5; // input - count
+	var kConstant = Math.pow(2.0,1.0/(scalesPerOctave-1));
+	var gaussSizeBase = 5, gaussSizeIncrement = 1.5, gauss1D, gaussSize;
+	var sig, sca, tmp, prevTmp;
+
+
+	for(i=0;i<totalOctaves;++i){
+		sca = startScale*Math.pow(2,i);
+		console.log(sca+"..........");
+		w = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
+		prevTmp = null;
+		for(j=0;j<scalesPerOctave;++j){
+			sca = startScale*Math.pow(2,i)*Math.pow(kConstant,j); // current actual scale
+			console.log(j,sca);
+			sig = sigma*Math.pow(kConstant,j);
+			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
+			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+			tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
+			//var amt = 1/(i+10);//(sig*sig);
+			//tmp = ImageMat.scaleFloat(amt,tmp);
+			if(prevTmp!=null){
+				cen = tmp[center]-prevTmp[center];
+				values.push(cen);
+				diff = ImageMat.subFloat(tmp,prevTmp);
+				diff = ImageMat.normalFloat01(diff);
+				images.push(diff);
+			}
+			prevTmp = tmp;
+		}
+	}
+	//var max = Math.max.apply(this,values), min = Math.min.apply(this,values);
+	// want: global maxima that:
+	// has only a [single - tricky with noise...] peak, that is NOT the ends
+	// OR ditto minima
+	// can look at relative intensities for peak: walk the value left/rigth until there is another peak and record the difference in VALUE or in POINTS 
+	// can exclude start/end points of first loop - that seems to tbe where the most noise is
+	// diffs: 0.00015, 0.002, 0.003, 
+	var max = [], min = [];
+	for(i=1;i<values.length-1;++i){
+		if(values[i-1]<values[i]&& values[i+1]<values[i]){
+			max.push( [i,values[i]] );
+		}
+		if(values[i-1]>values[i]&& values[i+1]>values[i]){
+			min.push( [i,values[i]] );
+		}
+	}
+	// console.log(max);
+	// console.log(min);
+	return {values:values, images:images, width:windowWid, height:windowHei, max:max, min:min};
+}
+
 ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
+	var currentWid = 15, currentHei = 15;
+	var matrix = new Matrix(3,3).identity();
+	var currentScale = 1.0;
+	var gray = this._flatGry;
+	var wid = this._width;
+	var hei = this._height;
+	var transform = new Matrix(3,3).identity();
+console.log(1);
+// n(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){
+	currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
+console.log(2);
+	var list = [];
+	var W0 = currentImage;
+
+// find maxima nearest to inPoint
+
+// find if point reaches a maxima or minima in scale space;
+
+	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:matrix, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
+}
+ImageDescriptor.prototype.getStableAffinePointHERPDEDERP = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
 	var unstableMax = 100.0;
 	var inScale = inPoint.z;
 	var inSigma = this.sigmaFromScale(inScale);

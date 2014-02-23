@@ -26,7 +26,7 @@ function ImageFeature(x,y,scale,ssValue, matrix){
 	this._y = y;
 	this._scale = scale;
 	this._ssValue = ssValue;
-	this._affine = matrix;
+	this._affine = (matrix!==undefined&&matrix!==null)?matrix:((new Matrix(3,3)).identity());
 	this._pointList = []; // ordered list of other points [BEST,..,WORST] [{point:ptX,score:0}]
 	this._colorAngles = null; // red,grn,blu,gry [0,2pi]
 	this._bins = null; // gradient
@@ -103,7 +103,7 @@ ImageFeature.prototype.angleFromColors = function(color, wid,hei){
 	var cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
 	// get zoomed rectangle
 	sigma = undefined;
-	scaler = ImageDescriptor.SCALE_MULTIPLIER*8.0; // increase the gaussian effect
+	scaler = ImageDescriptor.SCALE_MULTIPLIER*1.0; // increase the gaussian effect
 	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, null); // iso-affine is unstable
 	//rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, this.transform());
 	// blur
