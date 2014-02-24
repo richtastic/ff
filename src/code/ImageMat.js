@@ -588,6 +588,17 @@ ImageMat.dropBelow = function(img,value){
 	return a;
 }
 
+// visualize peaks
+ImageMat.showPeaks = function(har, wid,hei, peaks){
+	var result = ImageMat.newZeroFloat(wid,hei);
+	var obj, i, len = peaks.length;
+	for(i=0;i<len;++i){
+		obj = peaks[i];
+		result[wid*obj.y + obj.x] = 1.0;
+	}
+	return result;
+}
+
 ImageMat.getPeaks = function(peaks, wid,hei){ // the problem with this is it misses maxima that are erased by the retracting process - poor resolution (2-3 pixels?)
 	var i, j, tl,to,tr, lf,se,ri, bl,bo,br, index;
 	var wm1 = wid-1, hm1 = hei-1;

@@ -279,6 +279,8 @@ ImageDescriptor.prototype.compareFeatures = function(){ // this finds best-match
 
 ImageDescriptor.prototype.sigmaFromScale = function(cScale){
 	var cExponent = Math.log(cScale)/Math.log(2);
+	this._sourceImageSigma = 1.6;
+	this._sourceImageConstant = 2; //  ???
 	var cSigma = this._sourceImageSigma*Math.pow(this._sourceImageConstant,(cExponent*2)%2);
 	return cSigma;
 }
@@ -369,20 +371,14 @@ eigMin[i] = Math.min(e1,e2);
 	return {matrix:u, harris:harris, e:eigMax, f:eigMin, b:Lx, c:Ly};
 }
 ImageDescriptor.prototype.doesPointHaveScaleExtrema = function(x,y,s){ // only care about x and y position => scale space is determined around s
-console.log("doesPointHaveScaleExtre");
 	s = (s!==undefined)?s:1.0;
 	var w, prevW, diff, i, len, scale, cen;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
 	var transform = new Matrix(3,3).identity();
-	var windowWid = windowHei = 51;
+	var windowWid = windowHei = 75;
 	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
 	var center = windowWid*cenH + cenW;
-	var m = Math.sqrt(2);
-	var mm = m*m, mmm = m*m*m; 
-	var scales = [s/mm, s/m, s, s*m, s*mm];
-	var values = [];
-	var images = [];
-	var prevW = null;
+	var scales = [], sigmas = [], values = [], images = [];
 	/*
 	for(i=0;i<scales.length;++i){
 		scale = scales[i];
@@ -404,55 +400,128 @@ console.log("doesPointHaveScaleExtre");
 	var totalOctaves = 5; // input - count
 	var kConstant = Math.pow(2.0,1.0/(scalesPerOctave-1));
 	var gaussSizeBase = 5, gaussSizeIncrement = 1.5, gauss1D, gaussSize;
-	var sig, sca, tmp, prevTmp;
+	var sig, sca, tmp, prevTmp, prevSca;
 
 
 	for(i=0;i<totalOctaves;++i){
 		sca = startScale*Math.pow(2,i);
-		console.log(sca+"..........");
+		//console.log(sca+"..........");
 		w = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
 		prevTmp = null;
+		prevSca = null;
 		for(j=0;j<scalesPerOctave;++j){
 			sca = startScale*Math.pow(2,i)*Math.pow(kConstant,j); // current actual scale
-			console.log(j,sca);
+			//console.log(j,sca);
 			sig = sigma*Math.pow(kConstant,j);
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
 			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
 			tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
-			//var amt = 1/(i+10);//(sig*sig);
-			//tmp = ImageMat.scaleFloat(amt,tmp);
 			if(prevTmp!=null){
 				cen = tmp[center]-prevTmp[center];
 				values.push(cen);
 				diff = ImageMat.subFloat(tmp,prevTmp);
 				diff = ImageMat.normalFloat01(diff);
-				images.push(diff);
+var peaks = ImageMat.getPeaks(diff, windowWid,windowHei);
+var d2 = ImageMat.showPeaks(diff, windowWid,windowHei, peaks);
+var d3 = ImageMat.addFloat(diff,d2);
+var d4 = ImageMat.getNormalFloat01(d3);
+images.push(d4);
+				//images.push(diff);
+				scales.push( (sca+prevSca)*0.5 );
+				sigmas.push( sigma*Math.pow(kConstant,j-0.5) );
 			}
+			prevSca = sca;
 			prevTmp = tmp;
 		}
 	}
-	//var max = Math.max.apply(this,values), min = Math.min.apply(this,values);
+	var max=values[0], min=values[0];//var max = Math.max.apply(this,values), min = Math.min.apply(this,values);
+	var maxIndex=0; minIndex=0, maxScale=scales[0], minScale=scales[0];
+	var maxSigma=sigmas[0];
 	// want: global maxima that:
 	// has only a [single - tricky with noise...] peak, that is NOT the ends
 	// OR ditto minima
 	// can look at relative intensities for peak: walk the value left/rigth until there is another peak and record the difference in VALUE or in POINTS 
 	// can exclude start/end points of first loop - that seems to tbe where the most noise is
 	// diffs: 0.00015, 0.002, 0.003, 
-	var max = [], min = [];
-	for(i=1;i<values.length-1;++i){
-		if(values[i-1]<values[i]&& values[i+1]<values[i]){
-			max.push( [i,values[i]] );
+	for(i=1;i<values.length;++i){
+		if(values[i]>max){
+			max = values[i];
+			maxIndex = i;
+			maxScale = scales[i];
+			maxSigma = sigmas[i];
 		}
-		if(values[i-1]>values[i]&& values[i+1]>values[i]){
-			min.push( [i,values[i]] );
+		if(values[i]<min){
+			min = values[i];
+			minIndex = i;
+			minScale = scales[i];
 		}
 	}
+	// ignore end extrema
+	if(max==values[0] || max==values[values.length-1]){ max=null; maxIndex=null; maxScale=null; }
+	if(min==values[0] || min==values[values.length-1]){ min=null; minIndex=null; minScale=null; }
+	 // cubic+interpolation of maxima?
 	// console.log(max);
 	// console.log(min);
-	return {values:values, images:images, width:windowWid, height:windowHei, max:max, min:min};
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale};
 }
 
-ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
+
+ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig){
+	var sigma = undefined;
+	var kMult = undefined;
+	if(s===undefined){
+		var obj = this.doesPointHaveScaleExtrema(x,y);
+		if(obj.max!==null){
+			console.log(obj);
+			s = obj.maxScale;
+			sigma = obj.maxSigma;
+		}else{
+			s = 1.0;
+		}
+	}
+	var sca = s;
+	var gray = this._flatGry, wid = this._width, hei = this._height;
+	var transform = new Matrix(3,3).identity();
+	var windowWid = windowHei = 51;
+	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
+	var center = windowWid*cenH + cenW;
+	var w = ImageMat.extractRectFromFloatImage(x,y,sca,sigma, windowWid,windowHei, gray,wid,hei, transform);
+	//
+	var SMM = new Array();
+	var threshold = 0;
+	sigma = undefined; kMult = undefined;
+	var harris = ImageMat.harrisDetector(w,windowWid,windowHei, SMM, threshold, sigma, kMult);
+	var har = harris.response;
+	var peaks = ImageMat.getPeaks(har, windowWid,windowHei);
+	var minX=0, minY=0, dist, i, len=peaks.length, minDist = windowWid*windowWid;
+	var pX,pY;
+	for(i=0;i<len;++i){
+		pX = peaks[i].x - cenW;
+		pY = peaks[i].y - cenH;
+		// if(pX*sca + ){
+		// }
+		dist = (pX*pX+pY*pY);
+		if(dist<minDist){
+			minDist = dist;
+			minX = peaks[i].x - cenW;
+			minY = peaks[i].y - cenH;
+
+		}
+	}
+	console.log("CLOSEST: "+minX+", "+minY+" AT: "+sca);
+	console.log("NEXT: "+ (minX/sca + x*wid)/wid +", "+ (minY/sca + y*hei)/hei );
+	var har2 = ImageMat.showPeaks(har, windowWid,windowHei, peaks);
+	// 
+	//w = ImageMat.getNormalFloat01(har2);
+	w = ImageMat.addFloat(har,har2);
+	w = ImageMat.getNormalFloat01(w);
+	return {image:w, width:windowWid, height:windowHei, closestX:minX, closestY:minY};
+	//harris = this.harrisMatrix(W,windowWid,windowHei, sigmaI,sigmaD);
+}
+
+
+
+ImageDescriptor.prototype.getStableAffinePointNEW = function(inPoint){ // 
 	var currentWid = 15, currentHei = 15;
 	var matrix = new Matrix(3,3).identity();
 	var currentScale = 1.0;
@@ -460,10 +529,8 @@ ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.
 	var wid = this._width;
 	var hei = this._height;
 	var transform = new Matrix(3,3).identity();
-console.log(1);
 // n(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){
 	currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
-console.log(2);
 	var list = [];
 	var W0 = currentImage;
 
@@ -473,13 +540,13 @@ console.log(2);
 
 	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:matrix, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }
-ImageDescriptor.prototype.getStableAffinePointHERPDEDERP = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
+ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
 	var unstableMax = 100.0;
 	var inScale = inPoint.z;
 	var inSigma = this.sigmaFromScale(inScale);
-	var currentWid = 15, currentHei = 15;
+	var currentWid = 75, currentHei = 75;
 	var currentScale = ImageDescriptor.SCALE_MULTIPLIER*( inScale );
-	var currentSigma = 1.6;
+	var currentSigma = 4*1.6;
 	var currentImage;
 	var originalMinimum = null;
 	var originalGradient = null;
@@ -496,6 +563,7 @@ ImageDescriptor.prototype.getStableAffinePointHERPDEDERP = function(inPoint){ //
 	var scaledTotal = 1.0;
 var list = new Array();
 	for(i=0;i<10;++i){
+		//console.log(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);//transform.toString());
 		currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
 list.push(currentImage);
 		SMM = ImageMat.harrisDetectorSMM(currentImage,currentWid,currentHei, currentSigma);
@@ -524,7 +592,8 @@ list.push(currentImage);
 		//console.log("eigenValue ratio: "+eigRatio+"      <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "+i);
 		// check stability
 		if(eigRatio>unstableMax){
-			return null;
+			console.log("unstable A");
+			//return null;
 		}
 		// form useful vectors
 		var eigVecA = new V2D(eA[0],eA[1]);
@@ -568,16 +637,15 @@ scaledTotal*=correctScale;
 		transform = Matrix.mult(sca,transform);
 		// check stability 2
 		if(scaledTotal>unstableMax){
-			return null;
+			console.log("unstable B");
+			// return null;
 		}
 	}
 	// scale back to primary gradient direction
 	bestTransform.multV2DtoV2D(t,originalGradient);
 	ang = V2D.angleDirection(t,originalGradient);
-	// console.log(ang*180/Math.PI);
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
-	bestTransform = Matrix.mult(bestTransform,rot);
-	// return
+	bestTransform = Matrix.mult(rot,bestTransform);
 	var W0 = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale*4.0,null, currentWid,currentHei, gray,wid,hei, transform);
 	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:bestTransform, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }

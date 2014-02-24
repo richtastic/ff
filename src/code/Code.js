@@ -71,9 +71,10 @@ Code.isArray = function(obj){
 	//return (typeof obj)==Code.TYPE_ARRAY;
 }
 Code.copyToClipboardPrompt = function(str){
-	var txt = Code.newInputTextArea(str, 5,80);
+	var txt = Code.newInputTextArea(str, 3,10);
 	Code.setStyleZIndex(txt,"9999");
 	Code.setStylePosition(txt,"absolute");
+	Code.setStyleRight(txt,"0");
 	document.body.appendChild(txt);
 	txt.ondblclick = function(e){ document.body.removeChild(e.target); e.ondblclick=null; }
 }
@@ -671,6 +672,12 @@ Code.setStyleZIndex = function(ele,style){
 };
 Code.setStylePosition = function(ele,style){
 	ele.style.position = style;
+};
+Code.setStyleRight = function(ele,style){
+	ele.style.right = style;
+};
+Code.setStyleLeft = function(ele,style){
+	ele.style.left = style;
 };
 Code.getDomBody = function(){
 	return document.body;

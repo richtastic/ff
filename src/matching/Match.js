@@ -651,7 +651,13 @@ Match.prototype.testA = function(){
 		var descriptor = new ImageDescriptor(wid,hei, imageSourceRed,imageSourceGrn,imageSourceBlu,imageSourceGry, filename);
 		//descriptor.processScaleSpace();
 		if(i==0){ // original
-			descriptor._features.push(  new ImageFeature(0.355,0.925,1.2,0,null) ); // purple
+			descriptor._features.push(  new ImageFeature(0.355,0.927,1.2,0,null) ); // purple
+				//descriptor._features.push(  new ImageFeature(0.355,0.935766558,1.2,0,null) ); // purple SMM-1
+				//descriptor._features.push(  new ImageFeature(0.3522839,0.941198694,1.2,0,null) ); // purple SMM-2
+				//descriptor._features.push(  new ImageFeature(0.35551386,0.93150879,1.2,0,null) ); // purple SMM-3
+				//descriptor._features.push(  new ImageFeature(0.3527977919156853, 0.9369409261686293,1.2,0,null) ); // purple SMM-4
+				//descriptor._features.push(  new ImageFeature(0.36144026763831016, 0.9420623932635183,1.2,0,null) ); // purple SMM-5
+				//descriptor._features.push(  new ImageFeature(0.3638627432563343, 0.9323724907914216 ,1.2,0,null) ); // purple SMM-6
 			//descriptor._features.push(  new ImageFeature(0.508,0.538,1.2,0,null) ); // nose point
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow
@@ -702,7 +708,64 @@ d.matrix().translate(x,y);
 			//
 			container.addChild(d);
 			// show feature
-/*
+
+			// show scale space for point
+			var val = descriptor.doesPointHaveScaleExtrema(f.x(),f.y());
+			console.log(val);
+			console.log(val.max,val.min);
+			var arr = val.images;
+			var data = val.values;
+			var wi = val.width;
+			var he = val.height;
+var maxScale = val.maxScale;
+			var k;
+			var sca = "scales = [";
+			var str = "data = [";
+			for(k=0;k<arr.length;++k){
+				var img = arr[k];
+				var argb = ImageMat.ARGBFromFloat(img);
+				var src = this._stage.getARGBAsImage(argb, wi,he);
+				sca = sca + val.scales[k] + " ";
+				str = str + data[k] + " ";
+				d = new DOImage(src);
+				root.addChild(d);
+				d.matrix().translate(currentWidth + k*wi, hei + i*he);
+			}
+			sca = sca +"];\n";
+			str = str +"];\n";
+			Code.copyToClipboardPrompt(str+"\n"+sca);
+
+			// show harris maxima
+			val = descriptor.pointHarrisExtrema(f.x(),f.y());
+			img = val.image;
+			argb = ImageMat.ARGBFromFloat(img);
+			src = this._stage.getARGBAsImage(argb, wi,he);
+			d = new DOImage(src);
+			root.addChild(d);
+			d.matrix().translate(currentWidth+wid-val.width, hei - val.height);
+
+			// show affine-ness
+
+			//descriptor.getStableAffinePoint(f.x(),f.y());
+			console.log("val.maxScale: "+maxScale);
+			val = descriptor.getStableAffinePoint( new V3D( f.x(),f.y(),maxScale ) );
+			console.log(val);
+f.transform( val.matrix );
+			arr = val.list;
+			for(k=0;k<arr.length;++k){
+				img = arr[k];
+				argb = ImageMat.ARGBFromFloat(img);
+				src = this._stage.getARGBAsImage(argb, val.windowWidth,val.windowHeight);
+				d = new DOImage(src);
+				root.addChild(d);
+				d.matrix().translate(currentWidth+k*val.windowWidth, 400+i*val.windowHeight);
+			}
+
+		}
+		root.addChild(container);
+		container.matrix().translate(currentWidth,currentHeight);
+		
+
 var dB = descriptor;
 var ang = 0;
 f.clearPointList();
@@ -710,38 +773,12 @@ f.descriptor(dB);
 f.findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
 f.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
 f.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
-var size = 50;
+var size = 150;
 			d = this._showFeature(f,null,descriptor, size);
 			d.matrix().translate(j*size+currentWidth,hei);
-			root.addChild(d);
-*/
-			//descriptor.getStableAffinePoint(f.x(),f.y());
-			var val = descriptor.doesPointHaveScaleExtrema(f.x(),f.y());
-			var arr = val.images;
-			var data = val.values;
-			var wi = val.width;
-			var he = val.height;
-			var k;
-			var str = "data = [";
-			for(k=0;k<arr.length;++k){
-				//console.log(data[k]);
-				var img = arr[k];
-				//var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
-				var argb = ImageMat.ARGBFromFloat(img);
-				var src = this._stage.getARGBAsImage(argb, wi,he);
-				str = str + data[k] +" ";
-				d = new DOImage(src);
-				root.addChild(d);
-				d.matrix().translate(currentWidth + k*wi, hei + i*he);
-			}
-			str = str +"];\n";
-console.log(str);
-Code.copyToClipboardPrompt(str);
-		}
-		root.addChild(container);
-		container.matrix().translate(currentWidth,currentHeight);
-		currentWidth += wid;
+//			root.addChild(d);
 
+currentWidth += wid;
 //break;
 	}
 }
