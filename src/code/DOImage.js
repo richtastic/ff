@@ -10,7 +10,6 @@ function DOImage(img, options, parentDO){
 		if(options.width){ this._imageWidth=options.width; }
 		if(options.height){ this._imageHeight=options.height; }
 	}
-	
 }
 Code.inheritClass(DOImage, DO);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET
@@ -27,7 +26,9 @@ DOImage.prototype.image = function(img){
 		this._imageY = 0;
 		this._imageWidth = img.width;
 		this._imageHeight = img.height;
-		this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight); // default
+		( this.graphicsIllustration().clear() );
+		( this.graphicsIllustration().drawImage(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight) );
+//		this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight); // default
 	}
 	return this._image;
 }
@@ -63,31 +64,31 @@ DOImage.prototype.height = function(hei){
 	return this._imageHeight;
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
-DOImage.prototype.drawSingle = function(pX,pY,w,h){
-	this._setProperties(pX,pY,w,h);
-	Code.emptyArray(this._imageQueue);
-	this._imageQueue.push( Code.newArray(this.graphicsIllustration().clear,Code.newArray()) );
-	this._imageQueue.push( Code.newArray(this.graphicsIllustration().drawImage,Code.newArray(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight)) );
-	this._renderFxn = this._renderReset;
-}
-DOImage.prototype._renderReset = function(canvas){
-	if(this._imageQueue.length>0){
-		var i, j, fxn, args;
-		for(i=0; i<this._imageQueue.length; ++i){
-			fxn = this._imageQueue[i][0];
-			args = this._imageQueue[i][1];
-			for(j=0; j<args.length; ++j){
-				if(args[j]==null){
-					args[j] = canvas;
-				}
-			}
-			fxn.apply(this.graphicsIllustration(),args);
-		}
-		Code.emptyArray(this._imageQueue);
-	}
-	this._renderDefault(canvas);
-	this._renderFxn = this._renderDefault;
-}
+// DOImage.prototype.drawSingle = function(pX,pY,w,h){ // this is questionable .............................................................................................................
+// 	this._setProperties(pX,pY,w,h);
+// 	Code.emptyArray(this._imageQueue);
+// 	this._imageQueue.push( Code.newArray(this.graphicsIllustration().clear,Code.newArray()) );
+// 	this._imageQueue.push( Code.newArray(this.graphicsIllustration().drawImage,Code.newArray(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight)) );
+// 	this._renderFxn = this._renderReset;
+// }
+// DOImage.prototype._renderReset = function(canvas){
+// 	if(this._imageQueue.length>0){
+// 		var i, j, fxn, args;
+// 		for(i=0; i<this._imageQueue.length; ++i){
+// 			fxn = this._imageQueue[i][0];
+// 			args = this._imageQueue[i][1];
+// 			for(j=0; j<args.length; ++j){
+// 				if(args[j]==null){
+// 					args[j] = canvas;
+// 				}
+// 			}
+// 			fxn.apply(this.graphicsIllustration(),args);
+// 		}
+// 		Code.emptyArray(this._imageQueue);
+// 	}
+// 	this._renderDefault(canvas);
+// 	this._renderFxn = this._renderDefault;
+// }
 DOImage.prototype._renderDefault = function(canvas){
 	//console.log(this.graphicsIllustration == this.graphicsIntersection);
 			//this.super(this.render).render.call(this,canvas);

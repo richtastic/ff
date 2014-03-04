@@ -21,8 +21,8 @@ function FF(homeDir, completeFxn,  progressFxn){
 	head.appendChild(this._script);
 }
 FF.prototype._startLoadingFxn = function(){
-	var list = ["numeric-1.2.6.js", "Code.js","YAML.js","FileLoader.js","ScriptLoader.js","ImageLoader.js","SerialString.js","V2D.js","V3D.js","V4D.js","Matrix.js","Matrix2D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatchable.js","Ajax.js","ImageMat.js",
-				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","glMatrix-0.9.5.min.js","MatrixStackGL.js","StageGL.js","Minify.js"];
+	var list = ["numeric-1.2.6.js", "Code.js","YAML.js","FileLoader.js","ScriptLoader.js","ImageLoader.js","AudioLoader.js","MultiLoader.js","SerialString.js","V2D.js","V3D.js","V4D.js","Matrix.js","Matrix2D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatchable.js","Ajax.js","ImageMat.js",
+				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","glMatrix-0.9.5.min.js","MatrixStackGL.js","StageGL.js","Minify.js","Resource.js","Keyboard.js","Rect.js"];
 	var ctx = this.context;
 	this.context = null;
 	var scriptLoader = new ScriptLoader(ctx._homeDir,list,ctx,ctx._classesLoadedFxn,ctx._classesProgressFxn);

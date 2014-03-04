@@ -18,8 +18,9 @@ Memory2D.EVENT_SERIES = "EVENT_SERIES";
 Memory2D.EVENT_FAILURE = "EVENT_FAILURE";
 //
 function Memory2D( bound, pList){
+	Memory2D._.constructor.call(this);
 	var self = this;
-	Code.extendClass(this,Dispatchable);
+	//Code.extendClass(this,Dispatchable);
 	this._tree = new Tree();
 	this._stack = new Array();
 	this._memory = new Array();
@@ -246,3 +247,5 @@ function Memory2D( bound, pList){
 	this._count = this._process.length;
 	this._run_timer = new Ticker(1);
 }
+
+Code.inheritClass(Memory2D,Dispatchable);

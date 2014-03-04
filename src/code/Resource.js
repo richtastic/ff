@@ -1,86 +1,108 @@
 // Resource.js
 
 function Resource(){
-	var self = this;
-    self.audioPlayer = new Audio();
-	self.tex = new Array();
-	self.fnt = new Array();
-	self.snd = new Array();
-	self.map = new Array();
-    self.audLoader = new AudioLoader( "", new Array() );
-	self.imgLoader = new ImageLoader( "images/", new Array() );
-	self.fntLoader = new NextLoader( new Array() );
-	self.fxnLoader = new MultiLoader( new Array() );
-	Code.extendClass(this,Dispatchable);
-    // audio playing -------------------------------
-    self.playSound = function(aud){
-        self.audioPlayer.src = aud.src;
-        //self.audioPlayer.load();
-        self.audioPlayer.play();
+	Resource._.constructor.call(this);
+	this._tex = new Array();
+	this._fnt = new Array();
+	this._snd = new Array();
+	this._map = new Array();
+	this._audLoader = new AudioLoader( "audio/", new Array(), this );
+	this._imgLoader = new ImageLoader( "images/", new Array(), this );
+	//this._fntLoader = new NextLoader( new Array() );
+	this._fntLoader = new MultiLoader( new Array(), this );
+	this._fxnLoader = new MultiLoader( new Array(), this );
+	this._imgLoader.completeFxn(this._load2);
+	this._audLoader.completeFxn(this._load3);
+	this._fntLoader.completeFxn(this._load4);
+	this._fxnLoader.completeFxn(this._load5);
+	this._context = null;
+	this._fxnComplete = null;
+}
+Code.inheritClass(Resource,Dispatchable);
+// --------------------------------------------------------------------------------------------
+Resource.prototype.tex = function(i){
+	return this._tex[i];
+}
+// loading ------------------------------------------------------------------------------
+Resource.prototype.context = function(ctx){
+    if(ctx!==undefined){
+        this._context = ctx;
     }
-	// loading ------------------------------------------------------------------------------
-	self.load = function(){
-		self.imgLoader.load();
+    return this._context;
+}
+Resource.prototype.load = function(){
+	this._load1();
+}
+Resource.prototype._load1 = function(){ // images
+	this._imgLoader.load();
+}
+Resource.prototype._load2 = function(o){ // image complete | audio
+	var imgList = o.images;
+	for(var i=0;i<imgList.length;++i){
+		this._tex[i] = imgList[i];
 	}
-	self.load2 = function(imgList){ // image complete
-		for(var i=0;i<imgList.length;++i){
-			self.tex[i] = imgList[i];
-		}
-		self.audLoader.load();		
+	this._audLoader.load();		
+}
+Resource.prototype._load3 = function(o){ // audio complete | font A
+	var audList = o.sounds;
+	for(var i=0;i<audList.length;++i){
+		this.snd[i] = audList[i];
 	}
-	self.load3 = function(audList){ // audio complete
-        for(var i=0;i<audList.length;++i){
-            self.snd[i] = audList[i];
-        }
-        self.load_fonts();
+	this._loadFonts();
+}
+Resource.prototype._loadFonts = function(){ // font B
+	//this._fntLoader.clearLoadList();
+	for(var i=0;i<this._fnt.length;++i){
+		this._fnt[i].setCompleteFunction( this.fntLoader._next );
+		this._fntLoader.pushLoadList( this._fnt[i].load, Code.newArray() );
 	}
-	self.load_fonts = function(){ // font setup
-        self.fntLoader.clearLoadList();
-        for(var i=0;i<self.fnt.length;++i){
-        	self.fnt[i].setCompleteFunction( self.fntLoader.next );
-        	self.fntLoader.pushLoadList( self.fnt[i].load, Code.newArray() );
-        }
-        self.fntLoader.load();
-    }
-	self.load4 = function(){ // font complete
-        self.fxnLoader.load();
-    }
-    self.load5 = function(){ // functions complete
-        self.addListeners();
-        if(fxnComplete!=null){
-            fxnComplete();
-        }
-    }
-	self.setFxnComplete = function(fxn){
-		fxnComplete = fxn;
+	this._fntLoader.load();
+}
+Resource.prototype._load4 = function(){ // font complete | 
+	this._fxnLoader.load();
+}
+Resource.prototype._load5 = function(){ // functions complete
+	if(this._fxnComplete!=null){
+		this._fxnComplete.call(this._context,{});
 	}
-	self.kill = function(){
-		// 
+}
+Resource.prototype.completeFxn = function(fxn){
+	if(fxn!==undefined){
+		this._fxnComplete = fxn;
 	}
-	// global event listeners ----------------------------------------------------
-	self.alertLoadCompleteEvents = function(){
-		self.windowResizeListener(null,true);
-	}
-	self.addListeners = function(){
-		window.onresize = self.windowResizeListener;
-	}
-	self.prevWindowInnerWidth = -1;
-	self.prevWindowInnerHeight = -1;
-	self.windowResizeListener = function(e,f){
-		p = new V2D(window.innerWidth,window.innerHeight);
-		if(f || p.x!=self.prevWindowInnerWidth || p.y!=self.prevWindowInnerHeight){ // filter double-calls
-			self.prevWindowInnerWidth = p.x;
-			self.prevWindowInnerHeight = p.y;
-			self.alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);
-		}
-	}
-// ----------------------------------------------------------------------- constructor
-	self.imgLoader.setFxnComplete(self.load2);
-    self.audLoader.setFxnComplete(self.load3);
-    self.fntLoader.setFxnComplete(self.load4);
-    self.fxnLoader.setFxnComplete(self.load5);
-	self.fxnComplete = null;
+	return this._fxnComplete;
+}
+Resource.prototype.kill = function(){
+	// 
 }
 
 
+
+// this.audioPlayer = new Audio(); // native
+
+// global event listeners ----------------------------------------------------
+// Resource.prototype.alertLoadCompleteEvents = function(){
+// 	this.windowResizeListener(null,true);
+// }
+// Resource.prototype.addListeners = function(){
+// 	window.onresize = this.windowResizeListener;
+// }
+
+// this.prevWindowInnerWidth = -1;
+// this.prevWindowInnerHeight = -1;
+// this.windowResizeListener = function(e,f){
+// p = new V2D(window.innerWidth,window.innerHeight);
+// if(f || p.x!=this.prevWindowInnerWidth || p.y!=this.prevWindowInnerHeight){ // filter double-calls
+// this.prevWindowInnerWidth = p.x;
+// this.prevWindowInnerHeight = p.y;
+// this.alertAll(Dispatch.EVENT_WINDOW_RESIZE,p);
+// }
+// }
+
+// // audio playing -------------------------------
+// Resource.prototype.playSound = function(aud){
+// 	this.audioPlayer.src = aud.src;
+// 	//this.audioPlayer.load();
+// 	this.audioPlayer.play();
+// }
 

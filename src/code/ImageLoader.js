@@ -9,27 +9,47 @@ function ImageLoader(base,arr, ctx,cmp,pro){
 	this._image = null;
 	this.setLoadList(base,arr, ctx,cmp,pro);
 }
-ImageLoader.prototype.setLoadList = function(base,arr, ctx,cmp,pro){
+// --------------------------------------------------------------------------
+ImageLoader.prototype.context = function(ctx){
+    if(ctx!==undefined){
+        this._context = ctx;
+    }
+    return this._context;
+}
+ImageLoader.prototype.progressFxn = function(fxn){
+    if(fxn!==undefined){
+        this._fxnProgress = fxn;
+    }
+    return this._fxnProgress;
+}
+ImageLoader.prototype.completeFxn = function(fxn){
+    if(fxn!==undefined){
+        this._fxnComplete = fxn;
+    }
+    return this._fxnComplete;
+}
+ImageLoader.prototype.setLoadList = function(base,arr, ctx,cmp,prg){
 	if(base===null || base===undefined || !arr){ return; }
 	Code.emptyArray(this._files);
 	Code.emptyArray(this._images);
-	this._context = ctx;
-	this._fxnComplete = cmp;
-	this._fxnProgress = pro;
+	this.context(ctx);
+	this.completeFxn(cmp);
+	this.progressFxn(prg);
 	for(var i=0;i<arr.length;++i){
 		this._files.push(base+""+arr[i]);
 	}
 }
+// --------------------------------------------------------------------------
 ImageLoader.prototype.load = function(){
 	this._index = -1;
 	this._next(null);
 }
 ImageLoader.prototype._next = function(e){
 	var ctx = this;
-	if(this.context){ ctx=this.context; }
+	if(this.contextX){ ctx=this.contextX; }
 	if(ctx._image){
 		ctx._image.removeEventListener("load",ctx._next,false);
-		ctx._image.context = null;
+		ctx._image.contextX = null;
 		ctx._image = null;
 	}
 	++ctx._index;
@@ -47,7 +67,7 @@ ImageLoader.prototype._next = function(e){
 	var img = new Image(); // img.crossOrigin = 'anonymous';
 	ctx._images[ctx._index] = img;
 	ctx._image = img;
-	img.context = ctx;
+	img.contextX = ctx;
 	img.addEventListener("load",ctx._next,false);
 	img.src = url;
 }
@@ -57,7 +77,7 @@ ImageLoader.prototype.images = function(){
 ImageLoader.prototype.kill = function(){
 	if(this._image){
 		this._image.removeEventListener("load",ctx._next,false);
-		this._image.context = null;
+		this._image.contextX = null;
 		this._image = null;
 	}
 	Code.emptyArray(this._files);

@@ -4,18 +4,16 @@
 	ResourceRect.TEX_SPINO = 1;
 
 function ResourceRect(){
-	var self = this;
-	Code.extendClass(self,Resource);
-	// 
-	self.loadMore = function(){
-		// .. load something else
-	};
-	// CONSTRUCTOR
+	ResourceRect._.constructor.call(this);
 	var texdir = "./";
 	var tex = new Array();
 	tex[ResourceRect.TEX_REX] = "rex.png";
 	tex[ResourceRect.TEX_SPINO] = "spino.png";
-	self.imgLoader.setLoadList( texdir, tex, self );
-	self.fxnLoader.setLoadList( new Array(self.loadMore), self );
+	this._imgLoader.setLoadList(texdir, tex);
 }
-
+Code.inheritClass(ResourceRect,Resource);
+// ---------------------------------------------------------
+ResourceRect.prototype.kill = function(){
+	ResourceRect._.kill.call(this);
+}
+	
