@@ -5,33 +5,35 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <script type="text/javascript">
 function pageLoadedFxn(){
-	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
-}
-function setFeedback(str){
-	document.getElementsByName("feedback")[0].innerHTML = str;
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
-	var list = ["ResourceRect.js","Tree.js","Memory2D.js","RectanglePacking.js"];
+	var list = ["ResourceRect.js","Memory2D.js","RectanglePacking.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(o){}
-function gt(a,b){
-	return a-b;
-}
-function lt(a,b){
-	return a-b;
-}
 function customClassesLoadedFxn(){
-	setFeedback( "" );
-	console.log("loading complete");
 	var rp = new RectanglePacking();
+	// var kb = new Keyboard();
+	// kb.addFunction(Keyboard.EVENT_KEY_UP, ku);
+	// kb.addFunction(Keyboard.EVENT_KEY_DOWN, kd);
+	// kb.addFunction(Keyboard.EVENT_KEY_STILL_DOWN, ks);
+	// kb.addListeners();
+}
+function ku(e){
+	console.log("key up "+e);
+}
+function kd(e){
+	console.log("key down "+e);
+}
+function ks(e){
+	console.log("key still down "+e);
 }
 </script>
 </head>
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
-<div name="feedback" style=""></div>
 </body>
 </html>
 

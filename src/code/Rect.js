@@ -1,5 +1,4 @@
 // Rect.js
-
 Rect.pack = function(rectList, bound){ // updates rectList to locations inside bound
 	var i, j, len = rectList.length;
 	var area = 0;
@@ -13,20 +12,10 @@ Rect.pack = function(rectList, bound){ // updates rectList to locations inside b
 }
 
 Rect.sortBigger = function(a,b){
-	//return ( a.area()+a.width() ) - ( b.area()+b.width() );
 	return a.area()-b.area();
-	if(a.area()>=b.area()){
-		return true;
-	}
-	return false;
 }
 Rect.sortSmaller = function(a,b){
-	//return ( b.area()+b.width() )-( a.area()+a.width() );
 	return b.area()-a.area();
-	if(a.area()<=b.area()){
-		return true;
-	}
-	return false;
 }
 Rect.fits = function(a,b){
 	if(a.width()<=b.width() && a.height()<=b.height()){
@@ -35,47 +24,42 @@ Rect.fits = function(a,b){
 	return false;
 }
 function Rect(xPos,yPos, w,h){
-	var self = this;
 	this._x = 0;
 	this._y = 0;
 	this._width = 0;
 	this._height = 0;
-	this.x = function(pX){
-		if(arguments.length>0 && pX!=null && pX!=undefined){
-			self._x = pX;
-		}
-		return self._x;
-	}
-	this.y = function(pY){
-		if(arguments.length>0 && pY!=null && pY!=undefined){
-			self._y = pY;
-		}
-		return self._y;
-	}
-	this.width = function(wid){
-		if(arguments.length>0 && wid!=null && wid!=undefined){
-			self._width = wid;
-		}
-		return self._width;
-	}
-	this.height = function(hei){
-		if(arguments.length>0 && hei!=null && hei!=undefined){
-			self._height = hei;
-		}
-		return self._height;
-	}
-	this.area = function(){
-		return self._width*self._height;
-	}
-	this.toString = function(){
-		return "[Rect] "+self.x()+","+self.y()+" | "+self.width()+","+self.height()+" ("+self.area()+")";
-	}
 	this.x(xPos);
 	this.y(yPos);
 	this.width(w);
 	this.height(h);
 }
-
-
-
-
+Rect.prototype.x = function(pX){
+	if(pX!==undefined){
+		this._x = pX;
+	}
+	return this._x;
+}
+Rect.prototype.y = function(pY){
+	if(pY!==undefined){
+		this._y = pY;
+	}
+	return this._y;
+}
+Rect.prototype.width = function(wid){
+	if(wid!==undefined){
+		this._width = wid;
+	}
+	return this._width;
+}
+Rect.prototype.height = function(hei){
+	if(hei!==undefined){
+		this._height = hei;
+	}
+	return this._height;
+}
+Rect.prototype.area = function(){
+	return this._width*this._height;
+}
+Rect.prototype.toString = function(){
+	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";
+}

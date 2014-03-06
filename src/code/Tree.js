@@ -6,6 +6,7 @@ function Tree(){
 	this._data = null;
 	this._ownsData = false;
 }
+// --------------------------------------------------------------------------------------------------------------------
 Tree.prototype.parent = function(p){
 	if(arguments.length>0){
 		this._parent = p;
@@ -24,12 +25,14 @@ Tree.prototype.data = function(d){
 Tree.prototype.addChild = function(t){
 	this._children.push(t);
 	t.parent(this);
+	return t;
 }
 Tree.prototype.removeChild = function(t){
 	if( Code.elementExists(this._children, t) ){
-		Code.removeElementSimple(this._children, t);//Code.removeElement(this._children, t);
+		Code.removeElement(this._children, t); // Code.removeElementSimple(this._children, t);
 		t.parent(null);
 	}
+	return t;
 }
 Tree.prototype.lastChild = function(){
 	if(this._children.length>0){

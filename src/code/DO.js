@@ -57,7 +57,7 @@ DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinatio
 	var ele = sourceElement;
 	DO.tempMatrix.copy(ele._matrix);
 	while(ele != destinationElement && ele != undefined){
-		ele = ele.parent;
+		ele = ele.parent();
 		if(ele){
 			DO.tempMatrix.mult(ele._matrix,DO.tempMatrix);
 		}
@@ -69,7 +69,7 @@ DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinat
 	var ele = sourceElement;
 	DO.tempMatrix.copy(ele._matrix);
 	while(ele != destinationElement && ele != undefined){
-		ele = ele.parent;
+		ele = ele.parent();
 		if(ele){
 			DO.tempMatrix.mult(ele._matrix,DO.tempMatrix);
 		}
@@ -223,21 +223,21 @@ DO.prototype.removeParent = function(){
 }
 DO.prototype.removeChild = function(ch){
 	if(!ch){return;}
-	ch.parent = null;
+	ch.parent(null);
 	Code.removeElement(this._children,ch);
 	DO.removedFromStageRecursive(ch);
 }
 DO.prototype.removeAllChildren = function(ch){
 	var i, len = this._children.length;
 	for(i=0;i<len;++i){
-		this._children[i].parent = null;
+		this._children[i].parent(null);
 	}
 	Code.emptyArray(this._children);
 }
 DO.prototype.kill = function(ch){
 	Code.killArray(this._children);
 	this._matrix.kill();
-	this.parent = null;
+	this.parent(null);
 	DO._.kill.call(this);
 }
 // ------------------------------------------------------------------------------------------------------------------------ INTERSECTION

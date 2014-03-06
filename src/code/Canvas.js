@@ -480,6 +480,9 @@ Canvas.prototype._canvasTouchEndFxn = function(e){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ SCREEN OPERATIONS
+Canvas.prototype.checkResize = function(){
+	this._handleWindowResizedFxn();
+}
 Canvas.prototype._handleWindowResizedFxn = function(e){
 	var p = new V2D(window.innerWidth,window.innerHeight);
 	if(this._stageFit==Canvas.STAGE_FIT_FILL){

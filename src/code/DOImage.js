@@ -25,7 +25,7 @@ DOImage.prototype.image = function(img){
 		this._imageX = 0;
 		this._imageY = 0;
 		this._imageWidth = img.width;
-		this._imageHeight = img.height;
+		this._imageHeight = img.height;	
 		( this.graphicsIllustration().clear() );
 		( this.graphicsIllustration().drawImage(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight) );
 //		this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight); // default

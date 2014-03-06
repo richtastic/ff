@@ -12,6 +12,8 @@ Code.JS_EVENT_MOUSE_OUT = "mouseout";
 Code.JS_EVENT_MOUSE_OVER = "mouseover";
 Code.JS_EVENT_MOUSE_WHEEL = "mousewheel";
 	//Code.JS_EVENT_WHEEL = "wheel";
+Code.JS_EVENT_KEY_UP = "keyup";
+Code.JS_EVENT_KEY_DOWN = "keydown";
 Code.JS_EVENT_TOUCH_START = "touchstart";
 Code.JS_EVENT_TOUCH_MOVE = "touchmove";
 Code.JS_EVENT_TOUCH_END = "touchend";
@@ -767,6 +769,9 @@ Code.getTargetFromMouseEvent = function(e){
 		return e.target;
 	}
 	return e.srcElement; // IE
+}
+Code.getKeyCodeFromKeyboardEvent = function(e){
+	return e.keyCode;
 }
 // -------------------------------------------------------- LISTENING
 Code.addEventListener = function(ele,str,fxn){

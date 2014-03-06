@@ -45,63 +45,48 @@ Keyboard.KEY_NUM_6 = 54;
 Keyboard.KEY_NUM_7 = 55;
 Keyboard.KEY_NUM_8 = 56;
 Keyboard.KEY_NUM_9 = 57;
-Keyboard.EVENT_KEY_DOWN = "kbdevtkdn";
 Keyboard.EVENT_KEY_UP = "kbdevtkup";
-
+Keyboard.EVENT_KEY_DOWN = "kbdevtkdn";
+Keyboard.EVENT_KEY_STILL_DOWN = "kbdevtksd";
+// ----------------------------------------------------------------------------
 function Keyboard(){
-	var key = new Array();
-	var dispatch = new Dispatch();
-	function fillKeys(){
-		var i;
-		for(i=0;i<=255;++i){
-			key[i] = false;
-		}
-	}
-	// dispatch -----------------------------------------------------------
-	this.addFunction = addFunction;
-	function addFunction(str,fxn){
-		dispatch.addFunction(str,fxn);
-	}
-	this.removeFunction = removeFunction;
-	function removeFunction(str,fxn){
-		dispatch.removeFunction(str,fxn);
-	}
-	this.alertAll = alertAll;
-	function alertAll(str,o){
-		dispatch.alertAll(str,o);
-	}
-	// LISTENERS ----------------------------------------------------------
-	this.addListeners = addListeners;
-	function addListeners(){
-		addEventListener('keydown', keyDownFxn);
-		addEventListener('keyup', keyUpFxn);
-	}
-	this.removeListeners = removeListeners;
-	function removeListeners(){
-		removeEventListener('keydown', keyDownFxn);
-		removeEventListener('keyup', keyUpFxn);
-	}
-	function keyDownFxn(e){
-		var num = e.keyCode;
-		if( key[num]==false ){ // on first down
-			key[num] = true;
-			dispatch.alertAll(Keyboard.EVENT_KEY_DOWN,num);
-		}
-	}
-	function keyUpFxn(e){
-		var num = e.keyCode;
-		key[num] = false;
-		dispatch.alertAll(Keyboard.EVENT_KEY_UP,num);
-	}
-	this.keyIsDown = keyIsDown;
-	function keyIsDown(num){
-		return key[num];
-	}
-// --------------------------------------------------------- constructor
-	fillKeys();
+	Keyboard._.constructor.call(this);
+	this._key = new Array(255);
+	this._falseKeys();
 }
-
-
-
-
-
+Code.inheritClass(Keyboard, JSDispatchable);
+// ----------------------------------------------------------------------------
+Keyboard.prototype._falseKeys = function(){
+	for(var i=0;i<=255;++i){
+		this._key[i] = false;
+	}
+}
+Keyboard.prototype.addListeners = function(){
+	this.addJSEventListener(window, Code.JS_EVENT_KEY_UP, this._keyUpFxn);
+	this.addJSEventListener(window, Code.JS_EVENT_KEY_DOWN, this._keyDownFxn);
+}
+Keyboard.prototype.removeListeners = function(){
+	this.removeJSEventListener(window, Code.JS_EVENT_KEY_UP, this._keyUpFxn);
+	this.removeJSEventListener(window, Code.JS_EVENT_KEY_DOWN, this._keyDownFxn);
+}
+Keyboard.prototype._keyDownFxn = function(e){
+	var num = Code.getKeyCodeFromKeyboardEvent(e);
+	if( this._key[num]==false ){ // on first down
+		this._key[num] = true;
+		this.alertAll(Keyboard.EVENT_KEY_DOWN,e);
+	}else{
+		this.alertAll(Keyboard.EVENT_KEY_STILL_DOWN,e);
+	}
+}
+Keyboard.prototype._keyUpFxn = function(e){
+	var num = Code.getKeyCodeFromKeyboardEvent(e);
+	this._key[num] = false;
+	this.alertAll(Keyboard.EVENT_KEY_UP,e);
+}
+Keyboard.prototype._keyIsDown = function(num){
+	return this._key[num];
+}
+Keyboard.prototype.kill = function(){
+	Code.emptyArray(this._keys);
+	Keyboard._.kill.call(this);
+}

@@ -7,7 +7,7 @@ is a multi
 match */
 var /* in the middle */ cat = /* another */ "max";
 var myString = /* strings should not be altered */ " This String  HAS SPACES!/* this comment should not be adjusted at all*/ // WOOT!";
-function FF(homeDir, completeFxn,  progressFxn){
+function FF(homeDir, completeFxn, progressFxn, context){
 	this._homeDir = (homeDir==undefined||homeDir==null)?"":homeDir;
 	this._compFxn = completeFxn?completeFxn:null;
 	this._progFxn = progressFxn?progressFxn:null;
@@ -22,7 +22,7 @@ function FF(homeDir, completeFxn,  progressFxn){
 }
 FF.prototype._startLoadingFxn = function(){
 	var list = ["numeric-1.2.6.js", "Code.js","YAML.js","FileLoader.js","ScriptLoader.js","ImageLoader.js","AudioLoader.js","MultiLoader.js","SerialString.js","V2D.js","V3D.js","V4D.js","Matrix.js","Matrix2D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatchable.js","Ajax.js","ImageMat.js",
-				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","glMatrix-0.9.5.min.js","MatrixStackGL.js","StageGL.js","Minify.js","Resource.js","Keyboard.js","Rect.js"];
+				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","glMatrix-0.9.5.min.js","MatrixStackGL.js","StageGL.js","Minify.js","Resource.js","Keyboard.js","Rect.js","Tree.js"];
 	var ctx = this.context;
 	this.context = null;
 	var scriptLoader = new ScriptLoader(ctx._homeDir,list,ctx,ctx._classesLoadedFxn,ctx._classesProgressFxn);
