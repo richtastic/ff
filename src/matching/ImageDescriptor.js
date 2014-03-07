@@ -423,6 +423,7 @@ ImageDescriptor.prototype.doesPointHaveScaleExtrema = function(x,y,s){ // only c
 				diff = ImageMat.normalFloat01(diff);
 var peaks = ImageMat.getPeaks(diff, windowWid,windowHei);
 var d2 = ImageMat.showPeaks(diff, windowWid,windowHei, peaks);
+d2[windowWid*cenH + cenW] += 5.0;
 var d3 = ImageMat.addFloat(diff,d2);
 var d4 = ImageMat.getNormalFloat01(d3);
 images.push(d4);
@@ -492,37 +493,51 @@ ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig){
 	sigma = undefined; kMult = undefined;
 	var harris = ImageMat.harrisDetector(w,windowWid,windowHei, SMM, threshold, sigma, kMult);
 	var har = harris.response;
-	var peaks = ImageMat.getPeaks(har, windowWid,windowHei);
+//var peaks = ImageMat.getPeaks(har, windowWid,windowHei);
+//var peaks = ImageMat.findExtrema2DFloat(har, windowWid,windowHei);
+var peaks = ImageMat.findExtrema2DFloat(w, windowWid,windowHei);
+console.log("peaks: "+peaks.length);
 	var minX=0, minY=0, dist, i, len=peaks.length, minDist = windowWid*windowWid;
 	var pX,pY;
 	for(i=0;i<len;++i){
+		peaks[i].x*=windowWid;
+		peaks[i].y*=windowHei;
+	}
+	for(i=0;i<len;++i){
+		// peaks outside of image window should not be considered (0<x>1, 0<y>1)
+		//console.log("peak: "+peaks[i].toString());
 		pX = peaks[i].x - cenW;
 		pY = peaks[i].y - cenH;
-		// if(pX*sca + ){
-		// }
 		dist = (pX*pX+pY*pY);
 		if(dist<minDist){
 			minDist = dist;
-			minX = peaks[i].x - cenW;
-			minY = peaks[i].y - cenH;
-
+			minX = pX;
+			minY = pY;
 		}
 	}
-	console.log("CLOSEST: "+minX+", "+minY+" AT: "+sca);
+
+	console.log("CLOSEST: "+minX+", "+minY+" distance: "+Math.sqrt(minDist)+" AT: "+sca);
 	console.log("NEXT: "+ (minX/sca + x*wid)/wid +", "+ (minY/sca + y*hei)/hei );
-	var har2 = ImageMat.showPeaks(har, windowWid,windowHei, peaks);
+	minX = minX/sca/wid;
+	minY = minY/sca/hei;
+	//var har2 = ImageMat.showPeaks(har, windowWid,windowHei, peaks);
+	//har2[windowWid*cenH + cenW] += 2.0;
 	// 
 	//w = ImageMat.getNormalFloat01(har2);
-	w = ImageMat.addFloat(har,har2);
+	//w = ImageMat.getNormalFloat01(w);
+	//w = ImageMat.addFloat(har,har2);
+	w = ImageMat.addFloat(w, ImageMat.showPeaks(w, windowWid,windowHei, peaks) );
+	w[windowWid*cenH + cenW] += 1.0;
 	w = ImageMat.getNormalFloat01(w);
-	return {image:w, width:windowWid, height:windowHei, closestX:minX, closestY:minY};
+	return {image:w, width:windowWid, height:windowHei, closestX:minX, closestY:minY, closestDistance:Math.sqrt(minDist)};
 	//harris = this.harrisMatrix(W,windowWid,windowHei, sigmaI,sigmaD);
 }
 
 
 
-ImageDescriptor.prototype.getStableAffinePointNEW = function(inPoint){ // 
+ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 
 	var currentWid = 15, currentHei = 15;
+	var currentPoint = new V3D(); currentPoint.copy(inPoint);
 	var matrix = new Matrix(3,3).identity();
 	var currentScale = 1.0;
 	var gray = this._flatGry;
@@ -533,14 +548,23 @@ ImageDescriptor.prototype.getStableAffinePointNEW = function(inPoint){ //
 	currentImage = ImageMat.extractRectFromFloatImage(inPoint.x,inPoint.y,currentScale,null, currentWid,currentHei, gray,wid,hei, transform);
 	var list = [];
 	var W0 = currentImage;
-
+	var i, j, val, len;
+	var maxIterations = 1;
+	for(i=0;i<maxIterations;++i){
 // find maxima nearest to inPoint
-
+		console.log("POINT: "+currentPoint.toString());
+		val = this.pointHarrisExtrema(currentPoint.x,currentPoint.y,currentPoint.z);
+		if(val.closestDistance < currentPoint.z*5.0){
+			currentPoint.x += val.closestX;
+			currentPoint.y += val.closestY;
+		}
 // find if point reaches a maxima or minima in scale space;
-
+		val = this.doesPointHaveScaleExtrema(f.x(),f.y());
+		console.log(val);
+	}
 	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:matrix, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }
-ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
+ImageDescriptor.prototype.getStableAffinePointOLD = function(inPoint){ // 15|.25|1.6  25|0.1|4.0
 	var unstableMax = 100.0;
 	var inScale = inPoint.z;
 	var inSigma = this.sigmaFromScale(inScale);

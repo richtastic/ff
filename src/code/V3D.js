@@ -18,7 +18,7 @@ function V3D(xP,yP,zP){
 	// 	this.y = xP.y;
 	// 	this.z = xP.z;
 	// }else{
-	this.z = zP==undefined?0.0:zP;
+	this.z = zP===undefined?0.0:zP;
 	// }
 }
 Code.inheritClass(V3D, V2D);

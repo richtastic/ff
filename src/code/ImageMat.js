@@ -594,7 +594,7 @@ ImageMat.showPeaks = function(har, wid,hei, peaks){
 	var obj, i, len = peaks.length;
 	for(i=0;i<len;++i){
 		obj = peaks[i];
-		result[wid*obj.y + obj.x] = 1.0;
+		result[wid*Math.round(obj.y) + Math.round(obj.x)] = 1.0;
 	}
 	return result;
 }
@@ -735,6 +735,35 @@ ImageMat.printBadData = function(data, wid,hei){
 		}
 	}
 }
+
+ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r){
+	delX = delX!==undefined?delX:1.0;
+	delY = delY!==undefined?delY:1.0;
+	var list = new Array();
+	var i, j, hm1=hei-1, wm1=wid-1;
+	var jW0, jW1, jW2, i0,i1,i2;
+	var d0,d1,d2,d3,d4,d5,d6,d7,d8;
+	var result, count = 0;
+	for(j=1;j<hm1;++j){
+		jW0 = (j-1)*wid; jW1 = j*wid; jW2 = (j+1)*wid;
+		for(i=1;i<wm1;++i){
+			i0 = i-1; i1 = i; i2 = i+1;
+			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
+			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
+			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
+				result = ImageMat.extrema2DFloatInterpolate(new V3D(), delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r);
+				if(result){
+					result.x = (result.x+i)/wid; result.y = (result.y+j)/hei;
+					list.push(result);
+				}
+				//list.push( new V3D(i,j,d4) );
+			}
+		}
+	}
+	return list;
+}
+
+
 ImageMat.findExtrema3DFloat = function(a,b,c, wid,hei, delX,delY,delZ, r){ // a=-1, b=0, c=+1
 	delX = delX!==undefined?delX:1.0;
 	delY = delY!==undefined?delY:1.0;
@@ -776,6 +805,29 @@ ImageMat.findExtrema3DFloat = function(a,b,c, wid,hei, delX,delY,delZ, r){ // a=
 	}
 	//console.log("EXTREMA: "+count);
 	return list;
+}
+ImageMat._tempMatrix2_2 = new Matrix(2,2);
+ImageMat._tempMatrix2_1 = new Matrix(2,1);
+ImageMat._tempMatrix2_1_2 = new Matrix(2,1);
+ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r){ // 
+	var dx = (d5-d3)/(2.0*delX);
+	var dy = (d7-d1)/(2.0*delY);
+	var dxdx = (d5-2.0*d4+d3)/(delX*delX);
+	var dxdy = (d8-d6-d2+d0)/(2.0*delX*delY);
+	var dydx = dxdy;
+	var dydy = (d7-2.0*d4+d1)/(delY*delY);
+	var det = dxdx*dydy - dxdy*dxdy;
+	if(Math.abs(det) < 1E-10){ // need something better
+		return null;
+	}
+	var dD = ImageMat._tempMatrix2_1.setFromArray([dx, dy]);
+	var H = ImageMat._tempMatrix2_2.setFromArray([dxdx,dxdy, dydx,dydy]);
+	var Hinv = Matrix.inverse(H);
+	var temp = Matrix.mult(ImageMat._tempMatrix2_1_2, Hinv,dD);
+	loc.x = -temp.get(0,0);
+	loc.y = -temp.get(1,0);
+	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
+	return loc;
 }
 ImageMat._tempMatrix3_3 = new Matrix(3,3);
 ImageMat._tempMatrix3_1 = new Matrix(3,1);

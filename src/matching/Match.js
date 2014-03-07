@@ -739,7 +739,7 @@ var maxScale = val.maxScale;
 			val = descriptor.pointHarrisExtrema(f.x(),f.y());
 			img = val.image;
 			argb = ImageMat.ARGBFromFloat(img);
-			src = this._stage.getARGBAsImage(argb, wi,he);
+			src = this._stage.getARGBAsImage(argb, val.width,val.height);
 			d = new DOImage(src);
 			root.addChild(d);
 			d.matrix().translate(currentWidth+wid-val.width, hei - val.height);
