@@ -460,7 +460,15 @@ images.push(d4);
 	// ignore end extrema
 	if(max==values[0] || max==values[values.length-1]){ max=null; maxIndex=null; maxScale=null; }
 	if(min==values[0] || min==values[values.length-1]){ min=null; minIndex=null; minScale=null; }
-	 // cubic+interpolation of maxima?
+	// interpolation of extrema
+	var v;
+	if(maxIndex){
+		v = Code.locateExtrema1D(scales[maxIndex-1],values[maxIndex-1], scales[maxIndex],values[maxIndex], scales[maxIndex+1],values[maxIndex+1]);
+		maxScale = v.x;
+	}else if(minIndex){
+		v = Code.locateExtrema1D(scales[minIndex-1],values[minIndex-1], scales[minIndex],values[minIndex], scales[minIndex+1],values[minIndex+1]);
+		minScale = v.x;
+	}
 	// console.log(max);
 	// console.log(min);
 	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale};
@@ -487,16 +495,19 @@ ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig){
 	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
 	var center = windowWid*cenH + cenW;
 	var w = ImageMat.extractRectFromFloatImage(x,y,sca,sigma, windowWid,windowHei, gray,wid,hei, transform);
-	//
+
 	var SMM = new Array();
 	var threshold = 0;
 	sigma = undefined; kMult = undefined;
 	var harris = ImageMat.harrisDetector(w,windowWid,windowHei, SMM, threshold, sigma, kMult);
 	var har = harris.response;
-//var peaks = ImageMat.getPeaks(har, windowWid,windowHei);
-//var peaks = ImageMat.findExtrema2DFloat(har, windowWid,windowHei);
-var peaks = ImageMat.findExtrema2DFloat(w, windowWid,windowHei);
-console.log("peaks: "+peaks.length);
+	var peaks = ImageMat.findExtrema2DFloat(har, windowWid,windowHei);
+		sigma = 1.6;
+		gaussSize = 7;
+		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+		tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
+	//var peaks = ImageMat.findExtrema2DFloat(tmp, windowWid,windowHei);
+	console.log("peaks: "+peaks.length);
 	var minX=0, minY=0, dist, i, len=peaks.length, minDist = windowWid*windowWid;
 	var pX,pY;
 	for(i=0;i<len;++i){
@@ -516,19 +527,22 @@ console.log("peaks: "+peaks.length);
 		}
 	}
 
-	console.log("CLOSEST: "+minX+", "+minY+" distance: "+Math.sqrt(minDist)+" AT: "+sca);
-	console.log("NEXT: "+ (minX/sca + x*wid)/wid +", "+ (minY/sca + y*hei)/hei );
+	//console.log("CLOSEST: "+minX+", "+minY+" distance: "+Math.sqrt(minDist)+" AT: "+sca);
+//	console.log("NEXT: "+ (minX/sca + x*wid)/wid +", "+ (minY/sca + y*hei)/hei );
+	// absolute relative coords (relative excluding scale)
 	minX = minX/sca/wid;
 	minY = minY/sca/hei;
-	//var har2 = ImageMat.showPeaks(har, windowWid,windowHei, peaks);
+	var har2 = ImageMat.showPeaks(har, windowWid,windowHei, peaks);
 	//har2[windowWid*cenH + cenW] += 2.0;
 	// 
 	//w = ImageMat.getNormalFloat01(har2);
 	//w = ImageMat.getNormalFloat01(w);
-	//w = ImageMat.addFloat(har,har2);
-	w = ImageMat.addFloat(w, ImageMat.showPeaks(w, windowWid,windowHei, peaks) );
+	w = ImageMat.addFloat(har,har2);
+	//w = ImageMat.addFloat(tmp,har2);
+	//w = ImageMat.addFloat(w, ImageMat.showPeaks(w, windowWid,windowHei, peaks) );
 	w[windowWid*cenH + cenW] += 1.0;
 	w = ImageMat.getNormalFloat01(w);
+
 	return {image:w, width:windowWid, height:windowHei, closestX:minX, closestY:minY, closestDistance:Math.sqrt(minDist)};
 	//harris = this.harrisMatrix(W,windowWid,windowHei, sigmaI,sigmaD);
 }
@@ -536,7 +550,7 @@ console.log("peaks: "+peaks.length);
 
 
 ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 
-	var currentWid = 15, currentHei = 15;
+	var currentWid = 51, currentHei = 51;
 	var currentPoint = new V3D(); currentPoint.copy(inPoint);
 	var matrix = new Matrix(3,3).identity();
 	var currentScale = 1.0;
@@ -549,18 +563,21 @@ ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ //
 	var list = [];
 	var W0 = currentImage;
 	var i, j, val, len;
-	var maxIterations = 1;
+	var maxIterations = 3;
 	for(i=0;i<maxIterations;++i){
 // find maxima nearest to inPoint
-		console.log("POINT: "+currentPoint.toString());
+		console.log("POINT: +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+currentPoint.toString()+"   ");
 		val = this.pointHarrisExtrema(currentPoint.x,currentPoint.y,currentPoint.z);
 		if(val.closestDistance < currentPoint.z*5.0){
+			console.log("=> "+(val.closestX*wid)+","+(val.closestY*hei));
 			currentPoint.x += val.closestX;
 			currentPoint.y += val.closestY;
+			list.push(val.image);
 		}
 // find if point reaches a maxima or minima in scale space;
-		val = this.doesPointHaveScaleExtrema(f.x(),f.y());
-		console.log(val);
+		val = this.doesPointHaveScaleExtrema(currentPoint.x,currentPoint.y);
+		currentPoint.z = val.maxSigma;
+		//console.log(val);
 	}
 	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:matrix, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }

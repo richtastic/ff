@@ -594,7 +594,7 @@ ImageMat.showPeaks = function(har, wid,hei, peaks){
 	var obj, i, len = peaks.length;
 	for(i=0;i<len;++i){
 		obj = peaks[i];
-		result[wid*Math.round(obj.y) + Math.round(obj.x)] = 1.0;
+		result[wid*Math.round(obj.y) + Math.round(obj.x)] += 1.0;
 	}
 	return result;
 }
@@ -810,6 +810,7 @@ ImageMat._tempMatrix2_2 = new Matrix(2,2);
 ImageMat._tempMatrix2_1 = new Matrix(2,1);
 ImageMat._tempMatrix2_1_2 = new Matrix(2,1);
 ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r){ // 
+	r = r!==undefined?r:1E-10;
 	var dx = (d5-d3)/(2.0*delX);
 	var dy = (d7-d1)/(2.0*delY);
 	var dxdx = (d5-2.0*d4+d3)/(delX*delX);
@@ -817,7 +818,7 @@ ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,
 	var dydx = dxdy;
 	var dydy = (d7-2.0*d4+d1)/(delY*delY);
 	var det = dxdx*dydy - dxdy*dxdy;
-	if(Math.abs(det) < 1E-10){ // need something better
+	if(Math.abs(det) < r){ // need something better - tho this is appropriate for harris matrix ...
 		return null;
 	}
 	var dD = ImageMat._tempMatrix2_1.setFromArray([dx, dy]);
@@ -827,6 +828,7 @@ ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,
 	loc.x = -temp.get(0,0);
 	loc.y = -temp.get(1,0);
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
+	// loc.t = det;
 	return loc;
 }
 ImageMat._tempMatrix3_3 = new Matrix(3,3);

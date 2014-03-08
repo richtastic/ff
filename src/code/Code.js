@@ -1058,8 +1058,48 @@ Code.padStringRight = function(val,wid,filler){
 	}
 	return str;
 }
+// ------------------------------------------------ MATHS
+Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC){ // quadric interpolation
+	var ext = new V2D();
+	var dx1 = xB-xA;
+	var dx2 = xC-xB;
+	var dx3 = xC-xA;
+	var dy1 = yB-yA;
+	var dy2 = yC-yB;
+	var dy3 = yC-yA;
+	var dD = dy3/dx3;
+	var ddD = 0.5*(dy2-dy1)/(dx2-dx1);
+	
+	x = -dD/ddD;
+	//ext.y = yB + x*dD + 0.5*x*x*ddD;
+	ext.y = yB + 0.5*x*dD;
+	ext.x = x + xB;
 
+	return ext;
+}
 
 
 // base64
 
+	// var dx1 = xB-xA;
+	// var dx2 = xC-xB;
+	// if(dx1>dx2){
+	// 	// ext = Code.locateExtrema1D(-xA);
+	// 	// return ext;
+	// }
+	// var dx3 = xC-xA;
+	// var dy1 = yB-yA;
+	// var dy2 = yC-yB;
+	// var dy3 = yC-yA;
+	// // 
+	// var d2 = 2.0 * ((dy2/dx2) - (dy1/dx1))/dx3;
+	// var d1 = (dy2/dx2) + 0.5*d2*dx2;
+	// ext.x = xB - d1/d2;
+	// ext.y = yB + 0.5*d1*(ext.x-xB);
+
+
+	// return ext;
+//var dx = xC-xA;
+	//var dy = yC-yA;
+	// var dxdx = ()/(2.0*(xC-xB)*(xB-xA));
+	// var dydy = ()/(2.0*(yC-yB)*(yB-yA));

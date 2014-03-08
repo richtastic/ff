@@ -652,13 +652,8 @@ Match.prototype.testA = function(){
 		//descriptor.processScaleSpace();
 		if(i==0){ // original
 			descriptor._features.push(  new ImageFeature(0.355,0.927,1.2,0,null) ); // purple
-				//descriptor._features.push(  new ImageFeature(0.355,0.935766558,1.2,0,null) ); // purple SMM-1
-				//descriptor._features.push(  new ImageFeature(0.3522839,0.941198694,1.2,0,null) ); // purple SMM-2
-				//descriptor._features.push(  new ImageFeature(0.35551386,0.93150879,1.2,0,null) ); // purple SMM-3
-				//descriptor._features.push(  new ImageFeature(0.3527977919156853, 0.9369409261686293,1.2,0,null) ); // purple SMM-4
-				//descriptor._features.push(  new ImageFeature(0.36144026763831016, 0.9420623932635183,1.2,0,null) ); // purple SMM-5
-				//descriptor._features.push(  new ImageFeature(0.3638627432563343, 0.9323724907914216 ,1.2,0,null) ); // purple SMM-6
-			//descriptor._features.push(  new ImageFeature(0.508,0.538,1.2,0,null) ); // nose point
+				//descriptor._features.push(  new ImageFeature(0.3556696188862783,0.926289617934935,2.9344129382549475,0,null) );
+				
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.65,0.538,1.2,0,null) ); // nose
@@ -671,6 +666,7 @@ Match.prototype.testA = function(){
 		// }
 		if(i==1){ // scalexrotateskew
 			descriptor._features.push(  new ImageFeature(0.662,0.07,1.5,0,null) ); // purple
+				//descriptor._features.push(  new ImageFeature(0.6660366992424261,0.0646052378273286,1.7448123722644124,0,null) ); // 2
 		}
 		// descriptor.processAffineSpace();
 		// descriptor.describeFeatures();
@@ -711,8 +707,8 @@ d.matrix().translate(x,y);
 
 			// show scale space for point
 			var val = descriptor.doesPointHaveScaleExtrema(f.x(),f.y());
-			console.log(val);
-			console.log(val.max,val.min);
+//			console.log(val);
+//			console.log(val.max,val.min);
 			var arr = val.images;
 			var data = val.values;
 			var wi = val.width;
@@ -747,10 +743,13 @@ var maxScale = val.maxScale;
 			// show affine-ness
 
 			//descriptor.getStableAffinePoint(f.x(),f.y());
-			console.log("val.maxScale: "+maxScale);
+			//console.log("val.maxScale: "+maxScale);
+console.log("getStableAffinePoint-------------------------------------------------------------------- 1");
 			val = descriptor.getStableAffinePoint( new V3D( f.x(),f.y(),maxScale ) );
-			console.log(val);
-f.transform( val.matrix );
+			//val = descriptor.getStableAffinePointOLD( new V3D( f.x(),f.y(),maxScale ) );
+console.log("getStableAffinePoint-------------------------------------------------------------------- 2");
+ 			//console.log(val);
+// f.transform( val.matrix );
 			arr = val.list;
 			for(k=0;k<arr.length;++k){
 				img = arr[k];
@@ -758,7 +757,7 @@ f.transform( val.matrix );
 				src = this._stage.getARGBAsImage(argb, val.windowWidth,val.windowHeight);
 				d = new DOImage(src);
 				root.addChild(d);
-				d.matrix().translate(currentWidth+k*val.windowWidth, 400+i*val.windowHeight);
+				d.matrix().translate(currentWidth+k*val.windowWidth, 500+i*val.windowHeight);
 			}
 
 		}
@@ -776,7 +775,7 @@ f.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width()
 var size = 150;
 			d = this._showFeature(f,null,descriptor, size);
 			d.matrix().translate(j*size+currentWidth,hei);
-//			root.addChild(d);
+			root.addChild(d);
 
 currentWidth += wid;
 //break;
@@ -832,7 +831,7 @@ var obj = yaml.parse(str);
 var descriptor = new ImageDescriptor();
 descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
 
-Code.copyToClipboardPrompt(str);
+//Code.copyToClipboardPrompt(str);
 
 
 /*
