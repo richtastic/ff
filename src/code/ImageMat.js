@@ -283,11 +283,11 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
 	var ho2 = Math.floor(height*0.5);
 	var i, j, x, y, xx, yy, sum = 0;
 	for(j=0;j<height;++j){
-		y = ho2 - j; yy = y*y;
+		y = ho2 - j; yy = y*y; 
 		for(i=0;i<width;++i){
 			x = wo2 - i; xx = x*x;
 			val = Math.exp(-(xx*cX+yy*cY));
-			matrix[j*height + i] = val;
+			matrix[j*width + i] = val;
 			sum += val;
 		}
 	}
@@ -295,6 +295,30 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
 	for(i=0;i<len;++i){ // this is necessary for scale space extrema calculations
 		matrix[i] /= sum;
 	}
+	return matrix;
+}
+ImageMat.getLaplaceOfGaussianWindow = function(width,height, sigma){
+	var len = width*height;
+	var matrix = new Array(len);
+	var sigSquare = sigma*sigma;
+	var c = 1/(2*sigSquare);
+	var d = -1/(Math.PI*sigSquare*sigSquare)
+	var wo2 = Math.floor(width*0.5);
+	var ho2 = Math.floor(height*0.5);
+	var i, j, x, y, xx, yy, e, sum = 0;
+	for(j=0;j<height;++j){
+		y = ho2 - j; yy = y*y;
+		for(i=0;i<width;++i){
+			x = wo2 - i; xx = x*x;
+			e = (xx+yy)*c;
+			val = d*(1-e)*Math.exp(-e);
+			matrix[j*width + i] = val;
+			sum += val;
+		}
+	}
+	// for(i=0;i<len;++i){
+	// 	matrix[i] /= sum;
+	// }
 	return matrix;
 }
 ImageMat.gaussian2DFrom1DFloat = function(source, wid,hei, gauss1D){
@@ -1235,6 +1259,67 @@ ImageMat.derivativeX = function(src,wid,hei){
 }
 ImageMat.derivativeY = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
+}
+ImageMat.secondDerivativeX = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [0.5,-1,0.5], 3,1);
+}
+ImageMat.secondDerivativeY = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [0.5,-1,0.5], 1,3);
+}
+ImageMat.laplacian = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [0,-1,0, -1,4,-1, 0,-1,0], 3,3);
+	//return ImageMat.convolve(src,wid,hei, [-1,-1,-1, -1,8,-1, -1,-1,-1], 3,3);
+	//return ImageMat.convolve(src,wid,hei, [-0.5,-1,-0.5, -1,6,-1, -0.5,-1,-0.5], 3,3);
+}
+ImageMat.laplaceOfGaussian = function(src,wid,hei, sigma, w,h){
+	sigma = sigma!==undefined?sigma:1.6;
+	w = w!==undefined?(Math.ceil(1+sigma*3)*2+1):3;
+	h = h!==undefined?h:w;
+	var log = ImageMat.getLaplaceOfGaussianWindow(w,h,sigma);
+	//console.log( ImageMat.floatToOctave(log,w,h) );
+	return ImageMat.convolve(src,wid,hei, log, w,h);
+	return log;
+}
+ImageMat.laplaceOfGaussianX = function(src,wid,hei, sigma, w,h){
+	sigma = sigma!==undefined?sigma:1.6;
+	w = w!==undefined?w:3;
+	h = h!==undefined?h:3;
+	var log = ImageMat.getLaplaceOfGaussianWindow(w,h,sigma);
+	return ImageMat.convolve(src,wid,hei, log, w,h);
+}
+ImageMat.floatToString = function(src,wid,hei){
+	var str = "";
+	var i, j, wj;
+	for(j=0;j<hei;++j){
+		wj = wid*j;
+		str += "[ ";
+		for(i=0;i<wid;++i){
+			str += (src[wj+i])+" ";
+		}
+		str += "]\n";
+	}
+	return str;
+}
+ImageMat.floatToOctave = function(src,wid,hei){
+	var str = "";
+	str += "tx = linspace(1,"+wid+","+wid+");\n";
+	str += "ty = linspace(1,"+hei+","+hei+");\n";
+	str += "[xx,yy] = meshgrid(tx,ty);\n";
+	str += "tz = [";
+	var i, j, wj;
+	for(j=0;j<hei;++j){
+		wj = wid*j;
+		str += " ";
+		for(i=0;i<wid;++i){
+			str += (src[wj+i])+" ";
+		}
+		if(j<hei-1){
+			str += ";\n";
+		}
+	}
+	str += "]\n";
+	str += "mesh(tx,ty,tz);";
+	return str;
 }
 ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
 	// A(x) = autocorrelation = [gaussian window]*[Ixx(x) Ixy(x) ; Ixy(x) Iyy(x)]
