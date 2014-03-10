@@ -631,125 +631,13 @@ Match.prototype._showFeature = function(fB,fA,dB, size){
 	return container;
 }
 
-Match.prototype.addFloatImageHTML = function(img,wid,hei){
-	var argb = ImageMat.ARGBFromFloat(img);
-	var src = this._stage.getARGBAsImage(argb, wid,hei);
-	Code.setStyleZIndex(src,"999");
-	Code.setStylePosition(src,"absolute");
-	document.body.appendChild(src);
-}
-
-Match.prototype.filters = function(){
-	var i, len, j, len2, list, x, y, s;
-	var images = this._imageList;
-	var files = this._fileList;
-	var root = this._root;
-
-	//
-	var img = images[0];
-	var params = this.getDescriptorParameters( img );
-	var wid = params.width;
-	var hei = params.height;
-	var imageSourceRed = params.red;
-	var imageSourceGrn = params.grn;
-	var imageSourceBlu = params.blu;
-	// original
-	var imageSourceGry = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
-	// gradient
-	var gradX = ImageMat.derivativeX(imageSourceGry, wid,hei);
-	var gradY = ImageMat.derivativeY(imageSourceGry, wid,hei);
-	// second derivative
-	var grad2X = ImageMat.secondDerivativeX(imageSourceGry, wid,hei);
-	var grad2Y = ImageMat.secondDerivativeY(imageSourceGry, wid,hei);
-	// gradient magnitude
-	var gradMag = ImageMat.sqrtFloat( ImageMat.vectorSquaredSumFloat(gradX,gradY) );
-	// gradient angle
-	var gradAng = ImageMat.phaseFloat(gradX,gradY);
-	// gauss
-	var gauss1D = ImageMat.getGaussianWindow(7,1, 1.6);
-	var gauss = ImageMat.gaussian2DFrom1DFloat(imageSourceGry, wid,hei, gauss1D);
-	// laplacian
-	var laplacian = ImageMat.laplacian(imageSourceGry, wid,hei);
-	// sharpen
-	var sharp = ImageMat.addFloat( gauss, ImageMat.scaleFloat(0.25,laplacian) );
-	// LoG
-	var sig = 1.6;
-	var w = h = Math.ceil(1+sig*3)*2+1;
-	var log = ImageMat.laplaceOfGaussian(imageSourceGry, wid,hei, sig, w,h);
-	// DoG
-	// 
-	// eigen vectors? direction? magnitude? eigenvalues?
-	// 
-	// SMM
-	var smm = ImageMat.harrisDetectorSMM(imageSourceGry, wid,hei, 1.6);
-	//var smm = ImageMat.harrisDetector(imageSourceGry, wid,hei, 1.6);
-	var SMM = smm.SMM;
-	//var SMM = smm.response;
-	var det, tra, a, alpha = 0.5;
-	var mat = new Matrix(2,2);
-	smm = new Array();
-	for(i=0;i<SMM.length;++i){
-		a = SMM[i];
-		//console.log(SMM[i]);
-		//break;
-		//  harris measure = det^2(A) - alpha*trace^2(A)
-		det = a[0]*a[3] - a[1]*a[2];
-		tra = a[0]*a[3];
-		//smm[i] = tra;
-		//smm[i] = det;
-		// smm[i] = (det*det - alpha*tra*tra);
-		//var val = Matrix.eigenValuesAndVectors2D(a[0],a[1],a[2],a[3]);
-		mat.setFromArray([a[0],a[1],a[2],a[3]]);
-		var val = Matrix.eigenValuesAndVectors(mat);
-
-		//smm[i] = val.values[0];
-		//smm[i] = val.values[1];
-		smm[i] = val.values[0] + val.values[1];
-		
-		// if(val.values[1]!=0){
-		// 	smm[i] = Math.pow(val.values[0]/val.values[1], 0.01);
-		// if(val.values[0]!=0){
-		// 	smm[i] = Math.pow(val.values[1]/val.values[0], 0.25);
-		// }else{
-		// 	smm[i] = 0.0;
-		// }
-		//smm[i] = (isNaN(smm[i])||smm[i]===undefined)?0.0:smm;
-		//val.values[1]/val.values[0];
-	}
-	// 
-	gradX = ImageMat.normalFloat01(gradX);
-	gradY = ImageMat.normalFloat01(gradY);
-	grad2X = ImageMat.normalFloat01(grad2X);
-	grad2Y = ImageMat.normalFloat01(grad2Y);
-	gradMag = ImageMat.normalFloat01(gradMag);
-	gradAng = ImageMat.normalFloat01(gradAng);
-	laplacian = ImageMat.normalFloat01(laplacian);
-	gauss = ImageMat.normalFloat01(gauss);
-	sharp = ImageMat.normalFloat01(sharp);
-	log = ImageMat.normalFloat01(log);
-	smm = ImageMat.normalFloat01(smm);
-	//this.addFloatImageHTML(imageSourceGry, wid,hei);
-	//this.addFloatImageHTML(gradX, wid,hei);
-	//this.addFloatImageHTML(gradY, wid,hei);
-	//this.addFloatImageHTML(grad2X, wid,hei);
-	//this.addFloatImageHTML(grad2Y, wid,hei);
-	//this.addFloatImageHTML(gradMag, wid,hei);
-	//this.addFloatImageHTML(gradAng, wid,hei);
-	//this.addFloatImageHTML(laplacian, wid,hei);
-	//this.addFloatImageHTML(gauss, wid,hei);
-	//this.addFloatImageHTML(sharp, wid,hei);
-	//this.addFloatImageHTML(log, wid,hei);
-	this.addFloatImageHTML(smm, wid,hei);
-	//d = new DOImage(src);
-	//root.addChild(d);
-}
-
 
 Match.prototype.testA = function(){
 	var i, len, j, len2, list, x, y, s;
 	var images = this._imageList;
 	var files = this._fileList;
 	var root = this._root;
+root.matrix().scale(1.5);
 	var currentWidth = 0, currentHeight = 0;
 	len = images.length;
 	// find points
@@ -765,12 +653,12 @@ Match.prototype.testA = function(){
 		var descriptor = new ImageDescriptor(wid,hei, imageSourceRed,imageSourceGrn,imageSourceBlu,imageSourceGry, filename);
 		//descriptor.processScaleSpace();
 		if(i==0){ // original
-			descriptor._features.push(  new ImageFeature(0.355,0.927,1.2,0,null) ); // purple
-				//descriptor._features.push(  new ImageFeature(0.3556696188862783,0.926289617934935,2.9344129382549475,0,null) );
-				
+			descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow	
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
-			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow
-			//descriptor._features.push(  new ImageFeature(0.65,0.538,1.2,0,null) ); // nose
+			//descriptor._features.push(  new ImageFeature(0.50,0.54,1.2,0,null) ); // nose
+			//descriptor._features.push(  new ImageFeature(0.65,0.538,0.20,0,null) ); // nose middle
+			//descriptor._features.push(  new ImageFeature(0.57,0.885,0.60,0,null) ); // big orange
 		}
 		// if(i==1){ // scalexy
 		// 	descriptor._features.push(  new ImageFeature(0.60,0.89,2.0,0,null) ); // purple
@@ -780,7 +668,10 @@ Match.prototype.testA = function(){
 		// }
 		if(i==1){ // scalexrotateskew
 			descriptor._features.push(  new ImageFeature(0.662,0.07,1.5,0,null) ); // purple
-				//descriptor._features.push(  new ImageFeature(0.6660366992424261,0.0646052378273286,1.7448123722644124,0,null) ); // 2
+			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
+			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose
+			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
+			//descriptor._features.push(  new ImageFeature(0.465,0.121,1.4,0,null) ); // big orange
 		}
 		// descriptor.processAffineSpace();
 		// descriptor.describeFeatures();
@@ -788,6 +679,47 @@ Match.prototype.testA = function(){
 		d = new DOImage(images[i]);
 		d.matrix().translate(currentWidth,currentHeight);
 		root.addChild(d);
+		// EACH FEATURE
+		list = descriptor.getFeatureList();
+		len2 = list.length;
+		var container = new DO();
+		container.matrix().translate(currentWidth,currentHeight);
+		root.addChild(container);
+		for(j=0;j<len2;++j){
+			var f = list[j];
+			var ret = descriptor.detectPoint( new V3D( f.x(),f.y(),f.scale() ) );
+			var points = ret.points;
+			var windows = ret.windows;
+			var rad = 15.0, effR;
+			// points
+			for(k=0;k<points.length;++k){
+				var blu = Math.floor((0xFF)*(points.length-k-1)/(points.length-1)); // START
+				var grn = 0x00;//Math.floor((0xFF)*(k)/(points.length-1)); // END
+				var red = Math.floor((0xFF)*(k)/(points.length-1)); // END
+				d = new DO();
+				d.graphics().setLine(1.0,Code.getColARGB(0x66,red,grn,blu));
+				d.graphics().beginPath();
+				d.graphics().setFill(0x00FFFFFF);
+				//effR = rad*(0.5+0.5*(points.length-k) );
+				effR = rad/points[k].z;
+				d.graphics().moveTo(effR,0);
+				d.graphics().arc(0,0, effR, 0,Math.PI*2.0, false);
+				d.graphics().endPath();
+				d.graphics().fill();
+				d.graphics().strokeLine();
+				d.matrix().translate(points[k].x*wid,points[k].y*hei);
+				container.addChild(d);
+			}
+			// windows
+			for(k=0;k<windows.length;++k){
+				d = new DOImage( this._stage.getARGBAsImage(ImageMat.ARGBFromFloat(windows[k]), ret.width,ret.height) );
+				d.matrix().translate(k*ret.width,i*ret.height+hei);
+				container.addChild(d);
+			}
+		}
+
+currentWidth += wid;
+continue;
 		// show points
 		list = descriptor.getFeatureList();
 		len2 = list.length;
@@ -906,8 +838,7 @@ Match.prototype._imageCompleteFxn = function(o){
 
 var testing = true;
 if(testing){
-	//this.testA();
-	this.filters();
+	this.testA();
 	return
 }
 
@@ -1923,6 +1854,123 @@ Match.prototype.describePoint = function(x,y, wid,hei, origR,origG,origB,origY, 
 	var feature = new ImageFeature(x,y, wid,hei, origR,origG,origB,origY, gradRX,gradRY, gradGX,gradGY, gradBX,gradBY, gradYX,gradYY);
 	return feature;
 }
+
+Match.prototype.addFloatImageHTML = function(img,wid,hei){
+	var argb = ImageMat.ARGBFromFloat(img);
+	var src = this._stage.getARGBAsImage(argb, wid,hei);
+	Code.setStyleZIndex(src,"999");
+	Code.setStylePosition(src,"absolute");
+	document.body.appendChild(src);
+}
+
+Match.prototype.filters = function(){
+	var i, len, j, len2, list, x, y, s;
+	var images = this._imageList;
+	var files = this._fileList;
+	var root = this._root;
+
+	//
+	var img = images[0];
+	var params = this.getDescriptorParameters( img );
+	var wid = params.width;
+	var hei = params.height;
+	var imageSourceRed = params.red;
+	var imageSourceGrn = params.grn;
+	var imageSourceBlu = params.blu;
+	// original
+	var imageSourceGry = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
+	// gradient
+	var gradX = ImageMat.derivativeX(imageSourceGry, wid,hei);
+	var gradY = ImageMat.derivativeY(imageSourceGry, wid,hei);
+	// second derivative
+	var grad2X = ImageMat.secondDerivativeX(imageSourceGry, wid,hei);
+	var grad2Y = ImageMat.secondDerivativeY(imageSourceGry, wid,hei);
+	// gradient magnitude
+	var gradMag = ImageMat.sqrtFloat( ImageMat.vectorSquaredSumFloat(gradX,gradY) );
+	// gradient angle
+	var gradAng = ImageMat.phaseFloat(gradX,gradY);
+	// gauss
+	var gauss1D = ImageMat.getGaussianWindow(7,1, 1.6);
+	var gauss = ImageMat.gaussian2DFrom1DFloat(imageSourceGry, wid,hei, gauss1D);
+	// laplacian
+	var laplacian = ImageMat.laplacian(imageSourceGry, wid,hei);
+	// sharpen
+	var sharp = ImageMat.addFloat( gauss, ImageMat.scaleFloat(0.25,laplacian) );
+	// LoG
+	var sig = 1.6;
+	var w = h = Math.ceil(1+sig*3)*2+1;
+	var log = ImageMat.laplaceOfGaussian(imageSourceGry, wid,hei, sig, w,h);
+	// DoG
+	// 
+	// eigen vectors? direction? magnitude? eigenvalues?
+	// 
+	// SMM
+	var smm = ImageMat.harrisDetectorSMM(imageSourceGry, wid,hei, 1.6);
+	//var smm = ImageMat.harrisDetector(imageSourceGry, wid,hei, 1.6);
+	var SMM = smm.SMM;
+	//var SMM = smm.response;
+	var det, tra, a, alpha = 0.5;
+	var mat = new Matrix(2,2);
+	smm = new Array();
+	for(i=0;i<SMM.length;++i){
+		a = SMM[i];
+		//console.log(SMM[i]);
+		//break;
+		//  harris measure = det^2(A) - alpha*trace^2(A)
+		det = a[0]*a[3] - a[1]*a[2];
+		tra = a[0]*a[3];
+		//smm[i] = tra;
+		//smm[i] = det;
+		// smm[i] = (det*det - alpha*tra*tra);
+		//var val = Matrix.eigenValuesAndVectors2D(a[0],a[1],a[2],a[3]);
+		mat.setFromArray([a[0],a[1],a[2],a[3]]);
+		var val = Matrix.eigenValuesAndVectors(mat);
+
+		//smm[i] = val.values[0];
+		//smm[i] = val.values[1];
+		smm[i] = val.values[0] + val.values[1];
+		
+		// if(val.values[1]!=0){
+		// 	smm[i] = Math.pow(val.values[0]/val.values[1], 0.01);
+		// if(val.values[0]!=0){
+		// 	smm[i] = Math.pow(val.values[1]/val.values[0], 0.25);
+		// }else{
+		// 	smm[i] = 0.0;
+		// }
+		//smm[i] = (isNaN(smm[i])||smm[i]===undefined)?0.0:smm;
+		//val.values[1]/val.values[0];
+	}
+	// 
+	gradX = ImageMat.normalFloat01(gradX);
+	gradY = ImageMat.normalFloat01(gradY);
+	grad2X = ImageMat.normalFloat01(grad2X);
+	grad2Y = ImageMat.normalFloat01(grad2Y);
+	gradMag = ImageMat.normalFloat01(gradMag);
+	gradAng = ImageMat.normalFloat01(gradAng);
+	laplacian = ImageMat.normalFloat01(laplacian);
+	gauss = ImageMat.normalFloat01(gauss);
+	sharp = ImageMat.normalFloat01(sharp);
+	log = ImageMat.normalFloat01(log);
+	smm = ImageMat.normalFloat01(smm);
+	//this.addFloatImageHTML(imageSourceGry, wid,hei);
+	//this.addFloatImageHTML(gradX, wid,hei);
+	//this.addFloatImageHTML(gradY, wid,hei);
+	//this.addFloatImageHTML(grad2X, wid,hei);
+	//this.addFloatImageHTML(grad2Y, wid,hei);
+	//this.addFloatImageHTML(gradMag, wid,hei);
+	//this.addFloatImageHTML(gradAng, wid,hei);
+	//this.addFloatImageHTML(laplacian, wid,hei);
+	//this.addFloatImageHTML(gauss, wid,hei);
+	//this.addFloatImageHTML(sharp, wid,hei);
+	//this.addFloatImageHTML(log, wid,hei);
+	//this.addFloatImageHTML(smm, wid,hei);
+	//d = new DOImage(src);
+	//root.addChild(d);
+}
+
+
+
+
 /*
 
 local maxima

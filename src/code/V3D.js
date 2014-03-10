@@ -24,11 +24,13 @@ function V3D(xP,yP,zP){
 Code.inheritClass(V3D, V2D);
 V3D.prototype.copy = function(a){
 	this.x = a.x; this.y = a.y; this.z = a.z;
+	return this;
 }
 V3D.prototype.set = function(xV,yV,zV){
 	this.x = xV;
 	this.y = yV;
 	this.z = zV;
+	return this;
 }
 V3D.prototype.length = function(){
 	return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);

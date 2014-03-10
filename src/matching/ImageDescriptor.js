@@ -457,6 +457,14 @@ images.push(d4);
 			minScale = scales[i];
 		}
 	}
+var octA = "values = [";
+var octB = "scales = [";
+for(i=0;i<values.length;++i){
+	octA += values[i]+" ";
+	octB += scales[i]+" ";
+}
+octA += "];";
+octB += "];";
 	// ignore end extrema
 	if(max==values[0] || max==values[values.length-1]){ max=null; maxIndex=null; maxScale=null; }
 	if(min==values[0] || min==values[values.length-1]){ min=null; minIndex=null; minScale=null; }
@@ -471,17 +479,21 @@ images.push(d4);
 	}
 	// console.log(max);
 	// console.log(min);
-	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale};
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale,
+		octave:(octA+"\n"+octB)};
+}
+
+ImageDescriptor.prototype.pointSSExtrema = function(x,y,s,sig, extrema){
+	//
 }
 
 
-ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig){
+ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig, extrema, transform){
 	var sigma = undefined;
 	var kMult = undefined;
 	if(s===undefined){
 		var obj = this.doesPointHaveScaleExtrema(x,y);
 		if(obj.max!==null){
-			console.log(obj);
 			s = obj.maxScale;
 			sigma = obj.maxSigma;
 		}else{
@@ -490,7 +502,7 @@ ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig){
 	}
 	var sca = s;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
-	var transform = new Matrix(3,3).identity();
+	var transform = transform?transform:new Matrix(3,3).identity();
 	var windowWid = windowHei = 51;
 	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
 	var center = windowWid*cenH + cenW;
@@ -501,52 +513,171 @@ ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig){
 	sigma = undefined; kMult = undefined;
 	var harris = ImageMat.harrisDetector(w,windowWid,windowHei, SMM, threshold, sigma, kMult);
 	var har = harris.response;
-	var peaks = ImageMat.findExtrema2DFloat(har, windowWid,windowHei);
-		sigma = 1.6;
-		gaussSize = 7;
-		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
-		tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
-	//var peaks = ImageMat.findExtrema2DFloat(tmp, windowWid,windowHei);
-	console.log("peaks: "+peaks.length);
-	var minX=0, minY=0, dist, i, len=peaks.length, minDist = windowWid*windowWid;
+	var peaks = ImageMat.findExtrema2DFloat(har, windowWid,windowHei, 1.0,1.0, 1E-10);
+// sigma = 1.6;
+// gaussSize = 7;
+// gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+// tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
+//var peaks = ImageMat.findExtrema2DFloat(tmp, windowWid,windowHei);
+//console.log("peaks: "+peaks.length);
+	var minX=0, minY=0, dist, i, len=peaks.length, minDist = null;//windowWid*windowWid;
 	var pX,pY;
-	for(i=0;i<len;++i){
+	for(i=0;i<len;++i){ // normalize to 'pixel' size (of window)
 		peaks[i].x*=windowWid;
 		peaks[i].y*=windowHei;
 	}
-	for(i=0;i<len;++i){
-		// peaks outside of image window should not be considered (0<x>1, 0<y>1)
-		//console.log("peak: "+peaks[i].toString());
+var extremaMaxValue = extrema;//!==null?extrema:peaks[i].z-1;
+var extremaMinValue = extrema;//!==null?extrema:peaks[i].z+1; // IGNORING RIGHT NOW...
+	for(i=0;i<len;++i){ // peaks outside of image window should not be considered (0<x>1, 0<y>1)
 		pX = peaks[i].x - cenW;
 		pY = peaks[i].y - cenH;
-		dist = (pX*pX+pY*pY);
-		if(dist<minDist){
+		dist = Math.sqrt(pX*pX+pY*pY);
+		if((dist<minDist || minDist===null) ){// && (peaks[i].z>extremaMaxValue || extremaMaxValue===null)){ // || peaks[i].z<extremaMinValue
 			minDist = dist;
 			minX = pX;
 			minY = pY;
+			extremaMaxValue = peaks[i].z;
 		}
 	}
-
-	//console.log("CLOSEST: "+minX+", "+minY+" distance: "+Math.sqrt(minDist)+" AT: "+sca);
-//	console.log("NEXT: "+ (minX/sca + x*wid)/wid +", "+ (minY/sca + y*hei)/hei );
+//console.log( extremaMaxValue );
 	// absolute relative coords (relative excluding scale)
+// POINT HAS TO BE REVERSE-LOCATED VIA TRANSFORM
 	minX = minX/sca/wid;
 	minY = minY/sca/hei;
+var tinv = Matrix.inverse(transform);
+var pt = new V2D(minX,minY);
+tinv.multV2DtoV2D(pt,pt);
+minX = pt.x;
+minY = pt.y;
 	var har2 = ImageMat.showPeaks(har, windowWid,windowHei, peaks);
-	//har2[windowWid*cenH + cenW] += 2.0;
-	// 
-	//w = ImageMat.getNormalFloat01(har2);
-	//w = ImageMat.getNormalFloat01(w);
 	w = ImageMat.addFloat(har,har2);
-	//w = ImageMat.addFloat(tmp,har2);
-	//w = ImageMat.addFloat(w, ImageMat.showPeaks(w, windowWid,windowHei, peaks) );
 	w[windowWid*cenH + cenW] += 1.0;
 	w = ImageMat.getNormalFloat01(w);
-
-	return {image:w, width:windowWid, height:windowHei, closestX:minX, closestY:minY, closestDistance:Math.sqrt(minDist)};
-	//harris = this.harrisMatrix(W,windowWid,windowHei, sigmaI,sigmaD);
+//w = ImageMat.getNormalFloat01(tmp);
+	return {image:w, width:windowWid, height:windowHei, closestX:minX, closestY:minY, closestDistance:minDist, closestExtrema:extremaMaxValue};
 }
 
+
+ImageDescriptor.prototype.detectPoint = function(inPoint){
+	var i, len, sigma, eigs;
+	var sourceGry = this._flatGry;
+	var sourceWid = this._width;
+	var sourceHei = this._height;
+	var currentPoint = new V3D(); currentPoint.copy(inPoint);
+	var winWid = 51, winHei = 51;
+	var U = new Matrix(2,2); U.identity();
+	var u = new Matrix(2,2); u.identity();
+	var transform = new Matrix(3,3); transform.identity();
+	var maxIterations = 20;
+	var winList = new Array();
+	var pointList = new Array();
+var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o'];
+var octave = "hold off;\n";
+var originalMinimum = null;
+	var currentExtrema = null;
+	for(i=0;i<maxIterations;++i){
+		pointList.push( (new V3D()).copy(currentPoint) );
+		//transform.multV2DtoV2D(currentPoint, inPoint);
+		sigma = null;
+		win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*1.0,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+		//winList.push(win);
+		// spatial localization of harris extrema
+		val = this.pointHarrisExtrema(currentPoint.x,currentPoint.y,currentPoint.z, undefined, currentExtrema, transform);
+		//val = this.pointSSExtrema(currentPoint.x,currentPoint.y,currentPoint.z, undefined, currentExtrema, transform);
+		//winList.push(val.image);
+		if( val.closestDistance!==null && (val.closestDistance<currentPoint.z*15.0) ){ // not too far away
+			currentPoint.x += val.closestX;
+			currentPoint.y += val.closestY;
+			currentExtrema = val.closestExtrema;
+		}
+		// scale space extrema
+		val = this.doesPointHaveScaleExtrema(currentPoint.x,currentPoint.y);
+		//console.log(val.maxIndex,val.minIndex);
+		if(val.maxIndex){//||val.minIndex){
+			currentPoint.z = val.maxSigma;
+			currentPoint.z;
+		}
+octave += val.octave;
+octave += "\nplot(scales,values,\""+taves[i]+"\");\n";
+octave += "hold on;\n";
+		// transform 
+		sigma = null;
+		win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*1.0,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+		//winList.push(win);
+		eigs = this.getEigenInfoSMM(currentPoint.x,currentPoint.y,currentPoint.z, win,winWid,winHei);
+		originalMinimum = this.getEigenAffine(eigs.valueA,eigs.valueB,eigs.vectorA,eigs.vectorB,transform, originalMinimum);
+
+win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+winList.push(win);
+	}
+Code.copyToClipboardPrompt(octave);
+console.log("............");
+	return {windows:winList, width:winWid, height:winHei, points:pointList, affine:transform}
+}
+ImageDescriptor.prototype.getEigenAffine = function(eigA,eigB,eigVecA,eigVecB,trans, originalMinimum){
+	var vectorY = new V2D(0,1);
+	var t = new V2D();
+	var angleYVecA = V2D.angleDirection(vectorY,eigVecA);
+	var angleYVecB = V2D.angleDirection(vectorY,eigVecB);
+	var eigRatio = eigA/eigB;
+console.log(eigRatio);
+	// first record of direction of minima
+	//if(originalMinimum==null){
+		originalMinimum = new V2D(eigVecA.x,eigVecA.y);
+	//}
+	var cum = new Matrix(3,3);
+	var rot = new Matrix(3,3);
+	var sca = new Matrix(3,3);
+	var transform = trans;
+	// non-proportional scaling
+	cum.identity();
+	ang = -angleYVecA;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	cum = Matrix.mult(cum,rot);
+	amt = Math.pow(eigRatio,0.05);
+	sca.setFromArray([1/amt,0,0, 0,1.0,0, 0,0,1.0]);
+	cum = Matrix.mult(cum,sca);
+	ang = angleYVecA;
+	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	cum = Matrix.mult(cum,rot);
+	transform = Matrix.mult(transform,cum);
+	// recheck on scale
+	transform.multV2DtoV2D(t,originalMinimum);
+	var correctScale = t.length();
+	correctScale = 1/correctScale;
+//correctScale *= 1.1;
+	sca.setFromArray([correctScale,0,0, 0,correctScale,0, 0,0,1]);
+	transform = Matrix.mult(sca,transform);
+	//
+	trans.copy(transform);
+	return originalMinimum;
+}
+ImageDescriptor.prototype.getEigenInfoSMM = function(pX,pY,pZ, win,winWid,winHei){ // source,sourceWid,sourceHei,
+	var currentSigma = 4.6;
+	var SMM = ImageMat.harrisDetectorSMM(win,winWid,winHei, currentSigma);
+	var originalGradient = new V2D(SMM.gradientX,SMM.gradientY);
+	SMM = SMM.SMM;
+	var centerX = Math.floor(winWid*0.5), centerY = Math.floor(winHei*0.5);
+	var centerIndex = winWid*centerY+centerX;
+	var smm = SMM[centerIndex]; 
+	// get eigen values/vectors
+	var mat = new Matrix(2,2).setFromArray(smm);
+	eig = Matrix.eigenValuesAndVectors(mat);
+	var lA = Math.max(eig.values[0],eig.values[1]);
+	var lB = Math.min(eig.values[0],eig.values[1]);
+	var eA, eB;
+	if(lA>lB){
+		eigRatio = lA/lB;
+		eA = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+		eB = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	}else{
+		temp = lA; lA = lB; lB = temp;
+		eA = [eig.vectors[0].get(0,0), eig.vectors[0].get(1,0)];
+		eB = [eig.vectors[1].get(0,0), eig.vectors[1].get(1,0)];
+	}
+	var eigRatio = lA/lB;
+	return {valueA:lA, valueB:lB, vectorA:(new V3D(eA[0],eA[1])), vectorB:(new V3D(eB[0],eB[1])), ratio:eigRatio};
+}
 
 
 ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ // 
@@ -563,12 +694,14 @@ ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ //
 	var list = [];
 	var W0 = currentImage;
 	var i, j, val, len;
-	var maxIterations = 3;
+	var maxIterations = 10;
+
 	for(i=0;i<maxIterations;++i){
 // find maxima nearest to inPoint
 		console.log("POINT: +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+currentPoint.toString()+"   ");
 		val = this.pointHarrisExtrema(currentPoint.x,currentPoint.y,currentPoint.z);
-		if(val.closestDistance < currentPoint.z*5.0){
+		console.log(val.closestDistance);
+		if(val.closestDistance < currentPoint.z*5.0){ // not too far away
 			console.log("=> "+(val.closestX*wid)+","+(val.closestY*hei));
 			currentPoint.x += val.closestX;
 			currentPoint.y += val.closestY;
@@ -578,6 +711,10 @@ ImageDescriptor.prototype.getStableAffinePoint = function(inPoint){ //
 		val = this.doesPointHaveScaleExtrema(currentPoint.x,currentPoint.y);
 		currentPoint.z = val.maxSigma;
 		//console.log(val);
+		if(val.closestDistance < currentPoint.z*1E-2){ // basically the same point
+			console.log("converged");
+			break;
+		}
 	}
 	return {x:inPoint.x,y:inPoint.y,scale:inPoint.z, matrix:matrix, window:W0, windowWidth:currentWid, windowHeight:currentHei, list:list};
 }

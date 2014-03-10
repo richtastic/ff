@@ -618,9 +618,9 @@ ImageMat.showPeaks = function(har, wid,hei, peaks){
 	var obj, i, len = peaks.length;
 	for(i=0;i<len;++i){
 		obj = peaks[i];
-		result[wid*Math.round(obj.y) + Math.round(obj.x)] += 1.0;
+		result[wid*Math.round(obj.y) + Math.round(obj.x)] += 1.0;//Math.abs(obj.z?obj.z:0.0);
 	}
-	return result;
+	return result;//ImageMat.normalFloat01(result);
 }
 
 ImageMat.getPeaks = function(peaks, wid,hei){ // the problem with this is it misses maxima that are erased by the retracting process - poor resolution (2-3 pixels?)
