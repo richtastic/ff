@@ -1059,6 +1059,11 @@ Code.padStringRight = function(val,wid,filler){
 	return str;
 }
 // ------------------------------------------------ MATHS
+Code.interpolateExtrema = function(xVals,yVals, noEnds){
+	// find local maxima
+	// find local minima
+	return {min:null, max:null};
+}
 Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC){ // quadric interpolation
 	var ext = new V2D();
 	var dx1 = xB-xA;

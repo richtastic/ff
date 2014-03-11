@@ -559,6 +559,182 @@ minY = pt.y;
 
 
 ImageDescriptor.prototype.detectPoint = function(inPoint){
+	var i, len, sigma, val;
+	var sourceGry = this._flatGry;
+	var sourceWid = this._width;
+	var sourceHei = this._height;
+	var x = new V3D(); x.copy(inPoint);
+	var winWid = 51, winHei = 51;
+	var U = new Matrix(2,2);
+	var u = new Matrix(2,2);
+	var transform = new Matrix(3,3);
+	var maxIterations = 5;
+	var winList = new Array();
+	var pointList = new Array();
+	var currentExtrema = null;
+console.log("............ detect point");
+var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o'];
+var octave = "hold off;\n";
+	// 1. initialize U_0 to identity matrix
+	U.identity();
+	for(i=0;i<maxIterations;++i){
+		transform.setFromArray([U.get(0,0),U.get(0,1),0.0, U.get(1,0),U.get(1,1),0.0, 1.0,1.0,1.0]);
+		// 2. normalize window W(x_w) = I(x) centered on U_k-1 * x_w_k-1 = x_w_k-1
+		sigma = null;
+		W = ImageMat.extractRectFromFloatImage(x.x,x.y,x.z,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
+		val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
+//console.log(val.maxScale);
+var octA = "values = [";
+var octB = "scales = [";
+for(j=0;j<val.values.length;++j){
+	octA += val.values[j]+" ";
+	octB += val.scales[j]+" ";
+}
+octA += "];";
+octB += "];";
+octave += octA+"\n";
+octave += octB+"\n";
+octave += "plot(scales,values,\""+taves[i]+"\");\n";
+octave += "hold on;\n";
+		x.z = val.maxScale;
+		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
+		val = this.getEigenMaxDiffScale(W,winWid,winHei, 0.5,0.75,4);
+		// //transform.multV2DtoV2D(currentPoint, inPoint);
+		// sigma = null;
+		// win = 
+		// //winList.push(win);
+		// // spatial localization of harris extrema
+		// val = this.pointHarrisExtrema(currentPoint.x,currentPoint.y,currentPoint.z, undefined, currentExtrema, transform);
+		// //val = this.pointSSExtrema(currentPoint.x,currentPoint.y,currentPoint.z, undefined, currentExtrema, transform);
+		// //winList.push(val.image);
+		// if( val.closestDistance!==null && (val.closestDistance<currentPoint.z*15.0) ){ // not too far away
+		// 	currentPoint.x += val.closestX;
+		// 	currentPoint.y += val.closestY;
+		// 	currentExtrema = val.closestExtrema;
+		// }
+		// // scale space extrema
+		// val = this.doesPointHaveScaleExtrema(currentPoint.x,currentPoint.y);
+		// //console.log(val.maxIndex,val.minIndex);
+		// if(val.maxIndex){//||val.minIndex){
+		// 	currentPoint.z = val.maxSigma;
+		// 	currentPoint.z;
+		// }
+		// // transform 
+		// sigma = null;
+		// win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*1.0,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+		// //winList.push(win);
+		// eigs = this.getEigenInfoSMM(currentPoint.x,currentPoint.y,currentPoint.z, win,winWid,winHei);
+		// originalMinimum = this.getEigenAffine(eigs.valueA,eigs.valueB,eigs.vectorA,eigs.vectorB,transform, originalMinimum);
+
+		// win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+		// winList.push(win);
+	}
+console.log("............");
+Code.copyToClipboardPrompt(octave);
+	return {windows:winList, width:winWid, height:winHei, points:pointList, affine:transform}
+}
+ImageDescriptor.prototype.getEigenMaxDiffScale = function(win,winWid,winHei, sigmaI, startScale,stopScale,divisions){
+	var diffScale = stopScale - startScale;
+	var scales = [];
+	var values = [];
+	var i, len, scale, ratio, eigA, eigB, sigmaD;
+	var u = new Matrix(2,2);
+	for(i=0;i<=divisions;++i){
+		scale = startScale + diffScale*(i/divisions);
+		sigmaD = scale*sigmaI;
+		u = this.getMewFromWin(win,winWid,winHei, sigmaI, sigmaD);
+		// find u eigenvalues
+		ratio = eigA/eigB;
+		scales.push(scale);
+		values.push(ratio);
+	}
+	// interpolate (non-edge) to find max
+	return Code.interpolateExtrema(scales,values).max;
+}
+ImageDescriptor.prototype.getMewFromWin = function(win,winWid,winHei, sigmaI, sigmaD){ // centered at x,y, scaled at z, un-blurred
+	// find u
+	return null
+}
+
+ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){
+	// assume extended about current scale-space
+	s = (s!==undefined)?s:1.0; // theres some weirdness with non-base-two offsets
+	transform = (transform!=undefined)?transform:new Matrix2D();
+	var w, prevW, diff, i, len, scale, cen;
+	var gray = this._flatGry, wid = this._width, hei = this._height;
+	var windowWid = windowHei = 51;
+	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
+	var center = windowWid*cenH + cenW;
+	var scales = [], sigmas = [], values = [], images = [];
+	var startScale = 0.25*s;
+	var sigma = 1.6; // input - blur
+	var scalesPerOctave = 10; // input - divisions
+	var totalOctaves = 5; // input - count
+	var kConstant = Math.pow(2.0,1.0/(scalesPerOctave-1));
+	var gaussSizeBase = 5, gaussSizeIncrement = 1.5, gauss1D, gaussSize;
+	var sig, sca, tmp, prevTmp, prevSca;
+	for(i=0;i<totalOctaves;++i){
+		sca = startScale*Math.pow(2,i);
+		w = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
+		prevTmp = null; prevSca = null;
+		for(j=0;j<scalesPerOctave;++j){
+			sca = startScale*Math.pow(2,i)*Math.pow(kConstant,j); // current actual scale
+			sig = sigma*Math.pow(kConstant,j); // current blurr
+			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
+			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+			tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D); // blurred image
+			if(prevTmp!=null){
+				cen = tmp[center]-prevTmp[center];
+				diff = ImageMat.subFloat(tmp,prevTmp);
+				diff = ImageMat.normalFloat01(diff);
+				var peaks = ImageMat.getPeaks(diff, windowWid,windowHei);
+				var d2 = ImageMat.showPeaks(diff, windowWid,windowHei, peaks);
+				d2[windowWid*cenH + cenW] += 5.0;
+				var d3 = ImageMat.addFloat(diff,d2);
+				var d4 = ImageMat.getNormalFloat01(d3);
+				images.push(d4);
+				values.push(cen);
+				scales.push( (sca+prevSca)*0.5 );
+				sigmas.push( sigma*Math.pow(kConstant,j-0.5) );
+			}
+			prevSca = sca;
+			prevTmp = tmp;
+		}
+	}
+	var max=values[0], min=values[0];
+	var maxIndex=0, minIndex=0, maxScale=scales[0], minScale=scales[0];
+	var maxSigma=sigmas[0], minSigma=sigmas[0];
+	for(i=1;i<values.length;++i){
+		if(values[i]>max){
+			max = values[i];
+			maxIndex = i;
+			maxScale = scales[i];
+			maxSigma = sigmas[i];
+		}
+		if(values[i]<min){
+			min = values[i];
+			minIndex = i;
+			minScale = scales[i];
+			minSigma = sigmas[i];
+		}
+	}
+	// ignore end extrema
+	if(max==values[0] || max==values[values.length-1]){ max=null; maxIndex=null; maxScale=null; }
+	if(min==values[0] || min==values[values.length-1]){ min=null; minIndex=null; minScale=null; }
+	// interpolation to find extrema
+	var v;
+	if(maxIndex){
+		v = Code.locateExtrema1D(scales[maxIndex-1],values[maxIndex-1], scales[maxIndex],values[maxIndex], scales[maxIndex+1],values[maxIndex+1]);
+		maxScale = v.x;
+	}else if(minIndex){
+		v = Code.locateExtrema1D(scales[minIndex-1],values[minIndex-1], scales[minIndex],values[minIndex], scales[minIndex+1],values[minIndex+1]);
+		minScale = v.x;
+	}
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale};
+}
+
+ImageDescriptor.prototype.detectPointGAH = function(inPoint){
 	var i, len, sigma, eigs;
 	var sourceGry = this._flatGry;
 	var sourceWid = this._width;
