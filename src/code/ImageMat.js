@@ -271,6 +271,12 @@ ImageMat.rotateImage = function(){
 	
 }
 // ------------------------------------------------------------------------------------------------------------------------ image operations
+ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc){
+	bas = bas!==undefined?bas:2;
+	inc = inc!==undefined?inc:2;
+	var size = Math.round(bas + sigma*inc)*2+1;
+	return ImageMat.getGaussianWindow(size,1, sigma);
+}
 ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
 	if(sigmaY==undefined){ sigmaY = sigmaX; }
 	var len = width*height;
@@ -1323,7 +1329,7 @@ ImageMat.floatToOctave = function(src,wid,hei){
 }
 ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
 	// A(x) = autocorrelation = [gaussian window]*[Ixx(x) Ixy(x) ; Ixy(x) Iyy(x)]
-	// H(x) = harris measure = det^2(A) - alpha*trace^2(A)
+	// H(x) = harris measure = det(A) - alpha*trace^2(A)
 	var temp, padding, gaussSource, Ix, Iy, IxIx, IxIy, IyIy, Sxx, Sxy, Syy;
 	var determinant, trace, result;
 	sigma = sigma!==undefined?sigma:1.6;//1.6;

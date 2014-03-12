@@ -1060,12 +1060,41 @@ Code.padStringRight = function(val,wid,filler){
 }
 // ------------------------------------------------ MATHS
 Code.interpolateExtrema = function(xVals,yVals, noEnds){
+	var val, i, lenM1 = yVals.length-1;
+	var min = yVals[0];
+	var max = yVals[0];
+	var minIndex = 0;
+	var maxIndex = 0;
+	for(i=1;i<=lenM1;++i){
+		val = yVals[i];
+		if(val>max){ max = val; maxIndex = i; }
+		if(val<min){ min = val; minIndex = i; }
+	}
 	// find local maxima
+	if(maxIndex!=0&&maxIndex!=lenM1){
+		max = Code.locateExtrema1D(xVals[maxIndex-1],yVals[maxIndex-1], xVals[maxIndex],yVals[maxIndex], xVals[maxIndex+1],yVals[maxIndex+1]);
+	}else{
+		if(noEnds===true){
+			max = null;
+		}else{
+			max = new V2D(xVals[maxIndex],yVals[maxIndex]);
+		}
+	}
 	// find local minima
-	return {min:null, max:null};
+	if(minIndex!=0&&minIndex!=lenM1){
+		min = Code.locateExtrema1D(xVals[minIndex-1],yVals[minIndex-1], xVals[minIndex],yVals[minIndex], xVals[minIndex+1],yVals[minIndex+1]);
+	}else{
+		if(noEnds===true){
+			min = null;
+		}else{
+			console.log(minIndex,xVals[minIndex],yVals[minIndex]);
+			min = new V2D(xVals[minIndex],yVals[minIndex]);
+		}
+	}
+	return {min:min, max:max};
 }
-Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC){ // quadric interpolation
-	var ext = new V2D();
+Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC, ext){ // quadric interpolation
+	ext = ext!==undefined?ext:new V2D();
 	var dx1 = xB-xA;
 	var dx2 = xC-xB;
 	var dx3 = xC-xA;
@@ -1074,12 +1103,10 @@ Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC){ // quadric interpolation
 	var dy3 = yC-yA;
 	var dD = dy3/dx3;
 	var ddD = 0.5*(dy2-dy1)/(dx2-dx1);
-	
 	x = -dD/ddD;
 	//ext.y = yB + x*dD + 0.5*x*x*ddD;
 	ext.y = yB + 0.5*x*dD;
 	ext.x = x + xB;
-
 	return ext;
 }
 
