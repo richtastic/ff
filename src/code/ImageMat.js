@@ -782,9 +782,11 @@ ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r){
 			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
 			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
 				result = ImageMat.extrema2DFloatInterpolate(new V3D(), delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r);
-				if(result){
+				if(result){ // able to calculate
 					result.x = (result.x+i)/wid; result.y = (result.y+j)/hei;
 					list.push(result);
+				}else{ // i hate everything
+					list.push( new V3D(i/wid, j/hei, d4) );
 				}
 				//list.push( new V3D(i,j,d4) );
 			}
@@ -840,7 +842,7 @@ ImageMat._tempMatrix2_2 = new Matrix(2,2);
 ImageMat._tempMatrix2_1 = new Matrix(2,1);
 ImageMat._tempMatrix2_1_2 = new Matrix(2,1);
 ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r){ // 
-	r = r!==undefined?r:1E-10;
+	r = r!==undefined?r:1E-16;
 	var dx = (d5-d3)/(2.0*delX);
 	var dy = (d7-d1)/(2.0*delY);
 	var dxdx = (d5-2.0*d4+d3)/(delX*delX);
@@ -848,7 +850,7 @@ ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,
 	var dydx = dxdy;
 	var dydy = (d7-2.0*d4+d1)/(delY*delY);
 	var det = dxdx*dydy - dxdy*dxdy;
-	if(Math.abs(det) < r){ // need something better - tho this is appropriate for harris matrix ...
+	if(Math.abs(det) < r){ // need something better - tho this is appropriate for harris matrix ... // GAH - jsut increase the magnitudes ....
 		return null;
 	}
 	var dD = ImageMat._tempMatrix2_1.setFromArray([dx, dy]);

@@ -223,6 +223,44 @@ Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 		}
 	}
 }
+Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes
+	var lenX = endX - staX + 1;
+	var lenY = endY - staY + 1;
+	if(lenX<=0||lenY<=0){
+		return new Array();
+	}
+	var i, j, b = new Array(lenX*lenY);
+	for(j=0;j<lenY;++j){
+		for(i=0;i<lenX;++i){
+			b[lenX*j+i] = a[(wid)*(j+staY)+(i+staX)];
+		}
+	}
+	return b;
+}
+Code.toStringArray2D = function(a,wid,hei, exp){
+	exp = exp===undefined?4:exp;
+	var minLen = exp+6+1; // -#.E+#
+	var i, j, num, val, str = "[";
+	for(j=0;j<hei;++j){
+		if(j>0){
+			str += " ";
+		}
+		for(i=0;i<wid;++i){
+			num = a[wid*j+i];
+			val = num.toExponential(exp);
+			if(num>=0){ // +/1 prefix
+				val = " " + val+", ";
+			}
+			str += Code.padStringLeft(val,minLen," ");
+		}
+		if(j<hei-1){
+			str += "\n";
+		}else{
+			str += " ]";
+		}
+	}
+	return str.replace(/e/g,"E");
+}
 // ------------------------------------------------------------------------------------------ 
 Code.isUnique = function(val){ // val, ...array
 	for(i=1;i<arguments.length;++i){
@@ -1061,10 +1099,8 @@ Code.padStringRight = function(val,wid,filler){
 // ------------------------------------------------ MATHS
 Code.interpolateExtrema = function(xVals,yVals, noEnds){
 	var val, i, lenM1 = yVals.length-1;
-	var min = yVals[0];
-	var max = yVals[0];
-	var minIndex = 0;
-	var maxIndex = 0;
+	var min = yVals[0], max = yVals[0];
+	var minIndex = 0, maxIndex = 0;
 	for(i=1;i<=lenM1;++i){
 		val = yVals[i];
 		if(val>max){ max = val; maxIndex = i; }
@@ -1087,7 +1123,6 @@ Code.interpolateExtrema = function(xVals,yVals, noEnds){
 		if(noEnds===true){
 			min = null;
 		}else{
-			console.log(minIndex,xVals[minIndex],yVals[minIndex]);
 			min = new V2D(xVals[minIndex],yVals[minIndex]);
 		}
 	}

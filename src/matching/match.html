@@ -16,9 +16,33 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesLoadedFxn(){
 	Code.setPageTitle("fantastic");
-
 	//console.log( Code.locateExtrema1D(1.0,2.0, 2.0,3.0, 4.0,1.0).toString() );
 	//console.log( Code.locateExtrema1D(1.0,1.0, 2.0,3.0, 4.0,2.0).toString() );
+// var a = [ 8.2482E-6,  1.2988E-5,  1.5501E-5,  1.3178E-5,  8.7412E-6,  4.8403E-6,  2.3474E-6, 
+//   1.0204E-5,  1.6447E-5,  1.9558E-5,  1.7003E-5,  1.2099E-5,  7.1386E-6,  3.3571E-6, 
+//   9.5306E-6,  1.4999E-5,  1.7292E-5,  1.5136E-5,  1.1534E-5,  7.2499E-6,  3.2926E-6, 
+//   6.2087E-6,  9.7772E-6,  1.1808E-5,  1.1283E-5,  9.3590E-6,  6.0807E-6,  2.6512E-6, 
+//   3.1788E-6,  5.3476E-6,  7.8523E-6,  9.1186E-6,  8.1317E-6,  5.1937E-6,  2.2159E-6, 
+//   1.6502E-6,  3.0588E-6,  5.4678E-6,  7.3281E-6,  6.8116E-6,  4.3285E-6,  1.9057E-6, 
+//   9.3599E-7,  1.8033E-6,  3.3678E-6,  4.7061E-6,  4.5106E-6,  2.9696E-6,  1.4106E-6];
+// var winWid = 7;
+// var winHei = 7;
+// console.log(Code.toStringArray2D(a,winWid,winHei));
+// var peaks, i, len;
+// peaks = ImageMat.findExtrema2DFloat(a, winWid,winHei);
+// console.log(peaks.length);
+// for(i=0;i<peaks.length;++i){
+// 	console.log(peaks[i]);
+// }
+// peaks = ImageMat.getPeaks(a, winWid,winHei);
+// console.log(peaks.length);
+// for(i=0;i<peaks.length;++i){
+// 	console.log(peaks[i]);
+// }
+// return;
+
+	var match = new Match();
+	return;
 	
 	// var data = [0,0,0, 0,1,0.5, 0,0.5,0.5];
 	// var wid = 3;
@@ -29,8 +53,20 @@ function customClassesLoadedFxn(){
 	// vals = ImageMat.findExtrema2DFloat(data, wid,hei, delX,delY, r);
 	// console.log(vals);
 
-	var match = new Match();
-	return;
+
+	// var a = [0 , 1, 2, 3,
+	//          4 , 5, 6, 7,
+	//          8 , 9,10,11,
+	//          12,13,14,15,
+	//          16,17,18,19];
+	// var wid = 4;
+	// var hei = Math.floor(a.length/wid);
+	// var b = Code.subArray2D(a,wid,hei, 1,2, 2,3);
+	// console.log(a);
+	// console.log(b);
+	// var str = Code.toStringArray2D(b,2,2);
+	// console.log(str);
+	// return;
 
 	// var yaml = new YAML();
 	// var object3 = {item1:123, item2:"string"}

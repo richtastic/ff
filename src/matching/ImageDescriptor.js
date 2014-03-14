@@ -568,9 +568,10 @@ ImageDescriptor.prototype.detectPoint = function(inPoint){
 	var winWid = 51, winHei = 51;
 	var U = new Matrix(2,2);
 	var u = new Matrix(2,2);
+	var uNegSqrt;
 	var transform = new Matrix(3,3);
 	var transformInverse;// = new Matrix(3,3);
-	var maxIterations = 5;
+	var maxIterations = 10;
 	var winList = new Array();
 	var pointList = new Array();
 	var currentExtrema = null;
@@ -582,11 +583,16 @@ var octave2 = "hold off;\n";
 	// 1. initialize U_0 to identity matrix
 	U.identity();
 	for(i=0;i<maxIterations;++i){
+console.log(x.x*sourceWid,x.y*sourceHei,x.z," ",sourceWid,sourceHei);
+if(x.x<0 || x.x>1 || x.y<0 || x.y>1){
+	console.log("POINT IS OUT OF RANGE");
+}
 		transform.setFromArray([U.get(0,0),U.get(0,1),0.0, U.get(1,0),U.get(1,1),0.0, 1.0,1.0,1.0]);
 		transformInverse = Matrix.inverse(transform);
 		// 2. normalize window W(x_w) = I(x) centered on U_k-1 * x_w_k-1 = x_w_k-1
 		sigma = null;
 		W = ImageMat.extractRectFromFloatImage(x.x,x.y,x.z,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+winList.push(W);
 		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
 		val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
 //console.log(val.maxScale);
@@ -602,12 +608,14 @@ octave += octA+"\n";
 octave += octB+"\n";
 octave += "plot(scales,values,\""+taves[i]+"\");\n";
 octave += "hold on;\n";
+if(val.maxScale!==null){
 		x.z = val.maxScale;
+}
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
 		//console.log("correct: "+val.maxSigma)
 		sigmaI = 1.6; // sigmaFromScale
 		//console.log("guessed: "+sigma);
-		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.5,0.75,4); // 0.5,10.0,30);//
+		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.25,0.75,4); // 0.5,10.0,30);//
 		sigmaD = val.sigmaD;
 octA = "scales = [";
 octB = "ratios = [";
@@ -623,16 +631,41 @@ octave2 += "plot(scales,ratios,\""+taves[i]+"\");\n";
 octave2 += "hold on;\n";
 		// 5. detect spatial localization x_w_k of a maximum of the Harris measure [det(u(x,sI,sD))-alpha*tra^2(u(x,sI,sD))], nearest to x_w_k-1 and compute the location of the interest point x_k
 		val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI, sigmaD);
-winList.push(val.image);
+//winList.push(val.image);
 		var off = val.offset;
 		if(off==null){ // no maxima nearby ...
 			break;
 		}
-		console.log(off);
 		transformInverse.multV2DtoV2D(v, off); // reverse transform to actual (zoomed) image location
-		off.x *= x.z; off.y *= x.z; // scale to window size
-		// x.x += (v.x)*x.z;
-		// x.y += (v.y)*x.z;
+//		console.log(off.toString()+" => "+v.toString());
+		v.x /= x.z; v.y /= x.z; // scale to window size
+		x.x += v.x/sourceWid; x.y += v.y/sourceHei; // goto next position
+//		console.log(" + "+v.toString()+" == "+x.toString());
+		// 6. compute u_i_k = [u(x_w_k,sI,sD)]^(-1/2)
+		//console.log("=============================");
+		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
+		//console.log(u.toString());
+		u = Matrix.power(u,-0.125);
+		// uNegSqrt
+		//console.log(uNegSqrt.toString());
+		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
+		U = Matrix.mult(u,U); // concatenation u * U
+		//U = Matrix.mult(U,u);
+		var svd = Matrix.SVD(U);
+		var lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
+		var lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
+			// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
+			// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
+			if(svd.S.get(0,0)>svd.S.get(1,1)){ // set lambda max = 1
+				svd.S.set(0,0, 1.0); // should always be the case ?
+			}else{
+				svd.S.set(1,1, 1.0);
+			}
+			U = Matrix.fromSVD(svd.U,svd.S,svd.V);
+		// 8. go to step 2 if 1 - lambdaMin(u_i_k)/lambdaMax(u_i_k) >= epsilonC
+		//console.log( Matrix.SVD(U).S.toString() );
+		//console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		//console.log(U.toString());
 		// //transform.multV2DtoV2D(currentPoint, inPoint);
 		// sigma = null;
 		// win = 
@@ -664,14 +697,15 @@ winList.push(val.image);
 		// winList.push(win);
 	}
 console.log("............");
-//Code.copyToClipboardPrompt(octave);
-Code.copyToClipboardPrompt(octave2);
+Code.copyToClipboardPrompt(octave);
+//Code.copyToClipboardPrompt(octave2);
+//winList.push(W);
 	return {windows:winList, width:winWid, height:winHei, points:pointList, affine:transform};
 }
 ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, sigmaI, sigmaD, alpha){
-	alpha = alpha!==undefined?alpha:0.04;
+	alpha = alpha!==undefined?alpha:0.05;
 	var cenX = Math.floor(winWid*0.5);
-	var cenY = Math.floor(winWid*0.5);
+	var cenY = Math.floor(winHei*0.5);
 	var smm = this.getMewFromWin(win,winWid,winHei, sigmaI, sigmaD, true);
 	var i, det, tra, len = smm.length;
 	var measure = new Array(len);
@@ -685,25 +719,33 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 			measure[i] = 0;
 		}
 	}
+// var mXSta = Math.floor(winWid*0.5)-3;
+// var mXEnd = Math.floor(winWid*0.5)+3;
+// var mYSta = Math.floor(winHei*0.5)-3;
+// var mYEnd = Math.floor(winHei*0.5)+3;
+// var mXLen = mXEnd - mXSta + 1;
+// var mYLen = mYEnd - mYSta + 1;
+// var m1 = Code.subArray2D(measure,winWid,winHei, mXSta,mXEnd, mYSta,mYEnd);
+// console.log(Code.toStringArray2D(m1,mXLen,mYLen));
 	// get peaks
-	// var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei); // this doesn't work as expected
-	var peaks = ImageMat.getPeaks(measure, winWid,winHei);
+	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei); // this doesn't work as expected
+//	var peaks = ImageMat.getPeaks(measure, winWid,winHei);
 	len = peaks.length;
-console.log("PEAKS: "+len);
+//console.log("PEAKS: "+len);
 	var pX,pY, dist, minDist=null, closest = new V2D();
 	for(i=0;i<len;++i){
-		// pX = peaks[i].x*winWid - cenX; // + 0.5?
-		// pY = peaks[i].y*winHei - cenY; // + 0.5?
-		pX = peaks[i].x - cenX;
-		pY = peaks[i].y - cenY;
+		pX = peaks[i].x*winWid - cenX; // + 0.5?
+		pY = peaks[i].y*winHei - cenY; // + 0.5?
+		// pX = peaks[i].x - cenX;
+		// pY = peaks[i].y - cenY;
 		dist = Math.sqrt(pX*pX+pY*pY);
 		if(minDist===null || dist<minDist){
 			minDist = dist;
 			closest.x = pX; closest.y = pY;
 		}
 		// for show:
-		// peaks[i].x = peaks[i].x*winWid;
-		// peaks[i].y = peaks[i].y*winHei;
+		peaks[i].x = peaks[i].x*winWid;
+		peaks[i].y = peaks[i].y*winHei;
 	}
 	var image = null;
 	// image = ImageMat.showPeaks(measure,winWid,winHei, peaks);
@@ -781,7 +823,7 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){
 	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
 	var center = windowWid*cenH + cenW;
 	var scales = [], sigmas = [], values = [], images = [];
-	var startScale = 0.25*s;
+	var startScale = 0.125;//0.25*s;
 	var sigma = 1.6; // input - blur
 	var scalesPerOctave = 5; // input - divisions
 	var totalOctaves = 5; // input - count
