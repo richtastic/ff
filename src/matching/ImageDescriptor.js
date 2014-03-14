@@ -576,6 +576,7 @@ ImageDescriptor.prototype.detectPoint = function(inPoint){
 	var pointList = new Array();
 	var currentExtrema = null;
 	var sigmaI, sigmaD;
+var scaler = -0.25;
 console.log("............ detect point");
 var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o'];
 var octave = "hold off;\n";
@@ -584,6 +585,7 @@ var octave2 = "hold off;\n";
 	U.identity();
 	for(i=0;i<maxIterations;++i){
 console.log(x.x*sourceWid,x.y*sourceHei,x.z," ",sourceWid,sourceHei);
+pointList.push( new V3D(x.x,x.y,x.z) );
 if(x.x<0 || x.x>1 || x.y<0 || x.y>1){
 	console.log("POINT IS OUT OF RANGE");
 }
@@ -645,7 +647,8 @@ octave2 += "hold on;\n";
 		//console.log("=============================");
 		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
 		//console.log(u.toString());
-		u = Matrix.power(u,-0.125);
+		u = Matrix.power(u,scaler);//-0.25);
+//scaler *= 0.75;
 		// uNegSqrt
 		//console.log(uNegSqrt.toString());
 		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
@@ -728,7 +731,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 // var m1 = Code.subArray2D(measure,winWid,winHei, mXSta,mXEnd, mYSta,mYEnd);
 // console.log(Code.toStringArray2D(m1,mXLen,mYLen));
 	// get peaks
-	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei); // this doesn't work as expected
+	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei, 1.0,1.0, 1E-13); // this doesn't work as expected
 //	var peaks = ImageMat.getPeaks(measure, winWid,winHei);
 	len = peaks.length;
 //console.log("PEAKS: "+len);
@@ -823,7 +826,7 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){
 	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
 	var center = windowWid*cenH + cenW;
 	var scales = [], sigmas = [], values = [], images = [];
-	var startScale = 0.125;//0.25*s;
+	var startScale = 0.25;//0.25*s;
 	var sigma = 1.6; // input - blur
 	var scalesPerOctave = 5; // input - divisions
 	var totalOctaves = 5; // input - count

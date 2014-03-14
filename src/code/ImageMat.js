@@ -786,7 +786,7 @@ ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r){
 					result.x = (result.x+i)/wid; result.y = (result.y+j)/hei;
 					list.push(result);
 				}else{ // i hate everything
-					list.push( new V3D(i/wid, j/hei, d4) );
+					//list.push( new V3D(i/wid, j/hei, d4) );
 				}
 				//list.push( new V3D(i,j,d4) );
 			}
