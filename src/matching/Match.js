@@ -89,9 +89,9 @@ function Match(){
 // BLT.png
 	var list = [];
 	list.push("original.png");
-	//list.push("scalexy.png");
+	list.push("scalexy.png");
 	//list.push("scalex.png");
-	list.push("scalexrotateskew.png");
+	//list.push("scalexrotateskew.png");
 	var imageLoader = new ImageLoader("./images/test/", list, this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
@@ -667,11 +667,13 @@ root.matrix().scale(1.5);
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			descriptor._features.push(  new ImageFeature(0.657,0.073,1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.657,0.073,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.465,0.121,1.4,0,null) ); // big orange
+			// XY:
+			descriptor._features.push(  new ImageFeature(0.595,0.885,1.5*1.5,0,null) ); // purple
 		}
 		// descriptor.processAffineSpace();
 		// descriptor.describeFeatures();
@@ -690,7 +692,7 @@ root.matrix().scale(1.5);
 			var ret = descriptor.detectPoint( new V3D( f.x(),f.y(),f.scale() ) );
 			var points = ret.points;
 			var windows = ret.windows;
-			var rad = 15.0, effR;
+			var rad = 5.0, effR;
 			// points
 			for(k=0;k<points.length;++k){
 				var blu = Math.floor((0xFF)*(points.length-k-1)/(points.length-1)); // START
@@ -701,7 +703,7 @@ root.matrix().scale(1.5);
 				d.graphics().beginPath();
 				d.graphics().setFill(0x00FFFFFF);
 				//effR = rad*(0.5+0.5*(points.length-k) );
-				effR = rad/points[k].z;
+				effR = points[k].z*rad;
 				d.graphics().moveTo(effR,0);
 				d.graphics().arc(0,0, effR, 0,Math.PI*2.0, false);
 				d.graphics().endPath();
