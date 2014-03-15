@@ -567,6 +567,7 @@ minY = pt.y;
 
 
 ImageDescriptor.prototype.detectPoint = function(inPoint){
+inPoint.z = 1.0;
 	var i, len, sigma, val;
 	var sourceGry = this._flatGry;
 	var sourceWid = this._width;
@@ -577,11 +578,12 @@ ImageDescriptor.prototype.detectPoint = function(inPoint){
 	var U = new Matrix(2,2);
 	var u = new Matrix(2,2);
 	var uNegSqrt;
-	var transform = new Matrix(3,3);
+	var transform = new Matrix(3,3); transform.identity();
 	var transformInverse;// = new Matrix(3,3);
-	var maxIterations = 10;
+	var maxIterations = 8;
 	var winList = new Array();
 	var pointList = new Array();
+	var eigenList = new Array();
 	var currentExtrema = null;
 	var sigmaI, sigmaD;
 var scaler = -0.125;
@@ -591,13 +593,16 @@ var octave = "hold off;\n";
 var octave2 = "hold off;\n";
 	// 1. initialize U_0 to identity matrix
 	U.identity();
+var originalMinimum = null;
+var originalScale = x.z;
 	for(i=0;i<maxIterations;++i){
-//console.log(x.x*sourceWid,x.y*sourceHei,x.z," ",sourceWid,sourceHei);
+// console.log(x.x*sourceWid,x.y*sourceHei,x.z);//," ",sourceWid,sourceHei);
 pointList.push( new V3D(x.x,x.y,x.z) );
 if(x.x<0 || x.x>1 || x.y<0 || x.y>1){
 	console.log("POINT IS OUT OF RANGE");
 }
-		transform.setFromArray([U.get(0,0),U.get(0,1),0.0, U.get(1,0),U.get(1,1),0.0, 1.0,1.0,1.0]);
+//transform.identity();
+//		transform.setFromArray([U.get(0,0),U.get(0,1),0.0, U.get(1,0),U.get(1,1),0.0, 1.0,1.0,1.0]);
 		transformInverse = Matrix.inverse(transform);
 		// 2. normalize window W(x_w) = I(x) centered on U_k-1 * x_w_k-1 = x_w_k-1
 		sigma = null;
@@ -619,18 +624,14 @@ octave += octB+"\n";
 octave += "plot(scales,values,\""+taves[i]+"\");\n";
 octave += "hold on;\n";
 if(val.maxScale!==null){
-		x.z = val.maxScale;
-}else if(val.minScale!==null){
-		x.z = val.minScale;
+	x.z = val.maxScale;
 }
+sigmaI = val.maxSigma;
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
-		//console.log("correct: "+val.maxSigma)
-		sigmaI = 1.6;
-		sigmaI = this.sigmaFromScale(x.z);
 //console.log(x.z,sigmaI);
-		//console.log("guessed: "+sigma);
-		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.5,0.7,4); // 0.5,10.0,30);// 0.5,0.7,4
+		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.25,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
 		sigmaD = val.sigmaD;
+//sigmaD = 0.7*sigmaI;
 octA = "scales = [";
 octB = "ratios = [";
 for(j=0;j<val.ratios.length;++j){
@@ -645,23 +646,30 @@ octave2 += "plot(scales,ratios,\""+taves[i]+"\");\n";
 octave2 += "hold on;\n";
 		// 5. detect spatial localization x_w_k of a maximum of the Harris measure [det(u(x,sI,sD))-alpha*tra^2(u(x,sI,sD))], nearest to x_w_k-1 and compute the location of the interest point x_k
 		val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI, sigmaD);
+//if(i%2==0){
 winList.push(val.image);
+//}
 		var off = val.offset;
 		if(off==null){ // no maxima nearby ...
-			break;
-		}
+			//break;
+		}else{
 		transformInverse.multV2DtoV2D(v, off); // reverse transform to actual (zoomed) image location
 //		console.log(off.toString()+" => "+v.toString());
-		v.x /= x.z; v.y /= x.z; // scale to window size
+		v.x /= x.z; v.y /= x.z; // scale to window scale
+if(i==0||true){
 		x.x += v.x/sourceWid; x.y += v.y/sourceHei; // goto next position
+}
+}
 //		console.log(" + "+v.toString()+" == "+x.toString());
 		// 6. compute u_i_k = [u(x_w_k,sI,sD)]^(-1/2)
 		//console.log("=============================");
 		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
+var eig = Matrix.eigenValuesAndVectors(u);
 		//console.log(u.toString());
 		//u = Matrix.power(u,scaler);//-0.25);
 scaler *= 0.5;
-		u = Matrix.power(u,-0.125);
+u = Matrix.power(u,-0.25);
+//u = Matrix.inverse(u);
 		// uNegSqrt
 		//console.log(uNegSqrt.toString());
 		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
@@ -689,44 +697,72 @@ scaler *= 0.5;
 				svd.S.set(1,1, 1.0);
 			}
 			U = Matrix.fromSVD(svd.U,svd.S,svd.V);
+//continue;
 		// 8. go to step 2 if 1 - lambdaMin(u_i_k)/lambdaMax(u_i_k) >= epsilonC
-		//console.log( Matrix.SVD(U).S.toString() );
-		//console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-		//console.log(U.toString());
-		// //transform.multV2DtoV2D(currentPoint, inPoint);
-		// sigma = null;
-		// win = 
-		// //winList.push(win);
-		// // spatial localization of harris extrema
-		// val = this.pointHarrisExtrema(currentPoint.x,currentPoint.y,currentPoint.z, undefined, currentExtrema, transform);
-		// //val = this.pointSSExtrema(currentPoint.x,currentPoint.y,currentPoint.z, undefined, currentExtrema, transform);
-		// //winList.push(val.image);
-		// if( val.closestDistance!==null && (val.closestDistance<currentPoint.z*15.0) ){ // not too far away
-		// 	currentPoint.x += val.closestX;
-		// 	currentPoint.y += val.closestY;
-		// 	currentExtrema = val.closestExtrema;
-		// }
-		// // scale space extrema
-		// val = this.doesPointHaveScaleExtrema(currentPoint.x,currentPoint.y);
-		// //console.log(val.maxIndex,val.minIndex);
-		// if(val.maxIndex){//||val.minIndex){
-		// 	currentPoint.z = val.maxSigma;
-		// 	currentPoint.z;
-		// }
-		// // transform 
-		// sigma = null;
-		// win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*1.0,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
-		// //winList.push(win);
-		// eigs = this.getEigenInfoSMM(currentPoint.x,currentPoint.y,currentPoint.z, win,winWid,winHei);
-		// originalMinimum = this.getEigenAffine(eigs.valueA,eigs.valueB,eigs.vectorA,eigs.vectorB,transform, originalMinimum);
-		// win = ImageMat.extractRectFromFloatImage(currentPoint.x,currentPoint.y,currentPoint.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
-		// winList.push(win);
+var vectorY = new V2D(0,1);
+var vectorMin = new V2D(0,0);
+var vectorMax = new V2D(0,0);
+if(eig.values[0]>eig.values[1]){
+	lambdaMax = eig.values[0];
+	lambdaMin = eig.values[1];
+	vectorMin.set(eig.vectors[0].get(0,0),eig.vectors[0].get(1,0));
+	vectorMax.set(eig.vectors[1].get(0,0),eig.vectors[1].get(1,0));
+}else{
+	lambdaMax = eig.values[1];
+	lambdaMin = eig.values[0];
+	vectorMin.set(eig.vectors[1].get(0,0),eig.vectors[1].get(1,0));
+	vectorMax.set(eig.vectors[0].get(0,0),eig.vectors[0].get(1,0));
+}
+
+eigenList.push( [new V2D().copy(vectorMin),new V2D().copy(vectorMax),lambdaMin,lambdaMax] );
+
+var angleYMax = V2D.angleDirection(vectorY,vectorMax);
+var angleYMin = V2D.angleDirection(vectorY,vectorMin);
+var ang;
+var ratio2 = lambdaMax/lambdaMin;
+console.log("rati2:"+ratio2+" "+lambdaMin+" "+lambdaMax);
+//console.log("ANGLE: "+(angleYMax*180/Math.PI));
+if(originalMinimum==null){
+	originalMinimum = new V2D(vectorMax.x,vectorMax.y);
+	//originalMinimum = new V2D(vectorMin.x,vectorMin.y);
+}
+		var cum = new Matrix(3,3);
+		var rot = new Matrix(3,3);
+		var sca = new Matrix(3,3);
+		var tra = transform;
+		// non-proportional scaling
+		cum.identity();
+		ang = -angleYMax;
+		rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+		cum = Matrix.mult(cum,rot);
+		//amt = Math.pow(ratio2,0.005);
+		//amt = Math.pow(ratio,0.015);
+		//amt = Math.pow(ratio,0.005);
+		amt = 1.05;
+		//sca.setFromArray([1/amt,0,0, 0,1.0,0, 0,0,1.0]);
+		sca.setFromArray([1.0,0,0, 0,1.0/amt,0, 0,0,1.0]);
+		cum = Matrix.mult(cum,sca);
+		ang = angleYMax;
+		rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+		cum = Matrix.mult(cum,rot);
+		transform = Matrix.mult(tra,cum);
+		// recheck on scale
+// var t = new V2D();
+// 		tra.multV2DtoV2D(t,originalMinimum);
+// 		var correctScale = t.length();
+// //correctScale = originalScale*correctScale;
+// correctScale = (originalScale/x.z)*correctScale;
+// //console.log(correctScale);
+// 		correctScale = 1/correctScale;
+// 		sca.setFromArray([correctScale,0,0, 0,correctScale,0, 0,0,1]);
+// 		transform = Matrix.mult(sca,transform);
+		
 	}
 console.log("............");
 Code.copyToClipboardPrompt(octave);
 //Code.copyToClipboardPrompt(octave2);
 //winList.push(W);
-	return {windows:winList, width:winWid, height:winHei, points:pointList, affine:transform};
+	return {windows:winList, width:winWid, height:winHei, points:pointList, affine:transform, eigens:eigenList};
 }
 ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, sigmaI, sigmaD, alpha){
 	alpha = alpha!==undefined?alpha:0.05;
@@ -754,7 +790,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 // var m1 = Code.subArray2D(measure,winWid,winHei, mXSta,mXEnd, mYSta,mYEnd);
 // console.log(Code.toStringArray2D(m1,mXLen,mYLen));
 	// get peaks
-	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei, 1.0,1.0, 1E-15); // this doesn't work as expected
+	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei, 1.0,1.0, 1E-13); // this doesn't work as expected
 //	var peaks = ImageMat.getPeaks(measure, winWid,winHei);
 	len = peaks.length;
 //console.log("PEAKS: "+len);
@@ -779,7 +815,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 	image = ImageMat.addFloat(ImageMat.getNormalFloat01(measure),image);
 	//image = ImageMat.addFloat(measure,image);
 	image = ImageMat.getNormalFloat01(image);
-	image = ImageMat.addFloat(ImageMat.scaleFloat(0.5,win),image);
+	image = ImageMat.addFloat(ImageMat.scaleFloat(0.9995,win),image);
 image = ImageMat.getNormalFloat01(image);
 	if(minDist>Math.min(winWid,winHei)*0.5*0.95){
 		console.log("TOO FAR AWAY: "+minDist+" "+closest.toString());
@@ -836,7 +872,47 @@ ImageDescriptor.prototype.getMewFromWin = function(win,winWid,winHei, sigmaI, si
 	return u;
 }
 
-ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){
+ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // basic from mikolajczyk
+	var gray = this._flatGry, wid = this._width, hei = this._height;
+	var sca = 1.0;
+	var sigma;
+	var values = [], scales = [], images = [];
+	var minSigma = 1.0;
+	var maxSigma = 10.0;
+	var diffSigma = maxSigma - minSigma;
+	var divisions = 32;
+	var win, windowWid, windowHei;
+	var gaussSize, gauss1D;
+	var cenX, cenY, Lxx, Lyy, value;
+	var i;
+	for(i=0;i<divisions;++i){
+		sigma = diffSigma*((i+1)/(divisions-1));
+		gaussSize = Math.round(5 + sigma*2.0)*2+1;
+		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+		windowHei = windowWid = Math.floor(gaussSize*3);
+		win = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
+		win = ImageMat.gaussian2DFrom1DFloat(win, windowWid,windowHei, gauss1D);
+		Lxx = ImageMat.secondDerivativeX(win, windowWid,windowHei);
+		Lyy = ImageMat.secondDerivativeX(win, windowWid,windowHei);
+		cenX = Math.floor(windowWid*0.5);
+		cenY = Math.floor(windowWid*0.5);
+		center = windowWid*cenY + cenX;
+		Lxx = Lxx[center];
+		Lyy = Lyy[center];
+		value = sigma*sigma*Math.abs(Lxx + Lyy);
+		scales.push(sigma);
+		values.push(value);
+	}
+	//v = Code.locateExtrema1D(scales[maxIndex-1],values[maxIndex-1], scales[maxIndex],values[maxIndex], scales[maxIndex+1],values[maxIndex+1]);
+	value = Code.interpolateExtrema(scales,values, true);
+	value = value.max;
+	if(!value){
+		value = new V2D(0,1.6);
+	}
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:value.x, maxIndex:-1, maxScale:1.0, maxSigma:value.y};
+}
+
+ImageDescriptor.prototype.getScaleSpaceInfoOLD = function(x,y,s, transform){ // stems from SIFT
 	// assume extended about current scale-space
 	s = (s!==undefined)?s:1.0; // theres some weirdness with non-base-two offsets
 	transform = (transform!=undefined)?transform:new Matrix2D();

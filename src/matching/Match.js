@@ -89,9 +89,9 @@ function Match(){
 // BLT.png
 	var list = [];
 	list.push("original.png");
-	list.push("scalexy.png");
+	//list.push("scalexy.png");
 	//list.push("scalex.png");
-	//list.push("scalexrotateskew.png");
+	list.push("scalexrotateskew.png");
 	var imageLoader = new ImageLoader("./images/test/", list, this,this._imageCompleteFxn,this._imageProgressFxn);
 	imageLoader.load();
 }
@@ -133,9 +133,9 @@ Match.prototype.scaleImage = function(originalImage, scale){
 	imageElement.style.position = "absolute";
 	Code.addChild(document.body, imageElement );
 }
-Match.prototype.drawDot = function(pt, v1,v2, e1,e2){
+Match.prototype.drawDot = function(pt, v1,v2, e1,e2, rad){
 	var d = new DO();
-	var rad = 10.0;
+	rad = rad!==undefined?rad:10.0;
 	var ratioA = 1.0, ratioB = 1.0;
 	if(e1!==undefined && e2!==undefined){
 		if(e1>e2){
@@ -653,6 +653,7 @@ root.matrix().scale(1.5);
 		var descriptor = new ImageDescriptor(wid,hei, imageSourceRed,imageSourceGrn,imageSourceBlu,imageSourceGry, filename);
 		//descriptor.processScaleSpace();
 		if(i==0){ // original
+//descriptor._features.push(  new ImageFeature(Math.random(),Math.random(),1.0,0,null) ); // purple
 			descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow	
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
@@ -667,13 +668,13 @@ root.matrix().scale(1.5);
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			//descriptor._features.push(  new ImageFeature(0.657,0.073,1.5,0,null) ); // purple
+			descriptor._features.push(  new ImageFeature(0.65,0.074,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.465,0.121,1.4,0,null) ); // big orange
 			// XY:
-			descriptor._features.push(  new ImageFeature(0.595,0.885,1.5*1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.595,0.885,1.5*1.5,0,null) ); // purple
 		}
 		// descriptor.processAffineSpace();
 		// descriptor.describeFeatures();
@@ -692,6 +693,7 @@ root.matrix().scale(1.5);
 			var ret = descriptor.detectPoint( new V3D( f.x(),f.y(),f.scale() ) );
 			var points = ret.points;
 			var windows = ret.windows;
+			var eigens = ret.eigens;
 			var rad = 5.0, effR;
 			// points
 			for(k=0;k<points.length;++k){
@@ -716,6 +718,16 @@ root.matrix().scale(1.5);
 			for(k=0;k<windows.length;++k){
 				d = new DOImage( this._stage.getARGBAsImage(ImageMat.ARGBFromFloat(windows[k]), ret.width,ret.height) );
 				d.matrix().translate(k*ret.width,i*ret.height+hei);
+				container.addChild(d);
+			}
+			// eigens
+			for(k=0;k<eigens.length;++k){
+				var v1 = eigens[k][0];
+				var v2 = eigens[k][1];
+				var e1 = eigens[k][2];
+				var e2 = eigens[k][3];
+				d = this.drawDot(new V2D(0,0), v1,v2, e1,e2, 25.0);
+				d.matrix().translate((k+0.5)*ret.width,(i+0.5)*ret.height+hei);
 				container.addChild(d);
 			}
 		}

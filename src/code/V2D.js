@@ -37,6 +37,7 @@ function V2D(xP,yP){
 }
 V2D.prototype.copy = function(a){
 	this.x = a.x; this.y = a.y;
+	return this;
 }
 V2D.prototype.set = function(xV,yV){
 	this.x = xV; this.y = yV;
