@@ -1485,7 +1485,7 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	var gaussSize, gauss1D, padding=0, fullX=(imgWid*x), fullY=(imgHei*y);
 	var m, left, right, top, bot, center1, center2, wid, hei, img = new Array();
 	if(blurr){
-		gaussSize = Math.round(5 + sigma*2)*2+1;
+		gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 		padding = Math.floor(gaussSize/2.0);
 	}

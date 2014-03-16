@@ -706,6 +706,7 @@ descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.rand
 		root.addChild(container);
 		for(j=0;j<len2;++j){
 			var f = list[j];
+			console.log( f.x(),f.y(),f.scale() );
 			var ret = descriptor.detectPoint( new V3D( f.x(),f.y(),f.scale() ) );
 			var points = ret.points;
 			var windows = ret.windows;
