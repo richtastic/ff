@@ -580,7 +580,7 @@ inPoint.z = 1.0;
 	var uNegSqrt;
 	var transform = new Matrix(3,3); transform.identity();
 	var transformInverse;// = new Matrix(3,3);
-	var maxIterations = 14;
+	var maxIterations = 18;
 	var winList = new Array();
 	var pointList = new Array();
 	var eigenList = new Array();
@@ -591,6 +591,9 @@ console.log("............ detect point");
 var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o'];
 var octave = "hold off;\n";
 var octave2 = "hold off;\n";
+var octave3 = "hold off;\n";
+octC = "iterations = [";
+octD = "ratios = [";
 	// 1. initialize U_0 to identity matrix
 	U.identity();
 var originalMinimum = null;
@@ -598,7 +601,7 @@ var originalScale = x.z;
 sigmaI = 1.6;
 	for(i=0;i<maxIterations;++i){
 // console.log(x.x*sourceWid,x.y*sourceHei,x.z);//," ",sourceWid,sourceHei);
-console.log(x.x,x.y,x.z);//," ",sourceWid,sourceHei);
+//console.log(x.x,x.y,x.z);//," ",sourceWid,sourceHei);
 pointList.push( new V3D(x.x,x.y,x.z) );
 if(x.x<0 || x.x>1 || x.y<0 || x.y>1){
 	console.log("POINT IS OUT OF RANGE");
@@ -727,12 +730,9 @@ var angleYMax = V2D.angleDirection(vectorY,vectorMax);
 var angleYMin = V2D.angleDirection(vectorY,vectorMin);
 var ang;
 var ratio2 = lambdaMax/lambdaMin;
-console.log("rati2:"+ratio2+" "+lambdaMin+" "+lambdaMax);
-//console.log("ANGLE: "+(angleYMax*180/Math.PI));
-if(originalMinimum==null){
-	originalMinimum = new V2D(vectorMax.x,vectorMax.y);
-	//originalMinimum = new V2D(vectorMin.x,vectorMin.y);
-}
+console.log("ratio2:"+ratio2);
+octC += i+" ";
+octD += ratio2+" ";
 		var cum = new Matrix(3,3);
 		var rot = new Matrix(3,3);
 		var sca = new Matrix(3,3);
@@ -744,11 +744,16 @@ if(originalMinimum==null){
 		cum = Matrix.mult(cum,rot);
 		//amt = Math.pow(ratio2,0.005);
 		//amt = Math.pow(ratio,0.015);
-		amt = Math.pow(ratio,0.1*scaler);
-scaler *= 0.8;
+		//amt = Math.pow(ratio,0.1*scaler);
+		//amt = Math.pow(ratio2,0.1*scaler);
+		//amt = Math.pow(ratio,0.05*scaler);
+		//amt = (Math.log(Math.pow(ratio,0.5*scaler)+1)/Math.log(2));
+		amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler);
+scaler *= 0.9;
+console.log(amt);
 		//amt = 1.15;
 		//amt = 1.0;
-		console.log(amt);
+		//console.log(amt);
 		sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1.0]);
 		//sca.setFromArray([1.0,0,0, 0,1.0,0, 0,0,1.0]);
 		cum = Matrix.mult(cum,sca);
@@ -783,8 +788,15 @@ var separation = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),tr
 		
 	}
 console.log("............");
+octC += "];";
+octD += "];";
+octave3 += octC+"\n";
+octave3 += octD+"\n";
+octave3 += "plot(iterations,ratios,\""+"r--"+"\");\n";
+octave3 += "hold on;\n";
 Code.copyToClipboardPrompt(octave);
 //Code.copyToClipboardPrompt(octave2);
+//Code.copyToClipboardPrompt(octave3);
 //winList.push(W);
 	return {windows:winList, width:winWid, height:winHei, points:pointList, affine:transform, eigens:eigenList};
 }
@@ -842,7 +854,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 	image = ImageMat.addFloat(ImageMat.scaleFloat(0.9995,win),image);
 image = ImageMat.getNormalFloat01(image);
 	if(minDist>Math.min(winWid,winHei)*0.5*0.25){
-		console.log("TOO FAR AWAY: "+minDist+" "+closest.toString());
+		//console.log("TOO FAR AWAY: "+minDist+" "+closest.toString());
 		closest = null;
 	}
 	return {offset:closest, image:image};

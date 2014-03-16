@@ -721,7 +721,7 @@ descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.rand
 				d.graphics().beginPath();
 				d.graphics().setFill(0x00FFFFFF);
 				//effR = rad*(0.5+0.5*(points.length-k) );
-				effR = points[k].z*rad;
+				effR = rad/points[k].z;
 				d.graphics().moveTo(effR,0);
 				d.graphics().arc(0,0, effR, 0,Math.PI*2.0, false);
 				d.graphics().endPath();
