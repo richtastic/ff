@@ -1188,7 +1188,8 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	minY = y - minY;
 	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
 	if(isNaN(val)){
-		//console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP );
+		console.log("PT",wid,hei,x,y);
+		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP );
 		console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
 		return 0;
 	}
@@ -1219,6 +1220,7 @@ ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH)
 			for(i=0;i<wid;++i){
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
+				//console.log(fr.x,fr.y,fr.z);
 				fr.x /= fr.z; fr.y /= fr.z;
 				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
 				// if( isNaN(destination[wid*j+i]) ){

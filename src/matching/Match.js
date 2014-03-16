@@ -656,13 +656,24 @@ root.matrix().scale(1.5);
 		var descriptor = new ImageDescriptor(wid,hei, imageSourceRed,imageSourceGrn,imageSourceBlu,imageSourceGry, filename);
 		//descriptor.processScaleSpace();
 		if(i==0){ // original
-//descriptor._features.push(  new ImageFeature(Math.random(),Math.random(),1.0,0,null) ); // purple
-			descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
+/*
+0.5770567855797708 0.2688175290822983 - TOUNGE
+0.950956238200888 0.27552822907455266 - lOops
+- loOps
+0.2372146206907928 0.6518329964019358 - red dot
+0.18492452520877123 0.8221863184589893 - O
+0.7487616746220738 0.3051234376616776 - nosy
+0.8936987929046154 0.7520224319305271 - looPS corner
+0.46295735728926957 0.7622571864631027 - red-right
+*/
+descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.random()*0.8,1.0,0,null) ); // random
+			//descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow	
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
 			//descriptor._features.push(  new ImageFeature(0.50,0.54,1.2,0,null) ); // nose
 			//descriptor._features.push(  new ImageFeature(0.65,0.538,0.20,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.57,0.885,0.60,0,null) ); // big orange
+			//descriptor._features.push(  new ImageFeature(0.463,0.762,1.0,0,null) ); // red-right
 		}
 		// if(i==1){ // scalexy
 		// 	descriptor._features.push(  new ImageFeature(0.60,0.89,2.0,0,null) ); // purple
@@ -671,13 +682,15 @@ root.matrix().scale(1.5);
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
-			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose
+			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose ------ unstable
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
-			//descriptor._features.push(  new ImageFeature(0.465,0.121,1.4,0,null) ); // big orange
+			//descriptor._features.push(  new ImageFeature(0.48,0.125,1.4,0,null) ); // big orange
+			//descriptor._features.push(  new ImageFeature(0.465,0.245,1.0,0,null) ); // red-right
 			// XY:
 			//descriptor._features.push(  new ImageFeature(0.595,0.885,1.5*1.5,0,null) ); // purple
+			// 
 		}
 		// descriptor.processAffineSpace();
 		// descriptor.describeFeatures();

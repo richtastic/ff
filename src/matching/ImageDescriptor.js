@@ -586,7 +586,7 @@ inPoint.z = 1.0;
 	var eigenList = new Array();
 	var currentExtrema = null;
 	var sigmaI, sigmaD;
-var scaler = -0.125;
+var scaler = 1.0;
 console.log("............ detect point");
 var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o'];
 var octave = "hold off;\n";
@@ -595,8 +595,10 @@ var octave2 = "hold off;\n";
 	U.identity();
 var originalMinimum = null;
 var originalScale = x.z;
+sigmaI = 1.6;
 	for(i=0;i<maxIterations;++i){
 // console.log(x.x*sourceWid,x.y*sourceHei,x.z);//," ",sourceWid,sourceHei);
+console.log(x.x,x.y,x.z);//," ",sourceWid,sourceHei);
 pointList.push( new V3D(x.x,x.y,x.z) );
 if(x.x<0 || x.x>1 || x.y<0 || x.y>1){
 	console.log("POINT IS OUT OF RANGE");
@@ -626,11 +628,10 @@ octave += octA+"\n";
 octave += octB+"\n";
 octave += "plot(scales,values,\""+taves[i]+"\");\n";
 octave += "hold on;\n";
-if(val.maxScale!==null){
+if(val.maxScale!==null && val.maxScale>0.01){
 	x.z = val.maxScale;
 	sigmaI = val.maxSigma;
 }
-console.log("SCALE: "+x.z);
 //console.log(transform.toString());
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
 //console.log(x.z,sigmaI);
@@ -658,10 +659,11 @@ winList.push(val.image);
 		if(off==null){ // no maxima nearby ...
 			//break;
 		}else{
+v = new V2D(0,0);
 		transformInverse.multV2DtoV2D(v, off); // reverse transform to actual (zoomed) image location
 //		console.log(off.toString()+" => "+v.toString());
 		v.x /= x.z; v.y /= x.z; // scale to window scale
-if(i==0){ // ||true
+if(i==0||true){ // 
 		x.x += v.x/sourceWid; x.y += v.y/sourceHei; // goto next position
 }
 		}
@@ -672,7 +674,7 @@ if(i==0){ // ||true
 var eig = Matrix.eigenValuesAndVectors(u);
 		//console.log(u.toString());
 		//u = Matrix.power(u,scaler);//-0.25);
-scaler *= 0.5;
+//scaler *= 0.5;
 u = Matrix.power(u,-0.5);
 //u = Matrix.inverse(u);
 		// uNegSqrt
@@ -742,7 +744,8 @@ if(originalMinimum==null){
 		cum = Matrix.mult(cum,rot);
 		//amt = Math.pow(ratio2,0.005);
 		//amt = Math.pow(ratio,0.015);
-		amt = Math.pow(ratio,0.04);
+		amt = Math.pow(ratio,0.1*scaler);
+scaler *= 0.8;
 		//amt = 1.15;
 		//amt = 1.0;
 		console.log(amt);
@@ -755,7 +758,6 @@ if(originalMinimum==null){
 		transform = Matrix.mult(tra,cum);
 		// recheck on scale
 var separation = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1), transform.get(1,2),transform.get(1,2) );
-console.log( separation );
 if(separation.scaleX<separation.scaleY){
 	amt = 1/separation.scaleX;
 	sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1]);
@@ -768,7 +770,6 @@ amt = 1/amt;
 sca.setFromArray([amt,0,0, 0,amt,0, 0,0,1]);
 transform = Matrix.mult(sca,transform);
 var separation = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1), transform.get(1,2),transform.get(1,2) );
-console.log( separation );
 
 // var t = new V2D();
 // 		tra.multV2DtoV2D(t,originalMinimum);
@@ -840,7 +841,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 	image = ImageMat.getNormalFloat01(image);
 	image = ImageMat.addFloat(ImageMat.scaleFloat(0.9995,win),image);
 image = ImageMat.getNormalFloat01(image);
-	if(minDist>Math.min(winWid,winHei)*0.5*0.5){
+	if(minDist>Math.min(winWid,winHei)*0.5*0.25){
 		console.log("TOO FAR AWAY: "+minDist+" "+closest.toString());
 		closest = null;
 	}
@@ -903,8 +904,8 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 	var minSigma = 1.0;
 	var maxSigma = 10.0;
 	var diffSigma = maxSigma - minSigma;
-	var minScale = 0.25;
-	var maxScale = 4.0;
+	var minScale = 0.125;//0.25;
+	var maxScale = 8.0;//4.0;
 	var divisions = 20;
 	var exponent = 2;
 var minExp = Math.log(minScale)/Math.log(exponent);
