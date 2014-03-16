@@ -1145,6 +1145,16 @@ Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC, ext){ // quadric interpolat
 	return ext;
 }
 
+// wot
+Code.separateAffine2D = function(a,b,c,d, tx,ty){
+	var scaleX = Math.sqrt(a*a+b*b);
+	var scaleY = Math.sqrt(c*c+d*d);
+	var rotationA = Math.atan(c/d);
+	var rotationB = Math.atan(-b/a);
+	var rotation = (rotationA+rotationB)*0.5;
+	return {scaleX:scaleX, scaleY:scaleY, rotation:rotation, translationX:tx, translationY:ty};
+}
+
 
 // base64
 

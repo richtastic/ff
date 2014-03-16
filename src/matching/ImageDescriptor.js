@@ -580,7 +580,7 @@ inPoint.z = 1.0;
 	var uNegSqrt;
 	var transform = new Matrix(3,3); transform.identity();
 	var transformInverse;// = new Matrix(3,3);
-	var maxIterations = 8;
+	var maxIterations = 14;
 	var winList = new Array();
 	var pointList = new Array();
 	var eigenList = new Array();
@@ -631,6 +631,7 @@ if(val.maxScale!==null){
 	sigmaI = val.maxSigma;
 }
 console.log("SCALE: "+x.z);
+//console.log(transform.toString());
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
 //console.log(x.z,sigmaI);
 		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.25,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
@@ -660,10 +661,10 @@ winList.push(val.image);
 		transformInverse.multV2DtoV2D(v, off); // reverse transform to actual (zoomed) image location
 //		console.log(off.toString()+" => "+v.toString());
 		v.x /= x.z; v.y /= x.z; // scale to window scale
-if(i==0||true){
+if(i==0){ // ||true
 		x.x += v.x/sourceWid; x.y += v.y/sourceHei; // goto next position
 }
-}
+		}
 //		console.log(" + "+v.toString()+" == "+x.toString());
 		// 6. compute u_i_k = [u(x_w_k,sI,sD)]^(-1/2)
 		//console.log("=============================");
@@ -672,7 +673,7 @@ var eig = Matrix.eigenValuesAndVectors(u);
 		//console.log(u.toString());
 		//u = Matrix.power(u,scaler);//-0.25);
 scaler *= 0.5;
-u = Matrix.power(u,-0.25);
+u = Matrix.power(u,-0.5);
 //u = Matrix.inverse(u);
 		// uNegSqrt
 		//console.log(uNegSqrt.toString());
@@ -741,7 +742,7 @@ if(originalMinimum==null){
 		cum = Matrix.mult(cum,rot);
 		//amt = Math.pow(ratio2,0.005);
 		//amt = Math.pow(ratio,0.015);
-		amt = Math.pow(ratio,0.25);
+		amt = Math.pow(ratio,0.04);
 		//amt = 1.15;
 		//amt = 1.0;
 		console.log(amt);
@@ -753,6 +754,22 @@ if(originalMinimum==null){
 		cum = Matrix.mult(cum,rot);
 		transform = Matrix.mult(tra,cum);
 		// recheck on scale
+var separation = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1), transform.get(1,2),transform.get(1,2) );
+console.log( separation );
+if(separation.scaleX<separation.scaleY){
+	amt = 1/separation.scaleX;
+	sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1]);
+}else{
+	amt = 1/separation.scaleY;
+	sca.setFromArray([1.0,0,0, 0,amt,0, 0,0,1]);
+}
+amt = (separation.scaleX+separation.scaleY)*0.5;
+amt = 1/amt;
+sca.setFromArray([amt,0,0, 0,amt,0, 0,0,1]);
+transform = Matrix.mult(sca,transform);
+var separation = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1), transform.get(1,2),transform.get(1,2) );
+console.log( separation );
+
 // var t = new V2D();
 // 		tra.multV2DtoV2D(t,originalMinimum);
 // 		var correctScale = t.length();
@@ -796,7 +813,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 // var m1 = Code.subArray2D(measure,winWid,winHei, mXSta,mXEnd, mYSta,mYEnd);
 // console.log(Code.toStringArray2D(m1,mXLen,mYLen));
 	// get peaks
-	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei, 1.0,1.0, 1E-13); // this doesn't work as expected
+	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei, 1.0,1.0, 1E-10); // this doesn't work as expected
 //	var peaks = ImageMat.getPeaks(measure, winWid,winHei);
 	len = peaks.length;
 //console.log("PEAKS: "+len);
@@ -823,7 +840,7 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 	image = ImageMat.getNormalFloat01(image);
 	image = ImageMat.addFloat(ImageMat.scaleFloat(0.9995,win),image);
 image = ImageMat.getNormalFloat01(image);
-	if(minDist>Math.min(winWid,winHei)*0.5*0.95){
+	if(minDist>Math.min(winWid,winHei)*0.5*0.5){
 		console.log("TOO FAR AWAY: "+minDist+" "+closest.toString());
 		closest = null;
 	}
