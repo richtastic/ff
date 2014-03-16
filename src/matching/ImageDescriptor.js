@@ -568,7 +568,7 @@ minY = pt.y;
 
 ImageDescriptor.prototype.detectPoint = function(inPoint){
 inPoint.z = 1.0;
-	var i, len, sigma, val;
+	var i, j, len, sigma, val;
 	var sourceGry = this._flatGry;
 	var sourceWid = this._width;
 	var sourceHei = this._height;
@@ -610,6 +610,9 @@ if(x.x<0 || x.x>1 || x.y<0 || x.y>1){
 //winList.push(W);
 		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
 		val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
+for(j=0;j<val.images.length;++j){
+	winList.push(val.images[j]);
+}
 //console.log(val.maxScale);
 var octA = "values = [";
 var octB = "scales = [";
@@ -625,8 +628,9 @@ octave += "plot(scales,values,\""+taves[i]+"\");\n";
 octave += "hold on;\n";
 if(val.maxScale!==null){
 	x.z = val.maxScale;
+	sigmaI = val.maxSigma;
 }
-sigmaI = val.maxSigma;
+console.log("SCALE: "+x.z);
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
 //console.log(x.z,sigmaI);
 		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.25,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
@@ -679,7 +683,7 @@ u = Matrix.power(u,-0.25);
 		var lambdaMax = Math.max(svd.S.get(0,0),svd.S.get(1,1));
 		var lambdaMin = Math.min(svd.S.get(0,0),svd.S.get(1,1));
 		var ratio = lambdaMax/lambdaMin;
-		console.log("ratio:"+ratio+" "+lambdaMin+" "+lambdaMax);
+		//console.log("ratio:"+ratio+" "+lambdaMin+" "+lambdaMax);
 		var muliplier = Math.sqrt(ratio);
 			// svd.S.set(0,0, svd.S.get(0,0)/lambdaMax);
 			// svd.S.set(1,1, svd.S.get(1,1)/lambdaMax);
@@ -737,10 +741,12 @@ if(originalMinimum==null){
 		cum = Matrix.mult(cum,rot);
 		//amt = Math.pow(ratio2,0.005);
 		//amt = Math.pow(ratio,0.015);
-		//amt = Math.pow(ratio,0.005);
-		amt = 1.05;
-		//sca.setFromArray([1/amt,0,0, 0,1.0,0, 0,0,1.0]);
-		sca.setFromArray([1.0,0,0, 0,1.0/amt,0, 0,0,1.0]);
+		amt = Math.pow(ratio,0.25);
+		//amt = 1.15;
+		//amt = 1.0;
+		console.log(amt);
+		sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1.0]);
+		//sca.setFromArray([1.0,0,0, 0,1.0,0, 0,0,1.0]);
 		cum = Matrix.mult(cum,sca);
 		ang = angleYMax;
 		rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
@@ -880,27 +886,55 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 	var minSigma = 1.0;
 	var maxSigma = 10.0;
 	var diffSigma = maxSigma - minSigma;
-	var divisions = 32;
+	var minScale = 0.25;
+	var maxScale = 4.0;
+	var divisions = 20;
+	var exponent = 2;
+var minExp = Math.log(minScale)/Math.log(exponent);
+var maxExp = Math.log(maxScale)/Math.log(exponent);
+var diffExp = maxExp - minExp;
 	var win, windowWid, windowHei;
 	var gaussSize, gauss1D;
 	var cenX, cenY, Lxx, Lyy, value;
 	var i;
-	for(i=0;i<divisions;++i){
+	for(i=0;i<=divisions;++i){
 		sigma = diffSigma*((i+1)/(divisions-1));
+sigma = 1.6;
+sca = Math.pow(2, minExp + diffExp*(i/divisions) );
+//console.log(sca);
 		gaussSize = Math.round(5 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
-		windowHei = windowWid = Math.floor(gaussSize*3);
+		//windowHei = windowWid = Math.floor(gaussSize*2); // YES
+		//windowHei = windowWid = Math.floor(gaussSize*3); // ~YES
+		//windowHei = windowWid = Math.floor(gaussSize*4); // ~YES 
+		windowHei = windowWid = 75;
+if(windowHei%2==0){
+	windowHei++;
+	windowWid++;
+}
+//console.log(windowHei)
 		win = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
 		win = ImageMat.gaussian2DFrom1DFloat(win, windowWid,windowHei, gauss1D);
+//images.push(win);
 		Lxx = ImageMat.secondDerivativeX(win, windowWid,windowHei);
-		Lyy = ImageMat.secondDerivativeX(win, windowWid,windowHei);
+		Lyy = ImageMat.secondDerivativeY(win, windowWid,windowHei);
 		cenX = Math.floor(windowWid*0.5);
-		cenY = Math.floor(windowWid*0.5);
+		cenY = Math.floor(windowHei*0.5);
 		center = windowWid*cenY + cenX;
+if(i==0){
+for(var j=0;j<win.length;++j){
+	win[j] = sigma*sigma*Math.abs(Lxx[j] + Lyy[j]);
+}
+win = ImageMat.getNormalFloat01(win);
+win[center] = 1.0;
+//images.push(win);
+}
 		Lxx = Lxx[center];
 		Lyy = Lyy[center];
 		value = sigma*sigma*Math.abs(Lxx + Lyy);
-		scales.push(sigma);
+//		scales.push(sigma);
+//scales.push(i);
+scales.push(sca);
 		values.push(value);
 	}
 	//v = Code.locateExtrema1D(scales[maxIndex-1],values[maxIndex-1], scales[maxIndex],values[maxIndex], scales[maxIndex+1],values[maxIndex+1]);
@@ -909,7 +943,8 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 	if(!value){
 		value = new V2D(0,1.6);
 	}
-	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:value.x, maxIndex:-1, maxScale:1.0, maxSigma:value.y};
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:value.x, maxIndex:-1, maxScale:value.x, maxSigma:1.6}; // SCALE
+	//return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:value.x, maxIndex:-1, maxScale:1.0, maxSigma:value.y}; // SIGMA
 }
 
 ImageDescriptor.prototype.getScaleSpaceInfoOLD = function(x,y,s, transform){ // stems from SIFT

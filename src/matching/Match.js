@@ -146,14 +146,17 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2, rad){
 	}
 	var angle = 0;
 	if(v1!==undefined && v2!==undefined){
-		angle = V2D.angle(v1,new V2D(1,0));
+		angle = V2D.angleDirection(v2,new V2D(1,0));
 		//angle = Math.PI/2 + V2D.angle(v2,new V2D(1,0));
 		//if(Math.abs(angle)>Math.PI*0.5){
 		//if(ratioA>ratioB){
-		if(false){
-		 	angle = V2D.angle(v1,new V2D(-1,0));
+		if(e2>e1){
+			//console.log("REVERSE");
+		 	angle = Math.PI + V2D.angleDirection(v1,new V2D(-1,0));
+		}else{
+			//console.log("FORWARD");
 		}
-		console.log((angle)*180/Math.PI);
+		//console.log((angle)*180/Math.PI);
 	}
 	//main
 	d.graphics().clear();
@@ -668,7 +671,7 @@ root.matrix().scale(1.5);
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			descriptor._features.push(  new ImageFeature(0.65,0.074,1.5,0,null) ); // purple
+//			descriptor._features.push(  new ImageFeature(0.65,0.074,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
@@ -716,8 +719,11 @@ root.matrix().scale(1.5);
 			}
 			// windows
 			for(k=0;k<windows.length;++k){
-				d = new DOImage( this._stage.getARGBAsImage(ImageMat.ARGBFromFloat(windows[k]), ret.width,ret.height) );
-				d.matrix().translate(k*ret.width,i*ret.height+hei);
+				// ret.width,ret.height
+				var actualWid = Math.sqrt(windows[k].length);
+				var actualHei = actualWid;
+				d = new DOImage( this._stage.getARGBAsImage(ImageMat.ARGBFromFloat(windows[k]), actualWid, actualHei) );
+				d.matrix().translate(k*ret.width*1.0,i*ret.height+hei);
 				container.addChild(d);
 			}
 			// eigens
