@@ -302,118 +302,118 @@ ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ /
 
 
 
-// ImageDescriptor.prototype.doesPointHaveScaleExtrema = function(x,y,s){ // only care about x and y position => scale space is determined around s
-// 	s = (s!==undefined)?s:1.0;
-// 	var w, prevW, diff, i, len, scale, cen;
-// 	var gray = this._flatGry, wid = this._width, hei = this._height;
-// 	var transform = new Matrix(3,3).identity();
-// 	var windowWid = windowHei = 75;
-// 	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
-// 	var center = windowWid*cenH + cenW;
-// 	var scales = [], sigmas = [], values = [], images = [];
-// 	/*
-// 	for(i=0;i<scales.length;++i){
-// 		scale = scales[i];
-// 		w = ImageMat.extractRectFromFloatImage(x,y,scale,null, windowWid,windowHei, gray,wid,hei, transform);
-// 		if(prevW){
-// 			diff = ImageMat.subFloat(w,prevW);
-// 			cen = diff[center];
-// 			console.log(center);
-// 			console.log(cen);
-// 			values.push(cen);
-// 			diff = ImageMat.normalFloat01(diff);
-// 			images.push(diff);
-// 		}
-// 		prevW = w;
-// 	}*/
-// 	var startScale = 0.25;
-// 	var sigma = this._sigma
-// 	var scalesPerOctave = 5; // input - divisions
-// 	var totalOctaves = 5; // input - count
-// 	var kConstant = Math.pow(2.0,1.0/(scalesPerOctave-1));
-// 	var gaussSizeBase = 5, gaussSizeIncrement = 1.5, gauss1D, gaussSize;
-// 	var sig, sca, tmp, prevTmp, prevSca;
+ImageDescriptor.prototype.doesPointHaveScaleExtrema = function(x,y,s){ // only care about x and y position => scale space is determined around s
+	s = (s!==undefined)?s:1.0;
+	var w, prevW, diff, i, len, scale, cen;
+	var gray = this._flatGry, wid = this._width, hei = this._height;
+	var transform = new Matrix(3,3).identity();
+	var windowWid = windowHei = 75;
+	var cenW = Math.floor(windowWid*0.5), cenH = Math.floor(windowHei*0.5);
+	var center = windowWid*cenH + cenW;
+	var scales = [], sigmas = [], values = [], images = [];
+	/*
+	for(i=0;i<scales.length;++i){
+		scale = scales[i];
+		w = ImageMat.extractRectFromFloatImage(x,y,scale,null, windowWid,windowHei, gray,wid,hei, transform);
+		if(prevW){
+			diff = ImageMat.subFloat(w,prevW);
+			cen = diff[center];
+			console.log(center);
+			console.log(cen);
+			values.push(cen);
+			diff = ImageMat.normalFloat01(diff);
+			images.push(diff);
+		}
+		prevW = w;
+	}*/
+	var startScale = 0.25;
+	var sigma = this._sigma
+	var scalesPerOctave = 5; // input - divisions
+	var totalOctaves = 5; // input - count
+	var kConstant = Math.pow(2.0,1.0/(scalesPerOctave-1));
+	var gaussSizeBase = 5, gaussSizeIncrement = 1.5, gauss1D, gaussSize;
+	var sig, sca, tmp, prevTmp, prevSca;
 
 
-// 	for(i=0;i<totalOctaves;++i){
-// 		sca = startScale*Math.pow(2,i);
-// 		//console.log(sca+"..........");
-// 		w = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
-// 		prevTmp = null;
-// 		prevSca = null;
-// 		for(j=0;j<scalesPerOctave;++j){
-// 			sca = startScale*Math.pow(2,i)*Math.pow(kConstant,j); // current actual scale
-// 			//console.log(j,sca);
-// 			sig = sigma*Math.pow(kConstant,j);
-// 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
-// 			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
-// 			tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
-// 			if(prevTmp!=null){
-// 				cen = tmp[center]-prevTmp[center];
-// 				values.push(cen);
-// 				diff = ImageMat.subFloat(tmp,prevTmp);
-// 				diff = ImageMat.normalFloat01(diff);
-// var peaks = ImageMat.getPeaks(diff, windowWid,windowHei);
-// var d2 = ImageMat.showPeaks(diff, windowWid,windowHei, peaks);
-// d2[windowWid*cenH + cenW] += 5.0;
-// var d3 = ImageMat.addFloat(diff,d2);
-// var d4 = ImageMat.getNormalFloat01(d3);
-// images.push(d4);
-// 				//images.push(diff);
-// 				scales.push( (sca+prevSca)*0.5 );
-// 				sigmas.push( sigma*Math.pow(kConstant,j-0.5) );
-// 			}
-// 			prevSca = sca;
-// 			prevTmp = tmp;
-// 		}
-// 	}
-// 	var max=values[0], min=values[0];//var max = Math.max.apply(this,values), min = Math.min.apply(this,values);
-// 	var maxIndex=0; minIndex=0, maxScale=scales[0], minScale=scales[0];
-// 	var maxSigma=sigmas[0];
-// 	// want: global maxima that:
-// 	// has only a [single - tricky with noise...] peak, that is NOT the ends
-// 	// OR ditto minima
-// 	// can look at relative intensities for peak: walk the value left/rigth until there is another peak and record the difference in VALUE or in POINTS 
-// 	// can exclude start/end points of first loop - that seems to tbe where the most noise is
-// 	// diffs: 0.00015, 0.002, 0.003, 
-// 	for(i=1;i<values.length;++i){
-// 		if(values[i]>max){
-// 			max = values[i];
-// 			maxIndex = i;
-// 			maxScale = scales[i];
-// 			maxSigma = sigmas[i];
-// 		}
-// 		if(values[i]<min){
-// 			min = values[i];
-// 			minIndex = i;
-// 			minScale = scales[i];
-// 		}
-// 	}
-// var octA = "values = [";
-// var octB = "scales = [";
-// for(i=0;i<values.length;++i){
-// 	octA += values[i]+" ";
-// 	octB += scales[i]+" ";
-// }
-// octA += "];";
-// octB += "];";
-// 	// ignore end extrema
-// 	if(max==values[0] || max==values[values.length-1]){ max=null; maxIndex=null; maxScale=null; }
-// 	if(min==values[0] || min==values[values.length-1]){ min=null; minIndex=null; minScale=null; }
-// 	// interpolation of extrema
-// 	var v;
-// 	if(maxIndex){
-// 		v = Code.locateExtrema1D(scales[maxIndex-1],values[maxIndex-1], scales[maxIndex],values[maxIndex], scales[maxIndex+1],values[maxIndex+1]);
-// 		maxScale = v.x;
-// 	}else if(minIndex){
-// 		v = Code.locateExtrema1D(scales[minIndex-1],values[minIndex-1], scales[minIndex],values[minIndex], scales[minIndex+1],values[minIndex+1]);
-// 		minScale = v.x;
-// 	}
-// 	// console.log(max);
-// 	// console.log(min);
-// 	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale,
-// 		octave:(octA+"\n"+octB)};
-// }
+	for(i=0;i<totalOctaves;++i){
+		sca = startScale*Math.pow(2,i);
+		//console.log(sca+"..........");
+		w = ImageMat.extractRectFromFloatImage(x,y,sca,null, windowWid,windowHei, gray,wid,hei, transform);
+		prevTmp = null;
+		prevSca = null;
+		for(j=0;j<scalesPerOctave;++j){
+			sca = startScale*Math.pow(2,i)*Math.pow(kConstant,j); // current actual scale
+			//console.log(j,sca);
+			sig = sigma*Math.pow(kConstant,j);
+			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
+			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+			tmp = ImageMat.gaussian2DFrom1DFloat(w, windowWid,windowHei, gauss1D);
+			if(prevTmp!=null){
+				cen = tmp[center]-prevTmp[center];
+				values.push(cen);
+				diff = ImageMat.subFloat(tmp,prevTmp);
+				diff = ImageMat.normalFloat01(diff);
+var peaks = ImageMat.getPeaks(diff, windowWid,windowHei);
+var d2 = ImageMat.showPeaks(diff, windowWid,windowHei, peaks);
+d2[windowWid*cenH + cenW] += 5.0;
+var d3 = ImageMat.addFloat(diff,d2);
+var d4 = ImageMat.getNormalFloat01(d3);
+images.push(d4);
+				//images.push(diff);
+				scales.push( (sca+prevSca)*0.5 );
+				sigmas.push( sigma*Math.pow(kConstant,j-0.5) );
+			}
+			prevSca = sca;
+			prevTmp = tmp;
+		}
+	}
+	var max=values[0], min=values[0];//var max = Math.max.apply(this,values), min = Math.min.apply(this,values);
+	var maxIndex=0; minIndex=0, maxScale=scales[0], minScale=scales[0];
+	var maxSigma=sigmas[0];
+	// want: global maxima that:
+	// has only a [single - tricky with noise...] peak, that is NOT the ends
+	// OR ditto minima
+	// can look at relative intensities for peak: walk the value left/rigth until there is another peak and record the difference in VALUE or in POINTS 
+	// can exclude start/end points of first loop - that seems to tbe where the most noise is
+	// diffs: 0.00015, 0.002, 0.003, 
+	for(i=1;i<values.length;++i){
+		if(values[i]>max){
+			max = values[i];
+			maxIndex = i;
+			maxScale = scales[i];
+			maxSigma = sigmas[i];
+		}
+		if(values[i]<min){
+			min = values[i];
+			minIndex = i;
+			minScale = scales[i];
+		}
+	}
+var octA = "values = [";
+var octB = "scales = [";
+for(i=0;i<values.length;++i){
+	octA += values[i]+" ";
+	octB += scales[i]+" ";
+}
+octA += "];";
+octB += "];";
+	// ignore end extrema
+	if(max==values[0] || max==values[values.length-1]){ max=null; maxIndex=null; maxScale=null; }
+	if(min==values[0] || min==values[values.length-1]){ min=null; minIndex=null; minScale=null; }
+	// interpolation of extrema
+	var v;
+	if(maxIndex){
+		v = Code.locateExtrema1D(scales[maxIndex-1],values[maxIndex-1], scales[maxIndex],values[maxIndex], scales[maxIndex+1],values[maxIndex+1]);
+		maxScale = v.x;
+	}else if(minIndex){
+		v = Code.locateExtrema1D(scales[minIndex-1],values[minIndex-1], scales[minIndex],values[minIndex], scales[minIndex+1],values[minIndex+1]);
+		minScale = v.x;
+	}
+	// console.log(max);
+	// console.log(min);
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, max:max, maxIndex:maxIndex, maxScale:maxScale, maxSigma:maxSigma, min:min, minIndex:minIndex, minScale:minScale,
+		octave:(octA+"\n"+octB)};
+}
 
 
 ImageDescriptor.prototype.pointHarrisExtrema = function(x,y,s,sig, extrema, transform){/// THIS USES OLD FUNCTONS - WANT TO REMOVE
@@ -594,7 +594,7 @@ if(scaTot>8){
 		var off = val.offset;
 		var didMove = val.delta;
 		console.log(ratio, off.toString());
-//off.set(0,0);
+off.set(0,0);
 		if(ratio<1.1){
 			transformInverse = Matrix.inverse(transform);
 			//off.x /= x.z; off.y /= x.z; // scale to window scale
@@ -832,11 +832,25 @@ ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform
 //o = new V2D();
 	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
+/*
+@ sca=0.25: 
+@ sca=0.5:  is basically blurred
+@ sca=1.0:  base image no blurring
+@ sca=2.0: 
+@ sca=4.0: is sub-sapled
+
+
+WHAT DOES SIFT scale space translate to ?
+	- small single point
+	- 
+
+*/
 ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // basic from mikolajczyk
 	transform = transform!==undefined?transform:null;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
-	var values = [], scales = [], images = [];
-	var minScale = 0.03125, maxScale = 2.0, exponent = 2.0; // 0.25, 4.0 | 0.03125 0.0625
+	var values = [], scales = [], sigmas = [], images = [];
+	var minScale = 0.25, maxScale = 4.0, exponent = 2.0; // 0.25, 4.0 | 0.03125 0.0625 0.125 0.25 0.5 1.0 2.0 4.0 8.0
+	var sigmaBase = 1.0;
 	var divisions = 24; // 16-32
 	var minExp = Math.log(minScale)/Math.log(exponent);
 	var maxExp = Math.log(maxScale)/Math.log(exponent);
@@ -848,9 +862,11 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 	var cenX, cenY, Lxx, Lyy, value;
 	var i;
 	for(i=0;i<=divisions;++i){
-		sca = Math.pow(2, minExp + diffExp*(i/divisions) );
-		windowHei = windowWid = Math.floor(gaussSize*2); // 2-3
-		if(windowHei%2==0){ windowHei++; windowWid++; } // odd sized
+		sca = 1.0; // Math.pow(2, minExp + diffExp*(i/divisions) );
+		sigma = sigmaBase*Math.pow(2, minExp + diffExp*(i/divisions) );// * ();
+		gaussSize = Math.round(5 + sigma*2.0)*2+1;
+		windowHei = windowWid = Math.floor(gaussSize*2) + 1;
+console.log(gaussSize,sigma);
 		win = ImageMat.extractRectFromFloatImage(x,y,sca,sigma, windowWid,windowHei, gray,wid,hei, transform);
 		//win = ImageMat.gaussian2DFrom1DFloat(win, windowWid,windowHei, gauss1D);
 		cenX = Math.floor(windowWid*0.5);
@@ -873,13 +889,22 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 		Lyy = Lyy[4]; // Lyy = Lyy[center];
 		value = sigmaSquare*Math.abs(Lxx + Lyy);
 		scales.push(sca);
+		sigmas.push(sigma);
 		values.push(value);
 	}
-	value = Code.interpolateExtrema(scales,values, true);
+	// SCALE
+	// value = Code.interpolateExtrema(scales,values, true);
+	// value = value.max;
+	// var hasMax = value!=null;
+	// if(!value){
+	// 	value = new V2D(maxScale,0);
+	// }
+	// SIGMA
+	value = Code.interpolateExtrema(sigmas,values, true);
 	value = value.max;
 	var hasMax = value!=null;
 	if(!value){
-		value = new V2D(maxScale,0);
+		value = new V2D(sigmaBase,0);
 	}
 	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, maxScale:value.x, maxSigma:sigma, max:value.y, hasMax:hasMax};
 }
