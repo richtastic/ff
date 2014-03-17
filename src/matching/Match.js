@@ -666,8 +666,8 @@ root.matrix().scale(1.5);
 0.8936987929046154 0.7520224319305271 - looPS corner
 0.46295735728926957 0.7622571864631027 - red-right
 */
-descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.random()*0.8,1.0,0,null) ); // random
-			//descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
+//descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.random()*0.8,1.0,0,null) ); // random
+			descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow	
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
 			//descriptor._features.push(  new ImageFeature(0.50,0.54,1.2,0,null) ); // nose
@@ -682,7 +682,7 @@ descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.rand
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			//descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
+			descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose ------ unstable
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
@@ -872,7 +872,8 @@ Match.prototype._imageCompleteFxn = function(o){
 
 var testing = true;
 if(testing){
-	this.testA();
+	//this.testA();
+	this.filters();
 	return
 }
 
@@ -1902,7 +1903,6 @@ Match.prototype.filters = function(){
 	var images = this._imageList;
 	var files = this._fileList;
 	var root = this._root;
-
 	//
 	var img = images[0];
 	var params = this.getDescriptorParameters( img );
@@ -1974,6 +1974,51 @@ Match.prototype.filters = function(){
 		//smm[i] = (isNaN(smm[i])||smm[i]===undefined)?0.0:smm;
 		//val.values[1]/val.values[0];
 	}
+	// scaleSpace @ 1.0 scaling
+	console.log("...");
+	var sigma = 1.6;
+	var sigmaSquare = sigma*sigma;
+	var scale = 1.0;
+	var newWid = Math.floor(scale*wid);
+	var newHei = Math.floor(scale*hei);
+	var ssSrc = ImageMat.extractRect(imageSourceGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, newWid,newHei, wid,hei);
+
+	var descriptor = new ImageDescriptor(newWid,newHei, ssSrc,ssSrc,ssSrc, "unknown");
+	var val;
+	var transform = new Matrix(3,3).identity();
+Code.timerStart();
+	var ssOne = new Array();
+	for(j=0;j<newHei;++j){
+		for(i=0;i<newWid;++i){
+			val = descriptor.getScaleSpaceInfo(i*1.0/newWid,j*1.0/newHei,1.0, transform);
+			ssOne[newWid*j + i] = val.maxScale;//val.max;
+			//ssOne[newWid*j + i] = val.max;
+		}
+		console.log((j+1)*1.0/newHei, Code.timerQuickDifferenceSeconds());
+	}
+Code.timerStop();
+console.log( Code.timerDifferenceSeconds() );
+	//var sca = 1.0; var ssSrc = ImageMat.extractRect(imageSourceGry, 0,0, (wid/sca)-1,0, (wid/sca)-1,(hei/sca)-1, 0,(hei/sca)-1, newWid,newHei, wid,hei);
+	//var sca = 2.0; var ssSrc = ImageMat.extractRect(imageSourceGry, Math.floor(wid*0.25),Math.floor(hei*0.5), Math.floor(wid*0.75),Math.floor(hei*0.5), Math.floor(wid*0.75),Math.floor(hei*1.0), Math.floor(wid*0.25),Math.floor(hei*1.0), newWid,newHei, wid,hei);
+	// var sca = 4.0; var ssSrc = ImageMat.extractRect(imageSourceGry, Math.floor(wid*0.375),Math.floor(hei*0.625), Math.floor(wid*0.625),Math.floor(hei*0.625), Math.floor(wid*0.625),Math.floor(hei*1.0), Math.floor(wid*0.375),Math.floor(hei*1.0), newWid,newHei, wid,hei);
+	// var gauss1D = ImageMat.getGaussianWindow(11,1, sigma);
+	// var ssSrc = ImageMat.gaussian2DFrom1DFloat(ssSrc, newWid,newHei, gauss1D);
+	// var ssG2X = ImageMat.secondDerivativeX(ssSrc, newWid,newHei);
+	// var ssG2Y = ImageMat.secondDerivativeY(ssSrc, newWid,newHei);
+	// len = ssG2X.length;
+	// ssOne = new Array(len);
+	// for(i=0;i<len;++i){
+	// 	ssOne[i] = sigmaSquare*Math.abs(ssG2X[i]+ssG2Y[i]);
+	// 	var locX = i%newWid;
+	// 	var locY = Math.floor(i/newWid);
+	// 	if(locX<6||locX>(newWid-6)||locY<6||locY>(newHei-6)){
+	// 		ssOne[i] = 0.0;
+	// 	}
+	// }
+	// // INVERT:
+	// ssOne = ImageMat.normalFloat01(ssOne);
+	// ssOne = ImageMat.scaleFloat(-1.0,ssOne);
+	ssOne = ImageMat.normalFloat01(ssOne);
 	// 
 	gradX = ImageMat.normalFloat01(gradX);
 	gradY = ImageMat.normalFloat01(gradY);
@@ -1986,6 +2031,7 @@ Match.prototype.filters = function(){
 	sharp = ImageMat.normalFloat01(sharp);
 	log = ImageMat.normalFloat01(log);
 	smm = ImageMat.normalFloat01(smm);
+	ssOne = ImageMat.normalFloat01(ssOne);
 	//this.addFloatImageHTML(imageSourceGry, wid,hei);
 	//this.addFloatImageHTML(gradX, wid,hei);
 	//this.addFloatImageHTML(gradY, wid,hei);
@@ -1998,6 +2044,7 @@ Match.prototype.filters = function(){
 	//this.addFloatImageHTML(sharp, wid,hei);
 	//this.addFloatImageHTML(log, wid,hei);
 	//this.addFloatImageHTML(smm, wid,hei);
+	this.addFloatImageHTML(ssOne, newWid,newHei);
 	//d = new DOImage(src);
 	//root.addChild(d);
 }

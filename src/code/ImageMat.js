@@ -766,7 +766,8 @@ ImageMat.printBadData = function(data, wid,hei){
 	}
 }
 
-ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r){
+ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r, maxOnly){
+	maxOnly = maxOnly!==undefined?(!maxOnly):true;
 	delX = delX!==undefined?delX:1.0;
 	delY = delY!==undefined?delY:1.0;
 	var list = new Array();
@@ -780,7 +781,7 @@ ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r){
 			i0 = i-1; i1 = i; i2 = i+1;
 			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
 			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
-			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
+			||  (maxOnly&&(d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4)) ){ // minima
 				result = ImageMat.extrema2DFloatInterpolate(new V3D(), delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r);
 				if(result){ // able to calculate
 					result.x = (result.x+i)/wid; result.y = (result.y+j)/hei;
@@ -788,7 +789,6 @@ ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r){
 				}else{ // i hate everything
 					//list.push( new V3D(i/wid, j/hei, d4) );
 				}
-				//list.push( new V3D(i,j,d4) );
 			}
 		}
 	}

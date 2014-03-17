@@ -301,6 +301,10 @@ Code.timerStart = function(){
 Code.timerStop = function(){
 	Code._timerDateB = Code.getTimeMilliseconds();
 }
+Code.timerQuickDifferenceSeconds = function(){
+	var b = Code.getTimeMilliseconds();
+	return (b - Code._timerDateA)/1000.0;
+}
 Code.timerDifference = function(){
 	return Code._timerDateB - Code._timerDateA;
 }
@@ -1155,6 +1159,10 @@ Code.separateAffine2D = function(a,b,c,d, tx,ty){
 	return {scaleX:scaleX, scaleY:scaleY, rotation:rotation, translationX:tx, translationY:ty};
 }
 
+
+Code.distancePoints2D = function(ax,ay, bx,by){
+	return Math.sqrt(Math.pow(ax-bx,2) + Math.pow(ay-by,2));
+}
 
 // base64
 
