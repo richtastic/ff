@@ -165,6 +165,8 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2, rad){
 	d.graphics().setFill(0x33FF0000);
 	d.graphics().moveTo(rad,0);
 	//d.graphics().arc(0,0, rad*Math.max(ratioA,ratioB), 0,Math.PI*2, false);
+	ratioA = Math.min(Math.abs(ratioA),10);
+	ratioB = Math.min(Math.abs(ratioB),10);
 	d.graphics().drawEllipse(0,0, rad*2*ratioA,rad*2*ratioB, angle);
 	d.graphics().endPath();
 	d.graphics().fill();
@@ -667,13 +669,30 @@ root.matrix().scale(1.5);
 0.46295735728926957 0.7622571864631027 - red-right
 */
 //descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.random()*0.8,1.0,0,null) ); // random
-			descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow	
 			//descriptor._features.push(  new ImageFeature(0.330,0.875,1.2,0,null) ); // milky
 			//descriptor._features.push(  new ImageFeature(0.50,0.54,1.2,0,null) ); // nose
 			//descriptor._features.push(  new ImageFeature(0.65,0.538,0.20,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.57,0.885,0.60,0,null) ); // big orange
 			//descriptor._features.push(  new ImageFeature(0.463,0.762,1.0,0,null) ); // red-right
+			descriptor._features.push(  new ImageFeature(0.79,0.94,1.0, 0,null) ); //
+			//descriptor._features.push(  new ImageFeature(0.38,0.70,1.0, 0,null) ); //ss-purple-green
+			//descriptor._features.push(  new ImageFeature(0.26,0.555,1.0, 0,null) ); //ss-yellow
+			//descriptor._features.push(  new ImageFeature(0.46,0.85,1.0, 0,null) ); //ss-blue-dot
+// descriptor._features.push(  new ImageFeature(, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.698614107706785 - 0.0,0.22024469633081295,1.2308463075382536, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.13988446394875864,0.9826467269202003,1.2334442591633725, 0,null) ); // unstable
+//descriptor._features.push(  new ImageFeature(0.786469088791974,0.9729863982323277,1.1145807408953505, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.5483375933581802,0.289180176915191,1.285176190288322, 0,null) ); // huge warp
+//descriptor._features.push(  new ImageFeature(0.8309661319692764,0.4922512001961615,1.2103175881407138, 0,null) ); 
+//descriptor._features.push(  new ImageFeature(0.9807982688350545,0.6764733933804175,2.720872906394579, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.4620506522782965,0.12630109420727706,13.810006344812784, 0,null) ); // zoomed too far out
+//descriptor._features.push(  new ImageFeature(0.9424575726833312,0.03976487234949018,1.6604275649175595, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.9355483285177654,0.02465363081294266,1.5584287925259843, 0,null) ); // huge warp
+//descriptor._features.push(  new ImageFeature(0.8694241484516644,0.1373139938548761,1.682136042406485, 0,null) ); // unstable
+/*
+*/
 		}
 		// if(i==1){ // scalexy
 		// 	descriptor._features.push(  new ImageFeature(0.60,0.89,2.0,0,null) ); // purple
@@ -682,12 +701,15 @@ root.matrix().scale(1.5);
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.465,0.45,1.3,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose ------ unstable
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.48,0.125,1.4,0,null) ); // big orange
 			//descriptor._features.push(  new ImageFeature(0.465,0.245,1.0,0,null) ); // red-right
+			//descriptor._features.push(  new ImageFeature(0.49,0.30,1.0, 0,null) ); //ss-purple-green
+			//descriptor._features.push(  new ImageFeature(0.46,0.44,1.0, 0,null) ); //ss-yellow
+			//descriptor._features.push(  new ImageFeature(0.535,0.15,1.0, 0,null) ); //ss-blue-dot
 			// XY:
 			//descriptor._features.push(  new ImageFeature(0.595,0.885,1.5*1.5,0,null) ); // purple
 			// 
@@ -722,7 +744,7 @@ root.matrix().scale(1.5);
 				d.graphics().beginPath();
 				d.graphics().setFill(0x00FFFFFF);
 				//effR = rad*(0.5+0.5*(points.length-k) );
-				effR = rad/points[k].z;
+				effR = Math.min(Math.abs(rad/(points[k].z)),200);
 				d.graphics().moveTo(effR,0);
 				d.graphics().arc(0,0, effR, 0,Math.PI*2.0, false);
 				d.graphics().endPath();
@@ -872,13 +894,13 @@ Match.prototype._imageCompleteFxn = function(o){
 
 var testing = true;
 if(testing){
-	//this.testA();
-	this.filters();
+	this.testA();
+	//this.filters();
 	return
 }
 
 
-var comparing = true;
+var comparing = false;//true;
 if(comparing){
 	var fileLoader = new FileLoader();
 	fileLoader.setLoadList("./descriptors/",["BLT.yaml","BLB.yaml"], this, this._onYAMLCompleteFxn);
@@ -894,31 +916,30 @@ if(comparing){
 	var imageSourceBlu = params.blu;
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 
-var descriptor = new ImageDescriptor( params[0],params[1], params[2],params[3],params[4], imageFileName );
+var descriptor = new ImageDescriptor( params.width,params.height, params.red,params.grn,params.blu, imageFileName );
 	descriptor.processScaleSpace();
-	descriptor.processAffineSpace();
-	descriptor.describeFeatures();
+	//descriptor.processAffineSpace();
+	//descriptor.describeFeatures();
 
-var yaml = new YAML();
-var DATA = Match.YAML;
-
-yaml.startWrite();
-yaml.writeComment("Match: "+imageFileName);
-yaml.writeObjectStart("descriptor");
-	descriptor.saveToYAML(yaml);
-yaml.writeObjectEnd();
-var str = yaml.toString();
-var obj = yaml.parse(str);
-var descriptor = new ImageDescriptor();
-descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
-
+// SAVE TO YAML FILE
+// var yaml = new YAML();
+// var DATA = Match.YAML;
+// yaml.startWrite();
+// yaml.writeComment("Match: "+imageFileName);
+// yaml.writeObjectStart("descriptor");
+// 	descriptor.saveToYAML(yaml);
+// yaml.writeObjectEnd();
+// var str = yaml.toString();
+// var obj = yaml.parse(str);
+// var descriptor = new ImageDescriptor();
+// descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
 //Code.copyToClipboardPrompt(str);
 
 
 /*
 * comparing features across multiple image-descriptors
 */
-return;
+
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
 	
@@ -976,7 +997,9 @@ var scaleSpace = descriptor.getScaleSpaceExtrema();
 //ptList.push( scaleSpace[7] ); // white corner
 
 //ptList.push( scaleSpace[9] );
-for(i=0;i<10;++i){
+len = scaleSpace.length;
+//len = 100;
+for(i=0;i<len;++i){
 	ptList.push( scaleSpace[i] );
 }
 
@@ -988,30 +1011,22 @@ for(i=0;i<10;++i){
 
 for(i=0;i<ptList.length;++i){
 	var pt = ptList[i];
-var object = descriptor.getStableAffinePoint(pt);
-if(!object){ // unstable
-	console.log("UNSTABLE");
-	continue;
-}
-var affine = object.matrix;
-var newPoint = object.point;
-var windowPic = object.window;
-var windowHei = object.windowHeight;
-var windowWid = object.windowWidth;
-// console.log(object);
-// console.log(affine);
-// console.log(newPoint);
-
-this.qweasd = 300;
-this.addFloatPic(windowPic,windowWid,windowHei);
-for(var xx=0;xx<object.list.length;++xx){
-	this.addFloatPic(object.list[xx],windowWid,windowHei);
-}
-this.qweasdY += windowHei;
+	// var object = descriptor.getStableAffinePoint(pt);
+// var affine = object.matrix;
+// var newPoint = object.point;
+// var windowPic = object.window;
+// var windowHei = object.windowHeight;
+// var windowWid = object.windowWidth;
+// this.qweasd = 300;
+// this.addFloatPic(windowPic,windowWid,windowHei);
+// for(var xx=0;xx<object.list.length;++xx){
+// 	this.addFloatPic(object.list[xx],windowWid,windowHei);
+// }
+// this.qweasdY += windowHei;
 
 // //
-pt = new V4D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z,wid,ptList[i].t);
-
+pt = new V3D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z);
+console.log(pt.x/params.width,pt.y/params.height,pt.z);
 
 var d = new DO();
 var rad;
@@ -1052,9 +1067,9 @@ d.graphics().arc(0,0, rad, 0,Math.PI*2, false);
 d.graphics().endPath();
 d.graphics().fill();
 d.graphics().strokeLine();
-var aInv = Matrix.inverse(affine);
-var m2D = Matrix2D.matrix2DfromMatrix(aInv);
-d.matrix().copy(m2D);
+// var aInv = Matrix.inverse(affine);
+// var m2D = Matrix2D.matrix2DfromMatrix(aInv);
+// d.matrix().copy(m2D);
 d.matrix().translate(pt.x,pt.y);
 root.addChild(d);
 
@@ -1978,7 +1993,7 @@ Match.prototype.filters = function(){
 	console.log("...");
 	var sigma = 1.6;
 	var sigmaSquare = sigma*sigma;
-	var scale = 1.0;
+	var scale = 0.125;
 	var newWid = Math.floor(scale*wid);
 	var newHei = Math.floor(scale*hei);
 	var ssSrc = ImageMat.extractRect(imageSourceGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, newWid,newHei, wid,hei);
