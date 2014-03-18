@@ -16,7 +16,7 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	this._flatGrn = (origG!==undefined)?origG:null;
 	this._flatBlu = (origB!==undefined)?origB:null;
 	this._flatGry = new Array();
-	this._sigma = 3.0;
+	this._sigma = 1.6;
 	for(i=0;i<len;++i){
 		this._flatGry[i] = (this._flatRed[i]+this._flatGrn[i]+this._flatBlu[i])/3.0;
 	}
@@ -493,10 +493,10 @@ inPoint.z = 1.0;
 	var sourceWid = this._width;
 	var sourceHei = this._height;
 	var v = new V2D(), x = new V3D(); x.copy(inPoint);
-	var winWid = winHei = 75;
+	var winWid = winHei = 101;
 	var u = new Matrix(2,2);
 	var transformInverse, transform = new Matrix(3,3); transform.identity();
-	var maxIterations = 18;
+	var maxIterations = 20;
 	var winList = new Array(), pointList = new Array(), eigenList = new Array();
 	var sigmaI = this._sigma, sigmaD = this._sigma*0.7;
 	var decay = 1.0, decayRate = 1.0;//0.95;
@@ -517,7 +517,7 @@ pointList.push( new V3D(x.x,x.y,x.z) );
 		// 2. normalize window W(x_w) = I(x) centered on U_k-1 * x_w_k-1 = x_w_k-1
 		sigma = null;
 		W = ImageMat.extractRectFromFloatImage(x.x,x.y,x.z,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
-		winList.push(W);
+		winList.push( ImageMat.extractRectFromFloatImage(x.x,x.y,x.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform) );
 //winList.push(W);
 		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
 		val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
@@ -535,17 +535,19 @@ octA += "];";
 octB += "];";
 octave += octA+"\n";
 octave += octB+"\n";
-octave += "plot(scales,values,\""+taves[i]+"\");\n";
+octave += "semilogx(scales,values,\""+taves[i]+"\");\n";
 octave += "hold on;\n";
 if(val.hasMax){
 //totalScale *= (x.z/val.maxScale);
-	x.z = val.maxScale;
-	sigmaI = val.maxSigma;
+	//x.z = val.maxScale;
+	//sigmaI = val.maxSigma;
+	x.z += (val.maxScale-x.z)*0.75;
+	sigmaI += (val.maxSigma-sigma)*0.75;
 }
 //console.log(transform.toString());
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
 //console.log(x.z,sigmaI);
-		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.25,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
+		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.05,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
 		sigmaD = val.sigmaD;
 //sigmaD = 0.7*sigmaI;
 octA = "scales = [";
@@ -558,7 +560,7 @@ octA += "];";
 octB += "];";
 octave2 += octA+"\n";
 octave2 += octB+"\n";
-octave2 += "plot(scales,ratios,\""+taves[i]+"\");\n";
+octave2 += "semilogx(scales,ratios,\""+taves[i]+"\");\n";
 octave2 += "hold on;\n";
 		// 5. detect spatial localization x_w_k of a maximum of the Harris measure [det(u(x,sI,sD))-alpha*tra^2(u(x,sI,sD))], nearest to x_w_k-1 and compute the location of the interest point x_k
 // 		val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI, sigmaD);
@@ -591,11 +593,12 @@ if(scaTot>8){
 
 // 5. (spatial localization: immediate neighbor with higher ss-extrema value)
 		val = this.getClosestScaleSpaceMaxima(x.x,x.y,x.s,transform);//W,winWid,winHei, sigmaI,sigmaD);
+		//val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI,sigmaD);
 		var off = val.offset;
 		var didMove = val.delta;
 		console.log(ratio, off.toString());
-off.set(0,0);
-		if(ratio<1.1){
+//off.set(0,0);
+		if(ratio<2.1){
 			transformInverse = Matrix.inverse(transform);
 			//off.x /= x.z; off.y /= x.z; // scale to window scale
 			off.x *= x.z; off.y *= x.z; // scale to window scale
@@ -615,7 +618,7 @@ off.set(0,0);
 octC += i+" ";
 octD += ratio+" ";
 		// 8. go to step 2 if 1 - lambdaMin(u_i_k)/lambdaMax(u_i_k) >= epsilonC
-		if( (ratio-1.0)<=1E-3 ){ // converged
+		if( (ratio-1.0)<=1E-4 ){ // converged
 			console.log("converged");
 			break;
 		}
@@ -645,59 +648,56 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 	var smm = this.getMewFromWin(win,winWid,winHei, sigmaI, sigmaD, true);
 	var i, det, tra, len = smm.length;
 	var measure = new Array(len);
-	// for(i=0;i<len;++i){ // edges are trash
-	// 	tra = smm[i][0] + smm[i][3];
-	// 	det = smm[i][0]*smm[i][3] - smm[i][1]*smm[i][2];
-	// 	measure[i] = (det - alpha*tra*tra);
-	// 	var locX = i%winWid;
-	// 	var locY = Math.floor(i/winWid);
-	// 	if(locX<10||locX>(winWid-10)||locY<10||locY>(winHei-10)){
-	// 		measure[i] = 0;
-	// 	}
-	// }
-	// scale-space extrema @ scale
-	var gauss1D, sigmaSquare = sigmaI*sigmaI;
-	gauss1D = ImageMat.gaussianWindow1DFromSigma(sigmaI);
-	var blurredI = ImageMat.gaussian2DFrom1DFloat(win,winWid,winHei, gauss1D);
-	Lxx = ImageMat.secondDerivativeX(win, winWid,winHei);
-	Lyy = ImageMat.secondDerivativeY(win, winWid,winHei);
 	for(i=0;i<len;++i){ // edges are trash
-		measure[i] = sigmaSquare*Math.abs(Lxx[i] + Lyy[i]);
-		var locX = i%winWid;
-		var locY = Math.floor(i/winWid);
-		if(locX<3||locX>(winWid-3)||locY<3||locY>(winHei-3)){
-			measure[i] = 0;
-		}
+		tra = smm[i][0] + smm[i][3];
+		det = smm[i][0]*smm[i][3] - smm[i][1]*smm[i][2];
+		measure[i] = Math.abs(det - alpha*tra*tra);
 	}
-	// get peaks
-	var peaks = ImageMat.findExtrema2DFloat(measure, winWid,winHei, 1.0,1.0, 1E0, true);
-	len = peaks.length;
-	console.log("PEAKS: "+len);
-	var maximumDistance = Math.min(winWid,winHei)*0.5*0.5; // window / 2
-	var pX,pY,val, dist, minDist=null, minValue=null, closest=new V2D();
-	for(i=0;i<len;++i){
-		pX = peaks[i].x*winWid - cenX;
-		pY = peaks[i].y*winHei - cenY;
-		val = peaks[i].z;
-		dist = Math.sqrt(pX*pX+pY*pY);
-		if( dist<maximumDistance && ( minDist===null || (true && val>minValue)) ){ // dist<minDist
-			minDist = dist;
-			minValue = val;
-			closest.x = pX; closest.y = pY;
-		}
-		// for show:
-		peaks[i].x = peaks[i].x*winWid;
-		peaks[i].y = peaks[i].y*winHei;
-	}
-	var image = null;
-	// image = ImageMat.showPeaks(measure,winWid,winHei, peaks);
-	image = ImageMat.showPeaks(measure,winWid,winHei, peaks);
-	//image = ImageMat.addFloat(ImageMat.getNormalFloat01(measure),image);
-	//image = ImageMat.addFloat(measure,image);
-	image = ImageMat.getNormalFloat01(image);
-	image = ImageMat.addFloat(ImageMat.scaleFloat(0.50,win),image);
-	image = ImageMat.getNormalFloat01(image);
-	return {offset:minDist!==null?closest:null, image:image};
+	var c0,c1,c2,c3,c4,c5,c6,c7,c8;
+	c0 = measure[winWid*(cenY-1)+(cenX-1)];
+	c1 = measure[winWid*(cenY-1)+(cenX  )];
+	c2 = measure[winWid*(cenY-1)+(cenX+1)];
+	c3 = measure[winWid*(cenY  )+(cenX-1)];
+	c4 = measure[winWid*(cenY  )+(cenX  )];
+	c5 = measure[winWid*(cenY  )+(cenX+1)];
+	c6 = measure[winWid*(cenY+1)+(cenX-1)];
+	c7 = measure[winWid*(cenY+1)+(cenX  )];
+	c8 = measure[winWid*(cenY+1)+(cenX+1)];
+	var str = "";
+	str += (c0>c4)?"+":"-";
+	str += " ";
+	str += (c1>c4)?"+":"-";
+	str += " ";
+	str += (c2>c4)?"+":"-";
+	str += "\n";
+	str += (c3>c4)?"+":"-";
+	str += " ";
+	str += "x";
+	str += " ";
+	str += (c5>c4)?"+":"-";
+	str += "\n";
+	str += (c6>c4)?"+":"-";
+	str += " ";
+	str += (c7>c4)?"+":"-";
+	str += " ";
+	str += (c8>c4)?"+":"-";
+	str += "\n";
+	// USE ACTUAL GRADIENT DIRECTION / MAGNITUDE?
+	console.log(str);
+	var o = new V2D(0,0);
+	var maxi = Math.max.apply(this,[c0,c1,c2,c3,c4,c5,c6,c7,c8]);
+	     if(maxi==c0){ o.set(-1,-1) }
+	else if(maxi==c1){ o.set( 0,-1) }
+	else if(maxi==c2){ o.set( 1,-1) }
+	else if(maxi==c3){ o.set(-1, 0) }
+	//else if(maxi==c4){ o.set( 0, 0) }
+	else if(maxi==c5){ o.set( 1, 0) }
+	else if(maxi==c6){ o.set(-1, 1) }
+	else if(maxi==c7){ o.set( 0, 1) }
+	else if(maxi==c8){ o.set( 1, 1) }
+	o.norm();
+	o.scale(0.25);
+	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
 ImageDescriptor.prototype.getEigenMaxDiffScale = function(win,winWid,winHei, sigmaI, startScale,stopScale,divisions){ // maximize lambdaMin/lambdaMax
 	var diffScale = stopScale - startScale;
@@ -748,10 +748,11 @@ ImageDescriptor.prototype.getMewFromWin = function(win,winWid,winHei, sigmaI, si
 	return u;
 }
 ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform){//win,winWid,winHei, sigmaI,sigmaD){ // climb SS extrema
+	//return {offset:new V3D(), delta:false};
 	transform = transform!==undefined?transform:null;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
 	var values = [], scales = [], images = [];
-	var minScale = 0.03125, maxScale = 2.0, exponent = 2; // 0.25, 4.0
+	var minScale = 0.015625, maxScale = 2.0, exponent = 2; // 0.25, 4.0
 	var divisions = 24; // 16-32
 	var minExp = Math.log(minScale)/Math.log(exponent);
 	var maxExp = Math.log(maxScale)/Math.log(exponent);
@@ -830,12 +831,14 @@ ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform
 	else if(maxi==c8){ o.set( 1, 1) }
 	//console.log(maxi);
 //o = new V2D();
+	o.norm();
+	o.scale(0.25);
 	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
 /*
 @ sca=0.25: 
 @ sca=0.5:  is basically blurred
-@ sca=1.0:  base image no blurring
+@ sca=1.0:  base image
 @ sca=2.0: 
 @ sca=4.0: is sub-sapled
 
@@ -845,16 +848,23 @@ WHAT DOES SIFT scale space translate to ?
 	- 
 
 */
+/* speed up:
+precalculate windows
+fewer division
+dynamic window - to only search in specified scale
+*/
 ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // basic from mikolajczyk
 	transform = transform!==undefined?transform:null;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
 	var values = [], scales = [], sigmas = [], images = [];
-	var minScale = 0.25, maxScale = 4.0, exponent = 2.0; // 0.25, 4.0 | 0.03125 0.0625 0.125 0.25 0.5 1.0 2.0 4.0 8.0
-	var sigmaBase = 1.0;
-	var divisions = 24; // 16-32
+	var minScale = 0.015625, maxScale = 4.0, exponent = 2.0; // 0.25, 4.0 | 0.015625 0.03125 0.0625 0.125 0.25 0.5 1.0 2.0 4.0 8.0
+	var sigmaBase = this._sigma;
 	var minExp = Math.log(minScale)/Math.log(exponent);
 	var maxExp = Math.log(maxScale)/Math.log(exponent);
+	var divCount = 4;
+	var divisions = (maxExp-minExp)*divCount;
 	var diffExp = maxExp - minExp;
+	var exp;
 	var win, windowWid, windowHei;
 	var sca = 1.0, sigma = this._sigma;
 	var sigmaSquare = sigma*sigma;
@@ -862,11 +872,14 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 	var cenX, cenY, Lxx, Lyy, value;
 	var i;
 	for(i=0;i<=divisions;++i){
-		sca = 1.0; // Math.pow(2, minExp + diffExp*(i/divisions) );
-		sigma = sigmaBase*Math.pow(2, minExp + diffExp*(i/divisions) );// * ();
+		exp = minExp + diffExp*(i/divisions);
+		sca = Math.pow(2, exp );
+		sigma = sigmaBase;//*(1.0+0.1*i);//
+		// Math.pow(2, minExp + diffExp*(i/divisions) );// * ();
+		// (1.0+Code.remainderFloat(exp,1.0)); // remainder
 		gaussSize = Math.round(5 + sigma*2.0)*2+1;
 		windowHei = windowWid = Math.floor(gaussSize*2) + 1;
-console.log(gaussSize,sigma);
+//console.log(gaussSize,sigma);
 		win = ImageMat.extractRectFromFloatImage(x,y,sca,sigma, windowWid,windowHei, gray,wid,hei, transform);
 		//win = ImageMat.gaussian2DFrom1DFloat(win, windowWid,windowHei, gauss1D);
 		cenX = Math.floor(windowWid*0.5);
@@ -893,22 +906,23 @@ console.log(gaussSize,sigma);
 		values.push(value);
 	}
 	// SCALE
-	// value = Code.interpolateExtrema(scales,values, true);
-	// value = value.max;
-	// var hasMax = value!=null;
-	// if(!value){
-	// 	value = new V2D(maxScale,0);
-	// }
-	// SIGMA
-	value = Code.interpolateExtrema(sigmas,values, true);
-	value = value.max;
-	var hasMax = value!=null;
-	if(!value){
-		value = new V2D(sigmaBase,0);
+	var value1 = Code.interpolateExtrema(scales,values, true);
+	value1 = value1.max;
+	var hasMax = value1!=null;
+	if(!value1){
+		value1 = new V2D(maxScale,0);
 	}
-	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, maxScale:value.x, maxSigma:sigma, max:value.y, hasMax:hasMax};
+	// SIGMA
+	var value2 = Code.interpolateExtrema(sigmas,values, true);
+	value2 = value2.max;
+	var hasMax = value2!=null;
+	if(!value2){
+		value2 = new V2D(sigmaBase,0);
+	}
+	return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, maxScale:value1.x, maxSigma:sigma, max:value1.y, hasMax:hasMax}; // constant sigma
+	//return {values:values, scales:sigmas, images:images, width:windowWid, height:windowHei, maxScale:sca, maxSigma:value2.x, max:value2.y, hasMax:hasMax}; // constant scale
+	//return {values:values, scales:scales, images:images, width:windowWid, height:windowHei, maxScale:value1.x, maxSigma:value2.x, max:value1.y, hasMax:hasMax};
 }
-
 
 ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scaler,decayRate, eigenList){
 	var cum = new Matrix(3,3), rot = new Matrix(3,3), sca = new Matrix(3,3);
@@ -936,8 +950,9 @@ ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scal
 	ang = -angleYMax;
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	cum = Matrix.mult(cum,rot);
-	//amt = Math.pow(ratio,0.25*scaler); // stable points
-	amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points
+	amt = Math.pow(ratio,0.25*scaler); // stable points
+	//amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points
+	//amt = Math.pow(ratio,0.05*scaler);
 	scaler *= decayRate;
 	sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1.0]);
 	cum = Matrix.mult(cum,sca);

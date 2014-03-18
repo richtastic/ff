@@ -1164,6 +1164,9 @@ Code.distancePoints2D = function(ax,ay, bx,by){
 	return Math.sqrt(Math.pow(ax-bx,2) + Math.pow(ay-by,2));
 }
 
+Code.remainderFloat = function(a,b){ // a%b
+	return a - Math.floor(a/b)*b;
+}
 // base64
 
 	// var dx1 = xB-xA;

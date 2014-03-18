@@ -53,6 +53,9 @@ V2D.prototype.norm = function(){
 	if(dist==0){ return; }
 	this.x = this.x/dist; this.y = this.y/dist;
 }
+V2D.prototype.scale = function(c){
+	this.x *= c; this.y *= c;
+}
 V2D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+">";
 }
