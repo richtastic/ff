@@ -675,11 +675,11 @@ root.matrix().scale(1.5);
 			//descriptor._features.push(  new ImageFeature(0.50,0.54,1.2,0,null) ); // nose
 			//descriptor._features.push(  new ImageFeature(0.65,0.538,0.20,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.595,0.885,0.60,0,null) ); // big orange
-			descriptor._features.push(  new ImageFeature(0.463,0.762,1.0,0,null) ); // red-right
+			//descriptor._features.push(  new ImageFeature(0.463,0.762,1.0,0,null) ); // red-right
 			//descriptor._features.push(  new ImageFeature(0.79,0.94,1.0, 0,null) ); //
 			//descriptor._features.push(  new ImageFeature(0.38,0.70,1.0, 0,null) ); //ss-purple-green
 			//descriptor._features.push(  new ImageFeature(0.26,0.555,1.0, 0,null) ); //ss-yellow
-			//descriptor._features.push(  new ImageFeature(0.46,0.85,1.0, 0,null) ); //ss-blue-dot
+			descriptor._features.push(  new ImageFeature(0.46,0.85,1.0, 0,null) ); //ss-blue-dot
 // descriptor._features.push(  new ImageFeature(, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.698614107706785 - 0.0,0.22024469633081295,1.2308463075382536, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.13988446394875864,0.9826467269202003,1.2334442591633725, 0,null) ); // unstable
@@ -701,15 +701,15 @@ root.matrix().scale(1.5);
 		// 	descriptor._features.push(  new ImageFeature(0.280,0.909,1.2,0,null) ); // purple
 		// }
 		if(i==1){ // scalexrotateskew
-			descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
+			//descriptor._features.push(  new ImageFeature(0.66,0.075,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.460,0.445,1.3,0,null) ); // yellow
 			//descriptor._features.push(  new ImageFeature(0.275,0.46,1.2,0,null) ); // nose ------ unstable
 			//descriptor._features.push(  new ImageFeature(0.20,0.44,0.25,0,null) ); // nose middle
 			//descriptor._features.push(  new ImageFeature(0.455,0.125,1.4,0,null) ); // big orange
-			descriptor._features.push(  new ImageFeature(0.465,0.245,1.0,0,null) ); // red-right
+			//descriptor._features.push(  new ImageFeature(0.465,0.245,1.0,0,null) ); // red-right
 			//descriptor._features.push(  new ImageFeature(0.49,0.30,1.0, 0,null) ); //ss-purple-green
 			//descriptor._features.push(  new ImageFeature(0.46,0.44,1.0, 0,null) ); //ss-yellow
-			//descriptor._features.push(  new ImageFeature(0.535,0.15,1.0, 0,null) ); //ss-blue-dot
+			descriptor._features.push(  new ImageFeature(0.535,0.15,1.0, 0,null) ); //ss-blue-dot
 			// XY:
 			//descriptor._features.push(  new ImageFeature(0.595,0.885,1.5*1.5,0,null) ); // purple
 			// 

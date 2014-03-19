@@ -1167,6 +1167,13 @@ Code.distancePoints2D = function(ax,ay, bx,by){
 Code.remainderFloat = function(a,b){ // a%b
 	return a - Math.floor(a/b)*b;
 }
+
+Code.trimMaxEnds = function(a,b){
+	while(a.length>1 && a[0]>a[1]){ a.shift(); b.shift(); } // left
+	while(a.length>1 && a[a.length-1]>a[a.length-2]){ a.pop(); b.pop(); } // right
+}
+
+
 // base64
 
 	// var dx1 = xB-xA;

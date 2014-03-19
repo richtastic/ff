@@ -493,17 +493,17 @@ inPoint.z = 1.0;
 	var sourceWid = this._width;
 	var sourceHei = this._height;
 	var v = new V2D(), x = new V3D(); x.copy(inPoint);
-	var winWid = winHei = 101;
+	var winWid = winHei = 51;
 	var u = new Matrix(2,2);
 	var transformInverse, transform = new Matrix(3,3); transform.identity();
-	var maxIterations = 20;
+	var maxIterations = 25;
 	var winList = new Array(), pointList = new Array(), eigenList = new Array();
 	var sigmaI = this._sigma, sigmaD = this._sigma*0.7;
 	var decay = 1.0, decayRate = 1.0;//0.95;
 	var ratio = 2.0, prevRatio = 2.0;
 var totalScale = 1.0;
 console.log("............ detect point");
-var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o'];
+var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o','r-+','g-+','b-+','m-+','k-+'];
 var octave = "hold off;\n";
 var octave2 = "hold off;\n";
 var octave3 = "hold off;\n";
@@ -752,7 +752,7 @@ ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform
 	transform = transform!==undefined?transform:null;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
 	var values = [], scales = [], images = [];
-	var minScale = 0.015625, maxScale = 2.0, exponent = 2; // 0.25, 4.0
+	var minScale = 0.0325, maxScale = 2.0, exponent = 2; // 0.25, 4.0
 	var divisions = 24; // 16-32
 	var minExp = Math.log(minScale)/Math.log(exponent);
 	var maxExp = Math.log(maxScale)/Math.log(exponent);
@@ -819,20 +819,20 @@ ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform
 // USE ACTUAL GRADIENT DIRECTION / MAGNITUDE?
 	console.log(str);
 	var o = new V2D(0,0);
-	var maxi = Math.max.apply(this,[c0,c1,c2,c3,c4,c5,c6,c7,c8]);
-	     if(maxi==c0){ o.set(-1,-1) }
-	else if(maxi==c1){ o.set( 0,-1) }
-	else if(maxi==c2){ o.set( 1,-1) }
-	else if(maxi==c3){ o.set(-1, 0) }
-	//else if(maxi==c4){ o.set( 0, 0) }
-	else if(maxi==c5){ o.set( 1, 0) }
-	else if(maxi==c6){ o.set(-1, 1) }
-	else if(maxi==c7){ o.set( 0, 1) }
-	else if(maxi==c8){ o.set( 1, 1) }
+	// var maxi = Math.max.apply(this,[c0,c1,c2,c3,c4,c5,c6,c7,c8]);
+	//      if(maxi==c0){ o.set(-1,-1) }
+	// else if(maxi==c1){ o.set( 0,-1) }
+	// else if(maxi==c2){ o.set( 1,-1) }
+	// else if(maxi==c3){ o.set(-1, 0) }
+	// //else if(maxi==c4){ o.set( 0, 0) }
+	// else if(maxi==c5){ o.set( 1, 0) }
+	// else if(maxi==c6){ o.set(-1, 1) }
+	// else if(maxi==c7){ o.set( 0, 1) }
+	// else if(maxi==c8){ o.set( 1, 1) }
 	//console.log(maxi);
 //o = new V2D();
-	o.norm();
-	o.scale(0.25);
+	ImageMat.gradient2DFloatInterpolate(o,c0,c1,c2,c3,c4,c5,c6,c7,c8);
+	//o.scale(0.25);
 	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
 /*
@@ -906,6 +906,7 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 		values.push(value);
 	}
 	// SCALE
+	Code.trimMaxEnds(values,scales);
 	var value1 = Code.interpolateExtrema(scales,values, true);
 	value1 = value1.max;
 	var hasMax = value1!=null;
@@ -913,6 +914,7 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 		value1 = new V2D(maxScale,0);
 	}
 	// SIGMA
+	// Code.trimMaxEnds(values,scales);
 	var value2 = Code.interpolateExtrema(sigmas,values, true);
 	value2 = value2.max;
 	var hasMax = value2!=null;

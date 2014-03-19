@@ -841,6 +841,11 @@ ImageMat.findExtrema3DFloat = function(a,b,c, wid,hei, delX,delY,delZ, r){ // a=
 ImageMat._tempMatrix2_2 = new Matrix(2,2);
 ImageMat._tempMatrix2_1 = new Matrix(2,1);
 ImageMat._tempMatrix2_1_2 = new Matrix(2,1);
+ImageMat.gradient2DFloatInterpolate = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){
+	loc.x = (d5-d3)*0.5;
+	loc.y = (d7-d1)*0.5;
+
+}
 ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r){ // 
 	r = r!==undefined?r:1E-16;
 	var dx = (d5-d3)/(2.0*delX);
@@ -859,6 +864,9 @@ ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,
 	var temp = Matrix.mult(ImageMat._tempMatrix2_1_2, Hinv,dD);
 	loc.x = -temp.get(0,0);
 	loc.y = -temp.get(1,0);
+	if(loc.x<0.5 || loc.x>0.5 || loc.y<0.5 || loc.y>0.5){ // outside this window
+		return null;
+	}
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
 	// loc.t = det;
 	return loc;
@@ -885,6 +893,9 @@ ImageMat.extrema3DFloatInterpolate = function(loc, delX,delY,delZ, a0,a1,a2,a3,a
 	var Hinv = Matrix.inverse(H);
 	var temp = Matrix.mult(ImageMat._tempMatrix3_1_2, Hinv,dD);
 	loc.x = -temp.get(0,0); loc.y = -temp.get(1,0); loc.z = -temp.get(2,0);
+	if(loc.x<0.5 || loc.x>0.5 || loc.y<0.5 || loc.y>0.5 || loc.z<0.5 || loc.z>0.5){ // outside this window
+		return null;
+	}
 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
 	var det = dxdx*dydy - dxdy*dxdy;
 	var mag = Math.pow((dxdx + dydy),2)/det;
