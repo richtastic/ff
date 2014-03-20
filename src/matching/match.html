@@ -16,15 +16,40 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesLoadedFxn(){
 	Code.setPageTitle("fantastic");
-//var m;
-//m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 3,2,1, 2,1,1, 1,1,1, 1E-16);
-//m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 3,2,0, 2,1,0, 0,0,0, 1E-16);
-//m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 0,1,0, 1,2,1, 0,1,0, 1E-16);
-//m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 2,2,1, 1,2,1, 1,1,1, 1E-16);
-//console.log( m );
-//return;
-	//console.log( Code.locateExtrema1D(1.0,2.0, 2.0,3.0, 4.0,1.0).toString() );
-	//console.log( Code.locateExtrema1D(1.0,1.0, 2.0,3.0, 4.0,2.0).toString() );
+	var data = {};
+	var list = [];
+// find initial points
+	list.push("original.png");
+	//list.push("scalexy.png");
+	//list.push("scalex.png");
+	list.push("scalexrotateskew.png");
+	data.images = list;
+	data.imageBase = "./images/test/";
+	var match = new Match(Match.MODE_FIND_SIFT_POINTS, data);
+return;
+// find affine from sift
+	list.push("BLT.yaml");
+	list.push("BLB.yaml");
+	data.fileBase = "./descriptors/";
+	data.fileBase = list;
+	var match = new Match(Match.MODE_FIND_AFFINE_POINTS, data);
+// compare point lists
+// show points
+// test points
+	// 
+// ["BLT.png", "BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
+	
+	return;
+
+// var m;
+// m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 3,2,1, 2,1,1, 1,1,1, 1E-16);
+// m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 3,2,0, 2,1,0, 0,0,0, 1E-16);
+// m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 0,1,0, 1,2,1, 0,1,0, 1E-16);
+// m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 2,2,1, 1,2,1, 1,1,1, 1E-16);
+// m = ImageMat.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 0,0,0,0,0,0,0,0,1, 1E-16);
+// console.log( m );
+// return;
+
 // var a = [ 8.2482E-6,  1.2988E-5,  1.5501E-5,  1.3178E-5,  8.7412E-6,  4.8403E-6,  2.3474E-6, 
 //   1.0204E-5,  1.6447E-5,  1.9558E-5,  1.7003E-5,  1.2099E-5,  7.1386E-6,  3.3571E-6, 
 //   9.5306E-6,  1.4999E-5,  1.7292E-5,  1.5136E-5,  1.1534E-5,  7.2499E-6,  3.2926E-6, 
@@ -48,8 +73,6 @@ function customClassesLoadedFxn(){
 // }
 // return;
 
-	var match = new Match();
-	return;
 	
 	// var data = [0,0,0, 0,1,0.5, 0,0.5,0.5];
 	// var wid = 3;
@@ -144,12 +167,11 @@ function customClassesLoadedFxn(){
 	yaml.writeBoolean("b",true);
 	*/
 	//yaml.writeString("string","this is\na multi-line\n string. mk.");
-	var str = yaml.toString();
-	console.log( str );
-	obj = yaml.parse(str);
-	console.log( obj );
-
-return;
+	// var str = yaml.toString();
+	// console.log( str );
+	// obj = yaml.parse(str);
+	// console.log( obj );
+	// return;
 
 
 	// var scale;
@@ -515,65 +537,8 @@ until dx is minimal (convergence):
 	x = x + dx
 
 end
-
-
-
-
-
 */
-/*
-	//monty hall
-	var i, theDoor, theGuess, removed, index, success, count;
-	var array = new Array();
-	count = 100000;
-	for(i=0,success=0;i<count;++i){
-		array = [0,1,2]; // all doors: 0, 1, 2
-		theDoor = Math.round(Math.random()*3-0.5); // place prize behind a random door
-		theGuess = Math.round(Math.random()*3-0.5); // choose a random door
-		array.splice(theGuess,1);
-		removed = array[Math.round(Math.random()*2-0.5)]; // remove one of the non-guessed doors
-		if(removed==theDoor){ // can't remove the prize door
-			removed = array[(index+1)%2];
-		}
-		// stay with original guess, don't switch
-		if(theDoor==theGuess){ ++success; }
-	}
-	console.log("no switch success rate: " + (success/count));
-	for(i=0,success=0;i<count;++i){
-		array = [0,1,2]; // all doors: 0, 1, 2
-		theDoor = Math.round(Math.random()*3-0.5); // place prize behind a random door
-		theGuess = Math.round(Math.random()*3-0.5); // choose a random door
-		array.splice(theGuess,1);
-		index = Math.round(Math.random()*2-0.5);
-		removed = array[index]; // remove one of the non-guessed doors
-		if(removed==theDoor){ // can't remove the prize door
-			removed = array[(index+1)%2];
-		}
-		// change guess to be opposite door
-		if(removed==0){
-			if(theGuess==1){
-				theGuess = 2;
-			}else{
-				theGuess = 1;
-			}
-		}else if(removed==1){
-			if(theGuess==0){
-				theGuess = 2;
-			}else{
-				theGuess = 0;
-			}
-		}else if(removed==2){
-			if(theGuess==0){
-				theGuess = 1;
-			}else{
-				theGuess = 0;
-			}
-		}
-		if(theDoor==theGuess){ ++success; }
-	}
-	console.log("switch success rate: " + (success/count));
-	return;
-*/
+
 }
 </script>
 </head>

@@ -70,32 +70,40 @@ blend images from different perspectives to get best
 
 
 */
-
+Match.MODE_UNKNOWN = 0;
+Match.MODE_FIND_SIFT_POINTS = 1;
+Match.MODE_FIND_AFFINE_POINTS = 2;
+Match.MODE_COMPARE_POINTS = 3;
+Match.MODE_SHOW_POINTS = 4;
+Match.MODE_TEST_POINTS = 5;
 Match.YAML = {
 	DESCRIPTORS: "descriptors",
 	DESCRIPTOR: "descriptor",
 }
 
-function Match(){
+function Match(mode,data){
+	this._mode = mode;
 	this._canvas = new Canvas(null, 400,600, Canvas.STAGE_FIT_FILL, false);
-	//this._canvas.addListeners();
 	this._stage = new Stage(this._canvas, (1/10)*1000);
 	this._stage.start();
 	this._root = new DO(); this._stage.root().addChild(this._root);
-	//
 	this._imageList = new Array();
-	//var imageLoader = new ImageLoader("./images/medium/", ["BLT.png", "BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
-		//this,this._imageCompleteFxn,this._imageProgressFxn);
-// BLT.png
-	var list = [];
-	list.push("original.png");
-	//list.push("scalexy.png");
-	//list.push("scalex.png");
-	list.push("scalexrotateskew.png");
-	var imageLoader = new ImageLoader("./images/test/", list, this,this._imageCompleteFxn,this._imageProgressFxn);
-	imageLoader.load();
-}
-Match.prototype._imageProgressFxn0 = function(o){
+	if(this._mode==Match.MODE_FIND_SIFT_POINTS){
+		var imageLoader = new ImageLoader(data.imageBase, data.images, this,this._imageCompleteFxn,this._imageProgressFxn);
+		imageLoader.load();
+	}else if(this._mode==Match.MODE_FIND_AFFINE_POINTS){
+		var fileLoader = new FileLoader();
+		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxn);
+		fileLoader.load();
+	}else if(this._mode==Match.MODE_COMPARE_POINTS){
+		// 
+	}else if(this._mode==Match.MODE_SHOW_POINTS){
+		// 
+	}else if(this._mode==Match.MODE_TEST_POINTS){
+		// 
+	}else{
+		this._mode = Match.MODE_UNKNOWN;
+	}
 }
 
 Match.prototype.getDescriptorParameters = function(originalImage){
@@ -147,16 +155,11 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2, rad){
 	var angle = 0;
 	if(v1!==undefined && v2!==undefined){
 		angle = V2D.angleDirection(v2,new V2D(1,0));
-		//angle = Math.PI/2 + V2D.angle(v2,new V2D(1,0));
-		//if(Math.abs(angle)>Math.PI*0.5){
-		//if(ratioA>ratioB){
 		if(e2>e1){
-			//console.log("REVERSE");
 		 	angle = Math.PI + V2D.angleDirection(v1,new V2D(-1,0));
 		}else{
-			//console.log("FORWARD");
+			console.log("FORWARD??????????");
 		}
-		//console.log((angle)*180/Math.PI);
 	}
 	//main
 	d.graphics().clear();
@@ -196,8 +199,6 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2, rad){
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 	}
-	// var container = new DO();
-	// container.addChild(d);
 	var container = d;
 	container.matrix().identity();
 	container.matrix().translate(pt.x,pt.y);
@@ -891,22 +892,10 @@ Match.prototype._imageCompleteFxn = function(o){
 	this._fileList = Code.copyArray(fileNames,o.files);
 	this._imageList = Code.copyArray(images,o.images);
 	
-
-var testing = true;
-if(testing){
+if(this._mode == Match.MODE_TEST_POINTS){
 	this.testA();
-	//this.filters();
 	return
-}
-
-
-var comparing = false;//true;
-if(comparing){
-	var fileLoader = new FileLoader();
-	fileLoader.setLoadList("./descriptors/",["BLT.yaml","BLB.yaml"], this, this._onYAMLCompleteFxn);
-	fileLoader.load();
-	return;
-}
+} // else  - Match.MODE_FIND_AFFINE_POINTS
 	var imageFileName = fileNames[0];
 	var params = this.getDescriptorParameters( images[0] );
 	var wid = params.width;

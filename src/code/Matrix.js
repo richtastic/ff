@@ -452,10 +452,10 @@ Matrix.inverse = function(A){ // assumed square
 	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
 	C = C.getSubMatrix(0,A._colCount, A._rowCount,A._colCount);
 	if( !B.closeToIdentity() ){
-//return C;
 		return null;
 	}
 	return C;
+	// return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
 }
 Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square
 	var a = ain;
