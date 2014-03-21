@@ -169,6 +169,13 @@ Code.booleanToString = function(b){
 	return "false";
 }
 // ------------------------------------------------------------------------------------------ ARRAY
+Code.setArray = function(arr){
+	var i, im1, len = arguments.length;
+	for(im1=0,i=1;i<len;++i,++im1){
+		arr[im1] = arguments[i];
+	}
+	return arr;
+}
 Code.newArray = function(){
 	var arr = new Array();
 	var i, len = arguments.length;
@@ -222,6 +229,11 @@ Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 			return;
 		}
 	}
+}
+Code.removeElementAtSimple = function(a,i){ // not preserve order
+	a[i] = a[a.length-1];
+	a.pop();
+	return;
 }
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes
 	var lenX = endX - staX + 1;
@@ -1076,11 +1088,7 @@ Code.escapeHTML = function(str){
 // encodeURI(str)
 // escape(str)
 
-
-/*
-function.call(this, a, b, c);
-function.apply(this,arg);
-*/
+// ------------------------------------------------------------------------------------------------------------------------------------------------- formatting
 Code.padString = function(val,wid,filler){
 	return Code.padStringLeft(val,wid,filler);
 }
@@ -1100,8 +1108,87 @@ Code.padStringRight = function(val,wid,filler){
 	}
 	return str;
 }
-// ------------------------------------------------ MATHS
-Code.interpolateExtrema = function(xVals,yVals, noEnds){
+// ------------------------------------------------------------------------------------------------------------------------------------------------- MATHS
+Code.distancePoints2D = function(ax,ay, bx,by){
+	return Math.sqrt(Math.pow(ax-bx,2) + Math.pow(ay-by,2));
+}
+
+Code.remainderFloat = function(a,b){ // a%b
+	return a - Math.floor(a/b)*b;
+}
+
+Code.trimMaxEnds = function(a,b){
+	while(a.length>1 && a[0]>a[1]){ a.shift(); b.shift(); } // left
+	while(a.length>1 && a[a.length-1]>a[a.length-2]){ a.pop(); b.pop(); } // right
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------- transform matrices
+Code.separateAffine2D = function(a,b,c,d, tx,ty){
+	var scaleX = Math.sqrt(a*a+b*b);
+	var scaleY = Math.sqrt(c*c+d*d);
+	var rotationA = Math.atan(c/d);
+	var rotationB = Math.atan(-b/a);
+	var rotation = (rotationA+rotationB)*0.5;
+	return {scaleX:scaleX, scaleY:scaleY, rotation:rotation, translationX:tx, translationY:ty};
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------- matrices
+Code.inverse2x2 = function(arr, a,b,c,d){
+	var det = a*d - b*c;
+	if(det==0){ return null; }
+	det = 1/det;
+	arr[0] = det*d;
+	arr[1] = -det*b;
+	arr[2] = -det*c;
+	arr[3] = det*a;
+	return arr;
+}
+Code.inverse3x3 = function(arr, a,b,c,d,e,f,g,h,i){
+	var x = e*i-f*h;
+	var y = f*g-d*i;
+	var z = d*h-e*g;
+	var det = a*x + b*y + c*z; // a*e*i + d*h*c + g*b*f - a*h*f - g*e*c - d*b*i;
+	if(det==0){ return null; }
+	det = 1/det;
+	arr[0] = det*x;
+	arr[1] = det*(c*h-b*i);
+	arr[2] = det*(b*f-c*e);
+	arr[3] = det*y;
+	arr[4] = det*(a*i-c*g);
+	arr[5] = det*(c*d-a*f);
+	arr[6] = det*z;
+	arr[7] = det*(b*g-a*h);
+	arr[8] = det*(a*e-b*d);
+	return arr;
+}
+Code.inverse4x4 = function(arr, a,b,c,d, e,f,g,h, i,j,h,k, l,m,n,o){ // http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
+	var det = 0;
+	if(det==0){ return null; }
+	det = 1/det;
+	return arr;
+}
+Code.mult3x3by3x1toV3D = function(v, tbt, tbo){
+	v.x = tbo[0]*tbt[0] + tbo[1]*tbt[1] + tbo[2]*tbt[2];
+	v.y = tbo[0]*tbt[3] + tbo[1]*tbt[4] + tbo[2]*tbt[5];
+	v.z = tbo[0]*tbt[6] + tbo[1]*tbt[7] + tbo[2]*tbt[8];
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
+Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC, ext){ // quadric interpolation
+	ext = ext!==undefined?ext:new V2D();
+	var dx1 = xB-xA;
+	var dx2 = xC-xB;
+	var dx3 = xC-xA;
+	var dy1 = yB-yA;
+	var dy2 = yC-yB;
+	var dy3 = yC-yA;
+	var dD = dy3/dx3;
+	var ddD = 0.5*(dy2-dy1)/(dx2-dx1);
+	x = -dD/ddD;
+	ext.y = yB + 0.5*x*dD;
+	ext.x = x + xB;
+	return ext;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 2D
+Code.interpolateExtrema1D = function(xVals,yVals, noEnds){
 	var val, i, lenM1 = yVals.length-1;
 	var min = yVals[0], max = yVals[0];
 	var minIndex = 0, maxIndex = 0;
@@ -1132,69 +1219,69 @@ Code.interpolateExtrema = function(xVals,yVals, noEnds){
 	}
 	return {min:min, max:max};
 }
-Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC, ext){ // quadric interpolation
-	ext = ext!==undefined?ext:new V2D();
-	var dx1 = xB-xA;
-	var dx2 = xC-xB;
-	var dx3 = xC-xA;
-	var dy1 = yB-yA;
-	var dy2 = yC-yB;
-	var dy3 = yC-yA;
-	var dD = dy3/dx3;
-	var ddD = 0.5*(dy2-dy1)/(dx2-dx1);
-	x = -dD/ddD;
-	//ext.y = yB + x*dD + 0.5*x*x*ddD;
-	ext.y = yB + 0.5*x*dD;
-	ext.x = x + xB;
-	return ext;
+
+//------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 3D
+Code.interpolateExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
+	k = k!==undefined?k:0;
+	var i, j, hm1=hei-1, wm1=wid-1, list = []
+	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7;
+	var jW0,jW1,jW2, i0,i1,i2, result;
+	for(j=1;j<hm1;++j){
+		jW0 = (j-1)*wid, jW1 = j*wid, jW2 = (j+1)*wid;
+		for(i=1;i<wm1;++i){
+			i0 = i-1; i1 = i; i2 = i+1;
+			a0 = a[jW0+i0]; a1 = a[jW0+i1]; a2 = a[jW0+i2]; a3 = a[jW1+i0]; a4 = a[jW1+i1]; a5 = a[jW1+i2]; a6 = a[jW2+i0]; a7 = a[jW2+i1]; a8 = a[jW2+i2];
+			b0 = b[jW0+i0]; b1 = b[jW0+i1]; b2 = b[jW0+i2]; b3 = b[jW1+i0]; b4 = b[jW1+i1]; b5 = b[jW1+i2]; b6 = b[jW2+i0]; b7 = b[jW2+i1]; b8 = b[jW2+i2];
+			c0 = c[jW0+i0]; c1 = c[jW0+i1]; c2 = c[jW0+i2]; c3 = c[jW1+i0]; c4 = c[jW1+i1]; c5 = c[jW1+i2]; c6 = c[jW2+i0]; c7 = c[jW2+i1]; c8 = c[jW2+i2];
+			if((a0<b4&&a1<b4&&a2<b4&&a3<b4&&a4<b4&&a5<b4&&a6<b4&&a7<b4&&a8<b4 // maxima
+			&& b0<b4&&b1<b4&&b2<b4&&b3<b4    &&   b5<b4&&b6<b4&&b7<b4&&b8<b4
+			&& c0<b4&&c1<b4&&c2<b4&&c3<b4&&c4<b4&&c5<b4&&c6<b4&&c7<b4&&c8<b4)
+			||
+			(a0>b4&&a1>b4&&a2>b4&&a3>b4&&a4>b4&&a5>b4&&a6>b4&&a7>b4&&a8>b4 // minima
+			&& b0>b4&&b1>b4&&b2>b4&&b3>b4    &&   b5>b4&&b6>b4&&b7>b4&&b8>b4
+			&& c0>b4&&c1>b4&&c2>b4&&c3>b4&&c4>b4&&c5>b4&&c6>b4&&c7>b4&&c8>b4) ){
+				result = Code.extrema3DFloatInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
+				if(result==null){ continue; }
+				var eps = 1.0; // 0.5;
+				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
+					result.x += i; result.y += j; result.z += k;
+					list.push(result);
+				}else{ // need to interpolate at a neighbor
+					//	console.log("result; "+result.toString());
+				}
+			}
+		}
+	}
+	return list;
+}
+Code._tempMatrixArray1 = [0,0,0];
+Code._tempMatrixArray2 = [0,0,0, 0,0,0, 0,0,0];
+Code.extrema3DFloatInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7, keepDet){ // a is bot, b is middle, c is top
+	var dx = (b5-b3)*0.5;
+	var dy = (b7-b1)*0.5;
+	var dz = (c4-a4)*0.5;
+	var dxdx = (b5-2.0*b4+b3);
+	var dydy = (b7-2.0*b4+b1);
+	var dzdz = (c4-2.0*b4+a4);
+	var dxdy = (b8-b6-b2+b0)*0.25;
+	var dxdz = (c5-c3-a5+a3)*0.25;
+	var dydz = (c7-c1-a7+a1)*0.25;
+	var dD = Code.setArray(Code._tempMatrixArray1, dx,dy,dz);
+	var Hinv = Code.inverse3x3(Code._tempMatrixArray2, dxdx,dxdy,dxdz, dxdy,dydy,dydz, dxdz,dydz,dzdz);
+	if(!Hinv){ return null; }
+	Code.mult3x3by3x1toV3D(loc, Hinv,dD);
+	loc.x = -loc.x; loc.y = -loc.y; loc.z = -loc.z;
+	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
+	return loc;
 }
 
-// wot
-Code.separateAffine2D = function(a,b,c,d, tx,ty){
-	var scaleX = Math.sqrt(a*a+b*b);
-	var scaleY = Math.sqrt(c*c+d*d);
-	var rotationA = Math.atan(c/d);
-	var rotationB = Math.atan(-b/a);
-	var rotation = (rotationA+rotationB)*0.5;
-	return {scaleX:scaleX, scaleY:scaleY, rotation:rotation, translationX:tx, translationY:ty};
-}
 
 
-Code.distancePoints2D = function(ax,ay, bx,by){
-	return Math.sqrt(Math.pow(ax-bx,2) + Math.pow(ay-by,2));
-}
 
-Code.remainderFloat = function(a,b){ // a%b
-	return a - Math.floor(a/b)*b;
-}
 
-Code.trimMaxEnds = function(a,b){
-	while(a.length>1 && a[0]>a[1]){ a.shift(); b.shift(); } // left
-	while(a.length>1 && a[a.length-1]>a[a.length-2]){ a.pop(); b.pop(); } // right
-}
-
+/*
+function.call(this, a, b, c);
+function.apply(this,arg);
+*/
 
 // base64
-
-	// var dx1 = xB-xA;
-	// var dx2 = xC-xB;
-	// if(dx1>dx2){
-	// 	// ext = Code.locateExtrema1D(-xA);
-	// 	// return ext;
-	// }
-	// var dx3 = xC-xA;
-	// var dy1 = yB-yA;
-	// var dy2 = yC-yB;
-	// var dy3 = yC-yA;
-	// // 
-	// var d2 = 2.0 * ((dy2/dx2) - (dy1/dx1))/dx3;
-	// var d1 = (dy2/dx2) + 0.5*d2*dx2;
-	// ext.x = xB - d1/d2;
-	// ext.y = yB + 0.5*d1*(ext.x-xB);
-
-
-	// return ext;
-//var dx = xC-xA;
-	//var dy = yC-yA;
-	// var dxdx = ()/(2.0*(xC-xB)*(xB-xA));
-	// var dydy = ()/(2.0*(yC-yB)*(yB-yA));

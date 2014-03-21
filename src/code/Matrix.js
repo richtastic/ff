@@ -206,13 +206,21 @@ Matrix.prototype.toString = function(exp){
 	return str.replace(/e/g,"E");
 }
 
-
-
-Matrix.transform2DScale = function(a,sX,sY){
-	sY = sY!==undefined?sY:sX;
-	var b = new Matrix(3,3).setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
+Matrix._transformTemp = new Matrix(3,3);
+Matrix.transform2DTranslate = function(a,tX,tY){
+	var b = Matrix._transformTemp.setFromArray([1.0,0.0,0.0, 0.0,1.0,0.0, tX,tY,1.0]);
 	return Matrix.mult(a,b);
 }
+Matrix.transform2DScale = function(a,sX,sY){
+	sY = sY!==undefined?sY:sX;
+	var b = Matrix._transformTemp.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(a,b);
+}
+Matrix.transform2DRotate = function(a,ang){
+	var b = Matrix._transformTemp.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(a,b);
+}
+
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE MATHS
 Matrix.prototype.multV2DtoV2D = function(out, inn){
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];

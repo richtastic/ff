@@ -141,8 +141,9 @@ ImageDescriptor.prototype.getImageDefinition = function(){ // LEGACY
 }
 ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a list of potential scale-space points: _scaleSpaceExtrema
 	Code.timerStart();
-	var i, j, k, ss, len, len2, pt;
+	var i, j, k, ss, len, len2, pt, dist;
 	var wid = this._width, hei = this._height;
+	var minimumExtremaDistancePixels = 1.0; // single pixel
 	var sigma = 1.6;//this._sigma;
 	var scalesPerOctave = 5; // 5
 	var sConstant = scalesPerOctave-3;
@@ -182,8 +183,10 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		}
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
-			ext = ImageMat.findExtrema3DFloat(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 1.0,1.0,1.0, edgeResponseEigenRatioR);
+			ext = Code.interpolateExtrema3D(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 0);
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
+				ext[k].x /= currentWid;
+				ext[k].y /= currentHei;
 				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
 			}
 			extremaList.push(ext);
@@ -195,6 +198,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 			currentWid = nextWid; currentHei = nextHei;
 		}
 	}
+	// copy points over to single array
 	this._clearFeatureList();
 	len = extremaList.length;
 	var temp = new Array();
@@ -208,24 +212,32 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		}
 		Code.emptyArray(arr);
 	}
-	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); // 
-	len = temp.length;//len = Math.min(100,temp.length);
-	for(i=0;i<len;++i){
-		this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
-	}
-	// ALSO COPY REMAINING POINTS THAT FIT CRITERIA
-	len = temp.length;
-	for(;i<len;++i){
-break; // just keep 100
-		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
-			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
-		}else{
-			break;
+	// remove duplicates
+	for(i=0;i<temp.length;++i){
+		for(j=i+1;j<temp.length;++j){
+			dist = Code.distancePoints2D(temp[i].x*this._width,temp[i].y*this._height, temp[j].x*this._width,temp[j].y*this._height);
+			if( dist < minimumExtremaDistancePixels ){
+				if(temp[i].t>temp[j].t){ // keep j
+					temp[i] = temp[j];
+				} // keep i
+				Code.removeElementAtSimple(temp,j);
+				--j;
+			}
 		}
 	}
-	console.log("scale space count: "+this._features.length);
+	// get exact SMM at location and discard low intensities
+	// var det = dxdx*dydy - dxdy*dxdy;
+	// sort on extrema value
+	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); // 
+	len = temp.length;
+	for(i=0;i<len;++i){
+		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
+			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
+		}
+	}
 	Code.emptyArray(extremaList);
 	Code.timerStop();
+	console.log("scale space count: "+this._features.length);
 	console.log( "time: "+Code.timerDifferenceSeconds() );
 }
 
