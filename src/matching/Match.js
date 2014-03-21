@@ -1015,7 +1015,7 @@ for(i=0;i<ptList.length;++i){
 
 // //
 pt = new V3D(ptList[i].x*wid,ptList[i].y*hei,ptList[i].z);
-console.log(pt.x/params.width,pt.y/params.height,pt.z);
+//console.log(pt.x/params.width,pt.y/params.height,pt.z);
 
 var d = new DO();
 var rad;

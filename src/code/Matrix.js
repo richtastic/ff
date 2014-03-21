@@ -646,9 +646,6 @@ Matrix.LU = function(P,L,U, A, pivot){ // [P,L,U] = A : LU Decomposition (Factor
 	if a pivot is ~0, then row interchange must be done
 	*/
 }
-Matrix.scale = function(c, a,b){ // c = a*b(constant)
-	//
-}
 Matrix.mult = function(r, ain,bin){ // c = a*b 
 	var b = bin, a = ain;
 	if(bin===undefined){

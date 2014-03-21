@@ -864,7 +864,8 @@ ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,
 	var temp = Matrix.mult(ImageMat._tempMatrix2_1_2, Hinv,dD);
 	loc.x = -temp.get(0,0);
 	loc.y = -temp.get(1,0);
-	if(loc.x<0.5*delX || loc.x>0.5*delX || loc.y<0.5*delY || loc.y>0.5*delY){ // outside this window
+	if(loc.x<-0.5*delX || loc.x>0.5*delX || loc.y<-0.5*delY || loc.y>0.5*delY){ // outside this window
+		console.log("goto next cell-set");
 		return null;
 	}
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
@@ -875,56 +876,61 @@ ImageMat._tempMatrix3_3 = new Matrix(3,3);
 ImageMat._tempMatrix3_1 = new Matrix(3,1);
 ImageMat._tempMatrix3_1_2 = new Matrix(3,1);
 ImageMat.extrema3DFloatInterpolateNext = function(loc, delX,delY,delZ, a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8, r){ // a is bot, b is middle, c is top
-	// increasing x, increasing y, increasing z // unused: a0 a2 16 a8 c0 c2 c6 c8
+	// unused: a0 a2 a6 a8 c0 c2 c6 c8
 	var dx = (b5-b3)/(2.0*delX);
 	var dy = (b7-b1)/(2.0*delY);
 	var dz = (c4-a4)/(2.0*delZ);
-	var dxdx = (b5-2.0*b4+b3)/(delX*delX);
-	var dxdy = (b8-b6-b2+b0)/(2.0*delX*delY);
-	var dxdz = (c5-c3-a5+a3)/(2.0*delX*delZ);
+	var dxdx = (b5-2.0*b4+b3)/(1.0*delX*delX);
+	var dydy = (b7-2.0*b4+b1)/(1.0*delY*delY);
+	var dzdz = (c4-2.0*b4+a4)/(1.0*delZ*delZ);
+	var dxdy = (b8-b6-b2+b0)/(4.0*delX*delY);
+	var dxdz = (c5-c3-a5+a3)/(4.0*delX*delZ);
+	var dydz = (c7-c1-a7+a1)/(4.0*delY*delZ);
 	var dydx = dxdy;
-	var dydy = (b7-2.0*b4+b1)/(delY*delY);
-	var dydz = (c7-c1-a7+a1)/(2.0*delY*delZ);
 	var dzdx = dxdz;
 	var dzdy = dydz;
-	var dzdz = (c4-2.0*b4+a4)/(delZ*delZ);
+	
 	var dD = ImageMat._tempMatrix3_1.setFromArray([dx, dy, dz]);
 	var H = ImageMat._tempMatrix3_3.setFromArray([dxdx,dxdy,dxdz, dydx,dydy,dydz, dzdx,dzdy,dzdz]);
+	//var H = ImageMat._tempMatrix3_3.setFromArray([dxdx,0,0, 0,dydy,0, 0,0,dzdz]);
 	var Hinv = Matrix.inverse(H);
+	Hinv.scale(-1);
 	var temp = Matrix.mult(ImageMat._tempMatrix3_1_2, Hinv,dD);
-	loc.x = -temp.get(0,0); loc.y = -temp.get(1,0); loc.z = -temp.get(2,0);
-var str = "\n";
-str += "lin = linspace (0, 2, 3); [x, y, z] = meshgrid (lin, lin, lin);\n";
-str += "v = zeros(3,3,3);\n";
-str += "v(1,1,1) = "+a0+"; v(2,1,1) = "+a1+"; v(3,1,1) = "+a2+";\n";
-str += "v(1,2,1) = "+a3+"; v(2,2,1) = "+a4+"; v(3,2,1) = "+a5+";\n";
-str += "v(1,3,1) = "+a6+"; v(2,3,1) = "+a7+"; v(3,3,1) = "+a8+";\n";
-str += "v(1,1,2) = "+b0+"; v(2,1,2) = "+b1+"; v(3,1,2) = "+b2+";\n";
-str += "v(1,2,2) = "+b3+"; v(2,2,2) = "+b4+"; v(3,2,2) = "+b5+";\n";
-str += "v(1,3,2) = "+b6+"; v(2,3,2) = "+b7+"; v(3,3,2) = "+b8+";\n";
-str += "v(1,1,3) = "+c0+"; v(2,1,3) = "+c1+"; v(3,1,3) = "+c2+";\n";
-str += "v(1,2,3) = "+c3+"; v(2,2,3) = "+c4+"; v(3,2,3) = "+c5+";\n";
-str += "v(1,3,3) = "+c6+"; v(2,3,3) = "+c7+"; v(3,3,3) = "+c8+";\n";
-str += "iso = linspace("+
-	Math.max(a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8)+","+
-	Math.min(a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8)+", 9);";
-str += " iso = iso(2:size(iso,2)-1);\n";
-str += 'clg\n \
-for i = 1:size(iso,2) \n \
-	[f, s, c] = isosurface (x, y, z, v, iso(i), v); \n \
-	p = patch ("Faces", f, "Vertices", s, "FaceVertexCData", c, "FaceColor", "interp", "EdgeColor", "none"); \n \
-	set (gca, "PlotBoxAspectRatioMode", "manual", "PlotBoxAspectRatio", [1 1 1]); \n \
-	# set (p, "FaceLighting", "phong");\n \
-	# light ("Position", [1 1 5]);\n \
-	view(45,45) % sleep(0.25)\n \
-end\n';
-str += "\n";
-console.log(str);
-	if(false){
+	loc.x = temp.get(0,0); loc.y = temp.get(1,0); loc.z = temp.get(2,0);
+// var str = "\n";
+// str += "lin = linspace (0, 2, 3); [x, y, z] = meshgrid (lin, lin, lin);\n";
+// str += "v = zeros(3,3,3);\n";
+// str += "v(1,1,1) = "+a0+"; v(2,1,1) = "+a1+"; v(3,1,1) = "+a2+";\n";
+// str += "v(1,2,1) = "+a3+"; v(2,2,1) = "+a4+"; v(3,2,1) = "+a5+";\n";
+// str += "v(1,3,1) = "+a6+"; v(2,3,1) = "+a7+"; v(3,3,1) = "+a8+";\n";
+// str += "v(1,1,2) = "+b0+"; v(2,1,2) = "+b1+"; v(3,1,2) = "+b2+";\n";
+// str += "v(1,2,2) = "+b3+"; v(2,2,2) = "+b4+"; v(3,2,2) = "+b5+";\n";
+// str += "v(1,3,2) = "+b6+"; v(2,3,2) = "+b7+"; v(3,3,2) = "+b8+";\n";
+// str += "v(1,1,3) = "+c0+"; v(2,1,3) = "+c1+"; v(3,1,3) = "+c2+";\n";
+// str += "v(1,2,3) = "+c3+"; v(2,2,3) = "+c4+"; v(3,2,3) = "+c5+";\n";
+// str += "v(1,3,3) = "+c6+"; v(2,3,3) = "+c7+"; v(3,3,3) = "+c8+";\n";
+// str += "iso = linspace("+
+// 	Math.max(a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8)+","+
+// 	Math.min(a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8)+", 9);";
+// str += " iso = iso(2:size(iso,2)-1);\n";
+// str += 'clg\n \
+// for i = 1:size(iso,2) \n \
+// 	[f, s, c] = isosurface (x, y, z, v, iso(i), v); \n \
+// 	p = patch ("Faces", f, "Vertices", s, "FaceVertexCData", c, "FaceColor", "interp", "EdgeColor", "none"); \n \
+// 	set (gca, "PlotBoxAspectRatioMode", "manual", "PlotBoxAspectRatio", [1 1 1]); \n \
+// 	# set (p, "FaceLighting", "phong");\n \
+// 	# light ("Position", [1 1 5]);\n \
+// 	view(45,45) % sleep(0.25)\n \
+// end\n';
+// str += "\n";
+// console.log(str);
+	//if(false){
 	//if(loc.x<0.5 || loc.x>0.5 || loc.y<0.5 || loc.y>0.5 || loc.z<0.5 || loc.z>0.5){
-	//if(loc.x<0.5*delX || loc.x>0.5*delX || loc.y<0.5*delY || loc.y>0.5*delY || loc.z<0.5*delZ || loc.z>0.5*delZ){ // outside this window
-		return null;
+	if(loc.x<-0.5*delX || loc.x>0.5*delX || loc.y<-0.5*delY || loc.y>0.5*delY || loc.z<-0.5*delZ || loc.z>0.5*delZ){ // outside this window
+		//console.log("outside: "+loc.toString());
+//		return null;
 	}
+	//loc.x = 0.19268; loc.y = -0.12936; loc.z = .24913;
 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
 	var det = dxdx*dydy - dxdy*dxdy;
 	var mag = Math.pow((dxdx + dydy),2)/det;

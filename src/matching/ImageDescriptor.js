@@ -183,7 +183,6 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = ImageMat.findExtrema3DFloat(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 1.0,1.0,1.0, edgeResponseEigenRatioR);
-return;
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
 				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
 			}
