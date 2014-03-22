@@ -1146,7 +1146,7 @@ Code.inverse3x3 = function(arr, a,b,c,d,e,f,g,h,i){
 	var x = e*i-f*h;
 	var y = f*g-d*i;
 	var z = d*h-e*g;
-	var det = a*x + b*y + c*z; // a*e*i + d*h*c + g*b*f - a*h*f - g*e*c - d*b*i;
+	var det = a*x + b*y + c*z;
 	if(det==0){ return null; }
 	det = 1/det;
 	arr[0] = det*x;
@@ -1171,9 +1171,92 @@ Code.mult3x3by3x1toV3D = function(v, tbt, tbo){
 	v.y = tbo[0]*tbt[3] + tbo[1]*tbt[4] + tbo[2]*tbt[5];
 	v.z = tbo[0]*tbt[6] + tbo[1]*tbt[7] + tbo[2]*tbt[8];
 }
+Code.mult2x2by2x1toV2D = function(v, tbt, tbo){
+	v.x = tbo[0]*tbt[0] + tbo[1]*tbt[1];
+	v.y = tbo[0]*tbt[2] + tbo[1]*tbt[3];
+}
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
-Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC, ext){ // quadric interpolation
-	ext = ext!==undefined?ext:new V2D();
+Code.findExtrema1D = function(d){
+	var i, lenM1 = d.length-1;
+	var v, list = [];
+	var a,b,c;
+	for(i=1;i<lenM1;++i){
+		a = d[i-1]; b = d[i]; c = d[i+1];
+		if( (a<b&&c<b) || (b>a&&b>c) ){
+			v = Code.interpolateExtrema1D(new V2D(), a,b,c);
+			if(v){
+				v.x += i;
+				list.push(v);
+			}
+		}
+	}
+	return list;
+}
+Code.findGlobalExtrema1D = function(yVals, noEnds){
+	var val, i, lenM1 = yVals.length-1;
+	var min = yVals[0], max = yVals[0];
+	var minIndex = 0, maxIndex = 0;
+	for(i=1;i<=lenM1;++i){
+		val = yVals[i];
+		if(val>max){ max = val; maxIndex = i; }
+		if(val<min){ min = val; minIndex = i; }
+	}
+	if(maxIndex!=0&&maxIndex!=lenM1){ // find local maxima
+		max = Code.interpolateExtrema1D(new V2D(), yVals[maxIndex-1], yVals[maxIndex], yVals[maxIndex+1]);
+		max.x += maxIndex;
+	}else if( !(noEnds===true) ){
+		max = new V2D(maxIndex,yVals[maxIndex]);
+	}else{
+		max = null;
+	}
+	if(minIndex!=0&&minIndex!=lenM1){ // find local minima
+		min = Code.interpolateExtrema1D(new V2D(), yVals[minIndex-1], yVals[minIndex], yVals[minIndex+1]);
+	}else if( !(noEnds===true) ){
+		min = new V2D(minIndex,yVals[minIndex]);
+		min.x += minIndex;
+	}else{
+		min = null;
+	}
+	return {min:min, max:max};
+}
+Code.interpolateExtrema1D = function(loc, a,b,c){
+	var dxdx = (c-2.0*b+a);
+	if(dxdx==0){ return null; }
+	var dx = (c-a)*0.5;
+	loc.x = -dx/dxdx;
+	loc.y = b + 0.5*dx*loc.x;
+	return loc;
+}
+Code.findExtrema1DDiff = function(xVals,yVals, noEnds){
+	var val, i, lenM1 = yVals.length-1;
+	var min = yVals[0], max = yVals[0];
+	var minIndex = 0, maxIndex = 0;
+	for(i=1;i<=lenM1;++i){
+		val = yVals[i];
+		if(val>max){ max = val; maxIndex = i; }
+		if(val<min){ min = val; minIndex = i; }
+	}
+	if(maxIndex!=0&&maxIndex!=lenM1){ // find local maxima
+		max = Code.interpolateExtrema1D(new V2D(), xVals[maxIndex-1],yVals[maxIndex-1], xVals[maxIndex],yVals[maxIndex], xVals[maxIndex+1],yVals[maxIndex+1]);
+	}else{
+		if(noEnds===true){
+			max = null;
+		}else{
+			max = new V2D(xVals[maxIndex],yVals[maxIndex]);
+		}
+	}
+	if(minIndex!=0&&minIndex!=lenM1){ // find local minima
+		min = Code.interpolateExtrema1D(new V2D(), xVals[minIndex-1],yVals[minIndex-1], xVals[minIndex],yVals[minIndex], xVals[minIndex+1],yVals[minIndex+1]);
+	}else{
+		if(noEnds===true){
+			min = null;
+		}else{
+			min = new V2D(xVals[minIndex],yVals[minIndex]);
+		}
+	}
+	return {min:min, max:max};
+}
+Code.interpolateExtrema1DDiff = function(ext, xA,yA, xB,yB, xC,yC){ // unequal x separation
 	var dx1 = xB-xA;
 	var dx2 = xC-xB;
 	var dx3 = xC-xA;
@@ -1188,44 +1271,55 @@ Code.locateExtrema1D = function(xA,yA, xB,yB, xC,yC, ext){ // quadric interpolat
 	return ext;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 2D
-Code.interpolateExtrema1D = function(xVals,yVals, noEnds){
-	var val, i, lenM1 = yVals.length-1;
-	var min = yVals[0], max = yVals[0];
-	var minIndex = 0, maxIndex = 0;
-	for(i=1;i<=lenM1;++i){
-		val = yVals[i];
-		if(val>max){ max = val; maxIndex = i; }
-		if(val<min){ min = val; minIndex = i; }
-	}
-	// find local maxima
-	if(maxIndex!=0&&maxIndex!=lenM1){
-		max = Code.locateExtrema1D(xVals[maxIndex-1],yVals[maxIndex-1], xVals[maxIndex],yVals[maxIndex], xVals[maxIndex+1],yVals[maxIndex+1]);
-	}else{
-		if(noEnds===true){
-			max = null;
-		}else{
-			max = new V2D(xVals[maxIndex],yVals[maxIndex]);
+Code.findExtrema2DFloat = function(d, wid,hei){
+	var i, j, hm1=hei-1, wm1=wid-1, list = [];
+	var jW0, jW1, jW2, i0,i1,i2;
+	var d0,d1,d2,d3,d4,d5,d6,d7,d8;
+	var result, count = 0;
+	var eps = 1.0; // 0.5;
+	for(j=1;j<hm1;++j){
+		jW0 = (j-1)*wid; jW1 = j*wid; jW2 = (j+1)*wid;
+		for(i=1;i<wm1;++i){
+			i0 = i-1; i1 = i; i2 = i+1;
+			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
+			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
+			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
+				result = ImageMat.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+				if(result==null){ continue; }
+				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
+					result.x += i; result.y += j; result.z += k;
+					list.push(result);
+				}else{ // need to interpolate at a neighbor
+					//	console.log("result; "+result.toString());
+				}
+			}
 		}
 	}
-	// find local minima
-	if(minIndex!=0&&minIndex!=lenM1){
-		min = Code.locateExtrema1D(xVals[minIndex-1],yVals[minIndex-1], xVals[minIndex],yVals[minIndex], xVals[minIndex+1],yVals[minIndex+1]);
-	}else{
-		if(noEnds===true){
-			min = null;
-		}else{
-			min = new V2D(xVals[minIndex],yVals[minIndex]);
-		}
-	}
-	return {min:min, max:max};
+	return list;
 }
-
+Code._tempMatrixArray2 = [0,0];
+Code._tempMatrixArray4 = [0,0,0,0];
+Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // 
+	var dx = (d5-d3)*0.5;
+	var dy = (d7-d1)*0.5;
+	var dxdx = (d5-2.0*d4+d3);
+	var dydy = (d7-2.0*d4+d1);
+	var dxdy = (d8-d6-d2+d0)*0.25;
+	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
+	if(!Hinv){ return null; }
+	var dD = Code.setArray(Code._tempMatrixArray2,dx,dy);
+	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
+	loc.x = -loc.x; loc.y = -loc.y;
+	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
+	return loc;
+}
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 3D
-Code.interpolateExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
+Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 	k = k!==undefined?k:0;
-	var i, j, hm1=hei-1, wm1=wid-1, list = []
+	var i, j, hm1=hei-1, wm1=wid-1, list = [];
 	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7;
 	var jW0,jW1,jW2, i0,i1,i2, result;
+	var eps = 1.0; // 0.5;
 	for(j=1;j<hm1;++j){
 		jW0 = (j-1)*wid, jW1 = j*wid, jW2 = (j+1)*wid;
 		for(i=1;i<wm1;++i){
@@ -1240,9 +1334,8 @@ Code.interpolateExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 			(a0>b4&&a1>b4&&a2>b4&&a3>b4&&a4>b4&&a5>b4&&a6>b4&&a7>b4&&a8>b4 // minima
 			&& b0>b4&&b1>b4&&b2>b4&&b3>b4    &&   b5>b4&&b6>b4&&b7>b4&&b8>b4
 			&& c0>b4&&c1>b4&&c2>b4&&c3>b4&&c4>b4&&c5>b4&&c6>b4&&c7>b4&&c8>b4) ){
-				result = Code.extrema3DFloatInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
+				result = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
 				if(result==null){ continue; }
-				var eps = 1.0; // 0.5;
 				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
 					result.x += i; result.y += j; result.z += k;
 					list.push(result);
@@ -1254,9 +1347,9 @@ Code.interpolateExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 	}
 	return list;
 }
-Code._tempMatrixArray1 = [0,0,0];
-Code._tempMatrixArray2 = [0,0,0, 0,0,0, 0,0,0];
-Code.extrema3DFloatInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7, keepDet){ // a is bot, b is middle, c is top
+Code._tempMatrixArray3 = [0,0,0];
+Code._tempMatrixArray9 = [0,0,0, 0,0,0, 0,0,0];
+Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7, keepDet){ // a is bot, b is middle, c is top
 	var dx = (b5-b3)*0.5;
 	var dy = (b7-b1)*0.5;
 	var dz = (c4-a4)*0.5;
@@ -1266,9 +1359,9 @@ Code.extrema3DFloatInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5
 	var dxdy = (b8-b6-b2+b0)*0.25;
 	var dxdz = (c5-c3-a5+a3)*0.25;
 	var dydz = (c7-c1-a7+a1)*0.25;
-	var dD = Code.setArray(Code._tempMatrixArray1, dx,dy,dz);
-	var Hinv = Code.inverse3x3(Code._tempMatrixArray2, dxdx,dxdy,dxdz, dxdy,dydy,dydz, dxdz,dydz,dzdz);
+	var Hinv = Code.inverse3x3(Code._tempMatrixArray9, dxdx,dxdy,dxdz, dxdy,dydy,dydz, dxdz,dydz,dzdz);
 	if(!Hinv){ return null; }
+	var dD = Code.setArray(Code._tempMatrixArray3, dx,dy,dz);
 	Code.mult3x3by3x1toV3D(loc, Hinv,dD);
 	loc.x = -loc.x; loc.y = -loc.y; loc.z = -loc.z;
 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);

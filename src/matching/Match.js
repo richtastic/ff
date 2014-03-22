@@ -100,7 +100,9 @@ function Match(mode,data){
 	}else if(this._mode==Match.MODE_SHOW_POINTS){
 		// 
 	}else if(this._mode==Match.MODE_TEST_POINTS){
-		// 
+		console.log("tet");
+		var imageLoader = new ImageLoader(data.imageBase, data.images, this,this._imageCompleteFxn,this._imageProgressFxn);
+		imageLoader.load();
 	}else{
 		this._mode = Match.MODE_UNKNOWN;
 	}
@@ -657,6 +659,19 @@ root.matrix().scale(1.5);
 		var imageSourceBlu = params.blu;
 		var imageSourceGry = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 		var descriptor = new ImageDescriptor(wid,hei, imageSourceRed,imageSourceGrn,imageSourceBlu,imageSourceGry, filename);
+
+//imageSourceGry = ImageMat.historizeLocalFloat01(imageSourceGry,wid,hei);
+// imageSourceRed = ImageMat.historizeLocalFloat01(imageSourceRed,wid,hei);
+// imageSourceGrn = ImageMat.historizeLocalFloat01(imageSourceGrn,wid,hei);
+// imageSourceBlu = ImageMat.historizeLocalFloat01(imageSourceBlu,wid,hei);
+// d = new DOImage(  this._stage.getARGBAsImage(ImageMat.ARGBFromFloats(imageSourceRed,imageSourceGrn,imageSourceBlu), wid, hei) );
+//d = new DOImage(  this._stage.getARGBAsImage(ImageMat.ARGBFromFloat(imageSourceGry), wid, hei) );
+// d.matrix().translate(currentWidth,currentHeight);
+// root.addChild(d);
+// continue;
+		d = new DOImage(images[i]);
+		d.matrix().translate(currentWidth,currentHeight);
+		root.addChild(d);
 		//descriptor.processScaleSpace();
 		if(i==0){ // original
 /*
@@ -718,9 +733,7 @@ root.matrix().scale(1.5);
 		// descriptor.processAffineSpace();
 		// descriptor.describeFeatures();
 		// show image
-		d = new DOImage(images[i]);
-		d.matrix().translate(currentWidth,currentHeight);
-		root.addChild(d);
+
 		// EACH FEATURE
 		list = descriptor.getFeatureList();
 		len2 = list.length;

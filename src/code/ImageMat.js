@@ -766,150 +766,6 @@ ImageMat.printBadData = function(data, wid,hei){
 	}
 }
 
-ImageMat.findExtrema2DFloat = function(d, wid,hei, delX,delY, r, maxOnly){
-	maxOnly = maxOnly!==undefined?(!maxOnly):true;
-	delX = delX!==undefined?delX:1.0;
-	delY = delY!==undefined?delY:1.0;
-	var list = new Array();
-	var i, j, hm1=hei-1, wm1=wid-1;
-	var jW0, jW1, jW2, i0,i1,i2;
-	var d0,d1,d2,d3,d4,d5,d6,d7,d8;
-	var result, count = 0;
-	for(j=1;j<hm1;++j){
-		jW0 = (j-1)*wid; jW1 = j*wid; jW2 = (j+1)*wid;
-		for(i=1;i<wm1;++i){
-			i0 = i-1; i1 = i; i2 = i+1;
-			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
-			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
-			||  (maxOnly&&(d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4)) ){ // minima
-				result = ImageMat.extrema2DFloatInterpolate(new V3D(), delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r);
-				if(result){ // able to calculate
-					result.x = (result.x+i)/wid; result.y = (result.y+j)/hei;
-					list.push(result);
-				}else{ // i hate everything
-					//list.push( new V3D(i/wid, j/hei, d4) );
-				}
-			}
-		}
-	}
-	return list;
-}
-
-
-// ImageMat.findExtrema3DFloat = function(a,b,c, wid,hei, delX,delY,delZ, r){ // a=-1, b=0, c=+1
-// 	delX = delX!==undefined?delX:1.0;
-// 	delY = delY!==undefined?delY:1.0;
-// 	delZ = delZ!==undefined?delZ:1.0;
-// 	var list = new Array();
-// 	var i, j, hm1=hei-1, wm1=wid-1;
-// 	var jW0, jW1, jW2, i0,i1,i2;
-// 	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8;
-// 	var result, count = 0;
-// 	for(j=1;j<hm1;++j){
-// 		jW0 = (j-1)*wid;
-// 		jW1 = j*wid;
-// 		jW2 = (j+1)*wid;
-// 		for(i=1;i<wm1;++i){
-// 			i0 = i-1; i1 = i; i2 = i+1;
-// 			a0 = a[jW0+i0]; a1 = a[jW0+i1]; a2 = a[jW0+i2]; a3 = a[jW1+i0]; a4 = a[jW1+i1]; a5 = a[jW1+i2]; a6 = a[jW2+i0]; a7 = a[jW2+i1]; a8 = a[jW2+i2];
-// 			b0 = b[jW0+i0]; b1 = b[jW0+i1]; b2 = b[jW0+i2]; b3 = b[jW1+i0]; b4 = b[jW1+i1]; b5 = b[jW1+i2]; b6 = b[jW2+i0]; b7 = b[jW2+i1]; b8 = b[jW2+i2];
-// 			c0 = c[jW0+i0]; c1 = c[jW0+i1]; c2 = c[jW0+i2]; c3 = c[jW1+i0]; c4 = c[jW1+i1]; c5 = c[jW1+i2]; c6 = c[jW2+i0]; c7 = c[jW2+i1]; c8 = c[jW2+i2];
-// 			if((a0<b4&&a1<b4&&a2<b4&&a3<b4&&a4<b4&&a5<b4&&a6<b4&&a7<b4&&a8<b4 // maxima
-// 			&& b0<b4&&b1<b4&&b2<b4&&b3<b4    &&   b5<b4&&b6<b4&&b7<b4&&b8<b4
-// 			&& c0<b4&&c1<b4&&c2<b4&&c3<b4&&c4<b4&&c5<b4&&c6<b4&&c7<b4&&c8<b4)
-// 			||
-// 			(a0>b4&&a1>b4&&a2>b4&&a3>b4&&a4>b4&&a5>b4&&a6>b4&&a7>b4&&a8>b4 // minima
-// 			&& b0>b4&&b1>b4&&b2>b4&&b3>b4    &&   b5>b4&&b6>b4&&b7>b4&&b8>b4
-// 			&& c0>b4&&c1>b4&&c2>b4&&c3>b4&&c4>b4&&c5>b4&&c6>b4&&c7>b4&&c8>b4) ){
-// 				//result = new V3D(i/wm1,j/hm1,b4);
-// 				//result = ImageMat.extrema3DFloatInterpolateNext(new V4D(), delX,delY,delZ, a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8, r);
-// 				result = Code.extrema3DFloatInterpolate(new V5D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7, true);
-// 				if(result==null){ continue; }
-// 				var eps = 1.0;
-// 				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){
-// 					result.x = (result.x+i)/wid; result.y = (result.y+j)/hei; result.z = result.z;
-// 					list.push(result);
-// 					++count;
-// 				}else{ // need to interpolate at a neighbor
-// 				//	console.log("result; "+result.toString());
-// 				}
-// 			}
-// 		}
-// 	}
-// 	//console.log("EXTREMA: "+count);
-// 	return list;
-// }
-// ImageMat._tempMatrix2_2 = new Matrix(2,2);
-// ImageMat._tempMatrix2_1 = new Matrix(2,1);
-// ImageMat._tempMatrix2_1_2 = new Matrix(2,1);
-// ImageMat.extrema2DFloatInterpolate = function(loc, delX,delY, d0,d1,d2,d3,d4,d5,d6,d7,d8, r){ // 
-// 	r = r!==undefined?r:1E-16;
-// 	var dx = (d5-d3)/(2.0*delX);
-// 	var dy = (d7-d1)/(2.0*delY);
-// 	var dxdx = (d5-2.0*d4+d3)/(delX*delX);
-// 	var dxdy = (d8-d6-d2+d0)/(2.0*delX*delY);
-// 	var dydx = dxdy;
-// 	var dydy = (d7-2.0*d4+d1)/(delY*delY);
-// 	var det = dxdx*dydy - dxdy*dxdy;
-// 	if(Math.abs(det) < r){ // need something better - tho this is appropriate for harris matrix ... // GAH - jsut increase the magnitudes ....
-// 		return null;
-// 	}
-// 	var dD = ImageMat._tempMatrix2_1.setFromArray([dx, dy]);
-// 	var H = ImageMat._tempMatrix2_2.setFromArray([dxdx,dxdy, dydx,dydy]);
-// 	var Hinv = Matrix.inverse(H);
-// 	var temp = Matrix.mult(ImageMat._tempMatrix2_1_2, Hinv,dD);
-// 	loc.x = -temp.get(0,0);
-// 	loc.y = -temp.get(1,0);
-// 	if(loc.x<-0.5*delX || loc.x>0.5*delX || loc.y<-0.5*delY || loc.y>0.5*delY){ // outside this window
-// 		console.log("goto next cell-set");
-// 		return null;
-// 	}
-// 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
-// 	// loc.t = det;
-// 	return loc;
-// }
-// ImageMat._tempMatrix3_3 = new Matrix(3,3);
-// ImageMat._tempMatrix3_1 = new Matrix(3,1);
-// ImageMat._tempMatrix3_1_2 = new Matrix(3,1);
-// ImageMat.extrema3DFloatInterpolateNexasdasdasdast = function(loc, delX,delY,delZ, a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7,c8, r){ // a is bot, b is middle, c is top
-// 	// unused: a0 a2 a6 a8 c0 c2 c6 c8
-// 	var dx = (b5-b3)/(2.0*delX);
-// 	var dy = (b7-b1)/(2.0*delY);
-// 	var dz = (c4-a4)/(2.0*delZ);
-// 	var dxdx = (b5-2.0*b4+b3)/(1.0*delX*delX);
-// 	var dydy = (b7-2.0*b4+b1)/(1.0*delY*delY);
-// 	var dzdz = (c4-2.0*b4+a4)/(1.0*delZ*delZ);
-// 	var dxdy = (b8-b6-b2+b0)/(4.0*delX*delY);
-// 	var dxdz = (c5-c3-a5+a3)/(4.0*delX*delZ);
-// 	var dydz = (c7-c1-a7+a1)/(4.0*delY*delZ);
-// 	var dydx = dxdy;
-// 	var dzdx = dxdz;
-// 	var dzdy = dydz;
-	
-// 	var dD = ImageMat._tempMatrix3_1.setFromArray([dx, dy, dz]);
-// 	var H = ImageMat._tempMatrix3_3.setFromArray([dxdx,dxdy,dxdz, dydx,dydy,dydz, dzdx,dzdy,dzdz]);
-// 	//var H = ImageMat._tempMatrix3_3.setFromArray([dxdx,0,0, 0,dydy,0, 0,0,dzdz]);
-// 	var Hinv = Matrix.inverse(H);
-// 	Hinv.scale(-1);
-// 	var temp = Matrix.mult(ImageMat._tempMatrix3_1_2, Hinv,dD);
-// 	loc.x = temp.get(0,0); loc.y = temp.get(1,0); loc.z = temp.get(2,0);
-// 	if(loc.x<-0.5*delX || loc.x>0.5*delX || loc.y<-0.5*delY || loc.y>0.5*delY || loc.z<-0.5*delZ || loc.z>0.5*delZ){ // outside this window
-// 		//console.log("outside: "+loc.toString());
-// 		//return null;
-// 	}
-// 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
-// 	var det = dxdx*dydy - dxdy*dxdy;
-// 	var mag = Math.pow((dxdx + dydy),2)/det;
-// //console.log(loc);
-// //	loc.u = mag; // ?
-// 	// === loc.t = b4 + (dx*loc.x + dy*loc.y + dz*loc.z) + 0.5*((dxdx*loc.x+dxdy*loc.y+dxdz*loc.z)*loc.x + (dydx*loc.x+dydy*loc.y+dydz*loc.z)*loc.y + (dzdx*loc.x+dzdy*loc.y+dzdz*loc.z)*loc.z);
-// 	if(r!==undefined){ // lowe 2x2 hessian criteria tr^2(H)/det(H) < (r+1)^2/r
-// 		if ( mag > r ){
-// 			return null;
-// 		}
-// 	}
-// 	return loc;
-// }
 // ------------------------------------------------------------------------------------------------------------------------ fxns
 ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
@@ -935,23 +791,32 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 	}
 	return result;
 }
-
-ImageMat.convolveOld = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
-	var total = imageWidth*imageHeight;
-	var i, j, n, m, sum;
-	var result = new Array(total);
-	for(i=0;i<total;++i){
-		result[i] = 0.0;
-	}
-	for(i=operatorWidth;i<imageWidth-operatorWidth;++i){
-		for(j=operatorHeight;j<imageHeight-operatorHeight;++j){
-			sum = 0.0;
-			for(n=0;n<operatorWidth;++n){
-				for(m=0;m<operatorHeight;++m){
-					sum += image[(j-m)*imageWidth+(i+n)]*operator[m*operatorWidth+n];
+ImageMat.historizeLocalFloat01 = function(data,wid,hei, winWid,winHei){ // weird square-effect
+	winWid = winWid!==undefined?winWid:25;
+	winHei = winHei!==undefined?winHei:25;
+	var result = new Array(wid*hei);
+	var wo2 = Math.floor(winWid*0.5);
+	var ho2 = Math.floor(winHei*0.5);
+	var i,j,ii,jj,index,ind, max,min,range, mI,mJ;
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i){
+			index = wid*j+i;
+			max = min = data[index];
+			mI = Math.min(Math.max(i-wo2,0),wid-winWid);
+			mJ = Math.min(Math.max(j-ho2,0),hei-winHei);
+			for(jj=0;jj<winHei;++jj){
+				for(ii=0;ii<winWid;++ii){
+					ind = (mJ+jj)*wid+(mI+ii);
+					if(data[ind]>max){ max = data[ind]; }
+					if(data[ind]<min){ min = data[ind]; }
 				}
 			}
-			result[j*imageWidth+i] = sum;
+			range = max-min;
+			if(range!=0){
+				result[index] = (data[index]-min)/range;
+			}else{
+				result[index] = 0.0;
+			}
 		}
 	}
 	return result;
@@ -1229,12 +1094,8 @@ ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH)
 			for(i=0;i<wid;++i){
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
-				//console.log(fr.x,fr.y,fr.z);
 				fr.x /= fr.z; fr.y /= fr.z;
 				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
-				// if( isNaN(destination[wid*j+i]) ){
-				// 	console.log("                                    "+i+","+j+" "+fr);
-				// }
 			}
 		}
 	}

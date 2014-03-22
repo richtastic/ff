@@ -183,7 +183,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		}
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
-			ext = Code.interpolateExtrema3D(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 0);
+			ext = Code.findExtrema3D(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 0);
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
 				ext[k].x /= currentWid;
 				ext[k].y /= currentHei;

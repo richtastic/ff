@@ -14,6 +14,12 @@ function ColorMatRGBY(r,g,b,y, wid,hei){
 		this._gry[i] = y[i];
 	}
 }
+ColorMatRGBY.prototype.normalize = function(){
+	ImageMat.normalFloat01(this._red);
+	ImageMat.normalFloat01(this._grn);
+	ImageMat.normalFloat01(this._blu);
+	ImageMat.normalFloat01(this._gry);
+}
 ColorMatRGBY.prototype.width = function(){
 	return this._wid;
 }
