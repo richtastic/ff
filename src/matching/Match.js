@@ -98,9 +98,10 @@ function Match(mode,data){
 	}else if(this._mode==Match.MODE_COMPARE_POINTS){
 		// 
 	}else if(this._mode==Match.MODE_SHOW_POINTS){
-		// 
+		var fileLoader = new FileLoader();
+		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxnShow);
+		fileLoader.load();
 	}else if(this._mode==Match.MODE_TEST_POINTS){
-		console.log("tet");
 		var imageLoader = new ImageLoader(data.imageBase, data.images, this,this._imageCompleteFxn,this._imageProgressFxn);
 		imageLoader.load();
 	}else{
@@ -474,8 +475,7 @@ root.addChild(doi);
 	console.log("done");
 	return;
 }
-
-Match.prototype._onYAMLCompleteFxnAffine = function(o){
+Match.prototype.setYAMLFromComplete = function(o,fxn){
 	var DATA = Match.YAML;
 	var i, j, len, len2, d, f, descriptor, list, img, obj, yaml=new YAML(), hash=new Object();
 	var files = o.files[0];
@@ -487,8 +487,57 @@ Match.prototype._onYAMLCompleteFxnAffine = function(o){
 	this._descriptorData = o.contents[0];
 	this._descriptor = descriptor;
 	// load image for presentation
-	var imageLoader = new ImageLoader("", [descriptor.imageFileName()], this,this._onImageCompleteFxnAffine, null);
+	var imageLoader = new ImageLoader("", [descriptor.imageFileName()], this,fxn, null);	
 	imageLoader.load();
+	//return imageLoader;
+}
+Match.prototype._onYAMLCompleteFxnShow = function(o){
+	this.setYAMLFromComplete(o,this._onImageCompleteFxnShow);//.load();
+}
+Match.prototype._onImageCompleteFxnShow = function(o){
+	var i, j, len, len2, d, f, descriptor, list, img, obj;
+	var descriptor = this._descriptor;
+	img = o.images[0];
+	obj = this.getDescriptorParameters( img );
+	descriptor.setImageData( obj.width,obj.height,obj.red,obj.grn,obj.blu );
+
+	// draw images on screen
+	var container = new DO(); this._root.addChild(container);
+	container.matrix().identity(); container.matrix().scale(1.0);
+	d = new DOImage( img );
+	d.matrix().identity();
+	container.addChild(d);
+	var indexA = 0;
+	var rad = 2.0, x, y, s, w, h;
+
+	// draw features on screen
+	var features = descriptor.getFeatureList();
+	len = features.length;
+	console.log( "features length: "+len );
+	for(i=0;i<len;++i){
+		f = features[i];
+		f.descriptor(descriptor);
+		x = f.x()*descriptor.width(); y = f.y()*descriptor.height(); s = f.scale();
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0,0xFFFFFF00);
+		d.graphics().beginPath();
+		d.graphics().setFill(0x66FFFFFF);
+		d.graphics().moveTo(rad*s,0);
+		d.graphics().arc(0,0, rad*s, 0,Math.PI*2.0, false);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+		d.matrix().identity();
+		d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
+		d.matrix().translate(x,y);
+		container.addChild(d);
+	}
+}
+
+
+Match.prototype._onYAMLCompleteFxnAffine = function(o){
+	this.setYAMLFromComplete(o,this._onImageCompleteFxnAffine);
 }
 Match.prototype._onImageCompleteFxnAffine = function(o){
 	var i, j, len, len2, d, f, descriptor, list, img, obj;
@@ -512,8 +561,15 @@ Match.prototype._onImageCompleteFxnAffine = function(o){
 	currentWidth = 0; currentHeight = 0;
 
 // process affine space
-descriptor.processAffineSpace();
-descriptor.describeFeatures();
+try{
+	console.log("AFFINE");
+	descriptor.processAffineSpace();
+	descriptor.describeFeatures();
+}catch(e){
+	console.log(e);
+}finally{
+	// 
+}
 		w = descriptor.width(); h = descriptor.height();
 		list = descriptor.getFeatureList();
 		len2 = list.length;
@@ -889,6 +945,7 @@ descriptor._features.push(  new ImageFeature(0.3548,0.4553,1.0, 0,null) );
 			var f = list[j];
 			//console.log( f.x(),f.y(),f.scale() );
 			var ret = descriptor.detectPoint( new V3D( f.x(),f.y(),f.scale() ) );
+
 			var points = ret.points;
 			var windows = ret.windows;
 			var eigens = ret.eigens;
@@ -1080,7 +1137,9 @@ var descriptor = new ImageDescriptor( params.width,params.height, params.red,par
 	//descriptor.describeFeatures();
 
 // SAVE TO YAML FILE
+var DATA = Match.YAML;
 var yaml = this.saveDescriptorToYAML(descriptor);
+var str = yaml.toString();
 var obj = yaml.parse(str);
 Code.copyToClipboardPrompt(str);
 // double check reconstruction

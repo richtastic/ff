@@ -68,7 +68,7 @@ ImageFeature.prototype.loadFromYAML = function(yaml){
 		this._affine.set(1,0, obj[DATA.C]);
 		this._affine.set(1,1, obj[DATA.D]);
 		this._affine.set(2,2, 1.0);
-this._affine.identity();
+//this._affine.identity();
 	}else{
 		this._affine = new Matrix(3,3);
 		this._affine.identity();

@@ -19,14 +19,15 @@ function customClassesLoadedFxn(){
 	var data = {};
 	var list = [];
 	//var mode = Match.MODE_FIND_SIFT_POINTS;
-	var mode = Match.MODE_FIND_AFFINE_POINTS;
+	//var mode = Match.MODE_FIND_AFFINE_POINTS;
 	//var mode = Match.MODE_TEST_POINTS;
+	var mode = Match.MODE_SHOW_POINTS;
 // find initial points
 	if(mode == Match.MODE_FIND_SIFT_POINTS){
-		list.push("original.png");
+		//list.push("original.png");
 		//list.push("scalexy.png");
 		//list.push("scalex.png");
-		//list.push("scalexrotateskew.png");
+		list.push("scalexrotateskew.png");
 		data.images = list;
 		data.imageBase = "./images/test/";
 		var match = new Match(Match.MODE_FIND_SIFT_POINTS, data);
@@ -34,8 +35,8 @@ function customClassesLoadedFxn(){
 	}else if(mode == Match.MODE_FIND_AFFINE_POINTS){
 		//list.push("BLT.yaml");
 		//list.push("BLB.yaml");
-		list.push("original.yaml");
-		//list.push("scalexy.png");
+		//list.push("original.yaml");
+		list.push("skewed.yaml");
 		data.fileBase = "./descriptors/";
 		data.files = list;
 		var match = new Match(Match.MODE_FIND_AFFINE_POINTS, data);
@@ -43,6 +44,11 @@ function customClassesLoadedFxn(){
 	}else if(mode == Match.MODE_COMPARE_POINTS){
 // show points
 	}else if(mode == Match.MODE_SHOW_POINTS){
+		//list.push("original_affine.yaml");
+		list.push("skewed_affine.yaml");
+		data.fileBase = "./descriptors/";
+		data.files = list;
+		var match = new Match(Match.MODE_SHOW_POINTS, data);
 // test points
 	}else if(mode == Match.MODE_TEST_POINTS){
 		list.push("original.png");

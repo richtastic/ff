@@ -273,13 +273,20 @@ ImageDescriptor.prototype.processAffineSpace = function(){ // this finds the mos
 	var endPoints = new Array();
 	len = startPoints.length;
 	for(k=0;k<len;++k){
+try{
 		pt = new V3D(startPoints[k].x(),startPoints[k].y(),startPoints[k].scale()); // initial interest point
+console.log(pt.toString());
 		obj = this.detectPoint(pt);
 		console.log(obj)
 		if(obj){
 			feature = new ImageFeature(obj.point.x,obj.point.y,obj.point.z, 0.0, obj.affine);
 			endPoints.push(feature);
 		}
+}catch(e){
+	console.log(e);
+}finally{
+	// 
+}
 	}
 	this._features = endPoints;
 	Code.timerStop();
@@ -506,7 +513,7 @@ inPoint.z = 1.0;
 	var winWid = winHei = 51;
 	var u = new Matrix(2,2);
 	var transformInverse, transform = new Matrix(3,3); transform.identity();
-	var maxIterations = 20;
+	var maxIterations = 30;
 	var winList = new Array(), pointList = new Array(), eigenList = new Array();
 	var sigmaI = this._sigma, sigmaD = this._sigma*0.7;
 	var decay = 1.0, decayRate = 1.0;//0.95;
