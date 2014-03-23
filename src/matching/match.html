@@ -18,77 +18,43 @@ function customClassesLoadedFxn(){
 	Code.setPageTitle("fantastic");
 	var data = {};
 	var list = [];
+	//var mode = Match.MODE_FIND_SIFT_POINTS;
+	var mode = Match.MODE_FIND_AFFINE_POINTS;
+	//var mode = Match.MODE_TEST_POINTS;
 // find initial points
-	list.push("original.png");
-	//list.push("scalexy.png");
-	//list.push("scalex.png");
-	//list.push("scalexrotateskew.png");
-	data.images = list;
-	data.imageBase = "./images/test/";
-	var match = new Match(Match.MODE_FIND_SIFT_POINTS, data);
-return;
+	if(mode == Match.MODE_FIND_SIFT_POINTS){
+		list.push("original.png");
+		//list.push("scalexy.png");
+		//list.push("scalex.png");
+		//list.push("scalexrotateskew.png");
+		data.images = list;
+		data.imageBase = "./images/test/";
+		var match = new Match(Match.MODE_FIND_SIFT_POINTS, data);
 // find affine from sift
-	list.push("BLT.yaml");
-	list.push("BLB.yaml");
-	data.fileBase = "./descriptors/";
-	data.fileBase = list;
-	var match = new Match(Match.MODE_FIND_AFFINE_POINTS, data);
+	}else if(mode == Match.MODE_FIND_AFFINE_POINTS){
+		//list.push("BLT.yaml");
+		//list.push("BLB.yaml");
+		list.push("original.yaml");
+		//list.push("scalexy.png");
+		data.fileBase = "./descriptors/";
+		data.files = list;
+		var match = new Match(Match.MODE_FIND_AFFINE_POINTS, data);
 // compare point lists
+	}else if(mode == Match.MODE_COMPARE_POINTS){
 // show points
+	}else if(mode == Match.MODE_SHOW_POINTS){
 // test points
-	list.push("original.png");
-	data.images = list;
-	data.imageBase = "./images/test/";
-	var match = new Match(Match.MODE_TEST_POINTS, data);
+	}else if(mode == Match.MODE_TEST_POINTS){
+		list.push("original.png");
+		//list.push("scalex.png");
+		data.images = list;
+		data.imageBase = "./images/test/";
+		var match = new Match(Match.MODE_TEST_POINTS, data);
+	}
 	// 
 // ["BLT.png", "BLB.png"], // ["damn.png"], // ["max.png"], //"FT.png","FRB.png","FR.png","FLT2.png","FLT.png","FLB2.png","FLB.png","FL.png","FB.png","BRT.png","BRB.png","BLT.png","BLB.png","BL.png"],
 	
 	return;
-
-//console.log(Code.inverse3x3(new Array(), 1,2,3,6,7,9,1,1,1));
-// var m;
-// m = Code.extrema3DFloatInterpolate(new V3D(), 76, 68,69,75, 67, 88,89,84, 97.1,97.8,97.5, 83.7,83.2,83.5, 93, 92,88,83, 71);
-// m = Code.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 3,2,1, 2,1,1, 1,1,1, 1E-16);
-// m = Code.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 3,2,0, 2,1,0, 0,0,0, 1E-16);
-// m = Code.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 0,1,0, 1,2,1, 0,1,0, 1E-16);
-// m = Code.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 2,2,1, 1,2,1, 1,1,1, 1E-16);
-// m = Code.extrema2DFloatInterpolate(new V3D(), 1.0,1.0, 0,0,0,0,0,0,0,0,1, 1E-16);
-// console.log( m );
-// return;
-
-// var a = [ 8.2482E-6,  1.2988E-5,  1.5501E-5,  1.3178E-5,  8.7412E-6,  4.8403E-6,  2.3474E-6, 
-//   1.0204E-5,  1.6447E-5,  1.9558E-5,  1.7003E-5,  1.2099E-5,  7.1386E-6,  3.3571E-6, 
-//   9.5306E-6,  1.4999E-5,  1.7292E-5,  1.5136E-5,  1.1534E-5,  7.2499E-6,  3.2926E-6, 
-//   6.2087E-6,  9.7772E-6,  1.1808E-5,  1.1283E-5,  9.3590E-6,  6.0807E-6,  2.6512E-6, 
-//   3.1788E-6,  5.3476E-6,  7.8523E-6,  9.1186E-6,  8.1317E-6,  5.1937E-6,  2.2159E-6, 
-//   1.6502E-6,  3.0588E-6,  5.4678E-6,  7.3281E-6,  6.8116E-6,  4.3285E-6,  1.9057E-6, 
-//   9.3599E-7,  1.8033E-6,  3.3678E-6,  4.7061E-6,  4.5106E-6,  2.9696E-6,  1.4106E-6];
-// var winWid = 7;
-// var winHei = 7;
-// console.log(Code.toStringArray2D(a,winWid,winHei));
-// var peaks, i, len;
-// peaks = ImageMat.findExtrema2DFloat(a, winWid,winHei);
-// console.log(peaks.length);
-// for(i=0;i<peaks.length;++i){
-// 	console.log(peaks[i]);
-// }
-// peaks = ImageMat.getPeaks(a, winWid,winHei);
-// console.log(peaks.length);
-// for(i=0;i<peaks.length;++i){
-// 	console.log(peaks[i]);
-// }
-// return;
-
-	
-	// var data = [0,0,0, 0,1,0.5, 0,0.5,0.5];
-	// var wid = 3;
-	// var hei = 3;
-	// var delX = 1.0; 
-	// var delY = 1.0;
-	// var r = undefined;
-	// vals = ImageMat.findExtrema2DFloat(data, wid,hei, delX,delY, r);
-	// console.log(vals);
-
 
 	// var a = [0 , 1, 2, 3,
 	//          4 , 5, 6, 7,

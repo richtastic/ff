@@ -140,6 +140,7 @@ ImageFeature.prototype.findOrientations = function(origR,origG,origB,origY, wid,
 	this._colorAngles = new ColorAngle(angRed,angGrn,angBlu,angGry, magRed,magGrn,magBlu,magGry);
 }
 ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,hei, ang){
+//console.log(origR,origG,origB,origY, wid,hei, ang);
 	var rectRed, rectGrn, rectBlu, rectGry;
 	var gradRedX, gradGrnX, gradBluX, gradGryX, gradRedY, gradGrnY, gradBluY, gradGryY;
 	var Ix, Iy, src, mag, sigma, w, h, g=new V2D(), x=new V2D(1,0), rot = new Matrix(3,3); 

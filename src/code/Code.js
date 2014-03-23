@@ -327,6 +327,11 @@ Code.getTimeMilliseconds = function(){
     var d = new Date();
     return d.getTime();
 }
+Code.getTimeZone = function(){
+	var d = new Date();
+	var hours = Math.floor( -d.getTimezoneOffset()/60 );
+	return hours;
+}
 Code.getTimeStamp = function(){
     var d = new Date( Code.getTimeMilliseconds() );
 	var str = d.getFullYear()
@@ -1128,7 +1133,7 @@ Code.separateAffine2D = function(a,b,c,d, tx,ty){
 	var rotationA = Math.atan(c/d);
 	var rotationB = Math.atan(-b/a);
 	var rotation = (rotationA+rotationB)*0.5;
-	return {scaleX:scaleX, scaleY:scaleY, rotation:rotation, translationX:tx, translationY:ty};
+	return {scaleX:scaleX, scaleY:scaleY, scale:(scaleX+scaleY)*0.5, rotation:rotation, translationX:tx, translationY:ty};
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------- matrices
@@ -1191,6 +1196,12 @@ Code.findExtrema1D = function(d){
 		}
 	}
 	return list;
+}
+Code.findGlobalExtrema1DSecondary = function(value, linearValues){
+	var base = Math.floor(value.x);
+	var remainder = value.x - base;
+	value.x = linearValues[base]+remainder;
+	return value;
 }
 Code.findGlobalExtrema1D = function(yVals, noEnds){
 	var val, i, lenM1 = yVals.length-1;
@@ -1271,6 +1282,10 @@ Code.interpolateExtrema1DDiff = function(ext, xA,yA, xB,yB, xC,yC){ // unequal x
 	return ext;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 2D
+Code.gradient2D = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){
+	loc.x = (d5-d3)*0.5;
+	loc.y = (d7-d1)*0.5;
+}
 Code.findExtrema2DFloat = function(d, wid,hei){
 	var i, j, hm1=hei-1, wm1=wid-1, list = [];
 	var jW0, jW1, jW2, i0,i1,i2;

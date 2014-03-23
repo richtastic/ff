@@ -821,6 +821,22 @@ ImageMat.historizeLocalFloat01 = function(data,wid,hei, winWid,winHei){ // weird
 	}
 	return result;
 }
+ImageMat.getRangeEnds = function(data){
+	var i, len = data.length;
+	var min = data[0], max = data[0];
+	// for(i=1;i<len;++i){
+	// 	min = Math.min(min,data[i]);
+	// 	max = Math.max(max,data[i]);
+	// }
+	min = Math.min.apply(this,data);
+	max = Math.max.apply(this,data);
+	return {min:min, max:max};
+}
+ImageMat.getRange = function(data){
+	var range = ImageMat.getRangeEnds(data);
+	return range.max - range.min;
+}
+
 ImageMat.historize0255 = function(data){
 	var i, len = data.length;
 	var bins = new Array(256);
@@ -1133,23 +1149,56 @@ ImageMat.unpadFloat = function(src,wid,hei, left,right,top,bot){
 	}
 	return result;
 }
-ImageMat.derivativeX = function(src,wid,hei){
+ImageMat.derivativeX = function(src,wid,hei, x,y){
+	if(x!==undefined && y!==undefined){
+		return -0.5*src[wid*y+(x-1)] + 0.5*src[wid*y+(x+1)];
+	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 3,1);
 }
-ImageMat.derivativeY = function(src,wid,hei){
+ImageMat.derivativeY = function(src,wid,hei, x,y){
+	if(x!==undefined && y!==undefined){
+		return -0.5*src[wid*(y-1)+x] + 0.5*src[wid*(y+1)+x];
+	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
 }
-ImageMat.secondDerivativeX = function(src,wid,hei){
-	return ImageMat.convolve(src,wid,hei, [0.5,-1,0.5], 3,1);
+ImageMat.secondDerivativeX = function(src,wid,hei, x,y){
+	if(x!==undefined && y!==undefined){
+		return src[wid*y+(x-1)] - 2.0*src[wid*y+x] + src[wid*y+(x+1)];
+	}
+	return ImageMat.convolve(src,wid,hei, [1.0,-2,1.0], 3,1);
 }
-ImageMat.secondDerivativeY = function(src,wid,hei){
-	return ImageMat.convolve(src,wid,hei, [0.5,-1,0.5], 1,3);
+ImageMat.secondDerivativeY = function(src,wid,hei, x,y){
+	if(x!==undefined && y!==undefined){
+		return src[wid*(y-1)] - 2.0*src[wid*y+x] + src[wid*(y+1)+x];
+	}
+	return ImageMat.convolve(src,wid,hei, [1.0,-2,1.0], 1,3);
+}
+ImageMat.secondDerivativeXY = function(src,wid,hei, x,y){ // ?
+	if(x!==undefined && y!==undefined){
+		return 0.25*src[wid*(y-1)+(x-1)] - 0.25*src[wid*(y-1)+(x+1)] - 0.25*src[wid*(y+1)+(x-1)] + 0.25*src[wid*(y+1)+(x+1)];
+	}
+	return ImageMat.convolve(src,wid,hei, [0.25,0,-0.25, 0,0,0, -0.25,0,0.25], 3,3);
 }
 ImageMat.laplacian = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [0,-1,0, -1,4,-1, 0,-1,0], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-1,-1,-1, -1,8,-1, -1,-1,-1], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-0.5,-1,-0.5, -1,6,-1, -0.5,-1,-0.5], 3,3);
 }
+ImageMat.meanFilter = function(src,wid,hei, w,h){
+	if(w!==undefined && w!==undefined){
+		var i, len = w*h;
+		var num = 1.0/len;
+		var filter = new Array(len);
+		for(i=0;i<len;++i){ filter[i] = num; }
+		ImageMat.convolve(src,wid,hei, filter, w,h);	
+	}
+	return ImageMat.convolve(src,wid,hei, [1/9,1/9,1/9, 1/9,1/9,1/9, 1/9,1/9,1/9], 3,3);
+}
+ImageMat.medianFilter = function(src,wid,hei, w,h){
+	// .. nonlinear
+	return ImageMat.convolve(src,wid,hei, [0], 1,1);
+}
+
 ImageMat.laplaceOfGaussian = function(src,wid,hei, sigma, w,h){
 	sigma = sigma!==undefined?sigma:1.6;
 	w = w!==undefined?(Math.ceil(1+sigma*3)*2+1):3;

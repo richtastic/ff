@@ -93,7 +93,7 @@ function Match(mode,data){
 		imageLoader.load();
 	}else if(this._mode==Match.MODE_FIND_AFFINE_POINTS){
 		var fileLoader = new FileLoader();
-		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxn);
+		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxnAffine);
 		fileLoader.load();
 	}else if(this._mode==Match.MODE_COMPARE_POINTS){
 		// 
@@ -107,7 +107,17 @@ function Match(mode,data){
 		this._mode = Match.MODE_UNKNOWN;
 	}
 }
-
+Match.prototype.saveDescriptorToYAML = function(descriptor, yaml){
+	yaml = yaml!==undefined?yaml:(new YAML());
+	var DATA = Match.YAML;
+	yaml.startWrite();
+	yaml.writeComment("Match: "+descriptor.imageFileName());
+	yaml.writeObjectStart("descriptor");
+		descriptor.saveToYAML(yaml);
+	yaml.writeObjectEnd();
+	var str = yaml.toString();
+	return yaml;
+}
 Match.prototype.getDescriptorParameters = function(originalImage){
 	var i, j, dat, img;
 	var wid = originalImage.width, hei = originalImage.height;
@@ -157,7 +167,7 @@ Match.prototype.drawDot = function(pt, v1,v2, e1,e2, rad){
 	var angle = 0;
 	if(v1!==undefined && v2!==undefined){
 		angle = V2D.angleDirection(v2,new V2D(1,0));
-		if(e2>e1){
+		if(e2>=e1){
 		 	angle = Math.PI + V2D.angleDirection(v1,new V2D(-1,0));
 		}else{
 			console.log("FORWARD??????????");
@@ -465,7 +475,96 @@ root.addChild(doi);
 	return;
 }
 
-Match.prototype._onYAMLCompleteFxn = function(o){
+Match.prototype._onYAMLCompleteFxnAffine = function(o){
+	var DATA = Match.YAML;
+	var i, j, len, len2, d, f, descriptor, list, img, obj, yaml=new YAML(), hash=new Object();
+	var files = o.files[0];
+	var contents = o.contents[0];
+	obj = yaml.parse(contents);
+	descriptor = new ImageDescriptor();
+	descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
+	this._descriptorFile = o.files[0];
+	this._descriptorData = o.contents[0];
+	this._descriptor = descriptor;
+	// load image for presentation
+	var imageLoader = new ImageLoader("", [descriptor.imageFileName()], this,this._onImageCompleteFxnAffine, null);
+	imageLoader.load();
+}
+Match.prototype._onImageCompleteFxnAffine = function(o){
+	var i, j, len, len2, d, f, descriptor, list, img, obj;
+	var currentWidth = 0, currentHeight = 0;
+	var descriptor = this._descriptor;
+	img = o.images[0];
+	obj = this.getDescriptorParameters( img );
+	descriptor.setImageData( obj.width,obj.height,obj.red,obj.grn,obj.blu );
+	
+	// draw images on screen
+	var container = new DO(); this._root.addChild(container);
+	container.matrix().identity(); container.matrix().scale(1.0);
+	d = new DOImage( img );
+	d.matrix().identity();
+	d.matrix().translate(currentWidth,currentHeight);
+	currentWidth += d.width();
+	container.addChild(d);
+	var dA = this._descriptor;
+	var indexA = 0;
+	var rad = 2.0, x, y, s, w, h;
+	currentWidth = 0; currentHeight = 0;
+
+// process affine space
+descriptor.processAffineSpace();
+descriptor.describeFeatures();
+		w = descriptor.width(); h = descriptor.height();
+		list = descriptor.getFeatureList();
+		len2 = list.length;
+		d = new DO();
+		d.matrix().identity();
+		d.matrix().translate(currentWidth,currentHeight);
+		container.addChild(d);
+		d.graphics().clear();
+		for(j=0;j<len2;++j){
+			f = list[j];
+			x = f.x()*w; y = f.y()*h; s = f.scale();
+			d.graphics().setLine(1.0,0xFFFFFF00);
+			d.graphics().beginPath();
+			d.graphics().setFill(0x66FFFFFF);
+			d.graphics().moveTo(x+rad*s,y);
+			d.graphics().arc(x,y, rad*s, 0,Math.PI*2.0, false);
+			d.graphics().endPath();
+			d.graphics().fill();
+			d.graphics().strokeLine();
+		}
+	// 
+	var fA = dA.getFeatureList()[indexA];
+	fA.descriptor(dA);
+	//fA.findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
+	//var grys = fA.colorAngle().gry();//-fB.colorAngle().gry();
+	// ang = ImageFeature.bestRotation(fA,fB);
+	// console.log(ang*180/Math.PI);
+	// console.log(grys*180/Math.PI);
+	// ang = grys+ang;
+	// console.log(ang*180/Math.PI);
+	//fA.findDescriptor(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
+	//fA.findSurface(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
+	//console.log( "SSD:  "+ColorMatRGBY.SSD(fA.flat(),fB.flat()) );
+	//console.log( "conv: "+ColorMatRGBY.convolution(fA.flat(),fB.flat()) );
+i = 0;
+//d = this._showFeature(fA,null,dA);
+// this._root.addChild(d);
+// d.matrix().translate(descriptor.width() + 125*2*i,0);
+
+d = this._showFeatureBasic(fA,dA);
+this._root.addChild(d);
+d.matrix().translate(descriptor.width() + 125*2*i,0);
+
+	// save to YAML
+	var yaml = this.saveDescriptorToYAML(descriptor);
+	var str = yaml.toString();
+	// var obj = yaml.parse(str);
+	Code.copyToClipboardPrompt(str);
+}
+
+Match.prototype._onYAMLCompleteFxnOLD = function(o){
 	var DATA = Match.YAML;
 	var i, j, len, len2, d, f, descriptor, list, img, obj, yaml=new YAML(), hash=new Object();
 	var currentWidth = 0, currentHeight = 0;
@@ -473,6 +572,9 @@ Match.prototype._onYAMLCompleteFxn = function(o){
 	var contents = o.contents;
 	var descriptors = new Array();
 	len = files.length;
+	console.log( o )
+	console.log( this._fileList )
+	console.log( this._imageList )
 	for(i=0;i<len;++i){
 		hash[this._fileList[i]] = this._imageList[i];
 	}
@@ -602,6 +704,28 @@ d.matrix().translate(125 + 125*2*i,0);
 	}
 	//Code.copyToClipboardPrompt(o.contents[0]);
 }
+Match.prototype._showFeatureBasic = function(fB,dB){
+	var container = new DO(), o = new DO();
+	container.addChild(o);
+	var imgWid = 125, imgHei = 125;
+	//floatRed = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.redFlat(),dB.width(),dB.height(), fB.transform());
+	//floatGrn = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.greenFlat(),dB.width(),dB.height(), fB.transform());
+	//floatBlu = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale()*ImageDescriptor.SCALE_MULTIPLIER*rr,sigma, imgWid,imgHei, dB.blueFlat(),dB.width(),dB.height(), fB.transform());
+	floatGry = ImageMat.extractRectFromFloatImage(fB.x(),fB.y(),fB.scale(),null, imgWid,imgHei, dB.grayFlat(),dB.width(),dB.height(), fB.transform());
+	argb = ImageMat.ARGBFromFloat(floatGry);
+	//argb = ImageMat.ARGBFromFloats(floatRed,floatGrn,floatBlu);
+	img = this._stage.getARGBAsImage(argb, imgWid,imgHei);
+	d = new DOImage(img);
+	d.matrix().identity();
+	d.matrix().translate(-imgWid*0.5,-imgHei*0.5);
+	d.matrix().rotate(ang);
+	d.matrix().translate(imgWid*0.5,imgHei*0.5);
+	//d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
+	//d.matrix().translate(x,y);
+	o.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(fB.transform()) ) );
+	o.addChild(d);
+	return container;
+}
 Match.prototype._showFeature = function(fB,fA,dB, size){
 	var ang = 0;
 	if(fA!==undefined&&fA!==null){
@@ -684,6 +808,27 @@ root.matrix().scale(1.5);
 0.8936987929046154 0.7520224319305271 - looPS corner
 0.46295735728926957 0.7622571864631027 - red-right
 */
+
+//descriptor._features.push(  new ImageFeature(0.9569,0.6345,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.3374,0.5223,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.8684,0.0865,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.5305,0.2785,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.6615,0.1838,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.8439,0.1765,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.9097,0.0659,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.9356,0.7168,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.8355,0.1413,1.0, 0,null) );
+descriptor._features.push(  new ImageFeature(0.3548,0.4553,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.2917,0.9282,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.8884,0.661,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.,1.0, 0,null) );
+
+
+
+
+//descriptor._features.push(  new ImageFeature(0.27,0.456,1.0, 0,null) );
+
+
 //descriptor._features.push(  new ImageFeature(0.1+Math.random()*0.8,0.1+Math.random()*0.8,1.0,0,null) ); // random
 			//descriptor._features.push(  new ImageFeature(0.355,0.927,1.5,0,null) ); // purple
 			//descriptor._features.push(  new ImageFeature(0.260,0.55,1.2,0,null) ); // yellow	
@@ -695,7 +840,7 @@ root.matrix().scale(1.5);
 			//descriptor._features.push(  new ImageFeature(0.79,0.94,1.0, 0,null) ); //
 			//descriptor._features.push(  new ImageFeature(0.38,0.70,1.0, 0,null) ); //ss-purple-green
 			//descriptor._features.push(  new ImageFeature(0.26,0.555,1.0, 0,null) ); //ss-yellow
-			descriptor._features.push(  new ImageFeature(0.46,0.85,1.0, 0,null) ); //ss-blue-dot
+			//descriptor._features.push(  new ImageFeature(0.46,0.85,1.0, 0,null) ); //ss-blue-dot
 // descriptor._features.push(  new ImageFeature(, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.698614107706785 - 0.0,0.22024469633081295,1.2308463075382536, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.13988446394875864,0.9826467269202003,1.2334442591633725, 0,null) ); // unstable
@@ -742,7 +887,7 @@ root.matrix().scale(1.5);
 		root.addChild(container);
 		for(j=0;j<len2;++j){
 			var f = list[j];
-			console.log( f.x(),f.y(),f.scale() );
+			//console.log( f.x(),f.y(),f.scale() );
 			var ret = descriptor.detectPoint( new V3D( f.x(),f.y(),f.scale() ) );
 			var points = ret.points;
 			var windows = ret.windows;
@@ -758,7 +903,8 @@ root.matrix().scale(1.5);
 				d.graphics().beginPath();
 				d.graphics().setFill(0x00FFFFFF);
 				//effR = rad*(0.5+0.5*(points.length-k) );
-				effR = Math.min(Math.abs(rad/(points[k].z)),200);
+				//effR = Math.min(Math.abs(rad/(points[k].z)),200);
+				effR = Math.pow(points[k].z,0.5) * 1.6 * 7 / 2.0;
 				d.graphics().moveTo(effR,0);
 				d.graphics().arc(0,0, effR, 0,Math.PI*2.0, false);
 				d.graphics().endPath();
@@ -786,6 +932,16 @@ root.matrix().scale(1.5);
 				d.matrix().translate((k+0.5)*ret.width,(i+0.5)*ret.height+hei);
 				container.addChild(d);
 			}
+			// final result:
+			console.log(ret);
+			console.log(ret.point);
+			console.log(ret.affine);
+			var imgWid = imgHei = 101;
+			floatGry = ImageMat.extractRectFromFloatImage(ret.point.x,ret.point.y,ret.point.z*0.25,null, imgWid,imgHei, descriptor.grayFlat(),descriptor.width(),descriptor.height(), ret.affine);
+			argb = ImageMat.ARGBFromFloat(floatGry);//descriptor.redFlat(),descriptor.greenFlat(),descriptor.blueFlat());
+			src = this._stage.getARGBAsImage(argb, imgWid,imgHei);//descriptor.width(), descriptor.height());
+			d = new DOImage(src);
+			root.addChild(d);
 		}
 
 currentWidth += wid;
@@ -924,24 +1080,19 @@ var descriptor = new ImageDescriptor( params.width,params.height, params.red,par
 	//descriptor.describeFeatures();
 
 // SAVE TO YAML FILE
-// var yaml = new YAML();
-// var DATA = Match.YAML;
-// yaml.startWrite();
-// yaml.writeComment("Match: "+imageFileName);
-// yaml.writeObjectStart("descriptor");
-// 	descriptor.saveToYAML(yaml);
-// yaml.writeObjectEnd();
-// var str = yaml.toString();
-// var obj = yaml.parse(str);
-// var descriptor = new ImageDescriptor();
-// descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
-//Code.copyToClipboardPrompt(str);
+var yaml = this.saveDescriptorToYAML(descriptor);
+var obj = yaml.parse(str);
+Code.copyToClipboardPrompt(str);
+// double check reconstruction
+var descriptor = new ImageDescriptor();
+descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
+descriptor.setImageData(params.width,params.height, params.red,params.grn,params.blu, imageFileName);
+
 
 
 /*
 * comparing features across multiple image-descriptors
 */
-
 	// var features = scene.compareDescriptors(0,1);// descriptor.compareFeatures(); //
 	var filters = descriptor.getImageDefinition();
 	
@@ -964,52 +1115,12 @@ var descriptor = new ImageDescriptor( params.width,params.height, params.red,par
 		}
 	}
 
-
-
-// affine space is processed
-
-// var affineList = descriptor.getFeatureList();
-// for(i=0;i<affineList.length;++i){
-// 	//show point
-// }
-
-// return;
-
-
-
-
-var ptList = [];//[new V2D(145,221),new V2D(200,200),new V2D(250,250),new V2D(200,100),new V2D(130,130)];
-/*for(i=0;i<12;++i){
-	for(j=0;j<9;++j){
-		ptList.push( new V2D((i+1)*30,(j+1)*30) );
-	}
-}*/
+var ptList = [];
 var scaleSpace = descriptor.getScaleSpaceExtrema();
-// for(i=0;i<scaleSpace.length;++i){
-// 	ptList.push( scaleSpace[i] );
-// }
-//ptList.push( scaleSpace[18] );
-//ptList.push( scaleSpace[19] );
-//ptList.push( scaleSpace[20] ); // circ
-//ptList.push( scaleSpace[23] ); // line
-//ptList.push( scaleSpace[1] );
-//ptList.push( scaleSpace[3] ); //black dot
-//ptList.push( scaleSpace[4] ); // nutrition
-//ptList.push( scaleSpace[5] ); // corner
-//ptList.push( scaleSpace[7] ); // white corner
-
-//ptList.push( scaleSpace[9] );
 len = scaleSpace.length;
-//len = 100;
 for(i=0;i<len;++i){
 	ptList.push( scaleSpace[i] );
 }
-
-// BLT: 6 8 9 13 22 25 27 28 32 39 FROOTLOOPS:44
-// 11 24 50
-// SMALL: 90
-// LARGE: 80
-// UNSTABLE: 70, 21
 
 for(i=0;i<ptList.length;++i){
 	var pt = ptList[i];
@@ -1034,6 +1145,7 @@ var d = new DO();
 var rad;
 rad = 2.0;
 rad *= pt.z;
+rad = Math.pow(pt.z,0.5) * 1.6 * 7 /2.0;
 
 //main
 d.graphics().clear();
