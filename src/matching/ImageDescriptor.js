@@ -131,7 +131,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // var kConstant = Math.pow(2.0,1/sConstant);
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
-	var minThresholdIntensity = 0.05; // 0.03
+	var minThresholdIntensity = 0.10; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
 	edgeResponseEigenRatioR = (edgeResponseEigenRatioR + 1)*(edgeResponseEigenRatioR + 1)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
@@ -249,8 +249,8 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	console.log("  contrast/SMM count: "+temp.length);
 	// sort on extrema value
 	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); // 
-	//len = temp.length;
-	len = Math.min(temp.length,300);
+	len = temp.length;
+	//len = Math.min(temp.length,300);
 	for(i=0;i<len;++i){
 		//if( Math.abs(temp[i].t) >= minThresholdIntensity ){
 		//if( this._flatGry[this._width*Math.floor(temp[i].y) + Math.floor(temp[i].x)] >= minThresholdIntensity ){
@@ -289,6 +289,8 @@ console.log(pt.toString());
 	// 
 }
 	}
+// drop low-contrast points
+// drop points at edge of window
 	this._features = endPoints;
 	Code.timerStop();
 	console.log( "time: "+Code.timerDifferenceSeconds() );
@@ -504,7 +506,7 @@ minY = pt.y;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ImageDescriptor.prototype.detectPoint = function(inPoint){
+ImageDescriptor.prototype.detectPoint1 = function(inPoint){
 	// inPoint.z = 1.0;
 	var i, j, len, sigma, val;
 	var sourceGry = this._flatGry;
@@ -519,14 +521,6 @@ ImageDescriptor.prototype.detectPoint = function(inPoint){
 	var sigmaI = this._sigma, sigmaD = this._sigma*0.7;
 	var decay = 1.0, decayRate = 1.0;//0.95;
 	var ratio = 2.0, prevRatio = 2.0;
-var totalScale = 1.0;
-console.log("............ detect point");
-var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o','r-+','g-+','b-+','m-+','k-+','r-x','g-x','b-x','m-x','k-x','r-@','g-@','b-@','m-@','k-@'];
-var octave = "hold off;\n";
-var octave2 = "hold off;\n";
-var octave3 = "hold off;\n";
-octC = "iterations = [";
-octD = "ratios = [";
 	// 1. initialize U_0 to identity matrix
 	for(i=0;i<maxIterations;++i){
 		pointList.push( new V3D(x.x,x.y,x.z) );
@@ -535,10 +529,83 @@ octD = "ratios = [";
 		W = ImageMat.extractRectFromFloatImage(x.x,x.y,x.z,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
 		winList.push( ImageMat.extractRectFromFloatImage(x.x,x.y,x.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform) );
 		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
+		// val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
+		// if(val.hasMax){
+		// 	x.z += (val.maxScale-x.z)*0.5;
+		// 	sigmaI += (val.maxSigma-sigmaI)*0.5;
+		// }
+		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
+		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.05,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
+		sigmaD = val.sigmaD;
+		// 5. detect spatial localization x_w_k of a maximum of the Harris measure [det(u(x,sI,sD))-alpha*tra^2(u(x,sI,sD))], nearest to x_w_k-1 and compute the location of the interest point x_k
+ 		//val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI, sigmaD);
+		// 6. compute u_i_k = [u(x_w_k,sI,sD)]^(-1/2)
+		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
+		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
+		val = this.getAffineIncrementFromMew(u,transform, decay,decayRate, eigenList);
+		transform = val.affine;
+		decay = val.decay;
+		prevRatio = ratio;
+		ratio = val.ratio;
+		// 5. (spatial localization: immediate neighbor with higher ss-extrema value)
+		//val = this.getClosestScaleSpaceMaxima(x.x,x.y,x.s,transform);
+		val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI,sigmaD);
+		var off = val.offset;
+		if(ratio<2.0){
+			transformInverse = Matrix.inverse(transform);
+			off.x *= x.z; off.y *= x.z; // scale to window scale
+			transformInverse.multV2DtoV2D(v, off); // reverse transform to actual (zoomed) image location
+			v.x = x.x + v.x/sourceWid; v.y = x.y + v.y/sourceHei; // relative sizing
+			if(v.x>0 && v.x<1 && v.y>0 && v.y<1){
+				x.x = v.x; x.y = v.y; // goto next position
+			}
+		}
+		if( (ratio-1.0)<=1E-4 ){ // converged
+			console.log("converged");
+			break;
+		}
+	}
+console.log("............");
+	return {windows:winList, width:winWid, height:winHei, points:pointList, eigens:eigenList,   affine:transform, point:x };
+}
+ImageDescriptor.prototype.detectPoint = function(inPoint){
+	var i, j, len, sigma, val;
+	var sourceGry = this._flatGry;
+	var sourceWid = this._width;
+	var sourceHei = this._height;
+	var v = new V2D(), x = new V3D(); x.copy(inPoint);
+	var winWid = winHei = 51;
+	var u = new Matrix(2,2);
+	var transformInverse, transform = new Matrix(3,3); transform.identity();
+	var maxIterations = 30;
+	var winList = new Array(), pointList = new Array(), eigenList = new Array();
+	var sigmaI = this._sigma, sigmaD = this._sigma*0.7;
+	var decay = 1.0, decayRate = 1.0;//0.95;
+	var ratio = 1E9, prevRatio = 1E9;
+var totalScale = 1.0;
+console.log("............ detect point");
+var taves = ['r--','g--','b--','m--','k--','r-*','g-*','b-*','m-*','k-*','r-^','g-^','b-^','m-^','k-^','r-o','g-o','b-o','m-o','k-o','r-+','g-+','b-+','m-+','k-+','r-x','g-x','b-x','m-x','k-x','r-@','g-@','b-@','m-@','k-@'];
+var octave = "hold off;\n";
+var octave2 = "hold off;\n";
+var octave3 = "hold off;\n";
+octC = "iterations = [";
+octD = "ratios = [";
+var prevTransform = new Matrix(3,3);
+var prevPoint = new V3D();
+	// 1. initialize U_0 to identity matrix
+	for(i=0;i<maxIterations;++i){
+		prevTransform.copy(transform);
+		prevPoint.copy(x);
+		pointList.push( new V3D(x.x,x.y,x.z) );
+		// 2. normalize window W(x_w) = I(x) centered on U_k-1 * x_w_k-1 = x_w_k-1
+		sigma = null;
+		W = ImageMat.extractRectFromFloatImage(x.x,x.y,x.z,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
+		winList.push( ImageMat.extractRectFromFloatImage(x.x,x.y,x.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform) );
+		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
 		val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
 		if(val.hasMax){
-			x.z += (val.maxScale-x.z)*0.5;
-			sigmaI += (val.maxSigma-sigmaI)*0.5;
+			x.z += (val.maxScale-x.z)*0.9995;
+			sigmaI += (val.maxSigma-sigmaI)*0.9995;
 		}
 for(j=0;j<val.images.length;++j){
 	winList.push(val.images[j]);
@@ -590,10 +657,20 @@ octave2 += "hold on;\n";
 		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
 		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
 		val = this.getAffineIncrementFromMew(u,transform, decay,decayRate, eigenList);
-		transform = val.affine;
+if(i>0){
+transform = val.affine;
+}
+		// transform = val.affine;
 		decay = val.decay;
 		prevRatio = ratio;
 		ratio = val.ratio;
+// if(ratio>prevRatio){
+// 	console.log("RATIO CHANGE: "+ratio+"  "+prevRatio);
+// 	transform.copy(prevTransform);
+// 	x.copy(prevPoint);
+// 	ratio = prevRatio;
+// 	break;
+// }
 // 5. (spatial localization: immediate neighbor with higher ss-extrema value)
 		//val = this.getClosestScaleSpaceMaxima(x.x,x.y,x.s,transform);
 		val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI,sigmaD);
@@ -618,6 +695,9 @@ octD += ratio+" ";
 			console.log("converged");
 			break;
 		}
+if(i>0){
+break;
+}
 	}
 console.log("............");
 octC += "];";
@@ -939,10 +1019,10 @@ ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scal
 	ang = -angleYMax;
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	cum = Matrix.mult(cum,rot);
-	//amt = Math.pow(ratio,0.25*scaler); // stable points
+	amt = Math.pow(ratio,0.25*scaler); // stable points
 	//amt = Math.pow(ratio,0.10*scaler); // stable points
 	//amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points
-	amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points
+	//amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points
 	console.log("amt: "+amt+"            ("+ratio+")");
 
 	//amt = Math.pow(ratio,0.05*scaler);

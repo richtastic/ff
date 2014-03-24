@@ -31,21 +31,22 @@ function customClassesLoadedFxn(){
 	var list = [];
 	//var mode = Match.MODE_FIND_SIFT_POINTS;
 	//var mode = Match.MODE_FIND_AFFINE_POINTS;
-	var mode = Match.MODE_TEST_POINTS;
-	//var mode = Match.MODE_SHOW_POINTS;
+	//var mode = Match.MODE_TEST_POINTS;
+	var mode = Match.MODE_SHOW_POINTS;
 	if(mode == Match.MODE_FIND_SIFT_POINTS){ // find initial points
 		//list.push("original.png");
 		//list.push("scalexy.png");
 		//list.push("scalex.png");
 		//list.push("scalexrotateskew.png");
-		list.push("BLB.png");
+		//list.push("BLB.png");
+		//list.push("BLT.png");
 		data.images = list;
 		data.imageBase = "./images/";
 		var match = new Match(Match.MODE_FIND_SIFT_POINTS, data);
 	}else if(mode == Match.MODE_FIND_AFFINE_POINTS){ // find affine from sift
 		//list.push("original.yaml");
 		//list.push("skewed.yaml");
-		list.push("BLB.yaml");
+		//list.push("BLB.yaml");
 		//list.push("BLT.yaml");
 		data.fileBase = "./descriptors/";
 		data.files = list;
@@ -58,14 +59,17 @@ function customClassesLoadedFxn(){
 		//list.push("skewed.yaml");
 		//list.push("skewed_affine.yaml");
 		//list.push("BLB.yaml");
-		list.push("BLB_affine.yaml");
+		//list.push("BLB_affine.yaml");
+		//list.push("BLT.yaml");
+		list.push("BLT_affine.yaml");
 		data.fileBase = "./descriptors/";
 		data.files = list;
 		var match = new Match(Match.MODE_SHOW_POINTS, data);
 	}else if(mode == Match.MODE_TEST_POINTS){ // test points
 		//list.push("original.png");
 		//list.push("scalex.png");
-		list.push("BLB.png");
+		//list.push("BLB.png");
+		//list.push("BLT.png");
 		data.images = list;
 		data.imageBase = "./images/";
 		var match = new Match(Match.MODE_TEST_POINTS, data);

@@ -1033,6 +1033,13 @@ ImageMat.applyFxnFloat = function(data,fxn){
 		data[i] = fxn(data[i]);
 	}
 }
+ImageMat.invertFloat01 = function(data){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		data[i] = 1.0-data[i];
+	}
+	return data;
+}
 ImageMat.randomFloat01 = function(data){
 	var i, len = data.length;
 	for(i=0;i<len;++i){

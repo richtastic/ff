@@ -503,7 +503,7 @@ Match.prototype._onImageCompleteFxnShow = function(o){
 
 	// draw images on screen
 	var container = new DO(); this._root.addChild(container);
-	container.matrix().identity(); container.matrix().scale(1.5);
+	container.matrix().identity(); container.matrix().scale(1.0);
 	d = new DOImage( img );
 	d.matrix().identity();
 	container.addChild(d);
@@ -538,7 +538,7 @@ Match.prototype._onImageCompleteFxnShow = function(o){
 		d.graphics().fill();
 		d.graphics().strokeLine();
 		//
-		var sca = 0.5;
+		var sca = 0.40;
 		d.matrix().identity();
 		d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
 		d.matrix().scale(sca);
@@ -1034,6 +1034,10 @@ if(this._mode == Match.MODE_TEST_POINTS){
 	var imageSourceRed = params.red;
 	var imageSourceGrn = params.grn;
 	var imageSourceBlu = params.blu;
+// ImageMat.invertFloat01(imageSourceRed);
+// ImageMat.invertFloat01(imageSourceGrn);
+// ImageMat.invertFloat01(imageSourceBlu);
+
 	var imageSourceGray = ImageMat.grayFromRGBFloat(imageSourceRed,imageSourceGrn,imageSourceBlu);
 
 var descriptor = new ImageDescriptor( params.width,params.height, params.red,params.grn,params.blu, imageFileName );
