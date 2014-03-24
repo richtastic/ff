@@ -131,7 +131,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // var kConstant = Math.pow(2.0,1/sConstant);
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
-	var minThresholdIntensity = 0.10; // 0.03
+	var minThresholdIntensity = 0.05; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
 	edgeResponseEigenRatioR = (edgeResponseEigenRatioR + 1)*(edgeResponseEigenRatioR + 1)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
@@ -218,7 +218,8 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var gauss1D = ImageMat.getGaussianWindow(11,1, sigma);
 	var center = Math.floor(winSize*0.5);
 	var index = center*winSize + center;
-	var range;
+	var range, response;
+	var minContrastIntensity = 0.05;
 	for(i=0;i<temp.length;++i){
 		var s = Math.pow(temp[i].z,0.5)
 		// too close to edge
@@ -227,7 +228,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		rangeSize = Math.floor(featureImageSizeBase*s*sigma);
 		win = this.getScaleSpacePoint(temp[i].x,temp[i].y,temp[i].z,null, rangeSize,rangeSize, null);
 		range = ImageMat.getRange(win);
-		if(range<minThresholdIntensity){
+		if(range<minContrastIntensity){
 			Code.removeElementAtSimple(temp,i);
 			--i;
 			continue;
@@ -241,9 +242,18 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		tra = Lxx + Lyy;
 		det = Lxx*Lyy - Lxy*Lxy;
 		measure = tra*tra/det;
+		response = Lxx + Lyy;
+		// low edge response
 		if(measure < edgeResponseEigenRatioR){ // drop if low measure
 			Code.removeElementAtSimple(temp,i);
 			--i;
+		// low LoG response
+		}else if(response<minThresholdIntensity){
+			Code.removeElementAtSimple(temp,i);
+			--i;
+		// keep
+		}else{
+			temp[i].z = measure;
 		}
 	}
 	console.log("  contrast/SMM count: "+temp.length);
@@ -252,7 +262,8 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	len = temp.length;
 	//len = Math.min(temp.length,300);
 	for(i=0;i<len;++i){
-		//if( Math.abs(temp[i].t) >= minThresholdIntensity ){
+		// loe 
+		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
 		//if( this._flatGry[this._width*Math.floor(temp[i].y) + Math.floor(temp[i].x)] >= minThresholdIntensity ){
 			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
 		//}
