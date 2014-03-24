@@ -303,6 +303,12 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
 	}
 	return matrix;
 }
+// ImageMat.laplaceOfGaussianWindow1DFromSigma = function(sigma, bas,inc){
+// 	bas = bas!==undefined?bas:2;
+// 	inc = inc!==undefined?inc:2;
+// 	var size = Math.round(bas + sigma*inc)*2+1;
+// 	return ImageMat.getLaplaceOfGaussianWindow(size,1, sigma);
+// }
 ImageMat.getLaplaceOfGaussianWindow = function(width,height, sigma){
 	var len = width*height;
 	var matrix = new Array(len);
@@ -322,9 +328,9 @@ ImageMat.getLaplaceOfGaussianWindow = function(width,height, sigma){
 			sum += val;
 		}
 	}
-	// for(i=0;i<len;++i){
-	// 	matrix[i] /= sum;
-	// }
+	for(i=0;i<len;++i){
+		matrix[i] /= sum;
+	}
 	return matrix;
 }
 ImageMat.gaussian2DFrom1DFloat = function(source, wid,hei, gauss1D){

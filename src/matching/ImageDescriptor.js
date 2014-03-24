@@ -131,7 +131,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // var kConstant = Math.pow(2.0,1/sConstant);
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
-	var minThresholdIntensity = 0.03; // 0.03
+	var minThresholdIntensity = 0.05; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
 	edgeResponseEigenRatioR = (edgeResponseEigenRatioR + 1)*(edgeResponseEigenRatioR + 1)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
@@ -249,7 +249,8 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	console.log("  contrast/SMM count: "+temp.length);
 	// sort on extrema value
 	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); // 
-	len = temp.length;
+	//len = temp.length;
+	len = Math.min(temp.length,300);
 	for(i=0;i<len;++i){
 		//if( Math.abs(temp[i].t) >= minThresholdIntensity ){
 		//if( this._flatGry[this._width*Math.floor(temp[i].y) + Math.floor(temp[i].x)] >= minThresholdIntensity ){
@@ -504,7 +505,7 @@ minY = pt.y;
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ImageDescriptor.prototype.detectPoint = function(inPoint){
-inPoint.z = 1.0;
+	// inPoint.z = 1.0;
 	var i, j, len, sigma, val;
 	var sourceGry = this._flatGry;
 	var sourceWid = this._width;
@@ -532,11 +533,13 @@ octD = "ratios = [";
 		// 2. normalize window W(x_w) = I(x) centered on U_k-1 * x_w_k-1 = x_w_k-1
 		sigma = null;
 		W = ImageMat.extractRectFromFloatImage(x.x,x.y,x.z,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform);
-		winList.push( ImageMat.extractRectFromFloatImage(x.x,x.y,x.z*1.0,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform) );
-// drop points with multiple close peaks (within 10-25%?)
-
+		winList.push( ImageMat.extractRectFromFloatImage(x.x,x.y,x.z*0.25,sigma, winWid,winHei, sourceGry,sourceWid,sourceHei, transform) );
 		// 3. select integration scale sigma_I at point x_w_k-1 [characteristic scale]
 		val = this.getScaleSpaceInfo(x.x,x.y,x.z, transform);
+		if(val.hasMax){
+			x.z += (val.maxScale-x.z)*0.5;
+			sigmaI += (val.maxSigma-sigmaI)*0.5;
+		}
 for(j=0;j<val.images.length;++j){
 	winList.push(val.images[j]);
 }
@@ -554,18 +557,9 @@ octave += octB+"\n";
 octave += "sleep(0.05);\n";
 octave += "semilogx(scales,values,\""+taves[i]+"\");\n"; // semilogx
 octave += "hold on;\n";
-if(val.hasMax){
-	// x.z = val.maxScale;
-	// sigmaI = val.maxSigma;
-	x.z += (val.maxScale-x.z)*0.5;
-	sigmaI += (val.maxSigma-sigmaI)*0.5;
-}
-//console.log(transform.toString());
 		// 4. select differentiation scale sigma_D = s*sigma_I, which maximizes (lambda_min(u)/lambda_max(u)) with s in [0.5,...0.75] and u = u(x_w_k-1,sigma_I,sigma_D)
-//console.log(x.z,sigmaI);
 		val = this.getEigenMaxDiffScale(W,winWid,winHei, sigmaI, 0.05,0.75,5); // 0.5,10.0,30);// 0.5,0.7,4
 		sigmaD = val.sigmaD;
-//sigmaD = 0.7*sigmaI;
 octA = "scales = [";
 octB = "ratios = [";
 for(j=0;j<val.ratios.length;++j){
@@ -600,26 +594,16 @@ octave2 += "hold on;\n";
 		decay = val.decay;
 		prevRatio = ratio;
 		ratio = val.ratio;
-//console.log("RATIO:"+ratio+"++++++++++++");
-
 // 5. (spatial localization: immediate neighbor with higher ss-extrema value)
-		val = this.getClosestScaleSpaceMaxima(x.x,x.y,x.s,transform);//W,winWid,winHei, sigmaI,sigmaD);
-		//val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI,sigmaD);
+		//val = this.getClosestScaleSpaceMaxima(x.x,x.y,x.s,transform);
+		val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI,sigmaD);
 		var off = val.offset;
-		var didMove = val.delta;
-		//console.log(ratio, off.toString());
-//off.set(0,0);
 		if(ratio<2.0){
 			transformInverse = Matrix.inverse(transform);
-			//off.x /= x.z; off.y /= x.z; // scale to window scale
 			off.x *= x.z; off.y *= x.z; // scale to window scale
 			transformInverse.multV2DtoV2D(v, off); // reverse transform to actual (zoomed) image location
-			//v.x /= x.z; v.y /= x.z; // scale to window scale
-			//v.x *= x.z; v.y *= x.z; // scale to window scale
 			v.x = x.x + v.x/sourceWid; v.y = x.y + v.y/sourceHei; // relative sizing
-			//console.log("???: "+(x.x*sourceWid)+","+(x.y*sourceHei)+"  =>  "+(v.x*sourceWid)+","+(v.y*sourceHei)+" ");
 			if(v.x>0 && v.x<1 && v.y>0 && v.y<1){
-				//console.log("moving: "+(x.x*sourceWid)+","+(x.y*sourceHei)+"  =>  "+(v.x*sourceWid)+","+(v.y*sourceHei)+" ");
 				x.x = v.x; x.y = v.y; // goto next position
 			}
 		}
@@ -629,8 +613,8 @@ octave2 += "hold on;\n";
 octC += i+" ";
 octD += ratio+" ";
 		// 8. go to step 2 if 1 - lambdaMin(u_i_k)/lambdaMax(u_i_k) >= epsilonC
-		//if( (ratio-1.0)<=1E-4 ){ // converged
-		if( (ratio-1.0)<=0.1 && (prevRatio-1.0)<=0.1 ){ // converged
+		if( (ratio-1.0)<=1E-4 ){ // converged
+		//if( (ratio-1.0)<=0.1 && (prevRatio-1.0)<=0.1 ){ // converged
 			console.log("converged");
 			break;
 		}
@@ -647,20 +631,17 @@ Code.copyToClipboardPrompt(octave);
 //Code.copyToClipboardPrompt(octave3);
 //winList.push(W);
 
-if(ratio-1.0 > 0.1){
-	return null;
-}
+// if(ratio>2.0){
+// 	return null;
+// }
+// if(ratio-1.0 > 0.5){
+// 	return null;
+// }
 
-// NEED TO EXTRACT ACTUAL SCALE FOR POINT
-var sep = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1), transform.get(1,2),transform.get(1,2) );
-var effectiveScale = sep.scale/x.z;
-console.log(x.z,sep.scale);
-console.log("effctiveScale: "+effectiveScale)
-transform = Matrix.transform2DScale(transform,1/sep.scale);
-x.z /= sep.scale;
-// => AFFINE WILL CONTAIN ALL TRANSFORMATION (non-translational)
-
-
+	// NEED TO EXTRACT ACTUAL SCALE FOR POINT
+	var sep = Code.separateAffine2D( transform.get(0,0),transform.get(0,1),transform.get(1,0),transform.get(1,1), transform.get(1,2),transform.get(1,2) );
+	transform = Matrix.transform2DScale(transform,1/sep.scale);
+	x.z /= sep.scale;
 	return {windows:winList, width:winWid, height:winHei, points:pointList, eigens:eigenList,   affine:transform, point:x };
 }
 ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, sigmaI, sigmaD, alpha){
@@ -704,21 +685,9 @@ ImageDescriptor.prototype.getClosestHarrisMaxima = function(win,winWid,winHei, s
 	str += " ";
 	str += (c8>c4)?"+":"-";
 	str += "\n";
-	// USE ACTUAL GRADIENT DIRECTION / MAGNITUDE?
-	console.log(str);
+	//console.log(str);
 	var o = new V2D(0,0);
-	var maxi = Math.max.apply(this,[c0,c1,c2,c3,c4,c5,c6,c7,c8]);
-	     if(maxi==c0){ o.set(-1,-1) }
-	else if(maxi==c1){ o.set( 0,-1) }
-	else if(maxi==c2){ o.set( 1,-1) }
-	else if(maxi==c3){ o.set(-1, 0) }
-	//else if(maxi==c4){ o.set( 0, 0) }
-	else if(maxi==c5){ o.set( 1, 0) }
-	else if(maxi==c6){ o.set(-1, 1) }
-	else if(maxi==c7){ o.set( 0, 1) }
-	else if(maxi==c8){ o.set( 1, 1) }
-	o.norm();
-	o.scale(0.25);
+	Code.gradient2D(o,c0,c1,c2,c3,c4,c5,c6,c7,c8);
 	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
 ImageDescriptor.prototype.getEigenMaxDiffScale = function(win,winWid,winHei, sigmaI, startScale,stopScale,divisions){ // maximize lambdaMin/lambdaMax
@@ -770,8 +739,7 @@ ImageDescriptor.prototype.getMewFromWin = function(win,winWid,winHei, sigmaI, si
 	var u = (new Matrix(2,2)).setFromArray(smm);
 	return u;
 }
-ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform){//win,winWid,winHei, sigmaI,sigmaD){ // climb SS extrema
-	//return {offset:new V3D(), delta:false};
+ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform){
 	transform = transform!==undefined?transform:null;
 	var gray = this._flatGry, wid = this._width, hei = this._height;
 	var values = [], scales = [], images = [];
@@ -842,9 +810,6 @@ ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform
 	//console.log(str);
 	var o = new V2D(0,0);
 	Code.gradient2D(o,c0,c1,c2,c3,c4,c5,c6,c7,c8);
-	//o.x = (c5-c3)*0.5;
-	//o.y = (c7-c1)*0.5;
-	//o.scale(0.25);
 	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
 /*

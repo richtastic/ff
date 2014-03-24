@@ -261,9 +261,9 @@ Code.toStringArray2D = function(a,wid,hei, exp){
 			num = a[wid*j+i];
 			val = num.toExponential(exp);
 			if(num>=0){ // +/1 prefix
-				val = " " + val+", ";
+				val = " " + val
 			}
-			str += Code.padStringLeft(val,minLen," ");
+			str += Code.padStringLeft(val,minLen," ")+",";
 		}
 		if(j<hei-1){
 			str += "\n";

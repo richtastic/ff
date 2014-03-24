@@ -503,7 +503,7 @@ Match.prototype._onImageCompleteFxnShow = function(o){
 
 	// draw images on screen
 	var container = new DO(); this._root.addChild(container);
-	container.matrix().identity(); container.matrix().scale(1.0);
+	container.matrix().identity(); container.matrix().scale(1.5);
 	d = new DOImage( img );
 	d.matrix().identity();
 	container.addChild(d);
@@ -522,14 +522,26 @@ Match.prototype._onImageCompleteFxnShow = function(o){
 		d.graphics().clear();
 		d.graphics().setLine(1.0,0xFFFFFF00);
 		d.graphics().beginPath();
-		d.graphics().setFill(0x66FFFFFF);
+		d.graphics().setFill(0x11FFFFFF);
 		d.graphics().moveTo(rad*s,0);
 		d.graphics().arc(0,0, rad*s, 0,Math.PI*2.0, false);
 		d.graphics().endPath();
 		d.graphics().fill();
 		d.graphics().strokeLine();
+		//
+		d.graphics().beginPath();
+		d.graphics().setLine(1.0,0x00000000);
+		d.graphics().setFill(0xFFFF0000);
+		d.graphics().moveTo(1.0,0);
+		d.graphics().arc(0,0, 1.0, 0,Math.PI*2.0, false);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+		//
+		var sca = 0.5;
 		d.matrix().identity();
 		d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
+		d.matrix().scale(sca);
 		d.matrix().translate(x,y);
 		container.addChild(d);
 	}
@@ -564,8 +576,9 @@ Match.prototype._onImageCompleteFxnAffine = function(o){
 try{
 	console.log("AFFINE");
 	descriptor.processAffineSpace();
-	descriptor.describeFeatures();
+	//descriptor.describeFeatures();
 }catch(e){
+	console.log("ERROR");
 	console.log(e);
 }finally{
 	// 
@@ -605,9 +618,6 @@ try{
 	//console.log( "SSD:  "+ColorMatRGBY.SSD(fA.flat(),fB.flat()) );
 	//console.log( "conv: "+ColorMatRGBY.convolution(fA.flat(),fB.flat()) );
 i = 0;
-//d = this._showFeature(fA,null,dA);
-// this._root.addChild(d);
-// d.matrix().translate(descriptor.width() + 125*2*i,0);
 
 d = this._showFeatureBasic(fA,dA);
 this._root.addChild(d);
@@ -774,6 +784,7 @@ Match.prototype._showFeatureBasic = function(fB,dB){
 	d = new DOImage(img);
 	d.matrix().identity();
 	d.matrix().translate(-imgWid*0.5,-imgHei*0.5);
+	var ang = 0;
 	d.matrix().rotate(ang);
 	d.matrix().translate(imgWid*0.5,imgHei*0.5);
 	//d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
@@ -874,12 +885,14 @@ root.matrix().scale(1.5);
 //descriptor._features.push(  new ImageFeature(0.9097,0.0659,1.0, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.9356,0.7168,1.0, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.8355,0.1413,1.0, 0,null) );
-descriptor._features.push(  new ImageFeature(0.3548,0.4553,1.0, 0,null) );
+//descriptor._features.push(  new ImageFeature(0.3548,0.4553,1.0, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.2917,0.9282,1.0, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.8884,0.661,1.0, 0,null) );
 //descriptor._features.push(  new ImageFeature(0.,1.0, 0,null) );
 
 
+// BLB
+descriptor._features.push(  new ImageFeature(0.195,0.18,1.0, 0,null) );
 
 
 //descriptor._features.push(  new ImageFeature(0.27,0.456,1.0, 0,null) );
@@ -1000,114 +1013,6 @@ descriptor._features.push(  new ImageFeature(0.3548,0.4553,1.0, 0,null) );
 			d = new DOImage(src);
 			root.addChild(d);
 		}
-
-currentWidth += wid;
-continue;
-		// show points
-		list = descriptor.getFeatureList();
-		len2 = list.length;
-		var container = new DO();
-		var rad = 4.0;
-		for(j=0;j<len2;++j){
-			d = new DO();
-			f = list[j];
-			x = f.x()*wid; y = f.y()*hei; s = f.scale();
-			d.graphics().setLine(1.0,0xFF000000);
-			d.graphics().beginPath();
-			d.graphics().setFill(0x66FFFFFF);
-			// if(i==0&&j==indexA){
-			// 	d.graphics().setLine(1.0,0xFF00FF00);
-			// 	d.graphics().setFill(0xFFFF00000);
-			// }else if(i==1&&j==indexB){
-			// 	d.graphics().setLine(1.0,0xFF00FF00);
-			// 	d.graphics().setFill(0xFFFF00000);
-			// }
-			d.graphics().moveTo(0+rad*s,0);
-			d.graphics().arc(0,0, rad*s, 0,Math.PI*2.0, false);
-			d.graphics().endPath();
-			d.graphics().fill();
-			d.graphics().strokeLine();
-			//
-d.matrix().copy( Matrix2D.matrix2DfromMatrix( Matrix.inverse(f.transform()) ) );
-d.matrix().translate(x,y);
-			//
-			container.addChild(d);
-			// show feature
-
-			// show scale space for point
-			var val = descriptor.doesPointHaveScaleExtrema(f.x(),f.y());
-//			console.log(val);
-//			console.log(val.max,val.min);
-			var arr = val.images;
-			var data = val.values;
-			var wi = val.width;
-			var he = val.height;
-var maxScale = val.maxScale;
-			var k;
-			var sca = "scales = [";
-			var str = "data = [";
-			for(k=0;k<arr.length;++k){
-				var img = arr[k];
-				var argb = ImageMat.ARGBFromFloat(img);
-				var src = this._stage.getARGBAsImage(argb, wi,he);
-				sca = sca + val.scales[k] + " ";
-				str = str + data[k] + " ";
-				d = new DOImage(src);
-				root.addChild(d);
-				d.matrix().translate(currentWidth + k*wi, hei + i*he);
-			}
-			sca = sca +"];\n";
-			str = str +"];\n";
-			Code.copyToClipboardPrompt(str+"\n"+sca);
-
-			// show harris maxima
-			val = descriptor.pointHarrisExtrema(f.x(),f.y());
-			img = val.image;
-			argb = ImageMat.ARGBFromFloat(img);
-			src = this._stage.getARGBAsImage(argb, val.width,val.height);
-			d = new DOImage(src);
-			root.addChild(d);
-			d.matrix().translate(currentWidth+wid-val.width, hei - val.height);
-
-			// show affine-ness
-
-			//descriptor.getStableAffinePoint(f.x(),f.y());
-			//console.log("val.maxScale: "+maxScale);
-console.log("getStableAffinePoint-------------------------------------------------------------------- 1");
-			val = descriptor.getStableAffinePoint( new V3D( f.x(),f.y(),maxScale ) );
-			//val = descriptor.getStableAffinePointOLD( new V3D( f.x(),f.y(),maxScale ) );
-console.log("getStableAffinePoint-------------------------------------------------------------------- 2");
- 			//console.log(val);
-// f.transform( val.matrix );
-			arr = val.list;
-			for(k=0;k<arr.length;++k){
-				img = arr[k];
-				argb = ImageMat.ARGBFromFloat(img);
-				src = this._stage.getARGBAsImage(argb, val.windowWidth,val.windowHeight);
-				d = new DOImage(src);
-				root.addChild(d);
-				d.matrix().translate(currentWidth+k*val.windowWidth, 500+i*val.windowHeight);
-			}
-
-		}
-		root.addChild(container);
-		container.matrix().translate(currentWidth,currentHeight);
-		
-
-var dB = descriptor;
-var ang = 0;
-f.clearPointList();
-f.descriptor(dB);
-f.findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
-f.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
-f.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
-var size = 150;
-			d = this._showFeature(f,null,descriptor, size);
-			d.matrix().translate(j*size+currentWidth,hei);
-			root.addChild(d);
-
-currentWidth += wid;
-//break;
 	}
 }
 
