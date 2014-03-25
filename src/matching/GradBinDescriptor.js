@@ -25,6 +25,36 @@ GradBinDescriptor.prototype.clear = function(){
 		this._bins[i] = 0.0;
 	}
 }
+GradBinDescriptor.prototype.normalize = function(){
+	var i, len = this._bins.length;
+	var max = Code.maxArray(this._bins);
+	if(max!=0){
+		for(i=0;i<len;++i){
+			this._bins[i] /= max;
+		}
+	}
+}
+GradBinDescriptor.prototype.capPeak = function(peak){
+	var i, len = this._bins.length;
+	for(i=0;i<len;++i){
+		this._bins[i] = Math.min(this._bins[i],peak);
+	}
+}
+GradBinDescriptor.prototype.getPeaks = function(){
+	this._bins.push(this._bins[0]); this._bins.push(this._bins[1]); // circular
+	var peaks = Code.findMaxima1D( this._bins );
+	var linearValues = new Array(this._bins.length);
+	var mult = Math.PI2/(linearValues.length-2);
+	for(i=0;i<linearValues.length;++i){
+		linearValues[i] = i*mult;
+	}
+	for(i=0;i<peaks.length;++i){
+		Code.findExtrema1DSecondary(peaks[i], linearValues);
+		peaks[i].x = Code.moduloFloat(peaks[i].x,Math.PI2);
+	}
+	this._bins.pop(); this._bins.pop();
+	return peaks;
+}
 GradBinDescriptor.prototype.addAngle = function(angle,mag){
 	mag = mag!==undefined?mag:1.0;
 	angle = Code.angleZeroTwoPi(angle);

@@ -1,4 +1,7 @@
 // Code.js 
+// OVERRIDES:
+Math.PI2 = Math.PI*2.0;
+// 
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
 // http://www.quirksmode.org/dom/events/index.html
 Code.JS_EVENT_CLICK = "click";
@@ -1138,7 +1141,7 @@ Code.distancePoints2D = function(ax,ay, bx,by){
 	return Math.sqrt(Math.pow(ax-bx,2) + Math.pow(ay-by,2));
 }
 
-Code.remainderFloat = function(a,b){ // a%b
+Code.moduloFloat = function(a,b){ // a%b
 	return a - Math.floor(a/b)*b;
 }
 
@@ -1201,23 +1204,40 @@ Code.mult2x2by2x1toV2D = function(v, tbt, tbo){
 	v.y = tbo[0]*tbt[2] + tbo[1]*tbt[3];
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
-Code.findExtrema1D = function(d){
-	var i, lenM1 = d.length-1;
-	var v, list = [];
-	var a,b,c;
+Code.findMaxima1D = function(d){
+	var i, lenM1 = d.length-1, a,b,c, v, list = [];
 	for(i=1;i<lenM1;++i){
 		a = d[i-1]; b = d[i]; c = d[i+1];
-		if( (a<b&&c<b) || (b>a&&b>c) ){
+		if(b>=a&&b>=c){
 			v = Code.interpolateExtrema1D(new V2D(), a,b,c);
-			if(v){
-				v.x += i;
-				list.push(v);
-			}
+			if(v){ v.x += i; list.push(v); }
 		}
 	}
 	return list;
 }
-Code.findGlobalExtrema1DSecondary = function(value, linearValues){
+Code.findMinima1D = function(d){
+	var i, lenM1 = d.length-1, a,b,c, v, list = [];
+	for(i=1;i<lenM1;++i){
+		a = d[i-1]; b = d[i]; c = d[i+1];
+		if(b<=a&&b<=c){
+			v = Code.interpolateExtrema1D(new V2D(), a,b,c);
+			if(v){ v.x += i; list.push(v); }
+		}
+	}
+	return list;
+}
+Code.findExtrema1D = function(d){
+	var i, lenM1 = d.length-1, a,b,c, v, list = [];
+	for(i=1;i<lenM1;++i){
+		a = d[i-1]; b = d[i]; c = d[i+1];
+		if( (b<=a&&b<=c) || (b>=a&&b>=c) ){
+			v = Code.interpolateExtrema1D(new V2D(), a,b,c);
+			if(v){ v.x += i; list.push(v); }
+		}
+	}
+	return list;
+}
+Code.findExtrema1DSecondary = function(value, linearValues){
 	var base = Math.floor(value.x);
 	var remainder = value.x - base;
 	value.x = linearValues[base]+remainder;

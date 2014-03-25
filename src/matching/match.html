@@ -25,8 +25,7 @@ function customClassesLoadedFxn(){
 // var Iy = new Array();
 // var sigma = width/2.0;
 // var v = new V2D();
-
-// //var decay = ImageMat.getGaussianWindow(width,height, sigma,sigma,true);
+// // //var decay = ImageMat.getGaussianWindow(width,height, sigma,sigma,true);
 // var decay = ImageMat.getGaussianWindowSimple(width,height, sigma);
 
 // for(j=0;j<height;++j){
@@ -36,9 +35,14 @@ function customClassesLoadedFxn(){
 // 		v.norm();
 // 		Ix[index] = v.x;
 // 		Iy[index] = v.y;
+// 		Ix[index] = Math.random()*2.0 - 1.0;
+// 		Iy[index] = Math.random()*2.0 - 1.0;
 // 	}
 // }
 // var sift = new SIFTDescriptor();
+// var orientations = SIFTDescriptor.findMaximumOrientations(Ix,Iy,width,height);
+// console.log(orientations);
+// return;
 
 // sift.fromGradients(Ix,Iy,decay,width,height);
 

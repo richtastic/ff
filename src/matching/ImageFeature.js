@@ -124,6 +124,8 @@ ImageFeature.prototype.colorAngle = function(){
 	return this._colorAngles;
 }
 ImageFeature.prototype.findOrientations = function(origR,origG,origB,origY, wid,hei){
+console.log("...... orientation based on sift?");
+return;
 	var obj, angRed, angGrn, angBlu, angGry;
 	obj = this.angleFromColors(origR,wid,hei);
 	angRed = obj.angle;
@@ -140,7 +142,30 @@ ImageFeature.prototype.findOrientations = function(origR,origG,origB,origY, wid,
 	this._colorAngles = new ColorAngle(angRed,angGrn,angBlu,angGry, magRed,magGrn,magBlu,magGry);
 }
 ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,hei, ang){
-
+	var w = 20, h = 20; // 16 + 4 padding
+	var scaler = 1.0;
+	var sigma = 1.6;
+	var ang = 0.0;
+	var win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, this.transform()); // to canonical affine view/orientation
+	Ix = ImageMat.derivativeX(win, w,h);
+	Iy = ImageMat.derivativeY(win, w,h);
+	var orientations = SIFTDescriptor.findMaximumOrientations(Ix,Iy,w,h);
+	console.log(orientations);
+	// for each orientation...
+	var i;
+	for(i=0;i<orientations.length;++i){
+		ang = orientations[i];
+		//rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+		//rot = Matrix.mult(rot,this.transform());
+		rot = Matrix.transform2DRotate (this.transform(),-ang); // rotate to +x
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, rot);
+		Ix = ImageMat.derivativeX(win, w,h);
+		Iy = ImageMat.derivativeY(win, w,h);
+		// ...
+		this._bins = new SIFTDescriptor();
+		this._bins.fromGradients(Ix,Iy,w,h);
+		console.log(this._bins.toString());
+	}
 return;
 //console.log(origR,origG,origB,origY, wid,hei, ang);
 	var rectRed, rectGrn, rectBlu, rectGry;
