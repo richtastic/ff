@@ -186,6 +186,7 @@ Code.newArray = function(){
 }
 Code.copyArray = function(a,b){ // a = b
 	if(a==b){return;}
+	if(b===undefined){ b=a; a=new Array(); }
 	Code.emptyArray(a);
 	var i, len = b.length;
 	for(i=0;i<len;++i){
@@ -253,6 +254,8 @@ Code.toStringArray2D = function(a,wid,hei, exp){
 	exp = exp===undefined?4:exp;
 	var minLen = exp+6+1; // -#.E+#
 	var i, j, num, val, str = "[";
+	var hm1 = hei-1;
+	var wm1 = wid-1;
 	for(j=0;j<hei;++j){
 		if(j>0){
 			str += " ";
@@ -261,17 +264,34 @@ Code.toStringArray2D = function(a,wid,hei, exp){
 			num = a[wid*j+i];
 			val = num.toExponential(exp);
 			if(num>=0){ // +/1 prefix
-				val = " " + val
+				val = " " + val;
 			}
-			str += Code.padStringLeft(val,minLen," ")+",";
+			str += Code.padStringLeft(val,minLen," ");
+			if( !(j==hm1&&i==wm1) ){
+				if(i==wm1){
+					str += ";";
+				}else{
+					str += ",";
+				}
+			}
 		}
-		if(j<hei-1){
+		if(j<hm1){
 			str += "\n";
 		}else{
-			str += " ]";
+			str += "]";
 		}
 	}
 	return str.replace(/e/g,"E");
+}
+Code.convolutionSum = function(a,b){
+	var i, j, val, lenA = a.length, lenB = b.length, sum = 0.0;
+	for(i=0;i<lenA;++i){
+		val = a[i];
+		for(j=0;j<lenB;++j){
+			sum += val*b[j];
+		}
+	}
+	return sum;
 }
 // ------------------------------------------------------------------------------------------ 
 Code.isUnique = function(val){ // val, ...array
@@ -379,7 +399,7 @@ Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
 
 Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]
 	var pi2 = Math.PI*2;
-	while(ang>pi2){
+	while(ang>=pi2){
 		ang -= pi2;
 	}
 	while(ang<0){

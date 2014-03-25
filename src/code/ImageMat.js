@@ -277,7 +277,7 @@ ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc){
 	var size = Math.round(bas + sigma*inc)*2+1;
 	return ImageMat.getGaussianWindow(size,1, sigma);
 }
-ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
+ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter){
 	if(sigmaY==undefined){ sigmaY = sigmaX; }
 	var len = width*height;
 	var matrix = new Array(len);
@@ -297,18 +297,33 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY){
 			sum += val;
 		}
 	}
-	//console.log(sum);
-	for(i=0;i<len;++i){ // this is necessary for scale space extrema calculations
-		matrix[i] /= sum;
+	if(normCenter){ // maximum == 1.0
+		// 
+	}else{
+		for(i=0;i<len;++i){ // total == 1.0
+			matrix[i] /= sum;
+		}
 	}
 	return matrix;
 }
-// ImageMat.laplaceOfGaussianWindow1DFromSigma = function(sigma, bas,inc){
-// 	bas = bas!==undefined?bas:2;
-// 	inc = inc!==undefined?inc:2;
-// 	var size = Math.round(bas + sigma*inc)*2+1;
-// 	return ImageMat.getLaplaceOfGaussianWindow(size,1, sigma);
-// }
+ImageMat.getGaussianWindowSimple = function(width,height, sigma){ // === ImageMat.getGaussianWindow(width,height, sigma,sigma,true)
+	var len = width*height;
+	var matrix = new Array(len);
+	var c = 1/(2*sigma*sigma);
+	var wo2 = Math.floor(width*0.5);
+	var ho2 = Math.floor(height*0.5);
+	var i, j, x, y, xx, yy, sum = 0;
+	for(j=0;j<height;++j){
+		y = ho2 - j; yy = y*y; 
+		for(i=0;i<width;++i){
+			x = wo2 - i; xx = x*x;
+			val = Math.exp(-(xx+yy)*c);
+			matrix[j*width + i] = val;
+			sum += val;
+		}
+	}
+	return matrix;
+}
 ImageMat.getLaplaceOfGaussianWindow = function(width,height, sigma){
 	var len = width*height;
 	var matrix = new Array(len);

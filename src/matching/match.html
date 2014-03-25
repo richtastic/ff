@@ -16,6 +16,40 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesLoadedFxn(){
 	Code.setPageTitle("fantastic");
+// 	var sum = Code.convolutionSum([1,2,3,4,5],[1,3,4,1]);
+
+// var i,j,index;
+// var width = 16;
+// var height = 16;
+// var Ix = new Array();
+// var Iy = new Array();
+// var sigma = width/2.0;
+// var v = new V2D();
+
+// //var decay = ImageMat.getGaussianWindow(width,height, sigma,sigma,true);
+// var decay = ImageMat.getGaussianWindowSimple(width,height, sigma);
+
+// for(j=0;j<height;++j){
+// 	for(i=0;i<width;++i){
+// 		index = j*width + i;
+// 		v.set(i - width/2.0, height/2.0 - j);
+// 		v.norm();
+// 		Ix[index] = v.x;
+// 		Iy[index] = v.y;
+// 	}
+// }
+// var sift = new SIFTDescriptor();
+
+// sift.fromGradients(Ix,Iy,decay,width,height);
+
+// console.log(sift.toString());
+
+// // console.log(Code.toStringArray2D(Ix,width,height,3));
+// // console.log(Code.toStringArray2D(Iy,width,height,3));
+// //console.log(Code.toStringArray2D(decay,width,height,3));
+
+// return;
+
 // 	var sigma = 1.6;
 // 	var width = 5;
 // 	var height = 5;
@@ -27,12 +61,14 @@ function customClassesLoadedFxn(){
 // console.log(w2);
 // console.log(Code.toStringArray2D(w2,width,height) );
 // return;
+
 	var data = {};
 	var list = [];
 	//var mode = Match.MODE_FIND_SIFT_POINTS;
 	//var mode = Match.MODE_FIND_AFFINE_POINTS;
 	//var mode = Match.MODE_TEST_POINTS;
-	var mode = Match.MODE_SHOW_POINTS;
+	//var mode = Match.MODE_SHOW_POINTS;
+	var mode = Match.MODE_COMPARE_POINTS;
 	if(mode == Match.MODE_FIND_SIFT_POINTS){ // find initial points
 		//list.push("original.png");
 		//list.push("scalexy.png");
@@ -52,7 +88,11 @@ function customClassesLoadedFxn(){
 		data.files = list;
 		var match = new Match(Match.MODE_FIND_AFFINE_POINTS, data);
 	}else if(mode == Match.MODE_COMPARE_POINTS){ // compare point lists
-		// 
+		list.push("BLT_affine.yaml");
+		list.push("BLB_affine.yaml");
+		data.fileBase = "./descriptors/";
+		data.files = list;
+		var match = new Match(Match.MODE_COMPARE_POINTS, data);
 	}else if(mode == Match.MODE_SHOW_POINTS){ // show points
 		//list.push("original.yaml");
 		//list.push("original_affine.yaml");

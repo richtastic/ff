@@ -33,6 +33,14 @@ YAML.parse = function(inputString){
 YAML.prototype.parse = function(inputString){
 	return this._parse(inputString);
 }
+// YAML.prototype.clear = function(){
+// 	Code.emptyArray(this._lines);
+// 	Code.emptyArray(this._stack);
+// 	Code.emptyArray(this._documents);
+// 	this._lineNumber = 0;
+// 	this._indent = 0;
+// 	this._refCount = 0;
+// }
 // -------------------------------------------------------------------------------------------------- REFERENCE TABLE
 YAML.prototype._addRefenceTableReference = function(referenceName,object,key){
 	if(this._references[referenceName]===undefined){

@@ -96,7 +96,9 @@ function Match(mode,data){
 		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxnAffine);
 		fileLoader.load();
 	}else if(this._mode==Match.MODE_COMPARE_POINTS){
-		// 
+		var fileLoader = new FileLoader();
+		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxnCompare);
+		fileLoader.load();
 	}else if(this._mode==Match.MODE_SHOW_POINTS){
 		var fileLoader = new FileLoader();
 		fileLoader.setLoadList(data.fileBase,data.files, this, this._onYAMLCompleteFxnShow);
@@ -479,20 +481,25 @@ Match.prototype.setYAMLFromComplete = function(o,fxn){
 	var DATA = Match.YAML;
 	var i, j, len, len2, d, f, descriptor, list, img, obj, yaml=new YAML(), hash=new Object();
 	var files = o.files[0];
-	var contents = o.contents[0];
-	obj = yaml.parse(contents);
-	descriptor = new ImageDescriptor();
-	descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
-	this._descriptorFile = o.files[0];
-	this._descriptorData = o.contents[0];
-	this._descriptor = descriptor;
-	// load image for presentation
-	var imageLoader = new ImageLoader("", [descriptor.imageFileName()], this,fxn, null);	
+	var contents, list = o.contents;
+	this._descriptors = new Array();
+	var loadList = new Array();
+	for(i=0;i<list.length;++i){
+		contents = list[i];
+		obj = yaml.parse(contents);
+		descriptor = new ImageDescriptor();
+		descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
+		this._descriptors[i] = descriptor;
+		loadList[i] = descriptor.imageFileName();
+	}
+	//this._descriptorFile = o.files[0];
+	//this._descriptorData = o.contents[0];
+	this._descriptor = this._descriptors[0];
+	var imageLoader = new ImageLoader("", loadList, this,fxn, null);	
 	imageLoader.load();
-	//return imageLoader;
 }
 Match.prototype._onYAMLCompleteFxnShow = function(o){
-	this.setYAMLFromComplete(o,this._onImageCompleteFxnShow);//.load();
+	this.setYAMLFromComplete(o,this._onImageCompleteFxnShow);
 }
 Match.prototype._onImageCompleteFxnShow = function(o){
 	var i, j, len, len2, d, f, descriptor, list, img, obj;
@@ -547,6 +554,31 @@ Match.prototype._onImageCompleteFxnShow = function(o){
 	}
 }
 
+Match.prototype._onYAMLCompleteFxnCompare = function(o){
+	this.setYAMLFromComplete(o,this._onImageCompleteFxnCompare);
+}
+Match.prototype._onImageCompleteFxnCompare = function(o){
+//Code.timerStart();
+	var i, obj;
+	var images = Code.copyArray(o.images);
+	var files = Code.copyArray(o.files);
+	for(i=0;i<this._descriptors.length;++i){
+		img = images[i];
+		obj = this.getDescriptorParameters( img );
+		this._descriptors[i].setImageData( obj.width,obj.height,obj.red,obj.grn,obj.blu );
+		this._descriptors[i].describeFeatures();
+	}
+	var dA = this._descriptors[0];
+	var dB = this._descriptors[1];
+	var fA = dA.getFeatureList()[0];
+	var fB = dB.getFeatureList()[0];
+	// 
+	// 
+	console.log(fA);
+	console.log(fB);
+//Code.timerStop();
+//console.log("time: "+Code.timerDifferenceSeconds());
+}
 
 Match.prototype._onYAMLCompleteFxnAffine = function(o){
 	this.setYAMLFromComplete(o,this._onImageCompleteFxnAffine);

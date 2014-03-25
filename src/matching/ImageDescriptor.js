@@ -266,7 +266,9 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
 		//if( this._flatGry[this._width*Math.floor(temp[i].y) + Math.floor(temp[i].x)] >= minThresholdIntensity ){
 			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
-		//}
+		}/*else{ // because of sort
+			break;
+		}*/
 	}
 	Code.emptyArray(extremaList);
 	Code.timerStop();
