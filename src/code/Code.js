@@ -187,6 +187,13 @@ Code.newArray = function(){
 	}
 	return arr;
 }
+Code.newArrayZeros = function(len){
+	var i, arr = new Array();
+	for(i=len-1;--i;){
+		arr.push(0.0);
+	}
+	return arr;
+}
 Code.copyArray = function(a,b){ // a = b
 	if(a==b){return;}
 	if(b===undefined){ b=a; a=new Array(); }
@@ -1422,6 +1429,33 @@ Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b
 	loc.t = b4 + 0.5*(dx*loc.x + dy*loc.y + dz*loc.z);
 	return loc;
 }
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 2D
+Code.lineSegIntersect = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
+	var caX = (c.x - a.x);
+	var dcX = (d.x - c.x);
+	var baX = (b.x - a.x);
+	var caY = (c.y - a.y);
+	var dcY = (d.y - c.y);
+	var baY = (b.y - a.y);
+	var den = baY*dcX - baX*dcY;
+	if(den == 0){
+		return null;
+	}
+	var num1 = baX*caY - baY*caX;
+	var num2 = dcX*caY - dcY*caX; // dcX*acY-dcY*acX;
+	var t1 = num1/den; // (baX*caY-baY*caX)/(dcX*baY-dcY*baX);
+	var t2 = num2/den; // (dcX*acY-dcY*acX)/(baX*dcY-baY*dcX);
+	if(t1 < 0 || t1 > 1 || t2 < 0 || t2 > 1){ // outside time frame
+		return null;
+	}
+	return new V4D( a.x+t2*baX, a.y+t2*baY, t2, t1 ); // new V4D( c.x+t1*dcX, c.y+t1*dcY, t1, t2 );
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 
 
 

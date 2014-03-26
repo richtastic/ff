@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>R2D</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["R2D.js"],this,r2dLoadedFxn)).load();
+}
+function r2dLoadedFxn(){
+	var r2d = new R2D();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

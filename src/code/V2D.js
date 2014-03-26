@@ -6,6 +6,12 @@ V2D.dot = function(a,b){
 V2D.cross = function(a,b){ // z direction
 	return a.x*b.y-a.y*b.x;
 }
+V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
+	var cos = Math.cos(ang), sin = Math.sin(ang);
+	var x = a.x*cos - a.y*sin;
+	b.y = a.x*sin + a.y*cos;
+	b.x = x;
+}
 // V2D.crossNorm = function(a,b){ // z direction
 // 	return (a.x*b.y-a.y*b.x)/(a.length()*b.length());
 // }
