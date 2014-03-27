@@ -7,6 +7,9 @@ function R2D(){
 	this.simulatePoints();
 }
 R2D.prototype.simulatePoints = function(){
+	var fieldOfView = 90*(Math.PI/180);
+	var focalLength = 1.0;
+	// 
 	var points2D = new Array();
 	points2D.push( new V2D(-3,3) );
 	points2D.push( new V2D(-1,4) );
@@ -18,14 +21,12 @@ R2D.prototype.simulatePoints = function(){
 	points2D.push( new V2D(5,3) );
 	// 
 	var cams2D = new Array();
-	cams2D.push( new V3D(0,0, 0) );
-	cams2D.push( new V3D(3,0, 0) );
+	cams2D.push( new Cam2D(0,0, 0*Math.PI, focalLength,fieldOfView) );
+	cams2D.push( new Cam2D(3,0, 0*Math.PI, focalLength,fieldOfView) );
 	//
 	var images = new Array();
 	var correspondences = new Array();
 	//
-	var fieldOfView = 90*(Math.PI/180);
-	var focalLength = 1.0;
 	var imageWidth = 100;
 	var i, j, k, cam, image, point, list, pixel, matrix;
 	var v = new V2D();
@@ -41,13 +42,13 @@ R2D.prototype.simulatePoints = function(){
 		cam = cams2D[i];
 		cameraOrientation.set(0,1); // default +y
 		cameraOrientation.scale(focalLength);
-		V2D.rotate(cameraOrientation, cameraOrientation,cam.z); // rotate to camera direction
-		imageCenter.x = cam.x + cameraOrientation.x;
-		imageCenter.y = cam.y + cameraOrientation.y;
+		V2D.rotate(cameraOrientation, cameraOrientation,cam.rotation()); // rotate to camera direction
+		imageCenter.x = cam.position().x + cameraOrientation.x;
+		imageCenter.y = cam.position().y + cameraOrientation.y;
 		imageLine.copy(cameraOrientation); // default = camera - 90deg
 		V2D.rotate(imageLine,imageLine,-Math.PI*0.5);
 		imageLine.norm();
-		imageLine.scale(2.0*focalLength*Math.tan(fieldOfView*0.5));
+		imageLine.scale(cam.screenSize());
 		imageLeft.x = imageCenter.x - 0.5*imageLine.x;
 		imageLeft.y = imageCenter.y - 0.5*imageLine.y;
 		imageRight.x = imageCenter.x + 0.5*imageLine.x;
@@ -62,7 +63,7 @@ R2D.prototype.simulatePoints = function(){
 		list = correspondences[i] = new Array();
 		for(j=0;j<points2D.length;++j){
 			point = points2D[j];
-			v = Code.lineSegIntersect(imageLeft,imageRight, point,cam);
+			v = Code.lineSegIntersect(imageLeft,imageRight, point,cam.position());
 			if(v){
 				console.log("  "+point.toString()+" => "+v.toString());
 				pixel = Math.floor(v.z*imageWidth);
@@ -74,6 +75,8 @@ R2D.prototype.simulatePoints = function(){
 		}
 		images.push(image);
 	}
+	// find a better solution
+		// ...
 	// find solution
 	var A, x, b;
 	var matrices = new Array();

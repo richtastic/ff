@@ -8,11 +8,20 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["R2D.js"],this,r2dLoadedFxn)).load();
+	(new ScriptLoader("./",["Cam2D.js","R2D.js"],this,r2dLoadedFxn)).load();
 }
 function r2dLoadedFxn(){
 	var r2d = new R2D();
 }
+/*
+
+2D projection:
+[ a b c ]
+[ d e f ]
+[ g h i ]
+
+
+*/
 </script>
 <body onload="pageLoadedFxn();">
 </body>
