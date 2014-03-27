@@ -17,10 +17,9 @@ Node.prototype.getChildAt = function(index){
 	return this.children[index];
 }
 Node.prototype.kill = function(){
-	for(var i=0; i<this.children.length;++i){
-		this.children[i].kill();
+	while(this.children.length>0){
+		this.children.pop().kill();
 	}
-	Code.emptyArray(this.children);
 	this.children = null;
 	this.parent = null;
 	this.data = null;

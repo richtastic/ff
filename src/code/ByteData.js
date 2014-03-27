@@ -220,89 +220,109 @@ ByteData.prototype.kill = function(){
 	this._data = null;
 }
 // -------------------------------------------------------------------------------------------------------------- compression - huffman
-ByteData._recursiveDescentHuffman = function(node,code,table){
-	if(node.children.length==0){
-		node.data.code = code;
-		table[node.data.index] = node.data.code;
-		return;
-	}
-	ByteData._recursiveDescentHuffman(node.children[0],code+"0",table);
-	ByteData._recursiveDescentHuffman(node.children[1],code+"1",table);
-}
 ByteData._howToSortHuffmanNodes = function(a,b){
 	return a.data.count<b.data.count;
 }
+ByteData._recursiveDescentHuffman = function(node,table,bits,value){
+	bits=bits!==undefined?bits:0;
+	value=value!==undefined?value:0;
+	if(node.children.length==0){
+		node.data.bits = bits;
+		node.data.value = value;
+		table[node.data.index] = node.data;
+		return;
+	}
+	ByteData._recursiveDescentHuffman(node.children[0],table,bits+1,(value<<1)|0);
+	ByteData._recursiveDescentHuffman(node.children[1],table,bits+1,(value<<1)|1);
+}
+ByteData._recursiveWriteHuffman = function(node,ba,bits,tag){
+	tag = tag!==undefined?tag:" ";
+	if(node.children.length==2){ // pivot
+		//console.log(tag+" (pivot)");
+		ba.writeUint8(0);
+		ByteData._recursiveWriteHuffman(node.children[0],ba,bits,tag+" ");
+		ByteData._recursiveWriteHuffman(node.children[1],ba,bits,tag+" ");
+	}else{ // end
+		ba.writeUint8(node.data.bits);
+		ba.writeUintN(node.data.value,node.data.bits);
+		ba.writeUintN(node.data.index,bits);
+		//console.log(tag+" "+node.data.value+"  "+node.data.bits+" ["+node.data.index+"]");
+	}
+}
+ByteData._recursiveReadHuffman = function(node,ba,bits,tag){
+	tag = tag!==undefined?tag:" ";
+	var b = ba.readUint8();
+	if(b==0){ // pivot
+		//console.log(tag+" (pivot)");
+		node.data = {};
+		node.addChild(new Node()); node.addChild(new Node());
+		ByteData._recursiveReadHuffman(node.children[0],ba,bits,tag+" ");
+		ByteData._recursiveReadHuffman(node.children[1],ba,bits,tag+" ");
+	}else{ // end
+		var value = ba.readUintN(b);
+		var index = ba.readUintN(bits);
+		node.data = {bits:b, value:value, index:index};
+		//console.log(tag+" "+node.data.value+"  "+node.data.bits+" ["+node.data.index+"]");
+	}
+}
+ByteData._readHuffmanFromRoot = function(node,ba,bits){
+	if(node.children.length==0){
+		return node.data.index;
+	}else{
+		var val = ba.read();
+		return ByteData._readHuffmanFromRoot(node.children[val],ba,bits);
+	}
+}
 ByteData.prototype.compressedHuffman = function(bits){
-	bits = bits!==undefined?bits:2;
+	bits = bits!==undefined?bits:4;
 	var i, len, val, node, nodeA, nodeB, obj, len = Math.pow(2,bits), ba = new ByteData();
 	var was = this.position();
 	// generate frequency table
 	var table = Code.newArrayZeros( len );
 	this.position(0);
 	while( this.position()<this.length() ){
-		table[ this.readUintN(bits) ];
+		table[ this.readUintN(bits) ]++;
 	}
-	console.log(table);
-	// convert from int array to node array
+	// node frequency table
 	for(i=0;i<len;++i){
-		obj = new Object(); obj.count = table[i]; obj.index = i;
-		node = new Node(obj,null);
-		table[i] = node;
+		table[i] = new Node({count:table[i], index:i},null);
 	}
 	// create frequency tree
 	while(table.length>1){ // until single root
 		table.sort(ByteData._howToSortHuffmanNodes);
 		nodeA = table[table.length-1];
 		nodeB = table[table.length-2];
-		obj = new Object(); obj.count = nodeA.data.count+nodeB.data.count; obj.index = -1;
-		node = new Node(obj);
+		node = new Node({count:nodeA.data.count+nodeB.data.count, index:-1});
 		node.addChild(nodeA); node.addChild(nodeB);
 		table.pop(); table.pop();
 		table.push(node);
-		len = table.length;
 	}
 	node = table.pop();
-	ByteData._recursiveDescentHuffman(node,"",table); // direct mappting
-console.log(table);
-	// read and compress
-	str = "";
-	this.position(0);
-	while(this.position()<this.length()){
-		val = this.readUintN(bits);
-		str += table[val];
-	}
-console.log(str);
-console.log(this.length(),str.length);
+	ByteData._recursiveDescentHuffman(node,table); // direct mapping
 	// write huffman header
 	ba.writeUint8(bits);
-	//ba.writeUint8(bits); //
-	// ...
-
-	// len = str.length;
-	// i = 0;
-	// str2 = "";
-	// while(i<len){
-	// 	nodeA = node;
-	// 	var inStr = "";
-	// 	while(nodeA!=null && i<len){
-	// 		val = parseInt( str.charAt(i) );
-	// 		nodeA = nodeA.getChildAt(val);
-	// 		if(nodeA){
-	// 			code = nodeA.data.index;
-	// 			inStr = inStr+""+val;
-	// 			++i;
-	// 		}
-	// 	}
-	// 	//console.log( inStr+" => "+base10ToBinaryString(code,bits) );
-	// 	//str2 = str2 + base10ToBinaryString(code,bits);
-	// 	str2 = str2 + code+" ";
-	// }
-	//console.log(str2);
+	ByteData._recursiveWriteHuffman(node,ba,bits);
+	// read and compress
+	this.position(0);
+	while(this.position()<this.length()){
+		val = table[ this.readUintN(bits) ];
+		//console.log(val.value, val.bits);
+		ba.writeUintN( val.value, val.bits );
+	}
 	return ba;
 }
 ByteData.prototype.decompressedHuffman = function(){
-	var tree = new Tree();
-	var ba = new ByteData();
+	var bits, val, node = new Node(), ba = new ByteData(), was = this.position();
+	// read huffman header
+	this.position(0);
+	bits = this.readUint8(bits);
+	ByteData._recursiveReadHuffman(node,this,bits);
+	// read and decompress
+	while(this.position()<this.length()){
+		val = ByteData._readHuffmanFromRoot(node,this,bits);
+		ba.writeUintN( val, bits);
+	}
+	this.position(was);
 	return ba;
 }
 // -------------------------------------------------------------------------------------------------------------- compression - rice / golomb
