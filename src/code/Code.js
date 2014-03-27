@@ -188,9 +188,9 @@ Code.newArray = function(){
 	return arr;
 }
 Code.newArrayZeros = function(len){
-	var i, arr = new Array();
-	for(i=len-1;--i;){
-		arr.push(0.0);
+	var i, arr = new Array(len);
+	for(i=len;i--;){
+		arr[i] = 0.0;
 	}
 	return arr;
 }

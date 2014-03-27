@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Rice ... et al</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Rice.js"],this,riceLoadedFxn)).load();
+}
+function riceLoadedFxn(){
+	var rice = new Rice();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

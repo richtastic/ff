@@ -1,10 +1,12 @@
 // Tree.js
 
-function Tree(){
+function Tree(dat,par){
 	this._children = new Array();
 	this._parent = null;
 	this._data = null;
 	this._ownsData = false;
+	if(dat!==undefined){ this.data(dat); }
+	if(par!==undefined){ par.addChild(this); }
 }
 // --------------------------------------------------------------------------------------------------------------------
 Tree.prototype.parent = function(p){
