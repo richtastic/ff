@@ -226,12 +226,21 @@ Matrix.prototype.multV2DtoV2D = function(out, inn){
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
 	out.y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
 	out.x = x;
+	return out;
 }
 Matrix.prototype.multV2DtoV3D = function(out, inn){
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
 	var y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
 	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2];
 	out.x = x; out.y = y;
+	return out;
+}
+Matrix.prototype.multV3DtoV3D = function(out, inn){
+	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2]*inn.z;
+	var y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2]*inn.z;
+	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2]*inn.z;
+	out.x = x; out.y = y;
+	return out;
 }
 Matrix.prototype.scale = function(c){
 	var row, rows = this._rowCount, cols = this._colCount;
