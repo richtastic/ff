@@ -53,6 +53,7 @@ SIFTDescriptor.findMaximumOrientations = function(Ix,Iy,w,h){
 	}
 	// convert peaks to list of angles
 	for(i=0;i<peaks.length;++i){
+		console.log(peaks[i].y);
 		peaks[i] = peaks[i].x;
 	}
 	return peaks;

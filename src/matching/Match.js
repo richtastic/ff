@@ -558,7 +558,7 @@ Match.prototype._onYAMLCompleteFxnCompare = function(o){
 	this.setYAMLFromComplete(o,this._onImageCompleteFxnCompare);
 }
 Match.prototype._onImageCompleteFxnCompare = function(o){
-//Code.timerStart();
+Code.timerStart();
 	var i, obj;
 	var images = Code.copyArray(o.images);
 	var files = Code.copyArray(o.files);
@@ -576,8 +576,8 @@ Match.prototype._onImageCompleteFxnCompare = function(o){
 	// 
 	console.log(fA);
 	console.log(fB);
-//Code.timerStop();
-//console.log("time: "+Code.timerDifferenceSeconds());
+Code.timerStop();
+console.log("time: "+Code.timerDifferenceSeconds());
 }
 
 Match.prototype._onYAMLCompleteFxnAffine = function(o){

@@ -1,5 +1,8 @@
 // ByteData
 ByteData.BITS_PER_INT = 32;
+ByteData.CRC_32_A = 0x04C11DB7;
+ByteData.CRC_32_B = 0xEDB88320;
+ByteData.CRC_32_C = 0x82608EDB;
 ByteData.MAX_SUB_INDEX = ByteData.BITS_PER_INT - 1;
 ByteData.STRING_64_ARRAY = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/'];
 /*
@@ -119,13 +122,30 @@ ByteData.prototype.writeByteData = function(ba, rev){
 	}
 	ba._position = was;
 }
+// -------------------------------------------------------------------------------------------------------------- binary string
+ByteData.prototype.readBinaryString = function(len){
+	var i, str = "";
+	for(i=0;i<len;++i){
+		str += this.read();
+	}
+	return str;
+}
+ByteData.prototype.writeBinaryString = function(str){
+    var i, len = str.length;
+    for(i=0;i<len;++i){
+        if(str.charAt(i)!='0'){
+        	this.write(1);
+        }else{
+        	this.write(0);
+    	}
+    }
+}
 // -------------------------------------------------------------------------------------------------------------- uint
 ByteData.prototype.readUintN = function(len){
 	var i, num = 0;
-	for(i=0;i<len;++i){
-		var val = this.read();
-		if( val ){
-			num += 1<<(len-i-1);
+	for(i=len-1;i>=0;--i){
+		if( this.read() ){
+			num = (num | 1<<i)>>>0;
 		}
 	}
 	return num;
@@ -135,8 +155,8 @@ ByteData.prototype.writeUintN = function(n,b){
     ander <<= b-1;
     for(i=0;i<b;++i){
         (ander&n)==0?this.write(0):this.write(1);
-        ander >>= 1;
-        ander &= 0x7FFFFFFF;
+        ander >>>= 1;
+        //ander &= 0x7FFFFFFF;
     }
 }
 ByteData.prototype.readUint4 = function(){
@@ -218,6 +238,65 @@ ByteData.prototype.kill = function(){
 	this._subIndex = undefined;
 	this._ander = undefined;
 	this._data = null;
+}
+// -------------------------------------------------------------------------------------------------------------- error checking
+ByteData.prototype._doCRC = function(divisor,sta,end){
+	sta = sta!==undefined?sta:0;
+	end = end!==undefined?end:this.length();
+	var was = this.position();
+	var bits = Math.ceil(Math.log(divisor)/Math.log(2));
+	var leftMask = 0x0001<<bits-1;
+	var acc = 0;
+	// xor like a mother
+	this.position(sta);
+	for(i=sta;i<end;++i){ // while(this.position() < this.length()){
+		acc = acc<<1 | this.read();
+		if(acc&leftMask){
+			acc = acc ^ divisor;
+		}
+	}
+	// ending
+	for(i=0;i<bits;++i){
+		acc = acc<<1;
+		if(acc&leftMask){
+			acc = acc ^ divisor;
+		}
+	}
+	this.position(was);
+	return acc;
+}
+ByteData.prototype.appendCRC = function(divisor){
+	divisor = divisor!==undefined?divisor:ByteData.CRC_32_A;
+	var bits = Math.ceil(Math.log(divisor)/Math.log(2));
+	var was = this.position();
+	var acc = this._doCRC(divisor);
+	// append CDC divisor, remainder, bits
+	this.position(this.length());
+	this.writeUintN(divisor,bits);
+	this.writeUintN(acc,bits);
+	this.writeUint8(bits);
+	this.position(was);
+}
+ByteData.prototype.removeCRC = function(divisor){
+	var len = this.length();
+	var was = this.position();
+	this.position(len-8);
+	bits = this.readUint8();
+	var crcPosition = len-8-bits*2;
+	this.length(crcPosition);
+	this.position(was);
+}
+ByteData.prototype.checkCRC = function(){
+	var divisor, remainder, accumulator, bits, len = this.length(), was = this.position();
+	this.position(len-8);
+	bits = this.readUint8();
+	var crcPosition = len-8-bits*2;
+	this.position(crcPosition);
+	divisor = this.readUintN(bits);
+	remainder = this.readUintN(bits);
+	accumulator = this._doCRC(divisor,0,crcPosition);
+	this.position(was);
+	return remainder==accumulator;
 }
 // -------------------------------------------------------------------------------------------------------------- compression - huffman
 ByteData._howToSortHuffmanNodes = function(a,b){

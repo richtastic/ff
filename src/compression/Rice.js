@@ -4,9 +4,39 @@ function Rice(){
 	//this.example1();
 	//this.example2();
 	//this.example3();
-	this.example4();
+	//this.example4();
+	this.example5();
 }
-
+Rice.prototype.example5 = function(){
+	var data = new ByteData();
+	for(var i=0;i<10;++i){
+		data.writeUint8( Math.floor(Math.random()*256) );
+		//data.writeUint8(33);
+	}
+	//data.writeBinaryString("11010011101100");
+	console.log(data.toStringBin());
+	//data.appendCRC( parseInt("1011",2) );
+	//data.appendCRC();
+	//data.appendCRC(ByteData.CRC_32_A);
+	data.appendCRC(ByteData.CRC_32_B);
+	//data.appendCRC(ByteData.CRC_32_C);
+	console.log(data.toStringBin());
+	var was = data.checkCRC();
+	// error
+	var flipBit = 8;
+	//var flipBit = Math.floor(data.length()*0.5);
+	data.position(flipBit);
+	var flipped = data.read();
+	data.position(flipBit);
+	data.write(flipped==0);
+	// 
+	console.log(data.toStringBin());
+	var is = data.checkCRC();
+	data.removeCRC()
+	console.log(data.toStringBin());
+	console.log(was);
+	console.log(is);
+}
 Rice.prototype.example4 = function(){
 	var data = new ByteData();
 	for(var i=0;i<12500;++i){ // 100,000 bits * 1KB/(8bits*1024bytes) = 12.2 KB

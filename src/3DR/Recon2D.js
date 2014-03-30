@@ -76,20 +76,8 @@ Recon2D.crossRatio = function(pointA,pointB,pointC,pointD){ // ignores z
 	return num/den;
 }
 
-Recon2D. = function(){
-}
-
-Recon2D. = function(){
-}
-
-Recon2D. = function(){
-}
-
-Recon2D. = function(){
-}
-
-Recon2D. = function(){
-}
+// Recon2D. = function(){
+// }
 
 
 

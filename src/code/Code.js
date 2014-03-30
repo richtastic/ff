@@ -335,20 +335,19 @@ Code.minArray = function(a){
 	//console.log( Math.max.call(this,[1,2,42,34,23,7]) ); // NO
 	//console.log( Math.max.apply(this,[1,2,42,34,23,7]) ); // WORKS\
 // ------------------------------------------------------------------------------------------ TIME
-Code._timerDateA = 0;
-Code._timerDateB = 0;
+Code._timerDates = [];
+Code._timerDateTop = 0;
 Code.timerStart = function(){
-	Code._timerDateA = Code.getTimeMilliseconds();
+	Code._timerDates.push( Code.getTimeMilliseconds() );
 }
 Code.timerStop = function(){
-	Code._timerDateB = Code.getTimeMilliseconds();
+	Code._timerDateTop = Code.getTimeMilliseconds() - Code._timerDates.pop();
 }
 Code.timerQuickDifferenceSeconds = function(){
-	var b = Code.getTimeMilliseconds();
-	return (b - Code._timerDateA)/1000.0;
+	return (Code.getTimeMilliseconds() - Code._timerDates[Code._timerDates.length-1])/1000.0;
 }
 Code.timerDifference = function(){
-	return Code._timerDateB - Code._timerDateA;
+	return Code._timerDateTop;
 }
 Code.timerDifferenceSeconds = function(){
 	return Code.timerDifference()/1000.0;
