@@ -1,9 +1,7 @@
 // R2D.js
 
 function R2D(){
-	this.cat = "hat";
-	console.log("cmlmete");
-
+	// 
 	this.simulatePoints();
 }
 R2D.prototype.simulatePoints = function(){

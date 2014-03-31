@@ -17,7 +17,6 @@ function Stage(can, fr){
 		this._eventList[evts[e]] = new Array();
 	}
 	this._root = new DO();
-	//this.root().stage(this);
 	DO.addToStageRecursive(this._root,this);
 	this._root.graphics().clear();
 	this.addListeners();
@@ -83,12 +82,6 @@ Stage.prototype.getARGBAsImage = function(argb, wid,hei, matrix, type){//Stage.p
 	return this._toImage(wid,hei, type);
 }
 Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64(src) image from OBJ 
-	// this._renderCanvas.clear();
-	// this._renderCanvas.size(wid,hei);
-	// this._renderCanvas.contextIdentity();
-	// if(matrix){
-	// 	this._renderCanvas.contextTransform(matrix); 
-	// }
 	this._setupRenderCanvas(wid,hei, matrix);
 	obj.render(this._renderCanvas);
 	return this._toImage(wid,hei, type);
@@ -125,10 +118,8 @@ Stage.prototype.getDOAsARGB = function(obj, wid,hei, matrix){
 	return this._renderCanvas.getColorArrayARGB(0,0,wid,hei);
 }
 Stage.prototype.render = function(){
-	//console.log("render");
 	this._canvas.clear();
 	this.alertAll(Stage.EVENT_ON_ENTER_FRAME,this._time);
-	//this._canvas.matrix.identity();
 	this._root.render(this._canvas);
 	this.alertAll(Stage.EVENT_ON_EXIT_FRAME,this._time);
 }

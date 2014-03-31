@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Panorama</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Panorama.js"],this,panLoadedFxn)).load();
+}
+function panLoadedFxn(){
+	var pan = new Panorama();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
