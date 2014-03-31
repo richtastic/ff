@@ -37,7 +37,7 @@ Panorama.prototype.beginPanorama = function(){
 		accWid += wid;
 	}
 	// 
-	// 
+	// find Frundamental Matrix 
 }
 Panorama.prototype.directLinearTransform = function(){
 	// normalize points

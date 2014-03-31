@@ -221,6 +221,15 @@ Matrix.transform2DRotate = function(a,ang){
 	return Matrix.mult(a,b);
 }
 
+Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u
+	var v = vin, m = min;
+	if(vin===undefined){
+		v = min;
+		m = new Matrix(3,3);
+	}
+	m.setFromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
+	return m;
+}
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE MATHS
 Matrix.prototype.multV2DtoV2D = function(out, inn){
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
@@ -664,11 +673,10 @@ Matrix.LU = function(P,L,U, A, pivot){ // [P,L,U] = A : LU Decomposition (Factor
 	*/
 }
 Matrix.mult = function(r, ain,bin){ // c = a*b 
-	var b = bin, a = ain;
+	var b = bin, a = ain, c = Matrix._temp;
 	if(bin===undefined){
 		a = r; b = ain;
 	}
-	var c = Matrix._temp;
 	var i,j,k, v, rowsA=a._rowCount,rowsB=b._rowCount, colsA=a._colCount,colsB=b._colCount;
 	c.setSize(rowsA,colsB);
 	for(j=0;j<rowsA;++j){
@@ -686,10 +694,43 @@ Matrix.mult = function(r, ain,bin){ // c = a*b
 	r.copy(c);
 	return r;
 }
-Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
-	// 
+Matrix.add = function(r, ain,bin){ // c = a + b
+	var b = bin, a = ain, c = Matrix._temp;
+	if(bin===undefined){
+		a = r; b = ain;
+	}
+	var i,j, rowsA=a._rowCount,rowsB=b._rowCount, colsA=a._colCount,colsB=b._colCount;
+	c.setSize(rowsA,colsB);
+	for(j=0;j<rowsA;++j){
+		for(i=0;i<colsB;++i){
+			c._rows[j][i] = a._rows[j][i] + b._rows[j][i];
+		}
+	}
+	if(bin===undefined){
+		return c.copy();
+	}
+	r.copy(c);
+	return r;
 }
-Matrix.a = function(c, a){ // 
+Matrix.sub = function(c, a,b){ // c = a - b
+	var b = bin, a = ain, c = Matrix._temp;
+	if(bin===undefined){
+		a = r; b = ain;
+	}
+	var i,j, rowsA=a._rowCount,rowsB=b._rowCount, colsA=a._colCount,colsB=b._colCount;
+	c.setSize(rowsA,colsB);
+	for(j=0;j<rowsA;++j){
+		for(i=0;i<colsB;++i){
+			c._rows[j][i] = a._rows[j][i] - b._rows[j][i];
+		}
+	}
+	if(bin===undefined){
+		return c.copy();
+	}
+	r.copy(c);
+	return r;
+}
+Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
 	// 
 }
 Matrix._temp = new Matrix(1,1);
