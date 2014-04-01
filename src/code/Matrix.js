@@ -183,6 +183,18 @@ Matrix.prototype.copy = function(m){ // this = m || return copy
 Matrix.prototype.kill = function(){
 	//
 }
+Matrix.prototype.cleanCheck = function(exp){
+	var i, j, rowm1 = this._rowCount-1, colm1 = this._colCount-1, num, val;
+	for(j=0;j<=rowm1;++j){
+		for(i=0;i<=colm1;++i){
+			num = this._rows[j][i];
+			if(isNaN(num)||num===undefined){
+				this._rows[j][i] = 0.0;
+			}
+		}
+	}
+}
+
 Matrix.prototype.toString = function(exp){
 	exp = exp===undefined?4:exp;
 	var minLen = exp+6+1; // -#.E+#
@@ -650,6 +662,9 @@ Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
 	var U = new Matrix(A.rows(),A.rows()).setFromArrayMatrix(val.U);
 	var S = new Matrix(A.rows(),A.cols()).zero().setDiagonalsFromArray(val.S);
 	var V = new Matrix(A.cols(),A.cols()).setFromArrayMatrix(val.V);
+	U.cleanCheck();
+	S.cleanCheck();
+	V.cleanCheck();
 	return {U:U, S:S, V:V};
 	// REQUIRES FINDING EIGEN VECTORS
 	// ui of U = kth singular value = 
