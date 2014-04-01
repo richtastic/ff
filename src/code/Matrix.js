@@ -147,6 +147,17 @@ Matrix.prototype.randomize = function(mul,rnd){
 	}
 	return this;
 }
+// ------------------------------------------------------------------------------------------------------------------------ ...
+Matrix.prototype.getCol = function(col){
+	var rows = this.rows(), i, a = [];
+	for(i=0;i<rows;++i){
+		a[i] = this._rows[i][col];
+	}
+	return new Matrix(rows,1).setFromArray(a);
+}
+Matrix.prototype.getRow = function(row){
+	return new Matrix(1,this.rows()).setFromArray(this._rows[row]);
+}
 // ------------------------------------------------------------------------------------------------------------------------ FXN
 Matrix.prototype.swapRows = function(rowA,rowB){
 	temp = this._rows[rowB];
@@ -241,6 +252,37 @@ Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u
 	}
 	m.setFromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
 	return m;
+}
+// ------------------------------------------------------------------------------------------------------------------------ STATS
+Matrix.matrixFromVectors = function(array){ // 
+	var i, j;
+	var cols = array.length;
+	var rows = array[0].cols();
+	var m = new Matrix();
+	for(i=0;i<N;++i){
+		// 
+	}
+	return m;
+}
+Matrix.zeroMeanMatrix = function(matrix){
+	var N = matrix.cols();
+	var center = new Array(N);
+	// center[i] += [j][i]
+	center = center/N;
+	// ... subtract center
+}
+Matrix.square = function(c,a){ // dot
+	// multiplication assuming a * a^T
+	// ...
+	return c;
+}
+Matrix.covarianceMatrix = function(matrix){
+	matrix = Matrix.zeroMeanMatrix(matrix);
+	var n = matrix.rows();
+	var cov = Matrix.square(matrix); // dot
+	var N = n-1;
+	cov = cov / N;
+	//var cov = new Matrix(n);
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE MATHS
 Matrix.prototype.multV2DtoV2D = function(out, inn){

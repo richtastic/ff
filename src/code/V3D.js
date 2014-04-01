@@ -50,3 +50,10 @@ V3D.prototype.kill = function(){
 	V3D._.kill.call(this);
 	this.z = undefined;
 }
+V3D.prototype.homo = function(){
+	if(this.z!=0){
+		this.x /= this.z;
+		this.y /= this.z;
+		this.z = 1.0;
+	}
+}

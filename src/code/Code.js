@@ -1,6 +1,7 @@
 // Code.js 
 // OVERRIDES:
 Math.PI2 = Math.PI*2.0;
+Math.TAU = Math.PI*2.0;
 // 
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
 // http://www.quirksmode.org/dom/events/index.html

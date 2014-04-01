@@ -70,6 +70,12 @@ V2D.prototype.kill = function(){
 	this.y = undefined;
 }
 
+V2D.prototype.homo = function(){
+	if(this.y!=0){
+		this.x /= this.y;
+		this.y = 1.0;
+	}
+}
 
 V2D.ZERO = new V2D(0.0,0.0);
 V2D.DIRX = new V2D(1.0,0.0);
