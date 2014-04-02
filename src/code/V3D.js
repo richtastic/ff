@@ -3,12 +3,18 @@ V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 V3D.cross = function(a,b,c){ // axb
-	if(c!==undefined){ // a = bxc
+	if(c!==undefined){
 		a.set(b.y*c.z-b.z*c.y, b.z*c.x-b.x*c.z, b.x*c.y-b.y*c.x);
 		return a;
-	} // axb
-	c = new V3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
-	return c;
+	}
+	return new V3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+}
+V3D.diff = function(a,b,c){ // a-b
+	if(c!==undefined){
+		a.set(b.x-c.x,b.y-c.y,b.z-c.z);
+		return a;
+	}
+	return new V3D(a.x-b.x,a.y-b.y,a.z-b.z);
 }
 
 function V3D(xP,yP,zP){

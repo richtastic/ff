@@ -12,6 +12,13 @@ V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	b.y = a.x*sin + a.y*cos;
 	b.x = x;
 }
+V2D.diff = function(a,b,c){ // a-b
+	if(c!==undefined){
+		a.set(b.x-c.x,b.y-c.y);
+		return a;
+	}
+	return new V2D(a.x-b.x,a.y-b.y);
+}
 // V2D.crossNorm = function(a,b){ // z direction
 // 	return (a.x*b.y-a.y*b.x)/(a.length()*b.length());
 // }
