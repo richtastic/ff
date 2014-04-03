@@ -97,7 +97,7 @@ Panorama.prototype.calculateNormalizedPoints = function(){
 		}
 var dirInfo = this.calculatePrinciple(this._inputPoints[i]);
 var angle = dirInfo.angle;
-var ratio = dirInfo.ratio;
+var ratio = dirInfo.scale;
 var tmp = new V2D();
 		cenX /= len; cenY /= len;
 		avgX = 0.0; avgY = 0.0; avgD = 0.0;
@@ -114,6 +114,7 @@ var tmp = new V2D();
 		}
 		avgX /= len; avgY /= len; avgD /= len;
 		console.log("AVERAGES: "+avgX,avgY);
+console.log(ratio,avgX/avgY);
 
 		T = new Matrix(3,3).identity();
 		T = Matrix.transform2DTranslate(T,-cenX,-cenY);
