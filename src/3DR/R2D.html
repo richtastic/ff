@@ -23,6 +23,18 @@ function r2dLoadedFxn(){
 	// console.log( a.toString() );
 	// console.log( b.toString() );
 	// console.log( c.toString() );
+// ,"Worker.js"
+var worker = new Worker("Worker.js");
+worker.onmessage = function(e){
+	console.log("worker.onmessage");
+	console.log(e)
+}
+worker.postMessage("start"); // start worker
+
+//worker.postMessage("message to worker");
+
+
+return;
 	var r2d = new R2D();
 }
 /*
