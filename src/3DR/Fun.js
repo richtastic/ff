@@ -32,6 +32,38 @@ function Fun(){
 	//new ImageLoader("./images/",["snow1.png","snow2.png"],this,this.imagesLoadComplete).load();
 }
 Fun.prototype.imagesLoadComplete = function(o){
+	this.all();
+}
+
+Fun.prototype.all = function(){
+	// fundamental matrix
+	// + camera matrices
+	// + Xi
+	// image rectrification for fine-reconstruction of all X
+	/// 
 }
 
 
+Fun.prototype.fundementalFromPoints = function(pointsA,pointB){
+	// normalize points x, x'
+	// solve Af = 0 : Ai = x'*x x'*y x' y'*x y'*y y' x y 1
+	// F = [a b c; d e f; g h i]
+	// force F to rank 2, while closestly approximating 
+		// a) using last column of V in F = USV^T
+		// b) iteritively start with (a), minimize geometric distance via L.M. converging f
+	//
+	var F = new Matrix(3,3);
+	return F;
+}
+
+Fun.prototype. = function(){
+	//
+}
+
+Fun.prototype. = function(){
+	//
+}
+
+Fun.prototype. = function(){
+	//
+}

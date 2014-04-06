@@ -85,6 +85,17 @@ Matrix.prototype.set = function(row,col,val){
 Matrix.prototype.get = function(row,col){
 	return this._rows[row][col];
 }
+Matrix.prototype.toArray = function(){
+	var i, j, row = this._rowCount, col = this._colCount, index = 0;
+	var a = new Array(row*col);
+	for(j=0;j<row;++j){
+		for(i=0;i<col;++i){
+			a[index] = this._rows[j][i];
+			++index;
+		}
+	}
+	return a;
+}
 // ------------------------------------------------------------------------------------------------------------------------ BASIC SETTING
 Matrix.prototype.zero = function(){
 	var i, j, row = this._rowCount, col = this._colCount;
@@ -158,9 +169,15 @@ Matrix.prototype.getCol = function(col){
 Matrix.prototype.getRow = function(row){
 	return new Matrix(1,this.rows()).setFromArray(this._rows[row]);
 }
+Matrix.prototype.setColFromCol = function(i, mat,j){
+	var r, rows = Math.min(this.rows(),mat.rows());
+	for(r=0;r<rows;++r){
+		this._rows[r][i] = mat._rows[r][j];
+	}
+}
 // ------------------------------------------------------------------------------------------------------------------------ FXN
 Matrix.prototype.swapRows = function(rowA,rowB){
-	temp = this._rows[rowB];
+	var temp = this._rows[rowB];
 	this._rows[rowB] = this._rows[rowA];
 	this._rows[rowA] = temp;
 }
@@ -231,17 +248,17 @@ Matrix.prototype.toString = function(exp){
 
 Matrix._transformTemp = new Matrix(3,3);
 Matrix.transform2DTranslate = function(a,tX,tY){
-	var b = Matrix._transformTemp.setFromArray([1.0,0.0,0.0, 0.0,1.0,0.0, tX,tY,1.0]);
-	return Matrix.mult(a,b);
+	var b = Matrix._transformTemp.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
 }
 Matrix.transform2DScale = function(a,sX,sY){
 	sY = sY!==undefined?sY:sX;
 	var b = Matrix._transformTemp.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform2DRotate = function(a,ang){
 	var b = Matrix._transformTemp.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 
 Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u
@@ -311,6 +328,16 @@ Matrix.prototype.scale = function(c){
 		row = this._rows[j];
 		for(i=0;i<cols;++i){
 			row[i] = row[i]*c;
+		}
+	}
+	return this;
+}
+Matrix.prototype.offset = function(c){
+	var row, rows = this._rowCount, cols = this._colCount;
+	for(j=0;j<rows;++j){
+		row = this._rows[j];
+		for(i=0;i<cols;++i){
+			row[i] = row[i] + c;
 		}
 	}
 	return this;
@@ -492,7 +519,7 @@ Matrix.backPropagate = function(A,b){ // A*b = b0 => start with bottom-most vari
 	}
 	return b;
 }
-Matrix.norm2D = function(A){
+Matrix.norm2D = function(A){ // frobenius
 	var rows = A.rows(), cols = A.cols(), u, t;
 	var i, n = 0;
 	for(j=0;j<rows;++j){
@@ -527,6 +554,7 @@ Matrix.normInfinite = function(x){ // x is a vector
 	return maxAbs; // return max;
 }
 Matrix.inverse = function(A){ // assumed square
+	return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
 	C = Matrix.augment(A,(new Matrix(A._rowCount,A._colCount)).identity());
 	Matrix.RREF(C,C);
 	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
@@ -537,6 +565,8 @@ Matrix.inverse = function(A){ // assumed square
 	return C;
 	// return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
 }
+// RIGHT INVERSE n<=m: A^T[(A*A^T)^-1]
+// LEFT INVERSE m<=n: [(A^T*A)^-1]A^T
 Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square
 	var a = ain;
 	if(ain===undefined){

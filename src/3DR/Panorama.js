@@ -15,8 +15,8 @@ Panorama.prototype.imagesLoadComplete = function(o){
 	this._inputImages = o.images;
 	this._inputFilenames = o.files;
 	this._inputPoints = [];
-	this._inputPoints.push([new V2D(0.565,0.340),new V3D(0.790,0.375),new V3D(0.590,0.565),new V3D(0.860,0.670) ,new V3D(0.620,0.720)]);//,new V3D(0.955,0.690) ]);
-	this._inputPoints.push([new V2D(0.365,0.290),new V3D(0.590,0.315),new V3D(0.400,0.515),new V3D(0.670,0.600) ,new V3D(0.435,0.670)]);//,new V3D(0.955,0.690) ]);
+	this._inputPoints.push([new V3D(0.565,0.340),new V3D(0.790,0.375),new V3D(0.590,0.565),new V3D(0.860,0.670) ,new V3D(0.620,0.720)]);//,new V3D(0.955,0.690) ]);
+	this._inputPoints.push([new V3D(0.365,0.290),new V3D(0.590,0.315),new V3D(0.400,0.515),new V3D(0.670,0.600) ,new V3D(0.435,0.670)]);//,new V3D(0.955,0.690) ]);
 	//this._inputPoints.push([new V2D(0.085,0.295),new V3D(0.319,0.325),new V3D(0.155,0.520),new V3D(0.525,0.565) ,new V3D(0.360,0.620)]);//,new V3D(0.595,0.575) ]);
 	for(var i=0;i<this._inputPoints.length;++i){
 		for(var j=0;j<this._inputPoints[i].length;++j){
@@ -33,8 +33,8 @@ Panorama.prototype.imagesLoadComplete = function(o){
 }
 Panorama.prototype.calculatePrinciple = function(points){
 	var cov = this.calculateCovariance2D(points);
-	console.log("COV: ");
-	console.log(cov.toString());
+	// console.log("COV: ");
+	// console.log(cov.toString());
 	var svd = Matrix.SVD(cov);
 	var sigmas = svd.S;
 	var sigDir = svd.V;
@@ -45,23 +45,23 @@ Panorama.prototype.calculatePrinciple = function(points){
 	var eigs = Matrix.eigenValuesAndVectors(cov);
 	var eigVal = eigs.values;
 	var eigDir = eigs.vectors;
-	console.log("EIG: ");
-	console.log(eigVal[0],eigVal[1]);
+	// console.log("EIG: ");
+	// console.log(eigVal[0],eigVal[1]);
 	// console.log("EIGDIR: ");
 	// console.log(eigDir);
 	//
 	var dirEigA = new V2D(eigDir[0].get(0,0),eigDir[0].get(1,0));
 	var dirEigB = new V2D(eigDir[1].get(0,0),eigDir[1].get(1,0));
 	var dirX = new V2D(1,0);
-	console.log(dirEigA.toString());
-	console.log(dirEigB.toString());
+	// console.log(dirEigA.toString());
+	// console.log(dirEigB.toString());
 	var angle = V2D.angleDirection(dirX,dirEigA);
-	console.log("ANGLE: ");
-	console.log(angle*180/Math.PI);
+	// console.log("ANGLE: ");
+	// console.log(angle*180/Math.PI);
 	var ratio = Math.sqrt(eigVal[0]/eigVal[1]);
-	console.log("RATIO: ");
-	console.log(ratio);
-	console.log(" ");
+	// console.log("RATIO: ");
+	// console.log(ratio);
+	// console.log(" ");
 	return {direction:dirEigA, angle:angle, scale:ratio}
 }
 Panorama.prototype.calculateCovariance2D = function(points){
@@ -86,6 +86,7 @@ Panorama.prototype.calculateCovariance2D = function(points){
 }
 Panorama.prototype.calculateNormalizedPoints = function(){
 	var i, j, len, T, pX, pY, cenX, cenY, avgX, avgY, avgD;
+	this._normalizedPoints = [];
 	this._inputPointTransforms = [];
 	this._inputPointInverseTransforms = [];
 	for(i=0;i<this._inputPoints.length;++i){
@@ -99,6 +100,7 @@ var dirInfo = this.calculatePrinciple(this._inputPoints[i]);
 var angle = dirInfo.angle;
 var ratio = dirInfo.scale;
 var tmp = new V2D();
+var useNormalized = true;//false;
 		cenX /= len; cenY /= len;
 		avgX = 0.0; avgY = 0.0; avgD = 0.0;
 		for(j=0;j<len;++j){
@@ -108,90 +110,230 @@ var tmp = new V2D();
 			avgD += Math.sqrt(pX+pY);
 				tmp.set(v.x-cenX,v.y-cenY);
 				V2D.rotate(tmp,tmp,-angle);
-				console.log(tmp.toString());
+				// console.log(tmp.toString());
 				avgX += Math.abs(tmp.x);
 				avgY += Math.abs(tmp.y);
 		}
 		avgX /= len; avgY /= len; avgD /= len;
-		console.log("AVERAGES: "+avgX,avgY);
-console.log(ratio,avgX/avgY);
-
+		// console.log("AVERAGES: "+avgX,avgY);
+		// console.log(ratio,avgX/avgY);
+		// console.log("TRANSLATE: "+cenX+" "+cenY);
+		// console.log("    SCALE: "+(Math.sqrt(2)/avgD) );
 		T = new Matrix(3,3).identity();
 		T = Matrix.transform2DTranslate(T,-cenX,-cenY);
-		//T = Matrix.transform2DScale(T,Math.sqrt(2)/avgD);
+		if(!useNormalized){
+			T = Matrix.transform2DScale(T,Math.sqrt(2)/avgD);
+		}else{
 			T = Matrix.transform2DRotate(T,-angle);
 			T = Matrix.transform2DScale(T,Math.sqrt(2)/avgX,Math.sqrt(2)/avgY);
 			T = Matrix.transform2DRotate(T,angle);
+		}
 		this._inputPointTransforms[i] = T;
 		Tinv = new Matrix(3,3).identity();
+		if(!useNormalized){
+			Tinv = Matrix.transform2DScale(Tinv,avgD/Math.sqrt(2));
+		}else{
 			Tinv = Matrix.transform2DRotate(Tinv,-angle);
 			Tinv = Matrix.transform2DScale(Tinv,avgX/Math.sqrt(2),avgY/Math.sqrt(2));
 			Tinv = Matrix.transform2DRotate(Tinv,angle);
-		//Tinv = Matrix.transform2DScale(Tinv,avgD/Math.sqrt(2));
+		}
 		Tinv = Matrix.transform2DTranslate(Tinv,cenX,cenY);
 		this._inputPointInverseTransforms[i] = Tinv;
 	}
+	// save normalized points
+	for(i=0;i<this._inputPoints.length;++i){
+		len = this._inputPoints[i].length;
+		T = this._inputPointTransforms[i];
+		this._normalizedPoints[i] = new Array(len);
+		for(j=0;j<len;++j){
+			v = this._inputPoints[i][j];
+			this._normalizedPoints[i][j] = T.multV3DtoV3D(new V3D(),v);
+		}
+	}
 }
-/*
-NORMAL SCALING
-0.001123908763455454
-0.00022355651578567014
-0.0008892842607994475
-0.00009235205561524109
-0.00030597140617939225
-AVG: 5.2701e-04
-
-WITH ANISOTROPIC SCALING:
-0.0014165622409150222
-0.0006146484649091402
-0.0009938979846075959
-0.00033543098779688834
-0.00016528583707249648 
-AVG: 7.0517e-04
-*/
-// Panorama.prototype.denormalizePoints = function(){
-// 	var i, j;
-// 	for(i=0;i<this._inputPoints.length;++i){
-// 		for(j=0;j<this._inputPoints[i].length;++j){
-// 			v = this._inputPoints[i][j];
-// 			v.x /= 2*8*Math.sqrt(2); v.y /= 2*8*Math.sqrt(2);
-// 			v.x += 0.5; v.y += 0.5;
-// 		}
-// 	}
-// }
 Panorama.prototype.beginPanorama = function(){
 	var d, wid, hei, i, accWid = 0;
 	var u, v, w;
-	// display images
+	// display initial images
 	for(i=0;i<this._inputImages.length;++i){
 		d = new DOImage(this._inputImages[i]);
 		d.matrix().translate(accWid,0.0);
 		this._root.addChild(d);
 		wid = d.width();
 		hei = d.height();
-		// display points
+		// display initial points
 		for(j=0;j<this._inputPoints[i].length;++j){
 			v = this._inputPoints[i][j];
 			this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
 		}
 		accWid += wid;
 	}
-	var H = this.directLinearTransform();
+	// RANSAC GOES HERE
+	var H = this.goldStandardAlgorithmH();
 	var Hinv = Matrix.inverse(H);
+var str = "dat = [";
 	// display calculated points
 	for(j=0;j<this._inputPoints[0].length;++j){
 		u = this._inputPoints[0][j];
 		v = this._inputPoints[1][j];
+		// A calculated
+		w = Hinv.multV3DtoV3D(new V3D(),v);
+		w.homo();
+		//console.log(u.toString()+" "+v.toString());
+		//console.log(V2D.diff(u,w).length());
+str += V2D.diff(v,w).length() + " \n";
+		v = w;
+//v.x -= 0.01;
+		accWid = 0;
+		this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
+		// B calculated
 		w = H.multV3DtoV3D(new V3D(),u);
 		w.homo();
-		console.log(V2D.diff(v,w).length()); // console.log(v,w);
+		//console.log(V2D.diff(v,w).length()); // console.log(v,w);
+str += V2D.diff(v,w).length() + " \n";
 		v = w;
+//v.x -= 0.01;
 		accWid = 400;
 		this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
 	}
-	// find Frundamental Matrix 
+str += "]; \n";
+str += "sum(dat)/size(dat,1) \n";
+console.log(str);
 }
-Panorama.prototype.directLinearTransform = function(){
+Panorama.prototype.goldStandardAlgorithmH = function(){
+	var pointsA = this._normalizedPoints[0]; // this._inputPoints[0];
+	var pointsB = this._normalizedPoints[1]; // this._inputPoints[1];
+	var minErrorDiff = 1E-16;
+	var maxIterations = 30;
+	var errors, points, error, sampsonError, jacobian, Jinv, epsilon = 1E-6, err = 0, prevErr = 0;
+	var i,j,k, ret, H, h, delta, he, row,col, a,b, pointLen = pointsA.length, dataCount = pointsA.length*2*2;
+	// init via RANSAC / DLT
+	H = this.directLinearTransformH();
+	h = new Matrix(9,1);
+	he = new Matrix(9,1);
+	h.setFromArray( H.toArray() );
+var t = new Matrix(9,1);
+t.randomize(0.1);
+t.offset(-0.05);
+//console.log(t.toString())
+Matrix.add(h,h,t);
+	jacobian = new Matrix(dataCount,9);
+	for(i=0;i<maxIterations;++i){
+	 	// value at H
+		ret = this.locationsFromHColumn(h,pointsA,pointsB);
+		points = ret.points;
+		error = ret.errors;
+		err = error.getNorm();
+		console.log(err,prevErr, err-prevErr);
+		if( Math.abs(err-prevErr) < minErrorDiff ){
+			console.log("convergerd");
+			break;
+		}
+		prevErr = err;
+		// jacobian
+		for(k=0;k<9;++k){
+			he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
+			ret = this.locationsFromHColumn(he,pointsA,pointsB);
+			jacobian.setColFromCol(k, ret.errors,0);
+		}
+		// ...
+		jacobian.scale(1.0/epsilon);
+		// console.log( "jacobian" );
+		// console.log( jacobian.toString() );
+		// console.log( jacobian.getNorm() );
+Jinv = Matrix.pseudoInverse(jacobian);
+// SAMPSON ERROR ...
+// MOVE IN THE DIRECTION OF LOWEST SAMPSON ERROR ?
+// var jTrans = Matrix.transpose(jacobian);
+// jacobian = Matrix.mult(jacobian,jTrans);
+// Jinv = Matrix.inverse(jacobian);
+// var errorTrans = Matrix.transpose(error);
+// var e = Matrix.mult(Jinv,error);
+// e = Matrix.mult(errorTrans,e);
+// console.log(e.toString());
+// break;
+		// console.log( "inverse:" );
+		// console.log( Jinv.toString() );
+delta = Matrix.mult(Jinv, error);
+		//console.log( delta.toString() );
+		//console.log( "......." );
+		Matrix.add(h, h,delta);
+		//console.log( h.toString() );
+
+	}
+	H.setFromArray( h.toArray() );
+	console.log(H.toString(10));
+	console.log("\
+[ -5.7764232718E-1 -2.6629138523E-2 -1.1441132682E-2  ] \n\
+[  3.1702103815E-2 -5.7307517240E-1  3.1091438689E-3  ] \n\
+[ -5.4303061842E-3  1.2327094918E-3 -5.7967169449E-1  ] \n\
+");
+	
+// 	error = new Matrix(dataCount,1);
+// 	for(i=0;i<pointLen;++i){
+// 		b = H.multV3DtoV3D(new V3D(), pointsA[i]);
+// 		a = Hinv.multV3DtoV3D(new V3D(), pointsB[i]);
+// 		a.homo();
+// 		b.homo();
+// 		console.log(a,pointsA[i]);
+// 		console.log(a.x - pointsA[i].x);
+// 		error.set(4*i+0,0, a.x - pointsA[i].x);
+// 		error.set(4*i+1,0, a.y - pointsA[i].y);
+// 		error.set(4*i+2,0, b.x - pointsB[i].x);
+// 		error.set(4*i+3,0, b.y - pointsB[i].y);
+// 	}
+// 	console.log(error.toString());
+// 	// sampson error:
+// 	// newton iteration:
+// 	jacobian = new Matrix(dataCount,9);
+// // H IS NORMALIZED POINT CORRESPONDENCES ... 
+// 	for(i=0;i<?;++i){
+// 		jacobian(*,0) = H.(0,0, + epilon) * 1/epsilon;
+// 	}
+	// error = ;
+	// sampsonError = ;
+	// epsilon
+
+	// pre/post normalize
+	var pointAT = this._inputPointTransforms[0];
+	var pointBT = this._inputPointTransforms[1];
+	var pointAinvT = this._inputPointInverseTransforms[0];
+	var pointBinvT = this._inputPointInverseTransforms[1];
+	H = Matrix.mult(H,pointAT);
+	H = Matrix.mult(pointBinvT,H);
+	return H;
+}
+Panorama.prototype.locationsFromHColumn = function(h,pointsA,pointsB){
+	var H = new Matrix(3,3).setFromArray(h.toArray());
+	var Hinv = Matrix.inverse(H);
+	var dataLength = pointsA.length*2*2;
+	var results = new Matrix(dataLength,1);
+	var error = new Matrix(dataLength,1);
+	var i, a, b, a2 = new V3D(), b2 = new V3D();
+	for(i=0;i<pointsA.length;++i){
+		a = pointsA[i];
+		b = pointsB[i];
+		results.set(i*4+0, 0, a.x);
+		results.set(i*4+1, 0, a.y);
+		results.set(i*4+2, 0, b.x);
+		results.set(i*4+3, 0, b.y);
+		b2 = H.multV3DtoV3D(b2, a);
+		a2 = Hinv.multV3DtoV3D(a2, b);
+		a2.homo();
+		b2.homo();
+		error.set(i*4+0, 0, a2.x-a.x);
+		error.set(i*4+1, 0, a2.y-a.y);
+		error.set(i*4+2, 0, b2.x-b.x);
+		error.set(i*4+3, 0, b2.y-b.y);
+	}
+	return {points:results, errors:error};
+}
+Panorama.prototype.directLinearTransform4H = function(pointsA, pointsB){
+	// compute only using 4 points
+	var H = null;
+	return H;
+}
+Panorama.prototype.directLinearTransformH = function(){
 	var i, a, b, x, H, A, rows = [];
 	var pointsA = this._inputPoints[0];
 	var pointsB = this._inputPoints[1];
@@ -199,8 +341,6 @@ Panorama.prototype.directLinearTransform = function(){
 	var pointBT = this._inputPointTransforms[1];
 	var pointAinvT = this._inputPointInverseTransforms[0];
 	var pointBinvT = this._inputPointInverseTransforms[1];
-	// normalize points
-		// ...
 	// x cross Hx = 0  =>  Ah = b
 	// homogenious solution:
 	for(i=0;i<pointsA.length;++i){
@@ -225,10 +365,8 @@ Panorama.prototype.directLinearTransform = function(){
 	x = V.getCol(8); // last column = min(sigma)
 	H = new Matrix(3,3).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),x.get(8,0)]);
 	// H := inv(T')*H*T
-	H = Matrix.mult(H,pointAT);
-	H = Matrix.mult(pointBinvT,H);
-	// non-linear least squares - ?
-		// ...
+	// H = Matrix.mult(H,pointAT);
+	// H = Matrix.mult(pointBinvT,H);
 	return H;
 }
 Panorama.prototype.RANSAC = function(){
@@ -236,9 +374,6 @@ Panorama.prototype.RANSAC = function(){
 }
 Panorama.prototype.leastMeadianOfSquares = function(){
 	//
-}
-Panorama.prototype.goldStandardAlgorithm = function(){
-	// init via RANSAC / DLT
 }
 Panorama.prototype.maximumLiklyhoodEstimation = function(){
 	// maximum likelyhood estimation of H

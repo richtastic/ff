@@ -1033,6 +1033,9 @@ ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scal
 	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	cum = Matrix.mult(cum,rot);
 	amt = Math.pow(ratio,0.25*scaler); // stable points
+
+
+
 	//amt = Math.pow(ratio,0.10*scaler); // stable points
 	//amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points
 	//amt = Math.pow(Math.pow(ratio,0.25),0.25*scaler); // unstable points

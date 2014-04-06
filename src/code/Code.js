@@ -487,6 +487,34 @@ Code.postpendFixed = function(start,pad,count){
 	return str;
 }
 
+// -------------------------------------------------------- RNG
+Code._randGaussSin = null;
+Code.randGauss = function(){ // box muller - randn, normal, gaussian
+	var a, r;
+	if(Code._randGaussSin){
+		a = Code._randGaussSin;
+		Code._randGaussSin = null
+		return a;
+	}
+	r = Math.sqrt(-2.0*Math.log(Math.random()));
+	a = Math.TAU*Math.random();
+	Code._randGaussSin = r*Math.sin(a);
+	return r*Math.cos(a);
+}
+Code.randChiSquare = function(){ // 2 DOF
+	return rs = -2.0*Math.log(Math.random());
+}
+Code.randChiSquareN = function(n){ // N DOF
+	var i, sum = 0.0, nm1 = Math.floor(n/2.0);
+	for(i=0;i<nm1;++i){
+		sum += Code.randChiSquare();
+	}
+	if(n%2==1){
+		sum += Math.pow(Code.randGauss(),2)
+	}
+	return sum;
+}
+
 // -------------------------------------------------------- HTML
 Code.getBody = function(){
 	return document.body;

@@ -37,12 +37,12 @@ function includeHeader($title='Title'){
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<!-- externals -->
 	<link rel="stylesheet" type="text/css" href="./volunteer.css">
+	<script type="text/javascript" src="./code/Code.js"></script>
+	<script type="text/javascript" src="./code/Dispatch.js"></script>
+	<script type="text/javascript" src="./code/Dispatchable.js"></script>
+	<script type="text/javascript" src="./code/Ajax.js"></script>
 	<script type="text/javascript" src="./classes/json3.min.js"></script>
 	<script type="text/javascript" src="./classes/sha512.js"></script>
-	<script type="text/javascript" src="./classes/Code.js"></script>
-	<script type="text/javascript" src="./classes/Dispatch.js"></script>
-	<script type="text/javascript" src="./classes/Dispatchable.js"></script>
-	<script type="text/javascript" src="./classes/Ajax.js"></script>
 	<script type="text/javascript" src="./classes/PageWeb.js"></script>
 	<script type="text/javascript" src="./classes/NavWeb.js"></script>
 	<script type="text/javascript" src="./classes/Navigation.js"></script>
