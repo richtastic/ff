@@ -11,6 +11,30 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["Panorama.js"],this,panLoadedFxn)).load();
 }
 function panLoadedFxn(){
+
+
+// var eNow = this.sampsonsFromHColumn(h,pointsA,pointsB).errors;
+// var eJ = new Matrix(pointsA.length,9);
+// for(k=0;k<9;++k){
+// 	he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
+// 	ret = this.sampsonsFromHColumn(he,pointsA,pointsB);
+// 	var delY = Matrix.sub(ret.errors,eNow);
+// 	eJ.setColFromCol(k, delY,0);
+// }
+// eJ.scale(1.0/epsilon);
+// Jinv = Matrix.pseudoInverse(eJ);
+// // error
+// eN = eNow.getNorm();
+// console.log(eN-eP);
+// eP = eN
+// // next H
+// delta = Matrix.mult(Jinv, eNow);
+// Matrix.add(h, h,delta);
+// 	}
+// 	H.setFromArray( h.toArray() );
+// 	console.log(H.toString(10));
+
+
 	var pan = new Panorama();
 }
 </script>

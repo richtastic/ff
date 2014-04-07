@@ -799,7 +799,7 @@ Matrix.add = function(r, ain,bin){ // c = a + b
 	r.copy(c);
 	return r;
 }
-Matrix.sub = function(c, a,b){ // c = a - b
+Matrix.sub = function(r, ain,bin){ // c = a - b
 	var b = bin, a = ain, c = Matrix._temp;
 	if(bin===undefined){
 		a = r; b = ain;
