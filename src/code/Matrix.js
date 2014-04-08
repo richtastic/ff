@@ -868,6 +868,29 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 	// projection.set(1,1, projection.get(1,1)/pt.z );
 	return projection;
 }
+
+
+Matrix.choleskyDecomposition = function(A){ // A = L*L^t
+	var i, j, k, sum, piv, rows = A.rows();
+	var L = new Matrix(rows,rows);
+	for(i=0;i<rows;++i){
+		for(j=i;j<rows;++j){
+			sum = 0.0;
+			for(k=0;k<i;++k){
+				sum += L.get(i,k)*L.get(j,k);
+			}
+			if(i==j){
+				piv = Math.sqrt(A.get(i,j) - sum);
+				L.set(j,i, piv);
+			}else{
+				L.set(j,i, (A.get(i,j) - sum)/piv);
+			}
+		}
+	}
+	return L;
+} // inv(A) = trans(inv(L)) * inv(L)
+
+
 Matrix.eigenValuesAndVectors2D = function(a,b,c,d){
 	var trace = a + d;
 	var det = a*d - b*c;

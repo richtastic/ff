@@ -171,7 +171,7 @@ Panorama.prototype.beginPanorama = function(){
 	// RANSAC GOES HERE
 	var H = this.goldStandardAlgorithmH();
 	var Hinv = Matrix.inverse(H);
-var str = "dat = [";
+var str = "dat = [\n";
 	// display calculated points
 	for(j=0;j<this._inputPoints[0].length;++j){
 		u = this._inputPoints[0][j];
@@ -183,7 +183,7 @@ var str = "dat = [";
 		//console.log(V2D.diff(u,w).length());
 str += V2D.diff(v,w).length() + " \n";
 		v = w;
-v.x -= 0.01;
+//v.x -= 0.01;
 		accWid = 0;
 		this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
 		// B calculated
@@ -192,7 +192,7 @@ v.x -= 0.01;
 		//console.log(V2D.diff(v,w).length()); // console.log(v,w);
 str += V2D.diff(v,w).length() + " \n";
 		v = w;
-v.x -= 0.01;
+//v.x -= 0.01;
 		accWid = 400;
 		this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
 	}
@@ -219,6 +219,8 @@ var eN=0,eP=0;
 // t.randomize(0.01);
 // t.offset(-0.005);
 // Matrix.add(h,h,t);
+var lambda = 0.001;
+var lambdaScale = 10.0;
 	for(i=0;i<maxIterations;++i){
 	 	// y: value at H
 		currentResults = this.locationsFromHColumn(h,pointsA,pointsB).points;
@@ -227,6 +229,10 @@ var eN=0,eP=0;
 		//console.log("error: "+error.getNorm());
 		err = error.getNorm();
 		console.log(err-prevErr);
+		if( Math.abs(err-prevErr) < minErrorDiff ){
+			console.log("converged");
+			break;
+		}
 		prevErr = err;
 		// jacobian
 		for(k=0;k<9;++k){
@@ -236,17 +242,50 @@ var eN=0,eP=0;
 			jacobian.setColFromCol(k, delY,0);
 		}
 		jacobian.scale(1.0/epsilon);
-		Jinv = Matrix.pseudoInverse(jacobian);
+		//Jinv = Matrix.pseudoInverse(jacobian);
+// var v = Matrix.eigenValuesAndVectors(jj);
+// console.log("EIGEN VALUES AND VECTORS");
+// console.log(v.values);
+var jt = Matrix.transpose(jacobian);
+var jj = Matrix.mult(jt,jacobian);
+var L = new Matrix(jacobian.cols(),jacobian.cols()).identity();
+L.scale(lambda);
+var ji = Matrix.add(jj,L);
+ji = Matrix.inverse(ji);
+Jinv = Matrix.mult(ji,jt);
+
+delta = Matrix.mult(Jinv, error);
+var potentialH = Matrix.add(h,delta); // putative
+// TEMP
+var newError = this.absoluteErrorFromHColumn(potentialH,pointsA,pointsB).errors.getNorm();
+if(newError<err){
+	//console.log("GOTO NEXT: "+newError+" < "+err);
+	Matrix.add(h, h,delta);
+	lambda *= lambdaScale; // more 
+}else{
+	//console.log("BAD, SKIP: "+newError+" > "+err);
+	lambda /= lambdaScale; // less
+}
+
+/*
+console.log(jacobian.rows()+" x "+jacobian.cols());
+// console.log(ji.toString());
+// console.log(jt.toString());
+console.log(ji.rows()+" x "+ji.cols());
+console.log(jt.rows()+" x "+jt.cols());
+*/
+		// 
 		// dx: next h values
-		delta = Matrix.mult(Jinv, error);
-		// x += dx
-		Matrix.add(h, h,delta);
+		// delta = Matrix.mult(Jinv, error);
+		// // x += dx
+		// Matrix.add(h, h,delta);
 
 /*
 sampson
 */
 
 // var eNow = this.sampsonsFromHColumn(h,pointsA,pointsB).errors;
+// console.log(eNow.toString())
 // var eJ = new Matrix(pointsA.length,9);
 // for(k=0;k<9;++k){
 // 	he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
