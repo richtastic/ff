@@ -27,130 +27,14 @@ Panorama.prototype.imagesLoadComplete = function(o){
 	// var pts = [new V2D(2.5,2.4),new V2D(0.5,0.7),new V2D(2.2,2.9),new V2D(1.9,2.2),new V2D(3.1,3.0),new V2D(2.3,2.7),new V2D(2.0,1.6),new V2D(1.0,1.1),new V2D(1.5,1.6),new V2D(1.1,0.9)];
 	// this.calculatePrinciple( pts );
 	//
-	this.calculateNormalizedPoints();
+	var ret = R3D.calculateNormalizedPoints(this._inputPoints);
+	this._normalizedPoints = ret.normalized;
+	this._inputPointTransforms = ret.forward;
+	this._inputPointInverseTransforms = ret.reverse;
 	// start work
 	this.beginPanorama();
 }
-Panorama.prototype.calculatePrinciple = function(points){
-	var cov = this.calculateCovariance2D(points);
-	// console.log("COV: ");
-	// console.log(cov.toString());
-	var svd = Matrix.SVD(cov);
-	var sigmas = svd.S;
-	var sigDir = svd.V;
-	// console.log("SIG: ");
-	// console.log(sigmas.toString());
-	// console.log("SIGDIR: ");
-	// console.log(sigDir.toString());
-	var eigs = Matrix.eigenValuesAndVectors(cov);
-	var eigVal = eigs.values;
-	var eigDir = eigs.vectors;
-	// console.log("EIG: ");
-	// console.log(eigVal[0],eigVal[1]);
-	// console.log("EIGDIR: ");
-	// console.log(eigDir);
-	//
-	var dirEigA = new V2D(eigDir[0].get(0,0),eigDir[0].get(1,0));
-	var dirEigB = new V2D(eigDir[1].get(0,0),eigDir[1].get(1,0));
-	var dirX = new V2D(1,0);
-	// console.log(dirEigA.toString());
-	// console.log(dirEigB.toString());
-	var angle = V2D.angleDirection(dirX,dirEigA);
-	// console.log("ANGLE: ");
-	// console.log(angle*180/Math.PI);
-	var ratio = Math.sqrt(eigVal[0]/eigVal[1]);
-	// console.log("RATIO: ");
-	// console.log(ratio);
-	// console.log(" ");
-	return {direction:dirEigA, angle:angle, scale:ratio}
-}
-Panorama.prototype.calculateCovariance2D = function(points){
-	var i, len, meanX, meanY, normX, normY, sigXX, sigXY, sigYY;
-	len = points.length;
-	meanX = 0; meanY = 0;
-	for(i=0;i<len;++i){
-		meanX += points[i].x; meanY += points[i].y;
-	}
-	sigXX = 0; sigXY = 0; sigYY = 0;
-	meanX /= len; meanY /= len;
-	for(i=0;i<len;++i){
-		normX = points[i].x - meanX;
-		normY = points[i].y - meanY;
-		sigXX += normX*normX;
-		sigXY += normX*normY;
-		sigYY += normY*normY;
-	}
-	len -= 1;
-	sigXX /= len; sigXY /= len; sigYY /= len;
-	return new Matrix(2,2).setFromArray([sigXX, sigXY, sigXY, sigYY]);
-}
-Panorama.prototype.calculateNormalizedPoints = function(){
-	var i, j, len, T, pX, pY, cenX, cenY, avgX, avgY, avgD;
-	this._normalizedPoints = [];
-	this._inputPointTransforms = [];
-	this._inputPointInverseTransforms = [];
-	for(i=0;i<this._inputPoints.length;++i){
-		len = this._inputPoints[i].length;
-		cenX = 0.0; cenY = 0.0;
-		for(j=0;j<len;++j){
-			v = this._inputPoints[i][j];
-			cenX += v.x; cenY += v.y;
-		}
-var dirInfo = this.calculatePrinciple(this._inputPoints[i]);
-var angle = dirInfo.angle;
-var ratio = dirInfo.scale;
-var tmp = new V2D();
-var useNormalized = true;//false;
-		cenX /= len; cenY /= len;
-		avgX = 0.0; avgY = 0.0; avgD = 0.0;
-		for(j=0;j<len;++j){
-			v = this._inputPoints[i][j];
-			pX = Math.pow(v.x-cenX, 2.0);
-			pY = Math.pow(v.y-cenY, 2.0);
-			avgD += Math.sqrt(pX+pY);
-				tmp.set(v.x-cenX,v.y-cenY);
-				V2D.rotate(tmp,tmp,-angle);
-				// console.log(tmp.toString());
-				avgX += Math.abs(tmp.x);
-				avgY += Math.abs(tmp.y);
-		}
-		avgX /= len; avgY /= len; avgD /= len;
-		// console.log("AVERAGES: "+avgX,avgY);
-		// console.log(ratio,avgX/avgY);
-		// console.log("TRANSLATE: "+cenX+" "+cenY);
-		// console.log("    SCALE: "+(Math.sqrt(2)/avgD) );
-		T = new Matrix(3,3).identity();
-		T = Matrix.transform2DTranslate(T,-cenX,-cenY);
-		if(!useNormalized){
-			T = Matrix.transform2DScale(T,Math.sqrt(2)/avgD);
-		}else{
-			T = Matrix.transform2DRotate(T,-angle);
-			T = Matrix.transform2DScale(T,Math.sqrt(2)/avgX,Math.sqrt(2)/avgY);
-			T = Matrix.transform2DRotate(T,angle);
-		}
-		this._inputPointTransforms[i] = T;
-		Tinv = new Matrix(3,3).identity();
-		if(!useNormalized){
-			Tinv = Matrix.transform2DScale(Tinv,avgD/Math.sqrt(2));
-		}else{
-			Tinv = Matrix.transform2DRotate(Tinv,-angle);
-			Tinv = Matrix.transform2DScale(Tinv,avgX/Math.sqrt(2),avgY/Math.sqrt(2));
-			Tinv = Matrix.transform2DRotate(Tinv,angle);
-		}
-		Tinv = Matrix.transform2DTranslate(Tinv,cenX,cenY);
-		this._inputPointInverseTransforms[i] = Tinv;
-	}
-	// save normalized points
-	for(i=0;i<this._inputPoints.length;++i){
-		len = this._inputPoints[i].length;
-		T = this._inputPointTransforms[i];
-		this._normalizedPoints[i] = new Array(len);
-		for(j=0;j<len;++j){
-			v = this._inputPoints[i][j];
-			this._normalizedPoints[i][j] = T.multV3DtoV3D(new V3D(),v);
-		}
-	}
-}
+
 Panorama.prototype.beginPanorama = function(){
 	var d, wid, hei, i, accWid = 0;
 	var u, v, w;
@@ -164,13 +48,14 @@ Panorama.prototype.beginPanorama = function(){
 		// display initial points
 		for(j=0;j<this._inputPoints[i].length;++j){
 			v = this._inputPoints[i][j];
-			this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
+			this._root.addChild( R3D.drawPointAt(accWid + wid*v.x,hei*v.y) );
 		}
 		accWid += wid;
 	}
 	// RANSAC GOES HERE
 	var H = this.goldStandardAlgorithmH();
 	var Hinv = Matrix.inverse(H);
+var sum = 0.0;
 var str = "dat = [\n";
 	// display calculated points
 	for(j=0;j<this._inputPoints[0].length;++j){
@@ -182,23 +67,26 @@ var str = "dat = [\n";
 		//console.log(u.toString()+" "+v.toString());
 		//console.log(V2D.diff(u,w).length());
 str += V2D.diff(v,w).length() + " \n";
+sum += V2D.diff(v,w).length();
 		v = w;
-//v.x -= 0.01;
+v.x -= 0.01;
 		accWid = 0;
-		this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
+		this._root.addChild( R3D.drawPointAt(accWid + wid*v.x,hei*v.y) );
 		// B calculated
 		w = H.multV3DtoV3D(new V3D(),u);
 		w.homo();
 		//console.log(V2D.diff(v,w).length()); // console.log(v,w);
 str += V2D.diff(v,w).length() + " \n";
 		v = w;
-//v.x -= 0.01;
+v.x -= 0.01;
 		accWid = 400;
-		this._root.addChild( this._drawPointAt(accWid + wid*v.x,hei*v.y) );
+		this._root.addChild( R3D.drawPointAt(accWid + wid*v.x,hei*v.y) );
 	}
+sum /= this._inputPoints[0].length;
 str += "]; \n";
 str += "sum(dat)/size(dat,1) \n";
 console.log(str);
+console.log("average error: "+sum);
 }
 Panorama.prototype.goldStandardAlgorithmH = function(){
 	var pointsA = this._normalizedPoints[0]; // this._inputPoints[0];
@@ -243,9 +131,6 @@ var lambdaScale = 10.0;
 		}
 		jacobian.scale(1.0/epsilon);
 		//Jinv = Matrix.pseudoInverse(jacobian);
-// var v = Matrix.eigenValuesAndVectors(jj);
-// console.log("EIGEN VALUES AND VECTORS");
-// console.log(v.values);
 var jt = Matrix.transpose(jacobian);
 var jj = Matrix.mult(jt,jacobian);
 var L = new Matrix(jacobian.cols(),jacobian.cols()).identity();
@@ -253,10 +138,8 @@ L.scale(lambda);
 var ji = Matrix.add(jj,L);
 ji = Matrix.inverse(ji);
 Jinv = Matrix.mult(ji,jt);
-
 delta = Matrix.mult(Jinv, error);
 var potentialH = Matrix.add(h,delta); // putative
-// TEMP
 var newError = this.absoluteErrorFromHColumn(potentialH,pointsA,pointsB).errors.getNorm();
 if(newError<err){
 	//console.log("GOTO NEXT: "+newError+" < "+err);
@@ -267,13 +150,6 @@ if(newError<err){
 	lambda /= lambdaScale; // less
 }
 
-/*
-console.log(jacobian.rows()+" x "+jacobian.cols());
-// console.log(ji.toString());
-// console.log(jt.toString());
-console.log(ji.rows()+" x "+ji.cols());
-console.log(jt.rows()+" x "+jt.cols());
-*/
 		// 
 		// dx: next h values
 		// delta = Matrix.mult(Jinv, error);
@@ -281,28 +157,60 @@ console.log(jt.rows()+" x "+jt.cols());
 		// Matrix.add(h, h,delta);
 
 /*
-sampson
+sampson - if this is fact wtf that means
+*/
+/*
+		var error = this.sampsonsFromHColumn(h,pointsA,pointsB).errors;
+		err = error.getNorm();
+		console.log(err-prevErr);
+		if( Math.abs(err-prevErr) < minErrorDiff ){
+			console.log("converged");
+			break;
+		}
+		prevErr = err;
+		console.log(error.toString());
+		var eJ = new Matrix(pointsA.length,9);
+		for(k=0;k<9;++k){
+			he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
+			ret = this.sampsonsFromHColumn(he,pointsA,pointsB);
+			var delY = Matrix.sub(ret.errors,error);
+			eJ.setColFromCol(k, delY,0);
+		}
+jacobian = eJ;
+		eJ.scale(1.0/epsilon);
+		//Jinv = Matrix.pseudoInverse(eJ);
+var jt = Matrix.transpose(jacobian);
+var jj = Matrix.mult(jt,jacobian);
+var L = new Matrix(jacobian.cols(),jacobian.cols()).identity();
+L.scale(lambda);
+var ji = Matrix.add(jj,L);
+ji = Matrix.inverse(ji);
+Jinv = Matrix.mult(ji,jt);
+delta = Matrix.mult(Jinv, error);
+var potentialH = Matrix.add(h,delta); // putative
+//var newError = this.absoluteErrorFromHColumn(potentialH,pointsA,pointsB).errors.getNorm();
+var newError = this.sampsonsFromHColumn(he,pointsA,pointsB);
+if(newError<err){
+	//console.log("GOTO NEXT: "+newError+" < "+err);
+	Matrix.add(h, h,delta);
+	lambda *= lambdaScale; // more 
+}else{
+	//console.log("BAD, SKIP: "+newError+" > "+err);
+	lambda /= lambdaScale; // less
+}		
+		// next H
+		// delta = Matrix.mult(Jinv, eNow);
+		// Matrix.add(h, h,delta);
 */
 
-// var eNow = this.sampsonsFromHColumn(h,pointsA,pointsB).errors;
-// console.log(eNow.toString())
-// var eJ = new Matrix(pointsA.length,9);
-// for(k=0;k<9;++k){
-// 	he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
-// 	ret = this.sampsonsFromHColumn(he,pointsA,pointsB);
-// 	var delY = Matrix.sub(ret.errors,eNow);
-// 	eJ.setColFromCol(k, delY,0);
-// }
-// eJ.scale(1.0/epsilon);
-// Jinv = Matrix.pseudoInverse(eJ);
-// // error
-// eN = eNow.getNorm();
-// console.log(eN-eP);
-// eP = eN
-// // next H
-// delta = Matrix.mult(Jinv, eNow);
-// Matrix.add(h, h,delta);
+/*
+gold standard:
+
+*/
+
 	}
+	// normal:  average error: 0.20110955268203262 
+	// sampson: average error: 0.20111007855590562 // way faster convergence
 	H.setFromArray( h.toArray() );
 	console.log(H.toString(10));
 	
@@ -474,22 +382,7 @@ iteration methods:
 * powell's
 * simplex
 */
-Panorama.prototype._drawPointAt = function(pX,pY){
-	var rad = 6.0;
-	var d = new DO();
-	d.graphics().setLine(2.0, Code.getColARGB(0xFF,Math.floor(256*Math.random()),Math.floor(256*Math.random()),Math.floor(256*Math.random())) );
-	d.graphics().beginPath();
-	d.graphics().setFill(0x0000FF00);
-	d.graphics().moveTo(rad,0);
-	d.graphics().drawEllipse(pX,pY, rad,rad, 0.0);
-	d.graphics().endPath();
-	d.graphics().fill();
-	d.graphics().strokeLine();
-	return d;
-}
-Panorama.prototype.a = function(){
-	console.log("hai");
-}
+
 
 
 // DLT

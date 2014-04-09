@@ -96,6 +96,14 @@ Matrix.prototype.toArray = function(){
 	}
 	return a;
 }
+Matrix.prototype.colToArray = function(i){
+	var j, row = this._rowCount;
+	var a = new Array(row);
+	for(j=0;j<row;++j){
+		a[j] = this._rows[j][i];
+	}
+	return a;
+}
 // ------------------------------------------------------------------------------------------------------------------------ BASIC SETTING
 Matrix.prototype.zero = function(){
 	var i, j, row = this._rowCount, col = this._colCount;
@@ -173,6 +181,12 @@ Matrix.prototype.setColFromCol = function(i, mat,j){
 	var r, rows = Math.min(this.rows(),mat.rows());
 	for(r=0;r<rows;++r){
 		this._rows[r][i] = mat._rows[r][j];
+	}
+}
+Matrix.prototype.setRowFromArray = function(i, arr){
+	var c, cols = Math.min(arr.length,this.cols()), row = this._rows[i];
+	for(c=0; c<cols; ++c){
+		row[c] = arr[c];
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------ FXN
@@ -366,6 +380,9 @@ for each col
 */
 // ------------------------------------------------------------------------------------------------------------------------ MATHS
 Matrix.epsilon = 1.0E-15;
+Matrix.isZero = function(num){
+	return Math.abs(num)<Matrix.epsilon;
+}
 // assumes all sizes have been set beforehand
 Matrix.transpose = function(B, Ain){ // B = A^T
 	var A = Ain, C = Matrix._temp;
@@ -889,6 +906,15 @@ Matrix.choleskyDecomposition = function(A){ // A = L*L^t
 	}
 	return L;
 } // inv(A) = trans(inv(L)) * inv(L)
+
+Matrix.LU = function(A){ // A = L*U
+	var rows = A.rows();
+	var cols = A.cols();
+	var L = new Matrix(rows,rows);
+	var U = new Matrix(rows,cols);
+	// somebody DO something!
+	return {L:L, U:U};
+}
 
 
 Matrix.eigenValuesAndVectors2D = function(a,b,c,d){

@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["Panorama.js"],this,panLoadedFxn)).load();
+	(new ScriptLoader("./",["R3D.js","Panorama.js"],this,panLoadedFxn)).load();
 }
 function panLoadedFxn(){
 // var A = new Matrix(4,4).setFromArray([16,4,4,-4, 4,10,4,2, 4,4,6,-2, -4,2,-2,4]);
