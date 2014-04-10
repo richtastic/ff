@@ -11,6 +11,14 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Fun.js"],this,funLoadedFxn)).load();
 }
 function funLoadedFxn(){
+	var A = new Matrix(2,3).setFromArray([4, 11, 14, 8, 7, -2]);
+	//var svd = Matrix.nonShittySVD(A);
+	var A = new Matrix(3,3).setFromArray([4, 11, 14, 8, 7, -2, 0,0,0]);
+	var svd = Matrix.SVD(A);
+	console.log(svd.U.toString());
+	console.log(svd.S.toString());
+	console.log(svd.V.toString());
+return;
 	var fun = new Fun();
 }
 </script>

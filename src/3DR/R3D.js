@@ -176,7 +176,24 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 }
 R3D.fundamentalMatrix7 = function(pointsA,pointsB){ // assume z = 1
 	if(pointsA.length<7){ return null; }
-	// ...
+	var i, a, b, svd, U, S, V, len = pointsA.length;
+	var size = 7;
+	var F = new Matrix(3,3), f = new Matrix(size,1), A = new Matrix(9,9); // len,9
+	for(i=0;i<len;++i){
+		a = pointsA[i]; b = pointsA[i];
+		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, a.z*b.x, a.x*b.y, a.y*b.y, a.z*b.y, a.x*b.z, a.y*b.z, a.z*b.z, 1.0]);
+	}
+	for(;i<9;++i){
+		A.setRowFromArray(i,[0.0,0.0,0.0, 0.0,0.0,0.0, 0.0,0.0,0.0, 0.0]);
+	}
+	console.log(A.toString());
+	svd = Matrix.SVD(A);
+	U = svd.U; // 7x7
+	S = svd.S; // 7x9
+	V = svd.V; // 9x9
+	console.log(U.toString());
+	console.log(S.toString());
+	console.log(V.toString());
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.nonlinearLeastSquares = function(fxn,options){ // LevenbergMarquardt ... ish

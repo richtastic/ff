@@ -35,13 +35,18 @@ Fun.prototype.imagesLoadComplete = function(o){
 	this._inputImages = o.images;
 	this._inputFilenames = o.files;
 	this._inputPoints = [];
-	this._inputPoints.push([ new V3D(0.235,0.075), new V3D(0.590,0.085), new V3D(0.835,0.035), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555), new V3D(0.880,0.580), new V3D(0.750,0.670) ]);
-	this._inputPoints.push([ new V3D(0.175,0.115), new V3D(0.525,0.150), new V3D(0.770,0.115), new V3D(0.370,0.490), new V3D(0.730,0.395), new V3D(0.740,0.495), new V3D(0.150,0.600), new V3D(0.820,0.635), new V3D(0.695,0.730) ]);
+	this._inputPoints.push([ new V3D(0.235,0.075), new V3D(0.590,0.085), new V3D(0.835,0.035), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555) ]);//, new V3D(0.880,0.580), new V3D(0.750,0.670) ]);
+	this._inputPoints.push([ new V3D(0.175,0.115), new V3D(0.525,0.150), new V3D(0.770,0.115), new V3D(0.370,0.490), new V3D(0.730,0.395), new V3D(0.740,0.495), new V3D(0.150,0.600) ]);//, new V3D(0.820,0.635), new V3D(0.695,0.730) ]);
+var str = "";
 	for(var i=0;i<this._inputPoints.length;++i){
 		for(var j=0;j<this._inputPoints[i].length;++j){
 			this._inputPoints[i][j].z = 1.0;
+			str += ""+this._inputPoints[i][j].x+" "+this._inputPoints[i][j].y+" "+this._inputPoints[i][j].z+" \n";
 		}
+		str += "\n";
 	}
+str += "";
+Code.copyToClipboardPrompt(str);
 	this.all();
 	this.displayData();
 }

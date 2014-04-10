@@ -739,14 +739,8 @@ Matrix.eigenValuesAndVectors = function(A){
 Matrix.trace = function(){ // 
 	// = sum of main diagonals
 }
-Matrix.QRCore = function(){ // 
-	// gram-schmidt process
-}
-Matrix.QR = function(){ // 
-	// factorization - eigenvalues?
-	// requires 'CORE' QR decomposition
-}
 Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
+// now I also have to check the size, and trim ...
 	var val = numeric.svd(A._rows);
 	var U = new Matrix(A.rows(),A.rows()).setFromArrayMatrix(val.U);
 	var S = new Matrix(A.rows(),A.cols()).zero().setDiagonalsFromArray(val.S);
@@ -760,6 +754,44 @@ Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
 	// s1 >= s2 >= s3 >= .. sn/m
 	// 
 	//
+}
+Matrix.QRCore = function(){ // 
+// Q = normal basis for col(A)
+// Q^t * A = R
+	// gram-schmidt process (less precise - and time)
+	// OR householder (more precise - and time)
+
+}
+Matrix.QR = function(){ // 
+	// factorization - eigenvalues?
+	// requires 'CORE' QR decomposition
+}
+Matrix.houseHolder = function(A){
+	// reflect = x - 2*dot(x,v)*v
+	// 
+}
+Matrix.eig = function(A){
+	// householder
+	// QR factorize
+	// eigenvalues
+	// eigenvectors
+}
+Matrix.nonShittySVD = function(A){
+	var rows = A.rows(), cols = A.cols();
+/*
+V = eigenvectors of A^t * A (right singular vectors)
+S = eigenvalues  of A^t * A
+U = V*vi
+*/
+	var At = Matrix.transpose(A);
+	var AA = Matrix.mult(At,A);
+console.log(A.toString());
+console.log(At.toString());
+console.log(AA.toString());
+	var U = new Matrix(rows,rows);
+	var S = new Matrix(rows,cols);
+	var V = new Matrix(cols,cols);
+	return {U:U, S:S, V:V};
 }
 Matrix.fromSVD = function(U,S,V){ // USV
 	return Matrix.mult(U, Matrix.mult(S,Matrix.transpose(V)) );
