@@ -762,19 +762,32 @@ Matrix.QRCore = function(){ //
 	// OR householder (more precise - and time)
 
 }
-Matrix.QR = function(){ // 
-	// factorization - eigenvalues?
-	// requires 'CORE' QR decomposition
+Matrix.QR = function(A){ // rows >= cols
+	var rowsA = A.rows(), colsA = A.cols();
+	var i, j, k, t;
+	var maxT = Math.min(rowsA-1,colsA);
+	var Q = new Matrix(rowsA,rowsA); // orthogonal - basis for A cols
+	var R = new Matrix(rowsA,colsA); // upper triangular
+	for(t=0;t<maxT;++t){
+		// 
+	}
+	// Q = Q1' * Q2' * ... * Qt'
+	// R = Qt * ... * Q2 * Q1 = Q' * A
+}
+Matrix.QRP = function(A){ // (nearly) rank defecit
+	return null;
 }
 Matrix.houseHolder = function(A){
 	// reflect = x - 2*dot(x,v)*v
 	// 
 }
 Matrix.eig = function(A){
-	// householder
+	// upper hessenberg(tri-diagonal)
 	// QR factorize
+		// householder
 	// eigenvalues
-	// eigenvectors
+	// nulspace
+		// eigenvectors
 }
 Matrix.nonShittySVD = function(A){
 	var rows = A.rows(), cols = A.cols();
