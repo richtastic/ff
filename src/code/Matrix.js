@@ -104,6 +104,9 @@ Matrix.prototype.colToArray = function(i){
 	}
 	return a;
 }
+Matrix.prototype.rowToArray = function(i){
+	return Code.copyArray(this._rows[i]);
+}
 // ------------------------------------------------------------------------------------------------------------------------ BASIC SETTING
 Matrix.prototype.zero = function(){
 	var i, j, row = this._rowCount, col = this._colCount;
@@ -184,10 +187,25 @@ Matrix.prototype.setColFromCol = function(i, mat,j){
 	}
 }
 Matrix.prototype.setRowFromArray = function(i, arr){
+	while(this._rows.length<=i){
+		this._rows.push([]); // needs to be filled in
+		this._rowCount++;
+	}
 	var c, cols = Math.min(arr.length,this.cols()), row = this._rows[i];
 	for(c=0; c<cols; ++c){
 		row[c] = arr[c];
 	}
+}
+Matrix.prototype.dropLastRow = function(){
+	this._rows.pop();
+	this._rowCount--;
+}
+Matrix.prototype.dropLastCol = function(){
+	var r, rows;
+	for(r=0; r<rows; ++c){
+		this._rows[r].pop();
+	}
+	this._colCount--;
 }
 // ------------------------------------------------------------------------------------------------------------------------ FXN
 Matrix.prototype.swapRows = function(rowA,rowB){
@@ -740,7 +758,9 @@ Matrix.trace = function(){ //
 	// = sum of main diagonals
 }
 Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
-// now I also have to check the size, and trim ...
+if(A.rows()<A.cols()){
+return Matrix.nonShittySVD(A);
+}
 	var val = numeric.svd(A._rows);
 	var U = new Matrix(A.rows(),A.rows()).setFromArrayMatrix(val.U);
 	var S = new Matrix(A.rows(),A.cols()).zero().setDiagonalsFromArray(val.S);
@@ -787,7 +807,7 @@ Matrix.eig = function(A){
 		// householder
 	// eigenvalues
 	// nulspace
-		// eigenvectors
+		// eigenvectors = nul(A - l*I)  && multiplicity=orthogonality
 }
 Matrix.nonShittySVD = function(A){
 	var rows = A.rows(), cols = A.cols();
@@ -796,6 +816,7 @@ V = eigenvectors of A^t * A (right singular vectors)
 S = eigenvalues  of A^t * A
 U = V*vi
 */
+/*
 	var At = Matrix.transpose(A);
 	var AA = Matrix.mult(At,A);
 console.log(A.toString());
@@ -805,6 +826,34 @@ console.log(AA.toString());
 	var S = new Matrix(rows,cols);
 	var V = new Matrix(cols,cols);
 	return {U:U, S:S, V:V};
+*/
+// current lazy solution:
+	if(rows<cols){
+		var r = rows, c = cols;
+		var A_ = A.copy();
+		while(rows<cols){
+			A.setRowFromArray(rows, Code.newArrayZeros(cols));
+			++rows;
+		}
+		var svd = Matrix.SVD(A);
+console.log("\n");
+console.log(svd.U.toString());
+console.log("\n");
+console.log(svd.S.toString());
+console.log("\n");
+console.log(svd.V.toString());
+
+		while(r<rows){
+			A.dropLastRow();
+			svd.U.dropLastRow();
+			svd.U.dropLastCol();
+			svd.S.dropLastRow();
+			++r;
+		}
+		return svd;
+	}else{
+		return Matrix.SVD(A);
+	}
 }
 Matrix.fromSVD = function(U,S,V){ // USV
 	return Matrix.mult(U, Matrix.mult(S,Matrix.transpose(V)) );
