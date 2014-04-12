@@ -38,6 +38,10 @@ V3D.prototype.set = function(xV,yV,zV){
 	this.z = zV;
 	return this;
 }
+V3D.prototype.setFromArray = function(a){
+	this.set(a[0],a[1],a[2]);
+	return this;
+}
 V3D.prototype.length = function(){
 	return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 }

@@ -170,12 +170,18 @@ Matrix.prototype.randomize = function(mul,rnd){
 	return this;
 }
 // ------------------------------------------------------------------------------------------------------------------------ ...
-Matrix.prototype.getCol = function(col){
+Matrix.prototype.getColAsArray = function(col){
 	var rows = this.rows(), i, a = [];
 	for(i=0;i<rows;++i){
 		a[i] = this._rows[i][col];
 	}
-	return new Matrix(rows,1).setFromArray(a);
+	return a;
+}
+Matrix.prototype.getCol = function(col){
+	return new Matrix(this.rows(),1).setFromArray(this.getColAsArray(col));
+}
+Matrix.prototype.getRowAsArray = function(row){
+	return Code.copyArray( this._rows[row] );
 }
 Matrix.prototype.getRow = function(row){
 	return new Matrix(1,this.rows()).setFromArray(this._rows[row]);
