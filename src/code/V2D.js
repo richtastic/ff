@@ -19,6 +19,19 @@ V2D.diff = function(a,b,c){ // a-b
 	}
 	return new V2D(a.x-b.x,a.y-b.y);
 }
+V2D.distance = function(a,b){ // len(a-b)
+	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2));
+}
+V2D.equal = function(a,b){
+	return a.x==b.x && a.y==b.y;
+}
+V2D.midpoint = function(a,b,c){
+	if(c!==undefined){
+		a.set((b.x+c.x)*0.5,(b.y+c.y)*0.5);
+		return a;
+	}
+	return new V2D((a.x+b.x)*0.5,(a.y+b.y)*0.5);
+}
 // V2D.crossNorm = function(a,b){ // z direction
 // 	return (a.x*b.y-a.y*b.x)/(a.length()*b.length());
 // }
@@ -54,6 +67,7 @@ V2D.prototype.copy = function(a){
 }
 V2D.prototype.set = function(xV,yV){
 	this.x = xV; this.y = yV;
+	return this;
 }
 V2D.prototype.setFromArray = function(a){
 	this.set(a[0],a[1]);

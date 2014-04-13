@@ -103,8 +103,6 @@ Fun.prototype.all = function(){
 	F = Matrix.mult(F,this._forwardTransforms[0]); // a normalized
 	F = Matrix.mult(Matrix.transpose(this._forwardTransforms[1]),F); // b denormalized
 	Finv = Matrix.transpose(F);
-	// epipoles
-	var e = R3D.getEpipolesFromF(F);
 	// epipolar lines
 	this._lines = new Array();
 	var l1, l2, point, line;
@@ -124,15 +122,28 @@ Fun.prototype.all = function(){
 			lines.push( [l1,l2] );
 		}
 	}
-	// image rectification for fine-reconstruction of all X
-	//for(i=0;i<this._inputImages.length;++i){
-	var rect, img;
+	// epipoles
+	var e = R3D.getEpipolesFromF(F);
+	
+	var rect, data, img;
 	img = this._inputImages[0];
-	rect = R3D.polarRectification(img, F);
+	data = this._stage.getImageAsFloatRGB(img);
+	rect = R3D.polarRectification(data, new V2D(e.A.x*data.width,e.A.y*data.height));
 	console.log(rect);
-	img = this._inputImages[1];
-	rect = R3D.polarRectification(img, Finv);
-	console.log(rect);
+
+var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
+var d = new DOImage(i);
+d.matrix().translate(900,0);
+this._stage.addChild(d);
+
+//for(i=0;i<this._inputImages.length;++i){
+
+	// img = this._inputImages[1];
+	// data = this._stage.getImageAsFloatRGB(img);
+	// rect = R3D.polarRectification(data, new V2D(e.B.x*data.width,e.B.y*data.height));
+	// console.log(rect);
+
+	// image rectification for fine-reconstruction of all X
 	
 	// search along epipolar line (even better - search along effed F)
 

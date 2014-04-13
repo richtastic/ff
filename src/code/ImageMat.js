@@ -1,4 +1,20 @@
 // ImageMat.js
+ImageMat.tempA = new V3D();
+ImageMat.tempB = new V3D();
+ImageMat.tempC = new V3D();
+ImageMat.tempD = new V3D();
+ImageMat.tempE = new V3D();
+ImageMat.tempF = new V3D();
+ImageMat.tempG = new V3D();
+ImageMat.tempH = new V3D();
+ImageMat.tempI = new V3D();
+ImageMat.tempJ = new V3D();
+ImageMat.tempK = new V3D();
+ImageMat.tempL = new V3D();
+ImageMat.tempM = new V3D();
+ImageMat.tempN = new V3D();
+ImageMat.tempO = new V3D();
+ImageMat.tempP = new V3D();
 function ImageMat(wid, hei){
 	this._width = wid;
 	this._height = hei;
@@ -30,32 +46,40 @@ ImageMat.prototype.getPoint = function(val, x,y){
 	return this.getPointInterpolateCubic(val,x,y);
 }
 ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 points
-	var minX = Math.max(Math.floor(x), 0);
+	var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
 	var miiX = Math.max(minX-1, 0);
-	var maxX = Math.min(Math.ceil(x), this._width-1);
-	var maaX = Math.min(maxX+1, this._width-1);
-	var minY = Math.max(Math.floor(y),0);
-	var miiY = Math.max(minY-1,0);
-	var maxY = Math.min(Math.ceil(y), this._height-1);
-	var maaY = Math.min(maxY+1, this._height-1);
-	var indexA = miiY*this._width + miiX; var colA = new V3D(this._r[indexA],this._g[indexA],this._b[indexA]);
-	var indexB = miiY*this._width + minX; var colB = new V3D(this._r[indexB],this._g[indexB],this._b[indexB]);
-	var indexC = miiY*this._width + maxX; var colC = new V3D(this._r[indexC],this._g[indexC],this._b[indexC]);
-	var indexD = miiY*this._width + maaX; var colD = new V3D(this._r[indexD],this._g[indexD],this._b[indexD]);
-	var indexE = minY*this._width + miiX; var colE = new V3D(this._r[indexE],this._g[indexE],this._b[indexE]);
-	var indexF = minY*this._width + minX; var colF = new V3D(this._r[indexF],this._g[indexF],this._b[indexF]);
-	var indexG = minY*this._width + maxX; var colG = new V3D(this._r[indexG],this._g[indexG],this._b[indexG]);
-	var indexH = minY*this._width + maaX; var colH = new V3D(this._r[indexH],this._g[indexH],this._b[indexH]);
-	var indexI = maxY*this._width + miiX; var colI = new V3D(this._r[indexI],this._g[indexI],this._b[indexI]);
-	var indexJ = maxY*this._width + minX; var colJ = new V3D(this._r[indexJ],this._g[indexJ],this._b[indexJ]);
-	var indexK = maxY*this._width + maxX; var colK = new V3D(this._r[indexK],this._g[indexK],this._b[indexK]);
-	var indexL = maxY*this._width + maaX; var colL = new V3D(this._r[indexL],this._g[indexL],this._b[indexL]);
-	var indexM = maaY*this._width + miiX; var colM = new V3D(this._r[indexM],this._g[indexM],this._b[indexM]);
-	var indexN = maaY*this._width + minX; var colN = new V3D(this._r[indexN],this._g[indexN],this._b[indexN]);
-	var indexO = maaY*this._width + maxX; var colO = new V3D(this._r[indexO],this._g[indexO],this._b[indexO]);
-	var indexP = maaY*this._width + maaX; var colP = new V3D(this._r[indexP],this._g[indexP],this._b[indexP]);
+	var miiY = Math.max(minY-1, 0);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var maaX = Math.min(maxX+1, wm1);
+	var maaY = Math.min(maxY+1, hm1);
+	var indexA = miiY*wid + miiX; var colA = ImageMat.tempA.set(r[indexA],g[indexA],b[indexA]);
+	var indexB = miiY*wid + minX; var colB = ImageMat.tempB.set(r[indexB],g[indexB],b[indexB]);
+	var indexC = miiY*wid + maxX; var colC = ImageMat.tempC.set(r[indexC],g[indexC],b[indexC]);
+	var indexD = miiY*wid + maaX; var colD = ImageMat.tempD.set(r[indexD],g[indexD],b[indexD]);
+	var indexE = minY*wid + miiX; var colE = ImageMat.tempE.set(r[indexE],g[indexE],b[indexE]);
+	var indexF = minY*wid + minX; var colF = ImageMat.tempF.set(r[indexF],g[indexF],b[indexF]);
+	var indexG = minY*wid + maxX; var colG = ImageMat.tempG.set(r[indexG],g[indexG],b[indexG]);
+	var indexH = minY*wid + maaX; var colH = ImageMat.tempH.set(r[indexH],g[indexH],b[indexH]);
+	var indexI = maxY*wid + miiX; var colI = ImageMat.tempI.set(r[indexI],g[indexI],b[indexI]);
+	var indexJ = maxY*wid + minX; var colJ = ImageMat.tempJ.set(r[indexJ],g[indexJ],b[indexJ]);
+	var indexK = maxY*wid + maxX; var colK = ImageMat.tempK.set(r[indexK],g[indexK],b[indexK]);
+	var indexL = maxY*wid + maaX; var colL = ImageMat.tempL.set(r[indexL],g[indexL],b[indexL]);
+	var indexM = maaY*wid + miiX; var colM = ImageMat.tempM.set(r[indexM],g[indexM],b[indexM]);
+	var indexN = maaY*wid + minX; var colN = ImageMat.tempN.set(r[indexN],g[indexN],b[indexN]);
+	var indexO = maaY*wid + maxX; var colO = ImageMat.tempO.set(r[indexO],g[indexO],b[indexO]);
+	var indexP = maaY*wid + maaX; var colP = ImageMat.tempP.set(r[indexP],g[indexP],b[indexP]);
+	if(miiX<0||minX<0||maxX>wm1||maaX>wm1 || miiY<0||minY<0||maxY>hm1||maaY>hm1){
+		throw("undefined");
+	}
+	
 	minX = x - minX;
+	if(x<0||x>wid){ minX=0.0;}
 	minY = y - minY;
+	if(y<0||y>hei){ minY=0.0;}
 	ImageMat.cubicColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
 }
 ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^3 = 9 points
@@ -68,7 +92,7 @@ ImageMat.prototype.getPointInterpolateNearest = function(val, x,y){ // 1 point
 	x = Math.min(Math.max(Math.round(x),0),this._width-1);
 	y = Math.min(Math.max(Math.round(y),0),this._height-1);
 	index = y*this._width + x;
-	val.x = this._r[index];
+	val.x = [index];
 	val.y = this._g[index];
 	val.z = this._b[index];
 }
@@ -94,16 +118,10 @@ ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
 	var b = 0.5*(C-A);
 	var c = A - 2.5*B + 2.0*C - 0.5*D;
 	var d = 1.5*(B-C) + 0.5*(D-A);
-	if(isNaN(a)||isNaN(b)||isNaN(c)||isNaN(d)){
-		console.log("=>",a,b,c,d);
-	}
+	// if(isNaN(a)||isNaN(b)||isNaN(c)||isNaN(d)){
+	// 	console.log("=>",t,a,b,c,d,A,B,C,D);
+	// }
 	return (a + b*t + c*tt + d*ttt);
-	// odd effect ...
-	// var a = B + D - C - A;
-	// var b = A - B - a;
-	// var c = C - A;
-	// var d = B;
-	// return (a*ttt + b*tt + c*tt + d);
 }
 // ------------------------------------------------------------------------------------------------------------------------ get
 ImageMat.prototype.red = function(){
@@ -1529,3 +1547,4 @@ this.quadric1DBAD = function(t,tt,ttt,A,B,C,D){ // less clear
 	return ( a*ttt + b*tt + c*t + d );
 }
 */
+

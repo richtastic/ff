@@ -16,6 +16,19 @@ V3D.diff = function(a,b,c){ // a-b
 	}
 	return new V3D(a.x-b.x,a.y-b.y,a.z-b.z);
 }
+V3D.distance = function(a,b){ // len(a-b)
+	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2));
+}
+V3D.equal = function(a,b){
+	return a.x==b.x && a.y==b.y && a.z==b.z;
+}
+V3D.midpoint = function(a,b,c){
+	if(c!==undefined){
+		a.set((b.x+c.x)*0.5,(b.y+c.y)*0.5,(b.z+c.z)*0.5);
+		return a;
+	}
+	return new V2D((a.x+b.x)*0.5,(a.y+b.y)*0.5,(a.z+b.z)*0.5);
+}
 
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
@@ -33,9 +46,7 @@ V3D.prototype.copy = function(a){
 	return this;
 }
 V3D.prototype.set = function(xV,yV,zV){
-	this.x = xV;
-	this.y = yV;
-	this.z = zV;
+	this.x = xV; this.y = yV; this.z = zV;
 	return this;
 }
 V3D.prototype.setFromArray = function(a){

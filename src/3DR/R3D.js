@@ -187,7 +187,95 @@ R3D.getEpipolesFromF = function(F){
 	return {A:a,B:b};
 }
 // ------------------------------------------------------------------------------------------- rectification
-R3D.polarRectification = function(source,F){
+R3D.polarRectification = function(source,epipole){
+	console.log(source.width+" x "+source.height);//+"  | "+(source.red)+" "+(source.grn)+" "+(source.blu) );
+	if(epipole.y<0){
+		if(epipole.x<0){ // 1
+			console.log("rectify 1");
+		}else if(epipole.x<source.width){ // 2
+			console.log("rectify 2");
+		}else{ // 3
+			console.log("rectify 3");
+			return R3D._rectifyRegion3(source,epipole);
+		}
+	}else if(epipole.y<source.height){
+		if(epipole.x<0){ // 4
+			console.log("rectify 4");
+		}else if(epipole.x<source.width){ // 5
+			console.log("rectify 5");
+		}else{ // 6
+			console.log("rectify 6");
+		}
+	}else{// epipole.y>=source.height
+		if(epipole.x<0){ // 7
+			console.log("rectify 7");
+		}else if(epipole.x<source.width){ // 8
+			console.log("rectify 8");
+		}else{ // 9
+			console.log("rectify 9");
+		}
+	}
+}
+R3D._rectifyRegion5 = function(source,epipole){
+	//
+}
+R3D._rectifyRegion3 = function(source,epipole){
+	var width = source.width, height = source.height;
+	var red = source.red, grn = source.grn, blu = source.blu, gry = source.gry;
+var image = new ImageMat(width,height);
+image.setRedFromFloat(red);
+image.setGrnFromFloat(grn);
+image.setBluFromFloat(blu);
+	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
+	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D();
+	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;
+	var radiusCount, thetaCount = width + height - 2;
+	var rectifiedR, rectifiedG, rectifiedB;
+	// region 3 specific
+	corners = [TL,BL,BR];
+	radiusMin = Math.floor( V2D.distance(epipole,TR) );
+	radiusMax = Math.ceil( V2D.distance(epipole,BL) );
+	radiusCount = radiusMax-radiusMin + 1;
+	//
+	len = thetaCount*radiusCount;
+	rectifiedR = Code.newArrayZeros(len);
+	rectifiedG = Code.newArrayZeros(len);
+	rectifiedB = Code.newArrayZeros(len);
+	edge.copy(corners.shift());
+	V2D.diff(dir, corners[0],edge);
+	dir.norm();
+	for(j=0;j<thetaCount;++j){ // for each border pixel
+		next.set(edge.x+dir.x, edge.y+dir.y);
+		V2D.midpoint(ray, edge,next);
+		V2D.diff(ray, ray,epipole);
+		len = ray.length();// - radiusMin);
+		ray.norm();
+		// POST RADIUS
+		for(i=radiusMax;i>=radiusMin;--i){
+			//index = radiusCount*j + i -radiusMin;
+			index = radiusCount*j + (radiusMax-i);
+			image.getPointInterpolateCubic(color,epipole.x+i*ray.x, epipole.y+i*ray.y); // linear?
+			//image.getPointInterpolateNearest(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
+			rectifiedR[index] = color.x;
+			rectifiedG[index] = color.y;
+			rectifiedB[index] = color.z;
+		}
+		// PRE RADIUS
+		// .. increment perimeter
+		edge.x += dir.x; edge.y += dir.y;
+		if( V2D.equal(edge,corners[0]) ){
+			corners.shift();
+			if(corners.length==0){
+			}else{
+				V2D.diff(dir, corners[0],edge);
+				dir.norm();
+			}
+		}
+	}
+	// 
+	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount};
+}
+R3D._rectifyRegion6 = function(source,epipole){
 	//
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
