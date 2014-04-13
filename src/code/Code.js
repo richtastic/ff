@@ -2,6 +2,7 @@
 // OVERRIDES:
 Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
+Math.PIO2 = Math.PI/2.0;
 // 
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
 // http://www.quirksmode.org/dom/events/index.html
@@ -1462,7 +1463,7 @@ Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 2D
-Code.lineSegIntersect = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
+Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 	var caX = (c.x - a.x);
 	var dcX = (d.x - c.x);
 	var baX = (b.x - a.x);

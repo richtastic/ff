@@ -2,6 +2,14 @@
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
+V3D.angle = function(a,b){ // check
+	var lenA = a.length();
+	var lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return Math.acos( Math.max(Math.min( V3D.dot(a,b)/(lenA*lenB),1.0 ),-1.0) );
+	}
+	return 0;
+}
 V3D.cross = function(a,b,c){ // axb
 	if(c!==undefined){
 		a.set(b.y*c.z-b.z*c.y, b.z*c.x-b.x*c.z, b.x*c.y-b.y*c.x);
