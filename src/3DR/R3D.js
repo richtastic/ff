@@ -227,7 +227,7 @@ image.setRedFromFloat(red);
 image.setGrnFromFloat(grn);
 image.setBluFromFloat(blu);
 	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
-	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D();
+	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D(), point = new V3D();
 	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;
 	var radiusCount, thetaCount = width + height - 2;
 	var rectifiedR, rectifiedG, rectifiedB;
@@ -248,25 +248,26 @@ image.setBluFromFloat(blu);
 		next.set(edge.x+dir.x, edge.y+dir.y);
 		V2D.midpoint(ray, edge,next);
 		V2D.diff(ray, ray,epipole);
-		len = ray.length();// - radiusMin);
+		len = ray.length();
 		ray.norm();
-		// POST RADIUS
-		for(i=radiusMax;i>=radiusMin;--i){
-			//index = radiusCount*j + i -radiusMin;
+point.set(0,0);
+i = Math.floor(len);
+while(0<=point.x && point.x<=width && 0<=point.y && point.y<=height){
+point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
+--i;
+//		for(i=radiusMax;i>=radiusMin;--i){ // for each line - radius
 			index = radiusCount*j + (radiusMax-i);
-			image.getPointInterpolateCubic(color,epipole.x+i*ray.x, epipole.y+i*ray.y); // linear?
+			//image.getPointInterpolateCubic(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
+			image.getPointInterpolateLinear(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
 			//image.getPointInterpolateNearest(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
 		}
-		// PRE RADIUS
-		// .. increment perimeter
-		edge.x += dir.x; edge.y += dir.y;
+		edge.x += dir.x; edge.y += dir.y; // increment perimeter
 		if( V2D.equal(edge,corners[0]) ){
 			corners.shift();
-			if(corners.length==0){
-			}else{
+			if(corners.length>0){ // not last iteration
 				V2D.diff(dir, corners[0],edge);
 				dir.norm();
 			}

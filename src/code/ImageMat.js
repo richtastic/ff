@@ -75,7 +75,6 @@ ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 po
 	if(miiX<0||minX<0||maxX>wm1||maaX>wm1 || miiY<0||minY<0||maxY>hm1||maaY>hm1){
 		throw("undefined");
 	}
-	
 	minX = x - minX;
 	if(x<0||x>wid){ minX=0.0;}
 	minY = y - minY;
@@ -86,13 +85,27 @@ ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^3 = 9 p
 	// this maaaaaaaay not be useful
 }
 ImageMat.prototype.getPointInterpolateLinear = function(val, x,y){ // 2^2 = 4 points [BiLinear]
-	// do this
+	var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var indexA = minY*wid + minX; var colA = ImageMat.tempA.set(r[indexA],g[indexA],b[indexA]);
+	var indexB = minY*wid + maxX; var colB = ImageMat.tempB.set(r[indexB],g[indexB],b[indexB]);
+	var indexC = maxY*wid + minX; var colC = ImageMat.tempC.set(r[indexC],g[indexC],b[indexC]);
+	var indexD = maxY*wid + maxX; var colD = ImageMat.tempD.set(r[indexD],g[indexD],b[indexD]);
+	minX = x - minX;
+	if(x<0||x>wid){ minX=0.0;}
+	minY = y - minY;
+	if(y<0||y>hei){ minY=0.0;}
+	ImageMat.linearColor(val, minX,minY, colA,colB,colC,colD);
 }
 ImageMat.prototype.getPointInterpolateNearest = function(val, x,y){ // 1 point
 	x = Math.min(Math.max(Math.round(x),0),this._width-1);
 	y = Math.min(Math.max(Math.round(y),0),this._height-1);
 	index = y*this._width + x;
-	val.x = [index];
+	val.x = this._r[index];
 	val.y = this._g[index];
 	val.z = this._b[index];
 }
@@ -118,10 +131,21 @@ ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
 	var b = 0.5*(C-A);
 	var c = A - 2.5*B + 2.0*C - 0.5*D;
 	var d = 1.5*(B-C) + 0.5*(D-A);
-	// if(isNaN(a)||isNaN(b)||isNaN(c)||isNaN(d)){
-	// 	console.log("=>",t,a,b,c,d,A,B,C,D);
-	// }
 	return (a + b*t + c*tt + d*ttt);
+}
+ImageMat.linearColor = function(colR, x,y, colA,colB,colC,colD){
+	var r = ImageMat.linear2D(x,y, colA.x,colB.x,colC.x,colD.x);
+	var g = ImageMat.linear2D(x,y, colA.y,colB.y,colC.y,colD.y);
+	var b = ImageMat.linear2D(x,y, colA.z,colB.z,colC.z,colD.z);
+	colR.x = Math.min(Math.max(r,0.0),1.0);
+	colR.y = Math.min(Math.max(g,0.0),1.0);
+	colR.z = Math.min(Math.max(b,0.0),1.0);
+}
+ImageMat.linear2D = function(x,y, colA,colB,colC,colD){
+	return ImageMat.linear1D(y, ImageMat.linear1D(x,colA,colB), ImageMat.linear1D(x,colC,colD));
+}
+ImageMat.linear1D = function(t, A,B){
+	return t*B + (1.0-t)*A;
 }
 // ------------------------------------------------------------------------------------------------------------------------ get
 ImageMat.prototype.red = function(){
