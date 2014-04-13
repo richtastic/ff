@@ -203,8 +203,10 @@ R3D.polarRectification = function(source,epipole){
 			console.log("rectify 4");
 		}else if(epipole.x<source.width){ // 5
 			console.log("rectify 5");
+			return R3D._rectifyRegion5(source,epipole);
 		}else{ // 6
 			console.log("rectify 6");
+			return R3D._rectifyRegion6(source,epipole);
 		}
 	}else{// epipole.y>=source.height
 		if(epipole.x<0){ // 7
@@ -217,26 +219,43 @@ R3D.polarRectification = function(source,epipole){
 	}
 }
 R3D._rectifyRegion5 = function(source,epipole){
-	//
+	return R3D._rectifyRegion3(source,epipole, 5);
 }
-R3D._rectifyRegion3 = function(source,epipole){
+R3D._rectifyRegion6 = function(source,epipole){
+	return R3D._rectifyRegion3(source,epipole, 6);
+}
+R3D._rectifyRegion3 = function(source,epipole, region){
 	var width = source.width, height = source.height;
 	var red = source.red, grn = source.grn, blu = source.blu, gry = source.gry;
-var image = new ImageMat(width,height);
-image.setRedFromFloat(red);
-image.setGrnFromFloat(grn);
-image.setBluFromFloat(blu);
 	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
 	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D(), point = new V3D();
 	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;
-	var radiusCount, thetaCount = width + height - 2;
+	var radiusCount, thetaCount;
 	var rectifiedR, rectifiedG, rectifiedB;
-	// region 3 specific
-	corners = [TL,BL,BR];
-	radiusMin = Math.floor( V2D.distance(epipole,TR) );
-	radiusMax = Math.ceil( V2D.distance(epipole,BL) );
-	radiusCount = radiusMax-radiusMin + 1;
+	var image = new ImageMat(width,height);
+	image.setRedFromFloat(red);
+	image.setGrnFromFloat(grn);
+	image.setBluFromFloat(blu);
+	if(region===undefined || region==3){
+		corners = [TL,BL,BR];
+		radiusMin = Math.floor( V2D.distance(epipole,TR) );
+		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
+		thetaCount = width + height - 2;
+	}else if(region==6){
+		corners = [TR,TL,BL,BR];
+		radiusMin = radiusMin = Math.floor( epipole.x-width );
+		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
+		thetaCount = 2.0*width + height - 3;
+	}else if(region==5){
+		corners = [TR,TL,BL,BR,TR];
+		radiusMin = 0.0;
+		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR), V2D.distance(epipole,BR), V2D.distance(epipole,BL) ) );
+		thetaCount = 2.0*width + 2.0*height - 4;
+	}
+	// preloop to find out actual theta count
+	// ...
 	//
+	radiusCount = radiusMax-radiusMin + 1;
 	len = thetaCount*radiusCount;
 	rectifiedR = Code.newArrayZeros(len);
 	rectifiedG = Code.newArrayZeros(len);
@@ -250,21 +269,18 @@ image.setBluFromFloat(blu);
 		V2D.diff(ray, ray,epipole);
 		len = ray.length();
 		ray.norm();
-point.set(0,0);
-i = Math.floor(len);
-while(0<=point.x && point.x<=width && 0<=point.y && point.y<=height){
-point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
---i;
-//		for(i=radiusMax;i>=radiusMin;--i){ // for each line - radius
-			index = radiusCount*j + (radiusMax-i);
-			//image.getPointInterpolateCubic(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
-			image.getPointInterpolateLinear(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
-			//image.getPointInterpolateNearest(color,epipole.x+i*ray.x, epipole.y+i*ray.y);
+		// for each line - radius
+		for(i = Math.floor(len), point.set(0,0); 0<=point.x && point.x<=width && 0<=point.y && point.y<=height && i>=0; --i){
+		//for(i=radiusMax;i>=radiusMin;--i){
+			index = radiusCount*j + (radiusMax-i-1);
+			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
+			image.getPointInterpolateLinear(color,point.x,point.y);
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
 		}
-		edge.x += dir.x; edge.y += dir.y; // increment perimeter
+		// increment perimeter
+		edge.x += dir.x; edge.y += dir.y;
 		if( V2D.equal(edge,corners[0]) ){
 			corners.shift();
 			if(corners.length>0){ // not last iteration
@@ -273,11 +289,7 @@ point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
 			}
 		}
 	}
-	// 
 	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount};
-}
-R3D._rectifyRegion6 = function(source,epipole){
-	//
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.nonlinearLeastSquares = function(fxn,options){ // LevenbergMarquardt ... ish

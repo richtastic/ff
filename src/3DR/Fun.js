@@ -128,7 +128,9 @@ Fun.prototype.all = function(){
 	var rect, data, img;
 	img = this._inputImages[0];
 	data = this._stage.getImageAsFloatRGB(img);
-	rect = R3D.polarRectification(data, new V2D(e.A.x*data.width,e.A.y*data.height));
+	//rect = R3D.polarRectification(data, new V2D(e.A.x*data.width,e.A.y*data.height)); // 3
+	//rect = R3D.polarRectification(data, new V2D(0.60*data.width,0.5*data.height)); // 5
+	rect = R3D.polarRectification(data, new V2D(2.50*data.width,0.25*data.height)); // 6
 	console.log(rect);
 
 var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
