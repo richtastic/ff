@@ -192,32 +192,41 @@ R3D.polarRectification = function(source,epipole){
 	console.log(source.width+" x "+source.height);//+"  | "+(source.red)+" "+(source.grn)+" "+(source.blu) );
 	if(epipole.y<0){
 		if(epipole.x<0){ // 1
-			console.log("rectify 1");
+			return R3D._rectifyRegion1(source,epipole);
 		}else if(epipole.x<source.width){ // 2
-			console.log("rectify 2");
+			return R3D._rectifyRegion2(source,epipole);
 		}else{ // 3
-			console.log("rectify 3");
 			return R3D._rectifyRegion3(source,epipole);
 		}
 	}else if(epipole.y<source.height){
 		if(epipole.x<0){ // 4
-			console.log("rectify 4");
+			return R3D._rectifyRegion4(source,epipole);
 		}else if(epipole.x<source.width){ // 5
-			console.log("rectify 5");
 			return R3D._rectifyRegion5(source,epipole);
 		}else{ // 6
-			console.log("rectify 6");
 			return R3D._rectifyRegion6(source,epipole);
 		}
 	}else{// epipole.y>=source.height
 		if(epipole.x<0){ // 7
-			console.log("rectify 7");
+			return R3D._rectifyRegion7(source,epipole);
 		}else if(epipole.x<source.width){ // 8
-			console.log("rectify 8");
+			return R3D._rectifyRegion8(source,epipole);
 		}else{ // 9
-			console.log("rectify 9");
+			return R3D._rectifyRegion9(source,epipole);
 		}
 	}
+}
+R3D._rectifyRegion1 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 1);
+}
+R3D._rectifyRegion2 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 2);
+}
+R3D._rectifyRegion3 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 3);
+}
+R3D._rectifyRegion4 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 4);
 }
 R3D._rectifyRegion5 = function(source,epipole){
 	return R3D._rectifyRegionAll(source,epipole, 5);
@@ -225,36 +234,111 @@ R3D._rectifyRegion5 = function(source,epipole){
 R3D._rectifyRegion6 = function(source,epipole){
 	return R3D._rectifyRegionAll(source,epipole, 6);
 }
-R3D._rectifyRegion3 = function(source,epipole){
-	return R3D._rectifyRegionAll(source,epipole, 3);
+R3D._rectifyRegion7 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 7);
+}
+R3D._rectifyRegion8 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 8);
+}
+R3D._rectifyRegion9 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 9);
 }
 R3D._rectifyRegionAll = function(source,epipole, region){
-	var width = source.width, height = source.height;
-	var red = source.red, grn = source.grn, blu = source.blu, gry = source.gry;
+	var image, width, height;
+	if( Code.isa(ImageMat) ){ // is imagemat
+		image = source;
+		width = source.width();
+		height = source.height();
+	}else{ // is floats
+		width = source.width;
+		height = source.height;
+		image = new ImageMat(width,height);
+		image.setRedFromFloat(source.red);
+		image.setGrnFromFloat(source.grn);
+		image.setBluFromFloat(source.blu);
+	}
+	
 	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
 	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D(), point = new V3D();
 	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;
 	var radiusCount, thetaCount, intersect;
 	var rectifiedR, rectifiedG, rectifiedB;
-	var image = new ImageMat(width,height);
-	image.setRedFromFloat(red);
-	image.setGrnFromFloat(grn);
-	image.setBluFromFloat(blu);
-	if(region===undefined || region==3){
-		corners = [TL,BL,BR, TR];
+	var angleTable = [];
+	if(region==1){
+		corners = [TR,BR,BL, TL];
+		radiusMin = Math.floor( V2D.distance(epipole,TL) );
+		radiusMax = Math.ceil( V2D.distance(epipole,BR) );
+		thetaCount = width + height - 2;
+	}else if(region==2){
+		//corners = [TL,BL,BR,TR, TL];
+		corners = [TR,BR,BL,TL, TR];
+		radiusMin = Math.floor( -epipole.y );
+		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,BL), V2D.distance(epipole,BR) ) );
+		thetaCount = width + 2.0*height - 3;
+	}else if(region==3){
+		//corners = [TL,BL,BR, TR];
+		corners = [BR,BL,TL, TR];
 		radiusMin = Math.floor( V2D.distance(epipole,TR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
 		thetaCount = width + height - 2;
-	}else if(region==6){
-		corners = [TR,TL,BL,BR, TR];
-		radiusMin = radiusMin = Math.floor( epipole.x-width );
-		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
+	}else if(region==4){
+		corners = [TL,TR,BR,BL, TL];
+		radiusMin = Math.floor( -epipole.x );
+		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TR), V2D.distance(epipole,BR) ) );
 		thetaCount = 2.0*width + height - 3;
 	}else if(region==5){
-		corners = [TR,TL,BL,BR,TR, TL];
+		//corners = [TR,TL,BL,BR,TR, TL];
+		//corners = [TR,BR,BL,TL,TR, BR];
 		radiusMin = 0.0;
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR), V2D.distance(epipole,BR), V2D.distance(epipole,BL) ) );
 		thetaCount = 2.0*width + 2.0*height - 4;
+		// setup dividing at closest point
+		var m1 = epipole.x; // left
+		var m2 = width-epipole.x; // right
+		var m3 = epipole.y; // top
+		var m4 = height-epipole.y; // botom
+		var min = Math.min(m1,m2,m3,m4);
+		var pt = new V2D(), end = new V2D();
+		if(min==m1){ // left
+			pt.set(0,epipole.y);
+			end.set(width,epipole.y);
+			corners = [pt,TL,TR,BR,BL,pt,end];
+		}else if(min==m2){ // right
+			pt.set(width,epipole.y);
+			end.set(0,epipole.y);
+			corners = [pt,BR,BL,TL,TR,pt,end];
+		}else if(min==m3){ // top
+			pt.set(epipole.x,0);
+			end.set(epipole.x,height);
+			corners = [pt,TR,BR,BL,TL,pt,end];
+		}else if(min==m4){ // bottom
+			pt.set(width,epipole.y);
+			pt.set(epipole.x,height);
+			end.set(epipole.x,0);
+			corners = [pt,BL,TL,TR,BR,pt,end];
+		}
+	}else if(region==6){
+		//corners = [TR,TL,BL,BR, TR];
+		corners = [BR,BL,TL,TR, BR];
+		radiusMin = Math.floor( epipole.x-width );
+		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,BL) ) );
+		thetaCount = 2.0*width + height - 3;
+	}else if(region==7){
+		corners = [TL,TR,BR, BL];
+		radiusMin = Math.floor( V2D.distance(epipole,BL) );
+		radiusMax = Math.ceil( V2D.distance(epipole,TR) );
+		thetaCount = width + height - 2;
+	}else if(region==8){
+		corners = [BL,TL,TR,BR, BL];
+		radiusMin = Math.floor( epipole.y-height );
+		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR) ) );
+		thetaCount = width + 2.0*height - 3;
+	}else if(region==9){
+		//corners = [TR,TL,BL, BR];
+		corners = [BL,TL,TR, BR];
+		radiusMin = Math.floor( V2D.distance(epipole,BR) );
+		radiusMax = Math.ceil( V2D.distance(epipole,TL) );
+		thetaCount = width + height - 2;
 	}
 	// 
 	radiusCount = radiusMax-radiusMin + 1;
@@ -285,17 +369,20 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 			ray2.norm();
 		var gamma = V2D.angle(ray,ray2);
 		var delta = Math.PIO2-gamma;
-		var alpha = delta-phi;
+		var alpha = (delta-phi);
 		var beta = Math.PI - phi - alpha;
-		var n = (0.5/Math.sin(alpha))*Math.sin(beta);
+		var n = Math.abs( (0.5/Math.sin(alpha))*Math.sin(beta) );
 		next.set(dir.x*n + mid.x, dir.y*n + mid.y);
 		V2D.diff(ray, mid,epipole);
-		len = ray.length();
+		len = Math.floor(ray.length());
 		ray.norm();
+		angleTable.push(V2D.angleDirection(ray,V2D.DIRX) *180/Math.PI);
 		// for each line - radius
-		for(i = Math.floor(len), point.set(0,0); 0<=point.x && point.x<=width && 0<=point.y && point.y<=height && i>=0; --i){
-		//for(i=radiusMax;i>=radiusMin;--i){
-			index = radiusCount*j + (radiusMax-i-1);
+		//for(i = Math.floor(len), point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i>=0; --i){ // this has problems everywhere
+		//for(i=0, point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i<=len; ++i){ // this has problems everywhere
+		for(i=radiusMax;i>=radiusMin;--i){
+				index = radiusCount*j + i-radiusMin ; // 7 needs +1, 5 needs none
+			//	index = radiusCount*j + (radiusMax-i-1);
 			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
 			image.getPointInterpolateLinear(color,point.x,point.y);
 			// image.getPointInterpolateCubic(color,point.x,point.y);
@@ -304,7 +391,10 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 			rectifiedB[index] = color.z;
 		}
 		if(corners.length>1){
-			intersect = Code.lineSegIntersect2D(edge,next, corners[0],corners[1]);
+			var dd = new V2D(corners[0].x-corners[1].x,corners[0].y-corners[1].y);
+			dd.set(corners[0].x + dd.x, corners[0].y + dd.y);
+			intersect = Code.lineSegIntersect2D(edge,next, dd,corners[1]);
+			//intersect = Code.lineSegIntersect2D(edge,next, corners[0],corners[1]);
 		}
 		// increment perimeter
 		edge.copy(next);
@@ -325,7 +415,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 	rectifiedR = rectifiedR.slice(0,len);
 	rectifiedG = rectifiedG.slice(0,len);
 	rectifiedB = rectifiedB.slice(0,len);
-	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount};
+	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, angles:angleTable};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.nonlinearLeastSquares = function(fxn,options){ // LevenbergMarquardt ... ish

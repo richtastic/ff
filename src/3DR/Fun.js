@@ -88,6 +88,45 @@ Fun.prototype.displayData = function(){
 		accWid += wid;
 	}
 	
+
+var F = R3D.fundamentalMatrix(this._normalizedInputPoints[0],this._normalizedInputPoints[1]);
+F = Matrix.mult(F,this._forwardTransforms[0]); // a normalized
+F = Matrix.mult(Matrix.transpose(this._forwardTransforms[1]),F); // b denormalized
+Finv = Matrix.transpose(F);
+
+// epipoles
+	var e = R3D.getEpipolesFromF(F);
+	
+	var rect, data, img;
+	img = this._inputImages[0];
+var wid = img.width;
+var hei = img.height;
+img = this._stage.renderImage(wid,hei, this._root);
+//document.body.appendChild(img);
+	data = this._stage.getImageAsFloatRGB(img);
+	rect = R3D.polarRectification(data, new V2D(e.A.x*data.width,e.A.y*data.height));
+	//rect = R3D.polarRectification(data, new V2D(e.B.x*data.width,e.B.y*data.height));
+	//rect = R3D.polarRectification(data, new V2D(1.5*data.width,-0.25*data.height));
+	//rect = R3D.polarRectification(data, new V2D(-.5*data.width,-.25*data.height)); // 1 			| -7   : -62
+	//rect = R3D.polarRectification(data, new V2D(.999*data.width,-.25*data.height)); // 2 			| -159 : -20
+	//rect = R3D.polarRectification(data, new V2D(1.5*data.width,-.005*data.height)); // 3 			| -164 : -107
+	//rect = R3D.polarRectification(data, new V2D(-.50*data.width,0.0001*data.height)); // 4 			| 20  : -48
+	//rect = R3D.polarRectification(data, new V2D(0.5*data.width,0.00001*data.height)); // 5
+	//rect = R3D.polarRectification(data, new V2D(1.50*data.width,0.9995*data.height)); // 6
+	//rect = R3D.polarRectification(data, new V2D(-.50*data.width,1.005*data.height)); // 7
+	//rect = R3D.polarRectification(data, new V2D(.005*data.width,1.5*data.height)); // 8
+	//rect = R3D.polarRectification(data, new V2D(1.0001*data.width,1.5*data.height)); // 9
+	// console.log(rect.angles.length)
+	// for(i=0;i<rect.angles.length;i+=10){
+	// 	console.log(i+" | "+rect.angles[i]);
+	// }
+	//console.log( Code.toStringArray2D(rect.angles,rect.angles.length,1) );
+
+var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
+var d = new DOImage(i);
+d.matrix().translate(900,0);
+this._stage.addChild(d);
+
 }
 Fun.prototype.all = function(){
 	var ret;
@@ -118,25 +157,17 @@ Fun.prototype.all = function(){
 				line = Finv.multV3DtoV3D(new V3D(), point);
 			}
 			l1 = new V3D( 0.0,-line.z/line.y,1.0);
-			l2 = new V3D( 1.0,(-1.0*line.x-line.z)/line.y,1.0);
+			l2 = new V3D( 1.35,(-1.35*line.x-line.z)/line.y,1.0);
 			lines.push( [l1,l2] );
 		}
 	}
-	// epipoles
-	var e = R3D.getEpipolesFromF(F);
-	
-	var rect, data, img;
-	img = this._inputImages[0];
-	data = this._stage.getImageAsFloatRGB(img);
-	//rect = R3D.polarRectification(data, new V2D(e.A.x*data.width,e.A.y*data.height)); // 3
-	//rect = R3D.polarRectification(data, new V2D(0.60*data.width,0.5*data.height)); // 5
-	rect = R3D.polarRectification(data, new V2D(2.50*data.width,0.25*data.height)); // 6
-	console.log(rect);
+	// ...
 
-var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
-var d = new DOImage(i);
-d.matrix().translate(900,0);
-this._stage.addChild(d);
+/*
+convert point in image to point in rectified
+	- radius = given
+	- theta from lookup table ... 
+*/
 
 //for(i=0;i<this._inputImages.length;++i){
 
