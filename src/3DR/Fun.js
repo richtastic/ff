@@ -68,24 +68,7 @@ Fun.prototype.displayData = function(){
 	var inputPoints = [A.resolvedPoints(),B.resolvedPoints()];
 	var F = link.FA();
 	var Finv = link.FB();
-	// this._lines = new Array();
-	// var l1, l2, point, line;
-	// for(j=0;j<inputPoints.length;++j){
-	// 	var index = inputPoints.length-j-1;
-	// 	this._lines[index] = new Array();
-	// 	var lines = this._lines[index];
-	// 	for(i=0;i<inputPoints[j].length;++i){
-	// 		point = inputPoints[j][i];
-	// 		if(j==0){
-	// 			line = F.multV3DtoV3D(new V3D(), point);
-	// 		}else{
-	// 			line = Finv.multV3DtoV3D(new V3D(), point);
-	// 		}
-	// 		l1 = new V3D( 0.0,-line.z/line.y,1.0);
-	// 		l2 = new V3D( 1.35,(-1.35*line.x-line.z)/line.y,1.0);
-	// 		lines.push( [l1,l2] );
-	// 	}
-	// }
+	// visuals
 	var linesDO = new DO();
 	// display initial images
 	for(i=0;i<len;++i){
@@ -133,11 +116,57 @@ Fun.prototype.displayData = function(){
 	this._root.addChild( linesDO );
 	// display rectification search lines
 	var e = R3D.getEpipolesFromF(F);
-	var rect = A.getRectification(e.A);
+//e.A.set(0.5,0.75);
+	var rect = B.getRectification(e.B);
+	var thetas = rect.angles;
 	var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
 	var d = new DOImage(i);
 	d.matrix().translate(900,0);
-	this._stage.addChild(d);
+	this._root.addChild(d);
+	//
+// NEED TO GUARANTEE INCREASE/DECREASE IS CONSTANT (jump from Math.PI to -Math.PI) WHILE KEEPING SEARCH-FOR-ANGLE WORKING
+// JUMPS CAN ONLY HAPPEN ONCE
+	var angle = link.searchThetaInBFromPointInA(inputPoints[0][0]);
+// WRONG ANGLE
+
+	//var angle = link.searchThetaInAFromPointInB(inputPoints[1][0]);
+	console.log("ANGLE "+(angle*180/Math.PI));
+//console.log(thetas);
+//return;
+//console.log(thetas);
+console.log(thetas.length);
+	var lookup = R3D.monotonicAngleArray(thetas);
+console.log(thetas);
+console.log("ANGLE A: "+angle);
+angle = R3D.angleInLimits(angle,lookup.min,lookup.max);
+console.log("ANGLE B: "+angle);
+	var index;
+	if(thetas[0]<thetas[1]){//thetas.length-1]){
+		console.log("INCREASING");
+		index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatIncreasing, angle);
+	}else{
+		console.log("DECREASING");
+		index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatDecreasing, angle);
+	}
+	console.log("SEARCHING: "+angle);
+	console.log(index);
+if(index.length==1){
+	index = index[0];
+}else{
+	index = Code.linear1D(0.5,index[0],index[1]);
+}
+console.log(index);
+
+var d = new DO();
+var colLine = 0xFF0000FF;
+d.graphics().setLine(1.5, colLine );
+d.graphics().beginPath();
+d.graphics().moveTo(0,index);
+d.graphics().lineTo(1600,index);
+d.graphics().endPath();
+d.graphics().fill();
+d.graphics().strokeLine();
+this._root.addChild( d );
 
 /*
 

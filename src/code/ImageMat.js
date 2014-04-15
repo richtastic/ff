@@ -146,19 +146,14 @@ ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
 	return (a + b*t + c*tt + d*ttt);
 }
 ImageMat.linearColor = function(colR, x,y, colA,colB,colC,colD){
-	var r = ImageMat.linear2D(x,y, colA.x,colB.x,colC.x,colD.x);
-	var g = ImageMat.linear2D(x,y, colA.y,colB.y,colC.y,colD.y);
-	var b = ImageMat.linear2D(x,y, colA.z,colB.z,colC.z,colD.z);
+	var r = Code.linear2D(x,y, colA.x,colB.x,colC.x,colD.x);
+	var g = Code.linear2D(x,y, colA.y,colB.y,colC.y,colD.y);
+	var b = Code.linear2D(x,y, colA.z,colB.z,colC.z,colD.z);
 	colR.x = Math.min(Math.max(r,0.0),1.0);
 	colR.y = Math.min(Math.max(g,0.0),1.0);
 	colR.z = Math.min(Math.max(b,0.0),1.0);
 }
-ImageMat.linear2D = function(x,y, colA,colB,colC,colD){
-	return ImageMat.linear1D(y, ImageMat.linear1D(x,colA,colB), ImageMat.linear1D(x,colC,colD));
-}
-ImageMat.linear1D = function(t, A,B){
-	return t*B + (1.0-t)*A;
-}
+
 // ------------------------------------------------------------------------------------------------------------------------ get
 ImageMat.prototype.red = function(){
 	return this._r;

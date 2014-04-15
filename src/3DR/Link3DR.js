@@ -110,10 +110,27 @@ Link3DR.prototype.searchLineFromPoint = function(F, point){
 	return list;
 }
 Link3DR.prototype.searchThetaInBFromPointInA = function(point){
-	// get line in B
-	// get a point on the line
-	// get angle with XDIR
-	// return
+	return this.searchThetaFromPoint(this._F_AtoB,point);
+}
+Link3DR.prototype.searchThetaInAFromPointInB = function(point){
+	return this.searchThetaFromPoint(this._F_BtoA,point);
+}
+Link3DR.prototype.searchThetaFromPoint = function(F,point){
+	var epipole, angle, dir, line;
+	line = this.searchLineFromPoint(F, point);
+	epipole = R3D.getEpipolesFromF(F).B;
+console.log("EPIPOLE B: "+(epipole.x*408)+" "+(epipole.y*306));
+	if(V2D.distance(line[0],epipole)>V2D.distance(line[1],epipole)){
+		//dir = V2D.diff(line[0],epipole);
+		dir = V2D.diff(line[0],line[1]);
+	}else{
+		//dir = V2D.diff(line[1],epipole);
+		dir = V2D.diff(line[1],line[0]);
+	}
+	dir.norm();
+	angle = V2D.angleDirection(dir,V2D.DIRX);
+	//angle = V2D.angleDirection(V2D.DIRX,dir);
+	return angle;
 }
 Link3DR.prototype.rectify = function(){
 	var epipoleA = null;

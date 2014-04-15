@@ -188,6 +188,47 @@ R3D.getEpipolesFromF = function(F){
 	return {A:a,B:b};
 }
 // ------------------------------------------------------------------------------------------- rectification
+R3D.angleInLimits = function(angle,min,max){
+	while(angle<min){
+		angle += Math.TAU;
+	}
+	while(angle>max){
+		angle -= Math.TAU;
+	}
+	return angle;
+}
+R3D.monotonicAngleArray = function(angles){ // convert to always increasing or always decreasing
+	var min, max, i, len = angles.length;
+	min = angles[0]; max = angles[0];
+	var increasing = angles[0]<angles[1];
+	console.log("increasing "+increasing);
+	var add = 0;
+	for(i=1;i<len;++i){
+		if(increasing){
+			angles[i] += add;
+			if(angles[i]<angles[i-1]){
+				console.log("discontinuity: "+(i-1)+" -> "+i+" ["+angles[i-1]+" | "+angles[i]+"]");
+				add += Math.TAU;
+				angles[i] += add;
+			}
+			
+		}else{
+			angles[i] += add;
+			if(angles[i]>angles[i-1]){
+				console.log("discontinuity: "+(i-1)+" -> "+i+" ["+angles[i-1]+" | "+angles[i]+"]");
+				add -= Math.TAU;
+				angles[i] += add;
+			}
+		}
+		if(angles[i]>max){
+			max = angles[i];
+		}
+		if(angles[i]<min){
+			min = angles[i];
+		}
+	}
+	return {max:max, min:min, angles:angles};
+}
 R3D.polarRectification = function(source,epipole){
 	if(epipole.y<0){
 		if(epipole.x<0){ // 1
@@ -242,12 +283,13 @@ R3D._rectifyRegion8 = function(source,epipole){
 R3D._rectifyRegion9 = function(source,epipole){
 	return R3D._rectifyRegionAll(source,epipole, 9);
 }
-R3D._rectifyRegionAll = function(source,epipole, region){
+R3D._rectifyRegionAll = function(source,epipole, region){ // convention is always CW & seamless border-interface
+console.log("EPIPOLE: "+epipole.toString());
 	var image, width, height;
-	if( source.source && Code.isa(source.source,ImageMat) ){ // is imagemat
+	if( source.source && Code.isa(source.source,ImageMat) ){ // is already imagemat
 		image = source.source;
-		width = source.width; // ()
-		height = source.height; // ()
+		width = source.width;
+		height = source.height;
 	}else{ // is floats
 		width = source.width;
 		height = source.height;
@@ -374,7 +416,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 		V2D.diff(ray, mid,epipole);
 		len = Math.floor(ray.length());
 		ray.norm();
-		angleTable.push(V2D.angleDirection(ray,V2D.DIRX) *180/Math.PI);
+		angleTable.push(V2D.angleDirection(ray,V2D.DIRX)); // THE LAST ELEMENT SEEMS TO ALWAYS HAVE A MONOTOMIC DISCONTINUITY - IS THIS INTERSECTION RELATED?
 		// for each line - radius
 		//for(i = Math.floor(len), point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i>=0; --i){ // this has problems everywhere
 		//for(i=0, point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i<=len; ++i){ // this has problems everywhere
@@ -387,6 +429,11 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
+// if( Math.abs(V2D.angleDirection(ray,V2D.DIRX) - (-2.729) ) < 0.005){
+// 	rectifiedR[index] = 1.0;
+// 	rectifiedG[index] = 0.0;
+// 	rectifiedB[index] = 0.0;
+// }
 		}
 		if(corners.length>1){
 			var dd = new V2D(corners[0].x-corners[1].x,corners[0].y-corners[1].y);
@@ -400,8 +447,9 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 			if( intersect ){
 				V2D.diff(dir, corners[1],corners[0]);
 				dir.norm();
-				corners.shift();
-				edge.set(intersect.x,intersect.y);
+				//corners.shift();
+				//edge.set(intersect.x,intersect.y);
+				edge.copy(corners.shift());
 				intersect = null;
 			}
 		}else{

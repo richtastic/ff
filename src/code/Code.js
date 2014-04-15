@@ -173,6 +173,39 @@ Code.booleanToString = function(b){
 	}
 	return "false";
 }
+Code.binarySearchArrayFloatDecreasing = function(needle,hay){
+	return hay-needle;
+}
+Code.binarySearchArrayFloatIncreasing = function(needle,hay){ // searching for needle, comparing to item hay
+	return needle-hay;
+}
+Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,1,2,3,4,5],Code.binarySearchArrayFloatIncreasing, 3.5)
+	var left, right, middle, val;
+	left = 0; right = arr.length-1;
+	middle = Math.floor((right+left)/2);
+	val = fxn(needle,arr[middle]);
+	while( val !=0 && left<right){
+		// console.log("["+left+" |"+middle+"| "+right+"] = "+arr[middle]+"      ("+val+")");
+		if(val<0){
+			right = middle-1;
+		}else{
+			left = middle+1;
+		}
+		middle = Math.floor((right+left)/2);
+		val = fxn(needle,arr[middle]);
+	}
+	middle = Math.min(Math.max(0,middle),arr.length-1); // -1?
+	if(val<0){
+		if(middle-1>=0){ // END
+			return [middle-1,middle];
+		}
+	}else if(val>0){
+		if(middle+1<arr.length){ // END
+			return [middle,middle+1];
+		}
+	}
+	return [middle];
+}
 // ------------------------------------------------------------------------------------------ ARRAY
 Code.setArray = function(arr){
 	var i, im1, len = arguments.length;
@@ -1531,6 +1564,13 @@ Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b
 	return loc;
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------- SINGLE-FUNCTION INTERPOLATION
+Code.linear1D = function(t, A,B){
+	return t*B + (1.0-t)*A;
+}
+Code.linear2D = function(x,y, A,B,C,D){
+	return Code.linear1D(y, Code.linear1D(x,A,B), Code.linear1D(x,C,D));
+}
 
 
 
