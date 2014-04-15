@@ -305,6 +305,24 @@ Code.convolutionSum = function(a,b){
 	}
 	return sum;
 }
+Code.checkPoints2DToZeroOne = function(arr, width, height){
+	var i, len = arr.length, greaterThanOne = false;
+	for(i=len;i--;){
+		if(p.x>1.0 || p.y>1.0){
+			greaterThanOne = true;
+			break;
+		}
+	}
+	if(greaterThanOne){
+		Code.pointsToZeroOne(arr, width, height);
+	}
+}
+Code.points2DToZeroOne = function(arr, width, height){
+	for(var i=arr.length;i--;){
+		arr.x /= width;
+		arr.y /= width;
+	}
+}
 // ------------------------------------------------------------------------------------------ 
 Code.isUnique = function(val){ // val, ...array
 	for(i=1;i<arguments.length;++i){
@@ -471,6 +489,60 @@ Code.getJSColorFromRGBA = function(col){
 }
 Code.getJSColorFromARGB = function(col){
 	return "rgba("+Code.getRedARGB(col)+","+Code.getGrnARGB(col)+","+Code.getBluARGB(col)+","+Code.getAlpARGB(col)/255.0+")";
+}
+// color transfer ----------------------------------------------------
+// http://www.couleur.org/?page=transformations
+//http://www.rapidtables.com/convert/color/rgb-to-cmyk.htm
+//http://en.wikipedia.org/wiki/YUV
+Code.YUV_WR = 0.299;
+Code.YUV_WB = 0.114;
+Code.YUV_WG = 0.587; // 1 - WR - WB
+Code.YUV_UMAX = 0.436;
+Code.YUV_VMAX = 0.615;
+Code.YUVFromRGB = function(rgb){
+	var r = Code.getRedARGB(rgb)/255.0;
+	var g = Code.getGrnARGB(rgb)/255.0;
+	var b = Code.getBluARGB(rgb)/255.0;
+	var y = Code.YUV_WR*r + Code.YUV_WG*g + Code.YUV_WB*b;
+	var u = Code.YUV_UMAX * ((b-y)/(1.0-Code.YUV_WB));
+	var u = Code.YUV_VMAX * ((r-y)/(1.0-Code.YUV_WB));
+	return {y:y, u:u, v:v};
+}
+Code.RGBFromYUV = function(y,u,v){
+	var r = y + v*((1.0-Code.YUV_WR)/Code.YUV_VMAX);
+	var b = y + u*((1.0-Code.YUV_WB)/Code.YUV_UMAX);
+	var g = y - u*(Code.YUV_WB*(1.0-Code.YUV_WB)/Code.YUV_VMAX/Code.YUV_WG);
+		g -= u*(Code.YUV_WR*(1.0-Code.YUV_WR)/Code.YUV_VMAX/Code.YUV_WG);
+	r = Math.max(0,Math.min(Math.floor(256.0*r*(1.0-k)),255));
+	g = Math.max(0,Math.min(Math.floor(256.0*g*(1.0-k)),255));
+	b = Math.max(0,Math.min(Math.floor(256.0*b*(1.0-k)),255));
+	return Code.getColARGB(0x0, r,g,b);
+}
+Code.HSLFromRGB = function(rgb){
+	// 
+}
+Code.HSVFromRGB = function(rgb){
+	// 
+}
+Code.CMYKFromRGB = function(rgb){
+	var r = Code.getRedARGB(rgb)/255.0;
+	var g = Code.getGrnARGB(rgb)/255.0;
+	var b = Code.getBluARGB(rgb)/255.0;
+	var k = Math.max(r,g,b);
+	var c = 0.0, m = 0.0, y = 0.0;
+	if(k>0.0){
+		c = (k-r)/k;
+		m = (k-g)/k;
+		y = (k-b)/k;
+	}
+	k = 1.0 - k;
+	return {c:c, m:m, y:y, k:k};
+}
+Code.RGBFromCMYK = function(c,m,y,k){
+	var r = Math.min(Math.floor(256.0*(1.0-c)*(1.0-k)),255);
+	var g = Math.min(Math.floor(256.0*(1.0-m)*(1.0-k)),255);
+	var b = Math.min(Math.floor(256.0*(1.0-y)*(1.0-k)),255);
+	return Code.getColARGB(0x0, r,g,b);
 }
 // formatting functions ----------------------------------------------
 Code.prependFixed = function(start,pad,count){
@@ -1486,7 +1558,32 @@ Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 
-
+// ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
+Code.closestPoints3D = function(oa,da, ob,db){
+	var dot_dada = V3D.dot(da,da);
+	var dot_dadb = V3D.dot(da,db);
+	var dot_dbdb = V3D.dot(db,db);
+	var dot_oada = V3D.dot(oa,da);
+	var dot_obdb = V3D.dot(ob,db);
+	var dot_oadb = V3D.dot(oa,db);
+	var dot_obda = V3D.dot(ob,da);
+	var Q = dot_dadb;
+	var R = dot_dbdb;
+	var X = dot_dadb;
+	var Y = dot_dada;
+	var den = Q*X-R*Y;
+	if(den==0){ // parallel = infinite points
+		return null;
+	}
+	var C = dot_obda - dot_oada;
+	var D = dot_obdb - dot_oadb;
+	var num = (D*Y-C*X);
+	var tb = num/den;
+	var ta = (tb*dot_dadb - dot_oada + dot_obda)/dot_dada;
+	var A = new V3D(oa.x+ta*da.x, oa.y+ta*da.y, oa.z+ta*da.z);
+	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
+	return [A,B];
+}
 
 
 

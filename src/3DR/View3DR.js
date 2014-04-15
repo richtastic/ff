@@ -1,27 +1,55 @@
 // View3DR.js
-function View3DR(r,g,b){
+function View3DR(){
 	this._sourceImage = new ImageMat();
-	this._sourceImage.setFromFloats(r,g,b);
 	this._intrinsic = new Matrix(3,3).identity(); // K
 	this._links = new Array();
-	/*
-	this._extrinsic = new Matrix(3,4).identity(); // M
-	*/
+	this._featuresPutative = new Array();
+	this._featuresResolved = new Array();
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
-View3DR.prototype.source = function(s){
-	if(s!==undefined){
-		// 
+// ------------------------------------------------------------------------------------------------------------------------ GET/SET
+View3DR._deepCopyV3DHomoArray = function(to,from){
+	Code.emptyArray(to);
+	var i, len = from.length;
+	for(i=0;i<len;++i){
+		to.push( new V3D(from[i].x,from[i].y,1.0) );
+	}
+}
+View3DR.prototype.putativePoints = function(list){ // assumed [0-1]
+	if(list){
+		View3DR._deepCopyV3DHomoArray(this._featuresPutative,list);
+	}
+	return this._featuresPutative;
+}
+View3DR.prototype.resolvedPoints = function(list){ // assumed [0-1]
+	if(list){
+		View3DR._deepCopyV3DHomoArray(this._featuresResolved,list);
+	}
+	return this._featuresResolved;
+}
+View3DR.prototype.source = function(r,g,b,w,h){
+	if(r!==undefined){
+		if(w!==undefined && h!==undefined){ // R, G, B, width, height
+			this._sourceImage.init(w,h,r,g,b);
+		}else if(g!==undefined && b!==undefined){ // Gray, width, height
+			this._sourceImage.init(w,h,r);
+		}else{ // ImageMat
+			this._sourceImage.copy(r);
+		}
 	}
 	return this._sourceImage;
 }
+// ------------------------------------------------------------------------------------------------------------------------ FUNCTIONAL
 View3DR.prototype.addLink = function(l){
 	this._links.push(l);
 }
 View3DR.prototype.getRectification = function(epipole){
-	return R3D.polarRectification(this.source(),epipole);
+	var wid = this._sourceImage.width();
+	var hei = this._sourceImage.height();
+	var e = new V2D(epipole.x*wid,epipole.y*hei);
+	var wrapper = {source:this.source(), width:wid, height:hei};
+	return R3D.polarRectification(wrapper,e);
 }
-
+// ------------------------------------------------------------------------------------------------------------------------ PROCESSING
 View3DR.prototype.x = function(){
 	// 
 }

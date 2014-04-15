@@ -189,7 +189,6 @@ R3D.getEpipolesFromF = function(F){
 }
 // ------------------------------------------------------------------------------------------- rectification
 R3D.polarRectification = function(source,epipole){
-	console.log(source.width+" x "+source.height);//+"  | "+(source.red)+" "+(source.grn)+" "+(source.blu) );
 	if(epipole.y<0){
 		if(epipole.x<0){ // 1
 			return R3D._rectifyRegion1(source,epipole);
@@ -245,10 +244,10 @@ R3D._rectifyRegion9 = function(source,epipole){
 }
 R3D._rectifyRegionAll = function(source,epipole, region){
 	var image, width, height;
-	if( Code.isa(ImageMat) ){ // is imagemat
-		image = source;
-		width = source.width();
-		height = source.height();
+	if( source.source && Code.isa(source.source,ImageMat) ){ // is imagemat
+		image = source.source;
+		width = source.width; // ()
+		height = source.height; // ()
 	}else{ // is floats
 		width = source.width;
 		height = source.height;
@@ -257,7 +256,6 @@ R3D._rectifyRegionAll = function(source,epipole, region){
 		image.setGrnFromFloat(source.grn);
 		image.setBluFromFloat(source.blu);
 	}
-	
 	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
 	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D(), point = new V3D();
 	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;

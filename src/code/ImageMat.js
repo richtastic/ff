@@ -16,11 +16,23 @@ ImageMat.tempN = new V3D();
 ImageMat.tempO = new V3D();
 ImageMat.tempP = new V3D();
 function ImageMat(wid, hei){
+	this.init(wid,hei);
+}
+ImageMat.prototype.init = function(wid,hei,r,g,b){
 	this._width = wid;
 	this._height = hei;
-	this._r = new Array(wid*hei);
-	this._g = new Array(wid*hei);
-	this._b = new Array(wid*hei);
+	if(wid>0 && hei>0){
+		this._r = new Array(wid*hei);
+		this._g = new Array(wid*hei);
+		this._b = new Array(wid*hei);
+		if(r!=undefined){
+			if(g!=undefined && b!=undefined){
+				this.setFromFloats(r,g,b);
+			}else{
+				this.setFromFloats(r,r,r);
+			}
+		}
+	}
 }
 ImageMat.prototype.unset = function(){
 	this._width = undefined;
@@ -157,10 +169,16 @@ ImageMat.prototype.grn = function(){
 ImageMat.prototype.blu = function(){
 	return this._b;
 }
-ImageMat.prototype.width = function(){
+ImageMat.prototype.width = function(w){
+	// if(w!==undefined){
+	// 	this._width = w;
+	// }
 	return this._width;
 }
-ImageMat.prototype.height = function(){
+ImageMat.prototype.height = function(h){
+	// if(h!==undefined){
+	// 	this._height = h;
+	// }
 	return this._height;
 }
 ImageMat.prototype.getRedFloat = function(){
