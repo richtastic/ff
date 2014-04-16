@@ -1565,6 +1565,9 @@ Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- SINGLE-FUNCTION INTERPOLATION
+Code.linear1DRatio = function(C, A,B){
+	return (C-A)/(B-A);
+}
 Code.linear1D = function(t, A,B){
 	return t*B + (1.0-t)*A;
 }

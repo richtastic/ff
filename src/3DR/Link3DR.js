@@ -109,28 +109,29 @@ Link3DR.prototype.searchLineFromPoint = function(F, point){
 	}
 	return list;
 }
-Link3DR.prototype.searchThetaInBFromPointInA = function(point){
-	return this.searchThetaFromPoint(this._F_AtoB,point);
+Link3DR.prototype.searchThetaRadiusInBFromPointInA = function(point){
+	return this.searchThetaRadiusFromPoint(this._F_AtoB,this._B.width(),this._B.height(),point);
 }
-Link3DR.prototype.searchThetaInAFromPointInB = function(point){
-	return this.searchThetaFromPoint(this._F_BtoA,point);
+Link3DR.prototype.searchThetaRadiusInAFromPointInB = function(point){
+	return this.searchThetaRadiusFromPoint(this._F_BtoA,this._A.width(),this._A.height(),point);
 }
-Link3DR.prototype.searchThetaFromPoint = function(F,point){
+Link3DR.prototype.searchThetaRadiusFromPoint = function(F,width,height,point){ // width/height ratio necessary
 	var epipole, angle, dir, line;
 	line = this.searchLineFromPoint(F, point);
 	epipole = R3D.getEpipolesFromF(F).B;
-console.log("EPIPOLE B: "+(epipole.x*408)+" "+(epipole.y*306));
+	line[0].x *= width; line[0].y *= height;
+	line[1].x *= width; line[1].y *= height;
+	epipole.x *= width; epipole.y *= height;
 	if(V2D.distance(line[0],epipole)>V2D.distance(line[1],epipole)){
-		//dir = V2D.diff(line[0],epipole);
 		dir = V2D.diff(line[0],line[1]);
 	}else{
-		//dir = V2D.diff(line[1],epipole);
 		dir = V2D.diff(line[1],line[0]);
 	}
+	var r0 = V2D.distance(line[0],epipole);
+	var r1 = V2D.distance(line[1],epipole);
 	dir.norm();
 	angle = V2D.angleDirection(dir,V2D.DIRX);
-	//angle = V2D.angleDirection(V2D.DIRX,dir);
-	return angle;
+	return {angle:angle, radiusMin:Math.min(r0,r1), radiusMax:Math.max(r0,r1)};
 }
 Link3DR.prototype.rectify = function(){
 	var epipoleA = null;

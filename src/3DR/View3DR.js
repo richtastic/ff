@@ -38,6 +38,12 @@ View3DR.prototype.source = function(r,g,b,w,h){
 	}
 	return this._sourceImage;
 }
+View3DR.prototype.width = function(){
+	return this._sourceImage.width();
+}
+View3DR.prototype.height = function(){
+	return this._sourceImage.height();
+}
 // ------------------------------------------------------------------------------------------------------------------------ FUNCTIONAL
 View3DR.prototype.addLink = function(l){
 	this._links.push(l);

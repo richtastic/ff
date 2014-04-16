@@ -198,11 +198,9 @@ R3D.angleInLimits = function(angle,min,max){
 	return angle;
 }
 R3D.monotonicAngleArray = function(angles){ // convert to always increasing or always decreasing
-	var min, max, i, len = angles.length;
-	min = angles[0]; max = angles[0];
+	var add, min, max, i, len = angles.length;
 	var increasing = angles[0]<angles[1];
-	console.log("increasing "+increasing);
-	var add = 0;
+	min = angles[0]; max = angles[0]; add = 0;
 	for(i=1;i<len;++i){
 		if(increasing){
 			angles[i] += add;
@@ -284,7 +282,6 @@ R3D._rectifyRegion9 = function(source,epipole){
 	return R3D._rectifyRegionAll(source,epipole, 9);
 }
 R3D._rectifyRegionAll = function(source,epipole, region){ // convention is always CW & seamless border-interface
-console.log("EPIPOLE: "+epipole.toString());
 	var image, width, height;
 	if( source.source && Code.isa(source.source,ImageMat) ){ // is already imagemat
 		image = source.source;
@@ -418,9 +415,9 @@ console.log("EPIPOLE: "+epipole.toString());
 		ray.norm();
 		angleTable.push(V2D.angleDirection(ray,V2D.DIRX)); // THE LAST ELEMENT SEEMS TO ALWAYS HAVE A MONOTOMIC DISCONTINUITY - IS THIS INTERSECTION RELATED?
 		// for each line - radius
-		//for(i = Math.floor(len), point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i>=0; --i){ // this has problems everywhere
+		for(i = Math.floor(len), point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i>=0; --i){ // this has problems everywhere
 		//for(i=0, point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i<=len; ++i){ // this has problems everywhere
-		for(i=radiusMax;i>=radiusMin;--i){
+		//for(i=radiusMax;i>=radiusMin;--i){
 				index = radiusCount*j + i-radiusMin ; // 7 needs +1, 5 needs none
 			//	index = radiusCount*j + (radiusMax-i-1);
 			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
@@ -461,7 +458,7 @@ console.log("EPIPOLE: "+epipole.toString());
 	rectifiedR = rectifiedR.slice(0,len);
 	rectifiedG = rectifiedG.slice(0,len);
 	rectifiedB = rectifiedB.slice(0,len);
-	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, angles:angleTable};
+	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.nonlinearLeastSquares = function(fxn,options){ // LevenbergMarquardt ... ish

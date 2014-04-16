@@ -27,7 +27,7 @@ function Fun(){
 	this._stage = new Stage(this._canvas, (1/5)*1000);
 	this._stage.start();
 	this._root = new DO();
-//this._root.matrix().translate(0,200);
+//this._root.matrix().translate(50,50);
 	this._stage.root().addChild(this._root);
 	// load images
 	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
@@ -116,53 +116,63 @@ Fun.prototype.displayData = function(){
 	this._root.addChild( linesDO );
 	// display rectification search lines
 	var e = R3D.getEpipolesFromF(F);
-//e.A.set(0.5,0.75);
 	var rect = B.getRectification(e.B);
 	var thetas = rect.angles;
 	var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
 	var d = new DOImage(i);
 	d.matrix().translate(900,0);
 	this._root.addChild(d);
-	//
-// NEED TO GUARANTEE INCREASE/DECREASE IS CONSTANT (jump from Math.PI to -Math.PI) WHILE KEEPING SEARCH-FOR-ANGLE WORKING
-// JUMPS CAN ONLY HAPPEN ONCE
-	var angle = link.searchThetaInBFromPointInA(inputPoints[0][0]);
-// WRONG ANGLE
-
-	//var angle = link.searchThetaInAFromPointInB(inputPoints[1][0]);
-	console.log("ANGLE "+(angle*180/Math.PI));
-//console.log(thetas);
-//return;
-//console.log(thetas);
-console.log(thetas.length);
+	// convert to monotonic table
 	var lookup = R3D.monotonicAngleArray(thetas);
-console.log(thetas);
-console.log("ANGLE A: "+angle);
-angle = R3D.angleInLimits(angle,lookup.min,lookup.max);
-console.log("ANGLE B: "+angle);
+	
+
+for(j=0;j<inputPoints[0].length;++j){
+console.log(j);
+	// find angle line
+	var searchInfo = link.searchThetaRadiusInBFromPointInA(inputPoints[0][j]);
+	var angle = searchInfo.angle;
+	var radiusMin = searchInfo.radiusMin;
+	var radiusMax = searchInfo.radiusMax;
+	radiusMin = Math.floor(radiusMin);
+	radiusMax = Math.ceil(radiusMax);
+	// convert to lookup-table angle
+	angle = R3D.angleInLimits(angle,lookup.min,lookup.max);
 	var index;
-	if(thetas[0]<thetas[1]){//thetas.length-1]){
-		console.log("INCREASING");
+	if(thetas[0]<thetas[1]){ // console.log("INCREASING");
 		index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatIncreasing, angle);
-	}else{
-		console.log("DECREASING");
+	}else{ // console.log("DECREASING");
 		index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatDecreasing, angle);
 	}
-	console.log("SEARCHING: "+angle);
-	console.log(index);
-if(index.length==1){
-	index = index[0];
-}else{
-	index = Code.linear1D(0.5,index[0],index[1]);
-}
-console.log(index);
+	if(index.length==1){ // exact match (lolz)
+		index = index[0];
+	}else{ // interpolate to exact line (probly not necessary)
+		index = Code.linear1D(Code.linear1DRatio(angle,thetas[index[0]],thetas[index[1]]),index[0],index[1]);
+	}
 
+// line in rectified B
+var imageWidth = (rect.radiusMax-rect.radiusMin+1);
 var d = new DO();
-var colLine = 0xFF0000FF;
+var colLine = 0xFF00FF00;
 d.graphics().setLine(1.5, colLine );
 d.graphics().beginPath();
-d.graphics().moveTo(0,index);
-d.graphics().lineTo(1600,index);
+d.graphics().moveTo(900+radiusMin-rect.radiusMin,index);
+d.graphics().lineTo(900+radiusMax-rect.radiusMin,index);
+d.graphics().endPath();
+d.graphics().fill();
+d.graphics().strokeLine();
+this._root.addChild( d );
+}
+
+// slope in picture B
+var toX = 595;
+var lll = new V2D(300,0);
+V2D.rotate(lll,lll,angle);
+var d = new DO();
+var colLine = 0xFFFF0066;
+d.graphics().setLine(2.0, colLine );
+d.graphics().beginPath();
+d.graphics().moveTo(toX,0);
+d.graphics().lineTo(lll.x+toX,-lll.y);
 d.graphics().endPath();
 d.graphics().fill();
 d.graphics().strokeLine();
