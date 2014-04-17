@@ -225,7 +225,7 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 			min = angles[i];
 		}
 	}
-	return {max:max, min:min, angles:angles};
+	return {max:max, min:min, angles:angles, increasing:(angles[0]<angles[1])};
 }
 R3D.polarRectification = function(source,epipole){
 	if(epipole.y<0){
@@ -426,11 +426,6 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
-// if( Math.abs(V2D.angleDirection(ray,V2D.DIRX) - (-2.729) ) < 0.005){
-// 	rectifiedR[index] = 1.0;
-// 	rectifiedG[index] = 0.0;
-// 	rectifiedB[index] = 0.0;
-// }
 		}
 		if(corners.length>1){
 			var dd = new V2D(corners[0].x-corners[1].x,corners[0].y-corners[1].y);

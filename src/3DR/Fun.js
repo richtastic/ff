@@ -113,70 +113,75 @@ Fun.prototype.displayData = function(){
 		// ...
 		accWid += wid;
 	}
-	this._root.addChild( linesDO );
-	// display rectification search lines
-	var e = R3D.getEpipolesFromF(F);
-	var rect = B.getRectification(e.B);
-	var thetas = rect.angles;
-	var i = this._stage.getFloatRGBAsImage(rect.red,rect.grn,rect.blu, rect.width, rect.height);
-	var d = new DOImage(i);
-	d.matrix().translate(900,0);
+
+link.calculateRectificationTables();
+
+var i, d, r;
+	// A
+	r = link.rectificationB();
+	i = this._stage.getFloatRGBAsImage(r.red,r.grn,r.blu, r.width,r.height);
+	d = new DOImage(i);
+	d.matrix().translate(0,0);
 	this._root.addChild(d);
-	// convert to monotonic table
-	var lookup = R3D.monotonicAngleArray(thetas);
+	// B
+	r = link.rectificationA();
+	i = this._stage.getFloatRGBAsImage(r.red,r.grn,r.blu, r.width,r.height);
+	d = new DOImage(i);
+	d.matrix().translate(600,0);
+	this._root.addChild(d);
+
 	
-
-for(j=0;j<inputPoints[0].length;++j){
-console.log(j);
-	// find angle line
-	var searchInfo = link.searchThetaRadiusInBFromPointInA(inputPoints[0][j]);
-	var angle = searchInfo.angle;
-	var radiusMin = searchInfo.radiusMin;
-	var radiusMax = searchInfo.radiusMax;
-	radiusMin = Math.floor(radiusMin);
-	radiusMax = Math.ceil(radiusMax);
-	// convert to lookup-table angle
-	angle = R3D.angleInLimits(angle,lookup.min,lookup.max);
+for(i=0;i<inputPoints.length;++i){
+	r = link.rectificationB();
 	var index;
-	if(thetas[0]<thetas[1]){ // console.log("INCREASING");
-		index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatIncreasing, angle);
-	}else{ // console.log("DECREASING");
-		index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatDecreasing, angle);
+	var searchInfo;
+	var offX = 0;
+	if(i==1){
+		offX = 600;
+		r = link.rectificationA();
 	}
-	if(index.length==1){ // exact match (lolz)
-		index = index[0];
-	}else{ // interpolate to exact line (probly not necessary)
-		index = Code.linear1D(Code.linear1DRatio(angle,thetas[index[0]],thetas[index[1]]),index[0],index[1]);
+	for(j=0;j<inputPoints[i].length;++j){
+		if(i==0){
+			searchInfo = link.searchThetaRadiusInBFromPointInA(inputPoints[i][j]);
+		}else{
+			searchInfo = link.searchThetaRadiusInAFromPointInB(inputPoints[i][j]);
+		}
+		var angle = searchInfo.angle;
+		var radiusMin = searchInfo.radiusMin;
+		var radiusMax = searchInfo.radiusMax;
+		radiusMin = Math.floor(radiusMin);
+		radiusMax = Math.ceil(radiusMax);
+		// convert to lookup-table angle
+		angle = R3D.angleInLimits(angle,r.minAngle,r.maxAngle);
+		if(r.increasing){
+			index = Code.binarySearchArray(r.angles,Code.binarySearchArrayFloatIncreasing, angle);
+		}else{
+			index = Code.binarySearchArray(r.angles,Code.binarySearchArrayFloatDecreasing, angle);
+		}
+		if(index.length==1){ // exact match (lolz)
+			index = index[0];
+		}else{ // interpolate to exact line (probly not necessary)
+			index = Code.linear1D(Code.linear1DRatio(angle,r.angles[index[0]],r.angles[index[1]]),index[0],index[1]);
+		}
+		// line in rectified image
+		var imageWidth = (r.radiusMax-r.radiusMin+1);
+		var d = new DO();
+		var colLine = 0xFF00FF00;
+		d.graphics().setLine(1.5, colLine );
+		d.graphics().beginPath();
+		d.graphics().moveTo(offX+radiusMin-r.radiusMin,index);
+		d.graphics().lineTo(offX+radiusMax-r.radiusMin,index);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+		this._root.addChild( d );
 	}
-
-// line in rectified B
-var imageWidth = (rect.radiusMax-rect.radiusMin+1);
-var d = new DO();
-var colLine = 0xFF00FF00;
-d.graphics().setLine(1.5, colLine );
-d.graphics().beginPath();
-d.graphics().moveTo(900+radiusMin-rect.radiusMin,index);
-d.graphics().lineTo(900+radiusMax-rect.radiusMin,index);
-d.graphics().endPath();
-d.graphics().fill();
-d.graphics().strokeLine();
-this._root.addChild( d );
 }
 
-// slope in picture B
-var toX = 595;
-var lll = new V2D(300,0);
-V2D.rotate(lll,lll,angle);
-var d = new DO();
-var colLine = 0xFFFF0066;
-d.graphics().setLine(2.0, colLine );
-d.graphics().beginPath();
-d.graphics().moveTo(toX,0);
-d.graphics().lineTo(lll.x+toX,-lll.y);
-d.graphics().endPath();
-d.graphics().fill();
-d.graphics().strokeLine();
-this._root.addChild( d );
+// SEARCH ALONG EACH LINE TO FIND BEST MATCH - CORRELATION / SSD
+
+console.log("HERE");
+
 
 /*
 
