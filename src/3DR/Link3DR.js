@@ -150,6 +150,10 @@ Link3DR.getLookupTableFromRectification = function(rect){
 	rect.minAngle = data.min;
 	rect.maxAngle = data.max;
 	rect.increasing = data.increasing;
+	rect.image = new ImageMat(rect.width,rect.height);
+	rect.image.setFromFloats(rect.red,rect.grn,rect.blu);
+	rect.red = null; rect.grn = null; rect.blu = null;
+	delete rect.red; delete rect.grn; delete rect.blu;
 	//{red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax};
 	//{max:max, min:min, angles:angles, increasing:(angles[0]<angles[1])};
 	return rect; // already has angles array
@@ -173,6 +177,21 @@ Link3DR.prototype.calculateRectificationTables = function(){
 	// 	index = Code.binarySearchArray(thetas,Code.binarySearchArrayFloatDecreasing, angle);
 	// }
 	
+}
+Link3DR.rectificationAngleIndex = function(rect, angle){
+	angle = R3D.angleInLimits(angle,rect.minAngle,rect.maxAngle);
+	var index;
+	if(rect.increasing){
+		index = Code.binarySearchArray(rect.angles,Code.binarySearchArrayFloatIncreasing, angle);
+	}else{
+		index = Code.binarySearchArray(rect.angles,Code.binarySearchArrayFloatDecreasing, angle);
+	}
+	if(index.length==1){ // exact match (lolz)
+		index = index[0];
+	}else{ // interpolate to exact line (probly not necessary)
+		index = Code.linear1D(Code.linear1DRatio(angle,rect.angles[index[0]],rect.angles[index[1]]),index[0],index[1]);
+	}
+	return index;
 }
 Link3DR.prototype.rectificationA = function(){
 	return this._lookupTableA;

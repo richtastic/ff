@@ -119,16 +119,19 @@ link.calculateRectificationTables();
 var i, d, r;
 	// A
 	r = link.rectificationB();
-	i = this._stage.getFloatRGBAsImage(r.red,r.grn,r.blu, r.width,r.height);
+	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(0,0);
 	this._root.addChild(d);
 	// B
 	r = link.rectificationA();
-	i = this._stage.getFloatRGBAsImage(r.red,r.grn,r.blu, r.width,r.height);
+	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(600,0);
 	this._root.addChild(d);
+
+
+console.log("ACTUALLY.. this needs to be changed to search between two haystacks");
 
 	
 for(i=0;i<inputPoints.length;++i){
@@ -180,7 +183,58 @@ for(i=0;i<inputPoints.length;++i){
 
 // SEARCH ALONG EACH LINE TO FIND BEST MATCH - CORRELATION / SSD
 
-console.log("HERE");
+var windowSize = 11;
+var rect, source, needle, haystack, row;
+var img, di;
+for(i=0;i<inputPoints.length;++i){
+	rect = link.rectificationB();
+	source = link.A().source();
+	for(j=0;j<inputPoints[i].length;++j){
+		point = inputPoints[i][j];
+		// needle
+// orientation is ambiguous
+// needle needs to come from rectified image?
+		needle = source.getSubImage(point.x*source.width(),point.y*source.height(), windowSize,windowSize);
+		img = this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), needle.width(),needle.height());
+		di = new DOImage(img);
+		di.matrix().translate(j*windowSize,i*windowSize);
+		di.matrix().scale(3.0);
+		this._root.addChild(di);
+		// haystack
+			searchInfo = link.searchThetaRadiusInBFromPointInA(point);
+			row = Link3DR.rectificationAngleIndex(rect,searchInfo.angle);
+		haystack = rect.image.getSubImage( (searchInfo.radiusMin+searchInfo.radiusMax)*0.5 - rect.radiusMin,row,Math.floor(searchInfo.radiusMax-searchInfo.radiusMin+1),windowSize);
+		img = this._stage.getFloatRGBAsImage(haystack.red(),haystack.grn(),haystack.blu(), haystack.width(),haystack.height());
+		di = new DOImage(img);
+		di.matrix().translate(0*windowSize,j*windowSize + 50);
+		di.matrix().scale(3.0);
+		this._root.addChild(di);
+	}
+	break;
+}
+// r.image.red(),r.image.grn(),r.image.blu()
+
+
+
+
+
+
+
+
+
+
+
+// NO DISTORTION:
+// convolution angle-to-line on demand: 
+// input: point
+// grab strip from closest to furthest intersection, separated by n pixels
+// memoization?
+
+
+
+
+
+
 
 
 /*

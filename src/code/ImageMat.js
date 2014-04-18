@@ -196,6 +196,27 @@ ImageMat.prototype.getArrayARGB = function(){
 	}
 	return data;
 }
+ImageMat.prototype.getSubImageIndex = function(colSta,colEnd, rowSta,rowEnd){
+	var i, j, index, ind;
+	var wid = colEnd-colSta+1;
+	var hei = colEnd-colSta+1;
+	var len = wid*hei;
+	var r = new Array(len), g = new Array(len), b = new Array(len);
+	for(index=0, j=rowSta;j<=rowEnd;++j){
+		for(i=colSta;i<=colEnd;++i,++index){
+			ind = j*this._wid + i;
+			r[index] = this._red[ind];
+			g[index] = this._grn[ind];
+			b[index] = this._blu[ind];
+		}
+	}
+	var image = new ImageMat(wid,hei);
+	image.setFromFloats(r,g,b);
+	return image;
+}
+ImageMat.prototype.getSubImage = function(px,py, wid,hei){
+	return ImageMat.extractRect(this, px-wid/2.0,py-hei/2.0, px+wid/2.0,py-hei/2.0, px+wid/2.0,py+hei/2.0, px-wid/2.0,py+hei/2.0, wid,hei);
+}
 // ------------------------------------------------------------------------------------------------------------------------ set
 ImageMat.prototype.setFromArrayARGB = function(data){
 	var i, len = this._r.length;
@@ -1171,8 +1192,7 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 
 // projective transform
 ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){
-	var fr = new V3D();
-	var val = new V3D()
+	var i, j, fr = new V3D(), val = new V3D()
 	var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
 	var toPoints = [new V2D(aX,aY), new V2D(bX,bY), new V2D(cX,cY), new V2D(dX,dY)];
 	var projection = Matrix.get2DProjectiveMatrix(fromPoints,toPoints);
