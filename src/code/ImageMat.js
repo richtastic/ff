@@ -289,6 +289,14 @@ ImageMat.grayFromRGBFloat = function(r,g,b){
 	}
 	return a;
 }
+ImageMat.grayFromFloats = function(r,g,b){
+	var i, len = r.length;
+	var a = new Array(len);
+	for(i=0;i<len;++i){
+		a[i] = (r[i]+g[i]+b[i])/3.0;
+	}
+	return a;
+}
 ImageMat.ARGBFromFloats = function(rF,gF,bF){
 	var i, len = rF.length;
 	var col, r,g,b,a = new Array(len);
@@ -888,6 +896,59 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 	}
 	return result;
 }
+// INNER CONVOLUTION?
+ImageMat.ssd = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
+	var total = imageWidth*imageHeight;
+	var i, j, n, m, sum, staN, endN, staM, endM, num;
+	var oW2F = Math.floor(operatorWidth/2); oH2F = Math.floor(operatorHeight/2);
+	var oW2C = Math.ceil(operatorWidth/2); oH2C = Math.ceil(operatorHeight/2);
+	var result = new Array(total);
+	for(j=0;j<imageHeight;++j){
+		jIW = j*imageWidth;
+		for(i=0;i<imageWidth;++i){
+			staN = Math.max( oW2F-i, 0);
+			endN = Math.min(operatorWidth,oW2F+imageWidth-i);
+			staM = Math.max( oH2F-j, 0);
+			endM = Math.min(operatorHeight,oH2F+imageHeight-j);
+			sum = 0.0;
+			for(m=staM;m<endM;++m){
+				for(n=staN;n<endN;++n){
+					num = image[(j+m-oH2F)*imageWidth+(i+n-oW2F)]-operator[m*operatorWidth+n];
+					sum += num*num;
+				}
+			}
+			result[jIW+i] = sum;
+		}
+	}
+	return result;
+}
+ImageMat.ssdInner = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
+	var i, j, n, m, sum, staN, endN, staM, endM, num;
+	var oW2F = Math.floor(operatorWidth/2); oH2F = Math.floor(operatorHeight/2);
+	var oW2C = Math.ceil(operatorWidth/2); oH2C = Math.ceil(operatorHeight/2);
+	var resultWidth = imageWidth - operatorWidth;
+	var resultHeight = imageHeight - operatorHeight;
+	var total = resultWidth*resultHeight;
+	var result = new Array(total);
+	var iWm1 = imageWidth - oH2F;
+	var iHm1 = imageHeight - oH2F;
+	var index = 0;
+	for(j=oH2F;j<iHm1;++j){
+		jIW = j*imageWidth;
+		for(i=oW2F;i<iWm1;++i){
+			sum = 0.0;
+			for(m=0;m<operatorHeight;++m){
+				for(n=0;n<operatorWidth;++n){
+					num = image[(j+m-oH2F)*imageWidth+(i+n-oW2F)]-operator[m*operatorWidth+n];
+					sum += num*num;
+				}
+			}
+			result[index] = sum;
+			++index;
+		}
+	}
+	return result;
+}
 ImageMat.historizeLocalFloat01 = function(data,wid,hei, winWid,winHei){ // weird square-effect
 	winWid = winWid!==undefined?winWid:25;
 	winHei = winHei!==undefined?winHei:25;
@@ -1148,6 +1209,13 @@ ImageMat.randomAdd = function(data,mag,off){
 }
 ImageMat.flipAbsFxn = function(f){ 
 	return Math.abs(f-0.5);
+}
+ImageMat.log = function(data){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		data[i] = Math.log(data[i]);
+	}
+	return data;
 }
 
 

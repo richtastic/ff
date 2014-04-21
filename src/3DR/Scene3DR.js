@@ -31,7 +31,7 @@ Scene3DR.prototype.link = function(i){
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 Scene3DR.prototype.bundleAdjust = function(){
-	//var A = link.A(), B = link.B();
+	// var A = link.A(), B = link.B();
 	// multi-view bundle adjust goes here
 	var link, i, len = this._links.length;
 	for(i=0;i<len;++i){

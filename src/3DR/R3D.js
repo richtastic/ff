@@ -307,13 +307,11 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		radiusMax = Math.ceil( V2D.distance(epipole,BR) );
 		thetaCount = width + height - 2;
 	}else if(region==2){
-		//corners = [TL,BL,BR,TR, TL];
 		corners = [TR,BR,BL,TL, TR];
 		radiusMin = Math.floor( -epipole.y );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,BL), V2D.distance(epipole,BR) ) );
 		thetaCount = width + 2.0*height - 3;
 	}else if(region==3){
-		//corners = [TL,BL,BR, TR];
 		corners = [BR,BL,TL, TR];
 		radiusMin = Math.floor( V2D.distance(epipole,TR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
@@ -324,8 +322,6 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TR), V2D.distance(epipole,BR) ) );
 		thetaCount = 2.0*width + height - 3;
 	}else if(region==5){
-		//corners = [TR,TL,BL,BR,TR, TL];
-		//corners = [TR,BR,BL,TL,TR, BR];
 		radiusMin = 0.0;
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR), V2D.distance(epipole,BR), V2D.distance(epipole,BL) ) );
 		thetaCount = 2.0*width + 2.0*height - 4;
@@ -355,7 +351,6 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			corners = [pt,BL,TL,TR,BR,pt,end];
 		}
 	}else if(region==6){
-		//corners = [TR,TL,BL,BR, TR];
 		corners = [BR,BL,TL,TR, BR];
 		radiusMin = Math.floor( epipole.x-width );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,BL) ) );
@@ -371,7 +366,6 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR) ) );
 		thetaCount = width + 2.0*height - 3;
 	}else if(region==9){
-		//corners = [TR,TL,BL, BR];
 		corners = [BL,TL,TR, BR];
 		radiusMin = Math.floor( V2D.distance(epipole,BR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,TL) );
@@ -419,7 +413,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		//for(i=0, point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i<=len; ++i){ // this has problems everywhere
 		//for(i=radiusMax;i>=radiusMin;--i){
 				index = radiusCount*j + i-radiusMin ; // 7 needs +1, 5 needs none
-			//	index = radiusCount*j + (radiusMax-i-1);
+			//index = radiusCount*j + (radiusMax-i-1);
 			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
 			image.getPointInterpolateLinear(color,point.x,point.y);
 			// image.getPointInterpolateCubic(color,point.x,point.y);

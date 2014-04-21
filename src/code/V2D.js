@@ -87,6 +87,16 @@ V2D.prototype.norm = function(){
 V2D.prototype.scale = function(c){
 	this.x *= c; this.y *= c;
 }
+V2D.prototype.setLength = function(l){
+	this.norm();
+	this.x *= l; this.y *= l;
+}
+V2D.prototype.add = function(v){
+	this.x += v.x; this.y += v.y;
+}
+V2D.prototype.sub = function(v){
+	this.x -= v.x; this.y -= v.y;
+}
 V2D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+">";
 }

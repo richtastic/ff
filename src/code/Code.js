@@ -1480,10 +1480,10 @@ Code.findExtrema2DFloat = function(d, wid,hei){
 			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
 			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
 			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
-				result = ImageMat.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+				result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
 				if(result==null){ continue; }
 				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
-					result.x += i; result.y += j; result.z += k;
+					result.x += i; result.y += j;
 					list.push(result);
 				}else{ // need to interpolate at a neighbor
 					//	console.log("result; "+result.toString());
@@ -1627,6 +1627,16 @@ Code.closestPoints3D = function(oa,da, ob,db){
 	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	return [A,B];
 }
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+Code.ssdWindow = function(needle,widN,heiN, haystack,widH,heiH){
+	return ImageMat.ssd(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight);
+}
+Code.ssdWindowInside = function(needle,widN,heiN, haystack,widH,heiH){
+	return ImageMat.ssdInner(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------- 
 
 
 

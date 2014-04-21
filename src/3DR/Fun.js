@@ -27,7 +27,7 @@ function Fun(){
 	this._stage = new Stage(this._canvas, (1/5)*1000);
 	this._stage.start();
 	this._root = new DO();
-//this._root.matrix().translate(50,50);
+//this._root.matrix().translate(50,350);
 	this._stage.root().addChild(this._root);
 	// load images
 	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
@@ -106,6 +106,19 @@ Fun.prototype.displayData = function(){
 				d.graphics().fill();
 				d.graphics().strokeLine();
 				linesDO.addChild( d );
+				//  
+				// var ll = V2D.diff(pA,pB);
+				// ll.norm();
+				// ll.scale(400.0);
+				// d = new DO();
+				// d.graphics().setLine(2.0, 0xFFFF0000);
+				// d.graphics().beginPath();
+				// d.graphics().moveTo(pA.x + off,pA.y);
+				// d.graphics().lineTo(pA.x + off + ll.x,pA.y + ll.y);
+				// d.graphics().endPath();
+				// d.graphics().fill();
+				// d.graphics().strokeLine();
+				// linesDO.addChild( d );
 			}
 		}
 		// display final points
@@ -113,8 +126,14 @@ Fun.prototype.displayData = function(){
 		// ...
 		accWid += wid;
 	}
-
+this._root.addChild(linesDO);
 link.calculateRectificationTables();
+
+
+d = R3D.drawPointAt(link.epipoleAImage().x,link.epipoleAImage().y, 0xFF,0x00,0x00);
+//d = R3D.drawPointAt(link.epipoleBImage().x,link.epipoleBImage().y, 0xFF,0x00,0x00);
+this._root.addChild(d);
+
 
 var i, d, r;
 	// A
@@ -122,17 +141,13 @@ var i, d, r;
 	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(0,0);
-	this._root.addChild(d);
+//	this._root.addChild(d);
 	// B
 	r = link.rectificationA();
 	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(600,0);
-	this._root.addChild(d);
-
-
-console.log("ACTUALLY.. this needs to be changed to search between two haystacks");
-
+//	this._root.addChild(d);
 	
 for(i=0;i<inputPoints.length;++i){
 	r = link.rectificationB();
@@ -183,32 +198,156 @@ for(i=0;i<inputPoints.length;++i){
 
 // SEARCH ALONG EACH LINE TO FIND BEST MATCH - CORRELATION / SSD
 
-var windowSize = 11;
-var rect, source, needle, haystack, row;
+
+var windowSize = 25;
+var searchSize = 55;
+var rect, from, source, sourceTwo, needle, haystack, row, angle;
+var epipoleTo, epipoleFrom;
 var img, di;
 for(i=0;i<inputPoints.length;++i){
+	from = link.rectificationA();
 	rect = link.rectificationB();
+	epipoleFrom = link.epipoleAImage();
+	epipoleTo = link.epipoleBImage();
 	source = link.A().source();
+	sourceTwo = link.B().source();
 	for(j=0;j<inputPoints[i].length;++j){
 		point = inputPoints[i][j];
+		point = new V2D(point.x*source.width(),point.y*source.height());
 		// needle
 // orientation is ambiguous
 // needle needs to come from rectified image?
-		needle = source.getSubImage(point.x*source.width(),point.y*source.height(), windowSize,windowSize);
+		needle = source.getSubImage(point.x,point.y, windowSize,windowSize);
 		img = this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), needle.width(),needle.height());
 		di = new DOImage(img);
 		di.matrix().translate(j*windowSize,i*windowSize);
-		di.matrix().scale(3.0);
+		di.matrix().scale(1.0);
 		this._root.addChild(di);
+		// needle in rectified
+		var toPoint = V2D.diff(point,epipoleFrom);
+		radius = V2D.distance(point,epipoleFrom);
+		angle = V2D.angleDirection(toPoint,V2D.DIRX);
+		row = Link3DR.rectificationAngleIndex(from,angle);
+		needle = from.image.getSubImage( radius - from.radiusMin,row, windowSize,windowSize);
+		img = this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), needle.width(),needle.height());
+		di = new DOImage(img);
+		di.matrix().translate(j*windowSize,(i+1)*windowSize);
+		di.matrix().scale(1.0);
+		this._root.addChild(di);
+		
+
+		// NEEDLE 2
+		var needleInfo = link.getImagePointEpipoleFromA(point, windowSize*1,windowSize*1);
+		needle = needleInfo.image;
+		img = this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), needle.width(),needle.height());
+		di = new DOImage(img);
+		di.matrix().translate(j*windowSize,(i+1)*windowSize);
+		di.matrix().scale(1.0);
+		di.matrix().translate(0,30);
+		this._root.addChild(di);
+
+// dot
+d = R3D.drawPointAt(600+radius-from.radiusMin,row, 0xFF,0x00,0x00);
+this._root.addChild( d );
+
+
 		// haystack
+		point = inputPoints[i][j];
+		// A
 			searchInfo = link.searchThetaRadiusInBFromPointInA(point);
 			row = Link3DR.rectificationAngleIndex(rect,searchInfo.angle);
-		haystack = rect.image.getSubImage( (searchInfo.radiusMin+searchInfo.radiusMax)*0.5 - rect.radiusMin,row,Math.floor(searchInfo.radiusMax-searchInfo.radiusMin+1),windowSize);
+		var hayWid = Math.floor(searchInfo.radiusMax-searchInfo.radiusMin+1);
+		haystack = rect.image.getSubImage( (searchInfo.radiusMin+searchInfo.radiusMax)*0.5 - rect.radiusMin,row,hayWid,searchSize);
 		img = this._stage.getFloatRGBAsImage(haystack.red(),haystack.grn(),haystack.blu(), haystack.width(),haystack.height());
 		di = new DOImage(img);
-		di.matrix().translate(0*windowSize,j*windowSize + 50);
-		di.matrix().scale(3.0);
+		di.matrix().translate(0*windowSize,(j*searchSize + 20)*2.0 + 50 );
+		di.matrix().scale(1.0);
+		di.matrix().translate(600,0);
 		this._root.addChild(di);
+		// B
+		//return {image:newImage, TL:new V2D(aX,aY), TR:new V2D(aX,aY), BR:new V2D(aX,aY), BL:new V2D(aX,aY), intersectionA:intA, intersectionB:intB, width:winWid, height:winHei};
+		var haystackInfo = link.getImageLineBWithPointA(point, searchSize);
+		haystack = haystackInfo.image;
+		hayWid = haystack.width();
+		img = this._stage.getFloatRGBAsImage(haystack.red(),haystack.grn(),haystack.blu(), haystack.width(),haystack.height());
+		di = new DOImage(img);
+		di.matrix().translate(0*windowSize,(j*searchSize + 20)*2.0 + 50);
+		di.matrix().scale(1.0);
+		this._root.addChild(di);
+
+
+// RESULTS
+var grayNeedle = ImageMat.grayFromFloats( needle.red(),needle.grn(),needle.blu() );
+var grayHaystack = ImageMat.grayFromFloats( haystack.red(),haystack.grn(),haystack.blu() );
+// NORMALIZE FOR COMPARRISON
+grayNeedle = ImageMat.normalFloat01(grayNeedle);
+grayHaystack = ImageMat.normalFloat01(grayHaystack);
+// ...
+//var ssd = ImageMat.convolve(grayHaystack,hayWid,searchSize, grayNeedle,windowSize,windowSize);
+//var ssd = ImageMat.ssd(grayHaystack,hayWid,searchSize, grayNeedle,windowSize,windowSize);
+var ssd = ImageMat.ssdInner(grayHaystack,hayWid,searchSize, grayNeedle,windowSize,windowSize);
+	var ssdWid = hayWid-windowSize+1;
+	var ssdHei = searchSize-windowSize+1;
+ssd = ImageMat.normalFloat01(ssd);
+ssd = ImageMat.invertFloat01(ssd); // low is good
+var fxn = function(d){
+	return Math.pow(Math.pow(d,10),1.5);
+}
+ssd = ImageMat.normalFloat01(ssd);
+ImageMat.applyFxnFloat(ssd,fxn);
+// RGB
+	// var ssdR, ssdG, ssdB;
+	// ssdR = ImageMat.ssd(haystack.red(),hayWid,searchSize, needle.red(),windowSize,windowSize);
+	// ssdG = ImageMat.ssd(haystack.grn(),hayWid,searchSize, needle.grn(),windowSize,windowSize);
+	// ssdB = ImageMat.ssd(haystack.blu(),hayWid,searchSize, needle.blu(),windowSize,windowSize);
+	// ssd = ImageMat.normalFloat01(ssdR,ssdG);
+	// ssd = ImageMat.normalFloat01(ssdB,ssd);
+	// 	ssd = ImageMat.normalFloat01(ssd);
+	// 	ssd = ImageMat.invertFloat01(ssd); // low is good
+	// 	ssd = ImageMat.normalFloat01(ssd);
+	// 	ImageMat.applyFxnFloat(ssd,fxn);
+// show
+//img = this._stage.getFloatRGBAsImage(ssd,ssd,ssd, hayWid,searchSize);
+img = this._stage.getFloatRGBAsImage(ssd,ssd,ssd, ssdWid,ssdHei);
+di = new DOImage(img);
+di.matrix().translate(0*windowSize, (j*searchSize + 47.5)*2.0  + 50);
+di.matrix().scale(1.0,1.0);
+this._root.addChild(di);
+
+// result .......................................................
+// calculate peaks
+var extrema = Code.findExtrema2DFloat(ssd, ssdWid,ssdHei);
+var sortPeaksFxn = function(a,b){
+	return b.z-a.z;
+}
+extrema.sort(sortPeaksFxn);
+// get coords of highest peak in image
+var peak = extrema[0];
+//console.log(peak.toString())
+	peak.x += Math.floor(windowSize/2); // shift right
+	peak.y += Math.floor(windowSize/2); // shift down
+
+// translate haystack coords to original image coords
+var originalPoint = new V2D();
+var t;
+t = peak.x/haystack.width();
+// parallel
+originalPoint.x = Code.linear1D( t, haystackInfo.intersectionA.x,haystackInfo.intersectionB.x);
+originalPoint.y = Code.linear1D( t, haystackInfo.intersectionA.y,haystackInfo.intersectionB.y);
+// tangental
+var dir = V2D.diff(haystackInfo.TL,haystackInfo.BL);
+dir.setLength( peak.x - haystack.height()*0.5 ); // distance from middle
+originalPoint.add(dir);
+// extract original image point
+var sca = 1.0;
+needle = sourceTwo.getSubImage(originalPoint.x,originalPoint.y, windowSize*sca,windowSize*sca);
+img = this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), needle.width(),needle.height());
+di = new DOImage(img);
+di.matrix().translate(j*windowSize*sca,i*windowSize*sca);
+di.matrix().scale(sca);
+this._root.addChild(di);
+di.matrix().translate(900,0);
+
 	}
 	break;
 }
