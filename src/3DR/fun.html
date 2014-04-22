@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["R3D.js","View3DR.js","Link3DR.js","Scene3DR.js","Fun.js"],this,funLoadedFxn)).load();
+	(new ScriptLoader("./",["PointMatch.js","LineOrder.js","DualOrder.js","R3D.js","View3DR.js","Link3DR.js","Scene3DR.js","Fun.js"],this,funLoadedFxn)).load();
 }
 function funLoadedFxn(){
 /*
@@ -35,6 +35,8 @@ function funLoadedFxn(){
 	console.log( Matrix.fromSVD(svd.U,svd.S,svd.V).toString() );
 return;*/
 	var fun = new Fun();
+
+
 }
 </script>
 <body onload="pageLoadedFxn();">

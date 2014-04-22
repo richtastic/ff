@@ -274,6 +274,71 @@ Link3DR.prototype.rectificationB = function(){
 	return this._lookupTableB;
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
+Link3DR.prototype.calculateDisparity = function(){ // dense point matching (correspondence)
+	// 
+	// disparity: vector distance from expected location of a point (via reference origin)
+	// 
+	// each pair of CALCULATED lines:
+		// find major edge points in A -> ssd match in B
+		// find major edge points in B -> ssd match in A
+			// RESULT: line-anchor-ordering-match
+				// using this ordering-pinned-constraint, find best 
+/*
+system
+structure
+alignment
+layout
+line-order
+arrangement, sequence
+graph
+
+positioning
+
+point-line
+
+matching
+*/
+	var matcher;
+	// GET EVERYTHING IN IMAGE-COORDINATES
+	var pointListA = this._A.resolvedPoints();
+	var pointListB = this._B.resolvedPoints();
+	var i, j;
+	for(i=0;i<pointListA.length;++i){
+		// 
+		// pointA = pointListA[i];
+		// lineB = F-to-line
+		// pointB = search line for matching point
+		// lineA = Finv to line
+		// //
+		// search along each line for good point matches
+		// // 
+		// match all other points along opposite line
+		matcher = new DualOrder();
+		// construct restriction-model
+		// // 
+		// fill in point gaps
+		// //for(j=0;j<pointListB.length;++j){
+		// 	//
+		// //}
+	}
+	// 
+	// search in-between (NON-CALCULATED) lines?
+		// move away from known line 'pixel' at a time up to median line (or edge/end)
+	// 
+	// 
+	// local disparity assumes beginning of line (A) is zero of axis
+	// global disparity assumes some radius R from epipole is zero of axis ? (or THE EPIPOLE if inside picture?)
+	// 
+
+	// OUTPUT: mapping between each pixel in each image, (with disparity ?)
+	// 		LIST: []
+	//			i: 
+	//				imageA: x,y
+	//				imageB: x,y
+	// 				disparity: value (distance from A-B)
+}
+// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------ 
 Link3DR.prototype.x = function(){
 	//
 }

@@ -2,7 +2,7 @@
 FF.FILENAMES = ["numeric-1.2.6.js", "Code.js","Err.js","YAML.js","FileLoader.js","ScriptLoader.js","ImageLoader.js","AudioLoader.js","MultiLoader.js","ByteData.js","SerialString.js",
 				"V2D.js","V3D.js","V4D.js","V5D.js","Matrix.js","Matrix2D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatchable.js","Ajax.js","ImageMat.js",
 				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","glMatrix-0.9.5.min.js","MatrixStackGL.js","StageGL.js","Minify.js",
-				"Resource.js","Keyboard.js","Rect.js","Tree.js","Node.js"];
+				"Resource.js","Keyboard.js","Rect.js","Tree.js","Node.js","Link.js","LinkedList.js"];
 FF.LOCATION = "";
 /* this is a match */
 // no dependencies (loads ScriptLoader on own)

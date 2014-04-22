@@ -356,7 +356,8 @@ di.matrix().translate(900,0);
 
 
 
-
+var dense = link.calculateDisparity();
+console.log(dense);
 
 
 
