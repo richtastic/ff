@@ -246,6 +246,8 @@ for(i=0;i<inputPoints.length;++i){
 		di.matrix().translate(0,30);
 		this._root.addChild(di);
 
+// HERE
+
 // dot
 d = R3D.drawPointAt(600+radius-from.radiusMin,row, 0xFF,0x00,0x00);
 this._root.addChild( d );

@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Choppin 4 Sum Fotos</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Photo.js"],this,photoLoadedFxn)).load();
+}
+function photoLoadedFxn(){
+	var photo = new Photo();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

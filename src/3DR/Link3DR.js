@@ -82,7 +82,7 @@ Link3DR.prototype.searchLineInAFromPointInB = function(point){
 Link3DR.searchLineFromPoint = function(F, point){
 // should handle epipole-in-image half lines ...
 	var line, l1, l2, intA, intB, list = [];
-	line = F.multV3DtoV3D(new V3D(), point);
+	line = F.multV3DtoV3D(new V3D(), point); // if .z==undefined || null || 0 ... assume 2D multiplication
 	if(line.x==0.0 && line.y==0.0){
 		return null;
 	}
@@ -153,8 +153,20 @@ Link3DR.prototype.rectify = function(){
 	// this._rectificationB = this._B.getRectification(epipoleB);
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
+Link3DR.prototype.getImageLineAWithPointBImageCoords = function(point, winHei){ 
+	var normPoint = new V3D().copy(point);
+	normPoint.x /= this._B.source().width();
+	normPoint.y /= this._B.source().height();
+	return this.getImageLineAWithPointB(normPoint,winHei);
+}
 Link3DR.prototype.getImageLineAWithPointB = function(point, winHei){ 
 	return Link3DR.getImageLineWithPoint(this._F_BtoA,this._epipoleA,point,this._A.source(), winHei);
+}
+Link3DR.prototype.getImageLineBWithPointAImageCoords = function(point, winHei){ 
+	var normPoint = new V3D().copy(point);
+	normPoint.x /= this._A.source().width();
+	normPoint.y /= this._A.source().height();
+	return this.getImageLineBWithPointA(normPoint,winHei);
 }
 Link3DR.prototype.getImageLineBWithPointA = function(point, winHei){ 
 	return Link3DR.getImageLineWithPoint(this._F_AtoB,this._epipoleB,point,this._B.source(), winHei);
@@ -299,16 +311,35 @@ point-line
 matching
 */
 	var matcher;
+	var i, j, point, pointA, pointB, info, needle, haystack, intA1, intA2, intB1, intB2, windowSize = 25, searchSize = 35;
 	// GET EVERYTHING IN IMAGE-COORDINATES
-	var pointListA = this._A.resolvedPoints();
-	var pointListB = this._B.resolvedPoints();
-	var i, j;
+	var pointListA = this._A.resolvedPointsImageCoords();
+	var pointListB = this._B.resolvedPointsImageCoords();
+	var epipoleA = this.epipoleAImage();
+	var epipoleB = this.epipoleBImage();
+	var sourceA = this.A().source();
+	var sourceB = this.B().source();
 	for(i=0;i<pointListA.length;++i){
-		// 
-		// pointA = pointListA[i];
-		// lineB = F-to-line
-		// pointB = search line for matching point
-		// lineA = Finv to line
+		pointA = pointListA[i];
+		// needle - A
+		info = this.getImagePointEpipoleFromA(pointA, windowSize,windowSize);
+		needle = info.image;
+		// haystack - B
+		info = this.getImageLineBWithPointAImageCoords(pointA, searchSize);
+		intB1 = info.intersectionA;
+		intB2 = info.intersectionB;
+		//console.log(intB1.toString()+"   "+intB2.toString())
+		haystack = info.image;
+		// point - B
+		point = Link3DR.bestMatchNeedleHaystack(needle,haystack);
+		pointB = Link3DR.fromHayStackToImage(point,haystack, intB1,intB2, info.TL,info.TR,info.BR,info.BL);
+		pointB = new V3D(pointB.x,pointB.y,1.0);
+		// line - A
+		info = this.getImageLineAWithPointBImageCoords(pointB, searchSize);
+		intA1 = info.intersectionA;
+		intA2 = info.intersectionB;
+		//console.log(intA1.toString()+"   "+intA2.toString())
+		//console.log(" ... ");
 		// //
 		// search along each line for good point matches
 		// // 
@@ -336,6 +367,53 @@ matching
 	//				imageA: x,y
 	//				imageB: x,y
 	// 				disparity: value (distance from A-B)
+	return null;
+}
+Link3DR.bestMatchNeedleHaystack = function(needle,haystack){
+	var grayNeedle = ImageMat.grayFromFloats( needle.red(),needle.grn(),needle.blu() );
+	var grayHaystack = ImageMat.grayFromFloats( haystack.red(),haystack.grn(),haystack.blu() );
+	// normalize for comparrison
+	// GRAY
+	grayNeedle = ImageMat.normalFloat01(grayNeedle);
+	grayHaystack = ImageMat.normalFloat01(grayHaystack);
+	var ssd = ImageMat.ssdInner(grayHaystack,haystack.width(),haystack.height(), grayNeedle,needle.width(),needle.height());
+	var ssdWid = haystack.width()-needle.width()+1;
+	var ssdHei = haystack.height()-needle.height()+1;
+	ssd = ImageMat.normalFloat01(ssd);
+	ssd = ImageMat.invertFloat01(ssd); // low is good
+	ssd = ImageMat.normalFloat01(ssd);
+	// RGB
+	// var ssdR, ssdG, ssdB;
+	// ssdR = ImageMat.ssd(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
+	// ssdG = ImageMat.ssd(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
+	// ssdB = ImageMat.ssd(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
+	// ssd = ImageMat.normalFloat01(ssdR,ssdG);
+	// ssd = ImageMat.normalFloat01(ssdB,ssd);
+	// 	ssd = ImageMat.normalFloat01(ssd);
+	// 	ssd = ImageMat.invertFloat01(ssd); // low is good
+	// 	ssd = ImageMat.normalFloat01(ssd);
+	// calculate peaks
+	var extrema = Code.findExtrema2DFloat(ssd, ssdWid,ssdHei);
+	var sortPeaksFxn = function(a,b){ return b.z-a.z; }
+	extrema.sort(sortPeaksFxn);
+	// get coords of highest peak in image
+	console.log("EXTREMUM: "+extrema[0].z+" > "+extrema[1].z);
+	var peak = extrema[0];
+	peak.x += Math.floor(needle.width()*0.5); // shift right
+	peak.y += Math.floor(needle.height()*0.5); // shift down
+	return peak;
+}
+Link3DR.fromHayStackToImage = function(point,haystack, intA,intB, TL,TR,BR,BL){ // translate haystack coords to original image coords
+	var originalPoint = new V2D();
+	var t = point.x/haystack.width();
+	// parallel
+	originalPoint.x = Code.linear1D( t, intA.x,intB.x);
+	originalPoint.y = Code.linear1D( t, intA.y,intB.y);
+	// tangental
+	var dir = V2D.diff(TL,BL);
+	dir.setLength( point.x - haystack.height()*0.5 ); // distance from middle-line
+	originalPoint.add(dir);
+	return originalPoint;
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 // ------------------------------------------------------------------------------------------------------------------------ 
