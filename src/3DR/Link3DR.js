@@ -310,8 +310,19 @@ point-line
 
 matching
 */
+
+// start with smaller image (with stricter ssd?)
+// zoomed-in searching is restricted to smaller area
+// use different window sizes? (when cannot find a match / )
+// look at discarding non-texture (flat) search needles
+
+var imagesA = [], imagesB = [], linesA = [], linesB = [], matches = [], subs,match;
 	var matcher;
-	var i, j, point, pointA, pointB, info, needle, haystack, intA1, intA2, intB1, intB2, windowSize = 25, searchSize = 35;
+	var i, j, point, pointA, pointB, info, needle, haystack, haystackA, haystackB, infoA, infoB, intA1, intA2, intB1, intB2, windowSize = 25, searchSize = 35;
+	var hayWid, hayHei, hayHei2, hayHeiMin, hayHeiMax, winSize2 = Math.floor(windowSize*0.5);
+var maxSSD = searchSize*0.666;// *0.707; // maximum discrpency per pixel
+// between 0.5 && 0.707
+//maxSSD = Math.pow(maxSSD,3);
 	// GET EVERYTHING IN IMAGE-COORDINATES
 	var pointListA = this._A.resolvedPointsImageCoords();
 	var pointListB = this._B.resolvedPointsImageCoords();
@@ -324,27 +335,59 @@ matching
 		// needle - A
 		info = this.getImagePointEpipoleFromA(pointA, windowSize,windowSize);
 		needle = info.image;
+imagesA.push(needle.to3Array());
 		// haystack - B
 		info = this.getImageLineBWithPointAImageCoords(pointA, searchSize);
 		intB1 = info.intersectionA;
 		intB2 = info.intersectionB;
-		//console.log(intB1.toString()+"   "+intB2.toString())
+linesB.push(info.image.to3Array());
 		haystack = info.image;
+		haystackB = info.image;
+		infoB = info;
 		// point - B
 		point = Link3DR.bestMatchNeedleHaystack(needle,haystack);
 		pointB = Link3DR.fromHayStackToImage(point,haystack, intB1,intB2, info.TL,info.TR,info.BR,info.BL);
 		pointB = new V3D(pointB.x,pointB.y,1.0);
+imagesB.push(needle.to3Array());
 		// line - A
 		info = this.getImageLineAWithPointBImageCoords(pointB, searchSize);
 		intA1 = info.intersectionA;
 		intA2 = info.intersectionB;
-		//console.log(intA1.toString()+"   "+intA2.toString())
-		//console.log(" ... ");
+		haystackA = info.image;
+		infoA = info;
+linesA.push(info.image.to3Array());
+subs = [];
+matches.push(subs);
+		// for each point in A - find match in B
+		hayWid = haystackA.width();
+		hayHei = haystackA.height();
+		hayHei2 = Math.floor(hayHei*0.5);
+		hayHeiMin = hayHei2 - winSize2;
+		hayHeiMax = hayHei2 + winSize2;
+		for(j=winSize2;j<hayWid-winSize2;j+=10){
+			needle = haystackA.getSubImageIndex(j-winSize2,j+winSize2, hayHeiMin,hayHeiMax);
+			//console.log(needle)
+			point = Link3DR.bestMatchNeedleHaystack(needle,haystackB);
+			//console.log(point.z);
+			//point = Link3DR.fromHayStackToImage(point,haystackB, intB1,intB2, infoB.TL,infoB.TR,infoB.BR,info.BL);
+			var n = haystackB.getSubImage(point.x,point.y, windowSize,windowSize);
+			if(point.z > maxSSD ){ // ssd limits
+				Code.setArrayConstant( n.red(), 1.0 );
+				subs.push([needle.to3Array(),n.to3Array()]); // show as bad match
+				//subs.push([needle.to3Array(),null]);
+			}else{
+				subs.push([needle.to3Array(),n.to3Array()]);
+			}
+			// DISPARITY?
+			// ?
+			// ?
+		}
+		//console.log("   ");
 		// //
 		// search along each line for good point matches
 		// // 
 		// match all other points along opposite line
-		matcher = new DualOrder();
+		//matcher = new DualOrder();
 		// construct restriction-model
 		// // 
 		// fill in point gaps
@@ -367,41 +410,46 @@ matching
 	//				imageA: x,y
 	//				imageB: x,y
 	// 				disparity: value (distance from A-B)
-	return null;
+	return {imagesA:imagesA, imagesB:imagesB, linesA:linesA, linesB:linesB, matches:matches};
 }
 Link3DR.bestMatchNeedleHaystack = function(needle,haystack){
 	var grayNeedle = ImageMat.grayFromFloats( needle.red(),needle.grn(),needle.blu() );
 	var grayHaystack = ImageMat.grayFromFloats( haystack.red(),haystack.grn(),haystack.blu() );
 	// normalize for comparrison
 	// GRAY
-	grayNeedle = ImageMat.normalFloat01(grayNeedle);
-	grayHaystack = ImageMat.normalFloat01(grayHaystack);
+grayNeedle = ImageMat.normalFloat01(grayNeedle);
+grayHaystack = ImageMat.normalFloat01(grayHaystack);
 	var ssd = ImageMat.ssdInner(grayHaystack,haystack.width(),haystack.height(), grayNeedle,needle.width(),needle.height());
+	// RGB
+// var ssdR, ssdG, ssdB;
+// var nedR = ImageMat.getNormalFloat01(needle.red());
+// var nedG = ImageMat.getNormalFloat01(needle.grn());
+// var nedB = ImageMat.getNormalFloat01(needle.blu());
+// var hayR = ImageMat.getNormalFloat01(haystack.red());
+// var hayG = ImageMat.getNormalFloat01(haystack.grn());
+// var hayB = ImageMat.getNormalFloat01(haystack.blu());
+// ssdR = ImageMat.ssdInner(hayR,haystack.width(),haystack.height(), nedR,needle.width(),needle.height());
+// ssdG = ImageMat.ssdInner(hayG,haystack.width(),haystack.height(), nedG,needle.width(),needle.height());
+// ssdB = ImageMat.ssdInner(hayB,haystack.width(),haystack.height(), nedB,needle.width(),needle.height());
+// ssd = ImageMat.mulFloat(ssdR,ssdG);
+// ssd = ImageMat.mulFloat(ssdB,ssd);
+// ssd = ImageMat.absFloat(ssd);
+	// 
 	var ssdWid = haystack.width()-needle.width()+1;
 	var ssdHei = haystack.height()-needle.height()+1;
-	ssd = ImageMat.normalFloat01(ssd);
-	ssd = ImageMat.invertFloat01(ssd); // low is good
-	ssd = ImageMat.normalFloat01(ssd);
-	// RGB
-	// var ssdR, ssdG, ssdB;
-	// ssdR = ImageMat.ssd(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
-	// ssdG = ImageMat.ssd(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
-	// ssdB = ImageMat.ssd(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
-	// ssd = ImageMat.normalFloat01(ssdR,ssdG);
-	// ssd = ImageMat.normalFloat01(ssdB,ssd);
-	// 	ssd = ImageMat.normalFloat01(ssd);
-	// 	ssd = ImageMat.invertFloat01(ssd); // low is good
-	// 	ssd = ImageMat.normalFloat01(ssd);
 	// calculate peaks
 	var extrema = Code.findExtrema2DFloat(ssd, ssdWid,ssdHei);
-	var sortPeaksFxn = function(a,b){ return b.z-a.z; }
+	var sortPeaksFxn = function(a,b){ return a.z-b.z; }
 	extrema.sort(sortPeaksFxn);
 	// get coords of highest peak in image
-	console.log("EXTREMUM: "+extrema[0].z+" > "+extrema[1].z);
-	var peak = extrema[0];
-	peak.x += Math.floor(needle.width()*0.5); // shift right
-	peak.y += Math.floor(needle.height()*0.5); // shift down
-	return peak;
+	if(extrema.length>0){
+		console.log(extrema[0].z+"    <    "+extrema[1].z);
+		var peak = extrema[0];
+		peak.x += Math.floor(needle.width()*0.5); // shift right
+		peak.y += Math.floor(needle.height()*0.5); // shift down
+		return peak;
+	}
+	return null;
 }
 Link3DR.fromHayStackToImage = function(point,haystack, intA,intB, TL,TR,BR,BL){ // translate haystack coords to original image coords
 	var originalPoint = new V2D();

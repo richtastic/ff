@@ -229,6 +229,12 @@ Code.newArrayZeros = function(len){
 	}
 	return arr;
 }
+Code.setArrayConstant = function(arr,c){
+	for(var i=arr.length;i--;){
+		arr[i] = c;
+	}
+	return arr;
+}
 Code.copyArray = function(a,b){ // a = b
 	if(a==b){return;}
 	if(b===undefined){ b=a; a=new Array(); }

@@ -205,7 +205,7 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 		if(increasing){
 			angles[i] += add;
 			if(angles[i]<angles[i-1]){
-				console.log("discontinuity: "+(i-1)+" -> "+i+" ["+angles[i-1]+" | "+angles[i]+"]");
+				//console.log("discontinuity: "+(i-1)+" -> "+i+" ["+angles[i-1]+" | "+angles[i]+"]");
 				add += Math.TAU;
 				angles[i] += add;
 			}
@@ -213,7 +213,7 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 		}else{
 			angles[i] += add;
 			if(angles[i]>angles[i-1]){
-				console.log("discontinuity: "+(i-1)+" -> "+i+" ["+angles[i-1]+" | "+angles[i]+"]");
+				//console.log("discontinuity: "+(i-1)+" -> "+i+" ["+angles[i-1]+" | "+angles[i]+"]");
 				add -= Math.TAU;
 				angles[i] += add;
 			}
@@ -407,7 +407,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		V2D.diff(ray, mid,epipole);
 		len = Math.floor(ray.length());
 		ray.norm();
-		angleTable.push(V2D.angleDirection(ray,V2D.DIRX)); // THE LAST ELEMENT SEEMS TO ALWAYS HAVE A MONOTOMIC DISCONTINUITY - IS THIS INTERSECTION RELATED?
+		angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
 		// for each line - radius
 		for(i = Math.floor(len), point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i>=0; --i){ // this has problems everywhere
 		//for(i=0, point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i<=len; ++i){ // this has problems everywhere
@@ -442,6 +442,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			break;
 		}
 	}
+	angleTable.pop(); // one extra ...
 	thetaCount = j; // actual resulting length
 	len = thetaCount*radiusCount;
 	rectifiedR = rectifiedR.slice(0,len);

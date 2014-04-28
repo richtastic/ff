@@ -126,6 +126,9 @@ Fun.prototype.displayData = function(){
 		// ...
 		accWid += wid;
 	}
+
+/*
+
 this._root.addChild(linesDO);
 link.calculateRectificationTables();
 
@@ -141,13 +144,13 @@ var i, d, r;
 	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(0,0);
-//	this._root.addChild(d);
+	this._root.addChild(d);
 	// B
 	r = link.rectificationA();
 	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(600,0);
-//	this._root.addChild(d);
+	this._root.addChild(d);
 	
 for(i=0;i<inputPoints.length;++i){
 	r = link.rectificationB();
@@ -196,9 +199,6 @@ for(i=0;i<inputPoints.length;++i){
 	}
 }
 
-// SEARCH ALONG EACH LINE TO FIND BEST MATCH - CORRELATION / SSD
-
-
 var windowSize = 25;
 var searchSize = 55;
 var rect, from, source, sourceTwo, needle, haystack, row, angle;
@@ -245,8 +245,6 @@ for(i=0;i<inputPoints.length;++i){
 		di.matrix().scale(1.0);
 		di.matrix().translate(0,30);
 		this._root.addChild(di);
-
-// HERE
 
 // dot
 d = R3D.drawPointAt(600+radius-from.radiusMin,row, 0xFF,0x00,0x00);
@@ -353,24 +351,74 @@ di.matrix().translate(900,0);
 	}
 	break;
 }
-// r.image.red(),r.image.grn(),r.image.blu()
+*/
 
 
+d = new DO();
+d.graphics().setLine(2.0, colLine );
+d.graphics().beginPath();
+d.graphics().setFill(0x99FFFFFF);
+//d.graphics().moveTo(0,0);
+d.graphics().drawRect(0,0, 1000,800);
+d.graphics().endPath();
+d.graphics().fill();
+d.graphics().strokeLine();
+this._root.addChild(d);
 
 
 var dense = link.calculateDisparity();
 console.log(dense);
+// show process results:
+var iii, spacingV = 90;
+for(i=0;i<dense.imagesA.length;++i){
+	// A
+	img = this._stage.getFloatRGBAsImage(dense.imagesA[i][0],dense.imagesA[i][1],dense.imagesA[i][2], dense.imagesA[i][3],dense.imagesA[i][4]);
+	di = new DOImage(img);
+	di.matrix().translate(0,i*spacingV);
+	this._root.addChild(di);
+	// B
+	img = this._stage.getFloatRGBAsImage(dense.imagesB[i][0],dense.imagesB[i][1],dense.imagesB[i][2], dense.imagesB[i][3],dense.imagesB[i][4]);
+	di = new DOImage(img);
+	di.matrix().translate(50,i*spacingV);
+	this._root.addChild(di);
+	// A line
+	img = this._stage.getFloatRGBAsImage(dense.linesA[i][0],dense.linesA[i][1],dense.linesA[i][2], dense.linesA[i][3],dense.linesA[i][4]);
+	di = new DOImage(img);
+	di.matrix().translate(0,i*spacingV + 50);
+	this._root.addChild(di);
+	// B line
+	img = this._stage.getFloatRGBAsImage(dense.linesB[i][0],dense.linesB[i][1],dense.linesB[i][2], dense.linesB[i][3],dense.linesB[i][4]);
+	di = new DOImage(img);
+	di.matrix().translate(  dense.linesA[i][3]  ,i*spacingV + 50);
+	this._root.addChild(di);
+	// sub-matches:
+	//console.log(dense.matches[i].length)
+	for(j=0;j<dense.matches[i].length;++j){
+		if(dense.matches[i][j][0]){
+			// A
+			iii = dense.matches[i][j][0];
+			img = this._stage.getFloatRGBAsImage(iii[0],iii[1],iii[2], iii[3],iii[4]);
+			di = new DOImage(img);
+			di.matrix().translate( 100 + j*25,i*spacingV);
+			this._root.addChild(di);
+			// B
+			iii = dense.matches[i][j][1];
+			if(iii){ // could be bad match
+				img = this._stage.getFloatRGBAsImage(iii[0],iii[1],iii[2], iii[3],iii[4]);
+				di = new DOImage(img);
+				di.matrix().translate( 100 + j*25,i*spacingV+25);
+				this._root.addChild(di);
+			}
+		}
+	}
+}
 
 
 
 
 
 
-// NO DISTORTION:
-// convolution angle-to-line on demand: 
-// input: point
-// grab strip from closest to furthest intersection, separated by n pixels
-// memoization?
+
 
 
 

@@ -26,13 +26,16 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 		this._g = new Array(wid*hei);
 		this._b = new Array(wid*hei);
 		if(r!=undefined){
-			if(g!=undefined && b!=undefined){
+			if(g!==undefined && b!==undefined){
 				this.setFromFloats(r,g,b);
 			}else{
 				this.setFromFloats(r,r,r);
 			}
 		}
 	}
+}
+ImageMat.prototype.to3Array = function(){
+	return [this._r,this._g,this._b, this._width,this._height];
 }
 ImageMat.prototype.unset = function(){
 	this._width = undefined;
@@ -204,10 +207,10 @@ ImageMat.prototype.getSubImageIndex = function(colSta,colEnd, rowSta,rowEnd){
 	var r = new Array(len), g = new Array(len), b = new Array(len);
 	for(index=0, j=rowSta;j<=rowEnd;++j){
 		for(i=colSta;i<=colEnd;++i,++index){
-			ind = j*this._wid + i;
-			r[index] = this._red[ind];
-			g[index] = this._grn[ind];
-			b[index] = this._blu[ind];
+			ind = j*this._width + i;
+			r[index] = this._r[ind];
+			g[index] = this._g[ind];
+			b[index] = this._b[ind];
 		}
 	}
 	var image = new ImageMat(wid,hei);
@@ -1173,6 +1176,19 @@ ImageMat.normalFloat01 = function(data){
 	var range = max - min;
 	for(i=0;i<len;++i){
 		data[i] = (data[i]-min)/range;
+	}
+	return data;
+}
+ImageMat.normalFloatAboutZero = function(data){
+	var i, len = data.length;
+	var max = data[0], min = data[0];
+	for(i=1;i<len;++i){
+		max = Math.max(max,data[i]);
+		min = Math.min(min,data[i]);
+	}
+	var range = max - min;
+	for(i=0;i<len;++i){
+		data[i] = (data[i]-min)/range - 0.5;
 	}
 	return data;
 }
