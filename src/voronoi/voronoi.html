@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>Voronoi | Delaunay</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){}
+function defaultClassesLoadedFxn(){
+	var list = ["Vertex.js","Edge.js","Graph.js","Voronoi.js","Delaunay.js","Vor.js"];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){}
+function customClassesLoadedFxn(){
+	var voronoi = new Vor();
+	// var kb = new Keyboard();
+	// kb.addFunction(Keyboard.EVENT_KEY_UP, ku);
+	// kb.addFunction(Keyboard.EVENT_KEY_DOWN, kd);
+	// kb.addFunction(Keyboard.EVENT_KEY_STILL_DOWN, ks);
+	// kb.addListeners();
+}
+// function ku(e){
+// 	console.log("key up "+e);
+// }
+// function kd(e){
+// 	console.log("key down "+e);
+// }
+// function ks(e){
+// 	console.log("key still down "+e);
+// }
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+</body>
+</html>
+
