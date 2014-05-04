@@ -133,7 +133,10 @@ Graphics.prototype.strokeRect = function(sX,sY,wX,hY){
 Graphics._mat = new Matrix2D();
 Graphics._u = new V2D();
 Graphics._v = new V2D();
-
+Graphics.prototype.drawCircle = function(x,y, r){
+	this._graphics.push( Code.newArray(Graphics.canvasMoveTo,Code.newArray(x+r,y)) );
+	this._graphics.push( Code.newArray(Graphics.arc,Code.newArray(x,y, r, 0,Math.PI*2.0, false)) );
+}
 Graphics.prototype.drawEllipse = function(x,y, w,h, ang){
 	w *= 0.5 * 0.99; h *= 0.6666666666666 * 0.99;
 	var staX = -w, staY = 0;

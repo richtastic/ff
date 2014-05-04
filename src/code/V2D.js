@@ -7,10 +7,14 @@ V2D.cross = function(a,b){ // z direction
 	return a.x*b.y-a.y*b.x;
 }
 V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
+	if(ang===undefined){
+		ang = a; a = b; b = new V2D();
+	}
 	var cos = Math.cos(ang), sin = Math.sin(ang);
 	var x = a.x*cos - a.y*sin;
 	b.y = a.x*sin + a.y*cos;
 	b.x = x;
+	return b;
 }
 V2D.diff = function(a,b,c){ // a-b
 	if(c!==undefined){
@@ -31,6 +35,22 @@ V2D.midpoint = function(a,b,c){
 		return a;
 	}
 	return new V2D((a.x+b.x)*0.5,(a.y+b.y)*0.5);
+}
+V2D.add = function(c,a,b){
+	if(b!==undefined){
+		c.x = a.x+b.x;
+		c.y = a.y+b.y;
+		return c;
+	}
+	return new V2D(c.x+a.x,c.y+a.y);
+}
+V2D.sub = function(c,a,b){
+	if(b!==undefined){
+		c.x = a.x-b.x;
+		c.y = a.y-b.y;
+		return c;
+	}
+	return new V2D(c.x-a.x,c.y-a.y);
 }
 // V2D.crossNorm = function(a,b){ // z direction
 // 	return (a.x*b.y-a.y*b.x)/(a.length()*b.length());

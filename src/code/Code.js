@@ -2,7 +2,7 @@
 // OVERRIDES:
 Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
-Math.PIO2 = Math.PI/2.0;
+Math.PIO2 = Math.PI*0.5;
 // 
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
 // http://www.quirksmode.org/dom/events/index.html
@@ -1604,6 +1604,13 @@ Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 	}
 	return new V4D( a.x+t2*baX, a.y+t2*baY, t2, t1 ); // new V4D( c.x+t1*dcX, c.y+t1*dcY, t1, t2 );
 }
+Code.rayIntersect2D = function(a,b, c,d){
+	var den = b.y*d.x - b.x*d.y;
+	if(den == 0){ return null; }
+	var num = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
+	var t = num/den;
+	return new V2D(a.x+t*b.x, a.y+t*b.y); // num = (b.x*(c.y-a.y) + b.y*(a.x-c.x)); return new V2D(c.x+t2*d.x, c.y+t2*d.y);
+}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 
@@ -1634,6 +1641,10 @@ Code.closestPoints3D = function(oa,da, ob,db){
 	return [A,B];
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
+	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.ssdWindow = function(needle,widN,heiN, haystack,widH,heiH){
 	return ImageMat.ssd(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight);

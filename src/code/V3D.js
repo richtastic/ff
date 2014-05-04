@@ -35,9 +35,26 @@ V3D.midpoint = function(a,b,c){
 		a.set((b.x+c.x)*0.5,(b.y+c.y)*0.5,(b.z+c.z)*0.5);
 		return a;
 	}
-	return new V2D((a.x+b.x)*0.5,(a.y+b.y)*0.5,(a.z+b.z)*0.5);
+	return new V3D((a.x+b.x)*0.5,(a.y+b.y)*0.5,(a.z+b.z)*0.5);
 }
-
+V3D.add = function(c,a,b){
+	if(b!==undefined){
+		c.x = a.x+b.x;
+		c.y = a.y+b.y;
+		c.z = a.z+b.z;
+		return c;
+	}
+	return new V3D(c.x+a.x,c.y+a.y);
+}
+V3D.sub = function(c,a,b){
+	if(b!==undefined){
+		c.x = a.x-b.x;
+		c.y = a.y-b.y;
+		c.z = a.z-b.z;
+		return c;
+	}
+	return new V3D(c.x-a.x,c.y-a.y,c.z-a.z);
+}
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
 	// if( Code.isa(xP,V3D) ){
