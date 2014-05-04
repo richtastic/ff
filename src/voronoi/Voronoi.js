@@ -97,6 +97,36 @@ Voronoi.BinTree = function(v){
 	this._parent = null;
 	this.value(v);
 }
+Voronoi.BinTree.prototype.addNode = function(n,fxn){
+	var amount = fxn(this.value(),n.value());
+	var ret = this;
+	if(amount<0){
+		if(this._left){
+			var oldLeft = this._left;
+			ret = this._left.addNode(n,fxn);
+			if(ret != oldLeft){
+				//console.log("L: "+(oldLeft?oldLeft.value():"<null>")+" -> "+(ret?ret.value():"<null>")+" : "+(this._left != oldLeft));
+				this._left = ret;
+			}
+		}else{
+			//console.log("ADDING-LEFT: "+n.value());
+			this._left = n;
+		}
+	}else{
+		if(this._right){
+			var oldRight = this._right;
+			ret = this._right.addNode(n,fxn);
+			if(ret != oldRight){
+				//console.log("R: "+(oldRight?oldRight.value():"<null>")+" -> "+(ret?ret.value():"<null>")+" : "+(this._right != oldRight));
+				this._right = ret;
+			}
+		}else{
+			//console.log("ADDING-RIGHT: "+n.value());
+			this._right = n;
+		}
+	}
+	return this.rebalance();
+}
 Voronoi.BinTree.prototype.leaf = function(){
 	return this._left==null && this._right==null;
 }
@@ -126,6 +156,76 @@ Voronoi.BinTree.prototype.parent = function(p){
 		this._parent = p;
 	}
 	return this._parent;
+}
+Voronoi.BinTree.prototype.height = function(){
+	var left = this._left? this._left.height() : 0;
+	var right = this._right? this._right.height() : 0;
+	return 1 + Math.max(left,right);
+}
+Voronoi.BinTree.prototype.balance = function(){
+	var left = this._left? this._left.height() : 0;
+	var right = this._right? this._right.height() : 0;
+	return right - left;
+}
+Voronoi.BinTree.prototype.leftRotation = function(){
+	//console.log("left rotation: ["+this._value+"]");
+	var a = this, b = this.right(), c = this.right().left();
+	//console.log(a?a.value():"--",b?b.value():"--",c?c.value():"--");
+	a.right(c);
+	b.left(a);
+	return b;
+}
+Voronoi.BinTree.prototype.doubleLeftRotation = function(){ // left-right
+	//console.log("left double: ["+this._value+"]");
+	var root = this.leftRotation();
+	return root.rightRotation();
+}
+Voronoi.BinTree.prototype.rightRotation = function(){
+	//console.log("right rotation: ["+this._value+"]");
+	var a = this, b = this.left(), c = this.left().right();
+	a.left(c);
+	b.right(a);
+	return b;
+}
+Voronoi.BinTree.prototype.doubleRightRotation = function(){ // right-left
+	//console.log("right double: ["+this._value+"]");
+	var root = this.rightRotation();
+	return root.leftRotation();
+}
+Voronoi.BinTree.prototype.rebalance = function(){
+	var bal = this.balance();
+	var root = this;
+	//console.log("balance ... ["+this._value+"] : "+bal);
+	if(bal>1){ // right heavy
+		if(this._right.balance()<-1){ // left heavy
+			root = this.doubleLeftRotation();
+		}else{
+			root = this.leftRotation();
+		}
+	}else if(bal<-1){ // left heavy
+		if(this._left.balance()<-1){ // right heavy
+			root = this.doubleRightRotation();
+		}else{
+			root = this.rightRotation();
+		}
+	}
+	return root;
+}
+Voronoi.BinTree.prototype._string = function(tab,addTab){
+	var nextTab = tab+addTab;
+	var strLeft = nextTab+".";
+	var strRight = nextTab+".";
+	var strThis = this.value()+"";
+	if(this._left){
+		strLeft = this._left._string(nextTab,addTab);
+	}
+	if(this._right){
+		strRight = this._right._string(nextTab,addTab);
+	}
+	return strRight+"\n"+tab+"-"+strThis+"\n"+strLeft+"";
+}
+Voronoi.BinTree.prototype.toString = function(){
+	return this._string(" ","  ");
 }
 
 
@@ -256,19 +356,19 @@ Voronoi.WaveFront.prototype.addArc = function(a){
 		// find x coordinate of this intersection
 			//
 		// ... sub-node if necessary ...
-		prev = node;
-		if(gotoleft?){
-			node = node.left();
-		}else{
-			node = node.right();
-		}
-		value = node?node.value():null;
+		// prev = node;
+		// if(gotoleft?){
+		// 	node = node.left();
+		// }else{
+		// 	node = node.right();
+		// }
+		// value = node?node.value():null;
 	}
 	++this._length;
 }
 Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(p,d,q){
-	arc = this._FIND NODE
-	arc.removeCircleEventsFromQueue(q);
+	// arc = this._FIND NODE
+	// arc.removeCircleEventsFromQueue(q);
 	//this._T.splitArcAtPoint(arc,e.point());
 }
 // Voronoi.WaveFront.prototype.arcAbovePointAndDirectrix = function(p,d){
@@ -298,7 +398,6 @@ Voronoi.EdgeList = function(){
 kruskal MST - add useful edges ordered by weight 
 
 */
-
 
 
 

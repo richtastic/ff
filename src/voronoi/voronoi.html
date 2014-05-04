@@ -15,7 +15,42 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
-	var voronoi = new Vor();
+
+var fxn = function(a,b){
+	return b-a; // # - value
+}
+
+var a = new Voronoi.BinTree(6);
+var b = new Voronoi.BinTree(7);
+var c = new Voronoi.BinTree(8);
+var d = new Voronoi.BinTree(9);
+var e = new Voronoi.BinTree(14);
+var f = new Voronoi.BinTree(11);
+var g = new Voronoi.BinTree(12);
+var h = new Voronoi.BinTree(10);
+
+var root = a;
+
+root = root.addNode(b,fxn);
+console.log(root.toString());
+root = root.addNode(c,fxn);
+console.log(root.toString());
+root = root.addNode(d,fxn);
+console.log(root.toString());
+root = root.addNode(e,fxn);
+console.log(root.toString());
+root = root.addNode(f,fxn);
+console.log(root.toString());
+root = root.addNode(g,fxn);
+console.log(root.toString());
+root = root.addNode(h,fxn);
+
+
+console.log(root.toString());
+//console.log(root);
+// root = a.add...?
+
+	//var voronoi = new Vor();
 	// var kb = new Keyboard();
 	// kb.addFunction(Keyboard.EVENT_KEY_UP, ku);
 	// kb.addFunction(Keyboard.EVENT_KEY_DOWN, kd);
