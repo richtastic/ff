@@ -29,7 +29,7 @@ Voronoi.fortune = function(voronoi,points){
 	var i, len, e;
 	voronoi.setPoints2D(points);
 	var Q = Code.copyArray(points); // events
-	var T = new Voronoi.BinTree(); // status structure - binary search tree
+	var T = new Voronoi.WaveFront(); // status structure - binary search tree
 	var D = new Graph(); // doubly connected edge list
 	Q.sort(Voronoi.sortPointsY); // push on all events ... sort by largest Y
 	while(Q.length>0){ // while Q not empty
@@ -90,14 +90,123 @@ Voronoi.prototype.toString = function(){
 
 
 /* BinTree */
-Voronoi.BinTree = function(v){
+Voronoi.BinTree = function(){
+	this._root = null;
+	this._length = 0;
+	this._sorting = Voronoi.BinTree.sortNumericIncreasing;
+}
+Voronoi.BinTree.sortNumericIncreasing = function(a,b){
+	return b-a; // [smallest..largest]
+}
+Voronoi.BinTree.sortNumericDecreasing = function(a,b){
+	return a-b; // [largest..smallest]
+}
+Voronoi.BinTree.prototype.addItem = function(i,fxn){
+	fxn = fxn!==undefined?fxn:this._sorting;
+	if(this._root){
+		this._root = this._root.addItem(i,fxn);
+	}else{
+		this._root = new Voronoi.BinNode(i);
+	}
+	++this._length;
+}
+Voronoi.BinTree.prototype.removeItem = function(i,fxn){
+	fxn = fxn!==undefined?fxn:this._sorting;
+	if(this._root){
+		this._root.removeItem(i,fxn);
+		this._root = this._root.rebalance();
+		--this._length;
+		if(this._length==0){ // cheats, nice (;
+			this._root = null;
+		}
+	}
+	return null;
+}
+Voronoi.BinTree.prototype.findItem = function(i,fxn){
+	fxn = fxn!==undefined?fxn:this._sorting;
+	if(this._root){
+		return this._root.findItem(i,fxn);
+	}
+	return null;
+}
+Voronoi.BinTree.prototype.length = function(){
+	return this._length;
+}
+Voronoi.BinTree.prototype.toString = function(){
+	if(this._root){
+		return this._root.toString();
+	}
+	return "[empty]";
+}
+
+
+/* BinNode */
+Voronoi.BinNode = function(v){
 	this._value = null;
 	this._left = null;
 	this._right = null;
 	this._parent = null;
 	this.value(v);
 }
-Voronoi.BinTree.prototype.addNode = function(n,fxn){
+Voronoi.BinNode.prototype.addItem = function(i,fxn){
+	return this.addNode( new Voronoi.BinNode(i), fxn );
+}
+Voronoi.BinNode.prototype.findItem = function(i,fxn){
+	if(this.value()==i){
+		return this;
+	}
+	var amount = fxn(this.value(),i);
+	if(amount<0){
+		if(this._left){
+			return this._left.findItem(i,fxn);
+		}
+	}else{
+		if(this._right){
+			return this._right.findItem(i,fxn);
+		}
+	}
+	return null;
+}
+Voronoi.BinNode.prototype.removeItem = function(i,fxn){
+	var node = this.findItem(i,fxn);
+	if(node){
+		node.remove();
+		return node;
+	}
+	return null;
+}
+Voronoi.BinNode.prototype.remove = function(){
+	//console.log("remove ["+this.value()+"] ...");
+	var node;
+	if(this._left){ // has left
+		node = this.left();
+		while(node.right()!=null){
+			node = node.right();
+		}
+		this.value( node.value() );
+		if(node.parent()==this){
+			node.parent().left(node.left());
+		}else{
+			node.parent().right(node.left());
+		}
+		node.kill();
+	}else if(this._right){ // has right
+		node = this.right();
+		while(node.left()!=null){
+			node = node.left();
+		}
+		console.log("("+node.value()+")");
+		this.value( node.value() );
+		node.parent().left(node.right());
+		node.kill();
+	}else{ // leaf
+		node = this;
+		this.kill();
+		return null;
+	}
+	return this;
+}
+Voronoi.BinNode.prototype.addNode = function(n,fxn){
 	var amount = fxn(this.value(),n.value());
 	var ret = this;
 	if(amount<0){
@@ -105,69 +214,68 @@ Voronoi.BinTree.prototype.addNode = function(n,fxn){
 			var oldLeft = this._left;
 			ret = this._left.addNode(n,fxn);
 			if(ret != oldLeft){
-				//console.log("L: "+(oldLeft?oldLeft.value():"<null>")+" -> "+(ret?ret.value():"<null>")+" : "+(this._left != oldLeft));
 				this._left = ret;
 			}
 		}else{
-			//console.log("ADDING-LEFT: "+n.value());
-			this._left = n;
+			this.left(n);
 		}
 	}else{
 		if(this._right){
 			var oldRight = this._right;
 			ret = this._right.addNode(n,fxn);
 			if(ret != oldRight){
-				//console.log("R: "+(oldRight?oldRight.value():"<null>")+" -> "+(ret?ret.value():"<null>")+" : "+(this._right != oldRight));
 				this._right = ret;
 			}
 		}else{
-			//console.log("ADDING-RIGHT: "+n.value());
-			this._right = n;
+			this.right(n);
 		}
 	}
 	return this.rebalance();
 }
-Voronoi.BinTree.prototype.leaf = function(){
+Voronoi.BinNode.prototype.leaf = function(){
 	return this._left==null && this._right==null;
 }
-Voronoi.BinTree.prototype.wtf = function(){
-	return this._value==null && this.leaf();
-}
-Voronoi.BinTree.prototype.value = function(v){
+Voronoi.BinNode.prototype.value = function(v){
 	if(v!==undefined){
 		this._value = v;
 	}
 	return this._value;
 }
-Voronoi.BinTree.prototype.left = function(l){
+Voronoi.BinNode.prototype.left = function(l){
 	if(l!==undefined){
 		this._left = l;
+		if(this._left){
+			this._left.parent(this);
+		}
 	}
 	return this._left;
 }
-Voronoi.BinTree.prototype.right = function(r){
+Voronoi.BinNode.prototype.right = function(r){
 	if(r!==undefined){
 		this._right = r;
+		if(this._right){
+			this._right.parent(this);
+		}
 	}
 	return this._right;
 }
-Voronoi.BinTree.prototype.parent = function(p){
+Voronoi.BinNode.prototype.parent = function(p){
 	if(p!==undefined){
 		this._parent = p;
 	}
 	return this._parent;
 }
-Voronoi.BinTree.prototype.height = function(){
+Voronoi.BinNode.prototype.height = function(){
 	var left = this._left? this._left.height() : 0;
 	var right = this._right? this._right.height() : 0;
 	return 1 + Math.max(left,right);
 }
-Voronoi.BinTree.prototype.balance = function(){
+Voronoi.BinNode.prototype.balance = function(){
 	var left = this._left? this._left.height() : 0;
 	var right = this._right? this._right.height() : 0;
 	return right - left;
 }
-Voronoi.BinTree.prototype.leftRotation = function(){
+Voronoi.BinNode.prototype.leftRotation = function(){
 	//console.log("left rotation: ["+this._value+"]");
 	var a = this, b = this.right(), c = this.right().left();
 	//console.log(a?a.value():"--",b?b.value():"--",c?c.value():"--");
@@ -175,24 +283,24 @@ Voronoi.BinTree.prototype.leftRotation = function(){
 	b.left(a);
 	return b;
 }
-Voronoi.BinTree.prototype.doubleLeftRotation = function(){ // left-right
+Voronoi.BinNode.prototype.doubleLeftRotation = function(){ // left-right
 	//console.log("left double: ["+this._value+"]");
 	var root = this.leftRotation();
 	return root.rightRotation();
 }
-Voronoi.BinTree.prototype.rightRotation = function(){
+Voronoi.BinNode.prototype.rightRotation = function(){
 	//console.log("right rotation: ["+this._value+"]");
 	var a = this, b = this.left(), c = this.left().right();
 	a.left(c);
 	b.right(a);
 	return b;
 }
-Voronoi.BinTree.prototype.doubleRightRotation = function(){ // right-left
+Voronoi.BinNode.prototype.doubleRightRotation = function(){ // right-left
 	//console.log("right double: ["+this._value+"]");
 	var root = this.rightRotation();
 	return root.leftRotation();
 }
-Voronoi.BinTree.prototype.rebalance = function(){
+Voronoi.BinNode.prototype.rebalance = function(){
 	var bal = this.balance();
 	var root = this;
 	//console.log("balance ... ["+this._value+"] : "+bal);
@@ -211,22 +319,51 @@ Voronoi.BinTree.prototype.rebalance = function(){
 	}
 	return root;
 }
-Voronoi.BinTree.prototype._string = function(tab,addTab){
+Voronoi.BinNode.prototype._string = function(tab,addTab){
 	var nextTab = tab+addTab;
 	var strLeft = nextTab+".";
 	var strRight = nextTab+".";
 	var strThis = this.value()+"";
-	if(this._left){
-		strLeft = this._left._string(nextTab,addTab);
-	}
+	var str = "";
 	if(this._right){
 		strRight = this._right._string(nextTab,addTab);
+		str += strRight+"\n";
 	}
-	return strRight+"\n"+tab+"-"+strThis+"\n"+strLeft+"";
+	str += tab+"-"+strThis;
+	if(this._left){
+		strLeft = this._left._string(nextTab,addTab);
+		str += "\n"+strLeft+"";
+	}
+	return str;
+	//return strRight+"\n"+tab+"-"+strThis+"\n"+strLeft+""; // thorough
 }
-Voronoi.BinTree.prototype.toString = function(){
-	return this._string(" ","  ");
+Voronoi.BinNode.prototype.toString = function(){
+	return this._string(" ","   ");
 }
+Voronoi.BinNode.prototype.kill = function(){
+	if(this._parent){
+		if(this._parent.left()==this){
+			this._parent.left(null);
+		}else if(this._parent.right()==this){
+			this._parent.right(null);
+		} // else something is askew
+		this._parent = null;
+	}
+	if(this._right){
+		if(this._right.parent()==this){
+			this._right.parent(null);
+		}
+		this._right = null;
+	}
+	if(this._left){
+		if(this._left.parent()==this){
+			this._left.parent(null);
+		}
+		this._left = null;
+	}
+	this._value = null;
+}
+
 
 
 /* Event */
