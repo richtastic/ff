@@ -14,7 +14,32 @@ function Vor(){
 	this._root.matrix().translate(200,500);
 	this._stage.start();
 	this.voronoi();
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN, this.keyboardFxnKeyDown, this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN, this.keyboardFxnKeyDown2, this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP, this.keyboardFxnKeyUp, this);
+	this._keyboard.addListeners();
 }
+	
+Vor.prototype.keyboardFxnKeyUp = function(e){
+	// console.log("key up "+e);
+}
+Vor.prototype.keyboardFxnKeyDown = function(e){
+	// console.log("key down "+e);
+	if(e.keyCode==Keyboard.KEY_SPACE){
+		if(this._ticker.isRunning()){
+			console.log("PAUSE");
+			this._ticker.stop();
+		}else{
+			console.log("START");
+			this._ticker.start();
+		}
+	}
+}
+Vor.prototype.keyboardFxnKeyDown2 = function(e){
+	// console.log("key still down "+e);
+}
+
 Vor.circleFromPoints = function(a,b,c, root){
 	var lineAB = V2D.diff(a,b);
 	var lineBC = V2D.diff(b,c);
@@ -106,6 +131,7 @@ Vor.prototype.animation_tick = function(){
 		this._D = new Voronoi.EdgeList();
 		this._directrix = new V2D();
 	}
+	this._directrix.y = this._animPosY;
 	//
 	this._animPosY = 375 - this._animationTick*1.5;
 	this._animDirectrix.matrix().identity();
@@ -135,11 +161,80 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
+	// 
+	var circleEvents, halfEdge, next, arc, directrix, node, left, right, leftPoint, intPoint, arr, parabola;
 	// DRAW WAVEFRONT INTERSECTIONS ...
+	directrix = this._directrix.y;
+	//this._animParabolas.graphics().clear();
+	this._animParabolas.graphics().setLine(2.0,0xFFCC0066);
+	this._animParabolas.graphics().beginPath();
+	node = this._T.root().leftMost();
+		var count = 0;
+		console.log("loop");
+		while(node){
+			//console.log(node);
+			arc = node.value();
+			console.log(arc.toString());
+			parabola = arc.parabolaLeft();
+			intPoint = null;
+			if(!arc.nonIntersection()){
+				//console.log(arc.parabolaLeft(),arc.parabolaRight());
+				intPoint = arc.intersectionFromDirectrix(directrix);
+				var intersection = null;
+				var intersections = Code.intersectionParabolas(arc.parabolaLeft(),directrix, arc.parabolaRight(),directrix);
 
+				/*if(arc.direction()==Voronoi.ARC_PARABOLA_INT_RIGHT){
+					parabola = arc.parabolaLeft();
+				}else{
+					parabola = arc.parabolaRight();
+				}*/
+			}
+			// left limit
+			if( !arc.nodeLeft() ){ // left end
+				left = new V2D(-100,0);
+			}else{
+				left = right; // previous
+			}
+			// right limit
+			if( arc.nodeRight() && intPoint ){
+				right = intPoint;
+			}else{
+				//parabola = arc.parabolaRight();
+				right = new V2D(500,0);
+			}
+console.log(parabola.toString());
+			//console.log(left.toString()+" -> "+right.toString());
+			deltaJ = (right.x-left.x)/50.0;
+//console.log("PARABOLA: "+parabola+"     "+directrix);
+			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
+			a = arr[0], b = arr[1], c = arr[2];
+			//a = parabola.x; b = parabola.y; c = directrix;
+			for(j=left.x;j<=right.x;j+=deltaJ){
+				x = j;
+				y = a*x*x + b*x + c;
+				//y = ((x-a)*(x-a) + b*b - c*c)/(2.0*(b-c));
+				if(j==left.x){
+					this._animParabolas.graphics().moveTo(x,y);
+				}else{
+					this._animParabolas.graphics().lineTo(x,y);
+				}
+				//console.log(x,y);
+			}
+			//
+			node = node.value().nodeRight();
+			if(count >= 10){
+				console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+				node = null;
+			}
+			++count;
+		}
+		console.log(count);
+	this._animParabolas.graphics().moveTo(0,0);
+	this._animParabolas.graphics().endPath();
+	this._animParabolas.graphics().strokeLine();
 	//
 	// ALGORITHM
-	var circleEvents, halfEdge, next, arc, directrix;
+	//console.log(this._Q.toString());
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
 		//console.log(next.point().y);
@@ -156,7 +251,7 @@ Vor.prototype.animation_tick = function(){
 					this._D.addEdge(halfEdge);
 					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_RIGHT, halfEdge );
 					console.log(this._T);
-					var node = this._T.addArc( arc );
+					node = this._T.addArc( arc );
 					arc.node( node );
 					//arc.node( this._T.findAny(arc) );
 				}else{

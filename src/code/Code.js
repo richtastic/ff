@@ -1611,14 +1611,21 @@ Code.rayIntersect2D = function(a,b, c,d){
 	var t = num/den;
 	return new V2D(a.x+t*b.x, a.y+t*b.y); // num = (b.x*(c.y-a.y) + b.y*(a.x-c.x)); return new V2D(c.x+t2*d.x, c.y+t2*d.y);
 }
+Code.parabolaABCFromFocusDirectrix = function(focA,c){
+	var a = focA.x, b = focA.y;
+	var A = 1/(2.0*(b-c));
+	var B = -2.0*a*A;
+	var C = (a*a + b*b - c*c)*A;
+	return [A,B,C];
+}
 Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	var a1 = focA.x, b1 = focA.y, c1 = dirA;
 	var a2 = focB.x, b2 = focB.y, c2 = dirB;
 	var A1 = 0.5/(b1-c1);
-	var B1 = -2*a1*A1;
+	var B1 = -2.0*a1*A1;
 	var C1 = (a1*a1 + b1*b1 - c1*c1)*A1;
 	var A2 = 0.5/(b2-c2);
-	var B2 = -2*a2*A2;
+	var B2 = -2.0*a2*A2;
 	var C2 = (a2*a2 + b2*b2 - c2*c2)*A2;
 	var A = A1-A2, B = B1-B2, C = C1-C2;
 	var intAx, intAy, intBx, intBy;
