@@ -1611,7 +1611,129 @@ Code.rayIntersect2D = function(a,b, c,d){
 	var t = num/den;
 	return new V2D(a.x+t*b.x, a.y+t*b.y); // num = (b.x*(c.y-a.y) + b.y*(a.x-c.x)); return new V2D(c.x+t2*d.x, c.y+t2*d.y);
 }
+Code.intersectionParabolas = function(focA,dirA, focB,dirB){
+	var a1 = focA.x, b1 = focA.y, c1 = dirA;
+	var a2 = focB.x, b2 = focB.y, c2 = dirB;
+	var A1 = 0.5/(b1-c1);
+	var B1 = -2*a1*A1;
+	var C1 = (a1*a1 + b1*b1 - c1*c1)*A1;
+	var A2 = 0.5/(b2-c2);
+	var B2 = -2*a2*A2;
+	var C2 = (a2*a2 + b2*b2 - c2*c2)*A2;
+	var A = A1-A2, B = B1-B2, C = C1-C2;
+	var intAx, intAy, intBx, intBy;
+	var inside = B*B - 4*A*C;
+	// console.log(A,B,C," ... ",inside);
+	if(A==0 && B==0 && C!=0){ return null; }  // inconsistent
+	if(inside<0){ return null; } // imaginary
+	if(A==0){ // single intersection Bx + C = 0
+		if(C==0){ return null; } // infinite intersections (no constraints)
+		intAx = -B/C;
+		intAy = A1*intAx*intAx + B1*intAx + C1; // intAy = A2*intAx*intAx + B2*intAx + C2;
+		return [new V2D(intAx,intAy)];
+	} // two intersections
+	var sqrt = Math.sqrt(inside);
+	intAx = (sqrt - B)/(2.0*A);
+	intBx = -(B +sqrt)/(2.0*A);
+	intAy = A1*intAx*intAx + B1*intAx + C1;
+	intBy = A1*intBx*intBx + B1*intBx + C1;
+	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
+}
+Code.intersectionParabolas2 = function(focA,dirA, focB,dirB){
+	var a1 = focA.x, b1 = focA.y, c1 = dirA;
+	var a2 = focB.x, b2 = focB.y, c2 = dirB;
+	var d1 = b1*b1 - c1*c1;
+	var d2 = b2*b2 - c2*c2;
+	var e1 = 2.0*(b1-c1);
+	var e2 = 2.0*(b2-c2);
+	console.log(a1,b1,c1,d1,e1,"    -     ",a2,b2,c2,d2,e2);
+	var A = e2-e1;
+	var B = 2.0*(a2*e1 - a1*e2);
+	var C = a1*a1*e2 + d1*e2 - a2*a2*e1 - d2*e1;
+	var inside = B*B - 4*A*C;
+	console.log(A,B,C," ... ",inside);
+	if(A==0){ // identical parabolas
+		if(a1==a2){ // infinite intersections
+			return null;
+		}
+		console.log("single intersection .. linear equation");
+		// .. ?
+	}
+	if(inside<0){ return null; } // imaginary solutions
+	var sqrt = Math.sqrt(inside);
+	var intAx = (sqrt - B)/(2*A);
+	var intBx = -(B +sqrt)/(2*A);
+	var intAy = (Math.pow(intAx-a1,2) + d1)/e1;
+	var intBy = (Math.pow(intBx-a1,2) + d1)/e1;
+	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
+}
+/*
+PARABOLA: FOCUS: a,b  DIRECTRIX: c (=y)
 
+Equal Distance:
+sqrt( (x-a)^2 + (y-b)^2 ) = sqrt( (y-c)^2 )
+
+(x-a)^2 + (y-b)^2  = (y-c)^2
+(x-a)^2 + y*y + b*b - 2*y*b = y*y + c*c - 2*y*c
+(x-a)^2 + b*b - 2*y*b = c*c - 2*y*c
+(x-a)^2 + b*b = c*c + 2*y*(b - c)
+(x-a)^2 + b*b - c*c = 2*y*(b - c)
+[ (x-a)^2 + b*b - c*c ] / [ 2*(b - c) ] = y
+=>
+y = [ (x-a)*(x-a) + b*b - c*c ] / [ 2(b-c) ]
+
+two parabolas intersect: @ y1=y2 && x1=x2
+y1 = [ (x-a1)*(x-a1) + b1*b1 - c1*c1 ] / [ 2(b1-c1) ]
+y2 = [ (x-a2)*(x-a2) + b2*b2 - c2*c2 ] / [ 2(b2-c2) ]
+	d1 = (b1*b1 - c1*c1)
+	d2 = (b2*b2 - c2*c2)
+	e1 = 2(b1-c1)
+	e2 = 2(b2-c2)
+=>
+y1 = [ (x-a1)*(x-a1) + d1 ] / e1
+y2 = [ (x-a2)*(x-a2) + d2 ] / e2
+
+y1 = y2 :
+[ (x-a1)*(x-a1) + d1 ]/e1 = [ (x-a2)*(x-a2) + d2 ]/e2
+[ (x-a1)*(x-a1) + d1 ]*e2 = [ (x-a2)*(x-a2) + d2 ]*e1
+(x-a1)*(x-a1)*e2 + d1*e2 = (x-a2)*(x-a2)*e1 + d2*e1
+(x*x + a1*a1 - 2*x*a1)*e2 + d1*e2 = (x*x + a2*a2 - 2*x*a2)*e1 + d2*e1
+x*x*e2 + a1*a1*e2 - 2*x*a1*e2 + d1*e2 = x*x*e1 + a2*a2*e1 - 2*x*a2*e1 + d2*e1
+...
+x*x*(e2-e1) + a1*a1*e2 - 2*x*a1*e2 + d1*e2 = a2*a2*e1 - 2*x*a2*e1 + d2*e1
+x*x*(e2-e1) + a1*a1*e2 + x*2(a2*e1 - a1*e2) + d1*e2 = a2*a2*e1 + d2*e1
+x*x*(e2-e1) + a1*a1*e2 - a2*a2*e1 + x*2(a2*e1 - a1*e2) + d1*e2 = d2*e1
+x*x*(e2-e1) + a1*a1*e2 - a2*a2*e1 + x*2(a2*e1 - a1*e2) + d1*e2 - d2*e1 = 0
+x*x*(e2-e1) + x*2(a2*e1 - a1*e2) + (a1*a1*e2 - a2*a2*e1 + d1*e2 - d2*e1) = 0
+x*x*A + x*B + C = 0
+
+
+...
+vertex = a,[c + (b-c)/2] = a,(c+b)/2
+
+SOLVE FOR X:
+(x-a)^2 + (y-b)^2  = (y-c)^2
+x*x + a*a -2*ax + y*y + b*b - 2*y*b = y*y + c*c - 2*y*c
+x*x + a*a -2*ax + b*b - 2*y*b = c*c - 2*y*c
+x*x + a*a -2*ax + b*b = c*c + 2*y*b - 2*y*c
+x*x + -2*ax + b*b = c*c - a*a + 2*y*b - 2*y*c
+x*x + -2*ax = c*c - a*a - b*b + 2*y*b - 2*y*c
+
+
+...
+SOLVE FOR SIMPLE EQUATION:
+y = [ (x-a)*(x-a) + b*b - c*c ] / [ 2(b-c) ]
+y = [ x*x + a*a -2*ax + b*b - c*c ] / [ 2(b-c) ]
+Z = 2(b-c)
+y = x*x/Z - 2*ax/Z + (a*a + b*b - c*c)/Z
+A = 1/Z
+B = -2*a/Z
+C = (a*a + b*b - c*c)/Z
+
+
+
+
+*/
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D

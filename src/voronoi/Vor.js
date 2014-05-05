@@ -49,6 +49,9 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(5,6) );
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
+// points.push( new V2D(1,8) );
+// points.push( new V2D(1.5,7) );
+// points.push( new V2D(0,0) );
 	voronoi = new Voronoi();
 	var scale = 50.0;
 	for(i=0;i<points.length;++i){
@@ -57,7 +60,7 @@ Vor.prototype.voronoi = function(){
 		this._root.addChild( Vor.makePoint(points[i]) );
 	}
 	//
-	var circle = Vor.circleFromPoints(points[0],points[1],points[2],    this._root);
+//	var circle = Vor.circleFromPoints(points[0],points[1],points[2],    this._root);
 	// console.log(circle);
 	// this._root.addChild( Vor.makeLine(points[0],points[1]) );
 	// this._root.addChild( Vor.makeLine(points[1],points[2]) );
@@ -101,9 +104,10 @@ Vor.prototype.animation_tick = function(){
 		console.log(this._Q.toString());
 		this._T = new Voronoi.WaveFront();
 		this._D = new Voronoi.EdgeList();
+		this._directrix = new V2D();
 	}
 	//
-	this._animPosY = 375 - this._animationTick*0.5;
+	this._animPosY = 375 - this._animationTick*1.5;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
 	//
@@ -131,30 +135,45 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
+	// DRAW WAVEFRONT INTERSECTIONS ...
+
 	//
 	// ALGORITHM
-	var circleEvents;
+	var circleEvents, halfEdge, next, arc, directrix;
 	if( !this._Q.isEmpty() ){
-		var next = this._Q.peek();
+		next = this._Q.peek();
 		//console.log(next.point().y);
 		//console.log(this._animPosY);
-		var directrix = this._animPosY;
+//this._directrix.y = ; IS the point
+		directrix = this._animPosY;
 		if(next && next.point().y>directrix){
 			e = this._Q.next();
 			console.log("popped "+e);
 			if(e.type()==Voronoi.EVENT_TYPE_SITE){ // SITE
+				console.log("SITE EVENT");
 				if(this._T.isEmpty()){
-					this._T.addArc( new Voronoi.Arc( e.point() ) );
+					halfEdge = new Voronoi.HalfEdge();
+					this._D.addEdge(halfEdge);
+					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_RIGHT, halfEdge );
+					console.log(this._T);
+					arc.node( this._T.addArc( arc ) );
+					//arc.node( this._T.findAny(arc) );
 				}else{
 					// arc = this._T.arcAbovePointAndDirectrix(e.point(), directrix);
 					// arc.removeCircleEventsFromQueue(this._Q);
 					// this._T.splitArcAtPoint(arc,e.point());
-					Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue(e,point(),directrix);
+					this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), directrix, this._Q);
 				}
+				console.log("T: ");
+				console.log(this._T.toString());
 			}else{ // CIRCLE
+				console.log("CIRCLE EVENT");
 				// arc will disappear
 			}
 		}
+	}else{
+		this._ticker.stop();
+		// DRAW FINAL IMAGE
 	}
 	//
 	this._animationTick++;

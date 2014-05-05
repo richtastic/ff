@@ -90,10 +90,11 @@ Voronoi.prototype.toString = function(){
 
 
 /* BinTree */
-Voronoi.BinTree = function(){
+Voronoi.BinTree = function(fxn){
 	this._root = null;
 	this._length = 0;
 	this._sorting = Voronoi.BinTree.sortNumericIncreasing;
+	this.sorting(fxn);
 }
 Voronoi.BinTree.sortNumericIncreasing = function(a,b){
 	return b-a; // [smallest..largest]
@@ -101,14 +102,26 @@ Voronoi.BinTree.sortNumericIncreasing = function(a,b){
 Voronoi.BinTree.sortNumericDecreasing = function(a,b){
 	return a-b; // [largest..smallest]
 }
+Voronoi.BinTree.prototype.sorting = function(fxn){
+	if(fxn!==undefined){
+		this._sorting = fxn;
+	}
+	return this._sorting;
+}
 Voronoi.BinTree.prototype.addItem = function(i,fxn){
 	fxn = fxn!==undefined?fxn:this._sorting;
+	var result = null;
 	if(this._root){
-		this._root = this._root.addItem(i,fxn);
+		//this._root = this._root.addItem(i,fxn,result);
+		//result = result.pop();
+		result = new Voronoi.BinNode(i);
+		this._root = this._root.addNode(result,fxn);
 	}else{
-		this._root = new Voronoi.BinNode(i);
+		result = new Voronoi.BinNode(i);
+		this._root = result;
 	}
 	++this._length;
+	return result;
 }
 Voronoi.BinTree.prototype.removeItem = function(i,fxn){
 	fxn = fxn!==undefined?fxn:this._sorting;
@@ -132,6 +145,9 @@ Voronoi.BinTree.prototype.findItem = function(i,fxn){
 Voronoi.BinTree.prototype.length = function(){
 	return this._length;
 }
+Voronoi.BinTree.prototype.isEmpty = function(){
+	return this._length==0;
+}
 Voronoi.BinTree.prototype.toString = function(){
 	if(this._root){
 		return this._root.toString();
@@ -146,16 +162,27 @@ Voronoi.BinNode = function(v){
 	this._left = null;
 	this._right = null;
 	this._parent = null;
+	this._balance = false; // DON'T REBALANCE - HACK FOR WHERE LEAFS ARE DIFFERENT THAN NON-LEAVES
 	this.value(v);
 }
-Voronoi.BinNode.prototype.addItem = function(i,fxn){
-	return this.addNode( new Voronoi.BinNode(i), fxn );
+Voronoi.BinNode.prototype.addItem = function(i,fxn,res){
+	var node = new Voronoi.BinNode(i);
+	if(res){ res.push(node); }
+	return this.addNode(node, fxn );
 }
-Voronoi.BinNode.prototype.findItem = function(i,fxn){
-	if(this.value()==i){
+Voronoi.BinNode.prototype.findAny = function(i,fxn){ // non-binary-search finding
+	if(fxn(this.value(),i)==0){
 		return this;
 	}
+	var res = this._left.findAny(i,fxn);
+	if(res){ return res; }
+	return this._right.findAny(i,fxn);
+}
+Voronoi.BinNode.prototype.findItem = function(i,fxn,res){
 	var amount = fxn(this.value(),i);
+	if(amount==0){//if(this.value()==i){
+		return this;
+	}
 	if(amount<0){
 		if(this._left){
 			return this._left.findItem(i,fxn);
@@ -219,7 +246,7 @@ Voronoi.BinNode.prototype.addNode = function(n,fxn){
 		}else{
 			this.left(n);
 		}
-	}else{
+	}else{ // >=0
 		if(this._right){
 			var oldRight = this._right;
 			ret = this._right.addNode(n,fxn);
@@ -301,6 +328,9 @@ Voronoi.BinNode.prototype.doubleRightRotation = function(){ // right-left
 	return root.leftRotation();
 }
 Voronoi.BinNode.prototype.rebalance = function(){
+	if(!this._balance){
+		return this;
+	}
 	var bal = this.balance();
 	var root = this;
 	//console.log("balance ... ["+this._value+"] : "+bal);
@@ -453,41 +483,140 @@ Voronoi.Queue.prototype.toString = function(){
 
 
 /* Arc */
-Voronoi.Arc = function(p){
+Voronoi.ARC_PARABOLA_INT_UNKNOWN = -1;
+Voronoi.ARC_PARABOLA_INT_LEFT = 0;
+Voronoi.ARC_PARABOLA_INT_RIGHT = 1;
+Voronoi.Arc = function(parA,parB,dir, dirx, edge){
 	this._circleEvents = [];
-	this._point = null;
-	this.point(p);
+	this._halfEdge = null;
+	this._parabolaLeft = null;
+	this._parabolaRight = null;
+	this._direction = Voronoi.ARC_PARABOLA_INT_UNKNOWN;
+	this._directrix = null;
+	this._node = null; // location in tree
+	// init
+	this.parabolas(parA,parB);
+	this.direction(dir);
+	this.directrix(dirx)
+	this.halfEdge(edge);
 }
-Voronoi.Arc.prototype.point = function(p){
-	if(p!==undefined){
-		this._point = p;
+Voronoi.Arc.prototype.node = function(n){
+	console.log("addNode: ");
+	console.log(n);
+	if(n!==undefined){
+		this._node = n;
 	}
-	return this._point;
+	return this._node;
+}
+Voronoi.Arc.prototype.halfEdge = function(e){
+	if(e!==undefined){
+		this._halfEdge = e;
+	}
+	return this._halfEdge;
+}
+Voronoi.Arc.prototype.parabola = function(a){
+	if(a!==undefined){
+		this._parabolas(a,a);
+	}
+}
+Voronoi.Arc.prototype.parabolas = function(a,b){
+	if(a!==undefined){
+		this._parabolaA = a;
+		this._parabolaB = b;
+	}
+}
+Voronoi.Arc.prototype.direction = function(a){
+	if(a!==undefined){
+		this._direction = a;
+	}
+}
+Voronoi.Arc.prototype.directrix = function(d){
+	if(d!==undefined){
+		this._directrix = d;
+	}
 }
 Voronoi.Arc.prototype.removeCircleEventsFromQueue = function(queue){
 	while(this._circleEvents.length>0){
 		Code.removeElement( queue, this._circleEvents.pop() );
 	}
 }
+Voronoi.Arc.prototype.containing = function(point){ // point.y == directrix
+/*
+always two different parabolas:
+
+if this is a 'leaf' node -> return 0
+	=> result will check if parabola left or parabola right is actual intersection
+if this is a 'half-leaf' node:
+	and the intersection points to a null 
+else intersection points to another node
+	return -1/1 as typically
+*/
+// ... 
+	if(this._parabolaA==this._parabolaB){ // single parabola
+		return 0; // YES
+	}
+	var intA, intB;
+	var intersections = Code.intersectionParabolas(this._parabolaA,point.y, this._parabolaB,point.y);
+	if(intersections){
+		for(var i=0;i<intersections.length;++i){
+			console.log( "parabola intersection: " + intersections[i].toString() );
+		}
+	}else{
+		console.log("THIS IS WEEEEEEIRD .... NO INTERSECTIONS");
+	}
+	if(intersections.length==2){
+		intA = intersections[0]; intB = intersections[1];
+		minX = Math.min(this._parabolaA.x,this._parabolaB.x,intA.x,intB.x); // full range
+		maxX = Math.min(this._parabolaA.x,this._parabolaB.x,intA.x,intB.x);
+		if(this._directionA==Voronoi.ARC_PARABOLA_FOCUS_LEFT){
+			if(false){
+				///
+			}
+		}else{ // if(this._directionA==Voronoi.ARC_PARABOLA_FOCUS_RIGHT){
+
+		}
+		return -1; // go left
+		return 1; // go right
+	}else if(intersections.length==1){
+		intA = intersections[0];
+	}else{
+		console.log("UH OH");
+	}
+
+}
 
 
 /* WaveFront */
 Voronoi.WaveFront = function(){
-	this._tree = new Voronoi.BinTree();
+	this._tree = new Voronoi.BinTree(Voronoi.WaveFront.sorting);
 	this._length = 0;
 }
-Voronoi.WaveFront.prototype.isEmpty = function(){
-	if(this._length>0){
-		return false;
+Voronoi.WaveFront.sorting = function(a,b){
+	console.log("SORTING -----");
+	console.log(a,b);
+	if( Code.isa(b,V2D) ){ // arc and point - find if point intersects ..
+		console.log("V2D: "+b.toString());
+		return a.containing(p);
+	}else{ // two arcs
+		if(a==b){
+			return 0;
+		}
+		return -1; // ... anything really
 	}
-	return true;
+	return b-a;
+}
+Voronoi.WaveFront.prototype.isEmpty = function(){
+	return this._tree.isEmpty();
 }
 Voronoi.WaveFront.prototype.length = function(){
-	return this._length;
+	return this._tree.length();
 }
-Voronoi.WaveFront.prototype.addArc = function(a){
+Voronoi.WaveFront.prototype.addArc = function(arc){
+	return this._tree.addItem(arc);
+}
+/*Voronoi.WaveFront.prototype.addArcFromPoint = function(point){
 	var prev;
-	var node = this._tree;
+	var node = this._tree.root();
 	var value = node.value();
 	while( value ){
 		// find x coordinate of this intersection
@@ -502,8 +631,12 @@ Voronoi.WaveFront.prototype.addArc = function(a){
 		// value = node?node.value():null;
 	}
 	++this._length;
-}
-Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(p,d,q){
+}*/
+Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(point,directrix,queue){
+	console.log("add ...");
+	var arc = this._tree.findItem( point );
+	console.log(arc);
+	console.log("--------------------------------------------------------");
 	// arc = this._FIND NODE
 	// arc.removeCircleEventsFromQueue(q);
 	//this._T.splitArcAtPoint(arc,e.point());
@@ -515,11 +648,17 @@ Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(p,d,
 	
 // }
 
+/* HalfEdge */
+Voronoi.HalfEdge = function(){
+	this._what = null;
+}
 
 /* EdgeList */
 Voronoi.EdgeList = function(){
-	this._what = null;
-	
+	this._list = [];
+}
+Voronoi.EdgeList.prototype.addEdge = function(e){
+	this._list.push(e);
 }
 
 

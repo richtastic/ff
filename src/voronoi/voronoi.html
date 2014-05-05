@@ -16,6 +16,31 @@ function defaultClassesLoadedFxn(){
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
 /*
+var parabolaA = new V2D(0,1);
+var directrixA = new V2D(0,-1);
+// var parabolaB = new V2D(2,1); // single
+// var directrixB = new V2D(0,-1);
+// var parabolaB = new V2D(0,1); // infinite
+// var directrixB = new V2D(0,-1);
+// var parabolaB = new V2D(0,2); // none - INCONSISTENT
+// var directrixB = new V2D(0,0);
+// var parabolaB = new V2D(0,2); // imaginary
+// var directrixB = new V2D(0,1);
+var parabolaB = new V2D(10,0); // two
+var directrixB = new V2D(0,-1);
+
+var intersections = Code.intersectionParabolas(parabolaA,directrixA.y, parabolaB,directrixB.y);
+if(intersections){
+	for(var i=0;i<intersections.length;++i){
+		console.log( intersections[i].toString() );
+	}
+}else{
+	console.log("none");
+}
+return;
+*/
+
+/*
 var fxn = function(a,b){
 	return b-a; // # - value
 }
