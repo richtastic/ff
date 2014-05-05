@@ -146,7 +146,7 @@ Vor.prototype.animation_tick = function(){
 		//console.log(this._animPosY);
 //this._directrix.y = ; IS the point
 		directrix = this._animPosY;
-		if(next && next.point().y>directrix){
+		while(next && next.point().y>directrix){
 			e = this._Q.next();
 			console.log("popped "+e);
 			if(e.type()==Voronoi.EVENT_TYPE_SITE){ // SITE
@@ -156,7 +156,8 @@ Vor.prototype.animation_tick = function(){
 					this._D.addEdge(halfEdge);
 					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_RIGHT, halfEdge );
 					console.log(this._T);
-					arc.node( this._T.addArc( arc ) );
+					var node = this._T.addArc( arc );
+					arc.node( node );
 					//arc.node( this._T.findAny(arc) );
 				}else{
 					// arc = this._T.arcAbovePointAndDirectrix(e.point(), directrix);
@@ -170,6 +171,7 @@ Vor.prototype.animation_tick = function(){
 				console.log("CIRCLE EVENT");
 				// arc will disappear
 			}
+			next = this._Q.peek();
 		}
 	}else{
 		this._ticker.stop();
