@@ -477,6 +477,12 @@ Voronoi.Event.prototype.arc = function(a){
 	}
 	return this._arc;
 }
+Voronoi.Event.prototype.circle = function(c){
+	if(c!==undefined){
+		this._circle = c;
+	}
+	return this._circle;
+}
 Voronoi.Event.prototype.toString = function(){
 	var str = "";
 	if( this._type==Voronoi.EVENT_TYPE_SITE){
@@ -532,7 +538,7 @@ Voronoi.Queue.prototype.toString = function(){
 }
 
 
-/* Arc */
+/* Arc  -------------------------- this isn't really an Arc, it's a 'break point' - intersection, and the arc is the area between these intersection points */
 Voronoi.ARC_PARABOLA_INT_UNKNOWN = -1;
 Voronoi.ARC_PARABOLA_INT_LEFT = 0;
 Voronoi.ARC_PARABOLA_INT_RIGHT = 1;
@@ -765,6 +771,8 @@ Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(poin
 	pA.parabolaRight(point);
 	pB.parabolaLeft(point);
 	pB.parabolaRight(parabola);
+	pA.halfEdge( new Voronoi.HalfEdge() );
+	pB.halfEdge( new Voronoi.HalfEdge() );
 	console.log("HERE")
 	// arrange neighbors
 	if(parabola==arc.parabolaLeft()){ // to left
@@ -817,16 +825,82 @@ Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(poin
 		this._length+=2;
 	}
 	// parents taken care of
+	// circles = triplets of points
+	var points, circle;
+	arc = pA;
+	points = [arc.parabolaRight()];
+	while(arc && points.length<3){ // leftward
+		node = arc.nodeLeft();
+		if(node){
+			arc = node.value();
+			points.push(arc.parabolaRight());
+		}else{
+			arc = null;
+		}
+	}
+	if(points.length==3){
+		console.log("POTENTIAL CIRCLE LEFT");
+		console.log(points);
+	}
+	// 
+	arc = pB;
+	points = [arc.parabolaLeft()];
+	while(arc && points.length<3){ // rightward
+		node = arc.nodeRight();
+		if(node){
+			arc = node.value();
+			points.push(arc.parabolaLeft());
+		}else{
+			arc = null;
+		}
+	}
+	
+	if(points.length==3){
+		console.log("POTENTIAL CIRCLE RIGHT");
+		console.log(points);
+		circle = Code.circleFromPoints(points[0],points[1],points[2]);
+		point = new V2D(circle.center.x,circle.center.y-circle.radius);
+		circleEvent = new Voronoi.Event(point,Voronoi.EVENT_TYPE_CIRCLE);
+		circleEvent.circle(circle);
+			arc = pB.nodeRight().value();
+			arc.circleEvents().push(circleEvent);
+		circleEvent.arcs( left,right,parabola ... );
+		queue.addEvent(circleEvent);
+	}
+
+	// ...
 	console.log(nA);
 	console.log(nB);
 
-	// pA.parabolaLeft( arc.nodeLeft().value().parabolaRight() );
-	// pB.parabolaRight( arc.nodeRight().value().parabolaRight() );
-	// 
-	// 
 	console.log("--------------------------------------------------------\n\n");
 	// arc.removeCircleEventsFromQueue(q);
 	//this._T.splitArcAtPoint(arc,e.point());
+}
+Voronoi.WaveFront.prototype.removeArcAtCircleWithQueueAndGraph = function(circleEvent, queue, graph){
+//point,circle,arc
+	// add to graph:
+
+		// center of circle = vertex
+		// 2 new half-edges add to adjacent neighbors
+		// 
+	// circle triplets:
+		// arc.right(), arc.left(), arc.left().left()
+		// arc.left(), arc.right(), arc.right().right()
+	// delete arc from tree
+	//this._tree.remove
+	console.log(arc);
+	console.log("BEFORE:");
+	console.log(this._tree.toString());
+	arc.node().remove();
+	console.log("AFTER:");
+	console.log(this._tree.toString());
+
+		// make sure to remove the parabola from the left and right - replace with correct
+	// delete all cicle events with INVOLVE arc in queue
+		// this can only be the left and right adjacent neighbors
+		//.. 
+
+	arc.node().wtf();
 }
 Voronoi.WaveFront.prototype.toString = function(){
 	return "WAVEFRONT:\n"+this._tree.toString();
@@ -843,14 +917,22 @@ Voronoi.HalfEdge = function(){
 	this._what = null;
 }
 
-/* EdgeList */
-Voronoi.EdgeList = function(){
-	this._list = [];
-}
-Voronoi.EdgeList.prototype.addEdge = function(e){
-	this._list.push(e);
+/* Vertex */
+Voronoi.Vertex = function(){
+	this._what = null;
 }
 
+/* EdgeGraph */
+Voronoi.EdgeGraph = function(){
+	this._edges = [];
+	this._vertexes = [];
+}
+Voronoi.EdgeGraph.prototype.addEdge = function(e){
+	this._edges.push(e);
+}
+Voronoi.EdgeGraph.prototype.addVertex = function(v){
+	this._vertex.push(v);
+}
 
 
 

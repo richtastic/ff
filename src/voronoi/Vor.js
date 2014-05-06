@@ -128,12 +128,14 @@ Vor.prototype.animation_tick = function(){
 		}
 		console.log(this._Q.toString());
 		this._T = new Voronoi.WaveFront();
-		this._D = new Voronoi.EdgeList();
+		this._D = new Voronoi.EdgeGraph();
 		this._directrix = new V2D();
 	}
+	var circleEvents, halfEdge, next, arc, directrix, node, left, right, leftPoint, intPoint, arr, parabola;
 	this._directrix.y = this._animPosY;
+	directrix = this._directrix.y;
 	//
-	this._animPosY = 375 - this._animationTick*1.5;
+	this._animPosY = 375 - this._animationTick*2.5;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
 	//
@@ -147,7 +149,7 @@ Vor.prototype.animation_tick = function(){
 		focus = this._animPoints[i];
 		a = focus.x;
 		b = focus.y;
-		c = this._animPosY; // y = directrix
+		c = directrix;
 		for(j=left;j<=right;j+=deltaJ){
 			x = j;
 			y = ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));
@@ -161,20 +163,16 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
-	// 
-	var circleEvents, halfEdge, next, arc, directrix, node, left, right, leftPoint, intPoint, arr, parabola;
 	// DRAW WAVEFRONT INTERSECTIONS ...
-	directrix = this._directrix.y;
 	//this._animParabolas.graphics().clear();
 	this._animParabolas.graphics().setLine(2.0,0xFFCC0066);
 	this._animParabolas.graphics().beginPath();
 	node = this._T.root().leftMost();
 		var count = 0;
-		console.log("loop");
 		while(node){
 			//console.log(node);
 			arc = node.value();
-			console.log(arc.toString());
+//console.log(arc.toString());
 			parabola = arc.parabolaLeft();
 			intPoint = null;
 			if(!arc.nonIntersection()){
@@ -202,7 +200,7 @@ Vor.prototype.animation_tick = function(){
 				//parabola = arc.parabolaRight();
 				right = new V2D(500,0);
 			}
-console.log(parabola.toString());
+//console.log(parabola.toString());
 			//console.log(left.toString()+" -> "+right.toString());
 			deltaJ = (right.x-left.x)/50.0;
 //console.log("PARABOLA: "+parabola+"     "+directrix);
@@ -213,7 +211,7 @@ console.log(parabola.toString());
 				x = j;
 				y = a*x*x + b*x + c;
 				//y = ((x-a)*(x-a) + b*b - c*c)/(2.0*(b-c));
-				if(j==left.x){
+				if(j==left.x && count==0){
 					this._animParabolas.graphics().moveTo(x,y);
 				}else{
 					this._animParabolas.graphics().lineTo(x,y);
@@ -228,13 +226,13 @@ console.log(parabola.toString());
 			}
 			++count;
 		}
-		console.log(count);
+	//console.log(count);
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
 	//
 	// ALGORITHM
-	//console.log(this._Q.toString());
+	console.log(this._Q.toString());
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
 		//console.log(next.point().y);
@@ -249,7 +247,7 @@ console.log(parabola.toString());
 				if(this._T.isEmpty()){
 					halfEdge = new Voronoi.HalfEdge();
 					this._D.addEdge(halfEdge);
-					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_RIGHT, halfEdge );
+					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, halfEdge );
 					console.log(this._T);
 					node = this._T.addArc( arc );
 					arc.node( node );
@@ -259,12 +257,19 @@ console.log(parabola.toString());
 					// arc.removeCircleEventsFromQueue(this._Q);
 					// this._T.splitArcAtPoint(arc,e.point());
 					this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), directrix, this._Q);
+
+					// SHOW CIRCLE EVENT SITES (ADD AND CANCELATION)
+
 				}
 				console.log("T: ");
 				console.log(this._T.toString());
-			}else{ // CIRCLE
+			}else{ // CIRCLE Voronoi.EVENT_TYPE_CIRCLE
 				console.log("CIRCLE EVENT");
+				console.log(e);
 				// arc will disappear
+				//this._T.removeArcAtCircle(e.point(),e.circle(), arc);
+				this._T.removeArcAtCircleWithQueueAndGraph = function(e, this._Q,this.D){
+				//throw new Error();
 			}
 			next = this._Q.peek();
 		}

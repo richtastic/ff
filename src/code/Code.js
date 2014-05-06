@@ -1741,6 +1741,25 @@ C = (a*a + b*b - c*c)/Z
 
 
 */
+// ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
+Code.circleFromPoints = function(a,b,c){
+	var lineAB = V2D.diff(a,b);
+	var lineBC = V2D.diff(b,c);
+	//var lineAC = V2D.diff(a,c);
+	var rotAB = V2D.rotate(lineAB,Math.PIO2);
+	var rotBC = V2D.rotate(lineBC,Math.PIO2);
+	//var rotAC = V2D.rotate(lineAC,Math.PIO2);
+	var midAB = V2D.midpoint(a,b);
+	var midBC = V2D.midpoint(b,c);
+	//var midAC = V2D.midpoint(a,c);
+	var cenA = Code.rayIntersect2D(midAB,rotAB, midBC,rotBC);
+	//var cenB = Code.rayIntersect2D(midBC,rotBC, midAC,rotAC);
+	//var cenC = Code.rayIntersect2D(midAC,rotAC, midAB,rotAB);
+	var lenA = V2D.distance(cenA,a);
+	//var lenB = V2D.distance(cenB,b);
+	//var lenC = V2D.distance(cenC,c);
+	return {center:cenA, radius:lenA};
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
