@@ -72,7 +72,7 @@ Vor.prototype.voronoi = function(){
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
 	points.push( new V2D(5,6) );
-//	points.push( new V2D(6,4) );
+	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 // points.push( new V2D(1,8) );
 // points.push( new V2D(1.5,7) );
@@ -172,9 +172,9 @@ Vor.prototype.animation_tick = function(){
 	node = this._T.root().leftMost();
 		var count = 0;
 		while(node){
-			console.log(node);
+//console.log(node);
 			arc = node.value();
-console.log(arc);
+//console.log(arc);
 			parabola = arc.parabolaLeft();
 			intPoint = null;
 			if(!arc.nonIntersection()){
@@ -225,6 +225,7 @@ console.log(arc);
 			if(count >= 10){
 				console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
 				node = null;
+				throw new Error();
 			}
 			++count;
 		}

@@ -987,13 +987,10 @@ console.log(leftIntersection.node());
 	leftIntersection.direction(rightIntersection.direction()==Voronoi.ARC_PARABOLA_INT_RIGHT?Voronoi.ARC_PARABOLA_INT_LEFT:Voronoi.ARC_PARABOLA_INT_RIGHT); // flip direction?
 	//leftIntersection.
 	//Voronoi.ARC_PARABOLA_INT_RIGHT);
-console.log(  "EQUAL?" + ( leftIntersection.node().value() == leftIntersection ) );
 	// remove from tree
 	//leftIntersection.node().remove();
 	
 //console.log(rightIntersection.node()==leftIntersection.node());
-
-console.log(  "EQUAL?" + ( leftIntersection.node().value() == leftIntersection ) );
 
 	// add new to tree
 /*
