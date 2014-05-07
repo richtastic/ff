@@ -69,10 +69,10 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(1,1) );
 	points.push( new V2D(1,5) );
 	points.push( new V2D(2,7) );
-	points.push( new V2D(3,4) );
-	points.push( new V2D(5,2) );
+//	points.push( new V2D(3,4) );
+//	points.push( new V2D(5,2) );
 	points.push( new V2D(5,6) );
-	points.push( new V2D(6,4) );
+//	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 // points.push( new V2D(1,8) );
 // points.push( new V2D(1.5,7) );
@@ -135,7 +135,9 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	this._animPosY = 375 - this._animationTick*2.5;
+	var offYStart = 169;//375;
+	var rateStart = 0.5;//2.5;
+	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
 	//
@@ -170,9 +172,9 @@ Vor.prototype.animation_tick = function(){
 	node = this._T.root().leftMost();
 		var count = 0;
 		while(node){
-			//console.log(node);
+			console.log(node);
 			arc = node.value();
-//console.log(arc.toString());
+console.log(arc);
 			parabola = arc.parabolaLeft();
 			intPoint = null;
 			if(!arc.nonIntersection()){
@@ -232,7 +234,7 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().strokeLine();
 	//
 	// ALGORITHM
-	console.log(this._Q.toString());
+//	console.log(this._Q.toString());
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
 		//console.log(next.point().y);
@@ -268,7 +270,7 @@ Vor.prototype.animation_tick = function(){
 				console.log(e);
 				// arc will disappear
 				//this._T.removeArcAtCircle(e.point(),e.circle(), arc);
-				this._T.removeArcAtCircleWithQueueAndGraph = function(e, this._Q,this.D){
+				this._T.removeArcAtCircleWithQueueAndGraph(e, this._Q,this.D);
 				//throw new Error();
 			}
 			next = this._Q.peek();
