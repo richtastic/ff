@@ -16,9 +16,20 @@ function defaultClassesLoadedFxn(){
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
 
+var obj;
 var tree = new RedBlackTree();
 
+console.log(tree.root());
+
+
 tree.insertObject(10);
+
+// console.log( tree.toString() );
+// obj = tree.deleteObject(10);
+// console.log(obj);
+// console.log( tree.toString() );
+// return;
+
 tree.insertObject(6);
 tree.insertObject(3);
 tree.insertObject(5);
@@ -38,21 +49,48 @@ tree.insertObject(17);
 // tree.insertObject(6);
 
 console.log( tree.toString() );
-tree.deleteObject(6);
+console.log( tree.toArray() );
+
+
+//return;
+
+obj = tree.deleteObject(6);
 console.log( tree.toString() );
+console.log( tree.toArray() );
+
 tree.deleteObject(4);
-//tree.deleteObject(6);
-// tree.deleteObject(0);
-// tree.deleteObject(0);
-// tree.deleteObject(0);
-// tree.deleteObject(1);
-// tree.deleteObject(3);
-// tree.deleteObject(2);
-// tree.deleteObject(5);
 console.log( tree.toString() );
-
-//console.log( tree.toArray() );
-
+console.log( tree.toArray() );
+tree.deleteObject(3);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(0);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(2);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(0);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(0);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(1);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+obj = tree.deleteObject(3);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(2);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(5);
+console.log( tree.toString() );
+console.log( tree.toArray() );
+tree.deleteObject(10);
+console.log( tree.toString() );
+console.log( tree.toArray() );
 
 
 
