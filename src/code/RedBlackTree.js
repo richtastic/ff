@@ -6,13 +6,24 @@ red node has two black children
 */
 
 function RedBlackTree(){
-	this._root = null;
+	this._sentinel = new RedBlackTree.Node();
+		this._sentinel.data("x");
+	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
 }
 RedBlackTree.sortIncreasing = function(a,b){
 	return b - a;
 }
 // --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.sentinel = function(){
+	return this._sentinel;
+}
+RedBlackTree.prototype.nil = function(){
+	return this._sentinel;
+}
+RedBlackTree.prototype.isNil = function(n){
+	return n==this._sentinel;
+}
 RedBlackTree.prototype.root = function(r){
 	if(r!==undefined){
 		this._root = r;
@@ -26,36 +37,12 @@ RedBlackTree.prototype.sorting = function(s){
 	return this._sorting;
 }
 // --------------------------------------------------------------------------------------------------------------------
-// RedBlackTree.prototype.insertObject = function(o){
+// RedBlackTree.prototype.maximumNode = function(){
 // 	if(this._root){
-// 		this._root = this._root.insertObject(o,this._sorting);
-// 	}else{
-// 		this._root = new RedBlackTree.Node(o);
+// 		return this._root.maximum();
 // 	}
+// 	return null;
 // }
-// RedBlackTree.prototype.insertNode = function(n){
-// 	if(this._root){
-// 		this._root = this._root.insertNode(n,this._sorting,this._root);
-// 	}else{
-// 		this._root = n;
-// 	}
-// }
-// RedBlackTree.prototype.deleteObject = function(o){
-// 	if(this._root){
-// 		this._root = this._root.deleteObject(o,this._sorting);
-// 	}
-// }
-// RedBlackTree.prototype.deleteNode = function(n){
-// 	if(this._root){
-// 		this._root = n.deleteSelf();
-// 	}
-// }
-RedBlackTree.prototype.maximumNode = function(){
-	if(this._root){
-		return this._root.maximum();
-	}
-	return null;
-}
 RedBlackTree.prototype.maximum = function(){
 	var max = this.maximumNode();
 	if(max){
@@ -63,12 +50,12 @@ RedBlackTree.prototype.maximum = function(){
 	}
 	return null;
 }
-RedBlackTree.prototype.minimumNode = function(){
-	if(this._root){
-		return this._root.minimumNode();
-	}
-	return null;
-}
+// RedBlackTree.prototype.minimumNode = function(){
+// 	//if(this._root){
+// 		return this._root.minimumNode();
+// 	//}
+// 	return null;
+// }
 RedBlackTree.prototype.minimum = function(){
 	var min = this.minimumNode();
 	if(min){
@@ -77,27 +64,47 @@ RedBlackTree.prototype.minimum = function(){
 	return null;
 }
 RedBlackTree.prototype.findNodeFromObject = function(o){
-	if(this._root){
+	//if(this._root){
 		return this._root.findNodeFromObject(o,this._sorting);
-	}
+	//}
 	return null;
+}
+// --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.successor = function(node){
+	if( !this.isNil(node.right()) ){
+		return this.minimumNode(node.right());
+	}
+	var parent = node.parent();
+	while( !this.isNil(node) && parent.right()==node){
+		node = parent;
+		parent = node.parent();
+	}
+	return node;
+}
+RedBlackTree.prototype.minimumNode = function(node){
+	var left = node.left();
+	while( !this.isNil(left) ){
+		node = left;
+		left = node.left();
+	}
+	return node;
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.rotateLeft = function(node){
 	var a = node, b = node.right(), p = node.parent();
 	a.right(b.left());
-	if(b.left()){
+	if( !this.isNil(b.left()) ){
 		b.left().parent(a);
 	}
 	b.parent(p);
-	if(p){ // else root change to b
+	if(this.isNil(p)){
+		this.root(b);
+	}else{
 		if(a==p.left()){
 			p.left(b);
 		}else{
 			p.right(b);
 		}
-	}else{
-		this.root(b);
 	}
 	b.left(a);
 	a.parent(b);
@@ -105,18 +112,18 @@ RedBlackTree.prototype.rotateLeft = function(node){
 RedBlackTree.prototype.rotateRight = function(node){
 	var a = node, b = node.left(), p = node.parent();
 	a.left(b.right());
-	if(b.right()){
+	if( !this.isNil(b.right()) ){
 		b.right().parent(a);
 	}
 	b.parent(p);
-	if(p){ // else root change to b
+	if(this.isNil(p)){
+		this.root(b);
+	}else{
 		if(a==p.left()){
 			p.left(b);
 		}else{
 			p.right(b);
 		}
-	}else{
-		this.root(b);
 	}
 	b.right(a);
 	a.parent(b);
@@ -128,8 +135,8 @@ RedBlackTree.prototype.insertObject = function(o){
 }
 RedBlackTree.prototype.insertNode = function(n){
 	var fxn = this._sorting;
-	var value, node = this._root, next = null, o = n.data();
-	while(node){
+	var value, node = this.root(), next = this.nil(), o = n.data();
+	while( !this.isNil(node) ){
 		next = node;
 		value = fxn(node.data(),o);
 		if(value<0){
@@ -139,21 +146,23 @@ RedBlackTree.prototype.insertNode = function(n){
 		}
 	}
 	n.parent(next);
-	if(next){ // else root change to n
+	if( this.isNil(next) ){
+		this.root(n);
+	}else{
 		value = fxn(next.data(),o); // value was already calculated ?
 		if(value<0){
 			next.left(n);
 		}else{
 			next.right(n);
 		}
-	}else{
-		this.root(n);
 	}
+	n.left(this.nil());
+	n.right(this.nil());
 	n.colorRed();
 	this._insertFixup(n);
 }
 RedBlackTree.prototype._insertFixup = function(node){
-	while(node.parent() && node.parent().isRed()){
+	while(node.parent().isRed()){
 		if(node.parent()==node.parent().parent().left()){
 			sib = node.parent().parent().right();
 			if(sib && sib.isRed()){
@@ -199,33 +208,37 @@ RedBlackTree.prototype.deleteObject = function(o){
 	return null;
 }
 RedBlackTree.prototype.deleteNode = function(node){
+console.log(this.nil());
 	var x, y;
-	y = (node.left()&&node.right())?node.successor():node;
-	x = y.left()?y.left():y.right();
-	if(x){ // check if x is null?
-		x.parent(y.parent());
-	}
-	if(y.parent()){ // else root change to x
+console.log(this.successor(node));
+	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.successor(node);
+	x = ( this.isNil(y.left()) )?y.right():y.left();
+	x.parent(y.parent());
+	if( this.isNil(y.parent()) ){
+		this.root(x);
+	}else{
 		if(y==y.parent().left()){
 			y.parent().left(x);
 		}else{
 			y.parent().right(x);
 		}
-	}else{
-		console.log(x);
-		this._root = x;
 	}
 	var wasBlack = y.isBlack();
-	console.log(wasBlack);
 	if(y!=node){
-		y.replace(node); // physical replacement
-		if(!y.parent()){ // root replaced
-			this._root = y;
-		}
-		//node.data(y.data()); // satellite data
+		//y.replace(node); // physical replacement
+		// if(this.isNil(y.parent())){ // root replaced
+		// 	this._root = y;
+		// }
+		// node.left(y.left());
+		// node.right(y.right());
+		// node.parent(y.parent());
+		// node.color(y.color());
+		node.data(y.data()); // satellite data
+		//node.replace(y);
 	}
-	node.kill();
-	if(x && wasBlack){
+	//node.kill();
+// wasBlack = y.isBlack();
+	if(wasBlack){
 		this._deleteFixup(x);
 	}
 }
@@ -241,11 +254,12 @@ RedBlackTree.prototype._deleteFixup = function(node){
 				this.rotateLeft(node.parent());
 				w = node.parent().right();
 			}
+			console.log(w);
 			if(w.left().isBlack() && w.right().isBlack()){
 				w.colorRed();
 				node = node.parent();
 			}else{
-				if(w.right().colorBlack()){
+				if(w.right().isBlack()){
 					w.left().colorBlack();
 					w.colorRed();
 					this.rotateRight(w);
@@ -262,14 +276,14 @@ RedBlackTree.prototype._deleteFixup = function(node){
 			if(w.isRed()){
 				w.colorBlack();
 				node.parent().colorRed();
-				this.rotateLeft(node.parent());
+				this.rotateRight(node.parent());
 				w = node.parent().left();
 			}
-			if(w.left().isBlack() && w.right().isBlack()){
+			if(w.right().isBlack() && w.left().isBlack()){
 				w.colorRed();
 				node = node.parent();
 			}else{
-				if(w.left().colorBlack()){
+				if(w.left().isBlack()){
 					w.right().colorBlack();
 					w.colorRed();
 					this.rotateLeft(w);
@@ -365,15 +379,15 @@ RedBlackTree.Node.prototype.colorBlack = function(){
 	return this._color = RedBlackTree.NODE_COLOR_BLACK;
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.Node.prototype.minimumNode = function(){
-	var node = this;
-	var left = node.left();
-	while(left){
-		node = left;
-		left = node.left();
-	}
-	return node;
-}
+// RedBlackTree.Node.prototype.minimumNode = function(){
+// 	var node = this;
+// 	var left = node.left();
+// 	while(left){
+// 		node = left;
+// 		left = node.left();
+// 	}
+// 	return node;
+// }
 RedBlackTree.Node.prototype.maximumNode = function(){
 	var node = this;
 	var right = node.right();
@@ -395,18 +409,19 @@ RedBlackTree.Node.prototype.predecessor = function(){
 	}
 	return node;
 }
-RedBlackTree.Node.prototype.successor = function(){
-	if(this._right){
-		return this._right.minimumNode();
-	}
-	var node = this;
-	var parent = node.parent();
-	while(node && node.right()==node){
-		node = parent;
-		parent = node.parent();
-	}
-	return node;
-}
+// RedBlackTree.Node.prototype.successor = function(){
+// 	if(this._right){
+// 		return this._right.minimumNode();
+// 	}
+// 	var node = this;
+// 	var parent = node.parent();
+// 	while(node && node.right()==node){
+// 		node = parent;
+// 		parent = node.parent();
+// 	}
+// 	return node;
+// }
+
 RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn){
 	var value, node = this;
 	while(node){
@@ -590,11 +605,113 @@ RedBlackTree.Node.prototype.kill = function(){
 	this._left = null;
 	this._right = null;
 	this._data = null;
-	this._predecessor = null;
-	this._successor = null;
+	this._parent = null;
 }
 
 
 
 
 
+/*
+
+RedBlackTree.prototype.deleteNode = function(node){
+	var x, y, xParent, yIsLeft;
+	y = (node.left()&&node.right())?node.successor():node;
+	x = y.left()?y.left():y.right();
+	if(x){ // check if x is null?
+		x.parent(y.parent());
+	}
+	xParent = y.parent(); // +
+	yIsLeft = false; // +
+	if(y.parent()){ // else root change to x
+		if(y==y.parent().left()){
+			y.parent().left(x);
+			yIsLeft = true; // +
+		}else{
+			y.parent().right(x);
+		}
+	}else{
+		this._root = x;
+	}
+	var wasBlack = y.isBlack();
+	if(y!=node){
+		y.replace(node); // physical replacement
+		if(!y.parent()){ // root replaced
+			this._root = y;
+		}
+		//node.data(y.data());
+		//node.data(y.data()); // satellite data
+	}
+	//node.kill();
+	if(wasBlack){
+		this._deleteFixup(x,xParent,yIsLeft);
+	}
+}
+RedBlackTree.prototype._deleteFixup = function(node,parent,isLeft){
+	console.log("fixup");
+	if(!node){return;}
+	var w;
+	while(node!=this.root() && node.isBlack()){
+		if(isLeft){//node==node.parent().left()){
+			w = parent.right();// node.parent().right();
+			if(w.isRed()){
+				w.colorBlack();
+				parent.colorRed();//node.parent().colorRed();
+				this.rotateLeft(parent);//node.parent());
+				w = parent.right();//node.parent().right();
+			}
+			if(w.left().isBlack() && w.right().isBlack()){
+				w.colorRed();
+				node = parent;//node.parent();
+				parent = node.parent(); // +
+				isLeft = node==parent.left(); // +
+			}else{
+				if(w.right().isBlack()){
+					w.left().colorBlack();
+					w.colorRed();
+					this.rotateRight(w);
+					w = parent.right();//node.parent().right();
+				}
+				w.color( parent.color() );//node.parent().color() );
+				parent.colorBlack();//node.parent().colorBlack();
+				if(w.right()){ // +
+				w.right().colorBlack();
+				} // +
+				this.rotateLeft(parent);//this.rotateLeft(node.parent());
+				node = this.root();
+				parent = null; // +
+			}
+		}else{ // node==node.parent().right()
+			w = parent.left();//node.parent().left();
+			if(w.isRed()){
+				w.colorBlack();
+				parent.colorRed();//node.parent().colorRed();
+				this.rotateLeft(parent);//node.parent());
+				w = parent.left();//node.parent().left();
+			}
+			if(w.left().isBlack() && w.right().isBlack()){
+				w.colorRed();
+				node = parent;//node.parent();
+				parent = node.parent(); // +
+				isLeft = node==parent.left(); // +
+			}else{
+				if(w.left().isBlack()){
+					w.right().colorBlack();
+					w.colorRed();
+					this.rotateLeft(w);
+					w = parent.left();//node.parent().left();
+				}
+				w.color( parent.color() );//node.parent().color() );
+				parent.colorBlack();//node.parent().colorBlack();
+				if(w.left()){ // +
+					w.left().colorBlack();
+				}
+				this.rotateRight(parent);//node.parent());
+				node = this.root();
+				parent = null; // +
+			}
+		}
+	}
+	node.colorBlack();
+}
+*/
