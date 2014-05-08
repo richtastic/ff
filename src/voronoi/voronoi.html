@@ -15,6 +15,47 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
+
+var tree = new RedBlackTree();
+
+tree.insertObject(10);
+tree.insertObject(6);
+tree.insertObject(3);
+tree.insertObject(5);
+tree.insertObject(4);
+tree.insertObject(2);
+tree.insertObject(1);
+tree.insertObject(0);
+tree.insertObject(0);
+tree.insertObject(0);
+tree.insertObject(11);
+tree.insertObject(12);
+tree.insertObject(15);
+tree.insertObject(13);
+tree.insertObject(16);
+tree.insertObject(17);
+
+// tree.insertObject(6);
+
+console.log( tree.toString() );
+tree.deleteObject(6);
+
+console.log( tree.toString() );
+
+//console.log( tree.toArray() );
+
+
+
+
+
+
+return;
+
+
+
+
+
+
 /*
 var parabolaA = new V2D(0,1);
 var directrixA = new V2D(0,-1);
