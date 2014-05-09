@@ -1621,16 +1621,44 @@ Code.parabolaABCFromFocusDirectrix = function(focA,c){
 Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	var a1 = focA.x, b1 = focA.y, c1 = dirA;
 	var a2 = focB.x, b2 = focB.y, c2 = dirB;
-	var A1 = 0.5/(b1-c1);
+	var x, y, divA = (b1-c1), divB = (b2-c2);
+	var A1 = 0.5/divA;
 	var B1 = -2.0*a1*A1;
 	var C1 = (a1*a1 + b1*b1 - c1*c1)*A1;
-	var A2 = 0.5/(b2-c2);
+	var A2 = 0.5/divB;
 	var B2 = -2.0*a2*A2;
 	var C2 = (a2*a2 + b2*b2 - c2*c2)*A2;
+	//console.log(divA,"  ",divB);
+	if(divA==0 && divB==0){ // two lines at same directrix
+		if(focA.x==focB.x){ // y must also be equal
+			return [new V2D().copy(focA)];
+		}
+		return null;
+	}else if(divA==0){ // single line A
+		x = focA.x;
+		y = A2*x*x + B2*x + C2;
+		return [new V2D(x,y)];
+		// if(focA.y>dirA){ // A opens up
+		// 	if(y>=focB.y){ return [new V2D(x,y)]; }
+		// }else{ // A opens down
+		// 	if(y<=focB.y){ return [new V2D(x,y)]; }
+		// }
+		// return null;
+	}else if(divB==0){ // single line B
+		x = focB.x;
+		y = A1*x*x + B1*x + C1;
+		return [new V2D(x,y)];
+		// if(focB.y>dirB){ // B opens up
+		// 	if(y>=focB.y){ return [new V2D(x,y)]; }
+		// }else{ // B opens down
+		// 	if(y<=focB.y){ return [new V2D(x,y)]; }
+		// }
+		// return null;
+	}
+	
 	var A = A1-A2, B = B1-B2, C = C1-C2;
 	var intAx, intAy, intBx, intBy;
 	var inside = B*B - 4*A*C;
-	// console.log(A,B,C," ... ",inside);
 	if(A==0 && B==0 && C!=0){ return null; }  // inconsistent
 	if(inside<0){ return null; } // imaginary
 	if(A==0){ // single intersection Bx + C = 0

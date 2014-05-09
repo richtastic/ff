@@ -242,15 +242,42 @@ Voronoi.Arc.splitArcAtPoint = function(arc,point){
 		var arcL, arcC, arcR;
 		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix(), new Voronoi.HalfEdge(), null);
 		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, point, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix(), new Voronoi.HalfEdge(), null);
-		arcR = new Voronoi.Arc(point,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection, arc.directrix(), new Voronoi.HalfEdge(), null);
+		arcR = new Voronoi.Arc(point,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix(), new Voronoi.HalfEdge(), null);
 		return [arcL,arcC,arcR];
 	}
 	return null;
 }
 Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
-	// var newL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix(), new Voronoi.HalfEdge(), null);
-	// var newR = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix(), new Voronoi.HalfEdge(), null);
-	// return [newL,newR];
+	if(arcL.center()==arcR.center()){ // single arc
+		var arc = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.right(),arcR._directionRight(), arcC.directrix(), new Voronoi.HalfEdge(), null);
+		return [arc];
+	} // separate arcs
+	var newL = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcC.directrix(), new Voronoi.HalfEdge(), null);
+	var newR = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcR.center(), arcR.right(),arcR._directionRight(), arcC.directrix(), new Voronoi.HalfEdge(), null);
+	var centerPoint = arcC.intersectionAverage();
+	console.log(centerPoint);
+	var intersections = Code.intersectionParabolas(newL.center(),newL.directrix().y, newR.center(),newR.directrix().y);
+	console.log(intersections);
+	if(intersections.length==2){
+		if(intersections[0].x>intersections[1].x){ // order
+			intersections = [intersections[1],intersections[0]];
+		}
+		var distanceA = V2D.distance(intersections[0],centerPoint);
+		var distanceB = V2D.distance(intersections[1],centerPoint);
+		if(distanceA<distanceB){
+			newL.directionRight(Voronoi.ARC_PARABOLA_INT_LEFT);
+			newL.directionLeft(Voronoi.ARC_PARABOLA_INT_LEFT);
+		}else{
+			newL.directionRight(Voronoi.ARC_PARABOLA_INT_RIGHT);
+			newL.directionLeft(Voronoi.ARC_PARABOLA_INT_RIGHT);
+		}
+	}else if(intersections.length==1){ // doesn't matter
+		newL.directionRight(Voronoi.ARC_PARABOLA_INT_RIGHT);
+		newL.directionLeft(Voronoi.ARC_PARABOLA_INT_LEFT);
+	}else{ // 
+		console.log("????????");
+	}
+	return [newL,newR];
 }
 // -------------------------------------------------------------------------------------------------------------------- get/set
 Voronoi.Arc.prototype.node = function(n){
@@ -326,6 +353,21 @@ Voronoi.Arc.prototype.toString = function(){
 	}else{
 		str += "inf)";
 	}
+	if(this.leftDirection()==Voronoi.ARC_PARABOLA_INT_LEFT){
+		str += " (L";	
+	}else if(this.leftDirection()==Voronoi.ARC_PARABOLA_INT_RIGHT){
+		str += " (R";	
+	}else{
+		str += " (?";	
+	}
+	if(this.rightDirection()==Voronoi.ARC_PARABOLA_INT_LEFT){
+		str += ",L)";	
+	}else if(this.rightDirection()==Voronoi.ARC_PARABOLA_INT_RIGHT){
+		str += ",R)";	
+	}else{
+		str += ",?)";	
+	}
+	str += " ";
 	str += "]";
 	return str;
 
@@ -405,8 +447,8 @@ Voronoi.Arc.prototype.containsPointBoolean = function(point){
 Voronoi.Arc.prototype.containsPoint = function(point){ // searching via point
 	var ints = this.intersections();
 	if(ints[0]!=null && ints[1]!=null){
-		if(ints[0].x<points.x){
-			if(points.x<=ints[1]){
+		if(ints[0].x<point.x){
+			if(point.x<=ints[1].x){
 				return 0; // inside
 			}
 			return 1; // right
@@ -417,12 +459,12 @@ Voronoi.Arc.prototype.containsPoint = function(point){ // searching via point
 		return 0; // inside
 	}
 	if(ints[1]==null){ // [b, inf]
-		if(ints[0]<points.x){
+		if(ints[0].x<point.x){
 			return 0; // inside
 		}
 		return -1; // left
 	}else if(ints[0]==null){ // [-inf, a]
-		if(points.x<=ints[1]){
+		if(point.x<=ints[1].x){
 			return 0; // inside
 		}
 		return 1; // right
@@ -443,8 +485,10 @@ Voronoi.WaveFront.sorting = function(a,b){
 		return a.containsPoint(b);
 	}else{ // two arcs - insert
 		if( Voronoi.Arc.isArcToLeftOfArc(b,a) ){
+			//console.log("TO LEFT");
 			return -1;
 		}
+		//console.log("TO RIGHT");
 		return 1;
 	}
 }
@@ -734,9 +778,7 @@ Voronoi.WaveFront.prototype.toString = function(){
 // Voronoi.WaveFront.prototype.arcAbovePointAndDirectrix = function(p,d){
 // 	// 
 // }
-// Voronoi.WaveFront.prototype.splitArcAtPoint = function(arc,point){
-	
-// }
+
 
 /* HalfEdge */
 Voronoi.HalfEdge = function(){
