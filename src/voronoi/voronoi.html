@@ -124,16 +124,92 @@ console.log( tree.toArray() );
 
 return;
 */
-/*
-var arc, obj;
-var tree = new RedBlackTree();
 
-arc = new Voronoi.Arc();
+var arc, obj, node, a, b, list;
+var tree = new RedBlackTree(Voronoi.WaveFront.sorting);
+var directrix = new V2D(0,0);
+var parA = new V2D(3,4);
+var parB = new V2D(4,3);
+var parC = new V2D(2,2);
+var parD = new V2D(4.5,1);
+
+arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, parA, null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix, new Voronoi.HalfEdge(), null);
+node = RedBlackTree.newEmptyNode(arc);
+arc.node(node);
+console.log(arc);
+console.log(tree.toString());
+
+tree.insertNode(node);
+console.log(tree.toString());
+
+node = tree.findObject(parB);
+console.log(node);
+arc = node.data();
+console.log(arc);
+
+
+// INSERT NEW ARC:
+
+list = Voronoi.Arc.splitArcAtPoint(arc,parB);
+arc.kill();
+console.log(list);
+
+tree.deleteNode(node);
+console.log(tree.toString());
+
+arc = list[0];
+node = new RedBlackTree.newEmptyNode(arc);
+arc.node(node);
+tree.insertNode(node);
+console.log("\n");
+console.log(tree.toString());
+
+arc = list[1];
+node = new RedBlackTree.newEmptyNode(arc);
+arc.node(node);
+tree.insertNode(node);
+console.log("\n");
+console.log(tree.toString());
+
+arc = list[2];
+node = new RedBlackTree.newEmptyNode(arc);
+arc.node(node);
+tree.insertNode(node);
+console.log("\n");
+console.log(tree.toString());
+
+
+// MERGE-OUT OLD ARC
+console.log("\n\n");
+arc = list[1];
+console.log(arc.toString());
+a = tree.predecessor(arc.node());
+a = a.data();
+console.log(a.toString());
+b = tree.successor(arc.node());
+b = b.data();
+console.log(b.toString());
+
+console.log( Voronoi.Arc.isArcToLeftOfArc(a,arc) );
+console.log( Voronoi.Arc.isArcToLeftOfArc(arc,b) );
+
+list = Voronoi.Arc.mergeArcs(a, arc, b, parB);
+
+here
+
+console.log(list);
+// remove old 3 arcs
+// insert list of 2 new arcs
+
+console.log("\n\n");
+
+
+console.log(tree.toString());
 
 
 return;
-*/
 
+// (parL,dirL, parC, parR,dirR, dirX, edge, node){
 
 
 /*

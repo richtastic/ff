@@ -1646,6 +1646,14 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	intBy = A1*intBx*intBx + B1*intBx + C1;
 	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
 }
+/*
+	var a = new V2D(intAx,intAy);
+	var b = new V2D(intBx,intBy);
+	if(a.x<b.x){
+		return [a, b];
+	}
+	return [b,a];
+*/
 Code.intersectionParabolas2 = function(focA,dirA, focB,dirB){
 	var a1 = focA.x, b1 = focA.y, c1 = dirA;
 	var a2 = focB.x, b2 = focB.y, c2 = dirB;

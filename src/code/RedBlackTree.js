@@ -236,7 +236,6 @@ RedBlackTree.prototype.deleteObject = function(o){
 }
 RedBlackTree.prototype.deleteNode = function(node){
 	var x, y, wasData = node.data();
-	console.log("DELETING: "+node.data());
 	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.predecessor(node);//this.successor(node);
 	/*if( this.isNil(node.left()) || this.isNil(node.right()) ){
 		y = node;

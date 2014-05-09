@@ -204,45 +204,60 @@ Voronoi.Queue.prototype.toString = function(){
 	return str;
 }
 
-
-/* Arc  -------------------------- this isn't really an Arc, it's a 'break point' - intersection, and the arc is the area between these intersection points */
+// --------------------------------------------------------------------------------------------------------------------
+/* Arc */
 Voronoi.ARC_PARABOLA_INT_UNKNOWN = -1;
 Voronoi.ARC_PARABOLA_INT_LEFT = 0;
 Voronoi.ARC_PARABOLA_INT_RIGHT = 1;
-Voronoi.Arc = function(parA,parB,dir, edge){
+Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX, edge, node){
 	this._circleEvents = [];
 	this._halfEdge = null;
 	this._parabolaLeft = null;
+	this._parabolaCenter = null;
 	this._parabolaRight = null;
-	this._direction = Voronoi.ARC_PARABOLA_INT_UNKNOWN;
-	//this._directrix = null;
-	this._node = null; // location in tree
-	this._nodeLeft = null; // next leftward intersection
-	this._nodeRight = null; // next rightward intersection
-	// init
-	this.parabolaLeft(parA)
-	this.parabolaRight(parB);
-	this.direction(dir);
-	//this.directrix(dirx)
+	this._directionLeft = Voronoi.ARC_PARABOLA_INT_UNKNOWN;
+	this._directionRight = Voronoi.ARC_PARABOLA_INT_UNKNOWN;
+	this._directrix = null; // directrix pointer for arc ordering
+	this._node = null; // pointer to tree node for faster referencing
+	this.left(parL);
+	this.center(parC);
+	this.right(parR);
+	this.leftDirection(dirL);
+	this.rightDirection(dirR);
+	this.directrix(dirX)
 	this.halfEdge(edge);
+	this.node(node);
 }
+// -------------------------------------------------------------------------------------------------------------------- class
+Voronoi.Arc.isArcToLeftOfArc = function(a,b){
+	var avgA = a.intersectionAverage();
+	var avgB = b.intersectionAverage();
+	if(avgA==null || avgB==null){
+		return false;
+	}
+	return avgA < avgB;
+}
+Voronoi.Arc.splitArcAtPoint = function(arc,point){
+	if(arc.containsPointBoolean(point)){
+		var arcL, arcC, arcR;
+		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix(), new Voronoi.HalfEdge(), null);
+		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, point, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix(), new Voronoi.HalfEdge(), null);
+		arcR = new Voronoi.Arc(point,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection, arc.directrix(), new Voronoi.HalfEdge(), null);
+		return [arcL,arcC,arcR];
+	}
+	return null;
+}
+Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
+	// var newL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix(), new Voronoi.HalfEdge(), null);
+	// var newR = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix(), new Voronoi.HalfEdge(), null);
+	// return [newL,newR];
+}
+// -------------------------------------------------------------------------------------------------------------------- get/set
 Voronoi.Arc.prototype.node = function(n){
 	if(n!==undefined){
 		this._node = n;
 	}
 	return this._node;
-}
-Voronoi.Arc.prototype.nodeLeft = function(n){
-	if(n!==undefined){
-		this._nodeLeft = n;
-	}
-	return this._nodeLeft;
-}
-Voronoi.Arc.prototype.nodeRight = function(n){
-	if(n!==undefined){
-		this._nodeRight = n;
-	}
-	return this._nodeRight;
 }
 Voronoi.Arc.prototype.halfEdge = function(e){
 	if(e!==undefined){
@@ -256,134 +271,182 @@ Voronoi.Arc.prototype.circleEvents = function(e){ // set?
 	}
 	return this._circleEvents;
 }
-// Voronoi.Arc.prototype.parabolas = function(a,b){
-// 	if(a!==undefined){
-// 		this._parabolaLeft = a;
-// 		this._parabolaRight = b;
-// 	}
-// }
-Voronoi.Arc.prototype.parabolaLeft = function(l){
+Voronoi.Arc.prototype.left = function(l){
 	if(l!==undefined){
 		this._parabolaLeft = l;
 	}
 	return this._parabolaLeft;
 }
-Voronoi.Arc.prototype.parabolaRight = function(r){
+Voronoi.Arc.prototype.center = function(c){
+	if(c!==undefined){
+		this._parabolaCenter = c;
+	}
+	return this._parabolaCenter;
+}
+Voronoi.Arc.prototype.right = function(r){
 	if(r!==undefined){
 		this._parabolaRight = r;
 	}
 	return this._parabolaRight;
 }
-Voronoi.Arc.prototype.direction = function(a){
-	if(a!==undefined){
-		this._direction = a;
+Voronoi.Arc.prototype.leftDirection = function(l){
+	if(l!==undefined){
+		this._directionLeft = l;
 	}
+	return this._directionLeft;
 }
-// Voronoi.Arc.prototype.directrix = function(d){
-// 	if(d!==undefined){
-// 		this._directrix = d;
-// 	}
-// }
-Voronoi.Arc.prototype.nonIntersection = function(){
-	return this._parabolaLeft == this._parabolaRight; // or left+right nodes are null
+Voronoi.Arc.prototype.rightDirection = function(r){
+	if(r!==undefined){
+		this._directionRight = r;
+	}
+	return this._directionRight;
+}
+Voronoi.Arc.prototype.directrix = function(d){
+	if(d!==undefined){
+		this._directrix = d;
+	}
+	return this._directrix;
 }
 Voronoi.Arc.prototype.toString = function(){
 	var str = "";
+	var ints = this.intersections();
 	str += "[Arc: ";
-	str += this._parabolaLeft.toString() + " " + this._parabolaRight.toString();
-	str += this.nodeLeft()?("[N]<-"):("x<-");
-	str += " | ";
-	str += this.nodeRight()?("->[N]"):("->x");
-	str += (this._direction==Voronoi.ARC_PARABOLA_INT_LEFT)?" (L) ":" (R) ";
-	/*if(this.node()){
-		str += " "+(this.node().left()?"[]":"x")+"<- | ";
-		str += " ->"+(this.node().right()?"[]":"x");
+	if(this.center()){
+		str += "  "+this.center()+"  ";
 	}else{
-		str += " (null) ";
-	}*/
+		str += "  (x)  ";
+	}
+	if(ints[0]){
+		str += "["+ints[0].x+", ";
+	}else{
+		str += "(-inf, ";
+	}
+	if(ints[1]){
+		str += ""+ints[1].x+"]";
+	}else{
+		str += "inf)";
+	}
 	str += "]";
 	return str;
 
 }
+Voronoi.Arc.prototype.kill = function(){
+	this._node = null;
+	this._node = null;
+	this._node = null;
+	this._node = null;
+	this._node = null;
+	this._node = null;
+}
+// -------------------------------------------------------------------------------------------------------------------- operations
 Voronoi.Arc.prototype.removeCircleEventsFromQueue = function(queue){
 	while(this._circleEvents.length>0){
 		Code.removeElement( queue, this._circleEvents.pop() );
 	}
 }
-Voronoi.Arc.prototype.intersectionFromDirectrix = function(directrix){
-	var intersection = null;
-	var intersections = Code.intersectionParabolas(this._parabolaLeft,directrix, this._parabolaRight,directrix);
-	if(intersections){
-		for(var i=0;i<intersections.length;++i){
-			//console.log( "parabola intersection "+i+": " + intersections[i].toString() );
+// -------------------------------------------------------------------------------------------------------------------- intersections
+Voronoi.Arc.prototype.intersectLeft = function(){
+	if(this._parabolaLeft){
+		var intLeft = Code.intersectionParabolas(this._parabolaLeft,this._directrix.y, this._parabolaCenter,this._directrix.y);
+		if(intLeft.length==2){
+			if(intLeft[0].x>intLeft[1].x){
+				intLeft = [intLeft[1],intLeft[0]];
+			}
+			if(this._directionLeft==Voronoi.ARC_PARABOLA_INT_LEFT){
+				return intLeft[0];
+			}else if(this._directionLeft==Voronoi.ARC_PARABOLA_INT_RIGHT){
+				return intLeft[1];
+			}
+		}else if(intLeft.length==1){
+			return intLeft[0];
+		}else{
+			return null;
 		}
-	}else{
-		console.log("no int")
 	}
-	if(intersections.length==2){
-		var intA = intersections[0], intB = intersections[1];
-		if(this._direction==Voronoi.ARC_PARABOLA_INT_LEFT){
-			intersection = intA.x<intB.x?intA:intB;
-		}else{ // if(this._directionA==Voronoi.ARC_PARABOLA_FOCUS_RIGHT){
-			intersection = intA.x>intB.x?intA:intB;
-		}
-	}else if(intersections.length==1){
-		intersection = intersections[0];
-	}else{
-		console.log("UH OH");
-	}
-	return intersection;
+	return null;
 }
-Voronoi.Arc.prototype.whichParabola = function(point){ // after searching
-	if(this.nonIntersection()){
-		return this._parabolaLeft;
+Voronoi.Arc.prototype.intersectRight = function(){
+	if(this._parabolaRight){
+		var intRight = Code.intersectionParabolas(this._parabolaCenter,this._directrix.y, this._parabolaRight,this._directrix.y);
+		if(intRight.length==2){
+			if(intRight[0].x>intRight[1].x){
+				intRight = [intRight[1],intRight[0]];
+			}
+			if(this._directionRight==Voronoi.ARC_PARABOLA_INT_LEFT){
+				return intRight[0];
+			}else if(this._directionRight==Voronoi.ARC_PARABOLA_INT_RIGHT){
+				return intRight[1];
+			}
+		}else if(intRight.length==1){
+			return intRight[0];
+		}else{
+			return null;
+		}
 	}
-	var intersection = this.intersectionFromDirectrix(point.y);
-	console.log(point,intersection)
-	if(point.x<intersection.x){
-		return this._parabolaLeft;
-	}
-	return this._parabolaRight;
+	return null;
 }
-Voronoi.Arc.prototype.containing = function(point){ // searching
-	console.log(this)
-	if(this.nonIntersection()){
-		return 0; // this happens when there is only 1 arc in the tree
+Voronoi.Arc.prototype.intersections = function(){
+	return [this.intersectLeft(),this.intersectRight()];
+}
+Voronoi.Arc.prototype.intersectionAverage = function(a,b){
+	var ints = this.intersections();
+	if(ints[0]!=null && ints[1]!=null){
+		return (ints[0].x+ints[1].x)*0.5;
+	}else if(ints[0]!=null && ints[1]==null){
+		return ints[0].x + 1.0; // numerical stability
+	}else if(ints[0]==null && ints[1]!=null){
+		return ints[1].x - 1.0; // numerical stability
 	}
-	var intersection = this.intersectionFromDirectrix(point.y);
-	console.log(point,intersection)
-	if(point.x<intersection.x){ // left
-		if(this.node().left()){
-			return -1;
+	return null;
+}
+Voronoi.Arc.prototype.containsPointBoolean = function(point){
+	return this.containsPoint(point)==0;
+}
+Voronoi.Arc.prototype.containsPoint = function(point){ // searching via point
+	var ints = this.intersections();
+	if(ints[0]!=null && ints[1]!=null){
+		if(ints[0].x<points.x){
+			if(points.x<=ints[1]){
+				return 0; // inside
+			}
+			return 1; // right
 		}
-	}else{ // right
-		if(this.node().right()){
-			return 1;
+		return -1; // left
+	}
+	if(ints[0]==null && ints[1]==null){ // [-inf,inf]
+		return 0; // inside
+	}
+	if(ints[1]==null){ // [b, inf]
+		if(ints[0]<points.x){
+			return 0; // inside
 		}
+		return -1; // left
+	}else if(ints[0]==null){ // [-inf, a]
+		if(points.x<=ints[1]){
+			return 0; // inside
+		}
+		return 1; // right
 	}
 	return 0;
 }
 
 
+
+// --------------------------------------------------------------------------------------------------------------------
 /* WaveFront */
 Voronoi.WaveFront = function(){
 	this._tree = new RedBlackTree(Voronoi.WaveFront.sorting);
 	this._length = 0;
 }
 Voronoi.WaveFront.sorting = function(a,b){
-	console.log(a,b);
-	if( Code.isa(b,V2D) ){ // arc and point - find if point intersects ..
-		console.log("A");
-		//console.log("V2D: "+b.toString());
-		return a.containing(b); // value()
-	}else{ // two arcs
-		console.log("B");
-		if(a==b){
-			return 0;
+	if( Code.isa(b,V2D) ){ // arc and point - search
+		return a.containsPoint(b);
+	}else{ // two arcs - insert
+		if( Voronoi.Arc.isArcToLeftOfArc(b,a) ){
+			return -1;
 		}
-		return -1; // ... anything really
+		return 1;
 	}
-	return b-a;
 }
 Voronoi.WaveFront.prototype.root = function(){
 	return this._tree;
