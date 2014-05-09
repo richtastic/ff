@@ -5,17 +5,22 @@ every leaf is black
 red node has two black children
 */
 
-function RedBlackTree(){
+function RedBlackTree(fxn){
 	this._sentinel = new RedBlackTree.Node();
-		this._sentinel.data(null);
+		// this._sentinel.data(null);
 		// this._sentinel.left(this._sentinel);
 		// this._sentinel.right(this._sentinel);
 		// this._sentinel.parent(this._sentinel);
 	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
+	this._length = 0;
+	this.sorting(fxn);
 }
 RedBlackTree.sortIncreasing = function(a,b){
 	return b - a;
+}
+RedBlackTree.newEmptyNode = function(d){
+	return new RedBlackTree.Node(d);
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.sentinel = function(){
@@ -40,17 +45,37 @@ RedBlackTree.prototype.sorting = function(s){
 	return this._sorting;
 }
 // --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.length = function(){
+	return this._length;
+}
+RedBlackTree.prototype.isEmpty = function(){
+	return this._length==0;
+}
+// --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.clear = function(){
+	if( !this.isNil(this._root) ){
+		this._root.clear(this.nil());
+		this._root = this._sentinel;
+		this._sentinel.left(null);
+		this._sentinel.right(null);
+		this._sentinel.parent(null);
+	}
+}
 RedBlackTree.prototype.maximum = function(){
-	var max = this.maximumNode(this._root);
-	if(max){
-		return max.data();
+	if(!this.isNil(this._root)){
+		var max = this.maximumNode(this._root);
+		if(max){
+			return max.data();
+		}
 	}
 	return null;
 }
 RedBlackTree.prototype.minimum = function(){
-	var min = this.minimumNode(this._root);
-	if(min){
-		return min.data();
+	if(!this.isNil(this._root)){
+		var min = this.minimumNode(this._root);
+		if(min){
+			return min.data();
+		}
 	}
 	return null;
 }
@@ -71,6 +96,9 @@ RedBlackTree.prototype.findNodeFromObject = function(o){
 		return this._root.findNodeFromObject(o,this._sorting,this.nil());
 	}
 	return null;
+}
+RedBlackTree.prototype.findObject = function(o){
+	return this.findNodeFromObject(o);
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.predecessor = function(node){
@@ -158,6 +186,7 @@ RedBlackTree.prototype.insertNode = function(n){
 	n.right(this.nil());
 	n.colorRed();
 	this._insertFixup(n);
+	++this._length;
 }
 RedBlackTree.prototype._insertFixup = function(node){
 	while(node.parent().isRed()){
@@ -250,6 +279,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 		this.nil().right(x);
 		this._deleteFixup(x);
 	}
+	--this._length;
 	return wasData;
 }
 RedBlackTree.prototype._deleteFixup = function(node){
@@ -349,6 +379,9 @@ RedBlackTree.Node = function(d){
 	this._color = RedBlackTree.NODE_COLOR_UNKNOWN;
 	this.data(d);
 }
+RedBlackTree.Node.prototype.value = function(d){
+	return this.data(d);
+}
 RedBlackTree.Node.prototype.data = function(d){
 	if(d!==undefined){
 		this._data = d;
@@ -439,6 +472,18 @@ RedBlackTree.Node.prototype.kill = function(n){
 	this._parent = null; 
 }
 // --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.Node.prototype.clear = function(nil){
+	if(this==nil){
+		return;
+	}
+	if(this._left!=nil){
+		this._left.clear(nil);
+	}
+	if(this._right!=nil){
+		this._right.clear(nil);
+	}
+	this.kill();
+}
 RedBlackTree.Node.prototype.toString = function(tab,addTab,nil){
 	tab = tab!==undefined?tab:"   ";
 	addTab = addTab!==undefined?addTab:"  ";

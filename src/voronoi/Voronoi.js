@@ -346,6 +346,7 @@ Voronoi.Arc.prototype.whichParabola = function(point){ // after searching
 	return this._parabolaRight;
 }
 Voronoi.Arc.prototype.containing = function(point){ // searching
+	console.log(this)
 	if(this.nonIntersection()){
 		return 0; // this happens when there is only 1 arc in the tree
 	}
@@ -366,15 +367,17 @@ Voronoi.Arc.prototype.containing = function(point){ // searching
 
 /* WaveFront */
 Voronoi.WaveFront = function(){
-	this._tree = new Voronoi.BinTree(Voronoi.WaveFront.sorting);
+	this._tree = new RedBlackTree(Voronoi.WaveFront.sorting);
 	this._length = 0;
 }
 Voronoi.WaveFront.sorting = function(a,b){
-	//console.log(a,b);
+	console.log(a,b);
 	if( Code.isa(b,V2D) ){ // arc and point - find if point intersects ..
+		console.log("A");
 		//console.log("V2D: "+b.toString());
 		return a.containing(b); // value()
 	}else{ // two arcs
+		console.log("B");
 		if(a==b){
 			return 0;
 		}
@@ -394,7 +397,7 @@ Voronoi.WaveFront.prototype.length = function(){
 }
 Voronoi.WaveFront.prototype.addArc = function(arc){
 	++this._length;
-	return this._tree.addItem(arc);
+	return this._tree.insertObject(arc);
 }
 /*Voronoi.WaveFront.prototype.addArcFromPoint = function(point){
 	var prev;
@@ -417,7 +420,9 @@ Voronoi.WaveFront.prototype.addArc = function(arc){
 Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(point,directrix,queue){
 	console.log("add ..........................................................................");
 	var i, arc, node, len, circles, pA,pB, parabola;
-	node = this._tree.findItem( point );
+console.log(this._tree.toString());
+	node = this._tree.findObject( point );
+console.log(node);
 	arc = node.value();
 	console.log(point+" POINT INTERSECTS ARC: "+arc);
 	circles = arc.circleEvents();
@@ -428,8 +433,8 @@ Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(poin
 	// new 3-tree
 	pA = new Voronoi.Arc();
 	pB = new Voronoi.Arc();
-	nA = new Voronoi.BinNode(pA);
-	nB = new Voronoi.BinNode(pB);
+	nA = RedBlackTree.newEmptyNode(pA);
+	nB = RedBlackTree.newEmptyNode(pB);
 	pA.node(nA);
 	pB.node(nB);
 console.log("SETTING: "+(pA.node().value()==pA)+" & "+(pB.node().value()==pB));
@@ -473,10 +478,10 @@ console.log("SETTING: "+(pA.node().value()==pA)+" & "+(pB.node().value()==pB));
 		pB.nodeRight(null);
 		if(parabola==arc.parabolaLeft()){ // to left
 			nB.left(nA);
-			this._tree.addNode(nB);
+			this._tree.insertNode(nB);
 		}else{ // to right
 			nA.right(nB);
-			this._tree.addNode(nA);
+			this._tree.insertNode(nA);
 		}
 		this._length=2;
 	}else{

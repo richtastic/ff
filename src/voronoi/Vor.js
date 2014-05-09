@@ -169,7 +169,8 @@ Vor.prototype.animation_tick = function(){
 	//this._animParabolas.graphics().clear();
 	this._animParabolas.graphics().setLine(2.0,0xFFCC0066);
 	this._animParabolas.graphics().beginPath();
-	node = this._T.root().leftMost();
+	node = this._T.root().minimum();
+console.log(node);
 		var count = 0;
 		while(node){
 //console.log(node);
@@ -246,16 +247,20 @@ Vor.prototype.animation_tick = function(){
 			e = this._Q.next();
 			console.log("popped "+e);
 			if(e.type()==Voronoi.EVENT_TYPE_SITE){ // SITE
-				console.log("SITE EVENT");
+				console.log("SITE EVENT: "+this._T.isEmpty());
 				if(this._T.isEmpty()){
 					halfEdge = new Voronoi.HalfEdge();
 					this._D.addEdge(halfEdge);
 					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, halfEdge );
-					console.log(this._T);
+					console.log(this._T.toString());
 					node = this._T.addArc( arc );
 					arc.node( node );
 					//arc.node( this._T.findAny(arc) );
 				}else{
+					console.log("\n\n");
+					console.log(this._T.length());
+					console.log(this._T.toString());
+					console.log("\n\n");
 					// arc = this._T.arcAbovePointAndDirectrix(e.point(), directrix);
 					// arc.removeCircleEventsFromQueue(this._Q);
 					// this._T.splitArcAtPoint(arc,e.point());
