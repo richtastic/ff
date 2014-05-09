@@ -40,30 +40,6 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 	// console.log("key still down "+e);
 }
 
-Vor.circleFromPoints = function(a,b,c, root){
-	var lineAB = V2D.diff(a,b);
-	var lineBC = V2D.diff(b,c);
-	var lineAC = V2D.diff(a,c);
-	var rotAB = V2D.rotate(lineAB,Math.PIO2);
-	var rotBC = V2D.rotate(lineBC,Math.PIO2);
-	var rotAC = V2D.rotate(lineAC,Math.PIO2);
-	var midAB = V2D.midpoint(a,b);
-	var midBC = V2D.midpoint(b,c);
-	var midAC = V2D.midpoint(a,c);
-	var cenA = Code.rayIntersect2D(midAB,rotAB, midBC,rotBC);
-	var cenB = Code.rayIntersect2D(midBC,rotBC, midAC,rotAC);
-	var cenC = Code.rayIntersect2D(midAC,rotAC, midAB,rotAB);
-	var lenA = V2D.distance(cenA,a);
-	var lenB = V2D.distance(cenB,b);
-	var lenC = V2D.distance(cenC,c);
-	// root.addChild( Vor.makePoint(midAB,5.0,0xFF00FF00) );
-	// root.addChild( Vor.makeLine(midAB,V2D.add(midAB,rotAB),0xFF00FF00) );
-	// root.addChild( Vor.makePoint(midBC,5.0,0xFF00FF00) );
-	// root.addChild( Vor.makeLine(midBC,V2D.add(midBC,rotBC),0xFF00FF00) );
-	// root.addChild( Vor.makePoint(midAC,5.0,0xFF00FF00) );
-	// root.addChild( Vor.makeLine(midAC,V2D.add(midAC,rotAC),0xFF00FF00) );
-	return {center:cenA, radius:lenA};
-}
 Vor.prototype.voronoi = function(){
 	var points = new Array();
 	points.push( new V2D(1,1) );
@@ -135,7 +111,7 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 169;//375;
+	var offYStart = 375;
 	var rateStart = 0.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
@@ -183,12 +159,6 @@ console.log(node);
 				intPoint = arc.intersectionFromDirectrix(directrix);
 				var intersection = null;
 				var intersections = Code.intersectionParabolas(arc.parabolaLeft(),directrix, arc.parabolaRight(),directrix);
-
-				/*if(arc.direction()==Voronoi.ARC_PARABOLA_INT_RIGHT){
-					parabola = arc.parabolaLeft();
-				}else{
-					parabola = arc.parabolaRight();
-				}*/
 			}
 			// left limit
 			if( !arc.nodeLeft() ){ // left end

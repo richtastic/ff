@@ -88,18 +88,16 @@ Voronoi.prototype.toString = function(){
 }
 
 
-
+// --------------------------------------------------------------------------------------------------------------------
 /* Event */
 Voronoi.EVENT_TYPE_SITE = 0;
 Voronoi.EVENT_TYPE_CIRCLE = 1;
 Voronoi.Event = function(p,t){
 	this._type = null;
-	this._arcLeft = null;
-	this._arcRight = null;
-	this._parabola = null;
+	this._arc = null;
 	this._circle = null;
 	this._point = new V2D();
-	this._circles = [];
+	this._circles = null;
 	this.point(p);
 	this.type(t);
 }
@@ -119,30 +117,11 @@ Voronoi.Event.prototype.type = function(t){
 	}
 	return this._type;
 }
-Voronoi.Event.prototype.arcLeft = function(l){
-	if(l!==undefined){
-		this._arcLeft = l;
+Voronoi.Event.prototype.arc = function(a){
+	if(a!==undefined){
+		this._arc = a;
 	}
-	return this._arcLeft;
-}
-Voronoi.Event.prototype.arcRight = function(r){
-	if(r!==undefined){
-		this._arcRight = r;
-	}
-	return this._arcRight;
-}
-Voronoi.Event.prototype.parabola = function(p){
-	if(p!==undefined){
-		this._parabola = p;
-	}
-	return this._parabola;
-}
-Voronoi.Event.prototype.arcs = function(l,r,p){
-	if(l!==undefined){
-		this.arcLeft(l);
-		this.arcRight(r);
-		this.parabola(p);
-	}
+	return this._arc;
 }
 Voronoi.Event.prototype.circle = function(c){
 	if(c!==undefined){
@@ -162,7 +141,7 @@ Voronoi.Event.prototype.toString = function(){
 	return str;
 }
 
-
+// --------------------------------------------------------------------------------------------------------------------
 /* Queue */
 Voronoi.Queue = function(){
 	this._list = [];
@@ -173,7 +152,6 @@ Voronoi.Queue.sortPointY = function(a,b){
 Voronoi.Queue.prototype.addEvent = function(e){
 	this._list.push(e);
 	this._list.sort( Voronoi.Queue.sortPointY );
-	//console.log(this._list);
 }
 Voronoi.Queue.prototype.removeEvent = function(e){
 	Code.removeElement(this._list,e);
@@ -217,7 +195,7 @@ Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX, edge, node){
 	this._parabolaRight = null;
 	this._directionLeft = Voronoi.ARC_PARABOLA_INT_UNKNOWN;
 	this._directionRight = Voronoi.ARC_PARABOLA_INT_UNKNOWN;
-	this._directrix = null; // directrix pointer for arc ordering
+	this._directrix = null; // directrix pointer for arc ordering, splitting, merging
 	this._node = null; // pointer to tree node for faster referencing
 	this.left(parL);
 	this.center(parC);
@@ -249,11 +227,11 @@ Voronoi.Arc.splitArcAtPoint = function(arc,point){
 }
 Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 	if(arcL.center()==arcR.center()){ // single arc
-		var arc = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.right(),arcR._directionRight(), arcC.directrix(), new Voronoi.HalfEdge(), null);
+		var arc = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.right(),arcR.rightDirection(), arcC.directrix(), new Voronoi.HalfEdge(), null);
 		return [arc];
 	} // separate arcs
 	var newL = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcC.directrix(), new Voronoi.HalfEdge(), null);
-	var newR = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcR.center(), arcR.right(),arcR._directionRight(), arcC.directrix(), new Voronoi.HalfEdge(), null);
+	var newR = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcR.center(), arcR.right(),arcR.rightDirection(), arcC.directrix(), new Voronoi.HalfEdge(), null);
 	var centerPoint = arcC.intersectionAverage();
 	console.log(centerPoint);
 	var intersections = Code.intersectionParabolas(newL.center(),newL.directrix().y, newR.center(),newR.directrix().y);

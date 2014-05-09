@@ -130,6 +130,8 @@ console.log( p );
 return;
 */
 
+/*
+
 var arc, obj, node, a, b, list;
 var tree = new RedBlackTree(Voronoi.WaveFront.sorting);
 var directrix = new V2D(0,0);
@@ -238,15 +240,19 @@ console.log("\n");
 console.log(tree.toString());
 
 
-
-
-return;
-
-
 // MERGE-OUT OLD ARC
 directrix.copy(parD);
+directrix.y -= 0.1;
 console.log("\n\n");
-arc = list[1];
+
+
+console.log("\n");
+console.log(tree.toString());
+console.log("\n");
+
+arc = tree.root().data();
+console.log(arc);
+
 console.log(arc.toString());
 a = tree.predecessor(arc.node());
 a = a.data();
@@ -282,6 +288,7 @@ console.log(tree.toString());
 
 
 return;
+*/
 
 // (parL,dirL, parC, parR,dirR, dirX, edge, node){
 
