@@ -48,7 +48,7 @@ Vor.prototype.voronoi = function(){
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
 	points.push( new V2D(5,6) );
-	points.push( new V2D(6,4) );
+	//points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 // points.push( new V2D(1,8) );
 // points.push( new V2D(1.5,7) );
@@ -178,7 +178,7 @@ Vor.prototype.animation_tick = function(){
 					this._animParabolas.graphics().lineTo(x,y);
 				}
 			}
-			node = this._T.nextNode(arc);//root().nextNode(arc.node());
+			node = this._T.nextNode(arc);
 			//node = null;
 //console.log("NEXT NODE:");
 //console.log(node);

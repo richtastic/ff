@@ -220,6 +220,19 @@ Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX, edge){
 	this.halfEdge(edge);
 	//this.node(node);
 }
+Voronoi.Arc.prototype.physicalCopy = function(a){ // addition
+	this.left(a.left());
+	this.center(a.center());
+	this.right(a.right());
+	this.leftDirection(a.leftDirection());
+	this.rightDirection(a.rightDirection());
+	this.directrix(a.directrix())
+}
+Voronoi.Arc.prototype.copy = function(a){ // identical
+	this.phsicalCopy(a);
+	Code.copyArray(this._circleEvents,a.circleEvents());
+	// half edges
+}
 // -------------------------------------------------------------------------------------------------------------------- class
 Voronoi.Arc.isArcToLeftOfArc = function(a,b){
 	var avgA = a.intersectionAverage();
@@ -257,13 +270,16 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 		var distanceA = V2D.distance(intersections[0],centerPoint);
 		var distanceB = V2D.distance(intersections[1],centerPoint);
 		if(distanceA<distanceB){
+			console.log("A");
 			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
-			newL.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 		}else{
+			console.log("B");
 			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
-			newL.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
+			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 		}
 	}else if(intersections.length==1){ // doesn't matter
+	console.log("C");
 		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 		newL.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 	}else{ // 
@@ -539,10 +555,11 @@ Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(poin
 		arc = node.data();
 		// get list of new arcs
 		list = Voronoi.Arc.splitArcAtPoint(arc,point);
-		// remove old arc
-		this._tree.deleteNode(node);
-//		arc.kill();
-		for(i=0;i<list.length;++i){
+		// // remove old arc
+		// this._tree.deleteNode(node);
+		// copy over new left arc
+		arc.physicalCopy(list[0]);
+		for(i=1;i<list.length;++i){
 			arc = list[i];
 			node = RedBlackTree.newEmptyNode(arc);
 			//arc.node(node);
@@ -557,7 +574,13 @@ this.sortForSearchArc();
 		node = this._tree.prevNode(node);
 		left = node?node.data():null;
 		if(left && center && right){
-			Voronoi.WaveFront.addCirclePointFromArcs(left,right,center, queue);
+console.log(left.toString());
+console.log(center.toString());
+console.log(right.toString());
+console.log("LEFT/RIGHT ChECK 1");
+console.log( Voronoi.Arc.isArcToLeftOfArc(left,center) );
+console.log( Voronoi.Arc.isArcToLeftOfArc(center,right) );
+			Voronoi.WaveFront.addCirclePointFromArcs(left,center,right, queue);
 		}
 		// right triplets of points
 		left = list[1];
@@ -567,7 +590,13 @@ this.sortForSearchArc();
 		node = this._tree.nextNode(node);
 		right = node?node.data():null;
 		if(left && center && right){
-			Voronoi.WaveFront.addCirclePointFromArcs(left,right,center, queue);
+console.log(left.toString());
+console.log(center.toString());
+console.log(right.toString());
+console.log("LEFT/RIGHT ChECK 2");
+console.log( Voronoi.Arc.isArcToLeftOfArc(left,center) );
+console.log( Voronoi.Arc.isArcToLeftOfArc(center,right) );
+			Voronoi.WaveFront.addCirclePointFromArcs(left,center,right, queue);
 		}
 this.sortForSearchPoint();
 	}
@@ -604,6 +633,8 @@ this.sortForSearchArc();
 console.log(left.toString());
 console.log(center.toString());
 console.log(right.toString());
+console.log( Voronoi.Arc.isArcToLeftOfArc(left,center) );
+console.log( Voronoi.Arc.isArcToLeftOfArc(center,right) );
 var nl = this._tree.findNodeFromObject(left);
 var nc = this._tree.findNodeFromObject(center)
 var nr = this._tree.findNodeFromObject(right);
@@ -614,21 +645,36 @@ this.sortForSearchPoint();
 
 console.log("        -------------------- ");
 list = Voronoi.Arc.mergeArcs(left,center,right);
-
-console.log(list);
-	// delete old nodes
-	this._tree.deleteNode(nl);
-	this._tree.deleteNode(nc);
-	this._tree.deleteNode(nr);
 console.log("\n");
-console.log(tree.toString());
-	// add new nodes
-	for(i=0;i<list.length;++i){
-		arc = list[i];
-		node = RedBlackTree.newEmptyNode(arc);
-		//arc.node(node);
-		this._tree.insertNode(node);
-	}
+console.log(this._tree.toString());
+console.log("\n");
+console.log(list);
+console.log(list[0].toString());
+console.log(list[1].toString());
+	// // delete old nodes
+	// this._tree.deleteNode(nl);
+	// this._tree.deleteNode(nc);
+	// this._tree.deleteNode(nr);
+// only delete middle node
+	this._tree.deleteNode(nc);
+	// NODES MAY CHANGE BETWEEN DELETES
+// copy left and right
+	left.physicalCopy(list[0]);
+if(list.length==2){
+	right.physicalCopy(list[1]);
+}else{
+	this._tree.deleteNode(nr);
+}
+// delete right node if only 1 is returned
+// console.log("\n");
+// console.log(this._tree.toString());
+// 	// add new nodes
+// 	for(i=0;i<list.length;++i){
+// 		arc = list[i];
+// 		node = RedBlackTree.newEmptyNode(arc);
+// 		//arc.node(node);
+// 		this._tree.insertNode(node);
+// 	}
 console.log("\n");
 console.log(this._tree.toString());
 
