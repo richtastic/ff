@@ -72,14 +72,24 @@ RedBlackTree.prototype.maximum = function(){
 }
 RedBlackTree.prototype.minimum = function(){
 	if(!this.isNil(this._root)){
-		var min = this.minimumNode(this._root);
+		var min = this._minimumNode(this._root);
 		if(min){
 			return min.data();
 		}
 	}
 	return null;
 }
-RedBlackTree.prototype.minimumNode = function(node){
+RedBlackTree.prototype.minimumNode = function(){ // external
+	var node = this._root;
+	if(!this.isNil(node)){
+		while( !this.isNil( node.left() ) ){
+			node = node.left();
+		}
+		return node;
+	}
+	return null;
+}
+RedBlackTree.prototype._minimumNode = function(node){ // internal only
 	while( !this.isNil( node.left() ) ){
 		node = node.left();
 	}
@@ -90,6 +100,31 @@ RedBlackTree.prototype.maximumNode = function(node){
 		node =  node.right();
 	}
 	return node;
+}
+RedBlackTree.prototype._maximumNode = function(node){
+	var node = this._root;
+	if(!this.isNil(node)){
+		while( !this.isNil(node.right()) ){
+			node =  node.right();
+		}
+		return node;
+	}
+	return null;
+}
+
+RedBlackTree.prototype.nextNode = function(nodeIn){ // external 'successor'
+	node = this.successor(nodeIn);
+	if( !this.isNil(node) && node!=nodeIn ){
+		return node;
+	}
+	return null;
+}
+RedBlackTree.prototype.prevNode = function(nodeIn){ // external 'predecessor'
+	node = this.predecessor(node);
+	if( !this.isNil(node)  && node!=nodeIn ){
+		return node;
+	}
+	return null;
 }
 RedBlackTree.prototype.findNodeFromObject = function(o){
 	if( !this.isNil(this._root) ){
@@ -103,21 +138,25 @@ RedBlackTree.prototype.findObject = function(o){
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.predecessor = function(node){
 	if( !this.isNil(node.left()) ){
-		return this.maximumNode(node.left());
+		return this._maximumNode(node.left());
 	}
-	while( !this.isNil(node.parent()) && node.left()==node){
-		node = node.parent();
+	var parent = node.parent();
+	while( !this.isNil(parent) && node.left()==node){
+		node = parent;
+		parent = parent.parent();
 	}
 	return node;
 }
 RedBlackTree.prototype.successor = function(node){
 	if( !this.isNil(node.right()) ){
-		return this.minimumNode(node.right());
+		return this._minimumNode(node.right());
 	}
-	while( !this.isNil(node.parent()) && parent.right()==node){
-		node = node.parent();
+	var parent = node.parent();
+	while(!this.isNil(parent) && parent.right()==node){
+		node = parent;
+		parent = parent.parent();
 	}
-	return node;
+	return parent;
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.rotateLeft = function(node){
@@ -237,21 +276,6 @@ RedBlackTree.prototype.deleteObject = function(o){
 RedBlackTree.prototype.deleteNode = function(node){
 	var x, y, wasData = node.data();
 	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.predecessor(node);//this.successor(node);
-	/*if( this.isNil(node.left()) || this.isNil(node.right()) ){
-		y = node;
-	}else{
-		//y = this.predecessor(node);
-		// predecessor
-		y = node.left();
-		while( !this.isNil(y.right()) ){
-			y = y.right();
-		}
-		// successor
-		// y = node.right();
-		// while( !this.isNil(y.left()) ){
-		// 	y = y.left();
-		// }
-	}*/
 	x = ( this.isNil(y.left()) )?y.right():y.left();
 	x.parent(y.parent());
 	if( this.isNil(y.parent()) ){
@@ -378,9 +402,6 @@ RedBlackTree.Node = function(d){
 	this._color = RedBlackTree.NODE_COLOR_UNKNOWN;
 	this.data(d);
 }
-RedBlackTree.Node.prototype.value = function(d){
-	return this.data(d);
-}
 RedBlackTree.Node.prototype.data = function(d){
 	if(d!==undefined){
 		this._data = d;
@@ -484,14 +505,15 @@ RedBlackTree.Node.prototype.clear = function(nil){
 	this.kill();
 }
 RedBlackTree.Node.prototype.toString = function(tab,addTab,nil){
+	// if(nil===undefined){return "[RB-Node]";}
 	tab = tab!==undefined?tab:"   ";
 	addTab = addTab!==undefined?addTab:"  ";
 	var str = "";
-	if(this._right!=nil){
+	if(this._right!=nil && this._right!=this){
 		str += this._right.toString(tab+addTab,addTab,nil)+"\n";
 	}
 	str += tab+"-"+this._data+" ["+(this.isRed()?"R":"B")+"]";
-	if(this._left!=nil){
+	if(this._left!=nil  && this._right!=this){
 		str += "\n"+this._left.toString(tab+addTab,addTab,nil);
 	}
 	return str;

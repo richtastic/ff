@@ -111,8 +111,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 375;
-	var rateStart = 0.5;//2.5;
+	var offYStart = 360;//375;
+	var rateStart = 5.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -145,38 +145,26 @@ Vor.prototype.animation_tick = function(){
 	//this._animParabolas.graphics().clear();
 	this._animParabolas.graphics().setLine(2.0,0xFFCC0066);
 	this._animParabolas.graphics().beginPath();
-	node = this._T.root().minimum();
-console.log(node);
+	node = this._T.root().minimumNode();
 		var count = 0;
 		while(node){
 //console.log(node);
-			arc = node.value();
-//console.log(arc);
-			parabola = arc.parabolaLeft();
-			intPoint = null;
-			if(!arc.nonIntersection()){
-				//console.log(arc.parabolaLeft(),arc.parabolaRight());
-				intPoint = arc.intersectionFromDirectrix(directrix);
-				var intersection = null;
-				var intersections = Code.intersectionParabolas(arc.parabolaLeft(),directrix, arc.parabolaRight(),directrix);
-			}
+			arc = node.data();
+			parabola = arc.center();
+//console.log(parabola.toString(),directrix);
+			var intersections = arc.intersections();
+//console.log(intersections);
 			// left limit
-			if( !arc.nodeLeft() ){ // left end
-				left = new V2D(-100,0);
-			}else{
-				left = right; // previous
+			left = new V2D(-100,0);
+			if(intersections[0]){
+				left = intersections[0];
 			}
 			// right limit
-			if( arc.nodeRight() && intPoint ){
-				right = intPoint;
-			}else{
-				//parabola = arc.parabolaRight();
-				right = new V2D(500,0);
+			right = new V2D(500,0);
+			if(intersections[1]){
+				right = intersections[1];
 			}
-//console.log(parabola.toString());
-			//console.log(left.toString()+" -> "+right.toString());
 			deltaJ = (right.x-left.x)/50.0;
-//console.log("PARABOLA: "+parabola+"     "+directrix);
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
 			a = arr[0], b = arr[1], c = arr[2];
 			//a = parabola.x; b = parabola.y; c = directrix;
@@ -189,10 +177,11 @@ console.log(node);
 				}else{
 					this._animParabolas.graphics().lineTo(x,y);
 				}
-				//console.log(x,y);
 			}
-			//
-			node = node.value().nodeRight();
+			node = this._T.root().nextNode(arc.node());
+			//node = null;
+//console.log("NEXT NODE:");
+//console.log(node);
 			if(count >= 10){
 				console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
 				node = null;
@@ -200,33 +189,25 @@ console.log(node);
 			}
 			++count;
 		}
+		node = null;
 	//console.log(count);
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
 	//
+// console.log(" \n ");
+// console.log(this._T.toString());
 	// ALGORITHM
 //	console.log(this._Q.toString());
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
-		//console.log(next.point().y);
-		//console.log(this._animPosY);
-//this._directrix.y = ; IS the point
-		directrix = this._animPosY;
-		while(next && next.point().y>directrix){
+//console.log(next);
+		while(next && next.point().y>this._directrix.y){
 			e = this._Q.next();
 			console.log("popped "+e);
 			if(e.type()==Voronoi.EVENT_TYPE_SITE){ // SITE
 				console.log("SITE EVENT: "+this._T.isEmpty());
-				if(this._T.isEmpty()){
-					halfEdge = new Voronoi.HalfEdge();
-					this._D.addEdge(halfEdge);
-					arc = new Voronoi.Arc( e.point(),e.point(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, halfEdge );
-					console.log(this._T.toString());
-					node = this._T.addArc( arc );
-					arc.node( node );
-					//arc.node( this._T.findAny(arc) );
-				}else{
+					console.log("FULL");
 					console.log("\n\n");
 					console.log(this._T.length());
 					console.log(this._T.toString());
@@ -234,11 +215,8 @@ console.log(node);
 					// arc = this._T.arcAbovePointAndDirectrix(e.point(), directrix);
 					// arc.removeCircleEventsFromQueue(this._Q);
 					// this._T.splitArcAtPoint(arc,e.point());
-					this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), directrix, this._Q);
-
+					this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), this._directrix, this._Q);
 					// SHOW CIRCLE EVENT SITES (ADD AND CANCELATION)
-
-				}
 				console.log("T: ");
 				console.log(this._T.toString());
 			}else{ // CIRCLE Voronoi.EVENT_TYPE_CIRCLE
@@ -250,6 +228,7 @@ console.log(node);
 				//throw new Error();
 			}
 			next = this._Q.peek();
+console.log("LOOP");
 		}
 	}else{
 		this._ticker.stop();

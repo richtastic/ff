@@ -37,8 +37,8 @@ tree.insertObject(4);
 tree.insertObject(2);
 tree.insertObject(1);
 tree.insertObject(0);
-tree.insertObject(0);
-tree.insertObject(0);
+// tree.insertObject(0);
+// tree.insertObject(0);
 tree.insertObject(11);
 tree.insertObject(12);
 tree.insertObject(15);
@@ -52,7 +52,25 @@ console.log( tree.toString() );
 console.log( tree.toArray() );
 
 
-//return;
+var node = tree.findNodeFromObject(4);
+console.log( node.data() );
+node = tree.nextNode(node);
+console.log( node.data() );
+
+
+var node = tree.findNodeFromObject(3);
+console.log( node.data() );
+node = tree.nextNode(node);
+console.log( node.data() );
+
+
+var node = tree.findNodeFromObject(17);
+console.log( node );
+node = tree.nextNode(node);
+console.log( node.data() );
+
+
+return;
 
 obj = tree.deleteObject(6);
 console.log( tree.toString() );
@@ -124,6 +142,8 @@ console.log( tree.toArray() );
 
 return;
 */
+
+
 /*
 var p = Code.intersectionParabolas(new V2D(0,1),-1, new V2D(1,-1),-1);
 console.log( p );
