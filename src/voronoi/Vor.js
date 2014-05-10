@@ -42,13 +42,13 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-	points.push( new V2D(1,1) );
+	//points.push( new V2D(1,1) );
 	points.push( new V2D(1,5) );
 	points.push( new V2D(2,7) );
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
 	points.push( new V2D(5,6) );
-	//points.push( new V2D(6,4) );
+	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 // points.push( new V2D(1,8) );
 // points.push( new V2D(1.5,7) );
@@ -111,8 +111,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 360;//375;
-	var rateStart = 5.5;//2.5;
+	var offYStart = 100;//375;
+	var rateStart = 1.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -198,36 +198,22 @@ Vor.prototype.animation_tick = function(){
 // console.log(" \n ");
 // console.log(this._T.toString());
 	// ALGORITHM
-//	console.log(this._Q.toString());
+	console.log(this._Q.toString()+"    + "+this._directrix.toString());
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
 //console.log(next);
 		while(next && next.point().y>this._directrix.y){
+var temp = new V2D(this._directrix.x,this._directrix.y);
 			e = this._Q.next();
 			console.log("popped "+e);
-			if(e.type()==Voronoi.EVENT_TYPE_SITE){ // SITE
-				console.log("SITE EVENT: "+this._T.isEmpty());
-					console.log("FULL");
-					console.log("\n\n");
-					console.log(this._T.length());
-					console.log(this._T.toString());
-					console.log("\n\n");
-					// arc = this._T.arcAbovePointAndDirectrix(e.point(), directrix);
-					// arc.removeCircleEventsFromQueue(this._Q);
-					// this._T.splitArcAtPoint(arc,e.point());
-					this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), this._directrix, this._Q);
-					// SHOW CIRCLE EVENT SITES (ADD AND CANCELATION)
-				console.log("T: ");
-				console.log(this._T.toString());
-			}else{ // CIRCLE Voronoi.EVENT_TYPE_CIRCLE
-				console.log("CIRCLE EVENT");
-				console.log(e);
-				// arc will disappear
-				//this._T.removeArcAtCircle(e.point(),e.circle(), arc);
-				this._T.removeArcAtCircleWithQueueAndGraph(e, this._Q,this.D);
-				//throw new Error();
+this._directrix.copy( e.point() );
+			if(e.isSiteEvent()){
+				this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), this._directrix, this._Q);
+			}else{
+				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
 			next = this._Q.peek();
+this._directrix.copy( temp );
 console.log("LOOP");
 		}
 	}else{

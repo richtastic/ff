@@ -272,6 +272,15 @@ Code.removeElement = function(a,o){ // preserves order O(n)
 		}
 	}
 }
+Code.removeElementAt = function(a,i){ // preserve order
+	var len = a.length;
+	while(i<len){
+		a[i] = a[i+1];
+		++i;
+	}
+	a.pop();
+	return;
+}
 Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 	var i, len = a.length;
 	for(i=0;i<len;++i){

@@ -113,16 +113,20 @@ RedBlackTree.prototype._maximumNode = function(node){
 }
 
 RedBlackTree.prototype.nextNode = function(nodeIn){ // external 'successor'
-	node = this.successor(nodeIn);
-	if( !this.isNil(node) && node!=nodeIn ){
-		return node;
+	if(nodeIn){
+		var node = this.successor(nodeIn);
+		if( !this.isNil(node) && node!=nodeIn ){
+			return node;
+		}
 	}
 	return null;
 }
 RedBlackTree.prototype.prevNode = function(nodeIn){ // external 'predecessor'
-	node = this.predecessor(node);
-	if( !this.isNil(node)  && node!=nodeIn ){
-		return node;
+	if(nodeIn){
+		node = this.predecessor(nodeIn);
+		if( !this.isNil(node)  && node!=nodeIn ){
+			return node;
+		}
 	}
 	return null;
 }
@@ -275,7 +279,7 @@ RedBlackTree.prototype.deleteObject = function(o){
 }
 RedBlackTree.prototype.deleteNode = function(node){
 	var x, y, wasData = node.data();
-	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.predecessor(node);// this.successor(node);
+	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.successor(node);
 	x = ( this.isNil(y.left()) )?y.right():y.left();
 	x.parent(y.parent());
 	if( this.isNil(y.parent()) ){
