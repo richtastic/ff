@@ -490,6 +490,15 @@ Voronoi.WaveFront.sorting = function(a,b){
 		return 1;
 	}
 }
+Voronoi.WaveFront.sortingArcEquality = function(a,b){
+	if(a==b){
+		return 0;
+	}
+	if( Voronoi.Arc.isArcToLeftOfArc(b,a) ){
+		return -1;
+	}
+	return 1;
+}
 Voronoi.WaveFront.prototype.root = function(){
 	return this._tree;
 }
@@ -593,6 +602,18 @@ console.log(right.node());
 console.log(left.toString());
 console.log(center.toString());
 console.log(right.toString());
+var was = this._tree.sorting();
+this._tree.sorting( Voronoi.WaveFront.sortingArcEquality );
+var nl = this._tree.findNodeFromObject(left);
+var nc = this._tree.findNodeFromObject(center)
+var nr = this._tree.findNodeFromObject(right);
+console.log(nl);
+console.log(nc);
+console.log(nr);
+console.log(nl==left.node());
+console.log(nc==center.node());
+console.log(nr==right.node());
+this._tree.sorting(was);
 console.log("        -------------------- ");
 return;
 list = Voronoi.Arc.mergeArcs(left,center,right);
