@@ -275,28 +275,30 @@ RedBlackTree.prototype.deleteObject = function(o){
 }
 RedBlackTree.prototype.deleteNode = function(node){
 	var x, y, wasData = node.data();
-	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.predecessor(node);//this.successor(node);
+	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.predecessor(node);// this.successor(node);
 	x = ( this.isNil(y.left()) )?y.right():y.left();
 	x.parent(y.parent());
 	if( this.isNil(y.parent()) ){
 		this.root(x);
-	}else{
-		if(y==y.parent().left()){
-			y.parent().left(x);
-		}else{
-			y.parent().right(x);
+	}else{ // replace y with x
+		if(true){//y==node){
+			if(y==y.parent().left()){
+				y.parent().left(x);
+			}else{
+				y.parent().right(x);
+			}
+		}else{ // predecessor
+			// 
 		}
 	}
 	var wasBlack = y.isBlack();
-	if(y!=node){
-		y.replace(node); // physical replacement
-		if(this.isNil(y.parent())){ // root replaced
+	if(y!=node){ // predecessor
+		y.replace(node,null);
+		if(this.isNil(y.parent())){
 			this._root = y;
 		}
-		//node.data(y.data()); // satellite data
 	}
 	node.kill();
-// wasBlack = y.isBlack();
 	if(wasBlack){
 		this.nil().left(x);
 		this.nil().right(x);
@@ -306,7 +308,6 @@ RedBlackTree.prototype.deleteNode = function(node){
 	return wasData;
 }
 RedBlackTree.prototype._deleteFixup = function(node){
-	console.log(node);
 	var w;
 	while(node!=this.root() && node.isBlack()){
 		if(node==node.parent().left()){
@@ -466,9 +467,9 @@ RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil){
 // 	}
 // 	return node;
 // }
-RedBlackTree.Node.prototype.replace = function(node){ // leaves data unchanged
+RedBlackTree.Node.prototype.replace = function(node,nil){ // leaves data unchanged
 	this.parent(node.parent());
-	if(node.parent()){
+	if( node.parent()!=nil ){ // != nil?
 		if(node.parent().left()==node){
 			node.parent().left(this);
 		}else{
@@ -476,11 +477,11 @@ RedBlackTree.Node.prototype.replace = function(node){ // leaves data unchanged
 		}
 	}
 	this.right(node.right());
-	if(node.right()){
+	if(node.right()!=nil){
 		node.right().parent(this);
 	}
 	this.left(node.left());
-	if(node.left()){
+	if(node.left()!=nil){
 		node.left().parent(this);
 	}
 	this.color(node.color());

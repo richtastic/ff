@@ -178,7 +178,7 @@ Vor.prototype.animation_tick = function(){
 					this._animParabolas.graphics().lineTo(x,y);
 				}
 			}
-			node = this._T.root().nextNode(arc.node());
+			node = this._T.nextNode(arc);//root().nextNode(arc.node());
 			//node = null;
 //console.log("NEXT NODE:");
 //console.log(node);
