@@ -323,9 +323,9 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 		}
 	}else if(intersections.length==1){ // doesn't matter
-		console.log("SINGLE INTERSECTION");
+		console.log("SINGLE INTERSECTION: "+intersections[0]);
 		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
-		newL.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 	}else{ // 
 		console.log("????????");
 	}
@@ -641,20 +641,21 @@ Voronoi.WaveFront.prototype.nextNode = function(arc){
 	return this._tree.nextNode(node);
  }
 Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueue = function(point,directrix,queue){
-// console.log("add .........................................................................."+directrix);
+console.log("add ..........................................................................................."+directrix);
 // console.log(this._tree.toString());
 	var arc, node, list, i, left, center, right;
 	if(this.isEmpty()){ // infiniarc
+console.log("EMPTY");
 		arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, point, null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix, new Voronoi.HalfEdge(), null);
 		node = RedBlackTree.newEmptyNode(arc);
 		this._tree.insertNode(node);
 	}else{
-// console.log(point.toString());
+console.log(point.toString());
 		// find arc to split
 		node = this._tree.findObject(point);
-// console.log(node);
+console.log(node);
 		arc = node.data();
-// console.log("arc:"+arc);
+console.log("arc:"+arc);
 		// remove false-alarm circle events
 circleEvent = arc.circleEvent();
 if(circleEvent){
@@ -687,7 +688,26 @@ if(right.circleEvent().containsArc(arc)){
 			node = RedBlackTree.newEmptyNode(arc);
 			this._tree.insertNode(node);
 		}
+/*
 console.log("TRIPLETS:     "+list[1]);
+console.log("\n");
+console.log(this._tree.toString());
+console.log("\n");
+
+this.sortForSearchArc();
+var nn = this._tree.findNodeFromObject(list[1]);
+this.sortForSearchPoint();
+console.log("NODE: "+nn.data());
+var ns = this._tree.successor(nn);
+console.log("SUCCESSOR: "+(ns?ns.data():null));
+var ns2 = this._tree.successor(ns);
+console.log("SUCCESSOR2: "+(ns2?ns2.data():null));
+var np = this._tree.predecessor(nn);
+console.log("PREDECESSOR: "+(np?np.data():null));
+var np2 = this._tree.predecessor(np);
+console.log("PREDECESSOR2: "+(np2?np2.data():null));
+console.log(" ------------------------ ");
+*/
 		// left triplets of points
 		this.checkAddCircleWithRight(list[1],directrix,queue);
  		// right triplets of points
@@ -695,12 +715,13 @@ console.log("TRIPLETS:     "+list[1]);
 	}
 // console.log("\n");
 // console.log(this._tree.toString());
-// console.log("END ADDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD");
+console.log("add ........................................................................................... END");
 }
 Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue){ // left triplets of points
 	var node, left, center;
 	this.sortForSearchArc();
 	node = this._tree.findNodeFromObject(right);//right.node();
+	this.sortForSearchPoint();
 	node = this._tree.prevNode(node);
 	center = node?node.data():null;
 	node = this._tree.prevNode(node);
@@ -711,7 +732,6 @@ Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,q
 	if(left && center && right){
 		Voronoi.WaveFront.addCirclePointFromArcs(left,center,right, directrix, queue);
 	}
-	this.sortForSearchPoint();
 }
 Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,queue){ // right triplets of points
 	var node, left, center;
@@ -730,8 +750,13 @@ Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,que
 	this.sortForSearchPoint();
 }
 Voronoi.WaveFront.addCirclePointFromArcs = function(left,center,right, directrix, queue){
+	console.log("addCircle")
 	var circle = Code.circleFromPoints(left.center(),center.center(),right.center());
+	if(!circle){ return; }
+	console.log(circle);
 	var point = new V2D(circle.center.x,circle.center.y-circle.radius);
+	console.log(point)
+	console.log(directrix)
 	if(point.y<directrix.y){
 console.log("ADD CIRCLE: "+point.y+" < "+directrix.y);
 		var circleEvent = new Voronoi.Event(point,Voronoi.EVENT_TYPE_CIRCLE);

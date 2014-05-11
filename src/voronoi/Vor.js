@@ -245,8 +245,9 @@ console.log(this._T.toString());
 			next = this._Q.peek();
 console.log("\n");
 console.log(this._T.toString());
-console.log("----------------");
+console.log("\n");
 this._directrix.copy( temp );
+console.log("-------------------------------------------------------------------------------------------------------");
 		}
 	}else{
 		this._ticker.stop();

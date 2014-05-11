@@ -1672,7 +1672,7 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	if(inside<0){ return null; } // imaginary
 	if(A==0){ // single intersection Bx + C = 0
 		if(C==0){ return null; } // infinite intersections (no constraints)
-		intAx = -B/C;
+		intAx = -C/B;
 		intAy = A1*intAx*intAx + B1*intAx + C1; // intAy = A2*intAx*intAx + B2*intAx + C2;
 		return [new V2D(intAx,intAy)];
 	} // two intersections
@@ -1759,6 +1759,10 @@ x*x*(e2-e1) + a1*a1*e2 - a2*a2*e1 + x*2(a2*e1 - a1*e2) + d1*e2 - d2*e1 = 0
 x*x*(e2-e1) + x*2(a2*e1 - a1*e2) + (a1*a1*e2 - a2*a2*e1 + d1*e2 - d2*e1) = 0
 x*x*A + x*B + C = 0
 
+@ A = 0:
+x*B + C = 0
+x = -C/B;
+
 
 ...
 vertex = a,[c + (b-c)/2] = a,(c+b)/2
@@ -1800,10 +1804,13 @@ Code.circleFromPoints = function(a,b,c){
 	var cenA = Code.rayIntersect2D(midAB,rotAB, midBC,rotBC);
 	//var cenB = Code.rayIntersect2D(midBC,rotBC, midAC,rotAC);
 	//var cenC = Code.rayIntersect2D(midAC,rotAC, midAB,rotAB);
-	var lenA = V2D.distance(cenA,a);
-	//var lenB = V2D.distance(cenB,b);
-	//var lenC = V2D.distance(cenC,c);
-	return {center:cenA, radius:lenA};
+	if(cenA){ // entering in duplicate points kills me
+		var lenA = V2D.distance(cenA,a);
+		//var lenB = V2D.distance(cenB,b);
+		//var lenC = V2D.distance(cenC,c);
+		return {center:cenA, radius:lenA};
+	}
+	return null;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 

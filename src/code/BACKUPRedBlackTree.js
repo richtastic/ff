@@ -7,13 +7,10 @@ red node has two black children
 
 function RedBlackTree(fxn){
 	this._sentinel = new RedBlackTree.Node();
-		this._sentinel.data(null);
-		this._sentinel.left(this._sentinel);
-		this._sentinel.right(this._sentinel);
-		this._sentinel.parent(this._sentinel);
-		// this._sentinel.left(null);
-		// this._sentinel.right(null);
-		// this._sentinel.parent(null);
+		// this._sentinel.data(null);
+		// this._sentinel.left(this._sentinel);
+		// this._sentinel.right(this._sentinel);
+		// this._sentinel.parent(this._sentinel);
 	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
 	this._length = 0;
@@ -59,9 +56,9 @@ RedBlackTree.prototype.clear = function(){
 	if( !this.isNil(this._root) ){
 		this._root.clear(this.nil());
 		this._root = this._sentinel;
-		// this._sentinel.left(null);
-		// this._sentinel.right(null);
-		// this._sentinel.parent(null);
+		this._sentinel.left(null);
+		this._sentinel.right(null);
+		this._sentinel.parent(null);
 	}
 }
 RedBlackTree.prototype.maximum = function(){
@@ -105,18 +102,14 @@ RedBlackTree.prototype.maximumNode = function(node){
 	return node;
 }
 RedBlackTree.prototype._maximumNode = function(node){
-	while(!this.isNil(node.right())){
-		node = node.right();
+	var node = this._root;
+	if(!this.isNil(node)){
+		while( !this.isNil(node.right()) ){
+			node =  node.right();
+		}
+		return node;
 	}
-	return node;
-	// var node = this._root;
-	// if(!this.isNil(node)){
-	// 	while( !this.isNil(node.right()) ){
-	// 		node =  node.right();
-	// 	}
-	// 	return node;
-	// }
-	// return null;
+	return null;
 }
 
 RedBlackTree.prototype.nextNode = function(nodeIn){ // external 'successor'
@@ -152,18 +145,18 @@ RedBlackTree.prototype.predecessor = function(node){
 		return this._maximumNode(node.left());
 	}
 	var parent = node.parent();
-	while(!this.isNil(parent) && parent.left()==node){ // !this.isNil(parent) && 
+	while( !this.isNil(parent) && node.left()==node){
 		node = parent;
 		parent = parent.parent();
 	}
-	return parent;
+	return node;
 }
 RedBlackTree.prototype.successor = function(node){
 	if( !this.isNil(node.right()) ){
 		return this._minimumNode(node.right());
 	}
 	var parent = node.parent();
-	while(!this.isNil(parent) && parent.right()==node){ // !this.isNil(parent) &&
+	while(!this.isNil(parent) && parent.right()==node){
 		node = parent;
 		parent = parent.parent();
 	}
@@ -209,11 +202,11 @@ RedBlackTree.prototype.insertObject = function(o){
 	var node = new RedBlackTree.Node(o);
 	return this.insertNode(node);
 }
-RedBlackTree.prototype.insertNode = function(newNode){
+RedBlackTree.prototype.insertNode = function(n){
 	var fxn = this._sorting;
-	var value, node = this.root(), parent = this.nil(), o = newNode.data();
+	var value, node = this.root(), next = this.nil(), o = n.data();
 	while( !this.isNil(node) ){
-		parent = node;
+		next = node;
 		value = fxn(node.data(),o);
 		if(value<0){
 			node = node.left();
@@ -221,34 +214,32 @@ RedBlackTree.prototype.insertNode = function(newNode){
 			node = node.right();
 		}
 	}
-	newNode.parent(parent);
-	newNode.left(this.nil());
-	newNode.right(this.nil());
-	newNode.colorRed();
-	if( this.isNil(parent) ){
-		this.root(newNode);
-		++this._length;
-		return;
+	n.parent(next);
+	if( this.isNil(next) ){
+		this.root(n);
 	}else{
+		value = fxn(next.data(),o); // value was already calculated ?
 		if(value<0){
-			parent.left(newNode);
+			next.left(n);
 		}else{
-			parent.right(newNode);
+			next.right(n);
 		}
 	}
-	this._insertFixup(newNode);
+	n.left(this.nil());
+	n.right(this.nil());
+	n.colorRed();
+	this._insertFixup(n);
 	++this._length;
 }
 RedBlackTree.prototype._insertFixup = function(node){
-	var sib;
-	while(node.parent().isRed() && !this.isNil(node.parent().parent()) ){
+	while(node.parent().isRed()){
 		if(node.parent()==node.parent().parent().left()){
 			sib = node.parent().parent().right();
-			if(sib.isRed()){
+			if(sib && sib.isRed()){
 				node.parent().colorBlack();
 				sib.colorBlack();
+				node.parent().parent().colorRed();
 				node = node.parent().parent();
-				node.colorRed();
 			}else{
 				if(node==node.parent().right()){
 					node = node.parent();
@@ -260,11 +251,11 @@ RedBlackTree.prototype._insertFixup = function(node){
 			}
 		}else{ // p==p.parent().right() - right
 			sib = node.parent().parent().left();
-			if(sib.isRed()){
+			if(sib && sib.isRed()){
 				node.parent().colorBlack();
 				sib.colorBlack();
+				node.parent().parent().colorRed()
 				node = node.parent().parent();
-				node.colorRed();
 			}else{
 				if(node==node.parent().left()){
 					node = node.parent();
@@ -287,41 +278,6 @@ RedBlackTree.prototype.deleteObject = function(o){
 	return null;
 }
 RedBlackTree.prototype.deleteNode = function(node){
-	var splice, child, parent, wasData = node.data();
-	if( this.isNil(node.left()) ){
-		splice = node;
-		child = node.right();
-	}else if( this.isNil(node.right()) ){
-		splice = node;
-		child = node.left();
-	}else{
-		splice = node.left(); // get predecessor
-		while( !this.isNil(splice.right()) ){
-			splice = splice.right();
-		}
-		child = splice.left();
-		node.data( splice.data() ); // satellite data
-	}
-	parent = splice.parent();
-	if(!this.isNil(child)){
-		child.parent(parent);
-	}
-	if(this.isNil(parent)){
-		this.root(child);
-		--this._length;
-		return;
-	}
-	if(splice==parent.left()){
-		parent.left(child);
-	}else{
-		parent.right(child);
-	}
-	if(splice.isBlack()){
-		this._deleteFixup(child);
-	}
-	--this._length;
-return wasData;
-	//
 	var x, y, wasData = node.data();
 	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.successor(node);
 	x = ( this.isNil(y.left()) )?y.right():y.left();
@@ -356,53 +312,55 @@ return wasData;
 	return wasData;
 }
 RedBlackTree.prototype._deleteFixup = function(node){
-	var sib;
+	var w;
 	while(node!=this.root() && node.isBlack()){
 		if(node==node.parent().left()){
-			sib = node.parent().right();
-			if(sib.isRed()){
-				sib.colorBlack();
+			w = node.parent().right();
+			console.log(w);
+			if(w.isRed()){
+				w.colorBlack();
 				node.parent().colorRed();
 				this.rotateLeft(node.parent());
-				sib = node.parent().right();
+				w = node.parent().right();
 			}
-			if(sib.left().isBlack() && sib.right().isBlack()){
-				sib.colorRed();
+			//console.log(w); // error with successor
+			if(w.left().isBlack() && w.right().isBlack()){
+				w.colorRed();
 				node = node.parent();
 			}else{
-				if(sib.right().isBlack()){
-					sib.left().colorBlack();
-					sib.colorRed();
-					this.rotateRight(sib);
-					sib = node.parent().right();
+				if(w.right().isBlack()){
+					w.left().colorBlack();
+					w.colorRed();
+					this.rotateRight(w);
+					w = node.parent().right();
 				}
-				sib.color( node.parent().color() );
+				w.color( node.parent().color() );
 				node.parent().colorBlack();
-				sib.right().colorBlack();
+				w.right().colorBlack();
 				this.rotateLeft(node.parent());
 				node = this.root();
 			}
 		}else{ // node==node.parent().right()
-			sib = node.parent().left();
-			if(sib.isRed()){
-				sib.colorBlack();
+			w = node.parent().left();
+			if(w.isRed()){
+				w.colorBlack();
 				node.parent().colorRed();
 				this.rotateRight(node.parent());
-				sib = node.parent().left();
+				w = node.parent().left();
 			}
-			if(sib.right().isBlack() && sib.left().isBlack()){
-				sib.colorRed();
+			if(w.right().isBlack() && w.left().isBlack()){
+				w.colorRed();
 				node = node.parent();
 			}else{
-				if(sib.left().isBlack()){
-					sib.right().colorBlack();
-					sib.colorRed();
-					this.rotateLeft(sib);
-					sib = node.parent().left();
+				if(w.left().isBlack()){
+					w.right().colorBlack();
+					w.colorRed();
+					this.rotateLeft(w);
+					w = node.parent().left();
 				}
-				sib.color( node.parent().color() );
+				w.color( node.parent().color() );
 				node.parent().colorBlack();
-				sib.left().colorBlack();
+				w.left().colorBlack();
 				this.rotateRight(node.parent());
 				node = this.root();
 			}
