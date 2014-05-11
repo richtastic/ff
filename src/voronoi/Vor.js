@@ -11,7 +11,7 @@ function Vor(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
-	this._root.matrix().translate(200,500);
+	this._root.matrix().translate(400,600);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -50,9 +50,9 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(5,6) );
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
-// points.push( new V2D(1,8) );
-// points.push( new V2D(1.5,7) );
-// points.push( new V2D(0,0) );
+points.push( new V2D(1,8) );
+points.push( new V2D(0.5,7) );
+points.push( new V2D(0,0) );
 	voronoi = new Voronoi();
 	var scale = 50.0;
 	for(i=0;i<points.length;++i){
@@ -70,7 +70,7 @@ Vor.prototype.voronoi = function(){
 	
 	// animation:
 	this._animPoints = points;
-	var speed = 100;
+	var speed = 50;
 	this._ticker = new Ticker(speed);
 	this._ticker.addFunction(Ticker.EVENT_TICK,this.animation_tick,this);
 	this._ticker.start();
@@ -83,14 +83,16 @@ Vor.prototype.voronoi = function(){
 }
 Vor.prototype.animation_tick = function(){
 	var x, y, a, b, c, p, e, i, len, arc;
+var limitLeft = -300;
+var limitRight = 800;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
 		this._animDirectrix.graphics().clear();
 		this._animDirectrix.graphics().setLine(1.0,0xFF0000FF);
 		this._animDirectrix.graphics().beginPath();
-		this._animDirectrix.graphics().moveTo(-100,0);
-		this._animDirectrix.graphics().lineTo(1000,0);
+		this._animDirectrix.graphics().moveTo(limitLeft,0);
+		this._animDirectrix.graphics().lineTo(limitRight,0);
 		this._animDirectrix.graphics().endPath();
 		this._animDirectrix.graphics().strokeLine();
 		this._root.addChild(this._animDirectrix);
@@ -111,8 +113,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 100;//375;
-	var rateStart = 1.5;//2.5;
+	var offYStart = 375;//375;
+	var rateStart = 0.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -121,7 +123,7 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().setLine(1.0,0xFF229933);
 	this._animParabolas.graphics().beginPath();
 	len = this._animPoints.length;
-	var focus, left=-100, right=500;
+	var focus, left=limitLeft, right=limitRight;
 	var deltaJ = (right-left)/100.0;
 	for(i=0;i<len;++i){
 		focus = this._animPoints[i];
@@ -155,14 +157,18 @@ Vor.prototype.animation_tick = function(){
 			var intersections = arc.intersections();
 //console.log(intersections);
 			// left limit
-			left = new V2D(-100,0);
+			left = new V2D(limitLeft,0);
 			if(intersections[0]){
-				left = intersections[0];
+				if(intersections[0].x>left.x){
+					left = intersections[0];
+				}
 			}
 			// right limit
-			right = new V2D(500,0);
+			right = new V2D(limitRight,0);
 			if(intersections[1]){
-				right = intersections[1];
+				if(intersections[1].x<right.x){
+					right = intersections[1];
+				}
 			}
 			deltaJ = (right.x-left.x)/50.0;
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
@@ -179,9 +185,6 @@ Vor.prototype.animation_tick = function(){
 				}
 			}
 			node = this._T.nextNode(arc);
-			//node = null;
-//console.log("NEXT NODE:");
-//console.log(node);
 			if(count >= 10){
 				console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
 				node = null;
@@ -194,27 +197,56 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
-	//
-// console.log(" \n ");
-// console.log(this._T.toString());
+	
+	// DRAW CIRCLES IN QUEUE:
+	
+	var eventList = this._Q._list
+	for(i=0;i<eventList.length;++i){
+		var e = eventList[i];
+		if(e.isCircleEvent()){
+			var circle = e.circle();
+			// center
+			this._animParabolas.graphics().setFill(0xFF0000FF);
+			this._animParabolas.graphics().beginPath();
+			this._animParabolas.graphics().drawCircle(circle.center.x,circle.center.y,3.0);
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().fill();
+			// perimeter
+			this._animParabolas.graphics().setLine(1.0,0xFF3333CC);
+			this._animParabolas.graphics().beginPath();
+			this._animParabolas.graphics().drawCircle(circle.center.x,circle.center.y,circle.radius);
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().strokeLine();
+			// bottom
+			this._animParabolas.graphics().setFill(0xFF00CCFF);
+			this._animParabolas.graphics().beginPath();
+			this._animParabolas.graphics().drawCircle(e.point().x,e.point().y,3.0);
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().fill();
+		}
+	}
+
 	// ALGORITHM
-	console.log(this._Q.toString()+"    + "+this._directrix.toString());
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
 //console.log(next);
 		while(next && next.point().y>this._directrix.y){
+console.log(this._Q.toString()+"    + "+this._directrix.toString());
 var temp = new V2D(this._directrix.x,this._directrix.y);
 			e = this._Q.next();
-			console.log("popped "+e);
 this._directrix.copy( e.point() );
+console.log("popped "+e);
+console.log(this._T.toString());
 			if(e.isSiteEvent()){
 				this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), this._directrix, this._Q);
 			}else{
 				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
 			next = this._Q.peek();
+console.log("\n");
+console.log(this._T.toString());
+console.log("----------------");
 this._directrix.copy( temp );
-console.log("LOOP");
 		}
 	}else{
 		this._ticker.stop();
