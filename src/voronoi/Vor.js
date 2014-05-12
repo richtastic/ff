@@ -6,7 +6,8 @@ function Vor(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
-	this._root.matrix().translate(400,600);
+	this._root.matrix().scale(2.0);
+	this._root.matrix().translate(400,1000);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -112,8 +113,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 375;//375;
-	var rateStart = 1.5;//2.5;
+	var offYStart = 260;//375;
+	var rateStart = 0.1;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);

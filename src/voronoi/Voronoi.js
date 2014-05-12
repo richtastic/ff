@@ -325,6 +325,7 @@ Voronoi.Arc.prototype.physicalCopy = function(a){ // addition
 	this.rightDirection(a.rightDirection());
 	this.directrix(a.directrix());
 	this.edgeLeft(a.edgeLeft());
+	this.edgeRight(a.edgeRight());
 }
 Voronoi.Arc.prototype.copy = function(a){ // identical
 	this.phsicalCopy(a);
@@ -417,6 +418,7 @@ Voronoi.Arc.prototype.toString = function(){
 	}else{
 		str += ",?)";	
 	}
+	str += "<"+(this._edgeLeft?"YES":"NO")+","+(this._edgeRight?"YES":"NO")+">";	
 	//str += " "+(this.node().data()==this)+" ";
 	str += " ";
 	str += "]";
@@ -579,6 +581,18 @@ console.log("add ...............................................................
 		arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, siteEvent.site(), null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix);
 		node = RedBlackTree.newEmptyNode(arc);
 		this._tree.insertNode(node);
+		// add to graph
+		graph.addSite(arc.center());
+		// edges?
+		edge = Voronoi.HalfEdge.newTwins();
+		graph.addEdge(edge);
+		graph.addEdge(edge.opposite()); // other side of infinity
+		arc.edgeLeft(edge);
+		// right
+		edge = Voronoi.HalfEdge.newTwins();
+		graph.addEdge(edge);
+		graph.addEdge(edge.opposite()); // other side of infinity
+		arc.edgeRight(edge);
 	}else{
 		// find arc to split
 		node = this._tree.findObject(site.point());
@@ -597,12 +611,28 @@ console.log("add ...............................................................
 			node = RedBlackTree.newEmptyNode(arc);
 			this._tree.insertNode(node);
 		}
-		// add new edge record
+		// add new edge record to arcs and graph
+		graph.addSite(list[1].center());
 		edge = Voronoi.HalfEdge.newTwins();
-// list[0].addHalfEdge(edge);
-// list[1].addHalfEdge(edge.opposite());
 		graph.addEdge(edge);
 		graph.addEdge(edge.opposite());
+// center
+list[1].edgeLeft(edge.opposite());
+list[1].edgeRight(edge.opposite());
+list[1].center().addEdge(edge.opposite());
+// left
+list[0].edgeRight(edge);
+list[0].center().addEdge(edge);
+// right
+list[2].edgeLeft(edge);
+list[2].center().addEdge(edge);
+/*		// add new edge record - right
+		edge = Voronoi.HalfEdge.newTwins();
+		graph.addEdge(edge);
+		graph.addEdge(edge.opposite());
+list[1].edgeRight(edge.opposite());
+list[2].edgeLeft(edge.opposite());
+*/
 		// left triplets of points
 		this.checkAddCircleWithRight(list[1],directrix,queue);
  		// right triplets of points
@@ -705,17 +735,35 @@ left = l;
 right = r;
 	// calculate new arcs
 	list = Voronoi.Arc.mergeArcs(left,center,right);
-// copy data from middle node to graph
+
+// copy data from middle node to graph ????????????
+
 // add vertex at circle center and connect half-edges
 vertex = new Voronoi.Vertex();
 vertex.point(circleEvent.circle().center);
 graph.addVertex(vertex);
-// edge?.vertexA(vertex);
-// edge?.opposite().vertexB(vertex);
+// old get
+console.log("......................");
+console.log(left+"");
+console.log(right+"");
+console.log( left.edgeRight() );
+console.log( right.edgeLeft() );
+left.edgeRight().vertexB(vertex);
+right.edgeLeft().vertexB(vertex);
+// new
+var edge = Voronoi.HalfEdge.newTwins();
+edge.vertexA(vertex);
+edge.opposite().vertexA(vertex);
+// new set
+left.edgeRight(edge);
+right.edgeLeft(edge);
+
+
+
 	// only delete middle node
 	var nc = this._tree.findNodeFromObject(center);
 	this._tree.deleteNode(nc);
-	center.kill();
+	center.kill(); ///////////////////////////////////////////////// ?
 	// copy left and right
 	left.physicalCopy(list[0]);
 	if(list.length==2){
@@ -754,6 +802,9 @@ Voronoi.Site.prototype.point = function(p){
 		this._point.copy(p);
 	}
 	return this._point;
+}
+Voronoi.Site.prototype.addEdge = function(e){
+	this._edges.push(e);
 }
 Voronoi.Site.prototype.toString = function(){
 	var str = "[Site: ";
@@ -841,13 +892,17 @@ Voronoi.Cell.prototype.point = function(p){
 Voronoi.EdgeGraph = function(){
 	this._edges = [];
 	this._vertexes = [];
-	this._cells = [];
+	this._cells = []; // final?
+	this._sites = []; // initial - from fortune algorithm
 }
 Voronoi.EdgeGraph.prototype.addEdge = function(e){
 	this._edges.push(e);
 }
 Voronoi.EdgeGraph.prototype.addVertex = function(v){
 	this._vertexes.push(v);
+}
+Voronoi.EdgeGraph.prototype.addSite = function(s){ // parabolas
+	this._sites.push(s);
 }
 
 
