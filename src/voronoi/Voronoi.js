@@ -73,11 +73,14 @@ Voronoi.EVENT_TYPE_SITE = 0;
 Voronoi.EVENT_TYPE_CIRCLE = 1;
 Voronoi.Event = function(p,t){
 	this._type = null;
+	this._point = new V2D();
+	// site event
+	this._site = null;
+	// circle event
 	this._arcLeft = null;
 	this._arcCenter = null;
 	this._arcRight = null;
 	this._circle = null;
-	this._point = new V2D();
 	this.point(p);
 	this.type(t);
 }
@@ -126,6 +129,12 @@ Voronoi.Event.prototype.circle = function(c){
 		this._circle = c;
 	}
 	return this._circle;
+}
+Voronoi.Event.prototype.site = function(s){
+	if(s!==undefined){
+		this._site = s;
+	}
+	return this._site;
 }
 Voronoi.Event.prototype.containsArc = function(arc){
 	if(this._arcLeft==arc){
@@ -261,12 +270,12 @@ Voronoi.Arc.isArcToLeftOfArc = function(a,b){
 	}
 	return avgA < avgB;
 }
-Voronoi.Arc.splitArcAtPoint = function(arc,point){
-	if(arc.containsPointBoolean(point)){
+Voronoi.Arc.splitArcAtSite = function(arc,site){
+	if(arc.containsPointBoolean(site.point())){
 		var arcL, arcC, arcR;
-		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), point,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
-		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, point, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
-		arcR = new Voronoi.Arc(point,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
+		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
+		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, site, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
+		arcR = new Voronoi.Arc(site,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
 		return [arcL,arcC,arcR];
 	}
 	return null;
@@ -279,7 +288,7 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 	var newL = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcC.directrix());
 	var newR = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcR.center(), arcR.right(),arcR.rightDirection(), arcC.directrix());
 	var centerDistance = arcC.intersectionAverage();
-	var intersections = Code.intersectionParabolas(newL.center(),newL.directrix().y, newR.center(),newR.directrix().y);
+	var intersections = Code.intersectionParabolas(newL.center().point(),newL.directrix().y, newR.center().point(),newR.directrix().y);
 	if(intersections.length==2){
 		if(intersections[0].x>intersections[1].x){ // order
 			intersections = [intersections[1],intersections[0]];
@@ -434,7 +443,7 @@ Voronoi.Arc.prototype.kill = function(){
 // -------------------------------------------------------------------------------------------------------------------- intersections
 Voronoi.Arc.prototype.intersectLeft = function(){
 	if(this._parabolaLeft){
-		var intLeft = Code.intersectionParabolas(this._parabolaLeft,this._directrix.y, this._parabolaCenter,this._directrix.y);
+		var intLeft = Code.intersectionParabolas(this._parabolaLeft.point(),this._directrix.y, this._parabolaCenter.point(),this._directrix.y);
 		if(intLeft){
 		if(intLeft.length==2){
 			if(intLeft[0].x>intLeft[1].x){
@@ -456,7 +465,7 @@ Voronoi.Arc.prototype.intersectLeft = function(){
 }
 Voronoi.Arc.prototype.intersectRight = function(){
 	if(this._parabolaRight){
-		var intRight = Code.intersectionParabolas(this._parabolaCenter,this._directrix.y, this._parabolaRight,this._directrix.y);
+		var intRight = Code.intersectionParabolas(this._parabolaCenter.point(),this._directrix.y, this._parabolaRight.point(),this._directrix.y);
 		if(intRight){
 		if(intRight.length==2){
 			if(intRight[0].x>intRight[1].x){
@@ -560,23 +569,25 @@ Voronoi.WaveFront.prototype.nextNode = function(arc){
 	var node = this._tree.findNodeFromObject(arc);
 	return this._tree.nextNode(node);
  }
-Voronoi.WaveFront.prototype.addArcAbovePointAndDirectrixAndQueueAndGraph = function(point,directrix,queue,graph){
+Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = function(siteEvent,directrix,queue,graph){
 console.log("add ..........................................................................................."+directrix);
 // console.log(this._tree.toString());
-	var arc, node, list, i, left, center, right, edge;
+	var arc, node, list, i, left, center, right, edge, point, site;
+	point = siteEvent.point();
+	site = siteEvent.site();
 	if(this.isEmpty()){ // infiniarc
-		arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, point, null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix);
+		arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, siteEvent.site(), null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix);
 		node = RedBlackTree.newEmptyNode(arc);
 		this._tree.insertNode(node);
 	}else{
 		// find arc to split
-		node = this._tree.findObject(point);
+		node = this._tree.findObject(site.point());
 		arc = node.data();
 		// remove false-alarm circle events
 		queue.removeEvent( arc.circleEvent() );
 		arc.circleEvent(null);
 		// get list of new arcs
-		list = Voronoi.Arc.splitArcAtPoint(arc,point);
+		list = Voronoi.Arc.splitArcAtSite(arc,siteEvent.site());
 		// copy over new left arc
 		arc.physicalCopy(list[0]);
 		list[0] = arc;
@@ -624,7 +635,7 @@ Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,que
 	}
 }
 Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, dir,convergePoint){
-	var circle = Code.circleFromPoints(left.center(),center.center(),right.center());
+	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
 	if(!circle){ return; }
 		var point = new V2D(circle.center.x,circle.center.y-circle.radius);
 //circle CENTER needs to be below all parabolas ( or in past)
@@ -632,7 +643,7 @@ var aboveNode = this._tree.findNodeFromObject(circle.center);
 console.log(aboveNode);
 console.log(circle.center+"");
 var arc = aboveNode.data();
-var aboveCenter = Code.pointAboveParabola(arc.center(),directrix.y, circle.center);
+var aboveCenter = Code.pointAboveParabola(arc.center().point(),directrix.y, circle.center);
 console.log( arc+""+aboveCenter );
 //circle event needs to converge on correct side?
 //var aboveCenter = false;
@@ -673,7 +684,7 @@ Voronoi.WaveFront.prototype.removeArcAtCircleWithDirectrixAndQueueAndGraph = fun
 	left = circleEvent.left();
 	center = circleEvent.center();
 	right = circleEvent.right();
-
+console.log(center+"");
 var nodeC = this._tree.findNodeFromObject(center);
 var nodeL = this._tree.prevNode(nodeC);
 var nodeR = this._tree.nextNode(nodeC);
@@ -710,7 +721,7 @@ graph.addVertex(vertex);
 	if(list.length==2){
 		right.physicalCopy(list[1]);
 	}else{ // unification of arc - delete both
-		var nr = this._tree.findNodeFromObject(center)
+		var nr = this._tree.findNodeFromObject(center);
 		this._tree.deleteNode(nr);
 	}
 // add new edges & connect to vertex
@@ -743,6 +754,11 @@ Voronoi.Site.prototype.point = function(p){
 		this._point.copy(p);
 	}
 	return this._point;
+}
+Voronoi.Site.prototype.toString = function(){
+	var str = "[Site: ";
+	str += this._point.toString()+"]";
+	return str;
 }
 
 // --------------------------------------------------------------------------------------------------------------------

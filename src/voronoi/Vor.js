@@ -1,10 +1,5 @@
 // Vor.js
-/*
 
-circle from 3 points
-animate wave-line-front propagation
-
-*/
 function Vor(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas,(1/10)*1000);
@@ -83,8 +78,7 @@ points.push( new V2D(0,0) );
 }
 Vor.prototype.animation_tick = function(){
 	var x, y, a, b, c, p, e, i, len, arc;
-var limitLeft = -300;
-var limitRight = 900;
+	var limitLeft = -300, limitRight = 900;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
@@ -105,7 +99,9 @@ var limitRight = 900;
 		this._Q = new Voronoi.Queue();
 		for(i=0;i<this._animPoints.length;++i){
 			p = this._animPoints[i];
-			this._Q.addEvent( new Voronoi.Event(p, Voronoi.EVENT_TYPE_SITE) );
+			e = new Voronoi.Event(p, Voronoi.EVENT_TYPE_SITE);
+			e.site( new Voronoi.Site(p) );
+			this._Q.addEvent( e );
 		}
 		console.log(this._Q.toString());
 		this._T = new Voronoi.WaveFront();
@@ -155,7 +151,7 @@ var limitRight = 900;
 		while(node){
 //console.log(node);
 			arc = node.data();
-			parabola = arc.center();
+			parabola = arc.center().point();
 //console.log(parabola.toString(),directrix);
 			var intersections = arc.intersections();
 //console.log(intersections);
@@ -249,7 +245,7 @@ this._directrix.copy( e.point() );
 console.log("popped "+e);
 console.log(this._T.toString());
 			if(e.isSiteEvent()){
-				this._T.addArcAbovePointAndDirectrixAndQueueAndGraph(e.point(), this._directrix, this._Q, this._D);
+				this._T.addArcAboveSiteAndDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}else{
 				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
