@@ -11,7 +11,7 @@ function Vor(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
-	this._root.matrix().translate(400,1200);
+	this._root.matrix().translate(400,600);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -97,6 +97,9 @@ var limitRight = 900;
 		this._animDirectrix.graphics().strokeLine();
 		this._root.addChild(this._animDirectrix);
 		this._animParabolas = new DO();
+		this._stillVornoi = new DO();
+		this._stillVornoi.graphics().setFill(0xFFDDAA33);
+		this._root.addChild( this._stillVornoi );
 		this._root.addChild( this._animParabolas );
 		// ALGORITHM
 		this._Q = new Voronoi.Queue();
@@ -161,6 +164,10 @@ var limitRight = 900;
 			if(intersections[0]){
 				if(intersections[0].x>left.x){
 					left = intersections[0];
+					this._stillVornoi.graphics().beginPath();
+					this._stillVornoi.graphics().drawCircle(left.x,left.y,2.0);
+					this._stillVornoi.graphics().endPath();
+					this._stillVornoi.graphics().fill();
 				}
 			}
 			// right limit
@@ -168,6 +175,10 @@ var limitRight = 900;
 			if(intersections[1]){
 				if(intersections[1].x<right.x){
 					right = intersections[1];
+					this._stillVornoi.graphics().beginPath();
+					this._stillVornoi.graphics().drawCircle(right.x,right.y,2.0);
+					this._stillVornoi.graphics().endPath();
+					this._stillVornoi.graphics().fill();
 				}
 			}
 			deltaJ = (right.x-left.x)/50.0;
@@ -238,7 +249,7 @@ this._directrix.copy( e.point() );
 console.log("popped "+e);
 console.log(this._T.toString());
 			if(e.isSiteEvent()){
-				this._T.addArcAbovePointAndDirectrixAndQueue(e.point(), this._directrix, this._Q);
+				this._T.addArcAbovePointAndDirectrixAndQueueAndGraph(e.point(), this._directrix, this._Q, this._D);
 			}else{
 				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
