@@ -109,14 +109,6 @@ RedBlackTree.prototype._maximumNode = function(node){
 		node = node.right();
 	}
 	return node;
-	// var node = this._root;
-	// if(!this.isNil(node)){
-	// 	while( !this.isNil(node.right()) ){
-	// 		node =  node.right();
-	// 	}
-	// 	return node;
-	// }
-	// return null;
 }
 
 RedBlackTree.prototype.nextNode = function(nodeIn){ // external 'successor'
@@ -131,7 +123,7 @@ RedBlackTree.prototype.nextNode = function(nodeIn){ // external 'successor'
 RedBlackTree.prototype.prevNode = function(nodeIn){ // external 'predecessor'
 	if(nodeIn){
 		node = this.predecessor(nodeIn);
-		if( !this.isNil(node)  && node!=nodeIn ){
+		if( !this.isNil(node) && node!=nodeIn ){
 			return node;
 		}
 	}

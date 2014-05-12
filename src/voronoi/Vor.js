@@ -11,7 +11,7 @@ function Vor(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
-	this._root.matrix().translate(400,600);
+	this._root.matrix().translate(400,1200);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -47,7 +47,7 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(2,7) );
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
-	points.push( new V2D(5,6) );
+//	points.push( new V2D(5,6) );
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 points.push( new V2D(1,8) );
@@ -84,7 +84,7 @@ points.push( new V2D(0,0) );
 Vor.prototype.animation_tick = function(){
 	var x, y, a, b, c, p, e, i, len, arc;
 var limitLeft = -300;
-var limitRight = 800;
+var limitRight = 900;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
@@ -114,7 +114,7 @@ var limitRight = 800;
 	directrix = this._directrix.y;
 	//
 	var offYStart = 375;//375;
-	var rateStart = 0.5;//2.5;
+	var rateStart = 1.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);

@@ -1683,6 +1683,15 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	intBy = A1*intBx*intBx + B1*intBx + C1;
 	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
 }
+Code.pointAboveParabola = function(focus,directrix, point){
+	var abc = Code.parabolaABCFromFocusDirectrix(focus,directrix);
+	var a = abc[0], b = abc[1],c = abc[2];
+	var yVal = a*point.x*point.x + b*point.x + c;
+	if(point.y>yVal){
+		return true;
+	}
+	return false;
+}
 /*
 	var a = new V2D(intAx,intAy);
 	var b = new V2D(intBx,intBy);
