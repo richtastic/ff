@@ -6,8 +6,8 @@ function Vor(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
-	this._root.matrix().scale(2.0);
-	this._root.matrix().translate(400,1000);
+	//this._root.matrix().scale(2.0);
+	this._root.matrix().translate(400,500);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -39,7 +39,7 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 Vor.prototype.voronoi = function(){
 	var points = new Array();
 	//points.push( new V2D(1,1) );
-	points.push( new V2D(1,5) );
+	points.push( new V2D(0,6) );
 	points.push( new V2D(2,7) );
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
@@ -78,7 +78,7 @@ points.push( new V2D(0,0) );
 	//voronoi.delaunay();
 }
 Vor.prototype.animation_tick = function(){
-	var x, y, a, b, c, p, e, i, len, arc;
+	var x, y, a, b, c, p, e, i, j, len, arc;
 	var limitLeft = -300, limitRight = 900;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
@@ -113,8 +113,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 260;//375;
-	var rateStart = 0.1;//2.5;
+	var offYStart = 360;//375;
+	var rateStart = 1.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -207,7 +207,6 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().strokeLine();
 	
 	// DRAW CIRCLES IN QUEUE:
-	
 	var eventList = this._Q._list
 	for(i=0;i<eventList.length;++i){
 		var e = eventList[i];
@@ -231,6 +230,26 @@ Vor.prototype.animation_tick = function(){
 			this._animParabolas.graphics().drawCircle(e.point().x,e.point().y,3.0);
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().fill();
+		}
+	}
+
+	// DRAW CURRENT GRAPH
+	this._animParabolas.graphics().setLine(1.0,0xFFFF00FF);
+	var face, halfEdge, edges, faces = this._D.sites();
+	for(i=0;i<faces.length;++i){
+		face = faces[i];
+		edges = face.edges();
+		for(j=0;j<edges.length;++j){
+			halfEdge = edges[j];
+			if(halfEdge.vertexA() && halfEdge.vertexB()){
+				var pointA = halfEdge.vertexA().point();
+				var pointB = halfEdge.vertexB().point();
+				this._animParabolas.graphics().beginPath();
+				this._animParabolas.graphics().moveTo(pointA.x,pointA.y);
+				this._animParabolas.graphics().lineTo(pointB.x,pointB.y);
+				this._animParabolas.graphics().endPath();
+				this._animParabolas.graphics().strokeLine();
+			}
 		}
 	}
 

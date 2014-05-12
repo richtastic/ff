@@ -274,8 +274,12 @@ Voronoi.Arc.splitArcAtSite = function(arc,site){
 	if(arc.containsPointBoolean(site.point())){
 		var arcL, arcC, arcR;
 		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
+		arcL.edgeLeft(arc.edgeLeft());
+		arcL.edgeRight(null); // to be added
 		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, site, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
 		arcR = new Voronoi.Arc(site,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
+		arcR.edgeLeft(null); // to be added
+		arcR.edgeRight(arc.edgeRight());
 		return [arcL,arcC,arcR];
 	}
 	return null;
@@ -286,7 +290,11 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 		return [arc];
 	} // separate arcs
 	var newL = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcC.directrix());
+	newL.edgeLeft(arcL.edgeLeft());
+	newL.edgeRight(arcL.edgeRight());
 	var newR = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcR.center(), arcR.right(),arcR.rightDirection(), arcC.directrix());
+	newR.edgeLeft(arcL.edgeLeft());
+	newR.edgeRight(arcL.edgeRight());
 	var centerDistance = arcC.intersectionAverage();
 	var intersections = Code.intersectionParabolas(newL.center().point(),newL.directrix().y, newR.center().point(),newR.directrix().y);
 	if(intersections.length==2){
@@ -583,16 +591,18 @@ console.log("add ...............................................................
 		this._tree.insertNode(node);
 		// add to graph
 		graph.addSite(arc.center());
-		// edges?
+		// infini-edge-left
 		edge = Voronoi.HalfEdge.newTwins();
 		graph.addEdge(edge);
-		graph.addEdge(edge.opposite()); // other side of infinity
+		//graph.addEdge(edge.opposite()); // other side of infinity
 		arc.edgeLeft(edge);
-		// right
+		arc.center().addEdge(edge);
+		// nfini-edge-right
 		edge = Voronoi.HalfEdge.newTwins();
 		graph.addEdge(edge);
-		graph.addEdge(edge.opposite()); // other side of infinity
+		//graph.addEdge(edge.opposite()); // other side of infinity
 		arc.edgeRight(edge);
+		arc.center().addEdge(edge);
 	}else{
 		// find arc to split
 		node = this._tree.findObject(site.point());
@@ -615,24 +625,17 @@ console.log("add ...............................................................
 		graph.addSite(list[1].center());
 		edge = Voronoi.HalfEdge.newTwins();
 		graph.addEdge(edge);
-		graph.addEdge(edge.opposite());
+		//graph.addEdge(edge.opposite());
+// left
+list[0].edgeRight(edge);
+list[0].center().addEdge(edge);
 // center
 list[1].edgeLeft(edge.opposite());
 list[1].edgeRight(edge.opposite());
 list[1].center().addEdge(edge.opposite());
-// left
-list[0].edgeRight(edge);
-list[0].center().addEdge(edge);
 // right
 list[2].edgeLeft(edge);
-list[2].center().addEdge(edge);
-/*		// add new edge record - right
-		edge = Voronoi.HalfEdge.newTwins();
-		graph.addEdge(edge);
-		graph.addEdge(edge.opposite());
-list[1].edgeRight(edge.opposite());
-list[2].edgeLeft(edge.opposite());
-*/
+//list[2].center().addEdge(edge); // already added at left arc
 		// left triplets of points
 		this.checkAddCircleWithRight(list[1],directrix,queue);
  		// right triplets of points
@@ -640,6 +643,8 @@ list[2].edgeLeft(edge.opposite());
 	}
 // console.log("\n");
 // console.log(this._tree.toString());
+console.log("SPLIT RESULT: ");
+console.log(graph.toString());
 console.log("add ........................................................................................... END");
 }
 Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue){ // left triplets of points
@@ -735,7 +740,6 @@ left = l;
 right = r;
 	// calculate new arcs
 	list = Voronoi.Arc.mergeArcs(left,center,right);
-
 // copy data from middle node to graph ????????????
 
 // add vertex at circle center and connect half-edges
@@ -748,16 +752,28 @@ console.log(left+"");
 console.log(right+"");
 console.log( left.edgeRight() );
 console.log( right.edgeLeft() );
-left.edgeRight().vertexB(vertex);
-right.edgeLeft().vertexB(vertex);
-// new
+left.edgeRight().vertexAdd(vertex); // old
+//left.edgeRight().opposite().vertexAdd(vertex); // old
+right.edgeLeft().vertexAdd(vertex); // old
+//right.edgeLeft().opposite().vertexAdd(vertex); // old
+// new edge from point
 var edge = Voronoi.HalfEdge.newTwins();
-edge.vertexA(vertex);
-edge.opposite().vertexA(vertex);
-// new set
+vertex.addEdge(left.edgeRight()); // old
+//vertex.addEdge(left.edgeRight().opposite()); // old
+vertex.addEdge(right.edgeLeft()); // old
+//vertex.addEdge(right.edgeLeft().opposite()); // old
+vertex.addEdge(edge); // new
+//vertex.addEdge(edge.opposite()); // new
+edge.vertexAdd(vertex); // new
+//edge.opposite().vertexAdd(vertex); // new
+// link to next
+left.edgeRight().next(edge);
+right.edgeLeft().next(edge.opposite());
+// set as next
 left.edgeRight(edge);
-right.edgeLeft(edge);
-
+left.center().addEdge(edge);
+right.edgeLeft(edge.opposite());
+//right.center().addEdge(edge.opposite());
 
 
 	// only delete middle node
@@ -772,19 +788,22 @@ right.edgeLeft(edge);
 		var nr = this._tree.findNodeFromObject(center);
 		this._tree.deleteNode(nr);
 	}
-// add new edges & connect to vertex
-edge = Voronoi.HalfEdge.newTwins();
-edge.vertexA(vertex);
-edge.opposite().vertexB(vertex);
-// left.addHalfEdge(edge);
-// right.addHalfEdge(edge);
-graph.addEdge(edge);
-graph.addEdge(edge.opposite());
+// // add new edges & connect to vertex
+// edge = Voronoi.HalfEdge.newTwins();
+// edge.vertexAdd(vertex);
+// edge.opposite().vertexAdd(vertex);
+// // left.addHalfEdge(edge);
+// // right.addHalfEdge(edge);
+// graph.addEdge(edge);
+// graph.addEdge(edge.opposite());
 
 	// left triplets of points
 	this.checkAddCircleWithRight(right,directrix,queue);
 	// right triplets of points
 	this.checkAddCircleWithLeft(left,directrix,queue);
+//
+console.log("MERGE RESULT: ");
+console.log(graph.toString());
 }
 Voronoi.WaveFront.prototype.toString = function(){
 	return "WAVEFRONT:\n"+this._tree.toString();
@@ -806,6 +825,9 @@ Voronoi.Site.prototype.point = function(p){
 Voronoi.Site.prototype.addEdge = function(e){
 	this._edges.push(e);
 }
+Voronoi.Site.prototype.edges = function(){
+	return this._edges;
+}
 Voronoi.Site.prototype.toString = function(){
 	var str = "[Site: ";
 	str += this._point.toString()+"]";
@@ -824,7 +846,7 @@ Voronoi.HalfEdge = function(){
 // --------------------------------------------------------------------------------------------------------------------
 Voronoi.HalfEdge.newTwins = function(){
 	var edgeA = new Voronoi.HalfEdge();
-	var edgeB = new Voronoi.HalfEdge();
+	var edgeB = edgeA; // new Voronoi.HalfEdge();
 	edgeA.opposite(edgeB);
 	edgeB.opposite(edgeA);
 	return edgeA;
@@ -836,14 +858,25 @@ Voronoi.HalfEdge.prototype.opposite = function(o){
 	}
 	return this._opposite;
 }
+Voronoi.HalfEdge.prototype.vertexAdd = function(v){ // assigns external vertex to unassigned internal vertex
+	if(!this._vertexA){
+		this._vertexA = v
+	}else if(!this._vertexB){
+		this._vertexB = v;
+	}else{
+		"BOTH VERTEXES ALREADY ASSIGNED";
+	}
+}
 Voronoi.HalfEdge.prototype.vertexA = function(a){
 	if(a!==undefined){
+		console.log("vertexA WAS: "+this._vertexA+" IS: "+a);
 		this._vertexA = a;
 	}
 	return this._vertexA;
 }
 Voronoi.HalfEdge.prototype.vertexB = function(b){
 	if(b!==undefined){
+		console.log("vertexB WAS: "+this._vertexB+" IS: "+b);
 		this._vertexB = b;
 	}
 	return this._vertexB;
@@ -860,6 +893,13 @@ Voronoi.HalfEdge.prototype.prev = function(p){
 	}
 	return this._prev;
 }
+Voronoi.HalfEdge.prototype.toString = function(){
+	var str = "[HalfEdge: ";
+	str += this._vertexA+" -> "+this._vertexB+" ";
+	str += (this._prev?"prev":"null")+" <-> "+(this._next?"next":"null");
+	str += "]";
+	return str;
+}
 
 // --------------------------------------------------------------------------------------------------------------------
 /* Vertex */
@@ -873,6 +913,16 @@ Voronoi.Vertex.prototype.point = function(p){
 	}
 	return this._point;
 }
+Voronoi.Vertex.prototype.addEdge = function(e){
+	this._edges.push(e);
+}
+Voronoi.Vertex.prototype.toString = function(){
+	var str = "[Vertex: ";
+	str += this._point+" ("+this._edges.length+")";
+	str += "]";
+	return str;
+}
+
 
 // --------------------------------------------------------------------------------------------------------------------
 /* Cell (Face) */
@@ -904,8 +954,23 @@ Voronoi.EdgeGraph.prototype.addVertex = function(v){
 Voronoi.EdgeGraph.prototype.addSite = function(s){ // parabolas
 	this._sites.push(s);
 }
-
-
+Voronoi.EdgeGraph.prototype.sites = function(){
+	return this._sites;
+}
+Voronoi.EdgeGraph.prototype.toString = function(){
+	var str = "";
+	var face, halfEdge, edges, faces = this.sites();
+	for(i=0;i<faces.length;++i){
+		face = faces[i];
+		edges = face.edges();
+		for(j=0;j<edges.length;++j){
+			halfEdge = edges[j];
+			str += " "+i+"  : "+j+": "+halfEdge+"\n";
+		}
+		//str += "FACE/SITE "+i+": "+face+"--------------\n";
+	}
+	return str;
+}
 
 
 /*
