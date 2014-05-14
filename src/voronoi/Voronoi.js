@@ -261,6 +261,20 @@ Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX){
 	this.directrix(dirX)
 	//this.node(node);
 }
+Voronoi.Arc.prototype.physicalCopy = function(a){ // addition
+	this.left(a.left());
+	this.center(a.center());
+	this.right(a.right());
+	this.leftDirection(a.leftDirection());
+	this.rightDirection(a.rightDirection());
+	this.directrix(a.directrix());
+	this.edgeLeft(a.edgeLeft());
+	this.edgeRight(a.edgeRight());
+	this.circleEvent(a.circleEvent());
+}
+Voronoi.Arc.prototype.copy = function(a){ // identical
+	this.phsicalCopy(a);
+}
 // -------------------------------------------------------------------------------------------------------------------- class
 Voronoi.Arc.isArcToLeftOfArc = function(a,b){
 	var avgA = a.intersectionAverage();
@@ -277,6 +291,8 @@ Voronoi.Arc.splitArcAtSite = function(arc,site){
 		arcL.edgeLeft(arc.edgeLeft());
 		arcL.edgeRight(null); // to be added
 		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, site, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
+		arcC.edgeLeft(null); // to be added
+		arcC.edgeRight(null); // to be added
 		arcR = new Voronoi.Arc(site,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
 		arcR.edgeLeft(null); // to be added
 		arcR.edgeRight(arc.edgeRight());
@@ -293,8 +309,8 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 	newL.edgeLeft(arcL.edgeLeft());
 	newL.edgeRight(arcL.edgeRight());
 	var newR = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_UNKNOWN, arcR.center(), arcR.right(),arcR.rightDirection(), arcC.directrix());
-	newR.edgeLeft(arcL.edgeLeft());
-	newR.edgeRight(arcL.edgeRight());
+	newR.edgeLeft(arcR.edgeLeft());
+	newR.edgeRight(arcR.edgeRight());
 	var centerDistance = arcC.intersectionAverage();
 	var intersections = Code.intersectionParabolas(newL.center().point(),newL.directrix().y, newR.center().point(),newR.directrix().y);
 	if(intersections.length==2){
@@ -325,20 +341,6 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 // 	}
 // 	return this._node;
 // }
-Voronoi.Arc.prototype.physicalCopy = function(a){ // addition
-	this.left(a.left());
-	this.center(a.center());
-	this.right(a.right());
-	this.leftDirection(a.leftDirection());
-	this.rightDirection(a.rightDirection());
-	this.directrix(a.directrix());
-	this.edgeLeft(a.edgeLeft());
-	this.edgeRight(a.edgeRight());
-}
-Voronoi.Arc.prototype.copy = function(a){ // identical
-	this.phsicalCopy(a);
-	this.circleEvent(a.circleEvent());
-}
 Voronoi.Arc.prototype.edgeLeft = function(e){
 	if(e!==undefined){
 		this._edgeLeft = e;
@@ -597,7 +599,7 @@ console.log("add ...............................................................
 		//graph.addEdge(edge.opposite()); // other side of infinity
 		arc.edgeLeft(edge);
 		arc.center().addEdge(edge);
-		// nfini-edge-right
+		// infini-edge-right
 		edge = Voronoi.HalfEdge.newTwins();
 		graph.addEdge(edge);
 		//graph.addEdge(edge.opposite()); // other side of infinity
@@ -614,7 +616,7 @@ console.log("add ...............................................................
 		list = Voronoi.Arc.splitArcAtSite(arc,siteEvent.site());
 		// copy over new left arc
 		arc.physicalCopy(list[0]);
-		list[0] = arc;
+		list[0] = arc; // list[0].kill() - never used
 		// only add 2 new arcs
 		for(i=1;i<list.length;++i){
 			arc = list[i];
@@ -627,6 +629,7 @@ console.log("add ...............................................................
 		graph.addEdge(edge);
 		//graph.addEdge(edge.opposite());
 // left
+// edgeLeft already copied over
 list[0].edgeRight(edge);
 list[0].center().addEdge(edge);
 // center
@@ -636,6 +639,7 @@ list[1].center().addEdge(edge.opposite());
 // right
 list[2].edgeLeft(edge);
 //list[2].center().addEdge(edge); // already added at left arc
+// edgeRight already copied over
 		// left triplets of points
 		this.checkAddCircleWithRight(list[1],directrix,queue);
  		// right triplets of points
@@ -670,6 +674,7 @@ Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,que
 	}
 }
 Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, dir,convergePoint){
+	// is it necessary to check if newest circle has a higher point before it overwrites the old? or is order of discovery the priority?
 	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
 	if(!circle){ return; }
 		var point = new V2D(circle.center.x,circle.center.y-circle.radius);
@@ -738,44 +743,9 @@ console.log(center+"");
 console.log(right+"");
 left = l;
 right = r;
+
 	// calculate new arcs
 	list = Voronoi.Arc.mergeArcs(left,center,right);
-// copy data from middle node to graph ????????????
-
-// add vertex at circle center and connect half-edges
-vertex = new Voronoi.Vertex();
-vertex.point(circleEvent.circle().center);
-graph.addVertex(vertex);
-// old get
-console.log("......................");
-console.log(left+"");
-console.log(right+"");
-console.log( left.edgeRight() );
-console.log( right.edgeLeft() );
-left.edgeRight().vertexAdd(vertex); // old
-//left.edgeRight().opposite().vertexAdd(vertex); // old
-right.edgeLeft().vertexAdd(vertex); // old
-//right.edgeLeft().opposite().vertexAdd(vertex); // old
-// new edge from point
-var edge = Voronoi.HalfEdge.newTwins();
-vertex.addEdge(left.edgeRight()); // old
-//vertex.addEdge(left.edgeRight().opposite()); // old
-vertex.addEdge(right.edgeLeft()); // old
-//vertex.addEdge(right.edgeLeft().opposite()); // old
-vertex.addEdge(edge); // new
-//vertex.addEdge(edge.opposite()); // new
-edge.vertexAdd(vertex); // new
-//edge.opposite().vertexAdd(vertex); // new
-// link to next
-left.edgeRight().next(edge);
-right.edgeLeft().next(edge.opposite());
-// set as next
-left.edgeRight(edge);
-left.center().addEdge(edge);
-right.edgeLeft(edge.opposite());
-//right.center().addEdge(edge.opposite());
-
-
 	// only delete middle node
 	var nc = this._tree.findNodeFromObject(center);
 	this._tree.deleteNode(nc);
@@ -788,14 +758,53 @@ right.edgeLeft(edge.opposite());
 		var nr = this._tree.findNodeFromObject(center);
 		this._tree.deleteNode(nr);
 	}
-// // add new edges & connect to vertex
-// edge = Voronoi.HalfEdge.newTwins();
-// edge.vertexAdd(vertex);
-// edge.opposite().vertexAdd(vertex);
-// // left.addHalfEdge(edge);
-// // right.addHalfEdge(edge);
-// graph.addEdge(edge);
-// graph.addEdge(edge.opposite());
+
+console.log("......................");
+console.log(left+"");
+console.log(right+"");
+console.log( left.edgeRight() );
+console.log( right.edgeLeft() );
+// add vertex at circle center and connect half-edges
+vertex = new Voronoi.Vertex();
+vertex.point(circleEvent.circle().center);
+graph.addVertex(vertex);
+// add vertex to old edges
+left.edgeRight().vertexAdd(vertex);
+//left.edgeRight().opposite().vertexAdd(vertex);
+right.edgeLeft().vertexAdd(vertex);
+//right.edgeLeft().opposite().vertexAdd(vertex);
+// add old edges to vertex
+vertex.addEdge(left.edgeRight());
+//vertex.addEdge(left.edgeRight().opposite());
+vertex.addEdge(right.edgeLeft());
+//vertex.addEdge(right.edgeLeft().opposite());
+
+// new edge from vertex
+var edge = Voronoi.HalfEdge.newTwins();
+
+// add edge to vertex
+vertex.addEdge(edge);
+//vertex.addEdge(edge.opposite());
+// add vertex to edge
+edge.vertexAdd(vertex);
+//edge.opposite().vertexAdd(vertex);
+
+// link old edges to new edges (via vertex) -- should do this with same operation as vertex?
+left.edgeRight().opposite().next(right.edgeLeft().opposite());
+right.edgeLeft().opposite().next(left.edgeRight().opposite());
+// 2
+left.edgeRight().next(edge);
+edge.prev(left.edgeRight());
+// 3
+right.edgeLeft().next(edge.opposite());
+edge.opposite().prev(right.edgeLeft());
+// update arc edges to new edge+opposite
+left.edgeRight(edge);
+left.center().addEdge(edge);
+right.edgeLeft(edge.opposite());
+right.center().addEdge(edge.opposite());
+	
+	// copy was here
 
 	// left triplets of points
 	this.checkAddCircleWithRight(right,directrix,queue);
@@ -866,7 +875,9 @@ Voronoi.HalfEdge.prototype.vertexAdd = function(v){ // assigns external vertex t
 	}else{
 		"BOTH VERTEXES ALREADY ASSIGNED";
 	}
+	// if I know the site, I can calculate CCW and correct my direction if necessary
 }
+
 Voronoi.HalfEdge.prototype.vertexA = function(a){
 	if(a!==undefined){
 		console.log("vertexA WAS: "+this._vertexA+" IS: "+a);
