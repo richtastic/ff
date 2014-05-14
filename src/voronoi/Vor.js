@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(400,500);
+	this._root.matrix().translate(600,300);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -48,12 +48,12 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(8,2) );
 points.push( new V2D(1,8) );
 points.push( new V2D(0.5,7) );
-points.push( new V2D(0,0) );
+//points.push( new V2D(0,0) );
 	voronoi = new Voronoi();
-	var scale = 50.0;
+	var scale = 10.0;
 	for(i=0;i<points.length;++i){
-		points[i].x *= 50.0;
-		points[i].y *= 50.0;
+		points[i].x *= scale;
+		points[i].y *= scale;
 		this._root.addChild( Vor.makePoint(points[i]) );
 	}
 	//
@@ -113,7 +113,7 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 360;//375;
+	var offYStart = 150;//375;
 	var rateStart = 1.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();

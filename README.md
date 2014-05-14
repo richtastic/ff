@@ -16,8 +16,9 @@ Also contains other various code, with various purposes.
   * [Image-Texture-Normalizing](#)
   * [FSpice](#)
   * [YAML](#)
+  * [Voronoi | Delaunay](#PROJECT_VORONOI)
 2. [Classes](#CLASSES)
-  * (AJAX)(#CLASS_AJAX)
+  * [AJAX](#CLASS_AJAX)
 3. [References](#REFERENCES)
 
 <a name="PROJECTS"></a>
@@ -26,6 +27,24 @@ Also contains other various code, with various purposes.
 <a name="PROJECT_CAM"></a>
 ## Cam
 ## ...
+
+<a name="PROJECT_VORONOI"></a>
+## Voronoi (Voronoy)
+*Fortune Algorithm to yield Voronoi Diagram from a set of site points*
+<br/>
+```
+...
+```
+
+
+## Delaunay
+*Convert Delaunay Triangulation from Voronoi Diagram*
+<br/>
+```
+...
+```
+
+
 
 <a name="CLASSES"></a>
 # Class Index #

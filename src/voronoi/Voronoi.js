@@ -162,6 +162,11 @@ Voronoi.Event.prototype.toString = function(){
 		str += "[CIRC ";
 	}
 	str += this._point.toString();
+	// if(this.center()){
+	// 	if(this.center()){
+	// 		str += " <"+this.center()+">";
+	// 	}
+	// }
 	str += "]";
 	return str;
 }
@@ -242,7 +247,9 @@ Voronoi.Queue.prototype.toString = function(){
 Voronoi.ARC_PARABOLA_INT_UNKNOWN = -1;
 Voronoi.ARC_PARABOLA_INT_LEFT = 0;
 Voronoi.ARC_PARABOLA_INT_RIGHT = 1;
+Voronoi.ARC_COUNT = 0;
 Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX){
+	this._id = Voronoi.ARC_COUNT++;
 	this._circleEvent = null;
 	this._parabolaLeft = null;
 	this._parabolaCenter = null;
@@ -262,6 +269,7 @@ Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX){
 	//this.node(node);
 }
 Voronoi.Arc.prototype.physicalCopy = function(a){ // addition
+	this._id = a._id;
 	this.left(a.left());
 	this.center(a.center());
 	this.right(a.right());
@@ -271,6 +279,18 @@ Voronoi.Arc.prototype.physicalCopy = function(a){ // addition
 	this.edgeLeft(a.edgeLeft());
 	this.edgeRight(a.edgeRight());
 	this.circleEvent(a.circleEvent());
+	var circ = a.circleEvent(); // necessary?
+	if(circ){
+		if(circle.left()==a){
+			circle.left(this);
+		}
+		if(circle.center()==a){
+			circle.center(this);
+		}
+		if(circle.right()==a){
+			circle.right(this);
+		}
+	}
 }
 Voronoi.Arc.prototype.copy = function(a){ // identical
 	this.phsicalCopy(a);
@@ -398,7 +418,7 @@ Voronoi.Arc.prototype.directrix = function(d){
 Voronoi.Arc.prototype.toString = function(){
 	var str = "";
 	var ints = this.intersections();
-	str += "[Arc: ";
+	str += "[Arc: "+this._id+" ";
 	if(this.center()){
 		str += "  "+this.center()+"  ";
 	}else{
@@ -430,6 +450,12 @@ Voronoi.Arc.prototype.toString = function(){
 	}
 	str += "<"+(this._edgeLeft?"YES":"NO")+","+(this._edgeRight?"YES":"NO")+">";	
 	//str += " "+(this.node().data()==this)+" ";
+	str += " ";
+	if(this._circleEvent){
+		str += ""+this._circleEvent;
+	}else{
+		str += "(null)";
+	}
 	str += " ";
 	str += "]";
 	return str;
@@ -675,6 +701,13 @@ Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,que
 }
 Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, dir,convergePoint){
 	// is it necessary to check if newest circle has a higher point before it overwrites the old? or is order of discovery the priority?
+// remove previous false-alarm circle event - reguardless of what happens
+queue.removeEvent( center.circleEvent() );
+center.circleEvent(null);
+
+// test for convergence: are the arcs moving toward or away from the center of the circle?
+
+
 	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
 	if(!circle){ return; }
 		var point = new V2D(circle.center.x,circle.center.y-circle.radius);
@@ -698,7 +731,7 @@ console.log( arc+""+aboveCenter );
 			return;
 		}
 	}*/
-	if(!aboveCenter && point.y<(directrix.y-1E-10)){ // readds same point
+	if(!aboveCenter && point.y<(directrix.y-1E-10)){ // readds same point --- use some other method, like 'amIOnMyWayOut' to prevent calculation
 		console.log("ADD CIRCLE: "+point.y+" < "+directrix.y);
 		var circleEvent = new Voronoi.Event(point,Voronoi.EVENT_TYPE_CIRCLE);
 		circleEvent.circle(circle);
@@ -708,8 +741,8 @@ console.log( arc+""+aboveCenter );
 console.log(right+"");
 console.log(center+"");
 console.log(left+"");
-		// remove previous false-alarm circle event
-		queue.removeEvent( center.circleEvent() );
+		// // remove previous false-alarm circle event ^^^^^^^^^^^^^^
+		// queue.removeEvent( center.circleEvent() );
 		// set merge circle event to disappearing arc
 		center.circleEvent(circleEvent);
 		queue.addEvent(circleEvent);
@@ -730,7 +763,7 @@ var nodeL = this._tree.prevNode(nodeC);
 var nodeR = this._tree.nextNode(nodeC);
 var r = nodeR.data();
 var l = nodeL.data();
-	// delete all circleEvents involving middle arc (including this one)
+	// delete all circleEvents involving middle arc
 	queue.removeCircleEventWithArc( center );
 console.log("MERGING ....");
 console.log(l==left); // some split/merge didn't get recorded correctly...
