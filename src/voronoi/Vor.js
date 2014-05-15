@@ -43,14 +43,14 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(2,7) );
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
-//	points.push( new V2D(5,6) );
+	points.push( new V2D(5,6) );
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 points.push( new V2D(1,8) );
 points.push( new V2D(0.5,7) );
-//points.push( new V2D(0,0) );
+points.push( new V2D(0,0) );
 	voronoi = new Voronoi();
-	var scale = 10.0;
+	var scale = 50.0;
 	for(i=0;i<points.length;++i){
 		points[i].x *= scale;
 		points[i].y *= scale;
@@ -114,7 +114,7 @@ Vor.prototype.animation_tick = function(){
 	directrix = this._directrix.y;
 	//
 	var offYStart = 150;//375;
-	var rateStart = 1.5;//2.5;
+	var rateStart = 0.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -193,7 +193,7 @@ Vor.prototype.animation_tick = function(){
 				}
 			}
 			node = this._T.nextNode(arc);
-			if(count >= 10){
+			if(count >= 100){
 				console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
 				node = null;
 				throw new Error();
@@ -277,7 +277,7 @@ this._directrix.copy( temp );
 console.log("-------------------------------------------------------------------------------------------------------");
 		}
 	}else{
-		this._ticker.stop();
+//		this._ticker.stop();
 		// DRAW FINAL IMAGE
 	}
 	//

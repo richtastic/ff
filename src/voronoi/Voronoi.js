@@ -194,10 +194,10 @@ Voronoi.Queue.prototype.removeCircleEventWithArc = function(arc){
 	for(i=0; i<this._list.length; ++i){
 		e = this._list[i];
 		if(e.isCircleEvent()){
-			console.log("CIRCLE CONTAIN ARC?: "+arc+" "+e.circle().center+" "+e.containsArc(arc)+" ");
-			console.log("                     "+e.left());
-			console.log("                     "+e.center());
-			console.log("                     "+e.right());
+			// console.log("CIRCLE CONTAIN ARC?: "+arc+" "+e.circle().center+" "+e.containsArc(arc)+" ");
+			// console.log("                     "+e.left());
+			// console.log("                     "+e.center());
+			// console.log("                     "+e.right());
 			if(e.containsArc(arc)){
 				// remove from 
 				if(e.center().circleEvent()==e){
@@ -699,17 +699,25 @@ Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,que
 		this.addCirclePointFromArcs(left,center,right, directrix, queue, -1,center.center());
 	}
 }
+
 Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, dir,convergePoint){
 	// is it necessary to check if newest circle has a higher point before it overwrites the old? or is order of discovery the priority?
 // remove previous false-alarm circle event - reguardless of what happens
 queue.removeEvent( center.circleEvent() );
 center.circleEvent(null);
-
-// test for convergence: are the arcs moving toward or away from the center of the circle?
-
-
 	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
-	if(!circle){ return; }
+	if(!circle){ return; } // not colinear
+// test for convergence: circle is consistently oriented (based on parabola points)
+var AB = V2D.diff(left.center().point(), center.center().point());
+var BC = V2D.diff(center.center().point(), right.center().point());
+var ACirc = V2D.diff(left.center().point(), circle.center);
+var BCirc = V2D.diff(center.center().point(), circle.center);
+var isConvergence = (V2D.cross(AB,ACirc)<=0) && (V2D.cross(BC,BCirc)<=0);
+
+if(!isConvergence){
+	return;
+}
+// what follows now are probably duplicated checkts
 		var point = new V2D(circle.center.x,circle.center.y-circle.radius);
 //circle CENTER needs to be below all parabolas ( or in past)
 var aboveNode = this._tree.findNodeFromObject(circle.center);
@@ -732,7 +740,7 @@ console.log( arc+""+aboveCenter );
 		}
 	}*/
 	if(!aboveCenter && point.y<(directrix.y-1E-10)){ // readds same point --- use some other method, like 'amIOnMyWayOut' to prevent calculation
-		console.log("ADD CIRCLE: "+point.y+" < "+directrix.y);
+		//console.log("ADD CIRCLE: "+point.y+" < "+directrix.y);
 		var circleEvent = new Voronoi.Event(point,Voronoi.EVENT_TYPE_CIRCLE);
 		circleEvent.circle(circle);
 		circleEvent.left(left);
