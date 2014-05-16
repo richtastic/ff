@@ -368,9 +368,8 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 		}
 		console.log("SINGLE intersections");
 		// doesn't matter
-		
-		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
-		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
+		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 	}else{ // 
 		console.log("????????");
 	}
@@ -844,7 +843,10 @@ left = l;
 right = r;
 
 	// calculate new arcs
+var temp = new V2D().copy(directrix); // to fix single point of intersection problem ...
+directrix.y -= 100; // some number to guarantee directions (rather than single point of itnersection)
 	list = Voronoi.Arc.mergeArcs(left,center,right);
+directrix.copy(temp);
 	// only delete middle node
 	var nc = this._tree.findNodeFromObject(center);
 	this._tree.deleteNode(nc);
