@@ -33,18 +33,12 @@ Also contains other various code, with various purposes.
 *Fortune Algorithm to yield Voronoi Diagram from a set of site points*
 <br/>
 [How-To-Voronoi](./src/voronoi/wiki/index.md)
-```
-...
-```
 
 
 ## Delaunay
 *Convert Delaunay Triangulation from Voronoi Diagram*
 <br/>
-```
-...
-```
-
+[How-To-Voronoi](./src/voronoi/wiki/index.md#DELAUNAY)
 
 
 <a name="CLASSES"></a>
