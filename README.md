@@ -32,6 +32,7 @@ Also contains other various code, with various purposes.
 ## Voronoi (Voronoy)
 *Fortune Algorithm to yield Voronoi Diagram from a set of site points*
 <br/>
+[How-To-Voronoi](./src/voronoi/wiki/index.md)
 ```
 ...
 ```
