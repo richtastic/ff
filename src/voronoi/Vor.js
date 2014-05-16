@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(600,300);
+	this._root.matrix().translate(600,900);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -39,11 +39,11 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 Vor.prototype.voronoi = function(){
 	var points = new Array();
 	//points.push( new V2D(1,1) );
-	points.push( new V2D(0,6) );
+	points.push( new V2D(0,6) ); // add me back
 	points.push( new V2D(2,7) );
 //	points.push( new V2D(3,4) );
 //	points.push( new V2D(5,2) );
-	points.push( new V2D(5,6) );
+	points.push( new V2D(5,6) ); // hitter
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
 points.push( new V2D(1,8) );
@@ -113,8 +113,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 150;//375;
-	var rateStart = 0.5;//2.5;
+	var offYStart = 375;//375;
+	var rateStart = 1.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -273,6 +273,7 @@ console.log(this._T.toString());
 console.log("\n");
 console.log(this._T.toString());
 console.log("\n");
+console.log(this._Q.toString()+"    + "+this._directrix.toString());
 this._directrix.copy( temp );
 console.log("-------------------------------------------------------------------------------------------------------");
 		}

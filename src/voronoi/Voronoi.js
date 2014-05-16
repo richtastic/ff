@@ -177,10 +177,20 @@ Voronoi.Queue = function(){
 	this._list = [];
 }
 Voronoi.Queue.sortPointY = function(a,b){
-	return a.point().y-b.point().y; // [smallest...largest]
+	var diff = a.point().y-b.point().y;
+	// sort by x coord next?
+	// handle circle events before site events -> for when circle even coincides with site event
+	// if(diff==0){
+	// 	if(a.isCircleEvent()&&b.isSiteEvent){
+	// 		return -1;
+	// 	}else if(a.isSiteEvent()&&b.isCircleEvent){
+	// 		return 1;
+	// 	}
+	// }
+	return diff; // [smallest...largest]
 }
 Voronoi.Queue.prototype.addEvent = function(e){
-	this._list.push(e);
+	Code.addUnique(this._list,e); // this._list.push(e);
 	this._list.sort( Voronoi.Queue.sortPointY );
 }
 Voronoi.Queue.prototype.removeEvent = function(e){
@@ -334,21 +344,33 @@ Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
 	var centerDistance = arcC.intersectionAverage();
 	var intersections = Code.intersectionParabolas(newL.center().point(),newL.directrix().y, newR.center().point(),newR.directrix().y);
 	if(intersections.length==2){
+		console.log("two intersections");
 		if(intersections[0].x>intersections[1].x){ // order
 			intersections = [intersections[1],intersections[0]];
 		}
 		var distanceA = Math.abs(intersections[0].x-centerDistance);
 		var distanceB = Math.abs(intersections[1].x-centerDistance);
-		if(distanceA<distanceB){
+		/*if(distanceA==distanceB){
+			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+		}else*/ if(distanceA<distanceB){
 			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 		}else{
 			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 		}
-	}else if(intersections.length==1){ // doesn't matter
+	}else if(intersections.length==1){
+		if(false){
+			console.log("INTERSECT AT POINT ...");
+			// if there is an intersection at a single point, the direction DOES matter
+			// detect this and get it right
+		}
+		console.log("SINGLE intersections");
+		// doesn't matter
+		
 		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
-		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 	}else{ // 
 		console.log("????????");
 	}
@@ -543,8 +565,8 @@ Voronoi.Arc.prototype.containsPointBoolean = function(point){
 Voronoi.Arc.prototype.containsPoint = function(point){ // searching via point
 	var ints = this.intersections();
 	if(ints[0]!=null && ints[1]!=null){
-		if(ints[0].x<point.x){
-			if(point.x<=ints[1].x){
+		if(ints[0].x<=point.x){ // non inclusive left
+			if(point.x<=ints[1].x){ // inclusive right
 				return 0; // inside
 			}
 			return 1; // right
@@ -578,6 +600,7 @@ Voronoi.WaveFront = function(){
 	this._tree.sorting( Voronoi.WaveFront.sortingArcPoint );
 }
 Voronoi.WaveFront.sortingArcPoint = function(a,b){
+	// infinitely thin?
 	if( Code.isa(b,V2D) ){ // arc and point - search
 		return a.containsPoint(b);
 	}else{ // two arcs - insert
@@ -638,6 +661,36 @@ console.log("add ...............................................................
 		// remove false-alarm circle events
 		queue.removeEvent( arc.circleEvent() );
 		arc.circleEvent(null);
+// INTERSECTING AT INTERSECTION POINT
+// var thisNode = node;
+// var prevNode = this._tree.prevNode(node);
+// var nextNode = this._tree.nextNode(node);
+// var aL, aR, pL, pR;
+// var didIntersect = false;
+// console.log("check point intersect");
+// if(prevNode){
+// 	aL = prevNode.data();
+// 	aR = thisNode.data();
+// 	pL = aL.intersectRight();
+// 	pR = aR.intersectLeft();
+// 	console.log(pL,pR);
+// 	if( V2D.equal(pL,pR) ){ // split at point
+// 		console.log("INTERSECT AT POINT L");
+// 		didIntersect = true;
+// 	}
+// }
+// if(nextNode){
+// 	aL = thisNode.data();
+// 	aR = nextNode.data();
+// 	pL = aL.intersectRight();
+// 	pR = aR.intersectLeft();
+// 	console.log(pL,pR);
+// 	if( V2D.equal(pL,pR) ){ // split at point
+// 		console.log("INTERSECT AT POINT R");
+// 		didIntersect = true;
+// 	}
+// }
+// if(!didIntersect){}
 		// get list of new arcs
 		list = Voronoi.Arc.splitArcAtSite(arc,siteEvent.site());
 		// copy over new left arc
@@ -667,17 +720,17 @@ list[2].edgeLeft(edge);
 //list[2].center().addEdge(edge); // already added at left arc
 // edgeRight already copied over
 		// left triplets of points
-		this.checkAddCircleWithRight(list[1],directrix,queue);
+		this.checkAddCircleWithRight(list[1],directrix,queue, true);
  		// right triplets of points
- 		this.checkAddCircleWithLeft(list[1],directrix,queue);
+ 		this.checkAddCircleWithLeft(list[1],directrix,queue, true);
 	}
 // console.log("\n");
 // console.log(this._tree.toString());
-console.log("SPLIT RESULT: ");
-console.log(graph.toString());
+// console.log("SPLIT RESULT: ");
+// console.log(graph.toString());
 console.log("add ........................................................................................... END");
 }
-Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue){ // left triplets of points
+Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue, isAdd){ // left triplets of points
 	var node, left, center;
 	node = this._tree.findNodeFromObject(right);//right.node();
 	node = this._tree.prevNode(node);
@@ -685,10 +738,10 @@ Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,q
 	node = this._tree.prevNode(node);
 	left = node?node.data():null;
 	if(left && center && right){
-		this.addCirclePointFromArcs(left,center,right, directrix, queue, 1,center.center());
+		this.addCirclePointFromArcs(left,center,right, directrix, queue, isAdd);// 1,center.center());
 	}
 }
-Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,queue){ // right triplets of points
+Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,queue, isAdd){ // right triplets of points
 	var node, left, center;
 	node = this._tree.findNodeFromObject(left);//left.node();
 	node = this._tree.nextNode(node);
@@ -696,11 +749,12 @@ Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,que
 	node = this._tree.nextNode(node);
 	right = node?node.data():null;
 	if(left && center && right){
-		this.addCirclePointFromArcs(left,center,right, directrix, queue, -1,center.center());
+		this.addCirclePointFromArcs(left,center,right, directrix, queue, isAdd);// -1,center.center());
 	}
 }
 
-Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, dir,convergePoint){
+Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, isAdd){//dir,convergePoint){
+	isAdd = isAdd!==undefined?isAdd:false;
 	// is it necessary to check if newest circle has a higher point before it overwrites the old? or is order of discovery the priority?
 // remove previous false-alarm circle event - reguardless of what happens
 queue.removeEvent( center.circleEvent() );
@@ -739,7 +793,11 @@ console.log( arc+""+aboveCenter );
 			return;
 		}
 	}*/
-	if(!aboveCenter && point.y<(directrix.y-1E-10)){ // readds same point --- use some other method, like 'amIOnMyWayOut' to prevent calculation
+	if(!aboveCenter){
+	//if(!aboveCenter && point.y<(directrix.y-1E-10)){
+	//if( (!isAdd && !aboveCenter) || (isAdd && !aboveCenter && point.y<(directrix.y-1E-10)) ){
+	//&& point.y<=directrix.y ){// point.y<(directrix.y-1E-10)){ // readds same point --- use some other method, like 'amIOnMyWayOut' to prevent calculation
+console.log("addCirclePointFromArcs: "+circle.center+" | "+circle.radius+" ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE  ADD CIRCLE :::::: "+point+" | "+directrix);
 		//console.log("ADD CIRCLE: "+point.y+" < "+directrix.y);
 		var circleEvent = new Voronoi.Event(point,Voronoi.EVENT_TYPE_CIRCLE);
 		circleEvent.circle(circle);
@@ -852,8 +910,8 @@ right.center().addEdge(edge.opposite());
 	// right triplets of points
 	this.checkAddCircleWithLeft(left,directrix,queue);
 //
-console.log("MERGE RESULT: ");
-console.log(graph.toString());
+// console.log("MERGE RESULT: ");
+// console.log(graph.toString());
 }
 Voronoi.WaveFront.prototype.toString = function(){
 	return "WAVEFRONT:\n"+this._tree.toString();
