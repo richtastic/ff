@@ -1613,9 +1613,9 @@ Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 	}
 	return new V4D( a.x+t2*baX, a.y+t2*baY, t2, t1 ); // new V4D( c.x+t1*dcX, c.y+t1*dcY, t1, t2 );
 }
-Code.rayIntersect2D = function(a,b, c,d){
+Code.rayIntersect2D = function(a,b, c,d){ // two infinite lines
 	var den = b.y*d.x - b.x*d.y;
-	if(den == 0){ return null; }
+	if(den == 0){ return null; } // infinite or zero intersections
 	var num = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
 	var t = num/den;
 	return new V2D(a.x+t*b.x, a.y+t*b.y); // num = (b.x*(c.y-a.y) + b.y*(a.x-c.x)); return new V2D(c.x+t2*d.x, c.y+t2*d.y);
@@ -1627,6 +1627,13 @@ Code.parabolaABCFromFocusDirectrix = function(focA,c){
 	var C = (a*a + b*b - c*c)*A;
 	return [A,B,C];
 }
+Code.parabolaFocusDirectrixFromABC = function(A,B,C){
+	if(A==0){ return null;}
+	var h = -0.5*B/A;
+	var k = A*h*h + B*h + C;
+	var p = 0.25/A;
+	return {focus:new V2D(h,k+p), directrix:k-p};
+}
 Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	var a1 = focA.x, b1 = focA.y, c1 = dirA;
 	var a2 = focB.x, b2 = focB.y, c2 = dirB;
@@ -1637,7 +1644,6 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	var A2 = 0.5/divB;
 	var B2 = -2.0*a2*A2;
 	var C2 = (a2*a2 + b2*b2 - c2*c2)*A2;
-	//console.log(divA,"  ",divB);
 	if(divA==0 && divB==0){ // two lines at same directrix
 		if(focA.x==focB.x){ // y must also be equal
 			return [new V2D().copy(focA)];
@@ -1676,9 +1682,14 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 		intAy = A1*intAx*intAx + B1*intAx + C1; // intAy = A2*intAx*intAx + B2*intAx + C2;
 		return [new V2D(intAx,intAy)];
 	} // two intersections
+	if(inside==0){ // real repeated - WHEN DOES THIS HAPPEN?
+		intAx = -0.5*B/A;
+		intAy = A1*intAx*intAx + B1*intAx + C1;
+		return [new V2D(intAx,intAy)];
+	}
 	var sqrt = Math.sqrt(inside);
-	intAx = (sqrt - B)/(2.0*A);
-	intBx = -(B +sqrt)/(2.0*A);
+	intAx = 0.5*(sqrt - B)/A;
+	intBx = -0.5*(B +sqrt)/A;
 	intAy = A1*intAx*intAx + B1*intAx + C1;
 	intBy = A1*intBx*intBx + B1*intBx + C1;
 	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
@@ -1693,13 +1704,6 @@ Code.pointAboveParabola = function(focus,directrix, point){
 	return false;
 }
 /*
-	var a = new V2D(intAx,intAy);
-	var b = new V2D(intBx,intBy);
-	if(a.x<b.x){
-		return [a, b];
-	}
-	return [b,a];
-*/
 Code.intersectionParabolas2 = function(focA,dirA, focB,dirB){
 	var a1 = focA.x, b1 = focA.y, c1 = dirA;
 	var a2 = focB.x, b2 = focB.y, c2 = dirB;
@@ -1728,77 +1732,53 @@ Code.intersectionParabolas2 = function(focA,dirA, focB,dirB){
 	var intBy = (Math.pow(intBx-a1,2) + d1)/e1;
 	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
 }
-/*
-PARABOLA: FOCUS: a,b  DIRECTRIX: c (=y)
-
-Equal Distance:
-sqrt( (x-a)^2 + (y-b)^2 ) = sqrt( (y-c)^2 )
-
-(x-a)^2 + (y-b)^2  = (y-c)^2
-(x-a)^2 + y*y + b*b - 2*y*b = y*y + c*c - 2*y*c
-(x-a)^2 + b*b - 2*y*b = c*c - 2*y*c
-(x-a)^2 + b*b = c*c + 2*y*(b - c)
-(x-a)^2 + b*b - c*c = 2*y*(b - c)
-[ (x-a)^2 + b*b - c*c ] / [ 2*(b - c) ] = y
-=>
-y = [ (x-a)*(x-a) + b*b - c*c ] / [ 2(b-c) ]
-
-two parabolas intersect: @ y1=y2 && x1=x2
-y1 = [ (x-a1)*(x-a1) + b1*b1 - c1*c1 ] / [ 2(b1-c1) ]
-y2 = [ (x-a2)*(x-a2) + b2*b2 - c2*c2 ] / [ 2(b2-c2) ]
-	d1 = (b1*b1 - c1*c1)
-	d2 = (b2*b2 - c2*c2)
-	e1 = 2(b1-c1)
-	e2 = 2(b2-c2)
-=>
-y1 = [ (x-a1)*(x-a1) + d1 ] / e1
-y2 = [ (x-a2)*(x-a2) + d2 ] / e2
-
-y1 = y2 :
-[ (x-a1)*(x-a1) + d1 ]/e1 = [ (x-a2)*(x-a2) + d2 ]/e2
-[ (x-a1)*(x-a1) + d1 ]*e2 = [ (x-a2)*(x-a2) + d2 ]*e1
-(x-a1)*(x-a1)*e2 + d1*e2 = (x-a2)*(x-a2)*e1 + d2*e1
-(x*x + a1*a1 - 2*x*a1)*e2 + d1*e2 = (x*x + a2*a2 - 2*x*a2)*e1 + d2*e1
-x*x*e2 + a1*a1*e2 - 2*x*a1*e2 + d1*e2 = x*x*e1 + a2*a2*e1 - 2*x*a2*e1 + d2*e1
-...
-x*x*(e2-e1) + a1*a1*e2 - 2*x*a1*e2 + d1*e2 = a2*a2*e1 - 2*x*a2*e1 + d2*e1
-x*x*(e2-e1) + a1*a1*e2 + x*2(a2*e1 - a1*e2) + d1*e2 = a2*a2*e1 + d2*e1
-x*x*(e2-e1) + a1*a1*e2 - a2*a2*e1 + x*2(a2*e1 - a1*e2) + d1*e2 = d2*e1
-x*x*(e2-e1) + a1*a1*e2 - a2*a2*e1 + x*2(a2*e1 - a1*e2) + d1*e2 - d2*e1 = 0
-x*x*(e2-e1) + x*2(a2*e1 - a1*e2) + (a1*a1*e2 - a2*a2*e1 + d1*e2 - d2*e1) = 0
-x*x*A + x*B + C = 0
-
-@ A = 0:
-x*B + C = 0
-x = -C/B;
-
-
-...
-vertex = a,[c + (b-c)/2] = a,(c+b)/2
-
-SOLVE FOR X:
-(x-a)^2 + (y-b)^2  = (y-c)^2
-x*x + a*a -2*ax + y*y + b*b - 2*y*b = y*y + c*c - 2*y*c
-x*x + a*a -2*ax + b*b - 2*y*b = c*c - 2*y*c
-x*x + a*a -2*ax + b*b = c*c + 2*y*b - 2*y*c
-x*x + -2*ax + b*b = c*c - a*a + 2*y*b - 2*y*c
-x*x + -2*ax = c*c - a*a - b*b + 2*y*b - 2*y*c
-
-
-...
-SOLVE FOR SIMPLE EQUATION:
-y = [ (x-a)*(x-a) + b*b - c*c ] / [ 2(b-c) ]
-y = [ x*x + a*a -2*ax + b*b - c*c ] / [ 2(b-c) ]
-Z = 2(b-c)
-y = x*x/Z - 2*ax/Z + (a*a + b*b - c*c)/Z
-A = 1/Z
-B = -2*a/Z
-C = (a*a + b*b - c*c)/Z
-
-
-
-
 */
+Code.intersectionRayParabola = function(org,dir, foc,drx){
+	if(foc.y==drx.y){ // infinitely thin parabola
+		if(dir.x==0){ // infinite or 0 intersections
+			return null;
+		}
+		var t = (drx.x - org.x)/dir.x;
+		return(new V2D(org.x+t*dir.x,org.y+t*dir.y));
+	}
+	var list = Code.parabolaABCFromFocusDirectrix(foc,drx);
+	var pA = list[0], pB = list[1], pC = list[2];
+	if(dir.x==0){ // vertical line intersects at single point
+		console.log("vertical");
+		return [new V2D(org.x, pA*org.x*org.x + pB*org.x + pC)];
+	}
+	var m = dir.y/dir.x;
+	var b = org.y - m*org.x;
+	var A = pA, B = pB-m, C = pC-b;
+	console.log("A: "+A);
+	console.log("B: "+B);
+	console.log("C: "+C);
+	if(A==0){ // single intersection
+		console.log("single");
+		var x1 = -C/B;
+		var y1 = pA*x1*x1 + pB*x1 + pC;
+		return [new V2D(x1,y1)];
+	}
+	var inside = B*B - 4*A*C;
+	console.log("inside: "+inside);
+	if(inside<0){ // imaginary = no intersection
+		console.log("imaginary");
+		return null;
+	}
+	var sqrt = Math.sqrt(inside);
+	console.log("sqrt: "+sqrt);
+	if(inside==0){ // repeated real intersections
+		console.log("double real");
+		var x1 =  0.5*(sqrt - B)/A;
+		var y1 = pA*x1*x1 + pB*x1 + pC;
+		return [new V2D(x1,y1)];
+	} // two real intersection
+	var x1 =  0.5*(sqrt - B)/A;
+	var x2 = -0.5*(sqrt + B)/A;
+	var y1 = pA*x1*x1 + pB*x1 + pC;
+	var y2 = pA*x2*x2 + pB*x2 + pC;
+	return [new V2D(x1,y1), new V2D(x2,y2)];
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
 Code.circleFromPoints = function(a,b,c){
 	var lineAB = V2D.diff(a,b);

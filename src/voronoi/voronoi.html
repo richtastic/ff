@@ -15,6 +15,31 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
+
+var o = new V2D(-2,-2);
+//var d = new V2D(1,.732050807);
+var d = new V2D(1,1);
+var directrix = -1;
+var focus = new V2D(0,1);
+
+var a = 1.0;
+var b = 1.0;
+var c = 0.0;
+var dat = Code.parabolaFocusDirectrixFromABC(a,b,c);
+focus = dat.focus;
+directrix = dat.directrix;
+
+console.log(focus);
+console.log(directrix);
+
+
+var ints = Code.intersectionRayParabola(o,d, focus,directrix);
+
+console.log(ints);
+console.log(ints[0]);
+console.log(ints[1]);
+
+return;
 /*
 var focA = new V2D(25,350);
 var focB = new V2D(100,350);
