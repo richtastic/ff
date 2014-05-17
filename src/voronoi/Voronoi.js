@@ -71,6 +71,7 @@ Voronoi.prototype.toString = function(){
 /* Event */
 Voronoi.EVENT_TYPE_SITE = 0;
 Voronoi.EVENT_TYPE_CIRCLE = 1;
+Voronoi.EPSILON = 1E-10;
 Voronoi.Event = function(p,t){
 	this._type = null;
 	this._point = new V2D();
@@ -83,6 +84,27 @@ Voronoi.Event = function(p,t){
 	this._circle = null;
 	this.point(p);
 	this.type(t);
+}
+Voronoi.Event.pointsEqualToEpsilon = function(a,b){
+	var dist = V2D.distance(a,b);
+	console.log("DISTANCE: "+dist);
+	if(dist<Voronoi.EPSILON){
+		return true;
+	}
+	return false;
+}
+Voronoi.Event.equal = function(a,b){
+	if(a&&b){
+		if(a.type()==b.type()){
+			if(a.isCircleEvent()){
+				if( Voronoi.Event.pointsEqualToEpsilon(a.point(),b.point()) && Voronoi.Event.pointsEqualToEpsilon(a.circle().center,b.circle().center) ){
+					console.log("EQUALITY");
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 Voronoi.Event.prototype.point = function(x,y){
 	if(x!==undefined){
@@ -374,7 +396,7 @@ Voronoi.Arc._mergeArcs2 = function(arcL,arcC,arcR){
 			// if there is an intersection at a single point, the direction DOES matter
 			// detect this and get it right
 		}
-		console.log("SINGLE intersections");
+		console.log("SINGLE intersection");
 		// doesn't matter
 		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
@@ -737,9 +759,9 @@ list[2].edgeLeft(edge);
 //list[2].center().addEdge(edge); // already added at left arc
 // edgeRight already copied over
 		// left triplets of points
-		this.checkAddCircleWithRight(list[1],directrix,queue, true);
+		this.checkAddCircleWithRight(list[1],directrix,queue,null, true);
  		// right triplets of points
- 		this.checkAddCircleWithLeft(list[1],directrix,queue, true);
+ 		this.checkAddCircleWithLeft(list[1],directrix,queue,null, true);
 	}
 // console.log("\n");
 // console.log(this._tree.toString());
@@ -747,7 +769,7 @@ list[2].edgeLeft(edge);
 // console.log(graph.toString());
 console.log("add ........................................................................................... END");
 }
-Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue, isAdd){ // left triplets of points
+Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue, circleEvent, isAdd){ // left triplets of points
 	var node, left, center;
 	node = this._tree.findNodeFromObject(right);//right.node();
 	node = this._tree.prevNode(node);
@@ -755,22 +777,22 @@ Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,q
 	node = this._tree.prevNode(node);
 	left = node?node.data():null;
 	if(left && center && right){
-		this.addCirclePointFromArcs(left,center,right, directrix, queue, isAdd);// 1,center.center());
+		this.addCirclePointFromArcs(left,center,right, directrix, queue, circleEvent, isAdd);// 1,center.center());
 	}
 }
-Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,queue, isAdd){ // right triplets of points
-	var node, left, center;
+Voronoi.WaveFront.prototype.checkAddCircleWithLeft = function(left,directrix,queue, circleEvent, isAdd){ // right triplets of points
+	var node, right, center;
 	node = this._tree.findNodeFromObject(left);//left.node();
 	node = this._tree.nextNode(node);
 	center = node?node.data():null;
 	node = this._tree.nextNode(node);
 	right = node?node.data():null;
 	if(left && center && right){
-		this.addCirclePointFromArcs(left,center,right, directrix, queue, isAdd);// -1,center.center());
+		this.addCirclePointFromArcs(left,center,right, directrix, queue, circleEvent, isAdd);// -1,center.center());
 	}
 }
 
-Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, isAdd){//dir,convergePoint){
+Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right, directrix, queue, oldCircleEvent, isAdd){//dir,convergePoint){
 	isAdd = isAdd!==undefined?isAdd:false;
 	// is it necessary to check if newest circle has a higher point before it overwrites the old? or is order of discovery the priority?
 // remove previous false-alarm circle event - reguardless of what happens
@@ -779,16 +801,20 @@ center.circleEvent(null);
 	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
 	if(!circle){ return; } // not colinear
 // test for convergence: circle is consistently oriented (based on parabola points)
+// var AB = V2D.diff(left.center().point(), center.center().point());
+// var BC = V2D.diff(center.center().point(), right.center().point());
+// var ACirc = V2D.diff(left.center().point(), circle.center);
+// var BCirc = V2D.diff(center.center().point(), circle.center);
+// var c1 = V2D.cross(AB,ACirc);
+// var c2 = V2D.cross(BC,BCirc);
+// var isConvergence = ((c1<=0)&&(c2<=0));// || ((c1>=0)&&(c2>=0));
+// 
 var AB = V2D.diff(left.center().point(), center.center().point());
-var BC = V2D.diff(center.center().point(), right.center().point());
-var ACirc = V2D.diff(left.center().point(), circle.center);
-var BCirc = V2D.diff(center.center().point(), circle.center);
-var c1 = V2D.cross(AB,ACirc);
-var c2 = V2D.cross(BC,BCirc);
-var isConvergence = ((c1<=0)&&(c2<=0));// || ((c1>=0)&&(c2>=0));
-// if(!isConvergence){
-// 	return;
-// }
+var CB = V2D.diff(right.center().point(), center.center().point());
+var isConvergence = V2D.cross(AB,CB)>=0;
+if(!isConvergence){
+	return;
+}
 
 // THIS IS INCORRECT AGAIN
 
@@ -813,8 +839,8 @@ var aboveCenter = Code.pointAboveParabola(arc.center().point(),directrix.y, circ
 			return;
 		}
 	}*/
-	if(!aboveCenter){
-	//if(!aboveCenter && point.y<=directrix.y){
+	//if(!aboveCenter){
+	if(!aboveCenter && point.y<=directrix.y){
 	//if(point.y<=directrix.y){
 	//if( (isAdd && point.y<=directrix.y) || (!isAdd && point.y<directrix.y) ){
 	//if(!aboveCenter && point.y<(directrix.y-1E-10)){
@@ -834,7 +860,15 @@ console.log(left+"");
 		// queue.removeEvent( center.circleEvent() );
 		// set merge circle event to disappearing arc
 		center.circleEvent(circleEvent);
-		queue.addEvent(circleEvent);
+
+// PROBLEM: circle events are being generated for arcs that don't converge - but who's parabolas do - 
+
+		if( true){//!Voronoi.Event.equal(oldCircleEvent,circleEvent) ){
+			console.log("NOT DUPLICATE: "+circleEvent);
+			queue.addEvent(circleEvent);
+		}else{
+			console.log("DUPLICATE IGNORED: "+circleEvent);
+		}
 	}else{
 		console.log("POINT IS IN PAST "+point+" | "+directrix);
 	}
@@ -859,15 +893,15 @@ var r = nodeR.data();
 var l = nodeL.data();
 	// delete all circleEvents involving middle arc
 	queue.removeCircleEventWithArc( center );
-console.log("MERGING ....");
-console.log(l==left); // some split/merge didn't get recorded correctly...
-console.log(r==right);
-console.log(l+"");
-console.log(r+"");
-console.log("\n");
-console.log(left+"");
-console.log(center+"");
-console.log(right+"");
+// console.log("MERGING ....");
+// console.log(l==left); // some split/merge didn't get recorded correctly...
+// console.log(r==right);
+// console.log(l+"");
+// console.log(r+"");
+// console.log("\n");
+// console.log(left+"");
+// console.log(center+"");
+// console.log(right+"");
 left = l;
 right = r;
 
@@ -987,13 +1021,26 @@ var n, l, c, r;
 	}
 */
 
+	// // left triplets of points
+	// this.checkAddCircleWithRight(right,directrix,queue);
+	// // right triplets of points
+	// this.checkAddCircleWithLeft(left,directrix,queue);
+
+// --------
 	// left triplets of points
-	this.checkAddCircleWithRight(right,directrix,queue);
+	this.checkAddCircleWithRight(right,directrix,queue,circleEvent);
+// if(!Voronoi.Event.equal(circleEvent,newCE)){
+// 	newCE;
+// 	console.log("ADDED CIRCLE EVENT:");
+// }else{
+// 	console.log("CIRCLE EVENT DUPLICATE:");
+// }
 	// right triplets of points
-	this.checkAddCircleWithLeft(left,directrix,queue);
+	this.checkAddCircleWithLeft(left,directrix,queue,circleEvent);
 //
 // console.log("MERGE RESULT: ");
 // console.log(graph.toString());
+// circleEvent.kill();
 }
 Voronoi.WaveFront.prototype.toString = function(){
 	return "WAVEFRONT:\n"+this._tree.toString();
