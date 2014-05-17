@@ -1625,10 +1625,11 @@ Code.parabolaABCFromFocusDirectrix = function(focA,c){
 	var A = 1/(2.0*(b-c));
 	var B = -2.0*a*A;
 	var C = (a*a + b*b - c*c)*A;
-	return [A,B,C];
+	return {a:A,b:B,c:C};
+	//return [A,B,C];
 }
 Code.parabolaFocusDirectrixFromABC = function(A,B,C){
-	if(A==0){ return null;}
+	if(A==0){ return null; }
 	var h = -0.5*B/A;
 	var k = A*h*h + B*h + C;
 	var p = 0.25/A;
@@ -1742,7 +1743,7 @@ Code.intersectionRayParabola = function(org,dir, foc,drx){
 		return(new V2D(org.x+t*dir.x,org.y+t*dir.y));
 	}
 	var list = Code.parabolaABCFromFocusDirectrix(foc,drx);
-	var pA = list[0], pB = list[1], pC = list[2];
+	var pA = list.a, pB = list.b, pC = list.c;
 	if(dir.x==0){ // vertical line intersects at single point
 		console.log("vertical");
 		return [new V2D(org.x, pA*org.x*org.x + pB*org.x + pC)];

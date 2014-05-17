@@ -331,6 +331,14 @@ Voronoi.Arc.splitArcAtSite = function(arc,site){
 	return null;
 }
 Voronoi.Arc.mergeArcs = function(arcL,arcC,arcR){
+	var directrix = arcC.directrix();
+	var temp = new V2D().copy(directrix); // to fix single point of intersection problem ...
+	directrix.y -= 100; // some number to guarantee directions (rather than single point of itnersection)
+	var retVal = Voronoi.Arc._mergeArcs2(arcL,arcC,arcR);
+	directrix.copy(temp);
+	return retVal;
+}
+Voronoi.Arc._mergeArcs2 = function(arcL,arcC,arcR){
 	if(arcL.center()==arcR.center()){ // single arc
 		var arc = new Voronoi.Arc(arcL.left(),arcL.leftDirection(), arcL.center(), arcR.right(),arcR.rightDirection(), arcC.directrix());
 		return [arc];
@@ -661,9 +669,19 @@ console.log("add ...............................................................
 		queue.removeEvent( arc.circleEvent() );
 		arc.circleEvent(null);
 // INTERSECTING AT INTERSECTION POINT
-// var thisNode = node;
-// var prevNode = this._tree.prevNode(node);
-// var nextNode = this._tree.nextNode(node);
+var thisNode = node;
+var prevNode = this._tree.prevNode(node);
+var nextNode = this._tree.nextNode(node);
+var siteLeft = null, siteCenter = null, siteRight = null;
+if(prevNode){
+	siteLeft = prevNode.data().center();
+}
+if(thisNode){
+	siteCenter = thisNode.data().center();
+}
+if(nextNode){
+	siteRight = nextNode.data().center();
+}
 // var aL, aR, pL, pR;
 // var didIntersect = false;
 // console.log("check point intersect");
@@ -765,20 +783,23 @@ var AB = V2D.diff(left.center().point(), center.center().point());
 var BC = V2D.diff(center.center().point(), right.center().point());
 var ACirc = V2D.diff(left.center().point(), circle.center);
 var BCirc = V2D.diff(center.center().point(), circle.center);
-var isConvergence = (V2D.cross(AB,ACirc)<=0) && (V2D.cross(BC,BCirc)<=0);
+var c1 = V2D.cross(AB,ACirc);
+var c2 = V2D.cross(BC,BCirc);
+var isConvergence = ((c1<=0)&&(c2<=0));// || ((c1>=0)&&(c2>=0));
+// if(!isConvergence){
+// 	return;
+// }
 
-if(!isConvergence){
-	return;
-}
-// what follows now are probably duplicated checkts
+// THIS IS INCORRECT AGAIN
+
 		var point = new V2D(circle.center.x,circle.center.y-circle.radius);
 //circle CENTER needs to be below all parabolas ( or in past)
 var aboveNode = this._tree.findNodeFromObject(circle.center);
-console.log(aboveNode);
-console.log(circle.center+"");
+// console.log(aboveNode);
+// console.log(circle.center+"");
 var arc = aboveNode.data();
 var aboveCenter = Code.pointAboveParabola(arc.center().point(),directrix.y, circle.center);
-console.log( arc+""+aboveCenter );
+//console.log( arc+""+aboveCenter );
 //circle event needs to converge on correct side?
 //var aboveCenter = false;
 	/*if(dir==-1){ // left
@@ -793,6 +814,9 @@ console.log( arc+""+aboveCenter );
 		}
 	}*/
 	if(!aboveCenter){
+	//if(!aboveCenter && point.y<=directrix.y){
+	//if(point.y<=directrix.y){
+	//if( (isAdd && point.y<=directrix.y) || (!isAdd && point.y<directrix.y) ){
 	//if(!aboveCenter && point.y<(directrix.y-1E-10)){
 	//if( (!isAdd && !aboveCenter) || (isAdd && !aboveCenter && point.y<(directrix.y-1E-10)) ){
 	//&& point.y<=directrix.y ){// point.y<(directrix.y-1E-10)){ // readds same point --- use some other method, like 'amIOnMyWayOut' to prevent calculation
@@ -822,6 +846,11 @@ Voronoi.WaveFront.prototype.removeArcAtCircleWithDirectrixAndQueueAndGraph = fun
 	left = circleEvent.left();
 	center = circleEvent.center();
 	right = circleEvent.right();
+
+var prevSiteLeft = left.center();
+var prevSiteCenter = center.center();
+var prevSiteRight = right.center();
+
 console.log(center+"");
 var nodeC = this._tree.findNodeFromObject(center);
 var nodeL = this._tree.prevNode(nodeC);
@@ -843,14 +872,14 @@ left = l;
 right = r;
 
 	// calculate new arcs
-var temp = new V2D().copy(directrix); // to fix single point of intersection problem ...
-directrix.y -= 100; // some number to guarantee directions (rather than single point of itnersection)
+//var temp = new V2D().copy(directrix); // to fix single point of intersection problem ...
+//directrix.y -= 100; // some number to guarantee directions (rather than single point of itnersection)
 	list = Voronoi.Arc.mergeArcs(left,center,right);
-directrix.copy(temp);
+//directrix.copy(temp);
 	// only delete middle node
 	var nc = this._tree.findNodeFromObject(center);
 	this._tree.deleteNode(nc);
-	center.kill(); ///////////////////////////////////////////////// ?
+//	center.kill(); ///////////////////////////////////////////////// ?
 	// copy left and right
 	left.physicalCopy(list[0]);
 	if(list.length==2){
@@ -904,8 +933,59 @@ left.edgeRight(edge);
 left.center().addEdge(edge);
 right.edgeLeft(edge.opposite());
 right.center().addEdge(edge.opposite());
-	
-	// copy was here
+
+
+// PROBLEM: circles are adding converging points for incorrect converging points
+// need to somehow verify that the arc being included IS the arc calculating for
+
+/*
+var n, l, c, r;
+
+	r = right;
+	n = this._tree.findNodeFromObject(r);
+	n = this._tree.prevNode(n);
+	c = n?n.data():null;
+	n = this._tree.prevNode(n);
+	l = n?n.data():null;
+	if(l && c && r){
+		l = l.center();
+		c = c.center();
+		r = r.center();
+		if( !(l==prevSiteLeft || l==prevSiteCenter || l==prevSiteRight) &&
+			!(c==prevSiteLeft || c==prevSiteCenter || c==prevSiteRight) &&
+			!(r==prevSiteLeft || r==prevSiteCenter || r==prevSiteRight) ){
+			console.log("FOUNDX-CHECK1");
+			//console.log(l.point()+","+c.point()+","+r.point());
+			//console.log(prevSiteLeft.point()+","+prevSiteCenter.point()+","+prevSiteRight.point());
+			this.checkAddCircleWithRight(right,directrix,queue);
+		}else{
+			console.log("FOUNDX1");
+		}
+		//this.addCirclePointFromArcs(left,center,right, directrix, queue, isAdd);// 1,center.center());
+	}
+
+
+	r = left;
+	n = this._tree.findNodeFromObject(r);
+	n = this._tree.prevNode(n);
+	c = n?n.data():null;
+	n = this._tree.prevNode(n);
+	l = n?n.data():null;
+	if(l && c && r){
+		l = l.center();
+		c = c.center();
+		r = r.center();
+		if( !(l==prevSiteLeft || l==prevSiteCenter || l==prevSiteRight) &&
+			!(c==prevSiteLeft || c==prevSiteCenter || c==prevSiteRight) &&
+			!(r==prevSiteLeft || r==prevSiteCenter || r==prevSiteRight) ){
+			console.log("FOUNDX-CHECK2");
+			this.checkAddCircleWithRight(left,directrix,queue);
+		}else{
+			console.log("FOUNDX2");
+		}
+		//this.addCirclePointFromArcs(left,center,right, directrix, queue, isAdd);// 1,center.center());
+	}
+*/
 
 	// left triplets of points
 	this.checkAddCircleWithRight(right,directrix,queue);

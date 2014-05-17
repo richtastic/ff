@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(600,900);
+	this._root.matrix().translate(600,700);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -46,9 +46,14 @@ Vor.prototype.voronoi = function(){
 	points.push( new V2D(5,6) ); // hitter
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
-points.push( new V2D(1,8) );
-points.push( new V2D(0.5,7) );
-points.push( new V2D(0,0) );
+	points.push( new V2D(1,8) );
+	points.push( new V2D(0.5,7) );
+	points.push( new V2D(0,0) );
+	points.push( new V2D(5,7.5) );
+//
+// for(i=0;i<10;++i){
+// 	points.push( new V2D(Math.random()*10,Math.random()*10) );
+// }
 	voronoi = new Voronoi();
 	var scale = 50.0;
 	for(i=0;i<points.length;++i){
@@ -144,18 +149,14 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
 	// DRAW WAVEFRONT INTERSECTIONS ...
-	//this._animParabolas.graphics().clear();
 	this._animParabolas.graphics().setLine(2.0,0xFFCC0066);
 	this._animParabolas.graphics().beginPath();
 	node = this._T.root().minimumNode();
 		var count = 0;
 		while(node){
-//console.log(node);
 			arc = node.data();
 			parabola = arc.center().point();
-//console.log(parabola.toString(),directrix);
 			var intersections = arc.intersections();
-//console.log(intersections);
 			// left limit
 			left = new V2D(limitLeft,0);
 			if(intersections[0]){
@@ -180,7 +181,7 @@ Vor.prototype.animation_tick = function(){
 			}
 			deltaJ = (right.x-left.x)/50.0;
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
-			a = arr[0], b = arr[1], c = arr[2];
+			a = arr.a, b = arr.b, c = arr.c;
 			//a = parabola.x; b = parabola.y; c = directrix;
 			for(j=left.x;j<=right.x;j+=deltaJ){
 				x = j;

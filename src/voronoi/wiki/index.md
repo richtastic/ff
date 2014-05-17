@@ -94,7 +94,8 @@ y = Ax<sup>2</sup> + Bx + C
 <br/>
 
 
-*'Standard Form' of a parabola is given as: ** (x-h)<sup>2</sup> = 4p(y-k)***
+
+*'Standard Form' of a parabola is given as: **(x-h)<sup>2</sup> = 4p(y-k)***
 <br/>
 Directrix = y = k-p
 <br/>
@@ -104,7 +105,7 @@ Vertex = (h,k)
 <br/>
 
 
-**Turning this into a normal 2nd order polynomial yields:**
+**Turning this into a normal 2nd order polynomial equation yields:**
 <br/>
 (x-h)<sup>2</sup> = 4p(y-k)
 <br/>
@@ -160,7 +161,7 @@ y = ax<sup>2</sup> + bx + c
 **Finding the solutions of two simple examples, allows for plug-and-chug later on**
 <br/>
 
-*Solving the linear equation: **Bx + C = 0** :*
+*Solving the linear equation: **Bx + C = 0**:*
 <br/>
 Bx + C = 0
 <br/>
@@ -171,7 +172,7 @@ x = -C/B
 *Linear Solution:* **-C/B**
 <br/>
 
-*Solving the non-linear (quadratic) equation: **Ax<sup>2</sup> + Bx + C = 0** :*
+*Solving the non-linear (quadratic) equation: **Ax<sup>2</sup> + Bx + C = 0**:*
 <br/>
 Ax<sup>2</sup> + Bx + C = 0
 <br/>
@@ -200,7 +201,7 @@ x = [-B [+/-]sqrt(B<sup>2</sup> - 4AC)]/[2A]
 ![Parabola Line Diagram](./images/parabola_line.png "Parabola Line Diagram")
 <br/>
 
-*Lines have multiple representations:*
+**Lines have multiple representations:**
 <br/>
 *ray*: origin, direction
 <br/>
@@ -209,7 +210,7 @@ x = [-B [+/-]sqrt(B<sup>2</sup> - 4AC)]/[2A]
 *slope and intercept*: y = mx + b
 <br/>
 
-*Line defined as a point can be converted to slope-intercept form:*
+**Line defined as a point can be converted to slope-intercept form:**
 <br/>
 m = (B.y-A.y)/(B.x-A.x)
 <br/>
@@ -218,7 +219,7 @@ A.y = m*A.x + b
 b = A.y - m*A.x
 <br/>
 
-*Line defined as a ray can be converted to slope-intercept form:*
+**Line defined as a ray can be converted to slope-intercept form:**
 <br/>
 m = direction.y/direction.x
 <br/>
@@ -228,7 +229,7 @@ b = origin.y - m*origin.x
 <br/>
 
 
-*Set locations equal, sovle for (x,y)*
+**Set locations equal, sovle for (x,y)**
 <br/>
 **PARABOLA**: y = Ax<sup>2</sup> + Bx + C
 <br/>
@@ -246,7 +247,7 @@ Ax<sup>2</sup> + B'x + C' = 0
 <br/>
 
 
-*KEY NOTES:*
+**KEY NOTES:**
 <br/>
 if line is vertical (direction.x=0, A.x-B.x=0, m=inf) => single solution at y = f(A.x)
 <br/>
@@ -266,7 +267,7 @@ else => 2 unique solutions, solve quadratic equation
 ![Parabola Parabola Diagram](./images/parabola_parabola.png "Parabola Parabola Diagram")
 <br/>
 
-*Set locations equal, sovle for (x,y)*
+**Set locations equal, sovle for (x,y)**
 <br/>
 **PARABOLA 1**: y = ax<sup>2</sup> + bx + c
 <br/>
@@ -282,7 +283,7 @@ A'x<sup>2</sup> + B'x + C' = 0
 <br/>
 
 
-*KEY NOTES:*
+**KEY NOTES:**
 <br/>
 if two of (A,B,C) are zero and one is non-zero (A=0,B=0,C=#) => equation is inconsistent, no solution (WHEN DOES THIS HAPPEN)
 <br/>
