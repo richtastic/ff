@@ -278,6 +278,25 @@ RedBlackTree.prototype.deleteObject = function(o){
 	}
 	return null;
 }
+RedBlackTree.prototype._del = function(wasCut,node,splice){
+	return;
+	if(wasCut){
+		if(splice==this.nil()){
+			console.log("IS NIL SPLICE");
+		}
+		if(this.root()==node){
+			this.root(splice);
+		}
+		splice.replace(node, this.nil);
+		if(this.nil().parent()==node){
+			console.log("IS PARENT");
+			this.nil().parent(splice);
+		}
+		node.kill();
+	}else{
+		splice.kill();
+	}
+}
 RedBlackTree.prototype.deleteNode = function(node){
 	var splice, child, parent, wasData = node.data(), wasCut = false;
 	if( this.isNil(node.left()) ){
@@ -293,7 +312,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 		}
 		child = splice.left();
 		node.data( splice.data() ); // satellite data
-		//wasCut = true; // actually delete the requested node, and keep the old node
+		wasCut = true; // actually delete the requested node, and keep the old node
 	}
 	parent = splice.parent();
 	if(!this.isNil(child)){
@@ -302,10 +321,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 	if(this.isNil(parent)){
 		this.root(child);
 		--this._length;
-		if(wasCut){
-			if(this.root()==node){ console.log("root == node A"); this.root(splice); }
-			splice.replace(node, this.nil); node.kill();
-		}else{ splice.kill(); }
+		this._del(wasCut,node,splice);
 		return wasData;
 	}
 	if(splice==parent.left()){
@@ -313,15 +329,11 @@ RedBlackTree.prototype.deleteNode = function(node){
 	}else{
 		parent.right(child);
 	}
-	if(splice.isBlack()){
+	if(splice.isBlack()){ // child points to y's lone child, or nil, parent = 
 		this._deleteFixup(child);
 	}
 	--this._length;
-	if(wasCut){
-		if(this.root()==node){ console.log("root == node B"); this.root(splice); }
-		splice.replace(node, this.nil); node.kill();
-	}else{ splice.kill(); }
-
+	this._del(wasCut,node,splice);
 return wasData;
 	// //
 	// var x, y, wasData = node.data();
