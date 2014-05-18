@@ -279,8 +279,9 @@ RedBlackTree.prototype.deleteObject = function(o){
 	return null;
 }
 RedBlackTree.prototype._del = function(wasCut,node,splice){
-	return;
-	if(wasCut){
+	// splice.kill();
+	// return;
+	if(wasCut){//} && splice!=node){
 		if(splice==this.nil()){
 			console.log("IS NIL SPLICE");
 		}
@@ -297,6 +298,24 @@ RedBlackTree.prototype._del = function(wasCut,node,splice){
 		splice.kill();
 	}
 }
+RedBlackTree.prototype.deleteNode3 = function(node){
+	var splice, child, parent, wasData = node.data();
+	if( this.isNil(node.left()) ){ // empty left node
+		splice = node;
+		child = node.right();
+	}else if( this.isNil(node.right()) ){ // empty right node
+		splice = node;
+		child = node.left();
+	}else{ // two children
+		splice = this.predecessor(splice); // empty right node
+		child = splice.left();
+	}
+	parent = splice.parent();
+	if(this.isNil(parent)){ // root
+		//
+	}
+}
+
 RedBlackTree.prototype.deleteNode = function(node){
 	var splice, child, parent, wasData = node.data(), wasCut = false;
 	if( this.isNil(node.left()) ){
@@ -315,9 +334,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 		wasCut = true; // actually delete the requested node, and keep the old node
 	}
 	parent = splice.parent();
-	if(!this.isNil(child)){
-		child.parent(parent);
-	}
+	child.parent(parent);
 	if(this.isNil(parent)){
 		this.root(child);
 		--this._length;

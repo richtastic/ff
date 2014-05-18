@@ -38,23 +38,23 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-	// points.push( new V2D(1,1) );
-	// points.push( new V2D(0,6) );
-	// points.push( new V2D(2,7) );
-	// points.push( new V2D(3,4) );
-	// points.push( new V2D(5,2) );
-	// points.push( new V2D(5,6) );
-	// points.push( new V2D(6,4) );
-	// points.push( new V2D(8,2) );
-	// points.push( new V2D(1,8) );
-	// points.push( new V2D(0.5,7) );
-	// points.push( new V2D(0,0) );
-	// points.push( new V2D(3,7.0) );
-	// points.push( new V2D(3.5,7.0) );
+	points.push( new V2D(1,1) );
+	points.push( new V2D(0,6) );
+	points.push( new V2D(2,7) );
+	points.push( new V2D(3,4) );
+	points.push( new V2D(5,2) );
+	points.push( new V2D(5,6) );
+	points.push( new V2D(6,4) );
+	points.push( new V2D(8,2) );
+	points.push( new V2D(1,8) );
+	points.push( new V2D(0.5,7) );
+	points.push( new V2D(0,0) );
+	points.push( new V2D(3,7.0) );
+	points.push( new V2D(3.5,7.0) );
 	points.push( new V2D(5,7.5) );
 //
 points.push( new V2D(1.4,6.2) );
-// points.push( new V2D(1.5,6.2) );
+points.push( new V2D(1.5,6.2) );
 points.push( new V2D(1.6,6.2) );
 points.push( new V2D(4.7,7.0) );
 points.push( new V2D(3.4,7.2) );
@@ -72,6 +72,7 @@ points.push( new V2D(6.4,4.7) );
 // }
 // remove duplicate points 
 Voronoi.removeDuplicatePoints2D(points);
+//Voronoi.removePointsBelow(points, new V2D(0,6.1));
 	voronoi = new Voronoi();
 	var scale = 1*50.0;
 	for(i=0;i<points.length;++i){
@@ -192,8 +193,9 @@ Vor.prototype.animation_tick = function(){
 			deltaJ = (right.x-left.x)/100.0;
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
 			a = arr.a, b = arr.b, c = arr.c;
+			console.log(left.x,right.x);
 			//a = parabola.x; b = parabola.y; c = directrix;
-			for(j=left.x;j<=right.x;j+=deltaJ){
+			for(j=left.x, cc=0;j<=right.x && cc<100;j+=deltaJ, ++cc){ // hooray for finite precision
 				x = j;
 				y = a*x*x + b*x + c;
 				//y = ((x-a)*(x-a) + b*b - c*c)/(2.0*(b-c));
@@ -212,11 +214,9 @@ Vor.prototype.animation_tick = function(){
 			++count;
 		}
 		node = null;
-	//console.log(count);
 	this._animParabolas.graphics().moveTo(0,0);
 	this._animParabolas.graphics().endPath();
 	this._animParabolas.graphics().strokeLine();
-	
 	// DRAW CIRCLES IN QUEUE:
 	var eventList = this._Q._list
 	for(i=0;i<eventList.length;++i){
@@ -268,6 +268,7 @@ Vor.prototype.animation_tick = function(){
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
 //console.log(next);
+//count = 0;
 		while(next && next.point().y>this._directrix.y){
 console.log(this._Q.toString()+"    + "+this._directrix.toString());
 var temp = new V2D(this._directrix.x,this._directrix.y);
@@ -288,12 +289,19 @@ console.log("\n");
 console.log(this._Q.toString()+"    + "+this._directrix.toString());
 this._directrix.copy( temp );
 console.log("-------------------------------------------------------------------------------------------------------");
+// ++count;
+// if(count >= 10){
+// 	console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr2");
+// 	node = null;
+// 	throw new Error();
+// }
 		}
 	}else{
 //		this._ticker.stop();
 		// DRAW FINAL IMAGE
 	}
 	//
+	console.log("TICK");
 	this._animationTick++;
 }
 
