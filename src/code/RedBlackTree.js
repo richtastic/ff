@@ -279,7 +279,7 @@ RedBlackTree.prototype.deleteObject = function(o){
 	return null;
 }
 RedBlackTree.prototype.deleteNode = function(node){
-	var splice, child, parent, wasData = node.data();
+	var splice, child, parent, wasData = node.data(), wasCut = false;
 	if( this.isNil(node.left()) ){
 		splice = node;
 		child = node.right();
@@ -293,6 +293,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 		}
 		child = splice.left();
 		node.data( splice.data() ); // satellite data
+		wasCut = true; // actually delete the requested node, and keep the old node
 	}
 	parent = splice.parent();
 	if(!this.isNil(child)){
@@ -301,7 +302,11 @@ RedBlackTree.prototype.deleteNode = function(node){
 	if(this.isNil(parent)){
 		this.root(child);
 		--this._length;
-		return;
+		if(wasCut){
+			if(this.root()==node){ console.log("root == node A"); this.root(splice); }
+			splice.replace(node, this.nil); node.kill();
+		}else{ splice.kill(); }
+		return wasData;
 	}
 	if(splice==parent.left()){
 		parent.left(child);
@@ -312,40 +317,45 @@ RedBlackTree.prototype.deleteNode = function(node){
 		this._deleteFixup(child);
 	}
 	--this._length;
+	if(wasCut){
+		if(this.root()==node){ console.log("root == node B"); this.root(splice); }
+		splice.replace(node, this.nil); node.kill();
+	}else{ splice.kill(); }
+
 return wasData;
-	//
-	var x, y, wasData = node.data();
-	y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.successor(node);
-	x = ( this.isNil(y.left()) )?y.right():y.left();
-	x.parent(y.parent());
-	if( this.isNil(y.parent()) ){
-		this.root(x);
-	}else{ // replace y with x
-		if(true){//y==node){
-			if(y==y.parent().left()){
-				y.parent().left(x);
-			}else{
-				y.parent().right(x);
-			}
-		}else{ // predecessor
-			// 
-		}
-	}
-	var wasBlack = y.isBlack();
-	if(y!=node){ // predecessor
-		y.replace(node,null);
-		if(this.isNil(y.parent())){
-			this._root = y;
-		}
-	}
-	node.kill();
-	if(wasBlack){
-		this.nil().left(x);
-		this.nil().right(x);
-		this._deleteFixup(x);
-	}
-	--this._length;
-	return wasData;
+	// //
+	// var x, y, wasData = node.data();
+	// y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.successor(node);
+	// x = ( this.isNil(y.left()) )?y.right():y.left();
+	// x.parent(y.parent());
+	// if( this.isNil(y.parent()) ){
+	// 	this.root(x);
+	// }else{ // replace y with x
+	// 	if(true){//y==node){
+	// 		if(y==y.parent().left()){
+	// 			y.parent().left(x);
+	// 		}else{
+	// 			y.parent().right(x);
+	// 		}
+	// 	}else{ // predecessor
+	// 		// 
+	// 	}
+	// }
+	// var wasBlack = y.isBlack();
+	// if(y!=node){ // predecessor
+	// 	y.replace(node,null);
+	// 	if(this.isNil(y.parent())){
+	// 		this._root = y;
+	// 	}
+	// }
+	// node.kill();
+	// if(wasBlack){
+	// 	this.nil().left(x);
+	// 	this.nil().right(x);
+	// 	this._deleteFixup(x);
+	// }
+	// --this._length;
+	// return wasData;
 }
 RedBlackTree.prototype._deleteFixup = function(node){
 	var sib;
@@ -505,9 +515,9 @@ RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil){
 // 	}
 // 	return node;
 // }
-RedBlackTree.Node.prototype.replace = function(node,nil){ // leaves data unchanged
+RedBlackTree.Node.prototype.replace = function(node,nil){ // exact replica in place of node
 	this.parent(node.parent());
-	if( node.parent()!=nil ){ // != nil?
+	if( node.parent()!=nil ){
 		if(node.parent().left()==node){
 			node.parent().left(this);
 		}else{
@@ -522,6 +532,7 @@ RedBlackTree.Node.prototype.replace = function(node,nil){ // leaves data unchang
 	if(node.left()!=nil){
 		node.left().parent(this);
 	}
+	this.data(node.data());
 	this.color(node.color());
 }
 RedBlackTree.Node.prototype.kill = function(n){
@@ -544,16 +555,24 @@ RedBlackTree.Node.prototype.clear = function(nil){
 	this.kill();
 }
 RedBlackTree.Node.prototype.toString = function(tab,addTab,nil){
-	// if(nil===undefined){return "[RB-Node]";}
+	if(nil===undefined){return "[RB-Node]";}
 	tab = tab!==undefined?tab:"   ";
 	addTab = addTab!==undefined?addTab:"  ";
 	var str = "";
 	if(this._right!=nil && this._right!=this){
+		if(this._right==null){
+			str += "NULL RIGHT";
+		}else{
 		str += this._right.toString(tab+addTab,addTab,nil)+"\n";
+		}
 	}
 	str += tab+"-"+this._data+" ["+(this.isRed()?"R":"B")+"]";
 	if(this._left!=nil  && this._right!=this){
+		if(this._left==null){
+			str += "NULL LEFT";
+		}else{
 		str += "\n"+this._left.toString(tab+addTab,addTab,nil);
+		}
 	}
 	return str;
 }

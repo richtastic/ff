@@ -309,7 +309,6 @@ else => 2 unique solutions, solve quadratic equation
 
 A voronoi diagram is a graph that sections off sites (points) into cells, whereby any point in each cell is closer to the cell's site, than any other site.
 <br/>
-- 
 - sites
 - equal distances
 - cells
@@ -325,7 +324,8 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 - site event (split)
 - circle event (merge)
 - half-edges
-
+- converging arcs (1 location at 1 arc, convergence L-C-R focus check)
+<br/>
 
 
 <a name="OPTIMUM"></a>

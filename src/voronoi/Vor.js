@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(600,700);
+	this._root.matrix().translate(400,600);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -38,37 +38,47 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-	//points.push( new V2D(1,1) );
-	points.push( new V2D(0,6) ); // add me back
-	points.push( new V2D(2,7) );
-//	points.push( new V2D(3,4) );
-//	points.push( new V2D(5,2) );
-	points.push( new V2D(5,6) ); // hitter
-	points.push( new V2D(6,4) );
-	points.push( new V2D(8,2) );
-	points.push( new V2D(1,8) );
-	points.push( new V2D(0.5,7) );
-	points.push( new V2D(0,0) );
+	// points.push( new V2D(1,1) );
+	// points.push( new V2D(0,6) );
+	// points.push( new V2D(2,7) );
+	// points.push( new V2D(3,4) );
+	// points.push( new V2D(5,2) );
+	// points.push( new V2D(5,6) );
+	// points.push( new V2D(6,4) );
+	// points.push( new V2D(8,2) );
+	// points.push( new V2D(1,8) );
+	// points.push( new V2D(0.5,7) );
+	// points.push( new V2D(0,0) );
+	// points.push( new V2D(3,7.0) );
+	// points.push( new V2D(3.5,7.0) );
 	points.push( new V2D(5,7.5) );
 //
+points.push( new V2D(1.4,6.2) );
+// points.push( new V2D(1.5,6.2) );
+points.push( new V2D(1.6,6.2) );
+points.push( new V2D(4.7,7.0) );
+points.push( new V2D(3.4,7.2) );
+points.push( new V2D(3.5,7.1) );
+points.push( new V2D(4.7,7.0) );
+points.push( new V2D(3.4,7.4) );
+points.push( new V2D(3.5,7.3) );
+points.push( new V2D(3.1,6.6) );
+points.push( new V2D(4.1,5.6) );
+points.push( new V2D(3.1,5.7) );
+points.push( new V2D(6.6,4.6) );
+points.push( new V2D(6.4,4.7) );
 // for(i=0;i<10;++i){
 // 	points.push( new V2D(Math.random()*10,Math.random()*10) );
 // }
+// remove duplicate points 
+Voronoi.removeDuplicatePoints2D(points);
 	voronoi = new Voronoi();
-	var scale = 50.0;
+	var scale = 1*50.0;
 	for(i=0;i<points.length;++i){
 		points[i].x *= scale;
 		points[i].y *= scale;
 		this._root.addChild( Vor.makePoint(points[i]) );
 	}
-	//
-//	var circle = Vor.circleFromPoints(points[0],points[1],points[2],    this._root);
-	// console.log(circle);
-	// this._root.addChild( Vor.makeLine(points[0],points[1]) );
-	// this._root.addChild( Vor.makeLine(points[1],points[2]) );
-	// this._root.addChild( Vor.makeLine(points[2],points[0]) );
-	// this._root.addChild( Vor.makeCircle(circle.center,circle.radius) );
-	
 	// animation:
 	this._animPoints = points;
 	var speed = 50;
@@ -84,7 +94,7 @@ Vor.prototype.voronoi = function(){
 }
 Vor.prototype.animation_tick = function(){
 	var x, y, a, b, c, p, e, i, j, len, arc;
-	var limitLeft = -300, limitRight = 900;
+	var limitLeft = -400, limitRight = 1200;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
@@ -118,7 +128,7 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 375;//375;
+	var offYStart = 1*375;//375;
 	var rateStart = 1.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
@@ -129,7 +139,7 @@ Vor.prototype.animation_tick = function(){
 	this._animParabolas.graphics().beginPath();
 	len = this._animPoints.length;
 	var focus, left=limitLeft, right=limitRight;
-	var deltaJ = (right-left)/100.0;
+	var deltaJ = (right-left)/200.0;
 	for(i=0;i<len;++i){
 		focus = this._animPoints[i];
 		a = focus.x;
@@ -179,7 +189,7 @@ Vor.prototype.animation_tick = function(){
 					this._stillVornoi.graphics().fill();
 				}
 			}
-			deltaJ = (right.x-left.x)/50.0;
+			deltaJ = (right.x-left.x)/100.0;
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
 			a = arr.a, b = arr.b, c = arr.c;
 			//a = parabola.x; b = parabola.y; c = directrix;
@@ -270,6 +280,7 @@ console.log(this._T.toString());
 			}else{
 				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
+console.log(" OUT ");
 			next = this._Q.peek();
 console.log("\n");
 console.log(this._T.toString());
