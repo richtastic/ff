@@ -293,7 +293,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 		}
 		child = splice.left();
 		node.data( splice.data() ); // satellite data
-		wasCut = true; // actually delete the requested node, and keep the old node
+		//wasCut = true; // actually delete the requested node, and keep the old node
 	}
 	parent = splice.parent();
 	if(!this.isNil(child)){

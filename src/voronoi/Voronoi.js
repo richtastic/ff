@@ -856,6 +856,9 @@ console.log(list.length);
 	// only delete middle node
 	var nc = center.node();//this._tree.findNodeFromObject(center);
 	this._tree.deleteNode(nc);
+if(nc.data()){ // still present
+	nc.data().node(nc);
+}
 //	center.kill(); ///////////////////////////////////////////////// ?
 	// copy left and right
 	left.physicalCopy(list[0]);
