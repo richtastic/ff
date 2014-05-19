@@ -38,21 +38,21 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-	// points.push( new V2D(1,1) );
-	// points.push( new V2D(0,6) );
 	points.push( new V2D(2,7) );
 	points.push( new V2D(3,4) );
 	points.push( new V2D(5,2) );
 	points.push( new V2D(5,6) );
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
-	// points.push( new V2D(1,8) );
-	// points.push( new V2D(0.5,7) );
-	// points.push( new V2D(0,0) );
 	points.push( new V2D(3,7.0) );
 	points.push( new V2D(3.5,7.0) );
 	points.push( new V2D(5,7.5) );
 //
+// points.push( new V2D(1,1) );
+// points.push( new V2D(0,6) );
+// points.push( new V2D(1,8) );
+// points.push( new V2D(0.5,7) );
+// points.push( new V2D(0,0) );
 // points.push( new V2D(1.4,6.2) );
 // points.push( new V2D(1.5,6.2) );
 // points.push( new V2D(1.6,6.2) );
@@ -295,27 +295,52 @@ this._directrix.copy( temp );
 		for(i=0;i<sites.length;++i){
 			site = sites[i];
 			edges = site.edges();
+			
 			this._animParabolas.graphics().beginPath();
-			this._animParabolas.graphics().setFill(0x660000CC);
-			for(j=0;j<edges.length;++j){
-				edge = edges[j];
-				A = edge.vertexA();
+			var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
+			this._animParabolas.graphics().setFill(col);
+			var count = 0;
+			edge = edges[0];
+			var firstEdge = edge;
+			A = edge.vertexA();
+			B = edge.vertexB();
+			if(A){
+				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
+			}
+			while(edge && count<10){
 				B = edge.vertexB();
-				if(A && B){
-					this._animParabolas.graphics().moveTo(A.point().x,A.point().y);
-					this._animParabolas.graphics().lineTo(B.point().x,B.point().y);
+				if(B && (edge.next()!==firstEdge) ){
+					this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
 				}
+				edge = edge.next();
+				if(edge==firstEdge){
+					break;
+				}
+				++count;
 			}
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().strokeLine();
-			//this._animParabolas.graphics().fill();
+			this._animParabolas.graphics().fill();
+			
+			// for(j=0;j<edges.length;++j){
+			// 	edge = edges[j];
+			// 	A = edge.vertexA();
+			// 	B = edge.vertexB();
+			// 	if(A && B){
+			// 		this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
+			// 		this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
+			// 	}
+			// 	this._animParabolas.graphics().strokeLine();
+			// }
 		}
 	}
 	this._animationTick++;
 }
 
 
-
+Vor.magRand = function(){
+	return Math.random()*20.0 - 10.0;
+}
 
 Vor.makeLine = function(a,b,col,wid){
 	col = col!==undefined?col:0xFFFF0000;

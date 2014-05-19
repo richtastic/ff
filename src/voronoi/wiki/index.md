@@ -340,17 +340,17 @@ Steps:
     - find arc above new site
     - remove old circle event for site if present (false alarm)
     - add new arc to wavefront
-    - graph add: new vertex, 2 new half-edges
+    - graph add: new half-edge
     - check for possible circle events "triplets"
   - Circle Event (merge):
   	- remove all circle from queue events that reference the merging arc
-  	- graph add: new vertes, 1 new half-edge
+  	- graph add: new vertex, 1 new half-edge
     - collapse referenced arc (remove from wavefront)
     - check for possible circle events "triplets"
 - Cleanup Graph
   - Combine coincident vertexes (where multiple events occurred simultaneously)
-
-
+  - Cap infinite edges (eg via bounding box)
+  - Consistently orientate half-edges around site
 
 
 
@@ -377,12 +377,14 @@ The Red-Black is a BST that guarantees non-lopsided ness, and has the following 
 - add vertex, half-edge, site, to graph: O(1)
 - find arc from circle event: O(1)
 - check for possible circle events: O(1)
+
 <br/>
+
 Maximum wavefront arcs: 2n-1 (show worst case: vertical sites)
 <br/>
 Maximum circle events: n (although more do show up as false alarms)
 <br/>
-Algorithm runtime: O(*n*lg(*n*))
+Algorithm runtime: O(nlg(n))
 <br/>
 
 
