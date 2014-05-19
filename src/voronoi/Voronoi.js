@@ -339,7 +339,7 @@ Voronoi.Arc.isArcToLeftOfArc = function(a,b){
 }
 Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 	if(arc.containsPointBoolean(site.point())){
-		var directrix = arc.directrix();
+		/*var directrix = arc.directrix();
 		var temp = new V2D().copy(directrix);
 		directrix.y -= 100.0;
 		var pointA = arc.center().point();
@@ -368,7 +368,7 @@ Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 			arcR.edgeLeft(null); // to be added
 			arcR.edgeRight(arc.edgeRight());
 			return [arcL,arcR];
-		}else{
+		}else{*/
 			var arcL, arcC, arcR;
 			arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
 			arcL.edgeLeft(arc.edgeLeft());
@@ -380,7 +380,7 @@ Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 			arcR.edgeLeft(null); // to be added
 			arcR.edgeRight(arc.edgeRight());
 			return [arcL,arcC,arcR];
-		}
+		//}
 	}
 	return null;
 }
@@ -688,14 +688,51 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 	var arc, node, list, i, left, center, right, edge, point, site;
 	point = siteEvent.point();
 	site = siteEvent.site();
-	if(this.isEmpty()){ // infiniarc
-		arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, site, null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix);
-		node = RedBlackTree.newEmptyNode(arc);
-		arc.node(node);
-		this._tree.insertNode(node);
-		// add site to graph
-		graph.addSite(arc.center());
-		/* // these edges are always zero --- CASE WHERE TWO EDGES AT BEGINNIGN
+	if(this.isEmpty()){ // infiniarc(s)
+		var prevArc = null;
+		while(site){ // multiple initial sites with same y
+			arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, site, null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix);
+			node = RedBlackTree.newEmptyNode(arc);
+			arc.node(node);
+			if(prevArc){
+				arc.right(prevArc.center());
+				prevArc.left(arc.center());
+				arc.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+				prevArc.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+				// add edges to graph
+				edge = Voronoi.HalfEdge.newTwins();
+				graph.addEdge(edge);
+				graph.addEdge(edge.opposite());
+				// add edges to arcs
+				prevArc.edgeLeft(edge);
+				arc.edgeRight(edge.opposite());
+			}
+			prevArc = arc;
+			var fxn = function(a,b){
+				return b.center().point().x - a.center().point().x;
+			};
+			var wasSort = this._tree.sorting();
+			this._tree.sorting( fxn );
+				this._tree.insertNode(node);
+			this._tree.sorting( wasSort );
+//console.log(this._tree.toString());
+			// add site to graph
+			graph.addSite(arc.center());
+			// check if next arc is at same y:
+			site = null;
+			var peek = queue.peek();
+			if(peek && peek.point().y>=directrix.y){
+				siteEvent = queue.next();
+				point = siteEvent.point();
+				site = siteEvent.site();
+			}
+		}
+		/*
+		peek.point().y>=point.y
+		var peek = queue.peek();
+		console.log(peek);
+		*/
+		/* // these edges are always zero --- CASE WHERE TWO EDGES AT BEGINNING
 		// add edges to graph
 		edge = Voronoi.HalfEdge.newTwins();
 		graph.addEdge(edge);
@@ -718,7 +755,6 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 		arc.circleEvent(null);
 		// get list of new arc set
 		list = Voronoi.Arc.splitArcAtSite(arc,site, this._tree);
-console.log(list.length);
 		// copy over new left arc
 		arc.physicalCopy(list[0]);
 		// arc.node == same node as before
