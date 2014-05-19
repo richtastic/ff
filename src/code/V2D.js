@@ -44,7 +44,7 @@ V2D.add = function(c,a,b){
 	}
 	return new V2D(c.x+a.x,c.y+a.y);
 }
-V2D.sub = function(c,a,b){
+V2D.sub = function(c,a,b){ // same as diff
 	if(b!==undefined){
 		c.x = a.x-b.x;
 		c.y = a.y-b.y;

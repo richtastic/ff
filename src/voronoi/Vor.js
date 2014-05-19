@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(400,600);
+	this._root.matrix().translate(400,800);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -38,41 +38,40 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-	points.push( new V2D(1,1) );
-	points.push( new V2D(0,6) );
+	// points.push( new V2D(1,1) );
+	// points.push( new V2D(0,6) );
 	points.push( new V2D(2,7) );
 	points.push( new V2D(3,4) );
 	points.push( new V2D(5,2) );
 	points.push( new V2D(5,6) );
 	points.push( new V2D(6,4) );
 	points.push( new V2D(8,2) );
-	points.push( new V2D(1,8) );
-	points.push( new V2D(0.5,7) );
-	points.push( new V2D(0,0) );
+	// points.push( new V2D(1,8) );
+	// points.push( new V2D(0.5,7) );
+	// points.push( new V2D(0,0) );
 	points.push( new V2D(3,7.0) );
 	points.push( new V2D(3.5,7.0) );
 	points.push( new V2D(5,7.5) );
 //
-points.push( new V2D(1.4,6.2) );
-points.push( new V2D(1.5,6.2) );
-points.push( new V2D(1.6,6.2) );
-points.push( new V2D(4.7,7.0) );
-points.push( new V2D(3.4,7.2) );
-points.push( new V2D(3.5,7.1) );
-points.push( new V2D(4.7,7.0) );
-points.push( new V2D(3.4,7.4) );
-points.push( new V2D(3.5,7.3) );
-points.push( new V2D(3.1,6.6) );
-points.push( new V2D(4.1,5.6) );
-points.push( new V2D(3.1,5.7) );
-points.push( new V2D(6.6,4.6) );
-points.push( new V2D(6.4,4.7) );
+// points.push( new V2D(1.4,6.2) );
+// points.push( new V2D(1.5,6.2) );
+// points.push( new V2D(1.6,6.2) );
+// points.push( new V2D(3.4,7.2) );
+// points.push( new V2D(3.5,7.1) );
+// points.push( new V2D(4.7,7.0) );
+// points.push( new V2D(3.4,7.4) );
+// points.push( new V2D(3.5,7.3) );
+// points.push( new V2D(3.1,6.6) );
+// points.push( new V2D(4.1,5.6) );
+// points.push( new V2D(3.1,5.7) );
+// points.push( new V2D(6.6,4.6) );
+// points.push( new V2D(6.4,4.7) );
 // for(i=0;i<10;++i){
 // 	points.push( new V2D(Math.random()*10,Math.random()*10) );
 // }
 // remove duplicate points 
 Voronoi.removeDuplicatePoints2D(points);
-//Voronoi.removePointsBelow(points, new V2D(0,6.1));
+//Voronoi.removePointsBelow(points, new V2D(0,5.0));
 	voronoi = new Voronoi();
 	var scale = 1*50.0;
 	for(i=0;i<points.length;++i){
@@ -120,7 +119,7 @@ Vor.prototype.animation_tick = function(){
 			e.site( new Voronoi.Site(p) );
 			this._Q.addEvent( e );
 		}
-		console.log(this._Q.toString());
+		//console.log(this._Q.toString());
 		this._T = new Voronoi.WaveFront();
 		this._D = new Voronoi.EdgeGraph();
 		this._directrix = new V2D();
@@ -129,8 +128,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 1*375;//375;
-	var rateStart = 1.5;//2.5;
+	var offYStart = 1*400;//375;
+	var rateStart = 12.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -193,7 +192,6 @@ Vor.prototype.animation_tick = function(){
 			deltaJ = (right.x-left.x)/100.0;
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
 			a = arr.a, b = arr.b, c = arr.c;
-			console.log(left.x,right.x);
 			//a = parabola.x; b = parabola.y; c = directrix;
 			for(j=left.x, cc=0;j<=right.x && cc<100;j+=deltaJ, ++cc){ // hooray for finite precision
 				x = j;
@@ -267,41 +265,52 @@ Vor.prototype.animation_tick = function(){
 	// ALGORITHM
 	if( !this._Q.isEmpty() ){
 		next = this._Q.peek();
-//console.log(next);
-//count = 0;
 		while(next && next.point().y>this._directrix.y){
-console.log(this._Q.toString()+"    + "+this._directrix.toString());
+//console.log(this._Q.toString()+"    + "+this._directrix.toString());
 var temp = new V2D(this._directrix.x,this._directrix.y);
 			e = this._Q.next();
 this._directrix.copy( e.point() );
-console.log("popped "+e);
-console.log(this._T.toString());
+//console.log("popped "+e);
+//console.log(this._T.toString());
 			if(e.isSiteEvent()){
 				this._T.addArcAboveSiteAndDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}else{
 				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
-console.log(" OUT ");
 			next = this._Q.peek();
-console.log("\n");
-console.log(this._T.toString());
-console.log("\n");
-console.log(this._Q.toString()+"    + "+this._directrix.toString());
+// console.log("\n");
+// console.log(this._T.toString());
+// console.log("\n");
+// console.log(this._Q.toString()+"    + "+this._directrix.toString());
 this._directrix.copy( temp );
-console.log("-------------------------------------------------------------------------------------------------------");
-// ++count;
-// if(count >= 10){
-// 	console.log("errrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr2");
-// 	node = null;
-// 	throw new Error();
-// }
+//console.log("-------------------------------------------------------------------------------------------------------");
 		}
 	}else{
-//		this._ticker.stop();
+		this._ticker.stop();
+		this._D.finalize();
 		// DRAW FINAL IMAGE
+		this._animParabolas.graphics().setLine(2.0,0xFF333399);
+		var site, sites, edge, edges, A, B;
+		sites = this._D.sites();
+		for(i=0;i<sites.length;++i){
+			site = sites[i];
+			edges = site.edges();
+			this._animParabolas.graphics().beginPath();
+			this._animParabolas.graphics().setFill(0x660000CC);
+			for(j=0;j<edges.length;++j){
+				edge = edges[j];
+				A = edge.vertexA();
+				B = edge.vertexB();
+				if(A && B){
+					this._animParabolas.graphics().moveTo(A.point().x,A.point().y);
+					this._animParabolas.graphics().lineTo(B.point().x,B.point().y);
+				}
+			}
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().strokeLine();
+			//this._animParabolas.graphics().fill();
+		}
 	}
-	//
-	console.log("TICK");
 	this._animationTick++;
 }
 

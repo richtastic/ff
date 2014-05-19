@@ -321,11 +321,37 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 ![Fortune 1](./images/fortune_1.png "Fortune 1")
 <br/>
 - sweep line (directrix)
+- wavefront (lsit of arcs)
+- graph
+  - sites
+  - half-edges
+  - vertexes
 - site event (split)
 - circle event (merge)
-- half-edges
 - converging arcs (1 location at 1 arc, convergence L-C-R focus check)
 <br/>
+
+
+Steps:
+- Graph initialized empty
+- Queue initialized with n input site events
+- While Queue not empty
+  - Site Event (split):
+    - find arc above new site
+    - remove old circle event for site if present (false alarm)
+    - add new arc to wavefront
+    - graph add: new vertex, 2 new half-edges
+    - check for possible circle events "triplets"
+  - Circle Event (merge):
+  	- remove all circle from queue events that reference the merging arc
+  	- graph add: new vertes, 1 new half-edge
+    - collapse referenced arc (remove from wavefront)
+    - check for possible circle events "triplets"
+- Cleanup Graph
+  - Combine coincident vertexes (where multiple events occurred simultaneously)
+
+
+
 
 
 <a name="OPTIMUM"></a>
@@ -339,15 +365,39 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 A regular Binary Search Tree (BST) can become lopsided if interaction with it is less than random.
 The Red-Black is a BST that guarantees non-lopsided ness, and has the following time complexities:
 - insert: O(lg(n))
-- delete: O(1)
+- delete: O(lg(n))
 - search: O(lg(n))
-- ?: ?
 
 
 *List of Operations/Classes/Objects in Fortune Algoritm and Time Complexity O():*
+- find arc in wavefront: O(lg(n))
+- add arc to wavefront: O(lg(n))
+- remove arc from wavefront: O(lg(n))
+- remove circle event: O(1)
+- add vertex, half-edge, site, to graph: O(1)
+- find arc from circle event: O(1)
+- check for possible circle events: O(1)
 <br/>
+Maximum wavefront arcs: 2n-1 (show worst case: vertical sites)
 <br/>
+Maximum circle events: n (although more do show up as false alarms)
 <br/>
+Algorithm runtime: O(*n*lg(*n*))
+<br/>
+
+
+*Wavefront representations:*
+<br/>
+set of intersections
+<br/>
+set of arcs
+<br/>
+
+Notes:
+- avoid methods that are suspect to numerical error
+- book-keeping: keep only most pertinent data, as all references need to be updated, and more references = prone to error
+
+
 <br/>
 
 
