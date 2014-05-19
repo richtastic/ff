@@ -38,15 +38,21 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-	points.push( new V2D(2,7) );
-	points.push( new V2D(3,4) );
-	points.push( new V2D(5,2) );
-	points.push( new V2D(5,6) );
-	points.push( new V2D(6,4) );
-	points.push( new V2D(8,2) );
-	points.push( new V2D(3,7.0) );
-	points.push( new V2D(3.5,7.0) );
-	points.push( new V2D(5,7.5) );
+points.push( new V2D(3,6) );
+points.push( new V2D(5,6) );
+points.push( new V2D(4,6) );
+points.push( new V2D(5,5) );
+points.push( new V2D(6,4) );
+
+	// points.push( new V2D(2,7) );
+	// points.push( new V2D(3,4) );
+	// points.push( new V2D(5,2) );
+	// points.push( new V2D(5,6) );
+	// points.push( new V2D(6,4) );
+	// points.push( new V2D(8,2) );
+	// points.push( new V2D(3,7.0) );
+	// points.push( new V2D(3.5,7.0) );
+	// points.push( new V2D(5,7.5) );
 //
 // points.push( new V2D(1,1) );
 // points.push( new V2D(0,6) );
@@ -119,7 +125,7 @@ Vor.prototype.animation_tick = function(){
 			e.site( new Voronoi.Site(p) );
 			this._Q.addEvent( e );
 		}
-		//console.log(this._Q.toString());
+		console.log(this._Q.toString());
 		this._T = new Voronoi.WaveFront();
 		this._D = new Voronoi.EdgeGraph();
 		this._directrix = new V2D();
@@ -129,7 +135,7 @@ Vor.prototype.animation_tick = function(){
 	directrix = this._directrix.y;
 	//
 	var offYStart = 1*400;//375;
-	var rateStart = 12.5;//2.5;
+	var rateStart = 2.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);

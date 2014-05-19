@@ -337,19 +337,50 @@ Voronoi.Arc.isArcToLeftOfArc = function(a,b){
 	}
 	return avgA < avgB;
 }
-Voronoi.Arc.splitArcAtSite = function(arc,site){
+Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 	if(arc.containsPointBoolean(site.point())){
-		var arcL, arcC, arcR;
-		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
-		arcL.edgeLeft(arc.edgeLeft());
-		arcL.edgeRight(null); // to be added
-		arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, site, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
-		arcC.edgeLeft(null); // to be added
-		arcC.edgeRight(null); // to be added
-		arcR = new Voronoi.Arc(site,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
-		arcR.edgeLeft(null); // to be added
-		arcR.edgeRight(arc.edgeRight());
-		return [arcL,arcC,arcR];
+		var directrix = arc.directrix();
+		var temp = new V2D().copy(directrix);
+		directrix.y -= 100.0;
+		var pointA = arc.center().point();
+		var pointB = site.point();
+		var ints = Code.intersectionParabolas( pointA, directrix.y, pointB, directrix.y );
+		directrix.copy(temp);
+		if(ints.length==1){ // happens if first n sites have same y coord
+			console.log(tree.toString());
+			// refind to get correct arc
+			var node = tree.findObject(site.point());
+			arc = node.data();
+			var pointA = arc.center().point();
+			console.log(pointA+" <");
+			// if it's
+			if(pointA<pointB){
+				pointA = arc.center();
+				pointB = site;
+			}else{
+				pointB = arc.center();
+				pointA = site;
+			}
+			arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), pointA, pointB,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
+			arcL.edgeLeft(arc.edgeLeft());
+			arcL.edgeRight(null); // to be added
+			arcR = new Voronoi.Arc(pointA,Voronoi.ARC_PARABOLA_INT_LEFT, pointB, arc.right(),arc.rightDirection(), arc.directrix());
+			arcR.edgeLeft(null); // to be added
+			arcR.edgeRight(arc.edgeRight());
+			return [arcL,arcR];
+		}else{
+			var arcL, arcC, arcR;
+			arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
+			arcL.edgeLeft(arc.edgeLeft());
+			arcL.edgeRight(null); // to be added
+			arcC = new Voronoi.Arc(arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, site, arc.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
+			arcC.edgeLeft(null); // to be added
+			arcC.edgeRight(null); // to be added
+			arcR = new Voronoi.Arc(site,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
+			arcR.edgeLeft(null); // to be added
+			arcR.edgeRight(arc.edgeRight());
+			return [arcL,arcC,arcR];
+		}
 	}
 	return null;
 }
@@ -664,6 +695,7 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 		this._tree.insertNode(node);
 		// add site to graph
 		graph.addSite(arc.center());
+		/* // these edges are always zero --- CASE WHERE TWO EDGES AT BEGINNIGN
 		// add edges to graph
 		edge = Voronoi.HalfEdge.newTwins();
 		graph.addEdge(edge);
@@ -676,6 +708,7 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 		// other side of infinity
 		edge.opposite().site(null);
 		// no infinity to attach to
+		*/
 	}else{
 		// find arc to split
 		node = this._tree.findObject(site.point());
@@ -684,7 +717,8 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 		queue.removeEvent( arc.circleEvent() );
 		arc.circleEvent(null);
 		// get list of new arc set
-		list = Voronoi.Arc.splitArcAtSite(arc,site);
+		list = Voronoi.Arc.splitArcAtSite(arc,site, this._tree);
+console.log(list.length);
 		// copy over new left arc
 		arc.physicalCopy(list[0]);
 		// arc.node == same node as before
@@ -716,7 +750,9 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 		list[1].edgeLeft(edge);
 		list[1].edgeRight(edge);
 		// right
-		list[2].edgeLeft(edge.opposite());
+		if(list.length==3){
+			list[2].edgeLeft(edge.opposite());
+		}
 		// edgeRight already copied over
 		// left triplets of points
 		this.checkAddCircleWithRight(list[1],directrix,queue);
@@ -724,7 +760,8 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
  		this.checkAddCircleWithLeft(list[1],directrix,queue);
 	}
 	siteEvent.kill();
-//console.log("add ........................................................................................... END");
+console.log(this._tree.toString());
+console.log("add ........................................................................................... END");
 }
 Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue){ // left triplets of points
 	var node, left, center;
@@ -876,7 +913,9 @@ Voronoi.Site.prototype.toString = function(){
 
 // --------------------------------------------------------------------------------------------------------------------
 /* HalfEdge */
+Voronoi.HALF_EDGE_COUNT = 0;
 Voronoi.HalfEdge = function(){
+	this._id = ++Voronoi.HALF_EDGE_COUNT;
 	this._vertexA = null;
 	this._vertexB = null;
 	this._opposite = null;
@@ -953,7 +992,7 @@ Voronoi.HalfEdge.prototype.flipDirection = function(){
 	this._vertexB = temp;
 }
 Voronoi.HalfEdge.prototype.toString = function(){
-	var str = "[HalfEdge: ";
+	var str = "[HalfEdge: "+this._id+" ";
 	str += this._vertexA+" -> "+this._vertexB+" ";
 	str += (this._prev?"prev":"null")+" <-> "+(this._next?"next":"null");
 	str += "]";
@@ -1032,10 +1071,32 @@ Voronoi.EdgeGraph.prototype.toString = function(){
 Voronoi.EdgeGraph.prototype.finalize = function(){
 	var i, j, len, sites, site, edges, edge, A, B, ang, temp, vertex, center;
 	var CA = new V2D(), CB = new V2D();
-	// cap infinite edges to box?
-		// ...
-	// orientate edges for each site CCW  +  combine/remove duplicate vertexes
 	sites = this._sites
+	// cap infinite edges to box?
+	len = sites.length;
+	for(i=0;i<len;++i){
+		site = sites[i];
+		center = site.point();
+		edges = site.edges();
+		len2 = edges.length;
+		var infiniEdges = [];
+		for(j=0;j<len2;++j){
+			edge = edges[j];
+			A = edge.vertexA();
+			B = edge.vertexB();
+			/*if(!A && !B){
+				// first arc has 4 'infinite-edges'
+			}else*/ if(!A){
+				console.log(edge+"")
+				infiniEdges.push(edge);
+			}else if(!B){
+				console.log(edge+"")
+				infiniEdges.push(edge);
+			}
+		}
+		console.log("INFINITE EDGES: "+infiniEdges.length);
+	}
+	// orientate edges for each site CCW  +  combine/remove duplicate vertexes
 	len = sites.length;
 	for(i=0;i<len;++i){
 		site = sites[i];
