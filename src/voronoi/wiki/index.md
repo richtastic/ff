@@ -301,6 +301,129 @@ else => 2 unique solutions, solve quadratic equation
 <br/>
 
 
+### Ray-Ray (Line) Intersections:
+![Line Line Diagram](./images/ray_ray.png "Line Line Diagram")
+<br/>
+Ray = origin + direction, point along ray: point = origin + (t)direction
+<br/>
+
+
+*Ray 1:* a + (t1)b
+<br/>
+*Ray 2:* c + (t2)d
+<br/>
+
+
+*Solving For t2:*
+<br/>
+p.x = a.x + (t1)b.x
+<br/>
+p.x = c.x + (t2)d.x
+<br/>
+a.x + (t1)b.x = c.x + (t2)d.x
+<br/>
+(t1)b.x = c.x - a.x + (t2)d.x
+<br/>
+t1 = (c.x - a.x + (t2)d.x)/b.x  *[1]*
+<br/>
+
+
+
+p.y = a.y + (t1)b.y
+<br/>
+p.y = c.y + (t2)d.y
+<br/>
+a.y + (t1)b.y = c.y + (t2)d.y
+<br/>
+(t1)b.y = c.y - a.y + (t2)d.y
+<br/>
+t1 = (c.y - a.y + (t2)d.y)/b.y  *[2]*
+<br/>
+
+
+*[1]* = *[2]*
+<br/>
+(c.x - a.x + (t2)d.x)/b.x = (c.y - a.y + (t2)d.y)/b.y
+<br/>
+b.y(c.x - a.x + (t2)d.x) = b.x(c.y - a.y + (t2)d.y)
+<br/>
+b.y*c.x - b.y*a.x + t2*b.y*d.x = b.x*c.y - b.x*a.y + t2*b.x*d.y
+<br/>
+t2*b.y*d.x = b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x + t2*b.x*d.y
+<br/>
+t2*b.y*d.x - t2*b.x*d.y = b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x
+<br/>
+t2(b.y*d.x - b.x*d.y) = b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x
+<br/>
+t2 = (b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x)/(b.y*d.x - b.x*d.y)
+<br/>
+t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y*d.x - b.x*d.y]
+<br/>
+
+
+*Solving For t1:*
+<br/>
+a.x + (t1)b.x = c.x + (t2)d.x
+<br/>
+a.x - c.x + (t1)b.x = (t2)d.x
+<br/>
+(a.x - c.x + (t1)b.x)/d.x = t2  *[3]*
+<br/>
+
+
+
+<br/>
+a.y + (t1)b.y = c.y + (t2)d.y
+<br/>
+a.y - c.y + (t1)b.y = (t2)d.y
+<br/>
+(a.y - c.y + (t1)b.y)/d.y = t2  *[4]*
+<br/>
+
+
+
+*[3]* = *[4]*
+<br/>
+(a.x - c.x + (t1)b.x)/d.x = (a.y - c.y + (t1)b.y)/d.y
+<br/>
+d.y*(a.x - c.x + (t1)b.x) = d.x*(a.y - c.y + (t1)b.y)
+<br/>
+d.y*a.x - d.y*c.x + t1*d.y*b.x) = d.x*a.y - d.x*c.y + t1*d.x*b.y
+<br/>
+t1*d.y*b.x) = d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x + t1*d.x*b.y
+<br/>
+t1*d.y*b.x - t1*d.x*b.y = d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x
+<br/>
+t1(d.y*b.x - d.x*b.y) = d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x
+<br/>
+t1 = (d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x)/(d.y*b.x - d.x*b.y)
+<br/>
+t1 = [d.x(a.y - c.y) + d.y(c.x - a.x)]/[d.y*b.x - d.x*b.y]
+<br/>
+
+
+Side-By-Side:
+<br/>
+t1 = [d.x(a.y - c.y) + d.y(c.x - a.x)]/[d.y*b.x - d.x*b.y]
+<br/>
+t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y*d.x - b.x*d.y]
+<br/>
+
+
+KEY NOTES:
+<br/>
+If the demonimator equals zero, there are zero or infinite points
+<br/>
+Otherwise there is an intersection at t1 (Ray 1) and t2 (Ray 2)
+<br/>
+To limit to only positive intersections (infinite rays), check that t1>=0 and t2>=0
+<br/>
+To limit to only finite rays, check that 0<=t1<=1 and 0<=t2<=1
+<br/>
+
+
+
+
 <a name="VORONOI"></a>
 ## Voronoi
 *Voronoy Diagram*

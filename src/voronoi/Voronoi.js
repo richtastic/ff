@@ -690,10 +690,17 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 	site = siteEvent.site();
 	if(this.isEmpty()){ // infiniarc(s)
 		var prevArc = null;
+		var wasSort = this._tree.sorting();
+		var fxn = function(a,b){
+			return b.center().point().x - a.center().point().x;
+		};
+		this._tree.sorting( fxn );
 		while(site){ // multiple initial sites with same y
 			arc = new Voronoi.Arc(null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, site, null,Voronoi.ARC_PARABOLA_INT_UNKNOWN, directrix);
 			node = RedBlackTree.newEmptyNode(arc);
 			arc.node(node);
+			// add site to graph
+			graph.addSite(arc.center());
 			if(prevArc){
 				arc.right(prevArc.center());
 				prevArc.left(arc.center());
@@ -706,18 +713,15 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 				// add edges to arcs
 				prevArc.edgeLeft(edge);
 				arc.edgeRight(edge.opposite());
+				// add edges to sites
+				prevArc.center().addEdge(edge);
+				arc.center().addEdge(edge.opposite());
+				// add sites to edges
+				edge.site(prevArc.center());
+				edge.opposite().site(arc.center());
 			}
-			prevArc = arc;
-			var fxn = function(a,b){
-				return b.center().point().x - a.center().point().x;
-			};
-			var wasSort = this._tree.sorting();
-			this._tree.sorting( fxn );
-				this._tree.insertNode(node);
-			this._tree.sorting( wasSort );
-//console.log(this._tree.toString());
-			// add site to graph
-			graph.addSite(arc.center());
+			prevArc = arc; // remember for next iteration
+			this._tree.insertNode(node);
 			// check if next arc is at same y:
 			site = null;
 			var peek = queue.peek();
@@ -727,25 +731,7 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 				site = siteEvent.site();
 			}
 		}
-		/*
-		peek.point().y>=point.y
-		var peek = queue.peek();
-		console.log(peek);
-		*/
-		/* // these edges are always zero --- CASE WHERE TWO EDGES AT BEGINNING
-		// add edges to graph
-		edge = Voronoi.HalfEdge.newTwins();
-		graph.addEdge(edge);
-		graph.addEdge(edge.opposite());
-		// arc's site+edge
-		edge.site(arc.center());
-		arc.center().addEdge(edge);
-		arc.edgeLeft(edge);
-		arc.edgeRight(edge);
-		// other side of infinity
-		edge.opposite().site(null);
-		// no infinity to attach to
-		*/
+		this._tree.sorting( wasSort );
 	}else{
 		// find arc to split
 		node = this._tree.findObject(site.point());
@@ -796,8 +782,6 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
  		this.checkAddCircleWithLeft(list[1],directrix,queue);
 	}
 	siteEvent.kill();
-console.log(this._tree.toString());
-console.log("add ........................................................................................... END");
 }
 Voronoi.WaveFront.prototype.checkAddCircleWithRight = function(right,directrix,queue){ // left triplets of points
 	var node, left, center;
@@ -995,14 +979,12 @@ Voronoi.HalfEdge.prototype.vertexAndEdgeAdd = function(v,e){ // assigns external
 
 Voronoi.HalfEdge.prototype.vertexA = function(a){
 	if(a!==undefined){
-		console.log("vertexA WAS: "+this._vertexA+" IS: "+a);
 		this._vertexA = a;
 	}
 	return this._vertexA;
 }
 Voronoi.HalfEdge.prototype.vertexB = function(b){
 	if(b!==undefined){
-		console.log("vertexB WAS: "+this._vertexB+" IS: "+b);
 		this._vertexB = b;
 	}
 	return this._vertexB;
@@ -1109,6 +1091,14 @@ Voronoi.EdgeGraph.prototype.finalize = function(){
 	var CA = new V2D(), CB = new V2D();
 	sites = this._sites
 	// cap infinite edges to box?
+
+	var boxTLX = -100;
+	var boxTLY = 400;
+	var boxWid = 700;
+	var boxHei = 500;
+	var dirMag = boxWid+boxHei;
+	var linesCCW = [ [new V2D(boxTLX,boxTLY),new V2D(0,-boxHei)], [new V2D(boxTLX,boxTLY-boxHei),new V2D(boxWid,0)], [new V2D(boxTLX+boxWid,boxTLY-boxHei),new V2D(0,boxHei)], [new V2D(boxTLX+boxWid,boxTLY),new V2D(-boxWid,0)] ];
+	
 	len = sites.length;
 	for(i=0;i<len;++i){
 		site = sites[i];
@@ -1118,19 +1108,120 @@ Voronoi.EdgeGraph.prototype.finalize = function(){
 		var infiniEdges = [];
 		for(j=0;j<len2;++j){
 			edge = edges[j];
-			A = edge.vertexA();
-			B = edge.vertexB();
-			/*if(!A && !B){
-				// first arc has 4 'infinite-edges'
-			}else*/ if(!A){
-				console.log(edge+"")
+			A = edge.vertexA(); // prev
+			B = edge.vertexB(); // next
+			if(!A && !B){
+				// two parallel edges - need to handle specially
+				console.log("trouble abrewin");
+				// create start and end from intersections, and orientate CCW
+				// need to connect to partner edge in different way
+			}else if(!A){
 				infiniEdges.push(edge);
+				if( (edge.next().next()==edge) ){ // CW => CCW
+					edge.flipDirection();
+				}
 			}else if(!B){
-				console.log(edge+"")
 				infiniEdges.push(edge);
+				if( (edge.prev().prev()==edge) ){ // CW => CCW
+					edge.flipDirection();
+				}
 			}
 		}
-		console.log("INFINITE EDGES: "+infiniEdges.length);
+		//console.log("INFINITE EDGES: "+infiniEdges.length);
+		if(infiniEdges.length==2){
+			if( infiniEdges[0].next() ){ // wrong order
+				infiniEdges = [infiniEdges[1],infiniEdges[0]];
+			}
+			var k, l, intersection, edgeOrg, edgeDir, org, dir, a, b;
+			var dats = [null,null];
+			len2 = infiniEdges.length;
+			for(j=0;j<len2;++j){
+				edge = infiniEdges[j];
+				org = (edge.vertexA()?edge.vertexA():edge.vertexB()).point();
+				a = edge.site().point();
+				b = edge.opposite().site().point();
+				dir = V2D.sub(b,a);
+				dir.norm();
+				V2D.rotate(dir, dir,Math.PIO2);
+				a = V2D.sub(org,center);
+				b = V2D.sub(V2D.add(org,dir),center);
+				if( V2D.angleDirection(a,b)<0 ){ // this never happens ... consistent geometry
+					console.log("flip direction");
+					dir.flip();
+				}
+				dir.scale(dirMag);
+				dats[j] = [org,dir];
+			}
+			edge = infiniEdges[0];
+			edgeOrg = dats[0][0];
+			edgeDir = dats[0][1];
+			for(k=0;k<4;++k){
+				org = linesCCW[k][0];
+				dir = linesCCW[k][1];
+				intersection = Code.rayFiniteIntersect2D(edgeOrg,edgeDir, org,dir);
+				if(intersection){
+console.log("int A: "+intersection);
+					vertex = new Voronoi.Vertex();
+					vertex.point(intersection);
+					this.addVertex(vertex);
+					vertex.addEdge(edge);
+					edge.vertexB(vertex);
+					// 
+					var prevEdge = new Voronoi.HalfEdge();
+					this.addEdge(prevEdge);
+					prevEdge.site(site);
+					vertex.addEdge(prevEdge);
+					prevEdge.vertexA(vertex);
+					prevEdge.prev(edge);
+					edge.next(prevEdge);
+					//
+					edge = infiniEdges[1];
+					edgeOrg = dats[1][0];
+					edgeDir = dats[1][1];
+					edgeDir.flip(); // intersection direction is opposite 
+					for(l=0;l<4;++l){
+						org = linesCCW[(k+l)%4][0];
+						dir = linesCCW[(k+l)%4][1];
+						intersection = Code.rayFiniteIntersect2D(edgeOrg,edgeDir, org,dir);
+						if(intersection){
+console.log("int B:   "+intersection);
+							prevEdge.next(edge);
+							edge.prev(prevEdge);
+							b = new Voronoi.Vertex();
+							b.point(intersection);
+							prevEdge.vertexB(b);
+							prevEdge.vertexB().addEdge(prevEdge);
+							edge.vertexA(b);
+							edge.vertexA().addEdge(edge);
+							break;
+						}else{ // new edge
+							temp = new Voronoi.HalfEdge();
+							this.addEdge(temp);
+							temp.site(site);
+							site.addEdge(temp);
+							//
+							prevEdge.next(temp);
+							temp.prev(prevEdge);
+							b = new Voronoi.Vertex();
+							b.point( linesCCW[(k+l+1)%4][0] );
+							b.addEdge(prevEdge);
+							b.addEdge(temp);
+							prevEdge.vertexB( b );
+							temp.vertexA( b );
+							prevEdge = temp;
+						}
+						if(l==4){
+							console.log("never intersected - l");
+						}
+					}
+					break;
+				}
+				if(k==4){
+					console.log("never intersected - k");
+				}
+			}
+			
+		}
 	}
 	// orientate edges for each site CCW  +  combine/remove duplicate vertexes
 	len = sites.length;

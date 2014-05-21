@@ -89,6 +89,10 @@ V2D.prototype.set = function(xV,yV){
 	this.x = xV; this.y = yV;
 	return this;
 }
+V2D.prototype.flip = function(a){
+	this.x = -this.x; this.y = -this.y;
+	return this;
+}
 V2D.prototype.setFromArray = function(a){
 	this.set(a[0],a[1]);
 	return this;

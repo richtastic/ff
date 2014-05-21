@@ -1618,13 +1618,41 @@ Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 	}
 	return new V4D( a.x+t2*baX, a.y+t2*baY, t2, t1 ); // new V4D( c.x+t1*dcX, c.y+t1*dcY, t1, t2 );
 }
-Code.rayIntersect2D = function(a,b, c,d){ // two infinite lines
+Code.rayLineIntersect2D = function(a,b, c,d){ // two infinite lines
 	var den = b.y*d.x - b.x*d.y;
 	if(den == 0){ return null; } // infinite or zero intersections
 	var num = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
 	var t = num/den;
 	return new V2D(a.x+t*b.x, a.y+t*b.y); // num = (b.x*(c.y-a.y) + b.y*(a.x-c.x)); return new V2D(c.x+t2*d.x, c.y+t2*d.y);
 }
+Code.rayIntersect2D = function(a,b, c,d){ // positive intersections of two infinite rays
+	var den = b.y*d.x - b.x*d.y;
+	if(den == 0){ return null; }
+	var num1 = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
+	var num2 = (b.x*(c.y-a.y) + b.y*(a.x-c.x));
+	var t1 = num1/den;
+	var t2 = num2/den;
+	if(t1>=0 && t2>=0){
+		return new V2D(a.x+t1*b.x, a.y+t1*b.y);
+	}
+	return null;
+}
+Code.rayFiniteIntersect2D = function(a,b, c,d){ // two finite rays
+	var den = b.y*d.x - b.x*d.y;
+	if(den == 0){ return null; }
+	var num1 = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
+	var num2 = (b.x*(c.y-a.y) + b.y*(a.x-c.x));
+	var t1 = num1/den;
+	var t2 = num2/den;
+	if(t1>=0 && t1<=1.0 && t2>=0 && t2<=1.0){
+		return new V2D(a.x+t1*b.x, a.y+t1*b.y);
+	}
+	return null;
+}
+/*
+
+
+*/
 Code.parabolaABCFromFocusDirectrix = function(focA,c){
 	var a = focA.x, b = focA.y;
 	var A = 1/(2.0*(b-c));
@@ -1796,9 +1824,9 @@ Code.circleFromPoints = function(a,b,c){
 	var midAB = V2D.midpoint(a,b);
 	var midBC = V2D.midpoint(b,c);
 	//var midAC = V2D.midpoint(a,c);
-	var cenA = Code.rayIntersect2D(midAB,rotAB, midBC,rotBC);
-	//var cenB = Code.rayIntersect2D(midBC,rotBC, midAC,rotAC);
-	//var cenC = Code.rayIntersect2D(midAC,rotAC, midAB,rotAB);
+	var cenA = Code.rayLineIntersect2D(midAB,rotAB, midBC,rotBC);
+	//var cenB = Code.rayLineIntersect2D(midBC,rotBC, midAC,rotAC);
+	//var cenC = Code.rayLineIntersect2D(midAC,rotAC, midAB,rotAB);
 	if(cenA){ // entering in duplicate points kills me
 		var lenA = V2D.distance(cenA,a);
 		//var lenB = V2D.distance(cenB,b);

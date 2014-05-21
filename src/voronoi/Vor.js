@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(400,800);
+	this._root.matrix().translate(400,500);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -42,7 +42,7 @@ points.push( new V2D(3,6) );
 points.push( new V2D(5,6) );
 points.push( new V2D(4,6) );
 points.push( new V2D(5,5) );
-points.push( new V2D(6,4) );
+points.push( new V2D(5.5,4) );
 
 	// points.push( new V2D(2,7) );
 	// points.push( new V2D(3,4) );
@@ -125,7 +125,6 @@ Vor.prototype.animation_tick = function(){
 			e.site( new Voronoi.Site(p) );
 			this._Q.addEvent( e );
 		}
-		console.log(this._Q.toString());
 		this._T = new Voronoi.WaveFront();
 		this._D = new Voronoi.EdgeGraph();
 		this._directrix = new V2D();
@@ -135,7 +134,7 @@ Vor.prototype.animation_tick = function(){
 	directrix = this._directrix.y;
 	//
 	var offYStart = 1*400;//375;
-	var rateStart = 2.5;//2.5;
+	var rateStart = 12.5;//2.5;
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
