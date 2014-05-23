@@ -1008,14 +1008,13 @@ Voronoi.HalfEdge.prototype.flipDirection = function(){
 	temp = this._vertexA;
 	this._vertexA = this._vertexB;
 	this._vertexB = temp;
-	console.log("flipDirection")
 }
 Voronoi.HalfEdge.prototype.checkOrientation = function(){
 	if(this._vertexA && this._vertexB && this._site){
-		var AC = V2D.sub(this._vertexA,this._site.point());
-		var BC = V2D.sub(this._vertexB,this._site.point());
+		var AC = V2D.sub(this._vertexA.point(),this._site.point());
+		var BC = V2D.sub(this._vertexB.point(),this._site.point());
 		if( V2D.cross(AC,BC)<0 ){
-			console.log("check");
+		//if( V2D.angleDirection(AC,BC)>0 ){
 			this.flipDirection();
 		}
 	}
@@ -1024,6 +1023,7 @@ Voronoi.HalfEdge.prototype.toString = function(){
 	var str = "[HalfEdge: "+this._id+" ";
 	str += this._vertexA+" -> "+this._vertexB+" ";
 	str += (this._prev?"prev":"null")+" <-> "+(this._next?"next":"null");
+	str += this.site?" (S)":" (?)";
 	str += "]";
 	return str;
 }
@@ -1114,6 +1114,18 @@ console.log("finalize");
 	len = sites.length;
 	for(i=0;i<len;++i){
 		site = sites[i];
+//site = sites[1];
+//console.log("SITE: "+site);
+var d = new DO();
+d.graphics().clear();
+d.graphics().setLine(2.0, 0xFF00FF00);
+d.graphics().beginPath();
+d.graphics().drawCircle(site.point().x,site.point().y, 10.0);
+d.graphics().endPath();
+d.graphics().strokeLine();
+root.addChild(d);
+
+
 		center = site.point();
 		edges = site.edges();
 		len2 = edges.length;
@@ -1123,6 +1135,9 @@ console.log("finalize");
 			edge = edges[j];
 			A = edge.prev(); //edge.vertexA(); // prev
 			B = edge.next(); //edge.vertexB(); // next
+//edge.checkOrientation();
+//console.log("EDGE: "+edge);
+//console.log(""+edge.next());
 if(edge.next()){
 	edge.next().checkOrientation();
 }
@@ -1145,6 +1160,7 @@ if(edge.prev()){
 				}
 			}
 		}
+
 var d;
 var ray = new V2D(), mid = new V2D(), ints, dir, org;
 var col = Code.getColARGB(0xFF,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0));
@@ -1173,7 +1189,7 @@ if(edge.vertexA()){
 	pt = edge.vertexA().point();
 }else if(edge.vertexB()){
 	pt = edge.vertexB().point();
-	cc = 0xFF0000FF;
+	cc = 0xFF00FFFF;
 }
 var tr = new V2D(pt.x+ra.x, pt.y+ra.y);
 
@@ -1188,7 +1204,7 @@ d.graphics().clear();
 d.graphics().setLine(2.0, cc);
 d.graphics().beginPath();
 d.graphics().moveTo(pt.x,pt.y);
-d.graphics().lineTo(tr.x, tr.y);
+d.graphics().lineTo(tr.x+10*Math.random()-5, tr.y+10*Math.random()-5);
 d.graphics().endPath();
 d.graphics().strokeLine();
 root.addChild(d);
@@ -1212,7 +1228,6 @@ root.addChild(d);
 d = new DO();
 d.graphics().clear();
 d.graphics().setLine(2.0, 0xFFCC0000);
-//d.graphics().setFill(0xFFCC0000);
 d.graphics().setFill(col);
 d.graphics().beginPath();
 d.graphics().drawCircle(ints.x,ints.y-4, 15.0);
@@ -1236,9 +1251,8 @@ root.addChild(d);
 							edge.checkOrientation();
 d = new DO();
 d.graphics().clear();
-d.graphics().setFill(col);
 d.graphics().setLine(2.0, 0xFF0000CC);
-//d.graphics().setFill(0xFF0000CC);
+d.graphics().setFill(col);
 d.graphics().beginPath();
 d.graphics().drawCircle(ints.x,ints.y+4, 15.0);
 d.graphics().endPath();
@@ -1248,13 +1262,16 @@ root.addChild(d);
 						}
 					}
 				}
-			}
+console.log(edge+"");
+			} // edges
+
 			// orientate the disconnected edges consistently ?????????????
 
 			// direction = point above and below point directrix
 			// direction+orientation updated based on CCW rotation of line about 
-		}
-	}
+		} // if
+//break;
+	} // sites
 	/*
 	len = sites.length;
 	for(i=0;i<len;++i){

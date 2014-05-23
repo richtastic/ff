@@ -293,7 +293,7 @@ this._directrix.copy( temp );
 	}else{
 		this._ticker.stop();
 this._D.finalize(this._animParabolas);
-return;
+//return;
 		// DRAW FINAL IMAGE
 		this._animParabolas.graphics().setLine(2.0,0xFF333399);
 		var site, sites, edge, edges, A, B;
@@ -307,7 +307,12 @@ return;
 			this._animParabolas.graphics().setFill(col);
 			var count = 0;
 			edge = edges[0];
+while(edge.prev() && count<20){ // actually first
+	edge = edge.prev();
+	++count;
+}
 			var firstEdge = edge;
+			count = 0;
 			A = edge.vertexA();
 			B = edge.vertexB();
 			if(A){
