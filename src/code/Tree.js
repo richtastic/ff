@@ -8,7 +8,7 @@ function Tree(dat,par){
 	if(dat!==undefined){ this.data(dat); }
 	if(par!==undefined){ par.addChild(this); }
 }
-// --------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------------------------- 
 Tree.prototype.parent = function(p){
 	if(arguments.length>0){
 		this._parent = p;
@@ -42,6 +42,12 @@ Tree.prototype.lastChild = function(){
 	}
 	return null;
 }
+
+Tree.prototype.children = function(){ // readonly
+	return this._children;
+}
+
+// -------------------------------------------------------------------------------------------------------------------- 
 Tree.prototype.kill = function(){
 	var ch, i, len = this._children.length;
 	for(i=0;i<len;++i){
