@@ -38,7 +38,7 @@ Also contains other various code, with various purposes.
 ## Delaunay
 *Convert Delaunay Triangulation from Voronoi Diagram*
 <br/>
-[How-To-Voronoi](./src/voronoi/wiki/index.md#DELAUNAY)
+[How-To-Delaunay](./src/voronoi/wiki/index.md#DELAUNAY)
 
 
 <a name="CLASSES"></a>
