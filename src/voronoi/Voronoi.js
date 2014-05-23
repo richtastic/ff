@@ -971,12 +971,12 @@ Voronoi.HalfEdge.prototype.vertexAndEdgeAdd = function(v,e){ // assigns external
 	}else if(!this._vertexB){
 		this._vertexB = v;
 		this._next = e;
+		this.checkOrientation();
 	}else{
 		"BOTH VERTEXES ALREADY ASSIGNED";
 	}
 	// if I know the site, I can calculate CCW and correct my direction if necessary
 }
-
 Voronoi.HalfEdge.prototype.vertexA = function(a){
 	if(a!==undefined){
 		this._vertexA = a;
@@ -1008,6 +1008,17 @@ Voronoi.HalfEdge.prototype.flipDirection = function(){
 	temp = this._vertexA;
 	this._vertexA = this._vertexB;
 	this._vertexB = temp;
+	console.log("flipDirection")
+}
+Voronoi.HalfEdge.prototype.checkOrientation = function(){
+	if(this._vertexA && this._vertexB && this._site){
+		var AC = V2D.sub(this._vertexA,this._site.point());
+		var BC = V2D.sub(this._vertexB,this._site.point());
+		if( V2D.cross(AC,BC)<0 ){
+			console.log("check");
+			this.flipDirection();
+		}
+	}
 }
 Voronoi.HalfEdge.prototype.toString = function(){
 	var str = "[HalfEdge: "+this._id+" ";
@@ -1086,19 +1097,159 @@ Voronoi.EdgeGraph.prototype.toString = function(){
 	}
 	return str;
 }
-Voronoi.EdgeGraph.prototype.finalize = function(){
-	var i, j, len, sites, site, edges, edge, A, B, ang, temp, vertex, center;
-	var CA = new V2D(), CB = new V2D();
+Voronoi.EdgeGraph.prototype.finalize = function(root){ // cap infinite edges to box
+	var i, j, k, len, sites, site, edges, edge, A, B, ang, temp, vertex, center;
+	//var CA = new V2D(), CB = new V2D();
 	sites = this._sites
-	// cap infinite edges to box?
 
+	// find box dynamically by limits of vertexes and site + padding
+console.log("finalize");
 	var boxTLX = -100;
 	var boxTLY = 400;
 	var boxWid = 700;
 	var boxHei = 500;
-	var dirMag = boxWid+boxHei;
+	var maxMagnitude = boxWid+boxHei;
 	var linesCCW = [ [new V2D(boxTLX,boxTLY),new V2D(0,-boxHei)], [new V2D(boxTLX,boxTLY-boxHei),new V2D(boxWid,0)], [new V2D(boxTLX+boxWid,boxTLY-boxHei),new V2D(0,boxHei)], [new V2D(boxTLX+boxWid,boxTLY),new V2D(-boxWid,0)] ];
 	
+	len = sites.length;
+	for(i=0;i<len;++i){
+		site = sites[i];
+		center = site.point();
+		edges = site.edges();
+		len2 = edges.length;
+		// find the infinite edges for each site - should always be exactly 2
+		var infiniEdges = [];
+		for(j=0;j<len2;++j){
+			edge = edges[j];
+			A = edge.prev(); //edge.vertexA(); // prev
+			B = edge.next(); //edge.vertexB(); // next
+			if(!A && !B){
+				infiniEdges.push(edge); // no known orientation
+			}else if(!A){
+				infiniEdges.push(edge);
+				if( edge.next() && (edge.next().prev()!=edge) ){ // CW => CCW
+				//if( edge.next() && (edge.next().next()==edge) ){ // CW => CCW
+					edge.flipDirection();
+				}
+			}else if(!B){
+				infiniEdges.push(edge);
+				if( edge.prev() && (edge.prev().next()!=edge) ){ // CW => CCW
+				//if( edge.prev() && (edge.prev().prev()==edge) ){ // CW => CCW
+					edge.flipDirection();
+				}
+			}
+		}
+var d;
+var ray = new V2D(), mid = new V2D(), ints, dir, org;
+var col = Code.getColARGB(0xFF,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0));
+		// fill in missing vertexes and orientation for all types of infiniedges: 1) multi-polygon, 2) from single vertex, 3) disconnected
+// if missing both: both intersections are valid (but may need to be rotated)
+// if missing one vertex => only one direction is correct, 
+// if missing one vertex AND previous shows no known direction => only one is correct
+		if(infiniEdges.length==2){
+			for(j=0;j<2;++j){
+				edge = infiniEdges[j];
+				a = edge.site().point();
+				b = edge.opposite().site().point();
+				V2D.midpoint(mid, b,a);
+				V2D.sub(ray, b,a);
+				V2D.rotate(ray,ray, Math.PIO2);
+				ray.norm();
+				ray.scale(maxMagnitude);
+				// save calculations for next loop
+				infiniEdges[j] = {edge:edge, org:mid, dir:ray};
+				// fill in missing vertexes of known edges
+var pt;
+var ra = new V2D(ray.x,ray.y);
+ra.norm(); ra.scale(100);
+var cc = 0xFFFF0000;
+if(edge.vertexA()){
+	pt = edge.vertexA().point();
+}else if(edge.vertexB()){
+	pt = edge.vertexB().point();
+	cc = 0xFF0000FF;
+}
+var tr = new V2D(pt.x+ra.x, pt.y+ra.y);
+
+var AC = V2D.sub(pt,a);
+var BC = V2D.sub(tr,a);
+if( V2D.cross(AC,BC)<0 ){
+	console.log("flip");
+	dir.flip();
+}
+d = new DO();
+d.graphics().clear();
+d.graphics().setLine(2.0, cc);
+d.graphics().beginPath();
+d.graphics().moveTo(pt.x,pt.y);
+d.graphics().lineTo(tr.x, tr.y);
+d.graphics().endPath();
+d.graphics().strokeLine();
+root.addChild(d);
+				for(k=0;k<linesCCW.length;++k){
+					org = linesCCW[k][0];
+					dir = linesCCW[k][1];
+					//if( !edge.next() ){
+					if(!edge.vertexB()){ // next
+						//ray.flip();
+						ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
+						//ray.flip();
+						if(ints){
+							// before this can be replaced, it needs to be checked that it produces a 
+							//
+							vertex = new Voronoi.Vertex();
+							vertex.point(ints);
+							this.addVertex(vertex);
+							vertex.addEdge(edge);
+							edge.vertexB(vertex);
+							edge.checkOrientation();
+d = new DO();
+d.graphics().clear();
+d.graphics().setLine(2.0, 0xFFCC0000);
+//d.graphics().setFill(0xFFCC0000);
+d.graphics().setFill(col);
+d.graphics().beginPath();
+d.graphics().drawCircle(ints.x,ints.y-4, 15.0);
+d.graphics().endPath();
+d.graphics().fill();
+d.graphics().strokeLine();
+root.addChild(d);
+						}
+					}
+					//if( !edge.prev() ){
+					if(!edge.vertexA()){ // prev
+						ray.flip();
+						ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
+						ray.flip();
+						if(ints){
+							vertex = new Voronoi.Vertex();
+							vertex.point(ints);
+							this.addVertex(vertex);
+							vertex.addEdge(edge);
+							edge.vertexA(vertex);
+							edge.checkOrientation();
+d = new DO();
+d.graphics().clear();
+d.graphics().setFill(col);
+d.graphics().setLine(2.0, 0xFF0000CC);
+//d.graphics().setFill(0xFF0000CC);
+d.graphics().beginPath();
+d.graphics().drawCircle(ints.x,ints.y+4, 15.0);
+d.graphics().endPath();
+d.graphics().fill();
+d.graphics().strokeLine();
+root.addChild(d);
+						}
+					}
+				}
+			}
+			// orientate the disconnected edges consistently ?????????????
+
+			// direction = point above and below point directrix
+			// direction+orientation updated based on CCW rotation of line about 
+		}
+	}
+	/*
 	len = sites.length;
 	for(i=0;i<len;++i){
 		site = sites[i];
@@ -1249,7 +1400,18 @@ console.log("int B:   "+intersection);
 			} // else infiniedge
 		}
 	}
+	*/
 }
+/*
+NEW STRATEGY:
+1st loop over infinite edges / border to find all vertexes for each infinite edge
+	- find vertexes
+	- determine orientations (start vertex, end vertex)
+2nd loop over all infinite edges and connect vertices by boundaries, filling in next,prev
+	- connect (fill in missing) edges (boundary segments)
+	- determine prev/next
+
+*/
 
 /*
 

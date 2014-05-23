@@ -1649,6 +1649,9 @@ Code.rayFiniteIntersect2D = function(a,b, c,d){ // two finite rays
 	}
 	return null;
 }
+Code.closestPointLine2D = function(org, dir, point){ // infinite ray and point
+	//
+}
 /*
 
 

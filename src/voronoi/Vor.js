@@ -292,7 +292,8 @@ this._directrix.copy( temp );
 		}
 	}else{
 		this._ticker.stop();
-		this._D.finalize();
+this._D.finalize(this._animParabolas);
+return;
 		// DRAW FINAL IMAGE
 		this._animParabolas.graphics().setLine(2.0,0xFF333399);
 		var site, sites, edge, edges, A, B;
