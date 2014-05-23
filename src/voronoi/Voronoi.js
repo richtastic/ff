@@ -1123,6 +1123,12 @@ console.log("finalize");
 			edge = edges[j];
 			A = edge.prev(); //edge.vertexA(); // prev
 			B = edge.next(); //edge.vertexB(); // next
+if(edge.next()){
+	edge.next().checkOrientation();
+}
+if(edge.prev()){
+	edge.prev().checkOrientation();
+}
 			if(!A && !B){
 				infiniEdges.push(edge); // no known orientation
 			}else if(!A){
