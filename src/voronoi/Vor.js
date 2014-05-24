@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(400,500);
+	this._root.matrix().translate(400,700);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -38,21 +38,31 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
-points.push( new V2D(3,6) );
-points.push( new V2D(5,6) );
-points.push( new V2D(4,6) );
-points.push( new V2D(5,5) );
-points.push( new V2D(5.5,4) );
 
-	// points.push( new V2D(2,7) );
-	// points.push( new V2D(3,4) );
-	// points.push( new V2D(5,2) );
-	// points.push( new V2D(5,6) );
-	// points.push( new V2D(6,4) );
-	// points.push( new V2D(8,2) );
-	// points.push( new V2D(3,7.0) );
-	// points.push( new V2D(3.5,7.0) );
-	// points.push( new V2D(5,7.5) );
+// points.push( new V2D(3,6) );
+// points.push( new V2D(4,6) );
+// points.push( new V2D(5.5,4) );
+
+// points.push( new V2D(3,6) );
+// points.push( new V2D(5,6) );
+// points.push( new V2D(4,6) );
+// points.push( new V2D(5,5) );
+// points.push( new V2D(5.5,4) );
+
+// points.push( new V2D(3,6) );
+// points.push( new V2D(5,6) );
+// points.push( new V2D(4,6) );
+
+
+	points.push( new V2D(2,7) );
+	points.push( new V2D(3,4) );
+	points.push( new V2D(5,2) );
+	points.push( new V2D(5,6) );
+	points.push( new V2D(6,4) );
+	points.push( new V2D(8,2) );
+	points.push( new V2D(3,7.0) );
+	points.push( new V2D(3.5,7.0) );
+	points.push( new V2D(5,7.5) );
 //
 // points.push( new V2D(1,1) );
 // points.push( new V2D(0,6) );

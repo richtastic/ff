@@ -1098,150 +1098,241 @@ Voronoi.EdgeGraph.prototype.toString = function(){
 	return str;
 }
 Voronoi.EdgeGraph.prototype.finalize = function(root){ // cap infinite edges to box
-	var i, j, k, len, sites, site, edges, edge, A, B, ang, temp, vertex, center;
+	var i, j, k, l, len, sites, site, edges, edge, ang, temp, vertex, center, d, ray, yar, mid, ints, dir, org, a, b, p, count;
 	//var CA = new V2D(), CB = new V2D();
 	sites = this._sites
 
 	// find box dynamically by limits of vertexes and site + padding
 console.log("finalize");
+var boxPadding = 100;
 	var boxTLX = -100;
-	var boxTLY = 400;
+	var boxTLY = 700;
 	var boxWid = 700;
-	var boxHei = 500;
+	var boxHei = 800;
 	var maxMagnitude = boxWid+boxHei;
 	var linesCCW = [ [new V2D(boxTLX,boxTLY),new V2D(0,-boxHei)], [new V2D(boxTLX,boxTLY-boxHei),new V2D(boxWid,0)], [new V2D(boxTLX+boxWid,boxTLY-boxHei),new V2D(0,boxHei)], [new V2D(boxTLX+boxWid,boxTLY),new V2D(-boxWid,0)] ];
-	
+
 	len = sites.length;
 	for(i=0;i<len;++i){
 		site = sites[i];
-//site = sites[1];
-//console.log("SITE: "+site);
-var d = new DO();
-d.graphics().clear();
-d.graphics().setLine(2.0, 0xFF00FF00);
-d.graphics().beginPath();
-d.graphics().drawCircle(site.point().x,site.point().y, 10.0);
-d.graphics().endPath();
-d.graphics().strokeLine();
-root.addChild(d);
-
-
 		center = site.point();
 		edges = site.edges();
 		len2 = edges.length;
-		// find the infinite edges for each site - should always be exactly 2
+		// identify infinite edges for each site - should always be exactly 2
 		var infiniEdges = [];
 		for(j=0;j<len2;++j){
 			edge = edges[j];
 			A = edge.prev(); //edge.vertexA(); // prev
 			B = edge.next(); //edge.vertexB(); // next
-//edge.checkOrientation();
-//console.log("EDGE: "+edge);
-//console.log(""+edge.next());
-if(edge.next()){
-	edge.next().checkOrientation();
-}
-if(edge.prev()){
-	edge.prev().checkOrientation();
-}
 			if(!A && !B){
 				infiniEdges.push(edge); // no known orientation
 			}else if(!A){
 				infiniEdges.push(edge);
 				if( edge.next() && (edge.next().prev()!=edge) ){ // CW => CCW
-				//if( edge.next() && (edge.next().next()==edge) ){ // CW => CCW
+				//if( edge.next() && edge.next().prev() && edge.next().next() && (edge.next().next()==edge) ){ // CW => CCW
 					edge.flipDirection();
 				}
 			}else if(!B){
 				infiniEdges.push(edge);
 				if( edge.prev() && (edge.prev().next()!=edge) ){ // CW => CCW
-				//if( edge.prev() && (edge.prev().prev()==edge) ){ // CW => CCW
+				//if( edge.prev() && edge.prev().prev() && edge.prev().next() && (edge.prev().prev()==edge) ){ // CW => CCW
 					edge.flipDirection();
 				}
 			}
 		}
-
-var d;
-var ray = new V2D(), mid = new V2D(), ints, dir, org;
-var col = Code.getColARGB(0xFF,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0));
 		// fill in missing vertexes and orientation for all types of infiniedges: 1) multi-polygon, 2) from single vertex, 3) disconnected
-// if missing both: both intersections are valid (but may need to be rotated)
-// if missing one vertex => only one direction is correct, 
-// if missing one vertex AND previous shows no known direction => only one is correct
-		if(infiniEdges.length==2){
-			for(j=0;j<2;++j){
+console.log(infiniEdges.length)
+if(infiniEdges.length==1){ // infinite side
+	//infiniEdges.push(infiniEdges[1]); && REVERSE DIRECTION
+}
+		if(infiniEdges.length>0){
+console.log("inside");
+			// determine edge orientations
+			for(j=0;j<infiniEdges.length;++j){
 				edge = infiniEdges[j];
 				a = edge.site().point();
 				b = edge.opposite().site().point();
-				V2D.midpoint(mid, b,a);
-				V2D.sub(ray, b,a);
+				mid = V2D.midpoint(b,a);
+				ray = V2D.sub(b,a);
 				V2D.rotate(ray,ray, Math.PIO2);
 				ray.norm();
 				ray.scale(maxMagnitude);
-				// save calculations for next loop
+				// save calculations for next steps
 				infiniEdges[j] = {edge:edge, org:mid, dir:ray};
-				// fill in missing vertexes of known edges
-var pt;
-var ra = new V2D(ray.x,ray.y);
-ra.norm(); ra.scale(100);
-var cc = 0xFFFF0000;
-if(edge.vertexA()){
-	pt = edge.vertexA().point();
-}else if(edge.vertexB()){
-	pt = edge.vertexB().point();
-	cc = 0xFF00FFFF;
-}
-var tr = new V2D(pt.x+ra.x, pt.y+ra.y);
+			}
+			// if single-vertex edges, direction is still unknown up to this point, 4 possible orientations
+a = infiniEdges[0].edge;
+b = infiniEdges.length==2?infiniEdges[1].edge:null;
+//count = (a.prev()?1:0) + (a.next()?1:0) + (b.prev()?1:0) + (b.next()?1:0);
+//count = 0;
+// count += a.prev()?( ((a.prev().prev())?1:0) + ((a.prev().next())?1:0)):0;
+// count += a.next()?( ((a.next().prev())?1:0) + ((a.next().next())?1:0)):0;
+// count += b.prev()?( ((b.prev().prev())?1:0) + ((b.prev().next())?1:0)):0;
+// count += b.next()?( ((b.next().prev())?1:0) + ((b.next().next())?1:0)):0;
+			//if(count==2){ // 0: unconnected, 2: single vertex, 4: regular
+var v;
+var isOnly = a && b && (a.prev()==b || a.next()==b) && (b.prev()==a || b.next()==a);
+console.log(isOnly);
+			if(isOnly){ // single vertex
+				var s, c1, c2, orgA, orgB, dirA, dirB;
+				s = site.point();
+				orgA = infiniEdges[0].org;
+				orgB = infiniEdges[1].org;
+				dirA = infiniEdges[0].dir;
+				dirB = infiniEdges[1].dir;
+				//console.log("SINGLE-POINT CONNECTIONS");
+				v = a.vertexA()?a.vertexA():a.vertexB();
+				p = v.point();
+				c = V2D.sub( s, p );
 
-var AC = V2D.sub(pt,a);
-var BC = V2D.sub(tr,a);
-if( V2D.cross(AC,BC)<0 ){
-	console.log("flip");
-	dir.flip();
+				// one has to be P->null && null->P
+				// 
+				console.log( V2D.angleDirection(dirA,dirB) );
+				// cell can never be greater than Math.PI 
+				if(V2D.cross(dirA,dirB)>0){
+					b.vertexA(v);
+					b.prev(a);
+					b.vertexB(null);
+					b.next(null);
+					a.vertexA(null);
+					a.prev(null);
+					a.vertexB(v);
+					a.next(b);
+				}else{
+					a.vertexA(v);
+					a.prev(b);
+					a.vertexB(null);
+					a.next(null);
+					b.vertexA(null);
+					b.prev(null);
+					b.vertexB(v);
+					b.next(a);
+				}
+				
+				// CCW ?
+				// infiniEdges[0].edge.flipDirection();
+				// infiniEdges[0].dir.flip();
+				// infiniEdges[1].edge.flipDirection();
+				// infiniEdges[1].dir.flip();
+			}
+if(infiniEdges.length==1){
+	edge = infiniEdges[0].edge;
+	dir = infiniEdges[0].dir;
+	org = infiniEdges[0].org;
+	dir = new V2D().copy(dir); dir.flip;
+	infiniEdges.push({edge:edge, org:org, dir:dir}); // itself x2
 }
-d = new DO();
-d.graphics().clear();
-d.graphics().setLine(2.0, cc);
-d.graphics().beginPath();
-d.graphics().moveTo(pt.x,pt.y);
-d.graphics().lineTo(tr.x+10*Math.random()-5, tr.y+10*Math.random()-5);
-d.graphics().endPath();
-d.graphics().strokeLine();
-root.addChild(d);
-				for(k=0;k<linesCCW.length;++k){
+			// fill in missing vertexes of known edges
+			// AND do bounding cell edge addition
+			//for(j=0;j<2;++j){
+// console.log(infiniEdges[0].edge.vertexA());
+// console.log(infiniEdges[1].edge.vertexA());
+// pick edge missing next() vertex
+
+			// do this loop twice if full infinite edges
+var willContinue = true;
+while(willContinue){
+console.log("continuing");
+				willContinue = false;
+				a = infiniEdges[0];
+				if(a.edge.vertexB()){
+					a = infiniEdges[1];
+				}
+				edge = a.edge;
+				mid = a.org;
+				ray = a.dir;
+console.log(""+edge);
+				for(k=0;k<4;++k){
 					org = linesCCW[k][0];
 					dir = linesCCW[k][1];
+					ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
+					if(ints){
+						console.log("  INTERSECTION 1: "+ints);
+						vertex = new Voronoi.Vertex();
+						vertex.point(ints);
+						this.addVertex(vertex);
+						vertex.addEdge(edge);
+						edge.vertexB(vertex);
+						prevEdge = edge;
+						// new edge
+						temp = new Voronoi.HalfEdge();
+						this.addEdge(temp);
+						vertex.addEdge(temp);
+						site.addEdge(temp);
+						temp.site(site);
+						temp.vertexA( vertex );
+						temp.prev(prevEdge);
+						prevEdge.next(temp);
+						prevEdge = temp;
+						// searching for next edge:
+						a = a==infiniEdges[1]?infiniEdges[0]:infiniEdges[1];
+						edge = a.edge;
+						mid = a.org;
+						ray = new V2D().copy(a.dir);
+						ray.flip();
+						for(l=0;l<4;++l){ // connect with next
+							org = linesCCW[(k+l)%4][0];
+							dir = linesCCW[(k+l)%4][1];
+							ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
+							if(ints){
+								console.log("    INTERSECTION 2: "+ints);
+								vertex = new Voronoi.Vertex();
+								vertex.point(ints);
+								this.addVertex(vertex);
+								// prev
+								vertex.addEdge(prevEdge);
+								prevEdge.vertexB(vertex);
+								prevEdge.next(edge);
+								// next
+								vertex.addEdge(edge);
+								edge.vertexA(vertex);
+								edge.prev(prevEdge);
+								// double loop
+								if(!edge.vertexB()){
+									willContinue = true;
+								}
+								k = 5; // double break
+								break;
+							}else{ // new edge
+								console.log("    CONTINUE");
+								vertex = new Voronoi.Vertex();
+								vertex.point( linesCCW[(k+l+1)%4][0] );
+								this.addVertex(vertex);
+								vertex.addEdge(prevEdge);
+								//
+								temp = new Voronoi.HalfEdge();
+								this.addEdge(temp);
+								site.addEdge(temp);
+								vertex.addEdge(temp);
+								temp.site(site);
+								//
+								prevEdge.next(temp);
+								prevEdge.vertexB( vertex );
+								temp.prev(prevEdge);
+								temp.vertexA( vertex );
+								prevEdge = temp;
+							}
+						}
+						//ray.flip(); // back
+					}
+
+					/*
 					//if( !edge.next() ){
 					if(!edge.vertexB()){ // next
-						//ray.flip();
 						ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
-						//ray.flip();
 						if(ints){
-							// before this can be replaced, it needs to be checked that it produces a 
-							//
 							vertex = new Voronoi.Vertex();
 							vertex.point(ints);
 							this.addVertex(vertex);
 							vertex.addEdge(edge);
 							edge.vertexB(vertex);
 							edge.checkOrientation();
-d = new DO();
-d.graphics().clear();
-d.graphics().setLine(2.0, 0xFFCC0000);
-d.graphics().setFill(col);
-d.graphics().beginPath();
-d.graphics().drawCircle(ints.x,ints.y-4, 15.0);
-d.graphics().endPath();
-d.graphics().fill();
-d.graphics().strokeLine();
-root.addChild(d);
+
 						}
 					}
 					//if( !edge.prev() ){
 					if(!edge.vertexA()){ // prev
-						ray.flip();
-						ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
-						ray.flip();
+						ints = Code.rayFiniteIntersect2D(mid,yar, org,dir);
 						if(ints){
 							vertex = new Voronoi.Vertex();
 							vertex.point(ints);
@@ -1249,28 +1340,15 @@ root.addChild(d);
 							vertex.addEdge(edge);
 							edge.vertexA(vertex);
 							edge.checkOrientation();
-d = new DO();
-d.graphics().clear();
-d.graphics().setLine(2.0, 0xFF0000CC);
-d.graphics().setFill(col);
-d.graphics().beginPath();
-d.graphics().drawCircle(ints.x,ints.y+4, 15.0);
-d.graphics().endPath();
-d.graphics().fill();
-d.graphics().strokeLine();
-root.addChild(d);
+
 						}
 					}
+					*/
 				}
+}
 console.log(edge+"");
-			} // edges
-
-			// orientate the disconnected edges consistently ?????????????
-
-			// direction = point above and below point directrix
-			// direction+orientation updated based on CCW rotation of line about 
+			// disconnected edges may be CW, and each edge for site must be rechecked for consistency
 		} // if
-//break;
 	} // sites
 	/*
 	len = sites.length;
