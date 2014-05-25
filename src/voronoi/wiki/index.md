@@ -76,7 +76,7 @@ y = [(x-a)<sup>2</sup> + b<sup>2</sup> - c<sup>2</sup>] / [2(b-c)]
 
 **Simplifed to:**
 <br/>
-*=>  e = 2(b-c)*
+*&rarr;  e = 2(b-c)*
 <br/>
 y = [(x-a)<sup>2</sup> + b<sup>2</sup> - c<sup>2</sup>] / [2(b-c)]
 <br/>
@@ -88,7 +88,7 @@ y = [x<sup>2</sup> - 2ax + a<sup>2</sup> + b<sup>2</sup> - c<sup>2</sup>] /e
 <br/>
 y = x<sup>2</sup>/e - 2ax/e + (a<sup>2</sup> + b<sup>2</sup> - c<sup>2</sup>)/e
 <br/>
-*=>  A = 1/e, B = -2a/e, C = (a<sup>2</sup> + b<sup>2</sup> - c<sup>2</sup>)/e*
+*&rarr;  A = 1/e, B = -2a/e, C = (a<sup>2</sup> + b<sup>2</sup> - c<sup>2</sup>)/e*
 <br/>
 y = Ax<sup>2</sup> + Bx + C
 <br/>
@@ -118,7 +118,7 @@ x<sup>2</sup> + h<sup>2</sup> - 2hx + 4pk = 4py
 <br/>
 
 
-**Also, Noting that the derivative of y = ax<sup>2</sup> + bx + c  =>  y' = 2ax + b**
+**Also, Noting that the derivative of y = ax<sup>2</sup> + bx + c  &rarr;  y' = 2ax + b**
 <br/>
 The vertex is the maxima/minima of y, which is at the zero crossing of y' : 0 = 2ax + b
 <br/>
@@ -215,7 +215,7 @@ A<sup>2</sup>x<sup>2</sup> + ABx + B<sup>2</sup> = B<sup>2</sup> - AC
 <br/>
 x = [-B [+/-]sqrt(B<sup>2</sup> - 4AC)]/[2A]
 <br/>
-*=> Quadratic Equation:* **[-B +/- sqrt(B<sup>2</sup> - 4AC) ] / [2A]**
+*&rarr; Quadratic Equation:* **[-B +/- sqrt(B<sup>2</sup> - 4AC) ] / [2A]**
 
 
 ### Parabola-Line Intersections:
@@ -423,7 +423,7 @@ t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y&middot;d.x - b.x&middot;d.y]
 <br/>
 
 
-KEY NOTES:
+**KEY NOTES:**
 - If the demonimator equals zero &rarr; there are zero or infinite intersections
 - Else &rarr; there is an intersection at t1 (Ray 1) and t2 (Ray 2)
 - To limit to only positive intersections (infinite rays) &rarr; check that t1>=0 and t2>=0
@@ -432,16 +432,20 @@ KEY NOTES:
 
 
 <a name="VORONOI"></a>
-## Voronoi
-*Voronoy Diagram*
-<br/>
+## Voronoi Diagram
 ![Voronoi Diagram](./images/voronoi_definition.png "Voronoi Diagram")
 
-A voronoi diagram is a graph that sections off sites (points) into cells, whereby any point in each cell is closer to the cell's site, than any other site.
+A voronoi diagram is a graph that sections off sites (points) into cells, whereby any point in each cell is closer to the cell's site, than any other site. It is infrequently referred to as the "Post Office Problem".
 <br/>
-- sites
-- equal distances
-- cells
+**Site**: 2D point
+<br/>
+**Cell**: Container about site, the intersection of all half-planes that divide the site from all other sites. The perimeter is defined by a set of half-edges (typically ordered sequentially CCW or CW about the site). Any point inside the cell is closer to that cell's site than any other site.
+<br/>
+**Half-Edge**: An edge simply defined a border, but half-edges also enable 'ownership' of each side of a border. They also allow each side to be orientated independently of the opposite.
+<br/>
+**Neighbors**: Cells that share adjacent half-edges.
+<br/>
+**Vertex**: A point that is equidistant from three or more sites - a half-edge is geometrically defined by the connection of two vertexes.
 <br/>
 
 
@@ -449,20 +453,35 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 <a name="FORTUNE"></a>
 ## Fortune Algorithm
 ![Fortune 1](./images/fortune_1.png "Fortune 1")
+Fortune's Algorithm (Steve Fortune 1986) is an optimal process for producing a voronoi diagram (graph) from a set of input site on the 2D plane. The process can move from left-right, or up-down, but is assumed here to be top-down.
 <br/>
-- sweep line (directrix)
-- wavefront (list of arcs)
-- graph
-  - sites
-  - half-edges
-  - vertexes
-- site event (split)
-- circle event (merge)
-- converging arcs (1 location at 1 arc, convergence L-C-R focus check)
+**Sweep Line**: A common directrix used by all the arcs in the wavefront. It continuously moves top-down, where all sites above this line have been processed and all sites below await potential evaluation.
+<br/>
+**Wavefront**: The set of arcs defined by the lowest points of all parabolas with focuses of sites above the sweep line. (AKA Beach Line)
+<br/>
+**Site Event (Split)**: An input site before being processed - the site's location is defined as the site's position.
+<br/>
+**Circle Event (Merge)**: A convergence of three parabolas (which defines a circle) - the site's location is defined as the lowest point of the circle.
+<br/>
+**False Alarm**: If a new site 'shows up' causing a circle event to be rendered mute, the circle event is referred to as a 'false alarm'.
 <br/>
 
 
-Steps:
+### Data Structures
+The Fortune Algorithm uses several tools to keep track of all the information required for the algorithm.
+<br/>
+**Event Queue [Q]**: This contains all site and circle events - they are ordered based on the times at which they will arrive at the sweep line: Events with a higher y value will appear before events with a lower y value. Events with the same y value can further be sorted based on their x value (increasing or decreasing doesn't matter as long as it's consistent).
+<br/>
+**Voronoi Graph [G]**: This contains all vertexes and half-edges (and sites) that are added as the algorithm progresses. When complete, this is the output of the algorithm.
+<br/>
+**Wavefront [W]**: This is a a set of arcs (parabola segments) that serves as a way to keep track of the lowest parabola segments, as well as predict points of future convergence (which correspond to voronoi vertexes)
+<br/>
+
+
+
+### Algorithm
+
+
 - Graph initialized empty
 - Queue initialized with n input site events
 - While Queue not empty
@@ -482,6 +501,11 @@ Steps:
   - Cap infinite edges (eg via bounding box)
   - Consistently orientate half-edges around site
 
+- converging arcs (1 location at 1 arc, convergence L-C-R focus check)
+
+
+### Sequence
+- Example Sequence
 
 
 <a name="OPTIMUM"></a>
@@ -535,13 +559,24 @@ Notes:
 
 <a name="DELAUNAY"></a>
 ## Delaunay
-*Delaunay Diagram / Triangulation*
+![Delaunay Diagram](./images/delaunay_definition.png "Delaunay Diagram")
 <br/>
-![Delaunay Diagram](./images/parabola_parabola.png "Delaunay Diagram")
+*Delaunay Diagram / Triangulation* is the 'dual' of the voronoi diagram. This simply means they share common properties/features, which often function equivalently or complimentary.
+<br/>
+They cannot be called 'inverses', because V(D(X)) != X
 <br/>
 
-The delaunay diagram(triangulation) is the 'dual' of the voronoi diagram. It cannot be called not the 'inverse', because T(D(T)) != T
+**Relationships:**
+<br/>
+- Delaunay triangle edges are orthogonal to Voronoi cell edges
+- Delaunay vertexes are Voronoi sites
+- The convex hull of Delaunay vertexes is the convex hull of Voronoi sites
+- 3 concentric voronoi sites define a vornoi vertex &lrarr; 3 concentric delaunay vertexes define voronoi vertex
+- ...
 
+
+###From Voronoi
+...
 
 
 
@@ -560,5 +595,6 @@ The delaunay diagram(triangulation) is the 'dual' of the voronoi diagram. It can
 <br/>
 [Conic Sections](http://www.mathsisfun.com/geometry/conic-sections.html)
 <br/>
+[Dual / Duality](http://en.wikipedia.org/wiki/Dual_(mathematics))
 <br/>
 

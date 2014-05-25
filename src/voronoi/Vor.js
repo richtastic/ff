@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(300,600);
+	this._root.matrix().translate(300,1100);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -39,37 +39,6 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 Vor.prototype.voronoi = function(){
 	var points = new Array();
 // DISPLAY GROUP:
-	points.push( new V2D(-3,7) );
-	points.push( new V2D(-2,4) );
-	points.push( new V2D(-1,5) );
-	points.push( new V2D(-0.5,1) );
-	points.push( new V2D(0,3) );
-	points.push( new V2D(1,8) );
-	points.push( new V2D(2,4.5) );
-	points.push( new V2D(2.5,3) );
-	points.push( new V2D(3,7) );
-	points.push( new V2D(4,0) );
-	points.push( new V2D(4.5,4) );
-	points.push( new V2D(5,9) );
-	points.push( new V2D(6,2) );
-	points.push( new V2D(7,6) );
-	points.push( new V2D(7.5,3) );
-	points.push( new V2D(8,7) );
-	points.push( new V2D(9,6) );
-	points.push( new V2D(10,4) );
-	points.push( new V2D(11,3) );
-	points.push( new V2D(12,2) );
-	points.push( new V2D(13,0) );
-	points.push( new V2D(14,6) );
-	points.push( new V2D(15,9) );
-	points.push( new V2D(15.5,4) );
-	points.push( new V2D(16,8) );
-	points.push( new V2D(17,5.5) );
-	points.push( new V2D(18,2) );
-	points.push( new V2D(19,1) );
-	points.push( new V2D(20,6) );
-
-// THIS DIES SOMEWHERE:
 	// points.push( new V2D(-3,7) );
 	// points.push( new V2D(-2,4) );
 	// points.push( new V2D(-1,5) );
@@ -85,7 +54,7 @@ Vor.prototype.voronoi = function(){
 	// points.push( new V2D(6,2) );
 	// points.push( new V2D(7,6) );
 	// points.push( new V2D(7.5,3) );
-	// points.push( new V2D(8,8) );
+	// points.push( new V2D(8,7) );
 	// points.push( new V2D(9,6) );
 	// points.push( new V2D(10,4) );
 	// points.push( new V2D(11,3) );
@@ -94,6 +63,63 @@ Vor.prototype.voronoi = function(){
 	// points.push( new V2D(14,6) );
 	// points.push( new V2D(15,9) );
 	// points.push( new V2D(15.5,4) );
+	// points.push( new V2D(16,8) );
+	// points.push( new V2D(17,5.5) );
+	// points.push( new V2D(18,2) );
+	// points.push( new V2D(19,1) );
+	// points.push( new V2D(20,6) );
+
+// // THIS DIES SOMEWHERE:
+// 	points.push( new V2D(-3,7) );
+// 	points.push( new V2D(-2,4) );
+// 	points.push( new V2D(-1,5) );
+// 	points.push( new V2D(-0.5,1) );
+// 	points.push( new V2D(0,3) );
+// 	points.push( new V2D(1,8) );
+// 	points.push( new V2D(2,4.5) );
+// 	points.push( new V2D(2.5,3) );
+// 	points.push( new V2D(3,7) );
+// 	points.push( new V2D(4,0) );
+// 	points.push( new V2D(4.5,4) );
+// 	points.push( new V2D(5,9) );
+// 	points.push( new V2D(6,2) );
+// 	points.push( new V2D(7,6) );
+// 	points.push( new V2D(7.5,3) );
+// 	points.push( new V2D(8,8) );
+// 	points.push( new V2D(9,6) );
+// 	points.push( new V2D(10,4) );
+// 	points.push( new V2D(11,3) );
+// 	points.push( new V2D(12,2) );
+// 	points.push( new V2D(13,0) );
+// 	points.push( new V2D(14,6) );
+// 	points.push( new V2D(15,9) );
+// 	points.push( new V2D(15.5,4) );
+// DISPLAY GROUP:
+	points.push( new V2D(-3,7) );
+	points.push( new V2D(-2,4) );
+	points.push( new V2D(-1,5) );
+	points.push( new V2D(-0.5,1) );
+	points.push( new V2D(0,3) );
+	points.push( new V2D(1,8) );
+	points.push( new V2D(2,4.5) );
+	points.push( new V2D(2.5,3) );
+	points.push( new V2D(3,7) );
+	points.push( new V2D(4,0) );
+	points.push( new V2D(4.5,4) );
+	points.push( new V2D(5,9) );
+	points.push( new V2D(6,2) );
+	points.push( new V2D(7,6) );
+	points.push( new V2D(7.5,3) );
+	points.push( new V2D(8,8) );
+	points.push( new V2D(9,6) );
+	points.push( new V2D(10,4) );
+	points.push( new V2D(11,3) );
+	points.push( new V2D(12,2) );
+	points.push( new V2D(13,0) );
+	points.push( new V2D(14,6) );
+	points.push( new V2D(15,9) );
+	points.push( new V2D(15.5,4) );
+
 
 // TEST GROUP:
 	// points.push( new V2D(5,8) );
@@ -214,8 +240,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 1*420;//375;
-	var rateStart = 12.5;//2.5;
+	var offYStart = 310;//420;
+	var rateStart = 12.5;//12.5;
 
 
 	// ALGORITHM
@@ -248,25 +274,31 @@ this._directrix.copy( temp );
 		}
 	}else{
 		this._ticker.stop();
+console.log("FINALIZE!");
+
+
+//this._D.clearDuplicatedVertexes();
+		var site, sites, edge, edges, A, B;
+		sites = this._D.sites();
+		// for(i=0;i<sites.length;++i){
+		// 	site = sites[i];
+		// 	edges = site.edges();
+		// 	edge.checkOrientation();
+		// }
+
 this._D.finalize(this._animParabolas);
 // CLEAR CURRENT SCREEN:
 this._animParabolas.graphics().clear();
 this._stillVornoi.graphics().clear();
 this._animDirectrix.graphics().clear();
-
 		// DRAW FINAL IMAGE
 		//this._animParabolas.graphics().setLine(1.0,0xFF333399);
-		var site, sites, edge, edges, A, B;
-		sites = this._D.sites();
 		for(i=0;i<sites.length;++i){
+			//console.log("SITE:"+i);
 			site = sites[i];
 			edges = site.edges();
 			var count = 0;
 			edge = edges[0];
-// while(edge.prev() && count<20){ // actually first
-// 	edge = edge.prev();
-// 	++count;
-// }
 			var firstEdge = edge;
 			count = 0;
 			A = edge.vertexA();
@@ -299,9 +331,11 @@ this._animDirectrix.graphics().clear();
 			edge = firstEdge;
 			this._animParabolas.graphics().setLine(2.0,0xFFCC0000);
 			var dir, he1, he2;
-			while(edge){
+			var count=0;
+			while(edge && count<10){
 				A = edge.vertexA();
 				B = edge.vertexB();
+				if(A && B){
 					this._animParabolas.graphics().beginPath();
 					//
 					he1 = V2D.sub(edge.prev().vertexB().point(), edge.prev().vertexA().point());
@@ -315,7 +349,6 @@ this._animDirectrix.graphics().clear();
 					he1.scale(-sizeLen);
 					he2.scale(sizeLen);
 					this._animParabolas.graphics().moveTo(A.point().x+dir.x+he2.x,A.point().y+dir.y+he2.y);
-					//this._animParabolas.graphics().moveTo(A.point().x+dir.x+he1.x,A.point().y-dir.y+he1.y);
 					// 
 					he1 = V2D.sub(edge.next().vertexB().point(), edge.next().vertexA().point());
 					he2 = V2D.sub(edge.vertexB().point(), edge.vertexA().point());
@@ -333,12 +366,14 @@ this._animDirectrix.graphics().clear();
 					//
 					this._animParabolas.graphics().endPath();
 					this._animParabolas.graphics().strokeLine();
+				}
 				edge = edge.next();
 				if(edge==firstEdge){ break; }
+				++count;
 			}
-
+			//console.log(count)
 		}
-return;
+//return;
 		// delaunay generation
 		var delaunay = new Delaunay();
 		delaunay.fromVoronoi( this._D );
@@ -502,7 +537,7 @@ return;
 
 
 Vor.magRand = function(){
-	return 0;//Math.random()*20.0 - 10.0;
+	return 0;//Math.random()*40.0 - 20.0;
 }
 
 Vor.makeLine = function(a,b,col,wid){
