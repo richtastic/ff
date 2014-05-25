@@ -34,7 +34,8 @@ console.log(tree.data());
 	tree = this.makeMove(tree, board, next);
 console.log(tree.data());
 	// 5
-	next = new TTT.Move(1,2, TTT.PLAYER_HUMAN);
+	next = new TTT.Move(0,2, TTT.PLAYER_HUMAN);
+	//next = new TTT.Move(2,1, TTT.PLAYER_HUMAN);
 	console.log(next.toString());
 	tree = this.makeMove(tree, board, next);
 	// 6
@@ -223,6 +224,11 @@ TTT.prototype.generateChildNodes = function(tree,player, board){
 		}
 		board.pop();
 	}
+	if(player==TTT.PLAYER_HUMAN){
+		tree.data().max = 1;
+	}else{
+		tree.data().max = -1;
+	}
 	//
 	var children = tree.children();
 	tree.data().min = 0;
@@ -233,12 +239,12 @@ TTT.prototype.generateChildNodes = function(tree,player, board){
 		//tree.data().max = Math.max(tree.data().max, node.data().max);
 		if(player==TTT.PLAYER_HUMAN){
 			// minimize player wins
-			tree.data().max += node.data().max;
+			tree.data().max = Math.min(node.data().max,tree.data().max);
 			//tree.data().max -= node.data().max;
 			//tree.data().min += node.data().min;
 		}else{
 			// maximize cpu wins
-			tree.data().max -= node.data().max;
+			tree.data().max = Math.max(node.data().max,tree.data().max);
 			//tree.data().max += node.data().max;
 			//tree.data().min += node.data().min;
 		}
