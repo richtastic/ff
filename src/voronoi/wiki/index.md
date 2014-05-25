@@ -272,11 +272,11 @@ Ax<sup>2</sup> + B'x + C' = 0
 
 
 **KEY NOTES:**
-- if line is vertical (direction.x=0, A.x-B.x=0, m=inf) &rarr; single solution at y = f(A.x)
-- if A equals 0 &rarr; single tangent point intersection: Bx + C = 0, solve linear equation
-- if sqrt interrior (discriminant) equals 0 &rarr; single intersection at origin (also tangent)
-- if sqrt interrior (discriminant) less-than zero &rarr; imaginary solutions, no intersection
-- else &rarr; 2 unique solutions, solve quadratic equation
+- If line is vertical (direction.x=0, A.x-B.x=0, m=inf) &rarr; single solution at y = f(A.x)
+- If A equals 0 &rarr; single tangent point intersection: Bx + C = 0, solve linear equation
+- If sqrt interrior (discriminant) equals 0 &rarr; single intersection at origin (also tangent)
+- If sqrt interrior (discriminant) less-than zero &rarr; imaginary solutions, no intersection
+- Else &rarr; 2 unique solutions, solve quadratic equation
 
 
 *If the parabola is infinitely thin (focus.y=directrix.y) it is a vertical line &rarr; intersection(s) possibly exists at (focus.x,---)*
@@ -304,12 +304,12 @@ A'x<sup>2</sup> + B'x + C' = 0
 
 **KEY NOTES:**
 <br/>
-- if two of (A,B,C) are zero and one is non-zero (A=0,B=0,C=#) &rarr; equation is inconsistent, no solution (equal parabola above other parabola)
-- if all of (A,B,C) are zero &rarr; parabolas are identical, infinite solutions
-- if A equals 0 &rarr; parabolas are identical up to shift, single point intersection: Bx + C = 0, solve linear equation
-- if sqrt interrior (discriminant) equals 0 &rarr; single intersection, repeated ('thinner' parabola above other parabola)
-- if sqrt interrior (discriminant) less-than zero &rarr; imaginary solutions, no intersection
-- else &rarr; 2 unique solutions, solve quadratic equation
+- If two of (A,B,C) are zero and one is non-zero (A=0,B=0,C=#) &rarr; equation is inconsistent, no solution (equal parabolas, one above other)
+- If all of (A,B,C) are zero &rarr; parabolas are identical, infinite solutions
+- If A equals 0 &rarr; parabolas are identical up to shift, single point intersection: Bx + C = 0, solve linear equation
+- If sqrt interrior (discriminant) equals 0 &rarr; single intersection, repeated ('thinner' parabola above other parabola)
+- If sqrt interrior (discriminant) less-than zero &rarr; imaginary solutions, no intersection
+- Else &rarr; 2 unique solutions, solve quadratic equation
 
 
 *If A parabola is infinitely thin (focus.y=directrix.y) it is a vertical line &rarr; intersection(s) possibly exists at (focus.x,---)*
@@ -318,123 +318,116 @@ A'x<sup>2</sup> + B'x + C' = 0
 ### Ray-Ray (Line) Intersections:
 ![Line Line Diagram](./images/ray_ray.png "Line Line Diagram")
 <br/>
-Ray = origin + direction, point along ray: point = origin + (t)direction
+Ray = origin + direction, point along ray: point = origin + t&middot;direction
 <br/>
 
 
-*Ray 1:* a + (t1)b
+*Ray 1:* a + t1&middot;b
 <br/>
-*Ray 2:* c + (t2)d
-<br/>
-
-
-*Solving For t2:*
-<br/>
-p.x = a.x + (t1)b.x
-<br/>
-p.x = c.x + (t2)d.x
-<br/>
-a.x + (t1)b.x = c.x + (t2)d.x
-<br/>
-(t1)b.x = c.x - a.x + (t2)d.x
-<br/>
-t1 = (c.x - a.x + (t2)d.x)/b.x  *[1]*
+*Ray 2:* c + t2&middot;d
 <br/>
 
 
-
-p.y = a.y + (t1)b.y
+**Solving For t2:**
 <br/>
-p.y = c.y + (t2)d.y
+p.x = a.x + t1&middot;b.x
 <br/>
-a.y + (t1)b.y = c.y + (t2)d.y
+p.x = c.x + t2&middot;d.x
 <br/>
-(t1)b.y = c.y - a.y + (t2)d.y
+a.x + t1&middot;b.x = c.x + t2&middot;d.x
 <br/>
-t1 = (c.y - a.y + (t2)d.y)/b.y  *[2]*
+t1&middot;b.x = c.x - a.x + t2&middot;d.x
 <br/>
-
-
-*[1]* = *[2]*
-<br/>
-(c.x - a.x + (t2)d.x)/b.x = (c.y - a.y + (t2)d.y)/b.y
-<br/>
-b.y(c.x - a.x + (t2)d.x) = b.x(c.y - a.y + (t2)d.y)
-<br/>
-b.y*c.x - b.y*a.x + t2*b.y*d.x = b.x*c.y - b.x*a.y + t2*b.x*d.y
-<br/>
-t2*b.y*d.x = b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x + t2*b.x*d.y
-<br/>
-t2*b.y*d.x - t2*b.x*d.y = b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x
-<br/>
-t2(b.y*d.x - b.x*d.y) = b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x
-<br/>
-t2 = (b.x*c.y - b.x*a.y - b.y*c.x + b.y*a.x)/(b.y*d.x - b.x*d.y)
-<br/>
-t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y*d.x - b.x*d.y]
-<br/>
-
-
-*Solving For t1:*
-<br/>
-a.x + (t1)b.x = c.x + (t2)d.x
-<br/>
-a.x - c.x + (t1)b.x = (t2)d.x
-<br/>
-(a.x - c.x + (t1)b.x)/d.x = t2  *[3]*
+t1 = (c.x - a.x + t2&middot;d.x)/b.x  **[1]**
 <br/>
 
 
 
+p.y = a.y + t1&middot;b.y
 <br/>
-a.y + (t1)b.y = c.y + (t2)d.y
+p.y = c.y + t2&middot;d.y
 <br/>
-a.y - c.y + (t1)b.y = (t2)d.y
+a.y + t1&middot;b.y = c.y + t2&middot;d.y
 <br/>
-(a.y - c.y + (t1)b.y)/d.y = t2  *[4]*
+t1&middot;b.y = c.y - a.y + t2&middot;d.y
+<br/>
+t1 = (c.y - a.y + t2&middot;d.y)/b.y  **[2]**
+<br/>
+
+
+**[1]** = **[2]**
+<br/>
+(c.x - a.x + t2&middot;d.x)/b.x = (c.y - a.y + t2&middot;d.y)/b.y
+<br/>
+b.y(c.x - a.x + t2&middot;d.x) = b.x(c.y - a.y + t2&middot;d.y)
+<br/>
+b.y&middot;c.x - b.y&middot;a.x + t2&middot;b.y&middot;d.x = b.x&middot;c.y - b.x&middot;a.y + t2&middot;b.x&middot;d.y
+<br/>
+t2&middot;b.y&middot;d.x = b.x&middot;c.y - b.x&middot;a.y - b.y&middot;c.x + b.y&middot;a.x + t2&middot;b.x&middot;d.y
+<br/>
+t2&middot;b.y&middot;d.x - t2&middot;b.x&middot;d.y = b.x&middot;c.y - b.x&middot;a.y - b.y&middot;c.x + b.y&middot;a.x
+<br/>
+t2(b.y&middot;d.x - b.x&middot;d.y) = b.x&middot;c.y - b.x&middot;a.y - b.y&middot;c.x + b.y&middot;a.x
+<br/>
+t2 = (b.x&middot;c.y - b.x&middot;a.y - b.y&middot;c.x + b.y&middot;a.x)/(b.y&middot;d.x - b.x&middot;d.y)
+<br/>
+t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y&middot;d.x - b.x&middot;d.y]
+<br/>
+
+
+**Solving For t1:**
+<br/>
+a.x + t1&middot;b.x = c.x + t2&middot;d.x
+<br/>
+a.x - c.x + t1&middot;b.x = t2&middot;d.x
+<br/>
+(a.x - c.x + t1&middot;b.x)/d.x = t2  **[3]**
 <br/>
 
 
 
-*[3]* = *[4]*
+a.y + t1&middot;b.y = c.y + t2&middot;d.y
 <br/>
-(a.x - c.x + (t1)b.x)/d.x = (a.y - c.y + (t1)b.y)/d.y
+a.y - c.y + t1&middot;b.y = t2&middot;d.y
 <br/>
-d.y*(a.x - c.x + (t1)b.x) = d.x*(a.y - c.y + (t1)b.y)
-<br/>
-d.y*a.x - d.y*c.x + t1*d.y*b.x) = d.x*a.y - d.x*c.y + t1*d.x*b.y
-<br/>
-t1*d.y*b.x) = d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x + t1*d.x*b.y
-<br/>
-t1*d.y*b.x - t1*d.x*b.y = d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x
-<br/>
-t1(d.y*b.x - d.x*b.y) = d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x
-<br/>
-t1 = (d.x*a.y - d.x*c.y - d.y*a.x + d.y*c.x)/(d.y*b.x - d.x*b.y)
-<br/>
-t1 = [d.x(a.y - c.y) + d.y(c.x - a.x)]/[d.y*b.x - d.x*b.y]
+(a.y - c.y + t1&middot;b.y)/d.y = t2  **[4]**
 <br/>
 
 
-Side-By-Side:
+
+**[3]** = **[4]**
 <br/>
-t1 = [d.x(a.y - c.y) + d.y(c.x - a.x)]/[d.y*b.x - d.x*b.y]
+(a.x - c.x + t1&middot;b.x)/d.x = (a.y - c.y + t1&middot;b.y)/d.y
 <br/>
-t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y*d.x - b.x*d.y]
+d.y&middot;(a.x - c.x + t1&middot;b.x) = d.x&middot;(a.y - c.y + t1&middot;b.y)
+<br/>
+d.y&middot;a.x - d.y&middot;c.x + t1&middot;d.y&middot;b.x) = d.x&middot;a.y - d.x&middot;c.y + t1&middot;d.x&middot;b.y
+<br/>
+t1&middot;d.y&middot;b.x) = d.x&middot;a.y - d.x&middot;c.y - d.y&middot;a.x + d.y&middot;c.x + t1&middot;d.x&middot;b.y
+<br/>
+t1&middot;d.y&middot;b.x - t1&middot;d.x&middot;b.y = d.x&middot;a.y - d.x&middot;c.y - d.y&middot;a.x + d.y&middot;c.x
+<br/>
+t1(d.y&middot;b.x - d.x&middot;b.y) = d.x&middot;a.y - d.x&middot;c.y - d.y&middot;a.x + d.y&middot;c.x
+<br/>
+t1 = (d.x&middot;a.y - d.x&middot;c.y - d.y&middot;a.x + d.y&middot;c.x)/(d.y&middot;b.x - d.x&middot;b.y)
+<br/>
+t1 = [d.x(a.y - c.y) + d.y(c.x - a.x)]/[d.y&middot;b.x - d.x&middot;b.y]
+<br/>
+
+
+**Side-By-Side:**
+<br/>
+t1 = [d.x(a.y - c.y) + d.y(c.x - a.x)]/[d.y&middot;b.x - d.x&middot;b.y]
+<br/>
+t2 = [b.x(c.y - a.y) + b.y(a.x - c.x)]/[b.y&middot;d.x - b.x&middot;d.y]
 <br/>
 
 
 KEY NOTES:
-<br/>
-If the demonimator equals zero, there are zero or infinite points
-<br/>
-Otherwise there is an intersection at t1 (Ray 1) and t2 (Ray 2)
-<br/>
-To limit to only positive intersections (infinite rays), check that t1>=0 and t2>=0
-<br/>
-To limit to only finite rays, check that 0<=t1<=1 and 0<=t2<=1
-<br/>
-
+- If the demonimator equals zero &rarr; there are zero or infinite intersections
+- Else &rarr; there is an intersection at t1 (Ray 1) and t2 (Ray 2)
+- To limit to only positive intersections (infinite rays) &rarr; check that t1>=0 and t2>=0
+- To limit to only finite rays &rarr; check that 0<=t1<=1 and 0<=t2<=1
 
 
 
@@ -480,8 +473,8 @@ Steps:
     - graph add: new half-edge
     - check for possible circle events "triplets"
   - Circle Event (merge):
-  	- remove all circle from queue events that reference the merging arc
-  	- graph add: new vertex, 1 new half-edge
+      - remove all circle from queue events that reference the merging arc
+    - graph add: new vertex, 1 new half-edge
     - collapse referenced arc (remove from wavefront)
     - check for possible circle events "triplets"
 - Cleanup Graph
