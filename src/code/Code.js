@@ -1690,24 +1690,11 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 		x = focA.x;
 		y = A2*x*x + B2*x + C2;
 		return [new V2D(x,y)];
-		// if(focA.y>dirA){ // A opens up
-		// 	if(y>=focB.y){ return [new V2D(x,y)]; }
-		// }else{ // A opens down
-		// 	if(y<=focB.y){ return [new V2D(x,y)]; }
-		// }
-		// return null;
 	}else if(divB==0){ // single line B
 		x = focB.x;
 		y = A1*x*x + B1*x + C1;
 		return [new V2D(x,y)];
-		// if(focB.y>dirB){ // B opens up
-		// 	if(y>=focB.y){ return [new V2D(x,y)]; }
-		// }else{ // B opens down
-		// 	if(y<=focB.y){ return [new V2D(x,y)]; }
-		// }
-		// return null;
 	}
-	
 	var A = A1-A2, B = B1-B2, C = C1-C2;
 	var intAx, intAy, intBx, intBy;
 	var inside = B*B - 4*A*C;

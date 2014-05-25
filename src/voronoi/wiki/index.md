@@ -253,7 +253,7 @@ b = origin.y - m&middot;origin.x
 
 
 
-**Parabola-Line Intersection: Set locations equal, sovle for (x,y)**
+**Parabola-Line Intersection: Set locations equal, solve for (x,y):**
 <br/>
 **PARABOLA**: y = Ax<sup>2</sup> + Bx + C
 <br/>
@@ -272,23 +272,21 @@ Ax<sup>2</sup> + B'x + C' = 0
 
 
 **KEY NOTES:**
-<br/>
-- if line is vertical (direction.x=0, A.x-B.x=0, m=inf) => single solution at y = f(A.x)
-- if A equals 0 => single tangent point intersection: Bx + C = 0, solve linear equation
-- if sqrt interrior (discriminant) equals 0 => single intersection at origin (also tangent)
-- if sqrt interrior (discriminant) less-than zero => imaginary solutions, no intersection
-- else => 2 unique solutions, solve quadratic equation
-<br/>
-[If the parabola is infinitely thin (focus.y=directrix.y) => intersection(s) possibly exists at (focus.x,?)]
+- if line is vertical (direction.x=0, A.x-B.x=0, m=inf) &rarr; single solution at y = f(A.x)
+- if A equals 0 &rarr; single tangent point intersection: Bx + C = 0, solve linear equation
+- if sqrt interrior (discriminant) equals 0 &rarr; single intersection at origin (also tangent)
+- if sqrt interrior (discriminant) less-than zero &rarr; imaginary solutions, no intersection
+- else &rarr; 2 unique solutions, solve quadratic equation
 
 
+*If the parabola is infinitely thin (focus.y=directrix.y) it is a vertical line &rarr; intersection(s) possibly exists at (focus.x,---)*
 
 
 ### Parabola-Parabola Intersections:
 ![Parabola Parabola Diagram](./images/parabola_parabola.png "Parabola Parabola Diagram")
 <br/>
 
-**Set locations equal, sovle for (x,y)**
+**Set locations equal, solve for (x,y)**
 <br/>
 **PARABOLA 1**: y = ax<sup>2</sup> + bx + c
 <br/>
@@ -306,20 +304,15 @@ A'x<sup>2</sup> + B'x + C' = 0
 
 **KEY NOTES:**
 <br/>
-if two of (A,B,C) are zero and one is non-zero (A=0,B=0,C=#) => equation is inconsistent, no solution (WHEN DOES THIS HAPPEN)
-<br/>
-if all of (A,B,C) are zero => parabolas are identical, infinite solutions
-<br/>
-if A equals 0 => parabolas are identical up to offset, single point intersection: Bx + C = 0, solve linear equation
-<br/>
-if sqrt interrior (discriminant) equals 0 => single intersection, repeated (WHEN DOES THIS HAPPEN)
-<br/>
-if sqrt interrior (discriminant) less-than zero => imaginary solutions, no intersection
-<br/>
-else => 2 unique solutions, solve quadratic equation
-<br/>
-[If A parabola is infinitely thin (focus.y=directrix.y) => intersection(s) possibly exists at (focus.x,?)]
-<br/>
+- if two of (A,B,C) are zero and one is non-zero (A=0,B=0,C=#) &rarr; equation is inconsistent, no solution (equal parabola above other parabola)
+- if all of (A,B,C) are zero &rarr; parabolas are identical, infinite solutions
+- if A equals 0 &rarr; parabolas are identical up to shift, single point intersection: Bx + C = 0, solve linear equation
+- if sqrt interrior (discriminant) equals 0 &rarr; single intersection, repeated ('thinner' parabola above other parabola)
+- if sqrt interrior (discriminant) less-than zero &rarr; imaginary solutions, no intersection
+- else &rarr; 2 unique solutions, solve quadratic equation
+
+
+*If A parabola is infinitely thin (focus.y=directrix.y) it is a vertical line &rarr; intersection(s) possibly exists at (focus.x,---)*
 
 
 ### Ray-Ray (Line) Intersections:
