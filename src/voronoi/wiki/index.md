@@ -95,13 +95,13 @@ y = Ax<sup>2</sup> + Bx + C
 
 
 
-*'Standard Form' of a parabola is given as: **(x-h)<sup>2</sup> = 4p(y-k)***
+*'Standard Form' of a parabola is given as:* **(x-h)<sup>2</sup> = 4p(y-k)**
 <br/>
-Directrix = y = k-p
+**Directrix** = y = k-p
 <br/>
-Focus = (h,k+p)
+**Focus** = (h,k+p)
 <br/>
-Vertex = (h,k)
+**Vertex** = (h,k)
 <br/>
 
 
@@ -114,7 +114,7 @@ x<sup>2</sup> + h<sup>2</sup> - 2hx = 4py - 4pk
 x<sup>2</sup> + h<sup>2</sup> - 2hx + 4pk = 4py
 (1/(4p))x<sup>2</sup>  ((-h)/(2p))x + (4pk+h<sup>2</sup>)/(4p) = y
 <br/>
-*a*: 1/(4p), *b*: -h/(2p), *c*: (4pk+h<sup>2</sup>)/(4p)
+**a**: 1/(4p), **b**: -h/(2p), **c**: (4pk+h<sup>2</sup>)/(4p)
 <br/>
 
 
@@ -142,7 +142,6 @@ p = 1/(4a)
 <br />
 Ax<sup>2</sup> + Bxy + Cyx<sup>2</sup> + Dx + Ey + F = 0
 
-**A parabola is the intersection of a plane parallel to the edge of a cone (eccentricity=1)**
 
 *A parabola is then a simplification:*
 <br />
@@ -151,6 +150,28 @@ Ax<sup>2</sup> + Dx + Ey + F = 0
 y = -(A/E)x<sup>2</sup> - (D/E)x - (F/E)
 <br />
 y = ax<sup>2</sup> + bx + c
+
+**A parabola is the intersection of a plane parallel to the edge of a cone**
+
+
+**Eccentricity**: measure of how non-circular a conic is *(0=circle, (0,1)=ellipse, 1=parabola, (1,inf)=hyperbola inf=non-circular)*
+<br/>
+eccentricity = e := sqrt( [2sqrt((A-C)<sup>2</sup>+B<sup>2</sup>)]/[(A+C) + sqrt((A-C)<sup>2</sup>+B<sup>2</sup>)] )
+<br />
+@ B=0, C=0
+<br />
+e = sqrt( [2sqrt((A-0)<sup>2</sup>+0<sup>2</sup>)]/[(A+0) + sqrt((A-0)<sup>2</sup>+0<sup>2</sup>)] )
+<br />
+e = sqrt( [2sqrt(A<sup>2</sup>)]/[A + sqrt(A<sup>2</sup>)] )
+<br/>
+e = sqrt( [2A]/[A + A] )
+<br/>
+e = sqrt( 2A/2A )
+<br/>
+e = sqrt( 1 )
+<br/>
+e = 1
+
 
 
 <a name="INTERSECTIONS"></a>
@@ -553,5 +574,6 @@ The delaunay diagram(triangulation) is the 'dual' of the voronoi diagram. It can
 <br/>
 [Conic Sections](http://www.mathsisfun.com/geometry/conic-sections.html)
 <br/>
-
+[Eccentricity](http://en.wikipedia.org/wiki/Eccentricity_(mathematics))
+<br/>
 
