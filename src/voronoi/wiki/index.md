@@ -154,7 +154,7 @@ y = ax<sup>2</sup> + bx + c
 **A parabola is the intersection of a plane parallel to the edge of a cone**
 
 
-**Eccentricity**: measure of how non-circular a conic is *(0=circle, (0,1)=ellipse, 1=parabola, (1,inf)=hyperbola inf=non-circular)*
+**Eccentricity**: measure of how non-circular a conic is *(0=circle, (0,1)=ellipse, 1=parabola, (1,inf)=hyperbola, inf=non-circular)*
 <br/>
 eccentricity = e := sqrt( [2sqrt((A-C)<sup>2</sup>+B<sup>2</sup>)]/[(A+C) + sqrt((A-C)<sup>2</sup>+B<sup>2</sup>)] )
 <br />
@@ -224,33 +224,36 @@ x = [-B [+/-]sqrt(B<sup>2</sup> - 4AC)]/[2A]
 
 **Lines have multiple representations:**
 <br/>
-*ray*: origin, direction
-<br/>
 *two points*: A, B
 <br/>
 *slope and intercept*: y = mx + b
 <br/>
+*ray*: origin, direction
+<br/>
 
-**Line defined as a point can be converted to slope-intercept form:**
+Ray's are particularly useful representations, because they simplify calculations (remove repeated CPU operations), often we are only interested in the slope for various calculations/comparisons, and they are immediately useable for vector math.
+
+**A line defined as two points can be converted to slope-intercept form:**
 <br/>
 m = (B.y-A.y)/(B.x-A.x)
 <br/>
-A.y = m*A.x + b
+A.y = m&middot;A.x + b
 <br/>
-b = A.y - m*A.x
+b = A.y - m&middot;A.x
 <br/>
 
-**Line defined as a ray can be converted to slope-intercept form:**
+**A line defined as a ray can be converted to slope-intercept form:**
 <br/>
 m = direction.y/direction.x
 <br/>
-origin.y = m*origin.x + b
+origin.y = m&middot;origin.x + b
 <br/>
-b = origin.y - m*origin.x 
+b = origin.y - m&middot;origin.x 
 <br/>
 
 
-**Set locations equal, sovle for (x,y)**
+
+**Parabola-Line Intersection: Set locations equal, sovle for (x,y)**
 <br/>
 **PARABOLA**: y = Ax<sup>2</sup> + Bx + C
 <br/>
@@ -270,18 +273,15 @@ Ax<sup>2</sup> + B'x + C' = 0
 
 **KEY NOTES:**
 <br/>
-if line is vertical (direction.x=0, A.x-B.x=0, m=inf) => single solution at y = f(A.x)
-<br/>
-if A equals 0 => single tangent point intersection: Bx + C = 0, solve linear equation
-<br/>
-if sqrt interrior (discriminant) equals 0 => single intersection at origin (also tangent)
-<br/>
-if sqrt interrior (discriminant) less-than zero => imaginary solutions, no intersection
-<br/>
-else => 2 unique solutions, solve quadratic equation
+- if line is vertical (direction.x=0, A.x-B.x=0, m=inf) => single solution at y = f(A.x)
+- if A equals 0 => single tangent point intersection: Bx + C = 0, solve linear equation
+- if sqrt interrior (discriminant) equals 0 => single intersection at origin (also tangent)
+- if sqrt interrior (discriminant) less-than zero => imaginary solutions, no intersection
+- else => 2 unique solutions, solve quadratic equation
 <br/>
 [If the parabola is infinitely thin (focus.y=directrix.y) => intersection(s) possibly exists at (focus.x,?)]
-<br/>
+
+
 
 
 ### Parabola-Parabola Intersections:
@@ -574,6 +574,5 @@ The delaunay diagram(triangulation) is the 'dual' of the voronoi diagram. It can
 <br/>
 [Conic Sections](http://www.mathsisfun.com/geometry/conic-sections.html)
 <br/>
-[Eccentricity](http://en.wikipedia.org/wiki/Eccentricity_(mathematics))
 <br/>
 
