@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(400,700);
+	this._root.matrix().translate(300,600);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
