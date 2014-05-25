@@ -435,7 +435,7 @@ KEY NOTES:
 ## Voronoi
 *Voronoy Diagram*
 <br/>
-![Voronoi Diagram](./images/parabola_parabola.png "Voronoi Diagram")
+![Voronoi Diagram](./images/voronoi_definition.png "Voronoi Diagram")
 
 A voronoi diagram is a graph that sections off sites (points) into cells, whereby any point in each cell is closer to the cell's site, than any other site.
 <br/>
@@ -451,7 +451,7 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 ![Fortune 1](./images/fortune_1.png "Fortune 1")
 <br/>
 - sweep line (directrix)
-- wavefront (lsit of arcs)
+- wavefront (list of arcs)
 - graph
   - sites
   - half-edges

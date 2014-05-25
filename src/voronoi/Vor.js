@@ -38,18 +38,74 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 
 Vor.prototype.voronoi = function(){
 	var points = new Array();
+// DISPLAY GROUP:
+	points.push( new V2D(-3,7) );
+	points.push( new V2D(-2,4) );
+	points.push( new V2D(-1,5) );
+	points.push( new V2D(-0.5,1) );
+	points.push( new V2D(0,3) );
+	points.push( new V2D(1,8) );
+	points.push( new V2D(2,4.5) );
+	points.push( new V2D(2.5,3) );
+	points.push( new V2D(3,7) );
+	points.push( new V2D(4,0) );
+	points.push( new V2D(4.5,4) );
+	points.push( new V2D(5,9) );
+	points.push( new V2D(6,2) );
+	points.push( new V2D(7,6) );
+	points.push( new V2D(7.5,3) );
+	points.push( new V2D(8,7) );
+	points.push( new V2D(9,6) );
+	points.push( new V2D(10,4) );
+	points.push( new V2D(11,3) );
+	points.push( new V2D(12,2) );
+	points.push( new V2D(13,0) );
+	points.push( new V2D(14,6) );
+	points.push( new V2D(15,9) );
+	points.push( new V2D(15.5,4) );
+	points.push( new V2D(16,8) );
+	points.push( new V2D(17,5.5) );
+	points.push( new V2D(18,2) );
+	points.push( new V2D(19,1) );
+	points.push( new V2D(20,6) );
+
+// THIS DIES SOMEWHERE:
+	// points.push( new V2D(-3,7) );
+	// points.push( new V2D(-2,4) );
+	// points.push( new V2D(-1,5) );
+	// points.push( new V2D(-0.5,1) );
+	// points.push( new V2D(0,3) );
+	// points.push( new V2D(1,8) );
+	// points.push( new V2D(2,4.5) );
+	// points.push( new V2D(2.5,3) );
+	// points.push( new V2D(3,7) );
+	// points.push( new V2D(4,0) );
+	// points.push( new V2D(4.5,4) );
+	// points.push( new V2D(5,9) );
+	// points.push( new V2D(6,2) );
+	// points.push( new V2D(7,6) );
+	// points.push( new V2D(7.5,3) );
+	// points.push( new V2D(8,8) );
+	// points.push( new V2D(9,6) );
+	// points.push( new V2D(10,4) );
+	// points.push( new V2D(11,3) );
+	// points.push( new V2D(12,2) );
+	// points.push( new V2D(13,0) );
+	// points.push( new V2D(14,6) );
+	// points.push( new V2D(15,9) );
+	// points.push( new V2D(15.5,4) );
 
 // TEST GROUP:
-	points.push( new V2D(5,8) );
-	points.push( new V2D(6,7.5) );
-	points.push( new V2D(4,7) );
-	points.push( new V2D(3,5) );
-	points.push( new V2D(7,5) );
-	points.push( new V2D(9.5,4) );
-	points.push( new V2D(5,3) );
-	points.push( new V2D(3,2.75) );
-	points.push( new V2D(7,2.75) );
-	points.push( new V2D(5.5,2.5) );
+	// points.push( new V2D(5,8) );
+	// points.push( new V2D(6,7.5) );
+	// points.push( new V2D(4,7) );
+	// points.push( new V2D(3,5) );
+	// points.push( new V2D(7,5) );
+	// points.push( new V2D(9.5,4) );
+	// points.push( new V2D(5,3) );
+	// points.push( new V2D(3,2.75) );
+	// points.push( new V2D(7,2.75) );
+	// points.push( new V2D(5.5,2.5) );
 	
 
 // points.push( new V2D(3,6) );
@@ -159,7 +215,7 @@ Vor.prototype.animation_tick = function(){
 	directrix = this._directrix.y;
 	//
 	var offYStart = 1*420;//375;
-	var rateStart = 0.5;//2.5;
+	var rateStart = 12.5;//2.5;
 
 
 	// ALGORITHM
@@ -193,26 +249,32 @@ this._directrix.copy( temp );
 	}else{
 		this._ticker.stop();
 this._D.finalize(this._animParabolas);
+// CLEAR CURRENT SCREEN:
+this._animParabolas.graphics().clear();
+this._stillVornoi.graphics().clear();
+this._animDirectrix.graphics().clear();
+
 		// DRAW FINAL IMAGE
-		this._animParabolas.graphics().setLine(1.0,0xFF333399);
+		//this._animParabolas.graphics().setLine(1.0,0xFF333399);
 		var site, sites, edge, edges, A, B;
 		sites = this._D.sites();
 		for(i=0;i<sites.length;++i){
 			site = sites[i];
 			edges = site.edges();
-			this._animParabolas.graphics().beginPath();
-			var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
-			this._animParabolas.graphics().setFill(col);
 			var count = 0;
 			edge = edges[0];
-while(edge.prev() && count<20){ // actually first
-	edge = edge.prev();
-	++count;
-}
+// while(edge.prev() && count<20){ // actually first
+// 	edge = edge.prev();
+// 	++count;
+// }
 			var firstEdge = edge;
 			count = 0;
 			A = edge.vertexA();
 			B = edge.vertexB();
+			this._animParabolas.graphics().beginPath();
+			//var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
+			this._animParabolas.graphics().setFill(col);
+			this._animParabolas.graphics().setLine(2.0,0xFF330099);
 			if(A){
 				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
 			}
@@ -230,7 +292,53 @@ while(edge.prev() && count<20){ // actually first
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().strokeLine();
 			this._animParabolas.graphics().fill();
+
+			// DRAW HALF-EDGE INSETS:
+			var insetLen = 6.0;
+			var sizeLen = 8.0;
+			edge = firstEdge;
+			this._animParabolas.graphics().setLine(2.0,0xFFCC0000);
+			var dir, he1, he2;
+			while(edge){
+				A = edge.vertexA();
+				B = edge.vertexB();
+					this._animParabolas.graphics().beginPath();
+					//
+					he1 = V2D.sub(edge.prev().vertexB().point(), edge.prev().vertexA().point());
+					he2 = V2D.sub(edge.vertexB().point(), edge.vertexA().point());
+					he1.flip();
+					he1.norm();
+					he2.norm();
+					dir = V2D.add(he1,he2);
+					dir.norm();
+					dir.scale(insetLen);
+					he1.scale(-sizeLen);
+					he2.scale(sizeLen);
+					this._animParabolas.graphics().moveTo(A.point().x+dir.x+he2.x,A.point().y+dir.y+he2.y);
+					//this._animParabolas.graphics().moveTo(A.point().x+dir.x+he1.x,A.point().y-dir.y+he1.y);
+					// 
+					he1 = V2D.sub(edge.next().vertexB().point(), edge.next().vertexA().point());
+					he2 = V2D.sub(edge.vertexB().point(), edge.vertexA().point());
+					he2.flip();
+					he1.norm();
+					he2.norm();
+					dir = V2D.add(he1,he2);
+					dir.norm();
+					dir.scale(insetLen);
+					// 
+					this._animParabolas.graphics().lineTo(B.point().x+dir.x,B.point().y+dir.y);
+					// head
+					this._animParabolas.graphics().lineTo(B.point().x+3.0*dir.x,B.point().y+2.0*dir.y);
+					this._animParabolas.graphics().moveTo(B.point().x+dir.x,B.point().y+dir.y);
+					//
+					this._animParabolas.graphics().endPath();
+					this._animParabolas.graphics().strokeLine();
+				edge = edge.next();
+				if(edge==firstEdge){ break; }
+			}
+
 		}
+return;
 		// delaunay generation
 		var delaunay = new Delaunay();
 		delaunay.fromVoronoi( this._D );
