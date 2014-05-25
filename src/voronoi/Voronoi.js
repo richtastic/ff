@@ -941,7 +941,9 @@ Voronoi.HalfEdge = function(){
 	this._opposite = null;
 	this._next = null;
 	this._prev = null;
-	this._site = null; // quick referencing
+	this._site = null;
+	//this.triangle = null; // delaunay
+	this.triangle = 0; // delaunay
 }
 // --------------------------------------------------------------------------------------------------------------------
 Voronoi.HalfEdge.newTwins = function(){
@@ -1030,9 +1032,10 @@ Voronoi.HalfEdge.prototype.toString = function(){
 
 // --------------------------------------------------------------------------------------------------------------------
 /* Vertex */
-Voronoi.Vertex = function(){
+Voronoi.Vertex = function(p){
 	this._edges = [];
 	this._point = new V2D();
+	this.point(p);
 }
 Voronoi.Vertex.prototype.point = function(p){
 	if(p!==undefined){
@@ -1054,8 +1057,9 @@ Voronoi.Vertex.prototype.toString = function(){
 // --------------------------------------------------------------------------------------------------------------------
 /* Cell (Face) */
 Voronoi.Cell = function(){
-	this._point = new V2D(); // central site
+	this._point = new V2D();
 	this._edges = [];
+	this.vertex = null; // delaunay
 }
 Voronoi.Cell.prototype.point = function(p){
 	if(p!==undefined){
@@ -1083,6 +1087,9 @@ Voronoi.EdgeGraph.prototype.addSite = function(s){ // parabolas
 Voronoi.EdgeGraph.prototype.sites = function(){
 	return this._sites;
 }
+Voronoi.EdgeGraph.prototype.edges = function(){
+	return this._edges;
+}
 Voronoi.EdgeGraph.prototype.toString = function(){
 	var str = "";
 	var face, halfEdge, edges, faces = this.sites();
@@ -1098,8 +1105,13 @@ Voronoi.EdgeGraph.prototype.toString = function(){
 	return str;
 }
 Voronoi.EdgeGraph.prototype.finalize = function(root){ // cap infinite edges to box
-	var i, j, k, l, len, sites, site, edges, edge, ang, temp, vertex, center, d, ray, yar, mid, ints, dir, org, a, b, p, count, arr;
-	sites = this._sites
+	var i, j, k, l, len, sites, site, edges, edge, ang, temp, vertex, center, d, ray, yar, mid, ints, dir, org, a, b, p, count, arr, prevEdge, prevVertex;
+	sites = this._sites;
+
+	// empty: nothing to do
+	if(this._sites.length==0){
+		return;
+	}
 
 	// find box dynamically by limits of vertexes and sites + padding
 	var boxPadding = 100;
@@ -1133,11 +1145,34 @@ Voronoi.EdgeGraph.prototype.finalize = function(root){ // cap infinite edges to 
 	var linesCCW = [ [new V2D(boxTLX,boxTLY),new V2D(0,-boxHei)], [new V2D(boxTLX,boxBRY),new V2D(boxWid,0)], [new V2D(boxBRX,boxBRY),new V2D(0,boxHei)], [new V2D(boxBRX,boxTLY),new V2D(-boxWid,0)] ];
 
 	// if there exists a single site, return the box
-	if(this._sites.length==0){
-		console.log("single site, kill me");
-		vertex = new Voronoi.Vertex();
-		edge = new Voronoi.HalfEdge();
-		// ...
+	if(this._sites.length==1){ // sero edges
+		site = sites[0];
+		len = linesCCW.length;
+		prevEdge = null;
+		prevVertex = null;
+		firstEdge = null;
+		for(i=0;i<len;++i){
+			vertex = new Voronoi.Vertex(linesCCW[i][0]);
+			this.addVertex(vertex);
+			edge = new Voronoi.HalfEdge();
+			this.addEdge(edge);
+			site.addEdge(edge);
+			edge.site(site);
+			if(prevEdge){
+				edge.vertexA(prevVertex);
+				edge.prev(prevEdge);
+				prevEdge.vertexB(prevVertex);
+				prevEdge.next(edge);
+			}else{
+				firstEdge = edge;
+			}
+			prevEdge = edge;
+			prevVertex = vertex;
+		}
+		firstEdge.vertexA(prevVertex);
+		firstEdge.prev(prevEdge);
+		prevEdge.vertexB(firstEdge.vertexA());
+		prevEdge.next(firstEdge);
 		return;
 	}
 
@@ -1170,12 +1205,7 @@ Voronoi.EdgeGraph.prototype.finalize = function(root){ // cap infinite edges to 
 			}
 		}
 		// fill in missing vertexes and orientation for all types of infiniedges: 1) multi-polygon, 2) from single vertex, 3) disconnected
-console.log(infiniEdges.length)
-if(infiniEdges.length==1){ // infinite side
-	//infiniEdges.push(infiniEdges[1]); && REVERSE DIRECTION
-}
 		if(infiniEdges.length>0){
-console.log("inside");
 			// determine edge orientations
 			for(j=0;j<infiniEdges.length;++j){
 				edge = infiniEdges[j];
@@ -1190,14 +1220,11 @@ console.log("inside");
 				infiniEdges[j] = {edge:edge, org:mid, dir:ray};
 			}
 			// if single-vertex edges, direction is still unknown up to this point, 4 possible orientations
-a = infiniEdges[0].edge;
-b = infiniEdges.length==2?infiniEdges[1].edge:null;
-
-var v;
-var isOnly = a && b && (a.prev()==b || a.next()==b) && (b.prev()==a || b.next()==a);
-console.log(isOnly);
+			a = infiniEdges[0].edge;
+			b = infiniEdges.length==2?infiniEdges[1].edge:null;
+			var isOnly = a && b && (a.prev()==b || a.next()==b) && (b.prev()==a || b.next()==a);
 			if(isOnly){ // single vertex
-				var s, c1, c2, orgA, orgB, dirA, dirB;
+				var v, s, c1, c2, orgA, orgB, dirA, dirB;
 				s = site.point();
 				orgA = infiniEdges[0].org;
 				orgB = infiniEdges[1].org;
@@ -1208,9 +1235,8 @@ console.log(isOnly);
 				p = v.point();
 				c = V2D.sub( s, p );
 
-				// one has to be P->null && null->P
-				// 
-				console.log( V2D.angleDirection(dirA,dirB) );
+				// one has to be P->null && null->P 
+				//console.log( V2D.angleDirection(dirA,dirB) );
 				// cell can never be greater than Math.PI 
 				if(V2D.cross(dirA,dirB)>0){
 					b.vertexA(v);
@@ -1249,7 +1275,7 @@ if(infiniEdges.length==1){
 			// do this loop twice if full infinite edges
 			var willContinue = true;
 			while(willContinue){
-console.log("continuing");
+//console.log("continuing");
 				willContinue = false;
 				a = infiniEdges[0];
 				if(a.edge.vertexB()){
@@ -1258,13 +1284,12 @@ console.log("continuing");
 				edge = a.edge;
 				mid = a.org;
 				ray = a.dir;
-console.log(""+edge);
+//console.log(""+edge);
 				for(k=0;k<4;++k){
 					org = linesCCW[k][0];
 					dir = linesCCW[k][1];
 					ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
 					if(ints){
-						console.log("  INTERSECTION 1: "+ints);
 						vertex = new Voronoi.Vertex();
 						vertex.point(ints);
 						this.addVertex(vertex);
@@ -1292,7 +1317,6 @@ console.log(""+edge);
 							dir = linesCCW[(k+l)%4][1];
 							ints = Code.rayFiniteIntersect2D(mid,ray, org,dir);
 							if(ints){
-								console.log("    INTERSECTION 2: "+ints);
 								vertex = new Voronoi.Vertex();
 								vertex.point(ints);
 								this.addVertex(vertex);
@@ -1311,7 +1335,6 @@ console.log(""+edge);
 								k = 5; // double break
 								break;
 							}else{ // new edge
-								console.log("    CONTINUE");
 								vertex = new Voronoi.Vertex();
 								vertex.point( linesCCW[(k+l+1)%4][0] );
 								this.addVertex(vertex);
@@ -1339,7 +1362,13 @@ console.log(""+edge);
 	} // sites
 
 }
-
+Voronoi.EdgeGraph.prototype.convexHull = function(root){
+	var siteList = [];
+	// go about perimeter from some start site back to itself
+	// first edge: .prev()-most finite edge
+	// rotate edge till .next()-most finite edge
+	return siteList;
+}
 
 /*
 

@@ -39,6 +39,19 @@ Vor.prototype.keyboardFxnKeyDown2 = function(e){
 Vor.prototype.voronoi = function(){
 	var points = new Array();
 
+// TEST GROUP:
+	points.push( new V2D(5,8) );
+	points.push( new V2D(6,7.5) );
+	points.push( new V2D(4,7) );
+	points.push( new V2D(3,5) );
+	points.push( new V2D(7,5) );
+	points.push( new V2D(9.5,4) );
+	points.push( new V2D(5,3) );
+	points.push( new V2D(3,2.75) );
+	points.push( new V2D(7,2.75) );
+	points.push( new V2D(5.5,2.5) );
+	
+
 // points.push( new V2D(3,6) );
 // points.push( new V2D(4,6) );
 // points.push( new V2D(5.5,4) );
@@ -54,16 +67,16 @@ Vor.prototype.voronoi = function(){
 // points.push( new V2D(4,6) );
 
 
-	points.push( new V2D(2,7) );
-	points.push( new V2D(3,4) );
-	points.push( new V2D(5,2) );
-	points.push( new V2D(5,6) );
-	points.push( new V2D(6,4) );
-	points.push( new V2D(8,2) );
-	points.push( new V2D(3,7.0) );
-	points.push( new V2D(3.5,7.0) );
-	points.push( new V2D(5,7.5) );
-//
+	// points.push( new V2D(2,7) );
+	// points.push( new V2D(3,4) );
+	// points.push( new V2D(5,2) );
+	// points.push( new V2D(5,6) );
+	// points.push( new V2D(6,4) );
+	// points.push( new V2D(8,2) );
+	// points.push( new V2D(3,7.0) );
+	// points.push( new V2D(3.5,7.0) );
+	// points.push( new V2D(5,7.5) );
+
 // points.push( new V2D(1,1) );
 // points.push( new V2D(0,6) );
 // points.push( new V2D(1,8) );
@@ -140,11 +153,110 @@ Vor.prototype.animation_tick = function(){
 		this._directrix = new V2D();
 	}
 	var circleEvents, halfEdge, next, arc, directrix, node, left, right, leftPoint, intPoint, arr, parabola;
+
+//
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 1*400;//375;
-	var rateStart = 12.5;//2.5;
+	var offYStart = 1*420;//375;
+	var rateStart = 0.5;//2.5;
+
+
+	// ALGORITHM
+	if( !this._Q.isEmpty() ){
+		next = this._Q.peek();
+var looped = false;
+		while(next && next.point().y>this._directrix.y){
+looped = true;
+//console.log(this._Q.toString()+"    + "+this._directrix.toString());
+var temp = new V2D(this._directrix.x,this._directrix.y);
+			e = this._Q.next();
+this._directrix.copy( e.point() );
+//console.log("popped "+e);
+//console.log(this._T.toString());
+			if(e.isSiteEvent()){
+				this._T.addArcAboveSiteAndDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
+			}else{
+				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
+			}
+			next = this._Q.peek();
+// console.log("\n");
+// console.log(this._T.toString());
+// console.log("\n");
+// console.log(this._Q.toString()+"    + "+this._directrix.toString());
+this._directrix.copy( temp );
+//console.log("-------------------------------------------------------------------------------------------------------");
+		}
+		if(looped){ // pause at event
+//			this._ticker.stop();
+		}
+	}else{
+		this._ticker.stop();
+this._D.finalize(this._animParabolas);
+		// DRAW FINAL IMAGE
+		this._animParabolas.graphics().setLine(1.0,0xFF333399);
+		var site, sites, edge, edges, A, B;
+		sites = this._D.sites();
+		for(i=0;i<sites.length;++i){
+			site = sites[i];
+			edges = site.edges();
+			this._animParabolas.graphics().beginPath();
+			var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
+			this._animParabolas.graphics().setFill(col);
+			var count = 0;
+			edge = edges[0];
+while(edge.prev() && count<20){ // actually first
+	edge = edge.prev();
+	++count;
+}
+			var firstEdge = edge;
+			count = 0;
+			A = edge.vertexA();
+			B = edge.vertexB();
+			if(A){
+				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
+			}
+			while(edge && count<10){
+				B = edge.vertexB();
+				if(B && (edge.next()!==firstEdge) ){
+					this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
+				}
+				edge = edge.next();
+				if(edge==firstEdge){
+					break;
+				}
+				++count;
+			}
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().strokeLine();
+			this._animParabolas.graphics().fill();
+		}
+		// delaunay generation
+		var delaunay = new Delaunay();
+		delaunay.fromVoronoi( this._D );
+		var triangles = delaunay.triangles();
+		var tri;
+		len = triangles.length;
+		this._animParabolas.graphics().setLine(2.0,0xFFCC0033);
+		//this._animParabolas.graphics().setFill(0x66FF0099);
+		for(i=0;i<len;++i){
+			tri = triangles[i];
+			var col = Code.getColARGB(0x66,0xCC+Math.floor(Math.random()*(0xFF-0xCC+1) ),Math.floor(Math.random()*32.0),Math.floor(Math.random()*128.0));
+			this._animParabolas.graphics().setFill(col);
+			this._animParabolas.graphics().beginPath();
+			this._animParabolas.graphics().moveTo(tri.A().point().x,tri.A().point().y);
+			this._animParabolas.graphics().lineTo(tri.B().point().x +Vor.magRand(), tri.B().point().y +Vor.magRand());
+			this._animParabolas.graphics().lineTo(tri.C().point().x +Vor.magRand(), tri.C().point().y +Vor.magRand());
+			this._animParabolas.graphics().lineTo(tri.A().point().x,tri.A().point().y);
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().strokeLine();
+			this._animParabolas.graphics().fill();
+		}
+		return;
+	}
+
+
+	
 	this._animPosY = offYStart - this._animationTick*rateStart;
 	this._animDirectrix.matrix().identity();
 	this._animDirectrix.matrix().translate(0,this._animPosY);
@@ -277,90 +389,12 @@ Vor.prototype.animation_tick = function(){
 		}
 	}
 
-	// ALGORITHM
-	if( !this._Q.isEmpty() ){
-		next = this._Q.peek();
-		while(next && next.point().y>this._directrix.y){
-//console.log(this._Q.toString()+"    + "+this._directrix.toString());
-var temp = new V2D(this._directrix.x,this._directrix.y);
-			e = this._Q.next();
-this._directrix.copy( e.point() );
-//console.log("popped "+e);
-//console.log(this._T.toString());
-			if(e.isSiteEvent()){
-				this._T.addArcAboveSiteAndDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
-			}else{
-				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
-			}
-			next = this._Q.peek();
-// console.log("\n");
-// console.log(this._T.toString());
-// console.log("\n");
-// console.log(this._Q.toString()+"    + "+this._directrix.toString());
-this._directrix.copy( temp );
-//console.log("-------------------------------------------------------------------------------------------------------");
-		}
-	}else{
-		this._ticker.stop();
-this._D.finalize(this._animParabolas);
-//return;
-		// DRAW FINAL IMAGE
-		this._animParabolas.graphics().setLine(2.0,0xFF333399);
-		var site, sites, edge, edges, A, B;
-		sites = this._D.sites();
-		for(i=0;i<sites.length;++i){
-			site = sites[i];
-			edges = site.edges();
-			
-			this._animParabolas.graphics().beginPath();
-			var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
-			this._animParabolas.graphics().setFill(col);
-			var count = 0;
-			edge = edges[0];
-while(edge.prev() && count<20){ // actually first
-	edge = edge.prev();
-	++count;
-}
-			var firstEdge = edge;
-			count = 0;
-			A = edge.vertexA();
-			B = edge.vertexB();
-			if(A){
-				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
-			}
-			while(edge && count<10){
-				B = edge.vertexB();
-				if(B && (edge.next()!==firstEdge) ){
-					this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
-				}
-				edge = edge.next();
-				if(edge==firstEdge){
-					break;
-				}
-				++count;
-			}
-			this._animParabolas.graphics().endPath();
-			this._animParabolas.graphics().strokeLine();
-			this._animParabolas.graphics().fill();
-			
-			// for(j=0;j<edges.length;++j){
-			// 	edge = edges[j];
-			// 	A = edge.vertexA();
-			// 	B = edge.vertexB();
-			// 	if(A && B){
-			// 		this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
-			// 		this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
-			// 	}
-			// 	this._animParabolas.graphics().strokeLine();
-			// }
-		}
-	}
 	this._animationTick++;
 }
 
 
 Vor.magRand = function(){
-	return Math.random()*20.0 - 10.0;
+	return 0;//Math.random()*20.0 - 10.0;
 }
 
 Vor.makeLine = function(a,b,col,wid){
