@@ -510,70 +510,73 @@ The Fortune Algorithm uses several tools to keep track of all the information re
 <br/>
 *initial empty sites*
 <br/>
-
+---
 ![Sequence 2](./images/fortune_02.png "Sequence 2")
 <br/>
 *first site/arc added*
 <br/>
-
+---
 ![Sequence 3](./images/fortune_03.png "Sequence 3")
 <br/>
 *second arc added*
 <br/>
-
+---
 ![Sequence 4](./images/fortune_04.png "Sequence 4")
 <br/>
 *third arc added, and circle event generated showing point of convergence*
 <br/>
-
+---
 ![Sequence 5](./images/fortune_05.png "Sequence 5")
 <br/>
 *arc convergence*
 <br/>
-
+---
 ![Sequence 6](./images/fortune_06.png "Sequence 6")
 <br/>
 *additional sites added, more circle events generated*
 <br/>
-
+---
 ![Sequence 7](./images/fortune_07.png "Sequence 7")
 <br/>
 *another merge - arcs with definite vertex shown in red*
 <br/>
-
+---
 ![Sequence 8](./images/fortune_08.png "Sequence 8")
 <br/>
-*another merge updates wavefront, revealing false-alarm circle event*
+*another merge updates wavefront, revealing false-alarm circle event (removed)*
 <br/>
-
+---
 ![Sequence 9](./images/fortune_09.png "Sequence 9")
 <br/>
 *...ad infinitum...*
 <br/>
-
+---
 ![Sequence 10](./images/fortune_10.png "Sequence 10")
 <br/>
 *final voronoi diagram*
 <br/>
-
+---
 
 
 <a name="OPTIMUM"></a>
 ## Data Structure Speedup
-*Optimum-ness of Fortune Algorithm relies on underlying data structures*
-<br/>
 ![Red Black Trees](./images/red_black_tree.png "Red Black Trees")
 <br/>
-*Balanced Binary Search Tree - RedBlack*
+*Optimum-ness of Fortune Algorithm relies on underlying data structures*
+<br/>
 
-A regular Binary Search Tree (BST) can become lopsided if interaction with it is less than random.
-The Red-Black is a BST that guarantees non-lopsided ness, and has the following time complexities:
+
+
+**Balanced Binary Search Tree: RedBlack**
+<br/>
+A regular Binary Search Tree (BST) can become lopsided if interaction with it is less than random (or contrived).
+The Red-Black Tree is a BST that guarantees non-lopsided ness, and has the following time complexities:
 - insert: O(lg(n))
 - delete: O(lg(n))
 - search: O(lg(n))
+<br/>
 
-
-*List of Operations/Classes/Objects in Fortune Algoritm and Time Complexity O():*
+**List of Operations/Classes/Objects in Fortune Algoritm and Time Complexity O():**
 - find arc in wavefront: O(lg(n))
 - add arc to wavefront: O(lg(n))
 - remove arc from wavefront: O(lg(n))
@@ -581,8 +584,8 @@ The Red-Black is a BST that guarantees non-lopsided ness, and has the following 
 - add vertex, half-edge, site, to graph: O(1)
 - find arc from circle event: O(1)
 - check for possible circle events: O(1)
-
 <br/>
+
 
 Maximum wavefront arcs: 2n-1 (show worst case: vertical sites)
 <br/>
@@ -592,14 +595,15 @@ Algorithm runtime: O(nlg(n))
 <br/>
 
 
-*Wavefront representations:*
+**Wavefront representations:**
 <br/>
 set of intersections
 <br/>
 set of arcs
 <br/>
 
-Notes:
+
+**Notes:**
 - avoid methods that are suspect to numerical error
 - book-keeping: keep only most pertinent data, as all references need to be updated, and more references = prone to error
 
@@ -623,11 +627,18 @@ They cannot be called 'inverses', because V(D(X)) != X
 - The convex hull of Delaunay vertexes is the convex hull of Voronoi sites
 - 3 concentric voronoi sites define a vornoi vertex &lrarr; 3 concentric delaunay vertexes define voronoi vertex
 - ...
-
+<br/>
+- If any voronoi vertex has a valence larger than 3, then the Delaunay ceases to be a triangulation, and faces with more then 3 edges are resulted.
 
 ###From Voronoi
-...
+- For Each Site:
+  - For Each Edge
+    - form a triangle from:
+      - site
+      - edge.opposite.site
+      - edge.next.opposite.site
 
+Alone, this will create each triangle 3 times, but doing some limiting based on 'visits' to each edge can result in the complete unique set of delaunay triangles.
 
 
 
