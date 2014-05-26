@@ -1,5 +1,5 @@
 // V2D.js
-//V2D.CONST = "";
+
 V2D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y;
 }
@@ -52,9 +52,6 @@ V2D.sub = function(c,a,b){ // same as diff
 	}
 	return new V2D(c.x-a.x,c.y-a.y);
 }
-// V2D.crossNorm = function(a,b){ // z direction
-// 	return (a.x*b.y-a.y*b.x)/(a.length()*b.length());
-// }
 V2D.angle = function(a,b){
 	var lenA = a.length();
 	var lenB = b.length();
@@ -73,13 +70,8 @@ V2D.angleDirection = function(a,b){
 	return -angle;
 }
 function V2D(xP,yP){
-	// if( Code.isa(xP,V2D) ){
-	// 	this.x = xP.x;
-	// 	this.y = xP.y;
-	// }else{
-		this.x = xP==undefined?0.0:xP;
-		this.y = yP==undefined?0.0:yP;
-	// }
+	this.x = xP==undefined?0.0:xP;
+	this.y = yP==undefined?0.0:yP;
 }
 V2D.prototype.copy = function(a){
 	this.x = a.x; this.y = a.y;

@@ -956,6 +956,54 @@ graph.addVertex(vertex);
 	// add edge to sites
 	left.center().addEdge(edge.opposite());
 	right.center().addEdge(edge);
+/*
+var e1 = left.edgeRight();
+var e2 = right.edgeLeft();
+if( e1.vertexA() && e1.vertexB() && Voronoi.pointsEqualToEpsilon(e1.vertexA().point(),e1.vertexB().point()) ){
+// PROPER CLEANUP -> TOTALLY REMOVE ONE OF THE VERTEXES
+	// my orientation cannot be trusted
+	var vP = e1.vertexA().point();
+	console.log("DROP DUPLICATED VERTEXES 1");
+
+	if( e1.prev().vertexB() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexB().point(), vP) ){
+		e1.prev().next( e1.next() );
+	}else if( e1.prev().vertexA() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexA().point(), vP) ){
+		e1.prev().prev( e1.next() );
+	}else{
+		console.log("ERRRRRRRRRRRR 1");
+	}
+	if( e1.next().vertexB() && Voronoi.pointsEqualToEpsilon(e1.next().vertexB().point(), vP) ){
+		e1.next().next( e1.prev() );
+	}else if( e1.next().vertexA() && Voronoi.pointsEqualToEpsilon(e1.next().vertexA().point(), vP) ){
+		e1.next().prev( e1.prev() );
+	}else{
+		console.log("ERRRRRRRRRRRR 2");
+	}
+	e1.site().removeEdge(e1);
+	e1.opposite().site().removeEdge(e1.opposite());
+
+e1 = e1.opposite();
+	var vP = e1.vertexA().point();
+	console.log("DROP DUPLICATED VERTEXES 4");
+
+	if( e1.prev().vertexB() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexB().point(), vP) ){
+		e1.prev().next( e1.next() );
+	}else if( e1.prev().vertexA() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexA().point(), vP) ){
+		e1.prev().prev( e1.next() );
+	}else{
+		console.log("ERRRRRRRRRRRR 1");
+	}
+	if( e1.next().vertexB() && Voronoi.pointsEqualToEpsilon(e1.next().vertexB().point(), vP) ){
+		e1.next().next( e1.prev() );
+	}else if( e1.next().vertexA() && Voronoi.pointsEqualToEpsilon(e1.next().vertexA().point(), vP) ){
+		e1.next().prev( e1.prev() );
+	}else{
+		console.log("ERRRRRRRRRRRR 2");
+	}
+	// remove e1 / opposite from sites and graph and vertexes
+	// remove duplicated vertex from graph
+}
+*/
 	// update arc edges to new edge+opposite
 	left.edgeRight(edge.opposite());
 	right.edgeLeft(edge);

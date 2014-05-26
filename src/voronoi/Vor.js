@@ -69,56 +69,31 @@ Vor.prototype.voronoi = function(){
 	// points.push( new V2D(19,1) );
 	// points.push( new V2D(20,6) );
 
-// // THIS DIES SOMEWHERE:
-// 	points.push( new V2D(-3,7) );
-// 	points.push( new V2D(-2,4) );
-// 	points.push( new V2D(-1,5) );
-// 	points.push( new V2D(-0.5,1) );
-// 	points.push( new V2D(0,3) );
-// 	points.push( new V2D(1,8) );
-// 	points.push( new V2D(2,4.5) );
-// 	points.push( new V2D(2.5,3) );
-// 	points.push( new V2D(3,7) );
-// 	points.push( new V2D(4,0) );
-// 	points.push( new V2D(4.5,4) );
-// 	points.push( new V2D(5,9) );
-// 	points.push( new V2D(6,2) );
-// 	points.push( new V2D(7,6) );
-// 	points.push( new V2D(7.5,3) );
-// 	points.push( new V2D(8,8) );
-// 	points.push( new V2D(9,6) );
-// 	points.push( new V2D(10,4) );
-// 	points.push( new V2D(11,3) );
-// 	points.push( new V2D(12,2) );
-// 	points.push( new V2D(13,0) );
-// 	points.push( new V2D(14,6) );
-// 	points.push( new V2D(15,9) );
-// 	points.push( new V2D(15.5,4) );
-// DISPLAY GROUP:
-	points.push( new V2D(-3,7) );
-	points.push( new V2D(-2,4) );
-	points.push( new V2D(-1,5) );
-	points.push( new V2D(-0.5,1) );
-	points.push( new V2D(0,3) );
-	points.push( new V2D(1,8) );
-	points.push( new V2D(2,4.5) );
-	points.push( new V2D(2.5,3) );
-	points.push( new V2D(3,7) );
-	points.push( new V2D(4,0) );
-	points.push( new V2D(4.5,4) );
-	points.push( new V2D(5,9) );
-	points.push( new V2D(6,2) );
-	points.push( new V2D(7,6) );
-	points.push( new V2D(7.5,3) );
-	points.push( new V2D(8,8) );
-	points.push( new V2D(9,6) );
-	points.push( new V2D(10,4) );
-	points.push( new V2D(11,3) );
-	points.push( new V2D(12,2) );
-	points.push( new V2D(13,0) );
-	points.push( new V2D(14,6) );
-	points.push( new V2D(15,9) );
-	points.push( new V2D(15.5,4) );
+// VALENCE 4 VERTEX IN HERE SOMEWHERE:
+	// points.push( new V2D(-3,7) );
+	// points.push( new V2D(-2,4) );
+	// points.push( new V2D(-1,5) );
+	// points.push( new V2D(-0.5,1) );
+	// points.push( new V2D(0,3) );
+	// points.push( new V2D(1,8) );
+	// points.push( new V2D(2,4.5) );
+	// points.push( new V2D(2.5,3) );
+	// points.push( new V2D(3,7) );
+	// points.push( new V2D(4,0) );
+	// points.push( new V2D(4.5,4) );
+	// points.push( new V2D(5,9) );
+	// points.push( new V2D(6,2) );
+	// points.push( new V2D(7,6) );
+	// points.push( new V2D(7.5,3) );
+	// points.push( new V2D(8,8) );
+	// points.push( new V2D(9,6) );
+	// points.push( new V2D(10,4) );
+	// points.push( new V2D(11,3) );
+	// points.push( new V2D(12,2) );
+	// points.push( new V2D(13,0) );
+	// points.push( new V2D(14,6) );
+	// points.push( new V2D(15,9) );
+	// points.push( new V2D(15.5,4) );
 
 
 // TEST GROUP:
@@ -177,9 +152,9 @@ Vor.prototype.voronoi = function(){
 // points.push( new V2D(3.1,5.7) );
 // points.push( new V2D(6.6,4.6) );
 // points.push( new V2D(6.4,4.7) );
-// for(i=0;i<10;++i){
-// 	points.push( new V2D(Math.random()*10,Math.random()*10) );
-// }
+for(i=0;i<50;++i){
+	points.push( new V2D(Math.random()*30,Math.random()*10) );
+}
 // remove duplicate points 
 Voronoi.removeDuplicatePoints2D(points);
 //Voronoi.removePointsBelow(points, new V2D(0,5.0));
@@ -205,7 +180,7 @@ Voronoi.removeDuplicatePoints2D(points);
 }
 Vor.prototype.animation_tick = function(){
 	var x, y, a, b, c, p, e, i, j, len, arc;
-	var limitLeft = -400, limitRight = 1200;
+	var limitLeft = -200, limitRight = 1400;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
@@ -240,8 +215,8 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 310;//420;
-	var rateStart = 12.5;//12.5;
+	var offYStart = 500;//420;
+	var rateStart = 0.5;//12.5;
 
 
 	// ALGORITHM
@@ -374,7 +349,7 @@ this._animDirectrix.graphics().clear();
 */
 			//console.log(count)
 		}
-
+return;
 		// delaunay generation
 		var delaunay = new Delaunay();
 		delaunay.fromVoronoi( this._D );

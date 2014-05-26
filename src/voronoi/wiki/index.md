@@ -452,7 +452,8 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 
 <a name="FORTUNE"></a>
 ## Fortune Algorithm
-![Fortune 1](./images/fortune_1.png "Fortune 1")
+![Fortune 1](./images/fortune_definition.png "Fortune 1")
+<br/>
 Fortune's Algorithm (Steve Fortune 1986) is an optimal process for producing a voronoi diagram (graph) from a set of input site on the 2D plane. The process can move from left-right, or up-down, but is assumed here to be top-down.
 <br/>
 **Sweep Line**: A common directrix used by all the arcs in the wavefront. It continuously moves top-down, where all sites above this line have been processed and all sites below await potential evaluation.
