@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>DI Logo</title>
+<script src="../code/FF.js"></script>
+<script type="text/javascript">
+function handleOnLoad(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
+}
+function defaultClassesLoadedFxn(){
+	var list = ["DILogo.js"];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	var di = new DILogo();
+}
+</script>
+</head>
+<body onload="handleOnLoad();">
+</body>
+</html>

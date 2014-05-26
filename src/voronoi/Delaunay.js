@@ -45,7 +45,7 @@ var count = 0;
 			edge = edge.next();
 ++count;
 		}
-console.log(count)
+//console.log(count)
 count = 0;
 		firstEdge = edge;
 		// find first non-infinite edge
@@ -56,7 +56,7 @@ count = 0;
 			}
 ++count;
 		}
-console.log(count)
+//console.log(count)
 count = 0;
 		firstEdge = edge;
 		// create triangle for each edge
@@ -98,7 +98,7 @@ count = 0;
 			}
 ++count;
 		}
-console.log(count)
+//console.log(count)
 count = 0;
 	}
 	// clear site simple vertexes

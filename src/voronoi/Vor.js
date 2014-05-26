@@ -277,7 +277,7 @@ this._directrix.copy( temp );
 console.log("FINALIZE!");
 
 
-//this._D.clearDuplicatedVertexes();
+this._D.removeDuplicates();
 		var site, sites, edge, edges, A, B;
 		sites = this._D.sites();
 		// for(i=0;i<sites.length;++i){
@@ -310,7 +310,7 @@ this._animDirectrix.graphics().clear();
 			if(A){
 				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
 			}
-			while(edge && count<10){
+			while(edge && count<15){
 				B = edge.vertexB();
 				if(B && (edge.next()!==firstEdge) ){
 					this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
@@ -324,7 +324,7 @@ this._animDirectrix.graphics().clear();
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().strokeLine();
 			this._animParabolas.graphics().fill();
-
+/*
 			// DRAW HALF-EDGE INSETS:
 			var insetLen = 6.0;
 			var sizeLen = 8.0;
@@ -371,9 +371,10 @@ this._animDirectrix.graphics().clear();
 				if(edge==firstEdge){ break; }
 				++count;
 			}
+*/
 			//console.log(count)
 		}
-//return;
+
 		// delaunay generation
 		var delaunay = new Delaunay();
 		delaunay.fromVoronoi( this._D );
@@ -537,7 +538,9 @@ this._animDirectrix.graphics().clear();
 
 
 Vor.magRand = function(){
-	return 0;//Math.random()*40.0 - 20.0;
+	//return Math.random()*40.0 - 20.0;
+	//return Math.random()*20.0 - 10.0;
+	return 0;
 }
 
 Vor.makeLine = function(a,b,col,wid){

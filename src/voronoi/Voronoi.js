@@ -861,14 +861,81 @@ if(nc.data()){
 		this._tree.deleteNode(nr);
 	}
 	// add vertex at circle center to graph
-	vertex = new Voronoi.Vertex();
-	vertex.point(circleEvent.circle().center);
+	var e, o, d, pt = circleEvent.circle().center;
+/*
+if(
+(left.edgeRight().vertexA() && Voronoi.pointsEqualToEpsilon(left.edgeRight().vertexA().point(),pt)) ||
+(left.edgeRight().vertexB() && Voronoi.pointsEqualToEpsilon(left.edgeRight().vertexB().point(),pt))
+){
+	// reuse old vertex
+	e = left.edgeRight();
+	o = e.opposite();
+	console.log("left equal: "+e.vertexA()+" | "+e.vertexB());
+	console.log("          : "+o.vertexA()+" | "+o.vertexB());
+	console.log("  "+right.edgeLeft());
+	console.log("  "+right.edgeLeft().opposite());
+	vertex = e.vertexA() ? e.vertexA() : e.vertexB();
+	// remove left edge
+		vertex.removeEdge(e);
+		graph.removeEdge(e);
+		e.site().removeEdge(e);
+		e.site = null;
+	// remove opposite left edge
+		vertex.removeEdge(o);
+		graph.removeEdge(o);
+		o.site().removeEdge(o);
+		o.site = null;
+	// clear 'previous' edge to take place of old edge
+		if(e.prev()){
+			d = e.prev(); e.prev(null);
+		}else{ // e.next()
+			d = e.next(); e.prev(null);
+		}
+		if(d.next()==e){
+			d.next(null); d.vertexB(null);
+		}else{ // d.prev()
+			d.prev(null); d.vertexA(null);
+		}
+		// update arc to hold this older edge
+		left.edgeRight(d);
+	// clear 'previous' opposite
+		if(o.prev()){
+			d = o.prev(); o.prev(null);
+		}else{ // o.next()
+			d = o.next(); o.prev(null);
+		}
+		if(d.next()==o){
+			d.next(null); d.vertexB(null);
+		}else{ // d.prev()
+			d.prev(null); d.vertexA(null);
+		}
+		// update arc to hold this older edge
+
+	????????.edge????(o);
+}else if(
+(right.edgeLeft().vertexA() && Voronoi.pointsEqualToEpsilon(right.edgeLeft().vertexA().point(),pt)) ||
+(right.edgeLeft().vertexB() && Voronoi.pointsEqualToEpsilon(right.edgeLeft().vertexB().point(),pt))
+){
+	console.log("right equal: "+right.edgeLeft().vertexA()+" | "+right.edgeLeft().vertexB());
+}else{
+	// new vertex
+	vertex = new Voronoi.Vertex( pt );
 	graph.addVertex(vertex);
+}
+*/
+vertex = new Voronoi.Vertex( pt );
+graph.addVertex(vertex);
+
+	var l = left.edgeRight();
+	var r = right.edgeLeft()
 	// add old edges to vertex
-	vertex.addEdge(left.edgeRight());
-	vertex.addEdge(left.edgeRight().opposite());
-	vertex.addEdge(right.edgeLeft());
-	vertex.addEdge(right.edgeLeft().opposite());
+	vertex.addEdge(l);
+	vertex.addEdge(l.opposite());
+	vertex.addEdge(r);
+	vertex.addEdge(r.opposite());
+	// add vertex+edges to closing cell
+	l.opposite().vertexAndEdgeAdd(vertex, r.opposite());
+	r.opposite().vertexAndEdgeAdd(vertex, l.opposite());
 	// new edge from vertex
 	var edge = Voronoi.HalfEdge.newTwins();
 	// add edge to graph
@@ -877,129 +944,18 @@ if(nc.data()){
 	// add edge to vertex
 	vertex.addEdge(edge);
 	vertex.addEdge(edge.opposite());
-	// add vertex+edges to closing cell
-	left.edgeRight().opposite().vertexAndEdgeAdd(vertex, right.edgeLeft().opposite());
-	right.edgeLeft().opposite().vertexAndEdgeAdd(vertex, left.edgeRight().opposite());
 	// add vertex+edges to left cell
-	left.edgeRight().vertexAndEdgeAdd(vertex, edge.opposite());
-	edge.opposite().vertexAndEdgeAdd(vertex, left.edgeRight());
+	l.vertexAndEdgeAdd(vertex, edge.opposite());
+	edge.opposite().vertexAndEdgeAdd(vertex, l);
 	// add vertex+edges to right cell
-	right.edgeLeft().vertexAndEdgeAdd(vertex, edge);
-	edge.vertexAndEdgeAdd(vertex, right.edgeLeft());
+	r.vertexAndEdgeAdd(vertex, edge);
+	edge.vertexAndEdgeAdd(vertex, r);
 	// add new edge to sites
 	edge.opposite().site( left.center() );
 	edge.site( right.center() );
 	// add edge to sites
 	left.center().addEdge(edge.opposite());
 	right.center().addEdge(edge);
-
-var e1 = left.edgeRight();
-var e2 = right.edgeLeft();
-if( e1.vertexA() && e1.vertexB() && Voronoi.pointsEqualToEpsilon(e1.vertexA().point(),e1.vertexB().point()) ){
-// PROPER CLEANUP -> TOTALLY REMOVE ONE OF THE VERTEXES
-	// my orientation cannot be trusted
-	var vP = e1.vertexA().point();
-	console.log("DROP DUPLICATED VERTEXES 1");
-
-	if( e1.prev().vertexB() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexB().point(), vP) ){
-		e1.prev().next( e1.next() );
-	}else if( e1.prev().vertexA() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexA().point(), vP) ){
-		e1.prev().prev( e1.next() );
-	}else{
-		console.log("ERRRRRRRRRRRR 1");
-	}
-	if( e1.next().vertexB() && Voronoi.pointsEqualToEpsilon(e1.next().vertexB().point(), vP) ){
-		e1.next().next( e1.prev() );
-	}else if( e1.next().vertexA() && Voronoi.pointsEqualToEpsilon(e1.next().vertexA().point(), vP) ){
-		e1.next().prev( e1.prev() );
-	}else{
-		console.log("ERRRRRRRRRRRR 2");
-	}
-	e1.site().removeEdge(e1);
-	e1.opposite().site().removeEdge(e1.opposite());
-
-e1 = e1.opposite();
-	var vP = e1.vertexA().point();
-	console.log("DROP DUPLICATED VERTEXES 4");
-
-	if( e1.prev().vertexB() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexB().point(), vP) ){
-		e1.prev().next( e1.next() );
-	}else if( e1.prev().vertexA() && Voronoi.pointsEqualToEpsilon(e1.prev().vertexA().point(), vP) ){
-		e1.prev().prev( e1.next() );
-	}else{
-		console.log("ERRRRRRRRRRRR 1");
-	}
-	if( e1.next().vertexB() && Voronoi.pointsEqualToEpsilon(e1.next().vertexB().point(), vP) ){
-		e1.next().next( e1.prev() );
-	}else if( e1.next().vertexA() && Voronoi.pointsEqualToEpsilon(e1.next().vertexA().point(), vP) ){
-		e1.next().prev( e1.prev() );
-	}else{
-		console.log("ERRRRRRRRRRRR 2");
-	}
-
-/*
-	e1.prev().next( e1.next() );
-	e1.next().prev( e1.prev() );
-	e1.site().removeEdge(e1);
-
-	e1.opposite().prev().next( e1.opposite().next() );
-	e1.opposite().next().prev( e1.opposite().prev() );
-	e1.opposite().site().removeEdge(e1.opposite());
-*/
-	// remove e1 / opposite from sites and graph and vertexes
-	// remove duplicated vertex from graph
-}
-// if( e1.opposite().vertexA() && e1.opposite().vertexB() && Voronoi.pointsEqualToEpsilon(e1.opposite().vertexA().point(),e1.opposite().vertexB().point()) ){
-// 	console.log("DROP DUPLICATED VERTEXES 4");
-// }
-
-
-
-if( e2.vertexA() && e2.vertexB() && Voronoi.pointsEqualToEpsilon(e2.vertexA().point(),e2.vertexB().point()) ){
-	console.log("DROP DUPLICATED VERTEXES 2");
-}
-if( edge.vertexA() && edge.vertexB() && Voronoi.pointsEqualToEpsilon(edge.vertexA().point(),edge.vertexB().point()) ){
-	console.log("DROP DUPLICATED VERTEXES 3");
-}
-if( e2.opposite().vertexA() && e2.opposite().vertexB() && Voronoi.pointsEqualToEpsilon(e2.opposite().vertexA().point(),e2.opposite().vertexB().point()) ){
-	console.log("DROP DUPLICATED VERTEXES 5");
-}
-if( edge.opposite().vertexA() && edge.vertexB() && Voronoi.pointsEqualToEpsilon(edge.opposite().vertexA().point(),edge.opposite().vertexB().point()) ){
-	console.log("DROP DUPLICATED VERTEXES 6");
-}
-/*
-if(edge.next() && e1.next()){
-	if(edge == e1.next()){
-		console.log("next is prev");
-	}
-}
-if(edge.opposite().next() && e1.next()){
-	if(edge.opposite().next() == e1.next()){
-		console.log("next is prev");
-	}
-}
-if(edge.next() && e1.next()){
-	if(edge.next() == e1.prev()){
-		console.log("next is prev");
-	}
-}
-if(edge.opposite().prev() && e1.next()){
-	if(edge.opposite().prev() == e1.next()){
-		console.log("next is prev");
-	}
-}
-// other
-if(edge.prev() && e2.next()){
-	if(edge.prev() == e2.next()){
-		console.log("next is prev");
-	}
-}
-if(edge.opposite().prev() && e2.next()){
-	if(edge.opposite().prev() == e2.next()){
-		console.log("next is prev");
-	}
-}
-*/
 	// update arc edges to new edge+opposite
 	left.edgeRight(edge.opposite());
 	right.edgeLeft(edge);
@@ -1031,9 +987,7 @@ Voronoi.Site.prototype.addEdge = function(e){
 	this._edges.push(e);
 }
 Voronoi.Site.prototype.removeEdge = function(e){
-	//console.log("REMOVING: "+this._edges.length);
 	Code.removeElementSimple(this._edges, e);
-	//console.log("      => "+this._edges.length);
 }
 Voronoi.Site.prototype.edges = function(){
 	return this._edges;
@@ -1134,6 +1088,14 @@ Voronoi.HalfEdge.prototype.checkOrientation = function(){
 		}
 	}
 }
+Voronoi.HalfEdge.prototype.kill = function(){
+	this._vertexA = null;
+	this._vertexB = null;
+	this._opposite = null;
+	this._next = null;
+	this._prev = null;
+	this._site = null;
+}
 Voronoi.HalfEdge.prototype.toString = function(){
 	var str = "[HalfEdge: "+this._id+" ";
 	str += this._vertexA+" -> "+this._vertexB+" ";
@@ -1156,8 +1118,19 @@ Voronoi.Vertex.prototype.point = function(p){
 	}
 	return this._point;
 }
+Voronoi.Vertex.prototype.edges = function(){
+	return this._edges;
+}
 Voronoi.Vertex.prototype.addEdge = function(e){
 	this._edges.push(e);
+}
+Voronoi.Vertex.prototype.removeEdge = function(e){
+	Code.removeElementSimple(this._edges, e);
+}
+Voronoi.Vertex.prototype.kill = function(){
+	Code.emptyArray(this._edges);
+	this._edges = null;
+	this._point = null;
 }
 Voronoi.Vertex.prototype.toString = function(){
 	var str = "[Vertex: ";
@@ -1191,8 +1164,14 @@ Voronoi.EdgeGraph = function(){
 Voronoi.EdgeGraph.prototype.addEdge = function(e){
 	this._edges.push(e);
 }
+Voronoi.EdgeGraph.prototype.removeEdge = function(e){
+	Code.removeElementSimple(this._edges, e);
+}
 Voronoi.EdgeGraph.prototype.addVertex = function(v){
 	this._vertexes.push(v);
+}
+Voronoi.EdgeGraph.prototype.removeVertex = function(v){
+	Code.removeElementSimple(this._vertexes,v);
 }
 Voronoi.EdgeGraph.prototype.addSite = function(s){ // parabolas
 	this._sites.push(s);
@@ -1217,6 +1196,151 @@ Voronoi.EdgeGraph.prototype.toString = function(){
 	}
 	return str;
 }
+Voronoi.EdgeGraph.prototype.removeDuplicates = function(){ // remove vertices with same point
+	var i, len, j, sites, site, edges, edge, oppo, prev, next, temp, A, B, PA, PB, NA, NB;
+	sites = this._sites;
+	len = sites.length;
+	for(i=0;i<len;++i){
+		site = sites[i];
+		edges = site.edges();
+		//console.log("edges: "+edges.length);
+		for(j=0;j<edges.length;++j){
+			edge = edges[j];
+			A = edge.vertexA();
+			B = edge.vertexB();
+			if( A && B && Voronoi.pointsEqualToEpsilon(A.point(),B.point()) ){
+				console.log("FOUND DUP");
+				oppo = edge.opposite();
+				// edgeside
+				prev = edge.prev();
+				next = edge.next();
+console.log("STA A: "+A.edges().length);
+				if(prev.next()==edge){
+					prev.next(next);
+					if(prev.vertexB()==A){ prev.vertexB(B); A.removeEdge(prev); B.addEdge(prev); }
+				}else if(prev.prev()==edge){
+					prev.prev(next);
+					if(prev.vertexA()==A){ prev.vertexA(B); A.removeEdge(prev);  B.addEdge(prev); }
+				}
+				if(next.next()==edge){
+					next.next(prev);
+					if(next.vertexB()==A){ next.vertexB(B); A.removeEdge(next); B.addEdge(next); }
+				}else if(next.prev()==edge){
+					next.prev(prev);
+					if(next.vertexA()==A){ next.vertexA(B); A.removeEdge(next); B.addEdge(next); }
+				}
+console.log("S1- A: "+A.edges().length);
+				PA = prev; NA = next;
+				// opposite
+				prev = oppo.prev();
+				next = oppo.next();
+				if(prev.next()==oppo){
+					prev.next(next);
+					if(prev.vertexB()==A){ prev.vertexB(B); A.removeEdge(prev); B.addEdge(prev); }
+				}else if(prev.prev()==oppo){
+					prev.prev(next);
+					if(prev.vertexA()==A){ prev.vertexA(B); A.removeEdge(prev);  B.addEdge(prev); }
+				}
+				if(next.next()==oppo){
+					next.next(prev);
+					if(next.vertexB()==A){ next.vertexB(B); A.removeEdge(next); B.addEdge(next); }
+				}else if(next.prev()==oppo){
+					next.prev(prev);
+					if(next.vertexA()==A){ next.vertexA(B); A.removeEdge(next); B.addEdge(next); }
+				}
+console.log("S2- A: "+A.edges().length);
+				// 
+				PB = prev; NB = next;
+				// ARE THE OPPOSITES STILL VALID?
+				A.removeEdge(edge);
+				A.removeEdge(oppo);
+console.log("NEW A: "+A.edges().length);
+var remA = A.edges()[0];
+var remB = A.edges()[1];
+				console.log( remA+"" );
+				console.log( remB+"" );
+console.log(" ");
+console.log(" ");
+
+				// remove from history
+				console.log("STA B: "+B.edges().length);
+				// edge
+				// 
+				B.removeEdge(edge);
+				this.removeEdge(edge);
+				edge.site().removeEdge(edge);
+				edge.kill();
+				// oppo
+				// 
+				B.removeEdge(oppo);
+				this.removeEdge(oppo);
+				oppo.site().removeEdge(oppo);
+				oppo.kill();
+				// A
+
+				this.removeVertex(A);
+				console.log("OLD B: "+B.edges().length);
+				var k, ed, ee = A.edges();
+				for(k=0;k<ee.length;++k){
+					ed = ee[k];
+					if(ed.vertexA()==A){
+						ed.vertexA(B); B.addEdge(ed);
+					}else if(ee[k].vertexB()==A){
+						ed.vertexB(B); B.addEdge(ed);
+					}else{
+						console.log("errrrr");
+					}
+				}
+				console.log("NEW B: "+B.edges().length);
+				//console.log("STA A: "+A.edges().length);
+				//console.log("OLD A: "+A.edges().length);
+				//console.log("NEW A: "+A.edges().length);
+console.log("LAS A: "+A.edges().length);
+				A.kill();
+
+				// 
+				if(PA.next().prev()!=PA){
+					console.log("NO 1");
+				}
+				if(NA.prev().next()!=NA){
+					console.log("NO 2");
+				}
+				if(PB.next().prev()!=PB){
+					console.log("NO 3");
+				}
+				if(NB.prev().next()!=NB){
+					console.log("NO 4");
+				}
+				// 
+				if(PA.opposite().next().prev()!=PA.opposite()){
+					console.log("NO 5");
+				}
+				if(NA.opposite().prev().next()!=NA.opposite()){
+					console.log("NO 6");
+				}
+				if(PB.opposite().next().prev()!=PB.opposite()){
+					console.log("NO 7");
+				}
+				if(NB.opposite().prev().next()!=NB.opposite()){
+					console.log("NO 8");
+				}
+// NA.opposite(NB);
+// NB.opposite(NA);
+
+// PA.opposite(PB);
+// PB.opposite(PA);
+
+// PA.opposite(NB);
+// NB.opposite(PA);
+
+// NA.opposite(PB);
+// PB.opposite(NA);
+				--j;
+			}
+		}
+	}
+}
+
 Voronoi.EdgeGraph.prototype.finalize = function(root){ // cap infinite edges to box
 	var i, j, k, l, len, sites, site, edges, edge, ang, temp, vertex, center, d, ray, yar, mid, ints, dir, org, a, b, p, count, arr, prevEdge, prevVertex;
 	sites = this._sites;
