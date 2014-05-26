@@ -7,7 +7,7 @@ function Vor(){
 	this._stage.root().addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
 	//this._root.matrix().scale(2.0);
-	this._root.matrix().translate(300,1100);
+	this._root.matrix().translate(200,600);
 	this._stage.start();
 	this.voronoi();
 	this._keyboard = new Keyboard();
@@ -97,16 +97,16 @@ Vor.prototype.voronoi = function(){
 
 
 // TEST GROUP:
-	// points.push( new V2D(5,8) );
-	// points.push( new V2D(6,7.5) );
-	// points.push( new V2D(4,7) );
-	// points.push( new V2D(3,5) );
-	// points.push( new V2D(7,5) );
-	// points.push( new V2D(9.5,4) );
-	// points.push( new V2D(5,3) );
-	// points.push( new V2D(3,2.75) );
-	// points.push( new V2D(7,2.75) );
-	// points.push( new V2D(5.5,2.5) );
+	points.push( new V2D(5,8) );
+	points.push( new V2D(6,7.5) );
+	points.push( new V2D(4,7) );
+	points.push( new V2D(3,5) );
+	points.push( new V2D(7,5) );
+	points.push( new V2D(9.5,4) );
+	points.push( new V2D(5,3) );
+	points.push( new V2D(3,2.75) );
+	points.push( new V2D(7,2.75) );
+	points.push( new V2D(5.5,2.5) );
 	
 
 // points.push( new V2D(3,6) );
@@ -152,9 +152,9 @@ Vor.prototype.voronoi = function(){
 // points.push( new V2D(3.1,5.7) );
 // points.push( new V2D(6.6,4.6) );
 // points.push( new V2D(6.4,4.7) );
-for(i=0;i<50;++i){
-	points.push( new V2D(Math.random()*30,Math.random()*10) );
-}
+// for(i=0;i<50;++i){
+// 	points.push( new V2D(Math.random()*30,Math.random()*10) );
+// }
 // remove duplicate points 
 Voronoi.removeDuplicatePoints2D(points);
 //Voronoi.removePointsBelow(points, new V2D(0,5.0));
@@ -180,7 +180,7 @@ Voronoi.removeDuplicatePoints2D(points);
 }
 Vor.prototype.animation_tick = function(){
 	var x, y, a, b, c, p, e, i, j, len, arc;
-	var limitLeft = -200, limitRight = 1400;
+	var limitLeft = -200, limitRight = 1000;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
@@ -245,7 +245,7 @@ this._directrix.copy( temp );
 //console.log("-------------------------------------------------------------------------------------------------------");
 		}
 		if(looped){ // pause at event
-//			this._ticker.stop();
+			this._ticker.stop();
 		}
 	}else{
 		this._ticker.stop();

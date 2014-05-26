@@ -454,11 +454,11 @@ A voronoi diagram is a graph that sections off sites (points) into cells, whereb
 ## Fortune Algorithm
 ![Fortune 1](./images/fortune_definition.png "Fortune 1")
 <br/>
-Fortune's Algorithm (Steve Fortune 1986) is an optimal process for producing a voronoi diagram (graph) from a set of input site on the 2D plane. The process can move from left-right, or up-down, but is assumed here to be top-down.
+Fortune's Algorithm (Steve Fortune 1986) is an optimal process for producing a voronoi diagram (graph) from a set of input sites in the 2D plane. The process can move from left-right, or up-down, but is assumed here to be top-down.
 <br/>
 **Sweep Line**: A common directrix used by all the arcs in the wavefront. It continuously moves top-down, where all sites above this line have been processed and all sites below await potential evaluation.
 <br/>
-**Wavefront**: The set of arcs defined by the lowest points of all parabolas with focuses of sites above the sweep line. (AKA Beach Line)
+**Wavefront (Beach Line)**: The set of arcs defined by the lowest points over all parabolas (of sites above the sweep line).
 <br/>
 **Site Event (Split)**: An input site before being processed - the site's location is defined as the site's position.
 <br/>
@@ -475,7 +475,7 @@ The Fortune Algorithm uses several tools to keep track of all the information re
 <br/>
 **Voronoi Graph [G]**: This contains all vertexes and half-edges (and sites) that are added as the algorithm progresses. When complete, this is the output of the algorithm.
 <br/>
-**Wavefront [W]**: This is a a set of arcs (parabola segments) that serves as a way to keep track of the lowest parabola segments, as well as predict points of future convergence (which correspond to voronoi vertexes)
+**Wavefront [W]**: This is a set of arcs (parabola segments) which serves as a way to keep track of the lowest parabola segments, as well as predict points of future convergence (which correspond to voronoi vertexes)
 <br/>
 
 
@@ -489,24 +489,73 @@ The Fortune Algorithm uses several tools to keep track of all the information re
   - Site Event (split):
     - find arc above new site
     - remove old circle event for site if present (false alarm)
-    - add new arc to wavefront
+    - add new arc (formed by site) to wavefront (which is a vertical line)
     - graph add: new half-edge
     - check for possible circle events "triplets"
   - Circle Event (merge):
       - remove all circle from queue events that reference the merging arc
     - graph add: new vertex, 1 new half-edge
     - collapse referenced arc (remove from wavefront)
-    - check for possible circle events "triplets"
-- Cleanup Graph
-  - Combine coincident vertexes (where multiple events occurred simultaneously)
-  - Cap infinite edges (eg via bounding box)
+    - check for 2 possible circle events "triplets" formed by left 3 and right 3 sites
+      - the center of the event is where the left/right arc may disappear, the bottom is the event location
+      - converging arcs: focus are oriented Left-Center-Right about circle event center
+- Cleanup Graph when Queue is empty
+  - Combine coincident vertexes (where multiple events occurred simultaneously = valence 4+ vertex)
   - Consistently orientate half-edges around site
-
-- converging arcs (1 location at 1 arc, convergence L-C-R focus check)
+  - Cap infinite edges (eg via bounding box)
 
 
 ### Sequence
-- Example Sequence
+![Sequence 1](./images/fortune_01.png "Sequence 1")
+<br/>
+*initial empty sites*
+<br/>
+
+![Sequence 2](./images/fortune_02.png "Sequence 2")
+<br/>
+*first site/arc added*
+<br/>
+
+![Sequence 3](./images/fortune_03.png "Sequence 3")
+<br/>
+*second arc added*
+<br/>
+
+![Sequence 4](./images/fortune_04.png "Sequence 4")
+<br/>
+*third arc added, and circle event generated showing point of convergence*
+<br/>
+
+![Sequence 5](./images/fortune_05.png "Sequence 5")
+<br/>
+*arc convergence*
+<br/>
+
+![Sequence 6](./images/fortune_06.png "Sequence 6")
+<br/>
+*additional sites added, more circle events generated*
+<br/>
+
+![Sequence 7](./images/fortune_07.png "Sequence 7")
+<br/>
+*another merge - arcs with definite vertex shown in red*
+<br/>
+
+![Sequence 8](./images/fortune_08.png "Sequence 8")
+<br/>
+*another merge updates wavefront, revealing false-alarm circle event*
+<br/>
+
+![Sequence 9](./images/fortune_09.png "Sequence 9")
+<br/>
+*...ad infinitum...*
+<br/>
+
+![Sequence 10](./images/fortune_10.png "Sequence 10")
+<br/>
+*final voronoi diagram*
+<br/>
+
 
 
 <a name="OPTIMUM"></a>
