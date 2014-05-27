@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>isometric test</title>
+<script src="code/FFLoadAll.js"></script>
+<script type="text/javascript">
+// ---------------------------------------------------------
+var resource, keyboard, canvas, stage, do1, do2, do3;
+// ---------------------------------------------------------
+function pageLoadedFxn(){
+	ff = new FFLoadAll("code/",defaultLoadedFxn);
+}
+function defaultLoadedFxn(){
+    var list = ["ResourceIsometric.js"];
+    var scriptLoader = new ScriptLoader("",list,customLoadedFxn);
+    scriptLoader.load();
+}
+function customLoadedFxn(){
+    resource = new ResourceIsometric();
+    resource.setFxnComplete(resourceLoadedFxn);
+    resource.load();
+}
+function resourceLoadedFxn(){
+    console.log("isometric views");
+    canvas = new Canvas(resource,null,600,300,Canvas.STAGE_FIT_FILL);
+    stage = new Stage(canvas, (1/20)*1000);
+    resource.alertLoadCompleteEvents();
+    stage.start();
+    stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,enterFrameFxn);
+    stage.addFunction(Stage.EVENT_ON_EXIT_FRAME,exitFrameFxn);
+    //canvas.addFunction(Canvas.EVENT_CLICK,canvasClickFxn);
+    keyboard = new Keyboard();
+    keyboard.addListeners();
+    //keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,keyDownFxn);
+    //keyboard.addFunction(Keyboard.EVENT_KEY_UP,keyUpFxn);
+    // -------------
+    do1 = new DO();
+    do1.clearGraphics();
+    do1.setFillRGBA(0x01122FF99);
+    do1.drawRect(-50,-50,100,100);
+    do1.matrix.rotate(Math.PI/4);
+    do1.matrix.translate(100,100);
+    // stage.addChild(do1);
+}
+function enterFrameFxn(){
+    //
+}
+var theta = 0;
+function exitFrameFxn(){
+    var con = canvas.getContext();
+    var i, j, countX = 18, countY = 18;
+    var offX = 100, offY = 70;
+    var scaleX = 20, scaleY = 20;
+    var img = resource.tex[0];
+    var wid = img.width;
+    var hei = img.height - 44;
+    var magX = 0, magY = 0;
+    var x, y, dist;
+    for(j=0;j<countY;++j){
+        for(i=0;i<countX;++i){
+            x = (countX*0.5-i);
+            y = (countY*0.5-j);
+            dist = Math.sqrt( x*x + y*y );
+            magX = (x<0) ? 1 : -1 ;
+            magY = (y<0) ? 1 : -1 ;
+            con.drawImage(img,
+                offX + j*(wid/2-2) + wid*i,
+                offY + hei*j + scaleX*Math.sin( -theta + dist*0.90 )
+//                             + scaleX*Math.sin( theta + magX*x*0.3 )
+//                             + scaleY*Math.sin( theta + magY*y*0.3 )
+                );
+        }
+    }
+    // (countX/2-i)
+    theta += 0.1;
+}
+// ---------------------------------------------------------
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;background:url('images/pattern.jpg');">
+
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+// QuadTree.js
+
+function QuadTree(){
+	//
+}
+
+

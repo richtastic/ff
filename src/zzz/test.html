@@ -1,0 +1,178 @@
+<html>
+<head>
+<title>canvas test</title>
+<script src="code/FFLoadAll.js"></script>
+<script type="text/javascript">
+// ---------------------------------------------------------
+var resource, keyboard, canvas, stage, do1, do2, do3;
+// ---------------------------------------------------------
+var ff = null;
+function pageLoadedFxn(){
+	ff = new FFLoadAll("code/",classesLoadedFxn);
+}
+/*
+var r = 0xFFFF0000, g = 0xFF00FFFF, b = 0xFF0000FF, k = 0x00000000;
+var sourceImageData = [
+r, g, b, k
+];
+var wid = 100, hei = 100;
+    var imageData = new Array();
+    var imgDatLen = sourceImageData.length;
+    var index = 0;
+    console.log(imgDatLen);
+    for(j=0;j<hei;++j){
+        for(i=0;i<wid;++i){
+            col = sourceImageData[index % imgDatLen];//0xFF0000FF;
+            r = Code.getRedARGB(col);
+            g = Code.getGrnARGB(col);
+            b = Code.getBluARGB(col);
+            a = Code.getAlpARGB(col);
+            col = String.fromCharCode( b,g,r,0 );
+            imageData[ ((hei-j-1)*wid+i)] = col;
+            ++index;
+        }
+    }
+    var img = Code.generateImageFromData(wid,hei, imageData);
+    var body = document.getElementsByTagName('body') [0];
+    body.appendChild(img);
+    console.log(body);
+*/
+function classesLoadedFxn(){
+	resource = new Resource();
+	resource.setFxnComplete( resourceLoadedFxn );
+	resource.load();
+}
+function resourceLoadedFxn(){
+	console.log('recosds');
+	canvas = new Canvas(resource,null,600,300,Canvas.STAGE_FIT_FILL);
+	stage = new Stage(canvas, (1/50)*1000);
+	resource.alertLoadCompleteEvents();
+	stage.start();
+	stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,efF);
+	canvas.addFunction(Canvas.EVENT_CLICK,canvasClickFxn);
+	// -------------
+	do1 = new DO();
+	do1.clearGraphics();
+	do1.setFillRGBA(0x01122FF99);
+	do1.drawRect(-50,-50,100,100);
+	do1.matrix.rotate(Math.PI/4);
+	do1.matrix.translate(100,100);
+	//do1.matrix.rotate(Math.PI/14);
+	stage.addChild(do1);
+	// -------------
+	do2 = new DO();
+	do2.clearGraphics();
+	do2.setFillRGBA(0x099000099);
+	do2.drawRect(-50,-50,100,100);
+	//do2.matrix.rotate(Math.PI/8);
+	do2.matrix.translate(50,50);
+	do1.addChild(do2);
+	// -------------
+	do3 = new DO();
+	do3.clearGraphics();
+	do3.setFillRGBA(0x006633CC);
+	do3.drawRect(-150,0,100,100);
+	do3.matrix.rotate(Math.PI/3);
+	do3.matrix.translate(50,50);
+	do1.addChild(do3);
+	// -------------
+	//Code.extendClass(do3,Draggable);
+	/*
+	do1.addFunction(Canvas.EVENT_MOUSE_CLICK,do1Click);
+	do2.addFunction(Canvas.EVENT_MOUSE_CLICK,do2Click);
+	do3.addFunction(Canvas.EVENT_MOUSE_CLICK,do3Click);
+	*/
+	keyboard = new Keyboard();
+	keyboard.addListeners();
+	keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,keyDownFxn);
+	keyboard.addFunction(Keyboard.EVENT_KEY_UP,keyUpFxn);
+    /* */
+   
+}
+// ---------------------------------------------------------
+var moveAmount = 5;
+function keyDownFxn(e){
+	/*
+    var obj = do1;
+	if(keyboard.keyIsDown(Keyboard.KEY_SHIFT)){
+		obj = do2;
+	}
+	if(e==Keyboard.KEY_UP){
+		obj.matrix.translate(0,-moveAmount);
+	}else if(e==Keyboard.KEY_DOWN){
+		obj.matrix.translate(0,moveAmount);
+	}else if(e==Keyboard.KEY_LEFT){
+		obj.matrix.translate(-moveAmount,0);
+	}else if(e==Keyboard.KEY_RIGHT){
+		obj.matrix.translate(moveAmount,0);
+	}*/
+}
+function keyUpFxn(e){
+	//console.log("up");
+}
+
+function do1Click(o){
+	console.log("1");
+}
+function do2Click(o){
+	console.log("2");
+}
+function do3Click(o){
+	console.log("3");
+}
+function canvasClickFxn(pos){
+	console.log('click');
+}
+function efF(o){
+    var obj = do1;
+	if(keyboard.keyIsDown(Keyboard.KEY_SHIFT)){
+        obj = do2;
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_UP)){
+        obj.matrix.translate(0,-moveAmount);
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_DOWN)){
+        obj.matrix.translate(0,moveAmount);
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_LEFT)){
+        obj.matrix.translate(-moveAmount,0);
+    }
+    if(keyboard.keyIsDown(Keyboard.KEY_RIGHT)){
+        obj.matrix.translate(moveAmount,0);
+    }
+}
+// ---------------------------------------------------------
+
+// ---------------------------------------------------------
+/*
+BASE-64 ENCODE/DECODE
+view-source:http://ostermiller.org/calc/encode.html
+http://en.wikipedia.org/wiki/Base64
+
+[A-Z][a-z][0-9]+/ padding with =
+(base64 bits)%8==0 => no padding
+(base64 bits)%8==2 =>  = padding
+(base64 bits)%8==4 => == padding
+
+IMAGES
+http://www.worldwidewhat.net/2012/07/how-to-draw-bitmaps-using-javascript/
+
+FONT FACE
+http://forums.mozillazine.org/viewtopic.php?f=25&t=2251187
+http://www.opinionatedgeek.com/dotnet/tools/base64encode/
+http://www.motobit.com/util/base64-decoder-encoder.asp
+http://www.hcidata.info/base64.htm
+
+http://beej.us/blog/data/html5s-canvas-2-pixel/
+https://developer.mozilla.org/en-US/docs/HTML/Canvas/Pixel_manipulation_with_canvas
+http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
+http://stackoverflow.com/questions/667045/getpixel-from-html-canvas
+
+*/
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;background:url('pattern.jpg');">
+
+
+</body>
+</html>

@@ -286,6 +286,16 @@ Link3DR.prototype.rectificationB = function(){
 	return this._lookupTableB;
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
+Link3DR.prototype.highDisparity = function(){ // dense point matching (correspondence)
+	// start at thetaA = maximum theta in image relative to epipole
+		// get haystack pair
+		// if haystack is too small (outside window) => continue
+		// for each needleA (from haystackA) in haystackB
+			// find needleB: find best match, record disparity
+	// increment theta until reached max thetaA
+	// 
+	return {imagesA:imagesA, imagesB:imagesB, linesA:linesA, linesB:linesB, matches:matches, disparityB:disparityMap};
+}
 Link3DR.prototype.calculateDisparity = function(){ // dense point matching (correspondence)
 	// 
 	// disparity: vector distance from expected location of a point (via reference origin)
@@ -311,6 +321,7 @@ point-line
 matching
 */
 
+
 // start with smaller image (with stricter ssd?)
 // zoomed-in searching is restricted to smaller area
 // use different window sizes? (when cannot find a match / )
@@ -330,6 +341,9 @@ var maxSSD = searchSize*0.666;// *0.707; // maximum discrpency per pixel
 	var epipoleB = this.epipoleBImage();
 	var sourceA = this.A().source();
 	var sourceB = this.B().source();
+	// disparity output:
+	var disparityMap = new ImageMat(sourceB.width(),sourceB.height());
+	disparityMap.zeroAll();
 	for(i=0;i<pointListA.length;++i){
 		pointA = pointListA[i];
 		// needle - A
@@ -365,11 +379,13 @@ matches.push(subs);
 		hayHeiMin = hayHei2 - winSize2;
 		hayHeiMax = hayHei2 + winSize2;
 		for(j=winSize2;j<hayWid-winSize2;j+=10){
-			needle = haystackA.getSubImageIndex(j-winSize2,j+winSize2, hayHeiMin,hayHeiMax);
+			aPoint = new V2D(j-winSize2,j+winSize2);
+			needle = haystackA.getSubImageIndex(aPoint.x,aPoint.y, hayHeiMin,hayHeiMax);
 			//console.log(needle)
 			point = Link3DR.bestMatchNeedleHaystack(needle,haystackB);
-			//console.log(point.z);
-			//point = Link3DR.fromHayStackToImage(point,haystackB, intB1,intB2, infoB.TL,infoB.TR,infoB.BR,info.BL);
+			var matPoint = point;
+			console.log(point+"");
+			//point = Link3DR.fromHayStackToImage(point,haystackB, intB1,intB2, infoB.TL,infoB.TR,infoB.BR,infoB.BL);
 			var n = haystackB.getSubImage(point.x,point.y, windowSize,windowSize);
 			if(point.z > maxSSD ){ // ssd limits
 				Code.setArrayConstant( n.red(), 1.0 );
@@ -377,8 +393,19 @@ matches.push(subs);
 				//subs.push([needle.to3Array(),null]);
 			}else{
 				subs.push([needle.to3Array(),n.to3Array()]);
+				// DISPARITY?
+				//disparityMap.setPoint(Math.round(pointB.x),Math.round(pointB.y), new V3D(1.0,1.0,1.0) );
+				// from center to 
+				// console.log(n.width(),n.height())
+				// point.x -= Math.floor(n.width()*0.5);
+				// point.y -= Math.floor(n.height()*0.5);
+				var pointInA = Link3DR.fromHayStackToImage(aPoint,haystackA, intA1,intA2, infoA.TL,infoA.TR,infoA.BR,infoA.BL);
+				var pointInB = Link3DR.fromHayStackToImage( point,haystackB, intB1,intB2, infoB.TL,infoB.TR,infoB.BR,infoB.BL);
+				var disp = V2D.distance(pointInA,pointInB);
+				disparityMap.setPoint(Math.round(pointInB.x),Math.round(pointInB.y), new V3D(disp,disp,disp) );
+				
+				// disparityMap.setPoint(Math.round(point.x),Math.round(point.y), new V3D(1.0,0.0,1.0) );
 			}
-			// DISPARITY?
 			// ?
 			// ?
 		}
@@ -394,7 +421,11 @@ matches.push(subs);
 		// //for(j=0;j<pointListB.length;++j){
 		// 	//
 		// //}
+		//break;
 	}
+	ImageMat.normalFloat01(disparityMap.red());
+	ImageMat.normalFloat01(disparityMap.grn());
+	ImageMat.normalFloat01(disparityMap.blu());
 	// 
 	// search in-between (NON-CALCULATED) lines?
 		// move away from known line 'pixel' at a time up to median line (or edge/end)
@@ -410,7 +441,7 @@ matches.push(subs);
 	//				imageA: x,y
 	//				imageB: x,y
 	// 				disparity: value (distance from A-B)
-	return {imagesA:imagesA, imagesB:imagesB, linesA:linesA, linesB:linesB, matches:matches};
+	return {imagesA:imagesA, imagesB:imagesB, linesA:linesA, linesB:linesB, matches:matches, disparityB:disparityMap};
 }
 Link3DR.bestMatchNeedleHaystack = function(needle,haystack){
 	var grayNeedle = ImageMat.grayFromFloats( needle.red(),needle.grn(),needle.blu() );
@@ -443,7 +474,7 @@ grayHaystack = ImageMat.normalFloat01(grayHaystack);
 	extrema.sort(sortPeaksFxn);
 	// get coords of highest peak in image
 	if(extrema.length>0){
-		console.log(extrema[0].z+"    <    "+extrema[1].z);
+		//console.log(extrema[0].z+"    <    "+extrema[1].z);
 		var peak = extrema[0];
 		peak.x += Math.floor(needle.width()*0.5); // shift right
 		peak.y += Math.floor(needle.height()*0.5); // shift down

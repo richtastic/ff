@@ -34,6 +34,14 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 		}
 	}
 }
+ImageMat.prototype.zeroAll = function(){
+	var i, len = this._width*this._height;
+	for(i=0;i<len;++i){
+		this._r[i] = 0;
+		this._g[i] = 0;
+		this._b[i] = 0;
+	}
+}
 ImageMat.prototype.to3Array = function(){
 	return [this._r,this._g,this._b, this._width,this._height];
 }
@@ -310,6 +318,18 @@ ImageMat.ARGBFromFloats = function(rF,gF,bF){
 		a[i] = Code.getColARGB( 0xFF, r,g,b);
 	}
 	return a;
+}
+ImageMat.ARGBFromARGBFloats = function(aF,rF,gF,bF){
+	var i, len = rF.length;
+	var col, r,g,b,a, aa = new Array(len);
+	for(i=0;i<len;++i){
+		r = Math.round(rF[i]*255.0);
+		g = Math.round(gF[i]*255.0);
+		b = Math.round(bF[i]*255.0);
+		a = Math.round(aF[i]*255.0);
+		aa[i] = Code.getColARGB(a,r,g,b);
+	}
+	return aa;
 }
 ImageMat.ARGBFromRGBArrays = function(r,g,b){
 	var i, len = r.length;

@@ -98,6 +98,10 @@ Stage.prototype.getImageAsFloatRGB = function(originalImage){
 	img.unset();
 	return {width:wid, height:hei, red:red, grn:grn, blu:blu};
 }
+Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
+	var argb = ImageMat.ARGBFromARGBFloats(a,r,g,b);
+	return this.getARGBAsImage(argb, wid,hei,matrix,type);
+}
 Stage.prototype.getFloatRGBAsImage = function(r,g,b, wid,hei, matrix, type){
 	var argb = ImageMat.ARGBFromFloats(r,g,b);
 	return this.getARGBAsImage(argb, wid,hei,matrix,type);

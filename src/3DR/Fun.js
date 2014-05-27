@@ -366,30 +366,33 @@ d.graphics().strokeLine();
 this._root.addChild(d);
 
 
-var dense = link.calculateDisparity();
+console.log("calculateDisparity");
+
+//var dense = link.calculateDisparity();
+var dense = link.highDisparity();
 console.log(dense);
 // show process results:
-var iii, spacingV = 90;
+var iii, spacingV = 90, offsetY = 300;
 for(i=0;i<dense.imagesA.length;++i){
 	// A
 	img = this._stage.getFloatRGBAsImage(dense.imagesA[i][0],dense.imagesA[i][1],dense.imagesA[i][2], dense.imagesA[i][3],dense.imagesA[i][4]);
 	di = new DOImage(img);
-	di.matrix().translate(0,i*spacingV);
+	di.matrix().translate(0,offsetY+i*spacingV);
 	this._root.addChild(di);
 	// B
 	img = this._stage.getFloatRGBAsImage(dense.imagesB[i][0],dense.imagesB[i][1],dense.imagesB[i][2], dense.imagesB[i][3],dense.imagesB[i][4]);
 	di = new DOImage(img);
-	di.matrix().translate(50,i*spacingV);
+	di.matrix().translate(50,offsetY+i*spacingV);
 	this._root.addChild(di);
 	// A line
 	img = this._stage.getFloatRGBAsImage(dense.linesA[i][0],dense.linesA[i][1],dense.linesA[i][2], dense.linesA[i][3],dense.linesA[i][4]);
 	di = new DOImage(img);
-	di.matrix().translate(0,i*spacingV + 50);
+	di.matrix().translate(0,offsetY+i*spacingV + 50);
 	this._root.addChild(di);
 	// B line
 	img = this._stage.getFloatRGBAsImage(dense.linesB[i][0],dense.linesB[i][1],dense.linesB[i][2], dense.linesB[i][3],dense.linesB[i][4]);
 	di = new DOImage(img);
-	di.matrix().translate(  dense.linesA[i][3]  ,i*spacingV + 50);
+	di.matrix().translate(  dense.linesA[i][3]  ,offsetY+i*spacingV + 50);
 	this._root.addChild(di);
 	// sub-matches:
 	//console.log(dense.matches[i].length)
@@ -399,21 +402,33 @@ for(i=0;i<dense.imagesA.length;++i){
 			iii = dense.matches[i][j][0];
 			img = this._stage.getFloatRGBAsImage(iii[0],iii[1],iii[2], iii[3],iii[4]);
 			di = new DOImage(img);
-			di.matrix().translate( 100 + j*25,i*spacingV);
+			di.matrix().translate( 100 + j*25,offsetY+i*spacingV);
 			this._root.addChild(di);
 			// B
 			iii = dense.matches[i][j][1];
 			if(iii){ // could be bad match
 				img = this._stage.getFloatRGBAsImage(iii[0],iii[1],iii[2], iii[3],iii[4]);
 				di = new DOImage(img);
-				di.matrix().translate( 100 + j*25,i*spacingV+25);
+				di.matrix().translate( 100 + j*25,offsetY+i*spacingV+25);
 				this._root.addChild(di);
 			}
 		}
 	}
 }
+var disMap = dense.disparityB;
 
+console.log(disMap);
+// console.log(disMap.width(),disMap.height(),disMap.red(),disMap.grn(),disMap.blu())
 
+img = this._stage.getFloatRGBAsImage(disMap.red(),disMap.grn(),disMap.blu(), disMap.width(),disMap.height());
+//img = this._stage.getFloatARGBAsImage(disMap.red(), disMap.red(),disMap.grn(),disMap.blu(), disMap.width(),disMap.height());
+
+di = new DOImage(img);
+//di.matrix().translate(0,0);
+di.matrix().translate(408,0);
+//di.matrix().translate(1000,25);
+this._root.addChild(di);
+console.log("done");
 
 
 

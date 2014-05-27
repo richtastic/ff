@@ -24,11 +24,35 @@ DILogo.prototype.handleResourcesLoaded = function(e){
 	this.setupFxn();
 }
 DILogo.prototype.icosahedron = function(){ // 20-sided, centered at 0,0,0, radius 1
-	var list = [];
+	var i, j, x1,x2,y1,y2,z1,z2,rad, list = [];
+	//
+	for(i=0;i<3;++i){
+		y1 = Math.cos( Math.PI*((i+0)/3.0) );
+		y2 = Math.cos( Math.PI*((i+1)/3.0) );
+		if(i==0||i==2){
+			rad = 0;
+		}else{
+			rad = Math.sin( Math.PI*((i+1)/3.0) );
+		}
+		for(j=0;j<5;++j){
+			x1 = rad*Math.cos( 2.0*Math.PI*((j+0)/5.0) );
+			x2 = rad*Math.cos( 2.0*Math.PI*((j+1)/5.0) );
+			z1 = rad*Math.sin( 2.0*Math.PI*((j+0)/5.0) );
+			z2 = rad*Math.sin( 2.0*Math.PI*((j+1)/5.0) );
+		}
+	}
+	//
 	return list;
 }
 DILogo.prototype.icosidodecahedron = function(){ // 32-sided, centered at 0,0,0, radius 1
-	var list = [];
+	var i, j, x1,x2,y1,y2,z1,z2,rad, list = [];
+	for(i=0;i<5;++i){
+		if(){
+			len = i;
+		}
+		for(j=0;j<len;++j){
+		}
+	}
 	return list;
 }
 // RED EAR
