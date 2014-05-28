@@ -1,6 +1,7 @@
 // DILogo.js
 
 function DILogo(){
+	console.log("DILOGO");
 	var frameRate = 1000/50;
   	this._canvas = new Canvas(null,40,40,Canvas.STAGE_FIT_FILL,false,true);
   	//this._canvas = new Canvas(null,600,500,Canvas.STAGE_FIT_FIXED,false,true);
@@ -256,8 +257,8 @@ DILogo.prototype.onEnterFrameFxn = function(count, time){
 	var rateEar1 = 0.0008;
 	var rateEar2 = -Math.PI*(1.0/7.0);
 	var rateHead = 0.0004;
-	var earOffsetX = 2.8;
-	var earOffsetY = 2.4;
+	var earOffsetX = 2.4;
+	var earOffsetY = 2.0;
 	// RESET
 	this._stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage.clear();
@@ -266,7 +267,7 @@ DILogo.prototype.onEnterFrameFxn = function(count, time){
 	this._stage.matrixIdentity();
 	this._stage.matrixTranslate(0.0,0.0,zDistHead);
 	this._stage.matrixRotate(-e*rateHead, 0,1,0);
-	sca = 2.3; this._stage.matrixScale(sca,sca,sca);
+	sca = 1.9; this._stage.matrixScale(sca,sca,sca);
 	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._headTriBuffer);
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._headTriColorBuffer);
 	this._stage.matrixReset();
