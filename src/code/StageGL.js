@@ -19,7 +19,7 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
     //  matrices
 	this._projectionMatrix = mat4.create();
 	this._modelViewMatrixStack = new MatrixStackGL();
-	//this._modelViewMatrix = mat4.create();
+	this.frustrumAngle(45);
 	//
 	this.addListeners();
 }
@@ -62,9 +62,15 @@ StageGL.prototype.setViewport = function(mode,a,b,c,d){
 	}
 	return this._canvas.setViewport(xPos,yPos,wid,hei);
 }
+StageGL.prototype.frustrumAngle = function(a){
+	if(a!==undefined){
+		this._frustrumAngle = a;
+	}
+	return this._frustrumAngle;
+}
 StageGL.prototype.clear = function(){
 	this._canvas.clearViewport();
-	var angle = 45;
+	var angle = this._frustrumAngle;
 	var ratio = this._canvas.width()/this._canvas.height();
 	var cutClose = 0.1;
 	var cutFar = 100.0;
@@ -87,6 +93,9 @@ StageGL.prototype.matrixTranslate = function(x,y,z){
 }
 StageGL.prototype.matrixRotate = function(theta, x,y,z){
 	mat4.rotate(this._modelViewMatrixStack.matrix(), theta, [x,y,z]);
+}
+StageGL.prototype.matrixScale = function(x,y,z){
+	mat4.scale(this._modelViewMatrixStack.matrix(),[x,y,z]);
 }
 StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
 	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);

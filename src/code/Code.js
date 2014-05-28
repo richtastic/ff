@@ -536,6 +536,13 @@ Code.getBluARGB = function(col){
 Code.getAlpARGB = function(col){
 	return (col>>24)&0xFF;
 }
+Code.getFloatArrayARGBFromARGB = function(col){
+	var a = Code.getAlpARGB(col);
+	var r = Code.getRedARGB(col);
+	var g = Code.getGrnARGB(col);
+	var b = Code.getBluARGB(col);
+	return [a/255.0,r/255.0,g/255.0,b/255.0]; // col/256
+}
 // color functions ----------------------------------------------------
 Code.getJSColorFromRGBA = function(col){
 	return "rgba("+Code.getRedRGBA(col)+","+Code.getGrnRGBA(col)+","+Code.getBluRGBA(col)+","+Code.getAlpRGBA(col)/255.0+")";
