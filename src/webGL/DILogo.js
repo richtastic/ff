@@ -24,34 +24,108 @@ DILogo.prototype.handleResourcesLoaded = function(e){
 	this.setupFxn();
 }
 DILogo.prototype.icosahedron = function(){ // 20-sided, centered at 0,0,0, radius 1
-	var i, j, x1,x2,y1,y2,z1,z2,rad, list = [];
-	//
-	for(i=0;i<3;++i){
-		y1 = Math.cos( Math.PI*((i+0)/3.0) );
-		y2 = Math.cos( Math.PI*((i+1)/3.0) );
-		if(i==0||i==2){
-			rad = 0;
-		}else{
-			rad = Math.sin( Math.PI*((i+1)/3.0) );
-		}
-		for(j=0;j<5;++j){
-			x1 = rad*Math.cos( 2.0*Math.PI*((j+0)/5.0) );
-			x2 = rad*Math.cos( 2.0*Math.PI*((j+1)/5.0) );
-			z1 = rad*Math.sin( 2.0*Math.PI*((j+0)/5.0) );
-			z2 = rad*Math.sin( 2.0*Math.PI*((j+1)/5.0) );
+	var i, j, x,y,z, rad, ang,tmp, arr, tri, list = [];
+	// points:
+	var points = [];
+	ang = Math.PI/4.0; // Math.PI/3.0
+	rad = Math.cos(ang);
+	y = Math.sin(ang);
+	// top
+	points.push([new V3D(0,1,0)]);
+	// mid
+	for(j=0;j<2;++j){
+		arr = [];
+		points.push(arr);
+		for(i=0;i<5;++i){
+			tmp = (i/5.0)*2.0*Math.PI + (j/5.0)*Math.PI;
+			z = rad*Math.cos(tmp);
+			x = rad*Math.sin(tmp);
+			if(j==0){
+				arr.push( new V3D(x,y,z) );
+			}else{
+				arr.push( new V3D(x,-y,z) );
+			}
 		}
 	}
-	//
+	// bot
+	points.push([new V3D(0,-1,0)]);
+	// triangles:
+	// top
+	for(i=0;i<5;++i){
+		tri = new Tri(points[0][0], points[1][i], points[1][(i+1)%5]);
+		list.push(tri);
+	}
+	// mid-top
+	for(i=0;i<5;++i){
+		tri = new Tri(points[1][i], points[2][i], points[1][(i+1)%5]);
+		list.push(tri);
+	}
+	// mid-bot
+	for(i=0;i<5;++i){
+		tri = new Tri(points[2][i], points[2][(i+1)%5], points[1][(i+1)%5]);
+		list.push(tri);
+	}
+	// bot
+	for(i=0;i<5;++i){
+		tri = new Tri(points[3][0], points[2][(i+1)%5], points[2][i]);
+		list.push(tri);
+	}
 	return list;
 }
 DILogo.prototype.icosidodecahedron = function(){ // 32-sided, centered at 0,0,0, radius 1
-	var i, j, x1,x2,y1,y2,z1,z2,rad, list = [];
-	for(i=0;i<5;++i){
-		if(){
-			len = i;
-		}
-		for(j=0;j<len;++j){
-		}
+	var i, j, x,y,z, rad,ang,pnt,tri, list = [];
+	// points:
+	var points = [];
+	// top
+	points.push([new V3D(0,1,0)]);
+	// mid-top
+	ang = Math.PIO2; rad = Math.cos(ang); y = Math.sin(ang);
+	arr = []; points.push(arr);
+	for(i=0;i<4;++i){
+		tmp = (i/4.0)*2.0*Math.PI - Math.PI/4.0;
+		z = rad*Math.cos(tmp);
+		x = rad*Math.sin(tmp);
+		arr.push( new V3D(x,y,z) );
+	}
+	// mid
+	ang = 0; rad = Math.cos(ang); y = Math.sin(ang);
+	arr = []; points.push(arr);
+	for(i=0;i<8;++i){
+		tmp = (i/4.0)*2.0*Math.PI;
+		z = rad*Math.cos(tmp);
+		x = rad*Math.sin(tmp);
+		arr.push( new V3D(x,y,z) );
+	}
+	// mid-bot
+	arr = []; points.push(arr);
+	for(i=0;i<points[1].length;++i){
+		pnt = points[1][i];
+		arr.push( new V3D(pnt.x,-pnt.y,pnt.z) );
+	}
+	// bot
+	points.push([new V3D(0,-1,0)]);
+	// triangles:
+	// top
+	for(i=0;i<4;++i){
+		tri = new Tri(points[0][0],points[1][i],points[1][(i+1)%4]);
+		list.push(tri);
+	}
+	// mid-top
+	for(i=0;i<4;++i){ // each 'side'
+		j = i*2;
+		list.push( new Tri(points[1][i],points[2][j],points[1][(i+1)%4]) ); // top
+		list.push( new Tri(points[3][i],points[2][(j-1)%8],points[2][j]) ); // t-l
+		list.push( new Tri(points[3][(i+1)%4],points[2][j],points[2][(j+1)%8]) ); // t-r
+		list.push( new Tri(points[3][i],points[3][(i+1)%4],points[2][j]) ); // bot
+		list.push( new Tri(points[3][i],points[2][j],points[2][(j-1)%8]) ); // b-l
+		list.push( new Tri(points[2][j],points[3][(i+1)%4],points[2][(j+1)%8]) ); // b-r
+	}
+	// mid-bot
+		// ...
+	// bot
+	for(i=0;i<4;++i){
+		tri = new Tri(points[4][0],points[1][(i+1)%4],points[1][i]);
+		list.push(tri);
 	}
 	return list;
 }
