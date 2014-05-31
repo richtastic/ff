@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Surface Triangulation</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["PointCloud.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+}
+function r2dLoadedFxn(){
+	var surface = new SurfaceTri();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
