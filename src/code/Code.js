@@ -1809,7 +1809,6 @@ Code.intersectRayPlane = function(org,dir, pnt,nrm){
 	var den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
 	if(den==0){ return null; } // zero or infinite intersections
 	var t = num/den;
-	console.log("t: "+t);
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
 Code.planeEquationFromPointNormal = function(pnt,nrm){

@@ -70,9 +70,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 			this._program = null;
 // 			this._pMatrix = mat4.create();
 // 			this._mvMatrix = mat4.create();
-			console.log("try GL:");
 			this._context = this._canvas.getContext("experimental-webgl");
-			console.log(this._context);
 		}catch(e){
 			console.log("could not initialize webGL");
 		}

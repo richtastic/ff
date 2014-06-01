@@ -333,6 +333,36 @@ triangles may need to, be checked for orientation after algorithm completes by c
 
 what about 'disconnected' surfaces? specify some border (convex hull)?
 
+### Curvature
+**measurement of how quickly a curve/surface changes direction - sharpness - deviation from straight line**
+<br/>
+**Change in Position Vector dR**: (infitesimal arc) &approx; [r(x+&Delta;x,f(x+&Delta;x)) - (x-&Delta;x,f(x-&Delta;x))]/[2&Delta;x]
+<br/>
+**Unit Tangent Vector T**: dR/||dR||  (unit version of dR)
+<br/>
+**Unit Normal VectorN**: &Kappa;/||&Kappa;|| (always on side of osculating circle/sphere), *similar* Normal vector can be chosen using dR to be orthogonal to T - consistent 'side' of curve/path
+<br/>
+**Binormal Vector B**: T &times; N (something to do with torsion - not useful in 2D?)
+<br/>
+**Curvature-Normal Vector &Kappa;** = ||dT/ds|| = ||T'(s)|| &approx; [T(x+&Delta;x) - T(x-&Delta;x)]/[2&Delta;x] (~second vector derivative)
+<br/>
+**Curvature &kappa**: = ||&Kappa;||
+<br/>
+**Radius of Curvature**: 1/&Kappa; (radius of osculating sphere)
+<br/>
+**Arc Length s**: &int; |dR| dt
+<br/>
+curvature of line = 0; curvature of circle = 1/R
+<br/>
+<br/>
+<br/>
+<br/>
+ ? (polar coords shows T,N more clearly)
+<br/>
+
+
+
+
 ### Definition of 3D Plane
 <br/>
 **Equation of a plane**: ax + by + cz + d = 0 &rarr; normal vector (n): &lt;a,b,c&gt; point in plane (q): (a&middot;d,b&middot;d,c&middot;d)/||n||
@@ -449,11 +479,15 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
+- plot 2D curvature lines (N,T,B,R), and think about 3D curvature
 - generate sphere points (random, with error)
 - render points in webGL
 - determing MLS surface for any point
+- display MLS as sampled points on surface
+- how to get kappa - curvature of the MLS surface
 - container class for point cloud
-
+- how to 'query' field
+- how to generate first triangle
 
 
 RESULTS DATA:
@@ -474,7 +508,9 @@ plot(torusTim,torusTri,"b-x");
 plot(igeaTim,igeaTri,"m-x");
 
 
+---
 
 (Felix Hausdorff)[Felix Hausdorff]
 (Hausdorf Distance)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
 (osculating sphere)[http://mathworld.wolfram.com/OsculatingSphere.html]
+(Curvature)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]

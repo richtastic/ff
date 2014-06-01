@@ -8,9 +8,10 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PointCloud.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["PointCloud.js","EdgeFront.js","Front.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	/*
 	var res;
 	var o = new V3D(0,0,0);
 	var d = new V3D(1,1,0);
@@ -43,8 +44,9 @@ function classesLoadedFxn(){
 	pnt = res.point;
 	nrm = res.normal;
 	console.log(pnt+" "+nrm);
-
-	//var surface = new SurfaceTri();
+	*/
+	//
+	var surface = new SurfaceTri();
 }
 </script>
 <body onload="pageLoadedFxn();">

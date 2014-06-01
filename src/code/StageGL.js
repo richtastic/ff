@@ -19,7 +19,10 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
     //  matrices
 	this._projectionMatrix = mat4.create();
 	this._modelViewMatrixStack = new MatrixStackGL();
+	// view settings
 	this.frustrumAngle(45);
+	this.distanceNear(0.01);
+	this.distanceFar(100.0);
 	//
 	this.addListeners();
 }
@@ -46,6 +49,10 @@ StageGL.prototype.getBufferUint16ArrayElement = function(list, itemSize){
 }
 
 StageGL.prototype.setBackgroundColor = function(r,g,b,a){
+	if(arguments.length==1){
+		a = Code.getFloatArrayARGBFromARGB(r);
+		r = a[0]; g = a[1]; b = a[2]; a = a[3];
+	}
     return this._canvas.setBackgroundColor(r,g,b,a);
 }
 StageGL.prototype.enableDepthTest = function(){
@@ -68,12 +75,24 @@ StageGL.prototype.frustrumAngle = function(a){
 	}
 	return this._frustrumAngle;
 }
+StageGL.prototype.distanceNear = function(d){
+	if(d!==undefined){
+		this._distanceNear = d;
+	}
+	return this._distanceNear;
+}
+StageGL.prototype.distanceFar = function(d){
+	if(d!==undefined){
+		this._distanceFar = d;
+	}
+	return this._distanceFar;
+}
 StageGL.prototype.clear = function(){
 	this._canvas.clearViewport();
 	var angle = this._frustrumAngle;
 	var ratio = this._canvas.width()/this._canvas.height();
-	var cutClose = 0.1;
-	var cutFar = 100.0;
+	var cutClose = this._distanceNear;
+	var cutFar = this._distanceFar;
 	this.setPerspective(angle,ratio, cutClose,cutFar, this._projectionMatrix);
 }
 StageGL.prototype.setPerspective = function(angle, ratio, cutClose, cutFar, matrix){
