@@ -112,7 +112,7 @@ local bivariate polynomials = ? ?x*y?
 <br/>
 <br/>
 <br/>
-seed triangle
+seed triangle: first triangle, generated at random location on surface
 <br/>
 always grow with isosceles triangles
 <br/>
@@ -185,7 +185,9 @@ grand (great) circle of a sphere: largest circle that intersects a sphere (have 
 ### Algorithm
 
 - initial seed triangle:
-    - random point of cloud projected to MLS surface
+    - random point of cloud
+    - projected point to MLS surface
+    - find edge size appropriate for region (lookup L(x,y,z)?)
     - decide triangle edge length: force equalateral
     - inductively find best initial size:
         - query curvature and bracket and interval bisection to find best initial size
@@ -218,19 +220,71 @@ deferred edge: second priority - because edge will introduce a bad triangle
 boundary: anisotropy (using best fit local plane) maximum angle between local points and reference point if above a threshold (150&deg;)
 
 firstFront()
-vertexPredict()
+
+**vertexPredict(edge, field)**
+- need to know absolute curvature &kappa; (from &kappa;<sub>1</sub> and &kappa;<sub>2</sub>). L = &rho;/&kappa;
+
+&eta; = ?
+c = edge.length();
+b =  c * &eta;
+midpoint = e.midpoint()
+i = fieldMinInSphere(field, midpoint,b)
+&beta; = ?
+baseAngle = min(max(t,60-&beta;),60+&beta;) // clamp base angle of triangle &isin; [60-&beta;,60+&beta;]
+p = Point() // forms angle 180-2*baseAngle with edge
+return MLSProject(p)
+
+**fieldMinInSphere(field, center,radius)**
+-?
+
+**MLSProject(point)**
+-project point onto MLS Surface?
+
+**Triangulate(field)**
+- ?
+ 
+fronts = FirstFront()
+while(frontSet.length>0){
+    current = fronts.first()
+    // close front with only 3 vertexes - what about initial front?
+    if(current.vertexCount()==3){
+        current.closeFront()
+        fronts.removeFront(current)
+        continue
+    }
+    // ?
+    e = current.bestEdge()
+    if(e.canCutEar()){
+        e.cutEar()
+        continue
+    }
+    // 
+    p = vertexPredict(edge,field)
+    if( !triangleTooClose(e,p) ){ // 
+        e.growTriangle() // ?
+    }else{ // 
+        front = closestFront(e,p)
+        if(front==current){ // same front?
+            front = fronts.split(current-front) // separate front from current
+            fronts.addFront( front ) // add as new front
+        }else{ // different fronts
+            front = merge(current,front) // combine
+            fronts.removeFront(front) // remove second copy from list
+        }
+    }
+}
 
 **triangleTooClose()**
 - whether added point is closer than allowed to to existing triangulation (half ideal edge length at point p), if yes, topological even occurs
 
-growTriangle()
+x growTriangle()
 
 closestFront()
 
 **canCutEar()**
 - returns true if possible to form 'good' triangle (all resulting angles &lt; 70&deg;) by connecting edge e to any adjacent edges
 
-cutEar()
+x cutEar()
 
 bestEdge()
 
@@ -256,7 +310,19 @@ How do you choose the next point/location to add as a vertex (predict)?
 
 PointCloud
     - organize()
-Front
+
+Front:
+    - edges[] (doubly-linked list & priority queue)
+    - TriangleGrow(vertex,edge)
+        - create new triangle with vertex and internal edge - remove old edge from front, add 2 new edges
+        - if vertex is too close, merge with existing - causes topoligical event:
+            - split
+            - merge
+    - EarCut(edgeA,edgeB)
+        - create new triangle with 3 vertices on front - remove 2 old edges, add 1 new edge
+Full-Front:
+    - fronts[]
+    
 
 
 

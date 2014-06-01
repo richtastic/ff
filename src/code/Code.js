@@ -1734,36 +1734,6 @@ Code.pointAboveParabola = function(focus,directrix, point){
 	}
 	return false;
 }
-/*
-Code.intersectionParabolas2 = function(focA,dirA, focB,dirB){
-	var a1 = focA.x, b1 = focA.y, c1 = dirA;
-	var a2 = focB.x, b2 = focB.y, c2 = dirB;
-	var d1 = b1*b1 - c1*c1;
-	var d2 = b2*b2 - c2*c2;
-	var e1 = 2.0*(b1-c1);
-	var e2 = 2.0*(b2-c2);
-	console.log(a1,b1,c1,d1,e1,"    -     ",a2,b2,c2,d2,e2);
-	var A = e2-e1;
-	var B = 2.0*(a2*e1 - a1*e2);
-	var C = a1*a1*e2 + d1*e2 - a2*a2*e1 - d2*e1;
-	var inside = B*B - 4*A*C;
-	console.log(A,B,C," ... ",inside);
-	if(A==0){ // identical parabolas
-		if(a1==a2){ // infinite intersections
-			return null;
-		}
-		console.log("single intersection .. linear equation");
-		// .. ?
-	}
-	if(inside<0){ return null; } // imaginary solutions
-	var sqrt = Math.sqrt(inside);
-	var intAx = (sqrt - B)/(2*A);
-	var intBx = -(B +sqrt)/(2*A);
-	var intAy = (Math.pow(intAx-a1,2) + d1)/e1;
-	var intBy = (Math.pow(intBx-a1,2) + d1)/e1;
-	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
-}
-*/
 Code.intersectionRayParabola = function(org,dir, foc,drx){
 	if(foc.y==drx.y){ // infinitely thin parabola
 		if(dir.x==0){ // infinite or 0 intersections
@@ -1833,6 +1803,27 @@ Code.circleFromPoints = function(a,b,c){
 	return null;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
+Code.intersectRayPlane = function(org,dir, pnt,nrm){
+	var num = nrm.x*(pnt.x-org.x) + nrm.y*(pnt.y-org.y) + nrm.z*(pnt.z-org.z);
+	if(num==0){ return (new V3D()).copy(pnt); }// point is already in plane (first of possibly infinite intersections)
+	var den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
+	if(den==0){ return null; } // zero or infinite intersections
+	var t = num/den;
+	console.log("t: "+t);
+	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+}
+Code.planeEquationFromPointNormal = function(pnt,nrm){
+	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
+	var dot = (q.x*pnt.x + q.y*pnt.y +  q.z*pnt.z); // q.scale(dot);
+	return {a:nrm.x, b:nrm.y, c:nrm.z, d:dot};
+}
+Code.planePointNormalFromEquation = function(a,b,c,d){
+	var nrm = new V3D(a,b,c);
+	var len = nrm.length();
+	if(len!=0.0){ len = 1.0/len; }
+	return {normal:nrm, point:new V3D(a*d*len,b*d*len,c*d*len)};
+}
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
 Code.closestPoints3D = function(oa,da, ob,db){

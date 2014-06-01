@@ -10,8 +10,41 @@ function pageLoadedFxn(){
 function ffLoadedFxn(){
 	(new ScriptLoader("./",["PointCloud.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 }
-function r2dLoadedFxn(){
-	var surface = new SurfaceTri();
+function classesLoadedFxn(){
+	var res;
+	var o = new V3D(0,0,0);
+	var d = new V3D(1,1,0);
+	var n = new V3D(1,0,1);
+	var q = new V3D(1,2,3);
+	res = Code.intersectRayPlane(o,d, q,n);
+	console.log(res+"");
+	// -------
+	console.log("--------------");
+	var a,b,c,d, pnt,nrm;
+	pnt = new V3D(2,4,0);
+	nrm = new V3D(1,2,0);
+	pnt = Code.intersectRayPlane(new V3D(0,0,0),new V3D(0,1,0), pnt,nrm); // get new point in plane
+	console.log(pnt+" "+nrm);
+	//
+	res = Code.planeEquationFromPointNormal(pnt,nrm);
+	a = res.a; b = res.b; c = res.c; d = res.d;
+	console.log(a+" "+b+" "+c+" "+d);
+	//
+	res = Code.planePointNormalFromEquation(a,b,c,d);
+	pnt = res.point;
+	nrm = res.normal;
+	console.log(pnt+" "+nrm);
+	//
+	res = Code.planeEquationFromPointNormal(pnt,nrm);
+	a = res.a; b = res.b; c = res.c; d = res.d;
+	console.log(a+" "+b+" "+c+" "+d);
+
+	res = Code.planePointNormalFromEquation(a,b,c,d);
+	pnt = res.point;
+	nrm = res.normal;
+	console.log(pnt+" "+nrm);
+
+	//var surface = new SurfaceTri();
 }
 </script>
 <body onload="pageLoadedFxn();">
