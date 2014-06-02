@@ -17,6 +17,26 @@ V3D.cross = function(a,b,c){ // axb
 	}
 	return new V3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
 }
+V3D.rotate = function(to,from,org,dir,ang){ // to = (from-org).rotate(dir,ang)
+	var x = from.x, y = from.y, z = from.z;
+	var a = org.x, b = org.y, c = org.z;
+	var u = dir.x, v = dir.y, w = dir.z;
+	var uu = u*u, vv = v*v, ww = w*w; // squares
+	var ux_vy_wz = u*x + v*y + w*z; // dot
+	var au = a*u, bv = b*v, cw = c*w; // partial dots
+	var cos = Math.cos(ang), sin = Math.sin(ang), m1c = 1.0 - cos;
+	var X = (a*(vv+ww) - u*(bv+cw-ux_vy_wz))*m1c + x*cos + (b*w - c*v - w*y + v*z)*sin;
+	var Y = (b*(uu+ww) - v*(au+cw-ux_vy_wz))*m1c + y*cos - (a*w - c*u - w*x + u*z)*sin;
+	var Z = (c*(uu+vv) - w*(au+bv-ux_vy_wz))*m1c + z*cos + (a*v - b*u - v*x + u*y)*sin;
+	to.set(X,Y,Z);
+	return to;
+}
+V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
+	if(ang===undefined){
+		ang = dir; dir = a, a = b; b = new V2D();
+	}
+	V3D.rotate(b,a, V3D.ZERO,dir,ang); // about same origin
+}
 V3D.diff = function(a,b,c){ // a-b
 	if(c!==undefined){
 		a.set(b.x-c.x,b.y-c.y,b.z-c.z);
@@ -116,3 +136,7 @@ V3D.prototype.homo = function(){
 		this.z = 1.0;
 	}
 }
+V3D.ZERO = new V3D(0.0,0.0,0.0);
+V3D.DIRX = new V3D(1.0,0.0,0.0);
+V3D.DIRY = new V3D(0.0,1.0,0.0);
+V3D.DIRZ = new V3D(0.0,0.0,1.0);

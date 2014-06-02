@@ -167,7 +167,7 @@ surface is defined by a single real number, the radius of curvature
 **Bounded Hausdorff Distance:** Hausdorff distance between two surfaces A and B in &reals;<sup>3</sup> = &epsilon;(A,B) = max<sub>a&isin;A</sub>(min<sub>b&isin;B</sub>||a-b||)
 <br/>
 <br/>
-barycenter of triangle = centroid of triangle (lines from center of edge to opposite vertex all meet at point)
+barycenter of triangle &equiv; CoM = centroid of triangle (lines from center of edge to opposite vertex all meet at point)
 <br/>
 incenter of triangle = lines from vertex at half-angle direction meet at point
 <br/>
@@ -479,9 +479,9 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
-- plot 2D curvature lines (N,T,B,R), and think about 3D curvature
 - generate sphere points (random, with error)
 - render points in webGL
+
 - determing MLS surface for any point
 - display MLS as sampled points on surface
 - how to get kappa - curvature of the MLS surface
@@ -514,3 +514,4 @@ plot(igeaTim,igeaTri,"m-x");
 (Hausdorf Distance)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
 (osculating sphere)[http://mathworld.wolfram.com/OsculatingSphere.html]
 (Curvature)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
+(Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]

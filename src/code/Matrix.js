@@ -85,6 +85,15 @@ Matrix.prototype.set = function(row,col,val){
 Matrix.prototype.get = function(row,col){
 	return this._rows[row][col];
 }
+Matrix.prototype.toV3D = function(){
+	var i, j, v = new V3D();
+	if(this._rows.length==1){ // row vector
+		v.set(this._rows[0][0],this._rows[0][1],this._rows[0][2]);
+	}else{ // column vector
+		v.set(this._rows[0][0],this._rows[1][0],this._rows[2][0]);
+	}
+	return v;
+}
 Matrix.prototype.toArray = function(){
 	var i, j, row = this._rowCount, col = this._colCount, index = 0;
 	var a = new Array(row*col);

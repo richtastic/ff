@@ -170,6 +170,10 @@ Canvas.prototype.bindElementArrayBuffer = function(buffer, lengthOfIndividual){
 Canvas.prototype.drawElementArrayUint16Buffer = function(buffer, lengthOfTotal){
 	this._context.drawElements(this._context.TRIANGLES, lengthOfTotal, this._context.UNSIGNED_SHORT, 0);
 }
+Canvas.prototype.drawPoints = function(count, offset){
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.POINTS, offset, count);
+}
 Canvas.prototype.drawTriangles = function(count, offset){
 	offset = offset===undefined? 0 : offset;
 	this._context.drawArrays(this._context.TRIANGLES, offset, count);

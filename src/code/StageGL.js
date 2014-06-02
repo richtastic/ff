@@ -51,7 +51,7 @@ StageGL.prototype.getBufferUint16ArrayElement = function(list, itemSize){
 StageGL.prototype.setBackgroundColor = function(r,g,b,a){
 	if(arguments.length==1){
 		a = Code.getFloatArrayARGBFromARGB(r);
-		r = a[0]; g = a[1]; b = a[2]; a = a[3];
+		r = a[1]; g = a[2]; b = a[3]; a = a[0];
 	}
     return this._canvas.setBackgroundColor(r,g,b,a);
 }
@@ -125,6 +125,9 @@ StageGL.prototype.bindElementArrayBuffer = function(attr,buffer){
 StageGL.prototype.drawElementArrayUint16Buffer = function(buffer){
 	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.length);
 }
+StageGL.prototype.drawPoints = function(attr,buffer){
+	this._canvas.drawPoints(buffer.length);
+}
 StageGL.prototype.drawTriangles = function(attr,buffer){
 //	this.matrixReset();
 //	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
@@ -164,7 +167,7 @@ StageGL.prototype._enterFrame = function(e){
 // ------------------------------------------------------------------------------------------------------------------------ LISTENERS
 StageGL.prototype.addListeners = function(){
 	this._timer.addFunction(Ticker.EVENT_TICK,this._enterFrame,this);
-// 	this._canvas.addListeners();
+ 	this._canvas.addListeners();
 // 	this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this._stageResized,this);
 // 	this._canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,this._canvasMouseDown,this);
 // 	this._canvas.addFunction(Canvas.EVENT_MOUSE_UP,this._canvasMouseUp,this);
@@ -173,7 +176,7 @@ StageGL.prototype.addListeners = function(){
 }
 StageGL.prototype.removeListeners = function(){
 	this._timer.removeFunction(Ticker.EVENT_TICK,this._enterFrame,this);
-// 	this._canvas.removeListeners();
+ 	this._canvas.removeListeners();
 // 	this._canvas.removeFunction(Canvas.EVENT_WINDOW_RESIZE,this._stageResized,this);
 // 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_DOWN,this._canvasMouseDown,this);
 // 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_UP,this._canvasMouseUp,this);

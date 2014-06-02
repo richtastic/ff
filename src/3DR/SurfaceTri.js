@@ -9,41 +9,149 @@ function SurfaceTri(){
 	// 
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/10.0, this.getVertexShaders1(), this.getFragmentShaders1());
-  	this._stage3D.setBackgroundColor(0x66FF0000);
+  	this._stage3D.setBackgroundColor(0x88FFFFFF);
+	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
+	this._stage3D.start();
 	// datas
 	this._pointCloud = null;
 	this._front = new Front();
-	// 
+	// // 
 	this.plot1D();
+	//
+	this.setupSphere3D();
 }
 SurfaceTri.prototype.getVertexShaders1 = function(){
 	return ["\
 		attribute vec3 aVertexPosition; \
 		attribute vec4 aVertexColor; \
-		attribute vec2 aTextureCoord; \
 		varying vec4 vColor; \
-		varying vec2 vTextureCoord; \
 		uniform mat4 uMVMatrix; \
 		uniform mat4 uPMatrix; \
 		void main(void) { \
+			gl_PointSize = 3.0; \
 			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
-			vTextureCoord = aTextureCoord; \
+			vColor = aVertexColor; \
 		} \
     "];
+    
 }
 SurfaceTri.prototype.getFragmentShaders1 = function(){
     return ["\
 		precision mediump float; \
 		varying vec4 vColor; \
-		varying vec2 vTextureCoord; \
-		uniform sampler2D uSampler; \
 		void main(void){ \
-			gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t)); \
+			gl_FragColor = vColor; \
 		} \
     "];
+    
 }
+// ------------------------------------------------------------------------------------------------------------------------ 
+SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
+	//console.log(e);
+	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
+	this._stage3D.clear();
+	// 
+	this._stage3D.matrixIdentity();
+	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
+	this._stage3D.matrixRotate(e*0.01, 0,1,0);
+	this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
+	this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
+	this._stage3D.matrixReset();
+	this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
+}
+SurfaceTri.prototype.setupSphere3D = function(){
+	// 
+	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
+	// POINTS
+	var pts = this.generateSpherePoints(10,1.0,0.0);
+	var p, i;
+	var points = [];
+	var colors = [];
+	for(i=0;i<pts.length;++i){
+		p = pts[i];
+		points.push(p.x,p.y,p.z);
+		colors.push(Math.random(),Math.random(),Math.random(),1.0);
+	}
+	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
+	// PLANE FITTING
+	var cov = this.covarianceFromPoints(pts);
+
+	// START
+	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
+}
+SurfaceTri.prototype.covarianceFromPoints = function(points){
+	var dx,dy,dz, p, i, len = points.length;
+	//var mu = new V3D();
+	var a = 0, b = 0, c = 0;
+	var A=0,B=0,C=0, E=0,F=0, I=0;
+	// mean
+	for(i=0;i<len;++i){
+		p = points[i];
+		a += p.x;
+		b += p.y;
+		c += p.z; // centers of mass should be weighted means
+	}
+	a /= len; b /= len; c /= len;
+	for(i=0;i<len;++i){
+		p = points[i];
+		dx = p.x-a; dy = p.y-b; dz = p.z-c; // divide variance by weight for futher points (weight = 1/error)
+		A += dx*dx;
+		B += dx*dy;
+		C += dx*dz;
+		E += dy*dy;
+		F += dy*dz;
+		I += dz*dz;
+	}
+	var cov = new Matrix(3,3).setFromArray([A,B,C, B,E,F, C,F,I]);
+	var eig = Matrix.eigenValuesAndVectors(cov);
+	var svd = Matrix.SVD(cov);
+	console.log(cov.toString());
+	console.log(svd);
+	var values = eig.values;
+	var vectors = eig.vectors;
+	var v0 = vectors[0].toV3D();
+	var v1 = vectors[1].toV3D();
+	var v2 = vectors[2].toV3D();
+	console.log(values);
+	console.log(v0+"");
+	console.log(v1+"");
+	console.log(v2+"");
+	console.log("...");
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+	
+	console.log(U.toString());
+	console.log(S.toString());
+	console.log(V.toString());
+
+	var minDir = new V3D().setFromArray(V.colToArray(2));
+	console.log(minDir+"");
+	
+	return cov;
+}
+SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
+	count = count!==undefined?count:25;
+	radius = radius!==undefined?radius:1.0;
+	error = error!==undefined?error:0.01;
+	var i, v, theta, phi, psi, rad, list = [];
+	for(i=0;i<count;++i){
+		u = Math.random()*2.0-1.0;
+		rad = Math.sqrt(1-u*u);
+		theta = Math.random()*Math.TAU;
+		v = new V3D(rad*Math.cos(theta),rad*Math.sin(theta),u);
+		v.scale(radius+(Math.random()-0.5)*error);
+		list.push(v);
+		//list.push(v.x,v.y,v.z);
+		//list.push(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
+	}
+	return list;
+}
 // ------------------------------------------------------------------------------------------------------------------------ 
 SurfaceTri.prototype.plot1D = function(){
 	var fxn1D = function(x){ return (x-200)*(x-100)*(x+200)*0.00001; } // (-1.0*x*x*x + 2.0*x*x - 5*x - 1.0)
