@@ -9,7 +9,7 @@ function SurfaceTri(){
 	// 
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/10.0, this.getVertexShaders1(), this.getFragmentShaders1());
-  	this._stage3D.setBackgroundColor(0x88FFFFFF);
+  	this._stage3D.setBackgroundColor(0x00000000);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
 	this._stage3D.start();
@@ -33,8 +33,17 @@ SurfaceTri.prototype.getVertexShaders1 = function(){
 			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
 			vColor = aVertexColor; \
 		} \
-    "];
-    
+    "];/*,"\
+    	attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
+	"];*/
 }
 SurfaceTri.prototype.getFragmentShaders1 = function(){
     return ["\
@@ -43,8 +52,13 @@ SurfaceTri.prototype.getFragmentShaders1 = function(){
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-    "];
-    
+	"];/*,"\
+		precision mediump float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
+		} \
+    "];*/
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
@@ -54,11 +68,24 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	// 
 	this._stage3D.matrixIdentity();
 	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
-	this._stage3D.matrixRotate(e*0.01, 0,1,0);
+	this._stage3D.matrixRotate(e*0.03, 0,1,0);
 	this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
 	this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
 	this._stage3D.matrixReset();
 	this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
+	//
+	if(this._planeTriangleVertexList){
+		// console.log(this._planeTriangleVertexList);
+		// console.log(this._planeTriangleColorsList);
+		this._stage3D.matrixIdentity();
+		this._stage3D.matrixTranslate(0.0,0.0,-3.0);
+		this._stage3D.matrixRotate(e*0.03, 0,1,0);
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._planeTriangleVertexList);
+		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
+		this._stage3D.matrixReset();
+		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
+	}
+	this._stage3D.matrixReset();
 }
 SurfaceTri.prototype.setupSphere3D = function(){
 	// 
@@ -66,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(10,1.0,0.0);
+	var pts = this.generateSpherePoints(100,1.0,0.0);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -99,7 +126,7 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 	a /= len; b /= len; c /= len;
 	for(i=0;i<len;++i){
 		p = points[i];
-		dx = p.x-a; dy = p.y-b; dz = p.z-c; // divide variance by weight for futher points (weight = 1/error)
+		dx = p.x-a; dy = p.y-b; dz = p.z-c; // divide variance by weight for futher points (weight = 1/error) : w_i = 1/var_i, var_i = variance of ith error
 		A += dx*dx;
 		B += dx*dy;
 		C += dx*dz;
@@ -131,8 +158,29 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 	console.log(V.toString());
 
 	var minDir = new V3D().setFromArray(V.colToArray(2));
+	var N = new Matrix(3,1).setFromArray(V.colToArray(2));
 	console.log(minDir+"");
-	
+	console.log(N+"");
+	//
+	// var A = Matrix.mult(cov,N);
+	// A = Matrix.mult(Matrix.transpose(N),A);
+	// console.log(A+"");
+
+	var inPlane0 = new V3D().setFromArray(V.colToArray(0));
+	var inPlane1 = new V3D().setFromArray(V.colToArray(1));
+	var com = new V3D(a,b,c);
+	var edge = new V3D();
+
+	// make triangle plane:
+	var list = [inPlane0.x+a,inPlane0.y+a,inPlane0.z+c, inPlane1.x+a,inPlane1.y+b,inPlane1.z+c, a,b,c];
+	this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
+	var colors = [1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0];
+	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
+	console.log("...............");
+	console.log(list);
+	console.log(colors);
+	console.log(this._planeTriangleVertexList)
+	console.log(this._planeTriangleColorsList)
 	return cov;
 }
 SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
@@ -148,7 +196,11 @@ SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
 		v.scale(radius+(Math.random()-0.5)*error);
 		list.push(v);
 		//list.push(v.x,v.y,v.z);
-		//list.push(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
+		v.set(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
+		//v.x *= 0.01;
+		v.x = 0.0;
+		v.y *= 0.1;
+		v.z *= 0.1;
 	}
 	return list;
 }

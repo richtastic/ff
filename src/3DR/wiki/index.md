@@ -479,12 +479,13 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
-- generate sphere points (random, with error)
-- render points in webGL
-
-- determing MLS surface for any point
-- display MLS as sampled points on surface
+- MLS
+	x determing MLS surface for any point
+	x display MLS as sampled points on surface
+	- weighted?
+	- 'snapping' to closest sample point?
 - how to get kappa - curvature of the MLS surface
+	- maximum absolute curvature?
 - container class for point cloud
 - how to 'query' field
 - how to generate first triangle
