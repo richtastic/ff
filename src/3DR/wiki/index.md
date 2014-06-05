@@ -96,7 +96,7 @@ b = maximum querying radius (of guidance field) => result of maximum possible cu
 <br/>
 L = &rho;/&kappa; = ideal edge length
 <br/>
-? = approximation error
+? = approximation error - directly defined by &rho; subtending certain arc-length
 <br/>
 &tau; = smoothing factor, relates MLS h value to neighborhood radius
 <br/>
@@ -335,16 +335,17 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 
 ### Curvature
 **measurement of how quickly a curve/surface changes direction - sharpness - deviation from straight line**
-<br/>
-**Change in Position Vector dR**: (infitesimal arc) &approx; [r(x+&Delta;x,f(x+&Delta;x)) - (x-&Delta;x,f(x-&Delta;x))]/[2&Delta;x]
+
+#### 2D (Curve) Observances:
+**Change in Position Vector dR**: (infitesimal arc) &approx; [r(x+&Delta;x,f(x+&Delta;x)) - r(x-&Delta;x,f(x-&Delta;x))]/[2&Delta;x]
 <br/>
 **Unit Tangent Vector T**: dR/||dR||  (unit version of dR)
+<br/>
+**Curvature-Normal Vector &Kappa;** = ||dT/ds|| = ||T'(s)|| &approx; [T(x+&Delta;x) - T(x-&Delta;x)]/[2&Delta;x] (~second vector derivative)
 <br/>
 **Unit Normal VectorN**: &Kappa;/||&Kappa;|| (always on side of osculating circle/sphere), *similar* Normal vector can be chosen using dR to be orthogonal to T - consistent 'side' of curve/path
 <br/>
 **Binormal Vector B**: T &times; N (something to do with torsion - not useful in 2D?)
-<br/>
-**Curvature-Normal Vector &Kappa;** = ||dT/ds|| = ||T'(s)|| &approx; [T(x+&Delta;x) - T(x-&Delta;x)]/[2&Delta;x] (~second vector derivative)
 <br/>
 **Curvature &kappa**: = ||&Kappa;||
 <br/>
@@ -354,7 +355,77 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 <br/>
 curvature of line = 0; curvature of circle = 1/R
 <br/>
+
+
+#### 3D Scalar Field Observances:
+**f(x,y,z)**: Scalar Field
 <br/>
+**&nabla;f = df/ds (Grad)**: Gradient (direction of maximum increase) is a normal vector to a surface of constant value
+<br/>
+&lt; &part;f/&part;x, &part;f/&part;y, &part;f/&part;z &gt;
+<br/>
+&lt; [f(x+&Delta;x,y,z) - f(x-&Delta;x,y,z)]/[2&Delta;x] , [f(x,y+&Delta;y,z) - f(x,y-&Delta;y,z)]/[2&Delta;y] , [f(x,y,z+&Delta;z) - f(x,y,z-&Delta;z)]/[2&Delta;z] &gt;
+<br/>
+**3D Unit Normal Vector N**: Grad/||Grad||
+<br/>
+**3D Curvature (C for now)**: dN/dS because the Normal is a vector, this is a vector of vectors:
+<br/>
+C<sub>x</sub> = &lt; (&part;N/&part;x)<sub>x</sub>, (&part;N/&part;x)<sub>y</sub>, (&part;N/&part;x)<sub>z</sub> &gt;
+<br/>
+C<sub>y</sub> = &lt; (&part;N/&part;y)<sub>x</sub>, (&part;N/&part;y)<sub>y</sub>, (&part;N/&part;y)<sub>z</sub> &gt;
+<br/>
+C<sub>z</sub> = &lt; (&part;N/&part;z)<sub>x</sub>, (&part;N/&part;z)<sub>y</sub>, (&part;N/&part;z)<sub>z</sub> &gt;
+<br/>
+Should this be projected to the tangent plane?
+<br/>
+<br/>
+
+<br/>
+**Tangent Plane**: cotains point: p=&lt;p<sub>x</sub>,p<sub>y</sub>,p<sub>z</sub>&gt; with normal: N=&lt;N<sub>x</sub>,N<sub>y</sub>,N<sub>z</sub>&gt; &rarr; N<sub>x</sub>(x-p<sub>x</sub>) + N<sub>y</sub>(y-p<sub>y</sub>) + N<sub>z</sub>(z-p<sub>z</sub>) = 0
+<br/>
+<br/>
+**Principal Curvatures &kappa;1 and &kappa;2**: Each direction on a surface has a maximum and minimum curvature the direction of each is called the principal tangent direction (locally the surface is a plane [2 primary directions] and each direction has its own curvature) (which is max and which is min depends on who you ask)
+<br/>
+**Gauss Curvature &Kappa;(x)**: &kappa;1&middot;&kappa;2
+**Mean Curvature H(x)**: (&kappa;1 and &kappa;2)/2
+<br/>
+<br/>
+**First Fundamental Form (I)**: ?
+<br/>
+**Second Fundamental Form (II)**: ?
+<br/>
+**K** = detII/detI = (LN - MM)/(EG - FF)
+<br/>
+Simplification for surface F(x,y,z) = 0
+<br/>
+http://en.wikipedia.org/wiki/Gaussian_curvature
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+
+Surfaces:
+
+
+
+&kappa; = |r' &times; r''|/|r'<sup>3</sup>|
+
+
+
+
+Curves:
+B = T&times;N
+%tau; = -N*B'
+&kappa; = |r' &times; r''|/|r'<sup>3</sup>|
+
+
+&lt; &part;T/&part;x, &part;T/&part;y, &part;T/&part;z &gt;
+
+X: &lt; &part;<sup>2</sup>f/&part;x&part;y, &part;<sup>2</sup>f/&part;x&part;y, &part;<sup>2</sup>f/&part;x&part;z &gt;
+
 <br/>
 <br/>
  ? (polar coords shows T,N more clearly)
@@ -415,14 +486,35 @@ is n is not normal, d = g||n||<sup>2</sup>
 <br/>
 **Point in plane?**: center of mass of points?
 <br/>
+function should be weighted based on point distance to origin point of plane (projected point)
+&Sum;<sub>i</sub> (n&middot;p<sub>i</sub> - d)<sup>2</sup> &middot; function(&prop;1/||p<sub>i</sub>-o||)
+<br/>
 ****: ?
 <br/>
 Solve Ax = b &rarr; x = pinv(A)b ?
 <br/>
+Solve SVD ?
 <br/>
-Primary eigenvector = normal ?
+smallest eigenvector = normal to surface (direction in which the data varies the least)
 <br/>
 <br/>
+<br/>
+Locally, the surface must be defined by some bivariate polynomial - ie z = f(x,y) (in terms of the local coordinate system).
+&Sum;<sub>i</sub> (f(x<sub>i</sub>,y<sub>i</sub>) - z<sub>i</sub>)<sup>2</sup> &middot; function(&prop;1/||p<sub>i</sub>-o||)
+z<sub>i</sub> = height of point in plane coordinate system = n&middot;(p<sub>i</sub>-o)
+f() is some bivariate representation (?#? coefficients?)
+<br/>
+function(&prop;1/||p<sub>i</sub>-o||) suggested to be: exp(-d<sup>2</sup>/h<sup>2</sup>), where h is some input smoothing parameter (larger h = more ssmoothing)
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+**Minimization via Powell Iteration**
+<br/>
+OMG another iteration method
 <br/>
 <br/>
 <br/>
@@ -480,10 +572,11 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 **TODO:**
 - MLS
-	x determing MLS surface for any point
-	x display MLS as sampled points on surface
+    x determing MLS surface for any point
+    x display MLS as sampled points on surface
 	- weighted?
 	- 'snapping' to closest sample point?
+    - neighborhood?
 - how to get kappa - curvature of the MLS surface
 	- maximum absolute curvature?
 - container class for point cloud
@@ -515,4 +608,5 @@ plot(igeaTim,igeaTri,"m-x");
 (Hausdorf Distance)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
 (osculating sphere)[http://mathworld.wolfram.com/OsculatingSphere.html]
 (Curvature)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
+(3D Curvature)[http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html]
 (Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]
