@@ -337,13 +337,15 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 **measurement of how quickly a curve/surface changes direction - sharpness - deviation from straight line**
 
 #### 2D (Curve) Observances:
+As the three points that define any circle on a curve get closer to eachother (on the curve [arc length]) the circle approaches the oscilating circle 
+<br />
 **Change in Position Vector dR**: (infitesimal arc) &approx; [r(x+&Delta;x,f(x+&Delta;x)) - r(x-&Delta;x,f(x-&Delta;x))]/[2&Delta;x]
 <br/>
 **Unit Tangent Vector T**: dR/||dR||  (unit version of dR)
 <br/>
 **Curvature-Normal Vector &Kappa;** = ||dT/ds|| = ||T'(s)|| &approx; [T(x+&Delta;x) - T(x-&Delta;x)]/[2&Delta;x] (~second vector derivative)
 <br/>
-**Unit Normal VectorN**: &Kappa;/||&Kappa;|| (always on side of osculating circle/sphere), *similar* Normal vector can be chosen using dR to be orthogonal to T - consistent 'side' of curve/path
+**Unit Normal VectorN**: &Kappa;/||&Kappa;|| (always on side of osculating circle), *similar* Normal vector can be chosen using dR to be orthogonal to T - consistent 'side' of curve/path
 <br/>
 **Binormal Vector B**: T &times; N (something to do with torsion - not useful in 2D?)
 <br/>
@@ -355,6 +357,13 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 <br/>
 curvature of line = 0; curvature of circle = 1/R
 <br/>
+Change in normal along a CURVE: dN = -&kappa;T + &tau;B
+&kappa;<sub>n</sub>(X) = dot( -df(X), dN(X) ) / |df(x)|<sup>2</sup>
+B = T &cross; N
+dT = &kappa;N
+dN = -&kappa;T + &tau;B
+dB = -&tau;B
+(tangent-, principal normal-, binormal)-indicatrix
 
 
 #### 3D Scalar Field Observances:
@@ -428,8 +437,142 @@ X: &lt; &part;<sup>2</sup>f/&part;x&part;y, &part;<sup>2</sup>f/&part;x&part;y, 
 
 <br/>
 <br/>
- ? (polar coords shows T,N more clearly)
+ Two ways of defining a surface: Level sets - in which case the gradient points in the normal. Position Vector - in which case the derivative is an arc-length, tangent to the surface.
 <br/>
+
+<br/>
+**S = S(x,y,z=f(x,y))**: Surface topologially equivalent to a plane (explicitly defined)
+<br/>
+**P = (P<sub>x</sub>,P<sub>y</sub>,P<sub>y</sub>)**: Point on the surface in 3D Space
+<br/>
+**n = (n<sub>x</sub>,n<sub>y</sub>n<sub>z</sub>)**: Unit Normal vector = r<sub>u</sub>&times;r<sub>v</sub>/|r<sub>u</sub>&times;r<sub>v</sub>|
+<br/>
+<br/>
+**r(t) = r(u(t),v(t)) = **: Parametric Curve on r(u,v)
+<br/>
+<br/>
+**r = r(x,y,z)**: Position Vector / Parametric Surface defining S in terms of u and v, r(u,v)
+<br/>
+**r' = r<sub>u</sub>u' + r<sub>v</sub>v'**: Tangent vector of surface at P, u' and v' are the magnitudes in the directions of the unit directions r<sub>u</sub> and r<sub>v</sub>
+<br/>
+**r<sub>u</sub> = r<sub>u</sub>(r<sub>u1</sub>,r<sub>u2</sub>,r<sub>u3</sub>)**: Surface unit tangent vector in direction of derivative wrt u
+<br/>
+**r<sub>v</sub> = r<sub>v</sub>(r<sub>v1</sub>,r<sub>v2</sub>,r<sub>v3</sub>)**: Surface unit tangent vector in direction of derivative wrt v
+<br/>
+**r<sub>uu</sub> = r<sub>uu</sub>(r<sub>uu1</sub>,r<sub>uu2</sub>,r<sub>uu3</sub>)**: Second derivative in respective direction
+<br/>
+**r<sub>uv</sub> = r<sub>uv</sub>(r<sub>uv1</sub>,r<sub>uv2</sub>,r<sub>uv3</sub>)**: Second derivative in respective direction
+<br/>
+**r<sub>vv</sub> = r<sub>vv</sub>(r<sub>vv1</sub>,r<sub>vv2</sub>,r<sub>vv3</sub>)**: Second derivative in respective direction
+<br/>
+<br/>
+**k = &lt;k<sub>1</sub>,k<sub>2</sub>,k<sub>3</sub>&gt; = k<sub>n</sub>+k<sub>g</sub>**: curvature vector of some curve on surface
+<br/>
+**&kappa;<sub>n</sub>**: normal curvature of some curve on surface 
+<br/>
+**&kappa;<sub>g</sub>**: geodesic curvature of some curve on surface
+<br/> 
+**k<sub>n</sub> = &lt;k<sub>n1</sub>,k<sub>n2</sub>,k<sub>n3</sub>&gt;**: normal curvature vector of some curve on surface (in [+/-] direction of surface normal)
+<br/> 
+**k<sub>g</sub> = &lt;k<sub>g1</sub>,k<sub>g2</sub>,k<sub>g3</sub>&gt;**: geodesic curvature vector of some curve on surface (in tangent direction of surface)
+<br/>
+<br/>
+*First Fundamental Form (FFF) coefficients (I)* I = dr &middot; dr = E*du*<sup>2</sup> + 2F*du*dv + G*dv*<sup>2</sup> (arc length of a curve on the surface)
+<br/>
+**E**: r<sub>u</sub> &middot; r<sub>u</sub>
+<br/>
+**F**: r<sub>u</sub> &middot; r<sub>v</sub>
+<br/>
+**G**: r<sub>v</sub> &middot; r<sub>v</sub>
+<br/>
+*Second Fundamental Form (SFF) coefficients (II)* II = dr &middot;n = L*du*<sup>2</sup> + 2M*du*dv + N*dv*<sup>2</sup> (arc length change in direction of normal curve)
+<br/>
+**L**: r<sub>uu</sub> &middot; n
+<br/>
+**M**: r<sub>uv</sub> &middot; n
+<br/>
+**N**: r<sub>vv</sub> &middot; n
+<br/>
+<br/>
+**@ (II) = 0**:du = dv&middot;(-M&plusmn;sqrt(M<sup>2</sup>-LN))/L
+<br/>
+**&lambda; = dv/du = direction of normal curve**: Extrema @ d&kappa;<sub>i</sub>/d&lambda; = 0 = (E+2F&lambda;+G&lambda;)(N&lambda;+M) - (L+2M&lambda;+N&lambda;<sup>2</sup>)(G&lambda;+F) = 0
+<br/>
+&rarr; (EG-F<sup>2</sup>)&kappa;<sub>i</sub><sup>2</sup> - (EN+GL-2FM)&kappa;<sub>i</sub> + (LN-M<sup>2</sup>) = 0
+<br/>
+<br/>
+**K (gaussian curvature)**: &kappa;<sub>min</sub>&kappa;<sub>max</sub> = (LN-M<sup>2</sup>) / (EG-F<sup>2</sup>)
+<br/>
+**H (mean curvature)**: (&kappa;<sub>min</sub>+&kappa;<sub>max</sub>)/2 = (EN+GL-2FM) / 2(EG-F<sup>2</sup>)
+<br/>
+**&kappa;<sub>n</sub> (a curvature)**: &kappa;<sub>n</sub> = II/I : &kappa;<sub>n</sub><sup>2</sup> - 2H&kappa;<sub>n</sub> + K = 0
+<br/>
+**&kappa;<sub>min</sub> (min curvature)**: H - (H<sup>2</sup> - K)<sup>1/2</sup>
+<br/>
+**&kappa;<sub>max</sub> (max curvature)**: H + (H<sup>2</sup> - K)<sup>1/2</sup>
+<br/>
+<br/>
+<br/>
+<br/>
+which directions are the principal (and minimal) directions?
+```
+Solve for eigenvalues/vectors of: ?
+X1 = (a,b,c), X2 = (d,e,f) => some orthonormal basis for the tangent space
+[ II(X1,X1) II(X1,X2) ]
+[ II(X2,X1) II(X2,X2) ]
+OR PERHAPS THE CORRECT DET=0 is:
+[ L-kE M-kF ]
+[ M-kF N-kG ]
+```
+<br/>
+<br/>
+<br/>
+<br/>
+**Note: complex dot product (inner product, vector product)**:
+<br/>
+x = aX<sub>u</sub> + bX<sub>v</sub> , y = cX<sub>u</sub> + dX<sub>v</sub>
+<br/>
+x &middot; y = (aX<sub>u</sub> + bX<sub>v</sub>) &middot; (cX<sub>u</sub> + dX<sub>v</sub>)
+<br/>
+= (ac)(X<sub>u</sub>&middot;X<sub>u</sub>) + (a+d)(X<sub>u</sub>&middot;X<sub>v</sub>) + (b+c)(X<sub>u</sub>&middot;X<sub>v</sub>) + (bd)(X<sub>v</sub>&middot;X<sub>v</sub>)
+<br/>
+= (ac)(X<sub>u</sub>&middot;X<sub>u</sub>) + (ad+bc)(X<sub>u</sub>&middot;X<sub>v</sub>) + (bd)(X<sub>v</sub>&middot;X<sub>v</sub>)
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+REJECTIONS:
+X<sub>u</sub> = f(&part;a/&part;u, &part;b/&part;u, &part;c/&part;u)
+<br/>
+X<sub>v</sub> = f(&part;a/&part;v, &part;b/&part;v, &part;c/&part;v)
+<br/>
+X<sub>uv</sub> = f(&part;<sup>2</sup>a/&part;u&part;v, &part;<sup>2</sup>b/&part;u&part;v, &part;<sup>2</sup>c/&part;u&part;v)
+**u**: independent set of &reals;
+<br/>
+**v**: independent set of &reals;
+<br/>
+**X**: is the surface, set of points (x,y,z), defined by a function over space in terms of u and v
+<br/>
+**X = (x,y,z)**: f(f<sub>1</sub>(u,v), f<sub>2</sub>(u,v), f<sub>3</sub>(u,v) )
+<br/>
+**X<sub>u</sub> and X<sub>v</sub>**: Orthogonal Tangent vectors on the surface @ P - 
+<br/>
+
+<br/>
+**X<sub>u</sub> = f(&part;x/&part;u, &part;y/&part;u, &part;z/&part;u)**: f(&part;x/&part;x, &part;y/&part;x, &part;z/&part;x)
+<br/>
+**X<sub>v</sub> = f(&part;x/&part;v, &part;y/&part;v, &part;z/&part;v)**: f(&part;x/&part;y, &part;y/&part;y, &part;z/&part;y)
+<br/>
+**X<sub>uv</sub> = f(&part;<sup>2</sup>x/&part;u&part;v, &part;<sup>2</sup>y/&part;u&part;v, &part;<sup>2</sup>z/&part;u&part;v)**: f(&part;<sup>2</sup>x/&part;x&part;y, &part;<sup>2</sup>y/&part;x&part;y, &part;<sup>2</sup>z/&part;x&part;y)
+<br/>
+*In a numeric grid*: &part;x/&part;x=1, &part;x/&part;y=0, &part;y/&part;x=0, &part;y/&part;y=1, &part;<sup>2</sup>(x or y)/&part;(x or y)&part;(x or y) = 0
+<br/>
+
+
+
+
 
 
 
@@ -574,7 +717,7 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 - MLS
     x determing MLS surface for any point
     x display MLS as sampled points on surface
-	- weighted?
+    - weighted?
 	- 'snapping' to closest sample point?
     - neighborhood?
 - how to get kappa - curvature of the MLS surface
@@ -602,11 +745,16 @@ plot(torusTim,torusTri,"b-x");
 plot(igeaTim,igeaTri,"m-x");
 
 
+
+
+
+
 ---
 
 (Felix Hausdorff)[Felix Hausdorff]
 (Hausdorf Distance)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
 (osculating sphere)[http://mathworld.wolfram.com/OsculatingSphere.html]
+(Curvature - Surface Analysis, Fundamental Forms, etc)[http://web.mit.edu/hyperbook/Patrikalakis-Maekawa-Cho/]
 (Curvature)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
 (3D Curvature)[http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html]
 (Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]
