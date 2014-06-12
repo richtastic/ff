@@ -88,9 +88,9 @@ b = maximum querying radius (of guidance field) => result of maximum possible cu
 <br/>
 &gamma; = ?
 <br/>
-&kappa;<sub>1</sub> = ?
+&kappa;<sub>1</sub> = maximum curvature (in local area?)
 <br/>
-&kappa;<sub>2</sub> = ?
+&kappa;<sub>2</sub> = minimum curvature (in local area?)
 <br/>
 &kappa; = max(|&kappa;<sub>1</sub>|,|&kappa;<sub>2</sub>|) = minimum of absolute curvature
 <br/>
@@ -342,18 +342,24 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 <br/>
 **Unit Tangent Vector T**: dR/||dR||  (unit version of dR)
 <br/>
-**Curvature-Normal Vector &Kappa;** = ||dT/ds|| = ||T'(s)|| &approx; [T(x+&Delta;x) - T(x-&Delta;x)]/[2&Delta;x] (~second vector derivative)
+**Curvature-Normal Vector &Kappa;** = ||dT/ds|| = ||T'(s)|| &approx; [T(x+&Delta;x) - T(x-&Delta;x)]/[2&Delta;x] (~length of second vector derivative)
 <br/>
 **Unit Normal VectorN**: &Kappa;/||&Kappa;|| (always on side of osculating circle), *similar* Normal vector can be chosen using dR to be orthogonal to T - consistent 'side' of curve/path
 <br/>
-**Binormal Vector B**: T &times; N (something to do with torsion - not useful in 2D?)
+**Unit Binormal Vector B**: T &times; N ,change of B shows how curve twists out of osculating plane
 <br/>
 **Curvature &kappa;**: = ||&Kappa;||
 <br/>
 **Radius of Curvature r**: 1/&kappa; (radius of osculating sphere)
 <br/>
-**Other Notes**: need to souble-check...
-- arc length s = &int; |dR| dt
+**Torsion &tau;**: dB = &tau;N , dN = -(&tau;B + &kappa;T)
+<br/>
+**Osculating Plane**: Defined at each point as containing *both* T and N (perpendicular to B)
+<br/>
+**Frenet Frame**: T,N,B,&tau;,&kappa; define curve local behavior completely
+<br/>
+**Other Notes**: need to double-check...
+- arc length s = &int; ||dR|| dt
 - curvature of line = 0; curvature of circle = 1/R
 - Change in normal along a CURVE: dN = -&kappa;T + &tau;B
 - &kappa;<sub>n</sub>(X) = dot( -df(X), dN(X) ) / |df(x)|<sup>2</sup>
@@ -368,13 +374,13 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 #### 3D Surface Observances:
 ![3D Surface Curvature](./images/curve_3D_legend.png "3D Surface Curvature")
 <br/>
-**S = S(x,y,z=f(x,y))**: Surface topologially equivalent to a plane (explicitly defined)
+**Surface S = S(x,y,z=f(x,y))**: topologially equivalent to a plane (explicitly defined), locus of curves
 <br/>
-**P = (P<sub>x</sub>,P<sub>y</sub>,P<sub>y</sub>)**: Point on the surface in 3D Space
+**Point P = (P<sub>x</sub>,P<sub>y</sub>,P<sub>y</sub>)**: Point on the surface in 3D Space
 <br/>
-**r = r(r<sub>x</sub>,r<sub>y</sub>,r<sub>z</sub>)**: Position Vector / Parametric Surface defining S in terms of u and v, r(u,v)
+**Position Vector r = r(r<sub>x</sub>,r<sub>y</sub>,r<sub>z</sub>)**: Parametric Surface defining S in terms of u and v, r(u,v)
 <br/>
-**dr = (dr<sub>x</sub>,dr<sub>y</sub>,dr<sub>z</sub>) = r<sub>u</sub> + r<sub>v</sub> **: orthogonal surface tangent vectors with magnitudes equal to the derivative of arc length in respective direction (simply: dv + du)
+**Tangent Vector dr = (dr<sub>x</sub>,dr<sub>y</sub>,dr<sub>z</sub>) = r<sub>u</sub> + r<sub>v</sub> **: Orthogonal surface tangent vectors with magnitudes equal to the derivative of arc length in respective direction (simply: dv + du)
 <br/>
 **r<sub>u</sub> = r<sub>u</sub>(r<sub>u1</sub>,r<sub>u2</sub>,r<sub>u3</sub>)**: Surface unit tangent vector in direction of derivative wrt u
 <br/>
@@ -386,12 +392,14 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 <br/>
 **r<sub>vv</sub> = r<sub>vv</sub>(r<sub>vv1</sub>,r<sub>vv2</sub>,r<sub>vv3</sub>)**: Second derivative in respective direction
 <br/>
-**n = (n<sub>x</sub>,n<sub>y</sub>n<sub>z</sub>)**: Unit Normal vector = r<sub>u</sub>&times;r<sub>v</sub>/||r<sub>u</sub>&times;r<sub>v</sub>||
+**Unit Surface Normal Vector n = (n<sub>x</sub>,n<sub>y</sub>n<sub>z</sub>)**: r<sub>u</sub>&times;r<sub>v</sub>/||r<sub>u</sub>&times;r<sub>v</sub>||
+<br/>
+**Differential Area dA**: ||r<sub>u</sub>&times;r<sub>v</sub>||*du*dv ; ||r<sub>u</sub>&times;r<sub>v</sub>|| = (EG - F<sup>2</sup>)<sup>1/2</sup>
 <br/>
 <br/>
-**First Fundamental Form (I)**: derived from the magnitude of the longest arc-length at a point on the surface, *metric property of surface* : E*du*<sup>2</sup> + 2F*du*<sup>2</sup>*dv*<sup>2</sup> + G*dv*<sup>2</sup> = ds<sup>2</sup>
+**First Fundamental Form (I)**: Encodes: distance, area, angle; Magnitude of a given curve's arc-length at a point on the surface, *metric property of surface*: ds<sup>2</sup> = E*du*<sup>2</sup> + 2F*du*<sup>2</sup>*dv*<sup>2</sup> + G*dv*<sup>2</sup>
 <br/>
-**Second Fundamental Form (II)**: Magnitude of the second derivatives in the Normal direction, *extrinsic property of surface / shape operator* : L*du*<sup>2</sup> + 2M*du*<sup>2</sup>*dv*<sup>2</sup> + N*dv*<sup>2</sup> ds<sup>2</sup>
+**Second Fundamental Form (II)**: Change in the normal direction (second derivative) in direction of a given curve, *extrinsic property of surface / shape operator* : L*du*<sup>2</sup> + 2M*du*<sup>2</sup>*dv*<sup>2</sup> + dn*dv*<sup>2</sup> = &kappa;<sub>n</sub>
 <br/>
 <br/>
 *First Fundamental Form (FFF) coefficients (I)* I = dr &middot; dr = E*du*<sup>2</sup> + 2F*du*dv + G*dv*<sup>2</sup> (arc length of a curve on the surface)
@@ -402,7 +410,8 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 <br/>
 **G**: r<sub>v</sub> &middot; r<sub>v</sub>
 <br/>
-*Second Fundamental Form (SFF) coefficients (II)* II = dr &middot;n = L*du*<sup>2</sup> + 2M*du*dv + N*dv*<sup>2</sup> (arc length change in direction of normal curve)
+
+*Second Fundamental Form (SFF) coefficients (II)* II = -(dr &middot; n) = L*du*<sup>2</sup> + 2M*du*dv + N*dv*<sup>2</sup> (arc length change in direction of normal)
 <br/>
 **L**: r<sub>uu</sub> &middot; n
 <br/>
@@ -418,41 +427,44 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 &rarr; (EG-F<sup>2</sup>)&kappa;<sub>i</sub><sup>2</sup> - (EN+GL-2FM)&kappa;<sub>i</sub> + (LN-M<sup>2</sup>) = 0
 <br/>
 <br/>
-**Principal Curvatures &kappa;<sub>max</sub> and &kappa;<sub>min</sub>**: Each direction on a surface has a curvature, but a single maximum and minimum curvature exist - the direction of each is called the principal tangent direction (or the curvatures are equal in all directions &kappa;<sub>max</sub>=&kappa;<sub>min</sub>). A negative curvature means the osculating sphere for that direction is opposite of the defined normal direction.
+**Principal Curvatures &kappa;<sub>max</sub> and &kappa;<sub>min</sub>**: Each direction on a surface has a curvature, but a single maximum and minimum curvature exist - the direction of each is called the *principal tangent direction* (or the curvatures are equal in all directions if &kappa;<sub>max</sub>=&kappa;<sub>min</sub>). A negative curvature means the osculating sphere for that direction is opposite of the defined normal direction.
 <br/>
-**Gaussian Curvature K**: &kappa;<sub>min</sub>&kappa;<sub>max</sub> = (LN-M<sup>2</sup>) / (EG-F<sup>2</sup>)
+**Gaussian Curvature K**: &kappa;<sub>min</sub>&kappa;<sub>max</sub> = (LN-M<sup>2</sup>) / (EG-F<sup>2</sup>) ; *(determinant of [dn])*
 <br/>
-**Mean Curvature H**: (&kappa;<sub>min</sub>+&kappa;<sub>max</sub>)/2 = (EN+GL-2FM) / 2(EG-F<sup>2</sup>)
+**Mean Curvature H**: (&kappa;<sub>min</sub>+&kappa;<sub>max</sub>)/2 = (EN+GL-2FM) / 2(EG-F<sup>2</sup>) ; *(half the trace of [dn])*
 <br/>
 <br/>
-**&kappa;<sub>n</sub> (a curvature)**: &kappa;<sub>n</sub> = II/I : &kappa;<sub>n</sub><sup>2</sup> - 2H&kappa;<sub>n</sub> + K = 0
+**&kappa;<sub>n</sub> (a curvature)**: &kappa;<sub>n</sub> = II/I : &kappa;<sub>n</sub><sup>2</sup> - 2H&kappa;<sub>n</sub> + K = 0 ; &kappa;<sub>n</sub> = &kappa;<sub>max</sub>cos<sup>2</sup>&theta; + &kappa;<sub>min</sub>sin<sup>2</sup>&theta;
 <br/>
 **&kappa;<sub>min</sub> (min curvature)**: H - (H<sup>2</sup> - K)<sup>1/2</sup>
 <br/>
 **&kappa;<sub>max</sub> (max curvature)**: H + (H<sup>2</sup> - K)<sup>1/2</sup>
 <br/>
+**Principal Directions e<sub>min</sub>, e<sub>max</sub>**: directions of min and max curvature (equal if &kappa;<sub>min</sub>=&kappa;<sub>max</sub>)
 <br/>
-The directions of each curvature is found from the eigenvectors of:
+<br/>
+**Matrix Solutions**: The shape operator (primarily II, but also I) is a matrix representation of the problem, where the eigenvalues are the curvatures, and the eigenvectors are the corresponding principal directions (Hessian of f)
+<br/>
+*Renaming of coefficients*: The values from (I) are typically referred to as **e**=L, **f**=M, **g**=N, in this context
+<br/>
+1/det([E F; F G])&middot;[eG-fF f-gF ; fE-eF gE-fF]
 ```
-Solve for eigenvalues/vectors of: ?
-X1 = (a,b,c), X2 = (d,e,f) => some orthonormal basis for the tangent space
-[ II(X1,X1) II(X1,X2) ]
-[ II(X2,X1) II(X2,X2) ]
-OR PERHAPS THE CORRECT DET=0 is:
-[ L-kE M-kF ]
-[ M-kF N-kG ]
+- [e f]inv([E F])  =  -1/(EG-FF)[e f][G -F]  =  1/(EG-FF)[eG-fF fE-eF]
+  [f g]   ([F G])  =            [f g][-F E]  =           [fG-gF gE-fF]
+```
+Which is also shown by some sources as the negative diagonal-reversed shape operator:
+```
+1/(EG-FF)[eG-fF fG-gF]
+         [fE-eF gE-fF]
 ```
 <br/>
+**Other Interesting Equation**:
 <br/>
-
 A = [L(EG-2F<sup>2</sup>) + 2EFM - E<sup>2</sup>N] / [2E(EG-F<sup>2</sup>)]
 <br/>
 B = (EM - FL)/[E(EG-F<sup>2</sup>)<sup>1/2</sup>]
 <br/>
 k<sub>n</sub> = H + Acos2&theta; + Bsin2&theta;
-<br/>
-
-
 <br/>
 <br/>
 **Note: complex dot product (inner product, vector product)**:
@@ -466,108 +478,14 @@ x &middot; y = (aX<sub>u</sub> + bX<sub>v</sub>) &middot; (cX<sub>u</sub> + dX<s
 = (ac)(X<sub>u</sub>&middot;X<sub>u</sub>) + (ad+bc)(X<sub>u</sub>&middot;X<sub>v</sub>) + (bd)(X<sub>v</sub>&middot;X<sub>v</sub>)
 <br/>
 <br/>
-<br/>
-<br/>
-<br/>
-
-
-
-
-
-
-<br/>
-**k = &lt;k<sub>1</sub>,k<sub>2</sub>,k<sub>3</sub>&gt; = k<sub>n</sub>+k<sub>g</sub>**: curvature vector of some curve on surface
-<br/>
-**&kappa;<sub>n</sub>**: normal curvature of some curve on surface 
-<br/>
-**&kappa;<sub>g</sub>**: geodesic curvature of some curve on surface
-<br/> 
-**k<sub>n</sub> = &lt;k<sub>n1</sub>,k<sub>n2</sub>,k<sub>n3</sub>&gt;**: normal curvature vector of some curve on surface (in [+/-] direction of surface normal)
-<br/> 
-**k<sub>g</sub> = &lt;k<sub>g1</sub>,k<sub>g2</sub>,k<sub>g3</sub>&gt;**: geodesic curvature vector of some curve on surface (in tangent direction of surface)
-<br/>
-
-Two ways of defining a surface: Level sets - in which case the gradient points in the normal. Position Vector - in which case the derivative is an arc-length, tangent to the surface.
-<br/>
-
-
-
-**r(t) = r(u(t),v(t)) = **: Parametric Curve on r(u,v)
-
-
-
-
-
-
-REJECTIONS:
-X<sub>u</sub> = f(&part;a/&part;u, &part;b/&part;u, &part;c/&part;u)
-<br/>
-X<sub>v</sub> = f(&part;a/&part;v, &part;b/&part;v, &part;c/&part;v)
-<br/>
-X<sub>uv</sub> = f(&part;<sup>2</sup>a/&part;u&part;v, &part;<sup>2</sup>b/&part;u&part;v, &part;<sup>2</sup>c/&part;u&part;v)
-**u**: independent set of &reals;
-<br/>
-**v**: independent set of &reals;
-<br/>
-**X**: is the surface, set of points (x,y,z), defined by a function over space in terms of u and v
-<br/>
-**X = (x,y,z)**: f(f<sub>1</sub>(u,v), f<sub>2</sub>(u,v), f<sub>3</sub>(u,v) )
-<br/>
-**X<sub>u</sub> and X<sub>v</sub>**: Orthogonal Tangent vectors on the surface @ P - 
-<br/>
-
-<br/>
-**X<sub>u</sub> = f(&part;x/&part;u, &part;y/&part;u, &part;z/&part;u)**: f(&part;x/&part;x, &part;y/&part;x, &part;z/&part;x)
-<br/>
-**X<sub>v</sub> = f(&part;x/&part;v, &part;y/&part;v, &part;z/&part;v)**: f(&part;x/&part;y, &part;y/&part;y, &part;z/&part;y)
-<br/>
-**X<sub>uv</sub> = f(&part;<sup>2</sup>x/&part;u&part;v, &part;<sup>2</sup>y/&part;u&part;v, &part;<sup>2</sup>z/&part;u&part;v)**: f(&part;<sup>2</sup>x/&part;x&part;y, &part;<sup>2</sup>y/&part;x&part;y, &part;<sup>2</sup>z/&part;x&part;y)
-<br/>
-*In a numeric grid*: &part;x/&part;x=1, &part;x/&part;y=0, &part;y/&part;x=0, &part;y/&part;y=1, &part;<sup>2</sup>(x or y)/&part;(x or y)&part;(x or y) = 0
-<br/>
-
-
-**f(x,y,z)**: Scalar Field
-<br/>
-**&nabla;f = df/ds (Grad)**: Gradient (direction of maximum increase) is a normal vector to a surface of constant value
-<br/>
-&lt; &part;f/&part;x, &part;f/&part;y, &part;f/&part;z &gt;
-<br/>
-&lt; [f(x+&Delta;x,y,z) - f(x-&Delta;x,y,z)]/[2&Delta;x] , [f(x,y+&Delta;y,z) - f(x,y-&Delta;y,z)]/[2&Delta;y] , [f(x,y,z+&Delta;z) - f(x,y,z-&Delta;z)]/[2&Delta;z] &gt;
-<br/>
-**3D Unit Normal Vector N**: Grad/||Grad||
-<br/>
-**3D Curvature (C for now)**: dN/dS because the Normal is a vector, this is a vector of vectors:
-<br/>
-C<sub>x</sub> = &lt; (&part;N/&part;x)<sub>x</sub>, (&part;N/&part;x)<sub>y</sub>, (&part;N/&part;x)<sub>z</sub> &gt;
-<br/>
-C<sub>y</sub> = &lt; (&part;N/&part;y)<sub>x</sub>, (&part;N/&part;y)<sub>y</sub>, (&part;N/&part;y)<sub>z</sub> &gt;
-<br/>
-C<sub>z</sub> = &lt; (&part;N/&part;z)<sub>x</sub>, (&part;N/&part;z)<sub>y</sub>, (&part;N/&part;z)<sub>z</sub> &gt;
-<br/>
-Should this be projected to the tangent plane?
-<br/>
-Curves:
-B = T&times;N
-&tau; = -N*B'
-&kappa; = |r' &times; r''|/|r'<sup>3</sup>|
-
-
-
-&lt; &part;T/&part;x, &part;T/&part;y, &part;T/&part;z &gt;
-
-X: &lt; &part;<sup>2</sup>f/&part;x&part;y, &part;<sup>2</sup>f/&part;x&part;y, &part;<sup>2</sup>f/&part;x&part;z &gt;
-
-
-
-
-
-
-
-
-
-
-
+**Other Notes:**
+- All curves at a point share the same tangent plane and normal vector*
+- Two ways of defining a surface:
+    - Level sets: scalar field, gradient vector points normal to surface
+    - Position Vector: Derivative is arc-length tangent to surface, Second derivative is normal to surface
+- r(t) = r(u(t),v(t)) = Parametric Curve on r(u,v)
+- &tau; = -N&middot;B'
+- &kappa; = |r' &times; r''|/|r'<sup>3</sup>|
 
 
 
@@ -611,15 +529,15 @@ is n is not normal, d = g||n||<sup>2</sup>
 [ cov(y,x), cov(y,y), cov(y,z) ]
 [ cov(z,x), cov(z,y), cov(z,z) ]
 ```
-*cov(a,b) = &Sum;<sub>i</sub> (a-&mu;<sub>a</sub>)(b-&mu;<sub>b</sub>)*
+**Number of elements N**
 <br/>
-*&mu;<sub>a</sub> = (1/N)&Sum;<sub>i</sub> a*
+**Covariance cov(a,b)**: &Sum;<sub>i</sub> (a-&mu;<sub>a</sub>)(b-&mu;<sub>b</sub>)
 <br/>
-*N = number of elements*
+**Mean &mu;<sub>a</sub>** = (1/N)&Sum;<sub>i</sub> a
 <br/>
-*i = i<sup>th</sup> element*
+**Index of i<sup>th</sup> element i**
 <br/>
-*x,y,z are coordinates of P<sub>i<sub>*
+**i<sup>th</sup> Point P<sub>i</sub> P(x,y,z)**
 <br/>
 **Point in plane?**: center of mass of points?
 <br/>
@@ -630,10 +548,7 @@ function should be weighted based on point distance to origin point of plane (pr
 <br/>
 Solve Ax = b &rarr; x = pinv(A)b ?
 <br/>
-Solve SVD ?
-<br/>
-smallest eigenvector = normal to surface (direction in which the data varies the least)
-<br/>
+? Solve SVD ?: smallest eigenvector = normal to surface (direction in which the data varies the least)
 <br/>
 <br/>
 Locally, the surface must be defined by some bivariate polynomial - ie z = f(x,y) (in terms of the local coordinate system).
@@ -710,6 +625,7 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 **TODO:**
 x how to get kappa - curvature of the MLS surface
     x maximum absolute curvature?
+    x principal directions
 - MLS
     x determing MLS surface for any point
     x display MLS as sampled points on surface
@@ -749,6 +665,7 @@ plot(igeaTim,igeaTri,"m-x");
 (Hausdorf Distance)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
 (osculating sphere)[http://mathworld.wolfram.com/OsculatingSphere.html]
 (Curvature - Surface Analysis, Fundamental Forms, etc)[http://web.mit.edu/hyperbook/Patrikalakis-Maekawa-Cho/]
+(Intro to Curvature)[http://cs.nyu.edu/~ajsecord/shells_course/html/shells_course.html]
 (Curvature)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
 (3D Curvature)[http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html]
 (Simple 3D Surface Curvature)[Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights]
