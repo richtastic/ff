@@ -2,7 +2,7 @@
 **For now this will just be a place for random notes**
 
 7. [Surface Reconstruction](#SURFACE)
-
+9. [References](#REFERENCE)
 
 
 <a name="SURFACE"></a>
@@ -629,7 +629,9 @@ x how to get kappa - curvature of the MLS surface
 - MLS
     x determing MLS surface for any point
     x display MLS as sampled points on surface
-    - weighted?
+    - minimization to find plane
+    - minimization to find bivariate surface
+    - weighted minimizations
     - 'snapping' to closest sample point?
     - neighborhood?
 - container class for point cloud
@@ -660,14 +662,27 @@ plot(igeaTim,igeaTri,"m-x");
 
 
 ---
-
-(Felix Hausdorff)[Felix Hausdorff]
-(Hausdorf Distance)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
-(osculating sphere)[http://mathworld.wolfram.com/OsculatingSphere.html]
-(Curvature - Surface Analysis, Fundamental Forms, etc)[http://web.mit.edu/hyperbook/Patrikalakis-Maekawa-Cho/]
-(Intro to Curvature)[http://cs.nyu.edu/~ajsecord/shells_course/html/shells_course.html]
-(Curvature)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
-(3D Curvature)[http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html]
-(Simple 3D Surface Curvature)[Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights]
+<a name="REFERENCE"></a>
+## References
+<br/>
+Topic - Author (Source/Title)
+<br/>
+(Hausdorf Distance - Gregoire, Bouillot)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
+<br/>
+(Osculating Sphere of a Curve - Wolfram Alpha)[http://mathworld.wolfram.com/OsculatingSphere.html]
+<br/>
+(Curvature - Patrikalakis, Maekawa, Cho)[http://web.mit.edu/hyperbook/Patrikalakis-Maekawa-Cho/]
+<br/>
+(Curvature - Adrian Secord )[http://cs.nyu.edu/~ajsecord/shells_course/html/shells_course.html]
+<br/>
+(Curvature - Math Wiki)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
+<br/>
+(Curvature - Simon Willerton)[http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html]
+<br/>
+(Second Fundamental Form - ?)[The Second Fundamental Form - Outline]
+<br/>
+(Simple 3D Surface Curvature - Kurita, Boulanger)[Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights]
+<br/>
 (Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]
+<br/>
 

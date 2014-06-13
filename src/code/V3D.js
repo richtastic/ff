@@ -44,6 +44,9 @@ V3D.diff = function(a,b,c){ // a-b
 	}
 	return new V3D(a.x-b.x,a.y-b.y,a.z-b.z);
 }
+V3D.distanceSquare = function(a,b){
+	return Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2);
+}
 V3D.distance = function(a,b){ // len(a-b)
 	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2));
 }

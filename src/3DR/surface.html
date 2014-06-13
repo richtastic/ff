@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PointCloud.js","EdgeFront.js","Front.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["PointCloud.js","EdgeFront.js","Front.js","BivariateSurface.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	/*

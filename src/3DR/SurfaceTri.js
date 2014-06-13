@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(100,1.0,0.0);
+	var pts = this.generateSpherePoints(20,1.0,0.0);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -106,11 +106,84 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 
 	// PLANE FITTING
-	var cov = this.covarianceFromPoints(pts);
+	//var cov = this.covarianceFromPoints(pts);
+	var plane = this.planeFromPoints(pts);
 
 	// START
 	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
 }
+// find support plane for point r (reference frame)
+SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
+	var i,j,k, val, len = points.length;
+	var point, iter, maxIter=5;
+	var t=0, n=new V3D(), q=new V3D();
+	var A,B,C,D,E,F,G,H,I M = new Matrix(3,3);
+	// initial approximation for n, t=0, weights are fixed
+	for(j=0;j<3;++j){ // row
+		for(k=0;k<3;++k){ // col
+			val = 0;
+			for(i=0;i<len;++i){
+				point = points[i];
+				console.log(""+point);
+				//..
+				..
+			}
+			M.set(j,k, val);
+		}
+	}
+	// M.setFromArray([A,B,C, B,E,F, C,F,I]);
+	// n = eigenvector for smallest eigenvalue of 
+	n.set(); // 
+	// for(iter=0;iter<maxIter;++iter){
+	// 	for(i=0;i<len;++i){
+	// 		point = points[i];
+	// 		console.log(""+point);
+	// 		//..
+	// 		..
+	// 	}
+	// 	break;
+	// }
+	// ...
+	return {normal:n, origin:q};
+}
+// find surface approximation from 
+SurfaceTri.prototype.surfaceFromPlanePoints = function(r, normal,origin, points){
+	return {};
+}
+// full process point projected to surface
+SurfaceTri.prototype.projectPointToSurface = function(r, points){
+	var projection = new V3D();
+	var plane = this.pointPlaneFromPoints(r,points);
+	var nrm = plane.normal;
+	var org = plane.origin;
+	var surface = this.surfaceFromPlanePoints(r, nrm,org, points);
+	// surface is set of polynomials: cubic/quartic
+	// projection = g(0,0) = a*<n>
+	return projection;
+}
+// minimization weighting
+SurfaceTri.prototype.distanceWeight = function(q,point, h){ // h should probably be determined by some mean distance between some set of nearby points
+	h = h!==undefined?h:1.0; h = h*h;
+	var distSquare = distanceSquare(q,point);
+	return Math.exp(-distSquare/h);
+}
+/*
+0:  1     0  1   a
+1:  x     1      b
+2:  y     1  2   c
+3:  xx    2      d
+4:  xy    2      e
+5:  yy    2  3   f
+6:  xxx   3      g
+7:  xxy   3      h
+8:  xyy   3      i
+9:  yyy   3  4   j
+10: xxxx  4      k
+11: xxxy  4      l
+12: xxyy  4      m
+13: xyyy  4      n
+14: yyyy  4  5   o
+*/
 SurfaceTri.prototype.covarianceFromPoints = function(points){
 	var dx,dy,dz, p, i, len = points.length;
 	//var mu = new V3D();
@@ -199,8 +272,8 @@ SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
 		v.set(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
 		//v.x *= 0.01;
 		v.x = 0.0;
-		v.y *= 0.1;
-		v.z *= 0.1;
+		v.y *= 0.25;
+		v.z *= 0.25;
 	}
 	return list;
 }
