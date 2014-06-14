@@ -1075,6 +1075,11 @@ textarea{
 	font-size: 80%;
 	background: #FFFF99;
 }
+.legendBlockSwapped{
+	display: inline;
+	font-size: 80%;
+	background: #99DDAA;
+}
 .legendBlockLabel{
 	display: inline;
 	color:#000000;

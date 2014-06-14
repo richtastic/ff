@@ -59,9 +59,30 @@ Volunteer.generateLegend = function(){
 	blk = Code.newDiv("Swap Answered");
 		Code.addClass(blk, "legendBlockLabel");
 		Code.addChild(legend,blk);
+	blk = Code.newDiv(trash);
+		Code.addClass(blk, "legendBlockSwapped");
+		Code.addChild(legend,blk);
+	blk = Code.newDiv("Swapped");
+		Code.addClass(blk, "legendBlockLabel");
+		Code.addChild(legend,blk);
 	return legend;
 }
-
+Volunteer.sortShiftsWithBeginDate = function(positionList){
+	// sort by start time
+	positionList.sort(function(a,b){
+		return a.beginDate.getTime()-b.beginDate.getTime();
+	});
+	// sort by 'backup'
+	positionList.sort(function(a,b){
+		var reg = /backup/i;
+		var matchA = a.name.match(reg);
+		var lenA = matchA?matchA.length:0;
+		var matchB = b.name.match(reg);
+		var lenB = matchB?matchB.length:0;
+		return lenA-lenB;
+	});
+	return positionList;
+}
 // -------------------------------------------------------------------------------------------- constructor
 function Volunteer(){
 	Volunteer._.constructor.apply(this,arguments);

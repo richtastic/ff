@@ -84,6 +84,13 @@ PageCalendarMonth.prototype._getMonthShiftListSuccess = function(e){
 		var i, len, list, sta, shift;
 		list = e.list;
 		len = list.length;
+		// add date for sorting
+		for(i=0;i<len;++i){
+			shift = list[i];
+			shift.beginDate = Code.dateFromString(shift.begin);
+		}
+		Volunteer.sortShiftsWithBeginDate(list);
+		// push to display
 		for(i=0;i<len;++i){
 			shift = list[i];
 			sta = Code.dateFromString(shift.begin);

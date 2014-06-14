@@ -274,8 +274,10 @@ PageCalendarWeek.prototype._getWeekShiftListSuccess = function(o){
 		}
 		for(key in positionHash){
 			val = positionHash[key];
-			positionList.push( {name:key, begin:val.begin, end:val.end} );
+			positionList.push( {name:key, begin:val.begin, end:val.end, beginDate:Code.dateFromString(val.begin)} );
 		}
+		Volunteer.sortShiftsWithBeginDate(positionList);
+		// show
 		this._requiredShifts = { shifts: o.list, positions: positionList };
 		this._fillInShifts();
 	}

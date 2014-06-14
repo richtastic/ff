@@ -1,10 +1,10 @@
 // Ajax.js
 Ajax.METHOD_TYPE_GET = "GET";
 Ajax.METHOD_TYPE_POST = "POST";
+Ajax.TIMEOUT_DEFAULT = 15000; // 15 seconds
 
 // ------------ instance
 function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
-	this._request = null;
 	this._method = Ajax.METHOD_TYPE_GET;
 	this._params = null;
 	this._url = "wtf.wtf";
@@ -17,6 +17,7 @@ function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._request = new XMLHttpRequest();
 	this._request.onreadystatechange = this._stateChangeCaller;
 	this._request.context = this;
+	this.timeout(Ajax.TIMEOUT_DEFAULT);
 	this._autoDestroy = true;
 	if(auto){
 		this._autoDestroy = false;
@@ -62,6 +63,9 @@ Ajax.prototype.url = function(u){
 		return this._url;
 	}
 }
+Ajax.prototype.timeout = function(milliseconds){
+	this._request.timeout = milliseconds;
+}
 Ajax.prototype.callback = function(c){
 	if(arguments.length>0){
 		this._callback = c;
@@ -99,6 +103,9 @@ Ajax.prototype.postParams = function(url,parms,con,comp,err){
 	this.setHeader("Content-type","application/x-www-form-urlencoded");
 	this.send(url,Ajax.METHOD_TYPE_POST,comp,err);
 }
+/*
+this.setHeader("Authorization","Bearer: 0123456789");
+*/
 Ajax.prototype.clearHeader = function(){
 	this._header = {}; // better way of cleaning = null ?
 }

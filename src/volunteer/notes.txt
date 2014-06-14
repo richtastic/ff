@@ -71,6 +71,7 @@ drop table users;
 
 
 
+
 insert into users (username, password) values ("richie","123");
 select * from users;
 

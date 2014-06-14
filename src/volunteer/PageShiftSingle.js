@@ -185,7 +185,7 @@ PageShiftSingle.prototype._setShift = function(name, time, date, user, alg){
 PageShiftSingle.prototype._getSelectedUserID = function(){
 	var userid = this._shiftUserList.value;
 	if(userid==""){
-		return 0;
+		return -1;
 	}
 	return parseInt(userid,10);
 }
@@ -225,15 +225,18 @@ PageShiftSingle.prototype._getUsersListInfoSuccess = function(o){
 		Code.emptyDom(this._shiftUserList);
 		this._usersListInfo = o.list;
 		var i, user, opt, list = this._usersListInfo;
-		for(i=-1;i<list.length;++i){
-			if(i==-1){
+		for(i=-2;i<list.length;++i){
+			if(i==-2){
 				opt = Code.newOption("","",true);
+			}else if(i==-1){
+				opt = Code.newOption("(unassign)","0");
 			}else{
 				user = list[i];
 				opt = Code.newOption(Code.escapeHTML( user.username+"" ),user.id);
 			}
 			Code.addChild(this._shiftUserList,opt);
 		}
+		this._shiftUserList
 	}
 }
 // ------------------------------------------------------------------------------ 
@@ -329,7 +332,7 @@ PageShiftSingle.prototype._handleAnswerClickFxn = function(e){ // answer fill-in
 }
 PageShiftSingle.prototype._handleApply0ClickFxn = function(e){ // only this shift
 	var user_id = this._getSelectedUserID();
-	if(user_id>0){
+	if(user_id>=0){
 		this._applyUserToSingleShift(user_id,this._shiftInfo.id); // self
 	}else{
 		alert("user not selected");
@@ -337,7 +340,7 @@ PageShiftSingle.prototype._handleApply0ClickFxn = function(e){ // only this shif
 }
 PageShiftSingle.prototype._handleApply1ClickFxn = function(e){ // only empty
 	var user_id = this._getSelectedUserID();
-	if(user_id>0){
+	if(user_id>=0){
 		this._applyUserToEmptyShifts(user_id,this._shiftInfo.id); // parent
 	}else{
 		alert("user not selected");
@@ -345,7 +348,7 @@ PageShiftSingle.prototype._handleApply1ClickFxn = function(e){ // only empty
 }
 PageShiftSingle.prototype._handleApply2ClickFxn = function(e){ // all
 	var user_id = this._getSelectedUserID();
-	if(user_id>0){
+	if(user_id>=0){
 		this._applyUserToAllShifts(user_id,this._shiftInfo.id); // parent
 	}else{
 		alert("user not selected");
@@ -353,7 +356,7 @@ PageShiftSingle.prototype._handleApply2ClickFxn = function(e){ // all
 }
 PageShiftSingle.prototype._handleApply3ClickFxn = function(e){ // future
 	var user_id = this._getSelectedUserID();
-	if(user_id>0){
+	if(user_id>=0){
 		this._applyUserToFutureShifts(user_id,this._shiftInfo.id); // parent
 	}else{
 		alert("user not selected");

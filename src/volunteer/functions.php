@@ -99,6 +99,10 @@ function randomHex($val=8){
 	return $str;
 }
 
+function getDateNow(){
+	return dateFromString( date("Y-m-d H:i:s.0000") );
+}
+
 function stringFromDate($dat){
 	return date("Y-m-d H:i:s.0000",$dat); // YYYY-MM-DD HH:NN:SS.NNNN
 }
@@ -370,6 +374,18 @@ function isValidPositionData($name,$info){
 		}
 	}
 	return false;
+}
+
+function setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time_begin,$shift_time_end){
+	$query = 'update requests set fulfill_user_id="0", fulfill_date=NULL, status=0 where id in ('.
+	' select request_id from '.
+	' (select id as request_id,shift_id,request_user_id,fulfill_user_id,status as request_status from requests where fulfill_user_id="'.$user_id.'" and status=1) as A'. // answered,pending
+	' inner join '.
+	' (select id as the_shift_id,time_begin,time_end from shifts where parent_id!="0" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") or (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) ) as B '.
+	' on A.shift_id=B.the_shift_id '.
+	' );';
+	$result = mysql_query($query);
+	mysql_free_result($result);
 }
 function autoSetRequestToEmptyOnTimePass($connection){
 	$query = 'update requests set status="4" where id in (select id from (select requests.id as id, time_begin from requests left outer join shifts on requests.shift_id=shifts.id where requests.status<=1) as temp where time_begin<adddate(now(),interval 30 minute));';
