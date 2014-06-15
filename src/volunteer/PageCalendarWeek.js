@@ -171,7 +171,7 @@ PageCalendarWeek.prototype.setPositions = function(list){
 		}
 	}
 }
-PageCalendarWeek.prototype.addShift = function(name,dow0to6, shiftID,begin,end, userID,userName, reqExist,fillUID){
+PageCalendarWeek.prototype.addShift = function(name,dow0to6, shiftID,begin,end, userID,userName, reqExist,fillUID,swap){
 	shiftName = parseInt(name,10);
 	shiftID = parseInt(shiftID,10);
 	var found, col, d, i, len=this._positions.length;
@@ -184,7 +184,7 @@ PageCalendarWeek.prototype.addShift = function(name,dow0to6, shiftID,begin,end, 
 	}
 	if(found){
 		col = this._colContainers[i*8+dow0to6+1];
-		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID);
+		d = this._createShiftContainer(shiftID,begin,end,userID,userName, reqExist, fillUID,swap);
 		Code.addChild(col,d);
 		this._addListenShift(col);
 	}
@@ -207,7 +207,7 @@ PageCalendarWeek.prototype._shiftClickFxn = function(e){
 	}
 	this.alertAll(PageCalendarWeek.EVENT_SHIFT_CLICK,sid);
 }
-PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,uname, pend,fid){
+PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,uname, pend,fid,swap){
 	var d = Code.newDiv();
 	Code.addClass(d,"calendarWeekShiftDiv");
 	if(uname==""){
@@ -219,6 +219,8 @@ PageCalendarWeek.prototype._createShiftContainer = function(sid,begin,end,uid,un
 		}else{
 			Code.addClass(d,"calendarWeekShiftDivPending");
 		}
+	}else if(swap){
+		Code.addClass(d,"calendarWeekShiftDivSwapped");
 	}
 	Code.setProperty(d,this.PROPERTY_SHIFT_ID,""+Code.escapeHTML( sid+"" ));
 	Code.setContent(d, "<u>"+Code.escapeHTML( uname )+"</u>");//+"<br/>"+" "+begin+" - "+end+"");
@@ -250,7 +252,7 @@ PageCalendarWeek.prototype._fillInShifts = function(){
 		begin = Code.getHourStringFromDate(date);
 		date = Code.dateFromString(shift.end);
 		end = Code.getHourStringFromDate(date);
-		this.addShift( shift.name,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10) );
+		this.addShift( shift.name,dow0to6, shift.id,begin,end, shift.user_id,shift.username, shift.request_open_exists==="true", parseInt(shift.fulfill_user_id,10), shift.request_approved_exists==="true" );
 	}
 }
 

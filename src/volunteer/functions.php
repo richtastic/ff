@@ -375,7 +375,11 @@ function isValidPositionData($name,$info){
 	}
 	return false;
 }
-
+function userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end){
+	$query = 'select id from shifts where parent_id!="0" and user_id="'.$user_id.'" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") or (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) and id!="'.$shift_id.'" limit 1;';
+	$result = mysql_query($query);
+	return !($result && mysql_num_rows($result)==0);
+}
 function setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time_begin,$shift_time_end){
 	$query = 'update requests set fulfill_user_id="0", fulfill_date=NULL, status=0 where id in ('.
 	' select request_id from '.
@@ -384,6 +388,11 @@ function setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time
 	' (select id as the_shift_id,time_begin,time_end from shifts where parent_id!="0" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") or (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) ) as B '.
 	' on A.shift_id=B.the_shift_id '.
 	' );';
+	$result = mysql_query($query);
+	mysql_free_result($result);
+}
+function closeAllPendingRequestsForShift($shift_id){
+	$query = 'update requests set status="4" where status in ("0","1") and shift_id="'.$shift_id.'";';
 	$result = mysql_query($query);
 	mysql_free_result($result);
 }

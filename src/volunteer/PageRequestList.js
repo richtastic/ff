@@ -12,6 +12,7 @@ function PageRequestList(container, interface){
 		Code.addClass(this._requestTable,"requestListHeader");
 	this._approveButtonList = new Array();
 	this._denyButtonList = new Array();
+	this._clearButtonList = new Array();
 	//
 	Code.addChild(this._root, this._requestTable);
 	this._init();
@@ -35,6 +36,9 @@ PageRequestList.prototype.clear = function(){
 	}
 	while(this._denyButtonList.length>0){
 		o = this._denyButtonList.pop();
+	}
+	while(this._clearButtonList.length>0){
+		o = this._clearButtonList.pop();
 	}
 	while( Code.getRowCount(this._requestTable) > 1 ){
 		Code.removeRow(this._requestTable);
@@ -83,7 +87,7 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 		Code.setContent( col, Code.escapeHTML( reason ) );
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		if(btn){
+		if(btn==1){ // in progress
 			var approve = Code.newInputSubmit("Approve");
 				Code.addClass(approve, "requestListButton");
 				Code.setProperty(approve, "request_id", requestID);
@@ -97,6 +101,13 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 			Code.addListenerClick(reject,this._handleDenyClickFxn,this);
 			this._approveButtonList.push( approve );
 			this._denyButtonList.push( reject );
+		}else if(btn==0){ // done - clear
+			var cleared = Code.newInputSubmit("Clear");
+				Code.addClass(cleared, "requestListButton");
+				Code.setProperty(cleared, "request_id", requestID);
+			Code.addChild(col, cleared);
+			Code.addListenerClick(cleared,this._handleClearClickFxn,this);
+			this._clearButtonList.push( cleared );
 		}
 }
 // ------------------------------------------------------------------------------ 
@@ -149,26 +160,26 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 			shift_time = shift_begin+" - "+shift_end;
 			status = parseInt(status,10);
 			if(status==0){
-				btn = true;
+				btn = 1;
 				status = "open";
 			}else if(status==1){
-				btn = true;
+				btn = 1;
 				status = "answered";
 			}else if(status==2){
-				btn = false;
+				btn = 0;
 				status = "approved";
 			}else if(status==3){
-				btn = false;
+				btn = 0;
 				status = "denied";
 			}else if(status==4){
-				btn = false;
+				btn = 0;
 				status = "empty";
 			}else{ // no
-				btn = false;
+				btn = 0;
 				status = "?";
 			}
 			if(!this._interface.isImmediateAdmin()){
-				btn = false;
+				btn = -1;
 			}
 			this.addRequest(offset+i+1, request_id,created, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
 				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, info, btn);
@@ -206,8 +217,17 @@ PageRequestList.prototype._handleDenyClickFxnSuccess = function(o){
 		alert("RequestList: "+o.message);
 	}
 }
-// ------------------------------------------------------------------------------ 
-PageRequestList.prototype.wtf = function(){
-	
+PageRequestList.prototype._handleClearClickFxn = function(e){
+	var target = Code.getTargetFromMouseEvent(e);
+	var request_id = parseInt(Code.getProperty(target,"request_id"),10);
+	if(request_id>0){
+		this._interface.updateShiftRequestDisplayNo(request_id,this,this._handleClearClickFxnSuccess);
+	}
 }
-
+PageRequestList.prototype._handleClearClickFxnSuccess = function(o){
+	if(o && o.status=="success"){
+		this.reset(); // less half-assed
+	}else{
+		alert("RequestList: "+o.message);
+	}
+}

@@ -362,6 +362,10 @@ textarea{
 	background: #FFFF99;
 	border-color: #DDCC99;
 }
+.calendarWeekShiftDivSwapped{
+	background: #99DDAA;
+	border-color: #88BB99;
+}
 .calendarWeekToday{
 	background-color: #ACF;
 }
@@ -505,6 +509,10 @@ textarea{
 .pageMonthShiftTypePending{
 	background: #FFFF99;
 	border-color: #DDCC99;
+}
+.pageMonthShiftTypeSwapped{
+	background: #99DDAA;
+	border-color: #88BB99;
 }
 .calendarMonthRadioContainer{
 

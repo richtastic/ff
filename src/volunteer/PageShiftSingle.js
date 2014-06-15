@@ -33,6 +33,11 @@ function PageShiftSingle(container, interface){
 
 	this._shiftAnswerButton = Code.newInputSubmit("Answer Fill-In");
 		Code.addClass(this._shiftAnswerButton,"shiftSingleButton");
+	// undo buttons
+		this._shiftUnRequestButton = Code.newInputSubmit("Un-Request");
+			Code.addClass(this._shiftUnRequestButton,"shiftSingleButton");
+		this._shiftUnAnswerButton = Code.newInputSubmit("Un-Answer Fill-In");
+			Code.addClass(this._shiftUnAnswerButton,"shiftSingleButton");
 	//
 	this._shiftUserListContainer = Code.newDiv();
 		Code.addClass(this._shiftUserListContainer,"shiftSingleUserListContainer");
@@ -121,6 +126,8 @@ function PageShiftSingle(container, interface){
 			Code.addChild(this._shiftOptionCell31, this._shiftApply3);
 	Code.addListenerClick(this._shiftRequestButton, this._handleRequestClickFxn, this);
 	Code.addListenerClick(this._shiftAnswerButton, this._handleAnswerClickFxn, this);
+	Code.addListenerClick(this._shiftUnRequestButton, this._handleUnRequestClickFxn, this);
+	Code.addListenerClick(this._shiftUnAnswerButton, this._handleUnAnswerClickFxn, this);
 	Code.addListenerClick(this._shiftApply0, this._handleApply0ClickFxn, this);
 	Code.addListenerClick(this._shiftApply1, this._handleApply1ClickFxn, this);
 	Code.addListenerClick(this._shiftApply2, this._handleApply2ClickFxn, this);
@@ -141,6 +148,8 @@ PageShiftSingle.prototype.clear = function(){
 	Code.setTextAreaValue(this._shiftRequestText,"");
 	this._hideRequestInfo();
 	this._hideAnswerInfo();
+	this._hideUnRequestInfo();
+	this._hideUnAnswerInfo();
 	this._hideAdminInfo();
 	this._shiftInfo = null;
 	this._userInfo = null;
@@ -160,11 +169,23 @@ PageShiftSingle.prototype._showRequestInfo = function(){
 	Code.addChild(this._shiftActionButtonContainer, this._shiftRequestButton);
 	Code.addChild(this._shiftActionTextContainer, this._shiftRequestText);
 }
+PageShiftSingle.prototype._hideUnRequestInfo = function(){
+	Code.removeFromParent(this._shiftUnRequestButton);
+}
+PageShiftSingle.prototype._showUnRequestInfo = function(){
+	Code.addChild(this._shiftActionButtonContainer, this._shiftUnRequestButton);
+}
 PageShiftSingle.prototype._hideAnswerInfo = function(){
 	Code.removeFromParent(this._shiftAnswerButton);
 }
 PageShiftSingle.prototype._showAnswerInfo = function(){
 	Code.addChild(this._shiftActionButtonContainer, this._shiftAnswerButton);
+}
+PageShiftSingle.prototype._hideUnAnswerInfo = function(){
+	Code.removeFromParent(this._shiftUnAnswerButton);
+}
+PageShiftSingle.prototype._showUnAnswerInfo = function(){
+	Code.addChild(this._shiftActionButtonContainer, this._shiftUnAnswerButton);
 }
 PageShiftSingle.prototype._hideAdminInfo = function(){
 	Code.removeFromParent(this._shiftUserList);
@@ -245,15 +266,28 @@ PageShiftSingle.prototype._checkComplete = function(){
 		var isAdmin = this._interface.isAdmin(this._userInfo);
 		var belongsTo = this._userInfo.id==this._shiftInfo.user_id;
 		var isRequest = parseInt(this._shiftInfo.request_id,10)>0;
-		var isFilled = this._shiftInfo.request_filled===true;
+		var isFilled = this._shiftInfo.request_filled==="true";
+		var fillerIsUser = this._userInfo.id==this._shiftInfo.request_fulfill_user_id;
+// console.log(this._shiftInfo.request_fulfill_user_id);
+// console.log(this._userInfo.id+" ? "+this._shiftInfo.request_fulfill_user_id+" "+(this._userInfo.id==this._shiftInfo.request_fulfill_user_id));
 		if(isAdmin){
 			this._showAdminInfo();
 		}
-		if((belongsTo || isAdmin) && !isRequest){
-			this._showRequestInfo();
+		if(belongsTo || isAdmin){
+			if(!isRequest){
+				this._showRequestInfo();
+			}else if(!isFilled){
+				this._showUnRequestInfo();
+			}
 		}
-		if(isRequest && !isFilled){
-			this._showAnswerInfo();
+		if(isRequest){
+			if(isFilled){
+				if(fillerIsUser || isAdmin){ // not decided and user is owner
+					this._showUnAnswerInfo();
+				}
+			}else{
+				this._showAnswerInfo();
+			}
 		}
 		if(isAdmin){ // fill in user list
 			this._getUsersListInfo();
@@ -330,6 +364,14 @@ PageShiftSingle.prototype._handleRequestClickFxn = function(e){ // request fill-
 PageShiftSingle.prototype._handleAnswerClickFxn = function(e){ // answer fill-in
 	this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
 }
+
+PageShiftSingle.prototype._handleUnAnswerClickFxn = function(e){
+	//this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
+}
+PageShiftSingle.prototype._handleUnRequestClickFxn = function(e){
+	//this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
+}
+
 PageShiftSingle.prototype._handleApply0ClickFxn = function(e){ // only this shift
 	var user_id = this._getSelectedUserID();
 	if(user_id>=0){

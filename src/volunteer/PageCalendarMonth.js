@@ -95,13 +95,13 @@ PageCalendarMonth.prototype._getMonthShiftListSuccess = function(e){
 			shift = list[i];
 			sta = Code.dateFromString(shift.begin);
 			this.addShift(sta.getDate(), shift["name"], Code.getShortDateDescriptiveStringTime(sta), parseInt(shift["id"],10),
-				parseInt(shift["user_id"],10), shift["request_open_exists"]==="true", parseInt(shift["fulfill_user_id"],10));
+				parseInt(shift["user_id"],10), shift["request_open_exists"]==="true", parseInt(shift["fulfill_user_id"],10), shift["request_approved_exists"]==="true");
 		}
 	}
 	this._loading = false;
 }
 // ------------------------------------------------------------------------------ 
-PageCalendarMonth.prototype.addShift = function(dom, title, time, sid, uid, req, fid){
+PageCalendarMonth.prototype.addShift = function(dom, title, time, sid, uid, req, fid, swa){
 	if(title.length>3){
 		title = title.substr(0,3);
 	}
@@ -116,6 +116,8 @@ PageCalendarMonth.prototype.addShift = function(dom, title, time, sid, uid, req,
 			}else{
 				Code.addClass(div,"pageMonthShiftTypeOpen");
 			}
+		}else if(swa){
+			Code.addClass(div,"pageMonthShiftTypeSwapped");
 		}
 	}else{
 		Code.addClass(div,"pageMonthShiftTypeEmpty");

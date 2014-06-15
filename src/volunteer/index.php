@@ -90,6 +90,7 @@ $ACTION_TYPE_REQUEST_GET = "req";
 $ACTION_TYPE_REQUEST_CREATE = "request_create";
 $ACTION_TYPE_REQUEST_UPDATE_ANSWER = "request_answer";
 $ACTION_TYPE_REQUEST_UPDATE_DECIDE = "request_decide";
+$ACTION_TYPE_REQUEST_UPDATE_DISPLAY = "request_display";
 	$ACTION_TYPE_REQUEST_SHIFT_ID = "shift_id";
 	$ACTION_TYPE_REQUEST_REASON = "reason";
 	$ACTION_TYPE_REQUEST_REQUEST_ID = "request_id";
@@ -118,6 +119,7 @@ $LOG_TYPE_LOGIN_SUCCESS = "login_success";
 $LOG_TYPE_REQUEST_CREATE_ATTEMPT = "request_create_attempt";
 $LOG_TYPE_REQUEST_ANWSER_ATTEMPT = "request_answer_attempt";
 $LOG_TYPE_REQUEST_DECIDE_ATTEMPT = "request_decide_attempt";
+$LOG_TYPE_REQUEST_DISPLAY_ATTEMPT = "request_display_attempt";
 $LOG_TYPE_USER_ATTEMPT = "user_attempt";
 $LOG_TYPE_SHIFT_CREATE_ATTEMPT = "shift_create_attempt";
 //$LOG_TYPE_LOGOUT = "logout";
@@ -283,6 +285,7 @@ if($ARGUMENT_GET_ACTION!=null){
 						// sub-query - open request
 						$request_id = 0;
 						$request_filled = "false";
+						$request_fulfill_user_id = 0;
 						$query = 'select id,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status<=1 ;'; // open request
 						$result = mysql_query($query, $connection);
 						if($result){
@@ -293,6 +296,7 @@ if($ARGUMENT_GET_ACTION!=null){
 								$fulfill_user_id = intval($row["fulfill_user_id"]);
 								if($fulfill_user_id>0){
 									$request_filled = "true";
+									$request_fulfill_user_id = $fulfill_user_id;
 								}
 							}
 							mysql_free_result($result);
@@ -300,7 +304,7 @@ if($ARGUMENT_GET_ACTION!=null){
 						echo '{ "status":"success", "message":"shift", "shift": {'."\n";
 						echo '"id":"'.encodeJSONString($shift_id).'", "user_id":"'.encodeJSONString($user_id).'", "username":"'.encodeJSONString($username).'", "created":"'.encodeJSONString($created).'", ';
 						echo '"name":"'.encodeJSONString($shift_name).'", "time_begin":"'.encodeJSONString($time_begin).'", "time_end":"'.encodeJSONString($time_end).'", "algorithm":"'.encodeJSONString($algorithm).'", ';
-						echo '"request_id":"'.encodeJSONString($request_id).'","request_filled":"'.encodeJSONString($request_filled).'", "parent_id":"'.encodeJSONString($parent_id).'", '."\n";
+						echo '"request_id":"'.encodeJSONString($request_id).'","request_filled":"'.encodeJSONString($request_filled).'", "request_fulfill_user_id":"'.$request_fulfill_user_id.'", "parent_id":"'.encodeJSONString($parent_id).'", '."\n";
 						if($parent_id!=0){ // next search - same query on parent
 							$shift_id = $parent_id;
 							$query = 'select shifts.id,shifts.created,shifts.parent_id,shifts.user_id,shifts.name,shifts.time_begin,shifts.time_end,shifts.algorithm,users.username from shifts  left outer join users on users.id=shifts.user_id   where shifts.id="'.$shift_id.'"  limit 1;';
@@ -401,9 +405,18 @@ if($ARGUMENT_GET_ACTION!=null){
 								}
 								mysql_free_result($subresult);
 							}
+							$request_approved_exists = "false";
+							$subquery = 'select status,fulfill_user_id from requests where shift_id="'.$shift_id.'" and status=2 order by approved_date desc limit 1;'; // approved requests
+							$subresult = mysql_query($subquery, $connection);
+							if($subresult){
+								if(mysql_num_rows($subresult)==1){
+									$request_approved_exists = "true";
+								}
+								mysql_free_result($subresult);
+							}
 						echo '{ "begin":"'.encodeJSONString($begin).'", "end":"'.encodeJSONString($end).'", "parent":"'.encodeJSONString($parent_id).'", "user_id":"'.encodeJSONString($user_id).'", ';
 						echo '"username": "'.$username.'", "name":"'.encodeJSONString($shift_name).'", "id":"'.encodeJSONString($shift_id).'", ';
-						echo '"request_open_exists":"'.encodeJSONString($request_open_exists).'", "fulfill_user_id":"'.encodeJSONString($fulfill_user_id).'" }';
+						echo '"request_open_exists":"'.encodeJSONString($request_open_exists).'", "fulfill_user_id":"'.encodeJSONString($fulfill_user_id).'", "request_approved_exists":"'.$request_approved_exists.'" }';
 						if( $i<($total_results-1) ){ echo ','; }
 						echo "\n";
 						++$i;
@@ -542,20 +555,20 @@ if($ARGUMENT_GET_ACTION!=null){
 				echo '{"status":"error", "message":"unknown action"}';
 			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_GET){
-			//autoSetRequestToEmptyOnTimePass($connection);
 			$page = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_PAGE]); $page = $page==""?0:$page;
 			$count = decode_real_escape_string($_POST[$ACTION_TYPE_USER_GET_COUNT]);
 			$count = max(min($count,100),1);
 			$offset = max(0,$count*($page));
 			$statusCheck = '';
 			if(!$ACTION_VALUE_IS_ADMIN){
+				autoSetRequestToEmptyOnTimePass($connection); // check for old requests and close automatically
 				$statusCheck = ' where status<=1 '; // new or answered
 			}
 			$query =
-			'select request_id, created,fulfill_date,approved_date, shift_id, shift_begin, shift_end, shift_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
+			'select request_id, created,fulfill_date,approved_date,display, shift_id, shift_begin, shift_end, shift_name, owner_id, owner_username, requester_id, requester_username, fulfiller_id, fulfiller_username, approver_id, approver_username, info, status from'.
 			' (select * from'.
 			
-			' (select id as request_id, created,fulfill_date,approved_date, shift_id, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests) as R0'.
+			' (select id as request_id, created,fulfill_date,approved_date,display, shift_id, request_user_id as requester_id, fulfill_user_id as fulfiller_id, approved_user_id as approver_id, info, status from requests where display="0") as R0'.
 			' left outer join'.
 			' (select id, user_id as owner_id, time_begin as shift_begin, time_end as shift_end, name as shift_name from shifts) as S0'.
 			' on R0.shift_id=S0.id)'.
@@ -585,6 +598,7 @@ if($ARGUMENT_GET_ACTION!=null){
 				$i = 0;
 				while( $row = mysql_fetch_assoc($result) ){
 					$request_id = $row["request_id"];
+					$request_display = $row["display"];
 					$shift_id = $row["shift_id"];
 					$shift_begin = $row["shift_begin"];
 					$shift_end = $row["shift_end"];
@@ -608,7 +622,7 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '"shift_end":"'.encodeJSONString($shift_end).'", "name":"'.encodeJSONString($shift_name).'", "owner_id":"'.encodeJSONString($owner_id).'", "requester_id":"'.encodeJSONString($requester_id).'", ';
 					echo '"fulfiller_id":"'.encodeJSONString($fulfiller_id).'", "approver_id":"'.encodeJSONString($approver_id).'", "approved_date":"'.encodeJSONString($approved).'", ';
 					echo '"fulfilled_date":"'.encodeJSONString($filled).'", "owner_username":"'.encodeJSONString($owner_username).'", "requester_username":"'.encodeJSONString($requester_username).'", ';
-					echo '"fulfiller_username":"'.encodeJSONString($fulfiller_username).'", "approver_username":"'.encodeJSONString($approver_username).'", ';
+					echo '"fulfiller_username":"'.encodeJSONString($fulfiller_username).'", "approver_username":"'.encodeJSONString($approver_username).'", "request_display":"'.$request_display.'", '; // display is always 0
 					echo '"info":"'.encodeJSONString($info).'", "status":"'.encodeJSONString($status).'" ';
 					echo '}';
 					if($i<($total-1)){ echo ','; }
@@ -645,7 +659,7 @@ if($ARGUMENT_GET_ACTION!=null){
 							$total = mysql_num_rows($result);
 							mysql_free_result($result);
 							if($total==0){ // no requests already exist
-								$query = 'insert into requests (created,shift_id,request_user_id,fulfill_user_id,fulfill_date,approved_user_id,approved_date,info,status) values ('.$TIME_NOW.',"'.$shift_id.'","'.$user_id.'","0",NULL,"0",NULL,"'.$request_reason.'","0"); ';
+								$query = 'insert into requests (created,shift_id,request_user_id,fulfill_user_id,fulfill_date,approved_user_id,approved_date,info,status,display) values ('.$TIME_NOW.',"'.$shift_id.'","'.$user_id.'","0",NULL,"0",NULL,"'.$request_reason.'","0","0"); ';
 								$result = mysql_query($query,$connection);
 								if($result){ // request created
 									$request_id = intval( mysql_insert_id() );
@@ -706,9 +720,7 @@ if($ARGUMENT_GET_ACTION!=null){
 								mysql_free_result($result);
 								$existing_shift_date_end = dateFromString($shift_time_end);
 								if($existing_shift_date_end>$DATE_NOW){ // end of shift is in future
-									$query = 'select id from shifts where parent_id!="0" and user_id="'.$user_id.'" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") or (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) and id!="'.$shift_id.'" limit 1;';
-									$result = mysql_query($query);
-									if($result && mysql_num_rows($result)==0){ // user doesn't have an overlapping shift
+									if( !userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end) ){ // user doesn't have an overlapping shift
 										mysql_free_result($result);
 										setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time_begin,$shift_time_end); // open all pending requests filled
 										$query = 'update requests set fulfill_user_id="'.$user_id.'",fulfill_date='.$TIME_NOW.', status="1" where id="'.$request_id.'";';
@@ -816,8 +828,53 @@ if($ARGUMENT_GET_ACTION!=null){
 					echo '{ "status":"error", "message":"unknown type" }';
 				}
 			}else{
-					echo '{ "status":"error", "message":"invalid action" }';
+				echo '{ "status":"error", "message":"invalid action" }';
+			}
+		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_REQUEST_UPDATE_DISPLAY){
+			$user_id = $ACTION_VALUE_USER_ID;
+			$request_id = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_REQUEST_ID]);
+			$display_type = decode_real_escape_string($_POST[$ACTION_TYPE_REQUEST_TYPE]);
+			logEventDB($connection,$TIME_ZONE_OFFSET,$ACTION_VALUE_IP_REMOTE,$ACTION_VALUE_IP_FORWARD,$user_id, $LOG_TYPE_REQUEST_DISPLAY_ATTEMPT, $request_id."|".$display_type);
+			if($ACTION_VALUE_IS_ADMIN){
+				if($request_id>0){
+
+					$query = 'select status from requests where id="'.$request_id.'";';
+					$result = mysql_query($query);
+					if($result && mysql_num_rows($result)==1){
+						$row = mysql_fetch_assoc($result);
+						$request_status = intval($row["status"]);
+						mysql_free_result($result);
+						if($request_status==2||$request_status==3||$request_status==4){ // has been decided
+							$display_value = null;
+							if($display_type=="yes"){
+								$display_value = "0";
+							}else if($display_type=="no"){
+								$display_value = "1";
+							}
+							if($display_value!=null){
+								$query = 'update requests set display="'.$display_value.'" where id="'.$request_id.'";';
+								$result = mysql_query($query);
+								if($result){
+									mysql_free_result($result);
+									echo '{ "status":"success", "message":"request display updated: '.$display_type.'" }';
+								}else{
+									echo '{ "status":"error", "message":"bad yes update" }';
+								}
+							}else{
+								echo '{ "status":"error", "message":"unknown action:" }';
+							}
+						}else{
+							echo '{ "status":"error", "message":"request must be decided before it can be cleared" }';
+						}
+					}else{
+						echo '{ "status":"error", "message":"query error" }';
+					}
+				}else{
+					echo '{ "status":"error", "message":"invalid request" }';
 				}
+			}else{
+				echo '{ "status":"error", "message":"invalid action" }';
+			}
 		}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_SINGLE || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL || $ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){
 				$shift_id = decode_real_escape_string($_POST[$ACTION_TYPE_SHIFT_UPDATE_SHIFT_ID]);
 				$was_shift_id = $shift_id;
@@ -848,22 +905,11 @@ if($ARGUMENT_GET_ACTION!=null){
 								$shift_time_begin = $row["time_begin"];
 								$shift_time_end = $row["time_end"];
 								mysql_free_result($result);
-// don't fill in user for any colliding shifts
-// set any pending requests to open if they exist
-// only do check if NOT $unassigning_shift
-// $unassigning_shift
-								if($unassigning_shift){ // don't search for all empty shifts
-									$query = null;
-									$result = null;
-								}else{
-									$query = 'select id from shifts where parent_id!="0" and user_id="'.$user_id.'" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") || (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) and id!="'.$shift_id.'" limit 1;';
-									$result = mysql_query($query);
-								}
-								if( $unassigning_shift || ($result && mysql_num_rows($result)==0) ){ // user doesn't have an overlapping shift
-									
-// epen overlapping requests
-// setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time_begin,$shift_time_end); // open all pending requests filled
-
+								if( $unassigning_shift || !userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end) ){ // user doesn't have an overlapping shift
+									if(!$unassigning_shift){
+										setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time_begin,$shift_time_end); // open all pending requests filled
+									}
+									closeAllPendingRequestsForShift($shift_id);
 									if($old_user_id!=$user_id){
 										$query = 'update shifts set user_id="'.$user_id.'" where id="'.$shift_id.'"; ';
 										$result = mysql_query($query, $connection);
@@ -895,27 +941,63 @@ if($ARGUMENT_GET_ACTION!=null){
 							}else{ return; }
 						}
 						if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_EMPTY){
-							$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and user_id="0";';
+							//$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and user_id="0";';
+							$query = 'select * from shifts where parent_id="'.$parent_id.'" and user_id="0";';
 							$message = 'empty shifts updated';
 						}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_ALL){
-							$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'";';
+							//$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'";';
+							$query = 'select * from shifts where parent_id="'.$parent_id.'" and user_id!="'.$user_id.'";';
 							$message = 'all shifts updated';
 						}else if($ARGUMENT_GET_ACTION==$ACTION_TYPE_SHIFT_UPDATE_USER_FUTURE){
-							$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and time_begin>=(select time_begin from (select time_begin from shifts where id="'.$was_shift_id.'") as S);'; // future = NEXT SHIFTS
+							//$query = 'update shifts set user_id="'.$user_id.'" where parent_id="'.$parent_id.'" and time_begin>=(select time_begin from (select time_begin from shifts where id="'.$was_shift_id.'") as S);'; // future = NEXT SHIFTS
+							$query = 'select id,time_begin,time_end,user_id from shifts where parent_id="'.$parent_id.'" and user_id!="'.$user_id.'" and time_begin>=(select time_begin from (select time_begin from shifts where id="'.$was_shift_id.'") as S);';
 							$message = 'future shifts updated';
 							$shift_id = $old_shift_id;
 							$time_begin = $old_time_begin;
 						}
-// need to check one by one :/
-// don't fill in user for any colliding shifts
-// setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$shift_time_begin,$shift_time_end); // open all pending requests filled
-// 
+						
+						// need to check one by one to run sub queries
+						$result = mysql_query($query, $connection);
+						if($result){
+							$total_results = mysql_num_rows($result);
+							$total_updated = 0;
+							$errors = 0;
+							while($row = mysql_fetch_assoc($result)){
+								$next_shift_id = $row["id"];
+								$next_shift_time_begin = $row["time_begin"];
+								$next_shift_time_end = $row["time_end"];
+								$next_shift_user_id = $row["user_id"];
+								// don't fill in user for any colliding shifts
+								if( !userHasOverlappingShift($user_id,$next_shift_time_begin,$next_shift_time_end) ){
+									setAllPendingRequestsFilledByUserBetweenTimeToOpen($user_id,$next_shift_time_begin,$next_shift_time_end); // open all pending requests filled
+									closeAllPendingRequestsForShift($next_shift_id);
+									$query = 'update shifts set user_id="'.$user_id.'" where id="'.$next_shift_id.'";';
+									$res = mysql_query($query, $connection);
+									if(!$res){
+										$errors += 1;
+									}else{
+										mysql_free_result($res);
+										++$total_updated;
+									}
+								}
+							}
+							mysql_free_result($result);
+							if($errors==0){
+								echo '{ "status":"success", "message":"'.encodeJSONString($message).'", "shift": { "id":"'.encodeJSONString($shift_id).'", "time_begin":"'.encodeJSONString($time_begin).'" }, "updated":"'.$total_updated.'" }';
+							}else{
+								echo '{ "status":"error", "message":"sub queries failed: '.$errors.'" }';
+							}
+						}else{
+							echo '{ "status":"error", "message":"listing failed: '.encodeJSONString($query).'" }';
+						}
+						/*
 						$result = mysql_query($query, $connection);
 						if($result){
 							echo '{ "status":"success", "message":"'.encodeJSONString($message).'", "shift": { "id":"'.encodeJSONString($shift_id).'", "time_begin":"'.encodeJSONString($time_begin).'" } }';
 						}else{
 							echo '{ "status":"error", "message":"update failed" }';
 						}
+						*/
 					}
 					
 				}else{
