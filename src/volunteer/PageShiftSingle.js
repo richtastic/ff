@@ -30,6 +30,8 @@ function PageShiftSingle(container, interface){
 	this._shiftRequestText = Code.newInputTextArea("", 3,20);
 		Code.addClass(this._shiftRequestText,"shiftSingleText");
 		Code.setMaxLength(this._shiftRequestText,1024);
+	this._shiftRequestReason = Code.newDiv();
+		Code.addClass(this._shiftRequestReason,"shiftSingleReasonText");
 
 	this._shiftAnswerButton = Code.newInputSubmit("Answer Fill-In");
 		Code.addClass(this._shiftAnswerButton,"shiftSingleButton");
@@ -151,6 +153,7 @@ PageShiftSingle.prototype.clear = function(){
 	this._hideUnRequestInfo();
 	this._hideUnAnswerInfo();
 	this._hideAdminInfo();
+	this._hideRequestReason();
 	this._shiftInfo = null;
 	this._userInfo = null;
 	this._usersListInfo = null;
@@ -174,6 +177,16 @@ PageShiftSingle.prototype._hideUnRequestInfo = function(){
 }
 PageShiftSingle.prototype._showUnRequestInfo = function(){
 	Code.addChild(this._shiftActionButtonContainer, this._shiftUnRequestButton);
+}
+PageShiftSingle.prototype._showRequestReason = function(reason){
+	Code.addChild(this._shiftActionTextContainer, this._shiftRequestReason);
+	if(reason){
+		Code.setContent(this._shiftRequestReason,reason);
+	}
+}
+PageShiftSingle.prototype._hideRequestReason = function(){
+	Code.removeFromParent(this._shiftRequestReason);
+	Code.setContent(this._shiftRequestReason,"");
 }
 PageShiftSingle.prototype._hideAnswerInfo = function(){
 	Code.removeFromParent(this._shiftAnswerButton);
@@ -288,6 +301,9 @@ PageShiftSingle.prototype._checkComplete = function(){
 			}else{
 				this._showAnswerInfo();
 			}
+			this._showRequestReason(this._shiftInfo.request_reason);
+		}else{
+			this._hideRequestReason();
 		}
 		if(isAdmin){ // fill in user list
 			this._getUsersListInfo();
@@ -341,13 +357,26 @@ PageShiftSingle.prototype._createShiftRequestSuccess = function(o){
 		alert("Shift Single: "+o.message);
 	}
 }
-PageShiftSingle.prototype._updateShiftRequestAnswer = function(user_id,request_id){
-	this._interface.updateShiftRequestAnswer(user_id,request_id,this,this._updateShiftRequestAnswerSuccess);
-}
 PageShiftSingle.prototype._updateShiftRequestAnswerSuccess = function(o){
 	if(o && o.status=="success"){
 		var request_id = o.request.id;
 		this.alertAll(PageShiftSingle.EVENT_REQUEST_UPDATED,request_id);
+	}else if(o && o.status=="error"){
+		alert("Shift Single: "+o.message);
+	}
+}
+PageShiftSingle.prototype._updateShiftRequestUnAnswerSuccess = function(o){
+	if(o && o.status=="success"){
+		var request_id = o.request.id;
+		this.alertAll(PageShiftSingle.EVENT_REQUEST_UPDATED,request_id);
+	}else if(o && o.status=="error"){
+		alert("Shift Single: "+o.message);
+	}
+}
+PageShiftSingle.prototype._updateShiftRequestUnRequestSuccess = function(o){
+	if(o && o.status=="success"){
+		console.log("SUCCESS ... "+o);
+		this.reset( this._shiftInfo.id );
 	}else if(o && o.status=="error"){
 		alert("Shift Single: "+o.message);
 	}
@@ -362,16 +391,14 @@ PageShiftSingle.prototype._handleRequestClickFxn = function(e){ // request fill-
 	}
 }
 PageShiftSingle.prototype._handleAnswerClickFxn = function(e){ // answer fill-in
-	this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
+	this._interface.updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id,this,this._updateShiftRequestAnswerSuccess);
 }
-
 PageShiftSingle.prototype._handleUnAnswerClickFxn = function(e){
-	//this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
+	this._interface.updateShiftRequestUnAnswer(this._userInfo.id,this._shiftInfo.request_id,this,this._updateShiftRequestUnAnswerSuccess);
 }
 PageShiftSingle.prototype._handleUnRequestClickFxn = function(e){
-	//this._updateShiftRequestAnswer(this._userInfo.id,this._shiftInfo.request_id);
+	this._interface.updateShiftRequestUnRequest(this._userInfo.id,this._shiftInfo.request_id,this,this._updateShiftRequestUnRequestSuccess);
 }
-
 PageShiftSingle.prototype._handleApply0ClickFxn = function(e){ // only this shift
 	var user_id = this._getSelectedUserID();
 	if(user_id>=0){

@@ -375,8 +375,12 @@ function isValidPositionData($name,$info){
 	}
 	return false;
 }
-function userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end){
-	$query = 'select id from shifts where parent_id!="0" and user_id="'.$user_id.'" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") or (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) and id!="'.$shift_id.'" limit 1;';
+// function userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end){
+// 	return userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end, null);
+// }
+function userHasOverlappingShift($user_id,$shift_time_begin,$shift_time_end, $shift_id){
+	$query = 'select id from shifts where parent_id!="0" and user_id="'.$user_id.'" and not ((time_begin<="'.$shift_time_begin.'" and time_end<="'.$shift_time_begin.'") or (time_begin>="'.$shift_time_end.'" and time_end>="'.$shift_time_end.'")) '
+	.(($shift_id!=null)?(' and id!="'.$shift_id.'"'):(' ')).' limit 1;';
 	$result = mysql_query($query);
 	return !($result && mysql_num_rows($result)==0);
 }
@@ -591,6 +595,38 @@ function emailOnShiftSwapFilled($connection, $request_id){
 			mysql_free_result($result);
 		}else{
 			//error_log("could not send users data on filled");
+		}
+		mysql_free_result($result);
+	}
+}
+function emailOnShiftSwapUnFilled($connection, $request_id){
+	$request_id = mysql_real_escape_string($request_id);
+	$query = 'select requests.created as request_created,shifts.user_id as owner_id, shifts.name as shift_name,shifts.time_begin as shift_begin,shifts.time_end as shift_end '.
+			' from requests left outer join shifts on requests.shift_id=shifts.id where requests.id="'.$request_id.'";';
+	$result = mysql_query($query);
+	if($result && mysql_num_rows($result)==1){
+		$row = mysql_fetch_assoc($result);
+		$owner_id = $row["owner_id"];
+		$shift_name = $row["shift_name"];
+		$request_created = dateFromString($row["request_created"]);
+		$shift_begin = dateFromString($row["shift_begin"]);
+		$shift_end = dateFromString($row["shift_end"]);
+		$subject = 'BSFTH Swap Request';
+		$body = 'The following Shift Swap has been un-filled (at '.getHumanFullDateFromDate( getDateNow() ).'):  '.
+		$shift_name.' : '.getHumanDayFromDate($shift_begin).', '.getHumanTimeOfDayFromDate($shift_begin).' - '.getHumanTimeOfDayFromDate($shift_end);
+		mysql_free_result($result);
+		$query = 'select id,username,email from users where (id="'.$owner_id.'" and preference_email_shift_self="1") or preference_email_shift_other="1";';
+		$result = mysql_query($query);
+		if($result){
+			while($row = mysql_fetch_assoc($result)){
+				$email = $row["email"];
+				if( isValidEmail($email) ){
+					sendEmailBSFTH($email, $subject, $body);
+				}
+			}
+			mysql_free_result($result);
+		}else{
+			//error_log("could not send users data");
 		}
 		mysql_free_result($result);
 	}

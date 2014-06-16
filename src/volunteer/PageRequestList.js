@@ -13,6 +13,7 @@ function PageRequestList(container, interface){
 	this._approveButtonList = new Array();
 	this._denyButtonList = new Array();
 	this._clearButtonList = new Array();
+	this._otherButtonList = new Array();
 	//
 	Code.addChild(this._root, this._requestTable);
 	this._init();
@@ -40,6 +41,9 @@ PageRequestList.prototype.clear = function(){
 	while(this._clearButtonList.length>0){
 		o = this._clearButtonList.pop();
 	}
+	while(this._clearButtonList.length>0){
+		o = this._otherButtonList.pop();
+	}
 	while( Code.getRowCount(this._requestTable) > 1 ){
 		Code.removeRow(this._requestTable);
 	}
@@ -48,7 +52,11 @@ PageRequestList.prototype.reset = function(){
 	this.clear();
 	this._checkRequests();
 }
-PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftID,posID,posName,ownID,ownName,reqID,reqName,filID,filName,filled,appID,appName,approved,time,status,reason, btn){
+PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftID,posID,posName,ownID,ownName,reqID,reqName,filID,filName,filled,appID,appName,approved,time,status,reason, btn, status2, usrID){
+	var isAdmin = this._interface.isImmediateAdmin()
+	var ownsShift = ownID==usrID;
+	var ownsRequest = reqID==usrID;
+	var ownsAnswer = filID==usrID;
 	var row, col;
 	row = Code.addRow(this._requestTable);
 		Code.addClass(row, "requestListRow");
@@ -87,27 +95,54 @@ PageRequestList.prototype.addRequest = function(index,requestID,requested,shiftI
 		Code.setContent( col, Code.escapeHTML( reason ) );
 	col = Code.addCell(row);
 		Code.addClass(col, "requestListCell");
-		if(btn==1){ // in progress
-			var approve = Code.newInputSubmit("Approve");
-				Code.addClass(approve, "requestListButton");
-				Code.setProperty(approve, "request_id", requestID);
-			var reject = Code.newInputSubmit("Deny");
-				Code.addClass(reject, "requestListButton");
-				Code.setProperty(reject, "request_id", requestID);
-			Code.addChild(col, approve);
-			Code.addChild(col, reject);
-			//
-			Code.addListenerClick(approve,this._handleApproveClickFxn,this);
-			Code.addListenerClick(reject,this._handleDenyClickFxn,this);
-			this._approveButtonList.push( approve );
-			this._denyButtonList.push( reject );
-		}else if(btn==0){ // done - clear
-			var cleared = Code.newInputSubmit("Clear");
-				Code.addClass(cleared, "requestListButton");
-				Code.setProperty(cleared, "request_id", requestID);
-			Code.addChild(col, cleared);
-			Code.addListenerClick(cleared,this._handleClearClickFxn,this);
-			this._clearButtonList.push( cleared );
+		if(isAdmin){
+			if(btn==1){ // in progress
+				var approve = Code.newInputSubmit("Approve");
+					Code.addClass(approve, "requestListButton");
+					Code.setProperty(approve, "request_id", requestID);
+				var reject = Code.newInputSubmit("Deny");
+					Code.addClass(reject, "requestListButton");
+					Code.setProperty(reject, "request_id", requestID);
+				Code.addChild(col, approve);
+				Code.addChild(col, reject);
+				//
+				Code.addListenerClick(approve,this._handleApproveClickFxn,this);
+				Code.addListenerClick(reject,this._handleDenyClickFxn,this);
+				this._approveButtonList.push( approve );
+				this._denyButtonList.push( reject );
+			}else if(btn==0){ // done - clear
+				var cleared = Code.newInputSubmit("Clear");
+					Code.addClass(cleared, "requestListButton");
+					Code.setProperty(cleared, "request_id", requestID);
+				Code.addChild(col, cleared);
+				Code.addListenerClick(cleared,this._handleClearClickFxn,this);
+				this._clearButtonList.push( cleared );
+			}
+		}
+		if(status2==0){ // open 
+			if(ownsRequest){
+				var unrequest = Code.newInputSubmit("Un-Request");
+					Code.addClass(unrequest, "requestListButton");
+					Code.setProperty(unrequest, "request_id", requestID);
+				Code.addListenerClick(unrequest,this._handleUnRequestClickFxn,this);
+				this._otherButtonList.push( unrequest );
+				Code.addChild(col, unrequest);
+			}
+			var answer = Code.newInputSubmit("Answer");
+				Code.addClass(answer, "requestListButton");
+				Code.setProperty(answer, "request_id", requestID);
+			Code.addListenerClick(answer,this._handleAnswerClickFxn,this);
+			this._otherButtonList.push( answer );
+			Code.addChild(col, answer);
+		}else if(status2==1){
+			if(ownsAnswer){
+				var unanswer = Code.newInputSubmit("Un-Answer");
+					Code.addClass(unanswer, "requestListButton");
+					Code.setProperty(unanswer, "request_id", requestID);
+				Code.addListenerClick(unanswer,this._handleUnAnswerClickFxn,this);
+				this._otherButtonList.push( unanswer );
+				Code.addChild(col, unanswer);
+			}
 		}
 }
 // ------------------------------------------------------------------------------ 
@@ -118,11 +153,12 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 	if(o.status=="success"){
 		var moy = Code.monthsShort;
 		var i, btn, req, request_id, created, filled, approved, shift_id, shift_begin, shift_end, position_id, position_name;
-		var owner_id, owner_name, requester_id, requester_name, fulfiller_id, fulfiller_name, approver_id, approved_name, info, status;
+		var owner_id, owner_name, requester_id, requester_name, fulfiller_id, fulfiller_name, approver_id, approved_name, info, status, status2;
 		var page = parseInt(o.page,10);
 		var perpage = parseInt(o.count,10);
 		var offset = page*perpage;
 		var list = o.list;
+		var this_user_id = o["user_id"];
 		for(i=0;i<list.length;++i){
 			req = list[i];
 			request_id = req["request_id"];
@@ -159,6 +195,7 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 				}
 			shift_time = shift_begin+" - "+shift_end;
 			status = parseInt(status,10);
+			status2 = status;
 			if(status==0){
 				btn = 1;
 				status = "open";
@@ -178,11 +215,11 @@ PageRequestList.prototype._checkRequestsComplete = function(o){
 				btn = 0;
 				status = "?";
 			}
-			if(!this._interface.isImmediateAdmin()){
-				btn = -1;
-			}
+			// if(!this._interface.isImmediateAdmin()){
+			// 	btn = -1;
+			// }
 			this.addRequest(offset+i+1, request_id,created, shift_id, position_id,position_name, owner_id,owner_name, requester_id,requester_name,
-				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, info, btn);
+				fulfiller_id,fulfiller_name,filled, approver_id,approver_name,approved, shift_time, status, info, btn, status2, this_user_id);
 		}
 	}
 }
@@ -231,3 +268,48 @@ PageRequestList.prototype._handleClearClickFxnSuccess = function(o){
 		alert("RequestList: "+o.message);
 	}
 }
+////////////////////////////////////////////////////////////////////////////
+PageRequestList.prototype._handleUnRequestClickFxn = function(e){
+	var target = Code.getTargetFromMouseEvent(e);
+	var request_id = parseInt(Code.getProperty(target,"request_id"),10);
+	if(request_id>0){
+		this._interface.updateShiftRequestUnRequest(0,request_id,this,this._handleUnRequestClickFxnSuccess);
+	}
+}
+PageRequestList.prototype._handleUnAnswerClickFxn = function(e){
+	var target = Code.getTargetFromMouseEvent(e);
+	var request_id = parseInt(Code.getProperty(target,"request_id"),10);
+	if(request_id>0){
+		this._interface.updateShiftRequestUnAnswer(0,request_id,this,this._handleUnAnswerClickFxnSuccess);
+	}
+}
+PageRequestList.prototype._handleAnswerClickFxn = function(e){
+	var target = Code.getTargetFromMouseEvent(e);
+	var request_id = parseInt(Code.getProperty(target,"request_id"),10);
+	if(request_id>0){
+		this._interface.updateShiftRequestAnswer(0,request_id,this,this._handleAnswerClickFxnSuccess);
+	}
+}
+////////////////////////////////////////////////////////////////////////////
+PageRequestList.prototype._handleUnRequestClickFxnSuccess = function(o){
+	if(o && o.status=="success"){
+		this.reset(); // less half-assed
+	}else{
+		alert("RequestList: "+o.message);
+	}
+}
+PageRequestList.prototype._handleAnswerClickFxnSuccess = function(o){
+	if(o && o.status=="success"){
+		this.reset(); // less half-assed
+	}else{
+		alert("RequestList: "+o.message);
+	}
+}
+PageRequestList.prototype._handleUnAnswerClickFxnSuccess = function(o){
+	if(o && o.status=="success"){
+		this.reset(); // less half-assed
+	}else{
+		alert("RequestList: "+o.message);
+	}
+}
+
