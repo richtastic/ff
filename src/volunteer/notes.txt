@@ -47,9 +47,14 @@ ALTER TABLE `table`  ADD COLUMN `column` FLOAT(10,2) NOT NULL DEFAULT '0.00'
 drop table users;
 
 
+describe users;
 
 
+alter table requests drop column display;
 
+alter table requests add column display int(11) default NULL;
+
+update requests set display="0" where display is NULL;
 
 
 
@@ -82,110 +87,6 @@ use volunteering;
 show tables;
 
 alter table users
-
-
- +---------------------------------------------+
- |                    - 18 -                   |
- +---------------------------------------------+
- |   HELP WANTED - Dorm Supply 6:00AM-8:00AM   |
- +---------------------------------------------+
- |      HELP WANTED - Linens 5:30PM-7:00PM     |
- +---------------------------------------------+
- |    HELP WANTED - Dinner 1 5:00PM-7:00PM     |
- +---------------------------------------------+
- |       Richie - Dinner 2 5:00PM-7:00PM       |
- +---------------------------------------------+
- |        John - Dinner 3 5:00PM-7:00PM        |
- +---------------------------------------------+
- |     Maxamillion - Dinner 4 5:00PM-7:00PM    |
- +---------------------------------------------+
- |                                             |
- |                                             |
- |                                             |
- |                                             |
- |                                             |
- +---------------------------------------------+
-
- +---------------------------------------------+
- |                 Previous                    |
- +---------------------------------------------+
- |    Dinner - May 15, 2013  5:00PM-7:00PM     |
- +---------------------------------------------+
- |                   Next                      |
- +---------------------------------------------+
- |  Dorm Supply - May 21, 2013  5:00PM-7:00PM  |
- +---------------------------------------------+
-
-
-
- +---------------------------------------------+
- |                                             |
- |                                             |
- |         Please log into your shift          |
- |                                             |
- |        First Name [               ]         |
- |         Last Name [               ]         |
- |                                             |
- |                   [ OK ]                    |
- |                  [ Reset ]                  |
- |                                             |
- +---------------------------------------------+ 
- Check for all un-logged shifts starting/stopping within 1-2 hours from current time
- +---------------------------------------------+
- |                                             |
- |           Please verify your shift          |
- |                                             |
- |                Richie Zirbes                |
- |         Dorm Supply 5:00PM - 7:00PM         |
- |                                             |
- |                 [ Confirm ]                 |
- |                                             |
- |                 [ Cancel ]                  |
- |                                             |
- +---------------------------------------------+ 
- Check for all un-logged shifts starting within 1 hour of previous shift finish time
- +---------------------------------------------+
- |                                             |
- |   It appears you also have another shift.   |
- |   Would you like to log in for this too?    |
- |                                             |
- |         Dorm Supply 7:00PM - 8:30PM         |
- |                                             |
- |                   [ Yes ]                   |
- |                                             |
- |                   [ No ]                    |
- |                                             |
- +---------------------------------------------+
-If no shifts are found (assigned to user) => show list of all shifts within the next day (and minus a few hours of current time)
-If no user is found => refresh to login page with error "User not found"
-
-
-
-PERMISSIONS:
-
-ADMIN:
-USERS_CREATE
-USERS_READ
-USERS_UPDATE
-USERS_DELETE
-EMAIL_SEND
-SHIFT_CREATE
-
-TERMINAL:
-LOGIN_SCREEN
-
-
-USER:
-
-
-
-
-
-1024 bits / 4 = 256 chars
-256 bits / 4 = 64 chars
-         1         2         3         4         5         6
-1234567890123456789012345678901234567890123456789012345678901234567890
-0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
 
 
 
@@ -271,8 +172,10 @@ fulfill_date datetime, # filled
 approved_user_id int, # admin
 approved_date datetime, # decided
 info varchar(1024), # request reasoning explanation
-status int # 0=opened, 1=answered, 2=approved, 3=denied, 4=empty
+status int, # 0=opened, 1=answered, 2=approved, 3=denied, 4=empty
+display int # 0=show, 1=clear
 );
+
 # LOGGING
 drop table if exists logs;
 create table logs(
@@ -312,12 +215,40 @@ insert into users (username, password, email, first_name, last_name, phone, addr
 
 
 
+ftp SERVER
+USERNAME
+PASSWORD
+cd 2008/staff
 
-NEWEST TODO-----------
-
-
-TODO:
-PROBABLY EMAIL "CRON" JOB & LAUNCHER
-
-
-ON ASSIGN ONLY EMPTY SHIFTS -> NO ACTION TAKEN
+put config.php
+put functions.php
+put index.php
+put PageCalendarMonth.js
+put PageCalendarWeek.js
+put PageLogin.js
+put PageMonthBlock.js
+put PagePosition.js
+put PagePositionList.js
+put PageRequest.js
+put PageRequestList.js
+put PageShiftSingle.js
+put PageShifts.js
+put PageShiftsList.js
+put PageUser.js
+put PageUserList.js
+put ServerVolunteerInterface.js
+put volunteer.css
+put Volunteer.js
+mkdir classes
+cd classes
+lcd classes
+put Ajax.js
+put Code.js
+put Dispatchable.js
+put Dispatch.js
+put json3.min.js
+put JSONParse.js
+put Navigation.js
+put NavWeb.js
+put PageWeb.js
+put sha512.js

@@ -3,6 +3,7 @@
 //error_reporting(E_WARNING);
 error_reporting(E_ERROR); // mysql warnings
 require "functions.php";
+require "config.php";
 
 // 22:30 -> 01:30 = ahead by 3 hours 
 $TIME_ZONE_OFFSET = -3*60; // in minutes
@@ -129,7 +130,7 @@ $LOG_TYPE_SHIFT_CREATE_ATTEMPT = "shift_create_attempt";
 if($ARGUMENT_GET_ACTION!=null){
 	ignore_user_abort(true); 
 	set_time_limit(0);
-	$connection = mysql_connect("localhost","richie","qwerty") or die('{ "status": "error", "message": "connection failed" }');  mysql_select_db("volunteering");
+	$connection = configConnectToDatabaseOrDie();
 	//
 	$ACTION_VALUE_USER_ID = null;
 	$ACTION_VALUE_IS_ADMIN = false;
