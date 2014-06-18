@@ -25,6 +25,21 @@ Code.JS_EVENT_TOUCH_END = "touchend";
 Code.JS_EVENT_TOUCH_ENTER = "touchenter";
 Code.JS_EVENT_TOUCH_LEAVE = "touchleave";
 Code.JS_EVENT_TOUCH_CANCEL = "touchcancel";
+
+Code.JS_EVENT_DRAG_START = "dragstart";
+Code.JS_EVENT_DRAG_MOVE = "drag";
+Code.JS_EVENT_DRAG_END = "dragend";
+Code.JS_EVENT_DRAG_ENTER = "dragenter";
+Code.JS_EVENT_DRAG_OVER = "dragover";
+Code.JS_EVENT_DRAG_LEAVE = "dragleave";
+Code.JS_EVENT_DRAG_DROP = "drop";
+
+Code.JS_EVENT_LOAD_END = "loadend";
+Code.JS_EVENT_LOAD_PROGRESS = "progress";
+Code.JS_EVENT_LOAD_START = "loadstart";
+Code.JS_EVENT_ABORT = "abort";
+Code.JS_EVENT_ERROR = "error";
+
 Code.JS_EVENT_SCROLL = "scroll"; // window.onscroll
 Code.JS_EVENT_BLUR = "blur";
 Code.JS_EVENT_CHANGE = "change";
@@ -1026,10 +1041,18 @@ Code.getKeyCodeFromKeyboardEvent = function(e){
 // -------------------------------------------------------- LISTENING
 Code.addEventListener = function(ele,str,fxn){
 	if(Code.IS_IE){
-		// ele["on"+str]
+		// ele["on"+str] = fxn
 		ele.attachEvent("on"+str,fxn);
 	}else{
 		ele.addEventListener(str,fxn);
+	}
+}
+Code.removeEventListener = function(ele,str,fxn){
+	if(Code.IS_IE){
+		// ele["on"+str] = null
+		ele.detachEvent("on"+str,fxn);
+	}else{
+		ele.removeEventListener(str,fxn);
 	}
 }
 // -------------------------------------------------------- LISTENERS
@@ -1065,7 +1088,11 @@ Code.addListenerChange = function(ele,fxn){
 Code.stopEventPropagation = function(e){
 	e.stopPropagation();
 }
-
+Code.eventPreventDefault = function(e){
+	if(e.preventDefault){
+		e.preventDefault();
+	}
+}
 
 Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 	var ar = wid/hei;
