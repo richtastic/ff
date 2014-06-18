@@ -544,7 +544,7 @@ is n is not normal, d = g||n||<sup>2</sup>
 function should be weighted based on point distance to origin point of plane (projected point)
 &Sum;<sub>i</sub> (n&middot;p<sub>i</sub> - d)<sup>2</sup> &middot; function(&prop;1/||p<sub>i</sub>-o||)
 <br/>
-****: ?
+**...**: ?
 <br/>
 Solve Ax = b &rarr; x = pinv(A)b ?
 <br/>
@@ -562,6 +562,80 @@ function(&prop;1/||p<sub>i</sub>-o||) suggested to be: exp(-d<sup>2</sup>/h<sup>
 <br/>
 <br/>
 <br/>
+Minimize squared distance from plane:
+<br/>
+**r = (r<sub>x</sub>,r<sub>y</sub>,r<sub>z</sub>)**: point near surface
+<br/>
+**cloud point p = p<sub>i</sub> = (p<sub>x</sub>,p<sub>y</sub>,p<sub>z</sub>)**: point p in point cloud
+<br/>
+**projected point q = (q<sub>x</sub>,q<sub>y</sub>,q<sub>z</sub>)**: point p projected onto plane (origin of plane system)
+<br/>
+**plane unit normal n = &lt;n<sub>x</sub>,n<sub>y</sub>,n<sub>z</sub>&gt;**: plane unit normal ||n||=1
+<br/>
+**weight function &theta;(d)**: weighting based on point distance (d), exp(-d<sup>2</sup>/h<sup>2</sup>)
+<br/>
+**distance d**: distance
+<br/>
+**feature size h**: some user input, larger h smooths more
+<br/>
+**count N**: total number of cloud points
+<br/>
+&Sum;<sub>i=[0,N]</sub> (dot(n,p<sub>i</sub>-D))<sup>2</sup>&theta;(||p<sub>i</sub>-q||)
+<br/>
+let q = r + tn
+<br/>
+D &equiv; distance from origin to plane in direction of n (shortest distance to plane from origin)
+<br/>
+D = ||q||
+<br/>
+D = dot(n,q)
+<br/>
+D = dot(n,r+tn)
+<br/>
+D = dot(n,r)+t(n<sub>x</sub>+n<sub>y</sub>+n<sub>z</sub>)
+<br/>
+&rarr;
+<br/>
+dot(n,p<sub>i</sub>-D) = dot(n,p<sub>i</sub>-q)
+<br/>
+dot(n,p<sub>i</sub>-D) = dot(n,p<sub>i</sub>-(r+tn))
+<br/>
+dot(n,p<sub>i</sub>-D) = dot(n,p<sub>i</sub> - r - tn)
+<br/>
+&rarr;
+<br/>
+&Sum;<sub>i=[0,N]</sub> (dot(n,p<sub>i</sub> - r - tn))<sup>2</sup>&theta;(||p<sub>i</sub> - r - tn||)
+<br/>
+**Q(r)**: minimimum solution at smallest t
+<br/>
+<br/>
+Nonlinear iteration minimization:
+<br/>
+t = 0
+<br/>
+n = linear covariance SVD min U solution
+<br/>
+t is expected to be &isin; [-h/2,h/2]
+<br/>
+<br/>
+Partial derivative:
+<br/>
+2&Sum;<sub>i=[1,N]</sub>(dot(n,p<sub>i</sub> - r - tn))(1 + [dot(n,p<sub>i</sub> - r - tn)]<sup>2</sup>/h<sup>2</sup>)exp(||p<sub>i</sub> - r - tn||<sup>2</sup>/h<sup>2</sup>)
+<br/>
+<br/>
+reference numerical methods in C
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+...P(r) = minimum of projection onto surface = q + g(0,0)n = r + (t+g(0,0)n
+<br/>
+P(P(r)) = P(r) (projection of surface point &equiv surface point)
+<br/>
+<br/>
+<br/>
 
 
 **Minimization via Powell Iteration**
@@ -573,6 +647,63 @@ OMG another iteration method
 <br/>
 <br/>
 
+### Weighted Least Squares Bivariate Surface
+<br/>
+**Minimize weighted sum of squared errors (F)**: min&Sum;<sub>i&in;[1,N]</sub> w<sub>i</sub>(f(p<sub>i<sub>x</sub></sub>,p<sub>i<sub>y</sub></sub>) - p<sub>i<sub>z</sub></sub>)<sup>2</sup>
+<br/>
+**Point Set P**: set of points 1 to N
+<br/>
+**Point Weight w<sub>i</sub>**: weighting applied for point<sub>i</sub>
+<br/>
+**Point p = p<sub>i</sub> = p(p<sub>x</sub>,p<sub>y</sub>,p<sub>z</sub>)**:
+<br/>
+**Approximating function f(x,y) = b(x,y)<sup>T</sup>c**: (polynomial) bivariate surface z value, defined at all &reals;<sup>3</sup>
+<br/>
+**Polynomial basis (column) vector b = b(x,y)**: [1, x, y, x<sup>2</sup>, xy, y<sup>2</sup>, x<sup>3</sup>, x<sup>2</sup>y, xy<sup>2</sup>, y<sup>3</sup> ...]<sup>T</sup>
+<br/>
+**Polynomial coefficient (column) vector c**: [c<sub>1</sub> ... c<sub>count</sub>]<sup>T</sup>
+<br/>
+**Polynomial Degree deg**: maximum exponent of 
+<br/>
+**Coefficient count**: For a given degree, there are at most (deg<sup>2</sup> + 3*deg)/2 + 1 coefficients
+<br/>
+<br/>
+F = &Sum; w<sub>i</sub>&middot;(f(x<sub>i</sub>,y<sub>i</sub>) - z<sub>i</sub>)<sup>2</sup>
+<br/>
+F = &Sum; w<sub>i</sub>&middot;((b(x<sub>i</sub>,y<sub>i</sub>)<sup>T</sup>c - z<sub>i</sub>)<sup>2</sup>
+<br/>
+<br/>
+w(x&middot;c - z)<sup>2</sup>
+<br/>
+(d/dx) w(x&middot;c - z)<sup>2</sup> = 2w(x&middot;c - z)&middot;c
+<br/>
+<br/>
+&part;F/&part;b = &Sum; 2 w<sub>i</sub>&middot;b(x<sub>i</sub>,y<sub>i</sub>)&middot;(b(x<sub>i</sub>,y<sub>i</sub>)<sup>T</sup>c-z<sub>i</sub>)
+<br/>
+<br/>
+Minimize at derivative = 0
+<br/>
+2 &Sum; w<sub>i</sub>&middot;b(x<sub>i</sub>,y<sub>i</sub>)&middot;b(x<sub>i</sub>,y<sub>i</sub>)<sup>T</sup>c - b(x<sub>i</sub>,y<sub>i</sub>)z<sub>i</sub> = 0 
+<br/>
+&Sum; [w<sub>i</sub>&middot;b(x<sub>i</sub>,y<sub>i</sub>)&middot;b(x<sub>i</sub>,y<sub>i</sub>)<sup>T</sup>]c = &Sum; b(x<sub>i</sub>,y<sub>i</sub>)z<sub>i</sub>
+<br/>
+Ac = b'
+<br/>
+<br/>
+**Numerical Stability**: to keep all values in the same range, points are typically pre-transformed to place them at the origin (around their centroid), and perhaps scaled to fit between say [-1,1] in x,y,z
+<br/>
+<br/>
+Weighting function takes on forms like:
+- exp(-(d<sup>2</sup>/h<sup>2</sup>)
+- (1-d/h)<sup>4</sup>(4d/h+1)
+- 1/(d<sup>2</sup> - &epsilon;<sup>2</sup>)
+<br/>
+**Distance d**: distance between a point p<sub>i</sub> and some reference point (centroid)
+<br/>
+**Feature Size h**: basically a scale factor to enhance or limit the weighting
+<br/>
+constant, linear, quadratic, cubic, quartic, quintic, sextic, septic/septimic, octic/octavic, nonic, decic, 100=hectic
+<br/>
 
 
 ### Intersection of Line and Plane (Point Projected onto Plane)
@@ -683,6 +814,7 @@ Topic - Author (Source/Title)
 <br/>
 (Simple 3D Surface Curvature - Kurita, Boulanger)[Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights]
 <br/>
+(Weighted Least Squares)[www.nealen.net/projects/mls/asapmls.pdf]
 (Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]
 <br/>
 
