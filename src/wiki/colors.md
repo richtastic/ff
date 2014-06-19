@@ -8,7 +8,7 @@ The goal in the conversion is to evenly distribute the values from one range to 
 <br />
 Keep in mind that min(rangeA)=min(rangeB) (black should be black), similarly max(rangeA)=max(rangeB) (white should be white)
 
-## [0-255] to [0.0,1.0] (h to p)
+## [0,255] to [0.0,1.0]-(h to p)
 **p = h/255.0**
 <br/>
 The distance between each element is equal, the minimum 0.0, and max 1.0 are mapped to correctly.
@@ -22,7 +22,7 @@ h = [0:3]; # h = [  0    1    2    3 ]
 p = h/3.0; # p = [0.00 0.33 0.66 1.00]
 ```
 
-## [0.0,1.0] to [0-255] (P to H)
+## [0.0,1.0] to [0,255]-(P to H)
 **Wrong: round(p*255)**
 <br/>
 The problem with this is that the values at the ends (0 and 255) are mapped to ~half as many values as a number in the middle of the range
