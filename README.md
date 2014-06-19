@@ -19,7 +19,9 @@ Also contains other various code, with various purposes.
   * [Voronoi | Delaunay](#PROJECT_VORONOI)
 2. [Classes](#CLASSES)
   * [AJAX](#CLASS_AJAX)
-3. [References](#REFERENCES)
+3. [Notes](#NOTES)
+  * [AJAX](#NOTES_COLORS)
+4. [References](#REFERENCES)
 
 <a name="PROJECTS"></a>
 # Project Index #
@@ -77,6 +79,18 @@ Although I'll probably use fewer lines. I chose Apache 2.0, because GNU GPLs are
 [Apache License V2 - 2004-01-00 (text)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 [Apache Licenses](http://www.apache.org/licenses/)
 [Open Source Inititive - Apache License](http://opensource.org/licenses/Apache-2.0)
+
+
+<a name="NOTES"></a>
+# Notes
+
+
+<a name="NOTES_COLOR"></a>
+## Color Conversion
+<br/>
+[Color Conversion Analysis](./src/wiki/colors.md)
+
+
 
 ---
 
