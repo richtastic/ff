@@ -20,7 +20,7 @@ Also contains other various code, with various purposes.
 2. [Classes](#CLASSES)
   * [AJAX](#CLASS_AJAX)
 3. [Notes](#NOTES)
-  * [AJAX](#NOTES_COLORS)
+  * [Color Conversion](#NOTES_COLORS)
 4. [References](#REFERENCES)
 
 <a name="PROJECTS"></a>
@@ -85,7 +85,7 @@ Although I'll probably use fewer lines. I chose Apache 2.0, because GNU GPLs are
 # Notes
 
 
-<a name="NOTES_COLOR"></a>
+<a name="NOTES_COLORS"></a>
 ## Color Conversion
 <br/>
 [Color Conversion Analysis](./src/wiki/colors.md)
