@@ -167,23 +167,6 @@ SurfaceTri.prototype.distanceWeight = function(q,point, h){ // h should probably
 	var distSquare = distanceSquare(q,point);
 	return Math.exp(-distSquare/h);
 }
-/*
-0:  1     0  1   a
-1:  x     1      b
-2:  y     1  2   c
-3:  xx    2      d
-4:  xy    2      e
-5:  yy    2  3   f
-6:  xxx   3      g
-7:  xxy   3      h
-8:  xyy   3      i
-9:  yyy   3  4   j
-10: xxxx  4      k
-11: xxxy  4      l
-12: xxyy  4      m
-13: xyyy  4      n
-14: yyyy  4  5   o
-*/
 SurfaceTri.prototype.covarianceFromPoints = function(points){
 	var dx,dy,dz, p, i, len = points.length;
 	//var mu = new V3D();

@@ -131,7 +131,7 @@ always grow with isosceles triangles
 **MLS (Moving Least Squares**: specifies the underlying surface ? 
 <br/>
 <br/>
-**MSL Projection**:  projects point r in &reals;<sup>3</sup> to surface: r' = P(r)
+**MLS Projection**:  projects point r in &reals;<sup>3</sup> to surface: r' = P(r)
 - surface = set of points that project to themselves
 - 1:
     - fit a reference plane H = (q,n) to neighborhood of r (q is point on plane, n is unit normal vector)
@@ -183,7 +183,8 @@ grand (great) circle of a sphere: largest circle that intersects a sphere (have 
 <br/>
 
 ### Algorithm
-
+- input
+    - &rho;: solid angle (eg: &pi;/4)
 - initial seed triangle:
     - random point of cloud
     - projected point to MLS surface
@@ -193,13 +194,46 @@ grand (great) circle of a sphere: largest circle that intersects a sphere (have 
         - query curvature and bracket and interval bisection to find best initial size
         - best triangle is one where query length = length (fixed point of f)
 
-- 
-
+midpoint = randomPointInCloud()
+midpoint = project(midpoint)
+curvature = curvatureAtProjectedPoint(midpoint)
+edgeLengthA = &rho/curvature
+edgeLengthB = fieldMin(edgeLengthA)
+lenMin = min(edgeLengthA,edgeLengthB)
+lenMax = max(edgeLengthA,edgeLengthB)
+BISECTION:
+  lenMid = (lenMin+lenMax)/2
+  len = fieldMin(lenMid)
+  if len ~= lenMid
+    done
+  else if len < lenMid
+    lenMax = len
+  else if len > lenMid
+    lenMin = len
+  ...
 
 - add new vertex
     - Vertex-Prediction: vertex position is first estimated via prediction operator... ?
-        - consider current edge length and maximum curvature in triangle neighborhood
+        - consider current edge length
+            - ?
+                - &beta; = current? isosceles base angle 
+                - c = ?front edge length
+                - querying radius b = (sin2&beta;/sin3&beta;)c
+                
+            - L &le; &rho;/&kappa; = &rho;&middot;r 
+        - consider maximum curvature in triangle neighborhood
+            - sample bivariate surface at CLOSEST POINTS IN SET
+            - &kappa; = max(&kappa;<sub>min</sub>,&kappa;<sub>max</sub>)
     - vertex projected to MLS surface
+        - locally approximate surface as plane containing #? points
+            - weighted least squares
+        - locally approximate surface as bivariate polynomial (3rd/4th degree) in plane coord system
+            - weighted least squares, h varies locally 
+        - projected point = bivarate surface at f(x=0,y=0)
+    
+- neighbordhood = ? k nearest neighbors? = ?
+- 
+
 <br/>
 <br/>
 <br/>
@@ -219,7 +253,8 @@ deferred edge: second priority - because edge will introduce a bad triangle
 
 boundary: anisotropy (using best fit local plane) maximum angle between local points and reference point if above a threshold (150&deg;)
 
-firstFront()
+**firstFront()**
+- ? is this the first triangle edges? - what stops a 3-edge front from eating itself?
 
 **vertexPredict(edge, field)**
 - need to know absolute curvature &kappa; (from &kappa;<sub>1</sub> and &kappa;<sub>2</sub>). L = &rho;/&kappa;
@@ -235,7 +270,8 @@ p = Point() // forms angle 180-2*baseAngle with edge
 return MLSProject(p)
 
 **fieldMinInSphere(field, center,radius)**
--?
+-?smallest edge length within given sphere
+    - query each point in cloud and find max curvature = min r &rarr; L = &rho;&middot;r
 
 **MLSProject(point)**
 -project point onto MLS Surface?
@@ -760,9 +796,9 @@ x how to get kappa - curvature of the MLS surface
 - MLS
     x determing MLS surface for any point
     x display MLS as sampled points on surface
+    x minimization to find bivariate surface
+    x weighted minimizations
     - minimization to find plane
-    - minimization to find bivariate surface
-    - weighted minimizations
     - 'snapping' to closest sample point?
     - neighborhood?
 - container class for point cloud
