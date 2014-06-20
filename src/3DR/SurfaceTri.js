@@ -107,7 +107,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 
 	// PLANE FITTING
 	//var cov = this.covarianceFromPoints(pts);
-	var plane = this.planeFromPoints(pts);
+//	var plane = this.planeFromPoints(pts);
 
 	// START
 	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
@@ -117,7 +117,7 @@ SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
 	var i,j,k, val, len = points.length;
 	var point, iter, maxIter=5;
 	var t=0, n=new V3D(), q=new V3D();
-	var A,B,C,D,E,F,G,H,I M = new Matrix(3,3);
+	var A,B,C,D,E,F,G,H,I, M = new Matrix(3,3);
 	// initial approximation for n, t=0, weights are fixed
 	for(j=0;j<3;++j){ // row
 		for(k=0;k<3;++k){ // col
@@ -125,8 +125,8 @@ SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
 			for(i=0;i<len;++i){
 				point = points[i];
 				console.log(""+point);
-				//..
-				..
+				// ..
+				// ..
 			}
 			M.set(j,k, val);
 		}

@@ -46,7 +46,25 @@ function classesLoadedFxn(){
 	console.log(pnt+" "+nrm);
 	*/
 	//
-	var surface = new SurfaceTri();
+var pnts = [ 1, 1, 1.0,
+			1,-1, -0.5,
+		   -1, 1, 1.0,
+		   -1,-1, 1.0,
+		    0, 0,-1.0,
+		    1, 0, 0.0,
+		   -1, 0, 0.0,
+		    0, 1, 0.0,
+		    0,-1, 0.0];
+var i, points = new Array();
+var index = 0;
+for(i=0;i<pnts.length;i+=3){
+	points[index] = new V3D(pnts[i],pnts[i+1],pnts[i+2]);
+	++index;
+}
+console.log(points);
+var sur = new BivariateSurface();
+sur.fromPoints(points, 3);
+//	var surface = new SurfaceTri();
 }
 </script>
 <body onload="pageLoadedFxn();">

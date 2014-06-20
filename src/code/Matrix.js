@@ -85,6 +85,17 @@ Matrix.prototype.set = function(row,col,val){
 Matrix.prototype.get = function(row,col){
 	return this._rows[row][col];
 }
+Matrix.prototype.scale = function(s){
+	var i, j, row = this._rowCount, col = this._colCount;
+	var index = 0, len = list.length;
+	for(j=0;j<row;++j){
+		for(i=0;i<col && index<len;++i){
+			this._rows[j][i] = this._rows[j][i]*s;
+			++index;
+		}
+	}
+	return this;
+}
 Matrix.prototype.toV3D = function(){
 	var i, j, v = new V3D();
 	if(this._rows.length==1){ // row vector
@@ -94,9 +105,11 @@ Matrix.prototype.toV3D = function(){
 	}
 	return v;
 }
-Matrix.prototype.toArray = function(){
+Matrix.prototype.toArray = function(a){
 	var i, j, row = this._rowCount, col = this._colCount, index = 0;
-	var a = new Array(row*col);
+	if(!a){
+		a = new Array(row*col);
+	}
 	for(j=0;j<row;++j){
 		for(i=0;i<col;++i){
 			a[index] = this._rows[j][i];
@@ -138,6 +151,47 @@ Matrix.prototype.identity = function(){
 		}
 	}
 	return this;
+}
+Matrix.prototype.dropOutIdentity= function(thresh){
+	thresh = thresh===undefined?(1E-6):thresh;
+	var i, j, row = this._rowCount, col = this._colCount;
+	var found = false;
+	for(i=0;i<col;++i){
+		for(j=0;j<row;++j){
+			if(found){
+				this._rows[j][i] = 0.0;
+			}else{
+				if(i==j){
+					if( Math.abs(this._rows[j][i]-1.0 )>thresh ){
+						console.log(j,i,"==");
+						this._rows[j][i] = 0.0;
+						found = true;
+					}
+				}else if( Math.abs(this._rows[j][i])>thresh ){
+					console.log(j,i,"!=");
+					this._rows[j][i] = 0.0;
+					found = true;
+				}
+			}
+		}
+	}
+	return true;
+}
+Matrix.prototype.dropNonIdentity = function(){
+	var i, j, row = this._rowCount, col = this._colCount;
+	var found = false;
+	for(i=0;i<col;++i){
+		for(j=0;j<row;++j){
+			if(i==j){
+				// if( Math.abs(this._rows[j][i]-1.0 )>thresh ){
+				// 	//this._rows[j][i] = 0.0;
+				// }
+			}else{// if( Math.abs(this._rows[j][i])>thresh ){
+				this._rows[j][i] = 0.0;
+			}
+		}
+	}
+	return true;
 }
 Matrix.prototype.closeToIdentity = function(thresh){
 	thresh = thresh===undefined?(1E-6):thresh;
@@ -604,13 +658,21 @@ Matrix.normInfinite = function(x){ // x is a vector
 	return maxAbs; // return max;
 }
 Matrix.inverse = function(A){ // assumed square
-	return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
+	//return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
 	C = Matrix.augment(A,(new Matrix(A._rowCount,A._colCount)).identity());
 	Matrix.RREF(C,C);
 	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
 	C = C.getSubMatrix(0,A._colCount, A._rowCount,A._colCount);
 	if( !B.closeToIdentity() ){
-		return null;
+		console.log("not close")
+		console.log(B.toString())
+		//B.dropOutIdentity();
+		//return null;
+		//console.log(B.toString())
+		// console.log(B.toString())
+		// console.log(C.toString())
+		// C.dropNonIdentity();
+		// console.log(C.toString())
 	}
 	return C;
 	// return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
@@ -943,6 +1005,7 @@ Matrix.sub = function(r, ain,bin){ // c = a - b
 	r.copy(c);
 	return r;
 }
+
 Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
 	// 
 }
