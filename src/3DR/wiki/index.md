@@ -230,9 +230,35 @@ BISECTION:
         - locally approximate surface as bivariate polynomial (3rd/4th degree) in plane coord system
             - weighted least squares, h varies locally 
         - projected point = bivarate surface at f(x=0,y=0)
-    
-- neighbordhood = ? k nearest neighbors? = ?
-- 
+- neighborhood = ? k nearest neighbors? = ?
+- ?
+
+- primary loop:
+    - frontsList = firstFront()
+        - ?edges of first primary triangle?
+    - while: there are fronts in the frontsList
+        - currentFront = frontsList.first()
+            - if: there are only 3 edges in currentFront
+                - this should probly only be allowed:
+                    - A: edges are not all part of same triangle (inward joining)
+                    - B: edge length at center is larger than each of the 3 edges (is this ever not the case?)
+                - currentFront.close()
+                - frontsList.remove(currentFront)
+                - CONTINUE LOOP
+            - edge = currentFront.bestEdge()
+            - if: .CanCutEar(edge) # can join edge to front
+                - .CutEar(edge)
+                - CONTINUE LOOP
+            - vertex = .VertexPredict(edge,) # have to add a new vertex to front
+            - if: .TriangleTooClose(edge,vertex)
+                - front = .ClosestFront(edge,vertex)
+                - if: front==currentFront # added vertex cuts the front into separate objects (connected at point?)
+                    - frontsList.add( currentFront.split(?vertex?/?edge?)  )
+                - else: # added vertex causes seperate fronts to unify
+                    - currentFront.mergeIn(front)
+                    - frontsList.remove(front)
+            - else:
+                - .GrowTriangle(edge)
 
 <br/>
 <br/>
@@ -277,38 +303,7 @@ return MLSProject(p)
 -project point onto MLS Surface?
 
 **Triangulate(field)**
-- ?
- 
-fronts = FirstFront()
-while(frontSet.length>0){
-    current = fronts.first()
-    // close front with only 3 vertexes - what about initial front?
-    if(current.vertexCount()==3){
-        current.closeFront()
-        fronts.removeFront(current)
-        continue
-    }
-    // ?
-    e = current.bestEdge()
-    if(e.canCutEar()){
-        e.cutEar()
-        continue
-    }
-    // 
-    p = vertexPredict(edge,field)
-    if( !triangleTooClose(e,p) ){ // 
-        e.growTriangle() // ?
-    }else{ // 
-        front = closestFront(e,p)
-        if(front==current){ // same front?
-            front = fronts.split(current-front) // separate front from current
-            fronts.addFront( front ) // add as new front
-        }else{ // different fronts
-            front = merge(current,front) // combine
-            fronts.removeFront(front) // remove second copy from list
-        }
-    }
-}
+- main loop iterating over fronts dealing with point addition, edge addition, merge, splits
 
 **triangleTooClose()**
 - whether added point is closer than allowed to to existing triangulation (half ideal edge length at point p), if yes, topological even occurs
@@ -373,6 +368,27 @@ what about 'disconnected' surfaces? specify some border (convex hull)?
 **measurement of how quickly a curve/surface changes direction - sharpness - deviation from straight line**
 #### 2D (Curve) Observances:
 ![2D Curvature](./images/curve_2D_legend.png "2D Curvature")
+
+
+
+theta = pi/2;
+dTheta = 0.00001;
+R = 4.0;
+
+r1 = [R*cos(theta-dTheta) R*sin(theta-dTheta)]
+r2 = [R*cos(theta) R*sin(theta)]
+r3 = [R*cos(theta+dTheta) R*sin(theta+dTheta)]
+dr1 = (r2-r1)
+dr2 = (r3-r2)
+dr = ( sqrt(dot(dr1,dr1)) + sqrt(dot(dr2,dr2)))/2
+T1 = dr1./sqrt(dot(dr1,dr1))
+T2 = dr2./sqrt(dot(dr2,dr2))
+
+K = (T2-T1)/(dr)
+k = sqrt(dot(K,K))
+r = 1/k
+
+
 <br />
 **Change in Position Vector dR**: (infitesimal arc) &approx; [r(x+&Delta;x,f(x+&Delta;x)) - r(x-&Delta;x,f(x-&Delta;x))]/[2&Delta;x]
 <br/>

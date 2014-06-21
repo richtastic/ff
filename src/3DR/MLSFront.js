@@ -1,9 +1,9 @@
-// Front.js
+// MLSFront.js
 
-function Front(){
+function MLSFront(){
 	this._fronts = []; // set of EdgeFront
 }
-Front.prototype.wtf = function(){
+MLSFront.prototype.wtf = function(){
 	// 
 }
 

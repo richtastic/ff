@@ -14,8 +14,8 @@ function SurfaceTri(){
 	this._stage3D.enableDepthTest();
 	this._stage3D.start();
 	// datas
-	this._pointCloud = null;
-	this._front = new Front();
+	this._pointCloud = new PointCloud();
+	this._mlsMesh = new MLSMesh();
 	// // 
 	this.plot1D();
 	//
@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(20,1.0,0.0);
+	var pts = this.generateSpherePoints(200,1.0,0.0);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -104,6 +104,11 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	}
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
+	// POINT CLOUD
+	this._pointCloud.initWithPointArray(pts);
+	this._mlsMesh.initWithPointCloud(this._pointCloud);
+	this._mlsMesh.triangulateSurface();
 
 	// PLANE FITTING
 	//var cov = this.covarianceFromPoints(pts);
@@ -252,11 +257,11 @@ SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
 		v.scale(radius+(Math.random()-0.5)*error);
 		list.push(v);
 		//list.push(v.x,v.y,v.z);
-		v.set(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
+		//v.set(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
 		//v.x *= 0.01;
-		v.x = 0.0;
-		v.y *= 0.25;
-		v.z *= 0.25;
+		// v.x *= 0.0;
+		// v.y *= 0.25;
+		// v.z *= 0.25;
 	}
 	return list;
 }
@@ -387,7 +392,41 @@ radius *= 1E-1; // display purposes
 
 // ------------------------------------------------------------------------------------------------------------------------ 
 SurfaceTri.prototype.wtf = function(){
-	// 
+}
+
+SurfaceTri.prototype.wtf = function(){
+/*
+fronts = FirstFront()
+while(frontSet.length>0){
+    current = fronts.first()
+    // close front with only 3 vertexes - what about initial front?
+    if(current.vertexCount()==3){
+        current.closeFront()
+        fronts.removeFront(current)
+        continue
+    }
+    // ?
+    e = current.bestEdge()
+    if(e.canCutEar()){
+        e.cutEar()
+        continue
+    }
+    // 
+    p = vertexPredict(edge,field)
+    if( !triangleTooClose(e,p) ){ // 
+        e.growTriangle() // ?
+    }else{ // 
+        front = closestFront(e,p)
+        if(front==current){ // same front?
+            front = fronts.split(current-front) // separate front from current
+            fronts.addFront( front ) // add as new front
+        }else{ // different fronts
+            front = merge(current,front) // combine
+            fronts.removeFront(front) // remove second copy from list
+        }
+    }
+}
+*/
 }
 
 

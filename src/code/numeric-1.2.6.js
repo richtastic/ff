@@ -797,6 +797,7 @@ numeric.inv = function inv(x) {
     var A = numeric.clone(x), Ai, Aj;
     var I = numeric.identity(m), Ii, Ij;
     var i,j,k,x;
+try{
     for(j=0;j<n;++j) {
         var i0 = -1;
         var v0 = -1;
@@ -817,6 +818,11 @@ numeric.inv = function inv(x) {
             }
         }
     }
+}catch(e){
+    console.log("Error: "+e);
+}finally{
+    console.log("done");
+}
     return I;
 }
 

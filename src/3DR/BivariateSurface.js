@@ -43,14 +43,11 @@ BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 	// 
 	len = points.length;
 	for(i=0;i<len;++i){
-console.log(" "+i)
 		point = points[i];
 		index = 0;
 		for(j=0;j<=degree;++j){
-console.log("  "+j)
 			for(k=0;k<=j;++k){
-console.log("   "+k)
-console.log("      "+index+": "+(j-k)+" "+k+"    ==="+(Math.pow(point.x,j-k)*Math.pow(point.y,k)))
+//console.log("      "+index+": "+(j-k)+" "+k+"    ==="+(Math.pow(point.x,j-k)*Math.pow(point.y,k)))
 				bi.set(index,0, Math.pow(point.x,j-k)*Math.pow(point.y,k) );
 				++index;
 			}
@@ -66,19 +63,12 @@ console.log("      "+index+": "+(j-k)+" "+k+"    ==="+(Math.pow(point.x,j-k)*Mat
 		Matrix.add(b,b,bi);
 		Matrix.add(A,A,bb);
 	}
-	console.log(A.toString());
-	console.log(b.toString());
-console.log("SOLVE")
 	//c = Matrix.solve(A,b);
 	pInv = Matrix.pseudoInverse(A);
-console.log(pInv.toString())
-console.log("B")
 	c = Matrix.mult(pInv,b);
-console.log("OUT")
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
-	console.log(c.toString());
-	console.log(this._coefficients);
+	//console.log(this._coefficients);
 }
 
 BivariateSurface.degreeFromCoefficientCount = function(coeff){

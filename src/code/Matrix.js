@@ -330,7 +330,8 @@ Matrix.prototype.toString = function(exp){
 	var i, j, rowm1 = this._rowCount-1, colm1 = this._colCount-1, num, val;
 	var str = "";
 	for(j=0;j<=rowm1;++j){
-		str += "[ "
+		//str += "[ ";
+		str += " ";
 		for(i=0;i<=colm1;++i){
 			num = this._rows[j][i];
 			val = num.toExponential(exp);
@@ -339,7 +340,8 @@ Matrix.prototype.toString = function(exp){
 			}
 			str += Code.padStringLeft(val,minLen," ");
 		}
-		str += " ]";
+		//str += " ]";
+		str += "; ";
 		if(j<rowm1){
 			str += "\n";
 		}
@@ -521,21 +523,21 @@ det *= -1; // row swapping
 				pivotCell = B._rows[pivotRow][pivotCol];
 				for(j=pivotRow+1;j<row;++j){ // 
 					c = B._rows[j][pivotCol]/pivotCell;
-					if(c!=0){ // skip useless iterations
+					//if(c!=0){ // skip useless iterations
 						for(i=pivotCol;i<col;++i){
 							B._rows[j][i] -= c*B._rows[pivotRow][i];
 						}
-					}
+					//}
 				}
 				for(j=0;j<row;++j){ // zero all entries in pivot column
 					c = B._rows[j][pivotCol]/pivotCell;
-					if(c!=0){ // skip useless iterations
+					//if(c!=0){ // skip useless iterations
 						for(i=pivotCol;i<col;++i){
 							if(j!=pivotRow){
 								B._rows[j][i] -= c*B._rows[pivotRow][i];
 							}
 						}
-					}
+					//}
 				}
 if(pivotCol<col){
 	det *= pivotCell; // multiplying row
@@ -613,7 +615,7 @@ Matrix.backPropagate = function(A,b){ // A*b = b0 => start with bottom-most vari
 	for(i=cols-1;i>=0;--i){
 		val = b._rows[i][0];
 		for(j=rows-1;j>i;--j){
-			console.log("["+i+"]["+j+"] = "+ A._rows[i][j]);
+			//console.log("["+i+"]["+j+"] = "+ A._rows[i][j]);
 			val -= A._rows[i][j] * b._rows[j][0];
 		}
 		if( Math.abs(A._rows[i][j]) > Matrix.epsilon ){
@@ -684,10 +686,24 @@ Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square
 	if(ain===undefined){
 		a = cin;
 	}
-	var at = Matrix.transpose(a);
-	var c = Matrix.mult(at,a);
-	c = Matrix.inverse(c);
-	c = Matrix.mult(c,at);
+	// var at = Matrix.transpose(a);
+	// var c = Matrix.mult(at,a);
+	// c = Matrix.inverse(c);
+	// c = Matrix.mult(c,at);
+	var SVD = Matrix.SVD(a);
+	var U = SVD.U;
+	var S = SVD.S;
+	var V = SVD.V;
+	var i, num, len = Math.min(U.rows(),V.cols());
+	for(i=0;i<len;++i){
+		num = S.get(i,i);
+		if(num>Matrix.epsilon){
+			S.set(i,i, 1/num);
+		}
+	}
+	V = Matrix.transpose(V)
+	c = Matrix.mult(U,S);
+	c = Matrix.mult(c,V);
 	if(ain===undefined){
 		return c;
 	}

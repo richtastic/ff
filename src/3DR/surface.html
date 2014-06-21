@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PointCloud.js","EdgeFront.js","Front.js","BivariateSurface.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	/*
@@ -45,7 +45,7 @@ function classesLoadedFxn(){
 	nrm = res.normal;
 	console.log(pnt+" "+nrm);
 	*/
-	//
+/*
 var pnts = [ 1, 1, 1.0,
 			1,-1, -0.5,
 		   -1, 1, 1.0,
@@ -63,8 +63,9 @@ for(i=0;i<pnts.length;i+=3){
 }
 console.log(points);
 var sur = new BivariateSurface();
-sur.fromPoints(points, 3);
-//	var surface = new SurfaceTri();
+sur.fromPoints(points, 4);
+*/
+	var surface = new SurfaceTri();
 }
 </script>
 <body onload="pageLoadedFxn();">
