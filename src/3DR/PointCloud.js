@@ -14,10 +14,7 @@ PointCloud.prototype.initWithPointArray = function(points){
 		this._points.push(points[i]);
 		// com, min, max
 	}
-	this._tree.initWithRanges(a,b, c,d, e,f);
-	for(i=0;i<len;++i){
-		this._tree.insertObject(this._points[i]);
-	}
+	this._tree.initWithObjects(this._points);
 }
 PointCloud.Front = function(){
 	// Advancing Front
