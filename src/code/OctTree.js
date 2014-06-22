@@ -12,12 +12,31 @@ OctTree.twoRounded = function(d){
 	var e = Math.ceil(Math.log(n)/Math.log(2));
 	return Math.pow(2,e);
 }
-OctTree.twoDivisionRound = function(min,max){
+OctTree.twoDivisionRound = function(min,max, force){
 	var dif = V3D.sub(max,min);
-	dif.x = OctTree.twoRounded( dif.x );
-	dif.y = OctTree.twoRounded( dif.y );
-	dif.z = OctTree.twoRounded( dif.z );
+	if(force){
+		dif.x = OctTree.twoRounded( Math.max(dif.x,dif.y,dif.z) );
+		dif.y = diff.x;
+		dif.z = diff.x;
+	}else{
+		dif.x = OctTree.twoRounded( dif.x );
+		dif.y = OctTree.twoRounded( dif.y );
+		dif.z = OctTree.twoRounded( dif.z );
+	}
 	return dif;
+}
+// --------------------------------------------------------------------------------------------------------- 
+OctTree.prototype.count = function(){
+	return this._root.count();
+}
+OctTree.prototype.size = function(){
+	return this._root.size();
+}
+OctTree.prototype.min = function(){
+	return this._root.min();
+}
+OctTree.prototype.max = function(){
+	return this._root.max();
 }
 // --------------------------------------------------------------------------------------------------------- 
 OctTree.prototype.initWithObjects = function(objects){
@@ -48,10 +67,13 @@ OctTree.prototype.insertObject = function(obj){
 	this._root.insertObject(obj,this._sort);
 }
 OctTree.prototype.deleteObject = function(obj){
-	this._root.deleteObject(obj,this._sort);
+	return this._root.deleteObject(obj,this._sort);
 }
-OctTree.prototype.findObject = function(obj){
+OctTree.prototype.findObject = function(obj){ // use case?
 	this._root.findObject(obj,this._sort);
+}
+OctTree.prototype.findClosestObject = function(obj){
+	return this._root.findClosestObject(obj,this._sort);
 }
 OctTree.prototype.objectsInsideSphere = function(obj){
 	// 
@@ -68,6 +90,30 @@ OctTree.prototype.toString = function(){
 }
 OctTree.prototype.kill = function(){
 	// 
+}
+
+OctTree.prototype.kNN = function(k,p){
+	var nodeQueue = new PriorityQueue();// NODE  priority queue
+	var pointQueue = new PriorityQueue();// POINT priority queue
+	var node, child, i;
+	var distanceMinimum = this._root.size().lengthSquared(); // infinity
+	nodeQueue.push(this._root);
+	while( !nodeQueue.empty() ){
+		node = nodeQueue.pop();
+		if(node.isLeaf()){
+			if(dist<distanceMinimum){ // node is close enough to point
+				// add all points to pointQueue
+			}
+		}else{
+			for(i=8;i--;){
+				child = node.childAt(i);
+				if(child){
+					nodeQueue.push(child);
+				}
+			}
+		}
+	}
+	// first k elements in pointQueue
 }
 // --------------------------------------------------------------------------------------------------------- Voxel
 OctTree.Voxel = function(){
@@ -208,6 +254,9 @@ OctTree.Voxel.prototype.deleteObject = function(obj,srt){
 }
 
 OctTree.Voxel.prototype.findObject = function(obj,srt){
+	// 
+}
+OctTree.Voxel.prototype.findClosestObject = function(obj,srt){
 	// 
 }
 OctTree.Voxel.prototype.objectsInsideSphere = function(arr,cen,rad,srt){

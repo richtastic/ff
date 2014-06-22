@@ -808,8 +808,8 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
-- points into pointcloud
-    - octree
+x points into pointcloud
+    x octree
     - searching radius/cube
 - generate first triangle
 - MLS
@@ -867,4 +867,6 @@ Topic - Author (Source/Title)
 (Weighted Least Squares)[www.nealen.net/projects/mls/asapmls.pdf]
 (Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]
 <br/>
+
+
 
