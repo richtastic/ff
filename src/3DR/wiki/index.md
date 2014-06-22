@@ -453,6 +453,8 @@ r = 1/k
 <br/>
 **Second Fundamental Form (II)**: Change in the normal direction (second derivative) in direction of a given curve, *extrinsic property of surface / shape operator* : L*du*<sup>2</sup> + 2M*du*<sup>2</sup>*dv*<sup>2</sup> + dn*dv*<sup>2</sup> = &kappa;<sub>n</sub>
 <br/>
+**Shape Operator / Weingarten Map:** The negative derivative of the unit normal surface vector (n)
+<br/>
 <br/>
 *First Fundamental Form (FFF) coefficients (I)* I = dr &middot; dr = E*du*<sup>2</sup> + 2F*du*dv + G*dv*<sup>2</sup> (arc length of a curve on the surface)
 <br/>
@@ -806,20 +808,16 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
-x how to get kappa - curvature of the MLS surface
-    x maximum absolute curvature?
-    x principal directions
+- points into pointcloud
+    - octree
+    - searching radius/cube
+- generate first triangle
 - MLS
-    x determing MLS surface for any point
-    x display MLS as sampled points on surface
-    x minimization to find bivariate surface
-    x weighted minimizations
     - minimization to find plane
     - 'snapping' to closest sample point?
     - neighborhood?
-- container class for point cloud
 - how to 'query' field
-- how to generate first triangle
+
 
 
 RESULTS DATA:

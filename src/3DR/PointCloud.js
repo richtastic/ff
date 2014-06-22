@@ -6,15 +6,16 @@ function PointCloud(){
 }
 PointCloud.prototype.initWithPointArray = function(points){
 	var i, len = points.length;
-	var com = new V3D();
-	var min = new V3D();
-	var max = new V3D();
-	this._tree.clear();
 	for(i=0;i<len;++i){
 		this._points.push(points[i]);
-		// com, min, max
 	}
 	this._tree.initWithObjects(this._points);
+	console.log(this._tree.toString());
+	// for(i=0;i<len;++i){
+	// 	console.log("-------------------------------------------------------------------------------------------------------------------------------------------------");
+	// 	this._tree.deleteObject( this._points[i] );
+	// 	console.log(this._tree.toString());
+	// }
 }
 PointCloud.Front = function(){
 	// Advancing Front

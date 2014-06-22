@@ -1893,6 +1893,13 @@ Code.ssdWindowInside = function(needle,widN,heiN, haystack,widH,heiH){
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 
 
+Code.cuboidsSeparate = function(aMin,aMax, bMin,bMax){
+	return aMax.x<bMin.x || aMax.y<bMin.y || aMax.z<bMin.z || aMin.x>bMax.x || aMin.y>bMax.y || aMin.z>bMax.z;
+}
+
+
+
+
 
 /*
 function.call(this, a, b, c);

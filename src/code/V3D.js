@@ -78,6 +78,30 @@ V3D.sub = function(c,a,b){
 	}
 	return new V3D(c.x-a.x,c.y-a.y,c.z-a.z);
 }
+V3D.avg = function(a,b,c){ // a = average(b,c)
+	if(c===undefined){ c = b; b = a; a = new V3D(); }
+	a.set( (b.x+c.x)*0.5, (b.y+c.y)*0.5, (b.z+c.z)*0.5 );
+	return a;
+}
+V3D.scale = function(a,b,c){ // a = b*c
+	if(c===undefined){ c = b; b = a; a = new V3D(); }
+	a.set( b.x*c, b.y*c, b.z*c );
+	return a;
+}
+V3D.min = function(a,b,c){ // a = min(b,c)
+	if(c===undefined){ c = b; b = a; a = new V3D(); }
+	a.x = b.x<c.x?b.x:c.x;
+	a.y = b.y<c.y?b.y:c.y;
+	a.z = b.z<c.z?b.z:c.z;
+	return a;
+}
+V3D.max = function(a,b,c){ // a = max(b,c)
+	if(c===undefined){ c = b; b = a; a = new V3D(); }
+	a.x = b.x>c.x?b.x:c.x;
+	a.y = b.y>c.y?b.y:c.y;
+	a.z = b.z>c.z?b.z:c.z;
+	return a;
+}
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
 	// if( Code.isa(xP,V3D) ){
