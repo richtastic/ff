@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(200,1.0,0.0);
+	var pts = this.generateSpherePoints(2000,1.0,0.0);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -106,7 +106,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 
 	// POINT CLOUD
-	this._pointCloud.initWithPointArray(pts);
+	this._pointCloud.initWithPointArray(pts, true); // force cubes
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
 
@@ -256,12 +256,10 @@ SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
 		v = new V3D(rad*Math.cos(theta),rad*Math.sin(theta),u);
 		v.scale(radius+(Math.random()-0.5)*error);
 		list.push(v);
-		//list.push(v.x,v.y,v.z);
 		//v.set(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
-		//v.x *= 0.01;
-		// v.x *= 0.0;
-		// v.y *= 0.25;
-		// v.z *= 0.25;
+		// v.x *= 0.5;
+		// v.y *= 1.0;
+		// v.z *= 2.0;
 	}
 	return list;
 }

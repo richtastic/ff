@@ -138,19 +138,24 @@ V3D.prototype.norm = function(){
 	dist = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 	if(dist==0){ return; }
 	this.x = this.x/dist; this.y = this.y/dist; this.z = this.z/dist;
+	return this;
 }
 V3D.prototype.scale = function(c){
 	this.x *= c; this.y *= c; this.z *= c;
+	return this;
 }
 V3D.prototype.setLength = function(l){
 	this.norm();
 	this.x *= l; this.y *= l;  this.z *= l;
+	return this;
 }
 V3D.prototype.add = function(v){
 	this.x += v.x; this.y += v.y; this.z += v.z;
+	return this;
 }
 V3D.prototype.sub = function(v){
 	this.x -= v.x; this.y -= v.y; this.z -= v.z;
+	return this;
 }
 V3D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+","+this.z+">";

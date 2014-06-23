@@ -23,7 +23,45 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	tau = tau!==undefined?tau:1.0;
 	this._rho = rho;
 	this._tau = tau;
-	this.findSeedTriangle();
+	//this.findSeedTriangle();
+
+console.log("triangulate surface");
+
+console.log(this._pointCloud._tree.size());
+
+//console.log(this._pointCloud.toString()+"");
+
+var arr;
+
+//arr = this._pointCloud.pointsInsideCuboid( (new V3D(-1,-1,-1)).scale(0.6), (new V3D(1,1,1)).scale(0.6) );
+
+var cen = new V3D(0.5,0,0);
+rad = 0.6;
+//arr = this._pointCloud.pointsInsideSphere( cen,rad);
+
+var closest = this._pointCloud.closestPointToPoint(cen)
+console.log(  V3D.distanceSquare(cen,closest) );
+
+
+arr = this._pointCloud.kNearestNeighborsToPoint(10, cen);
+
+console.log( arr );
+for(var i=0;i<arr.length;++i){
+	//console.log( V3D.distance(cen,arr[i]) );
+	console.log(  i+": "+ V3D.distanceSquare(cen,arr[i]) );
+}
+
+console.log("CORRECT ANSWER: ---------------------------");
+
+arr = this._pointCloud._points;
+arr.sort( function(a,b){ return V3D.distanceSquare(a,cen)-V3D.distanceSquare(b,cen); } );
+
+
+for(var i=0;i<arr.length && i<10;++i){
+	console.log( i+": "+ V3D.distanceSquare(cen,arr[i]) );
+}
+
+
 }
 MLSMesh.prototype.findSeedTriangle = function(){
 	var cuboid, randomPoint, surfacePoint;

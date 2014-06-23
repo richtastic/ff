@@ -760,6 +760,55 @@ constant, linear, quadratic, cubic, quartic, quintic, sextic, septic/septimic, o
 <br/>
 
 
+### Oct Trees (Octrees)
+*Optimizations for searching through 3D points/objects compared to brute force O(n<sup>2</sup>)+*
+<br/>
+![Oct Trees](./images/octrees.png "Octrees")
+<br/>
+**Oct/Voxel**: 
+<br/>
+<br/>
+An Octree is first defined but it's outer limiting cube/cuboid. This can be an assumed volume that no objects are expected to be outside, or it can be a derived volume by first looking at the min/max values of all the static data that is to be inserted.
+<br/>
+<br/>
+Octree's get their optimizations by allowing for discarding unnecessary passes in their algorithms. Cubic octrees are more efficient compared to generic cuboid octrees because the circumsphere volume to voxel volume is minimized. The less efficient use of space is compensated for by the effective use of discarded passes.
+<br/>
+<br/>
+- check for points inside cuboid
+- check for points inside sphere
+- check for k nearest neighbors
+<br/>
+<br/>
+<br/>
+c = center of sphere
+<br/>
+r = sphere radius
+<br/>
+m = midpoint (center) of oct voxel
+<br/>
+R = maximum outer 'radius' of voxel
+<br/>
+distance between voxel center and sphere center: d &equiv; ||m-c||
+<br/>
+A point inside the voxel will only be inside the sphere if at least the circumsphere of the voxel meets the sphere:
+<br/>
+d &le; (r+R)
+<br/>
+d<sup>2</sup> = (r+R)<sup>2</sup>
+<br/>
+d<sup>2</sup> = r<sup>2</sup> + R<sup>2</sup> + 2rR
+<br/>
+<br/>
+(when comparing squared distances [to save calls to sqrt] don't mistake the (Freshman's Dream)[https://www.google.com/search?q=freshman+dream])
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
 ### Intersection of Line and Plane (Point Projected onto Plane)
 **point in space (&reals;<sup>3</sup>)**: p
 <br/>
@@ -808,9 +857,6 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
-x points into pointcloud
-    x octree
-    - searching radius/cube
 - generate first triangle
 - MLS
     - minimization to find plane

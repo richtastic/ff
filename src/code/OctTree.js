@@ -16,8 +16,8 @@ OctTree.twoDivisionRound = function(min,max, force){
 	var dif = V3D.sub(max,min);
 	if(force){
 		dif.x = OctTree.twoRounded( Math.max(dif.x,dif.y,dif.z) );
-		dif.y = diff.x;
-		dif.z = diff.x;
+		dif.y = dif.x;
+		dif.z = dif.x;
 	}else{
 		dif.x = OctTree.twoRounded( dif.x );
 		dif.y = OctTree.twoRounded( dif.y );
@@ -39,7 +39,7 @@ OctTree.prototype.max = function(){
 	return this._root.max();
 }
 // --------------------------------------------------------------------------------------------------------- 
-OctTree.prototype.initWithObjects = function(objects){
+OctTree.prototype.initWithObjects = function(objects, force){
 	this.clear();
 	var i, len = objects.length;
 	var obj, point, siz, min = new V3D(), max = new V3D();
@@ -52,7 +52,7 @@ OctTree.prototype.initWithObjects = function(objects){
 		V3D.min(min,min,point);
 		V3D.max(max,max,point);
 	}
-	dif = OctTree.twoDivisionRound(min,max);
+	dif = OctTree.twoDivisionRound(min,max, force);
 	this._root.center( V3D.avg(max,min) );
 	this._root.size( dif );
 	//
@@ -75,8 +75,10 @@ OctTree.prototype.findObject = function(obj){ // use case?
 OctTree.prototype.findClosestObject = function(obj){
 	return this._root.findClosestObject(obj,this._sort);
 }
-OctTree.prototype.objectsInsideSphere = function(obj){
-	// 
+OctTree.prototype.objectsInsideSphere = function(center,radius){
+	var arr = [];
+	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._sort);
+	return arr;
 }
 OctTree.prototype.objectsInsideCuboid = function(min,max){
 	var arr = [];
@@ -91,29 +93,51 @@ OctTree.prototype.toString = function(){
 OctTree.prototype.kill = function(){
 	// 
 }
-
-OctTree.prototype.kNN = function(k,p){
-	var nodeQueue = new PriorityQueue();// NODE  priority queue
-	var pointQueue = new PriorityQueue();// POINT priority queue
+// OctTree.sortNode = function(a,b){
+// 	return b.d-a.d;
+// }
+// OctTree.sortPoint = function(a,b){
+// 	return b-a;
+// }
+OctTree.prototype.kNN = function(k,p){ // 
+	var sortNode = function(a,b){ return b.d - a.d; };
+	var sortPoint = function(a,b){ return V3D.distanceSquare(b,p)-V3D.distanceSquare(a,p); };
+	var nodeQueue = new RedBlackTree(); nodeQueue.sorting(sortNode);
+	var pointQueue = new RedBlackTree(); pointQueue.sorting(sortPoint); pointQueue.setMaximum(k);
 	var node, child, i;
-	var distanceMinimum = this._root.size().lengthSquared(); // infinity
-	nodeQueue.push(this._root);
-	while( !nodeQueue.empty() ){
-		node = nodeQueue.pop();
-		if(node.isLeaf()){
-			if(dist<distanceMinimum){ // node is close enough to point
-				// add all points to pointQueue
-			}
-		}else{
-			for(i=8;i--;){
-				child = node.childAt(i);
-				if(child){
-					nodeQueue.push(child);
+	var distSquare, distanceMinimumSquare = this._root.size().lengthSquared(); // infinity
+	node = this._root; node.d = node.centerDistanceToPointSquare(p);
+var count = 0;
+	while( node ){ //
+//++count;
+		if( node.d <= distanceMinimumSquare + node.maxRadiusSquare() + 2.0*Math.sqrt(distanceMinimumSquare*node.maxRadiusSquare()) ){
+//++count;
+			if( node.isLeaf() ){
+++count;
+				distSquare = V3D.distanceSquare(p,node.data());
+				if(dist<distanceMinimumSquare){ // save unnecessary insertions
+					pointQueue.insertObject( node.data() );
+					if(pointQueue.length()==k){ // can start limiting candidates
+						distanceMinimumSquare = V3D.distanceSquare(p,pointQueue.maximum());
+					}
+				}
+			}else{
+				for(i=8;i--;){
+					child = node.childAt(i);
+					if(child){
+						child.d = child.centerDistanceToPointSquare(p);
+						nodeQueue.insertObject(child);
+					}
 				}
 			}
 		}
+		node = nodeQueue.popMinimum();
 	}
-	// first k elements in pointQueue
+console.log(count);
+	var a = pointQueue.toArray();
+	nodeQueue.kill();
+	pointQueue.kill();
+	return a;
 }
 // --------------------------------------------------------------------------------------------------------- Voxel
 OctTree.Voxel = function(){
@@ -128,6 +152,8 @@ OctTree.Voxel = function(){
 	this._min = new V3D();
 	this._max = new V3D();
 	this._data = null;
+	this._capacity = 1; // allowable objects to store as a leaf before these must be separated among children
+	this.d = null; // trash for sorting purposes
 }
 OctTree.Voxel.indexForPoint = function(center,v){
 	var index = 0;
@@ -141,6 +167,9 @@ OctTree.Voxel.prototype._recheckExtrema = function(){
 	var cen = this._center, siz = this._size;
 	this._min.set(cen.x-0.5*siz.x,cen.y-0.5*siz.y,cen.z-0.5*siz.z);
 	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y,cen.z+0.5*siz.z);
+}
+OctTree.Voxel.prototype.isLeaf = function(){
+	return this._count==1; // this.data!==null
 }
 OctTree.Voxel.prototype.count = function(){
 	return this._count;
@@ -182,6 +211,19 @@ OctTree.Voxel.prototype.min = function(){
 OctTree.Voxel.prototype.max = function(){
 	return this._max;
 }
+OctTree.Voxel.prototype.childAt = function(i){
+	if(0<=i && i<=7){
+		return this._children[i];
+	}
+	return null;
+}
+OctTree.Voxel.prototype.maxRadiusSquare = function(){
+	//return (3.0/4.0)*Math.pow(Math.max(this._size.x,this._size.y,this._size.z),2);
+	return V3D.dot(this._size,this._size)*3.0/4.0;
+}
+OctTree.Voxel.prototype.centerDistanceToPointSquare = function(p){
+	return V3D.distanceSquare(p,this.center()); //Math.max(0, V3D.distanceSquare(p,this.center())-this.maxRadiusSquare() );
+}
 OctTree.Voxel.childFromParentAndPoint = function(oct,v){
 	var child = new OctTree.Voxel();
 	var siz = V3D.scale(oct.size(),0.5);
@@ -220,7 +262,7 @@ OctTree.Voxel.prototype.deleteObject = function(obj,srt){
 		if(this._data==obj){
 			this._count = 0;
 			this._data = null;
-			//this.clear(); // if this is the root, I have to 'remove' my own data
+			this.clear(); // if this is the root, I have to 'remove' my own data
 			return obj;
 		}
 	}else{
@@ -231,7 +273,7 @@ OctTree.Voxel.prototype.deleteObject = function(obj,srt){
 			o = child.deleteObject(obj,srt);
 			if(o){
 				if(child.count()==0){
-					//child.kill();
+					child.kill();
 					this._children[index] = null;
 				}
 				--this._count;
@@ -259,12 +301,31 @@ OctTree.Voxel.prototype.findObject = function(obj,srt){
 OctTree.Voxel.prototype.findClosestObject = function(obj,srt){
 	// 
 }
-OctTree.Voxel.prototype.objectsInsideSphere = function(arr,cen,rad,srt){
-	// 
-}
-OctTree.prototype.objectsInsideCuboid = function(arr,min,max,srt){
+OctTree.Voxel.prototype.objectsInsideSphereSquare = function(arr,cen,radSqu,srt){
+	var distSquare;
 	if(this._data){
-		var v = str(this._data);
+		var v = srt(this._data);
+		distSquare = V3D.distanceSquare(cen,v);
+		if(distSquare<radSqu){
+			arr.push(this._data);
+		}
+	}else{
+		var i, child, R;
+		for(i=8;i--;){
+			child = this._children[i];
+			if(child){
+				R = child.maxRadiusSquare();
+				distSquare = V3D.distanceSquare(cen,child.center());
+				if( distSquare <= radSqu + R + 2.0*Math.sqrt(radSqu*R) ){
+					child.objectsInsideSphereSquare(arr,cen,radSqu,srt);
+				}
+			}
+		}
+	}
+}
+OctTree.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,srt){
+	if(this._data){
+		var v = srt(this._data);
 		if(v.x<=max.x && v.y<=max.y && v.x<=max.z && v.x>=min.x && v.y>=min.y && v.x>=min.z){
 			arr.push(this._data);
 		}
@@ -274,7 +335,7 @@ OctTree.prototype.objectsInsideCuboid = function(arr,min,max,srt){
 			child = this._children[i];
 			if(child){
 				if( !Code.cuboidsSeparate(child.min(),child.max(), min,max) ){
-					child.objectsInsideCuboid(arr,min,max,str);
+					child.objectsInsideCuboid(arr,min,max,srt);
 				}
 			}
 		}

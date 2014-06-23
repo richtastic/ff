@@ -17,6 +17,7 @@ function RedBlackTree(fxn){
 	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
 	this._length = 0;
+	this._maximumLength = 0;
 	this.sorting(fxn);
 }
 RedBlackTree.sortIncreasing = function(a,b){
@@ -26,6 +27,9 @@ RedBlackTree.newEmptyNode = function(d){
 	return new RedBlackTree.Node(d);
 }
 // --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.setMaximum = function(count){
+	this._maximumLength = count;
+}
 RedBlackTree.prototype.sentinel = function(){
 	return this._sentinel;
 }
@@ -82,6 +86,31 @@ RedBlackTree.prototype.minimum = function(){
 	}
 	return null;
 }
+
+RedBlackTree.prototype.popMinimum = function(){
+	if(!this.isNil(this._root)){
+		var min = this._minimumNode(this._root);
+		if(min){
+			var dat = min.data();
+			this.deleteNode(min);
+			return dat;
+		}
+	}
+	return null;
+}
+RedBlackTree.prototype.popMaximum = function(){
+	if(!this.isNil(this._root)){
+		var max = this.maximumNode(this._root);
+		if(max){
+			var dat = max.data();
+			this.deleteNode(max);
+			return dat;
+		}
+	}
+	return null;
+}
+
+
 RedBlackTree.prototype.minimumNode = function(){ // external
 	var node = this._root;
 	if(!this.isNil(node)){
@@ -230,6 +259,11 @@ RedBlackTree.prototype.insertNode = function(newNode){
 	}
 	this._insertFixup(newNode);
 	++this._length;
+	if(this._maximumLength>0){
+		if(this._length>this._maximumLength){
+			this.popMaximum();
+		}
+	}
 }
 RedBlackTree.prototype._insertFixup = function(node){
 	var sib;
@@ -442,7 +476,7 @@ RedBlackTree.prototype._deleteFixup = function(node){
 	node.colorBlack();
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.prototype.toArray = function(){
+RedBlackTree.prototype.toArray = function(limit){
 	var array = [];
 	if( !this.isNil(this._root) ){
 		this._root.toArray(array,this.nil());
@@ -457,7 +491,7 @@ RedBlackTree.prototype.toString = function(){
 }
 RedBlackTree.prototype.kill = function(){
 	if( !this.isNil(this._root) ){
-		this._root.clear();
+		this._root.clear(this._sentinel);
 		this._root = null;
 	}
 	if(this._sentinel){
