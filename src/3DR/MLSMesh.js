@@ -8,6 +8,9 @@ function MLSMesh(){
 	this._field = null;
 	this._rho = 0;
 	this._tau = 0;
+	//
+	this._k = 0;
+this.crap = {};
 }
 MLSMesh.prototype.pointCloud = function(clo){
 	if(clo!==undefined){
@@ -23,8 +26,8 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	tau = tau!==undefined?tau:1.0;
 	this._rho = rho;
 	this._tau = tau;
-	//this.findSeedTriangle();
-
+	this.findSeedTriangle();
+/*
 console.log("triangulate surface");
 
 console.log(this._pointCloud._tree.size());
@@ -60,7 +63,7 @@ arr.sort( function(a,b){ return V3D.distanceSquare(a,cen)-V3D.distanceSquare(b,c
 for(var i=0;i<arr.length && i<10;++i){
 	console.log( i+": "+ V3D.distanceSquare(cen,arr[i]) );
 }
-
+*/
 
 }
 MLSMesh.prototype.findSeedTriangle = function(){
@@ -75,27 +78,43 @@ MLSMesh.prototype.findSeedTriangle = function(){
 		// this._pointCloud.
 }
 MLSMesh.prototype.projectToSurface = function(p){
-	var neighbors, h, k;
+	var neighborhood, h, k, f, plane, norm, point;
 	// find set of local point to weight
-	k = Math.max(0.01*this._pointCloud.count(),5);
-	neighbors = this.neighborhoodPoints(p, k);
-	h = this._tau*this.localFeatureSize(p,neighbors);
+	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
+console.log("k:"+k);
+	neighborhood = this.neighborhoodPoints(p, k);
+	f = this.localFeatureSize(p,neighborhood);
+console.log("f:"+f);
+	h = this._tau*f;
+console.log("h:"+h);
 	// find local plane initial approximation
-		// ...
+console.log(p)
+console.log(neighborhood)
+		plane = MLSMesh.weightedSurfaceNormalFromPoints(p,neighborhood,h);
+		norm = plane.normal;
+		point = plane.point;
+console.log(point);
+console.log(norm);
+this.crap.plane = plane;
 	// iteritive minimized error local plane
 		// ...
 	// find bivariate surface wrt plane
 		// ...
 	// 
 }
-MLSMesh.prototype.neighborhoodPoints = function(p,k){
-	var arr = []; // find k nearest neighbors
+MLSMesh.prototype.neighborhoodPoints = function(p,k){ // find k nearest neighbors
+	var arr = this._pointCloud.kNearestNeighborsToPoint(k,p);
 	return arr;
 }
-MLSMesh.prototype.localFeatureSize = function(p,neighbors){
-	var r = 0;// weighted average distance between neighbors and p
-	return r;
+MLSMesh.prototype.localFeatureSize = function(p,neighborhood){
+	var i, d, r = 0; // average distance between neighborhood and p
+	for(i=neighborhood.length;i--;){
+		d = V3D.distance(p,neighborhood[i]);
+		r += d;
+	}
+	return r/(neighborhood.length-1); // exclude p
 }
+
 MLSMesh.prototype.localScale = function(p){
 	//
 }
@@ -133,6 +152,71 @@ MLSMesh.prototype.triangulate = function(){
 	}
 */
 }
-
+MLSMesh.distanceWeighting = function(dd,hh){
+	return Math.exp( -dd/hh );
+}
+MLSMesh.weightedSurfaceNormalFromPoints = function(feature, points, h){
+	var hh = h!==undefined?(h*h):1.0;
+	var dx,dy,dz, dd, p, w, i, len = points.length;
+	var a = 0, b = 0, c = 0;
+	var A=0,B=0,C=0, E=0,F=0, I=0;
+	for(i=0;i<len;++i){
+		p = points[i];
+		dd = V3D.distance(feature,p);
+		w = MLSMesh.distanceWeighting(dd,hh);
+//w = 1
+console.log(w);
+		a += w*p.x; b += w*p.y; c += w*p.z;
+	}
+	a /= len; b /= len; c /= len;
+//var com = new V3D(a,b,c);
+var com = (new V3D()).copy(feature);
+	for(i=0;i<len;++i){
+		p = points[i];
+		dx = p.x-a; dy = p.y-b; dz = p.z-c;
+		A += dx*dx; B += dx*dy; C += dx*dz;
+		E += dy*dy; F += dy*dz; I += dz*dz;
+	}
+	var cov = new Matrix(3,3).setFromArray([A,B,C, B,E,F, C,F,I]);
+	var eig = Matrix.eigenValuesAndVectors(cov);
+	var values = eig.values;
+	var vectors = eig.vectors;
+//var vM = Math.min(values[0],values[1],values[2]); // without weights
+var vM = Math.max(values[0],values[1],values[2]); // with weights
+	var v0, v1, v2;
+	var vA = vectors[0].toV3D();
+	var vB = vectors[1].toV3D();
+	var vC = vectors[2].toV3D();
+	if( values[0] == vM ){
+		v0 = vA; v1 = vB; v2 = vC;
+	}else if( values[1] == vM ){
+		v0 = vB; v1 = vA; v2 = vC;
+	}else{
+		v0 = vC; v1 = vA; v2 = vB;
+	}
+	if( V3D.dot(V3D.cross(v1,v2),v0) <0 ){ // consistent orientation
+		vA = v1; v1 = v2; v2 = vA;
+	}
+	/*
+	var svd = Matrix.SVD(cov);
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+// console.log(U.toString());
+// console.log(S.toString());
+// console.log(V.toString());
+	var minDir = new V3D().setFromArray(V.colToArray(2));
+console.log( V3D.dot(minDir,v0) +"  "+values[0] );
+console.log( V3D.dot(minDir,v1) +"  "+values[1] );
+console.log( V3D.dot(minDir,v2) +"  "+values[2] );
+// var N = new Matrix(3,1).setFromArray(V.colToArray(2));
+// console.log(minDir+"");
+// console.log(N+"");
+	var inPlane0 = new V3D().setFromArray(V.colToArray(0));
+	var inPlane1 = new V3D().setFromArray(V.colToArray(1));
+	var com = new V3D(a,b,c);
+	*/
+	return {normal:v0, orthogonalA:v1, orthogonalB:v2, point:com};
+}
 
 

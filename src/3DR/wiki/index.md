@@ -799,7 +799,7 @@ d<sup>2</sup> = (r+R)<sup>2</sup>
 d<sup>2</sup> = r<sup>2</sup> + R<sup>2</sup> + 2rR
 <br/>
 <br/>
-(when comparing squared distances [to save calls to sqrt] don't mistake the (Freshman's Dream)[https://www.google.com/search?q=freshman+dream])
+(when comparing squared distances [to save calls to sqrt] don't mistake the [Freshman's Dream](https://www.google.com/search?q=freshman+dream)
 <br/>
 <br/>
 <br/>
@@ -858,12 +858,13 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 **TODO:**
 - generate first triangle
+    - show plane and bivariate visually (triangles)
 - MLS
     - minimization to find plane
     - 'snapping' to closest sample point?
     - neighborhood?
 - how to 'query' field
-
+- N-object octree leaves
 
 
 RESULTS DATA:
@@ -908,10 +909,11 @@ Topic - Author (Source/Title)
 <br/>
 (Second Fundamental Form - ?)[The Second Fundamental Form - Outline]
 <br/>
-(Simple 3D Surface Curvature - Kurita, Boulanger)[Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights]
+[Simple 3D Surface Curvature - Kurita, Boulanger](Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights)
 <br/>
-(Weighted Least Squares)[www.nealen.net/projects/mls/asapmls.pdf]
-(Random Points on a Sphere)[http://mathworld.wolfram.com/SpherePointPicking.html]
+[Weighted Least Squares](www.nealen.net/projects/mls/asapmls.pdf)
+<br/>
+[Random Points on a Sphere](http://mathworld.wolfram.com/SpherePointPicking.html)
 <br/>
 
 

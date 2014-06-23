@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(2000,1.0,0.0);
+	var pts = this.generateSpherePoints(200,1.0,0.0);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -109,6 +109,29 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._pointCloud.initWithPointArray(pts, true); // force cubes
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
+
+var plane = this._mlsMesh.crap.plane;
+console.log(plane)
+var org = plane.point;
+var inPlane0 = plane.orthogonalA;
+var inPlane1 = plane.orthogonalB;
+inPlane0.scale(0.33);
+inPlane1.scale(0.33);
+
+var list = [inPlane0.x+org.x,inPlane0.y+org.y,inPlane0.z+org.z,
+			inPlane1.x+org.x,inPlane1.y+org.y,inPlane1.z+org.z,
+			org.x-(inPlane0.x+inPlane1.x)*0.5,
+			org.y-(inPlane0.y+inPlane1.y)*0.5,
+			org.z-(inPlane0.z+inPlane1.z)*0.5];
+this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
+var colors = [1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0];
+this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
+console.log("...............");
+console.log(list);
+console.log(colors);
+console.log(this._planeTriangleVertexList)
+console.log(this._planeTriangleColorsList)
+
 
 	// PLANE FITTING
 	//var cov = this.covarianceFromPoints(pts);

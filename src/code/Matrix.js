@@ -822,7 +822,7 @@ Matrix.eigenVectors = function(A){
 	*/
 }
 Matrix.eigenValuesAndVectors = function(A){
-	var x = numeric.eig(A._rows);
+	var x = numeric.eig(A._rows); // these aren't necessarily ordered
 	var values = x.lambda.x;
 	var vectors = x.E.x;
 	var vects = new Array();

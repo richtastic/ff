@@ -107,13 +107,13 @@ OctTree.prototype.kNN = function(k,p){ //
 	var node, child, i;
 	var distSquare, distanceMinimumSquare = this._root.size().lengthSquared(); // infinity
 	node = this._root; node.d = node.centerDistanceToPointSquare(p);
-var count = 0;
+//var count = 0;
 	while( node ){ //
 //++count;
 		if( node.d <= distanceMinimumSquare + node.maxRadiusSquare() + 2.0*Math.sqrt(distanceMinimumSquare*node.maxRadiusSquare()) ){
 //++count;
 			if( node.isLeaf() ){
-++count;
+//++count;
 				distSquare = V3D.distanceSquare(p,node.data());
 				if(dist<distanceMinimumSquare){ // save unnecessary insertions
 					pointQueue.insertObject( node.data() );
@@ -133,7 +133,7 @@ var count = 0;
 		}
 		node = nodeQueue.popMinimum();
 	}
-console.log(count);
+//console.log(count);
 	var a = pointQueue.toArray();
 	nodeQueue.kill();
 	pointQueue.kill();
