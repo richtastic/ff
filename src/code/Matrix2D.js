@@ -11,24 +11,27 @@ function Matrix2D(){
 	this.a=0; this.b=0; this.c=0; this.d=0; this.x=0; this.y=0;
 	this.identity();
 }
-Matrix.prototype.saveToYAML = function(yaml){
-	yaml.writeNumber(DATA.A, this._a);
-	yaml.writeNumber(DATA.B, this._b);
-	yaml.writeNumber(DATA.C, this._c);
-	yaml.writeNumber(DATA.D, this._d);
-	yaml.writeNumber(DATA.X, this._x);
-	yaml.writeNumber(DATA.Y, this._y);
+Matrix2D.prototype.saveToYAML = function(yaml){
+	yaml.writeNumber(DATA.A, this.a);
+	yaml.writeNumber(DATA.B, this.b);
+	yaml.writeNumber(DATA.C, this.c);
+	yaml.writeNumber(DATA.D, this.d);
+	yaml.writeNumber(DATA.X, this.x);
+	yaml.writeNumber(DATA.Y, this.y);
 }
 Matrix2D.prototype.identity = function(){
 	this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.x = 0; this.y = 0;
+	return this;
 }
 Matrix2D.prototype.set = function(tA,tB,tC,tD,tX,tY){
 	this.a = tA; this.b = tB; this.c = tC; this.d = tD; this.x = tX; this.y = tY;
+	return this;
 }
 Matrix2D.prototype.translate = function(tx,ty){
 	var mat = Matrix2D.temp;
 	mat.set(1,0,0,1,tx,ty);
 	this.mult(mat,this);
+	return this;
 }
 Matrix2D.prototype.translateX = function(tx){
 	if(tx!==undefined){
@@ -36,6 +39,7 @@ Matrix2D.prototype.translateX = function(tx){
 	}else{
 		return this.x;
 	}
+	return this;
 }
 Matrix2D.prototype.translateY = function(ty){
 	if(ty!==undefined){
@@ -43,6 +47,7 @@ Matrix2D.prototype.translateY = function(ty){
 	}else{
 		return this.y;
 	}
+	return this;
 }
 // skewing by x, y
 Matrix2D.prototype.rotate = function(theta){
@@ -74,14 +79,23 @@ Matrix2D.prototype.mult = function(mA,mB){
 	this.c = aC*bA + aD*bC;
 	this.d = aC*bB + aD*bD;
 	this.y = aC*bX + aD*bY + aY;
+	return this;
 }
 Matrix2D.prototype.multV2D = function(aV,bV){ // a = trans(b)
 	var ax = this.a*bV.x + this.b*bV.y + this.x;
-	aV.y = this.c*bV.x + this.d*bV.y + this.y;
+	aV.y =   this.c*bV.x + this.d*bV.y + this.y;
 	aV.x = ax;
+	return aV;
+}
+Matrix2D.prototype.multV3D = function(aV,bV){ // a = trans(b)
+	var ax = this.a*bV.x + this.b*bV.y + this.x*bV.z;
+	aV.y =   this.c*bV.x + this.d*bV.y + this.y*bV.z;
+	aV.x = ax;
+	return aV;
 }
 Matrix2D.prototype.copy = function(m){
 	this.set(m.a,m.b,m.c,m.d,m.x,m.y);
+	return this;
 }
 Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_inv.html
 	var det = 1/(m.a*m.d - m.b*m.c);
@@ -92,6 +106,7 @@ Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_
 	var d = m.a*det;
 	var y = (m.c*m.x-m.a*m.y)*det;
 	this.a = a; this.b = b; this.c = c; this.d = d; this.x = x; this.y = y;
+	return this;
 }
 Matrix2D.prototype.get = function(){
 	return new Array(this.a,this.b,this.c,this.d,this.x,this.y);
@@ -100,7 +115,7 @@ Matrix2D.prototype.toString = function(){
 	return "[ "+this.a+" "+this.b+" "+this.x+" | "+this.c+" "+this.d+" "+this.y+" ]";
 }
 Matrix2D.prototype.kill = function(){
-	//
+	this.a = undefined; this.b = undefined; this.c = undefined; this.d = undefined; this.x = undefined; this.y = undefined;
 }
 // -----------------------------------------------------------------------------------------------
 Matrix2D.temp = new Matrix2D();

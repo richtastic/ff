@@ -185,6 +185,7 @@ grand (great) circle of a sphere: largest circle that intersects a sphere (have 
 ### Algorithm
 - input
     - &rho;: solid angle (eg: &pi;/4)
+    - &tau;: some additional cmoothing constant (eg: ?)
 - initial seed triangle:
     - random point of cloud
     - projected point to MLS surface
@@ -881,7 +882,9 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 **TODO:**
 - generate first triangle
-    - show plane and bivariate visually (triangles)
+    x show plane and bivariate visually (triangles)
+    - get curvature at surface (sphere should be 1/R)
+    - determine edge size at point (field)
 - MLS
     - minimization to find plane
     - 'snapping' to closest sample point?

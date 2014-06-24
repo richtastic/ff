@@ -110,6 +110,8 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
 
+console.log(".................................. display crap ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
 var plane = this._mlsMesh.crap.plane;
 console.log(plane)
 var org = plane.point;
@@ -123,14 +125,58 @@ var list = [inPlane0.x+org.x,inPlane0.y+org.y,inPlane0.z+org.z,
 			org.x-(inPlane0.x+inPlane1.x)*0.5,
 			org.y-(inPlane0.y+inPlane1.y)*0.5,
 			org.z-(inPlane0.z+inPlane1.z)*0.5];
-this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
 var colors = [1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0];
+
+var transF = this._mlsMesh.crap.forward;
+var transR = this._mlsMesh.crap.reverse;
+var bivariate = this._mlsMesh.crap.bivariate
+
+var j, k, x, y, z, x1,y1,z11,z12,z21,z22, x2,y2,z2, i1,i2, j1,j2;
+var p11 = new V3D(), p21 = new V3D(), p12 = new V3D(), p22 = new V3D();
+var sca = 0.1;
+for(j=0;j<10;++j){
+	j1 = j;
+	j2 = j+1;
+	for(i=0;i<10;++i){
+		i1 = i;
+		i2 = i+1;
+		//
+		x1 = (-5 + i1)*sca;
+		x2 = (-5 + i2)*sca;
+		y1 = (-5 + j1)*sca;
+		y2 = (-5 + j2)*sca;
+		z11 = bivariate.valueAt(x1,y1);
+		z12 = bivariate.valueAt(x1,y2);
+		z21 = bivariate.valueAt(x2,y1);
+		z22 = bivariate.valueAt(x2,y2);
+		//
+		p11.set(x1,y1,z11);
+		p21.set(x2,y1,z21);
+		p12.set(x1,y2,z12);
+		p22.set(x2,y2,z22);
+		//
+		transR.multV3D(p11,p11);
+		transR.multV3D(p12,p12);
+		transR.multV3D(p21,p21);
+		transR.multV3D(p22,p22);
+		//
+		list.push(p11.x,p11.y,p11.z, p22.x,p22.y,p22.z, p12.x,p12.y,p12.z);
+		list.push(p11.x,p11.y,p11.z, p21.x,p21.y,p21.z, p22.x,p22.y,p22.z);
+		for(k=0;k<6;++k){
+			colors.push(Math.random(),Math.random(),Math.random(), 0.75);
+		}
+		//colors.push(Math.random(),Math.random(),Math.random(), 0.75);
+	}
+}
+
+
+this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
 this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
-console.log("...............");
-console.log(list);
-console.log(colors);
-console.log(this._planeTriangleVertexList)
-console.log(this._planeTriangleColorsList)
+
+// console.log(list)
+// console.log(colors)
+// console.log(this._planeTriangleVertexList)
+// console.log(this._planeTriangleColorsList)
 
 
 	// PLANE FITTING
@@ -162,6 +208,7 @@ SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
 	// M.setFromArray([A,B,C, B,E,F, C,F,I]);
 	// n = eigenvector for smallest eigenvalue of 
 	n.set(); // 
+	
 	// for(iter=0;iter<maxIter;++iter){
 	// 	for(i=0;i<len;++i){
 	// 		point = points[i];

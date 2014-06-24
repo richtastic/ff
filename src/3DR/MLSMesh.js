@@ -93,18 +93,21 @@ console.log(neighborhood)
 		plane = MLSMesh.weightedSurfaceNormalFromPoints(p,neighborhood,h);
 		normal = plane.normal;
 		origin = plane.point;
-console.log(origin);
-console.log(normal);
 this.crap.plane = plane;
 	// iteritive minimized error local plane
 		// ...
 	// find bivariate surface wrt plane
-	var planeNeighborhood = MLSMesh.transformedPointsWithPlane(neighborhood, origin, normal);
-console.log(planeNeighborhood);
+	var transform = MLSMesh.transformMatricesFromSpaceToPlane(origin, normal);
+	var forward = transform.forward; // from world to plane frame
+	var reverse = transform.reverse; // from plane to world frame
+	var planeNeighborhood = MLSMesh.transformPoints(neighborhood, forward);
 	var degree = 4;
-	var bivariate = new Bivariatesurface();
+	var bivariate = new BivariateSurface();
 	bivariate.fromPoints(planeNeighborhood,degree);//, weightPoint,h);
 console.log(bivariate);
+this.crap.bivariate = bivariate;
+this.crap.forward = forward;
+this.crap.reverse = reverse;
 	// 
 }
 MLSMesh.prototype.neighborhoodPoints = function(p,k){ // find k nearest neighbors
@@ -229,19 +232,28 @@ console.log( V3D.dot(minDir,v2) +"  "+values[2] );
 }
 
 
-MLSMesh.transformedPointsWithPlane = function(points, origin, normal){ // transform the points
-	var trans = MLSMesh.transformMatrixFromSpaceToPlane(origin,normal);
+MLSMesh.transformPoints = function(points, trans){ // transform the points
 	var newPoints = [];
-	// translate to origin
-	// rotate z direction to normal direction
-
+	var i, len = points.length;
+	for(i=0;i<len;++i){
+		newPoints.push( trans.multV3D(new V3D(), points[i]) );
+	}
 	return newPoints;
 }
-MLSMesh.transformMatrixFromSpaceToPlane = function(origin, normal){ // transform the points
-	var trans = new Matrix3D();
-	// translate to origin
-	// rotate z direction to normal direction
-	return trans;
+MLSMesh.transformMatricesFromSpaceToPlane = function(origin, normal){ // transform the points
+	var forward = new Matrix3D();
+	var reverse = new Matrix3D();
+	var z = V3D.DIRZ;
+	forward.translate(-origin.x,-origin.y,-origin.z); // translate to origin
+	if( !(1.0 - V3D.dot(z,normal) < 1E-6) ){
+		var cross = V3D.cross(z,normal);
+		var angle = V3D.angle(z,normal);
+		cross.norm();
+		forward.rotateVector(cross,-angle);// rotate z direction to normal direction
+		reverse.rotateVector(cross,angle);
+	}
+	reverse.translate(origin.x,origin.y,origin.z);
+	return {forward:forward, reverse:reverse};
 }
 
 
