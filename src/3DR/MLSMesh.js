@@ -78,7 +78,7 @@ MLSMesh.prototype.findSeedTriangle = function(){
 		// this._pointCloud.
 }
 MLSMesh.prototype.projectToSurface = function(p){
-	var neighborhood, h, k, f, plane, norm, point;
+	var neighborhood, h, k, f, plane, normal, origin, degree;
 	// find set of local point to weight
 	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
 console.log("k:"+k);
@@ -91,15 +91,20 @@ console.log("h:"+h);
 console.log(p)
 console.log(neighborhood)
 		plane = MLSMesh.weightedSurfaceNormalFromPoints(p,neighborhood,h);
-		norm = plane.normal;
-		point = plane.point;
-console.log(point);
-console.log(norm);
+		normal = plane.normal;
+		origin = plane.point;
+console.log(origin);
+console.log(normal);
 this.crap.plane = plane;
 	// iteritive minimized error local plane
 		// ...
 	// find bivariate surface wrt plane
-		// ...
+	var planeNeighborhood = MLSMesh.transformedPointsWithPlane(neighborhood, origin, normal);
+console.log(planeNeighborhood);
+	var degree = 4;
+	var bivariate = new Bivariatesurface();
+	bivariate.fromPoints(planeNeighborhood,degree);//, weightPoint,h);
+console.log(bivariate);
 	// 
 }
 MLSMesh.prototype.neighborhoodPoints = function(p,k){ // find k nearest neighbors
@@ -110,6 +115,7 @@ MLSMesh.prototype.localFeatureSize = function(p,neighborhood){
 	var i, d, r = 0; // average distance between neighborhood and p
 	for(i=neighborhood.length;i--;){
 		d = V3D.distance(p,neighborhood[i]);
+console.log("distance:"+d);
 		r += d;
 	}
 	return r/(neighborhood.length-1); // exclude p
@@ -160,29 +166,32 @@ MLSMesh.weightedSurfaceNormalFromPoints = function(feature, points, h){
 	var dx,dy,dz, dd, p, w, i, len = points.length;
 	var a = 0, b = 0, c = 0;
 	var A=0,B=0,C=0, E=0,F=0, I=0;
+var weightSum = 0;
 	for(i=0;i<len;++i){
 		p = points[i];
-		dd = V3D.distance(feature,p);
+		dd = V3D.distanceSquare(feature,p);
 		w = MLSMesh.distanceWeighting(dd,hh);
-//w = 1
-console.log(w);
 		a += w*p.x; b += w*p.y; c += w*p.z;
+		weightSum += w;
 	}
-	a /= len; b /= len; c /= len;
-//var com = new V3D(a,b,c);
-var com = (new V3D()).copy(feature);
+	a /= weightSum; b /= weightSum; c /= weightSum;
+	var com = new V3D(a,b,c);
 	for(i=0;i<len;++i){
 		p = points[i];
+		dd = V3D.distanceSquare(feature,p);
+		w = MLSMesh.distanceWeighting(dd,hh); // way to not recalculate ?
 		dx = p.x-a; dy = p.y-b; dz = p.z-c;
-		A += dx*dx; B += dx*dy; C += dx*dz;
-		E += dy*dy; F += dy*dz; I += dz*dz;
+		A += w*dx*dx; B += w*dx*dy; C += w*dx*dz;
+		E += w*dy*dy; F += w*dy*dz; I += w*dz*dz;
+		weightSum += w;
 	}
 	var cov = new Matrix(3,3).setFromArray([A,B,C, B,E,F, C,F,I]);
+//	cov.scale(1/weightSum); // unnecessary
 	var eig = Matrix.eigenValuesAndVectors(cov);
 	var values = eig.values;
 	var vectors = eig.vectors;
-//var vM = Math.min(values[0],values[1],values[2]); // without weights
-var vM = Math.max(values[0],values[1],values[2]); // with weights
+	var vM = Math.min(values[0],values[1],values[2]); // least direction
+//var vM = Math.max(values[0],values[1],values[2]); // primary direction
 	var v0, v1, v2;
 	var vA = vectors[0].toV3D();
 	var vB = vectors[1].toV3D();
@@ -217,6 +226,22 @@ console.log( V3D.dot(minDir,v2) +"  "+values[2] );
 	var com = new V3D(a,b,c);
 	*/
 	return {normal:v0, orthogonalA:v1, orthogonalB:v2, point:com};
+}
+
+
+MLSMesh.transformedPointsWithPlane = function(points, origin, normal){ // transform the points
+	var trans = MLSMesh.transformMatrixFromSpaceToPlane(origin,normal);
+	var newPoints = [];
+	// translate to origin
+	// rotate z direction to normal direction
+
+	return newPoints;
+}
+MLSMesh.transformMatrixFromSpaceToPlane = function(origin, normal){ // transform the points
+	var trans = new Matrix3D();
+	// translate to origin
+	// rotate z direction to normal direction
+	return trans;
 }
 
 

@@ -605,7 +605,7 @@ Solve Ax = b &rarr; x = pinv(A)b ?
 ? Solve SVD ?: smallest eigenvector = normal to surface (direction in which the data varies the least)
 <br/>
 <br/>
-Locally, the surface must be defined by some bivariate polynomial - ie z = f(x,y) (in terms of the local coordinate system).
+Locally, the surface must be defined by some bivariate polynomial - ie: z = f(x,y) (in terms of the local coordinate system).
 &Sum;<sub>i</sub> (f(x<sub>i</sub>,y<sub>i</sub>) - z<sub>i</sub>)<sup>2</sup> &middot; function(&prop;1/||p<sub>i</sub>-o||)
 z<sub>i</sub> = height of point in plane coordinate system = n&middot;(p<sub>i</sub>-o)
 f() is some bivariate representation (?#? coefficients?)
@@ -701,6 +701,29 @@ OMG another iteration method
 <br/>
 <br/>
 
+
+### Weighted Least Squares Planar Surface
+
+<br/>
+**Weight w<sub>i</sub>**: w &prop; 1/distance
+<br/>
+**Weighted Center of Mass x&#x0304; = &lt;x&#x0304;,y&#x0304;,z&#x0304;&gt;**: &lt; &Sum;<sub>i&in;[1,n]</sub> w<sub>i</sub>x<sub>i</sub> , &Sum;<sub>i&in;[1,n]</sub> w<sub>i</sub>y<sub>i</sub> , &Sum;<sub>i&in;[1,n]</sub> w<sub>i</sub>z<sub>i</sub> &gt; / &Sum;<sub>i&in;[1,n]</sub>w<sub>i</sub>
+<br/>
+**Weighted Covariance cov(a,b)**: &Sum;<sub>i&in;[1,n]</sub>w<sub>i</sub>(a<sub>i</sub>-a&#x0304;)(b<sub>i</sub>-b&#x0304;)
+<br/>
+**Weighted Covariance Matrix**: &Sum;<sub>i&in;[1,n]</sub>w<sub>i</sub>||x<sub>i</sub>-x&#x0304;||<sup>2</sup>
+```
+[ cov(x,x) cov(x,y) cov(x,z) ]
+[ cov(y,x) cov(y,y) cov(y,z) ]
+[ cov(z,x) cov(z,y) cov(z,z) ]
+```
+<br/>
+**Minimization**: min &Sum;<sub>i&in;[1,n]</sub>w<sub>i</sub>||x<sub>i</sub>-x&#x0304;||<sup>2</sup>
+<br/>
+Finding the best plane fit is equivalent to minimizing the sum of squared errors (covariance matrix) &rarr; this corresponds to the eigenvector direction corresponding to the smallest eigenvalue (ie: the direction the data varies in the least).
+<br/>
+
+
 ### Weighted Least Squares Bivariate Surface
 <br/>
 **Minimize weighted sum of squared errors (F)**: min&Sum;<sub>i&in;[1,N]</sub> w<sub>i</sub>(f(p<sub>i<sub>x</sub></sub>,p<sub>i<sub>y</sub></sub>) - p<sub>i<sub>z</sub></sub>)<sup>2</sup>
@@ -717,7 +740,7 @@ OMG another iteration method
 <br/>
 **Polynomial coefficient (column) vector c**: [c<sub>1</sub> ... c<sub>count</sub>]<sup>T</sup>
 <br/>
-**Polynomial Degree deg**: maximum exponent of 
+**Polynomial Degree deg**: maximum exponent of polynomial (eg: x<sup>3</sup> = 3, x<sup>2</sup>y<sup>2</sup> = 4)
 <br/>
 **Coefficient count**: For a given degree, there are at most (deg<sup>2</sup> + 3*deg)/2 + 1 coefficients
 <br/>
