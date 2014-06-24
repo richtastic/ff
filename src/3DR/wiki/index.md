@@ -333,6 +333,29 @@ How do you choose the next point/location to add as a vertex (predict)?
 
 
 
+<br/>
+**Determining maximum search radius**:
+<br/>
+![Unbounded Curvature](./images/triangle_unbounded.png "Unbounded Curvature Searching")
+<br/>
+**Added Triangles are always isosceles**: To account for infinite curvature, the search radius max only need be **b**
+<br/>
+**Triangle angles sum to &pi;**: &gamma; + 3&beta; = &pi; &rarr; &gamma; = &pi; - 3&beta;
+<br/>
+**sin(&theta;) = sin(&pi; - &theta;)**: sin(&gamma;) = sin(3&beta;)
+<br/>
+**Law of Sines**: sin(&gamma;)/c = sin(2&beta;)/b
+<br/>
+&rarr; sin(3&beta;)/c = sin(2&beta;)/b
+<br/>
+&rarr; b = c&middot;sin(2&beta;)/sin(3&beta;) = &eta;c
+<br/>
+**&beta;=60&deg;**&rarr;*&eta;=&infin;* | **&beta;=59&deg;**&rarr;*&eta;=17* | **&beta;=55&deg;**&rarr;*&eta;=3.7* | **&beta;=50&deg;**&rarr;*&eta;=2*
+<br/>
+<br/>
+
+
+
 
 
 
@@ -885,11 +908,13 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
     x show plane and bivariate visually (triangles)
     - get curvature at surface (sphere should be 1/R)
     - determine edge size at point (field)
+    - vertex predict
 - MLS
     - minimization to find plane
     - 'snapping' to closest sample point?
     - neighborhood?
 - how to 'query' field
+- 
 - N-object octree leaves
 
 
