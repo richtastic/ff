@@ -113,6 +113,129 @@ BivariateSurface.coefficientCountFromDegree = function(degree){
 }
 
 
+BivariateSurface.prototype.curvatureAt = function(x1,y1){
+	var dx = dy = 1E-6;
+	// var dxx = dx*dx;
+	// var dxy = dx*dy;
+	// var dyy = dy*dy;
+	// locations
+	var x0 = x1-dx, x2 = x1+dx;
+	var y0 = y1-dy, y2 = y1+dy;
+	// values
+	var z00 = this.valueAt(x0,y0);
+	var z10 = this.valueAt(x1,y0);
+	var z20 = this.valueAt(x2,y0);
+	var z01 = this.valueAt(x0,y1);
+	var z11 = this.valueAt(x1,y1);
+	var z21 = this.valueAt(x2,y1);
+	var z02 = this.valueAt(x0,y2);
+	var z12 = this.valueAt(x1,y2);
+	var z22 = this.valueAt(x2,y2);
+	// derivatives
+	var dzdx = (z21-z01)*0.5;
+	var dzdy = (z12-z10)*0.5;
+	// second derivatives
+	var dzdxx = (z21 - 2.0*z11 + z01);
+	var dzdyy = (z12 - 2.0*z11 + z10);
+	var dzdxy = (z22 - z20 - z02 + z00)*0.25;
+	// tangent vectors
+	var tangentA = new V3D(dx,0,dzdx);
+	var tangentB = new V3D(0,dy,dzdy);
+	// normal vectors
+	var normal = V3D.cross(tangentA,tangentB);
+	var unitNormal = normal.copy().norm();
+	// second derivative vectors
+	// var secondA = new V3D(0,0,dzdxx);
+	// var secondB = new V3D(0,0,dzdxy);
+	// var secondC = new V3D(0,0,dzdyy);
+	// (I)
+	var E = V3D.dot(tangentA,tangentA);
+	var F = V3D.dot(tangentA,tangentB);
+	var G = V3D.dot(tangentB,tangentB);
+	// (II)
+	var L = dzdxx*unitNormal.z; // V3D.dot(secondA,unitNormal); // secondA.z*unitNormal.z
+	var M = dzdxy*unitNormal.z; // V3D.dot(secondB,unitNormal); // secondB.z*unitNormal.z
+	var N = dzdyy*unitNormal.z; // V3D.dot(secondC,unitNormal); // secondC.z*unitNormal.z
+	// curvatures
+	var den = E*G - F*F;
+	var K = (L*N - M*M)/den;
+	var H = (E*N + G*L - 2.0*F*M)/(2.0*den);
+	var inside = H*H - K;
+	var sqin = Math.sqrt(inside);
+	var pMin = H - sqin;
+	var pMax = H + sqin;
+	// radius of curvature
+	var rA = 1.0/pMin;
+	var rB = 1.0/pMax;
+	// primary curvature directions
+	var a = L*G-F*M;
+	var b = M*G-F*N;
+	var c = E*M-F*L;
+	var d = E*N-F*M;
+	var scale = 1.0/(E*G-F*F);
+	var eig = Matrix.eigenValuesAndVectors2D(a,b,c,d);
+	var eigenValues = eig.values;
+	var eigenVectors = eig.vectors;
+	// primary curvatures in 3D frame
+	var eigA = new V3D(eigenVectors[0][0],eigenVectors[0][1],0);
+	var eigB = new V3D(eigenVectors[1][0],eigenVectors[1][1],0);
+		// perpendicular vector:
+		var twist = V3D.cross(unitNormal,V3D.DIRZ);
+		var angle = V3D.angle(V3D.DIRZ,unitNormal);
+		// rotate vectors to match z axis
+		var twistX = V3D.rotateAngle(new V3D(),V3D.DIRX,twist,-angle);
+		var twistY = V3D.rotateAngle(new V3D(),V3D.DIRY,twist,-angle);
+		// find angle between axes
+		var angleX = V3D.angle(tangentA,V3D.DIRX);
+		var angleY = V3D.angle(tangentB,V3D.DIRY);
+		if( Math.abs(angleX-angleY)>1E-5 ){ // roundoff error
+			angleX = V3D.angle(tangentA,V3D.DIRY);
+			angleY = V3D.angle(tangentB,V3D.DIRX);
+		}
+		// repeat process for eigenvectors
+		var twistEigA = V3D.rotateAngle(new V3D(),eigA,twist,-angle);
+		var twistEigB = V3D.rotateAngle(new V3D(),eigB,twist,-angle);
+		var frameEigA = V3D.rotateAngle(new V3D(),twistEigA,unitNormal,-angleX);
+		var frameEigB = V3D.rotateAngle(new V3D(),twistEigB,unitNormal,-angleX);
+	// 
+console.log(tangentA+"")
+console.log(tangentB+"")
+console.log(normal+"")
+console.log(unitNormal+"")
+console.log("gauss: "+K)
+console.log("avg: "+H)
+console.log(pMin)
+console.log(pMax)
+console.log("radiusA: "+rA)
+console.log("radiusB: "+rB)
+console.log("eigenvector world frame 1: "+frameEigA)
+console.log("eigenvector world frame 2: "+frameEigB)
+	var temp;
+	var curveMin = Math.abs(pMin);
+	var curveMax = Math.abs(pMax);
+	if( curveMin>curveMax ){
+		temp = curveMin;
+		curveMin = curveMax;
+		curveMax = temp;
+	}
+	return {min:curveMin, max:curveMax};
+}
+/*
+%frameEigA = twistEigA;
+%frameEigB = twistEigB;
+
+
+
+
+
+curveNormal = unitNormal;
+
+dottedA = dot(unitNormal,secondA);
+dottedB = dot(unitNormal,secondB);
+dottedC = dot(unitNormal,secondC);
+[dottedA,dottedB,dottedC]
+
+*/
 
 
 

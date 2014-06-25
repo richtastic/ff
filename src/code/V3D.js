@@ -33,9 +33,9 @@ V3D.rotate = function(to,from,org,dir,ang){ // to = (from-org).rotate(dir,ang)
 }
 V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
 	if(ang===undefined){
-		ang = dir; dir = a, a = b; b = new V2D();
+		ang = dir; dir = a, a = b; b = new V3D();
 	}
-	V3D.rotate(b,a, V3D.ZERO,dir,ang); // about same origin
+	return V3D.rotate(b,a, V3D.ZERO,dir,ang); // about same origin
 }
 V3D.diff = function(a,b,c){ // a-b
 	if(c!==undefined){

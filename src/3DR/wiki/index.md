@@ -906,11 +906,13 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 **TODO:**
 - generate first triangle
     x show plane and bivariate visually (triangles)
-    - get curvature at surface (sphere should be 1/R)
-    - determine edge size at point (field)
+    x get curvature at surface (sphere should be 1/R)
+    x peoject point to surface
+    x determine edge size at point (field)
+    - field minimum in radius -> ? based on beta?
     - vertex predict
 - MLS
-    - minimization to find plane
+    - iterative minimization to find plane
     - 'snapping' to closest sample point?
     - neighborhood?
 - how to 'query' field

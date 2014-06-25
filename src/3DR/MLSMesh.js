@@ -74,8 +74,21 @@ MLSMesh.prototype.findSeedTriangle = function(){
 	randomPoint = this._pointCloud.closestPointToPoint(randomPoint);
 	// project point onto surface
 	surfacePoint = this.projectToSurface(randomPoint);
-	// 
+this.crap.projection = surfacePoint;
+		// have curvature
+		// have ideal edge length
+	// ?
+
 		// this._pointCloud.
+}
+MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){
+}
+MLSMesh.prototype.vertexPredict = function(edge, field){
+	var beta = undefined; // what is beta?
+	var c = edge.length();
+	// form triangle
+	var t = new Tri();
+	// 
 }
 MLSMesh.prototype.projectToSurface = function(p){
 	var neighborhood, h, k, f, plane, normal, origin, degree;
@@ -104,10 +117,21 @@ this.crap.plane = plane;
 	var degree = 4;
 	var bivariate = new BivariateSurface();
 	bivariate.fromPoints(planeNeighborhood,degree);//, weightPoint,h);
-console.log(bivariate);
 this.crap.bivariate = bivariate;
 this.crap.forward = forward;
 this.crap.reverse = reverse;
+
+	var zValue = bivariate.valueAt(0,0);
+	var projectedPoint = new V3D(0,0,zValue);
+	reverse.multV3D(projectedPoint,projectedPoint);
+
+var curvatures = bivariate.curvatureAt(0,0);
+var kappa = curvatures.max;
+var idealLength = this._rho/kappa;
+console.log("IDEAL LENGTH: "+idealLength);
+
+
+	return projectedPoint;
 	// 
 }
 MLSMesh.prototype.neighborhoodPoints = function(p,k){ // find k nearest neighbors
@@ -228,7 +252,11 @@ console.log( V3D.dot(minDir,v2) +"  "+values[2] );
 	var inPlane1 = new V3D().setFromArray(V.colToArray(1));
 	var com = new V3D(a,b,c);
 	*/
-	return {normal:v0, orthogonalA:v1, orthogonalB:v2, point:com};
+	// use projected point as reference center:
+	var diff = V3D.diff(feature,com);
+	var dN = V3D.dot(v0,diff);
+	var proj = new V3D( feature.x-dN*v0.x, feature.y-dN*v0.y, feature.z-dN*v0.z );
+	return {normal:v0, orthogonalA:v1, orthogonalB:v2, point:proj}; // point:com
 }
 
 

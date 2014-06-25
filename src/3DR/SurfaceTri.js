@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(200,1.0,0.0);
+	var pts = this.generateSpherePoints(4000,1.5,0.0);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -130,6 +130,7 @@ var colors = [1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0];
 var transF = this._mlsMesh.crap.forward;
 var transR = this._mlsMesh.crap.reverse;
 var bivariate = this._mlsMesh.crap.bivariate
+
 
 var j, k, x, y, z, x1,y1,z11,z12,z21,z22, x2,y2,z2, i1,i2, j1,j2;
 var p11 = new V3D(), p21 = new V3D(), p12 = new V3D(), p22 = new V3D();
@@ -168,6 +169,13 @@ for(j=0;j<10;++j){
 		//colors.push(Math.random(),Math.random(),Math.random(), 0.75);
 	}
 }
+
+// surface projected point:
+var proj = this._mlsMesh.crap.projection;
+console.log(proj)
+list.push(proj.x,proj.y,proj.z, proj.x+inPlane0.x,proj.y+inPlane0.y,proj.z+inPlane0.z, proj.x+inPlane1.x,proj.y+inPlane1.y,proj.z+inPlane1.z);
+
+colors.push(1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0);
 
 
 this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);

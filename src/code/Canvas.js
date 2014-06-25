@@ -140,6 +140,12 @@ Canvas.prototype.setBackgroundColor = function (r,g,b,a){
 }
 Canvas.prototype.enableDepthTest = function(){
 	this._context.enable(this._context.DEPTH_TEST);
+// put these in seperate method:
+	this._context.depthFunc(this._context.LESS);
+	//this._context.depthFunc(this._context.MORE);
+	//this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE);
+	this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE_MINUS_SRC_ALPHA);
+	this._context.enable(this._context.BLEND);
 }
 
 Canvas.prototype.getBufferFloat32Array = function(list, lengthOfIndividual){
