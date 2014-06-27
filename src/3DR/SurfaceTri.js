@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(4000,1.5,0.0);
+	var pts = this.generateSpherePoints(4000,1.5,0.01);
 	var p, i;
 	var points = [];
 	var colors = [];

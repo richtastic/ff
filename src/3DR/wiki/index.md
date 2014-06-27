@@ -185,7 +185,7 @@ grand (great) circle of a sphere: largest circle that intersects a sphere (have 
 ### Algorithm
 - input
     - &rho;: solid angle (eg: &pi;/4)
-    - &tau;: some additional cmoothing constant (eg: ?)
+    - &tau;: some additional smoothing constant (eg: ?)
 - initial seed triangle:
     - random point of cloud
     - projected point to MLS surface
@@ -199,7 +199,10 @@ midpoint = randomPointInCloud()
 midpoint = project(midpoint)
 curvature = curvatureAtProjectedPoint(midpoint)
 edgeLengthA = &rho/curvature
-edgeLengthB = fieldMin(edgeLengthA)
+
+searchLength = ?
+
+edgeLengthB = fieldMin(searchLength)
 lenMin = min(edgeLengthA,edgeLengthB)
 lenMax = max(edgeLengthA,edgeLengthB)
 BISECTION:
@@ -297,7 +300,7 @@ p = Point() // forms angle 180-2*baseAngle with edge
 return MLSProject(p)
 
 **fieldMinInSphere(field, center,radius)**
--?smallest edge length within given sphere
+-smallest edge length within given sphere
     - query each point in cloud and find max curvature = min r &rarr; L = &rho;&middot;r
 
 **MLSProject(point)**

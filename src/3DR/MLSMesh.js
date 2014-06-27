@@ -82,13 +82,27 @@ this.crap.projection = surfacePoint;
 		// this._pointCloud.
 }
 MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){
+	// ? GO OVER ALL POINTS IN SPHERE AND FIND MINIMUM OF EDGE LENGTH
+	// MIN EDGE LENGTH = (RHO)*(RADIUS OF CURVATURE)
+	// L = p*r
 }
 MLSMesh.prototype.vertexPredict = function(edge, field){
-	var beta = undefined; // what is beta?
+	// what is beta?
+	var beta = 55.0*Math.PI/180.0; // choose 55 degrees (search radius ~ 3.63)
+	// find search radius
 	var c = edge.length();
-	// form triangle
-	var t = new Tri();
-	// 
+	var eta = Math.sin(2*beta)/Math.sin(3*beta);
+	var b = eta*c;
+	// find minimum in local area
+	var midpoint = edge.midpoint();
+	var i = this.fieldMinimumInSphere(field,midpoint,b);
+	// force non-horrible triangle
+	var baseAngle = Math.acos(0.5*c/i);
+	// find point p in same plane as edge, fitting isosceles:c,i,i
+	p = new V3D(?,?,?);
+?
+	proj = projectToSurface(p);
+	return proj;
 }
 MLSMesh.prototype.projectToSurface = function(p){
 	var neighborhood, h, k, f, plane, normal, origin, degree;
