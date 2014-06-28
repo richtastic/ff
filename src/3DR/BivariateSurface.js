@@ -1,7 +1,7 @@
 // BivariateSurface.js
 
-function BivariateSurface(){
-	this._degree = 3;
+function BivariateSurface(degree){
+	this._degree = degree!==undefined?degree:3;
 	this._coefficients = new Array();
 //	this._origin = new V3D(); // 0
 //	this._normal = new V3D(); // +z
@@ -52,6 +52,7 @@ BivariateSurface.prototype.degree4ValueAt = function(x){
 	return value;
 }
 BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
+	degree = degree!==undefined?degree:this._degree;
 	degree = Math.max(0,degree);
 	var hh = h?h*h:0;
 	var i, j, k, len, index, point, coeff, w=1.0;

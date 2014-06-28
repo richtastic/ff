@@ -16,8 +16,8 @@ function SurfaceTri(){
 	// datas
 	this._pointCloud = new PointCloud();
 	this._mlsMesh = new MLSMesh();
-	// // 
-	this.plot1D();
+	//
+//	this.plot1D();
 	//
 	this.setupSphere3D();
 }
@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(4000,1.5,0.01);
+	var pts = this.generateSpherePoints(1000,1.0,1E-16);
 	var p, i;
 	var points = [];
 	var colors = [];

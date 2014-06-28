@@ -1,5 +1,5 @@
 // Tri.js
-function Tri(a,b,c){
+function Tri(a,b,c){ // CCW+
 	this._A = null;
 	this._B = null;
 	this._C = null;
@@ -25,6 +25,13 @@ Tri.prototype.C = function(c){
 		this._C = c;
 	}
 	return this._C;
+}
+Tri.prototype.normal = function(){
+	var AB = V3D.sub(B,A);
+	var BC = V3D.sub(C,B);
+	V3D.cross(AB, AB,BC);
+	AB.norm();
+	return AB;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri.prototype.kill = function(){

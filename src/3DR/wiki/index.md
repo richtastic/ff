@@ -304,7 +304,7 @@ return MLSProject(p)
     - query each point in cloud and find max curvature = min r &rarr; L = &rho;&middot;r
 
 **MLSProject(point)**
--project point onto MLS Surface?
+-project ANY POINT IN R3 onto MLS Surface?
 
 **Triangulate(field)**
 - main loop iterating over fronts dealing with point addition, edge addition, merge, splits

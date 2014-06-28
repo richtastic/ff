@@ -8,6 +8,7 @@ function MLSMesh(){
 	this._field = null;
 	this._rho = 0;
 	this._tau = 0;
+	this._bivariate = new BivariateSurface(4);
 	//
 	this._k = 0;
 this.crap = {};
@@ -26,7 +27,7 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	tau = tau!==undefined?tau:1.0;
 	this._rho = rho;
 	this._tau = tau;
-	this.findSeedTriangle();
+	var seedTri = this.findSeedTriangle();
 /*
 console.log("triangulate surface");
 
@@ -76,10 +77,27 @@ MLSMesh.prototype.findSeedTriangle = function(){
 	surfacePoint = this.projectToSurface(randomPoint);
 this.crap.projection = surfacePoint;
 		// have curvature
-		// have ideal edge length
+	var edgeLengthA; // have ideal edge length
+		// somehow do iterations ...
+	var idealEdgeLength = edgeLengthA;
+// distance from center to vertex of equilateral
+	var insideLength = idealEdgeLength*Math.cos(Math.PI/6.0);
+// need surface normal
+	var normal;
+// pick some direction for vertexA ??????
+// ????
 	// ?
-
-		// this._pointCloud.
+	var vertexA = new V3D();
+// vertexB = point-to-vertexA rotated about normal 60 degrees
+	// ?
+	var vertexB = new V3D();
+// vertexC = point-to-vertexA rotated about normal 60 degrees negative
+	// ?
+	var vertexC = new V3D();
+// this._pointCloud.
+	var tri = new MLSTri(vertexA,vertexB,vertexC);
+	tri.generateEdgesFromVerts();
+	return tri;
 }
 MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){
 	// ? GO OVER ALL POINTS IN SPHERE AND FIND MINIMUM OF EDGE LENGTH
@@ -98,32 +116,30 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	var i = this.fieldMinimumInSphere(field,midpoint,b);
 	// force non-horrible triangle
 	var baseAngle = Math.acos(0.5*c/i);
-	baseAngle = Math.min(Math.max(baseAngle,(Math.PI/3.0)-beta),(Math.PI/3.0)+beta); // limit base angle to [60-B,60+B] ~> [5,112]
+	baseAngle = Math.min(Math.max(baseAngle,(Math.PI/3.0)-beta),(Math.PI/3.0)+beta);
+	// limit base angle to [60-B,60+B] ~> [5,115] * this doesn't make any sense
 	// gamma = 180 - 2*beta
 	// beta = (180-gamma)/2
-	// keep gamma over N
-	// keep beta over M
+	// keep gamma over N && keep beta over M
 	// => beta <= (180-N)/2  @ N=10 -> beta<=85
 	// => beta >= M          @ M=10 -> beta>=10
 	baseAngle = Math.min(Math.max(baseAngle,10*Math.PI/180),85*Math.PI/180); 
 	// recalculate i if base angle has changed:
 	i = (0.5*c)/Math.cos(baseAngle);
+	// find vector in edge's triangle plane perpendicular to edge (toward p)
+	var tri = edge.tri();
+	var norm = tri.norm();
+	var dir = edge.unit();
+	var perp = V3D.cross(dir,norm);
 	// find point p in same plane as edge, fitting isosceles:c,i,i
-/*
-use:
-triange normal = N
-perpendicular edge = E
-N x E = V
-direction along V ?
-rotate E 90 degrees about N 
-in direction AWAY from triangle interrior
-*/
-	p = new V3D(?,?,?);
-?
+	var alt = Math.sqrt( i*i + c*c*0.25 ); // altitude = i^2 + (c/2)^2
+	perp.scale(alt);
+	p = V3D.add(midpoint,perp);
+	// best point is on surface
 	proj = projectToSurface(p);
 	return proj;
 }
-MLSMesh.prototype.projectToSurface = function(p){
+MLSMesh.prototype.projectToSurface = function(p){ // DOES THIS NEED TO BE AN ACTUAL POINT ON SURFACE, OR ANY POINT
 	var neighborhood, h, k, f, plane, normal, origin, degree;
 	// find set of local point to weight
 	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
@@ -147,9 +163,8 @@ this.crap.plane = plane;
 	var forward = transform.forward; // from world to plane frame
 	var reverse = transform.reverse; // from plane to world frame
 	var planeNeighborhood = MLSMesh.transformPoints(neighborhood, forward);
-	var degree = 4;
-	var bivariate = new BivariateSurface();
-	bivariate.fromPoints(planeNeighborhood,degree);//, weightPoint,h);
+	var bivariate = this._bivariate;
+	bivariate.fromPoints(planeNeighborhood);//,degree, weightPoint,h);
 this.crap.bivariate = bivariate;
 this.crap.forward = forward;
 this.crap.reverse = reverse;

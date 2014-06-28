@@ -115,7 +115,7 @@ OctTree.prototype.kNN = function(k,p){ //
 			if( node.isLeaf() ){
 //++count;
 				distSquare = V3D.distanceSquare(p,node.data());
-				if(dist<distanceMinimumSquare){ // save unnecessary insertions
+				if(distSquare<distanceMinimumSquare){ // save unnecessary insertions
 					pointQueue.insertObject( node.data() );
 					if(pointQueue.length()==k){ // can start limiting candidates
 						distanceMinimumSquare = V3D.distanceSquare(p,pointQueue.maximum());

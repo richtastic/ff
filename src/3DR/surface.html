@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSEdge.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSEdge.js","MLSTri.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	/*

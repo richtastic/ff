@@ -1,10 +1,13 @@
 // MLSEdge.js
 
-function MLSEdge(){
+function MLSEdge(a,b){
 	this._a = null;
 	this._b = null;
 	this._tri = null;
+	this.A(a);
+	this.B(b);
 }
+// -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.A = function(a){
 	if(a!==undefined){
 		this._a = a;
@@ -23,6 +26,13 @@ MLSEdge.prototype.tri = function(t){
 	}
 	return this._tri;
 }
+// -------------------------------------------------------------------------------------------------------------------- 
+MLSEdge.prototype.unit = function(){
+	var AB = V3D.sub(this._B,this._A);
+	AB.norm();
+	return AB;
+}
+// -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.midpoint = function(){
 	return V3D.midpoint(this._a,this._b);
 }
