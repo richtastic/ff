@@ -98,7 +98,26 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	var i = this.fieldMinimumInSphere(field,midpoint,b);
 	// force non-horrible triangle
 	var baseAngle = Math.acos(0.5*c/i);
+	baseAngle = Math.min(Math.max(baseAngle,(Math.PI/3.0)-beta),(Math.PI/3.0)+beta); // limit base angle to [60-B,60+B] ~> [5,112]
+	// gamma = 180 - 2*beta
+	// beta = (180-gamma)/2
+	// keep gamma over N
+	// keep beta over M
+	// => beta <= (180-N)/2  @ N=10 -> beta<=85
+	// => beta >= M          @ M=10 -> beta>=10
+	baseAngle = Math.min(Math.max(baseAngle,10*Math.PI/180),85*Math.PI/180); 
+	// recalculate i if base angle has changed:
+	i = (0.5*c)/Math.cos(baseAngle);
 	// find point p in same plane as edge, fitting isosceles:c,i,i
+/*
+use:
+triange normal = N
+perpendicular edge = E
+N x E = V
+direction along V ?
+rotate E 90 degrees about N 
+in direction AWAY from triangle interrior
+*/
 	p = new V3D(?,?,?);
 ?
 	proj = projectToSurface(p);

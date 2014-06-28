@@ -908,10 +908,6 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 **TODO:**
 - generate first triangle
-    x show plane and bivariate visually (triangles)
-    x get curvature at surface (sphere should be 1/R)
-    x peoject point to surface
-    x determine edge size at point (field)
     - field minimum in radius -> ? based on beta?
     - vertex predict
 - MLS
