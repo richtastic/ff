@@ -907,6 +907,10 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 
 
 **TODO:**
+- good-enough-for-now first triangle
+- create front from first tri
+- main front loop
+	- front operations
 - generate first triangle
     - field minimum in radius -> ? based on beta?
     - vertex predict
