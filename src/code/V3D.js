@@ -17,7 +17,7 @@ V3D.cross = function(a,b,c){ // axb
 	}
 	return new V3D(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
 }
-V3D.rotate = function(to,from,org,dir,ang){ // to = (from-org).rotate(dir,ang)
+V3D.rotate = function(to,from,org,dir,ang){ // to = (from-org).rotate(dir,ang)  (dir better be unit normal)
 	var x = from.x, y = from.y, z = from.z;
 	var a = org.x, b = org.y, c = org.z;
 	var u = dir.x, v = dir.y, w = dir.z;

@@ -1,8 +1,8 @@
 // Tri.js
 function Tri(a,b,c){ // CCW+
-	this._A = null;
-	this._B = null;
-	this._C = null;
+	this._a = null;
+	this._b = null;
+	this._c = null;
 	this.A(a);
 	this.B(b);
 	this.C(c);
@@ -10,21 +10,21 @@ function Tri(a,b,c){ // CCW+
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri.prototype.A = function(a){
 	if(a!==undefined){
-		this._A = a;
+		this._a = a;
 	}
-	return this._A;
+	return this._a;
 }
 Tri.prototype.B = function(b){
 	if(b!==undefined){
-		this._B = b;
+		this._b = b;
 	}
-	return this._B;
+	return this._b;
 }
 Tri.prototype.C = function(c){
 	if(c!==undefined){
-		this._C = c;
+		this._c = c;
 	}
-	return this._C;
+	return this._c;
 }
 Tri.prototype.normal = function(){
 	var AB = V3D.sub(B,A);
@@ -35,7 +35,7 @@ Tri.prototype.normal = function(){
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri.prototype.kill = function(){
-	this._A = null;
-	this._B = null;
-	this._C = null;
+	this._a = null;
+	this._b = null;
+	this._c = null;
 }

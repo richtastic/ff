@@ -111,7 +111,14 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._mlsMesh.triangulateSurface();
 
 console.log(".................................. display crap ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+var list = [];
+colors = [];
 
+var seed = this._mlsMesh.crap.seed;
+list.push(seed.A().x,seed.A().y,seed.A().z, seed.B().x,seed.B().y,seed.B().z, seed.C().x,seed.C().y,seed.C().z);
+colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
+
+/*
 var plane = this._mlsMesh.crap.plane;
 console.log(plane)
 var org = plane.point;
@@ -120,12 +127,12 @@ var inPlane1 = plane.orthogonalB;
 inPlane0.scale(0.33);
 inPlane1.scale(0.33);
 
-var list = [inPlane0.x+org.x,inPlane0.y+org.y,inPlane0.z+org.z,
+list.push(inPlane0.x+org.x,inPlane0.y+org.y,inPlane0.z+org.z,
 			inPlane1.x+org.x,inPlane1.y+org.y,inPlane1.z+org.z,
 			org.x-(inPlane0.x+inPlane1.x)*0.5,
 			org.y-(inPlane0.y+inPlane1.y)*0.5,
-			org.z-(inPlane0.z+inPlane1.z)*0.5];
-var colors = [1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0];
+			org.z-(inPlane0.z+inPlane1.z)*0.5);
+colors.push(1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0);
 
 var transF = this._mlsMesh.crap.forward;
 var transR = this._mlsMesh.crap.reverse;
@@ -176,7 +183,7 @@ console.log(proj)
 list.push(proj.x,proj.y,proj.z, proj.x+inPlane0.x,proj.y+inPlane0.y,proj.z+inPlane0.z, proj.x+inPlane1.x,proj.y+inPlane1.y,proj.z+inPlane1.z);
 
 colors.push(1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0);
-
+*/
 
 this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
 this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);

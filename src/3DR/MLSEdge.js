@@ -1,9 +1,13 @@
 // MLSEdge.js
+MLSEdge.PRIORITY_NORMAL = 0;
+MLSEdge.PRIORITY_DEFERRED = 1;
 
 function MLSEdge(a,b){
 	this._a = null;
 	this._b = null;
 	this._tri = null;
+	this._priorityState = MLSEdge.PRIORITY_NORMAL;
+	this._priority = 1;
 	this.A(a);
 	this.B(b);
 }
@@ -25,6 +29,12 @@ MLSEdge.prototype.tri = function(t){
 		this._tri = t;
 	}
 	return this._tri;
+}
+MLSEdge.prototype.priority = function(p){
+	if(p!==undefined){
+		this._priority = p;
+	}
+	return this._priority;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.unit = function(){

@@ -919,7 +919,8 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
     - 'snapping' to closest sample point?
     - neighborhood?
 - how to 'query' field
-- 
+- wavy torus
+- simulate with real point cloud source
 - N-object octree leaves
 
 

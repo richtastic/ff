@@ -115,6 +115,7 @@ BivariateSurface.coefficientCountFromDegree = function(degree){
 
 
 BivariateSurface.prototype.curvatureAt = function(x1,y1){
+	var temp;
 	var dx = dy = 1E-6;
 	// var dxx = dx*dx;
 	// var dxy = dx*dy;
@@ -180,8 +181,11 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	// primary curvatures in 3D frame
 	var eigA = new V3D(eigenVectors[0][0],eigenVectors[0][1],0);
 	var eigB = new V3D(eigenVectors[1][0],eigenVectors[1][1],0);
+	if(eigenValues[1]>eigenValues[0]){
+		temp = eigA; eigA = eigB; eigB = temp;
+	}
 		// perpendicular vector:
-		var twist = V3D.cross(unitNormal,V3D.DIRZ);
+		var twist = V3D.cross(unitNormal,V3D.DIRZ); twist.norm();
 		var angle = V3D.angle(V3D.DIRZ,unitNormal);
 		// rotate vectors to match z axis
 		var twistX = V3D.rotateAngle(new V3D(),V3D.DIRX,twist,-angle);
@@ -189,7 +193,8 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 		// find angle between axes
 		var angleX = V3D.angle(tangentA,V3D.DIRX);
 		var angleY = V3D.angle(tangentB,V3D.DIRY);
-		if( Math.abs(angleX-angleY)>1E-5 ){ // roundoff error
+		if( Math.abs(angleX-angleY)>1E-6 ){ // roundoff error
+//			console.log("inside");
 			angleX = V3D.angle(tangentA,V3D.DIRY);
 			angleY = V3D.angle(tangentB,V3D.DIRX);
 		}
@@ -198,45 +203,30 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 		var twistEigB = V3D.rotateAngle(new V3D(),eigB,twist,-angle);
 		var frameEigA = V3D.rotateAngle(new V3D(),twistEigA,unitNormal,-angleX);
 		var frameEigB = V3D.rotateAngle(new V3D(),twistEigB,unitNormal,-angleX);
-	// 
-console.log(tangentA+"")
-console.log(tangentB+"")
-console.log(normal+"")
-console.log(unitNormal+"")
-console.log("gauss: "+K)
-console.log("avg: "+H)
-console.log(pMin)
-console.log(pMax)
-console.log("radiusA: "+rA)
-console.log("radiusB: "+rB)
-console.log("eigenvector world frame 1: "+frameEigA)
-console.log("eigenvector world frame 2: "+frameEigB)
-	var temp;
+		frameEigA.norm();
+		frameEigB.norm();
+// console.log(tangentA+"")
+// console.log(tangentB+"")
+// console.log(normal+"")
+// console.log(unitNormal+"")
+// console.log("gauss: "+K)
+// console.log("avg: "+H)
+// console.log(pMin)
+// console.log(pMax)
+// console.log("radiusA: "+rA)
+// console.log("radiusB: "+rB)
+// console.log("eigenvector world frame 1: "+frameEigA)
+// console.log("eigenvector world frame 2: "+frameEigB)
 	var curveMin = Math.abs(pMin);
 	var curveMax = Math.abs(pMax);
 	if( curveMin>curveMax ){
-		temp = curveMin;
-		curveMin = curveMax;
-		curveMax = temp;
+		temp = curveMin; curveMin = curveMax; curveMax = temp;
+//		console.log("FLIP B :"+pMin+" "+pMax);
 	}
-	return {min:curveMin, max:curveMax};
+	unitNormal.scale(-1.0); // flip from direction of curvature to direction of exterior
+	return {min:curveMin, max:curveMax, directionMax:frameEigA, directionMin:frameEigB, normal:unitNormal};
 }
-/*
-%frameEigA = twistEigA;
-%frameEigB = twistEigB;
 
-
-
-
-
-curveNormal = unitNormal;
-
-dottedA = dot(unitNormal,secondA);
-dottedB = dot(unitNormal,secondB);
-dottedC = dot(unitNormal,secondC);
-[dottedA,dottedB,dottedC]
-
-*/
 
 
 

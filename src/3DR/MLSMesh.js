@@ -28,6 +28,42 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	this._rho = rho;
 	this._tau = tau;
 	var seedTri = this.findSeedTriangle();
+this.crap.seed = seedTri;
+	var firstFront = new MLSEdgeFront();
+	var frontList = new MLSFront() ;
+		frontList.addFront(firstFront);
+	/*
+	fronts = FirstFront()
+	while(frontSet.length>0){
+		current = fronts.first()
+		// close front with only 3 vertexes - what about initial front?
+		if(current.vertexCount()==3){
+			current.closeFront()
+			fronts.removeFront(current)
+			continue
+		}
+		// ?
+		e = current.bestEdge()
+		if(e.canCutEar()){
+			e.cutEar()
+			continue
+		}
+		// 
+		p = vertexPredict(edge,field)
+		if( !triangleTooClose(e,p) ){ // 
+			e.growTriangle() // ?
+		}else{ // 
+			front = closestFront(e,p)
+			if(front==current){ // same front?
+				front = fronts.split(current-front) // separate front from current
+				fronts.addFront( front ) // add as new front
+			}else{ // different fronts
+				front = merge(current,front) // combine
+				fronts.removeFront(front) // remove second copy from list
+			}
+		}
+	}
+*/
 /*
 console.log("triangulate surface");
 
@@ -68,44 +104,56 @@ for(var i=0;i<arr.length && i<10;++i){
 
 }
 MLSMesh.prototype.findSeedTriangle = function(){
-	var cuboid, randomPoint, surfacePoint;
+	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;
 	// pick random cloud point
 	cuboid = this._pointCloud.range();
 	randomPoint = new V3D(cuboid.min.x+Math.random()*cuboid.size.x, cuboid.min.y+Math.random()*cuboid.size.y, cuboid.min.z+Math.random()*cuboid.size.z);
 	randomPoint = this._pointCloud.closestPointToPoint(randomPoint);
 	// project point onto surface
-	surfacePoint = this.projectToSurface(randomPoint);
-	var field = null;
-	var searchDistance = 1.0; // ?
-	var edgeLengthA = this.fieldMinimumInSphere(field,surfacePoint,searchDistance);
-	// need surface normal
-var normal = this.projectToSurfaceNormal(surfacePoint);
-
-		// somehow do iterations ...
+	surfaceData = this.projectToSurfaceData(randomPoint);
+	surfacePoint = surfaceData.point;
+	surfaceNormal = surfaceData.normal;
+	surfaceLength = surfaceData.length;
+	surfaceDirMin = surfaceData.directionMin;
+	// iteritively find ideal curvature
+	var searchDistance = surfaceLength;
+	var edgeLengthA = this.fieldMinimumInSphere(null,surfacePoint,searchDistance);
+	var edgeLengthB = edgeLengthA; // from somewhere ...
+		// somehow do iteration / bisections ...
 	var idealEdgeLength = edgeLengthA;
-// distance from center to vertex of equilateral
+	// distance from center to vertex of equilateral
 	var insideLength = idealEdgeLength*Math.cos(Math.PI/6.0);
-// pick some direction for vertexA ??????
-// ????
-	// ?
-	var vertexA = new V3D();
-// vertexB = point-to-vertexA rotated about normal 60 degrees
-	// ?
-	var vertexB = new V3D();
-// vertexC = point-to-vertexA rotated about normal 60 degrees negative
-	// ?
-	var vertexC = new V3D();
-// project points to surface?
-
-// this._pointCloud.
+	// pick some direction for vertexA: minimum curvature direction
+	var vertexA = V3D.scale(new V3D(),surfaceDirMin,insideLength);// new V3D(surfacePoint.x+insideLength*surfaceDirMin.x, surfacePoint.y+insideLength*surfaceDirMin.y, surfacePoint.z+insideLength*surfaceDirMin.z);
+	var vertexB = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal, Math.PI*4.0/3.0); // 120deg = 4/3*pi
+	var vertexC = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal,-Math.PI*4.0/3.0);
+	vertexA.add(surfacePoint); vertexB.add(surfacePoint); vertexC.add(surfacePoint);
+	// project points to surface
+	vertexA = this.projectToSurfacePoint(vertexA);
+	vertexB = this.projectToSurfacePoint(vertexB);
+	vertexC = this.projectToSurfacePoint(vertexC);
+	// generate triangle
 	var tri = new MLSTri(vertexA,vertexB,vertexC);
 	tri.generateEdgesFromVerts();
 	return tri;
 }
-MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){
-	// ? GO OVER ALL POINTS IN SPHERE AND FIND MINIMUM OF EDGE LENGTH
-	// MIN EDGE LENGTH = (RHO)*(RADIUS OF CURVATURE)
-	// L = p*r
+MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){ // GO OVER ALL POINTS IN SPHERE AND FIND MINIMUM OF EDGE LENGTH
+	arr = this._pointCloud.pointsInsideSphere(center,radius);
+	var i, point, data, curv, maxCurv = null;
+	if(arr.length==0){ // just use closest point
+		point = this._pointCloud.closestPointToPoint(center);
+		arr.push[point];
+	}
+	for(i=arr.length;i--;){
+		point = arr[i];
+		data = this.projectToSurfaceData(point);
+		curv = data.max;
+		if(maxCurv==null || curv>maxCurv){
+			maxCurv = curv;
+		}
+	} // if there's no closest point (empty point cloud) -> crash
+	var idealLength = this._rho/maxCurv;
+	return idealLength;
 }
 MLSMesh.prototype.vertexPredict = function(edge, field){
 	// what is beta?
@@ -142,21 +190,21 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	proj = projectToSurface(p);
 	return proj;
 }
-MLSMesh.prototype.projectToSurfaceNormal = function(p){
-	var data = this._projectToSurface(p);
-	return data.normal;
+MLSMesh.prototype.projectToSurfaceData = function(p){
+	return this._projectToSurface(p);
 }
-MLSMesh.prototype.projectToSurface = function(p){ // DOES THIS NEED TO BE AN ACTUAL POINT ON SURFACE, OR ANY POINT
+MLSMesh.prototype.projectToSurfacePoint = function(p){ // DOES THIS NEED TO BE AN ACTUAL POINT ON SURFACE, OR ANY POINT
 	var data = this._projectToSurface(p);
 	return data.point;
 }
 MLSMesh.prototype._projectToSurface = function(p){
 	var neighborhood, h, k, f, plane, normal, origin, degree;
+	var bivariate = this._bivariate;
 	// find set of local point to weight
 	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
 
 	// NEED TO TAKE INTO ACCOUNT ACTUAL CLOUD POINTS AND R^3 POINTS
-	var closestPoint = this.closestPointToPoint(p);
+	var closestPoint = this._pointCloud.closestPointToPoint(p);
 	neighborhood = this.neighborhoodPoints(p, k);
 	f = this.localFeatureSize(closestPoint,neighborhood);
 
@@ -173,15 +221,25 @@ MLSMesh.prototype._projectToSurface = function(p){
 	var reverse = MLSMesh.tempReverse; // from plane to world frame
 	var transform = MLSMesh.transformMatricesFromSpaceToPlane(forward, reverse, origin, normal);
 	var planeNeighborhood = MLSMesh.transformPoints(neighborhood, forward);
-	this._bivariate.fromPoints(planeNeighborhood); // ,degree, weightPoint,h);
+	bivariate.fromPoints(planeNeighborhood); // ,degree, weightPoint,h);
 	// find projected surface point on poly surface
 	var zValue = bivariate.valueAt(0,0);
 	var projectedPoint = new V3D(0,0,zValue);
 	reverse.multV3D(projectedPoint,projectedPoint);
 	// find curvature info on poly surface
 	var curvatures = bivariate.curvatureAt(0,0);
+	var dirMax = curvatures.directionMax;
+	var dirMin = curvatures.directionMin;
+	var dirNorm = curvatures.normal;
 	var idealLength = this._rho/curvatures.max;
-	return {min:curvatures.min, max:curvatures.max, point:projectedPoint, normal:normal, length:idealLength};
+	// rotate directions to world directions
+	var zero = reverse.multV3D(new V3D(),V3D.ZERO);
+	reverse.multV3D(dirMin,dirMin);
+	reverse.multV3D(dirMax,dirMax);
+	reverse.multV3D(dirNorm,dirNorm);
+	dirMin.sub(zero); dirMax.sub(zero); dirNorm.sub(zero);
+	// 
+	return {min:curvatures.min, max:curvatures.max, directionMin:dirMin, directionMax:dirMax, point:projectedPoint, normal:dirNorm, length:idealLength};
 }
 MLSMesh.prototype.neighborhoodPoints = function(p,k){ // find k nearest neighbors
 	var arr = this._pointCloud.kNearestNeighborsToPoint(k,p);

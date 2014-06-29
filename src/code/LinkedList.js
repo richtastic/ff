@@ -80,7 +80,11 @@ LinkedList.prototype.shift = function(){ // pop at head
 	return head;
 }
 // ---------------------------------------------- 
-LinkedList.prototype.empty = function(){
+LinkedList.prototype.isEmpty = function(){
+	return this._length==0;
+}
+// ---------------------------------------------- 
+LinkedList.prototype.clear = function(){
 	var next, node = this._head;
 	while(node){
 		next = node.next();
@@ -108,4 +112,49 @@ LinkedList.prototype.toString = function(){
 LinkedList.prototype.kill = function(){
 	this.empty();
 }
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------ 
+// LinkedList.Link
+LinkedList.Link = function(dat){
+	this._data = null;
+	this._prev = null;
+	this._next = null;
+	this.data(dat);
+}
+LinkedList.Link.toLink = function(n){
+	if(n!==undefined || n===null || !Code.isa(n,Link) ){
+		n = new Link(n);
+	}
+	return n;
+}
+LinkedList.Link.prototype.data = function(d){
+	if(d!==undefined){
+		this._data = d;
+	}
+	return this._data;
+}
+LinkedList.Link.prototype.next = function(n){
+	if(n!==undefined){
+		this._next = n;
+	}
+	return this._next;
+}
+LinkedList.Link.prototype.prev = function(p){
+	if(p!==undefined){
+		this._prev = p;
+	}
+	return this._prev;
+}
+LinkedList.Link.prototype.kill = function(){
+	this._prev = null;
+	this._next = null;
+	this._data = null;
+}
+
+ 
+
+
+
+
 
