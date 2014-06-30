@@ -119,7 +119,9 @@ list.push(seed.A().x,seed.A().y,seed.A().z, seed.B().x,seed.B().y,seed.B().z, se
 colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
 
 var vertex = this._mlsMesh.crap.vertex;
-list.push(vertex.x,vertex.y,vertex.z, seed.B().x,seed.B().y,seed.B().z, seed.C().x,seed.C().y,seed.C().z);
+var vA = this._mlsMesh.crap.vA;
+var vB = this._mlsMesh.crap.vB;
+list.push(vertex.x,vertex.y,vertex.z, vA.x,vA.y,vA.z, vB.x,vB.y,vB.z);
 colors.push(1.0,0.0,0.0,0.5,  1.0,0.0,0.0,0.5,  1.0,0.0,0.0,0.5);
 
 /*

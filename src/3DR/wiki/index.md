@@ -906,13 +906,12 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 <br/>
 
 
-### Closest Point on Line-Segment to Point (Min Distance Between Line-Segment and Point)
-<br/>
+### Closest Point on Line-Segment to Point (Min Distance Line and Point)
 ![Point Line Segment Distance](./images/linesegment_point_3D.png "Point to Line Segment Distance")
 <br/>
-**Line Segment AB**: points A and B represent the line segment
+**Line Segment AB**: points A and B represent a line segment
 <br/>
-**Ray o + td**: Ray representation of line segment, o&in;&reals;<sup>3</sup>, d&in;&reals;<sup>3</sup>, t&in;&reals;, any t value outside [0,1] means point is outside segment
+**Ray o + td**: Ray representation of line segment, o&isin;&Reals;<sup>3</sup>, d&isin;&Reals;<sup>3</sup>, t&in;&reals;, any t value outside [0,1] means point is outside segment
 <br/>
 **Ray Origin o = (o<sub>x</sub>,o<sub>y</sub>,o<sub>z</sub>)**: same point as A
 <br/>
@@ -923,7 +922,7 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 **Closest Point q = (q<sub>x</sub>,q<sub>y</sub>,q<sub>z</sub>)**: Closest point on LINE (may be outside line segment) to point p
 <br/>
 <br/>
-**Disect Definition of q into 3 Equations**:
+**Dissect Definition of q into 3 Equations**:
 <br/>
 *q = o + td*
 <br/>
@@ -975,8 +974,9 @@ if t is outside [0,1] the closest points are the segment ends A(o) and B(o+d) re
 
 
 **TODO:**
-- good-enough-for-now first triangle
-- create front from first tri
+x good-enough-for-now first triangle
+x create front from first tri
+- vertex predict location
 - main front loop
     - front operations
 - generate first triangle

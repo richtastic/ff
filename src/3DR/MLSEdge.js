@@ -76,7 +76,7 @@ MLSEdge.prototype.node = function(n){
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.unit = function(){
-	var AB = V3D.sub(this._a,this._b);
+	var AB = V3D.sub(this._b,this._a);
 	AB.norm();
 	return AB;
 }
