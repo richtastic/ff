@@ -1,6 +1,7 @@
 // LinkedList.js
 
 function LinkedList(){
+	this._circular = c!==undefined?c:false;
 	this._head = null;
 	this._tail = null;
 	this._length = 0;
@@ -9,9 +10,36 @@ function LinkedList(){
 LinkedList.prototype.length = function(){
 	return this._length;
 }
+LinkedList.prototype.head = function(){
+	return this._head;
+}
+LinkedList.prototype.tail = function(){
+	return this._tail;
+}
+LinkedList.prototype.front = function(){
+	if(this._head){
+		return this._head.data();
+	}
+	return null;
+}
+LinkedList.prototype.back = function(){
+	if(this._tail){
+		return this._tail.data();
+	}
+	return null;
+}
+LinkedList.prototype.tail = function(){
+	return this._tail;
+}
+LinkedList.prototype._circularEstablish = function(){
+	if(this._circular){
+		this._tail.next(this._head);
+		this._head.prev(this._tail);
+	}
+}
 // ---------------------------------------------- 
 LinkedList.prototype.push = function(n){ // push at tail
-	return this._push( Link.toLink(n) );
+	return this._push( LinkedList.Link.toLink(n) );
 }
 LinkedList.prototype._push = function(n){
 	var tail = this._tail;
@@ -23,6 +51,7 @@ LinkedList.prototype._push = function(n){
 		this._tail = n;
 		this._head = n;
 	}
+	this._circularEstablish();
 	++this._length;
 	return n;
 }
@@ -31,9 +60,10 @@ LinkedList.prototype.pop = function(){ // pop at tail
 	var tail = this._tail;
 	if(tail){
 		var prev = tail.prev();
-		if(prev){
+		if(this._length>1){ // prev && prev!=tail){ // circular check
 			prev.next(null);
 			this._tail = prev;
+			this._circularEstablish();
 		}else{
 			this._head = null;
 			this._tail = null;
@@ -58,6 +88,7 @@ LinkedList.prototype._unshift = function(n){
 		this._head = n;
 		this._tail = n;
 	}
+	this._circularEstablish();
 	++this._length;
 	return n;
 }
@@ -66,9 +97,10 @@ LinkedList.prototype.shift = function(){ // pop at head
 	var head = this._head;
 	if(head){
 		var next = head.next();
-		if(next){
+		if(this._length>1){// next && next!=head){ // circular check
 			next.prev(null);
 			this._head = next;
+			this._circularEstablish();
 		}else{
 			this._head = null;
 			this._tail = null;
@@ -78,6 +110,54 @@ LinkedList.prototype.shift = function(){ // pop at head
 		--this._length;
 	}
 	return head;
+}
+// ---------------------------------------------- 
+LinkedList.prototype.removeNode = function(link){ // remove random link
+	if(link==this._head){ // head remove
+		this.unshift();
+	}else if(link==this._tail){ // tail remove
+		this.pop();
+	}else{ // non-end remove
+		link.next().prev( link.prev() );
+		link.prev().next( link.next() );
+		link.next(null);
+		link.prev(null);
+	}
+	return link;
+}
+// ---------------------------------------------- 
+LinkedList.prototype.addAfter = function(obj, link){ // add object after node
+	this.addNodeAfter( LinkedList.Link.toLink(n),link );
+}
+LinkedList.prototype.addNodeAfter = function(node, link){ // add link after node
+	var next = link.next();
+	link.next(node);
+	node.prev(link);
+	node.next(next);
+	if(next){
+		next.prev(node);
+	}
+	if(link==this._tail){
+		this._tail = node;
+	}
+	return link;
+}
+// ---------------------------------------------- 
+LinkedList.prototype.addBefore = function(obj, link){ // add object before node
+	this.addNodeBefore( LinkedList.Link.toLink(n),link );
+}
+LinkedList.prototype.addNodeBefore = function(node, link){ // add link before node
+	var prev = link.prev();
+	link.prev(node);
+	node.next(link);
+	node.prev(prev);
+	if(prev){
+		prev.next(node);
+	}
+	if(link==this._head){
+		this._head = node;
+	}
+	return link;
 }
 // ---------------------------------------------- 
 LinkedList.prototype.isEmpty = function(){
@@ -99,14 +179,30 @@ LinkedList.prototype.clear = function(){
 }
 // ---------------------------------------------- 
 LinkedList.prototype.toString = function(){
-	var str = "";
-	var node = this._head;
-	while(node){
-		str += ""+node.data()+" ";
-		node = node.next();
+	var str = "[LinkedList ";
+	var link = "<->";
+	if(this._circular){
+		str += "(circ) ";
 	}
-	str += "["+this.length()+"]";
+	var node = head = this._head;
+	if(head){
+		do{
+			str += ""+node.data()+link;
+			node = node.next();
+		}while(node!=head);
+		str += " ("+this.length()+")";
+	}else{
+		str = "(empty)";
+	}
+	str += "]";
 	return str;
+}
+// ---------------------------------------------- 
+LinkedList.prototype.iteratingExample = function(){ // circular list
+	var i, node;
+	for(node=this.head(),i=this.length(); i--; node=node.next()){
+		console.log(node+"");
+	}
 }
 // ---------------------------------------------- 
 LinkedList.prototype.kill = function(){
@@ -114,8 +210,7 @@ LinkedList.prototype.kill = function(){
 }
 
 
-// ------------------------------------------------------------------------------------------------------------------------------------------ 
-// LinkedList.Link
+// ------------------------------------------------------------------------------------------------------------------------------------------ LinkedList.Link
 LinkedList.Link = function(dat){
 	this._data = null;
 	this._prev = null;
@@ -124,7 +219,7 @@ LinkedList.Link = function(dat){
 }
 LinkedList.Link.toLink = function(n){
 	if(n!==undefined || n===null || !Code.isa(n,Link) ){
-		n = new Link(n);
+		n = new LinkedList.Link(n);
 	}
 	return n;
 }
@@ -145,6 +240,9 @@ LinkedList.Link.prototype.prev = function(p){
 		this._prev = p;
 	}
 	return this._prev;
+}
+LinkedList.Link.prototype.toString = function(){
+	return "[LL: "+this.data()+" ]";
 }
 LinkedList.Link.prototype.kill = function(){
 	this._prev = null;

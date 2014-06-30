@@ -1683,9 +1683,28 @@ Code.rayFiniteIntersect2D = function(a,b, c,d){ // two finite rays
 	}
 	return null;
 }
-Code.closestPointLine2D = function(org, dir, point){ // infinite ray and point
-	//
+Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
+	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
+	return new V3D(org.x+t*dir.x,org.y+t*dir.y);
 }
+
+Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
+	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
+	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+}
+Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and point
+	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
+	if(t<=0){
+		return new V3D(org.x,org.y,org.z);
+	}else if(t>=1){
+		return new V3D(org.x+dir.x,org.y+dir.y,org.z+dir.z);
+	}
+	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+}
+
+
+
+
 /*
 
 

@@ -906,11 +906,79 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 <br/>
 
 
+### Closest Point on Line-Segment to Point (Min Distance Between Line-Segment and Point)
+<br/>
+![Point Line Segment Distance](./images/linesegment_point_3D.png "Point to Line Segment Distance")
+<br/>
+**Line Segment AB**: points A and B represent the line segment
+<br/>
+**Ray o + td**: Ray representation of line segment, o&in;&reals;<sup>3</sup>, d&in;&reals;<sup>3</sup>, t&in;&reals;, any t value outside [0,1] means point is outside segment
+<br/>
+**Ray Origin o = (o<sub>x</sub>,o<sub>y</sub>,o<sub>z</sub>)**: same point as A
+<br/>
+**Ray Direction d = &lt;d<sub>x</sub>,d<sub>y</sub>,d<sub>x</sub>&gt;**: ray direction A-B, (magnitude &equiv; ||A-B||)
+<br/>
+**Point p = (p<sub>x</sub>,p<sub>y</sub>,p<sub>z</sub>)**: Point in &reals;<sup>3</sup>, to find distance from line
+<br/>
+**Closest Point q = (q<sub>x</sub>,q<sub>y</sub>,q<sub>z</sub>)**: Closest point on LINE (may be outside line segment) to point p
+<br/>
+<br/>
+**Disect Definition of q into 3 Equations**:
+<br/>
+*q = o + td*
+<br/>
+q<sub>x</sub> = o<sub>x</sub> + td<sub>x</sub>
+<br/>
+q<sub>y</sub> = o<sub>y</sub> + td<sub>y</sub>
+<br/>
+q<sub>z</sub> = o<sub>z</sub> + td<sub>z</sub>
+<br/>
+<br/>
+**Closest Point direction q-p is orthogonal to line**:
+<br/>
+*dot(q-p,d) = 0 = &lt;q-p&gt; &middot; d = 0*
+<br/>
+&lt;q-p&gt; &middot; d = d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + d<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) + d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0
+<br/>
+<br/>
+**Solve for t from previous equations**
+<br/>
+d<sub>x</sub>(o<sub>x</sub>+td<sub>x</sub>-p<sub>x</sub>) + d<sub>y</sub>(o<sub>y</sub>+td<sub>y</sub>-p<sub>y</sub>) + d<sub>z</sub>(o<sub>x</sub>+td<sub>z</sub>-p<sub>z</sub>) = 0
+<br/>
+d<sub>x</sub>o<sub>x</sub>+td<sub>x</sub>d<sub>x</sub>-d<sub>x</sub>p<sub>x</sub> + d<sub>y</sub>o<sub>y</sub>+td<sub>y</sub>d<sub>y</sub>-d<sub>y</sub>p<sub>y</sub> + d<sub>z</sub>o<sub>x</sub>+td<sub>z</sub>d<sub>z</sub>-d<sub>z</sub>p<sub>z</sub> = 0
+<br/>
+t(d<sub>x</sub>d<sub>x</sub> + d<sub>y</sub>d<sub>y</sub> + d<sub>z</sub>d<sub>z</sub>) + (d<sub>x</sub>o<sub>x</sub> + d<sub>y</sub>o<sub>y</sub> + d<sub>z</sub>o<sub>x</sub>) - (d<sub>x</sub>p<sub>x</sub> + d<sub>y</sub>p<sub>y</sub> + d<sub>z</sub>p<sub>z</sub>) = 0
+<br/>
+t(d<sub>x</sub>d<sub>x</sub> + d<sub>y</sub>d<sub>y</sub> + d<sub>z</sub>d<sub>z</sub>) = (d<sub>x</sub>p<sub>x</sub> + d<sub>y</sub>p<sub>y</sub> + d<sub>z</sub>p<sub>z</sub>) - (d<sub>x</sub>o<sub>x</sub> + d<sub>y</sub>o<sub>y</sub> + d<sub>z</sub>o<sub>x</sub>)
+<br/>
+t = [(d<sub>x</sub>p<sub>x</sub>+d<sub>y</sub>p<sub>y</sub>+d<sub>z</sub>p<sub>z</sub>) - (d<sub>x</sub>o<sub>x</sub>+d<sub>y</sub>o<sub>y</sub>+d<sub>z</sub>o<sub>x</sub>)]/(d<sub>x</sub>d<sub>x</sub>+d<sub>y</sub>d<sub>y</sub>+d<sub>z</sub>d<sub>z</sub>)
+<br/>
+t = [dot(d,p) - dot(d,o)]/dot(d,d)
+<br/>
+t = [(d &middot; p) - (d &middot; o)]/(d &middot; d)
+<br/>
+<br/>
+
+
+**KEY NOTES:**
+<br/>
+if the denominator equals zero (dot(d,d)) &rarr; there is no direction
+<br/>
+if t is outside [0,1] the closest points are the segment ends A(o) and B(o+d) respectively
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
 **TODO:**
 - good-enough-for-now first triangle
 - create front from first tri
 - main front loop
-	- front operations
+    - front operations
 - generate first triangle
     - field minimum in radius -> ? based on beta?
     - vertex predict

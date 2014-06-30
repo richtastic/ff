@@ -228,7 +228,8 @@ RedBlackTree.prototype.rotateRight = function(node){
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.insertObject = function(o){
 	var node = new RedBlackTree.Node(o);
-	return this.insertNode(node);
+	this.insertNode(node);
+	return node;
 }
 RedBlackTree.prototype.insertNode = function(newNode){
 	var fxn = this._sorting;
@@ -332,24 +333,6 @@ RedBlackTree.prototype._del = function(wasCut,node,splice){
 		splice.kill();
 	}
 }
-RedBlackTree.prototype.deleteNode3 = function(node){
-	var splice, child, parent, wasData = node.data();
-	if( this.isNil(node.left()) ){ // empty left node
-		splice = node;
-		child = node.right();
-	}else if( this.isNil(node.right()) ){ // empty right node
-		splice = node;
-		child = node.left();
-	}else{ // two children
-		splice = this.predecessor(splice); // empty right node
-		child = splice.left();
-	}
-	parent = splice.parent();
-	if(this.isNil(parent)){ // root
-		//
-	}
-}
-
 RedBlackTree.prototype.deleteNode = function(node){
 	var splice, child, parent, wasData = node.data(), wasCut = false;
 	if( this.isNil(node.left()) ){
@@ -385,40 +368,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 	}
 	--this._length;
 	this._del(wasCut,node,splice);
-return wasData;
-	// //
-	// var x, y, wasData = node.data();
-	// y = ( this.isNil(node.left()) || this.isNil(node.right()) )?node:this.successor(node);
-	// x = ( this.isNil(y.left()) )?y.right():y.left();
-	// x.parent(y.parent());
-	// if( this.isNil(y.parent()) ){
-	// 	this.root(x);
-	// }else{ // replace y with x
-	// 	if(true){//y==node){
-	// 		if(y==y.parent().left()){
-	// 			y.parent().left(x);
-	// 		}else{
-	// 			y.parent().right(x);
-	// 		}
-	// 	}else{ // predecessor
-	// 		// 
-	// 	}
-	// }
-	// var wasBlack = y.isBlack();
-	// if(y!=node){ // predecessor
-	// 	y.replace(node,null);
-	// 	if(this.isNil(y.parent())){
-	// 		this._root = y;
-	// 	}
-	// }
-	// node.kill();
-	// if(wasBlack){
-	// 	this.nil().left(x);
-	// 	this.nil().right(x);
-	// 	this._deleteFixup(x);
-	// }
-	// --this._length;
-	// return wasData;
+	return wasData;
 }
 RedBlackTree.prototype._deleteFixup = function(node){
 	var sib;

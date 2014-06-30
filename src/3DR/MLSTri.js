@@ -12,13 +12,27 @@ function MLSTri(a,b,c){
 Code.inheritClass(MLSTri, Tri);
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSTri.prototype.edgeAB = function(e){
+	if(e!==undefined){
+		this._edgeAB = e;
+	}
 	return this._edgeAB;
 }
 MLSTri.prototype.edgeBC = function(e){
+	if(e!==undefined){
+		this._edgeBC = e;
+	}
 	return this._edgeBC;
 }
 MLSTri.prototype.edgeCA = function(e){
+	if(e!==undefined){
+		this._edgeCA = e;
+	}
 	return this._edgeCA;
+}
+MLSTri.prototype.setEdgeABBCCA = function(edgeAB,edgeBC,edgeCA){
+	this._edgeAB = edgeAB;
+	this._edgeBC = edgeBC;
+	this._edgeCA = edgeCA;
 }
 MLSTri.prototype.generateEdgesFromVerts = function(){
 	this._edgeAB = new MLSEdge(this._a,this._b);

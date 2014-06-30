@@ -27,8 +27,8 @@ Tri.prototype.C = function(c){
 	return this._c;
 }
 Tri.prototype.normal = function(){
-	var AB = V3D.sub(B,A);
-	var BC = V3D.sub(C,B);
+	var AB = V3D.sub(this._b,this._a);
+	var BC = V3D.sub(this._c,this._b);
 	V3D.cross(AB, AB,BC);
 	AB.norm();
 	return AB;

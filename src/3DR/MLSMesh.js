@@ -27,81 +27,73 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	tau = tau!==undefined?tau:1.0;
 	this._rho = rho;
 	this._tau = tau;
+	// find initial best triangle/front
 	var seedTri = this.findSeedTriangle();
 this.crap.seed = seedTri;
 	var firstFront = new MLSEdgeFront();
-	var frontList = new MLSFront() ;
+		firstFront.fromTriangle(seedTri);
+	var frontList = new MLSFront();
 		frontList.addFront(firstFront);
-	/*
-	fronts = FirstFront()
-	while(frontSet.length>0){
-		current = fronts.first()
-		// close front with only 3 vertexes - what about initial front?
-		if(current.vertexCount()==3){
-			current.closeFront()
-			fronts.removeFront(current)
-			continue
+	// pick best front from set
+	var edge, edge2, vertex, front, closest, edgesCanCut, idealLength;
+var count = 0;
+try{
+	while( frontList.count()>0  && count<1){
+console.log("ITERATION ------------------------------------------------------------------------------------------------------------------------");
+		current = frontList.first();
+		console.log(current);
+		if(current.count()==3 && current.moreThanSingleTri()){
+			console.log("close current front");
+			current.close();
+			frontList.remove(current);
+			continue;
 		}
-		// ?
-		e = current.bestEdge()
-		if(e.canCutEar()){
-			e.cutEar()
-			continue
+		edge = current.bestEdge();
+		console.log(edge);
+		edgesCanCut = current.canCutEar(edge);
+		if( edgesCanCut ){
+			current.cutEar(edge);
+			continue;
 		}
-		// 
-		p = vertexPredict(edge,field)
-		if( !triangleTooClose(e,p) ){ // 
-			e.growTriangle() // ?
-		}else{ // 
-			front = closestFront(e,p)
-			if(front==current){ // same front?
-				front = fronts.split(current-front) // separate front from current
-				fronts.addFront( front ) // add as new front
-			}else{ // different fronts
-				front = merge(current,front) // combine
-				fronts.removeFront(front) // remove second copy from list
+		data = this.vertexPredict(edge, null);
+		idealLength = data.length;
+		vertex = data.point;
+this.crap.vertex = vertex;
+		console.log(vertex);
+		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
+		console.log(closest);
+		if( closest ){
+			front = closest.front;
+			edge2 = closest.edge;
+			if(front==current){
+				console.log("SPLIT");
+				front = current.split(edge,edge2,point);
+				frontList.addFront(front);
+			}else{
+				console.log("MERGE");
+				current.merge(front);
+				frontList.removeFront(front);
 			}
+		}else{
+			current.growTriangle(edge,vertex);
 		}
+++count;
 	}
-*/
-/*
-console.log("triangulate surface");
-
-console.log(this._pointCloud._tree.size());
-
-//console.log(this._pointCloud.toString()+"");
-
-var arr;
-
-//arr = this._pointCloud.pointsInsideCuboid( (new V3D(-1,-1,-1)).scale(0.6), (new V3D(1,1,1)).scale(0.6) );
-
-var cen = new V3D(0.5,0,0);
-rad = 0.6;
-//arr = this._pointCloud.pointsInsideSphere( cen,rad);
-
-var closest = this._pointCloud.closestPointToPoint(cen)
-console.log(  V3D.distanceSquare(cen,closest) );
-
-
-arr = this._pointCloud.kNearestNeighborsToPoint(10, cen);
-
-console.log( arr );
-for(var i=0;i<arr.length;++i){
-	//console.log( V3D.distance(cen,arr[i]) );
-	console.log(  i+": "+ V3D.distanceSquare(cen,arr[i]) );
+}catch(e){
+	console.log("error: "+e);
 }
-
-console.log("CORRECT ANSWER: ---------------------------");
-
-arr = this._pointCloud._points;
-arr.sort( function(a,b){ return V3D.distanceSquare(a,cen)-V3D.distanceSquare(b,cen); } );
-
-
-for(var i=0;i<arr.length && i<10;++i){
-	console.log( i+": "+ V3D.distanceSquare(cen,arr[i]) );
 }
-*/
-
+MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){
+	var closest = frontList.closestFront(edge,vertex);
+	var closestEdge = closest.edge;
+	var closestFront = closestFront;
+	var closestDistance = closest.distance;
+	var minDistance = idealLength*0.5;
+	console.log(closestDistance+" >?= "+minDistance);
+	if(closestDistance>=minDistance){ // point is further away than min allowed to existing triangulation
+		return closest;
+	}
+	return null;
 }
 MLSMesh.prototype.findSeedTriangle = function(){
 	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;
@@ -179,7 +171,7 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	i = (0.5*c)/Math.cos(baseAngle);
 	// find vector in edge's triangle plane perpendicular to edge (toward p)
 	var tri = edge.tri();
-	var norm = tri.norm();
+	var norm = tri.normal();
 	var dir = edge.unit();
 	var perp = V3D.cross(dir,norm);
 	// find point p in same plane as edge, fitting isosceles:c,i,i
@@ -187,13 +179,14 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	perp.scale(alt);
 	p = V3D.add(midpoint,perp);
 	// best point is on surface
-	proj = projectToSurface(p);
-	return proj;
+	//var proj = this.projectToSurfacePoint(p);
+	var data = this.projectToSurfaceData(p);
+	return data;
 }
 MLSMesh.prototype.projectToSurfaceData = function(p){
 	return this._projectToSurface(p);
 }
-MLSMesh.prototype.projectToSurfacePoint = function(p){ // DOES THIS NEED TO BE AN ACTUAL POINT ON SURFACE, OR ANY POINT
+MLSMesh.prototype.projectToSurfacePoint = function(p){ // DOES THIS NEED TO BE AN ACTUAL POINT ON SURFACE, OR ANY POINT ? - PASS A LENGTH ALONG WITH NEIGHBORHOOD ... OR A FLAG FOR NON-POINT?
 	var data = this._projectToSurface(p);
 	return data.point;
 }
@@ -202,6 +195,7 @@ MLSMesh.prototype._projectToSurface = function(p){
 	var bivariate = this._bivariate;
 	// find set of local point to weight
 	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
+
 
 	// NEED TO TAKE INTO ACCOUNT ACTUAL CLOUD POINTS AND R^3 POINTS
 	var closestPoint = this._pointCloud.closestPointToPoint(p);
@@ -256,40 +250,6 @@ MLSMesh.prototype.localFeatureSize = function(p,neighborhood){ // p must be a po
 
 MLSMesh.prototype.localScale = function(p){
 	//
-}
-MLSMesh.prototype.triangulate = function(){
-/*
-	fronts = FirstFront()
-	while(frontSet.length>0){
-		current = fronts.first()
-		// close front with only 3 vertexes - what about initial front?
-		if(current.vertexCount()==3){
-			current.closeFront()
-			fronts.removeFront(current)
-			continue
-		}
-		// ?
-		e = current.bestEdge()
-		if(e.canCutEar()){
-			e.cutEar()
-			continue
-		}
-		// 
-		p = vertexPredict(edge,field)
-		if( !triangleTooClose(e,p) ){ // 
-			e.growTriangle() // ?
-		}else{ // 
-			front = closestFront(e,p)
-			if(front==current){ // same front?
-				front = fronts.split(current-front) // separate front from current
-				fronts.addFront( front ) // add as new front
-			}else{ // different fronts
-				front = merge(current,front) // combine
-				fronts.removeFront(front) // remove second copy from list
-			}
-		}
-	}
-*/
 }
 MLSMesh.distanceWeighting = function(dd,hh){
 	return Math.exp( -dd/hh );
