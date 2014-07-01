@@ -37,13 +37,14 @@ this.crap.seed = seedTri;
 	// pick best front from set
 	var edge, edge2, vertex, front, closest, edgesCanCut, idealLength;
 var count = 0;
-try{
-	while( frontList.count()>0  && count<1){
+// try{
+this.crap.fronts = frontList;
+	while( frontList.count()>0  && count<5){
 console.log("ITERATION ------------------------------------------------------------------------------------------------------------------------");
 		current = frontList.first();
 		console.log(current);
 		if(current.count()==3 && current.moreThanSingleTri()){
-			console.log("close current front");
+			console.log("CLOSE FRONT");
 			current.close();
 			frontList.remove(current);
 			continue;
@@ -52,13 +53,15 @@ console.log("ITERATION ---------------------------------------------------------
 		console.log(edge);
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
-			current.cutEar(edge);
+			console.log("CUTEAR");
+			console.log( edgesCanCut );
+			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB);
 			continue;
 		}
 		data = this.vertexPredict(edge, null);
 		idealLength = data.length;
 		vertex = data.point;
-//this.crap.vertex = vertex;
+this.crap.vertex = vertex;
 		console.log(vertex);
 		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
 		console.log(closest);
@@ -75,13 +78,14 @@ console.log("ITERATION ---------------------------------------------------------
 				frontList.removeFront(front);
 			}
 		}else{
+			console.log("GROW");
 			current.growTriangle(edge,vertex);
 		}
 ++count;
 	}
-}catch(e){
-	console.log("error: "+e);
-}
+// }catch(e){
+// 	console.log("error: "+e);
+// }
 }
 MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){
 	var closest = frontList.closestFront(edge,vertex);
@@ -91,9 +95,9 @@ MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLengt
 	var minDistance = idealLength*0.5;
 	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
 	if(closestDistance>=minDistance){ // point is further away than min allowed to existing triangulation
-		return closest;
+		return null;
 	}
-	return null;
+	return closest;
 }
 MLSMesh.prototype.findSeedTriangle = function(){
 	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;
@@ -148,8 +152,6 @@ MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){ // GO 
 	return idealLength;
 }
 MLSMesh.prototype.vertexPredict = function(edge, field){
-this.crap.vA = edge.A();
-this.crap.vB = edge.B();
 	// what is beta?
 	var beta = 55.0*Math.PI/180.0; // choose 55 degrees (search radius ~ 3.63)
 	// find search radius
@@ -158,12 +160,9 @@ this.crap.vB = edge.B();
 	var b = eta*c;
 	// find minimum in local area
 	var midpoint = edge.midpoint();
-this.crap.vA = midpoint;
 	var i = this.fieldMinimumInSphere(field,midpoint,b);
-console.log("min in sphere: "+i);
 	// force non-horrible triangle
 	var baseAngle = Math.acos(0.5*c/i);
-console.log("BASE ANGLE A: "+(baseAngle*180.0/Math.PI));
 	//baseAngle = Math.min(Math.max(baseAngle,(Math.PI/3.0)-beta),(Math.PI/3.0)+beta);
 	// limit base angle to [60-B,60+B] ~> [5,115] * this doesn't make any sense
 	// gamma = 180 - 2*beta
@@ -172,26 +171,21 @@ console.log("BASE ANGLE A: "+(baseAngle*180.0/Math.PI));
 	// => beta <= (180-N)/2  @ N=10 -> beta<=85
 	// => beta >= M          @ M=10 -> beta>=10
 	baseAngle = Math.min(Math.max(baseAngle,10*Math.PI/180),85*Math.PI/180); 
-console.log("BASE ANGLE B: "+(baseAngle*180.0/Math.PI));
 	// recalculate i if base angle has changed:
 	i = (0.5*c)/Math.cos(baseAngle);
-i = 0.75*c;
 	// find vector in edge's triangle plane perpendicular to edge (toward p)
 	var tri = edge.tri();
 	var norm = tri.normal();
 	var dir = edge.unit();
 	var perp = V3D.cross(dir,norm);
-console.log("dot: "+V3D.dot(perp,norm)+" | "+V3D.dot(perp,norm));
-//	perp.norm();
+	perp.norm();
 	// find point p in same plane as edge, fitting isosceles:c,i,i
-	var alt = Math.sqrt( i*i + c*c*0.25 ); // altitude = i^2 + (c/2)^2
-console.log("i: "+i+"   c: "+c+"   alt: "+alt+"   perp:"+perp.length());
+	var alt = Math.sqrt(i*i + c*c*0.25);
 	perp.scale(alt);
 	p = V3D.add(midpoint,perp);
-console.log("distances: "+ V3D.distance(p,edge.A())+" | "+V3D.distance(p,edge.B()) );
+this.crap.vA = edge.A();
+this.crap.vB = edge.B();
 this.crap.vertex = p;
-	// best point is on surface
-	//var proj = this.projectToSurfacePoint(p);
 	var data = this.projectToSurfaceData(p);
 	return data;
 }

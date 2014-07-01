@@ -63,6 +63,8 @@ MLSEdge.prototype.link = function(l){
 	return this._link;
 }
 MLSEdge.prototype.next = function(){
+	console.log(this._link);
+	console.log(this._link.next());
 	return this._link.next().data();
 }
 MLSEdge.prototype.prev = function(){

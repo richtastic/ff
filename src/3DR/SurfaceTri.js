@@ -114,6 +114,22 @@ console.log(".................................. display crap -------------------
 var list = [];
 colors = [];
 
+var front, tris, tri, fronts, i, j;
+
+fronts = this._mlsMesh.crap.fronts._fronts;
+
+for(i=fronts.length;i--;){
+	front = fronts[i];
+	tris = front._triangles;
+	for(j=tris.length;j--;){
+		tri = tris[j];
+		list.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
+		colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
+	}
+}
+
+
+/*
 var seed = this._mlsMesh.crap.seed;
 list.push(seed.A().x,seed.A().y,seed.A().z, seed.B().x,seed.B().y,seed.B().z, seed.C().x,seed.C().y,seed.C().z);
 colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
@@ -123,6 +139,7 @@ var vA = this._mlsMesh.crap.vA;
 var vB = this._mlsMesh.crap.vB;
 list.push(vertex.x,vertex.y,vertex.z, vA.x,vA.y,vA.z, vB.x,vB.y,vB.z);
 colors.push(1.0,0.0,0.0,0.5,  1.0,0.0,0.0,0.5,  1.0,0.0,0.0,0.5);
+*/
 
 /*
 var plane = this._mlsMesh.crap.plane;

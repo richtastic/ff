@@ -67,7 +67,7 @@ V3D.add = function(c,a,b){
 		c.z = a.z+b.z;
 		return c;
 	}
-	return new V3D(c.x+a.x,c.y+a.y);
+	return new V3D(c.x+a.x,c.y+a.y,c.z+a.z);
 }
 V3D.sub = function(c,a,b){
 	if(b!==undefined){

@@ -1,6 +1,6 @@
 // LinkedList.js
 
-function LinkedList(){
+function LinkedList(c){
 	this._circular = c!==undefined?c:false;
 	this._head = null;
 	this._tail = null;
@@ -76,7 +76,7 @@ LinkedList.prototype.pop = function(){ // pop at tail
 }
 // ---------------------------------------------- 
 LinkedList.prototype.unshift = function(n){ // push at head
-	return this._unshift( Link.toLink(n) );
+	return this._unshift( LinkedList.Link.toLink(n) );
 }
 LinkedList.prototype._unshift = function(n){ 
 	var head = this._head;
@@ -114,7 +114,7 @@ LinkedList.prototype.shift = function(){ // pop at head
 // ---------------------------------------------- 
 LinkedList.prototype.removeNode = function(link){ // remove random link
 	if(link==this._head){ // head remove
-		this.unshift();
+		this.shift();
 	}else if(link==this._tail){ // tail remove
 		this.pop();
 	}else{ // non-end remove
@@ -122,41 +122,44 @@ LinkedList.prototype.removeNode = function(link){ // remove random link
 		link.prev().next( link.next() );
 		link.next(null);
 		link.prev(null);
+		--this._length;
 	}
 	return link;
 }
 // ---------------------------------------------- 
-LinkedList.prototype.addAfter = function(obj, link){ // add object after node
-	this.addNodeAfter( LinkedList.Link.toLink(n),link );
+LinkedList.prototype.addAfter = function(node, obj){ // add object after node
+	return this.addNodeAfter(node,LinkedList.Link.toLink(obj));
 }
 LinkedList.prototype.addNodeAfter = function(node, link){ // add link after node
-	var next = link.next();
-	link.next(node);
-	node.prev(link);
-	node.next(next);
+	var next = node.next();
+	node.next(link);
+	link.prev(node);
+	link.next(next);
 	if(next){
-		next.prev(node);
+		next.prev(link);
 	}
-	if(link==this._tail){
-		this._tail = node;
+	if(node==this._tail){
+		this._tail = link;
 	}
+	++this._length;
 	return link;
 }
 // ---------------------------------------------- 
-LinkedList.prototype.addBefore = function(obj, link){ // add object before node
-	this.addNodeBefore( LinkedList.Link.toLink(n),link );
+LinkedList.prototype.addBefore = function(node, obj){ // add object before node
+	return this.addNodeBefore(node,LinkedList.Link.toLink(obj));
 }
 LinkedList.prototype.addNodeBefore = function(node, link){ // add link before node
-	var prev = link.prev();
-	link.prev(node);
-	node.next(link);
-	node.prev(prev);
+	var prev = node.prev();
+	node.prev(link);
+	link.next(node);
+	link.prev(prev);
 	if(prev){
-		prev.next(node);
+		prev.next(link);
 	}
-	if(link==this._head){
-		this._head = node;
+	if(node==this._head){
+		this._head = link;
 	}
+	++this._length;
 	return link;
 }
 // ---------------------------------------------- 
@@ -192,7 +195,7 @@ LinkedList.prototype.toString = function(){
 		}while(node!=head);
 		str += " ("+this.length()+")";
 	}else{
-		str = "(empty)";
+		str += "(empty)";
 	}
 	str += "]";
 	return str;

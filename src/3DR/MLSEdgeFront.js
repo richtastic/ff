@@ -3,6 +3,7 @@
 function MLSEdgeFront(){ // single front
 	this._edgeQueue = new PriorityQueue(MLSEdge.sortIncreasing);
 	this._edgeList = new LinkedList(true);
+	this._triangles = [];
 }
 MLSEdgeFront.prototype.moreThanSingleTri = function(){
 	var len = this._edgeList.length();
@@ -28,6 +29,34 @@ MLSEdgeFront.prototype.split = function(front){
 }
 MLSEdgeFront.prototype.close = function(){
 	// ?
+}
+MLSEdgeFront.prototype.growTriangle = function(edge,vertex){
+	var link, node;
+	// create new triangle with new edges (reverse orientation of edge)
+	var tri = new MLSTri(edge.B(),edge.A(),vertex);
+	var edgeAB = new MLSEdge(edge.B(),edge.A());
+	var edgeBC = new MLSEdge(edge.A(),vertex);
+	var edgeCA = new MLSEdge(vertex,edge.B());
+	tri.setEdgeABBCCA(edgeAB,edgeBC,edgeCA);
+	edgeAB.tri(tri);
+	edgeBC.tri(tri);
+	edgeCA.tri(tri);
+	this._triangles.push(tri);
+	// add new edges to front
+	link = this._edgeList.addAfter(edge.link(),edgeCA);
+		edgeCA.link(link);
+	link = this._edgeList.addAfter(edgeCA.link(),edgeBC);
+		edgeBC.link(link);
+	// add new edges to queue
+	node = this._edgeQueue.push(edgeCA);
+		edgeCA.node(node);
+	node = this._edgeQueue.push(edgeBC);
+		edgeBC.node(node);
+	// remove old edge
+	this._edgeList.removeNode(edge.link());
+	this._edgeQueue.removeNode(edge.node());
+	edge.link(null);
+	edge.node(null);
 }
 MLSEdgeFront.prototype.bestEdge = function(){
 	var edge = this._edgeQueue.minimum();
@@ -71,6 +100,7 @@ console.log("max angles: "+maxAngleLeft+" "+maxAngleRight);
 	return null;
 }
 MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with edge, update front
+console.log("CUTEAR");
 	var left = edgeA.next();
 	var right = edgeA.prev();
 	var newTri, newEdge, node, link, eA, eB;
@@ -90,13 +120,14 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with e
 		throw new Error("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
 	}
 	// generate new edge and triangle
-	// might want to isolate triangles for correct/consistant orientations (create 2 new edges to mirror eA and eB)
+	// might want to isolate triangles for correct/consistant orientations (create 2 new edges to mirror eA and eB) - YES - YES I DO
 	newEdge = new MLSEdge(eA.A(),eB.B());
 	newTri = new MLSTri(eA.A(),eB.B(),eA.B());
 	newEdge.tri(newTri);
 	newTri.setEdgeABBCCA(newEdge,eB,eA);
+	this._triangles.push(tri);
 	// insert new edge into front and queue
-	link = this._edgeList.addNodeAfter(edgeA,newEdge);
+	link = this._edgeList.addAfter(edgeA.link(),newEdge);
 		newEdge.link(link);
 	node = this._edgeQueue.push(newEdge);
 		newEdge.node(node);
@@ -105,6 +136,10 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with e
 	this._edgeList.removeNode(edgeA.link());
 	this._edgeQueue.removeNode(edgeB.node());
 	this._edgeQueue.removeNode(edgeA.node());
+	edgeA.link(null);
+	edgeA.node(null);
+	edgeB.link(null);
+	edgeB.node(null);
 }
 MLSEdgeFront.prototype.fromTriangle = function(tri){ // initial front
 	var link, node;
@@ -124,9 +159,6 @@ MLSEdgeFront.prototype.fromTriangle = function(tri){ // initial front
 		tri.edgeBC().link(link);
 	link = this._edgeList.push(tri.edgeCA());
 		tri.edgeCA().link(link);
-// console.log( tri.edgeCA().link().data() );
-// console.log( tri.edgeCA().link().next().data() );
-// this._edgeList.iteratingExample();
 	// priority queue
 	node = this._edgeQueue.push(tri.edgeAB());
 		tri.edgeAB().node(node);
@@ -134,6 +166,8 @@ MLSEdgeFront.prototype.fromTriangle = function(tri){ // initial front
 		tri.edgeBC().node(node);
 	node = this._edgeQueue.push(tri.edgeCA());
 		tri.edgeCA().node(node);
+	// add new triangle to set
+	this._triangles.push(tri);
 	console.log("list:");
 	console.log(this._edgeList.toString());
 	console.log("queue:");

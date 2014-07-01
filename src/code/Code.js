@@ -1687,19 +1687,14 @@ Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y);
 }
-
-Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
-	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
-	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
-}
-Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and point
-	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
+Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and point
+	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
 	if(t<=0){
-		return new V3D(org.x,org.y,org.z);
+		return new V2D(org.x,org.y);
 	}else if(t>=1){
-		return new V3D(org.x+dir.x,org.y+dir.y,org.z+dir.z);
+		return new V2D(org.x+dir.x,org.y+dir.y);
 	}
-	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
 
 
@@ -1849,6 +1844,20 @@ Code.circleFromPoints = function(a,b,c){
 	return null;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
+Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
+	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
+	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+}
+Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and point
+	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
+	if(t<=0){
+		return new V3D(org.x,org.y,org.z);
+	}else if(t>=1){
+		return new V3D(org.x+dir.x,org.y+dir.y,org.z+dir.z);
+	}
+	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+}
+
 Code.intersectRayPlane = function(org,dir, pnt,nrm){
 	var num = nrm.x*(pnt.x-org.x) + nrm.y*(pnt.y-org.y) + nrm.z*(pnt.z-org.z);
 	if(num==0){ return (new V3D()).copy(pnt); }// point is already in plane (first of possibly infinite intersections)
@@ -1871,7 +1880,7 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
-Code.closestPoints3D = function(oa,da, ob,db){
+Code.closestPoints3D = function(oa,da, ob,db){ // infinite ray-ray closet points
 	var dot_dada = V3D.dot(da,da);
 	var dot_dadb = V3D.dot(da,db);
 	var dot_dbdb = V3D.dot(db,db);

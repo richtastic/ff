@@ -28,10 +28,13 @@ Tri.prototype.C = function(c){
 }
 Tri.prototype.normal = function(){
 	var AB = V3D.sub(this._b,this._a);
-	var BC = V3D.sub(this._c,this._b);
-	V3D.cross(AB, AB,BC);
+	var AC = V3D.sub(this._c,this._a);
+	V3D.cross(AB, AB,AC);
 	AB.norm();
 	return AB;
+}
+Tri.prototype.center = function(){ // barycenter
+	return new V3D((this._a.x+this._b.x+this._c.x)/3.0, (this._a.y+this._b.y+this._c.y)/3.0, (this._a.z+this._b.z+this._c.z)/3.0);
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri.prototype.kill = function(){

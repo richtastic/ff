@@ -45,6 +45,9 @@ MLSTri.prototype.generateEdgesFromVerts = function(){
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSTri.prototype.kill = function(){
 	MLSTri._.kill.call(this);
+	this._edgeAB = null;
+	this._edgeBC = null;
+	this._edgeCA = null;
 }
 
 
