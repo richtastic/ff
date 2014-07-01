@@ -34,7 +34,7 @@ MLSEdgeFront.prototype.growTriangle = function(edge,vertex){
 	var link, node;
 	// create new triangle with new edges (reverse orientation of edge)
 	var tri = new MLSTri(edge.B(),edge.A(),vertex);
-	var edgeAB = new MLSEdge(edge.B(),edge.A());
+	var edgeAB = new MLSEdge(edge.B(),edge.A()); // edge opposite
 	var edgeBC = new MLSEdge(edge.A(),vertex);
 	var edgeCA = new MLSEdge(vertex,edge.B());
 	tri.setEdgeABBCCA(edgeAB,edgeBC,edgeCA);
@@ -45,7 +45,7 @@ MLSEdgeFront.prototype.growTriangle = function(edge,vertex){
 	// add new edges to front
 	link = this._edgeList.addAfter(edge.link(),edgeCA);
 		edgeCA.link(link);
-	link = this._edgeList.addAfter(edgeCA.link(),edgeBC);
+	link = this._edgeList.addAfter(edge.link(),edgeBC);
 		edgeBC.link(link);
 	// add new edges to queue
 	node = this._edgeQueue.push(edgeCA);
@@ -91,51 +91,55 @@ MLSEdgeFront.prototype.canCutEar = function(edge){ // look at 2 adjacent triangl
 		c = Math.PI - V3D.angle(ca,bc);
 		maxAngleRight = Math.max(a,b,c);
 	}
-console.log("max angles: "+maxAngleLeft+" "+maxAngleRight);
+//console.log("max angles: "+(maxAngleLeft*180/Math.PI)+" "+(maxAngleRight*180/Math.PI));
 	if(maxAngleLeft<maxAngle && maxAngleLeft<maxAngleRight){
-		return {edgeA:edge, edgeB:left};
+		return {edgeA:left, edgeB:edge};
 	}else if(maxAngleRight<maxAngle){
 		return {edgeA:edge, edgeB:right};
 	}
 	return null;
 }
 MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with edge, update front
-console.log("CUTEAR");
 	var left = edgeA.next();
 	var right = edgeA.prev();
-	var newTri, newEdge, node, link, eA, eB;
+	var temp, node, link, tri, eA, eB, eC;
 	if(left==edgeB){
-		eA = edgeA; eB = edgeB;
-		// newEdge = new MLSEdge(edgeA.A(),edgeB.B());
-		// newTri = new MLSTri(edgeA.A(),edgeB.B(),edgeA.B());
-		// newEdge.tri(newTri);
-		// newTri.setEdgeABBCCA(newEdge,edgeB,edgeA);
+		// keep as is
 	}else if(right==edgeB){
-		eA = edgeB; eB = edgeA;
-		// newEdge = new MLSEdge(edgeB.A(),edgeA.B());
-		// newTri = new MLSTri(edgeB.A(),edgeA.B(),edgeB.A());
-		// newEdge.tri(newTri);
-		// newTri.setEdgeABBCCA(newEdge,edgeA,edgeB);
+		temp = edgeA;
+		edgeA = edgeB;
+		edgeB = temp;
 	}else{
-		throw new Error("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
+		//throw new Error("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
+		console.log("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
+		console.log(edgeA.next()==edgeB);
+		console.log(edgeA.prev()==edgeB);
+		console.log(edgeB.next()==edgeA);
+		console.log(edgeB.prev()==edgeA);
+		console.log(edgeA==edgeB);
+		console.log(edgeA+"");
+		console.log(edgeB+"");
 	}
 	// generate new edge and triangle
-	// might want to isolate triangles for correct/consistant orientations (create 2 new edges to mirror eA and eB) - YES - YES I DO
-	newEdge = new MLSEdge(eA.A(),eB.B());
-	newTri = new MLSTri(eA.A(),eB.B(),eA.B());
-	newEdge.tri(newTri);
-	newTri.setEdgeABBCCA(newEdge,eB,eA);
+	eA = new MLSEdge(edgeA.A(),edgeB.B()); // new edge
+	eB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
+	eC = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
+	tri = new MLSTri(eA.A(),eB.A(),eC.A());
+	tri.setEdgeABBCCA(eA,eB,eC);
+	eA.tri(tri);
+	eB.tri(tri);
+	eC.tri(tri);
 	this._triangles.push(tri);
-	// insert new edge into front and queue
-	link = this._edgeList.addAfter(edgeA.link(),newEdge);
-		newEdge.link(link);
-	node = this._edgeQueue.push(newEdge);
-		newEdge.node(node);
+	// add new edge to front and queue
+	link = this._edgeList.addAfter(edgeA.link(),eA);
+		eA.link(link);
+	node = this._edgeQueue.push(eA);
+		eA.node(node);
 	// remove from front and queue
-	this._edgeList.removeNode(edgeB.link());
 	this._edgeList.removeNode(edgeA.link());
-	this._edgeQueue.removeNode(edgeB.node());
+	this._edgeList.removeNode(edgeB.link());
 	this._edgeQueue.removeNode(edgeA.node());
+	this._edgeQueue.removeNode(edgeB.node());
 	edgeA.link(null);
 	edgeA.node(null);
 	edgeB.link(null);
@@ -185,11 +189,8 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	var head=list.head();
 	for(node=head,i=len; i--; node=node.next()){
 		edge = node.data();
-
-			point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
-			dist = V3D.distance(point,inVertex);
-console.log(dist);
-
+		point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
+		dist = V3D.distance(point,inVertex);
 		if(edge!=inEdge){
 			if(minDistance==null || dist<minDistance){
 				minDistance = dist;

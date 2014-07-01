@@ -1,8 +1,10 @@
 // MLSEdge.js
 MLSEdge.PRIORITY_NORMAL = 0;
 MLSEdge.PRIORITY_DEFERRED = 1;
+MLSEdge._count = 0;
 
 function MLSEdge(a,b){
+	this._id = MLSEdge._count++;
 	this._a = null;
 	this._b = null;
 	this._tri = null; // only holds most-recently set tri (can actually be part of many tris, but is only set to single tri [many-one])
@@ -63,12 +65,10 @@ MLSEdge.prototype.link = function(l){
 	return this._link;
 }
 MLSEdge.prototype.next = function(){
-	console.log(this._link);
-	console.log(this._link.next());
 	return this._link.next().data();
 }
 MLSEdge.prototype.prev = function(){
-	return this._link.next().data();
+	return this._link.prev().data();
 }
 MLSEdge.prototype.node = function(n){
 	if(n!==undefined){
@@ -91,7 +91,7 @@ MLSEdge.prototype.midpoint = function(){
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.toString = function(){
-	var str = "[MLSEdge: ";
+	var str = "[MLSEdge: |"+this._id+"| ";
 	str += this._priorityState+":"+this._priority;
 	str += "]";
 	return str;

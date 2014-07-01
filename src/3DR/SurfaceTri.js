@@ -118,15 +118,19 @@ var front, tris, tri, fronts, i, j;
 
 fronts = this._mlsMesh.crap.fronts._fronts;
 
+var triCount = 0;
 for(i=fronts.length;i--;){
 	front = fronts[i];
 	tris = front._triangles;
 	for(j=tris.length;j--;){
 		tri = tris[j];
+		//tri.jitter(0.10);
 		list.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
 		colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
+		++triCount;
 	}
 }
+console.log("TRIANGLES:"+triCount);
 
 
 /*

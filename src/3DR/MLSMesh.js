@@ -8,7 +8,7 @@ function MLSMesh(){
 	this._field = null;
 	this._rho = 0;
 	this._tau = 0;
-	this._bivariate = new BivariateSurface(4);
+	this._bivariate = new BivariateSurface(4); // 3 gives:  "eig: internal error"
 	//
 	this._k = 0;
 this.crap = {};
@@ -23,13 +23,13 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this.pointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(Math.PI/10.0);
+	rho = rho!==undefined?rho:(2*Math.PI/10.0);
 	tau = tau!==undefined?tau:1.0;
 	this._rho = rho;
 	this._tau = tau;
 	// find initial best triangle/front
 	var seedTri = this.findSeedTriangle();
-this.crap.seed = seedTri;
+//this.crap.seed = seedTri;
 	var firstFront = new MLSEdgeFront();
 		firstFront.fromTriangle(seedTri);
 	var frontList = new MLSFront();
@@ -39,38 +39,38 @@ this.crap.seed = seedTri;
 var count = 0;
 // try{
 this.crap.fronts = frontList;
-	while( frontList.count()>0  && count<5){
-console.log("ITERATION ------------------------------------------------------------------------------------------------------------------------");
+	while( frontList.count()>0  && count<21){
+console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION ");
 		current = frontList.first();
-		console.log(current);
+// console.log(current._edgeList.toString());
+// current._edgeList.checkYourself();
+// console.log(current._edgeQueue.toString());
 		if(current.count()==3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
 			current.close();
 			frontList.remove(current);
+++count;
 			continue;
 		}
 		edge = current.bestEdge();
-		console.log(edge);
+//		console.log(edge);
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
 			console.log("CUTEAR");
-			console.log( edgesCanCut );
 			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB);
+++count;
 			continue;
 		}
 		data = this.vertexPredict(edge, null);
 		idealLength = data.length;
 		vertex = data.point;
-this.crap.vertex = vertex;
-		console.log(vertex);
 		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
-		console.log(closest);
 		if( closest ){
 			front = closest.front;
 			edge2 = closest.edge;
 			if(front==current){
 				console.log("SPLIT");
-				front = current.split(edge,edge2,point);
+				front = current.split(edge,edge2,vertex);
 				frontList.addFront(front);
 			}else{
 				console.log("MERGE");
@@ -82,6 +82,7 @@ this.crap.vertex = vertex;
 			current.growTriangle(edge,vertex);
 		}
 ++count;
+console.log(count);
 	}
 // }catch(e){
 // 	console.log("error: "+e);
@@ -93,7 +94,7 @@ MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLengt
 	var closestFront = closestFront;
 	var closestDistance = closest.distance;
 	var minDistance = idealLength*0.5;
-	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
+//	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
 	if(closestDistance>=minDistance){ // point is further away than min allowed to existing triangulation
 		return null;
 	}
@@ -183,9 +184,6 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	var alt = Math.sqrt(i*i + c*c*0.25);
 	perp.scale(alt);
 	p = V3D.add(midpoint,perp);
-this.crap.vA = edge.A();
-this.crap.vB = edge.B();
-this.crap.vertex = p;
 	var data = this.projectToSurfaceData(p);
 	return data;
 }

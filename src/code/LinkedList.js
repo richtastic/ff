@@ -28,9 +28,6 @@ LinkedList.prototype.back = function(){
 	}
 	return null;
 }
-LinkedList.prototype.tail = function(){
-	return this._tail;
-}
 LinkedList.prototype._circularEstablish = function(){
 	if(this._circular){
 		this._tail.next(this._head);
@@ -39,14 +36,19 @@ LinkedList.prototype._circularEstablish = function(){
 }
 // ---------------------------------------------- 
 LinkedList.prototype.push = function(n){ // push at tail
-	return this._push( LinkedList.Link.toLink(n) );
+	return this.pushNode( LinkedList.Link.toLink(n) );
 }
-LinkedList.prototype._push = function(n){
+LinkedList.prototype.pushNode = function(n){
 	var tail = this._tail;
 	if(tail){
+		var next = tail.next();
 		tail.next(n);
 		n.prev(tail);
+		n.next(next);
 		this._tail = n;
+		if(next){
+			next.prev(n);
+		}
 	}else{
 		this._tail = n;
 		this._head = n;
@@ -76,14 +78,19 @@ LinkedList.prototype.pop = function(){ // pop at tail
 }
 // ---------------------------------------------- 
 LinkedList.prototype.unshift = function(n){ // push at head
-	return this._unshift( LinkedList.Link.toLink(n) );
+	return this.unshiftNode( LinkedList.Link.toLink(n) );
 }
-LinkedList.prototype._unshift = function(n){ 
+LinkedList.prototype.unshiftNode = function(n){ 
 	var head = this._head;
 	if(head){
-		n.next(head);
+		var prev = head.prev();
 		head.prev(n);
+		n.next(head);
+		n.prev(prev);
 		this._head = n;
+		if(prev){
+			prev.next(n);
+		}
 	}else{
 		this._head = n;
 		this._tail = n;
@@ -179,6 +186,26 @@ LinkedList.prototype.clear = function(){
 	this._head = null;
 	this._tail = null;
 	this._length = 0;
+}
+// ---------------------------------------------- 
+LinkedList.prototype.checkYourself = function(){
+	var i, node, err;
+	for(node=this.head(),i=this.length(); i--; node=node.next()){
+		err = false;
+		if( node.prev() && node.prev().next()!=node ){
+			err = true;
+			console.log("wreck yourself A: "+node);
+		}
+		if( node.next() && node.next().prev()!=node ){
+			err = true;
+			console.log("wreck yourself B: "+node);
+		}
+		if(err){
+			console.log(" -BAD: "+node);
+		}else{
+			console.log(" +OK:  "+node);
+		}
+	}
 }
 // ---------------------------------------------- 
 LinkedList.prototype.toString = function(){

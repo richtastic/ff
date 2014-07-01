@@ -979,6 +979,7 @@ x create front from first tri
 - vertex predict location
 - main front loop
     - front operations
+    - edge queue priority
 - generate first triangle
     - field minimum in radius -> ? based on beta?
     - vertex predict
@@ -990,7 +991,7 @@ x create front from first tri
 - wavy torus
 - simulate with real point cloud source
 - N-object octree leaves
-
+- trackball rotation
 
 RESULTS DATA:
 
