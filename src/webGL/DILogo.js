@@ -8,7 +8,7 @@ function DILogo(){
     this._stage = new StageGL(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
     this._canvas.addListeners();
   	this._stage.setBackgroundColor(1.0,1.0,1.0,1.0);
-  	this._stage.frustrumAngle(25);
+  	this._stage.frustrumAngle(35);
 	this._stage.enableDepthTest();
 	this.loadResources();
 }
@@ -30,7 +30,7 @@ DILogo.prototype.icosahedron = function(){ // 20-sided, centered at 0,0,0, radiu
 	var i, j, x,y,z, rad, ang,tmp, arr, tri, list = [];
 	// points:
 	var points = [];
-	ang = Math.PI/6.0; // Math.PI/3.0
+	ang = Math.PI/6.5;//Math.PI/6.0; // Math.PI/3.0
 	rad = Math.cos(ang);
 	y = Math.sin(ang);
 	// top
@@ -131,72 +131,80 @@ DILogo.prototype.icosidodecahedron = function(){ // 32-sided, centered at 0,0,0,
 	return list;
 }
 // RED EAR
-DILogo.COLOR_RED_TOP_BRI = 0xFFFF9999;
-DILogo.COLOR_RED_TOP_HIG = 0xFFFF6666;
-DILogo.COLOR_RED_TOP_MED = 0xFFBB3333;
-DILogo.COLOR_RED_TOP_LOW = 0xFFCC2233;
+DILogo.COLOR_RED_TOP_BRI = 0xFFFF8866; // x
+DILogo.COLOR_RED_TOP_HIG = 0xFFFF5500; // x
+DILogo.COLOR_RED_TOP_MED = 0xFFFF5550;
+DILogo.COLOR_RED_TOP_AVG = 0xFFFF6D50;
+DILogo.COLOR_RED_TOP_LOW = 0xFFFF8969;
 
-DILogo.COLOR_RED_MID_BRI = 0xFFFF6666;
-DILogo.COLOR_RED_MID_HIG = 0xFFFF3333;
-DILogo.COLOR_RED_MID_MED = 0xFFDD2233;
-DILogo.COLOR_RED_MID_LOW = 0xFFCC1133;
-DILogo.COLOR_RED_MID_DAR = 0xFFBB1122;
-DILogo.COLOR_RED_MID_OFF = 0xFFFF2244;
+DILogo.COLOR_RED_MID_BRI = 0xFFDD3333; // x
+DILogo.COLOR_RED_MID_HIG = 0xFFB02233; // x
+DILogo.COLOR_RED_MID_MED = 0xFFB53035;
+DILogo.COLOR_RED_MID_AVG = 0xFFC13329;
+DILogo.COLOR_RED_MID_LOW = 0xFFD31C1C;
+DILogo.COLOR_RED_MID_DOW = 0xFFE82A2A;
+DILogo.COLOR_RED_MID_DAR = 0xFFFF5043;
+DILogo.COLOR_RED_MID_OFF = 0xFFDD2822; // x
+DILogo.COLOR_RED_MID_OF2 = 0xFFCC2923; // x
 
-DILogo.COLOR_RED_BOT_HIG = 0xFFEE4444;
-DILogo.COLOR_RED_BOT_MED = 0xFFDD2233;
-DILogo.COLOR_RED_BOT_LOW = 0xFFBB1122;
-DILogo.COLOR_RED_BOT_DAR = 0xFF990000;
+DILogo.COLOR_RED_BOT_HIG = 0xFFC13729;
+DILogo.COLOR_RED_BOT_MED = 0xFFBB1111; // x
+DILogo.COLOR_RED_BOT_LOW = 0xFFA5190A;
+DILogo.COLOR_RED_BOT_DAR = 0xFF00FF00;//0xFF990000;
 // PINK EAR
-DILogo.COLOR_PIN_TOP_BRI = 0xFFFF88CC;
-DILogo.COLOR_PIN_TOP_HIG = 0xFFFF77DD;
-DILogo.COLOR_PIN_TOP_MED = 0xFFFF66BB;
-DILogo.COLOR_PIN_TOP_LOW = 0xFFFF55AA;
+DILogo.COLOR_PIN_TOP_BRI = 0xFFF05090; // x
+DILogo.COLOR_PIN_TOP_HIG = 0xFF00FF00;//0xFFFF77DD;
+DILogo.COLOR_PIN_TOP_MED = 0xFFEE437F;
+DILogo.COLOR_PIN_TOP_AVG = 0xFFEF5F7F;
+DILogo.COLOR_PIN_TOP_LOW = 0xFFEC7A8C;//0xFFFF55AA;
 
-DILogo.COLOR_PIN_MID_BRI = 0xFFFF77DD;
-DILogo.COLOR_PIN_MID_HIG = 0xFFDD33CC;
-DILogo.COLOR_PIN_MID_MED = 0xFFFF4499;
-DILogo.COLOR_PIN_MID_LOW = 0xFFAA33CC;
-DILogo.COLOR_PIN_MID_DAR = 0xFFBB3388;
-DILogo.COLOR_PIN_MID_OFF = 0xFFDD33DD;
+DILogo.COLOR_PIN_MID_BRI = 0xFFBB2277; // x
+DILogo.COLOR_PIN_MID_HIG = 0xFFEE4499; // x
+DILogo.COLOR_PIN_MID_MED = 0xFFCC3388;
+DILogo.COLOR_PIN_MID_AVG = 0xFFEE4477;
+DILogo.COLOR_PIN_MID_LOW = 0xFF993388;
+DILogo.COLOR_PIN_MID_DOW = 0xFFC01B7D;
+DILogo.COLOR_PIN_MID_DAR = 0xFFE23F96;
+DILogo.COLOR_PIN_MID_OFF = 0xFFCC1177; // x
+DILogo.COLOR_PIN_MID_OF2 = 0xFFDD3399; // x
 
-DILogo.COLOR_PIN_BOT_HIG = 0xFF9933AA;
-DILogo.COLOR_PIN_BOT_MED = 0xFF8822CC;
-DILogo.COLOR_PIN_BOT_LOW = 0xFF441199;
-DILogo.COLOR_PIN_BOT_DAR = 0xFF220088;
+DILogo.COLOR_PIN_BOT_HIG = 0xFF552288; // x
+DILogo.COLOR_PIN_BOT_MED = 0xFF773388; // x
+DILogo.COLOR_PIN_BOT_LOW = 0xFF6B1A89;
+DILogo.COLOR_PIN_BOT_DAR = 0xFF7B2C89;
 // BODY-YELLOW
-DILogo.COLOR_YLW_MID_HIG = 0xFFFFDD33;
-DILogo.COLOR_YLW_MID_MED = 0xFFFFBB00;
-DILogo.COLOR_YLW_MID_LOW = 0xFFFF8822;
-DILogo.COLOR_YLW_MID_DRK = 0xFFEE5533;
+DILogo.COLOR_YLW_MID_HIG = 0xFFFDDA00;
+DILogo.COLOR_YLW_MID_MED = 0xFFFAB615;
+DILogo.COLOR_YLW_MID_LOW = 0xFFFF9022;
+DILogo.COLOR_YLW_MID_DRK = 0xFFED6B0A;
 // BODY-GREEN
-DILogo.COLOR_GRN_MID_HIG = 0xFF88EE66;
-DILogo.COLOR_GRN_MID_MED = 0xFF33CC33;
-DILogo.COLOR_GRN_MID_LOW = 0xFF009933;
-DILogo.COLOR_GRN_MID_DRK = 0xFF005533;
+DILogo.COLOR_GRN_MID_HIG = 0xFFBBD82E;
+DILogo.COLOR_GRN_MID_MED = 0xFF8BC53F;
+DILogo.COLOR_GRN_MID_LOW = 0xFF66AA44;
+DILogo.COLOR_GRN_MID_DRK = 0xFF447733;
 // BODY-PURPLE
-DILogo.COLOR_PRP_MID_HIG = 0xFF7722FF;
-DILogo.COLOR_PRP_MID_MED = 0xFF5522DD;
-DILogo.COLOR_PRP_MID_LOW = 0xFF3322CC;
-DILogo.COLOR_PRP_MID_DRK = 0xFF2200CC;
+DILogo.COLOR_PRP_MID_HIG = 0xFFB080FF;
+DILogo.COLOR_PRP_MID_MED = 0xFF9955FF;
+DILogo.COLOR_PRP_MID_LOW = 0xFF7733AA;
+DILogo.COLOR_PRP_MID_DRK = 0xFF5522AA;
 // BODY-BLUE
-DILogo.COLOR_BLU_MID_HIG = 0xFF3377FF;
-DILogo.COLOR_BLU_MID_MED = 0xFF0033CC;
-DILogo.COLOR_BLU_MID_LOW = 0xFF1100BB;
-DILogo.COLOR_BLU_MID_DRK = 0xFF000088;
+DILogo.COLOR_BLU_MID_HIG = 0xFF11AABB;
+DILogo.COLOR_BLU_MID_MED = 0xFF1177BB;
+DILogo.COLOR_BLU_MID_LOW = 0xFF0055AA;
+DILogo.COLOR_BLU_MID_DRK = 0xFF114488;
 
 DILogo.prototype.colorsEarPink = function(){
-	var colors = [DILogo.COLOR_PIN_TOP_BRI,DILogo.COLOR_PIN_TOP_MED,DILogo.COLOR_PIN_TOP_LOW,DILogo.COLOR_PIN_TOP_MED,DILogo.COLOR_PIN_TOP_HIG,
-				  DILogo.COLOR_PIN_MID_BRI,DILogo.COLOR_PIN_MID_MED,DILogo.COLOR_PIN_MID_DAR,DILogo.COLOR_PIN_MID_MED,DILogo.COLOR_PIN_MID_MED,
-				  DILogo.COLOR_PIN_MID_HIG,DILogo.COLOR_PIN_MID_LOW,DILogo.COLOR_PIN_MID_LOW,DILogo.COLOR_PIN_MID_HIG,DILogo.COLOR_PIN_MID_OFF,
+	var colors = [DILogo.COLOR_PIN_TOP_BRI,DILogo.COLOR_PIN_TOP_MED,DILogo.COLOR_PIN_TOP_LOW,DILogo.COLOR_PIN_TOP_AVG,DILogo.COLOR_PIN_TOP_HIG,
+				  DILogo.COLOR_PIN_MID_BRI,DILogo.COLOR_PIN_MID_MED,DILogo.COLOR_PIN_MID_DAR,DILogo.COLOR_PIN_MID_AVG,DILogo.COLOR_PIN_MID_OFF,
+				  DILogo.COLOR_PIN_MID_HIG,DILogo.COLOR_PIN_MID_LOW,DILogo.COLOR_PIN_MID_DOW,DILogo.COLOR_PIN_MID_HIG,DILogo.COLOR_PIN_MID_OF2,
 				  DILogo.COLOR_PIN_BOT_HIG,DILogo.COLOR_PIN_BOT_LOW,DILogo.COLOR_PIN_BOT_DAR,DILogo.COLOR_PIN_BOT_LOW,DILogo.COLOR_PIN_BOT_MED];
 	return colors;
 }
 DILogo.prototype.colorsEarRed = function(){
-	var colors = [DILogo.COLOR_RED_TOP_BRI,DILogo.COLOR_RED_TOP_MED,DILogo.COLOR_RED_TOP_LOW,DILogo.COLOR_RED_TOP_MED,DILogo.COLOR_RED_TOP_HIG,
-				  DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_DAR,DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_BRI,
-				  DILogo.COLOR_RED_MID_MED,DILogo.COLOR_RED_MID_LOW,DILogo.COLOR_RED_MID_LOW,DILogo.COLOR_RED_MID_MED,DILogo.COLOR_RED_MID_OFF,
-				  DILogo.COLOR_RED_BOT_LOW,DILogo.COLOR_RED_BOT_MED,DILogo.COLOR_RED_BOT_HIG,DILogo.COLOR_RED_BOT_LOW,DILogo.COLOR_RED_BOT_DAR];
+	var colors = [DILogo.COLOR_RED_TOP_BRI,DILogo.COLOR_RED_TOP_MED,DILogo.COLOR_RED_TOP_LOW,DILogo.COLOR_RED_TOP_AVG,DILogo.COLOR_RED_TOP_HIG,
+				  DILogo.COLOR_RED_MID_BRI,DILogo.COLOR_RED_MID_MED,DILogo.COLOR_RED_MID_DAR,DILogo.COLOR_RED_MID_AVG,DILogo.COLOR_RED_MID_OFF,
+				  DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_LOW,DILogo.COLOR_RED_MID_DOW,DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_OF2,
+				  DILogo.COLOR_RED_BOT_HIG,DILogo.COLOR_RED_BOT_LOW,DILogo.COLOR_RED_BOT_HIG,DILogo.COLOR_RED_BOT_LOW,DILogo.COLOR_RED_BOT_MED];
 	return colors;
 }
 DILogo.prototype.colorsHead = function(){
@@ -252,22 +260,28 @@ DILogo.prototype.setupFxn = function(e){
     this._stage.start();
 }
 DILogo.prototype.onEnterFrameFxn = function(count, time){
-	var e = time;
-	var sca, zDistHead = -18.0, zDistEars = -20.0;
+	var e = 0;//time;
+	var sca, zDistHead = zDistEars = -10.0;
 	var rateEar1 = 0.0008;
-	var rateEar2 = -Math.PI*(1.0/7.0);
+	var rateEar2 = -Math.PI*(1.0/14.0);
+	var earTilt = Math.PI*(1.0/7.0);
+	var earRotOffset = Math.PI*(1.0/20.0);
 	var rateHead = 0.0004;
-	var earOffsetX = 2.4;
-	var earOffsetY = 2.0;
+	var rateHead2 = -Math.PI*(1.0/4.0);
+	var headOffset = Math.PI*(1.0/28.0);
+	var earOffsetX = 2.2;
+	var earOffsetY = 1.50;
+	var bodyOffsetY = -0.50;
 	// RESET
 	this._stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage.clear();
 
 	// BODY
 	this._stage.matrixIdentity();
-	this._stage.matrixTranslate(0.0,0.0,zDistHead);
-	this._stage.matrixRotate(-e*rateHead, 0,1,0);
-	sca = 1.9; this._stage.matrixScale(sca,sca,sca);
+	this._stage.matrixTranslate(0.0,bodyOffsetY,zDistHead);
+	this._stage.matrixRotate(-headOffset - e*rateHead, 0,1,0);
+	this._stage.matrixRotate(-rateHead2, 0,1,0);
+	sca = 1.95; this._stage.matrixScale(sca,sca,sca);
 	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._headTriBuffer);
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._headTriColorBuffer);
 	this._stage.matrixReset();
@@ -277,8 +291,9 @@ DILogo.prototype.onEnterFrameFxn = function(count, time){
 	this._stage.matrixIdentity();
 	this._stage.matrixTranslate(-earOffsetX,earOffsetY,zDistEars);
 	this._stage.matrixRotate(e*rateEar1, 0,1,0);
-	this._stage.matrixRotate(-rateEar2, 1,0,0);
-	this._stage.matrixRotate(Math.PI, 0,1,0);
+	this._stage.matrixRotate(-rateEar2, 0,0,1);
+	this._stage.matrixRotate(earTilt, 1,0,0);
+	this._stage.matrixRotate(Math.PI + earRotOffset, 0,1,0);
 	sca = 1.0; this._stage.matrixScale(sca,sca,sca);
 	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._pinkTriBuffer);
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._pinkTriColorBuffer);
@@ -289,7 +304,9 @@ DILogo.prototype.onEnterFrameFxn = function(count, time){
 	this._stage.matrixIdentity();
 	this._stage.matrixTranslate(earOffsetX,earOffsetY,zDistEars);
 	this._stage.matrixRotate(-e*rateEar1, 0,1,0);
-	this._stage.matrixRotate(rateEar2, 1,0,0);
+	this._stage.matrixRotate(rateEar2, 0,0,1);
+	this._stage.matrixRotate(earTilt, 1,0,0);
+	this._stage.matrixRotate(Math.PI - earRotOffset, 0,1,0);
 	sca = 1.0; this._stage.matrixScale(sca,sca,sca);
 	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._redTriBuffer);
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._redTriColorBuffer);
