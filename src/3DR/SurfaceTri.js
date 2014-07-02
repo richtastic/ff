@@ -67,7 +67,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	this._stage3D.clear();
 	// 
 	this._stage3D.matrixIdentity();
-	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
+	this._stage3D.matrixTranslate(0.0,0.0,-2.0);
 	this._stage3D.matrixRotate(e*0.03, 0,1,0);
 	this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
 	this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
@@ -93,7 +93,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(1000,1.0,1E-16);
+	var pts = this.generateSpherePoints(1000,1.0,1E-3);
 	var p, i;
 	var points = [];
 	var colors = [];

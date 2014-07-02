@@ -8,7 +8,7 @@ function MLSMesh(){
 	this._field = null;
 	this._rho = 0;
 	this._tau = 0;
-	this._bivariate = new BivariateSurface(4); // 3 gives:  "eig: internal error"
+	this._bivariate = new BivariateSurface(3); // 3 gives:  "eig: internal error"
 	//
 	this._k = 0;
 this.crap = {};
@@ -28,23 +28,23 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	this._rho = rho;
 	this._tau = tau;
 	// find initial best triangle/front
-	var seedTri = this.findSeedTriangle();
+	var seedData = this.findSeedTriangle();
 //this.crap.seed = seedTri;
 	var firstFront = new MLSEdgeFront();
-		firstFront.fromTriangle(seedTri);
+		firstFront.fromTriangle(seedData.tri, seedData.idealLength);
 	var frontList = new MLSFront();
 		frontList.addFront(firstFront);
 	// pick best front from set
-	var edge, edge2, vertex, front, closest, edgesCanCut, idealLength;
+	var edge, edge2, vertex, front, closest, edgesCanCut, idealLength, data;
 var count = 0;
 // try{
 this.crap.fronts = frontList;
-	while( frontList.count()>0  && count<21){
-console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION ");
+	while( frontList.count()>0  && count<10){ // 21
+console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
 		current = frontList.first();
 // console.log(current._edgeList.toString());
 // current._edgeList.checkYourself();
-// console.log(current._edgeQueue.toString());
+//console.log(current._edgeQueue.toString());
 		if(current.count()==3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
 			current.close();
@@ -57,7 +57,10 @@ console.log("+------------------------------------------------------------------
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
 			console.log("CUTEAR");
-			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB);
+			vertex = MLSEdge.midpointUnjoined(edgesCanCut.edgeA,edgesCanCut.edgeB);
+			data = this.projectToSurfaceData(vertex);
+			idealLength = data.length;
+			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB, idealLength);
 ++count;
 			continue;
 		}
@@ -66,6 +69,9 @@ console.log("+------------------------------------------------------------------
 		vertex = data.point;
 		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
 		if( closest ){
+			if( current.deferEdge(edge) ){
+				continue;
+			}
 			front = closest.front;
 			edge2 = closest.edge;
 			if(front==current){
@@ -74,12 +80,14 @@ console.log("+------------------------------------------------------------------
 				frontList.addFront(front);
 			}else{
 				console.log("MERGE");
-				current.merge(front);
+throw new Error("not implemented");
+				current.merge(edge,edge2,vertex, front);
 				frontList.removeFront(front);
 			}
+break;
 		}else{
 			console.log("GROW");
-			current.growTriangle(edge,vertex);
+			current.growTriangle(edge,vertex,idealLength);
 		}
 ++count;
 console.log(count);
@@ -132,7 +140,7 @@ MLSMesh.prototype.findSeedTriangle = function(){
 	// generate triangle
 	var tri = new MLSTri(vertexA,vertexB,vertexC);
 	tri.generateEdgesFromVerts();
-	return tri;
+	return {tri:tri, idealLength:idealEdgeLength};
 }
 MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){ // GO OVER ALL POINTS IN SPHERE AND FIND MINIMUM OF EDGE LENGTH
 	arr = this._pointCloud.pointsInsideSphere(center,radius);
@@ -161,7 +169,10 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	var b = eta*c;
 	// find minimum in local area
 	var midpoint = edge.midpoint();
+console.log("mid "+midpoint);
 	var i = this.fieldMinimumInSphere(field,midpoint,b);
+console.log("i "+i +"   c"+c)
+i = Math.max(i,c*0.5); // BAD SITUATION ......................... didn't search around well enough at some point
 	// force non-horrible triangle
 	var baseAngle = Math.acos(0.5*c/i);
 	//baseAngle = Math.min(Math.max(baseAngle,(Math.PI/3.0)-beta),(Math.PI/3.0)+beta);
@@ -199,14 +210,13 @@ MLSMesh.prototype._projectToSurface = function(p){
 	var bivariate = this._bivariate;
 	// find set of local point to weight
 	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
-
-
+// k = 20;
+// console.log(k);
 	// NEED TO TAKE INTO ACCOUNT ACTUAL CLOUD POINTS AND R^3 POINTS
 	var closestPoint = this._pointCloud.closestPointToPoint(p);
 	neighborhood = this.neighborhoodPoints(p, k);
 	f = this.localFeatureSize(closestPoint,neighborhood);
 
-	
 	h = this._tau*f;
 	// find local plane initial approximation
 	plane = MLSMesh.weightedSurfaceNormalFromPoints(p,neighborhood,h);

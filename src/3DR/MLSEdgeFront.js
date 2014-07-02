@@ -21,22 +21,50 @@ MLSEdgeFront.prototype.moreThanSingleTri = function(){
 	}
 	return false;
 }
-MLSEdgeFront.prototype.merge = function(front){
-	// ?
+MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front){
+	// find optimal vertex
+	// create 2 triangles
+	// combine linked lists
+	//
+	// add new stuff, remove old
+	return front;
 }
-MLSEdgeFront.prototype.split = function(front){
-	// ?
+MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex){
+	var front;
+	// find optimal vertex
+	// create 2 triangles
+	// create new front
+	front = new MLSEdgeFront();
+	// seperate fronts
+	// add new stuff, remove old
+	return front;
 }
 MLSEdgeFront.prototype.close = function(){
 	// ?
 }
-MLSEdgeFront.prototype.growTriangle = function(edge,vertex){
+MLSEdgeFront.prototype.deferEdge = function(edge){
+	if(edge.priorityState()==MLSEdge.PRIORITY_NORMAL){
+		var node;
+		this._edgeQueue.removeNode(edge.node());
+		edge.priorityState(MLSEdge.PRIORITY_DEFERRED);
+		node = this._edgeQueue.push(edge);
+		edge.node(node);
+		return true;
+	}
+	return false;
+}
+MLSEdgeFront.prototype.growTriangle = function(edge,vertex,idealLength){ // midpoint ideal length? individual ideal lengths?
 	var link, node;
 	// create new triangle with new edges (reverse orientation of edge)
 	var tri = new MLSTri(edge.B(),edge.A(),vertex);
 	var edgeAB = new MLSEdge(edge.B(),edge.A()); // edge opposite
 	var edgeBC = new MLSEdge(edge.A(),vertex);
 	var edgeCA = new MLSEdge(vertex,edge.B());
+	// priorities
+	edgeAB.priority(edge.priority());
+	edgeBC.priorityFromIdeal(idealLength);
+	edgeCA.priorityFromIdeal(idealLength);
+	// triangle
 	tri.setEdgeABBCCA(edgeAB,edgeBC,edgeCA);
 	edgeAB.tri(tri);
 	edgeBC.tri(tri);
@@ -99,7 +127,7 @@ MLSEdgeFront.prototype.canCutEar = function(edge){ // look at 2 adjacent triangl
 	}
 	return null;
 }
-MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with edge, update front
+MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, idealLength){ // create triangle with edge, update front
 	var left = edgeA.next();
 	var right = edgeA.prev();
 	var temp, node, link, tri, eA, eB, eC;
@@ -120,10 +148,15 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with e
 		console.log(edgeA+"");
 		console.log(edgeB+"");
 	}
-	// generate new edge and triangle
+	// new edges/tri
 	eA = new MLSEdge(edgeA.A(),edgeB.B()); // new edge
 	eB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
 	eC = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
+	// priorities
+	eA.priorityFromIdeal(idealLength);
+	eB.priority(edgeB.priority());
+	eC.priority(edgeA.priority());
+	// new triangle
 	tri = new MLSTri(eA.A(),eB.A(),eC.A());
 	tri.setEdgeABBCCA(eA,eB,eC);
 	eA.tri(tri);
@@ -145,17 +178,14 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB){ // create triangle with e
 	edgeB.link(null);
 	edgeB.node(null);
 }
-MLSEdgeFront.prototype.fromTriangle = function(tri){ // initial front
+MLSEdgeFront.prototype.fromTriangle = function(tri,idealLength){ // initial front - // midpoint ideal length
 	var link, node;
 	this._edgeList.clear();
 	this._edgeQueue.clear();
-	// lolz -------------------------------
-	// tri.edgeAB().priority(1);
-	// tri.edgeBC().priority(2);
-	// tri.edgeCA().priority(3);
-	// tri.edgeAB().priorityState(2);
-	// tri.edgeBC().priorityState(2);
-	// tri.edgeCA().priorityState(1);
+	// priorities
+	tri.edgeAB().priorityFromIdeal(idealLength);
+	tri.edgeBC().priorityFromIdeal(idealLength);
+	tri.edgeCA().priorityFromIdeal(idealLength);
 	// linked list
 	link = this._edgeList.push(tri.edgeAB());
 		tri.edgeAB().link(link);

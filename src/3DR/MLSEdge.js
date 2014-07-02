@@ -9,7 +9,7 @@ function MLSEdge(a,b){
 	this._b = null;
 	this._tri = null; // only holds most-recently set tri (can actually be part of many tris, but is only set to single tri [many-one])
 	this._priorityState = MLSEdge.PRIORITY_NORMAL;
-	this._priority = 1;
+	this._priority = 1; // length/idealLength closest to 1 => l/i - 1
 	this._link = null; // linked list reference for prev/next
 	this._node = null; // priority queue reference
 	this.A(a);
@@ -19,9 +19,21 @@ MLSEdge.sortIncreasing = function(a,b){
 	var stateA = a.priorityState();
 	var stateB = b.priorityState();
 	if(stateA==stateB){
-		return b.priority() - b.priority();
+		return b.priority() - a.priority();
 	}
 	return stateB-stateA;
+}
+MLSEdge.midpointUnjoined = function(edgeA,edgeB){ // midpoint of 3rd triangle edge
+	if( V3D.equal(edgeA.A(),edgeB.A()) ){
+		return V3D.midpoint(edgeA.B(),edgeB.B());
+	}else if( V3D.equal(edgeA.A(),edgeB.B()) ){
+		return V3D.midpoint(edgeA.B(),edgeB.A());
+	}else if( V3D.equal(edgeA.B(),edgeB.A()) ){
+		return V3D.midpoint(edgeA.A(),edgeB.B());
+	}else if( V3D.equal(edgeA.B(),edgeB.B()) ){
+		return V3D.midpoint(edgeA.A(),edgeB.A());
+	}
+	return null;
 }
 // RedBlackTree.sortIncreasing = function(a,b){
 // 	return b - a;
@@ -58,6 +70,11 @@ MLSEdge.prototype.priorityState = function(p){
 	return this._priorityState;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
+MLSEdge.prototype.priorityFromIdeal = function(idealLength){
+	var ratio = this.length()/idealLength;
+	ratio = Math.max(ratio,1/ratio) - 1.0; // use worst error
+	return this.priority(ratio);
+}
 MLSEdge.prototype.link = function(l){
 	if(l!==undefined){
 		this._link = l;
@@ -77,6 +94,9 @@ MLSEdge.prototype.node = function(n){
 	return this._node;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
+MLSEdge.prototype.length = function(){
+	return V3D.distance(this._a,this._b);
+}
 MLSEdge.prototype.unit = function(){
 	var AB = V3D.sub(this._b,this._a);
 	AB.norm();
