@@ -67,22 +67,21 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	this._stage3D.clear();
 	// 
 	this._stage3D.matrixIdentity();
-	this._stage3D.matrixTranslate(0.0,0.0,-2.0);
+	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
 	this._stage3D.matrixRotate(e*0.03, 0,1,0);
 	this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
 	this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
-	this._stage3D.matrixReset();
 	this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
 	//
 	if(this._planeTriangleVertexList){
 		// console.log(this._planeTriangleVertexList);
 		// console.log(this._planeTriangleColorsList);
-		this._stage3D.matrixIdentity();
-		this._stage3D.matrixTranslate(0.0,0.0,-3.0);
-		this._stage3D.matrixRotate(e*0.03, 0,1,0);
+		// this._stage3D.matrixIdentity();
+		// this._stage3D.matrixTranslate(0.0,0.0,-3.0);
+		// this._stage3D.matrixRotate(e*0.03, 0,1,0);
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._planeTriangleVertexList);
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
-		this._stage3D.matrixReset();
+		// this._stage3D.matrixReset();
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 	}
 	this._stage3D.matrixReset();
@@ -93,7 +92,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
 	// POINTS
-	var pts = this.generateSpherePoints(1000,1.0,1E-3);
+	var pts = this.generateSpherePoints(1000,1.5,1E-13);
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -131,6 +130,33 @@ for(i=fronts.length;i--;){
 	}
 }
 console.log("TRIANGLES:"+triCount);
+
+
+var norm, edge, dir, mid, ver;
+edge = this._mlsMesh.crap.edgeA;
+norm = edge.tri().normal();
+dir = edge.unit();
+V3D.rotateAngle(dir,dir,norm,-Math.PI/2);
+dir.scale(edge.length());
+mid = edge.midpoint();
+ver = V3D.add(mid,dir);
+
+list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
+colors.push(1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0);
+
+
+
+edge = this._mlsMesh.crap.edgeB;
+norm = edge.tri().normal();
+dir = edge.unit();
+V3D.rotateAngle(dir,dir,norm,-Math.PI/2);
+dir.scale(edge.length());
+mid = edge.midpoint();
+ver = V3D.add(mid,dir);
+
+list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
+colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
+
 
 
 /*

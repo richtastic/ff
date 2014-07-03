@@ -35,6 +35,11 @@ MLSEdge.midpointUnjoined = function(edgeA,edgeB){ // midpoint of 3rd triangle ed
 	}
 	return null;
 }
+MLSEdge.centroid = function(edgeA,edgeB){
+	var cenA = edgeA.midpoint();
+	var cenB = edgeB.midpoint();
+	return V3D.midpoint(cenA,cenA,cenB);
+}
 // RedBlackTree.sortIncreasing = function(a,b){
 // 	return b - a;
 // }

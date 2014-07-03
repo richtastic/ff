@@ -860,7 +860,7 @@ d<sup>2</sup> = r<sup>2</sup> + R<sup>2</sup> + 2rR
 
 
 ### Intersection of Line and Plane (Point Projected onto Plane)
-**point in space (&reals;<sup>3</sup>)**: p
+**point in space (&real;<sup>3</sup>)**: p
 <br/>
 **plane defined by point and unit normal**: q, n
 <br/>
@@ -911,7 +911,7 @@ if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the pla
 <br/>
 **Line Segment AB**: points A and B represent a line segment
 <br/>
-**Ray o + td**: Ray representation of line segment, o&isin;&Reals;<sup>3</sup>, d&isin;&Reals;<sup>3</sup>, t&in;&reals;, any t value outside [0,1] means point is outside segment
+**Ray o + td**: Ray representation of line segment, o&isin;&real;<sup>3</sup>, d&isin;&#8477;<sup>3</sup>, t&isin;&reals;, any t value outside [0,1] means point is outside segment
 <br/>
 **Ray Origin o = (o<sub>x</sub>,o<sub>y</sub>,o<sub>z</sub>)**: same point as A
 <br/>
@@ -966,11 +966,121 @@ if the denominator equals zero (dot(d,d)) &rarr; there is no direction
 if t is outside [0,1] the closest points are the segment ends A(o) and B(o+d) respectively
 
 
+
+### Closest Points Between Line Segments
+![Line-Line Segment Distance](./images/linesegments_3D.png "Min Line to Line Segment Distance")
 <br/>
+**Line Segment 1**: o + td = a (for some a)
+<br/>
+**Line Segment 1**: &sigma; + &lambda;&delta; = &alpha; (for some &alpha;)
+<br/>
+<br/>
+**a-&alpha; orthogonal to both lines**: (a - &alpha;) &middot; d = 0 [1]; (a - &alpha;) &middot; &delta; = 0 [2];
+<br/>
+<br/>
+*Expanding [1], solving for &lambda;*
+<br/>
+(a - &alpha;) &middot; d = 0
+<br/>
+(a<sub>x</sub>-&alpha;<sub>x</sub>)d<sub>x</sub> + (a<sub>y</sub>-&alpha;<sub>y</sub>)d<sub>y</sub> + (a<sub>z</sub>-&alpha;<sub>z</sub>)d<sub>z</sub> = 0
+<br/>
+(o<sub>x</sub>+td<sub>x</sub> - &sigma;<sub>x</sub>-&lambda;&delta;<sub>x</sub>)d<sub>x</sub> + (o<sub>y</sub>+td<sub>y</sub> - &sigma;<sub>y</sub>-&lambda;&delta;<sub>y</sub>)d<sub>y</sub> + (o<sub>z</sub>+td<sub>z</sub> - &sigma;<sub>z</sub>-&lambda;&delta;<sub>z</sub>)d<sub>z</sub> = 0
+<br/>
+dot(o,d) + t&middot;dot(d,d) - dot(&sigma;,d) - &lambda;&middot;dot(&delta;,d) = 0
+<br/>
+dot(o,d) + t&middot;dot(d,d) - dot(&sigma;,d) = &lambda;&middot;dot(&delta;,d)
+<br/>
+[dot(o,d) + t&middot;dot(d,d) - dot(&sigma;,d)]/dot(&delta;,d) = &lambda; [3]
+<br/>
+<br/>
+*Expanding [2], solving for &lambda;*
+<br/>
+(a - &alpha;) &middot; &delta; = 0
+<br/>
+(a<sub>x</sub>-&alpha;<sub>x</sub>)&delta;<sub>x</sub> + (a<sub>y</sub>-&alpha;<sub>y</sub>)&delta;<sub>y</sub> + (a<sub>z</sub>-&alpha;<sub>z</sub>)&delta;<sub>z</sub> = 0
+<br/>
+(o<sub>x</sub>+td<sub>x</sub> - &sigma;<sub>x</sub>-&lambda;&delta;<sub>x</sub>)&delta;<sub>x</sub> + (o<sub>y</sub>+td<sub>y</sub> - &sigma;<sub>y</sub>-&lambda;&delta;<sub>y</sub>)&delta;<sub>y</sub> + (o<sub>z</sub>+td<sub>z</sub> - &sigma;<sub>z</sub>-&lambda;&delta;<sub>z</sub>)&delta;<sub>z</sub> = 0
+<br/>
+dot(o,&delta;) + t&middot;dot(d,&delta;) - dot(&sigma;,&delta;) - &lambda;&middot;dot(&delta;,&delta;) = 0
+<br/>
+dot(o,&delta;) + t&middot;dot(d,&delta;) - dot(&sigma;,&delta;) = &lambda;&middot;dot(&delta;,&delta;)
+<br/>
+[dot(o,&delta;) + t&middot;dot(d,&delta;) - dot(&sigma;,&delta;)]/dot(&delta;,&delta;) = &lambda; [4]
+<br/>
+<br/>
+*Combining [3] = [4], solve for t*
+<br/>
+[dot(o,d) + t&middot;dot(d,d) - dot(&sigma;,d)]/dot(&delta;,d) = [dot(o,&delta;) + t&middot;dot(d,&delta;) - dot(&sigma;,&delta;)]/dot(&delta;,&delta;)
+<br/>
+dot(&delta;,&delta;)[dot(o,d) + t&middot;dot(d,d) - dot(&sigma;,d)] = dot(&delta;,d)[dot(o,&delta;) + t&middot;dot(d,&delta;) - dot(&sigma;,&delta;)]
+<br/>
+dot(&delta;,&delta;)dot(o,d) + t&middot;dot(&delta;,&delta;)dot(d,d) - dot(&delta;,&delta;)dot(&sigma;,d) = dot(&delta;,d)dot(o,&delta;) + t&middot;dot(&delta;,d)dot(d,&delta;) - dot(&delta;,d)dot(&sigma;,&delta;)
+<br/>
+t[dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(d,&delta;)] = dot(&delta;,d)dot(o,&delta;) + dot(&delta;,&delta;)dot(&sigma;,d) - dot(&delta;,d)dot(&sigma;,&delta;) - dot(&delta;,&delta;)dot(o,d)
+<br/>
+t = [dot(&delta;,d)dot(o,&delta;) + dot(&delta;,&delta;)dot(&sigma;,d) - dot(&delta;,d)dot(&sigma;,&delta;) - dot(&delta;,&delta;)dot(o,d)]/[dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(d,&delta;)]
+<br/>
+t = [dot(&delta;,d)(dot(o,&delta;)-dot(&sigma;,&delta;)) + dot(&delta;,&delta;)(dot(&sigma;,d)-dot(o,d))]/[dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(d,&delta;)]
+<br/>
+<br/>
+*Expanding [1], solving for t*
+<br/>
+dot(o,d) + t&middot;dot(d,d) - dot(&sigma;,d) - &lambda;&middot;dot(&delta;,d) = 0
+<br/>
+t&middot;dot(d,d) = dot(&sigma;,d) + &lambda;&middot;dot(&delta;,d) - dot(o,d)
+<br/>
+t = [dot(&sigma;,d) + &lambda;&middot;dot(&delta;,d) - dot(o,d)]/dot(d,d) [5]
+<br/>
+<br/>
+*Expanding [2], solving for t*
+<br/>
+dot(o,&delta;) + t&middot;dot(d,&delta;) - dot(&sigma;,&delta;) - &lambda;&middot;dot(&delta;,&delta;) = 0
+<br/>
+t&middot;dot(d,&delta;) = dot(&sigma;,&delta;) + &lambda;&middot;dot(&delta;,&delta;) - dot(o,&delta;)
+<br/>
+t = [dot(&sigma;,&delta;) + &lambda;&middot;dot(&delta;,&delta;) - dot(o,&delta;)]/dot(d,&delta;) [6]
+<br/>
+<br/>
+*Combining [5] = [6], solve for &lambda;*
+<br/>
+[dot(&sigma;,d) + &lambda;&middot;dot(&delta;,d) - dot(o,d)]/dot(d,d) = [dot(&sigma;,&delta;) + &lambda;&middot;dot(&delta;,&delta;) - dot(o,&delta;)]/dot(d,&delta;)
+<br/>
+dot(d,&delta;)[dot(&sigma;,d) + &lambda;&middot;dot(&delta;,d) - dot(o,d)] = dot(d,d)[dot(&sigma;,&delta;) + &lambda;&middot;dot(&delta;,&delta;) - dot(o,&delta;)]
+<br/>
+dot(d,&delta;)dot(&sigma;,d) + &lambda;&middot;dot(d,&delta;)dot(&delta;,d) - dot(d,&delta;)dot(o,d) = dot(d,d)dot(&sigma;,&delta;) + &lambda;&middot;dot(d,d)dot(&delta;,&delta;) - dot(d,d)dot(o,&delta;)
+<br/>
+&lambda;[dot(d,&delta;)dot(&delta;,d) - dot(d,d)dot(&delta;,&delta;)] = dot(d,&delta;)dot(o,d) + dot(d,d)dot(&sigma;,&delta;) - dot(d,d)dot(o,&delta;) - dot(d,&delta;)dot(&sigma;,d)
+<br/>
+&lambda; = [dot(d,&delta;)dot(o,d) + dot(d,d)dot(&sigma;,&delta;) - dot(d,d)dot(o,&delta;) - dot(d,&delta;)dot(&sigma;,d)]/[dot(d,&delta;)dot(&delta;,d) - dot(d,d)dot(&delta;,&delta;)]
+<br/>
+&lambda; = [dot(&delta;,d)dot(&sigma;,d) + dot(d,d)dot(o,&delta;) - dot(&delta;,d)dot(o,d) - dot(d,d)dot(&sigma;,&delta;)]/[dot(d,d)dot(&delta;,&delta;) - dot(&delta;,d)dot(&delta;,d)]
+<br/>
+&lambda; = [dot(&delta;,d)(dot(&sigma;,d)-dot(o,d)) + dot(d,d)(dot(o,&delta;)-dot(&sigma;,&delta;))]/[dot(d,d)dot(&delta;,&delta;) - dot(&delta;,d)dot(&delta;,d)]
+<br/>
+<br/>
+*Solutions Juxtaposed to Observe Symmetry*
+<br/>
+t = [dot(&delta;,d)(dot(o,&delta;)-dot(&sigma;,&delta;)) + dot(&delta;,&delta;)(dot(&sigma;,d)-dot(o,d))]/[dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(&delta;,d)]
+<br/>
+&lambda; = [dot(&delta;,d)(dot(&sigma;,d)-dot(o,d)) + dot(d,d)(dot(o,&delta;)-dot(&sigma;,&delta;))]/[dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(&delta;,d)]
+<br/>
+<br/>
+**KEY NOTES:**
+<br/>
+if the denominator equals zero [dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(&delta;,d)] &rarr; the lines are parallel/anti-parallel
+<br/>
+If the closest points on the segments are outside t&isin;[0,1] or &lamda;&isin;[0,1], the closest points are endpoints.
+<br/>
+Parallel closest points need to be determined in a more detailed fashion
+
+
 <br/>
 <br/>
 <br/>
 
+<br/>
+<br/>
+<br/>
 
 
 **TODO:**
@@ -1021,17 +1131,17 @@ plot(igeaTim,igeaTri,"m-x");
 <br/>
 Topic - Author (Source/Title)
 <br/>
-(Hausdorf Distance - Gregoire, Bouillot)[http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html]
+[Hausdorf Distance - Gregoire, Bouillot](http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html)
 <br/>
-(Osculating Sphere of a Curve - Wolfram Alpha)[http://mathworld.wolfram.com/OsculatingSphere.html]
+[Osculating Sphere of a Curve - Wolfram Alpha](http://mathworld.wolfram.com/OsculatingSphere.html)
 <br/>
-(Curvature - Patrikalakis, Maekawa, Cho)[http://web.mit.edu/hyperbook/Patrikalakis-Maekawa-Cho/]
+[Curvature - Patrikalakis, Maekawa, Cho](http://web.mit.edu/hyperbook/Patrikalakis-Maekawa-Cho/)
 <br/>
-(Curvature - Adrian Secord )[http://cs.nyu.edu/~ajsecord/shells_course/html/shells_course.html]
+[Curvature - Adrian Secord](http://cs.nyu.edu/~ajsecord/shells_course/html/shells_course.html)
 <br/>
-(Curvature - Math Wiki)[http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve]
+[Curvature - Math Wiki](http://mathwiki.ucdavis.edu/Calculus/Vector_Calculus/Vector-Valued_Functions_and_Motion_in_Space/Curvature_and_Normal_Vectors_of_a_Curve)
 <br/>
-(Curvature - Simon Willerton)[http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html]
+[Curvature - Simon Willerton](http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html)
 <br/>
 (Second Fundamental Form - ?)[The Second Fundamental Form - Outline]
 <br/>

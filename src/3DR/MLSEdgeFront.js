@@ -29,13 +29,49 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front){
 	// add new stuff, remove old
 	return front;
 }
-MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex){
-	var front;
-	// find optimal vertex
-	// create 2 triangles
+MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex){ // separate via 2 triangle 'parallelogram', or 'single-tri' if shared vertex
+	var i, node, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found;
 	// create new front
 	front = new MLSEdgeFront();
+	console.log(front);
 	// seperate fronts
+	found = false;
+	for(edge=edgeA,i=this._edgeQueue.length();i--;){
+		console.log(edge+" | "+(edge==edgeB));
+		if(edge==edgeB){
+			found = true;
+			break;
+		}
+		edge = edge.next();
+	}
+	if(!found){
+		console.log("ERROR");
+		return null;
+	}
+	if(edgeA.next()==edgeB){
+		console.log("neighbor A");
+	}else if(edgeA.prev()==edgeB){
+		console.log("neighbor B");
+	}else if(edgeA.next().next()==edgeB){
+		console.log("square A");
+	}else if(edgeA.prev().prev()==edgeB){
+		console.log("square B");
+	}else{
+		console.log("far neighbor");
+	}
+	// find optimal vertex
+	// centroid = MLSEdge.centroid(edgeA,edgeB);
+	// console.log(centroid);
+	// create new edges
+	e1AB = new MLSEdge();
+	e1BC = new MLSEdge();
+	e1CA = new MLSEdge();
+	e2AB = new MLSEdge();
+	e2BC = new MLSEdge();
+	e2CA = new MLSEdge();
+	// create 2 triangles
+	// triA = new MLSTri(?,?,?);
+	// triB = new MLSTri(?,?,?);
 	// add new stuff, remove old
 	return front;
 }
@@ -217,11 +253,41 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	var dist, point, minDistance = null, minEdge=null;
 	var dir = new V3D();
 	var head=list.head();
+	// for(node=head,i=len; i--; node=node.next()){
+	// 	edge = node.data();
+	// 	point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
+	// 	dist = V3D.distance(point,inVertex);
+	// 	if(edge!=inEdge){
+	// 		if(minDistance==null || dist<minDistance){
+	// 			minDistance = dist;
+	// 			minEdge = edge;
+	// 		}
+	// 	}
+	// }
+	var neig, ang;
 	for(node=head,i=len; i--; node=node.next()){
 		edge = node.data();
 		point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
 		dist = V3D.distance(point,inVertex);
-		if(edge!=inEdge){
+		if(edge==inEdge){ // check neighbors
+// 			var toNeigh, toVert = new V3D();
+// 			// next
+// 			neig = edge.next();
+// 			toNeigh = neig.unit().scale(-1.0); // B to A
+// 			V3D.sub(toVert,inVertex,edge.B());
+// 			angle = V3D.angle(toVert,toNeigh);
+// //console.log("angleA: "+(angle*180/Math.PI));
+// 			// prev
+// 			neig = edge.prev();
+// 			toNeigh = neig.unit(); // A to B
+// 			V3D.sub(toVert,inVertex,edge.A());
+// 			angle = V3D.angle(toVert,toNeigh);
+// //console.log("angleB: "+(angle*180/Math.PI));
+// 			// if(angle<Math.PI){// 60 degrees
+// 			// 	minDistance = 0;
+// 			// 	minEdge = neigh;
+// 			// }
+		}else{
 			if(minDistance==null || dist<minDistance){
 				minDistance = dist;
 				minEdge = edge;
@@ -230,7 +296,11 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	}
 	return {edge:minEdge, distance:minDistance};
 }
-// (minimum point-line distance);
+/*
+
+
+
+*/
 
 
 

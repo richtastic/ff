@@ -39,7 +39,7 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 var count = 0;
 // try{
 this.crap.fronts = frontList;
-	while( frontList.count()>0  && count<10){ // 21
+	while( frontList.count()>0  && count<30){ // 21
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
 		current = frontList.first();
 // console.log(current._edgeList.toString());
@@ -69,11 +69,13 @@ console.log("+------------------------------------------------------------------
 		vertex = data.point;
 		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
 		if( closest ){
-			if( current.deferEdge(edge) ){
-				continue;
-			}
+			// if( current.deferEdge(edge) ){
+			// 	continue;
+			// }
 			front = closest.front;
 			edge2 = closest.edge;
+this.crap.edgeA = edge;
+this.crap.edgeB = edge2;
 			if(front==current){
 				console.log("SPLIT");
 				front = current.split(edge,edge2,vertex);

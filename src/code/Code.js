@@ -1844,6 +1844,9 @@ Code.circleFromPoints = function(a,b,c){
 	return null;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
+Code.closestPointTLine3D = function(org,dir, point){ // infinite ray and point - t value
+	return (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
+}
 Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
 	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
@@ -1880,7 +1883,8 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
-Code.closestPoints3D = function(oa,da, ob,db){ // infinite ray-ray closet points
+Code.closestPointsSegments3D = function(oa,da, ob,db){ // finite ray-ray closet points
+	var A, B, ta, tb;
 	var dot_dada = V3D.dot(da,da);
 	var dot_dadb = V3D.dot(da,db);
 	var dot_dbdb = V3D.dot(db,db);
@@ -1888,14 +1892,42 @@ Code.closestPoints3D = function(oa,da, ob,db){ // infinite ray-ray closet points
 	var dot_obdb = V3D.dot(ob,db);
 	var dot_oadb = V3D.dot(oa,db);
 	var dot_obda = V3D.dot(ob,da);
-	var Q = dot_dadb;
-	var R = dot_dbdb;
-	var X = dot_dadb;
-	var Y = dot_dada;
-	var den = Q*X-R*Y;
+	var den = dot_dada*dot_dbdb - dot_dadb*dot_dadb;
+	if(den==0){ // parallel, pick some point & match
+		A = new V3D(ob.x+db.x,ob.y+db.y,ob.z+db.z);
+		ta = Code.closestPointTLine3D(oa,db,oa); // 0
+		tb = Code.closestPointTLine3D(A ,db,oa); // 1
+
+// HERE - FINISH
+
+		A = null;
+		B = null;
+	}else{
+		var oadb_obdb = dot_oadb - dot_obdb;
+		var obda_oada = dot_obda - dot_oada;
+		ta = (dot_dadb*oadb_obdb + dot_dbdb*obda_oada)/den;
+		tb = (dot_dadb*obda_oada + dot_dada*oadb_obdb)/den;
+		ta = Math.min(Math.max(ta,0.0),1.0);
+		tb = Math.min(Math.max(tb,0.0),1.0);
+		A = new V3D(oa.x+ta*da.x, oa.y+ta*da.y, oa.z+ta*da.z);
+		B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
+	}
+	return [A,B];
+}
+Code.closestPointsLines3D = function(oa,da, ob,db){ // infinite ray-ray closet points
+	var dot_dada = V3D.dot(da,da);
+	var dot_dadb = V3D.dot(da,db);
+	var dot_dbdb = V3D.dot(db,db);
+	var dot_oada = V3D.dot(oa,da);
+	var dot_obdb = V3D.dot(ob,db);
+	var dot_oadb = V3D.dot(oa,db);
+	var dot_obda = V3D.dot(ob,da);
+	var den = dot_dadb*dot_dadb-dot_dbdb*dot_dada;
 	if(den==0){ // parallel = infinite points
 		return null;
 	}
+	var X = dot_dadb;
+	var Y = dot_dada;
 	var C = dot_obda - dot_oada;
 	var D = dot_obdb - dot_oadb;
 	var num = (D*Y-C*X);
