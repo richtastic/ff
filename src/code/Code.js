@@ -1861,13 +1861,41 @@ Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and poi
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
 
-Code.intersectRayPlane = function(org,dir, pnt,nrm){
+Code.intersectRayPlane = function(org,dir, pnt,nrm){ // infinite ray - plane intersection
 	var num = nrm.x*(pnt.x-org.x) + nrm.y*(pnt.y-org.y) + nrm.z*(pnt.z-org.z);
-	if(num==0){ return (new V3D()).copy(pnt); }// point is already in plane (first of possibly infinite intersections)
+	if(num==0){ return (new V3D()).copy(org); } // point is already in plane (first of possibly infinite intersections)
 	var den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
 	if(den==0){ return null; } // zero or infinite intersections
 	var t = num/den;
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+}
+Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri intersection
+	var num, den, ab, ac, bc, ca, ap, bp, cp, p, u, v, w;
+	ab = V3D.sub(b,a);
+	ac = V3D.sub(c,a);
+	if(nrm===undefined){ nrm = V3D.cross(ab,bc).norm(); }
+	num = nrm.x*(a.x-org.x) + nrm.y*(a.y-org.y) + nrm.z*(a.z-org.z);
+	if(num==0){ return (new V3D()).copy(org); } // point is already in plane (first of possibly infinite intersections)
+	den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
+	if(den==0){ return null; } // zero or infinite intersections
+	t = num/den;
+	if(t<0 || t>1){ return null; } // outside ray
+	p = new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+	// edges
+	bc = V3D.sub(c,b);
+	ca = V3D.sub(a,c);
+	// to point
+	ap = V3D.sub(b,a);
+	bp = V3D.sub(c,b);
+	cp = V3D.sub(a,c);
+	// area directionals
+	u = V3D.dot(V3D.cross(ap,ab),nrm);
+	v = V3D.dot(V3D.cross(bp,bc),nrm);
+	w = V3D.dot(V3D.cross(cp,ca),nrm);
+	if( (u>=0 && v>=0 && w>=0) || (u<=0 && v<=0 && w<=0) ){
+		return p;
+	}
+	return null;
 }
 Code.planeEquationFromPointNormal = function(pnt,nrm){
 	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
@@ -1937,7 +1965,10 @@ Code.closestPointsLines3D = function(oa,da, ob,db){ // infinite ray-ray closet p
 	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	return [A,B];
 }
-
+Code.closestPointPlane3D = function(o,d, b){ // 
+	var t = ((b.x-o.x)*d.x + (b.y-o.y)*d.y + (b.z-o.z)*d.z)/d.length();
+	return new V3D(b.x+t*d.x,b.y+t*d.y,b.z+t*d.z);
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));

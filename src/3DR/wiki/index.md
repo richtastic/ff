@@ -899,12 +899,30 @@ if the denominator equals zero (dot(n,d)) &rarr; the line is in the plane
 <br/>
 if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the plane
 
-
-<br/>
-<br/>
 <br/>
 <br/>
 
+### Point in Plane Inside Polygon(Triangle) Check
+<br/>
+(edge.b-edge.a)&times;(p-edge.a) all point in same direction (all +normal or -normal)
+<br/>
+**Triangle a,b,c (n)**: Triangle defined by 3 points which define a plane
+<br/>
+n = unit(&lt;b-a&gt; &times; &lt;c-a&gt;)
+<br/>
+u = (p-a) &times; (b-a)
+<br/>
+v = (p-b) &times; (c-b)
+<br/>
+w = (p-c) &times; (a-c)
+<br/>
+(u>=0 && v>=0 && w>=0) || (u<=0 && v<=0 && w<=0)
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 ### Closest Point on Line-Segment to Point (Min Distance Line and Point)
 ![Point Line Segment Distance](./images/linesegment_point_3D.png "Point to Line Segment Distance")
@@ -1074,9 +1092,53 @@ If the closest points on the segments are outside t&isin;[0,1] or &lamda;&isin;[
 Parallel closest points need to be determined in a more detailed fashion
 
 
+
+
+### Closest Point on Plane from Point
+![Plane-Point Distance](./images/plane_to_point_3D.png "Min Plane-Point Distance")
+<br/>
+**Point b**: Point of interest (known)
+<br/>
+**Plane n,q**: Normal n, point in plane q
+<br/>
+**Point p (intersection)**: Point in Plane closest to b (to be calculated)
+<br/>
+**Line p = b + td**: Line connecting known point and unknown point
 <br/>
 <br/>
+**Point-Intersection and in-Plane Orthogonality**: &lt;p-q&gt; &middot; &lt;p-b&gt; = 0;
 <br/>
+**Point-Intersection and Normal Parallelity**: &lt;p-b&gt; &middot; d = ||p-b||&middot;||d|| &rarr; &lt;p-b&gt;/||p-b|| &equiv; d/||d|| &rarr; d &equiv; n
+<br/>
+dot(p-q,p-b) = 0
+<br/>
+(p<sub>x</sub>-q<sub>x</sub>)(p<sub>x</sub>-b<sub>x</sub>) + (p<sub>y</sub>-q<sub>y</sub>)(p<sub>y</sub>-b<sub>y</sub>) + (p<sub>z</sub>-q<sub>z</sub>)(p<sub>z</sub>-b<sub>z</sub>) = 0
+<br/>
+(b<sub>x</sub>+td<sub>x</sub>-q<sub>x</sub>)(b<sub>x</sub>+td<sub>x</sub>-b<sub>x</sub>) + (b<sub>y</sub>+td<sub>y</sub>-q<sub>y</sub>)(b<sub>y</sub>+td<sub>y</sub>-b<sub>y</sub>) + (b<sub>z</sub>+td<sub>z</sub>-q<sub>z</sub>)(b<sub>z</sub>+td<sub>z</sub>-b<sub>z</sub>) = 0
+<br/>
+t(b<sub>x</sub>+td<sub>x</sub>-q<sub>x</sub>)d<sub>x</sub> + t(b<sub>y</sub>+td<sub>y</sub>-q<sub>y</sub>)d<sub>y</sub> + t(b<sub>z</sub>+td<sub>z</sub>-q<sub>z</sub>)d<sub>z</sub> = 0
+<br/>
+t[dot(b,d) + t&middot;dot(d,d) - dot(q,d)] = 0
+<br/>
+dot(b,d) + t&middot;dot(d,d) - dot(q,d) = 0
+<br/>
+t&middot;dot(d,d) = dot(q,d) - dot(b,d)
+<br/>
+t = [dot(q,d) - dot(b,d)]/dot(d,d)
+<br/>
+t = dot(q-b,d)/dot(d,d)
+<br/>
+<br/>
+*Insight*
+<br/>
+Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&gt; along d
+<br/>
+<br/>
+
+
+
+
+
 
 <br/>
 <br/>

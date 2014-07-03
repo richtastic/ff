@@ -260,13 +260,14 @@ DILogo.prototype.setupFxn = function(e){
     this._stage.start();
 }
 DILogo.prototype.onEnterFrameFxn = function(count, time){
-	var e = 0;//time;
+	var e = time;
+	var rateBase = 0.0004;
+	var rateHead = rateBase*1.0;
+	var rateEar1 = rateBase*2.0;
 	var sca, zDistHead = zDistEars = -10.0;
-	var rateEar1 = 0.0008;
 	var rateEar2 = -Math.PI*(1.0/14.0);
 	var earTilt = Math.PI*(1.0/7.0);
 	var earRotOffset = Math.PI*(1.0/20.0);
-	var rateHead = 0.0004;
 	var rateHead2 = -Math.PI*(1.0/4.0);
 	var headOffset = Math.PI*(1.0/28.0);
 	var earOffsetX = 2.2;
