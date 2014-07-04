@@ -104,11 +104,11 @@ MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLengt
 	var closestFront = closestFront;
 	var closestDistance = closest.distance;
 	var minDistance = idealLength*0.5;
-//	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
-	if(closestDistance>=minDistance){ // point is further away than min allowed to existing triangulation
-		return null;
+	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
+	if(closestDistance<minDistance){ // point is further away than min allowed to existing triangulation
+		return closest;
 	}
-	return closest;
+	return null;
 }
 MLSMesh.prototype.findSeedTriangle = function(){
 	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;

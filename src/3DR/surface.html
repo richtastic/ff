@@ -183,25 +183,55 @@ console.log(p+"");
 return;
 */
 
+/*
 var oa,da,ob,db;
-
 oa = new V3D(1,1,0); da = new V3D(3,3,0); ob = new V3D(3,1,1); db = new V3D(-1,3,0);
 // parallel
 oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-2,0,1); db = new V3D(1,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(1,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(2,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(5,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(0,0,1); db = new V3D(1,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(0.5,0,1); db = new V3D(1,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(1,0,1); db = new V3D(2,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(2,0,1); db = new V3D(1,0,0);
-// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(3,0,1); db = new V3D(1,0,0);
-
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(1,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(2,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(5,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(0,0,1); db = new V3D(1,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(0.5,0,1); db = new V3D(1,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(1,0,1); db = new V3D(2,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(2,0,1); db = new V3D(1,0,0);
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(3,0,1); db = new V3D(1,0,0);
 
 p = Code.closestPointsSegments3D(oa,da, ob,db);
 console.log(p+"");
-
 return;
+*/
+
+/*
+var pA,pB, oa,da, ob,db;
+
+oa = new V3D(0,3,0); da = new V3D(8,2,0); ob = new V3D(4,0,0); db = new V3D(3,5,0);
+oa = new V3D(0,3,0); da = new V3D(8,2,0); ob = new V3D(4,0,0); db = new V3D(1,2,0);
+ob = new V3D(0,3,0); db = new V3D(8,2,0); oa = new V3D(4,0,0); da = new V3D(1,2,0); // flip
+oa = new V3D(3,2,0); da = new V3D(2,2,0); ob = new V3D(4,2,0); db = new V3D(1,1,0);
+oa = new V3D(3,2,0); da = new V3D(2,2,0); ob = new V3D(1,1,0); db = new V3D(4,0,0);
+
+arr = Code.closestPointsSegments3D(oa,da, ob,db);
+pA = arr[0];
+pB = arr[1];
+console.log(pA+"");
+console.log(pB+"");
+return;
+*/
+
+/*
+var o,d, a,b,c, r;
+a = new V3D(0,0,0); b = new V3D(3,0,0); c = new V3D(1.5,3,2);
+o = new V3D(2,1,0); d = new V3D(3,0,0);
+o = new V3D(1,0.5,0); d = new V3D(1,0,0.1);
+o = new V3D(0.5,2,0); d = new V3D(3,0,0);
+o = new V3D(0.5,2,1.33); d = new V3D(3,0,0);
+o = new V3D(3,0,0); d = new V3D(1,2,0);
+
+r = Code.closestDistanceSegmentTri3D(o,d, a,b,c);
+console.log(r+"");
+return;
+*/
 
 	var surface = new SurfaceTri();
 }

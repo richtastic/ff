@@ -967,12 +967,11 @@ t = [(d &middot; p) - (d &middot; o)]/(d &middot; d)
 <br/>
 <br/>
 
-
 **KEY NOTES:**
 <br/>
 if the denominator equals zero (dot(d,d)) &rarr; there is no direction
 <br/>
-if t is outside [0,1] the closest points are the segment ends A(o) and B(o+d) respectively
+if t is outside [0,1], the best point is outside the segment, but t is capped to [0,1]
 
 
 
@@ -1078,10 +1077,17 @@ t = [dot(&delta;,d)(dot(o,&delta;)-dot(&sigma;,&delta;)) + dot(&delta;,&delta;)(
 <br/>
 if the denominator equals zero [dot(&delta;,&delta;)dot(d,d) - dot(&delta;,d)dot(&delta;,d)] &rarr; the lines are parallel/anti-parallel
 <br/>
-If the closest points on the segments are outside t&isin;[0,1] or &lamda;&isin;[0,1], the closest points are endpoints.
+if t and/or &lambda; are outside [0,1] the closest points between the segments needs some minimization (below)
 <br/>
 Parallel closest points need to be determined in a more detailed fashion
 
+
+#### Minimizing for t,&lamdba; outside [0,1]
+If t or lambda; are outside [0,1], the problem converts to a shortest distance between (end)point and line-segment.
+<br/>
+For each particular situation (t<0,t>1,&lambda;<0,&lambda;>1) the endpoint is checked for shortest distance to opposite line, which can be capped to [0,1]
+<br/>
+<br/>
 
 
 
@@ -1103,26 +1109,26 @@ Parallel closest points need to be determined in a more detailed fashion
 <br/>
 dot(p-q,p-b) = 0
 <br/>
-(p<sub>x</sub>-q<sub>x</sub>)(p<sub>x</sub>-b<sub>x</sub>) + (p<sub>y</sub>-q<sub>y</sub>)(p<sub>y</sub>-b<sub>y</sub>) + (p<sub>z</sub>-q<sub>z</sub>)(p<sub>z</sub>-b<sub>z</sub>) = 0
+dot(b+t&middot;n-q,b+t&middot;n-b) = 0
 <br/>
-(b<sub>x</sub>+td<sub>x</sub>-q<sub>x</sub>)(b<sub>x</sub>+td<sub>x</sub>-b<sub>x</sub>) + (b<sub>y</sub>+td<sub>y</sub>-q<sub>y</sub>)(b<sub>y</sub>+td<sub>y</sub>-b<sub>y</sub>) + (b<sub>z</sub>+td<sub>z</sub>-q<sub>z</sub>)(b<sub>z</sub>+td<sub>z</sub>-b<sub>z</sub>) = 0
+dot(b+t&middot;n-q,t&middot;n) = 0
 <br/>
-t(b<sub>x</sub>+td<sub>x</sub>-q<sub>x</sub>)d<sub>x</sub> + t(b<sub>y</sub>+td<sub>y</sub>-q<sub>y</sub>)d<sub>y</sub> + t(b<sub>z</sub>+td<sub>z</sub>-q<sub>z</sub>)d<sub>z</sub> = 0
+t&middot;dot(b+t&middot;n-q,n) = 0
 <br/>
-t[dot(b,d) + t&middot;dot(d,d) - dot(q,d)] = 0
+dot(b+t&middot;n-q,n) = 0
 <br/>
-dot(b,d) + t&middot;dot(d,d) - dot(q,d) = 0
+dot(b,n) + t&middot;dot(n,n) - dot(q,n) = 0
 <br/>
-t&middot;dot(d,d) = dot(q,d) - dot(b,d)
+t&middot;dot(n,n) = dot(q,n) - dot(b,n)
 <br/>
-t = [dot(q,d) - dot(b,d)]/dot(d,d)
+t = [dot(q,n) - dot(b,n)]/dot(n,n)
 <br/>
-t = dot(q-b,d)/dot(d,d)
+t = dot(q-b,n)/dot(n,n)
 <br/>
 <br/>
 *Insight*
 <br/>
-Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&gt; along d
+Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&gt; along n
 <br/>
 <br/>
 
@@ -1131,18 +1137,18 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 **Triangle a,b,c (n)**: Triangle defined by 3 points: a,b,c, and unit normal n = unit(ab&times;ac)
 <br/>
-**Line Segment o,d (A,B)**: o + td t &isin; [0,1], or A=o and B=o+d
+**Line Segment o,d (AB)**: o + td t &isin; [0,1], or A=o and B=o+d
+<br/>
+**Check 1**: if AB intersects triangle inside &rarr; distance = 0
+<br/>
+**Check 2**: closest point from points A or B to plane is inside triangle &rarr; distance = ||min(A or B)||
+<br/>
+**Check 3**: closest point from AB and each edge: ab, bc, ca &rarr; distance = ||min(ab,bc,ca)||
 <br/>
 <br/>
 <br/>
 <br/>
 <br/>
-<br/>
-IF o,o+d intersects the triangle inside (distance = 0)
-<br/>
-ELSE IF shortest distance of segment ends to plane is inside tri (distance = min)
-<br/>
-ELSE: distance = closest line-segment distance from A,B and each edge ab, bc, ca
 <br/>
 <br/>
 <br/>

@@ -253,11 +253,26 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	var dist, point, minDistance = null, minEdge=null;
 	var dir = new V3D();
 	var head=list.head();
-	var neig, ang;
+	var neig, ang, p;
 	for(node=head,i=len; i--; node=node.next()){
 		edge = node.data();
-		point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
-		dist = V3D.distance(point,inVertex);
+		//point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
+		//dist = V3D.distance(point,inVertex);
+		dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inEdge.A(),inEdge.B(),inVertex);
+		if(dist<1E-16){ // use furthest point for immediate neighbor
+			// use angle?
+			if(edge==inEdge.next()){
+				p = Code.closestPointLineSegment3D(inEdge.B(),V3D.sub(dir,inVertex,inEdge.B()), edge.B());
+				dist = V3D.distance(p, edge.B());
+				console.log("next neighbor "+dist);
+				//dist *= 2.0; // random multiplier
+			}else if(edge==inEdge.prev()){
+				p = Code.closestPointLineSegment3D(inEdge.A(),V3D.sub(dir,inVertex,inEdge.A()), edge.A());
+				dist = V3D.distance(p, edge.A());
+				console.log("prev neighbor "+dist);
+				//dist *= 2.0; // random multiplier
+			}
+		}
 		if(edge==inEdge){ // check neighbors
 // 			var toNeigh, toVert = new V3D();
 // 			// next

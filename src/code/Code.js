@@ -1900,7 +1900,7 @@ Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri inters
 }
 Code.planeEquationFromPointNormal = function(pnt,nrm){
 	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
-	var dot = (q.x*pnt.x + q.y*pnt.y +  q.z*pnt.z); // q.scale(dot);
+	var dot = (q.x*pnt.x + q.y*pnt.y + q.z*pnt.z); // q.scale(dot);
 	return {a:nrm.x, b:nrm.y, c:nrm.z, d:dot};
 }
 Code.planePointNormalFromEquation = function(a,b,c,d){
@@ -1922,9 +1922,9 @@ Code.closestPointsSegments3D = function(oa,da, ob,db){ // finite ray-ray closet 
 	var dot_oadb = V3D.dot(oa,db);
 	var dot_obda = V3D.dot(ob,da);
 	var den = dot_dada*dot_dbdb - dot_dadb*dot_dadb;
-	if(den==0){ // parallel, pick some point & match
+	if(den==0){ // parallel, pick some point and match
 		B = new V3D(ob.x+db.x,ob.y+db.y,ob.z+db.z);
-		ta = Code.closestPointTLine3D(oa,da, ob);  // org,dir, point
+		ta = Code.closestPointTLine3D(oa,da, ob);
 		tb = Code.closestPointTLine3D(oa,da, B);
 		flip = false;
 		if(ta>tb){ flip=ta; ta=tb; tb=flip; flip=true;} // ordered increasing, if anti-parallel
@@ -1949,8 +1949,25 @@ Code.closestPointsSegments3D = function(oa,da, ob,db){ // finite ray-ray closet 
 		var obda_oada = dot_obda - dot_oada;
 		ta = (dot_dadb*oadb_obdb + dot_dbdb*obda_oada)/den;
 		tb = (dot_dadb*obda_oada + dot_dada*oadb_obdb)/den;
-		ta = Math.min(Math.max(ta,0.0),1.0);
-		tb = Math.min(Math.max(tb,0.0),1.0);
+		if(ta<0.0){
+			ta = 0.0;
+			tb = (dot_oadb-dot_obdb)/dot_dbdb; // closest point given endpoint oa
+			tb = Math.min(Math.max(tb,0.0),1.0);
+		}else if(ta>1.0){
+			ta = 1.0;
+			A = V3D.add(oa,da);
+			tb = (V3D.dot(A,db)-dot_obdb)/dot_dbdb; // closest point given endpoint oa+da
+			tb = Math.min(Math.max(tb,0.0),1.0);
+		}else if(tb<0.0){
+			tb = 0.0;
+			ta = (dot_obda-dot_oada)/dot_dada; // closest point given endpoint ob
+			ta = Math.min(Math.max(ta,0.0),1.0);
+		}else if(tb>1.0){
+			tb = 1.0;
+			B = V3D.add(ob,db);
+			ta = (V3D.dot(B,da)-dot_oada)/dot_dada; // closest point given endpoint ob+db
+			ta = Math.min(Math.max(ta,0.0),1.0);
+		}
 		A = new V3D(oa.x+ta*da.x, oa.y+ta*da.y, oa.z+ta*da.z);
 		B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	}
@@ -1979,9 +1996,75 @@ Code.closestPointsLines3D = function(oa,da, ob,db){ // infinite ray-ray closet p
 	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	return [A,B];
 }
-Code.closestPointPlane3D = function(o,d, b){ // 
-	var t = ((b.x-o.x)*d.x + (b.y-o.y)*d.y + (b.z-o.z)*d.z)/d.length();
-	return new V3D(b.x+t*d.x,b.y+t*d.y,b.z+t*d.z);
+Code.closestPointPlane3D = function(q,n, p){ // 
+	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y + (q.z-p.z)*n.z)/(n.x*n.x+n.y*n.y+n.z*n.z);
+	return new V3D(p.x+t*n.x,p.y+t*n.y,p.z+t*n.z);
+}
+Code.closestPointTri3D = function(pnt, a,b,c,nrm){ // closest point to plane also inside tri bounds
+	var p, ab,bc,ca, u,v,w;
+	// ab = V3D.sub(b,a);
+	// ac = V3D.sub(c,a);
+	// if(nrm===undefined){ nrm=V3D.cross(ab,ac).norm(); }
+	p = Code.closestPointPlane3D(a,nrm, pnt);
+	if(!p){ return null; }
+	// edges
+	ab = V3D.sub(b,a);
+	bc = V3D.sub(c,b);
+	ca = V3D.sub(a,c);
+	// to point
+	ap = V3D.sub(p,a);
+	bp = V3D.sub(p,b);
+	cp = V3D.sub(p,c);
+	// area directionals
+	u = V3D.dot(V3D.cross(ab,ap),nrm);
+	v = V3D.dot(V3D.cross(bc,bp),nrm);
+	w = V3D.dot(V3D.cross(ca,cp),nrm);
+	// all in same direction
+	if( (u>=0 && v>=0 && w>=0) || (u<=0 && v<=0 && w<=0) ){
+		return p;
+	}
+	return null;
+}
+
+Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest distance between line segment AB and tri a,b,c
+	var ab, ac, bc, ca, pA,pB,pC, dA,dB,dC;
+	ab = V3D.sub(b,a);
+	ac = V3D.sub(c,a);
+	if(nrm===undefined){ nrm=V3D.cross(ab,ac).norm(); }
+	// check for interrior triangle plane intersection with line
+	pA = Code.intersectRayTri(org,dir, a,b,c, nrm);
+//console.log("A "+pA);
+	if(pA){
+		return 0;
+	}
+	// check for interrior triangle plane closest point with line ends
+	var B = new V3D(org.x+dir.x, org.y+dir.y, org.z+dir.z);
+	pA = Code.closestPointTri3D(org, a,b,c,nrm);
+	pB = Code.closestPointTri3D(B,   a,b,c,nrm);
+//console.log("B "+pA+" "+pB);
+	if(pA&&pB){
+		dA = V3D.distance(org,pA);
+		dB = V3D.distance(B,pB);
+		return Math.min(dA,dB);
+	}else if(pA){
+		return V3D.distance(org,pA);
+	}else if(pB){
+		return V3D.distance(B,pB);
+	}
+	// find closest point between each segment
+//console.log("C");
+	bc = V3D.sub(c,b);
+	ca = V3D.sub(a,c);
+	pA = Code.closestPointsSegments3D(org,dir, a,ab);
+	dA = V3D.distance(pA[0],pA[1]);
+//console.log(" "+dA+" "+pA[0]+" "+pA[1]);
+	pB = Code.closestPointsSegments3D(org,dir, b,bc);
+	dB = V3D.distance(pB[0],pB[1]);
+//console.log(" "+dB+" "+pB[0]+" "+pB[1]);
+	pC = Code.closestPointsSegments3D(org,dir, c,ca);
+	dC = V3D.distance(pC[0],pC[1]);
+//console.log(" "+dC+" "+pC[0]+" "+pC[1]);
+	return Math.min(dA,dB,dC);
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
