@@ -253,17 +253,6 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	var dist, point, minDistance = null, minEdge=null;
 	var dir = new V3D();
 	var head=list.head();
-	// for(node=head,i=len; i--; node=node.next()){
-	// 	edge = node.data();
-	// 	point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
-	// 	dist = V3D.distance(point,inVertex);
-	// 	if(edge!=inEdge){
-	// 		if(minDistance==null || dist<minDistance){
-	// 			minDistance = dist;
-	// 			minEdge = edge;
-	// 		}
-	// 	}
-	// }
 	var neig, ang;
 	for(node=head,i=len; i--; node=node.next()){
 		edge = node.data();
@@ -297,7 +286,12 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	return {edge:minEdge, distance:minDistance};
 }
 /*
+	- minimum distance of edge to triangle-plane
+		- UNLESS it is the neighbor - then:
+			- min distance from opposite vertex to tri-plane
 
+	- min distance: tri vertex to edge i
+	- every point along plane
 
 
 */

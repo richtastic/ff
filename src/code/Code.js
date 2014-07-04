@@ -1869,13 +1869,13 @@ Code.intersectRayPlane = function(org,dir, pnt,nrm){ // infinite ray - plane int
 	var t = num/den;
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
-Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri intersection
+Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri intersection (only non-parallel directions [else 2D line intersection])
 	var num, den, ab, ac, bc, ca, ap, bp, cp, p, u, v, w;
 	ab = V3D.sub(b,a);
 	ac = V3D.sub(c,a);
-	if(nrm===undefined){ nrm = V3D.cross(ab,bc).norm(); }
+	if(nrm===undefined){ nrm = V3D.cross(ab,ac).norm(); }
+	// solve for t in [0,1]
 	num = nrm.x*(a.x-org.x) + nrm.y*(a.y-org.y) + nrm.z*(a.z-org.z);
-	if(num==0){ return (new V3D()).copy(org); } // point is already in plane (first of possibly infinite intersections)
 	den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
 	if(den==0){ return null; } // zero or infinite intersections
 	t = num/den;
@@ -1883,15 +1883,16 @@ Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri inters
 	p = new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 	// edges
 	bc = V3D.sub(c,b);
-	ca = V3D.sub(a,c);
+	ca = ac.scale(-1.0);
 	// to point
-	ap = V3D.sub(b,a);
-	bp = V3D.sub(c,b);
-	cp = V3D.sub(a,c);
+	ap = V3D.sub(p,a);
+	bp = V3D.sub(p,b);
+	cp = V3D.sub(p,c);
 	// area directionals
-	u = V3D.dot(V3D.cross(ap,ab),nrm);
-	v = V3D.dot(V3D.cross(bp,bc),nrm);
-	w = V3D.dot(V3D.cross(cp,ca),nrm);
+	u = V3D.dot(V3D.cross(ab,ap),nrm);
+	v = V3D.dot(V3D.cross(bc,bp),nrm);
+	w = V3D.dot(V3D.cross(ca,cp),nrm);
+	// all in same direction
 	if( (u>=0 && v>=0 && w>=0) || (u<=0 && v<=0 && w<=0) ){
 		return p;
 	}
@@ -1912,7 +1913,7 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
 Code.closestPointsSegments3D = function(oa,da, ob,db){ // finite ray-ray closet points
-	var A, B, ta, tb;
+	var A, B, ta, tb, flip;
 	var dot_dada = V3D.dot(da,da);
 	var dot_dadb = V3D.dot(da,db);
 	var dot_dbdb = V3D.dot(db,db);
@@ -1922,14 +1923,27 @@ Code.closestPointsSegments3D = function(oa,da, ob,db){ // finite ray-ray closet 
 	var dot_obda = V3D.dot(ob,da);
 	var den = dot_dada*dot_dbdb - dot_dadb*dot_dadb;
 	if(den==0){ // parallel, pick some point & match
-		A = new V3D(ob.x+db.x,ob.y+db.y,ob.z+db.z);
-		ta = Code.closestPointTLine3D(oa,db,oa); // 0
-		tb = Code.closestPointTLine3D(A ,db,oa); // 1
-
-// HERE - FINISH
-
-		A = null;
-		B = null;
+		B = new V3D(ob.x+db.x,ob.y+db.y,ob.z+db.z);
+		ta = Code.closestPointTLine3D(oa,da, ob);  // org,dir, point
+		tb = Code.closestPointTLine3D(oa,da, B);
+		flip = false;
+		if(ta>tb){ flip=ta; ta=tb; tb=flip; flip=true;} // ordered increasing, if anti-parallel
+		if(ta<=0 && tb<=0){
+			A = new V3D(oa.x,oa.y,oa.z);
+			tb = flip?0:1;
+			B = new V3D(ob.x+tb*db.x,ob.y+tb*db.y,ob.z+tb*db.z);
+		}else if(ta<0.0 && tb>0.0){
+			A = new V3D(oa.x,oa.y,oa.z); // A = new V3D(oa.x+tb*da.x,oa.y+tb*da.y,oa.z+tb*da.z);
+			B = Code.closestPointLine3D(ob,db, A);
+		}else if(ta>=0.0 && ta<=1.0){
+			A = new V3D(oa.x+ta*da.x,oa.y+ta*da.y,oa.z+ta*da.z);
+			tb = flip?1:0;
+			B = new V3D(ob.x+tb*db.x,ob.y+tb*db.y,ob.z+tb*db.z);
+		}else{ // ta>=1.0 && b>=1.0
+			A = new V3D(oa.x+da.x,oa.y+da.y,oa.z+da.z);
+			tb = flip?1:0;
+			B = new V3D(ob.x+tb*db.x,ob.y+tb*db.y,ob.z+tb*db.z);
+		}
 	}else{
 		var oadb_obdb = dot_oadb - dot_obdb;
 		var obda_oada = dot_obda - dot_oada;

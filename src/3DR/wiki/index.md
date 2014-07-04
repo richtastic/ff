@@ -860,67 +860,58 @@ d<sup>2</sup> = r<sup>2</sup> + R<sup>2</sup> + 2rR
 
 
 ### Intersection of Line and Plane (Point Projected onto Plane)
-**point in space (&real;<sup>3</sup>)**: p
+![Line Plane Intersection](./images/line_plane_intersect.png "Line Plane Intersection")
 <br/>
-**plane defined by point and unit normal**: q, n
+**Plane (q,n)**: defined by point: q and unit normal: n
 <br/>
-**projection of point p onto plane (result)**: r
+**Ray (o,d)**: origin: o and direction: d, point = o + t&middot;d
 <br/>
-r is also equal to the intersection of the plane (q,n) with a line p,n (renamed o,d here)
+**Point p**: point in space (&real;<sup>3</sup>), point along ray and also in plane (intersection)
 <br/>
-**Line to test for intersection**: o + t&middot;d (o=origin, d=direction, t=scale along direction)
+**Plane Normal and Line-in-Plane Orthogonality**: dot(n, p - q) = 0
 <br/>
-
-
-Solving for t, where o + t&middot;d = r (point of intersection):
+dot(n, p - q) = 0
 <br/>
-dot(n, r - q) = 0
+dot(n, o + t&middot;d - q) = 0
 <br/>
-n.x(r.x - q.x) + n.y(r.y - q.y) + n.z(r.z - q.z) = 0
+dot(n,o) + t&middot;dot(n,d) - dot(n,q) = 0
 <br/>
-n.x(o.x + t&middot;d.x - q.x) + n.y(o.y + t&middot;d.y - q.y) + n.z(o.z + t&middot;d.z - q.z) = 0
+t&middot;dot(n,d) = dot(n,q) - dot(n,o)
 <br/>
-n.x&middot;o.x + t&middot;n.x&middot;d.x - n.x&middot;q.x + n.y&middot;o.y + t&middot;n.y&middot;d.y + n.y&middot;o.y + t&middot;n.z&middot;d.z - n.z&middot;q.z = 0
+t = [dot(n,q) - dot(n,o)]/dot(n,d)
 <br/>
-t&middot;n.x&middot;d.x + t&middot;n.y&middot;d.y + t&middot;n.z&middot;d.z = n.x&middot;q.x - n.x&middot;o.x + n.y&middot;q.y - n.y&middot;o.y + n.z&middot;q.z - n.z&middot;o.z
+t = dot(n,q-o)/dot(n,d)
 <br/>
-t(n.x&middot;d.x + n.y&middot;d.y + n.z&middot;d.z) = n.x&middot;q.x - n.x&middot;o.x + n.y&middot;q.y - n.y&middot;o.y + n.z&middot;q.z - n.z&middot;o.z
 <br/>
-t(n.x&middot;d.x + n.y&middot;d.y + n.z&middot;d.z) = n.x(q.x-o.x) + n.y(q.y-o.y) + n.z(q.z-o.z)
-<br/>
-t = (n.x(q.x-o.x) + n.y(q.y-o.y) + n.z(q.z-o.z))/(n.x&middot;d.x + n.y&middot;d.y + n.z&middot;d.z)
-<br/>
-t = dot(n,q.x-o.x)/dot(n,d)
-<br/>
-
 **KEY NOTES:**
 <br/>
-if the denominator equals zero (dot(n,d)) &rarr; the line is in the plane
+if the denominator equals zero (dot(n,d)) &rarr; the line is parallel to the plane
 <br/>
-if t equals zero (dot(n,q.x-o.x) equals zero) &rarr; point is already in the plane
-
+if t equals zero (dot(n,q-o) equals zero) &rarr; ray origin is in plane
 <br/>
 <br/>
 
 ### Point in Plane Inside Polygon(Triangle) Check
-<br/>
-(edge.b-edge.a)&times;(p-edge.a) all point in same direction (all +normal or -normal)
+![Line Triangle Intersection](./images/line_triangle_intersect.png "Line Triangle Intersection")
 <br/>
 **Triangle a,b,c (n)**: Triangle defined by 3 points which define a plane
 <br/>
-n = unit(&lt;b-a&gt; &times; &lt;c-a&gt;)
+**Point p**: point inside triangle plane, not necessarily inside triangle bounds
 <br/>
-u = (p-a) &times; (b-a)
+**Consistent Direction**: For each edge e &isin; (ab,bc,ca): (e.b-e.a)&times;(p-e.a) should all point in same direction
 <br/>
-v = (p-b) &times; (c-b)
+n = unit(ab&times;ac)
 <br/>
-w = (p-c) &times; (a-c)
+u = (ap &times; ab) &middot; n
+<br/>
+v = (bp &times; bc) &middot; n
+<br/>
+w = (cp &times; ca) &middot; n
 <br/>
 (u>=0 && v>=0 && w>=0) || (u<=0 && v<=0 && w<=0)
 <br/>
 <br/>
-<br/>
-<br/>
+**Area Method**: The area of the triangle abc ||ab&times;ac||/2, should always be equal to the summed areas of the 3 'sub'-trianges defined by point p: abp, bcp, cap. The summed area is only greater if the point is outside the triangle. This method is more sbject to numerical stability.
 <br/>
 <br/>
 
@@ -990,7 +981,7 @@ if t is outside [0,1] the closest points are the segment ends A(o) and B(o+d) re
 <br/>
 **Line Segment 1**: o + td = a (for some a)
 <br/>
-**Line Segment 1**: &sigma; + &lambda;&delta; = &alpha; (for some &alpha;)
+**Line Segment 2**: &sigma; + &lambda;&delta; = &alpha; (for some &alpha;)
 <br/>
 <br/>
 **a-&alpha; orthogonal to both lines**: (a - &alpha;) &middot; d = 0 [1]; (a - &alpha;) &middot; &delta; = 0 [2];
@@ -1135,15 +1126,39 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 <br/>
 
-
-
-
-
-
+### Minimum Distance of Line-Segment to Triangle-Plane
+![?](./images/?.png "?")
+<br/>
+**Triangle a,b,c (n)**: Triangle defined by 3 points: a,b,c, and unit normal n = unit(ab&times;ac)
+<br/>
+**Line Segment o,d (A,B)**: o + td t &isin; [0,1], or A=o and B=o+d
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
+<br/>
+IF o,o+d intersects the triangle inside (distance = 0)
+<br/>
+ELSE IF shortest distance of segment ends to plane is inside tri (distance = min)
+<br/>
+ELSE: distance = closest line-segment distance from A,B and each edge ab, bc, ca
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
+1) intersect line-plane inside?
+2) end points -to-plane inside?
+3) closest of line and 3 line segments
+
+<br/>
+<br/>
+
+### ?
+![?](./images/?.png "?")
+<br/>
 
 **TODO:**
 x good-enough-for-now first triangle

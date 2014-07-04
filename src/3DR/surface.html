@@ -170,6 +170,39 @@ console.log(ll.toString());
 return;
 */
 
+/*
+var org, dir, a,b,c, p;
+org = new V3D(-1,-1,-1);
+dir = new V3D(3.666666666666,2,1);
+dir.scale(1E9);
+a = new V3D(0,0,0);
+b = new V3D(3,0,0);
+c = new V3D(2,3,0);
+p = Code.intersectRayTri(org,dir, a,b,c);
+console.log(p+"");
+return;
+*/
+
+var oa,da,ob,db;
+
+oa = new V3D(1,1,0); da = new V3D(3,3,0); ob = new V3D(3,1,1); db = new V3D(-1,3,0);
+// parallel
+oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-2,0,1); db = new V3D(1,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(1,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(2,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(-1,0,1); db = new V3D(5,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(0,0,1); db = new V3D(1,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(0.5,0,1); db = new V3D(1,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(1,0,1); db = new V3D(2,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(2,0,1); db = new V3D(1,0,0);
+// oa = new V3D(0,0,0); da = new V3D(2,0,0); ob = new V3D(3,0,1); db = new V3D(1,0,0);
+
+
+p = Code.closestPointsSegments3D(oa,da, ob,db);
+console.log(p+"");
+
+return;
+
 	var surface = new SurfaceTri();
 }
 </script>
