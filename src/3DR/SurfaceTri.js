@@ -12,7 +12,6 @@ function SurfaceTri(){
   	this._stage3D.setBackgroundColor(0x00000000);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
-	this._stage3D.start();
 	// datas
 	this._pointCloud = new PointCloud();
 	this._mlsMesh = new MLSMesh();
@@ -20,6 +19,17 @@ function SurfaceTri(){
 //	this.plot1D();
 	//
 	this.setupSphere3D();
+	//
+	this._ticker = new Ticker(500);
+	this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
+	this._ticker.start();
+	//
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN, this.keyboardKeyDown, this);
+	this._keyboard.addListeners();
+	//
+	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
+	this._stage3D.start();
 }
 SurfaceTri.prototype.getVertexShaders1 = function(){
 	return ["\
@@ -86,6 +96,28 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	}
 	this._stage3D.matrixReset();
 }
+SurfaceTri.prototype.keyboardKeyDown = function(e){
+	var key = Code.getKeyCodeFromKeyboardEvent(e);
+	if(key==Keyboard.KEY_SPACE){
+		if(this._ticker.isRunning()){
+			this._ticker.stop();
+		}else{
+			this._ticker.start();
+		}
+	}
+	if(key==Keyboard.KEY_ENTER){
+		if(this._stage3D.isRunning()){
+			this._stage3D.stop();
+		}else{
+			this._stage3D.start();
+		}
+	}
+}
+SurfaceTri.prototype.triangulateTick = function(e){
+	//console.log("tick: "+e);
+	this._mlsMesh.triangulateSurfaceIteration();
+	this.resetTris();
+}
 SurfaceTri.prototype.setupSphere3D = function(){
 	// 
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
@@ -108,55 +140,8 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	this._pointCloud.initWithPointArray(pts, true); // force cubes
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
-
-console.log(".................................. display crap ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
-var list = [];
-colors = [];
-
-var front, tris, tri, fronts, i, j;
-
-fronts = this._mlsMesh.crap.fronts._fronts;
-
-var triCount = 0;
-for(i=fronts.length;i--;){
-	front = fronts[i];
-	tris = front._triangles;
-	for(j=tris.length;j--;){
-		tri = tris[j];
-		//tri.jitter(0.10);
-		list.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
-		colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
-		++triCount;
-	}
-}
-console.log("TRIANGLES:"+triCount);
-
-
-var norm, edge, dir, mid, ver;
-edge = this._mlsMesh.crap.edgeA;
-norm = edge.tri().normal();
-dir = edge.unit();
-V3D.rotateAngle(dir,dir,norm,-Math.PI/2);
-dir.scale(edge.length());
-mid = edge.midpoint();
-ver = V3D.add(mid,dir);
-
-list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
-colors.push(1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0);
-
-
-
-edge = this._mlsMesh.crap.edgeB;
-norm = edge.tri().normal();
-dir = edge.unit();
-V3D.rotateAngle(dir,dir,norm,-Math.PI/2);
-dir.scale(edge.length());
-mid = edge.midpoint();
-ver = V3D.add(mid,dir);
-
-list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
-colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
-
+// 
+//
 
 
 /*
@@ -238,8 +223,6 @@ list.push(proj.x,proj.y,proj.z, proj.x+inPlane0.x,proj.y+inPlane0.y,proj.z+inPla
 colors.push(1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0);
 */
 
-this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
-this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
 
 // console.log(list)
 // console.log(colors)
@@ -250,10 +233,64 @@ this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
 	// PLANE FITTING
 	//var cov = this.covarianceFromPoints(pts);
 //	var plane = this.planeFromPoints(pts);
-
-	// START
-	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
 }
+
+SurfaceTri.prototype.resetTris = function(){
+
+	console.log(".................................. display crap ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+	var list = [];
+	colors = [];
+
+	var front, tris, tri, fronts, i, j;
+
+	fronts = this._mlsMesh.crap.fronts._fronts;
+
+	var triCount = 0;
+	for(i=fronts.length;i--;){
+		front = fronts[i];
+		tris = front._triangles;
+		for(j=tris.length;j--;){
+			tri = tris[j];
+			//tri.jitter(0.10);
+			list.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
+			colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
+			++triCount;
+		}
+	}
+	console.log("TRIANGLES:"+triCount);
+
+	var norm, edge, dir, mid, ver;
+	edge = this._mlsMesh.crap.edgeA;
+	if(edge){
+		norm = edge.tri().normal();
+		dir = edge.unit();
+		V3D.rotateAngle(dir,dir,norm,-Math.PI/2);
+		dir.scale(edge.length());
+		mid = edge.midpoint();
+		//ver = V3D.add(mid,dir);
+		ver = this._mlsMesh.crap.vertex;
+		list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
+		colors.push(1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0);
+	}
+
+	edge = this._mlsMesh.crap.edgeB;
+	if(edge){
+		norm = edge.tri().normal();
+		dir = edge.unit();
+		V3D.rotateAngle(dir,dir,norm,-Math.PI/2);
+		dir.scale(edge.length());
+		mid = edge.midpoint();
+		ver = V3D.add(mid,dir);
+		list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
+		colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
+	}
+
+	this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
+	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
+	
+	console.log("OUT");
+}
+
 // find support plane for point r (reference frame)
 SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
 	var i,j,k, val, len = points.length;

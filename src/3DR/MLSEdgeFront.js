@@ -5,6 +5,12 @@ function MLSEdgeFront(){ // single front
 	this._edgeList = new LinkedList(true);
 	this._triangles = [];
 }
+MLSEdgeFront.prototype.edgeQueue = function(){
+	return this._edgeQueue;
+}
+MLSEdgeFront.prototype.edgeList = function(){
+	return this._edgeList;
+}
 MLSEdgeFront.prototype.moreThanSingleTri = function(){
 	var len = this._edgeList.length();
 	if(len>3){ // more edges than fit on a triangle
@@ -29,8 +35,221 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front){
 	// add new stuff, remove old
 	return front;
 }
-MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex){ // separate via 2 triangle 'parallelogram', or 'single-tri' if shared vertex
-	var i, node, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found;
+MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex, idealLength, minDistance,        crap){ // separate via 2 triangle 'parallelogram', or 'single-tri' if shared vertex
+// need to add in edge priority:
+// edgeA/B.priorityFromIdeal(idealLength);
+	var i, prev, next, node, dist, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found, edgeC;
+	var a,b,c,d;
+var oldEdge = edgeB;
+edgeB = null;
+	var dir = new V3D();
+	// find first edge that doesn't like new trianglulation
+	for(prev=edgeA.prev(),next=edgeA.next(),i=Math.ceil(this._edgeQueue.length()/2.0);i--;){
+		console.log(i+" / "+this._edgeQueue.length());
+		// prev
+		edge = prev;
+		if(edge==edgeA.prev()){
+			p = Code.closestPointLineSegment3D(edgeA.A(),V3D.sub(dir,vertex,edgeA.A()), edge.A());
+			dist = V3D.distance(p, edge.A());
+			console.log("prev neighbor "+dist);
+		}else{
+			dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), edgeA.A(),edgeA.B(),vertex);
+		}
+		console.log("PREV CHECK: "+dist+" <?< "+(dist<minDistance));
+		if(dist<minDistance){
+			edgeB = edge;
+			crap.edgeB = edge;
+			break;
+		}
+		// next
+		edge = next;
+		if(edge==edgeA.next()){
+			p = Code.closestPointLineSegment3D(edgeA.B(),V3D.sub(dir,vertex,edgeA.B()), edge.B());
+			dist = V3D.distance(p, edge.B());
+			console.log("next neighbor "+dist);
+		}else{
+			dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), edgeA.A(),edgeA.B(),vertex);
+		}
+		console.log("NEXT CHECK: "+dist+" <?< "+(dist<minDistance));
+		if(dist<minDistance){
+			edgeB = edge;
+			crap.edgeB = edge;
+			break;
+		}
+		// continue
+		prev = prev.prev();
+		next = next.next();
+	}
+	// first neighbors
+	if(edgeB==edgeA.prev() || edgeB==edgeA.next()){
+		// create
+		if( edgeB==edgeA.prev() ){
+			console.log("PREV");
+			e1AB = new MLSEdge(edgeB.A(),edgeA.B());
+			e1BC = new MLSEdge(edgeA.B(),edgeA.A()); // B opposite
+			e1CA = new MLSEdge(edgeA.A(),edgeB.A()); // A opposite
+		}else{ // (edgeB==edgeA.next()){
+			console.log("NEXT");
+			e1AB = new MLSEdge(edgeA.A(),edgeB.B());
+			e1BC = new MLSEdge(edgeB.B(),edgeB.A()); // A opposite
+			e1CA = new MLSEdge(edgeB.A(),edgeA.A()); // B opposite
+		}
+		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
+		e1AB.tri( triA );
+		e1BC.tri( triA );
+		e1CA.tri( triA );
+		triA.setEdgeABBCCA( e1AB, e1BC, e1CA );
+		// add new
+		node = this._edgeQueue.push(e1AB);
+			e1AB.node(node);
+		link = this._edgeList.addAfter(edgeA.link(), e1AB);
+			e1AB.link(link);
+		this._triangles.push(triA);
+		// remove old
+		this._edgeList.removeNode(edgeA.link());
+		this._edgeList.removeNode(edgeB.link());
+		this._edgeQueue.removeNode(edgeA.node());
+		this._edgeQueue.removeNode(edgeB.node());
+		return null; 
+	}else if(edgeB==edgeA.prev().prev() || edgeB==edgeA.next().next()){ // second neighbors
+		// create
+		if(edgeB==edgeA.prev().prev()){
+			console.log("PREV-DOUBLE");
+			a = edgeB.A();
+			b = edgeB.B();
+			c = edgeA.A();
+			d = edgeA.B();
+			edgeC = edgeA.prev();
+		}else{ // edgeB==edgeA.next().next()
+			console.log("NEXT-DOUBLE");
+			a = edgeA.A();
+			b = edgeA.B();
+			c = edgeB.A();
+			d = edgeB.B();
+			edgeC = edgeA.next();
+		}
+		if( V3D.distanceSquare(a,c) <  V3D.distanceSquare(b,d) ){
+			e1AB = new MLSEdge(a,c); // new diag
+			e1BC = new MLSEdge(c,b); // prev(next) opposite
+			e1CA = new MLSEdge(b,a); // B(A) opposite
+			triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
+			e1AB.tri( triA );
+			e1BC.tri( triA );
+			e1CA.tri( triA );
+			e2AB = new MLSEdge(c,a); // new diag
+			e2BC = new MLSEdge(a,d); // new
+			e2CA = new MLSEdge(d,c); // A(B) opposite
+			triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
+			e2AB.tri( triB );
+			e2BC.tri( triB );
+			e2CA.tri( triB );
+			edge = e2BC;
+		}else{
+			e1AB = new MLSEdge(d,b); // new diag
+			e1BC = new MLSEdge(b,a); // B(A) opposite
+			e1CA = new MLSEdge(a,d); // new
+			triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
+			e1AB.tri( triA );
+			e1BC.tri( triA );
+			e1CA.tri( triA );
+			e2AB = new MLSEdge(b,d); // new diag
+			e2BC = new MLSEdge(d,c); // A(B) opposite
+			e2CA = new MLSEdge(c,b); // prev(next) opposite
+			triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
+			e2AB.tri( triB );
+			e2BC.tri( triB );
+			e2CA.tri( triB );
+			edge = e1CA;
+		}
+		// add new
+		node = this._edgeQueue.push(edge);
+			edge.node(node);
+		link = this._edgeList.addAfter(edgeA.link(), edge);
+			edge.link(link);
+		this._triangles.push(triA);
+		this._triangles.push(triB);
+		// remove old
+		this._edgeList.removeNode(edgeA.link());
+		this._edgeList.removeNode(edgeB.link());
+		this._edgeList.removeNode(edgeC.link());
+		this._edgeQueue.removeNode(edgeA.node());
+		this._edgeQueue.removeNode(edgeB.node());
+		this._edgeQueue.removeNode(edgeC.node());
+		return null; 
+	}else{ // third+ neighbors
+if(oldEdge!=edgeA.prev() && oldEdge!=edgeA.prev().prev() && oldEdge!=edgeA.next() && oldEdge!=edgeA.next().next()){
+	edgeB = oldEdge; // ---- worst ... ?
+}
+		console.log("THIRD");
+		centroid = MLSEdge.centroid(edgeA,edgeB);
+		// create
+		e1AB = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
+		e1BC = new MLSEdge(edgeA.A(),centroid); // new (new)
+		e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
+		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
+		e1AB.tri( triA );
+		e1BC.tri( triA );
+		e1CA.tri( triA );
+		e2AB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
+		e2BC = new MLSEdge(edgeB.A(),centroid); // new (new)
+		e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
+		triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
+		e2AB.tri( triB );
+		e2BC.tri( triB );
+		e2CA.tri( triB );
+		// front
+		front = new MLSEdgeFront();
+		// go thru entire list and remove edges from edgeA to edgeB [everything after edgeA, and before edgeB]
+var i = 0;		
+		for(edge=edgeA.next(),i=0;edge!=edgeB && i<50;edge=edge.next(),++i){
+			console.log(i+": "+(edge==edgeA)+" "+(edge==edgeB)+" "+edge);
+			if(edge!=edgeA && edge!=edgeB){
+			// remove from old
+			this._edgeList.removeNode(edge.link());
+			this._edgeQueue.removeNode(edge.node());
+			// add to new
+			node = front.edgeQueue().push(edge);
+				edge.node(node);
+			link = front.edgeList().push(edge);
+				edge.link(link);
+			}
+		}
+		console.log("2");
+		// add new edges to new front
+		node = front.edgeQueue().push(e2BC);
+			e2BC.node(node);
+		link = front.edgeList().push(e2BC);
+			e2BC.link(link);
+		node = front.edgeQueue().push(e1CA);
+			e1CA.node(node);
+		link = front.edgeList().push(e1CA);
+			e1CA.link(link);
+		// add new edges to old front
+		node = this._edgeQueue.push(e1BC);
+			e1BC.node(node);
+		link = this._edgeList.addAfter(edgeA.link(),e1BC);
+			e1BC.link(link);
+		node = this._edgeQueue.push(e2CA);
+			e2CA.node(node);
+		link = this._edgeList.addAfter(e1BC.link(),e2CA);
+			e2CA.link(link);
+		// remove final end edges from old front
+		this._edgeList.removeNode(edgeA.link());
+		this._edgeList.removeNode(edgeB.link());
+		this._edgeQueue.removeNode(edgeA.node());
+		this._edgeQueue.removeNode(edgeB.node());
+		// add new tris
+		this._triangles.push(triA);
+		this._triangles.push(triB);
+		console.log("3");
+		return front;
+	}
+return null; // no new front created
+	
+
+
+
+
 	// create new front
 	front = new MLSEdgeFront();
 	console.log(front);
@@ -256,43 +475,73 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	var neig, ang, p;
 	for(node=head,i=len; i--; node=node.next()){
 		edge = node.data();
-		//point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
-		//dist = V3D.distance(point,inVertex);
-		dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inEdge.A(),inEdge.B(),inVertex);
-		if(dist<1E-16){ // use furthest point for immediate neighbor
-			// use angle?
-			if(edge==inEdge.next()){
-				p = Code.closestPointLineSegment3D(inEdge.B(),V3D.sub(dir,inVertex,inEdge.B()), edge.B());
-				dist = V3D.distance(p, edge.B());
-				console.log("next neighbor "+dist);
-				//dist *= 2.0; // random multiplier
-			}else if(edge==inEdge.prev()){
-				p = Code.closestPointLineSegment3D(inEdge.A(),V3D.sub(dir,inVertex,inEdge.A()), edge.A());
-				dist = V3D.distance(p, edge.A());
-				console.log("prev neighbor "+dist);
-				//dist *= 2.0; // random multiplier
+		if(edge!=inEdge){ // check neighbors
+			//point = Code.closestPointLineSegment3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inVertex);
+			//dist = V3D.distance(point,inVertex);
+			
+			dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), inEdge.A(),inEdge.B(),inVertex);
+			if(dist<1E-10){ // use furthest point for immediate neighbor
+				if(edge==inEdge.next()){
+					p = Code.closestPointLineSegment3D(inEdge.B(),V3D.sub(dir,inVertex,inEdge.B()), edge.B());
+					dist = V3D.distance(p, edge.B());
+					console.log("next neighbor "+dist);
+				}else if(edge==inEdge.prev()){
+					p = Code.closestPointLineSegment3D(inEdge.A(),V3D.sub(dir,inVertex,inEdge.A()), edge.A());
+					dist = V3D.distance(p, edge.A());
+					console.log("prev neighbor "+dist);
+				}
 			}
-		}
-		if(edge==inEdge){ // check neighbors
-// 			var toNeigh, toVert = new V3D();
-// 			// next
-// 			neig = edge.next();
-// 			toNeigh = neig.unit().scale(-1.0); // B to A
-// 			V3D.sub(toVert,inVertex,edge.B());
-// 			angle = V3D.angle(toVert,toNeigh);
-// //console.log("angleA: "+(angle*180/Math.PI));
-// 			// prev
-// 			neig = edge.prev();
-// 			toNeigh = neig.unit(); // A to B
-// 			V3D.sub(toVert,inVertex,edge.A());
-// 			angle = V3D.angle(toVert,toNeigh);
-// //console.log("angleB: "+(angle*180/Math.PI));
-// 			// if(angle<Math.PI){// 60 degrees
-// 			// 	minDistance = 0;
-// 			// 	minEdge = neigh;
-// 			// }
-		}else{
+// 				// use angle?
+// 				// look at the area of the triangle created by THIS triangle and if it is greater than the area created by neighbor triangles (1/3) -> event
+// 				var dd;
+// 				var angleA, angleB;
+// 				//var areaA, areaB;
+// 				//areaA = V3D.cross( inEdge.direction(), V3D.sub(dir,inEdge.A(),inVertex) ).length()*0.5;
+// 				if(edge==inEdge.next()){
+// 					dir = V3D.sub(dir,inEdge.B(),inVertex); // edge.B -> vertex
+// 					dd = inEdge.direction().scale(-1.0); // edge.B -> edge.A
+// 					angleA = V3D.angle( dd, dir );
+// 					dd = inEdge.direction(); // edge.A -> edge.B
+// 					angleB = V3D.angle(dir, dd);
+// 	console.log("next angles: "+(angleA*180/Math.PI)+" | "+(angleB*180/Math.PI));
+// 	// if(angleB>angleA){
+
+// 	// }
+					
+// 					dir = V3D.sub(dir,edge.A(),inVertex);
+// 					dd = edge.direction();
+// 					angle = ;
+// 					areaB = V3D.cross( edge.direction(), dir ).length();
+// 					console.log("next areas: "+areaA+" / "+areaB);
+// 					if(areaB<areaA){
+// 						dist = 0;
+// 					}
+// dist = Number.MAX_VALUE;
+// 				}else if(edge==inEdge.prev()){
+// 					dir = V3D.sub(dir,inEdge.A(),inVertex); // edge.A -> vertex
+// 					dd = inEdge.direction(); // edge.A -> edge.B
+// 					angleA = V3D.angle(dir, dd);
+// 					dd = inEdge.direction().scale(-1.0); // edge.B -> edge.A
+// 					angleB = V3D.angle(dd, dir);
+// 	console.log("prev angles: "+(angleA*180/Math.PI)+" | "+(angleB*180/Math.PI));
+// 					/*dir = V3D.sub(dir,edge.A(),inVertex); // edge.A -> vertex
+// 					dd = edge.direction().scale(-1.0); // prev.B -> prev.A
+// 					angle = V3D.angle( dd,dir );
+// 	console.log("prev angle: "+(angle*180/Math.PI));
+// 					if(angle<Math.PIO2){
+// 						areaB = V3D.cross( dd, dir ).length()*0.5;
+// 						console.log("prev areas: "+areaA+" / "+areaB);
+// 						if(areaB<areaA*0.5){
+// 							dist = 0;
+// 						}
+// 					}else{
+// 						dist = Number.MAX_VALUE;
+// 					}*/
+// dist = Number.MAX_VALUE;
+// 				}
+// 			}
 			if(minDistance==null || dist<minDistance){
+				console.log("dist: "+dist);
 				minDistance = dist;
 				minEdge = edge;
 			}

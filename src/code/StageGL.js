@@ -160,6 +160,9 @@ StageGL.prototype.start = function(){
 StageGL.prototype.stop = function(){
 	this._timer.stop();
 }
+StageGL.prototype.isRunning = function(){
+	return this._timer.isRunning();
+}
 StageGL.prototype._enterFrame = function(e){
 	++this._time;
 	this.render();

@@ -1167,12 +1167,16 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 
 **TODO:**
-x good-enough-for-now first triangle
-x create front from first tri
-- vertex predict location
 - main front loop
     - front operations
+        - split
+            x 1st neighbor
+            x 2nd neighbor
+            - 3rd neighbor
+        - merge
+            - need to check internal front first?
     - edge queue priority
+- import/use point files
 - generate first triangle
     - field minimum in radius -> ? based on beta?
     - vertex predict
@@ -1226,13 +1230,15 @@ Topic - Author (Source/Title)
 <br/>
 [Curvature - Simon Willerton](http://golem.ph.utexas.edu/category/2010/03/intrinsic_volumes_for_riemanni.html)
 <br/>
-(Second Fundamental Form - ?)[The Second Fundamental Form - Outline]
+[The Second Fundamental Form - Outline](http://math.bard.edu/belk/math352/Outline%20-%20Second%20Fundamental%20Form.pdf)
 <br/>
 [Simple 3D Surface Curvature - Kurita, Boulanger](Computation of Surface Curvature from Range Images Using Geometrically Intrinsic Weights)
 <br/>
 [Weighted Least Squares](www.nealen.net/projects/mls/asapmls.pdf)
 <br/>
 [Random Points on a Sphere](http://mathworld.wolfram.com/SpherePointPicking.html)
+<br/>
+[Sample Point Files](http://users.cms.caltech.edu/~cs175/cs175-03/homework)
 <br/>
 
 

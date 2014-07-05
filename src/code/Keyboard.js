@@ -1,5 +1,6 @@
 // Keyboard.js
 Keyboard.KEY_TAB = 9;
+Keyboard.KEY_ENTER = 13;
 Keyboard.KEY_SHIFT = 16;
 Keyboard.KEY_CTRL = Keyboard.KEY_CONTROL = 17;
 Keyboard.KEY_ALT = Keyboard.KEY_ALTERNATE = 18;

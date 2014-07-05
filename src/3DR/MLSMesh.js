@@ -29,17 +29,20 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	this._tau = tau;
 	// find initial best triangle/front
 	var seedData = this.findSeedTriangle();
-//this.crap.seed = seedTri;
+	//this.crap.seed = seedTri;
 	var firstFront = new MLSEdgeFront();
 		firstFront.fromTriangle(seedData.tri, seedData.idealLength);
 	var frontList = new MLSFront();
 		frontList.addFront(firstFront);
+this.frontList = frontList;
 	// pick best front from set
+}
+MLSMesh.prototype.triangulateSurfaceIteration = function(rho, tau){
 	var edge, edge2, vertex, front, closest, edgesCanCut, idealLength, data;
-var count = 0;
-// try{
+	var frontList = this.frontList;
+	var count = 0;
 this.crap.fronts = frontList;
-	while( frontList.count()>0  && count<30){ // 21
+	while( frontList.count()>0  && count<1){ // 21
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
 		current = frontList.first();
 // console.log(current._edgeList.toString());
@@ -74,19 +77,23 @@ console.log("+------------------------------------------------------------------
 			// }
 			front = closest.front;
 			edge2 = closest.edge;
+			minDistance = closest.minDistance;
 this.crap.edgeA = edge;
 this.crap.edgeB = edge2;
+this.crap.vertex = vertex;
+console.log(front,current);
 			if(front==current){
 				console.log("SPLIT");
-				front = current.split(edge,edge2,vertex);
-				frontList.addFront(front);
+				front = current.split(edge,edge2,vertex, idealLength, minDistance,        this.crap);
+				if(front){
+					frontList.addFront(front);
+				}
 			}else{
 				console.log("MERGE");
 throw new Error("not implemented");
 				current.merge(edge,edge2,vertex, front);
 				frontList.removeFront(front);
 			}
-break;
 		}else{
 			console.log("GROW");
 			current.growTriangle(edge,vertex,idealLength);
@@ -94,9 +101,6 @@ break;
 ++count;
 console.log(count);
 	}
-// }catch(e){
-// 	console.log("error: "+e);
-// }
 }
 MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){
 	var closest = frontList.closestFront(edge,vertex);
@@ -106,6 +110,7 @@ MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLengt
 	var minDistance = idealLength*0.5;
 	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
 	if(closestDistance<minDistance){ // point is further away than min allowed to existing triangulation
+		closest.minDistance = minDistance;
 		return closest;
 	}
 	return null;
@@ -173,6 +178,7 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	var midpoint = edge.midpoint();
 console.log("mid "+midpoint);
 	var i = this.fieldMinimumInSphere(field,midpoint,b);
+// i = infinity?
 console.log("i "+i +"   c"+c)
 i = Math.max(i,c*0.5); // BAD SITUATION ......................... didn't search around well enough at some point
 	// force non-horrible triangle

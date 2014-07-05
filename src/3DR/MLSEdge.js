@@ -102,10 +102,12 @@ MLSEdge.prototype.node = function(n){
 MLSEdge.prototype.length = function(){
 	return V3D.distance(this._a,this._b);
 }
-MLSEdge.prototype.unit = function(){
+MLSEdge.prototype.direction = function(){
 	var AB = V3D.sub(this._b,this._a);
-	AB.norm();
 	return AB;
+}
+MLSEdge.prototype.unit = function(){
+	return this.direction().norm();
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.length = function(){
