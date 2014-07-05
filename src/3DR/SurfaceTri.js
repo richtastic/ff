@@ -20,7 +20,7 @@ function SurfaceTri(){
 	//
 	this.setupSphere3D();
 	//
-	this._ticker = new Ticker(500);
+	this._ticker = new Ticker(100);
 	this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
 	this._ticker.start();
 	//
@@ -243,12 +243,14 @@ SurfaceTri.prototype.resetTris = function(){
 
 	var front, tris, tri, fronts, i, j;
 
-	fronts = this._mlsMesh.crap.fronts._fronts;
+	//fronts = this._mlsMesh.crap.fronts._fronts;
+	fronts = Code.copyArray(this._mlsMesh.crap.fronts._fronts);
+	fronts.push(this._mlsMesh.crap.fronts); // 
 
 	var triCount = 0;
 	for(i=fronts.length;i--;){
 		front = fronts[i];
-		tris = front._triangles;
+		tris = front.triangles();
 		for(j=tris.length;j--;){
 			tri = tris[j];
 			//tri.jitter(0.10);
@@ -257,7 +259,7 @@ SurfaceTri.prototype.resetTris = function(){
 			++triCount;
 		}
 	}
-	console.log("TRIANGLES:"+triCount);
+	console.log("TRIANGLES:"+triCount+"          FRONTS:"+fronts.length);
 
 	var norm, edge, dir, mid, ver;
 	edge = this._mlsMesh.crap.edgeA;

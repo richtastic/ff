@@ -46,12 +46,12 @@ this.crap.fronts = frontList;
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
 		current = frontList.first();
 // console.log(current._edgeList.toString());
-// current._edgeList.checkYourself();
+current._edgeList.checkYourself();
 //console.log(current._edgeQueue.toString());
 		if(current.count()==3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
 			current.close();
-			frontList.remove(current);
+			frontList.removeFront(current);
 ++count;
 			continue;
 		}
@@ -81,7 +81,6 @@ console.log("+------------------------------------------------------------------
 this.crap.edgeA = edge;
 this.crap.edgeB = edge2;
 this.crap.vertex = vertex;
-console.log(front,current);
 			if(front==current){
 				console.log("SPLIT");
 				front = current.split(edge,edge2,vertex, idealLength, minDistance,        this.crap);
@@ -90,8 +89,7 @@ console.log(front,current);
 				}
 			}else{
 				console.log("MERGE");
-throw new Error("not implemented");
-				current.merge(edge,edge2,vertex, front);
+				current.merge(edge,edge2,vertex, front, idealLength, minDistance,        this.crap);
 				frontList.removeFront(front);
 			}
 		}else{
@@ -99,7 +97,6 @@ throw new Error("not implemented");
 			current.growTriangle(edge,vertex,idealLength);
 		}
 ++count;
-console.log(count);
 	}
 }
 MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){

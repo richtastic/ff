@@ -2,15 +2,23 @@
 
 function MLSFront(){
 	this._fronts = []; // set of EdgeFront
+	this._triangles = []; // set of completed triangles from removed fronts*
+}
+MLSFront.prototype.triangles = function(){
+	return this._triangles;
 }
 MLSFront.prototype.addFront = function(front){
 	this._fronts.push(front);
 }
 MLSFront.prototype.removeFront = function(front){
-	// ?
+	var tris = front.triangles();
+	for(i=tris.length;i--;){
+		this._triangles.push( tris.pop() );
+	}
+	Code.removeElementSimple(this._fronts, front);
 }
 MLSFront.prototype.first = function(){
-	return this._fronts[0];//.pop(); // 
+	return this._fronts[0]; // select front with highest priority edge
 }
 MLSFront.prototype.count = function(){
 	return this._fronts.length;

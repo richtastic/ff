@@ -248,7 +248,7 @@ LinkedList.Link = function(dat){
 	this.data(dat);
 }
 LinkedList.Link.toLink = function(n){
-	if(n!==undefined || n===null || !Code.isa(n,Link) ){
+	if(n!==undefined || n===null || !Code.isa(n,LinkedList.Link) ){
 		n = new LinkedList.Link(n);
 	}
 	return n;
