@@ -45,8 +45,8 @@ this.crap.fronts = frontList;
 	while( frontList.count()>0  && count<1){ // 21
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
 		current = frontList.first();
-// console.log(current._edgeList.toString());
-current._edgeList.checkYourself();
+//console.log(current._edgeList.toString());
+//current._edgeList.checkYourself();
 //console.log(current._edgeQueue.toString());
 		if(current.count()==3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
@@ -89,8 +89,13 @@ this.crap.vertex = vertex;
 				}
 			}else{
 				console.log("MERGE");
-				current.merge(edge,edge2,vertex, front, idealLength, minDistance,        this.crap);
-				frontList.removeFront(front);
+				current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,        this.crap);
+				if(current==front){
+					frontList.removeFront(front);
+				}else if(current!=null){ // actually, split
+					console.log("SPLIT 4 REALS YO");
+					frontList.addFront(front);
+				}
 			}
 		}else{
 			console.log("GROW");

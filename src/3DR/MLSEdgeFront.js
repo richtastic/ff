@@ -53,6 +53,7 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength,
 		console.log("GOOD");
 	}else{
 		console.log("internal priority");
+		return this.split(edgeA,edgeB, vertex, idealLength, minDistance,        crap);
 	}
 	edgeB = oldEdge;
 	console.log("MERGING"); // exact copy from THIRD
