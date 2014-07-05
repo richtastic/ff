@@ -34,24 +34,18 @@ MLSEdgeFront.prototype.moreThanSingleTri = function(){
 	return false;
 }
 MLSEdgeFront.prototype.addNodeLinkEdgeBefore = function(edgeA,edgeB){
-	var node = this._edgeQueue.push(edgeB);
-		edgeB.node(node);
-	var link = this._edgeList.addBefore(edgeA.link(),edgeB);
-		edgeB.link(link);
+	edgeB.node( this._edgeQueue.push(edgeB) );
+	edgeB.link( this._edgeList.addBefore(edgeA.link(),edgeB) );
 	return edgeB;
 }
 MLSEdgeFront.prototype.addNodeLinkEdgeAfter = function(edgeA,edgeB){
-	var node = this._edgeQueue.push(edgeB);
-		edgeB.node(node);
-	var link = this._edgeList.addAfter(edgeA.link(),edgeB);
-		edgeB.link(link);
+	edgeB.node( this._edgeQueue.push(edgeB) );
+	edgeB.link( this._edgeList.addAfter(edgeA.link(),edgeB) );
 	return edgeB;
 }
 MLSEdgeFront.prototype.addNodeLinkEdgePush = function(edgeB){
-	var node = this._edgeQueue.push(edgeB);
-		edgeB.node(node);
-	var link = this._edgeList.push(edgeB);
-		edgeB.link(link);
+	edgeB.node( this._edgeQueue.push(edgeB) );
+	edgeB.link( this._edgeList.push(edgeB) );
 	return edgeB;
 }
 MLSEdgeFront.prototype.removeNodeLinkEdge = function(edge){
@@ -63,40 +57,52 @@ MLSEdgeFront.prototype.removeNodeLinkEdge = function(edge){
 
 MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength, minDistance, field,      crap){
 	var i, prev, next, node, edge, link, dist, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found, edgeC;
+	var surfaceData, surfacePoint, surfaceNormal, surfaceLength;
 	var oldEdge = edgeB;
 	edgeB = null;
 	edgeB = this.firstEdgeToComplain(edgeA, vertex, minDistance);
 	if(edgeB==null){
-		console.log("GOOD");
+		console.log("EXTERNAL EDGE -> MERGE");
 	}else{
-		console.log("INTERNAL PRIORITY");
-		return this.split(edgeA,edgeB, vertex, idealLength, minDistance, front, field,       crap);
+		console.log("INTERNAL PRIORITY -> SPLIT");
+		return this.split(edgeA,edgeB, vertex, idealLength, minDistance, field,       crap);
 	}
 	edgeB = oldEdge;
 	console.log("MERGING"); // exact copy from THIRD
-		centroid = MLSEdge.centroid(edgeA,edgeB);
-		var surfaceData, surfacePoint, surfaceNormal, surfaceLength;
-			surfaceData = field.projectToSurfaceData(centroid);
-			surfacePoint = surfaceData.point;
-			surfaceNormal = surfaceData.normal;
-			surfaceLength = surfaceData.length;
-			centroid.copy(surfacePoint);
-		// create
-		e1AB = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
-		e1BC = new MLSEdge(edgeA.A(),centroid); // new (new)
-		e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
-		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
-		e1AB.tri( triA );
-		e1BC.tri( triA );
-		e1CA.tri( triA );
-		e2AB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
-		e2BC = new MLSEdge(edgeB.A(),centroid); // new (new)
-		e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
-		triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
-		e2AB.tri( triB );
-		e2BC.tri( triB );
-		e2CA.tri( triB );
-	// add first two
+	// optimal point
+	centroid = MLSEdge.centroid(edgeA,edgeB);
+	surfaceData = field.projectToSurfaceData(centroid);
+	surfacePoint = surfaceData.point;
+	surfaceNormal = surfaceData.normal;
+	surfaceLength = surfaceData.length;
+	centroid.copy(surfacePoint);
+	// edges A
+	e1AB = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
+	e1BC = new MLSEdge(edgeA.A(),centroid); // new (new)
+	e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
+	// priorities A
+	e1AB.priority( edgeA.priority() );
+	e1BC.priorityFromIdeal( surfaceLength );
+	e1CA.priorityFromIdeal( surfaceLength );
+	// triangle A
+	triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
+	e1AB.tri( triA );
+	e1BC.tri( triA );
+	e1CA.tri( triA );
+	// edges B
+	e2AB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
+	e2BC = new MLSEdge(edgeB.A(),centroid); // new (new)
+	e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
+	// priorities B
+	e2AB.priority( edgeB.priority() );
+	e2BC.priorityFromIdeal( surfaceLength );
+	e2CA.priorityFromIdeal( surfaceLength );
+	// triangle B
+	triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
+	e2AB.tri( triB );
+	e2BC.tri( triB );
+	e2CA.tri( triB );
+	// add first two edges
 	this.addNodeLinkEdgeBefore(edgeA,e1BC);
 	this.addNodeLinkEdgeBefore(edgeA,e2CA);
 	// combine linked lists
@@ -119,19 +125,19 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength,
 	this.removeNodeLinkEdge(edgeA);
 	return front;
 }
-MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance){
-	var prev, next, edge, p, dist, i, edgeB = null;
-	var dir = new V3D();
-	// find first edge that doesn't like new trianglulation
-	for(prev=edgeA.prev(),next=edgeA.next(),i=Math.ceil(this._edgeQueue.length()/2.0);i--;){ // next!=edgeA && prev=edgeA && 
+MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance){ // find first edge that doesn't like new trianglulation
+	var prev, next, edge, p, dist, i, edgeB = null, dir = new V3D();
+	for(prev=edgeA.prev(),next=edgeA.next(),i=Math.ceil(this._edgeQueue.length()/2.0)+1;i--;){ // next!=edgeA && prev=edgeA && 
 		// prev
 		edge = prev;
 		if(edge==edgeA.prev()){
 			p = Code.closestPointLineSegment3D(edgeA.A(),V3D.sub(dir,vertex,edgeA.A()), edge.A());
 			dist = V3D.distance(p, edge.A());
 			console.log("prev neighbor "+dist);
-		}else{
+		}else if(edge!=edgeA){
 			dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), edgeA.A(),edgeA.B(),vertex);
+		}else{
+			dist = Number.MAX_VALUE;
 		}
 		console.log("PREV CHECK: "+dist+" <?< "+(dist<minDistance));
 		if(dist<minDistance){
@@ -144,8 +150,10 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 			p = Code.closestPointLineSegment3D(edgeA.B(),V3D.sub(dir,vertex,edgeA.B()), edge.B());
 			dist = V3D.distance(p, edge.B());
 			console.log("next neighbor "+dist);
-		}else{
+		}else if(edge!=edgeA){
 			dist = Code.closestDistanceSegmentTri3D(edge.A(),V3D.sub(dir,edge.B(),edge.A()), edgeA.A(),edgeA.B(),vertex);
+		}else{
+			dist = Number.MAX_VALUE;
 		}
 		console.log("NEXT CHECK: "+dist+" <?< "+(dist<minDistance));
 		if(dist<minDistance){
@@ -159,28 +167,34 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 	return edgeB;
 }
 MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex, idealLength, minDistance, field,        crap){ // separate via 2 triangle 'parallelogram', or 'single-tri' if shared vertex
-// need to add in edge priority:
-// edgeA/B.priorityFromIdeal(idealLength);
 	var i, prev, next, node, link, dist, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found, edgeC;
-	var a,b,c,d;
-var oldEdge = edgeB;
-edgeB = null;
+	var surfaceData, surfacePoint, surfaceNormal, surfaceLength, a,b,c,d;
+	edgeB = null;
 	edgeB = this.firstEdgeToComplain(edgeA, vertex, minDistance);
-	crap.edgeB = edgeB;
+	if(edgeB==null){ console.log("WAS NULL"); return null; }
+crap.edgeB = edgeB;
 	// first neighbors
 	if(edgeB==edgeA.prev() || edgeB==edgeA.next()){
-		// create
 		if( edgeB==edgeA.prev() ){
-			console.log("PREV");
-			e1AB = new MLSEdge(edgeB.A(),edgeA.B());
-			e1BC = new MLSEdge(edgeA.B(),edgeA.A()); // B opposite
-			e1CA = new MLSEdge(edgeA.A(),edgeB.A()); // A opposite
+			//console.log("PREV");
+			e1AB = new MLSEdge(edgeB.A(),edgeA.B()); // new
+			e1BC = new MLSEdge(edgeA.B(),edgeA.A()); // A opposite
+			e1CA = new MLSEdge(edgeA.A(),edgeB.A()); // B opposite
+			// priority
+			e1AB.priorityFromIdeal( idealLength );
+			e1BC.priority( edgeA.priority() );
+			e1CA.priority( edgeB.priority() );
 		}else{ // (edgeB==edgeA.next()){
-			console.log("NEXT");
-			e1AB = new MLSEdge(edgeA.A(),edgeB.B());
-			e1BC = new MLSEdge(edgeB.B(),edgeB.A()); // A opposite
-			e1CA = new MLSEdge(edgeB.A(),edgeA.A()); // B opposite
+			//console.log("NEXT");
+			e1AB = new MLSEdge(edgeA.A(),edgeB.B()); // new
+			e1BC = new MLSEdge(edgeB.B(),edgeB.A()); // B opposite
+			e1CA = new MLSEdge(edgeB.A(),edgeA.A()); // A opposite
+			// priority
+			e1AB.priorityFromIdeal( idealLength );
+			e1BC.priority( edgeB.priority() );
+			e1CA.priority( edgeA.priority() );
 		}
+		// triangles
 		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
 		e1AB.tri( triA );
 		e1BC.tri( triA );
@@ -193,17 +207,17 @@ edgeB = null;
 		this.removeNodeLinkEdge(edgeA);
 		this.removeNodeLinkEdge(edgeB);
 		return null; 
-	}else if(edgeB==edgeA.prev().prev() || edgeB==edgeA.next().next()){ // second neighbors
+	}else if(false){//edgeB==edgeA.prev().prev() || edgeB==edgeA.next().next()){ // second neighbors
 		// create
 		if(edgeB==edgeA.prev().prev()){
-			console.log("PREV-DOUBLE");
+			//console.log("PREV-DOUBLE");
 			a = edgeB.A();
 			b = edgeB.B();
 			c = edgeA.A();
 			d = edgeA.B();
 			edgeC = edgeA.prev();
 		}else{ // edgeB==edgeA.next().next()
-			console.log("NEXT-DOUBLE");
+			//console.log("NEXT-DOUBLE");
 			a = edgeA.A();
 			b = edgeA.B();
 			c = edgeB.A();
@@ -243,6 +257,14 @@ edgeB = null;
 			e2CA.tri( triB );
 			edge = e1CA;
 		}
+		// priority
+		e1AB.priorityFromIdeal( idealLength ); // don't care
+		e1BC.priorityFromIdeal( idealLength ); // don't care
+		e1CA.priorityFromIdeal( idealLength ); // don't care
+		e2AB.priorityFromIdeal( idealLength ); // don't care
+		e2BC.priorityFromIdeal( idealLength ); // don't care
+		e2CA.priorityFromIdeal( idealLength ); // don't care
+		edge.priorityFromIdeal( idealLength ); // set last to replace previous value
 		// add new
 		this.addNodeLinkEdgeAfter(edgeA,edge);
 		this.addTri(triA);
@@ -253,32 +275,44 @@ edgeB = null;
 		this.removeNodeLinkEdge(edgeC);
 		return null; 
 	}else{ // third+ neighbors
-// if(oldEdge!=edgeA.prev() && oldEdge!=edgeA.prev().prev() && oldEdge!=edgeA.next() && oldEdge!=edgeA.next().next()){
-// 	edgeB = oldEdge; // ---- worst ... ?
-// }
-if(edgeB==null){
-	console.log("WAS NULL");
-	edgeB = oldEdge;
-}
-		console.log("THIRD");
+		//console.log("THIRD");
+// console.log(edgeA)
+// console.log(edgeB)
+// console.log(edgeA.A())
+// console.log(edgeA.B())
+// console.log(edgeB.A())
+// console.log(edgeB.B())
+// console.log(centroid+"")
+// console.log(field)
+// console.log(field.projectToSurfaceData)
 		centroid = MLSEdge.centroid(edgeA,edgeB);
-			var surfaceData, surfacePoint, surfaceNormal, surfaceLength;
 			surfaceData = field.projectToSurfaceData(centroid);
 			surfacePoint = surfaceData.point;
 			surfaceNormal = surfaceData.normal;
 			surfaceLength = surfaceData.length;
 			centroid.copy(surfacePoint);
-		// create
+		// new edges A
 		e1AB = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
 		e1BC = new MLSEdge(edgeA.A(),centroid); // new (new)
 		e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
+		// priorities A
+		e1AB.priority( edgeA.priority() );
+		e1BC.priorityFromIdeal( idealLength );
+		e1CA.priorityFromIdeal( idealLength );
+		// triangle A
 		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
 		e1AB.tri( triA );
 		e1BC.tri( triA );
 		e1CA.tri( triA );
+		// new edges B
 		e2AB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
 		e2BC = new MLSEdge(edgeB.A(),centroid); // new (new)
 		e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
+		// priorities B
+		e2AB.priority( edgeB.priority() );
+		e2BC.priorityFromIdeal( idealLength );
+		e2CA.priorityFromIdeal( idealLength );
+		// triangle B
 		triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
 		e2AB.tri( triB );
 		e2BC.tri( triB );
@@ -287,7 +321,6 @@ if(edgeB==null){
 		front = new MLSEdgeFront();
 		// go thru entire list and remove edges from edgeA to edgeB [everything after edgeA, and before edgeB]
 		for(edge=edgeA.next(); edge!=edgeB; ){
-			console.log(i+": "+(edge==edgeA)+" "+(edge==edgeB)+" "+edge.link()+" "+edge.node());
 			next = edge.next();
 			// remove from old, add to new
 			this.removeNodeLinkEdge(edge);
@@ -295,13 +328,12 @@ if(edgeB==null){
 			// next
 			edge = next;
 		}
-		console.log("WOT");
 		// add new edges to new front
 		front.addNodeLinkEdgePush(e2BC);
 		front.addNodeLinkEdgePush(e1CA);
 		// add new edges to old front
-		this.addNodeLinkEdgeAfter(edgeA,e1BC);
-		this.addNodeLinkEdgeAfter(e1BC,e2CA); // switch these with edgeA
+		this.addNodeLinkEdgeBefore(edgeA,e1BC);
+		this.addNodeLinkEdgeBefore(edgeA,e2CA);
 		// remove final end edges from old front
 		this.removeNodeLinkEdge(edgeA);
 		this.removeNodeLinkEdge(edgeB);
@@ -322,7 +354,7 @@ MLSEdgeFront.prototype.close = function(){ // collape 3 edges to triangle
 	var edgeBC = new MLSEdge(edgeC.B(),edgeC.A()); // edgeC opposite
 	var edgeCA = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
 	// priorities
-		// ...
+		// don't care
 	// triangle
 	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
 	edgeAB.tri(tri);
@@ -416,15 +448,7 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, idealLength){ // create tr
 		edgeA = edgeB;
 		edgeB = temp;
 	}else{
-		//throw new Error("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
-		console.log("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
-		console.log(edgeA.next()==edgeB);
-		console.log(edgeA.prev()==edgeB);
-		console.log(edgeB.next()==edgeA);
-		console.log(edgeB.prev()==edgeA);
-		console.log(edgeA==edgeB);
-		console.log(edgeA+"");
-		console.log(edgeB+"");
+		throw new Error("CANNOT CUT EAR WITH NON-ADJACENT EDGE");
 	}
 	// new edges/tri
 	eA = new MLSEdge(edgeA.A(),edgeB.B()); // new edge

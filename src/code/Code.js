@@ -316,6 +316,13 @@ Code.removeElementAtSimple = function(a,i){ // not preserve order
 	a.pop();
 	return;
 }
+Code.subSampleArray = function(a,count){
+	var i, index, len = a.length - count;
+	for(i=0;i<len;++i){
+		index = Math.floor(Math.random()*a.length);
+		a[index] = a.pop();
+	}
+}
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes
 	var lenX = endX - staX + 1;
 	var lenY = endY - staY + 1;
@@ -2085,6 +2092,25 @@ Code.cuboidsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMax.z<bMin.z || aMin.x>bMax.x || aMin.y>bMax.y || aMin.z>bMax.z;
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+Code.parsePointSetString = function(data, max){
+	var lines = data.split("\n");
+	var i, v, line, nums, x, y, z, list = [], len = lines.length;
+	if(max!==undefined){ len = max; } // limit to max lines
+	for(i=0;i<len;++i){
+		line = lines[i];
+		if(line.length==0 || line.charAt(0)=="#"){ continue; } // comments, empty lines
+		nums = line.split(" ");
+		if(nums.length==3){ // 1st line is length
+			x = Number(nums[0]);
+			y = Number(nums[1]);
+			z = Number(nums[2]);
+			v = new V3D(x,y,z);
+			list.push(v);
+		}
+	}
+	return list;
+}
 
 
 

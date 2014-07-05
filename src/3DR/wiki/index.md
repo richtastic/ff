@@ -1169,6 +1169,7 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 **TODO:**
 x add projections for merge/split
 - clean up / check correctness on add/remove edge code
+- best edge from all fronts
 - main front loop
     - front operations
         - split
@@ -1188,6 +1189,7 @@ x add projections for merge/split
     - iterative minimization to find plane
     - 'snapping' to closest sample point?
     - neighborhood?
+- priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
 - how to 'query' field
 - wavy torus
 - simulate with real point cloud source

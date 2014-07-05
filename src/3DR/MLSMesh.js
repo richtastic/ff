@@ -23,7 +23,7 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this.pointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(2*Math.PI/10.0);
+	rho = rho!==undefined?rho:(2*2*Math.PI/10.0);
 	tau = tau!==undefined?tau:1.0;
 	this._rho = rho;
 	this._tau = tau;
@@ -56,19 +56,11 @@ console.log("+------------------------------------------------------------------
 			continue;
 		}
 		edge = current.bestEdge();
-//		console.log(edge);
+console.log(edge+" "+current.edgeList().length());
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
 			console.log("CUTEAR");
-			console.log(edgesCanCut)
-			console.log(edgesCanCut.edgeA)
-			console.log(edgesCanCut.edgeB)
-			console.log(edgesCanCut.edgeA.A())
-			console.log(edgesCanCut.edgeA.B())
-			console.log(edgesCanCut.edgeB.A())
-			console.log(edgesCanCut.edgeB.B())
 			vertex = MLSEdge.midpointUnjoined(edgesCanCut.edgeA,edgesCanCut.edgeB);
-			console.log(vertex+"")
 			data = this.projectToSurfaceData(vertex);
 			idealLength = data.length;
 			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB, idealLength);
@@ -80,9 +72,13 @@ console.log("+------------------------------------------------------------------
 		vertex = data.point;
 		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
 		if( closest ){
-			// if( current.deferEdge(edge) ){
-			// 	continue;
-			// }
+			if( current.deferEdge(edge) ){
+				console.log("DEFERRED");
+++count;
+				continue;
+			}else{
+				console.log("COULD NOT DEFER");
+			}
 			front = closest.front;
 			edge2 = closest.edge;
 			minDistance = closest.minDistance;
@@ -138,7 +134,8 @@ MLSMesh.prototype.findSeedTriangle = function(){
 	surfaceLength = surfaceData.length;
 	surfaceDirMin = surfaceData.directionMin;
 	// iteritively find ideal curvature
-	var searchDistance = surfaceLength;
+	var searchDistance = surfaceLength*1.0; // no idea ...
+console.log();
 	var edgeLengthA = this.fieldMinimumInSphere(null,surfacePoint,searchDistance);
 	var edgeLengthB = edgeLengthA; // from somewhere ...
 		// somehow do iteration / bisections ...
@@ -163,8 +160,9 @@ MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){ // GO 
 	arr = this._pointCloud.pointsInsideSphere(center,radius);
 	var i, point, data, curv, maxCurv = null;
 	if(arr.length==0){ // just use closest point
+console.log("ZERO LENGTH");
 		point = this._pointCloud.closestPointToPoint(center);
-		arr.push[point];
+		arr.push(point);
 	}
 	for(i=arr.length;i--;){
 		point = arr[i];
@@ -174,6 +172,7 @@ MLSMesh.prototype.fieldMinimumInSphere = function(field, center, radius){ // GO 
 			maxCurv = curv;
 		}
 	} // if there's no closest point (empty point cloud) -> crash
+console.log(maxCurv);
 	var idealLength = this._rho/maxCurv;
 	return idealLength;
 }
@@ -182,6 +181,7 @@ MLSMesh.prototype.vertexPredict = function(edge, field){
 	var beta = 55.0*Math.PI/180.0; // choose 55 degrees (search radius ~ 3.63)
 	// find search radius
 	var c = edge.length();
+console.log("C IS: "+c);
 	var eta = Math.sin(2*beta)/Math.sin(3*beta);
 	var b = eta*c;
 	// find minimum in local area
@@ -227,9 +227,8 @@ MLSMesh.prototype._projectToSurface = function(p){
 	var neighborhood, h, k, f, plane, normal, origin, degree;
 	var bivariate = this._bivariate;
 	// find set of local point to weight
-	k = Math.max(0.01*this._pointCloud.count(),5)+1; // drop points outside of some standard deviation?
+	k = Math.min( Math.max(0.01*this._pointCloud.count(),5)+1,20); // drop points outside of some standard deviation?
 // k = 20;
-// console.log(k);
 	// NEED TO TAKE INTO ACCOUNT ACTUAL CLOUD POINTS AND R^3 POINTS
 	var closestPoint = this._pointCloud.closestPointToPoint(p);
 	neighborhood = this.neighborhoodPoints(p, k);
@@ -258,6 +257,7 @@ MLSMesh.prototype._projectToSurface = function(p){
 	var dirMin = curvatures.directionMin;
 	var dirNorm = curvatures.normal;
 	var idealLength = this._rho/curvatures.max;
+//console.log("idealLength: "+idealLength);
 	// rotate directions to world directions
 	var zero = reverse.multV3D(new V3D(),V3D.ZERO);
 	reverse.multV3D(dirMin,dirMin);

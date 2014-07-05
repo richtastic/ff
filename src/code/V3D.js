@@ -1,4 +1,5 @@
 // V3D.js
+V3D.EPSILON = 1E-15; 
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
@@ -51,6 +52,7 @@ V3D.distance = function(a,b){ // len(a-b)
 	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2));
 }
 V3D.equal = function(a,b){
+	//return (Math.abs(a.x-b.x)<V3D.EPSILON) && (Math.abs(a.y-b.y)<V3D.EPSILON) && (Math.abs(a.z-b.z)<V3D.EPSILON);
 	return a.x==b.x && a.y==b.y && a.z==b.z;
 }
 V3D.midpoint = function(a,b,c){

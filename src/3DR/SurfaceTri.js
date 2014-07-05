@@ -10,15 +10,15 @@ function SurfaceTri(){
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/10.0, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage3D.setBackgroundColor(0x00000000);
-	this._stage3D.frustrumAngle(60);
+	this._stage3D.frustrumAngle(45);
 	this._stage3D.enableDepthTest();
 	// datas
-	this._pointCloud = new PointCloud();
-	this._mlsMesh = new MLSMesh();
 	//
 //	this.plot1D();
 	//
-	this.setupSphere3D();
+	this.setupDisplay3D();
+//	this.setupSphere3D();
+	this.loadPointFile();
 	//
 	this._ticker = new Ticker(100);
 	this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
@@ -72,7 +72,7 @@ SurfaceTri.prototype.getFragmentShaders1 = function(){
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
-	//console.log(e);
+	if(!this._mlsMesh){ return; }
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
 	// 
@@ -115,16 +115,59 @@ SurfaceTri.prototype.keyboardKeyDown = function(e){
 }
 SurfaceTri.prototype.triangulateTick = function(e){
 	//console.log("tick: "+e);
-	this._mlsMesh.triangulateSurfaceIteration();
-	this.resetTris();
+	if(this._mlsMesh){
+		this._mlsMesh.triangulateSurfaceIteration();
+		this.resetTris();
+	}
 }
-SurfaceTri.prototype.setupSphere3D = function(){
-	// 
+
+
+SurfaceTri.prototype.setupDisplay3D = function(){
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+}
 
-	// POINTS
+SurfaceTri.prototype.loadPointFile = function(){
+	console.log("LOAD...");
+	//var sourceFileName = "./images/points/saltdome_1019.pts";
+	//var sourceFileName = "./images/points/foot_5092.pts";
+	var sourceFileName = "./images/points/bunny_30571.pts";
+	var ajax = new Ajax();
+	ajax.get(sourceFileName,this,function(e){
+		var list = Code.parsePointSetString(e);
+		Code.subSampleArray(list,5000);
+		var i, v, len = list.length;
+		var max = list[0].copy();
+		var min = list[0].copy();
+		for(i=1;i<len;++i){
+			v = list[i];
+			V3D.max(max,max,v);
+			V3D.min(min,min,v);
+		}
+		var center = V3D.avg(min,max);
+		var range = V3D.sub(max,min);
+		// center at origin, scaled to [0,1]
+		var trans = new Matrix3D();
+		trans.identity();
+		trans.translate(-center.x,-center.y,-center.z);
+		trans.scale( 2.0/Math.max(range.x,range.y,range.z) );
+		for(i=0;i<len;++i){
+			v = list[i];
+			trans.multV3D(v,v);
+		}
+		this.startPointCloud(list);
+	});
+}
+SurfaceTri.prototype.setupSphere3D = function(){
 	var pts = this.generateSpherePoints(1000,1.5,1E-13);
+	this.startPointCloud(pts);
+}
+
+SurfaceTri.prototype.startPointCloud = function(pts){
+
+	this._pointCloud = new PointCloud();
+	this._mlsMesh = new MLSMesh();
+
 	var p, i;
 	var points = [];
 	var colors = [];
@@ -135,105 +178,12 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	}
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
-
-	// POINT CLOUD
-	this._pointCloud.initWithPointArray(pts, true); // force cubes
+	// TRIANGULATE
+	this._pointCloud.initWithPointArray(pts, true);
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
-// 
-//
-
-
-/*
-var seed = this._mlsMesh.crap.seed;
-list.push(seed.A().x,seed.A().y,seed.A().z, seed.B().x,seed.B().y,seed.B().z, seed.C().x,seed.C().y,seed.C().z);
-colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
-
-var vertex = this._mlsMesh.crap.vertex;
-var vA = this._mlsMesh.crap.vA;
-var vB = this._mlsMesh.crap.vB;
-list.push(vertex.x,vertex.y,vertex.z, vA.x,vA.y,vA.z, vB.x,vB.y,vB.z);
-colors.push(1.0,0.0,0.0,0.5,  1.0,0.0,0.0,0.5,  1.0,0.0,0.0,0.5);
-*/
-
-/*
-var plane = this._mlsMesh.crap.plane;
-console.log(plane)
-var org = plane.point;
-var inPlane0 = plane.orthogonalA;
-var inPlane1 = plane.orthogonalB;
-inPlane0.scale(0.33);
-inPlane1.scale(0.33);
-
-list.push(inPlane0.x+org.x,inPlane0.y+org.y,inPlane0.z+org.z,
-			inPlane1.x+org.x,inPlane1.y+org.y,inPlane1.z+org.z,
-			org.x-(inPlane0.x+inPlane1.x)*0.5,
-			org.y-(inPlane0.y+inPlane1.y)*0.5,
-			org.z-(inPlane0.z+inPlane1.z)*0.5);
-colors.push(1.0,0.0,0.0,1.0, 0.0,1.0,0.0,1.0, 0.0,0.0,1.0,1.0);
-
-var transF = this._mlsMesh.crap.forward;
-var transR = this._mlsMesh.crap.reverse;
-var bivariate = this._mlsMesh.crap.bivariate
-
-
-var j, k, x, y, z, x1,y1,z11,z12,z21,z22, x2,y2,z2, i1,i2, j1,j2;
-var p11 = new V3D(), p21 = new V3D(), p12 = new V3D(), p22 = new V3D();
-var sca = 0.1;
-for(j=0;j<10;++j){
-	j1 = j;
-	j2 = j+1;
-	for(i=0;i<10;++i){
-		i1 = i;
-		i2 = i+1;
-		//
-		x1 = (-5 + i1)*sca;
-		x2 = (-5 + i2)*sca;
-		y1 = (-5 + j1)*sca;
-		y2 = (-5 + j2)*sca;
-		z11 = bivariate.valueAt(x1,y1);
-		z12 = bivariate.valueAt(x1,y2);
-		z21 = bivariate.valueAt(x2,y1);
-		z22 = bivariate.valueAt(x2,y2);
-		//
-		p11.set(x1,y1,z11);
-		p21.set(x2,y1,z21);
-		p12.set(x1,y2,z12);
-		p22.set(x2,y2,z22);
-		//
-		transR.multV3D(p11,p11);
-		transR.multV3D(p12,p12);
-		transR.multV3D(p21,p21);
-		transR.multV3D(p22,p22);
-		//
-		list.push(p11.x,p11.y,p11.z, p22.x,p22.y,p22.z, p12.x,p12.y,p12.z);
-		list.push(p11.x,p11.y,p11.z, p21.x,p21.y,p21.z, p22.x,p22.y,p22.z);
-		for(k=0;k<6;++k){
-			colors.push(Math.random(),Math.random(),Math.random(), 0.75);
-		}
-		//colors.push(Math.random(),Math.random(),Math.random(), 0.75);
-	}
 }
 
-// surface projected point:
-var proj = this._mlsMesh.crap.projection;
-console.log(proj)
-list.push(proj.x,proj.y,proj.z, proj.x+inPlane0.x,proj.y+inPlane0.y,proj.z+inPlane0.z, proj.x+inPlane1.x,proj.y+inPlane1.y,proj.z+inPlane1.z);
-
-colors.push(1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0,  1.0,0.0,0.0,1.0);
-*/
-
-
-// console.log(list)
-// console.log(colors)
-// console.log(this._planeTriangleVertexList)
-// console.log(this._planeTriangleColorsList)
-
-
-	// PLANE FITTING
-	//var cov = this.covarianceFromPoints(pts);
-//	var plane = this.planeFromPoints(pts);
-}
 
 SurfaceTri.prototype.resetTris = function(){
 
@@ -259,7 +209,7 @@ SurfaceTri.prototype.resetTris = function(){
 			++triCount;
 		}
 	}
-	console.log("TRIANGLES:"+triCount+"          FRONTS:"+fronts.length);
+	console.log("TRIANGLES:"+triCount+"          FRONTS:"+(fronts.length-1));
 
 	var norm, edge, dir, mid, ver;
 	edge = this._mlsMesh.crap.edgeA;
@@ -289,8 +239,6 @@ SurfaceTri.prototype.resetTris = function(){
 
 	this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
 	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
-	
-	console.log("OUT");
 }
 
 // find support plane for point r (reference frame)
@@ -566,43 +514,6 @@ radius *= 1E-1; // display purposes
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ 
-SurfaceTri.prototype.wtf = function(){
-}
-
-SurfaceTri.prototype.wtf = function(){
-/*
-fronts = FirstFront()
-while(frontSet.length>0){
-    current = fronts.first()
-    // close front with only 3 vertexes - what about initial front?
-    if(current.vertexCount()==3){
-        current.closeFront()
-        fronts.removeFront(current)
-        continue
-    }
-    // ?
-    e = current.bestEdge()
-    if(e.canCutEar()){
-        e.cutEar()
-        continue
-    }
-    // 
-    p = vertexPredict(edge,field)
-    if( !triangleTooClose(e,p) ){ // 
-        e.growTriangle() // ?
-    }else{ // 
-        front = closestFront(e,p)
-        if(front==current){ // same front?
-            front = fronts.split(current-front) // separate front from current
-            fronts.addFront( front ) // add as new front
-        }else{ // different fronts
-            front = merge(current,front) // combine
-            fronts.removeFront(front) // remove second copy from list
-        }
-    }
-}
-*/
-}
 
 
 

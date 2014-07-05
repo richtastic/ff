@@ -17,8 +17,17 @@ MLSFront.prototype.removeFront = function(front){
 	}
 	Code.removeElementSimple(this._fronts, front);
 }
-MLSFront.prototype.first = function(){
-	return this._fronts[0]; // select front with highest priority edge
+MLSFront.prototype.first = function(){ // select front with highest priority edge
+	var i, front = this._fronts[0];
+	var edge, bestEdge = front.bestEdge();
+	for(i=1;i<this._fronts.length;++i){
+		edge = this._fronts[i].bestEdge();
+		if(edge.priority() < bestEdge.priority()){
+			bestEdge = edge;
+			front = this._fronts[i];
+		}
+	}
+	return front;
 }
 MLSFront.prototype.count = function(){
 	return this._fronts.length;
