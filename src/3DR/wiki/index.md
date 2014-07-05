@@ -1167,7 +1167,7 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 
 **TODO:**
-- add projections for merge/split
+x add projections for merge/split
 - clean up / check correctness on add/remove edge code
 - main front loop
     - front operations
@@ -1175,7 +1175,7 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
             x 1st neighbor
             x 2nd neighbor
             - 3rd neighbor
-            	- need to project point to surface
+                - need to project point to surface
         - merge
             - need to check internal front first?
             - need to project point to surface

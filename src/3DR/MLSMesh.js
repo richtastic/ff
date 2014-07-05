@@ -45,9 +45,9 @@ this.crap.fronts = frontList;
 	while( frontList.count()>0  && count<1){ // 21
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
 		current = frontList.first();
-//console.log(current._edgeList.toString());
-//current._edgeList.checkYourself();
-//console.log(current._edgeQueue.toString());
+// console.log(current._edgeList.toString());
+// current._edgeList.checkYourself();
+// console.log(current._edgeQueue.toString());
 		if(current.count()==3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
 			current.close();
@@ -60,7 +60,15 @@ console.log("+------------------------------------------------------------------
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
 			console.log("CUTEAR");
+			console.log(edgesCanCut)
+			console.log(edgesCanCut.edgeA)
+			console.log(edgesCanCut.edgeB)
+			console.log(edgesCanCut.edgeA.A())
+			console.log(edgesCanCut.edgeA.B())
+			console.log(edgesCanCut.edgeB.A())
+			console.log(edgesCanCut.edgeB.B())
 			vertex = MLSEdge.midpointUnjoined(edgesCanCut.edgeA,edgesCanCut.edgeB);
+			console.log(vertex+"")
 			data = this.projectToSurfaceData(vertex);
 			idealLength = data.length;
 			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB, idealLength);
@@ -83,13 +91,13 @@ this.crap.edgeB = edge2;
 this.crap.vertex = vertex;
 			if(front==current){
 				console.log("SPLIT");
-				front = current.split(edge,edge2,vertex, idealLength, minDistance,        this.crap);
+				front = current.split(edge,edge2,vertex, idealLength, minDistance,this,        this.crap);
 				if(front){
 					frontList.addFront(front);
 				}
 			}else{
 				console.log("MERGE");
-				current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,        this.crap);
+				current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,this,        this.crap);
 				if(current==front){
 					frontList.removeFront(front);
 				}else if(current!=null){ // actually, split
