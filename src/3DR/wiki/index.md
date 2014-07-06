@@ -1168,27 +1168,14 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 
 **TODO:**
 x add projections for merge/split
-- clean up / check correctness on add/remove edge code
-- best edge from all fronts
-- main front loop
-    - front operations
-        - split
-            x 1st neighbor
-            x 2nd neighbor
-            - 3rd neighbor
-                - need to project point to surface
-        - merge
-            - need to check internal front first?
-            - need to project point to surface
-    - edge queue priority
-- import/use point files
-- generate first triangle
-    - field minimum in radius -> ? based on beta?
-    - vertex predict
-- MLS
-    - iterative minimization to find plane
-    - 'snapping' to closest sample point?
-    - neighborhood?
+x clean up / check correctness on add/remove edge code
+x best edge from all fronts
+x import/use point files
+- generate first triangle - iterate
+- precalc ideal length at each input point
+    - min in sphere use these values
+- vertex predict improve
+- too-close merge/split needs better solution
 - priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
 - how to 'query' field
 - wavy torus

@@ -2101,7 +2101,7 @@ Code.parsePointSetString = function(data, max){
 		line = lines[i];
 		if(line.length==0 || line.charAt(0)=="#"){ continue; } // comments, empty lines
 		nums = line.split(" ");
-		if(nums.length==3){ // 1st line is length
+		if(nums.length>=3){ // 1st line is length, some sources have additional fields
 			x = Number(nums[0]);
 			y = Number(nums[1]);
 			z = Number(nums[2]);
