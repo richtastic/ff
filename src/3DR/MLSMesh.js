@@ -8,7 +8,7 @@ function MLSMesh(){
 	this._field = null;
 	this._rho = 0;
 	this._tau = 0;
-	this._bivariate = new BivariateSurface(3); // 3 gives:  "eig: internal error"
+	this._bivariate = new BivariateSurface(4);
 	//
 	this._k = 0;
 this.crap = {};
@@ -23,10 +23,12 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this.pointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(2*2*Math.PI/10.0);
-	tau = tau!==undefined?tau:1.0;
+	rho = rho!==undefined?rho:(4.0*Math.PI/10.0);
+	tau = tau!==undefined?tau:10.0;
 	this._rho = rho;
 	this._tau = tau;
+	// precalculate ideal lengths for each source point, and bivariate coefficients / normal?
+	// this.calculateSourceIdealLengths();
 	// find initial best triangle/front
 	var seedData = this.findSeedTriangle();
 	//this.crap.seed = seedTri;
@@ -123,6 +125,9 @@ MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLengt
 }
 MLSMesh.prototype.findSeedTriangle = function(){
 	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;
+	var vertexA, vertexB, vertexC, edgeLength, edgeLengthMin, edgeLengthMax, insideLength, edgeLengthA,edgeLengthB,edgeLengthC, idealEdgeLength;
+	var cosRatio = Math.cos(Math.PI/6.0);
+	var deg120 = Math.PI*4.0/3.0;
 	// pick random cloud point
 	cuboid = this._pointCloud.range();
 	randomPoint = new V3D(cuboid.min.x+Math.random()*cuboid.size.x, cuboid.min.y+Math.random()*cuboid.size.y, cuboid.min.z+Math.random()*cuboid.size.z);
@@ -133,25 +138,54 @@ MLSMesh.prototype.findSeedTriangle = function(){
 	surfaceNormal = surfaceData.normal;
 	surfaceLength = surfaceData.length;
 	surfaceDirMin = surfaceData.directionMin;
-	// iteritively find ideal curvature
-	var searchDistance = surfaceLength*1.0; // no idea ...
-console.log();
-	var edgeLengthA = this.fieldMinimumInSphere(null,surfacePoint,searchDistance);
-	var edgeLengthB = edgeLengthA; // from somewhere ...
-		// somehow do iteration / bisections ...
-	var idealEdgeLength = edgeLengthA;
-	// distance from center to vertex of equilateral
-	var insideLength = idealEdgeLength*Math.cos(Math.PI/6.0);
-	// pick some direction for vertexA: minimum curvature direction
-	var vertexA = V3D.scale(new V3D(),surfaceDirMin,insideLength);// new V3D(surfacePoint.x+insideLength*surfaceDirMin.x, surfacePoint.y+insideLength*surfaceDirMin.y, surfacePoint.z+insideLength*surfaceDirMin.z);
-	var vertexB = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal, Math.PI*4.0/3.0); // 120deg = 4/3*pi
-	var vertexC = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal,-Math.PI*4.0/3.0);
+	// initial tri
+	insideLength = surfaceLength*cosRatio;
+	vertexA = V3D.scale(new V3D(),surfaceDirMin,insideLength);
+	vertexB = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal, deg120);
+	vertexC = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal,-deg120);
 	vertexA.add(surfacePoint); vertexB.add(surfacePoint); vertexC.add(surfacePoint);
-	// project points to surface
-	vertexA = this.projectToSurfacePoint(vertexA);
-	vertexB = this.projectToSurfacePoint(vertexB);
-	vertexC = this.projectToSurfacePoint(vertexC);
-	// generate triangle
+	// iteritively find ideal edge length
+	var i, min, max;
+	edgeLengthMin = null;
+	edgeLengthMax = null;
+	for(i=0;i<10;++i){
+		surfaceData = this.projectToSurfaceData(vertexA);
+		vertexA = surfaceData.point;
+		edgeLengthA = surfaceData.length;
+		//
+		surfaceData = this.projectToSurfaceData(vertexB);
+		vertexB = surfaceData.point;
+		edgeLengthB = surfaceData.length;
+		//
+		surfaceData = this.projectToSurfaceData(vertexC);
+		vertexC = surfaceData.point;
+		edgeLengthC = surfaceData.length;
+		//
+		min = Math.min(edgeLengthA,edgeLengthB,edgeLengthC);
+		max = Math.max(edgeLengthA,edgeLengthB,edgeLengthC);
+		if(edgeLengthMax==null){
+			edgeLengthMin = min
+			edgeLengthMax = max;
+		}else{
+			var mid = (max+min)/2.0;
+			if(mid < idealEdgeLength){
+				edgeLengthMax = idealEdgeLength;
+			}else{
+				edgeLengthMin = idealEdgeLength;
+			}
+		}
+		console.log(i+": "+edgeLengthMin+" "+edgeLengthMax);
+		idealEdgeLength = (edgeLengthMin+edgeLengthMax)/2.0;
+		insideLength = idealEdgeLength*cosRatio;
+		vertexA = V3D.scale(new V3D(),surfaceDirMin,insideLength);
+		vertexB = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal, deg120);
+		vertexC = V3D.rotateAngle(new V3D(),vertexA,surfaceNormal,-deg120);
+		vertexA.add(surfacePoint); vertexB.add(surfacePoint); vertexC.add(surfacePoint);
+		if(Math.abs(edgeLengthMin-edgeLengthMax)<1E-6){
+			break;
+		}
+	}
+	// initial triangle
 	var tri = new MLSTri(vertexA,vertexB,vertexC);
 	tri.generateEdgesFromVerts();
 	return {tri:tri, idealLength:idealEdgeLength};
@@ -219,7 +253,7 @@ i = Math.max(i,c*0.5); // BAD SITUATION ......................... didn't search 
 MLSMesh.prototype.projectToSurfaceData = function(p){
 	return this._projectToSurface(p);
 }
-MLSMesh.prototype.projectToSurfacePoint = function(p){ // DOES THIS NEED TO BE AN ACTUAL POINT ON SURFACE, OR ANY POINT ? - PASS A LENGTH ALONG WITH NEIGHBORHOOD ... OR A FLAG FOR NON-POINT?
+MLSMesh.prototype.projectToSurfacePoint = function(p){
 	var data = this._projectToSurface(p);
 	return data.point;
 }
@@ -228,15 +262,13 @@ MLSMesh.prototype._projectToSurface = function(p){
 	var bivariate = this._bivariate;
 	// find set of local point to weight
 	k = Math.min( Math.max(0.01*this._pointCloud.count(),5)+1,20); // drop points outside of some standard deviation?
-// k = 20;
-	// NEED TO TAKE INTO ACCOUNT ACTUAL CLOUD POINTS AND R^3 POINTS
 	var closestPoint = this._pointCloud.closestPointToPoint(p);
 	neighborhood = this.neighborhoodPoints(p, k);
 	f = this.localFeatureSize(closestPoint,neighborhood);
-
 	h = this._tau*f;
 	// find local plane initial approximation
 	plane = MLSMesh.weightedSurfaceNormalFromPoints(p,neighborhood,h);
+	// plane = MLSMesh.weightedSurfaceNormalFromPoints(closestPoint,neighborhood,h);
 	normal = plane.normal;
 	origin = plane.point;
 	// iteritive minimized error local plane
@@ -331,25 +363,6 @@ var weightSum = 0;
 	if( V3D.dot(V3D.cross(v1,v2),v0) <0 ){ // consistent orientation
 		vA = v1; v1 = v2; v2 = vA;
 	}
-	/*
-	var svd = Matrix.SVD(cov);
-	var U = svd.U;
-	var S = svd.S;
-	var V = svd.V;
-// console.log(U.toString());
-// console.log(S.toString());
-// console.log(V.toString());
-	var minDir = new V3D().setFromArray(V.colToArray(2));
-console.log( V3D.dot(minDir,v0) +"  "+values[0] );
-console.log( V3D.dot(minDir,v1) +"  "+values[1] );
-console.log( V3D.dot(minDir,v2) +"  "+values[2] );
-// var N = new Matrix(3,1).setFromArray(V.colToArray(2));
-// console.log(minDir+"");
-// console.log(N+"");
-	var inPlane0 = new V3D().setFromArray(V.colToArray(0));
-	var inPlane1 = new V3D().setFromArray(V.colToArray(1));
-	var com = new V3D(a,b,c);
-	*/
 	// use projected point as reference center:
 	var diff = V3D.diff(feature,com);
 	var dN = V3D.dot(v0,diff);

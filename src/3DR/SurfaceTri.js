@@ -19,6 +19,8 @@ function SurfaceTri(){
 	this.setupDisplay3D();
 //	this.setupSphere3D();
 	this.loadPointFile();
+this._displayPoints = true;
+this._displayTriangles = true;
 	//
 	this._ticker = new Ticker(100);
 	this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
@@ -79,19 +81,16 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	this._stage3D.matrixIdentity();
 	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
 	this._stage3D.matrixRotate(e*0.03, 0,1,0);
-	this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
-	this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
-	this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
-	//
-	if(this._planeTriangleVertexList){
-		// console.log(this._planeTriangleVertexList);
-		// console.log(this._planeTriangleColorsList);
-		// this._stage3D.matrixIdentity();
-		// this._stage3D.matrixTranslate(0.0,0.0,-3.0);
-		// this._stage3D.matrixRotate(e*0.03, 0,1,0);
+	// points
+	if(this._displayPoints){
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
+		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
+		this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
+	}
+	// triangles
+	if(this._planeTriangleVertexList && this._displayTriangles){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._planeTriangleVertexList);
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
-		// this._stage3D.matrixReset();
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 	}
 	this._stage3D.matrixReset();
@@ -111,6 +110,12 @@ SurfaceTri.prototype.keyboardKeyDown = function(e){
 		}else{
 			this._stage3D.start();
 		}
+	}
+	if(key==Keyboard.KEY_LET_Z){
+		this._displayTriangles = !this._displayTriangles;
+	}
+	if(key==Keyboard.KEY_LET_X){
+		this._displayPoints = !this._displayPoints;
 	}
 }
 SurfaceTri.prototype.triangulateTick = function(e){

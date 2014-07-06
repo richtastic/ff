@@ -1167,15 +1167,11 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 
 **TODO:**
-x add projections for merge/split
-x clean up / check correctness on add/remove edge code
-x best edge from all fronts
-x import/use point files
 - generate first triangle - iterate
-- precalc ideal length at each input point
-    - min in sphere use these values
 - vertex predict improve
 - too-close merge/split needs better solution
+- precalc ideal length at each input point
+    - min in sphere use these values
 - priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
 - how to 'query' field
 - wavy torus
