@@ -1167,19 +1167,16 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 
 **TODO:**
-- generate first triangle - iterate
-    - this triangle needs to be small enough so that vertexPredict min-in-sphere doesn't die:
-        - i < c/2
-- vertex predict improve
+- pull FIELD out to actual class
 - too-close merge/split needs better solution
-- precalc ideal length at each input point
-    - min in sphere use these values
+- vertex predict improve
 - priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
-- how to 'query' field
+- generate first triangle - iterate
 - wavy torus
 - simulate with real point cloud source
 - N-object octree leaves
 - trackball rotation
+
 
 RESULTS DATA:
 
