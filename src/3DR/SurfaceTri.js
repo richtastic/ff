@@ -119,11 +119,11 @@ SurfaceTri.prototype.keyboardKeyDown = function(e){
 	}
 }
 SurfaceTri.prototype.triangulateTick = function(e){
-	//console.log("tick: "+e);
 	if(this._mlsMesh){
 		this._mlsMesh.triangulateSurfaceIteration();
 		this.resetTris();
 	}
+	//this._ticker.stop(); // ...............................................................
 }
 
 
@@ -133,7 +133,6 @@ SurfaceTri.prototype.setupDisplay3D = function(){
 }
 
 SurfaceTri.prototype.loadPointFile = function(){
-	console.log("LOAD...");
 	//var sourceFileName = "./images/points/saltdome_1019.pts";
 	//var sourceFileName = "./images/points/foot_5092.pts";
 	var sourceFileName = "./images/points/bunny_30571.pts";
@@ -191,14 +190,11 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 
 
 SurfaceTri.prototype.resetTris = function(){
-
-	console.log(".................................. display crap ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 	var list = [];
 	colors = [];
 
 	var front, tris, tri, fronts, i, j;
 
-	//fronts = this._mlsMesh.crap.fronts._fronts;
 	fronts = Code.copyArray(this._mlsMesh.crap.fronts._fronts);
 	fronts.push(this._mlsMesh.crap.fronts); // 
 
@@ -242,6 +238,53 @@ SurfaceTri.prototype.resetTris = function(){
 		colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
 	}
 
+/*
+var bivariate = this._mlsMesh.crap.bivariate;
+var transR = this._mlsMesh.crap.transR;
+var v = this._mlsMesh.crap.vertexR;
+var u = new V3D(v.x+0.5,v.y+0.5,v.z+0.5);
+var w = new V3D(v.x,v.y+0.5,v.z);
+list.push(v.x,v.y,v.z, u.x,u.y,u.z, w.x,w.y,w.z);
+colors.push(1.0,0.0,0.0, 0.75);
+colors.push(0.0,0.0,1.0, 0.50);
+colors.push(0.0,0.0,1.0, 0.50);
+var j, k, x, y, z, x1,y1,z11,z12,z21,z22, x2,y2,z2, i1,i2, j1,j2;
+var p11 = new V3D(), p21 = new V3D(), p12 = new V3D(), p22 = new V3D();
+var sca = 0.02;
+for(j=0;j<10;++j){
+	j1 = j;
+	j2 = j+1;
+	for(i=0;i<10;++i){
+		i1 = i;
+		i2 = i+1;
+		//
+		x1 = (-5 + i1)*sca;
+		x2 = (-5 + i2)*sca;
+		y1 = (-5 + j1)*sca;
+		y2 = (-5 + j2)*sca;
+		z11 = bivariate.valueAt(x1,y1);
+		z12 = bivariate.valueAt(x1,y2);
+		z21 = bivariate.valueAt(x2,y1);
+		z22 = bivariate.valueAt(x2,y2);
+		//
+		p11.set(x1,y1,z11);
+		p21.set(x2,y1,z21);
+		p12.set(x1,y2,z12);
+		p22.set(x2,y2,z22);
+		//
+		transR.multV3D(p11,p11);
+		transR.multV3D(p12,p12);
+		transR.multV3D(p21,p21);
+		transR.multV3D(p22,p22);
+		//
+		list.push(p11.x,p11.y,p11.z, p22.x,p22.y,p22.z, p12.x,p12.y,p12.z);
+		list.push(p11.x,p11.y,p11.z, p21.x,p21.y,p21.z, p22.x,p22.y,p22.z);
+		for(k=0;k<6;++k){
+			colors.push(Math.random(),Math.random(),Math.random(), 0.75);
+		}
+	}
+}
+*/
 	this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
 	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
 }

@@ -39,6 +39,12 @@ OctTree.prototype.max = function(){
 	return this._root.max();
 }
 // --------------------------------------------------------------------------------------------------------- 
+OctTree.prototype.sort = function(s){
+	if(s!==undefined){
+		this._sort = s;
+	}
+	return this._sort;
+}
 OctTree.prototype.initWithObjects = function(objects, force){
 	this.clear();
 	var i, len = objects.length;
@@ -100,13 +106,15 @@ OctTree.prototype.kill = function(){
 // 	return b-a;
 // }
 OctTree.prototype.kNN = function(k,p){ // 
+	var sortFxn = this._sort;
+	p = sortFxn(p); // turn into V3D
 	var sortNode = function(a,b){ return b.d - a.d; };
-	var sortPoint = function(a,b){ return V3D.distanceSquare(b,p)-V3D.distanceSquare(a,p); };
+	var sortPoint = function(a,b){ return V3D.distanceSquare(sortFxn(b),p)-V3D.distanceSquare(sortFxn(a),p); };
 	var nodeQueue = new RedBlackTree(); nodeQueue.sorting(sortNode);
 	var pointQueue = new RedBlackTree(); pointQueue.sorting(sortPoint); pointQueue.setMaximum(k);
 	var node, child, i;
 	var distSquare, distanceMinimumSquare = this._root.size().lengthSquared(); // infinity
-	node = this._root; node.d = node.centerDistanceToPointSquare(p);
+	node = this._root; node.d = node.centerDistanceToPointSquare( p ); // this._sort(p) );
 //var count = 0;
 	while( node ){ //
 //++count;
@@ -114,7 +122,7 @@ OctTree.prototype.kNN = function(k,p){ //
 //++count;
 			if( node.isLeaf() ){
 //++count;
-				distSquare = V3D.distanceSquare(p,node.data());
+				distSquare = V3D.distanceSquare(p, sortFxn(node.data()) );
 				if(distSquare<distanceMinimumSquare){ // save unnecessary insertions
 					pointQueue.insertObject( node.data() );
 					if(pointQueue.length()==k){ // can start limiting candidates

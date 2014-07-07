@@ -4,6 +4,18 @@ function PointCloud(){
 	this._points = new Array();
 	this._tree = new OctTree();
 }
+PointCloud.prototype.sort = function(s){
+	if(s!==undefined){
+		this._tree.sort(s);
+	}
+	return this._tree.sort();
+}
+PointCloud.prototype.clear = function(){
+	this._tree.clear();
+}
+PointCloud.prototype.points = function(){
+	return this._points;
+}
 PointCloud.prototype.initWithPointArray = function(points, force){
 	var i, len = points.length;
 	for(i=0;i<len;++i){
@@ -49,15 +61,6 @@ PointCloud.prototype.pointsInsideSphere = function(center, radius){
 PointCloud.prototype.toString = function(){
 	return this._tree.toString();
 }
-PointCloud.whot = function(){
-	// ?
-}
-
-
-
-
-
-
 
 
 

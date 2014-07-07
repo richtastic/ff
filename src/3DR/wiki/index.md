@@ -1168,6 +1168,8 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 
 **TODO:**
 - generate first triangle - iterate
+    - this triangle needs to be small enough so that vertexPredict min-in-sphere doesn't die:
+        - i < c/2
 - vertex predict improve
 - too-close merge/split needs better solution
 - precalc ideal length at each input point

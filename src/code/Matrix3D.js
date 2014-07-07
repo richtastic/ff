@@ -47,6 +47,14 @@ Matrix3D.prototype.translate = function(tx,ty,tz){
 	return this;
 }
 // skewing by x, y, z
+Matrix3D.prototype.fromQuaternion = function(v){
+	V4D.qToMatrix(this,v);
+	return this;
+}
+Matrix3D.prototype.rotateQuaternion = function(v){
+	var mat = Matrix3D.temp.fromQuaternion(v);
+	return this;
+}
 Matrix3D.prototype.rotateVector = function(v,t){ // vector, theta
 	var mat = Matrix3D.temp;
 	var c = Math.cos(t), s = Math.sin(t);
@@ -143,6 +151,9 @@ Matrix3D.prototype.multV4D = function(aV,bV){ // a = trans(b)
 	return aV;
 }
 Matrix3D.prototype.copy = function(m){
+	if(m===undefined){
+		return new Matrix3D().copy(this);
+	}
 	this.set(m.a,m.b,m.c,m.d,m.e,m.f,m.g,m.h,m.i,m.j,m.k,m.l);
 	return this;
 }

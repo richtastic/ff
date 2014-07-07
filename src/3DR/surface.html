@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSEdge.js","MLSTri.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSPoint.js","MLSEdge.js","MLSTri.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	/*
@@ -233,6 +233,34 @@ console.log(r+"");
 return;
 */
 
+/*
+var qa, qb, qt, d, v, u, m, angle1, angle2;
+
+angle1 = Math.PI*(1.0/2.0);
+angle2 = -Math.PI*(1.0/2.0);
+d = new V3D(0,0,1);
+v = new V3D(2,1,0);
+u = new V3D();
+qa = new V4D();
+qb = new V4D();
+qt = new V4D();
+qt.qClear();
+qa.qRotateDir(d.x,d.y,d.z, angle1);
+qb.qRotateDir(d.x,d.y,d.z, angle2);
+
+V4D.qMul(qt, qb,qt);
+V4D.qMul(qt, qa,qt);
+
+
+m = V4D.qMatrix(qt);
+u = m.multV3D(u,v);
+console.log(qa+"");
+console.log(m+"");
+console.log(v+"");
+console.log("----------------->");
+console.log(u+"");
+return;
+*/
 
 	var surface = new SurfaceTri();
 }

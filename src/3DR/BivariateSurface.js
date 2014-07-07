@@ -6,6 +6,12 @@ function BivariateSurface(degree){
 //	this._origin = new V3D(); // 0
 //	this._normal = new V3D(); // +z
 }
+BivariateSurface.prototype.copy = function(){
+	var b = new BivariateSurface();
+	b._degree = this._degree;
+	b._coefficients = Code.copyArray(this._coefficients);
+	return b;
+}
 BivariateSurface.prototype.coefficients = function(c){
 	if(c!==undefined){
 		Code.copyArray(this._coefficients,c);
