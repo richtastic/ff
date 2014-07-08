@@ -168,7 +168,6 @@ SurfaceTri.prototype.setupSphere3D = function(){
 }
 
 SurfaceTri.prototype.startPointCloud = function(pts){
-
 	this._pointCloud = new PointCloud();
 	this._mlsMesh = new MLSMesh();
 

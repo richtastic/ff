@@ -329,7 +329,7 @@ YAML.prototype._prefixIndent = function(count){
 	return str;
 }
 // -------------------------------------------------------------------------------------------------- ------------------------ WRITING
-YAML.prototype.startWrite = function(inputString){
+YAML.prototype.startWrite = function(){
 	this._lines = new Array();
 	this._stack = new Array();
 	this._references = new Array();

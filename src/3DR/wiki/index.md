@@ -1167,7 +1167,7 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 
 **TODO:**
-- pull FIELD out to actual class
+x pull FIELD out to actual class
 - too-close merge/split needs better solution
 - vertex predict improve
 - priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations

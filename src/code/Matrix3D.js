@@ -32,6 +32,10 @@ Matrix3D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.K, this.k);
 	yaml.writeNumber(DATA.L, this.l);
 }
+Matrix3D.prototype.readFromObject = function(obj){
+	var DATA = Matrix3D.YAML;
+	this.set(obj[DATA.A],obj[DATA.B],obj[DATA.C],obj[DATA.D], obj[DATA.E],obj[DATA.F],obj[DATA.G],obj[DATA.H], obj[DATA.I],obj[DATA.J],obj[DATA.K],obj[DATA.L]);
+}
 Matrix3D.prototype.identity = function(){
 	this.a=1; this.b=0; this.c=0; this.d=0; this.e=0; this.f=1; this.g=0; this.h=0; this.i=0; this.j=0; this.k=1; this.l=0;
 	return this;
