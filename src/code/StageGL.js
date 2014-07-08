@@ -116,6 +116,11 @@ StageGL.prototype.matrixRotate = function(theta, x,y,z){
 StageGL.prototype.matrixScale = function(x,y,z){
 	mat4.scale(this._modelViewMatrixStack.matrix(),[x,y,z]);
 }
+StageGL.prototype.matrixMultM3D = function(m){
+	//mat4.postMultM3D(this._modelViewMatrixStack.matrix(), this._modelViewMatrixStack.matrix(), m);
+	//mat4.postMultM3D(m, this._modelViewMatrixStack.matrix());
+	mat4.postMultM3D(this._modelViewMatrixStack.matrix(),m);
+}
 StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
 	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
 }

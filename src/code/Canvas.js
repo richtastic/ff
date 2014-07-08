@@ -23,6 +23,7 @@ Canvas.EVENT_MOUSE_DOWN = "canevtmoudwn";
 Canvas.EVENT_MOUSE_UP = "canevtmouup";
 Canvas.EVENT_MOUSE_CLICK = "canevtmouclk";
 Canvas.EVENT_MOUSE_MOVE = "canevtmoumov";
+Canvas.EVENT_MOUSE_WHEEL = "canevtmouwhl";
 Canvas.EVENT_TOUCH_START = "canevttousta";
 Canvas.EVENT_TOUCH_MOVE = "canevttoumov";
 Canvas.EVENT_TOUCH_END = "canevttouend";
@@ -402,6 +403,7 @@ Canvas.prototype.addListeners = function(){
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn);
+		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_WHEEL, this._canvasMouseWheelFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
@@ -415,6 +417,7 @@ Canvas.prototype.removeListeners = function(){
 		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn);
 		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn);
 		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn);
+		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_WHEEL, this._canvasMouseWheelFxn);
 		this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
 		this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
 		this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
@@ -422,7 +425,15 @@ Canvas.prototype.removeListeners = function(){
 	}
 }
 //  ------------------------------------------------------------------------------------------------------------------------ MOUSE POSITIONING
+Canvas.prototype.getMouseDelta = function(e){
+	e = Code.getJSEvent(e);
+//console.log(e)
+//console.log(e.deltaX,e.deltaY,e.deltaZ, e.wheelDelta, e.wheelDeltaX, e.wheelDeltaY);
+	var delta = e.wheelDelta/120.0;//e.deltaY/(e.wheelDelta?(e.wheelDelta):(120.0));
+	return delta
+}
 Canvas.prototype.getMousePosition = function(e){
+	e = Code.getJSEvent(e);
 	var pos = new V2D(0,0);
 	var ele = this._canvas;
 	while(ele != null){
@@ -438,6 +449,12 @@ Canvas.prototype._canvasClickFxn = function(e){
 	e.preventDefault();
 	pos = this.getMousePosition(e);
 	this.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+}
+Canvas.prototype._canvasMouseWheelFxn = function(e){
+	e.preventDefault();
+	pos = this.getMousePosition(e);
+	var posD = new V3D(pos.x,pos.y,this.getMouseDelta(e) );
+	this.alertAll(Canvas.EVENT_MOUSE_WHEEL,posD);
 }
 Canvas.prototype._canvasMouseDownFxn = function(e){
 	e.preventDefault();

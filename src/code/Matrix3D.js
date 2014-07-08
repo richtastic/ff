@@ -17,7 +17,22 @@ function Matrix3D(){
 	this.a=0; this.b=0; this.c=0; this.d=0; this.e=0; this.f=0; this.g=0; this.h=0; this.i=0; this.j=0; this.k=0; this.l=0;
 	this.identity();
 }
-
+//if(mat4){
+mat4.preMultM3D = function(a,b,m){
+	if(!m){
+		m = b;
+		return mat4.multiply(a,a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1]);
+	}
+	return mat4.multiply(a,b,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1]);
+}
+mat4.postMultM3D = function(a,b,m){
+	if(!m){
+		m = b;
+		return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],a);
+	}
+	return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],b);
+}
+//}
 Matrix3D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.A, this.a);
 	yaml.writeNumber(DATA.B, this.b);

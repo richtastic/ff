@@ -22,6 +22,10 @@ function SurfaceTri(){
 this._displayPoints = true;
 this._displayTriangles = true;
 	//
+	this._userMatrix = new Matrix3D().identity();
+	this._userMatrixTemp = new Matrix3D().identity();
+	this._userScale = 0.0;
+	//
 	this._ticker = new Ticker(100);
 	this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
 	this._ticker.start();
@@ -32,6 +36,12 @@ this._displayTriangles = true;
 	//
 	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
 	this._stage3D.start();
+	//
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
+	//
 }
 SurfaceTri.prototype.getVertexShaders1 = function(){
 	return ["\
@@ -73,14 +83,57 @@ SurfaceTri.prototype.getFragmentShaders1 = function(){
     "];*/
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
+SurfaceTri.prototype.onMouseDownFxn3D = function(e){
+	this._mouseIsDown = true;
+	this._mouseDownStartPoint = this._mouseSpherePoint(e);
+}
+SurfaceTri.prototype.onMouseUpFxn3D = function(e){
+	this._mouseIsDown = false;
+	this._mouseDownEndPoint = this._mouseSpherePoint(e);
+	this._userMatrix.mult(this._userMatrix,this._userMatrixTemp);
+	this._userMatrixTemp.identity();
+}
+SurfaceTri.prototype.onMouseMoveFxn3D = function(e){
+	if(this._mouseIsDown){
+		this._mouseDownEndPoint = this._mouseSpherePoint(e);
+		this._userMatrixTemp.identity();
+		var angle = -V3D.angle(this._mouseDownStartPoint,this._mouseDownEndPoint);
+		var dir = V3D.cross(this._mouseDownStartPoint,this._mouseDownEndPoint);
+		dir.norm();
+		this._userMatrixTemp.rotateVector(dir,angle);
+	}
+}
+SurfaceTri.prototype.onMouseWheelFxn3D = function(e){
+	this._userScale += ((e.z>0)?-1:1)*0.25;
+}
+SurfaceTri.prototype._mouseSpherePoint = function(e){
+	var canWid = this._canvas3D.width();
+	var canHei = this._canvas3D.height();
+	var center = new V3D(canWid*0.5,canHei*0.5,0);
+	var point = new V3D(e.x,e.y,0);
+	var cenToPnt = V3D.sub(point,center);
+	var radius = Math.min(center.x,center.y);
+	if(cenToPnt.length()>radius){ // snap to sphere
+		cenToPnt.norm().scale(radius);
+		cenToPnt.z = 0;
+	}else{
+		cenToPnt.z = Math.sqrt(radius*radius - cenToPnt.y*cenToPnt.y - cenToPnt.x*cenToPnt.x);
+	}
+	cenToPnt.y = -cenToPnt.y;
+	return cenToPnt;
+}
 SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	if(!this._mlsMesh){ return; }
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
 	// 
+	//this._userMatrix.rotateY(0.03);
 	this._stage3D.matrixIdentity();
-	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
-	this._stage3D.matrixRotate(e*0.03, 0,1,0);
+	this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
+	//this._stage3D.matrixPush();
+	this._stage3D.matrixMultM3D(this._userMatrixTemp);
+	this._stage3D.matrixMultM3D(this._userMatrix);
+	//this._stage3D.matrixRotate(e*0.03, 0,1,0);
 	// points
 	if(this._displayPoints){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
@@ -93,6 +146,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 	}
+	//this._stage3D.matrixPop();
 	this._stage3D.matrixReset();
 }
 SurfaceTri.prototype.keyboardKeyDown = function(e){
@@ -123,7 +177,7 @@ SurfaceTri.prototype.triangulateTick = function(e){
 		this._mlsMesh.triangulateSurfaceIteration();
 		this.resetTris();
 	}
-	//this._ticker.stop(); // ...............................................................
+	this._ticker.stop(); // ...............................................................
 }
 
 

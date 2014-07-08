@@ -12,6 +12,7 @@ function MLSEdge(a,b){
 	this._priority = 1; // length/idealLength closest to 1 => l/i - 1
 	this._link = null; // linked list reference for prev/next
 	this._node = null; // priority queue reference
+	this._boundary = false;
 	this.A(a);
 	this.B(b);
 }
@@ -97,6 +98,15 @@ MLSEdge.prototype.node = function(n){
 		this._node = n;
 	}
 	return this._node;
+}
+MLSEdge.prototype.isBoundary = function(b){
+	return this._boundary;
+}
+MLSEdge.prototype.boundary = function(b){
+	if(b!==undefined){
+		this._boundary = b;
+	}
+	return this._boundary;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.length = function(){

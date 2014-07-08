@@ -15,7 +15,7 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this._field.initWithPointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(2.0*Math.PI/10.0);
+	rho = rho!==undefined?rho:(1.0*Math.PI/10.0);
 	tau = tau!==undefined?tau:1;
 	this._field.rho(rho);
 	this._field.tau(tau);
@@ -103,7 +103,7 @@ this.crap.vertex = vertex;
 ++count;
 	}
 }
-MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){
+MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){ // too close to triangulation
 	var closest = frontList.closestFront(edge,vertex);
 	var closestEdge = closest.edge;
 	var closestFront = closestFront;
@@ -225,12 +225,13 @@ MLSMesh.prototype.necessaryMinLength = function(edge){ // necessary minimum leng
 	var i = this._field.minimumInSphere(midpoint,b);
 	// this doesn't actually have to be the minimum, but ACCOUNT for the minimum length at a distance, by some geometric minimization
 	// ?
+	return c;
 	return i;
 }
 MLSMesh.prototype.vertexPredict = function(edge){
 	var c = edge.length();
 	var i = this.necessaryMinLength(edge);
-	i = Math.min(Math.max(i,0.5*c/Math.cos(10*Math.PI/180.0)),0.5*c/Math.cos(70*Math.PI/180.0)); // clamp base angle to 10,70
+	i = Math.min(Math.max(i,0.5*c/Math.cos(10*Math.PI/180.0)),0.5*c/Math.cos(60*Math.PI/180.0)); // clamp base angle to 10,60
 	// limit base angle to [60-B,60+B] ~> [5,115] * this doesn't make any sense
 	// find vector in edge's triangle plane perpendicular to edge (toward p)
 	var tri = edge.tri();
