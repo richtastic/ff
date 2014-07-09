@@ -248,7 +248,7 @@ SurfaceTri.prototype.resetTris = function(){
 
 	var front, tris, tri, fronts, i, j;
 
-	fronts = Code.copyArray(this._mlsMesh.crap.fronts._fronts);
+	fronts = [];//Code.copyArray(this._mlsMesh.crap.fronts._fronts);
 	fronts.push(this._mlsMesh.crap.fronts); // 
 
 	var triCount = 0;

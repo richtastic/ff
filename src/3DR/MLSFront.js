@@ -7,15 +7,20 @@ function MLSFront(){
 MLSFront.prototype.triangles = function(){
 	return this._triangles;
 }
+MLSFront.prototype.addTri = function(tri){
+	this._triangles.push(tri);
+}
 MLSFront.prototype.addFront = function(front){
+	front.container(this);
 	this._fronts.push(front);
 }
 MLSFront.prototype.removeFront = function(front){
-	var tris = front.triangles();
-	for(i=tris.length;i--;){
-		this._triangles.push( tris.pop() );
-	}
+	// var tris = front.triangles();
+	// for(i=tris.length;i--;){
+	// 	this._triangles.push( tris.pop() );
+	// }
 	Code.removeElementSimple(this._fronts, front);
+	front.container(null);
 }
 MLSFront.prototype.first = function(){ // select front with highest priority edge
 	var i, front = this._fronts[0];
@@ -31,6 +36,19 @@ MLSFront.prototype.first = function(){ // select front with highest priority edg
 }
 MLSFront.prototype.count = function(){
 	return this._fronts.length;
+}
+MLSFront.prototype.pointCloseToTriangulation = function(point, maxDistance){
+	var i, len, tri, tris = this._triangles;
+	len = tris.length;
+	for(i=0;i<len;++i){
+		tri = tris[i];
+		dist = Code.closestDistancePointTri3D(point, tri.A(),tri.B(),tri.C(),tri.normal());
+		console.log(dist+" <?< "+maxDistance);
+		if(dist < maxDistance){
+			return true;
+		}
+	}
+	return false;
 }
 MLSFront.prototype.closestFront = function(edge,vertex){ // go over all edges in various fronts - find closest edge to point 
 	var i, front, closest, len = this._fronts.length;

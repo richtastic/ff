@@ -53,6 +53,9 @@ MLSField.prototype.maxCurvatureInSphere = function(center, radius){ // maximum c
 	var idealLength = this._rho/maxCurv;
 	return idealLength;
 }
+MLSField.prototype.idealEdgeLengthAtPoint = function(p){
+	return this._rho/this._pointCloud.closestPointToPoint(p).curvature();
+}
 MLSField.prototype.minimumInSphere = function(center, radius){ 
 	return this._rho/this.maxCurvatureInSphere(center, radius);
 }

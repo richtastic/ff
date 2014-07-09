@@ -3,7 +3,7 @@
 function MLSEdgeFront(){ // single front
 	this._edgeQueue = new PriorityQueue(MLSEdge.sortIncreasing);
 	this._edgeList = new LinkedList(true);
-	this._triangles = [];
+	this._container = null;
 }
 MLSEdgeFront.prototype.edgeQueue = function(){
 	return this._edgeQueue;
@@ -11,11 +11,14 @@ MLSEdgeFront.prototype.edgeQueue = function(){
 MLSEdgeFront.prototype.edgeList = function(){
 	return this._edgeList;
 }
-MLSEdgeFront.prototype.triangles = function(){
-	return this._triangles;
+MLSEdgeFront.prototype.container = function(c){
+	if(c!==undefined){
+		this._container = c;
+	}
+	return this._container;
 }
 MLSEdgeFront.prototype.addTri = function(tri){
-	this._triangles.push(tri);
+	this._container.addTri(tri);
 }
 MLSEdgeFront.prototype.moreThanSingleTri = function(){
 	var len = this._edgeList.length();
@@ -82,8 +85,8 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength,
 	e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
 	// priorities A
 	e1AB.priority( edgeA.priority() );
-	e1BC.priorityFromIdeal( surfaceLength );
-	e1CA.priorityFromIdeal( surfaceLength );
+	e1BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1BC.midpoint()) );
+	e1CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1CA.midpoint()) );
 	// triangle A
 	triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
 	e1AB.tri( triA );
@@ -95,8 +98,8 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength,
 	e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
 	// priorities B
 	e2AB.priority( edgeB.priority() );
-	e2BC.priorityFromIdeal( surfaceLength );
-	e2CA.priorityFromIdeal( surfaceLength );
+	e2BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2BC.midpoint()) );
+	e2CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2CA.midpoint()) );
 	// triangle B
 	triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
 	e2AB.tri( triB );
@@ -181,7 +184,7 @@ crap.edgeB = edgeB;
 			e1BC = new MLSEdge(edgeA.B(),edgeA.A()); // A opposite
 			e1CA = new MLSEdge(edgeA.A(),edgeB.A()); // B opposite
 			// priority
-			e1AB.priorityFromIdeal( idealLength );
+			e1AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) );
 			e1BC.priority( edgeA.priority() );
 			e1CA.priority( edgeB.priority() );
 		}else{ // (edgeB==edgeA.next()){
@@ -190,7 +193,7 @@ crap.edgeB = edgeB;
 			e1BC = new MLSEdge(edgeB.B(),edgeB.A()); // B opposite
 			e1CA = new MLSEdge(edgeB.A(),edgeA.A()); // A opposite
 			// priority
-			e1AB.priorityFromIdeal( idealLength );
+			e1AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) );
 			e1BC.priority( edgeB.priority() );
 			e1CA.priority( edgeA.priority() );
 		}
@@ -258,13 +261,13 @@ crap.edgeB = edgeB;
 			edge = e1CA;
 		}
 		// priority
-		e1AB.priorityFromIdeal( idealLength ); // don't care
-		e1BC.priorityFromIdeal( idealLength ); // don't care
-		e1CA.priorityFromIdeal( idealLength ); // don't care
-		e2AB.priorityFromIdeal( idealLength ); // don't care
-		e2BC.priorityFromIdeal( idealLength ); // don't care
-		e2CA.priorityFromIdeal( idealLength ); // don't care
-		edge.priorityFromIdeal( idealLength ); // set last to replace previous value
+		e1AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) ); // don't care
+		e1BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1BC.midpoint()) ); // don't care
+		e1CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1CA.midpoint()) ); // don't care
+		e2AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2AB.midpoint()) ); // don't care
+		e2BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2BC.midpoint()) ); // don't care
+		e2CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2CA.midpoint()) ); // don't care
+		//edge.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) ); // set last to replace previous value
 		// add new
 		this.addNodeLinkEdgeAfter(edgeA,edge);
 		this.addTri(triA);
@@ -297,8 +300,8 @@ crap.edgeB = edgeB;
 		e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
 		// priorities A
 		e1AB.priority( edgeA.priority() );
-		e1BC.priorityFromIdeal( idealLength );
-		e1CA.priorityFromIdeal( idealLength );
+		e1BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1BC.midpoint()) );
+		e1CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1CA.midpoint()) );
 		// triangle A
 		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
 		e1AB.tri( triA );
@@ -310,8 +313,8 @@ crap.edgeB = edgeB;
 		e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
 		// priorities B
 		e2AB.priority( edgeB.priority() );
-		e2BC.priorityFromIdeal( idealLength );
-		e2CA.priorityFromIdeal( idealLength );
+		e2BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2BC.midpoint()) );
+		e2CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2CA.midpoint()) );
 		// triangle B
 		triB = new MLSTri( e2AB.A(), e2BC.A(), e2CA.A() );
 		e2AB.tri( triB );
@@ -378,7 +381,7 @@ MLSEdgeFront.prototype.deferEdge = function(edge){
 	}
 	return false;
 }
-MLSEdgeFront.prototype.growTriangle = function(edge,vertex,idealLength){ // midpoint ideal length? individual ideal lengths?
+MLSEdgeFront.prototype.growTriangle = function(edge,vertex,field){
 	var link, node;
 	// create new triangle with new edges (reverse orientation of edge)
 	var tri = new MLSTri(edge.B(),edge.A(),vertex);
@@ -386,9 +389,9 @@ MLSEdgeFront.prototype.growTriangle = function(edge,vertex,idealLength){ // midp
 	var edgeBC = new MLSEdge(edge.A(),vertex);
 	var edgeCA = new MLSEdge(vertex,edge.B());
 	// priorities
-	edgeAB.priority(edge.priority());
-	edgeBC.priorityFromIdeal(idealLength);
-	edgeCA.priorityFromIdeal(idealLength);
+	edgeAB.priority( edge.priority() );
+	edgeBC.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
+	edgeCA.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
 	// triangle
 	tri.setEdgeABBCCA(edgeAB,edgeBC,edgeCA);
 	edgeAB.tri(tri);
@@ -437,7 +440,7 @@ MLSEdgeFront.prototype.canCutEar = function(edge){ // look at 2 adjacent triangl
 	}
 	return null;
 }
-MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, idealLength){ // create triangle with edge, update front
+MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, field){ // create triangle with edge, update front
 	var left = edgeA.next();
 	var right = edgeA.prev();
 	var temp, node, link, tri, eA, eB, eC;
@@ -455,16 +458,16 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, idealLength){ // create tr
 	eB = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
 	eC = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
 	// priorities
-	eA.priorityFromIdeal(idealLength);
-	eB.priority(edgeB.priority());
-	eC.priority(edgeA.priority());
+	eA.priorityFromIdeal( field.idealEdgeLengthAtPoint(eA.midpoint()) );
+	eB.priority( edgeB.priority() );
+	eC.priority( edgeA.priority() );
 	// new triangle
 	tri = new MLSTri(eA.A(),eB.A(),eC.A());
 	tri.setEdgeABBCCA(eA,eB,eC);
 	eA.tri(tri);
 	eB.tri(tri);
 	eC.tri(tri);
-	this._triangles.push(tri);
+	this.addTri(tri);
 	// add new edge to front and queue
 	link = this._edgeList.addAfter(edgeA.link(),eA);
 		eA.link(link);
@@ -480,14 +483,14 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, idealLength){ // create tr
 	edgeB.link(null);
 	edgeB.node(null);
 }
-MLSEdgeFront.prototype.fromTriangle = function(tri,idealLength){ // initial front - // midpoint ideal length
+MLSEdgeFront.prototype.fromTriangle = function(tri){ // initial front - // midpoint ideal length
 	var link, node;
 	this._edgeList.clear();
 	this._edgeQueue.clear();
-	// priorities
-	tri.edgeAB().priorityFromIdeal(idealLength);
-	tri.edgeBC().priorityFromIdeal(idealLength);
-	tri.edgeCA().priorityFromIdeal(idealLength);
+	// priorities - already set
+	// tri.edgeAB().priorityFromIdeal(idealLength);
+	// tri.edgeBC().priorityFromIdeal(idealLength);
+	// tri.edgeCA().priorityFromIdeal(idealLength);
 	// linked list
 	link = this._edgeList.push(tri.edgeAB());
 		tri.edgeAB().link(link);
@@ -503,7 +506,7 @@ MLSEdgeFront.prototype.fromTriangle = function(tri,idealLength){ // initial fron
 	node = this._edgeQueue.push(tri.edgeCA());
 		tri.edgeCA().node(node);
 	// add new triangle to set
-	this._triangles.push(tri);
+	this.addTri(tri);
 	console.log("list:");
 	console.log(this._edgeList.toString());
 	console.log("queue:");
@@ -512,7 +515,6 @@ MLSEdgeFront.prototype.fromTriangle = function(tri,idealLength){ // initial fron
 MLSEdgeFront.prototype.count = function(){
 	return this._edgeList.length();
 }
-
 
 MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all edges - find closest edge to point (not including THIS edge)
 	var i, edge, node, list = this._edgeList, len = list.length();

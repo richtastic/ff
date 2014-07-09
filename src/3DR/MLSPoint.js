@@ -4,6 +4,7 @@ function MLSPoint(v){
 	this._point = new V3D();
 	this._curvature = null;
 	this._coefficients = null;
+	this._normal = null;
 	this.point(v);
 }
 MLSPoint.prototype.curvature = function(c){

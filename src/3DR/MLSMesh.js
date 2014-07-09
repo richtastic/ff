@@ -25,9 +25,9 @@ MLSMesh.prototype.triangulateSurface = function(rho, tau){
 	var seedData = this.findSeedTriangle();
 	//this.crap.seed = seedTri;
 	var firstFront = new MLSEdgeFront();
-		firstFront.fromTriangle(seedData.tri, seedData.idealLength);
 	var frontList = new MLSFront();
 		frontList.addFront(firstFront);
+		firstFront.fromTriangle(seedData.tri);
 	this.frontList = frontList;
 	// pick best front from set
 }
@@ -57,7 +57,7 @@ console.log(edge+"  ("+current.edgeList().length()+") ");
 			vertex = MLSEdge.midpointUnjoined(edgesCanCut.edgeA,edgesCanCut.edgeB);
 			data = this._field.projectToSurfaceData(vertex);
 			idealLength = data.length;
-			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB, idealLength);
+			current.cutEar(edgesCanCut.edgeA,edgesCanCut.edgeB, this._field);
 ++count;
 			continue;
 		}
@@ -67,6 +67,7 @@ console.log(edge+"  ("+current.edgeList().length()+") ");
 		closest = this.triangleTooClose(frontList, edge,vertex, idealLength);
 //closest = null;
 		if( closest ){
+console.log("TOO CLOSE -> TAKE EVASIVE MANEUVERS");
 			if( current.deferEdge(edge) ){
 				console.log("DEFERRED");
 ++count;
@@ -82,13 +83,13 @@ this.crap.edgeB = edge2;
 this.crap.vertex = vertex;
 			if(front==current){
 				console.log("SPLIT");
-				front = current.split(edge,edge2,vertex, idealLength, minDistance,this,        this.crap);
+				front = current.split(edge,edge2,vertex, idealLength, minDistance,this._field,        this.crap);
 				if(front){
 					frontList.addFront(front);
 				}
 			}else{
 				console.log("MERGE");
-				current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,this,        this.crap);
+				current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,this._field,        this.crap);
 				if(current==front){
 					frontList.removeFront(front);
 				}else if(current!=null){ // actually, split
@@ -98,23 +99,29 @@ this.crap.vertex = vertex;
 			}
 		}else{
 			console.log("GROW");
-			current.growTriangle(edge,vertex,idealLength);
+			current.growTriangle(edge,vertex,this._field);
 		}
 ++count;
 	}
 }
 MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){ // too close to triangulation
+HERE
+	console.log(idealLength);
+	var minDistance = idealLength*0.5;
+	var isTooClose = frontList.pointCloseToTriangulation(vertex,minDistance);
+
+	if(isTooClose){return true; } //  this doesn't seem to be enough
+	
 	var closest = frontList.closestFront(edge,vertex);
 	var closestEdge = closest.edge;
 	var closestFront = closestFront;
 	var closestDistance = closest.distance;
-	var minDistance = idealLength*0.5;
 	console.log(closestDistance+" >?= "+minDistance+"      ideal:"+idealLength);
 	if(closestDistance<minDistance){ // point is further away than min allowed to existing triangulation
 		closest.minDistance = minDistance;
-		return closest;
+		return true;//return closest;
 	}
-	return null;
+	return false;
 }
 MLSMesh.prototype.findSeedTriangle = function(){ // the edges have to take into account the minimum curvature in the neighborhood - otherwise the triangle can be too big
 	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;
@@ -194,22 +201,24 @@ console.log(i+" : "+edgeLengthMin+" | "+edgeLengthMax+"   ... "+edgeLengthA+" | 
 			break;
 		}
 	}
-	vertexA.copy( this._field.projectToSurfacePoint(vertexA) );
-	vertexB.copy( this._field.projectToSurfacePoint(vertexB) );
-	vertexC.copy( this._field.projectToSurfacePoint(vertexC) );
+	surfaceData = this._field.projectToSurfaceData(vertexA);
+	vertexA.copy( surfaceData.point );
+	edgeA.priorityFromIdeal( surfaceData.length );
+	surfaceData = this._field.projectToSurfaceData(vertexB);
+	vertexB.copy( surfaceData.point );
+	edgeB.priorityFromIdeal( surfaceData.length );
+	surfaceData = this._field.projectToSurfaceData(vertexC);
+	vertexC.copy( surfaceData.point );
+	edgeC.priorityFromIdeal( surfaceData.length );
 this.crap.transR = MLSField.tempReverse.copy();
 this.crap.bivariate = this._field._bivariate.copy();
-this.crap.vertexR = vertexC;
+this.crap.vertexR = vertexC.copy();
 	// initial triangle
 	var tri = new MLSTri(vertexA,vertexB,vertexC);
 	tri.setEdgeABBCCA(edgeA,edgeB,edgeC);
 	edgeA.tri(tri);
 	edgeB.tri(tri);
 	edgeC.tri(tri);
-	edgeA.priorityFromIdeal( this._field.projectToSurfaceData(edgeA.midpoint()).length );
-	edgeB.priorityFromIdeal( this._field.projectToSurfaceData(edgeB.midpoint()).length );
-	edgeC.priorityFromIdeal( this._field.projectToSurfaceData(edgeC.midpoint()).length );
-	//tri.generateEdgesFromVerts();
 	return {tri:tri, idealLength:idealEdgeLength};
 }
 
@@ -225,13 +234,13 @@ MLSMesh.prototype.necessaryMinLength = function(edge){ // necessary minimum leng
 	var i = this._field.minimumInSphere(midpoint,b);
 	// this doesn't actually have to be the minimum, but ACCOUNT for the minimum length at a distance, by some geometric minimization
 	// ?
-	return c;
+	//return c;
 	return i;
 }
 MLSMesh.prototype.vertexPredict = function(edge){
 	var c = edge.length();
 	var i = this.necessaryMinLength(edge);
-	i = Math.min(Math.max(i,0.5*c/Math.cos(10*Math.PI/180.0)),0.5*c/Math.cos(60*Math.PI/180.0)); // clamp base angle to 10,60
+	i = Math.min(Math.max(i,0.5*c/Math.cos(20*Math.PI/180.0)),0.5*c/Math.cos(55*Math.PI/180.0)); // clamp base angle to 20,55
 	// limit base angle to [60-B,60+B] ~> [5,115] * this doesn't make any sense
 	// find vector in edge's triangle plane perpendicular to edge (toward p)
 	var tri = edge.tri();

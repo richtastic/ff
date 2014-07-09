@@ -2003,6 +2003,7 @@ Code.closestPointsLines3D = function(oa,da, ob,db){ // infinite ray-ray closet p
 	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	return [A,B];
 }
+
 Code.closestPointPlane3D = function(q,n, p){ // 
 	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y + (q.z-p.z)*n.z)/(n.x*n.x+n.y*n.y+n.z*n.z);
 	return new V3D(p.x+t*n.x,p.y+t*n.y,p.z+t*n.z);
@@ -2013,7 +2014,7 @@ Code.closestPointTri3D = function(pnt, a,b,c,nrm){ // closest point to plane als
 	// ac = V3D.sub(c,a);
 	// if(nrm===undefined){ nrm=V3D.cross(ab,ac).norm(); }
 	p = Code.closestPointPlane3D(a,nrm, pnt);
-	if(!p){ return null; }
+	if(!p){ return null; } // this never happens
 	// edges
 	ab = V3D.sub(b,a);
 	bc = V3D.sub(c,b);
@@ -2031,6 +2032,22 @@ Code.closestPointTri3D = function(pnt, a,b,c,nrm){ // closest point to plane als
 		return p;
 	}
 	return null;
+}
+
+Code.closestDistancePointTri3D = function(p, a,b,c,nrm){ // shortest distance between point p and tri a,b,c
+	// is closest point to plane inside tri?
+	var c1, c2, c3 = Code.closestPointTri3D(p,a,b,c,nrm);
+	if( c3 ){
+		return V3D.distance(p,c3);
+	} // else closest point on each of 3 edges
+	var d1,d2,d3, ray = new V3D();
+	V3D.sub(ray, b,a);
+	d1 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(a,ray, p) );
+	V3D.sub(ray, c,b);
+	d2 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(b,ray, p) );
+	V3D.sub(ray, a,c);
+	d3 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(c,ray, p) );
+	return Math.sqrt( Math.min(d1,d2,d3) );
 }
 
 Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest distance between line segment AB and tri a,b,c

@@ -427,10 +427,10 @@ Canvas.prototype.removeListeners = function(){
 //  ------------------------------------------------------------------------------------------------------------------------ MOUSE POSITIONING
 Canvas.prototype.getMouseDelta = function(e){
 	e = Code.getJSEvent(e);
-//console.log(e)
-//console.log(e.deltaX,e.deltaY,e.deltaZ, e.wheelDelta, e.wheelDeltaX, e.wheelDeltaY);
-	var delta = e.wheelDelta/120.0;//e.deltaY/(e.wheelDelta?(e.wheelDelta):(120.0));
-	return delta
+// console.log(e)
+// console.log(e.deltaX,e.deltaY,e.deltaZ, e.wheelDelta, e.wheelDeltaX, e.wheelDeltaY);
+	//var delta = e.wheelDelta/120.0;//e.deltaY/(e.wheelDelta?(e.wheelDelta):(120.0));
+	return e.wheelDelta/120.0;
 }
 Canvas.prototype.getMousePosition = function(e){
 	e = Code.getJSEvent(e);
