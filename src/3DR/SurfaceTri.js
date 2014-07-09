@@ -17,8 +17,8 @@ function SurfaceTri(){
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-//	this.setupSphere3D();
-	this.loadPointFile();
+	this.setupSphere3D();
+//	this.loadPointFile();
 this._displayPoints = true;
 this._displayTriangles = true;
 	//

@@ -43,7 +43,7 @@ MLSFront.prototype.pointCloseToTriangulation = function(point, maxDistance){
 	for(i=0;i<len;++i){
 		tri = tris[i];
 		dist = Code.closestDistancePointTri3D(point, tri.A(),tri.B(),tri.C(),tri.normal());
-		console.log(dist+" <?< "+maxDistance);
+		//console.log(dist+" <?< "+maxDistance);
 		if(dist < maxDistance){
 			return true;
 		}

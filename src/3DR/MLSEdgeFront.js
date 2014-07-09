@@ -142,7 +142,7 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 		}else{
 			dist = Number.MAX_VALUE;
 		}
-		console.log("PREV CHECK: "+dist+" <?< "+(dist<minDistance));
+//		console.log("PREV CHECK: "+dist+" <?< "+(dist<minDistance));
 		if(dist<minDistance){
 			edgeB = edge;
 			break;
@@ -158,7 +158,7 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 		}else{
 			dist = Number.MAX_VALUE;
 		}
-		console.log("NEXT CHECK: "+dist+" <?< "+(dist<minDistance));
+//		console.log("NEXT CHECK: "+dist+" <?< "+(dist<minDistance));
 		if(dist<minDistance){
 			edgeB = edge;
 			break;
