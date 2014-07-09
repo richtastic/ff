@@ -177,7 +177,7 @@ SurfaceTri.prototype.triangulateTick = function(e){
 		this._mlsMesh.triangulateSurfaceIteration();
 		this.resetTris();
 	}
-	this._ticker.stop(); // ...............................................................
+//	this._ticker.stop(); // ...............................................................
 }
 
 
@@ -217,7 +217,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 	});
 }
 SurfaceTri.prototype.setupSphere3D = function(){
-	var pts = this.generateSpherePoints(1000,1.5,1E-13);
+	var pts = this.generateSpherePoints(5000,1.5,1E-13);
 	this.startPointCloud(pts);
 }
 
@@ -263,7 +263,7 @@ SurfaceTri.prototype.resetTris = function(){
 			++triCount;
 		}
 	}
-	console.log("TRIANGLES:"+triCount+"          FRONTS:"+(fronts.length-1));
+	console.log("TRIANGLES:"+triCount);
 
 	var norm, edge, dir, mid, ver;
 	edge = this._mlsMesh.crap.edgeA;

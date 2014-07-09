@@ -2044,7 +2044,6 @@ Code.closestDistancePointTri3D = function(p, a,b,c,nrm){ // shortest distance be
 	d3 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(c,ray, p) );
 	return Math.sqrt( Math.min(d1,d2,d3) );
 }
-
 Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest distance between line segment AB and tri a,b,c
 	var ab, ac, bc, ca, pA,pB,pC, dA,dB,dC;
 	ab = V3D.sub(b,a);

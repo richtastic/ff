@@ -58,7 +58,7 @@ MLSEdgeFront.prototype.removeNodeLinkEdge = function(edge){
 	edge.node(null);
 }
 
-MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength, minDistance, field,      crap){
+MLSEdgeFront.prototype.mergeOld = function(edgeA,edgeB, vertex, front, idealLength, minDistance, field,      crap){
 	var i, prev, next, node, edge, link, dist, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found, edgeC;
 	var surfaceData, surfacePoint, surfaceNormal, surfaceLength;
 	var oldEdge = edgeB;
@@ -128,6 +128,42 @@ MLSEdgeFront.prototype.merge = function(edgeA,edgeB, vertex, front, idealLength,
 	this.removeNodeLinkEdge(edgeA);
 	return front;
 }
+MLSEdgeFront.prototype.isAnOKEdge = function(edge){
+	var i, len, tri, tris = this.container().triangles();
+	len = tris.length;
+	for(i=0;i<len;++i){
+		// ?
+		// tri = tris[i];
+		// if( edge ){
+		// 	return false;
+		// }
+	}
+	return true;
+}
+MLSEdgeFront.prototype.closestEdgePoint = function(edgeIn,vertex){
+// THIS SHOULD NOT ALLOW THE TRIANGLE THAT IS PROJECTED TO GO BEYOND THE FRONT - THE RESULT IS AN INVALID TRIANGLE
+// => the closest point can't be inside a triangle?
+	var edgeNext = edgeIn.next();
+	var edge, dist, ray = new V3D(), minDistance=null, minEdge=null;
+	for(edge=this._edgeList.head().data(), i=this._edgeList.length(); i--; edge=edge.next()){
+		dist = V3D.distanceSquare(vertex, edge.A() );
+		if(dist<minDistance || minDistance==null){
+			if(edge!=edgeIn && edge!=edgeNext){
+				var tempA = new MLSEdge();
+				var tempB = new MLSEdge();
+				tempA.A( edgeIn.A() );
+				tempA.B( vertex );
+				tempB.A( edgeIn.B() );
+				tempB.B( vertex );
+				if( this.isAnOKEdge( tempA ) && this.isAnOKEdge( tempB ) ){
+					minDistance = dist;
+					minEdge = edge;
+				}
+			}
+		}
+	}
+	return {edge:minEdge, distance:Math.sqrt(minDistance)};
+}
 MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance){ // find first edge that doesn't like new trianglulation
 	var prev, next, edge, p, dist, i, edgeB = null, dir = new V3D();
 	for(prev=edgeA.prev(),next=edgeA.next(),i=Math.ceil(this._edgeQueue.length()/2.0)+1;i--;){ // next!=edgeA && prev=edgeA && 
@@ -169,7 +205,109 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 	}
 	return edgeB;
 }
-MLSEdgeFront.prototype.split = function(edgeA,edgeB, vertex, idealLength, minDistance, field,        crap){ // separate via 2 triangle 'parallelogram', or 'single-tri' if shared vertex
+MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,        crap){ // 
+	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB, vertexTo;
+	dA = V3D.distanceSquare(vertexFrom,edgeTo.A());
+	dB = V3D.distanceSquare(vertexFrom,edgeTo.B());
+	if( dA<dB ){// && !V3D.equal(edgeTo.A(),edgeFrom.A()) && !V3D.equal(edgeTo.A(),edgeFrom.B()) ){
+		vertexTo = edgeTo.A();
+		lastEdge = edgeTo;
+	}else{
+		vertexTo = edgeTo.B();
+		lastEdge = edgeTo.next();
+	}
+	// edges
+	edgeAB = new MLSEdge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
+	edgeBC = new MLSEdge(edgeFrom.A(),vertexTo); // new
+	edgeCA = new MLSEdge(vertexTo,edgeFrom.B()); // new
+	edgeAB.priorityFromIdeal( edgeTo.priority() );
+	edgeBC.priority( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
+	edgeCA.priority( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
+	// triangle
+	tri = new MLSTri(edgeAB.A(),edgeBC.A(),edgeCA.A());
+	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
+	edgeAB.tri(tri);
+	edgeBC.tri(tri);
+	edgeCA.tri(tri);
+	this.addTri(tri);
+console.log("TRI NORM SPLIT: "+tri.normal().length());
+	// front
+	front = new MLSEdgeFront();
+	front.container(this.container());
+	for(edge=edgeFrom.next(); edge!=lastEdge; ){
+		next = edge.next();
+		this.removeNodeLinkEdge(edge);
+		front.addNodeLinkEdgePush(edge);
+		edge = next;
+	}
+	front.addNodeLinkEdgePush(edgeCA);
+	this.addNodeLinkEdgeAfter(edgeFrom, edgeBC);
+	this.removeNodeLinkEdge(edgeFrom);
+	// front may be a two-edge front if lastEdge==edgeFrom
+	console.log("NEW FRONTS COUNT: "+this.count()+" | "+front.count());
+	if(front.count()<=2){
+		front.kill();
+		front = null;
+	}else{
+		this.container().addFront(front);
+	}
+	// this might be a two-edge front if edgeFrom.next().next()==edgeTo
+	if(this.count()<=2){
+		this.clear();
+		this.container().removeFront(this);
+	}
+	return front;
+}
+MLSEdgeFront.prototype.merge = function(edgeFrom,edgeTo, vertexFrom, front, field,      crap){
+	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB, vertexTo;
+	dA = V3D.distanceSquare(vertexFrom,edgeTo.A());
+	dB = V3D.distanceSquare(vertexFrom,edgeTo.B());
+	if( dA<dB ){
+		vertexTo = edgeTo.A();
+		lastEdge = edgeTo;
+	}else{
+		vertexTo = edgeTo.B();
+		lastEdge = edgeTo.next();
+	}
+	// edges
+	edgeAB = new MLSEdge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
+	edgeBC = new MLSEdge(edgeFrom.A(),vertexTo); // new
+	edgeCA = new MLSEdge(vertexTo,edgeFrom.B()); // new
+	edgeAB.priorityFromIdeal( edgeTo.priority() );
+	edgeBC.priority( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
+	edgeCA.priority( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
+	// triangle
+	tri = new MLSTri(edgeAB.A(),edgeBC.A(),edgeCA.A());
+	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
+	edgeAB.tri(tri);
+	edgeBC.tri(tri);
+	edgeCA.tri(tri);
+	this.addTri(tri);
+console.log("TRI NORM MERGE: "+tri.normal().length());
+	// front
+	var nodeStart = lastEdge.prev();
+	this.addNodeLinkEdgeBefore(edgeFrom, edgeBC);
+	for(edge=lastEdge; edge!=nodeStart; ){
+		next = edge.next();
+		front.removeNodeLinkEdge(edge);
+		this.addNodeLinkEdgeBefore(edgeFrom,edge);
+		edge = next;
+	}
+	front.removeNodeLinkEdge(nodeStart);
+	this.addNodeLinkEdgeBefore(edgeFrom,nodeStart);
+	this.addNodeLinkEdgeBefore(edgeFrom,edgeCA);
+	this.removeNodeLinkEdge(edgeFrom);
+	console.log("NEW FRONTS COUNT: "+this.count()+" | "+front.count());
+	this.container().removeFront( front );
+	// this might be a two-edge front?
+	if(this.count()<=2){
+		this.clear();
+		this.container().removeFront(this);
+	}
+	return front;
+}
+//MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,        crap){ // 
+MLSEdgeFront.prototype.splitOld = function(edgeA,edgeB, vertex, idealLength, minDistance, field,        crap){ // separate via 2 triangle 'parallelogram', or 'single-tri' if shared vertex
 	var i, prev, next, node, link, dist, front, temp, centroid, triA,triB, e1AB,e1BC,e1CA, e2AB,e2BC,e2CA, found, edgeC;
 	var surfaceData, surfacePoint, surfaceNormal, surfaceLength, a,b,c,d;
 	edgeB = null;
@@ -349,6 +487,13 @@ crap.edgeB = edgeB;
 	return null; // no new front created
 }
 MLSEdgeFront.prototype.close = function(){ // collape 3 edges to triangle
+	if(this.count()<3){
+		this.clear();
+		return;
+	}else if(this.count()>3){
+		console.log("EDGE COUNT IS LARGER THAN 3: "+this.count());
+		return;
+	}
 	var edgeA = this._edgeList.head().data();
 	var edgeB = edgeA.next();
 	var edgeC = edgeB.next();
@@ -357,7 +502,9 @@ MLSEdgeFront.prototype.close = function(){ // collape 3 edges to triangle
 	var edgeBC = new MLSEdge(edgeC.B(),edgeC.A()); // edgeC opposite
 	var edgeCA = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
 	// priorities
-		// don't care
+	edgeAB.priority( edgeA.priority() );
+	edgeBC.priority( edgeC.priority() );
+	edgeCA.priority( edgeB.priority() );
 	// triangle
 	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
 	edgeAB.tri(tri);
@@ -485,8 +632,7 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, field){ // create triangle
 }
 MLSEdgeFront.prototype.fromTriangle = function(tri){ // initial front - // midpoint ideal length
 	var link, node;
-	this._edgeList.clear();
-	this._edgeQueue.clear();
+	this.clear();
 	// priorities - already set
 	// tri.edgeAB().priorityFromIdeal(idealLength);
 	// tri.edgeBC().priorityFromIdeal(idealLength);
@@ -598,16 +744,16 @@ MLSEdgeFront.prototype.closestEdge = function(inEdge,inVertex){ // go over all e
 	}
 	return {edge:minEdge, distance:minDistance};
 }
-/*
-	- minimum distance of edge to triangle-plane
-		- UNLESS it is the neighbor - then:
-			- min distance from opposite vertex to tri-plane
-
-	- min distance: tri vertex to edge i
-	- every point along plane
-
-
-*/
+MLSEdgeFront.prototype.clear = function(){
+	this._edgeQueue.clear();
+	this._edgeList.clear();
+}
+MLSEdgeFront.prototype.kill = function(){
+	this.clear();
+	this._edgeQueue = null;
+	this._edgeList = null;
+	this._container = null;
+}
 
 
 

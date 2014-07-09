@@ -15,7 +15,7 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this._field.initWithPointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(1.0*Math.PI/8.0);
+	rho = rho!==undefined?rho:(1.0*Math.PI/4.0);
 	tau = tau!==undefined?tau:1;
 	this._field.rho(rho);
 	this._field.tau(tau);
@@ -37,9 +37,9 @@ MLSMesh.prototype.triangulateSurfaceIteration = function(){
 	var count = 0;
 this.crap.fronts = frontList;
 	while( frontList.count()>0  && count<1){ // 21
-console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+count);
+console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+this.frontList.count()+" ("+count+") ");
 		current = frontList.first();
-		if(current.count()==3 && current.moreThanSingleTri()){
+		if(current.count()<=3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
 			current.close();
 			frontList.removeFront(current);
@@ -47,6 +47,8 @@ console.log("+------------------------------------------------------------------
 			continue;
 		}
 		edge = current.bestEdge();
+console.log(edge);
+console.log(edge+"");
 //console.log(edge+"  ("+current.edgeList().length()+") ");
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
@@ -58,12 +60,15 @@ console.log("+------------------------------------------------------------------
 ++count;
 			continue;
 		}
+console.log("A");
 		data = this.vertexPredict(edge, null);
+console.log("B");
 		idealLength = data.length;
 		vertex = data.point;
 		isClose = this.triangleTooClose(frontList, edge,vertex, idealLength);
 console.log(idealLength+" vs "+edge.length());
 		if( isClose ){
+			// can get better defer state based on how good resulting triangle would look (would need to update?)
 			if( current.deferEdge(edge) ){
 				console.log("DEFERRED");
 ++count;
@@ -71,7 +76,8 @@ console.log(idealLength+" vs "+edge.length());
 			}else{
 				console.log("COULD NOT DEFER");
 			}
-			closest = this.triangleClosestFront(frontList, edge,vertex, idealLength);
+			//closest = this.triangleClosestFront(frontList, edge,vertex, idealLength);
+			closest = this.triangleClosestFrontPoint(frontList, edge,vertex, idealLength);
 			//
 			front = closest.front;
 			edge2 = closest.edge;
@@ -81,19 +87,23 @@ this.crap.edgeB = edge2;
 this.crap.vertex = vertex;
 			if(front==current){
 				console.log("SPLIT");
-				front = current.split(edge,edge2,vertex, idealLength, minDistance,this._field,        this.crap);
-				if(front){
-					frontList.addFront(front);
-				}
+				//front = current.split(edge,edge2,vertex, idealLength, minDistance,this._field,        this.crap);
+				front = current.split(edge,edge2,vertex,this._field,        this.crap);
+				// console.log(front);
+				// if(front){
+				// 	frontList.addFront(front);
+				// }
 			}else{
 				console.log("MERGE");
-				current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,this._field,        this.crap);
-				if(current==front){
-					frontList.removeFront(front);
-				}else if(current!=null){ // actually, split
-					console.log("SPLIT 4 REALS YO");
-					frontList.addFront(front);
-				}
+				//throw new Error("qwe");
+				current.merge(edge,edge2,vertex, front, this._field,        this.crap);
+				// current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,this._field,        this.crap);
+				// if(current==front){
+				// 	frontList.removeFront(front);
+				// }else if(current!=null){ // actually, split
+				// 	console.log("SPLIT 4 REALS YO");
+				// 	frontList.addFront(front);
+				// }
 			}
 		}else{
 			console.log("GROW");
@@ -108,7 +118,11 @@ MLSMesh.prototype.minLengthBeforeEvent = function(edge,idealLength){
 MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){ // too close to triangulation
 	return frontList.pointCloseToTriangulation(vertex,  this.minLengthBeforeEvent(edge,idealLength) );
 }
-MLSMesh.prototype.triangleClosestFront = function(frontList, edge,vertex, idealLength){ // too close to triangulation
+MLSMesh.prototype.triangleClosestFrontPoint = function(frontList, edge,vertex, idealLength){ // closest point on front (and edge it belongs to)
+	var closest = frontList.closestFrontPoint(edge,vertex);
+	return closest;
+}
+MLSMesh.prototype.triangleClosestFront = function(frontList, edge,vertex, idealLength){ // closest edge on front
 	var minDistance = this.minLengthBeforeEvent(edge,idealLength);
 	var closest = frontList.closestFront(edge,vertex);
 	var closestEdge = closest.edge;
