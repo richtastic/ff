@@ -4,7 +4,14 @@ Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
 Math.PIO2 = Math.PI*0.5;
 // 
-Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );
+Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );// (document.body.attachEvent && window.ActiveXObject);
+
+Code.TYPE_OBJECT = "object";
+Code.TYPE_FUNCTION = "function";
+Code.TYPE_NUMBER = "number";
+Code.TYPE_STRING = "string";
+Code.TYPE_UNDEFINED = "undefined";
+
 // http://www.quirksmode.org/dom/events/index.html
 Code.JS_EVENT_CLICK = "click";
 Code.JS_EVENT_RESIZE = "resize";
@@ -1339,6 +1346,19 @@ Code.padStringRight = function(val,wid,filler){
 	return str;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- MATHS
+Code.gcd = function(a,b){
+	a = Math.abs(a); b = Math.abs(b);
+	temp = Math.max(a,b); b = Math.min(a,b); a = temp;
+	while(b!=0){
+		q = Math.floor(a/b);
+		r = a%b; // a - b*q;
+		if(r == 0){
+			return b;
+		}
+		a = b; b = r;
+	}
+	return Math.max(a,b);
+}
 Code.distancePoints2D = function(ax,ay, bx,by){
 	return Math.sqrt(Math.pow(ax-bx,2) + Math.pow(ay-by,2));
 }
@@ -2122,6 +2142,117 @@ Code.parsePointSetString = function(data, max){
 	}
 	return list;
 }
+
+
+
+
+// -------------------------------------------------------------------------------------------------------------------------------------------------  THESE NEED TO BE RECHECKED - COPIED FROM OLD CODE
+
+Code.killArray = function(a){
+	while(a.length>0){ a.pop().kill(); }
+}
+Code.killMe = function(obj){
+	for(var key in obj){
+		obj[key] = null;
+	}
+}
+
+// object styling functions ----------------------------------------------
+Code.copyProperties = function(objectOut,objectIn, override){
+	for(p in objectIn){
+		if(!objectOut[p] || override){
+			objectOut[p] = objectIn[p];
+		}
+	}
+};
+// ? functions ----------------------------------------------
+Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
+	var ar = wid/hei;
+	v.x = fitWid; v.y = fitWid/ar;
+	if(v.y>fitHei){
+		v.x = fitHei*ar; v.y = fitHei;
+	}
+}
+
+// conversion functions ----------------------------------------------
+Code.getHex = function (intVal){
+	var str = intVal.toString(16);
+	while(str.length<6){
+		str = "0"+str;
+	}
+	return '#'+str;
+}
+
+// -------------------------------------------------------- images
+Code.generateBMPImageHeader = function(w,h){ // 
+    var imgWidth = parseInt(width);
+    var imgHeight = parseInt(height);
+    var imageData = new Array();
+    var sizeOfImage = imgWidth * imgHeight;
+    var height = h;
+    var width = w;
+    height = Code.asLittleEndianHex(height, 4);
+    width = Code.asLittleEndianHex(width, 4);
+    num_file_bytes = Code.asLittleEndianHex(sizeOfImage*4, 4);
+    imageHeader = ('BM' +                // "Magic Number"
+                num_file_bytes +     // size of the file (bytes)*
+                '\x00\x00' +         // reserved
+                '\x00\x00' +         // reserved
+                '\x36\x00\x00\x00' + // offset of where BMP data lives (54 bytes)
+                '\x28\x00\x00\x00' + // number of remaining bytes in header from here (40 bytes)
+                width +              // the width of the bitmap in pixels*
+                height +             // the height of the bitmap in pixels*
+                '\x01\x00' +         // the number of color planes (1)
+                '\x20\x00' +         // 32 bits / pixel
+                '\x00\x00\x00\x00' + // No compression (0)
+                '\x00\x00\x00\x00' + // size of the BMP data (bytes)*
+                '\x13\x0B\x00\x00' + // 2835 pixels/meter - horizontal resolution
+                '\x13\x0B\x00\x00' + // 2835 pixels/meter - the vertical resolution
+                '\x00\x00\x00\x00' + // Number of colors in the palette (keep 0 for 32-bit)
+                '\x00\x00\x00\x00'   // 0 important colors (means all colors are important)
+        );
+    return imageHeader;
+}
+Code.asLittleEndianHex = function(value, bytes){
+    var result = [];
+    for (; bytes>0; bytes--){
+        result.push(String.fromCharCode(value & 255));
+        value >>= 8;
+    }
+    return result.join('');
+}
+Code.setPixelRGBA = function(dat, x,y, r,g,b,a){
+    var index = (x+y*dat.width)*4;
+    dat.data[index+0] = r;
+    dat.data[index+1] = g;
+    dat.data[index+2] = b;
+    dat.data[index+3] = a;
+}
+Code.generateBMPImageSrc = function(wid,hei,imageData){
+    return 'data:image/bmp;base64,'+window.btoa(Code.generateBMPImageHeader(wid,hei)+imageData.join(""));
+}
+Code.generateImageFromData = function(wid,hei,imageData){
+    var img = new Image(wid,hei);
+    img.width = wid;
+    img.height = hei;
+    img.src = Code.generateBMPImageSrc(wid,hei,imageData);
+    return img;
+}
+Code.generateImageFromBit64encode = function(str, fxn){
+    var img = new Image();
+    if(fxn!=null){
+    	img.onload = fxn;
+    }
+    img.src = str;
+    return img;
+}
+
+
+
+
+
+
+
 
 
 

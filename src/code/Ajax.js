@@ -3,6 +3,7 @@ Ajax.METHOD_TYPE_GET = "GET";
 Ajax.METHOD_TYPE_POST = "POST";
 Ajax.TIMEOUT_DEFAULT = 15000; // 15 seconds
 
+
 // ------------ instance
 function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._method = Ajax.METHOD_TYPE_GET;
@@ -88,6 +89,12 @@ Ajax.prototype.context = function(c){
 	}
 }
 // --- actual functions ---------------------------------------
+Ajax.prototype.cancel = function(){
+	this._request.abort();
+	if(this._errorback){
+		this._errorback.call( this._context, null, this );
+	}
+}
 Ajax.prototype.get = function(url,con,comp,err){
 	this.context(con);
 	this.send(url,Ajax.METHOD_TYPE_GET,comp,err);
@@ -148,11 +155,12 @@ Ajax.prototype._stateChange = function(){
 			return;
 		}else{
 			var response = this._request.responseText;
-			if(this._request.status==200){
+			var responseCode = this._request.status;
+			if(Math.floor(responseCode/200)==0){ // 204, ... 300
 				if(this._callback!==null && this._callback!==undefined){
 					this._callback.call( this._context, response, this );
 				}
-			}else{
+			}else{ // 400, 500
 				if(this._errorback!==null && this._errorback!==undefined){
 					this._errorback.call( this._context, response, this );
 				}
@@ -163,6 +171,53 @@ Ajax.prototype._stateChange = function(){
 		}
 	}
 }
+/*
+http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+100 - continue
+101 - switching protocols
+2xx - success
+200 - OK
+201 - created
+202 - accepted
+203 - not authorized
+204 - no content
+205 - reset
+206 - partial
+3xx - redirect
+300 - multiple choices
+301 - moved permanently
+302 - found
+303 - see other
+304 - not modified
+305 - use proxy
+307 - temp redirect
+4xx - client error
+400 - bad request
+401 - unauthorized
+402 - payment required
+403 - forbidden
+404 - not found
+405 - method not allowed
+406 - not acceptable
+407 - proxy auth required
+408 - request timeout
+409 - conflict
+410 - gone
+411 - length required
+412 - precondition failed
+413 - too large
+414 - too long
+415 - unsupported media
+416 - range not satisfiable
+417 - expectation failed
+5xx - server error
+500 - internal error
+501 - not implemented
+502 - bad gateway
+503 - service unavailable
+504 - gateway timeout
+505 - http version not supported
+*/
 Ajax.prototype.kill = function(){
 	if(this._request){
 		this._request.onreadystatechange = null;
@@ -179,3 +234,81 @@ Ajax.prototype.kill = function(){
 	this._request = null;
 	this._autoDestroy = null;
 }
+
+
+// --- queue-ing ---------------------------------------
+Ajax._queue = null;
+Ajax.defaultQueue = function(){
+	if(!Ajax._queue){
+		Ajax._queue = new Ajax.Queue();
+	}
+	return Ajax._queue;
+}
+
+Ajax.Queue = function(){ // request throttling
+	this._queue = new PriorityQueue(Ajax.Queue.sortAjax);
+	this._maxProgressCount = 5;
+	this._inProgress = [];
+}
+
+Ajax.Queue.sortAjax = function(a,b){
+	// need to do search check for objects of different type
+	if(a==b){
+		return 0;
+	}
+	return b.priority - a.priority;
+}
+Ajax.Queue.prototype.throttle = function(c){
+	if(c!==undefined){
+		this._maxProgressCount = c;
+	}
+	return this._maxProgressCount;
+}
+Ajax.Queue.prototype.length = function(){
+	return this._queue.length();
+}
+Ajax.Queue.prototype.addRequest = function(request, priority){
+	priority = (priority!==undefined)?priority:1.0;
+	this._queue.push();
+}
+Ajax.Queue.prototype.removeRequest = function(request){
+	/*var i, len = this._inProgress.length;
+	for(i=0;i<len;++i){
+		if(this._inProgress[i]==request){
+			return null;
+		}
+	}*/
+	var obj = this._queue.removeObject(request);
+	if(obj){
+		request = obj.request;
+		obj.kill();
+		return request;
+	}
+	return null;
+}
+Ajax.Queue.prototype._checkNextRequest = function(){
+	if(this._inProgress.length<this._maxProgressCount){
+		var request = this._queue.popMinimum();
+		if(request){
+			request = request.request;
+		}
+	}
+}
+
+// ------------------------------------------------------------------------------------------
+Ajax.Queue.Request = function(request, priority){
+	this.priority = priority;
+	this.request = request;
+}
+Ajax.Queue.Request.prototype.kill = function(){
+	this.priority = undefined;
+	this.request = null;
+}
+
+
+
+
+
+
+
+
