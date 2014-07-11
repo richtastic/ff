@@ -41,7 +41,7 @@ console.log("+------------------------------------------------------------------
 		current = frontList.first();
 		if(current.count()<=3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
-			current.close();
+			current.close(this._field);
 			frontList.removeFront(current);
 ++count;
 			continue;
@@ -60,13 +60,11 @@ console.log(edge+"");
 ++count;
 			continue;
 		}
-console.log("A");
 		data = this.vertexPredict(edge, null);
-console.log("B");
 		idealLength = data.length;
 		vertex = data.point;
 		isClose = this.triangleTooClose(frontList, edge,vertex, idealLength);
-console.log(idealLength+" vs "+edge.length());
+console.log(idealLength+" vs "+edge.length()+" is close: "+isClose);
 		if( isClose ){
 			// can get better defer state based on how good resulting triangle would look (would need to update?)
 			if( current.deferEdge(edge) ){
@@ -169,22 +167,22 @@ console.log(randomPoint+"");
 	edgeLengthMax = null;
 	for(i=0;i<10;++i){
 		// limited to nearby max curvature
-		// vertexA.copy( this.projectToSurfacePoint(vertexA) );
-		// vertexB.copy( this.projectToSurfacePoint(vertexB) );
-		// vertexC.copy( this.projectToSurfacePoint(vertexC) );
-		// edgeLengthA = this.necessaryMinLength(edgeA);
-		// edgeLengthB = this.necessaryMinLength(edgeB);
-		// edgeLengthC = this.necessaryMinLength(edgeC);
+		vertexA.copy( this._field.projectToSurfacePoint(vertexA) );
+		vertexB.copy( this._field.projectToSurfacePoint(vertexB) );
+		vertexC.copy( this._field.projectToSurfacePoint(vertexC) );
+		edgeLengthA = this.necessaryMinLength(edgeA);
+		edgeLengthB = this.necessaryMinLength(edgeB);
+		edgeLengthC = this.necessaryMinLength(edgeC);
 		// ideal
-		surfaceData = this._field.projectToSurfaceData(vertexA);
-		vertexA.copy( surfaceData.point );
-		edgeLengthA = surfaceData.length;
-		surfaceData = this._field.projectToSurfaceData(vertexB);
-		vertexB.copy( surfaceData.point );
-		edgeLengthB = surfaceData.length;
-		surfaceData = this._field.projectToSurfaceData(vertexC);
-		vertexC.copy( surfaceData.point );
-		edgeLengthC = surfaceData.length;
+		// surfaceData = this._field.projectToSurfaceData(vertexA);
+		// vertexA.copy( surfaceData.point );
+		// edgeLengthA = surfaceData.length;
+		// surfaceData = this._field.projectToSurfaceData(vertexB);
+		// vertexB.copy( surfaceData.point );
+		// edgeLengthB = surfaceData.length;
+		// surfaceData = this._field.projectToSurfaceData(vertexC);
+		// vertexC.copy( surfaceData.point );
+		// edgeLengthC = surfaceData.length;
 console.log(i+" : "+edgeLengthMin+" | "+edgeLengthMax+"   ... "+edgeLengthA+" | "+edgeLengthB+" | "+edgeLengthC+"    "+edgeA.length()+"  "+edgeB.length()+"  "+edgeC.length());
 		min = Math.min(edgeLengthA,edgeLengthB,edgeLengthC);
 		max = Math.max(edgeLengthA,edgeLengthB,edgeLengthC);
@@ -216,13 +214,13 @@ console.log(i+" : "+edgeLengthMin+" | "+edgeLengthMax+"   ... "+edgeLengthA+" | 
 	}
 	surfaceData = this._field.projectToSurfaceData(vertexA);
 	vertexA.copy( surfaceData.point );
-	edgeA.priorityFromIdeal( surfaceData.length );
 	surfaceData = this._field.projectToSurfaceData(vertexB);
 	vertexB.copy( surfaceData.point );
-	edgeB.priorityFromIdeal( surfaceData.length );
 	surfaceData = this._field.projectToSurfaceData(vertexC);
 	vertexC.copy( surfaceData.point );
-	edgeC.priorityFromIdeal( surfaceData.length );
+	edgeA.priorityFromIdeal( this._field.idealEdgeLengthAtPoint(edgeA.midpoint()) );
+	edgeB.priorityFromIdeal( this._field.idealEdgeLengthAtPoint(edgeB.midpoint()) );
+	edgeC.priorityFromIdeal( this._field.idealEdgeLengthAtPoint(edgeC.midpoint()) );
 this.crap.transR = MLSField.tempReverse.copy();
 this.crap.bivariate = this._field._bivariate.copy();
 this.crap.vertexR = vertexC.copy();
@@ -251,7 +249,10 @@ MLSMesh.prototype.necessaryMinLength = function(edge){ // necessary minimum leng
 	return i;
 }
 MLSMesh.prototype.vertexPredict = function(edge){
-	var c = edge.length();
+//	var c = edge.length();
+	var c = edge.idealLength();
+console.log(edge.length()+" / "+edge.idealLength());
+// -> use ideal edge length instead?
 	var i = this.necessaryMinLength(edge);
 	var A = 0.5*c/Math.cos(5*Math.PI/180.0);
 	var B = 0.5*c/Math.cos(55*Math.PI/180.0)

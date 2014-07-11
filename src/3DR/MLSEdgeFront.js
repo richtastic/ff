@@ -84,7 +84,8 @@ MLSEdgeFront.prototype.mergeOld = function(edgeA,edgeB, vertex, front, idealLeng
 	e1BC = new MLSEdge(edgeA.A(),centroid); // new (new)
 	e1CA = new MLSEdge(centroid,edgeA.B()); // new (old)
 	// priorities A
-	e1AB.priority( edgeA.priority() );
+	//e1AB.priority( edgeA.priority() );
+e1AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) );
 	e1BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1BC.midpoint()) );
 	e1CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1CA.midpoint()) );
 	// triangle A
@@ -97,7 +98,8 @@ MLSEdgeFront.prototype.mergeOld = function(edgeA,edgeB, vertex, front, idealLeng
 	e2BC = new MLSEdge(edgeB.A(),centroid); // new (new)
 	e2CA = new MLSEdge(centroid,edgeB.B()); // new (old)
 	// priorities B
-	e2AB.priority( edgeB.priority() );
+	//e2AB.priority( edgeB.priority() );
+esAB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2AB.midpoint()) );
 	e2BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2BC.midpoint()) );
 	e2CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e2CA.midpoint()) );
 	// triangle B
@@ -220,9 +222,10 @@ MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,      
 	edgeAB = new MLSEdge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
 	edgeBC = new MLSEdge(edgeFrom.A(),vertexTo); // new
 	edgeCA = new MLSEdge(vertexTo,edgeFrom.B()); // new
-	edgeAB.priorityFromIdeal( edgeTo.priority() );
-	edgeBC.priority( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
-	edgeCA.priority( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
+	//edgeAB.priority( edgeFrom.priority() );
+	edgeAB.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeAB.midpoint()) );
+	edgeBC.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
+	edgeCA.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
 	// triangle
 	tri = new MLSTri(edgeAB.A(),edgeBC.A(),edgeCA.A());
 	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
@@ -273,9 +276,10 @@ MLSEdgeFront.prototype.merge = function(edgeFrom,edgeTo, vertexFrom, front, fiel
 	edgeAB = new MLSEdge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
 	edgeBC = new MLSEdge(edgeFrom.A(),vertexTo); // new
 	edgeCA = new MLSEdge(vertexTo,edgeFrom.B()); // new
-	edgeAB.priorityFromIdeal( edgeTo.priority() );
-	edgeBC.priority( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
-	edgeCA.priority( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
+//edgeAB.priority( edgeFrom.priority() );
+	edgeAB.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeAB.midpoint()) );
+	edgeBC.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
+	edgeCA.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
 	// triangle
 	tri = new MLSTri(edgeAB.A(),edgeBC.A(),edgeCA.A());
 	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
@@ -323,8 +327,10 @@ crap.edgeB = edgeB;
 			e1CA = new MLSEdge(edgeA.A(),edgeB.A()); // B opposite
 			// priority
 			e1AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) );
-			e1BC.priority( edgeA.priority() );
-			e1CA.priority( edgeB.priority() );
+			// e1BC.priority( edgeA.priority() );
+			// e1CA.priority( edgeB.priority() );
+e1BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1BC.midpoint()) );
+e1CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1CA.midpoint()) );
 		}else{ // (edgeB==edgeA.next()){
 			//console.log("NEXT");
 			e1AB = new MLSEdge(edgeA.A(),edgeB.B()); // new
@@ -332,8 +338,10 @@ crap.edgeB = edgeB;
 			e1CA = new MLSEdge(edgeB.A(),edgeA.A()); // A opposite
 			// priority
 			e1AB.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1AB.midpoint()) );
-			e1BC.priority( edgeB.priority() );
-			e1CA.priority( edgeA.priority() );
+			// e1BC.priority( edgeB.priority() );
+			// e1CA.priority( edgeA.priority() );
+e1BC.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1BC.midpoint()) );
+e1CA.priorityFromIdeal( field.idealEdgeLengthAtPoint(e1CA.midpoint()) );
 		}
 		// triangles
 		triA = new MLSTri( e1AB.A(), e1BC.A(), e1CA.A() );
@@ -486,7 +494,7 @@ crap.edgeB = edgeB;
 	console.log("SHOULD NEVER HIT THIS");
 	return null; // no new front created
 }
-MLSEdgeFront.prototype.close = function(){ // collape 3 edges to triangle
+MLSEdgeFront.prototype.close = function(field){ // collape 3 edges to triangle
 	if(this.count()<3){
 		this.clear();
 		return;
@@ -502,9 +510,12 @@ MLSEdgeFront.prototype.close = function(){ // collape 3 edges to triangle
 	var edgeBC = new MLSEdge(edgeC.B(),edgeC.A()); // edgeC opposite
 	var edgeCA = new MLSEdge(edgeB.B(),edgeB.A()); // edgeB opposite
 	// priorities
-	edgeAB.priority( edgeA.priority() );
-	edgeBC.priority( edgeC.priority() );
-	edgeCA.priority( edgeB.priority() );
+	// edgeAB.priority( edgeA.priority() );
+	// edgeBC.priority( edgeC.priority() );
+	// edgeCA.priority( edgeB.priority() );
+edgeAB.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeAB.midpoint()) );
+edgeBC.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
+edgeCA.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
 	// triangle
 	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
 	edgeAB.tri(tri);
@@ -536,7 +547,8 @@ MLSEdgeFront.prototype.growTriangle = function(edge,vertex,field){
 	var edgeBC = new MLSEdge(edge.A(),vertex);
 	var edgeCA = new MLSEdge(vertex,edge.B());
 	// priorities
-	edgeAB.priority( edge.priority() );
+	//edgeAB.priority( edge.priority() );
+edgeAB.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeAB.midpoint()) );
 	edgeBC.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeBC.midpoint()) );
 	edgeCA.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
 	// triangle
@@ -606,8 +618,10 @@ MLSEdgeFront.prototype.cutEar = function(edgeA,edgeB, field){ // create triangle
 	eC = new MLSEdge(edgeA.B(),edgeA.A()); // edgeA opposite
 	// priorities
 	eA.priorityFromIdeal( field.idealEdgeLengthAtPoint(eA.midpoint()) );
-	eB.priority( edgeB.priority() );
-	eC.priority( edgeA.priority() );
+	// eB.priority( edgeB.priority() );
+	// eC.priority( edgeA.priority() );
+	eB.priorityFromIdeal( field.idealEdgeLengthAtPoint(eB.midpoint()) );
+	eC.priorityFromIdeal( field.idealEdgeLengthAtPoint(eC.midpoint()) );
 	// new triangle
 	tri = new MLSTri(eA.A(),eB.A(),eC.A());
 	tri.setEdgeABBCCA(eA,eB,eC);

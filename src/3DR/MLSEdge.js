@@ -13,6 +13,7 @@ function MLSEdge(a,b){
 	this._link = null; // linked list reference for prev/next
 	this._node = null; // priority queue reference
 	this._boundary = false;
+	this._idealLength = 0;
 	this.A(a);
 	this.B(b);
 }
@@ -77,6 +78,7 @@ MLSEdge.prototype.priorityState = function(p){
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.priorityFromIdeal = function(idealLength){
+	this._idealLength = idealLength;
 	var ratio = this.length()/idealLength;
 	ratio = Math.max(ratio,1/ratio) - 1.0; // use worst error
 	return this.priority(ratio);
@@ -111,6 +113,9 @@ MLSEdge.prototype.boundary = function(b){
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSEdge.prototype.length = function(){
 	return V3D.distance(this._a,this._b);
+}
+MLSEdge.prototype.idealLength = function(){
+	return this._idealLength;
 }
 MLSEdge.prototype.direction = function(){
 	var AB = V3D.sub(this._b,this._a);

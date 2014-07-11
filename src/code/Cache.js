@@ -1,5 +1,5 @@
 // Cache.js
-Cache.Data.EVENT_REQUEST = "req";
+Cache = {};
 
 Cache.Data = function(ramSize, diskSize, throttle){
 	throttle = (throttle!==undefined)?throttle:(Ajax.defaultQueue);
@@ -11,7 +11,10 @@ Cache.Data = function(ramSize, diskSize, throttle){
 	this._throttle = new Ajax.Queue();
 }
 Code.inheritClass(Cache.Data, Dispatchable);
-Cache.Data.urlToFriendly(url){
+
+Cache.Data.EVENT_REQUEST = "req";
+
+Cache.Data.urlToFriendly = function(url){
 	return url.replace(/(:|\/|\+| )/g,"_")
 }
 Cache.Data.prototype.getNewData = function(url, events){ // get cache object for now, but also latest web version too
@@ -33,18 +36,18 @@ Cache.Data.prototype.getData = function(url, events, force){ // get data from ca
 
 
 // Request -----------------------------------------------------------------------------------------------------------------------
-Cache.Request.EVENT_LOAD_START = "sta";
-Cache.Request.EVENT_LOAD_SUCCESS = "suc";
-Cache.Request.EVENT_LOAD_FAILURE = "fal";
-Cache.Request.EVENT_PROGRESS = "prg";
-Cache.Request._ID = 0;
-
 Cache.Request = function(url){
 	Cache.Request._.constructor.call(this);
 	this._id = Cache.Request._ID++;
 	this._url = url;
 }
 Code.inheritClass(Cache.Data, Dispatchable);
+Cache.Request.EVENT_LOAD_START = "sta";
+Cache.Request.EVENT_LOAD_SUCCESS = "suc";
+Cache.Request.EVENT_LOAD_FAILURE = "fal";
+Cache.Request.EVENT_PROGRESS = "prg";
+Cache.Request._ID = 0;
+
 Cache.Request.prototype.cancel = function(){
 	//
 }
