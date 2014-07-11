@@ -15,7 +15,7 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this._field.initWithPointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(1.0*Math.PI/4.0);
+	rho = rho!==undefined?rho:(1.0*Math.PI/8.0);
 	tau = tau!==undefined?tau:1;
 	this._field.rho(rho);
 	this._field.tau(tau);
@@ -76,33 +76,23 @@ console.log(idealLength+" vs "+edge.length()+" is close: "+isClose);
 			}
 			//closest = this.triangleClosestFront(frontList, edge,vertex, idealLength);
 			closest = this.triangleClosestFrontPoint(frontList, edge,vertex, idealLength);
-			//
 			front = closest.front;
 			edge2 = closest.edge;
 			minDistance = closest.minDistance;
 this.crap.edgeA = edge;
 this.crap.edgeB = edge2;
 this.crap.vertex = vertex;
-			if(front==current){
-				console.log("SPLIT");
-				//front = current.split(edge,edge2,vertex, idealLength, minDistance,this._field,        this.crap);
-				front = current.split(edge,edge2,vertex,this._field,        this.crap);
-				// console.log(front);
-				// if(front){
-				// 	frontList.addFront(front);
-				// }
-			}else{
-				console.log("MERGE");
-				//throw new Error("qwe");
-				current.merge(edge,edge2,vertex, front, this._field,        this.crap);
-				// current = current.merge(edge,edge2,vertex, front, idealLength, minDistance,this._field,        this.crap);
-				// if(current==front){
-				// 	frontList.removeFront(front);
-				// }else if(current!=null){ // actually, split
-				// 	console.log("SPLIT 4 REALS YO");
-				// 	frontList.addFront(front);
-				// }
-			}
+// these don't HAVE to be done via vertex predict:
+// use first/closest 
+current.topologicalEvent(edge,edge2,vertex,front,this._field,        this.crap);
+			// if(front==current){
+			// 	console.log("SPLIT");
+			// 	front = current.split(edge,edge2,vertex,this._field,        this.crap);
+			// }else{
+			// 	console.log("MERGE");
+			// 	current.merge(edge,edge2,vertex, front, this._field,        this.crap);
+			// }
+//throw new Error("stop");
 		}else{
 			console.log("GROW");
 			current.growTriangle(edge,vertex,this._field);
@@ -249,9 +239,9 @@ MLSMesh.prototype.necessaryMinLength = function(edge){ // necessary minimum leng
 	return i;
 }
 MLSMesh.prototype.vertexPredict = function(edge){
-//	var c = edge.length();
-	var c = edge.idealLength();
-console.log(edge.length()+" / "+edge.idealLength());
+	var c = edge.length();
+	//var c = Math.min(edge.idealLength(),edge.length());
+//console.log(edge.length()+" / "+edge.idealLength());
 // -> use ideal edge length instead?
 	var i = this.necessaryMinLength(edge);
 	var A = 0.5*c/Math.cos(5*Math.PI/180.0);

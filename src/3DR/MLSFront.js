@@ -14,6 +14,9 @@ MLSFront.prototype.addFront = function(front){
 	front.container(this);
 	this._fronts.push(front);
 }
+MLSFront.prototype.fronts = function(){
+	return this._fronts;
+}
 MLSFront.prototype.removeFront = function(front){
 	Code.removeElementSimple(this._fronts, front);
 	front.container(null);

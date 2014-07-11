@@ -192,7 +192,7 @@ var weightSum = 0;
 		vA = v1; v1 = v2; v2 = vA;
 	}
 	// use projected point as reference center:
-	var diff = V3D.diff(feature,com);
+	var diff = V3D.sub(feature,com);
 	var dN = V3D.dot(v0,diff);
 	var proj = new V3D( feature.x-dN*v0.x, feature.y-dN*v0.y, feature.z-dN*v0.z );
 	return {normal:v0, orthogonalA:v1, orthogonalB:v2, point:proj}; // point:com

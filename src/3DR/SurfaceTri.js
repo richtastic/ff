@@ -8,7 +8,7 @@ function SurfaceTri(){
 	this._stage2D.root().addChild(this._root);
 	// 
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
-	this._stage3D = new StageGL(this._canvas3D, 1000.0/10.0, this.getVertexShaders1(), this.getFragmentShaders1());
+	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage3D.setBackgroundColor(0x00000000);
 	this._stage3D.frustrumAngle(45);
 	this._stage3D.enableDepthTest();
@@ -263,7 +263,8 @@ SurfaceTri.prototype.resetTris = function(){
 			++triCount;
 		}
 	}
-	console.log("TRIANGLES:"+triCount);
+if(this._mlsMesh.crap.fronts._fronts.length>0){
+	console.log("TRIANGLES:"+triCount+" FRONTS: "+this._mlsMesh.crap.fronts._fronts.length);
 
 	var norm, edge, dir, mid, ver;
 	edge = this._mlsMesh.crap.edgeA;
@@ -290,6 +291,7 @@ SurfaceTri.prototype.resetTris = function(){
 		list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
 		colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
 	}
+}
 
 /*
 var bivariate = this._mlsMesh.crap.bivariate;

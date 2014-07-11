@@ -144,23 +144,23 @@ MLSEdgeFront.prototype.isAnOKEdge = function(edge){
 }
 MLSEdgeFront.prototype.closestEdgePoint = function(edgeIn,vertex){
 // THIS SHOULD NOT ALLOW THE TRIANGLE THAT IS PROJECTED TO GO BEYOND THE FRONT - THE RESULT IS AN INVALID TRIANGLE
-// => the closest point can't be inside a triangle?
+// => the edges of this new triangle can't cross other local triangles
 	var edgeNext = edgeIn.next();
 	var edge, dist, ray = new V3D(), minDistance=null, minEdge=null;
 	for(edge=this._edgeList.head().data(), i=this._edgeList.length(); i--; edge=edge.next()){
 		dist = V3D.distanceSquare(vertex, edge.A() );
 		if(dist<minDistance || minDistance==null){
 			if(edge!=edgeIn && edge!=edgeNext){
-				var tempA = new MLSEdge();
-				var tempB = new MLSEdge();
-				tempA.A( edgeIn.A() );
-				tempA.B( vertex );
-				tempB.A( edgeIn.B() );
-				tempB.B( vertex );
-				if( this.isAnOKEdge( tempA ) && this.isAnOKEdge( tempB ) ){
+				// var tempA = new MLSEdge();
+				// var tempB = new MLSEdge();
+				// tempA.A( edgeIn.A() );
+				// tempA.B( vertex );
+				// tempB.A( edgeIn.B() );
+				// tempB.B( vertex );
+				// if( this.isAnOKEdge( tempA ) && this.isAnOKEdge( tempB ) ){
 					minDistance = dist;
 					minEdge = edge;
-				}
+				// }
 			}
 		}
 	}
@@ -206,6 +206,68 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 		next = next.next();
 	}
 	return edgeB;
+}
+MLSEdgeFront.prototype.topologicalEvent = function(edgeFrom,edgeTo, vertexFrom, frontIn, field,      crap){
+console.log("TOPOLOGIAL HANDLING:");
+	// go over all edges in all fronts, and find edge+vertex+front satisfying:
+	/*
+		*) vertex closest to the edgeFrom midpoint
+		*) can't be an end-vertex of edgeFrom
+		*) must be in direction of vertexFrom-edgeFrom.midpoint (dot==0)
+		*) ?
+	*/
+	var fromA = edgeFrom.A();
+	var fromB = edgeFrom.B();
+	var midpoint = edgeFrom.midpoint();
+var norm = edgeFrom.tri().normal();
+var dir = edgeFrom.unit();
+	var direction = V3D.cross(dir,norm);//V3D.sub(vertexFrom,midpoint);
+	direction.norm();
+// var tri = edgeFrom.tri();
+// console.log(tri.A()+"");
+// console.log(tri.B()+"");
+// console.log(tri.C()+"");
+// console.log(dir);
+// console.log(norm);
+// console.log(direction);
+
+//console.log(direction+"");
+	var frontList = this.container().fronts();
+	var i, j, front, dot, edge, edgeList, dist, closestPoint = null, closestDistance = null, closestEdge = null, closestFront = null, midToVert=new V3D();
+	for(i=0;i<frontList.length;++i){
+		front = frontList[i];
+		edgeList = front.edgeList();
+//console.log(i+": Front: "+front+" : "+edgeList);
+var len = edgeList.length();
+		for(j=0, edge=edgeList.head().data(); j<len; ++j, edge=edge.next()){
+			//edge = edgeList[j];
+//console.log(j+": Edge: "+edge+" "+edge.A());
+			if( edge!=edgeFrom && !V3D.equal(fromB, edge.A()) && !V3D.equal(fromA, edge.A()) ){ // && !V3D.equal(fromA, edge.A()) && !V3D.equal(fromB, edge.B()) ){ // only need to check b for edge.prev: 1/n
+				V3D.sub(midToVert, edge.A(),midpoint);
+				dot = V3D.dot(midToVert,direction);
+				if(dot>0.0){ // this probably also covers the same-edge conlinearity ...
+					dist = V3D.distanceSquare( midpoint,edge.A() );
+console.log("dist: "+dist+" | dot: "+dot);
+					if( closestDistance==null || dist<closestDistance ){
+						closestDistance = dist;
+						closestFront = front;
+						closestEdge = edge;
+						closestPoint = edge.A();
+					}
+				}
+			}
+		}
+	}
+	// handle split if same front
+console.log(closestEdge+" | "+closestPoint+" | "+closestFront);
+console.log("distance: "+closestDistance);
+	if(closestFront==this){
+console.log("SPLIT");
+		this.split(edgeFrom, closestEdge, closestPoint, field, crap);
+	}else if(closestFront!=null){ // handle merge if seperate front
+console.log("MERGE");
+		this.merge(edgeFrom, closestEdge, closestPoint, closestFront, field, crap);
+	}
 }
 MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,        crap){ // 
 	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB, vertexTo;

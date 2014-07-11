@@ -38,13 +38,13 @@ V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
 	}
 	return V3D.rotate(b,a, V3D.ZERO,dir,ang); // about same origin
 }
-V3D.diff = function(a,b,c){ // a-b
-	if(c!==undefined){
-		a.set(b.x-c.x,b.y-c.y,b.z-c.z);
-		return a;
-	}
-	return new V3D(a.x-b.x,a.y-b.y,a.z-b.z);
-}
+// V3D.diff = function(a,b,c){ // a-b
+// 	if(c!==undefined){
+// 		a.set(b.x-c.x,b.y-c.y,b.z-c.z);
+// 		return a;
+// 	}
+// 	return new V3D(a.x-b.x,a.y-b.y,a.z-b.z);
+// }
 V3D.distanceSquare = function(a,b){
 	return Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2);
 }
