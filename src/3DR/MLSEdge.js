@@ -1,6 +1,7 @@
 // MLSEdge.js
 MLSEdge.PRIORITY_NORMAL = 0;
 MLSEdge.PRIORITY_DEFERRED = 1;
+MLSEdge.PRIORITY_DEFERRED_2 = 2;
 MLSEdge._count = 0;
 
 function MLSEdge(a,b){

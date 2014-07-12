@@ -1925,6 +1925,27 @@ Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri inters
 	}
 	return null;
 }
+Code._temp_A = [];
+Code.planePlaneIntersection = function(pA,nA, pB,nB){ // infinite plane intersection = line
+	var dir = V3D.cross(nA,nB).norm();
+	if(dir.length()==0){return null;} // zero or infinite intersections
+	var A = Code.matrix3x3Inverse([nA.x,nA.y,nA.z, nB.x,nB.y,nB.z, dir.x,dir.y,dir.z]);
+	var b = new V3D(V3D.dot(pA,nA), V3D.dot(pB,nB), V3D.dot(pA,dir));
+	console.log(A+"");
+	Code.matrix3x3xV3D(b, A, b);
+	// var A = new Matrix(3,3);
+	// A.setFromArray([nA.x,nA.y,nA.z, nB.x,nB.y,nB.z, dir.x,dir.y,dir.z]);
+	// var b = new Matrix(3,1);
+	// var q = new Matrix(3,1);
+	// b.set(0,0, V3D.dot(pA,nA) );
+	// b.set(1,0, V3D.dot(pB,nB) );
+	// b.set(2,0, V3D.dot(pA,dir) );
+	//q = Matrix.mult(Matrix.inverse(A), b);
+	//q = Matrix.solve(mat,b);
+	//console.log(q+"");
+	//return [new V3D(q.get(0,0), q.get(1,0), q.get(2,0)), dir];
+	return [b, dir];
+}
 Code.planeEquationFromPointNormal = function(pnt,nrm){
 	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
 	var dot = (q.x*pnt.x + q.y*pnt.y + q.z*pnt.z); // q.scale(dot);
@@ -1937,7 +1958,29 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 	return {normal:nrm, point:new V3D(a*d*len,b*d*len,c*d*len)};
 }
 
-
+// ------------------------------------------------------------------------------------------------------------------------------------------------- Array Matrix Math
+Code.matrix3x3xV3D = function(z,m,x){ // z = matrix*x
+	if(!x){ x=m; m=z; z=new V3D(); }
+	z.set(m[0]*x.x+m[1]*x.y+m[2]*x.z, m[3]*x.x+m[4]*x.y+m[5]*x.z, m[6]*x.x+m[7]*x.y+m[8]*x.z);
+	return z;
+}
+Code.matrix3x3Inverse = function(z,x){ // z = inverse(x)
+	x = x||z;
+	var det = x[0]*(x[4]*x[8]-x[5]*x[7]) + x[1]*(x[6]*x[5]-x[3]*x[8]) + x[2]*(x[3]*x[7]-x[6]*x[4]); // a*(e*i-f*h) + b*(g*f-d*i) + c*(d*h-g*e)
+	if(det==0.0){ return null; }
+	det = 1.0/det;
+	var a = (x[4]*x[8]-x[5]*x[7])*det;
+	var b = (x[2]*x[7]-x[1]*x[8])*det;
+	var c = (x[1]*x[5]-x[2]*x[4])*det;
+	var d = (x[5]*x[6]-x[3]*x[8])*det;
+	var e = (x[0]*x[8]-x[2]*x[6])*det;
+	var f = (x[2]*x[3]-x[0]*x[5])*det;
+	var g = (x[3]*x[7]-x[4]*x[6])*det;
+	var h = (x[1]*x[6]-x[0]*x[7])*det;
+	var i = (x[0]*x[4]-x[1]*x[3])*det;
+	z[0] = a; z[1] = b; z[2] = c; z[3] = d; z[4] = e; z[5] = f; z[6] = g; z[7] = h; z[8] = i;
+	return z;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CLOSEST POINT 3D
 Code.closestPointsSegments3D = function(oa,da, ob,db){ // finite ray-ray closet points
 	var A, B, ta, tb, flip;

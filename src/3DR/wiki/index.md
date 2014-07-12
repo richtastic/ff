@@ -1,12 +1,8 @@
 # Notes
 **For now this will just be a place for random notes**
 
-1. [Surface Reconstruction](#SURFACE)
-2. [Curvature](#CURVATURE)
-3. [Least Squares Plane](#LSPLANE)
-4. [Least Squares Surface](#LSSURFACE)
-5. [Intersections](#INTERSECTIONS)
-6. [References](#REFERENCE)
+7. [Surface Reconstruction](#SURFACE)
+9. [References](#REFERENCE)
 
 
 <a name="SURFACE"></a>
@@ -364,12 +360,37 @@ How do you choose the next point/location to add as a vertex (predict)?
 
 
 
+
+
+
+
+
+
+PointCloud
+    - organize()
+
+Front:
+    - edges[] (doubly-linked list & priority queue)
+    - TriangleGrow(vertex,edge)
+        - create new triangle with vertex and internal edge - remove old edge from front, add 2 new edges
+        - if vertex is too close, merge with existing - causes topoligical event:
+            - split
+            - merge
+    - EarCut(edgeA,edgeB)
+        - create new triangle with 3 vertices on front - remove 2 old edges, add 1 new edge
+Full-Front:
+    - fronts[]
+    
+
+
+
+
+
 initial vertex should be oriented such that the surface points in the correct direction (for culling)
 triangles may need to, be checked for orientation after algorithm completes by checking with *outside* points or some idea of surface normals
 
 what about 'disconnected' surfaces? specify some border (convex hull)?
 
-<a name="CURVATURE"></a>
 ### Curvature
 **measurement of how quickly a curve/surface changes direction - sharpness - deviation from straight line**
 #### 2D (Curve) Observances:
@@ -548,9 +569,8 @@ x &middot; y = (aX<sub>u</sub> + bX<sub>v</sub>) &middot; (cX<sub>u</sub> + dX<s
 - &kappa; = |r' &times; r''|/|r'<sup>3</sup>|
 
 
-<a name="LSPLANE"></a>
+
 ### Definition of 3D Plane
-![Plane](./images/plane.png "Plane")
 <br/>
 **Equation of a plane**: ax + by + cz + d = 0 &rarr; normal vector (n): &lt;a,b,c&gt; point in plane (q): (a&middot;d,b&middot;d,c&middot;d)/||n||
 <br/>
@@ -581,7 +601,6 @@ is n is not normal, d = g||n||<sup>2</sup>
 <br/>
 
 ### (Geometric) Least Squares Planar Surface From Set of Points
-![Least Squares Plane](./images/ls_plane.png "Least Squares Plane")
 <br/>
 **Set of points (&reals;<sup>3</sup>) to fit**: P
 <br/>
@@ -709,9 +728,9 @@ OMG another iteration method
 <br/>
 <br/>
 
-<a name="LSSURFACE"></a>
+
 ### Weighted Least Squares Planar Surface
-![Least Squares Surface](./images/ls_surface.png "Least Squares Surface")
+
 <br/>
 **Weight w<sub>i</sub>**: w &prop; 1/distance
 <br/>
@@ -839,7 +858,7 @@ d<sup>2</sup> = r<sup>2</sup> + R<sup>2</sup> + 2rR
 <br/>
 
 
-<a name="INTERSECTIONS"></a>
+
 ### Intersection of Line and Plane (Point Projected onto Plane)
 ![Line Plane Intersection](./images/line_plane_intersect.png "Line Plane Intersection")
 <br/>
@@ -953,8 +972,8 @@ t = [(d &middot; p) - (d &middot; o)]/(d &middot; d)
 if the denominator equals zero (dot(d,d)) &rarr; there is no direction
 <br/>
 if t is outside [0,1], the best point is outside the segment, but t is capped to [0,1]
-<br/>
-<br/>
+
+
 
 ### Closest Points Between Line Segments
 ![Line-Line Segment Distance](./images/linesegments_3D.png "Min Line to Line Segment Distance")
@@ -1071,6 +1090,7 @@ For each particular situation (t<0,t>1,&lambda;<0,&lambda;>1) the endpoint is ch
 <br/>
 
 
+
 ### Closest Point on Plane from Point
 ![Plane-Point Distance](./images/plane_to_point_3D.png "Min Plane-Point Distance")
 <br/>
@@ -1142,20 +1162,136 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 <br/>
 
+### Triagle-Plane x2 intersection
+![?](./images/?.png "?")
+<br/>
+**Plane A n,p**: Plane of Triangle A with: unit-normal n, point in plane: p
+<br/>
+**Plane A &eta;,&rho;**: Plane of Triangle A with: unit-normal &eta;, point in plane: &rho;
+<br/>
+**Line of Intersection q,d**: Plane-Plane Intersection Line with point q, unit direction d
+<br/>
+<br/>
+**Direction must be perpendicular to both n and &eta;**: d = unit(n &times; &eta;)
+<br/>
+<br/>
+**q on line to respective plane points is also perpendicular to respective normals**:
+<br/>
+&lt;q-p&gt; &middot; n = 0
+<br/>
+&lt;q-&rho;&gt; &middot; &eta; = 0
+<br/>
+*Without any more requirements q is underdetermined (free parameter for q), choose additional criteria*:
+<br/>
+**Pick q as minimum distance from p**: *(alternate method is to choose some x or y or z for q)*
+<br/>
+&lt;q-p&gt; &middot; n = 0
+<br/>
+<br/>
+*Expand q equations*:
+<br/>
+n<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) + n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0 [1]
+<br/>
+&eta;<sub>x</sub>(q<sub>x</sub>-&rho;<sub>x</sub>) + &eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) + &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>) = 0 [2]
+<br/>
+d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + d<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) + d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0 [3]
+<br/>
+<br/>
+*Solve [1] & [2] for q<sub>x</sub>*:
+<br/>
+n<sub>x</sub>q<sub>x</sub> - n<sub>x</sub>p<sub>x</sub> + n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) + n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0
+<br/>
+n<sub>x</sub>q<sub>x</sub> = n<sub>x</sub>p<sub>x</sub> - n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)
+<br/>
+q<sub>x</sub> = p<sub>x</sub> - [n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/n<sub>x</sub> [4]
+<br/>
+&rarr;
+<br/>
+q<sub>x</sub> = &rho;<sub>x</sub> - [&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)]/&eta;<sub>x</sub> [5]
+<br/>
+<br/>
+*Solve [3] for q<sub>y</sub>*:
+<br/>
+d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + d<sub>y</sub>q<sub>y</sub> - d<sub>y</sub>p<sub>y</sub> + d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0
+<br/>
+d<sub>y</sub>q<sub>y</sub> = d<sub>y</sub>p<sub>y</sub> - d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)
+<br/>
+q<sub>y</sub> = p<sub>y</sub> - [d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/d<sub>y</sub> [6]
+<br/>
+<br/>
+*[4] = [5], solve for q<sub>y</sub>*:
+<br/>
+p<sub>x</sub> - [n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/n<sub>x</sub> = &rho;<sub>x</sub> - [&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)]/&eta;<sub>x</sub>
+<br/>
+n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>[n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)] = n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> - n<sub>x</sub>[&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)]
+<br/>
+n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - &eta;<sub>x</sub>n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> - n<sub>x</sub>&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - n<sub>x</sub>&eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)
+<br/>
+n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>q<sub>y</sub> + &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> = n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> - n<sub>x</sub>&eta;<sub>y</sub>q<sub>y</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub>
+<br/>
+n<sub>x</sub>&eta;<sub>y</sub>q<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>q<sub>y</sub> = - n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub>
+<br/>
+q<sub>y</sub>(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>) = -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>
+<br/>
+q<sub>y</sub> = [ -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>]/(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>) [7]
+<br/>
+<br/>
+*[6] = [7], solve for q<sub>z</sub>*:
+<br/>
+p<sub>y</sub> - [d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/d<sub>y</sub> = [ -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>]/(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)
+<br/>
+(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)p<sub>y</sub> - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)[d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)] = d<sub>y</sub>[ -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>]
+<br/>
+(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)p<sub>y</sub> - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = d<sub>y</sub>[-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub>] + q<sub>z</sub>d<sub>y</sub>[&eta;<sub>x</sub>n<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>]
+<br/>
+(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)p<sub>y</sub> - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = d<sub>y</sub>[-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub>] + q<sub>z</sub>d<sub>y</sub>[&eta;<sub>x</sub>n<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>]
+<br/>
+.. kill me
+<br/>
+<br/>
+**Or solve via Ax = b**: *from [1], [2], [3]*
+<br/>
+n<sub>x</sub>q<sub>x</sub> + n<sub>y</sub>q<sub>y</sub> + n<sub>z</sub>q<sub>z</sub> = d<sub>x</sub>p<sub>x</sub> + n<sub>y</sub>p<sub>y</sub> + n<sub>z</sub>p<sub>z</sub>
+<br/>
+&eta;<sub>x</sub>q<sub>x</sub> + &eta;<sub>y</sub>q<sub>y</sub> + &eta;<sub>z</sub>q<sub>z</sub> = &eta;<sub>x</sub>&rho;<sub>x</sub> + &eta;<sub>y</sub>&rho;<sub>y</sub> + &eta;<sub>z</sub>&rho;<sub>z</sub>
+<br/>
+d<sub>x</sub>q<sub>x</sub> + d<sub>y</sub>q<sub>y</sub> + d<sub>z</sub>q<sub>z</sub> = d<sub>x</sub>p<sub>x</sub> + d<sub>y</sub>p<sub>y</sub> + d<sub>z</sub>p<sub>z</sub>
+<br/>
+```
+[n.x n.y d.z] [q.x]   [n.x*p.x + n.y*p.y + n.z*p.z]
+[e.x e.y d.z] [q.y] = [e.x*r.x + e.y*r.y + e.z*r.z]
+[d.x d.y d.z] [q.z]   [d.x*p.x + d.y*p.y + d.z*p.z]
+```
+<br/>
+<br/>
+infinite-line - segment-line intersection:
+<br/>
+to avoid numerical error, just sheck for closest point between two infinite lines, check to see if 
+<br/>
+do for all 3 triangle edges => either none or two must intersect
+<br/>
+<br/>
+**KEY NOTES:**
+<br/>
+If planes are parallel (d=zero), there are zero or infinite solutions for plane-plane intersection
+<br/>
+<br/>
+<br/>
+
+
 ### ?
 ![?](./images/?.png "?")
 <br/>
 
 **TODO:**
-x priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
-- merge/split vertex needs to me merged with exisiting point, not own custom point
 - too-close merge/split needs better solution
 - vertex predict improve
+- priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
 - generate first triangle - iterate
 - wavy torus
-x simulate with real point cloud source
+- simulate with real point cloud source
 - N-object octree leaves
-x trackball rotation
+- trackball rotation
 
 
 RESULTS DATA:

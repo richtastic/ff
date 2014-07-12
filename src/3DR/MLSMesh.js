@@ -15,7 +15,7 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this._field.initWithPointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(1.0*Math.PI/8.0);
+	rho = rho!==undefined?rho:(1.0*Math.PI/10.0);
 	tau = tau!==undefined?tau:1;
 	this._field.rho(rho);
 	this._field.tau(tau);
@@ -47,8 +47,6 @@ console.log("+------------------------------------------------------------------
 			continue;
 		}
 		edge = current.bestEdge();
-console.log(edge);
-console.log(edge+"");
 //console.log(edge+"  ("+current.edgeList().length()+") ");
 		edgesCanCut = current.canCutEar(edge);
 		if( edgesCanCut ){
@@ -64,7 +62,7 @@ console.log(edge+"");
 		idealLength = data.length;
 		vertex = data.point;
 		isClose = this.triangleTooClose(frontList, edge,vertex, idealLength);
-console.log(idealLength+" vs "+edge.length()+" is close: "+isClose);
+//console.log(idealLength+" vs "+edge.length()+" is close: "+isClose);
 		if( isClose ){
 			// can get better defer state based on how good resulting triangle would look (would need to update?)
 			if( current.deferEdge(edge) ){
@@ -133,7 +131,7 @@ MLSMesh.prototype.findSeedTriangle = function(){ // the edges have to take into 
 	randomPoint = new V3D(cuboid.min.x+Math.random()*cuboid.size.x, cuboid.min.y+Math.random()*cuboid.size.y, cuboid.min.z+Math.random()*cuboid.size.z);
 //randomPoint = new V3D(0.699497050140053,0.8740153680555522,-0.08700824482366443);
 randomPoint = new V3D(0.5,0.5,0.5);
-console.log(randomPoint+"");
+//console.log(randomPoint+"");
 	vertexA = new V3D(), vertexB = new V3D(), vertexC = new V3D();
 	var edgeA = new MLSEdge(vertexA,vertexB), edgeB = new MLSEdge(vertexB,vertexC), edgeC = new MLSEdge(vertexC,vertexA);
 	//
@@ -173,7 +171,7 @@ console.log(randomPoint+"");
 		// surfaceData = this._field.projectToSurfaceData(vertexC);
 		// vertexC.copy( surfaceData.point );
 		// edgeLengthC = surfaceData.length;
-console.log(i+" : "+edgeLengthMin+" | "+edgeLengthMax+"   ... "+edgeLengthA+" | "+edgeLengthB+" | "+edgeLengthC+"    "+edgeA.length()+"  "+edgeB.length()+"  "+edgeC.length());
+//console.log(i+" : "+edgeLengthMin+" | "+edgeLengthMax+"   ... "+edgeLengthA+" | "+edgeLengthB+" | "+edgeLengthC+"    "+edgeA.length()+"  "+edgeB.length()+"  "+edgeC.length());
 		min = Math.min(edgeLengthA,edgeLengthB,edgeLengthC);
 		max = Math.max(edgeLengthA,edgeLengthB,edgeLengthC);
 		if(edgeLengthMax==null){
@@ -240,7 +238,7 @@ MLSMesh.prototype.necessaryMinLength = function(edge){ // necessary minimum leng
 }
 MLSMesh.prototype.vertexPredict = function(edge){
 	var c = edge.length();
-	//var c = Math.min(edge.idealLength(),edge.length());
+//var c = Math.min(edge.idealLength(),edge.length());
 //console.log(edge.length()+" / "+edge.idealLength());
 // -> use ideal edge length instead?
 	var i = this.necessaryMinLength(edge);

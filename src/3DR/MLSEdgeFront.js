@@ -247,7 +247,7 @@ var len = edgeList.length();
 				dot = V3D.dot(midToVert,direction);
 				if(dot>0.0){ // this probably also covers the same-edge conlinearity ...
 					dist = V3D.distanceSquare( midpoint,edge.A() );
-console.log("dist: "+dist+" | dot: "+dot);
+//console.log("dist: "+dist+" | dot: "+dot);
 					if( closestDistance==null || dist<closestDistance ){
 						closestDistance = dist;
 						closestFront = front;
@@ -258,6 +258,26 @@ console.log("dist: "+dist+" | dot: "+dot);
 			}
 		}
 	}
+// if(!closestPoint){return;}
+// var ab = V3D.sub(edgeFrom.B(),edgeFrom.A());
+// var bc = V3D.sub(closestPoint,edgeFrom.B());
+// var ca = V3D.sub(edgeFrom.A(),closestPoint);
+// var angle1 = Math.PI - V3D.angle(ab,bc); // AB - BC
+// var angle2 = Math.PI - V3D.angle(bc,ca); // BC - CA
+// var angle3 = Math.PI - V3D.angle(ca,ab); // CA - AB
+// var largestAngle = Math.max( angle1,angle2,angle3 );
+// var seventyDegrees = Math.PI*(70.0/180.0);
+// if(largestAngle>seventyDegrees){
+// 	// set priority to angle shittiness -- to correctly reorder - every triangle needs to be reordered after one re-triangulates
+// 	edgeFrom.priority(largestAngle);
+// 	if( this.deferEdge2(edgeFrom) ){
+// 		console.log("DEFERRED 2");
+// 		return;
+// 	}else{
+// 		console.log("COULD NOT DEFER 2");
+// 	}
+// }
+
 	// handle split if same front
 console.log(closestEdge+" | "+closestPoint+" | "+closestFront);
 console.log("distance: "+closestDistance);
@@ -595,6 +615,17 @@ MLSEdgeFront.prototype.deferEdge = function(edge){
 		var node;
 		this._edgeQueue.removeNode(edge.node());
 		edge.priorityState(MLSEdge.PRIORITY_DEFERRED);
+		node = this._edgeQueue.push(edge);
+		edge.node(node);
+		return true;
+	}
+	return false;
+}
+MLSEdgeFront.prototype.deferEdge2 = function(edge){
+	if(edge.priorityState()==MLSEdge.PRIORITY_DEFERRED){
+		var node;
+		this._edgeQueue.removeNode(edge.node());
+		edge.priorityState(MLSEdge.PRIORITY_DEFERRED_2);
 		node = this._edgeQueue.push(edge);
 		edge.node(node);
 		return true;
