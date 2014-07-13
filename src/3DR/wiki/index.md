@@ -1162,18 +1162,21 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 <br/>
 
-### Triagle-Plane x2 intersection
+### Triangle-Triangle (Plane-Segment) &times;2 Intersection
 ![?](./images/?.png "?")
+<br/>
+**Triangle A a<sub>A</sub>,b<sub>A</sub>,c<sub>A</sub>, n**: Triangle A defined by 3 points:  a<sub>A</sub>,b<sub>A</sub>,c<sub>A</sub>, unit-normal n = unit(&lt;b<sub>A</sub>-a<sub>A</sub>&gt; &times; &lt;c<sub>A</sub>-a<sub>A</sub>&gt;)
+<br/>
+**Triangle B a<sub>B</sub>,b<sub>B</sub>,c<sub>B</sub>, &eta;**: Triangle B defined by 3 points:  a<sub>B</sub>,b<sub>B</sub>,c<sub>B</sub>, unit-normal &eta; = unit(&lt;b<sub>B</sub>-a<sub>B</sub>&gt; &times; &lt;c<sub>B</sub>-a<sub>B</sub>&gt;)
 <br/>
 **Plane A n,p**: Plane of Triangle A with: unit-normal n, point in plane: p
 <br/>
-**Plane A &eta;,&rho;**: Plane of Triangle A with: unit-normal &eta;, point in plane: &rho;
+**Plane B &eta;,&rho;**: Plane of Triangle A with: unit-normal &eta;, point in plane: &rho;
 <br/>
 **Line of Intersection q,d**: Plane-Plane Intersection Line with point q, unit direction d
 <br/>
 <br/>
 **Direction must be perpendicular to both n and &eta;**: d = unit(n &times; &eta;)
-<br/>
 <br/>
 **q on line to respective plane points is also perpendicular to respective normals**:
 <br/>
@@ -1185,7 +1188,7 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 **Pick q as minimum distance from p**: *(alternate method is to choose some x or y or z for q)*
 <br/>
-&lt;q-p&gt; &middot; n = 0
+&lt;q-p&gt; &middot; d = 0
 <br/>
 <br/>
 *Expand q equations*:
@@ -1197,59 +1200,7 @@ n<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + n<sub>y</sub>(q<sub>y</sub>-p<sub>y
 d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + d<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) + d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0 [3]
 <br/>
 <br/>
-*Solve [1] & [2] for q<sub>x</sub>*:
-<br/>
-n<sub>x</sub>q<sub>x</sub> - n<sub>x</sub>p<sub>x</sub> + n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) + n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0
-<br/>
-n<sub>x</sub>q<sub>x</sub> = n<sub>x</sub>p<sub>x</sub> - n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)
-<br/>
-q<sub>x</sub> = p<sub>x</sub> - [n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/n<sub>x</sub> [4]
-<br/>
-&rarr;
-<br/>
-q<sub>x</sub> = &rho;<sub>x</sub> - [&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)]/&eta;<sub>x</sub> [5]
-<br/>
-<br/>
-*Solve [3] for q<sub>y</sub>*:
-<br/>
-d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) + d<sub>y</sub>q<sub>y</sub> - d<sub>y</sub>p<sub>y</sub> + d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = 0
-<br/>
-d<sub>y</sub>q<sub>y</sub> = d<sub>y</sub>p<sub>y</sub> - d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)
-<br/>
-q<sub>y</sub> = p<sub>y</sub> - [d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/d<sub>y</sub> [6]
-<br/>
-<br/>
-*[4] = [5], solve for q<sub>y</sub>*:
-<br/>
-p<sub>x</sub> - [n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/n<sub>x</sub> = &rho;<sub>x</sub> - [&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)]/&eta;<sub>x</sub>
-<br/>
-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>[n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)] = n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> - n<sub>x</sub>[&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - &eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)]
-<br/>
-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>(q<sub>y</sub>-p<sub>y</sub>) - &eta;<sub>x</sub>n<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> - n<sub>x</sub>&eta;<sub>y</sub>(q<sub>y</sub>-&rho;<sub>y</sub>) - n<sub>x</sub>&eta;<sub>z</sub>(q<sub>z</sub>-&rho;<sub>z</sub>)
-<br/>
-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>q<sub>y</sub> + &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> = n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> - n<sub>x</sub>&eta;<sub>y</sub>q<sub>y</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub>
-<br/>
-n<sub>x</sub>&eta;<sub>y</sub>q<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>q<sub>y</sub> = - n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub>
-<br/>
-q<sub>y</sub>(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>) = -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>
-<br/>
-q<sub>y</sub> = [ -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>]/(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>) [7]
-<br/>
-<br/>
-*[6] = [7], solve for q<sub>z</sub>*:
-<br/>
-p<sub>y</sub> - [d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)]/d<sub>y</sub> = [ -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>]/(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)
-<br/>
-(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)p<sub>y</sub> - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)[d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>)] = d<sub>y</sub>[ -n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub> + &eta;<sub>x</sub>n<sub>z</sub>q<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>q<sub>z</sub>]
-<br/>
-(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)p<sub>y</sub> - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = d<sub>y</sub>[-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub>] + q<sub>z</sub>d<sub>y</sub>[&eta;<sub>x</sub>n<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>]
-<br/>
-(n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)p<sub>y</sub> - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>x</sub>(q<sub>x</sub>-p<sub>x</sub>) - (n<sub>x</sub>&eta;<sub>y</sub> - &eta;<sub>x</sub>n<sub>y</sub>)d<sub>z</sub>(q<sub>z</sub>-p<sub>z</sub>) = d<sub>y</sub>[-n<sub>x</sub>&eta;<sub>x</sub>p<sub>x</sub> - &eta;<sub>x</sub>n<sub>y</sub>p<sub>y</sub> - &eta;<sub>x</sub>n<sub>z</sub>p<sub>z</sub> + n<sub>x</sub>&eta;<sub>x</sub>&rho;<sub>x</sub> + n<sub>x</sub>&eta;<sub>y</sub>&rho;<sub>y</sub> + n<sub>x</sub>&eta;<sub>z</sub>&rho;<sub>z</sub>] + q<sub>z</sub>d<sub>y</sub>[&eta;<sub>x</sub>n<sub>z</sub> - n<sub>x</sub>&eta;<sub>z</sub>]
-<br/>
-.. kill me
-<br/>
-<br/>
-**Or solve via Ax = b**: *from [1], [2], [3]*
+**Solve via Ax = b (x = A<sup>-1</sup>b)**: *from [1], [2], [3]*
 <br/>
 n<sub>x</sub>q<sub>x</sub> + n<sub>y</sub>q<sub>y</sub> + n<sub>z</sub>q<sub>z</sub> = d<sub>x</sub>p<sub>x</sub> + n<sub>y</sub>p<sub>y</sub> + n<sub>z</sub>p<sub>z</sub>
 <br/>
@@ -1262,18 +1213,64 @@ d<sub>x</sub>q<sub>x</sub> + d<sub>y</sub>q<sub>y</sub> + d<sub>z</sub>q<sub>z</
 [e.x e.y d.z] [q.y] = [e.x*r.x + e.y*r.y + e.z*r.z]
 [d.x d.y d.z] [q.z]   [d.x*p.x + d.y*p.y + d.z*p.z]
 ```
+**KEY NOTES:**
+<br/>
+If planes are parallel (d=zero), there are zero or infinite solutions for plane-plane intersection
 <br/>
 <br/>
-infinite-line - segment-line intersection:
+**Infinite-Line - Line-Segment Intersection**:
 <br/>
-to avoid numerical error, just sheck for closest point between two infinite lines, check to see if 
+**Line q,d**: Infinite Line with point q, direction d, any point p = q + t&middot;d
+<br/>
+**Segment p,e**: Line Segment with point b, direction e, any point p = b + u&middot;e, u&isin;[0,1]
+<br/>
+<br/>
+**Line-Line Intersection**: p = q + t&middot;d = b + u&middot;e
+<br/>
+*Expand into 3 equations (Over-determined)*
+<br/>
+q<sub>x</sub> + t&middot;d<sub>x</sub> = b<sub>x</sub> + u&middot;e<sub>x</sub>
+<br/>
+q<sub>y</sub> + t&middot;d<sub>y</sub> = b<sub>y</sub> + u&middot;e<sub>y</sub>
+<br/>
+q<sub>z</sub> + t&middot;d<sub>z</sub> = b<sub>z</sub> + u&middot;e<sub>z</sub>
+<br/>
+<br/>
+t = (b<sub>x</sub> + u&middot;e<sub>x</sub> - q<sub>x</sub>)/d<sub>x</sub> [1]
+<br/>
+t = (b<sub>y</sub> + u&middot;e<sub>y</sub> - q<sub>y</sub>)/d<sub>y</sub> [2]
+<br/>
+t = (b<sub>z</sub> + u&middot;e<sub>z</sub> - q<sub>z</sub>)/d<sub>z</sub> [3]
+<br/>
+*[1] = [2]*
+<br/>
+(b<sub>x</sub> + u&middot;e<sub>x</sub> - q<sub>x</sub>)/d<sub>x</sub> = (b<sub>y</sub> + u&middot;e<sub>y</sub> - q<sub>y</sub>)/d<sub>y</sub>
+<br/>
+d<sub>y</sub>(b<sub>x</sub> + u&middot;e<sub>x</sub> - q<sub>x</sub>) = d<sub>x</sub>(b<sub>y</sub> + u&middot;e<sub>y</sub> - q<sub>y</sub>)
+<br/>
+d<sub>y</sub>b<sub>x</sub> + u&middot;e<sub>x</sub>d<sub>y</sub> - d<sub>y</sub>q<sub>x</sub> = d<sub>x</sub>b<sub>y</sub> + u&middot;e<sub>x</sub>d<sub>y</sub> - d<sub>x</sub>q<sub>y</sub>
+<br/>
+u&middot;e<sub>x</sub>d<sub>y</sub> - u&middot;e<sub>x</sub>d<sub>y</sub> = d<sub>x</sub>b<sub>y</sub> - d<sub>x</sub>q<sub>y</sub> - d<sub>y</sub>b<sub>x</sub> + d<sub>y</sub>q<sub>x</sub>
+<br/>
+*[1]=[2], [1]=[3], [2]=[3]*:
+<br/>
+u = (d<sub>x</sub>b<sub>y</sub> - d<sub>y</sub>b<sub>x</sub> + d<sub>y</sub>q<sub>x</sub> - d<sub>x</sub>q<sub>y</sub>)/(e<sub>x</sub>d<sub>y</sub> - e<sub>x</sub>d<sub>y</sub>)
+<br/>
+u = (d<sub>x</sub>b<sub>z</sub> - d<sub>z</sub>b<sub>x</sub> + d<sub>z</sub>q<sub>x</sub> - d<sub>x</sub>q<sub>z</sub>)/(e<sub>x</sub>d<sub>z</sub> - e<sub>x</sub>d<sub>z</sub>)
+<br/>
+u = (d<sub>y</sub>b<sub>z</sub> - d<sub>z</sub>b<sub>y</sub> + d<sub>z</sub>q<sub>y</sub> - d<sub>y</sub>q<sub>z</sub>)/(e<sub>y</sub>d<sub>z</sub> - e<sub>y</sub>d<sub>z</sub>)
+<br/>
+<br/>
+*Combinations of t=... and u=... need to be checked to avoid division by zero*
+<br/>
+<br/>
+*Just check for closest point between two infinite lines, then check if point is inside [0,1] on segment*
 <br/>
 do for all 3 triangle edges => either none or two must intersect
 <br/>
 <br/>
 **KEY NOTES:**
 <br/>
-If planes are parallel (d=zero), there are zero or infinite solutions for plane-plane intersection
 <br/>
 <br/>
 <br/>

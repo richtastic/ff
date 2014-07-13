@@ -261,7 +261,7 @@ console.log("----------------->");
 console.log(u+"");
 return;
 */
-
+/*
 var pA,nA, pB,nB, line;
 
 nA = new V3D(1,0,0);
@@ -270,12 +270,42 @@ nB = new V3D(1,1,0);
 nB.norm();
 pB = new V3D(1,2,2);
 
+// var i = 0, count = 1000000;
+// Code.timerStart()
+// //Code.timerQuickDifferenceSeconds();
+// for(i=count;i--;){
+// 	line = Code.planePlaneIntersection(pA,nA, pB,nB);
+// }
+// Code.timerStop();
+// console.log("seconds: "+Code.timerDifferenceSeconds());
+
 line = Code.planePlaneIntersection(pA,nA, pB,nB);
 console.log(line)
 if(line){
 	console.log(line[0]+"")
 	console.log(line[1]+"")
 }
+*/
+
+var a1,b1,c1,n1,  a2,b2,c2,n2;
+
+a1 = new V3D(2, 3, 0);
+b1 = new V3D(2,-3,-3);
+c1 = new V3D(2,-3, 3);
+n1 = V3D.cross(V3D.sub(b1,a1),V3D.sub(c1,a1)).norm();
+
+a2 = new V3D(0,-1, 0);
+b2 = new V3D(4,-1,-3);
+c2 = new V3D(4,-1, 3);
+n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+
+console.log(a1+" | "+b1+" | "+c1+" | "+n1);
+console.log(a2+" | "+b2+" | "+c2+" | "+n2);
+
+line = Code.triTriIntersection(a1,b1,c1,n1, a2,b2,c2,n2);
+
+console.log(line);
 
 return;
 
