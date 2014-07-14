@@ -1169,9 +1169,9 @@ Geometrically, this shows the simpler observation: t is the portion of &lt;q-p&g
 <br/>
 **Triangle B a<sub>B</sub>,b<sub>B</sub>,c<sub>B</sub>, &eta;**: Triangle B defined by 3 points:  a<sub>B</sub>,b<sub>B</sub>,c<sub>B</sub>, unit-normal &eta; = unit(&lt;b<sub>B</sub>-a<sub>B</sub>&gt; &times; &lt;c<sub>B</sub>-a<sub>B</sub>&gt;)
 <br/>
-**Plane A n,p**: Plane of Triangle A with: unit-normal n, point in plane: p
+**Plane A n,p**: Plane of Triangle A with: unit-normal n, point in plane: p; d<sub>A</sub> = -n &middot; p (n&middot;x + d<sub>A</sub> = 0)
 <br/>
-**Plane B &eta;,&rho;**: Plane of Triangle A with: unit-normal &eta;, point in plane: &rho;
+**Plane B &eta;,&rho;**: Plane of Triangle A with: unit-normal &eta;, point in plane: &rho;; d<sub>B</sub> = -&eta; &middot; &rho; (&eta;&middot;x + d<sub>B</sub> = 0)
 <br/>
 **Line of Intersection q,d**: Plane-Plane Intersection Line with point q, unit direction d
 <br/>
@@ -1264,9 +1264,42 @@ u = (d<sub>y</sub>b<sub>z</sub> - d<sub>z</sub>b<sub>y</sub> + d<sub>z</sub>q<su
 *Combinations of t=... and u=... need to be checked to avoid division by zero*
 <br/>
 <br/>
+**Quick Check:** Use signed distances to initially determine if all points of tri are on a single side of the plane-plane intersection to quickly fail before doing unnecessary calculations
+<br/>
+**Signed Distances (triangle A with plane B)**:
+<br/>
+d<sub>aA</sub> = n &middot; a + d<sub>B</sub>
+<br/>
+d<sub>bA</sub> = n &middot; b + d<sub>B</sub>
+<br/>
+d<sub>cA</sub> = n &middot; c + d<sub>B</sub>
+<br/>
+**Signed Distances (triangle B with plane A)**:
+<br/>
+d<sub>aB</sub> = &eta; &middot; a + d<sub>A</sub>
+<br/>
+d<sub>bB</sub> = &eta; &middot; b + d<sub>A</sub>
+<br/>
+d<sub>cB</sub> = &eta; &middot; c + d<sub>A</sub>
+<br/>
+**Fast Fail Check A:** (d<sub>aA</sub>&lt;0 && d<sub>bA</sub>&lt;0 && d<sub>cA</sub>&lt;0) || (d<sub>aA</sub>&gt;0 && d<sub>bA</sub>&gt;0 && d<sub>cA</sub>&gt;0)
+<br/>
+**Fast Fail Check B:** (d<sub>aB</sub>&lt;0 && d<sub>bB</sub>&lt;0 && d<sub>cB</sub>&lt;0) || (d<sub>aB</sub>&gt;0 && d<sub>bB</sub>&gt;0 && d<sub>cB</sub>&gt;0)
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+<br/>
 *Just check for closest point between two infinite lines, then check if point is inside [0,1] on segment*
 <br/>
 do for all 3 triangle edges => either none or two must intersect
+<br/>
+<br/>
+<br/>
+**Coplanar Triangles**
+<br/>
 <br/>
 <br/>
 **KEY NOTES:**
@@ -1341,6 +1374,7 @@ Topic - Author (Source/Title)
 <br/>
 [Sample Point Files](http://users.cms.caltech.edu/~cs175/cs175-03/homework)
 <br/>
-
+[Fast Tri-Tri Intersection - Tomas Moller](fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/pubs/tritri.pdf)
+<br/>
 
 

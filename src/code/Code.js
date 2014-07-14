@@ -1937,60 +1937,103 @@ Code.planePlaneIntersection = function(pA,nA, pB,nB){ // infinite plane intersec
 	Code.matrix3x3xV3D(b, A, b);
 	return [b, dir];
 }
+Code.triTriIntersectionBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
+}
 Code.triTriIntersection = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
+	var temp;
 	// a triangle intersection does exist: some point is on plane 1 if signed distances are different
-	var d1 = -(n1.x*(a1.x*a1.x) + n1.y*(a1.y*a1.y) + n2.z*(a1.z*a1.z));
+	var d1 = -V3D.dot(n1,a1);
 	var d12a = V3D.dot(n1,a2) + d1;
 	var d12b = V3D.dot(n1,b2) + d1;
 	var d12c = V3D.dot(n1,c2) + d1;
 	if( (d12a>0 && d12b>0 && d12c>0) || (d12a<0 && d12b<0 && d12c<0) ){ return null; } // all tri2 on single side
-	var d2 = -(n2.x*(a2.x*a2.x) + n2.y*(a2.y*a2.y) + n2.z*(a2.z*a2.z));
+	var d1 = -V3D.dot(n2,a2);
 	var d21a = V3D.dot(n2,a1) + d2;
 	var d21b = V3D.dot(n2,b1) + d2;
 	var d21c = V3D.dot(n2,c1) + d2;
 	if( (d21a>0 && d21b>0 && d21c>0) || (d21a<0 && d21b<0 && d21c<0) ){ return null; } // all tri1 on single side
-	if( d12a==0 && d12b==0 && d12c==0 ){ // coplanar
-		// project to 2D and overlap
-	}
-	var line = Code.planePlaneIntersection(a1,n1, a2,n2);
-	// if(!line){return null;} // already checked for
-	var p = line[0];
-	var d = line[1];
 	var ab1 = V3D.sub(b1,a1);
 	var bc1 = V3D.sub(c1,b1);
 	var ca1 = V3D.sub(a1,c1);
 	var ab2 = V3D.sub(b2,a2);
 	var bc2 = V3D.sub(c2,b2);
 	var ca2 = V3D.sub(a2,c2);
+	if( d12a==0 && d12b==0 && d12c==0 ){ // coplanar
+		// project to 2D and overlap
+		// 6 intersections
+		// if some => 
+		// if none => full contained
+		return "coplanar";
+	}
+	var line = Code.planePlaneIntersection(a1,n1, a2,n2);
+	// if(!line){return null;} // must exist
+	var o = line[0];
+	var d = line[1]; d.norm();
+//console.log("line: "+o+" : "+d)
 	// A:
 	var intLineAB1 = Code.closestPointsLines3D(a1,ab1, o,d);
 	var intLineBC1 = Code.closestPointsLines3D(b1,bc1, o,d);
 	var intLineCA1 = Code.closestPointsLines3D(c1,ca1, o,d);
+	var points1 = [];
 // check if intersection is outside segments
 //	if( !(intLineAB1 || intLineBC1 || intLineCA1) ){ return null; } // no intersection with tri 1
-var o1 = point1
-var u1 = point2
-var d1 = u1-o1
+	if(intLineAB1){ points1.push(intLineAB1.pop()); }
+	if(intLineBC1){ points1.push(intLineBC1.pop()); }
+	if(intLineCA1){ points1.push(intLineCA1.pop()); }
+	var o1 = points1[0];
+	var u1 = points1[1];
+	var d1 = V3D.sub(u1,o1);
 	// B:
 	var intLineAB2 = Code.closestPointsLines3D(a2,ab2, o,d);
 	var intLineBC2 = Code.closestPointsLines3D(b2,bc2, o,d);
 	var intLineCA2 = Code.closestPointsLines3D(c2,ca2, o,d);
+	var points2 = [];
 // check if intersection is outside segments
 //	if( !(intLineAB2 || intLineBC2 || intLineCA2) ){ return null; } // no intersection with tri 2
-var o2 = point1
-var u2 = point2
-var d2 = u2-o2
+	if(intLineAB2){ points2.push(intLineAB2.pop()); }
+	if(intLineBC2){ points2.push(intLineBC2.pop()); }
+	if(intLineCA2){ points2.push(intLineCA2.pop()); }
+	var o2 = points2[0];
+	var u2 = points2[1];
+	var d2 = V3D.sub(u2,o2);
 	// find overlapping segment between [o1,u1] and [o2,u2]
-	//
-	p = new V3D(); // first point on line
-
-	return [p,d];
+//console.log(o1+"|"+u1+"   "+o2+"|"+u2)
+	// 1D interval check
+	var int1A = V3D.dot(V3D.sub(o1,o),d);
+	var int1B = V3D.dot(V3D.sub(u1,o),d);
+	var int2A = V3D.dot(V3D.sub(o2,o),d);
+	var int2B = V3D.dot(V3D.sub(u2,o),d);
+	if(int1A>int1B){ temp=int1A; int1A=int1B; int1B=temp; }
+	if(int2A>int2B){ temp=int2A; int2A=int2B; int2B=temp; }
+	if(int1A>int2A){ // int1 before int2
+		temp=int1A; int1A=int2A; int2A=temp;
+		temp=int1B; int1B=int2B; int2B=temp;
+	}
+	// no overlap
+	if(int1B<int2A){ return null; }
+	// first point
+	var intA = int1A;
+	if(int2A>int1A){ intA = int2A;}
+	// second point
+	var intB = int1B;
+	if(int2B<int1B){ intB = int2B; }
+console.log(" "+int1A);
+console.log(" "+int1B);
+console.log(" "+int2A);
+console.log(" "+int2B);
+console.log("[ "+intA+" "+intB+" ]");
+	// line segment in ray form
+	a = V3D.add(o, d.copy().scale(intA));
+	b = V3D.add(o, d.copy().scale(intB));
+console.log("[ "+a+" "+b+" ]");
+	d = d.scale(intB-intA); // d = V3D.sub(b,a);
+	return [a,d];
 }
 
-Code.planeEquationFromPointNormal = function(pnt,nrm){
+Code.planeEquationFromPointNormal = function(pnt,nrm){ // should d = -dot?
 	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
-	var dot = (q.x*pnt.x + q.y*pnt.y + q.z*pnt.z); // q.scale(dot);
-	return {a:nrm.x, b:nrm.y, c:nrm.z, d:dot};
+	var dot = q.x*pnt.x + q.y*pnt.y + q.z*pnt.z; // q.scale(dot);
+	return {a:nrm.x, b:nrm.y, c:nrm.z, d:-dot};
 }
 Code.planePointNormalFromEquation = function(a,b,c,d){
 	var nrm = new V3D(a,b,c);
