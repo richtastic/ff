@@ -71,8 +71,8 @@ firstDevice = firstDevice[0]
 options = {}
 options[:autopilot] = true
 options[:program] = "./camtoimage"
-options[:width] = 640 # 320
-options[:height] = 480 # 240
+options[:width] = 320 # 480 # 640 # 320
+options[:height] = 240 # 360 # 480 # 240
 options[:device] = firstDevice
 options[:rate] = 5.0
 options[:output_ppm] = "image.ppm"
@@ -84,8 +84,8 @@ options[:output_json] = "image.json"
 options[:pipe_in] = "pipe_in"
 options[:pipe_out] = "pipe_out"
 options[:quit] = "q"
-options[:output_width] = 480 # 320
-options[:output_height] = 360 # 240
+options[:output_width] = 320 # 480 # 320
+options[:output_height] = 240 # 360 # 240
 optparse = OptionParser.new do |opts|
 	opts.banner = "\nUsage: #{$0} [options]\n\n"
 	# -d
@@ -151,7 +151,7 @@ i = 0
 continue_loop = true
 while(continue_loop)
 # --------------------------------------------------------- pace to input rate
-	sleep(0.10) #sleep(1/options[:rate])
+	sleep(0.50) #sleep(1/options[:rate])
 # --------------------------------------------------------- ask to take a picture
 	puts "writing to in pipe"
 	writePipeComm( inPipeHandle, "s")
@@ -171,7 +171,7 @@ while(continue_loop)
 		elsif result !=""
 			puts "'#{result}'"
 		end
-		sleep(0.10)
+		sleep(0.25)
 		puts "RECHECK"
 		count = count + 1
 	end

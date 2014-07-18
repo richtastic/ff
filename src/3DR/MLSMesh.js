@@ -15,7 +15,7 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this._field.initWithPointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
-	rho = rho!==undefined?rho:(1.0*Math.PI/10.0);
+	rho = rho!==undefined?rho:(1.0*Math.PI/8.0);
 	tau = tau!==undefined?tau:1;
 	this._field.rho(rho);
 	this._field.tau(tau);
@@ -72,24 +72,19 @@ console.log("+------------------------------------------------------------------
 			}else{
 				console.log("COULD NOT DEFER");
 			}
-			//closest = this.triangleClosestFront(frontList, edge,vertex, idealLength);
+/*
 			closest = this.triangleClosestFrontPoint(frontList, edge,vertex, idealLength);
-			front = closest.front;
-			edge2 = closest.edge;
-			minDistance = closest.minDistance;
+front = closest.front;
+edge2 = closest.edge;
+minDistance = closest.minDistance;
 this.crap.edgeA = edge;
 this.crap.edgeB = edge2;
 this.crap.vertex = vertex;
 // these don't HAVE to be done via vertex predict:
 // use first/closest 
 current.topologicalEvent(edge,edge2,vertex,front,this._field,        this.crap);
-			// if(front==current){
-			// 	console.log("SPLIT");
-			// 	front = current.split(edge,edge2,vertex,this._field,        this.crap);
-			// }else{
-			// 	console.log("MERGE");
-			// 	current.merge(edge,edge2,vertex, front, this._field,        this.crap);
-			// }
+*/
+		current.topologicalEvent(edge,vertex, this._field,        this.crap);
 //throw new Error("stop");
 		}else{
 			console.log("GROW");

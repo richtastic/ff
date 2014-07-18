@@ -242,24 +242,24 @@ void init_device(const char *dev_name, int *fd, int *picWidth, int *picHeight, s
 	}
 	CLEAR(cropcap);
 	cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	if( xioctl(*fd, VIDIOC_CROPCAP, &cropcap)==0 ){
-		crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		crop.c = cropcap.defrect; // reset to default
-		if( -1 == xioctl(*fd, VIDIOC_S_CROP, &crop) ){
-			switch(errno){
-				case EINVAL: // cropping not supported
-				break;
-				default: // errors ignored
-				break;
-			}
-			fprintf(stderr, "\t\terror %d, %s\n", errno, strerror (errno));
-			fprintf(stderr, "\tcropping to a rectangle failed - ignored...\n");
-		}else{
-			fprintf(stderr, "\tcropping to rectangle set ...\n");
-		}
-	}else{ // errors ignored
-		fprintf(stderr, " device does not have cropping capabilities - ignored ...\n");
-	}
+	// if( xioctl(*fd, VIDIOC_CROPCAP, &cropcap)==0 ){
+	// 	crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	// 	crop.c = cropcap.defrect; // reset to default
+	// 	if( -1 == xioctl(*fd, VIDIOC_S_CROP, &crop) ){
+	// 		switch(errno){
+	// 			case EINVAL: // cropping not supported
+	// 			break;
+	// 			default: // errors ignored
+	// 			break;
+	// 		}
+	// 		fprintf(stderr, "\t\terror %d, %s\n", errno, strerror (errno));
+	// 		fprintf(stderr, "\tcropping to a rectangle failed - ignored...\n");
+	// 	}else{
+	// 		fprintf(stderr, "\tcropping to rectangle set ...\n");
+	// 	}
+	// }else{ // errors ignored
+	// 	fprintf(stderr, " device does not have cropping capabilities - ignored ...\n");
+	// }
 	CLEAR(fmt);
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	fmt.fmt.pix.width = *picWidth;
@@ -316,16 +316,16 @@ void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, in
 	tv.tv_sec = 2;
 	tv.tv_usec = 0;
 	fd_set fds;
-	while(i<limit){
+	//while(i<limit){
 		fprintf(stderr, "attempt %d\n",i);
 		FD_ZERO(&fds);
 		FD_SET(*fd, &fds);
 		r = select((*fd) + 1, &fds, NULL, NULL, &tv);
 		if(r==-1){
 			fprintf(stderr, "\t-1\n");
-			if(EINTR == errno){
-				continue;
-			}
+			// if(EINTR == errno){
+			// 	continue;
+			// }
 			errno_exit ("select");
 		}else if(r==0){
 			fprintf(stderr, "select timeout\n");
@@ -333,7 +333,7 @@ void grab_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, in
 		}
 		read_frame(fd, buffer_ptr, n_buffers, picWidth, picHeight, image_buffer, outFilename);
 		++i;
-	}
+	//}
 	fprintf(stderr, "success\n");
 }
 int read_frame(int *fd, struct buffer **buffer_ptr, unsigned int *n_buffers, int picWidth, int picHeight, char *image_buffer, const char *outFilename){
@@ -375,8 +375,10 @@ int process_image(const void* p, size_t len, int picWidth, int picHeight, char *
 	int length = (int)len;
 	int encodedLength = picWidth*picHeight*2;// two pixels are encoded with 4 values
 	int picLength = picWidth*picHeight*3;// each pixel is encoded with 3 values
+	//fprintf(stderr, "%d\n", );
 	fprintf(stderr, "available buffer: %d / %d | %d (%dx%d)\n",length, encodedLength, picLength, picWidth, picHeight);
 	if(length>=encodedLength){
+	//if(1){//
 		int i, j;
 		unsigned char c, y0, u, y1, v;
 		int r, g, b;

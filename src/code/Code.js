@@ -1925,6 +1925,36 @@ Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri inters
 	}
 	return null;
 }
+Code.intersectRayQuad = function(org,dir, a,b,c,d, nrm){ // finite ray - quad intersection (only non-parallel directions [else 2D line intersection])
+	var num, den, ab, ac, bc, ca, ap, bp, cp, p, u, v, w;
+	// solve for t in [0,1]
+	num = nrm.x*(a.x-org.x) + nrm.y*(a.y-org.y) + nrm.z*(a.z-org.z);
+	den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
+	if(den==0){ return null; } // zero or infinite intersections
+	t = num/den;
+	if(t<0.0 || t>1.0){ return null; } // outside ray
+	p = new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
+	// edges
+	ab = V3D.sub(b,a);
+	bc = V3D.sub(c,b);
+	cd = V3D.sub(d,c);
+	da = V3D.sub(a,d);
+	// to point
+	ap = V3D.sub(p,a);
+	bp = V3D.sub(p,b);
+	cp = V3D.sub(p,c);
+	dp = V3D.sub(p,d);
+	// area directionals
+	u = V3D.dot(V3D.cross(ab,ap),nrm);
+	v = V3D.dot(V3D.cross(bc,bp),nrm);
+	w = V3D.dot(V3D.cross(cd,cp),nrm);
+	s = V3D.dot(V3D.cross(da,dp),nrm);
+	// all in same direction
+	if( (u>=0 && v>=0 && w>=0 && s>=0) || (u<=0 && v<=0 && w<=0 && s<=0) ){
+		return p;
+	}
+	return null;
+}
 Code._temp_A = [];
 // var A = Code._temp_A;
 // A[0]=nA.x, A[1]=nA.y, A[2]=nA.z, A[3]=nB.x, A[4]=nB.y, A[5]=nB.z, A[6]=dir.x, A[7]=dir.y, A[8]=dir.z;

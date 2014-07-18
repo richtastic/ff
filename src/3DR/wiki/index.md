@@ -1315,8 +1315,10 @@ do for all 3 triangle edges => either none or two must intersect
 
 **TODO:**
 - too-close merge/split needs better solution
+	- use edge-quad intersection test on each boundary edge
 - vertex predict improve
-- priorities for edges need to be ACTUAL MIDPOINTS, not vertex approximations
+	- use arc-distance projection
+- priorities for edges need to be minimum of BOTH VERTEXES
 - generate first triangle - iterate
 - wavy torus
 - simulate with real point cloud source
