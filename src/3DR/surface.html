@@ -286,8 +286,31 @@ if(line){
 	console.log(line[1]+"")
 }
 */
-
 /*
+var a1 = new V3D(1,1,0);
+var b1 = new V3D(2,3,0);
+var c1 = new V3D(3,1,0);
+// var a2 = new V3D(2,2,0);
+// var b2 = new V3D(3,3,0);
+// var c2 = new V3D(4,2,0);
+// var a2 = new V3D(2,0,0);
+// var b2 = new V3D(4,0,0);
+// var c2 = new V3D(4,2,0);
+var a2 = new V3D(1,3,0);
+var b2 = new V3D(2,0,0);
+var c2 = new V3D(3,2,0);
+var i, intersect;
+intersect = Code.triTriIntersection2D(a1,b1,c1, a2,b2,c2);
+console.log(intersect);
+for(i=0;i<intersect.length;++i){
+	console.log(""+intersect[i]);
+}
+
+return;
+*/
+
+
+
 var a1,b1,c1,n1,  a2,b2,c2,n2;
 
 a1 = new V3D(2, 3, 0);
@@ -310,16 +333,21 @@ n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
 console.log(a1+" | "+b1+" | "+c1+" | "+n1);
 console.log(a2+" | "+b2+" | "+c2+" | "+n2);
 
-intersect = Code.triTriIntersection(a1,b1,c1,n1, a2,b2,c2,n2);
+intersect = Code.triTriIntersection3D(a1,b1,c1,n1, a2,b2,c2,n2);
+console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, a2,b2,c2,n2) );
 
+var i;
 console.log(intersect);
 if(intersect){
 	console.log(intersect.length);
-	console.log(intersect[0]+" "+intersect[1])
+	for(i=0;i<intersect.length;++i){
+		console.log(intersect[i]+"");
+	}
+	//console.log(intersect[0]+" "+intersect[1])
 }
 
 return;
-*/
+
 
 	var surface = new SurfaceTri();
 }

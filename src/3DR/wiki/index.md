@@ -1309,6 +1309,25 @@ do for all 3 triangle edges => either none or two must intersect
 <br/>
 
 
+2D Tri-Tri Clipping
+A = Tri A
+B = Tri B
+listA = [a,b,c]
+
+polygon = []
+
+for each point p in listA
+	edgeA = p.next-p.now (circle around)
+	if point is inside triB
+		polygon.push[p]
+	order = []
+	for each rayB point.edgeB in triB
+		if rayB POSITIVELY intersects edgeA
+			order.push(intersection capped at t=[0,1]  && keep track of distance)
+	order.sort on distance
+	polygon.push(order with closest distance)
+
+
 ### ?
 ![?](./images/?.png "?")
 <br/>

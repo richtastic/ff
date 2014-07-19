@@ -1710,6 +1710,18 @@ Code.rayFiniteIntersect2D = function(a,b, c,d){ // two finite rays
 	}
 	return null;
 }
+Code.rayFiniteInfinitePositiveIntersect2D = function(a,b, c,d){ // finite ray and positive-infinite ray
+	var den = b.y*d.x - b.x*d.y;
+	if(den == 0){ return null; }
+	var num1 = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
+	var num2 = (b.x*(c.y-a.y) + b.y*(a.x-c.x));
+	var t1 = num1/den;
+	var t2 = num2/den;
+	if(t1>=0 && t1<=1.0 && t2>=0){
+		return new V2D(a.x+t1*b.x, a.y+t1*b.y);
+	}
+	return null;
+}
 Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y);
@@ -1898,9 +1910,6 @@ Code.intersectRayPlane = function(org,dir, pnt,nrm){ // infinite ray - plane int
 }
 Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri intersection (only non-parallel directions [else 2D line intersection])
 	var num, den, ab, ac, bc, ca, ap, bp, cp, p, u, v, w;
-	ab = V3D.sub(b,a);
-	ac = V3D.sub(c,a);
-	if(nrm===undefined){ nrm = V3D.cross(ab,ac).norm(); }
 	// solve for t in [0,1]
 	num = nrm.x*(a.x-org.x) + nrm.y*(a.y-org.y) + nrm.z*(a.z-org.z);
 	den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
@@ -1909,8 +1918,9 @@ Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri inters
 	if(t<0 || t>1){ return null; } // outside ray
 	p = new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 	// edges
+	ab = V3D.sub(b,a);
 	bc = V3D.sub(c,b);
-	ca = ac.scale(-1.0);
+	ca = V3D.sub(a,c);
 	// to point
 	ap = V3D.sub(p,a);
 	bp = V3D.sub(p,b);
@@ -1967,10 +1977,115 @@ Code.planePlaneIntersection = function(pA,nA, pB,nB){ // infinite plane intersec
 	Code.matrix3x3xV3D(b, A, b);
 	return [b, dir];
 }
-Code.triTriIntersectionBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
+Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
+	// var ab1 = V2D.sub(a1,b1); // CW
+	// var bc1 = V2D.sub(c1,a1);
+	// var ca1 = V2D.sub(b1,c1);
+	// var arrOrgA = [b1,a1,c1]; // CW
+	// var arrDirA = [ab1,bc1,ca1];
+	var ab1 = V2D.sub(b1,a1);
+	var bc1 = V2D.sub(c1,b1);
+	var ca1 = V2D.sub(a1,c1);
+	var arrOrgA = [a1,b1,c1];
+	var arrDirA = [ab1,bc1,ca1];
+	var ab2 = V2D.sub(b2,a2);
+	var bc2 = V2D.sub(c2,b2);
+	var ca2 = V2D.sub(a2,c2);
+	var arrOrgB = [a2,b2,c2];
+	var arrDirB = [ab2,bc2,ca2];
+	var cross1, cross2, cross3;
+	var i, j, orgA, dirA, orgB, dirB, temp, p, dist;
+	var polygon = [];
+	var tempSort = function(a,b){ return b[1]-a[1]; } // largest at beginning, smallest at end
+	for(i=0;i<3;++i){
+		orgA = arrOrgA[i];
+		dirA = arrDirA[i];
+		// orgA inside B
+		cross1 = V2D.cross(ab2,V2D.sub(orgA,a2));
+		cross2 = V2D.cross(bc2,V2D.sub(orgA,b2));
+		cross3 = V2D.cross(ca2,V2D.sub(orgA,c2));
+		// strictly inside
+		if( (cross1>0&&cross2>0&&cross3>0) || (cross1<0&&cross2<0&&cross3<0) ){ // CCW / CW
+			polygon.push(V2D.copy(orgA));
+		}
+		// any intersections along 
+		temp = []; // clear
+		for(j=0;j<3;++j){
+			orgB = arrOrgB[j];
+			dirB = arrDirB[j];
+			p = Code.rayFiniteInfinitePositiveIntersect2D(orgA,dirA, orgB,dirB);
+			if(p){
+				dist = V2D.distanceSquare(orgB,p);
+				if(dist>dirB.lengthSquare()){ // use end point = next point
+					p.copy( arrOrgB[(j+1)%3] );
+				}
+				//dist = V2D.distanceSquare(orgA,p);
+				temp.push([p,dist]);
+			}
+		}
+		// sort on closest intersection
+		if(temp.length>0){
+			if(temp.length>1){
+				temp.sort(tempSort);
+//console.log("--------------");
+				for(j=temp.length;j--;){
+//console.log(temp[j][1]+": "+temp[j][0]+"");
+					polygon.push(temp[j][0]);
+				}
+			}else{
+				polygon.push(temp[0][0]);
+			}
+		}
+	}
+	return polygon; // remove duplicate (end) points ?
+	// this is a double-copy for exactly the same triangles
 }
-Code.triTriIntersection = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
-	var temp;
+Code.triTriIntersection2DBoolean = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
+	var ab1 = V2D.sub(b1,a1);
+	var bc1 = V2D.sub(c1,b1);
+	var ca1 = V2D.sub(a1,c1);
+	var arrOrgA = [a1,b1,c1];
+	var arrDirA = [ab1,bc1,ca1];
+	var ab2 = V2D.sub(b2,a2);
+	var bc2 = V2D.sub(c2,b2);
+	var ca2 = V2D.sub(a2,c2);
+	var arrOrgB = [a2,b2,c2];
+	var arrDirB = [ab2,bc2,ca2];
+	var i, j, orgA, dirA, orgB, dirB, temp, p, dist;
+	// intersections?
+	for(i=0;i<3;++i){
+		orgA = arrOrgA[i];
+		dirA = arrDirA[i];
+		for(j=0;j<3;++j){
+			orgB = arrOrgB[j];
+			dirB = arrDirB[j];
+			p = Code.rayFiniteIntersect2D(orgA,dirA, orgB,dirB);
+			if(p){
+				return true;
+			}
+		}
+	}
+	// 1 inside 2?
+	orgA = a1;
+	cross1 = V2D.cross(ab2,V2D.sub(orgA,a2));
+	cross2 = V2D.cross(bc2,V2D.sub(orgA,b2));
+	cross3 = V2D.cross(ca2,V2D.sub(orgA,c2));
+	if( (cross1>=0&&cross2>0&&cross3>=0) || (cross1<=0&&cross2<=0&&cross3<=0) ){
+		return true;
+	}
+	// 2 inside 1?
+	orgB = a2;
+	cross1 = V2D.cross(ab1,V2D.sub(orgB,a1));
+	cross2 = V2D.cross(bc1,V2D.sub(orgB,b1));
+	cross3 = V2D.cross(ca1,V2D.sub(orgB,c1));
+	if( (cross1>=0&&cross2>0&&cross3>=0) || (cross1<=0&&cross2<=0&&cross3<=0) ){
+		return true;
+	}
+	// no intersection
+	return false;
+}
+Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
+	var i, temp;
 	// a triangle intersection does exist: some point is on plane 1 if signed distances are different
 	var d1 = -V3D.dot(n1,a1);
 	var d12a = V3D.dot(n1,a2) + d1;
@@ -1989,11 +2104,33 @@ Code.triTriIntersection = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	var bc2 = V3D.sub(c2,b2);
 	var ca2 = V3D.sub(a2,c2);
 	if( d12a==0 && d12b==0 && d12c==0 ){ // coplanar
-		// project to 2D and overlap
-		// 6 intersections
-		// if some => 
-		// if none => full contained
-		return "coplanar";
+		// project to 2D
+		var theta = V3D.angle(n1,V3D.DIRZ);
+		var norm = V3D.cross(V3D.DIRZ,n1);
+		var matTo = new Matrix3D();
+		var matFr = new Matrix3D();
+		matTo.translate(-a1.x,-a1.y,-a1.z);
+		matTo.rotateVector(norm, -theta);
+		matFr.rotateVector(norm, theta);
+		matFr.translate(a1.x,a1.y,a1.z);
+		var pA1 = matTo.multV3D(new V3D(), a1);
+		var pB1 = matTo.multV3D(new V3D(), b1);
+		var pC1 = matTo.multV3D(new V3D(), c1);
+		var pA2 = matTo.multV3D(new V3D(), a2);
+		var pB2 = matTo.multV3D(new V3D(), b2);
+		var pC2 = matTo.multV3D(new V3D(), c2);
+		// find 2D intersections
+		console.log(pA1+" "+pB1+" "+pC1);
+		console.log(pA2+" "+pB2+" "+pC2);
+		var int2D = Code.triTriIntersection2D(pA1,pB1,pC1, pA2,pB2,pC2);
+		// unproject
+		for(i=int2D.length;i--;){
+			//console.log("fr: "+int2D[i]+"");
+			int2D[i] = V3D.fromV2D(int2D[i]);
+			matFr.multV3D(int2D[i],int2D[i]);
+			//console.log("to: "+int2D[i]+"");
+		}
+		return int2D;
 	}
 	var line = Code.planePlaneIntersection(a1,n1, a2,n2);
 	// if(!line){return null;} // must exist
@@ -2059,7 +2196,11 @@ console.log("[ "+a+" "+b+" ]");
 	d = d.scale(intB-intA); // d = V3D.sub(b,a);
 	return [a,d];
 }
-
+Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
+	// intersect plane
+	// coplanar check
+	// line segment check
+}
 Code.planeEquationFromPointNormal = function(pnt,nrm){ // should d = -dot?
 	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
 	var dot = q.x*pnt.x + q.y*pnt.y + q.z*pnt.z; // q.scale(dot);

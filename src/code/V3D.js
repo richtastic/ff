@@ -45,6 +45,9 @@ V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
 // 	}
 // 	return new V3D(a.x-b.x,a.y-b.y,a.z-b.z);
 // }
+V3D.fromV2D = function(a){
+	return new V3D(a.x,a.y,0);
+}
 V3D.distanceSquare = function(a,b){
 	return Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2);
 }
@@ -56,6 +59,9 @@ V3D.equal = function(a,b){
 }
 V3D.equalToEpsilon = function(a,b){
 	return (Math.abs(a.x-b.x)<V3D.EPSILON) && (Math.abs(a.y-b.y)<V3D.EPSILON) && (Math.abs(a.z-b.z)<V3D.EPSILON);
+}
+V3D.copy = function(a){
+	return (new V3D()).copy(a);
 }
 V3D.midpoint = function(a,b,c){
 	if(c!==undefined){
@@ -135,7 +141,7 @@ V3D.prototype.setFromArray = function(a){
 V3D.prototype.length = function(){
 	return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 }
-V3D.prototype.lengthSquared = function(){
+V3D.prototype.lengthSquare = function(){
 	return this.x*this.x+this.y*this.y+this.z*this.z;
 }
 V3D.prototype.norm = function(){

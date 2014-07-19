@@ -16,18 +16,24 @@ V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	b.x = x;
 	return b;
 }
-V2D.diff = function(a,b,c){ // a-b
-	if(c!==undefined){
-		a.set(b.x-c.x,b.y-c.y);
-		return a;
-	}
-	return new V2D(a.x-b.x,a.y-b.y);
+// V2D.diff = function(a,b,c){ // a-b
+// 	if(c!==undefined){
+// 		a.set(b.x-c.x,b.y-c.y);
+// 		return a;
+// 	}
+// 	return new V2D(a.x-b.x,a.y-b.y);
+// }
+V2D.distanceSquare = function(a,b){
+	return Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2);
 }
 V2D.distance = function(a,b){ // len(a-b)
 	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2));
 }
 V2D.equal = function(a,b){
 	return a.x==b.x && a.y==b.y;
+}
+V2D.copy = function(a){
+	return (new V2D()).copy(a);
 }
 V2D.midpoint = function(a,b,c){
 	if(c!==undefined){
@@ -92,7 +98,7 @@ V2D.prototype.setFromArray = function(a){
 V2D.prototype.length = function(){
 	return Math.sqrt(this.x*this.x+this.y*this.y);
 }
-V2D.prototype.lengthSquared = function(){
+V2D.prototype.lengthSquare = function(){
 	return this.x*this.x+this.y*this.y;
 }
 V2D.prototype.norm = function(){
