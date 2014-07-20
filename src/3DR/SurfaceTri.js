@@ -171,6 +171,9 @@ SurfaceTri.prototype.keyboardKeyDown = function(e){
 	if(key==Keyboard.KEY_LET_X){
 		this._displayPoints = !this._displayPoints;
 	}
+	if(key==Keyboard.KEY_LET_A){
+		this.resetTris();
+	}
 }
 SurfaceTri.prototype.triangulateTick = function(e){
 	if(this._mlsMesh){
@@ -290,6 +293,18 @@ if(this._mlsMesh.crap.fronts._fronts.length>0){
 		ver = V3D.add(mid,dir);
 		list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
 		colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
+	}
+
+	var fence = this._mlsMesh.crap.fence;
+	if(fence){
+		console.log(fence.length);
+		for(i=0;i<fence.length;i+=4){
+			//console.log(fence[i+0]+"");
+			list.push(fence[i+0].x,fence[i+0].y,fence[i+0].z, fence[i+1].x,fence[i+1].y,fence[i+1].z, fence[i+2].x,fence[i+2].y,fence[i+2].z);
+			list.push(fence[i+2].x,fence[i+2].y,fence[i+2].z, fence[i+3].x,fence[i+3].y,fence[i+3].z, fence[i+0].x,fence[i+0].y,fence[i+0].z);
+			colors.push(0.0,1.0,0.0,0.75,  0.0,1.0,0.0,0.75,  0.0,1.0,0.0,0.75);
+			colors.push(0.0,1.0,0.50,0.75,  0.0,1.0,0.50,0.75,  0.0,1.0,0.50,0.75);
+		}
 	}
 }
 

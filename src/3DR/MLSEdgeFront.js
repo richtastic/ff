@@ -209,13 +209,6 @@ MLSEdgeFront.prototype.firstEdgeToComplain = function(edgeA, vertex, minDistance
 }
 MLSEdgeFront.prototype.topologicalEvent = function(edgeFrom,vertexFrom, field,      crap){
 console.log("TOPOLOGIAL HANDLING:");
-	// go over all edges in all fronts, and find edge+vertex+front satisfying:
-	/*
-		*) vertex closest to the midpoint/vertexFrom ?
-		*) can't be an end-vertex of edgeFrom
-		*) must be in direction of vertexFrom-edgeFrom.midpoint (dot==0)
-		*) result can't intersect any prior triangles
-	*/
 	// store stats, find perpendicular to edge
 	var fromA = edgeFrom.A();
 	var fromB = edgeFrom.B();
@@ -226,64 +219,129 @@ console.log("TOPOLOGIAL HANDLING:");
 	// iterate to find closest vertex
 	var frontList = this.container().fronts();
 	var i, j, k, l, front, dot, edge, edgeList, dist, closestPoint = null, closestDistance = null, closestEdge = null, closestFront = null, midToVert=new V3D();
+var countEdges = 0;
 	for(i=0;i<frontList.length;++i){
 		front = frontList[i];
 		edgeList = front.edgeList();
 		var len = edgeList.length();
 		for(j=0, edge=edgeList.head().data(); j<len; ++j, edge=edge.next()){
+			++countEdges;
+// console.log("EDGE TEST -----------------------------------------:"+countEdges);
 			if( edge!=edgeFrom && !V3D.equal(fromB, edge.A()) && !V3D.equal(fromA, edge.A()) ){ // && !V3D.equal(fromA, edge.A()) && !V3D.equal(fromB, edge.B()) ){ // only need to check b for edge.prev: 1/n
 				// in correct direction - this may be limiting on odd surfaces ?
 				V3D.sub(midToVert, edge.A(),midpoint);
 				dot = V3D.dot(midToVert,perp);
-				if(dot<=0.0){
+				if(dot<=0.0){ // this probably also covers the same-edge conlinearity ...
 					continue;
 				}
-				//if(dot>0.0){ // this probably also covers the same-edge conlinearity ...
-					// WHICH DISTANCE TO USE:
-					dist = V3D.distanceSquare( midpoint,edge.A() );
-					//dist = V3D.distanceSquare( vertexFrom,edge.A() );
-					// closest so far
-					if( closestDistance==null || dist<closestDistance ){
-						var f, e, eL, len2;
-						var qInt, eNE, eNP, eNN, eD, qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D(), qN=new V3D();
-						var vert=edge.A(), aToV=new V3D(), bToV=new V3D();
-						var maxEdgeLength = Math.max(aToV.length(),bToV.length());
-						// doesn't intersect any front-edge-fences
-						V3D.sub(aToV, vert,fromA);
-						V3D.sub(bToV, vert,fromB);
-						qInt = false;
-						for(k=0;k<frontList.length;++k){
-							f = frontList[k];
-							eL = f.edgeList();
-							len2 = eL.length();
-							for(l=0, e=eL.head().data(); l<len2; ++l, e=e.next()){
-								// contains end point 
-								if(e==edgeFrom){// || V3D.equal(e.A(),vert) || V3D.equal(e.B(),vert) ){ // don't check if edge-vertex is pase edge or contains end point?
-									continue;
-								}
-								// find 4 points to define fence quad
-								eNE = e.tri().normal();
-								eNP = e.prev().tri().normal();
-								eNN = e.next().tri().normal();
-								eNprev = V3D.avg(eNE,eNP).norm();
-								eNnext = V3D.avg(eNE,eNN).norm();
-								eD = e.unit();
-								qN = V3D.cross(qN,eD,eNE).norm();
-								eNP.scale(maxEdgeLength);
-								eNN.scale(maxEdgeLength);
-								V3D.add(qA, e.A(),eNP);
-								V3D.sub(qB, e.A(),eNP);
-								V3D.sub(qC, e.B(),eNN);
-								V3D.add(qD, e.B(),eNN);
-								qInt = Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qA,qB,qC,qN);
-								qInt |= Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qC,qD,qA,qN);
-								if(qInt){
-									break;
-								}
+				// WHICH DISTANCE TO USE:
+				//dist = V3D.distanceSquare( midpoint,edge.A() );
+				dist = V3D.distanceSquare( vertexFrom,edge.A() );
+				// closest so far
+				if( closestDistance==null || dist<closestDistance ){
+					var f, e, eL, len2, maxEdgeLength;
+					var qInt, eNE, eNP, eNN, eD, qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D(), qN=new V3D();
+					var vert=edge.A(), aToV=new V3D(), bToV=new V3D();
+					// doesn't intersect any front-edge-fences
+					V3D.sub(aToV, vert,fromA);
+					V3D.sub(bToV, vert,fromB);
+					maxEdgeLength = Math.max(aToV.length(),bToV.length());
+maxEdgeLength = 0.25;
+qInt = null;
+crap.fence = [];
+					for(k=0;k<frontList.length;++k){
+						f = frontList[k];
+						eL = f.edgeList();
+						len2 = eL.length();
+						for(l=0, e=eL.head().data(); l<len2; ++l, e=e.next()){
+							// don't check if e is triangle edge
+							if(e==edgeFrom // e.A()==fromA&&e.B()==fromB
+								|| (V3D.equal(e.A(),vert)&&V3D.equal(e.B(),fromA))
+								|| (V3D.equal(e.A(),vert)&&V3D.equal(e.B(),fromB))
+								|| (V3D.equal(e.B(),vert)&&V3D.equal(e.A(),fromA))
+								|| (V3D.equal(e.B(),vert)&&V3D.equal(e.A(),fromB))
+								){
+								continue;
 							}
-							if(qInt){
-// console.log("e: "+e.A()+" "+e.B()+" ");
-// console.log("tri: "+fromA+" "+fromB+" "+vert);
+//console.log((e.next()==e)+" "+(e.prev()==e));
+							// find 4 points to define fence quad
+							eNE = e.tri().normal();
+							eNP = e.prev().tri().normal();
+							eNN = e.next().tri().normal();
+							eD = e.unit();
+							qN = V3D.cross(qN, eD,eNE).norm();
+// have to remove portion in direction of edge-perpendicular
+/*
+var dirQ;
+dirQ = V3D.scale(qN, V3D.dot(eNP,qN));
+eNP = V3D.sub(eNP, eNP,dirQ);
+eNP.norm();
+eNP = V3D.add(eNP, eNE,eNP).norm();
+//eNP = V3D.avg(eNE,eNP).norm();
+eNP.scale(maxEdgeLength);
+dirQ = V3D.scale(qN, V3D.dot(eNN,qN));
+eNN = V3D.sub(eNN, eNN,dirQ);
+eNN.norm();
+eNN = V3D.add(eNN, eNE,eNN).norm();
+//eNN = V3D.avg(eNE,eNN).norm();
+eNN.scale(maxEdgeLength);
+*/
+eNP = V3D.add(eNP, eNE,eNP).norm();
+eNP.scale(maxEdgeLength);
+eNN = V3D.add(eNN, eNE,eNN).norm();
+eNN.scale(maxEdgeLength);
+//
+							V3D.add(qA, e.A(),eNP);
+							V3D.sub(qB, e.A(),eNP);
+							V3D.sub(qC, e.B(),eNN);
+							V3D.add(qD, e.B(),eNN);
+crap.fence.push(qA.copy(),qB.copy(),qC.copy(),qD.copy());
+							qInt = Code.triTriIntersection3D(fromA,fromB,vertexFrom,fromN, qA,qB,qC,qN);
+							//if(qInt){ break; }
+var m, really;
+if(qInt){
+really = false;
+for(m=0;m<qInt.length;++m){
+if( !(V3D.equalToEpsilon(qInt[m],e.A())||V3D.equalToEpsilon(qInt[m],e.B())) ){
+	really = true;
+}
+}
+if(really){
+break;
+}
+}
+							
+							qInt = Code.triTriIntersection3D(fromA,fromB,vertexFrom,fromN, qC,qD,qA,qN);
+if(qInt){
+really = false;
+for(m=0;m<qInt.length;++m){
+if( !(V3D.equalToEpsilon(qInt[m],e.A())||V3D.equalToEpsilon(qInt[m],e.B())) ){
+	really = true;
+}
+}
+if(really){
+break;
+}
+}
+
+
+							qInt = null;
+							//if(qInt){ break; }
+							// qInt = Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qA,qB,qC,qN);
+							// qInt |= Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qC,qD,qA,qN);
+							// if(qInt){
+							// 	break;
+							// }
+						}
+						if(qInt){
+console.log("TRIANGLE INTERSECTION "+frontList.length);
+console.log(qInt);
+console.log(qA+" "+qB+" "+qC+" "+qD+" "+qN);
+for(m=0;m<qInt.length;++m){
+console.log(m+": "+qInt[m]);
+}
+console.log("e: "+e.A()+" "+e.B()+" ");
+console.log("tri: "+fromA+" "+fromB+" "+vert);
 // console.log(" "+V3D.equal(e.A(),vert)+" "+V3D.equal(e.B(),vert)+"    "+V3D.equal(e.A(),fromA)+"||"+V3D.equal(e.B(),fromA)+"     "+V3D.equal(e.A(),fromB)+"||"+V3D.equal(e.B(),fromB));
 if(edgeFrom){
 crap.edgeA = edgeFrom;
@@ -292,50 +350,33 @@ if(e){
 crap.edgeB = e;
 }
 if(vertexFrom){
-crap.vertex = vertexFrom;
+//crap.vertex = vertexFrom;
+crap.vertex = edge.A();
 }
-								break;
-							}
-						}
-						if(!qInt){
-							closestDistance = dist;
-							closestFront = front;
-							closestEdge = edge;
-							closestPoint = edge.A();
+//throw new Error();
+							break; // stop checking - 
 						}
 					}
-				//}
+					if(!qInt){
+						closestDistance = dist;
+						closestFront = front;
+						closestEdge = edge;
+						closestPoint = edge.A();
+					}
+				}
+//}
 			}
 		}
 	}
-// if(!closestPoint){return;}
-// var ab = V3D.sub(edgeFrom.B(),edgeFrom.A());
-// var bc = V3D.sub(closestPoint,edgeFrom.B());
-// var ca = V3D.sub(edgeFrom.A(),closestPoint);
-// var angle1 = Math.PI - V3D.angle(ab,bc); // AB - BC
-// var angle2 = Math.PI - V3D.angle(bc,ca); // BC - CA
-// var angle3 = Math.PI - V3D.angle(ca,ab); // CA - AB
-// var largestAngle = Math.max( angle1,angle2,angle3 );
-// var seventyDegrees = Math.PI*(70.0/180.0);
-// if(largestAngle>seventyDegrees){
-// 	// set priority to angle shittiness -- to correctly reorder - every triangle needs to be reordered after one re-triangulates
-// 	edgeFrom.priority(largestAngle);
-// 	if( this.deferEdge2(edgeFrom) ){
-// 		console.log("DEFERRED 2");
-// 		return;
-// 	}else{
-// 		console.log("COULD NOT DEFER 2");
-// 	}
-// }
-	// handle split if same front
-console.log(closestEdge+" | "+closestPoint+" | "+closestFront);
-console.log("distance: "+closestDistance);
+console.log("EDGE TEST TOTAL ------------------------------------------------------------------:"+countEdges+" "+this.container().edgeLength() );
 	if(closestFront==this){
 console.log("SPLIT");
 		this.split(edgeFrom, closestEdge, closestPoint, field, crap);
 	}else if(closestFront!=null){ // handle merge if seperate front
 console.log("MERGE");
 		this.merge(edgeFrom, closestEdge, closestPoint, closestFront, field, crap);
+	}else{
+		throw new Error("null edge");
 	}
 }
 MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,        crap){ // 

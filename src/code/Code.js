@@ -2028,7 +2028,8 @@ Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersect
 			if(temp.length>1){
 				temp.sort(tempSort);
 //console.log("--------------");
-				for(j=temp.length;j--;){
+				//for(j=temp.length;j--;){
+				for(j=0;j<temp.length;++j){
 //console.log(temp[j][1]+": "+temp[j][0]+"");
 					polygon.push(temp[j][0]);
 				}
@@ -2105,6 +2106,7 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	var ca2 = V3D.sub(a2,c2);
 	if( d12a==0 && d12b==0 && d12c==0 ){ // coplanar
 		// project to 2D
+		console.log("PLANAR");
 		var theta = V3D.angle(n1,V3D.DIRZ);
 		var norm = V3D.cross(V3D.DIRZ,n1);
 		var matTo = Matrix3D.TEMP.identity();
@@ -2117,8 +2119,8 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 		var pB2 = matTo.multV3D(new V3D(), b2);
 		var pC2 = matTo.multV3D(new V3D(), c2);
 		// find 2D intersections
-		console.log(pA1+" "+pB1+" "+pC1);
-		console.log(pA2+" "+pB2+" "+pC2);
+		// console.log(pA1+" "+pB1+" "+pC1);
+		// console.log(pA2+" "+pB2+" "+pC2);
 		var int2D = Code.triTriIntersection2D(pA1,pB1,pC1, pA2,pB2,pC2);
 		// unproject
 		var matFr = Matrix3D.TEMP.identity();
@@ -2137,16 +2139,7 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	var d = line[1]; d.norm();
 	var o1, u1, o2, u2;
 	// A segment of intersection
-	if( (d21a<=0&&d21b>0&&d21c>0) || (d21a>=0&&d21b<0&&d21c<0) ){ // lone a
-		o1 = Code.closestPointsLines3D(a1,ab1, o,d)[0];
-		u1 = Code.closestPointsLines3D(c1,ca1, o,d)[0];
-	}else if( (d21a>0&&d21b<=0&&d21c>0) || (d21a<0&&d21b>=0&&d21c<0) ){ // lone b
-		o1 = Code.closestPointsLines3D(a1,ab1, o,d)[0];
-		u1 = Code.closestPointsLines3D(b1,bc1, o,d)[0];
-	}else if( (d21a>0&&d21b>0&&d21c<=0) || (d21a<0&&d21b<0&&d21c>=0) ){ // lone c
-		o1 = Code.closestPointsLines3D(b1,bc1, o,d)[0];
-		u1 = Code.closestPointsLines3D(c1,ca1, o,d)[0];
-	}else if(d21a==0&&d21b==0){ // line ab
+	if(d21a==0&&d21b==0){ // line ab
 		o1 = V3D.copy(a1);
 		u1 = V3D.copy(b1);
 	}else if(d21b==0&&d21c==0){ // line bc
@@ -2155,18 +2148,18 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	}else if(d21c==0&&d21a==0){ // line ca
 		o1 = V3D.copy(c1);
 		u1 = V3D.copy(a1);
+	}else if( (d21a<=0&&d21b>0&&d21c>0) || (d21a>=0&&d21b<0&&d21c<0) ){ // lone a
+		o1 = Code.closestPointsLines3D(a1,ab1, o,d)[0];
+		u1 = Code.closestPointsLines3D(c1,ca1, o,d)[0];
+	}else if( (d21a>0&&d21b<=0&&d21c>0) || (d21a<0&&d21b>=0&&d21c<0) ){ // lone b
+		o1 = Code.closestPointsLines3D(a1,ab1, o,d)[0];
+		u1 = Code.closestPointsLines3D(b1,bc1, o,d)[0];
+	}else if( (d21a>0&&d21b>0&&d21c<=0) || (d21a<0&&d21b<0&&d21c>=0) ){ // lone c
+		o1 = Code.closestPointsLines3D(b1,bc1, o,d)[0];
+		u1 = Code.closestPointsLines3D(c1,ca1, o,d)[0];
 	}else{ return null; } // ?
 	// B segment of intersection
-	if( (d12a<=0&&d12b>0&&d12c>0) || (d12a>=0&&d12b<0&&d12c<0) ){ // lone a
-		o2 = Code.closestPointsLines3D(a2,ab2, o,d)[0];
-		u2 = Code.closestPointsLines3D(c2,ca2, o,d)[0];
-	}else if( (d12a>0&&d12b<=0&&d12c>0) || (d12a<0&&d12b>=0&&d12c<0) ){ // lone b
-		o2 = Code.closestPointsLines3D(a2,ab2, o,d)[0];
-		u2 = Code.closestPointsLines3D(b2,bc2, o,d)[0];
-	}else if( (d12a>0&&d12b>0&&d12c<=0) || (d12a<0&&d12b<0&&d12c>=0) ){ // lone c
-		o2 = Code.closestPointsLines3D(b2,bc2, o,d)[0];
-		u2 = Code.closestPointsLines3D(c2,ca2, o,d)[0];
-	}else if(d12a==0&&d12b==0){ // line ab
+	if(d12a==0&&d12b==0){ // line ab
 		o2 = V3D.copy(a2);
 		u2 = V3D.copy(b2);
 	}else if(d12b==0&&d12c==0){ // line bc
@@ -2175,6 +2168,15 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	}else if(d12c==0&&d12a==0){ // line ca
 		o2 = V3D.copy(c2);
 		u2 = V3D.copy(a2);
+	}else if( (d12a<=0&&d12b>0&&d12c>0) || (d12a>=0&&d12b<0&&d12c<0) ){ // lone a
+		o2 = Code.closestPointsLines3D(a2,ab2, o,d)[0];
+		u2 = Code.closestPointsLines3D(c2,ca2, o,d)[0];
+	}else if( (d12a>0&&d12b<=0&&d12c>0) || (d12a<0&&d12b>=0&&d12c<0) ){ // lone b
+		o2 = Code.closestPointsLines3D(a2,ab2, o,d)[0];
+		u2 = Code.closestPointsLines3D(b2,bc2, o,d)[0];
+	}else if( (d12a>0&&d12b>0&&d12c<=0) || (d12a<0&&d12b<0&&d12c>=0) ){ // lone c
+		o2 = Code.closestPointsLines3D(b2,bc2, o,d)[0];
+		u2 = Code.closestPointsLines3D(c2,ca2, o,d)[0];
 	}else{ return null; } // ?
 	// 1D interval check
 	var int1A = V3D.dot(V3D.sub(o1,o),d);

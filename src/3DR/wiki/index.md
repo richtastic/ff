@@ -1309,6 +1309,15 @@ do for all 3 triangle edges => either none or two must intersect
 <br/>
 
 
+/*
+		*) vertex closest to the midpoint/vertexFrom ?
+		*) can't be an end-vertex of edgeFrom
+		*) must be in direction of vertexFrom-edgeFrom.midpoint (dot==0)
+		*) result can't intersect any prior triangles
+*/
+
+
+
 2D Tri-Tri Clipping
 A = Tri A
 B = Tri B

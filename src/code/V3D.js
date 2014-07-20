@@ -1,5 +1,5 @@
 // V3D.js
-V3D.EPSILON = 1E-15; 
+V3D.EPSILON = 1E-10;
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }

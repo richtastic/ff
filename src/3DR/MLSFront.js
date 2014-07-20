@@ -21,6 +21,29 @@ MLSFront.prototype.removeFront = function(front){
 	Code.removeElementSimple(this._fronts, front);
 	front.container(null);
 }
+MLSFront.prototype.edgeLength = function(){ 
+	var i, len, front, edgeList, frontList = this.fronts();
+	var len = 0;
+	for(i=0;i<frontList.length;++i){
+		front = frontList[i];
+		edgeList = front.edgeList();
+		len += edgeList.length();
+	}
+	return len;
+}
+MLSFront.prototype.checkYourself = function(){ 
+	var i, j, len, front, edgeList, edge, frontList = this.fronts();
+	for(i=0;i<frontList.length;++i){
+		front = frontList[i];
+		edgeList = front.edgeList();
+		len = edgeList.length();
+		for(j=0, edge=edgeList.head().data(); j<len; ++j, edge=edge.next()){
+			if(edge.length()<1E-5){
+				throw new Error("EDGE LENGTH: "+edge.length());
+			}
+		}
+	}
+}
 MLSFront.prototype.first = function(){ // select front with highest priority edge
 	if(this._fronts.length<=0){
 		return null;

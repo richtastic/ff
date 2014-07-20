@@ -38,6 +38,8 @@ MLSMesh.prototype.triangulateSurfaceIteration = function(){
 this.crap.fronts = frontList;
 	while( frontList.count()>0  && count<1){ // 21
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+this.frontList.count()+" ("+count+") ");
+frontList.checkYourself();
+
 		current = frontList.first();
 		if(current.count()<=3 && current.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
@@ -72,18 +74,6 @@ console.log("+------------------------------------------------------------------
 			}else{
 				console.log("COULD NOT DEFER");
 			}
-/*
-			closest = this.triangleClosestFrontPoint(frontList, edge,vertex, idealLength);
-front = closest.front;
-edge2 = closest.edge;
-minDistance = closest.minDistance;
-this.crap.edgeA = edge;
-this.crap.edgeB = edge2;
-this.crap.vertex = vertex;
-// these don't HAVE to be done via vertex predict:
-// use first/closest 
-current.topologicalEvent(edge,edge2,vertex,front,this._field,        this.crap);
-*/
 		current.topologicalEvent(edge,vertex, this._field,        this.crap);
 //throw new Error("stop");
 		}else{
