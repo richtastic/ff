@@ -208,8 +208,8 @@ Matrix3D.prototype.kill = function(){
 	this.i = undefined; this.j = undefined; this.k = undefined; this.l = undefined;
 }
 // -----------------------------------------------------------------------------------------------
-Matrix3D.temp = new Matrix3D();
-
+Matrix3D.temp = new Matrix3D(); // internal
+Matrix3D.TEMP = new Matrix3D(); // external
 
 Matrix3D.matrix3DfromMatrix = function(mat){
 	var m3D = new Matrix3D();

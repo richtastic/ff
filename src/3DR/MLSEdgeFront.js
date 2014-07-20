@@ -219,10 +219,10 @@ console.log("TOPOLOGIAL HANDLING:");
 	// store stats, find perpendicular to edge
 	var fromA = edgeFrom.A();
 	var fromB = edgeFrom.B();
+	var fromN = edgeFrom.tri().normal();
 	var midpoint = edgeFrom.midpoint();
-	var norm = edgeFrom.tri().normal();
 	var dir = edgeFrom.unit();
-	var perp = V3D.cross(dir,norm).norm();
+	var perp = V3D.cross(dir,fromN).norm();
 	// iterate to find closest vertex
 	var frontList = this.container().fronts();
 	var i, j, k, l, front, dot, edge, edgeList, dist, closestPoint = null, closestDistance = null, closestEdge = null, closestFront = null, midToVert=new V3D();
@@ -238,57 +238,48 @@ console.log("TOPOLOGIAL HANDLING:");
 				if(dot<=0.0){
 					continue;
 				}
-// WILL HAVE TO DO TRI-TRI INTERSECTION :(
 				//if(dot>0.0){ // this probably also covers the same-edge conlinearity ...
 					// WHICH DISTANCE TO USE:
-					//dist = V3D.distanceSquare( midpoint,edge.A() );
-					dist = V3D.distanceSquare( vertexFrom,edge.A() );
+					dist = V3D.distanceSquare( midpoint,edge.A() );
+					//dist = V3D.distanceSquare( vertexFrom,edge.A() );
 					// closest so far
 					if( closestDistance==null || dist<closestDistance ){
 						var f, e, eL, len2;
-						var qInt, eN, eD, qN=new V3D(), qNL=new V3D(), qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D();
+						var qInt, eNE, eNP, eNN, eD, qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D(), qN=new V3D();
 						var vert=edge.A(), aToV=new V3D(), bToV=new V3D();
 						var maxEdgeLength = Math.max(aToV.length(),bToV.length());
-maxEdgeLength*= 100;
 						// doesn't intersect any front-edge-fences
 						V3D.sub(aToV, vert,fromA);
 						V3D.sub(bToV, vert,fromB);
-						qInt = null;
+						qInt = false;
 						for(k=0;k<frontList.length;++k){
 							f = frontList[k];
 							eL = f.edgeList();
 							len2 = eL.length();
 							for(l=0, e=eL.head().data(); l<len2; ++l, e=e.next()){
-								// don't check if edge-vertex is same as would-be-vertex OR share same edge
-								// base edge
 								// contains end point 
-								if(e==edgeFrom || V3D.equal(e.A(),vert) || V3D.equal(e.B(),vert) ){
+								if(e==edgeFrom){// || V3D.equal(e.A(),vert) || V3D.equal(e.B(),vert) ){ // don't check if edge-vertex is pase edge or contains end point?
 									continue;
 								}
 								// find 4 points to define fence quad
-								eN = e.tri().normal();
+								eNE = e.tri().normal();
+								eNP = e.prev().tri().normal();
+								eNN = e.next().tri().normal();
+								eNprev = V3D.avg(eNE,eNP).norm();
+								eNnext = V3D.avg(eNE,eNN).norm();
 								eD = e.unit();
-								qN = V3D.cross(qN,eD,eN).norm();
-								qNL = V3D.scale(qNL,qN,maxEdgeLength);
-								V3D.add(qA, e.A(),qNL);
-								V3D.sub(qB, e.A(),qNL);
-								V3D.sub(qC, e.B(),qNL);
-								V3D.add(qD, e.B(),qNL);
-								// // check intersection of both would-be-edges and quad
-								// if( !(V3D.equal(e.A(),fromA)||V3D.equal(e.B(),fromA)) ){ //e!=edgeFrom.prev()){ // not prev
-								// 	qInt = Code.intersectRayQuad(fromA,aToV, qA,qB,qC,qD, qN);
-								// 	if(qInt){
-								// 		console.log("violating intersection 1: "+qInt);
-								// 		break;
-								// 	}
-								// }
-								// if( !(V3D.equal(e.A(),fromB)||V3D.equal(e.B(),fromB)) ){ //e!=edgeFrom.next()){ // not next
-								// 	qInt = Code.intersectRayQuad(fromB,bToV, qA,qB,qC,qD, qN);
-								// 	if(qInt){
-								// 		console.log("violating intersection 2: "+qInt);
-								// 		break;
-								// 	}
-								// }
+								qN = V3D.cross(qN,eD,eNE).norm();
+								eNP.scale(maxEdgeLength);
+								eNN.scale(maxEdgeLength);
+								V3D.add(qA, e.A(),eNP);
+								V3D.sub(qB, e.A(),eNP);
+								V3D.sub(qC, e.B(),eNN);
+								V3D.add(qD, e.B(),eNN);
+								qInt = Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qA,qB,qC,qN);
+								qInt |= Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qC,qD,qA,qN);
+								if(qInt){
+									break;
+								}
 							}
 							if(qInt){
 // console.log("e: "+e.A()+" "+e.B()+" ");

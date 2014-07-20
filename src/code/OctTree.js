@@ -113,7 +113,7 @@ OctTree.prototype.kNN = function(k,p){ //
 	var nodeQueue = new RedBlackTree(); nodeQueue.sorting(sortNode);
 	var pointQueue = new RedBlackTree(); pointQueue.sorting(sortPoint); pointQueue.setMaximum(k);
 	var node, child, i;
-	var distSquare, distanceMinimumSquare = this._root.size().lengthSquared(); // infinity
+	var distSquare, distanceMinimumSquare = this._root.size().lengthSquare(); // infinity
 	node = this._root; node.d = node.centerDistanceToPointSquare( p ); // this._sort(p) );
 //var count = 0;
 	while( node ){ //
