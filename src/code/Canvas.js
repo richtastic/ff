@@ -142,11 +142,15 @@ Canvas.prototype.setBackgroundColor = function (r,g,b,a){
 Canvas.prototype.enableDepthTest = function(){
 	this._context.enable(this._context.DEPTH_TEST);
 // put these in seperate method:
-	this._context.depthFunc(this._context.LESS);
+	//this._context.depthFunc(this._context.LESS);
+	this._context.depthFunc(this._context.LEQUAL);
 	//this._context.depthFunc(this._context.MORE);
 	//this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE);
 	this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE_MINUS_SRC_ALPHA);
+	//this._context.blendFuncSeparate(this._context.SRC_ALPHA, this._context.ONE_MINUS_SRC_ALPHA, this._context.ONE, this._context.ONE_MINUS_SRC_ALPHA);
 	this._context.enable(this._context.BLEND);
+	//this._context.enable(this._context.DEPTH_TEST); // disable?
+	//this._context.colorMask(true,true,true,false);
 }
 
 Canvas.prototype.getBufferFloat32Array = function(list, lengthOfIndividual){
@@ -166,6 +170,7 @@ Canvas.prototype.setViewport = function(xPos,yPos,wid,hei){
 }
 Canvas.prototype.clearViewport = function(){
 	this._context.clear(this._context.COLOR_BUFFER_BIT | this._context.DEPTH_BUFFER_BIT);
+	this._context.clearDepth(1.0);
 }
 Canvas.prototype.bindArrayFloatBuffer = function(attr, buffer, lengthOfIndividual){
 	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer);
@@ -177,9 +182,20 @@ Canvas.prototype.bindElementArrayBuffer = function(buffer, lengthOfIndividual){
 Canvas.prototype.drawElementArrayUint16Buffer = function(buffer, lengthOfTotal){
 	this._context.drawElements(this._context.TRIANGLES, lengthOfTotal, this._context.UNSIGNED_SHORT, 0);
 }
+Canvas.prototype.setLineWidth = function(width){
+	this._context.lineWidth(width);
+}
 Canvas.prototype.drawPoints = function(count, offset){
 	offset = offset===undefined? 0 : offset;
 	this._context.drawArrays(this._context.POINTS, offset, count);
+}
+Canvas.prototype.drawLines = function(count, offset){
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.LINES, offset, count);
+}
+Canvas.prototype.drawLineList = function(count, offset){
+	offset = offset===undefined? 0 : offset;
+	this._context.drawArrays(this._context.LINESTRIP, offset, count);
 }
 Canvas.prototype.drawTriangles = function(count, offset){
 	offset = offset===undefined? 0 : offset;

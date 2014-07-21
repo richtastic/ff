@@ -42,7 +42,11 @@ MLSFront.prototype.checkYourself = function(){
 				throw new Error("EDGE LENGTH: "+edge.length());
 			}
 		}
+		if( front.edgeQueue()._tree.length() != front.edgeQueue()._tree.manualCount() ){
+			throw new Error("PRIORITY QUEUE COUNT:"+front.edgeQueue()._tree.length()+" | "+front.edgeQueue()._tree.manualCount());
+		}
 	}
+
 }
 MLSFront.prototype.first = function(){ // select front with highest priority edge
 	if(this._fronts.length<=0){
@@ -50,8 +54,21 @@ MLSFront.prototype.first = function(){ // select front with highest priority edg
 	}
 	var i, front = this._fronts[0];
 	var edge, bestEdge = front.bestEdge();
+// console.log("GET FIRST");
+// console.log(front);
+// console.log(front.edgeQueue());
+// console.log(front.edgeQueue().isEmpty());
+// console.log(bestEdge);
 	for(i=1;i<this._fronts.length;++i){
 		edge = this._fronts[i].bestEdge();
+if(edge==null){
+console.log(this._fronts[i]);
+console.log(this._fronts[i].edgeQueue());
+console.log(this._fronts[i].edgeQueue().length());
+console.log(this._fronts[i].edgeQueue().isEmpty());
+console.log(this._fronts[i].edgeQueue().toString());
+console.log(edge);
+}
 		if(edge.priority() < bestEdge.priority()){
 			bestEdge = edge;
 			front = this._fronts[i];

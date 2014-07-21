@@ -112,6 +112,9 @@ V3D.max = function(a,b,c){ // a = max(b,c)
 	a.z = b.z>c.z?b.z:c.z;
 	return a;
 }
+V3D.pushToArray = function(a,v){
+	a.push(v.x,v.y,v.z);
+}
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
 	// if( Code.isa(xP,V3D) ){

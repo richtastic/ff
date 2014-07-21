@@ -75,7 +75,7 @@ frontList.checkYourself();
 				console.log("COULD NOT DEFER");
 			}
 		current.topologicalEvent(edge,vertex, this._field,        this.crap);
-//throw new Error("stop");
+//throw new Error("check");
 		}else{
 			console.log("GROW");
 			current.growTriangle(edge,vertex,this._field);
@@ -229,7 +229,7 @@ MLSMesh.prototype.vertexPredict = function(edge){
 	var i = this.necessaryMinLength(edge);
 	var A = 0.5*c/Math.cos(5*Math.PI/180.0);
 	var B = 0.5*c/Math.cos(55*Math.PI/180.0)
-	console.log("  VP EDGE LENGTH "+c+" / "+i+"  |  "+A+"  |  "+B);
+	//console.log("  VP EDGE LENGTH "+c+" / "+i+"  |  "+A+"  |  "+B);
 	i = Math.min(Math.max(i,A),B); // clamp base angle to 5,55
 	// limit base angle to [60-B,60+B] ~> [5,115] * this doesn't make any sense
 	// find vector in edge's triangle plane perpendicular to edge (toward p)

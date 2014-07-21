@@ -18,9 +18,11 @@ function SurfaceTri(){
 	//
 	this.setupDisplay3D();
 	this.setupSphere3D();
+//this.setupLineTest();
 //	this.loadPointFile();
 this._displayPoints = true;
 this._displayTriangles = true;
+this._seeThru = false;
 	//
 	this._userMatrix = new Matrix3D().identity();
 	this._userMatrixTemp = new Matrix3D().identity();
@@ -69,7 +71,7 @@ SurfaceTri.prototype.getVertexShaders1 = function(){
 }
 SurfaceTri.prototype.getFragmentShaders1 = function(){
     return ["\
-		precision mediump float; \
+		precision highp float; \
 		varying vec4 vColor; \
 		void main(void){ \
 			gl_FragColor = vColor; \
@@ -81,6 +83,9 @@ SurfaceTri.prototype.getFragmentShaders1 = function(){
 			gl_FragColor = vColor; \
 		} \
     "];*/
+    // gl_FragColor = vColor; \
+    // vec4(vColor.rgb*vLightWeighting, vColor.a*uAlpha); \
+    // vec4(vColor.r, vColor.g, vColor.b, vColor.a); \
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 SurfaceTri.prototype.onMouseDownFxn3D = function(e){
@@ -134,6 +139,13 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	this._stage3D.matrixMultM3D(this._userMatrixTemp);
 	this._stage3D.matrixMultM3D(this._userMatrix);
 	//this._stage3D.matrixRotate(e*0.03, 0,1,0);
+// lines
+	if(this._linePointBuffer){
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._linePointBuffer);
+		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._lineColorBuffer);
+		this._stage3D.setLineWidth(4.0);
+		this._stage3D.drawLines(this._vertexPositionAttrib, this._linePointBuffer);
+	}
 	// points
 	if(this._displayPoints){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
@@ -146,6 +158,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 	}
+
 	//this._stage3D.matrixPop();
 	this._stage3D.matrixReset();
 }
@@ -174,9 +187,12 @@ SurfaceTri.prototype.keyboardKeyDown = function(e){
 	if(key==Keyboard.KEY_LET_A){
 		this.resetTris();
 	}
+	if(key==Keyboard.KEY_LET_S){
+		this._seeThru = !this._seeThru;
+	}
 }
 SurfaceTri.prototype.triangulateTick = function(e){
-	if(this._mlsMesh){
+	if(true && this._mlsMesh){
 		this._mlsMesh.triangulateSurfaceIteration();
 		this.resetTris();
 	}
@@ -187,6 +203,156 @@ SurfaceTri.prototype.triangulateTick = function(e){
 SurfaceTri.prototype.setupDisplay3D = function(){
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+}
+
+SurfaceTri.prototype.setupLineTest = function(){
+	//
+	var i, len, colorsT, pointsT, colorsL, pointsL;
+	//
+var a1,b1,c1,n1, a2,b2,c2,n2, d2,n3, intersect;
+a1 = new V3D(2, 3, 0);
+b1 = new V3D(2,-3,-3);
+c1 = new V3D(2,-3, 3);
+n1 = V3D.cross(V3D.sub(b1,a1),V3D.sub(c1,a1)).norm();
+
+// a2 = new V3D(0,-1, 0);
+// b2 = new V3D(4,-1,-3);
+// c2 = new V3D(4,-1, 3);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// no
+// a2 = new V3D(10,-2, 0);
+// b2 = new V3D(14,-1,-3);
+// c2 = new V3D(14,-3, 3);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// coplanar 1 - same tri
+// a2 = new V3D(2, 3, 0);
+// b2 = new V3D(2,-3,-3);
+// c2 = new V3D(2,-3, 3);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// // coplanar 2 1 in 2 out ------------------ problems - all points are there, but lines are wrong
+// a2 = new V3D(2, 3, 0);
+// b2 = new V3D(2,-2,-3);
+// c2 = new V3D(2,-2, 3);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// coplanar 3 - interrior
+// a2 = new V3D(2, 2, 0);
+// b2 = new V3D(2,-2,-2);
+// c2 = new V3D(2,-2, 2);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// coplanar 3 - exterrior
+// a2 = new V3D(2, 4, 0);
+// b2 = new V3D(2,-4,-4);
+// c2 = new V3D(2,-4, 4);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// share edge
+// a2 = new V3D(2, 3, 0); // y
+// b2 = new V3D(2,-3,-3); // y
+// c2 = new V3D(6,-3, 0);
+// n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+// bla
+a2 = new V3D(2, 3, 0);
+b2 = new V3D(2,-3,-3);
+c2 = new V3D(6,-3, 0);
+n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+
+
+////////////////////// EDGE TESTING:
+// tri
+a1 = new V3D(-0.05872125921395547,-0.9996518228238633,1.1167994791484033);
+b1 = new V3D(0.3372410092652108,-0.6224891612415742,1.3224200141662352);
+c1 = new V3D(0.28932089482475565,-1.1994690261562009,0.8529807749697932);
+n1 = V3D.cross(V3D.sub(b1,a1),V3D.sub(c1,a1)).norm();
+// quad
+a2 = new V3D(1.042432528875717,-0.9123679275849793,1.0649280937657997);
+b2 = new V3D(0.7813020783839917,-0.6773280387080766,0.7091653378979015);
+c2 = new V3D(0.2469034333118606,-0.519471856083595,1.1133110540309494);
+n2 = V3D.cross(V3D.sub(b2,a2),V3D.sub(c2,a2)).norm();
+d2 = new V3D(0.42757858521856096,-0.7255064663995533,1.531528974301521);
+n3 = V3D.cross(V3D.sub(d2,c2),V3D.sub(a2,c2)).norm();
+// n2 = new V3D(0.5218946730060251,0.7596067201701442,0.388102539234531);
+// n3 = n2;
+
+console.log(a1+" | "+b1+" | "+c1+" | "+n1);
+console.log(a2+" | "+b2+" | "+c2+" | "+n2);
+console.log(c2+" | "+d2+" | "+a2+" | "+n3);
+
+var intersections = [];
+intersect = Code.triTriIntersection3D(a1,b1,c1,n1, a2,b2,c2,n2);
+intersections.push(intersect);
+console.log(intersect)
+console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, a2,b2,c2,n2) );
+intersect = Code.triTriIntersection3D(a1,b1,c1,n1, c2,d2,a2,n3);
+intersections.push(intersect);
+console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, c2,d2,a2,n3) );
+	//
+	colorsL = [];
+	colorsT = [];
+	pointsL = [];
+	pointsT = [];
+	// for(i=0;i<;++i){
+	// 	pointsL.push(Math.random(), Math.random(), Math.random() );
+	// 	colorsL.push(Math.random(),Math.random(),Math.random(),1.0);
+	// }
+	// tris
+	V3D.pushToArray(pointsT, a1);
+	V3D.pushToArray(pointsT, b1);
+	V3D.pushToArray(pointsT, c1);
+	V3D.pushToArray(pointsT, a2);
+	V3D.pushToArray(pointsT, b2);
+	V3D.pushToArray(pointsT, c2);
+	V3D.pushToArray(pointsT, c2);
+	V3D.pushToArray(pointsT, d2);
+	V3D.pushToArray(pointsT, a2);
+	colorsT.push(0.0,1.0,0.0, 0.60);
+	colorsT.push(0.0,1.0,0.0, 0.60);
+	colorsT.push(0.0,1.0,0.0, 0.60);
+	colorsT.push(0.0,0.0,1.0, 0.60);
+	colorsT.push(0.0,0.0,1.0, 0.60);
+	colorsT.push(0.0,0.0,1.0, 0.60);
+	colorsT.push(0.0,0.0,1.0, 0.60);
+	colorsT.push(0.0,0.3,1.0, 0.60);
+	colorsT.push(0.0,0.3,1.0, 0.60);
+
+	// intersection
+	for(j=0;j<intersections.length;++j){
+		intersect = intersections[j];
+		if(intersect){
+			for(i=0;i<intersect.length;++i){
+		console.log(i+": "+intersect[i]+"");
+				V3D.pushToArray(pointsL, intersect[i]);
+				V3D.pushToArray(pointsL, intersect[(i+1)%intersect.length]);
+				colorsL.push(1.0,0.0,0.0, 1.0);
+				colorsL.push(0.7,0.0,0.3, 1.0);
+			}
+		}
+	}
+	var eA, eB;
+	// edge
+	eA = new V3D(0.9118673036298544,-0.7948479831465279,0.8870467158318506);
+	eB = new V3D(0.3372410092652108,-0.6224891612415742,1.3224200141662352);
+	V3D.pushToArray(pointsL,eA);
+	V3D.pushToArray(pointsL,eB);
+	colorsL.push(0.0,0.0,0.50, 1.0);
+	colorsL.push(0.0,0.0,0.50, 1.0);
+	// intersection:
+	eA = new V3D(1.2290342771578318,-0.08529995444503025,-1.0388515770936175);
+	eB = new V3D(1.2284897352205146,-0.08487553819679178,-1.03967877623796);
+	V3D.pushToArray(pointsL,eA);
+	V3D.pushToArray(pointsL,eB);
+	colorsL.push(0.0,0.50,0.0, 1.0);
+	colorsL.push(0.0,0.50,0.0, 1.0);
+	//
+	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
+	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
+	this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
+	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 }
 
 SurfaceTri.prototype.loadPointFile = function(){
@@ -252,8 +418,10 @@ SurfaceTri.prototype.resetTris = function(){
 	var front, tris, tri, fronts, i, j;
 
 	fronts = [];//Code.copyArray(this._mlsMesh.crap.fronts._fronts);
-	fronts.push(this._mlsMesh.crap.fronts); // 
-
+	if(this._mlsMesh.crap.fronts){
+		fronts.push(this._mlsMesh.crap.fronts); // 
+	}
+var alphaT = this._seeThru?0.75:1.0;
 	var triCount = 0;
 	for(i=fronts.length;i--;){
 		front = fronts[i];
@@ -262,11 +430,11 @@ SurfaceTri.prototype.resetTris = function(){
 			tri = tris[j];
 			//tri.jitter(0.10);
 			list.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
-			colors.push(1.0,0.0,0.0,1.0,  0.0,1.0,0.0,1.0,  0.0,0.0,1.0,1.0);
+			colors.push(1.0,0.0,0.0,alphaT,  0.0,1.0,0.0,alphaT,  0.0,0.0,1.0,alphaT);
 			++triCount;
 		}
 	}
-if(this._mlsMesh.crap.fronts._fronts.length>0){
+if(this._mlsMesh.crap.fronts && this._mlsMesh.crap.fronts._fronts.length>0){
 	console.log("TRIANGLES:"+triCount+" FRONTS: "+this._mlsMesh.crap.fronts._fronts.length);
 
 	var norm, edge, dir, mid, ver;
@@ -280,7 +448,7 @@ if(this._mlsMesh.crap.fronts._fronts.length>0){
 		//ver = V3D.add(mid,dir);
 		ver = this._mlsMesh.crap.vertex;
 		list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
-		colors.push(1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0,  1.0,0.0,1.0,1.0);
+		colors.push(1.0,0.0,1.0,0.8,  1.0,0.0,1.0,0.8,  1.0,0.0,1.0,0.50);
 	}
 
 	edge = this._mlsMesh.crap.edgeB;
@@ -292,7 +460,7 @@ if(this._mlsMesh.crap.fronts._fronts.length>0){
 		mid = edge.midpoint();
 		ver = V3D.add(mid,dir);
 		list.push(edge.B().x,edge.B().y,edge.B().z, edge.A().x,edge.A().y,edge.A().z, ver.x,ver.y,ver.z);
-		colors.push(0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0,  0.0,1.0,1.0,1.0);
+		colors.push(0.0,1.0,1.0,0.8,  0.0,1.0,1.0,0.8,  0.0,1.0,1.0,0.50);
 	}
 
 	var fence = this._mlsMesh.crap.fence;

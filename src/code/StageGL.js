@@ -130,17 +130,22 @@ StageGL.prototype.bindElementArrayBuffer = function(attr,buffer){
 StageGL.prototype.drawElementArrayUint16Buffer = function(buffer){
 	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.length);
 }
+StageGL.prototype.setLineWidth = function(width){
+	this._canvas.setLineWidth(width);
+}
 StageGL.prototype.drawPoints = function(attr,buffer){
 	this._canvas.drawPoints(buffer.length);
 }
+StageGL.prototype.drawLines = function(attr,buffer){
+	this._canvas.drawLines(buffer.length);
+}
+StageGL.prototype.drawLineList = function(attr,buffer){
+	this._canvas.drawLineList(buffer.length);
+}
 StageGL.prototype.drawTriangles = function(attr,buffer){
-//	this.matrixReset();
-//	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
 	this._canvas.drawTriangles(buffer.length);
 }
 StageGL.prototype.drawTriangleList = function(attr,buffer){
-//	this.matrixReset();
-//	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
 	this._canvas.drawTriangleList(buffer.length);
 }
 StageGL.prototype.matrixReset = function(){

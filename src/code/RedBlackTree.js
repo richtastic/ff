@@ -11,9 +11,6 @@ function RedBlackTree(fxn){
 		this._sentinel.left(this._sentinel);
 		this._sentinel.right(this._sentinel);
 		this._sentinel.parent(this._sentinel);
-		// this._sentinel.left(null);
-		// this._sentinel.right(null);
-		// this._sentinel.parent(null);
 	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
 	this._length = 0;
@@ -55,6 +52,15 @@ RedBlackTree.prototype.sorting = function(s){
 RedBlackTree.prototype.length = function(){
 	return this._length;
 }
+// DEBUGGING PURPOSES
+RedBlackTree.prototype.manualCount = function(){
+	if(!this.isNil(this._root)){
+		return this._root.manualCount(this._sentinel);
+	}
+	return 0;
+}
+
+
 RedBlackTree.prototype.isEmpty = function(){
 	return this._length==0;
 }
@@ -63,9 +69,7 @@ RedBlackTree.prototype.clear = function(){
 	if( !this.isNil(this._root) ){
 		this._root.clear(this.nil());
 		this._root = this._sentinel;
-		// this._sentinel.left(null);
-		// this._sentinel.right(null);
-		// this._sentinel.parent(null);
+		this._length = 0;
 	}
 }
 RedBlackTree.prototype.maximum = function(){
@@ -314,8 +318,6 @@ RedBlackTree.prototype.deleteObject = function(o){
 	return null;
 }
 RedBlackTree.prototype._del = function(wasCut,node,splice){
-	// splice.kill();
-	// return;
 	if(wasCut){//} && splice!=node){
 		if(splice==this.nil()){
 			console.log("IS NIL SPLICE");
@@ -521,13 +523,6 @@ RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil){
 	}
 	return null;
 }
-// RedBlackTree.Node.prototype.findRoot = function(){
-// 	var node = this, next = this._parent;
-// 	while(next){
-// 		next = node.parent();
-// 	}
-// 	return node;
-// }
 RedBlackTree.Node.prototype.replace = function(node,nil){ // exact replica in place of node
 	this.parent(node.parent());
 	if( node.parent()!=nil ){
@@ -566,6 +561,20 @@ RedBlackTree.Node.prototype.clear = function(nil){
 		this._right.clear(nil);
 	}
 	this.kill();
+}
+RedBlackTree.Node.prototype.manualCount = function(nil){
+	var countL = 0, countR = 0;
+	if(this._right!=nil && this._right!=this){
+		if(this._right!=null){
+			var countR = this._right.manualCount(nil);
+		}
+	}
+	if(this._left!=nil && this._left!=this){
+		if(this._left!=null){
+			var countL = this._left.manualCount(nil);
+		}
+	}
+	return countL+countR+1;
 }
 RedBlackTree.Node.prototype.toString = function(tab,addTab,nil){
 	if(nil===undefined){return "[RB-Node]";}
