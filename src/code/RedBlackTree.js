@@ -254,6 +254,7 @@ RedBlackTree.prototype.insertNode = function(newNode){
 	if( this.isNil(parent) ){
 		this.root(newNode);
 		++this._length;
+this._INSIDE = false;
 		return;
 	}else{
 		if(value<0){
@@ -262,6 +263,7 @@ RedBlackTree.prototype.insertNode = function(newNode){
 			parent.right(newNode);
 		}
 	}
+this._INSIDE = true;
 	this._insertFixup(newNode);
 	++this._length;
 	if(this._maximumLength>0){
@@ -318,7 +320,8 @@ RedBlackTree.prototype.deleteObject = function(o){
 	return null;
 }
 RedBlackTree.prototype._del = function(wasCut,node,splice){
-	if(wasCut){//} && splice!=node){
+	if(wasCut){
+		if(splice==node){ throw new Error("equal"); }
 		if(splice==this.nil()){
 			console.log("IS NIL SPLICE");
 		}
@@ -332,6 +335,7 @@ RedBlackTree.prototype._del = function(wasCut,node,splice){
 		}
 		node.kill();
 	}else{
+		if(splice!=node){ throw new Error("not equal"); }
 		splice.kill();
 	}
 }
@@ -340,6 +344,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 	if( this.isNil(node.left()) ){
 		splice = node;
 		child = node.right();
+		this._INSIDE = false;
 	}else if( this.isNil(node.right()) ){
 		splice = node;
 		child = node.left();
@@ -357,7 +362,7 @@ RedBlackTree.prototype.deleteNode = function(node){
 	if(this.isNil(parent)){
 		this.root(child);
 		--this._length;
-		this._del(wasCut,node,splice);
+//		this._del(wasCut,node,splice);
 		return wasData;
 	}
 	if(splice==parent.left()){
@@ -366,10 +371,13 @@ RedBlackTree.prototype.deleteNode = function(node){
 		parent.right(child);
 	}
 	if(splice.isBlack()){ // child points to y's lone child, or nil, parent = 
+this._INSIDE = true;
 		this._deleteFixup(child);
+	}else{
+this._INSIDE = false;
 	}
 	--this._length;
-	this._del(wasCut,node,splice);
+//	this._del(wasCut,node,splice);
 	return wasData;
 }
 RedBlackTree.prototype._deleteFixup = function(node){
@@ -528,7 +536,7 @@ RedBlackTree.Node.prototype.replace = function(node,nil){ // exact replica in pl
 	if( node.parent()!=nil ){
 		if(node.parent().left()==node){
 			node.parent().left(this);
-		}else{
+		}else if(node.parent().right()==node){
 			node.parent().right(this);
 		}
 	}
@@ -548,6 +556,7 @@ RedBlackTree.Node.prototype.kill = function(n){
 	this._right = null;
 	this._data = null;
 	this._parent = null; 
+	this._color = undefined;
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.Node.prototype.clear = function(nil){
