@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Surface Triangulation</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Pixelation.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var pixel = new Pixelation();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
