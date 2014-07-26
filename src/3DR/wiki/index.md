@@ -1342,8 +1342,10 @@ for each point p in listA
 <br/>
 
 **TODO:**
-- too-close merge/split needs better solution
-	- use edge-quad intersection test on each boundary edge
+- FIND/FIX RBT
+- CHECK/FIX triangle overlapping
+- border edges on mesh
+
 - vertex predict improve
 	- use arc-distance projection
 - priorities for edges need to be minimum of BOTH VERTEXES
