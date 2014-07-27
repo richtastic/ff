@@ -359,7 +359,8 @@ return;
 
 // TESTING RBT
 var j;
-for(j=0;j<1000;++j){
+var limit = 1000;
+for(j=0;j<limit;++j){
 
 var sortFxn = function(a,b){ return b-a; };
 var tree = new RedBlackTree(sortFxn);
@@ -393,7 +394,8 @@ for(i=0;i<1000;++i){
 		console.log(isC);
 		console.log("added: "+dat);
 		console.log("in: "+tree._INSIDE);
-		throw new Error("UNEQUAL SIZES A "+i+": "+lenA+" "+lenB+" "+lenC+" ");
+		console.log(tree._sentinel);
+		throw new Error("UNEQUAL SIZES A "+i+": "+lenA+" "+lenB+" "+lenC+" "+tree._FIX_1);
 	}
 	wasC = tree.toString();
 	if(Math.random()<=pRemove){
@@ -408,6 +410,7 @@ for(i=0;i<1000;++i){
 		}
 	}
 	lenA = arr.length;
+	//console.log(tree)
 	lenB = tree.length();
 	lenC = tree.manualCount();
 	if(lenA!=lenB || lenB!=lenC){
@@ -419,11 +422,13 @@ for(i=0;i<1000;++i){
 		console.log(isC);
 		console.log("removed: "+dat);
 		console.log("in: "+tree._INSIDE);
-		throw new Error("UNEQUAL SIZES B "+i+": "+lenA+" "+lenB+" "+lenC+" ");
+		console.log(tree._sentinel);
+		throw new Error("UNEQUAL SIZES B "+i+": "+lenA+" "+lenB+" "+lenC+" "+tree._FIX_1);
 	}
 	//console.log(tree.toString());
 	//console.log(i+": "+lenA+" "+lenB+" "+lenC+" ");
 }
+console.log(j+" / "+limit);
 }
 console.log(j+" : "+i+": "+lenA+" "+lenB+" "+lenC+" ");
 

@@ -11,6 +11,7 @@ function RedBlackTree(fxn){
 		this._sentinel.left(this._sentinel);
 		this._sentinel.right(this._sentinel);
 		this._sentinel.parent(this._sentinel);
+		this._sentinel.colorBlack();
 	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
 	this._length = 0;
@@ -37,21 +38,18 @@ RedBlackTree.prototype.isNil = function(n){
 	return n==this._sentinel;
 }
 RedBlackTree.prototype.root = function(r){
-	if(r!==undefined){
-		this._root = r;
-	}
+	if(r!==undefined){ this._root = r; }
 	return this._root;
 }
 RedBlackTree.prototype.sorting = function(s){
-	if(s!==undefined){
-		this._sorting = s;
-	}
+	if(s!==undefined){ this._sorting = s; }
 	return this._sorting;
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.length = function(){
 	return this._length;
 }
+
 // DEBUGGING PURPOSES
 RedBlackTree.prototype.manualCount = function(){
 	if(!this.isNil(this._root)){
@@ -59,7 +57,6 @@ RedBlackTree.prototype.manualCount = function(){
 	}
 	return 0;
 }
-
 
 RedBlackTree.prototype.isEmpty = function(){
 	return this._length==0;
@@ -74,19 +71,13 @@ RedBlackTree.prototype.clear = function(){
 }
 RedBlackTree.prototype.maximum = function(){
 	if(!this.isNil(this._root)){
-		var max = this.maximumNode(this._root);
-		if(max){
-			return max.data();
-		}
+		return this._maximumNode(this._root).data();
 	}
 	return null;
 }
 RedBlackTree.prototype.minimum = function(){
 	if(!this.isNil(this._root)){
-		var min = this._minimumNode(this._root);
-		if(min){
-			return min.data();
-		}
+		return this._minimumNode(this._root).data();
 	}
 	return null;
 }
@@ -94,34 +85,26 @@ RedBlackTree.prototype.minimum = function(){
 RedBlackTree.prototype.popMinimum = function(){
 	if(!this.isNil(this._root)){
 		var min = this._minimumNode(this._root);
-		if(min){
-			var dat = min.data();
-			this.deleteNode(min);
-			return dat;
-		}
+		var dat = min.data();
+		this.deleteNode(min);
+		return dat;
 	}
 	return null;
 }
 RedBlackTree.prototype.popMaximum = function(){
 	if(!this.isNil(this._root)){
-		var max = this.maximumNode(this._root);
-		if(max){
-			var dat = max.data();
-			this.deleteNode(max);
-			return dat;
-		}
+		var max = this._maximumNode(this._root);
+		var dat = max.data();
+		this.deleteNode(max);
+		return dat;
 	}
 	return null;
 }
 
 
 RedBlackTree.prototype.minimumNode = function(){ // external
-	var node = this._root;
-	if(!this.isNil(node)){
-		while( !this.isNil( node.left() ) ){
-			node = node.left();
-		}
-		return node;
+	if(!this.isNil(this._root)){
+		return this._minimumNode(this._root);
 	}
 	return null;
 }
@@ -132,10 +115,10 @@ RedBlackTree.prototype._minimumNode = function(node){ // internal only
 	return node;
 }
 RedBlackTree.prototype.maximumNode = function(node){
-	while( !this.isNil(node.right()) ){
-		node =  node.right();
+	if(!this.isNil(this._root)){
+		return this._maximumNode(this._root);
 	}
-	return node;
+	return null;
 }
 RedBlackTree.prototype._maximumNode = function(node){
 	while(!this.isNil(node.right())){
@@ -177,7 +160,7 @@ RedBlackTree.prototype.predecessor = function(node){
 		return this._maximumNode(node.left());
 	}
 	var parent = node.parent();
-	while(!this.isNil(parent) && parent.left()==node){ // !this.isNil(parent) && 
+	while(parent.left()==node){
 		node = parent;
 		parent = parent.parent();
 	}
@@ -188,7 +171,7 @@ RedBlackTree.prototype.successor = function(node){
 		return this._minimumNode(node.right());
 	}
 	var parent = node.parent();
-	while(!this.isNil(parent) && parent.right()==node){ // !this.isNil(parent) &&
+	while(parent.right()==node){
 		node = parent;
 		parent = parent.parent();
 	}
@@ -202,12 +185,14 @@ RedBlackTree.prototype.rotateLeft = function(node){
 		b.left().parent(a);
 	}
 	b.parent(a.parent());
-	if( this.isNil(a.parent()) ){
-		this.root(b);
-	}else if(a==a.parent().left()){
-		a.parent().left(b);
+	if( !this.isNil(a.parent()) ){
+		if(a==a.parent().left()){
+			a.parent().left(b);
+		}else{
+			a.parent().right(b);
+		}
 	}else{
-		a.parent().right(b);
+		this.root(b);
 	}
 	b.left(a);
 	a.parent(b);
@@ -219,12 +204,14 @@ RedBlackTree.prototype.rotateRight = function(node){
 		b.right().parent(a);
 	}
 	b.parent(a.parent());
-	if( this.isNil(a.parent()) ){
-		this.root(b);
-	}else if(a==a.parent().right()){
-		a.parent().right(b);
+	if( !this.isNil(a.parent()) ){
+		if(a==a.parent().right()){
+			a.parent().right(b);
+		}else{
+			a.parent().left(b);
+		}
 	}else{
-		a.parent().left(b);
+		this.root(b);
 	}
 	b.right(a);
 	a.parent(b);
@@ -241,20 +228,16 @@ RedBlackTree.prototype.insertNode = function(newNode){
 	while( !this.isNil(node) ){
 		parent = node;
 		value = fxn(node.data(),o);
-		if(value<0){
-			node = node.left();
-		}else{
-			node = node.right();
-		}
+		if(value<0){ node = node.left();
+		}else{ node = node.right(); }
 	}
 	newNode.parent(parent);
 	newNode.left(this.nil());
 	newNode.right(this.nil());
 	newNode.colorRed();
+	++this._length;
 	if( this.isNil(parent) ){
 		this.root(newNode);
-		++this._length;
-this._INSIDE = false;
 		return;
 	}else{
 		if(value<0){
@@ -263,9 +246,7 @@ this._INSIDE = false;
 			parent.right(newNode);
 		}
 	}
-this._INSIDE = true;
 	this._insertFixup(newNode);
-	++this._length;
 	if(this._maximumLength>0){
 		if(this._length>this._maximumLength){
 			this.popMaximum();
@@ -291,7 +272,7 @@ RedBlackTree.prototype._insertFixup = function(node){
 				node.parent().parent().colorRed();
 				this.rotateRight(node.parent().parent());
 			}
-		}else{ // p==p.parent().right() - right
+		}else if(node.parent()==node.parent().parent().right()){ // p==p.parent().right() - right
 			sib = node.parent().parent().left();
 			if(sib.isRed()){
 				node.parent().colorBlack();
@@ -307,6 +288,8 @@ RedBlackTree.prototype._insertFixup = function(node){
 				node.parent().parent().colorRed();
 				this.rotateLeft(node.parent().parent());
 			}
+		}else{
+			throw new Error("insert fixup parent is neither left or right child of parent");
 		}
 	}
 	this.root().colorBlack();
@@ -319,118 +302,100 @@ RedBlackTree.prototype.deleteObject = function(o){
 	}
 	return null;
 }
-RedBlackTree.prototype._del = function(wasCut,node,splice){
-	if(wasCut){
-		if(splice==node){ throw new Error("equal"); }
-		if(splice==this.nil()){
-			console.log("IS NIL SPLICE");
-		}
-		if(this.root()==node){
-			this.root(splice);
-		}
-		splice.replace(node, this.nil);
-		if(this.nil().parent()==node){
-			console.log("IS PARENT");
-			this.nil().parent(splice);
-		}
-		node.kill();
-	}else{
-		if(splice!=node){ throw new Error("not equal"); }
-		splice.kill();
-	}
-}
+
 RedBlackTree.prototype.deleteNode = function(node){
-	var splice, child, parent, wasData = node.data(), wasCut = false;
+	var remove, replace, parent, wasData = node.data();
 	if( this.isNil(node.left()) ){
-		splice = node;
-		child = node.right();
+		remove = node;
+		replace = node.right();
 		this._INSIDE = false;
 	}else if( this.isNil(node.right()) ){
-		splice = node;
-		child = node.left();
+		remove = node;
+		replace = node.left();
 	}else{
-		splice = node.left(); // get predecessor
-		while( !this.isNil(splice.right()) ){
-			splice = splice.right();
+		remove = node.left();//remove = this.predecessor(node);
+		while( !this.isNil(remove.right()) ){
+			remove = remove.right();
 		}
-		child = splice.left();
-		node.data( splice.data() ); // satellite data
-		wasCut = true; // actually delete the requested node, and keep the old node
+		replace = remove.left();
+		node.data( remove.data() ); // satellite data
 	}
-	parent = splice.parent();
-	child.parent(parent);
-	if(this.isNil(parent)){
-		this.root(child);
-		--this._length;
-//		this._del(wasCut,node,splice);
-		return wasData;
+	parent = remove.parent();
+	if( !this.isNil(replace) ){
+		replace.parent(parent);
 	}
-	if(splice==parent.left()){
-		parent.left(child);
+	if( this.isNil(parent) ){
+		this.root(replace);
 	}else{
-		parent.right(child);
-	}
-	if(splice.isBlack()){ // child points to y's lone child, or nil, parent = 
-this._INSIDE = true;
-		this._deleteFixup(child);
-	}else{
-this._INSIDE = false;
+		if(remove==parent.left()){
+			parent.left(replace);
+		}else if(remove==parent.right()){
+			parent.right(replace);
+		}else{
+			throw new Error("removed was neither left or right of parent");
+		}
+		if(remove.isBlack()){
+			this._deleteFixup(replace, parent);
+		}
 	}
 	--this._length;
-//	this._del(wasCut,node,splice);
 	return wasData;
 }
-RedBlackTree.prototype._deleteFixup = function(node){
+RedBlackTree.prototype._deleteFixup = function(node, parent){
 	var sib;
-	while(node!=this.root() && node.isBlack()){
-		if(node==node.parent().left()){
-			sib = node.parent().right();
-			if(sib.isRed()){
+	while( node!=this._root && node.isBlack() ){
+		if( node==parent.left() ){
+			sib = parent.right();
+			if( sib.isRed() ){
 				sib.colorBlack();
-				node.parent().colorRed();
-				this.rotateLeft(node.parent());
-				sib = node.parent().right();
+				parent.colorRed();
+				this.rotateLeft(parent);
+				sib = parent.right();
 			}
 			if(sib.left().isBlack() && sib.right().isBlack()){
 				sib.colorRed();
-				node = node.parent();
+				node = parent;
+				parent = parent.parent();
 			}else{
 				if(sib.right().isBlack()){
 					sib.left().colorBlack();
 					sib.colorRed();
 					this.rotateRight(sib);
-					sib = node.parent().right();
+					sib = parent.right();
 				}
-				sib.color( node.parent().color() );
-				node.parent().colorBlack();
+				sib.color( parent.color() );
+				parent.colorBlack();
 				sib.right().colorBlack();
-				this.rotateLeft(node.parent());
+				this.rotateLeft(parent);
 				node = this.root();
 			}
-		}else{ // node==node.parent().right()
-			sib = node.parent().left();
+		}else if(node==node.parent().right()){
+			sib = parent.left();
 			if(sib.isRed()){
 				sib.colorBlack();
-				node.parent().colorRed();
-				this.rotateRight(node.parent());
-				sib = node.parent().left();
+				parent.colorRed();
+				this.rotateRight(parent);
+				sib = parent.left();
 			}
 			if(sib.right().isBlack() && sib.left().isBlack()){
 				sib.colorRed();
-				node = node.parent();
+				node = parent;
+				parent = parent.parent();
 			}else{
 				if(sib.left().isBlack()){
 					sib.right().colorBlack();
 					sib.colorRed();
 					this.rotateLeft(sib);
-					sib = node.parent().left();
+					sib = parent.left();
 				}
-				sib.color( node.parent().color() );
-				node.parent().colorBlack();
+				sib.color( parent.color() );
+				parent.colorBlack();
 				sib.left().colorBlack();
-				this.rotateRight(node.parent());
+				this.rotateRight(parent);
 				node = this.root();
 			}
+		}else{
+			throw new Error("delete fixup was neither left or right of parent");
 		}
 	}
 	node.colorBlack();
@@ -475,33 +440,23 @@ RedBlackTree.Node = function(d){
 	this.data(d);
 }
 RedBlackTree.Node.prototype.data = function(d){
-	if(d!==undefined){
-		this._data = d;
-	}
+	if(d!==undefined){this._data = d; }
 	return this._data;
 }
 RedBlackTree.Node.prototype.left = function(l){
-	if(l!==undefined){
-		this._left = l;
-	}
+	if(l!==undefined){ this._left = l; }
 	return this._left;
 }
 RedBlackTree.Node.prototype.right = function(r){
-	if(r!==undefined){
-		this._right = r;
-	}
+	if(r!==undefined){ this._right = r; }
 	return this._right;
 }
 RedBlackTree.Node.prototype.parent = function(p){
-	if(p!==undefined){
-		this._parent = p;
-	}
+	if(p!==undefined){ this._parent = p; }
 	return this._parent;
 }
 RedBlackTree.Node.prototype.color = function(c){
-	if(c!==undefined){
-		this._color = c;
-	}
+	if(c!==undefined){ this._color = c; }
 	return this._color;
 }
 RedBlackTree.Node.prototype.isRed = function(){
@@ -551,6 +506,12 @@ RedBlackTree.Node.prototype.replace = function(node,nil){ // exact replica in pl
 	this.data(node.data());
 	this.color(node.color());
 }
+RedBlackTree.Node.prototype.clear = function(nil){
+	if(this==nil){ return; }
+	if(this._left!=nil){ this._left.clear(nil); }
+	if(this._right!=nil){ this._right.clear(nil); }
+	this.kill();
+}
 RedBlackTree.Node.prototype.kill = function(n){
 	this._left = null;
 	this._right = null;
@@ -559,18 +520,6 @@ RedBlackTree.Node.prototype.kill = function(n){
 	this._color = undefined;
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.Node.prototype.clear = function(nil){
-	if(this==nil){
-		return;
-	}
-	if(this._left!=nil){
-		this._left.clear(nil);
-	}
-	if(this._right!=nil){
-		this._right.clear(nil);
-	}
-	this.kill();
-}
 RedBlackTree.Node.prototype.manualCount = function(nil){
 	var countL = 0, countR = 0;
 	if(this._right!=nil && this._right!=this){
@@ -620,12 +569,31 @@ RedBlackTree.Node.prototype.toArray = function(array,nil){
 	}
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.Node.prototype.kill = function(){
-	this._left = null;
-	this._right = null;
-	this._data = null;
-	this._parent = null;
+
+
+
+
+
+
+
+
+RedBlackTree.prototype._del = function(wasCut,node,splice){
+	if(wasCut){
+		if(splice==node){ throw new Error("equal"); }
+		if(splice==this.nil()){
+			console.log("IS NIL SPLICE");
+		}
+		if(this.root()==node){
+			this.root(splice);
+		}
+		splice.replace(node, this.nil);
+		if(this.nil().parent()==node){
+			console.log("IS PARENT");
+			this.nil().parent(splice);
+		}
+		node.kill();
+	}else{
+		if(splice!=node){ throw new Error("not equal"); }
+		splice.kill();
+	}
 }
-
-
-

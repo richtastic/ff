@@ -20,9 +20,12 @@ RBT.prototype.keyboardKeyDown = function(e){
 		// 
 	}
 }
-RBT.Object = function(n,k){
-	this.name = n;
+RBT.Object = function(v,k){
+	this.value = v;
 	this.key = k;
+}
+RBT.Object.prototype.toString = function(){
+	return "["+this.value+"]";
 }
 RBT.Object.search = function(a,b){
 	if(a==b){ return 0; }
@@ -31,9 +34,17 @@ RBT.Object.search = function(a,b){
 }
 RBT.prototype.start = function(){
 	console.log("...");
-
+	var i, k, v, o;
 
 	var tree = new RedBlackTree(RBT.Object.search);
+	for(i=0;i<10;++i){
+		k = i;
+		v = "Object+"+Code.prependFixed(i+"","0",3);
+		o = new RBT.Object(v,k);
+		tree.insertObject(o);
+		console.log(tree.toString());
+	}
+	console.log(tree.toString());
 
 	this.drawTree(tree);
 }
