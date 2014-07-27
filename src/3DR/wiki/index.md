@@ -1342,9 +1342,13 @@ for each point p in listA
 <br/>
 
 **TODO:**
-- FIND/FIX RBT
+- LLRBT
 - CHECK/FIX triangle overlapping
-- border edges on mesh
+	- border edges on mesh
+	- correctly replacing the edges to the correct lists?
+		- check return value
+	- are fronts closed correctly?
+	- do resulting fronts have colinearity?
 
 - vertex predict improve
 	- use arc-distance projection

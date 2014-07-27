@@ -299,7 +299,7 @@ console.log("MERGE");
 			this._CCC = 0;
 		}
 		//throw new Error("null edge ");
-		throw new Error("null edge "+this._CCC);
+		throw new Error("null edge "+closestFront+" "+this._CCC);
 	}
 }
 MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,        crap){ // 

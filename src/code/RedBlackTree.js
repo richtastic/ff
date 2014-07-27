@@ -304,21 +304,18 @@ RedBlackTree.prototype.deleteObject = function(o){
 }
 
 RedBlackTree.prototype.deleteNode = function(node){
-	var remove, replace, parent, wasData = node.data();
+	var remove, replace, parent, wasData = node.data(), update=false;
 	if( this.isNil(node.left()) ){
 		remove = node;
 		replace = node.right();
-		this._INSIDE = false;
 	}else if( this.isNil(node.right()) ){
 		remove = node;
 		replace = node.left();
 	}else{
-		remove = node.left();//remove = this.predecessor(node);
-		while( !this.isNil(remove.right()) ){
-			remove = remove.right();
-		}
+		remove = this.predecessor(node);
 		replace = remove.left();
 		node.data( remove.data() ); // satellite data
+		update = true;
 	}
 	parent = remove.parent();
 	if( !this.isNil(replace) ){
@@ -338,8 +335,33 @@ RedBlackTree.prototype.deleteNode = function(node){
 			this._deleteFixup(replace, parent);
 		}
 	}
+	if(update){
+		if(this.root()==node){ this.root(remove); }
+		remove.replace(node, this.nil());
+	}
+	node.kill();
 	--this._length;
 	return wasData;
+}
+RedBlackTree.prototype._del = function(wasCut,node,splice){
+	if(wasCut){
+		if(splice==node){ throw new Error("equal"); }
+		if(splice==this.nil()){
+			console.log("IS NIL SPLICE");
+		}
+		if(this.root()==node){
+			this.root(splice);
+		}
+		splice.replace(node, this.nil);
+		if(this.nil().parent()==node){
+			console.log("IS PARENT");
+			this.nil().parent(splice);
+		}
+		node.kill();
+	}else{
+		if(splice!=node){ throw new Error("not equal"); }
+		splice.kill();
+	}
 }
 RedBlackTree.prototype._deleteFixup = function(node, parent){
 	var sib;
@@ -400,6 +422,7 @@ RedBlackTree.prototype._deleteFixup = function(node, parent){
 	}
 	node.colorBlack();
 }
+
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.toArray = function(limit){
 	var array = [];
@@ -572,28 +595,3 @@ RedBlackTree.Node.prototype.toArray = function(array,nil){
 
 
 
-
-
-
-
-
-RedBlackTree.prototype._del = function(wasCut,node,splice){
-	if(wasCut){
-		if(splice==node){ throw new Error("equal"); }
-		if(splice==this.nil()){
-			console.log("IS NIL SPLICE");
-		}
-		if(this.root()==node){
-			this.root(splice);
-		}
-		splice.replace(node, this.nil);
-		if(this.nil().parent()==node){
-			console.log("IS PARENT");
-			this.nil().parent(splice);
-		}
-		node.kill();
-	}else{
-		if(splice!=node){ throw new Error("not equal"); }
-		splice.kill();
-	}
-}

@@ -34,17 +34,31 @@ RBT.Object.search = function(a,b){
 }
 RBT.prototype.start = function(){
 	console.log("...");
-	var i, k, v, o;
-
-	var tree = new RedBlackTree(RBT.Object.search);
+	var i, k, v, o, f, index;
+	var arr = [];
+	//var tree = new RedBlackTree(RBT.Object.search);
+	var tree = new LLRBT(RBT.Object.search);
 	for(i=0;i<10;++i){
 		k = i;
 		v = "Object+"+Code.prependFixed(i+"","0",3);
 		o = new RBT.Object(v,k);
-		tree.insertObject(o);
+		arr.push(o);
 		console.log(tree.toString());
+		tree.insertObject(o);
 	}
+	console.log(tree);
 	console.log(tree.toString());
+	//console.log(tree.findObject(f));
+	console.log(tree.length());
+	while(i>0 && tree.length()>0){
+		index = Math.floor( Math.random()*arr.length );
+		o = arr[index];
+		console.log(o);
+		console.log(tree.findObject(o));
+		console.log(tree.removeObject(o));
+		console.log(tree.toString());
+		--i;
+	}
 
 	this.drawTree(tree);
 }
