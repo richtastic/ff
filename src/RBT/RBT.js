@@ -38,6 +38,7 @@ RBT.prototype.start = function(){
 	var arr = [];
 	//var tree = new RedBlackTree(RBT.Object.search);
 	var tree = new LLRBT(RBT.Object.search);
+for(j=0;j<2;++j){
 	for(i=0;i<10;++i){
 		k = i;
 		v = "Object+"+Code.prependFixed(i+"","0",3);
@@ -48,19 +49,20 @@ RBT.prototype.start = function(){
 	}
 	console.log(tree);
 	console.log(tree.toString());
+}
 	//console.log(tree.findObject(f));
 	console.log(tree.length());
-	while(i>0 && tree.length()>0){
+	while(arr.length>0 && tree.length()>0){
 		index = Math.floor( Math.random()*arr.length );
-index = 7;
+//index = 7;
 		o = arr[index];
 		Code.removeElementAtSimple(arr,index);
 		console.log("REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING: "+": "+o);
 		console.log(tree.findObject(o));
-		console.log("GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT "+tree.removeObject(o));
+		console.log("GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOTGOT GOTGOT  : "+tree.deleteObject(o));
 		console.log(tree.toString());
 		--i;
-break;
+//break;
 	}
 
 	this.drawTree(tree);

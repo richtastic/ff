@@ -355,16 +355,19 @@ if(intersect){
 return;
 */
 
-/*
 
+try{
 // TESTING RBT
 var j;
 var limit = 100;
+var tree, arr;
 for(j=0;j<limit;++j){
-
-var sortFxn = function(a,b){ return b-a; };
-var tree = new RedBlackTree(sortFxn);
-var arr = [];
+var sortFxn = function(a,b){ return a-b; };
+if(true){//!tree){
+	//tree = new RedBlackTree(sortFxn);
+	tree = new LLRBT(sortFxn);
+	arr = [];
+}
 var pAdd = 0.50;
 var pRemove = 0.50;
 var i, lenA, lenB, lenC, ele, dat, index;
@@ -384,7 +387,8 @@ for(i=0;i<1000;++i){
 	}
 	lenA = arr.length;
 	lenB = tree.length();
-	lenC = tree.manualCount();
+	lenC = lenB;
+	//lenC = tree.manualCount();
 	if(lenA!=lenB || lenB!=lenC){
 		isC = tree.toString();
 		console.log(j);
@@ -395,14 +399,15 @@ for(i=0;i<1000;++i){
 		console.log("added: "+dat);
 		console.log("in: "+tree._INSIDE);
 		console.log(tree._sentinel);
-		throw new Error("UNEQUAL SIZES A "+i+": "+lenA+" "+lenB+" "+lenC+" "+tree._FIX_1);
+		throw new Error("UNEQUAL SIZES A "+i+": "+lenA+" "+lenB+" "+lenC);
 	}
 	wasC = tree.toString();
 	if(Math.random()<=pRemove){
 		if(arr.length>0){
 			index = Math.floor( Math.random()*arr.length );
 			ele = arr[index];
-			dat = ele.data();
+				dat = ele;// LLRBT
+				//dat = ele.data(); // RedBlackTree
 			//console.log("remove: "+index+" "+ele);
 			Code.removeElementAtSimple(arr,index);
 			//tree.deleteNode(ele);
@@ -410,9 +415,10 @@ for(i=0;i<1000;++i){
 		}
 	}
 	lenA = arr.length;
-	//console.log(tree)
+	//console.log(tree+"")
 	lenB = tree.length();
-	lenC = tree.manualCount();
+	//lenC = tree.manualCount();
+	lenC = lenB;
 	if(lenA!=lenB || lenB!=lenC){
 		isC = tree.toString();
 		console.log(j);
@@ -423,18 +429,24 @@ for(i=0;i<1000;++i){
 		console.log("removed: "+dat);
 		console.log("in: "+tree._INSIDE);
 		console.log(tree._sentinel);
-		throw new Error("UNEQUAL SIZES B "+i+": "+lenA+" "+lenB+" "+lenC+" "+tree._FIX_1);
+		throw new Error("UNEQUAL SIZES B "+i+": "+lenA+" "+lenB+" "+lenC);
 	}
 	//console.log(tree.toString());
 	//console.log(i+": "+lenA+" "+lenB+" "+lenC+" ");
 }
-console.log(j+" / "+limit);
+console.log(j+" / "+limit+"  --- "+tree.length());
 }
 console.log(j+" : "+i+": "+lenA+" "+lenB+" "+lenC+" ");
 
+
+}catch(e){
+	console.log(tree)
+	console.log(tree.length())
+	throw e;
+}
 return;
 
-*/
+
 
 /*
 // TESTING LL

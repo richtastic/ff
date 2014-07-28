@@ -29,13 +29,12 @@ LLRBT.prototype.height = function(){
 }
 // --------------------------------------------------------------------------------------------------------------------
 LLRBT.prototype._isRed = function(node){
-	if(node && node.isRed()){ return true; }
-	return false;
+	return node && node.isRed();
 }
 LLRBT.prototype._colorFlip = function(node){ // node.color===blk, node.left.color===red, node.right.color===red
-	node.colorFlip(); // node.colorRed();
-	node.left().colorFlip(); // node.left().colorBlack();
-	node.right().colorFlip(); // node.right().colorBlack();
+	node.colorFlip();
+	node.left().colorFlip(); // if(node.left()){ node.left().colorFlip(); }
+	node.right().colorFlip(); // if(node.right()){node.right().colorFlip(); }
 	return node;
 }
 // --------------------------------------------------------------------------------------------------------------------
@@ -57,7 +56,7 @@ LLRBT.prototype._rotateRight = function(node){ // node.left.color===red
 }
 LLRBT.prototype._moveRedLeft = function(node){
 	this._colorFlip(node);
-	if( this._isRed(node.right().left()) ){
+	if( this._isRed(node.right().left()) ){ // node.right() &&
 		node.right( this._rotateRight(node.right()) );
 		node = this._rotateLeft(node);
 		this._colorFlip(node);
@@ -66,7 +65,7 @@ LLRBT.prototype._moveRedLeft = function(node){
 }
 LLRBT.prototype._moveRedRight = function(node){
 	this._colorFlip(node);
-	if( this._isRed(node.left().left()) ){
+	if( this._isRed(node.left().left()) ){ // node.left() &&
 		node = this._rotateRight(node);
 		this._colorFlip(node);
 	}
@@ -74,7 +73,12 @@ LLRBT.prototype._moveRedRight = function(node){
 }
 // --------------------------------------------------------------------------------------------------------------------
 LLRBT.prototype.findObject = function(data){
-	var value, node = this._root;
+	if(this._root){
+		return this._findObject(this._root, data);
+	}
+}
+LLRBT.prototype._findObject = function(node, data){
+	var value;
 	while(node){
 		value = this._sorting(data,node.data());
 		if(value==0){
@@ -91,29 +95,19 @@ LLRBT.prototype.findObject = function(data){
 LLRBT.prototype.insertObject = function(data){
 	this._root = this._insert(this._root, data);
 	++this._length;
+	return data;
 }
 LLRBT.prototype._insert = function(node, data){
 	if(!node){ return new LLRBT.Node(data); }
 	var value = this._sorting(data,node.data());
-	if(value<0){
+	if(value==0){
+		node.data(data);
+	}else if(value<0){
 		node.left( this._insert( node.left(), data) );
 	}else{
 		node.right( this._insert( node.right(), data) );
 	}
-return this._fixUp(node);
-	// case 1: right-child is red => rotate left
-	if( this._isRed(node.right()) ){ // && !this._isRed(node.left()) 
-		node = this._rotateLeft(node);
-	}
-	// case 2: left child and grandchild are both red => rotate, set children black, move red up tree
-	if( this._isRed(node.left()) && this._isRed(node.left().left()) ){
-		node = this._rotateRight(node);
-	}
-	// from 2: move red up tree
-	if( this._isRed(node.left()) && this._isRed(node.right()) ){
-		this._colorFlip(node);
-	}
-	return node;
+	return this._fixUp(node);
 }
 LLRBT.prototype._fixUp = function(node){
 	// case 1: right-child is red => rotate left
@@ -123,68 +117,44 @@ LLRBT.prototype._fixUp = function(node){
 	// case 2: left child and grandchild are both red => rotate, set children black, move red up tree
 	if( this._isRed(node.left()) && this._isRed(node.left().left()) ){
 		node = this._rotateRight(node);
-	}
+	/*}
 	// from 2: move red up tree
-	if( this._isRed(node.left()) && this._isRed(node.right()) ){
+	if( this._isRed(node.left()) && this._isRed(node.right()) ){*/
 		this._colorFlip(node);
 	}
 	return node;
 }
-/*
-LLRBT.prototype._fixUp = function(node){
-	if( this._isRed(node.right()) ){
-		node = this._rotateLeft(node);
-	}
-	if( this._isRed(node.left()) && this._isRed(node.left().left()) ){
-		node = this._rotateRight(node);
-		this._colorFlip(node);
-	}
-	return node;
-}
-*/
 // --------------------------------------------------------------------------------------------------------------------
-LLRBT.prototype.removeObject = function(data){
+LLRBT.prototype.deleteObject = function(data){
 	this._root = this._delete(this._root, data);
-	this._root.color(LLRBT.COLOR_BLACK);
+	if(this._root){
+		this._root.color(LLRBT.COLOR_BLACK);
+	}
 	--this._length; // only on success
-	return data; // ?
+	return data;
 }
 LLRBT.prototype._delete = function(node, data){
 	var value = this._sorting(data,node.data());
-console.log("VALUE: "+value+"   ("+data+" | "+node.data()+")");
 	if(value<0){
-console.log("A");
 		if( !this._isRed(node.left()) && !this._isRed(node.left().left()) ){
 			node = this._moveRedLeft(node);
 		}
 		node.left( this._delete(node.left(), data) );
 	}else{
-console.log("B");
-		if( this._isRed(node.left()) ){ // leanRight?
+		if( this._isRed(node.left()) ){
 			node = this._rotateRight(node);
-			//node = this._moveRedRight(node);
 		}
-console.log("      "+node.data()+" .right = "+(node.right()?node.right().data():"(null)"));
+		value = this._sorting(data,node.data());
 		if(value==0 && !node.right()){
 			return null;
 		}
-console.log("C");
-		//console.log("++++++"+node+"");
 		if( !this._isRed(node.right()) && !this._isRed(node.right().left()) ){
 			node = this._moveRedRight(node);
 		}
+		value = this._sorting(data,node.data());
 		if(value==0){ // reuse successor, delete successor
-			// console.log( node.right().data()+"" );
 			var successor = this._minNode(node.right());
-			console.log("ME: "+node.data()+" ");
-			console.log("SUCCESSOR: "+successor);
 			node.data( successor.data() )
-			// console.log("1: "+node.data());
-			// node.data( this._minNode(node.right()).data() );
-			// console.log("2: "+node.data());
-			// node.data( this.findObject(node.right(), node.data() ) )
-			// console.log("3: "+node.data());
-			//node.data( this._minNode(node.right()).data() );
 			node.right( this._deleteMinNode(node.right()) );
 		}else{
 			node.right( this._delete(node.right(), data) );
@@ -192,8 +162,8 @@ console.log("C");
 	}
 	return this._fixUp(node);
 }
-LLRBT.prototype.deleteMin = function(node){
-	this._root = this._deleteMinNode(node);
+LLRBT.prototype.deleteMin = function(){
+	this._root = this._deleteMinNode(this._root);
 	this._root.color( LLRBT.COLOR_BLACK );
 }
 LLRBT.prototype._deleteMinNode = function(node){
@@ -204,8 +174,8 @@ LLRBT.prototype._deleteMinNode = function(node){
 	node.left( this._deleteMinNode(node.left()) );
 	return this._fixUp(node);
 }
-LLRBT.prototype.deleteMax = function(node){
-	this._root = this._deleteMaxNode(node);
+LLRBT.prototype.deleteMax = function(){
+	this._root = this._deleteMaxNode(this._root);
 	this._root.color( LLRBT.COLOR_BLACK );
 }
 LLRBT.prototype._deleteMaxNode = function(node){
@@ -221,15 +191,16 @@ LLRBT.prototype._deleteMaxNode = function(node){
 	node.left( this._deleteMaxNode(node.left()) );
 	return this._fixUp(node);
 }
+// --------------------------------------------------------------------------------------------------------------------
 LLRBT.prototype._minNode = function(node){
-	if( node.left() ){
-		return this._minNode(node.left());
+	while( node.left() ){
+		node = node.left();
 	}
 	return node;
 }
 LLRBT.prototype._maxNode = function(node){
-	if( node.right() ){
-		return this._maxNode(node.right());
+	while( node.right() ){
+		node = node.right();
 	}
 	return node;
 }
@@ -246,18 +217,10 @@ LLRBT.prototype.max = function(){
 	return null;
 }
 // --------------------------------------------------------------------------------------------------------------------
-
-
-
-
-// --------------------------------------------------------------------------------------------------------------------
 LLRBT.prototype.toString = function(){
 	if( this._root ){ return this._root.toString("","   "); }
 	return "[empty]";
 }
-
-
-
 // --------------------------------------------------------------------------------------------------------------------
 LLRBT.COLOR_RED = 0;
 LLRBT.COLOR_BLACK = 1;
