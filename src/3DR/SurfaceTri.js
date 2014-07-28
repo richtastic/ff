@@ -780,7 +780,7 @@ SurfaceTri.prototype.plot1D = function(){
 		// vector calculus
 var dirA = new V2D(x-dx,ymh);
 var dirB = new V2D(x+dx,yph);
-var dR = V2D.diff(dirB,dirA);
+var dR = V2D.sub(dirB,dirA);
 		// right side
 		dir.set(dR.y,-dR.x);
 		dir.norm(); dir.scale(100.0);

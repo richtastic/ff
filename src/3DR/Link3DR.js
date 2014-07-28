@@ -137,9 +137,9 @@ Link3DR.prototype.searchThetaRadiusFromPoint = function(F,epi,width,height,point
 	line[1].x *= width; line[1].y *= height;
 	epipole.x *= width; epipole.y *= height;
 	if(V2D.distance(line[0],epipole)>V2D.distance(line[1],epipole)){
-		dir = V2D.diff(line[0],line[1]);
+		dir = V2D.sub(line[0],line[1]);
 	}else{
-		dir = V2D.diff(line[1],line[0]);
+		dir = V2D.sub(line[1],line[0]);
 	}
 	var r0 = V2D.distance(line[0],epipole);
 	var r1 = V2D.distance(line[1],epipole);
@@ -185,7 +185,7 @@ Link3DR.getImageLineWithPoint = function(F,epipole, point,image, winHei, winWid)
 	epipole = new V2D(epipole.x*image.width(), epipole.y*image.height() );
 	// find intersection with image
 	if(pointGrab){
-		dir = V2D.diff(point,epipole);
+		dir = V2D.sub(point,epipole);
 		V2D.rotate(ort,dir,-Math.PIO2);
 		dir.setLength(winHei*0.5);
 		ort.setLength(winWid*0.5);
@@ -208,14 +208,14 @@ Link3DR.getImageLineWithPoint = function(F,epipole, point,image, winHei, winWid)
 		}
 		//console.log(intA.toString()+"  "+intB.toString()+"        "+epipole.toString())
 		//console.log(V2D.distance(intA,epipole) , V2D.distance(intB,epipole))
-		dir = V2D.diff(intB,intA);
+		dir = V2D.sub(intB,intA);
 		len = dir.length();
 		winWid = Math.ceil( len );
 		dir.setLength(winWid-len);
 		intB.add(dir);
 		intA.sub(dir);
 		// orthogonal
-		dir = V2D.diff(intB,intA);
+		dir = V2D.sub(intB,intA);
 		dir.setLength(winHei*0.5);
 		V2D.rotate(ort,dir,-Math.PIO2);
 		aX = intA.x + ort.x;
@@ -489,7 +489,7 @@ Link3DR.fromHayStackToImage = function(point,haystack, intA,intB, TL,TR,BR,BL){ 
 	originalPoint.x = Code.linear1D( t, intA.x,intB.x);
 	originalPoint.y = Code.linear1D( t, intA.y,intB.y);
 	// tangental
-	var dir = V2D.diff(TL,BL);
+	var dir = V2D.sub(TL,BL);
 	dir.setLength( point.x - haystack.height()*0.5 ); // distance from middle-line
 	originalPoint.add(dir);
 	return originalPoint;

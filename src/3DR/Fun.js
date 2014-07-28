@@ -107,7 +107,7 @@ Fun.prototype.displayData = function(){
 				d.graphics().strokeLine();
 				linesDO.addChild( d );
 				//  
-				// var ll = V2D.diff(pA,pB);
+				// var ll = V2D.sub(pA,pB);
 				// ll.norm();
 				// ll.scale(400.0);
 				// d = new DO();
@@ -224,7 +224,7 @@ for(i=0;i<inputPoints.length;++i){
 		di.matrix().scale(1.0);
 		this._root.addChild(di);
 		// needle in rectified
-		var toPoint = V2D.diff(point,epipoleFrom);
+		var toPoint = V2D.sub(point,epipoleFrom);
 		radius = V2D.distance(point,epipoleFrom);
 		angle = V2D.angleDirection(toPoint,V2D.DIRX);
 		row = Link3DR.rectificationAngleIndex(from,angle);
@@ -335,7 +335,7 @@ t = peak.x/haystack.width();
 originalPoint.x = Code.linear1D( t, haystackInfo.intersectionA.x,haystackInfo.intersectionB.x);
 originalPoint.y = Code.linear1D( t, haystackInfo.intersectionA.y,haystackInfo.intersectionB.y);
 // tangental
-var dir = V2D.diff(haystackInfo.TL,haystackInfo.BL);
+var dir = V2D.sub(haystackInfo.TL,haystackInfo.BL);
 dir.setLength( peak.x - haystack.height()*0.5 ); // distance from middle
 originalPoint.add(dir);
 // extract original image point

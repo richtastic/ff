@@ -378,10 +378,10 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	rectifiedG = Code.newArrayZeros(len);
 	rectifiedB = Code.newArrayZeros(len);
 	edge.copy(corners.shift());
-	V2D.diff(dir, corners[0],edge);
+	V2D.sub(dir, corners[0],edge);
 	dir.norm();
 	for(j=0;j<thetaCount;++j){ // for each border pixel
-		V2D.diff(ray, edge,epipole);
+		V2D.sub(ray, edge,epipole);
 		var theta = V2D.angle(ray, dir);
 		var phi = Math.PIO2 - theta;
 		var l = (0.5/Math.sin(theta)); // * 1.0
@@ -392,11 +392,11 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		var up = new V2D();
 			up.set(edge.x + ray.x*m, edge.y + ray.y*m);
 		var down = new V2D();
-			V2D.diff(down,mid,up);
+			V2D.sub(down,mid,up);
 			down.norm(); down.scale(0.5); // numerical exacting
 			down.set(mid.x+down.x,mid.y+down.y);
 		var ray2 = new V2D();
-			V2D.diff(ray2,down,epipole);
+			V2D.sub(ray2,down,epipole);
 			ray2.norm();
 		var gamma = V2D.angle(ray,ray2);
 		var delta = Math.PIO2-gamma;
@@ -404,7 +404,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		var beta = Math.PI - phi - alpha;
 		var n = Math.abs( (0.5/Math.sin(alpha))*Math.sin(beta) );
 		next.set(dir.x*n + mid.x, dir.y*n + mid.y);
-		V2D.diff(ray, mid,epipole);
+		V2D.sub(ray, mid,epipole);
 		len = Math.floor(ray.length());
 		ray.norm();
 		angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
@@ -431,7 +431,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		edge.copy(next);
 		if(corners.length>1){
 			if( intersect ){
-				V2D.diff(dir, corners[1],corners[0]);
+				V2D.sub(dir, corners[1],corners[0]);
 				dir.norm();
 				//corners.shift();
 				//edge.set(intersect.x,intersect.y);

@@ -813,8 +813,8 @@ Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right,
 	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
 	if(!circle){  return; } // not colinear
 	// convergence = CW around 
-	var AB = V2D.diff(left.center().point(), center.center().point());
-	var CB = V2D.diff(right.center().point(), center.center().point());
+	var AB = V2D.sub(left.center().point(), center.center().point());
+	var CB = V2D.sub(right.center().point(), center.center().point());
 	var isConvergence = V2D.cross(AB,CB)>=0;
 	if(!isConvergence){
 		return;

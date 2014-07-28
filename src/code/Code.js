@@ -1862,9 +1862,9 @@ Code.intersectionRayParabola = function(org,dir, foc,drx){
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
 Code.circleFromPoints = function(a,b,c){
-	var lineAB = V2D.diff(a,b);
-	var lineBC = V2D.diff(b,c);
-	//var lineAC = V2D.diff(a,c);
+	var lineAB = V2D.sub(a,b);
+	var lineBC = V2D.sub(b,c);
+	//var lineAC = V2D.sub(a,c);
 	var rotAB = V2D.rotate(lineAB,Math.PIO2);
 	var rotBC = V2D.rotate(lineBC,Math.PIO2);
 	//var rotAC = V2D.rotate(lineAC,Math.PIO2);
