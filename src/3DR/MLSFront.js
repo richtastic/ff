@@ -32,7 +32,7 @@ MLSFront.prototype.edgeLength = function(){
 	return len;
 }
 MLSFront.prototype.checkYourself = function(){ 
-	var i, j, len, front, edgeList, edge, frontList = this.fronts();
+	var i, j, k, ea, eb, len, front, edgeList, edge, frontList = this.fronts();
 	for(i=0;i<frontList.length;++i){
 		front = frontList[i];
 		edgeList = front.edgeList();
@@ -44,6 +44,21 @@ MLSFront.prototype.checkYourself = function(){
 		}
 		if( front.edgeQueue()._tree.length() != front.edgeQueue()._tree.manualCount() ){
 			throw new Error("PRIORITY QUEUE COUNT:"+front.edgeQueue()._tree.length()+" | "+front.edgeQueue()._tree.manualCount());
+		}
+		// check for duplicated edges
+		for(j=0, ea=edgeList.head().data(); j<len ; ++j, ea=ea.next()){
+			for(k=0, eb=edgeList.head().data(); k<len ; ++k, eb=eb.next()){
+				if(ea==eb){continue;}
+				if(  ( V3D.equal(ea.A(),eb.A())&&V3D.equal(ea.B(),eb.B()) ) || ( V3D.equal(ea.A(),eb.B())&&V3D.equal(ea.B(),eb.A()) ) ){
+					ERR = edgeList;
+					console.log(edgeList);
+					console.log(ea);
+					console.log(eb);
+					console.log(ea.A()+"->"+ea.B()+"");
+					console.log(eb.A()+"->"+eb.B()+"");
+					throw new Error("DUPLICATED EDGE : "+j+" | "+k );
+				}
+			}
 		}
 	}
 

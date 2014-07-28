@@ -52,8 +52,14 @@ MLSEdgeFront.prototype.addNodeLinkEdgePush = function(edgeB){
 	return edgeB;
 }
 MLSEdgeFront.prototype.removeNodeLinkEdge = function(edge){
-	this._edgeList.removeNode(edge.link());
-	this._edgeQueue.removeNode(edge.node());
+	var link = this._edgeList.removeNode(edge.link());
+	var node = this._edgeQueue.removeNode(edge.node());
+	if(link==null){
+		throw new Error("null link returned");
+	}
+	if(node==null){
+		throw new Error("null node returned");
+	}
 	edge.link(null);
 	edge.node(null);
 }
@@ -152,7 +158,7 @@ if(dot<=0.0){ // this probably also covers the same-edge conlinearity ...
 				//dist = V3D.distanceSquare( midpoint,edge.A() );
 				dist = V3D.distanceSquare( vertexFrom,edge.A() );
 				// closest so far
-				if( closestDistance==null || dist<closestDistance ){
+				if( closestDistance==null || dist<closestDistance || (dist<=closestDistance && front==this) ){
 					var f, e, eL, len2, maxEdgeLength;
 					var qInt, eNE, eNP, eNN, eD, qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D(), qN=new V3D();
 					var vert=edge.A(), aToV=new V3D(), bToV=new V3D();
@@ -327,24 +333,12 @@ MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,      
 	// front
 	front = new MLSEdgeFront();
 	front.container(this.container());
-	console.log("A");
 	for(edge=edgeFrom.next(); edge!=lastEdge; ){
 		next = edge.next();
-try{
 		this.removeNodeLinkEdge(edge);
-}catch(err){
-	console.log("this.remove error");
-	throw err;
-}
-try{
 		front.addNodeLinkEdgePush(edge);
-}catch(err){
-	console.log("front.add error");
-	throw err;
-}
 		edge = next;
 	}
-	console.log("B");
 	front.addNodeLinkEdgePush(edgeCA);
 	this.addNodeLinkEdgeAfter(edgeFrom, edgeBC);
 	this.removeNodeLinkEdge(edgeFrom);
@@ -364,11 +358,22 @@ try{
 	return front;
 }
 MLSEdgeFront.prototype.merge = function(edgeFrom,edgeTo, vertexFrom, front, field,      crap){
+	console.log(edgeFrom,edgeTo);
+	console.log(edgeFrom.A()+"->"+edgeFrom.B());
+	console.log(edgeTo.A()+"->"+edgeTo.B());
+	console.log(vertexFrom+"");
+	console.log("OLD FRONTS COUNT: "+this.count()+" | "+front.count());
+
+crap._mergedA = front.edgeList().copy();
+crap._mergedB = this.edgeList().copy();
+
 	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB;
 	if( V3D.equal(vertexFrom,edgeTo.A()) ){
 		lastEdge = edgeTo;
+		console.log("in - A");
 	}else{ // edgeTo.next().A()===edgeTo.B()
 		lastEdge = edgeTo.next();
+		console.log("in - B");
 	}
 	// edges
 	edgeAB = new MLSEdge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
@@ -400,11 +405,14 @@ MLSEdgeFront.prototype.merge = function(edgeFrom,edgeTo, vertexFrom, front, fiel
 	this.removeNodeLinkEdge(edgeFrom);
 	console.log("NEW FRONTS COUNT: "+this.count()+" | "+front.count());
 	this.container().removeFront( front );
+	// remove possibly duplicated edges
+		// ..
 	// this might be a two-edge front?
 	if(this.count()<=2){
 		this.clear();
 		this.container().removeFront(this);
 	}
+	crap._merged = this;
 	return front;
 }
 MLSEdgeFront.prototype.close = function(field){ // collape 3 edges to triangle

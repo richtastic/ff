@@ -10,7 +10,7 @@ function SurfaceTri(){
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage3D.setBackgroundColor(0x00000000);
-	this._stage3D.frustrumAngle(45);
+	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
 	// datas
 	//
@@ -139,13 +139,6 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	this._stage3D.matrixMultM3D(this._userMatrixTemp);
 	this._stage3D.matrixMultM3D(this._userMatrix);
 	//this._stage3D.matrixRotate(e*0.03, 0,1,0);
-// lines
-	if(this._linePointBuffer){
-		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._linePointBuffer);
-		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._lineColorBuffer);
-		this._stage3D.setLineWidth(4.0);
-		this._stage3D.drawLines(this._vertexPositionAttrib, this._linePointBuffer);
-	}
 	// points
 	if(this._displayPoints){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
@@ -158,7 +151,13 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 	}
-
+	// lines
+	if(this._linePointBuffer){
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._linePointBuffer);
+		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._lineColorBuffer);
+		this._stage3D.setLineWidth(4.0);
+		this._stage3D.drawLines(this._vertexPositionAttrib, this._linePointBuffer);
+	}
 	//this._stage3D.matrixPop();
 	this._stage3D.matrixReset();
 }
@@ -434,6 +433,9 @@ var alphaT = this._seeThru?0.75:1.0;
 			++triCount;
 		}
 	}
+
+
+
 if(this._mlsMesh.crap.fronts && this._mlsMesh.crap.fronts._fronts.length>0){
 	console.log("TRIANGLES:"+triCount+" FRONTS: "+this._mlsMesh.crap.fronts._fronts.length);
 
@@ -525,6 +527,49 @@ for(j=0;j<10;++j){
 */
 	this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(list,3);
 	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colors,4);
+
+
+
+
+if(this._mlsMesh.crap._merged){
+	list = this._mlsMesh.crap._merged.edgeList();
+	var pointsL = [];
+	var colorsL = [];
+	var link, edge, i, pct, len = list.length();
+	if(len>0){
+	for(i=0, edge=list.head().data(); i<len; ++i, edge=edge.next()){
+		EDGE = edge;
+		pct = 1.0*i/(len-1.0);
+		V3D.pushToArray(pointsL, edge.A());
+		V3D.pushToArray(pointsL, edge.B());
+		colorsL.push(0.0,1.0*pct,0.0, 1.0);
+		colorsL.push(0.0,1.0,0.0, 1.0);
+	}
+	list = this._mlsMesh.crap._mergedA;
+	len = list.length();
+	for(i=0, link=list.head(); i<len; ++i, link=link.next()){
+		edge = link.data();
+		V3D.pushToArray(pointsL, edge.A());
+		V3D.pushToArray(pointsL, edge.B());
+		colorsL.push(1.0,0.0,0.0, 0.50);
+		colorsL.push(1.0,0.0,0.0, 0.50);
+	}
+	list = this._mlsMesh.crap._mergedB;
+	len = list.length();
+	for(i=0, link=list.head(); i<len; ++i, link=link.next()){
+		edge = link.data();
+		V3D.pushToArray(pointsL, edge.A());
+		V3D.pushToArray(pointsL, edge.B());
+		colorsL.push(0.0,0.0,1.0, 0.50);
+		colorsL.push(0.0,0.0,1.0, 0.50);
+	}
+	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
+	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
+}
+}
+
+
+
 }
 
 // find support plane for point r (reference frame)

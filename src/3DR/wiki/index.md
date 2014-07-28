@@ -1344,20 +1344,19 @@ for each point p in listA
 **TODO:**
 - LLRBT
 - CHECK/FIX triangle overlapping
-	- border edges on mesh
-	- correctly replacing the edges to the correct lists?
-		- check return value
-	- are fronts closed correctly?
-	- do resulting fronts have colinearity?
-
+	- merge/splits do result in a 'duplicate' overlapping edge
+    - current stop-gap is to 'prefer' to merge with points that are on THIS front, rather than merge
+    - BUT: fronts can share a point -> and this may cause an issue...
+        - can this be avoided?
+        - else, will need to check for dup edges
+- wavy torus
+- priorities for edges need to be minimum of BOTH VERTEXES
+- initial triangle is too big
+    - generate first triangle - iterate
 - vertex predict improve
 	- use arc-distance projection
-- priorities for edges need to be minimum of BOTH VERTEXES
-- generate first triangle - iterate
-- wavy torus
 - simulate with real point cloud source
 - N-object octree leaves
-- trackball rotation
 
 
 RESULTS DATA:

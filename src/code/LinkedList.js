@@ -238,6 +238,15 @@ LinkedList.prototype.iteratingExample = function(){ // circular list
 LinkedList.prototype.kill = function(){
 	this.empty();
 }
+// ---------------------------------------------- 
+LinkedList.prototype.copy = function(){
+	var link, i, len = this.length();
+	var list = new LinkedList();
+	for(i=0, link=this.head(); i<len;++i, link=link.next()){
+		list.push( link.data() );
+	}
+	return list;
+}
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------ LinkedList.Link
