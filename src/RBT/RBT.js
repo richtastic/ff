@@ -52,12 +52,15 @@ RBT.prototype.start = function(){
 	console.log(tree.length());
 	while(i>0 && tree.length()>0){
 		index = Math.floor( Math.random()*arr.length );
+index = 7;
 		o = arr[index];
-		console.log(o);
+		Code.removeElementAtSimple(arr,index);
+		console.log("REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING:REMOVING: "+": "+o);
 		console.log(tree.findObject(o));
-		console.log(tree.removeObject(o));
+		console.log("GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT GOT "+tree.removeObject(o));
 		console.log(tree.toString());
 		--i;
+break;
 	}
 
 	this.drawTree(tree);
