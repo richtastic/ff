@@ -17,9 +17,10 @@ function SurfaceTri(){
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-	this.setupSphere3D();
-//this.setupLineTest();
+//	this.setupSphere3D();
+	this.setupTorus3D();
 //	this.loadPointFile();
+//this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
 this._seeThru = false;
@@ -355,13 +356,13 @@ console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, c2,d2,a2,n3) );
 }
 
 SurfaceTri.prototype.loadPointFile = function(){
-	//var sourceFileName = "./images/points/saltdome_1019.pts";
+	var sourceFileName = "./images/points/saltdome_1019.pts";
 	//var sourceFileName = "./images/points/foot_5092.pts";
-	var sourceFileName = "./images/points/bunny_30571.pts";
+	//var sourceFileName = "./images/points/bunny_30571.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
-		Code.subSampleArray(list,5000);
+		//Code.subSampleArray(list,5000);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();
@@ -380,9 +381,20 @@ SurfaceTri.prototype.loadPointFile = function(){
 		for(i=0;i<len;++i){
 			v = list[i];
 			trans.multV3D(v,v);
+			// if(v==null){
+			// 	throw new Error("null v");
+			// }
+			// if( isNaN(v.x) || isNaN(v.y) || isNaN(v.z) ){
+			// 	throw new Error("found nanish "+v);
+			// }
 		}
 		this.startPointCloud(list);
 	});
+}
+SurfaceTri.prototype.setupTorus3D = function(){
+	var pts = this.generateSpherePoints(5000,1.5,1E-13);
+	PUT FOOD IN ME
+	this.startPointCloud(pts);
 }
 SurfaceTri.prototype.setupSphere3D = function(){
 	var pts = this.generateSpherePoints(5000,1.5,1E-13);

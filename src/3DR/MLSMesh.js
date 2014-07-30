@@ -15,14 +15,18 @@ MLSMesh.prototype.initWithPointCloud = function(cloud){
 	this._field.initWithPointCloud(cloud);
 }
 MLSMesh.prototype.triangulateSurface = function(rho, tau){
+console.log("A");
 	rho = rho!==undefined?rho:(1.0*Math.PI/10.0);
 	tau = tau!==undefined?tau:1;
 	this._field.rho(rho);
 	this._field.tau(tau);
+console.log("A2");
 	// precalculate ideal lengths for each source point, and bivariate coefficients / normal?
 	this._field.preCalculations();
+console.log("C");
 	// find initial best triangle/front
 	var seedData = this.findSeedTriangle();
+console.log("B");
 	//this.crap.seed = seedTri;
 	var firstFront = new MLSEdgeFront();
 	var frontList = new MLSFront();
@@ -126,6 +130,7 @@ randomPoint = new V3D(0.5,0.5,0.5);
 	surfacePoint = surfaceData.point;
 	surfaceNormal = surfaceData.normal;
 	surfaceLength = surfaceData.length;
+console.log("surfaceLength: "+surfaceLength);
 	surfaceDirMin = surfaceData.directionMin;
 	// initial tri
 	insideLength = surfaceLength*cosRatio;
@@ -140,7 +145,9 @@ randomPoint = new V3D(0.5,0.5,0.5);
 	edgeLengthMax = null;
 	for(i=0;i<10;++i){
 		// limited to nearby max curvature
+console.log("start ..."+vertexA);
 		vertexA.copy( this._field.projectToSurfacePoint(vertexA) );
+console.log("vertex: "+vertexA);
 		vertexB.copy( this._field.projectToSurfacePoint(vertexB) );
 		vertexC.copy( this._field.projectToSurfacePoint(vertexC) );
 		edgeLengthA = this.necessaryMinLength(edgeA);
@@ -172,19 +179,24 @@ randomPoint = new V3D(0.5,0.5,0.5);
 // edgeLengthMin = Math.min(edgeLengthMin, min);
 // edgeLengthMax = Math.min(edgeLengthMax, max);
 		}
-		//console.log(i+": "+edgeLengthMin+" "+edgeLengthMax);
+		console.log(i+": "+edgeLengthMin+" "+edgeLengthMax);
 		idealEdgeLength = (edgeLengthMin+edgeLengthMax)/2.0;
+idealEdgeLength = 0.1;
+//idealEdgeLength = Math.min(idealEdgeLength,edgeLengthMin);
 //idealEdgeLength = edgeLengthMin;
 //idealEdgeLength = this.fieldMinimumInSphere(null,vertexA,1E9); // everywhere
 		insideLength = idealEdgeLength*cosRatio;
+console.log()
 		vertexA = V3D.scale(vertexA,surfaceDirMin,insideLength);
 		vertexB = V3D.rotateAngle(vertexB,vertexA,surfaceNormal, deg120);
 		vertexC = V3D.rotateAngle(vertexC,vertexA,surfaceNormal,-deg120);
 		vertexA.add(surfacePoint); vertexB.add(surfacePoint); vertexC.add(surfacePoint);
+console.log("next ...");
 		if(Math.abs(edgeLengthMin-edgeLengthMax)<1E-6){
 			break;
 		}
 	}
+	console.log("out");
 	surfaceData = this._field.projectToSurfaceData(vertexA);
 	vertexA.copy( surfaceData.point );
 	surfaceData = this._field.projectToSurfaceData(vertexB);

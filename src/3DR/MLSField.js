@@ -80,8 +80,12 @@ MLSField.prototype._projectToSurface = function(p){
 	k = Math.min( Math.max(0.01*this._pointCloud.count(),5)+1,20); // drop points outside of some standard deviation?
 //k = 5;
 	var closestPoint = this._pointCloud.closestPointToPoint(p);
+if(closestPoint==null){
+console.log("closest: "+p+" = "+closestPoint);
+}
 closestPoint = MLSField.sortMLSPoint(closestPoint);
 	neighborhood = this.neighborhoodPoints(p, k);
+	//console.log("neigh: "+neighborhood);
 	f = this.localFeatureSize(closestPoint,neighborhood);
 	h = this._tau*f;
 	// find local plane initial approximation
