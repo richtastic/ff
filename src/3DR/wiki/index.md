@@ -1309,32 +1309,39 @@ do for all 3 triangle edges => either none or two must intersect
 <br/>
 
 
-/*
-		*) vertex closest to the midpoint/vertexFrom ?
-		*) can't be an end-vertex of edgeFrom
-		*) must be in direction of vertexFrom-edgeFrom.midpoint (dot==0)
-		*) result can't intersect any prior triangles
-*/
+
+## Texture Stitching / Blending / Synthesis / Mosaics
+![Texture Stitching](./images/stitching.png "Texture Stitching")
+<br/>
+- Vertex-Images registrations
+    - find projection of each vertex on each of n images
+    - primary mapping of vertex is to image with best normal fit (largest dot product)
+- Find Transitional-Triangles
+    - triangles in which all vertexes map to the same image/perspective don't need to be blended
+    - triangles where 2 or 3 vertexes map to seperate images must be blended
+- Local Vertex-Image 
+    - use ssd/conv to find best homography/projection between various images which vertex project to
+- Blending
+    - use barycentric coords to blend in/out between textures
+        - color(point) = &alpha;v<sub>A</sub> + &beta;v<sub>B</sub> + &gamma;v<sub>C</sub>
+        - &alpha; + &beta; + &gamma; = 1
+    - use highest resolution for texture?
+- Texture (Rectangle) Packing
+    - what resolution to map to?
+    - use blocks of source image where possible
+    - account for distortion in perspective
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 
 
-2D Tri-Tri Clipping
-A = Tri A
-B = Tri B
-listA = [a,b,c]
 
-polygon = []
 
-for each point p in listA
-	edgeA = p.next-p.now (circle around)
-	if point is inside triB
-		polygon.push[p]
-	order = []
-	for each rayB point.edgeB in triB
-		if rayB POSITIVELY intersects edgeA
-			order.push(intersection capped at t=[0,1]  && keep track of distance)
-	order.sort on distance
-	polygon.push(order with closest distance)
+
+
 
 
 ### ?
