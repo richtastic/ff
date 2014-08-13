@@ -1,8 +1,148 @@
 # Notes
 **For now this will just be a place for random notes**
+1. [?](#?)
+2. [Camera Modeling](#CAMERA)
+3. [Feature Matching](#FEATURE)
+4. [Triangulation](#TRIANGULATE)
+5. [Surface Reconstruction](#SURFACE)
+6. [Surface Texturing](#TEXTURE)
+7. [?](#?)
+8. [References](#REFERENCE)
 
-7. [Surface Reconstruction](#SURFACE)
-9. [References](#REFERENCE)
+
+
+<a name="CAMERA"></a>
+## Camera Modeling
+Variabilities:
+- Rotation
+- Translation (parallax)
+- Radial distortion
+- Optical Center
+
+Camera Matrices
+
+
+
+
+
+<a name="FEATURE"></a>
+## Feature Matching
+
+
+corner
+
+SIFT
+
+
+
+
+
+
+<a name="TRIANGULATE"></a>
+## Point Triangulation 
+
+Essential Matrix (known focal?) - 7 unknowns?
+
+
+Fundamental Matrix - 8 unknowns
+
+
+epipoles
+
+epipolar lines
+
+
+
+(Simultaneous) Bundle Adjustment
+
+
+N-View Geometry/Calibration/...
+
+
+Point Triangulation
+
+
+
+<br/>
+<br/>
+<br/>
+
+<a name="ITERATION"></a>
+## some iteration methods ...
+
+<br/>
+<br/>
+<br/>
+
+LaGrange Multipliers
+
+Gradient Descent
+
+Newton Method
+
+Levenberg-Marquart
+
+Cholesky Decomposition
+
+QR Decomposition
+
+
+**Rodriguez's Formula**: Compute Rotation Vector or Matrix from 3 basis vectors - identifying parallel and perpendicular components:
+<br/>
+**R = &lt;R<sub>x</sub>,R<sub>y</sub>,R<sub>z</sub>&gt;**: unit rotation vector
+<br/>
+**v = &lt;v<sub>x</sub>,v<sub>y</sub>,v<sub>z</sub>&gt;**: vector to rotate
+<br/>
+**u = &lt;u<sub>x</sub>,u<sub>y</sub>,u<sub>z</sub>&gt;**: vector result by rotating v about R
+<br/>
+**&theta**: rotation angle
+<br/>
+v<sub>&parallel;</sub> = R(R&middot;v)
+<br/>
+v<sub>&perp;</sub> = v - v<sub>&parallel;</sub> = v - R(R&middot;v)
+<br/>
+&rarr;
+<br/>
+u = v&middot;cos&theta; + (R&times;u)sin&theta; + R(R&middot;v)(1-cos&theta;)
+<br/>
+<br/>
+
+
+
+<br/>
+**"Aperature Problem"**: Looking at only a small portion of a larger object, the perceived motion could be off by ~90 degrees, or motion may not be perceived at all. EG: looking only at an edge of a rectangle moving in a corner direction may appear to be moving only perpendicular to the edge
+<br/>
+<br/>
+
+<br/>
+**Image Flow / Flow Field**: Apparent movement of objects in a scene/image (feature location change)/gradient
+<br/>
+<br/>
+
+
+<br/>
+**Parametric Deformation (Camera) Model**: x,y  f&rarr; u,v ; u = a<sub>0</sub> + a<sub>1</sub>x + a<sub>2</sub>y + ... ; v = b<sub>0</sub> + b<sub>1</sub>x + b<sub>2</sub>y + ... 
+<br/>
+*typically radial basis polynomial*: &rho; = c<sub>0</sub> + c<sub>1</sub>((x-c<sub>x</sub>)<sup>2</sup>+(y-c<sub>y</sub>)<sup>2</sup>)<sup>1/2</sup> + c<sub>2</sub>((x-c<sub>x</sub>)<sup>2</sup>+(y-c<sub>y</sub>)<sup>2</sup>) + ... 
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+foreshortening
+<br/>
+<br/>
+
+
+
+
+### ?
+![?](./images/?.png "?")
+<br/>
+
+
+
 
 
 <a name="SURFACE"></a>
@@ -179,7 +319,25 @@ orthocenter of triangle = perpendicular lines from each edge that pass through o
 grand (great) circle of a sphere: largest circle that intersects a sphere (have same diameter) (infinite number)
 <br/>
 <br/>
+```
+# demonstration of instantanious surface curvature at point
+theta = pi/2;
+dTheta = 0.00001;
+R = 4.0;
 
+r1 = [R*cos(theta-dTheta) R*sin(theta-dTheta)]
+r2 = [R*cos(theta) R*sin(theta)]
+r3 = [R*cos(theta+dTheta) R*sin(theta+dTheta)]
+dr1 = (r2-r1)
+dr2 = (r3-r2)
+dr = ( sqrt(dot(dr1,dr1)) + sqrt(dot(dr2,dr2)))/2
+T1 = dr1./sqrt(dot(dr1,dr1))
+T2 = dr2./sqrt(dot(dr2,dr2))
+
+K = (T2-T1)/(dr)
+k = sqrt(dot(K,K))
+r = 1/k
+```
 <br/>
 
 ### Algorithm
@@ -723,6 +881,7 @@ P(P(r)) = P(r) (projection of surface point &equiv surface point)
 <br/>
 OMG another iteration method
 <br/>
+http://mathfaculty.fullerton.edu/mathews/n2003/PowellMethodMod.html
 <br/>
 <br/>
 <br/>
@@ -1310,44 +1469,6 @@ do for all 3 triangle edges => either none or two must intersect
 
 
 
-## Texture Stitching / Blending / Synthesis / Mosaics
-![Texture Stitching](./images/stitching.png "Texture Stitching")
-<br/>
-- Vertex-Images registrations
-    - find projection of each vertex on each of n images (camera image plane)
-        - intersects positively - in front of (for cameras INSIDE the scene),
-        - intersects positive normal (not interrior of surface)
-        - not occluded by (intersects) model
-    - primary mapping of vertex is to image with best normal fit (largest dot product)
-- Find Transitional-Triangles
-    - triangles in which all vertexes map to the same image/perspective don't need to be blended
-    - triangles where 2 or 3 vertexes map to seperate images must be blended
-- Local Vertex-Image 
-    - use ssd/conv to find best homography/projection between various images which vertex project to
-- Blending
-    - use barycentric coords to blend in/out between textures
-        - color(point) = &alpha;v<sub>A</sub> + &beta;v<sub>B</sub> + &gamma;v<sub>C</sub>
-        - &alpha; + &beta; + &gamma; = 1
-    - use highest resolution for texture?
-    - image planes closer to face (higher resolution) should be preferred
-        -> somehow related to final projected pixel size: distorted res. vs low res.
-        -> effective pixel size
-- Texture (Rectangle) Packing
-    - what resolution to map to?
-    - use blocks of source image where possible
-    - account for distortion in perspective
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-
-
-
-
-
-
-
 
 
 ### ?
@@ -1355,19 +1476,13 @@ do for all 3 triangle edges => either none or two must intersect
 <br/>
 
 **TODO:**
-- LLRBT
-- CHECK/FIX triangle overlapping
-	- merge/splits do result in a 'duplicate' overlapping edge
-    - current stop-gap is to 'prefer' to merge with points that are on THIS front, rather than merge
-    - BUT: fronts can share a point -> and this may cause an issue...
-        - can this be avoided?
-        - else, will need to check for dup edges
+
 - wavy torus
 - priorities for edges need to be minimum of BOTH VERTEXES
 - initial triangle is too big
     - generate first triangle - iterate
 - vertex predict improve
-	- use arc-distance projection
+    - use arc-distance projection
 - simulate with real point cloud source
 - N-object octree leaves
 
@@ -1392,13 +1507,56 @@ plot(igeaTim,igeaTri,"m-x");
 
 
 
+<a name="TEXTURE"></a>
+
+## Texture Stitching / Blending / Synthesis / Mosaics
+![Texture Stitching](./images/stitching.png "Texture Stitching")
+<br/>
+- Global vs Local point registration
+- Vertex-Images registrations
+    - find projection of each vertex on each of n images (camera image plane)
+        - intersects positively - in front of (for cameras INSIDE the scene),
+        - intersects positive normal (not interrior of surface)
+        - not occluded by (intersects) model
+    - primary mapping of vertex is to image with best normal fit (largest dot product)
+- Find Transitional-Triangles
+    - triangles in which all vertexes map to the same image/perspective don't need to be blended
+    - triangles where 2 or 3 vertexes map to seperate images must be blended
+- Local Vertex-Image 
+    - use ssd/conv to find best homography/projection between various images which vertex project to
+    - coarse-to-fine pyramid 32/16/8/.. correlation matching
+- Blending
+    - use barycentric coords to blend in/out between textures
+        - color(point) = &alpha;v<sub>A</sub> + &beta;v<sub>B</sub> + &gamma;v<sub>C</sub>
+        - &alpha; + &beta; + &gamma; = 1
+    - use highest resolution for texture?
+    - image planes closer to face (higher resolution) should be preferred
+        -> somehow related to final projected pixel size: distorted res. vs low res.
+        -> effective pixel size
+- Texture (Rectangle) Packing
+    - what resolution to map to?
+    - use blocks of source image where possible
+    - account for distortion in perspective
+<br/>
+<br/>
+Feathering - Transparancy Fading between images
+<br/>
+<br/>
+<br/>
+
+
+
+
+
+
+
+
+
 
 
 ---
 <a name="REFERENCE"></a>
 ## References
-<br/>
-Topic - Author (Source/Title)
 <br/>
 [Hausdorf Distance - Gregoire, Bouillot](http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/98/normand/main.html)
 <br/>
@@ -1424,5 +1582,12 @@ Topic - Author (Source/Title)
 <br/>
 [Fast Tri-Tri Intersection - Tomas Moller](fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/pubs/tritri.pdf)
 <br/>
+[Acquiring, Stitching and Blending ... - Rocchini, Cignoni, Montani, Scopigno](www.cs.hunter.cuny.edu/~ioannis/3DP_S09/rocchini.stitch.pdf)
+<br/>
+
+
+
+
+
 
 

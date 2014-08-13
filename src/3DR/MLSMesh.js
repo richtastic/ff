@@ -111,6 +111,7 @@ MLSMesh.prototype.triangleClosestFront = function(frontList, edge,vertex, idealL
 	return null;
 }
 MLSMesh.prototype.findSeedTriangle = function(){ // the edges have to take into account the minimum curvature in the neighborhood - otherwise the triangle can be too big
+console.log("I STILL NEED TO BE FIXED TO USE MINIMUM OF OSC SPHERE");
 	var cuboid, randomPoint, surfacePoint, surfaceNormal, surfaceLength, surfaceData;
 	var edgeLength, edgeLengthMin, edgeLengthMax, insideLength, edgeLengthA,edgeLengthB,edgeLengthC, idealEdgeLength;
 	var cosRatio = Math.cos(Math.PI/6.0);
@@ -181,12 +182,11 @@ console.log("vertex: "+vertexA);
 		}
 		console.log(i+": "+edgeLengthMin+" "+edgeLengthMax);
 		idealEdgeLength = (edgeLengthMin+edgeLengthMax)/2.0;
-idealEdgeLength = 0.1;
+//idealEdgeLength = 0.1;
 //idealEdgeLength = Math.min(idealEdgeLength,edgeLengthMin);
 //idealEdgeLength = edgeLengthMin;
 //idealEdgeLength = this.fieldMinimumInSphere(null,vertexA,1E9); // everywhere
 		insideLength = idealEdgeLength*cosRatio;
-console.log()
 		vertexA = V3D.scale(vertexA,surfaceDirMin,insideLength);
 		vertexB = V3D.rotateAngle(vertexB,vertexA,surfaceNormal, deg120);
 		vertexC = V3D.rotateAngle(vertexC,vertexA,surfaceNormal,-deg120);

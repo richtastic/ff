@@ -393,7 +393,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 }
 SurfaceTri.prototype.setupTorus3D = function(){
 	var pts = this.generateSpherePoints(5000,1.5,1E-13);
-	PUT FOOD IN ME
+console.log("PUT FOOD IN ME");
 	this.startPointCloud(pts);
 }
 SurfaceTri.prototype.setupSphere3D = function(){
