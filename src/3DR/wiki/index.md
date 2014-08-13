@@ -1314,7 +1314,10 @@ do for all 3 triangle edges => either none or two must intersect
 ![Texture Stitching](./images/stitching.png "Texture Stitching")
 <br/>
 - Vertex-Images registrations
-    - find projection of each vertex on each of n images
+    - find projection of each vertex on each of n images (camera image plane)
+        - intersects positively - in front of (for cameras INSIDE the scene),
+        - intersects positive normal (not interrior of surface)
+        - not occluded by (intersects) model
     - primary mapping of vertex is to image with best normal fit (largest dot product)
 - Find Transitional-Triangles
     - triangles in which all vertexes map to the same image/perspective don't need to be blended
@@ -1326,6 +1329,9 @@ do for all 3 triangle edges => either none or two must intersect
         - color(point) = &alpha;v<sub>A</sub> + &beta;v<sub>B</sub> + &gamma;v<sub>C</sub>
         - &alpha; + &beta; + &gamma; = 1
     - use highest resolution for texture?
+    - image planes closer to face (higher resolution) should be preferred
+        -> somehow related to final projected pixel size: distorted res. vs low res.
+        -> effective pixel size
 - Texture (Rectangle) Packing
     - what resolution to map to?
     - use blocks of source image where possible
