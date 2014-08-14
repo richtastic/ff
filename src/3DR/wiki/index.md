@@ -11,6 +11,13 @@
 
 
 
+TODO:
+- SIFT point extraction
+- store points in file for later
+- bundle adjustment feature matching to get F matrix
+
+
+
 <a name="CAMERA"></a>
 ## Camera Modeling
 Variabilities:
