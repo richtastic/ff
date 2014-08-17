@@ -497,8 +497,8 @@ function sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body){
 		return 0;
 	}
 	$headers = "From: ".$fromEmail."\r\nReply-To: ".$replyEmail."";
-	//return mail($toEmail, $subject, $body, $headers);
-	error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
+	return mail($toEmail, $subject, $body, $headers);
+	//error_log('MAIL: '.$toEmail.' | '.$subject.' | '.$body);
 }
 
 function sendEmailBSFTH($toEmail, $subject,$body){ // qs500.pair.com

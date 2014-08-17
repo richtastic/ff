@@ -1,6 +1,6 @@
 # Notes
 **For now this will just be a place for random notes**
-1. [?](#?)
+1. [Math](#MATHS)
 2. [Camera Modeling](#CAMERA)
 3. [Feature Matching](#FEATURE)
 4. [Triangulation](#TRIANGULATE)
@@ -16,6 +16,239 @@ TODO:
 - store points in file for later
 - bundle adjustment feature matching to get F matrix
 
+<a name="MATHS"></a>
+## MATH
+
+### Adjoint(M)
+**adj(M)**
+
+### Cofactor(M)
+**cof(M)**
+
+### Determinant(M)
+**det(M)**
+
+
+### Inverse(M)
+**inv(M)**
+<br/>
+inv(M) = 1/det(M) * adt(M)
+<br/>
+
+
+### NulSpace(M)
+**nul(M)**
+
+
+### Discrete Math
+<br/>
+**Jacobian**: &part;f<sub>i</sub>(x)/&part;x<sub>i</sub> ; f<sub>i</sub> &darr; ; x<sub>i</sub> &rarr;
+<br/>
+**Hessian**: &part;<sup>2</sup>f<sub>i</sub>(x)/&part;x<sub>i</sub>&part;x<sub>j</sub> ; x<sub>i</sub> &darr; ; x<sub>j</sub> &rarr;
+<br/>
+<br/>
+f(x+&delta;) &asymp; f(x) + J(x)&middot;&delta; + &frac12;&delta;<sup>T</sup>&middot;H(x)&middot;&delta; <sub> + O(&delta;<sup>3</sup>) </sub>
+<br/>
+<br/>
+<br/>
+
+
+
+### Lines
+![Line](./images/line.png "Line")
+<br/>
+**Line: a,b,c &equiv; [a,b,c]<sup>T</sup>**: ax + by + c = 0
+<br/>
+**&lt;a,b&gt;**: vector normal to line (from origin), ||&lt;a,b&gt;|| = ||ab|| = (a<sup>2</sup>+b<sup>2</sup>)<sup>1/2</sup>
+<br/>
+**c/||ab||**: distance along normal vector to line (closest to origin)
+<br/>
+Same line can be defined by different combinations of a,b,c (eg k&middot;a,k&middot;b,c/k)
+<br/>
+**Homogenious line**: ||ab|| = 1 ?
+<br/>
+
+### Point on a Line
+**Point (x,y,1), (x,y,1)<sup>T</sup>**: The point (k&middot;x,k&middot;y,k) represents the same point
+<br/>
+**Homogenious Point**: (x,y,1)
+<br/>
+**Inhomogenious Point**: (k&middot;x,k&middot;y,k) ? k&ne; 0 ?
+<br/>
+
+### Line-Line Intersection
+**Line l = [a,b,c]<sup>T</sup>**: line ax + by + c = 0
+<br/>
+**Line l' = [A,B,C]<sup>T</sup>**: line Ax + By + C = 0
+<br/>
+ax + by + c = 0
+<br/>
+Ax + By + C = 0
+<br/>
+**Intersection point p = (x,y,w)**: p = l &times; l' = [l]<sub>&times;</sub> l' = [l']<sup>T</sup><sub>&times;</sub> l
+<br/>
+= &lt;bC-cB, cA-aC, aB-bA&gt;
+```
+[x]   [0  -c  b] [A]
+[y] = [c   0 -a]*[B]
+[w]   [-b  a  0] [C]
+```
+
+### Parallel Line-Line Intersection
+"parallel lines meet at infinity" <sub>(they never intersect)</sub>
+<br/>
+**Parallel line intersection point p**: p= &lt;bC-cB, cA-aC, aB-bA&gt;, with a=A, b=B &rarr;
+<br/>
+p = &lt;(C-c)b, (c-C)a, 0&gt;
+<br/>
+p ~ &lt;b, -a, 0&gt;
+<br/>
+p ~ &lt;-b, a, 0&gt;
+<br/>
+
+### Ideal Points
+**Ideal point p is at infinity**: p = &lt;x,y,0&gt;
+<br/>
+
+### Line at infinity
+**Line at infinity l<sub>&infin;</sub> contains all points at infinity**: l = &lt;0,0,1&gt;
+<br/>
+&lt;0,0,1&gt; &middot; &lt;x,y,0&gt; = 0
+<br/>
+
+
+### Projective Rays
+**Ray in P<sup>2</sup> r = &lt;x,y,z&gt;**: a ray is a 'point' in P<sup>2</sup>
+<br/>
+**Planes in P<sup>2</sup>**: defined by 2 distint rays ; a 'line' in P<sup>2</sup> is the intersection of the plane defined by 2 rays and the plane &pi; at z=1
+<br/>
+
+
+### Projective Planes
+<br/>
+?
+<br/>
+
+
+### Conic
+a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x + e&middot;y + f = 0
+<br/>
+Homogenized: a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x&middot;z + e&middot;y&middot;z + f&middot;z<sup>2</sup> = 0
+<br/>
+x<sup>T</sup>&middot;C&middot;x = 0
+<br/>
+```
+        [ a  b/2 d/2] [x]
+[x y z]*[b/2  c  e/2]*[y]
+        [d/2 e/2  f ] [z]
+```
+**Degenerate**: not full (3) rank, instead rank 2 (nul(C)=) or rank 1
+<br/>
+
+### Dual Conic
+l<sup>T</sup>&middot;C&lowast;&middot;l = 0
+<br/>
+C&lowast; = adj(C) ~ C<sup>-1</sup>
+<br/>
+
+
+### Transforms
+**Colineation, Projectivity, homography, projective transform**
+<br/>
+Invertable mapping of points on lines to points on lines, 8DOF
+<br/>
+Point Transformation:
+<br/>
+x' = H&middot;x
+<br/>
+l' = H<sup>-T</sup>&middot;x
+<br/>
+C' = H<sup>-T</sup>&middot;C&middot;H<sup>-1</sup>
+<br/>
+C&lowast;' = H&middot;C&lowast;&middot;H<sup>T</sup>
+<br/>
+
+
+### Transformation Hierarchy
+**Isometry/Euclidean**: H<sub>E</sub> ; 3DOF: 1rot, 2trans
+<br/>
+*invariant: length, angle, area, parallel lines, ...*
+<br/>
+```
+[x']   [ e*cos(t) -sin(t) tx ] [x]
+[y'] = [ e*sin(t)  cos(t) ty ]*[y]
+[1 ]   [   0       0       1 ] [1]
+```
+e = &plusmn;1 ; s=1 = orientation preserving
+<br/>
+R<sub>2&times;2</sub> is orthonormal rotation matrix; R&middot;R<sup>T</sup> = I
+<br/>
+**Similarity/Metric**: H<sub>M</sub> ; 4DOF: 1rot, 2trans, 1scale
+<br/>
+*invariant: angle, parallel lines, ratio of lengths, ratio of area, circular points: I, J*
+<br/>
+```
+[x']   [ s*cos(t) -s*sin(t) tx ] [x]
+[y'] = [ s*sin(t)  s*cos(t) ty ]*[y]
+[1 ]   [    0         0      1 ] [1]
+```
+<br/>
+**Affine/Affinity**: H<sub>A</sub> ; 6DOF: 2rot, 2trans, 2scale
+<br/>
+*invariant: parallel lines, ratio of lengths or parallel lines, ratio of area, I<sub>&infin;</sub>*
+<br/>
+```
+[x']   [ a b tx ] [x]
+[y'] = [ c d ty ]*[y]
+[1 ]   [ 0 0  1 ] [1]
+```
+A<sub>2&times;2</sub>sub> = R(&theta;)&middot;R(-&phi;)&middot;D&middot;R(&phi;) ; D = [l1 0 ; 0 l2] (non-isotropic scaling)
+<br/>
+rotate by &phi;, scale by l1 in x and l2 in y, reverse rotate by &phi;, rotate by &theta;
+<br/>
+**Projective**: H<sub>O</sub> ; 8DOF
+<br/>
+*invariant: cross ratio: ratio of ratios, order, tangency*
+<br/>
+```
+[x']   [ a b tx ] [x]     [x']   [ a b c ] [x]
+[y'] = [ c d ty ]*[y]  =  [y'] = [ d e f ]*[y]
+[1 ]   [ e f  v ] [1]     [1 ]   [ g h i ] [1]
+```
+<br/>
+H = H<sub>M</sub>&middot;H<sub>A</sub>&middot;H<sub>P</sub> = H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>
+```
+[sR t][K 0][I 0] = [A t]
+[0  1][0 1][v u]   [v u]
+```
+A = sRK + tv
+<br/>
+<br/>
+
+<br/>
+<br/>
+**Cross-Ratio: a,b,c,d &isin; colinear**: |ab|&middot;|cd| / |ac|&middot;|bd|
+|ab|&middot;|cd| / |ad|&middot;|bc|
+|ac|&middot;|bd| / |ad|&middot;|bc|
+
+
+### 
+<br/>
+concurrent lines &harr; collinear points [perspective]
+
+
+
+### 
+<br/>
+
+
+&star;
+&lowast;
+elation
+homology
+homography
+perspectivity
+killmenow
 
 
 <a name="CAMERA"></a>

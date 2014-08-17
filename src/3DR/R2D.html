@@ -10,7 +10,71 @@ function pageLoadedFxn(){
 function ffLoadedFxn(){
 	(new ScriptLoader("./",["Cam2D.js","Recon2D.js","R2D.js"],this,r2dLoadedFxn)).load();
 }
+
+// var d0 = det2x2(a.x,a.y,b.x,b.y);
+// var d1 = det2x2(c.x,c.y,d.x,d.y);
+// var d2 = det2x2(a.x,a.y,c.x,c.y);
+// var d3 = det2x2(b.x,b.y,d.x,d.y);
+
+function crossRatioBAD(a,b,c,d){
+    var d0 = det2x2(a.x,b.x,a.y,b.y);
+    var d1 = det2x2(c.x,d.x,c.y,d.y);
+    var d2 = det2x2(a.x,c.x,a.y,c.y);
+    var d3 = det2x2(b.x,d.x,b.y,d.y);
+    console.log(d0,d1,d2,d3);
+    var num = d0*d1;
+    var den = d2*d3;
+    return num/den;
+}
+function det2x2(a,b,c,d){
+    return a*d - b*c;
+}
+
+function crossRatio(a,b,c,d){
+	var AB = V2D.distance(a,b);
+	var CD = V2D.distance(c,d);
+	var AC = V2D.distance(a,c);
+	var BD = V2D.distance(b,d);
+		var AD = V2D.distance(a,d);
+		var BC = V2D.distance(b,c);
+	//var num = AB*CD, den = AC*BD; // 0.25
+	//var num = AB*CD, den = AD*BC; // 0.33
+	//var num = AC*BD, den = AD*BC; // 1.33
+	var num = AB*CD, den = AC*BD; // 
+    if(den!=0){
+    	return num/den;
+	}
+	return null;
+}
+/*
+
+((p1, p2; p3, p4))
+((p3, p4; p1, p2))
+((p2, p1; p4, p3))
+((p4, p3; p2, p1))
+
+*/
+
+
 function r2dLoadedFxn(){
+	var a = new V2D(-5,0);
+	var b = new V2D(-4,0);
+	var c = new V2D(-3,0);
+	var d = new V2D(-2,0);
+	console.log( crossRatio(a,b,c,d) );
+	var A = new V2D(0,10);
+	var B = new V2D(0,4);
+	var C = new V2D(0,2);
+	var D = new V2D(0,1);
+	console.log( crossRatio(A,B,C,D) );
+	var a = new V2D(0,0);
+	var b = new V2D(0,0);
+	var c = new V2D(0,0);
+	var d = new V2D(0,0);
+	console.log( crossRatio(a,b,c,d) );
+return;
+
+
 	// var a = new Matrix(3,3);
 	// var b = new Matrix(3,3);
 	// var c = new Matrix(3,3);
