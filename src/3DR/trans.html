@@ -1,0 +1,22 @@
+<html>
+<head>
+<title>Transformations</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Trans.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var trans = new Trans();
+	console.log("...");
+}
+</script>
+<body onload="pageLoadedFxn();">
+&equiv;
+&ne;
+</body>
+</html>

@@ -44,7 +44,7 @@ inv(M) = 1/det(M) * adt(M)
 <br/>
 **Jacobian**: &part;f<sub>i</sub>(x)/&part;x<sub>i</sub> ; f<sub>i</sub> &darr; ; x<sub>i</sub> &rarr;
 <br/>
-**Hessian**: &part;<sup>2</sup>f<sub>i</sub>(x)/&part;x<sub>i</sub>&part;x<sub>j</sub> ; x<sub>i</sub> &darr; ; x<sub>j</sub> &rarr;
+**Hessian**: &part;<sup>2</sup>f(x)/&part;x<sub>i</sub>&part;x<sub>j</sub> ; x<sub>i</sub> &darr; ; x<sub>j</sub> &rarr;
 <br/>
 <br/>
 f(x+&delta;) &asymp; f(x) + J(x)&middot;&delta; + &frac12;&delta;<sup>T</sup>&middot;H(x)&middot;&delta; <sub> + O(&delta;<sup>3</sup>) </sub>
@@ -223,6 +223,40 @@ H = H<sub>M</sub>&middot;H<sub>A</sub>&middot;H<sub>P</sub> = H<sub>P</sub>&midd
 ```
 A = sRK + tv
 <br/>
+
+
+
+### Transformation Recovery
+<br/>
+locate l<sub>&infin;</sub> (contains points at infinity)
+<br/>
+H = H<sub>A</sub>&middot;[1 0 0 ; 0 1 0; l<sub>1</sub> l<sub>2</sub> l<sub>3</sub>]  (l<sub>3</sub> &ne; 0)
+<br/>
+<br/>
+
+
+
+
+### 
+<br/>
+
+
+### 
+<br/>
+
+
+### 
+<br/>
+
+
+### 
+<br/>
+
+
+### 
+<br/>
+
+
 <br/>
 
 <br/>
@@ -230,16 +264,6 @@ A = sRK + tv
 **Cross-Ratio: a,b,c,d &isin; colinear**: |ab|&middot;|cd| / |ac|&middot;|bd|
 |ab|&middot;|cd| / |ad|&middot;|bc|
 |ac|&middot;|bd| / |ad|&middot;|bc|
-
-
-### 
-<br/>
-concurrent lines &harr; collinear points [perspective]
-
-
-
-### 
-<br/>
 
 
 &star;
