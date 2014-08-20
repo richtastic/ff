@@ -54,21 +54,21 @@ f(x+&delta;) &asymp; f(x) + J(x)&middot;&delta; + &frac12;&delta;<sup>T</sup>&mi
 
 
 
-### Lines
+### 2D Lines
 ![Line](./images/line.png "Line")
 <br/>
 **Line: a,b,c &equiv; [a,b,c]<sup>T</sup>**: ax + by + c = 0
 <br/>
 **&lt;a,b&gt;**: vector normal to line (from origin), ||&lt;a,b&gt;|| = ||ab|| = (a<sup>2</sup>+b<sup>2</sup>)<sup>1/2</sup>
 <br/>
-**c/||ab||**: distance along normal vector to line (closest to origin)
+**c/||ab||**: *negative* signed distance along normal vector to line (closest to origin)
 <br/>
 Same line can be defined by different combinations of a,b,c (eg k&middot;a,k&middot;b,c/k)
 <br/>
 **Homogenious line**: ||ab|| = 1 ?
 <br/>
 
-### Point on a Line
+### 2D Point on a Line
 **Point (x,y,1), (x,y,1)<sup>T</sup>**: The point (k&middot;x,k&middot;y,k) represents the same point
 <br/>
 **Homogenious Point**: (x,y,1)
@@ -76,7 +76,7 @@ Same line can be defined by different combinations of a,b,c (eg k&middot;a,k&mid
 **Inhomogenious Point**: (k&middot;x,k&middot;y,k) ? k&ne; 0 ?
 <br/>
 
-### Line-Line Intersection
+### 2D Line-Line Intersection
 **Line l = [a,b,c]<sup>T</sup>**: line ax + by + c = 0
 <br/>
 **Line l' = [A,B,C]<sup>T</sup>**: line Ax + By + C = 0

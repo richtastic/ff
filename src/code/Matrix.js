@@ -681,15 +681,25 @@ Matrix.inverse = function(A){ // assumed square
 }
 // RIGHT INVERSE n<=m: A^T[(A*A^T)^-1]
 // LEFT INVERSE m<=n: [(A^T*A)^-1]A^T
-Matrix.pseudoInverse = function(cin, ain){ // c = aa^at non-square
+Matrix.pseudoInverse = function(cin, ain){
+	return Matrix.pseudoInverseSVD(cin,ain);
+}
+Matrix.pseudoInverseSimple = function(cin, ain){ // c = aa^at non-square
 	var a = ain;
 	if(ain===undefined){
 		a = cin;
 	}
-	// var at = Matrix.transpose(a);
-	// var c = Matrix.mult(at,a);
-	// c = Matrix.inverse(c);
-	// c = Matrix.mult(c,at);
+	var at = Matrix.transpose(a);
+	var c = Matrix.mult(at,a);
+	c = Matrix.inverse(c);
+	c = Matrix.mult(c,at);
+	return cin.copy(c);
+}
+Matrix.pseudoInverseSVD = function(cin, ain){ // c = aa^at non-square
+	var a = ain;
+	if(ain===undefined){
+		a = cin;
+	}
 	var SVD = Matrix.SVD(a);
 	var U = SVD.U;
 	var S = SVD.S;
@@ -1064,8 +1074,9 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 		matB.set(2*i  ,0, to.x);
 		matB.set(2*i+1,0, to.y);
 	}
-	var x = Matrix.solve(matA,matB);//Matrix.mult(Matrix.pseudoInverse(matA), matB);
-	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1]);
+	//var x = Matrix.solve(matA,matB);
+	var x = Matrix.mult(Matrix.pseudoInverseSimple(matA), matB); // 
+	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]);
 	// var pt = new V3D(0,0,0);
 	// projection.multV2DtoV3D(pt,pt);
 	// console.log(pt.toString());

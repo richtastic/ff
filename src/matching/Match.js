@@ -150,7 +150,7 @@ Match.prototype.scaleImage = function(originalImage, scale){
 	var newHei = Math.round(hei*scale);
 	img = ImageMat.extractRect(img, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, newWid,newHei);
 	var argb = ImageMat.ARGBFromFloats(img.red(),img.grn(),img.blu());
-	var imageElement = this._stage.getRGBAAsImage(argb, img.width(), img.height());
+	var imageElement = this._stage.getARGBAsImage(argb, img.width(), img.height());
 
 	imageElement.style.zIndex = 99;
 	imageElement.style.position = "absolute";

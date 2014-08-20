@@ -2313,6 +2313,17 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 	if(len!=0.0){ len = 1.0/len; }
 	return {normal:nrm, point:new V3D(a*d*len,b*d*len,c*d*len)};
 }
+// ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
+Code.lineEquationFromPoints2D = function(a,b){ // 
+	dir = V2D.sub(b,a);
+	var closest = Code.closestPointLine2D(a,dir, V2D.ZERO);
+	var len = closest.length();
+	closest.norm();
+	return {a:closest.x, b:closest.y, c:-len};
+}
+Code.homoIntersectionFromLines2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B
+	return new V3D(b1*c2-c1*b2,  c1*a2-a1*c2, a1*b2-b1*a2); // 
+}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- Array Matrix Math
 Code.matrix3x3xV3D = function(z,m,x){ // z = matrix*x

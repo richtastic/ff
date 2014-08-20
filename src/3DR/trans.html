@@ -11,8 +11,25 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["Trans.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	/*
+	var a = new V2D(-1,1);
+	var b = new V2D(1,2);
+	var lineA = Code.lineEquationFromPoints2D(a,b);
+	console.log(lineA)
+	var c = new V2D(0,5);
+	var d = new V2D(2,2);
+	var lineB = Code.lineEquationFromPoints2D(c,d);
+	console.log(lineB)
+	var intAB = Code.homoIntersectionFromLines2D(lineA.a,lineA.b,lineA.c, lineB.a,lineB.b,lineB.c);
+	//var intAB = Code.homoIntersectionFromLines2D(lineB.a,lineB.b,lineB.c, lineA.a,lineA.b,lineA.c); 
+	console.log(intAB.toString())
+	intAB.homo()
+	console.log(intAB.toString())
+
+	intAB = Code.rayLineIntersect2D(a,V2D.sub(b,a),c,V2D.sub(d,c));
+	console.log(intAB.toString())
+	*/
 	var trans = new Trans();
-	console.log("...");
 }
 </script>
 <body onload="pageLoadedFxn();">
