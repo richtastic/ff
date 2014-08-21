@@ -352,7 +352,11 @@ function getHumanTimeOfDayFromDate($seconds){
 
 function encodeJSONString($str){
 	//return json_encode($str);
-	return str_replace('"','\"',$str);
+	//$str = str_replace("'","\\\\'",$str); // remove quotes .. not necessary inside "
+	$str = str_replace("\"","\\\"",$str); // remove quotes
+	$str = str_replace("\n","\\n",$str); // remove new lines
+	$str = str_replace("\r","\\r",$str); // remove new lines
+	return $str;
 }
 function decodeString($str){
 	//return urldecode($str);
