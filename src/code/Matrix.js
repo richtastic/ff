@@ -352,16 +352,19 @@ Matrix.prototype.toString = function(exp){
 Matrix._transformTemp = new Matrix(3,3);
 Matrix.transform2DTranslate = function(a,tX,tY){
 	var b = Matrix._transformTemp.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
+	return Matrix.mult(a,b);
+	//return Matrix.mult(b,a);
 }
 Matrix.transform2DScale = function(a,sX,sY){
 	sY = sY!==undefined?sY:sX;
 	var b = Matrix._transformTemp.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
+	return Matrix.mult(a,b);
+	//return Matrix.mult(b,a);
 }
 Matrix.transform2DRotate = function(a,ang){
 	var b = Matrix._transformTemp.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
+	return Matrix.mult(a,b);
+	//return Matrix.mult(b,a);
 }
 
 Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u

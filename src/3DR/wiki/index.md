@@ -1,13 +1,15 @@
 # Notes
 **For now this will just be a place for random notes**
 1. [Math](#MATHS)
-2. [Camera Modeling](#CAMERA)
-3. [Feature Matching](#FEATURE)
-4. [Triangulation](#TRIANGULATE)
-5. [Surface Reconstruction](#SURFACE)
-6. [Surface Texturing](#TEXTURE)
-7. [?](#?)
-8. [References](#REFERENCE)
+2. [2D Concepts](#2DSTUFF)
+3. [3D Concepts](#3DSTUFF)
+4. [Camera Modeling](#CAMERA)
+5. [Feature Matching](#FEATURE)
+6. [Triangulation](#TRIANGULATE)
+7. [Surface Reconstruction](#SURFACE)
+8. [Surface Texturing](#TEXTURE)
+9. [?](#?)
+10. [References](#REFERENCE)
 
 
 
@@ -19,25 +21,41 @@ TODO:
 <a name="MATHS"></a>
 ## MATH
 
-### Adjoint(M)
-**adj(M)**
+### Transpose(M)
+**tra(M), M<sup>T</sup>**
+<br/>
+flip along y=-x axis
+
 
 ### Cofactor(M)
 **cof(M)**
+<br/>
++/- alternating (checkerboard) of sub determinant found by crossing out row j and col i
+
+
+### Adjoint(M)
+**adj(M)**
+<br/>
+= tra( cof(M) )
+
 
 ### Determinant(M)
 **det(M)**
-
+<br/>
+sum of cofactors of a single row or column, in which the result is also multiplied by the value at row j, col i
+<br/>
+(Laplace Expansion)
 
 ### Inverse(M)
 **inv(M)**
 <br/>
-inv(M) = 1/det(M) * adt(M)
+inv(M) = 1/det(M) * adj(M)
 <br/>
 
 
 ### NulSpace(M)
 **nul(M)**
+row? vector when multiplied by M yields 0 vector
 
 
 ### Discrete Math
@@ -53,6 +71,8 @@ f(x+&delta;) &asymp; f(x) + J(x)&middot;&delta; + &frac12;&delta;<sup>T</sup>&mi
 <br/>
 
 
+<a name="2DSTUFF"></a>
+## 2D Concepts
 
 ### 2D Lines
 ![Line](./images/line.png "Line")
@@ -206,7 +226,7 @@ A<sub>2&times;2</sub>sub> = R(&theta;)&middot;R(-&phi;)&middot;D&middot;R(&phi;)
 <br/>
 rotate by &phi;, scale by l1 in x and l2 in y, reverse rotate by &phi;, rotate by &theta;
 <br/>
-**Projective**: H<sub>O</sub> ; 8DOF
+**Projective**: H<sub>P</sub> ; 8DOF
 <br/>
 *invariant: cross ratio: ratio of ratios, order, tangency*
 <br/>
@@ -225,20 +245,39 @@ A = sRK + tv
 <br/>
 
 
+### Circular Points
+**I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform
+<br/>
+**C&#42;<sub>&infin;</sub>**: Infinite dual(line) conic = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub> ; fixed under metric transform
+<br/>
+C&#42;<sub>&infin;</sub>' = (H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>) C&#42;<sub>&infin;</sub> (H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>)<sup>T</sup>
+<br/>
+C&#42;<sub>&infin;</sub>' = U[1,0,0; 0,1,0; 0,0,0]U<sup>T</sup>, U = SVD left-eigenvalues
+<br/>
+**Projective Angle of lines l=(l<sub>1</sub>,l<sub>2</sub>,l<sub>3</sub>) and m=(m<sub>1</sub>,m<sub>2</sub>,m<sub>3</sub>)**: [l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>]/sqrt( (l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;l) &middot; (m<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;m) ) ; invariant to projective transform
+<br/>
+
 
 ### Transformation Recovery
 <br/>
 locate l<sub>&infin;</sub> (contains points at infinity)
 <br/>
-H = H<sub>A</sub>&middot;[1 0 0 ; 0 1 0; l<sub>1</sub> l<sub>2</sub> l<sub>3</sub>]  (l<sub>3</sub> &ne; 0)
+H<sub>l&infin;</sub> = [1 0 0 ; 0 1 0; l<sub>1</sub> l<sub>2</sub> l<sub>3</sub>]  (l<sub>3</sub> &ne; 0)
+<br/>
+H = H<sub>A</sub>&middot;H<sub>l&infin;</sub>
+<br/>
+H&middot;H<sub>l&infin;</sub> = H<sub>A</sub>&middot;H<sub>l&infin;</sub>&middot;H<sub>l&infin;</sub><sup>-1</sup>
+<br/>
+H&middot;H<sub>l&infin;</sub> = H<sub>A</sub>
+<br/>
+???
 <br/>
 <br/>
 
-
-
-
-### 
 <br/>
+H<sub>M</sub> = ? SVDized C&infin; ?
+
+
 
 
 ### 
@@ -273,6 +312,16 @@ homology
 homography
 perspectivity
 killmenow
+
+
+<a name="2DSTUFF"></a>
+## 3D Concepts
+
+
+### 
+<br/>
+
+
 
 
 <a name="CAMERA"></a>
@@ -1848,7 +1897,8 @@ Feathering - Transparancy Fading between images
 <br/>
 [Acquiring, Stitching and Blending ... - Rocchini, Cignoni, Montani, Scopigno](www.cs.hunter.cuny.edu/~ioannis/3DP_S09/rocchini.stitch.pdf)
 <br/>
-
+[Multiple View Geometry in Computer Vision - 2002](Richard Hartly + Andrew Zisserman)
+<br/>
 
 
 
