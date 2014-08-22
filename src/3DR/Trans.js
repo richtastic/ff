@@ -94,11 +94,11 @@ Trans.prototype.handleImageLoaded = function(e){
 		d.graphics().strokeLine();
 		this._root.addChild(d);
 	}
-	// create homography 
-	var homography = Matrix.get2DProjectiveMatrix(planePoints,points);
+	// create homography (this is the solution looking for) H = Hp * Ha * Hm
+	//var homography = Matrix.get2DProjectiveMatrix(planePoints,points);
 
 	// unknown homography
-	//var homography = new Matrix(3,3).identity(); // current image
+	var homography = new Matrix(3,3).identity(); // current image
 	
 	console.log(homography.toString());
 	// find Ha
@@ -112,9 +112,11 @@ Trans.prototype.handleImageLoaded = function(e){
 	console.log(Ha.toString());
 
 	// 
-	homography = Ha
+	//homography = Ha
 	//homography = lineMatrix
 	//homography = lmInv;
+	homography = Matrix.transpose(lmInv);
+	homography = Matrix.transpose(lineMatrix);
 
 	var pt = new V3D(0,0,1);
 	pt = new V3D(159,397);
@@ -126,10 +128,9 @@ Trans.prototype.handleImageLoaded = function(e){
 	console.log( ".........." )
 
 //homography = Matrix.inverse(homography);
-
+	//homography = Matrix.transform2DTranslate(homography,-pt.x,-pt.y);
 	//homography = Matrix.transform2DScale(homography,2);
 	//homography = Matrix.transform2DTranslate(homography,-200,-75);
-	//homography = Matrix.transform2DTranslate(homography,-pt.x,-pt.y);
 	//homography = Matrix.transform2DTranslate(homography,-30,50);
 	//var tX = 0, tY = 0;
 	// var tX = -200, tY = -50;

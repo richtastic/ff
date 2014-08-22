@@ -58,6 +58,65 @@ inv(M) = 1/det(M) * adj(M)
 row? vector when multiplied by M yields 0 vector
 
 
+### Conics and Conic Sections
+**Geometrically**: Intersection of a plane and a (double-sided) cone
+<br/>
+**Algebraically**: a&middot;x<sup>2</sup> + b&middot;y<sup>2</sup> + c&middot;x&middot;y + d&middot;x + e&middot;y + f = 0
+<br/>
+**Matrix-ically**: 
+```
+```
+<br/>
+**Descriminant**: b<sup>2</sup> - 4&middot;a&middot;c
+<br/>
+<br/>
+<br/>
+**Degenerate**: equation does not have highest degree (2 in regular conic (a,b,c &ne; 0)- null, point, line, crossing-line pair, parallel-line pair)
+<br/>
+<br/>
+<br/>
+<br/>
+**null set**: cone with vertex at infinity (cylinder), plane is parallel to cylinder
+<br/>
+**parallel line pair**: cone with vertex at infinity (cylinder), plane intersects cylinder twice
+<br/>
+**point**: plane intersects cone only at origin
+<br/>
+**line**: plane intersects cone at limiting edge (thru origin)
+<br/>
+**crossing line pair**: plane intersects cone edge twice (thru origin)
+<br/>
+**Circle**:
+<br/>
+**Ellipse**:
+<br/>
+**Parabola**:
+<br/>
+**Hyperbola**:
+<br/>
+****:
+<br/>
+<br/>
+<br/>
+<br/>
+
+..
+
+
+### Quadrics
+**Geometrically**: 
+<br/>
+**Algebraically**: a&middot;x<sup>2</sup> + b&middot;y<sup>2</sup> + c&middot;z<sup>2</sup> + 2&middot;d&middot;x&middot;y + 2&middot;e&middot;x&middot;z + 2&middot;f&middot;y&middot;z + g&middot;x + h&middot;y + i&middot;z + j = 0
+<br/>
+**Matrix-ically**: x<sup>T</sup>&middot;q&middot;x + L&middot;x + J = 0
+```
+    [a d e g]                   [a d e]
+Q = [d b f h] = [q L^T]  ;  q = [d b f]  ; L = [g h i]
+    [e f c i]   [L   j]         [e f c]
+    [g h i j]
+```
+
+
 ### Discrete Math
 <br/>
 **Jacobian**: &part;f<sub>i</sub>(x)/&part;x<sub>i</sub> ; f<sub>i</sub> &darr; ; x<sub>i</sub> &rarr;
@@ -1897,9 +1956,9 @@ Feathering - Transparancy Fading between images
 <br/>
 [Acquiring, Stitching and Blending ... - Rocchini, Cignoni, Montani, Scopigno](www.cs.hunter.cuny.edu/~ioannis/3DP_S09/rocchini.stitch.pdf)
 <br/>
-[Multiple View Geometry in Computer Vision - 2002](Richard Hartly + Andrew Zisserman)
+[Multiple View Geometry in Computer Vision - 2002 - Richard Hartly + Andrew Zisserman](?)
 <br/>
-
+[Conic Sections Beyond Reals^2- Mzuri S. Handlin](http://www.whitman.edu/mathematics/SeniorProjectArchive/2013/Handlin.pdf)
 
 
 
