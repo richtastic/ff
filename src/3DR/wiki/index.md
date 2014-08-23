@@ -58,16 +58,36 @@ inv(M) = 1/det(M) * adj(M)
 row? vector when multiplied by M yields 0 vector
 
 
+### Rank(M)
+**rank(M)**
+Number of linearly independent columns
+
+
+### Eigenvalues(M)
+**eigs(M)**
+roots of characteristic equation: det(M-&lambda;I)=0
+(vector/values causing matrix to be singular)
+
+
+
 ### Conics and Conic Sections
-**Geometrically**: Intersection of a plane and a (double-sided) cone
+**Geometrically**: Intersection of a plane and a (double-sided) cone &rarr; A CURVE
 <br/>
-**Algebraically**: a&middot;x<sup>2</sup> + b&middot;y<sup>2</sup> + c&middot;x&middot;y + d&middot;x + e&middot;y + f = 0
+**Algebraically for x,y,z**: a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x&middot;z + e&middot;y&middot;z + f&middot;z<sup>2</sup> = 0
 <br/>
 **Matrix-ically**: 
 ```
+    [ a  b/2 d/2]
+C = [b/2  c  e/2]   x^T*C*x = 0  ; x = [x;y;z]
+    [d /2 e/2  f]
 ```
 <br/>
-**Descriminant**: b<sup>2</sup> - 4&middot;a&middot;c
+<br/>
+C&middot;x = tangent line? = (a+b/2+d/2)&middot;x + (c+b/2+e/2)&middot;y + (f+d/2+e/2)
+<br/>
+
+<br/>
+**Descriminant (desc)**: b<sup>2</sup> - 4&middot;a&middot;c ; derived by removing cross-term (B&middot;x&middot;y) knowing: *invariant to rotation* 
 <br/>
 <br/>
 <br/>
@@ -75,36 +95,54 @@ row? vector when multiplied by M yields 0 vector
 <br/>
 <br/>
 <br/>
+
+|         *TYPE*         | *DESC* |                  *EQUATION*                    |                                          *EXPLANATION*                                      |
+| ---------------------- | ------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
+|      **null set**      |    ?   |                                                | cone with vertex at infinity (cylinder), plane is parallel to cylinder with no intersection |
+| **parallel line pair** |    ?   |                                                | cone with vertex at infinity (cylinder), plane intersects cylinder twice                    |
+|       **point**        | desc<0 |                                                | plane intersects cone only at origin [degenerate ellipse]                                   |
+|        **line**        | desc=0 |                                                | plane intersects cone at limiting edge (thru origin) [degenerate parabola]                  |
+| **crossing line pair** | desc>0 |                                                | plane intersects cone edge twice (thru origin) [degenerate hyperbola]                       |
+|       **circle**       | desc<0 | (x-h)^2/r^2 + (y-k)^2/r^2 - 1 = 0              | plane is perpendicular to principal axis                                                    |
+|      **ellipse**       | desc<0 | (x-h)^2/a^2 + (y-k)^2/b^2 - 1 = 0              |                                                                                             |
+|      **parabola**      | desc=0 | 4p(y-k) - (x-h)^2 = 0 OR 4p(x-h) - (y-k)^2 = 0 | plane is sloped parallel to conic generating line ; x^2 or y^2 coefficient = 0              |
+|     **hyperbola**      | desc>0 | (x-h)^2/a^2 - (y-k)^2/b^2 - 1 = 0              |                                                                                             |
 <br/>
-**null set**: cone with vertex at infinity (cylinder), plane is parallel to cylinder
-<br/>
-**parallel line pair**: cone with vertex at infinity (cylinder), plane intersects cylinder twice
-<br/>
-**point**: plane intersects cone only at origin
-<br/>
-**line**: plane intersects cone at limiting edge (thru origin)
-<br/>
-**crossing line pair**: plane intersects cone edge twice (thru origin)
-<br/>
-**Circle**:
-<br/>
-**Ellipse**:
-<br/>
-**Parabola**:
-<br/>
-**Hyperbola**:
-<br/>
-****:
+After Rotation: x' = xcos&theta; - ysin&theta; ; y' = xsin&theta; + ycos&theta;
 <br/>
 <br/>
+A' = Acos<sup>2</sup>&theta; + Bcos&theta;sin&theta; + Csin<sup>2</sup>&theta;
 <br/>
+B' = -2Acos&theta;sin&theta; + Bcos<sup>2</sup>&theta; - Bsin<sup>2</sup>&theta; + 2Ccos&theta;sin&theta;
+<br/>
+C' = Asin<sup>2</sup>&theta; + Bsin&theta;cos&theta; + Ccos<sup>2</sup>&theta;
+<br/>
+D' = Dcos&theta; + Esin&theta;
+<br/>
+E' = -Dsin&theta; + Ecos&theta;
+<br/>
+F' = F
+<br/>
+...
+<br/>
+B'<sup>2</sup> - 4A'C' &equiv; B<sup>2</sup> - 4AC [invariant]
+<br/>
+<br/>
+Choose &theta; such that B'=0 (no cross term piece)
+<br/>
+&theta; = -atan( [ A - C &plusmn; sqrt((A-C)<sup>2</sup>+B<sup>2</sup>) ]/B )
+<br/>
+&rarr; B<sup>2</sup> - 4AC = -4A'C' &rarr; evaluate simpler equation: A'x<sup>2</sup> + C'y<sup>2</sup> + D'x + E'y + F
 <br/>
 
-..
 
+**Plane**: a<sub>1</sub>x + a<sub>2</sub>y + a<sub>3</sub>z - b = 0
+<br/>
+**Cone**: c<sub>1</sub>x<sup>2</sup> + c<sub>2</sub>y<sup>2</sup> - c<sub>3</sub>z<sup>2</sup> = 0
+<br/>
 
 ### Quadrics
-**Geometrically**: 
+**Geometrically**: intersection of a hypercone and hypersphere (in &reals;<sup>4</sup>) &rarr; A SURFACE
 <br/>
 **Algebraically**: a&middot;x<sup>2</sup> + b&middot;y<sup>2</sup> + c&middot;z<sup>2</sup> + 2&middot;d&middot;x&middot;y + 2&middot;e&middot;x&middot;z + 2&middot;f&middot;y&middot;z + g&middot;x + h&middot;y + i&middot;z + j = 0
 <br/>
@@ -115,6 +153,37 @@ Q = [d b f h] = [q L^T]  ;  q = [d b f]  ; L = [g h i]
     [e f c i]   [L   j]         [e f c]
     [g h i j]
 ```
+
+rank(q) = &rho;3
+rank(Q) = &rho;4
+sign(det(Q)) = &Delta;
+sign(eigs(q))
+
+
+
+
+
+
+ellipsoid (+sphere +spheroid)
+elliptic (+circular) paraboloid
+hyperbolic paraboloid
+hyperboloid of 1 sheet
+hyperboloid of 2 sheets
+elliptic (+circular) cone
+elliptic (+circular) cylinder (ellipse+z)
+parabolic cylinder (parabola+z)
+hyperbolic cylinder (hyperbola+z)
+intersecting planes
+parallel planes
+coincident planes (share same plane) 
+
+
+<br/>
+**HyperPlane**: a<sub>1</sub>x + a<sub>2</sub>y + a<sub>3</sub>z + a<sub>4</sub>w - b  = 0  ~ 1/ a<sub>4</sub> ~ a<sub>1</sub>x + a<sub>2</sub>y + a<sub>3</sub>z + w - b  = 0
+<br/>
+**HyperCone**: c<sub>1</sub>x<sup>2</sup> + c<sub>2</sub>y<sup>2</sup> + c<sub>3</sub>z<sup>2</sup> - c<sub>4</sub>w = 0
+<br/>
+
 
 
 ### Discrete Math
@@ -153,6 +222,9 @@ Same line can be defined by different combinations of a,b,c (eg k&middot;a,k&mid
 **Homogenious Point**: (x,y,1)
 <br/>
 **Inhomogenious Point**: (k&middot;x,k&middot;y,k) ? k&ne; 0 ?
+<br/>
+<br/>
+Point x(x,y,1) is on line l(a,b,c) IFF: x<sup>T</sup>l = 0  (dot product=0)
 <br/>
 
 ### 2D Line-Line Intersection
@@ -223,6 +295,11 @@ x<sup>T</sup>&middot;C&middot;x = 0
 ```
 **Degenerate**: not full (3) rank, instead rank 2 (nul(C)=) or rank 1
 <br/>
+<br/>
+C = U<sup>T</sup>&middot;D&middot;U
+<br/>
+
+
 
 ### Dual Conic
 l<sup>T</sup>&middot;C&lowast;&middot;l = 0
@@ -305,7 +382,7 @@ A = sRK + tv
 
 
 ### Circular Points
-**I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform
+**I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform ; (when fixed: eigenvalues: exp(i&theta;) and exp(-i&theta;))
 <br/>
 **C&#42;<sub>&infin;</sub>**: Infinite dual(line) conic = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub> ; fixed under metric transform
 <br/>
@@ -315,6 +392,20 @@ C&#42;<sub>&infin;</sub>' = U[1,0,0; 0,1,0; 0,0,0]U<sup>T</sup>, U = SVD left-ei
 <br/>
 **Projective Angle of lines l=(l<sub>1</sub>,l<sub>2</sub>,l<sub>3</sub>) and m=(m<sub>1</sub>,m<sub>2</sub>,m<sub>3</sub>)**: [l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>]/sqrt( (l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;l) &middot; (m<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;m) ) ; invariant to projective transform
 <br/>
+
+
+### Fixed Points
+3 fixed points and 3 fixed lines (through these points); points are eigenvectors of H, lines are eigenvectors of H<sup>-T</sup>
+
+
+**Polar Line:** *pole* point (anywhere) x and corresponding *polar* line Cx is tangent to the conic C at point y, if y<sup>T</sup>Cx = 0
+
+**Correlation A**: invertible mapping from points and lines in P<sup>2</sup> : l = Ax
+
+**Conjugate Points**: with respect to C, any two points x,y satisfying: y<sup>T</sup>Cx = 0
+
+**(Dual) Conjugate Lines**: with respect to C, any two lines l,m satisfying: l<sup>T</sup>C&#42;m = 0
+
 
 
 ### Transformation Recovery

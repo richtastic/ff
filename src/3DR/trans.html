@@ -11,7 +11,7 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["Trans.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	/*
+/*
 	var a = new V2D(-1,1);
 	var b = new V2D(1,2);
 	var lineA = Code.lineEquationFromPoints2D(a,b);
@@ -28,7 +28,23 @@ function classesLoadedFxn(){
 
 	intAB = Code.rayLineIntersect2D(a,V2D.sub(b,a),c,V2D.sub(d,c));
 	console.log(intAB.toString())
-	*/
+*/
+/*
+// point on a line:
+var a = new V2D(2,3);
+var b = new V2D(4,0);
+var p = new V2D(1,4.5);
+var p = new V2D(0,6);
+var p = new V2D(2,1); // not on line
+var p = new V2D(3,3); // not on line
+var line = Code.lineEquationFromPoints2D(a,b);
+console.log(line);
+console.log(line.a*p.x,line.b*p.y,line.c);
+console.log(line.a*p.x + line.b*p.y + line.c);
+*/
+
+//return;
+
 	var trans = new Trans();
 }
 </script>
