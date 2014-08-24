@@ -282,11 +282,17 @@ p ~ &lt;-b, a, 0&gt;
 
 
 ### Conic
-a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x + e&middot;y + f = 0
+**a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x + e&middot;y + f = 0**
 <br/>
-Homogenized: a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x&middot;z + e&middot;y&middot;z + f&middot;z<sup>2</sup> = 0
+**Homogenized**: a&middot;x<sup>2</sup> + b&middot;x&middot;y + c&middot;y<sup>2</sup> + d&middot;x&middot;z + e&middot;y&middot;z + f&middot;z<sup>2</sup> = 0
 <br/>
-x<sup>T</sup>&middot;C&middot;x = 0
+**Transformation as x = Hx**: C' = H<sup>-T</sup>&middot;C&middot;H<sup>-1</sup>
+<br/>
+**Point on Conic**: x<sup>T</sup>&middot;C&middot;x = 0
+<br/>
+**Line Tanget to Conic at x**: l = C&middot;x
+<br/>
+**Point on Conic Tangent Line**: x = C<sup>-1</sup>&middot;l = 0
 <br/>
 ```
         [ a  b/2 d/2] [x]
@@ -295,16 +301,21 @@ x<sup>T</sup>&middot;C&middot;x = 0
 ```
 **Degenerate**: not full (3) rank, instead rank 2 (nul(C)=) or rank 1
 <br/>
+**Conjugate Points of C**: Any two points x,y satisfying: y<sup>T</sup>Cx = 0
 <br/>
 C = U<sup>T</sup>&middot;D&middot;U
 <br/>
 
 
 
-### Dual Conic
-l<sup>T</sup>&middot;C&lowast;&middot;l = 0
+### Dual Conic C&#42; (C&lowast;) (conic envelope)
+**l<sup>T</sup>&middot;C&#42;&middot;l = 0**
 <br/>
-C&lowast; = adj(C) ~ C<sup>-1</sup>
+C&#42; = adj(C) ~ C<sup>-1</sup> <sup>[symmetric,nonsingular]</sup>
+<br/>
+**(Dual) Conjugate Lines of C**: Any two lines l,m satisfying: l<sup>T</sup>C&#42;m = 0
+<br/>
+**Transformation as x = Hx**: C&#42;' = H&middot;C&#42;&middot;H<sup>T</sup>
 <br/>
 
 
@@ -402,9 +413,7 @@ C&#42;<sub>&infin;</sub>' = U[1,0,0; 0,1,0; 0,0,0]U<sup>T</sup>, U = SVD left-ei
 
 **Correlation A**: invertible mapping from points and lines in P<sup>2</sup> : l = Ax
 
-**Conjugate Points**: with respect to C, any two points x,y satisfying: y<sup>T</sup>Cx = 0
 
-**(Dual) Conjugate Lines**: with respect to C, any two lines l,m satisfying: l<sup>T</sup>C&#42;m = 0
 
 
 
@@ -426,7 +435,35 @@ H&middot;H<sub>l&infin;</sub> = H<sub>A</sub>
 
 <br/>
 H<sub>M</sub> = ? SVDized C&infin; ?
+<br/>
 
+
+
+<br/>
+C&#42;<sub>&infin;</sub>' = (H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>)C&#42;<sub>&infin;</sub>(H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>)<sup>T</sup>
+<br/>
+= [K&middot;K<sup>T</sup> , K&middot;K<sup>T</sup>&middot;v ; v<sup>T</sup>&middot;K&middot;K<sup>T</sup> , v<sup>T</sup>&middot;K&middot;K<sup>T</sup>&middot;v]
+<br/>
+S = K&middot;K<sup>T</sup> = [s<sub>1</sub>,s<sub>2</sub> ; s<sub>2</sub>,s<sub>3</sub>] ; (symmetric - 3 unknowns)
+<br/>
+~ U[1,0,0; 0,1,0; 0,0,0]U<sup>T</sup>
+<br/>
+H = U ?
+<br/>
+<br/>
+Hm from Ha, using two orthogonal lines (l,m) in Ha
+<br/>
+l<sup>T</sup>C&#42;<sub>&infin;</sub>m = 0
+<br/>
+= [l<sub>1</sub>,l<sub>2</sub>,l<sub>3</sub>]C&#42;<sub>&infin;</sub>[m<sub>1</sub>;m<sub>2</sub>;m<sub>3</sub>] = 0
+<br/>
+= [l<sub>1</sub>&middot;m<sub>1</sub>, l<sub>1</sub>&middot;m<sub>2</sub>+l<sub>2</sub>&middot;m<sub>1</sub>, l<sub>1</sub>&middot;m<sub>1</sub>]&middot;[s<sub>1</sub>,s<sub>2</sub>,s<sub>3</sub>] = 0
+<br/>
+SOLVE FOR s1,s2,s3: [a b c; d e f; 0 0 0]&middot;[s1;s2;s3] = 0; [a,...,f] known from 2 orthogonal pairs as above^
+<br/>
+
+<br/>
+<br/>
 
 
 

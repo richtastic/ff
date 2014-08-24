@@ -153,6 +153,16 @@ lInf.homo();
 
 	homography = Matrix.mult(Ha,lineMatrix);
 	console.log(homography.toString())
+/*
+// C&#42;' = H&middot;C&#42;&middot;H<sup>T</sup>
+var conic = new Matrix();
+var dualC = new Matrix();
+
+var affineA = [];
+
+
+*/
+
 	// 
 	//homography = Ha
 	//homography = lineMatrix
@@ -168,6 +178,10 @@ lInf.homo();
 	pt.homo()
 	console.log( pt.toString() )
 	console.log( ".........." )
+
+
+
+
 // USE TRANSFORMED CORNERS TO SCALE IT TO FIT IN WINDOW
 
 // this sadly qualifies as affine
@@ -175,9 +189,11 @@ lInf.homo();
 //homography = Matrix.inverse(homography);
 //homography = Matrix.transpose(homography);
 console.log(homography.toString())
-homography = Matrix.transform2DScale(homography,0.05,0.007);
 //homography = Matrix.transform2DRotate(homography,Math.PI/10.0);
+/*
+homography = Matrix.transform2DScale(homography,0.05,0.007);
 homography = Matrix.transform2DTranslate(homography,100,2200);
+*/
 //homography = Matrix.transform2DScale(homography,10,0.5);
 //homography = Matrix.transform2DScale(homography,0.5);
 // homography = Matrix.transform2DTranslate(homography,5000,10);

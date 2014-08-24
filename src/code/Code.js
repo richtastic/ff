@@ -2327,6 +2327,12 @@ Code.homoIntersectionFromLines2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B
 Code.homoLineFromPoints2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B - dual
 	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2);
 }
+Code.conicFromCoefficients = function(a,b,c,d,e,f){
+	return new Matrix2D().setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
+}
+Code.quadricFromCoefficients = function(a,b,c,d,e,f,g,h,i,j){ // M4D?
+	//return new Matrix3D().setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- Array Matrix Math
 Code.matrix3x3xV3D = function(z,m,x){ // z = matrix*x
 	if(!x){ x=m; m=z; z=new V3D(); }
