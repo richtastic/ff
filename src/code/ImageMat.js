@@ -1296,7 +1296,7 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 
 // projective transform
 ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection){ // projection is 3x3 Matrix
-	var i, j, fr = new V3D(), val = new V3D()
+	var i, j, fr = new V3D(), val = new V3D();
 	if( !(source instanceof Array) ){
 		var destination = new ImageMat(wid,hei);
 		for(j=0;j<hei;++j){
@@ -1328,6 +1328,33 @@ ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH)
 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
 }
 
+// apply transform and just re-get image?
+ImageMat.applyProjection = function(source,sW,sH, wid,hei, projection){
+	var i, j, fr = new V3D(), val = new V3D();
+	if( !(source instanceof Array) ){
+		var destination = new ImageMat(wid,hei);
+		for(j=0;j<hei;++j){
+			for(i=0;i<wid;++i){
+				fr.x = i; fr.y = j;
+				projection.multV2DtoV3D(fr,fr);
+				fr.x /= fr.z; fr.y /= fr.z;
+				source.getPoint(val, fr.x,fr.y);
+				destination.setPoint(i,j, val);
+			}
+		}
+	}else{
+		/*destination = new Array(wid*hei);
+		for(j=0;j<hei;++j){
+			for(i=0;i<wid;++i){
+				fr.x = i; fr.y = j;
+				projection.multV2DtoV3D(fr,fr);
+				fr.x /= fr.z; fr.y /= fr.z;
+				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+			}
+		}*/
+	}
+	return destination;
+}
 
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 	var newWid = wid+left+right, newHei = hei+top+bot;

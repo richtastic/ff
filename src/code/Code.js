@@ -2322,9 +2322,11 @@ Code.lineEquationFromPoints2D = function(a,b){ //
 	return {a:closest.x, b:closest.y, c:-len};
 }
 Code.homoIntersectionFromLines2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B
-	return new V3D(b1*c2-c1*b2,  c1*a2-a1*c2, a1*b2-b1*a2); // 
+	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2); // 
 }
-
+Code.homoLineFromPoints2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B - dual
+	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2);
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- Array Matrix Math
 Code.matrix3x3xV3D = function(z,m,x){ // z = matrix*x
 	if(!x){ x=m; m=z; z=new V3D(); }
