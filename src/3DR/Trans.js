@@ -30,6 +30,28 @@ Trans.prototype.handleImageLoaded = function(e){
 	var points = [new V2D(159,397), new V2D(544,381), new V2D(601,430.5), new V2D(163,456)];
 	var planePoints = [new V2D(0,0), new V2D(planeWidth-1,0), new V2D(planeWidth-1,planeHeight-1,1), new V2D(0,planeHeight-1,1)];
 
+/*
+PICK 5 PAIRS OF ORTHOGONAL LINES
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	var lineA = Code.lineEquationFromPoints2D(points[0],points[3]);
 	var lineB = Code.lineEquationFromPoints2D(points[1],points[2]);
 

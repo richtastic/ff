@@ -277,7 +277,7 @@ p ~ &lt;-b, a, 0&gt;
 ### Projective Rays
 **Ray in P<sup>2</sup> r = &lt;x,y,z&gt;**: a ray is a 'point' in P<sup>2</sup>
 <br/>
-**Planes in P<sup>2</sup>**: defined by 2 distint rays ; a 'line' in P<sup>2</sup> is the intersection of the plane defined by 2 rays and the plane &pi; at z=1
+**Planes in P<sup>2</sup>**: defined by 2 distint rays ; a 'line' in P<sup>2</sup> is the intersection of the plane defined -by 2 rays and the plane &pi; at z=1
 <br/>
 
 
@@ -322,7 +322,7 @@ C&#42; = adj(C) ~ C<sup>-1</sup> <sup>[symmetric,nonsingular]</sup>
 **(Dual) Conjugate Lines of C**: Any two lines l,m satisfying: l<sup>T</sup>C&#42;m = 0
 <br/>
 **Transformation as x = Hx**: C&#42;' = H&middot;C&#42;&middot;H<sup>T</sup>
-<br/>
+<br/>*
 
 
 
@@ -397,7 +397,7 @@ A = sRK + tv
 <br/>
 
 
-## Infinite Dual(line) Conic C&#42;<sub>&infin;</sub>
+### Infinite Dual(line) Conic C&#42;<sub>&infin;</sub>
 *contains all information required to find metric reconstruction*
 <br/>
 l<sub>&infin;</sub> = nul(C&#42;<sub>&infin;</sub>)
@@ -543,6 +543,8 @@ killmenow
 <br/>
 **Point At Infinity**: X = (X,Y,Z,0)
 <br/>
+M = [W&#42; &pi;<sup>T</sup>] ; W&#42;&isin;plane, &pi;&isin;point ; nul(M) = point
+<br/>
 
 
 ### 3D Planes
@@ -558,6 +560,10 @@ killmenow
 <br/>
 **Parameterized From 3 Points**: X = M&middot;x ; &pi;<sup>T</sup>&middot;M = 0 ; x&isin;P<sup>2</sup> ; M = [X|X<sub>1</sub>|X<sub>2</sub>|X<sub>3</sub>] ; ?
 <br/>
+M = [W; X<sup>T</sup>] ; W&isin;line, X&isin;point ; nul(M) = plane
+<br/>
+<br/>
+<br/>
 **Plane at infinity &pi;<sub>&infin;</sub>**: (&pi;<sub>1</sub>,&pi;<sub>2</sub>,&pi;<sub>3</sub>,0) ; contains all points at infinity
 <br/>
 <br/>
@@ -567,14 +573,54 @@ killmenow
 ### 3D Lines
 4DOF
 <br/>
-**Null-Space/Span Representation**: 
+**Null-Space/Span Representation**:  A,B &isin; points;  W = [A<sub>1x4</sub> ; B<sub>1x4</sub>] ; 
 <br/>
-**Plucker Matrices Representation**:
+*span(W<sup>T</sup>)* = pencil of points
 <br/>
-**Plucker Line Coords Representation**:
+*span(right-nul(W))* = pencil of planes (thru line?)
 <br/>
-**Derivations**: join of 2 points, intersection of 2 planes
+P,Q &isin; planes; Dual W = W&#42; = [P<sub>1x4</sub> ; Q<sub>1x4</sub>] ; intersection of 2 planes
 <br/>
+W&#42; = ???W???
+<br/>
+*span(W&#42;<sup>T</sup>)* = pencil of planes
+<br/>
+*span(right-nul(W&#42;))* = pencil of points on line
+<br/>
+**Plucker Matrices Representation**: 4-space representation of l=x&times;y
+<br/>
+A,B &isin; points ; L = A&middot;B<sup>T</sup> - B&middot;A<sup>T</sup>
+<br/>
+L<sub>4x4</sub>, skew-symmetric, rank(L)=2, span(nul(L))=pencil of lines, 
+<br/>
+L' = H&middot;L&middot;H<sup>T</sup>
+<br/>
+P,Q &isin; planes, Dual L&#42; = P&middot;Q<sup>T</sup> - Q&middot;P<sup>T</sup>
+<br/>
+L&#42;' = HH<sup>-T</sup>&middot;L&#42;&middot;H<sup>-1</sup>
+<br/>
+&pi; = L&#42;&middot;X (plane = line joined with point)
+<br/>
+L&#42;X = 0 iff X is on L
+<br/>
+X = L&middot;&pi; (point = intersection of line and plane)
+<br/>
+L&middot;&pi; = 0 iff L is on &pi;
+<br/>
+M = [L<sub>1</sub>,...,L<sub>i</sub>,...,L<sub>n</sub>] ; M&middot;pi; = 0 iff lines are all coplanar (nul(M)==&pi;)
+<br/>
+**Plucker Line Coords Representation**: set of 6 elements from matrix representation (element in P<sup>5</sup> [Klein Quadric])
+<br/>
+L = {l<sub>1,2</sub>,l<sub>1,3</sub>,l<sub>1,4</sub>,l<sub>2,3</sub>,l<sub>4,2</sub>,l<sub>3,4</sub>}
+<br/>
+l<sub>1,2</sub>&middot;l<sub>3,4</sub> + l<sub>1,3</sub>&middot;l<sub>4,2</sub> + l<sub>1,4</sub>&middot;l<sub>2,3</sub> = 0
+<br/>
+Two lines only intersect if coplanar: det[A,B,A',B'] = (L|L') = l<sub>1,2</sub>&middot;l'<sub>3,4</sub> + l<sub>1,3</sub>&middot;l'<sub>4,2</sub> + l<sub>1,4</sub>&middot;l'<sub>2,3</sub> + l'<sub>1,2</sub>&middot;l<sub>3,4</sub> + l'<sub>1,3</sub>&middot;l<sub>4,2</sub> + l'<sub>1,4</sub>&middot;l<sub>2,3</sub> = 0
+<br/>
+Two lines L,L' intersection of two planes: P,Q and P',Q': (L|L')=det[P,Q,P',Q']
+<br/>
+<br/>
+
 
 ### Points on Planes
 <br/>
@@ -604,15 +650,39 @@ killmenow
 
 
 
-### Quadric
+### Quadric Q
+**a&middot;x<sup>2</sup> + b&middot;y<sup>2</sup> + c&middot;z<sup>2</sup> + 2&middot;d&middot;x&middot;y + 2&middot;e&middot;x&middot;z + 2&middot;f&middot;y&middot;z + g&middot;x + h&middot;y + i&middot;z + j = 0**
+<br/>
+**Homogenized**: a&middot;x<sup>2</sup> + b&middot;y<sup>2</sup> + c&middot;z<sup>2</sup> + 2&middot;d&middot;x&middot;y + 2&middot;e&middot;x&middot;z + 2&middot;f&middot;y&middot;z + g&middot;x&middot;w + h&middot;y&middot;w + i&middot;z&middot;w + j&middot;w<sup>2</sup> = 0
+<br/>
+X<sup>T</sup>&middot;Q&middot;X = 0
+<br/>
+9DOF
+```
+    [a d e g]   [X]
+    [d b f h] * [Y] = 0
+    [e f c i]   [Z]
+    [g h i j]   [W]
+```
+<br/>
+**Polar Plane &pi; = Q&middot;X**: polar pla
+<br/>
+<br/>
+<br/>
+Q '= H<sup>-T</sup>&middot;Q&middot;H<sup>-1</sup>
+<br/>
+<br/>
+<br/>
+<br/>
 <br/>
 
 
-
-
-### Dual Quadric
+### Dual Quadric Q&#42;
 <br/>
-
+Q&#42;' = H&middot;Q&#42;&middot;H<sup>T</sup>
+<br/>
+<br/>
+<br/>
 
 
 
