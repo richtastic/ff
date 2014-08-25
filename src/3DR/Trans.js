@@ -153,6 +153,19 @@ lInf.homo();
 
 	homography = Matrix.mult(Ha,lineMatrix);
 	console.log(homography.toString())
+
+// find conic at infinity in original image: 
+// l*C*m = 0 
+// a*l1*m1
+// b*(l1*m2+l2*m1)/2
+// c*l2m2
+// d*(l1*m3+l3*m1)/2
+// e*(l2*m3+l3*m2)/2
+// f*l3*m3
+// 5 unknowns: a,b,c,d,e,f
+// [l1*m1 , (l1*m2+l2*m1)/2 , l2m2, (l1*m3+l3*m1)/2, (l2*m3+l3*m2)/2 , l3*m3] [a,b,c,d,e,f]T = 0
+// 5 paris of orthogonal lines to find C*inf
+
 /*
 // C&#42;' = H&middot;C&#42;&middot;H<sup>T</sup>
 var conic = new Matrix();
@@ -162,6 +175,8 @@ var affineA = [];
 
 
 */
+
+
 
 	// 
 	//homography = Ha

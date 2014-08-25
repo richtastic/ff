@@ -1,8 +1,8 @@
 # Notes
 **For now this will just be a place for random notes**
 1. [Math](#MATHS)
-2. [2D Concepts](#2DSTUFF)
-3. [3D Concepts](#3DSTUFF)
+2. [Projective 2D Concepts](#2DSTUFF)
+3. [Projective 3D Concepts](#3DSTUFF)
 4. [Camera Modeling](#CAMERA)
 5. [Feature Matching](#FEATURE)
 6. [Triangulation](#TRIANGULATE)
@@ -200,7 +200,13 @@ f(x+&delta;) &asymp; f(x) + J(x)&middot;&delta; + &frac12;&delta;<sup>T</sup>&mi
 
 
 <a name="2DSTUFF"></a>
-## 2D Concepts
+## Projective 2D Concepts
+
+### 2D Points
+**Point x = [x<sub>1</sub>;x<sub>2</sub>;x<sub>3</sub>] = (x,y,w) ~ (x,y,1)**: 
+<br/>
+**Point At Infinity**: x = (x,y,0)
+<br/>
 
 ### 2D Lines
 ![Line](./images/line.png "Line")
@@ -319,20 +325,19 @@ C&#42; = adj(C) ~ C<sup>-1</sup> <sup>[symmetric,nonsingular]</sup>
 <br/>
 
 
+
 ### Transforms
 **Colineation, Projectivity, homography, projective transform**
 <br/>
 Invertable mapping of points on lines to points on lines, 8DOF
 <br/>
-Point Transformation:
+**Point Transformation**: x' = H&middot;x
 <br/>
-x' = H&middot;x
+**Line Transformation**: l' = H<sup>-T</sup>&middot;l
 <br/>
-l' = H<sup>-T</sup>&middot;x
+**Conic Transformation**: C' = H<sup>-T</sup>&middot;C&middot;H<sup>-1</sup>
 <br/>
-C' = H<sup>-T</sup>&middot;C&middot;H<sup>-1</sup>
-<br/>
-C&lowast;' = H&middot;C&lowast;&middot;H<sup>T</sup>
+**Dual Conic Transformation**: C&#42;' = H&middot;C&#42;&middot;H<sup>T</sup>
 <br/>
 
 
@@ -392,29 +397,55 @@ A = sRK + tv
 <br/>
 
 
-### Circular Points
-**I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform ; (when fixed: eigenvalues: exp(i&theta;) and exp(-i&theta;))
+## Infinite Dual(line) Conic C&#42;<sub>&infin;</sub>
+*contains all information required to find metric reconstruction*
 <br/>
-**C&#42;<sub>&infin;</sub>**: Infinite dual(line) conic = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub> ; fixed under metric transform
+l<sub>&infin;</sub> = nul(C&#42;<sub>&infin;</sub>)
+<br/>
+H<sub>P</sub>&middot; = [I<sub>2x2</sub> 0<sub>2x1</sub> ; v<sub>2x1</sub><sup>T</sup 1];
+<br/>
+H<sub>A</sub>&middot; = [K<sub>2x2</sub> 0<sub>2x1</sub> ; 0<sub>1x2</sub> 1];
+<br/>
+H<sub>M</sub>&middot; = [sR<sub>2x2</sub> t<sub>2x1</sub> ; 0<sub>1x2</sub> 1];
 <br/>
 C&#42;<sub>&infin;</sub>' = (H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>) C&#42;<sub>&infin;</sub> (H<sub>P</sub>&middot;H<sub>A</sub>&middot;H<sub>M</sub>)<sup>T</sup>
 <br/>
 C&#42;<sub>&infin;</sub>' = U[1,0,0; 0,1,0; 0,0,0]U<sup>T</sup>, U = SVD left-eigenvalues
 <br/>
-**Projective Angle of lines l=(l<sub>1</sub>,l<sub>2</sub>,l<sub>3</sub>) and m=(m<sub>1</sub>,m<sub>2</sub>,m<sub>3</sub>)**: [l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>]/sqrt( (l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;l) &middot; (m<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;m) ) ; invariant to projective transform
+C&#42;<sub>&infin;</sub>' = (H<sub>P</sub>H<sub>A</sub>)C&#42;<sub>&infin;</sub>(H<sub>P</sub><sup>T</sup>H<sub>A</sub><sup>T</sup>)
+<br/>
+C&#42;<sub>&infin;</sub>' = [K&middot;K<sup>T</sup> , K&middot;K<sup>T</sup>&middot;v ; v<sup>T</sup>&middot;K&middot;K<sup>T</sup> , v<sup>T</sup>&middot;K&middot;K<sup>T</sup>&middot;v]
+<br/>
+<br/>
+**IF ONLY AFFINE**: C&#42;<sub>&infin;</sub>' = [(K&middot;K<sup>T</sup>)<sub>2x2</sub>,0<sub>2x1</sub>; 0,0,0];
+<br/>
+S = K&middot;K<sup>T</sup> ; find K by square rooting S (cholesky)
+<br/>
+<br/>
+
+
+### Circular Points
+**I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform ; (when fixed: eigenvalues: exp(i&theta;) and exp(-i&theta;))
+<br/>
+**C&#42;<sub>&infin;</sub>**: C&#42;<sub>&infin;</sub> = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub>
+<br/>
+**Fixed under metric transform (up to complex scale)**: I&middot;H<sub>M</sub> = I ; I = [cos&theta; + i&middot;sin&theta; ; cos&theta; - i&middot;sin&theta; ; 0] ; I = [e<sup>i&theta;</sup> ; i&middot;e<sup>i&theta;</sup> ; 0] ; I = e<sup>i&theta;</sup>[1;i;0]
+<br/>
+a=c=1 ; b=d=e=f=0 ; (up to scale?)
+<br/>
+**Projective Dot Product of lines l=(l<sub>1</sub>,l<sub>2</sub>,l<sub>3</sub>) and m=(m<sub>1</sub>,m<sub>2</sub>,m<sub>3</sub>)**: cos&theta; = [l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;m]/sqrt( (l<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;l) &middot; (m<sup>T</sup>&middot;C&#42;<sub>&infin;</sub>&middot;m) ) ; invariant to projective transform
 <br/>
 
 
 ### Fixed Points
-3 fixed points and 3 fixed lines (through these points); points are eigenvectors of H, lines are eigenvectors of H<sup>-T</sup>
-
-
+3 fixed points and 3 fixed lines (through these points); points are eigenvectors of H, lines are eigenvectors of H<sup>-T</sup>(H<sup>T</sup>?) (H<sup>-T</sup>&middot;l=&lambda;&middot;l)
+<br/>
+<br/>
 **Polar Line:** *pole* point (anywhere) x and corresponding *polar* line Cx is tangent to the conic C at point y, if y<sup>T</sup>Cx = 0
-
+<br/>
 **Correlation A**: invertible mapping from points and lines in P<sup>2</sup> : l = Ax
-
-
-
+<br/>
+<br/>
 
 
 ### Transformation Recovery
@@ -501,8 +532,106 @@ perspectivity
 killmenow
 
 
-<a name="2DSTUFF"></a>
-## 3D Concepts
+<a name="3DSTUFF"></a>
+## Projective 3D Concepts
+**Points and Planes are Dual**: ?
+<br/>
+**Lines are Self-Dual**: ?
+
+### 3D Points
+**Point X = [X<sub>1</sub>;X<sub>2</sub>;X<sub>3</sub>;X<sub>4</sub>] = (X,Y,Z,W) ~ (X,Y,Z,1)**: 
+<br/>
+**Point At Infinity**: X = (X,Y,Z,0)
+<br/>
+
+
+### 3D Planes
+**Plane &pi; = [&pi;<sub>1</sub>;&pi;<sub>2</sub>;&pi;<sub>3</sub>;&pi;<sub>4</sub>]** &pi;<sub>1</sub>&middot;X = &pi;<sub>2</sub>&middot;Y + &pi;<sub>3</sub>&middot;Z + &pi;<sub>4</sub> = 0
+<br/>
+&lt;&pi;<sub>1</sub>,&pi;<sub>2</sub>,&pi;<sub>3</sub>&gt; is normal vector to &pi; , &pi;<sub>4</sub>/||normal|| is distance along normal vector to closest point of &pi; from the origin
+<br/>
+**Homogenized**: &pi;<sub>1</sub>&middot;X = &pi;<sub>2</sub>&middot;Y + &pi;<sub>3</sub>&middot;Z + &pi;<sub>4</sub>W = 0
+<br/>
+**Definition From 3 Points**: [X<sub>A</sub><sub>4x1</sub> ; X<sub>B</sub><sub>4x1</sub> ; X<sub>C</sub><sub>4x1</sub>]&middot;&pi;<sub>4x1</sub> = 0
+<br/>
+**3 Planes Define Point**: [&pi;<sub>A</sub><sub>4x1</sub> ; &pi;<sub>B</sub><sub>4x1</sub> ; &pi;<sub>C</sub><sub>4x1</sub>]&middot;X<sub>4x1</sub> = 0
+<br/>
+**Parameterized From 3 Points**: X = M&middot;x ; &pi;<sup>T</sup>&middot;M = 0 ; x&isin;P<sup>2</sup> ; M = [X|X<sub>1</sub>|X<sub>2</sub>|X<sub>3</sub>] ; ?
+<br/>
+**Plane at infinity &pi;<sub>&infin;</sub>**: (&pi;<sub>1</sub>,&pi;<sub>2</sub>,&pi;<sub>3</sub>,0) ; contains all points at infinity
+<br/>
+<br/>
+<br/>
+
+
+### 3D Lines
+4DOF
+<br/>
+**Null-Space/Span Representation**: 
+<br/>
+**Plucker Matrices Representation**:
+<br/>
+**Plucker Line Coords Representation**:
+<br/>
+**Derivations**: join of 2 points, intersection of 2 planes
+<br/>
+
+### Points on Planes
+<br/>
+
+
+
+### Plane-Plane Intersection
+<br/>
+
+
+
+### P<sup>3</sup> Transform Hierarchy
+<br/>
+**Projective H**: 15DOF projective transform (collineation)
+<br/>
+*invariant: intersection of line and plane, order of contact*
+<br/>
+```
+[X']   [a b c d]   [X]
+[Y'] = [e f g h] * [Y]
+[Z']   [i j k l]   [Z]
+[1 ]   [m n o p]   [1]
+```
+<br/>
+<br/>
+<br/>
+
+
+
+### Quadric
+<br/>
+
+
+
+
+### Dual Quadric
+<br/>
+
+
+
+
+### Transforms
+<br/>
+**Points**: X' = HX
+<br/>
+**Planes**: &pi;' = H<sup>-T</sup>&middot;&pi;
+<br/>
+**Quadrics**: Q' = H<sup>-T</sup>&middot;Q&middot;H<sup>-1</sup>
+<br/>
+**Dual Quadrics**: Q&#42;' = H&middot;Q&#42;&middot;H<sup>T</sup>
+<br/>
+
+
+### 
+<br/>
+
+
 
 
 ### 
