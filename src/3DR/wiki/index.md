@@ -566,6 +566,10 @@ M = [W; X<sup>T</sup>] ; W&isin;line, X&isin;point ; nul(M) = plane
 <br/>
 **Plane at infinity &pi;<sub>&infin;</sub>**: (&pi;<sub>1</sub>,&pi;<sub>2</sub>,&pi;<sub>3</sub>,0) ; contains all points at infinity
 <br/>
+- fixed under affinity
+<br/>
+- 2 parallel planes intersect at &pi;<sub>&infin;</sub>
+<br/>
 <br/>
 <br/>
 
@@ -665,19 +669,26 @@ X<sup>T</sup>&middot;Q&middot;X = 0
     [g h i j]   [W]
 ```
 <br/>
-**Polar Plane &pi; = Q&middot;X**: polar pla
+Q = U<sup>T</sup>&middot;D&middot;U <sub>(symmetric)</sub> ~ H<sup>T</sup>&middot;D&middot;H ; &sigma(D) = signatire of D = &Sigma;+1 - abs(&Sigma;-1)
+<br/>
+**Polar Plane &pi; = Q&middot;X**: polar plane
 <br/>
 <br/>
 <br/>
-Q '= H<sup>-T</sup>&middot;Q&middot;H<sup>-1</sup>
+Q' = H<sup>-T</sup>&middot;Q&middot;H<sup>-1</sup>
 <br/>
 <br/>
 <br/>
 <br/>
 <br/>
+
+**Absolute conic**: &Omega;<sub>&infin;</sub>
 
 
 ### Dual Quadric Q&#42;
+Q&#42; = adj(Q) ~ Q<sup>-1</sup> <sub>(Q is invertible)</sub>
+<br/>
+**Plane defined by Quadric**: &pi;<sup>T</sup>&middot;Q&#42;&middot;&pi; = 0
 <br/>
 Q&#42;' = H&middot;Q&#42;&middot;H<sup>T</sup>
 <br/>
@@ -695,6 +706,96 @@ Q&#42;' = H&middot;Q&#42;&middot;H<sup>T</sup>
 **Quadrics**: Q' = H<sup>-T</sup>&middot;Q&middot;H<sup>-1</sup>
 <br/>
 **Dual Quadrics**: Q&#42;' = H&middot;Q&#42;&middot;H<sup>T</sup>
+<br/>
+
+
+### 3D Transformation Hierarchy
+**Euclidean**: H<sub>E</sub> ; 6DOF: 3 translation, 3 rotation
+<br/>
+volume
+<br/>
+```
+[X']   [ R3x3  t3x1 ]   [X]
+[Y'] = [            ] * [Y]
+[Z']   [            ]   [Z]        t translation
+[1 ]   [ 0  0  0  1 ]   [1]        R rotation matrix
+```
+<br/>
+<br/>
+
+**Similarity/Metric**: H<sub>A</sub> ; 7DOF: +1 scale
+<br/>
+angles, &Omega;<sub>&infin;</sub>
+<br/>
+```
+[X']   [ s*R3x3 t3x1 ]   [X]
+[Y'] = [             ] * [Y]
+[Z']   [             ]   [Z]
+[1 ]   [ 0  0   0  1 ]   [1]
+```
+<br/>
+<br/>
+
+**Affine**: H<sub>A</sub> ; 12DOF
+<br/>
+plane parallelism, volume ratios, centroid, &pi;<sub>&infin;</sub>
+<br/>
+```
+[X']   [ A3x3  t3x1 ]   [X]
+[Y'] = [            ] * [Y]
+[Z']   [            ]   [Z]
+[1 ]   [ 0  0  0  1 ]   [1]      A invertible
+```
+<br/>
+<br/>
+
+**Projective**: H<sub>P</sub> ; 15DOF
+<br/>
+intersection, tangency, gaussian curvature sign
+<br/>
+```
+[X']   [a b c d]   [X]     [ A3x3  t3x1 ]
+[Y'] = [e f g h] * [Y]  =  [            ]
+[Z']   [i j k l]   [Z]     [            ]
+[1 ]   [m n o p]   [1]     [ v1x3    v  ]     v scalar
+```
+<br/>
+<br/>
+<br/>
+
+
+### Screw Decomposition (3D) t = t&parallel; + t&perp; @ S
+General transation+rotation: reduced to rotation about and translation along *screw axis* vector
+<br/>
+**coordinate origin S**: 
+<br/>
+**t&perp;**: direction of rotation, magnitude is rotation angle: &theta;&isin;(0,&pi;)
+<br/>
+**t&parallel;**: direction of rotation, magnitude of translation
+<br/>
+<br/>
+**(1) rotation around t by &theta; (t&perp;)**:
+<br/>
+**(2) translation along t (t&parallel;)**:
+<br/>
+**Special Case: Pure Translation**: 
+<br/>
+**Special Case: Pure Rotation**:
+<br/>
+**Special Case: No Op (Identity)**:
+<br/>
+<br/>
+**Constriction from R matrix and t vector**: ?
+<br/>
+<br/>
+**Constriction to R matrix and t vector**: ?
+<br/>
+<br/>
+if &theta;==0 &rarr; only movement along t by ||t||
+
+
+
+### 
 <br/>
 
 
@@ -2286,7 +2387,8 @@ Feathering - Transparancy Fading between images
 [Multiple View Geometry in Computer Vision - 2002 - Richard Hartly + Andrew Zisserman](?)
 <br/>
 [Conic Sections Beyond Reals^2- Mzuri S. Handlin](http://www.whitman.edu/mathematics/SeniorProjectArchive/2013/Handlin.pdf)
-
+<br/>
+[Review of the Geometry of Screw Axes - Nasser M. Abbasi - 2006](http://12000.org/my_notes/screw_axis/index.pdf)
 
 
 
