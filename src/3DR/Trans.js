@@ -8,9 +8,13 @@ function Trans(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// import image to work with
 	var imageLoader = new ImageLoader("./images/",["desktop1.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
+}
+Trans.prototype.handleMouseClickFxn = function(e){
+	console.log(e.x,e.y)
 }
 Trans.prototype.handleImageLoaded = function(e){
 	var i, d, p, rad;
@@ -33,11 +37,41 @@ Trans.prototype.handleImageLoaded = function(e){
 /*
 PICK 5 PAIRS OF ORTHOGONAL LINES
 */
+var pair, pa, pb, pc, pd, l, m;
+var linesOrthoPairs = [];
+linesOrthoPairs.push([[new V2D(189,411), new V2D(190,419)],[new V2D(189,419), new V2D(204,418)]]); // Q
+linesOrthoPairs.push([[new V2D(273,417), new V2D(289,422)],[new V2D(276,423), new V2D(287,416)]]); // G
+linesOrthoPairs.push([[new V2D(326,424), new V2D(339,423)],[new V2D(339,423), new V2D(344,432)]]); // M
+linesOrthoPairs.push([[new V2D(253,449), new V2D(369,442)],[new V2D(369,442), new V2D(358,422)]]); // SPACE
+linesOrthoPairs.push([[new V2D(430,391), new V2D(442,406)],[new V2D(442,406), new V2D(491,404)]]); // FXNS
+// visual feedback of orthogonal lines
+for(i=0;i<linesOrthoPairs.length;++i){
+	pair = linesOrthoPairs[i];
+	pa = pair[0][0];
+	pb = pair[0][1];
+	pc = pair[1][0];
+	pd = pair[1][1];
+	// draw
+	d = new DO();
+	d.graphics().clear();
+	// 1
+	d.graphics().setLine(1.0,0x999966FF);
+	d.graphics().beginPath();
+	d.graphics().moveTo(pa.x,pa.y);
+	d.graphics().lineTo(pb.x,pb.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	// 2
+	d.graphics().setLine(1.0,0x99FF6699);
+	d.graphics().beginPath();
+	d.graphics().moveTo(pc.x,pc.y);
+	d.graphics().lineTo(pd.x,pd.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	this._root.addChild(d);
+}
 
-
-
-
-
+// construct infinite conic
 
 
 

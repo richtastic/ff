@@ -44,53 +44,53 @@ console.log(line.a*p.x + line.b*p.y + line.c);
 */
 
 
-// screw decomposition of transformation
-var angleX = Math.PI/6;
-var translation = new V3D(1,2,3);
-var trans = new Matrix3D();
-var matrix3 = new Matrix(3,3);
-var matrix = new Matrix(4,4);
+// // screw decomposition of transformation
+// var angleX = Math.PI/6;
+// var translation = new V3D(1,2,3);
+// var trans = new Matrix3D();
+// var matrix3 = new Matrix(3,3);
+// var matrix = new Matrix(4,4);
 
-//eigen = Matrix.eigenValuesAndVectors(matrix);
-//console.log(eigen)
-/*
-var svd = Matrix.SVD(matrix);
-console.log(svd.U.toString());
-console.log(svd.S.toString());
-console.log(svd.V.toString());
-*/
-// transform
-trans.identity();
-trans.rotateX(angleX);
-trans.translate(translation.x,translation.y,translation.z);
+// //eigen = Matrix.eigenValuesAndVectors(matrix);
+// //console.log(eigen)
+// /*
+// var svd = Matrix.SVD(matrix);
+// console.log(svd.U.toString());
+// console.log(svd.S.toString());
+// console.log(svd.V.toString());
+// */
+// // transform
+// trans.identity();
+// trans.rotateX(angleX);
+// trans.translate(translation.x,translation.y,translation.z);
 
-// convert over
-matrix.setFromArray( trans.toArray() );
+// // convert over
+// matrix.setFromArray( trans.toArray() );
 
-var axisAngle = trans.rotationToAxis();
-var transVect = trans.translationToVector();
-console.log( axisAngle.toString() );
-console.log( transVect.toString() );
-
-
-console.log("trans");
+// var axisAngle = trans.rotationToAxis();
+// var transVect = trans.translationToVector();
+// console.log( axisAngle.toString() );
+// console.log( transVect.toString() );
 
 
-// show results
-console.log("trans");
-console.log(trans.toString());
-console.log("matrix");
-console.log(matrix.toString());
+// console.log("trans");
 
-console.log("direction");
 
-console.log("angle");
+// // show results
+// console.log("trans");
+// console.log(trans.toString());
+// console.log("matrix");
+// console.log(matrix.toString());
 
-console.log("distance");
+// console.log("direction");
 
-console.log("center");
+// console.log("angle");
 
-return;
+// console.log("distance");
+
+// console.log("center");
+
+// return;
 
 	var trans = new Trans();
 }
