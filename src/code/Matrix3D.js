@@ -87,6 +87,25 @@ Matrix3D.prototype.rotateVector = function(v,t){ // vector, theta
 	this.mult(mat,this);
 	return this;
 }
+Matrix3D.prototype.translationToVector = function(v){
+	if(v){
+		v.x = this.d; v.y = this.h; v.z = this.l;
+		return v;
+	}
+	return new V3D(this.d,this.h,this.l);
+}
+Matrix3D.prototype.rotationToAxis = function(){
+	var angle = Math.acos((this.a+this.f+this.k-1.0)*0.5);
+	var xNum = this.j - this.g;
+	var yNum = this.c - this.i;
+	var zNum = this.e - this.b;
+	var den = Math.sqrt(xNum*xNum + yNum*yNum + zNum*zNum);
+	var x = xNum/den;
+	var y = yNum/den;
+	var z = zNum/den;
+	return new V4D(x,y,z, angle);
+}
+
 Matrix3D.prototype.rotateX = function(tX){
 	var mat = Matrix3D.temp;
 	var c = Math.cos(tX), s = Math.sin(tX);
@@ -201,6 +220,9 @@ Matrix3D.prototype.toString = function(){
 		  +"[ "+this.e+" "+this.f+" "+this.g+" "+this.h+" ]\n"
 		  +"[ "+this.i+" "+this.j+" "+this.k+" "+this.l+" ]\n"
 		  +"[ 0 0 0 1 ]";
+}
+Matrix3D.prototype.toArray = function(){
+	return [this.a,this.b,this.c,this.d, this.e,this.f,this.g,this.h, this.i,this.j,this.k,this.l, 0,0,0,1];
 }
 Matrix3D.prototype.kill = function(){
 	this.a = undefined; this.b = undefined; this.c = undefined; this.d = undefined;

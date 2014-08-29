@@ -14,6 +14,11 @@
 
 
 TODO:
+- screw/axisAngle<->R+t
+- 2D pick out orthogonal lines
+- read/notes ch3
+- walkthrough reconstruction piece-by-piece manually with set
+...
 - SIFT point extraction
 - store points in file for later
 - bundle adjustment feature matching to get F matrix
@@ -571,6 +576,7 @@ M = [W; X<sup>T</sup>] ; W&isin;line, X&isin;point ; nul(M) = plane
 - 2 parallel planes intersect at &pi;<sub>&infin;</sub>
 <br/>
 <br/>
+**Projective Dot Product of planes &pi;<sub>A</sub>=(&pi;<sub>A1</sub>,&pi;<sub>A2</sub>,&pi;<sub>A3</sub>,&pi;<sub>A4</sub>) and &pi;<sub>B</sub>=(&pi;<sub>B1</sub>,&pi;<sub>B2</sub>,&pi;<sub>B3</sub>,&pi;<sub>B4</sub>)**: cos&theta; = [&pi;<sub>A</sub><sup>T</sup>&middot;Q&#42;<sub>&infin;</sub>&middot;&pi;<sub>B</sub>]/sqrt( (&pi;<sub>A</sub><sup>T</sup>&middot;Q&#42;<sub>&infin;</sub>&middot;&pi;<sub>A</sub>) &middot; (&pi;<sub>B</sub><sup>T</sup>&middot;Q&#42;<sub>&infin;</sub>&middot;&pi;<sub>B</sub>) ) ; invariant to projective transform
 <br/>
 
 
@@ -624,6 +630,35 @@ Two lines only intersect if coplanar: det[A,B,A',B'] = (L|L') = l<sub>1,2</sub>&
 Two lines L,L' intersection of two planes: P,Q and P',Q': (L|L')=det[P,Q,P',Q']
 <br/>
 <br/>
+
+
+### Absolute Conic &Omega;<sub>&infin;</sub>
+Conic fixed to &pi;<sub>&infin;</sub> under metric transform: x<sub>4</sub> = 0 && x<sub>1</sub><sup>2</sup> + x<sub>2</sub><sup>2</sup> + x<sub>3</sub><sup>2</sup> = 0
+<br/>
+[x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub>]&middot;I&middot;[x<sub>1</sub>,x<sub>2</sub>,x<sub>3</sub>]<sup>T</sup> = 0 
+<br/>
+Imaginary points on &pi;<sub>&infin;</sub> only
+<br/>
+- All circles intersect &Omega;<sub>&infin;</sub> at two points (circular points); support plane (&pi;) of circle intersects &pi;<sub>&infin;</sub> at a line
+<br/>
+- All spheres intersect &pi;<sub>&infin;</sub> in &Omega;<sub>&infin;</sub> (circular/elliptic intersection?)
+<br/>
+- Pole/Polar relation with tangent line pairs on &Omega;<sub>&infin;</sub> and line thru tangent points &rarr; orthogonality?
+<br/>
+
+
+### Absolute Dual Quadric Q&#42;<sub>&infin;</sub> (Dual of &Omega;<sub>&infin;</sub>)
+Q&#42;<sub>&infin;</sub> ~ [1,0,0,0; 0,1,0,0; 0,0,1,0; 0,0,0,0];
+<br/>
+rank(Q&#42;<sub>&infin;</sub>) = 3 ; 8DOF
+<br/>
+null(Q&#42;<sub>&infin;</sub>) = &pi;<sub>&infin;</sub> <sub> Q&#42;<sub>&infin;</sub>&middot;&pi;<sub>&infin;</sub> = 0 </sub>
+<br/>
+Consists of all planes tangent to &Omega;<sub>&infin;</sub>
+<br/>
+<br/>
+<br/>
+
 
 
 ### Points on Planes
@@ -764,7 +799,55 @@ intersection, tangency, gaussian curvature sign
 <br/>
 
 
-### Screw Decomposition (3D) t = t&parallel; + t&perp; @ S
+### Screw Decomposition (3D)
+P(t) = **C** + t**S** <sub>P=line, C=center, S=screwAxis</sub>
+<br/>
+**Origin of Screw Frame C = &lt;C<sub>x</sub>,C<sub>y</sub>,C<sub>z</sub>&gt;**: Origin of Screw Frame
+<br/>
+**Screw Vector S = &lt;S<sub>x</sub>,S<sub>y</sub>,S<sub>z</sub>&gt;**: Direction of rotation and magnitude of translation?
+<br/>
+**Rotation Angle &phi;**: &isin; [0,pi]
+<br/>
+<br/>
+**Screw Unit Direction Vector s = unit(S)**: Unit vector version of S
+<br/>
+**Magnitude of Screw Vector d = ||S||**: 
+<br/>
+<br/>
+**?**: ?
+<br/>
+****: ?
+<br/>
+<br/>
+**From R matrix and t vector**: ?
+<br/>
+eigenvector of R is in direction of s
+<br/>
+<br/>
+<br/>
+**To R matrix and t vector**: ?
+<br/>
+move to origin. rotate vector, move in S
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+NOTES:
+C = [R]C + d - (d*S)S
+C = [bxd - bx(bxd)]/[2b*b]
+
+
+
+
+
+
+OLDER CRAP:
+
+**t = t&parallel; + t&perp; @ S**
+<br/>
 General transation+rotation: reduced to rotation about and translation along *screw axis* vector
 <br/>
 **coordinate origin S**: 
