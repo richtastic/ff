@@ -942,12 +942,12 @@ console.log(AA.toString());
 			++rows;
 		}
 		var svd = Matrix.SVD(A);
-console.log("\n");
-console.log(svd.U.toString());
-console.log("\n");
-console.log(svd.S.toString());
-console.log("\n");
-console.log(svd.V.toString());
+// console.log("\n");
+// console.log(svd.U.toString());
+// console.log("\n");
+// console.log(svd.S.toString());
+// console.log("\n");
+// console.log(svd.V.toString());
 
 		while(r<rows){
 			A.dropLastRow();

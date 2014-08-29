@@ -432,7 +432,7 @@ S = K&middot;K<sup>T</sup> ; find K by square rooting S (cholesky)
 ### Circular Points
 **I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform ; (when fixed: eigenvalues: exp(i&theta;) and exp(-i&theta;))
 <br/>
-**C&#42;<sub>&infin;</sub>**: C&#42;<sub>&infin;</sub> = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub>
+**Dual of cirualar points: C&#42;<sub>&infin;</sub>**: C&#42;<sub>&infin;</sub> = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub>
 <br/>
 **Fixed under metric transform (up to complex scale)**: I&middot;H<sub>M</sub> = I ; I = [cos&theta; + i&middot;sin&theta; ; cos&theta; - i&middot;sin&theta; ; 0] ; I = [e<sup>i&theta;</sup> ; i&middot;e<sup>i&theta;</sup> ; 0] ; I = e<sup>i&theta;</sup>[1;i;0]
 <br/>

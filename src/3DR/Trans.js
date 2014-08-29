@@ -37,7 +37,7 @@ Trans.prototype.handleImageLoaded = function(e){
 /*
 PICK 5 PAIRS OF ORTHOGONAL LINES
 */
-var pair, pa, pb, pc, pd, l, m;
+var pair, a,b,c,d, pa, pb, pc, pd, l, m;
 var linesOrthoPairs = [];
 linesOrthoPairs.push([[new V2D(189,411), new V2D(190,419)],[new V2D(189,419), new V2D(204,418)]]); // Q
 linesOrthoPairs.push([[new V2D(273,417), new V2D(289,422)],[new V2D(276,423), new V2D(287,416)]]); // G
@@ -71,16 +71,134 @@ for(i=0;i<linesOrthoPairs.length;++i){
 	this._root.addChild(d);
 }
 
+// construct least squares matrix
+var cols = 5;//6
+var Aconic = new Matrix(linesOrthoPairs.length,cols);
+var Xconic = new Matrix(cols,1);
+var Bconic = new Matrix(Aconic.rows(),1);
+for(i=0;i<linesOrthoPairs.length;++i){
+	pair = linesOrthoPairs[i];
+	pa = pair[0][0];
+	pb = pair[0][1];
+	pc = pair[1][0];
+	pd = pair[1][1];
+	a = new V3D(pa.x,pa.y,1);
+	b = new V3D(pb.x,pb.y,1);
+	l = V3D.cross(a,b);
+	l.homo();
+	c = new V3D(pc.x,pc.y,1);
+	d = new V3D(pd.x,pd.y,1);
+	m = V3D.cross(c,d);
+	m.homo();
+	//
+	Aconic.set(i,0, l.x*m.x );
+	Aconic.set(i,1, (l.x*m.y+l.y*m.x)*0.5 );
+	Aconic.set(i,2, l.y*m.y );
+	Aconic.set(i,3, (l.x*m.z+l.z*m.x)*0.5 );
+	Aconic.set(i,4, (l.y*m.z+l.z*m.y)*0.5 );
+	//Aconic.set(i,4, l.z*m.z );
+	//Aconic.set(i,5, (l.y*m.z+l.z*m.y)*0.5 );
+	//
+	//Bconic.set(i,0, 0 );
+	Bconic.set(i,0, -(l.z*m.z) );
+	//Bconic.set(i,0, -(l.y*m.z+l.z*m.y)*0.5 );
+}
+console.log("... solve time")
+Xconic = Matrix.solve(Aconic,Bconic);
+console.log(Xconic.toString());
+/*
+console.log("... SVD time")
+var svd = Matrix.SVD(Aconic);
+console.log(svd);
+console.log("...")
+console.log(svd.U.toString());
+console.log(svd.S.toString());
+console.log(svd.V.toString());
+console.log("..")
+// var inv = Matrix.inverse(Aconic);
+// console.log(inv.toString());
+// console.log("..")
+// Xconic = Matrix.solve(Aconic,Bconic);
+// console.log(Aconic.toString());
+// console.log(Xconic.toString());
+// find infinite conic coefficients
+var Cconic = svd.V.colToArray(5); // last element
+console.log(Cconic.toString())
+f = Cconic[5];
+a = Cconic[0]/f;
+b = Cconic[1]/f;
+c = Cconic[2]/f;
+d = Cconic[3]/f;
+e = Cconic[4]/f;
+f = 1.0;
+*/
+a = Xconic.get(0,0);
+b = Xconic.get(1,0);
+c = Xconic.get(2,0);
+d = Xconic.get(3,0);
+e = Xconic.get(4,0);
+f = 1.0;
+
+console.log("vars: "+a+" "+b+" "+c+" "+d+" "+e+" "+f)
+
 // construct infinite conic
+var infinConic = new Matrix(3,3);
+infinConic.setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
+console.log(infinConic.toString())
+
+svd = Matrix.SVD(infinConic);
+console.log("...")
+console.log(svd.U.toString());
+console.log(svd.S.toString());
+console.log(svd.V.toString());
+
+var lambda0 = svd.S.get(0,0);
+var lambda1 = svd.S.get(1,1);
+var lambda2 = svd.S.get(2,2);
+
+var U = svd.U;
+var U_T = Matrix.transpose(U);
+/*
+var diag = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
+U_T = Matrix.mult(diag,U_T);
+U = Matrix.transpose(U_T);
+
+*/
+
+//var homography = Matrix.transpose(U);
+var homography = U;
 
 
+homography = Matrix.transform2DTranslate(homography,-200,-50);
 
+/*
+var U = svd.U;
 
+///degenSigma = new Matrix(3,3).setFromArray([lambda0,0,0, 0,lambda1,0, 0,0,lambda2]);
+degenSigma = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
+var Nconic = Matrix.mult(U,Matrix.mult(degenSigma, Matrix.transpose(U) ));
+console.log(Nconic.toString());
 
+svd = Matrix.SVD(Nconic);
+console.log("... AGAIN")
+console.log(svd.U.toString());
+console.log(svd.S.toString());
+console.log(svd.V.toString());
 
+var degenSigma = Matrix.mult(D,infinConic);
+*/
+//var homography = svd.U;//Matrix.mult(svd.U,degenSigma);
+//var homography = Matrix.transpose(svd.U);
 
+console.log(homography.toString());
+console.log("=============================");
 
+// dual is/are circular points
 
+// projectivity = ?
+
+/*
+console.log("...")
 
 
 
@@ -222,16 +340,7 @@ lInf.homo();
 // [l1*m1 , (l1*m2+l2*m1)/2 , l2m2, (l1*m3+l3*m1)/2, (l2*m3+l3*m2)/2 , l3*m3] [a,b,c,d,e,f]T = 0
 // 5 paris of orthogonal lines to find C*inf
 
-/*
-// C&#42;' = H&middot;C&#42;&middot;H<sup>T</sup>
-var conic = new Matrix();
-var dualC = new Matrix();
-
-var affineA = [];
-
-
 */
-
 
 
 	// 
@@ -266,8 +375,8 @@ homography = Matrix.transform2DScale(homography,0.05,0.007);
 homography = Matrix.transform2DTranslate(homography,100,2200);
 */
 //homography = Matrix.transform2DScale(homography,10,0.5);
-//homography = Matrix.transform2DScale(homography,0.5);
-// homography = Matrix.transform2DTranslate(homography,5000,10);
+// homography = Matrix.transform2DScale(homography,0.005);
+// homography = Matrix.transform2DTranslate(homography,200,10);
 
 //homography = Matrix.inverse(homography);
 	//homography = Matrix.transform2DTranslate(homography,-pt.x,-pt.y);
