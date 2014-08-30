@@ -72,7 +72,11 @@ for(i=0;i<linesOrthoPairs.length;++i){
 }
 
 // construct least squares matrix
-var cols = 5;//6
+// A
+// var cols = 6;
+// B
+var cols = 5;
+
 var Aconic = new Matrix(linesOrthoPairs.length,cols);
 var Xconic = new Matrix(cols,1);
 var Bconic = new Matrix(Aconic.rows(),1);
@@ -96,55 +100,49 @@ for(i=0;i<linesOrthoPairs.length;++i){
 	Aconic.set(i,2, l.y*m.y );
 	Aconic.set(i,3, (l.x*m.z+l.z*m.x)*0.5 );
 	Aconic.set(i,4, (l.y*m.z+l.z*m.y)*0.5 );
-	//Aconic.set(i,4, l.z*m.z );
-	//Aconic.set(i,5, (l.y*m.z+l.z*m.y)*0.5 );
-	//
-	//Bconic.set(i,0, 0 );
+	// A
+	// Aconic.set(i,5, l.z*m.z );
+	// Bconic.set(i,0, 0 );
+	// B
 	Bconic.set(i,0, -(l.z*m.z) );
-	//Bconic.set(i,0, -(l.y*m.z+l.z*m.y)*0.5 );
 }
+// A
+// console.log("... SVD time")
+// var svd = Matrix.SVD(Aconic);
+// var Cconic = svd.V.colToArray(5);
+// console.log(Cconic.toString())
+// var sca = 1.0;
+// a = Cconic[0]/sca;
+// b = Cconic[1]/sca;
+// c = Cconic[2]/sca;
+// d = Cconic[3]/sca;
+// e = Cconic[4]/sca;
+// f = 1.0/sca;
+
+// B
 console.log("... solve time")
-Xconic = Matrix.solve(Aconic,Bconic);
+//Xconic = Matrix.solve(Aconic,Bconic);
+Ainv = Matrix.pseudoInverseSimple(Aconic);
+//Ainv = Matrix.pseudoInverseSVD(Aconic);
+console.log(Ainv);
+Xconic = Matrix.mult(Ainv,Bconic);
+
 console.log(Xconic.toString());
-/*
-console.log("... SVD time")
-var svd = Matrix.SVD(Aconic);
-console.log(svd);
-console.log("...")
-console.log(svd.U.toString());
-console.log(svd.S.toString());
-console.log(svd.V.toString());
-console.log("..")
-// var inv = Matrix.inverse(Aconic);
-// console.log(inv.toString());
-// console.log("..")
-// Xconic = Matrix.solve(Aconic,Bconic);
-// console.log(Aconic.toString());
-// console.log(Xconic.toString());
-// find infinite conic coefficients
-var Cconic = svd.V.colToArray(5); // last element
-console.log(Cconic.toString())
-f = Cconic[5];
-a = Cconic[0]/f;
-b = Cconic[1]/f;
-c = Cconic[2]/f;
-d = Cconic[3]/f;
-e = Cconic[4]/f;
-f = 1.0;
-*/
-a = Xconic.get(0,0);
-b = Xconic.get(1,0);
-c = Xconic.get(2,0);
-d = Xconic.get(3,0);
-e = Xconic.get(4,0);
-f = 1.0;
+var sca = 1.0;//1E5;
+a = Xconic.get(0,0)/sca;
+b = Xconic.get(1,0)/sca;
+c = Xconic.get(2,0)/sca;
+d = Xconic.get(3,0)/sca;
+e = Xconic.get(4,0)/sca;
+f = 1.0/sca;
+
 
 console.log("vars: "+a+" "+b+" "+c+" "+d+" "+e+" "+f)
 
 // construct infinite conic
 var infinConic = new Matrix(3,3);
 infinConic.setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
-console.log(infinConic.toString())
+console.log(infinConic.toString());
 
 svd = Matrix.SVD(infinConic);
 console.log("...")
@@ -157,19 +155,38 @@ var lambda1 = svd.S.get(1,1);
 var lambda2 = svd.S.get(2,2);
 
 var U = svd.U;
+var S = svd.S;
+var V = svd.V;
 var U_T = Matrix.transpose(U);
+
+// need upper cholesky factorization to find K of KK^T
+
+
+
+
+
 /*
-var diag = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
-U_T = Matrix.mult(diag,U_T);
-U = Matrix.transpose(U_T);
-
+var D = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
+U = Matrix.mult(U,D);
+U_T = Matrix.transpose(U);
+var A = Matrix.mult(U,Matrix.mult(S,U_T));
+console.log("......A:");
+console.log(A.toString());
+console.log("......SVD:");
+svd = Matrix.SVD(A);
+console.log(svd.U.toString());
+console.log(svd.S.toString());
+console.log(svd.V.toString());
+console.log("...")
 */
-
 //var homography = Matrix.transpose(U);
+//var homography = svd.U;
 var homography = U;
+//homography = Matrix.inverse(homography);
 
+homography = Matrix.transform2DScale(homography,1E1);
+homography = Matrix.transform2DTranslate(homography,-100,-100);
 
-homography = Matrix.transform2DTranslate(homography,-200,-50);
 
 /*
 var U = svd.U;
