@@ -43,7 +43,9 @@ linesOrthoPairs.push([[new V2D(189,411), new V2D(190,419)],[new V2D(189,419), ne
 linesOrthoPairs.push([[new V2D(273,417), new V2D(289,422)],[new V2D(276,423), new V2D(287,416)]]); // G
 linesOrthoPairs.push([[new V2D(326,424), new V2D(339,423)],[new V2D(339,423), new V2D(344,432)]]); // M
 linesOrthoPairs.push([[new V2D(253,449), new V2D(369,442)],[new V2D(369,442), new V2D(358,422)]]); // SPACE
-linesOrthoPairs.push([[new V2D(430,391), new V2D(442,406)],[new V2D(442,406), new V2D(491,404)]]); // FXNS
+linesOrthoPairs.push([[new V2D(430,390), new V2D(442,405)],[new V2D(442,406), new V2D(491,404)]]); // FXNS
+// moar points
+linesOrthoPairs.push([[new V2D(521,423), new V2D(543,395)],[new V2D(570,420), new V2D(497,397)]]); // NUMS
 // visual feedback of orthogonal lines
 for(i=0;i<linesOrthoPairs.length;++i){
 	pair = linesOrthoPairs[i];
@@ -144,6 +146,13 @@ var infinConic = new Matrix(3,3);
 infinConic.setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
 console.log(infinConic.toString());
 
+
+// EIGENVECTORS?
+var eigs = Matrix.eigenValuesAndVectors(infinConic);
+console.log(eigs)
+
+
+
 svd = Matrix.SVD(infinConic);
 console.log("...")
 console.log(svd.U.toString());
@@ -184,8 +193,8 @@ console.log("...")
 var homography = U;
 //homography = Matrix.inverse(homography);
 
-homography = Matrix.transform2DScale(homography,1E1);
-homography = Matrix.transform2DTranslate(homography,-100,-100);
+homography = Matrix.transform2DScale(homography,100);
+homography = Matrix.transform2DTranslate(homography,-400,-100);
 
 
 /*
