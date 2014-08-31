@@ -90,7 +90,27 @@ console.log(line.a*p.x + line.b*p.y + line.c);
 
 // console.log("center");
 
-// return;
+/*
+var A = [1,2,3, 4,5,6, 9,8,2];
+var m = 3;
+var n = 3;
+var A_T = Matrix.matrixArrayTranspose(A,m,n);
+console.log( Matrix.matrixArrayToString(A, m,n) );
+console.log( Matrix.matrixArrayToString(A_T, m,n) );
+A = Matrix.matrixArrayMultiply(A,m,n, A_T,n,m);
+//var A = [14,32,31, 32,77,88, 31,88,149];
+console.log( Matrix.matrixArrayToString(A, m,n) );
+var B = Matrix.matrixArrayCholeskyLL( A,m,n )
+console.log( Matrix.matrixArrayToString(B,m,n) );
+//console.log( B.toString() );
+*/
+
+var pointsFr = [];
+var pointsTo = [];
+Code.projectiveDLT(pointsFr,pointsTo);
+
+
+return;
 
 	var trans = new Trans();
 }

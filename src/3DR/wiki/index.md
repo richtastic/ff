@@ -1,5 +1,5 @@
 # Notes
-**For now this will just be a place for random notes**
+
 1. [Math](#MATHS)
 2. [Projective 2D Concepts](#2DSTUFF)
 3. [Projective 3D Concepts](#3DSTUFF)
@@ -432,7 +432,7 @@ S = K&middot;K<sup>T</sup> ; find K by square rooting S (cholesky)
 ### Circular Points
 **I and J**: I=[1;i;0], J=[1;-i;0] ; fixed under metric transform ; (when fixed: eigenvalues: exp(i&theta;) and exp(-i&theta;))
 <br/>
-**Dual of cirualar points: C&#42;<sub>&infin;</sub>**: C&#42;<sub>&infin;</sub> = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub>
+**Dual of circular points: C&#42;<sub>&infin;</sub>**: C&#42;<sub>&infin;</sub> = I&middot;J<sup>T</sup> + J&middot;I<sup>T</sup> ~ [1,0,0; 0,1,0; 0,0,0] ; nul(C&#42;<sub>&infin;</sub>)=l<sub>&infin;</sub>
 <br/>
 **Fixed under metric transform (up to complex scale)**: I&middot;H<sub>M</sub> = I ; I = [cos&theta; + i&middot;sin&theta; ; cos&theta; - i&middot;sin&theta; ; 0] ; I = [e<sup>i&theta;</sup> ; i&middot;e<sup>i&theta;</sup> ; 0] ; I = e<sup>i&theta;</sup>[1;i;0]
 <br/>
@@ -503,7 +503,79 @@ SOLVE FOR s1,s2,s3: [a b c; d e f; 0 0 0]&middot;[s1;s2;s3] = 0; [a,...,f] known
 
 
 
-### 
+### 2D Homography
+Solve for H where: x' = H&middot;x
+<br/>
+```
+[x']   [a b c]   [x]
+[y'] = [d e f] * [y]
+[z']   [g h i]   [z]
+```
+<br/>
+**Solve straight-forward version**:
+<br/>
+x' = a&middot;x + b&middot;y + c&middot;z ; y' = d&middot;x + e&middot;y + f&middot;z ;  z' = g&middot;x + h&middot;y + i&middot;z
+<br/>
+<br/>
+x'/z' = (a&middot;x + b&middot;y + c&middot;z)/(g&middot;x + h&middot;y + i&middot;z)
+<br/>
+x'&middot;(g&middot;x + h&middot;y + i&middot;z) = z'&middot;(a&middot;x + b&middot;y + c&middot;z)
+<br/>
+g&middot;x&middot;x' + h&middot;y&middot;x' + i&middot;z&middot;x' = a&middot;x&middot;z' + b&middot;y&middot;z' + c&middot;z&middot;z'
+<br/>
+g&middot;x&middot;x' + h&middot;y&middot;x' + i&middot;z&middot;x' - a&middot;x&middot;z' - b&middot;y&middot;z' - c&middot;z&middot;z' = 0 **[1]**
+<br/>
+<br/>
+y'/z' = (d&middot;x + e&middot;y + f&middot;z)/(g&middot;x + h&middot;y + i&middot;z)
+<br/>
+y'&middot;(g&middot;x + h&middot;y + i&middot;z) = z'&middot;(d&middot;x + e&middot;y + f&middot;z)
+<br/>
+g&middot;x&middot;y' + h&middot;y&middot;y' + i&middot;z&middot;y' = d&middot;x&middot;z' + e&middot;y&middot;z' + f&middot;z&middot;z'
+<br/>
+g&middot;x&middot;y' + h&middot;y&middot;y' + i&middot;z&middot;y' - d&middot;x&middot;z' - e&middot;y&middot;z' - f&middot;z&middot;z' = 0 **[2]**
+<br/>
+<br/>
+[1] + [2]
+```
+%   a     b     c     d     e     f     g     h     i
+[ -x*z' -y*z' -z*z'   0     0     0    x*x'  y*x'  z*x' ] 
+[   0     0     0   -x*z' -y*z' -z*z'  x*y'  y*y'  z*y' ] * [a,b,c,d,e,f,g,h,i]' = [0]
+[   .     .     .     .     .     .     .     .     .   ]
+```
+<br/>
+<br/>
+
+**Solve cross product version**:
+<br/>
+x'&times;x' = x'&times;Hx &rarr; 0 = x'&times;Hx
+<br/>
+[x' y' z']&times;[a&middot;x + b&middot;y + c&middot;z ; d&middot;x + e&middot;y + f&middot;z ; g&middot;x + h&middot;y + i&middot;z]
+<br/>
+**i**: y'&middot;(g&middot;x + h&middot;y + i&middot;z) - z'&middot;(d&middot;x + e&middot;y + f&middot;z) = 0
+<br/>
+g&middot;x&middot;y' + h&middot;y&middot;y' + i&middot;z&middot;y' - d&middot;x&middot;z' - e&middot;y&middot;z' - f&middot;z&middot;z' = 0 **[1]**
+<br/>
+**j**: z'&middot;(a&middot;x + b&middot;y + c&middot;z) - x'&middot;(g&middot;x + h&middot;y + i&middot;z) = 0
+<br/>
+a&middot;x&middot;z' + b&middot;y&middot;z' + c&middot;z&middot;z' - g&middot;x&middot;x' - h&middot;y&middot;x' - i&middot;z&middot;x' = 0 **[2]**
+<br/>
+**k**: x'&middot;(d&middot;x + e&middot;y + f&middot;z) - y'&middot;(a&middot;x + b&middot;y + c&middot;z) = 0
+<br/>
+d&middot;x&middot;x' + e&middot;y&middot;x' + f&middot;z&middot;x' - a&middot;x&middot;y' - b&middot;y&middot;y' - c&middot;z&middot;y' = 0 **[3]**
+<br/>
+<br/>
+[1] + [2] + [3]
+```
+%   a     b     c     d     e     f     g     h     i
+[   0     0     0   -x*z' -y*z' -z*z'  x*y'  y*y'  z*y' ] 
+[  x*z'  y*z'  z*z'   0     0     0   -x*x' -y*x' -z*x' ] * [a,b,c,d,e,f,g,h,i]' = [0]
+[ -x*y' -y*y' -z*y'  x*x'  y*x'  z*x'   0     0     0   ]
+[   .     .     .     .     .     .     .     .     .   ]
+```
+<br/>
+<br/>
+**With Lines**: Solve for H<sup>T</sup>, where l' = H<sup>T</sup>&middot;l
+<br/>
 <br/>
 
 
@@ -799,6 +871,11 @@ intersection, tangency, gaussian curvature sign
 <br/>
 
 
+
+<a name="RANDOM">
+## Random Stuff
+
+
 ### Screw Decomposition (3D)
 P(t) = **C** + t**S** <sub>P=line, C=center, S=screwAxis</sub>
 <br/>
@@ -878,7 +955,71 @@ if &theta;==0 &rarr; only movement along t by ||t||
 
 
 
+### Algebraic Distance ? 
+ ? d<sub>alg</sub>(**a**,**b**) = (**a**&times;**b**)<sup>1/2</sup> =  ||**&epsilon;**||
+<br/>
+minimized by least squares
+<br/>
+
+
+### Geometric Distance
+d<sub>geo</sub>(**a**,**b**) = ( &Sum;(a<sub>i</sub> - b<sub>i</sub>) )<sup>1/2</sup>
+<br/>
+Euclidean distance
+<br/>
+**Single Space error**: ( &Sum;d(x'<sub>i</sub>,H&middot;x<sub>i</sub>)<sup>2</sup> )<sup>1/2</sup>
+<br/>
+**Symmetric transfer (errors in space A and space B)**: ( &Sum;d(x<sub>i</sub>,H<sup>-1</sup>H&middot;x'<sub>i</sub>)<sup>2</sup> + d(x'<sub>i</sub>,H&middot;x<sub>i</sub>)<sup>2</sup> )<sup>1/2</sup>
+<br/>
+**Reprojection (perfect: x,x' ; changing: &chi;,&chi;')**: ( &Sum;d(x<sub>i</sub>,&chi;<sub>i</sub>)<sup>2</sup> + d(x'<sub>i</sub>,&chi;'<sub>i</sub>)<sup>2</sup> )<sup>1/2</sup>
+<br/>
+&rarr; fitting a surface in P/&Reals;<sup>2&middot;dim</sup>, (x<sub>i</sub>,y<sub>i</sub>,x'<sub>i</sub>,y'<sub>i</sub>,..)
+<br/>
+<br/>
+
+
+
+### Sampson Error ~ Mahalanobis Norm
+*(reduces to geometric error in linear case)*
+<br/>
+||&Delta;<sub>x</sub>||<sup>2</sup> : (min) distance from variety surface
+<br/>
+C<sub>H</sub>(x) = A&middot;h (for finding coefficients a,..,i of H for point correspondences)
+<br/>
+C<sub>H</sub>(x+&Delta;<sub>x</sub>) = C<sub>H</sub>(x) + (&part;C<sub>H</sub>/&part;x)&middot;&Delta;<sub>x</sub>
+<br/>
+&Delta;<sub>x</sub> = &chi; - x
+<br/>
+&chi; = point on verity(4D-surface) : C<sub>H</sub>(&chi;) = 0
+<br/>
+<br/>
+C<sub>H</sub>(x) + (&part;C<sub>H</sub>/&part;x)&middot;&Delta;<sub>x</sub> = 0 &harr; J&middot;&Delta;<sub>x</sub> = -&epsilon;
+<br/>
+&epsilon; &equiv; C<sub>H</sub>(x) &equiv; cost
+<br/>
+*Want vector &Delta;<sub>x</sub> that minimizes ||&Delta;<sub>x</sub>||*
+<br/>
+&rarr; &Delta;<sub>x</sub> = -J<sup>T</sup>(J&middot;J<sup>T</sup>)<sup>-1</sup>&epsilon;
+<br/>
+||&Delta;<sub>x</sub>||<sup>2</sup> = &epsilon;<sup>T</sup>(J&middot;J<sup>T</sup>)<sup>-1</sup>&epsilon;
+<br/>
+D<sub>&perp;</sub> = &Sum;&epsilon;<sub>i</sub><sup>T</sup>(J<sub>i</sub>&middot;J<sub>i</sub><sup>T</sup>)<sup>-1</sup>&epsilon;<sub>i</sub>
+<br/>
+<br/>
+
+
+
+
+
+
+
+### Maximum Liklihood Estimation (MLS)
+<br/>
+<br/>
+
+
 ### 
+<br/>
 <br/>
 
 
@@ -957,7 +1098,13 @@ Point Triangulation
 <br/>
 <br/>
 
-LaGrange Multipliers
+**LaGrange Multipliers:**
+<br />
+Find max/min of f(x), subject to g(x) = c &rarr; F(x,&lambda;) = f(x) - &lambda;[g(x)-k] 
+<br />
+Solve F<sub>x</sub> = 0 , F<sub>&lambda;</sub> = 0
+<br />
+
 
 Gradient Descent
 
@@ -2472,7 +2619,7 @@ Feathering - Transparancy Fading between images
 [Conic Sections Beyond Reals^2- Mzuri S. Handlin](http://www.whitman.edu/mathematics/SeniorProjectArchive/2013/Handlin.pdf)
 <br/>
 [Review of the Geometry of Screw Axes - Nasser M. Abbasi - 2006](http://12000.org/my_notes/screw_axis/index.pdf)
-
-
+<br/>
+[Numerical Recipes in C - Press, Teukolsky, Vetterling, Flannery - 1992](http://apps.nrbook.com/c/index.html)
 
 

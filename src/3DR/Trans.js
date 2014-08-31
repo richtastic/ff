@@ -46,6 +46,8 @@ linesOrthoPairs.push([[new V2D(253,449), new V2D(369,442)],[new V2D(369,442), ne
 linesOrthoPairs.push([[new V2D(430,390), new V2D(442,405)],[new V2D(442,406), new V2D(491,404)]]); // FXNS
 // moar points
 linesOrthoPairs.push([[new V2D(521,423), new V2D(543,395)],[new V2D(570,420), new V2D(497,397)]]); // NUMS
+linesOrthoPairs.push([[new V2D(158,405), new V2D(417,391)],[new V2D(417,391), new V2D(453,438)]]); // KEYS
+
 // visual feedback of orthogonal lines
 for(i=0;i<linesOrthoPairs.length;++i){
 	pair = linesOrthoPairs[i];
@@ -70,6 +72,7 @@ for(i=0;i<linesOrthoPairs.length;++i){
 	d.graphics().lineTo(pd.x,pd.y);
 	d.graphics().endPath();
 	d.graphics().strokeLine();
+	// add
 	this._root.addChild(d);
 }
 
@@ -91,11 +94,17 @@ for(i=0;i<linesOrthoPairs.length;++i){
 	a = new V3D(pa.x,pa.y,1);
 	b = new V3D(pb.x,pb.y,1);
 	l = V3D.cross(a,b);
-	l.homo();
+	//l.homo();
 	c = new V3D(pc.x,pc.y,1);
 	d = new V3D(pd.x,pd.y,1);
 	m = V3D.cross(c,d);
-	m.homo();
+	//m.homo();
+	//
+	// console.log("...")
+	// console.log(a.toString()+" | "+b.toString())
+	// console.log(c.toString()+" | "+d.toString())
+	// console.log("...")
+	// console.log(l.toString()+" | "+m.toString())
 	//
 	Aconic.set(i,0, l.x*m.x );
 	Aconic.set(i,1, (l.x*m.y+l.y*m.x)*0.5 );
@@ -108,6 +117,9 @@ for(i=0;i<linesOrthoPairs.length;++i){
 	// B
 	Bconic.set(i,0, -(l.z*m.z) );
 }
+console.log("... A|B");
+console.log(Aconic.toString());
+console.log(Bconic.toString());
 // A
 // console.log("... SVD time")
 // var svd = Matrix.SVD(Aconic);
@@ -128,7 +140,7 @@ Ainv = Matrix.pseudoInverseSimple(Aconic);
 //Ainv = Matrix.pseudoInverseSVD(Aconic);
 console.log(Ainv);
 Xconic = Matrix.mult(Ainv,Bconic);
-
+console.log("... X:");
 console.log(Xconic.toString());
 var sca = 1.0;//1E5;
 a = Xconic.get(0,0)/sca;
@@ -149,12 +161,24 @@ console.log(infinConic.toString());
 
 // EIGENVECTORS?
 var eigs = Matrix.eigenValuesAndVectors(infinConic);
-console.log(eigs)
-
+var eigVec = eigs.vectors;
+var eigVal = eigs.values;
+var eigenU = new Matrix(3,3); // orthonormal
+var eigenV = new Matrix(3,3); // diagonal
+for(i=0;i<3;++i){ // column
+	eigenV.set(i,i, eigVal[i]);
+	for(j=0;j<3;++j){ // row
+		eigenU.set(j,i, eigVec[i].get(j,0) );
+	}
+}
+console.log("... EIGEN")
+console.log(eigenU.toString())
+console.log(eigenV.toString())
+var eigenU_T = Matrix.transpose(eigenU);
 
 
 svd = Matrix.SVD(infinConic);
-console.log("...")
+console.log("... SVD")
 console.log(svd.U.toString());
 console.log(svd.S.toString());
 console.log(svd.V.toString());
@@ -163,15 +187,38 @@ var lambda0 = svd.S.get(0,0);
 var lambda1 = svd.S.get(1,1);
 var lambda2 = svd.S.get(2,2);
 
+//var D = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,Math.sqrt(lambda2)]);
+var D = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
+var E = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,1]);
+
 var U = svd.U;
 var S = svd.S;
 var V = svd.V;
+U = Matrix.mult(U,D);
+// more accurate:
+// U.setFromArray([
+//   -3.9936e+02, -5.2657e+01, -2.0606e-05,
+//   -4.2094e+02, 4.9958e+01, -2.4337e-04,
+//   -9.9889e-01, 9.9942e-02, 1.1080e-01]);
+
+
 var U_T = Matrix.transpose(U);
+
+
+var newA = Matrix.mult(U,Matrix.mult(E,U_T));
+console.log("COMPARE:");
+console.log(newA.toString());
+console.log("VS:");
+console.log(infinConic.toString());
 
 // need upper cholesky factorization to find K of KK^T
 
 
+// U = eigenU;
+// V = eigenU;
+// U_T = eigenU_T;
 
+console.log("...");
 
 
 /*
@@ -193,7 +240,7 @@ console.log("...")
 var homography = U;
 //homography = Matrix.inverse(homography);
 
-homography = Matrix.transform2DScale(homography,100);
+homography = Matrix.transform2DScale(homography,1E-2);
 homography = Matrix.transform2DTranslate(homography,-400,-100);
 
 
@@ -427,7 +474,7 @@ homography = Matrix.transform2DTranslate(homography,100,2200);
 	d.matrix().identity();
 	d.matrix().translate(imageWidth,0);
 	this._root.addChild(d);
-	console.log(",,,");
+	console.log(".........");
 	/*
 	
 

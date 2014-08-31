@@ -2669,6 +2669,70 @@ Code.generateImageFromBit64encode = function(str, fxn){
 
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// PROJECTIVITIES
+Code.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points
+// allow for only 8 points -> null space: SVD V_last
+	var i, j, fr, to, len = pointsFr.length;
+	var v = new V3D(), u = new V3D();
+	var rows = len*3;
+	var cols = 9;
+	var A = new Matrix(rows,cols);
+	var B = new Matrix(rows,1); // zeros
+	for(i=0;i<len;++i){
+		fr = pointsFr[i];
+		to = pointsTo[i];
+		u.x=fr.x; u.y=fr.y; u.z=(fr.z!==undefined)?fr.z:1.0;
+		v.x=to.x; v.y=to.y; v.z=(to.z!==undefined)?to.z:1.0;
+		A.set(i*3+0,0, 0);
+		A.set(i*3+0,1, 0);
+		A.set(i*3+0,2, 0);
+		A.set(i*3+0,3, -u.x*v.z);
+		A.set(i*3+0,4, -u.y*v.z);
+		A.set(i*3+0,5, -u.z*v.z);
+		A.set(i*3+0,6,  u.x*v.y);
+		A.set(i*3+0,7,  u.y*v.y);
+		A.set(i*3+0,8,  u.z*v.y);
+		//
+		A.set(i*3+1,0,  u.x*v.z);
+		A.set(i*3+1,1,  u.y*v.z);
+		A.set(i*3+1,2,  u.z*v.z);
+		A.set(i*3+1,3,  0);
+		A.set(i*3+1,4,  0);
+		A.set(i*3+1,5,  0);
+		A.set(i*3+1,6,  -u.x*v.x);
+		A.set(i*3+1,7,  -u.y*v.x);
+		A.set(i*3+1,8,  -u.z*v.x);
+		//
+		A.set(i*3+2,0, -u.x*v.y);
+		A.set(i*3+2,1, -u.y*v.y);
+		A.set(i*3+2,2, -u.z*v.y);
+		A.set(i*3+2,3,  u.x*v.x);
+		A.set(i*3+2,4,  u.y*v.x);
+		A.set(i*3+2,5,  u.z*v.x);
+		A.set(i*3+2,6, 0);
+		A.set(i*3+2,7, 0);
+		A.set(i*3+2,8, 0);
+	}
+	var Ainv = Matrix.pseudoInverseSimple(A);
+	var X = Matrix.mult(Ainv,B);
+	var a = x.get(0,0);
+	var b = x.get(1,0);
+	var c = x.get(2,0);
+	var d = x.get(3,0);
+	var e = x.get(4,0);
+	var f = x.get(5,0);
+	var g = x.get(6,0);
+	var h = x.get(7,0);
+	var i = x.get(8,0);
+	var H = new Matrix(3,3).setFromArray([a,b,c,d,e,f,g,h,i]);
+	// SVD ?
+	return H;
+}
+/*
+[   0     0     0   -x*z' -y*z' -z*z'  x*y'  y*y'  z*y' ] 
+[  x*z'  y*z'  z*z'   0     0     0   -x*x' -y*x' -z*x' ] * [a,b,c,d,e,f,g,h,i]' = [0]
+[ -x*y' -y*y' -z*y'  x*x'  y*x'  z*x'   0     0     0   ]
+*/
 
 
 

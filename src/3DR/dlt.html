@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>DLT</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["DLT2D.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var dlt = new DLT2D();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

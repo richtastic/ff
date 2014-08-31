@@ -1229,6 +1229,115 @@ Matrix.power = function(A,power){
 	}
 	return (new Matrix(A.rows(),A.cols())).setFromArrayMatrix(Apow);
 }
+
+/*
+array -only calculations
+*/
+Matrix.matrixArrayMultiply = function(A,m,n, B,n,p){ // 
+	var i, j, k, v;
+	C = Code.newArrayZeros(m*p);
+	for(j=0;j<m;++j){ // rowsA
+		for(i=0;i<p;++i){ // colsB
+			v = 0.0;
+			for(k=0;k<n;++k){ // colsA,rowsB
+				v += A[j*m+k]*B[k*n+i];
+			}
+			C[j*m+i] = v;
+		}
+	}
+	return C;
+}
+Matrix.matrixArrayTranspose = function(A,m,n){ // 
+	var i, j, C = new Array(m*n);
+	for(j=0;j<n;++j){ // rowsC
+		for(i=0;i<m;++i){ // colsC
+			C[j*n+i] = A[i*m+j];
+		}
+	}
+	return C;
+}
+Matrix.matrixArrayCholeskyLL = function(A, n){ // A is symmetric positive definite
+	var m=n, sum, i, j, k;
+	var len = m*n;
+	var B = Code.copyArray(A);
+	var p = Code.newArrayZeros(m);
+	// fill in lower triangle
+	for(j=0;j<m;++j){ // row
+		for(i=j;i<n;++i){ // col
+			sum = B[j*m + i];
+			for(k=j-1;k>=0;--k){
+				sum -= B[j*m+k]*B[i*m+k];
+			}
+			if(i==j){
+				if(sum<=0.0){ console.log("choleskyLL fail"); return null; }
+				p[j] = Math.sqrt(sum);
+			}else{
+				B[i*m+j] = sum/p[j];
+			}
+		}
+	}
+	// fill in pivots and zero upper
+	for(j=0;j<m;++j){ // row
+		B[j*m + j] = p[j]; // pivot
+		for(i=j+1;i<n;++i){ // col
+			B[j*m + i] = 0.0; // upper
+		}
+	}
+	delete p; // temp var
+	return B;
+}
+
+/*Matrix.choleskyBackSub = function(A, n){ // A is symmetric positive definite
+	var sum, i, j, k, len = m*n;
+	B = new Array(len);
+	for(i=1;i<n;++i){
+		for(j=1;j<n;++j){
+		}
+	}
+}*/
+
+Matrix.matrixArrayToString = function(A, m,n){
+	var i, j, index, num, val, str = "";
+	var exp = 4;
+	var minLen = exp+7;
+	var rowm1 = m-1;
+	for(j=0;j<m;++j){ // rows
+		for(i=0;i<n;++i){ // cols
+			index = j*n + i;
+			num = A[index];
+			if(num>=0){ 
+				val = " "+num.toExponential(exp);
+			}else{
+				val = num.toExponential(exp);
+			}
+			str += Code.padStringLeft(val,minLen," ");
+		}
+		str += "; ";
+		if(j<rowm1){
+			str += "\n";
+		}
+	}
+	return str;
+}
+
+/*
+exp = exp===undefined?4:exp;
+	var minLen = exp+6+1; // -#.E+#
+	var i, j, rowm1 = this._rowCount-1, colm1 = this._colCount-1, num, val;
+	var str = "";
+	for(j=0;j<=rowm1;++j){
+		//str += "[ ";
+		str += " ";
+		for(i=0;i<=colm1;++i){
+			num = this._rows[j][i];
+			val = num.toExponential(exp);
+			if(num>=0){ // +/1 prefix
+				val = " " + val;
+			}
+			str += Code.padStringLeft(val,minLen," ");
+*/
+
+
 /*
 Matrix.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_inv.html
 	var det = 1/(m.a*m.d - m.b*m.c);
