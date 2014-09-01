@@ -2670,6 +2670,46 @@ Code.generateImageFromBit64encode = function(str, fxn){
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// PROJECTIVITIES
+Code.normalizePoints2D = function(currentPoints, nextPoints, matrix, inverse){ // isotropic? scaling to average point = 1,1,1
+	if(!matrix){ matrix = new Matrix2D(); }
+	var i, p, len=currentPoints.length, cen=new V2D(), avg=new V2D();
+	var root2 = Math.sqrt(2);
+	// find center
+	for(i=0;i<len;++i){
+		p = currentPoints[i];
+		cen.x += p.x;
+		cen.y += p.y;
+	}
+	cen.x /= len;
+	cen.y /= len;
+	// find average-center vector
+	for(i=0;i<len;++i){
+		p = currentPoints[i];
+		avg.x += Math.abs(p.x-cen.x);
+		avg.y += Math.abs(p.y-cen.y);
+	}
+	avg.x /= len;
+	avg.y /= len;
+	// calculate matrix
+	matrix.identity();
+	matrix.translate(-cen.x,-cen.y);
+	matrix.scale(root2/avg.x,root2/avg.y);
+	// appy to all points
+	if(nextPoints){
+		for(i=0;i<len;++i){
+			p = matrix.multV2D(new V2D(),currentPoints[i]);
+			nextPoints.push(p);
+		}
+	}
+	// if(inverse){
+	// 	// .. ?
+	// }
+	// matrix.identity();
+	// matrix.scale(avg.x/root2,avg.y/root2);
+	// matrix.translate(cen.x,cen.y);
+	return matrix;
+}
+
 Code.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points
 // allow for only 8 points -> null space: SVD V_last
 	var i, j, fr, to, len = pointsFr.length;
@@ -2713,19 +2753,18 @@ Code.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points
 		A.set(i*3+2,7, 0);
 		A.set(i*3+2,8, 0);
 	}
-	var Ainv = Matrix.pseudoInverseSimple(A);
-	var X = Matrix.mult(Ainv,B);
-	var a = x.get(0,0);
-	var b = x.get(1,0);
-	var c = x.get(2,0);
-	var d = x.get(3,0);
-	var e = x.get(4,0);
-	var f = x.get(5,0);
-	var g = x.get(6,0);
-	var h = x.get(7,0);
-	var i = x.get(8,0);
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(8);
+	var a = coeff[0];
+	var b = coeff[1];
+	var c = coeff[2];
+	var d = coeff[3];
+	var e = coeff[4];
+	var f = coeff[5];
+	var g = coeff[6];
+	var h = coeff[7];
+	var i = coeff[8];
 	var H = new Matrix(3,3).setFromArray([a,b,c,d,e,f,g,h,i]);
-	// SVD ?
 	return H;
 }
 /*

@@ -118,6 +118,9 @@ Matrix2D.prototype.get = function(){
 Matrix2D.prototype.toString = function(){
 	return "[ "+this.a+" "+this.b+" "+this.x+" | "+this.c+" "+this.d+" "+this.y+" ]";
 }
+Matrix2D.prototype.toArray = function(){
+	return [this.a,this.b,this.x, this.c,this.d,this.y, 0,0,1];
+}
 Matrix2D.prototype.kill = function(){
 	this.a = undefined; this.b = undefined; this.c = undefined; this.d = undefined; this.x = undefined; this.y = undefined;
 }
