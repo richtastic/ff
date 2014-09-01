@@ -958,7 +958,7 @@ if &theta;==0 &rarr; only movement along t by ||t||
 ### Algebraic Distance ? 
  ? d<sub>alg</sub>(**a**,**b**) = (**a**&times;**b**)<sup>1/2</sup> =  ||**&epsilon;**||
 <br/>
-minimized by least squares
+minimized by least squares: minimizes: ||A&middot;h||
 <br/>
 
 
@@ -1009,11 +1009,76 @@ D<sub>&perp;</sub> = &Sum;&epsilon;<sub>i</sub><sup>T</sup>(J<sub>i</sub>&middot
 
 
 
+### Mahalanobis Distance
+Takes into account error/spread in different directions (covariance &Sigma;)
+<br/>
+**||x-&chi;||<sub>&Sigma;</sub><sup>2</sup>**: (x-&chi;)<sup>T</sup>&Sigma;<sup>-1</sup>(x-&chi;)
+<br/>
+**independent error 2 images**: ||&middot;||<sub>&Sigma;</sub> = &Sum; ||x<sub>i</sub>-&chi;<sub>i</sub>||<sub>&Sigma;<sub>i</sub></sub><sup>2</sup> + ||x'<sub>i</sub>-&chi;'<sub>i</sub>||<sub>&Sigma;'<sub>i</sub></sub><sup>2</sup>
+<br/>
+<br/>
+
+
+### Maximum Liklihood Estimation (MLE) of homography H
+**MLE Minimizes Geometric Error**:
+<br/>
+&Sum;d(x'<sub>i</sub>,H&middot;&chi;<sub>i</sub>)<sup>2</sup> *1 image*
+<br/>
+&Sum; d(x<sub>i</sub>,x&tilde;<sub>i</sub>)<sup>2</sup> + d(x'<sub>i</sub>,x'&tilde;<sub>i</sub>)<sup>2</sup> [ x'&tilde; = H&tilde;&middot;x&tilde; ] *2 images*
+<br/>
+**MLE Maximizes Log Liklihood**:
+<br/>
+ln(p(x<sub>i</sub>,x'<sub>i</sub>|H,&chi;<sub>i</sub>)) = &Sum; (1/[2&middot;&sigma;<sup>2</sup>])&middot;d(x'<sub>i</sub>,H&middot;&chi;<sub>i</sub>)<sup>2</sup> + c *1 image*
+<br/>
+? ln(p(x'<sub>i</sub>|H,&chi;<sub>i</sub>)) = &Sum; (1/[2&middot;&sigma;<sup>2</sup>])&middot;[ d(x<sub>i</sub>,&chi;<sub>i</sub>)<sup>2</sup> + d(x'<sub>i</sub>,H&middot;&chi;<sub>i</sub>)<sup>2</sup> ] + c *2 images*
+<br/>
+**True Point &chi; and H&middot;&chi;**: exact actual location, zero error
+<br/>
+**Best Estimates x&tilde; H&tilde; **: minimized error values (MLE)
+<br/>
+**assumed measurement error of x pdf**: p(x) = (1/[2&pi;&sigma;<sup>2</sup>])&middot;exp(-d(x,&chi;)/(2&middot;&sigma;<sup>2</sup>))
+<br/>
+<br/>
+
+<br/>
+? &Sum; d(x<sub>i</sub>,&chi;<sub>i</sub>)<sup>2</sup> + d(x'<sub>i</sub>,H&middot;&chi;<sub>i</sub>)<sup>2</sup> *2 images*
+<br/>
 
 
 
 
-### Maximum Liklihood Estimation (MLS)
+### Invariance-Insuring Methods
+DLT minimizing d<sub>geo</sub> is invariant under similarity transforms
+<br/>
+DLT minimizing d<sub>alg</sub> is not invariant to coordinate shift / scaling
+<br/>
+**Normalization**: position and scale values about some origin(0) and range(avg distance = &radic;2) (iso- or aniso- tropic), reverse after
+<br/>
+- NOT POINTS AT INFINITY? (128 iii)
+<br/>
+<br/>
+
+
+### Iterative Minimization
+**Cost Function**: feature to minimize
+<br/>
+**Parametrization**: Entity to be found
+<br/>
+**Function Specification**: finding X = f(P), or closest
+
+- measurement vector x &issin; R<sup>N</sup>
+- set of parameters P &isin; R<sup>M</sup>
+- mapping f : R<sup>M</sup> &rarr; R<sup>N</sup> (parameters to 'measurements')
+- S &isin; R<sup>N</sup> is surface of allowable measurements
+- cost to be minimized: Mahalanobis distance: ||X - f(P)||<sub>&Sigma;</sub><sup>2</sup> = ||X-f(P)||<sup>T</sup>&middot;&Sigma;<sup>-1</sup>&middot;||X-f(P)||<sup>T</sup>
+
+<br/>
+<br/>
+****: 
+<br/>
+****: 
+<br/>
+<br/>
 <br/>
 <br/>
 
@@ -1021,6 +1086,16 @@ D<sub>&perp;</sub> = &Sum;&epsilon;<sub>i</sub><sup>T</sup>(J<sub>i</sub>&middot
 ### 
 <br/>
 <br/>
+<br/>
+
+
+
+
+### 
+<br/>
+<br/>
+<br/>
+
 
 
 ### 
@@ -1029,9 +1104,25 @@ D<sub>&perp;</sub> = &Sum;&epsilon;<sub>i</sub><sup>T</sup>(J<sub>i</sub>&middot
 
 
 
-### 
-<br/>
 
+&hellip;
+&vellip;
+H&not;
+
+H&prime;
+
+&iquest;
+
+H&deg;
+H&sim;
+~
+
+&there4;
+
+
+H&uml;
+
+&weierp;
 
 
 
