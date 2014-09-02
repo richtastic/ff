@@ -14,14 +14,15 @@
 
 
 TODO:
-- screw/axisAngle<->R+t
-- 2D pick out orthogonal lines
-- read/notes ch3
+- simple y = mx +b RANSAC
+- screw/axisAngle<->R+t (trans)
 - walkthrough reconstruction piece-by-piece manually with set
 ...
 - SIFT point extraction
 - store points in file for later
 - bundle adjustment feature matching to get F matrix
+
+&lceil;A&rceil;
 
 <a name="MATHS"></a>
 ## MATH
@@ -876,12 +877,12 @@ intersection, tangency, gaussian curvature sign
 ## Random Stuff
 
 
-### Screw Decomposition (3D)
+### Screw/Helical Decomposition (3D)
 P(t) = **C** + t**S** <sub>P=line, C=center, S=screwAxis</sub>
 <br/>
 **Origin of Screw Frame C = &lt;C<sub>x</sub>,C<sub>y</sub>,C<sub>z</sub>&gt;**: Origin of Screw Frame
 <br/>
-**Screw Vector S = &lt;S<sub>x</sub>,S<sub>y</sub>,S<sub>z</sub>&gt;**: Direction of rotation and magnitude of translation?
+**Screw Vector S = &lt;S<sub>x</sub>,S<sub>y</sub>,S<sub>z</sub>&gt;**: Direction of rotation vector, with magnitude of translation
 <br/>
 **Rotation Angle &phi;**: &isin; [0,pi]
 <br/>
@@ -891,18 +892,22 @@ P(t) = **C** + t**S** <sub>P=line, C=center, S=screwAxis</sub>
 **Magnitude of Screw Vector d = ||S||**: 
 <br/>
 <br/>
-**?**: ?
+**From R matrix and t vector**:
 <br/>
-****: ?
+somewhere in this mess?: http://www.kwon3d.com/theory/jkinem/helical.html
+<br/>
+R decomposed into r(unit direction), and &theta; - about origin
+<br/>
+C = ?
+<br/>
+&phi; = ?
+<br/>
+s = ?
+<br/>
+S = ?
 <br/>
 <br/>
-**From R matrix and t vector**: ?
-<br/>
-eigenvector of R is in direction of s
-<br/>
-<br/>
-<br/>
-**To R matrix and t vector**: ?
+**To R matrix and t vector**:
 <br/>
 move to origin. rotate vector, move in S
 <br/>
@@ -915,54 +920,21 @@ move to origin. rotate vector, move in S
 NOTES:
 C = [R]C + d - (d*S)S
 C = [bxd - bx(bxd)]/[2b*b]
+b = tan(&phi;/2)*S
 
 
 
-
-
-
-OLDER CRAP:
-
-**t = t&parallel; + t&perp; @ S**
+### Algebraic Distance
+algebraic discrepancy vector from A&middot;h = 0 <sub>minimized by least squares</sub>
 <br/>
-General transation+rotation: reduced to rotation about and translation along *screw axis* vector
+d<sub>alg</sub>(**a**,**b**) = ||A&middot;h|| = ||**&epsilon;**||
 <br/>
-**coordinate origin S**: 
+ =?= (**a**&times;**b**)<sup>1/2</sup>
 <br/>
-**t&perp;**: direction of rotation, magnitude is rotation angle: &theta;&isin;(0,&pi;)
-<br/>
-**t&parallel;**: direction of rotation, magnitude of translation
-<br/>
-<br/>
-**(1) rotation around t by &theta; (t&perp;)**:
-<br/>
-**(2) translation along t (t&parallel;)**:
-<br/>
-**Special Case: Pure Translation**: 
-<br/>
-**Special Case: Pure Rotation**:
-<br/>
-**Special Case: No Op (Identity)**:
-<br/>
-<br/>
-**Constriction from R matrix and t vector**: ?
-<br/>
-<br/>
-**Constriction to R matrix and t vector**: ?
-<br/>
-<br/>
-if &theta;==0 &rarr; only movement along t by ||t||
-
-
-
-### Algebraic Distance ? 
- ? d<sub>alg</sub>(**a**,**b**) = (**a**&times;**b**)<sup>1/2</sup> =  ||**&epsilon;**||
-<br/>
-minimized by least squares: minimizes: ||A&middot;h||
 <br/>
 
 
-### Geometric Distance
+### Geometric (Euclidean) Distance
 d<sub>geo</sub>(**a**,**b**) = ( &Sum;(a<sub>i</sub> - b<sub>i</sub>) )<sup>1/2</sup>
 <br/>
 Euclidean distance
@@ -980,7 +952,7 @@ Euclidean distance
 
 
 ### Sampson Error ~ Mahalanobis Norm
-*(reduces to geometric error in linear case)*
+Approximation to Geometric Error *(reduces to geometric error in linear case)*
 <br/>
 ||&Delta;<sub>x</sub>||<sup>2</sup> : (min) distance from variety surface
 <br/>
@@ -990,6 +962,10 @@ C<sub>H</sub>(x+&Delta;<sub>x</sub>) = C<sub>H</sub>(x) + (&part;C<sub>H</sub>/&
 <br/>
 &Delta;<sub>x</sub> = &chi; - x
 <br/>
+**Find:**
+<br/>
+C<sub>H</sub>(x) + (&part;C<sub>H</sub>/&part;x)&middot;&Delta;<sub>x</sub> = 0
+<br/>
 &chi; = point on verity(4D-surface) : C<sub>H</sub>(&chi;) = 0
 <br/>
 <br/>
@@ -997,15 +973,57 @@ C<sub>H</sub>(x) + (&part;C<sub>H</sub>/&part;x)&middot;&Delta;<sub>x</sub> = 0 
 <br/>
 &epsilon; &equiv; C<sub>H</sub>(x) &equiv; cost
 <br/>
+<br/>
 *Want vector &Delta;<sub>x</sub> that minimizes ||&Delta;<sub>x</sub>||*
 <br/>
 &rarr; &Delta;<sub>x</sub> = -J<sup>T</sup>(J&middot;J<sup>T</sup>)<sup>-1</sup>&epsilon;
 <br/>
 ||&Delta;<sub>x</sub>||<sup>2</sup> = &epsilon;<sup>T</sup>(J&middot;J<sup>T</sup>)<sup>-1</sup>&epsilon;
 <br/>
-D<sub>&perp;</sub> = &Sum;&epsilon;<sub>i</sub><sup>T</sup>(J<sub>i</sub>&middot;J<sub>i</sub><sup>T</sup>)<sup>-1</sup>&epsilon;<sub>i</sub>
+Distance<sub>&perp;</sub> = &Sum;&epsilon;<sub>i</sub><sup>T</sup>(J<sub>i</sub>&middot;J<sub>i</sub><sup>T</sup>)<sup>-1</sup>&epsilon;<sub>i</sub>
 <br/>
 <br/>
+<br/>
+<br/>
+
+
+2D: Finding best H, given x<sub>i</sub>&isin;P<sup>3</sup> and x'<sub>i</sub>&isin;P<sup>3</sup>
+<br/>
+n = number of matching pairs (4 total knowns: x<sub>i</sub>;y<sub>i</sub>;x'<sub>i</sub>;y'<sub>i</sub>)
+<br/>
+h<sub>9&times;1</sub> = [a,b,c,d,e,f,g,h,i]
+<br/>
+H = <sub>3&times;3</sub> = [a,b,c; d,e,f; g,h,i]
+<br/>
+A = <sub>2n&times;9</sub> = matrix formed from 2 equations of: x' = Hx ; x'/z' = ... ; y'/z' = ... 
+<br/>
+x<sub>4n&times;1</sub> = [x<sub>i</sub>;y<sub>i</sub>;x'<sub>i</sub>;y'<sub>i</sub>]
+<br/>
+e<sub>2n?or?4n&times;1</sub> = [|x<sub>i</sub> - H<sup>-1</sup>&middot;x'<sub>i</sub>|; |y<sub>i</sub> - H<sup>-1</sup>&middot;x'<sub>i</sub>|; |x'<sub>i</sub> - H&middot;x<sub>i</sub>|; |y'<sub>i</sub> - H&middot;y<sub>i</sub>|]
+Hx = C<sub>H</sub>(x)
+<br/>
+-> could possibly be 2nx1 using GEOMETRIC DISTANCE as error
+-> is actually NOT be absolute values, but that the magnitude is taken afterwards
+<br/>
+&Delta;<sub>x</sub><sub>9&times;1</sub> = change in h, that reduces the error (gradient?), THIS IS WHAT IS SOLVED FOR ON EACH ITERATION
+<br/>
+= &middot;(J&middot;J<sup>T</sup> + &Lambda;)<sup>-1</sup>&middot;J<sup>T</sup> &middot; error
+<br/>
+&lambda; = some scale factor for LM iteration
+<br/>
+&Lambda;<sub>x</sub><sub>9&times;9</sub> = &lambda;&middot;I
+<br/>
+J<sub>2n?or?4n&times;9</sub> = &part;()/&part;x<sub>i</sub>
+ = matrix formed from DERIVATIVES OF 2 equations of: x' = Hx ; x'/z' = ... ; y'/z' = ... 
+(numerical or explicit)
+<br/>
+<br/>
+h (H) are updated each iteration
+<br/>
+<br/>
+<br/>
+
+
 
 
 
@@ -1020,7 +1038,7 @@ Takes into account error/spread in different directions (covariance &Sigma;)
 
 
 ### Maximum Liklihood Estimation (MLE) of homography H
-**MLE Minimizes Geometric Error**:
+**MLE Minimizes Geometric Error**: (approximated by Sampson Error?)
 <br/>
 &Sum;d(x'<sub>i</sub>,H&middot;&chi;<sub>i</sub>)<sup>2</sup> *1 image*
 <br/>
@@ -1046,13 +1064,23 @@ ln(p(x<sub>i</sub>,x'<sub>i</sub>|H,&chi;<sub>i</sub>)) = &Sum; (1/[2&middot;&si
 
 
 
-
 ### Invariance-Insuring Methods
 DLT minimizing d<sub>geo</sub> is invariant under similarity transforms
 <br/>
 DLT minimizing d<sub>alg</sub> is not invariant to coordinate shift / scaling
 <br/>
 **Normalization**: position and scale values about some origin(0) and range(avg distance = &radic;2) (iso- or aniso- tropic), reverse after
+<br/>
+&crarr; to&#42; = H&middot;fr&#42;
+<br/>
+&rarr; T<sub>to</sub>&middot;to = H&#42;&middot;T<sub>fr</sub>&middot;fr
+<br/>
+&rarr; T<sub>to</sub><sup>-1</sup>&middot;T<sub>to</sub>&middot;to = T<sub>to</sub><sup>-1</sup>&middot;H&#42;&middot;T<sub>fr</sub>&middot;fr
+<br/>
+&rarr; to = T<sub>to</sub><sup>-1</sup>&middot;H&#42;&middot;T<sub>fr</sub>&middot;fr
+<br/>
+&there4; H = T<sub>to</sub><sup>-1</sup>&middot;H&#42;&middot;T<sub>fr</sub>
+<br/>
 <br/>
 - NOT POINTS AT INFINITY? (128 iii)
 <br/>
@@ -1073,17 +1101,60 @@ DLT minimizing d<sub>alg</sub> is not invariant to coordinate shift / scaling
 - cost to be minimized: Mahalanobis distance: ||X - f(P)||<sub>&Sigma;</sub><sup>2</sup> = ||X-f(P)||<sup>T</sup>&middot;&Sigma;<sup>-1</sup>&middot;||X-f(P)||<sup>T</sup>
 
 <br/>
+**Single Image**: 
 <br/>
-****: 
+**Symmetric Error**: 
 <br/>
-****: 
+**Reprojection Error**: 
 <br/>
 <br/>
 <br/>
 <br/>
 
 
-### 
+### RANSAC
+<br/>
+**inliers**: points that fit the set
+<br/>
+**outliers**: points that don't fit in the set - have smallest support sets
+<br/>
+**model**: mathematical structure constituting formulas data can fit to (eg: line, homography)
+<br/>
+**threshold t**: distance separating inliers and outliers (eg: 5&sigma;)
+<br/>
+**consensus set C**: set of points that fit model <sub>i</sub>
+<br/>
+**support c = |C|**: number of points that lie within threshold of (fit) model<sub>i</sub>
+<br/>
+**full data set S**: set of all input points
+<br/>
+**sample set s**: minimum sample required to define/construct/predict model
+<br/>
+**minimum required support threshold T**: min support to constitute a valid model (could be &infin;)
+<br/>
+**Process**:
+for N iterations:
+- randomly select a minimum amount of data samples possible
+- determine consensus set that fits model, and support count
+- if c > T -> terminate ?
+use largest consensus set, restimate model
+<br/>
+**s**: .
+<br/>
+**s**: .
+<br/>
+<br/>
+TABLE OF SAMPLES / PROBABILITY
+<br/>
+<br/>
+<br/>
+MLE: &delta;<sub>x</sub> = -J<sup>T</sup>(JJ<sup>T</sup>)<sup>-1</sup>&epsilon;
+<br/>
+Sampson: ||&delta;<sub>x</sub>||<sup>2</sup> = &epsilon;<sup>T</sup>(JJ<sup>T</sup>)<sup>-1</sup>&epsilon;
+<br/>
+<br/>
+<br/>
+<br/>
 <br/>
 <br/>
 <br/>
@@ -1190,22 +1261,51 @@ Point Triangulation
 <br/>
 
 **LaGrange Multipliers:**
-<br />
-Find max/min of f(x), subject to g(x) = c &rarr; F(x,&lambda;) = f(x) - &lambda;[g(x)-k] 
-<br />
+<br/>
+Find max/min of f(x), subject to g(x) = c &rArr; F(x,&lambda;) = f(x) - &lambda;[g(x)-k] 
+<br/>
 Solve F<sub>x</sub> = 0 , F<sub>&lambda;</sub> = 0
-<br />
+<br/>
+<br/>
 
 
-Gradient Descent
+**Gradient Descent**:
+<br/>
+<br/>
 
-Newton Method
+**Newton Method**:
+<br/>
+<br/>
 
-Levenberg-Marquart
+**Levenberg-Marquart**:
+<br/>
+<br/>
+<br/>
+& Sparse Specific
+<br/>
 
-Cholesky Decomposition
+**Simplex**:
+<br/>
+<br/>
 
-QR Decomposition
+**Powell**:
+<br/>
+http://mathfaculty.fullerton.edu/mathews/n2003/PowellMethodMod.html
+<br/>
+
+
+## Some Linear Algebra Concepts
+
+**Cholesky Decomposition**:
+<br/>
+Find A from some matrix M = A&middot;A<sup>T</sup> (square root of positive definite matrix)
+<br/>
+result is a lower trianglular (L) or upper triangular (U) matrix: L = U<sup>T</sup>
+<br/>
+
+**QR Decomposition**:
+<br/>
+<br/>
 
 
 **Rodriguez's Formula**: Compute Rotation Vector or Matrix from 3 basis vectors - identifying parallel and perpendicular components:
@@ -1997,16 +2097,6 @@ P(P(r)) = P(r) (projection of surface point &equiv surface point)
 <br/>
 <br/>
 
-
-**Minimization via Powell Iteration**
-<br/>
-OMG another iteration method
-<br/>
-http://mathfaculty.fullerton.edu/mathews/n2003/PowellMethodMod.html
-<br/>
-<br/>
-<br/>
-<br/>
 
 
 ### Weighted Least Squares Planar Surface

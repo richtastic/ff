@@ -73,41 +73,29 @@ DLT2D.prototype.handleImageLoaded = function(e){
 		pointsFr.push(arr[0]);
 		pointsTo.push(arr[1]);
 	}
-	// console.log(pointsFr);
-	// console.log(pointsTo);
-	//H = Code.projectiveDLT(pointsFr,pointsTo);
 	// precondition
 	var pointsToNormalized = [];
-	var transformTo = Code.normalizePoints2D(pointsTo,pointsToNormalized,null);
+	var transformTo = R3D.normalizePoints2D(pointsTo,pointsToNormalized,null);
 	var pointsFrNormalized = [];
-	var transformFr = Code.normalizePoints2D(pointsFr,pointsFrNormalized,null);
-
-	//H = Code.projectiveDLT(pointsTo,pointsFr);
-	H = Code.projectiveDLT(pointsToNormalized,pointsFrNormalized);
-
-	transformToInverse = new Matrix2D();
-		transformToInverse.inverse(transformTo);
-	transformFrInverse = new Matrix2D();
-		transformFrInverse.inverse(transformFr);
-
-	console.log(transformTo.toString())
-	console.log(transformToInverse.toString())
-	
+	var transformFr = R3D.normalizePoints2D(pointsFr,pointsFrNormalized,null);
+	// 
+	H = R3D.projectiveDLT(pointsFrNormalized,pointsToNormalized);
+	// 
+	transformToInverse = new Matrix2D().inverse(transformTo);
+	transformFrInverse = new Matrix2D().inverse(transformFr);
+	// convert to Matrix from Matrix2D
 	transformTo = new Matrix(3,3).setFromArray(transformTo.toArray());
 	transformFr = new Matrix(3,3).setFromArray(transformFr.toArray());
 	transformToInverse = new Matrix(3,3).setFromArray(transformToInverse.toArray());
 	transformFrInverse = new Matrix(3,3).setFromArray(transformFrInverse.toArray());
-
-	H = Matrix.mult(H,transformTo);
-	H = Matrix.mult(transformFrInverse,H);
-	
-
+	// denormalize
+	H = Matrix.mult(H,transformFr);
+	H = Matrix.mult(transformToInverse,H);
+	// need 'inverse' transform for visualization
+	H = Matrix.inverse(H);
 	console.log(H.toString())
-	// 
-	
 	// test with 2D points
 	// test with 3D points
-
 	// show altered image:
 	var homography = H;
 	var i = 0;

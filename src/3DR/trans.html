@@ -105,6 +105,44 @@ console.log( Matrix.matrixArrayToString(B,m,n) );
 //console.log( B.toString() );
 */
 
+
+var matrix = new Matrix3D();
+var vector = new V3D();
+var angle = Math.PI*(1.0/8.0);
+vector.set(1,1,1);
+vector.norm();
+matrix.identity();
+matrix.rotateVector(vector,angle);
+matrix.translate(1,2,3);
+// ...
+var r = matrix.rotationToAxis();
+var theta = r.t;
+var t = matrix.translationToVector();
+//
+var phi = theta;
+var s = new V3D(r.x,r.y,r.z);
+var b = V3D.scale(s, Math.tan(phi*0.5) );
+var bb = V3D.dot(b,b);
+var d = V3D.copy(t);
+console.log("b: "+b.toString())
+console.log("bb: "+bb)
+console.log("s: "+s.toString())
+console.log("phi: "+phi)
+console.log("d: "+d.toString())
+var bxd = V3D.cross(b,d);
+console.log("bxd: "+bxd.toString())
+var bxbxd = V3D.cross(b, bxd);
+console.log("bxdxd: "+bxbxd.toString())
+var C = V3D.sub(bxd, bxbxd);
+console.log("C: "+C.toString())
+C.scale(2.0*bb);
+console.log("RESULT:")
+console.log(C.toString())
+
+
+
+return;
+
 var pointsFr = [];
 var pointsTo = [];
 Code.projectiveDLT(pointsFr,pointsTo);

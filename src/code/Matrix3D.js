@@ -95,11 +95,15 @@ Matrix3D.prototype.translationToVector = function(v){
 	return new V3D(this.d,this.h,this.l);
 }
 Matrix3D.prototype.rotationToAxis = function(){
-	var angle = Math.acos((this.a+this.f+this.k-1.0)*0.5);
+	var angle = Math.acos( (this.a+this.f+this.k-1.0)*0.5 );
+console.log(angle)
 	var xNum = this.j - this.g;
 	var yNum = this.c - this.i;
 	var zNum = this.e - this.b;
 	var den = Math.sqrt(xNum*xNum + yNum*yNum + zNum*zNum);
+	if(den==0){
+		return new V4D(1,0,0, 0);
+	}
 	var x = xNum/den;
 	var y = yNum/den;
 	var z = zNum/den;
