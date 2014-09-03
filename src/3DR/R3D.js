@@ -611,8 +611,9 @@ R3D.projectiveRANSAC = function(pointsFr,pointsTo){ // 2D point pairs
 	var H = new Matrix(3,3);
 	var subsetFr = [];
 	var subsetTo = [];
-	// do RANSAC
+	// find minimal sets
 	// remove outliers
+	// constuct consensus set
 	var obj = {}
 	obj.H = H;
 	obj.pointsA = subsetFr;

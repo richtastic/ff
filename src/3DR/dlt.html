@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["DLT2D.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["R3D.js","DLT2D.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	var dlt = new DLT2D();

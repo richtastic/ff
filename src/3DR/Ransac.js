@@ -35,6 +35,14 @@ Ransac.prototype.handleLoaded = function(e){
 	}
 	// outliers
 	points.push(new V2D(3.0,8.0));
+	var minCount = 2;
+	var epsilon = 1.0/points.length;
+	var pOutlier = 0.5;
+	var pDesired = 0.99;
+	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(1-pOutlier,minCount) )); // initially assume 50% are outliers
+	var maxLineDistance = 1.0; // this should be based on error
+	console.log("ITERATIONS: "+maxIterations);
+	console.log("DISTANCE: "+maxLineDistance);
 	// show visually
 	scale = 10.0;
 	offX = 10.0;
@@ -55,19 +63,18 @@ Ransac.prototype.handleLoaded = function(e){
 	}
 	// RANSAC
 	var index, support, consensus, dist, org=new V2D(), dir=new V2D();
-	var minCount = 2;
-	var maxIterations = 10;
 	len = points.length;
-	var maxLineDistance = 1.0;
 	var maxSupport = 0;
 	var maxConsensus = null;
 	var maxModel = null;
 	A = new Matrix(minCount,3);
 	for(j=0;j<maxIterations;++j){
 		var pts = [];
+		var indexList = [];
+		for(i=0;i<len;++i){ indexList[i] = i; }
 		for(i=0;i<minCount;++i){
-			index = Math.floor(Math.random()*len); // THESE NEED TO BE DIFFERENT INDEXES
-			//console.log(index)
+			index = Math.floor(Math.random()*indexList.length);
+			index = indexList.splice(index,1);
 			pts.push( points[ index ] );
 		}
 		// line fitting
@@ -87,6 +94,7 @@ Ransac.prototype.handleLoaded = function(e){
 		//L = new Matrix(1,2).setFromArray([m,b]);
 		// find consensus set
 		consensus = [];
+// sum distances and rate based on inverse of average/total distance?
 		for(i=0;i<len;++i){
 			p = points[i];
 			org.set(0,b)
@@ -96,11 +104,14 @@ Ransac.prototype.handleLoaded = function(e){
 				consensus.push(p);
 			}
 		}
+// SHOULD ALWAYS HAVE A MINIMUM OF 2
+		console.log(consensus.length);
 		// save consensus
 		if(consensus.length>maxSupport){
 			maxSupport = consensus.length;
 			maxConsensus = consensus;
 			maxModel = [m,b];
+maxIterations = maxIterations// UPDATE THIS BASED ON NEW CEILING FOR OUTLIERS
 		}
 
 	}
