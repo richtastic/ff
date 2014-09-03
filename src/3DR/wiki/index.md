@@ -1120,7 +1120,7 @@ DLT minimizing d<sub>alg</sub> is not invariant to coordinate shift / scaling
 <br/>
 **model**: mathematical structure constituting formulas data can fit to (eg: line, homography)
 <br/>
-**threshold t**: distance separating inliers and outliers (eg: 5&sigma;)
+**threshold t**: distance separating inliers and outliers (eg: 5&sigma;) - CHOOSE BASED ON 0-MEAN GAUSSIAN ERROR: &chi;<sup>2</sup><sub>m</sub>
 <br/>
 **consensus set C**: set of points that fit model <sub>i</sub>
 <br/>
@@ -1132,19 +1132,74 @@ DLT minimizing d<sub>alg</sub> is not invariant to coordinate shift / scaling
 <br/>
 **minimum required support threshold T**: min support to constitute a valid model (could be &infin;)
 <br/>
+**probability of inlier w = 1-&epsilon;**: proportion of samples that are inliers
+<br/>
+**probability of outlier &epsilon; = 1-w**: proportion of samples that are outliers
+<br/>
+**samples s**: total number of data points (samples)
+<br/>
+**total (max) iterations N = ln(1-p)/ln(1-w<sup>2</sup>)**: number of tests performed based on p
+<br/>
+**probability p**: probability at least one sample contains no outliers
+<br/>
 **Process**:
 for N iterations:
 - randomly select a minimum amount of data samples possible
 - determine consensus set that fits model, and support count
 - if c > T -> terminate ?
 use largest consensus set, restimate model
+
 <br/>
 **s**: .
 <br/>
-**s**: .
 <br/>
 <br/>
-TABLE OF SAMPLES / PROBABILITY
+CHOOSING THRESHOLD t = d&perp; = <sub>0</sub>&int;<sup>k<sup>2</sup></sup> &chi;<sub>m</sub><sup>2</sup>(&xi;) d&xi;
+<br/>
+&sigma; = STDDEV of error (in image units)
+
+| DOF m | t<sup>2</sup> (&alpha;=90%) | t<sup>2</sup> (&alpha;=95%) | Model Example             |
+|-------|-----------------------------|-----------------------------|---------------------------|
+| 1     | 2.71&sigma;<sup>2</sup>     | 3.84&sigma;<sup>2</sup>     | line, F                   |
+| 2     | 4.61&sigma;<sup>2</sup>     | 5.99&sigma;<sup>2</sup>     | homography, camera matrix |
+| 3     | 6.25&sigma;<sup>2</sup>     | 7.81&sigma;<sup>2</sup>     | trifocal tensor           |
+
+<br/>
+<br/>
+CHOOSING SAMPLE COUNTS N:
+<br/>
+probability of getting an outlier: 1-p = (1-w<sup>s</sup>)<sup>N</sup>  &rArr;  N = ln(1-p)/ln(1-(1-&epsilon;)<sup>s</sup>)
+<br/>
+<br/>
+p = 0.99
+
+| SAMPLES |  5% OUT | 10% OUT | 20% OUT | 30% OUT | 50% OUT |
+|---------|---------|---------|---------|---------|---------|
+| 2       | 2       | 3       | 5       | 7       | 17      |
+| 3       | 3       | 4       | 7       | 11      | 35      |
+| 4       | 3       | 5       | 9       | 17      | 72      |
+| 5       | 4       | 6       | 12      | 26      | 146     |
+| 6       | 4       | 7       | 16      | 37      | 293     |
+| 7       | 4       | 8       | 20      | 54      | 588     |
+| 8       | 5       | 9       | 26      | 78      | 1177    |
+| 10      |         |         |         |         |         |
+| 100     |         |         |         |         |         |
+<br/>
+p = 0.95
+
+| SAMPLES |  5% OUT | 10% OUT | 20% OUT | 30% OUT | 50% OUT |
+|---------|---------|---------|---------|---------|---------|
+| 2       | 2       | 2       | 3       | 5       | 11      |
+| 3       | 2       | 3       | 5       | 8       | 23      |
+| 4       | 2       | 3       | 6       | 11      | 47      |
+| 5       | 3       | 4       | 8       | 17      | 95      |
+| 6       | 3       | 4       | 10      | 24      | 191     |
+| 7       | 3       | 5       | 13      | 35      | 381     |
+| 8       | 3       | 6       | 17      | 51      | 765     |
+| 10      |         |         |         |         |         |
+| 100     |         |         |         |         |         |
+
+
 <br/>
 <br/>
 <br/>

@@ -1724,7 +1724,11 @@ Code.rayFiniteInfinitePositiveIntersect2D = function(a,b, c,d){ // finite ray an
 }
 Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
-	return new V3D(org.x+t*dir.x,org.y+t*dir.y);
+	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
+}
+Code.distancePointLine2D = function(org,dir, point){
+	var p = Code.closestPointLine2D(org,dir, point);
+	return V2D.distance(point,p);
 }
 Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
