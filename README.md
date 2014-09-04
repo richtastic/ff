@@ -81,6 +81,7 @@ Although I'll probably use fewer lines. I chose Apache 2.0, because GNU GPLs are
 [Open Source Inititive - Apache License](http://opensource.org/licenses/Apache-2.0)
 
 
+
 <a name="NOTES"></a>
 # Notes
 
@@ -96,7 +97,8 @@ Although I'll probably use fewer lines. I chose Apache 2.0, because GNU GPLs are
 
 <a name="REFERENCES"></a>
 # References #
-
+[MIT License](http://opensource.org/licenses/MIT)
+<br/>
 [Apache Licenses](http://www.apache.org/licenses/)
 <br/>
 [GNU General Public License 3.0 - V3, 2007-06-29](http://opensource.org/licenses/GPL-3.0)

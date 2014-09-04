@@ -19,17 +19,19 @@ Ransac.prototype.handleLoaded = function(e){
 	console.log("Ransac");
 	var lineM = 0.5, lineB = 2.0;
 	var error = 0.2;
-// SIGMA = ?
 	var i, j, d, x, y, p, len, scale, offX, offY;
 	var svd, coeff, m, b, y, L, A;
 	var points = [];
+	// 
+	var sigma = 0.1;
 	// inliers
 	for(i=0;i<7;++i){
 		x = Math.random()*10.0 - 0.0;
 		y = lineM*x + lineB;
 		// error
-		x = x + Math.random()*error - error*0.5;
-		y = y + Math.random()*error - error*0.5;
+console.log(Code.randGauss())
+		x = x + sigma*Code.randGauss();//Math.random()*error - error*0.5;
+		y = y + sigma*Code.randGauss();//Math.random()*error - error*0.5;
 		// add
 		points.push(new V2D(x,y));
 	}
@@ -44,8 +46,8 @@ Ransac.prototype.handleLoaded = function(e){
 	console.log("ITERATIONS: "+maxIterations);
 	console.log("DISTANCE: "+maxLineDistance);
 	// show visually
-	scale = 10.0;
-	offX = 10.0;
+	scale = 20.0;
+	offX = 20.0;
 	offY = 200.0;
 	len = points.length;
 	for(i=0;i<len;++i){
@@ -95,10 +97,23 @@ Ransac.prototype.handleLoaded = function(e){
 		// find consensus set
 		consensus = [];
 // sum distances and rate based on inverse of average/total distance?
+		org.set(0,b)
+		dir.set(1,m); // 1-0,m+b-b
+dir.scale(10.0);
+d = new DO();
+d.graphics().clear();
+d.graphics().setLine(2.0,0xFF00FF00);
+d.graphics().beginPath();
+x = org.x; y = org.y;
+d.graphics().moveTo(scale*x + offX, -scale*y + offY);
+x = org.x + dir.x; y = org.y + dir.y;
+d.graphics().lineTo(scale*x + offX, -scale*y + offY);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.graphics().fill();
+this._root.addChild(d);
 		for(i=0;i<len;++i){
 			p = points[i];
-			org.set(0,b)
-			dir.set(1,m+b);
 			dist = Code.distancePointLine2D(org,dir, p);
 			if(dist <= maxLineDistance){
 				consensus.push(p);
@@ -111,7 +126,10 @@ Ransac.prototype.handleLoaded = function(e){
 			maxSupport = consensus.length;
 			maxConsensus = consensus;
 			maxModel = [m,b];
-maxIterations = maxIterations// UPDATE THIS BASED ON NEW CEILING FOR OUTLIERS
+			// update max iterations based on known min inliers
+			var pInlier = maxSupport*1.0/len;
+var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pInlier,minCount) )); 
+			console.log("NEW MAX: "+maxIterations);
 		}
 
 	}
@@ -121,6 +139,9 @@ maxIterations = maxIterations// UPDATE THIS BASED ON NEW CEILING FOR OUTLIERS
 	m = maxModel[0];
 	b = maxModel[1];
 	console.log("CONSENSUS: "+support+" := "+m+" x + "+b);
+	console.log(""+consensus);
+	// further improve model by incorporating more inliers progressivley
+		// .. 
 	// show line
 	d = new DO();
 	d.graphics().clear();
