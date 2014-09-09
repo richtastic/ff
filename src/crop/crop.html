@@ -9,80 +9,12 @@ function pageLoadedFxn(){
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
-	var list = ["Crop.js"];
-	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader = new ScriptLoader("./",["Crop.js"],this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
 	var crop = new Crop();
-	var kb = new Keyboard();
-	kb.addFunction(Keyboard.EVENT_KEY_UP, ku);
-	kb.addFunction(Keyboard.EVENT_KEY_DOWN, kd);
-	kb.addFunction(Keyboard.EVENT_KEY_STILL_DOWN, ks);
-	kb.addListeners();
-	//
-	var body = document.body;
-	Code.addEventListener(body,Code.JS_EVENT_DRAG_START,dragCancel);
-	Code.addEventListener(body,Code.JS_EVENT_DRAG_OVER,dragCancel);
-	Code.addEventListener(body,Code.JS_EVENT_DRAG_ENTER,dragCancel);
-	Code.addEventListener(body,Code.JS_EVENT_DRAG_DROP,dragDrop);
-	Code.addEventListener(body,Code.JS_EVENT_DRAG_END,dragCancel);
-}
-function dragCancel(e){
-	e = Code.getJSEvent(e);
-	Code.eventPreventDefault(e);
-	//console.log("drag "+e);
-}
-function dragDrop(e){
-	var i, len, dataTransfer, files, fileList, fileReader;
-	e = Code.getJSEvent(e);
-	Code.eventPreventDefault(e);
-	dataTransfer = e.dataTransfer;
-	fileList = dataTransfer.files;
-	//console.log(e);
-	//console.log(dataTransfer);
-	//console.log(fileList);
-	len = fileList.length;
-	for(i=0;i<len;++i){
-		file = fileList[i];
-		//console.log(file);
-		console.log(file.name+" : "+file.size+" Bytes ["+file.type+"]");
-		fileReader = new FileReader();
-		Code.addEventListener(fileReader,Code.JS_EVENT_LOAD_START,handleFileStartLoad);
-		Code.addEventListener(fileReader,Code.JS_EVENT_LOAD_PROGRESS,handleFileProgress);
-		Code.addEventListener(fileReader,Code.JS_EVENT_LOAD_END,handleFileLoaded);
-		fileReader.readAsDataURL(file);
-	}
-}
-function handleFileStartLoad(e){
-	console.log(e);
-}
-function handleFileProgress(e){
-	console.log(e);
-	console.log(e.lengthComputable+" | "+e.loaded+"/"+e.total);
-}
-function handleFileLoaded(e){
-	var fileReader = this;
-	//console.log(fileReader);
-	//console.log(file);
-	var binary = fileReader.result;
-	//console.log(e);
-	var imgDOM = new Image();
-	imgDOM.src = binary;
-	Code.addChild(document.body,imgDOM);
-}
-function dragFxn1(e){
-	console.log("drag1 "+e);
-}
-function ku(e){
-	console.log("key up "+e);
-}
-function kd(e){
-	console.log("key down "+e);
-}
-function ks(e){
-	console.log("key still down "+e);
 }
 </script>
 </head>

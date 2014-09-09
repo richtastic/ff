@@ -19,7 +19,7 @@ function Stage(can, fr){
 	this._root = new DO();
 	DO.addToStageRecursive(this._root,this);
 	this._root.graphics().clear();
-	this.addListeners();
+//	this.addListeners();
 }
 Code.inheritClass(Stage,Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES
@@ -56,11 +56,14 @@ this.setCursorStyle = function(style){
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 Stage.prototype.addFunctionDisplay = function(obj,str,fxn){
+	console.log("adding "+obj+" "+str+" "+fxn);
+	console.log(this._eventList[str])
 	if(this._eventList[str]!=null){
 		this._eventList[str].push([obj,fxn]);
 	}else{
 		// 
 	}
+	console.log(this._eventList[str])
 }
 Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
 	var i, j, item, arr = this._eventList[str];
@@ -246,34 +249,35 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	var arr;
 	if(list){ // OUTSIDE ALERTING
 		for(var i=0;i<list.length;++i){
+			console.log(i);
 			var obj = list[i][0];
-			if(intersection!=obj){
+			if(intersection!=obj){ // is not object of intersection
 				cum.identity();
 				while(obj != null){
-					//cum.mult(cum,obj.matrix);
-					cum.mult(obj.matrix,cum);
-					obj = obj.parent;
+					cum.mult(obj.matrix(),cum);
+					obj = obj.parent();
 				}
-				list[i][1]([intersection,DO.getPointFromTransform(new V2D(),cum,pos)]);
+				list[i][1]( {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":pos} );
 			}
 		}
 	}
 	if(intersection){ // ANCESTOR INSIDE ALERT
 		obj = intersection;
-		while(obj){
+		while(obj && obj.parent){
 			path.push(obj);
 			obj = obj.parent;
 		}
 		cum.identity();
-		while(path.length>0){// run path
+		while(path.length>0){ // run path 
 			obj = path.pop();
-			cum.mult(cum,obj.matrix);
-			obj.alertAll(evt,[intersection,DO.getPointFromTransform(new V2D(),cum,pos)]);
+			cum.mult(cum,obj.matrix());
+			obj.alertAll( evt,{"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":pos} );
 		}
 	}
 	arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 }
 Stage.prototype._canvasMouseDown = function(pos){
+	console.log("mouse down");
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
 	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 }

@@ -1,10 +1,10 @@
 // DO.js
-DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
-DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
-DO.EVENT_DRAGGED = "do.evtdragged";
-DO.EVENT_DOWN = "do.evtdown";
-DO.EVENT_UP = "do.evtup";
-DO.EVENT_CLICKED = "do.evtclicked";
+// DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
+// DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
+// DO.EVENT_DRAGGED = "do.evtdragged";
+// DO.EVENT_DOWN = "do.evtdown";
+// DO.EVENT_UP = "do.evtup";
+// DO.EVENT_CLICKED = "do.evtclicked";
 DO._ID = 0;
 DO._tempO = new V2D();
 DO._tempX = new V2D();
@@ -21,8 +21,8 @@ DO.getPointFromTransform = function(newPos,mat,pos){
 	DO._tempOP.x = pos.x-DO._tempO.x; DO._tempOP.y = pos.y-DO._tempO.y;
 	DO._tempOX.x = DO._tempX.x-DO._tempO.x; DO._tempOX.y = DO._tempX.y-DO._tempO.y;
 	DO._tempOY.x = DO._tempY.x-DO._tempO.x; DO._tempOY.y = DO._tempY.y-DO._tempO.y;
-	var oxLen2 = DO._tempOX.lengthSquared();
-	var oyLen2 = DO._tempOY.lengthSquared();
+	var oxLen2 = DO._tempOX.lengthSquare();
+	var oyLen2 = DO._tempOY.lengthSquare();
 	newPos.x = V2D.dot(DO._tempOP,DO._tempOX)/oxLen2;
 	newPos.y = V2D.dot(DO._tempOP,DO._tempOY)/oyLen2;
 	return newPos;
@@ -91,6 +91,8 @@ function DO(parentDO){
 	this._graphics = new Graphics();
 	this._graphicsIllustration = this._graphics;
 	this._graphicsIntersection = this._graphicsIllustration;
+	this._checkIntersectionChildren = true;
+	this._checkIntersectionThis = true;
 }
 Code.inheritClass(DO,Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET
@@ -119,7 +121,9 @@ DO.prototype.graphicsIllustration = function(){
 DO.prototype.addFunction = function(str,fxn,ctx){
 	DO._.addFunction.call(this,str,fxn,ctx);
 	if(this._stage){
-		this._stage.addFunctionDO(this,str,fxn);
+		this._stage.addFunctionDisplay(this,str,fxn);
+	}else{
+		console.log("need to add this request to some queue and activate on attaching to stage");
 	}
 }
 DO.prototype.removeFunction = function(str,fxn,ctx){
@@ -222,6 +226,7 @@ DO.prototype.removeParent = function(){
 	this._parent.removeChild(this);
 }
 DO.prototype.removeChild = function(ch){
+	// make sure to remove all event listeners from stage
 	if(!ch){return;}
 	ch.parent(null);
 	Code.removeElement(this._children,ch);
@@ -247,8 +252,6 @@ DO.prototype.checkIntersectionChildren = function(b){
 	}
 	return this._checkIntersectionChildren;
 }
-this._checkIntersectionChildren = true;
-this._checkIntersectionThis = true;
 DO.prototype.checkIntersectionChildren = function(bool){
 	this._checkIntersectionChildren = bool;
 }
@@ -281,11 +284,11 @@ DO.prototype.getIntersection = function(pos, can){
 		}
 	}
 	if(this._checkIntersectionThis){
-		this.graphicsIntersection.setupRender(can);
-		this.graphicsIntersection.render(can);
-		this.graphicsIntersection.takedownRender(can);
+		this._graphicsIntersection.setupRender(can);
+		this._graphicsIntersection.render(can);
+		this._graphicsIntersection.takedownRender(can);
 		var context = can.context();
-		var imgData = can.getImageData(0,0,can.width(),can.height());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
+var imgData = can.getImageData(0,0,can.width(),can.height());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
 		var pix = this.getPixelARGB( imgData, pos.x,pos.y);
 		this.takedownRender(can);
 		if(pix!=0){
@@ -298,7 +301,7 @@ DO.prototype.getPixelARGB = function(img, x,y){
 	if(x>=img.width || x<0 || y>=img.height || y<0){ return 0; }
 	var index = (y*img.width + x)*4, dat = img.data;
 	return Code.getColARGB(dat[index],dat[index+1],dat[index+2],dat[index+3]);
-};
+}
 // ------------------------------------------------------------------------------------------------------------------------ STAGE PASSTHROUGH
 // 	this.getCurrentMousePosition = function(){
 // 		return this.stage.getCurrentMousePosition();
