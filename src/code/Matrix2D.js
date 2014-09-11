@@ -59,6 +59,7 @@ Matrix2D.prototype.rotate = function(theta){
 	var cA = Math.cos(theta), sA = Math.sin(theta);
 	mat.set(cA,-sA,sA,cA,0,0);
 	this.mult(mat,this);
+	return this;
 }
 Matrix2D.prototype.scale = function(sx,sy){
 	var mat = Matrix2D.temp;
@@ -67,12 +68,15 @@ Matrix2D.prototype.scale = function(sx,sy){
 	}
 	mat.set(sx,0,0,sy,0,0);
 	this.mult(mat,this);
+	return this;
 }
 Matrix2D.prototype.premult = function(mat){
 	this.mult(this,mat);
+	return this;
 }
 Matrix2D.prototype.postmult = function(mat){
 	this.mult(mat,this);
+	return this;
 }
 Matrix2D.prototype.mult = function(mA,mB){
 	var aA=mA.a,aB=mA.b,aC=mA.c,aD=mA.d,aX=mA.x,aY=mA.y;

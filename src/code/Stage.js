@@ -11,7 +11,7 @@ function Stage(can, fr){
 	this._tempCanvas = new Canvas(null,100,100,Canvas.STAGE_FIT_FIXED,true);
 	this._renderCanvas = new Canvas(null,100,100,Canvas.STAGE_FIT_FIXED,true);
 	this._eventList = new Object(); // hash
-	var evts = [Canvas.EVENT_MOUSE_UP,Canvas.EVENT_MOUSE_DOWN,Canvas.EVENT_MOUSE_CLICK,Canvas.EVENT_MOUSE_MOVE,
+	var evts = [Canvas.EVENT_MOUSE_UP,Canvas.EVENT_MOUSE_DOWN,Canvas.EVENT_MOUSE_CLICK,Canvas.EVENT_MOUSE_MOVE, Canvas.EVENT_MOUSE_EXIT,
 			Canvas.EVENT_MOUSE_UP_OUTSIDE,Canvas.EVENT_MOUSE_DOWN_OUTSIDE,Canvas.EVENT_MOUSE_CLICK_OUTSIDE,Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
 	for(var e in evts){
 		this._eventList[evts[e]] = new Array();
@@ -55,15 +55,12 @@ this.setCursorStyle = function(style){
 	this._canvas.setCursorStyle(style);
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
-Stage.prototype.addFunctionDisplay = function(obj,str,fxn){
-	console.log("adding "+obj+" "+str+" "+fxn);
-	console.log(this._eventList[str])
+Stage.prototype.addFunctionDisplay = function(obj,str,fxn,ctx){
 	if(this._eventList[str]!=null){
-		this._eventList[str].push([obj,fxn]);
+		this._eventList[str].push([obj,fxn,ctx]);
 	}else{
-		// 
+		// alervt event does not exist
 	}
-	console.log(this._eventList[str])
 }
 Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
 	var i, j, item, arr = this._eventList[str];
@@ -179,6 +176,7 @@ Stage.prototype.addListeners = function(){
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_UP,this._canvasMouseUp,this);
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this._canvasMouseClick,this);
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this._canvasMouseMove,this);
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_EXIT,this._canvasMouseExit,this);
 }
 Stage.prototype.removeListeners = function(){
 	this._timer.removeFunction(Ticker.EVENT_TICK,this._enterFrame,this);
@@ -188,6 +186,7 @@ Stage.prototype.removeListeners = function(){
 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_UP,this._canvasMouseUp,this);
 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_CLICK,this._canvasMouseClick,this);
 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_MOVE,this._canvasMouseMove,this);
+	this._canvas.removeFunction(Canvas.EVENT_MOUSE_EXIT,this._canvasMouseExit,this);
 }
 // ------------------------------------------------------------------------------------------------------------------------ DISPLAY LIST
 Stage.prototype.addChild = function(ch){
@@ -236,7 +235,7 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	path = new Array();
 	// OUTSIDE
 	var list = null;
-	if(evt==Canvas.EVENT_MOUSE_UP){
+	if(evt==Canvas.EVENT_MOUSE_UP){//|| evt==Canvas.EVENT_MOUSE_EXIT){
 		var list = this._eventList[Canvas.EVENT_MOUSE_UP_OUTSIDE];
 	}else if(evt==Canvas.EVENT_MOUSE_DOWN){
 		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN_OUTSIDE];
@@ -249,7 +248,6 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	var arr;
 	if(list){ // OUTSIDE ALERTING
 		for(var i=0;i<list.length;++i){
-			console.log(i);
 			var obj = list[i][0];
 			if(intersection!=obj){ // is not object of intersection
 				cum.identity();
@@ -257,7 +255,12 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 					cum.mult(obj.matrix(),cum);
 					obj = obj.parent();
 				}
-				list[i][1]( {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":pos} );
+				var o = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":pos};
+				if(list[i].length>2){
+					list[i][1].call( list[i][2], o );
+				}else{
+					list[i][1]( o );
+				}
 			}
 		}
 	}
@@ -277,7 +280,6 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 }
 Stage.prototype._canvasMouseDown = function(pos){
-	console.log("mouse down");
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
 	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
 }
@@ -293,7 +295,10 @@ Stage.prototype._canvasMouseMove = function(pos){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
 	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
 }
-
+Stage.prototype._canvasMouseExit = function(e){
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_EXIT,pos); // ...
+	this.alertAll(Canvas.EVENT_MOUSE_EXIT,pos);
+}
 
 Stage.prototype.kill = function(){
 	Stage._.kill.call(this);

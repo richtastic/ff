@@ -24,6 +24,7 @@ Canvas.EVENT_MOUSE_UP = "canevtmouup";
 Canvas.EVENT_MOUSE_CLICK = "canevtmouclk";
 Canvas.EVENT_MOUSE_MOVE = "canevtmoumov";
 Canvas.EVENT_MOUSE_WHEEL = "canevtmouwhl";
+Canvas.EVENT_MOUSE_EXIT = "canevtmouext";
 Canvas.EVENT_TOUCH_START = "canevttousta";
 Canvas.EVENT_TOUCH_MOVE = "canevttoumov";
 Canvas.EVENT_TOUCH_END = "canevttouend";
@@ -495,7 +496,8 @@ Canvas.prototype._canvasMouseOutFxn = function(e){
 	pos = this.getMousePosition(e);
 	this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
 	//this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...
-	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	//this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	this.alertAll(Canvas.EVENT_MOUSE_EXIT,pos);
 }
 //  ------------------------------------------------------------------------------------------------------------------------ TOUCH POSITIONING
 // https://developer.mozilla.org/en-US/docs/DOM/TouchEvent

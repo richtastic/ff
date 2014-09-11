@@ -37,7 +37,7 @@ Crop.prototype.handleLoaded = function(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Crop.prototype.handleCanvasResizeFxn = function(e){
-	console.log(e);
+	//console.log(e);
 }
 Crop.prototype.handleStageEnterFrameFxn = function(e){
 	//console.log(e);
@@ -66,7 +66,7 @@ Crop.prototype.loadImageFromSource = function(src){
 	this._imageLoader.load();
 }
 Crop.prototype.handleImageLoadedFromSource = function(e){
-	var d;
+	var d, p;
 	var image = e.images[0];
 	document.body.appendChild(image);
 	image.setAttribute("id","trash");
@@ -78,14 +78,72 @@ Crop.prototype.handleImageLoadedFromSource = function(e){
 	image.style.display = "none";
 	
 	d = new DOImage(image);
-	this._root.addChild(d);
-	d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageStartDrag,this);
+	d.matrix().identity().rotate(Math.PI/10).scale(0.75).translate(100,40);
+	d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageMouseDownIn,this);
+	d.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this._imageMouseDownOut,this);
+	d.addFunction(Canvas.EVENT_MOUSE_UP,this._imageMouseUpIn,this);
+	d.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._imageMouseUpOut,this);
+	d.addFunction(Canvas.EVENT_MOUSE_MOVE,this._imageMouseMoveIn,this);
+	d.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._imageMouseMoveOut,this);
+	this._isDragging = false;
+	this._dragOffset = new V2D();
+	this._dragMatrix = new Matrix2D();
+	this._dragTemp = new Matrix2D();
+	//
+	p = new DOImage(image);
+	p.matrix().identity().rotate(Math.PI/8).scale(0.75).translate(100,40);
+	this._root.addChild(p);
+	p.addChild(d);
 }
 
 
-Crop.prototype._imageStartDrag = function(e){
-	console.log(e)
+Crop.prototype._imageMouseDownIn = function(e){
+	// need to transform global point click to local(parent) point, then apply matrix translation based on local(parent) point
+	console.log(e);
+	console.log("down+in: "+e+" "+this._isDragging);
+	this._isDragging = true;
+	this._dragTarget = e.target;
+	this._dragOffset.copy(e.global);
+	this._dragMatrix.copy(this._dragTarget.matrix());
 }
+Crop.prototype._imageMouseDownOut = function(e){
+	console.log("down+ou: "+e+" "+this._isDragging);
+	if(this._isDragging){
+		//this._isDragging = false;
+	}
+}
+Crop.prototype._imageMouseUpIn = function(e){
+	console.log("up+in: "+e+" "+this._isDragging);
+	if(this._isDragging){
+		this._isDragging = false;
+	}
+}
+Crop.prototype._imageMouseUpOut = function(e){
+	console.log("up+ou: "+e+" "+this._isDragging);
+	if(this._isDragging){
+		this._isDragging = false;
+	}
+}
+Crop.prototype._imageMouseMoveIn = function(e){
+	console.log("move+in: "+e+" "+this._isDragging);
+	if(this._isDragging){
+		this._imageDragUpdate(e.global);
+	}
+}
+Crop.prototype._imageMouseMoveOut = function(e){
+	console.log("move+ou: "+e+" "+this._isDragging);
+	if(this._isDragging){
+		this._imageDragUpdate(e.global);
+	}
+}
+
+Crop.prototype._imageDragUpdate = function(v){
+	var diff = V2D.sub(v,this._dragOffset);
+	this._dragTemp.copy(this._dragMatrix);
+	this._dragTemp.translate(diff.x,diff.y);
+	this._dragTarget.matrix().copy(this._dragTemp);
+}
+
 /*
 click - select
 mosuedown+hold - start drag

@@ -5,6 +5,10 @@
 // DO.EVENT_DOWN = "do.evtdown";
 // DO.EVENT_UP = "do.evtup";
 // DO.EVENT_CLICKED = "do.evtclicked";
+// DO.EVENT_MOUSE_DOWN_OUTSIDE = "doevtmoudwnout";
+// DO.EVENT_MOUSE_UP_OUTSIDE = "doevtmouupout";
+// DO.EVENT_MOUSE_CLICK_OUTSIDE = "donevtmouclkout";
+// DO.EVENT_MOUSE_MOVE_OUTSIDE = "doevtmoumovout";
 DO._ID = 0;
 DO._tempO = new V2D();
 DO._tempX = new V2D();
@@ -121,7 +125,7 @@ DO.prototype.graphicsIllustration = function(){
 DO.prototype.addFunction = function(str,fxn,ctx){
 	DO._.addFunction.call(this,str,fxn,ctx);
 	if(this._stage){
-		this._stage.addFunctionDisplay(this,str,fxn);
+		this._stage.addFunctionDisplay(this,str,fxn,ctx);
 	}else{
 		console.log("need to add this request to some queue and activate on attaching to stage");
 	}
@@ -129,7 +133,7 @@ DO.prototype.addFunction = function(str,fxn,ctx){
 DO.prototype.removeFunction = function(str,fxn,ctx){
 	DO._.addFunction.call(this,str,fxn,ctx);
 	if(this._stage){
-		this._stage.removeFunctionDO(this,str,fxn);
+		this._stage.removeFunctionDisplay(this,str,fxn,ctx);
 	}
 }
 DO.prototype.alertAll = function(str,o){
@@ -157,7 +161,7 @@ DO.prototype.transformEvent = function(evt,pos){ // this.root.transformEvent(Can
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 DO.prototype.newGraphicsIllustration = function(gr){
 	this._graphicsIllustration = gr?gr:new Graphics();
-	this._graphics = this._graphicsIllustration;
+	this._graphics = this._graphicsIllustration; // ? nbefore?
 }
 DO.prototype.newGraphicsIntersection = function(gr){
 	this.graphicsIntersection = gr?gr:new Graphics();
