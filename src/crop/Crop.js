@@ -79,12 +79,6 @@ Crop.prototype.handleImageLoadedFromSource = function(e){
 	
 	d = new DOImage(image);
 	d.matrix().identity().rotate(Math.PI/10).scale(0.75).translate(100,40);
-	d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageMouseDownIn,this);
-	d.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this._imageMouseDownOut,this);
-	d.addFunction(Canvas.EVENT_MOUSE_UP,this._imageMouseUpIn,this);
-	d.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._imageMouseUpOut,this);
-	d.addFunction(Canvas.EVENT_MOUSE_MOVE,this._imageMouseMoveIn,this);
-	d.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._imageMouseMoveOut,this);
 	this._isDragging = false;
 	this._dragOffset = new V2D();
 	this._dragMatrix = new Matrix2D();
@@ -94,6 +88,13 @@ Crop.prototype.handleImageLoadedFromSource = function(e){
 	p.matrix().identity().rotate(Math.PI/8).scale(0.75).translate(100,40);
 	this._root.addChild(p);
 	p.addChild(d);
+	// listen after the fact
+	d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageMouseDownIn,this);
+	d.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this._imageMouseDownOut,this);
+	d.addFunction(Canvas.EVENT_MOUSE_UP,this._imageMouseUpIn,this);
+	d.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._imageMouseUpOut,this);
+	d.addFunction(Canvas.EVENT_MOUSE_MOVE,this._imageMouseMoveIn,this);
+	d.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._imageMouseMoveOut,this);
 }
 
 
