@@ -95,8 +95,21 @@ Crop.prototype.handleImageLoadedFromSource = function(e){
 	d.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._imageMouseUpOut,this);
 	d.addFunction(Canvas.EVENT_MOUSE_MOVE,this._imageMouseMoveIn,this);
 	d.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._imageMouseMoveOut,this);
+
+	this._root.graphics().clear();
+
 }
 
+Crop.prototype.drawDot = function(global){
+	this._root.graphics().setLine(1.0,0xFFFF0000);
+	this._root.graphics().setFill(0x9900FF00);
+	this._root.graphics().beginPath();
+	this._root.graphics().drawCircle(global.x,global.y, 5.0);
+	this._root.graphics().endPath();
+	this._root.graphics().fill();
+	this._root.graphics().strokeLine();
+	console.log(global.x,global.y);
+}
 
 Crop.prototype._imageMouseDownIn = function(e){
 	// need to transform global point click to local(parent) point, then apply matrix translation based on local(parent) point
@@ -106,12 +119,22 @@ Crop.prototype._imageMouseDownIn = function(e){
 	this._dragTarget = e.target;
 	this._dragOffset.copy(e.global);
 	this._dragMatrix.copy(this._dragTarget.matrix());
+	this._dragTarget.graphics().setLine(1.0,0xFFFF0000);
+	this._dragTarget.graphics().setFill(0x9900FF00);
+	this._dragTarget.graphics().beginPath();
+	this._dragTarget.graphics().drawCircle(e.local.x,e.local.y, 5.0);
+	this._dragTarget.graphics().endPath();
+	this._dragTarget.graphics().fill();
+	this._dragTarget.graphics().strokeLine();
+
+this.drawDot(e.global);
 }
 Crop.prototype._imageMouseDownOut = function(e){
 	console.log("down+ou: "+e+" "+this._isDragging);
 	if(this._isDragging){
 		//this._isDragging = false;
 	}
+	this.drawDot(e.global);
 }
 Crop.prototype._imageMouseUpIn = function(e){
 	console.log("up+in: "+e+" "+this._isDragging);
@@ -128,6 +151,13 @@ Crop.prototype._imageMouseUpOut = function(e){
 Crop.prototype._imageMouseMoveIn = function(e){
 	console.log("move+in: "+e+" "+this._isDragging);
 	if(this._isDragging){
+	// this._dragTarget.graphics().setLine(1.0,0xFFFF0000);
+	// this._dragTarget.graphics().setFill(0x9900FF00);
+	// this._dragTarget.graphics().beginPath();
+	// this._dragTarget.graphics().drawCircle(e.local.x,e.local.y, 5.0);
+	// this._dragTarget.graphics().endPath();
+	// this._dragTarget.graphics().fill();
+	// this._dragTarget.graphics().strokeLine();
 		this._imageDragUpdate(e.global);
 	}
 }
@@ -139,10 +169,17 @@ Crop.prototype._imageMouseMoveOut = function(e){
 }
 
 Crop.prototype._imageDragUpdate = function(v){
-	var diff = V2D.sub(v,this._dragOffset);
-	this._dragTemp.copy(this._dragMatrix);
-	this._dragTemp.translate(diff.x,diff.y);
-	this._dragTarget.matrix().copy(this._dragTemp);
+	this._dragTarget.matrix().copy(this._dragMatrix); // back to what it was before
+	var locA = new V2D().copy(this._dragOffset);
+	var locB = new V2D().copy(v);
+
+	DO.matrixLocalDown(this._dragTemp, this._dragTarget);
+	DO.getPointFromTransform(locA,this._dragTemp,locA);
+	DO.getPointFromTransform(locB,this._dragTemp,locB);
+
+	var diff = V2D.sub(locB,locA);
+	this._dragTarget.matrix().translate(diff.x,diff.y);
+	
 }
 
 /*

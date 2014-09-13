@@ -231,7 +231,7 @@ Stage.prototype._stageResized = function(o){
 }
 Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLOBAL POSITION INTERSECTION LOCATION
 	var path, arr, obj, intersection = this.getIntersection(pos,this._tempCanvas);
-	arr = new Array( intersection, pos );
+	//arr = new Array( intersection, pos );
 	path = new Array();
 	// OUTSIDE
 	var list = null;
@@ -245,7 +245,7 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 		var list = this._eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
 	}
 	var cum = new Matrix2D();
-	var arr;
+	//var arr;
 	if(list){ // OUTSIDE ALERTING
 		for(var i=0;i<list.length;++i){
 			var obj = list[i][0];
@@ -255,7 +255,7 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 					cum.mult(obj.matrix(),cum);
 					obj = obj.parent();
 				}
-				var o = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":pos};
+				var o = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))};
 				if(list[i].length>2){
 					list[i][1].call( list[i][2], o );
 				}else{
@@ -266,18 +266,19 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	}
 	if(intersection){ // ANCESTOR INSIDE ALERT
 		obj = intersection;
-		while(obj && obj.parent){
+		while(obj){ // } && obj.parent()){ // top parent = root ; and assuming root has identity
 			path.push(obj);
-			obj = obj.parent;
+			obj = obj.parent();
 		}
 		cum.identity();
 		while(path.length>0){ // run path 
 			obj = path.pop();
 			cum.mult(cum,obj.matrix());
-			obj.alertAll( evt,{"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":pos} );
+			obj.alertAll( evt,{"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))} );
 		}
 	}
-	arr = null; pos = null; //Code.emptyArray(arr); // results in undefined sent to events
+	// arr = null; 
+	pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 }
 Stage.prototype._canvasMouseDown = function(pos){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);

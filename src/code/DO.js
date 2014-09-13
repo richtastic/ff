@@ -18,10 +18,10 @@ DO._tempOX = new V2D();
 DO._tempOY = new V2D();
 DO._tempMatrix = new Matrix2D();
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
-DO.getPointFromTransform = function(newPos,mat,pos){
-	DO._tempO.x = 0; DO._tempO.y = 0; mat.multV2D(DO._tempO,DO._tempO);
-	DO._tempX.x = 1; DO._tempX.y = 0; mat.multV2D(DO._tempX,DO._tempX);
-	DO._tempY.x = 0; DO._tempY.y = 1; mat.multV2D(DO._tempY,DO._tempY);
+DO.getPointFromTransform = function(newPos,mat,pos){ // converts global point to local point in local point coords
+	mat.multV2D(DO._tempO,V2D.ZERO);
+	mat.multV2D(DO._tempX,V2D.DIRX);
+	mat.multV2D(DO._tempY,V2D.DIRY);
 	DO._tempOP.x = pos.x-DO._tempO.x; DO._tempOP.y = pos.y-DO._tempO.y;
 	DO._tempOX.x = DO._tempX.x-DO._tempO.x; DO._tempOX.y = DO._tempX.y-DO._tempO.y;
 	DO._tempOY.x = DO._tempY.x-DO._tempO.x; DO._tempOY.y = DO._tempY.y-DO._tempO.y;
@@ -56,31 +56,49 @@ DO.printRecursive = function(obj,cur,ind,fin){
 		DO.printRecursive(obj.children[i],ind+"|"+cur,ind,fin);
 	}
 }
-DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){
+DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){ // transform point from lower in tree to higher in tree
 	if(destinationElement==undefined){ destinationElement = null; }
 	var ele = sourceElement;
-	DO.tempMatrix.copy(ele._matrix);
+	DO._tempMatrix.copy(ele.matrix()); // .identity() ?
 	while(ele != destinationElement && ele != undefined){
 		ele = ele.parent();
 		if(ele){
-			DO.tempMatrix.mult(ele._matrix,DO.tempMatrix);
+			DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
 		}
 	}
-	DO.tempMatrix.multV2D(destinationPoint,sourcePoint);
+	DO._tempMatrix.multV2D(destinationPoint,sourcePoint);
+	return destinationPoint;
 }
-DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinationElement){
+DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinationElement){ // transform point from higher in tree to lower in tree
 	if(destinationElement==undefined){ destinationElement = null; }
 	var ele = sourceElement;
-	DO.tempMatrix.copy(ele._matrix);
+	DO._tempMatrix.copy(ele.matrix()); // .identity() ?
 	while(ele != destinationElement && ele != undefined){
 		ele = ele.parent();
 		if(ele){
-			DO.tempMatrix.mult(ele._matrix,DO.tempMatrix);
+			DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
 		}
 	}
-	DO.tempMatrix.inverse(DO.tempMatrix);
-	DO.tempMatrix.multV2D(destinationPoint,sourcePoint);
+	DO._tempMatrix.multV2D(destinationPoint,sourcePoint);
+	return destinationPoint;
 }
+DO.matrixLocalDown = function(matrix,sourceElement,destinationElement){ // transform matrix from higher in tree to lower in tree
+	if(destinationElement==undefined){ destinationElement = null; }
+	var ele = sourceElement;
+	DO._tempMatrix.identity();//copy(ele.matrix());
+	while(ele != destinationElement && ele != undefined){
+		ele = ele.parent();
+		if(ele){
+			//DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
+			DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
+		}
+		//ele = ele.parent();
+	}
+	//DO._tempMatrix.inverse(DO._tempMatrix);
+	matrix.copy(DO._tempMatrix);
+	return matrix;
+}
+
 // ------------------------------------------------------------------------------------------------------------------------ 
 function DO(parentDO){
 	DO._.constructor.call(this);
