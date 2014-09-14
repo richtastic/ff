@@ -1142,12 +1142,17 @@ DLT minimizing d<sub>alg</sub> is not invariant to coordinate shift / scaling
 <br/>
 **probability p**: probability at least one sample contains no outliers
 <br/>
-**Process**:
+**RANSAC Process**:
 for N iterations:
 - randomly select a minimum amount of data samples possible
 - determine consensus set that fits model, and support count
 - if c > T -> terminate ?
 use largest consensus set, restimate model
+**Restimation Process**:
+- find optimal fit to inliers (least squares fit by mean distance)
+- reclassify inliers
+until converge (there may be oscillation)
+[the % assumed worst outliers?]
 
 <br/>
 **s**: .
@@ -1229,9 +1234,21 @@ Sampson: ||&delta;<sub>x</sub>||<sup>2</sup> = &epsilon;<sup>T</sup>(JJ<sup>T</s
 
 
 
-### 
+### Total Least Squares (TLS): (MaxLikEst) (A+ &Delta;A)X = B + &Delta;B
+*Least Squares solves for X where  only B is corrected/perturbed* ??? AX = B + &Delta;B
+-> my understanding: A is formed by elements OF B, so they are both perturbed?
+<br/>
+best A and B for A&middot'X = B
+<br/>
+<br/>
 <br/>
 
+
+
+### 
+<br/>
+<br/>
+<br/>
 
 
 

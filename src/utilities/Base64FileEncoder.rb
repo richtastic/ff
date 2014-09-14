@@ -3,9 +3,11 @@
 require "./ByteData.rb"
 
 def FileToBase64(file_name)
-	# byte data
-	bd = ByteData.new
-	bd.set_write_head(0)
+	@@BASE64TABLE = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d",
+	"e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","+","/"]
+	# # byte data
+	# bd = ByteData.new
+	# bd.set_write_head(0)
 
 	# determine what file type
 	file = File.open(file_name,"rb")
@@ -38,10 +40,15 @@ def FileToBase64(file_name)
 		puts "unknown file type"
 		file_type = ""
 	end
+
 	# end prefix
 	prefix = "data:#{file_type};base64,"
 
 	# get base64 encoding
+	buffer = 0
+	byte = 0
+	offset = 0
+	datas = []
 	file = File.open(file_name,"rb")
 	uint = file.getc
 	while uint != nil do
@@ -49,16 +56,43 @@ def FileToBase64(file_name)
 		uint.each_byte do |c| # bullshit
 			intVal = c
 		end
-		#uint = uint.ord
-		#uint = uint.oct
-		#bd.write_uint8(uint)
-		bd.write_uint8(intVal)
+		buffer <<= 8 # room for next byte
+		buffer = buffer & 0xFFFF
+		buffer = buffer | intVal
+		if offset==0
+			num = (buffer>>2) & 0x3F
+			offset = 2
+		elsif offset==2
+			num = (buffer>>4) & 0x3F
+			offset = 4
+		elsif offset==4
+			num = (buffer>>6) & 0x3F
+			datas.push @@BASE64TABLE[num]
+			num = (buffer>>0) & 0x3F
+			buffer = 0 # buffer >>= 6
+			offset = 0
+		end
+		datas.push @@BASE64TABLE[num]
+		byte += 1
+		# bd.write_uint8(intVal)
 		uint = file.getc
 	end
-	#puts bd.to_s(2)
 	file.close()
-
-	return "#{prefix}#{bd.to_s_base_64_encoded}"
+	# remainder
+	if offset==0
+		# N/A
+	elsif offset==2
+		num = (buffer<<4) & 0x3F
+		datas.push @@BASE64TABLE[num]
+		datas.push "=="
+	elsif offset==4
+		num = (buffer<<2) & 0x3F
+		datas.push @@BASE64TABLE[num]
+		datas.push "="
+	end
+	datas = datas.join()
+	return "#{prefix}#{datas}"
+	# return "#{prefix}#{bd.to_s_base_64_encoded}"
 end
 
 
