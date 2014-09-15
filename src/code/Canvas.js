@@ -58,6 +58,8 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 			document.body.appendChild(this._canvas);
 		}
 	}
+// this._cover = document.createElement("div");
+// document.body.appendChild(this._cover);
 	this._stageFit = Canvas.STAGE_FIT_FIXED;
 	if(canWid&&canHei){
 		this._canvas.width = canWid; this._canvas.height = canHei;
@@ -505,20 +507,20 @@ Canvas.prototype.getTouchPosition = function(e){
 	return this.getMousePosition(e);
 }
 Canvas.prototype._canvasTouchStartFxn = function(e){ // e.target.touchdata[]
-	//setFeedback( "TOUCH START" );
+	console.log( "TOUCH START" );
 	e.preventDefault();
 	pos = this.getTouchPosition(e);
 	this.alertAll(Canvas.EVENT_TOUCH_START,pos);
 	pos = null;
 }
 Canvas.prototype._canvasTouchMoveFxn = function(e){
-	//setFeedback( "TOUCH MOVE" );
+	console.log( "TOUCH MOVE" );
 	e.preventDefault();
 	pos = this.getTouchPosition(e);
 	this.alertAll(Canvas.EVENT_TOUCH_MOVE,pos);
 }
 Canvas.prototype._canvasTouchEndFxn = function(e){
-	//setFeedback( "TOUCH END" );
+	console.log( "TOUCH END" );
 	e.preventDefault();
 	pos = this.getTouchPosition(e);
 	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);

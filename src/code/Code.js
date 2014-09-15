@@ -32,6 +32,8 @@ Code.JS_EVENT_TOUCH_END = "touchend";
 Code.JS_EVENT_TOUCH_ENTER = "touchenter";
 Code.JS_EVENT_TOUCH_LEAVE = "touchleave";
 Code.JS_EVENT_TOUCH_CANCEL = "touchcancel";
+Code.JS_EVENT_TOUCH_TAP = "tap";
+Code.JS_EVENT_TOUCH_DOUBLE_TAP = "dbltap";
 
 Code.JS_EVENT_DRAG_START = "dragstart";
 Code.JS_EVENT_DRAG_MOVE = "drag";

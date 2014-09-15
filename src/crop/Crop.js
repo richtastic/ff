@@ -43,61 +43,168 @@ Crop.prototype.handleStageEnterFrameFxn = function(e){
 	//console.log(e);
 }
 Crop.prototype.handleKeyUpFxn = function(e){
-	console.log(e);
+	// 
 }
 Crop.prototype.handleKeyDownFxn = function(e){
-	console.log(e);
+	if(e.keyCode==Keyboard.KEY_LET_X){
+		console.log("x");
+		//var image = this._canvas.getAsImage(100,100,10,10);
+		var image = this._stage.renderImage(200,200, this._stage.root(), null);
+		// local save
+		// image.style.position = "absolute";
+		// image.style.zIndex = "100";
+		// document.body.appendChild(image);
+/*
+// craps out sending payload >~ 1.1MB (internal type error)
+var url = "./base64data.php";
+var data = ""+image.src;
+//data = data.substr(data.indexOf(',')+1);
+//data = encodeURIComponent(data);
+// form
+var form = document.createElement("form");
+form.action = url;
+form.method = "POST";
+form.target = "_blank"; // _self, _blank
+var input = document.createElement("input");
+input.type = "hidden";
+input.name = "data";
+input.value = data;
+form.appendChild(input);
+form.display = "none";
+document.body.appendChild(form);
+form.submit();
+setTimeout(function(e){
+	document.body.removeChild(form);
+}, 1000);
+*/
+
+/*
+var win = window.open("about:blank","_blank","win");
+console.log(win);
+// INSIDE WINDOW LOAD SOME HANDLING ...
+window.addEventListener("onmessage",function(e){
+	console.log("GOT MESSAGE: "+e);
+	//
+});
+win.postMessage("...","*");
+*/
+
+
+//window.open("POST",url,data,"_blank");
+
+		// var element = new Image();
+		// var data = ""+image.src;
+		// data = encodeURIComponent(data);
+		// params = {"data": data};
+		// var ajax = new Ajax();
+		// var url = "./base64data.php";
+		// var comp = function(e){ console.log("complete: "); var img = new Image(); var url = window.URL || window.webkitURL; img.src=url.createObjectURL(e); document.body.appendChild(img); }
+		// var err = function(e){ console.log("err: "); }
+		// var con = this;
+		// ajax.postParams(url,params,con,comp,err);
+	}
 }
 Crop.prototype.handleKeyDown2Fxn = function(e){
-	console.log(e);
+	//console.log(e);
 }
 Crop.prototype.handle = function(e){
 	console.log(e);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+Crop.prototype.urlToLocalURL = function(url){
+	return "./imageCORS.php?url="+encodeURIComponent(url);
+}
 Crop.prototype.loadImageFromSource = function(src){
 	//src = "http://a.dilcdn.com/bl/wp-content/uploads/sites/2/2014/08/10500323_10152575001630742_1989013401463860381_n-250x188.jpg";
+	src = this.urlToLocalURL("http://a.dilcdn.com/bl/wp-content/uploads/sites/2/2014/08/10500323_10152575001630742_1989013401463860381_n-250x188.jpg");
+	// src = encodeURIComponent(src);
+	// src = "./imageCORS.php?url="+src;
 	//src = "http://localhost/images/crossorigin.php?source="+escape(src);
-	//console.log(src);
-	src = "../images/pattern.jpg";
+	console.log(src);
+	//src = "../images/pattern.jpg";
 
+	this.CORSimage(src);
+//return;
 	this._imageLoader.setLoadList("",[src], this,this.handleImageLoadedFromSource);
 	this._imageLoader.load();
 }
+
+Crop.prototype.CORSimage = function(url){
+	var localURL = "./imageCORS.php";
+	// ...
+}
+
+Crop.prototype.convertImageToData = function(img){
+	var image = new Image();
+	image.crossOrigin = "Anonymous";
+	image.src = img.value;
+	image.width = img.width;
+	image.height = img.height;
+//
+	var width = image.width;
+	var height = image.height;
+	var canvas = new Canvas(null,width,height,Canvas.STAGE_FIT_FIXED);
+	var stage = new Stage(canvas);
+	var d = new DOImage(image);
+	stage.addChild(d);
+	var data = stage.renderImage(width,height,d,null);
+	//var data = canvas.getAsImage(0,0,width,height);
+	return data;
+}
+
+Crop.prototype.handleImageLoadedFromSourceX = function(e){
+	var d, p;
+	var img = e.images[0];
+
+	var image = new Image();
+	image.onload = function(){ console.log("loaded image"); }
+	image.crossOrigin = "Anonymous";
+	image.src = img.value;
+	image.width = img.width;
+	image.height = img.height;
+}
+
+
 Crop.prototype.handleImageLoadedFromSource = function(e){
 	var d, p;
 	var image = e.images[0];
-	document.body.appendChild(image);
-	image.setAttribute("id","trash");
-	image.setAttribute("crossorigin","localhost");
-	//image.crossOrigin = 'anonymous';
-	image.crossOrigin = 'Anonymous';
-	image = document.getElementById("trash");
 
-	image.style.display = "none";
+	// image = this.convertImageToData(image);
+	// console.log(image);
+
+
+	// document.body.appendChild(image);
+	// image.setAttribute("id","trash");
+	// image.setAttribute("crossorigin","localhost");
+	// //image.crossOrigin = 'anonymous';
+	// image.crossOrigin = 'Anonymous';
+	// image = document.getElementById("trash");
+	//image.style.display = "none";
+
 	
 	d = new DOImage(image);
-	d.matrix().identity().rotate(Math.PI/10).scale(0.75).translate(100,40);
+	d.matrix().identity().rotate(Math.PI/10).scale(4.75).translate(-100,40);
 	this._isDragging = false;
 	this._dragOffset = new V2D();
 	this._dragMatrix = new Matrix2D();
 	this._dragTemp = new Matrix2D();
 	//
 	p = new DOImage(image);
-	p.matrix().identity().rotate(Math.PI/8).scale(0.75).translate(100,40);
+	p.matrix().identity().rotate(Math.PI/8).scale(2.75).translate(100,-40);
 	this._root.addChild(p);
 	p.addChild(d);
-	// listen after the fact
-	d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageMouseDownIn,this);
-	d.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this._imageMouseDownOut,this);
-	d.addFunction(Canvas.EVENT_MOUSE_UP,this._imageMouseUpIn,this);
-	d.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._imageMouseUpOut,this);
-	d.addFunction(Canvas.EVENT_MOUSE_MOVE,this._imageMouseMoveIn,this);
-	d.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._imageMouseMoveOut,this);
+	// // listen after the fact
+	// d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageMouseDownIn,this);
+	// d.addFunction(Canvas.EVENT_MOUSE_DOWN_OUTSIDE,this._imageMouseDownOut,this);
+	// d.addFunction(Canvas.EVENT_MOUSE_UP,this._imageMouseUpIn,this);
+	// d.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._imageMouseUpOut,this);
+	// d.addFunction(Canvas.EVENT_MOUSE_MOVE,this._imageMouseMoveIn,this);
+	// d.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._imageMouseMoveOut,this);
+
+	d.enableDragging();
+	p.enableDragging();
 
 	this._root.graphics().clear();
-
 }
 
 Crop.prototype.drawDot = function(global){

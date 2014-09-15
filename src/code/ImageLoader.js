@@ -64,7 +64,11 @@ ImageLoader.prototype._next = function(e){
 		ctx.kill();
 		return;
 	}
-	var img = new Image(); // img.crossOrigin = 'anonymous';
+	var img = new Image();
+	//img.crossOrigin = "anonymous";
+	//img.crossOrigin = "Anonymous";
+	//img.crossOrigin = "";
+	//img.crossOrigin = "*";
 	ctx._images[ctx._index] = img;
 	ctx._image = img;
 	img.contextX = ctx;

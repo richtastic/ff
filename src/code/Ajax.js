@@ -99,7 +99,7 @@ Ajax.prototype.get = function(url,con,comp,err){
 	this.context(con);
 	this.send(url,Ajax.METHOD_TYPE_GET,comp,err);
 }
-Ajax.prototype.post = function(url,con,comp,err){
+Ajax.prototype.post = function(url,con,comp,err){ // to actually post params apparently the content type header must be present -> use below
 	this.context(con);
 	this.send(url,Ajax.METHOD_TYPE_POST,comp,err);
 }
@@ -156,7 +156,7 @@ Ajax.prototype._stateChange = function(){
 		}else{
 			var response = this._request.responseText;
 			var responseCode = this._request.status;
-			if(Math.floor(responseCode/200)==0){ // 204, ... 300
+			if( Math.floor(responseCode/200)==1 || Math.floor(responseCode/300)==1 ){ // 200s or 300s  ////// 204, ... 300?
 				if(this._callback!==null && this._callback!==undefined){
 					this._callback.call( this._context, response, this );
 				}

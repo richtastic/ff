@@ -17,6 +17,7 @@ DO._tempOP = new V2D();
 DO._tempOX = new V2D();
 DO._tempOY = new V2D();
 DO._tempMatrix = new Matrix2D();
+DO._dragTempMatrix = new Matrix2D();
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
 DO.getPointFromTransform = function(newPos,mat,pos){ // converts global point to local point in local point coords
 	mat.multV2D(DO._tempO,V2D.ZERO);
@@ -149,9 +150,11 @@ DO.prototype.addFunction = function(str,fxn,ctx){
 	}
 }
 DO.prototype.removeFunction = function(str,fxn,ctx){
-	DO._.addFunction.call(this,str,fxn,ctx);
+	DO._.removeFunction.call(this,str,fxn,ctx);
 	if(this._stage){
 		this._stage.removeFunctionDisplay(this,str,fxn,ctx);
+	}else{
+		// leaked? or should be called during remove child ?
 	}
 }
 DO.prototype.alertAll = function(str,o){
@@ -339,140 +342,73 @@ DO.prototype.removeListeners = function(){
 	//
 }
 // ------------------------------------------------------------------------------------------------------------------------ DRAGGING
-// 	// dragging
+DO.prototype.enableDragging = function(){
+	this._isDragging = false;
+	this._dragOffset = new V2D();
+	this._dragMatrix = new Matrix2D();
+	this._dragStop(); // double check
+	this.addFunction(Canvas.EVENT_MOUSE_DOWN,this._dragMouseDownIn,this);
+}
+DO.prototype.disableDragging = function(){
+	this._dragStop(); // double check
+	this.removeFunction(Canvas.EVENT_MOUSE_DOWN,this._dragMouseDownIn,this);
+	this._isDragging = false;
+	this._dragOffset = null;
+	this._dragMatrix = null;
+}
+DO.prototype._dragStart = function(){
+	this.addFunction(Canvas.EVENT_MOUSE_UP,this._dragMouseUpIn,this);
+	this.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._dragMouseUpOut,this);
+	this.addFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
+	this.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
+	this._isDragging = true;
+}
+DO.prototype._dragStop = function(){
+	this._isDragging = false;
+	this.removeFunction(Canvas.EVENT_MOUSE_UP,this._dragMouseUpIn,this);
+	this.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._dragMouseUpOut,this);
+	this.removeFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
+	this.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
+}
+DO.prototype._dragMouseDownIn = function(e){
+	if(e.target==this){
+		this._dragOffset.copy(e.global);
+		this._dragMatrix.copy(this.matrix());
+		this._dragStart();
+	}
+}
+DO.prototype._dragMouseUpIn = function(e){
+	if(this._isDragging){ this._dragStop(); }
+}
+DO.prototype._dragMouseUpOut = function(e){
+	if(this._isDragging){ this._dragStop(); }
+}
+DO.prototype._dragMouseMoveIn = function(e){
+	if(this._isDragging){ this._dragUpdate(e.global); }
+}
+DO.prototype._dragMouseMoveOut = function(e){
+	if(this._isDragging){
+		this._dragUpdate(e.global);
+	}
+}
+DO.prototype._dragUpdate = function(v){
+	this.matrix().copy(this._dragMatrix);
+	var locA = new V2D().copy(this._dragOffset);
+	var locB = new V2D().copy(v);
+	DO.matrixLocalDown(DO._dragTempMatrix, this);
+	DO.getPointFromTransform(locA,DO._dragTempMatrix,locA);
+	DO.getPointFromTransform(locB,DO._dragTempMatrix,locB);
+	var diff = V2D.sub(locB,locA);
+	this.matrix().translate(diff.x,diff.y);
+}
+// 	fun things to add
 // 	this._checkLimits = false;
 // 	this._rangeLimitsX = [-100, 100];
 // 	this._rangeLimitsY = [-100, 100];
-// 	this.checkRangeLimitsOn = function(xLim,yLim){
-// 		if(xLim!==undefined){
-// 			this._rangeLimitsX[0] = xLim[0];
-// 			this._rangeLimitsX[1] = xLim[1];
-// 		}
-// 		if(yLim!==undefined){
-// 			this._rangeLimitsY[0] = yLim[0];
-// 			this._rangeLimitsY[1] = yLim[1];
-// 		}
-// 		this._checkLimits = true;
-// 	}
-// 	this.checkRangeLimitsOff = function(){
-// 		this._checkLimits = false;
-// 	}
-// 	this.dragEnabled = false;
-// 	this.dragging = false;
 // 	this.dragAnyChildren = false;
 // 	this.dragOffset = new V2D();
 // 	this.dragRoundingX = 0;
 // 	this.dragRoundingY = 0;
-// 	this.setDraggingEnabled = function(rX,rY, any){
-// 		if(rX!==null && rX!==undefined && rX!==0){ this.dragRoundingX = rX; }else{ this.dragRoundingX = 0; }
-// 		if(rY!==null && rY!==undefined && rY!==0){ this.dragRoundingY = rY; }else{ this.dragRoundingY = 0; }
-// 		if(any!==null && any!==undefined){ this.dragAnyChildren = any; }else{ this.dragAnyChildren = false; }
-// 		this.dragEnabled = true;
-// 		this.addFunction(Canvas.EVENT_MOUSE_DOWN,this.dragMouseDownFxn);
-// 	};
-// 	this.setDraggingDisabled = function(){
-// 		this.removeFunction(Canvas.EVENT_MOUSE_DOWN,this.dragMouseDownFxn);
-// 		this.dragEnabled = false;
-// 	};
-// 	this.startDrag = function(pos,ele){
-// 		if(!this.dragEnabled){ return; }
-// 		this.dragOffset.x = pos.x;
-// 		this.dragOffset.y = pos.y;
-// 		this.dragging = true;
-// 	};
-// 	this.stopDrag = function(){
-// 		this.dragging = false;
-// 	};
-// 	this.dragMouseDownFxn = function(e){
-// 		//console.log("M-DOWN");
-// 		if(this.dragEnabled && (e[0]==this || this.dragAnyChildren)){
-// 			var pos = e[1];
-// 			this.startDrag(e[1],e[0]);
-// 			this.addFunction(Canvas.EVENT_MOUSE_MOVE,this.mouseMoveDragCheckFxn);
-// 			this.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this.mouseMoveDragCheckFxnOutside);
-// 			this.addFunction(Canvas.EVENT_MOUSE_UP,this.dragMouseUpFxn);
-// 			this.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this.dragMouseUpFxn);
-// 		}
-// 	};
-// 	this.dragMouseUpFxn = function(e){
-// 		if(true){//this.dragEnabled && this.dragging){
-// 			this.removeFunction(Canvas.EVENT_MOUSE_MOVE,this.mouseMoveDragCheckFxn);
-// 			this.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this.mouseMoveDragCheckFxnOutside);
-// 			this.removeFunction(Canvas.EVENT_MOUSE_UP,this.dragMouseUpFxn);
-// 			this.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this.dragMouseUpFxn);
-// 			this.stopDrag();
-// 			this.dragging = false;
-// 		}
-// 		//console.log("M-UP "+this.dragging);
-// 	};
-// 	this.mouseMoveDragCheckFxnOutside = function(e){
-// 		if(this.dragEnabled && this.dragging){
-// 			this.mouseMoveDragCheckFxn(e,false);
-// 		}else{
-// 			//console.log("RE-MOVED");
-// 			this.removeFunction(Canvas.EVENT_MOUSE_MOVE,this.mouseMoveDragCheckFxn);
-// 			this.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this.mouseMoveDragCheckFxnOutside);
-// 			this.removeFunction(Canvas.EVENT_MOUSE_UP,this.dragMouseUpFxn);
-// 			this.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this.dragMouseUpFxn);
-// 		}
-// 	}
-// 	this.mouseMoveDragCheckFxn = function(e,check){
-// 		//console.log("move "+this.dragging);
-// 		if(this.dragging){
-// 			if(e[0]==this || !check){
-// 				var pos = e[1];
-// 				var diffX = pos.x - this.dragOffset.x;
-// 				var diffY = pos.y - this.dragOffset.y;
-// 				// GRID ROUNDING
-// 				if(this.dragRoundingX>0){
-// 					diffX = this.dragRoundingX*Math.round(diffX/this.dragRoundingX);
-// 				}
-// 				if(this.dragRoundingY>0){
-// 					diffY = this.dragRoundingY*Math.round(diffY/this.dragRoundingY);
-// 				}
-// 				this.matrix.translate(diffX,diffY);
-// 				//
-// 				if(this._checkLimits){
-// 					var xNum = this.matrix.translateX();
-// 					var yNum = this.matrix.translateY();
-// 					if(xNum<this._rangeLimitsX[0]){
-// 						this.matrix.pretranslate(this._rangeLimitsX[0]-xNum,0);
-// 					}else if(xNum>this._rangeLimitsX[1]){
-// 						this.matrix.pretranslate(this._rangeLimitsX[1]-xNum,0);
-// 					}
-// 					if(yNum<this._rangeLimitsY[0]){
-// 						this.matrix.pretranslate(0,this._rangeLimitsY[0]-yNum);
-// 					}else if(yNum>this._rangeLimitsY[1]){
-// 						this.matrix.pretranslate(0,this._rangeLimitsY[1]-yNum);
-// 					}
-// 				}
-// 				this.alertAll(DO.EVENT_DRAGGED,this);
-// 			}
-// 		}
-// 	};
-// 	// 
-// 	this.enableClickListener = function(){
-// 		this.addFunction(Canvas.EVENT_MOUSE_DOWN,this.onMouseDownClickCheckFxn);
-// 		this.addFunction(Canvas.EVENT_MOUSE_UP,this.onMouseUpClickCheckFxn);
-// 	}
-// 	this.disableClickListener = function(){
-// 		this.removeFunction(Canvas.EVENT_MOUSE_DOWN,this.onMouseDownClickCheckFxn);
-// 		this.removeFunction(Canvas.EVENT_MOUSE_UP,this.onMouseUpClickCheckFxn);
-// 	}
-// 	this.click_check = false;
-// 	this.onMouseDownClickCheckFxn = function(o){
-// 		console.log("EVENT_DOWN");
-// 		this.alertAll(DO.EVENT_DOWN,o);
-// 		this.click_check = true;
-// 	}
-// 	this.onMouseUpClickCheckFxn = function(o){
-// 		this.alertAll(DO.EVENT_UP,o);
-// 		if(this.click_check){
-// 			this.alertAll(DO.EVENT_CLICKED,o);
-// 		}
-// 		this.click_check = false;
-// 	}
-// 	//
 // ------------------------------------------------------------------------------------------------------------------------ DEBUGGING
 DO.prototype.toString = function(){
 	return "[DO "+this._id+(this._stage==null?"-":"*")+"]";

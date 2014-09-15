@@ -15,6 +15,7 @@ function defaultClassesLoadedFxn(){
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
 	var crop = new Crop();
+	document.body.addEventListener("touchstart",function(e){ console.log("e "+e); } );
 }
 </script>
 </head>

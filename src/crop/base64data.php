@@ -13,6 +13,9 @@ if(!$base64string){ // try POST
 	$base64string = $_POST[$PARAM_CONTENT_DATA];
 }
 
+// print_r( ini_get_all() );
+//echo ini_get("upload_max_filesize");
+
 if($base64string){
 	// find content type if not set
 	if(!$base64content){
@@ -35,6 +38,6 @@ if($base64string){
 	echo $base64data;
 	exit;
 }else{
-	echo "no content";
+	echo "no content?";
 }
 ?>

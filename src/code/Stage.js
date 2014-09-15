@@ -19,7 +19,6 @@ function Stage(can, fr){
 	this._root = new DO();
 	DO.addToStageRecursive(this._root,this);
 	this._root.graphics().clear();
-//	this.addListeners();
 }
 Code.inheritClass(Stage,Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES
@@ -169,6 +168,7 @@ Stage.prototype.stop = function(){
 	this._timer.stop();
 }
 Stage.prototype.addListeners = function(){
+	console.log("listening...");
 	this._timer.addFunction(Ticker.EVENT_TICK,this._enterFrame,this);
 	this._canvas.addListeners();
 	this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this._stageResized,this);
@@ -177,6 +177,9 @@ Stage.prototype.addListeners = function(){
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this._canvasMouseClick,this);
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this._canvasMouseMove,this);
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_EXIT,this._canvasMouseExit,this);
+	this._canvas.addFunction(Canvas.EVENT_TOUCH_START,this._canvasTouchStart,this);
+	this._canvas.addFunction(Canvas.EVENT_TOUCH_MOVE,this._canvasTouchMove,this);
+	this._canvas.addFunction(Canvas.EVENT_TOUCH_END,this._canvasTouchEnd,this);
 }
 Stage.prototype.removeListeners = function(){
 	this._timer.removeFunction(Ticker.EVENT_TICK,this._enterFrame,this);
@@ -187,6 +190,9 @@ Stage.prototype.removeListeners = function(){
 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_CLICK,this._canvasMouseClick,this);
 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_MOVE,this._canvasMouseMove,this);
 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_EXIT,this._canvasMouseExit,this);
+	this._canvas.removeFunction(Canvas.EVENT_TOUCH_START,this._canvasTouchStart,this);
+	this._canvas.removeFunction(Canvas.EVENT_TOUCH_MOVE,this._canvasTouchMove,this);
+	this._canvas.removeFunction(Canvas.EVENT_TOUCH_END,this._canvasTouchEnd,this);
 }
 // ------------------------------------------------------------------------------------------------------------------------ DISPLAY LIST
 Stage.prototype.addChild = function(ch){
@@ -299,6 +305,22 @@ Stage.prototype._canvasMouseMove = function(pos){
 Stage.prototype._canvasMouseExit = function(e){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_EXIT,pos); // ...
 	this.alertAll(Canvas.EVENT_MOUSE_EXIT,pos);
+}
+
+Stage.prototype._canvasTouchStart = function(pos){
+	console.log("start "+pos);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
+	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+}
+Stage.prototype._canvasTouchMove = function(pos){
+	console.log("move "+pos);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
+	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+}
+Stage.prototype._canvasTouchEnd = function(pos){
+	console.log("end "+pos);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,pos);
+	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
 }
 
 Stage.prototype.kill = function(){
