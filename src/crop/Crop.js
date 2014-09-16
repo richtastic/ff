@@ -165,32 +165,34 @@ Crop.prototype.handleImageLoadedFromSourceX = function(e){
 }
 
 
+Crop.prototype.createEditHandle = function(){
+	var wid = 30, hei = 30, d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0x99FF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(-wid*0.5,-hei*0.5,wid,hei);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	return d;
+}
+
 Crop.prototype.handleImageLoadedFromSource = function(e){
 	var d, p;
 	var image = e.images[0];
-
-	// image = this.convertImageToData(image);
-	// console.log(image);
-
-
-	// document.body.appendChild(image);
-	// image.setAttribute("id","trash");
-	// image.setAttribute("crossorigin","localhost");
-	// //image.crossOrigin = 'anonymous';
-	// image.crossOrigin = 'Anonymous';
-	// image = document.getElementById("trash");
-	//image.style.display = "none";
+	//
 
 	
 	d = new DOImage(image);
-	d.matrix().identity().rotate(Math.PI/10).scale(4.75).translate(-100,40);
+	d.matrix().identity().rotate(Math.PI/10).scale(0.75).translate(-100,40);
 	this._isDragging = false;
 	this._dragOffset = new V2D();
 	this._dragMatrix = new Matrix2D();
 	this._dragTemp = new Matrix2D();
 	//
 	p = new DOImage(image);
-	p.matrix().identity().rotate(Math.PI/8).scale(2.75).translate(100,-40);
+	p.matrix().identity().rotate(Math.PI/8).scale(0.75).translate(100,-40);
 	this._root.addChild(p);
 	p.addChild(d);
 	// // listen after the fact
@@ -204,8 +206,23 @@ Crop.prototype.handleImageLoadedFromSource = function(e){
 	d.enableDragging();
 	p.enableDragging();
 
-	this._root.graphics().clear();
+	this._root.graphics().clear(); /// ... for drawling dots
+
+
+
+	var block = this.createEditHandle();
+	this._root.addChild(block);
+	block.enableDragging();
+	block.addFunction(DO.EVENT_DRAG_BEGIN, function(e){ console.log("begun: "+e); }, this);
+	block.addFunction(DO.EVENT_DRAG_MOVE, function(e){ console.log("move: "+e); }, this);
+	block.addFunction(DO.EVENT_DRAG_END, function(e){ console.log("end: "+e); }, this);
+
 }
+/*
+handle: listen for start drag:
+	- sides/coreners: stretching - BOUNDING BOX, OR ROTATE-WITH
+	- rot-handle
+*/
 
 Crop.prototype.drawDot = function(global){
 	this._root.graphics().setLine(1.0,0xFFFF0000);

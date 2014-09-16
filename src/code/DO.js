@@ -1,7 +1,9 @@
 // DO.js
 // DO.EVENT_ADDED_TO_STAGE = "do.addtosta";
 // DO.EVENT_REMOVED_FROM_STAGE = "do.remfrosta";
-// DO.EVENT_DRAGGED = "do.evtdragged";
+DO.EVENT_DRAG_BEGIN = "do.evtdrgbeg";
+DO.EVENT_DRAG_MOVE = "do.evtdrgmov";
+DO.EVENT_DRAG_END = "do.evtdrgend";
 // DO.EVENT_DOWN = "do.evtdown";
 // DO.EVENT_UP = "do.evtup";
 // DO.EVENT_CLICKED = "do.evtclicked";
@@ -356,42 +358,43 @@ DO.prototype.disableDragging = function(){
 	this._dragOffset = null;
 	this._dragMatrix = null;
 }
-DO.prototype._dragStart = function(){
+DO.prototype._dragStart = function(e){
 	this.addFunction(Canvas.EVENT_MOUSE_UP,this._dragMouseUpIn,this);
 	this.addFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._dragMouseUpOut,this);
 	this.addFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
 	this.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
 	this._isDragging = true;
+	this.alertAll(DO.EVENT_DRAG_BEGIN, e);
 }
-DO.prototype._dragStop = function(){
+DO.prototype._dragStop = function(e){
 	this._isDragging = false;
 	this.removeFunction(Canvas.EVENT_MOUSE_UP,this._dragMouseUpIn,this);
 	this.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._dragMouseUpOut,this);
 	this.removeFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
 	this.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
+	this.alertAll(DO.EVENT_DRAG_END, e);
 }
 DO.prototype._dragMouseDownIn = function(e){
 	if(e.target==this){
 		this._dragOffset.copy(e.global);
 		this._dragMatrix.copy(this.matrix());
-		this._dragStart();
+		this._dragStart(e);
 	}
 }
 DO.prototype._dragMouseUpIn = function(e){
-	if(this._isDragging){ this._dragStop(); }
+	if(this._isDragging){ this._dragStop(e); }
 }
 DO.prototype._dragMouseUpOut = function(e){
-	if(this._isDragging){ this._dragStop(); }
+	if(this._isDragging){ this._dragStop(e); }
 }
 DO.prototype._dragMouseMoveIn = function(e){
-	if(this._isDragging){ this._dragUpdate(e.global); }
+	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragMouseMoveOut = function(e){
-	if(this._isDragging){
-		this._dragUpdate(e.global);
-	}
+	if(this._isDragging){ this._dragUpdate(e); }
 }
-DO.prototype._dragUpdate = function(v){
+DO.prototype._dragUpdate = function(e){
+	v = e.global;
 	this.matrix().copy(this._dragMatrix);
 	var locA = new V2D().copy(this._dragOffset);
 	var locB = new V2D().copy(v);
@@ -400,6 +403,7 @@ DO.prototype._dragUpdate = function(v){
 	DO.getPointFromTransform(locB,DO._dragTempMatrix,locB);
 	var diff = V2D.sub(locB,locA);
 	this.matrix().translate(diff.x,diff.y);
+	this.alertAll(DO.EVENT_DRAG_MOVE, e);
 }
 // 	fun things to add
 // 	this._checkLimits = false;
@@ -421,27 +425,18 @@ DO.prototype.print = function(){
 
 
 
-
-
-// //console.log("new DO");
-// 	/*
-// 	this.clearGraphics();
-// 	this.setFillARGB(0x0000FF99);
-// 	this.drawRect(0,0,100,100);
-// 	this.setLine(1.0,0x00FF00);
-// 	this.beginPath();
-// 	this.moveTo(0,0);
-// 	this.lineTo(100,0);
-// 	this.lineTo(100,100);
-// 	this.lineTo(0,100);
-// 	this.lineTo(0,0);
-// 	this.strokeLine();
-// 	this.endPath();
-// 	*/
-// // --------------
-// 	//this.addListeners();
-// 	//console.log("ADD LISTENERS");
-// }
-
+/*
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0x99FF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(100,100);
+	d.graphics().lineTo(-100,100);
+	d.graphics().drawRect(-50,-20, 100,40);
+	d.graphics().drawCircle(0,0, 100.0);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.graphics().strokeLine();
+*/
 
 
