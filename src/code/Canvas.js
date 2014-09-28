@@ -426,6 +426,7 @@ Canvas.prototype.addListeners = function(){
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
 		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
+			this._handleWindowResizedFxn(); // expect a recheck, rather than trigger externally
 		this._listening = true;
 	}
 }
@@ -527,9 +528,6 @@ Canvas.prototype._canvasTouchEndFxn = function(e){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ SCREEN OPERATIONS
-Canvas.prototype.checkResize = function(){
-	this._handleWindowResizedFxn();
-}
 Canvas.prototype._handleWindowResizedFxn = function(e){
 	var p = new V2D(window.innerWidth,window.innerHeight);
 	if(this._stageFit==Canvas.STAGE_FIT_FILL){

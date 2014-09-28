@@ -51,6 +51,29 @@ V2D.sub = function(c,a,b){ // same as diff
 	}
 	return new V2D(c.x-a.x,c.y-a.y);
 }
+
+V2D.avg = function(a,b,c){ // a = average(b,c) === midpoint
+	if(c===undefined){ c = b; b = a; a = new V2D(); }
+	a.set( (b.x+c.x)*0.5, (b.y+c.y)*0.5 );
+	return a;
+}
+V2D.scale = function(a,b,c){ // a = b*c
+	if(c===undefined){ c = b; b = a; a = new V2D(); }
+	a.set( b.x*c, b.y*c );
+	return a;
+}
+V2D.min = function(a,b,c){ // a = min(b,c)
+	if(c===undefined){ c = b; b = a; a = new V2D(); }
+	a.x = b.x<c.x?b.x:c.x;
+	a.y = b.y<c.y?b.y:c.y;
+	return a;
+}
+V2D.max = function(a,b,c){ // a = max(b,c)
+	if(c===undefined){ c = b; b = a; a = new V2D(); }
+	a.x = b.x>c.x?b.x:c.x;
+	a.y = b.y>c.y?b.y:c.y;
+	return a;
+}
 V2D.angle = function(a,b){
 	var lenA = a.length();
 	var lenB = b.length();
@@ -98,19 +121,24 @@ V2D.prototype.norm = function(){
 	dist = Math.sqrt(this.x*this.x+this.y*this.y);
 	if(dist==0){ return; }
 	this.x = this.x/dist; this.y = this.y/dist;
+	return this;
 }
 V2D.prototype.scale = function(c){
 	this.x *= c; this.y *= c;
+	return this;
 }
 V2D.prototype.setLength = function(l){
 	this.norm();
 	this.x *= l; this.y *= l;
+	return this;
 }
 V2D.prototype.add = function(v){
 	this.x += v.x; this.y += v.y;
+	return this;
 }
 V2D.prototype.sub = function(v){
 	this.x -= v.x; this.y -= v.y;
+	return this;
 }
 V2D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+">";
