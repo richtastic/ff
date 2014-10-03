@@ -33,7 +33,7 @@ Hot.prototype._refreshDisplay = function(){
 							{ "location": new V2D(2,2) }
 						];
 	}
-	var i, plane, o, d, p, beacon, beacons=this._beacons, device=this._device, planes=this._halfPlanes;
+	var i, j, plane, a, b, c, o, d, p, beacon, beacons=this._beacons, device=this._device, planes=this._halfPlanes;
 	this._displayScale = 100.0;
 	this._root.graphics().clear();
 	for(i=0; i<beacons.length; ++i){
@@ -58,15 +58,113 @@ Hot.prototype._refreshDisplay = function(){
 	}
 	// POLYGON FROM LIST OF PLANES
 	// start off with bounding box at infinty defined by 4 points (CW)
-	// for each half plane in list:
-	//		for each edge in polygon:
-	//			if intersection:
-	//				START DROP LIST AT NEXT POINT (if on negative half) OR PREV POINT (if on positive half)
-	//				STOP DROP LIST AT PREV POINT (neg) OR NEXT (pos)
-	//					BREAK
-	//		drop points in set
-	//	
+	var boxCenter = new V2D(0,0), boxWidth = 1E4, boxHeight = 1E6;
+	//var boxCenter = new V2D(6,2.5), boxWidth = 5, boxHeight = 2;
+	var boxTL = new V2D(boxCenter.x-boxWidth, boxCenter.y+boxHeight);
+	var boxTR = new V2D(boxCenter.x+boxWidth, boxCenter.y+boxHeight);
+	var boxBR = new V2D(boxCenter.x+boxWidth, boxCenter.y-boxHeight);
+	var boxBL = new V2D(boxCenter.x-boxWidth, boxCenter.y-boxHeight);
+	var polygon = [boxTL,boxTR,boxBR,boxBL]; // CW
+	for(i=0;i<planes.length;++i){
+		plane = planes[i];
+		var dropIndexStart = -1;
+		var dropIndexStop = -1;
+		var dropIndexForward = true;
+		var intList = [];
+		for(j=0;j<polygon.length;++j){
+			a = polygon[j];
+			b = polygon[(j+1)%polygon.length];
+			c = plane.org;
+			d = V2D.rotate(plane.dir, -Math.PI*0.5);
+			d = V2D.add(c,d);
+			var intersection = Code.lineSegLineIntersect2D(a,b, c,d);
+			if(intersection){
+// WEIRDNESS IF LINES ARE PARALLEL  AND  PERP+share a point
+				console.log("PLANE INTERSECTION: "+intersection+"   "+a+","+b);
+				if(intList.length>0){
+					if(intersection.x==intList[0].x && intersection.y==intList[0].y){
+						console.log("CONTINUE");
+						continue;
+					}
+				}
+				intList.push( new V2D(intersection.x,intersection.y) );
+				var dot = V2D.dot(plane.dir, V2D.sub(a, plane.org) ); //
+				if(dot==0){
+					dot = -V2D.dot(plane.dir, V2D.sub(b, plane.org) );
+				}
+				console.log("dot: "+dot);
+				if(dropIndexStart>=0){
+					//if(dot<0){ dropIndexForward=false; }
+					//if(dot>=0){ // keep b
+					if(dropIndexForward){
+						dropIndexStop = j; // drop a
+					}else{
+						dropIndexStop = j+1; // drop b
+					}
+					break;
+				}else{
+					if(dot<0){ dropIndexForward=false; }
+					if(dropIndexForward){ // keep a
+						dropIndexStart = j+1; // drop b
+					}else{
+						dropIndexStart = j; // drop a
+					}
+				}
+			}
+		}
+		if(dropIndexStart>=0 && dropIndexStop>=0 && intList.length>0){
+			dropIndexStart = dropIndexStart%polygon.length;
+			dropIndexStop = dropIndexStop%polygon.length;
+			console.log("dropping: "+dropIndexStart+" -> "+dropIndexStop);
+			// if(dropIndexStart>dropIndexStop){
+			// 	console.log("FLIP");
+			// }
+			console.log("A: "+polygon);
+			if(dropIndexForward){
+console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= FORWARD");
+				console.log(" "+dropIndexStart+" "+(dropIndexStop-dropIndexStart+1) );
+				polygon.splice(dropIndexStart,dropIndexStop-dropIndexStart+1);
+				console.log("2: "+polygon);
+				Code.arrayInsertArray(polygon, dropIndexStart, intList);
+			}else{ // reverse
+console.log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= REVERSE");
+				polygon.splice(0,dropIndexStart+1);
+				console.log("2: "+polygon);
+				intList = intList.reverse();
+				if(dropIndexStart!=dropIndexStop){ // drop multiple
+					if(dropIndexStart>dropIndexStop){
+						console.log("flip");
+						a = dropIndexStart;
+						dropIndexStart = dropIndexStop;
+						dropIndexStop = a;
+// FINISHED?
+						//polygon.splice(dropIndexStart,dropIndexStop-dropIndexStart+1);
+						Code.arrayInsertArray(polygon, dropIndexStart, intList);
+					}else{
+						console.log("norm: "+dropIndexStop+" "+(polygon.length-dropIndexStop+1));
+						polygon.splice(dropIndexStop-dropIndexStart-1,polygon.length-dropIndexStop+1);
+						console.log("3: "+polygon);
+						//Code.arrayInsertArray(polygon, polygon.length-1, intList);
+						Code.arrayUnshiftArray(polygon, intList);
+						//Code.arrayPushArray(intList, polygon);
+					}
+				}else{ // drop single
+					console.log("sngle");
+					Code.arrayInsertArray(polygon, dropIndexStart, intList);
+				}
+			}
+			console.log("B: "+polygon);
+		}
+	}
 	// if resulting polygon does not contain a point on a given half plane - discard the half plane from the set
+	//
+	for(i=0;i<polygon.length;++i){
+		a = V2D.copy(polygon[i])
+		b = V2D.copy(polygon[(i+1)%polygon.length]);
+		a.scale(this._displayScale);
+		b.scale(this._displayScale);
+		this.drawLine(a,b, 0xFF0033CC); // intersection with disaply rect?
+	}
 	//
 	this.drawDot( V2D.scale(device.location,this._displayScale), 0xFF0000FF,0xFF000099, 5.0);
 	//this.drawDot( V2D.scale(calculated.location,this._displayScale), 0x9900FF00,0xCC009900, 3.0);

@@ -9,7 +9,7 @@ function pageLoadedFxn(){
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
-	scriptLoader = new ScriptLoader("./",["Crop.js"],this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader = new ScriptLoader("./",["DOEdit.js","Crop.js"],this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(o){}

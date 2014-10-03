@@ -40,15 +40,15 @@ Triangulate.prototype._refreshDisplay = function(){
 }
 Triangulate.prototype.doTriangulation = function(){
 	if(!this._phone){
-		this._phone = { location:new V2D(6.5,1.5) };
-		this._phoneCalculated = { location:new V2D() }
+		this._phone = { location:new V3D(6.5,1.5,0) };
+		this._phoneCalculated = { location:new V3D() }
 		this._beacons = 	[
-					{"id":0, location:new V2D(1,1)},
-					{"id":1, location:new V2D(2,1)},
-					{"id":2, location:new V2D(1,3)},
-					{"id":3, location:new V2D(6,2)},
-					{"id":4, location:new V2D(8,2)},
-					{"id":5, location:new V2D(7,1)},
+					{"id":0, location:new V3D(1,1,0)},
+					{"id":1, location:new V3D(2,1,0)},
+					{"id":2, location:new V3D(1,3,0)},
+					{"id":3, location:new V3D(6,2,0)},
+					{"id":4, location:new V3D(8,2,0)},
+					{"id":5, location:new V3D(7,1,0)},
 					/*
 					{"id":6, location:new V2D(6.5,1.5)},
 					{"id":7, location:new V2D(7.5,1)},
@@ -73,13 +73,12 @@ Triangulate.prototype.doTriangulation = function(){
 	// construct least squares matrix
 	var A, B, X;
 	var rows = beaconCount; // -1;
-	var cols = 3;
+	var cols = 4; // 2
 	A = new Matrix(rows,cols);
-	//B = new Matrix(rows,1);
+	B = new Matrix(rows,1);
 	// for(j=1; j<rows; ++j){
 	// 	beaconA = beacons[j-1];
 	// 	beaconB = beacons[j];
-// WEIGHTED BY INVERSE DISTANCE ?
 	for(j=0; j<rows; ++j){
 		beaconA = beacons[j];
 		beaconB = beacons[(j+1)%beaconCount];
@@ -91,21 +90,40 @@ Triangulate.prototype.doTriangulation = function(){
 		//wei = 1.0;
 		A.set(j,0, wei*2.0*(locA.x-locB.x) );
 		A.set(j,1, wei*2.0*(locA.y-locB.y) );
-		A.set(j,2, wei*(-locA.x*locA.x - locA.y*locA.y + locB.x*locB.x + locB.y*locB.y - disB*disB + disA*disA) );
+		A.set(j,2, wei*2.0*(locA.z-locB.z) );
+		A.set(j,3, wei*(locB.x*locB.x + locB.y*locB.y + locB.z*locB.z - locA.x*locA.x - locA.y*locA.y - locA.z*locA.z - disB*disB + disA*disA) );
+		// A.set(j,0, wei*2.0*(locB.x-locA.x) );
+		// A.set(j,1, wei*2.0*(locB.y-locA.y) );
+		// B.set(j,0, wei*(-locA.x*locA.x - locA.y*locA.y + locB.x*locB.x + locB.y*locB.y + disA*disA - disB*disB ) );
+		// A.set(j,0, wei*2.0*(locA.x-locB.x) );
+		// A.set(j,1, wei*2.0*(locA.y-locB.y) );
+		// B.set(j,0, wei*(locA.x*locA.x + locA.y*locA.y - locB.x*locB.x - locB.y*locB.y - disA*disA + disB*disB ) );
 	}
+// AX = b :   A) solve Ax=0  B) x = V * diag(1/sigma_i...[0]) * (trans(U)*b)
 	var svd = Matrix.SVD(A);
-	var U = svd.U;
-	var S = svd.S;
-	var Vt = svd.V;
-	var Ut = Matrix.transpose(U);
-	var V = Matrix.transpose(Vt);
-	len = Math.min( S.rows(), S.cols() );
-	var Ss = S.copy();
-	for(i=0;i<len;++i){
-		num = Ss.get(i,i);
-		if(num!=0){ num = 1/num; }
-		Ss.set(i,i,num);
-	}
+	// var U = svd.U;
+	// var S = svd.S;
+	// var Vt = svd.V;
+	// var Ut = Matrix.transpose(U);
+	// var V = Matrix.transpose(Vt);
+	// var Ss = S.copy();
+	// len = Math.min( S.rows(), S.cols() );
+	// for(i=0;i<len;++i){
+	// 	num = Ss.get(i,i);
+	// 	if(num!=0){ num = 1/num; }
+	// 	Ss.set(i,i,num);
+	// }
+//X = new Matrix(cols,1).fromArray( svd.V.colToArray(2) );
+// temp = Matrix.mult(Ut,B);
+// temp = Matrix.mult(Ss,temp);
+// temp = Matrix.mult(V,temp);
+// temp = Matrix.mult(V,Ss);
+// temp = Matrix.mult(temp,Ut);
+// temp = Matrix.mult(temp,B);
+
+// var X = temp;
+// console.log( X.toString() );
+// coeff = X.colToArray(0);
 	// console.log( " * * * * * * * " );
 	// console.log( U.toString() );
 	// console.log( Ut.toString() );
@@ -120,7 +138,7 @@ Triangulate.prototype.doTriangulation = function(){
 	for(i=0;i<coeff.length;++i){
 		coeff[i] = coeff[i]/coeff[coeff.length-1];
 	}
-	this._phoneCalculated.location.set(coeff[0],coeff[1]);
+	this._phoneCalculated.location.set(coeff[0],coeff[1],coeff[2]);
 	// 
 	var X = new Matrix(coeff.length,1).setFromArray(coeff);
 	temp = Matrix.mult(A,X);

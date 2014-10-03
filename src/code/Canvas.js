@@ -333,8 +333,8 @@ Canvas.prototype.setLine = function(wid,col){
 	this._context.lineCap = 'round';
 }
 Canvas.prototype.setLineJoinCap = function(j,c){
-	this._context.lineJoin = j;
-	this._context.lineCap = c;
+	this._context.lineJoin = j; // bevel|round|miter
+	this._context.lineCap = c; // butt|round|square
 }
 Canvas.prototype.setLinearFill = function(){
 	this._context.fillStyle = this.createLinearGradient.apply(this,arguments);

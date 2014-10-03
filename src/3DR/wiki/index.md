@@ -1906,6 +1906,10 @@ r = 1/k
 - As the three points that define any circle on a curve get closer to eachother (on the curve [arc length]) the circle approaches the oscilating circle 
 
 
+searching for a 2D closed form ...
+- WRONG: I have never found this to be correct: (1+f'^2)^3/2 / f''
+- CORRECT: this gives &asymp; same result as numerical approximation: ( x'&middot;x' + y'&middot;y' )^(3/2) / abs(x''&middot;y' - y''&middot;x')
+
 #### 3D Surface Observances:
 ![3D Surface Curvature](./images/curve_3D_legend.png "3D Surface Curvature")
 <br/>

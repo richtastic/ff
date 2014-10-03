@@ -259,6 +259,31 @@ Code.setArrayConstant = function(arr,c){
 	}
 	return arr;
 }
+Code.arrayPushArray = function(a,b){
+	var i, len=b.length;
+	for(i=0;i<len;++i){
+		a.push(b[i]);
+	}
+	return a;
+}
+Code.arrayUnshiftArray = function(a,b){
+	var i, len=b.length;
+	for(i=0;i<len;++i){
+		a.unshift(b[len-i-1]);
+	}
+	return a;
+}
+Code.arrayInsert = function(a, i, o){
+	a.splice(i, 0, o);
+	return a;
+}
+Code.arrayInsertArray = function(a, i, b){
+	for(var j=0;j<b.length;++j){
+		a.splice(i+j, 0, b[j]);
+	}
+	return a;
+}
+// Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
 Code.copyArray = function(a,b){ // a = b
 	if(a==b){return;}
 	if(b===undefined){ b=a; a=new Array(); }
@@ -1681,6 +1706,23 @@ Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 	}
 	return new V4D( a.x+t2*baX, a.y+t2*baY, t2, t1 ); // new V4D( c.x+t1*dcX, c.y+t1*dcY, t1, t2 );
 }
+
+Code.lineSegLineIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab : line segment & infinite line intersection
+	var caX = (c.x - a.x);
+	var dcX = (d.x - c.x);
+	var baX = (b.x - a.x);
+	var caY = (c.y - a.y);
+	var dcY = (d.y - c.y);
+	var baY = (b.y - a.y);
+	var den = baY*dcX - baX*dcY;
+	if(den == 0){ return null; }
+	var num2 = dcX*caY - dcY*caX;
+	var t2 = num2/den;
+	if(t2 < 0 || t2 > 1){ return null; }
+	return new V4D( a.x+t2*baX, a.y+t2*baY, t2);
+}
+
+
 Code.rayLineIntersect2D = function(a,b, c,d){ // two infinite lines
 	var den = b.y*d.x - b.x*d.y;
 	if(den == 0){ return null; } // infinite or zero intersections
@@ -2670,4 +2712,213 @@ Code.generateImageFromBit64encode = function(str, fxn){
     img.src = str;
     return img;
 }
+
+
+// multivalued logic [0,1]
+Code.fuzzyNot = function(a){ // compliment
+	return 1 - a;
+}
+Code.fuzzyAnd = function(a,b){ // intersection
+	return Math.min(a,b);
+}
+Code.fuzzyOr = function(a,b){ // union
+	return Math.max(a,b);
+}
+Code.fuzzyXor = function(a,b){ // 
+	return Math.min( Math.max(a,b), Math.max(1-a,1-b) ); // === Math.max( Math.min(a,1-b), Math.min(1-a,b) );
+}
+Code.fuzzyProbOr = function(a,b){
+	return a+b - a*b;
+}
+Code.fuzzyProbAnd = function(a,b){
+	return a*b;
+}
+Code.fuzzyDistance = function(a,b){
+	return Math.abs(a-b);
+}
+Code.fuzzyRound = function(a,b){
+	return (a<b)?a:1;
+}
+Code.fuzzyTruncate = function(a,b){
+	return (a>b)?a:0;
+}
+
+
+
+// bezier curves:
+Code.bezier2DQuadraticExtrema = function(A, B, C){
+	var tx = 0.5;
+	var ty = 0.5;
+	var denX = A.x - 2*B.x + C.x;
+	var denY = A.y - 2*B.y + C.y;
+	if(denX==0 || denY==0){
+		return null;
+	}
+	tx = (A.x - B.x)/denX;
+	ty = (A.y - B.y)/denY;
+	var tx1 = 1-tx;
+	var ty1 = 1-ty;
+// cap t in [0,1]
+	return new V2D( A.x*tx1*tx1 + 2*B.x*tx1*tx + C.x*tx*tx, A.y*ty1*ty1 + 2*B.y*ty1*ty + C.y*ty*ty );
+}
+Code.bezier2DCubicExtrema = function(A, B, C, D){
+	var t, a, b, c, z0, z1, ins, sqr;
+/*
+// A.x -= A.x;
+// B.x -= A.x;
+// C.x -= A.x;
+// D.x -= A.x;
+// X
+	a = -A.x + 3*B.x - 3*C.x + D.x;
+	b = 2*A.x - 4*B.x + 2*C.x;
+	c = B.x - A.x;
+console.log(a,b,c);
+	if(a==0){ return null; }
+	ins = b*b - 4*a*c;
+console.log(ins);
+	if(ins < 0){ return null; } // ?
+	sqr = Math.sqrt(ins);
+	z0 = (-b + sqr)/(2*a);
+	z1 = (-b - sqr)/(2*a);
+console.log(z0,z1)
+
+*/
+
+
+// A.y -= A.y;
+// B.y -= A.y;
+// C.y -= A.y;
+// D.y -= A.y;
+//t = (-A.y + 2*B.y - C.y)/(-A.y + 3*B.y - 3*C.y + D.y);
+//console.log("second: "+t);
+// Y
+	a = -A.y + 3*B.y - 3*C.y + D.y;
+	b = 2*A.y - 4*B.y + 2*C.y;
+	c = B.y - A.y;
+// a *= 3;
+// b *= 3;
+// c *= 3;
+console.log(a,b,c);
+//	if(a==0){ return null; }
+	ins = b*b - 4*a*c;
+console.log(ins);
+	if(ins < 0){ return null; } // ?
+	sqr = Math.sqrt(ins);
+console.log((-b + sqr),(-b - sqr))
+	z0 = (-b + sqr)/(2*a);
+	z1 = (-b - sqr)/(2*a);
+console.log(z0,z1)
+
+
+function computeCubicFirstDerivativeRoots(a,b,c,d) {
+    var ret = [-1,-1];
+  var tl = -a+2*b-c;
+  var tr = -Math.sqrt(-a*(c-d) + b*b - b*(c+d) +c*c);
+  var dn = -a+3*b-3*c+d;
+    if(dn!=0) { ret[0] = (tl+tr)/dn; ret[1] = (tl-tr)/dn; }
+    return ret; 
+}
+
+console.log(A.y,B.y,C.y,D.y);
+console.log( computeCubicFirstDerivativeRoots(A.y,B.y,C.y,D.y) )
+//console.log( computeCubicFirstDerivativeRoots(A.x,B.x,C.x,D.x) )
+
+	// ... which ?
+	t = z0;
+	// ?
+	t = z1;
+	// 
+	t1 = 1-t;
+	return new V2D( );
+}
+
+Code.bezier2DExtrema = function(){ // arguments = list of coefficients
+	// Newton Raphson
+	// 
+}
+
+Code.bezier2DCubicBoundingBox = function(A, B, C, D){
+	// find extrema
+	var extrema = Code.bezier2DCubicExtrema(A,B,C,D);
+	// exrema of extrema
+	return new Rect(0,0, 0,0);
+}
+
+Code.bezier2DQuadricSplit = function(A, B, C, t){ // De Casteljau's algorithm
+	var u = 1.0 - t;
+	var Q = Code.bezier2DQuadricAtT(A,B,C, t);
+	var AB = new V2D(A.x*u+B.x*t, A.y*u+B.y*t);
+	var BC = new V2D(B.x*u+C.x*t, B.y*u+C.y*t);
+	var X = new V2D(AB.x*u+BC.x*t, AB.y*u+BC.y*t);
+	return [[A,AB,X,Q], [Q,Y,CD,D]];
+}
+Code.bezier2DCubicSplit = function(A, B, C, D, t){ // De Casteljau's algorithm
+	var u = 1.0 - t;
+	var Q = Code.bezier2DCubicAtT(A,B,C,D, t);
+	var AB = new V2D(A.x*u+B.x*t, A.y*u+B.y*t);
+	var BC = new V2D(B.x*u+C.x*t, B.y*u+C.y*t);
+	var CD = new V2D(C.x*u+D.x*t, C.y*u+D.y*t);
+	var X = new V2D(AB.x*u+BC.x*t, AB.y*u+BC.y*t);
+	var Y = new V2D(BC.x*u+CD.x*t, BC.y*u+CD.y*t);
+	return [[A,AB,X,Q], [Q,Y,CD,D]];
+}
+
+Code.bezier2DSplit = function(){ // arguments = list of coefficients | cut point
+	//
+}
+
+
+
+
+Code.bezier2DQuadricAtT = function(A,B,C, t){
+	var t1 = 1-t;
+	var tA = t1*t1;
+	var tB = 2*t1*t;
+	var tC = t*t;
+	return new V2D( A.x*tA+B.x*tB+C.x*tC, A.y*tA+B.y*tB+C.y*tC );
+}
+Code.bezier2DCubicAtT = function(A,B,C,D, t){
+	var t1 = 1-t;
+	var tA = t1*t1*t1;
+	var tB = 3*t1*t1*t;
+	var tC = 3*t1*t*t;
+	var tD = t*t*t;
+	return new V2D( A.x*tA+B.x*tB+C.x*tC+D.x*tD, A.y*tA+B.y*tB+C.y*tC+D.y*tD );
+}
+
+Code.bezier2DCubicTangentAtT = function(A,B,C,D, t){ // scaled tangent
+	var t1 = 1-t;
+	/*var tt = t*t;
+	var tA = 3*(-1+2*t-tt);
+	var tB = 3*(1-4*t+3*tt);
+	var tC = 3*(2*t-3*tt);
+	var tD = 3*tt;
+	return new V2D( A.x*tA+B.x*tB+C.x*tC+D.x*tD, A.y*tA+B.y*tB+C.y*tC+D.y*tD );
+	*/
+	//return new V2D( -3*t1*t1*A.x + 3*t1*t1*B.x - 6*t*t1*B.x - 3*t*t*C.x + 6*t*t1*C.x + 3*t*t*D.x,  -3*t1*t1*A.y + 3*t1*t1*B.y - 6*t*t1*B.y - 3*t*t*C.y + 6*t*t1*C.y + 3*t*t*D.y );
+	return new V2D( 3*t1*t1*(B.x-A.x)+6*t*t1*(C.x-B.x)+3*t*t*(D.x-C.x) , 3*t1*t1*(B.y-A.y)+6*t*t1*(C.y-B.y)+3*t*t*(D.y-C.y) );
+}
+Code.bezier2DCubicNormalAtT = function(A,B,C,D, t){ // scaled normal - direction of osculating circle
+	var tan = Code.bezier2DCubicTangentAtT(A,B,C,D,t);
+	tan.rotate(-Math.PIO2);
+	return tan;
+}
+
+
+
+
+Code.bezier2DCubicSecondAtT = function(A,B,C,D, t){ // second derivative
+	var t1 = 1-t;
+	var tt = t*t;
+	return new V2D( 6*t1*(C.x-2*B.x+A.x)+6*t*(D.x-2*C.x+B.x),  6*t1*(C.y-2*B.y+A.y)+6*t*(D.y-2*C.y+B.y) );
+}
+
+
+
+
+
+
+
+
+
 

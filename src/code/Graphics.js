@@ -40,7 +40,7 @@ Graphics.arc = function(pX,pY, rad, sA,eA, cw){
 Graphics.canvasStrokeLine = function(){
 	Graphics._canvas.strokeLine();
 }
-Graphics.canvasFill= function(){
+Graphics.canvasFill = function(){
 	Graphics._canvas.fill();
 }
 Graphics.canvasEndPath = function(){
@@ -110,6 +110,13 @@ Graphics.prototype.moveTo = function(pX,pY){
 }
 Graphics.prototype.lineTo = function(pX,pY){
 	this._graphics.push( Code.newArray(Graphics.canvasLineTo,Code.newArray(pX,pY)) );
+}
+Graphics.prototype.bezierTo = function(a,b, c,d, e,f){
+	if(arguments.length==4){ // quadratic
+		this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(a,b,c,d,e,f)) );
+	}else{ // cubic
+		this._graphics.push( Code.newArray(Graphics.canvasBezierCurveTo,Code.newArray(a,b,c,d,e,f)) );
+	}
 }
 Graphics.prototype.arc = function(pX,pY, rad, sA,eA, cw){
 	this._graphics.push( Code.newArray(Graphics.arc,Code.newArray(pX,pY, rad, sA,eA, cw)) );

@@ -34,6 +34,9 @@ Crop.prototype.handleLoaded = function(){
 	this.addListeners();
 	//
 	this.loadImageFromSource("src");
+
+
+	this.bezierCurves();
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Crop.prototype.handleCanvasResizeFxn = function(e){
@@ -305,6 +308,214 @@ Crop.prototype._imageDragUpdate = function(v){
 	this._dragTarget.matrix().translate(diff.x,diff.y);
 	
 }
+
+
+
+
+Crop.prototype.bezierCurves = function(){
+	//
+	//var bezier = [ new V2D(300,300), new V2D(300,400), new V2D(400,400), new V2D(400,300) ];
+	var bezier = [ new V2D(300,300), new V2D(300,401), new V2D(400,400), new V2D(400,300) ];
+	var A = bezier[0];
+	var B = bezier[1];
+	var C = bezier[2];
+	var D = bezier[3];
+	console.log(bezier);
+console.log( "BEZ: "+Code.bezier2DCubicAtT(A,B,C,D, 0.5) );
+	var d = new DO();
+	this._root.addChild(d);
+	d.graphics().clear();
+	d.graphics().setLine(3.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(A.x,A.y);
+	d.graphics().bezierTo(B.x,B.y, C.x,C.y, D.x,D.y);
+	//d.graphics().bezierTo(B.x,B.y, C.x,C.y);
+	//d.graphics().endPath(); // goto start
+	d.graphics().strokeLine();
+
+	//Code.bezier2DCubicExtrema = function(A, B, C, D){
+
+	// SHOW POINTS
+	// A
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(A.x,A.y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	// B
+	d.graphics().setLine(1.0,0xFF0000FF);
+	d.graphics().setFill(0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(B.x,B.y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	// C
+	d.graphics().setLine(1.0,0xFF0000FF);
+	d.graphics().setFill(0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(C.x,C.y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	// D
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(D.x,D.y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+
+var atT = 0.5;
+var point = Code.bezier2DCubicAtT(A,B,C,D, atT);
+
+var splits = Code.bezier2DCubicSplit(A,B,C,D, atT);
+var b1 = splits[0];
+var b2 = splits[1];
+d.graphics().setLine(1.0, 0xFF00FF00);
+d.graphics().beginPath();
+d.graphics().moveTo(b1[0].x,b1[0].y);
+d.graphics().bezierTo(b1[1].x,b1[1].y, b1[2].x,b1[2].y, b1[3].x,b1[3].y);
+d.graphics().strokeLine();
+	// b1
+	d.graphics().setLine(1.0,0xFF00FF00);
+	d.graphics().setFill(0xFF00FF00);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(b1[1].x,b1[1].y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	// c1
+	d.graphics().setLine(1.0,0xFF00FF00);
+	d.graphics().setFill(0xFF00FF00);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(b1[2].x,b1[2].y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+
+d.graphics().setLine(1.0, 0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().moveTo(b2[0].x,b2[0].y);
+d.graphics().bezierTo(b2[1].x,b2[1].y, b2[2].x,b2[2].y, b2[3].x,b2[3].y);
+d.graphics().strokeLine();
+
+	// b2
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(b2[1].x,b2[1].y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+	// c2
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(b2[2].x,b2[2].y, 4.0);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+
+// TANGENT:
+var tangent = Code.bezier2DCubicTangentAtT(A,B,C,D, atT);
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(point.x,point.y);
+	d.graphics().lineTo(point.x+tangent.x,point.y+tangent.y);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+// NORMAL:
+var normal = Code.bezier2DCubicNormalAtT(A,B,C,D, atT);
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(point.x,point.y);
+	d.graphics().lineTo(point.x+normal.x,point.y+normal.y);
+	d.graphics().fill();
+	d.graphics().strokeLine();
+console.log( "RADIUS: "+normal.length() );
+
+console.log( "tangent: "+tangent );
+console.log( "tangent: "+tangent.length() );
+
+var second = Code.bezier2DCubicSecondAtT(A,B,C,D, atT);
+console.log( "second: "+second );
+console.log( "second: "+second.length() );
+
+
+var fA = Math.pow( V2D.dot( tangent,tangent ),1.5) / (second.x*tangent.y - second.y*tangent.x) ; // THIS IS CORRECT
+console.log("fA: "+fA);
+
+// var ttt = tangent.length();
+// tangent.norm();
+// tangent.scale(1/ttt);
+//var radi = new V2D( Math.pow(1+tangent.length,3/2)/(second.length()) , Math.pow(1+tangent.y*tangent.y,3/2)/(second.length()) ); // THIS IS NOT CORRECT
+//var radi = Math.pow(1+Math.pow(tangent.length(),2),3/2)/(second.length()); // NO
+var radi = Math.pow(1+V2D.dot(tangent,tangent),1.5)/( second.length() ); 
+console.log( "radiA: "+radi );
+radi /= tangent.length();
+// V2D.dot(tangent,tangent)
+// V2D.dot(tangent,tangent)
+console.log( "radiB: "+radi );
+// (1+f'^2^3/2) / f''
+// 
+
+var rr1 = Math.pow(1+tangent.x*tangent.x,1.5)/( second.length() ); 
+var rr2 = Math.pow(1+tangent.y*tangent.y,1.5)/( second.length() ); 
+console.log("rr1: "+rr1);
+console.log("rr2: "+rr2);
+
+var delta = 0.0001;
+var p0 = Code.bezier2DCubicAtT(A,B,C,D, atT-delta);
+var p1 = Code.bezier2DCubicAtT(A,B,C,D, atT);
+var p2 = Code.bezier2DCubicAtT(A,B,C,D, atT+delta);
+
+var aTan = V2D.sub(p2,p0)
+// tangent.norm();
+// aTan.norm();
+	console.log("actual tangent: "+aTan+" "+aTan.length()+" / "+tangent);
+
+var tan1 = V2D.sub(p1,p0);
+var tan2 = V2D.sub(p2,p1);
+
+	// var nnn = V2D.sub(tan2,tan1);
+	// console.log("actual normal: "+nnn+" "+nnn.length())
+	// radi = Math.pow(1+V2D.dot(aTan,aTan),1.5)/( nnn.length() ); 
+	// console.log( "radi: "+radi );
+
+var mag = (tan1.length()+tan2.length())*0.5;
+tan1.norm();
+tan2.norm();
+var cur = V2D.sub(tan2,tan1).scale(1/mag);
+radi = 1/cur.length();
+console.log( "radi: "+radi );
+
+console.log("rad * second "+(radi*second.length()));
+
+var nor = V2D.copy(normal).norm().scale(radi);
+console.log("nor: "+nor);
+
+// osculating circle:
+	d.graphics().setLine(1.0,0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(point.x+nor.x,point.y+nor.y,radi);
+	d.graphics().strokeLine();
+
+//
+
+//console.log( "radi: "+radi.length() );
+
+// (1+f'^2^3/2) / f'' '
+
+// radi: 37.31483220537392 
+
+
+	// 
+	var BB = Code.bezier2DCubicBoundingBox(A,B,C,D);
+	console.log(BB.toString());
+	d.graphics().setLine(1.0,0xFF6699CC);
+	d.graphics().beginPath();
+	d.graphics().drawRect(BB.x(),BB.y(),BB.width(),BB.height());
+	d.graphics().strokeLine();
+	//d.graphics().moveTo(A.x,A.y);
+	//this._root.graphics().
+}
+
 
 /*
 click - select
