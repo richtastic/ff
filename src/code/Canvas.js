@@ -47,6 +47,8 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 	this._mouseDown = false;
 	this._mousePosition = new V2D();
 	this._matrix = new Matrix2D();
+	this._alphaStack = [];
+	this._alphaComposite = 1.0;
 	if(canHTML){
 		this._canvas = canHTML;
 	}else{
@@ -80,6 +82,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 		}
 	}else{
 		this._context = this._canvas.getContext("2d");
+console.log(this._context.globalCompositeOperation);
 	}
 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 	this.id(Canvas._ID++);
@@ -259,6 +262,41 @@ Canvas.prototype.height = function(hei){
 	return this._canvas.height;
 }
 //  ------------------------------------------------------------------------------------------------------------------------ CANVAS OPERATIONS
+Canvas.prototype.pushComposite = function(c){
+	/*
+	DESTINATION = current canvas
+	SOURCE = to-be-drawled
+	"none" =?= DNE?
+	"copy" = only shows source ?
+	"destination-atop" = if(alpha=1): dest over source  :else: source over dest
+	"destination-in" = only shows portion of dest that intersects source
+	"destination-out" = only shows portion of dest that doesnt intersect source
+	"destination-over" = source is layered behind dest
+	"source-atop" = shows destination and part of source that intersects destination
+	"source-in" = only shows portion of source that intersects dest
+	"source-out" = only shows portion of source that doesnt intersect dest
+	"source-over" = source is layerd in-front-of dest [default]
+	"darker" = source-dest (sub) REMOVED FROM SPEC
+	"lighter" = source+dest (add)
+	"xor" = 
+	*/
+	this._context.globalCompositeOperation = "source-over";
+}
+Canvas.prototype.popComposite = function(){
+	//
+}
+Canvas.prototype.pushAlpha = function(a){
+	this._alphaStack.push(this._alphaComposite); // SAVE
+	this._alphaComposite *= a;
+	this._context.globalAlpha = this._alphaComposite;
+	//console.log(this._alphaComposite);
+	return a;
+}
+Canvas.prototype.popAlpha = function(){
+	this._alphaComposite = this._alphaStack.pop(); // RESTORE
+	this._context.globalAlpha = this._alphaComposite;
+	return this._alphaComposite;
+}
 Canvas.prototype.getColorArrayARGB = function(a,b,c,d){
 	var imgData = this._context.getImageData(a,b,c,d).data;
 	var i, j, w=c, h=d, index, jw, jw4;
@@ -373,11 +411,12 @@ Canvas.prototype.endPath = function(){
 	this._context.closePath();
 }
 Canvas.prototype.drawRect = function(sX,sY,wX,hY){
-	this._context.fillRect(sX,sY,wX,hY);
+	//this._context.fillRect(sX,sY,wX,hY);
+	this._context.rect(sX,sY,wX,hY);
 }
-Canvas.prototype.strokeRect = function(sX,sY,wX,hY){
-	this._context.fillRect(sX,sY,wX,hY);
-}
+// Canvas.prototype.strokeRect = function(sX,sY,wX,hY){
+// 	this._context.strokeRect(sX,sY,wX,hY);
+// }
 // ------------------------------------------------------------------------------------------------------------------------ 
 Canvas.prototype.clear = function(){
 	var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;

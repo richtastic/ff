@@ -108,6 +108,8 @@ function DO(parentDO){
 	this._id = DO._ID++;
 	this._stage = null;
 	this._parent = null;
+//this._alpha = 1.0;
+// tint?
 	this._children = new Array(); // 0 = back, length-1 = front
 	this._mask = false;
 	this._matrix = new Matrix2D();
@@ -194,12 +196,14 @@ DO.prototype.setupRender = function(canvas){
 	var context = this._canvas.context();
 	var a = this._matrix.get();
 	context.save();
+	//canvas.pushAlpha(this._alpha); // current transparancy
 	context.transform(a[0],a[2],a[1],a[3],a[4],a[5]); 
 	Code.emptyArray(a);
 }
 DO.prototype.takedownRender = function(){
 	var context = this._canvas.context();
 	context.restore();
+	//this._canvas.popAlpha(); // revert
 	this._canvas = null;
 }
 DO.prototype.render = function(canvas){
@@ -207,7 +211,7 @@ DO.prototype.render = function(canvas){
 	this.setupRender(canvas);
 	this._graphicsIllustration.setupRender(canvas);
 	this._graphicsIllustration.render(canvas);
-	this._graphicsIllustration.takedownRender(canvas);
+	// moved to allow alpha stacking inside graphics
 	if(this.mask){
 		context.clip();
 	}
@@ -216,6 +220,7 @@ DO.prototype.render = function(canvas){
 	for(i=0;i<len;++i){
 		arr[i].render(canvas);
 	}
+	this._graphicsIllustration.takedownRender(canvas);
 	this.takedownRender(canvas);
 }
 // ------------------------------------------------------------------------------------------------------------------------ DISPLAY LIST
@@ -413,6 +418,16 @@ DO.prototype._dragUpdate = function(e){
 // 	this.dragOffset = new V2D();
 // 	this.dragRoundingX = 0;
 // 	this.dragRoundingY = 0;
+// ------------------------------------------------------------------------------------------------------------------------ EDITING
+DO.prototype.boundingBox = function(){
+	// find largest BB containing THIS and all CHILDREN
+	var box = this._graphics.boundingBox();
+	var bb, i, len = this._children.length;
+	for(i=0;i<len;++i){
+		bb = this._children[i].boundingBox();
+	}
+	return box;
+}
 // ------------------------------------------------------------------------------------------------------------------------ DEBUGGING
 DO.prototype.toString = function(){
 	return "[DO "+this._id+(this._stage==null?"-":"*")+"]";

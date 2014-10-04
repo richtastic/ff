@@ -10,6 +10,8 @@ function DOImage(img, options, parentDO){
 		if(options.width){ this._imageWidth=options.width; }
 		if(options.height){ this._imageHeight=options.height; }
 	}
+	//this._alpha = 0.5;
+	//this._graphics._alpha = 0.5;
 }
 Code.inheritClass(DOImage, DO);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET

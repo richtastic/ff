@@ -4,6 +4,9 @@ Graphics._canvas = null;
 Graphics.setCanvas = function(canvas){
 	Graphics._canvas = canvas;
 }
+Graphics.getCanvas = function(canvas){
+	return Graphics._canvas;
+}
 Graphics.canvasSetLine = function(wid,col){
 	Graphics._canvas.setLine(wid,col);
 }
@@ -78,8 +81,16 @@ Graphics.measureText = function(str,callback){
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 function Graphics(){
 	this._graphics = new Array();
+	this._alpha = 1.0;
+	// tint?
 }
 // ------------------------------------------------------------------------------------------------------------------------ DRAWING
+Graphics.prototype.alpha = function(a){
+	if(a!==undefined){
+		this._alpha = a;
+	}
+	return this._alpha;
+}
 Graphics.prototype.clear = function(){
 	Code.emptyArray(this._graphics);
 }
@@ -209,13 +220,23 @@ Graphics.prototype.drawGraphics = function(canvas){
 }
 Graphics.prototype.setupRender = function(canvas){
 	Graphics.setCanvas(canvas);
+	canvas.pushAlpha(this._alpha);
 }
-Graphics.prototype.takedownRender = function(){
+Graphics.prototype.takedownRender = function(canvas){
+	canvas.popAlpha();
 	Graphics.setCanvas(null);
 }
 Graphics.prototype.render = function(canvas){
 	if(!canvas){return;}
 	this.drawGraphics(canvas);
+}
+// ------------------------------------------------------------------------------------------------------------------------ EDITING
+Graphics.prototype.boundingBox = function(){
+	/*
+		go thru this._graphics
+		find extrema points
+	*/
+	return new Rect(0,0, 0,0);
 }
 // ------------------------------------------------------------------------------------------
 Graphics.prototype.kill = function(){

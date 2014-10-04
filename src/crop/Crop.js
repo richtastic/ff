@@ -189,14 +189,16 @@ Crop.prototype.handleImageLoadedFromSource = function(e){
 	
 	d = new DOImage(image);
 	d.matrix().identity().rotate(Math.PI/10).scale(0.75).translate(-100,40);
-	this._isDragging = false;
-	this._dragOffset = new V2D();
-	this._dragMatrix = new Matrix2D();
-	this._dragTemp = new Matrix2D();
+//	d.graphics().alpha(0.50);
+	// this._isDragging = false;
+	// this._dragOffset = new V2D();
+	// this._dragMatrix = new Matrix2D();
+	// this._dragTemp = new Matrix2D();
 	//
 	p = new DOImage(image);
 	p.matrix().identity().rotate(Math.PI/8).scale(0.75).translate(100,-40);
 	this._root.addChild(p);
+//	p.graphics().alpha(0.90);
 	p.addChild(d);
 	// // listen after the fact
 	// d.addFunction(Canvas.EVENT_MOUSE_DOWN,this._imageMouseDownIn,this);
@@ -315,11 +317,42 @@ Crop.prototype._imageDragUpdate = function(v){
 Crop.prototype.bezierCurves = function(){
 	//
 	//var bezier = [ new V2D(300,300), new V2D(300,400), new V2D(400,400), new V2D(400,300) ];
-	var bezier = [ new V2D(300,300), new V2D(300,401), new V2D(400,400), new V2D(400,300) ];
+	//var bezier = [ new V2D(300,100), new V2D(300,200), new V2D(400,200), new V2D(400,100) ];
+	var bezier = [ new V2D(300,100), new V2D(250,50), new V2D(460,300), new V2D(300,200) ];
 	var A = bezier[0];
 	var B = bezier[1];
 	var C = bezier[2];
 	var D = bezier[3];
+
+var strT = "t = [";
+var strP = "p = [";
+var strQ = "q = [";
+for(var i=0;i<=10;++i){
+	t = i/10.0;
+	var p = Code.bezier2DCubicAtT(A,B,C,D, t);
+	var q = Code.bezier2DCubicTangentAtT(A,B,C,D, t);
+	var r = Code.bezier2DCubicSecondAtT(A,B,C,D, t);
+	strT = strT+""+t;
+	strP = strP+""+p.y;
+	strQ = strQ+""+q.y;
+	if(i<10){
+		strT = strT+", ";
+		strP = strP+", ";
+		strQ = strQ+", ";
+	}else{
+		strT = strT+" ";
+		strP = strP+" ";
+		strQ = strQ+" ";
+	}
+}
+strT = strT+"]; ";
+strP = strP+"]; ";
+strQ = strQ+"]; ";
+//strR = strR+"]; ";
+console.log(strT);
+console.log(strP);
+console.log(strQ);
+
 	console.log(bezier);
 console.log( "BEZ: "+Code.bezier2DCubicAtT(A,B,C,D, 0.5) );
 	var d = new DO();
@@ -332,9 +365,6 @@ console.log( "BEZ: "+Code.bezier2DCubicAtT(A,B,C,D, 0.5) );
 	//d.graphics().bezierTo(B.x,B.y, C.x,C.y);
 	//d.graphics().endPath(); // goto start
 	d.graphics().strokeLine();
-
-	//Code.bezier2DCubicExtrema = function(A, B, C, D){
-
 	// SHOW POINTS
 	// A
 	d.graphics().setLine(1.0,0xFFFF0000);
@@ -498,6 +528,7 @@ console.log("nor: "+nor);
 
 //
 
+
 //console.log( "radi: "+radi.length() );
 
 // (1+f'^2^3/2) / f'' '
@@ -508,9 +539,12 @@ console.log("nor: "+nor);
 	// 
 	var BB = Code.bezier2DCubicBoundingBox(A,B,C,D);
 	console.log(BB.toString());
-	d.graphics().setLine(1.0,0xFF6699CC);
-	d.graphics().beginPath();
-	d.graphics().drawRect(BB.x(),BB.y(),BB.width(),BB.height());
+	//d.graphics().setLine(1.0,0xFF6699CC);
+	d.graphics().setLine(1.0,0xFFFF0000);
+	//d.graphics().setFill(0x33990099);
+	//d.graphics().beginPath();
+	d.graphics().drawRect(BB.x(),BB.y(), BB.width(),BB.height());
+	//d.graphics().endPath();
 	d.graphics().strokeLine();
 	//d.graphics().moveTo(A.x,A.y);
 	//this._root.graphics().

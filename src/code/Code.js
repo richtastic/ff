@@ -2761,7 +2761,15 @@ Code.bezier2DQuadraticExtrema = function(A, B, C){
 // cap t in [0,1]
 	return new V2D( A.x*tx1*tx1 + 2*B.x*tx1*tx + C.x*tx*tx, A.y*ty1*ty1 + 2*B.y*ty1*ty + C.y*ty*ty );
 }
+
+
+
+
 Code.bezier2DCubicExtrema = function(A, B, C, D){
+
+
+
+
 	var t, a, b, c, z0, z1, ins, sqr;
 /*
 // A.x -= A.x;
@@ -2837,11 +2845,86 @@ Code.bezier2DExtrema = function(){ // arguments = list of coefficients
 	// 
 }
 
-Code.bezier2DCubicBoundingBox = function(A, B, C, D){
+
+function computeCubicBoundingBox(xa,ya,xb,yb,xc,yc,xd,yd)
+{
+    // find the zero point for x and y in the derivatives
+  var minx = 9999;
+  var maxx = -9999;
+    if(xa<minx) { minx=xa; }
+    if(xa>maxx) { maxx=xa; }
+    if(xd<minx) { minx=xd; }
+    if(xd>maxx) { maxx=xd; }
+    var ts = computeCubicFirstDerivativeRoots(xa, xb, xc, xd);
+    for(var i=0; i<ts.length;i++) {
+      var t = ts[i];
+        if(t>=0 && t<=1) {
+          var x = computeCubicBaseValue(t, xa, xb, xc, xd);
+          var y = computeCubicBaseValue(t, ya, yb, yc, yd);
+            if(x<minx) { minx=x; }
+            if(x>maxx) { maxx=x; }}}
+
+  var miny = 9999;
+  var maxy = -9999;
+    if(ya<miny) { miny=ya; }
+    if(ya>maxy) { maxy=ya; }
+    if(yd<miny) { miny=yd; }
+    if(yd>maxy) { maxy=yd; }
+    ts = computeCubicFirstDerivativeRoots(ya, yb, yc, yd);
+    for(i=0; i<ts.length;i++) {
+      var t = ts[i];
+        if(t>=0 && t<=1) {
+          var x = computeCubicBaseValue(t, xa, xb, xc, xd);
+          var y = computeCubicBaseValue(t, ya, yb, yc, yd);
+            if(y<miny) { miny=y; }
+            if(y>maxy) { maxy=y; }}}
+
+    // bounding box corner coordinates
+    var bbox = [minx,miny, maxx,miny, maxx,maxy, minx,maxy ];
+    return bbox;
+}
+
+
+Code.bezier2DCubicBoundingBox = function(A, B, C, D){ // Newton-Raphson
+	var t, u, f, g, h, point, step, steps = 20;
+	var minX, minY, maxX, maxY;
+	minX  = Math.min(A.x,D.x);
+	minY = Math.min(A.y,D.y);
+	maxX  = Math.max(A.x,D.x);
+	maxY = Math.max(A.y,D.y);
+	var min = 1E-6;
+	for(step=0;step<=steps;++step){
+		t = 1.0*step/steps;
+		// X
+		for(i=0;i<10;++i){
+			g = Code.bezier2DCubicTangentAtT(A,B,C,D, t);
+			h = Code.bezier2DCubicSecondAtT(A,B,C,D, t);
+			u = t;
+			if( h.x!=0 ){ t = t - g.x/h.x; }else{ break; }
+			if( Math.abs(u-t) < min){ break; }
+		}
+		t = Math.min(1, Math.max(0,t)); // cap in reality
+		point = Code.bezier2DCubicAtT(A,B,C,D, t);
+		minX = (point.x<minX)?point.x:minX;
+		maxX = (point.x>maxX)?point.x:maxX;
+		// Y
+		for(i=0;i<10;++i){
+			g = Code.bezier2DCubicTangentAtT(A,B,C,D, t);
+			h = Code.bezier2DCubicSecondAtT(A,B,C,D, t);
+			u = t;
+			if( h.y!=0 ){ t = t - g.y/h.y; }else{ break; }
+			if( Math.abs(u-t) < min){ break; }
+		}
+		t = Math.min(1, Math.max(0,t)); // cap in reality
+		point = Code.bezier2DCubicAtT(A,B,C,D, t);
+		minY = (point.y<minY)?point.y:minY;
+		maxY = (point.y>maxY)?point.y:maxY;
+	}
 	// find extrema
-	var extrema = Code.bezier2DCubicExtrema(A,B,C,D);
+	//var extrema = Code.bezier2DCubicExtrema(A,B,C,D);
 	// exrema of extrema
-	return new Rect(0,0, 0,0);
+	console.log(minX,minY, maxX,maxY);
+	return new Rect(minX,minY, maxX-minX,maxY-minY);
 }
 
 Code.bezier2DQuadricSplit = function(A, B, C, t){ // De Casteljau's algorithm
