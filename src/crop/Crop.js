@@ -308,7 +308,6 @@ Crop.prototype._imageDragUpdate = function(v){
 
 	var diff = V2D.sub(locB,locA);
 	this._dragTarget.matrix().translate(diff.x,diff.y);
-	
 }
 
 
@@ -318,7 +317,7 @@ Crop.prototype.bezierCurves = function(){
 	//
 	//var bezier = [ new V2D(300,300), new V2D(300,400), new V2D(400,400), new V2D(400,300) ];
 	//var bezier = [ new V2D(300,100), new V2D(300,200), new V2D(400,200), new V2D(400,100) ];
-	var bezier = [ new V2D(300,100), new V2D(250,50), new V2D(460,300), new V2D(300,200) ];
+	var bezier = [ new V2D(300,100), new V2D(150,50), new V2D(460,300), new V2D(300,200) ];
 	var A = bezier[0];
 	var B = bezier[1];
 	var C = bezier[2];
@@ -395,7 +394,7 @@ console.log( "BEZ: "+Code.bezier2DCubicAtT(A,B,C,D, 0.5) );
 	d.graphics().fill();
 	d.graphics().strokeLine();
 
-var atT = 0.5;
+var atT = 0.15;
 var point = Code.bezier2DCubicAtT(A,B,C,D, atT);
 
 var splits = Code.bezier2DCubicSplit(A,B,C,D, atT);
@@ -548,6 +547,29 @@ console.log("nor: "+nor);
 	d.graphics().strokeLine();
 	//d.graphics().moveTo(A.x,A.y);
 	//this._root.graphics().
+
+
+
+	d = new DO();
+	this._root.addChild(d);
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().moveTo(500,100);
+	d.graphics().lineTo(600,150);
+	d.graphics().bezierTo(700,200, 700,300, 600,300);
+	//d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	console.log("..............");
+	BB = d.graphics().boundingBox();
+	console.log(BB.toString());
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(BB.x(),BB.y(), BB.width(),BB.height());
+	d.graphics().strokeLine();
+	// d.graphics()
+
 }
 
 

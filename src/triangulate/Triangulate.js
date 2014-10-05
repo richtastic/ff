@@ -28,14 +28,18 @@ Triangulate.prototype._refreshDisplay = function(){
 	var i, beacon, beacons=this._beacons, phone=this._phone, calculated = this._phoneCalculated;
 	this._displayScale = 100.0;
 	this._root.graphics().clear();
+this._displayScale = 30.0;
+this._doX = 300;
+this._doY = 100;
 	for(i=0; i<beacons.length; ++i){
 		beacon = beacons[i];
-		this.drawDot( V2D.scale(beacon.location,this._displayScale), 0x99FF0000,0xFFFF0000, 3.0);
-		this.drawDot( V2D.scale(beacon.location,this._displayScale), 0x11FF00FF,0x99FF00FF, V2D.distance(beacon.location,phone.location)*this._displayScale );
-		this.drawDot( V2D.scale(beacon.location,this._displayScale), 0x1199CC00,0x9966CC00, beacon.distance*this._displayScale );
+		this.drawDot( V2D.add(V2D.scale(beacon.location,this._displayScale), new V2D(this._doX,this._doY)), 0x99FF0000,0xFFFF0000, 3.0);
+		this.drawDot( V2D.add(V2D.scale(beacon.location,this._displayScale), new V2D(this._doX,this._doY)), 0x11FF00FF,0x99FF00FF, V2D.distance(beacon.location,phone.location)*this._displayScale );
+		this.drawDot( V2D.add(V2D.scale(beacon.location,this._displayScale), new V2D(this._doX,this._doY)), 0x1199CC00,0x9966CC00, beacon.distance*this._displayScale );
+		//this.drawDot( V2D.add(V2D.scale(beacon.location,this._displayScale), new V2D(this._doX,this._doY)), 0x1199CC00,0x9966CC00, beacon.testDistance*this._displayScale );
 	}
-	this.drawDot( V2D.scale(phone.location,this._displayScale), 0xFF0000FF,0xFF000099, 5.0);
-	this.drawDot( V2D.scale(calculated.location,this._displayScale), 0x9900FF00,0xCC009900, 3.0);
+	this.drawDot( V2D.add(V2D.scale(phone.location,this._displayScale), new V2D(this._doX,this._doY)), 0xFF0000FF,0xFF000099, 5.0);
+	this.drawDot( V2D.add(V2D.scale(calculated.location,this._displayScale), new V2D(this._doX,this._doY)), 0x9900FF00,0xCC009900, 3.0);
 
 }
 Triangulate.prototype.doTriangulation = function(){
@@ -43,17 +47,22 @@ Triangulate.prototype.doTriangulation = function(){
 		this._phone = { location:new V3D(6.5,1.5,0) };
 		this._phoneCalculated = { location:new V3D() }
 		this._beacons = 	[
+					
 					{"id":0, location:new V3D(1,1,0)},
 					{"id":1, location:new V3D(2,1,0)},
 					{"id":2, location:new V3D(1,3,0)},
 					{"id":3, location:new V3D(6,2,0)},
 					{"id":4, location:new V3D(8,2,0)},
 					{"id":5, location:new V3D(7,1,0)},
+					
 					/*
 					{"id":6, location:new V2D(6.5,1.5)},
 					{"id":7, location:new V2D(7.5,1)},
 					{"id":8, location:new V2D(6.5,2.5)},
 					*/
+					// {"id":0, location:new V3D(0,0,0),   testDistance:2.4},
+					// {"id":1, location:new V3D(0,2.1336,0),   testDistance:3.00},
+					// {"id":2, location:new V3D(-2.4384,2.1336,0),   testDistance:5.20},
 				];
 		this._errorDistance = 0.0;
 	}
@@ -76,9 +85,7 @@ Triangulate.prototype.doTriangulation = function(){
 	var cols = 4; // 2
 	A = new Matrix(rows,cols);
 	B = new Matrix(rows,1);
-	// for(j=1; j<rows; ++j){
-	// 	beaconA = beacons[j-1];
-	// 	beaconB = beacons[j];
+
 	for(j=0; j<rows; ++j){
 		beaconA = beacons[j];
 		beaconB = beacons[(j+1)%beaconCount];
@@ -86,8 +93,11 @@ Triangulate.prototype.doTriangulation = function(){
 		var locB = beaconB.location;
 		var disA = beaconA.distance;
 		var disB = beaconB.distance;
+// disA = beaconA.testDistance;
+// disB = beaconB.testDistance;
 		var wei = beaconA.weight*beaconB.weight;
-		//wei = 1.0;
+		wei = 1.0;
+//console.log("BEACON: "+j+": "+locA.toString()+"  @ "+disA);
 		A.set(j,0, wei*2.0*(locA.x-locB.x) );
 		A.set(j,1, wei*2.0*(locA.y-locB.y) );
 		A.set(j,2, wei*2.0*(locA.z-locB.z) );
@@ -101,6 +111,21 @@ Triangulate.prototype.doTriangulation = function(){
 	}
 // AX = b :   A) solve Ax=0  B) x = V * diag(1/sigma_i...[0]) * (trans(U)*b)
 	var svd = Matrix.SVD(A);
+/*
+2014-10-04 21:42:08.442 BeaconLocate[16018:1726584] BEACON: 0: 0.000000,0.000000,0.000000  @ 2.902069
+2014-10-04 21:42:08.443 BeaconLocate[16018:1726584] BEACON: 1: 0.000000,2.133600,0.000000  @ 4.453875
+2014-10-04 21:42:08.444 BeaconLocate[16018:1726584] BEACON: 2: -2.438400,2.133600,0.000000  @ 6.233386
+2014-10-04 21:42:08.445 BeaconLocate[16018:1726584] matrixA:
+2014-10-04 21:42:08.446 BeaconLocate[16018:1726584]  0.000000 4.267200 0.000000 6.862753
+2014-10-04 21:42:08.447 BeaconLocate[16018:1726584]  -4.876800 0.000000 0.000000 13.072306
+2014-10-04 21:42:08.447 BeaconLocate[16018:1726584]  4.876800 -4.267200 0.000000 -19.935059
+2014-10-04 21:42:08.448 BeaconLocate[16018:1726584] matrixVt:
+2014-10-04 21:42:08.448 BeaconLocate[16018:1726584]  0.248683 -0.177566 0.000000 -0.952170
+2014-10-04 21:42:08.449 BeaconLocate[16018:1726584]  -0.520686 -0.853434 0.000000 0.023163
+2014-10-04 21:42:08.450 BeaconLocate[16018:1726584]  0.816727 -0.490021 0.000000 0.304691
+2014-10-04 21:42:08.450 BeaconLocate[16018:1726584]  0.000000 0.000000 1.000000 0.000000
+2014-10-04 21:42:08.450 BeaconLocate[16018:1726584] POS: 2.680509,-1.608257,0.000000
+*/
 	// var U = svd.U;
 	// var S = svd.S;
 	// var Vt = svd.V;

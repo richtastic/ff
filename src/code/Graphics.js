@@ -232,11 +232,42 @@ Graphics.prototype.render = function(canvas){
 }
 // ------------------------------------------------------------------------------------------------------------------------ EDITING
 Graphics.prototype.boundingBox = function(){
+	var i, len = this._graphics.length;
+	var fxn, arg, minX=null, minY=null, maxX=null, maxY=null;
+	for(i=0;i<len;++i){
+		fxn = this._graphics[i][0];
+		arg = this._graphics[i][1];
+		if(fxn==Graphics.canvasMoveTo){
+			console.log("MOV "+arg)
+			minX = (minX==null||arg[0]<minX)?arg[0]:minX;
+			minY = (minY==null||arg[1]<minY)?arg[1]:minY;
+			maxX = (maxX==null||arg[0]>maxX)?arg[0]:maxX;
+			maxY = (maxY==null||arg[1]>maxY)?arg[1]:maxY;
+		}else if(fxn==Graphics.canvasLineTo){
+			console.log("LIN "+arg);
+			minX = (minX==null||arg[0]<minX)?arg[0]:minX;
+			minY = (minY==null||arg[1]<minY)?arg[1]:minY;
+			maxX = (maxX==null||arg[0]>maxX)?arg[0]:maxX;
+			maxY = (maxY==null||arg[1]>maxY)?arg[1]:maxY;
+		}else if(fxn==Graphics.canvasBezierCurveTo){
+			console.log("BEZ");
+		}else if(fxn==Graphics.canvasQuadraticCurveTo){
+			console.log("QUA");
+		}else if(fxn==Graphics.canvasDrawImage0){
+			console.log("IMG0");
+		}else if(fxn==Graphics.canvasDrawImage2){
+			console.log("IMG2");
+		}else if(fxn==Graphics.canvasDrawImage4){
+			console.log("IMG4");
+		}else if(fxn==Graphics.canvasDrawImage8){
+			console.log("IMG8");
+		}
+	}
 	/*
 		go thru this._graphics
 		find extrema points
 	*/
-	return new Rect(0,0, 0,0);
+	return new Rect(minX,minY, maxX-minX,maxY-minY);
 }
 // ------------------------------------------------------------------------------------------
 Graphics.prototype.kill = function(){
