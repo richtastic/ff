@@ -181,7 +181,7 @@ Crop.prototype.createEditHandle = function(){
 	return d;
 }
 
-Crop.prototype.handleImageLoadedFromSource = function(e){
+Crop.prototype.handleImageLoadedFromSource = function(e){ return;
 	var d, p;
 	var image = e.images[0];
 	//
@@ -558,18 +558,38 @@ console.log("nor: "+nor);
 	d.graphics().moveTo(500,100);
 	d.graphics().lineTo(600,150);
 	d.graphics().bezierTo(700,200, 700,300, 600,300);
+	d.graphics().bezierTo(300,-200, 600,400);
 	//d.graphics().endPath();
 	d.graphics().strokeLine();
 
+	var e = new DO();
+	d.addChild(e);
+	e.matrix().translate(-200,-300);
+	e.matrix().scale(2.0);
+	e.matrix().rotate(Math.PI*0.95);
+	e.matrix().translate(300,420);
+	e.graphics().clear();
+	e.graphics().setLine(1.0, 0xFF00CC00);
+	e.graphics().beginPath();
+	e.graphics().moveTo(300,300);
+	e.graphics().bezierTo(100,200, 200,500);
+	e.graphics().strokeLine();
+/*
 	console.log("..............");
-	BB = d.graphics().boundingBox();
+	//BB = d.graphics().boundingBox();
+	BB = d.boundingBox();
 	console.log(BB.toString());
-	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().setLine(3.0, 0xFFFF0000);
 	d.graphics().beginPath();
 	d.graphics().drawRect(BB.x(),BB.y(), BB.width(),BB.height());
 	d.graphics().strokeLine();
 	// d.graphics()
+*/
 
+
+	n = new DOEdit();
+	this._root.addChild(n);
+	n.element(d);
 }
 
 

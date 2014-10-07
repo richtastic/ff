@@ -14,6 +14,9 @@ q' = -2&middot;A + 2&middot;A&middot;t + 2&middot;B - 4&middot;B&middot;t + 2&mi
 q' = -2&middot;A + 2&middot;B + t(2&middot;A - 4&middot;B + 2&middot;C)
 <br/>
 <br/>
+q'' = 2&middot;A - 4&middot;B + 2&middot;C
+<br/>
+<br/>
 @ max/min:
 <br/>
 -t(2&middot;A - 4&middot;B + 2&middot;C) = -2&middot;A + 2&middot;B

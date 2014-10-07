@@ -2745,100 +2745,95 @@ Code.fuzzyTruncate = function(a,b){
 
 
 
-// bezier curves:
-Code.bezier2DQuadraticExtrema = function(A, B, C){
-	var tx = 0.5;
-	var ty = 0.5;
-	var denX = A.x - 2*B.x + C.x;
-	var denY = A.y - 2*B.y + C.y;
-	if(denX==0 || denY==0){
-		return null;
-	}
-	tx = (A.x - B.x)/denX;
-	ty = (A.y - B.y)/denY;
-	var tx1 = 1-tx;
-	var ty1 = 1-ty;
-// cap t in [0,1]
-	return new V2D( A.x*tx1*tx1 + 2*B.x*tx1*tx + C.x*tx*tx, A.y*ty1*ty1 + 2*B.y*ty1*ty + C.y*ty*ty );
-}
+// // bezier curves:
+// Code.bezier2DQuadraticExtrema = function(A, B, C){
+// 	var tx = 0.5;
+// 	var ty = 0.5;
+// 	var denX = A.x - 2*B.x + C.x;
+// 	var denY = A.y - 2*B.y + C.y;
+// 	if(denX==0 || denY==0){
+// 		return null;
+// 	}
+// 	tx = (A.x - B.x)/denX;
+// 	ty = (A.y - B.y)/denY;
+// 	var tx1 = 1-tx;
+// 	var ty1 = 1-ty;
+// // cap t in [0,1]
+// 	return new V2D( A.x*tx1*tx1 + 2*B.x*tx1*tx + C.x*tx*tx, A.y*ty1*ty1 + 2*B.y*ty1*ty + C.y*ty*ty );
+// }
 
 
 
+// Code.bezier2DCubicExtrema = function(A, B, C, D){
+// 	var t, a, b, c, z0, z1, ins, sqr;
+// /*
+// // A.x -= A.x;
+// // B.x -= A.x;
+// // C.x -= A.x;
+// // D.x -= A.x;
+// // X
+// 	a = -A.x + 3*B.x - 3*C.x + D.x;
+// 	b = 2*A.x - 4*B.x + 2*C.x;
+// 	c = B.x - A.x;
+// console.log(a,b,c);
+// 	if(a==0){ return null; }
+// 	ins = b*b - 4*a*c;
+// console.log(ins);
+// 	if(ins < 0){ return null; } // ?
+// 	sqr = Math.sqrt(ins);
+// 	z0 = (-b + sqr)/(2*a);
+// 	z1 = (-b - sqr)/(2*a);
+// console.log(z0,z1)
 
-Code.bezier2DCubicExtrema = function(A, B, C, D){
-
-
-
-
-	var t, a, b, c, z0, z1, ins, sqr;
-/*
-// A.x -= A.x;
-// B.x -= A.x;
-// C.x -= A.x;
-// D.x -= A.x;
-// X
-	a = -A.x + 3*B.x - 3*C.x + D.x;
-	b = 2*A.x - 4*B.x + 2*C.x;
-	c = B.x - A.x;
-console.log(a,b,c);
-	if(a==0){ return null; }
-	ins = b*b - 4*a*c;
-console.log(ins);
-	if(ins < 0){ return null; } // ?
-	sqr = Math.sqrt(ins);
-	z0 = (-b + sqr)/(2*a);
-	z1 = (-b - sqr)/(2*a);
-console.log(z0,z1)
-
-*/
+// */
 
 
-// A.y -= A.y;
-// B.y -= A.y;
-// C.y -= A.y;
-// D.y -= A.y;
-//t = (-A.y + 2*B.y - C.y)/(-A.y + 3*B.y - 3*C.y + D.y);
-//console.log("second: "+t);
-// Y
-	a = -A.y + 3*B.y - 3*C.y + D.y;
-	b = 2*A.y - 4*B.y + 2*C.y;
-	c = B.y - A.y;
-// a *= 3;
-// b *= 3;
-// c *= 3;
-console.log(a,b,c);
-//	if(a==0){ return null; }
-	ins = b*b - 4*a*c;
-console.log(ins);
-	if(ins < 0){ return null; } // ?
-	sqr = Math.sqrt(ins);
-console.log((-b + sqr),(-b - sqr))
-	z0 = (-b + sqr)/(2*a);
-	z1 = (-b - sqr)/(2*a);
-console.log(z0,z1)
+// // A.y -= A.y;
+// // B.y -= A.y;
+// // C.y -= A.y;
+// // D.y -= A.y;
+// //t = (-A.y + 2*B.y - C.y)/(-A.y + 3*B.y - 3*C.y + D.y);
+// //console.log("second: "+t);
+// // Y
+// 	a = -A.y + 3*B.y - 3*C.y + D.y;
+// 	b = 2*A.y - 4*B.y + 2*C.y;
+// 	c = B.y - A.y;
+// // a *= 3;
+// // b *= 3;
+// // c *= 3;
+// console.log(a,b,c);
+// //	if(a==0){ return null; }
+// 	ins = b*b - 4*a*c;
+// console.log(ins);
+// 	if(ins < 0){ return null; } // ?
+// 	sqr = Math.sqrt(ins);
+// console.log((-b + sqr),(-b - sqr))
+// 	z0 = (-b + sqr)/(2*a);
+// 	z1 = (-b - sqr)/(2*a);
+// console.log(z0,z1)
 
 
-function computeCubicFirstDerivativeRoots(a,b,c,d) {
-    var ret = [-1,-1];
-  var tl = -a+2*b-c;
-  var tr = -Math.sqrt(-a*(c-d) + b*b - b*(c+d) +c*c);
-  var dn = -a+3*b-3*c+d;
-    if(dn!=0) { ret[0] = (tl+tr)/dn; ret[1] = (tl-tr)/dn; }
-    return ret; 
-}
+// function computeCubicFirstDerivativeRoots(a,b,c,d) {
+//     var ret = [-1,-1];
+//   var tl = -a+2*b-c;
+//   var tr = -Math.sqrt(-a*(c-d) + b*b - b*(c+d) +c*c);
+//   var dn = -a+3*b-3*c+d;
+//     if(dn!=0) { ret[0] = (tl+tr)/dn; ret[1] = (tl-tr)/dn; }
+//     return ret; 
+// }
 
-console.log(A.y,B.y,C.y,D.y);
-console.log( computeCubicFirstDerivativeRoots(A.y,B.y,C.y,D.y) )
-//console.log( computeCubicFirstDerivativeRoots(A.x,B.x,C.x,D.x) )
+// console.log(A.y,B.y,C.y,D.y);
+// console.log( computeCubicFirstDerivativeRoots(A.y,B.y,C.y,D.y) )
+// //console.log( computeCubicFirstDerivativeRoots(A.x,B.x,C.x,D.x) )
 
-	// ... which ?
-	t = z0;
-	// ?
-	t = z1;
-	// 
-	t1 = 1-t;
-	return new V2D( );
-}
+// 	// ... which ?
+// 	t = z0;
+// 	// ?
+// 	t = z1;
+// 	// 
+// 	t1 = 1-t;
+// 	return new V2D( );
+// }
 
 Code.bezier2DExtrema = function(){ // arguments = list of coefficients
 	// Newton Raphson
@@ -2846,45 +2841,35 @@ Code.bezier2DExtrema = function(){ // arguments = list of coefficients
 }
 
 
-function computeCubicBoundingBox(xa,ya,xb,yb,xc,yc,xd,yd)
-{
-    // find the zero point for x and y in the derivatives
-  var minx = 9999;
-  var maxx = -9999;
-    if(xa<minx) { minx=xa; }
-    if(xa>maxx) { maxx=xa; }
-    if(xd<minx) { minx=xd; }
-    if(xd>maxx) { maxx=xd; }
-    var ts = computeCubicFirstDerivativeRoots(xa, xb, xc, xd);
-    for(var i=0; i<ts.length;i++) {
-      var t = ts[i];
-        if(t>=0 && t<=1) {
-          var x = computeCubicBaseValue(t, xa, xb, xc, xd);
-          var y = computeCubicBaseValue(t, ya, yb, yc, yd);
-            if(x<minx) { minx=x; }
-            if(x>maxx) { maxx=x; }}}
-
-  var miny = 9999;
-  var maxy = -9999;
-    if(ya<miny) { miny=ya; }
-    if(ya>maxy) { maxy=ya; }
-    if(yd<miny) { miny=yd; }
-    if(yd>maxy) { maxy=yd; }
-    ts = computeCubicFirstDerivativeRoots(ya, yb, yc, yd);
-    for(i=0; i<ts.length;i++) {
-      var t = ts[i];
-        if(t>=0 && t<=1) {
-          var x = computeCubicBaseValue(t, xa, xb, xc, xd);
-          var y = computeCubicBaseValue(t, ya, yb, yc, yd);
-            if(y<miny) { miny=y; }
-            if(y>maxy) { maxy=y; }}}
-
-    // bounding box corner coordinates
-    var bbox = [minx,miny, maxx,miny, maxx,maxy, minx,maxy ];
-    return bbox;
+Code.bezier2DQuadricBoundingBox = function(A, B, C){ // Newton-Raphson
+	//var t, u, f, g, h, point, step, steps = 20;
+	var minX, minY, maxX, maxY, x, y, t;
+	minX  = Math.min(A.x,C.x);
+	minY = Math.min(A.y,C.y);
+	maxX  = Math.max(A.x,C.x);
+	maxY = Math.max(A.y,C.y);
+	numX = A.x - B.x;
+	numY = A.y - B.y;
+	denX = A.x - 2*B.x + C.x;
+	denY = A.y - 2*B.y + C.y;
+	if(denX!=0){
+		t = numX/denX;
+		if(t>0 && t<1){
+			x = Code.bezier2DQuadricAtT(A,B,C, t).x;
+			minX  = Math.min(minX,x);
+			maxX  = Math.max(maxX,x);
+		}
+	}
+	if(denY!=0){
+		t = numY/denY;
+		if(t>0 && t<1){
+			y = Code.bezier2DQuadricAtT(A,B,C, t).y;
+			minY  = Math.min(minY,y);
+			maxY  = Math.max(maxY,y);
+		}
+	}
+	return new Rect(minX,minY, maxX-minX,maxY-minY);
 }
-
-
 Code.bezier2DCubicBoundingBox = function(A, B, C, D){ // Newton-Raphson
 	var t, u, f, g, h, point, step, steps = 20;
 	var minX, minY, maxX, maxY;
@@ -2920,10 +2905,6 @@ Code.bezier2DCubicBoundingBox = function(A, B, C, D){ // Newton-Raphson
 		minY = (point.y<minY)?point.y:minY;
 		maxY = (point.y>maxY)?point.y:maxY;
 	}
-	// find extrema
-	//var extrema = Code.bezier2DCubicExtrema(A,B,C,D);
-	// exrema of extrema
-	console.log(minX,minY, maxX,maxY);
 	return new Rect(minX,minY, maxX-minX,maxY-minY);
 }
 
@@ -2945,7 +2926,6 @@ Code.bezier2DCubicSplit = function(A, B, C, D, t){ // De Casteljau's algorithm
 	var Y = new V2D(BC.x*u+CD.x*t, BC.y*u+CD.y*t);
 	return [[A,AB,X,Q], [Q,Y,CD,D]];
 }
-
 Code.bezier2DSplit = function(){ // arguments = list of coefficients | cut point
 	//
 }
@@ -2960,6 +2940,13 @@ Code.bezier2DQuadricAtT = function(A,B,C, t){
 	var tC = t*t;
 	return new V2D( A.x*tA+B.x*tB+C.x*tC, A.y*tA+B.y*tB+C.y*tC );
 }
+Code.bezier2DQuadricTangentAtT = function(A,B,C, t){
+	return new V2D( 2*A.x*(t-1) + 2*B.x*(1-t) + 2*C.x*t, 2*A.y*(t-1) + 2*B.y*(1-t) + 2*C.y*t);
+}
+Code.bezier2DQuadricNormalAtT = function(A,B,C, t){
+	return new V2D( 2*A.x-4*B.x+2*C.x, 2*A.y-4*B.y+2*C.y );
+}
+
 Code.bezier2DCubicAtT = function(A,B,C,D, t){
 	var t1 = 1-t;
 	var tA = t1*t1*t1;
@@ -2981,7 +2968,7 @@ Code.bezier2DCubicTangentAtT = function(A,B,C,D, t){ // scaled tangent
 	//return new V2D( -3*t1*t1*A.x + 3*t1*t1*B.x - 6*t*t1*B.x - 3*t*t*C.x + 6*t*t1*C.x + 3*t*t*D.x,  -3*t1*t1*A.y + 3*t1*t1*B.y - 6*t*t1*B.y - 3*t*t*C.y + 6*t*t1*C.y + 3*t*t*D.y );
 	return new V2D( 3*t1*t1*(B.x-A.x)+6*t*t1*(C.x-B.x)+3*t*t*(D.x-C.x) , 3*t1*t1*(B.y-A.y)+6*t*t1*(C.y-B.y)+3*t*t*(D.y-C.y) );
 }
-Code.bezier2DCubicNormalAtT = function(A,B,C,D, t){ // scaled normal - direction of osculating circle
+Code.bezier2DCubicNormalAtT = function(A,B,C,D, t){ // scaled normal - NOT CURRENTLY direction of osculating circle
 	var tan = Code.bezier2DCubicTangentAtT(A,B,C,D,t);
 	tan.rotate(-Math.PIO2);
 	return tan;

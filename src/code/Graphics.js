@@ -231,28 +231,49 @@ Graphics.prototype.render = function(canvas){
 	this.drawGraphics(canvas);
 }
 // ------------------------------------------------------------------------------------------------------------------------ EDITING
-Graphics.prototype.boundingBox = function(){
+Graphics.prototype.boundingBox = function(mat){
+	mat = mat?mat:new Matrix2D();
 	var i, len = this._graphics.length;
 	var fxn, arg, minX=null, minY=null, maxX=null, maxY=null;
+	var bb, prev=new V2D(), B=new V2D(), C=new V2D(), D=new V2D();
+	var found = false;
 	for(i=0;i<len;++i){
 		fxn = this._graphics[i][0];
 		arg = this._graphics[i][1];
 		if(fxn==Graphics.canvasMoveTo){
-			console.log("MOV "+arg)
-			minX = (minX==null||arg[0]<minX)?arg[0]:minX;
-			minY = (minY==null||arg[1]<minY)?arg[1]:minY;
-			maxX = (maxX==null||arg[0]>maxX)?arg[0]:maxX;
-			maxY = (maxY==null||arg[1]>maxY)?arg[1]:maxY;
+			prev.set(arg[0],arg[1]); mat.multV2D(prev,prev);
+			minX = (minX==null||prev.x<minX)?prev.x:minX;
+			minY = (minY==null||prev.y<minY)?prev.y:minY;
+			maxX = (maxX==null||prev.x>maxX)?prev.x:maxX;
+			maxY = (maxY==null||prev.y>maxY)?prev.y:maxY;
 		}else if(fxn==Graphics.canvasLineTo){
-			console.log("LIN "+arg);
-			minX = (minX==null||arg[0]<minX)?arg[0]:minX;
-			minY = (minY==null||arg[1]<minY)?arg[1]:minY;
-			maxX = (maxX==null||arg[0]>maxX)?arg[0]:maxX;
-			maxY = (maxY==null||arg[1]>maxY)?arg[1]:maxY;
+			found = true;
+			prev.set(arg[0],arg[1]); mat.multV2D(prev,prev);
+			minX = (minX==null||prev.x<minX)?prev.x:minX;
+			minY = (minY==null||prev.y<minY)?prev.y:minY;
+			maxX = (maxX==null||prev.x>maxX)?prev.x:maxX;
+			maxY = (maxY==null||prev.y>maxY)?prev.y:maxY;
 		}else if(fxn==Graphics.canvasBezierCurveTo){
-			console.log("BEZ");
+			found = true;
+			B.set(arg[0],arg[1]); mat.multV2D(B,B);
+			C.set(arg[2],arg[3]); mat.multV2D(C,C);
+			D.set(arg[4],arg[5]); mat.multV2D(D,D);
+			bb = Code.bezier2DCubicBoundingBox(prev,B,C,D);
+			prev.set(D.x,D.y);
+			minX = (minX==null||bb.x()<minX)?bb.x():minX;
+			minY = (minY==null||bb.y()<minY)?bb.y():minY;
+			maxX = (maxX==null||bb.endX()>maxX)?bb.endX():maxX;
+			maxY = (maxY==null||bb.endY()>maxY)?bb.endY():maxY;
 		}else if(fxn==Graphics.canvasQuadraticCurveTo){
-			console.log("QUA");
+			found = true;
+			B.set(arg[0],arg[1]); mat.multV2D(B,B);
+			C.set(arg[2],arg[3]); mat.multV2D(C,C);
+			bb = Code.bezier2DQuadricBoundingBox(prev,B,C);
+			prev.set(C.x,C.y);
+			minX = (minX==null||bb.x()<minX)?bb.x():minX;
+			minY = (minY==null||bb.y()<minY)?bb.y():minY;
+			maxX = (maxX==null||bb.endX()>maxX)?bb.endX():maxX;
+			maxY = (maxY==null||bb.endY()>maxY)?bb.endY():maxY;
 		}else if(fxn==Graphics.canvasDrawImage0){
 			console.log("IMG0");
 		}else if(fxn==Graphics.canvasDrawImage2){
@@ -263,10 +284,7 @@ Graphics.prototype.boundingBox = function(){
 			console.log("IMG8");
 		}
 	}
-	/*
-		go thru this._graphics
-		find extrema points
-	*/
+	if(!found){ return null; }
 	return new Rect(minX,minY, maxX-minX,maxY-minY);
 }
 // ------------------------------------------------------------------------------------------

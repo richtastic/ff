@@ -419,12 +419,18 @@ DO.prototype._dragUpdate = function(e){
 // 	this.dragRoundingX = 0;
 // 	this.dragRoundingY = 0;
 // ------------------------------------------------------------------------------------------------------------------------ EDITING
-DO.prototype.boundingBox = function(){
+DO.prototype.boundingBox = function(trans){
+	trans = trans?trans:new Matrix2D();
 	// find largest BB containing THIS and all CHILDREN
-	var box = this._graphics.boundingBox();
-	var bb, i, len = this._children.length;
+	var box = this._graphics.boundingBox(trans);
+	var mat = new Matrix2D();
+	var d, bb, i, len = this._children.length;
 	for(i=0;i<len;++i){
-		bb = this._children[i].boundingBox();
+		d = this._children[i];
+		mat.copy(trans);
+		mat.mult(mat, d.matrix());
+		bb = d.boundingBox(mat);
+		box = Rect.union(box,box,bb);
 	}
 	return box;
 }

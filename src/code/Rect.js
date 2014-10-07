@@ -23,6 +23,41 @@ Rect.fits = function(a,b){
 	}
 	return false;
 }
+Rect.union = function(a,b,c){ // a = b+c
+	if(c===undefined){
+		if(a==null && b==null){
+			return null;
+		}else if(b==null){
+			return new Rect().copy(a);
+		}else if(a==null){
+			return new Rect().copy(b);
+		}
+		c = b; b = a; a = new Rect();
+	}else{
+		if(c==null && b==null){
+			return null;
+		}else if(b==null){
+			if(a==null){
+				return new Rect().copy(c);
+			}else{
+				return a.copy(c);
+			}
+		}else if(c==null){
+			if(a==null){
+				return new Rect().copy(b);
+			}else{
+				return a.copy(b);
+			}
+		}
+	}
+	var maxX = Math.max( b.endX(), c.endX() );
+	var maxY = Math.max( b.endY(), c.endY() );
+	a.x( Math.min(b.x(),c.x()) );
+	a.y( Math.min(b.y(),c.y()) );
+	a.width( maxX-a.x() );
+	a.height( maxY-a.y() );
+	return a;
+}
 function Rect(xPos,yPos, w,h){
 	this._x = 0;
 	this._y = 0;
@@ -32,6 +67,13 @@ function Rect(xPos,yPos, w,h){
 	this.y(yPos);
 	this.width(w);
 	this.height(h);
+}
+Rect.prototype.copy = function(r){
+	this.x( r.x() );
+	this.y( r.y() );
+	this.width( r.width() );
+	this.height( r.height() );
+	return this;
 }
 Rect.prototype.x = function(pX){
 	if(pX!==undefined){
@@ -59,6 +101,12 @@ Rect.prototype.height = function(hei){
 }
 Rect.prototype.area = function(){
 	return this._width*this._height;
+}
+Rect.prototype.endX = function(){
+	return this._x + this._width;
+}
+Rect.prototype.endY = function(){
+	return this._y + this._height;
 }
 Rect.prototype.toString = function(){
 	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";
