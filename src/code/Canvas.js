@@ -2,6 +2,7 @@
 Canvas.STAGE_FIT_FIXED = 0;
 Canvas.STAGE_FIT_FILL = 1;
 Canvas.STAGE_FIT_SCALE = 2;
+Canvas.CURSOR_STYLE_NONE = "none";						// hides cursor
 Canvas.CURSOR_STYLE_DEFAULT = "auto";					// 
 Canvas.CURSOR_STYLE_DEFAULT = "default";				// ^
 Canvas.CURSOR_STYLE_CROSSHAIR = "crosshair";			// +
@@ -13,11 +14,38 @@ Canvas.CURSOR_STYLE_RESIZE_BOTTOM_LEFT = "se-resize";	// |/
 Canvas.CURSOR_STYLE_RESIZE_BOTTOM_RIGHT = "sw-resize";	// \|
 Canvas.CURSOR_STYLE_RESIZE_RIGHT = "e-resize";			// >|
 Canvas.CURSOR_STYLE_RESIZE_LEFT = "w-resize";			// |<
+Canvas.CURSOR_STYLE_RESIZE_TL_BR = "nwse-resize";		// \
+Canvas.CURSOR_STYLE_RESIZE_TR_BL = "nesw-resize";		// /
+Canvas.CURSOR_STYLE_RESIZE_TOP_BOTTOM = "ns-resize";	// |
+Canvas.CURSOR_STYLE_RESIZE_LEFT_RIGHT = "ew-resize";	// |
+Canvas.CURSOR_STYLE_SLIDE_HORIZONTAL = "col-resize";	// <-|->
+Canvas.CURSOR_STYLE_SLIDE_VERTICAL = "row-resize";		// vertical version of: <-|->
+
+Canvas.CURSOR_STYLE_ALIAS = "alias";					//  curvy arrow CW
+Canvas.CURSOR_STYLE_SCROLL_ALL = "all-scroll";	 		// 4-arrows ~ move ()
+Canvas.CURSOR_STYLE_MOVE_ARROWS = "move"; 				// 4-arrows OR a hand grabbing _m
+Canvas.CURSOR_STYLE_ADD = "cell";						// crosshair - PLUS sign
+Canvas.CURSOR_STYLE_MENU = "context-menu";				// arrow + little nav infographic
+Canvas.CURSOR_STYLE_COPY = "copy";						// arrow + little add infographic
+Canvas.CURSOR_STYLE_NO_DROP = "no-drop";				// arrow + no-smoking infographic ~ not-allowed
+Canvas.CURSOR_STYLE_NO = "not-allowed";				// arrow + no-smoking infographic
+Canvas.CURSOR_STYLE_PROGRESS = "progress";				// arrow + spinning ball infographic
+Canvas.CURSOR_STYLE_WAIT = "wait";						// arrow + spinning ball infographic ~ progress
+
+Canvas.CURSOR_STYLE_TEXT = "text";						// I
+Canvas.CURSOR_STYLE_TEXT_VERTICAL = "vertical-text";	// I (vertical)
+Canvas.CURSOR_STYLE_ZOOM_IN = "zoom-in";				// magnifying glass + PLUS
+Canvas.CURSOR_STYLE_ZOOM_OUT = "zoom-out";				// magnifying glass + MINUS
 Canvas.CURSOR_STYLE_QUESTION = "help";					// ?
 Canvas.CURSOR_STYLE_GRAB = "move";						// _m
-Canvas.CURSOR_STYLE_POINT = "point";					// ^ / |m
-Canvas.CURSOR_STYLE_WAIT = "progress";					// tick
-Canvas.CURSOR_STYLE_TYPE = "text";						// I
+Canvas.CURSOR_STYLE_FINGER = "pointer";					// hand pointing
+//Canvas.CURSOR_STYLE_POINT = "point";					// ^ / |m
+//Canvas.CURSOR_STYLE_WAIT = "progress";					// tick
+
+//Canvas.CURSOR_STYLE_ENTER_A_URL ... ("url('http://www.kirupa.com/html5/images/pointer_cursor.png')"); // external image - NOT USED?
+Canvas.CURSOR_STYLE_GRAB_START = "grab"; // NOT USED ?
+Canvas.CURSOR_STYLE_GRABBED = "grabbing";	// NOT USED ?
+
 // these propagate up/down the display/list
 Canvas.EVENT_MOUSE_DOWN = "canevtmoudwn";
 Canvas.EVENT_MOUSE_UP = "canevtmouup";

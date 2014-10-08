@@ -50,7 +50,7 @@ Stage.prototype.frameRate = function(fr){
 Stage.prototype.time = function(){
 	return this._time;
 }
-this.setCursorStyle = function(style){
+Stage.prototype.setCursorStyle = function(style){
 	this._canvas.setCursorStyle(style);
 }
 // ------------------------------------------------------------------------------------------------------------------------ 

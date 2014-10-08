@@ -2841,7 +2841,7 @@ Code.bezier2DExtrema = function(){ // arguments = list of coefficients
 }
 
 
-Code.bezier2DQuadricBoundingBox = function(A, B, C){ // Newton-Raphson
+Code.bezier2DQuadricBoundingBox = function(A, B, C){ // parbola maxima root finding
 	//var t, u, f, g, h, point, step, steps = 20;
 	var minX, minY, maxX, maxY, x, y, t;
 	minX  = Math.min(A.x,C.x);

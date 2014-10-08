@@ -102,6 +102,12 @@ Rect.prototype.height = function(hei){
 Rect.prototype.area = function(){
 	return this._width*this._height;
 }
+Rect.prototype.centerX = function(){
+	return this._x + this._width*0.5;
+}
+Rect.prototype.centerY = function(){
+	return this._y + this._height*0.5;
+}
 Rect.prototype.endX = function(){
 	return this._x + this._width;
 }

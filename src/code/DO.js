@@ -148,6 +148,7 @@ DO.prototype.graphicsIllustration = function(){
 DO.prototype.addFunction = function(str,fxn,ctx){
 	DO._.addFunction.call(this,str,fxn,ctx);
 	if(this._stage){
+		//console.log("I HAVE A STAGE");
 		this._stage.addFunctionDisplay(this,str,fxn,ctx);
 	}else{
 		console.log("need to add this request to some queue and activate on attaching to stage");
