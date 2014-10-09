@@ -397,10 +397,14 @@ DO.prototype._dragMouseMoveIn = function(e){
 	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragMouseMoveOut = function(e){
+console.log("dragging while out");
+// change target to this:
+e.target = this; // REMOVE ME
 	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragUpdate = function(e){
 	v = e.global;
+e.dragging = this; // rather than TARGET, because target is the actual originator
 	this.matrix().copy(this._dragMatrix);
 	var locA = new V2D().copy(this._dragOffset);
 	var locB = new V2D().copy(v);

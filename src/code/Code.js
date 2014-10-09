@@ -972,8 +972,20 @@ Code.setStyleWidth = function(ele,val){
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
-Code.setStyleCursor = function(ele,style){
-	ele.style.cursor = style;
+Code.setStyleCursor = function(ele,styleIn){
+	var cursorStyle = "cursor: -moz-"+styleIn+"; cursor: -webkit-"+styleIn+"; cursor: "+styleIn+";";
+	var style = ele.getAttribute("style");
+	//console.log( "++ "+style );
+	style = Code.removeAllStyle(style, "cursor");
+	style = style + "" + cursorStyle;
+	//console.log( "=> "+style );
+	ele.setAttribute("style",style);
+	//style = ele.getAttribute("style");
+	//console.log( "   "+style );
+};
+Code.removeAllStyle = function(style, property){ // property:attribute;
+	var reg = new RegExp(""+property+".*?:.*?;( )*", "gi");
+	return style.replace(reg,"");
 };
 Code.setStyleZIndex = function(ele,style){
 	ele.style.zIndex = style;

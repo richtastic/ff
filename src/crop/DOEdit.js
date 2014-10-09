@@ -139,6 +139,8 @@ DOEdit.prototype.element = function(e){
 			this._tlScale.addFunction(DO.EVENT_DRAG_MOVE, this._handleDragMove, this);
 			this._tlScale.addFunction(DO.EVENT_DRAG_END, this._handleDragEnd, this);
 			this._tlRotate.addFunction(DO.EVENT_DRAG_BEGIN, this._handleDragBegin, this);
+			this._tlRotate.addFunction(DO.EVENT_DRAG_MOVE, this._handleDragMove, this);
+			this._tlRotate.addFunction(DO.EVENT_DRAG_END, this._handleDragEnd, this);
 		}else{ // unset
 			this._tlScale.disableDragging();
 			this._tlScale.removeFunction(DO.EVENT_DRAG_BEGIN, this._handleDragBegin, this);
@@ -152,22 +154,27 @@ DOEdit.prototype._handleDragBegin = function(e){
 	var target = e.target;
 	if(target==this._tlScale){
 		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_RESIZE_TL_BR);
-// this._stage.setCursorStyle("");
-
+	}else if(target==this._tlRotate){
+		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_CAN_GRAB);
+	}else{
+		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_HELP);
+		// this._stage.setCursorStyle("");
 	}
 }
 DOEdit.prototype._handleDragEnd = function(e){
 	var target = e.target;
 	if(target==this._tlScale){
-		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
+		//
 	}
+	this._stage.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 }
 DOEdit.prototype._handleDragMove = function(e){
+	// SYMBOLED OBJECTS: bounding box is rotated
+	// GROUPED OBJECTS: bounding box is recalculated after transition
 	// console.log("drag move:");
 	// console.log(e);
 	var target = e.target;
 	if(target==this._tlScale){
-		console.log("TL - SCALE");
 		var newCenter = new V2D(0,0);
 		this._tlScale.matrix().multV2D(newCenter,newCenter);
 		console.log(newCenter+"");
@@ -188,7 +195,27 @@ DOEdit.prototype._handleDragMove = function(e){
 		DOEdit.generateBorder(this._border, bb);
 
 	}else if(target==this._tlRotate){
-		console.log("TL - ROTATE");
+		var newCenter = new V2D(0,0);
+		this._tlRotate.matrix().multV2D(newCenter,newCenter);
+		var angleStart = Math.atan2(this._boundingBox.y()-this._center.y,this._boundingBox.x()-this._center.x);
+		var angleEnd = Math.atan2(newCenter.y-this._center.y,newCenter.x-this._center.x);
+		var angle = angleEnd-angleStart;
+		//console.log( angle*180/Math.PI );
+		//console.log( newCenter+"" );
+		this._element.matrix().copy(this._elementMatrix); // as it were
+		this._element.matrix().translate(-this._center.x,-this._center.y);// move to offset
+		this._element.matrix().rotate(angle); // apply transform
+		this._element.matrix().translate(this._center.x,this._center.y);// move back
+		// rotate AND MOVE box
+		this._border.matrix().identity(); // as it were
+		this._border.matrix().translate(-this._center.x,-this._center.y);// move to offset
+		this._border.matrix().rotate(angle); // apply transform
+		this._border.matrix().translate(this._center.x,this._center.y);// move back
+		// apply to scalers
+		newCenter.set(this._boundingBox.x(),this._boundingBox.y());
+		this._border.matrix().multV2D(newCenter,newCenter);
+		this._tlScale.matrix().identity();
+		this._tlScale.matrix().translate(newCenter.x,newCenter.y);
 	}else{
 		console.log("OTHER - ?");
 	}

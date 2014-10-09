@@ -36,15 +36,19 @@ Canvas.CURSOR_STYLE_TEXT = "text";						// I
 Canvas.CURSOR_STYLE_TEXT_VERTICAL = "vertical-text";	// I (vertical)
 Canvas.CURSOR_STYLE_ZOOM_IN = "zoom-in";				// magnifying glass + PLUS
 Canvas.CURSOR_STYLE_ZOOM_OUT = "zoom-out";				// magnifying glass + MINUS
-Canvas.CURSOR_STYLE_QUESTION = "help";					// ?
+Canvas.CURSOR_STYLE_HELP = "help";						// ?
 Canvas.CURSOR_STYLE_GRAB = "move";						// _m
 Canvas.CURSOR_STYLE_FINGER = "pointer";					// hand pointing
 //Canvas.CURSOR_STYLE_POINT = "point";					// ^ / |m
 //Canvas.CURSOR_STYLE_WAIT = "progress";					// tick
 
 //Canvas.CURSOR_STYLE_ENTER_A_URL ... ("url('http://www.kirupa.com/html5/images/pointer_cursor.png')"); // external image - NOT USED?
-Canvas.CURSOR_STYLE_GRAB_START = "grab"; // NOT USED ?
+Canvas.CURSOR_STYLE_CAN_GRAB = "grab"; // NOT USED ?
 Canvas.CURSOR_STYLE_GRABBED = "grabbing";	// NOT USED ?
+
+// http://www.htmlgoodies.com/beyond/css/article.php/3470321
+Canvas.CURSOR_STYLE_HAND = "hand"; // ~ pointer
+
 
 // these propagate up/down the display/list
 Canvas.EVENT_MOUSE_DOWN = "canevtmoudwn";
