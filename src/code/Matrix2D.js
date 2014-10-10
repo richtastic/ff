@@ -53,7 +53,18 @@ Matrix2D.prototype.translateY = function(ty){
 	}
 	return this;
 }
-// skewing by x, y
+Matrix2D.prototype.skewX = function(sx){ // NOT ANGLE, that should be done beforehand
+	var mat = Matrix2D.temp;
+	mat.set(1,sx,0,1,0,0);
+	this.mult(mat,this);
+	return this;
+}
+Matrix2D.prototype.skewY = function(sy){ // NOT ANGLE, that should be done beforehand
+	var mat = Matrix2D.temp;
+	mat.set(1,0,sy,1,0,0);
+	this.mult(mat,this);
+	return this;
+}
 Matrix2D.prototype.rotate = function(theta){
 	var mat = Matrix2D.temp;
 	var cA = Math.cos(theta), sA = Math.sin(theta);

@@ -1034,18 +1034,17 @@ Code.removeClass = function(ele,cla){
 	c = c.replace("  "," ");
 	ele.setAttribute("class",c);
 };
-/*
-Code.getStyle = function(ele){
-	var c = ele.getAttribute("style");
+Code.getStyle = function(ele,prop){
+	/*var c = ele.getAttribute("style");
 	if(c==undefined || c==null){
 		c = ele.style;
 		if(c==undefined || c==null){
 			return "";
 		}
 	}
-	return c;
-}*/
-Code.addStyle = function(ele,cla){
+	return c;*/
+};
+Code.addStyle = function(ele,prop,attr){
 	/*var c = Code.getClass(ele)+" "+cla;
 	c = c.replace("  "," ");
 	c = c.replace(/^ /,"");

@@ -370,6 +370,7 @@ DO.prototype._dragStart = function(e){
 	this.addFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
 	this.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
 	this._isDragging = true;
+	e.dragging = this;
 	this.alertAll(DO.EVENT_DRAG_BEGIN, e);
 }
 DO.prototype._dragStop = function(e){
@@ -378,6 +379,7 @@ DO.prototype._dragStop = function(e){
 	this.removeFunction(Canvas.EVENT_MOUSE_UP_OUTSIDE,this._dragMouseUpOut,this);
 	this.removeFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
 	this.removeFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
+	if(e){ e.dragging = this; }
 	this.alertAll(DO.EVENT_DRAG_END, e);
 }
 DO.prototype._dragMouseDownIn = function(e){
@@ -397,14 +399,12 @@ DO.prototype._dragMouseMoveIn = function(e){
 	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragMouseMoveOut = function(e){
-console.log("dragging while out");
-// change target to this:
-e.target = this; // REMOVE ME
+//e.target = this; // use e.dragging as target
 	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragUpdate = function(e){
 	v = e.global;
-e.dragging = this; // rather than TARGET, because target is the actual originator
+	e.dragging = this;
 	this.matrix().copy(this._dragMatrix);
 	var locA = new V2D().copy(this._dragOffset);
 	var locB = new V2D().copy(v);

@@ -43,8 +43,8 @@ Canvas.CURSOR_STYLE_FINGER = "pointer";					// hand pointing
 //Canvas.CURSOR_STYLE_WAIT = "progress";					// tick
 
 //Canvas.CURSOR_STYLE_ENTER_A_URL ... ("url('http://www.kirupa.com/html5/images/pointer_cursor.png')"); // external image - NOT USED?
-Canvas.CURSOR_STYLE_CAN_GRAB = "grab"; // NOT USED ?
-Canvas.CURSOR_STYLE_GRABBED = "grabbing";	// NOT USED ?
+Canvas.CURSOR_STYLE_CAN_GRAB = "grab";
+Canvas.CURSOR_STYLE_GRABBING = "grabbing";
 
 // http://www.htmlgoodies.com/beyond/css/article.php/3470321
 Canvas.CURSOR_STYLE_HAND = "hand"; // ~ pointer

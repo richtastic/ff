@@ -84,11 +84,12 @@ function DOEdit(parentDO){
 // this._tlScale.addFunction(Canvas.EVENT_MOUSE_DOWN, this._handleMouseDown, this);
 this._tlScale.enableDragging();
 this._tlRotate.enableDragging();
+this._tmSkew.enableDragging();
 	//
 	this.addChild(this._container);
 	this.addChild(this._crosshair);
 	this.addChild(this._border);
-	// bedind
+	// behind
 	this.addChild(this._tlRotate);
 	this.addChild(this._tmSkew);
 	this.addChild(this._trRotate);
@@ -109,6 +110,7 @@ this._tlRotate.enableDragging();
 
 	DOEdit.generateScaler(this._tlScale);
 	DOEdit.generateSkewer(this._tlRotate);
+	DOEdit.generateSkewer(this._tmSkew);
 	DOEdit.generateCrosshair(this._crosshair);
 }
 Code.inheritClass(DOEdit, DO);
@@ -128,6 +130,8 @@ DOEdit.prototype.element = function(e){
 			this._tlScale.matrix().translate(bb.x(),bb.y());
 			this._tlRotate.matrix().identity();
 			this._tlRotate.matrix().translate(bb.x(),bb.y());
+			this._tmSkew.matrix().identity();
+			this._tmSkew.matrix().translate(bb.centerX(),bb.y());
 			// the crosshair should be the object center .... for now center to BB
 			this._center.set(bb.centerX(), bb.centerY());
 			this._crosshair.matrix().identity();
@@ -141,6 +145,10 @@ DOEdit.prototype.element = function(e){
 			this._tlRotate.addFunction(DO.EVENT_DRAG_BEGIN, this._handleDragBegin, this);
 			this._tlRotate.addFunction(DO.EVENT_DRAG_MOVE, this._handleDragMove, this);
 			this._tlRotate.addFunction(DO.EVENT_DRAG_END, this._handleDragEnd, this);
+			this._tmSkew.addFunction(DO.EVENT_DRAG_BEGIN, this._handleDragBegin, this);
+			this._tmSkew.addFunction(DO.EVENT_DRAG_MOVE, this._handleDragMove, this);
+			this._tmSkew.addFunction(DO.EVENT_DRAG_END, this._handleDragEnd, this);
+			
 		}else{ // unset
 			this._tlScale.disableDragging();
 			this._tlScale.removeFunction(DO.EVENT_DRAG_BEGIN, this._handleDragBegin, this);
@@ -151,21 +159,68 @@ DOEdit.prototype.element = function(e){
 
 
 DOEdit.prototype._handleDragBegin = function(e){
-	var target = e.target;
+	console.log("begin");
+	var target = e.dragging;
+	this._elementMatrix.copy( this._element.matrix() );
 	if(target==this._tlScale){
 		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_RESIZE_TL_BR);
 	}else if(target==this._tlRotate){
-		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_CAN_GRAB);
+		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_GRABBING);
+	}else if(target==this._tmSkew){
+		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_SLIDE_HORIZONTAL);
 	}else{
+		// this._stage.setCursorStyle(Canvas.CURSOR_STYLE_CAN_GRAB);
 		this._stage.setCursorStyle(Canvas.CURSOR_STYLE_HELP);
 		// this._stage.setCursorStyle("");
 	}
 }
 DOEdit.prototype._handleDragEnd = function(e){
-	var target = e.target;
+	var target = e.dragging;
 	if(target==this._tlScale){
+		// 
+	}else if(target==this._tlRotate){
 		//
+	}else if(target==this._tmSkew){
+		/*
+		console.log("skew");
+		var newCenter = new V2D(0,0);
+		this._tmSkew.matrix().multV2D(newCenter,newCenter);
+		//newCenter.y = this._boundingBox.y();// IGNORE Y CHANGES
+		this._tmSkew.matrix().translate(0,this._boundingBox.y()-newCenter.y);
+		*/
+	}else{
+		console.log("EG?");
 	}
+	// PUT ALL ITEMS BACK INTO STARTING POSITIONS
+			// bounding box - EITHER get a bound via the matrix, or get a bound then apply the matrix
+			var bb = this._element.boundingBox(this._element.matrix());
+			//
+			this._center.set(bb.centerX(), bb.centerY());
+			this._crosshair.matrix().identity();
+			this._crosshair.matrix().translate(bb.centerX(),bb.centerY());
+			//
+			this._boundingBox.copy(bb);
+			this._border.matrix().identity();
+			DOEdit.generateBorder(this._border, bb);
+			// 
+			this._tlScale.matrix().identity();
+			this._tlScale.matrix().translate(bb.x(),bb.y());
+			this._tlRotate.matrix().identity();
+			this._tlRotate.matrix().translate(bb.x(),bb.y());
+			this._tmSkew.matrix().identity();
+			this._tmSkew.matrix().translate(bb.centerX(),bb.y());
+			//this._elementMatrix.copy(this._element.matrix());
+			//console.log("BOXED: "+bb+"");
+			/*this._tlScale.matrix().identity();
+			this._tlScale.matrix().translate(bb.x(),bb.y());
+			this._tlRotate.matrix().identity();
+			this._tlRotate.matrix().translate(bb.x(),bb.y());
+			this._tmSkew.matrix().identity();
+			this._tmSkew.matrix().translate(bb.centerX(),bb.y());
+			*/
+		// 
+//this._elementMatrix.copy( this._element.matrix() );
+	// ...
 	this._stage.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 }
 DOEdit.prototype._handleDragMove = function(e){
@@ -173,15 +228,24 @@ DOEdit.prototype._handleDragMove = function(e){
 	// GROUPED OBJECTS: bounding box is recalculated after transition
 	// console.log("drag move:");
 	// console.log(e);
-	var target = e.target;
+	var target = e.dragging;
 	if(target==this._tlScale){
 		var newCenter = new V2D(0,0);
 		this._tlScale.matrix().multV2D(newCenter,newCenter);
 		console.log(newCenter+"");
 		var scaleX = (this._center.x-newCenter.x)/(this._center.x-this._boundingBox.x());
 		var scaleY = (this._center.y-newCenter.y)/(this._center.y-this._boundingBox.y());
-		this._updateElementTransformScale(scaleX,scaleY);
-
+		//this._updateElementTransformScale(scaleX,scaleY);
+		this._element.matrix().copy(this._elementMatrix); // as it were
+		this._element.matrix().translate(-this._center.x,-this._center.y);// move to offset
+		this._element.matrix().scale(scaleX,scaleY); // apply transform
+		this._element.matrix().translate(this._center.x,this._center.y);// move back
+		// BOX
+		this._border.matrix().identity(); // as it were
+		this._border.matrix().translate(-this._center.x,-this._center.y);// move to offset
+		this._border.matrix().scale(scaleX,scaleY); // apply transform
+		this._border.matrix().translate(this._center.x,this._center.y);// move back
+		// 
 		var bb = new Rect().copy(this._boundingBox);
 		var tl = new V2D(bb.x(),bb.y());
 		var br = new V2D(bb.endX(),bb.endY());
@@ -192,7 +256,7 @@ DOEdit.prototype._handleDragMove = function(e){
 		bb.y( Math.min(nTL.y,nBR.y) );
 		bb.width( Math.abs(nBR.x-nTL.x) );
 		bb.height( Math.abs(nBR.y-nTL.y) );
-		DOEdit.generateBorder(this._border, bb);
+		//DOEdit.generateBorder(this._border, bb);
 
 	}else if(target==this._tlRotate){
 		var newCenter = new V2D(0,0);
@@ -216,6 +280,29 @@ DOEdit.prototype._handleDragMove = function(e){
 		this._border.matrix().multV2D(newCenter,newCenter);
 		this._tlScale.matrix().identity();
 		this._tlScale.matrix().translate(newCenter.x,newCenter.y);
+	}else if(target==this._tmSkew){
+		var newCenter = new V2D(0,0);
+		this._tmSkew.matrix().multV2D(newCenter,newCenter);
+		newCenter.y = this._boundingBox.y();// IGNORE Y CHANGES
+		var angleStart = Math.atan2(this._boundingBox.y()-this._center.y,this._boundingBox.centerX()-this._center.x);
+		var angleEnd = Math.atan2(newCenter.y-this._center.y,newCenter.x-this._center.x);
+		var angle = -(angleEnd-angleStart);
+		var tan = Math.tan(angle);
+		//console.log( angle*180/Math.PI );
+		// IF Y GOES OVERBOARD -> FLIP SIGN
+		if( newCenter.y>this._center.y ){
+			tan = -tan;
+		}
+		// 
+		this._element.matrix().copy(this._elementMatrix); // as it were
+		this._element.matrix().translate(-this._center.x,-this._center.y);// move to offset
+		this._element.matrix().skewX(tan); // apply transform
+		this._element.matrix().translate(this._center.x,this._center.y);// move back
+		// BOX:
+		this._border.matrix().identity(); // as it were
+		this._border.matrix().translate(-this._center.x,-this._center.y);// move to offset
+		this._border.matrix().skewX(tan); // apply transform
+		this._border.matrix().translate(this._center.x,this._center.y);// move back
 	}else{
 		console.log("OTHER - ?");
 	}

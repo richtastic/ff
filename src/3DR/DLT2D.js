@@ -10,7 +10,8 @@ function DLT2D(){
 	this._stage.start();
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// import image to work with
-	var imageLoader = new ImageLoader("../matching/images/medium/",["BL.png","BLB.png"], this,this.handleImageLoaded,null);
+//	var imageLoader = new ImageLoader("../matching/images/medium/",["BL.png","BLB.png"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("./images/",["screen.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 	//this.handleLoaded();
 }
@@ -38,12 +39,18 @@ DLT2D.prototype.handleImageLoaded = function(e){
 	}
 	// 
 	var points = [];
-	points.push([new V2D(234,9), new V2D(199,293)]);
-	points.push([new V2D(342,42), new V2D(82,249)]);
-	points.push([new V2D(321,285), new V2D(42,17)]);
-	points.push([new V2D(208,296), new V2D(181,35)]);
-	points.push([new V2D(249,65), new V2D(175,249)]);
-	points.push([new V2D(307,202), new V2D(83,115)]);
+	// points.push([new V2D(234,9), new V2D(199,293)]);
+	// points.push([new V2D(342,42), new V2D(82,249)]);
+	// points.push([new V2D(321,285), new V2D(42,17)]);
+	// points.push([new V2D(208,296), new V2D(181,35)]);
+	// points.push([new V2D(249,65), new V2D(175,249)]);
+	// points.push([new V2D(307,202), new V2D(83,115)]);
+var wid = 2100;
+var hei = 700;
+points.push([new V2D(33,61), new V2D(0,0)]);
+points.push([new V2D(958,314), new V2D(wid,0)]);
+points.push([new V2D(966,682), new V2D(wid,hei)]);
+points.push([new V2D(20,962), new V2D(0,hei)]);
 	//points.push([new V2D(,), new V2D(,)]);
 		// ...
 	// show points on screen;
@@ -105,8 +112,10 @@ DLT2D.prototype.handleImageLoaded = function(e){
 	var imageARGB = this._stage.getDOAsARGB(img, wid,hei);
 	var imageMat = new ImageMat(wid,hei);
 	imageMat.setFromArrayARGB(imageARGB);
-	var planeWidth = 400;
-	var planeHeight = 300;
+	// var planeWidth = 400;
+	// var planeHeight = 300;
+var planeWidth = 2100;
+var planeHeight = 700;
 	var imagePlaneMat = ImageMat.extractRectWithProjection(imageMat,wid,hei, planeWidth,planeHeight, homography);
 	var imagePlaneARGB = ImageMat.ARGBFromFloats(imagePlaneMat.red(),imagePlaneMat.grn(),imagePlaneMat.blu());
 	var imagePlane = this._stage.getARGBAsImage(imagePlaneARGB, planeWidth,planeHeight);
