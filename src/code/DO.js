@@ -4,6 +4,8 @@
 DO.EVENT_DRAG_BEGIN = "do.evtdrgbeg";
 DO.EVENT_DRAG_MOVE = "do.evtdrgmov";
 DO.EVENT_DRAG_END = "do.evtdrgend";
+DO.EVENT_MOUSE_IN = "do.evtmouinn";
+DO.EVENT_MOUSE_OUT = "do.evtmouout";
 // DO.EVENT_DOWN = "do.evtdown";
 // DO.EVENT_UP = "do.evtup";
 // DO.EVENT_CLICKED = "do.evtclicked";
@@ -36,6 +38,7 @@ DO.getPointFromTransform = function(newPos,mat,pos){ // converts global point to
 }
 DO.addToStageRecursive = function(ch,sta){
 	ch._stage = sta;
+	ch._mouseOver = ch._mouseWasOver = false;
 	ch.addedToStage(sta);
 	for(var i=0;i<ch._children.length;++i){
 		if(ch._children[i]._stage != sta){ 
@@ -45,6 +48,7 @@ DO.addToStageRecursive = function(ch,sta){
 }
 DO.removedFromStageRecursive = function(ch){
 	ch._stage = null;
+	ch._mouseOver = ch._mouseWasOver = false;// if YES, alert mouse out
 	ch.removedFromStage(null);
 	for(i=0;i<ch._children.length;++i){
 		if(ch._children[i].stage() != null){
@@ -112,6 +116,8 @@ function DO(parentDO){
 // tint?
 	this._children = new Array(); // 0 = back, length-1 = front
 	this._mask = false;
+	this._mouseOver = false;
+	this._mouseWasOver = false;
 	this._matrix = new Matrix2D();
 	this._parent = parentDO;
 	this._canvas = null;

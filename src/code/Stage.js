@@ -235,13 +235,20 @@ Stage.prototype.getIntersection = function(pos){
 Stage.prototype._stageResized = function(o){
 	this._root.width = o.x; this._root.height = o.y;
 }
+Stage.prototype._performFxnOnDisplay = function(d,fxn){
+	fxn(d); // fxn.call(d);
+	var ch, i, len=d._children.length;
+	for(i=0; i<len; ++i){
+		this._performFxnOnDisplay(d._children[i],fxn);
+	}
+}
 Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLOBAL POSITION INTERSECTION LOCATION
 	var path, arr, obj, intersection = this.getIntersection(pos,this._tempCanvas);
 	//arr = new Array( intersection, pos );
 	path = new Array();
 	// OUTSIDE
 	var list = null;
-	if(evt==Canvas.EVENT_MOUSE_UP){//|| evt==Canvas.EVENT_MOUSE_EXIT){
+	if(evt==Canvas.EVENT_MOUSE_UP){ // || evt==Canvas.EVENT_MOUSE_EXIT){
 		var list = this._eventList[Canvas.EVENT_MOUSE_UP_OUTSIDE];
 	}else if(evt==Canvas.EVENT_MOUSE_DOWN){
 		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN_OUTSIDE];
@@ -249,6 +256,21 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 		var list = this._eventList[Canvas.EVENT_MOUSE_CLICK_OUTSIDE];
 	}else if(evt==Canvas.EVENT_MOUSE_MOVE){
 		var list = this._eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
+		this._performFxnOnDisplay(this._root, function(d){ if(d._mouseOver){d._mouseWasOver=true;} d._mouseOver=false; } );
+		/*
+		go thru entire stack and:
+			if ch._mouseOver==true
+				ch._mouseWasOver = true
+			ch._mouseOver = false
+		if intersection: go over hierarchy and:
+			ch._mouseOver = true
+			if ch._mouseWasOver == false
+				:::ALERT MOUSE ENTER
+		go thru entire stack and:
+			if ch._mouseWasOver == true
+				:::ALERT MOUSE EXIT
+			ch._mouseWasOver = false
+		*/
 	}
 	var cum = new Matrix2D();
 	//var arr;
@@ -270,6 +292,7 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 			}
 		}
 	}
+	var evtObj
 	if(intersection){ // ANCESTOR INSIDE ALERT
 		obj = intersection;
 		while(obj){ // } && obj.parent()){ // top parent = root ; and assuming root has identity
@@ -280,8 +303,19 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 		while(path.length>0){ // run path 
 			obj = path.pop();
 			cum.mult(cum,obj.matrix());
-			obj.alertAll( evt,{"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))} );
+			evtObj = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))}
+			obj._mouseOver = true;
+			if(!obj._mouseWasOver){
+				// console.log("MOUSE ENTERED");
+				obj.alertAll(DO.EVENT_MOUSE_IN,{"target":obj}); // TARGET IS ACTUALLY INTERSECTION
+			}
+			obj.alertAll( evt, evtObj );
 		}
+	}
+	if(evt==Canvas.EVENT_MOUSE_MOVE){
+		//evtObj = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))}
+		// TARGET IS ACTUALLY THE LOWEST SINGLE CHILD
+		this._performFxnOnDisplay(this._root, function(d){ if(d._mouseWasOver && !d._mouseOver){ d.alertAll(DO.EVENT_MOUSE_OUT,{"target":d}); } d._mouseWasOver=false; } );
 	}
 	// arr = null; 
 	pos = null; //Code.emptyArray(arr); // results in undefined sent to events
@@ -345,7 +379,7 @@ this.canvasMouseMoveOutside = function(pos){
 };
 */
 
-
+this._mouseOver = false;
 
 // var can = this._renderCanvas.getCanvas();
 // document.body.appendChild(can);
@@ -353,3 +387,5 @@ this.canvasMouseMoveOutside = function(pos){
 // var can = this._tempCanvas.getCanvas();
 // document.body.appendChild(can);
 // can.style.position="absolute"; can.style.left="0px"; can.style.top="300px";
+
+
