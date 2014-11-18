@@ -704,6 +704,37 @@ Code.randChiSquareN = function(n){ // N DOF
 	return sum;
 }
 
+Code.randomizedArray = function(len){
+	var i, arr = [], len = len?len:10;
+	for(i=0;i<len;++i){
+		arr[i] = i;
+	}
+	Code.randomizeArray(arr, false);
+}
+Code.randomizeArray = function(arr, guarantee){
+	var i, len = arr.length;
+	if(len<=1){return;}
+	var indexA, indexB, temp;
+	var wasLastIndex = arr[len-1];
+	for(i=0;i<len;++i){
+		indexA = Math.floor(Math.random()*len);
+		indexB = Math.floor(Math.random()*len);
+		temp = arr[indexA];
+		arr[indexA] = arr[indexB];
+		arr[indexB] = temp;
+	}
+	// guarantee non-repeats
+    var isFirstIndex = arr[0];
+    if(guarantee){
+	    if(wasLastIndex==isFirstIndex){ 
+	        indexA = 0;
+	        indexB = Math.floor(Math.random()*(len-1))+1;
+	        temp = arr[indexA];
+	        arr[indexA] = carr[indexB];
+	        arr[indexB] = temp;
+	    }
+	}
+}
 // -------------------------------------------------------- HTML
 Code.getBody = function(){
 	return document.body;
