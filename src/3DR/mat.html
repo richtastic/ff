@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>MAT</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	console.log("loaded");
+	var mat, inv, a, b;
+	// gauss-jordan inverse - invertible ====================================================================
+	mat = new Matrix(3,3);
+	mat.setFromArray([1,2,3, 2,2,5, 2,3,3]);
+	console.log( mat.toString() );
+		b = new Matrix(3,1);
+		b.setFromArray([1,2,3]);
+		console.log( b.toString() );
+	inv = Matrix._inverseSquareGaussJordan(mat, b);
+	console.log( inv.toString() );
+	console.log( b.toString() );
+	console.log( "..." );
+
+	// gauss-jordan inverse - singular ====================================================================
+	mat.setFromArray([1,2,3, 2,2,5, 3,4,8]);
+	console.log( mat.toString() );
+	inv = Matrix._inverseSquareGaussJordan(mat);
+	if(inv){
+		console.log( inv.toString() );
+	}else{
+		console.log( "not invertible" );
+	}
+	console.log( "..." );
+
+	// LU factorixation/decomposition- singular ====================================================================
+
+
+	// console.log( mat.toString() );
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

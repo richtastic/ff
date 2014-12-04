@@ -29,7 +29,6 @@ Ransac.prototype.handleLoaded = function(e){
 		x = Math.random()*10.0 - 0.0;
 		y = lineM*x + lineB;
 		// error
-console.log(Code.randGauss())
 		x = x + sigma*Code.randGauss();//Math.random()*error - error*0.5;
 		y = y + sigma*Code.randGauss();//Math.random()*error - error*0.5;
 		// add
@@ -37,6 +36,7 @@ console.log(Code.randGauss())
 	}
 	// outliers
 	points.push(new V2D(3.0,8.0));
+	points.push(new V2D(8.0,1.0));
 	var minCount = 2;
 	var epsilon = 1.0/points.length;
 	var pOutlier = 0.5;
@@ -141,7 +141,23 @@ var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pInl
 	console.log("CONSENSUS: "+support+" := "+m+" x + "+b);
 	console.log(""+consensus);
 	// further improve model by incorporating more inliers progressivley
-		// .. 
+		A = new Matrix(consensus.length,3);
+		for(i=0;i<consensus.length;++i){
+			p = consensus[i];
+			A.set(i,0, p.x);
+			A.set(i,1, 1.0);
+			A.set(i,2, -p.y);
+		}
+		svd = Matrix.SVD(A);
+		coeff = svd.V.colToArray(2);
+		m = coeff[0];
+		b = coeff[1];
+		y = coeff[2]; // deviates from 1
+		m /= y;
+		b /= y;
+		// go thru and see if there are any more inliers
+		// iterate
+		// use maximum set (for iteration)
 	// show line
 	d = new DO();
 	d.graphics().clear();

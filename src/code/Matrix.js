@@ -1364,3 +1364,241 @@ SPAN === LINEAR COMBINATION
 http://www.youtube.com/watch?v=abYAUqs_n6I
 
 */
+
+
+/* ---------------------------------------------------------------- NUMERICAL RECIPES ---------------------------------------------------------------- */
+
+// 2: Linear Algebra Solutions
+// n = rows, m = cols
+Matrix._inverseSquareGaussJordan = function(matrixA, matrixB){ // set matrixA to inverse via gauss-jordan
+	var i, j, k, l, ll, val, inv, maxRow, maxCol, maxValue, rows, cols;
+	rows = matrixA.rows();
+	cols = matrixB ? matrixB.cols() : 0;
+	var iPivots = new Array(rows);
+	var indexRow = new Array(rows);
+	var indexCol = new Array(rows);
+	// zero pivots
+	for(i=rows;i--;){
+		iPivots[i] = 0;
+	}
+	// main row loop
+	for(i=0;i<rows;++i){
+		// find maximum index/value in remaining positions
+		maxValue = 0.0;
+		for(j=0;j<rows;++j){
+			if(iPivots[j]!=1){
+				for(k=0;k<rows;++k){
+					if(iPivots[k]==0){
+						val = Math.abs(matrixA._rows[j][k]);
+						if(val >= maxValue){
+							maxValue = val;
+							maxRow = j;
+							maxCol = k;
+						}
+					}
+				}
+			}
+		}
+		// pivot element
+		++iPivots[maxCol];
+		if(maxRow!=maxCol){ // not along diagonal, row swap
+			for(l=0;l<rows;++l){
+				val = matrixA._rows[maxRow][l];
+				matrixA._rows[maxRow][l] = matrixA._rows[maxCol][l];
+				matrixA._rows[maxCol][l] = val;
+			}
+			for(l=0;l<cols;++l){
+				val = matrixB._rows[maxRow][l];
+				matrixB._rows[maxRow][l] = matrixB._rows[maxCol][l];
+				matrixB._rows[maxCol][l] = val;
+			}
+		}
+		// remember pivot positions
+		indexRow[i] = maxRow;
+		indexCol[i] = maxCol;
+		val = matrixA._rows[maxCol][maxCol];
+		if(val==0.0){ // singular matrix not invertable
+			console.log("gaussj: singular matrix");
+			return null;
+		}
+		// scale row to pivot = 1.0
+		inv = 1.0/val;
+		matrixA._rows[maxCol][maxCol] = 1.0;
+		for(l=0;l<rows;++l){
+			matrixA._rows[maxCol][l] *= inv;
+		}
+		for(l=0;l<cols;++l){
+			matrixB._rows[maxCol][l] *= inv;
+		}
+		// reduce non-pivot rows 
+		for(ll=0;ll<rows;++ll){
+			if(ll!=maxCol){
+				val = matrixA._rows[ll][maxCol];
+				matrixA._rows[ll][maxCol] = 0.0;
+				for(l=0;l<rows;++l){
+					matrixA._rows[ll][l] -= matrixA._rows[maxCol][l]*val;
+				}
+				for(l=0;l<cols;++l){
+					matrixB._rows[ll][l] -= matrixB._rows[maxCol][l]*val;
+				}
+			}
+		}
+	}
+	// un-permute swapped changes
+	for(l=rows;l--;){
+		if(indexRow[l]!=indexCol[l]){
+			for(k=0;k<rows;++k){
+				val = matrixA._rows[k][indexRow[l]];
+				matrixA._rows[k][indexRow[l]] = matrixA._rows[k][indexCol[l]];
+				matrixA._rows[k][indexCol[l]] = val;
+			}
+		}
+	}
+	return matrixA;
+}
+
+
+Matrix._LUDecomposition = function(){
+	//
+}
+
+// 11: Eigensystems
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

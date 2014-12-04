@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# base64File
+# test
 
 def command comm
 	return %x[ "#{comm}" ]
