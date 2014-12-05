@@ -12,8 +12,87 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 	console.log("loaded");
-	var mat, inv, a, b;
+	var mat, inv, a, b, x, r, c;
+	var matrixA, matrixB, matrixX, matrixL, matrixU, inverse, rows, cols, array, result;
+/*
 	// gauss-jordan inverse - invertible ====================================================================
+	rows = 3;
+	cols = 0;
+	array = [1,2,3, 2,2,5, 2,3,3];
+	matrixA = Code.newArray2DZeros(rows,rows);
+	Code.setArray2DFromArray(matrixA,rows,rows, array);
+	matrixB = Code.newArray2DZeros(rows,cols);
+	console.log( Code.array2DtoString(matrixA) );
+	//
+	console.log( "..." );
+	inverse = Matrix._inverseSquareGaussJordan(matrixA,rows, matrixB,cols);
+	if(inverse){
+		console.log( Code.array2DtoString(inverse) );
+	}else{
+		console.log( "not invertible" );
+	}
+	console.log( "..." );
+
+	console.log( "\n=>\n\n" );
+
+	matrixA = new Matrix(rows,rows);
+	matrixA.setFromArray(array);
+	console.log( matrixA.toString() );
+	inverse = Matrix._inverseMatrixNew(matrixA);
+	console.log( "..." );
+	if(inverse){
+		console.log( inverse.toString() );
+	}else{
+		console.log( "not invertible" );
+	}
+	console.log( "..." );
+	console.log( matrixA.toString() );
+	console.log( "..." );
+
+// A = [1,2,3; 2,2,5; 2,3,3]
+// inv(A)
+*/
+
+	// LU Decomposition ====================================================================
+	rows = 3;
+	array = [1,2,3, 2,2,5, 2,3,3];
+	matrixA = Code.newArray2DZeros(rows,rows);
+	Code.setArray2DFromArray(matrixA,rows,rows, array);
+	console.log( Code.array2DtoString(matrixA) );
+	Matrix._LUDecompositionCrout(matrixA,rows);
+	console.log( "..." );
+	console.log( Code.array2DtoString(matrixA) );
+	console.log( "..." );
+
+	console.log( "\n=>\n\n" );
+
+	matrixA = new Matrix(rows,rows);
+	matrixA.setFromArray(array);
+	console.log( matrixA.toString() );
+	result = Matrix._luDecomposeNew(matrixA);
+	console.log( "..." );
+	console.log( result );
+	if(result){
+		matrixL = result.L;
+		matrixU = result.U;
+		console.log( "..." );
+		console.log( matrixL.toString() );
+		console.log( "..." );
+		console.log( matrixU.toString() );
+		console.log( " *= " );
+		result = Matrix.mult(matrixL,matrixU);
+		//result = Matrix.mult(matrixU,matrixL);
+		console.log( result.toString() );
+		console.log( "..." );
+	}
+	
+
+	// 
+
+// A = [1,2,3; 2,2,5; 2,3,3]
+// [L, U] = lu(A)
+
+/*
 	mat = new Matrix(3,3);
 	mat.setFromArray([1,2,3, 2,2,5, 2,3,3]);
 	console.log( mat.toString() );
@@ -35,11 +114,24 @@ function classesLoadedFxn(){
 		console.log( "not invertible" );
 	}
 	console.log( "..." );
-
+*/
+/*
 	// LU factorixation/decomposition- singular ====================================================================
-
-
+	mat = new Matrix(4,4);
+	mat.setFromArray([0,2,0,1, 2,2,3,2, 4,-3,0,1, 6,1,-6,-5]);
+	console.log( mat.toString() );
+	mat = Matrix._LUDecompositionCrout(mat);
+	console.log( "..." );
+	console.log( mat.toString() );
+	console.log( "..." );
 	// console.log( mat.toString() );
+
+	Matrix._LUBackSubstitution(matrixLU, index, vectorB);
+*/
+/*
+A = [0,2,0,1; 2,2,3,2; 4,-3,0,1; 6,1,-6,-5]
+[L, U, P] = lu(A)
+*/
 }
 </script>
 <body onload="pageLoadedFxn();">

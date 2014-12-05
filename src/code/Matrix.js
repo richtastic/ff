@@ -39,27 +39,14 @@ Matrix.prototype.setFromArray = function(list, newRow,newCol){
 	if(newRow!==undefined){
 		this.setSize(newRow,newCol);
 	}
-	var i, j, row = this._rowCount, col = this._colCount;
-	var index = 0, len = list.length;
-	for(j=0;j<row;++j){
-		for(i=0;i<col && index<len;++i){
-			this._rows[j][i] = list[index];
-			++index;
-		}
-	}
+	Code.setArray2DFromArray(this._rows,this._rowCount,this._colCount, list);
 	return this;
 }
 Matrix.prototype.setFromArrayMatrix = function(list, newRow,newCol){
 	if(newRow!==undefined){
 		this.setSize(newRow,newCol);
 	}
-	var i, j, row = this._rowCount, col = this._colCount;
-	var len = row*col;
-	for(j=0;j<row;++j){
-		for(i=0;i<col;++i){
-			this._rows[j][i] = list[j][i];
-		}
-	}
+	Code.copyArray2DFromArray2D(this._rows,this._rowCount,this._colCount, list);
 	return this;
 }
 Matrix.prototype.setDiagonalsFromArray = function(list){
@@ -325,28 +312,7 @@ Matrix.prototype.cleanCheck = function(exp){
 }
 
 Matrix.prototype.toString = function(exp){
-	exp = exp===undefined?4:exp;
-	var minLen = exp+6+1; // -#.E+#
-	var i, j, rowm1 = this._rowCount-1, colm1 = this._colCount-1, num, val;
-	var str = "";
-	for(j=0;j<=rowm1;++j){
-		//str += "[ ";
-		str += " ";
-		for(i=0;i<=colm1;++i){
-			num = this._rows[j][i];
-			val = num.toExponential(exp);
-			if(num>=0){ // +/1 prefix
-				val = " " + val;
-			}
-			str += Code.padStringLeft(val,minLen," ");
-		}
-		//str += " ]";
-		str += "; ";
-		if(j<rowm1){
-			str += "\n";
-		}
-	}
-	return str.replace(/e/g,"E");
+	return Code.array2DtoString(this._rows, exp);
 }
 
 Matrix._transformTemp = new Matrix(3,3);
@@ -1366,14 +1332,54 @@ http://www.youtube.com/watch?v=abYAUqs_n6I
 */
 
 
-/* ---------------------------------------------------------------- NUMERICAL RECIPES ---------------------------------------------------------------- */
+/* ---------------------------------------------------------------------------- COOKED RECIPES ---------------------------------------------------------------------------- */
+Matrix._inverseMatrixNew = function(matrix){
+	if(!matrix){ return null; }
+	var rows = matrix.rows();
+	var cols = matrix.cols();
+	if(rows!=cols){ return null; }
+	var inverse = matrix.copy();
+	var result = Matrix._inverseSquareGaussJordan(inverse._rows,rows, null,0);
+	if(result){
+		return inverse;
+	}
+	return null;
+}
+Matrix._luDecomposeNew = function(matrixA){
+	if(!matrixA){ return null; }
+	var rows = matrixA.rows();
+	var cols = matrixA.cols();
+	if(rows!=cols){ return null; }
+	var matrixL = matrixA.copy();
+	var result = Matrix._LUDecompositionCrout(matrixL._rows,rows);
+	if(!result){
+		return null;
+	}
+	var matrixU = new Matrix(rows,cols);
+	for(j=0;j<rows;++j){
+		for(i=j;i<cols;++i){
+			matrixU._rows[j][i] = matrixL._rows[j][i];
+			if(i==j){
+				matrixL._rows[j][i] = 1.0;
+				//matrixU._rows[j][i] = 1.0;
+			}else{
+				matrixL._rows[j][i] = 0.0;
+			}
+		}
+	}
+// THERES A PERMUTATION MATRIX THAT NEEDS TO BE INCLUDED HERE ....
+	return {"L":matrixL, "U":matrixU, "P":null};
+}
+Matrix._solveAXB = function(matrixA, matrixX){ // LU + backsub is better for finding inv(A)*B = X
+	//
+}
+
+/* -------------------------------------------------------------------------- NUMERICAL RECIPES -------------------------------------------------------------------------- */
 
 // 2: Linear Algebra Solutions
-// n = rows, m = cols
-Matrix._inverseSquareGaussJordan = function(matrixA, matrixB){ // set matrixA to inverse via gauss-jordan
-	var i, j, k, l, ll, val, inv, maxRow, maxCol, maxValue, rows, cols;
-	rows = matrixA.rows();
-	cols = matrixB ? matrixB.cols() : 0;
+// gaussj
+Matrix._inverseSquareGaussJordan = function(matrixA,rows, matrixB,cols){ // set matrixA to inverse  and  matrixB=inv(matrixA)*matrixB solution  via gauss-jordan
+	var i, j, k, l, ll, val, inv, maxRow, maxCol, maxValue;
 	var iPivots = new Array(rows);
 	var indexRow = new Array(rows);
 	var indexCol = new Array(rows);
@@ -1389,7 +1395,7 @@ Matrix._inverseSquareGaussJordan = function(matrixA, matrixB){ // set matrixA to
 			if(iPivots[j]!=1){
 				for(k=0;k<rows;++k){
 					if(iPivots[k]==0){
-						val = Math.abs(matrixA._rows[j][k]);
+						val = Math.abs(matrixA[j][k]);
 						if(val >= maxValue){
 							maxValue = val;
 							maxRow = j;
@@ -1403,43 +1409,43 @@ Matrix._inverseSquareGaussJordan = function(matrixA, matrixB){ // set matrixA to
 		++iPivots[maxCol];
 		if(maxRow!=maxCol){ // not along diagonal, row swap
 			for(l=0;l<rows;++l){
-				val = matrixA._rows[maxRow][l];
-				matrixA._rows[maxRow][l] = matrixA._rows[maxCol][l];
-				matrixA._rows[maxCol][l] = val;
+				val = matrixA[maxRow][l];
+				matrixA[maxRow][l] = matrixA[maxCol][l];
+				matrixA[maxCol][l] = val;
 			}
 			for(l=0;l<cols;++l){
-				val = matrixB._rows[maxRow][l];
-				matrixB._rows[maxRow][l] = matrixB._rows[maxCol][l];
-				matrixB._rows[maxCol][l] = val;
+				val = matrixB[maxRow][l];
+				matrixB[maxRow][l] = matrixB[maxCol][l];
+				matrixB[maxCol][l] = val;
 			}
 		}
 		// remember pivot positions
 		indexRow[i] = maxRow;
 		indexCol[i] = maxCol;
-		val = matrixA._rows[maxCol][maxCol];
+		val = matrixA[maxCol][maxCol];
 		if(val==0.0){ // singular matrix not invertable
 			console.log("gaussj: singular matrix");
 			return null;
 		}
 		// scale row to pivot = 1.0
 		inv = 1.0/val;
-		matrixA._rows[maxCol][maxCol] = 1.0;
+		matrixA[maxCol][maxCol] = 1.0;
 		for(l=0;l<rows;++l){
-			matrixA._rows[maxCol][l] *= inv;
+			matrixA[maxCol][l] *= inv;
 		}
 		for(l=0;l<cols;++l){
-			matrixB._rows[maxCol][l] *= inv;
+			matrixB[maxCol][l] *= inv;
 		}
 		// reduce non-pivot rows 
 		for(ll=0;ll<rows;++ll){
 			if(ll!=maxCol){
-				val = matrixA._rows[ll][maxCol];
-				matrixA._rows[ll][maxCol] = 0.0;
+				val = matrixA[ll][maxCol];
+				matrixA[ll][maxCol] = 0.0;
 				for(l=0;l<rows;++l){
-					matrixA._rows[ll][l] -= matrixA._rows[maxCol][l]*val;
+					matrixA[ll][l] -= matrixA[maxCol][l]*val;
 				}
 				for(l=0;l<cols;++l){
-					matrixB._rows[ll][l] -= matrixB._rows[maxCol][l]*val;
+					matrixB[ll][l] -= matrixB[maxCol][l]*val;
 				}
 			}
 		}
@@ -1448,23 +1454,146 @@ Matrix._inverseSquareGaussJordan = function(matrixA, matrixB){ // set matrixA to
 	for(l=rows;l--;){
 		if(indexRow[l]!=indexCol[l]){
 			for(k=0;k<rows;++k){
-				val = matrixA._rows[k][indexRow[l]];
-				matrixA._rows[k][indexRow[l]] = matrixA._rows[k][indexCol[l]];
-				matrixA._rows[k][indexCol[l]] = val;
+				val = matrixA[k][indexRow[l]];
+				matrixA[k][indexRow[l]] = matrixA[k][indexCol[l]];
+				matrixA[k][indexCol[l]] = val;
 			}
 		}
 	}
 	return matrixA;
 }
 
-
-Matrix._LUDecomposition = function(){
-	//
+// ludcmp
+Matrix._LUDecompositionCrout = function(matrixA,rows){ // LU = A via Crouts method + back substitution
+	var tiny = 1E-16; // prevent division by zero
+	var i, j, k, sum, value, maxValue, maxIndex;
+	var vector = new Array(rows);
+	var index = new Array(rows);
+	var d = 1.0; // d = +1 even row changes, -1 odd row changes
+	// get (inverse) largest element per row
+	for(i=0;i<rows;++i){
+		maxValue = 0.0;
+		for(j=0;j<rows;++j){
+			value = Math.abs(matrixA[i][j]);
+			if(value>maxValue){
+				maxValue = value;
+			}
+		}
+		if(maxValue==0.0){
+			console.log("singular matrix ludcmp");
+			return null;
+		}
+		vector[i] = 1.0/maxValue;
+	}
+	// main crout loop
+	for(j=0;j<rows;++j){
+		for(i=0;i<j;++i){
+			sum = matrixA[i][j];
+			for(k=0;k<i;++k){
+				sum -= matrixA[i][k] * matrixA[k][j];
+			}
+			matrixA[i][j] = sum;
+		}
+		maxValue = 0.0;
+		for(i=j;i<rows;++i){
+			sum = matrixA[i][j];
+			for(k=0;k<j;++k){
+				sum -= matrixA[i][k] * matrixA[k][j];
+			}
+			matrixA[i][j] = sum;
+			value = vector[i]*Math.abs(sum);
+			if(value >= maxValue){
+				maxValue = value;
+				maxIndex = i;
+			}
+		}
+		// interchange rows
+		if(j!=maxIndex){
+			for(k=0;k<rows;++k){
+				value = matrixA[maxIndex][k];
+				matrixA[maxIndex][k] = matrixA[j][k];
+				matrixA[j][k] = value;
+			}
+			d = -d;
+			vector[maxIndex] = vector[j];
+		}
+		index[j] = maxIndex;
+		if(matrixA[j][j] == 0.0){ // singular fibbing
+			matrixA[j][j] == tiny;
+		}
+		if(j!=rows-1){ // last element
+			value = 1.0/matrixA[j][j];
+			for(i=j+1;i<rows;++i){
+				matrixA[i][j] *= value;
+			}
+		}
+	}
+console.log(vector);
+console.log(index);
+	return matrixA;
 }
+// lubksb
+Matrix._LUBackSubstitution = function(matrixLU, index, vectorB){ // solves A*X = B
+	var i, j, ii, ip, sum, rows;
+	rows = matrixLU.rows();
+	ii=0;
+	for(i=0;i<rows;++i){
+		ip = index[i];
+		sum = vectorB[ip];
+		vectorB[ip] = vectorB[i];
+		if(ii>0){
+			for(j=ii;j<i;++j){
+				sum -= matrixLU._rows[i][j]*vectorB[i];
+			}
+		}else if(sum!=0){
+			ii=i;
+		}
+		b[i] = sum;
+	}
+	for(i=rows;i--;){
+		sum = vectorB[i];
+		for(j=i+1;j<rows;++j){
+			sum -= matrixLU._rows[i][j]*vectorB[i];
+		}
+		vectorB[i] = sum / matrixLU._rows[i][i];
+	}
+}
+// _
+Matrix._solveAXBbyLU = function(matrixA,rows, vectorB,cols){ 
+	// float **a, *b, d;
+	// int n, *index;
+	ludcmp(a,n,index,d);
+	lubksb(a,n,index,b);
+}
+// _
+Matrix._LUInverse = function(matrixA,rows){ // solves inv(A) from LU decomposed matrix
+	var i, j, index, col;
+	var inverse = new Array();
+	col = new Array(rows);
+	Matrix._LUDecompositionCrout(matrixA,rows);
+	for(j=0;j<rows;++j){
+		for(i=0;i<cols;++i){
+			col[i] = 0.0;
+		}
+		col[j] = 0.0;
+		Matrix._LUBackSubstitution(matrixA,rows, index,col);
+		for(i=0;i<cols;++i){
+			col[i] = 0.0;
+		}
+	}
+	return inverse;
+}
+// _
+Matrix._LUDeterminant = function(matrixA,rows){
+}
+
+// 2.4:
+
+// 3: 
 
 // 11: Eigensystems
 
-
+// n = rows, m = cols
 
 
 

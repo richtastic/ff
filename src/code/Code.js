@@ -357,6 +357,73 @@ Code.subSampleArray = function(a,count){
 		a[index] = a.pop();
 	}
 }
+// ------------------------------------------------------------------------------------------ ARRAY 2D
+Code.newArray2D = function(rows,cols){
+	var i, arr = new Array(rows);
+	for(i=0;i<rows;++i){
+		arr[i] = new Array(cols);
+	}
+	return arr;
+}
+Code.newArray2DZeros = function(rows,cols){
+	var i, j, a, arr = new Array(rows);
+	for(i=0;i<rows;++i){
+		a = new Array(cols);
+		for(j=0;j<cols;++j){
+			a[j] = 0.0;
+		}
+		arr[i] = a;
+	}
+	return arr;
+}
+Code.setArray2DFromArray = function(arr,row,col,list){
+	var i, j, index = 0, len = list.length;
+	for(j=0;j<row;++j){
+		for(i=0;i<col && index<len;++i,++index){
+			arr[j][i] = list[index];
+		}
+	}
+	return this;
+}
+Code.copyArray2DFromArray2D = function(arr,row,col,list){
+	if(newRow!==undefined){
+		this.setSize(newRow,newCol);
+	}
+	var i, j;
+	for(j=0;j<row;++j){
+		for(i=0;i<col;++i){
+			arr[j][i] = list[j][i];
+		}
+	}
+	return this;
+}
+Code.array2DtoString = function(arr, exp){
+	exp = exp===undefined?4:exp;
+	var minLen = exp+6+1; // -#.E+#
+	var rows = arr.length;
+	var cols = (rows>0)?(arr[0].length):(0);
+	var i, j, rowm1 = rows-1, colm1 = cols-1, num, val;
+	var str = "";
+	for(j=0;j<=rowm1;++j){
+		//str += "[ ";
+		str += " ";
+		for(i=0;i<=colm1;++i){
+			num = arr[j][i];
+			val = num.toExponential(exp);
+			if(num>=0){ // +/1 prefix
+				val = " " + val;
+			}
+			str += Code.padStringLeft(val,minLen," ");
+		}
+		//str += " ]";
+		str += "; ";
+		if(j<rowm1){
+			str += "\n ";
+		}
+	}
+	return str.replace(/e/g,"E");
+}
+// ------------------------------------------------------------------------------------------ SIMULATED ARRAY 2D
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes
 	var lenX = endX - staX + 1;
 	var lenY = endY - staY + 1;
