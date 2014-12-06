@@ -10,8 +10,8 @@ function DLT2D(){
 	this._stage.start();
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// import image to work with
-//	var imageLoader = new ImageLoader("../matching/images/medium/",["BL.png","BLB.png"], this,this.handleImageLoaded,null);
-	var imageLoader = new ImageLoader("./images/",["screen.png"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("../matching/images/medium/",["BL.png","BLB.png"], this,this.handleImageLoaded,null);
+//	var imageLoader = new ImageLoader("./images/",["screen.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 	//this.handleLoaded();
 }
@@ -26,6 +26,7 @@ DLT2D.prototype.handleImageLoaded = function(e){
 	var images = [];
 	// display images
 	x = 0;
+console.log(e.images.length)
 	for(i=0;i<e.images.length;++i){
 		img = e.images[i];
 		d = new DOImage(img);
@@ -39,18 +40,18 @@ DLT2D.prototype.handleImageLoaded = function(e){
 	}
 	// 
 	var points = [];
-	// points.push([new V2D(234,9), new V2D(199,293)]);
-	// points.push([new V2D(342,42), new V2D(82,249)]);
-	// points.push([new V2D(321,285), new V2D(42,17)]);
-	// points.push([new V2D(208,296), new V2D(181,35)]);
-	// points.push([new V2D(249,65), new V2D(175,249)]);
-	// points.push([new V2D(307,202), new V2D(83,115)]);
-var wid = 2100;
-var hei = 700;
-points.push([new V2D(33,61), new V2D(0,0)]);
-points.push([new V2D(958,314), new V2D(wid,0)]);
-points.push([new V2D(966,682), new V2D(wid,hei)]);
-points.push([new V2D(20,962), new V2D(0,hei)]);
+	points.push([new V2D(234,9), new V2D(199,293)]);
+	points.push([new V2D(342,42), new V2D(82,249)]);
+	points.push([new V2D(321,285), new V2D(42,17)]);
+	points.push([new V2D(208,296), new V2D(181,35)]);
+	points.push([new V2D(249,65), new V2D(175,249)]);
+	points.push([new V2D(307,202), new V2D(83,115)]);
+// var wid = 2100;
+// var hei = 700;
+// points.push([new V2D(33,61), new V2D(0,0)]);
+// points.push([new V2D(958,314), new V2D(wid,0)]);
+// points.push([new V2D(966,682), new V2D(wid,hei)]);
+// points.push([new V2D(20,962), new V2D(0,hei)]);
 	//points.push([new V2D(,), new V2D(,)]);
 		// ...
 	// show points on screen;
@@ -72,7 +73,7 @@ points.push([new V2D(20,962), new V2D(0,hei)]);
 		d.graphics().fill();
 		this._root.addChild(d);
 	}
-	// convert to sepearte arrays:
+	// convert to seperate arrays:
 	var pointsFr = [];
 	var pointsTo = [];
 	for(i=0;i<points.length;++i){
@@ -112,17 +113,18 @@ points.push([new V2D(20,962), new V2D(0,hei)]);
 	var imageARGB = this._stage.getDOAsARGB(img, wid,hei);
 	var imageMat = new ImageMat(wid,hei);
 	imageMat.setFromArrayARGB(imageARGB);
-	// var planeWidth = 400;
-	// var planeHeight = 300;
-var planeWidth = 2100;
-var planeHeight = 700;
+	var planeWidth = 400;
+	var planeHeight = 300;
+// var planeWidth = 2100;
+// var planeHeight = 700;
 	var imagePlaneMat = ImageMat.extractRectWithProjection(imageMat,wid,hei, planeWidth,planeHeight, homography);
 	var imagePlaneARGB = ImageMat.ARGBFromFloats(imagePlaneMat.red(),imagePlaneMat.grn(),imagePlaneMat.blu());
 	var imagePlane = this._stage.getARGBAsImage(imagePlaneARGB, planeWidth,planeHeight);
 	d = new DOImage(imagePlane);
 	d.matrix().identity();
-	d.matrix().translate(800,000);
+	d.matrix().translate(400,000);
 	this._root.addChild(d);
+	d.graphics().alpha(0.5);
 	console.log(".........");
 }
 DLT2D.prototype.handleEnterFrame = function(e){

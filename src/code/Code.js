@@ -386,9 +386,6 @@ Code.setArray2DFromArray = function(arr,row,col,list){
 	return this;
 }
 Code.copyArray2DFromArray2D = function(arr,row,col,list){
-	if(newRow!==undefined){
-		this.setSize(newRow,newCol);
-	}
 	var i, j;
 	for(j=0;j<row;++j){
 		for(i=0;i<col;++i){

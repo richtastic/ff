@@ -114,7 +114,6 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 		}
 	}else{
 		this._context = this._canvas.getContext("2d");
-console.log(this._context.globalCompositeOperation);
 	}
 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 	this.id(Canvas._ID++);

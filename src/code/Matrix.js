@@ -830,6 +830,7 @@ Matrix.trace = function(){ //
 	// = sum of main diagonals
 }
 Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
+	if(!A){return null;}
 if(A.rows()<A.cols()){
 return Matrix.nonShittySVD(A);
 }
@@ -1374,6 +1375,18 @@ Matrix._solveAXB = function(matrixA, matrixX){ // LU + backsub is better for fin
 	//
 }
 
+Matrix._ = function(){ 
+	//
+}
+
+Matrix._ = function(){ 
+	//
+}
+
+Matrix._ = function(){ 
+	//
+}
+
 /* -------------------------------------------------------------------------- NUMERICAL RECIPES -------------------------------------------------------------------------- */
 
 // 2: Linear Algebra Solutions
@@ -1528,8 +1541,6 @@ Matrix._LUDecompositionCrout = function(matrixA,rows){ // LU = A via Crouts meth
 			}
 		}
 	}
-console.log(vector);
-console.log(index);
 	return matrixA;
 }
 // lubksb
@@ -1587,7 +1598,39 @@ Matrix._LUInverse = function(matrixA,rows){ // solves inv(A) from LU decomposed 
 Matrix._LUDeterminant = function(matrixA,rows){
 }
 
-// 2.4:
+// 2.4: Tridiagonal / Band Diagonal
+// tridiag(a,b,c,r,u,n)
+// banmul(a,n,m1,m2,x,b)
+// bandec(a,n,m1,m2,a1,indx,d)
+// banbks(a,n,m1,m2,a1,indx,b)
+
+// 2.5
+// mprov(a,alud,n,indx,b,x)
+
+
+// 2.6 SVD
+
+// svbksb
+Matrix._singularValueBackSubstitution = function(matrixU, vectorW, matrixV, rows, cols, vectorB, vectorX){ // solves AX=B fom svcmp
+	// m rows
+	// n cols
+}
+
+// svdcmp
+Matrix._singularValueDecomposition = function(matrixA, rows,cols, vectorW, matrixV){ // A = U*W*Vt
+	// m = rows
+	// n = cols
+}
+// 
+
+
+// 2.7 Sparse
+// cyclic(a,b,c,alpha,beta,r,x,n)
+// sprsin(a,nm,thresh,nmax,sa,ija)
+// sprsax(sa,ija,x,b,n)
+// sprstx(sa,ija,x,b,n)
+// sprstp(sa,ija,sb,ijb)
+// svbksb(u,w,v,m,n,b,x)
 
 // 3: 
 

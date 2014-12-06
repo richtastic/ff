@@ -168,7 +168,6 @@ Stage.prototype.stop = function(){
 	this._timer.stop();
 }
 Stage.prototype.addListeners = function(){
-	console.log("listening...");
 	this._timer.addFunction(Ticker.EVENT_TICK,this._enterFrame,this);
 	this._canvas.addListeners();
 	this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this._stageResized,this);

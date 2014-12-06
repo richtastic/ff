@@ -25,6 +25,8 @@ function Fun(){
 	// setup display
 	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas, (1/5)*1000);
+	this._canvas.addListeners();
+	this._stage.addListeners();
 	this._stage.start();
 	this._root = new DO();
 //this._root.matrix().translate(50,350);
@@ -58,6 +60,7 @@ Fun.prototype.imagesLoadComplete = function(o){
 	this.displayData();
 }
 Fun.prototype.displayData = function(){
+var colLine = 0xFF000000;
 	var d, wid, hei, i, accWid = 0;
 	var u, v, w;
 	var len = this._inputImages.length;
@@ -71,6 +74,7 @@ Fun.prototype.displayData = function(){
 	// visuals
 	var linesDO = new DO();
 	// display initial images
+	console.log(len)
 	for(i=0;i<len;++i){
 		d = new DOImage(this._inputImages[i]);
 		d.matrix().translate(accWid,0.0);
@@ -122,12 +126,10 @@ Fun.prototype.displayData = function(){
 			}
 		}
 		// display final points
-		
 		// ...
 		accWid += wid;
 	}
 
-/*
 
 this._root.addChild(linesDO);
 link.calculateRectificationTables();
@@ -145,12 +147,16 @@ var i, d, r;
 	d = new DOImage(i);
 	d.matrix().translate(0,0);
 	this._root.addChild(d);
+d.graphics().alpha(0.5);
+d.matrix().translate(0,350);
 	// B
 	r = link.rectificationA();
 	i = this._stage.getFloatRGBAsImage(r.image.red(),r.image.grn(),r.image.blu(), r.width,r.height);
 	d = new DOImage(i);
 	d.matrix().translate(600,0);
 	this._root.addChild(d);
+d.graphics().alpha(0.5);
+d.matrix().translate(0,350);
 	
 for(i=0;i<inputPoints.length;++i){
 	r = link.rectificationB();
@@ -166,7 +172,7 @@ for(i=0;i<inputPoints.length;++i){
 			searchInfo = link.searchThetaRadiusInBFromPointInA(inputPoints[i][j]);
 		}else{
 			searchInfo = link.searchThetaRadiusInAFromPointInB(inputPoints[i][j]);
-		}
+		}//
 		var angle = searchInfo.angle;
 		var radiusMin = searchInfo.radiusMin;
 		var radiusMax = searchInfo.radiusMax;
@@ -196,6 +202,7 @@ for(i=0;i<inputPoints.length;++i){
 		d.graphics().fill();
 		d.graphics().strokeLine();
 		this._root.addChild( d );
+d.matrix().translate(0,350);
 	}
 }
 
@@ -222,7 +229,7 @@ for(i=0;i<inputPoints.length;++i){
 		di = new DOImage(img);
 		di.matrix().translate(j*windowSize,i*windowSize);
 		di.matrix().scale(1.0);
-		this._root.addChild(di);
+//		this._root.addChild(di);
 		// needle in rectified
 		var toPoint = V2D.sub(point,epipoleFrom);
 		radius = V2D.distance(point,epipoleFrom);
@@ -233,7 +240,7 @@ for(i=0;i<inputPoints.length;++i){
 		di = new DOImage(img);
 		di.matrix().translate(j*windowSize,(i+1)*windowSize);
 		di.matrix().scale(1.0);
-		this._root.addChild(di);
+//		this._root.addChild(di);
 		
 
 		// NEEDLE 2
@@ -244,11 +251,12 @@ for(i=0;i<inputPoints.length;++i){
 		di.matrix().translate(j*windowSize,(i+1)*windowSize);
 		di.matrix().scale(1.0);
 		di.matrix().translate(0,30);
-		this._root.addChild(di);
+//		this._root.addChild(di);
 
 // dot
 d = R3D.drawPointAt(600+radius-from.radiusMin,row, 0xFF,0x00,0x00);
 this._root.addChild( d );
+d.matrix().translate(0,350);
 
 
 		// haystack
@@ -263,7 +271,7 @@ this._root.addChild( d );
 		di.matrix().translate(0*windowSize,(j*searchSize + 20)*2.0 + 50 );
 		di.matrix().scale(1.0);
 		di.matrix().translate(600,0);
-		this._root.addChild(di);
+//		this._root.addChild(di);
 		// B
 		//return {image:newImage, TL:new V2D(aX,aY), TR:new V2D(aX,aY), BR:new V2D(aX,aY), BL:new V2D(aX,aY), intersectionA:intA, intersectionB:intB, width:winWid, height:winHei};
 		var haystackInfo = link.getImageLineBWithPointA(point, searchSize);
@@ -273,7 +281,7 @@ this._root.addChild( d );
 		di = new DOImage(img);
 		di.matrix().translate(0*windowSize,(j*searchSize + 20)*2.0 + 50);
 		di.matrix().scale(1.0);
-		this._root.addChild(di);
+//		this._root.addChild(di);
 
 
 // RESULTS
@@ -312,7 +320,7 @@ img = this._stage.getFloatRGBAsImage(ssd,ssd,ssd, ssdWid,ssdHei);
 di = new DOImage(img);
 di.matrix().translate(0*windowSize, (j*searchSize + 47.5)*2.0  + 50);
 di.matrix().scale(1.0,1.0);
-this._root.addChild(di);
+//this._root.addChild(di);
 
 // result .......................................................
 // calculate peaks
@@ -345,15 +353,15 @@ img = this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), nee
 di = new DOImage(img);
 di.matrix().translate(j*windowSize*sca,i*windowSize*sca);
 di.matrix().scale(sca);
-this._root.addChild(di);
+//this._root.addChild(di);
 di.matrix().translate(900,0);
 
 	}
 	break;
 }
-*/
 
 
+colLine = 0xFFFFFFFF;
 d = new DO();
 d.graphics().setLine(2.0, colLine );
 d.graphics().beginPath();
@@ -363,13 +371,13 @@ d.graphics().drawRect(0,0, 1000,800);
 d.graphics().endPath();
 d.graphics().fill();
 d.graphics().strokeLine();
-this._root.addChild(d);
+//this._root.addChild(d); // transparent cover
 
 
 console.log("calculateDisparity");
 
-//var dense = link.calculateDisparity();
-var dense = link.highDisparity();
+var dense = link.calculateDisparity();
+//var dense = link.highDisparity();
 console.log(dense);
 // show process results:
 var iii, spacingV = 90, offsetY = 300;
@@ -378,22 +386,22 @@ for(i=0;i<dense.imagesA.length;++i){
 	img = this._stage.getFloatRGBAsImage(dense.imagesA[i][0],dense.imagesA[i][1],dense.imagesA[i][2], dense.imagesA[i][3],dense.imagesA[i][4]);
 	di = new DOImage(img);
 	di.matrix().translate(0,offsetY+i*spacingV);
-	this._root.addChild(di);
+//	this._root.addChild(di);
 	// B
 	img = this._stage.getFloatRGBAsImage(dense.imagesB[i][0],dense.imagesB[i][1],dense.imagesB[i][2], dense.imagesB[i][3],dense.imagesB[i][4]);
 	di = new DOImage(img);
 	di.matrix().translate(50,offsetY+i*spacingV);
-	this._root.addChild(di);
+//	this._root.addChild(di);
 	// A line
 	img = this._stage.getFloatRGBAsImage(dense.linesA[i][0],dense.linesA[i][1],dense.linesA[i][2], dense.linesA[i][3],dense.linesA[i][4]);
 	di = new DOImage(img);
 	di.matrix().translate(0,offsetY+i*spacingV + 50);
-	this._root.addChild(di);
+//	this._root.addChild(di);
 	// B line
 	img = this._stage.getFloatRGBAsImage(dense.linesB[i][0],dense.linesB[i][1],dense.linesB[i][2], dense.linesB[i][3],dense.linesB[i][4]);
 	di = new DOImage(img);
 	di.matrix().translate(  dense.linesA[i][3]  ,offsetY+i*spacingV + 50);
-	this._root.addChild(di);
+//	this._root.addChild(di);
 	// sub-matches:
 	//console.log(dense.matches[i].length)
 	for(j=0;j<dense.matches[i].length;++j){
@@ -403,14 +411,14 @@ for(i=0;i<dense.imagesA.length;++i){
 			img = this._stage.getFloatRGBAsImage(iii[0],iii[1],iii[2], iii[3],iii[4]);
 			di = new DOImage(img);
 			di.matrix().translate( 100 + j*25,offsetY+i*spacingV);
-			this._root.addChild(di);
+//			this._root.addChild(di);
 			// B
 			iii = dense.matches[i][j][1];
 			if(iii){ // could be bad match
 				img = this._stage.getFloatRGBAsImage(iii[0],iii[1],iii[2], iii[3],iii[4]);
 				di = new DOImage(img);
 				di.matrix().translate( 100 + j*25,offsetY+i*spacingV+25);
-				this._root.addChild(di);
+//				this._root.addChild(di);
 			}
 		}
 	}
@@ -427,7 +435,8 @@ di = new DOImage(img);
 //di.matrix().translate(0,0);
 di.matrix().translate(408,0);
 //di.matrix().translate(1000,25);
-this._root.addChild(di);
+this._root.addChild(di); // disparity
+di.graphics().alpha(0.85);
 console.log("done");
 
 

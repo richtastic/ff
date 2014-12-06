@@ -4,6 +4,8 @@ function Panorama(){
 	// setup display
 	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas, (1/5)*1000);
+	this._canvas.addListeners();
+	this._stage.addListeners();
 	this._stage.start();
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
