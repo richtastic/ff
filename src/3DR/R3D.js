@@ -109,6 +109,26 @@ R3D.calculateNormalizedPoints = function(inputPoints){
 	return {normalized:normalizedPoints, forward:inputPointTransforms, reverse:inputPointInverseTransforms};
 }
 
+R3D.screenNormalizedAspectPointFromPixelPoint = function(point,width,height){
+	var scale = Math.max(width,height);
+	return new V2D(point.x/scale,point.y/scale);
+}
+R3D.pixelPointFromNormalizedAspectPoint = function(point,width,height){
+	var scale = Math.max(width,height);
+	return new V2D(point.x*scale,point.y*scale);
+}
+
+R3D.screenNormalizedPointFromPixelPoint = function(point,width,height){
+	return new V2D(point.x/width,point.y/height);
+}
+R3D.screenNormalizedPointsFromPixelPoints = function(points,width,height){
+	var i, len=points.length;
+	var list = [];
+	for(i=0;i<len;++i){
+		list.push( R3D.screenNormalizedPointFromPixelPoint(points[i],width,height) );
+	}
+	return list;
+}
 // ------------------------------------------------------------------------------------------- F utilities
 R3D.fundamentalMatrix = function(pointsA,pointsB){
 	if(pointsA.length>=8){

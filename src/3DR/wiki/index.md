@@ -873,7 +873,160 @@ intersection, tangency, gaussian curvature sign
 
 
 
-<a name="RANDOM">
+<a name="CAMERA_ABSOLUTE"/>
+## Camera transform from absolute truth 3D points known:
+
+**Finding camera pose in 3D space:**
+```
+[x]   [a b c d]   [X]
+[y] = [e f g h] * [Y]
+[w]   [i j k l]   [Z]
+
+aX + bY + cZ + d = x
+eX + fY + gZ + h = y
+iX + jY + kZ + l = w
+
+screenX = x/w = (aX + bY + cZ + d) / (iX + jY + kZ + l)
+screenY = y/w = (eX + fY + gZ + h) / (iX + jY + kZ + l)
+
+(iX + jY + kZ + l)x = (aX + bY + cZ + d)
+iXx + jYx + kZx + lx = aX + bY + cZ + d
+-aX  - bY  - cZ -  d  +  0  +  0  +  0  +  0  + iXx + jYx + kZx + lx = 0
+
+(iX + jY + kZ + l)y = (eX + fY + gZ + h) 
+iXy + jYy + kZy + ly = eX + fY + gZ + h
+ 0  +  0  +  0  +  0  -  eX - fY  -  gZ - h   + iXy + jYy + kZy + ly = 0
+-aX  - bY  - cZ -  d  +  0  +  0  +  0  +  0  + iXx + jYx + kZx + lx = 0
+
+[ 0  0  0  0 -X -Y -Z -1 xX xY xZ] * [a b c d e f g h i j k l] = [0]
+[-X -Y -Z -1  0  0  0  0 xX xY xZ]
+
+3*4 = 12 unknowns
+each point provides 2 equations
+[unknowns are also restricted by euclidean reality]
+=> need 6+ points
+
+```
+
+?
+(x,y,w are (aspect-preserved?) normalized points [-1,1])
+
+
+Camera 1: H<sub>1</sub>
+Camera 2: H<sub>2</sub>
+
+The transform that transforms Camera1 to Camera2 = H<sub>1</sub><sup>-1</sup> &middot; H<sub>2</sub> 
+
+
+
+F<sub>rank2</sub><sup>hat</sup> = H'<sup>-T</sup> F H'<sup>-1</sup>
+
+**Essential Matrix**:
+<br/>
+E = K'<sup>T</sup> &middot; F &middot; K
+P = camera matrix = K &middot; [R | t]
+
+
+**Normalized Image Coordinate**:
+x<sup>hat</sup> = K<sup>-1</sup> &middot; x
+
+
+
+**Camera parameter matrix**:
+```
+    [ax  s  x0]
+K = [0  ay  y0]
+    [0   0   1]
+```
+
+
+P = projectildy reconstructed matrix
+
+X<sub>Ei</sub> = REAL WORLD (Euclidean) position
+X<sub>i</sub> = projectedly calculated position
+
+X<sub>Ei</sub> = h &middot; X<sub>i</sub>
+
+x<sub>i</sub> = P &middot; H<sup>-1</sup> &middot; X<sub>Ei</sub>
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+
+Radial Distortion recovery:
+x<sub>corrected</sub> = x(1 + k<sub>1</sub>r<sup>2</sup> + k<sub>2</sub>r<sup>4</sup> + k<sub>3</sub>r<sup>6</sup>)
+y<sub>corrected</sub> = y(1 + k<sub>1</sub>r<sup>2</sup> + k<sub>2</sub>r<sup>4</sup> + k<sub>3</sub>r<sup>6</sup>)
+
+Tangental Distortion recovery
+x<sub>corrected</sub> = x + (2p<sub>1</sub>xy + p<sub>2</sub>(r<sup>2</sup> + 2x<sup>2</sup>))
+y<sub>corrected</sub> = y + (2p<sub>2</sub>xy + p<sub>1</sub>(r<sup>2</sup> + 2y<sup>2</sup>))
+
+k1, k2, k3, p1, p2 &isin; distortion coefficients
+
+
+
+
+**2D Calibration:**
+* use checkerboard 2D plane, and take picture [need 4+ points per plane]
+```
+    [u]   [fx 0 cx]   [r11 r12 r13 t1]   [X]
+b = [v] ~ [0 fy cy] * [r21 r22 r23 t2] * [Y]
+    [1]   [0  0  1]   [r31 r32 r33 t3]   [Z]
+                                         [1]
+```
+choose z=0 in plane => r13,r23,r33 don't matter => H is 3x3
+H = (h1,h2,h3) = K * (r1,r2,t) 
+
+B = K<sup>-T</sup> &middot; K<sup>-1</sup> = symmetirc positive definite
+=> cholesky factorize
+```
+    [b11 b12 b13]
+B = [b21 b22 b23]
+    [b31 b32 b33]
+```
+b12 = b21
+b31 = b23
+b32 = b32
+b = [b11,b12,b13,b22,b23,b33]
+
+
+V = constructed with the following:
+h1<sup>T</sup> &middot; B &middot; h2 = 0
+h1<sup>T</sup> &middot; B &middot; h1 - h2<sup>T</sup> &middot; B &middot; h2 = 0
+
+
+DLT:
+V*b = 0
+b = argminb in Vb
+
+
+Levenberg-Marquart:
+lense distortion ...
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+
+<a name="RANDOM"/>
 ## Random Stuff
 
 
@@ -1304,10 +1457,11 @@ SIFT
 <a name="TRIANGULATE"></a>
 ## Point Triangulation 
 
-Essential Matrix (known focal?) - 7 unknowns?
+Essential Matrix (known focal?) - 5 DOF? : R (3) + t(3) + scale
+	- 2 singular values are equal, 3rd == 0
 
 
-Fundamental Matrix - 8 unknowns
+Fundamental Matrix - 8 unknowns [7 DOF?]
 
 
 epipoles
