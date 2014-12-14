@@ -569,7 +569,7 @@ R3D.normalizePoints2D = function(currentPoints, nextPoints, matrix, inverse){ //
 	return matrix;
 }
 
-R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points
+R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x3 homography / projection matrix
 	var i, j, fr, to, len = pointsFr.length;
 	var v = new V3D(), u = new V3D();
 	var rows = len*3;
@@ -613,16 +613,16 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points
 	}
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(8);
-	var a = coeff[0];
-	var b = coeff[1];
-	var c = coeff[2];
-	var d = coeff[3];
-	var e = coeff[4];
-	var f = coeff[5];
-	var g = coeff[6];
-	var h = coeff[7];
-	var i = coeff[8];
-	var H = new Matrix(3,3).setFromArray([a,b,c,d,e,f,g,h,i]);
+	// var a = coeff[0];
+	// var b = coeff[1];
+	// var c = coeff[2];
+	// var d = coeff[3];
+	// var e = coeff[4];
+	// var f = coeff[5];
+	// var g = coeff[6];
+	// var h = coeff[7];
+	// var i = coeff[8];
+	var H = new Matrix(3,3).setFromArray(coeff);//[a,b,c,d,e,f,g,h,i]);
 	return H;
 }
 

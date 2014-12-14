@@ -10,8 +10,8 @@ function pageLoadedFxn(){
 function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Manual3DR.js"],this,classesLoadedFxn)).load();
 }
-function classesLoadedFxn(){
-	var manual = new Manual3DR();
+function classesLoadedFxn()
+{	var manual = new Manual3DR();
 }
 </script>
 <body onload="pageLoadedFxn();">

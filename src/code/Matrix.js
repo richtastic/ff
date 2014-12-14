@@ -365,6 +365,17 @@ Matrix.square = function(c,a){ // dot
 	// ...
 	return c;
 }
+Matrix.dot = function(a,b){ // c = SUM(a.*b)
+	var i, j, sum = 0;
+	var cols = Math.min(a.cols(),b.cols());
+	var rows = Math.min(a.rows(),b.rows());
+	for(j=0;j<rows;++j){
+		for(i=0;i<cols;++i){
+			sum += a._rows[j][i] * b._rows[j][i];
+		}
+	}
+	return sum;
+}
 Matrix.covarianceMatrix = function(matrix){
 	matrix = Matrix.zeroMeanMatrix(matrix);
 	var n = matrix.rows();

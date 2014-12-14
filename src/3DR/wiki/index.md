@@ -925,7 +925,7 @@ F<sub>rank2</sub><sup>hat</sup> = H'<sup>-T</sup> F H'<sup>-1</sup>
 <br/>
 E = K'<sup>T</sup> &middot; F &middot; K
 P = camera matrix = K &middot; [R | t]
-
+E = [t]<sub>&times;</sub>&middot;R = R[R<sup>T</sup>|t]<sub>&times;</sub>
 
 **Normalized Image Coordinate**:
 x<sup>hat</sup> = K<sup>-1</sup> &middot; x
@@ -953,6 +953,102 @@ x<sub>i</sub> = P &middot; H<sup>-1</sup> &middot; X<sub>Ei</sub>
 
 
 
+
+
+
+
+
+#### Camera Calibration (Finding Intrinsic K Matrix):
+- use planar object (2D chess-grid) so 2D z points can be assumed 0
+- identify known points in picture on grid
+```
+[x]   [fx  s cx]   [r11 r12 r13 t1]   [X]
+[y] ~ [ 0 fy cy] * [r21 r22 r23 t2] * [Y]
+[1]   [ 0  0  1]   [r31 r32 r33 t3]   [Z=0]
+                                      [1]
+```
+- reduce to simple homography
+```
+[x]   [fx  s cx]   [r11 r12 t1]   [X]
+[y] ~ [ 0 fy cy] * [r21 r22 t2] * [Y]
+[1]   [ 0  0  1]   [r31 r32 t3]   [Z]
+```
+- i & j are reference image indexes
+- H = [h<sub>1</sub> h<sub>2</sub> h<sub>3</sub>] = &lambda; &middot; K &middot; [r1 r2 t]
+	- ? H is found form knowing that a set of 3D points X homographize into image points x
+		- solve
+- by the magic of matrix algebra (no idea):
+    - r1 & r2 are orthonormal
+- h<sub>1</sub><sup>T</sup>K<sup>-T</sup>&middot;</sup>K<sup>-1</sup>h<sub>2</sub> = 0
+- h<sub>1</sub><sup>T</sup>K<sup>-T</sup>&middot;K<sup>-1</sup>h<sub>1</sub> = h<sub>2</sub><sup>T</sup>K<sup>-T</sup>&middot;K<sup>-1</sup>h<sub>2</sub>
+- B = K<sup>-T</sup>&middot;K<sup>-1</sup>
+```
+    [b11 b12 b13]   [b11 b12 b13]     [ 1/(fx^2)          -s/(fx^2*fy)                       (v0*s - u0*fy)/(fx^2*fy)         ]
+B = [b21 b22 b23] = [b12 b22 b23] = l*[    -       s^2/(fx^2*fy^2) + 1/(fy^2)        s(v0*s - u0*fy)/(fx^2*fy) - v0/(fy^2)    ]
+    [b31 b32 b33]   [b13 b23 b33]     [    -                   -               (v0*s - u0*fy)^2/(fx^2*fy) + (v0^2)/(fy^2) + 1 ]
+```
+b = [b11,b12,b22,b13,b23,b33]
+hi = [hi1,hi2,hi3]<sup>T</sup>
+```
+vij = [hi1*hj1 , hi1*hj2 + hi2*hj1 , hi2*hj2 , hi3*hj1 + hi1*hj3 , hi3*hj2 + hi2*hj3 , hi3*hj3 ]^T
+```
+h<sub>i</sub><sup>T</sup>&middot;B&middot;h<sub>j</sub> = v<sub>ij</sub><sup>T</sup>&middot;b
+```
+V = [    v12^T    ]
+    [ (v11-v22)^T ]
+```
+solve for b: V&middot;b = 0
+need at least 2 images, each with 8+ known 3D-2D matches
+N = 3+ images to find all K
+N = 2, assume s=0
+N = 1, assume s=0, fx=0, fy=0
+<br/>
+
+v0 = (b12&middot;b13 - b11&middot;b23)/(b11&middot;b22-b12&middot;b12)
+<br/>
+&lambda; = b33 - [b13&middot;b13 + v0&middot;(b12&middot;b13 - b11&middot;b23)]/b11
+<br/>
+fx = sqrt( &lambda;/b11 )
+<br/>
+fy = sqrt( (&lambda;&middot;b11)/(b11&middot;b22 - b12&middot;b12) )
+<br/>
+s = -b12&middot;fx<sup>2</sup>&middot;fy / &lambda;
+<br/>
+u0 = s&middot;v0/fx - b13&middot;fx<sup>2</sup>/&lambda;
+<br/>
+
+
+
+a point-set in this case is:
+X,Y,0, x,y
+each point-set defines 1/8 points for an H matrix
+
+
+*) get 9 points on plane
+*) calculate homography:
+	H = R3D.projectiveDLT(pointsFr,pointsTo)
+*) decompose the H from each of the images to hi1,hi2,hi3
+*) construct the lines of the V matrix from h's
+   [v12]
+   [v11-v22]
+   [v13]
+   [v11-v33]
+   [v23]
+   [v22-v33]
+*) SVD V*b=0
+*) use b values to compute K properties
+*) construct K from (6) properties
+
+
+[Camera Calibration - Zhang](http://research.microsoft.com/en-us/um/people/zhang/papers/zhangpami-02-calib.pdf)
+
+
+
+
+
+
+
+
 <br/>
 <br/>
 <br/>
@@ -966,6 +1062,11 @@ x<sub>corrected</sub> = x + (2p<sub>1</sub>xy + p<sub>2</sub>(r<sup>2</sup> + 2x
 y<sub>corrected</sub> = y + (2p<sub>2</sub>xy + p<sub>1</sub>(r<sup>2</sup> + 2y<sup>2</sup>))
 
 k1, k2, k3, p1, p2 &isin; distortion coefficients
+
+
+
+
+
 
 
 
