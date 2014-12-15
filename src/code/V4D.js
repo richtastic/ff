@@ -92,6 +92,13 @@ V4D.prototype.set = function(xV,yV,zV,tV){
 	this.z = zV;
 	this.t = tV;
 }
+V4D.prototype.setFromArray = function(a){
+	this.set(a[0],a[1],a[2],a[3]);
+	return this;
+}
+V4D.prototype.toArray = function(){
+	return Code.newArray(this.x,this.y,this.z,this.t);
+}
 V4D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+","+this.z+","+this.t+">";
 }
@@ -99,3 +106,17 @@ V4D.prototype.kill = function(){
 	this.t = undefined;
 	V4D._.kill.call(this);
 }
+V4D.prototype.homo = function(){
+	if(this.z!=0){
+		this.x /= this.t;
+		this.y /= this.t;
+		this.z /= this.t;
+		this.t = 1.0;
+	}
+}
+
+V4D.ZERO = new V4D(0.0,0.0,0.0,0.0);
+V4D.DIRX = new V4D(1.0,0.0,0.0,0.0);
+V4D.DIRY = new V4D(0.0,1.0,0.0,0.0);
+V4D.DIRZ = new V4D(0.0,0.0,1.0,0.0);
+V4D.DIRT = new V4D(0.0,0.0,0.0,1.0);

@@ -163,6 +163,9 @@ V3D.prototype.sub = function(v){
 	this.x -= v.x; this.y -= v.y; this.z -= v.z;
 	return this;
 }
+V3D.prototype.toArray = function(){
+	return Code.newArray(this.x,this.y,this.z);
+}
 V3D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+","+this.z+">";
 }

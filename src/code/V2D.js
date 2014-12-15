@@ -143,6 +143,9 @@ V2D.prototype.sub = function(v){
 	this.x -= v.x; this.y -= v.y;
 	return this;
 }
+V2D.prototype.toArray = function(){
+	return Code.newArray(this.x,this.y);
+}
 V2D.prototype.toString = function(){
 	return "<"+this.x+","+this.y+">";
 }

@@ -220,6 +220,70 @@ Matrix.prototype.randomize = function(mul,rnd){
 	return this;
 }
 // ------------------------------------------------------------------------------------------------------------------------ ...
+Matrix.prototype.appendColFromArray = function(col){
+	var cols = this.cols();
+	var rows = this.rows();
+	var i, len = Math.min(rows,col.length);
+	for(i=0;i<len;++i){ // match first up to row count
+		this._rows[i][cols] = col[i];
+	}
+	for(;i<rows;++i){ // remaining = 0
+		console.log(i,cols,len)
+		this._rows[i][cols] = 0.0;
+	}
+	this._colCount += 1;
+	return this;
+}
+Matrix.prototype.appendRowFromArray = function(row){
+	var cols = this.cols();
+	var rows = this.rows();
+	var i, len = Math.min(cols,row.length);
+	this._rows.push([]);
+	for(i=0;i<len;++i){ // match first up to col count
+		this._rows[rows][i] = row[i];
+	}
+	for(;i<cols;++i){ // remaining = 0
+		this._rows[rows][i] = 0.0;
+	}
+	this._rowCount += 1;
+	return this;
+}
+Matrix.prototype.appendMatrixRight = function(mat){ // stretch down to fit
+	//
+	return this;
+}
+Matrix.prototype.appendMatrixBottom = function(mat){ // stretch right to fit
+	var colsA = this.cols();
+	var rowsA = this.rows();
+	var colsB = mat.cols();
+	var rowsB = mat.rows();
+	var totalCols = Math.max(colsA,colsB);
+	var totalRows = rowsA+rowsB;
+	var i, j, k;
+	// extend top if necessary
+	for(j=0;j<rowsA;++j){
+		for(i=colsA;i<totalCols;++i){
+			this._rows[j][i] = 0.0;
+		}
+	}
+	// add in content
+	for(k=0,j=rowsA;j<totalRows;++k,++j){
+		this._rows[j] = new Array();
+		for(i=0;i<colsB;++i){
+			this._rows[j][i] = mat._rows[k][i];
+		}
+	}
+	// extend bottom if necessary
+	for(j=rowsA;j<totalRows;++j){
+		for(i=colsB;i<totalCols;++i){
+			this._rows[j][i] = 0.0;
+		}
+	}
+	this._rowCount = totalRows;
+	this._colCount = totalCols;
+	return this;
+}
+// ------------------------------------------------------------------------------------------------------------------------ ...
 Matrix.prototype.getColAsArray = function(col){
 	var rows = this.rows(), i, a = [];
 	for(i=0;i<rows;++i){
@@ -333,7 +397,7 @@ Matrix.transform2DRotate = function(a,ang){
 	//return Matrix.mult(b,a);
 }
 
-Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u
+Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u      (skew symmetric)
 	var v = vin, m = min;
 	if(vin===undefined){
 		v = min;
@@ -1342,6 +1406,11 @@ SPAN === LINEAR COMBINATION
 http://www.youtube.com/watch?v=abYAUqs_n6I
 
 */
+
+
+Matrix.prototype.det = function(){
+	return numeric.det(this._rows);
+}
 
 
 /* ---------------------------------------------------------------------------- COOKED RECIPES ---------------------------------------------------------------------------- */

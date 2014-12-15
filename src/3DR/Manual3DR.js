@@ -155,6 +155,7 @@ Manual3DR.prototype.handleSceneImagesLoaded = function(imageInfo){
 	this._imageSources = list;
 this.calibrateCameraMatrix();
 	this.handleLoaded();
+	this.render3DScene();
 }
 Manual3DR.prototype.handleMouseClickFxn = function(e){
 	console.log(e.x,e.y)
@@ -410,34 +411,130 @@ Manual3DR.prototype.handleLoaded = function(){
 	}
 	// calculate Fundamental matrix from 2D correspondences
 	var fundamental = R3D.fundamentalMatrix(pointsA,pointsB);
+	console.log("F:");
 	console.log(fundamental.toString())
 
 	// already got intrinsic camera matrix
 	var K = this._intrinsicK;
+	console.log("K")
 	console.log(K.toString())
+	var Kinv = Matrix.inverse(K);
+	console.log("K^-1")
+	console.log(Kinv.toString())
 
 	// calculate essential matrix
-	var Kt = Matrix.transpose(K); // K'T ?
+	var Kt = Matrix.transpose(K);
 	var essential = Matrix.mult(Kt, Matrix.mult(fundamental,K) );
+	console.log("E:")
 	console.log(essential.toString())
 
-// need to work in normalized points inv(K) * x'
+	// need to work in normalized points inv(K) * x'
 	var pointsNormA = new Array();
+	var pointsNormB = new Array();
 	len = pointsA.length;
 	for(i=0;i<len;++i){
-		imgs = pointList[i].pos2D;
 		v = pointsA[i];
-		pointsA.push( new V3D(v.x,v.y,1) );
+		v = Kinv.multV3DtoV3D(new V3D(), v);
+		pointsNormA.push( v );
+		v = pointsB[i];
+		v = Kinv.multV3DtoV3D(new V3D(), v);
+		pointsNormB.push( v );
 	}
 
+	// 
+	var W = new Matrix(3,3).setFromArray([0,-1,0, 1,0,0, 0,0,1]);
+	var Wt = Matrix.transpose(W);
+	//var Z = new Matrix(3,3).setFromArray([0,1,0, -1,0,0, 0,0,0]);
+	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
 
-// ...
-
+	// force D = 1,1,0
 	var svd = Matrix.SVD(essential);
-	console.log(svd);
-	console.log(svd.V);
-	console.log(svd.V.toString());
-	//var coeff = svd.V.colToArray(8);
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+	var Vt = Matrix.transpose(V);
+	var t = U.getCol(2);
+	var tNeg = t.copy().scale(-1.0);
+	console.log("t:");
+	console.log(t.toString())
+	console.log(tNeg.toString())
+
+	// one of 4 possible solutions
+	var det;
+	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt));
+	det = possibleA.det();
+	if(det<0){
+		console.log("FLIP1: "+det);
+		possibleA.scale(-1.0);
+	}
+	var possibleB = Matrix.mult(U,Matrix.mult(Wt,Vt));
+	det = possibleB.det();
+	if(det<0){
+		console.log("FLIP2: "+det);
+		possibleB.scale(-1.0);
+	}
+
+	// 4x4 matrices
+	var possibles = new Array();
+	m = possibleA.copy().appendColFromArray(t.toArray());//.appendRowFromArray([0,0,0,1]);
+	possibles.push( m );
+	m = possibleA.copy().appendColFromArray(tNeg.toArray());//.appendRowFromArray([0,0,0,1]);
+	possibles.push( m );
+	m = possibleB.copy().appendColFromArray(t.toArray());//.appendRowFromArray([0,0,0,1]);
+	possibles.push( m );
+	m = possibleB.copy().appendColFromArray(tNeg.toArray());//.appendRowFromArray([0,0,0,1]);
+	possibles.push( m );
+
+	// find single matrix that results in 3D point in front of both cameras Z>0
+	var pA = pointsNormA[0];
+	var pB = pointsNormB[0];
+	var pAx = Matrix.crossMatrixFromV3D( pA );
+	var pBx = Matrix.crossMatrixFromV3D( pB );
+
+var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+	var projection = null;
+	len = possibles.length;
+	for(i=0;i<len;++i){
+		//var M1 = possibles[i];
+		//var M2 = Matrix.inverse(M1);
+			var M2 = possibles[i];
+		//console.log(M1.toString());
+		//console.log(M2.toString());
+		var pAM = Matrix.mult(pAx,M1);
+		var pBM = Matrix.mult(pBx,M2);
+		// console.log(pAM.toString());
+		// console.log(pBM.toString());
+		// console.log("...");
+		var A = pAM.copy().appendMatrixBottom(pBM);
+		//console.log("svd");
+		svd = Matrix.SVD(A);
+		//console.log(svd);
+		//console.log(svd.V.toString());
+		
+		var P1 = svd.V.getCol(3);
+		var p1Norm = new V4D().setFromArray(P1.toArray());
+		//console.log(p1Norm.toString());
+		p1Norm.homo();
+		//console.log(p1Norm.toString());
+		var P2 = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+		//console.log(P2.toString());
+M2 = M2.copy().appendRowFromArray([0,0,0,1]);
+		P2 = Matrix.mult(M2,P2);
+		//console.log(P2.toString());
+		var p2Norm = new V4D().setFromArray(P2.toArray());
+		//console.log(p2Norm.toString());
+		p2Norm.homo();
+		console.log(p1Norm.z+" && "+p2Norm.z);
+		if(p1Norm.z>0 && p2Norm.z>0){
+			console.log(".......................>>XXX");
+			projection = M2;
+			//break;
+		}
+	}
+	if(projection){
+		console.log("projection:");
+		console.log(projection.toString());
+	}
 
 	// // calculate projective camera matrix
 	// len = pointList.length;
@@ -465,6 +562,11 @@ Manual3DR.prototype.handleLoaded = function(){
 
 	// generate depth map
 	// ... image A/B
+}
+Manual3DR.prototype.render3DScene = function(){
+	// put cameras in 3D world
+	// put projected images in 2D world
+	// 3D world mouse/keyboard navigation
 }
 Manual3DR.prototype.handleEnterFrame = function(e){
 	//console.log(e);

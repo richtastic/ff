@@ -927,6 +927,10 @@ E = K'<sup>T</sup> &middot; F &middot; K
 P = camera matrix = K &middot; [R | t]
 E = [t]<sub>&times;</sub>&middot;R = R[R<sup>T</sup>|t]<sub>&times;</sub>
 
+E has 5 DOF (3 rot, 3 trans, 1 scale ambiguity)
+
+E has two equal non-zero singular values (and a 0 singular value)
+
 **Normalized Image Coordinate**:
 x<sup>hat</sup> = K<sup>-1</sup> &middot; x
 
