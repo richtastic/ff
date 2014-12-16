@@ -3096,5 +3096,30 @@ Code.bezier2DCubicSecondAtT = function(A,B,C,D, t){ // second derivative
 
 
 
+Code.spherePointFrom2DRect = function(originx,originy,width,height, px,py){
+	var center = new V3D(originx+width*0.5,originy+height*0.5,0);
+	var point = new V3D(px,py,0);
+	var cenToPnt = V3D.sub(point,center);
+	var radius = Math.min(center.x,center.y);
+	if(cenToPnt.length()>radius){ // snap to sphere
+		cenToPnt.norm().scale(radius);
+		cenToPnt.z = 0;
+	}else{
+		cenToPnt.z = Math.sqrt(radius*radius - cenToPnt.y*cenToPnt.y - cenToPnt.x*cenToPnt.x);
+	}
+	cenToPnt.y = -cenToPnt.y;
+	return cenToPnt;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 

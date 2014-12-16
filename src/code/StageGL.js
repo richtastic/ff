@@ -10,12 +10,13 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
 	this._dateTime = Code.getTimeMilliseconds();
 	this._time = 0;
 	this._countTime = 0;
+	this._programs = [];
 	// 
 	this.canvas(can);
-	this._canvas.startProgram();
-    this._canvas.setVertexShaders(vertexShaders);
-    this._canvas.setFragmentShaders(fragmentShaders);
-    this._canvas.linkProgram();
+	for(var i=0; i<vertexShaders.length;++i){
+		this.appendProgram( vertexShaders[i], fragmentShaders[i]);
+	}
+	this.selectProgram(0);
     //  matrices
 	this._projectionMatrix = mat4.create();
 	this._modelViewMatrixStack = new MatrixStackGL();
@@ -28,6 +29,14 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
 }
 Code.inheritClass(StageGL,Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET
+StageGL.prototype.selectProgram = function(i){
+	this._canvas.program( this._programs[i] );
+}
+StageGL.prototype.appendProgram = function(vertexShader, fragmentShader){
+	if(vertexShader && fragmentShader){
+		this._programs[this._programs.length] = this._canvas.newProgram(vertexShader, fragmentShader);
+	}
+}
 // ------------------------------------------------------------------------------------------------------------------------ CANVAS PASSTHROUGH
 StageGL.prototype.canvas = function(canvas){
 	if(canvas!==undefined){

@@ -9,6 +9,20 @@ function Manual3DR(){
 	this._stage.addListeners();
 	this._stage.start();
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	// resources
+	this._resource = {};
+	// 3D stage
+	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
+	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
+  	this._stage3D.setBackgroundColor(0x00000000);
+	this._stage3D.frustrumAngle(60);
+	this._stage3D.enableDepthTest();
+	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
+	// this._stage3D.start();
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 	//
 	var imageList, imageLoader;
 	// calibration images:
@@ -20,6 +34,65 @@ function Manual3DR(){
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
+Manual3DR.prototype.getVertexShaders1 = function(){
+	return ["\
+		attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_PointSize = 2.0; \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
+    	",
+    	"\
+    	attribute vec3 aVertexPosition; \
+		attribute vec2 aTextureCoord; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		varying vec2 vTextureCoord; \
+		void main(void) { \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vTextureCoord = aTextureCoord; \
+		} \
+		"];
+}
+Manual3DR.prototype.getFragmentShaders1 = function(){
+    return ["\
+		precision highp float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
+		} \
+	",
+	"\
+		precision mediump float; \
+		varying vec2 vTextureCoord; \
+		uniform sampler2D uSampler; \
+		void main(void){ \
+			gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t)); \
+		} \
+    "];
+}
+Manual3DR.prototype.onEnterFrameFxn3D = function(e){
+	this.render3DScene();
+}
+Manual3DR.prototype.onMouseDownFxn3D = function(e){
+	//
+}
+Manual3DR.prototype.onMouseUpFxn3D = function(e){
+	//
+}
+Manual3DR.prototype.onMouseMoveFxn3D = function(e){
+	//
+}
+Manual3DR.prototype.onMouseWheelFxn3D = function(e){
+	//
+}
+
+//
 Manual3DR.prototype.handleCalibrationImagesLoaded = function(imageInfo){
 	console.log("calibrated");
 	var i, j, len, d, img, imgs, o, obj, p, v;
@@ -152,10 +225,12 @@ Manual3DR.prototype.handleSceneImagesLoaded = function(imageInfo){
 	for(i=0;i<imageList.length;++i){
 		list[i] = imageList[i];
 	}
+this._resource.testImage = list[0];
 	this._imageSources = list;
 this.calibrateCameraMatrix();
 	this.handleLoaded();
-	this.render3DScene();
+	//this.render3DScene();
+	this._stage3D.start();
 }
 Manual3DR.prototype.handleMouseClickFxn = function(e){
 	console.log(e.x,e.y)
@@ -335,6 +410,7 @@ Manual3DR.prototype.handleLoaded = function(){
 	var offsetX = 0; offsetY = 0;
 	// show image sources
 	len = imageSources.length;
+	/*
 	for(i=0;i<len;++i){
 		img = imageSources[i];
 		if(i==0){
@@ -346,6 +422,7 @@ Manual3DR.prototype.handleLoaded = function(){
 		d.matrix().translate(offsetX,offsetY);
 		offsetX += d.image().width;
 	}
+	*/
 	// determined point pairs:
 	var pointList = [];
 	// origin
@@ -384,7 +461,7 @@ Manual3DR.prototype.handleLoaded = function(){
 	pointList.push({"pos3D":null,"pos2D":[new V2D(58,158), new V2D(65.5,165)]});
 	// display point pairs:
 	len = pointList.length;
-	console.log(len)
+	/*
 	for(i=0;i<len;++i){
 		imgs = pointList[i].pos2D;
 		for(j=0;j<imgs.length;++j){
@@ -398,6 +475,7 @@ Manual3DR.prototype.handleLoaded = function(){
 			this._root.addChild(d);
 		}
 	}
+	*/
 	// calculate fundamental matrix
 	var pointsA = [];
 	var pointsB = [];
@@ -564,11 +642,106 @@ M2 = M2.copy().appendRowFromArray([0,0,0,1]);
 	// ... image A/B
 }
 Manual3DR.prototype.render3DScene = function(){
+	var e = this.e?this.e:0;
+	this.e = e; ++this.e;
+	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
+	this._stage3D.clear();
+	// 
+	//this._userMatrix.rotateY(0.03);
+	this._stage3D.matrixIdentity();
+	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
+	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
+	//this._stage3D.matrixPush();
+	//this._stage3D.matrixMultM3D(this._userMatrixTemp);
+	//this._stage3D.matrixMultM3D(this._userMatrix);
+	this._stage3D.matrixRotate(e*0.13, 0,1,0);
+	// points
+	// if(this._displayPoints){
+	// 	this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
+	// 	this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
+	// 	this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
+	// }
+	// triangles
+	//console.log("rendering");
+	if(this._planeTriangleVertexList){
+this._stage3D.selectProgram(0);
+this._stage3D.matrixReset();
+		//this._canvas3D._context.activeTexture(null);
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._planeTriangleVertexList);
+		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
+		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
+
+this._stage3D.selectProgram(1);
+this._stage3D.matrixReset();
+		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._texturePoints);
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._vertexPoints);
+
+		this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
+		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
+		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
+		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._vertexPoints);
+//this._stage3D.matrixReset();
+	}else{
+this._stage3D.selectProgram(0);
+		var pointsL = [];
+		var colorsL = [];
+		this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+		this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+		//
+		var i;
+		for(i=0;i<30;++i){
+			pointsL.push(Math.random()*3.0-1.5,Math.random()*3.0-1.5,Math.random()*3.0-1.5);
+			colorsL.push(0.0,Math.random()*1.0,0.50, 1.0);
+		}
+		//
+		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsL,3);
+		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsL,4);
+		console.log(this._planeTriangleVertexList)
+		console.log(this._planeTriangleColorsList)
+
+
+//this._planeTriangleVertexList = 1
+		// texture
+this._stage3D.selectProgram(1);
+		var texture = this._resource.testImage;
+		var program = this._canvas3D._program;
+		var gl = this._canvas3D._context;
+		//gl.bindTexture(gl.TEXTURE_2D, texture);
+console.log("0");
+
+var obj = new DOImage(texture);
+this._root.addChild(obj);
+var wid = texture.width;
+var hei = texture.height;
+wid = Math.pow(2, Math.ceil(Math.log(wid)/Math.log(2)) );
+hei = Math.pow(2, Math.ceil(Math.log(hei)/Math.log(2)) );
+console.log(wid,hei);
+wid = Math.max(wid,hei);
+hei = wid;
+texture = this._stage.renderImage(wid,hei,obj, null);
+obj.removeParent();
+
+this._texture = this._canvas3D.bindTextureImageRGBA(texture);
+
+		var texturePoints = [0,0, 1,0, 0,1,        1,0, 1,1, 0,1];
+		var vertexPoints = [0,-3,0, 3,-3,0, 0,0,0,  3,-3,0, 3,0,0, 0,0,0];
+		//gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(texturePoints), gl.STATIC_DRAW);
+		//this._texturePoints = this._canvas3D.getBufferFloat32Array(texturePoints, 2);
+	console.log("1");
+	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
+	console.log("2");
+		this._texturePoints = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+		this._vertexPoints = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+console.log("3");
+	}
+	// lines
 	// put cameras in 3D world
 	// put projected images in 2D world
 	// 3D world mouse/keyboard navigation
+
 }
-Manual3DR.prototype.handleEnterFrame = function(e){
+Manual3DR.prototype.handleEnterFrame = function(e){ // 2D canvas
 	//console.log(e);
 }
 

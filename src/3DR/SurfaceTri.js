@@ -113,20 +113,7 @@ SurfaceTri.prototype.onMouseWheelFxn3D = function(e){
 	this._userScale += ((e.z>0)?-1:1)*0.25;
 }
 SurfaceTri.prototype._mouseSpherePoint = function(e){
-	var canWid = this._canvas3D.width();
-	var canHei = this._canvas3D.height();
-	var center = new V3D(canWid*0.5,canHei*0.5,0);
-	var point = new V3D(e.x,e.y,0);
-	var cenToPnt = V3D.sub(point,center);
-	var radius = Math.min(center.x,center.y);
-	if(cenToPnt.length()>radius){ // snap to sphere
-		cenToPnt.norm().scale(radius);
-		cenToPnt.z = 0;
-	}else{
-		cenToPnt.z = Math.sqrt(radius*radius - cenToPnt.y*cenToPnt.y - cenToPnt.x*cenToPnt.x);
-	}
-	cenToPnt.y = -cenToPnt.y;
-	return cenToPnt;
+	return Code.spherePointFrom2DRect(0,0,this._canvas3D.width(),this._canvas3D.height(), e.x,e.y);
 }
 SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	if(!this._mlsMesh){ return; }

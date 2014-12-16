@@ -106,8 +106,6 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 	if(is3D){
 		try{
 			this._program = null;
-// 			this._pMatrix = mat4.create();
-// 			this._mvMatrix = mat4.create();
 			this._context = this._canvas.getContext("experimental-webgl");
 		}catch(e){
 			console.log("could not initialize webGL");
@@ -130,38 +128,49 @@ Canvas.prototype.createShaderFromString = function(str, type){
 	}
 	return null;
 }
-Canvas.prototype.compileAndAttachShaderFromString = function(str,type){
+Canvas.prototype.compileAndAttachShaderFromString = function(program, str,type){
 	var shader = this.createShaderFromString(str,type);
 	this._context.shaderSource(shader, str);
 	this._context.compileShader(shader);
-	this._context.attachShader(this._program, shader);
+	this._context.attachShader(program, shader);
 	if(!this._context.getShaderParameter(shader, this._context.COMPILE_STATUS)){
 		console.log("could not compile shader: "+this._context.getShaderInfoLog(shader));
 		return null;
 	}
 }
-Canvas.prototype.setVertexShaders = function(list){
-	for(var i=0; i<list.length; ++i){
-		this.compileAndAttachShaderFromString(list[i],Canvas.WEBGL_SHADER_TYPE_VERTEX);
-	}
+Canvas.prototype.setVertexShader = function(program, list){
+	this.compileAndAttachShaderFromString(program, list,Canvas.WEBGL_SHADER_TYPE_VERTEX);
 }
-Canvas.prototype.setFragmentShaders = function(list){
-	for(var i=0; i<list.length; ++i){
-		this.compileAndAttachShaderFromString(list[i],Canvas.WEBGL_SHADER_TYPE_FRAGMENT);
+Canvas.prototype.setFragmentShader = function(program, list){
+	this.compileAndAttachShaderFromString(program, list,Canvas.WEBGL_SHADER_TYPE_FRAGMENT);
+}
+Canvas.prototype.program = function(program){
+	if(program!==undefined){
+		this._program = program;
+		this.linkProgram(this._program);
 	}
+	return this._program;
+}
+Canvas.prototype.newProgram = function(vertexShader, fragmentShader){
+	var program = this.startProgram();
+	this.setVertexShader(program, vertexShader);
+    this.setFragmentShader(program, fragmentShader);
+ //   this.linkProgram(program);
+    return program;
 }
 Canvas.prototype.startProgram = function(){
-	this._program = this._context.createProgram();
+	return this._context.createProgram();
 }
-Canvas.prototype.linkProgram = function(){
-	this._context.linkProgram(this._program);
-	if(!this._context.getProgramParameter(this._program, this._context.LINK_STATUS)){
+Canvas.prototype.linkProgram = function(program){
+	this._context.linkProgram(program);
+	if(!this._context.getProgramParameter(program, this._context.LINK_STATUS)){
 		console.log("could not initialize shaders");
 		return null;
 	}
-	this._context.useProgram(this._program);
-	this._program.projectionMatrixUniform = this._context.getUniformLocation(this._program, "uPMatrix");
-	this._program.modelViewMatrixUniform = this._context.getUniformLocation(this._program, "uMVMatrix");
+	this._context.useProgram(program);
+	program.projectionMatrixUniform = this._context.getUniformLocation(program, "uPMatrix");
+	program.modelViewMatrixUniform = this._context.getUniformLocation(program, "uMVMatrix");
+	return program;
 }
 Canvas.prototype.enableVertexAttribute = function(attribName){
 	var attr = this._context.getAttribLocation(this._program, attribName);
