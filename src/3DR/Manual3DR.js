@@ -650,7 +650,7 @@ Manual3DR.prototype.render3DScene = function(){
 	//this._userMatrix.rotateY(0.03);
 	this._stage3D.matrixIdentity();
 	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
-	this._stage3D.matrixTranslate(0.0,0.0,-3.0);
+	this._stage3D.matrixTranslate(0.0,0.0,-5.0);
 	//this._stage3D.matrixPush();
 	//this._stage3D.matrixMultM3D(this._userMatrixTemp);
 	//this._stage3D.matrixMultM3D(this._userMatrix);
@@ -713,18 +713,23 @@ var obj = new DOImage(texture);
 this._root.addChild(obj);
 var wid = texture.width;
 var hei = texture.height;
+var origWid = wid;
+var origHei = hei;
 wid = Math.pow(2, Math.ceil(Math.log(wid)/Math.log(2)) );
 hei = Math.pow(2, Math.ceil(Math.log(hei)/Math.log(2)) );
 console.log(wid,hei);
 wid = Math.max(wid,hei);
 hei = wid;
+var origWid = origWid/wid;
+var origHei = origHei/hei;
 texture = this._stage.renderImage(wid,hei,obj, null);
 obj.removeParent();
 
 this._texture = this._canvas3D.bindTextureImageRGBA(texture);
-
-		var texturePoints = [0,0, 1,0, 0,1,        1,0, 1,1, 0,1];
-		var vertexPoints = [0,-3,0, 3,-3,0, 0,0,0,  3,-3,0, 3,0,0, 0,0,0];
+var vert = 1-origHei;
+var horz = origWid;
+		var texturePoints = [0,vert, horz,vert, 0,1,        horz,vert, horz,1, 0,1];
+		var vertexPoints = [0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0];
 		//gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(texturePoints), gl.STATIC_DRAW);
 		//this._texturePoints = this._canvas3D.getBufferFloat32Array(texturePoints, 2);
 	console.log("1");
