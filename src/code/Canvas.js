@@ -147,7 +147,7 @@ Canvas.prototype.setFragmentShader = function(program, list){
 Canvas.prototype.program = function(program){
 	if(program!==undefined){
 		this._program = program;
-		this.linkProgram(this._program);
+		this._context.useProgram(this._program);
 	}
 	return this._program;
 }
@@ -155,7 +155,7 @@ Canvas.prototype.newProgram = function(vertexShader, fragmentShader){
 	var program = this.startProgram();
 	this.setVertexShader(program, vertexShader);
     this.setFragmentShader(program, fragmentShader);
- //   this.linkProgram(program);
+    this.linkProgram(program);
     return program;
 }
 Canvas.prototype.startProgram = function(){
@@ -198,7 +198,12 @@ Canvas.prototype.enableDepthTest = function(){
 	//this._context.enable(this._context.DEPTH_TEST); // disable?
 	//this._context.colorMask(true,true,true,false);
 }
-
+Canvas.prototype.enableCulling = function(){
+	return this._context.enable(this._context.CULL_FACE);
+}
+Canvas.prototype.disableCulling = function(){
+	return this._context.disable(this._context.CULL_FACE);
+}
 Canvas.prototype.getBufferFloat32Array = function(list, lengthOfIndividual){
 	var buffer = this._context.createBuffer();
 	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer, lengthOfIndividual);

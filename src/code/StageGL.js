@@ -67,6 +67,12 @@ StageGL.prototype.setBackgroundColor = function(r,g,b,a){
 StageGL.prototype.enableDepthTest = function(){
 	return this._canvas.enableDepthTest();
 }
+StageGL.prototype.enableCulling = function(){
+	return this._canvas.enableCulling();
+}
+StageGL.prototype.disableCulling = function(){
+	return this._canvas.disableCulling();
+}
 StageGL.prototype.enableVertexAttribute = function(attrib){
 	return this._canvas.enableVertexAttribute(attrib);
 }

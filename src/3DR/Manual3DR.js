@@ -665,12 +665,16 @@ Manual3DR.prototype.render3DScene = function(){
 	//console.log("rendering");
 	if(this._planeTriangleVertexList){
 this._stage3D.selectProgram(0);
+this._stage3D.enableCulling();
 this._stage3D.matrixReset();
 		//this._canvas3D._context.activeTexture(null);
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._planeTriangleVertexList);
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 
+this._stage3D.disableCulling();
+
+//this._stage3D.enableCulling();
 this._stage3D.selectProgram(1);
 this._stage3D.matrixReset();
 		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._texturePoints);
@@ -680,6 +684,7 @@ this._stage3D.matrixReset();
 		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
 		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._vertexPoints);
+
 //this._stage3D.matrixReset();
 	}else{
 this._stage3D.selectProgram(0);
@@ -689,7 +694,7 @@ this._stage3D.selectProgram(0);
 		this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 		//
 		var i;
-		for(i=0;i<30;++i){
+		for(i=0;i<300;++i){
 			pointsL.push(Math.random()*3.0-1.5,Math.random()*3.0-1.5,Math.random()*3.0-1.5);
 			colorsL.push(0.0,Math.random()*1.0,0.50, 1.0);
 		}
@@ -703,6 +708,7 @@ this._stage3D.selectProgram(0);
 //this._planeTriangleVertexList = 1
 		// texture
 this._stage3D.selectProgram(1);
+
 		var texture = this._resource.testImage;
 		var program = this._canvas3D._program;
 		var gl = this._canvas3D._context;
