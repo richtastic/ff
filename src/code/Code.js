@@ -656,6 +656,18 @@ Code.getBluARGB = function(col){
 Code.getAlpARGB = function(col){
 	return (col>>24)&0xFF;
 }
+Code.getFloatAlpARGB = function(col){
+	return ((col>>24)&0xFF)/255.0;
+}
+Code.getFloatRedARGB = function(col){
+	return ((col>>16)&0xFF)/255.0;
+}
+Code.getFloatGrnARGB = function(col){
+	return ((col>>8)&0xFF)/255.0;
+}
+Code.getFloatBluARGB = function(col){
+	return (col&0xFF)/255.0;
+}
 Code.getFloatArrayARGBFromARGB = function(col){
 	var a = Code.getAlpARGB(col);
 	var r = Code.getRedARGB(col);

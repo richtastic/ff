@@ -7,6 +7,9 @@ function Tri(a,b,c){ // CCW+
 	this.B(b);
 	this.C(c);
 }
+Tri.fromList = function(ax,ay,az, bx,by,bz, cx,cy,cz){
+	return new Tri(new V3D(ax,ay,az), new V3D(bx,by,bz), new V3D(cx,cy,cz));
+}
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri.prototype.A = function(a){
 	if(a!==undefined){
@@ -52,6 +55,18 @@ Tri.prototype.jitter = function(amplitude){
 	this._c.z += Math.random()*amplitude - amplitude*0.5;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
+Tri.prototype.toString = function(){
+	var str = "";
+	str += "[Tri: ";
+	str += this._a?(this._a.toString()):("[null]");
+	str += ", ";
+	str += this._b?(this._b.toString()):("[null]");
+	str += ", ";
+	str += this._c?(this._c.toString()):("[null]");
+	str += " ]";
+	return str;
+}
+
 Tri.prototype.kill = function(){
 	this._a = null;
 	this._b = null;
