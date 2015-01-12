@@ -641,6 +641,53 @@ M2 = M2.copy().appendRowFromArray([0,0,0,1]);
 	// generate depth map
 	// ... image A/B
 }
+Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
+	//...
+	var pointsL = this._renderPointsList;
+	var colorsL = this._renderColorsList;
+	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	//
+	// var i;
+	// for(i=0;i<300;++i){
+	// 	pointsL.push(Math.random()*3.0-1.5,Math.random()*3.0-1.5,Math.random()*3.0-1.5);
+	// 	colorsL.push(0.0,Math.random()*1.0,0.50, 1.0);
+	// }
+	// 
+	var i, j, len, tri, col;
+	var c = [];
+	var t = [];
+	c.push(0xFFFF0000);
+	t.push(Tri.fromList(0.0,0.0,0.0, 0.5,-0.5,1.0,  -0.5,-0.5,1.0));
+	c.push(0xFF00CC00);
+	t.push(Tri.fromList(0.0,0.0,0.0, 0.5,0.5,1.0, 0.5,-0.5,1.0));
+	c.push(0xFF0000FF);
+	t.push(Tri.fromList(0.0,0.0,0.0, -0.5,0.5,1.0, 0.5,0.5,1.0));
+	c.push(0xFFFFCC00);
+	t.push(Tri.fromList(0.0,0.0,0.0, -0.5,-0.5,1.0, -0.5,0.5,1.0));
+	c.push(0xFFCCCCCC);
+	t.push(Tri.fromList(0.5,-0.5,1.0, 0.5,0.5,1.0, -0.5,0.5,1.0));
+	c.push(0xFF999999);
+	t.push(Tri.fromList(0.5,-0.5,1.0, -0.5,0.5,1.0, -0.5,-0.5,1.0));
+
+var v = new V3D();
+	len = c.length;
+	for(i=0;i<len;++i){
+		col = c[i];
+		tri = t[i];
+		matrix.multV3DtoV3D(v,tri.A());
+		console.log(tri.A().toString()+" -> "+v.toString());
+		pointsL.push(v.x,v.y,v.z);
+		matrix.multV3DtoV3D(v,tri.B());
+		pointsL.push(v.x,v.y,v.z);
+		matrix.multV3DtoV3D(v,tri.C());
+		pointsL.push(v.x,v.y,v.z);
+		for(j=0;j<3;++j){
+			colorsL.push( Code.getFloatRedARGB(col),Code.getFloatGrnARGB(col),Code.getFloatBluARGB(col),Code.getFloatAlpARGB(col) );
+		}
+	}
+	//
+}
 Manual3DR.prototype.render3DScene = function(){
 	var e = this.e?this.e:0;
 	this.e = e; ++this.e;
@@ -654,7 +701,7 @@ Manual3DR.prototype.render3DScene = function(){
 	this._stage3D.matrixTranslate(0.0,0.0,-5.0);
 	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
 	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
-	//this._stage3D.matrixRotate(e*0.01, 0,0,1);
+	this._stage3D.matrixRotate(e*0.03, e*.02,0,1);
 	//this._stage3D.matrixPush();
 	//this._stage3D.matrixMultM3D(this._userMatrixTemp);
 	//this._stage3D.matrixMultM3D(this._userMatrix);
@@ -692,47 +739,22 @@ this._stage3D.matrixReset();
 //this._stage3D.matrixReset();
 	}else{
 this._stage3D.selectProgram(0);
-		var pointsL = [];
-		var colorsL = [];
-		this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
-		this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
-		//
-		// var i;
-		// for(i=0;i<300;++i){
-		// 	pointsL.push(Math.random()*3.0-1.5,Math.random()*3.0-1.5,Math.random()*3.0-1.5);
-		// 	colorsL.push(0.0,Math.random()*1.0,0.50, 1.0);
-		// }
-		// 
-		var i, j, len, tri, col;
-		var c = [];
-		var t = [];
-		c.push(0xFFFF0000);
-		t.push(Tri.fromList(0.0,0.0,0.0, 0.5,-0.5,1.0,  -0.5,-0.5,1.0));
-		c.push(0xFF00CC00);
-		t.push(Tri.fromList(0.0,0.0,0.0, 0.5,0.5,1.0, 0.5,-0.5,1.0));
-		c.push(0xFF0000FF);
-		t.push(Tri.fromList(0.0,0.0,0.0, -0.5,0.5,1.0, 0.5,0.5,1.0));
-		c.push(0xFFFFCC00);
-		t.push(Tri.fromList(0.0,0.0,0.0, -0.5,-0.5,1.0, -0.5,0.5,1.0));
-		c.push(0xFFCCCCCC);
-		t.push(Tri.fromList(0.5,-0.5,1.0, 0.5,0.5,1.0, -0.5,0.5,1.0));
-		c.push(0xFF999999);
-		t.push(Tri.fromList(0.5,-0.5,1.0, -0.5,0.5,1.0, -0.5,-0.5,1.0));
-
-		len = c.length;
-		for(i=0;i<len;++i){
-			col = c[i];
-			tri = t[i];
-			pointsL.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
-			for(j=0;j<3;++j){
-				colorsL.push( Code.getFloatRedARGB(col),Code.getFloatGrnARGB(col),Code.getFloatBluARGB(col),Code.getFloatAlpARGB(col) );
-			}
-		}
-		//
-		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsL,3);
-		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsL,4);
+this._renderPointsList = [];
+this._renderColorsList = [];
+		// do stuff
+var matrix = new Matrix(4,4);
+matrix.identity();
+matrix = Matrix.transform3DTranslate(matrix,1,2,0);
+matrix = Matrix.transform3DRotateX(matrix, Math.PI*0.25);
+console.log(matrix.toString())
+this.addCameraVisual(matrix);
+		// done
+		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(this._renderPointsList,3);
+		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(this._renderColorsList,4);
 		console.log(this._planeTriangleVertexList)
 		console.log(this._planeTriangleColorsList)
+
+
 
 
 //this._planeTriangleVertexList = 1
@@ -764,19 +786,17 @@ obj.removeParent();
 this._texture = this._canvas3D.bindTextureImageRGBA(texture);
 var vert = 1-origHei;
 var horz = origWid;
+		// 
 		var texturePoints = [];
-		//texturePoints.push(0,vert, horz,vert, 0,1,        horz,vert, horz,1, 0,1);
 		var vertexPoints = [];
-		//vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
-		//gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(texturePoints), gl.STATIC_DRAW);
-		//this._texturePoints = this._canvas3D.getBufferFloat32Array(texturePoints, 2);
-	console.log("1");
-	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
-	this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
-	console.log("2");
+		// do stuff
+		texturePoints.push(0,vert, horz,vert, 0,1,        horz,vert, horz,1, 0,1);
+		vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
+		// set
+		this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+		this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
 		this._texturePoints = this._stage3D.getBufferFloat32Array(texturePoints, 2);
 		this._vertexPoints = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
-console.log("3");
 	}
 	// lines
 	// put cameras in 3D world
