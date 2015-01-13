@@ -136,6 +136,9 @@ StageGL.prototype.matrixMultM3D = function(m){
 	//mat4.postMultM3D(m, this._modelViewMatrixStack.matrix());
 	mat4.postMultM3D(this._modelViewMatrixStack.matrix(),m);
 }
+StageGL.prototype.matrixMultM3DPre = function(m){
+	mat4.preMultM3D(this._modelViewMatrixStack.matrix(),m);
+}
 StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
 	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
 }

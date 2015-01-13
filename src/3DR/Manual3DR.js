@@ -19,6 +19,12 @@ function Manual3DR(){
 	this._stage3D.enableDepthTest();
 	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
 	// this._stage3D.start();
+	this._spherePointBegin = null;
+	this._spherePointEnd = null;
+	this._sphereMatrix = new Matrix3D();
+	this._sphereMatrix.identity();
+	this._userInteractionMatrix = new Matrix3D();
+	this._userInteractionMatrix.identity();
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
@@ -57,6 +63,17 @@ Manual3DR.prototype.getVertexShaders1 = function(){
 			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
 			vTextureCoord = aTextureCoord; \
 		} \
+		",
+		" \
+		attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
 		"];
 }
 Manual3DR.prototype.getFragmentShaders1 = function(){
@@ -66,13 +83,20 @@ Manual3DR.prototype.getFragmentShaders1 = function(){
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-	",
-	"\
+		",
+		"\
 		precision mediump float; \
 		varying vec2 vTextureCoord; \
 		uniform sampler2D uSampler; \
 		void main(void){ \
 			gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t)); \
+		} \
+    	",
+    	"\
+		precision highp float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
 		} \
     "];
 }
@@ -80,16 +104,51 @@ Manual3DR.prototype.onEnterFrameFxn3D = function(e){
 	this.render3DScene();
 }
 Manual3DR.prototype.onMouseDownFxn3D = function(e){
-	//
-}
-Manual3DR.prototype.onMouseUpFxn3D = function(e){
-	//
+	var point = e;
+	point = this.spherePointFromRectPoint(point);
+	this._spherePointBegin = point;
+	this._spherePointEnd = point.copy();
 }
 Manual3DR.prototype.onMouseMoveFxn3D = function(e){
-	//
+	if(this._spherePointBegin){
+		var point = e;
+		point = this.spherePointFromRectPoint(point);
+		this._spherePointEnd = point;
+		this.updateSphereMatrixFromPoints(this._spherePointBegin, this._spherePointEnd);
+	}
+}
+Manual3DR.prototype.onMouseUpFxn3D = function(e){
+	// apply
+	var point = e;
+	point = this.spherePointFromRectPoint(point);
+	this._spherePointEnd = point;
+	this.updateSphereMatrixFromPoints(this._spherePointBegin, this._spherePointEnd);
+	this._userInteractionMatrix.mult(this._userInteractionMatrix, this._sphereMatrix);
+	//this._userInteractionMatrix.mult(this._sphereMatrix, this._userInteractionMatrix);
+		// reset
+	this._spherePointBegin = null;
+	this._spherePointEnd = null;
+	this._sphereMatrix.identity();
 }
 Manual3DR.prototype.onMouseWheelFxn3D = function(e){
 	//
+}
+
+Manual3DR.prototype.spherePointFromRectPoint = function(point){
+	var wid = this._canvas3D.width();
+	var hei = this._canvas3D.height();
+	point = Code.spherePointFrom2DRect(0,0,wid,hei, point.x,point.y);
+	return point;
+}
+Manual3DR.prototype.updateSphereMatrixFromPoints = function(pointA,pointB){
+	var angle = V3D.angle(pointA,pointB);
+	angle = -angle;
+	if(angle!=0){
+		var direction = V3D.cross(pointA,pointB);
+		direction.norm();
+		this._sphereMatrix.identity();
+		this._sphereMatrix.rotateVector(direction,angle);
+	}
 }
 
 //
@@ -606,13 +665,26 @@ M2 = M2.copy().appendRowFromArray([0,0,0,1]);
 		if(p1Norm.z>0 && p2Norm.z>0){
 			console.log(".......................>>XXX");
 			projection = M2;
-			//break;
+			break;
 		}
 	}
 	if(projection){
 		console.log("projection:");
 		console.log(projection.toString());
 	}
+this._cameras = [];
+this._cameras.push({"extrinsic":new Matrix(4,4).identity(),
+					"center":new V3D(0,0,0), // center of camera on image (not image center)
+					"topLeft":new V3D(-1,1,0), // top left corner of image location
+					"xAxis":new V3D(1,0,0), // top side of image
+					"yAxis":new V3D(0,-1,0), // left side of image
+					"points":[], // list of interest points to put lines thru
+					"focalLength":1.0000,
+					"screenWidth":1.0000,
+					"screenHeight":1.0000,
+					});
+this._cameras.push({"extrinsic":projection
+					});
 
 	// // calculate projective camera matrix
 	// len = pointList.length;
@@ -699,9 +771,16 @@ Manual3DR.prototype.render3DScene = function(){
 	//this._stage3D.matrixRotate(e*0.01, 0,1,0);
 	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
 	this._stage3D.matrixTranslate(0.0,0.0,-5.0);
-	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
+//	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
 	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
-	this._stage3D.matrixRotate(e*0.03, e*.02,0,1);
+//	this._stage3D.matrixRotate(e*0.0, e*0.0,0,1);
+
+this._stage3D.matrixMultM3D(this._sphereMatrix);
+this._stage3D.matrixMultM3D(this._userInteractionMatrix);
+
+
+//this._stage3D.matrixMultM3DPre(this._sphereMatrix);
+//this._sphereMatrix
 	//this._stage3D.matrixPush();
 	//this._stage3D.matrixMultM3D(this._userMatrixTemp);
 	//this._stage3D.matrixMultM3D(this._userMatrix);
@@ -715,6 +794,8 @@ Manual3DR.prototype.render3DScene = function(){
 	// triangles
 	//console.log("rendering");
 	if(this._planeTriangleVertexList){
+		
+// TRIANGLES
 this._stage3D.selectProgram(0);
 this._stage3D.enableCulling();
 this._stage3D.matrixReset();
@@ -735,6 +816,17 @@ this._stage3D.matrixReset();
 		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
 		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._vertexPoints);
+//
+
+// RENDER LINES
+this._stage3D.selectProgram(2);
+this._stage3D.disableCulling();
+this._stage3D.matrixReset();
+
+this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
+this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
+this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
+
 
 //this._stage3D.matrixReset();
 	}else{
@@ -743,11 +835,19 @@ this._renderPointsList = [];
 this._renderColorsList = [];
 		// do stuff
 var matrix = new Matrix(4,4);
+
+var i, len = this._cameras.length;
+for(i=0;i<len;++i){
+	var camera = this._cameras[i];
+	matrix.copy(camera["extrinsic"]);
+	this.addCameraVisual(matrix);
+}
+/*
 matrix.identity();
-matrix = Matrix.transform3DTranslate(matrix,1,2,0);
-matrix = Matrix.transform3DRotateX(matrix, Math.PI*0.25);
-console.log(matrix.toString())
+matrix = Matrix.transform3DTranslate(matrix,0,0,0);
+matrix = Matrix.transform3DRotateX(matrix, Math.PI*0.0);
 this.addCameraVisual(matrix);
+*/
 		// done
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(this._renderPointsList,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(this._renderColorsList,4);
@@ -758,7 +858,7 @@ this.addCameraVisual(matrix);
 
 
 //this._planeTriangleVertexList = 1
-		// texture
+// TEXTURES
 this._stage3D.selectProgram(1);
 
 		var texture = this._resource.testImage;
@@ -797,6 +897,17 @@ var horz = origWid;
 		this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
 		this._texturePoints = this._stage3D.getBufferFloat32Array(texturePoints, 2);
 		this._vertexPoints = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+
+
+
+		// LINES
+		this._stage3D.selectProgram(2);
+		this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+		this._programLineVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+		var linePoints = [0,0, 5,5];
+		var lineColors = [0,1,0,1, 1,1,0,1];
+		this._programLinePoints = this._stage3D.getBufferFloat32Array(linePoints, 2);
+		this._programLineColors = this._stage3D.getBufferFloat32Array(lineColors, 4);
 	}
 	// lines
 	// put cameras in 3D world
