@@ -14,8 +14,7 @@ Matrix3D.YAML = {
 	L:"l"
 }
 function Matrix3D(){
-	this.a=0; this.b=0; this.c=0; this.d=0; this.e=0; this.f=0; this.g=0; this.h=0; this.i=0; this.j=0; this.k=0; this.l=0;
-	this.identity();
+	this.a=1; this.b=0; this.c=0; this.d=0; this.e=0; this.f=1; this.g=0; this.h=0; this.i=0; this.j=0; this.k=1; this.l=0;
 }
 //if(mat4){
 mat4.preMultM3D = function(a,b,m){
@@ -237,11 +236,14 @@ Matrix3D.prototype.kill = function(){
 Matrix3D.temp = new Matrix3D(); // internal
 Matrix3D.TEMP = new Matrix3D(); // external
 
-Matrix3D.matrix3DfromMatrix = function(mat){
+Matrix3D.matrix3DFromMatrix = function(mat){
 	var m3D = new Matrix3D();
 	m3D.set(mat.get(0,0),mat.get(0,1),mat.get(0,2),mat.get(0,3), 
 			mat.get(1,0),mat.get(1,1),mat.get(1,2),mat.get(1,3),
 			mat.get(2,0),mat.get(2,1),mat.get(2,2),mat.get(2,3));
 	return m3D;
+}
+Matrix3D.matrixFromMatrix3D = function(mat){
+	return new Matrix(4,4).setFromArray([mat.a,mat.b,mat.c,mat.d, mat.e,mat.f,mat.g,mat.h, mat.i,mat.j,mat.k,mat.l, 0,0,0,1]);
 }
 

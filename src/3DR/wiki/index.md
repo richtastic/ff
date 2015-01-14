@@ -987,9 +987,9 @@ x<sub>i</sub> = P &middot; H<sup>-1</sup> &middot; X<sub>Ei</sub>
 - h<sub>1</sub><sup>T</sup>K<sup>-T</sup>&middot;K<sup>-1</sup>h<sub>1</sub> = h<sub>2</sub><sup>T</sup>K<sup>-T</sup>&middot;K<sup>-1</sup>h<sub>2</sub>
 - B = K<sup>-T</sup>&middot;K<sup>-1</sup>
 ```
-    [b11 b12 b13]   [b11 b12 b13]     [ 1/(fx^2)          -s/(fx^2*fy)                       (v0*s - u0*fy)/(fx^2*fy)         ]
-B = [b21 b22 b23] = [b12 b22 b23] = l*[    -       s^2/(fx^2*fy^2) + 1/(fy^2)        s(v0*s - u0*fy)/(fx^2*fy) - v0/(fy^2)    ]
-    [b31 b32 b33]   [b13 b23 b33]     [    -                   -               (v0*s - u0*fy)^2/(fx^2*fy) + (v0^2)/(fy^2) + 1 ]
+    [b11 b12 b13]   [b11 b12 b13]     [ 1/(fx^2)          -s/(fx^2*fy)                       (v0*s - u0*fy)/(fx^2*fy)           ]
+B = [b21 b22 b23] = [b12 b22 b23] = l*[    -       s^2/(fx^2*fy^2) + 1/(fy^2)        s(v0*s - u0*fy)/(fx^2*fy^2) - v0/(fy^2)    ]
+    [b31 b32 b33]   [b13 b23 b33]     [    -                   -               (v0*s - u0*fy)^2/(fx^2*fy^2) + (v0^2)/(fy^2) + 1 ]
 ```
 b = [b11,b12,b22,b13,b23,b33]
 hi = [hi1,hi2,hi3]<sup>T</sup>
@@ -1067,8 +1067,13 @@ y<sub>corrected</sub> = y + (2p<sub>2</sub>xy + p<sub>1</sub>(r<sup>2</sup> + 2y
 
 k1, k2, k3, p1, p2 &isin; distortion coefficients
 
+r = sqrt(x&middot;x + y&middot;y)
+x & y measured from center (principal point)
 
 
+ITERATE:
+A) calculate intrinsic matrix
+B) calculate radial (+ tangental) distortion
 
 
 

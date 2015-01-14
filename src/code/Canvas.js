@@ -106,7 +106,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 	if(is3D){
 		try{
 			this._program = null;
-			this._context = this._canvas.getContext("experimental-webgl");
+			this._context = this._canvas.getContext("experimental-webgl", {preserveDrawingBuffer: true});
 		}catch(e){
 			console.log("could not initialize webGL");
 		}
