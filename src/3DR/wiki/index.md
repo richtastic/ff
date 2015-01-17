@@ -1057,6 +1057,12 @@ each point-set defines 1/8 points for an H matrix
 <br/>
 <br/>
 
+Forward radial distortion:
+
+<br/>
+<br/>
+<br/>
+
 Radial Distortion recovery:
 x<sub>corrected</sub> = x(1 + k<sub>1</sub>r<sup>2</sup> + k<sub>2</sub>r<sup>4</sup> + k<sub>3</sub>r<sup>6</sup>)
 y<sub>corrected</sub> = y(1 + k<sub>1</sub>r<sup>2</sup> + k<sub>2</sub>r<sup>4</sup> + k<sub>3</sub>r<sup>6</sup>)

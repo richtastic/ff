@@ -17,7 +17,7 @@ function Manual3DR(){
   	this._stage3D.setBackgroundColor(0x00000000);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
-	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
+//	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
 	// this._stage3D.start();
 	this._spherePointBegin = null;
 	this._spherePointEnd = null;
@@ -37,9 +37,272 @@ function Manual3DR(){
 //	imageLoader = new ImageLoader("./images/",imageList, this,this.handleCalibrationImagesLoaded,null);
 //	imageLoader.load();
 	// import image to work with
-	imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
-	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
-	imageLoader.load();
+	// imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
+	// imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
+	// imageLoader.load();
+	this.distortionStuff();
+}
+Manual3DR.prototype.distortionStuff = function(){
+	var d, i, j, k, x, y, img, arr, index, X, Y, u, v, w;
+	var wid = 400;
+	var hei = 300;
+	var dia = Math.sqrt(wid*wid+hei*hei);
+	var colLineVer = 0xFFFF0000;
+	var colLineHor = 0xFF0000FF;
+	var colLineRad = 0xFF00FF00;
+	var countVertical = 13;
+	var countHorizontal = 11;
+	var countRadial = 8;
+	// create example image to display
+	d = new DO();
+	d.graphics().clear();
+	// vertical stripes
+	for(i=0;i<countVertical;++i){
+		x = wid*(i/(countVertical-1));
+		d.graphics().setLine(2.0, colLineVer);
+		d.graphics().beginPath();
+		d.graphics().moveTo(x,0);
+		d.graphics().lineTo(x,hei);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	}
+	// horizontal stripes
+	for(i=0;i<countHorizontal;++i){
+		y = hei*(i/(countHorizontal-1));
+		d.graphics().setLine(2.0, colLineHor);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,y);
+		d.graphics().lineTo(wid,y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	}
+	// radial stripes
+	for(i=0;i<countRadial;++i){
+		r = dia*(i/(countRadial-1))*0.5; // Math.max(wid,hei)
+		d.graphics().setLine(2.0, colLineRad);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(wid*0.5,hei*0.5,r);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	}
+	// convert to image
+	// img = this._stage.renderImage(wid,hei,d);
+	// d = new DOImage(img);
+	// convert to pixel array:
+	arr = this._stage.getDOAsARGB(d,wid,hei);
+	img = this._stage.getARGBAsImage(arr, wid,hei);
+	img.setAttribute("style","z-index:9999999; position:relative; top:0; left:0; padding:0; margin:0; border:0;");
+	document.body.appendChild(img);
+	//
+	// do shit
+	var disArr = Code.newArrayZeros(wid*hei);
+	index = 0;
+	var maxDim = Math.max(wid,hei);
+	var k1, k2, k3, p1, p2, p3, x2, y2;
+	var r2, r4, r6, xc, yc, xP, yP;
+	xc = 0.0;
+	yc = 0.0;
+k1=-1.0;
+k2=0.0;
+k3=0.0;
+p1 = 0.0;
+p2 = 0.0;
+p3 = 0.0;
+
+var systemPoints = {"original":
+						[new V2D(0,0),
+						new V2D(wid*0.5,0),
+						new V2D(wid,0),
+						new V2D(wid*0.5,hei*0.5),
+						new V2D(wid*0.5,0),
+						new V2D(wid*0.5,hei),
+						new V2D(wid,0),
+						new V2D(wid,hei*0.5),
+						new V2D(wid,hei)],
+					"distorted":[]};
+	var pts = systemPoints["original"];
+	var nxt = systemPoints["distorted"];
+	for(i=0;i<pts.length;++i){
+		v = pts[i];
+		nxt[i] = this.pointFromDistortion(wid,hei,maxDim, v.x,v.y, xc,yc, k1,k2,k3,p1,p2);
+	}
+
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i,++index){
+			v = this.pointFromDistortion(wid,hei,maxDim, i,j, xc,yc, k1,k2,k3,p1,p2);
+			//
+			X = Math.round(v.x);
+			Y = Math.round(v.y);
+			if(0<=X && X<wid  && 0<=Y && Y<hei){
+				ind = Y*wid + X;
+				disArr[index] = arr[ind]; // INTERPOLATE
+			}else{
+				disArr[index] = 0xFF000000;
+			}
+		}
+	}
+	// index = Math.round(hei*0.5 + (maxDim/hei)*yc)*wid + Math.round(wid*0.5*(wid/maxDim)*xc);
+	// disArr[index] = 0xFFFFFF00;
+	// disArr[index+1] = 0xFF000000;
+	// disArr[index+2] = 0xFF000000;
+	//
+	//img = this._stage.getARGBAsImage(arr, wid,hei);
+	img = this._stage.getARGBAsImage(disArr, wid,hei);
+	img.setAttribute("style","z-index:9999999; position:relative; top:0; left:0; padding:0; margin:0; border:0;");
+	document.body.appendChild(img);
+
+	// recovery
+	var iterations, iterationsMax = 30;
+	var error, errorPrev, errorNext, errorMag, delta, dist, result, currentResult, errorMinimum;
+	var jacobian, Jinv, epsilon = 1E-8, err = 0, prevErr = 0;
+	errorMinimum = 1E-10;
+	error = new Matrix();
+var h = new Matrix(3,1); // 
+var he = new Matrix(3,1); // 
+var jacobian = new Matrix(pts.length,3); // k1,k2,k3
+var lambda = 1E10;
+var lambdaScale = 10.0;
+k1 = 0.0;
+k2 = 0.0;
+k3 = 0.0;
+p1 = 0.0;
+p2 = 0.0;
+h.setFromArray([k1,k2,k3]);
+	for(i=0;i<iterationsMax;++i){
+		// y
+		currentResult = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, h.toArray()).result;
+		// dy = squared error
+		error = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, h.toArray()).error;
+		//console.log("        ??? "+error.toArray());
+		errorMag = error.getNorm();
+		console.log("ERROR: "+errorMag);
+		if(errorMag<errorMinimum){
+			console.log("converge");
+			break;
+		}
+		errorPrev = errorMag;
+		// dy => jacobian
+		for(k=0;k<h.rows();++k){
+			he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
+			result = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, he.toArray()).result;
+			var delY = Matrix.sub(result,currentResult);
+			jacobian.setColFromCol(k, delY,0);
+		}
+		jacobian.scale(1.0/epsilon);
+		// LM dx = f(jacobian,error,lambda)
+		// h += dx
+// dx
+var jt = Matrix.transpose(jacobian);
+var jj = Matrix.mult(jt,jacobian);
+var L = new Matrix(jacobian.cols(),jacobian.cols()).identity();
+L.scale(lambda);
+var ji = Matrix.add(jj,L);
+ji = Matrix.inverse(ji);
+Jinv = Matrix.mult(ji,jt);
+delta = Matrix.mult(Jinv, error);
+// x += dx [?]
+var potentialH = Matrix.add(h,delta); // putative
+//console.log(potentialH.toArray()+" .........");
+errorNext = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, potentialH.toArray()).error.getNorm();
+//console.log("=> "+errorNext);
+		// check
+		if(errorNext<errorPrev){
+			Matrix.add(h, h,delta);
+			lambda /= lambdaScale;
+		}else{
+			lambda *= lambdaScale;
+		}
+//console.log(h.toArray()+"  ");
+	}
+/*
+
+*/
+
+
+// k1 = 0.75;
+// k2 = -0.0;
+// k3 = -0.0;
+// k1=-1.1517657531332417;
+// k2=-0.48703981309609307;
+// k3=-0.36694145859461313
+console.log("        => "+h.toArray());
+k1 = h.get(0,0);
+k2 = h.get(1,0);
+k3 = h.get(2,0);
+	var recArr = Code.newArrayZeros(wid*hei);
+	index = 0;
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i,++index){
+			v = this.pointFromDistortion(wid,hei,maxDim, i,j, xc,yc, k1,k2,k3);
+			X = Math.round(v.x);
+			Y = Math.round(v.y);
+			if(0<=X && X<wid  && 0<=Y && Y<hei){
+				ind = Y*wid + X;
+				recArr[index] = disArr[ind]; // INTERPOLATE
+			}else{
+				recArr[index] = 0xFF000000;
+			}
+		}
+	}
+
+	img = this._stage.getARGBAsImage(recArr, wid,hei);
+	img.setAttribute("style","z-index:9999999; position:relative; top:0; left:0; padding:0; margin:0; border:0;");
+	document.body.appendChild(img);
+
+	//d = new DOImage(img);
+	//console.log(arr)
+	// 
+	// d.graphics().fill();
+	// d.graphics().setFill(0xFF00FFCC);
+	// this._root.addChild(d);
+	//
+}
+Manual3DR.prototype.cameraResultsFromSet = function(fr,to, wid,hei,sca, xc,yc, params){//k1,k2,k3,p1,p2){
+	var k1 = params[0];
+	var k2 = params[1];
+	var k3 = params[2];
+	var p1 = 0.0;
+	var p2 = 0.0;
+	var u, v, w, dist;
+	var error = new Matrix(fr.length*2,1);
+	var result = new Matrix(fr.length*2,1);
+	for(j=0;j<fr.length;++j){
+		v = fr[j];
+		u = to[j];
+		w = this.pointFromDistortion(wid,hei,sca, u.x,u.y, xc,yc, k1,k2,k3,p1,p2);
+		// error.set(j*2+0,0, (w.x-w.x) );
+		// error.set(j*2+1,0, (w.y-w.y) );
+		error.set(j*2+0,0, (v.x-w.x) );
+		error.set(j*2+1,0, (v.y-w.y) );
+		//error.set(j*2+0,0, Math.pow(w.x-v.x,2) );
+		//error.set(j*2+1,0, Math.pow(w.y-v.y,2) );
+		result.set(j*2+0,0, w.x);
+		result.set(j*2+1,0, w.y);
+	}
+	return {"error":error,"result":result};
+}
+Manual3DR.prototype.pointFromDistortion = function(wid,hei,sca, x,y, xc,yc, k1,k2,k3,p1,p2){
+	p1 = p1!==undefined?p1:0.0;
+	p2 = p2!==undefined?p2:0.0;
+	x = (x-wid/2)/sca;
+	y = (y-hei/2)/sca;
+	var xP = x + xc*0.5;
+	var yP = y + yc*0.5;
+	var x2 = xP*xP;
+	var y2 = yP*yP;
+	var r2 = xP*xP + yP*yP;
+	var r4 = r2*r2;
+	var r6 = r4*r2;
+	//var r = Math.sqrt(r2);
+	 var X = x/(1.0 + k1*r2 + k2*r4 + k3*r6);
+	 var Y = y/(1.0 + k1*r2 + k2*r4 + k3*r6);
+	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*x2);
+	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*y2);
+	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) ;// + 2*p1*x*y + p2*(r2 + 2*x2);
+	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) ;// + 2*p1*x*y + p2*(r2 + 2*y2);
+	X = wid/2 - (X*sca);
+	Y = hei/2 - (Y*sca);
+	return new V3D(X,Y);
 }
 Manual3DR.prototype.getVertexShaders1 = function(){
 	return ["\
@@ -135,8 +398,10 @@ Manual3DR.prototype.onMouseWheelFxn3D = function(e){
 	//
 }
 Manual3DR.prototype.onMouseClickFxn3D = function(e){
+return;
 	var wid = 512;//texture.image.width;
 	var hei = 512;//texture.image.height;
+	var size = 4 * wid * hei;
 
 	var gl = this._canvas3D.context();
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
@@ -144,56 +409,108 @@ Manual3DR.prototype.onMouseClickFxn3D = function(e){
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+//
+	// CREATE TEXTURE TO HOLD RESULT
+	var dataArray = Code.newArrayZeros(size); // 0 rgba array
+var i;
+for(i=0;i<size;++i){
+	dataArray[i] = Math.floor(Math.random()*256.0);
+}
+	var dataTypedArray = new Uint8Array(dataArray);
+	var dataType = gl.RGBA;
 	var texture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, texture);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, wid, hei, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+	gl.texImage2D(gl.TEXTURE_2D, 0, dataType, wid, hei, 0, dataType, gl.UNSIGNED_BYTE, dataTypedArray);
+	//gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, wid, hei, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+	console.log(texture);
 
+	// CREATE RENDER BUFFER
+	console.log(gl)
+	var renderBuffer = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, renderBuffer);
+	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, frameBuffer, wid, hei);
+
+	// CREATE FRAME BUFFER TO HOLD CURRENT SCENE
 	var frameBuffer = gl.createFramebuffer();
 	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-	frameBuffer.width = wid;
-	frameBuffer.height = hei;
-	// var renderBuffer = gl.createRenderBuffer();
-	// gl.bindRenderBuffer(gl.RENDERBUFFER, renderBuffer);
-	// gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, frameBuffer, wid, hei);
 	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
- //    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderBuffer);
 
-	var size = 4 * wid * hei;
+ 	// RENDER
+ 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderBuffer);
+
+
+
+console.log("RENDER HERE");
+gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+this.render3DScene();
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+	// COPY OUT FRAME BUFFER INTO DATA CONTAINER
 	var data = new Uint8Array(size);
 	gl.readPixels(0,0, wid,hei, gl.RGBA, gl.UNSIGNED_BYTE, data);
-
 	// gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	gl.deleteFramebuffer(frameBuffer);
 
+gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+//gl.deleteFramebuffer(renderBuffer);
 
+gl.bindTexture(gl.TEXTURE_2D, null);
+//gl.deleteTexture(texture);
+
+// capturing a different rect than I think I am
 	
-    var canvas = document.createElement('canvas');
-    canvas.width = wid;
-    canvas.height = hei;
-    var context = canvas.getContext('2d');
+	var i, j, index, inde2, temp, wo2=Math.floor(wid/2), ho2=Math.floor(hei/2);
+	// // flip horizontal
+	// for(j=0;j<hei;++j){
+	// 	for(i=0;i<wo2;++i){
+	// 		index = j*wid + i;
+	// 		inde2 = j*wid + wid-1 - i;
+	// 		temp = data[index]; 
+	// 		data[index] = data[inde2];
+	// 		data[inde2] = temp;
+	// 	}
+	// }
+	// flip vertical
+	for(j=0;j<ho2;++j){
+		for(i=0;i<wid;++i){
+			index = j*wid*4 + i*4;
+			inde2 = (hei-1-j)*wid*4 + i*4;
+			// R
+			temp = data[index]; 
+			data[index] = data[inde2];
+			data[inde2] = temp;
+			// G
+			temp = data[index+1]; 
+			data[index+1] = data[inde2+1];
+			data[inde2+1] = temp;
+			// B
+			temp = data[index+2]; 
+			data[index+2] = data[inde2+2];
+			data[inde2+2] = temp;
+			// A
+			temp = data[index+3]; 
+			data[index+3] = data[inde2+3];
+			data[inde2+3] = temp;
+		}
+	}
+	// 
+	// var context = this._canvas.context();
+	// var imageData = context.createImageData(wid,hei);
+ //    imageData.data.set(data);
+ //    context.putImageData(imageData, 0, 0);
 
-    var imageData = context.createImageData(wid, hei);
-    imageData.data.set(data);
-    context.putImageData(imageData, 0, 0);
-
-    var img = new Image();
-    img.src = canvas.toDataURL();
-    img.style = "z-index:999; position:absolute; top:50; left:0;";
-    document.body.appendChild(img);
-
-/*
-	var context = this._canvas.context();
-	var imageData = context.createImageData(wid,hei);
-    imageData.data.set(data);
-    context.putImageData(imageData, 0, 0);
-
-	var argb = data;
+ 	// convert to usable array
+	var argb = new Array();
+	for(index=0;index<size;++index){
+		argb[index] = Code.getColARGB(data[index*4+3],data[index*4+0],data[index*4+1],data[index*4+2]);
+	}
+	// convert to image
 	var img = this._stage.getARGBAsImage(argb, wid,hei);
-	console.log(img);
-	img.style = "z-index:999; position:absolute; top:50; left:0;";
 	document.body.appendChild(img);
-*/
+	//img.style = "z-index:9999999; position:absolute; top:0; left:0; padding:0; margin:0; border:0;";
+	img.setAttribute("style","z-index:9999999; position:absolute; top:0; left:0; padding:0; margin:0; border:0;");
+
 	console.log("OUT");
 
 //this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
