@@ -814,7 +814,7 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 var fxn = this.lmMinProjectionFxn;
 var args = [ points0.norm.normalized[0], points0.norm.normalized[1] ];
 var xVals = H0.toArray();
-var yVals = new Array(); // from and to points
+var yVals = Code.newArrayZeros(args[0].length*4); // from and to points
 console.log("A: "+xVals.toString());
 Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
 // Matrix.lmMinimize = function(fxn, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance){ 
@@ -928,48 +928,44 @@ console.log("B: "+xVals.toString());
 
 */
 }
-Manual3DR.prototype.lmMinProjectionFxn = function(args, xMatrix,yMatrix,errorMatrix){ // x:nx1, y:1xm, e:1xm
-	var ptsFrom = args[0];
+Manual3DR.prototype.lmMinProjectionFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1xm, e:1xm
+	var ptsFr = args[0];
 	var ptsTo = args[1];
-	var Hinv, H = new Matrix(3,3);
-	var i, len = 9;
-	// initialize
-	for(i=0;i<len;++i){
+	var unknowns = 9;
+	var fr, to, frB=new V3D(), toB=new V3D();
+	var Hinv = new Matrix(3,3), H = new Matrix(3,3);
+	var i, len = ptsFr.length;
+	var rows = 2*2*len;
+	// convert unknown list to matrix
+	for(i=0;i<unknowns;++i){
 		H.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
 	}
 	Hinv = Matrix.inverse(H);
-	// find / set y
- // from and to points - x and y
-	yMatrix.setFromArray( Code.newArrayZeros(1) );
-	// set error
-	if(errorMatrix){
-		yMatrix.setFromArray( Code.newArrayZeros(1) );
-	}
-
-/*	
-	var dataLength = pointsA.length*2*2;
-	var error = new Matrix(dataLength,1);
-	var i, a, b, a2 = new V3D(), b2 = new V3D();
-	for(i=0;i<pointsA.length;++i){
-		a = pointsA[i];
-		b = pointsB[i];
-		b2 = H.multV3DtoV3D(b2, a);
-		a2 = Hinv.multV3DtoV3D(a2, b);
-		a2.homo();
-		b2.homo();
-		error.set(i*4+0, 0, a2.x-a.x);
-		error.set(i*4+1, 0, a2.y-a.y);
-		error.set(i*4+2, 0, b2.x-b.x);
-		error.set(i*4+3, 0, b2.y-b.y);
-error.set(i*4+0, 0, Math.pow(a2.x-a.x,2) );
-error.set(i*4+1, 0, Math.pow(a2.y-a.y,2) );
-error.set(i*4+2, 0, Math.pow(b2.x-b.x,2) );
-error.set(i*4+3, 0, Math.pow(b2.y-b.y,2) );
-	}
-	return {errors:error};
-*/
-
-
+	// find forward / reverse transforms
+ 	for(i=0;i<len;++i){
+		fr = ptsFr[i];
+		to = ptsTo[i];
+		H.multV3DtoV3D(toB,fr);
+		Hinv.multV3DtoV3D(frB,to);
+		frB.homo();
+		toB.homo();
+ 		if(yMatrix){
+ 			yMatrix.set(i*4+0,0, frB.x);
+ 			yMatrix.set(i*4+1,0, frB.y);
+ 			yMatrix.set(i*4+2,0, toB.x);
+ 			yMatrix.set(i*4+3,0, toB.y);
+ 		}
+ 		if(eMatrix){
+ 			eMatrix.set(i*4+0,0, Math.pow(frB.x-fr.x,2) );
+ 			eMatrix.set(i*4+1,0, Math.pow(frB.y-fr.y,2) );
+ 			eMatrix.set(i*4+2,0, Math.pow(toB.x-to.x,2) );
+ 			eMatrix.set(i*4+3,0, Math.pow(toB.y-to.y,2) );
+ 		}
+ 	}
+ 	if(eMatrix){
+ 		//console.log(eMatrix.toString())
+ 		//console.log(eMatrix.getNorm()+"")
+ 	}
 }
 // var v01 = Manual3DR.vRowFromCols(h_0_0,h_0_1,h_0_2, h_1_0,h_1_1,h_1_2);
 Manual3DR.vRowFromCols = function(hi0,hi1,hi2, hj0,hj1,hj2){

@@ -1415,10 +1415,11 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var i, j;
 	var x = new Matrix(n,1).setFromArray(xInitial);
 	var xTemp = new Matrix(n,1);
-	var y = new Matrix(1,m);
-	var yTemp = new Matrix(1,m);
-	var dy = new Matrix(1,m);
-	var error = new Matrix(1,m);
+	var dx = new Matrix(n,1);
+	var y = new Matrix(m,1);
+	var yTemp = new Matrix(m,1);
+	var dy = new Matrix(m,1);
+	var error = new Matrix(m,1);
 	var jacobian = new Matrix(m,n); 
 	var L = new Matrix(n,n);
 	var prevError = -1, nextError, currError;
@@ -1437,9 +1438,9 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		prevError = currError;
 		// f(x+dx) - y = dy => jacobian
 		for(j=0;j<n;++j){
-			xTemp.copy(x); xTemp.set(j,0, xTemp.get(k,0)+epsilon );
-			fxn(args, x,yTemp,null);
-			Matrix.sub(dy,tempY,y); // negative dy
+			xTemp.copy(x); xTemp.set(j,0, xTemp.get(j,0)+epsilon );
+			fxn(args, xTemp,yTemp,null);
+			Matrix.sub(dy,yTemp,y); // negative dy
 			jacobian.setColFromCol(j, dy,0);
 		}
 		jacobian.scale(1.0/epsilon);
@@ -1450,20 +1451,22 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		var ji = Matrix.add(jj,L);
 		ji = Matrix.inverse(ji);
 		var Jinv = Matrix.mult(ji,jt);
-		delta = Matrix.mult(Jinv, error);
+		dx = Matrix.mult(Jinv, error);
 		// check x tolernce
+// console.log(Jinv.toString())
+// console.log(dx.getNorm())
 		if(dx.getNorm()<xTolerance){
 			console.log("converge x");
 			break;
 		}
 		// x += dx  (putative)
-		Matrix.add(xTemp, x,delta);
+		Matrix.add(xTemp, x,dx);
 		// possible new y
 		fxn(args, xTemp,yTemp,error);
 		errorNext = error.getNorm();
-		if(errorNext<errorPrev){
-			Matrix.copy(x, xTemp);
-			Matrix.copy(y, yTemp);
+		if(errorNext<prevError){
+			x.copy(xTemp);
+			y.copy(yTemp);
 			currError = nextError;
 			lambda *= lambdaScale;
 		}else{
