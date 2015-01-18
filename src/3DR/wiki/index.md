@@ -1020,6 +1020,7 @@ s = -b12&middot;fx<sup>2</sup>&middot;fy / &lambda;
 <br/>
 u0 = s&middot;v0/fx - b13&middot;fx<sup>2</sup>/&lambda;
 <br/>
+(Extrinsic Matrix calculations if care)
 
 
 
@@ -1031,22 +1032,14 @@ each point-set defines 1/8 points for an H matrix
 *) get 9 points on plane
 *) calculate homography:
 	H = R3D.projectiveDLT(pointsFr,pointsTo)
+	* use nonlinear to refine H starting point
 *) decompose the H from each of the images to hi1,hi2,hi3
 *) construct the lines of the V matrix from h's
-   [v12]
-   [v11-v22]
-   [v13]
-   [v11-v33]
-   [v23]
-   [v22-v33]
 *) SVD V*b=0
-*) use b values to compute K properties
-*) construct K from (6) properties
+*) use b values to compute K (6) properties
 
 
 [Camera Calibration - Zhang](http://research.microsoft.com/en-us/um/people/zhang/papers/zhangpami-02-calib.pdf)
-
-
 
 
 

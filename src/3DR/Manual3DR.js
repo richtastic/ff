@@ -17,7 +17,7 @@ function Manual3DR(){
   	this._stage3D.setBackgroundColor(0x00000000);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
-//	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
+this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
 	// this._stage3D.start();
 	this._spherePointBegin = null;
 	this._spherePointEnd = null;
@@ -37,10 +37,10 @@ function Manual3DR(){
 //	imageLoader = new ImageLoader("./images/",imageList, this,this.handleCalibrationImagesLoaded,null);
 //	imageLoader.load();
 	// import image to work with
-	// imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
-	// imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
-	// imageLoader.load();
-	this.distortionStuff();
+	imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
+	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
+	imageLoader.load();
+//this.distortionStuff();
 }
 Manual3DR.prototype.distortionStuff = function(){
 	var d, i, j, k, x, y, img, arr, index, X, Y, u, v, w;
@@ -105,10 +105,10 @@ Manual3DR.prototype.distortionStuff = function(){
 	var maxDim = Math.max(wid,hei);
 	var k0, k1, k2, k3, p1, p2, p3, x2, y2;
 	var r2, r4, r6, xc, yc, xP, yP;
-xc = -0.20;
-yc = 0.10;
+xc = 0.20;
+yc = 0.30;
 k0 = 1.0;
-k1 = -1.0;
+k1 = 1.0;
 k2 = 0.0;
 k3 = 0.0;
 p1 = 0.0;
@@ -163,7 +163,18 @@ var col = new V3D();
 	document.body.appendChild(img);
 
 	// recovery
-	var iterations, iterationsMax = 30;
+
+// TODO: LINEAR STEP TO FIRST APPROXIMATE X VALUES
+xc = 0.0;
+yc = 0.0;
+k0 = 1.0;
+k1 = 0.0;
+k2 = 0.0;
+k3 = 0.0;
+p1 = 0.0;
+p2 = 0.0;
+
+	var iterations, iterationsMax = 20;
 	var error, errorPrev, errorNext, errorMag, delta, dist, result, currentResult, errorMinimum;
 	var jacobian, Jinv, epsilon = 1E-8, err = 0, prevErr = 0;
 	errorMinimum = 1E-10;
@@ -174,15 +185,7 @@ var he = new Matrix(unknowns,1); //
 var jacobian = new Matrix(pts.length,unknowns); // k1,k2,k3
 var lambda = 1E10;
 var lambdaScale = 10.0;
-xc = 0.0;
-yc = 0.0;
-k0 = 1.0;
-k1 = 0.0;
-k2 = 0.0;
-k3 = 0.0;
-p1 = 0.0;
-p2 = 0.0;
-h.setFromArray([k0,k1,k2,k3,p1,p2]);
+h.setFromArray([xc,yc,k0,k1,k2,k3,p1,p2]);
 	for(i=0;i<iterationsMax;++i){
 		// y
 		currentResult = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, h.toArray()).result;
@@ -234,19 +237,15 @@ errorNext = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, potentialH.toArra
 */
 
 
-// k1 = 0.75;
-// k2 = -0.0;
-// k3 = -0.0;
-// k1=-1.1517657531332417;
-// k2=-0.48703981309609307;
-// k3=-0.36694145859461313
 console.log("        => "+h.toArray());
-k0 = h.get(0,0);
-k1 = h.get(1,0);
-k2 = h.get(2,0);
-k3 = h.get(3,0);
-p1 = h.get(4,0);
-p2 = h.get(5,0);
+xc = h.get(0,0);
+yc = h.get(1,0);
+k0 = h.get(2,0);
+k1 = h.get(3,0);
+k2 = h.get(4,0);
+k3 = h.get(5,0);
+p1 = h.get(6,0);
+p2 = h.get(7,0);
 	var recArr = Code.newArrayZeros(wid*hei);
 matA.setFromArrayARGB(disArr);
 	index = 0;
@@ -288,6 +287,8 @@ Manual3DR.prototype.cameraResultsFromSet = function(fr,to, wid,hei,sca, params){
 	var k3 = params[5];
 	var p1 = params.length>4?params[6] : 0.0;
 	var p2 = params.length>5?params[7] : 0.0;
+// xc = 0;
+// yc = 0;
 	var u, v, w, dist;
 	var error = new Matrix(fr.length*2,1);
 	var result = new Matrix(fr.length*2,1);
@@ -319,10 +320,10 @@ Manual3DR.prototype.pointFromDistortion = function(wid,hei,sca, x,y, xc,yc, k0,k
 	var r4 = r2*r2;
 	var r6 = r4*r2;
 	//var r = Math.sqrt(r2);
-	 var X = x/(1.0 + k1*r2 + k2*r4 + k3*r6);// + 2*p1*x*y + p2*(r2 + 2*x2);
-	 var Y = y/(1.0 + k1*r2 + k2*r4 + k3*r6);// + 2*p1*x*y + p2*(r2 + 2*y2);
-	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*x2);
-	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*y2);
+	 // var X = x/(1.0 + k1*r2 + k2*r4 + k3*r6);// + 2*p1*x*y + p2*(r2 + 2*x2);
+	 // var Y = y/(1.0 + k1*r2 + k2*r4 + k3*r6);// + 2*p1*x*y + p2*(r2 + 2*y2);
+	var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6);
+	var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6);
 	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*x2);
 	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*y2);
 	X = wid/2 - (X*sca);
@@ -807,6 +808,18 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 	H0 = R3D.projectiveDLT(points0.norm.normalized[0],points0.norm.normalized[1]);
 	H1 = R3D.projectiveDLT(points1.norm.normalized[0],points1.norm.normalized[1]);
 	H2 = R3D.projectiveDLT(points2.norm.normalized[0],points2.norm.normalized[1]);
+//=> Levenberg Marquardt nonlinear minimization goes here
+
+//var x = new Matrix().fromArray(H0.toArray());
+var fxn = this.lmMinProjectionFxn;
+var args = [ points0.norm.normalized[0], points0.norm.normalized[1] ];
+var xVals = H0.toArray();
+var yVals = new Array(); // from and to points
+console.log("A: "+xVals.toString());
+Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+// Matrix.lmMinimize = function(fxn, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance){ 
+console.log("B: "+xVals.toString());
+
 	// unnormalize:
 	var H, forward, reverse;
 	// 0
@@ -831,64 +844,62 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 	H = Matrix.mult(reverse,H);
 	H2 = H;
 
-	// H0 = R3D.projectiveDLT(points0.pos2D,points0.pos3D);
-	// H1 = R3D.projectiveDLT(points1.pos2D,points1.pos3D);
-	// H2 = R3D.projectiveDLT(points2.pos2D,points2.pos3D);
-	// console.log(H0.toString());
-	// console.log(H1.toString());
-	// console.log(H2.toString());
-	// decompose cols of Hi
-	var h_0_0 = H0.getCol(0);
-	var h_0_1 = H0.getCol(1);
-	var h_0_2 = H0.getCol(2);
-	var h_1_0 = H1.getCol(0);
-	var h_1_1 = H1.getCol(1);
-	var h_1_2 = H1.getCol(2);
-	var h_2_0 = H2.getCol(0);
-	var h_2_1 = H2.getCol(1);
-	var h_2_2 = H2.getCol(2);
-	//console.log(h_1_1.toString());
-	// get rows of V
-	var v01 = Manual3DR.vRowFromCols(h_0_0,h_0_1,h_0_2, h_1_0,h_1_1,h_1_2);
-	var v02 = Manual3DR.vRowFromCols(h_0_0,h_0_1,h_0_2, h_2_0,h_2_1,h_2_2);
-	var v12 = Manual3DR.vRowFromCols(h_1_0,h_1_1,h_1_2, h_2_0,h_2_1,h_2_2);
-		var v00 = Manual3DR.vRowFromCols(h_0_0,h_0_1,h_0_2, h_0_0,h_0_1,h_0_2);
-		var v11 = Manual3DR.vRowFromCols(h_1_0,h_1_1,h_1_2, h_1_0,h_1_1,h_1_2);
-		var v22 = Manual3DR.vRowFromCols(h_2_0,h_2_1,h_2_2, h_2_0,h_2_1,h_2_2);
-	var v00_v11 = Matrix.sub(v00,v11);
-	var v00_v22 = Matrix.sub(v00,v22);
-	var v11_v22 = Matrix.sub(v11,v22);
-	// console.log("v01");
-	// console.log(v01.toString());
-	// construct V matrix
-	var vArr = [v01.toArray(),v00_v11.toArray(),
-				v02.toArray(),v00_v22.toArray(),
-				v12.toArray(),v11_v22.toArray()];
-	var V = new Matrix(6,6).setFromArrayMatrix(vArr);
+	// arbitrary scale last element
+	H0.scale(1.0/H0.get(2,2));
+	H1.scale(1.0/H1.get(2,2));
+	H2.scale(1.0/H2.get(2,2));
+
+	var listH = [H0,H1,H2];
+	var hCount = listH.length;
+	// CONSTRUCT V:
+	var V = new Matrix(2*hCount,6);//.setFromArrayMatrix(vArr);
+	var h00, h01, h10, h11, h20, h21;
+	for(i=0;i<hCount;++i){ // row,col: 0i*0j, 0i*1j + 1i*0j, 1i*1j, 2i*0j + 0i*2j, 2i*1j + 1i*2j, 2i*2j
+		H = listH[i];
+		h00 = H.get(0,0); // 0
+		h01 = H.get(0,1); // 1
+		h10 = H.get(1,0); // 3
+		h11 = H.get(1,1); // 4
+		h20 = H.get(2,0); // 6
+		h21 = H.get(2,1); // 7
+		// v01
+		V.set(i*2+0,0, h00*h01 );
+		V.set(i*2+0,1, h00*h11 + h10*h01 );
+		V.set(i*2+0,2, h10*h11 );
+		V.set(i*2+0,3, h20*h01 + h00*h21 );
+		V.set(i*2+0,4, h20*h11 + h10*h21 );
+		V.set(i*2+0,5, h20*h21 );
+		// v00 - v11
+		V.set(i*2+1,0, h00*h00 - h01*h01 );
+		V.set(i*2+1,1, 2.0*(h00*h10 - h01*h11) );
+		V.set(i*2+1,2, h10*h10 - h11*h11 );
+		V.set(i*2+1,3, 2.0*(h20*h00 - h21*h01) );
+ 		V.set(i*2+1,4, 2.0*(h20*h10 - h21*h11) );
+ 		V.set(i*2+1,5, h20*h20 - h21*h21 );
+// normalize row ? 
+	}
+	//console.log("V.toString()");
 	//console.log(V.toString());
 	// SVD: V * b = 0
 	var svd = Matrix.SVD(V);
-	//console.log(svd)
-	// console.log(svd.V)
-	// console.log(svd.V.toString())
 	var coeff = svd.V.colToArray(5);
 	//console.log(coeff)
-	var b00 = coeff[0]; // -
+	var b00 = coeff[0];
 	var b01 = coeff[1];
 	var b11 = coeff[2];
 	var b02 = coeff[3];
-	var b12 = coeff[4]; // -
-	var b22 = coeff[5]; // -
-	console.log(coeff)
-	// compute K properties
-		var num1 = (b01*b02) - (b00*b12);
-		var den1 = (b00*b11) - (b01*b01);
+	var b12 = coeff[4];
+	var b22 = coeff[5];
+	// compute K properties - requirements: den1!=0, b00!=0, fy>0
+		var num1 = b01*b02 - b00*b12;
+		var den1 = b00*b11 - b01*b01;
 	var v0 = num1/den1;
 	var lambda = b22 - ((b02*b02 + v0*num1)/b00);
-	var fx = Math.sqrt(Math.abs( lambda/b00 ));
-	var fy = Math.sqrt(Math.abs( (lambda*b00)/den1 ));
+	var fx = Math.sqrt( Math.abs( lambda/b00 ) ); // Math.abs(
+	var fy = Math.sqrt( Math.abs( (lambda*b00)/den1 ) ); // Math.abs(
 	var s = -b01*fx*fx*fy/lambda;
 	var u0 = ((s*v0)/fx) - ((b02*fx*fx)/lambda);
+	//console.log(lambda,b00,den1,fx,fy)
 	// construct K
 	var K = new Matrix(3,3).setFromArray([fx,s,u0, 0,fy,v0, 0,0,1]);
 	console.log("K: ");
@@ -901,7 +912,66 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 	console.log("estimated example: ");
 	console.log( (new Matrix(3,3).setFromArray([200,0,100, 0,300,150, 0,0,1])).toString() );
 	console.log("..........................................");
+/*
+* normalize image points: x,y in [-1,1] based on image width/height, image center is origin
+* find homography between model points and image points
+	* use DLT for initial points
+	* use LM for refinement
+	* scale homography to last element = 1
+* find B
+	* find V
+	* SVD V*b=0
+	* B = [b]
+* find K
+	* from B coefficients
+	* correct K (if need to undo point normalization)
+
+*/
 }
+Manual3DR.prototype.lmMinProjectionFxn = function(args, xMatrix,yMatrix,errorMatrix){ // x:nx1, y:1xm, e:1xm
+	var ptsFrom = args[0];
+	var ptsTo = args[1];
+	var Hinv, H = new Matrix(3,3);
+	var i, len = 9;
+	// initialize
+	for(i=0;i<len;++i){
+		H.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
+	}
+	Hinv = Matrix.inverse(H);
+	// find / set y
+ // from and to points - x and y
+	yMatrix.setFromArray( Code.newArrayZeros(1) );
+	// set error
+	if(errorMatrix){
+		yMatrix.setFromArray( Code.newArrayZeros(1) );
+	}
+
+/*	
+	var dataLength = pointsA.length*2*2;
+	var error = new Matrix(dataLength,1);
+	var i, a, b, a2 = new V3D(), b2 = new V3D();
+	for(i=0;i<pointsA.length;++i){
+		a = pointsA[i];
+		b = pointsB[i];
+		b2 = H.multV3DtoV3D(b2, a);
+		a2 = Hinv.multV3DtoV3D(a2, b);
+		a2.homo();
+		b2.homo();
+		error.set(i*4+0, 0, a2.x-a.x);
+		error.set(i*4+1, 0, a2.y-a.y);
+		error.set(i*4+2, 0, b2.x-b.x);
+		error.set(i*4+3, 0, b2.y-b.y);
+error.set(i*4+0, 0, Math.pow(a2.x-a.x,2) );
+error.set(i*4+1, 0, Math.pow(a2.y-a.y,2) );
+error.set(i*4+2, 0, Math.pow(b2.x-b.x,2) );
+error.set(i*4+3, 0, Math.pow(b2.y-b.y,2) );
+	}
+	return {errors:error};
+*/
+
+
+}
+// var v01 = Manual3DR.vRowFromCols(h_0_0,h_0_1,h_0_2, h_1_0,h_1_1,h_1_2);
 Manual3DR.vRowFromCols = function(hi0,hi1,hi2, hj0,hj1,hj2){
 	var arr = [];
 	arr.push( Matrix.dot(hi0,hj0) );
@@ -1115,7 +1185,7 @@ M2 = M2.copy().appendRowFromArray([0,0,0,1]);
 		if(p1Norm.z>0 && p2Norm.z>0){
 			console.log(".......................>>XXX");
 			projection = M2;
-			//break;
+			break;
 		}
 	}
 	if(projection){

@@ -1396,6 +1396,106 @@ Matrix.matrixArrayToString = function(A, m,n){
 	return str;
 }
 
+
+Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance){ // levenberg marquardt nonlinear minimization - reference: lmdif
+	// fxn = function to evaluate y && error from a given x
+	// m = number of functions
+	// n = number of (unknowns) variables (n<=m)
+	// x = initial estimate of n variables
+	// fvec = fxn(x) at return (length=m)
+	// fTolerance = halt if sum-of-squared-errors is less than this
+	// xTolerance = halt if relative difference in consecutive solutions is less than this
+	// gTol = ...
+	// maxIterations = halt if loop is greater or equal to this
+	// diag is scaling array length = m
+	// 	
+	maxIterations = maxIterations!==undefined?maxIterations:30;
+	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
+	xTolerance = xTolerance!==undefined?xTolerance:1E-10;
+	var i, j;
+	var x = new Matrix(n,1).setFromArray(xInitial);
+	var xTemp = new Matrix(n,1);
+	var y = new Matrix(1,m);
+	var yTemp = new Matrix(1,m);
+	var dy = new Matrix(1,m);
+	var error = new Matrix(1,m);
+	var jacobian = new Matrix(m,n); 
+	var L = new Matrix(n,n);
+	var prevError = -1, nextError, currError;
+	var epsilon = 1E-8; // should be on scale of ~min(x)/1E-6
+	var lambda = 0.1;
+	var lambdaScale = 10.0;
+	// initial
+	fxn(args, x,y,error);
+	currError = error.getNorm();
+	for(i=0;i<maxIterations; ++i){
+		// check function error
+		if(currError<fTolerance){
+			console.log("converge f");
+			break;
+		}
+		prevError = currError;
+		// f(x+dx) - y = dy => jacobian
+		for(j=0;j<n;++j){
+			xTemp.copy(x); xTemp.set(j,0, xTemp.get(k,0)+epsilon );
+			fxn(args, x,yTemp,null);
+			Matrix.sub(dy,tempY,y); // negative dy
+			jacobian.setColFromCol(j, dy,0);
+		}
+		jacobian.scale(1.0/epsilon);
+		// dx
+		var jt = Matrix.transpose(jacobian);
+		var jj = Matrix.mult(jt,jacobian);
+		L.identity(); L.scale(lambda);
+		var ji = Matrix.add(jj,L);
+		ji = Matrix.inverse(ji);
+		var Jinv = Matrix.mult(ji,jt);
+		delta = Matrix.mult(Jinv, error);
+		// check x tolernce
+		if(dx.getNorm()<xTolerance){
+			console.log("converge x");
+			break;
+		}
+		// x += dx  (putative)
+		Matrix.add(xTemp, x,delta);
+		// possible new y
+		fxn(args, xTemp,yTemp,error);
+		errorNext = error.getNorm();
+		if(errorNext<errorPrev){
+			Matrix.copy(x, xTemp);
+			Matrix.copy(y, yTemp);
+			currError = nextError;
+			lambda *= lambdaScale;
+		}else{
+			lambda /= lambdaScale;
+		}
+	}
+	x.toArray(xInitial);
+	y.toArray(yFinal);
+}
+
+       /*
+       SUBROUTINE LMDIF(FCN,M,N,X,FVEC,FTOL,XTOL,GTOL,MAXFEV,EPSFCN, DIAG,MODE,FACTOR,NPRINT,INFO,NFEV,FJAC,LDFJAC, IPVT,QTF,WA1,WA2,WA3,WA4)
+       INTEGER M,N,MAXFEV,MODE,NPRINT,INFO,NFEV,LDFJAC
+       INTEGER IPVT(N)
+       DOUBLE PRECISION FTOL,XTOL,GTOL,EPSFCN,FACTOR
+       DOUBLE PRECISION X(N),FVEC(M),DIAG(N),FJAC(LDFJAC,N),QTF(N),
+      *                 WA1(N),WA2(N),WA3(N),WA4(M)
+       EXTERNAL FCN
+
+       SUBROUTINE FCN(M,N,X,FVEC,IFLAG)
+         INTEGER M,N,IFLAG
+         DOUBLE PRECISION X(N),FVEC(M)
+         ----------
+         CALCULATE THE FUNCTIONS AT X AND
+         RETURN THIS VECTOR IN FVEC.
+         ----------
+         RETURN
+         END
+*/
+
+
+
 /*
 exp = exp===undefined?4:exp;
 	var minLen = exp+6+1; // -#.E+#

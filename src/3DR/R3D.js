@@ -575,7 +575,7 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 	var rows = len*3;
 	var cols = 9;
 	var A = new Matrix(rows,cols);
-	var B = new Matrix(rows,1); // zeros
+//	var B = new Matrix(rows,1); // zeros
 	for(i=0;i<len;++i){
 		fr = pointsFr[i];
 		to = pointsTo[i];
@@ -600,7 +600,7 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 		A.set(i*3+1,6,  -u.x*v.x);
 		A.set(i*3+1,7,  -u.y*v.x);
 		A.set(i*3+1,8,  -u.z*v.x);
-		//
+		// one row is considered superfluous, unless the data fits a particular edge cases, so it stays
 		A.set(i*3+2,0, -u.x*v.y);
 		A.set(i*3+2,1, -u.y*v.y);
 		A.set(i*3+2,2, -u.z*v.y);
@@ -613,19 +613,9 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 	}
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(8);
-	// var a = coeff[0];
-	// var b = coeff[1];
-	// var c = coeff[2];
-	// var d = coeff[3];
-	// var e = coeff[4];
-	// var f = coeff[5];
-	// var g = coeff[6];
-	// var h = coeff[7];
-	// var i = coeff[8];
-	var H = new Matrix(3,3).setFromArray(coeff);//[a,b,c,d,e,f,g,h,i]);
+	var H = new Matrix(3,3).setFromArray(coeff);
 	return H;
 }
-
 R3D.projectiveRANSAC = function(pointsFr,pointsTo){ // 2D point pairs
 	// ...
 	var H = new Matrix(3,3);
