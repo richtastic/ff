@@ -22,9 +22,10 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 	this._width = wid;
 	this._height = hei;
 	if(wid>0 && hei>0){
-		this._r = new Array(wid*hei);
-		this._g = new Array(wid*hei);
-		this._b = new Array(wid*hei);
+		var len = wid*hei;
+		this._r = new Array(len);
+		this._g = new Array(len);
+		this._b = new Array(len);
 		if(r!=undefined){
 			if(g!==undefined && b!==undefined){
 				this.setFromFloats(r,g,b);
@@ -34,6 +35,7 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 		}
 	}
 }
+
 ImageMat.prototype.zeroAll = function(){
 	var i, len = this._width*this._height;
 	for(i=0;i<len;++i){
@@ -66,7 +68,7 @@ ImageMat.prototype.setPoint = function(x,y, val){
 	this._b[index] = val.z;
 }
 ImageMat.prototype.getPoint = function(val, x,y){
-	return this.getPointInterpolateCubic(val,x,y);
+	this.getPointInterpolateCubic(val,x,y);
 }
 ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 points
 	var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
@@ -104,7 +106,7 @@ ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 po
 	if(y<0||y>hei){ minY=0.0;}
 	ImageMat.cubicColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
 }
-ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^3 = 9 points
+ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^2 = 9 points
 	// this maaaaaaaay not be useful
 }
 ImageMat.prototype.getPointInterpolateLinear = function(val, x,y){ // 2^2 = 4 points [BiLinear]

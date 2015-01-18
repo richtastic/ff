@@ -641,6 +641,13 @@ Code.getAlpRGBA = function(col){
 	return col&0xFF;
 }
 // color functions ----------------------------------------------------
+Code.getColARGBFromFloat = function(a,r,g,b){
+	a = Math.min(Math.floor(a*256.0),255);
+	r = Math.min(Math.floor(r*256.0),255);
+	g = Math.min(Math.floor(g*256.0),255);
+	b = Math.min(Math.floor(b*256.0),255);
+	return Code.getColARGB(a,r,g,b);
+}
 Code.getColARGB = function(a,r,g,b){
 	return (a<<24)+(r<<16)+(g<<8)+b;
 }

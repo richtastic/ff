@@ -56,6 +56,12 @@ Manual3DR.prototype.distortionStuff = function(){
 	// create example image to display
 	d = new DO();
 	d.graphics().clear();
+	// BG
+	d.graphics().setFill(0xFFFFFFFF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0,wid,hei);
+	d.graphics().endPath();
+	d.graphics().fill();
 	// vertical stripes
 	for(i=0;i<countVertical;++i){
 		x = wid*(i/(countVertical-1));
@@ -94,20 +100,19 @@ Manual3DR.prototype.distortionStuff = function(){
 	img.setAttribute("style","z-index:9999999; position:relative; top:0; left:0; padding:0; margin:0; border:0;");
 	document.body.appendChild(img);
 	//
-	// do shit
 	var disArr = Code.newArrayZeros(wid*hei);
 	index = 0;
 	var maxDim = Math.max(wid,hei);
-	var k1, k2, k3, p1, p2, p3, x2, y2;
+	var k0, k1, k2, k3, p1, p2, p3, x2, y2;
 	var r2, r4, r6, xc, yc, xP, yP;
-	xc = 0.0;
-	yc = 0.0;
-k1=-1.0;
-k2=0.0;
-k3=0.0;
+xc = -0.20;
+yc = 0.10;
+k0 = 1.0;
+k1 = -1.0;
+k2 = 0.0;
+k3 = 0.0;
 p1 = 0.0;
 p2 = 0.0;
-p3 = 0.0;
 
 var systemPoints = {"original":
 						[new V2D(0,0),
@@ -124,21 +129,27 @@ var systemPoints = {"original":
 	var nxt = systemPoints["distorted"];
 	for(i=0;i<pts.length;++i){
 		v = pts[i];
-		nxt[i] = this.pointFromDistortion(wid,hei,maxDim, v.x,v.y, xc,yc, k1,k2,k3,p1,p2);
+		nxt[i] = this.pointFromDistortion(wid,hei,maxDim, v.x,v.y, xc,yc, k0,k1,k2,k3,p1,p2);
 	}
 
+var matA = new ImageMat(wid,hei);
+matA.setFromArrayARGB(arr);
+var col = new V3D();
 	for(j=0;j<hei;++j){
 		for(i=0;i<wid;++i,++index){
-			v = this.pointFromDistortion(wid,hei,maxDim, i,j, xc,yc, k1,k2,k3,p1,p2);
-			//
-			X = Math.round(v.x);
-			Y = Math.round(v.y);
-			if(0<=X && X<wid  && 0<=Y && Y<hei){
-				ind = Y*wid + X;
-				disArr[index] = arr[ind]; // INTERPOLATE
-			}else{
-				disArr[index] = 0xFF000000;
-			}
+			v = this.pointFromDistortion(wid,hei,maxDim, i,j, xc,yc, k0,k1,k2,k3,p1,p2);
+			// INTERPOLATE
+			matA.getPoint(col, v.x,v.y);
+			disArr[index] = Code.getColARGBFromFloat(1.0,col.x,col.y,col.z);
+			// NEAREST NEIGHBOR
+			// X = Math.round(v.x);
+			// Y = Math.round(v.y);
+			// if(0<=X && X<wid  && 0<=Y && Y<hei){
+			// 	ind = Y*wid + X;
+			// 	disArr[index] = arr[ind];
+			// }else{
+			// 	disArr[index] = 0xFF000000;
+			// }
 		}
 	}
 	// index = Math.round(hei*0.5 + (maxDim/hei)*yc)*wid + Math.round(wid*0.5*(wid/maxDim)*xc);
@@ -157,22 +168,26 @@ var systemPoints = {"original":
 	var jacobian, Jinv, epsilon = 1E-8, err = 0, prevErr = 0;
 	errorMinimum = 1E-10;
 	error = new Matrix();
-var h = new Matrix(3,1); // 
-var he = new Matrix(3,1); // 
-var jacobian = new Matrix(pts.length,3); // k1,k2,k3
+var unknowns = 8;
+var h = new Matrix(unknowns,1); // 
+var he = new Matrix(unknowns,1); // 
+var jacobian = new Matrix(pts.length,unknowns); // k1,k2,k3
 var lambda = 1E10;
 var lambdaScale = 10.0;
+xc = 0.0;
+yc = 0.0;
+k0 = 1.0;
 k1 = 0.0;
 k2 = 0.0;
 k3 = 0.0;
 p1 = 0.0;
 p2 = 0.0;
-h.setFromArray([k1,k2,k3]);
+h.setFromArray([k0,k1,k2,k3,p1,p2]);
 	for(i=0;i<iterationsMax;++i){
 		// y
-		currentResult = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, h.toArray()).result;
+		currentResult = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, h.toArray()).result;
 		// dy = squared error
-		error = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, h.toArray()).error;
+		error = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, h.toArray()).error;
 		//console.log("        ??? "+error.toArray());
 		errorMag = error.getNorm();
 		console.log("ERROR: "+errorMag);
@@ -184,7 +199,7 @@ h.setFromArray([k1,k2,k3]);
 		// dy => jacobian
 		for(k=0;k<h.rows();++k){
 			he.copy(h); he.set(k,0, he.get(k,0)+epsilon );
-			result = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, he.toArray()).result;
+			result = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, he.toArray()).result;
 			var delY = Matrix.sub(result,currentResult);
 			jacobian.setColFromCol(k, delY,0);
 		}
@@ -203,7 +218,7 @@ delta = Matrix.mult(Jinv, error);
 // x += dx [?]
 var potentialH = Matrix.add(h,delta); // putative
 //console.log(potentialH.toArray()+" .........");
-errorNext = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, potentialH.toArray()).error.getNorm();
+errorNext = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, potentialH.toArray()).error.getNorm();
 //console.log("=> "+errorNext);
 		// check
 		if(errorNext<errorPrev){
@@ -226,22 +241,30 @@ errorNext = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, xc,yc, potentialH
 // k2=-0.48703981309609307;
 // k3=-0.36694145859461313
 console.log("        => "+h.toArray());
-k1 = h.get(0,0);
-k2 = h.get(1,0);
-k3 = h.get(2,0);
+k0 = h.get(0,0);
+k1 = h.get(1,0);
+k2 = h.get(2,0);
+k3 = h.get(3,0);
+p1 = h.get(4,0);
+p2 = h.get(5,0);
 	var recArr = Code.newArrayZeros(wid*hei);
+matA.setFromArrayARGB(disArr);
 	index = 0;
 	for(j=0;j<hei;++j){
 		for(i=0;i<wid;++i,++index){
-			v = this.pointFromDistortion(wid,hei,maxDim, i,j, xc,yc, k1,k2,k3);
-			X = Math.round(v.x);
-			Y = Math.round(v.y);
-			if(0<=X && X<wid  && 0<=Y && Y<hei){
-				ind = Y*wid + X;
-				recArr[index] = disArr[ind]; // INTERPOLATE
-			}else{
-				recArr[index] = 0xFF000000;
-			}
+			v = this.pointFromDistortion(wid,hei,maxDim, i,j, xc,yc, k0,k1,k2,k3,p1,p2);
+			// INTERPOLATE
+			matA.getPoint(col, v.x,v.y);
+			recArr[index] = Code.getColARGBFromFloat(1.0,col.x,col.y,col.z);
+			// NEAREST NEIGHBOR
+			// X = Math.round(v.x);
+			// Y = Math.round(v.y);
+			// if(0<=X && X<wid  && 0<=Y && Y<hei){
+			// 	ind = Y*wid + X;
+			// 	recArr[index] = disArr[ind]; // INTERPOLATE
+			// }else{
+			// 	recArr[index] = 0xFF000000;
+			// }
 		}
 	}
 
@@ -252,24 +275,26 @@ k3 = h.get(2,0);
 	//d = new DOImage(img);
 	//console.log(arr)
 	// 
-	// d.graphics().fill();
-	// d.graphics().setFill(0xFF00FFCC);
+	
 	// this._root.addChild(d);
 	//
 }
-Manual3DR.prototype.cameraResultsFromSet = function(fr,to, wid,hei,sca, xc,yc, params){//k1,k2,k3,p1,p2){
-	var k1 = params[0];
-	var k2 = params[1];
-	var k3 = params[2];
-	var p1 = 0.0;
-	var p2 = 0.0;
+Manual3DR.prototype.cameraResultsFromSet = function(fr,to, wid,hei,sca, params){
+	var xc = params[0];
+	var yc = params[1];
+	var k0 = params[2];
+	var k1 = params[3];
+	var k2 = params[4];
+	var k3 = params[5];
+	var p1 = params.length>4?params[6] : 0.0;
+	var p2 = params.length>5?params[7] : 0.0;
 	var u, v, w, dist;
 	var error = new Matrix(fr.length*2,1);
 	var result = new Matrix(fr.length*2,1);
 	for(j=0;j<fr.length;++j){
 		v = fr[j];
 		u = to[j];
-		w = this.pointFromDistortion(wid,hei,sca, u.x,u.y, xc,yc, k1,k2,k3,p1,p2);
+		w = this.pointFromDistortion(wid,hei,sca, u.x,u.y, xc,yc, k0,k1,k2,k3,p1,p2);
 		// error.set(j*2+0,0, (w.x-w.x) );
 		// error.set(j*2+1,0, (w.y-w.y) );
 		error.set(j*2+0,0, (v.x-w.x) );
@@ -281,7 +306,7 @@ Manual3DR.prototype.cameraResultsFromSet = function(fr,to, wid,hei,sca, xc,yc, p
 	}
 	return {"error":error,"result":result};
 }
-Manual3DR.prototype.pointFromDistortion = function(wid,hei,sca, x,y, xc,yc, k1,k2,k3,p1,p2){
+Manual3DR.prototype.pointFromDistortion = function(wid,hei,sca, x,y, xc,yc, k0,k1,k2,k3,p1,p2){
 	p1 = p1!==undefined?p1:0.0;
 	p2 = p2!==undefined?p2:0.0;
 	x = (x-wid/2)/sca;
@@ -294,12 +319,12 @@ Manual3DR.prototype.pointFromDistortion = function(wid,hei,sca, x,y, xc,yc, k1,k
 	var r4 = r2*r2;
 	var r6 = r4*r2;
 	//var r = Math.sqrt(r2);
-	 var X = x/(1.0 + k1*r2 + k2*r4 + k3*r6);
-	 var Y = y/(1.0 + k1*r2 + k2*r4 + k3*r6);
+	 var X = x/(1.0 + k1*r2 + k2*r4 + k3*r6);// + 2*p1*x*y + p2*(r2 + 2*x2);
+	 var Y = y/(1.0 + k1*r2 + k2*r4 + k3*r6);// + 2*p1*x*y + p2*(r2 + 2*y2);
 	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*x2);
 	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*y2);
-	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) ;// + 2*p1*x*y + p2*(r2 + 2*x2);
-	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) ;// + 2*p1*x*y + p2*(r2 + 2*y2);
+	// var X = x*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*x2);
+	// var Y = y*(1.0 + k1*r2 + k2*r4 + k3*r6) + 2*p1*x*y + p2*(r2 + 2*y2);
 	X = wid/2 - (X*sca);
 	Y = hei/2 - (Y*sca);
 	return new V3D(X,Y);

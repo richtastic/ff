@@ -23,6 +23,9 @@ Tangental Distortion recovery
 x<sub>corrected</sub> = x + (2p<sub>1</sub>xy + p<sub>2</sub>(r<sup>2</sup> + 2x<sup>2</sup>))
 y<sub>corrected</sub> = y + (2p<sub>2</sub>xy + p<sub>1</sub>(r<sup>2</sup> + 2y<sup>2</sup>))
 
+ALSO FOUND:
+&delta;<sub>x</sub> = -y&middot;(p<sub>1</sub>r<sup>2</sup> + p<sub>2</sub>r<sup>4</sup> + ...)
+&delta;<sub>y</sub> = +x&middot;(p<sub>1</sub>r<sup>2</sup> + p<sub>2</sub>r<sup>4</sup> + ...)
 
 
 
