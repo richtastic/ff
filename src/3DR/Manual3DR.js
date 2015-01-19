@@ -1280,30 +1280,39 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	console.log(K.toString());
 	var fx = K.get(0,0);
 	var fy = K.get(1,1);
-	var sk = K.get(0,1);
+	var sk = K.get(0,1); // = tan(y-axis-to-x-axis) * fy
 	var cx = K.get(0,2);
 	var cy = K.get(1,2);
-	console.log("params: ",fx,fy,sk,cx,cy)
 	var imageWidth = 400;
 	var imageHeight = 300;
-/*
-- f = 1.0;
-- imgWidth = imageWidth * fx
-- imgHeight = imageHeight * fy
-- imgCenterX = cx  * fx
-- imgCenterY = cy * fy
-*/
+	// 
 	var focalLength = 1.0;
 	var px = focalLength/fx;
 	var py = focalLength/fy;
-// //console.log("px: "+px+"  py: "+py);
+	var imgSizeX = px*imageWidth;
+	var imgSizeY = py*imageHeight;
+	var imgCenX = px*cx;
+	var imgCenY = py*cy;
+	console.log("params: ",fx,fy,sk,cx,cy)
+	console.log("px: "+px+"  py: "+py);
+	console.log("size: "+imgSizeX+" x "+imgSizeY);
+ 	console.log("center: "+imgCenX+","+imgCenY);
 
-// 	var imgSizeX = px*imageWidth;
-// 	var imgSizeY = py*imageWidth;
-// 	var imgCenX = px*cx;
-// 	var imgCenY = py*cy;
-// 	console.log("size: "+imgSizeX+" x "+imgSizeY);
-// 	console.log("center: "+imgCenX+","+imgCenY);
+ 	// calculate physical size
+ 	var camOrigin = new V3D(0,0,0);
+ 	var camCenter = new V3D(0,0,focalLength);
+ 	var camScreenX = new V3D(imgSizeX,0,0);
+ 	var camScreenY = new V3D(0,-imgSizeY,0);
+ 	var camScreenTL = new V3D(-imgCenX,imgCenY,focalLength);
+ 	var camScreenTR = V3D.add(camScreenTL,camScreenX);
+ 	var camScreenBL = V3D.add(camScreenTL,camScreenY);
+ 	var camScreenBR = V3D.add(camScreenTR,camScreenY);
+ 	var imgScreenDistance = 2.2;
+ 	var imgCamRatio = imgScreenDistance/focalLength;
+ 	var imgScreenTL = V3D.scale(camScreenTL,imgCamRatio);
+ 	var imgScreenTR = V3D.scale(camScreenTR,imgCamRatio);
+ 	var imgScreenBL = V3D.scale(camScreenBL,imgCamRatio);
+ 	var imgScreenBR = V3D.scale(camScreenBR,imgCamRatio);
 
 	//...
 	var pointsL = this._renderPointsList;
@@ -1315,12 +1324,6 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 		// do stuff
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
-	//
-	// var i;
-	// for(i=0;i<300;++i){
-	// 	pointsL.push(Math.random()*3.0-1.5,Math.random()*3.0-1.5,Math.random()*3.0-1.5);
-	// 	colorsL.push(0.0,Math.random()*1.0,0.50, 1.0);
-	// }
 	// 
 	var i, j, len, tri, col;
 	var c = [];
@@ -1330,44 +1333,64 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	var tVert = [];
 	var tUV = [];
 	c.push(0xFFFF0000);
-	t.push(Tri.fromList(0.0,0.0,0.0, 0.5,-0.5,1.0,  -0.5,-0.5,1.0));
+	t.push(Tri.fromPoints(camOrigin, camScreenBR, camScreenBL ));
 	c.push(0xFF00CC00);
-	t.push(Tri.fromList(0.0,0.0,0.0, 0.5,0.5,1.0, 0.5,-0.5,1.0));
+	t.push(Tri.fromPoints(camOrigin, camScreenTR, camScreenBR ));
 	c.push(0xFF0000FF);
-	t.push(Tri.fromList(0.0,0.0,0.0, -0.5,0.5,1.0, 0.5,0.5,1.0));
+	t.push(Tri.fromPoints(camOrigin, camScreenTL, camScreenTR ));
 	c.push(0xFFFFCC00);
-	t.push(Tri.fromList(0.0,0.0,0.0, -0.5,-0.5,1.0, -0.5,0.5,1.0));
+	t.push(Tri.fromPoints(camOrigin, camScreenBL, camScreenTL ));
 	c.push(0xFFCCCCCC);
-	t.push(Tri.fromList(0.5,-0.5,1.0, 0.5,0.5,1.0, -0.5,0.5,1.0));
+	t.push(Tri.fromPoints(camScreenBR, camScreenTR, camScreenTL ));
 	c.push(0xFF999999);
-	t.push(Tri.fromList(0.5,-0.5,1.0, -0.5,0.5,1.0, -0.5,-0.5,1.0));
+	t.push(Tri.fromPoints(camScreenBR, camScreenTL, camScreenBL ));
 	// lines
 	lp.push(new V3D(0,0,0), new V3D(0,0,10));
 	lc.push(0xFF990000, 0xFF990000);
 	// textures
-	tVert.push(Tri.fromList( 0.5,-0.5, 2.0,   0.5, 0.5, 2.0,  -0.5, 0.5, 2.0 ));
-	tVert.push(Tri.fromList( 0.5,-0.5, 2.0,  -0.5, 0.5, 2.0,  -0.5,-0.5, 2.0 ));
-	tUV.push(Tri.fromList(0.50,0.50,0.0,  0.50,1.0,0.0,  0.0,1.0,0.0 ));
-	tUV.push(Tri.fromList(0.50,0.50,0.0,  0.0, 1.0,0.0,  0.0,0.50,0.0 ));
+	tVert.push(Tri.fromPoints(imgScreenBR, imgScreenTR, imgScreenTL ));
+	tVert.push(Tri.fromPoints(imgScreenBR, imgScreenTL, imgScreenBL ));
+var textureWidth = 512.0;
+var textureHeight = 512.0;
+var endX = imageWidth/textureWidth;
+var endY = 1.0 - imageHeight/textureHeight;
+var texTL = new V3D(0.0,  1.0, 0);
+var texTR = new V3D(endX, 1.0, 0);
+var texBL = new V3D(0.0,  endY, 0);
+var texBR = new V3D(endX, endY, 0);
+	tUV.push(Tri.fromPoints(texBR, texTR, texTL));
+	tUV.push(Tri.fromPoints(texBR, texTL, texBL));
 
-// scale things by intrinsic camera matrix
-
-var v = new V3D();
+var v;
 	len = c.length;
 	for(i=0;i<len;++i){
 		col = c[i];
 		tri = t[i];
-		matrix.multV3DtoV3D(v,tri.A());
+		v = matrix.multV3DtoV3D(new V3D(),tri.A());
 		pointsL.push(v.x,v.y,v.z);
-		matrix.multV3DtoV3D(v,tri.B());
+		v = matrix.multV3DtoV3D(new V3D(),tri.B());
 		pointsL.push(v.x,v.y,v.z);
-		matrix.multV3DtoV3D(v,tri.C());
+		v = matrix.multV3DtoV3D(new V3D(),tri.C());
 		pointsL.push(v.x,v.y,v.z);
 		for(j=0;j<3;++j){
 			colorsL.push( Code.getFloatRedARGB(col),Code.getFloatGrnARGB(col),Code.getFloatBluARGB(col),Code.getFloatAlpARGB(col) );
 		}
 	}
 	//
+
+var lineDist = 10.0;
+if(this._booleanCam){ // 2 // = test image 0
+	lp.push(new V3D(0,0,0), new V3D(.09,.178,1).scale(lineDist));
+	lc.push(0xFF00CC00, 0xFF00CC00);
+	lp.push(new V3D(0,0,0), new V3D(.09,.188,1).scale(lineDist));
+	lc.push(0xFF00CC00, 0xFF0000CC);
+}else{ // 1  // = test image 1
+	this._booleanCam = true;
+	lp.push(new V3D(0,0,0), new V3D(.265,.20,1).scale(lineDist));
+	lc.push(0xFF00CC00, 0xFF00CC00);
+	lp.push(new V3D(0,0,0), new V3D(.265,.21,1).scale(lineDist));
+	lc.push(0xFF00CC00, 0xFF0000CC);
+}
 	//
 	len = lp.length;
 	for(i=0;i<len;++i){
@@ -1377,15 +1400,16 @@ var v = new V3D();
 		linePoints.push(v.x,v.y,v.z);
 		lineColors.push( Code.getFloatRedARGB(col),Code.getFloatGrnARGB(col),Code.getFloatBluARGB(col),Code.getFloatAlpARGB(col) );
 	}
-	//
+	
 	len = tVert.length;
 	for(i=0;i<len;++i){
 		tri = tVert[i];
-		matrix.multV3DtoV3D(v,tri.A());
+		v = new V3D();
+		v = matrix.multV3DtoV3D(new V3D(),tri.A());
 		textureVertPoints.push(v.x,v.y,v.z);
-		matrix.multV3DtoV3D(v,tri.B());
+		v = matrix.multV3DtoV3D(new V3D(),tri.B());
 		textureVertPoints.push(v.x,v.y,v.z);
-		matrix.multV3DtoV3D(v,tri.C());
+		v = matrix.multV3DtoV3D(new V3D(),tri.C());
 		textureVertPoints.push(v.x,v.y,v.z);
 		tri = tUV[i];
 		v = tri.A();
@@ -1395,6 +1419,7 @@ var v = new V3D();
 		v = tri.C();
 		textureUVPoints.push(v.x,v.y);
 	}
+	
 }
 Manual3DR.prototype.render3DScene = function(){
 	var e = this.e?this.e:0;

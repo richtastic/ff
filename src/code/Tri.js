@@ -7,6 +7,9 @@ function Tri(a,b,c){ // CCW+
 	this.B(b);
 	this.C(c);
 }
+Tri.fromPoints = function(a,b,c){
+	return (new Tri(a,b,c));
+}
 Tri.fromList = function(ax,ay,az, bx,by,bz, cx,cy,cz){
 	return new Tri(new V3D(ax,ay,az), new V3D(bx,by,bz), new V3D(cx,cy,cz));
 }
