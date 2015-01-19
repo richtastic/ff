@@ -1566,12 +1566,24 @@ SIFT
 <a name="TRIANGULATE"></a>
 ## Point Triangulation 
 
+<br/>
 Essential Matrix (known focal?) - 5 DOF? : R (3) + t(3) + scale
 	- 2 singular values are equal, 3rd == 0
+x<sub>B-norm</sub><sup>T</sup>&middot;F&middot;x<sub>A-norm</sub> = 0
+<br/>
+E = K<sub>B</sub><sup>T</sup>&middot;F&middot;K<sub>A</sub>
+<br/>
 
 
+<br/>
+<br/>
 Fundamental Matrix - 8 unknowns [7 DOF?]
-
+<br/>
+x<sub>B</sub><sup>T</sup>&middot;F&middot;x<sub>A</sub> = 0
+<br/>
+(rank 2)
+<br/>
+<br/>
 
 epipoles
 

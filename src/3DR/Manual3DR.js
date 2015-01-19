@@ -808,18 +808,25 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 	H0 = R3D.projectiveDLT(points0.norm.normalized[0],points0.norm.normalized[1]);
 	H1 = R3D.projectiveDLT(points1.norm.normalized[0],points1.norm.normalized[1]);
 	H2 = R3D.projectiveDLT(points2.norm.normalized[0],points2.norm.normalized[1]);
-//=> Levenberg Marquardt nonlinear minimization goes here
-
-//var x = new Matrix().fromArray(H0.toArray());
-var fxn = this.lmMinProjectionFxn;
-var args = [ points0.norm.normalized[0], points0.norm.normalized[1] ];
-var xVals = H0.toArray();
-var yVals = Code.newArrayZeros(args[0].length*4); // from and to points
-console.log("A: "+xVals.toString());
-Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
-// Matrix.lmMinimize = function(fxn, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance){ 
-console.log("B: "+xVals.toString());
-
+	// Levenberg Marquardt nonlinear minimization goes here
+	var fxn, args, yVals, xVals;
+	fxn = this.lmMinProjectionFxn;
+	// H0
+	xVals = H0.toArray();
+	args = [ points0.norm.normalized[0], points0.norm.normalized[1] ];
+	yVals = Code.newArrayZeros(args[0].length*4);
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	// H1
+	xVals = H1.toArray();
+	args = [ points1.norm.normalized[0], points1.norm.normalized[1] ];
+	yVals = Code.newArrayZeros(args[0].length*4);
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	// H2
+	xVals = H2.toArray();
+	args = [ points2.norm.normalized[0], points2.norm.normalized[1] ];
+	yVals = Code.newArrayZeros(args[0].length*4);
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	
 	// unnormalize:
 	var H, forward, reverse;
 	// 0
@@ -1069,14 +1076,14 @@ Manual3DR.prototype.handleLoaded = function(){
 
 	// already got intrinsic camera matrix
 	var K = this._intrinsicK;
-	console.log("K")
-	console.log(K.toString())
 	var Kinv = Matrix.inverse(K);
-	console.log("K^-1")
-	console.log(Kinv.toString())
+	var Kt = Matrix.transpose(K);
+	// console.log("K")
+	// console.log(K.toString())
+	// console.log("K^-1")
+	// console.log(Kinv.toString())
 
 	// calculate essential matrix
-	var Kt = Matrix.transpose(K);
 	var essential = Matrix.mult(Kt, Matrix.mult(fundamental,K) );
 	console.log("E:")
 	console.log(essential.toString())
@@ -1108,35 +1115,33 @@ Manual3DR.prototype.handleLoaded = function(){
 	var Vt = Matrix.transpose(V);
 	var t = U.getCol(2);
 	var tNeg = t.copy().scale(-1.0);
-	console.log("t:");
-	console.log(t.toString())
-	console.log(tNeg.toString())
+	// console.log("t:");
+	// console.log(t.toString())
+	// console.log(tNeg.toString())
 
 	// one of 4 possible solutions
-	var det;
 	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt));
-	det = possibleA.det();
-	if(det<0){
-		console.log("FLIP1: "+det);
-		possibleA.scale(-1.0);
-	}
-	var possibleB = Matrix.mult(U,Matrix.mult(Wt,Vt));
-	det = possibleB.det();
-	if(det<0){
-		console.log("FLIP2: "+det);
-		possibleB.scale(-1.0);
-	}
-
-	// 4x4 matrices
+	possibleA = possibleA.appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleB = Matrix.mult(U,Matrix.mult(W,Vt));
+	possibleB = possibleB.appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	var possibleC = Matrix.mult(U,Matrix.mult(Wt,Vt));
+	possibleC = possibleC.appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleD = Matrix.mult(U,Matrix.mult(Wt,Vt));
+	possibleD = possibleD.appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
 	var possibles = new Array();
-	m = possibleA.copy().appendColFromArray(t.toArray());//.appendRowFromArray([0,0,0,1]);
-	possibles.push( m );
-	m = possibleA.copy().appendColFromArray(tNeg.toArray());//.appendRowFromArray([0,0,0,1]);
-	possibles.push( m );
-	m = possibleB.copy().appendColFromArray(t.toArray());//.appendRowFromArray([0,0,0,1]);
-	possibles.push( m );
-	m = possibleB.copy().appendColFromArray(tNeg.toArray());//.appendRowFromArray([0,0,0,1]);
-	possibles.push( m );
+	possibles.push( possibleA );
+	possibles.push( possibleB );
+	possibles.push( possibleC );
+	possibles.push( possibleD );
+	var det;
+	for(i=0;i<possibles.length;++i){
+		var m = possibles[i];
+		det = m.det();
+		if(det<0){
+			//console.log("FLIP "+i+" : "+det);
+			m.scale(-1.0);
+		}
+	}
 
 	// find single matrix that results in 3D point in front of both cameras Z>0
 	var pA = pointsNormA[0];
@@ -1171,15 +1176,14 @@ var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 		//console.log(p1Norm.toString());
 		var P2 = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 		//console.log(P2.toString());
-M2 = M2.copy().appendRowFromArray([0,0,0,1]);
 		P2 = Matrix.mult(M2,P2);
 		//console.log(P2.toString());
 		var p2Norm = new V4D().setFromArray(P2.toArray());
 		//console.log(p2Norm.toString());
 		p2Norm.homo();
-		console.log(p1Norm.z+" && "+p2Norm.z);
+		//console.log(p1Norm.z+" && "+p2Norm.z);
 		if(p1Norm.z>0 && p2Norm.z>0){
-			console.log(".......................>>XXX");
+			//console.log(".......................>>XXX");
 			projection = M2;
 			break;
 		}
@@ -1235,6 +1239,9 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	var colorsL = this._renderColorsList;
 	var linePoints = this._renderLinePointsList;//[0,0, 5,5];
 	var lineColors = this._renderLineColorsList;//[0.5,0,0,1, 0.5,0,0,1];
+	var textureUVPoints = this._renderTextureUVList;
+	var textureVertPoints = this._renderTexturePointList;
+		// do stuff
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 	//
@@ -1249,6 +1256,8 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	var t = [];
 	var lp = [];
 	var lc = [];
+	var tVert = [];
+	var tUV = [];
 	c.push(0xFFFF0000);
 	t.push(Tri.fromList(0.0,0.0,0.0, 0.5,-0.5,1.0,  -0.5,-0.5,1.0));
 	c.push(0xFF00CC00);
@@ -1264,6 +1273,13 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	// lines
 	lp.push(new V3D(0,0,0), new V3D(0,0,10));
 	lc.push(0xFF990000, 0xFF990000);
+	// textures
+	tVert.push(Tri.fromList( 0.5,-0.5, 2.0,   0.5, 0.5, 2.0,  -0.5, 0.5, 2.0 ));
+	tVert.push(Tri.fromList( 0.5,-0.5, 2.0,  -0.5, 0.5, 2.0,  -0.5,-0.5, 2.0 ));
+	tUV.push(Tri.fromList(0.50,0.50,0.0,  0.50,1.0,0.0,  0.0,1.0,0.0 ));
+	tUV.push(Tri.fromList(0.50,0.50,0.0,  0.0, 1.0,0.0,  0.0,0.50,0.0 ));
+
+// scale things by intrinsic camera matrix
 
 var v = new V3D();
 	len = c.length;
@@ -1291,6 +1307,23 @@ var v = new V3D();
 		lineColors.push( Code.getFloatRedARGB(col),Code.getFloatGrnARGB(col),Code.getFloatBluARGB(col),Code.getFloatAlpARGB(col) );
 	}
 	//
+	len = tVert.length;
+	for(i=0;i<len;++i){
+		tri = tVert[i];
+		matrix.multV3DtoV3D(v,tri.A());
+		textureVertPoints.push(v.x,v.y,v.z);
+		matrix.multV3DtoV3D(v,tri.B());
+		textureVertPoints.push(v.x,v.y,v.z);
+		matrix.multV3DtoV3D(v,tri.C());
+		textureVertPoints.push(v.x,v.y,v.z);
+		tri = tUV[i];
+		v = tri.A();
+		textureUVPoints.push(v.x,v.y);
+		v = tri.B();
+		textureUVPoints.push(v.x,v.y);
+		v = tri.C();
+		textureUVPoints.push(v.x,v.y);
+	}
 }
 Manual3DR.prototype.render3DScene = function(){
 	var e = this.e?this.e:0;
@@ -1338,16 +1371,16 @@ this._stage3D.matrixReset();
 
 this._stage3D.disableCulling();
 
-//this._stage3D.enableCulling();
+this._stage3D.enableCulling();
 this._stage3D.selectProgram(1);
 this._stage3D.matrixReset();
-		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._texturePoints);
-		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._vertexPoints);
+		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints);
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints);
 
 		this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
 		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
 		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
-		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._vertexPoints);
+		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints);
 //
 
 // RENDER LINES
@@ -1367,6 +1400,8 @@ this._renderPointsList = [];
 this._renderColorsList = [];
 this._renderLinePointsList = [];
 this._renderLineColorsList = [];
+this._renderTextureUVList = [];
+this._renderTexturePointList = [];
 		// do stuff
 var matrix = new Matrix(4,4);
 
@@ -1430,16 +1465,16 @@ this._texture = this._canvas3D.bindTextureImageRGBA(texture);
 var vert = 1-origHei;
 var horz = origWid;
 		// 
-		var texturePoints = [];
-		var vertexPoints = [];
+		var texturePoints = this._renderTextureUVList;
+		var vertexPoints = this._renderTexturePointList;
 		// do stuff
 		texturePoints.push(0,vert, horz,vert, 0,1,        horz,vert, horz,1, 0,1);
 		vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
 		// set
 		this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 		this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
-		this._texturePoints = this._stage3D.getBufferFloat32Array(texturePoints, 2);
-		this._vertexPoints = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+		this._textureUVPoints = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+		this._textureVertexPoints = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
 
 
 

@@ -148,6 +148,7 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	U = svd.U;
 	S = svd.S;
 	V = svd.V;
+// nonlinear improvement goes here
 	F.setFromArray( V.colToArray(8) );
 	F = R3D.forceRank2F(F);
 	return F;
