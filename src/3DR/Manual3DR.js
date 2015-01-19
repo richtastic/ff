@@ -33,9 +33,9 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 	//
 	var imageList, imageLoader;
 	// calibration images:
-//	imageList = ["calibration1-0.jpg","calibration1-1.jpg","calibration1-2.jpg"];
-//	imageLoader = new ImageLoader("./images/",imageList, this,this.handleCalibrationImagesLoaded,null);
-//	imageLoader.load();
+	// imageList = ["calibration1-0.jpg","calibration1-1.jpg","calibration1-2.jpg"];
+	// imageLoader = new ImageLoader("./images/",imageList, this,this.handleCalibrationImagesLoaded,null);
+	// imageLoader.load();
 	// import image to work with
 	imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
@@ -577,11 +577,22 @@ Manual3DR.prototype.handleCalibrationImagesLoaded = function(imageInfo){
 			imagePixelHeight = img.height;
 		}
 		d = new DOImage(img);
-if(i==2){
+if(i==0){
 		this._root.addChild(d);
 }
 		d.matrix().translate(0,0);
 	}
+	var points3D = [];
+	for(i=0;i<10;++i){
+		for(j=0;j<8;++j){
+			points3D.push( new V3D(i,j,1.0) );
+		}
+	}
+	points0 = {	"pos2D": [new V2D(110,225), new V2D(133,224.8), new V2D(156,224.7), new V2D(180,224.5), new V2D(204,224.2), new V2D(230,224.2), new V2D(257,224.2), new V2D(283.5,224.2), new V2D(313,224.2), new V2D(343,224.5)],
+				"pos3D": points3D
+			};
+
+	/*
 	// 0
 	points0 = {	"pos2D":
 				[new V2D(110,225),
@@ -666,6 +677,7 @@ if(i==2){
 				new V3D(5,6,1),
 				new V3D(4,6,1)]
 			};
+	*/
 	// var points = {	"pos2D":
 	// 				[new V2D(0,0),
 	// 				new V2D(0,0),
@@ -677,7 +689,7 @@ if(i==2){
 	// 				new V3D(0,0,0),
 	// 				new V3D(0,0,0)]
 	// 			};
-	var points = points2;
+	var points = points0;
 	// draw spots on image for verification:
 	list = points.pos2D;
 	for(i=0;i<list.length;++i){
@@ -793,21 +805,22 @@ Manual3DR.prototype.calibrateCameraMatrix = function(){
 				new V3D(5,6,1),
 				new V3D(4,6,1)]
 			};
-	// homography - projection matrices  ----  pointsFr,pointsTo
-
+	// straight up DLT - less accurate
 	// H0 = R3D.projectiveDLT(points0.pos3D,points0.pos2D);
 	// H1 = R3D.projectiveDLT(points1.pos3D,points1.pos2D);
 	// H2 = R3D.projectiveDLT(points2.pos3D,points2.pos2D);
 
-points0.norm = R3D.calculateNormalizedPoints([points0.pos2D,points0.pos3D]);
-points1.norm = R3D.calculateNormalizedPoints([points1.pos2D,points1.pos3D]);
-points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
-// points0.norm = R3D.calculateNormalizedPoints([points0.pos3D,points0.pos2D]);
-// points1.norm = R3D.calculateNormalizedPoints([points1.pos3D,points1.pos2D]);
-// points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
+	// normalize points
+// points0.norm = R3D.calculateNormalizedPoints([points0.pos2D,points0.pos3D]);
+// points1.norm = R3D.calculateNormalizedPoints([points1.pos2D,points1.pos3D]);
+// points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
+points0.norm = R3D.calculateNormalizedPoints([points0.pos3D,points0.pos2D]);
+points1.norm = R3D.calculateNormalizedPoints([points1.pos3D,points1.pos2D]);
+points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 	H0 = R3D.projectiveDLT(points0.norm.normalized[0],points0.norm.normalized[1]);
 	H1 = R3D.projectiveDLT(points1.norm.normalized[0],points1.norm.normalized[1]);
 	H2 = R3D.projectiveDLT(points2.norm.normalized[0],points2.norm.normalized[1]);
+
 	// Levenberg Marquardt nonlinear minimization goes here
 	var fxn, args, yVals, xVals;
 	fxn = this.lmMinProjectionFxn;
@@ -856,6 +869,8 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 	H1.scale(1.0/H1.get(2,2));
 	H2.scale(1.0/H2.get(2,2));
 
+
+
 	var listH = [H0,H1,H2];
 	var hCount = listH.length;
 	// CONSTRUCT V:
@@ -898,12 +913,23 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 	var b12 = coeff[4];
 	var b22 = coeff[5];
 	// compute K properties - requirements: den1!=0, b00!=0, fy>0
+		var ratio;
 		var num1 = b01*b02 - b00*b12;
 		var den1 = b00*b11 - b01*b01;
 	var v0 = num1/den1;
 	var lambda = b22 - ((b02*b02 + v0*num1)/b00);
-	var fx = Math.sqrt( Math.abs( lambda/b00 ) ); // Math.abs(
-	var fy = Math.sqrt( Math.abs( (lambda*b00)/den1 ) ); // Math.abs(
+		ratio = lambda/b00;
+		if(ratio<0){
+			ratio = Math.abs( ratio );
+			console.log("bad ratio A");
+		}
+	var fx = Math.sqrt( ratio ); // Math.abs(
+		ratio = (lambda*b00)/den1;
+		if(ratio<0){
+			ratio = Math.abs( ratio );
+			console.log("bad ratio B");
+		}
+	var fy = Math.sqrt( ratio ); // Math.abs(
 	var s = -b01*fx*fx*fy/lambda;
 	var u0 = ((s*v0)/fx) - ((b02*fx*fx)/lambda);
 	//console.log(lambda,b00,den1,fx,fy)
@@ -915,10 +941,26 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos2D,points2.pos3D]);
 
 	// radial distortion time ....
 
-	//
+	/*
+	var sizeW = 400;
+	var sizeH = 300;
+	var cx = sizeW*0.5;
+	var cy = sizeH*0.5;
+	var s = 0;
+	var fx = 480; // 300~500
+	var fy = fx;
+	var testK = (new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]));
+	// FOUND VALUES:
+	fx = 372.76047221810444
+	fy = 372.1358082506365
+	s = -1.2121641660857738;
+	cx = 200.2563459136281;
+	cy = 146.6423388412101;
+	this._intrinsicK = testK;
 	console.log("estimated example: ");
-	console.log( (new Matrix(3,3).setFromArray([200,0,100, 0,300,150, 0,0,1])).toString() );
+	console.log( testK.toString() );
 	console.log("..........................................");
+	*/
 /*
 * normalize image points: x,y in [-1,1] based on image width/height, image center is origin
 * find homography between model points and image points
@@ -1234,6 +1276,35 @@ this._cameras.push({"extrinsic":projection
 	// ... image A/B
 }
 Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
+	var K = this._intrinsicK;
+	console.log(K.toString());
+	var fx = K.get(0,0);
+	var fy = K.get(1,1);
+	var sk = K.get(0,1);
+	var cx = K.get(0,2);
+	var cy = K.get(1,2);
+	console.log("params: ",fx,fy,sk,cx,cy)
+	var imageWidth = 400;
+	var imageHeight = 300;
+/*
+- f = 1.0;
+- imgWidth = imageWidth * fx
+- imgHeight = imageHeight * fy
+- imgCenterX = cx  * fx
+- imgCenterY = cy * fy
+*/
+	var focalLength = 1.0;
+	var px = focalLength/fx;
+	var py = focalLength/fy;
+// //console.log("px: "+px+"  py: "+py);
+
+// 	var imgSizeX = px*imageWidth;
+// 	var imgSizeY = py*imageWidth;
+// 	var imgCenX = px*cx;
+// 	var imgCenY = py*cy;
+// 	console.log("size: "+imgSizeX+" x "+imgSizeY);
+// 	console.log("center: "+imgCenX+","+imgCenY);
+
 	//...
 	var pointsL = this._renderPointsList;
 	var colorsL = this._renderColorsList;
