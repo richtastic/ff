@@ -10,8 +10,8 @@ function pageLoadedFxn(){
 	ff = new FF("../code/",defaultClassesLoadedFxn,null);
 }
 function defaultClassesLoadedFxn(){
-	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ColorMatRGBY.js","ImageFeature.js","ImageDescriptor.js","ImageMatcher.js","Match.js"];
-	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
+	var list = ["ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ColorMatRGBY.js","ImageFeature.js","ImageDescriptor.js","ImageMatcher.js","../matching/Match.js"];
+	scriptLoader = new ScriptLoader("../3DR/",list,this,customClassesLoadedFxn);
 	scriptLoader.load();
 }
 function customClassesLoadedFxn(){
@@ -68,14 +68,14 @@ function customClassesLoadedFxn(){
 
 	var data = {};
 	var list = [];
-	//var mode = Match.MODE_FIND_SIFT_POINTS;
+	var mode = Match.MODE_FIND_SIFT_POINTS;
 	//var mode = Match.MODE_FIND_AFFINE_POINTS;
 	//var mode = Match.MODE_TEST_POINTS;
 	//var mode = Match.MODE_SHOW_POINTS;
-	var mode = Match.MODE_COMPARE_POINTS;
+	//var mode = Match.MODE_COMPARE_POINTS;
 	if(mode == Match.MODE_FIND_SIFT_POINTS){ // find initial points
-		//list.push("original.png");
-		//list.push("scalexy.png");
+		list.push("original.png");
+		list.push("scalexy.png");
 		//list.push("scalex.png");
 		//list.push("scalexrotateskew.png");
 		//list.push("BLB.png");
@@ -391,7 +391,7 @@ Affine Second Moment Matrix
 
 	*/
 
-	return;
+//	return;
 	var a = new V2D(160,55);
 	var b = new V2D(195,215);
 	var c = new V2D(145,240);

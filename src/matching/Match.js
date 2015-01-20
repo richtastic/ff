@@ -85,8 +85,10 @@ function Match(mode,data){
 	this._mode = mode;
 	this._canvas = new Canvas(null, 400,600, Canvas.STAGE_FIT_FILL, false);
 	this._stage = new Stage(this._canvas, (1/10)*1000);
-	this._stage.start();
 	this._root = new DO(); this._stage.root().addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
 	this._imageList = new Array();
 	if(this._mode==Match.MODE_FIND_SIFT_POINTS){
 		var imageLoader = new ImageLoader(data.imageBase, data.images, this,this._imageCompleteFxn,this._imageProgressFxn);
@@ -518,7 +520,7 @@ Match.prototype._onImageCompleteFxnShow = function(o){
 	var rad = 2.0, x, y, s, w, h;
 
 	// draw features on screen
-	var features = descriptor.getFeatureList();
+	var features = descriptor.featureList();
 	len = features.length;
 	console.log( "features length: "+len );
 	for(i=0;i<len;++i){
@@ -636,7 +638,7 @@ try{
 			d.graphics().strokeLine();
 		}
 	// 
-	var fA = dA.getFeatureList()[indexA];
+	var fA = dA.featureList()[indexA];
 	fA.descriptor(dA);
 	//fA.findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
 	//var grys = fA.colorAngle().gry();//-fB.colorAngle().gry();
@@ -705,7 +707,7 @@ var indexA = 6, indexB = 25; // worst
 //80&59
 //var indexA = 79, indexB = 71; // best
 //var indexA = 6, indexB = 25;
-var indexA = Math.floor(Math.random()*dA.getFeatureList().length), indexB = Math.floor(Math.random()*dB.getFeatureList().length);
+var indexA = Math.floor(Math.random()*dA.featureList().length), indexB = Math.floor(Math.random()*dB.featureList().length);
 //indexA = 6; // 98 99 115 148 161 184 | 25
 indexA = 79; // 117 152
 //indexB = 71;
@@ -717,7 +719,7 @@ indexA = 0; indexB = 146;
 	for(i=0;i<len;++i){
 		img = hash[ descriptors[i].imageFileName() ];
 		w = descriptors[i].width(); h = descriptors[i].height();
-		list = descriptors[i].getFeatureList();
+		list = descriptors[i].featureList();
 		len2 = list.length;
 		d = new DO();
 		d.matrix().identity();
@@ -748,8 +750,8 @@ indexA = 0; indexB = 146;
 	}
 
 
-	var fA = dA.getFeatureList()[indexA];
-	var fB = dB.getFeatureList()[indexB];
+	var fA = dA.featureList()[indexA];
+	var fB = dB.featureList()[indexB];
 	fA.descriptor(dA);
 	fA.findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
 	fB.descriptor(dB);
@@ -1049,6 +1051,7 @@ descriptor._features.push(  new ImageFeature(0.195,0.18,1.0, 0,null) );
 }
 
 Match.prototype._imageCompleteFxn = function(o){
+
 	var root = this._root;
 	var images = new Array();
 	var fileNames = new Array();
@@ -1087,7 +1090,6 @@ Code.copyToClipboardPrompt(str);
 var descriptor = new ImageDescriptor();
 descriptor.loadFromYAML(obj[0][DATA.DESCRIPTOR]);
 descriptor.setImageData(params.width,params.height, params.red,params.grn,params.blu, imageFileName);
-
 
 
 /*
@@ -1146,6 +1148,8 @@ var rad;
 rad = 2.0;
 rad *= pt.z;
 rad = Math.pow(pt.z,0.5) * 1.6 * 7 /2.0;
+// wtf
+rad = Math.pow(pt.z,0.5)*1.5;
 
 //main
 d.graphics().clear();
@@ -1252,9 +1256,8 @@ root.addChild(doImage);
 
 }
 
-
 return;
-
+//console.log("showing");
 
 	var originalImage = filters.shift();
 	//var pt = new V2D(147,135); // OO

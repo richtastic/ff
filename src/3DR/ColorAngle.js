@@ -10,33 +10,21 @@ function ColorAngle(rA,gA,bA,yA, rM,gM,bM,yM){
 	this._gryM = (yM!==undefined)?yM:1;
 	this.normalizeMagnitudes();
 }
-ColorAngle.prototype.red = function(r){
+ColorAngle.prototype.redAng = function(r){
 	if(r!==undefined){ this._redA=r;}
 	return this._redA;
 }
-ColorAngle.prototype.grn = function(g){
+ColorAngle.prototype.grnAng = function(g){
 	if(g!==undefined){ this._grnA=g;}
 	return this._grnA;
 }
-ColorAngle.prototype.blu = function(b){
+ColorAngle.prototype.bluAng = function(b){
 	if(b!==undefined){ this._bluA=b;}
 	return this._bluA;
 }
-ColorAngle.prototype.gry = function(g){
+ColorAngle.prototype.gryAng = function(g){
 	if(g!==undefined){ this._gryA=g;}
 	return this._gryA;
-}
-ColorAngle.prototype.redAng = function(r){
-	return this.red(r);
-}
-ColorAngle.prototype.grnAng = function(g){
-	return this.grn(g);
-}
-ColorAngle.prototype.bluAng = function(b){
-	return this.blu(b);
-}
-ColorAngle.prototype.gryAng = function(g){
-	return this.gry(g);
 }
 ColorAngle.prototype.redMag = function(r){
 	if(r!==undefined){ this._redM=r;}
@@ -56,10 +44,17 @@ ColorAngle.prototype.gryMag = function(g){
 }
 ColorAngle.prototype.normalizeMagnitudes = function(g){
 	var max = Math.max(this._redM,this._grnM,this._bluM,this._gryM);
-	this._redM = this._redM/max;
-	this._grnM = this._grnM/max;
-	this._bluM = this._bluM/max;
-	this._gryM = this._gryM/max;
+	if(max!=0){
+		this._redM = this._redM/max;
+		this._grnM = this._grnM/max;
+		this._bluM = this._bluM/max;
+		this._gryM = this._gryM/max;
+	}else{
+		this._redM = 0;
+		this._grnM = 0;
+		this._bluM = 0;
+		this._gryM = 0;
+	}
 }
 
 ColorAngle.compareAngles = function(angA,angB, ang){ // but is this the LOWEST POSSIBLE SCORE => NO, use binary search, etc...
@@ -81,10 +76,12 @@ ColorAngle.compareAngles = function(angA,angB, ang){ // but is this the LOWEST P
 			  + Math.abs(diffGry)*angA.gryMag()*angB.gryMag();
 	return score;
 }
+ColorAngle.prototype.primaryAngle = function(){
+	return this._gryA;
+}
 
 ColorAngle._temp = new ColorAngle();
 ColorAngle.optimumAngle = function(angA,angB){
-return 0;
 	var ang = 0, dir = 1, i, len=100, delta = .1;
 	var scoreA, scoreB = ColorAngle.compareAngles(angA,angB, ang);
 	for(i=0;i<len;++i){

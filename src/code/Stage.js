@@ -80,20 +80,20 @@ Stage.prototype.getImageAsFloatGray = function(originalImage){
 	var gray = ImageMat.grayFromRGBFloat(data.red, data.grn, data.blu);
 	return {width:data.width, height:data.height, gray:gray}
 }
-Stage.prototype.getImageAsFloatRGB = function(originalImage){
+Stage.prototype.getImageAsFloatRGB = function(originalImage, expand){
 	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
 	var doImage = new DOImage(originalImage);
 	dat = this.getDOAsARGB(doImage, wid,hei);
 	img = new ImageMat(wid,hei);
 	img.setFromArrayARGB(dat);
-	// var normR = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getRedFloat()) );
-	// var normG = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getGrnFloat()) );
-	// var normB = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat(img.getBluFloat()) );
-	// dat = ImageMat.ARGBFromRGBArrays(normR,normG,normB);
-	// img.setFromArrayARGB(dat);
 	var red = img.getRedFloat();
 	var grn = img.getGrnFloat();
 	var blu = img.getBluFloat();
+	if(expand){
+		red = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( red ) );
+		grn = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( grn ) );
+		blu = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( blu ) );
+	}
 	img.unset();
 	return {width:wid, height:hei, red:red, grn:grn, blu:blu};
 }

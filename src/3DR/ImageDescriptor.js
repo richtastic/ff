@@ -18,6 +18,17 @@ function ImageDescriptor(wid,hei, origR,origG,origB, filename){
 	this.imageFileName(filename);
 	this.setImageData(wid,hei, origR,origG,origB);
 }
+ImageDescriptor.fromImageFileStage = function(img,file,stage){
+	var params = stage.getImageAsFloatRGB(img);
+	var wid = params.width;
+	var hei = params.height;
+	var red = params.red;
+	var grn = params.grn;
+	var blu = params.blu;
+	var gry = ImageMat.grayFromRGBFloat(red,grn,blu);
+	var descriptor = new ImageDescriptor(wid,hei, red,grn,blu,gry, file);
+	return descriptor;
+}
 ImageDescriptor.prototype.imageFileName = function(filename){
 	if(filename!==undefined){
 		this._filename = filename;
@@ -47,10 +58,6 @@ ImageDescriptor.prototype.setImageData = function(wid,hei,red,grn,blu){
 	for(i=0;i<len;++i){
 		this._flatGry[i] = (this._flatRed[i]+this._flatGrn[i]+this._flatBlu[i])/3.0;
 	}
-	// this._flatRed = ImageMat.normalFloat01(this._flatRed);
-	// this._flatGrn = ImageMat.normalFloat01(this._flatGrn);
-	// this._flatBlu = ImageMat.normalFloat01(this._flatBlu);
-	// this._flatGry = ImageMat.normalFloat01(this._flatGry);
 }
 ImageDescriptor.prototype.redFlat = function(){
 	return this._flatRed;
@@ -78,18 +85,11 @@ ImageDescriptor.prototype.saveToYAML = function(yaml){
 		}
 	yaml.writeArrayEnd();
 }
-// ImageDescriptor.prototype.imageLoadedCompleteFxn = function(obj){
-// 	console.log(obj.images);
-// 	console.log(obj.files);
-// }
 ImageDescriptor.prototype.loadFromYAML = function(yaml){
 	this.clearData();
 	var i, len, feature, DATA = ImageDescriptor.YAML
 	this._filename = yaml[DATA.FILENAME];
 	var timestamp = yaml[DATA.CREATED];
-	// var imageLoader = new ImageLoader();//"",[this._filename], this,this.imageLoadedCompleteFxn,null);
-	// imageLoader.setLoadList("",[this._filename], this,this.imageLoadedCompleteFxn,null);
-	// imageLoader.load();
 	var arr = yaml[DATA.FEATURES];
 	len = arr.length;
 	for(i=0;i<len;++i){
@@ -98,11 +98,10 @@ ImageDescriptor.prototype.loadFromYAML = function(yaml){
 		this._features.push(feature);
 	}
 }
-
 ImageDescriptor.prototype._clearFeatureList = function(){
 	Code.emptyArray(this._features);
 }
-ImageDescriptor.prototype.getFeatureList = function(){
+ImageDescriptor.prototype.featureList = function(){
 	return this._features;
 }
 ImageDescriptor.prototype.getScaleSpaceExtrema = function(){
@@ -121,6 +120,7 @@ ImageDescriptor.prototype.getImageDefinition = function(){ // LEGACY
 	return arr;
 }
 ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a list of potential scale-space points: _scaleSpaceExtrema
+var images = [];
 	Code.timerStart();
 	var i, j, k, ss, len, len2, pt, dist;
 	var wid = this._width, hei = this._height;
@@ -128,13 +128,13 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var sigma = 1.6;//this._sigma;
 	var scalesPerOctave = 5; // 5
 	var sConstant = scalesPerOctave-3;
-	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // var kConstant = Math.pow(2.0,1/sConstant);
+	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // sqrt(2)
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
-	var minThresholdIntensity = 0.05; // 0.03
+	var minThresholdIntensity = 0.03; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
-	edgeResponseEigenRatioR = (edgeResponseEigenRatioR + 1)*(edgeResponseEigenRatioR + 1)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
+	edgeResponseEigenRatioR = Math.pow(edgeResponseEigenRatioR + 1, 2)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
 	var gaussSizeBase = 5;
 	var gaussSizeIncrement = 1.5;
 	var gauss1D, gaussSize;
@@ -144,7 +144,17 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var nextWid, nextHei;
 	var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
 	var nextImage, dog, img, ext, sig, padding, tmp;
+var _vizWid = currentWid/Math.pow(2,totalOctaves-1);
+var _vizHei = currentHei/Math.pow(2,totalOctaves-1);
+var _vizMin = ImageMat.newZeroFloat(_vizWid,_vizHei);
+var _vizMax = ImageMat.newZeroFloat(_vizWid,_vizHei);
+ImageMat.addConst(_vizMax,-1E10);
+ImageMat.addConst(_vizMin,1E10);
+var _vizMinScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
+var _vizMaxScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
 	for(i=0;i<totalOctaves;++i){
+images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
+var prevImage = currentImage;
 		console.log( "octave: "+(i+1)+"/"+totalOctaves+" ... size "+currentWid+", "+currentHei+" . . . . . . . . . . . . . . . . . . . . . . . . . . .");
 		Code.emptyArray( dogList );
 		for(j=0;j<scalesPerOctave-1;++j){
@@ -161,8 +171,29 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 			dog = ImageMat.subFloat(currentImage, nextImage);
 			dogList.push(dog);
 			currentImage = nextImage;
-			if(j==scalesPerOctave-1-2){ ss = nextImage; }
+//			if(j==scalesPerOctave-1-2){ ss = nextImage; } // not used
 		}
+for(j=0;j<dogList.length;++j){
+	var k,l;
+	for(k=0;k<_vizHei;++k){
+		for(l=0;l<_vizWid;++l){
+			var index = k*_vizWid + l;
+			var _i = Math.floor(l*currentWid/_vizWid);
+			var _j = Math.floor(k*currentHei/_vizHei);
+			var ind = _j*currentWid + _i;
+			var val = dogList[j][ind];
+			var sca = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(val+1.0)/(dogList.length-2) );
+			if(_vizMax[index]<val){
+				_vizMax[index] = val;
+				_vizMaxScale[index] = sca;
+			}
+			if(_vizMin[index]>val){
+				_vizMin[index] = val;
+				_vizMinScale[index] = sca;
+			}
+		}
+	}
+}
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = Code.findExtrema3D(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 0);
@@ -176,6 +207,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		// subsample image for next octave
 		if(i<totalOctaves-1){
 			nextWid = Math.floor(currentWid*0.5); nextHei = Math.floor(currentHei*0.5);
+ss = prevImage; // ss is blurry
 			currentImage = ImageMat.extractRect(ss, 0,0, currentWid-1,0, currentWid-1,currentHei-1, 0,currentHei-1, nextWid,nextHei, currentWid,currentHei);
 			currentWid = nextWid; currentHei = nextHei;
 		}
@@ -199,7 +231,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	for(i=0;i<temp.length;++i){
 		for(j=i+1;j<temp.length;++j){
 			dist = Code.distancePoints2D(temp[i].x*this._width,temp[i].y*this._height, temp[j].x*this._width,temp[j].y*this._height);
-			if( dist < minimumExtremaDistancePixels ){
+			if(dist < minimumExtremaDistancePixels ){ // keep highest contrast point
 				if(temp[i].t>temp[j].t){ // keep j
 					temp[i] = temp[j];
 				} // keep i
@@ -210,7 +242,7 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	}
 	console.log("       rm-dup count: "+temp.length);
 	// get exact SMM at location and discard low measures
-	edgeResponseEigenRatioR = 12.1; // 12.1 ^
+	edgeResponseEigenRatioR = 4.0;//12.1; // 12.1 ^
 	var Lxx, Lxx, Lxy, tra, det, measure, win, winSize = 25;// (11+1)*2+1
 	var featureImageSizeBase = 7;
 	var rangeSize;
@@ -218,8 +250,8 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	var gauss1D = ImageMat.getGaussianWindow(11,1, sigma);
 	var center = Math.floor(winSize*0.5);
 	var index = center*winSize + center;
-	var range, response;
-	var minContrastIntensity = 0.05;
+	var range, response, intensity;
+	var minContrastIntensity = 0.01;
 	for(i=0;i<temp.length;++i){
 		var s = Math.pow(temp[i].z,0.5)
 		// too close to edge
@@ -230,31 +262,30 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 		range = ImageMat.getRange(win);
 		if(range<minContrastIntensity){
 			Code.removeElementAtSimple(temp,i);
-			--i;
-			continue;
+			--i; continue;
 		}
 		// 
-		win = this.getScaleSpacePoint(temp[i].x,temp[i].y,temp[i].z,null, winSize,winSize, null); // zoom in
-		win = ImageMat.gaussian2DFrom1DFloat(win, winSize,winSize, gauss1D); // gaussian
+		//win = this.getScaleSpacePoint(temp[i].x,temp[i].y,temp[i].z,null, winSize,winSize, null); // zoom in
+		//win = ImageMat.gaussian2DFrom1DFloat(win, winSize,winSize, gauss1D); // gaussian
 		Lxx = ImageMat.secondDerivativeX(win,winSize,winSize, center,center);
 		Lyy = ImageMat.secondDerivativeY(win,winSize,winSize, center,center);
 		Lxy = ImageMat.secondDerivativeXY(win,winSize,winSize, center,center);
 		tra = Lxx + Lyy;
 		det = Lxx*Lyy - Lxy*Lxy;
 		measure = tra*tra/det;
-		response = Lxx + Lyy;
+		intensity = Math.abs(temp[i].t);
+		//response = Lxx + Lyy;
+//measure = edgeResponseEigenRatioR;
 		// low edge response
 		if(measure < edgeResponseEigenRatioR){ // drop if low measure
 			Code.removeElementAtSimple(temp,i);
-			--i;
+			--i; continue;
 		// low LoG response
-		}else if(response<minThresholdIntensity){
+		}else if(intensity<minThresholdIntensity){
 			Code.removeElementAtSimple(temp,i);
-			--i;
-		// keep
-		}else{
-			temp[i].z = measure;
-		}
+			--i; continue;
+		} // keep
+		temp[i].t = Math.abs(measure);
 	}
 	console.log("  contrast/SMM count: "+temp.length);
 	// sort on extrema value
@@ -262,19 +293,159 @@ ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a li
 	len = temp.length;
 	//len = Math.min(temp.length,300);
 	for(i=0;i<len;++i){
-		// loe 
-		if( Math.abs(temp[i].t) >= minThresholdIntensity ){
 		//if( this._flatGry[this._width*Math.floor(temp[i].y) + Math.floor(temp[i].x)] >= minThresholdIntensity ){
 			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
-		}/*else{ // because of sort
-			break;
-		}*/
+		//}
 	}
 	Code.emptyArray(extremaList);
 	Code.timerStop();
 	console.log("  scale space count: "+this._features.length);
 	console.log( "time: "+Code.timerDifferenceSeconds() );
+	//
+_zMin = _vizMin;
+_zMax = _vizMax;
+_vizMin = _vizMinScale;
+_vizMax = _vizMaxScale;
+
+var _peaksMin = ImageMat.getPeaks(_vizMin, _vizWid,_vizHei);
+var _peaksMax = ImageMat.getPeaks(_vizMax, _vizWid,_vizHei);
+var _peaks = [];
+for(i=0;i<_peaksMin.length;++i){
+	index = Math.round(_peaksMax[i].y)*_vizWid + Math.round(_peaksMax[i].x);
+	if(_zMin[index]<-0.10){
+		_peaks.push(_peaksMin[i]);
+	}
 }
+for(i=0;i<_peaksMax.length;++i){
+	index = Math.round(_peaksMax[i].y)*_vizWid + Math.round(_peaksMax[i].x);
+	if(_zMax[index]>0.10){
+		_peaks.push(_peaksMax[i]);
+	}
+}
+for(i=0;i<_peaks.length;++i){
+	_peaks[i].x *= 4;
+	_peaks[i].y *= 4;
+}
+
+	_vizMax = ImageMat.normalFloat01(_vizMax);
+	_vizMin = ImageMat.normalFloat01(_vizMin);
+	_vizMin = ImageMat.invertFloat01(_vizMin);
+// _vizMin = ImageMat.addFloat(_vizMin,_vizMax);
+// _vizMin = ImageMat.normalFloat01(_vizMin);
+	return {"images":images,"viz":[{"source":_vizMin,"width":_vizWid,"height":_vizHei}, {"source":_vizMax,"width":_vizWid,"height":_vizHei}],
+"scalePeaks":_peaks};
+}
+
+ImageDescriptor.prototype.processCornerSpace = function(){
+	Code.timerStart();
+	var i, j, k, ss, len, len2, pt, dist, index, peak;
+	var wid = this._width, hei = this._height;
+	var gray = this._flatGry;
+	//var winSize = 7;
+	var sigma = 0.7;
+	var k = 0.04; // 0.03 ~ 0.05
+	var minThresholdPercent = 0.01; // 0.10
+	var minThresh = null;
+	var maxThresh = null;
+	var gaussWin = ImageMat.gaussianWindow1DFromSigma(sigma);
+gray = ImageMat.gaussian2DFrom1DFloat(gray, wid,hei, gaussWin);
+	var dx = ImageMat.convolve(gray,wid,hei, [-1,1], 2,1);
+	var dy = ImageMat.convolve(gray,wid,hei, [-1,1], 1,2);
+	var dxx = ImageMat.mulFloat(dx,dx);
+	var dyy = ImageMat.mulFloat(dy,dy);
+	var dxy = ImageMat.mulFloat(dx,dy);
+	var mxx = ImageMat.gaussian2DFrom1DFloat(dxx, wid,hei, gaussWin);
+	var myy = ImageMat.gaussian2DFrom1DFloat(dyy, wid,hei, gaussWin);
+	var mxy = ImageMat.gaussian2DFrom1DFloat(dxy, wid,hei, gaussWin);
+	//var R = new ImageMat(wid,hei);
+	var R = ImageMat.newZeroFloat(wid,hei);//Code.newArrayZero(wid*hei);
+	//gaussSource = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
+	//gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D);
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i){
+			index = j*wid + i;
+			var m00 = mxx[index];
+			var m01 = mxy[index];
+			var m10 = mxy[index];
+			var m11 = mxy[index];
+			var tra = m00 * m11;
+			var det = m00*m11 - m01*m10;
+			R[index] = det - k*tra*tra;
+		}
+	}
+	/*
+	// peak 1
+	var L = [];
+	var peaks = ImageMat.newZeroFloat(wid,hei);
+	var indexL = 0;
+	for(j=1;j<hei-1;++j){
+		for(i=1;i<wid-1;++i){
+			index = j*wid + i;
+			var _a = R[(j-1)*wid + (i-1)];
+			var _b = R[(j-1)*wid + (i  )];
+			var _c = R[(j-1)*wid + (i+1)];
+			var _d = R[(j  )*wid + (i-1)];
+			var _e = R[(j  )*wid + (i  )];
+			var _f = R[(j  )*wid + (i+1)];
+			var _g = R[(j-1)*wid + (i-1)];
+			var _h = R[(j-1)*wid + (i  )];
+			var _i = R[(j-1)*wid + (i+1)];
+			var r = _e;
+			if(minThresh==null||r<minThresh){
+				minThresh = r;
+			}
+			if(maxThresh==null||r>maxThresh){
+				maxThresh = r;
+			}
+			if(r==Math.max(_a,_b,_c,_d,_e,_f,_g,_h,_i)){
+				L.push({"x":i,"y":j,"value":r});
+				++indexL;
+			}
+			++indexL;
+		}
+	}
+	// group peaks into regions
+	*/
+	// peak 2
+	var peaks = [];
+	var L = ImageMat.getPeaks(R, wid,hei);
+	for(i=0;i<L.length;++i){
+		peak = L[i];
+		if( 1<peak.x&&peak.x<wid-1 && 1<peak.y&&peak.y<hei-1){
+			r = peak.value;
+			if(minThresh==null||r<minThresh){
+				minThresh = r;
+			}
+			if(maxThresh==null||r>maxThresh){
+				maxThresh = r;
+			}
+		}
+	}
+	var minThresholdValue = maxThresh*minThresholdPercent;
+	for(i=0;i<L.length;++i){
+		peak = L[i];
+		if(peak.value>minThresholdValue && 1<peak.x&&peak.x<wid-1 && 1<peak.y&&peak.y<hei-1){
+			peaks.push(peak);
+		}
+	}
+	
+	// for(i=0;i<peaks.length;++i){
+	// 	var peak = peaks[i];
+	// 	console.log(peak.value);
+	// 	if(Math.abs(peak.value)<1E-6){
+	// 		Code.removeElementAtSimple(peaks,i);
+	// 		--i; continue;
+	// 	}
+	// }
+
+	Code.timerStop();
+	console.log("  corner space count: "+this._features.length);
+	console.log( "time: "+Code.timerDifferenceSeconds() );
+	//console.log(peaks.length);
+	return peaks;
+}
+
+
 
 ImageDescriptor.prototype.processAffineSpace = function(){ // this finds the most affine-invariant transformation to compare points
 	Code.timerStart();
@@ -319,15 +490,15 @@ ImageDescriptor.prototype.describeFeatures = function(){ // features are now ful
 	Code.timerStop();
 	console.log( "time: "+Code.timerDifferenceSeconds() );
 }
-ImageDescriptor.prototype.compareFeatures = function(){ // this finds best-matching lists for each featuring
-	var list = this._features;
-	var i, len=list.length;
-	for(i=0;i<len;++i){
-		for(j=i+1;j<len;++j){
-			ImageFeature.compareFeatures(list[i],list[j]);
-		}
-	}
-}
+// ImageDescriptor.prototype.compareFeatures = function(){ // this finds best-matching lists for each featuring
+// 	var list = this._features;
+// 	var i, len=list.length;
+// 	for(i=0;i<len;++i){
+// 		for(j=i+1;j<len;++j){
+// 			ImageFeature.compareFeatures(list[i],list[j]);
+// 		}
+// 	}
+// }
 
 
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present

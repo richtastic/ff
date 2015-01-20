@@ -1011,10 +1011,6 @@ Manual3DR.prototype.lmMinProjectionFxn = function(args, xMatrix,yMatrix,eMatrix)
  			eMatrix.set(i*4+3,0, Math.pow(toB.y-to.y,2) );
  		}
  	}
- 	if(eMatrix){
- 		//console.log(eMatrix.toString())
- 		//console.log(eMatrix.getNorm()+"")
- 	}
 }
 // var v01 = Manual3DR.vRowFromCols(h_0_0,h_0_1,h_0_2, h_1_0,h_1_1,h_1_2);
 Manual3DR.vRowFromCols = function(hi0,hi1,hi2, hj0,hj1,hj2){

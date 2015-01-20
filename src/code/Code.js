@@ -297,6 +297,9 @@ Code.copyArray = function(a,b){ // a = b
 Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
 }
+Code.truncateArray = function(a,length){
+	while(a.length>length){ a.pop(); }
+}
 Code.elementExists = function(a,o){ // O(n)
 	for(var i=0; i<a.length; ++i){
 		if(a[i]==o){ return true; }
@@ -641,6 +644,13 @@ Code.getAlpRGBA = function(col){
 	return col&0xFF;
 }
 // color functions ----------------------------------------------------
+Code.randomInt = function(min,max){
+	if(max===undefined){
+		max = min;
+		min = 0;
+	}
+	return min + Math.min( Math.floor(Math.random()*(max-min+1)), max-min);
+}
 Code.getColARGBFromFloat = function(a,r,g,b){
 	a = Math.min(Math.floor(a*256.0),255);
 	r = Math.min(Math.floor(r*256.0),255);
@@ -1748,7 +1758,7 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 	var i, j, hm1=hei-1, wm1=wid-1, list = [];
 	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7;
 	var jW0,jW1,jW2, i0,i1,i2, result;
-	var eps = 1.0; // 0.5;
+	var eps = 1.0; // 0.5
 	for(j=1;j<hm1;++j){
 		jW0 = (j-1)*wid, jW1 = j*wid, jW2 = (j+1)*wid;
 		for(i=1;i<wm1;++i){
@@ -1763,14 +1773,19 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 			(a0>b4&&a1>b4&&a2>b4&&a3>b4&&a4>b4&&a5>b4&&a6>b4&&a7>b4&&a8>b4 // minima
 			&& b0>b4&&b1>b4&&b2>b4&&b3>b4    &&   b5>b4&&b6>b4&&b7>b4&&b8>b4
 			&& c0>b4&&c1>b4&&c2>b4&&c3>b4&&c4>b4&&c5>b4&&c6>b4&&c7>b4&&c8>b4) ){
-				result = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
-				if(result==null){ continue; }
-				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
-					result.x += i; result.y += j; result.z += k;
-					list.push(result);
-				}else{ // need to interpolate at a neighbor
-					//	console.log("result; "+result.toString());
-				}
+				result = new V4D(i,j,0,b4); // --- close enough
+				list.push(result);
+				// result = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
+				// if(result==null){ console.log("null result"); continue; }
+				// if(true){//Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
+				// 	result.x += i; result.y += j; result.z += k;
+				// 	list.push(result);
+				// }else{ // need to interpolate at a neighbor
+				// 	// console.log("neighbor - result; "+result.toString()+"----------    ");
+				// 	// console.log("          var a = ["+a0+","+a1+","+a2+","+a3+","+a4+","+a5+","+a6+","+a7+","+a8+"] ");
+				// 	// console.log("          var b = ["+b0+","+b1+","+b2+","+b3+","+b4+","+b5+","+b6+","+b7+","+b8+"] ");
+				// 	// console.log("          var c = ["+c0+","+c1+","+c2+","+c3+","+c4+","+c5+","+c6+","+c7+","+c8+"] ");
+				// }
 			}
 		}
 	}
@@ -1778,7 +1793,7 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 }
 Code._tempMatrixArray3 = [0,0,0];
 Code._tempMatrixArray9 = [0,0,0, 0,0,0, 0,0,0];
-Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7, keepDet){ // a is bot, b is middle, c is top
+Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7){ // a is bot, b is middle, c is top
 	var dx = (b5-b3)*0.5;
 	var dy = (b7-b1)*0.5;
 	var dz = (c4-a4)*0.5;

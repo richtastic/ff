@@ -18,14 +18,17 @@ ImageMatcher.prototype.loadFromYAML = function(yaml){
 ImageMatcher.prototype.clearMatches = function(){
 	Code.emptyArray(this._matches);
 }
+ImageMatcher.prototype.matches = function(){
+	return this._matches;
+}
 ImageMatcher.prototype.matchDescriptors = function(dA,dB){
 Code.timerStart();
 	var i, j, lenA, lenB, listA, listB, fA, fB;
 	this.clearMatches();
 	this._descriptorA = dA;
 	this._descriptorB = dB;
-	listA = dA.getFeatureList();
-	listB = dB.getFeatureList();
+	listA = dA.featureList();
+	listB = dB.featureList();
 	lenA = listA.length;
 	lenB = listB.length;
 	// clear any existing matches
@@ -33,12 +36,12 @@ Code.timerStart();
 // lenB = 10;
 	for(i=0;i<lenA;++i){
 		listA[i].clearPointList();
-		listA[i].descriptor(dA);
+		//listA[i].descriptor(dA);
 		listA[i].findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
 	}
 	for(j=0;j<lenB;++j){
 		listB[j].clearPointList();
-		listB[j].descriptor(dB);
+		//listB[j].descriptor(dB);
 		listB[j].findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
 	}
 	// find all matching scores
@@ -58,17 +61,22 @@ var skipped = 0;
 		for(j=0;j<lenB;++j){
 			fB = listB[j];
 			// compare features at best possible orientation
-			grys = fA.colorAngle().gry()-fB.colorAngle().gry();
-			ang = ImageFeature.bestRotation(fA,fB);
-			ang = grys+ang;
-			fB.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
-			fB.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
+			// grys = fA.colorAngle().gry()-fB.colorAngle().gry();
+			// ang = ImageFeature.bestRotation(fA,fB);
+			// ang = grys+ang;
+			//ang = 0;
+			// fB.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
+			// fB.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
 // var u = fB._flat.uniqueness();
 // if(u<0.05){
 // 	//skipped++;
 // 	continue;
 // }
-			ImageFeature.compareFeatures(fA,fB);
+			var score = ImageFeature.compareFeatures(fA,fB);
+			//console.log(score);
+			fA.addFeatureMatch(fB,score);
+			fB.addFeatureMatch(fA,score);
+//break;
 		}
 	}
 console.log("skipped: "+skipped+" / "+lenA+" = "+(skipped/lenA));
@@ -81,34 +89,56 @@ ImageMatcher._sortPointList = function(a,b){
 }
 ImageMatcher.prototype.chooseBestMatches = function(){
 Code.timerStart();
+
+// if fA's top is fB and fB's top match is fA
+
 	// check for uniqueness - only single high-scoring match - ignore matches that are all similar to eachother
 	// choose the best matches between each feature
 	//   - drop features with poor/duplicate matches
+	this.clearMatches();
 	var best = this._matches;
-	var i, j, lenA, lenB, listA, listB, fA, fB, pts, len;
-	listA = this._descriptorA.getFeatureList();
-	listB = this._descriptorB.getFeatureList();
+	var i, j, lenA, lenB, listA, listB, fA, fB, fC, pts, len;
+	listA = this._descriptorA.featureList();
+	listB = this._descriptorB.featureList();
 	lenA = listA.length;
 	lenB = listB.length;
+	var lA, lB;
 	// clear any existing matches
 	for(i=0;i<lenA;++i){
-		pts = listA[i]._pointList;
-		len = pts.length;
-		for(j=0;j<len;++j){
-			best.push([listA[i],pts[j][0],pts[j][1]]);
+		fA = listA[i];
+		lA = fA._pointList;
+		if(lA.length>0){
+			fB = lA[0][0];
+			lB = fB._pointList;
+			if(lB.length>0){
+				fC = lB[0][0];
+				if(fC==fA){
+					score = lB[0][1];
+					console.log("TWO TOP MATCHES");
+					this._matches.push([fA,fB,score]);
+				}
+			}
 		}
-		// if(pts.length>0){
-		// 	best.push([listA[i],pts[0][0],pts[0][1]]); // A,B,score
-		// }
 	}
-	best.sort(ImageMatcher._sortPointList);
-	// for(j=0;j<lenB;++j){
-	// 	listB[j].clearPointList();
-	// }
+	// SAME IN FB'S DIRECTION IF NOT SYMMETRIC
+	//...
+	// DROP BAD IN SET
+	this._matches.sort(this._sortMatches);
+	for(i=0;i<this._matches.length;++i){
+		var m = this._matches;
+		if(m[i][2]>10){
+			Code.truncateArray(this._matches,i);
+			break;
+		}
+	}
+	Code.truncateArray(this._matches,25); // for sho
+	console.log("matches: "+this._matches.length);
 Code.timerStop();
-console.log( Code.timerDifferenceSeconds() );
+console.log( "time: "+Code.timerDifferenceSeconds() );
 }
-
+ImageMatcher.prototype._sortMatches = function(a,b){
+	return a[2]-b[2];
+}
 ImageMatcher.prototype.consolidateMatches = function(){
 	// pull the data from the features, and store in seperate data structure
 }
