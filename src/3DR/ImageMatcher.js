@@ -126,12 +126,12 @@ Code.timerStart();
 	this._matches.sort(this._sortMatches);
 	for(i=0;i<this._matches.length;++i){
 		var m = this._matches;
-		if(m[i][2]>10){
-			Code.truncateArray(this._matches,i);
-			break;
-		}
+		// if(m[i][2]>10){
+		// 	Code.truncateArray(this._matches,i);
+		// 	break;
+		// }
 	}
-	Code.truncateArray(this._matches,25); // for sho
+	Code.truncateArray(this._matches,40); // for sho
 	console.log("matches: "+this._matches.length);
 Code.timerStop();
 console.log( "time: "+Code.timerDifferenceSeconds() );

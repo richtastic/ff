@@ -311,7 +311,7 @@ var _peaksMin = ImageMat.getPeaks(_vizMin, _vizWid,_vizHei);
 var _peaksMax = ImageMat.getPeaks(_vizMax, _vizWid,_vizHei);
 var _peaks = [];
 for(i=0;i<_peaksMin.length;++i){
-	index = Math.round(_peaksMax[i].y)*_vizWid + Math.round(_peaksMax[i].x);
+	index = Math.round(_peaksMin[i].y)*_vizWid + Math.round(_peaksMin[i].x);
 	if(_zMin[index]<-0.10){
 		_peaks.push(_peaksMin[i]);
 	}

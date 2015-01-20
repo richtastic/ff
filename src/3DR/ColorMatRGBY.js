@@ -56,7 +56,8 @@ ColorMatRGBY.SSD = function(a,b){
 	var ssdG = ColorMatRGBY._SSD(gA,gB);
 	var ssdB = ColorMatRGBY._SSD(bA,bB);
 	var ssdY = ColorMatRGBY._SSD(yA,yB);
-	return (ssdR + ssdG + ssdB + ssdY)*0.25;
+	return (ssdR + ssdG + ssdB)*(1.0/3.0);
+	//return (ssdR + ssdG + ssdB + ssdY)*0.25;
 	//return ssdY;
 }
 ColorMatRGBY._SSD = function(a,b){

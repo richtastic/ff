@@ -14,8 +14,8 @@ function FeatureTest(){
 	//var imageList = ["calibration1-0.jpg","calibration1-1.jpg"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalex.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexy.png"];
-	var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
-	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
+	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
+	var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
 	new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 }
 FeatureTest.prototype.imagesLoadComplete = function(o){
