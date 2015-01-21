@@ -139,7 +139,6 @@ var images = [];
 	var gaussSizeIncrement = 1.5;
 	var gauss1D, gaussSize;
 	var dogList = new Array();
-//	var extremaList = new Array();
 	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized 
 	var nextWid, nextHei;
 	var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
@@ -219,19 +218,6 @@ ss = prevImage; // ss is blurry
 	}
 	// copy points over to single array
 	this._clearFeatureList();
-	/*
-	len = extremaList.length;
-	
-	for(i=0;i<len;++i){
-		arr = extremaList[i];
-		len2 = arr.length;
-		for(j=0;j<len2;++j){
-			pt = arr[j];
-			pt.t = Math.abs(pt.t);
-			temp.push(pt);
-		}
-		Code.emptyArray(arr);
-	}*/
 	console.log("     original count: "+temp.length);
 	// remove duplicates
 	for(i=0;i<temp.length;++i){
@@ -299,11 +285,9 @@ ss = prevImage; // ss is blurry
 	len = temp.length;
 	//len = Math.min(temp.length,300);
 	for(i=0;i<len;++i){
-		//if( this._flatGry[this._width*Math.floor(temp[i].y) + Math.floor(temp[i].x)] >= minThresholdIntensity ){
-			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
-		//}
+		this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
 	}
-	//Code.emptyArray(extremaList);
+	Code.emptyArray(temp);
 	Code.timerStop();
 	console.log("  scale space count: "+this._features.length);
 	console.log( "time: "+Code.timerDifferenceSeconds() );
@@ -505,6 +489,32 @@ ImageDescriptor.prototype.describeFeatures = function(){ // features are now ful
 // 		}
 // 	}
 // }
+ImageDescriptor.prototype.dropNonUniqueFeatures = function(){ 
+	var matcher = new ImageMatcher();
+	matcher.matchDescriptors(this,this);
+	var i, j;
+	var features = this._features;
+	console.log("FEATURE COUNT A: "+features.length);
+	// for(i=0;i<features.length;++i){
+	// 	var f = features[i];
+	// 	var matches = f._pointList;
+	// 	for(j=0;j<matches.length;++j){
+	// 		var m = matches[j];
+	// 		var score = m[1];
+	// 		if(score<30){ // should be based on some distribution stdev
+	// 			Code.removeElementAtSimple(features,i);
+	// 			--i;
+	// 			break;
+	// 		}
+	// 		break;
+	// 	}
+	// }
+	var fiftyPercent = Math.max(Math.round(features.length*0.50),50);
+	features.sort( function(a,b){ return b._pointList[0][1] - a._pointList[0][1]; } );
+	Code.truncateArray(features,fiftyPercent);
+	console.log("FEATURE COUNT B: "+features.length);
+	matcher.kill();
+}
 
 
 ImageDescriptor.prototype.getScaleSpacePoint = function(x,y,s,u, w,h, matrix){ // return scale-space image with width:w and height:h, centered at x,y, transformed by matrix if present

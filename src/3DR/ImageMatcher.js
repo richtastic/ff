@@ -32,54 +32,38 @@ Code.timerStart();
 	lenA = listA.length;
 	lenB = listB.length;
 	// clear any existing matches
-// lenA = 10;
-// lenB = 10;
 	for(i=0;i<lenA;++i){
 		listA[i].clearPointList();
-		//listA[i].descriptor(dA);
 		listA[i].findOrientations(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height());
 	}
-	for(j=0;j<lenB;++j){
-		listB[j].clearPointList();
-		//listB[j].descriptor(dB);
-		listB[j].findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
+	if(dA!=dB){
+		for(j=0;j<lenB;++j){
+			listB[j].clearPointList();
+			listB[j].findOrientations(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height());
+		}
 	}
 	// find all matching scores
-	var ang;
-var skipped = 0;
+	var skipped = 0;
 	for(i=0;i<lenA;++i){
 		fA = listA[i];
-		fA.findDescriptor(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
-		fA.findSurface(dA.redFlat(),dA.greenFlat(),dA.blueFlat(),dA.grayFlat(),dA.width(),dA.height(), 0);
-
 // var u = fA._flat.uniqueness();
 // if(u<0.05){
 // 	skipped++;
 // 	continue;
 // }
-
-		for(j=0;j<lenB;++j){
+		if(dA==dB){
+			j = i+1;
+		}else{
+			j = 0;
+		}
+		for(;j<lenB;++j){
 			fB = listB[j];
-			// compare features at best possible orientation
-			// grys = fA.colorAngle().gry()-fB.colorAngle().gry();
-			// ang = ImageFeature.bestRotation(fA,fB);
-			// ang = grys+ang;
-			//ang = 0;
-			// fB.findDescriptor(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
-			// fB.findSurface(dB.redFlat(),dB.greenFlat(),dB.blueFlat(),dB.grayFlat(),dB.width(),dB.height(), ang);
-// var u = fB._flat.uniqueness();
-// if(u<0.05){
-// 	//skipped++;
-// 	continue;
-// }
 			var score = ImageFeature.compareFeatures(fA,fB);
-			//console.log(score);
 			fA.addFeatureMatch(fB,score);
 			fB.addFeatureMatch(fA,score);
-//break;
 		}
 	}
-console.log("skipped: "+skipped+" / "+lenA+" = "+(skipped/lenA));
+//console.log("skipped: "+skipped+" / "+lenA+" = "+(skipped/lenA));
 Code.timerStop();
 console.log( Code.timerDifferenceSeconds() );
 }
@@ -109,6 +93,7 @@ Code.timerStart();
 		lA = fA._pointList;
 		if(lA.length>0){
 			fB = lA[0][0];
+			
 			lB = fB._pointList;
 			if(lB.length>0){
 				fC = lB[0][0];
@@ -131,7 +116,7 @@ Code.timerStart();
 		// 	break;
 		// }
 	}
-	Code.truncateArray(this._matches,40); // for sho
+//	Code.truncateArray(this._matches,40); // for sho
 	console.log("matches: "+this._matches.length);
 Code.timerStop();
 console.log( "time: "+Code.timerDifferenceSeconds() );
@@ -141,4 +126,7 @@ ImageMatcher.prototype._sortMatches = function(a,b){
 }
 ImageMatcher.prototype.consolidateMatches = function(){
 	// pull the data from the features, and store in seperate data structure
+}
+ImageMatcher.prototype.kill = function(){
+	//...
 }

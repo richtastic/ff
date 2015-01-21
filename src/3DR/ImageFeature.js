@@ -10,8 +10,6 @@ ImageFeature.ORIENTATION_SCALE_MULTIPLIER = 6*0.25; //1.0-4.0
 ImageFeature.SSD_SIZE_B4 = 15; // before gauss
 ImageFeature.SSD_SIZE = 13; // flat [padding=4]
 ImageFeature.SURFACE_SCALE_MULTIPLIER = 4*0.25;
-// ImageFeature.SSD_SIZE_B4 = 15; // before gauss
-// ImageFeature.SSD_SIZE = 7; // flat [padding=4]
 ImageFeature.YAML = {
 	X:"x",
 	Y:"y",
@@ -197,6 +195,9 @@ ImageFeature.prototype.clearPointList = function(){
 	Code.emptyArray(this._pointList);
 }
 ImageFeature.prototype.addFeatureMatch = function(feature,score){
+	if(feature==this){
+		console.log("EQUALED");
+	}
 	this._pointList.push([feature,score]);
 	this._pointList.sort(ImageFeature._sortPointList);
 	if(this._pointList.length>ImageFeature.MAX_POINT_LIST){

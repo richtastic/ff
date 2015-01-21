@@ -57,9 +57,11 @@ this._scales[i] = scales;
 		// var peaks = desc.processCornerSpace();
 		// this._peaks[i] = peaks;
 		desc.describeFeatures();
+		// 
+		desc.dropNonUniqueFeatures();
 //break;
 	}
-	/*
+	//
 	var matcher = new ImageMatcher();
 	matcher.matchDescriptors(this._imageFeatureList[0], this._imageFeatureList[1]);
 	matcher.chooseBestMatches();
@@ -95,7 +97,7 @@ this._scales[i] = scales;
 		d.matrix().identity();
 		this._root.addChild(d);
 	}
-	*/
+	
 }
 FeatureTest.prototype.displayFeatures = function(){
 	var i, j, d, img, desc, len, img, obj, fea;
@@ -106,7 +108,7 @@ FeatureTest.prototype.displayFeatures = function(){
 		var features = desc.featureList();
 		for(j=0;j<features.length;++j){
 			fea = features[j];
-			this.displayFeature(fea,obj,img);
+//			this.displayFeature(fea,obj,img);
 		}
 this._feaLocX = 0.0;
 this._feaLocY = 400.0;
