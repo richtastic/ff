@@ -5,16 +5,50 @@ function GradBinDescriptor(count){
 	this._bins = new Array(count);
 	this.clear();
 }
-GradBinDescriptor.compare = function(binA,binB){ //////////////////////////////////////////////////// ?
+GradBinDescriptor.compare = function(binA,binB){
+	//return GradBinDescriptor.compareConv(binA,binB);
+	//return GradBinDescriptor.compareCross(binA,binB);
+	return GradBinDescriptor.compareSSD(binA,binB);
+}
+GradBinDescriptor.compareConv = function(binA,binB){
 	var i, len = Math.min(binA.binLength(),binB.binLength());
 	var score = 0, sumA = binA.area(), sumB = binA.area();
 	sumA = sumA>0?sumA:1.0;
 	sumB = sumB>0?sumB:1.0;
 	for(i=0;i<len;++i){
-		score += binA._bin[i]*binB._bin[i];
+		score += binA._bins[i]*binB._bins[i];
 	}
-	score *= 1.0/(sumA,sumB);
-	return score;
+	return score/(sumA*sumB);
+}
+GradBinDescriptor.compareCross = function(binA,binB){ // cross correlation
+	var i, len = Math.min(binA.binLength(),binB.binLength());
+	var score = 0, sumA = 0, sumB = 0;
+	for(i=0;i<len;++i){
+		score += binA._bins[i]*binB._bins[i];
+		sumA += binA._bins[i]*binA._bins[i];
+		sumB += binB._bins[i]*binB._bins[i];
+	}
+	sumA = Math.sqrt(sumA);
+	sumB = Math.sqrt(sumB);
+	if(sumA==0||sumB==0){ return 0; }
+	return score/(sumA*sumB);
+}
+GradBinDescriptor.compareSSD = function(binA,binB){
+	var binA = binA._bins;
+	var binB = binB._bins;
+	var maxA = Math.max.apply(this,binA);
+	var minA = Math.min.apply(this,binA);
+	var maxB = Math.max.apply(this,binB);
+	var minB = Math.min.apply(this,binB);
+	var rangeA = maxA-minA;
+	var rangeB = maxB-minB;
+	if(rangeA!=0){ rangeA = 1.0/rangeA; }
+	if(rangeB!=0){ rangeB = 1.0/rangeB; }
+	var i, ssd = 0;
+	for(i=binA.length;i--;){
+		ssd += Math.pow( rangeA*(binA[i]-minA) - rangeB*(binB[i]-minB),2);
+	}
+	return ssd;
 }
 GradBinDescriptor.prototype.binLength = function(){
 	return this._bins.length;

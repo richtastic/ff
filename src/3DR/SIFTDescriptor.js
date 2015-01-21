@@ -12,13 +12,16 @@ function SIFTDescriptor(){
 		this._bins[i] = new GradBinDescriptor(SIFTDescriptor.BIN_COUNT);
 	}
 }
-
+SIFTDescriptor._gauss = null;
 SIFTDescriptor.gaussian = function(){
-	return ImageMat.getGaussianWindowSimple(16,16, 8);
+	if(!SIFTDescriptor._gauss){
+		SIFTDescriptor._gauss = ImageMat.getGaussianWindowSimple(16,16, 1.6);
+	}
+	return SIFTDescriptor._gauss;
 }
 SIFTDescriptor.compare = function(descA,descB){
-	var score = 0;
-	for(var i=0;i<this._bins.length;++i){
+	var i, score = 0;
+	for(i=0;i<descA._bins.length;++i){
 		score += GradBinDescriptor.compare(descA._bins[i],descB._bins[i]);
 	}
 	return score;
@@ -81,9 +84,14 @@ SIFTDescriptor.prototype.fromGradients = function(Ix,Iy,w,h){
 		for(i=0;i<bW;++i,++gIndex){
 			index = w*(j+offY) + i+offX;
 			bin = this._width*Math.floor(j/cntH) + Math.floor(i/cntW);
-			this._bins[bin].addVector(Ix[index], Iy[index], Math.sqrt( Math.pow(Ix[index],2)+Math.pow(Iy[index],2) )*gauss[gIndex]);
+			//var mag = Math.sqrt( Math.pow(Ix[index],2)+Math.pow(Iy[index],2) )*gauss[gIndex];
+			var mag = Math.sqrt( Math.pow(Ix[index],2)+Math.pow(Iy[index],2) );
+			//var mag = 1.0;
+			var ang = Math.atan2(Iy[index],Ix[index]);
+			this._bins[bin].addAngle(ang, mag);
 		}
 	}
+	return this;
 }
 SIFTDescriptor.prototype.clear = function(){
 	for(var i=0;i<this._bins.length;++i){

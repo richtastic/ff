@@ -131,7 +131,7 @@ var images = [];
 	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // sqrt(2)
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
-	var minThresholdIntensity = 0.03; // 0.03
+	var minThresholdIntensity = 0.01; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
 	edgeResponseEigenRatioR = Math.pow(edgeResponseEigenRatioR + 1, 2)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
@@ -139,7 +139,7 @@ var images = [];
 	var gaussSizeIncrement = 1.5;
 	var gauss1D, gaussSize;
 	var dogList = new Array();
-	var extremaList = new Array();
+//	var extremaList = new Array();
 	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized 
 	var nextWid, nextHei;
 	var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
@@ -152,6 +152,7 @@ ImageMat.addConst(_vizMax,-1E10);
 ImageMat.addConst(_vizMin,1E10);
 var _vizMinScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
 var _vizMaxScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
+	var temp = new Array();
 	for(i=0;i<totalOctaves;++i){
 images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
 var prevImage = currentImage;
@@ -201,8 +202,12 @@ for(j=0;j<dogList.length;++j){
 				ext[k].x /= currentWid;
 				ext[k].y /= currentHei;
 				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
+				ext[k].t = Math.abs(ext[k].t);
+				var intensity = ext[k].t;
+				if(intensity>=minThresholdIntensity){
+					temp.push(ext[k]);
+				}
 			}
-			extremaList.push(ext);
 		}
 		// subsample image for next octave
 		if(i<totalOctaves-1){
@@ -214,8 +219,9 @@ ss = prevImage; // ss is blurry
 	}
 	// copy points over to single array
 	this._clearFeatureList();
+	/*
 	len = extremaList.length;
-	var temp = new Array();
+	
 	for(i=0;i<len;++i){
 		arr = extremaList[i];
 		len2 = arr.length;
@@ -225,7 +231,7 @@ ss = prevImage; // ss is blurry
 			temp.push(pt);
 		}
 		Code.emptyArray(arr);
-	}
+	}*/
 	console.log("     original count: "+temp.length);
 	// remove duplicates
 	for(i=0;i<temp.length;++i){
@@ -273,7 +279,7 @@ ss = prevImage; // ss is blurry
 		tra = Lxx + Lyy;
 		det = Lxx*Lyy - Lxy*Lxy;
 		measure = tra*tra/det;
-		intensity = Math.abs(temp[i].t);
+		//intensity = Math.abs(temp[i].t);
 		//response = Lxx + Lyy;
 //measure = edgeResponseEigenRatioR;
 		// low edge response
@@ -281,10 +287,10 @@ ss = prevImage; // ss is blurry
 			Code.removeElementAtSimple(temp,i);
 			--i; continue;
 		// low LoG response
-		}else if(intensity<minThresholdIntensity){
+		}/*else if(intensity<minThresholdIntensity){
 			Code.removeElementAtSimple(temp,i);
 			--i; continue;
-		} // keep
+		} // keep*/
 		temp[i].t = Math.abs(measure);
 	}
 	console.log("  contrast/SMM count: "+temp.length);
@@ -297,7 +303,7 @@ ss = prevImage; // ss is blurry
 			this._features.push( new ImageFeature(temp[i].x,temp[i].y,temp[i].z,temp[i].t,null) );
 		//}
 	}
-	Code.emptyArray(extremaList);
+	//Code.emptyArray(extremaList);
 	Code.timerStop();
 	console.log("  scale space count: "+this._features.length);
 	console.log( "time: "+Code.timerDifferenceSeconds() );

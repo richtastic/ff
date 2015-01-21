@@ -5,7 +5,7 @@ ImageFeature.SQUARE_SIZE_SELECT = 7;
 // SIFT FEATURE 8x8
 ImageFeature.DESCRIPTOR_SIZE_P4_B4 = 20; // before gradient
 ImageFeature.DESCRIPTOR_SIZE_P4 = 16;
-ImageFeature.ORIENTATION_SCALE_MULTIPLIER = 0.25;
+ImageFeature.ORIENTATION_SCALE_MULTIPLIER = 6*0.25; //1.0-4.0
 // SSD CENTERED ON POINT
 ImageFeature.SSD_SIZE_B4 = 15; // before gauss
 ImageFeature.SSD_SIZE = 13; // flat [padding=4]
@@ -150,26 +150,25 @@ ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,he
 	this._affine = Matrix.transform2DRotate(this._affine, -primaryAngle);
 	// generate SIFT feature
 	var w = ImageFeature.DESCRIPTOR_SIZE_P4_B4;
-	var h = wid;
+	var h = w;
 	var scaler = 1.0;
 	var sigma = 1.6;
-	var ang = 0.0;
-	var win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, this._affine); // to canonical affine view/orientation
+	var win;
+	win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, this._affine);
 	Ix = ImageMat.derivativeX(win, w,h);
 	Iy = ImageMat.derivativeY(win, w,h);
-	// var orientations = SIFTDescriptor.findMaximumOrientations(Ix,Iy,w,h);
-	// // for each orientation...
-	// var i;
-	// for(i=0;i<orientations.length;++i){
-	// 	win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, null);
-	// 	Ix = ImageMat.derivativeX(win, w,h);
-	// 	Iy = ImageMat.derivativeY(win, w,h);
-	// 	// ...
-	// 	this._bins = new SIFTDescriptor();
-	// 	this._bins.fromGradients(Ix,Iy,w,h);
-	// }
-	this._sift = new SIFTDescriptor();
-	this._sift.fromGradients(Ix,Iy,w,h);
+	// EACH COLOR
+	this._sift = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origR,wid,hei, this._affine);
+		Ix = ImageMat.derivativeX(win, w,h); Iy = ImageMat.derivativeY(win, w,h);
+		this._siftR = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origG,wid,hei, this._affine);
+		Ix = ImageMat.derivativeX(win, w,h); Iy = ImageMat.derivativeY(win, w,h);
+		this._siftG = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origB,wid,hei, this._affine);
+		Ix = ImageMat.derivativeX(win, w,h); Iy = ImageMat.derivativeY(win, w,h);
+		this._siftB = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
+
 	this.findSurface(origR,origG,origB,origY, wid,hei);
 }
 ImageFeature.prototype.SIFT = function(){
@@ -217,19 +216,42 @@ ImageFeature.prototype._calculateScore = function(){
 ImageFeature.bestRotation = function(featureA, featureB){ // how far to rotate B to best match A
 	return ColorAngle.optimumAngle( featureA.colorAngle(), featureB.colorAngle() );
 }
-ImageFeature.compareFeatures = function(featureA, featureB){
-	// assume features are already in best comperable orientation
-	// console.log( "SIFT: "+SIFTDescriptor.compare(featureA.bins(),featureB.bins()) );
-	// console.log( "SSD:  "+ColorMatRGBY.SSD(featureA.flat(),featureB.flat()) );
-	// console.log( "conv: "+ColorMatRGBY.convolution(featureA.flat(),featureB.flat()) );
-	// calculate their relative score and place features in respective list
-var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+ImageFeature.compareFeatures = function(featureA, featureB){ // assume features are already in best comperable orientation
+	// A
+	// var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+	// return scoreSSD;
+	// B
+	// var scoreCon = ColorMatRGBY.convolution(featureA.flat(),featureB.flat());
+	// scoreCon = scoreCon==0? Number.MAX_VALUE : 1.0/scoreCon;
+	// return scoreCon;
+	// C
+	// var scoreSIF = SIFTDescriptor.compare(featureA._sift,featureB._sift); // cross
+	// scoreSIF = scoreSIF==0? Number.MAX_VALUE : 1.0/scoreSIF;
+	// return scoreSIF;
+	// D
+	// var scoreSIF = SIFTDescriptor.compare(featureA._sift,featureB._sift); // ssd
+	// return scoreSIF;
+	// E
+	// var sR = SIFTDescriptor.compare(featureA._siftR,featureB._siftR);
+	// var sG = SIFTDescriptor.compare(featureA._siftG,featureB._siftG);
+	// var sB = SIFTDescriptor.compare(featureA._siftB,featureB._siftB);
+	// return (sR+sG+sB)*(1.0/3.0);
+
+	var sR = SIFTDescriptor.compare(featureA._siftR,featureB._siftR);
+	var sG = SIFTDescriptor.compare(featureA._siftG,featureB._siftG);
+	var sB = SIFTDescriptor.compare(featureA._siftB,featureB._siftB);
+	var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+	return (sR+sG+sB)*(1.0/3.0) + scoreSSD;
+
+
+	var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+	var scoreSIF = SIFTDescriptor.compare(featureA._sift,featureB._sift);
+	return scoreSSD + scoreSIF;
+
 //var score = 1/ColorMatRGBY.convolution(featureA.flat(),featureB.flat());
 	// var score = 16 - SIFTDescriptor.compare(featureA.bins(),featureB.bins());
 	// featureA.addPointList(featureB,score);
 	// featureB.addPointList(featureA,score);
-	var score = scoreSSD;
-	return score;
 	/*
 	* relative orientation
 		- eg is red CCW or CW from gray

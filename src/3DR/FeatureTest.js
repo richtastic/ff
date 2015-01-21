@@ -8,14 +8,14 @@ function FeatureTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	// load images
-	//var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
+	var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
 	//var imageList = ["snow1.png","snow2.png"];
 	//var imageList = ["F_S_1_1.jpg","F_S_1_2.jpg"];
 	//var imageList = ["calibration1-0.jpg","calibration1-1.jpg"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalex.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexy.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
-	var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
+	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
 	new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 }
 FeatureTest.prototype.imagesLoadComplete = function(o){
@@ -59,6 +59,7 @@ this._scales[i] = scales;
 		desc.describeFeatures();
 //break;
 	}
+	/*
 	var matcher = new ImageMatcher();
 	matcher.matchDescriptors(this._imageFeatureList[0], this._imageFeatureList[1]);
 	matcher.chooseBestMatches();
@@ -94,7 +95,7 @@ this._scales[i] = scales;
 		d.matrix().identity();
 		this._root.addChild(d);
 	}
-
+	*/
 }
 FeatureTest.prototype.displayFeatures = function(){
 	var i, j, d, img, desc, len, img, obj, fea;
@@ -105,7 +106,7 @@ FeatureTest.prototype.displayFeatures = function(){
 		var features = desc.featureList();
 		for(j=0;j<features.length;++j){
 			fea = features[j];
-//			this.displayFeature(fea,obj,img);
+			this.displayFeature(fea,obj,img);
 		}
 this._feaLocX = 0.0;
 this._feaLocY = 400.0;

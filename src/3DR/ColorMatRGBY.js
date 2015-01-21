@@ -61,16 +61,17 @@ ColorMatRGBY.SSD = function(a,b){
 	//return ssdY;
 }
 ColorMatRGBY._SSD = function(a,b){
-	var ssd = 0;
 	var maxA = Math.max.apply(this,a);
 	var minA = Math.min.apply(this,a);
-	var rangeA = 1/(maxA-minA);
 	var maxB = Math.max.apply(this,b);
 	var minB = Math.min.apply(this,b);
-	var rangeB = 1/(maxB-minB);
-	for(var i=a.length;i--;){
+	var rangeA = maxA-minA;
+	var rangeB = maxB-minB;
+	if(rangeA!=0){ rangeA = 1.0/rangeA; }
+	if(rangeB!=0){ rangeB = 1.0/rangeB; }
+	var i, ssd = 0;
+	for(i=a.length;i--;){
 		ssd += Math.pow( rangeA*(a[i]-minA) - rangeB*(b[i]-minB),2);
-		//ssd += Math.pow(a[i]-b[i],2);
 	}
 	return ssd;
 }
@@ -84,7 +85,8 @@ ColorMatRGBY.convolution = function(a,b){
 	var convG = ColorMatRGBY._conv(gA,gB);
 	var convB = ColorMatRGBY._conv(bA,bB);
 	var convY = ColorMatRGBY._conv(yA,yB);
-	return (convR + convG + convB + convY)*0.25;
+	return (convR + convG + convB)*(1.0/3.0);
+	//return (convR + convG + convB + convY)*0.25;
 }
 ColorMatRGBY._conv = function(a,b){
 	var maxA = Math.max.apply(this,a);
