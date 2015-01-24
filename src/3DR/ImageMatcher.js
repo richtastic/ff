@@ -121,6 +121,11 @@ Code.timerStart();
 Code.timerStop();
 console.log( "time: "+Code.timerDifferenceSeconds() );
 }
+ImageMatcher.prototype.dropNonUniqueMatches = function(){
+	// remove elements in list that have a close 1st and 2nd place
+	// eg score[0]/score[1] >0.95
+	// then remove the opposite element that was the same match
+}
 ImageMatcher.prototype._sortMatches = function(a,b){
 	return a[2]-b[2];
 }

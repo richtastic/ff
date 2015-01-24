@@ -219,8 +219,8 @@ ImageFeature.bestRotation = function(featureA, featureB){ // how far to rotate B
 }
 ImageFeature.compareFeatures = function(featureA, featureB){ // assume features are already in best comperable orientation
 	// A
-	// var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
-	// return scoreSSD;
+	var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+	return scoreSSD;
 	// B
 	// var scoreCon = ColorMatRGBY.convolution(featureA.flat(),featureB.flat());
 	// scoreCon = scoreCon==0? Number.MAX_VALUE : 1.0/scoreCon;

@@ -54,13 +54,14 @@ this._scales = [];
 		this._imageFeatureList[i] = desc;
 		var scales = desc.processScaleSpace();
 this._scales[i] = scales;
-		// var peaks = desc.processCornerSpace();
-		// this._peaks[i] = peaks;
+// var peaks = desc.processCornerSpace();
+// this._peaks[i] = peaks;
 		desc.describeFeatures();
 		// 
-		desc.dropNonUniqueFeatures();
+		//desc.dropNonUniqueFeatures();
 //break;
 	}
+	return;
 	//
 	var matcher = new ImageMatcher();
 	matcher.matchDescriptors(this._imageFeatureList[0], this._imageFeatureList[1]);
@@ -108,19 +109,21 @@ FeatureTest.prototype.displayFeatures = function(){
 		var features = desc.featureList();
 		for(j=0;j<features.length;++j){
 			fea = features[j];
-//			this.displayFeature(fea,obj,img);
+this.displayFeature(fea,obj,img);
 		}
 this._feaLocX = 0.0;
 this._feaLocY = 400.0;
 this._feaCount = 0;
 
 		var scales = this._scales[i];
-		if(false){//scales){
+		if(scales){
 			var viz = scales["viz"];
 			var arr = viz;
-			var currWidth = 0;
+			var currWidth = 400*i;
 			var currHeight = 300;
+			// 
 			for(j=0;j<arr.length;++j){
+j = 1
 				var source = arr[j];
 				var _src = source["source"];
 				var _wid = source["width"];
@@ -134,27 +137,28 @@ this._feaCount = 0;
 				d.matrix().scale(sca);
 				d.matrix().translate(currWidth,currHeight);
 				currWidth += _wid*sca;
+break;
 			}
+			// in-image circling of peak locations
 			// var peaks = scales["scalePeaks"];
 			// for(j=0;j<peaks.length;++j){
 			// 	var peak = peaks[j];
 			// 	this.displayPeak(peak,obj,true);
 			// }
-			/*
-			scales = scales["images"];
-			for(j=0;j<scales.length;++j){
-				var source = scales[j];
-				var _src = source["source"];
-				var _wid = source["width"];
-				var _hei = source["height"];
-				//var _col = ImageMat.ARGBFromFloat(_src);
-				var _img = this._stage.getFloatRGBAsImage(_src,_src,_src,_wid,_hei);
-				d = new DOImage(_img);
-				this._root.addChild(d);
-			}
-			*/
+			// gray DOG base images
+			// scales = scales["images"];
+			// for(j=0;j<scales.length;++j){
+			// 	var source = scales[j];
+			// 	var _src = source["source"];
+			// 	var _wid = source["width"];
+			// 	var _hei = source["height"];
+			// 	//var _col = ImageMat.ARGBFromFloat(_src);
+			// 	var _img = this._stage.getFloatRGBAsImage(_src,_src,_src,_wid,_hei);
+			// 	d = new DOImage(_img);
+			// 	this._root.addChild(d);
+			// }
+			
 		}
-
 		var peaks = this._peaks[i];
 		if(peaks){
 			for(j=0;j<peaks.length;++j){
@@ -253,6 +257,9 @@ var gryMag = angles.gryMag();
 	d.matrix().translate(x,y);
 	obj.addChild(d);
 };
+
+return;
+
 //
 if(this._feaLocX===undefined){
 	this._feaLocX = 0.0;

@@ -171,7 +171,7 @@ var prevImage = currentImage;
 			dog = ImageMat.subFloat(currentImage, nextImage);
 			dogList.push(dog);
 			currentImage = nextImage;
-//			if(j==scalesPerOctave-1-2){ ss = nextImage; } // not used
+//if(j==scalesPerOctave-1-2){ ss = nextImage; } // not used
 		}
 for(j=0;j<dogList.length;++j){
 	var k,l;
@@ -182,7 +182,18 @@ for(j=0;j<dogList.length;++j){
 			var _j = Math.floor(k*currentHei/_vizHei);
 			var ind = _j*currentWid + _i;
 			var val = dogList[j][ind];
-			var sca = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(val+1.0)/(dogList.length-2) );
+val = 0;
+			// do actual summation averaging
+			var count = Math.floor(currentWid/_vizWid);
+			for(var ii=0;ii<count;++ii){
+				for(var jj=0;jj<count;++jj){
+					val += dogList[j][(_j+jj)*currentWid + (_i+ii)];
+				}
+			}
+			val = val / (count*count);
+			var inder = 0;
+			var sca = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(inder+1.0)/(dogList.length-2) );
+val = Math.abs(val);
 			if(_vizMax[index]<val){
 				_vizMax[index] = val;
 				_vizMaxScale[index] = sca;
@@ -300,16 +311,30 @@ _vizMax = _vizMaxScale;
 var _peaksMin = ImageMat.getPeaks(_vizMin, _vizWid,_vizHei);
 var _peaksMax = ImageMat.getPeaks(_vizMax, _vizWid,_vizHei);
 var _peaks = [];
+
+
+this._clearFeatureList();
+var scaleX = 1.0/_vizWid;//this._width;///_vizWid;
+var scaleY = 1.0/_vizHei;
+
 for(i=0;i<_peaksMin.length;++i){
 	index = Math.round(_peaksMin[i].y)*_vizWid + Math.round(_peaksMin[i].x);
-	if(_zMin[index]<-0.10){
+	//if(_zMin[index]<-0.03){
+	if(true){
 		_peaks.push(_peaksMin[i]);
+var sca = _vizMin[index]*0.2;
+this._features.push( new ImageFeature(_peaksMin[i].x*scaleX,_peaksMin[i].y*scaleY,sca,null) );
 	}
 }
 for(i=0;i<_peaksMax.length;++i){
 	index = Math.round(_peaksMax[i].y)*_vizWid + Math.round(_peaksMax[i].x);
-	if(_zMax[index]>0.10){
+	//if(true){//_peaksMax[i].value>0){//_zMax[index]>0.03){
+	//if(_zMax[index]>0.03){
+	if(true){
 		_peaks.push(_peaksMax[i]);
+//console.log(_peaksMax[i].x,_peaksMax[i].y);
+var sca = _vizMax[index]*0.2;
+this._features.push( new ImageFeature(_peaksMax[i].x*scaleX,_peaksMax[i].y*scaleY,sca,null) );
 	}
 }
 for(i=0;i<_peaks.length;++i){
