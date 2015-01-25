@@ -386,7 +386,7 @@ Code.setArray2DFromArray = function(arr,row,col,list){
 			arr[j][i] = list[index];
 		}
 	}
-	return this;
+	return arr;
 }
 Code.copyArray2DFromArray2D = function(arr,row,col,list){
 	var i, j;
@@ -395,7 +395,7 @@ Code.copyArray2DFromArray2D = function(arr,row,col,list){
 			arr[j][i] = list[j][i];
 		}
 	}
-	return this;
+	return arr;
 }
 Code.array2DtoString = function(arr, exp){
 	exp = exp===undefined?4:exp;
@@ -422,6 +422,26 @@ Code.array2DtoString = function(arr, exp){
 		}
 	}
 	return str.replace(/e/g,"E");
+}
+Code.array1Das2DtoString = function(arr, wid,hei, exp){
+	exp = exp===undefined?4:exp;
+	var minLen = exp+6+1; // -#.E+#
+	var i, j, val, index=0, str = "";
+	str += "\n";
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i,++index){
+			//str += arr[index]+" ";
+			num = arr[index];
+			val = num.toExponential(exp);
+			if(num<0){
+				str += Code.padStringLeft(val,minLen," ");
+			}else{
+				str += " "+Code.padStringLeft(val,minLen-1," ");
+			}
+		}
+		str += "\n";
+	}
+	return str;
 }
 // ------------------------------------------------------------------------------------------ SIMULATED ARRAY 2D
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes

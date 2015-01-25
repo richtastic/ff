@@ -8,13 +8,13 @@ function FeatureTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	// load images
-	var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
+	//var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
 	//var imageList = ["snow1.png","snow2.png"];
 	//var imageList = ["F_S_1_1.jpg","F_S_1_2.jpg"];
 	//var imageList = ["calibration1-0.jpg","calibration1-1.jpg"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalex.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexy.png"];
-	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
+	var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
 	new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 }
@@ -58,7 +58,7 @@ this._scales[i] = scales;
 // this._peaks[i] = peaks;
 		desc.describeFeatures();
 		// 
-		//desc.dropNonUniqueFeatures();
+//		desc.dropNonUniqueFeatures();
 //break;
 	}
 	return;
@@ -122,23 +122,23 @@ this._feaCount = 0;
 			var currWidth = 400*i;
 			var currHeight = 300;
 			// 
-			for(j=0;j<arr.length;++j){
-j = 1
-				var source = arr[j];
-				var _src = source["source"];
-				var _wid = source["width"];
-				var _hei = source["height"];
-				var sca = 4.0;
-				//var _col = ImageMat.ARGBFromFloat(_src);
-				var _img = this._stage.getFloatRGBAsImage(_src,_src,_src,_wid,_hei);
-				d = new DOImage(_img);
-				this._root.addChild(d);
-				d.matrix().identity();
-				d.matrix().scale(sca);
-				d.matrix().translate(currWidth,currHeight);
-				currWidth += _wid*sca;
-break;
-			}
+// 			for(j=0;j<arr.length;++j){
+// j = 0
+// 				var source = arr[j];
+// 				var _src = source["source"];
+// 				var _wid = source["width"];
+// 				var _hei = source["height"];
+// 				var sca = 4.0;
+// 				//var _col = ImageMat.ARGBFromFloat(_src);
+// 				var _img = this._stage.getFloatRGBAsImage(_src,_src,_src,_wid,_hei);
+// 				d = new DOImage(_img);
+// 				this._root.addChild(d);
+// 				d.matrix().identity();
+// 				d.matrix().scale(sca);
+// 				d.matrix().translate(currWidth,currHeight);
+// 				currWidth += _wid*sca;
+// break;
+// 			}
 			// in-image circling of peak locations
 			// var peaks = scales["scalePeaks"];
 			// for(j=0;j<peaks.length;++j){

@@ -124,13 +124,12 @@ var images = [];
 	Code.timerStart();
 	var i, j, k, ss, len, len2, pt, dist;
 	var wid = this._width, hei = this._height;
-	var minimumExtremaDistancePixels = 1.0; // single pixel
-	var sigma = 1.6;//this._sigma;
+	var sigma = 1.6; // this._sigma;
 	var scalesPerOctave = 5; // 5
-	var sConstant = scalesPerOctave-3;
-	var kConstant = Math.pow(2.0,2.0/(scalesPerOctave-1)); // sqrt(2)
+	var kConstant = Math.pow(2.0,1.0/scalesPerOctave);
 	var totalOctaves = 4; // 4
 	var startScale = 2.0; // 2.0
+	var minimumExtremaDistancePixels = 1.0; // single pixel
 	var minThresholdIntensity = 0.01; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
@@ -140,9 +139,21 @@ var images = [];
 	var gauss1D, gaussSize;
 	var dogList = new Array();
 	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized 
-	var nextWid, nextHei;
 	var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
-	var nextImage, dog, img, ext, sig, padding, tmp;
+	var prevImage, nextImage, nextWid, nextHei, dog, img, ext, sig, padding, tmp;
+	var temp = new Array();
+
+// sig = sigma;
+// gaussSize = gaussSizeBase*2+1;
+// gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+// padding = Math.floor(gaussSize/2.0);
+// tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
+// tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
+// currentImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
+
+
+	
+
 var _vizWid = currentWid/Math.pow(2,totalOctaves-1);
 var _vizHei = currentHei/Math.pow(2,totalOctaves-1);
 var _vizMin = ImageMat.newZeroFloat(_vizWid,_vizHei);
@@ -151,67 +162,80 @@ ImageMat.addConst(_vizMax,-1E10);
 ImageMat.addConst(_vizMin,1E10);
 var _vizMinScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
 var _vizMaxScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
-	var temp = new Array();
+	
 	for(i=0;i<totalOctaves;++i){
 images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
-var prevImage = currentImage;
+
+
+// sig = sigma;
+// gaussSize = gaussSizeBase*2+1;
+// gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+// padding = Math.floor(gaussSize/2.0);
+// tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
+// tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
+// currentImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
+
+		prevImage = currentImage;
 		console.log( "octave: "+(i+1)+"/"+totalOctaves+" ... size "+currentWid+", "+currentHei+" . . . . . . . . . . . . . . . . . . . . . . . . . . .");
 		Code.emptyArray( dogList );
-		for(j=0;j<scalesPerOctave-1;++j){
-			// calculate gaussian settings 
+		for(j=0;j<scalesPerOctave;++j){
+			// gaussian settings
+			var currentScale = Math.pow(2, i + j/scalesPerOctave );
+			//console.log("EFFECTIVE SCALE: ("+i+","+j+") = "+currentScale);
 			sig = sigma*Math.pow(kConstant,j);
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
-			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);//,       sig, true);
 			// add padding for blur, then remove
 			padding = Math.floor(gaussSize/2.0);
 			tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
 			tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
 			nextImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
 			// difference of images
-			dog = ImageMat.subFloat(currentImage, nextImage);
+			//dog = ImageMat.subFloat(currentImage, nextImage);
+			dog = ImageMat.subFloat(prevImage, nextImage);
 			dogList.push(dog);
-			currentImage = nextImage;
-//if(j==scalesPerOctave-1-2){ ss = nextImage; } // not used
+			prevImage = nextImage
 		}
-for(j=0;j<dogList.length;++j){
-	var k,l;
-	for(k=0;k<_vizHei;++k){
-		for(l=0;l<_vizWid;++l){
-			var index = k*_vizWid + l;
-			var _i = Math.floor(l*currentWid/_vizWid);
-			var _j = Math.floor(k*currentHei/_vizHei);
-			var ind = _j*currentWid + _i;
-			var val = dogList[j][ind];
-val = 0;
-			// do actual summation averaging
-			var count = Math.floor(currentWid/_vizWid);
-			for(var ii=0;ii<count;++ii){
-				for(var jj=0;jj<count;++jj){
-					val += dogList[j][(_j+jj)*currentWid + (_i+ii)];
-				}
-			}
-			val = val / (count*count);
-			var inder = 0;
-			var sca = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(inder+1.0)/(dogList.length-2) );
-val = Math.abs(val);
-			if(_vizMax[index]<val){
-				_vizMax[index] = val;
-				_vizMaxScale[index] = sca;
-			}
-			if(_vizMin[index]>val){
-				_vizMin[index] = val;
-				_vizMinScale[index] = sca;
-			}
-		}
-	}
-}
+// for(j=0;j<dogList.length;++j){
+// 	var k,l;
+// 	for(k=0;k<_vizHei;++k){
+// 		for(l=0;l<_vizWid;++l){
+// 			var index = k*_vizWid + l;
+// 			var _i = Math.floor(l*currentWid/_vizWid);
+// 			var _j = Math.floor(k*currentHei/_vizHei);
+// 			var ind = _j*currentWid + _i;
+// 			var val = dogList[j][ind];
+// val = 0;
+// 			// do actual summation averaging
+// 			var count = Math.floor(currentWid/_vizWid);
+// 			for(var ii=0;ii<count;++ii){
+// 				for(var jj=0;jj<count;++jj){
+// 					val += dogList[j][(_j+jj)*currentWid + (_i+ii)];
+// 				}
+// 			}
+// 			val = val / (count*count);
+// 			var inder = 0;
+// 			var sca = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(inder+1.0)/(dogList.length-2) );
+// val = Math.abs(val);
+// 			if(_vizMax[index]<val){
+// 				_vizMax[index] = val;
+// 				_vizMaxScale[index] = sca;
+// 			}
+// 			if(_vizMin[index]>val){
+// 				_vizMin[index] = val;
+// 				_vizMinScale[index] = sca;
+// 			}
+// 		}
+// 	}
+// }
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = Code.findExtrema3D(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 0);
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
 				ext[k].x /= currentWid;
 				ext[k].y /= currentHei;
-				ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
+				//ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
+				ext[k].z = Math.pow(2, i + j/scalesPerOctave + ext[k].z/scalesPerOctave )
 				ext[k].t = Math.abs(ext[k].t);
 				var intensity = ext[k].t;
 				if(intensity>=minThresholdIntensity){
@@ -222,7 +246,8 @@ val = Math.abs(val);
 		// subsample image for next octave
 		if(i<totalOctaves-1){
 			nextWid = Math.floor(currentWid*0.5); nextHei = Math.floor(currentHei*0.5);
-ss = prevImage; // ss is blurry
+//ss = prevImage; // ss is blurry
+ss = currentImage;
 			currentImage = ImageMat.extractRect(ss, 0,0, currentWid-1,0, currentWid-1,currentHei-1, 0,currentHei-1, nextWid,nextHei, currentWid,currentHei);
 			currentWid = nextWid; currentHei = nextHei;
 		}
@@ -245,7 +270,7 @@ ss = prevImage; // ss is blurry
 	}
 	console.log("       rm-dup count: "+temp.length);
 	// get exact SMM at location and discard low measures
-	edgeResponseEigenRatioR = 4.0;//12.1; // 12.1 ^
+	//edgeResponseEigenRatioR = 4.0;//12.1; // 12.1 ^
 	var Lxx, Lxx, Lxy, tra, det, measure, win, winSize = 25;// (11+1)*2+1
 	var featureImageSizeBase = 7;
 	var rangeSize;
@@ -312,7 +337,7 @@ var _peaksMin = ImageMat.getPeaks(_vizMin, _vizWid,_vizHei);
 var _peaksMax = ImageMat.getPeaks(_vizMax, _vizWid,_vizHei);
 var _peaks = [];
 
-
+/*
 this._clearFeatureList();
 var scaleX = 1.0/_vizWid;//this._width;///_vizWid;
 var scaleY = 1.0/_vizHei;
@@ -341,7 +366,7 @@ for(i=0;i<_peaks.length;++i){
 	_peaks[i].x *= 4;
 	_peaks[i].y *= 4;
 }
-
+*/
 	_vizMax = ImageMat.normalFloat01(_vizMax);
 	_vizMin = ImageMat.normalFloat01(_vizMin);
 	_vizMin = ImageMat.invertFloat01(_vizMin);

@@ -380,11 +380,15 @@ ImageMat.rotateImage = function(){
 	
 }
 // ------------------------------------------------------------------------------------------------------------------------ image operations
-ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc){
+ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc, does){
 	bas = bas!==undefined?bas:2;
 	inc = inc!==undefined?inc:2;
 	var size = Math.round(bas + sigma*inc)*2+1;
+	if(does){
+		return ImageMat.getGaussianWindow(size,1, sigma,sigma, true);
+	}
 	return ImageMat.getGaussianWindow(size,1, sigma);
+	// SHOULD USE A 1D GENERATOR HERE
 }
 ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter){
 	if(sigmaY==undefined){ sigmaY = sigmaX; }
@@ -407,7 +411,11 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter){
 		}
 	}
 	if(normCenter){ // maximum == 1.0
-		// 
+		var sigma2 = sigmaX*sigmaY;
+		val = 1/(2.0*Math.PI*sigma2);
+		for(i=0;i<len;++i){ // total == 1.0
+			matrix[i] *= val;
+		}
 	}else{
 		for(i=0;i<len;++i){ // total == 1.0
 			matrix[i] /= sum;

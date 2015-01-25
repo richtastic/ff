@@ -10,8 +10,61 @@ function pageLoadedFxn(){
 function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Manual3DR.js"],this,classesLoadedFxn)).load();
 }
-function classesLoadedFxn()
-{	var manual = new Manual3DR();
+function classesLoadedFxn(){
+	//var manual = new Manual3DR();
+
+	var i, j, k, lenPop, lenTre;
+	var popular, trending, duplicated;
+lenPop = 3; // 3
+lenTre = 10; // 10
+	for(i=0;i<=lenPop;++i){
+		// popular = [];
+		// for(k=0;k<i;++k){
+		// 	popular.push(k);
+		// }
+		for(j=0;j<=lenTre;++j){
+			//trending = [];
+			// for(k=0;k<j;++k){
+			// 	trending.push(k);
+			// }
+			//
+			for(k=0;k<=i;++k){
+				checkLoadedListQuizzes(i, j, k);
+			}
+		}
+	}
+	
+console.log("done");
+
+}
+function checkLoadedListQuizzes(usedPopularCount, usedTrendingCount, duplicated){
+	var COUNT_DISPLAY_TOTAL_MAX = 10;
+	var COUNT_DISPLAY_POPULAR_MAX = 3;
+	var actualTrendingCount = Math.max(0,usedTrendingCount-duplicated); // simulate bug
+var availablePopularCount = usedPopularCount;
+var availableTrendingCount = usedTrendingCount;// - duplicated;
+var wasPop = usedPopularCount;
+var wasTre = usedTrendingCount;
+	if( (availablePopularCount+availableTrendingCount) <= COUNT_DISPLAY_TOTAL_MAX ){ // need to use everything
+            usedPopularCount = availablePopularCount;
+            usedTrendingCount = availableTrendingCount;
+    }else{ // select subset
+        if( availablePopularCount<COUNT_DISPLAY_POPULAR_MAX ){ // popular limiting
+            usedPopularCount = availablePopularCount;
+            usedTrendingCount = COUNT_DISPLAY_TOTAL_MAX - availablePopularCount;
+        }else if( availableTrendingCount < (COUNT_DISPLAY_TOTAL_MAX-COUNT_DISPLAY_POPULAR_MAX) ){ // trending limiting
+            usedPopularCount = COUNT_DISPLAY_TOTAL_MAX - availableTrendingCount;
+            usedTrendingCount = availableTrendingCount;
+        }else{ // nonlimiting
+            usedPopularCount = Math.min(availablePopularCount,COUNT_DISPLAY_POPULAR_MAX);
+            usedTrendingCount = COUNT_DISPLAY_TOTAL_MAX - usedPopularCount;
+        }
+    }
+    //console.log(wasPop+"/"+wasTre+"("+duplicated+")  =>  "+usedPopularCount+","+usedTrendingCount);
+//if(usedPopularCount>availablePopularCount || usedTrendingCount>availableTrendingCount){
+if(usedTrendingCount>actualTrendingCount){
+	console.log("fail: "+wasPop+"/"+wasTre+"("+duplicated+")  =>  "+usedPopularCount+","+usedTrendingCount);
+}
 }
 </script>
 <body onload="pageLoadedFxn();">

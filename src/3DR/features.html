@@ -15,6 +15,69 @@ function classesLoadedFxn(){
 	var features = new FeatureTest();
 	return;
 
+// difference of gaussian experiments
+	var i, j, k, len, index;
+	var width = 10;
+	var height = 10;
+	var size = width*height;
+	var mat = new Array(size);
+	for(j=0;j<height;++j){//
+		for(i=0;i<width;++i){//
+			index = j*width + i;
+			mat[index] = 0;
+		}
+	}
+
+	j = 4; i = 4; index = j*width + i; mat[index] = 1.0;
+
+	//var source = new ImageMat(width,height,mat,mat,mat);
+	var source = Code.copyArray(mat);
+
+	var sigmaA = 1.6;
+	var gauss1DA = ImageMat.gaussianWindow1DFromSigma(sigmaA);
+	var gaussedA = ImageMat.gaussian2DFrom1DFloat(source, width,height, gauss1DA);
+
+	var sigmaB = 1.6*1.6;
+	var gauss1DB = ImageMat.gaussianWindow1DFromSigma(sigmaB);
+	var gaussedB = ImageMat.gaussian2DFrom1DFloat(source, width,height, gauss1DB);
+
+	var gaussedC = ImageMat.gaussian2DFrom1DFloat(gaussedA, width,height, gauss1DA);
+
+	var gaussDiffAB = ImageMat.subFloat(gaussedA,gaussedB);
+	var gaussDiffAC = ImageMat.subFloat(gaussedA,gaussedC);
+	var gaussDiffBC = ImageMat.subFloat(gaussedB,gaussedC);
+
+	console.log( "SOURCE:" );
+	console.log( Code.array1Das2DtoString(source, width,height) );
+
+console.log( ImageMat.sumFloat(gauss1DA) );
+console.log( ImageMat.sumFloat(gauss1DB) );
+
+	console.log( "A:" );
+	console.log( Code.array1Das2DtoString(gaussedA, width,height) );
+
+	console.log( "B:" );
+	console.log( Code.array1Das2DtoString(gaussedB, width,height) );
+
+	console.log( "C:" );
+	console.log( Code.array1Das2DtoString(gaussedC, width,height) );
+
+	console.log( "DIFF AB:" );
+	console.log( Code.array1Das2DtoString(gaussDiffAB, width,height) );
+
+	console.log( "DIFF AC:" );
+	console.log( Code.array1Das2DtoString(gaussDiffAC, width,height) );
+
+	console.log( "DIFF BC:" );
+	console.log( Code.array1Das2DtoString(gaussDiffBC, width,height) );
+
+	return;
+
+
+
+
+// this shows extrema being outside of detection location
+
  var a = [-0.0031704982880084165,-0.004274601809128087,-0.005458226613662687,-0.0032523236377163256,-0.004429873179193189,-0.005667577234607646,-0.0033301012220670057,-0.00451968302981931,-0.005741803285186697] 
  var b = [-0.005663115438903743,-0.00620459315123556,-0.005982045323666307,-0.005719663932825081,-0.00626065504612372,-0.006031585608448964,-0.005702442428397236,-0.006216345396295231,-0.0059509564461344144];
  var c = [-0.004141515460750589,-0.002727052230286131,-0.0004163081232491095,-0.0041551986148183895,-0.0027360967768288447,-0.0004271178699614131,-0.004110595368775005,-0.0026828401635838883,-0.0003763682806563473];
