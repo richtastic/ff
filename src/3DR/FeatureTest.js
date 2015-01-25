@@ -6,16 +6,18 @@ function FeatureTest(){
 	this._stage.addListeners();
 	this._stage.start();
 	this._root = new DO();
+this._root.matrix().scale(1.5);
 	this._stage.root().addChild(this._root);
 	// load images
-	//var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
+	var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
 	//var imageList = ["snow1.png","snow2.png"];
 	//var imageList = ["F_S_1_1.jpg","F_S_1_2.jpg"];
 	//var imageList = ["calibration1-0.jpg","calibration1-1.jpg"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalex.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexy.png"];
-	var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
+	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
+	//var imageList = ["catHat.jpg","catHat.jpg"];
 	new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 }
 FeatureTest.prototype.imagesLoadComplete = function(o){
@@ -58,10 +60,10 @@ this._scales[i] = scales;
 // this._peaks[i] = peaks;
 		desc.describeFeatures();
 		// 
-//		desc.dropNonUniqueFeatures();
+		desc.dropNonUniqueFeatures();
 //break;
 	}
-	return;
+//	return;
 	//
 	var matcher = new ImageMatcher();
 	matcher.matchDescriptors(this._imageFeatureList[0], this._imageFeatureList[1]);
@@ -109,14 +111,14 @@ FeatureTest.prototype.displayFeatures = function(){
 		var features = desc.featureList();
 		for(j=0;j<features.length;++j){
 			fea = features[j];
-this.displayFeature(fea,obj,img);
+//this.displayFeature(fea,obj,img);
 		}
 this._feaLocX = 0.0;
 this._feaLocY = 400.0;
 this._feaCount = 0;
 
 		var scales = this._scales[i];
-		if(scales){
+		if(false && i==0 && scales){
 			var viz = scales["viz"];
 			var arr = viz;
 			var currWidth = 400*i;
@@ -146,17 +148,22 @@ this._feaCount = 0;
 			// 	this.displayPeak(peak,obj,true);
 			// }
 			// gray DOG base images
-			// scales = scales["images"];
-			// for(j=0;j<scales.length;++j){
-			// 	var source = scales[j];
-			// 	var _src = source["source"];
-			// 	var _wid = source["width"];
-			// 	var _hei = source["height"];
-			// 	//var _col = ImageMat.ARGBFromFloat(_src);
-			// 	var _img = this._stage.getFloatRGBAsImage(_src,_src,_src,_wid,_hei);
-			// 	d = new DOImage(_img);
-			// 	this._root.addChild(d);
-			// }
+			var offScaleX = 0;
+			var offScaleY = 300;
+			scales = scales["images"];
+			for(j=0;j<scales.length;++j){
+				var source = scales[j];
+				var _src = source["source"];
+				var _wid = source["width"];
+				var _hei = source["height"];
+				_src = ImageMat.normalFloat01(_src);
+				//var _col = ImageMat.ARGBFromFloat(_src);
+				var _img = this._stage.getFloatRGBAsImage(_src,_src,_src,_wid,_hei);
+				d = new DOImage(_img);
+				d.matrix().translate(offScaleX,offScaleY);
+				this._root.addChild(d);
+				offScaleX += _wid;
+			}
 			
 		}
 		var peaks = this._peaks[i];
@@ -204,7 +211,7 @@ if(obj&&img){
 	var d = new DO();
 	var rad = 5.0;
 	//rad = 1.0 + 5.0*Math.log(0.1*scale);
-	rad = 2.0*scale;
+	rad = 4.0*scale;
 var angles = feature.colorAngle();
 var redAng = angles.redAng();
 var grnAng = angles.grnAng();
@@ -258,7 +265,7 @@ var gryMag = angles.gryMag();
 	obj.addChild(d);
 };
 
-return;
+//return;
 
 //
 if(this._feaLocX===undefined){

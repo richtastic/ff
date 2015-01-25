@@ -1793,19 +1793,20 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 			(a0>b4&&a1>b4&&a2>b4&&a3>b4&&a4>b4&&a5>b4&&a6>b4&&a7>b4&&a8>b4 // minima
 			&& b0>b4&&b1>b4&&b2>b4&&b3>b4    &&   b5>b4&&b6>b4&&b7>b4&&b8>b4
 			&& c0>b4&&c1>b4&&c2>b4&&c3>b4&&c4>b4&&c5>b4&&c6>b4&&c7>b4&&c8>b4) ){
-				result = new V4D(i,j,0,b4); // --- close enough
-				list.push(result);
-				// result = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
-				// if(result==null){ console.log("null result"); continue; }
-				// if(true){//Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
-				// 	result.x += i; result.y += j; result.z += k;
-				// 	list.push(result);
-				// }else{ // need to interpolate at a neighbor
-				// 	// console.log("neighbor - result; "+result.toString()+"----------    ");
-				// 	// console.log("          var a = ["+a0+","+a1+","+a2+","+a3+","+a4+","+a5+","+a6+","+a7+","+a8+"] ");
-				// 	// console.log("          var b = ["+b0+","+b1+","+b2+","+b3+","+b4+","+b5+","+b6+","+b7+","+b8+"] ");
-				// 	// console.log("          var c = ["+c0+","+c1+","+c2+","+c3+","+c4+","+c5+","+c6+","+c7+","+c8+"] ");
-				// }
+			// 	result = new V4D(i,j,0,b4); // --- close enough
+			// 	list.push(result);
+			// continue;
+				result = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
+				if(result==null){ console.log("null result"); continue; }
+				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
+					result.x += i; result.y += j; result.z += k;
+					list.push(result);
+				}else{ // need to interpolate at a neighbor
+					// console.log("neighbor - result; "+result.toString()+"----------    ");
+					// console.log("          var a = ["+a0+","+a1+","+a2+","+a3+","+a4+","+a5+","+a6+","+a7+","+a8+"] ");
+					// console.log("          var b = ["+b0+","+b1+","+b2+","+b3+","+b4+","+b5+","+b6+","+b7+","+b8+"] ");
+					// console.log("          var c = ["+c0+","+c1+","+c2+","+c3+","+c4+","+c5+","+c6+","+c7+","+c8+"] ");
+				}
 			}
 		}
 	}

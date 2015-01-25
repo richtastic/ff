@@ -38,6 +38,9 @@ ColorMatRGBY.prototype.blu = function(){
 ColorMatRGBY.prototype.gry = function(){
 	return this._gry;
 }
+ColorMatRGBY.prototype.rangeAvg = function(){
+	return (this._ranger(this._red) + this._ranger(this._grn) + this._ranger(this._blu))/3.0;
+}
 ColorMatRGBY.prototype.uniqueness = function(){
 	return this._ranger(this._red) * this._ranger(this._grn) * this._ranger(this._blu);
 }

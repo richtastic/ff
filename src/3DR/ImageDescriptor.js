@@ -122,69 +122,75 @@ ImageDescriptor.prototype.getImageDefinition = function(){ // LEGACY
 ImageDescriptor.prototype.processScaleSpace = function(){ // this generates a list of potential scale-space points: _scaleSpaceExtrema
 var images = [];
 	Code.timerStart();
+	var sourceImageData = this._flatGry;
+//sourceImageData = this._flatRed;
+//sourceImageData = this._flatGrn;
+//sourceImageData = this._flatBlu;
 	var i, j, k, ss, len, len2, pt, dist;
 	var wid = this._width, hei = this._height;
 	var sigma = 1.6; // this._sigma;
 	var scalesPerOctave = 5; // 5
-	var kConstant = Math.pow(2.0,1.0/scalesPerOctave);
 	var totalOctaves = 4; // 4
-	var startScale = 2.0; // 2.0
+	var startScale = 1.0; // 2.0
 	var minimumExtremaDistancePixels = 1.0; // single pixel
 	var minThresholdIntensity = 0.01; // 0.03
 	// var minEdgeDistance = 0.05;
 	var edgeResponseEigenRatioR = 10.0; // 10.0
 	edgeResponseEigenRatioR = Math.pow(edgeResponseEigenRatioR + 1, 2)/edgeResponseEigenRatioR; // convert to lowe equation // 12.1
+	var kConstant = Math.pow(2.0,1.0/scalesPerOctave);
 	var gaussSizeBase = 5;
 	var gaussSizeIncrement = 1.5;
 	var gauss1D, gaussSize;
-	var dogList = new Array();
 	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized 
-	var currentImage = ImageMat.extractRect(this._flatGry, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
+	var currentImage = ImageMat.extractRect(sourceImageData, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
 	var prevImage, nextImage, nextWid, nextHei, dog, img, ext, sig, padding, tmp;
 	var temp = new Array();
+	var tempSets = new Array();
+	var dogList = new Array();
 
-// sig = sigma;
-// gaussSize = gaussSizeBase*2+1;
-// gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
-// padding = Math.floor(gaussSize/2.0);
-// tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
-// tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
-// currentImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
+//sigma = sigma * Math.pow(2.0,1.0/scalesPerOctave);
 
+// presmooth
+sig = 0.5;
+gaussSize = gaussSizeBase*2+1;
+gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
+padding = Math.floor(gaussSize/2.0);
+tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
+tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
+currentImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
 
 	
 
-var _vizWid = currentWid/Math.pow(2,totalOctaves-1);
-var _vizHei = currentHei/Math.pow(2,totalOctaves-1);
+var _vizWid = Math.floor(currentWid/Math.pow(2,totalOctaves));
+var _vizHei = Math.floor(currentHei/Math.pow(2,totalOctaves));
 var _vizMin = ImageMat.newZeroFloat(_vizWid,_vizHei);
 var _vizMax = ImageMat.newZeroFloat(_vizWid,_vizHei);
 ImageMat.addConst(_vizMax,-1E10);
 ImageMat.addConst(_vizMin,1E10);
 var _vizMinScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
 var _vizMaxScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
-	
+
 	for(i=0;i<totalOctaves;++i){
-images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
-
-
-// sig = sigma;
-// gaussSize = gaussSizeBase*2+1;
-// gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);
-// padding = Math.floor(gaussSize/2.0);
-// tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
-// tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
-// currentImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
-
+//images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
 		prevImage = currentImage;
-		console.log( "octave: "+(i+1)+"/"+totalOctaves+" ... size "+currentWid+", "+currentHei+" . . . . . . . . . . . . . . . . . . . . . . . . . . .");
+		//console.log( "octave: "+(i+1)+"/"+totalOctaves+" ... size "+currentWid+", "+currentHei+" . . . . . . . . . . . . . . . . . . . . . . . . . . .");
 		Code.emptyArray( dogList );
 		for(j=0;j<scalesPerOctave;++j){
 			// gaussian settings
 			var currentScale = Math.pow(2, i + j/scalesPerOctave );
-			//console.log("EFFECTIVE SCALE: ("+i+","+j+") = "+currentScale);
-			sig = sigma*Math.pow(kConstant,j);
+//			sig = sigma*Math.pow(kConstant,j);
+//sig = sigma*kConstant*Math.pow(kConstant,j); // found A
+//sig = sigma*Math.pow(2, j/scalesPerOctave );
+//sig = sigma*Math.pow(2, j/(scalesPerOctave-1) );
+//sig = sigma*Math.pow(2.0,j/kConstant);// ok
+sig = sigma*Math.pow(2,j); // 
+//sig = sigma*Math.pow(kConstant,j);
+//sig = sigma*Math.pow(2.0*kConstant,j);
+//sig = sigma*Math.pow(2.0,j/scalesPerOctave); // no results
+//sig = sigma*Math.pow(2.0,i+j/scalesPerOctave); // bad
 			gaussSize = Math.round(gaussSizeBase + j*gaussSizeIncrement)*2+1;
 			gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sig);//,       sig, true);
+//console.log("EFFECTIVE SCALE: ("+i+","+j+") = "+currentScale," -- "+sig+"      "+gaussSize);
 			// add padding for blur, then remove
 			padding = Math.floor(gaussSize/2.0);
 			tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,padding,padding);
@@ -192,8 +198,11 @@ images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
 			nextImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
 			// difference of images
 			//dog = ImageMat.subFloat(currentImage, nextImage);
-			dog = ImageMat.subFloat(prevImage, nextImage);
+			dog = ImageMat.subFloat(nextImage,prevImage);
+//dog = ImageMat.gaussian2DFrom1DFloat(dog, currentWid,currentHei, gauss1D);			
+//ImageMat.normalFloat01(dog);
 			dogList.push(dog);
+
 			prevImage = nextImage
 		}
 // for(j=0;j<dogList.length;++j){
@@ -228,26 +237,39 @@ images.push( {"source":currentImage,"width":currentWid,"height":currentHei} );
 // 		}
 // 	}
 // }
+if(i==2){
+	for(j=0;j<dogList.length;++j){
+		var dogNorm = Code.copyArray(dogList[j]);
+
+		dogNorm = ImageMat.normalFloat01(dogNorm);
+		images.push( {"source":dogNorm,"width":currentWid,"height":currentHei} );
+	}
+}
 		// find local extrema
 		for(j=0;j<dogList.length-2;++j){ // interpolate exact location of extrema and throw away data below threshold
 			ext = Code.findExtrema3D(dogList[j],dogList[j+1],dogList[j+2], currentWid,currentHei, 0);
+
 			for(k=0;k<ext.length;++k){ // set sigma to absolute position based on relative position + iteration IN LINEAR SPACE
+if(i==2){
+	var index = Math.floor(ext[k].y)*currentWid + Math.floor(ext[k].x);
+	images[j]["source"][index] += 2.0;
+}
 				ext[k].x /= currentWid;
 				ext[k].y /= currentHei;
-				//ext[k].z = Math.pow(2, i + (j/(dogList.length-2)) + 0.5*(ext[k].z+1.0)/(dogList.length-2) );
-				ext[k].z = Math.pow(2, i + j/scalesPerOctave + ext[k].z/scalesPerOctave )
-				ext[k].t = Math.abs(ext[k].t);
+				ext[k].z = Math.pow(2, i + j/scalesPerOctave + ext[k].z/scalesPerOctave ) / startScale;
+				ext[k].t = Math.abs(ext[k].t); // look at minima and maxima
 				var intensity = ext[k].t;
 				if(intensity>=minThresholdIntensity){
 					temp.push(ext[k]);
 				}
 			}
 		}
+
 		// subsample image for next octave
 		if(i<totalOctaves-1){
 			nextWid = Math.floor(currentWid*0.5); nextHei = Math.floor(currentHei*0.5);
-//ss = prevImage; // ss is blurry
-ss = currentImage;
+ss = prevImage; // ss is blurry
+//ss = currentImage;
 			currentImage = ImageMat.extractRect(ss, 0,0, currentWid-1,0, currentWid-1,currentHei-1, 0,currentHei-1, nextWid,nextHei, currentWid,currentHei);
 			currentWid = nextWid; currentHei = nextHei;
 		}
@@ -255,6 +277,7 @@ ss = currentImage;
 	// copy points over to single array
 	this._clearFeatureList();
 	console.log("     original count: "+temp.length);
+	temp.sort( function(a,b){ return Math.abs(b.t) - Math.abs(a.t) ;} );
 	// remove duplicates
 	for(i=0;i<temp.length;++i){
 		for(j=i+1;j<temp.length;++j){
@@ -268,9 +291,10 @@ ss = currentImage;
 			}
 		}
 	}
+//	Code.truncateArray(temp,1000);
+
 	console.log("       rm-dup count: "+temp.length);
 	// get exact SMM at location and discard low measures
-	//edgeResponseEigenRatioR = 4.0;//12.1; // 12.1 ^
 	var Lxx, Lxx, Lxy, tra, det, measure, win, winSize = 25;// (11+1)*2+1
 	var featureImageSizeBase = 7;
 	var rangeSize;
@@ -281,7 +305,7 @@ ss = currentImage;
 	var range, response, intensity;
 	var minContrastIntensity = 0.01;
 	for(i=0;i<temp.length;++i){
-		var s = Math.pow(temp[i].z,0.5)
+		var s = Math.pow(temp[i].z,0.5);
 		// too close to edge
 		// 
 		// low contrast
@@ -305,7 +329,7 @@ ss = currentImage;
 		//response = Lxx + Lyy;
 //measure = edgeResponseEigenRatioR;
 		// low edge response
-		if(measure < edgeResponseEigenRatioR){ // drop if low measure
+		if(measure >= edgeResponseEigenRatioR){ // drop if high measure
 			Code.removeElementAtSimple(temp,i);
 			--i; continue;
 		// low LoG response
@@ -315,7 +339,7 @@ ss = currentImage;
 		} // keep*/
 		temp[i].t = Math.abs(measure);
 	}
-	console.log("  contrast/SMM count: "+temp.length);
+	console.log(" contrast/SMM count: "+temp.length);
 	// sort on extrema value
 	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); // 
 	len = temp.length;
@@ -563,6 +587,16 @@ ImageDescriptor.prototype.dropNonUniqueFeatures = function(){
 	features.sort( function(a,b){ return b._pointList[0][1] - a._pointList[0][1]; } );
 	Code.truncateArray(features,fiftyPercent);
 	console.log("FEATURE COUNT B: "+features.length);
+
+	for(i=0;i<features.length;++i){
+		// drop low contrast points
+		//console.log( features[i].contrastSSDScore() );
+		if(features[i].contrastSSDScore() < 0.10){
+			Code.removeElementAtSimple(features,i);
+			--i;
+		}
+	}
+
 	matcher.kill();
 }
 

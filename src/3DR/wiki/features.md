@@ -83,13 +83,16 @@ det(C) - &alpha;tra(c)<sup>2</sup> &gt; t
 
 
 
+
+Harris Corner Detector
+
 <br/>
 <br/>
 <br/>
 <br/>
 
 
-
+Harris-Laplacian
 
 <br/>
 <br/>
@@ -100,7 +103,21 @@ det(C) - &alpha;tra(c)<sup>2</sup> &gt; t
 
 (http://www.cs.utexas.edu/~grauman/courses/fall2009/papers/local_features_synthesis_draft.pdf)[yerp]
 
+http://www.vlfeat.org/api/sift.html
+
+http://www.inf.fu-berlin.de/lehre/SS09/CV/uebungen/uebung09/SIFT.pdf
 
 
 
+
+
+- find best fit affine transform around feature area
+- http://www.cs.cornell.edu/courses/cs664/2008sp/handouts/cs664-6-features.pdf
+- 
+- RANSAC BEST DLT
+- 
 - drop points that have multiple maxima/minima
+- 
+- 
+
+

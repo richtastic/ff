@@ -5,11 +5,11 @@ ImageFeature.SQUARE_SIZE_SELECT = 7;
 // SIFT FEATURE 8x8
 ImageFeature.DESCRIPTOR_SIZE_P4_B4 = 20; // before gradient
 ImageFeature.DESCRIPTOR_SIZE_P4 = 16;
-ImageFeature.ORIENTATION_SCALE_MULTIPLIER = 6*0.25; //1.0-4.0
+ImageFeature.ORIENTATION_SCALE_MULTIPLIER = 2.0; // 1.0-4.0
 // SSD CENTERED ON POINT
 ImageFeature.SSD_SIZE_B4 = 15; // before gauss
 ImageFeature.SSD_SIZE = 13; // flat [padding=4]
-ImageFeature.SURFACE_SCALE_MULTIPLIER = 4*0.25;
+ImageFeature.SURFACE_SCALE_MULTIPLIER = 1.50;
 ImageFeature.YAML = {
 	X:"x",
 	Y:"y",
@@ -102,7 +102,8 @@ ImageFeature.prototype.angleFromColors = function(color, wid,hei){
 	// get zoomed rectangle
 	sigma = undefined;
 	scaler = ImageFeature.ORIENTATION_SCALE_MULTIPLIER;
-	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, null); // iso-affine is unstable
+	scaler = scaler / this.scale();
+	rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w,h, color,wid,hei, null); // iso-affine is unstable
 	//rect = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, color,wid,hei, this.transform());
 	// blur
 	sigma = 1.6;
@@ -149,21 +150,22 @@ ImageFeature.prototype.findDescriptor = function(origR,origG,origB,origY, wid,he
 	// generate SIFT feature
 	var w = ImageFeature.DESCRIPTOR_SIZE_P4_B4;
 	var h = w;
-	var scaler = 1.0;
+	var scaler = ImageFeature.ORIENTATION_SCALE_MULTIPLIER;
+	scaler = scaler / this.scale();
 	var sigma = 1.6;
 	var win;
-	win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origY,wid,hei, this._affine);
+	win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w,h, origY,wid,hei, this._affine);
 	Ix = ImageMat.derivativeX(win, w,h);
 	Iy = ImageMat.derivativeY(win, w,h);
 	// EACH COLOR
 	this._sift = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
-		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origR,wid,hei, this._affine);
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w,h, origR,wid,hei, this._affine);
 		Ix = ImageMat.derivativeX(win, w,h); Iy = ImageMat.derivativeY(win, w,h);
 		this._siftR = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
-		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origG,wid,hei, this._affine);
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w,h, origG,wid,hei, this._affine);
 		Ix = ImageMat.derivativeX(win, w,h); Iy = ImageMat.derivativeY(win, w,h);
 		this._siftG = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
-		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w,h, origB,wid,hei, this._affine);
+		win = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w,h, origB,wid,hei, this._affine);
 		Ix = ImageMat.derivativeX(win, w,h); Iy = ImageMat.derivativeY(win, w,h);
 		this._siftB = new SIFTDescriptor().fromGradients(Ix,Iy,w,h);
 
@@ -181,10 +183,11 @@ ImageFeature.prototype.findSurface = function(origR,origG,origB,origY, wid,hei){
 	var w2 = ImageFeature.SSD_SIZE, h2 = ImageFeature.SSD_SIZE;
 	//var padding = Math.floor((ImageFeature.SSD_SIZE_B4 - ImageFeature.SSD_SIZE)*0.5);
 	var rectRed, rectGrn, rectBlu, rectGry;
-	rectRed = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origR,wid,hei, rot);
-	rectGrn = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origG,wid,hei, rot);
-	rectBlu = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origB,wid,hei, rot);
-	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),this.scale()*scaler,sigma, w2,h2, origY,wid,hei, rot);
+	scaler = scaler / this.scale();
+	rectRed = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w2,h2, origR,wid,hei, rot);
+	rectGrn = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w2,h2, origG,wid,hei, rot);
+	rectBlu = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w2,h2, origB,wid,hei, rot);
+	rectGry = ImageMat.extractRectFromFloatImage(this.x(),this.y(),scaler,sigma, w2,h2, origY,wid,hei, rot);
 	this._flat = new ColorMatRGBY(rectRed,rectGrn,rectBlu,rectGry, w2,h2);
 }
 ImageFeature.prototype.flat = function(){
@@ -213,14 +216,18 @@ ImageFeature.prototype._calculateScore = function(){
 	var score = base + gradient + angle + scale; // large gradient = better, large color volume, ...
 	return score;
 }
+ImageFeature.prototype.contrastSSDScore = function(){
+	return this._flat.rangeAvg();
+	//return this._flat.uniqueness();
+}
 // --------------------------------------------------------------------------------------------------------- CLASS
 ImageFeature.bestRotation = function(featureA, featureB){ // how far to rotate B to best match A
 	return ColorAngle.optimumAngle( featureA.colorAngle(), featureB.colorAngle() );
 }
 ImageFeature.compareFeatures = function(featureA, featureB){ // assume features are already in best comperable orientation
 	// A
-	var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
-	return scoreSSD;
+	// var scoreSSD = ColorMatRGBY.SSD(featureA.flat(),featureB.flat());
+	// return scoreSSD;
 	// B
 	// var scoreCon = ColorMatRGBY.convolution(featureA.flat(),featureB.flat());
 	// scoreCon = scoreCon==0? Number.MAX_VALUE : 1.0/scoreCon;
