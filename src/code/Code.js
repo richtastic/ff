@@ -843,10 +843,63 @@ Code.randomizeArray = function(arr, guarantee){
 	        indexA = 0;
 	        indexB = Math.floor(Math.random()*(len-1))+1;
 	        temp = arr[indexA];
-	        arr[indexA] = carr[indexB];
+	        arr[indexA] = arr[indexB];
 	        arr[indexB] = temp;
 	    }
 	}
+}
+
+Code.randomSubsetFromArray = function(newArr, count, oldArr){
+	if(count<oldArr*0.5){
+		return Code._randomSubsetNoScale(newArr,count,oldArr);
+	}
+	return Code._randomSubsetResourceHog(newArr,count,oldArr);
+}
+Code._randomSubsetResourceHog = function(newArr, count, oldArr){
+	var i, len = oldArr.length;
+	var arr = Code.newArray();
+	for(i=0;i<len;++i){
+		arr[i] = i;
+	}
+	Code.randomizeArray(arr);
+	len = Math.min(count,len);
+	for(i=0;i<len;++i){
+		newArr[i] = oldArr[ arr[i] ];
+	}
+	return newArr;
+}
+Code._randomSubsetNoScale = function(newArr, count, oldArr){
+	var item, i, j=0, len = oldArr.length;
+	var temp = [];
+	while(j<count){
+		item = Math.floor(Math.random()*(len-1))+1;
+		item = oldArr[item];
+		if(!Code.elementExists(temp,item)){
+			temp.push(item);
+			newArr.push(item);
+			++j;
+		}
+	}
+	return newArr;
+}
+
+Code.stdDev = function(list,key,mean){
+	var i, sig=0, item, len=list.length;
+	if(len==0){ return 0; }
+	for(i=len;i--;){
+		item = list[key]
+		sig += Math.pow(item-mean,2);
+	}
+	return Math.sqrt(sig / len);
+}
+Code.median = function(list,key){
+	var i, mu=0, item, len=list.length;
+	if(len==0){ return 0; }
+	for(i=len;i--;){
+		item = list[key]
+		mu += item;
+	}
+	return mu / len;
 }
 // -------------------------------------------------------- HTML
 Code.getBody = function(){

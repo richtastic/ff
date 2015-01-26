@@ -9,13 +9,13 @@ function FeatureTest(){
 this._root.matrix().scale(1.5);
 	this._stage.root().addChild(this._root);
 	// load images
-	var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
+	//var imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
 	//var imageList = ["snow1.png","snow2.png"];
 	//var imageList = ["F_S_1_1.jpg","F_S_1_2.jpg"];
 	//var imageList = ["calibration1-0.jpg","calibration1-1.jpg"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalex.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexy.png"];
-	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
+	var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
 	//var imageList = ["catHat.jpg","catHat.jpg"];
 	new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
@@ -28,6 +28,12 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	this.displayImages(o.images,o.files);
 	this.findFeatures();
 	this.displayFeatures();
+}
+FeatureTest.prototype.ransacMatches = function(pointsA,pointsB){
+	// ...
+	var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
+	console.log(fundamental);
+	
 }
 FeatureTest.prototype.displayImages = function(images,files){
 	var i, d, len, img;
@@ -86,8 +92,10 @@ this._scales[i] = scales;
 		var hei = img.height;
 		var xA = featureA.x()*wid;
 		var yA = featureA.y()*hei;
-		var xB = featureB.x()*wid+wid;
-		var yB = featureB.y()*hei+0;
+		var xB = featureB.x()*wid;
+			//xB += wid; // to other image
+		var yB = featureB.y()*hei;
+			//yB += 0; // to other image
 		var d = new DO();
 		var col = Code.getColARGB(0xFF,Code.randomInt(0xFF),Code.randomInt(0xFF),Code.randomInt(0xFF));
 		d.graphics().clear();

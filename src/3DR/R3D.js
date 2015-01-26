@@ -499,7 +499,130 @@ R3D.drawPointAt = function(pX,pY, r,g,b){
 	return d;
 }
 
-
+R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){ 
+	if(!pointsA || !pointsB || pointsA.length<7){
+		return null;
+	}
+	/*
+	point normalization
+	*/
+	var i, j, k, arr, fxn, args, xVals, yVals, result, fundamental, support, consensus;
+	var ptA, ptB, pointA, pointB, distanceA, distanceB;
+	var subsetPointsA, subsetPointsB;
+	var consensusSet = [];
+	var maxSupportCount = 0;
+	var minCount = 7;
+	var epsilon = 1/pointsA.length;
+	var pOutlier = 0.5; // inital assumption
+	var pDesired = 0.99; // to have selected a valid subset
+	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
+	console.log("maxIterations: "+maxIterations);
+	var maxErrorDistance = 2.0; // pixels
+	for(i=0;i<maxIterations;++i){
+		// reset for iteration
+		Code.emptyArray(subsetPointsA);
+		Code.emptyArray(subsetPointsB);
+		// get params
+		Code.randomSubsetFromArray(subsetPointsA, 7, pointsA);
+		Code.randomSubsetFromArray(subsetPointsB, 7, pointsB);
+		arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
+		// try 1 or 3 possibilities
+		for(j=0;j<arr.length;++j){
+			fundamental = arr[j];
+			support = 0;
+			Code.emptyArray(consensus);
+			// find inliers
+			for(k=0;k<pointsA.length;++k){
+				pointA = pointsA[k];
+				pointB = pointsB[k];
+				fundamental.multV3DtoV3D(ptB, pointA);
+				fundamental.multV3DtoV3D(ptA, pointB);
+				distanceA = V2D.distance(pointA, ptA);
+				distanceB = V2D.distance(pointB, ptB);
+				// distance to actual point within reason
+				if(distanceA<maxErrorDistance && distanceB<maxErrorDistance){
+					++support;
+					consensus.push([pointA,pointB]);
+				}
+				// ...
+			}
+			console.log(i+": support: "+support);
+			if(support>maxSupportCount){
+				maxSupportCount = support;
+				Code.emptyArray(consensusSet);
+				Code.copyArray(consensusSet, consensus);
+			}
+		}
+	}
+	// f using all inliers
+	Code.emptyArray(subsetPointsA);
+	Code.emptyArray(subsetPointsB);
+	for(i=0;i<maxSupportCount;++i){
+		subsetPointsA.push( consensusSet[i][0] );
+		subsetPointsB.push( consensusSet[i][1] );
+	}
+	arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
+	/// if there re only 7 points, might get 1 or 3 in array
+	fundamental = arr;
+	// nonlinear estimation
+	fxn = R3D.lmMinFundamentalFxn;
+	args = [subsetPointsA,subsetPointsB];
+	xVals = fundamental.toArray();
+	args = [];//[ points1.norm.normalized[0], points1.norm.normalized[1] ];
+	yVals = Code.newArrayZeros(maxSupportCount*4);
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	/*
+	matrix/point un-normalization
+	*/
+	result fundamental;
+/*
+points0.norm = R3D.calculateNormalizedPoints([points0.pos3D,points0.pos2D]);
+points1.norm = R3D.calculateNormalizedPoints([points1.pos3D,points1.pos2D]);
+points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
+...
+forward = points0.norm.forward[0];
+reverse = points0.norm.reverse[1];
+H = H0;
+H = Matrix.mult(H,forward);
+H = Matrix.mult(reverse,H);
+H0 = H;
+*/
+}
+R3D.prototype.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1xm, e:1xm
+	var ptsFr = args[0];
+	var ptsTo = args[1];
+	var unknowns = 9;
+	var fr, to, frB=new V3D(), toB=new V3D();
+	var Hinv = new Matrix(3,3), H = new Matrix(3,3);
+	var i, len = ptsFr.length;
+	var rows = 2*2*len;
+	// convert unknown list to matrix
+	for(i=0;i<unknowns;++i){
+		H.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
+	}
+	Hinv = Matrix.inverse(H);
+	// find forward / reverse transforms
+ 	for(i=0;i<len;++i){
+		fr = ptsFr[i];
+		to = ptsTo[i];
+		H.multV3DtoV3D(toB,fr);
+		Hinv.multV3DtoV3D(frB,to);
+		frB.homo();
+		toB.homo();
+ 		if(yMatrix){
+ 			yMatrix.set(i*4+0,0, frB.x);
+ 			yMatrix.set(i*4+1,0, frB.y);
+ 			yMatrix.set(i*4+2,0, toB.x);
+ 			yMatrix.set(i*4+3,0, toB.y);
+ 		}
+ 		if(eMatrix){
+ 			eMatrix.set(i*4+0,0, Math.pow(frB.x-fr.x,2) );
+ 			eMatrix.set(i*4+1,0, Math.pow(frB.y-fr.y,2) );
+ 			eMatrix.set(i*4+2,0, Math.pow(toB.x-to.x,2) );
+ 			eMatrix.set(i*4+3,0, Math.pow(toB.y-to.y,2) );
+ 		}
+ 	}
+}
 
 
 

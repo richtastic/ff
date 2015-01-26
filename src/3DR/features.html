@@ -12,7 +12,17 @@ function ffLoadedFxn(){
 		"ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ColorMatRGBY.js","ImageFeature.js","ImageDescriptor.js","ImageMatcher.js","FeatureTest.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	var features = new FeatureTest();
+	// var features = new FeatureTest();
+	// return;
+
+// testing randomizing arrays
+	var arr = [0,1,2,3,4,5];
+	//var arr = [0,1,2];
+	console.log(arr);
+	//Code.randomizeArray(arr);//Code.randomizeArray(arr, true);
+	//console.log(arr);
+	console.log( Code._randomSubsetNoScale([], 3, arr) );
+	console.log( Code.randomSubsetFromArray([], 3, arr) );
 	return;
 
 // difference of gaussian experiments
