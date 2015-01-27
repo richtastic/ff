@@ -99,6 +99,148 @@ Harris-Laplacian
 <br/>
 <br/>
 
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+**Ellipse-Fitting:**
+<br/>
+
+
+
+
+
+**Circle:**
+<br/>
+distance from point x<sub>i</sub> from edge of circle
+<br/>
+d<sub>i</sub> = ||c - x<sub>i</sub>|| - r
+<br/>
+d<sub>i</sub> = sqrt( (c<sub>x</sub>-x<sub>i</sub>)<sup>2</sup> + (c<sub>y</sub>-y<sub>i</sub>)<sup>2</sup> ) - r
+<br/>
+<br/>
+_chain rule:_ [f(g)]'= f'(g) &middot; g'
+<br/>
+<br/>
+f: x<sup>1/2</sup>
+<br/>
+f': (1/2)&middot;x<sup>-1/2</sup>
+<br/>
+g: (c<sub>x</sub>-x)<sup>2</sup> + (c<sub>y</sub>-y)<sup>2</sup>
+<br/>
+g': ((c<sub>x</sub>-x)<sup>2</sup>)' + 0 = (c<sub>x</sub><sup>2</sup> - 2c<sub>x</sub>&middot;x + x<sup>2</sup>)' = 2c<sub>x</sub> - 2x + 0 = 2(c<sub>x</sub> - x)
+<br/>
+f'(g)&middot;g' = (1/2)&middot;((c<sub>x</sub>-x)<sup>2</sup> + (c<sub>y</sub>-y)<sup>2</sup>)<sup>-1/2</sup> &middot; 2(c<sub>x</sub> - x) = 
+<br/>
+= (c<sub>x</sub>-x) / sqrt((c<sub>x</sub>-x)<sup>2</sup> + (c<sub>y</sub>-y)<sup>2</sup>)
+
+<br/>
+&part;d<sub>i</sub>/&part;c<sub>j</sub> = (c<sub>x</sub> - x<sub>i<sub>x</sub></sub>) / sqrt( (c<sub>x</sub> - x<sub>i<sub>x</sub></sub>)<sup>2</sup> + (c<sub>y</sub> - x<sub>i<sub>y</sub></sub>)<sup>2</sup> )
+<br/>
+
+<br/>
+<br/>
+
+
+**Ellipse:**
+<br/>
+x<sup>T</sup>&middot;A&middot;x + b<sup>T</sup>&middot;x + c = 0
+<br/>
+x = Q&middot;x' + t
+<br/>
+A' = Q<sup>T</sup>&middot;A&middot;Q
+<br/>
+b' = b<sup>T</sup>t
+<br/>
+c' = c ?
+<br/>
+<br/>
+&rArr;
+<br/>
+<br/>
+x'<sup>T</sup>&middot;A'&middot;x' + b'<sup>T</sup>&middot;x' + c' = 0
+<br/>
+<br/>
+A' = diag(&lambda;<sub>1</sub>,&lambda;<sub>2</sub>)
+<br/>
+<br/>
+z = t
+<br/>
+a = sqrt(-c'/&lambda;<sub>1</sub>)
+<br/>
+b = sqrt(-c'/&lambda;<sub>2</sub>)
+<br/>
+<br/>
+det(A) = &lambda;<sub>1</sub>&middot;&lambda;<sub>2</sub>
+<br/>
+tra(A) = &lambda;<sub>1</sub> + &lambda;<sub>2</sub>
+<br/>
+<br/>
+&kappa; = a/b
+<br/>
+&kappa;<sup>2</sup> = &mu; &plusmn; &radic; &mu;<sup>2</sup> - 1 )
+<br/>
+&mu = tra(A)<sup>2</sup>/(2&middot;det(A)) - 1
+
+<br/>
+<br/>
+u = (a<sub>11</sub>,2a<sub>12</sub>,a<sub>22</sub>,b<sub>1</sub>,c)<sup>T</sup>
+<br/>
+v = (b<sub>1</sub>,b<sub>2</sub>,c)<sup>T</sup>
+<br/>
+w = (a<sub>1q</sub>,&radic;2)&middot;a<sub>12</sub>,a<sub>s2</sub>)<sup>T</sup>
+<br/>
+
+<br/>
+<br/>
+
+<br/>
+<br/>
+
+<br/>
+<br/>
+
+<br/>
+<br/>
+
+- algebraic (different constraints)
+   - &lambda;<sub>1</sub> + &lambda;<sub>2</sub> = 1
+   - ^ && dot(w,w) = 1
+- geometric
+
+
+
+<br/>
+<br/>
+
+
+
+
+
+
+(d/dx)|x| = x/|x|
+<br/>
+(d/dx)|u| = (u/|u|)*(du/dx)
+<br/>
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+http://www.emis.de/journals/BBMS/Bulletin/sup962/gander.pdf
+<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
 
 
 (http://www.cs.utexas.edu/~grauman/courses/fall2009/papers/local_features_synthesis_draft.pdf)[yerp]

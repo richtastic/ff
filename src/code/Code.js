@@ -1606,6 +1606,52 @@ Code.trimMaxEnds = function(a,b){
 	while(a.length>1 && a[0]>a[1]){ a.shift(); b.shift(); } // left
 	while(a.length>1 && a[a.length-1]>a[a.length-2]){ a.pop(); b.pop(); } // right
 }
+Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
+	if(a==0){ // linear
+		if(b==0){ // singular (vertical)
+			return null;
+		}
+		return -c/b;
+	}
+	var inside = b*b - 4.0*a*c;
+	if(inside<0){ return null; }
+	if(inside==0){
+		return -b/(2.0*a);
+	}
+	var root = Math.sqrt(inside);
+	return [(-b+root)/(2.0*a), (-b-root)/(2.0*a)];
+}
+Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
+	if(a==0){ // quadratic
+		return Code.quadraticSolution(b,c,d);
+	} // else: 1 or 3 solutions
+	var delta = 18.0*a*b*c*d - 4.0*b*b*b*d + b*b*c*c - 4.0*a*c*c*c - 27.0*a*a*d*d; // discriminant
+	var del0 = b*b - 3.0*a*c;
+	var del1 = 2.0*b*b*b - 9.0*a*b*c + 27.0*a*d*d;
+	if(delta>0){ // 3 distinct
+		//
+	}else if(delta==0){ // 3 repeated
+		//
+	}else{ // delta<0 // 1 real, 2 imag
+		//
+	}
+// another example
+	var p = -b/(3.0*a);
+	var pp = p*p;
+	var q = p*pp + (b*c-3*a*d)/(6.0*a*a);
+	var r = c/(3.0*a);
+	var qq = q*q;
+	var rpp = r-pp;
+	var m = rpp*rpp*rpp;
+	var n = qq + m;
+	var ins = Math.sqrt(n);
+	var in1 = q + ins;
+	var in2 = q - ins;
+	var out1 = Math.pow(in1,1.0/3.0);
+	var out2 = Math.pow(in2,1.0/3.0);
+	var soln = out1 + out2 + p;
+}
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------- transform matrices
 Code.separateAffine2D = function(a,b,c,d, tx,ty){
 	var scaleX = Math.sqrt(a*a+b*b);

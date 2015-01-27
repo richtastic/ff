@@ -179,24 +179,47 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){
 	// console.log(U.toString());
 	// console.log(S.toString());
 	// console.log(V.toString());
-	// get smallest sigma rows of V
+	// V(7,8) = right nul(A)
 	var row8 = new Matrix(3,3).setFromArray(V.colToArray(7));
 	var row8t = Matrix.transpose(row8);
 	var row9 = new Matrix(3,3).setFromArray(V.colToArray(8));
-	var row9t = Matrix.transpose(row9)
-	var r9i = Matrix.inverse(row9t);
-	var critical = Matrix.mult(r9i,row8t);
+	//var row9t = Matrix.transpose(row9)
+	//var r9i = Matrix.inverse(row9t);
+	var r9i = Matrix.inverse(row9);
+// console.log(row8.toString())
+// console.log(row9.toString())
+	//var critical = Matrix.mult(r9i,row8t);
+
+var F1 = row8;
+var F2 = row9;
+
+	var critical = Matrix.mult(r9i,row8);
 	var eigs = Matrix.eigenValuesAndVectors(critical);
-	// rank2: det (F1 + lambda*D2) = a*l^3 + b*l^2 + c*l + d = 0
+	// rank2: det (F1 + lambda*F2) = a*l^3 + b*l^2 + c*l + d = 0
 	// eigen values
 	var values = eigs.values;
 	var list = [];
 	// solution = row8^T - lambda*row9^T
+	console.log(values);
+// var diag0 = new Matrix().identity().scale(values[0]);
+// var diag1 = new Matrix().identity().scale(values[1]);
+// var diag2 = new Matrix().identity().scale(values[2]);
+// list.push(diag0,diag1,diag2);
 	for(i=0;i<values.length;++i){ // only 1 or 3 solutions
-		if( !Matrix.isZero(values[i]) ){
-			F.copy(row8); F.scale(values[i]);
-			list.push(F.copy());
-		}
+		//if( !Matrix.isZero(values[i]) ){
+			var F = new Matrix(3,3);
+			F.copy(F2);
+			F.scale(values[i]);
+			F = Matrix.add(F1,F);
+			list[i] = F;
+			console.log(list[i].toString())
+		//}
+		/*
+		var diag = new Matrix(3,3).identity().scale(values[i]);
+		var M = Matrix.mult(diag,F2);
+		list[i] = Matrix.add( F1, M );
+		console.log(list[i].toString())
+		*/
 	}
 	return list;
 }
@@ -503,50 +526,62 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	if(!pointsA || !pointsB || pointsA.length<7){
 		return null;
 	}
+	var maxErrorDistance = 1.0/100.0; // % ~ 2 pixels
 	/*
 	point normalization
 	*/
-	var i, j, k, arr, fxn, args, xVals, yVals, result, fundamental, support, consensus;
-	var ptA, ptB, pointA, pointB, distanceA, distanceB;
-	var subsetPointsA, subsetPointsB;
-	var consensusSet = [];
-	var maxSupportCount = 0;
+	var i, j, k, arr, fxn, args, xVals, yVals, result, fundamental;
+	var ptA=new V3D(), ptB=new V3D(), pointA, pointB, distanceA, distanceB;
+	var subsetPointsA=[], subsetPointsB=[];
+	var consensus=[], consensusSet = [];
+	var support, maxSupportCount = 0;
 	var minCount = 7;
 	var epsilon = 1/pointsA.length;
 	var pOutlier = 0.5; // inital assumption
 	var pDesired = 0.99; // to have selected a valid subset
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
+maxIterations = 1E4
+//maxIterations = 1;
 	console.log("maxIterations: "+maxIterations);
-	var maxErrorDistance = 2.0; // pixels
 	for(i=0;i<maxIterations;++i){
 		// reset for iteration
 		Code.emptyArray(subsetPointsA);
 		Code.emptyArray(subsetPointsB);
 		// get params
-		Code.randomSubsetFromArray(subsetPointsA, 7, pointsA);
-		Code.randomSubsetFromArray(subsetPointsB, 7, pointsB);
-		arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
+		// Code.randomSubsetFromArray(subsetPointsA, 7, pointsA);
+		// Code.randomSubsetFromArray(subsetPointsB, 7, pointsB);
+		// arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
+Code.randomSubsetFromArray(subsetPointsA, 8, pointsA);
+Code.randomSubsetFromArray(subsetPointsB, 8, pointsB);
+arr = R3D.fundamentalMatrix8(subsetPointsA,subsetPointsB);
+arr = [arr];
 		// try 1 or 3 possibilities
 		for(j=0;j<arr.length;++j){
 			fundamental = arr[j];
+			var fundamentalInverse = Matrix.transpose(fundamental);
 			support = 0;
 			Code.emptyArray(consensus);
+			//console.log("f: "+fundamental.toString());
 			// find inliers
 			for(k=0;k<pointsA.length;++k){
 				pointA = pointsA[k];
 				pointB = pointsB[k];
 				fundamental.multV3DtoV3D(ptB, pointA);
-				fundamental.multV3DtoV3D(ptA, pointB);
+				fundamentalInverse.multV3DtoV3D(ptA, pointB);
 				distanceA = V2D.distance(pointA, ptA);
 				distanceB = V2D.distance(pointB, ptB);
+//console.log(distanceA,distanceB);
 				// distance to actual point within reason
 				if(distanceA<maxErrorDistance && distanceB<maxErrorDistance){
+					//console.log(pointB.toString()+" - "+ptB.toString()+"............");
 					++support;
 					consensus.push([pointA,pointB]);
 				}
 				// ...
 			}
+			if(support>0){
 			console.log(i+": support: "+support);
+			}
 			if(support>maxSupportCount){
 				maxSupportCount = support;
 				Code.emptyArray(consensusSet);
@@ -564,6 +599,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
 	/// if there re only 7 points, might get 1 or 3 in array
 	fundamental = arr;
+console.log("B");
 	// nonlinear estimation
 	fxn = R3D.lmMinFundamentalFxn;
 	args = [subsetPointsA,subsetPointsB];
@@ -571,10 +607,11 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	args = [];//[ points1.norm.normalized[0], points1.norm.normalized[1] ];
 	yVals = Code.newArrayZeros(maxSupportCount*4);
 	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+console.log("D");
 	/*
 	matrix/point un-normalization
 	*/
-	result fundamental;
+	return fundamental;
 /*
 points0.norm = R3D.calculateNormalizedPoints([points0.pos3D,points0.pos2D]);
 points1.norm = R3D.calculateNormalizedPoints([points1.pos3D,points1.pos2D]);
