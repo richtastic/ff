@@ -1606,6 +1606,13 @@ Code.trimMaxEnds = function(a,b){
 	while(a.length>1 && a[0]>a[1]){ a.shift(); b.shift(); } // left
 	while(a.length>1 && a[a.length-1]>a[a.length-2]){ a.pop(); b.pop(); } // right
 }
+Code.powOdd = function(n,p){
+	var r = Math.pow(Math.abs(n),p);
+	if(n<0){
+		return -r;
+	}
+	return r;
+}
 Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
 	if(a==0){ // linear
 		if(b==0){ // singular (vertical)
@@ -1614,9 +1621,13 @@ Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
 		return -c/b;
 	}
 	var inside = b*b - 4.0*a*c;
-	if(inside<0){ return null; }
-	if(inside==0){
-		return -b/(2.0*a);
+	if(inside<0){ // complex
+		//console.log(-b*0.5/a + " +/- i*" + Math.sqrt(-inside));
+		return null;
+	}
+	if(inside==0){ // real repeated
+		var x = -b/(2.0*a);
+		return [x,x];
 	}
 	var root = Math.sqrt(inside);
 	return [(-b+root)/(2.0*a), (-b-root)/(2.0*a)];
@@ -1624,32 +1635,54 @@ Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
 Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
 	if(a==0){ // quadratic
 		return Code.quadraticSolution(b,c,d);
-	} // else: 1 or 3 solutions
-	var delta = 18.0*a*b*c*d - 4.0*b*b*b*d + b*b*c*c - 4.0*a*c*c*c - 27.0*a*a*d*d; // discriminant
-	var del0 = b*b - 3.0*a*c;
-	var del1 = 2.0*b*b*b - 9.0*a*b*c + 27.0*a*d*d;
-	if(delta>0){ // 3 distinct
-		//
-	}else if(delta==0){ // 3 repeated
-		//
-	}else{ // delta<0 // 1 real, 2 imag
-		//
 	}
-// another example
-	var p = -b/(3.0*a);
-	var pp = p*p;
-	var q = p*pp + (b*c-3*a*d)/(6.0*a*a);
-	var r = c/(3.0*a);
-	var qq = q*q;
-	var rpp = r-pp;
-	var m = rpp*rpp*rpp;
-	var n = qq + m;
-	var ins = Math.sqrt(n);
-	var in1 = q + ins;
-	var in2 = q - ins;
-	var out1 = Math.pow(in1,1.0/3.0);
-	var out2 = Math.pow(in2,1.0/3.0);
-	var soln = out1 + out2 + p;
+	var A = b/a;
+	var B = c/a;
+	var C = d/a;
+	var AO3 = A/3.0;
+	var R = (9.0*A*B - 27.0*C - 2.0*A*A*A)/54.0;
+	var RR = R*R;
+	var Q = (3.0*B - A*A)/9.0;
+	var QQQ = Q*Q*Q;
+	var D = RR + QQQ;
+	var x1, x2, x3;
+	if(3.0*Q-2.0*R+D==0.0){ // 3 equal
+		x1 = Code.powOdd(C,1.0/3.0);
+		return [x1,x1,x1];
+	}
+	if(D<0.0){ // 3 distinct
+		var theta = Math.acos(R/Math.sqrt(-QQQ));
+		var rQ = Math.sqrt(-Q);
+		x1 = 2.0 * rQ * Math.cos(theta/3.0) - AO3;
+		x2 = 2.0 * rQ * Math.cos((theta+Math.PI2)/3.0) - AO3;
+		x3 = 2.0 * rQ * Math.cos((theta+Math.PI2*2.0)/3.0) - AO3;
+		return [x1,x2,x3];
+	}else if(D > 0.0){ // 1 real
+		var rD = Math.sqrt(D);
+		var S = Code.powOdd(R + rD,1.0/3.0);
+		var T = Code.powOdd(R - rD,1.0/3.0);
+		x1 = S + T - AO3;
+		//xR = -(S+T)*0.5 - AO3;
+		//xI = (S-T)*0.5*Math.sqrt(3.0);
+		// x2 = xR + i*xI
+		// x3 = xR - i*xI
+		return [x1];
+	}else{ // D == 0.0 // 3 real, 2+ same
+		var RC = Code.powOdd(R,1.0/3.0);
+		x1 = 2.0*RC - AO3;
+		x2 = -RC - AO3;
+		x3 = x2;
+		return [x1,x2,x3];
+	}
+	// this covers D <=0.0
+	// console.log(x1,x2,x3);
+	var r = Math.sqrt(RR-D);
+	var rc = Code.powOdd(r,1.0/3.0);
+	var theta = Math.acos(R/r);
+	x1 = 2.0*rc*Math.cos(theta/3.0) - AO3;
+	x2 = -rc*(Math.cos(theta/3.0)+Math.sqrt(3.0)*Math.sin(theta/3.0)) - AO3;
+	x3 = -rc*(Math.cos(theta/3.0)-Math.sqrt(3.0)*Math.sin(theta/3.0)) - AO3;
+	return [x1,x2,x3];
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- transform matrices
