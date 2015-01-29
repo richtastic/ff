@@ -526,12 +526,14 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	if(!pointsA || !pointsB || pointsA.length<7){
 		return null;
 	}
+console.log(pointsA.length,pointsB.length);
 	var maxErrorDistance = 1.0/100.0; // % ~ 2 pixels
 	/*
 	point normalization
 	*/
 	var i, j, k, arr, fxn, args, xVals, yVals, result, fundamental;
 	var ptA=new V3D(), ptB=new V3D(), pointA, pointB, distanceA, distanceB;
+	var lineA=new V3D(), lineB=new V3D();
 	var subsetPointsA=[], subsetPointsB=[];
 	var consensus=[], consensusSet = [];
 	var support, maxSupportCount = 0;
@@ -540,8 +542,8 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	var pOutlier = 0.5; // inital assumption
 	var pDesired = 0.99; // to have selected a valid subset
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
-maxIterations = 1E4
-//maxIterations = 1;
+maxIterations = 1E3;
+maxIterations = 1;
 	console.log("maxIterations: "+maxIterations);
 	for(i=0;i<maxIterations;++i){
 		// reset for iteration
@@ -551,9 +553,25 @@ maxIterations = 1E4
 		// Code.randomSubsetFromArray(subsetPointsA, 7, pointsA);
 		// Code.randomSubsetFromArray(subsetPointsB, 7, pointsB);
 		// arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
-Code.randomSubsetFromArray(subsetPointsA, 8, pointsA);
-Code.randomSubsetFromArray(subsetPointsB, 8, pointsB);
-arr = R3D.fundamentalMatrix8(subsetPointsA,subsetPointsB);
+Code.randomSubsetFromArray(subsetPointsA, 9, pointsA);
+Code.randomSubsetFromArray(subsetPointsB, 9, pointsB);
+subsetPointsA = pointsA;
+subsetPointsB = pointsB;
+// console.log(subsetPointsA+"");
+// console.log(subsetPointsB+"");
+var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
+var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
+//arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
+//arr = R3D.fundamentalMatrix8(subsetPointsA,subsetPointsB);
+//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
+// console.log(pointsANorm.normalized+"");
+// console.log(pointsBNorm.normalized+"");
+arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+arr = Matrix.mult(arr,pointsANorm.forward[0]);
+arr = Matrix.mult( Matrix.transpose(pointsBNorm.forward[0]), arr);
+
+
+console.log(arr+"")
 arr = [arr];
 		// try 1 or 3 possibilities
 		for(j=0;j<arr.length;++j){
@@ -566,11 +584,42 @@ arr = [arr];
 			for(k=0;k<pointsA.length;++k){
 				pointA = pointsA[k];
 				pointB = pointsB[k];
-				fundamental.multV3DtoV3D(ptB, pointA);
-				fundamentalInverse.multV3DtoV3D(ptA, pointB);
-				distanceA = V2D.distance(pointA, ptA);
-				distanceB = V2D.distance(pointB, ptB);
-//console.log(distanceA,distanceB);
+//console.log(pointA+"      "+pointB)
+				// fundamental.multV3DtoV3D(ptB, pointA);
+				// fundamentalInverse.multV3DtoV3D(ptA, pointB);
+				fundamental.multV3DtoV3D(lineA, pointA);
+				fundamentalInverse.multV3DtoV3D(lineB, pointB);
+				// fundamental.multV3DtoV3D(ptA, pointB);
+				// fundamentalInverse.multV3DtoV3D(ptB, pointA);
+				// ptA.homo();
+				// ptB.homo();
+//console.log(pointA+""+ptA)
+// ax + by + c(z) = 0
+//var org = lineA.copy();
+//org.homo();
+//org.scale(-1)
+var org = new V2D(-lineA.x/lineA.z,-lineA.y/lineA.z);
+// var dir = new V2D(org.x,org.y);
+// dir.norm();
+// V2D.rotate(dir, dir,Math.PIO2);
+// dir.norm();
+var dir = new V2D(org.y,-org.x);
+var point = pointB.copy();
+
+
+// 
+// var dotA = pointB.x*lineA.x + pointB.y*lineA.y + pointB.z*lineA.z;
+// var dotB = pointA.x*lineB.x + pointA.y*lineB.y + pointA.z*lineB.z;
+// console.log("dot: "+dotA+" | "+dotB);
+// var num = dotA*dotA;
+// var den = (lineA.x*lineA.x + lineA.y*lineA.y) + (lineB.x*lineB.x + lineB.y*lineB.y);
+// var err = num/den;
+// console.log(err);
+				distanceA = Code.distancePointLine2D(org,dir, point);
+				distanceB = 1E10;
+				// distanceA = V2D.distance(pointA, ptA);
+				// distanceB = V2D.distance(pointB, ptB);
+console.log(distanceA,distanceB);
 				// distance to actual point within reason
 				if(distanceA<maxErrorDistance && distanceB<maxErrorDistance){
 					//console.log(pointB.toString()+" - "+ptB.toString()+"............");

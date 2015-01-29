@@ -2655,6 +2655,19 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 	return {normal:nrm, point:new V3D(a*d*len,b*d*len,c*d*len)};
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
+Code.lineOriginAndDirectionFromEquation = function(org,dir, a,b,c){
+	if(c==0){
+		org.x = 0;
+		org.y = 0;
+		dir.x = 0;
+		dir.y = 0;
+	}else{
+		org.x = -a/c;
+		org.y = -b/c;
+		dir.x = org.y;
+		dir.y = -org.x;
+	}
+}
 Code.lineEquationFromPoints2D = function(a,b){ // 
 	dir = V2D.sub(b,a);
 	var closest = Code.closestPointLine2D(a,dir, V2D.ZERO);
