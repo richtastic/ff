@@ -566,12 +566,17 @@ var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
 //arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
 // console.log(pointsANorm.normalized+"");
 // console.log(pointsBNorm.normalized+"");
+
 arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 arr = Matrix.mult(arr,pointsANorm.forward[0]);
 arr = Matrix.mult( Matrix.transpose(pointsBNorm.forward[0]), arr);
 
+//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
 
 console.log(arr+"")
+
+return arr;
+
 arr = [arr];
 		// try 1 or 3 possibilities
 		for(j=0;j<arr.length;++j){
@@ -652,6 +657,9 @@ console.log("B");
 	// nonlinear estimation
 	fxn = R3D.lmMinFundamentalFxn;
 	args = [subsetPointsA,subsetPointsB];
+if(!fundamental){
+	return null;
+}
 	xVals = fundamental.toArray();
 	args = [];//[ points1.norm.normalized[0], points1.norm.normalized[1] ];
 	yVals = Code.newArrayZeros(maxSupportCount*4);

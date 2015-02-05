@@ -81,16 +81,19 @@ Link3DR.prototype.searchLineInAFromPointInB = function(point){
 }
 Link3DR.searchLineFromPoint = function(F, point){
 // should handle epipole-in-image half lines ...
+console.log("A");
 	var line, l1, l2, intA, intB, list = [];
 	line = F.multV3DtoV3D(new V3D(), point); // if .z==undefined || null || 0 ... assume 2D multiplication
 	if(line.x==0.0 && line.y==0.0){
 		return null;
 	}
+console.log("B");
 	var TL = new V2D(0,0);
 	var TR = new V2D(1.0,0);
 	var BR = new V2D(1.0,1.0);
 	var BL = new V2D(0,1.0);
 	if( Math.abs(line.x) > Math.abs(line.y) ){ // more vertical
+console.log("X");
 		l1 = new V2D( -line.z/line.x, 0.0);
 		l2 = new V2D( (-1.0*line.y-line.z)/line.x, 1.0);
 		intA = Code.lineSegIntersect2D(l1,l2, TL,BL);
@@ -106,6 +109,7 @@ Link3DR.searchLineFromPoint = function(F, point){
 			if(0<l2.x && l2.x<1.0){ list.push(l2); }
 		}
 	}else{ // more horizontal
+console.log("Y");
 		l1 = new V2D( 0.0,-line.z/line.y);
 		l2 = new V2D( 1.0,(-1.0*line.x-line.z)/line.y);
 		intA = Code.lineSegIntersect2D(l1,l2, TL,TR);
@@ -113,14 +117,17 @@ Link3DR.searchLineFromPoint = function(F, point){
 		if(intA){ intA = new V2D(intA.x,intA.y); }
 		if(intB){ intB = new V2D(intB.x,intB.y); }
 		if(intA && intB){
+console.log("1");
 			list.push( intA ); list.push( intB );
 		}else{
+console.log("2");
 			if(0<l1.y && l1.y<1.0){ list.push(l1); }
 			if(intA){ list.push( intA ); }
 			if(intB){ list.push( intB ); }
 			if(0<l2.y && l2.y<1.0){ list.push(l2); }
 		}
 	}
+	console.log("C");
 	return list; // this list is not ordered - distance requires width/height/ratio known
 }
 // ------------------------------------------------------------------------------------------------------------------------ OPS

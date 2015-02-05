@@ -2655,7 +2655,7 @@ Code.planePointNormalFromEquation = function(a,b,c,d){
 	return {normal:nrm, point:new V3D(a*d*len,b*d*len,c*d*len)};
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
-Code.lineOriginAndDirectionFromEquation = function(org,dir, a,b,c){
+Code.lineOriginAndDirection2DFromEquation = function(org,dir, a,b,c){
 	if(c==0){
 		org.x = 0;
 		org.y = 0;
