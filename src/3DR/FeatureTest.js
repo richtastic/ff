@@ -1,4 +1,4 @@
-function FeatureTest(){
+                   function FeatureTest(){
 	// setup display
 	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas, (1/5)*1000);
@@ -8,7 +8,7 @@ function FeatureTest(){
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	this._root = new DO();
 //this._root.matrix().scale(1.5);
-this._root.matrix().translate(10,50);
+//this._root.matrix().translate(10,50);
 	this._stage.root().addChild(this._root);
 
 //this.ransacMatches();
@@ -46,6 +46,8 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	pts.push(new V3D(191,89,1.0), new V3D(617,120,1.0)); // grid dark blue
 	pts.push(new V3D(161,76,1.0), new V3D(582,107,1.0)); // grid dark red
 	pts.push(new V3D(260,170,1.0), new V3D(744,183,1.0)); // base right corner
+	pts.push(new V3D(41,257,1.0), new V3D(453,266,1.0)); // 4
+	pts.push(new V3D(238,256,1.0), new V3D(790.5,268,1.0)); // 
 	// pts.push(new V3D(,,1.0), new V3D(,,1.0));
 	var i, len = pts.length;
 	var str = "";
@@ -68,10 +70,13 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	str = "\n";
 	var ptsA = [];
 	var ptsB = [];
+	var j = 0;
 	for(i=0;i<len;i+=2){
 		str += "pointsA.push( new V3D("+pts[i+0].x+","+pts[i+0].y+",1.0) ); pointsB.push( new V3D("+pts[i+1].x+","+pts[i+1].y+",1.0) );\n";
-		ptsA.push(new V3D(pts[i+0].x*400,pts[i+0].y*300,1.0));
-		ptsB.push(new V3D(pts[i+1].x*400,pts[i+1].y*300,1.0));
+		ptsA.push(new V3D(pts[i+0].x*1.0,pts[i+0].y*1.0,1.0));
+		ptsB.push(new V3D(pts[i+1].x*1.0,pts[i+1].y*1.0,1.0));
+		console.log(ptsA[j]+" "+ptsB[j])
+		++j;
 	}
 	str += "";
 //	console.log(str);
@@ -103,23 +108,41 @@ for(i=0;i<len;++i){
 	//
 	var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
 	//var fundamental = R3D.fundamentalMatrix(pointsA,pointsB);
-	console.log(fundamental);
-imageWidth *= 2;
+	console.log(fundamental+"");
+//imageWidth *= 2;
+for(var k=5;k<6;++k){
+//for(var k=0;k<9;++k){
 //for(var k=0;k<1;++k){
-	var k = 2;
+//for(var k=1;k<2;++k){
+//for(var k=2;k<3;++k){
+//for(var k=3;k<4;++k){ // 
+//for(var k=4;k<5;++k){
 	var pointA = pointsA[k];
 	var pointB = pointsB[k];
 	var lineA = new V3D();
 	var lineB = new V3D();
-	var fundamentalInverse = Matrix.transpose(fundamental);
+
 	fundamental.multV3DtoV3D(lineA, pointA);
-	fundamentalInverse.multV3DtoV3D(lineB, pointB);
+
+	var fundamentalInverse = Matrix.transpose(fundamental);
+	//fundamentalInverse.multV3DtoV3D(lineB, pointB);
+	//fundamentalInverse.multV3DtoV3D(lineA, pointA);
 	//
+	
 console.log("pointA:"+pointA);
 console.log("lineA:"+lineA);
 
-// var wtf = Link3DR.searchLineFromPoint(fundamental, pointA);
-// console.log("wtf:"+wtf+"")
+var wtf = Link3DR.searchLineFromPoint(fundamental, pointA);
+console.log("wtf:"+wtf+"")
+	d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0xFF00FF00);
+	d.graphics().beginPath();
+	d.graphics().moveTo(imageWidth+wtf[0].x*imageWidth,wtf[0].y*imageHeight);
+	d.graphics().lineTo(imageWidth+wtf[1].x*imageWidth,wtf[1].y*imageHeight);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	this._root.addChild(d);
 
 	var d, v;
 	// 
@@ -129,20 +152,75 @@ console.log("lineA:"+lineA);
 	//var org = new V2D(nrm.x,nrm.y);
 	//var dir = new V2D(org.y,-org.x);
 	//var dir = new V2D(-org.y,org.x);
-	var dir = new V2D(-lineA.x,lineA.y);
 	//var dir = new V2D(-lineA.y,lineA.x);
 	//var org = new V2D(lineA.x/lineA.z,lineA.y/lineA.z);
 	//var org = new V2D(-lineA.x/lineA.z,-lineA.y/lineA.z);
 	//var org = new V2D(-lineA.x*lineA.z,-lineA.y*lineA.z);
-	var org = new V2D(lineA.x*lineA.z,lineA.y*lineA.z);
+
+	//var dir = new V2D(-lineA.x,lineA.y);
+
+// lineA.x *= imageWidth;
+// lineA.y *= imageHeight;
+console.log("lineA:"+lineA);
+
+	var nrm = new V2D(lineA.x,lineA.y);
+		nrm.scale(-lineA.z);
+	//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
+	//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
+	//var org = new V2D(nrm.x,nrm.y);
+	//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
+	//var org = new V2D(nrm.x*imageHeight,nrm.y*imageWidth);
+	//var org = new V2D(lineA.x*imageWidth*lineA.z,lineA.y*imageHeight*lineA.z);
+
+	//var org = new V2D(-lineA.x*imageWidth*lineA.z,-lineA.y*imageHeight*lineA.z);
+
+//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
+//var org = new V2D(nrm.x,nrm.y);
+//org.norm();
+//org.scale(lineA.z);
+
+
+var org = new V2D(lineA.x,lineA.y);
+var len = org.length();
+org.norm();
+// org.scale(-lineA.z);
+org.scale(-lineA.z/len);
+
+org.x *= imageWidth;
+org.y *= imageHeight;
+
+	//org.scale(-1/lineA.z);
+// org.x = 200;
+// org.y = 150;
+	var dir = new V2D(-nrm.y,nrm.x); // rotate norm - pi/2
+	dir.x *= imageWidth;
+	dir.y *= imageHeight;
+	dir.norm();
+
+
+
 	var point = pointB.copy();
-// console.log("nrm: "+nrm);
-// console.log("org: "+org);
-// console.log("dir: "+dir);
-dir.norm();
+
+// dir.x *= imageWidth;
+// dir.y *= imageHeight;
+// dir.norm();
+
+
+
+
+	// var a,b,c;
+	// a = lineA.x;
+	// b = lineA.y;
+	// c = lineA.z;
+	// console.log(a,b,c);
+
+
+console.log("nrm: "+nrm);
+console.log("org: "+org);
+console.log("dir: "+dir);
+
 var scale = -500;
-dir.x *= scale;
-dir.y *= scale;
+dir.scale(scale);
 	//
 	d = new DO();
 	d.graphics().clear();
@@ -156,14 +234,14 @@ dir.y *= scale;
 //d.graphics().setFill(0x0000FF00);
 //d.graphics().fill();
 	//
-	d = R3D.drawPointAt(imageWidth+org.x,org.y, 0x00,0xFF,0x00);
+	d = R3D.drawPointAt(imageWidth+org.x*imageWidth,org.y*imageHeight, 0x00,0xFF,0x00);
 	this._root.addChild(d);
 	//
-	d = R3D.drawPointAt(pointA.x,pointA.y, 0xFF,0x00,0x00);
+	d = R3D.drawPointAt(pointA.x*imageWidth,pointA.y*imageHeight, 0xFF,0x00,0x00);
 	this._root.addChild(d);
-	d = R3D.drawPointAt(imageWidth+pointB.x,pointB.y, 0xFF,0x00,0x00);
+	d = R3D.drawPointAt(imageWidth+pointB.x*imageWidth,pointB.y*imageHeight, 0xFF,0x00,0x00);
 	this._root.addChild(d);
-//}
+}
 	//
 // Code.lineOriginAndDirection2DFromEquation(org,dir, a,b,c);
 }

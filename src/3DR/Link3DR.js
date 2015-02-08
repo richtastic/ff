@@ -48,6 +48,8 @@ Link3DR.prototype.bundleAdjust = function(b){
 	var ret;
 	// normalize input points
 	inputPoints = [this._A.putativePoints(), this._B.putativePoints()];
+	console.log("putattivsdfsf");
+	console.log(inputPoints)
 	ret = R3D.calculateNormalizedPoints(inputPoints);
 	var normalizedInputPoints = ret.normalized;
 	var forwardTransforms = ret.forward;
@@ -98,6 +100,7 @@ console.log("X");
 		l2 = new V2D( (-1.0*line.y-line.z)/line.x, 1.0);
 		intA = Code.lineSegIntersect2D(l1,l2, TL,BL);
 		intB = Code.lineSegIntersect2D(l1,l2, TR,BR);
+console.log(intA,intB);
 		if(intA){ intA = new V2D(intA.x,intA.y); }
 		if(intB){ intB = new V2D(intB.x,intB.y); }
 		if(intA && intB){
@@ -114,6 +117,7 @@ console.log("Y");
 		l2 = new V2D( 1.0,(-1.0*line.x-line.z)/line.y);
 		intA = Code.lineSegIntersect2D(l1,l2, TL,TR);
 		intB = Code.lineSegIntersect2D(l1,l2, BL,BR);
+console.log(intA,intB);
 		if(intA){ intA = new V2D(intA.x,intA.y); }
 		if(intB){ intB = new V2D(intB.x,intB.y); }
 		if(intA && intB){
