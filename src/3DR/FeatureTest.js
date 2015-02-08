@@ -73,9 +73,9 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	var j = 0;
 	for(i=0;i<len;i+=2){
 		str += "pointsA.push( new V3D("+pts[i+0].x+","+pts[i+0].y+",1.0) ); pointsB.push( new V3D("+pts[i+1].x+","+pts[i+1].y+",1.0) );\n";
-		ptsA.push(new V3D(pts[i+0].x*1.0,pts[i+0].y*1.0,1.0));
-		ptsB.push(new V3D(pts[i+1].x*1.0,pts[i+1].y*1.0,1.0));
-		console.log(ptsA[j]+" "+ptsB[j])
+		ptsA.push(new V3D(pts[i+0].x*400,pts[i+0].y*300,1.0));
+		ptsB.push(new V3D(pts[i+1].x*400,pts[i+1].y*300,1.0));
+		//console.log(ptsA[j]+" "+ptsB[j])
 		++j;
 	}
 	str += "";
@@ -106,140 +106,93 @@ for(i=0;i<len;++i){
 }
 */
 	//
-	var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
-	//var fundamental = R3D.fundamentalMatrix(pointsA,pointsB);
+	//var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
+	var fundamental = R3D.fundamentalMatrix(pointsA,pointsB);
+	console.log(fundamental+"");
+
+// NONLINEAR IMPROVEMENT HERE ...
+	// nonlinear estimation
+	var fxn, args, xVals, yVals, maxSupportCount;
+maxSupportCount = pointsA.length;
+	fxn = R3D.lmMinFundamentalFxn;
+	args = [pointsA,pointsB];
+	xVals = fundamental.toArray();
+	//args = [];//[ points1.norm.normalized[0], points1.norm.normalized[1] ];
+	yVals = Code.newArrayZeros(maxSupportCount*4);
+	var flip = undefined;
+	//var flip = true;
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, 30, 1E-10, 1E-10, flip );
+
+// FORCE 7-DOF HERE ...
+
+
 	console.log(fundamental+"");
 //imageWidth *= 2;
-for(var k=5;k<6;++k){
+for(var k=0;k<pointsA.length;++k){
 //for(var k=0;k<9;++k){
 //for(var k=0;k<1;++k){
 //for(var k=1;k<2;++k){
 //for(var k=2;k<3;++k){
-//for(var k=3;k<4;++k){ // 
+//for(var k=3;k<4;++k){
 //for(var k=4;k<5;++k){
+//for(var k=5;k<6;++k){
+//for(var k=6;k<9;++k){
 	var pointA = pointsA[k];
 	var pointB = pointsB[k];
 	var lineA = new V3D();
 	var lineB = new V3D();
 
-	fundamental.multV3DtoV3D(lineA, pointA);
-
 	var fundamentalInverse = Matrix.transpose(fundamental);
-	//fundamentalInverse.multV3DtoV3D(lineB, pointB);
-	//fundamentalInverse.multV3DtoV3D(lineA, pointA);
-	//
-	
-console.log("pointA:"+pointA);
-console.log("lineA:"+lineA);
-
-var wtf = Link3DR.searchLineFromPoint(fundamental, pointA);
-console.log("wtf:"+wtf+"")
-	d = new DO();
-	d.graphics().clear();
-	d.graphics().setLine(1.0,0xFF00FF00);
-	d.graphics().beginPath();
-	d.graphics().moveTo(imageWidth+wtf[0].x*imageWidth,wtf[0].y*imageHeight);
-	d.graphics().lineTo(imageWidth+wtf[1].x*imageWidth,wtf[1].y*imageHeight);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-	this._root.addChild(d);
+	fundamental.multV3DtoV3D(lineA, pointA);
+	fundamentalInverse.multV3DtoV3D(lineB, pointB);
 
 	var d, v;
-	// 
-	//var nrm = new V2D(lineA.x*lineA.z,lineA.y*lineA.z);
-	//var nrm = new V2D(-lineA.x/lineA.z,-lineA.y/lineA.z);
-	//var nrm = new V2D(lineA.x/lineA.z,lineA.y/lineA.z);
-	//var org = new V2D(nrm.x,nrm.y);
-	//var dir = new V2D(org.y,-org.x);
-	//var dir = new V2D(-org.y,org.x);
-	//var dir = new V2D(-lineA.y,lineA.x);
-	//var org = new V2D(lineA.x/lineA.z,lineA.y/lineA.z);
-	//var org = new V2D(-lineA.x/lineA.z,-lineA.y/lineA.z);
-	//var org = new V2D(-lineA.x*lineA.z,-lineA.y*lineA.z);
-
-	//var dir = new V2D(-lineA.x,lineA.y);
-
-// lineA.x *= imageWidth;
-// lineA.y *= imageHeight;
-console.log("lineA:"+lineA);
-
+/*
 	var nrm = new V2D(lineA.x,lineA.y);
-		nrm.scale(-lineA.z);
-	//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
-	//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
-	//var org = new V2D(nrm.x,nrm.y);
-	//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
-	//var org = new V2D(nrm.x*imageHeight,nrm.y*imageWidth);
-	//var org = new V2D(lineA.x*imageWidth*lineA.z,lineA.y*imageHeight*lineA.z);
-
-	//var org = new V2D(-lineA.x*imageWidth*lineA.z,-lineA.y*imageHeight*lineA.z);
-
-//var org = new V2D(nrm.x*imageWidth,nrm.y*imageHeight);
-//var org = new V2D(nrm.x,nrm.y);
-//org.norm();
-//org.scale(lineA.z);
-
-
-var org = new V2D(lineA.x,lineA.y);
-var len = org.length();
-org.norm();
-// org.scale(-lineA.z);
-org.scale(-lineA.z/len);
-
-org.x *= imageWidth;
-org.y *= imageHeight;
-
-	//org.scale(-1/lineA.z);
-// org.x = 200;
-// org.y = 150;
+	var org = new V2D(lineA.x,lineA.y);
+	var len = org.length();
+	org.norm();
+	org.scale(-lineA.z/len);
+	// org.x *= imageWidth;
+	// org.y *= imageHeight;
 	var dir = new V2D(-nrm.y,nrm.x); // rotate norm - pi/2
-	dir.x *= imageWidth;
-	dir.y *= imageHeight;
+	// dir.x *= imageWidth;
+	// dir.y *= imageHeight;
 	dir.norm();
-
-
-
-	var point = pointB.copy();
-
-// dir.x *= imageWidth;
-// dir.y *= imageHeight;
-// dir.norm();
-
-
-
-
-	// var a,b,c;
-	// a = lineA.x;
-	// b = lineA.y;
-	// c = lineA.z;
-	// console.log(a,b,c);
-
-
-console.log("nrm: "+nrm);
-console.log("org: "+org);
-console.log("dir: "+dir);
-
-var scale = -500;
-dir.scale(scale);
+*/
+	var dir = new V2D();
+	var org = new V2D();
+	var scale = 500;
 	//
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	dir.scale(scale);
 	d = new DO();
 	d.graphics().clear();
 	d.graphics().setLine(1.0,0xFFFF0000);
 	d.graphics().beginPath();
-	d.graphics().moveTo(imageWidth+org.x,org.y);
+	d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
 	d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
 	d.graphics().endPath();
 	d.graphics().strokeLine();
 	this._root.addChild(d);
-//d.graphics().setFill(0x0000FF00);
-//d.graphics().fill();
 	//
-	d = R3D.drawPointAt(imageWidth+org.x*imageWidth,org.y*imageHeight, 0x00,0xFF,0x00);
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+	dir.scale(scale);
+	d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
+	d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
 	this._root.addChild(d);
 	//
-	d = R3D.drawPointAt(pointA.x*imageWidth,pointA.y*imageHeight, 0xFF,0x00,0x00);
+	// d = R3D.drawPointAt(imageWidth+org.x,org.y, 0x00,0xFF,0x00);
+	// this._root.addChild(d);
+	d = R3D.drawPointAt(pointA.x,pointA.y, 0xFF,0x00,0x00);
 	this._root.addChild(d);
-	d = R3D.drawPointAt(imageWidth+pointB.x*imageWidth,pointB.y*imageHeight, 0xFF,0x00,0x00);
+	d = R3D.drawPointAt(imageWidth+pointB.x,pointB.y, 0xFF,0x00,0x00);
 	this._root.addChild(d);
 }
 	//

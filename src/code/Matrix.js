@@ -527,7 +527,11 @@ Matrix.prototype.getNorm = function(){
 	return Matrix.norm2D(this);
 }
 Matrix.prototype.normalize = function(){
-	this.scale( 1.0/Matrix.norm2D(this) );
+	var len = Matrix.norm2D(this);
+	if(len!=0){
+		len = 1.0/len;
+	}
+	this.scale( len );
 	return this;
 }
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
@@ -713,6 +717,7 @@ Matrix.norm2D = function(A){ // frobenius
 			n += x*x;
 		}
 	}
+	//console.log("N: "+n+" "+Math.sqrt(n))
 	return Math.sqrt(n);
 }
 Matrix.normInfinite = function(x){ // x is a vector
@@ -1397,7 +1402,7 @@ Matrix.matrixArrayToString = function(A, m,n){
 }
 
 
-Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance){ // levenberg marquardt nonlinear minimization - reference: lmdif
+Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance, lambdaScaleFlip){ // levenberg marquardt nonlinear minimization - reference: lmdif
 	// fxn = function to evaluate y && error from a given x
 	// m = number of functions
 	// n = number of (unknowns) variables (n<=m)
@@ -1409,9 +1414,10 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	// maxIterations = halt if loop is greater or equal to this
 	// diag is scaling array length = m
 	// 	
-	maxIterations = maxIterations!==undefined?maxIterations:30;
+	maxIterations = maxIterations!==undefined?maxIterations:50;
 	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
 	xTolerance = xTolerance!==undefined?xTolerance:1E-10;
+	lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
 	var i, j;
 	var x = new Matrix(n,1).setFromArray(xInitial);
 	var xTemp = new Matrix(n,1);
@@ -1422,20 +1428,24 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var error = new Matrix(m,1);
 	var jacobian = new Matrix(m,n); 
 	var L = new Matrix(n,n);
-	var prevError = -1, nextError, currError;
+	var errorPrev = -1, errorNext, errorCurr;
 	var epsilon = 1E-8; // should be on scale of ~min(x)/1E-6
-	var lambda = 0.1;
+	var lambda = 0.001;
 	var lambdaScale = 10.0;
+	if(lambdaScaleFlip){
+		lambdaScale = 1.0/lambdaScale;
+	}
 	// initial
 	fxn(args, x,y,error);
-	currError = error.getNorm();
+	errorCurr = error.getNorm();
 	for(i=0;i<maxIterations; ++i){
+//console.log(i+": "+errorCurr);
 		// check function error
-		if(currError<fTolerance){
+		if(errorCurr<fTolerance){
 			console.log("converge f");
 			break;
 		}
-		prevError = currError;
+		errorPrev = errorCurr;
 		// f(x+dx) - y = dy => jacobian
 		for(j=0;j<n;++j){
 			xTemp.copy(x); xTemp.set(j,0, xTemp.get(j,0)+epsilon );
@@ -1464,13 +1474,14 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		// possible new y
 		fxn(args, xTemp,yTemp,error);
 		errorNext = error.getNorm();
-		if(errorNext<prevError){
+//console.log("=> "+currError+" "+errorNext+"")
+		if(errorNext<errorPrev){
 			x.copy(xTemp);
 			y.copy(yTemp);
-			currError = nextError;
-			lambda *= lambdaScale;
-		}else{
+			errorCurr = errorNext;
 			lambda /= lambdaScale;
+		}else{
+			lambda *= lambdaScale;
 		}
 	}
 	x.toArray(xInitial);

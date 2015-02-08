@@ -82,6 +82,11 @@ Link3DR.prototype.searchLineInAFromPointInB = function(point){
 	return Link3DR.searchLineFromPoint(this._F_BtoA,point);
 }
 Link3DR.searchLineFromPoint = function(F, point){
+
+// this should use vectors
+// and rectangle intersection
+// NOT normalized square y = mx + b 
+
 // should handle epipole-in-image half lines ...
 console.log("A");
 	var line, l1, l2, intA, intB, list = [];

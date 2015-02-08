@@ -2662,10 +2662,13 @@ Code.lineOriginAndDirection2DFromEquation = function(org,dir, a,b,c){
 		dir.x = 0;
 		dir.y = 0;
 	}else{
-		org.x = -a/c;
-		org.y = -b/c;
-		dir.x = org.y;
-		dir.y = -org.x;
+		len = Math.sqrt(a*a+b*b);
+		len = len*len;
+		org.x = -a*c/len;
+		org.y = -b*c/len;
+		dir.x = -b;
+		dir.y = a;
+		dir.norm();
 	}
 }
 Code.lineEquationFromPoints2D = function(a,b){ // 
