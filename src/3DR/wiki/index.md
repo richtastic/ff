@@ -1577,7 +1577,7 @@ E = K<sub>B</sub><sup>T</sup>&middot;F&middot;K<sub>A</sub>
 
 <br/>
 <br/>
-Fundamental Matrix - 8 unknowns [7 DOF?]
+Fundamental Matrix - 8 unknowns + rank2  = [7 DOF]
 <br/>
 x<sub>B</sub><sup>T</sup>&middot;F&middot;x<sub>A</sub> = 0
 <br/>
@@ -1598,6 +1598,72 @@ N-View Geometry/Calibration/...
 
 
 Point Triangulation
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+
+**Trifocal Tensor, T:** 3 cameras relate a line L, projected onto 3 images
+<br/>
+lines in images: l &hArr; l' &hArr; l''
+<br/>
+points (matching) in images: x &hArr; x' &hArr; x''
+<br/>
+camera centers: C, C', C''
+<br/>
+a<sub>4</sub> = e' = P'&middot;C
+<br/>
+b<sub>4</sub> = e'' = P''&middot;C
+<br/>
+P = [I|0] | P' = [A|a<sub>4</sub>] | P = [B|b<sub>4</sub>]
+<br/>
+&pi; = P<sup>T</sup>&middot;l = [1,1,1,0]<sup>T</sup>
+<br/>
+&pi;' = P'<sup>T</sup>&middot;l' = [(A<sup>T</sup>&middot;l')<sup>T</sup>, a<sub>4</sub>&middot;l']<sup>T</sup>
+<br/>
+&pi;'' = P''<sup>T</sup>&middot;l'' = [(B<sup>T</sup>&middot;l'')<sup>T</sup>, b<sub>4</sub>&middot;l'']<sup>T</sup>
+<br/>
+M = [&pi;,&pi;',&pi;''] = [m<sub>1</sub>,m<sub>2</sub>,m<sub>3</sub>], m<sub>1</sub> = &alpha;&middot;m<sub>2</sub> + &beta;&middot;m<sub>3</sub>
+<br/>
+3 planes meet at line: det(M) = 0
+<br/>
+<br/>
+l<sub>i</sub> = l''<sup>T</sup>&middot;(b<sub>4</sub>&middot;a<sub>i</sub><sup>T</sup>)&middot;l' - l'<sup>T</sup>&middot;(a<sub>4</sub>&middot;b<sub>i</sub><sup>T</sup>)&middot;l''
+<br/>
+T<sub>i</sub> = a<sub>i</sub>&middot;b<sub>4</sub><sup>T</sup> - a<sub>4</sub>&middot;b<sub>i</sub><sup>T</sup>
+<br/>
+l<sub>i</sub> = l'<sup>T</sup>&middot;T<sub>i</sub>&middot;l''
+<br/>
+T = [T<sub>1</sub> T<sub>2</sub> T<sub>3</sub>]
+<br/>
+l<sup>T</sup> = l'<sup>T</sup>&middot;T&middot;l''
+<br/>
+<br/>
+**3D Point P on 3D Line L**:
+<br/>
+l'<sup>T</sup>&middot;(&Sigma;<sub>i</sub> x<sup>i</sup>&middot;T<sub>i</sub>)&middot;l'' = 0
+<br/>
+[x']<sub>&times;</sub>&middot;(&Sigma;<sub>i</sub> x<sup>i</sup>&middot;T<sub>i</sub>)&middot;[x'']<sub>&times;</sub> = 0<sub>3&times;3</sub>
+<br/>
+<br/>
+F<sub>2,1</sub> = [e']<sub>&times;</sub>&middot;T&middot;e''
+<br/>
+P' = [T&middot;e'' | e']
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+
+
+
+
 
 
 

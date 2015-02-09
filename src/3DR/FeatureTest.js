@@ -73,6 +73,11 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	var j = 0;
 	for(i=0;i<len;i+=2){
 		str += "pointsA.push( new V3D("+pts[i+0].x+","+pts[i+0].y+",1.0) ); pointsB.push( new V3D("+pts[i+1].x+","+pts[i+1].y+",1.0) );\n";
+// var sca = 1E-3;
+// pts[i+0].x += Math.random()*sca - sca*0.5;
+// pts[i+0].y += Math.random()*sca - sca*0.5;
+// pts[i+1].x += Math.random()*sca - sca*0.5;
+// pts[i+1].y += Math.random()*sca - sca*0.5;
 		ptsA.push(new V3D(pts[i+0].x*400,pts[i+0].y*300,1.0));
 		ptsB.push(new V3D(pts[i+1].x*400,pts[i+1].y*300,1.0));
 		//console.log(ptsA[j]+" "+ptsB[j])
@@ -106,37 +111,14 @@ for(i=0;i<len;++i){
 }
 */
 	//
-	//var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
-	var fundamental = R3D.fundamentalMatrix(pointsA,pointsB);
+	var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
+	//var fundamental = R3D.fundamentalMatrix(pointsA,pointsB);
+	console.log(fundamental+"");
+	fundamental = R3D.fundamentalMatrixNonlinear(fundamental,pointsA,pointsB);
 	console.log(fundamental+"");
 
-// NONLINEAR IMPROVEMENT HERE ...
-	// nonlinear estimation
-	var fxn, args, xVals, yVals, maxSupportCount;
-maxSupportCount = pointsA.length;
-	fxn = R3D.lmMinFundamentalFxn;
-	args = [pointsA,pointsB];
-	xVals = fundamental.toArray();
-	//args = [];//[ points1.norm.normalized[0], points1.norm.normalized[1] ];
-	yVals = Code.newArrayZeros(maxSupportCount*4);
-	var flip = undefined;
-	//var flip = true;
-	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, 30, 1E-10, 1E-10, flip );
 
-// FORCE 7-DOF HERE ...
-
-
-	console.log(fundamental+"");
-//imageWidth *= 2;
 for(var k=0;k<pointsA.length;++k){
-//for(var k=0;k<9;++k){
-//for(var k=0;k<1;++k){
-//for(var k=1;k<2;++k){
-//for(var k=2;k<3;++k){
-//for(var k=3;k<4;++k){
-//for(var k=4;k<5;++k){
-//for(var k=5;k<6;++k){
-//for(var k=6;k<9;++k){
 	var pointA = pointsA[k];
 	var pointB = pointsB[k];
 	var lineA = new V3D();
@@ -147,19 +129,6 @@ for(var k=0;k<pointsA.length;++k){
 	fundamentalInverse.multV3DtoV3D(lineB, pointB);
 
 	var d, v;
-/*
-	var nrm = new V2D(lineA.x,lineA.y);
-	var org = new V2D(lineA.x,lineA.y);
-	var len = org.length();
-	org.norm();
-	org.scale(-lineA.z/len);
-	// org.x *= imageWidth;
-	// org.y *= imageHeight;
-	var dir = new V2D(-nrm.y,nrm.x); // rotate norm - pi/2
-	// dir.x *= imageWidth;
-	// dir.y *= imageHeight;
-	dir.norm();
-*/
 	var dir = new V2D();
 	var org = new V2D();
 	var scale = 500;
@@ -195,9 +164,18 @@ for(var k=0;k<pointsA.length;++k){
 	d = R3D.drawPointAt(imageWidth+pointB.x,pointB.y, 0xFF,0x00,0x00);
 	this._root.addChild(d);
 }
+
 	//
-// Code.lineOriginAndDirection2DFromEquation(org,dir, a,b,c);
+	this.denseFeatureMatching();
+	this.what();
 }
+FeatureTest.prototype.denseFeatureMatching = function(){
+	//
+}
+FeatureTest.prototype.what = function(){
+	//
+}
+
 FeatureTest.prototype.displayImages = function(images,files){
 	var i, d, len, img;
 	var currentX = 0, currentY = 0;

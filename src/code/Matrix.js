@@ -382,51 +382,51 @@ Matrix.prototype.toString = function(exp){
 Matrix._transformTemp2D = new Matrix(3,3);
 Matrix.transform2DTranslate = function(a,tX,tY){
 	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform2DScale = function(a,sX,sY){
 	sY = sY!==undefined?sY:sX;
 	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform2DRotate = function(a,ang){
 	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 //
 Matrix._transformTemp3D = new Matrix(4,4);
 Matrix.transform3DTranslate = function(a,tX,tY,tZ){
 	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,tX, 0.0,1.0,0.0,tY, 0.0,0.0,1.0,tZ, 0.0,0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform3DScale = function(a,sX,sY,sZ){
 	sY = sY!==undefined?sY:sX;
 	sZ = sZ!==undefined?sZ:sY;
 	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateX = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
 	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,0.0, 0.0,c,-s,0.0, 0.0,s,c,0.0, 0.0,0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateY = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
 	var b = Matrix._transformTemp3D.setFromArray([c,0.0,s,0.0, 0.0,1.0,0.0,0.0, -s,0.0,c,0.0, 0.0,0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateZ = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
 	var b = Matrix._transformTemp3D.setFromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
-	return Matrix.mult(a,b);
-	//return Matrix.mult(b,a);
+	//return Matrix.mult(a,b);
+	return Matrix.mult(b,a);
 }
 
 
@@ -1430,7 +1430,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var L = new Matrix(n,n);
 	var errorPrev = -1, errorNext, errorCurr;
 	var epsilon = 1E-8; // should be on scale of ~min(x)/1E-6
-	var lambda = 0.001;
+	var lambda = 1E-3;
 	var lambdaScale = 10.0;
 	if(lambdaScaleFlip){
 		lambdaScale = 1.0/lambdaScale;

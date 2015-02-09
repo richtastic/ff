@@ -45,13 +45,12 @@ R3D.calculatePrinciple = function(points){
 	return {direction:dirEigA, angle:angle, scale:ratio}
 }
 R3D.calculateNormalizedPoints = function(inputPoints){
-	var i, j, len, T, pX, pY, cenX, cenY, avgX, avgY, avgD;
+	var i, j, len, T, cenX, cenY, rmsX, rmsY;
 	var dirInfo, angle, ratio, tmp = new V2D(), v = new V3D();
 	var normalizedPoints = [];
 	var inputPointTransforms = [];
 	var inputPointInverseTransforms = [];
-	var useNormalized = true;//false;
-	var scaler = Math.sqrt(2);//1.0;//Math.sqrt(2);
+	var scaler = Math.sqrt(2);
 	for(i=0;i<inputPoints.length;++i){
 		len = inputPoints[i].length;
 		cenX = 0.0; cenY = 0.0;
@@ -63,41 +62,28 @@ R3D.calculateNormalizedPoints = function(inputPoints){
 		angle = dirInfo.angle;
 		ratio = dirInfo.scale;
 		cenX /= len; cenY /= len;
-		avgX = 0.0; avgY = 0.0; avgD = 0.0;
-//console.log(cenX,cenY)
+		rmsX = 0.0; rmsY = 0.0;
 		for(j=0;j<len;++j){
 			v = inputPoints[i][j];
-			pX = Math.pow(v.x-cenX, 2.0);
-			pY = Math.pow(v.y-cenY, 2.0);
-			avgD += Math.sqrt(pX+pY);
-				tmp.set(v.x-cenX,v.y-cenY);
-				V2D.rotate(tmp,tmp,-angle);
-				avgX += Math.abs(tmp.x);
-				avgY += Math.abs(tmp.y);
+			tmp.set(v.x-cenX,v.y-cenY);
+			V2D.rotate(tmp,tmp,-angle);
+			rmsX += tmp.x*tmp.x;
+			rmsY += tmp.y*tmp.y;
 		}
-		avgX /= len; avgY /= len; avgD /= len;
-// FIND MEAN SQUARED DISTANCE
-// SCALE S.T. SIGMA IS @ sqrt(2)
-console.log(avgX,avgY)
+		rmsX = Math.sqrt(rmsX/len);
+		rmsY = Math.sqrt(rmsY/len);
+//console.log("center: "+cenX+","+cenY+" RMS: "+rmsX+","+rmsY)
 		T = new Matrix(3,3).identity();
-		T = Matrix.transform2DTranslate(T,-cenX,-cenY);
-		if(!useNormalized){
-			T = Matrix.transform2DScale(T,scaler/avgD);
-		}else{
+			T = Matrix.transform2DTranslate(T,-cenX,-cenY);
 			T = Matrix.transform2DRotate(T,-angle);
-			T = Matrix.transform2DScale(T,scaler/avgX,scaler/avgY);
+			T = Matrix.transform2DScale(T,scaler/rmsX,scaler/rmsY);
 			T = Matrix.transform2DRotate(T,angle);
-		}
 		inputPointTransforms[i] = T;
 		Tinv = new Matrix(3,3).identity();
-		if(!useNormalized){
-			Tinv = Matrix.transform2DScale(Tinv,avgD/scaler);
-		}else{
 			Tinv = Matrix.transform2DRotate(Tinv,-angle);
-			Tinv = Matrix.transform2DScale(Tinv,avgX/scaler,avgY/scaler);
+			Tinv = Matrix.transform2DScale(Tinv,rmsX/scaler,rmsY/scaler);
 			Tinv = Matrix.transform2DRotate(Tinv,angle);
-		}
-		Tinv = Matrix.transform2DTranslate(Tinv,cenX,cenY);
+			Tinv = Matrix.transform2DTranslate(Tinv,cenX,cenY);
 		inputPointInverseTransforms[i] = Tinv;
 	}
 	// save normalized points
@@ -108,7 +94,6 @@ console.log(avgX,avgY)
 		for(j=0;j<len;++j){
 			v = inputPoints[i][j];
 			normalizedPoints[i][j] = T.multV3DtoV3D(new V3D(),v);
-			//console.log(normalizedPoints[i][j].toString());
 		}
 	}
 	return {normalized:normalizedPoints, forward:inputPointTransforms, reverse:inputPointInverseTransforms};
@@ -135,6 +120,19 @@ R3D.screenNormalizedPointsFromPixelPoints = function(points,width,height){
 	return list;
 }
 // ------------------------------------------------------------------------------------------- F utilities
+R3D.forceRank2 = function(fundamental){
+	var svd = Matrix.SVD(fundamental);
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+	var s0 = S.get(0,0);
+	var s1 = S.get(1,1);
+	S = new Matrix(3,3).setFromArray([s0,0,0, 0,s1,0, 0,0,0]);
+	V = Matrix.transpose(V);
+	var m = Matrix.mult(U,S);
+	m = Matrix.mult(m,V);
+	return m;
+}
 R3D.fundamentalMatrix = function(pointsA,pointsB){
 	if(pointsA.length>=8){
 		return R3D.fundamentalMatrix8(pointsA,pointsB);
@@ -167,6 +165,8 @@ R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole
 	return Matrix.fromSVD(U,S,V);
 }
 R3D.fundamentalMatrix7 = function(pointsA,pointsB){
+//F = FA + l*FB
+//F = a*FA + (1-a)*FB
 	if(pointsA.length<7){ return null; }
 	var i, a, b, svd, U, S, V, len = pointsA.length;
 	var size = 7;
@@ -504,12 +504,21 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
-R3D.nonlinearLeastSquares = function(fxn,options){ // LevenbergMarquardt ... ish
-	var maxIterations = 10; // apparently >100 is typical
-	// 
-	// options.iterations
-
-	//
+R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares
+	var maxIterations = 30;
+	var fxn, args, xVals, yVals, maxSupportCount;
+	maxSupportCount = pointsA.length;
+	fxn = R3D.lmMinFundamentalFxn;
+	args = [pointsA,pointsB];
+	xVals = fundamental.toArray();
+	yVals = Code.newArrayZeros(maxSupportCount*4);
+	var flip = undefined;
+	flip = true;
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, flip );
+	fundamental = new Matrix(3,3).setFromArray(xVals);
+	// FORCE RANK 2
+	fundamental = R3D.forceRank2(fundamental);
+	return fundamental;
 }
 
 // ------------------------------------------------------------------------------------------- drawling utilities
@@ -535,7 +544,6 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	if(!pointsA || !pointsB || pointsA.length<7){
 		return null;
 	}
-console.log(pointsA.length,pointsB.length);
 	var maxErrorDistance = 1.0/100.0; // % ~ 2 pixels
 	/*
 	point normalization
@@ -573,9 +581,6 @@ var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
 //arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
 //arr = R3D.fundamentalMatrix8(subsetPointsA,subsetPointsB);
 //arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
-console.log(pointsANorm)
-console.log(pointsANorm.normalized+"");
-console.log(pointsBNorm.normalized+"");
 
 arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 arr = Matrix.mult(arr,pointsANorm.forward[0]);
@@ -875,7 +880,7 @@ R3D.projectiveRANSAC = function(pointsFr,pointsTo){ // 2D point pairs
 
 
 
-R3D.cubicDeterminantSolution3x3 = function(arrayA, arrayB){
+R3D.cubicDeterminantSolution3x3 = function(arrayA, arrayB){ // F = FA + l*FB
 	var A00 = arrayA[0], A01 = arrayA[1], A02 = arrayA[2], A10 = arrayA[3], A11 = arrayA[4], A12 = arrayA[5], A20 = arrayA[6], A21 = arrayA[7], A22 = arrayA[8];
 	var B00 = arrayB[0], B01 = arrayB[1], B02 = arrayB[2], B10 = arrayB[3], B11 = arrayB[4], B12 = arrayB[5], B20 = arrayB[6], B21 = arrayB[7], B22 = arrayB[8];
 	var c0 = A00*A11*A22 - A00*A12*A21 + A01*A12*A20 - A01*A10*A22 + A02*A10*A21 - A02*A11*A22;
@@ -884,7 +889,10 @@ R3D.cubicDeterminantSolution3x3 = function(arrayA, arrayB){
 	var c3 = B00*B11*B22 - B00*B12*B21 + B01*B12*B20 - B01*B10*B22 + B02*B10*B21 - B02*B11*B20;
 	return Code.cubicSolution(c3,c2,c1,c0); // lambda
 }
-
+R3D.cubicDeterminantSolutionPercent3x3 = function(arrayA, arrayB){ // F = a*FA + (1-a)*FB
+	// 
+	return null;
+}
 
 
 /*
