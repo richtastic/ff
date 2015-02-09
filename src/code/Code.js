@@ -253,6 +253,13 @@ Code.newArrayZeros = function(len){
 	}
 	return arr;
 }
+Code.newArrayOnes = function(len){
+	var i, arr = new Array(len);
+	for(i=len;i--;){
+		arr[i] = 1.0;
+	}
+	return arr;
+}
 Code.setArrayConstant = function(arr,c){
 	for(var i=arr.length;i--;){
 		arr[i] = c;
@@ -358,6 +365,16 @@ Code.subSampleArray = function(a,count){
 	for(i=0;i<len;++i){
 		index = Math.floor(Math.random()*a.length);
 		a[index] = a.pop();
+	}
+}
+Code.arrayLimit = function(arr,min,max){
+	var i, len = arr.length;
+	if(min>max){
+		// LIMIT TO ONLY OUTSIDE
+	}else{
+		for(i=len;i>0;--i){
+			arr[i] = Math.max(Math.min(arr[i],max),min);
+		}
 	}
 }
 // ------------------------------------------------------------------------------------------ ARRAY 2D

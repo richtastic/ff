@@ -23,7 +23,31 @@
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotate.png"];
 	//var imageList = ["../../matching/images/original.png","../../matching/images/scalexrotateskew.png"];
 	//var imageList = ["catHat.jpg","catHat.jpg"];
-	new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
+new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
+//new ImageLoader("./images/",["tgag.jpg"],this,this.getScaledImage).load();
+}
+FeatureTest.prototype.getScaledImage = function(o){
+	var img = o.images[0];
+	var scale = 2.0;
+	var wid = img.width;
+	var hei = img.height;
+	var wid2 = wid*scale;
+	var hei2 = hei*scale;
+	var data = this._stage.getImageAsFloatRGB(img);
+	console.log("A");
+	var mat = new ImageMat(img.width,img.height, data.red,data.grn,data.blu);
+	console.log("B");
+	var a = Code.newArrayOnes(wid2*hei2);
+	var r = ImageMat.extractRect(data.red, 0,0, wid,0, wid,hei, 0,hei, wid2,hei2, wid,hei);
+	var g = ImageMat.extractRect(data.grn, 0,0, wid,0, wid,hei, 0,hei, wid2,hei2, wid,hei);
+	var b = ImageMat.extractRect(data.blu, 0,0, wid,0, wid,hei, 0,hei, wid2,hei2, wid,hei);
+	Code.arrayLimit(r,0,1.0);
+	Code.arrayLimit(g,0,1.0);
+	Code.arrayLimit(b,0,1.0);
+	var i = this._stage.getFloatARGBAsImage(a,r,g,b, wid2,hei2, null);
+	//var d = new DOImage(i);
+	//this._root.addChild(d);
+	document.body.appendChild(i);
 }
 FeatureTest.prototype.handleMouseClickFxn = function(e){
 	console.log(e.x,e.y);
