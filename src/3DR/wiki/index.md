@@ -1574,20 +1574,26 @@ x<sub>B-norm</sub><sup>T</sup>&middot;F&middot;x<sub>A-norm</sub> = 0
 E = K<sub>B</sub><sup>T</sup>&middot;F&middot;K<sub>A</sub>
 <br/>
 
-
 <br/>
 <br/>
 Fundamental Matrix - 8 unknowns + rank2  = [7 DOF]
 <br/>
 x<sub>B</sub><sup>T</sup>&middot;F&middot;x<sub>A</sub> = 0
 <br/>
-(rank 2)
+l<sub>A in B</sub> = F&middot;x<sub>A</sub>
 <br/>
 <br/>
-
-epipoles
+F = [t]<sub>&times;</sub>&middot;M & t=e' &hArr; P = [I | 0], P'=[M | t]
+<br/>
+<br/>
+epipole: F&middot;e<sub></sub> = 0 ; F<sup>T</sup>&middot;e' = 0
+<br/>
+e' = eigenvector
+<br/>
 
 epipolar lines
+
+
 
 
 
