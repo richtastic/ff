@@ -191,13 +191,18 @@ for(var k=0;k<pointsA.length;++k){
 
 	//
 	this.denseFeatureMatching();
-	this.what();
+	// refine matches
+	this.what(fundamental);
 }
 FeatureTest.prototype.denseFeatureMatching = function(){
 	//
 }
-FeatureTest.prototype.what = function(){
-	//
+FeatureTest.prototype.what = function(fundamental){
+	var cams = R3D.cameraMatricesFromF(fundamental);
+	var camA = cams.A;
+	var camB = cams.B;
+	console.log(camA+"");
+	console.log(camB+"");
 }
 
 FeatureTest.prototype.displayImages = function(images,files){

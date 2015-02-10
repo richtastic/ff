@@ -240,6 +240,19 @@ R3D.getEpipolesFromF = function(F){
 	b.homo(); // epipole IN IMAGE B: F' * eb = 0
 	return {A:a,B:b};
 }
+R3D.cameraMatricesFromF = function(F){
+	var epipoles = R3D.getEpipolesFromF(F);
+	var eA = epipoles.A;
+	var eB = epipoles.B;
+	var cross = Matrix.crossMatrixFromV3D(eB);
+// NEGATIVE CROSS?
+// cross.scale(-1.0);
+	var camB = cross.copy();
+	camB.appendColFromArray(eB.toArray());
+	camB.appendRowFromArray([0, 0, 0, 1]);
+	var camA = new Matrix(4,4).identity();
+	return {A:camA, B:camB};
+}
 // ------------------------------------------------------------------------------------------- rectification
 R3D.angleInLimits = function(angle,min,max){
 	while(angle<min){

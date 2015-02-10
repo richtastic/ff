@@ -921,15 +921,73 @@ The transform that transforms Camera1 to Camera2 = H<sub>1</sub><sup>-1</sup> &m
 
 F<sub>rank2</sub><sup>hat</sup> = H'<sup>-T</sup> F H'<sup>-1</sup>
 
-**Essential Matrix**:
+**Essential Matrix, E**: E = K'<sup>T</sup> &middot; F &middot; K
 <br/>
-E = K'<sup>T</sup> &middot; F &middot; K
 P = camera matrix = K &middot; [R | t]
-E = [t]<sub>&times;</sub>&middot;R = R[R<sup>T</sup>|t]<sub>&times;</sub>
-
+<br/>
+E = R[R<sup>T</sup>|t]<sub>&times;</sub> = [t]<sub>&times;</sub>&middot;R = S&middot;R
+<br/>
 E has 5 DOF (3 rot, 3 trans, 1 scale ambiguity)
-
+<br/>
 E has two equal non-zero singular values (and a 0 singular value)
+<br/>
+E = U &middot; &Sigma;<sub>1,1,0</sub> &middot; V<sup>T</sup>
+<br/>
+``` 
+        [1 0 0]
+E = U * [0 1 0] * Vt
+        [0 0 0]
+```
+```
+    [ 0 -1  0]
+W = [ 1  0  0]
+    [ 0  0  1]
+```
+```
+    [ 0  1  0]
+Z = [-1  0  0]
+    [ 0  0  0]
+```
+S = (k)&middot;U&middot;Z&middot;U<sup>T</sup>
+<br />
+&there4; Z = &Sigma;<sub>1,1,0</sub>&middot;W
+<br />
+&rArr; S = U&middot;&Sigma;<sub>1,1,0</sub>&middot;W&middot;U<sup>T</sup>
+<br />
+&there4; E = S&middot;R = U&middot;&Sigma;<sub>1,1,0</sub>&middot;(W&middot;U<sup>T</sup>&middot;R)
+<br />
+<br />
+_extraction: 4 possibilities_
+<br />
+[1 & 3] S = U&middot;Z&middot;U<sup>T</sup>, R = U&middot;W&middot;V<sup>T</sup>
+<br/>
+[2 & 4] S = U&middot;Z&middot;U<sup>T</sup>, R = U&middot;W&middot;<sup>T</sup>V<sup>T</sup>
+<br/>
+<br/>
+E is only up to scale, translate by &plusmn; u<sub>2</sub>
+<br/>
+<br/>
+[1] P' = [U&middot;W&middot;V<sup>T</sup> | u<sub>2</sub>]
+<br/>
+[2] P' = [U&middot;W&middot;V<sup>T</sup> | -u<sub>2</sub>]
+<br/>
+[3] P' = [U&middot;W<sup>T</sup>&middot;V<sup>T</sup> | u<sub>2</sub>]
+<br/>
+[3] P' = [U&middot;W<sup>T</sup>&middot;V<sup>T</sup> | -u<sub>2</sub>]
+<br/>
+<br/>
+<br/>
+
+
+
+
+<br/>
+
+
+
+
+
+
 
 **Normalized Image Coordinate**:
 x<sup>hat</sup> = K<sup>-1</sup> &middot; x
@@ -1576,6 +1634,10 @@ E = K<sub>B</sub><sup>T</sup>&middot;F&middot;K<sub>A</sub>
 
 <br/>
 <br/>
+
+
+<br/>
+<br/>
 Fundamental Matrix - 8 unknowns + rank2  = [7 DOF]
 <br/>
 x<sub>B</sub><sup>T</sup>&middot;F&middot;x<sub>A</sub> = 0
@@ -1585,13 +1647,38 @@ l<sub>A in B</sub> = F&middot;x<sub>A</sub>
 <br/>
 F = [t]<sub>&times;</sub>&middot;M & t=e' &hArr; P = [I | 0], P'=[M | t]
 <br/>
+M = ?
+<br/>
+<br/>
+P' = [ [e']<sub>&times;</sub>&middot;F + e'&middot;v<sup>T</sup> | &lambda;&middot;e' ]
+<br/>
+e' = epipole in image B
+<br/>
+v = any 3 vector
+<br/>
+&lambda; = nonzero scalar
+<br/>
+_choose v = [0,0,0]<sup>T</sup>, &lambda; = 1_
+<br/>
 <br/>
 epipole: F&middot;e<sub></sub> = 0 ; F<sup>T</sup>&middot;e' = 0
 <br/>
-e' = eigenvector
+e / e' = eigenvectors..
+<br/>
+e = right null vector of V (of F)  (right null vector of F?)
+<br/>
+e' = right null vector of U (of F)  (left null vector of F?)
+<br/>
+<br/>
+e = svd(F).V.col(2).homo()
+<br/>
 <br/>
 
 epipolar lines
+
+
+
+
 
 
 
@@ -1605,6 +1692,12 @@ N-View Geometry/Calibration/...
 
 Point Triangulation
 
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 <br/>
 <br/>
@@ -1678,6 +1771,117 @@ i = &alpha;&middot;A<sub>2,2</sub> + (1-&alpha;)&middot;B<sub>2,2</sub>
 (1-&alpha;)&middot;B<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>&middot;&alpha;&middot;A<sub>2,2</sub>
 +
 (1-&alpha;)&middot;B<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>&middot;(1-&alpha;)&middot;B<sub>2,2</sub>
+
+<br/>
+<br/>
+
+&alpha;<sup>3</sup>&middot;A<sub>0,0</sub>&middot;A<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+&alpha;<sup>2</sup>&middot;(1-&alpha;)&middot;A<sub>0,0</sub>&middot;A<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
+<br/>
+
+&alpha;<sup>2</sup>&middot;(1-&alpha;)&middot;A<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+&alpha;&middot;(1-&alpha;)<sup>2</sup>&middot;A<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
+<br/>
+
+
+&alpha;<sup>2</sup>&middot;(1-&alpha;)&middot;B<sub>0,0</sub>&middot;A<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+&alpha;&middot;(1-&alpha;)<sup>2</sup>&middot;B<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
+<br/>
+
+&alpha;&middot;(1-&alpha;)<sup>2</sup>&middot;B<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+(1-&alpha;)<sup>3</sup>&middot;B<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
+<br/>
+
+<br/>
+
+
+...
+
+&alpha;<sup>3</sup>&middot;A<sub>0,0</sub>&middot;A<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+(&alpha;<sup>2</sup>-&alpha;<sup>3</sup>)&middot;A<sub>0,0</sub>&middot;A<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
++
+<br/>
+(&alpha;<sup>2</sup>-&alpha;<sup>3</sup>)&middot;A<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+(&alpha;-2&middot;&alpha;<sup>2</sup>+&alpha;<sup>3</sup>)&middot;A<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
++
+<br/>
+(&alpha;<sup>2</sup>-&alpha;<sup>3</sup>)&middot;B<sub>0,0</sub>&middot;A<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+(&alpha;-2&middot;&alpha;<sup>2</sup>+&alpha;<sup>3</sup>)&middot;B<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
++
+<br/>
+(&alpha;-2&middot;&alpha;<sup>2</sup>+&alpha;<sup>3</sup>)&middot;B<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;A<sub>2,2</sub>
+<br/>
++
+<br/>
+(1-3&middot;&alpha;+3&middot;&alpha;<sup>2</sup>-&alpha;<sup>3</sup>)&middot;B<sub>0,0</sub>&middot;B<sub>1,1</sub>&middot;B<sub>2,2</sub>
+<br/>
+<br/>
+
+
+
+
+&alpha;&middot;(1-&alpha;)<sup>2</sup>
+= 
+&alpha;&middot;(1-&alpha;)&middot;(1-&alpha;)
+= 
+(&alpha;-&alpha;<sup>2</sup>)&middot;(1-&alpha;)
+= 
+&alpha; - &alpha;<sup>2</sup> - &alpha;<sup>2</sup> + &alpha;<sup>3</sup>
+=
+&alpha; - 2&middot;&alpha;<sup>2</sup> + &alpha;<sup>3</sup>
+=
+
+
+<br/>
+<br/>
+
+
+(1-&alpha;)<sup>3</sup>
+= 
+(1-&alpha;)&middot;(1-&alpha;)&middot;(1-&alpha;)
+= 
+(1 - 2&middot;&alpha; + &alpha;<sup>2</sup>)&middot;(1-&alpha;)
+= 
+(1 - 2&middot;&alpha; + &alpha;<sup>2</sup> - &alpha; + 2&middot;&alpha;<sup>2</sup> - &alpha;<sup>3</sup>)
+= 
+(1 - 3&middot;&alpha; + 3&middot;&alpha;<sup>2</sup> - &alpha;<sup>3</sup>)
+=
+
+
+
+
+
+
+
+
 
 
 <br/>
