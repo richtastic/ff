@@ -1609,6 +1609,162 @@ Point Triangulation
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
+<br/>
+
+7 Point Determinant: det(&alpha;&middot;F<sub>A</sub> + (1-&alpha;)&middot;F<sub>B</sub>)
+<br/>
+```
+     [a b c]
+det( [d e f] )
+     [g h i]
+```
+<br/>
+a&middot;(e&middot;i - f&middot;h) - b&middot;(d&middot;i - f&middot;g) + c&middot;(d&middot;h  - e&middot;g)
+<br/>
+a&middot;e&middot;i - a&middot;f&middot;h + b&middot;f&middot;g - b&middot;d&middot;i + c&middot;d&middot;h - c&middot;e&middot;g
+<br/>
+(1) - (2) + (3) - (4) + (5) - (6)
+<br/>
+<br/>
+a = &alpha;&middot;A<sub>0,0</sub> + (1-&alpha;)&middot;B<sub>0,0</sub>
+<br/>
+b = &alpha;&middot;A<sub>0,1</sub> + (1-&alpha;)&middot;B<sub>0,1</sub>
+<br/>
+c = &alpha;&middot;A<sub>0,2</sub> + (1-&alpha;)&middot;B<sub>0,2</sub>
+<br/>
+d = &alpha;&middot;A<sub>1,0</sub> + (1-&alpha;)&middot;B<sub>1,0</sub>
+<br/>
+e = &alpha;&middot;A<sub>1,1</sub> + (1-&alpha;)&middot;B<sub>1,1</sub>
+<br/>
+f = &alpha;&middot;A<sub>1,2</sub> + (1-&alpha;)&middot;B<sub>1,2</sub>
+<br/>
+g = &alpha;&middot;A<sub>2,0</sub> + (1-&alpha;)&middot;B<sub>2,0</sub>
+<br/>
+h = &alpha;&middot;A<sub>2,1</sub> + (1-&alpha;)&middot;B<sub>2,1</sub>
+<br/>
+i = &alpha;&middot;A<sub>2,2</sub> + (1-&alpha;)&middot;B<sub>2,2</sub>
+<br/>
+<br/>
+(1) = (&alpha;&middot;A<sub>0,0</sub> + (1-&alpha;)&middot;B<sub>0,0</sub>) &middot; (&alpha;&middot;A<sub>1,1</sub> + (1-&alpha;)&middot;B<sub>1,1</sub>) &middot; (&alpha;&middot;A<sub>2,2</sub> + (1-&alpha;)&middot;B<sub>2,2</sub>)
+<br/>
+(2) = (&alpha;&middot;A<sub>0,0</sub> + (1-&alpha;)&middot;B<sub>0,0</sub>) &middot; (&alpha;&middot;A<sub>1,2</sub> + (1-&alpha;)&middot;B<sub>1,2</sub>) &middot; (&alpha;&middot;A<sub>2,1</sub> + (1-&alpha;)&middot;B<sub>2,1</sub>)
+<br/>
+(3) = (&alpha;&middot;A<sub>0,1</sub> + (1-&alpha;)&middot;B<sub>0,1</sub>) &middot; (&alpha;&middot;A<sub>1,2</sub> + (1-&alpha;)&middot;B<sub>1,2</sub>) &middot; (&alpha;&middot;A<sub>2,0</sub> + (1-&alpha;)&middot;B<sub>2,0</sub>)
+<br/>
+(4) = (&alpha;&middot;A<sub>0,1</sub> + (1-&alpha;)&middot;B<sub>0,1</sub>) &middot; (&alpha;&middot;A<sub>1,0</sub> + (1-&alpha;)&middot;B<sub>1,0</sub>) &middot; (&alpha;&middot;A<sub>2,2</sub> + (1-&alpha;)&middot;B<sub>2,2</sub>)
+<br/>
+(5) = (&alpha;&middot;A<sub>0,2</sub> + (1-&alpha;)&middot;B<sub>0,2</sub>) &middot; (&alpha;&middot;A<sub>1,0</sub> + (1-&alpha;)&middot;B<sub>1,0</sub>) &middot; (&alpha;&middot;A<sub>2,1</sub> + (1-&alpha;)&middot;B<sub>2,1</sub>)
+<br/>
+(6) = (&alpha;&middot;A<sub>0,2</sub> + (1-&alpha;)&middot;B<sub>0,2</sub>) &middot; (&alpha;&middot;A<sub>1,1</sub> + (1-&alpha;)&middot;B<sub>1,1</sub>) &middot; (&alpha;&middot;A<sub>2,0</sub> + (1-&alpha;)&middot;B<sub>2,0</sub>)
+<br/>
+<br/>
+(1) = (&alpha;&middot;A<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub> + &alpha;&middot;A<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub> + (1-&alpha;)&middot;B<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub> + (1-&alpha;)&middot;B<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>) ) &middot; (&alpha;&middot;A<sub>2,2</sub> + (1-&alpha;)&middot;B<sub>2,2</sub>)
+<br/>
+<br/>
+&alpha;&middot;A<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub>&middot;&alpha;&middot;A<sub>2,2</sub>
++
+&alpha;&middot;A<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub>&middot;(1-&alpha;)&middot;B<sub>2,2</sub>
+
+&alpha;&middot;A<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>&middot;&alpha;&middot;A<sub>2,2</sub>
++
+&alpha;&middot;A<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>&middot;(1-&alpha;)&middot;B<sub>2,2</sub>
+
+(1-&alpha;)&middot;B<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub>&middot;&alpha;&middot;A<sub>2,2</sub>
++
+(1-&alpha;)&middot;B<sub>0,0</sub>&middot;&alpha;&middot;A<sub>1,1</sub>&middot;(1-&alpha;)&middot;B<sub>2,2</sub>
+
+(1-&alpha;)&middot;B<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>&middot;&alpha;&middot;A<sub>2,2</sub>
++
+(1-&alpha;)&middot;B<sub>0,0</sub>&middot;(1-&alpha;)&middot;B<sub>1,1</sub>&middot;(1-&alpha;)&middot;B<sub>2,2</sub>
+
+
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
