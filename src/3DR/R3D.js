@@ -908,6 +908,150 @@ R3D.cubicDeterminantSolutionPercent3x3 = function(arrayA, arrayB){ // F = a*FA +
 }
 
 
+
+
+
+
+
+
+
+R3D.triangulatePoints = function(fundamental, pointsA,pointsB){
+	var i, j, val, min, t, len=pointsA.length;
+	var pointA, pointB, Tfwd=new Matrix(3,3), Trev=new Matrix(3,3);
+	var cams = R3D.cameraMatricesFromF(fundamental);
+	var camA = cams.A;
+	var camB = cams.B;
+	console.log(camA+"");
+	console.log(camB+"");
+	var epipoles = R3D.getEpipolesFromF(fundamental);
+	var epipoleA = epipoles.A;
+	var epipoleB = epipoles.B;
+	var bestA2D = [], bestB2D = [];
+	// for each point pair:
+	for(i=0;i<len;++i){
+		pointA = pointsA[i];
+		pointB = pointsB[i];
+		// transform to origin-x-axis form
+		Tfwd.identity();
+		Trev.identity();
+		//...
+		// find coefficients
+		//...
+		// solve 6th degree polynomial
+		var roots = R3D.polynomialRoots([]);
+		console.log(roots);
+		// find smallest of 6 solutions + t=inf
+		min = null;
+		for(j=0;j<roots.length;++j){
+			t = roots[j];
+			val = 0;//fxn...(t);
+			if(min==null || min<val){
+				min = val;
+			}
+		}
+	}
+	// convert results from 2D to 3D 
+	var bestA3D = [], bestB3D = [];
+
+	return null;
+}
+
+
+R3D.polynomialRoots = function(coefficients){ // 0,...,n
+	var count = coefficients.length;
+	if(count<=1){ return []; }
+	// use smallest
+	// var min, minIndex;
+	for(i=0;i<count;++i){
+		min = coefficients[i];
+		if(min!=0.0){
+			minIndex = i;
+			break;
+		}
+	}
+	if(min==0.0){ return []; }
+minIndex = 0.0;
+
+	var i, j, len = count-minIndex-1;
+	var A = new Matrix(len,len);
+	
+	// need to shift/ignore till smallest coeff!=0
+	j = 0;
+	for(i=minIndex; i<len; ++i){ // col
+		A.set(j,i-minIndex, -coefficients[i+1]/min); // Ar,c = -c1/c0, ... , -cn/c0
+	}
+	for(j=1; j<len; ++j){ // row
+		for(i=0; i<len; ++i){ // col
+			if(j-1==i){
+				A.set(j,i, 1.0);
+			}else{
+				A.set(j,i, 0.0);
+			}
+		}
+	}
+	console.log(A+"");
+	var eigs = Matrix.eigenValuesAndVectors(A);
+	var values = eigs.values;
+	console.log(values);
+	var roots = []
+	for(i=0;i<len;++i){
+		if(values[i]!=0.0){
+			roots[i] = 1.0/values[i];
+		}else{
+			roots[i] = 0.0;
+		}
+//roots[i] = values[i];
+	}
+	return roots;
+}
+
+
+R3D.polynomialRoots2 = function(coefficients){ // 0,...,n
+	var count = coefficients.length;
+	if(count<=1){ return []; }
+	// use smallest
+	var min, minIndex;
+	for(i=0;i<count;++i){
+		min = coefficients[i];
+		if(min!=0){
+			minIndex = i;
+			break;
+		}
+	}
+	if(min==0.0){ return []; }
+	var i, j, len = count-1;
+	var A = new Matrix(len,len);
+	
+	// need to shift/ignore till smallest coeff!=0
+	j = 0;
+	for(i=0; i<len; ++i){ // col
+		A.set(j,i, -coefficients[i+1]/min); // Ar,c = -c1/c0, ... , -cn/c0
+	}
+	for(j=1; j<len; ++j){ // row
+		for(i=0; i<len; ++i){ // col
+			if(j-1==i){
+				A.set(j,i, 1.0);
+			}else{
+				A.set(j,i, 0.0);
+			}
+		}
+	}
+	console.log(A+"");
+	var eigs = Matrix.eigenValuesAndVectors(A);
+	var values = eigs.values;
+	console.log(values);
+	var roots = []
+	for(i=0;i<len;++i){
+		if(values[i]!=0.0){
+			roots[i] = 1.0/values[i];
+		}else{
+			roots[i] = 0.0;
+		}
+//roots[i] = values[i];
+	}
+	return roots;
+}
+
 /*
 function.call(this, a, b, c);
 function.apply(this,arg);

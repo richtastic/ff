@@ -12,8 +12,72 @@ function ffLoadedFxn(){
 		"ColorFloat.js","ColorAngle.js","ColorGradient.js","ColorMatRGBY.js","GradBinDescriptor.js","SIFTDescriptor.js","ColorMatRGBY.js","ImageFeature.js","ImageDescriptor.js","ImageMatcher.js","FeatureTest.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	var features = new FeatureTest();
-	return;
+	// var features = new FeatureTest();
+	// return;
+
+// testing polynomial root finding
+//                   0, 1, 2, 3, 4 
+//var coefficients = [-7, 1,-7, 2, 2];
+//var coefficients = [ 0,-7, 1,-7, 2, 2];
+//var coefficients = [ 10, -140, -270, 0, 10];
+var coefficients = [ 1E-8, -140, 270, 0, 10];
+console.log(coefficients);
+var roots = R3D.polynomialRoots(coefficients);
+console.log(roots);
+
+var r, x, i, j, k, sum;
+for(i=0;i<roots.length;++i){
+	x = roots[i];
+	sum = 0.0;
+	for(j=0;j<coefficients.length;++j){
+		v = coefficients[j];
+		for(k=0;k<j;++k){
+			v *= x;
+		}
+		sum += v;
+	}
+	console.log(i+": ("+x+") = "+sum);
+}
+
+/*
+-4.91
+-0.589
+0.064
+5.435
+
+
+Real roots:
+Root 1:
+Root 2:
+Complex roots:
+Root 3:
+Root 4:
+
+0
+0.514
+
+-0.257-i*5.215
+-0.257+i*5.215
+
+
+*/
+/*
+
+R3D.js:984 [-0.03655813741072811, -0.03655813741072811, 0.5990130384951929, -0.3830396208165937]
+features.html:23 [-27.353691156775035, -27.353691156775035, 1.669412743522485, -2.61069598457758]
+   1.4286E-1 -1.0000E+0  2.8571E-1  2.8571E-1 ; 
+   1.0000E+0  0.0000E+0  0.0000E+0  0.0000E+0 ; 
+   0.0000E+0  1.0000E+0  0.0000E+0  0.0000E+0 ; 
+   0.0000E+0  0.0000E+0  1.0000E+0  0.0000E+0 ;
+
+   A = [1.4286E-1 -1.0000E+0  2.8571E-1  2.8571E-1 ; 
+   1.0000E+0  0.0000E+0  0.0000E+0  0.0000E+0 ; 
+   0.0000E+0  1.0000E+0  0.0000E+0  0.0000E+0 ; 
+   0.0000E+0  0.0000E+0  1.0000E+0  0.0000E+0 ]
+   eig(A)
+
+*/
+return;
 
 // testing cubic solutions
 // var a = 2;

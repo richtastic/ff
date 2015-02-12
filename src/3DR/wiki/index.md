@@ -12,6 +12,11 @@
 10. [References](#REFERENCE)
 
 
+# added line
+
+# added another (2) lines
+
+# I wamt to keep this line, but drop the others
 
 TODO:
 - simple y = mx +b RANSAC
