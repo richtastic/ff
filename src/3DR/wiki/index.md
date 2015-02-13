@@ -1673,9 +1673,74 @@ e' = right null vector of U (of F)  (left null vector of F?)
 e = svd(F).V.col(2).homo()
 <br/>
 <br/>
+epipolar lines: l = F&middot;x
 
-epipolar lines
 
+
+**Linear Triangulation**:
+<br/>
+x = P&middot;X
+<br/>
+x' = P'&middot;X
+<br/>
+<br/>
+**THIS IS NOT PROJECTIVE INVARIANT**
+<br/>
+```
+[x]   [a b c d][X]
+[y] = [e f g h][Y]
+[^]   [i j k l][Z]
+               [1]
+```
+<br/>
+x = a&middot;X + b&middot;Y + c&middot;Z + d
+<br/>
+y = e&middot;X + f&middot;Y + g&middot;Z + h
+<br/>
+&lambda; = i&middot;X + j&middot;Y + k&middot;Z + l
+<br/>
+**homogeneous**: x ~ x/&lambda;, y ~ y/&lambda;
+<br/>
+x&middot;(i&middot;X + j&middot;Y + k&middot;Z + l) = a&middot;X + b&middot;Y + c&middot;Z + d
+<br/>
+y&middot;(i&middot;X + j&middot;Y + k&middot;Z + l) = e&middot;X + f&middot;Y + g&middot;Z + h
+<br/>
+&rArr;
+<br/>
+x&middot;(i&middot;X + j&middot;Y + k&middot;Z + l) - (a&middot;X + b&middot;Y + c&middot;Z + d) = 0
+<br/>
+y&middot;(i&middot;X + j&middot;Y + k&middot;Z + l) - (e&middot;X + f&middot;Y + g&middot;Z + h) = 0
+<br/>
+&rArr;
+<br/>
+X&middot;(x&middot;i - a) + Y&middot;(x&middot;j - b) + Z(x&middot;k - c) - d = 0
+<br/>
+X(y&middot;i - e) + Y(y&middot;j - f) + Z(y&middot;k - g) - h = 0
+<br/>
+<br/>
+x&middot;(P<sub>2,:</sub>&middot;X) - (P<sub>0,:</sub>&middot;X) = 0
+<br/>
+y&middot;(P<sub>2,:</sub>&middot;X) - (P<sub>1,:</sub>&middot;X) = 0
+<br/>
+<br/>
+```
+#        X         Y         Z      1
+    [ x*i - a   x*j - b   x*k - c   -d  ]   [0]
+A = [ y*i - e   y*j - f   y*k - g   -h  ] = [0]
+    [ x'*i'-a'  x'*j'-b'  x'*k'-c'  -d' ]   [0]
+    [ y'*i'-e'  y'*j'-f'  y'*k'-g'  -h' ]   [0]
+```
+<br/>
+SVD(A) &rarr; nul(V)
+<br/>
+<br/>
+
+### (V)EGADEAT|-|
+
+
+
+<br/>
+<br/>
 
 
 
