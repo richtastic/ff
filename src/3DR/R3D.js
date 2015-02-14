@@ -232,12 +232,17 @@ console.log("LAMBDA: "+lambda);
 	}
 	return list;
 }
-R3D.getEpipolesFromF = function(F){
+R3D.getEpipolesFromF = function(F,normed){
+	normed = normed!==undefined?normed:true;
 	var svd = Matrix.SVD(F);
 	var a = (new V3D()).setFromArray(svd.V.getColAsArray(2));
-	a.homo(); // epipole IN IMAGE A: F * ea = 0
+	if(normed){
+		a.homo(); // epipole IN IMAGE A: F * ea = 0
+	}
 	var b = (new V3D()).setFromArray(svd.U.getColAsArray(2));
-	b.homo(); // epipole IN IMAGE B: F' * eb = 0
+	if(normed){
+		b.homo(); // epipole IN IMAGE B: F' * eb = 0
+	}
 	return {A:a,B:b};
 }
 R3D.cameraMatricesFromF = function(F){
@@ -275,7 +280,6 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 				add += Math.TAU;
 				angles[i] += add;
 			}
-			
 		}else{
 			angles[i] += add;
 			if(angles[i]>angles[i-1]){
@@ -912,52 +916,191 @@ R3D.cubicDeterminantSolutionPercent3x3 = function(arrayA, arrayB){ // F = a*FA +
 
 
 
-
+R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
+	var A = new Matrix();
+	return X;
+}
 
 
 R3D.triangulatePoints = function(fundamental, pointsA,pointsB){
-	var i, j, val, min, t, len=pointsA.length;
-	var pointA, pointB, Tfwd=new Matrix(3,3), Trev=new Matrix(3,3);
+	var i, j, val, min, tMin, F, t, len=pointsA.length;
+	var pointA, pointB, lineA, lineB;
+	var TAfwd=new Matrix(3,3), TBfwd=new Matrix(3,3), TArev=new Matrix(3,3), TBrev=new Matrix(3,3);
+	var RAfwd=new Matrix(3,3), RBfwd=new Matrix(3,3), RArev=new Matrix(3,3), RBrev=new Matrix(3,3);
 	var cams = R3D.cameraMatricesFromF(fundamental);
 	var camA = cams.A;
 	var camB = cams.B;
 	console.log(camA+"");
 	console.log(camB+"");
-	var epipoles = R3D.getEpipolesFromF(fundamental);
-	var epipoleA = epipoles.A;
-	var epipoleB = epipoles.B;
+	var epipoles, epipoleA, epipoleB;
 	var bestA2D = [], bestB2D = [];
+	var bestA3D = [], bestB3D = [];
 	// for each point pair:
 	for(i=0;i<len;++i){
 		pointA = pointsA[i];
 		pointB = pointsB[i];
 		// transform to origin-x-axis form
-		Tfwd.identity();
-		Trev.identity();
-		//...
+		F = fundamental.copy();
+		TAfwd.identity();
+		TBfwd.identity();
+		TArev.identity();
+		TBrev.identity();
+		Matrix.transform2DTranslate(TAfwd,-pointA.x,-pointA.y);
+		Matrix.transform2DTranslate(TArev, pointA.x, pointA.y);
+		Matrix.transform2DTranslate(TBfwd,-pointB.x,-pointB.y);
+		Matrix.transform2DTranslate(TBrev, pointB.x, pointB.y);
+		F = Matrix.mult(Matrix.transpose(TBrev),Matrix.mult(F,TArev));
+		// get transformed epipoles
+		epipoles = R3D.getEpipolesFromF(fundamental,false); // is not-normalized correct?
+		epipoleA = epipoles.A;
+		epipoleB = epipoles.B;
+		// transform to epipole-x-axis-form
+		epipoleA = V2D.norm(epipoleA); // new V2D().copy(epipoleA).norm();
+		epipoleB = V2D.norm(epipoleB); // new V2D().copy(epipoleB).norm();
+		RAfwd.setFromArray([epipoleA.x, epipoleA.y, 0,  -epipoleA.y, epipoleA.x, 0, 0,0,1]);
+		RBfwd.setFromArray([epipoleA.x, epipoleA.y, 0,  -epipoleA.y, epipoleA.x, 0, 0,0,1]);
+		RArev = Matrix.transpose(RAfwd);
+		RBrev = Matrix.transpose(RBfwd);
+		F = Matrix.mult(RBfwd,Matrix.mult(F,RArev)); // is RBfwd correct?
+var toA = Matrix.mult(TArev,RArev);
+var toB = Matrix.mult(TBrev,RBrev);
+		// form polynomial
+		var fA, fB, a, b, c, d;
+		fA = epipoleA.z;
+		fB = epipoleB.z;
+		a = F.get(1,1);
+		b = F.get(1,2);
+		c = F.get(2,1);
+		d = F.get(2,2);
+		//
+		var t0 = -a*a*b*c - a*b*b*d + b*b*c*d;
+		var t1 = b*b + fB*fB*d*d - a*a*b*d + a*b*c*d - a*b*b*c + b*b*c*c;
+		var t2 = 2*a*b + 2*fB*fB*c*d + a*b*c*c - 2*a*b*b*d*fA*fA + 2*b*b*c*d*fA*fA;
+		var t3 = a*a + fB*fB*c*c - a*a*b*d*fA*fA + 2*a*b*c*d*fA*fA - 2*a*b*b*c*fA*fA - 2*a*b*b*c*fA*fA + 2*b*b*c*c*fA*fA;
+		var t4 = -a*a*b*d*fA*fA*fA*fA + 2*a*b*c*c*fA*fA - a*b*b*d*fA*fA*fA*fA - a*a*b*c*fA*fA + b*b*c*d*fA*fA*fA*fA;
+		var t5 = -a*a*b*d*fA*fA*fA*fA + a*b*c*d*fA*fA*fA*fA - a*b*b*c*fA*fA*fA*fA + b*b*c*c*fA*fA*fA*fA;
+		var t6 = -a*a*b*c*fA*fA*fA*fA + a*b*c*c*fA*fA*fA*fA;
 		// find coefficients
-		//...
+		var coefficients = [t0,t1,t2,t3,t4,t5,t6];
+//console.log(coefficients)
+		// cost fxn values
 		// solve 6th degree polynomial
-		var roots = R3D.polynomialRoots([]);
-		console.log(roots);
+		var roots = R3D.polynomialRoots(coefficients);
+		console.log(roots); // & t=inf
+		//roots.push(1E100);
 		// find smallest of 6 solutions + t=inf
 		min = null;
-		for(j=0;j<roots.length;++j){
-			t = roots[j];
-			val = 0;//fxn...(t);
-			if(min==null || min<val){
+		tMin = 0;
+		for(j=-1;j<roots.length;++j){
+//console.log(t)
+			// find cost value at inf & real roots (complex doesn't hurt but takes up time)
+			if(j<0){
+				t = 1E100; // infinity
+				val = R3D.cost2DPolyFromValuesAsymptotic(a,b,c,d,fA,fB);
+			}else{
+				t = roots[j];
+				val = R3D.cost2DPolyFromValues(t,a,b,c,d,fA,fB);
+			}
+			if(min===null || min>val){
 				min = val;
+				tMin = t;
+			}
+		}
+		t = tMin;
+		lineA = new V3D(t*fA,1,t);
+		lineB = new V3D(-fB*(c*t+d), a*t+b, c*t+d);
+		var bestPointA = R3D.closestPointToOriginLineFromV3D(lineA);
+		var bestPointB = R3D.closestPointToOriginLineFromV3D(lineB);
+		//console.log(bestPointA+" "+bestPointB+" ");
+		// transform to image coordinates
+		bestPointA = toA.multV3DtoV3D(bestPointA, bestPointA);
+		bestPointB = toB.multV3DtoV3D(bestPointB, bestPointB);
+		bestA2D.push(bestPointA);
+		bestA2D.push(bestPointB);
+		// convert results from 2D to 3D via cams
+		// homogeneous method
+		bestPointA = new V3D();
+		bestPointB = new V3D();
+		// ...
+		bestA3D.push(bestPointA);
+		bestA3D.push(bestPointB);
+	}
+	
+	return {"A":{"2D":bestA2D,"3D":bestA3D}, "B":{"2D":bestB2D,"3D":bestB3D}};
+	return null;
+}
+// Matrix.multV3DtoV3D(new V3D(), line);
+R3D.closestPointToOriginLineFromV3D = function(v){
+	return R3D.closestPointToOriginLine(v.x,v.y,v.z);
+}
+R3D.closestPointToOriginLine = function(a,b,c){
+	return new V3D(-a*c,-b*c,a*a+b*b);
+}
+R3D.cost2DPolyFromValuesAsymptotic = function(a,b,c,d,fA,fB){ // more accurate / faster than setting t=1E100
+	var denA = fA*fA;
+	var denB = a*a + fB*fB*c*c;
+	if(denA==0 || denB==0){
+		return 1E100;
+	}
+	var numA = 1;
+	var numB = c*c;
+	return (numA/denA) + (numB/denB);
+}
+R3D.cost2DPolyFromValues = function(t, a,b,c,d,fA,fB){
+	var atb = a*t+b;
+	var ctd = c*t+d;
+	var ctd2 = ctd*ctd;
+	var tt = t*t;
+	var denA = Math.pow(1 + fA*fA*tt,2);
+	var denB = atb*atb + fB*fB*ctd2;
+	if(denA==0 || denB==0){
+		return 1E100;
+	}
+	var numA = tt;
+	var numB = ctd2;
+	return (numA/denA) + (numB/denB);
+}
+
+R3D.polynomialRoots = function(coefficients){ // 0,...,n
+	var count = coefficients.length;
+	if(count<=1){ return []; }
+	var i, j, len = count-1;
+	var A = new Matrix(len,len);
+	var min = coefficients[0];
+	min = min==0.0 ? 1E-10 : min; // handle zero = epsilon - may perform bad in some scenarios
+	j = 0;
+ 	for(i=0; i<len; ++i){ // col
+		A.set(j,i, -coefficients[i+1]/min); // Ar,c = -c1/c0, ... , -cn/c0
+	}
+	for(j=1; j<len; ++j){ // row
+		for(i=0; i<len; ++i){ // col
+			if(j-1==i){
+				A.set(j,i, 1.0);
+			}else{
+				A.set(j,i, 0.0);
 			}
 		}
 	}
-	// convert results from 2D to 3D 
-	var bestA3D = [], bestB3D = [];
-
-	return null;
+	//console.log(A+"");
+	var eigs = Matrix.eigenValuesAndVectors(A);
+	var values = eigs.values;
+	console.log(values);
+	var roots = []
+	for(i=0;i<len;++i){
+		if(values[i]!=0.0){
+			roots[i] = 1.0/values[i];
+		}else{
+			roots[i] = 0.0;
+		}
+	}
+	// this may need local zero finding from numerical error
+	return roots;
 }
 
 
-R3D.polynomialRoots = function(coefficients){ // 0,...,n
+
+R3D.polynomialRootsShift = function(coefficients){ // 0,...,n
+console.log("this hasn't been figured out yet");
 	var count = coefficients.length;
 	if(count<=1){ return []; }
 	// use smallest
@@ -1005,52 +1148,6 @@ minIndex = 0.0;
 	return roots;
 }
 
-
-R3D.polynomialRoots2 = function(coefficients){ // 0,...,n
-	var count = coefficients.length;
-	if(count<=1){ return []; }
-	// use smallest
-	var min, minIndex;
-	for(i=0;i<count;++i){
-		min = coefficients[i];
-		if(min!=0){
-			minIndex = i;
-			break;
-		}
-	}
-	if(min==0.0){ return []; }
-	var i, j, len = count-1;
-	var A = new Matrix(len,len);
-	
-	// need to shift/ignore till smallest coeff!=0
-	j = 0;
-	for(i=0; i<len; ++i){ // col
-		A.set(j,i, -coefficients[i+1]/min); // Ar,c = -c1/c0, ... , -cn/c0
-	}
-	for(j=1; j<len; ++j){ // row
-		for(i=0; i<len; ++i){ // col
-			if(j-1==i){
-				A.set(j,i, 1.0);
-			}else{
-				A.set(j,i, 0.0);
-			}
-		}
-	}
-	console.log(A+"");
-	var eigs = Matrix.eigenValuesAndVectors(A);
-	var values = eigs.values;
-	console.log(values);
-	var roots = []
-	for(i=0;i<len;++i){
-		if(values[i]!=0.0){
-			roots[i] = 1.0/values[i];
-		}else{
-			roots[i] = 0.0;
-		}
-//roots[i] = values[i];
-	}
-	return roots;
-}
 
 /*
 function.call(this, a, b, c);

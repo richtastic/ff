@@ -8,7 +8,7 @@ V2D.cross = function(a,b){ // z direction
 }
 V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	if(ang===undefined){
-		ang = a; a = b; b = new V2D();
+		ang = a; a = b; b = a.copy();
 	}
 	var cos = Math.cos(ang), sin = Math.sin(ang);
 	var x = a.x*cos - a.y*sin;
@@ -33,7 +33,9 @@ V2D.midpoint = function(a,b,c){
 		a.set((b.x+c.x)*0.5,(b.y+c.y)*0.5);
 		return a;
 	}
-	return new V2D((a.x+b.x)*0.5,(a.y+b.y)*0.5);
+	c = a.copy();
+	c.set((a.x+b.x)*0.5,(a.y+b.y)*0.5);
+	return c;
 }
 V2D.add = function(c,a,b){
 	if(b!==undefined){
@@ -72,6 +74,15 @@ V2D.max = function(a,b,c){ // a = max(b,c)
 	if(c===undefined){ c = b; b = a; a = new V2D(); }
 	a.x = b.x>c.x?b.x:c.x;
 	a.y = b.y>c.y?b.y:c.y;
+	return a;
+}
+V2D.norm = function(a,b){
+	if(b===undefined){
+		b = a;
+		a = b.copy();
+	}
+	a.copy(b);
+	V2D.prototype.norm.apply(a);
 	return a;
 }
 V2D.angle = function(a,b){

@@ -192,22 +192,13 @@ for(var k=0;k<pointsA.length;++k){
 	//
 	this.denseFeatureMatching();
 	// refine matches
-	this.what(fundamental,pointsA,pointsB);
+	R3D.triangulatePoints(fundamental,pointsA,pointsB);
 }
 FeatureTest.prototype.denseFeatureMatching = function(){
 	//
 }
 FeatureTest.prototype.what = function(fundamental,pointsA,pointsB){
-	var cams = R3D.cameraMatricesFromF(fundamental);
-	var camA = cams.A;
-	var camB = cams.B;
-	console.log(camA+"");
-	console.log(camB+"");
-
-	// Minimize Geometric Error
 	// ...
-
-	// R3D.triangulatePoints(fundamental,camA,camB);
 }
 
 FeatureTest.prototype.displayImages = function(images,files){
