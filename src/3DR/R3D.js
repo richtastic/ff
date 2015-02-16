@@ -773,7 +773,7 @@ R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1
 
 
 
-// ------------------------------------------------------------------------------------------- LATEST BOOYAH
+
 
 
 
@@ -880,20 +880,22 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 	var H = new Matrix(3,3).setFromArray(coeff);
 	return H;
 }
-R3D.projectiveRANSAC = function(pointsFr,pointsTo){ // 2D point pairs
-	// ...
-	var H = new Matrix(3,3);
-	var subsetFr = [];
-	var subsetTo = [];
-	// find minimal sets
-	// remove outliers
-	// constuct consensus set
-	var obj = {}
-	obj.H = H;
-	obj.pointsA = subsetFr;
-	obj.pointsB = subsetTo;
-	return obj;
-}
+
+// USE fundamentalRANSACFromPoints
+// R3D.projectiveRANSAC = function(pointsFr,pointsTo){ // 2D point pairs
+// 	// ...
+// 	var H = new Matrix(3,3);
+// 	var subsetFr = [];
+// 	var subsetTo = [];
+// 	// find minimal sets
+// 	// remove outliers
+// 	// constuct consensus set
+// 	var obj = {}
+// 	obj.H = H;
+// 	obj.pointsA = subsetFr;
+// 	obj.pointsB = subsetTo;
+// 	return obj;
+// }
 
 
 
@@ -917,8 +919,45 @@ R3D.cubicDeterminantSolutionPercent3x3 = function(arrayA, arrayB){ // F = a*FA +
 
 
 R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
-	var A = new Matrix();
-	return X;
+	var i, j, to, fr, len=pointsFr.length;
+	var rows = 4, cols = 4;
+	var points3D = new Array(len);
+	var A = new Matrix(rows,cols);
+	//var arr = new Array();
+	for(i=0;i<len;++i){
+		fr = pointsFr[i];
+		to = pointsFr[i];
+		// fr
+		A.set(0,0, fr.x*cameraA.get(2,0) - cameraA.get(0,0) );
+		A.set(0,1, fr.x*cameraA.get(2,1) - cameraA.get(0,1) );
+		A.set(0,2, fr.x*cameraA.get(2,2) - cameraA.get(0,2) );
+		A.set(0,3, -cameraA.get(0,3) );
+		A.set(1,0, fr.y*cameraA.get(2,0) - cameraA.get(1,0) );
+		A.set(1,1, fr.y*cameraA.get(2,1) - cameraA.get(1,1) );
+		A.set(1,2, fr.y*cameraA.get(2,2) - cameraA.get(1,2) );
+		A.set(1,3, -cameraA.get(1,3) );
+		// to
+		A.set(2,0, to.x*cameraB.get(2,0) - cameraB.get(0,0) );
+		A.set(2,1, to.x*cameraB.get(2,1) - cameraB.get(0,1) );
+		A.set(2,2, to.x*cameraB.get(2,2) - cameraB.get(0,2) );
+		A.set(2,3, -cameraB.get(0,3) );
+		A.set(3,0, to.y*cameraB.get(2,0) - cameraB.get(1,0) );
+		A.set(3,1, to.y*cameraB.get(2,1) - cameraB.get(1,1) );
+		A.set(3,2, to.y*cameraB.get(2,2) - cameraB.get(1,2) );
+		A.set(3,3, -cameraB.get(1,3) );
+		// 
+		var svd = Matrix.SVD(A);
+		var coeff = svd.V.colToArray(3);
+		console.log(coeff);
+		var point = new V3D(coeff[0],coeff[1],coeff[2]);
+		point.scale(1.0/coeff[3]);
+		points3D.push(point);
+		console.log(point+"");
+	}
+	// var svd = Matrix.SVD(A);
+	// var coeff = svd.V.colToArray(8);
+	// var H = new Matrix(3,3).setFromArray(coeff);
+	return points3D;
 }
 
 
@@ -945,10 +984,10 @@ R3D.triangulatePoints = function(fundamental, pointsA,pointsB){
 		TBfwd.identity();
 		TArev.identity();
 		TBrev.identity();
-		Matrix.transform2DTranslate(TAfwd,-pointA.x,-pointA.y);
-		Matrix.transform2DTranslate(TArev, pointA.x, pointA.y);
-		Matrix.transform2DTranslate(TBfwd,-pointB.x,-pointB.y);
-		Matrix.transform2DTranslate(TBrev, pointB.x, pointB.y);
+		TAfwd = Matrix.transform2DTranslate(TAfwd,-pointA.x,-pointA.y);
+		TArev = Matrix.transform2DTranslate(TArev, pointA.x, pointA.y);
+		TBfwd = Matrix.transform2DTranslate(TBfwd,-pointB.x,-pointB.y);
+		TBrev = Matrix.transform2DTranslate(TBrev, pointB.x, pointB.y);
 		F = Matrix.mult(Matrix.transpose(TBrev),Matrix.mult(F,TArev));
 		// get transformed epipoles
 		epipoles = R3D.getEpipolesFromF(fundamental,false); // is not-normalized correct?
@@ -1019,11 +1058,13 @@ var toB = Matrix.mult(TBrev,RBrev);
 		bestA2D.push(bestPointB);
 		// convert results from 2D to 3D via cams
 		// homogeneous method
-		bestPointA = new V3D();
-		bestPointB = new V3D();
-		// ...
-		bestA3D.push(bestPointA);
-		bestA3D.push(bestPointB);
+		// bestPointA = new V3D();
+		// bestPointB = new V3D();
+		// // ...
+		// bestA3D.push(bestPointA);
+		// bestA3D.push(bestPointB);
+		var list = R3D.triangulationDLT(camA,camB,[pointA],[pointB]);
+		bestA3D.push(list[0]);
 	}
 	
 	return {"A":{"2D":bestA2D,"3D":bestA3D}, "B":{"2D":bestB2D,"3D":bestB3D}};
