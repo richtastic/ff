@@ -252,7 +252,8 @@ R3D.cameraMatricesFromF = function(F){
 	var cross = Matrix.crossMatrixFromV3D(eB);
 // NEGATIVE CROSS?
 // cross.scale(-1.0);
-	var camB = cross.copy();
+	var camB = Matrix.mult(cross,F);
+// can scale right column by sime factor (sigma)
 	camB.appendColFromArray(eB.toArray());
 	camB.appendRowFromArray([0, 0, 0, 1]);
 	var camA = new Matrix(4,4).identity();
@@ -948,11 +949,11 @@ R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points
 		// 
 		var svd = Matrix.SVD(A);
 		var coeff = svd.V.colToArray(3);
-		console.log(coeff);
+//		console.log(coeff);
 		var point = new V3D(coeff[0],coeff[1],coeff[2]);
 		point.scale(1.0/coeff[3]);
-		points3D.push(point);
-		console.log(point+"");
+		points3D[i] = point;
+//		console.log(point+"");
 	}
 	// var svd = Matrix.SVD(A);
 	// var coeff = svd.V.colToArray(8);
@@ -1025,7 +1026,7 @@ var toB = Matrix.mult(TBrev,RBrev);
 		// cost fxn values
 		// solve 6th degree polynomial
 		var roots = R3D.polynomialRoots(coefficients);
-		console.log(roots); // & t=inf
+		//console.log(roots); // & t=inf
 		//roots.push(1E100);
 		// find smallest of 6 solutions + t=inf
 		min = null;
@@ -1064,7 +1065,8 @@ var toB = Matrix.mult(TBrev,RBrev);
 		// bestA3D.push(bestPointA);
 		// bestA3D.push(bestPointB);
 		var list = R3D.triangulationDLT(camA,camB,[pointA],[pointB]);
-		bestA3D.push(list[0]);
+		var p = list[0]
+		console.log(list[0]+"");
 	}
 	
 	return {"A":{"2D":bestA2D,"3D":bestA3D}, "B":{"2D":bestB2D,"3D":bestB3D}};
@@ -1125,7 +1127,7 @@ R3D.polynomialRoots = function(coefficients){ // 0,...,n
 	//console.log(A+"");
 	var eigs = Matrix.eigenValuesAndVectors(A);
 	var values = eigs.values;
-	console.log(values);
+//	console.log(values);
 	var roots = []
 	for(i=0;i<len;++i){
 		if(values[i]!=0.0){

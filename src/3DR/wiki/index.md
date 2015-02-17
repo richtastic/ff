@@ -1666,6 +1666,20 @@ v = any 3 vector
 _choose v = [0,0,0]<sup>T</sup>, &lambda; = 1_
 <br/>
 <br/>
+
+Pfolleys:
+<br/>
+P2 = [[e<sup>12</sup>]<sub>&times;</sub>&middot;F<sub>12</sub> + e<sub>12</sub>&middot;&pi;<sup>T</sup> | &sigma;&middot;e<sub>12</sub>]
+
+(what is / how to find Hinfin:i,j)?
+
+
+
+
+
+
+<br/>
+<br/>
 epipole: F&middot;e<sub></sub> = 0 ; F<sup>T</sup>&middot;e' = 0
 <br/>
 e / e' = eigenvectors..
@@ -2563,6 +2577,33 @@ P' = [T&middot;e'' | e']
 <br/>
 
 
+
+
+
+#### Modulus Contstraint
+**Determine Plane at Infinity, H<sub>&infin;</sub>**
+<br/>
+H<sub>&infin;:i,j</sub> ~ H<sub>&infin;:1,j</sub>&middot;H<sub>&infin;:1,i</sub> ~ K&middot;R<sub>j</sub><sup>T</sup>&middot;R<sub>j</sub><sup>-T</sup>&middot;K<sup>-1</sup> ~ (H<sub>&infin;:1,j</sub> - e<sub>1,j</sub>&middot;&pi;<sub>&infin;</sub><sup>T</sup>)&middot;(H<sub>&infin;:1,i</sub> - e<sub>1,i</sub>&middot;&pi;<sub>&infin;</sub><sup>T</sup>)
+<br/>
+<br/>
+H<sub>&infin;:i,j</sub> : conjugated with rotation matrix
+<br/>
+<br/>
+&rArr; det(H<sub>&infin;:i,j</sub> - &Lambda;) = l<sub>3</sub>&middot;&lambda;<sup>3</sup> + l<sub>2</sub>&middot;&lambda;<sup>2</sup> + l<sub>1</sub>&middot;&lambda; + l<sub>0</sub> = 0
+<br/>
+&rarr;
+<br/>
+l<sub>3</sub>&middot;l<sub>1</sub><sup>3</sup> = l<sub>2</sub><sup>3</sup>&middot;l<sub>0</sub>
+<br/>
+M<sub>i,j</sub> : l<sub>3:i,j</sub>&middot;l<sub>1:i,j</sub><sup>3</sup> - l<sub>2:i,j</sub><sup>3</sup>&middot;l<sub>0:i,j</sub> = 0
+<br/>
+(64- possible solutions, only care about non-complex solutions)
+<br/>
+<br/>
+Over 3+ Images. minimize cost:
+<br/>
+C<sub>MC<sub>: &Sigma;<sub>i</sub>&Sigma;<sub>j</sub> M<sub>i,j</sub><sup>2</sup>
+<br/>
 
 
 
