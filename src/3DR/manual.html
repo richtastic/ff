@@ -11,31 +11,7 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Manual3DR.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	//var manual = new Manual3DR();
-
-	var i, j, k, lenPop, lenTre;
-	var popular, trending, duplicated;
-lenPop = 3; // 3
-lenTre = 10; // 10
-	for(i=0;i<=lenPop;++i){
-		// popular = [];
-		// for(k=0;k<i;++k){
-		// 	popular.push(k);
-		// }
-		for(j=0;j<=lenTre;++j){
-			//trending = [];
-			// for(k=0;k<j;++k){
-			// 	trending.push(k);
-			// }
-			//
-			for(k=0;k<=i;++k){
-				checkLoadedListQuizzes(i, j, k);
-			}
-		}
-	}
-	
-console.log("done");
-
+	var manual = new Manual3DR();
 }
 function checkLoadedListQuizzes(usedPopularCount, usedTrendingCount, duplicated){
 	var COUNT_DISPLAY_TOTAL_MAX = 10;

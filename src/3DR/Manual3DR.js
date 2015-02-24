@@ -338,11 +338,10 @@ Manual3DR.prototype.getVertexShaders1 = function(){
 		uniform mat4 uMVMatrix; \
 		uniform mat4 uPMatrix; \
 		void main(void) { \
-			gl_PointSize = 2.0; \
 			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
 			vColor = aVertexColor; \
 		} \
-    	",
+    	", // ^ colored triangles
     	"\
     	attribute vec3 aVertexPosition; \
 		attribute vec2 aTextureCoord; \
@@ -353,7 +352,7 @@ Manual3DR.prototype.getVertexShaders1 = function(){
 			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
 			vTextureCoord = aTextureCoord; \
 		} \
-		",
+		", // ^ textured triangles
 		" \
 		attribute vec3 aVertexPosition; \
 		attribute vec4 aVertexColor; \
@@ -361,10 +360,23 @@ Manual3DR.prototype.getVertexShaders1 = function(){
 		uniform mat4 uMVMatrix; \
 		uniform mat4 uPMatrix; \
 		void main(void) { \
+			gl_PointSize = 2.0; \
 			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
 			vColor = aVertexColor; \
 		} \
-		"];
+		", // ^ lines
+		" \
+		attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_PointSize = 4.0; \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
+		"]; // ^ points
 }
 Manual3DR.prototype.getFragmentShaders1 = function(){
     return ["\
@@ -373,7 +385,7 @@ Manual3DR.prototype.getFragmentShaders1 = function(){
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-		",
+		", // 
 		"\
 		precision mediump float; \
 		varying vec2 vTextureCoord; \
@@ -381,14 +393,21 @@ Manual3DR.prototype.getFragmentShaders1 = function(){
 		void main(void){ \
 			gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t)); \
 		} \
-    	",
+    	", // 
     	"\
 		precision highp float; \
 		varying vec4 vColor; \
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-    "];
+		", // 
+    	"\
+		precision highp float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
+		} \
+    	"]; // 
 }
 Manual3DR.prototype.onEnterFrameFxn3D = function(e){
 	this.render3DScene();
@@ -536,14 +555,6 @@ gl.bindTexture(gl.TEXTURE_2D, null);
 	document.body.appendChild(img);
 	//img.style = "z-index:9999999; position:absolute; top:0; left:0; padding:0; margin:0; border:0;";
 	img.setAttribute("style","z-index:9999999; position:absolute; top:0; left:0; padding:0; margin:0; border:0;");
-
-	console.log("OUT");
-
-//this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
-
-	// texture.image.onload = function(){
-	// 	console.log("loaded");
-	// }
 }
 
 Manual3DR.prototype.spherePointFromRectPoint = function(point){
@@ -708,7 +719,8 @@ Manual3DR.prototype.handleSceneImagesLoaded = function(imageInfo){
 	for(i=0;i<imageList.length;++i){
 		list[i] = imageList[i];
 	}
-this._resource.testImage = list[0];
+this._resource.testImage0 = list[0];
+this._resource.testImage1 = list[1];
 	this._imageSources = list;
 this.calibrateCameraMatrix();
 	this.handleLoaded();
@@ -956,6 +968,14 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 	s = -1.2121641660857738;
 	cx = 200.2563459136281;
 	cy = 146.6423388412101;
+
+	// NEWEST VALUES:
+	fx = 376.10038433315435
+	fy = 376.7410755028418
+	s  = -0.4399151157738108
+	cx = 201.61665699519267
+	cy = 152.26370698493383
+
 	this._intrinsicK = testK;
 	console.log("estimated example: ");
 	console.log( testK.toString() );
@@ -1271,7 +1291,7 @@ this._cameras.push({"extrinsic":projection
 	// generate depth map
 	// ... image A/B
 }
-Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
+Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureVertPoints){ // point/direction
 	var K = this._intrinsicK;
 	console.log(K.toString());
 	var fx = K.get(0,0);
@@ -1282,7 +1302,7 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	var imageWidth = 400;
 	var imageHeight = 300;
 	// 
-	var focalLength = 1.0;
+	var focalLength = 1.0; // scales universe?
 	var px = focalLength/fx;
 	var py = focalLength/fy;
 	var imgSizeX = px*imageWidth;
@@ -1315,8 +1335,6 @@ Manual3DR.prototype.addCameraVisual = function(matrix){ // point/direction
 	var colorsL = this._renderColorsList;
 	var linePoints = this._renderLinePointsList;//[0,0, 5,5];
 	var lineColors = this._renderLineColorsList;//[0.5,0,0,1, 0.5,0,0,1];
-	var textureUVPoints = this._renderTextureUVList;
-	var textureVertPoints = this._renderTexturePointList;
 		// do stuff
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
@@ -1354,8 +1372,11 @@ var texTL = new V3D(0.0,  1.0, 0);
 var texTR = new V3D(endX, 1.0, 0);
 var texBL = new V3D(0.0,  endY, 0);
 var texBR = new V3D(endX, endY, 0);
-	tUV.push(Tri.fromPoints(texBR, texTR, texTL));
-	tUV.push(Tri.fromPoints(texBR, texTL, texBL));
+	// tUV.push(Tri.fromPoints(texBR, texTR, texTL));
+	// tUV.push(Tri.fromPoints(texBR, texTL, texBL));
+	// flip left and right to be facing camera
+	tUV.push(Tri.fromPoints(texBL, texTL, texTR));
+	tUV.push(Tri.fromPoints(texBL, texTR, texBR));
 
 var v;
 	len = c.length;
@@ -1376,16 +1397,16 @@ var v;
 
 var lineDist = 10.0;
 if(this._booleanCam){ // 2 // = test image 0
-	lp.push(new V3D(0,0,0), new V3D(.09,.178,1).scale(lineDist));
+	lp.push(new V3D(0,0,0), new V3D(-.09,.178,1).scale(lineDist));
 	lc.push(0xFF00CC00, 0xFF00CC00);
-	lp.push(new V3D(0,0,0), new V3D(.09,.188,1).scale(lineDist));
-	lc.push(0xFF00CC00, 0xFF0000CC);
+	// lp.push(new V3D(0,0,0), new V3D(.09,.188,1).scale(lineDist));
+	// lc.push(0xFF00CC00, 0xFF0000CC);
 }else{ // 1  // = test image 1
 	this._booleanCam = true;
-	lp.push(new V3D(0,0,0), new V3D(.265,.20,1).scale(lineDist));
+	lp.push(new V3D(0,0,0), new V3D(-.265,.20,1).scale(lineDist));
 	lc.push(0xFF00CC00, 0xFF00CC00);
-	lp.push(new V3D(0,0,0), new V3D(.265,.21,1).scale(lineDist));
-	lc.push(0xFF00CC00, 0xFF0000CC);
+	// lp.push(new V3D(0,0,0), new V3D(.265,.21,1).scale(lineDist));
+	// lc.push(0xFF00CC00, 0xFF0000CC);
 }
 	//
 	len = lp.length;
@@ -1463,16 +1484,19 @@ this._stage3D.matrixReset();
 
 this._stage3D.disableCulling();
 
-this._stage3D.enableCulling();
+//this._stage3D.enableCulling();
 this._stage3D.selectProgram(1);
 this._stage3D.matrixReset();
-		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints);
-		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints);
+// RENDER TEXTURES
+	for(i=0;i<this._textureUVPoints.length;++i){
+		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints[i]);
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 
 		this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
-		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._texture);
+		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
 		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
-		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints);
+		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+	}
 //
 
 // RENDER LINES
@@ -1485,6 +1509,12 @@ this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._pro
 this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
 
 
+// RENDER POINTS
+
+	this._stage3D.bindArrayFloatBuffer(this._pointVertexPositionAttrib, this._pointPointBuffer);
+	this._stage3D.bindArrayFloatBuffer(this._pointVertexColorAttrib, this._pointColorBuffer);
+	this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
+
 //this._stage3D.matrixReset();
 	}else{
 this._stage3D.selectProgram(0);
@@ -1492,8 +1522,12 @@ this._renderPointsList = [];
 this._renderColorsList = [];
 this._renderLinePointsList = [];
 this._renderLineColorsList = [];
+// TEXTURES
+this._textureUVPoints = [];
+this._textureVertexPoints = [];
 this._renderTextureUVList = [];
 this._renderTexturePointList = [];
+this._textures = [];
 		// do stuff
 var matrix = new Matrix(4,4);
 
@@ -1509,16 +1543,14 @@ this._cameras[1]["extrinsic"] = Matrix3D.matrixFromMatrix3D(m);//Matrix.transfor
 //console.log(this._cameras[1]["extrinsic"].toString())
 */
 for(i=0;i<len;++i){
+	// seperate texture lists:
+	this._renderTextureUVList[i] = [];
+	this._renderTexturePointList[i] = [];
+	//
 	var camera = this._cameras[i];
 	matrix.copy(camera["extrinsic"]);
-	this.addCameraVisual(matrix);
+	this.addCameraVisual(matrix, this._renderTextureUVList[i], this._renderTexturePointList[i]);
 }
-/*
-matrix.identity();
-matrix = Matrix.transform3DTranslate(matrix,0,0,0);
-matrix = Matrix.transform3DRotateX(matrix, Math.PI*0.0);
-this.addCameraVisual(matrix);
-*/
 		// done
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(this._renderPointsList,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(this._renderColorsList,4);
@@ -1532,42 +1564,39 @@ this.addCameraVisual(matrix);
 // TEXTURES
 this._stage3D.selectProgram(1);
 
-		var texture = this._resource.testImage;
+		var texture;
 		var program = this._canvas3D._program;
 		var gl = this._canvas3D._context;
-		//gl.bindTexture(gl.TEXTURE_2D, texture);
+// 0
+texture = this._resource.testImage0;
+var obj = this.textureBase2FromImage(texture);
+texture = obj["texture"];
+var horz = obj["width"];
+var vert = obj["height"];
+this._textures[1] = this._canvas3D.bindTextureImageRGBA(texture);
 
-var obj = new DOImage(texture);
-this._root.addChild(obj);
-var wid = texture.width;
-var hei = texture.height;
-var origWid = wid;
-var origHei = hei;
-wid = Math.pow(2, Math.ceil(Math.log(wid)/Math.log(2)) );
-hei = Math.pow(2, Math.ceil(Math.log(hei)/Math.log(2)) );
-console.log(wid,hei);
-wid = Math.max(wid,hei);
-hei = wid;
-var origWid = origWid/wid;
-var origHei = origHei/hei;
-texture = this._stage.renderImage(wid,hei,obj, null);
-obj.removeParent();
+// 1
+texture = this._resource.testImage1;
+var obj = this.textureBase2FromImage(texture);
+texture = obj["texture"];
+var horz = obj["width"];
+var vert = obj["height"];
+this._textures[0] = this._canvas3D.bindTextureImageRGBA(texture);
 
-this._texture = this._canvas3D.bindTextureImageRGBA(texture);
-var vert = 1-origHei;
-var horz = origWid;
-		// 
-		var texturePoints = this._renderTextureUVList;
-		var vertexPoints = this._renderTexturePointList;
-		// do stuff
-		texturePoints.push(0,vert, horz,vert, 0,1,        horz,vert, horz,1, 0,1);
-		vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
-		// set
+
+		// get
 		this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 		this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
-		this._textureUVPoints = this._stage3D.getBufferFloat32Array(texturePoints, 2);
-		this._textureVertexPoints = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
-
+		for(i=0;i<len;++i){
+			var texturePoints = this._renderTextureUVList[i];
+			var vertexPoints = this._renderTexturePointList[i];
+			// set
+			this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+			this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+		}
+		// test image in middle:
+		// texturePoints.push(0,vert, horz,vert, 0,1,        horz,vert, horz,1, 0,1);
+		// vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
 
 
 		// LINES
@@ -1577,12 +1606,71 @@ var horz = origWid;
 		// ....
 		this._programLinePoints = this._stage3D.getBufferFloat32Array(this._renderLinePointsList, 3);
 		this._programLineColors = this._stage3D.getBufferFloat32Array(this._renderLineColorsList, 4);
+
+// POINTS
+	this._stage3D.selectProgram(3);
+	//
+// FROM FEATURE TEST:
+var pts = [];
+pts.push(new V3D(0.00021902714989178337,0.0001258407464476963,0.000001198059109192175));
+pts.push(new V3D(0.0005425898993153965,0.00020382059794663403,0.0000027801061443287616));
+pts.push(new V3D(0.001502588377343881,0.0004439020569288396,0.000007520280294920924));
+pts.push(new V3D(0.00004354286507181842,0.00014658797540950688,7.734183220313274e-7));
+pts.push(new V3D(0.000053915721438172285,0.00013876243145861762,7.462522802302672e-7));
+pts.push(new V3D(0.000019943887596197935,0.00013923734985566295,8.338454777851844e-7));
+pts.push(new V3D(0.0004904517191755608,0.0002057511854612057,0.0000031043062204590162));
+pts.push(new V3D(0.00046855192730634515,0.00021099137180472926,0.0000035511287266040967));
+pts.push(new V3D(0.00022261387276091414,0.00011695745381619748,0.000001052647516471325));
+pts.push(new V3D(0.000017686985061626107,0.00019810344781772668,7.977047193600988e-7));
+pts.push(new V3D(0.00010648557672108022,0.00009138003598031809,5.900521174155687e-7));
+console.log(pts.length)
+	//
+	var p, i;
+	var points = [];
+	var colors = [];
+	for(i=0;i<pts.length;++i){
+		p = new V3D(Math.random(),Math.random(),Math.random());
+		p = pts[i];
+		p.scale(1.0E4);
+		console.log(p.x,p.y,p.z)
+		points.push(p.x,p.y,p.z);
+		//colors.push(Math.random(),Math.random(),Math.random(),1.0);
+		colors.push(1.0,Math.random()*0.5,0.0,1.0);
+	}
+
+	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+
+	this._pointPointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
+
 	}
 	// lines
 	// put cameras in 3D world
 	// put projected images in 2D world
 	// 3D world mouse/keyboard navigation
 
+}
+
+Manual3DR.prototype.textureBase2FromImage = function(texture){
+	var obj = new DOImage(texture);
+	this._root.addChild(obj);
+	var wid = texture.width;
+	var hei = texture.height;
+	var origWid = wid;
+	var origHei = hei;
+	wid = Math.pow(2.0, Math.ceil(Math.log(wid)/Math.log(2.0)) );
+	hei = Math.pow(2.0, Math.ceil(Math.log(hei)/Math.log(2.0)) );
+	wid = Math.max(wid,hei);
+	hei = wid;
+	var origWid = origWid/wid;
+	var origHei = origHei/hei;
+	texture = this._stage.renderImage(wid,hei,obj, null);
+	obj.removeParent();
+	var vert = 1-origHei;
+	var horz = origWid;
+	return {"texture":texture,"width":horz,"height":vert};
 }
 Manual3DR.prototype.handleEnterFrame = function(e){ // 2D canvas
 	//console.log(e);

@@ -141,6 +141,13 @@ for(i=0;i<len;++i){
 	fundamental = R3D.fundamentalMatrixNonlinear(fundamental,pointsA,pointsB);
 	console.log(fundamental+"");
 
+// FOUND VIA MANUAL3DR
+var F = fundamental;
+var K = new Matrix(3,3).setFromArray([3.7610E+2, -4.3992E-1, 2.0162E+2, 0.0000E+0, 3.7674E+2, 1.5226E+2, 0.0000E+0, 0.0000E+0, 1.0000E+0]);
+var Kt = Matrix.transpose(K);
+var E = Matrix.mult(Kt,Matrix.mult(F,K));
+//fundamental = E;
+
 
 for(var k=0;k<pointsA.length;++k){
 	var pointA = pointsA[k];
@@ -192,7 +199,20 @@ for(var k=0;k<pointsA.length;++k){
 	//
 	this.denseFeatureMatching();
 	// refine matches
-	R3D.triangulatePoints(fundamental,pointsA,pointsB);
+	var points = R3D.triangulatePoints(fundamental,pointsA,pointsB);
+	var points2DA = points["A"];
+	var points2DB = points["B"];
+	var points3D = points["3D"];
+	//console.log(points3D);
+
+	var i, str = "\n";
+	str += "var pts = [];\n";
+	for(i=0;i<points3D.length;++i){
+		var pt = points3D[i];
+		str += "pts.push(new V3D("+pt.x+","+pt.y+","+pt.z+"));\n";
+	}
+	str += "\n";
+	console.log(str);
 }
 FeatureTest.prototype.denseFeatureMatching = function(){
 	//

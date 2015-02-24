@@ -973,8 +973,7 @@ R3D.triangulatePoints = function(fundamental, pointsA,pointsB){
 	console.log(camA+"");
 	console.log(camB+"");
 	var epipoles, epipoleA, epipoleB;
-	var bestA2D = [], bestB2D = [];
-	var bestA3D = [], bestB3D = [];
+	var bestA2D = [], bestB2D = [], best3D = [];
 	// for each point pair:
 	for(i=0;i<len;++i){
 		pointA = pointsA[i];
@@ -1056,23 +1055,22 @@ var toB = Matrix.mult(TBrev,RBrev);
 		bestPointA = toA.multV3DtoV3D(bestPointA, bestPointA);
 		bestPointB = toB.multV3DtoV3D(bestPointB, bestPointB);
 		bestA2D.push(bestPointA);
-		bestA2D.push(bestPointB);
-		// convert results from 2D to 3D via cams
+		bestB2D.push(bestPointB);
+		// convert results from 2D to 3D via cams back-projection rays:
 		// homogeneous method
 		// bestPointA = new V3D();
 		// bestPointB = new V3D();
 		// // ...
 		// bestA3D.push(bestPointA);
-		// bestA3D.push(bestPointB);
+		// bestB3D.push(bestPointB);
 		var list = R3D.triangulationDLT(camA,camB,[pointA],[pointB]);
 		var p = list[0]
-		console.log(list[0]+"");
+		//console.log(list[0]+"");
+		//p.homo();
+		best3D.push(p);
 	}
-	
-	return {"A":{"2D":bestA2D,"3D":bestA3D}, "B":{"2D":bestB2D,"3D":bestB3D}};
-	return null;
+	return {"A":bestA2D, "B":bestB2D, "3D":best3D};
 }
-// Matrix.multV3DtoV3D(new V3D(), line);
 R3D.closestPointToOriginLineFromV3D = function(v){
 	return R3D.closestPointToOriginLine(v.x,v.y,v.z);
 }
