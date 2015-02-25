@@ -1807,6 +1807,7 @@ t&middot;(b<sup>2</sup> + f&prime;<sup>2</sup>&middot;d<sup>2</sup>) + t<sup>2</
 
 
 
+
 #### long simplification of cost polynomial / root polynomial:
 
 
@@ -1825,7 +1826,7 @@ s(t) = t<sup>2</sup>/(1 + f<sup>2</sup>&middot;t<sup>2</sup>) + (c&middot;t + d)
 
 
 #### forming derivative polynomial
-s&prime;(t) = 2&middot;t/(1 + f<sup>2</sup>&middot;t<sup>2</sup>)<sup>2</sup> + [2&middot;(a&middot;b - c&middot;d)&middot;(a&middot;t + b)&middot;(c&middot;t + d)]/[(a&middot;t + b)<sup>2</sup> + f&prime;<sup>2</sup>&middot;(c&middot;t + d)<sup>2</sup>]<sup>2</sup>
+s&prime;(t) = 2&middot;t/(1 + f<sup>2</sup>&middot;t<sup>2</sup>)<sup>2</sup> - [2&middot;(a&middot;b - c&middot;d)&middot;(a&middot;t + b)&middot;(c&middot;t + d)]/[(a&middot;t + b)<sup>2</sup> + f&prime;<sup>2</sup>&middot;(c&middot;t + d)<sup>2</sup>]<sup>2</sup>
 <br/>
 <br/>
 
@@ -1847,6 +1848,9 @@ a<sup>2</sup>&middot;t<sup>3</sup> + b<sup>2</sup>&middot;t + 2&middot;a&middot;
 <br/>
 t&middot;(b<sup>2</sup> + f&prime;<sup>2</sup>&middot;d<sup>2</sup>) + t<sup>2</sup>&middot;(2&middot;a&middot;b + 2&middot;f&prime;<sup>2</sup>&middot;c&middot;d) + t<sup>3</sup>&middot;(a<sup>2</sup> + f&prime;<sup>2</sup>&middot;c<sup>2</sup>)
 <br/>
+t<sup>0</sup>:
+<br/>
+(-)
 <br/>
 t<sup>1</sup>:
 <br/>
@@ -1865,7 +1869,7 @@ B:
 <br/>
 (a&middot;b - b&middot;c)&middot;(1 + f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(1 + f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(a&middot;t + b)&middot;(c&middot;t + d)
 <br/>
-(a&middot;b + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup> - b&middot;c - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(1 + f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(a&middot;t&middot;c&middot;t +a&middot;t&middot;d + b&middot;c&middot;t + b&middot;d)
+(a&middot;b + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup> - b&middot;c - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(1 + f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(a&middot;t&middot;c&middot;t + a&middot;t&middot;d + b&middot;c&middot;t + b&middot;d)
 <br/>
 (a&middot;b + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup> - b&middot;c - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup> +  a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup> + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;f<sup>2</sup>&middot;t<sup>2</sup> - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup> - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;f<sup>2</sup>&middot;t<sup>2</sup>)&middot;(a&middot;t&middot;c&middot;t +a&middot;t&middot;d + b&middot;c&middot;t + b&middot;d)
 <br/>
@@ -1884,7 +1888,6 @@ a&middot;b&middot;b&middot;c&middot;t + a&middot;b&middot;f<sup>2</sup>&middot;t
 +
 <br/>
 a&middot;b&middot;b&middot;d + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;b&middot;d - b&middot;c&middot;b&middot;d - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;b&middot;d + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;b&middot;d + a&middot;b&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;b&middot;d - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;b&middot;d - b&middot;c&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;f<sup>2</sup>&middot;t<sup>2</sup>&middot;b&middot;d
-<br/>
 <br/>
 =
 <br/>
@@ -1906,7 +1909,24 @@ a&middot;b<sup>2</sup>&middot;d + a&middot;b<sup>2</sup>&middot;d&middot;f<sup>2
 
 t<sup>0</sup>:
 <br/>
-+a<sup>2</sup>&middot;b&middot;c
+(-)
+<br/>
+t<sup>1</sup>:
+<br/>
+b<sup>2</sup> + f&prime;<sup>2</sup>&middot;d<sup>2</sup>
+<br/>
+t<sup>2</sup>:
+<br/>
+2&middot;a&middot;b + 2&middot;f&prime;<sup>2</sup>&middot;c&middot;d
+<br/>
+t<sup>3</sup>:
+<br/>
+a<sup>2</sup> + f&prime;<sup>2</sup>&middot;c<sup>2</sup>
+<br/>
+<br/>
+
+t<sup>0</sup>:
+<br/>
 +a&middot;b<sup>2</sup>&middot;d
 -b<sup>2</sup>&middot;c&middot;d
 <br/>
@@ -1919,6 +1939,7 @@ t<sup>1</sup>:
 <br/>
 t<sup>2</sup>:
 <br/>
++a<sup>2</sup>&middot;b&middot;c
 -a&middot;b&middot;c<sup>2</sup>
 +a&middot;b<sup>2</sup>&middot;d&middot;f<sup>2</sup>
 -b<sup>2</sup>&middot;c&middot;d&middot;f<sup>2</sup>
@@ -1963,7 +1984,6 @@ t<sup>6</sup>:
 <br/>
 t<sup>0</sup>:
 <br/>
--a<sup>2</sup>&middot;b&middot;c
 -a&middot;b<sup>2</sup>&middot;d
 +b<sup>2</sup>&middot;c&middot;d
 
@@ -1980,6 +2000,7 @@ t<sup>2</sup>:
 <br/>
 +2&middot;a&middot;b
 +2&middot;f&prime;<sup>2</sup>&middot;c&middot;d
+-a<sup>2</sup>&middot;b&middot;c
 +a&middot;b&middot;c<sup>2</sup>
 -a&middot;b<sup>2</sup>&middot;d&middot;f<sup>2</sup>
 +b<sup>2</sup>&middot;c&middot;d&middot;f<sup>2</sup>
@@ -1990,14 +2011,14 @@ t<sup>3</sup>:
 <br/>
 +a<sup>2</sup>
 +f&prime;<sup>2</sup>&middot;c<sup>2</sup>
--a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
-+a&middot;b&middot;c&middot;d&middot;f<sup>2</sup>
--a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
-+a&middot;b&middot;c&middot;d&middot;f<sup>2</sup>
--a&middot;b<sup>2</sup>&middot;c&middot;f<sup>2</sup>
-+b<sup>2</sup>&middot;c<sup>2</sup>&middot;f<sup>2</sup>
--a&middot;b<sup>2</sup>&middot;c&middot;f<sup>2</sup>
-+b<sup>2</sup>&middot;c<sup>2</sup>&middot;f<sup>2</sup>
++a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
+-a&middot;b&middot;c&middot;d&middot;f<sup>2</sup>
++a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
+-a&middot;b&middot;c&middot;d&middot;f<sup>2</sup>
++a&middot;b<sup>2</sup>&middot;c&middot;f<sup>2</sup>
+-b<sup>2</sup>&middot;c<sup>2</sup>&middot;f<sup>2</sup>
++a&middot;b<sup>2</sup>&middot;c&middot;f<sup>2</sup>
+-b<sup>2</sup>&middot;c<sup>2</sup>&middot;f<sup>2</sup>
 
 t<sup>4</sup>:
 <br/>
@@ -2021,12 +2042,10 @@ t<sup>6</sup>:
 +a&middot;b&middot;c<sup>2</sup>&middot;f<sup>4</sup>
 
 <br/>
-<br/>
 **=**
 <br/>
 t<sup>0</sup>:
 <br/>
--a<sup>2</sup>&middot;b&middot;c
 -a&middot;b<sup>2</sup>&middot;d
 +b<sup>2</sup>&middot;c&middot;d
 <br/>
@@ -2043,6 +2062,7 @@ t<sup>2</sup>:
 <br/>
 +2&middot;a&middot;b
 +2&middot;f&prime;<sup>2</sup>&middot;c&middot;d
+-a<sup>2</sup>&middot;b&middot;c
 +a&middot;b&middot;c<sup>2</sup>
 -2&middot;a&middot;b<sup>2</sup>&middot;d&middot;f<sup>2</sup>
 +2&middot;b<sup>2</sup>&middot;c&middot;d&middot;f<sup>2</sup>
@@ -2051,18 +2071,16 @@ t<sup>3</sup>:
 <br/>
 +a<sup>2</sup>
 +f&prime;<sup>2</sup>&middot;c<sup>2</sup>
--a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
--a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
-+2&middot;a&middot;b&middot;c&middot;d&middot;f<sup>2</sup>
--2&middot;a&middot;b<sup>2</sup>&middot;c&middot;f<sup>2</sup>
-+2&middot;b<sup>2</sup>&middot;c<sup>2</sup>&middot;f<sup>2</sup>
++2&middot;a<sup>2</sup>&middot;b&middot;d&middot;f<sup>2</sup>
+-2&middot;a&middot;b&middot;c&middot;d&middot;f<sup>2</sup>
++2&middot;a&middot;b<sup>2</sup>&middot;c&middot;f<sup>2</sup>
+-2&middot;b<sup>2</sup>&middot;c<sup>2</sup>&middot;f<sup>2</sup>
 <br/>
 t<sup>4</sup>:
 <br/>
--a<sup>2</sup>&middot;b&middot;c&middot;f<sup>2</sup>
+-2&middot;a<sup>2</sup>&middot;b&middot;c&middot;f<sup>2</sup>
 +2&middot;a&middot;b&middot;c<sup>2</sup>&middot;f<sup>2</sup>
 -a&middot;b<sup>2</sup>&middot;d&middot;f<sup>4</sup>
--a<sup>2</sup>&middot;b&middot;c&middot;f<sup>2</sup>
 +b<sup>2</sup>&middot;c&middot;d&middot;f<sup>4</sup>
 <br/>
 t<sup>5</sup>:
@@ -2087,6 +2105,8 @@ t<sup>6</sup>:
 <br/>
 
 <br/>
+
+
 
 
 

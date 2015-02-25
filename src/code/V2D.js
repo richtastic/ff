@@ -16,6 +16,9 @@ V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	b.x = x;
 	return b;
 }
+V2D.len = function(v){ // function.length is reserved by JS
+	return Math.sqrt(v.x*v.x+v.y*v.y);
+}
 V2D.distanceSquare = function(a,b){
 	return Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2);
 }

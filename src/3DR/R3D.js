@@ -990,17 +990,24 @@ R3D.triangulatePoints = function(fundamental, pointsA,pointsB){
 		TBrev = Matrix.transform2DTranslate(TBrev, pointB.x, pointB.y);
 		F = Matrix.mult(Matrix.transpose(TBrev),Matrix.mult(F,TArev));
 		// get transformed epipoles
-		epipoles = R3D.getEpipolesFromF(fundamental,false); // is not-normalized correct?
+		epipoles = R3D.getEpipolesFromF(F,false);
 		epipoleA = epipoles.A;
 		epipoleB = epipoles.B;
+		// ||e.x,e.y|| = 1.0 , e.z scaled too
+		epipoleA.scale(1.0/V2D.len(epipoleA));
+		epipoleB.scale(1.0/V2D.len(epipoleB));
+// epipoleA = V2D.norm(epipoleA); // new V2D().copy(epipoleA).norm();
+// epipoleB = V2D.norm(epipoleB); // new V2D().copy(epipoleB).norm();
+// console.log( "A: "+epipoleA );
+// console.log( "B: "+epipoleB );
 		// transform to epipole-x-axis-form
-		epipoleA = V2D.norm(epipoleA); // new V2D().copy(epipoleA).norm();
-		epipoleB = V2D.norm(epipoleB); // new V2D().copy(epipoleB).norm();
-		RAfwd.setFromArray([epipoleA.x, epipoleA.y, 0,  -epipoleA.y, epipoleA.x, 0, 0,0,1]);
-		RBfwd.setFromArray([epipoleA.x, epipoleA.y, 0,  -epipoleA.y, epipoleA.x, 0, 0,0,1]);
+		RAfwd.setFromArray([epipoleA.x,epipoleA.y,0, -epipoleA.y,epipoleA.x,0, 0,0,1]);
+		RBfwd.setFromArray([epipoleB.x,epipoleB.y,0, -epipoleB.y,epipoleB.x,0, 0,0,1]);
 		RArev = Matrix.transpose(RAfwd);
 		RBrev = Matrix.transpose(RBfwd);
-		F = Matrix.mult(RBfwd,Matrix.mult(F,RArev)); // is RBfwd correct?
+// console.log("FWD: "+RBfwd);
+// console.log("REV: "+RBrev);
+		F = Matrix.mult(RBfwd,Matrix.mult(F,RArev));
 var toA = Matrix.mult(TArev,RArev);
 var toB = Matrix.mult(TBrev,RBrev);
 		// form polynomial
@@ -1011,28 +1018,26 @@ var toB = Matrix.mult(TBrev,RBrev);
 		b = F.get(1,2);
 		c = F.get(2,1);
 		d = F.get(2,2);
+console.log(a,b,c,d,fA,fB);
 		//
-		var t0 = -a*a*b*c - a*b*b*d + b*b*c*d;
+		var t0 = -a*b*b*d + b*b*c*d;
 		var t1 = b*b + fB*fB*d*d - a*a*b*d + a*b*c*d - a*b*b*c + b*b*c*c;
-		var t2 = 2*a*b + 2*fB*fB*c*d + a*b*c*c - 2*a*b*b*d*fA*fA + 2*b*b*c*d*fA*fA;
-		var t3 = a*a + fB*fB*c*c - a*a*b*d*fA*fA + 2*a*b*c*d*fA*fA - 2*a*b*b*c*fA*fA - 2*a*b*b*c*fA*fA + 2*b*b*c*c*fA*fA;
-		var t4 = -a*a*b*d*fA*fA*fA*fA + 2*a*b*c*c*fA*fA - a*b*b*d*fA*fA*fA*fA - a*a*b*c*fA*fA + b*b*c*d*fA*fA*fA*fA;
+		var t2 = 2*a*b + 2*fB*fB*c*d - a*a*b*c + a*b*c*c - 2*a*b*b*d*fA*fA + 2*b*b*c*d*fA*fA;
+		var t3 = a*a + fB*fB*c*c - a*a*b*d*fA*fA - 2*a*b*c*d*fA*fA + 2*a*b*b*c*fA*fA + 2*b*b*c*c*fA*fA;
+		var t4 = -2*a*a*b*c*fA*fA + 2*a*b*c*c*fA*fA - a*b*b*d*fA*fA*fA*fA + b*b*c*d*fA*fA*fA*fA;
 		var t5 = -a*a*b*d*fA*fA*fA*fA + a*b*c*d*fA*fA*fA*fA - a*b*b*c*fA*fA*fA*fA + b*b*c*c*fA*fA*fA*fA;
 		var t6 = -a*a*b*c*fA*fA*fA*fA + a*b*c*c*fA*fA*fA*fA;
-		// find coefficients
+		// find cost function polynomial coefficients
 		var coefficients = [t0,t1,t2,t3,t4,t5,t6];
-//console.log(coefficients)
-		// cost fxn values
-		// solve 6th degree polynomial
+for(var zz=0;zz<coefficients.length;++zz){
+	coefficients[zz] /= t0;
+}
 		var roots = R3D.polynomialRoots(coefficients);
-		//console.log(roots); // & t=inf
-		//roots.push(1E100);
 		// find smallest of 6 solutions + t=inf
+console.log(coefficients+"   --- "+roots);
 		min = null;
 		tMin = 0;
-		for(j=-1;j<roots.length;++j){
-//console.log(t)
-			// find cost value at inf & real roots (complex doesn't hurt but takes up time)
+		for(j=-1;j<roots.length;++j){ // find cost value at inf & real roots (complex doesn't hurt but takes up time)
 			if(j<0){
 				t = 1E100; // infinity
 				val = R3D.cost2DPolyFromValuesAsymptotic(a,b,c,d,fA,fB);
@@ -1050,20 +1055,22 @@ var toB = Matrix.mult(TBrev,RBrev);
 		lineB = new V3D(-fB*(c*t+d), a*t+b, c*t+d);
 		var bestPointA = R3D.closestPointToOriginLineFromV3D(lineA);
 		var bestPointB = R3D.closestPointToOriginLineFromV3D(lineB);
-		//console.log(bestPointA+" "+bestPointB+" ");
-		// transform to image coordinates
+//console.log(bestPointA+" "+bestPointB+" ");
+		// transform to original image coordinates
 		bestPointA = toA.multV3DtoV3D(bestPointA, bestPointA);
 		bestPointB = toB.multV3DtoV3D(bestPointB, bestPointB);
+// NORM?
+// bestPointA.norm();
+// bestPointB.norm();
+// TO 1 ?
+bestPointA.z = 1.0;
+bestPointB.z = 1.0;
 		bestA2D.push(bestPointA);
 		bestB2D.push(bestPointB);
 		// convert results from 2D to 3D via cams back-projection rays:
-		// homogeneous method
-		// bestPointA = new V3D();
-		// bestPointB = new V3D();
-		// // ...
-		// bestA3D.push(bestPointA);
-		// bestB3D.push(bestPointB);
-		var list = R3D.triangulationDLT(camA,camB,[pointA],[pointB]);
+//var list = R3D.triangulationDLT(camA,camB,[pointA],[pointB]);
+console.log(bestPointA+"");
+		var list = R3D.triangulationDLT(camA,camB,[bestPointA],[bestPointB]);
 		var p = list[0]
 		//console.log(list[0]+"");
 		//p.homo();
