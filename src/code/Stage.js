@@ -40,7 +40,7 @@ Stage.prototype.frameRate = function(fr){
 		if(wasRunning){
 			this._timer.stop();
 		}
-		this._timer.rate(fr);
+		this._timer.frameSpeed(fr);
 		if(wasRunning){
 			this._timer.start();
 		}

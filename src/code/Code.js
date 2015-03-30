@@ -3309,7 +3309,30 @@ Code.bezier2DCubicSecondAtT = function(A,B,C,D, t){ // second derivative
 	return new V2D( 6*t1*(C.x-2*B.x+A.x)+6*t*(D.x-2*C.x+B.x),  6*t1*(C.y-2*B.y+A.y)+6*t*(D.y-2*C.y+B.y) );
 }
 
+Code.bezier2DQuadraticLength = function(A,B,C, intervals){
+	return 0;
+}
 
+Code.bezier2DCubicLength = function(A,B,C,D, intervals){
+	intervals = intervals!==undefined?intervals:100;
+	var i, t;
+	var ptA = new V2D(), ptB = new V2D();
+	var distance = 0;
+	t = 0.0;
+	ptA = Code.bezier2DCubicAtT(A,B,C,D, t);
+	for (i=1; i<=intervals; ++i){
+		t = i/intervals;
+		ptB = Code.bezier2DCubicAtT(A,B,C,D, t);
+		distance += V2D.distance(ptA,ptB);
+		ptA.x = ptB.x;
+		ptA.y = ptB.y;
+	}
+	return distance;
+}
+
+Code.bezier2DCubicLinearN = function(A,B,C,D){
+	
+}
 
 
 

@@ -124,7 +124,7 @@ Graphics.prototype.lineTo = function(pX,pY){
 }
 Graphics.prototype.bezierTo = function(a,b, c,d, e,f){
 	if(arguments.length==4){ // quadratic
-		this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(a,b,c,d,e,f)) );
+		this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(a,b,c,d)) );
 	}else{ // cubic
 		this._graphics.push( Code.newArray(Graphics.canvasBezierCurveTo,Code.newArray(a,b,c,d,e,f)) );
 	}
