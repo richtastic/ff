@@ -40,6 +40,18 @@ V2D.midpoint = function(a,b,c){
 	c.set((a.x+b.x)*0.5,(a.y+b.y)*0.5);
 	return c;
 }
+V2D.pointAtT = function(a,b,c,t){
+	var t1;
+	if(t!==undefined){
+		t1 = 1.0 - t;
+		a.set(b.x*t1+c.x*t, b.y*t1+c.y*t);
+		return a;
+	}
+	t = c;
+	t1 = 1.0 - t;
+	c = new V2D(a.x*t1+b.x*t, a.y*t1+b.y*t);
+	return c;
+}
 V2D.add = function(c,a,b){
 	if(b!==undefined){
 		c.x = a.x+b.x;

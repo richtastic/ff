@@ -1571,7 +1571,9 @@ Code.escapeHTML = function(str){
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
 }
-
+Code.escapeURI = function(str){
+	return encodeURIComponent(str);
+}
 // ENCODE URL STRING SAFE FOR SENDING:
 // encodeURIComponent(str)
 // encodeURI(str)
@@ -3167,7 +3169,7 @@ Code.bezier2DExtrema = function(){ // arguments = list of coefficients
 }
 
 
-Code.bezier2DQuadricBoundingBox = function(A, B, C){ // parbola maxima root finding
+Code.bezier2DQuadraticBoundingBox = function(A, B, C){ // parbola maxima root finding
 	//var t, u, f, g, h, point, step, steps = 20;
 	var minX, minY, maxX, maxY, x, y, t;
 	minX  = Math.min(A.x,C.x);
@@ -3181,7 +3183,7 @@ Code.bezier2DQuadricBoundingBox = function(A, B, C){ // parbola maxima root find
 	if(denX!=0){
 		t = numX/denX;
 		if(t>0 && t<1){
-			x = Code.bezier2DQuadricAtT(A,B,C, t).x;
+			x = Code.bezier2DQuadraticAtT(A,B,C, t).x;
 			minX  = Math.min(minX,x);
 			maxX  = Math.max(maxX,x);
 		}
@@ -3189,7 +3191,7 @@ Code.bezier2DQuadricBoundingBox = function(A, B, C){ // parbola maxima root find
 	if(denY!=0){
 		t = numY/denY;
 		if(t>0 && t<1){
-			y = Code.bezier2DQuadricAtT(A,B,C, t).y;
+			y = Code.bezier2DQuadraticAtT(A,B,C, t).y;
 			minY  = Math.min(minY,y);
 			maxY  = Math.max(maxY,y);
 		}
@@ -3234,9 +3236,9 @@ Code.bezier2DCubicBoundingBox = function(A, B, C, D){ // Newton-Raphson
 	return new Rect(minX,minY, maxX-minX,maxY-minY);
 }
 
-Code.bezier2DQuadricSplit = function(A, B, C, t){ // De Casteljau's algorithm
+Code.bezier2DQuadraticSplit = function(A, B, C, t){ // De Casteljau's algorithm
 	var u = 1.0 - t;
-	var Q = Code.bezier2DQuadricAtT(A,B,C, t);
+	var Q = Code.bezier2DQuadraticAtT(A,B,C, t);
 	var AB = new V2D(A.x*u+B.x*t, A.y*u+B.y*t);
 	var BC = new V2D(B.x*u+C.x*t, B.y*u+C.y*t);
 	var X = new V2D(AB.x*u+BC.x*t, AB.y*u+BC.y*t);
