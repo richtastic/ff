@@ -609,7 +609,8 @@ Canvas.prototype._canvasTouchEndFxn = function(e){
 	console.log( "TOUCH END" );
 	e.preventDefault();
 	pos = this.getTouchPosition(e);
-	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	//this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	this.alertAll(Canvas.EVENT_TOUCH_END,pos);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ SCREEN OPERATIONS

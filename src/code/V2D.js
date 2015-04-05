@@ -8,7 +8,7 @@ V2D.cross = function(a,b){ // z direction
 }
 V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	if(ang===undefined){
-		ang = a; a = b; b = a.copy();
+		ang = a; a = b; b = V2D.copy(a);
 	}
 	var cos = Math.cos(ang), sin = Math.sin(ang);
 	var x = a.x*cos - a.y*sin;

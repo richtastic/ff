@@ -76,6 +76,10 @@ function Cells(){
 	this._stage.addListeners();
 	this._stage.start();
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.handleCanvasResizeFxn,this);
+	this._canvas.addFunction(Canvas.EVENT_TOUCH_START,this.handleCanvasTouchStartFxn,this);
+	this._canvas.addFunction(Canvas.EVENT_TOUCH_MOVE,this.handleCanvasTouchMoveFxn,this);
+	this._canvas.addFunction(Canvas.EVENT_TOUCH_END,this.handleCanvasTouchEndFxn,this);
 	this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this.handleEnterFrame,this);
 
 	this._keyboard = new Keyboard();
@@ -84,9 +88,15 @@ function Cells(){
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP, this.keyboardFxnKeyUp, this);
 	this._keyboard.addListeners();
 
+	this.generateCells();
+}
+Cells.prototype.generateCells = function(){
+	var cellSize = 24.0;
+	var availableWidth = this._canvas.width();
+	var availableHeight = this._canvas.height();
+	var rows = Math.floor(availableHeight/cellSize); // 150;
+	var cols = Math.floor(availableWidth/cellSize); // 180;
 	var d, i, j, index;
-	var rows = 150;
-	var cols = 180;
 	var len = rows*cols;
 	var grid = new Array(len);
 	var cells = new Array(len);
@@ -101,8 +111,8 @@ function Cells(){
 			++index;
 		}
 	}
-	this._cellSizeWidth = 5.0;
-	this._cellSizeHeight = 5.0;
+	this._cellSizeWidth = cellSize; // 5.0;
+	this._cellSizeHeight = cellSize; // 5.0;
 	this._grid = grid;
 	this._cells = cells;
 	this._rows = rows;
@@ -140,6 +150,9 @@ Cells.prototype.keyboardFxnKeyDown = function(e){
 	}
 	// redraw update
 	this.renderCells();
+}
+Cells.prototype.handleCanvasResizeFxn = function(e){
+	console.log(e);
 }
 Cells.prototype.keyboardFxnKeyDown2 = function(e){
 	// console.log("key still down "+e);
@@ -425,6 +438,17 @@ Cells.prototype.handleMouseClickFxn = function(e){
 		}
 		this.renderCells();
 	}
+}
+
+Cells.prototype.handleCanvasTouchStartFxn = function(e){
+	console.log(e);
+	this.handleMouseClickFxn(e);
+}
+Cells.prototype.handleCanvasTouchMoveFxn = function(e){
+	console.log(e);
+}
+Cells.prototype.handleCanvasTouchEndFxn = function(e){
+	//this.handleMouseClickFxn(e);
 }
 
 Cells.prototype.handleEnterFrame = function(e){

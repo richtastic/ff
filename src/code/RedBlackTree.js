@@ -6,22 +6,27 @@ red node has two black children
 */
 
 function RedBlackTree(fxn){
-	this._sentinel = new RedBlackTree.Node();
+	this._sentinel = this.newEmptyNode(null);
 		this._sentinel.data(null);
 		this._sentinel.left(this._sentinel);
 		this._sentinel.right(this._sentinel);
 		this._sentinel.parent(this._sentinel);
 		this._sentinel.colorBlack();
+	this._sortOnData = true;
 	this._root = this._sentinel;
 	this._sorting = RedBlackTree.sortIncreasing;
 	this._length = 0;
 	this._maximumLength = 0;
 	this.sorting(fxn);
 }
+RedBlackTree.sortOnData = function(s){
+	if(s!==undefined){ this._sortOnData = s ? true : false; }
+	return this._sortOnData;
+}
 RedBlackTree.sortIncreasing = function(a,b){
 	return b - a;
 }
-RedBlackTree.newEmptyNode = function(d){
+RedBlackTree.prototype.newEmptyNode = function(d){
 	return new RedBlackTree.Node(d);
 }
 // --------------------------------------------------------------------------------------------------------------------
@@ -147,7 +152,7 @@ RedBlackTree.prototype.prevNode = function(nodeIn){ // external 'predecessor'
 }
 RedBlackTree.prototype.findNodeFromObject = function(o){
 	if( !this.isNil(this._root) ){
-		return this._root.findNodeFromObject(o,this._sorting,this.nil());
+		return this._root.findNodeFromObject(this._sortOnData ? o : this._root, this._sorting, this.nil(), this._sortOnData);
 	}
 	return null;
 }
@@ -178,6 +183,9 @@ RedBlackTree.prototype.successor = function(node){
 	return parent;
 }
 // --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.updateAfterRotation = function(newParent){
+	// override
+}
 RedBlackTree.prototype.rotateLeft = function(node){
 	var a = node, b = node.right();
 	a.right(b.left());
@@ -196,6 +204,7 @@ RedBlackTree.prototype.rotateLeft = function(node){
 	}
 	b.left(a);
 	a.parent(b);
+	this.updateAfterRotation(b);
 }
 RedBlackTree.prototype.rotateRight = function(node){
 	var a = node, b = node.left();
@@ -215,6 +224,7 @@ RedBlackTree.prototype.rotateRight = function(node){
 	}
 	b.right(a);
 	a.parent(b);
+	this.updateAfterRotation(b);
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.prototype.insertObject = function(o){
@@ -223,11 +233,12 @@ RedBlackTree.prototype.insertObject = function(o){
 	return node;
 }
 RedBlackTree.prototype.insertNode = function(newNode){
+	//console.log("RBT.insertNode: "+newNode);
 	var fxn = this._sorting;
 	var value, node = this.root(), parent = this.nil(), o = newNode.data();
 	while( !this.isNil(node) ){
 		parent = node;
-		value = fxn(node.data(),o);
+		value = this._sortOnData ? fxn(node.data(),o) : fxn(node,newNode);
 		if(value<0){ node = node.left();
 		}else{ node = node.right(); }
 	}
@@ -364,7 +375,10 @@ RedBlackTree.prototype._del = function(wasCut,node,splice){
 	}
 }
 RedBlackTree.prototype._deleteFixup = function(node, parent){
+	var oldNode = node;
+	var oldParent = parent;
 	var sib;
+	console.log("delete fixup");
 	while( node!=this._root && node.isBlack() ){
 		if( node==parent.left() ){
 			sib = parent.right();
@@ -421,9 +435,18 @@ RedBlackTree.prototype._deleteFixup = function(node, parent){
 		}
 	}
 	node.colorBlack();
+	this.updateAfterDeletion(oldParent);
+}
+RedBlackTree.prototype.updateAfterDeletion = function(oldParent){
+	// override
 }
 
 // --------------------------------------------------------------------------------------------------------------------
+RedBlackTree.prototype.iterate = function(fxn){
+	if( !this.isNil(this._root) ){
+		this._root.iterate(fxn,this.nil());
+	}
+}
 RedBlackTree.prototype.toArray = function(limit){
 	var array = [];
 	if( !this.isNil(this._root) ){
@@ -495,10 +518,10 @@ RedBlackTree.Node.prototype.colorBlack = function(){
 	return this._color = RedBlackTree.NODE_COLOR_BLACK;
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil){
+RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil, sod){ // if sod==false o isa node
 	var value, node = this;
 	while( node!=nil ){
-		value = fxn(node.data(),o);
+		value = sod ? fxn(node.data(),o) : fxn(node,o);
 		if( value==0 ){
 			return node;
 		}else if(value<0){
@@ -557,25 +580,20 @@ RedBlackTree.Node.prototype.manualCount = function(nil){
 	}
 	return countL+countR+1;
 }
+RedBlackTree.Node.prototype.nodeString = function(){
+	return this._data+" ["+(this.isRed()?"R":"B")+"]";
+}
 RedBlackTree.Node.prototype.toString = function(tab,addTab,nil){
 	if(nil===undefined){return "[RB-Node]";}
 	tab = tab!==undefined?tab:"   ";
 	addTab = addTab!==undefined?addTab:"  ";
 	var str = "";
 	if(this._right!=nil && this._right!=this){
-		if(this._right==null){
-			str += "NULL RIGHT";
-		}else{
 		str += this._right.toString(tab+addTab,addTab,nil)+"\n";
-		}
 	}
-	str += tab+"-"+this._data+" ["+(this.isRed()?"R":"B")+"]";
+	str += tab+"-"+this.nodeString();
 	if(this._left!=nil  && this._right!=this){
-		if(this._left==null){
-			str += "NULL LEFT";
-		}else{
 		str += "\n"+this._left.toString(tab+addTab,addTab,nil);
-		}
 	}
 	return str;
 }
@@ -589,6 +607,18 @@ RedBlackTree.Node.prototype.toArray = function(array,nil){
 	array.push(this._data);
 	if(this._right!=nil){
 		this._right.toArray(array,nil);
+	}
+}
+RedBlackTree.Node.prototype.iterate = function(fxn,nil){
+	if(this==nil){
+		return;
+	}
+	if(this._left!=nil){
+		this._left.toArray(fxn,nil);
+	}
+	fxn(this._data);
+	if(this._right!=nil){
+		this._right.toArray(fxn,nil);
 	}
 }
 // --------------------------------------------------------------------------------------------------------------------

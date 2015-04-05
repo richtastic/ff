@@ -3255,24 +3255,65 @@ Code.bezier2DCubicSplit = function(A, B, C, D, t){ // De Casteljau's algorithm
 	return [[A,AB,X,Q], [Q,Y,CD,D]];
 }
 Code.bezier2DSplit = function(){ // arguments = list of coefficients | cut point
-	//
+	// 
 }
 
 
 
 
-Code.bezier2DQuadricAtT = function(A,B,C, t){
+Code.bezier2DQuadraticAtT = function(A,B,C, t){
 	var t1 = 1-t;
 	var tA = t1*t1;
 	var tB = 2*t1*t;
 	var tC = t*t;
 	return new V2D( A.x*tA+B.x*tB+C.x*tC, A.y*tA+B.y*tB+C.y*tC );
 }
-Code.bezier2DQuadricTangentAtT = function(A,B,C, t){
-	return new V2D( 2*A.x*(t-1) + 2*B.x*(1-t) + 2*C.x*t, 2*A.y*(t-1) + 2*B.y*(1-t) + 2*C.y*t);
+Code.bezier2DQuadraticTangentAtT = function(A,B,C, t){
+	return new V2D( 2*(t-1)*A.x + 2*(1-2*t)*B.x + 2*t*C.x, 2*(t-1)*A.y + 2*(1-2*t)*B.y + 2*t*C.y );
 }
-Code.bezier2DQuadricNormalAtT = function(A,B,C, t){
+Code.bezier2DQuadraticSecondAtT = function(A,B,C, t){
 	return new V2D( 2*A.x-4*B.x+2*C.x, 2*A.y-4*B.y+2*C.y );
+}
+Code.bezier2DQuadraticNormalAtT = function(A,B,C, t){
+	var eps = 0.001;
+	var tanA = Code.bezier2DQuadraticTangentAtT(A,B,C, t-eps);
+	var tanB = Code.bezier2DQuadraticTangentAtT(A,B,C, t+eps);
+	tanA.norm();
+	tanB.norm();
+	var norm = V2D.sub(tanB,tanA);
+	norm.scale(0.5/eps);
+	return norm;
+}
+Code.bezier2DQuadraticClosestPointToPoint = function(source, A,B,C, intervals){
+	intervals = intervals!==undefined?intervals:100;
+	var i, t, point;
+	var bestPoint = null, bestDistance = null;
+	for(i=0;i<=intervals;++i){
+		t = i/intervals;
+		point = Code.bezier2DQuadraticAtT(A,B,C, t);
+		distance = V2D.distance(point,source);
+		if(!bestPoint || distance<bestDistance){
+			bestPoint = point;
+			bestDistance = distance;
+		}
+	}
+	return bestPoint;
+}
+Code.bezier2DCubicClosestPointToPoint = function(source, A,B,C,D, intervals){
+	intervals = intervals!==undefined?intervals:100;
+	var i, t, point;
+	var bestPoint = null, bestDistance = null;
+	for(i=0;i<=intervals;++i){
+		t = i/intervals;
+		point = Code.bezier2DCubicAtT(A,B,C,D, t);
+		distance = V2D.distance(point,source);
+		if(!bestPoint || distance<bestDistance){
+			bestPoint = point;
+			bestDistance = distance;
+		}
+	}
+	// look at 2 best sub points and continue to refine? ad infinitum?
+	return bestPoint;
 }
 
 Code.bezier2DCubicAtT = function(A,B,C,D, t){
@@ -3297,9 +3338,15 @@ Code.bezier2DCubicTangentAtT = function(A,B,C,D, t){ // scaled tangent
 	return new V2D( 3*t1*t1*(B.x-A.x)+6*t*t1*(C.x-B.x)+3*t*t*(D.x-C.x) , 3*t1*t1*(B.y-A.y)+6*t*t1*(C.y-B.y)+3*t*t*(D.y-C.y) );
 }
 Code.bezier2DCubicNormalAtT = function(A,B,C,D, t){ // scaled normal - NOT CURRENTLY direction of osculating circle
-	var tan = Code.bezier2DCubicTangentAtT(A,B,C,D,t);
-	tan.rotate(-Math.PIO2);
-	return tan;
+	// cheating
+	var eps = 0.001;
+	var tanA = Code.bezier2DCubicTangentAtT(A,B,C,D, t-eps);
+	var tanB = Code.bezier2DCubicTangentAtT(A,B,C,D, t+eps);
+	tanA.norm();
+	tanB.norm();
+	var norm = V2D.sub(tanB,tanA);
+	norm.scale(0.5/eps);
+	return norm;
 }
 
 
@@ -3312,7 +3359,20 @@ Code.bezier2DCubicSecondAtT = function(A,B,C,D, t){ // second derivative
 }
 
 Code.bezier2DQuadraticLength = function(A,B,C, intervals){
-	return 0;
+	intervals = intervals!==undefined?intervals:100;
+	var i, t;
+	var ptA = new V2D(), ptB = new V2D();
+	var distance = 0;
+	t = 0.0;
+	ptA = Code.bezier2DQuadraticAtT(A,B,C, t);
+	for (i=1; i<=intervals; ++i){
+		t = i/intervals;
+		ptB = Code.bezier2DQuadraticAtT(A,B,C, t);
+		distance += V2D.distance(ptA,ptB);
+		ptA.x = ptB.x;
+		ptA.y = ptB.y;
+	}
+	return distance;
 }
 
 Code.bezier2DCubicLength = function(A,B,C,D, intervals){
