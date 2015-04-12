@@ -3299,21 +3299,30 @@ Code.bezier2DQuadraticClosestPointToPoint = function(source, A,B,C, intervals){
 	}
 	return bestPoint;
 }
-Code.bezier2DCubicClosestPointToPoint = function(source, A,B,C,D, intervals){
-	intervals = intervals!==undefined?intervals:100;
-	var i, t, point;
-	var bestPoint = null, bestDistance = null;
-	for(i=0;i<=intervals;++i){
-		t = i/intervals;
-		point = Code.bezier2DCubicAtT(A,B,C,D, t);
-		distance = V2D.distance(point,source);
-		if(!bestPoint || distance<bestDistance){
-			bestPoint = point;
-			bestDistance = distance;
+Code.bezier2DCubicClosestPointToPoint = function(source, A,B,C,D, intervals, loops){
+	intervals = intervals!==undefined?intervals:10;
+	loops = loops!==undefined?loops:3;
+	var i, j, t, point, bestPoints = [], tMin = 0, tMax = 1.0;;
+	var sortFxn = function(a,b){ return a[0] - b[0]; };
+	for(j=0;j<=loops;++j){
+		for(i=0;i<=intervals;++i){
+			t = (i/intervals)*(tMax-tMin) + tMin;
+			point = Code.bezier2DCubicAtT(A,B,C,D, t);
+			distance = V2D.distance(point,source);
+			bestPoints.push([distance,t,point]);
+			bestPoints.sort(sortFxn);
+			Code.truncateArray(bestPoints,2);
+		}
+		tMin = Math.min( bestPoints[0][1], bestPoints[1][1] );
+		tMax = Math.max( bestPoints[0][1], bestPoints[1][1] );
+		if(tMin==tMax){
+			break;
 		}
 	}
-	// look at 2 best sub points and continue to refine? ad infinitum?
-	return bestPoint;
+	var best = bestPoints[0][2];
+	Code.emptyArray(bestPoints);
+	return best;
+	//return bestPoint;
 }
 
 Code.bezier2DCubicAtT = function(A,B,C,D, t){

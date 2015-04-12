@@ -578,7 +578,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	var pDesired = 0.99; // to have selected a valid subset
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
 maxIterations = 1E3;
-maxIterations = 1;
+maxIterations = 10;
 	console.log("maxIterations: "+maxIterations);
 	for(i=0;i<maxIterations;++i){
 		// reset for iteration
@@ -1029,12 +1029,15 @@ console.log(a,b,c,d,fA,fB);
 		var t6 = -a*a*b*c*fA*fA*fA*fA + a*b*c*c*fA*fA*fA*fA;
 		// find cost function polynomial coefficients
 		var coefficients = [t0,t1,t2,t3,t4,t5,t6];
-for(var zz=0;zz<coefficients.length;++zz){
-	coefficients[zz] /= t0;
-}
+// console.log(coefficients);
+		for(var zz=0;zz<coefficients.length;++zz){ // necessary ?
+			coefficients[zz] /= t0;
+		}
 		var roots = R3D.polynomialRoots(coefficients);
 		// find smallest of 6 solutions + t=inf
-console.log(coefficients+"   --- "+roots);
+// console.log(coefficients);
+// console.log(roots);
+// console.log("...............");
 		min = null;
 		tMin = 0;
 		for(j=-1;j<roots.length;++j){ // find cost value at inf & real roots (complex doesn't hurt but takes up time)

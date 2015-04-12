@@ -307,7 +307,7 @@ Traffic.prototype.handleMouseClickFxn = function(e){
 }
 
 Traffic.prototype.handleEnterFrame = function(e){
-return;
+//return;
 	this.processScene();
 	this.renderScene();
 }

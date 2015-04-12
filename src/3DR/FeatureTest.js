@@ -72,6 +72,12 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	pts.push(new V3D(260,170,1.0), new V3D(744,183,1.0)); // base right corner
 	pts.push(new V3D(41,257,1.0), new V3D(453,266,1.0)); // 4
 	pts.push(new V3D(238,256,1.0), new V3D(790.5,268,1.0)); // 
+	// excess
+	pts.push(new V3D(205,76,1.0), new V3D(634,104,1.0)); // 
+	pts.push(new V3D(203,116,1.0), new V3D(631,153,1.0)); // 
+	pts.push(new V3D(176,128,1.0), new V3D(603,161,1.0)); // 
+	pts.push(new V3D(171,69,1.0), new V3D(593,101,1.0)); // 
+	pts.push(new V3D(173,108,1.0), new V3D(591,146,1.0)); // 
 	// pts.push(new V3D(,,1.0), new V3D(,,1.0));
 	var i, len = pts.length;
 	var str = "";
@@ -84,8 +90,7 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 		v = pts[i+1];
 		d = R3D.drawPointAt(v.x,v.y, 0x00,0x00,0xFF);
 		this._root.addChild(d);
-		
-
+		// normalize points to width/height with correct offsets
 		pts[i+0].x = (pts[i+0].x-0.0)/400.0;
 		pts[i+0].y = (pts[i+0].y-0.0)/300.0;
 		pts[i+1].x = (pts[i+1].x-400.0)/400.0;
@@ -209,6 +214,7 @@ for(var k=0;k<pointsA.length;++k){
 	str += "var pts = [];\n";
 	for(i=0;i<points3D.length;++i){
 		var pt = points3D[i];
+// pt.homo(); // doesn't make sense
 		str += "pts.push(new V3D("+pt.x+","+pt.y+","+pt.z+"));\n";
 	}
 	str += "\n";
