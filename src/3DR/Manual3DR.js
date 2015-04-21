@@ -1347,23 +1347,23 @@ Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureV
 	var tVert = [];
 	var tUV = [];
 	c.push(0xFFFF0000);
-	t.push(Tri.fromPoints(camOrigin, camScreenBR, camScreenBL ));
+	t.push(Tri3D.fromPoints(camOrigin, camScreenBR, camScreenBL ));
 	c.push(0xFF00CC00);
-	t.push(Tri.fromPoints(camOrigin, camScreenTR, camScreenBR ));
+	t.push(Tri3D.fromPoints(camOrigin, camScreenTR, camScreenBR ));
 	c.push(0xFF0000FF);
-	t.push(Tri.fromPoints(camOrigin, camScreenTL, camScreenTR ));
+	t.push(Tri3D.fromPoints(camOrigin, camScreenTL, camScreenTR ));
 	c.push(0xFFFFCC00);
-	t.push(Tri.fromPoints(camOrigin, camScreenBL, camScreenTL ));
+	t.push(Tri3D.fromPoints(camOrigin, camScreenBL, camScreenTL ));
 	c.push(0xFFCCCCCC);
-	t.push(Tri.fromPoints(camScreenBR, camScreenTR, camScreenTL ));
+	t.push(Tri3D.fromPoints(camScreenBR, camScreenTR, camScreenTL ));
 	c.push(0xFF999999);
-	t.push(Tri.fromPoints(camScreenBR, camScreenTL, camScreenBL ));
+	t.push(Tri3D.fromPoints(camScreenBR, camScreenTL, camScreenBL ));
 	// lines
 	lp.push(new V3D(0,0,0), new V3D(0,0,10));
 	lc.push(0xFF990000, 0xFF990000);
 	// textures
-	tVert.push(Tri.fromPoints(imgScreenBR, imgScreenTR, imgScreenTL ));
-	tVert.push(Tri.fromPoints(imgScreenBR, imgScreenTL, imgScreenBL ));
+	tVert.push(Tri3D.fromPoints(imgScreenBR, imgScreenTR, imgScreenTL ));
+	tVert.push(Tri3D.fromPoints(imgScreenBR, imgScreenTL, imgScreenBL ));
 var textureWidth = 512.0;
 var textureHeight = 512.0;
 var endX = imageWidth/textureWidth;
@@ -1375,8 +1375,8 @@ var texBR = new V3D(endX, endY, 0);
 	// tUV.push(Tri.fromPoints(texBR, texTR, texTL));
 	// tUV.push(Tri.fromPoints(texBR, texTL, texBL));
 	// flip left and right to be facing camera
-	tUV.push(Tri.fromPoints(texBL, texTL, texTR));
-	tUV.push(Tri.fromPoints(texBL, texTR, texBR));
+	tUV.push(Tri3D.fromPoints(texBL, texTL, texTR));
+	tUV.push(Tri3D.fromPoints(texBL, texTR, texBR));
 
 var v;
 	len = c.length;
@@ -1472,7 +1472,7 @@ this._stage3D.matrixMultM3D(this._userInteractionMatrix);
 	// triangles
 	//console.log("rendering");
 	if(this._planeTriangleVertexList){
-		
+/*
 // TRIANGLES
 this._stage3D.selectProgram(0);
 this._stage3D.enableCulling();
@@ -1498,7 +1498,7 @@ this._stage3D.matrixReset();
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 	}
 //
-
+*/
 // RENDER LINES
 this._stage3D.selectProgram(2);
 this._stage3D.disableCulling();
@@ -1599,13 +1599,6 @@ this._textures[0] = this._canvas3D.bindTextureImageRGBA(texture);
 		// vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
 
 
-		// LINES
-		this._stage3D.selectProgram(2);
-		this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
-		this._programLineVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
-		// ....
-		this._programLinePoints = this._stage3D.getBufferFloat32Array(this._renderLinePointsList, 3);
-		this._programLineColors = this._stage3D.getBufferFloat32Array(this._renderLineColorsList, 4);
 
 // POINTS
 	this._stage3D.selectProgram(3);
@@ -1623,36 +1616,53 @@ this._textures[0] = this._canvas3D.bindTextureImageRGBA(texture);
 // pts.push(new V3D(0.00022355251761197684,0.00011739786874813588,0.0000010599646583340864));
 // pts.push(new V3D(0.00001684017727136176,0.00019863381255558101,8.001914394864113e-7));
 // pts.push(new V3D(0.00010658292192119984,0.00009158338177763248,5.916374067133575e-7));
+
+
 var pts = [];
-pts.push(new V3D(9.232036873132476,6.140160857679896,0.05614903531918251));
-pts.push(new V3D(16.569898511178554,6.384642483923667,0.08981140076490154));
-pts.push(new V3D(24.844762332190136,7.260822368867289,0.12973623780076962));
-pts.push(new V3D(2.0495540389100295,9.575436564108237,0.047395538734209965));
-pts.push(new V3D(2.5375636065451586,9.8170963949956,0.04740599308139596));
-pts.push(new V3D(0.8312054296466007,8.023749996820504,0.04829256458408983));
-pts.push(new V3D(15.609118499194388,6.960113410793292,0.1040553449989287));
-pts.push(new V3D(15.14915422090254,7.348912504600127,0.12027153926536203));
-pts.push(new V3D(9.37122088667257,5.585177277997288,0.049490488685654456));
-pts.push(new V3D(0.7114414057059522,12.627273088140688,0.04986385937420145));
-pts.push(new V3D(4.9133756360463945,8.309099369041807,0.0408649702001706));
-pts.push(new V3D(24.483611588298842,7.73781050013555,0.14655053987610722));
-pts.push(new V3D(11.257617319335061,6.478952816996861,0.07369049142135592));
-pts.push(new V3D(7.9631163116455115,6.869547871065687,0.06412426178245668));
-pts.push(new V3D(20.332087293839777,7.826172862069992,0.14862586521629614));
-pts.push(new V3D(9.818597301594066,6.818543248412918,0.07674377061451883));
-console.log(pts.length)
+pts.push(new V3D(181.7759595488257,115.83608626335102,1.0143299751656232));
+pts.push(new V3D(505.7469742557165,199.83124534500917,2.594420986932873));
+pts.push(new V3D(2167.6016842233757,664.7767195285846,10.825436865195607));
+pts.push(new V3D(31.187604547172377,120.51425103118922,0.605587972991312));
+pts.push(new V3D(39.22436444209934,123.08876229339911,0.6075745009828019));
+pts.push(new V3D(12.456197662831286,102.6941289986451,0.617957851623479));
+pts.push(new V3D(445.2029503961679,195.84746142517486,2.823146853210107));
+pts.push(new V3D(418.64962874179673,197.18623283863897,3.1881867141571556));
+pts.push(new V3D(185.85499406083707,109.62286567142947,0.9010190866671728));
+pts.push(new V3D(10.688332275338434,148.06807708139075,0.589085983354743));
+pts.push(new V3D(82.95328711861026,107.46232528106832,0.5495820768769595));
+pts.push(new V3D(2017.3278491245323,649.2921375217761,11.594563394424792));
+pts.push(new V3D(244.74442380953568,136.4191174424548,1.4969789280905532));
+pts.push(new V3D(147.60986318643526,117.47043945656532,1.092458391025811));
+pts.push(new V3D(894.8404744645912,339.6406435786824,6.306870270634655));
+pts.push(new V3D(197.99996483393767,129.97761843291116,1.4476753441129435));
+pts.push(new V3D(303.68612020016604,159.754339361098,2.1797153589879077));
+pts.push(new V3D(260.87733075780915,143.79496980598387,1.7108730704311286));
+pts.push(new V3D(1241.805865411691,435.6391395412944,7.963382839814098));
+
+var prs = [];
+prs.push( [11, 12] ); 
+prs.push( [14, 15] ); 
+prs.push( [11, 14] ); 
+prs.push( [12, 15] ); 
+
+
+
+
+
+
 	//
-	var p, i;
+	var p, i, u, v;
 	var points = [];
 	var colors = [];
+console.log(pts)
 	for(i=0;i<pts.length;++i){
 		//p = new V3D(Math.random(),Math.random(),Math.random());
 		p = pts[i];
 //p.homo(); // doesn't make sense to make all z values = 1
 		// p.scale(1.0E4);
 		// p.z *= 200;
-		p.scale(1.0E-1);
-		p.z *= 200;
+		p.scale(1.0E-2);
+		p.z *= 100;
 		console.log(p.x,p.y,p.z)
 		points.push(p.x,p.y,p.z);
 		//colors.push(Math.random(),Math.random(),Math.random(),1.0);
@@ -1666,11 +1676,46 @@ console.log(pts.length)
 	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 
 
+	// line point-pairs
+
+	var linPnt = this._renderLinePointsList;
+	var linCol = this._renderLineColorsList;
+ console.log(linPnt);
+// console.log(linCol);
+// console.log(prs)
+
+
+	for(i=0; i<prs.length; ++i){
+		p = prs[i];
+		u = pts[ p[0] ];
+		v = pts[ p[1] ];
+		linPnt.push( u.x,u.y,u.z );
+		linPnt.push( v.x,v.y,v.z );
+		linCol.push(0.0,0.0,1.0,1.0);
+		linCol.push(1.0,0.0,1.0,1.0);
 	}
-	// lines
+
+
+
+
+		// LINES
+		this._stage3D.selectProgram(2);
+		this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+		this._programLineVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+		// ....
+		// END OF LINES:
+console.log("LENGTH: "+this._renderLinePointsList.length);
+		this._programLinePoints = this._stage3D.getBufferFloat32Array(this._renderLinePointsList, 3);
+		this._programLineColors = this._stage3D.getBufferFloat32Array(this._renderLineColorsList, 4);
+
+
+} // if 0
+
 	// put cameras in 3D world
 	// put projected images in 2D world
 	// 3D world mouse/keyboard navigation
+
+
 
 }
 

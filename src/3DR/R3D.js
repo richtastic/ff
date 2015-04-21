@@ -1200,6 +1200,27 @@ minIndex = 0.0;
 }
 
 
+
+
+
+
+
+
+
+
+
+
+// texture / triangulating / blending
+
+
+R3D.triangulateTexture = function(inputImages, inputTriangles, outputImage, outputTriangle, paddingOut){ // single channel combining of colors in [0,1]
+	//
+}
+
+
+
+
+
 /*
 function.call(this, a, b, c);
 function.apply(this,arg);

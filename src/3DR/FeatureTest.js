@@ -61,28 +61,40 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	// this.findFeatures();
 	// this.displayFeatures();
 	var pts = []; //  A, B, ...
-	pts.push(new V3D(228,150,1.0), new V3D(685,170,1.0)); // left leg
-	pts.push(new V3D(232,105,1.0), new V3D(696,106,1.0)); // body middle
-	pts.push(new V3D(233,86,1.0), new V3D(699,77,1.0)); // face middle
-	pts.push(new V3D(88,208,1.0), new V3D(531,194,1.0)); // left classes dot
-	pts.push(new V3D(113,216,1.0), new V3D(566,212,1.0)); // left glasses black
-	pts.push(new V3D(24,167,1.0), new V3D(428,138,1.0)); // lighter red
-	pts.push(new V3D(191,89,1.0), new V3D(617,120,1.0)); // grid dark blue
-	pts.push(new V3D(161,76,1.0), new V3D(582,107,1.0)); // grid dark red
-	pts.push(new V3D(260,170,1.0), new V3D(744,183,1.0)); // base right corner
-	pts.push(new V3D(41,257,1.0), new V3D(453,266,1.0)); // 4
-	pts.push(new V3D(238,256,1.0), new V3D(790.5,268,1.0)); // 
-	// excess
-	pts.push(new V3D(205,76,1.0), new V3D(634,104,1.0)); // 
-	pts.push(new V3D(203,116,1.0), new V3D(631,153,1.0)); // 
-	pts.push(new V3D(176,128,1.0), new V3D(603,161,1.0)); // 
-	pts.push(new V3D(171,69,1.0), new V3D(593,101,1.0)); // 
-	pts.push(new V3D(173,108,1.0), new V3D(591,146,1.0)); // 
+	pts.push(new V3D(228,150,1.0), new V3D(685,170,1.0)); // left length 				// 0
+	pts.push(new V3D(232,105,1.0), new V3D(696,106,1.0)); // body middle 				// 1
+	pts.push(new V3D(233,86,1.0), new V3D(699,77,1.0)); // face middle 					// 2
+	pts.push(new V3D(88,208,1.0), new V3D(531,194,1.0)); // left classes dot 			// 3
+	pts.push(new V3D(113,216,1.0), new V3D(566,212,1.0)); // left glasses black 		// 4
+	pts.push(new V3D(24,167,1.0), new V3D(428,138,1.0)); // lighter red 				// 5
+	pts.push(new V3D(191,89,1.0), new V3D(617,120,1.0)); // grid dark blue 				// 6
+	pts.push(new V3D(161,76,1.0), new V3D(582,107,1.0)); // grid dark red 				// 7
+	pts.push(new V3D(260,170,1.0), new V3D(744,183,1.0)); // base right corner 			// 8
+	pts.push(new V3D(41,257,1.0), new V3D(453,266,1.0)); // 4 							// 9
+	pts.push(new V3D(238,256,1.0), new V3D(790.5,268,1.0)); //  						// 10
+	pts.push(new V3D(205,76,1.0), new V3D(634,104,1.0)); //  							// 11
+	pts.push(new V3D(203,116,1.0), new V3D(631,153,1.0)); //  							// 12
+	pts.push(new V3D(176,128,1.0), new V3D(603,161,1.0)); //  							// 13
+	pts.push(new V3D(171,69,1.0), new V3D(593,101,1.0)); //  							// 14
+	pts.push(new V3D(173,108,1.0), new V3D(591,146,1.0)); // 							// 15
+	pts.push(new V3D(172,90,1.0), new V3D(593,125,1.0)); // 							// 16
+	pts.push(new V3D(189,105,1.0), new V3D(611,139,1.0)); // 							// 17 -- double check
+	pts.push(new V3D(186,72,1.0), new V3D(613,102,1.0)); // 							// 18
+	// line connections 
+	pairs = [];
+	//pairs.push([0,1]);
+	//pairs.push([15,16]);
+	//pairs.push([16,17]);
+	pairs.push([11,12]); // right square
+	pairs.push([14,15]); // left square
+	pairs.push([11,14]); // top square
+	pairs.push([12,15]); // bot square
 	// pts.push(new V3D(,,1.0), new V3D(,,1.0));
-	var i, len = pts.length;
+	var i, len, u, v, pair;
+	// points
+	len = pts.length;
 	var str = "";
 	for(i=0;i<len;i+=2){
-		var v, d;
 		v = pts[i+0];
 		d = R3D.drawPointAt(v.x,v.y, 0x00,0x00,0xFF);
 		this._root.addChild(d);
@@ -96,6 +108,39 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 		pts[i+1].x = (pts[i+1].x-400.0)/400.0;
 		pts[i+1].y = (pts[i+1].y-0.0)/300.0;
 	}
+	// lines
+	len = pairs.length;
+	d = new DO();
+	this._root.addChild(d);
+	for(i=0;i<len;++i){
+		pair = pairs[i];
+		// left
+		u = pts[ pair[0]*2+0 ];
+		v = pts[ pair[1]*2+0 ];
+		u = new V2D(u.x*400,u.y*300);
+		v = new V2D(v.x*400,v.y*300);
+		d.graphics().setLine(1.0,0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().moveTo(u.x,u.y);
+		d.graphics().lineTo(v.x,v.y);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+
+		// right
+		u = pts[ pair[0]*2+1 ];
+		v = pts[ pair[1]*2+1 ];
+		u = new V2D(u.x*400 + 400,u.y*300);
+		v = new V2D(v.x*400 + 400,v.y*300);
+		d.graphics().setLine(1.0,0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().moveTo(u.x,u.y);
+		d.graphics().lineTo(v.x,v.y);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+	}
+	// registering points
+	len = pts.length;
+	// ...
 	str = "\n";
 	var ptsA = [];
 	var ptsB = [];
@@ -114,9 +159,10 @@ FeatureTest.prototype.imagesLoadComplete = function(o){
 	}
 	str += "";
 //	console.log(str);
-this.ransacMatches(ptsA,ptsB);
+linePairsTrash = pairs;
+this.ransacMatches(ptsA,ptsB, linePairsTrash);
 }
-FeatureTest.prototype.ransacMatches = function(pointsA,pointsB){
+FeatureTest.prototype.ransacMatches = function(pointsA,pointsB, linePairsTrash){
 	var imageWidth=400;
 	var imageHeight=300;
 /*
@@ -215,10 +261,18 @@ for(var k=0;k<pointsA.length;++k){
 	for(i=0;i<points3D.length;++i){
 		var pt = points3D[i];
 // pt.homo(); // doesn't make sense
-		str += "pts.push(new V3D("+pt.x+","+pt.y+","+pt.z+"));\n";
+		str += "pts.push(new V3D("+pt.x+","+pt.y+","+pt.z+"));"+ "" +"\n";
 	}
 	str += "\n";
+	//console.log(str);
+
+	str += "var prs = [];\n";
+	len = linePairsTrash.length;
+	for(i=0;i<len;++i){
+		str += "prs.push( [" + linePairsTrash[i][0] + ", " + linePairsTrash[i][1] + "] ); \n";
+	}
 	console.log(str);
+	
 }
 FeatureTest.prototype.denseFeatureMatching = function(){
 	//

@@ -55,22 +55,22 @@ DILogo.prototype.icosahedron = function(){ // 20-sided, centered at 0,0,0, radiu
 	// triangles:
 	// top
 	for(i=0;i<5;++i){
-		tri = new Tri(points[0][0], points[1][i], points[1][(i+1)%5]);
+		tri = new Tri3D(points[0][0], points[1][i], points[1][(i+1)%5]);
 		list.push(tri);
 	}
 	// mid-top
 	for(i=0;i<5;++i){
-		tri = new Tri(points[1][i], points[2][i], points[1][(i+1)%5]);
+		tri = new Tri3D(points[1][i], points[2][i], points[1][(i+1)%5]);
 		list.push(tri);
 	}
 	// mid-bot
 	for(i=0;i<5;++i){
-		tri = new Tri(points[2][i], points[2][(i+1)%5], points[1][(i+1)%5]);
+		tri = new Tri3D(points[2][i], points[2][(i+1)%5], points[1][(i+1)%5]);
 		list.push(tri);
 	}
 	// bot
 	for(i=0;i<5;++i){
-		tri = new Tri(points[3][0], points[2][(i+1)%5], points[2][i]);
+		tri = new Tri3D(points[3][0], points[2][(i+1)%5], points[2][i]);
 		list.push(tri);
 	}
 	return list;
@@ -110,22 +110,22 @@ DILogo.prototype.icosidodecahedron = function(){ // 32-sided, centered at 0,0,0,
 	// triangles:
 	// top
 	for(i=0;i<4;++i){
-		tri = new Tri(points[0][0],points[1][i],points[1][(i+1)%4]);
+		tri = new Tri3D(points[0][0],points[1][i],points[1][(i+1)%4]);
 		list.push(tri);
 	}
 	// mid
 	for(i=0;i<4;++i){ // each 'side'
 		j = i*2;
-		list.push( new Tri(points[1][i],points[2][j],points[1][(i+1)%4]) ); // top
-		list.push( new Tri(points[1][i],points[2][(j+8-1)%8],points[2][j]) ); // t-l
-		list.push( new Tri(points[1][(i+1)%4],points[2][j],points[2][(j+1)%8]) ); // t-r
-		list.push( new Tri(points[3][i],points[3][(i+1)%4],points[2][j]) ); // bot
-		list.push( new Tri(points[3][i],points[2][j],points[2][(j+8-1)%8]) ); // b-l
-		list.push( new Tri(points[2][j],points[3][(i+1)%4],points[2][(j+1)%8]) ); // b-r
+		list.push( new Tri3D(points[1][i],points[2][j],points[1][(i+1)%4]) ); // top
+		list.push( new Tri3D(points[1][i],points[2][(j+8-1)%8],points[2][j]) ); // t-l
+		list.push( new Tri3D(points[1][(i+1)%4],points[2][j],points[2][(j+1)%8]) ); // t-r
+		list.push( new Tri3D(points[3][i],points[3][(i+1)%4],points[2][j]) ); // bot
+		list.push( new Tri3D(points[3][i],points[2][j],points[2][(j+8-1)%8]) ); // b-l
+		list.push( new Tri3D(points[2][j],points[3][(i+1)%4],points[2][(j+1)%8]) ); // b-r
 	}
 	// bot
 	for(i=0;i<4;++i){
-		tri = new Tri(points[4][0],points[3][(i+1)%4],points[3][i]);
+		tri = new Tri3D(points[4][0],points[3][(i+1)%4],points[3][i]);
 		list.push(tri);
 	}
 	return list;
