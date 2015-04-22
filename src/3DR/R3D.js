@@ -1213,8 +1213,16 @@ minIndex = 0.0;
 // texture / triangulating / blending
 
 
-R3D.triangulateTexture = function(inputImages, inputTriangles, outputImage, outputTriangle, paddingOut){ // single channel combining of colors in [0,1]
-	//
+R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, outputImage, outputTriangle, paddingOut){ // single channel combining of colors in [0,1]
+	// inputImages: array of 0-1 floats, width, height
+	// inputTriangles: coordinates of 2D triangle vertices, 
+	// inputWeights: 0-1 weights to use for applying color - if null, it will do averaging with 2 images, and median with 3+ images
+	// 
+	// output image: array to output 0-1, width, height
+	// outputTriangle: coordinates of 2D triangle vertices
+	// paddingOut: overhanging distance to account for edges (in pixels), defaults to 1
+
+	var inside = Code.insideTrianglePadded3D();
 }
 
 

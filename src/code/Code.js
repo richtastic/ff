@@ -3427,6 +3427,13 @@ Code.spherePointFrom2DRect = function(originx,originy,width,height, px,py){
 
 
 
+Code.insideTrianglePadded3D = function(a,b,c,pad){
+	// check inside inside triangle
+	// check inside outer triangle
+	// check inside any of circles radius pad
+	// check sub-rectangles
+	return false;
+}
 
 
 
