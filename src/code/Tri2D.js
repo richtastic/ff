@@ -61,7 +61,7 @@ Tri2D.prototype.toString = function(){
 	str += this._b?(this._b.toString()):("[null]");
 	str += ", ";
 	str += this._c?(this._c.toString()):("[null]");
-	str += " ]";
+	str += "]";
 	return str;
 }
 Tri2D.prototype.kill = function(){ // doesn't own points

@@ -18,7 +18,11 @@ Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arg
 	if(this.list[str] == undefined){ return; }
 	for(var i=0;i<this.list[str].length;++i){
 		if( this.list[str][i] instanceof Array){
-			this.list[str][i][0].call(this.list[str][i][1],a,b,c,d,e,f,g,h,i,j);
+			try{
+				this.list[str][i][0].call(this.list[str][i][1],a,b,c,d,e,f,g,h,i,j);
+			}catch(e){
+				console.log("CAUGHT ERROR FOR EVENT: ",str);
+			}
 		}else{
 			this.list[str][i](a,b,c,d,e,f,g,h,i,j);
 		}

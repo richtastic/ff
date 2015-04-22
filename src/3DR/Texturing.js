@@ -39,6 +39,60 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
+Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
+	var pointsA = [];
+	var pointsB = [];
+	var points = [pointsA,pointsB];
+	var tri;
+	// A
+	tri = new Tri2D( new V2D(0,0), new V2D(100,0), new V2D(0,100) );
+	console.log(tri.toString())
+	pointsA.push(tri.A());
+	pointsA.push(tri.B());
+	pointsA.push(tri.C());
+	// B
+	pointsB.push(new V2D(0,0));
+	pointsB.push(new V2D(100,0));
+	pointsB.push(new V2D(0,100));
+
+	var imageList = imageInfo.images;
+	var i, j, list = [], d, img, x=0, y=0;
+	for(i=0;i<imageList.length;++i){
+		img = imageList[i];
+		//console.log(img)
+		// list[i] = img;
+		d = new DOImage(img);
+		d.enableDragging();
+		this._root.addChild(d);
+		d.matrix().identity();
+		d.matrix().translate(x,y);
+		//
+		d.graphics().setLine(1.0,0xFFFF0000);
+		d.graphics().beginPath();
+		for(j=0;j<=points[i].length;++j){
+			v = points[i][j % points[i].length];
+			if(j==0){
+				d.graphics().moveTo(v.x,v.y);
+			}else{
+				d.graphics().lineTo(v.x,v.y);
+			}
+		}
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		
+		//
+		x += img.width;
+		y += 0;
+	}
+	/*
+this._resource.testImage0 = list[0];
+this._resource.testImage1 = list[1];
+	this._imageSources = list;
+this.calibrateCameraMatrix();
+	this.handleLoaded();
+	this._stage3D.start();
+	*/
+}
 Texturing.prototype.combineTriangles = function(){
 /*
 STEPS:
@@ -90,7 +144,9 @@ Texturing.prototype.textureBase2FromImage = function(texture){
 Texturing.prototype.handleEnterFrame = function(e){ // 2D canvas
 	//console.log(e);
 }
-
+Texturing.prototype.handleMouseClickFxn = function(e){
+	console.log(e.x%400,e.y)
+}
 
 
 
