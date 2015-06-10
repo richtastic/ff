@@ -1108,6 +1108,19 @@ Code.newListItem = function(a){
 	return li;
 };
 
+
+Code.addHeader = function(t){
+	return t.createTHead();
+}
+Code.addFooter = function(t){
+	return t.createTFoot();
+}
+Code.addBody = function(t){
+	var b = Code.newElement("tbody");
+	Code.addChild(t,b);
+	return b;
+}
+
  // IE error - need to use insertRow with tables
 Code.addRow = function(a,i){
 	if(i===undefined){ i=-1; }

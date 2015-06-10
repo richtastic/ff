@@ -43,24 +43,27 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 	var pointsA = [];
 	var pointsB = [];
 	var points = [pointsA,pointsB];
+	var tris = [];
 	var tri;
 	// A
-	tri = new Tri2D( new V2D(0,0), new V2D(100,0), new V2D(0,100) );
-	console.log(tri.toString())
+	tri = new Tri2D( new V2D(172,69), new V2D(173,108), new V2D(204,118) );
+	tris.push([tri]);
 	pointsA.push(tri.A());
 	pointsA.push(tri.B());
 	pointsA.push(tri.C());
 	// B
-	pointsB.push(new V2D(0,0));
-	pointsB.push(new V2D(100,0));
-	pointsB.push(new V2D(0,100));
-
+	tri = new Tri2D( new V2D(193,100), new V2D(192,147), new V2D(232,153) );
+	tris.push([tri]);
+	pointsB.push(tri.A());
+	pointsB.push(tri.B());
+	pointsB.push(tri.C());
+	// 
 	var imageList = imageInfo.images;
 	var i, j, list = [], d, img, x=0, y=0;
 	for(i=0;i<imageList.length;++i){
 		img = imageList[i];
 		//console.log(img)
-		// list[i] = img;
+		list[i] = img;
 		d = new DOImage(img);
 		d.enableDragging();
 		this._root.addChild(d);
@@ -92,8 +95,15 @@ this.calibrateCameraMatrix();
 	this.handleLoaded();
 	this._stage3D.start();
 	*/
+	this._tris = tris;
+	this._imgs = list;
+	this.combineTriangles();
 }
 Texturing.prototype.combineTriangles = function(){
+	var triList = this._tris;
+	var imgList = this._imgs;
+	console.log(triList);
+	console.log(imgList);
 /*
 STEPS:
 	MAPPING:
@@ -115,7 +125,7 @@ STEPS:
 	var inTriA = new Tri();
 	inputImages = []; // 
 	*/
-	R3D.triangulateTexture(inputImages, inputTriangles, outputImage, outputTriangle);
+//	R3D.triangulateTexture(inputImages, inputTriangles, outputImage, outputTriangle);
 }
 Texturing.prototype.cameraResultsFromSet = function(fr,to, wid,hei,sca, params){
 	// 
