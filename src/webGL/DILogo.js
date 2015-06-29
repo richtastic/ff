@@ -5,6 +5,7 @@ function DILogo(){
 	var frameRate = 1000/50;
   	this._canvas = new Canvas(null,40,40,Canvas.STAGE_FIT_FILL,false,true);
   	//this._canvas = new Canvas(null,600,500,Canvas.STAGE_FIT_FIXED,false,true);
+  	console.log(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
     this._stage = new StageGL(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
     this._canvas.addListeners();
   	this._stage.setBackgroundColor(1.0,1.0,1.0,1.0);

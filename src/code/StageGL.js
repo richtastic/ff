@@ -11,7 +11,6 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
 	this._time = 0;
 	this._countTime = 0;
 	this._programs = [];
-	// 
 	this.canvas(can);
 	for(var i=0; i<vertexShaders.length;++i){
 		this.appendProgram( vertexShaders[i], fragmentShaders[i]);

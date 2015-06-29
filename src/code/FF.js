@@ -52,7 +52,5 @@ FF.prototype.kill = function(){
 	this._homeDir = null;
 	this._progFxn = null;
 	this._compFxn = null;
-	this._compFxn = null;
-	
 }
 
