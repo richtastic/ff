@@ -106,12 +106,19 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 	if(is3D){
 		try{
 			this._program = null;
-			this._context = this._canvas.getContext("experimental-webgl", {preserveDrawingBuffer: true});
+			var options = {preserveDrawingBuffer: true};
+			this._context = this._canvas.getContext("webgl");
+			if(!this._context){
+				this._context = this._canvas.getContext("experimental-webgl", options);
+			}
 		}catch(e){
 			console.log("could not initialize webGL");
 		}
 	}else{
 		this._context = this._canvas.getContext("2d");
+	}
+	if(!this._context){
+		console.log("unable to get any context");
 	}
 	this.setCursorStyle(Canvas.CURSOR_STYLE_DEFAULT);
 	this.id(Canvas._ID++);

@@ -1599,7 +1599,6 @@ this._textures[0] = this._canvas3D.bindTextureImageRGBA(texture);
 		// vertexPoints.push(0,-1,0, 3,-1,0, 0,1,0,  3,-1,0, 3,1,0, 0,1,0);
 
 
-
 // POINTS
 	this._stage3D.selectProgram(3);
 	//
