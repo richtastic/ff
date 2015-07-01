@@ -4066,6 +4066,62 @@ do for all 3 triangle edges => either none or two must intersect
 <br/>
 
 
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+
+# Debugging ... 
+<br/>
+x = x&prime;/z&prime;
+<br/>
+y = y&prime;/z&prime;
+<br/>
+<br/>
+x&prime; = a&middot;X + b&middot;Y + c&middot;Z + d
+<br/>
+y&prime; = e&middot;X + f&middot;Y + g&middot;Z + h
+<br/>
+z&prime; = i&middot;X + j&middot;Y + k&middot;Z + l
+<br/>
+<br/>
+a = r<sub>1,1</sub>&middot;f<sub>x</sub> + r<sub>2,1</sub>&middot;s + r<sub>3,1</sub>&middot;c<sub>x</sub>
+<br/>
+b = r<sub>1,2</sub>&middot;f<sub>x</sub> + r<sub>2,2</sub>&middot;s + r<sub>3,2</sub>&middot;c<sub>x</sub>
+<br/>
+c = r<sub>1,3</sub>&middot;f<sub>x</sub> + r<sub>2,3</sub>&middot;s + r<sub>3,3</sub>&middot;c<sub>x</sub>
+<br/>
+d = t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s + t<sub>z</sub>&middot;c<sub>x</sub>
+<br/>
+<br/>
+e = r<sub>2,1</sub>&middot;f<sub>y</sub> + r<sub>3,1</sub>&middot;c<sub>y</sub>
+<br/>
+f = r<sub>2,2</sub>&middot;f<sub>y</sub> + r<sub>3,2</sub>&middot;c<sub>y</sub>
+<br/>
+g = r<sub>2,3</sub>&middot;f<sub>y</sub> + r<sub>3,3</sub>&middot;c<sub>y</sub>
+<br/>
+h = t<sub>y</sub>&middot;f<sub>y</sub> + t<sub>z</sub>&middot;c<sub>y</sub>
+<br/>
+<br/>
+i = r<sub>3,1</sub>
+<br/>
+j = r<sub>3,2</sub>
+<br/>
+k = r<sub>3,3</sub>
+<br/>
+l = t<sub>z</sub>
+<br/>
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+<br/>
+
 
 
 
