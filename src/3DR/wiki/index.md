@@ -12,12 +12,6 @@
 10. [References](#REFERENCE)
 
 
-# added line
-
-# added another (2) lines
-
-# I wamt to keep this line, but drop the others
-
 TODO:
 - simple y = mx +b RANSAC
 - screw/axisAngle<->R+t (trans)
@@ -926,7 +920,7 @@ The transform that transforms Camera1 to Camera2 = H<sub>1</sub><sup>-1</sup> &m
 
 F<sub>rank2</sub><sup>hat</sup> = H'<sup>-T</sup> F H'<sup>-1</sup>
 
-**Essential Matrix, E**: E = K'<sup>T</sup> &middot; F &middot; K
+**Essential Matrix, E**: E = K'<sup>T</sup> &middot; F &middot; K     (points are normalized image corrdinates)
 <br/>
 P = camera matrix = K &middot; [R | t]
 <br/>
@@ -4111,13 +4105,31 @@ do for all 3 triangle edges => either none or two must intersect
 **Essential Matrix**:
 E = K<sup>T</sup>&middot;F&middot;K
 <br/>
-E = R&middot;[t]<sub>&mult;</sub>
+E = R&middot;[t]<sub>&times;</sub> =?= [t]<sub>&times;</sub>&middot;R ?
 <br/>
 E = U&middot;&Sigma;&middot;V<sup>T</sup>
 <br/>
-...
-https://en.wikipedia.org/wiki/Essential_matrix
-
+<br/>
+E = U &middot; [1,0,0; 0,1,0; 0,0,0] &middot; V<sup>T</sup>
+<br/>
+E = S&middot;R
+<br/>
+E = U&middot;(ZX)&middot;V<sup>T</sup>  |  X=W || X=W<sup>T</sup>
+<br/>
+P = [I|0]
+<br/>
+P'<sub>1</sub> = [UWV<sup>T</sup>,+u]
+<br/>
+P'<sub>1</sub> = [UWV<sup>T</sup>,-u]
+<br/>
+P'<sub>1</sub> = [UW<sup>T</sup>V<sup>T</sup>,+u]
+<br/>
+P'<sub>1</sub> = [UW<sup>T</sup>V<sup>T</sup>,-u]
+<br/>
+<br/>
+t = U&middot;[0;0;1] = last column of U
+<br/>
+<br/>
 
 
 **Orthonormal Rotational Matrix Properties:**
