@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Synthetic</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Synthetic.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var s = new Synthetic();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

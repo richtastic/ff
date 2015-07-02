@@ -4074,6 +4074,75 @@ do for all 3 triangle edges => either none or two must intersect
 
 
 # Debugging ... 
+
+<br/>
+
+
+<br/>
+
+**Camera Matrix P**: P = M&middot;K
+
+| P |   |   |   |
+|---|---|---|---|
+| a | b | c | d |
+| e | f | g | h |
+| i | j | k | l |
+
+<br/>
+**Extrinsic Camera Matrix M**: 
+| M |   |   |   |
+|---|---|---|---|
+| r<sub>1,1</sub> | r<sub>1,2</sub> | r<sub>1,3</sub> | t<sub>x</sub> |
+| r<sub>2,1</sub> | r<sub>2,2</sub> | r<sub>2,3</sub> | t<sub>y</sub> |
+| r<sub>3,1</sub> | r<sub>3,2</sub> | r<sub>3,3</sub> | t<sub>z</sub> |
+
+<br/>
+**Intrinsic Camera Matrix K**: 
+| K |   |   |
+|---|---|---|
+| f<sub>x</sub> | s | c<sub>x</sub> |
+|0 | f<sub>y</sub> | c<sub>x</sub> |
+|0 | 0 | 1 |
+
+<br/>
+
+
+<br/>
+**Essential Matrix**:
+E = K<sup>T</sup>&middot;F&middot;K
+<br/>
+E = R&middot;[t]<sub>&mult;</sub>
+<br/>
+E = U&middot;&Sigma;&middot;V<sup>T</sup>
+<br/>
+...
+https://en.wikipedia.org/wiki/Essential_matrix
+
+
+
+**Orthonormal Rotational Matrix Properties:**
+<br/>
+&lt; r<sub>1,1</sub>, r<sub>1,2</sub>, r<sub>1,3</sub> &gt; &middot; &lt; r<sub>2,1</sub>, r<sub>2,2</sub>, r<sub>2,3</sub> &gt; = 0
+<br/>
+&lt; r<sub>1,1</sub>, r<sub>1,2</sub>, r<sub>1,3</sub> &gt; &middot; &lt; r<sub>3,1</sub>, r<sub>3,2</sub>, r<sub>3,3</sub> &gt; = 0
+<br/>
+&lt; r<sub>2,1</sub>, r<sub>2,2</sub>, r<sub>2,3</sub> &gt; &middot; &lt; r<sub>3,1</sub>, r<sub>3,2</sub>, r<sub>3,3</sub> &gt; = 0
+<br/>
+<br/>
+&lt; r<sub>1,1</sub>, r<sub>1,2</sub>, r<sub>1,3</sub> &gt; &middot; &lt; r<sub>1,1</sub>, r<sub>1,2</sub>, r<sub>1,3</sub> &gt; = 1
+<br/>
+&lt; r<sub>2,1</sub>, r<sub>2,2</sub>, r<sub>2,3</sub> &gt; &middot; &lt; r<sub>2,1</sub>, r<sub>2,2</sub>, r<sub>2,3</sub> &gt; = 1
+<br/>
+&lt; r<sub>3,1</sub>, r<sub>3,2</sub>, r<sub>3,3</sub> &gt; &middot; &lt; r<sub>3,1</sub>, r<sub>3,2</sub>, r<sub>3,3</sub> &gt; = 1
+<br/>
+<br/>
+
+&lt; x&prime;, y&prime;, z&prime; &gt; = P &middot; &lt; X, Y, Z &gt;
+<br/>
+
+<br/>
+<br/>
+
 <br/>
 x = x&prime;/z&prime;
 <br/>
@@ -4114,13 +4183,49 @@ k = r<sub>3,3</sub>
 l = t<sub>z</sub>
 <br/>
 <br/>
+KNOWN:
+<br/>
+K: f<sub>x</sub>, f<sub>y</sub>, s, c<sub>x</sub>, c<sub>y</sub> 
+<br/>
+X<sub>i</sub>, Y<sub>i</sub>, Z<sub>i</sub> &lrarr; x<sub>i</sub>, y<sub>i</sub>
 <br/>
 <br/>
+UNKNOWN:
+<br/>
+P: a, b, c, d, e, f, g, h, i, k, l
+<br/>
+M: r<sub>1,1</sub>, r<sub>1,2</sub>, r<sub>1,3</sub>, r<sub>2,1</sub>, r<sub>2,2</sub>, r<sub>2,3</sub>, r<sub>3,1</sub>, r<sub>3,1</sub>, r<sub>3,2</sub>, r<sub>3,3</sub>, t<sub>x</sub>, t<sub>y</sub>, t<sub>z</sub>
+<br/>
+
+
+
+<br/>
+P = M&middot;K
+<br/>
+P&middot;K<sup>-1</sup> = M&middot;K&middot;K<sup>-1</sup>
+<br/>
+P&middot;K<sup>-1</sup> = M
+<br/>
+
+<br/>
+
 
 <br/>
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
+
+
+
+
+
+
+
+
+
+
 
 
 
