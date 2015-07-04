@@ -15,6 +15,10 @@ function V4D(xP,yP,zP,tP){
 }
 Code.inheritClass(V4D, V3D);
 // --------------------------------------------------------------------------------------------------------------------- quaternion
+V4D.copy = function(a){
+	return (new V4D()).copy(a);
+}
+// --------------------------------------------------------------------------------------------------------------------- quaternion
 V4D.qTemp = new V4D();
 V4D.qDiv = function(c, a,b){ // c = a/b // non-unit
 	if(b===undefined){ b = a; a = c; c = new V4D(); }
@@ -82,9 +86,15 @@ V4D.prototype.qLength = function(){
 V4D.prototype.qScale = function(s){
 	this.x *= s; this.y *= s; this.z *= s; this.t *= s;
 }
+V4D.prototype.qInverse = function(){ // flip rotation angle, keep direction
+	this.x = -this.x; this.y = -this.y; this.z = -this.z;
+	return this;
+}
 // ---------------------------------------------------------------------------------------------------------------------
 V4D.prototype.copy = function(a){
+	if(!a){ return new V4D(this.x, this.y, this.z, this.t); };
 	this.x = a.x; this.y = a.y; this.z = a.z; this.t = a.t;
+	return this;
 }
 V4D.prototype.set = function(xV,yV,zV,tV){
 	this.x = xV;

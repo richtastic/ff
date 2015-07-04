@@ -35,19 +35,25 @@ Matrix.prototype.saveToYAML = function(yaml){
 	yaml.writeArrayEnd();
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
-Matrix.prototype.setFromArray = function(list, newRow,newCol){
+Matrix.prototype.fromArray = function(list, newRow,newCol){
 	if(newRow!==undefined){
 		this.setSize(newRow,newCol);
 	}
 	Code.setArray2DFromArray(this._rows,this._rowCount,this._colCount, list);
 	return this;
 }
-Matrix.prototype.setFromArrayMatrix = function(list, newRow,newCol){
+Matrix.prototype.setFromArray = function(list, newRow,newCol){
+	return this.fromArray(list, newRow,newCol);
+}
+Matrix.prototype.fromArrayMatrix = function(list, newRow,newCol){
 	if(newRow!==undefined){
 		this.setSize(newRow,newCol);
 	}
 	Code.copyArray2DFromArray2D(this._rows,this._rowCount,this._colCount, list);
 	return this;
+}
+Matrix.prototype.setFromArrayMatrix = function(list, newRow,newCol){
+	return this.fromArrayMatrix(list, newRow,newCol);
 }
 Matrix.prototype.setDiagonalsFromArray = function(list){
 	var i, len = Math.min(this.rows(), this.cols(), list.length);
@@ -382,50 +388,42 @@ Matrix.prototype.toString = function(exp){
 Matrix._transformTemp2D = new Matrix(3,3);
 Matrix.transform2DTranslate = function(a,tX,tY){
 	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DScale = function(a,sX,sY){
 	sY = sY!==undefined?sY:sX;
 	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DRotate = function(a,ang){
 	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 //
 Matrix._transformTemp3D = new Matrix(4,4);
 Matrix.transform3DTranslate = function(a,tX,tY,tZ){
 	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,tX, 0.0,1.0,0.0,tY, 0.0,0.0,1.0,tZ, 0.0,0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DScale = function(a,sX,sY,sZ){
 	sY = sY!==undefined?sY:sX;
 	sZ = sZ!==undefined?sZ:sY;
 	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateX = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
 	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,0.0, 0.0,c,-s,0.0, 0.0,s,c,0.0, 0.0,0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateY = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
 	var b = Matrix._transformTemp3D.setFromArray([c,0.0,s,0.0, 0.0,1.0,0.0,0.0, -s,0.0,c,0.0, 0.0,0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateZ = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
 	var b = Matrix._transformTemp3D.setFromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
-	//return Matrix.mult(a,b);
 	return Matrix.mult(b,a);
 }
 

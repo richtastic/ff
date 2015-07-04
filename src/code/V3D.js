@@ -120,11 +120,9 @@ function V3D(xP,yP,zP){
 }
 Code.inheritClass(V3D, V2D);
 V3D.prototype.copy = function(a){
-	if(a){
-		this.x = a.x; this.y = a.y; this.z = a.z;
-		return this;
-	}
-	return new V3D(this.x,this.y,this.z);
+	if(!a){  return new V3D(this.x,this.y,this.z); }
+	this.x = a.x; this.y = a.y; this.z = a.z;
+	return this;
 }
 V3D.prototype.set = function(xV,yV,zV){
 	this.x = xV; this.y = yV; this.z = zV;

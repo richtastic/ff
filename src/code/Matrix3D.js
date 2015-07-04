@@ -16,6 +16,48 @@ Matrix3D.YAML = {
 function Matrix3D(){
 	this.a=1; this.b=0; this.c=0; this.d=0; this.e=0; this.f=1; this.g=0; this.h=0; this.i=0; this.j=0; this.k=1; this.l=0;
 }
+Matrix3D.prototype.fromArray = function(a){
+	if(!a){ return; }
+	var i, len=a.length;
+	if(len>0){ this.a = a[0]; }
+	if(len>1){ this.b = a[1]; }
+	if(len>2){ this.c = a[2]; }
+	if(len>3){ this.d = a[3]; }
+	if(len>4){ this.e = a[4]; }
+	if(len>5){ this.f = a[5]; }
+	if(len>6){ this.g = a[6]; }
+	if(len>7){ this.h = a[7]; }
+	if(len>8){ this.i = a[8]; }
+	if(len>9){ this.j = a[9]; }
+	if(len>10){ this.k = a[10]; }
+	if(len>11){ this.l = a[11]; }
+	return this;
+}
+Matrix3D.prototype.fromArrayRotation = function(a){ // 3x3 rotation values
+	if(!a){ return; }
+	var i, len=a.length;
+	if(len>0){ this.a = a[0]; }
+	if(len>1){ this.b = a[1]; }
+	if(len>2){ this.c = a[2]; }
+	if(len>3){ this.e = a[3]; }
+	if(len>4){ this.f = a[4]; }
+	if(len>5){ this.g = a[5]; }
+	if(len>6){ this.i = a[6]; }
+	if(len>7){ this.j = a[7]; }
+	if(len>8){ this.k = a[8]; }
+	return this;
+}
+Matrix3D.prototype.fromArrayTranslation = function(a){
+	if(!a){ return; }
+	var i, len=a.length;
+	if(len>0){ this.d = a[0]; }
+	if(len>1){ this.h = a[1]; }
+	if(len>2){ this.l = a[2]; }
+	return this;
+}
+Matrix3D.prototype.toMatrix = function(){
+	return Matrix3D.matrixFromMatrix3D(this);
+}
 //if(mat4){
 mat4.preMultM3D = function(a,b,m){
 	if(!m){
@@ -64,13 +106,104 @@ Matrix3D.prototype.translate = function(tx,ty,tz){
 	this.mult(mat,this);
 	return this;
 }
+
 // skewing by x, y, z
+
+Matrix3D.prototype.toTranslation = function(v){
+	if(!v){ v = new V3D(); }
+	v.set(this.d,this.h,this.l);
+	return v;
+}
+
+Matrix3D.prototype.toQuaternion = function(){
+	var a00 = this.a, a01 = this.b, a02 = this.c;
+	var a10 = this.e, a11 = this.f, a12 = this.g;
+	var a20 = this.i, a21 = this.j, a22 = this.k;
+	var trace = a00 + a11 + a22;
+	var w, x, y, z, s;
+	if(trace>0) {
+		s = 0.5 / Math.sqrt(trace + 1.0);
+		w = 0.25 / s;
+		x = (a21-a12) * s;
+		y = (a02-a20) * s;
+		z = (a10-a01) * s;
+	}else{
+		if(a00>a11 && a00>a22){
+			s = 2.0 * Math.sqrt(1.0+a00-a11-a22);
+			w = (a21-a12) / s;
+			x = 0.25 * s;
+			y = (a01+a10) / s;
+			z = (a02+a20) / s;
+		}else if(a11>a22){
+			s = 2.0 * Math.sqrt(1.0+a11-a00-a22);
+			w = (a02-a20) / s;
+			x = (a01+a10) / s;
+			y = 0.25 * s;
+			z = (a12+a21) / s;
+		}else{
+			s = 2.0 * Math.sqrt(1.0+a22-a00-a11);
+			w = (a10-a01) / s;
+			x = (a02+a20) / s;
+			y = (a12+a21) / s;
+			z = 0.25 * s;
+		}
+	}
+	return new V4D(x,y,z,w);
+	/*
+	// something wrong here:
+	var r11 = this.a, r12 = this.b, r13 = this.c;
+	var r21 = this.e, r22 = this.f, r23 = this.g;
+	var r31 = this.i, r32 = this.j, r33 = this.k;
+	var q0 = ( r11+r22+r33+1.0)*0.25;
+	var q1 = ( r11-r22-r33+1.0)*0.25;
+	var q2 = (-r11+r22-r33+1.0)*0.25;
+	var q3 = (-r11-r22+r33+1.0)*0.25;
+	q0 = Math.max(0.0,q0);
+	q1 = Math.max(0.0,q1);
+	q2 = Math.max(0.0,q2);
+	q3 = Math.max(0.0,q3);
+	q0 = Math.sqrt(q0);
+	q1 = Math.sqrt(q1);
+	q2 = Math.sqrt(q2);
+	q3 = Math.sqrt(q3);
+	if(q0>=q1 && q0>=q2 && q0>=q3){
+		q0 *= 1.0;
+		q1 *= Code.sign(r32-r23);
+		q2 *= Code.sign(r13-r31);
+		q3 *= Code.sign(r21-r12);
+	}else if(q1>=q0 && q1>=q2 && q1>=q3){
+		q0 *= Code.sign(r32-r23);
+		q1 *= 1.0;
+		q2 *= Code.sign(r21+r12);
+		q3 *= Code.sign(r13+r31);
+	}else if(q2>=q0 && q2>=q1 && q2>=q3){
+		q0 *= Code.sign(r13-r31);
+		q1 *= Code.sign(r21+r12);
+		q2 *= 1.0;
+		q3 *= Code.sign(r32+r23);
+	}else if(q3>=q0 && q3>=q1 && q3>=q2){
+		q0 *= Code.sign(r21-r12);
+		q1 *= Code.sign(r31+r13);
+		q2 *= Code.sign(r32+r23);
+		q3 *= 1.0;
+	}else{
+		console.log("quaternion magnitude error");
+	}
+	var r = Math.sqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
+	if(r==0){
+		return new V4D(0,0,0,1);
+	}
+	return new V4D(q0/r,q1/r,q2/r,q3/r);
+	//return new V4D(q3/r,q0/r,q1/r,q2/r);
+	*/
+}
 Matrix3D.prototype.fromQuaternion = function(v){
-	V4D.qToMatrix(this,v);
+	V4D.qMatrix(this,v);
 	return this;
 }
 Matrix3D.prototype.rotateQuaternion = function(v){
 	var mat = Matrix3D.temp.fromQuaternion(v);
+	this.postMult(mat); // pre?
 	return this;
 }
 Matrix3D.prototype.rotateVector = function(v,t){ // vector, theta
@@ -93,7 +226,7 @@ Matrix3D.prototype.translationToVector = function(v){
 	}
 	return new V3D(this.d,this.h,this.l);
 }
-Matrix3D.prototype.rotationToAxis = function(){
+Matrix3D.prototype.rotationToAxis = function(){ // direction + rotation required to ?
 	var angle = Math.acos( (this.a+this.f+this.k-1.0)*0.5 );
 console.log(angle)
 	var xNum = this.j - this.g;
@@ -198,7 +331,13 @@ Matrix3D.prototype.copy = function(m){
 	this.set(m.a,m.b,m.c,m.d,m.e,m.f,m.g,m.h,m.i,m.j,m.k,m.l);
 	return this;
 }
+Matrix3D.inverse = function(m){
+	var n = new Matrix3D();
+	n.inverse(m);
+	return n;
+}
 Matrix3D.prototype.inverse = function(m){ // http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
+	// http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche53.html ----- R|t specific
 	var det = 1/(m.a*m.f*m.k + m.b*m.g*m.i + m.c*m.e*m.j - m.a*m.g*m.j - m.b*m.e*m.k - m.c*m.f*m.i);
 	var a = (m.f*m.k - m.g*m.j)*det;
 	var b = (m.c*m.j - m.b*m.k)*det;
@@ -227,6 +366,12 @@ Matrix3D.prototype.toString = function(){
 Matrix3D.prototype.toArray = function(){
 	return [this.a,this.b,this.c,this.d, this.e,this.f,this.g,this.h, this.i,this.j,this.k,this.l, 0,0,0,1];
 }
+Matrix3D.prototype.toArrayRotation = function(){
+	return [this.a,this.b,this.c, this.e,this.f,this.g, this.i,this.j,this.k];
+}
+Matrix3D.prototype.toArrayTranslation = function(){
+	return [this.d,this.h,this.l];
+}
 Matrix3D.prototype.kill = function(){
 	this.a = undefined; this.b = undefined; this.c = undefined; this.d = undefined;
 	this.e = undefined; this.f = undefined; this.g = undefined; this.h = undefined;
@@ -244,6 +389,6 @@ Matrix3D.matrix3DFromMatrix = function(mat){
 	return m3D;
 }
 Matrix3D.matrixFromMatrix3D = function(mat){
-	return new Matrix(4,4).setFromArray([mat.a,mat.b,mat.c,mat.d, mat.e,mat.f,mat.g,mat.h, mat.i,mat.j,mat.k,mat.l, 0,0,0,1]);
+	return new Matrix(4,4).fromArray([mat.a,mat.b,mat.c,mat.d, mat.e,mat.f,mat.g,mat.h, mat.i,mat.j,mat.k,mat.l, 0,0,0,1]);
 }
 

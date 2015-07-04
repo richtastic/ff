@@ -805,7 +805,9 @@ Code.postpendFixed = function(start,pad,count){
 	}
 	return str;
 }
-
+Code.sign = function(num){
+	return num>=0.0 ? 1.0 : -1.0;
+}
 // -------------------------------------------------------- RNG
 Code._randGaussSin = null;
 Code.randGauss = function(){ // box muller - randn, normal, gaussian

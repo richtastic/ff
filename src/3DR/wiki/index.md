@@ -4232,8 +4232,62 @@ P&middot;K<sup>-1</sup> = M
 
 
 
+# Quaternions
+<br/>
+
+| R |   |   |
+|---|---|---|
+| r<sub>1,1</sub> | r<sub>1,2</sub> | r<sub>1,3</sub> |
+| r<sub>2,1</sub> | r<sub>2,2</sub> | r<sub>2,3</sub> |
+| r<sub>3,1</sub> | r<sub>3,2</sub> | r<sub>3,3</sub> |
 
 
+| Q |   |   |
+|---|---|---|
+| q<sub>0</sub><sup>2</sup> + q<sub>1</sub><sup>2</sup> - q<sub>2</sub><sup>2</sup> - q<sub>3</sub><sup>2</sup> | 2(q<sub>1</sub><sup>2</sup>&middot;q<sub>2</sub><sup>2</sup> - q<sub>0</sub><sup>2</sup>&middot;q<sub>3</sub><sup>2</sup>) | 2(q<sub>1</sub><sup>2</sup>&middot;q<sub>3</sub><sup>2</sup> + q<sub>0</sub><sup>2</sup>&middot;q<sub>2</sub><sup>2</sup>) |
+| 2(q<sub>1</sub><sup>2</sup>&middot;q<sub>2</sub><sup>2</sup> + q<sub>0</sub><sup>2</sup>&middot;q<sub>3</sub><sup>2</sup>) | q<sub>0</sub><sup>2</sup> - q<sub>1</sub><sup>2</sup> + q<sub>2</sub><sup>2</sup> - q<sub>3</sub><sup>2</sup> |  2(q<sub>2</sub><sup>3</sup>&middot;q<sub>3</sub><sup>2</sup> - q<sub>0</sub><sup>2</sup>&middot;q<sub>1</sub><sup>2</sup>) |
+| 2(q<sub>1</sub><sup>2</sup>&middot;q<sub>3</sub><sup>2</sup> - q<sub>0</sub><sup>2</sup>&middot;q<sub>2</sub><sup>2</sup>) | 2(q<sub>2</sub><sup>2</sup>&middot;q<sub>3</sub><sup>2</sup> + q<sub>0</sub><sup>2</sup>&middot;q<sub>1</sub><sup>2</sup>) | q<sub>0</sub><sup>2</sup> - q<sub>1</sub><sup>2</sup> - q<sub>2</sub><sup>2</sup> + q<sub>3</sub><sup>2</sup> |
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+not quite right: http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche52.html
+<br/>
+works: http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+<br/>
+<br/>
+<br/>
 
 
 
