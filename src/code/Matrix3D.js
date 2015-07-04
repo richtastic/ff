@@ -149,53 +149,6 @@ Matrix3D.prototype.toQuaternion = function(){
 		}
 	}
 	return new V4D(x,y,z,w);
-	/*
-	// something wrong here:
-	var r11 = this.a, r12 = this.b, r13 = this.c;
-	var r21 = this.e, r22 = this.f, r23 = this.g;
-	var r31 = this.i, r32 = this.j, r33 = this.k;
-	var q0 = ( r11+r22+r33+1.0)*0.25;
-	var q1 = ( r11-r22-r33+1.0)*0.25;
-	var q2 = (-r11+r22-r33+1.0)*0.25;
-	var q3 = (-r11-r22+r33+1.0)*0.25;
-	q0 = Math.max(0.0,q0);
-	q1 = Math.max(0.0,q1);
-	q2 = Math.max(0.0,q2);
-	q3 = Math.max(0.0,q3);
-	q0 = Math.sqrt(q0);
-	q1 = Math.sqrt(q1);
-	q2 = Math.sqrt(q2);
-	q3 = Math.sqrt(q3);
-	if(q0>=q1 && q0>=q2 && q0>=q3){
-		q0 *= 1.0;
-		q1 *= Code.sign(r32-r23);
-		q2 *= Code.sign(r13-r31);
-		q3 *= Code.sign(r21-r12);
-	}else if(q1>=q0 && q1>=q2 && q1>=q3){
-		q0 *= Code.sign(r32-r23);
-		q1 *= 1.0;
-		q2 *= Code.sign(r21+r12);
-		q3 *= Code.sign(r13+r31);
-	}else if(q2>=q0 && q2>=q1 && q2>=q3){
-		q0 *= Code.sign(r13-r31);
-		q1 *= Code.sign(r21+r12);
-		q2 *= 1.0;
-		q3 *= Code.sign(r32+r23);
-	}else if(q3>=q0 && q3>=q1 && q3>=q2){
-		q0 *= Code.sign(r21-r12);
-		q1 *= Code.sign(r31+r13);
-		q2 *= Code.sign(r32+r23);
-		q3 *= 1.0;
-	}else{
-		console.log("quaternion magnitude error");
-	}
-	var r = Math.sqrt(q0*q0 + q1*q1 + q2*q2 + q3*q3);
-	if(r==0){
-		return new V4D(0,0,0,1);
-	}
-	return new V4D(q0/r,q1/r,q2/r,q3/r);
-	//return new V4D(q3/r,q0/r,q1/r,q2/r);
-	*/
 }
 Matrix3D.prototype.fromQuaternion = function(v){
 	V4D.qMatrix(this,v);

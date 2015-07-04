@@ -213,6 +213,16 @@ Matrix.prototype.getSubMatrix = function(offRow,offCol, rows,cols){
 	}
 	return m;
 }
+Matrix.prototype.setSubMatrix = function(submatrix, subOffRow,subOffCol,subRows,subCols, matOffRow,matOffCol,matRows,matCols){
+	
+	// var i,j, m = new Matrix(rows,cols);
+	// for(j=0;j<rows;++j){
+	// 	for(i=0;i<cols;++i){
+	// 		m._rows[j][i] = this._rows[j+offRow][i+offCol];
+	// 	}
+	// }
+	// return m;
+}
 Matrix.prototype.randomize = function(mul,rnd){
 	var i, j, row = this._rowCount, col = this._colCount;
 	for(j=0;j<row;++j){

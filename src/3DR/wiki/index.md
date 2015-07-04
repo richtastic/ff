@@ -4253,8 +4253,12 @@ P&middot;K<sup>-1</sup> = M
 <br/>
 <br/>
 <br/>
-
-
+**rotating from A to B:**
+<br/>
+B<sub>q</sub> = A<sub>q</sub> &middot; &Delta;<sub>q</sub>
+<br/>
+&Delta;<sub>q</sub> = A<sub>q</sub><sup>-1</sup> &middot; B<sub>q</sub>
+<br/>
 <br/>
 <br/>
 <br/>
