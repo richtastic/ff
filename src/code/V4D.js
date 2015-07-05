@@ -117,7 +117,7 @@ V4D.prototype.kill = function(){
 	V4D._.kill.call(this);
 }
 V4D.prototype.homo = function(){
-	if(this.z!=0){
+	if(this.t!=0){
 		this.x /= this.t;
 		this.y /= this.t;
 		this.z /= this.t;
