@@ -4225,6 +4225,28 @@ P&middot;K<sup>-1</sup> = M
 
 
 <br/>
+*Recovering/Dropping Scale* - to unity
+<br/>
+**2D:**
+<br/>
+```
+[a b tx] = [sx*cosA -sx*sinA (sx?)*tx]
+[c d ty]   [sy*sinA  sy*cosA (sx?)*ty]
+```
+<br/>
+a<sup>2</sup> + b<sup>2</sup> = s<sub>x</sub><sup>2</sup>( cos<sup>2</sup>A + sin<sup>2</sup>A )
+<br/>
+s<sub>x</sub> = sqrt(a<sup>2</sup> + b<sup>2</sup>)
+<br/>
+<br/>
+
+**3D:**
+<br/>
+```
+[a b c tx]   [s? s? s? tx]
+[d e f ty] = [s? s? s? ty]
+[g h i tz]   [s? s? s? tz]
+```
 <br/>
 <br/>
 <br/>

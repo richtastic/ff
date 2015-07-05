@@ -6,6 +6,7 @@ function Synthetic(){
 	this.defineCameras();
 	this.generate3DPoints();
 	this.projectPointsTo2D();
+	this.display2DPoints();
 	this.pointCalculations();
 	this.display2DPoints();
 	console.log("done");
@@ -99,18 +100,6 @@ Synthetic.prototype.projectPointsTo2D = function(){
 		for(i=0;i<len;++i){
 			p3d = points3D[i];
 			v = P.multV3DtoV3D(new V3D(), p3d);
-/*
-var Kt = Matrix.transpose(K);
-var Ki = Matrix.inverse(K);
-var x = M.multV3DtoV3D(new V3D(), p3d);
-console.log("y...");
-var y = new Matrix(3,1).setFromArray(v.toArray());
-//console.log(y.toString());
-	//y = Matrix.mult( Kt,y );
-	y = Matrix.mult( Ki,y ); ////////////////////////////////////
-	y = new V3D().setFromArray( y.toArray() );
-console.log("v: "+v.toString()+", x:"+x.toString()+", y:"+y.toString());
-*/
 			if(v.z < 0){
 				console.log("behind camera: "+v.toString());
 				p2d = null;
@@ -435,17 +424,57 @@ for(var k=0;k<pointsA.length;++k){
 break;
 		}
 	}
-	console.log("projection:");
-	console.log(projection.toString());
+camA.M.identity();
+	// console.log("projection:");
+	// console.log(projection.toString());
 	cam = {}
 	cam.width = camA.width;
 	cam.height = camA.height;
 	cam.K = camA.K.copy();
 	//var delta = Matrix.inverse(projection);
 	var delta = projection;
+	console.log("delta:");
+	console.log(delta.toString());
 	cam.M = Matrix.mult(delta,camA.M.copy());
 	// cam.M = camA.M.copy();
 	// cam.M = delta.copy();
+
+// 3D LOCATIONS IN TERMS OF PROJECTION MATRIX:
+len = points3D.length;
+for(i=0;i<len-1;++i){
+	var pA = points3D[i];
+	var pB = points3D[i+1];
+	console.log("distance: "+V3D.distance(pA,pB));
+}
+var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+var M2 = projection.getSubMatrix(0,0, 3,4);
+for(i=0;i<len;++i){
+	var pA = pointsA[i];
+	var pB = pointsB[i];
+	pA = KaInv.multV3DtoV3D(new V3D(), pA);
+	pB = KbInv.multV3DtoV3D(new V3D(), pB);
+	var p2DA = pA;
+	var p2DB = pB;
+	if (p2DA && p2DB){
+		var p3D = points3D[i];
+		var pAx = Matrix.crossMatrixFromV3D( p2DA );
+		var pBx = Matrix.crossMatrixFromV3D( p2DB );
+		var pAM = Matrix.mult(pAx,M1);
+		var pBM = Matrix.mult(pBx,M2);
+		var A = pAM.copy().appendMatrixBottom(pBM);
+		var svd = Matrix.SVD(A);
+		var p = svd.V.getCol(3);
+		var pNorm = new V4D().setFromArray(p.toArray()).homo();
+		p3D = new V3D(pNorm.x,pNorm.y,pNorm.z);
+		points3D[i] = p3D;
+	}
+}
+for(i=0;i<len-1;++i){
+	var pA = points3D[i];
+	var pB = points3D[i+1];
+	//console.log(pA.toString());
+	console.log("distance: "+V3D.distance(pA,pB));
+}
 
 // // REAL ANSWER:
 var aRev = Matrix.inverse(camA.M)

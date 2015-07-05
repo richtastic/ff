@@ -123,6 +123,7 @@ V4D.prototype.homo = function(){
 		this.z /= this.t;
 		this.t = 1.0;
 	}
+	return this;
 }
 
 V4D.ZERO = new V4D(0.0,0.0,0.0,0.0);
