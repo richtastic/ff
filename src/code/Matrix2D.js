@@ -148,3 +148,26 @@ Matrix2D.matrix2DfromMatrix = function(mat){
 	m2D.set(mat.get(0,0),mat.get(0,1), mat.get(1,0),mat.get(1,1), mat.get(0,1),mat.get(1,1));
 	return m2D;
 }
+
+Matrix2D.deltaPoint = function(o,m,p){
+	if(!p){
+		p = m; m = o; o = new V2D(dx,dy);
+	}
+	var dx = p.x*m.a + p.y*m.d + 0; // bla
+	var dy = p.x*m.b + p.y*m.e + 0;
+	o.set(dx,dy);
+	return o;
+}
+Matrix2D.decomposeMatrix = function(m){
+	var px = Matrix2D.deltaPoint(m, new V2D(0,1));
+	var py = Matrix2D.deltaPoint(m, new V2D(1,0));
+	var skewX = Math.atan2(px.y,px.x) - Math.TAU*0.25;
+	var skewY = Math.atan2(py.y,py.x);
+	var scaleX = Math.sqrt(m.a*m.a +m.b*m.b);
+	var scaleY = Math.sqrt(m.a*m.a +m.b*m.b);
+	var tx = m.c;
+	var ty = m.f;
+	var rotation = skewX; // ?
+}
+
+

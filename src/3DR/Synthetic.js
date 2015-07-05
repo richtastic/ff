@@ -393,6 +393,7 @@ for(var k=0;k<pointsA.length;++k){
 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
 	var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+//M1 = camA.M.getSubMatrix(0,0, 3,4);
 	var projection = null;
 	len = possibles.length;
 	for(i=0;i<len;++i){
@@ -406,25 +407,25 @@ for(var k=0;k<pointsA.length;++k){
 
 		svd = Matrix.SVD(A);
 		var P1 = svd.V.getCol(3);
-		console.log("P1:"+P1.toString());
 		var p1Norm = new V4D().setFromArray(P1.toArray());
-		p1Norm.homo(); // THIS IS THE ASSUED ACTUAL 3D POINT - LOCATION
-		console.log("p1Norm:"+p1Norm.toString());
+		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
+		//console.log("p1Norm:"+p1Norm.toString());
 		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 
 		var P2 = Matrix.mult(possibleInv,P1est);
 		//var P2 = Matrix.mult(possible,P1est);
 		var p2Norm = new V4D().setFromArray(P2.toArray());
 		//p2Norm.homo(); // not necessary?
-		console.log("p2Norm:"+p2Norm.toString());
+		//console.log("p2Norm:"+p2Norm.toString());
 		
 		if(p1Norm.z>0 && p2Norm.z>0){
+		//if(p1Norm.z<=0 && p2Norm.z<=0){
 			console.log(".......................>>XXX");
 			projection = possible;
 break;
 		}
 	}
-camA.M.identity();
+// camA.M.identity();
 	// console.log("projection:");
 	// console.log(projection.toString());
 	cam = {}
@@ -432,49 +433,62 @@ camA.M.identity();
 	cam.height = camA.height;
 	cam.K = camA.K.copy();
 	//var delta = Matrix.inverse(projection);
-	var delta = projection;
-	console.log("delta:");
-	console.log(delta.toString());
-	cam.M = Matrix.mult(delta,camA.M.copy());
-	// cam.M = camA.M.copy();
-	// cam.M = delta.copy();
+	var delta = projection.copy();
+	console.log("delta:\n"+delta.toString());
 
-// 3D LOCATIONS IN TERMS OF PROJECTION MATRIX:
-len = points3D.length;
-for(i=0;i<len-1;++i){
-	var pA = points3D[i];
-	var pB = points3D[i+1];
-	console.log("distance: "+V3D.distance(pA,pB));
-}
-var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-var M2 = projection.getSubMatrix(0,0, 3,4);
-for(i=0;i<len;++i){
-	var pA = pointsA[i];
-	var pB = pointsB[i];
-	pA = KaInv.multV3DtoV3D(new V3D(), pA);
-	pB = KbInv.multV3DtoV3D(new V3D(), pB);
-	var p2DA = pA;
-	var p2DB = pB;
-	if (p2DA && p2DB){
-		var p3D = points3D[i];
-		var pAx = Matrix.crossMatrixFromV3D( p2DA );
-		var pBx = Matrix.crossMatrixFromV3D( p2DB );
-		var pAM = Matrix.mult(pAx,M1);
-		var pBM = Matrix.mult(pBx,M2);
-		var A = pAM.copy().appendMatrixBottom(pBM);
-		var svd = Matrix.SVD(A);
-		var p = svd.V.getCol(3);
-		var pNorm = new V4D().setFromArray(p.toArray()).homo();
-		p3D = new V3D(pNorm.x,pNorm.y,pNorm.z);
-		points3D[i] = p3D;
-	}
-}
-for(i=0;i<len-1;++i){
-	var pA = points3D[i];
-	var pB = points3D[i+1];
-	//console.log(pA.toString());
-	console.log("distance: "+V3D.distance(pA,pB));
-}
+var oDir = delta.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+var xDir = delta.multV3DtoV3D(new V3D(), new V3D(1,0,0));
+var yDir = delta.multV3DtoV3D(new V3D(), new V3D(0,1,0));
+var zDir = delta.multV3DtoV3D(new V3D(), new V3D(0,0,1));
+console.log("o:"+oDir.toString());
+console.log("x:"+xDir.toString()+" == "+V3D.distance(oDir,xDir));
+console.log("y:"+yDir.toString()+" == "+V3D.distance(oDir,yDir));
+console.log("z:"+zDir.toString()+" == "+V3D.distance(oDir,zDir));
+// delta.set(0,3, 0);
+// delta.set(1,3, 3.3072E+0);
+// delta.set(2,3, 9.0385E-1);
+// delta.set(1,2, -0.5);
+// delta.set(2,1, 0.5);
+// console.log("delta:\n"+delta.toString());
+	cam.M = Matrix.mult(delta,camA.M.copy());
+
+// // 3D LOCATIONS IN TERMS OF PROJECTION MATRIX:
+// len = points3D.length;
+// for(i=0;i<len-1;++i){
+// 	var pA = points3D[i];
+// 	var pB = points3D[i+1];
+// 	console.log("distance: "+V3D.distance(pA,pB));
+// }
+// var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+// // M1 = camA.M.getSubMatrix(0,0, 3,4);
+// var M2 = projection.getSubMatrix(0,0, 3,4);
+// for(i=0;i<len;++i){
+// 	var pA = pointsA[i];
+// 	var pB = pointsB[i];
+// 	pA = KaInv.multV3DtoV3D(new V3D(), pA);
+// 	pB = KbInv.multV3DtoV3D(new V3D(), pB);
+// 	var p2DA = pA;
+// 	var p2DB = pB;
+// 	if (p2DA && p2DB){
+// 		var p3D = points3D[i];
+// 		var pAx = Matrix.crossMatrixFromV3D( p2DA );
+// 		var pBx = Matrix.crossMatrixFromV3D( p2DB );
+// 		var pAM = Matrix.mult(pAx,M1);
+// 		var pBM = Matrix.mult(pBx,M2);
+// 		var A = pAM.copy().appendMatrixBottom(pBM);
+// 		var svd = Matrix.SVD(A);
+// 		var p = svd.V.getCol(3);
+// 		var pNorm = new V4D().setFromArray(p.toArray()).homo();
+// 		p3D = new V3D(pNorm.x,pNorm.y,pNorm.z);
+// 		points3D[i] = p3D;
+// 	}
+// }
+// for(i=0;i<len-1;++i){
+// 	var pA = points3D[i];
+// 	var pB = points3D[i+1];
+// 	//console.log(pA.toString());
+// 	console.log("distance: "+V3D.distance(pA,pB));
+// }
 
 // // REAL ANSWER:
 var aRev = Matrix.inverse(camA.M)

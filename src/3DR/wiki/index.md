@@ -4248,11 +4248,39 @@ s<sub>x</sub> = sqrt(a<sup>2</sup> + b<sup>2</sup>)
 [g h i tz]   [s? s? s? tz]
 ```
 <br/>
+scalex = length(a,d,g)
+<br/>
+scaley = length(b,e,h)
+<br/>
+scalez = length(c,f,i)
+<br/>
+scale- = determinant of matrix (if equal)
 <br/>
 <br/>
 <br/>
 <br/>
 
+
+
+**Euclidean/Metric transformation between point sets**:
+<br/>
+<br/>
+<br/>
+<br/>
+this doesn't enforce euclidean constraints: valid 3x3 rotation, uniform scale @ 1
+<br/>
+```
+ 0 1 2 3 4 5 6 7 8 9 0 1
+ [ X1 ; Y1 ; Z1 ;  1 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ; -X2 ]
+ [  0 ;  0 ;  0 ;  0 ; X1 ; Y1 ; Z1 ;  1 ;  0 ;  0 ;  0 ;  0 ; -Y2 ] * [ a b c d e f g h i j k l 1]T  = 0
+ [  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ; X1 ; Y1 ; Z1 ;  1 ; -Z2 ]   .... m n o p = 0 0 0 1
+ 4+ points
+```
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 
 
