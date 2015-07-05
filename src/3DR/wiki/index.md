@@ -4105,7 +4105,9 @@ do for all 3 triangle edges => either none or two must intersect
 **Essential Matrix**:
 E = K<sup>T</sup>&middot;F&middot;K
 <br/>
-E = R&middot;[t]<sub>&times;</sub> =?= [t]<sub>&times;</sub>&middot;R ?
+E =  [t]<sub>&times;</sub>&middot;R
+=?= 
+R&middot;[t]<sub>&times;</sub>
 <br/>
 E = U&middot;&Sigma;&middot;V<sup>T</sup>
 <br/>

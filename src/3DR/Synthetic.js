@@ -241,7 +241,7 @@ Pab = Rab.copy().appendColFromArray( Tab.toArray() ).appendRowFromArray([0,0,0,1
 
 
 
-		F = R3D.fundamentalMatrix(pointsA,pointsB);
+		F = R3D.fundamentalMatrix(pointsB,pointsA);
 		// var fundamental = R3D.fundamentalRANSACFromPoints(pointsA,pointsB);
 		// fundamental = R3D.fundamentalMatrixNonlinear(fundamental,pointsA,pointsB);
 		// F = fundamental
@@ -255,17 +255,30 @@ Pab = Rab.copy().appendColFromArray( Tab.toArray() ).appendRowFromArray([0,0,0,1
 		E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbT,E);
 
-
-console.log("E:\n"+E.toString());
+		/* // TEST p1 * K * p0 = 0
+		var index = 0;
+		var p0 = pointsA[index];
+		var p1 = pointsB[index];
+		p0 = KaInv.multV3DtoV3D(new V3D(),p0);
+		p1 = KbInv.multV3DtoV3D(new V3D(),p1);
+		p0 = new Matrix(1,3).fromArray(p0.toArray());
+		p1 = new Matrix(3,1).fromArray(p1.toArray());
+		console.log("p0:\n"+p0.toString());
+		console.log("p1:\n"+p1.toString());
+		//console.log("F:\n"+F.toString());
+		console.log("E:\n"+E.toString());
+		var r = Matrix.mult(p0,Matrix.mult(E,p1));
+		//var r = Matrix.mult(p0,Matrix.mult(F,p1));
+		console.log("r:\n"+r.toString());
+		*/
 
 // VERIFY F BY DRAWLING EPIPOLAR LINES
 // var epipoles = R3D.getEpipolesFromF(F,true);
 // console.log(epipoles);
 
-// HOW TO VERIFY E ?
-
-var pointsA = camA.points2D;
-var pointsB = camB.points2D;
+//var fundamental = F;
+var fundamental = Matrix.transpose(F);
+var fundamentalInverse = Matrix.transpose(fundamental);
 for(var k=0;k<pointsA.length;++k){
 	if(!pointsA[k] || !pointsB[k]){ continue; }
 	var pointA = pointsA[k];
@@ -275,8 +288,7 @@ for(var k=0;k<pointsA.length;++k){
 	var lineA = new V3D();
 	var lineB = new V3D();
 
-	var fundamental = F;
-	var fundamentalInverse = Matrix.transpose(fundamental);
+	
 	fundamental.multV3DtoV3D(lineA, pointA);
 	fundamentalInverse.multV3DtoV3D(lineB, pointB);
 
@@ -327,41 +339,43 @@ for(var k=0;k<pointsA.length;++k){
 		//
 		var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
 		var Wt = Matrix.transpose(W);
-		var Z = new Matrix(3,3).setFromArray([0.0, 1.0, 0.0,  -1.0, 0.0, 0.0,  0.0, 0.0, 0.0]);
+		//var Z = new Matrix(3,3).setFromArray([0.0, 1.0, 0.0,  -1.0, 0.0, 0.0,  0.0, 0.0, 0.0]);
 		var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
+		var svd, U, S, V, Vt;
 		// force D = 1,1,0
-		// S = diag110
-		//
-		var svd = Matrix.SVD(E);
-		var U = svd.U;
-		var S = svd.S;
-		var V = svd.V;
-		var Vt = Matrix.transpose(V);
+			// svd = Matrix.SVD(E);
+			// U = svd.U;
+			// S = svd.S;
+			// V = svd.V;
+			// S = diag110;
+			// console.log("U:"+U.toString());
+			// console.log("S:"+S.toString());
+			// console.log("V:"+V.toString());
+			// //E = Matrix.mult(U,Matrix.mult(S,Vt));
+		svd = Matrix.SVD(E);
+		U = svd.U;
+		S = svd.S;
+		V = svd.V;
+		Vt = Matrix.transpose(V);
 		var t = U.getCol(2);
-		console.log(t.toString())
+		console.log("t: "+t.toString());
 		var tNeg = t.copy().scale(-1.0);
 		// four possible solutions
 	// one of 4 possible solutions
-	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt));
-	possibleA = possibleA.appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
-	var possibleB = Matrix.mult(U,Matrix.mult(W,Vt));
-	possibleB = possibleB.appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
-	var possibleC = Matrix.mult(U,Matrix.mult(Wt,Vt));
-	possibleC = possibleC.appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
-	var possibleD = Matrix.mult(U,Matrix.mult(Wt,Vt));
-	possibleD = possibleD.appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleB = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	var possibleC = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleD = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
 	var possibles = [];
 	possibles.push( possibleA );
 	possibles.push( possibleB );
 	possibles.push( possibleC );
 	possibles.push( possibleD );
-	var det;
 	for(i=0;i<possibles.length;++i){
 		var m = possibles[i];
 		var r = m.getSubMatrix(0,0, 3,3);
-		det = r.det();
-		if(det<0){
-			// ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
+		var det = r.det();
+		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
 			console.log("FLIP "+i+" : "+det);
 			r.scale(-1.0);
 			r.appendColFromArray( m.getSubMatrix(0,3, 3,1).toArray() );
@@ -373,238 +387,76 @@ for(var k=0;k<pointsA.length;++k){
 
 
 	// find single matrix that results in 3D point in front of both cameras Z>0
-	var pA = pointsA[0];
-	var pB = pointsB[0];
-	// to normalized points
-	//pA = Matrix.mult( KaT, new Matrix(3,1).setFromArray(pA.toArray()) );
-	pA = Matrix.mult( KaInv, new Matrix(3,1).setFromArray(pA.toArray()) );
-	//pA = Matrix.mult( new Matrix(3,1).setFromArray(pA.toArray()), KaInv );
-		pA = new V3D().setFromArray(pA.toArray());
-	//pB = Matrix.mult( KbT, new Matrix(3,1).setFromArray(pB.toArray()) );
-	pB = Matrix.mult( KbInv, new Matrix(3,1).setFromArray(pB.toArray()) );
-	//pB = Matrix.mult( new Matrix(3,1).setFromArray(pB.toArray()), KbInv );
-		pB = new V3D().setFromArray(pB.toArray());
-	// console.log("pA:"+pA.toString());
-	// console.log("pB:"+pB.toString());
-
-	var x = new Matrix(3,1).setFromArray(pA.toArray());
-	var y = new Matrix(3,1).setFromArray(pB.toArray());
-		x = Matrix.transpose(x);
-	var res = Matrix.mult(x,Matrix.mult(E,y));
-	console.log("res:"+res.toString());
+	var index = 1;
+	var pA = pointsA[index];
+	var pB = pointsB[index];
+	var p3D = points3D[index];
+	console.log("p3D: "+p3D.toString());
+	console.log("pA: "+pA.toString());
+	pA = KaInv.multV3DtoV3D(new V3D(), pA);
+	pB = KbInv.multV3DtoV3D(new V3D(), pB);
+	// console.log("pA: "+pA.toString());
+	// pA.homo();
+	// pB.homo();
+	// console.log("pA: "+pA.toString());
 
 	var pAx = Matrix.crossMatrixFromV3D( pA );
 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
 	var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-		// M1 = M1.getSubMatrix(0,0, 3,4);
 	var projection = null;
 	len = possibles.length;
 	for(i=0;i<len;++i){
-			// 
-		var M2 = possibles[i];
-			M2 = M2.getSubMatrix(0,0, 3,4);
-		// console.log(i+":\n"+M1.toString());
-		// console.log(i+":\n"+M2.toString());
+		var possible = possibles[i];
+		var possibleInv = Matrix.inverse(possible);
+		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
 		var pAM = Matrix.mult(pAx,M1);
 		var pBM = Matrix.mult(pBx,M2);
 		
 		var A = pAM.copy().appendMatrixBottom(pBM);
-		//console.log("A:\n"+A.toString());
+
 		svd = Matrix.SVD(A);
-		//console.log(V.toString())
 		var P1 = svd.V.getCol(3);
+		console.log("P1:"+P1.toString());
 		var p1Norm = new V4D().setFromArray(P1.toArray());
-		
-		p1Norm.homo();
-		
-		var P2 = new Matrix(4,1).setFromArray( p1Norm.toArray() );
-		P2 = Matrix.mult(M2,P2);
+		p1Norm.homo(); // THIS IS THE ASSUED ACTUAL 3D POINT - LOCATION
+		console.log("p1Norm:"+p1Norm.toString());
+		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+
+		var P2 = Matrix.mult(possibleInv,P1est);
+		//var P2 = Matrix.mult(possible,P1est);
 		var p2Norm = new V4D().setFromArray(P2.toArray());
-		
-		p2Norm.homo();
+		//p2Norm.homo(); // not necessary?
+		console.log("p2Norm:"+p2Norm.toString());
 		
 		if(p1Norm.z>0 && p2Norm.z>0){
 			console.log(".......................>>XXX");
-			projection = M2;
-			//break;
+			projection = possible;
+break;
 		}
 	}
-	if(projection){
-		console.log("projection:");
-		console.log(projection.toString());
-	}
+	console.log("projection:");
+	console.log(projection.toString());
 	cam = {}
 	cam.width = camA.width;
 	cam.height = camA.height;
 	cam.K = camA.K.copy();
-//	cam.M = projection.copy();
-	//cam.M = Matrix.mult(camA.M,projection);
-	//cam.M = Matrix.mult(projection,camA.M);
-	//cam.M = Matrix.mult(camB.M,projection);
-	//cam.M = Matrix.mult(projection,camB.M);
-	//cam.M = Pab.copy();
-	//cam.M = camA.M.copy();
+	//var delta = Matrix.inverse(projection);
+	var delta = projection;
+	cam.M = Matrix.mult(delta,camA.M.copy());
+	// cam.M = camA.M.copy();
+	// cam.M = delta.copy();
 
-var A = Matrix3D.matrix3DFromMatrix(camA.M);
-var B = Matrix3D.matrix3DFromMatrix(camB.M);
-// console.log("A:\n"+A.toString());
-// console.log("B:\n"+B.toString());
-var AInv = Matrix3D.inverse(A);
-var BInv = Matrix3D.inverse(B);
-// console.log("AInv:\n"+AInv.toString());
-// console.log("BInv:\n"+BInv.toString());
-var rA = (new Matrix3D().fromArrayRotation( A.toArrayRotation() )).toMatrix();
-var rB = (new Matrix3D().fromArrayRotation( B.toArrayRotation() )).toMatrix();
-// console.log("rA: "+rA.toString());
-// console.log("rB: "+rB.toString());
-var qA = A.toQuaternion();
-var qB = B.toQuaternion();
-// console.log("qA: "+qA.toString());
-// console.log("qB: "+qB.toString());
-var tA = A.toTranslation();
-var tB = B.toTranslation();
- console.log("tA: "+tA.toString());
- console.log("tB: "+tB.toString());
-var tAInv = AInv.toTranslation();
-var tBInv = BInv.toTranslation();
-// console.log("tAInv: "+tAInv.toString());
-// console.log("tBInv: "+tBInv.toString());
-var qAInv = qA.copy().qInverse();
-var qBInv = qB.copy().qInverse();
-// console.log("qAInv: "+qAInv.toString());
-// console.log("qBInv: "+qBInv.toString());
-
-//var qNet = V4D.qMul(qB,qAInv); // APPARENTLY SOURCE 1: Delta = B * A^-1 ---- WRONG
-var qNet = V4D.qMul(qAInv, qB); // APPARENTLY SOURCE 2: 
-var rNet = new Matrix3D().fromQuaternion(qNet);
-var tNet = tB.copy().sub(tA);
-// console.log("qNet: "+qNet.toString());
-// console.log("rNet: "+rNet.toString());
-// console.log("tNet: "+tNet.toString());
-
-var D = new Matrix3D();
-D.fromArrayRotation( rNet.toArrayRotation() );
-//D.fromArrayTranslation( tNet.toArray() );
-//console.log("D: "+D.toString());
-var rAB = D.toMatrix();
-D = D.toMatrix();
-//console.log("D:\n"+D.toString());
-
-
-
-var org, out;
-org = new V3D(0,0,0);
-out = camA.M.multV3DtoV3D(new V3D(), org);
-//console.log("O->A: "+out.toString());
-out = camB.M.multV3DtoV3D(new V3D(), org);
-//console.log("O->B: "+out.toString());
-
-
-
-
-
-
-
-
-
-var oA = new Matrix(4,4).identity();
-oA.set(0,3, tA.x);
-oA.set(1,3, tA.y);
-oA.set(2,3, tA.z);
-var oAneg = oA.copy().scale(-1);
-
-
-//var rABI = Matrix.inverse(rAB);
-//tNet = rABI.multV3DtoV3D(new V3D(), tNet);
-//tNet = rAB.multV3DtoV3D(new V3D(), tNet);
-//tNet = camA.M.multV3DtoV3D(new V3D(), tNet);
-//tNet = camB.M.multV3DtoV3D(new V3D(), tNet);
-
-var dAB = new Matrix(4,4).identity();
-dAB.set(0,3, tNet.x);
-dAB.set(1,3, tNet.y);
-dAB.set(2,3, tNet.z);
-//dAB.scale(-1);
-
-
-var delta = new Matrix(4,4).identity();
-console.log("delta 1: "+delta.toString());
-delta = Matrix.mult(oAneg,delta);
-console.log("delta 2: "+delta.toString());
-delta = Matrix.mult(rAB,delta);
-console.log("delta 3: "+delta.toString());
-//delta = Matrix.mult(oA,delta);
-console.log("delta 4: "+delta.toString());
-delta = Matrix.mult(dAB,delta);
-console.log("delta 5: "+delta.toString());
-
-
-//var net = Matrix.mult(camA.M.copy(),delta);
-var net = Matrix.mult(delta,camA.M.copy());
-cam.M = net;
-
-
-
+// // REAL ANSWER:
 var aRev = Matrix.inverse(camA.M)
 var bFwd = camB.M
-
 delta = Matrix.mult(bFwd,aRev);
-
-var net = Matrix.mult(delta,camA.M.copy());
-cam.M = net;
-
-
-// PREFIX ROTATION + POSTFIX TRANSLATION: WORKS
-
-// var delta = new Matrix(4,4).identity();
-// delta = Matrix.mult(camA.M.copy(),D);
-// delta = Matrix.transform3DTranslate(delta,tNet.x,tNet.y,tNet.z);
-// cam.M = delta;
-
-/*
-//delta = Matrix.transform3DTranslate(delta,tAInv.x,tAInv.y,tAInv.z);
-//delta = Matrix.transform3DTranslate(delta,-tA.x,-tA.y,-tA.z);
-//delta = Matrix.transform3DTranslate(delta,tA.x,tA.y,tA.z);
-//delta = Matrix.transform3DTranslate(delta,-tNet.x,-tNet.y,-tNet.z);
-//delta = Matrix.transform3DTranslate(delta,tNet.x,tNet.y,tNet.z);
-delta = Matrix.mult(D,delta);
-//delta = Matrix.transform3DTranslate(delta,tNet.x,tNet.y,tNet.z);
-//delta = Matrix.mult(delta,D);
-//delta = Matrix.transform3DTranslate(delta,tA.x,tA.y,tA.z);
-//delta = Matrix.transform3DTranslate(delta,tNet.x,tNet.y,tNet.z);
-delta = Matrix.transform3DTranslate(delta,-tNet.x,-tNet.y,-tNet.z);
-//delta = Matrix.transform3DTranslate(delta,tAInv.x,tAInv.y,tAInv.z);
-
-var net = Matrix.mult(camA.M.copy(),delta);
-//var net = Matrix.mult(delta,camA.M.copy());
-cam.M = net;
-*/
-
-
-/*
-
-//( tNet * (camA.M * D))
-
-
-var delta = new Matrix(4,4).identity();
-
-delta = Matrix.transform3DTranslate(delta,tNet.x,tNet.y,tNet.z);
-delta = Matrix.mult(delta,D);
-//delta = Matrix.transform3DTranslate(delta,tAInv.x,tAInv.y,tAInv.z);
-//delta = Matrix.transform3DTranslate(delta,-tA.x,-tA.y,-tA.z);
-//
-
-//delta = Matrix.transform3DTranslate(delta,tNet.x,tNet.y,tNet.z);
-//delta = Matrix.transform3DTranslate(delta,tAInv.x,tAInv.y,tAInv.z);
-//delta = Matrix.transform3DTranslate(delta,-tA.x,-tA.y,-tA.z);
-
-var net = Matrix.mult(camA.M,delta); // START FROM A, APPLY DELTA
-cam.M = net;
-*/
+console.log("REAL DELTA: \n",delta.toString());
+// //var net = Matrix.mult(delta,camA.M.copy());
+// //cam.M = net;
 
 	cams.push(cam);
-	//
+	
 	this.projectPointsTo2D();
 	
 		//
