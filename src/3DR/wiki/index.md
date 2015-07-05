@@ -4270,9 +4270,8 @@ scale- = determinant of matrix (if equal)
 this doesn't enforce euclidean constraints: valid 3x3 rotation, uniform scale @ 1
 <br/>
 ```
- 0 1 2 3 4 5 6 7 8 9 0 1
- [ X1 ; Y1 ; Z1 ;  1 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ; -X2 ]
- [  0 ;  0 ;  0 ;  0 ; X1 ; Y1 ; Z1 ;  1 ;  0 ;  0 ;  0 ;  0 ; -Y2 ] * [ a b c d e f g h i j k l 1]T  = 0
+ [ X1 ; Y1 ; Z1 ;  1 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ; -X2 ]     0 1 2 3 4 5 6 7 8 9 0 1 2 
+ [  0 ;  0 ;  0 ;  0 ; X1 ; Y1 ; Z1 ;  1 ;  0 ;  0 ;  0 ;  0 ; -Y2 ] * [ a b c d e f g h i j k l 1 ]T  = 0
  [  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ;  0 ; X1 ; Y1 ; Z1 ;  1 ; -Z2 ]   .... m n o p = 0 0 0 1
  4+ points
 ```

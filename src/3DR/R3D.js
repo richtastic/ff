@@ -3,13 +3,67 @@
 function R3D(){
 	// this is a library
 }
-R3D.prototype.wtf = function(){
-	// ...
-}
-
 
 // ------------------------------------------------------------------------------------------- conditioning utilities
-R3D.calculateCovariance2D = function(points){
+R3D.centroid3D = function(points3D){
+	var i, len=points3D.length;
+	var cen = new V3D();
+	for(i=0;i<len;++i){
+		cen.add(points3D[i]);
+	}
+	cen.scale(1.0/len);
+	return cen;
+}
+R3D.uniformScale3D = function(pointsA,pointsB, centroidA, centroidB){
+	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
+	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
+	var i, dA, dB, len=pointsA.length, scale = 0;
+	for(i=0;i<len;++i){
+		dA = V3D.distance(pointsA[i],centroidA)
+		dB = V3D.distance(pointsB[i],centroidB);
+		if(dA!=0){
+			scale += dB/dA;
+		}
+	}
+	scale /= len;
+	return scale;
+}
+R3D.covariance3D = function(pointsA,pointsB, centroidA, centroidB){
+	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
+	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
+	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0;
+	for(it=0;it<len;++it){
+		pA = pointsA[it].copy().sub(centroidA);
+		pB = pointsB[it].copy().sub(centroidB);
+		a += pA.x*pB.x;
+		b += pA.x*pB.y;
+		c += pA.x*pB.z;
+		d += pA.y*pB.x;
+		e += pA.y*pB.y;
+		f += pA.y*pB.z;
+		g += pA.z*pB.x;
+		h += pA.z*pB.y;
+		i += pA.z*pB.z;
+	}
+	var cov = new Matrix(3,3).setFromArray([a, b, c, d, e, f, g, h, i]);
+	return cov;
+}
+R3D.nonUniformScale3D = function(pointsA,pointsB, cov, centroidA, centroidB){
+	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
+	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
+	var i, len=pointsA.length, scale = new V3D();
+	for(i=0;i<len;++i){
+// find eigenvalues as x/y/z axes?
+// find distance along each covariant axis
+// 
+		//pointsB[i]
+		//scale.add(  );
+		//scale += V3D.distance(pointsB[i],centroidB)/V3D.distance(pointsA[i],centroidA);
+	}
+	scale.scale(1/len);
+	return scale;
+}
+R3D.calculateCovariance2D = function(points){ // self covariance
 	var i, len, meanX, meanY, normX, normY, sigXX, sigXY, sigYY;
 	len = points.length;
 	meanX = 0; meanY = 0;
@@ -898,6 +952,33 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 // 	return obj;
 // }
 
+
+
+
+R3D.euclieanTransform3D = function(pointsFr,pointsTo){ // find euclid matrix [3x4] : from->to
+	var centroidFr = R3D.centroid3D(pointsFr);
+	var centroidTo = R3D.centroid3D(pointsTo);
+	var scale = R3D.uniformScale3D(pointsFr,pointsTo, centroidFr,centroidTo);
+		//nonUniform scaling
+	var cov = R3D.covariance3D(pointsFr,pointsTo, centroidFr,centroidTo);
+	var svd = Matrix.SVD(cov);
+	var U = svd.U;
+	var V = svd.V;
+	var Ut = Matrix.transpose(U);
+	var R = Matrix.mult(V,Ut);
+	var det = R.det();
+	if(det<0){ // flip z vector
+		R.set(0,2, -R.get(0,2));
+		R.set(1,2, -R.get(1,2));
+		R.set(2,2, -R.get(2,2));
+	}
+	console.log("cov:\n"+cov.toString());
+//scale = 1.0;
+	var S = new Matrix(3,3).setFromArray([scale,0,0, 0,scale,0, 0,0,scale]);
+	R = Matrix.mult(R,S);
+	var t = R.multV3DtoV3D(new V3D(), centroidFr).scale(-1).add(centroidTo); // -R*Fr + To
+	return R.copy().appendColFromArray([t.x, t.y, t.z]).appendRowFromArray([0, 0, 0, 1]);
+}
 
 
 R3D.cubicDeterminantSolution3x3 = function(arrayA, arrayB){ // F = FA + l*FB
