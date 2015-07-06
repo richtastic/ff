@@ -4345,6 +4345,130 @@ works: http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrix
 <br/>
 
 
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
+**Hard Solutions***
+<br/>
+*Basic 3D*: Rotation: <rx,ry,rz,(angle/length)> + Translation: <tx,ty,tz> = 6 DOF
+<br/>
+12DOF - orthonormal = 6DOF ; R &middot; R<sup>T</sup> = I
+<br/>
+[X';Y';Z';1] = [a b c d; e f g h; i j k l; 0 0 0 1] * [X; Y; Z; 1]
+<br/>
+X' = a&middot;X + b&middot;Y + c&middot;Z + d [1]
+<br/>
+Y' = e&middot;X + f&middot;Y + g&middot;Z + h [2]
+<br/>
+Z' = i&middot;X + j&middot;Y + k&middot;Z + l [3]
+<br/>
+a&middot;a + b&middot;b + c&middot;c = 1 [4]
+<br/>
+e&middot;e + f&middot;f + g&middot;g = 1 [5]
+<br/>
+h&middot;h + i&middot;i + j&middot;j = 1 [6]
+<br/>
+a&middot;e + b&middot;f + c&middot;g = 0 [7]
+<br/>
+a&middot;h + b&middot;i + c&middot;j = 0 [8]
+<br/>
+e&middot;h + f&middot;i + g&middot;j = 0 [9]
+<br/>
+<br/>
+9 equations, 12 unknowns
+<br/>
+<br/>
+a = (-b&middot;f - c&middot;g) / e [~7]
+<br/>
+a = (-b&middot;i - c&middot;j) / h [~8]
+<br/>
+[~7]=[~8]
+<br/>
+(-b&middot;f - c&middot;g) / e = (-b&middot;i - c&middot;j) / h
+<br/>
+h&middot;(b&middot;f + c&middot;g) = e&middot;(b&middot;i + c&middot;j)
+<br/>
+h = e&middot;(b&middot;i + c&middot;j)/(b&middot;f + c&middot;g) [10]
+<br/>
+h = (-f&middot;i - g&middot;j) / e [~9]
+<br/>
+[10]=[~9]
+<br/>
+e&middot;(b&middot;i + c&middot;j)/(b&middot;f + c&middot;g) = (-f&middot;i - g&middot;j) / e
+<br/>
+e&middot;e = (-f&middot;i - g&middot;j)&middot;(b&middot;f + c&middot;g)/(b&middot;i + c&middot;j)
+<br/>
+...
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+&lt;a,b,c&gt;<sup>2</sup> = 1
+<br/>
+&lt;e,f,g&gt;<sup>2</sup> = 1
+<br/>
+&lt;h,i,j&gt;<sup>2</sup> = 1
+<br/>
+&lt;a,b,c&gt; &middot; &lt;e,f,g&gt;= 0
+<br/>
+&lt;a,b,c&gt; &middot; &lt;i,j,k&gt;= 0
+<br/>
+&lt;e,f,g&gt; &middot; &lt;i,j,k&gt;= 0
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
 
 
 

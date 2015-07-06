@@ -253,13 +253,24 @@ DO.prototype.removedFromStage = function(stage){
 DO.prototype.getChildAt = function(i){
 	return this._children[i];
 }
+DO.prototype._checkAddChild = function(ch){
+	if( this._stage!=null ){
+		DO.addToStageRecursive(ch,this._stage);
+	}
+}
 DO.prototype.addChild = function(ch){
 	if(!ch){return;}
 	ch.parent(this);
 	Code.addUnique(this._children,ch);
-	if( this._stage!=null ){
-		DO.addToStageRecursive(ch,this._stage);
-	}
+	this._checkAddChild(ch);
+}
+DO.prototype.addChildAtIndex = function(ch,index){
+	if(!ch){return;}
+	ch.parent(this);
+	Code.removeElement(this._children,ch);
+	index = Math.min(Math.max(0,index),this._children.length);
+	Code.arrayInsert(this._children,index,ch);
+	this._checkAddChild(ch);
 }
 DO.prototype.removeParent = function(){
 	this._parent.removeChild(this);
@@ -277,6 +288,20 @@ DO.prototype.removeAllChildren = function(ch){
 		this._children[i].parent(null);
 	}
 	Code.emptyArray(this._children);
+}
+DO.prototype.moveToBack = function(ch){
+	var parent = this._parent;
+	if(parent){
+		parent.removeChild(this);
+		parent.addChildAtIndex(this,0);
+	}
+}
+DO.prototype.moveToFront = function(ch){
+	var parent = this._parent;
+	if(parent){
+		parent.removeChild(this);
+		parent.addChildAtIndex(this,parent._children.length);
+	}
 }
 DO.prototype.kill = function(ch){
 	Code.killArray(this._children);

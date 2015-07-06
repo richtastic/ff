@@ -315,120 +315,64 @@ for(var k=0;k<pointsA.length;++k){
 }
 
 
-		//
-		// console.log("Pa:\n"+Pa.toString());
-		// console.log("PaInv:\n"+PaInv.toString());
-		// console.log("Pb: "+Pb.toString());
-		// console.log("Pab:\n"+Pab.toString());
-// console.log("Pab:\n"+(Matrix.mult(Pb,PaInv)).toString());
-// console.log("Pab:\n"+(Matrix.mult(PaInv,Pb)).toString());
-// console.log("Pab:\n"+(Matrix.mult(Pa,PbInv)).toString());
-// console.log("Pab:\n"+(Matrix.mult(PbInv,Pa)).toString());
-// NORMALIZE POINTS ???????
-		//
-		var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
-		var Wt = Matrix.transpose(W);
-		//var Z = new Matrix(3,3).setFromArray([0.0, 1.0, 0.0,  -1.0, 0.0, 0.0,  0.0, 0.0, 0.0]);
-		var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
-		var svd, U, S, V, Vt;
-		// force D = 1,1,0
-			// svd = Matrix.SVD(E);
-			// U = svd.U;
-			// S = svd.S;
-			// V = svd.V;
-			// S = diag110;
-			// console.log("U:"+U.toString());
-			// console.log("S:"+S.toString());
-			// console.log("V:"+V.toString());
-			// //E = Matrix.mult(U,Matrix.mult(S,Vt));
-		svd = Matrix.SVD(E);
-		U = svd.U;
-		S = svd.S;
-		V = svd.V;
-		Vt = Matrix.transpose(V);
-		var t = U.getCol(2);
-		console.log("t: "+t.toString());
-		var tNeg = t.copy().scale(-1.0);
-		// four possible solutions
-	// one of 4 possible solutions
-	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
-	var possibleB = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
-	var possibleC = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
-	var possibleD = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
-	var possibles = [];
-	possibles.push( possibleA );
-	possibles.push( possibleB );
-	possibles.push( possibleC );
-	possibles.push( possibleD );
-	for(i=0;i<possibles.length;++i){
-		var m = possibles[i];
-		var r = m.getSubMatrix(0,0, 3,3);
-		var det = r.det();
-		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
-			console.log("FLIP "+i+" : "+det);
-			r.scale(-1.0);
-			r.appendColFromArray( m.getSubMatrix(0,3, 3,1).toArray() );
-			r.appendRowFromArray([0,0,0,1]);
-			possibles[i] = r;
-		}
-//possibles[i] = Matrix.multV3DtoV3D(possibles[i]);
-	}
 
 
+// 	// find single matrix that results in 3D point in front of both cameras Z>0
+// 	var index = 1;
+// 	var pA = pointsA[index];
+// 	var pB = pointsB[index];
+// 	var p3D = points3D[index];
+// 	console.log("p3D: "+p3D.toString());
+// 	console.log("pA: "+pA.toString());
+// 	pA = KaInv.multV3DtoV3D(new V3D(), pA);
+// 	pB = KbInv.multV3DtoV3D(new V3D(), pB);
+// 	// console.log("pA: "+pA.toString());
+// 	// pA.homo();
+// 	// pB.homo();
+// 	// console.log("pA: "+pA.toString());
 
-	// find single matrix that results in 3D point in front of both cameras Z>0
-	var index = 1;
-	var pA = pointsA[index];
-	var pB = pointsB[index];
-	var p3D = points3D[index];
-	console.log("p3D: "+p3D.toString());
-	console.log("pA: "+pA.toString());
-	pA = KaInv.multV3DtoV3D(new V3D(), pA);
-	pB = KbInv.multV3DtoV3D(new V3D(), pB);
-	// console.log("pA: "+pA.toString());
-	// pA.homo();
-	// pB.homo();
-	// console.log("pA: "+pA.toString());
+// 	var pAx = Matrix.crossMatrixFromV3D( pA );
+// 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
-	var pAx = Matrix.crossMatrixFromV3D( pA );
-	var pBx = Matrix.crossMatrixFromV3D( pB );
-
-	var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-//M1 = camA.M.getSubMatrix(0,0, 3,4);
-//M1 = camB.M.getSubMatrix(0,0, 3,4);
-//console.log("M1:\n"+M1.toString());
-	var projection = null;
-	len = possibles.length;
-	for(i=0;i<len;++i){
-		var possible = possibles[i];
-		var possibleInv = Matrix.inverse(possible);
-		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
-		var pAM = Matrix.mult(pAx,M1);
-		var pBM = Matrix.mult(pBx,M2);
+// 	var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+// //M1 = camA.M.getSubMatrix(0,0, 3,4);
+// //M1 = camB.M.getSubMatrix(0,0, 3,4);
+// //console.log("M1:\n"+M1.toString());
+// 	var projection = null;
+// 	len = possibles.length;
+// 	for(i=0;i<len;++i){
+// 		var possible = possibles[i];
+// 		var possibleInv = Matrix.inverse(possible);
+// 		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
+// 		var pAM = Matrix.mult(pAx,M1);
+// 		var pBM = Matrix.mult(pBx,M2);
 		
-		var A = pAM.copy().appendMatrixBottom(pBM);
+// 		var A = pAM.copy().appendMatrixBottom(pBM);
 
-		svd = Matrix.SVD(A);
-		var P1 = svd.V.getCol(3);
-		var p1Norm = new V4D().setFromArray(P1.toArray());
-		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
-		//console.log("p1Norm:"+p1Norm.toString());
-		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+// 		svd = Matrix.SVD(A);
+// 		var P1 = svd.V.getCol(3);
+// 		var p1Norm = new V4D().setFromArray(P1.toArray());
+// 		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
+// 		//console.log("p1Norm:"+p1Norm.toString());
+// 		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 
-		var P2 = Matrix.mult(possibleInv,P1est);
-		//var P2 = Matrix.mult(possible,P1est);
-		var p2Norm = new V4D().setFromArray(P2.toArray());
-		//p2Norm.homo(); // not necessary?
-		//console.log("p2Norm:"+p2Norm.toString());
+// 		var P2 = Matrix.mult(possibleInv,P1est);
+// 		//var P2 = Matrix.mult(possible,P1est);
+// 		var p2Norm = new V4D().setFromArray(P2.toArray());
+// 		//p2Norm.homo(); // not necessary?
+// 		//console.log("p2Norm:"+p2Norm.toString());
 		
-		if(p1Norm.z>0 && p2Norm.z>0){
-		//if(p1Norm.z<=0 && p2Norm.z<=0){
-			console.log(".......................>>XXX");
-			projection = possible;
-break;
-		}
-	}
-// camA.M.identity();
+// 		if(p1Norm.z>0 && p2Norm.z>0){
+// 		//if(p1Norm.z<=0 && p2Norm.z<=0){
+// 			console.log(".......................>>XXX");
+// 			projection = possible;
+// break;
+// 		}
+// 	}
+
+var projection = R3D.transformFromFundamental(pointsA, pointsB, F, Ka, Kb, null);
+
+camA.M.identity();
 	// console.log("projection:");
 	// console.log(projection.toString());
 	cam = {}
@@ -456,44 +400,19 @@ console.log("z:"+zDir.toString()+" == "+V3D.distance(oDir,zDir));
 	cam.M = Matrix.mult(delta,camA.M.copy());
 
 // 3D LOCATIONS IN TERMS OF PROJECTION MATRIX:
-len = points3D.length;
-for(i=0;i<len-1;++i){
-	var pA = points3D[i];
-	var pB = points3D[i+1];
-//	console.log("distance: "+V3D.distance(pA,pB));
-}
-var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-// M1 = camA.M.getSubMatrix(0,0, 3,4);
-var M2 = projection.getSubMatrix(0,0, 3,4);
-var points3D_2 = [];
-for(i=0;i<len;++i){
-	var pA = pointsA[i];
-	var pB = pointsB[i];
-	pA = KaInv.multV3DtoV3D(new V3D(), pA);
-	pB = KbInv.multV3DtoV3D(new V3D(), pB);
-	var p2DA = pA;
-	var p2DB = pB;
-	if (p2DA && p2DB){
-		var p3D = points3D[i];
-		var pAx = Matrix.crossMatrixFromV3D( p2DA );
-		var pBx = Matrix.crossMatrixFromV3D( p2DB );
-		var pAM = Matrix.mult(pAx,M1);
-		var pBM = Matrix.mult(pBx,M2);
-		var A = pAM.copy().appendMatrixBottom(pBM);
-		var svd = Matrix.SVD(A);
-		var p = svd.V.getCol(3);
-		var pNorm = new V4D().setFromArray(p.toArray()).homo();
-		p3D = new V3D(pNorm.x,pNorm.y,pNorm.z);
-		points3D_2[i] = p3D;
-	}
-}
-for(i=0;i<len-1;++i){
-	var pA = points3D[i];
-	var pB = points3D[i+1];
-	//console.log(pA.toString());
-	//console.log("distance: "+V3D.distance(pA,pB));
-}
-
+// len = points3D.length;
+// for(i=0;i<len-1;++i){
+// 	var pA = points3D[i];
+// 	var pB = points3D[i+1];
+// //	console.log("distance: "+V3D.distance(pA,pB));
+// }
+points3D_2 = R3D.points3DFromTransform(pointsA,pointsB, F, Ka, Kb, projection, null);
+// for(i=0;i<len-1;++i){
+// 	var pA = points3D[i];
+// 	var pB = points3D[i+1];
+// 	//console.log(pA.toString());
+// 	//console.log("distance: "+V3D.distance(pA,pB));
+// }
 
 var euclid = R3D.euclieanTransform3D(points3D,points3D_2);
 var eucInv = Matrix.inverse(euclid);
@@ -503,7 +422,8 @@ for(i=0;i<len;++i){
 	var p = points3D_2[i];
 	//p = euclid.multV3DtoV3D(new V3D, p);
 	p = eucInv.multV3DtoV3D(new V3D, p);
-	points3D[i] = p;
+//	points3D[i] = p;
+points3D[i] = points3D_2[i];
 }
 
 // // REAL ANSWER:

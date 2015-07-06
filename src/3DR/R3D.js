@@ -83,6 +83,131 @@ R3D.calculateCovariance2D = function(points){ // self covariance
 	sigXX /= len; sigXY /= len; sigYY /= len;
 	return new Matrix(2,2).setFromArray([sigXX, sigXY, sigXY, sigYY]);
 }
+R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // find relative transformation matrix  // points use F
+	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+	var KaInv = Matrix.inverse(Ka);
+	var KbInv = Matrix.inverse(Kb);
+	//
+	var E = Matrix.mult(F,Ka);
+	E = Matrix.mult(KbT,E);
+	// NORMALIZE POINTS ???????
+	//
+	var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
+	var Wt = Matrix.transpose(W);
+	//var Z = new Matrix(3,3).setFromArray([0.0, 1.0, 0.0,  -1.0, 0.0, 0.0,  0.0, 0.0, 0.0]);
+	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
+	var svd, U, S, V, Vt;
+	// force D = 1,1,0
+	// svd = Matrix.SVD(E);
+	// U = svd.U;
+	// S = svd.S;
+	// V = svd.V;
+	// S = diag110;
+	// console.log("U:"+U.toString());
+	// console.log("S:"+S.toString());
+	// console.log("V:"+V.toString());
+	// //E = Matrix.mult(U,Matrix.mult(S,Vt));
+	svd = Matrix.SVD(E);
+	U = svd.U;
+	S = svd.S;
+	V = svd.V;
+	Vt = Matrix.transpose(V);
+	var t = U.getCol(2);
+	var tNeg = t.copy().scale(-1.0);
+	// one of 4 possible solutions
+	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleB = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	var possibleC = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleD = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	var possibles = [];
+	possibles.push( possibleA );
+	possibles.push( possibleB );
+	possibles.push( possibleC );
+	possibles.push( possibleD );
+	for(i=0;i<possibles.length;++i){
+		var m = possibles[i];
+		var r = m.getSubMatrix(0,0, 3,3);
+		var det = r.det();
+		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
+			console.log("FLIP "+i+" : "+det);
+			r.scale(-1.0);
+			r.appendColFromArray( m.getSubMatrix(0,3, 3,1).toArray() );
+			r.appendRowFromArray([0,0,0,1]);
+			possibles[i] = r;
+		}
+	}
+
+	// find single matrix that results in 3D point in front of both cameras Z>0
+	var index = 0;
+	var pA = pointsA[index];
+	var pB = pointsB[index];
+	pA = KaInv.multV3DtoV3D(new V3D(), pA);
+	pB = KbInv.multV3DtoV3D(new V3D(), pB);
+
+	var pAx = Matrix.crossMatrixFromV3D( pA );
+	var pBx = Matrix.crossMatrixFromV3D( pB );
+
+	var projection = null;
+	len = possibles.length;
+	for(i=0;i<len;++i){
+		var possible = possibles[i];
+		var possibleInv = Matrix.inverse(possible);
+		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
+		var pAM = Matrix.mult(pAx,M1);
+		var pBM = Matrix.mult(pBx,M2);
+		
+		var A = pAM.copy().appendMatrixBottom(pBM);
+
+		svd = Matrix.SVD(A);
+		var P1 = svd.V.getCol(3);
+		var p1Norm = new V4D().setFromArray(P1.toArray());
+		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
+		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+
+		var P2 = Matrix.mult(possibleInv,P1est);
+		//var P2 = Matrix.mult(possible,P1est);
+		var p2Norm = new V4D().setFromArray(P2.toArray());
+		//p2Norm.homo(); // not necessary?
+		
+		if(p1Norm.z>0 && p2Norm.z>0){
+		//if(p1Norm.z<=0 && p2Norm.z<=0){
+			console.log(".......................>>XXX");
+			projection = possible;
+break;
+		}
+	}
+	return projection;
+}
+R3D.points3DFromTransform = function(pointsA,pointsB, F, Ka, Kb, M2, M1){ // points use F
+	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+	M2 = M2.getSubMatrix(0,0, 3,4);
+	var KaInv = Matrix.inverse(Ka);
+	var KbInv = Matrix.inverse(Kb);
+	var points3D_2 = [];
+	var i, len = pointsA.length;
+	for(i=0;i<len;++i){
+		var pA = pointsA[i];
+		var pB = pointsB[i];
+		pA = KaInv.multV3DtoV3D(new V3D(), pA);
+		pB = KbInv.multV3DtoV3D(new V3D(), pB);
+		var p2DA = pA;
+		var p2DB = pB;
+		if (p2DA && p2DB){
+			var pAx = Matrix.crossMatrixFromV3D( p2DA );
+			var pBx = Matrix.crossMatrixFromV3D( p2DB );
+			var pAM = Matrix.mult(pAx,M1);
+			var pBM = Matrix.mult(pBx,M2);
+			var A = pAM.copy().appendMatrixBottom(pBM);
+			var svd = Matrix.SVD(A);
+			var p = svd.V.getCol(3);
+			var pNorm = new V4D().setFromArray(p.toArray()).homo();
+			var p3D = new V3D(pNorm.x,pNorm.y,pNorm.z);
+			points3D_2[i] = p3D;
+		}
+	}
+	return points3D_2;
+}
+
 R3D.calculatePrinciple = function(points){
 	var cov = this.calculateCovariance2D(points);
 	var svd = Matrix.SVD(cov);
@@ -594,11 +719,11 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){ // nonli
 }
 
 // ------------------------------------------------------------------------------------------- drawling utilities
-R3D.drawPointAt = function(pX,pY, r,g,b){
+R3D.drawPointAt = function(pX,pY, r,g,b, rad){
 	r = r!==undefined?r:(Math.floor(256*Math.random()));
 	g = g!==undefined?g:(Math.floor(256*Math.random()));
 	b = b!==undefined?b:(Math.floor(256*Math.random()));
-	var rad = 7.0;
+	rad = rad!==undefined?rad:7.0;
 	var d = new DO();
 	var colLine = Code.getColARGB(0xFF,r,g,b);
 	d.graphics().setLine(2.0, colLine );
@@ -1286,9 +1411,65 @@ minIndex = 0.0;
 
 
 
+R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // harris
+	konstant = konstant ? konstant : 0.04; // 0.04-0.06
+	sigma = sigma ? sigma : 1.6;
+	var i, j, a, b, c, d;
+	var Ix = ImageMat.derivativeX(src,width,height);
+	var Iy = ImageMat.derivativeY(src,width,height);
+	var Ix2 = ImageMat.mulFloat(Ix,Ix);
+	var Iy2 = ImageMat.mulFloat(Iy,Iy);
+	var IxIy = ImageMat.mulFloat(Ix,Iy);
+	// gaussian Ix2, Iy2, IxIy
+	var gaussSize = Math.round(2+sigma)*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	var padding = Math.floor(gaussSize/2.0);
+	//Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, wid+2*padding,hei+2*padding, gauss1D);
+	Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	Iy2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	IxIy = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	var harrisValue = new Array(width*height);
+	for(j=0;j<height;++j){
+		for(i=0;i<width;++i){
+			index = j*width + i;
+			a = Ix2[index];
+			b = IxIy[index];
+			c = IxIy[index];
+			d = Iy2[index];
+			var tra = a + d;
+			var det = a*d - c*b;
+        	harrisValue[index] = det - konstant*tra*tra;
+		}
+	}
+	return harrisValue;
+}
 
-
-
+R3D.pointsCornerDetector = function(src, width, height, konstant, sigma){ // uses harris
+	var percentExclude = 0.05;
+	var harrisValues = R3D.harrisCornerDetection(src, width, height, konstant, sigma);
+	var extrema = Code.findExtrema2DFloat(harrisValues, width,height);
+	var cornerPoints = [];
+	var i, len=extrema.length;
+	if(len>0){
+		var maxValue = extrema[0].z;
+		var minValue = maxValue;
+		for(i=1;i<len;++i){
+			maxValue = Math.max(maxValue, extrema[i].z);
+			minValue = Math.max(minValue, extrema[i].z);
+		}
+		var limitMin = maxValue*percentExclude;
+		var limitMax = maxValue;
+		for(i=0;i<len;++i){
+			var val = extrema[i].z;
+			if(limitMin<=val && val<=limitMax){
+				cornerPoints.push(extrema[i]);
+			}
+		}
+	}
+	//harrisValue = ImageMat.getNormalFloat01(harrisValue);
+	//ImageMat.invertFloat01(harrisValue);
+	return cornerPoints;
+}
 
 
 // texture / triangulating / blending

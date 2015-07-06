@@ -1914,8 +1914,10 @@ Code.findExtrema2DFloat = function(d, wid,hei){
 				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
 					result.x += i; result.y += j;
 					list.push(result);
-				}else{ // need to interpolate at a neighbor
-					//	console.log("result; "+result.toString());
+				}else{ // need to interpolate at a neighbor ... is this not already done?
+					//console.log("result; "+result.toString());
+					result.x += i; result.y += j;
+					list.push(result);
 				}
 			}
 		}
@@ -1972,6 +1974,8 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 					// console.log("          var a = ["+a0+","+a1+","+a2+","+a3+","+a4+","+a5+","+a6+","+a7+","+a8+"] ");
 					// console.log("          var b = ["+b0+","+b1+","+b2+","+b3+","+b4+","+b5+","+b6+","+b7+","+b8+"] ");
 					// console.log("          var c = ["+c0+","+c1+","+c2+","+c3+","+c4+","+c5+","+c6+","+c7+","+c8+"] ");
+					result.x += i; result.y += j; result.z += k;
+					list.push(result);
 				}
 			}
 		}

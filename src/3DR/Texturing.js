@@ -45,18 +45,42 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 	var points = [pointsA,pointsB];
 	var tris = [];
 	var tri;
+
+	// real
+	pntO = new V3D(0,0,0);
+	pntX = new V3D(1,0,0);
+	pntY = new V3D(0,1,0);
+	pntZ = new V3D(0,0,1);
+	pntXY = new V3D(1,1,0);
+	pntXZ = new V3D(1,0,1);
+	pntYZ = new V3D(0,1,1);
 	// A
-	tri = new Tri2D( new V2D(172,69), new V2D(173,108), new V2D(204,118) );
+	var pntAO = new V2D(173,108);
+	var pntAX = new V2D(204,118);
+	var pntAY = new V2D(172,69);
+	var pntAXY = new V2D(205,76);
+	// 1
+	tri = new Tri2D( pntAY, pntAO, pntAX );
 	tris.push([tri]);
-	pointsA.push(tri.A());
-	pointsA.push(tri.B());
-	pointsA.push(tri.C());
+	pointsA.push(tri.A(),tri.B(),tri.C());
+	// 2
+	tri = new Tri2D( pntAX, pntAXY, pntAY );
+	tris.push([tri]);
+	pointsA.push(tri.A(),tri.B(),tri.C());
 	// B
-	tri = new Tri2D( new V2D(193,100), new V2D(192,147), new V2D(232,153) );
+	var pntBO = new V2D(173,108);
+	var pntBX = new V2D(204,118);
+	var pntBY = new V2D(172,69);
+	var pntBXY = new V2D(205,76);
+	// 1
+	tri = new Tri2D( pntBY, pntBO, pntBX );
 	tris.push([tri]);
-	pointsB.push(tri.A());
-	pointsB.push(tri.B());
-	pointsB.push(tri.C());
+	pointsB.push(tri.A(),tri.B(),tri.C());
+	// 2
+	tri = new Tri2D( pntBX, pntBXY, pntBY );
+	tris.push([tri]);
+	pointsB.push(tri.A(),tri.B(),tri.C());
+
 	// 
 	var imageList = imageInfo.images;
 	var i, j, list = [], d, img, x=0, y=0;
@@ -82,7 +106,6 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 		}
 		d.graphics().endPath();
 		d.graphics().strokeLine();
-		
 		//
 		x += img.width;
 		y += 0;

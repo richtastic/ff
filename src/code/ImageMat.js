@@ -158,6 +158,9 @@ ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
 	var d = 1.5*(B-C) + 0.5*(D-A);
 	return (a + b*t + c*tt + d*ttt);
 }
+ImageMat.linear2D = function(colR, x,y, colA,colB,colC,colD){
+	return Code.linear2D(x,y, colA,colB,colC,colD);
+}
 ImageMat.linearColor = function(colR, x,y, colA,colB,colC,colD){
 	var r = Code.linear2D(x,y, colA.x,colB.x,colC.x,colD.x);
 	var g = Code.linear2D(x,y, colA.y,colB.y,colC.y,colD.y);
@@ -1264,6 +1267,26 @@ ImageMat.log = function(data){
 	return data;
 }
 
+ImageMat.getPointInterpolateLinear = function(array, wid,hei, x,y){
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var indexA = minY*wid + minX; var colA = array[indexA];
+	var indexB = minY*wid + maxX; var colB = array[indexB];
+	var indexC = maxY*wid + minX; var colC = array[indexC];
+	var indexD = maxY*wid + maxX; var colD = array[indexD];
+	minX = x - minX;
+	if(x<0||x>wid){ minX=0.0;}
+	minY = y - minY;
+	if(y<0||y>hei){ minY=0.0;}
+	val = ImageMat.linear2D(val, minX,minY, colA,colB,colC,colD);
+	if(isNaN(val)){
+		console.log("PT",wid,hei,x,y);
+	}
+	return val;
+}
 
 ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	x = Math.max(Math.min(x,wid-1),0);
@@ -1325,7 +1348,8 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection)
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
-				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				//destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
 			}
 		}
 	}
@@ -1469,6 +1493,8 @@ ImageMat.floatToOctave = function(src,wid,hei){
 	return str;
 }
 ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
+	console.log("USE R3D");
+	return null;
 	// A(x) = autocorrelation = [gaussian window]*[Ixx(x) Ixy(x) ; Ixy(x) Iyy(x)]
 	// H(x) = harris measure = det(A) - alpha*trace^2(A)
 	var temp, padding, gaussSource, Ix, Iy, IxIx, IxIy, IyIy, Sxx, Sxy, Syy;
@@ -1618,32 +1644,39 @@ ImageMat._TR = new V2D();
 ImageMat._BR = new V2D();
 ImageMat._BL = new V2D();
 
-ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){
+ImageMat.extractRectFromFloatImageBasic = function(x,y, outWidth,outHeight, source,sourceWidth,sourceHeight){
+	return ImageMat.extractRectFromFloatImage(x,y,1.0,null, outWidth,outHeight, source,sourceWidth,sourceHeight,null);
+}
+
+ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 
 	var blurr = (sigma!==undefined) && (sigma!=null);
-	var gaussSize, gauss1D, padding=0, fullX=(imgWid*x), fullY=(imgHei*y);
-	var m, left, right, top, bot, center1, center2, wid, hei, img = new Array();
+	var gaussSize, gauss1D, padding=0, fullX=(imgWid*x), fullY=(imgHei*y); // wtf
+	var img;
 	if(blurr){
+console.log("blurr");
 		gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 		padding = Math.floor(gaussSize/2.0);
 	}
-	left = fullX - (w*0.5)*scale - padding*scale;
-	right = fullX + (w*0.5)*scale + padding*scale;
-	top = fullY - (h*0.5)*scale - padding*scale;
-	bot = fullY + (h*0.5)*scale + padding*scale;
-	O = ImageMat._O; O.set(0,0);
-	TL = ImageMat._TL; TL.set(left,top);
-	TR = ImageMat._TR; TR.set(right,top);
-	BR = ImageMat._BR; BR.set(right,bot);
-	BL = ImageMat._BL; BL.set(left,bot);
+	fullX = x; // wtf
+	fullY = y; // wtf
+	var left = fullX - (w*0.5)*scale - padding*scale;
+	var right = fullX + (w*0.5)*scale + padding*scale;
+	var top = fullY - (h*0.5)*scale - padding*scale;
+	var bot = fullY + (h*0.5)*scale + padding*scale;
+	var O = ImageMat._O; O.set(0,0);
+	var TL = ImageMat._TL; TL.set(left,top);
+	var TR = ImageMat._TR; TR.set(right,top);
+	var BR = ImageMat._BR; BR.set(right,bot);
+	var BL = ImageMat._BL; BL.set(left,bot);
 	if(matrix){
-		matinv = matrix;
+		var matinv = matrix;
 		matrix = Matrix.inverse(matrix);
-		center1 = ImageMat._center1; center1.set(fullX,fullY);
-		center2 = ImageMat._center2; center2.set(0,0);
+		var center1 = ImageMat._center1; center1.set(fullX,fullY);
+		var center2 = ImageMat._center2; center2.set(0,0);
 		matinv.multV2DtoV2D(center2,center1);
 		// to origin
-		m = new Matrix(3,3);
+		var m = new Matrix(3,3);
 		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
 		matrix = Matrix.mult(matrix,m);
 		// to updated center
@@ -1656,15 +1689,16 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 		matrix.multV2DtoV2D(BL,BL);
 	}
 	// EXTRACT AROUND SOURCE POINT
-	wid = w+2*padding;
-	hei = h+2*padding;
-	img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
+	var wid = w+2*padding;
+	var hei = h+2*padding;
+	console.log(TL.x,TL.y);//, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y)
+	var img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
 	// BLUR IMAGE
 	if(blurr){
 		img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
+		// DE-PAD IMAGE
+		img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
 	}
-	// DE-PAD IMAGE
-	img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
 	return img;
 }
 
