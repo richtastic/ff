@@ -1408,7 +1408,24 @@ minIndex = 0.0;
 
 
 
-
+// -------------------------------------------------------------------------------------------- array image type operations
+R3D.gradientDirection = function(rect, wid,hei){
+	var rect, gradX, gradY;
+	var Ix, Iy, src, mag, ang, sigma, scaler, dir = new V2D(), x = V2D.DIRX;
+	var cenX = Math.floor(wid*0.5), cenY = Math.floor(hei*0.5);
+	// blur
+	sigma = 1.6;
+	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
+	src = ImageMat.gaussian2DFrom1DFloat(rect, wid,hei, gauss1D);
+	// find gradient
+	Ix = ImageMat.derivativeX(src, wid,hei);
+	Iy = ImageMat.derivativeY(src, wid,hei);
+	dir.set(Ix[wid*cenY + cenX], Iy[wid*cenY + cenX]);
+	// angle with x-axis
+	mag = dir.length();
+	ang = V2D.angleDirection(x,dir);
+	return {direction:dir, angle:ang, magnitude:mag};
+}
 
 
 R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // harris

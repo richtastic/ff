@@ -1691,7 +1691,6 @@ console.log("blurr");
 	// EXTRACT AROUND SOURCE POINT
 	var wid = w+2*padding;
 	var hei = h+2*padding;
-	console.log(TL.x,TL.y);//, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y)
 	var img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
 	// BLUR IMAGE
 	if(blurr){
