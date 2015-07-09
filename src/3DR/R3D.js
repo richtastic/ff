@@ -223,7 +223,8 @@ R3D.calculatePrinciple = function(points){
 	var ratio = Math.sqrt(eigVal[0]/eigVal[1]);
 	return {direction:dirEigA, angle:angle, scale:ratio}
 }
-R3D.calculateNormalizedPoints = function(inputPoints){
+R3D.calculateNormalizedPoints = function(inputPoints){ // array of arrays
+	//if(!Code.isArray(inputPoints)){ inputPoints = [inputPoints]; }
 	var i, j, len, T, cenX, cenY, rmsX, rmsY;
 	var dirInfo, angle, ratio, tmp = new V2D(), v = new V3D();
 	var normalizedPoints = [];
@@ -298,6 +299,79 @@ R3D.screenNormalizedPointsFromPixelPoints = function(points,width,height){
 	}
 	return list;
 }
+// ------------------------------------------------------------------------------------------- H utilities
+R3D.homographyMatrixLinear = function(pointsA,pointsB){
+	if (pointsA && pointsB && pointsA.length>=4 && pointsB.length>=4){
+		return R3D.projectiveDLT(pointsA,pointsB);
+	}
+	return null;
+}
+R3D.HomographyMatrixNonlinear = function(H,pointsA,pointsB){
+// no idea if this is right yet
+	var maxIterations = 30;
+	var fxn, args, xVals, yVals, maxSupportCount;
+	maxSupportCount = pointsA.length;
+	fxn = R3D.lmMinHomographyFxn;
+	args = [pointsA,pointsB];
+	xVals = H.toArray();
+yVals = Code.newArrayZeros(maxSupportCount*4);
+	var flip = undefined;
+	flip = true;
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, flip );
+	H = new Matrix(3,3).setFromArray(xVals);
+	return H;
+}
+R3D.lmMinHomographyFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1xm, e:1xm
+	return null;
+	var pointsA = args[0];
+	var pointsB = args[1];
+	var unknowns = 9;
+	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
+	var Frev = new Matrix(3,3), Ffwd = new Matrix(3,3);
+	var orgA = new V3D(), orgB = new V3D(), dirA = new V3D(), dirB = new V3D();
+	var onA, onB;
+	var i, len = pointsA.length;
+	var rows = 2*2*len;
+	// convert unknown list to matrix
+	for(i=0;i<unknowns;++i){
+		Ffwd.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
+	}
+	Frev = Matrix.transpose(Ffwd);
+	// find forward / reverse distances from line
+ 	for(i=0;i<len;++i){
+		pointA = pointsA[i];
+		pointB = pointsB[i];
+		Ffwd.multV3DtoV3D(lineA, pointA);
+		Frev.multV3DtoV3D(lineB, pointB);
+		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
+		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
+		onA = Code.closestPointLine2D(orgA,dirA, pointB);
+		onB = Code.closestPointLine2D(orgB,dirB, pointA);
+		// var distB = Code.distancePointLine2D(orgA,dirA, pointB);
+		// var distA = Code.distancePointLine2D(orgB,dirB, pointA);
+ 		if(yMatrix){
+ 			yMatrix.set(i*4+0,0, onA.x);
+ 			yMatrix.set(i*4+1,0, onA.y);
+ 			yMatrix.set(i*4+2,0, onB.x);
+ 			yMatrix.set(i*4+3,0, onB.y);
+ 		}
+ 		if(eMatrix){
+ 			// eMatrix.set(i*4+0,0, Math.pow(onA.x-pointB.x,2) );
+ 			// eMatrix.set(i*4+1,0, Math.pow(onA.y-pointB.y,2) );
+ 			// eMatrix.set(i*4+2,0, Math.pow(onB.x-pointA.x,2) );
+ 			// eMatrix.set(i*4+3,0, Math.pow(onB.y-pointA.y,2) );
+ 			eMatrix.set(i*4+0,0, Math.pow(onB.x-pointA.x,2) );
+ 			eMatrix.set(i*4+1,0, Math.pow(onB.y-pointA.y,2) );
+ 			eMatrix.set(i*4+2,0, Math.pow(onA.x-pointB.x,2) );
+ 			eMatrix.set(i*4+3,0, Math.pow(onA.y-pointB.y,2) );
+ 			// eMatrix.set(i*4+0,0, distB );
+ 			// eMatrix.set(i*4+1,0, distB );
+ 			// eMatrix.set(i*4+2,0, distA );
+ 			// eMatrix.set(i*4+3,0, distA );
+ 		}
+ 	}
+}
+
 // ------------------------------------------------------------------------------------------- F utilities
 R3D.forceRank2 = function(fundamental){
 	var svd = Matrix.SVD(fundamental);
@@ -1013,7 +1087,7 @@ R3D.normalizePoints2D = function(currentPoints, nextPoints, matrix, inverse){ //
 	return matrix;
 }
 
-R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x3 homography / projection matrix
+R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x3 homography / projection matrix -- need 2nx9 == 4 correspondences
 	var i, j, fr, to, len = pointsFr.length;
 	var v = new V3D(), u = new V3D();
 	var rows = len*3;

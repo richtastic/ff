@@ -377,6 +377,19 @@ Code.arrayLimit = function(arr,min,max){
 		}
 	}
 }
+Code.newIndexArray = function(start,end){ // inclusive
+	array = [];
+	for(i=start;i<=end;++i){
+		array.push(i);
+	}
+	return array;
+}
+Code.arrayRandomItemPop = function(array){
+	if(array.length==0){ return null; }
+	var index = Math.floor(Math.random()*array.length);
+	var value = array.splice(index,1);
+	return value;
+}
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -2971,6 +2984,10 @@ Code.parsePointSetString = function(data, max){
 }
 
 
+
+Code.requiredIterationsForModel = function(pDesiredCoverage, pOutlier, sampleCount){
+	return Math.ceil(Math.log(1.0-pDesiredCoverage)/Math.log( 1 - Math.pow(pOutlier,sampleCount) ))
+}
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------------  THESE NEED TO BE RECHECKED - COPIED FROM OLD CODE

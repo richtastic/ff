@@ -38,8 +38,8 @@ V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
 	}
 	return V3D.rotate(b,a, V3D.ZERO,dir,ang); // about same origin
 }
-V3D.fromV2D = function(a){
-	return new V3D(a.x,a.y,0);
+V3D.fromV2D = function(a,option){
+	return new V3D(a.x,a.y, option!==undefined ? option : 0 );
 }
 V3D.distanceSquare = function(a,b){
 	return Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2);

@@ -143,17 +143,132 @@ var matches = [];
 				this._root.addChild(pnt);
 				pnt = R3D.drawPointAt(featureB.center.x+400,featureB.center.y, r,g,b, size);
 				this._root.addChild(pnt);
-				matches.push({A:featureA.center.copy(), B:featureA.center.copy()});
+				matches.push({A:featureA, B:featureB});
 			}
 		}
 		// 
 console.log("matches: "+matches.length);
-// sareching for best fit homography: H = [a b c; d e f; g h i]
+// searching for best fit homography: H = [a b c; d e f; g h i]
 	// RANSAC matches
+	var initialAssumedProbabilityOutliers = 0.5;
+	var minSampleCount = 5;
+	var pDesired = 0.99;
+	var populationCount = matches.length;
+	//
+	var pOutlier = initialAssumedProbabilityOutliers;
+	//
+	var minAllowableSupport = 4;
+	var maxSupport = 0;
+	var maxConsensus = 0;
+	var maxModel = 0;
+	var maxIterations = Code.requiredIterationsForModel(pDesired, pOutlier, minSampleCount);
+	var sampleIndexList, samples, pointsA, pointsB, pointsANormalized, pointsBNormalized;
+	var index;
+	var H, Hinv;
+	var match, pointA, pointB;
+	var distA, distB;
+	var consensus;
+	//
+	console.log("ITERATIONS: "+maxIterations);
+//	console.log("DISTANCE: "+maxLineDistance);
 	for(j=0;j<maxIterations;++j){
-		//
+		sampleIndexList = Code.newIndexArray(0,populationCount-1);
+		samples = [];
+		pointsA = [];
+		pointsB = [];
+		for(i=0;i<minSampleCount;++i){
+			index = Code.arrayRandomItemPop(sampleIndexList);
+			match = matches[index];
+			pointsA.push( V3D.fromV2D(match.A.center,1.0) );
+			pointsB.push( V3D.fromV2D(match.B.center,1.0) );
+		}
+		pointsANormalized = R3D.calculateNormalizedPoints([pointsA]);
+		pointsBNormalized = R3D.calculateNormalizedPoints([pointsB]);
+		H = R3D.homographyMatrixLinear(pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
+		// H = R3D.homographyMatrixNonlinear(H, pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
+		H = Matrix.mult(H, pointsANormalized.forward[0]);
+		H = Matrix.mult(pointsBNormalized.reverse[0], H);
+		Hinv = Matrix.inverse(H);
+// var pA = pointsA[0];
+// var pAH = H.multV3DtoV3D(new V3D(), pA);
+// pAH.homo();
+// var pB = pointsB[0];
+// var pBH = Hinv.multV3DtoV3D(new V3D(), pB);
+// pBH.homo();
+// //H = Matrix.inverse(H);
+
+// console.log("pA:  "+pA.toString());
+// console.log("pBH: "+pBH.toString());
+
+// console.log("pAH: "+pAH.toString());
+// console.log("pB:  "+pB.toString());
+
+// break;
+		// find support count
+		consensus = [];
+var maxPointDistance = 5.0; // pixels
+		for(i=0;i<populationCount;++i){
+			match = matches[i];
+			pointA = V3D.fromV2D(match.A.center,1.0);
+			pointB = V3D.fromV2D(match.B.center,1.0);
+			//console.log(pointA+" - "+pointB)
+			pointAH = H.multV3DtoV3D(new V3D(), pointA);
+			pointBH = Hinv.multV3DtoV3D(new V3D(), pointB);
+			pointAH.homo();
+			pointBH.homo();
+//			console.log(pointAH+" - "+pointBH)
+			distA = V2D.distance(pointA,pointBH);
+			distB = V2D.distance(pointB,pointAH);
+//			console.log(distA+" - "+distB);
+			if(distA <= maxPointDistance && distB <= maxPointDistance){
+				consensus.push([pointA,pointB]);
+			}
+		}
+// SHOULD ALWAYS HAVE A MINIMUM OF 2
+//		console.log(consensus.length);
+		// save best consensus
+		if(consensus.length>maxSupport && consensus.length>=minAllowableSupport){
+			maxSupport = consensus.length;
+			maxConsensus = consensus;
+			maxModel = H.copy();
+			// update max iterations based on known min inliers
+			pOutlier = maxSupport*1.0/populationCount;
+			//pOutlier = 1 - pInlier;
+			maxIterations = Code.requiredIterationsForModel(pDesired, pOutlier, minSampleCount);
+			console.log("NEW SUPPORT: "+maxSupport+" MAX ITERATIONS: "+maxIterations);
+		}
+
 	}
+		// for(){
+		// 
+		// }
 	/*
+Code.randomSubsetFromArray(subsetPointsA, 9, pointsA);
+Code.randomSubsetFromArray(subsetPointsB, 9, pointsB);
+subsetPointsA = pointsA;
+subsetPointsB = pointsB;
+// console.log(subsetPointsA+"");
+// console.log(subsetPointsB+"");
+var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
+var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
+//arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
+//arr = R3D.fundamentalMatrix8(subsetPointsA,subsetPointsB);
+//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
+
+arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+arr = Matrix.mult(arr,pointsANorm.forward[0]);
+arr = Matrix.mult( Matrix.transpose(pointsBNorm.forward[0]), arr);
+
+
+		var minCount = 2;
+	var epsilon = 1.0/points.length;
+	var pOutlier = 0.5;
+	var pDesired = 0.99;
+	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(1-pOutlier,minCount) )); // initially assume 50% are outliers
+	var maxLineDistance = 1.0; // this should be based on error
+	console.log("ITERATIONS: "+maxIterations);
+
+
 	var index, support, consensus, dist, org=new V2D(), dir=new V2D();
 	len = points.length;
 	var maxSupport = 0;
@@ -269,6 +384,7 @@ var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pInl
 	//}
 	// show matches in display
 }
+
 Stitching.prototype.combineTriangles = function(){
 	var triList = this._tris;
 	var imgList = this._imgs;

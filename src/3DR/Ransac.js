@@ -128,7 +128,8 @@ this._root.addChild(d);
 			maxModel = [m,b];
 			// update max iterations based on known min inliers
 			var pInlier = maxSupport*1.0/len;
-var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pInlier,minCount) )); 
+			pOutlier = 1 - pInlier;
+var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pOutlier,minCount) )); 
 			console.log("NEW MAX: "+maxIterations);
 		}
 
