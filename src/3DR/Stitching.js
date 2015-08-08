@@ -154,6 +154,7 @@ console.log("matches: "+matches.length);
 	var minSampleCount = 5;
 	var pDesired = 0.99;
 	var populationCount = matches.length;
+	var sigmaDistanceScale = 5.0; // 5-sigma
 	//
 	var pOutlier = initialAssumedProbabilityOutliers;
 	//
@@ -185,10 +186,24 @@ console.log("matches: "+matches.length);
 		pointsANormalized = R3D.calculateNormalizedPoints([pointsA]);
 		pointsBNormalized = R3D.calculateNormalizedPoints([pointsB]);
 		H = R3D.homographyMatrixLinear(pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
-		// H = R3D.homographyMatrixNonlinear(H, pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
+		var optimalResult = R3D.homographyMatrixNonlinearVars(H, pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
+// console.log(pointsA);
+// console.log(pointsB);
+console.log(optimalResult);
+		var optimalPoints = optimalResult.x;
+		var optimalA = [];
+		var optimalB = [];
+		for (i=0;i<minSampleCount; ++i){
+			optimalA.push(new V2D(optimalPoints[i*4+0],optimalPoints[i*4+1]));
+			optimalB.push(new V2D(optimalPoints[i*4+2],optimalPoints[i*4+3]));
+		}
+// console.log(optimalA)
+// console.log(optimalB)
+		H = optimalResult.H;
 		H = Matrix.mult(H, pointsANormalized.forward[0]);
 		H = Matrix.mult(pointsBNormalized.reverse[0], H);
 		Hinv = Matrix.inverse(H);
+
 // var pA = pointsA[0];
 // var pAH = H.multV3DtoV3D(new V3D(), pA);
 // pAH.homo();
@@ -206,7 +221,45 @@ console.log("matches: "+matches.length);
 // break;
 		// find support count
 		consensus = [];
-var maxPointDistance = 5.0; // pixels
+
+
+// FIND MAXIMUM ALLOWABLE DISTANCE A POINT CAN BE FROM CALCULATED POINT AND STILL BE CONSIDERED VALID
+
+// find OPTIMAL x & x'
+// n = MINIMUM POINT COUNT
+var averageDistanceA = 0;
+var averageDistanceB = 0;
+for(i=0; i<minSampleCount; ++i){
+	var A = pointsA[i];
+	var B = pointsB[i];
+	var X = optimalA[i];
+	var Y = optimalB[i];
+	var distanceA = V2D.distance(A,X);
+	var distanceB = V2D.distance(B,Y);
+	averageDistanceA += distanceA;
+	averageDistanceB += distanceB;
+}
+
+averageDistanceA /= minSampleCount;
+averageDistanceB /= minSampleCount;
+var sigmaDistanceA = 0;
+var sigmaDistanceB = 0;
+for(i=0; i<minSampleCount; ++i){
+	var A = pointsA[i];
+	var B = pointsB[i];
+	var X = optimalA[i];
+	var Y = optimalB[i];
+	var distanceA = V2D.distance(A,X);
+	var distanceB = V2D.distance(B,Y);
+	sigmaDistanceA += Math.pow(distanceA - averageDistanceA, 2);
+	sigmaDistanceB += Math.pow(distanceB - averageDistanceB, 2);
+}
+// sigma = sqrt( sum(x_i-x_avg)/n )
+sigmaDistanceA = Math.sqrt(sigmaDistanceA/minSampleCount);
+sigmaDistanceB = Math.sqrt(sigmaDistanceB/minSampleCount);
+console.log("ERRORS:",sigmaDistanceA,sigmaDistanceB);
+var maxPointDistanceA = sigmaDistanceScale * sigmaDistanceA; // pixels
+var maxPointDistanceB = sigmaDistanceScale * sigmaDistanceB; // pixels
 		for(i=0;i<populationCount;++i){
 			match = matches[i];
 			pointA = V3D.fromV2D(match.A.center,1.0);
@@ -220,7 +273,7 @@ var maxPointDistance = 5.0; // pixels
 			distA = V2D.distance(pointA,pointBH);
 			distB = V2D.distance(pointB,pointAH);
 //			console.log(distA+" - "+distB);
-			if(distA <= maxPointDistance && distB <= maxPointDistance){
+			if(distA <= maxPointDistanceA && distB <= maxPointDistanceB){
 				consensus.push([pointA,pointB]);
 			}
 		}
