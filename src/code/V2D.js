@@ -191,3 +191,30 @@ V2D.ZERO = new V2D(0.0,0.0);
 V2D.DIRX = new V2D(1.0,0.0);
 V2D.DIRY = new V2D(0.0,1.0);
 
+
+// HELPERS:
+V2D.extremaFromArray = function(pointList){
+	var i, len=pointList.length, pt;
+	var minImageX = null, minImageY = null;
+	var maxImageX = null, maxImageY = null;
+	for(i=0; i<len; ++i){
+		pt = pointList[i];
+		if(minImageX==null || pt.x<minImageX){
+			minImageX = pt.x;
+		}
+		if(maxImageX==null || pt.x>maxImageX){
+			maxImageX = pt.x;
+		}
+		if(minImageY==null || pt.y<minImageY){
+			minImageY = pt.y;
+		}
+		if(maxImageY==null || pt.y>maxImageY){
+			maxImageY = pt.y;
+		}
+	}
+	var minPoint = new V2D(minImageX, minImageY);
+	var maxPoint = new V2D(maxImageX, maxImageY);
+	return {"min":minPoint, "max":maxPoint};
+}
+
+

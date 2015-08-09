@@ -23,15 +23,24 @@ Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 	var i, j, list = [], d, img, x=0, y=0;
 var featurePoints = [];
 var features = [];
+var matrixOffY = 50;
 	for(i=0;i<imageList.length;++i){
 		img = imageList[i];
 		list[i] = img;
 		d = new DOImage(img);
 		this._root.addChild(d);
+if(i==0){
+	d.removeParent();
+}
+// d.addFunction(Canvas.EVENT_MOUSE_DOWN,function(e){
+// 	console.log(e);
+// 	console.log("down");
+// 	d.moveToFront();
+// },d);
 		d.moveToBack();
 		d.enableDragging();
 		d.matrix().identity();
-		d.matrix().translate(x,y);
+		d.matrix().translate(x,y+matrixOffY);
 		d.graphics().setLine(1.0,0xFFFF0000);
 		d.graphics().beginPath();
 		d.graphics().endPath();
@@ -62,7 +71,7 @@ var features = [];
 				var b = 0x00;
 				var size = 1 + points[j].z*100000.0;
 				var pnt = R3D.drawPointAt(point.x,point.y, r,g,b, size);
-				d.addChild(pnt);
+//				d.addChild(pnt);
 				var winSize = 25;
 				var sigma = null;//1.6;
 				var scale = 0.50;
@@ -80,7 +89,7 @@ var features = [];
 					var e = new DOImage(iii);
 					//e.matrix().identity().translate(Math.random()*400,Math.random()*100);
 					e.matrix().identity().translate(j*winSize,i*winSize);
-					this._root.addChild(e);
+//					this._root.addChild(e);
 				points[j] = feature;
 			}
 features.push(points);
@@ -134,15 +143,15 @@ var matches = [];
 				e.graphics().lineTo(featureB.center.x+400,featureB.center.y);
 				e.graphics().endPath();
 				e.graphics().strokeLine();
-				this._root.addChild(e);
+//				this._root.addChild(e);
 				size = 15;
 				r = 0x00;
 				g = 0x00;
 				b = 0xFF;
 				pnt = R3D.drawPointAt(featureA.center.x,featureA.center.y, r,g,b, size);
-				this._root.addChild(pnt);
+//				this._root.addChild(pnt);
 				pnt = R3D.drawPointAt(featureB.center.x+400,featureB.center.y, r,g,b, size);
-				this._root.addChild(pnt);
+//				this._root.addChild(pnt);
 				matches.push({A:featureA, B:featureB});
 			}
 		}
@@ -187,9 +196,6 @@ console.log("matches: "+matches.length);
 		pointsBNormalized = R3D.calculateNormalizedPoints([pointsB]);
 		H = R3D.homographyMatrixLinear(pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
 		var optimalResult = R3D.homographyMatrixNonlinearVars(H, pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
-// console.log(pointsA);
-// console.log(pointsB);
-console.log(optimalResult);
 		var optimalPoints = optimalResult.x;
 		var optimalA = [];
 		var optimalB = [];
@@ -234,6 +240,8 @@ for(i=0; i<minSampleCount; ++i){
 	var B = pointsB[i];
 	var X = optimalA[i];
 	var Y = optimalB[i];
+		Y = H.multV3DtoV3D( new V3D(), V3D.fromV2D(A,1.0) );
+		X = Hinv.multV3DtoV3D( new V3D(), V3D.fromV2D(B,1.0) );
 	var distanceA = V2D.distance(A,X);
 	var distanceB = V2D.distance(B,Y);
 	averageDistanceA += distanceA;
@@ -260,6 +268,10 @@ sigmaDistanceB = Math.sqrt(sigmaDistanceB/minSampleCount);
 console.log("ERRORS:",sigmaDistanceA,sigmaDistanceB);
 var maxPointDistanceA = sigmaDistanceScale * sigmaDistanceA; // pixels
 var maxPointDistanceB = sigmaDistanceScale * sigmaDistanceB; // pixels
+
+maxPointDistanceA = 1.0;
+maxPointDistanceB = 1.0;
+
 		for(i=0;i<populationCount;++i){
 			match = matches[i];
 			pointA = V3D.fromV2D(match.A.center,1.0);
@@ -288,154 +300,119 @@ var maxPointDistanceB = sigmaDistanceScale * sigmaDistanceB; // pixels
 			pOutlier = maxSupport*1.0/populationCount;
 			//pOutlier = 1 - pInlier;
 			maxIterations = Code.requiredIterationsForModel(pDesired, pOutlier, minSampleCount);
-			console.log("NEW SUPPORT: "+maxSupport+" MAX ITERATIONS: "+maxIterations);
+			console.log(" >>> NEW SUPPORT: "+maxSupport+" MAX ITERATIONS: "+maxIterations);
 		}
 
 	}
-		// for(){
-		// 
-		// }
-	/*
-Code.randomSubsetFromArray(subsetPointsA, 9, pointsA);
-Code.randomSubsetFromArray(subsetPointsB, 9, pointsB);
-subsetPointsA = pointsA;
-subsetPointsB = pointsB;
-// console.log(subsetPointsA+"");
-// console.log(subsetPointsB+"");
-var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
-var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
-//arr = R3D.fundamentalMatrix7(subsetPointsA,subsetPointsB);
-//arr = R3D.fundamentalMatrix8(subsetPointsA,subsetPointsB);
-//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
 
-arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
-arr = Matrix.mult(arr,pointsANorm.forward[0]);
-arr = Matrix.mult( Matrix.transpose(pointsBNorm.forward[0]), arr);
+	// BEST RANSAC MODEL RESULT
+	console.log("+=+=+=+=+=+=+=+=+=+=+=+");
+	console.log("MAX SUPPORT: "+maxSupport);
+	console.log("+=+=+=+=+=+=+=+=+=+=+=+");
+	//console.log("MAX SUPPORT: "+maxSupport);
+	H = maxModel;
+	Hinv = Matrix.inverse(H);
 
+	// PLACE IMAGE 1 OVER IMAGE 2
+	var temp;
+	var imageA = imageList[0];
+	var imageB = imageList[1];
+	var imageACorners = [], imageBCorners = [];
+	imageACorners.push(new V2D(0,0)); // TL
+	imageACorners.push(new V2D(imageA.width,0)); // TR
+	imageACorners.push(new V2D(imageA.width,imageA.height)); // BR
+	imageACorners.push(new V2D(0,imageA.height)); // BL
+	imageBCorners.push(new V2D(0,0)); // TL
+	imageBCorners.push(new V2D(imageB.width,0)); // TR
+	imageBCorners.push(new V2D(imageB.width,imageB.height)); // BR
+	imageBCorners.push(new V2D(0,imageB.height)); // BL
 
-		var minCount = 2;
-	var epsilon = 1.0/points.length;
-	var pOutlier = 0.5;
-	var pDesired = 0.99;
-	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(1-pOutlier,minCount) )); // initially assume 50% are outliers
-	var maxLineDistance = 1.0; // this should be based on error
-	console.log("ITERATIONS: "+maxIterations);
-
-
-	var index, support, consensus, dist, org=new V2D(), dir=new V2D();
-	len = points.length;
-	var maxSupport = 0;
-	var maxConsensus = null;
-	var maxModel = null;
-	A = new Matrix(minCount,3);
-	for(j=0;j<maxIterations;++j){
-		var pts = [];
-		var indexList = [];
-		for(i=0;i<len;++i){ indexList[i] = i; }
-		for(i=0;i<minCount;++i){
-			index = Math.floor(Math.random()*indexList.length);
-			index = indexList.splice(index,1);
-			pts.push( points[ index ] );
-		}
-		// line fitting
-		for(i=0;i<minCount;++i){
-			p = pts[i];
-			A.set(i,0, p.x);
-			A.set(i,1, 1.0);
-			A.set(i,2, -p.y);
-		}
-		svd = Matrix.SVD(A);
-		coeff = svd.V.colToArray(2);
-		m = coeff[0];
-		b = coeff[1];
-		y = coeff[2]; // deviates from 1
-		m /= y;
-		b /= y;
-		//L = new Matrix(1,2).setFromArray([m,b]);
-		// find consensus set
-		consensus = [];
-// sum distances and rate based on inverse of average/total distance?
-		org.set(0,b)
-		dir.set(1,m); // 1-0,m+b-b
-dir.scale(10.0);
-d = new DO();
-d.graphics().clear();
-d.graphics().setLine(2.0,0xFF00FF00);
-d.graphics().beginPath();
-x = org.x; y = org.y;
-d.graphics().moveTo(scale*x + offX, -scale*y + offY);
-x = org.x + dir.x; y = org.y + dir.y;
-d.graphics().lineTo(scale*x + offX, -scale*y + offY);
-d.graphics().endPath();
-d.graphics().strokeLine();
-d.graphics().fill();
-this._root.addChild(d);
-		for(i=0;i<len;++i){
-			p = points[i];
-			dist = Code.distancePointLine2D(org,dir, p);
-			if(dist <= maxLineDistance){
-				consensus.push(p);
+	imageACornersInB = this.pointListTransformedH(imageACorners, H);
+//	imageACornersInB = this.pointListTransformedH(imageACorners, Hinv);
+//imageACornersInB = this.pointListTransformedH(imageACornersInB, Hinv);
+	//imageBCornersInA = this.pointListTransformedH(imageBCorners, Hinv);
+	temp = V2D.extremaFromArray(imageACornersInB);
+	var imageATransMin = temp.min;
+	var imageATransMax = temp.max;
+	var imageATransWidth = imageATransMax.x-imageATransMin.x;
+	var imageATransHeight = imageATransMax.y-imageATransMin.y;
+	console.log(imageATransMin+" -> "+imageATransMax);
+	console.log(imageATransWidth+" x "+imageATransHeight);
+	if(imageATransWidth>2.0*imageA.width || imageATransHeight>2.0*imageA.height){
+		console.log("HOMOGRAPHY IS TOO WARPED");
+	} else {
+		console.log("START TO WARP");
+		var imageMat;
+		var imageCWidth = Math.ceil(imageATransWidth);
+		var imageCHeight = Math.ceil(imageATransHeight);
+		var offsetBC = V2D.copy( imageATransMin );
+		var imageCPixels = imageCWidth*imageCHeight;
+		//var imageCMat = new Array(imageCPixels);
+		var imageCMatR = new Array(imageCPixels);
+		var imageCMatG = new Array(imageCPixels);
+		var imageCMatB = new Array(imageCPixels);
+		var imageCMatA = new Array(imageCPixels);
+			//imageMat = this._stage.getImageAsFloatGray(imageA);
+		//var imageAMat = imageMat.gray;
+			imageMat = this._stage.getImageAsFloatRGB(imageA);
+		var imageAMatR = imageMat.red;
+		var imageAMatG = imageMat.grn;
+		var imageAMatB = imageMat.blu;
+		// 	imageMat = this._stage.getImageAsFloatGray(imageB);
+		// var imageBMat = imageMat.gray;
+		for(j=0; j<imageCHeight; ++j){
+			for(i=0; i<imageCWidth; ++i){
+				var index = imageCWidth*j + i;
+				var ptB = new V3D(i,j,1.0);
+				ptB.x += offsetBC.x;
+				ptB.y += offsetBC.y;
+				var ptA = Hinv.multV3DtoV3D(new V3D(), ptB);
+				var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
+				//var isPointInside = Code.isPointInsidePolygon2D(ptA,);
+				isPointInside = (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height);
+				if(isPointInside){
+					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
+					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatA[index] = 1.0;
+				} else {
+					imageCMatR[index] = 0.0;
+					imageCMatG[index] = 0.0;
+					imageCMatB[index] = 0.0;
+					imageCMatA[index] = 0.0;
+				}
 			}
 		}
-// SHOULD ALWAYS HAVE A MINIMUM OF 2
-		console.log(consensus.length);
-		// save consensus
-		if(consensus.length>maxSupport){
-			maxSupport = consensus.length;
-			maxConsensus = consensus;
-			maxModel = [m,b];
-			// update max iterations based on known min inliers
-			var pInlier = maxSupport*1.0/len;
-var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pInlier,minCount) )); 
-			console.log("NEW MAX: "+maxIterations);
-		}
-
+		//imageC = this._stage.getFloatGrayAsImage(imageCMat, imageCWidth,imageCHeight, null);
+		imageC = this._stage.getFloatARGBAsImage(imageCMatA,imageCMatR,imageCMatG,imageCMatB, imageCWidth,imageCHeight, null);
+		// Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
+		var img = new DOImage(imageC);
+		//img.graphics().alpha(0.75);
+		this._root.addChild(img);
+		//img.moveBackward();
+		img.moveToBack();
+		//img.moveForward();
+		img.matrix().translate(400.0,matrixOffY);
+		img.matrix().translate(offsetBC.x,offsetBC.y);
 	}
-	// get best model/consensus/support
-	consensus = maxConsensus;
-	support = maxSupport;
-	m = maxModel[0];
-	b = maxModel[1];
-	console.log("CONSENSUS: "+support+" := "+m+" x + "+b);
-	console.log(""+consensus);
-	// further improve model by incorporating more inliers progressivley
-		A = new Matrix(consensus.length,3);
-		for(i=0;i<consensus.length;++i){
-			p = consensus[i];
-			A.set(i,0, p.x);
-			A.set(i,1, 1.0);
-			A.set(i,2, -p.y);
-		}
-		svd = Matrix.SVD(A);
-		coeff = svd.V.colToArray(2);
-		m = coeff[0];
-		b = coeff[1];
-		y = coeff[2]; // deviates from 1
-		m /= y;
-		b /= y;
-		// go thru and see if there are any more inliers
-		// iterate
-		// use maximum set (for iteration)
-	// show line
-	d = new DO();
-	d.graphics().clear();
-	d.graphics().setFill(0xFF000000);
-	d.graphics().setLine(1.0,0xFF0000FF);
-	d.graphics().beginPath();
-	x = 0.0; y = m*x + b;
-	d.graphics().moveTo(scale*x + offX, -scale*y + offY);
-	x = 10.0; y = m*x + b;
-	d.graphics().lineTo(scale*x + offX, -scale*y + offY);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-	d.graphics().fill();
-	this._root.addChild(d);
-	console.log(".........");
-	*/
+	console.log("DONE");
+}
 
 
-	//}
-	// show matches in display
+Stitching.prototype.pointListTransformedH = function(pointList,H){
+	var i, len = pointList.length;
+	var pt = new V3D();
+	var newList = [];
+	for(i=0; i<len; ++i){
+		var point = pointList[i];
+		pt.set(point.x,point.y,1.0);
+		var transPoint = H.multV3DtoV3D(new V3D(), pt);
+		transPoint.homo();
+		newList.push(transPoint);
+	}
+	return newList;
 }
 
 Stitching.prototype.combineTriangles = function(){

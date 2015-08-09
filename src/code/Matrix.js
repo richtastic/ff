@@ -757,8 +757,8 @@ Matrix.inverse = function(A){ // assumed square
 	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
 	C = C.getSubMatrix(0,A._colCount, A._rowCount,A._colCount);
 	if( !B.closeToIdentity() ){
-		console.log("not close")
-		console.log(B.toString())
+//		console.log("not close")
+//		console.log(B.toString())
 		//B.dropOutIdentity();
 		//return null;
 		//console.log(B.toString())
@@ -1474,7 +1474,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 // console.log(Jinv.toString())
 // console.log(dx.getNorm())
 		if(dx.getNorm()<xTolerance){
-			console.log("converge x");
+//			console.log("converge x");
 			break;
 		}
 		// x += dx  (putative)

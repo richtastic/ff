@@ -2930,6 +2930,23 @@ Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest dis
 //console.log(" "+dC+" "+pC[0]+" "+pC[1]);
 	return Math.min(dA,dB,dC);
 }
+Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderflex.com/polygon/
+	var i, j, a, b, len=polygonArray.length;
+	if(len<=2){ return false; } // check is on/near line for len==2?
+	var oddNodes = false;
+	for(i=0, j=len-1; i<len; ++i){
+		a = polygonArray[i];
+		b = polygonArray[j];
+		if( ((a.y<p.y && b.y>=p.y) || (b.y<p.y && a.y>=p.y)) && (a.x<=p.x || b.x<=p.x) ){
+			var intersect = (a.x+(p.y-a.y)/(b.y-a.y)*(b.x-a.x));
+			intersect = (intersect < p.x);
+			oddNodes = (oddNodes==intersect) ? false : true;
+			//oddNodes ^= intersect;
+		}
+		j = i;
+	}
+	return oddNodes;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));

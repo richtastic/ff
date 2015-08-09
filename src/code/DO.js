@@ -272,6 +272,17 @@ DO.prototype.addChildAtIndex = function(ch,index){
 	Code.arrayInsert(this._children,index,ch);
 	this._checkAddChild(ch);
 }
+DO.prototype.indexOfChild = function(ch){
+	if(ch){
+		var i, len=this._children.length;
+		for(i=0;i<len;++i){
+			if(this._children[i]==ch){
+				return i;
+			}
+		}
+	}
+	return -1;
+}
 DO.prototype.removeParent = function(){
 	this._parent.removeChild(this);
 }
@@ -288,6 +299,22 @@ DO.prototype.removeAllChildren = function(ch){
 		this._children[i].parent(null);
 	}
 	Code.emptyArray(this._children);
+}
+DO.prototype.moveBackward = function(ch){
+	var parent = this._parent;
+	if(parent){
+		var i = parent.indexOfChild(this);
+		parent.removeChild(this);
+		parent.addChildAtIndex(this,i-1);
+	}
+}
+DO.prototype.moveForward = function(ch){
+	var parent = this._parent;
+	if(parent){
+		var i = parent.indexOfChild(this);
+		parent.removeChild(this);
+		parent.addChildAtIndex(this,i+1);
+	}
 }
 DO.prototype.moveToBack = function(ch){
 	var parent = this._parent;

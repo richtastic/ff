@@ -97,6 +97,26 @@ Stage.prototype.getImageAsFloatRGB = function(originalImage, expand){
 	img.unset();
 	return {width:wid, height:hei, red:red, grn:grn, blu:blu};
 }
+Stage.prototype.getImageAsFloatRGBA = function(originalImage, expand){
+	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
+	var doImage = new DOImage(originalImage);
+	dat = this.getDOAsARGB(doImage, wid,hei);
+	img = new ImageMat(wid,hei);
+	img.setFromArrayARGB(dat);
+	var red = img.getRedFloat();
+	var grn = img.getGrnFloat();
+	var blu = img.getBluFloat();
+//	var alp = img.getAlpFloat();
+var alp = null; // DNE
+	if(expand){
+		red = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( red ) );
+		grn = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( grn ) );
+		blu = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( blu ) );
+//		alp = ImageMat.rangeStretch0255( ImageMat.zero255FromFloat( alp ) );
+	}
+	img.unset();
+	return {width:wid, height:hei, red:red, grn:grn, blu:blu, alp:alp};
+}
 Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
 	var argb = ImageMat.ARGBFromARGBFloats(a,r,g,b);
 	return this.getARGBAsImage(argb, wid,hei,matrix,type);
