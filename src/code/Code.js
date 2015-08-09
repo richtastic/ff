@@ -2947,6 +2947,113 @@ Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderfle
 	}
 	return oddNodes;
 }
+Code.edgeListFromPolygon = function(poly){
+	var i, lenA = poly.length;
+	var edge, edges = [];
+	for(i=0;i<lenA;++i){
+		a = poly[i];
+		b = poly[(i+1)%lenA];
+		edge = {"start":a, "end":b, "next":null, "prev":null};
+		edges.push(edge);
+	}
+	for(i=0;i<lenA;++i){
+		edge = edges[i];
+		edge.prev = edges[(i-1+lenA)%lenA];
+		edge.next = edges[(i+1)%lenA];
+	}
+	return edges;
+}
+Code.polygonUnion2D = function(polyA,polyB){
+	var i, j;
+	var lenA = polyA.length;
+	var lenB = polyB.length;
+	var edgesA = Code.edgeListFromPolygon(polyA);
+	var edgesB = Code.edgeListFromPolygon(polyB);
+	var polyC = [];
+	var edgeA, edgeB;
+	for(i=0;i<lenA;++i){
+		edgeA = edgesA[i];
+		for(j=0;j<lenB;++j){
+			edgeB = edgesB[j];
+// HERE
+HERE
+			p = Code.lineSegIntersect2D(a,b, c,d);
+		}
+	}
+// HERE
+	return polyC;
+	/*
+	var i, j, a, b, p, q, temp;
+	// var lenA = polyA.length;
+	// var lenB = polyB.length;
+	var polyC = [];
+	var startIndex = 0;
+	//
+	var polyX = polyA;
+	var polyY = polyB;
+	var startPoly = polyX;
+	var polyIndex = startIndex;
+	p = V2D.copy( polyX[polyIndex] );
+	polyC.push( p );
+	while(true){
+		a = V2D.copy(polyX[(polyXi+0)%polyX.length]);
+		b = V2D.copy(polyX[(polyXi+1)%polyX.length]);
+		p = Code.closestLineSegIntersectPolygon2D(a,b,polyY);
+		if(p){
+			polyC.push(p.point);
+			temp = polyX;
+			polyX = polyY;
+			polyY = temp;
+			polyIndex = p.index;
+			++polyIndex;
+		} else {
+			polyC.push(p.point);
+
+		}
+		if(){
+			break;
+		}
+		break;
+	}
+	return polyC;
+	*/
+}
+Code.closestLineSegIntersectPolygon2D = function(a,b, array){
+	// NOT TESTED OR USED ANYWHERE YET
+	var i, len=array.length;
+	var c, d;
+	var intersections = [];
+	for(i=0; i<len; ++i){
+		c = array[i];
+		d = array[(i+1)%len];
+		p = Code.lineSegIntersect2D(a,b, c,d);
+		if(p){
+			intersections.push(p);
+		}
+	}
+	len = intersections.length;
+	var closestPoint = null;
+	var closestDistance = 0;
+	var closestIndex = 0;
+	var dist;
+	for(i=0; i<len; ++i){
+		p = intersections[i];
+		dist = V2D.distanceSquare(a,p);
+		if(closestPoint==null || dist<closestDistance){
+			closestPoint = p;
+			closestDistance = dist;
+			closestIndex = i;
+		}
+	}
+	if(closestPoint){
+		return {"point":closestPoint, "distance":Math.sqrt(closestDistance), "index":closestIndex};
+	}
+	return;
+}
+Code.polygonClip2D = function(polyA,polyB){ // 
+	var polyC = [];
+	return polyC;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));

@@ -18,7 +18,49 @@ function Stitching(){
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
+Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, lineWidth){
+	var i=0, len=pointList.length;
+	if(len<=1){ return; }
+	colorLine = colorLine ? colorLine : 0xFFFF0000;
+	lineWidth = lineWidth ? lineWidth : 1.0;
+	colorFill = colorFill ? colorFill : 0x9900FF00;
+	var d = new DO();
+	console.log(pointList)
+	d.graphics().setLine(lineWidth,colorLine);
+	d.graphics().beginPath();
+	d.graphics().moveTo(pointList[i].x,pointList[i].y);
+	for(i=1; i<=len; ++i){
+		d.graphics().lineTo(pointList[i%len].x,pointList[i%len].y);
+	}
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	this._root.addChild(d);
+}
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
+
+	var polyA = [];
+		polyA.push(new V2D(220,250));
+		polyA.push(new V2D(270,200));
+		polyA.push(new V2D(10,20));
+	var polyB = [];
+		polyB.push(new V2D(100,200));
+		polyB.push(new V2D(250,20));
+		polyB.push(new V2D(120,150));
+	var polyC = Code.polygonUnion2D(polyA,polyB);
+
+	this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
+	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
+	this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 2.0);
+
+
+return;
+
+
+
+
+
+
+
 	var imageList = imageInfo.images;
 	var i, j, list = [], d, img, x=0, y=0;
 var featurePoints = [];
