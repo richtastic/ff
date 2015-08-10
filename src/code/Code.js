@@ -2953,7 +2953,7 @@ Code.edgeListFromPolygon = function(poly){
 	for(i=0;i<lenA;++i){
 		a = poly[i];
 		b = poly[(i+1)%lenA];
-		edge = {"start":a, "end":b, "next":null, "prev":null};
+		edge = {"start":a, "end":b, "next":null, "prev":null, "intersections":[], "processed":false};
 		edges.push(edge);
 	}
 	for(i=0;i<lenA;++i){
@@ -2963,24 +2963,100 @@ Code.edgeListFromPolygon = function(poly){
 	}
 	return edges;
 }
+Code._polySortFxn = function(a,b){
+	var edge;
+	if(a.s==0){
+		edge = a.edgeA;
+	}else{
+		edge = a.edgeB;
+	}
+	var distA = V2D.distanceSquare(edge.start,a.point);
+	var distB = V2D.distanceSquare(edge.start,b.point);
+	if(distA<distB){
+		return -1;
+	}else if(distA<distB){
+		return -1;
+	}
+}
 Code.polygonUnion2D = function(polyA,polyB){
+	if(!polyA || !polyB){ return []; }
 	var i, j;
 	var lenA = polyA.length;
 	var lenB = polyB.length;
+	if(lenA<=2 || lenB<=2){ // 
+		return [];
+	}
 	var edgesA = Code.edgeListFromPolygon(polyA);
 	var edgesB = Code.edgeListFromPolygon(polyB);
 	var polyC = [];
 	var edgeA, edgeB;
+	var hasIntersection = false;
+	// find all intersections
 	for(i=0;i<lenA;++i){
 		edgeA = edgesA[i];
+		a = edgeA.start;
+		b = edgeA.end;
 		for(j=0;j<lenB;++j){
 			edgeB = edgesB[j];
-// HERE
-HERE
+			c = edgeB.start;
+			d = edgeB.end;
 			p = Code.lineSegIntersect2D(a,b, c,d);
+			if(p){
+				var intersect = {"point":p, "edgeA":edgeA, "edgeB":edgeB, "s":0};
+				edgeA.intersections.push(intersect);
+				edgeB.intersections.push(intersect);
+				hasIntersection = true;
+			}
 		}
 	}
-// HERE
+	if(!hasIntersection){
+
+		return Code.copyArray(polyA);
+	}
+	// order intersections by distance
+	for(i=0;i<lenA;++i){
+		edgeA = edgesA[i];
+		edgeA.s = 0;
+		edgeA.intersections.sort();
+	}
+	for(i=0;i<lenB;++i){
+		edgeB = edgesB[i];
+		edgeB.s = 1;
+		edgeB.intersections.sort();
+	}
+	// connect polygons from intersections
+	edge = edgesA[0];
+	while(edge.processed==false){
+		next = edge.next;
+		edge.processed = true;
+		intersections = edge.intersections;
+		if(intersections.length>0){
+			intersect = intersections[0];
+			edgeA = intersect.edgeA;
+			edgeB = intersect.edgeB;
+			point = intersect.point;
+			intersections.shift();
+			edge.intersections = [];
+// plop in new edge & update intersections on B
+//{"start":a, "end":b, "next":null, "prev":null, "intersections":[], "processed":false};
+edge = {"start":point, "end":edge.end, "next":next, "prev":edge, "intersections":intersections, "processed":false};
+edgeA.end = point;
+			for(i=0;i<intersections.length;++i){
+				intersections[i].edgeA = edge;
+			}
+next.prev = edge;
+
+// B:
+find where intersection is inside edgeB list
+split B at this location
+
+edge 
+break;
+		}else{
+			edge = next;
+		}
+	}
+	// assemble union polygon
 	return polyC;
 	/*
 	var i, j, a, b, p, q, temp;
