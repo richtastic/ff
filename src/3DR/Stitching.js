@@ -25,32 +25,67 @@ Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, line
 	lineWidth = lineWidth ? lineWidth : 1.0;
 	colorFill = colorFill ? colorFill : 0x9900FF00;
 	var d = new DO();
-	console.log(pointList)
 	d.graphics().setLine(lineWidth,colorLine);
-	d.graphics().beginPath();
-	d.graphics().moveTo(pointList[i].x,pointList[i].y);
-	for(i=1; i<=len; ++i){
-		d.graphics().lineTo(pointList[i%len].x,pointList[i%len].y);
+	
+	for(i=0; i<len; ++i){
+		var offX = 0;//10.0*(Math.random()-0.5);
+		var offY = 0;//10.0*(Math.random()-0.5);
+		var pA = pointList[i];
+		var pB = pointList[(i+1)%len];
+		var dir = V2D.sub(pB,pA); dir.norm();
+		//var nrm = V2D.rotate(dir,Math.PIO2);
+		var ang = 20.0*(Math.PI/180.0);
+		var siz = 15.0;
+		var lin1 = V2D.rotate(dir,Math.PI-ang);
+		var lin2 = V2D.rotate(dir,-(Math.PI-ang));
+			lin1.scale(siz);
+			lin2.scale(siz);
+		d.graphics().beginPath();
+		d.graphics().moveTo(pA.x,pA.y);
+		d.graphics().lineTo(pB.x+offX,pB.y+offY);
+			d.graphics().lineTo(pB.x+lin1.x,pB.y+lin1.y);
+			d.graphics().lineTo(pB.x+lin2.x,pB.y+lin2.y);
+			d.graphics().lineTo(pB.x,pB.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
 	}
-	d.graphics().endPath();
-	d.graphics().strokeLine();
+	
 	this._root.addChild(d);
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 
+	// var a = [0,1,2,3,4,5,6,7];
+	// console.log(Code.copyArray(a));
+	// console.log(Code.copyArray(new Array(), a));
+	// console.log(Code.copyArray(a,0,4));
+	// console.log(Code.copyArray(new Array(), a,3,7));
+	// return;
+
+
 	var polyA = [];
 		polyA.push(new V2D(220,250));
 		polyA.push(new V2D(270,200));
+		//polyA.push(new V2D(300,100));
 		polyA.push(new V2D(10,20));
 	var polyB = [];
 		polyB.push(new V2D(100,200));
 		polyB.push(new V2D(250,20));
 		polyB.push(new V2D(120,150));
+	// var polyA = [];
+	// 	polyA.push(new V2D(50,50));
+	// 	polyA.push(new V2D(50,250));
+	// 	polyA.push(new V2D(350,250));
+	// 	polyA.push(new V2D(350,50));
+	// var polyB = [];
+	// 	polyB.push(new V2D(10,100));
+	// 	polyB.push(new V2D(10,400));
+	// 	polyB.push(new V2D(400,400));
+	// 	polyB.push(new V2D(400,100));
 	var polyC = Code.polygonUnion2D(polyA,polyB);
 
 	this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
 	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
-	this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 2.0);
+	this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
 
 
 return;

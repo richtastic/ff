@@ -291,13 +291,25 @@ Code.arrayInsertArray = function(a, i, b){
 	return a;
 }
 // Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
-Code.copyArray = function(a,b){ // a = b
+// Code.copyArray(array)
+// Code.copyArray(arrayTo, arrayFrom)
+// Code.copyArray(array, start, end)
+// Code.copyArray(arrayTo, arrayFrom, start, end)
+Code.copyArray = function(a,b,start,end){ // a = b
 	if(a==b){return;}
-	if(b===undefined){ b=a; a=new Array(); }
+	if(arguments.length==1){
+		b=a; a=new Array(); start=0; end=b.length-1;
+	}else if(arguments.length==2){
+		start=0; end=b.length - 1;
+	}else if(arguments.length==3){
+		end=start; start=b; b=a; a=new Array();
+	}else if(arguments.length==4){
+		//
+	}
+	//if(b===undefined){ b=a; a=new Array(); }
 	Code.emptyArray(a);
-	var i, len = b.length;
-	for(i=0;i<len;++i){
-		a[i] = b[i];
+	for(var j=0,i=start; i<=end; ++i,++j){
+		a[j] = b[i];
 	}
 	return a;
 }
@@ -2940,7 +2952,7 @@ Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderfle
 		if( ((a.y<p.y && b.y>=p.y) || (b.y<p.y && a.y>=p.y)) && (a.x<=p.x || b.x<=p.x) ){
 			var intersect = (a.x+(p.y-a.y)/(b.y-a.y)*(b.x-a.x));
 			intersect = (intersect < p.x);
-			oddNodes = (oddNodes==intersect) ? false : true;
+			oddNodes = (oddNodes==intersect) ? false : true; // xor
 			//oddNodes ^= intersect;
 		}
 		j = i;
@@ -2963,20 +2975,21 @@ Code.edgeListFromPolygon = function(poly){
 	}
 	return edges;
 }
-Code._polySortFxn = function(a,b){
-	var edge;
-	if(a.s==0){
-		edge = a.edgeA;
-	}else{
-		edge = a.edgeB;
-	}
+Code._polySort2DFxnA = function(a,b){
+	return Code._polySort2DFxn(a.edgeA,a,b);
+}
+Code._polySort2DFxnB = function(a,b){
+	return Code._polySort2DFxn(a.edgeB,a,b);
+}
+Code._polySort2DFxn = function(edge,a,b){
 	var distA = V2D.distanceSquare(edge.start,a.point);
 	var distB = V2D.distanceSquare(edge.start,b.point);
 	if(distA<distB){
 		return -1;
-	}else if(distA<distB){
-		return -1;
+	}else if(distA>distB){
+		return 1;
 	}
+	return 0;
 }
 Code.polygonUnion2D = function(polyA,polyB){
 	if(!polyA || !polyB){ return []; }
@@ -3002,97 +3015,164 @@ Code.polygonUnion2D = function(polyA,polyB){
 			d = edgeB.end;
 			p = Code.lineSegIntersect2D(a,b, c,d);
 			if(p){
+				console.log("intersection:"+p)
+				p = new V2D(p.x,p.y);
 				var intersect = {"point":p, "edgeA":edgeA, "edgeB":edgeB, "s":0};
 				edgeA.intersections.push(intersect);
 				edgeB.intersections.push(intersect);
 				hasIntersection = true;
+
 			}
 		}
 	}
+	// no intersection
 	if(!hasIntersection){
-
-		return Code.copyArray(polyA);
+		var isBInsideA = Code.isPointInsidePolygon2D(polyB[0],polyA);
+		if(isBInsideA){
+			return Code.copyArray(polyA);
+		}
+		var isAInsideB = Code.isPointInsidePolygon2D(polyA[0],polyB);
+		if(isAInsideB){
+			return Code.copyArray(polyA);
+		}
+		return [Code.copyArray(polyA), Code.copyArray(polyB)];
 	}
 	// order intersections by distance
 	for(i=0;i<lenA;++i){
 		edgeA = edgesA[i];
-		edgeA.s = 0;
-		edgeA.intersections.sort();
+		edgeA.intersections.sort(Code._polySort2DFxnA);
+		for(j=0; j<edgeA.intersections.length; ++j){
+			var distance = V2D.distance(edgeA.start,edgeA.intersections[j].point);
+		}
 	}
 	for(i=0;i<lenB;++i){
 		edgeB = edgesB[i];
-		edgeB.s = 1;
-		edgeB.intersections.sort();
+		edgeB.intersections.sort(Code._polySort2DFxnB);
+		for(j=0; j<edgeB.intersections.length; ++j){
+			var distance = V2D.distance(edgeB.start,edgeB.intersections[j].point);
+		}
 	}
 	// connect polygons from intersections
+	var prev, next, edge, edgeOld, edgeNew, startEdge, wasFlip;
 	edge = edgesA[0];
 	while(edge.processed==false){
-		next = edge.next;
 		edge.processed = true;
 		intersections = edge.intersections;
 		if(intersections.length>0){
+			next = edge.next;
+			prev = edge.prev;
 			intersect = intersections[0];
 			edgeA = intersect.edgeA;
 			edgeB = intersect.edgeB;
 			point = intersect.point;
 			intersections.shift();
 			edge.intersections = [];
-// plop in new edge & update intersections on B
-//{"start":a, "end":b, "next":null, "prev":null, "intersections":[], "processed":false};
-edge = {"start":point, "end":edge.end, "next":next, "prev":edge, "intersections":intersections, "processed":false};
-edgeA.end = point;
-			for(i=0;i<intersections.length;++i){
-				intersections[i].edgeA = edge;
+wasFlip = edge.flip;
+edge.flip = intersect;
+			// add in new edge on A
+			edgeNew = {"start":point, "end":edge.end, "next":next, "prev":edge, "intersections":intersections, "processed":false};
+			edge.end = point;
+			edge.next = edgeNew;
+//intersect.edgeA = edgeNew;
+			for(j=0;j<intersections.length;++j){
+				intersections[j].edgeA = edgeNew;
 			}
-next.prev = edge;
-
-// B:
-find where intersection is inside edgeB list
-split B at this location
-
-edge 
-break;
+			//console.log("WAS: "+wasFlip);
+edgeNew.flip = wasFlip; // should always be undefined
+			edgeNew.next.prev = edgeNew;
+			edge = edgeNew;
+			// split B at this intersection location too
+			intersections = edgeB.intersections
+			for(i=0;i<intersections.length;++i){
+				var intersectB = intersections[i];
+				if(intersect==intersectB){
+					edgeA = intersect.edgeA;
+					edgeB = intersect.edgeB;
+//console.log(intersect.edgeB==edgeB);
+					point = intersect.point;
+					edgeOld = edgeB;
+//console.log("WAS: "+edgeOld.start+" => "+edgeOld.end);
+wasFlip = edgeOld.flip;
+edgeOld.flip = intersect;
+					var intsLeft = Code.copyArray(intersections,0,i-1);
+					var intsRight = Code.copyArray(intersections,i+1,intersections.length-1);
+					edgeNew = {"start":point, "end":edgeOld.end, "next":edgeOld.next, "prev":edgeOld, "intersections":intsRight, "processed":false};
+					edgeOld.end = point;
+					edgeOld.intersections = intsLeft;
+					edgeOld.next = edgeNew;
+					edgeNew.next.prev = edgeNew;
+edgeNew.flip = wasFlip;
+//intersect.edgeB = edgeNew;
+					for(j=0;j<intsRight.length;++j){
+						intsRight[j].edgeB = edgeNew;
+					}
+//console.log("IS: "+edgeOld.start+" => "+edgeOld.end+" ---> "+edgeNew.start+" => "+edgeNew.end);
+					break;
+				}
+			}
 		}else{
-			edge = next;
+			edge = edge.next;
 		}
+	}
+//console.log("A");
+	var bottomLeftPoint = null;
+	var bottomLeftEdge = null;
+	i = 0;
+	startEdge = edgesA[0];
+	edge = startEdge;
+	while( (i==0 || edge!=startEdge) && i<100){
+		if(bottomLeftPoint==null || edge.start.x<bottomLeftPoint.x){//} || edge.start.y<bottomLeftPoint.y){
+			//console.log("SET "+bottomLeftPoint+" => "+edge.start);
+			bottomLeftPoint = edge.start;
+			bottomLeftEdge = edge;
+		}
+		edge.processed = false;
+		edge = edge.next;
+		++i;
+	}
+	//
+//console.log("B");
+	i = 0;
+	startEdge = edgesB[0];
+	edge = startEdge;
+	while( (i==0 || edge!=startEdge) && i<100){
+		if(bottomLeftPoint==null || edge.start.x<bottomLeftPoint.x){//} || edge.start.y<bottomLeftPoint.y){
+			//console.log("SET "+bottomLeftPoint+" => "+edge.start);
+			bottomLeftPoint = edge.start;
+			bottomLeftEdge = edge;
+		}
+		edge.processed = false;
+		edge = edge.next;
+		++i;
 	}
 	// assemble union polygon
-	return polyC;
-	/*
-	var i, j, a, b, p, q, temp;
-	// var lenA = polyA.length;
-	// var lenB = polyB.length;
-	var polyC = [];
-	var startIndex = 0;
-	//
-	var polyX = polyA;
-	var polyY = polyB;
-	var startPoly = polyX;
-	var polyIndex = startIndex;
-	p = V2D.copy( polyX[polyIndex] );
-	polyC.push( p );
-	while(true){
-		a = V2D.copy(polyX[(polyXi+0)%polyX.length]);
-		b = V2D.copy(polyX[(polyXi+1)%polyX.length]);
-		p = Code.closestLineSegIntersectPolygon2D(a,b,polyY);
-		if(p){
-			polyC.push(p.point);
-			temp = polyX;
-			polyX = polyY;
-			polyY = temp;
-			polyIndex = p.index;
-			++polyIndex;
-		} else {
-			polyC.push(p.point);
-
+	console.log(bottomLeftPoint+"");
+	console.log(bottomLeftEdge+"");
+console.log("C");
+	i = 0;
+	startEdge = bottomLeftEdge;
+	edge = startEdge;
+	while( (i==0 || edge!=startEdge) && i<8 ){ // !edge.processed
+		polyC.push(edge.start);
+		console.log(i+": "+edge);
+		edge.processed = true;
+		if(edge.flip){
+			//console.log("FLIP:"+(edge.flip.edgeA==edge)+" || "+(edge.flip.edgeB==edge));
+			if(edge.flip.edgeA==edge){
+				console.log("GOTO EDGE B");
+				edge = edge.flip.edgeB.next;
+			}else{
+				console.log("GOTO EDGE A");
+				edge = edge.flip.edgeA.next;
+			}
+			
+		}else{
+			edge = edge.next;
 		}
-		if(){
-			break;
-		}
-		break;
+		++i;
 	}
+	//
 	return polyC;
-	*/
 }
 Code.closestLineSegIntersectPolygon2D = function(a,b, array){
 	// NOT TESTED OR USED ANYWHERE YET

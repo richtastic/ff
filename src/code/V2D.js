@@ -60,7 +60,7 @@ V2D.add = function(c,a,b){
 	}
 	return new V2D(c.x+a.x,c.y+a.y);
 }
-V2D.sub = function(c,a,b){ // same as diff
+V2D.sub = function(c,a,b){
 	if(b!==undefined){
 		c.x = a.x-b.x;
 		c.y = a.y-b.y;
@@ -147,7 +147,7 @@ V2D.prototype.lengthSquare = function(){
 	return this.x*this.x+this.y*this.y;
 }
 V2D.prototype.norm = function(){
-	dist = Math.sqrt(this.x*this.x+this.y*this.y);
+	var dist = Math.sqrt(this.x*this.x+this.y*this.y);
 	if(dist==0){ return; }
 	this.x = this.x/dist; this.y = this.y/dist;
 	return this;
