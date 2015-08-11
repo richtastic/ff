@@ -3062,23 +3062,22 @@ Code.polygonUnion2D = function(polyA,polyB){
 			next = edge.next;
 			prev = edge.prev;
 			intersect = intersections[0];
-			edgeA = intersect.edgeA;
+			edgeA = intersect.edgeA; // edgeA == edge
 			edgeB = intersect.edgeB;
 			point = intersect.point;
 			intersections.shift();
-			edge.intersections = [];
-wasFlip = edge.flip;
-edge.flip = intersect;
+			edgeOld.intersections = [];
+wasFlip = edge.intersect;
+edge.intersect = intersect;
 			// add in new edge on A
-			edgeNew = {"start":point, "end":edge.end, "next":next, "prev":edge, "intersections":intersections, "processed":false};
+			edgeNew = {"start":point, "end":edge.end, "next":next, "prev":edgeOld, "intersections":intersections, "processed":false};
 			edge.end = point;
 			edge.next = edgeNew;
-//intersect.edgeA = edgeNew;
 			for(j=0;j<intersections.length;++j){
 				intersections[j].edgeA = edgeNew;
 			}
 			//console.log("WAS: "+wasFlip);
-edgeNew.flip = wasFlip; // should always be undefined
+edgeNew.intersect = wasFlip; // should always be undefined
 			edgeNew.next.prev = edgeNew;
 			edge = edgeNew;
 			// split B at this intersection location too
@@ -3092,8 +3091,8 @@ edgeNew.flip = wasFlip; // should always be undefined
 					point = intersect.point;
 					edgeOld = edgeB;
 //console.log("WAS: "+edgeOld.start+" => "+edgeOld.end);
-wasFlip = edgeOld.flip;
-edgeOld.flip = intersect;
+wasFlip = edgeOld.intersect;
+edgeOld.intersect = intersect;
 					var intsLeft = Code.copyArray(intersections,0,i-1);
 					var intsRight = Code.copyArray(intersections,i+1,intersections.length-1);
 					edgeNew = {"start":point, "end":edgeOld.end, "next":edgeOld.next, "prev":edgeOld, "intersections":intsRight, "processed":false};
@@ -3101,7 +3100,7 @@ edgeOld.flip = intersect;
 					edgeOld.intersections = intsLeft;
 					edgeOld.next = edgeNew;
 					edgeNew.next.prev = edgeNew;
-edgeNew.flip = wasFlip;
+edgeNew.intersect = wasFlip;
 //intersect.edgeB = edgeNew;
 					for(j=0;j<intsRight.length;++j){
 						intsRight[j].edgeB = edgeNew;
@@ -3154,16 +3153,16 @@ console.log("C");
 	edge = startEdge;
 	while( (i==0 || edge!=startEdge) && i<8 ){ // !edge.processed
 		polyC.push(edge.start);
-		console.log(i+": "+edge);
+		console.log(i+": ......... "+edge.start+" => "+edge.end);
 		edge.processed = true;
-		if(edge.flip){
+		if(edge.intersect){
 			//console.log("FLIP:"+(edge.flip.edgeA==edge)+" || "+(edge.flip.edgeB==edge));
-			if(edge.flip.edgeA==edge){
+			if(edge.intersect.edgeA==edge){
 				console.log("GOTO EDGE B");
-				edge = edge.flip.edgeB.next;
+				edge = edge.intersect.edgeB.next;
 			}else{
 				console.log("GOTO EDGE A");
-				edge = edge.flip.edgeA.next;
+				edge = edge.intersect.edgeA.next;
 			}
 			
 		}else{
