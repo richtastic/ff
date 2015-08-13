@@ -3074,13 +3074,13 @@ Code.PolySweepPointEvent = function(e,l){
 	//this._point = null;
 	this._edge = null;
 	//this._other = null;
-	this._left = true;
+	//this._left = true;
 	this._polygon = null;
 	this._inOut = false;
 	this._inside = false;
 	this._polyType = null;
 	this.edge(e);
-	this.isLeftEndpoint(l);
+	//this.isLeftEndpoint(l);
 }
 Code.PolySweepPointEvent.prototype.edge = function(e){
 	if(e!==undefined){
@@ -3088,13 +3088,17 @@ Code.PolySweepPointEvent.prototype.edge = function(e){
 	}
 	return this._edge;
 }
-Code.PolySweepPointEvent.prototype.point = function(p){
+Code.PolySweepPointEvent.prototype.left = function(p){
 	if(this._edge){
-		if(this._left){
+		if(this._edge.left().x<this._edge.right().x){
 			return this._edge.left();
-		}else{
+		}else if(this._edge.left().x>this._edge.right().x){
 			return this._edge.right();
+		} // =
+		if(this._edge.left().y<this._edge.right().y){
+			return this._edge.left();
 		}
+		return this._edge.right();
 	}
 	return null;
 }
@@ -3126,12 +3130,22 @@ Code.PolySweepPointEvent.prototype.polyType = function(p){
 	}
 	return this.polyType;
 }
-Code.PolySweepPointEvent.prototype.isLeftEndpoint = function(l){
-	if(l!==undefined){
-		this._left = l;
-	}
-	return this._left;
-}
+// Code.PolySweepPointEvent.prototype.point = function(p){
+// 	if(this._edge){
+// 		if(this._left){
+// 			return this._edge.left();
+// 		}else{
+// 			return this._edge.right();
+// 		}
+// 	}
+// 	return null;
+// }
+// Code.PolySweepPointEvent.prototype.isLeftEndpoint = function(l){
+// 	if(l!==undefined){
+// 		this._left = l;
+// 	}
+// 	return this._left;
+// }
 // Code.PolySweepPointEvent.prototype.isRightEndpoint = function(){
 // 	return !this._left;
 // }
@@ -3155,13 +3169,13 @@ Code._possibleEdgeIntersection = function(a,b, sweep, queue){ // intersection be
 	if(!a || !b){
 		return null;
 	}
-	console.log(a,b);
 	var isSamePoly = a.poly == b.poly;
 	if(!isSamePoly){
 		var point = Code.lineSegIntersect2D(a,b, c,d);
 		if(point){
 			var isIntersectionEndPoint = V2D.equal(point,a.point()) || V2D.equal(point,a.other()) || V2D.equal(point,b.point()) || V2D.equal(point,b.other());
 			if (!isIntersectionEndPoint){
+				console.log("FOUND INTERSECT");
 				// subdivide lines
 				// add points to sweep
 				// readd a & b to queue
