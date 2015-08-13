@@ -2,8 +2,12 @@
 
 function PriorityQueue(fxn){
 	this._tree = new RedBlackTree(fxn);
+	this._tree.sortOnData(true);
 }
 // --------------------------------------------------------------------------------------------------------------------
+PriorityQueue.prototype.sorting = function(fxn){
+	return this._tree.sorting(fxn);
+}
 PriorityQueue.prototype.length = function(){
 	return this._tree.length();
 }
@@ -37,6 +41,30 @@ PriorityQueue.prototype.removeObject = function(o){
 PriorityQueue.prototype.removeNode = function(n){
 	return this._tree.deleteNode(n);
 }
+
+
+PriorityQueue.prototype.next = function(o){
+	var node = this._tree.findNodeFromObject(o);
+	if(node){
+		node = this._tree.nextNode(node);
+		if(node){
+			return node.data();
+		}
+	}
+	return null;
+}
+PriorityQueue.prototype.prev = function(o){
+	var node = this._tree.findNodeFromObject(o);
+	if(node){
+		node = this._tree.prevNode(node);
+		if(node){
+			return node.data();
+		}
+	}
+	return null;
+}
+
+
 PriorityQueue.prototype.kill = function(){
 	this._tree.kill();
 	this._tree = null;

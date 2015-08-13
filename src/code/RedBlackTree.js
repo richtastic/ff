@@ -19,7 +19,7 @@ function RedBlackTree(fxn){
 	this._maximumLength = 0;
 	this.sorting(fxn);
 }
-RedBlackTree.sortOnData = function(s){
+RedBlackTree.prototype.sortOnData = function(s){
 	if(s!==undefined){ this._sortOnData = s ? true : false; }
 	return this._sortOnData;
 }
@@ -152,7 +152,9 @@ RedBlackTree.prototype.prevNode = function(nodeIn){ // external 'predecessor'
 }
 RedBlackTree.prototype.findNodeFromObject = function(o){
 	if( !this.isNil(this._root) ){
-		return this._root.findNodeFromObject(this._sortOnData ? o : this._root, this._sorting, this.nil(), this._sortOnData);
+		//console.log("findNodeFromObject Tree")
+		//return this._root.findNodeFromObject(this._sortOnData ? o : this._root, this._sorting, this.nil(), this._sortOnData);
+		return this._root.findNodeFromObject(this._root, this._sorting, this.nil(), this._sortOnData);
 	}
 	return null;
 }
@@ -233,6 +235,7 @@ RedBlackTree.prototype.insertObject = function(o){
 	return node;
 }
 RedBlackTree.prototype.insertNode = function(newNode){
+	//console.log("insert node ... ");
 	//console.log("RBT.insertNode: "+newNode);
 	var fxn = this._sorting;
 	var value, node = this.root(), parent = this.nil(), o = newNode.data();
@@ -358,14 +361,14 @@ RedBlackTree.prototype._del = function(wasCut,node,splice){
 	if(wasCut){
 		if(splice==node){ throw new Error("equal"); }
 		if(splice==this.nil()){
-			console.log("IS NIL SPLICE");
+//			console.log("IS NIL SPLICE");
 		}
 		if(this.root()==node){
 			this.root(splice);
 		}
 		splice.replace(node, this.nil);
 		if(this.nil().parent()==node){
-			console.log("IS PARENT");
+//			console.log("IS PARENT");
 			this.nil().parent(splice);
 		}
 		node.kill();
@@ -378,7 +381,7 @@ RedBlackTree.prototype._deleteFixup = function(node, parent){
 	var oldNode = node;
 	var oldParent = parent;
 	var sib;
-	console.log("delete fixup");
+//	console.log("delete fixup");
 	while( node!=this._root && node.isBlack() ){
 		if( node==parent.left() ){
 			sib = parent.right();
@@ -519,9 +522,12 @@ RedBlackTree.Node.prototype.colorBlack = function(){
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil, sod){ // if sod==false o isa node
+	// console.log("findNodeFromObject Node")
+	// console.log(o)
 	var value, node = this;
 	while( node!=nil ){
-		value = sod ? fxn(node.data(),o) : fxn(node,o);
+		value = sod ? fxn(node.data(),o.data()) : fxn(node,o);
+		//value = sod ? fxn(node.data(),o) : fxn(node,o);
 		if( value==0 ){
 			return node;
 		}else if(value<0){

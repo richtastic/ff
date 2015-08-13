@@ -2959,7 +2959,344 @@ Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderfle
 	}
 	return oddNodes;
 }
+// --------------------------------------------------------------------------------------- polygon point
+Code.PolyPoint = function(p){
+	this._point = null;
+	this._prev = null;
+	this._next = null;
+	this.point(p);
+}
+Code.PolyPoint.prototype.point = function(p){
+	if(p!==undefined){
+		this._point = p;
+	}
+	return this._point;
+}
+Code.PolyPoint.prototype.next = function(n){
+	if(n!==undefined){
+		this._next = n;
+	}
+	return this._next;
+}
+Code.PolyPoint.prototype.prev = function(p){
+	if(p!==undefined){
+		this._prev = p;
+	}
+	return this._prev;
+}
+// --------------------------------------------------------------------------------------- polygon edge
+Code.PolyEdge = function(){
+	this._left = null;
+	this._right = null;
+}
+Code.PolyEdge.prototype.left = function(l){
+	if(l!==undefined){
+		this._left = l;
+	}
+	return this._left;
+}
+Code.PolyEdge.prototype.right = function(r){
+	if(r!==undefined){
+		this._right = r;
+	}
+	return this._right;
+}
+Code.PolyEdge.prototype.next = function(n){
+	if(this._right){
+		return this._right.next();
+	}
+	return null;
+}
+Code.PolyEdge.prototype.prev = function(p){
+	if(this._left){
+		return this._left.prev();
+	}
+	return null;
+}
+// --------------------------------------------------------------------------------------- polygon helpers
 Code.edgeListFromPolygon = function(poly){
+	var i, a, b, lenA = poly.length;
+	var edge, edges = [];
+	var point, points = [];
+	for(i=0;i<lenA;++i){
+		point = new Code.PolyPoint(poly[i]);
+		points.push(point);
+	}
+	for(i=0;i<lenA;++i){
+		a = points[i];
+		b = points[(i+1)%lenA];
+		edge = new Code.PolyEdge();
+		a.next(edge);
+		b.prev(edge);
+		edge.left(a);
+		edge.right(b);
+		edges.push(edge);
+	}
+	return edges;
+}
+// --------------------------------------------------------------------------------------- sweep
+Code.PolySweepLine = function(){
+	this._edges = new PriorityQueue();
+	this._edges.sorting( Code._polygonSweepEventSort );
+}
+Code.PolySweepLine.prototype.insert = function(event){
+	console.log(event);
+	return this._edges.push(event);
+}
+Code.PolySweepLine.prototype.find = function(event){
+	event = this._edges.find(event);
+	return event;
+}
+Code.PolySweepLine.prototype.next = function(event){
+	event = this._edges.next(event);
+	return event;
+}
+Code.PolySweepLine.prototype.prev = function(event){
+	event = this._edges.prev(event);
+	return event;
+}
+Code.PolySweepLine.prototype.erase = function(event){
+	event = this._edges.removeObject(event);
+	return event;
+}
+Code.PolySweepLine.prototype.location = function(l){
+	// if(l!==undefined){
+	// 	this._location.copy(l);
+	// }
+	// return this._location;
+	if(this._edges.length>0){
+		return this._edges[this._edges.length-1].left();
+	}
+	return null;
+}
+// --------------------------------------------------------------------------------------- 
+Code.PolySweepPointEvent = function(e,l){
+	//this._point = null;
+	this._edge = null;
+	//this._other = null;
+	this._left = true;
+	this._polygon = null;
+	this._inOut = false;
+	this._inside = false;
+	this._polyType = null;
+	this.edge(e);
+	this.isLeftEndpoint(l);
+}
+Code.PolySweepPointEvent.prototype.edge = function(e){
+	if(e!==undefined){
+		this._edge = e;
+	}
+	return this._edge;
+}
+Code.PolySweepPointEvent.prototype.point = function(p){
+	if(this._edge){
+		if(this._left){
+			return this._edge.left();
+		}else{
+			return this._edge.right();
+		}
+	}
+	return null;
+}
+Code.PolySweepPointEvent.prototype.other = function(o){
+	if(this._edge){
+		if(this._left){
+			return this._edge.right();
+		}else{
+			return this._edge.left();
+		}
+	}
+	return null;
+}
+Code.PolySweepPointEvent.prototype.inside = function(i){
+	if(i!==undefined){
+		this._inside = i;
+	}
+	return this._inside;
+}
+Code.PolySweepPointEvent.prototype.inOut = function(i){
+	if(i!==undefined){
+		this._inOut = i;
+	}
+	return this._inOut;
+}
+Code.PolySweepPointEvent.prototype.polyType = function(p){
+	if(p!==undefined){
+		this.polyType = p;
+	}
+	return this.polyType;
+}
+Code.PolySweepPointEvent.prototype.isLeftEndpoint = function(l){
+	if(l!==undefined){
+		this._left = l;
+	}
+	return this._left;
+}
+// Code.PolySweepPointEvent.prototype.isRightEndpoint = function(){
+// 	return !this._left;
+// }
+Code.PolySweepPointEvent.prototype.setInsideOtherPolygonFlag = function(e){
+	Code.PolySweepPointEvent.setInsideFlag(this,e);
+}
+Code.PolySweepPointEvent.setInsideFlag = function(le,ple){
+	if(ple==null){
+		le.inside( false );
+		le.inOut( false );
+	}else if( le.polyType()==ple.polyType() ){
+		le.inside( ple.inside() );
+		le.inOut( !ple.inOut() );
+	}else{
+		le.inside( !ple.inOut() );
+		le.inOut( ple.inside() );
+	}
+}
+// --------------------------------------------------------------------------------------- 
+Code._possibleEdgeIntersection = function(a,b, sweep, queue){ // intersection between two edges
+	if(!a || !b){
+		return null;
+	}
+	console.log(a,b);
+	var isSamePoly = a.poly == b.poly;
+	if(!isSamePoly){
+		var point = Code.lineSegIntersect2D(a,b, c,d);
+		if(point){
+			var isIntersectionEndPoint = V2D.equal(point,a.point()) || V2D.equal(point,a.other()) || V2D.equal(point,b.point()) || V2D.equal(point,b.other());
+			if (!isIntersectionEndPoint){
+				// subdivide lines
+				// add points to sweep
+				// readd a & b to queue
+				// add new points to queue
+			}
+		}
+	}
+	return null;
+}
+Code._polygonSweepEventSort = function(a,b){
+//	console.log(a,b);
+	if(a.point().x<b.point().x){
+		return 1;
+	}else if(a.point().x>b.point().x){
+		return -1;
+	}
+	if(a.point().y<b.point().y){
+		return 1;
+	}else if(a.point().y>b.point().y){
+		return -1;
+	}
+	return 0;
+}
+// Code._polygonPointSort = function(a,b){
+// 	if(a._point.x<b._point.x){
+// 		return 1;
+// 	}else if(a._point.x>b._point.x){
+// 		return -1;
+// 	}
+// 	if(a._point.y<b._point.y){
+// 		return 1;
+// 	}else if(a._point.y>b._point.y){
+// 		return -1;
+// 	}
+// 	return 0;
+// }
+// Code._polygonEdgeSort = function(a,b){ // used?
+// 	if(a._left.x<b._left.x){
+// 		return 1;
+// 	}else if(a._left.x>b._left.x){
+// 		return -1;
+// 	}
+// 	if(a._left.y<b._left.y){
+// 		return 1;
+// 	}else if(a._left.y>b._left.y){
+// 		return -1;
+// 	}
+// 	return 0;
+// }
+// --------------------------------------------------------------------------------------- 
+Code.polygonUnion2D = function(polyA,polyB){
+	var i, edge, point, left, right, event, pos;
+	var edgesA = Code.edgeListFromPolygon(polyA);
+	var edgesB = Code.edgeListFromPolygon(polyB);
+	var queue = new PriorityQueue();
+	var sweep = new Code.PolySweepLine();
+	var intersect = []; // ?
+	var union = []; // ?
+	queue.sorting( Code._polygonSweepEventSort );
+	// add polygon A points
+	len = edgesA.length;
+	for(i=0; i<len; ++i){
+		edge = edgesA[i];
+		event = new Code.PolySweepPointEvent(edge);
+		queue.push(event);
+	}
+	// add polygon B points
+	len = edgesB.length;
+	for(i=0; i<len; ++i){
+		edge = edgesB[i];
+		event = new Code.PolySweepPointEvent(edge);
+		queue.push(event);
+	}
+
+	while( !queue.isEmpty() ){
+		console.log("...................................................");
+		console.log("Q:");
+		console.log(queue.toString());
+		console.log("S:");
+		console.log(sweep._edges.toString());
+		event = queue.minimum();
+		console.log("E:");
+		console.log(event);
+		queue.popMinimum();
+		if(event.isLeftEndpoint()){
+			console.log("...left");
+			sweep.insert(event);
+			prev = sweep.prev(event);
+			next = sweep.next(event);
+			event.setInsideOtherPolygonFlag( prev );
+			Code._possibleEdgeIntersection(event, next, sweep, queue);
+			Code._possibleEdgeIntersection(event, prev, sweep, queue);
+		}else{ // right endpoint
+			console.log("...right");
+			next = sweep.next(event);
+			prev = sweep.prev(event);
+			if( event.isInsideOtherPolygon() ){
+				intersect.add(event.segment());
+			}else{
+				union.add(event.segment());
+			}
+			sweep.erase(event);
+			Code._possibleEdgeIntersection(prev, next, sweep, queue);
+		}
+	}
+
+	// combine edges into poly groups
+
+
+
+
+
+
+
+
+
+
+
+
+
+	var polyC = [];
+	return polyC;
+}
+// http://www.cs.ucr.edu/~vbz/cs230papers/martinez_boolean.pdf
+// http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.83.6811&rep=rep1&type=pdf
+
+
+
+
+
+
+
+
+
+Code.edgeListFromPolygonOLD = function(poly){
 	var i, lenA = poly.length;
 	var edge, edges = [];
 	for(i=0;i<lenA;++i){
@@ -2991,7 +3328,7 @@ Code._polySort2DFxn = function(edge,a,b){
 	}
 	return 0;
 }
-Code.polygonUnion2D = function(polyA,polyB){
+Code.polygonUnion2D_OLD = function(polyA,polyB){
 	if(!polyA || !polyB){ return []; }
 	var i, j;
 	var lenA = polyA.length;
@@ -3066,13 +3403,14 @@ Code.polygonUnion2D = function(polyA,polyB){
 			edgeB = intersect.edgeB;
 			point = intersect.point;
 			intersections.shift();
+edgeOld = edge;
 			edgeOld.intersections = [];
-wasFlip = edge.intersect;
-edge.intersect = intersect;
+wasFlip = edgeOld.intersect;
+edgeOld.intersect = intersect;
 			// add in new edge on A
-			edgeNew = {"start":point, "end":edge.end, "next":next, "prev":edgeOld, "intersections":intersections, "processed":false};
-			edge.end = point;
-			edge.next = edgeNew;
+			edgeNew = {"start":point, "end":edgeOld.end, "next":next, "prev":edgeOld, "intersections":intersections, "processed":false};
+			edgeOld.end = point;
+			edgeOld.next = edgeNew;
 			for(j=0;j<intersections.length;++j){
 				intersections[j].edgeA = edgeNew;
 			}
