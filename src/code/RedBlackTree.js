@@ -154,7 +154,8 @@ RedBlackTree.prototype.findNodeFromObject = function(o){
 	if( !this.isNil(this._root) ){
 		//console.log("findNodeFromObject Tree")
 		//return this._root.findNodeFromObject(this._sortOnData ? o : this._root, this._sorting, this.nil(), this._sortOnData);
-		return this._root.findNodeFromObject(this._root, this._sorting, this.nil(), this._sortOnData);
+		//return this._root.findNodeFromObject(this._root, this._sorting, this.nil(), this._sortOnData);
+		return this._root.findNodeFromObject(o, this._sorting, this.nil(), false); // 
 	}
 	return null;
 }
@@ -522,12 +523,9 @@ RedBlackTree.Node.prototype.colorBlack = function(){
 }
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil, sod){ // if sod==false o isa node
-	// console.log("findNodeFromObject Node")
-	// console.log(o)
 	var value, node = this;
 	while( node!=nil ){
-		value = sod ? fxn(node.data(),o.data()) : fxn(node,o);
-		//value = sod ? fxn(node.data(),o) : fxn(node,o);
+		value = sod ? fxn(node.data(),o.data(), true) : fxn(node.data(),o, true);
 		if( value==0 ){
 			return node;
 		}else if(value<0){

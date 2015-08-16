@@ -4,11 +4,15 @@ function Stitching(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();
+	this._keyboard = new Keyboard();
 	this._stage.addChild(this._root);
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this.handleEnterFrame,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDownFxn,this);
+	this._keyboard.addListeners();
 	// resources
 	this._resource = {};
 	//
@@ -52,25 +56,23 @@ Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, line
 	
 	this._root.addChild(d);
 }
-Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
-
-	// var a = [0,1,2,3,4,5,6,7];
-	// console.log(Code.copyArray(a));
-	// console.log(Code.copyArray(new Array(), a));
-	// console.log(Code.copyArray(a,0,4));
-	// console.log(Code.copyArray(new Array(), a,3,7));
-	// return;
-
-
+Stitching.prototype.handleKeyboardDownFxn = function(e){
+	if(e.keyCode==Keyboard.KEY_SPACE){
+		this.iteration = this.iteration!==undefined ? this.iteration+1 : 0;
+		this.doStuff();
+	}
+}
+Stitching.prototype.doStuff = function(){
+	console.log(this.iteration);
 	var polyA = [];
-		polyA.push(new V2D(220,250));
+		polyA.push(new V2D(240,250));
 		polyA.push(new V2D(270,200));
 		//polyA.push(new V2D(300,100));
 		polyA.push(new V2D(10,20));
 	var polyB = [];
-		polyB.push(new V2D(100,200));
+		polyB.push(new V2D(80,270));
 		polyB.push(new V2D(250,20));
-		polyB.push(new V2D(120,150));
+		polyB.push(new V2D(100,150));
 	// var polyA = [];
 	// 	polyA.push(new V2D(50,50));
 	// 	polyA.push(new V2D(50,250));
@@ -81,12 +83,29 @@ Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 	// 	polyB.push(new V2D(10,400));
 	// 	polyB.push(new V2D(400,400));
 	// 	polyB.push(new V2D(400,100));
-	var polyC = Code.polygonUnion2D(polyA,polyB);
+	var polyC = Code.polygonUnion2D(polyA,polyB, this.iteration);
+	console.log(polyC)
 
+
+this._root.removeAllChildren();
 	this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
 	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
-	this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
+	//this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
+	for(i=0;i<polyC.length;++i){
+		this.drawPolygon(polyC[i], 0xFF0000CC, 0x00000000, 2.0);
+	}
+}
+Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 
+	// var a = [0,1,2,3,4,5,6,7];
+	// console.log(Code.copyArray(a));
+	// console.log(Code.copyArray(new Array(), a));
+	// console.log(Code.copyArray(a,0,4));
+	// console.log(Code.copyArray(new Array(), a,3,7));
+	// return;
+
+
+	this.doStuff();
 
 return;
 

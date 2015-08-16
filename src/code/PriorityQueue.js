@@ -41,7 +41,9 @@ PriorityQueue.prototype.removeObject = function(o){
 PriorityQueue.prototype.removeNode = function(n){
 	return this._tree.deleteNode(n);
 }
-
+PriorityQueue.prototype.toArray = function(){
+	return this._tree.toArray();
+}
 
 PriorityQueue.prototype.next = function(o){
 	var node = this._tree.findNodeFromObject(o);
@@ -63,7 +65,6 @@ PriorityQueue.prototype.prev = function(o){
 	}
 	return null;
 }
-
 
 PriorityQueue.prototype.kill = function(){
 	this._tree.kill();
