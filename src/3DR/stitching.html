@@ -11,7 +11,23 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Stitching.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	var stitch = new Stitching();
+var stitch = new Stitching();
+
+
+// var a = new V2D(-2,-1); // parallel - no-intersect
+// var b = new V2D(0,1);
+// var a = new V2D(-1,-1); // inside
+// var b = new V2D(1,1);
+// var a = new V2D(-3,-3); // left
+// var b = new V2D(0,0);
+// var a = new V2D(-1,-1); // right
+// var b = new V2D(3,3);
+// var a = new V2D(-4,-4); // outside
+// var b = new V2D(3,3);
+// var c = new V2D(-2,-2);
+// var d = new V2D(2,2);
+// var result = Code.lineSegIntersect2D(a,b, c,d);
+// console.log(result);
 /*
 	console.log( V2D.areaTri( new V2D(0,0), new V2D(1,0), new V2D(0,1) ) );
 	console.log( V2D.areaTri( new V2D(0,0), new V2D(1,0), new V2D(0,-1) ) );

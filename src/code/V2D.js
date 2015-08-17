@@ -10,9 +10,6 @@ V2D.areaTri = function(a,b,c){ // ab x bc // - area of a TRIANGLE is 1/2 of this
 	//return V2D.cross( V2D.sub(b,a), V2D.sub(c,b) );
 	return (b.x-a.x)*(c.y-b.y) - (b.y-a.y)*(c.x-b.x);
 }
-V2D.cross = function(a,b){ // z direction
-	return a.x*b.y-a.y*b.x;
-}
 V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	if(ang===undefined){
 		ang = a; a = b; b = V2D.copy(a);
