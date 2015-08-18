@@ -3291,6 +3291,7 @@ Code.PolySweepPointEvent.ResultTypeUnknown = 0;
 Code.PolySweepPointEvent.ResultTypeUnion = 1;
 Code.PolySweepPointEvent.ResultTypeIntersection = 2;
 Code.PolySweepPointEvent.ResultTypeDifference = 3;
+Code.PolySweepPointEvent.ResultTypeXOR = 3;
 Code.PolySweepPointEvent.prototype.toString = function(){
 	var str = "[ "+(this.isLeftPoint()?"L":"R")+" | "+this.point()+" => "+this.opposite().point()+" ]";
 	return str;
@@ -3313,7 +3314,15 @@ Code.PolySweepPointEvent.prototype.point = function(p){
 	}
 	return this._point;
 }
+Code.PolySweepPointEvent.prototype.left = function(l){
+	if(l!==undefined){
+		this._left = l;
+	}
+	return this._left;
+}
 Code.PolySweepPointEvent.prototype.isLeftPoint = function(){
+	//return this._left;
+	
 	if(this._opposite){
 		var p = this.point().point();
 		var o = this.opposite().point().point();
@@ -3332,6 +3341,7 @@ Code.PolySweepPointEvent.prototype.isLeftPoint = function(){
 		return this._edge.left() == this.point(); // same point
 	}
 	return false;
+	
 }
 Code.PolySweepPointEvent.prototype.opposite = function(o){
 	if(o!==undefined){
@@ -3370,12 +3380,12 @@ Code.PolySweepPointEvent.prototype.isEdgeBelowPoint = function(point){
 	}
 	return area > 0;
 }
-Code.PolySweepPointEvent.prototype.isEdgeAbovePoint = function(point){
+Code.PolySweepPointEvent.prototype.isEdgeAbovePoint = function(point){ // rename to aboveorequalto
 	var area = V2D.areaTri(this.point().point(),this.opposite().point().point(), point);
 	if(this.isLeftPoint()){
-		return area > 0;
+		return area >= 0;
 	}
-	return area < 0;
+	return area <= 0;
 }
 Code.PolySweepPointEvent.prototype.isInsideOtherPolygon = function(){
 	return this.inside();
@@ -3385,13 +3395,13 @@ Code.PolySweepPointEvent.prototype.setInsideOtherPolygonFlag = function(e){
 }
 Code.PolySweepPointEvent.setInsideFlag = function(le,ple){ // left endpoint, previous left endpoint
 //console.log("setInsideOtherPolygonFlag: "+le.inside()+" / "+le.inOut()+" .. . ")
-	if(ple==null){
+	if(ple==null){ // no previous edge => not inside and not in/out?
 		le.inside( false );
 		le.inOut( false );
-	}else if( le.polygon()==ple.polygon() ){
+	}else if( le.polygon()==ple.polygon() ){ // same polygon => 
 		le.inside( ple.inside() );
 		le.inOut( !ple.inOut() );
-	}else{
+	}else{ // ple is different polygon => 
 		le.inside( !ple.inOut() );
 		le.inOut( ple.inside() );
 	}
@@ -3404,8 +3414,14 @@ Code._dividePolySegment = function(eventA,point,sweep,queue){
 	var edgeA = eventA.edge();
 	var pLeft = edgeA.left();
 	var pRight = edgeA.right();
-	var edgeB = new Code.PolyEdge(p,pRight);
-	edgeA.right(p);
+	var edgeB;
+	if( V2D.equal(eventA.point().point(),pLeft.point()) ){
+		edgeB = new Code.PolyEdge(p,pRight);
+		edgeA.right(p);
+	}else{
+		edgeB = new Code.PolyEdge(pLeft,p);
+		edgeA.left(p);
+	}
 	if(pLeft.next()==pRight){
 		p.prev(pLeft);
 		p.next(pRight);
@@ -3428,6 +3444,46 @@ Code._dividePolySegment = function(eventA,point,sweep,queue){
 
 	queue.push(eventAO);
 	queue.push(eventB);
+	// DO CHECK:
+	if( !(eventA.opposite()==eventAO) ){
+		console.log("DIVIDE ERROR: A");
+	}
+	if( !(eventA==eventAO.opposite()) ){
+		console.log("DIVIDE ERROR: AO");
+	}
+	if( !(eventB.opposite()==eventBO) ){
+		console.log("DIVIDE ERROR: B");
+	}
+	if( !(eventB==eventBO.opposite()) ){
+		console.log("DIVIDE ERROR: BO");
+	}
+	if( !(eventA.edge()==edgeA) ){
+		console.log("DIVIDE ERROR: AE");
+	}
+	if( !(eventAO.edge()==edgeA) ){
+		console.log("DIVIDE ERROR: AO");
+	}
+	if( !(eventB.edge()==edgeB) ){
+		console.log("DIVIDE ERROR: BE");
+	}
+	if( !(eventBO.edge()==edgeB) ){
+		console.log("DIVIDE ERROR: BO");
+	}
+	if( !(V2D.equal(eventA.point().point(),edgeA.left().point()) || V2D.equal(eventA.point().point(),edgeA.right().point()) ) ){
+		console.log("DIVIDE ERROR: AP");
+		console.log(" "+eventA.point().point()+" | "+edgeA.left().point()+" | "+edgeA.right().point());
+	}
+	if( !(V2D.equal(eventAO.point().point(),edgeA.left().point()) || V2D.equal(eventAO.point().point(),edgeA.right().point()) ) ){
+		console.log("DIVIDE ERROR: AOP");
+		console.log(" "+eventAO.point().point()+" | "+edgeA.left().point()+" | "+edgeA.right().point());
+	}
+	if( !(V2D.equal(eventB.point().point(),edgeB.left().point()) || V2D.equal(eventB.point().point(),edgeB.right().point()) ) ){
+		console.log("DIVIDE ERROR: BP");
+	}
+	if( !(V2D.equal(eventBO.point().point(),edgeB.left().point()) || V2D.equal(eventBO.point().point(),edgeB.right().point()) ) ){
+		console.log("DIVIDE ERROR: BOP");
+		console.log(" "+eventBO.point().point()+" | "+edgeB.left().point()+" | "+edgeB.right().point());
+	}
 }
 
 Code._possibleEdgeIntersection = function(eventA,eventB, sweep, queue){ // intersection between two edges   |||||||||||||||| extend polygon to be set of arrays: groups of polygons
@@ -3451,10 +3507,10 @@ Code._possibleEdgeIntersection = function(eventA,eventB, sweep, queue){ // inter
 			// if( V2D.equal(a,c) || V2D.equal(b,d) ){ // intersect at same start point // HANDLED BY ISINTERSECTOINPOINT
 			// 	console.log("WOULD NOT INTERSECT 1");
 			// }
-			//var isIntersectionEndPoint = V2D.equal(point,a) || V2D.equal(point,b) || V2D.equal(point,c) || V2D.equal(point,d);
 			var isIntersectionEndPoint = V2D.equal(a,c) || V2D.equal(a,d) || V2D.equal(b,c) || V2D.equal(b,d);
 			if (!isIntersectionEndPoint){
 				console.log("FOUND INTERSECT: "+point);
+				isIntersectionEndPoint = V2D.equal(point,a) || V2D.equal(point,b) || V2D.equal(point,c) || V2D.equal(point,d);
 				// subdivide lines
 				var edgeA = eventA.edge();
 				var edgeB = eventB.edge();
@@ -3465,8 +3521,12 @@ Code._possibleEdgeIntersection = function(eventA,eventB, sweep, queue){ // inter
 				}else if(false){ // single subdivision - line/point
 					//
 				}else if(true){ // double subdivision
-					Code._dividePolySegment(eventA, point, sweep, queue);
-					Code._dividePolySegment(eventB, point, sweep, queue);
+					if( !V2D.equal(point,a) && !V2D.equal(point,b) ){
+						Code._dividePolySegment(eventA, point, sweep, queue);
+					}
+					if( !V2D.equal(point,c) && !V2D.equal(point,d) ){
+						Code._dividePolySegment(eventB, point, sweep, queue);
+					}
 				}
 				return true;
 			}/*else{
@@ -3476,21 +3536,20 @@ Code._possibleEdgeIntersection = function(eventA,eventB, sweep, queue){ // inter
 	} // else 0 intersections
 	return false;
 }
-Code._polygonSweepEventSortXThenYThenDirection = function(a,b,s){
-	if(a==b){ return 0; }
+Code._polygonSweepEventSortBoolean = function(a,b){ // true == after(-1), false == before(1)
 	var app = a.point().point();
 	var bpp = b.point().point();
-	if( app.x < bpp.x ){
-		return 1;
-	}
 	if( app.x > bpp.x ){
-		return -1;
+		return true;
 	}
-	if( app.y < bpp.y ){
-		return 1;
+	if( app.x < bpp.x ){
+		return false;
 	}
 	if( app.y > bpp.y ){
-		return -1;
+		return true;
+	}
+	if( app.y < bpp.y ){
+		return false;
 	}
 	if( a.isLeftPoint() && !b.isLeftPoint() ){
 		return 1;
@@ -3498,20 +3557,10 @@ Code._polygonSweepEventSortXThenYThenDirection = function(a,b,s){
 	if( !a.isLeftPoint() && b.isLeftPoint() ){
 		return -1;
 	}
-	// right is processed first ?
-	// if( !a.isLeftPoint() && b.isLeftPoint() ){
-	// 	return 1;
-	// }
-	// if( a.isLeftPoint() && !b.isLeftPoint() ){
-	// 	return -1;
-	// }
-	console.log("SORT 2 ORDERED LAST");
-	if( a.isEdgeBelowPoint(bpp) ){
-		return 1;
-	}
-	return -1;
+	var bop = b.opposite().point().point();
+	return a.isEdgeAbovePoint(bop);
 }
-Code._polygonSweepEventSort = function(a,b,s){
+Code._polygonSweepEventSort = function(a,b,s){ // a & b are ONLY left events
 	if(a==b){ return 0; }
 	var app = a.point().point();
 	var bpp = b.point().point();
@@ -3527,40 +3576,30 @@ Code._polygonSweepEventSort = function(a,b,s){
 	var appBelowbop = a.isEdgeBelowPoint(bop);
 	var bppBelowapp = b.isEdgeBelowPoint(app);
 	var bppBelowaop = b.isEdgeBelowPoint(aop);
-	var isNotCollinear = appAbovebpp || appAbovebop || bppAboveapp || bppAboveaop    ||    appBelowbpp || appBelowbop || bppBelowapp || bppBelowaop;
 
-	var appEqualbpp = V2D.equal(app,bpp);
-	var compared = Code._polygonSweepEventSortXThenYThenDirection(a,b);
-
-	if(isNotCollinear){
-		if(appEqualbpp){
-			if( appBelowbop ){
-				return 1;
-			}else{
-				return -1;
-			}
+	var signedAreaA = V2D.areaTri(app,aop,bpp);
+	var signedAreaB = V2D.areaTri(app,aop,bop);
+	var notCollinear = signedAreaA!=0.0 || signedAreaB!=0.0;
+	if(notCollinear){
+		if(V2D.equal(app,bpp)){ // sort on right endpoint
+			return a.isEdgeBelowPoint(bop) ? -1 : 1;
 		}
-		if(compared==1){
-			if(bppAboveapp){
-				return -1;
-			}else{
-				return 1;
-			}
+		if( Code._polygonSweepEventSortBoolean(a,b) ){
+			return b.isEdgeAbovePoint(app) ? -1 : 1;
 		}
-		if(appBelowbpp){
-			return 1;
-		}else{
-			return -1;
-		}
+		return a.isEdgeBelowPoint(bpp) ? -1 : 1;
 	} // else collinear
-	if(appEqualbpp){
-		return -1;
+	console.log("COLLINEAR POINTS FOUND:");
+	console.log("A: "+a);
+	console.log("B: "+b);
+	if(V2D.equal(app,bpp)){ 
+		return (a.id()<b.id()) ? -1 : 1;
 	}
-	console.log("SORT SWEEP ORDERED LAST");
-	return compared;
+	return Code._polygonSweepEventSortBoolean(a,b) ? -1 : 1;
 }
 Code._polygonQueueEventSort = function(a,b,s){
-	return Code._polygonSweepEventSortXThenYThenDirection(a,b,s);
+	if(a==b){ return 0; }
+	return Code._polygonSweepEventSortBoolean(a,b) ? -1 : 1;
 }
 // --------------------------------------------------------------------------------------- 
 Code._polyInitProcessEdge = function(edge, type, sweep, queue){
@@ -3600,7 +3639,7 @@ Code.polygonUnion2D = function(polyA,polyB, _iteration, operation){
 		edge = edgesB[i];
 		Code._polyInitProcessEdge(edge,Code.PolySweepPointEvent.PolygonTypeClipped, sweep,queue);
 	}
-	// iterate thru all (dynamic) left and right events
+	// iterate thru all (dynamic) left and right events in queue
 var iter = 0;
 	while( !queue.isEmpty() ){
 		console.log("..................................................."+iter+"/"+_iteration);
@@ -3613,16 +3652,16 @@ var iter = 0;
 			next = sweep.next(event);
 			event.setInsideOtherPolygonFlag( prev );
 			foundIntersection |= Code._possibleEdgeIntersection(event, next, sweep, queue);
-			foundIntersection |= Code._possibleEdgeIntersection(event, prev, sweep, queue);
+			foundIntersection |= Code._possibleEdgeIntersection(prev, event, sweep, queue);
 		}else{ // right endpoint
 			console.log("...right");
 			opposite = event.opposite();
 			next = sweep.next(opposite);
 			prev = sweep.prev(opposite);
-			if( event.isInsideOtherPolygon() ){ // if( opposite.isInsideOtherPolygon() ){ // ?
+			if( opposite.isInsideOtherPolygon() ){
 				intersect.push(event.edge());
 			}
-			if( !event.isInsideOtherPolygon() ){  // if( !opposite.isInsideOtherPolygon() ){ // ?
+			if( !opposite.isInsideOtherPolygon() ){
 				union.push(event.edge());
 			}
 			sweep.erase(opposite);
