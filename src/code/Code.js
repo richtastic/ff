@@ -2079,14 +2079,10 @@ Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 			//if(lenAB2==0.0){ return null; }
 			var ac = V2D.sub(c,a);
 			var ad = V2D.sub(d,a);
-			console.log(ab+"");
-			console.log(ac+"");
-			console.log(ad+"");
 			var dotC = V2D.dot(ab,ac)/lenAB2;
 			var dotD = V2D.dot(ab,ad)/lenAB2;
 			var dotMax = Math.max(dotC,dotD);
 			var dotMin = Math.min(dotC,dotD);
-			console.log(dotMin,dotMax);
 			if((dotMin<0 && dotMax<0) || (1<dotMin && 1<dotMax)){
 				return null;
 			}
@@ -3016,6 +3012,18 @@ Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderfle
 	}
 	return oddNodes;
 }
+Code.polygonUnion2D = function(polyA,polyB, _iteration, operation){
+	console.log(polyA);
+	console.log(polyB);
+	var polyA = Poly2D.poly2DfromArray(polyA);
+	var polyB = Poly2D.poly2DfromArray(polyB);
+	var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeUnion, _iteration);
+	if(polyC){
+		return polyC._pointSets;
+	}
+	return [];
+}
+/*
 // --------------------------------------------------------------------------------------- polygon point
 Code.PolyPoint = function(p, pr,ne){
 	this._id = Code.PolyPoint.index++;
@@ -3529,9 +3537,7 @@ Code._possibleEdgeIntersection = function(eventA,eventB, sweep, queue){ // inter
 					}
 				}
 				return true;
-			}/*else{
-				console.log("WOULD NOT INTERSECT 2");
-			}*/
+			}
 		}
 	} // else 0 intersections
 	return false;
@@ -3713,24 +3719,24 @@ if(edge){
 
 
 
-	console.log("UNION: "+union.length);
-	console.log("INTERSECT: "+intersect.length);
+	// console.log("UNION: "+union.length);
+	// console.log("INTERSECT: "+intersect.length);
 
-/*
-	var polyC = [];
-	var arr = union;
-	for(i=0;i<arr.length;++i){
-		var edge = arr[i];
-		polyC.push([edge.left().point(),edge.right().point()]);
-	}
-	arr = intersect;
-	for(i=0;i<arr.length;++i){
-		var edge = arr[i];
-		polyC.push([edge.left().point(),edge.right().point()]);
-	}
 
-	//polyC = [polyC];
-*/
+	// var polyC = [];
+	// var arr = union;
+	// for(i=0;i<arr.length;++i){
+	// 	var edge = arr[i];
+	// 	polyC.push([edge.left().point(),edge.right().point()]);
+	// }
+	// arr = intersect;
+	// for(i=0;i<arr.length;++i){
+	// 	var edge = arr[i];
+	// 	polyC.push([edge.left().point(),edge.right().point()]);
+	// }
+
+	// //polyC = [polyC];
+
 
 if(_iteration===undefined){
 polyC = [];
@@ -3818,7 +3824,7 @@ polyC = [];
 // http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.83.6811&rep=rep1&type=pdf
 
 
-
+*/
 
 
 
@@ -4040,7 +4046,7 @@ console.log("C");
 	//
 	return polyC;
 }
-*/
+
 Code.closestLineSegIntersectPolygon2D = function(a,b, array){
 	// NOT TESTED OR USED ANYWHERE YET
 	var i, len=array.length;

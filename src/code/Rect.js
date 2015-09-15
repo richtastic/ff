@@ -75,6 +75,13 @@ Rect.prototype.copy = function(r){
 	this.height( r.height() );
 	return this;
 }
+Rect.prototype.set = function(pX,pY,wid,hei){
+	this.x(pX);
+	this.y(pY);
+	this.widthwid;
+	this.height(hei);
+	return this;
+}
 Rect.prototype.x = function(pX){
 	if(pX!==undefined){
 		this._x = pX;
@@ -88,13 +95,13 @@ Rect.prototype.y = function(pY){
 	return this._y;
 }
 Rect.prototype.width = function(wid){
-	if(wid!==undefined){
+	if(wid!==undefined){ // if wid<0 => flip?
 		this._width = wid;
 	}
 	return this._width;
 }
 Rect.prototype.height = function(hei){
-	if(hei!==undefined){
+	if(hei!==undefined){ // if hei<0 => flip?
 		this._height = hei;
 	}
 	return this._height;
@@ -113,6 +120,12 @@ Rect.prototype.endX = function(){
 }
 Rect.prototype.endY = function(){
 	return this._y + this._height;
+}
+Rect.prototype.min = function(){
+	return new V2D(this.x(),this.y());
+}
+Rect.prototype.max = function(){
+	return new V2D(this.endX(),this.endY());
 }
 Rect.prototype.toString = function(){
 	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";
