@@ -143,9 +143,11 @@ Poly2D.Edge.prototype.B = function(b){
 }
 
 // ---------------------------------------------------------------------------------------------------------
-Poly2D.SweepEvent = function(edg,pnt,ply,etp){
+//Poly2D.SweepEvent = function(edg,pnt,ply,etp){
+Poly2D.SweepEvent = function(pnt,ply,etp){
+	this._id = Poly2D.SweepEvent._id++;
 	this._edge = null; // actual edge object
-	this._point = null; // edge's left/right point
+	//this._point = null; // edge's left/right point
 	this._direction = Poly2D.SweepEvent.DirectionTypeUnknown; // assigned location (leftness)
 	this._opposite = null; // opposite event (right/left)
 	this._polygon = Poly2D.SweepEvent.PolygonTypeUnknown; // polygon identity
@@ -153,11 +155,12 @@ Poly2D.SweepEvent = function(edg,pnt,ply,etp){
 	this._inside = false;
 	this._edgeType = Poly2D.SweepEvent.EdgeTypeUnknown; // edge behavior
 	this._isLeft = false;
-	this.edge(edg);
+	//this.edge(edg);
 	this.point(pnt);
 	this.polygon(ply);
 	this.edgeType(etp);
 }
+Poly2D.SweepEvent._id = 0;
 // ---------------------------------------------------------------------------------------------------------
 Poly2D.SweepEvent.setInsideFlag = function(leftEndpoint,prevLeftEnd){ // left endpoint, previous left endpoint
 	if(prevLeftEnd==null){ // no previous edge => not inside and not in/out?
@@ -202,11 +205,8 @@ Poly2D.SweepEvent.prototype.polygon = function(p){
 	}
 	return this._polygon;
 }
-Poly2D.SweepEvent.prototype.edge = function(e){
-	if(e!==undefined){
-		this._edge = e;
-	}
-	return this._edge;
+Poly2D.SweepEvent.prototype.id = function(i){
+	return this._id;
 }
 Poly2D.SweepEvent.prototype.point = function(p){
 	if(p!==undefined){
@@ -239,11 +239,11 @@ Poly2D.SweepEvent.prototype.inOut = function(i){
 	}
 	return this._inOut;
 }
-Poly2D.SweepEvent.prototype.polyType = function(p){
+Poly2D.SweepEvent.prototype.polygonType = function(p){
 	if(p!==undefined){
-		this.polyType = p;
+		this.polygonType = p;
 	}
-	return this.polyType;
+	return this.polygonType;
 }
 Poly2D.SweepEvent.prototype.edgeType = function(e){
 	if(e!==undefined){
@@ -251,43 +251,17 @@ Poly2D.SweepEvent.prototype.edgeType = function(e){
 	}
 	return this._edgeType;
 }
+Poly2D.SweepEvent.isEdgeAboveEdge = function(eventA, eventB){
+	var area = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.point());
+	if(eventA.isLeftEvent()){
+		return area > 0;
+	}
+	return area < 0;
+}
+Poly2D.SweepEvent.isEdgeBelowEdge = function(eventA, eventB){
+	return !Poly2D.SweepEvent.isEdgeAboveEdge(eventB,eventB);
+}
 // Poly2D.SweepEvent.prototype.isEdgeBelowPoint = function(point){
-
-
-// HERE
-
-// 	var area = V2D.areaTri(this.point().point(),this.opposite().point().point(), point);
-// 	if(this.isLeftPoint()){
-// 		return area < 0;
-// 	}
-// 	return area > 0;
-// }
-// Poly2D.SweepEvent.prototype.isEdgeAbovePoint = function(point){ // rename to aboveorequalto
-// 	var area = V2D.areaTri(this.point().point(),this.opposite().point().point(), point);
-// 	if(this.isLeftPoint()){
-// 		return area >= 0;
-// 	}
-// 	return area <= 0;
-// }
-// Poly2D.SweepEvent.prototype.isInsideOtherPolygon = function(){
-// 	return this.inside();
-// }
-// Poly2D.SweepEvent.prototype.setInsideOtherPolygonFlag = function(e){
-// 	Poly2D.SweepEvent.setInsideFlag(this,e);
-// }
-// Code.PolySweepPointEvent.setInsideFlag = function(le,ple){ // left endpoint, previous left endpoint
-// //console.log("setInsideOtherPolygonFlag: "+le.inside()+" / "+le.inOut()+" .. . ")
-// 	if(ple==null){ // no previous edge => not inside and not in/out?
-// 		le.inside( false );
-// 		le.inOut( false );
-// 	}else if( le.polygon()==ple.polygon() ){ // same polygon => 
-// 		le.inside( ple.inside() );
-// 		le.inOut( !ple.inOut() );
-// 	}else{ // ple is different polygon => 
-// 		le.inside( !ple.inOut() );
-// 		le.inOut( ple.inside() );
-// 	}
-// }
 Poly2D.SweepEvent.setInsideFlag = function(event,prev, sweepLine){
 	if(!prev){ // no previous edge => not inside and not in/out?
 		event.inside(false);
@@ -438,13 +412,82 @@ Poly2D.PolyChain.prototype.isComplete = function(){
 }
 // ---------------------------------------------------------------------------------------------------------
 Poly2D.PolyChainSet = function(){
-	this._chains = [];
+	this._chainsIncomplete = [];
+	this._chainsComplete = [];
+}
+Poly2D.PolyChainSet.prototype.isComplete = function(){
+	return this._chainsIncomplete.length == 0;
+}
+Poly2D.PolyChainSet.prototype.addEdge = function(pointA,pointB){
+	var chains = this._chainsIncomplete;
+	var i, len=chains.length;
+	var chain, availableChains = [];
+	// find any chains with available ends
+	for(i=0; i<len; ++i){
+		chain = chains[i];
+		if( chain.canAddEdge(pointA,pointB) ){
+			availableChains.push(chain);
+		}
+	}
+	len = availableChains.length;
+	if(len>2){ // should never happen
+		console.log("invalid chain set");
+		return false;
+	}else if(len==2){ // link 2 chains together
+		var old = availableChains[1];
+		chain = availableChains[0];
+		Code.removeElementAtSimple(chains, old);
+		chain.addChain( old );
+		if(chain.isComplete()){
+			Code.removeElementSimple(chains, old);
+			Code.removeElementSimple(chains, chain);
+			this._chainsComplete.push(chain);
+		}
+	} else if(len==1){ // add to end of single chain
+		chain = availableChains[0];
+		chain.addEdge(pointA,pointB);
+	} else { // create new chain
+		chain = new Poly2D.PolyChain();
+		chains.push(chain);
+		chain.addEdge(pointA,pointB);
+	}
+	return true;
+}
+Poly2D.PolyChainSet.prototype.toArray = function(){
+	var arrayList = [];
+	var chains = this._chainsIncomplete;
+	var i, len=chains.length;
+	var chain, availableChains = [];
+	// find any chains with available ends
+	for(i=0; i<len; ++i){
+		chain = chains[i];
+		arrayList.push(chain.toArray()); // .pop() ?
+	}
+	return arrayList;
+}
+Poly2D.PolyChainSet.prototype.toString = function(){
+	var i, len, str, chains;
+	str = "[PolyChainSet: ";
+	chains = this._chainsComplete;
+	len = chains.length;
+	for(i=0;i<len;++i){
+		str += chains[i].toString() + "\n";
+	}
+	chains = this._chainsIncomplete;
+	len = chains.length;
+	for(i=0;i<len;++i){
+		str += chains[i].toString() + "\n";
+	}
+	str += "]";
+	return str;
 }
 
 // ---------------------------------------------------------------------------------------------------------
 Poly2D.PolySweepLine = function(){
 	this._edges = new PriorityQueue();
-	this._edges.sorting( Code._polygonSweepEventSort );
+	//this._edges.sorting( Poly2D.segmentCompareNumeric );
+	this._edges.sorting( Poly2D.segmentCompareNumericFlip );
+	//this._edges.sorting( Poly2D.sweepEventCompareNumericFlip );
 }
 Poly2D.PolySweepLine.prototype.insert = function(event){
 	return this._edges.push(event);
@@ -465,19 +508,18 @@ Poly2D.PolySweepLine.prototype.erase = function(event){
 	event = this._edges.removeObject(event);
 	return event;
 }
-// Code.PolySweepLine.prototype.location = function(l){
-// 	if(this._edges.length>0){
-// 		return this._edges[this._edges.length-1].left();
-// 	}
-// 	return null;
-// }
+Poly2D.PolySweepLine.prototype.toArray = function(){
+	return this._edges.toArray();
+}
+Poly2D.PolySweepLine.prototype.toString = function(){
+	return this._edges.toString();
+}
 
 // ---------------------------------------------------------------------------------------------------------
 Poly2D.processSegment = function(eventQueue, pointA,pointB, polygonType){
 	if(!V2D.equal(pointA,pointB)){
-		var edge = new Poly2D.Edge(pointA,pointB);
-		var eventA = new Poly2D.SweepEvent( edge, pointA, polygonType);
-		var eventB = new Poly2D.SweepEvent( edge, pointB, polygonType);
+		var eventA = new Poly2D.SweepEvent(pointA, polygonType, Poly2D.SweepEvent.EdgeTypeRegular);
+		var eventB = new Poly2D.SweepEvent(pointB, polygonType, Poly2D.SweepEvent.EdgeTypeRegular);
 		eventA.opposite(eventB);
 		eventB.opposite(eventA);
 		if(eventA.point().x < eventB.point().x){
@@ -489,7 +531,7 @@ Poly2D.processSegment = function(eventQueue, pointA,pointB, polygonType){
 		}else if(eventA.point().y < eventB.point().y){
 			eventA.isLeftEvent(true);
 			eventB.isLeftEvent(false);
-		}else{ // eventA.point().y > eventB.point().y
+		}else{ // eventA.point().y > eventB.point().y || V2D.equal(...)
 			eventA.isLeftEvent(false);
 			eventB.isLeftEvent(true);
 		}
@@ -511,11 +553,27 @@ Poly2D.processPolygon = function(eventQueue, polygon, polygonType){
 		}
 	}
 }
-Poly2D.possibleIntersection = function(eventA, eventB){
-	console.log("possibleEdgeIntersection "+eventA+" "+eventB);
+Poly2D.possibleIntersectionAny = function(event,sweepLine){
+	var intersection = true;
+	while(intersection) {
+		intersection = false;
+		var eventList = sweepLine.toArray();
+		//console.log(eventList);
+		var i, e, len=eventList.length;
+		for(i=0;i<len;++i){
+			e = eventList[i];
+			if( Poly2D.possibleIntersection(event,e,sweepLine) ){
+				intersection = true;
+				break;
+			}
+		}
+	}
+}
+Poly2D.possibleIntersection = function(eventA, eventB, sweepLine){
 	if(!eventA || !eventB){
 		return false;
 	}
+	//console.log("possibleEdgeIntersection "+eventA+" "+eventB);
 	var a = eventA.point();
 	var b = eventA.opposite().point();
 	var c = eventB.point();
@@ -532,40 +590,185 @@ Poly2D.possibleIntersection = function(eventA, eventB){
 			pointB = point[1];
 		}
 	}else{
+		//console.log("no intersections");
 		return false;
 	}
+	// console.log("numIntersections: "+numIntersections);
+	// console.log(point,pointA,pointB);
 	var oppositeA = eventA.opposite();
 	var oppositeB = eventB.opposite();
 	// single intersection - endpoint
-	if(numIntersections==1 && (V2D.equal(eventA.point(),eventB.point()) || V2D.equal(oppositeA.point(),oppositeB.point())){
+	if( numIntersections==1 && (V2D.equal(eventA.point(),eventB.point()) || V2D.equal(oppositeA.point(),oppositeB.point()) ) ){
+		//console.log("int drop A");
 		return false;
 	}
 	// double intersection - same polygon - error
 	if(numIntersections==2 && eventA.polygonType()==eventB.polygonType()){
+		//console.log("int drop B");
 		return false;
 	}
 	//
+	// console.log(eventA);
+	// console.log(eventB);
+	//console.log("numIntersections: "+numIntersections);
 	if(numIntersections==1){
-		if( !V2D.equal(eventA.point(),point) && V2D.equal(eventA.opposite().point(),point)){
-			divideSegment(eventA,point);
+		//console.log("inside 1");
+		if( !V2D.equal(eventA.point(),point) && !V2D.equal(eventA.opposite().point(),point)){
+			return Poly2D.divideSegment(eventA,point, sweepLine);
 		}
-		if( !V2D.equal(eventB.point(),point) && V2D.equal(eventB.opposite().point(),point)){
-			divideSegment(eventB,point);
+		if( !V2D.equal(eventB.point(),point) && !V2D.equal(eventB.opposite().point(),point)){
+			return Poly2D.divideSegment(eventB,point, sweepLine);
 		}
-		return true;
+		return false;
 	}
 	// numIntersections == 2
-	//
+	console.log("handle 2+ intersections ...");
 	return true;
 }
 // ---------------------------------------------------------------------------------------------------------
-Poly2D.divideSegment = function(event,point){
-	if( V2D.equal(event.point(),point) || V2D.equal(event.opposite().point(),point)){  // single point is endpoint
+Poly2D.divideSegment = function(event, point, sweepLine){
+	console.log("divide segment: "+event+" | "+point);
+	if( V2D.equal(event.point(),point) || V2D.equal(event.opposite().point(),point)){ // single point is endpoint
+		console.log("divide segment drop");
 		return false;
 	}
-	// ...
+	//console.log("divide segment: "+event+" | "+point);
+	var eventRight = new Poly2D.SweepEvent(point,event.polygonType(),event.edgeType());
+	var eventLeft = new Poly2D.SweepEvent(point,event.polygonType(),event.edgeType());
+	eventRight.isLeftEvent(false);
+	eventLeft.isLeftEvent(true);
+	eventRight.opposite(event);
+	eventLeft.opposite(event.opposite());
+	if( Poly2D.sweepEventCompare(eventLeft, event.opposite()) ){
+		console.log("oops 1");
+		event.opposite().isLeftEvent(true);
+		eventLeft.isLeftEvent(false);
+	}
+	if( Poly2D.sweepEventCompare(event, eventRight) ){
+		console.log("oops 2");
+	}
+	event.opposite().opposite(eventLeft);
+	event.opposite(eventRight);
+	sweepLine.insert(eventLeft);
+	sweepLine.insert(eventRight);
 	return true;
 }
+/*
+1) closer in X
+2) closer in Y
+3) left event
+4) is above other event
+*/
+Poly2D.sweepEventCompare = function(eventA, eventB){
+	if(eventA.point().x > eventB.point().x){
+		return true;
+	}
+	if(eventA.point().x < eventB.point().x){
+		return false;
+	}
+	if(eventA.point().y > eventB.point().y){
+		return true;
+	}
+	if(eventA.point().y < eventB.point().y){
+		return false;
+	}
+	if(eventA.isLeftEvent() != eventB.isLeftEvent()){
+		return eventA.isLeftEvent();
+	}
+	return Poly2D.SweepEvent.isEdgeAboveEdge(eventA,eventB.opposite());
+}
+Poly2D.sweepEventCompareNumeric = function(eventA, eventB){
+	if(eventA.point().x > eventB.point().x){
+		return 1;
+	}
+	if(eventA.point().x < eventB.point().x){
+		return -1;
+	}
+	if(eventA.point().y > eventB.point().y){
+		return 1;
+	}
+	if(eventA.point().y < eventB.point().y){
+		return -1;
+	}
+	if(eventA.isLeftEvent() != eventB.isLeftEvent()){
+		return eventA.isLeftEvent() ? 1 : -1;
+	}
+	return Poly2D.SweepEvent.isEdgeAboveEdge(eventA,eventB.opposite()) ? 1 : -1;
+}
+Poly2D.sweepEventCompareNumericFlip = function(eventA, eventB){
+	var result = Poly2D.sweepEventCompareNumeric(eventA,eventB);
+	if(result==-1){
+		return 1;
+	}else if(result==1){
+		return -1;
+	} // else 0
+	return result;
+}
+Poly2D.segmentCompare = function(eventA, eventB){
+	if(eventA==eventB){
+		return false;
+	}
+	var signedArea1 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.point());
+	var signedArea2 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.opposite().point());
+	if(signedArea1 != 0.0 || signedArea2 != 0.0){
+		if(V2D.equal(eventA.point(),eventB.point())){
+			return Poly2D.SweepEvent.isEdgeBelowEdge(eventA,eventB.opposite());
+		}
+		if( Poly2D.sweepEventCompare(eventA,eventB) ){
+			return Poly2D.SweepEvent.isEdgeAboveEdge(eventB,eventA);
+		}
+		return !Poly2D.SweepEvent.isEdgeAboveEdge(eventA,eventB);
+	}
+	if(V2D.equal(eventA.point(),eventB.point())){
+		return eventA.id() < eventB.id(); // arbitrary consistence
+	}
+	return Poly2D.sweepEventCompare(eventA,eventB);
+}
+Poly2D.segmentCompareNumeric = function(eventA, eventB){
+	//return Poly2D.segmentCompare(eventA,eventB) ? 1 : -1;
+	if(eventA==eventB){
+		return 0;
+	}
+	var signedArea1 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.point());
+	var signedArea2 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.opposite().point());
+	if(signedArea1 != 0.0 || signedArea2 != 0.0){
+		if(V2D.equal(eventA.point(),eventB.point())){
+			return Poly2D.SweepEvent.isEdgeBelowEdge(eventA,eventB.opposite()) ? 1 : -1;
+		}
+		if( Poly2D.sweepEventCompare(eventA,eventB) ){
+			return Poly2D.SweepEvent.isEdgeAboveEdge(eventB,eventA) ? 1 : -1;
+		}
+		return Poly2D.SweepEvent.isEdgeBelowEdge(eventA,eventB) ? 1 : -1;
+	}
+	if(V2D.equal(eventA.point(),eventB.point())){
+		return eventA.id() < eventB.id() ? 1 : -1; // arbitrary consistence
+	}
+	return Poly2D.sweepEventCompareNumeric(eventA,eventB);
+}
+Poly2D.segmentCompareNumericFlip = function(eventA, eventB){
+	var result = Poly2D.segmentCompareNumeric(eventA,eventB);
+	if(result==-1){
+		return 1;
+	}else if(result==1){
+		return -1;
+	} // else 0
+	return result;
+}
+/*
+bool Martinez::SweepEventComp::operator() (SweepEvent* e1, SweepEvent* e2) {
+	if (e1->p.x > e2->p.x) // Different x-coordinate
+		return true;
+	if (e2->p.x > e1->p.x) // Different x-coordinate
+		return false;
+	if (e1->p != e2->p) // Different points, but same x-coordinate. The event with lower y-coordinate is processed first
+		return e1->p.y > e2->p.y;
+	if (e1->left != e2->left) // Same point, but one is a left endpoint and the other a right endpoint. The right endpoint is processed first
+		return e1->left;
+	// Same point, both events are left endpoints or both are right endpoints. The event associate to the bottom segment is processed first
+	return e1->above (e2->other->p);
+}
+*/
+
 /*
 void Martinez::possibleIntersection (SweepEvent* e1, SweepEvent* e2)
 ...
@@ -652,6 +855,7 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 	}
 	// add all points to event queue
 	var eventQueue = new PriorityQueue();
+		eventQueue.sorting( Poly2D.sweepEventCompareNumericFlip ); // Poly2D.segmentCompareNumeric );
 	Poly2D.processPolygon(eventQueue, polygonA, Poly2D.SweepEvent.PolygonTypeSubject);
 	Poly2D.processPolygon(eventQueue, polygonB, Poly2D.SweepEvent.PolygonTypeClipped);
 	//
@@ -660,22 +864,29 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 	//
 	var event, prev, next, opposite, addEdge;
 	while( !eventQueue.isEmpty() ){
+		//console.log("EVENT QUEUE: \n"+eventQueue);
+		//console.log("SWEEP LINE: \n "+sweepLine);
 		event = eventQueue.minimum();
 		eventQueue.popMinimum(); // eventQueue.removeObject(event); // 
 		// update sweep line
 		if(event.isLeftEvent()){ // add
+			console.log("---------------------------------------LEFT:  "+event.point()+" -> "+event.opposite().point());
 			sweepLine.insert(event);
 			prev = sweepLine.prev(event);
 			next = sweepLine.next(event);
 			Poly2D.SweepEvent.setInsideFlag(event, prev, sweepLine);
-			Poly2D.possibleIntersection(event, next);
-			Poly2D.possibleIntersection(prev, event);
+			console.log(prev);
+			console.log(next);
+			//Poly2D.possibleIntersectionAny(event,sweepLine);
+			Poly2D.possibleIntersection(event, next, sweepLine);
+			Poly2D.possibleIntersection(prev, event, sweepLine);
 		}else{ // remove
+			console.log("---------------------------------------RIGHT: "+event.point()+" -> "+event.opposite().point());
 			opposite = event.opposite();
 			prev = sweepLine.prev(opposite);
 			next = sweepLine.next(opposite);
 			addEdge = false;
-			if(event.edgeType==Poly2D.SweepEvent.EdgeTypeRegular){
+			if(event.edgeType()==Poly2D.SweepEvent.EdgeTypeRegular){
 				if(operationType==Poly2D.SweepEvent.ResultTypeIntersection){
 					if(opposite.inside()){
 						addEdge = true;
@@ -699,16 +910,27 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 				if(operationType==Poly2D.SweepEvent.ResultTypeDifference){
 					addEdge = true;
 				}
+			}else{
+				console.log("EDGE TYPE OTHER: "+event.edgeType());
 			}
 			if(addEdge){
-				chainSet.addEdge(event.edge().A(),event.edge().B());
+				//console.log("ADD EDGE");
+				chainSet.addEdge(event.point(),event.opposite().point());
 			}
 			sweepLine.erase(opposite);
-			Poly2D.possibleIntersection(prev, next);
+			//Poly2D.possibleIntersectionAny(event,sweepLine);
+			Poly2D.possibleIntersection(prev, next, sweepLine);
 		}
 	}
 	
-	chainSet...
+	var done = chainSet.isComplete();
+	console.log("complete: "+done);
+	console.log("chainset "+chainSet.toString());
+	var arr = chainSet.toArray();
+	console.log(arr);
+	var poly = new Poly2D.poly2DfromArray(arr);
+	console.log(poly);
+	return poly;
 }
 
 

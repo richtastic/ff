@@ -92,7 +92,10 @@ this._root.removeAllChildren();
 	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
 	//this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
 	for(i=0;i<polyC.length;++i){
-		this.drawPolygon(polyC[i], 0xFF0000CC, 0x00000000, 2.0);
+		var con = polyC[i];
+		for(j=0;j<con.length;++j){
+			this.drawPolygon(con[j], 0xFF0000CC, 0x00000000, 2.0);
+		}
 	}
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){

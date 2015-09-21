@@ -35,7 +35,7 @@ RectanglePacking.prototype.constructed = function(){
 	this.stage.addChild(this.doRoot);
 	this.setup();
 	this.addListeners();
-	this.canvas.checkResize();
+	//this.canvas.checkResize();
 }
 RectanglePacking.prototype.setup = function(){
 	var i, len, area, data, bound, rectList, src;
@@ -362,7 +362,7 @@ RectanglePacking.prototype.generateRandom = function(wid,hei){ //
 		area += rectList[i].area();
 	}
 	var i, len = rectList.length;
-	while(area>0.99*bound.area()){ // .90 = YES, .95 = MAYBE, .99 = NO
+	while(area>0.98*bound.area()){ // .90 = YES, .95 = MAYBE, .99 = NO
 		area -= (rectList.pop()).area();
 	}
 	return {list:rectList, bound:bound, resource:null};
