@@ -251,17 +251,18 @@ Poly2D.SweepEvent.prototype.edgeType = function(e){
 	}
 	return this._edgeType;
 }
-Poly2D.SweepEvent.isEdgeAboveEdge = function(eventA, eventB){
-	var area = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.point());
-	if(eventA.isLeftEvent()){
-		return area > 0;
+Poly2D.SweepEvent.isEdgeAbovePoint = function(eventA, point){ // one of the edge points assumed to be equal
+	var pointA = eventA.point();
+	var pointB = eventA.opposite().point();
+	var area = V2D.areaTri(pointA,pointB,point);
+	if( eventA.isLeftEvent() ){
+		return area < 0;
 	}
-	return area < 0;
+	return area > 0;
 }
-Poly2D.SweepEvent.isEdgeBelowEdge = function(eventA, eventB){
-	return !Poly2D.SweepEvent.isEdgeAboveEdge(eventB,eventB);
+Poly2D.SweepEvent.isEdgeBelowPoint = function(eventA, point){
+	return !Poly2D.SweepEvent.isEdgeAbovePoint(eventA,point);
 }
-// Poly2D.SweepEvent.prototype.isEdgeBelowPoint = function(point){
 Poly2D.SweepEvent.setInsideFlag = function(event,prev, sweepLine){
 	if(!prev){ // no previous edge => not inside and not in/out?
 		event.inside(false);
@@ -485,8 +486,8 @@ Poly2D.PolyChainSet.prototype.toString = function(){
 // ---------------------------------------------------------------------------------------------------------
 Poly2D.PolySweepLine = function(){
 	this._edges = new PriorityQueue();
-	//this._edges.sorting( Poly2D.segmentCompareNumeric );
-	this._edges.sorting( Poly2D.segmentCompareNumericFlip );
+	this._edges.sorting( Poly2D.segmentCompareNumeric );
+	//this._edges.sorting( Poly2D.segmentCompareNumericFlip );
 	//this._edges.sorting( Poly2D.sweepEventCompareNumericFlip );
 }
 Poly2D.PolySweepLine.prototype.insert = function(event){
@@ -522,6 +523,7 @@ Poly2D.processSegment = function(eventQueue, pointA,pointB, polygonType){
 		var eventB = new Poly2D.SweepEvent(pointB, polygonType, Poly2D.SweepEvent.EdgeTypeRegular);
 		eventA.opposite(eventB);
 		eventB.opposite(eventA);
+		/*
 		if(eventA.point().x < eventB.point().x){
 			eventA.isLeftEvent(true);
 			eventB.isLeftEvent(false);
@@ -532,6 +534,15 @@ Poly2D.processSegment = function(eventQueue, pointA,pointB, polygonType){
 			eventA.isLeftEvent(true);
 			eventB.isLeftEvent(false);
 		}else{ // eventA.point().y > eventB.point().y || V2D.equal(...)
+			eventA.isLeftEvent(false);
+			eventB.isLeftEvent(true);
+		}
+		*/
+		var result = ?(eventA,eventB);
+		if(){
+			eventA.isLeftEvent(true);
+			eventB.isLeftEvent(false);
+		}else{
 			eventA.isLeftEvent(false);
 			eventB.isLeftEvent(true);
 		}
@@ -553,7 +564,7 @@ Poly2D.processPolygon = function(eventQueue, polygon, polygonType){
 		}
 	}
 }
-Poly2D.possibleIntersectionAny = function(event,sweepLine){
+Poly2D.possibleIntersectionAny = function(event,sweepLine,eventQueue){
 	var intersection = true;
 	while(intersection) {
 		intersection = false;
@@ -562,14 +573,14 @@ Poly2D.possibleIntersectionAny = function(event,sweepLine){
 		var i, e, len=eventList.length;
 		for(i=0;i<len;++i){
 			e = eventList[i];
-			if( Poly2D.possibleIntersection(event,e,sweepLine) ){
+			if( Poly2D.possibleIntersection(event,e,sweepLine,eventQueue) ){
 				intersection = true;
 				break;
 			}
 		}
 	}
 }
-Poly2D.possibleIntersection = function(eventA, eventB, sweepLine){
+Poly2D.possibleIntersection = function(eventA, eventB, sweepLine, eventQueue){
 	if(!eventA || !eventB){
 		return false;
 	}
@@ -614,10 +625,10 @@ Poly2D.possibleIntersection = function(eventA, eventB, sweepLine){
 	if(numIntersections==1){
 		//console.log("inside 1");
 		if( !V2D.equal(eventA.point(),point) && !V2D.equal(eventA.opposite().point(),point)){
-			return Poly2D.divideSegment(eventA,point, sweepLine);
+			return Poly2D.divideSegment(eventA,point, sweepLine,eventQueue);
 		}
 		if( !V2D.equal(eventB.point(),point) && !V2D.equal(eventB.opposite().point(),point)){
-			return Poly2D.divideSegment(eventB,point, sweepLine);
+			return Poly2D.divideSegment(eventB,point, sweepLine,eventQueue);
 		}
 		return false;
 	}
@@ -626,208 +637,112 @@ Poly2D.possibleIntersection = function(eventA, eventB, sweepLine){
 	return true;
 }
 // ---------------------------------------------------------------------------------------------------------
-Poly2D.divideSegment = function(event, point, sweepLine){
-	console.log("divide segment: "+event+" | "+point);
+Poly2D.divideSegment = function(event, point, sweepLine, eventQueue){
 	if( V2D.equal(event.point(),point) || V2D.equal(event.opposite().point(),point)){ // single point is endpoint
 		console.log("divide segment drop");
 		return false;
 	}
-	//console.log("divide segment: "+event+" | "+point);
+	console.log("divide segment: "+event+" | "+point);
+	if( !event.isLeftEvent() ){
+		event = event.opposite();
+	}
 	var eventRight = new Poly2D.SweepEvent(point,event.polygonType(),event.edgeType());
 	var eventLeft = new Poly2D.SweepEvent(point,event.polygonType(),event.edgeType());
 	eventRight.isLeftEvent(false);
 	eventLeft.isLeftEvent(true);
 	eventRight.opposite(event);
 	eventLeft.opposite(event.opposite());
-	if( Poly2D.sweepEventCompare(eventLeft, event.opposite()) ){
-		console.log("oops 1");
-		event.opposite().isLeftEvent(true);
-		eventLeft.isLeftEvent(false);
-	}
-	if( Poly2D.sweepEventCompare(event, eventRight) ){
-		console.log("oops 2");
-	}
 	event.opposite().opposite(eventLeft);
 	event.opposite(eventRight);
-	sweepLine.insert(eventLeft);
-	sweepLine.insert(eventRight);
+	// sweepLine.insert(eventLeft);
+	// sweepLine.insert(eventRight);
+	eventQueue.push(eventLeft);
+	eventQueue.push(eventRight);
 	return true;
 }
 /*
-1) closer in X
-2) closer in Y
+1) lowest in X
+2) lowest in Y
 3) left event
 4) is above other event
 */
+Poly2D.compareNumericToLogical = function(result){
+	return result==1 ? true : false;
+}
 Poly2D.sweepEventCompare = function(eventA, eventB){
-	if(eventA.point().x > eventB.point().x){
-		return true;
-	}
-	if(eventA.point().x < eventB.point().x){
-		return false;
-	}
-	if(eventA.point().y > eventB.point().y){
-		return true;
-	}
-	if(eventA.point().y < eventB.point().y){
-		return false;
-	}
-	if(eventA.isLeftEvent() != eventB.isLeftEvent()){
-		return eventA.isLeftEvent();
-	}
-	return Poly2D.SweepEvent.isEdgeAboveEdge(eventA,eventB.opposite());
+	return Poly2D.compareNumericToLogical( Poly2D.sweepEventCompareNumeric(eventA,eventB) );
 }
 Poly2D.sweepEventCompareNumeric = function(eventA, eventB){
-	if(eventA.point().x > eventB.point().x){
-		return 1;
+	if(eventA==eventB){
+		return 0;
 	}
 	if(eventA.point().x < eventB.point().x){
-		return -1;
-	}
-	if(eventA.point().y > eventB.point().y){
 		return 1;
+	}
+	if(eventA.point().x > eventB.point().x){
+		return -1;
 	}
 	if(eventA.point().y < eventB.point().y){
-		return -1;
-	}
-	if(eventA.isLeftEvent() != eventB.isLeftEvent()){
-		return eventA.isLeftEvent() ? 1 : -1;
-	}
-	return Poly2D.SweepEvent.isEdgeAboveEdge(eventA,eventB.opposite()) ? 1 : -1;
-}
-Poly2D.sweepEventCompareNumericFlip = function(eventA, eventB){
-	var result = Poly2D.sweepEventCompareNumeric(eventA,eventB);
-	if(result==-1){
 		return 1;
-	}else if(result==1){
+	}
+	if(eventA.point().y > eventB.point().y){
 		return -1;
-	} // else 0
-	return result;
+	}
+	if(eventA.isLeftEvent() != eventB.isLeftEvent()){ // right before left ?
+		return eventA.isLeftEvent() ? -1 : 1;
+	}
+	return Poly2D.SweepEvent.isEdgeBelowPoint(eventA,eventB.opposite().point()) ? 1 : -1;
 }
+
 Poly2D.segmentCompare = function(eventA, eventB){
-	if(eventA==eventB){
-		return false;
-	}
-	var signedArea1 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.point());
-	var signedArea2 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.opposite().point());
-	if(signedArea1 != 0.0 || signedArea2 != 0.0){
-		if(V2D.equal(eventA.point(),eventB.point())){
-			return Poly2D.SweepEvent.isEdgeBelowEdge(eventA,eventB.opposite());
-		}
-		if( Poly2D.sweepEventCompare(eventA,eventB) ){
-			return Poly2D.SweepEvent.isEdgeAboveEdge(eventB,eventA);
-		}
-		return !Poly2D.SweepEvent.isEdgeAboveEdge(eventA,eventB);
-	}
-	if(V2D.equal(eventA.point(),eventB.point())){
-		return eventA.id() < eventB.id(); // arbitrary consistence
-	}
-	return Poly2D.sweepEventCompare(eventA,eventB);
+	return Poly2D.compareNumericToLogical( Poly2D.sweepEventCompareNumeric(eventA,eventB) );
 }
+/*
+?
+*/
 Poly2D.segmentCompareNumeric = function(eventA, eventB){
-	//return Poly2D.segmentCompare(eventA,eventB) ? 1 : -1;
 	if(eventA==eventB){
 		return 0;
 	}
 	var signedArea1 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.point());
 	var signedArea2 = V2D.areaTri(eventA.point(),eventA.opposite().point(), eventB.opposite().point());
 	if(signedArea1 != 0.0 || signedArea2 != 0.0){
+		/*
 		if(V2D.equal(eventA.point(),eventB.point())){
-			return Poly2D.SweepEvent.isEdgeBelowEdge(eventA,eventB.opposite()) ? 1 : -1;
+			return Poly2D.SweepEvent.isEdgeBelowPoint(eventA,eventB.opposite().point()) ? 1 : -1;
 		}
-		if( Poly2D.sweepEventCompare(eventA,eventB) ){
-			return Poly2D.SweepEvent.isEdgeAboveEdge(eventB,eventA) ? 1 : -1;
+		if( Poly2D.sweepEventCompareNumeric(eventA,eventB) == 1 ){ // 
+			return Poly2D.SweepEvent.isEdgeAbovePoint(eventB,eventA.point()) ? 1 : -1;
+		} // 
+		return Poly2D.SweepEvent.isEdgeBelowPoint(eventA,eventB.point()) ? 1 : -1;
+		*/
+		var below1 = Poly2D.SweepEvent.isEdgeBelowPoint(eventA,eventB.point());
+		var below2 = Poly2D.SweepEvent.isEdgeBelowPoint(eventA,eventB.opposite().point());
+		if( below1 && below2 ){
+			return 1;
 		}
-		return Poly2D.SweepEvent.isEdgeBelowEdge(eventA,eventB) ? 1 : -1;
+		below1 = Poly2D.SweepEvent.isEdgeBelowPoint(eventB,eventA.point());
+		below2 = Poly2D.SweepEvent.isEdgeBelowPoint(eventB,eventA.opposite().point());
+		if( below1 && below2 ){
+			return -1;
+		}
+		//console.log(eventA+"",eventB+"");
+		//return -1;
+		return Poly2D.sweepEventCompareNumeric(eventA,eventB);
 	}
+	console.log("COLINEAR CODE");
 	if(V2D.equal(eventA.point(),eventB.point())){
 		return eventA.id() < eventB.id() ? 1 : -1; // arbitrary consistence
 	}
 	return Poly2D.sweepEventCompareNumeric(eventA,eventB);
 }
-Poly2D.segmentCompareNumericFlip = function(eventA, eventB){
-	var result = Poly2D.segmentCompareNumeric(eventA,eventB);
-	if(result==-1){
-		return 1;
-	}else if(result==1){
-		return -1;
-	} // else 0
-	return result;
-}
-/*
-bool Martinez::SweepEventComp::operator() (SweepEvent* e1, SweepEvent* e2) {
-	if (e1->p.x > e2->p.x) // Different x-coordinate
-		return true;
-	if (e2->p.x > e1->p.x) // Different x-coordinate
-		return false;
-	if (e1->p != e2->p) // Different points, but same x-coordinate. The event with lower y-coordinate is processed first
-		return e1->p.y > e2->p.y;
-	if (e1->left != e2->left) // Same point, but one is a left endpoint and the other a right endpoint. The right endpoint is processed first
-		return e1->left;
-	// Same point, both events are left endpoints or both are right endpoints. The event associate to the bottom segment is processed first
-	return e1->above (e2->other->p);
-}
-*/
-
-/*
-void Martinez::possibleIntersection (SweepEvent* e1, SweepEvent* e2)
-...
-
-	// The line segments overlap
-	vector<SweepEvent *> sortedEvents;
-	if (e1->p == e2->p) {
-		sortedEvents.push_back (0);
-	} else if (sec (e1, e2)) {
-		sortedEvents.push_back (e2);
-		sortedEvents.push_back (e1);
-	} else {
-		sortedEvents.push_back (e1);
-		sortedEvents.push_back (e2);
-	}
-	if (e1->other->p == e2->other->p) {
-		sortedEvents.push_back (0);
-	} else if (sec (e1->other, e2->other)) {
-		sortedEvents.push_back (e2->other);
-		sortedEvents.push_back (e1->other);
-	} else {
-		sortedEvents.push_back (e1->other);
-		sortedEvents.push_back (e2->other);
-	}
-
-	if (sortedEvents.size () == 2) { // are both line segments equal?
-		e1->type = e1->other->type = NON_CONTRIBUTING;
-		e2->type = e2->other->type = (e1->inOut == e2->inOut) ? SAME_TRANSITION : DIFFERENT_TRANSITION;
-		return;
-	}
-	if (sortedEvents.size () == 3) { // the line segments share an endpoint
-		sortedEvents[1]->type = sortedEvents[1]->other->type = NON_CONTRIBUTING;
-		if (sortedEvents[0])         // is the right endpoint the shared point?
-			sortedEvents[0]->other->type = (e1->inOut == e2->inOut) ? SAME_TRANSITION : DIFFERENT_TRANSITION;
-		 else 								// the shared point is the left endpoint
-			sortedEvents[2]->other->type = (e1->inOut == e2->inOut) ? SAME_TRANSITION : DIFFERENT_TRANSITION;
-		divideSegment (sortedEvents[0] ? sortedEvents[0] : sortedEvents[2]->other, sortedEvents[1]->p);
-		return;
-	}
-	if (sortedEvents[0] != sortedEvents[3]->other) { // no line segment includes totally the other one
-		sortedEvents[1]->type = NON_CONTRIBUTING;
-		sortedEvents[2]->type = (e1->inOut == e2->inOut) ? SAME_TRANSITION : DIFFERENT_TRANSITION;
-		divideSegment (sortedEvents[0], sortedEvents[1]->p);
-		divideSegment (sortedEvents[1], sortedEvents[2]->p);
-		return;
-	}
-	 // one line segment includes the other one
-	sortedEvents[1]->type = sortedEvents[1]->other->type = NON_CONTRIBUTING;
-	divideSegment (sortedEvents[0], sortedEvents[1]->p);
-	sortedEvents[3]->other->type = (e1->inOut == e2->inOut) ? SAME_TRANSITION : DIFFERENT_TRANSITION;
-	divideSegment (sortedEvents[3]->other, sortedEvents[2]->p);
-}
-*/
 
 // ---------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------
 
-Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, clipping = B
+Poly2D.compute = function(polygonA, polygonB, operationType, iteration){ // subject = A, clipping = B
+	iteration = iteration!==undefined ? iteration : 999;
 	if(!polygonA || !polygonB || !operationType){
 		return null;
 	}
@@ -855,7 +770,7 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 	}
 	// add all points to event queue
 	var eventQueue = new PriorityQueue();
-		eventQueue.sorting( Poly2D.sweepEventCompareNumericFlip ); // Poly2D.segmentCompareNumeric );
+		eventQueue.sorting( Poly2D.sweepEventCompareNumeric );
 	Poly2D.processPolygon(eventQueue, polygonA, Poly2D.SweepEvent.PolygonTypeSubject);
 	Poly2D.processPolygon(eventQueue, polygonB, Poly2D.SweepEvent.PolygonTypeClipped);
 	//
@@ -863,9 +778,11 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 	var chainSet = new Poly2D.PolyChainSet();
 	//
 	var event, prev, next, opposite, addEdge;
-	while( !eventQueue.isEmpty() ){
-		//console.log("EVENT QUEUE: \n"+eventQueue);
-		//console.log("SWEEP LINE: \n "+sweepLine);
+	var count = 0;
+	while( !eventQueue.isEmpty() && count < iteration ){
+		++count;
+		console.log("EVENT QUEUE: \n"+eventQueue);
+		console.log("SWEEP LINE: \n "+sweepLine);
 		event = eventQueue.minimum();
 		eventQueue.popMinimum(); // eventQueue.removeObject(event); // 
 		// update sweep line
@@ -878,8 +795,8 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 			console.log(prev);
 			console.log(next);
 			//Poly2D.possibleIntersectionAny(event,sweepLine);
-			Poly2D.possibleIntersection(event, next, sweepLine);
-			Poly2D.possibleIntersection(prev, event, sweepLine);
+			Poly2D.possibleIntersection(event, next, sweepLine, eventQueue);
+			Poly2D.possibleIntersection(prev, event, sweepLine, eventQueue);
 		}else{ // remove
 			console.log("---------------------------------------RIGHT: "+event.point()+" -> "+event.opposite().point());
 			opposite = event.opposite();
@@ -919,7 +836,7 @@ Poly2D.compute = function(polygonA, polygonB, operationType){ // subject = A, cl
 			}
 			sweepLine.erase(opposite);
 			//Poly2D.possibleIntersectionAny(event,sweepLine);
-			Poly2D.possibleIntersection(prev, next, sweepLine);
+			Poly2D.possibleIntersection(prev, next, sweepLine, eventQueue);
 		}
 	}
 	
