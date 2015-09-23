@@ -22,7 +22,8 @@ function Stitching(){
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
-Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, lineWidth){
+Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, lineWidth, complete){
+	complete = complete!==undefined ? complete : true;
 	var i=0, len=pointList.length;
 	if(len<=1){ return; }
 	colorLine = colorLine ? colorLine : 0xFFFF0000;
@@ -32,8 +33,16 @@ Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, line
 	d.graphics().setLine(lineWidth,colorLine);
 	
 	for(i=0; i<len; ++i){
-		var offX = 0;//10.0*(Math.random()-0.5);
-		var offY = 0;//10.0*(Math.random()-0.5);
+		if(!complete){
+			if(i==len-1){
+				break;
+			}
+		}
+var ext = 10.0;
+		var offAX = ext*(Math.random()-0.5);
+		var offAY = ext*(Math.random()-0.5);
+		var offBX = ext*(Math.random()-0.5);
+		var offBY = ext*(Math.random()-0.5);
 		var pA = pointList[i];
 		var pB = pointList[(i+1)%len];
 		var dir = V2D.sub(pB,pA); dir.norm();
@@ -45,11 +54,11 @@ Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, line
 			lin1.scale(siz);
 			lin2.scale(siz);
 		d.graphics().beginPath();
-		d.graphics().moveTo(pA.x,pA.y);
-		d.graphics().lineTo(pB.x+offX,pB.y+offY);
-			d.graphics().lineTo(pB.x+lin1.x,pB.y+lin1.y);
-			d.graphics().lineTo(pB.x+lin2.x,pB.y+lin2.y);
-			d.graphics().lineTo(pB.x,pB.y);
+		d.graphics().moveTo(pA.x+offAX,pA.y+offAY);
+		d.graphics().lineTo(pB.x+offBX,pB.y+offBY);
+			d.graphics().lineTo(pB.x+offBX+lin1.x,pB.y+offBY+lin1.y);
+			d.graphics().lineTo(pB.x+offBX+lin2.x,pB.y+offBY+lin2.y);
+			d.graphics().lineTo(pB.x+offBX,pB.y+offBY);
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 	}
@@ -88,14 +97,15 @@ Stitching.prototype.doStuff = function(){
 
 
 this._root.removeAllChildren();
-	this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
-	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
+	// this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
+	// this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
 	//this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
-		for(j=0;j<con.length;++j){
-			this.drawPolygon(con[j], 0xFF0000CC, 0x00000000, 2.0);
-		}
+		this.drawPolygon(con, 0xFF0000CC, 0x00000000, 1.0, false);
+		// for(j=0;j<con.length;++j){
+		// 	this.drawPolygon(con[j], 0xFF0000CC, 0x00000000, 2.0);
+		// }
 	}
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){

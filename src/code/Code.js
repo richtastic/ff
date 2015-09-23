@@ -3018,9 +3018,11 @@ Code.polygonUnion2D = function(polyA,polyB, _iteration, operation){
 	var polyA = Poly2D.poly2DfromArray(polyA);
 	var polyB = Poly2D.poly2DfromArray(polyB);
 	var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeUnion, _iteration);
+return polyC;
+	/*
 	if(polyC){
 		return polyC._pointSets;
-	}
+	}*/
 	return [];
 }
 /*

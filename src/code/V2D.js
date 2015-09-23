@@ -126,6 +126,7 @@ function V2D(xP,yP){
 	this.y = yP==undefined?0.0:yP;
 }
 V2D.prototype.copy = function(a){
+	if(!a){ return new V2D(this.x,this.y); }
 	this.x = a.x; this.y = a.y;
 	return this;
 }
