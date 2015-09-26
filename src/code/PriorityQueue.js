@@ -35,6 +35,16 @@ PriorityQueue.prototype.popMaximum = function(){
 PriorityQueue.prototype.toString = function(){
 	return this._tree.toString();
 }
+PriorityQueue.prototype.toStringLinear = function(){
+	var arr = this.toArray();
+	var i, len=arr.length;
+	var str = "";
+	for(i=0; i<len; ++i){
+		str += arr[i].toString();
+		str += "\n";
+	}
+	return str;
+}
 PriorityQueue.prototype.removeObject = function(o){
 	return this._tree.deleteObject(o);
 }

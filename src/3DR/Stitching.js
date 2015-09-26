@@ -38,7 +38,7 @@ Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, line
 				break;
 			}
 		}
-var ext = 10.0;
+var ext = 1.0;
 		var offAX = ext*(Math.random()-0.5);
 		var offAY = ext*(Math.random()-0.5);
 		var offBX = ext*(Math.random()-0.5);
@@ -97,9 +97,10 @@ Stitching.prototype.doStuff = function(){
 
 
 this._root.removeAllChildren();
-	// this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
-	// this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
+	this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
+	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
 	//this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
+	console.log("DRAW ARROWS: "+polyC.length);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
 		this.drawPolygon(con, 0xFF0000CC, 0x00000000, 1.0, false);
