@@ -2060,7 +2060,19 @@ Code.linear2D = function(x,y, A,B,C,D){
 }
 
 
-
+Code.lineSegCollinear2D = function(a,b, c,d){
+	var AB = V2D.sub(b,a);
+	var AC = V2D.sub(c,a);
+	var AD = V2D.sub(d,a);
+	var cross1 = V2D.cross(AB,AC);
+	var cross2 = V2D.cross(AB,AD);
+	//console.log("lineSegCollinear2D :"+cross1+" "+cross2);
+	var eps = 1E-10;
+	if( Math.abs(cross1)<eps && Math.abs(cross2)<eps ){
+		return true;
+	}
+	return false;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 2D
 Code.lineSegIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab, t = %cd
 	var caX = (c.x - a.x);

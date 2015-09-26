@@ -152,9 +152,6 @@ RedBlackTree.prototype.prevNode = function(nodeIn){ // external 'predecessor'
 }
 RedBlackTree.prototype.findNodeFromObject = function(o){
 	if( !this.isNil(this._root) ){
-		//console.log("findNodeFromObject Tree")
-		//return this._root.findNodeFromObject(this._sortOnData ? o : this._root, this._sorting, this.nil(), this._sortOnData);
-		//return this._root.findNodeFromObject(this._root, this._sorting, this.nil(), this._sortOnData);
 		return this._root.findNodeFromObject(o, this._sorting, this.nil(), false); // 
 	}
 	return null;
@@ -236,13 +233,11 @@ RedBlackTree.prototype.insertObject = function(o){
 	return node;
 }
 RedBlackTree.prototype.insertNode = function(newNode){
-	//console.log("insert node ... ");
-	//console.log("RBT.insertNode: "+newNode);
 	var fxn = this._sorting;
 	var value, node = this.root(), parent = this.nil(), o = newNode.data();
 	while( !this.isNil(node) ){
 		parent = node;
-		value = this._sortOnData ? fxn(node.data(),o) : fxn(node,newNode);
+		value = this._sortOnData ? fxn(o,node.data()) : fxn(newNode,node);
 		if(value<0){ node = node.left();
 		}else{ node = node.right(); }
 	}
@@ -525,7 +520,7 @@ RedBlackTree.Node.prototype.colorBlack = function(){
 RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil, sod){ // if sod==false o isa node
 	var value, node = this;
 	while( node!=nil ){
-		value = sod ? fxn(node.data(),o.data(), true) : fxn(node.data(),o, true);
+		value = sod ? fxn(o.data(),node.data(), true) : fxn(o,node.data(), true);
 		if( value==0 ){
 			return node;
 		}else if(value<0){
