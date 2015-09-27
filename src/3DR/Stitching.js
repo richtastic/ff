@@ -76,8 +76,8 @@ Stitching.prototype.doStuff = function(){
 	var polyA = [];
 		polyA.push(new V2D(240,250));
 		polyA.push(new V2D(270,200));
-		polyA.push(new V2D(99,100));
-		//polyA.push(new V2D(300,100));
+		polyA.push(new V2D(100,100));
+		polyA.push(new V2D(300,100));
 		polyA.push(new V2D(10,20));
 	var polyB = [];
 		polyB.push(new V2D(80,270));
