@@ -26,19 +26,20 @@ Stitching.prototype.drawPolygon = function(pointList, colorLine, colorFill, line
 	complete = complete!==undefined ? complete : true;
 	var i=0, len=pointList.length;
 	if(len<=1){ return; }
-	colorLine = colorLine ? colorLine : 0xFFFF0000;
-	lineWidth = lineWidth ? lineWidth : 1.0;
-	colorFill = colorFill ? colorFill : 0x9900FF00;
+	colorLine = colorLine!==undefined ? colorLine : 0xFFFF0000;
+	lineWidth = lineWidth!==undefined ? lineWidth : 1.0;
+	colorFill = colorFill!==undefined ? colorFill : 0x9900FF00;
 	var d = new DO();
 	d.graphics().setLine(lineWidth,colorLine);
-	
+	d.graphics().beginPath();
+	d.graphics().setFill(colorFill);
 	for(i=0; i<len; ++i){
 		if(!complete){
 			if(i==len-1){
 				break;
 			}
 		}
-var ext = 1.0;
+var ext = 0.0;
 		var offAX = ext*(Math.random()-0.5);
 		var offAY = ext*(Math.random()-0.5);
 		var offBX = ext*(Math.random()-0.5);
@@ -53,15 +54,17 @@ var ext = 1.0;
 		var lin2 = V2D.rotate(dir,-(Math.PI-ang));
 			lin1.scale(siz);
 			lin2.scale(siz);
-		d.graphics().beginPath();
+		//d.graphics().beginPath();
 		d.graphics().moveTo(pA.x+offAX,pA.y+offAY);
 		d.graphics().lineTo(pB.x+offBX,pB.y+offBY);
 			d.graphics().lineTo(pB.x+offBX+lin1.x,pB.y+offBY+lin1.y);
 			d.graphics().lineTo(pB.x+offBX+lin2.x,pB.y+offBY+lin2.y);
 			d.graphics().lineTo(pB.x+offBX,pB.y+offBY);
-		d.graphics().endPath();
+		//d.graphics().endPath();
 		d.graphics().strokeLine();
 	}
+	d.graphics().fill();
+	d.graphics().endPath();
 	
 	this._root.addChild(d);
 }
@@ -76,36 +79,51 @@ Stitching.prototype.doStuff = function(){
 	var polyA = [];
 		polyA.push(new V2D(240,250));
 		polyA.push(new V2D(270,200));
-		polyA.push(new V2D(100,100));
-		polyA.push(new V2D(300,100));
+		//polyA.push(new V2D(100,100));
+		//polyA.push(new V2D(300,100));
 		polyA.push(new V2D(10,20));
 	var polyB = [];
 		polyB.push(new V2D(80,270));
 		polyB.push(new V2D(250,20));
+		//polyB.push(new V2D(100,20));
 		polyB.push(new V2D(100,150));
-	// var polyA = [];
-	// 	polyA.push(new V2D(50,50));
-	// 	polyA.push(new V2D(50,250));
-	// 	polyA.push(new V2D(350,250));
-	// 	polyA.push(new V2D(350,50));
-	// var polyB = [];
-	// 	polyB.push(new V2D(10,100));
-	// 	polyB.push(new V2D(10,400));
-	// 	polyB.push(new V2D(400,400));
-	// 	polyB.push(new V2D(400,100));
+		/*
+	// rectangles
+	var polyA = [];
+		polyA.push(new V2D(50,50));
+		polyA.push(new V2D(50,250));
+		polyA.push(new V2D(350,250));
+		polyA.push(new V2D(350,50));
+	var polyB = [];
+		polyB.push(new V2D(10,100));
+		polyB.push(new V2D(10,400));
+		polyB.push(new V2D(400,400));
+		polyB.push(new V2D(400,100));
+	// rectangles shared edges
+	var polyA = [];
+		polyA.push(new V2D(150,150));
+		polyA.push(new V2D(150,250));
+		polyA.push(new V2D(400,250));
+		polyA.push(new V2D(400,150));
+	var polyB = [];
+		polyB.push(new V2D(10,100));
+		polyB.push(new V2D(10,400));
+		polyB.push(new V2D(400,400));
+		polyB.push(new V2D(400,100));
+		*/
 	var polyC = Code.polygonUnion2D(polyA,polyB, this.iteration);
 	console.log(polyC)
 
 
 this._root.removeAllChildren();
-	this.drawPolygon(polyA, 0xFFCC0000, 0x00000000, 1.0);
-	this.drawPolygon(polyB, 0xFF00CC00, 0x00000000, 1.0);
+	this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
+	this.drawPolygon(polyB, 0xFF00CC00, 0xFF00CC00, 2.0);
 	//this.drawPolygon(polyC, 0xFF0000CC, 0x00000000, 1.5);
 	console.log("DRAW ARROWS: "+polyC.length);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
 		//V2D.shiftPoints(con,Math.random()*50.0, Math.random()*25.0); // XOR is grouped
-		this.drawPolygon(con, 0xFF0000CC, 0x00000000, 1.0, false);
+		this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, false);
 		// for(j=0;j<con.length;++j){
 		// 	this.drawPolygon(con[j], 0xFF0000CC, 0x00000000, 2.0);
 		// }
