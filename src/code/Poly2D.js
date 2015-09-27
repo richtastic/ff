@@ -174,7 +174,7 @@ Poly2D.SweepEvent.ResultTypeUnknown = 0;
 Poly2D.SweepEvent.ResultTypeUnion = 1;
 Poly2D.SweepEvent.ResultTypeIntersection = 2;
 Poly2D.SweepEvent.ResultTypeDifference = 3;
-Poly2D.SweepEvent.ResultTypeXOR = 3;
+Poly2D.SweepEvent.ResultTypeXOR = 4;
 // ---------------------------------------------------------------------------------------------------------
 Poly2D.SweepEvent.prototype.toString = function(){
 	return "[SE: "+(this.isLeftEvent() ? "L" : "R")+" "+(this.polygon())+" "+(this.inside() ? "in " : "out")+" "+(this.inOut() ? "in->out" : "out->in")+" "+this.point()+"=>"+(this.opposite() ? this.opposite().point() : "X")+"]"
@@ -239,8 +239,8 @@ Poly2D.SweepEvent.isEdgeBelowPoint = function(eventA, point){
 	return !Poly2D.SweepEvent.isEdgeAbovePoint(eventA,point);
 }
 Poly2D.SweepEvent.setInsideFlag = function(event,prev, sweepLine){
-	console.log("........................................ "+event.polygon() );
-	console.log("setInsideFlag A: inside:"+event.inside()+" & inOut:"+event.inOut());
+//	console.log("........................................ "+event.polygon() );
+//	console.log("setInsideFlag A: inside:"+event.inside()+" & inOut:"+event.inOut());
 	if(!prev){ // no previous edge => not inside and not in/out?
 		event.inside(false);
 		event.inOut(false);
@@ -266,7 +266,7 @@ Poly2D.SweepEvent.setInsideFlag = function(event,prev, sweepLine){
 		event.inside( !prev.inOut() );
 		event.inOut( prev.inside() );
 	}
-	console.log("setInsideFlag B: inside:"+event.inside()+" & inOut:"+event.inOut());
+//	console.log("setInsideFlag B: inside:"+event.inside()+" & inOut:"+event.inOut());
 }
 
 
@@ -274,6 +274,7 @@ Poly2D.SweepEvent.setInsideFlag = function(event,prev, sweepLine){
 Poly2D.PolyChain = function(){
 	this._points = [];
 }
+Poly2D.PolyChain.EPSILON = 1E-10; // undefined; //
 Poly2D.PolyChain.prototype.toString = function(){
 	var str = "[PolyChain("+this._points.length+"): ";
 	for(var i=0;i< this._points.length; ++i){
@@ -298,22 +299,25 @@ Poly2D.PolyChain.prototype.canAddEdge = function(pointA, pointB){
 }
 Poly2D.PolyChain.prototype._canAddElements = function(array){
 	if( this.isComplete() ){ return false; }
-	if(this._points.length>0){
+	if(this._points.length>1){
 		var a = this._points[0];
 		var b = this._points[this._points.length-1];
 		var len = array.length;
 		var lm1 = len-1;
 		var pointA = array[0];
 		var pointB = array[lm1];
-		var canAA = a.x==pointA.x && a.y==pointA.y;
-		var canAB = a.x==pointB.x && a.y==pointB.y;
-		var canBA = b.x==pointA.x && b.y==pointA.y;
-		var canBB = b.x==pointB.x && b.y==pointB.y;
+		// var canAA = a.x==pointA.x && a.y==pointA.y;
+		// var canAB = a.x==pointB.x && a.y==pointB.y;
+		// var canBA = b.x==pointA.x && b.y==pointA.y;
+		// var canBB = b.x==pointB.x && b.y==pointB.y;
+		var eps = Poly2D.PolyChain.EPSILON;
+		var canAA = V2D.equal(a,pointA, eps);
+		var canAB = V2D.equal(a,pointB, eps);
+		var canBA = V2D.equal(b,pointA, eps);
+		var canBB = V2D.equal(b,pointB, eps);
 		return canAA || canAB || canBA || canBB;
-	}else{
-		return true;
 	}
-	return false;
+	return true;
 }
 Poly2D.PolyChain.prototype.addEdge = function(pointA, pointB){
 	return this._addElements([pointA,pointB]);
@@ -322,6 +326,11 @@ Poly2D.PolyChain.prototype.addChain = function(chain){
 	return this._addElements(chain._points);
 }
 Poly2D.PolyChain.prototype._addElements = function(array){
+	// console.log("THIS");
+	// console.log(this._points);
+	// console.log("ADDD");
+	// console.log(array)
+	// console.log("...");
 	if( this.isComplete() ){ return false; }
 	var i, len = array.length;
 	if(this._points.length>0){
@@ -331,11 +340,11 @@ Poly2D.PolyChain.prototype._addElements = function(array){
 		var lm2 = len-2;
 		var pointA = array[0];
 		var pointB = array[lm1];
-		var canAA = a.x==pointA.x && a.y==pointA.y;
-		var canAB = a.x==pointB.x && a.y==pointB.y;
-		var canBA = b.x==pointA.x && b.y==pointA.y;
-		var canBB = b.x==pointB.x && b.y==pointB.y;
-//		console.log(canAA , canAB , canBA , canBB);
+		var eps = Poly2D.PolyChain.EPSILON;
+		var canAA = V2D.equal(a,pointA, eps);
+		var canAB = V2D.equal(a,pointB, eps);
+		var canBA = V2D.equal(b,pointA, eps);
+		var canBB = V2D.equal(b,pointB, eps);
 		if(canAA && canAB && canBA && canBB){
 			return false; // same points everywhere
 		}
@@ -383,7 +392,9 @@ Poly2D.PolyChain.prototype.isComplete = function(){
 	if(this._points.length>1){
 		var a = this._points[0];
 		var b = this._points[this._points.length-1];
-		if(a.x==b.x && a.y==b.y){
+		var eps = Poly2D.PolyChain.EPSILON;
+		var endsEqual = V2D.equal(a,b, eps);
+		if(endsEqual){ // if(a.x==b.x && a.y==b.y){
 			return true;
 		}
 	}
@@ -398,6 +409,7 @@ Poly2D.PolyChainSet.prototype.isComplete = function(){
 	return this._chainsIncomplete.length == 0;
 }
 Poly2D.PolyChainSet.prototype.addEdge = function(pointA,pointB){
+//console.log("ADD EGDE: "+pointA+" + "+pointB);
 	var chains = this._chainsIncomplete;
 	var i, len=chains.length;
 	var chain, availableChains = [];
@@ -409,27 +421,33 @@ Poly2D.PolyChainSet.prototype.addEdge = function(pointA,pointB){
 		}
 	}
 	len = availableChains.length;
+//console.log("avail chains: "+len);
 	if(len>2){ // should never happen
 		console.log("invalid chain set");
 		return false;
 	}else if(len==2){ // link 2 chains together
+//console.log("=> link chains");
 		var old = availableChains[1];
 		chain = availableChains[0];
+		chain.addEdge(pointA,pointB);
 		Code.removeElementAtSimple(chains, old);
 		chain.addChain( old );
 		if(chain.isComplete()){
-			Code.removeElementSimple(chains, old);
+			//Code.removeElementSimple(chains, old);
 			Code.removeElementSimple(chains, chain);
 			this._chainsComplete.push(chain);
 		}
 	} else if(len==1){ // add to end of single chain
+//console.log("=> end-chain");
 		chain = availableChains[0];
 		chain.addEdge(pointA,pointB);
 	} else { // create new chain
+//console.log("=> new chain");
 		chain = new Poly2D.PolyChain();
 		chains.push(chain);
 		chain.addEdge(pointA,pointB);
 	}
+//console.log(this.toString());
 	return true;
 }
 Poly2D.PolyChainSet.prototype.toArray = function(){
@@ -446,16 +464,16 @@ Poly2D.PolyChainSet.prototype.toArray = function(){
 }
 Poly2D.PolyChainSet.prototype.toString = function(){
 	var i, len, str, chains;
-	str = "[PolyChainSet: ";
+	str = "[PolyChainSet: \n";
 	chains = this._chainsComplete;
 	len = chains.length;
 	for(i=0;i<len;++i){
-		str += chains[i].toString() + "\n";
+		str += "  "+i+": "+chains[i].toString() + "\n";
 	}
 	chains = this._chainsIncomplete;
 	len = chains.length;
 	for(i=0;i<len;++i){
-		str += chains[i].toString() + "\n";
+		str += "  "+i+": "+chains[i].toString() + "\n";
 	}
 	str += "]";
 	return str;
@@ -641,9 +659,9 @@ Poly2D.sweepEventCompareNumeric = function(eventA, eventB){
 	if(eventA.point().y > eventB.point().y){
 		return 1;
 	}
-	if(eventA.isLeftEvent() != eventB.isLeftEvent()){ // left before right
-		return eventA.isLeftEvent() ? -1 : 1;
-		//return eventA.isLeftEvent() ? 1 : -1;
+	if(eventA.isLeftEvent() != eventB.isLeftEvent()){ // right before left
+		//return eventA.isLeftEvent() ? -1 : 1;
+		return eventA.isLeftEvent() ? 1 : -1;
 	}
 	return Poly2D.SweepEvent.isEdgeBelowPoint(eventA,eventB.opposite().point()) ? -1 : 1;
 }
@@ -696,7 +714,7 @@ Poly2D.sweepEventLineCompareNumeric = function(eventA, eventB){ // segmentCompar
 //		console.log(" => -1   (F)");
 		return 1;
 	}
-	//console.log("COLINEAR CODE");
+console.log("COLINEAR CODE");
 	if(V2D.equal(eventA.point(),eventB.point())){
 		var result = eventA.id() < eventB.id() ? 1 : -1; // arbitrary consistence
 //		console.log(" => "+result+"  (G)");
@@ -779,12 +797,8 @@ var doneEdgeArray = [];
 					}
 				}else if(operationType==Poly2D.SweepEvent.ResultTypeUnion){
 					if(!opposite.inside()){
-console.log("ADD UNION EDGE: "+opposite);
 						addEdge = true;
-					}else{
-console.log("NOP UNION EDGE: "+opposite);
 					}
-
 				}else if(operationType==Poly2D.SweepEvent.ResultTypeDifference){
 					if( (event.polygon()==Poly2D.SweepEvent.PolygonTypeSubject && !opposite.inside()) || (event.polygon()==Poly2D.SweepEvent.PolygonTypeClipped && opposite.inside()) ){
 						addEdge = true;
@@ -806,26 +820,25 @@ console.log("NOP UNION EDGE: "+opposite);
 			if(addEdge){
 doneEdgeArray.push([event.point().copy(),event.opposite().point().copy()]);
 				//console.log("ADD EDGE");
-				chainSet.addEdge(event.point(),event.opposite().point());
+				chainSet.addEdge(event.point().copy(),event.opposite().point().copy());
 			}
 			var erased = sweepLine.erase(opposite);
 			//console.log("erased: "+erased);
 			if(erased==null){
-				console.log("NULL ERASED .................. <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-				throw erased
+//				throw "tried to remove a sweep line event that was not found"
 			}
 			Poly2D.possibleIntersection(prev, next, sweepLine, eventQueue);
 		}
 	} // end while
-	//console.log("ITERATION: \n"+count);
+	console.log("ITERATION: \n"+count);
 	console.log("EVENT QUEUE OUT: \n"+eventQueue.toStringLinear());
 	//console.log("EVENT QUEUE OUT: \n"+eventQueue.toString());
 	console.log("SWEEP LINE OUT: \n"+sweepLine.toStringLinear());
 	//console.log("SWEEP LINE OUT: \n"+sweepLine.toString());
-for(var j=0; j<doneEdgeArray.length; ++j){
-	console.log(doneEdgeArray[j][0]+"=>"+doneEdgeArray[j][1])
-}
-return doneEdgeArray;
+// for(var j=0; j<doneEdgeArray.length; ++j){
+// 	console.log(doneEdgeArray[j][0]+"=>"+doneEdgeArray[j][1])
+// }
+// return doneEdgeArray;
 
 var arr = sweepLine.toArray();
 console.log(arr);

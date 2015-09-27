@@ -72,10 +72,11 @@ Stitching.prototype.handleKeyboardDownFxn = function(e){
 	}
 }
 Stitching.prototype.doStuff = function(){
-	console.log(this.iteration);
+//	console.log(this.iteration);
 	var polyA = [];
 		polyA.push(new V2D(240,250));
 		polyA.push(new V2D(270,200));
+		polyA.push(new V2D(99,100));
 		//polyA.push(new V2D(300,100));
 		polyA.push(new V2D(10,20));
 	var polyB = [];
@@ -103,6 +104,7 @@ this._root.removeAllChildren();
 	console.log("DRAW ARROWS: "+polyC.length);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
+		//V2D.shiftPoints(con,Math.random()*50.0, Math.random()*25.0); // XOR is grouped
 		this.drawPolygon(con, 0xFF0000CC, 0x00000000, 1.0, false);
 		// for(j=0;j<con.length;++j){
 		// 	this.drawPolygon(con[j], 0xFF0000CC, 0x00000000, 2.0);

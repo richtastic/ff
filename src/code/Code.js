@@ -404,7 +404,7 @@ Code.arrayLimit = function(arr,min,max){
 	if(min>max){
 		// LIMIT TO ONLY OUTSIDE
 	}else{
-		for(i=len;i>0;--i){
+		for(i=len-1;i>=0;--i){
 			arr[i] = Math.max(Math.min(arr[i],max),min);
 		}
 	}
@@ -3024,19 +3024,39 @@ Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderfle
 	}
 	return oddNodes;
 }
-Code.polygonUnion2D = function(polyA,polyB, _iteration, operation){
-	console.log(polyA);
-	console.log(polyB);
+Code.polygonOperation2D = function(polyA,polyB, _iteration, operation){
 	var polyA = Poly2D.poly2DfromArray(polyA);
 	var polyB = Poly2D.poly2DfromArray(polyB);
-	var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeUnion, _iteration);
-return polyC;
-	/*
-	if(polyC){
-		return polyC._pointSets;
-	}*/
-	return [];
+	var polyC = Poly2D.compute(polyA,polyB,operation, _iteration);
+	return polyC;
 }
+Code.polygonUnion2D = function(polyA,polyB, _iteration){
+	//return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeXOR);
+	return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeUnion);
+}
+Code.polygonIntersection2D = function(polyA,polyB, _iteration){
+	return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeIntersection);
+}
+Code.polygonDifference2D = function(polyA,polyB, _iteration){
+	return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeDifference);
+}
+Code.polygonXOR2D = function(polyA,polyB, _iteration){
+	return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeXOR);
+}
+// Code.bla = {
+// 	//var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeUnion, _iteration);
+// 	var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeIntersection, _iteration);
+// 	//var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeDifference, _iteration);
+// 	//var polyC = Poly2D.compute(polyB,polyA,Poly2D.SweepEvent.ResultTypeDifference, _iteration);
+// 	//var polyC = Poly2D.compute(polyA,polyB,Poly2D.SweepEvent.ResultTypeXOR, _iteration);
+// 	//var polyC = Poly2D.compute(polyB,polyA,Poly2D.SweepEvent.ResultTypeXOR, _iteration);
+// return polyC;
+// 	/*
+// 	if(polyC){
+// 		return polyC._pointSets;
+// 	}*/
+// 	return [];
+// }
 /*
 // --------------------------------------------------------------------------------------- polygon point
 Code.PolyPoint = function(p, pr,ne){

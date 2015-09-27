@@ -29,7 +29,10 @@ V2D.distanceSquare = function(a,b){
 V2D.distance = function(a,b){ // len(a-b)
 	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2));
 }
-V2D.equal = function(a,b){
+V2D.equal = function(a,b, eps){
+	if(eps!==undefined){
+		return Math.abs(a.x-b.x)<eps && Math.abs(a.y-b.y)<eps;
+	}
 	return a.x==b.x && a.y==b.y;
 }
 V2D.copy = function(a){
@@ -121,12 +124,22 @@ V2D.angleDirection = function(a,b){
 	}
 	return -angle;
 }
+V2D.shiftPoints = function(a,b,c){
+	if(c===undefined){
+		c = b.y;
+		b = b.x;
+	}
+	for(var i=a.length-1; i>=0; --i){
+		a[i].x += b;
+		a[i].y += c;
+	}
+}
 function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;
 }
 V2D.prototype.copy = function(a){
-	if(!a){ return new V2D(this.x,this.y); }
+	if(a===undefined){ return new V2D(this.x,this.y); }
 	this.x = a.x; this.y = a.y;
 	return this;
 }

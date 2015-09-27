@@ -47,7 +47,10 @@ V3D.distanceSquare = function(a,b){
 V3D.distance = function(a,b){ // len(a-b)
 	return Math.sqrt(Math.pow(a.x-b.x,2)+Math.pow(a.y-b.y,2)+Math.pow(a.z-b.z,2));
 }
-V3D.equal = function(a,b){
+V3D.equal = function(a,b, eps){
+	if(eps!==undefined){
+		return Math.abs(a.x-b.x)<eps && Math.abs(a.y-b.y)<eps && Math.abs(a.z-b.z)<eps;
+	}
 	return a.x==b.x && a.y==b.y && a.z==b.z;
 }
 V3D.equalToEpsilon = function(a,b){
