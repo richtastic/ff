@@ -2143,7 +2143,6 @@ Code.lineSegLineIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab : lin
 	return new V4D( a.x+t2*baX, a.y+t2*baY, t2);
 }
 
-
 Code.rayLineIntersect2D = function(a,b, c,d){ // two infinite lines
 	var den = b.y*d.x - b.x*d.y;
 	if(den == 0){ return null; } // infinite or zero intersections

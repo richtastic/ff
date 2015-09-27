@@ -71,10 +71,10 @@ var ext = 0.0;
 Stitching.prototype.handleKeyboardDownFxn = function(e){
 	if(e.keyCode==Keyboard.KEY_SPACE){
 		this.iteration = this.iteration!==undefined ? this.iteration+1 : 0;
-		this.doStuff();
+		this.testPolyPoly();
 	}
 }
-Stitching.prototype.doStuff = function(){
+Stitching.prototype.testPolyPoly = function(){
 //	console.log(this.iteration);
 	var polyA = [];
 		polyA.push(new V2D(240,250));
@@ -138,10 +138,8 @@ Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 	// console.log(Code.copyArray(new Array(), a,3,7));
 	// return;
 
-
-	this.doStuff();
-
-return;
+//this.testPolyPoly();
+//return;
 
 
 
