@@ -129,6 +129,51 @@ this._root.removeAllChildren();
 		// }
 	}
 }
+Stitching.prototype.testGraph = function(){
+	var graph = new Graph();
+	var v, e;
+	var vs,v2,v3,v4,v5,vt;
+	// vertexes
+	v = graph.addVertex();
+	v.id("s");
+	vs = v;
+	v = graph.addVertex();
+	v.id("2");
+	v2 = v;
+	v = graph.addVertex();
+	v.id("3");
+	v3 = v;
+	v = graph.addVertex();
+	v.id("4");
+	v4 = v;
+	v = graph.addVertex();
+	v.id("5");
+	v5 = v;
+	v = graph.addVertex();
+	v.id("t");
+	vt = v;
+	// edges
+	graph.addEdge(vs,v2, 3, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(vs,v3, 3, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(vs,v4, 2, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v4, 1, Graph.Edge.DIRECTION_REVERSE);
+	graph.addEdge(v2,v5, 4, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v3,v4, 1, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v3,vt, 2, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v4,v5, 1, Graph.Edge.DIRECTION_REVERSE);
+	graph.addEdge(v4,vt, 2, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v5,vt, 1, Graph.Edge.DIRECTION_FORWARD);
+	//
+	//
+	console.log(graph);
+	console.log(graph.toString());
+
+	var path = graph.BFS(vs,vt);
+	console.log(path);
+
+	var cut = graph.minCut(vs,vt);
+	console.log(cut);
+}
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 
 	// var a = [0,1,2,3,4,5,6,7];
@@ -141,8 +186,8 @@ Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 //this.testPolyPoly();
 //return;
 
-
-
+this.testGraph();
+return;
 
 
 

@@ -2,7 +2,7 @@
 FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","YAML.js","FileLoader.js","ScriptLoader.js","ImageLoader.js","AudioLoader.js","MultiLoader.js","ByteData.js","SerialString.js",
 				"LinkedList.js","Queue.js","RedBlackTree.js","LLRBT.js","IntervalTree.js","PriorityQueue.js","Tree.js",
 				"Rect.js","V2D.js","V3D.js","V4D.js","V5D.js","Tri2D.js","Tri3D.js","OctTree.js","Matrix.js","Matrix2D.js","Matrix3D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatchable.js","Ajax.js","ImageMat.js",
-				"Poly2D.js",
+				"Poly2D.js","Graph.js",
 				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","MatrixStackGL.js","StageGL.js","Minify.js",
 				"Resource.js","Keyboard.js","Cache.js","Diagram.js"]; // "Node.js"
 FF.LOCATION = "";

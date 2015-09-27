@@ -345,6 +345,12 @@ Code.elementExists = function(a,o){ // O(n)
 	}
 	return false;
 }
+Code.indexOfElement = function(a,o){ // O(n)
+	for(var i=0; i<a.length; ++i){
+		if(a[i]==o){ return i; }
+	}
+	return null;
+}
 Code.addUnique = function(a,o){ // O(n)
 	if( !Code.elementExists(a,o) ){ a.push(o); return true; }
 	return false;
