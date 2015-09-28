@@ -63,7 +63,7 @@ Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
 		maxFlow += increment;
 		path = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true);
 	}
-	//console.log("max flow: "+maxFlow)
+	console.log("max flow: "+maxFlow)
 	var cuts = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true, true);
 	for(i=0;i<cuts.length;++i){
 		cuts[i] = graph.getVertex(cuts[i][0]).getEdgeTo( graph.getVertex(cuts[i][1]) );
@@ -72,7 +72,9 @@ Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
 	//return maxFlow;
 	return cuts;
 }
-
+Graph._minPath = function(graph,source,target,adjacency){ // dijkstra
+	return [];
+}
 Graph.BFS_COLOR_UNKNOWN = 0;
 Graph.BFS_COLOR_WHITE = 1; // unvisited
 Graph.BFS_COLOR_GRAY = 2; // touched
@@ -101,12 +103,31 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 		}
 	}
 	if(cuts){
+		var s = [], t = [];
+		for(i=0;i<vertexCount;++i){
+			if(colorVector[i]==Graph.BFS_COLOR_BLACK){
+				//console.log("KEEP: "+graph.getVertex(i));
+				s.push(graph.getVertex(i));
+			}else{
+				t.push(graph.getVertex(i));
+			}
+		}
 		var cut = [];
 		for(i=0;i<vertexCount;++i){
 			for(j=0;j<vertexCount;++j){
+				// forward edges
 				if( adjacencyMatrix[i][j] != 0){ // an edge exists in original matrix
 					if(colorVector[i]==Graph.BFS_COLOR_BLACK && colorVector[j]!=Graph.BFS_COLOR_BLACK){
 //						console.log( "CUT: "+i+","+j+" = "+graph.getVertex(i) +" & "+graph.getVertex(j) );
+						if(indexes){
+							cut.push([i,j]);
+						}else{
+							cut.push([graph.getVertex(i),graph.getVertex(j)]);
+						}
+					}
+					// reverse edges - don't count in max flow count
+					if(colorVector[i]!=Graph.BFS_COLOR_BLACK && colorVector[j]==Graph.BFS_COLOR_BLACK){
+						//console.log("ALSO CUT: "+graph.getVertex(i) +" & "+graph.getVertex(j));
 						if(indexes){
 							cut.push([i,j]);
 						}else{
@@ -117,6 +138,7 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 			}
 		}
 		return cut;
+		return {"edges":cut,"A":s,"B":t}
 	}
 	if( colorVector[targetIndex]!=Graph.BFS_COLOR_BLACK ){ // target not reached
 		return [];
@@ -186,6 +208,9 @@ Graph.prototype.toString = function(){
 	}
 	str += "]";
 	return str;
+}
+Graph.prototype.kill = function(){
+	//
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 Graph.Vertex = function(){
@@ -313,7 +338,7 @@ Graph.Edge.prototype.B = function(b){
 	return this._vertexB;
 }
 Graph.Edge.prototype.toString = function(){
-	return "[Edge "+this._id+" ("+(this._vertexA ? "(A)" : "(?)")+"->"+(this._vertexB ? "(B)" : "(?)")+"]";
+	return "[Edge "+this._id+" ("+(this._vertexA ? ("("+this._vertexA.id()+")") : "(?)")+"->"+(this._vertexB ? ("("+this._vertexB.id()+")") : "(?)")+"]";
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 

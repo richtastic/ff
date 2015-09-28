@@ -380,7 +380,7 @@ ImageMat.colorArrayFxnARGB_ARGB = function(data, fxnA, fxnR, fxnG, fxnB){
 }
 // ------------------------------------------------------------------------------------------------------------------------ interpolations
 ImageMat.rotateImage = function(){
-	
+	// ?
 }
 // ------------------------------------------------------------------------------------------------------------------------ image operations
 ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc, does){
@@ -1392,6 +1392,17 @@ ImageMat.unpadFloat = function(src,wid,hei, left,right,top,bot){
 	}
 	return result;
 }
+ImageMat.applyGaussianFloat = function(src,wid,hei, sigma){
+	var gaussSizeBase = 5;
+	var gaussSize = gaussSizeBase*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	var padding = Math.floor(gaussSize/2.0);
+	var tmp = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
+	var newWid = wid+2.0*padding;
+	var newHei = hei+2.0*padding;
+	var tmp = ImageMat.gaussian2DFrom1DFloat(tmp, newWid,newHei, gauss1D);
+	return ImageMat.unpadFloat(tmp, newWid,newHei, padding,padding,padding,padding);
+}
 ImageMat.derivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
 		return -0.5*src[wid*y+(x-1)] + 0.5*src[wid*y+(x+1)];
@@ -1700,7 +1711,111 @@ console.log("blurr");
 	}
 	return img;
 }
-
+ImageMat.watershedSort = function(a,b){
+	if(a==b){
+		return 0;
+	}
+	a = a.point();
+	b = b.point();
+	if(a.z<b.z){
+		return -1;
+	}
+	if(a.z>b.z){
+		return 1;
+	}
+	if(a.x<b.x){
+		return -1;
+	}
+	if(a.x>b.x){
+		return 1;
+	}
+	if(a.y<b.y){
+		return -1;
+	}
+	if(a.y>b.y){
+		return 1;
+	}
+}
+ImageMat.WSPoint = function(v){
+	this._label = ImageMat.LABEL_INIT;
+	this._dist = 0;
+	this._point = new V3D();
+	this.point(v);
+}
+ImageMat.WSPoint.prototype.point = function(v){
+	if(v){
+		this._point.copy(v);
+	}
+	return this._point;
+}
+ImageMat.LABEL_WATERSHED = 0;
+ImageMat.LABEL_INIT = 1;
+ImageMat.LABEL_MASK = 2;
+ImageMat.watershed = function(float01,width,height){
+	var heightIndex, pixelCount;
+	var queue = new PriorityQueue();
+	var pointList = new PriorityQueue();
+	pointList.sorting( ImageMat.watershedSort );
+	var index, h, i, j, u, v, p, q, len;
+	len = float01.length;
+	for(index=0;index<len;++index){
+		i = index % width;
+		j = Math.floor(index/i);
+		v = float01[index];
+		pointList.push( new ImageMat.WSPoint(new V3D(i,j,v)) );
+	}
+HERE ...
+	console.log(pointList.length());
+	pointList = pointList.toArray();
+	pixelCount = pointList.length;
+	var fictitious = new WSPoint(new V3D(-1,-1,-1));
+	var currentLabel = ImageMat.LABEL_WATERSHED;
+	//while(pointList.length()>0){
+	heightIndex=0;
+	while(heightIndex<pixelCount){
+		v = pointList[heightIndex];
+		h = v.point().z;
+		p = null;
+		i = 1;
+		if(heightIndex+i<pixelCount){
+			p = pointList[heightIndex+i];
+		}
+		while(p && p.point().z==h){
+			// if p has neighbor q, q.label()>0 || q.label()==ImageMat.LABEL_WATERSHED
+				// 
+				// p.distance(1)
+				// queue.push(p)
+			// ...
+			p = pointList.minimum();
+		}
+		var currentDistance = 1;
+		queue.push(fictitious);
+		while( !queue.isEmpty() ){ // loop
+			p = queue.popMinimum();
+			if(p==fictitious){
+				if(queue.isEmpty()){
+					break;
+				}else{
+					queue.push(fictitious);
+					currentDistance += 1;
+					p = queue.popMinimum();
+				}
+			}
+			foreach q in p.neighbors() {
+				//
+			}
+			for all 
+		}
+		// 
+		// if(pointList.length() % 10000 == 0){
+		// 	console.log(v.point().z)
+		// }
+		// GOTO NEXT HEIGHT INDEX
+		h = 
+		++heightIndex;
+	}
+	console.log(pointList.length());
+}
 
 
 

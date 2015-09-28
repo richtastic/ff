@@ -3036,7 +3036,6 @@ Code.polygonOperation2D = function(polyA,polyB, _iteration, operation){
 	return polyC;
 }
 Code.polygonUnion2D = function(polyA,polyB, _iteration){
-	//return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeXOR);
 	return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeUnion);
 }
 Code.polygonIntersection2D = function(polyA,polyB, _iteration){

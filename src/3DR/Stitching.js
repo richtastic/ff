@@ -65,8 +65,8 @@ var ext = 0.0;
 	}
 	d.graphics().fill();
 	d.graphics().endPath();
-	
 	this._root.addChild(d);
+	return d;
 }
 Stitching.prototype.handleKeyboardDownFxn = function(e){
 	if(e.keyCode==Keyboard.KEY_SPACE){
@@ -132,6 +132,7 @@ this._root.removeAllChildren();
 Stitching.prototype.testGraph = function(){
 	var graph = new Graph();
 	var v, e;
+	/*
 	var vs,v2,v3,v4,v5,vt;
 	// vertexes
 	v = graph.addVertex();
@@ -163,8 +164,48 @@ Stitching.prototype.testGraph = function(){
 	graph.addEdge(v4,v5, 1, Graph.Edge.DIRECTION_REVERSE);
 	graph.addEdge(v4,vt, 2, Graph.Edge.DIRECTION_FORWARD);
 	graph.addEdge(v5,vt, 1, Graph.Edge.DIRECTION_FORWARD);
-	//
-	//
+	*/
+	var vs,v1,v2,v3,v4,v5,v6,vt;
+	v = graph.addVertex();
+	v.id("s");
+	vs = v;
+	v = graph.addVertex();
+	v.id("1");
+	v1 = v;
+	v = graph.addVertex();
+	v.id("2");
+	v2 = v;
+	v = graph.addVertex();
+	v.id("3");
+	v3 = v;
+	v = graph.addVertex();
+	v.id("4");
+	v4 = v;
+	v = graph.addVertex();
+	v.id("5");
+	v5 = v;
+	v = graph.addVertex();
+	v.id("6");
+	v6 = v;
+	v = graph.addVertex();
+	v.id("t");
+	vt = v;
+	graph.addEdge(vs,v1, 10,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(vs,v2, 5, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(vs,v3, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v1,v2, 4, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v1,v4, 9, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v1,v5, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v3, 4, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v5, 8, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v6, 6, Graph.Edge.DIRECTION_REVERSE);
+	graph.addEdge(v3,v6, 16,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v4,v5, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v4,vt, 10,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v5,v6, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v5,vt, 10,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v6,vt, 10,Graph.Edge.DIRECTION_FORWARD);
+
 	console.log(graph);
 	console.log(graph.toString());
 
@@ -173,23 +214,49 @@ Stitching.prototype.testGraph = function(){
 
 	var cut = graph.minCut(vs,vt);
 	console.log(cut);
+	for(var i=0;i<cut.length;++i){
+		console.log(cut[i].toString());
+	}
+}
+Stitching.prototype.testWatershed = function(imageInfo){
+	var imageList = imageInfo.images;
+	var i, j, list = [], d, img, x=0, y=0;
+	for(i=0;i<imageList.length;++i){
+		img = imageList[i];
+		list[i] = img;
+		d = new DOImage(img);
+		this._root.addChild(d);
+		break;
+	}
+	var imageGray = this._stage.getImageAsFloatGray(img);
+	var wid = imageGray.width;
+	var hei = imageGray.height;
+	var sigma = 1.4;
+	var imageGrayFloat = imageGray.gray;
+	var imageGrayFloatGauss = ImageMat.applyGaussianFloat(imageGrayFloat,wid,hei, sigma);
+	//
+
+	var watershed = ImageMat.watershed(imageGrayFloat,wid,hei);
+	console.log(watershed);
+
+	//
+	img = this._stage.getFloatGrayAsImage(imageGrayFloatGauss,wid,hei, null);
+	d = new DOImage(img);
+	this._root.addChild(d);
+	d.matrix().translate(400.0,0.0);
+	//console.log(imageGrayFloatGauss);
+	//
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 
-	// var a = [0,1,2,3,4,5,6,7];
-	// console.log(Code.copyArray(a));
-	// console.log(Code.copyArray(new Array(), a));
-	// console.log(Code.copyArray(a,0,4));
-	// console.log(Code.copyArray(new Array(), a,3,7));
-	// return;
+// this.testPolyPoly();
+// return;
 
-//this.testPolyPoly();
-//return;
+// this.testGraph();
+// return;
 
-this.testGraph();
+this.testWatershed(imageInfo);
 return;
-
-
 
 
 	var imageList = imageInfo.images;
@@ -197,6 +264,7 @@ return;
 var featurePoints = [];
 var features = [];
 var matrixOffY = 50;
+var matrixOffX = 400.0;
 	for(i=0;i<imageList.length;++i){
 		img = imageList[i];
 		list[i] = img;
@@ -546,9 +614,12 @@ maxPointDistanceB = 1.0;
 				if(isPointInside){
 					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
 					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
-					imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-					imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
-					imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatR[index] = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatG[index] = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
+					imageCMatB[index] = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
 					imageCMatA[index] = 1.0;
 				} else {
 					imageCMatR[index] = 0.0;
@@ -567,9 +638,26 @@ maxPointDistanceB = 1.0;
 		//img.moveBackward();
 		img.moveToBack();
 		//img.moveForward();
-		img.matrix().translate(400.0,matrixOffY);
+		img.matrix().translate(matrixOffX,matrixOffY);
 		img.matrix().translate(offsetBC.x,offsetBC.y);
 	}
+	// find intersecting regions:
+	var polyA = imageACorners;
+	var polyB = imageACornersInB;
+	polyC = Code.polygonUnion2D(polyA,polyB);
+	console.log(polyC);
+	
+	d = this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
+		d.matrix().translate(matrixOffX,matrixOffY);
+	d = this.drawPolygon(polyB, 0xFF00CC00, 0xFF00CC00, 2.0);
+		d.matrix().translate(matrixOffX,matrixOffY);
+	console.log("DRAW ARROWS: "+polyC.length);
+	for(i=0;i<polyC.length;++i){
+		var con = polyC[i];
+		d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, false);
+		d.matrix().translate(matrixOffX,matrixOffY);
+	}
+
 	console.log("DONE");
 }
 
