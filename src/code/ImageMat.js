@@ -1711,6 +1711,125 @@ console.log("blurr");
 	}
 	return img;
 }
+
+
+ImageMat.GROUP_UNASSIGNED = -1;
+ImageMat.GROUP_START = 0;
+ImageMat.watershed = function(heightMap,width,height){
+	var h, i, j, p, q, v, len, index, neighbors;
+	var wm1 = width-1, hm1 = height-1;
+	pixelCount = heightMap.length;
+	var gridList = new Array(len);
+	var pointList = new PriorityQueue();
+	pointList.sorting( ImageMat.watershedSort );
+	// assign all pixels to unassigned group
+	for(index=0;index<pixelCount;++index){
+		i = index % width;
+		j = Math.floor(index/width);
+		v = heightMap[index];
+		p = new ImageMat.WSPoint( new V3D(i,j,v) );
+		p.label(ImageMat.GROUP_UNASSIGNED);
+		pointList.push(p);
+		gridList[index] = p;
+	}
+	// queue to array: order pixels in height
+	pointList = pointList.toArray();
+	pixelCount = pointList.length;
+	// connect neighbors
+	for(index=0;index<pixelCount;++index){
+		i = index % width;
+		j = Math.floor(index/width);
+		p = gridList[index];
+		if(j>0 && i>0){ // up & left
+			p.addNeighbor( gridList[ (j-1)*width + (i-1) ] );
+		}
+		if(j>0){ // up
+			p.addNeighbor( gridList[ (j-1)*width + i ] );
+		}
+		if(j>0 && i<wm1){ // up & right
+			p.addNeighbor( gridList[ (j-1)*width + (i+1) ] );
+		}
+		if(i>0){ // left
+			p.addNeighbor( gridList[ j*width + (i-1) ] );
+		}
+		if(i<wm1){ // left & right
+			p.addNeighbor( gridList[ j*width + (i+1) ] );
+		}
+		if(j<hm1 && i>0){ // down & left
+			p.addNeighbor( gridList[ (j+1)*width + (i-1) ] );
+		}
+		if(j<hm1){ // down
+			p.addNeighbor( gridList[ j*width + i ] );
+		}
+		if(j<hm1 && i<wm1){ // down & right
+			p.addNeighbor( gridList[ (j+1)*width + (i+1) ] );
+		}
+	}
+	// for each pixel
+	var currentGroup = ImageMat.GROUP_START;
+	heightIndex=0;
+var queue = new PriorityQueue();
+queue.sorting( ImageMat.watershedSort );
+	while(heightIndex<pixelCount){
+		p = pointList[heightIndex];
+		h = p.height();
+		// assign all unassigned-neighbors to same group, or assign new group
+		for(i=heightIndex; i<pixelCount; ++i){
+			p = pointList[i];
+			if(p.height()==h){
+				neighbors = p.neighbors();
+				queue.clear();
+				for(j=0; j<neighbors.length; ++j){
+					q = neighbors[j];
+					if(q.label()!=ImageMat.GROUP_UNASSIGNED){
+						queue.push(q);
+						//p.label( q.label() );
+						//break; // just one neighbor is sufficient
+					}
+				}
+				// assign label of lowest/highest h
+				//q = queue.popMinimum();
+				q = queue.popMaximum();
+				if(q){
+					p.label( q.label() );
+				}
+				queue.clear();
+				if(p.label()==ImageMat.GROUP_UNASSIGNED){
+					p.label(currentGroup);
+					currentGroup += 1;
+				}
+			}else{
+				break;
+			}
+		}
+		// goto next height
+		heightIndex = i;
+	}
+
+	//
+
+	var groupList = new Array(currentGroup);
+	len = gridList.length;
+	for(i=0; i<len; ++i){
+		p = gridList[i];
+		label = p.label();
+		arr = groupList[label];
+		if(!arr){
+			groupList[label] = [];
+			arr = groupList[label];
+		}
+		if(p.point().x==undefined || p.point().y==undefined){
+			console.log(i+" / "+p);
+		}
+		v = new V2D( p.point().x, p.point().y );
+		arr.push(v);
+	}
+	return groupList;
+}
+
+
+
+
 ImageMat.watershedSort = function(a,b){
 	if(a==b){
 		return 0;
@@ -1782,7 +1901,7 @@ ImageMat.WSPoint.prototype.toString = function(){
 ImageMat.LABEL_WATERSHED = 0;
 ImageMat.LABEL_INIT = -1;
 ImageMat.LABEL_MASK = -2;
-ImageMat.watershed = function(heightMap,width,height){
+ImageMat.watershed_1 = function(heightMap,width,height){
 	var index, h, i, j, label, u, v, p, q, r, arr, len;
 	var wm1 = width-1, hm1=height-1;
 	var heightIndex, pixelCount;
