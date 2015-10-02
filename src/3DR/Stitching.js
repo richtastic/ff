@@ -225,27 +225,52 @@ Stitching.prototype.testWatershed = function(imageInfo){
 		img = imageList[i];
 		list[i] = img;
 		d = new DOImage(img);
-		this._root.addChild(d);
+//		this._root.addChild(d);
+			d.matrix().translate(400.0,0.0);
 		break;
 	}
 	var imageGray = this._stage.getImageAsFloatGray(img);
 	var wid = imageGray.width;
 	var hei = imageGray.height;
-	var sigma = 1.4;
+	var sigma = 2.0; // 1.4;
 	var imageGrayFloat = imageGray.gray;
 	var imageGrayFloatGauss = ImageMat.applyGaussianFloat(imageGrayFloat,wid,hei, sigma);
 	//
 
-	var watershed = ImageMat.watershed(imageGrayFloat,wid,hei);
-	console.log(watershed);
-
+	//var watershed = ImageMat.watershed(imageGrayFloat,wid,hei);
+	var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei);
+	console.log(watershed.length);
+imageGrayFloatGauss = this.colorImageWithGroups(watershed,wid,hei);
 	//
 	img = this._stage.getFloatGrayAsImage(imageGrayFloatGauss,wid,hei, null);
 	d = new DOImage(img);
 	this._root.addChild(d);
 	d.matrix().translate(400.0,0.0);
+	d.graphics().alpha(0.5);
 	//console.log(imageGrayFloatGauss);
 	//
+}
+Stitching.prototype.colorImageWithGroups = function(groups, width, height){
+	var i, j, p, len, len2, group, index;
+	var pixels = width*height;
+	var image = Code.newArrayZeros(pixels);//new Array(pixels);
+console.log(width+" x "+height);
+//return image;
+	len = groups.length;
+	var colors = new Array(25); for(i=0;i<colors.length;++i){ colors[i] = i/(colors.length-1); /*colors[i] = colors[i]*0.5 + 0.5;*/ }
+var range = 0;
+	for(i=0;i<len;++i){
+		group = groups[i];
+		len2 = group.length;
+console.log("group: "+i+" = "+len2);
+		for(j=0;j<len2;++j){
+			p = group[j];
+			index = width*p.y + p.x;
+			image[index] = colors[i % colors.length];
+		}
+	}
+	console.log(range+" / pixels: "+pixels)
+	return image;
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 
