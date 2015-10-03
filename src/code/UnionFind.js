@@ -52,37 +52,55 @@ UnionFind.prototype.kill = function(){
 
 // --------------------------------------------------------------------------------------------------------------------
 UnionFind.Set = function(o){
-	this._reference = -1;
-	this._nodes = []; // first item is reference object
+	this._reference = null;
+	this._hash = {};
+	this._hashing = UnionFind._hashingFxn;
 	if(object!==undefined){
 		this.addObject(o);
 	}
 }
-UnionFind.Set.prototype.nodes = function(){
-	return this._nodes;
+UnionFind.Set._hashingFxn = function(object){
+	return object.toString();
 }
-UnionFind.Set.prototype.getRepresentative = function(object){
-	for(var i=0; i<this._nodes.length; ++i){
-		if(this._nodes[i]==object){
-			return this._nodes[this._reference];
-		}
+// --------------------------------------------------------------------------------------------------------------------
+UnionFind.Set.prototype.hashing = function(fxn){
+	if(fxn!==undefined){
+		this._hashing = fxn;
 	}
-	return null;
+	return this._hashing;
+}
+UnionFind.Set.prototype.reference = function(r){
+	if(r!==undefined){
+		this._reference = r;
+	}
+	return this._reference;
 }
 UnionFind.Set.prototype.addObject = function(object, change){
 	if(object){
-		if(this._reference<0){
-			this._reference = 0;
-		}
 		if(change){
-			this._ref = this._nodes.length;
+			this.reference(object);
 		}
 		this._nodes.push(object);
 		return true;
 	}
 	return false;
 }
+UnionFind.Set.prototype.removeObject = function(object){
+	if(object){
+		var key = this._hashing(object);
+		if( Code.objectHasProperty(this._hash,key) ){
+			var obj = this._hash[key];
+			if(obj==object){
+				delete this._hash[key];
+				return true;
+			}
+		}
+	}
+	return false;
+}
 UnionFind.Set.prototype.kill = function(){
+	// ...
+	HERE
 	if(this._nodes){
 		Code.emptyArray(this._nodes);
 	}

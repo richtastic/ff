@@ -190,6 +190,9 @@ Code.log = function log(o){
 	}
 }
 
+Code.objectHasProperty = function(o,p){
+	return o.hasOwnProperty(p);
+}
 
 Code.booleanToString = function(b){
 	if(b===true || b==="true" || b==="t"){ // b===1 || b==="1"
