@@ -11,7 +11,55 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Stitching.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+
+
 var stitch = new Stitching();
+
+/*
+
+	var union, set;
+	var hashingFxn = function(obj){
+		return ""+obj.id;
+	}
+
+	var a = {id:"A"};
+	var b = {id:"B"};
+	var c = {id:"C"};
+	var d = {id:"D"};
+
+	console.log(hashingFxn(a));
+	
+	union = new UnionFind( hashingFxn );
+	set = union.newSet(a);
+	console.log("a: "+set);
+	set = union.newSet(b);
+	console.log("b: "+set);
+	set = union.findSetFromObject(a);
+	console.log("find a: "+set);
+	set = union.findSetFromObject(b);
+	console.log("find b: "+set);
+	//
+	console.log("--------------");
+	set = union.findSetFromObject(a);
+	set.addObject(c);
+	set = union.findSetFromObject(c);
+	console.log("find c: "+set);
+	console.log("contains a: "+set.contains(a));
+	console.log("contains b: "+set.contains(b));
+	console.log("contains c: "+set.contains(c));
+	console.log("contains d: "+set.contains(d));
+	console.log("--------------");
+	set = union.findSetFromObject(b);
+	set.addObject(d);
+	set = union.findSetFromObject(d);
+	console.log("find d: "+set);
+	console.log("contains a: "+set.contains(a));
+	console.log("contains b: "+set.contains(b));
+	console.log("contains c: "+set.contains(c));
+	console.log("contains d: "+set.contains(d));
+
+	union.kill();
+*/
 
 /*
 var sweepLine = new Poly2D.PolySweepLine();

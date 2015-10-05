@@ -7,6 +7,7 @@ Math.PIO2 = Math.PI*0.5;
 Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );// (document.body.attachEvent && window.ActiveXObject);
 
 Code.TYPE_OBJECT = "object";
+Code.TYPE_ARRAY = 'array';
 Code.TYPE_FUNCTION = "function";
 Code.TYPE_NUMBER = "number";
 Code.TYPE_STRING = "string";
@@ -71,12 +72,7 @@ Code.JS_EVENT_SCROLL = "scroll";
 Code.JS_EVENT_SELECT = "select";
 Code.JS_EVENT_SUBMIT = "submit";
 Code.JS_EVENT_UNLOAD = "textinput";
-//
-Code.TYPE_FUNCTION = 'function';
-Code.TYPE_OBJECT = 'object';
-Code.TYPE_STRING = 'string';
-Code.TYPE_ARRAY = 'array';
-Code.TYPE_NUMBER = 'number';
+
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
