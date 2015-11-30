@@ -253,17 +253,18 @@ Stitching.prototype.colorImageWithGroups = function(groups, width, height){
 	var pixels = width*height;
 	var image = Code.newArrayZeros(pixels);//new Array(pixels);
 	len = groups.length;
-console.log(width+" x "+height+" : "+len);
-	var colors = new Array(25); for(i=0;i<colors.length;++i){ colors[i] = i/(colors.length-1); /*colors[i] = colors[i]*0.5 + 0.5;*/ }
+//console.log(width+" x "+height+" : "+len);
+	var colors = new Array(5); for(i=0;i<colors.length;++i){ colors[i] = i/(colors.length-1); /*colors[i] = colors[i]*0.5 + 0.5;*/ }
 	for(i=0;i<len;++i){
 		group = groups[i];
-		len2 = group.length;
+		//len2 = group.length;
 //console.log("group: "+i+" = "+len2);
-		for(j=0;j<len2;++j){
-			p = group[j];
-			index = width*p.y + p.x;
-			image[index] = colors[i % colors.length];
-		}
+		//for(j=0;j<len2;++j){
+			//p = group[j];
+			//index = width*p.y + p.x;
+			//image[index] = colors[i % colors.length];
+			image[i] = colors[group % colors.length];
+		//}
 	}
 	return image;
 }
@@ -762,9 +763,12 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 // WATERSHEDDING:
 	var wid = wid;//imageGray.width;
 	var hei = hei;//imageGray.height;
-	var sigma = 1.8; // 1.4;
+	var sigma = 1.4; // 1.4;
 	var imageGrayFloatGauss = ImageMat.applyGaussianFloat(intersectionImage,wid,hei, sigma);
 
+// dropp gaussian
+imageGrayFloatGauss = intersectionImage;
+//
 
 var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei);
 imageGrayFloatGauss = this.colorImageWithGroups(watershed,wid,hei);

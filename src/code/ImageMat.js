@@ -1712,7 +1712,7 @@ console.log("blurr");
 	return img;
 }
 
-
+/*
 ImageMat.GROUP_UNASSIGNED = -1;
 ImageMat.GROUP_START = 0;
 ImageMat.watershed_2 = function(heightMap,width,height){
@@ -2062,9 +2062,32 @@ ImageMat.watershed_1 = function(heightMap,width,height){
 	}
 	return groupList;
 }
+*/
+ImageMat._watershedPointSort = function(a,b){
+	if(a==b){
+		return 0;
+	}
+	if(a.z<b.z){
+		return -1;
+	}
+	if(a.z>b.z){
+		return 1;
+	}
+	if(a.x<b.x){
+		return -1;
+	}
+	if(a.x>b.x){
+		return 1;
+	}
+	if(a.y<b.y){
+		return -1;
+	}
+	if(a.y>b.y){
+		return 1;
+	}
+}
 
-
-ImageMat.watershed_again = function(heightMap,width,height){
+ImageMat._watershed_internal = function(heightMap,width,height){
 	var i, j, index, h, v;
 	var pixelCount = width*height;
 	var groupMap = new Array(pixelCount);
@@ -2072,30 +2095,84 @@ ImageMat.watershed_again = function(heightMap,width,height){
 	var group = 0;
 	// order all pixels by height
 	var pointQueue = new PriorityQueue();
-	pointQueue.sorting( ImageMat.watershedSort );
+	pointQueue.sorting( ImageMat._watershedPointSort );
 	// label all pixels as unknown group
 	for(index=0;index<pixelCount;++index){
 		i = index % width;
 		j = Math.floor(index/width);
 		h = heightMap[index];
-		v = new V3D(i,j,h));
-		pointList.push(v);
-		gridList[index] = -1; // unknown group
+		v = new V3D(i,j,h);
+		pointQueue.push(v);
+		groupMap[index] = -1; // unknown group
 	}
 	// assign groups iteratively
 	pointQueue = pointQueue.toArray();
 	// for each pixel in height queue
 	for(index=0; index<pixelCount; ++index){
-		// if pixel is only bordered by unknown neighbors
-			// => assign it to new group
-here
-		// else pixel borders labeled neighbor(s) 
-			// => assign it to group with largest _peak_ height
-		//
+		v = pointQueue[index];
+		i = v.x;
+		j = v.y;
+		h = v.z;
+		var neighbors = ImageMat._watershed_neighbors(groupMap, width, height, i, j);
+		var highestGroup = ImageMat._watershed_highest_group(neighbors, groupTable);
+		if(highestGroup==null){ // pixel is only bordered by unknown neighbors
+			groupMap[j*width + i] = group; // assign it to new group
+			groupTable[group] = h;
+			++group;
+		}else{ // pixel borders labeled neighbor(s) 
+			groupMap[j*width + i] = highestGroup; // => assign it to group with largest _peak_ height
+		}
 	}
+	return groupMap;
+}
+ImageMat._watershed_highest_group = function(neighbors, groupList){
+	var highestGroup = null;
+	var highestHeight = null;
+	for(var i=neighbors.length; i>0; --i){
+		var group = neighbors[i];
+		if(group>=0){
+			var height = groupList[group];
+			if(highestGroup==null || height>highestHeight){
+				highestGroup = group;
+				highestHeight = height;
+			}
+		}
+	}
+	return highestGroup;
+}
+ImageMat._watershed_neighbors = function(gridList, width, height, i, j){//index){
+	var wm1 = width-1;
+	var hm1 = height-1;
+	var list = [];
+	if(j>0 && i>0){ // up & left
+		list.push( gridList[ (j-1)*width + (i-1) ] );
+	}
+	if(j>0){ // up
+		list.push( gridList[ (j-1)*width + i ] );
+	}
+	if(j>0 && i<wm1){ // up & right
+		list.push( gridList[ (j-1)*width + (i+1) ] );
+	}
+	if(i>0){ // left
+		list.push( gridList[ j*width + (i-1) ] );
+	}
+	if(i<wm1){ // left & right
+		list.push( gridList[ j*width + (i+1) ] );
+	}
+	if(j<hm1 && i>0){ // down & left
+		list.push( gridList[ (j+1)*width + (i-1) ] );
+	}
+	if(j<hm1){ // down
+		list.push( gridList[ j*width + i ] );
+	}
+	if(j<hm1 && i<wm1){ // down & right
+		list.push( gridList[ (j+1)*width + (i+1) ] );
+	}
+	return list;
 }
 
-ImageMat.watershed = ImageMat.watershed_2;
+//ImageMat.watershed = ImageMat.watershed_2;
+ImageMat.watershed = ImageMat._watershed_internal;
 
 /*
 this.colorQuadrantCubic = function(colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP, x,y){
