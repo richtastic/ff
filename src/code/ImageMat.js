@@ -2063,6 +2063,38 @@ ImageMat.watershed_1 = function(heightMap,width,height){
 	return groupList;
 }
 
+
+ImageMat.watershed_again = function(heightMap,width,height){
+	var i, j, index, h, v;
+	var pixelCount = width*height;
+	var groupMap = new Array(pixelCount);
+	var groupTable = new Array();
+	var group = 0;
+	// order all pixels by height
+	var pointQueue = new PriorityQueue();
+	pointQueue.sorting( ImageMat.watershedSort );
+	// label all pixels as unknown group
+	for(index=0;index<pixelCount;++index){
+		i = index % width;
+		j = Math.floor(index/width);
+		h = heightMap[index];
+		v = new V3D(i,j,h));
+		pointList.push(v);
+		gridList[index] = -1; // unknown group
+	}
+	// assign groups iteratively
+	pointQueue = pointQueue.toArray();
+	// for each pixel in height queue
+	for(index=0; index<pixelCount; ++index){
+		// if pixel is only bordered by unknown neighbors
+			// => assign it to new group
+here
+		// else pixel borders labeled neighbor(s) 
+			// => assign it to group with largest _peak_ height
+		//
+	}
+}
+
 ImageMat.watershed = ImageMat.watershed_2;
 
 /*
