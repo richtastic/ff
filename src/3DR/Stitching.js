@@ -616,11 +616,17 @@ maxPointDistanceB = 1.0;
 			//imageMat = this._stage.getImageAsFloatGray(imageA);
 		//var imageAMat = imageMat.gray;
 			imageMat = this._stage.getImageAsFloatRGB(imageA);
+		//var imageAMat = imageMat.gray;
 		var imageAMatR = imageMat.red;
 		var imageAMatG = imageMat.grn;
 		var imageAMatB = imageMat.blu;
-		// 	imageMat = this._stage.getImageAsFloatGray(imageB);
-		// var imageBMat = imageMat.gray;
+			//imageMat = this._stage.getImageAsFloatGray(imageB);
+			imageMat = this._stage.getImageAsFloatRGB(imageB);
+		//var imageBMat = imageMat.gray;
+		var imageBMatR = imageMat.red;
+		var imageBMatG = imageMat.grn;
+		var imageBMatB = imageMat.blu;
+
 		for(j=0; j<imageCHeight; ++j){
 			for(i=0; i<imageCWidth; ++i){
 				var index = imageCWidth*j + i;
@@ -653,10 +659,10 @@ maxPointDistanceB = 1.0;
 		imageC = this._stage.getFloatARGBAsImage(imageCMatA,imageCMatR,imageCMatG,imageCMatB, imageCWidth,imageCHeight, null);
 		// Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
 		var img = new DOImage(imageC);
-		//img.graphics().alpha(0.75);
+		img.graphics().alpha(0.75);
 		this._root.addChild(img);
 		//img.moveBackward();
-		img.moveToBack();
+		//img.moveToBack();
 		//img.moveForward();
 		img.matrix().translate(matrixOffX,matrixOffY);
 		img.matrix().translate(offsetBC.x,offsetBC.y);
@@ -691,28 +697,29 @@ maxPointDistanceB = 1.0;
 		d.matrix().translate(matrixOffX,matrixOffY);
 	}
 
-console.log(intersectionRect+"")
+console.log("intersectionRect"+intersectionRect.toString()+"")
+
 // calculate intersection & mask
-var wid = Math.ceil(intersectionRect.width());
-var hei = Math.ceil(intersectionRect.height());
+var wid = Math.floor(intersectionRect.width());
+var hei = Math.floor(intersectionRect.height());
 var intersectionImage = Code.newArrayZeros(wid*hei);
+//var intersectionImageA = Code.newArrayZeros(wid*hei);
 var intersectionMask = Code.newArrayZeros(wid*hei);
 var offX = intersectionRect.x();
-var offY = intersectionRect.x();
-for(i=0;i<wid;++i){
-	for(j=0;j<hei;++j){
+var offY = intersectionRect.y();
+console.log("OFFSET FROM IMAGEB TL: "+offX+","+offY);
+for(j=0;j<hei;++j){
+	for(i=0;i<wid;++i){
 		var index = j*wid + i;
-		// i, j in intersectionImage
-		// i+offX, j+offY in A image
-		// trans(A) in B image
 				var ptB = new V3D(i+offX,j+offY,1.0);
-				ptB.x += offsetBC.x;
-				ptB.y += offsetBC.y;
+				var to = ptB;
 				var ptA = Hinv.multV3DtoV3D(new V3D(), ptB);
 				var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
-			var colorA, colorB, colorI;
+				var colorA, colorB, colorC;
 				//var isPointInside = Code.isPointInsidePolygon2D(ptA,);
-				isPointInside = (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height);
+				var isPointInside = true;
+				isPointInside = isPointInside && ( (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height) );
+				isPointInside = isPointInside && ( (to.x>=0) && (to.x<imageB.width) && (to.y>=0) && (to.y<imageB.height) );
 				if(isPointInside){
 					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
 					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
@@ -722,21 +729,53 @@ for(i=0;i<wid;++i){
 					// imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
 					// imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
 					// imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
-					colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-					intersectionImage = 
-// HERE
-					//imageCMatA[index] = 1.0;
+colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
+					// average:
+					//colorC = (colorA + colorB)*0.5;
+					// difference:
+					colorC = Math.abs(colorA - colorB);
+
+					intersectionImage[index] = colorC;
+					intersectionMask[index] = 1.0;
 				} else {
-					imageCMatR[index] = 0.0;
-					imageCMatG[index] = 0.0;
-					imageCMatB[index] = 0.0;
-					imageCMatA[index] = 0.0;
+					intersectionImage[index] = 0.0;
+					intersectionMask[index] = 0.0;
+
+					// imageCMatR[index] = 0.0;
+					// imageCMatG[index] = 0.0;
+					// imageCMatB[index] = 0.0;
+					// imageCMatA[index] = 0.0;
 				}
 
 
 		// if inside, mask = 1, else mask = 0
 	}
-}
+}		
+
+		intersectionImage = ImageMat.normalFloat01(intersectionImage);
+
+		imageC = this._stage.getFloatARGBAsImage(intersectionMask,intersectionImage,intersectionImage,intersectionImage, wid,hei, null);
+		img = new DOImage(imageC);
+		this._root.addChild(img);
+
+// WATERSHEDDING:
+	var wid = wid;//imageGray.width;
+	var hei = hei;//imageGray.height;
+	var sigma = 1.8; // 1.4;
+	var imageGrayFloatGauss = ImageMat.applyGaussianFloat(intersectionImage,wid,hei, sigma);
+
+
+var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei);
+imageGrayFloatGauss = this.colorImageWithGroups(watershed,wid,hei);
+	//
+	img = this._stage.getFloatGrayAsImage(imageGrayFloatGauss,wid,hei, null);
+	d = new DOImage(img);
+	this._root.addChild(d);
+	d.matrix().translate(0.0,300.0);
+	//d.graphics().alpha(0.5);
+		
+
 
 
 	console.log("DONE");
