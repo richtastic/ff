@@ -3046,6 +3046,12 @@ Code.polygonDifference2D = function(polyA,polyB, _iteration){
 Code.polygonXOR2D = function(polyA,polyB, _iteration){
 	return Code.polygonOperation2D(polyA,polyB, _iteration, Poly2D.SweepEvent.ResultTypeXOR);
 }
+Code.polygonArea2D = function(polyArray){
+	var polygon = Poly2D.poly2DfromArray(polyArray);
+	var area = polygon.area();
+	polygon.kill();
+	return area;
+}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x

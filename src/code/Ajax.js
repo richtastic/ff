@@ -1,17 +1,48 @@
 // Ajax.js
 Ajax.METHOD_TYPE_GET = "GET";
 Ajax.METHOD_TYPE_POST = "POST";
+Ajax.METHOD_TYPE_DELETE = "DELETE";
+Ajax.METHOD_TYPE_PUT = "PUT";
+Ajax.METHOD_TYPE_HEAD = "HEAD";
+Ajax.METHOD_TYPE_OPTIONS = "OPTIONS";
+Ajax.METHOD_TYPE_TRACE = "TRACE";
+Ajax.METHOD_TYPE_CONNECT = "CONNECT";
 Ajax.TIMEOUT_DEFAULT = 15000; // 15 seconds
-
+Ajax.HEADER_CONTENT_TYPE = "Content-Type"; // POST & PUT
+	Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED = "application/x-www-form-urlencoded";
+	Ajax.CONTENT_TYPE_VALUE_IMAGE_ANY = "image/*";
+	Ajax.CONTENT_TYPE_VALUE_IMAGE_PNG = "image/png";
+	Ajax.CONTENT_TYPE_VALUE_IMAGE_JPG = "image/jpeg";
+	Ajax.CONTENT_TYPE_VALUE_IMAGE_GIF = "image/gif";
+	Ajax.CONTENT_TYPE_VALUE_TEXT_ANY = "text/*";
+	Ajax.CONTENT_TYPE_VALUE_JAVASCRIPT_TEXT = "text/javascript";
+	Ajax.CONTENT_TYPE_VALUE_JAVASCRIPT_APPLICATION = "application/javascript";
+Ajax.HEADER_ACCEPT = "Accept";
+Ajax.HEADER_ACCEPT_CHARSET = "Accept-Charset"; // utf-8
+Ajax.HEADER_ACCEPT_LANGUAGE = "Accept-Language"; // en-US
+Ajax.HEADER_AUTHORIZATION = "Authorization";
+Ajax.HEADER_CACHE_CONTROL = "Cache-Control";
+Ajax.HEADER_CONTENT_ENCODING = "Content-Encoding";
+Ajax.HEADER_CONTENT_LANGUAGE = "Content-Language";
+Ajax.HEADER_CONTENT_LENGTH = "Content-Length";
+Ajax.HEADER_DATE = "Date";
+Ajax.HEADER_E_TAG = "ETag";
+Ajax.HEADER_EXPIRES = "Expores";
+Ajax.HEADER_IF_MODIFIED_SINCE = "If-Modified-Since";
+Ajax.HEADER_LAST_MODIFIED = "Last-Modified";
+Ajax.HEADER_LOCATION = "Location";
+Ajax.HEADER_ORIGIN = "Origin";
+Ajax.HEADER_REFERER = "Referer";
+Ajax.HEADER_USER_AGENT = "User-Agent";
+// "Authorization","Bearer: 0123456789"
 
 // ------------ instance
 function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._method = Ajax.METHOD_TYPE_GET;
 	this._params = null;
-	this._url = "wtf.wtf";
+	this._url = null;
 	this._context = null;
 	this._callback = null;
-	this._errorback = null;
 	this._header = {};
 	this._binary = false;
 	this._cache = false;
@@ -26,112 +57,143 @@ function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 }
 // --- get/set ---------------------------------------
 Ajax.prototype.cache = function(c){
-	if(arguments.length>0 && c!==undefined && c!==null){
+	if(c!==undefined && c!==null){
 		this._cache = c;
 	}else{
 		return this._cache;
 	}
 }
 Ajax.prototype.params = function(p){
-	if(arguments.length>0 && p!==undefined && p!==null){
+	if(p!==undefined && p!==null){
+		console.log(p);
 		var str="", count=0;
 		for(k in p){
+			console.log(k+" = "+p[k]);
 			if(count>0){ str = str + "&"; }
-			str = str + k+"="+p[k];
+			str = str + k+"="+Code.escapeURI(p[k]);
 			++count;
 		}
 		this._params = str;
-	}else{
-		return this._params;
 	}
+	return this._params;
 }
 Ajax.prototype.method = function(m){
-	if(arguments.length>0 && m!==undefined && m!==null){
+	if(m!==undefined && m!==null){
 		this._method = m;
-	}else{
-		return this._method;
 	}
+	return this._method;
 }
 Ajax.prototype.url = function(u){
-	if(arguments.length>0 && u!==undefined && u!==null){
+	if(u!==undefined && u!==null){
 		this._url = u;
 		if(!this._cache){
 			if( this._url.indexOf("?")>=0 ){
 				this._url = this._url+"&_="+Code.getTimeMilliseconds()+""+Math.floor(Math.random()*10000);
 			}
 		}
-	}else{
-		return this._url;
 	}
+	return this._url;
 }
 Ajax.prototype.timeout = function(milliseconds){
-	this._request.timeout = milliseconds;
+	if(milliseconds){
+		this._request.timeout = milliseconds;
+	}
+	return this._request.timeout;
 }
 Ajax.prototype.callback = function(c){
-	if(arguments.length>0){
+	if(c!==undefined){
 		this._callback = c;
-	}else{
-		return this._callback;
 	}
-}
-Ajax.prototype.errorback = function(e){
-	if(arguments.length>0){
-		this._errorback = e;
-	}else{
-		return this._errorback;
-	}
+	return this._callback;
 }
 Ajax.prototype.context = function(c){
-	if(arguments.length>0){
+	if(c!==undefined){
 		this._context = c;
-	}else{
-		return this._context;
 	}
+	return this._context;
 }
 // --- actual functions ---------------------------------------
 Ajax.prototype.cancel = function(){
 	this._request.abort();
-	if(this._errorback){
-		this._errorback.call( this._context, null, this );
-	}
+	this._callCallback(null);
 }
-Ajax.prototype.get = function(url,con,comp,err){
+Ajax.prototype.get = function(url,con,comp,params){
 	this.context(con);
-	this.send(url,Ajax.METHOD_TYPE_GET,comp,err);
+	this.send(url,Ajax.METHOD_TYPE_GET,comp,params);
 }
-Ajax.prototype.post = function(url,con,comp,err){ // to actually post params apparently the content type header must be present -> use below
+Ajax.prototype.post = function(url,con,comp,params){
 	this.context(con);
-	this.send(url,Ajax.METHOD_TYPE_POST,comp,err);
+	this.send(url,Ajax.METHOD_TYPE_POST,comp,params);
 }
-Ajax.prototype.postParams = function(url,parms,con,comp,err){
-	this.context(con);
-	this.params(parms);
-	this.clearHeader();
-	this.setHeader("Content-type","application/x-www-form-urlencoded");
-	this.send(url,Ajax.METHOD_TYPE_POST,comp,err);
+Ajax.prototype.put = function(){
+	// ?
 }
-/*
-this.setHeader("Authorization","Bearer: 0123456789");
-*/
+Ajax.prototype.delete = function(){
+	// ?
+}
 Ajax.prototype.clearHeader = function(){
 	this._header = {}; // better way of cleaning = null ?
 }
 Ajax.prototype.setHeader = function(param,value){
 	this._header[param] = value;
 }
-Ajax.prototype.send = function(url,meth,comp,err){
+Ajax.prototype.send = function(url,meth,cmp,params){
 	this.url(url);
 	this.method(meth);
-	this.callback(comp);
-	this.errorback((err===null||err===undefined)?comp:err);
-	this._request.open(this._method,this._url,true);
+	this.callback(cmp);
+	this.params(params);
+
+	var hasParameters = this._params && this._params.length>0;
+	var url = this._url;
+	if (hasParameters && this._method==Ajax.METHOD_TYPE_GET) { // append parameters to URL
+		url = url + "?" + this._params; // TODO: better concatenation
+	}
+	// begin request
+	this._request.open(this._method,url,true);
+	// set request headers
+	this.clearHeader();
 	for(o in this._header){
 		this._request.setRequestHeader(o,this._header[o]);
 	}
-	this._request.send(this._params);
+	// set request parameters
+	if(hasParameters){ // care about parameters
+		if(this._method==Ajax.METHOD_TYPE_GET){ // GET PARAMS go in URL
+			this._request.send();
+		}else if(this._method==Ajax.METHOD_TYPE_POST) { // POST PARAMS
+			this._setPostHeaderParameters();
+			this._request.send(this._params);
+		}else{ // 
+			this._request.send(this._params);
+		}
+	}else{ // don't care about parameters
+		this._request.send();
+	}
+
+}
+// ---- helpers ---------------------------------------------------------
+Ajax.prototype.responseCode = function(){
+	var responseCode = this._request.status;
+	return responseCode;
+}
+Ajax.prototype.responseContent = function(){
+	var responseContent = this._request.responseText;
+	return responseContent;
+}
+// ---- internal functions ---------------------------------------------------------
+Ajax.prototype._setPostHeaderParameters = function(){
+	this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED);
 }
 Ajax.prototype._stateChangeCaller = function(e){
 	this.context._stateChange.call(this.context, e);
+}
+Ajax.prototype._callCallback = function(response){
+	if(this._callback){
+		if(this._context){
+			this.callback.call( this._context, null, this );
+		}else{
+			this.callback(response, this);
+		}
+	}
 }
 Ajax.prototype._stateChange = function(){
 	if(this._request.readyState==4){ // should also look at 400, 304, ... differentiate types 
@@ -154,16 +216,14 @@ Ajax.prototype._stateChange = function(){
 			}
 			return;
 		}else{
+
 			var response = this._request.responseText;
 			var responseCode = this._request.status;
+			console.log(response);
 			if( Math.floor(responseCode/200)==1 || Math.floor(responseCode/300)==1 ){ // 200s or 300s  ////// 204, ... 300?
-				if(this._callback!==null && this._callback!==undefined){
-					this._callback.call( this._context, response, this );
-				}
+				this._callCallback(response);
 			}else{ // 400, 500
-				if(this._errorback!==null && this._errorback!==undefined){
-					this._errorback.call( this._context, response, this );
-				}
+				this._callCallback(null);
 			}
 		}
 		if(this._autoDestroy){
@@ -226,7 +286,6 @@ Ajax.prototype.kill = function(){
 	this._method = null;
 	this._url = null;
 	this._callback = null;
-	this._errorback = null;
 	this._context = null;
 	this._header = null;
 	this._binary = null;

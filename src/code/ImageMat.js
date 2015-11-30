@@ -1715,7 +1715,7 @@ console.log("blurr");
 
 ImageMat.GROUP_UNASSIGNED = -1;
 ImageMat.GROUP_START = 0;
-ImageMat.watershed = function(heightMap,width,height){
+ImageMat.watershed_2 = function(heightMap,width,height){
 	var h, i, j, p, q, v, len, index, neighbors;
 	var wm1 = width-1, hm1 = height-1;
 	pixelCount = heightMap.length;
@@ -2063,7 +2063,7 @@ ImageMat.watershed_1 = function(heightMap,width,height){
 	return groupList;
 }
 
-
+ImageMat.watershed = ImageMat.watershed_2;
 
 /*
 this.colorQuadrantCubic = function(colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP, x,y){

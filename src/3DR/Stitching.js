@@ -275,8 +275,8 @@ Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 // this.testGraph();
 // return;
 
-this.testWatershed(imageInfo);
-return;
+// this.testWatershed(imageInfo);
+// return;
 
 
 	var imageList = imageInfo.images;
@@ -664,8 +664,14 @@ maxPointDistanceB = 1.0;
 	// find intersecting regions:
 	var polyA = imageACorners;
 	var polyB = imageACornersInB;
-	polyC = Code.polygonUnion2D(polyA,polyB);
+	//polyC = Code.polygonUnion2D(polyA,polyB);
+	//polyC = Code.polygonDifference2D(polyA,polyB);
+	polyC = Code.polygonIntersection2D(polyA,polyB);
 	console.log(polyC);
+	// find largest polygon & assign bounding box
+	var intersectionRect = new Rect();
+	var intersectionPoly = null;
+	var maxArea = 0;
 	
 	d = this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
 		d.matrix().translate(matrixOffX,matrixOffY);
@@ -674,9 +680,64 @@ maxPointDistanceB = 1.0;
 	console.log("DRAW ARROWS: "+polyC.length);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
-		d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, false);
+		var area = Math.abs( Code.polygonArea2D(con) );
+		if(area>maxArea){
+			maxArea = area;
+			intersectionRect.fromArray(con);
+			intersectionPoly = con;
+		}
+		//d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, false);
+		d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, true);
 		d.matrix().translate(matrixOffX,matrixOffY);
 	}
+
+console.log(intersectionRect+"")
+// calculate intersection & mask
+var wid = Math.ceil(intersectionRect.width());
+var hei = Math.ceil(intersectionRect.height());
+var intersectionImage = Code.newArrayZeros(wid*hei);
+var intersectionMask = Code.newArrayZeros(wid*hei);
+var offX = intersectionRect.x();
+var offY = intersectionRect.x();
+for(i=0;i<wid;++i){
+	for(j=0;j<hei;++j){
+		var index = j*wid + i;
+		// i, j in intersectionImage
+		// i+offX, j+offY in A image
+		// trans(A) in B image
+				var ptB = new V3D(i+offX,j+offY,1.0);
+				ptB.x += offsetBC.x;
+				ptB.y += offsetBC.y;
+				var ptA = Hinv.multV3DtoV3D(new V3D(), ptB);
+				var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
+			var colorA, colorB, colorI;
+				//var isPointInside = Code.isPointInsidePolygon2D(ptA,);
+				isPointInside = (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height);
+				if(isPointInside){
+					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
+					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatR[index] = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatG[index] = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatB[index] = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
+					// imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
+					colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					intersectionImage = 
+// HERE
+					//imageCMatA[index] = 1.0;
+				} else {
+					imageCMatR[index] = 0.0;
+					imageCMatG[index] = 0.0;
+					imageCMatB[index] = 0.0;
+					imageCMatA[index] = 0.0;
+				}
+
+
+		// if inside, mask = 1, else mask = 0
+	}
+}
+
 
 	console.log("DONE");
 }

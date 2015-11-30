@@ -88,6 +88,38 @@ Poly2D.prototype.add = function(c){
 		return this;
 	}
 }
+Poly2D.prototype.copy = function(c){
+	if(!c){
+		return Poly2D.copy( this );
+	}else{
+		return Poly2D.copy( c, this);
+	}
+}
+Poly2D.prototype.area = function(){
+	var i, j, lm2, points;
+	var a, b, c, area=0;
+	var len = this._pointSets.length;
+	for(i=len; i--;){
+		points = this._pointSets[i];
+		lm2 = points.length-2;
+		for(j=0; j<lm2 ;j++){
+			cross = V2D.areaTri(points[0],points[j+1],points[j+2]);
+			area += cross;
+		}
+	}
+	return area;
+}
+Poly2D.prototype.kill = function(){
+	if(this._pointSets){
+		for(i=this._pointSets.length; i--;){
+			Code.emptyArray(this._pointSets[i]);
+		}
+		Code.emptyArray(this._pointSets);
+		this._pointSets = null;
+	}
+	return this;
+}
+// --------------------------------------------------------------------------------------------------------- 
 Poly2D.add = function(c,a,b){ // c = a + b === union
 	if(b===undefined){
 		b = a;
@@ -97,13 +129,6 @@ Poly2D.add = function(c,a,b){ // c = a + b === union
 	c.removeAllContours();
 	c.add(a);
 	c.add(b);
-}
-Poly2D.copy = function(c){
-	if(!c){
-		return Poly2D.copy( this );
-	}else{
-		return Poly2D.copy( c, this);
-	}
 }
 Poly2D.copy = function(a,b){ // a = b
 	if(b===undefined){
@@ -284,10 +309,14 @@ Poly2D.PolyChain.prototype.toString = function(){
 	return str;
 }
 Poly2D.PolyChain.prototype.toArray = function(){
-	var i, len=this._points.length;
+	var points = this._points;
+	var i, len=points.length;
 	var arr = new Array();
+	if(len>0 && V2D.equal(points[0],points[len-1]) ){ // if first point is same as last point, drop
+		--len;
+	}
 	for(i=0; i<len; ++i){
-		arr[i] = this._points[i];
+		arr[i] = points[i];
 	}
 	return arr;
 }

@@ -68,6 +68,15 @@ function Rect(xPos,yPos, w,h){
 	this.width(w);
 	this.height(h);
 }
+Rect.prototype.fromArray = function(points2D){ // bounding box of points
+	if(points2D && points2D.length>0){
+		var extrema = V2D.extremaFromArray(points2D);
+		var min = extrema.min;
+		var max = extrema.max;
+		this.set(min.x,min.y,max.x-min.x,max.y-min.y);
+	}
+	return this;
+}
 Rect.prototype.copy = function(r){
 	this.x( r.x() );
 	this.y( r.y() );
@@ -78,7 +87,7 @@ Rect.prototype.copy = function(r){
 Rect.prototype.set = function(pX,pY,wid,hei){
 	this.x(pX);
 	this.y(pY);
-	this.widthwid;
+	this.width(wid);
 	this.height(hei);
 	return this;
 }

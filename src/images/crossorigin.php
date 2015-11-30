@@ -1,5 +1,6 @@
 <?php
 // crossorigin.php ? source = 
+// Access-Control-Allow-Origin
 ini_set('display_errors', 1);
 
 $url = $_GET["source"];

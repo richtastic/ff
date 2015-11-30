@@ -6,8 +6,10 @@ V2D.dot = function(a,b){
 V2D.cross = function(a,b){ // z direction
 	return a.x*b.y-a.y*b.x;
 }
-V2D.areaTri = function(a,b,c){ // ab x bc // - area of a TRIANGLE is 1/2 of this
-	//return V2D.cross( V2D.sub(b,a), V2D.sub(c,b) );
+V2D.areaTri = function(a,b,c){ 
+	return V2D.crossTri(a,b,c)*0.5;
+}
+V2D.crossTri = function(a,b,c){ // ab x bc // - area of a TRIANGLE is 1/2 of this
 	return (b.x-a.x)*(c.y-b.y) - (b.y-a.y)*(c.x-b.x);
 }
 V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
