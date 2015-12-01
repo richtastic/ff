@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Cache</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Cache.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var cache = new Cache();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
