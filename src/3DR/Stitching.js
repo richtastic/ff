@@ -240,9 +240,8 @@ Stitching.prototype.testWatershed = function(imageInfo){
 	//var watershed = ImageMat.watershed(imageGrayFloat,wid,hei);
 	var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei);
 	console.log(watershed.length);
-imageGrayFloatGauss = this.colorImageWithGroups(watershed,wid,hei);
-	//
-	img = this._stage.getFloatGrayAsImage(imageGrayFloatGauss,wid,hei, null);
+	var imgGroups = this.colorImageWithGroups(watershed,wid,hei);
+	img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
 	d = new DOImage(img);
 	this._root.addChild(d);
 	d.matrix().translate(400.0,0.0);
@@ -251,22 +250,24 @@ imageGrayFloatGauss = this.colorImageWithGroups(watershed,wid,hei);
 Stitching.prototype.colorImageWithGroups = function(groups, width, height){
 	var i, j, p, len, len2, group, index;
 	var pixels = width*height;
-	var image = Code.newArrayZeros(pixels);//new Array(pixels);
+	var imageRed = Code.newArrayZeros(pixels);
+	var imageGrn = Code.newArrayZeros(pixels);
+	var imageBlu = Code.newArrayZeros(pixels);
+	var imageAlp = Code.newArrayZeros(pixels);
 	len = groups.length;
-//console.log(width+" x "+height+" : "+len);
-	var colors = new Array(5); for(i=0;i<colors.length;++i){ colors[i] = i/(colors.length-1); /*colors[i] = colors[i]*0.5 + 0.5;*/ }
+	//var colors = new Array(5); for(i=0;i<colors.length;++i){ colors[i] = i/(colors.length-1);
+	var countRed = 7;
+	var countGrn = 11;
+	var countBlu = 13;
 	for(i=0;i<len;++i){
 		group = groups[i];
-		//len2 = group.length;
-//console.log("group: "+i+" = "+len2);
-		//for(j=0;j<len2;++j){
-			//p = group[j];
-			//index = width*p.y + p.x;
-			//image[index] = colors[i % colors.length];
-			image[i] = colors[group % colors.length];
-		//}
+		//image[i] = colors[group % colors.length];
+		imageRed[i] = (group % countRed)/(countRed-1);
+		imageGrn[i] = (group % countBlu)/(countBlu-1);
+		imageBlu[i] = (group % countGrn)/(countGrn-1);
+		imageAlp[i] = 1.0;
 	}
-	return image;
+	return {"red":imageRed, "blu":imageBlu, "grn":imageGrn, "alp":imageAlp};
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
 
@@ -701,13 +702,17 @@ maxPointDistanceB = 1.0;
 console.log("intersectionRect"+intersectionRect.toString()+"")
 
 // calculate intersection & mask
-var wid = Math.floor(intersectionRect.width());
-var hei = Math.floor(intersectionRect.height());
+var padLeft = 10;
+var padRight = 10;
+var padTop = 10;
+var padBot = 10;
+var wid = Math.ceil(intersectionRect.width()) + padLeft + padRight;
+var hei = Math.ceil(intersectionRect.height()) + padTop + padBot;
 var intersectionImage = Code.newArrayZeros(wid*hei);
 //var intersectionImageA = Code.newArrayZeros(wid*hei);
-var intersectionMask = Code.newArrayZeros(wid*hei);
-var offX = intersectionRect.x();
-var offY = intersectionRect.y();
+var intersectionMask = Code.newArrayZeros(wid*hei); // inside: 0, else: 2^simages
+var offX = intersectionRect.x() - padLeft;
+var offY = intersectionRect.y() - padTop;
 console.log("OFFSET FROM IMAGEB TL: "+offX+","+offY);
 for(j=0;j<hei;++j){
 	for(i=0;i<wid;++i){
@@ -718,9 +723,10 @@ for(j=0;j<hei;++j){
 				var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
 				var colorA, colorB, colorC;
 				//var isPointInside = Code.isPointInsidePolygon2D(ptA,);
-				var isPointInside = true;
-				isPointInside = isPointInside && ( (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height) );
-				isPointInside = isPointInside && ( (to.x>=0) && (to.x<imageB.width) && (to.y>=0) && (to.y<imageB.height) );
+				
+				var isPointInsideA = ( (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height) );
+				var isPointInsideB = ( (to.x>=0) && (to.x<imageB.width) && (to.y>=0) && (to.y<imageB.height) );
+				var isPointInside = isPointInsideA && isPointInsideB;
 				if(isPointInside){
 					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
 					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
@@ -738,10 +744,10 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 					colorC = Math.abs(colorA - colorB);
 
 					intersectionImage[index] = colorC;
-					intersectionMask[index] = 1.0;
+					intersectionMask[index] = 0.0;
 				} else {
 					intersectionImage[index] = 0.0;
-					intersectionMask[index] = 0.0;
+					intersectionMask[index] = 1.0 + (isPointInsideA ? 2.0 : 0) + (isPointInsideB ? 4.0 : 0);
 
 					// imageCMatR[index] = 0.0;
 					// imageCMatG[index] = 0.0;
@@ -761,28 +767,90 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 		this._root.addChild(img);
 
 // WATERSHEDDING:
-	var wid = wid;//imageGray.width;
-	var hei = hei;//imageGray.height;
 	var sigma = 1.4; // 1.4;
 	var imageGrayFloatGauss = ImageMat.applyGaussianFloat(intersectionImage,wid,hei, sigma);
 
-// dropp gaussian
-imageGrayFloatGauss = intersectionImage;
+// drop gaussian
+//imageGrayFloatGauss = intersectionImage;
 //
-
-var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei);
-imageGrayFloatGauss = this.colorImageWithGroups(watershed,wid,hei);
+var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei, intersectionMask);
+var imgGroups = this.colorImageWithGroups(watershed,wid,hei);
 	//
-	img = this._stage.getFloatGrayAsImage(imageGrayFloatGauss,wid,hei, null);
+	img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
+	//
 	d = new DOImage(img);
 	this._root.addChild(d);
 	d.matrix().translate(0.0,300.0);
 	//d.graphics().alpha(0.5);
-		
+
+// graph from watershed grouping
+var data = Stitching.graphFromGroupBitmap(watershed,wid,hei, intersectionMask);
+console.log(data);
 
 
 
 	console.log("DONE");
+}
+
+Stitching.graphFromGroupBitmap = function(groups,width,height, inverseMask){
+	var graph = new Graph();
+	var extrema = [];
+	var v, e;
+/*
+	var vs,v1,v2,v3,v4,v5,v6,vt;
+	v = graph.addVertex();
+	v.id("s");
+	vs = v;
+	v = graph.addVertex();
+	v.id("1");
+	v1 = v;
+	v = graph.addVertex();
+	v.id("2");
+	v2 = v;
+	v = graph.addVertex();
+	v.id("3");
+	v3 = v;
+	v = graph.addVertex();
+	v.id("4");
+	v4 = v;
+	v = graph.addVertex();
+	v.id("5");
+	v5 = v;
+	v = graph.addVertex();
+	v.id("6");
+	v6 = v;
+	v = graph.addVertex();
+	v.id("t");
+	vt = v;
+	graph.addEdge(vs,v1, 10,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(vs,v2, 5, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(vs,v3, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v1,v2, 4, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v1,v4, 9, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v1,v5, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v3, 4, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v5, 8, Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v2,v6, 6, Graph.Edge.DIRECTION_REVERSE);
+	graph.addEdge(v3,v6, 16,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v4,v5, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v4,vt, 10,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v5,v6, 15,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v5,vt, 10,Graph.Edge.DIRECTION_FORWARD);
+	graph.addEdge(v6,vt, 10,Graph.Edge.DIRECTION_FORWARD);
+*/
+	console.log(graph);
+	// console.log(graph.toString());
+
+	return {"graph":graph, "extrema":extrema};
+
+	// var path = graph.BFS(vs,vt);
+	// console.log(path);
+
+	// var cut = graph.minCut(vs,vt);
+	// console.log(cut);
+	// for(var i=0;i<cut.length;++i){
+	// 	console.log(cut[i].toString());
+	// }
 }
 
 
