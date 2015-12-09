@@ -1739,7 +1739,9 @@ ImageMat._watershed_internal = function(heightMap,width,height, inverseMask){
 	var i, j, index, h, v;
 	var pixelCount = width*height;
 	var groupMap = new Array(pixelCount);
-	var groupTable = new Array();
+	var groupHeights = [];
+	var groupLists = [];
+	var groupRects = [];
 	var group = 0;
 	// order all pixels by height
 	var pointQueue = new PriorityQueue();
@@ -1766,16 +1768,26 @@ ImageMat._watershed_internal = function(heightMap,width,height, inverseMask){
 		j = v.y;
 		h = v.z;
 		var neighbors = ImageMat._watershed_neighbors(groupMap, width, height, i, j, inverseMask);
-		var highestGroup = ImageMat._watershed_highest_group(neighbors, groupTable);
+		var highestGroup = ImageMat._watershed_highest_group(neighbors, groupHeights);
 		if(highestGroup==null){ // pixel is only bordered by unknown neighbors
 			groupMap[j*width + i] = group; // assign it to new group
-			groupTable[group] = h;
+			groupLists[group] = [];
+			groupHeights[group] = h;
+			groupRects[group] = new Rect(i,j,1,1);
+			highestGroup = group;
 			++group;
 		}else{ // pixel borders labeled neighbor(s) 
 			groupMap[j*width + i] = highestGroup; // => assign it to group with largest _peak_ height
+			groupRects[highestGroup].union(new Rect(i,j,1,1));
 		}
+		//groupRects[highestGroup] = Rect.union(groupRects[highestGroup], new Rect(i,j,1,1));
+		groupLists[highestGroup].push(v);
 	}
-	return groupMap;
+	return {"pixels":groupMap, // 2d array of pixels with value = groupID
+			"groups":groupLists, // array of group arrays of V3Ds
+			"heights":groupHeights, // array of group maxHeights
+			"rects":groupRects //  array of group rects
+			};
 }
 ImageMat._watershed_highest_group = function(neighbors, groupList){
 	var highestGroup = null;

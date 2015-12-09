@@ -42,7 +42,7 @@ Rect.union = function(a,b,c){ // a = b+c
 			}else{
 				return a.copy(c);
 			}
-		}else if(c==null){
+		}else if(c==null){groupRects[group] = new Rect(i,j,1,1);
 			if(a==null){
 				return new Rect().copy(b);
 			}else{
@@ -52,10 +52,12 @@ Rect.union = function(a,b,c){ // a = b+c
 	}
 	var maxX = Math.max( b.endX(), c.endX() );
 	var maxY = Math.max( b.endY(), c.endY() );
-	a.x( Math.min(b.x(),c.x()) );
-	a.y( Math.min(b.y(),c.y()) );
-	a.width( maxX-a.x() );
-	a.height( maxY-a.y() );
+	var minX = Math.min(b.x(),c.x());
+	var minY = Math.min(b.y(),c.y());
+	a.x( minX );
+	a.y( minY );
+	a.width( maxX-minX );
+	a.height( maxY-minY );
 	return a;
 }
 function Rect(xPos,yPos, w,h){
@@ -135,6 +137,9 @@ Rect.prototype.min = function(){
 }
 Rect.prototype.max = function(){
 	return new V2D(this.endX(),this.endY());
+}
+Rect.prototype.union = function(b){ //
+	return Rect.union(this,this,b);
 }
 Rect.prototype.toString = function(){
 	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";
