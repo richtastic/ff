@@ -60,6 +60,32 @@ Rect.union = function(a,b,c){ // a = b+c
 	a.height( maxY-minY );
 	return a;
 }
+Rect.copy = function(a,b){ // a = b
+	if(!b){
+		b = a;
+		a = new Rect();
+	}
+	a.x( b.x() );
+	a.y( b.y() );
+	a.width( b.width() );
+	a.height( b.height() );
+	return a;
+}
+Rect.isIntersectX = function(a,b){
+	return (a._x<=b._x && a._x+a._width>b._x) || (b._x<=a._x && b._x+b._width>a._x);
+}
+Rect.isIntersectY = function(a,b){
+	return (a._y<=b._y && a._y+a._height>b._y) || (b._y<=a._y && b._y+b._height>a._y);
+}
+Rect.isIntersect = function(a,b){
+	return Rect.isIntersectX(a,b) && Rect.isIntersectY(a,b);
+}
+Rect.intersect = function(a,b){
+	if(Rect.isIntersect(a,b)){
+
+	}
+	return null;
+}
 function Rect(xPos,yPos, w,h){
 	this._x = 0;
 	this._y = 0;
@@ -80,11 +106,11 @@ Rect.prototype.fromArray = function(points2D){ // bounding box of points
 	return this;
 }
 Rect.prototype.copy = function(r){
-	this.x( r.x() );
-	this.y( r.y() );
-	this.width( r.width() );
-	this.height( r.height() );
-	return this;
+	if(r){
+		Rect.copy(this,r);
+		return this;
+	}
+	return Rect.copy(this);
 }
 Rect.prototype.set = function(pX,pY,wid,hei){
 	this.x(pX);
@@ -140,6 +166,20 @@ Rect.prototype.max = function(){
 }
 Rect.prototype.union = function(b){ //
 	return Rect.union(this,this,b);
+}
+Rect.prototype.pad = function(l,r, b,t){ //
+	var xA = this._x - l;
+	var xB = this._x + this._width + r;
+	var w = xB-xA;
+	var x = (w>0) ? xA : xB;
+	w = Math.abs(w);
+	var yA = this._y - b;
+	var yB = this._y + this._height + t;
+	var h = yB-yA;
+	var y = (h>0) ? yA : yB;
+	h = Math.abs(h);
+	this.set(x,y, w,h);
+	return this;
 }
 Rect.prototype.toString = function(){
 	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";

@@ -711,6 +711,8 @@ var hei = Math.ceil(intersectionRect.height()) + padTop + padBot;
 var intersectionImage = Code.newArrayZeros(wid*hei);
 //var intersectionImageA = Code.newArrayZeros(wid*hei);
 var intersectionMask = Code.newArrayZeros(wid*hei); // inside: 0, else: 2^simages
+var intersectionList = Code.newArrayZeros(wid*hei);
+var allIntersections = Code.newArrayIndexes(1,2);//[1,2];
 var offX = intersectionRect.x() - padLeft;
 var offY = intersectionRect.y() - padTop;
 console.log("OFFSET FROM IMAGEB TL: "+offX+","+offY);
@@ -727,6 +729,8 @@ for(j=0;j<hei;++j){
 				var isPointInsideA = ( (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height) );
 				var isPointInsideB = ( (to.x>=0) && (to.x<imageB.width) && (to.y>=0) && (to.y<imageB.height) );
 				var isPointInside = isPointInsideA && isPointInsideB;
+				//
+				intersectionList[index] = [];
 				if(isPointInside){
 					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
 					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
@@ -747,8 +751,9 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 					intersectionMask[index] = 0.0;
 				} else {
 					intersectionImage[index] = 0.0;
-					//intersectionMask[index] = 1.0 + (isPointInsideA ? 2.0 : 0) + (isPointInsideB ? 4.0 : 0);
 					intersectionMask[index] = 1.0 + (isPointInsideA ? 1.0 : 0) + (isPointInsideB ? 1.0 : 0);
+					if(isPointInsideA){ intersectionList[index].push(1); }
+					if(isPointInsideB){ intersectionList[index].push(2); }
 					// imageCMatR[index] = 0.0;
 					// imageCMatG[index] = 0.0;
 					// imageCMatB[index] = 0.0;
@@ -804,7 +809,7 @@ var imgGroups = this.colorImageWithGroups(pixels,wid,hei);
 var watershedPixels = watershed.pixels;
 var watershedGroups = watershed.groups;
 var watershedRects = watershed.rects;
-var data = Stitching.graphFromGroupBitmap(watershedGroups, watershedRects, watershedPixels,wid,hei, intersectionMask, this);
+var data = Stitching.graphFromGroupBitmap(watershedGroups, watershedRects, watershedPixels,wid,hei, intersectionMask, intersectionList, allIntersections, this);
 console.log(data);
 
 
@@ -853,18 +858,24 @@ Stitching.pixelNeighbors8 = function(i,j){
 	return list;
 }
 
-Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,height, inverseMask, s){
+Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,height, inverseMask, sourceList, allSources, s){
 	var graph = new Graph();
 	var extrema = [];
-	var v, e;
-	var i, j, k, index, len, group, pixel, pixels, neighbors, borders;
+	var u, v, e;
+	var i, j, k, index, len, group, pixel, pixels, neighbors, borders, sources;
 	var groupCount = groupList.length;
 	console.log("graphFromGroupBitmap: "+groupCount);
 	var vertexList = [];
+	var infiniteVertexes = [];
+	// create infinite nodes
+	for(i=0;i<allSources.length;++i){
+		v = graph.addVertex();
+		infiniteVertexes.push(v);
+	}
+	// create infinite node connections
 	for(i=0; i<groupList.length; ++i){ // for each group
 		// find if group touches borders
 		group = groupList[i];
-//console.log(group);
 		borders = []; // collection of all the borders item touches
 		len = group.length;
 		for(j=0; j<len; ++j){ // for each pixel in group
@@ -873,43 +884,64 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 			for(k=0;k<neighbors.length;++k){ // for each neighbor
 				neighbor = neighbors[k];
 				index = neighbor.y * width + neighbor.x; // 2D index
-				index = inverseMask[index]; // border index
-				borders[index] = borders[index] ? borders[index]++ : 1;
-				// if touches a border edge
-				// add border index
+				if(inverseMask[index]!=0){
+					sources = sourceList[index];
+					for(l=0;l<sources.length;++l){
+						index = sources[l];
+						borders[index] = borders[index] ? borders[index]++ : 1;
+					}
+				}
 			}
 		}
-//		console.log(borders); // 0 = masked, 1 DNE, 2 = 1, 2+ = multiple
-		if(borders.length > 3){ // touches multiple borders
+		var keys = Code.keys(borders);
+		var borderCount = keys.length;
+		if(borderCount>=2){ // touches multiple borders
 			// do not add as vertex in graph
-			var rect = groupRects[i];
-			s.drawRectFromRect(rect);
-			console.log("rect: "+rect)
+			// s.drawRectFromRect(groupRects[i]);
+			vertexList[i] = null;
 		} else { // 0 or 1 border
-			// add group vertex to graph
+			// add group vertex to graph 
 			v = graph.addVertex();
 			vertexList[i] = v;
-			if(borders.length==3){ // touches exactly 1 
-				var rect = groupRects[i];
-				s.drawRectFromRect(rect);
-				// add infinite connections to 
+			if(borderCount==1){ // touches 1 border
+				index = keys[0];
+				for(j=0;j<allSources.length;++j){ // add infinite connections to the first mask it does NOT TOUCH
+					key = allSources[j];
+					if(key!=index){
+						u = infiniteVertexes[key];
+						graph.addEdge(u,v, 10,Graph.Edge.DIRECTION_DUPLEX);
+						//s.drawRectFromRect(groupRects[i]);
+						break;
+					}
+				}
+
+			} // touches no borders
+			else {
+				s.drawRectFromRect(groupRects[i]);
 			}
-
-		} // else length == 1, touches no borders
-		//this.drawRectFromRect(rect);
-		
-//		break;
+		}
 	}
-
-	// for each group : groupA
-		// for each other group : groupB
-			// if the rectangles + 1 padding intersect
-				// for each pixelA in groupA
-					// for each pixelB in groupB
-						// if pixelA is neighbor to pixelB
-							// add pixelA & pixelB to cost list
-				// if cost list is not empty
-					// => add edge between nodes with cost of list
+	// connect adjacent groups
+	for(i=0; i<groupList.length; ++i){
+		var groupA = vertexList[i];
+		for(j=0; j<groupList.length; ++j){
+			var groupB = vertexList[j];
+			if(i!=j && groupA && groupB){
+				var rectA = groupRects[i];
+				var rectB = groupRects[j];
+				rectA = rectA.copy().pad(1,1,1,1);
+				if( Rect.isIntersect(rectA,rectB) ){
+					console.log("ADD COMMON EDGE");
+					// for each pixelA in groupA
+						// for each pixelB in groupB
+							// if pixelA is neighbor to pixelB
+								// add pixelA & pixelB to cost list
+					// if cost list is not empty
+						// => add edge between nodes with cost of list
+				}
+			}
+		}
+	}
 /*
 	var vs,v1,v2,v3,v4,v5,v6,vt;
 	v = graph.addVertex();

@@ -118,7 +118,13 @@ Code.extendClass = function extendClass(target, source) {
 	}
     return target;
 }
-
+Code.keys = function keys(object){
+	if(object){
+		return Object.keys(object);
+		var keys = []; for(var key in object){ keys.push(key); } return keys;
+	}
+	return [];
+}
 Code.inheritClass = function inheritClass(SubC, SuperC){
 	// console.log( Object.defineProperty );
 	// console.log( Object.getProperties );
@@ -256,6 +262,19 @@ Code.newArrayOnes = function(len){
 	var i, arr = new Array(len);
 	for(i=len;i--;){
 		arr[i] = 1.0;
+	}
+	return arr;
+}
+Code.newArrayIndexes = function(fr,to){
+	console.log(fr,to);
+	if(to===undefined){
+		to = fr;
+		fr = 0;
+	}
+	var arr = new Array();
+	var i, len = to-fr+1;
+	for(i=0;i<len;++i){
+		arr.push(fr+i);
 	}
 	return arr;
 }
