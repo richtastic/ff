@@ -712,7 +712,7 @@ var intersectionImage = Code.newArrayZeros(wid*hei);
 //var intersectionImageA = Code.newArrayZeros(wid*hei);
 var intersectionMask = Code.newArrayZeros(wid*hei); // inside: 0, else: 2^simages
 var intersectionList = Code.newArrayZeros(wid*hei);
-var allIntersections = Code.newArrayIndexes(1,2);//[1,2];
+var allIntersections = Code.newArrayIndexes(0,1);//[1,2];
 var offX = intersectionRect.x() - padLeft;
 var offY = intersectionRect.y() - padTop;
 console.log("OFFSET FROM IMAGEB TL: "+offX+","+offY);
@@ -752,8 +752,8 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 				} else {
 					intersectionImage[index] = 0.0;
 					intersectionMask[index] = 1.0 + (isPointInsideA ? 1.0 : 0) + (isPointInsideB ? 1.0 : 0);
-					if(isPointInsideA){ intersectionList[index].push(1); }
-					if(isPointInsideB){ intersectionList[index].push(2); }
+					if(isPointInsideA){ intersectionList[index].push(0); }
+					if(isPointInsideB){ intersectionList[index].push(1); }
 					// imageCMatR[index] = 0.0;
 					// imageCMatG[index] = 0.0;
 					// imageCMatB[index] = 0.0;
@@ -810,14 +810,34 @@ var watershedPixels = watershed.pixels;
 var watershedGroups = watershed.groups;
 var watershedRects = watershed.rects;
 var data = Stitching.graphFromGroupBitmap(watershedGroups, watershedRects, watershedPixels,wid,hei, intersectionMask, intersectionList, allIntersections, this);
-console.log(data);
-
-
-
+var graph = data.graph;
+var extrema = data.extrema;
+console.log("graph:");
+console.log(graph);
+console.log("extrema:");
+console.log(extrema);
+if(extrema.length>1) {
+	var vs = extrema[0];
+	var vt = extrema[1];
+	var path = graph.BFS(vs,vt);
+	console.log("PATH:");
+	console.log(path);
+	if(!path){
+		console.log("no path exists, can't try cutting");
+	}
+	var cut = graph.minCut(vs,vt);
+	console.log("CUT:");
+	console.log(cut);
+	console.log(cut.length);
+	// for(var i=0;i<cut.length;++i){
+	// 	console.log(cut[i].toString());
+	// }
+}
 	console.log("DONE");
 }
 
-Stitching.prototype.drawRectFromRect = function(rect){
+Stitching.prototype.drawRectFromRect = function(rect, padding){
+	padding = padding!==undefined ? padding : 2;
 	var d = new DO();
 	this._root.addChild(d);
 	d.matrix().translate(0.0,300.0);
@@ -830,10 +850,10 @@ Stitching.prototype.drawRectFromRect = function(rect){
 	d.graphics().setFill(colorFill);
 	var pA = rect.min();
 	var pB = rect.max();
-	pA.x -= 2;
-	pA.y -= 2;
-	pB.x += 2;
-	pB.y += 2;
+	pA.x -= padding;
+	pA.y -= padding;
+	pB.x += padding;
+	pB.y += padding;
 	d.graphics().moveTo(pA.x,pA.y);
 	d.graphics().lineTo(pB.x,pA.y);
 	d.graphics().lineTo(pB.x,pB.y);
@@ -844,6 +864,20 @@ Stitching.prototype.drawRectFromRect = function(rect){
 	d.graphics().endPath();
 }
 
+Stitching.pixelNeighbors8HasValue = function(i,j, image,width,height, value){
+	var neighbors = Stitching.pixelNeighbors8(i,j);
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+		if(neighbor.x>=0 && neighbor.x<width && neighbor.y>=0 && neighbor.y<height){
+			var index = neighbor.y*width + neighbor.x;
+			var val = image[index];
+			if(val==value){
+				return true;
+			}
+		}
+	}
+	return false;
+}
 Stitching.pixelNeighbors8 = function(i,j){
 	var list = [];
 	list.push(new V2D(i-1,j-1));
@@ -860,7 +894,6 @@ Stitching.pixelNeighbors8 = function(i,j){
 
 Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,height, inverseMask, sourceList, allSources, s){
 	var graph = new Graph();
-	var extrema = [];
 	var u, v, e;
 	var i, j, k, index, len, group, pixel, pixels, neighbors, borders, sources;
 	var groupCount = groupList.length;
@@ -905,11 +938,13 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 			vertexList[i] = v;
 			if(borderCount==1){ // touches 1 border
 				index = keys[0];
+				//console.log(index);
 				for(j=0;j<allSources.length;++j){ // add infinite connections to the first mask it does NOT TOUCH
 					key = allSources[j];
 					if(key!=index){
+						// TODO: INDEXES AND KEYS DON'T NECESSARILY MATCH
 						u = infiniteVertexes[key];
-						graph.addEdge(u,v, 10,Graph.Edge.DIRECTION_DUPLEX);
+						graph.addEdge(u,v, Graph.WEIGHT_INFINITY,Graph.Edge.DIRECTION_DUPLEX);
 						//s.drawRectFromRect(groupRects[i]);
 						break;
 					}
@@ -923,80 +958,47 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 	}
 	// connect adjacent groups
 	for(i=0; i<groupList.length; ++i){
-		var groupA = vertexList[i];
-		for(j=0; j<groupList.length; ++j){
-			var groupB = vertexList[j];
-			if(i!=j && groupA && groupB){
+		var groupA = groupList[i];
+		var vertexA = vertexList[i];
+		for(j=i+1; j<groupList.length; ++j){
+			var groupB = groupList[j];
+			var vertexB = vertexList[j];
+			if(vertexA && vertexB){
 				var rectA = groupRects[i];
 				var rectB = groupRects[j];
 				rectA = rectA.copy().pad(1,1,1,1);
-				if( Rect.isIntersect(rectA,rectB) ){
-					console.log("ADD COMMON EDGE");
-					// for each pixelA in groupA
-						// for each pixelB in groupB
-							// if pixelA is neighbor to pixelB
-								// add pixelA & pixelB to cost list
-					// if cost list is not empty
+				if( Rect.isIntersect(rectA,rectB) ){ // possible neighboring groups
+					var edgeA = [];
+					var edgeB = [];
+					for(k=0; k<groupA.length; ++k){ // all neighboring group A pixels
+						var pixelA = groupA[k];
+						var isNeighborA = Stitching.pixelNeighbors8HasValue(pixelA.x,pixelA.y, groupMap,width,height, j);
+						if(isNeighborA){
+							edgeA.push(pixelA);
+						}
+					}
+					for(k=0; k<groupB.length; ++k){ // all neighboring group B pixels
+						var pixelB = groupB[k];
+						var isNeighborB = Stitching.pixelNeighbors8HasValue(pixelB.x,pixelB.y, groupMap,width,height, i);
+						if(isNeighborB){
+							edgeB.push(pixelB);
+						}
+					}
+					if(edgeA.length>0 && edgeB.length>0){ // shared edge
 						// => add edge between nodes with cost of list
+						var costA = 0;
+						var costB = 0;
+						for(k=0; k<edgeA.length; ++k){ costA+=edgeA[k].z; }
+						for(k=0; k<edgeB.length; ++k){ costB+=edgeB[k].z; }
+						var totalCost = (costA + costB)*0.5;
+						graph.addEdge(vertexA,vertexB, totalCost,Graph.Edge.DIRECTION_DUPLEX);
+					}
 				}
 			}
 		}
 	}
-/*
-	var vs,v1,v2,v3,v4,v5,v6,vt;
-	v = graph.addVertex();
-	v.id("s");
-	vs = v;
-	v = graph.addVertex();
-	v.id("1");
-	v1 = v;
-	v = graph.addVertex();
-	v.id("2");
-	v2 = v;
-	v = graph.addVertex();
-	v.id("3");
-	v3 = v;
-	v = graph.addVertex();
-	v.id("4");
-	v4 = v;
-	v = graph.addVertex();
-	v.id("5");
-	v5 = v;
-	v = graph.addVertex();
-	v.id("6");
-	v6 = v;
-	v = graph.addVertex();
-	v.id("t");
-	vt = v;
-	graph.addEdge(vs,v1, 10,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(vs,v2, 5, Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(vs,v3, 15,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v1,v2, 4, Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v1,v4, 9, Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v1,v5, 15,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v2,v3, 4, Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v2,v5, 8, Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v2,v6, 6, Graph.Edge.DIRECTION_REVERSE);
-	graph.addEdge(v3,v6, 16,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v4,v5, 15,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v4,vt, 10,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v5,v6, 15,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v5,vt, 10,Graph.Edge.DIRECTION_FORWARD);
-	graph.addEdge(v6,vt, 10,Graph.Edge.DIRECTION_FORWARD);
-*/
-	console.log(graph);
-	// console.log(graph.toString());
 
-	return {"graph":graph, "extrema":extrema};
-
-	// var path = graph.BFS(vs,vt);
-	// console.log(path);
-
-	// var cut = graph.minCut(vs,vt);
-	// console.log(cut);
-	// for(var i=0;i<cut.length;++i){
-	// 	console.log(cut[i].toString());
-	// }
+	return {"graph":graph, "extrema":infiniteVertexes};
 }
 
 

@@ -45,7 +45,11 @@ Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
 	var i, v, path;
 	var maxFlow = 0.0;
 	path = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true);
+var iteration = 0;
 	while(path && path.length>0){
+if(iteration>=1E6){
+	break;
+}
 		var increment = Graph.WEIGHT_INFINITY;
 		// find flow increment
 		for(i=path.length;--i;){
@@ -62,6 +66,7 @@ Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
 		}
 		maxFlow += increment;
 		path = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true);
+++iteration;
 	}
 	console.log("max flow: "+maxFlow)
 	var cuts = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true, true);
