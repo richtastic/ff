@@ -47,7 +47,10 @@ Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
 	path = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true);
 var iteration = 0;
 	while(path && path.length>0){
-if(iteration>=1E6){
+if(iteration%100==0){
+console.log(iteration);
+}
+if(iteration>=1E4){
 	break;
 }
 		var increment = Graph.WEIGHT_INFINITY;
@@ -80,6 +83,36 @@ if(iteration>=1E6){
 Graph._minPath = function(graph,source,target,adjacency){ // dijkstra
 	return [];
 }
+Graph._addVistitedVertex = function(graph, vertex, skippedEdges, list){
+	if(vertex.temp()==Graph.BFS_COLOR_WHITE){ // is unvisited
+		vertex.temp(Graph.BFS_COLOR_BLACK); // set visited
+		list.push(vertex);
+		var i, edge, other;
+		var edges = vertex.edges();
+		for(i=0; i<edges.length; ++i){
+			edge = edges[i];
+			if(!skippedEdges || !Code.elementExists(skippedEdges, edge) ){
+				other = edge.opposite(vertex);
+				Graph._addVistitedVertex(graph, other, skippedEdges, list);
+			}
+		}
+	}
+}
+Graph.verticesReachableFromVertexWithoutEdges = function(graph, startVertex, skippedEdges){
+	var i, vertex;
+	var reachable = [];
+	var vertexes = graph.vertexes();
+	// set to unvisited
+	for(i=0; i<vertexes.length; ++i){
+		vertex = vertexes[i];
+		vertex.temp(Graph.BFS_COLOR_WHITE);
+	} // travel to neighbors and mark as visited
+	Graph._addVistitedVertex(graph, startVertex, skippedEdges, reachable);
+	graph.clearEdgeTemps();
+	graph.clearVertexTemps();
+	return reachable;
+}
+
 Graph.BFS_COLOR_UNKNOWN = 0;
 Graph.BFS_COLOR_WHITE = 1; // unvisited
 Graph.BFS_COLOR_GRAY = 2; // touched
@@ -160,27 +193,93 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 	}
 	return path;
 }
-Graph.allReachableNodes = function(graph,vertex){
-	return null;
+Graph.prototype.splitWithCut = function(cut){
+	return Graph.splitGraphFromEdgeCut(this,cut);
 }
 Graph.splitGraphFromEdgeCut = function(graph,cut){
+	if(cut.length==0){
+		return null;
+	}
 	var i, edge, vertex;
 	var graphA = new Graph();
 	var graphB = new Graph();
 	edge = cut[0];
 	var vertexA = edge.A();
 	var vertexB = edge.B();
-
+	//
 	// all reachable vertexes fromA
-	Graph.allReachableNodes(vertexA);
-	Graph.allReachableNodes(vertexB);
+	var listA = Graph.verticesReachableFromVertexWithoutEdges(graph, vertexA, cut);
+	var listB = Graph.verticesReachableFromVertexWithoutEdges(graph, vertexB, cut);
 
-	return [graphA,graphB];
+	// TODO: TURN THESE INTO GRAPHS
+
+	return [listA,listB];
+}
+Graph.copy = function(graph){
+	var i, j, index, d, e, u, v, w, edges;
+	var vertexesA = graph.vertexes();
+	var edgesA = graph.edges();
+	var vertexesB = [];
+	var edgesB = [];
+	// copy vertexes verbatim
+	for(i=0;i<vertexesA.length;++i){
+		v = vertexesA[i];
+		v.temp(i);
+		u = new Graph.Vertex();
+		u.id( v.id() );
+		u.data( v.data() );
+		vertexesB[i] = u;
+	}
+	// replicate edges
+	for(i=0;i<vertexesA.length;++i){
+		v = vertexesA[i];
+		u = vertexesB[i];
+		edges = v.edges();
+		for(j=0;j<edges.length;++j){
+			e = edges[j];
+			if(e.A()==v){
+				d = new Graph.Edge();
+				index = e.B().temp();//Code.indexOfElement(vertexesA,e.B());
+				w = vertexesB[index];
+				d.id( e.id() );
+				d.weight( e.weight() );
+				d.direction( e.direction() );
+				d.A( u );
+				d.B( w );
+				edgesB.push(d);
+				u.addEdge(d);
+				w.addEdge(d);
+			}
+		}
+	}
+	graph.clearEdgeTemps();
+	graph.clearVertexTemps();
+	// new graph
+	graph = new Graph();
+	graph._vertexes = vertexesB;
+	graph._edges = edgesB;
+	return graph;
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 function Graph(){
 	this._vertexes = [];
 	this._edges = [];
+}
+Graph.prototype.clearEdgeTemps = function(){
+	for(var i=this._vertexes.length; i--;){
+		this._vertexes[i].temp(null);
+	}
+}
+Graph.prototype.clearVertexTemps = function(){
+	for(var i=this._edges.length; i--;){
+		this._edges[i].temp(null);
+	}
+}
+Graph.prototype.edges = function(){
+	return this._edges;
+}
+Graph.prototype.vertexes = function(){
+	return this._vertexes;
 }
 Graph.prototype.BFS = function(from, to){
 	return Graph.BFS(this, from,to, Graph.adjacencyMatrix(this));
@@ -202,9 +301,8 @@ Graph.prototype.getVertex = function(i){
 Graph.prototype.indexForVertex = function(v){
 	return Code.indexOfElement(this._vertexes,v);
 }
-Graph.prototype.addVertex = function(){ // vertex
-	// vertex = vertex!==undefined ? vertex : new Graph.Vertex();
-	var vertex = new Graph.Vertex();
+Graph.prototype.addVertex = function(vertex){
+	vertex = vertex!==undefined ? vertex : new Graph.Vertex();
 	this._vertexes.push(vertex);
 	return vertex;
 }
@@ -212,7 +310,7 @@ Graph.prototype.vertexCount = function(){
 	return this._vertexes.length;
 }
 Graph.prototype.addEdge = function(a,b,w,d){
-	var edge = new Graph.Edge(a,b,w,d);
+	var edge = (arguments.length==1) ? a : new Graph.Edge(a,b,w,d);
 	this._edges.push(edge);
 	return edge;
 }
@@ -221,6 +319,9 @@ Graph.prototype.edgeCount = function(){
 }
 Graph.prototype.minCut = function(source,sink){
 	return Graph._minCut(this,source,sink);
+}
+Graph.prototype.copy = function(){
+	return Graph.copy(this);
 }
 Graph.prototype.toString = function(){
 	var i, len;
@@ -240,6 +341,7 @@ Graph.Vertex = function(){
 	this._data = null;
 	this._id = Graph.Vertex._index++;
 	this._edges = [];
+	this._temp = null;
 }
 Graph.Vertex._index = 0;
 Graph.Vertex.prototype.id = function(i){
@@ -247,6 +349,18 @@ Graph.Vertex.prototype.id = function(i){
 		this._id = i;
 	}
 	return this._id;
+}
+Graph.Vertex.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
+}
+Graph.Vertex.prototype.data = function(d){
+	if(d!==undefined){
+		this._data = d;
+	}
+	return this._data;
 }
 Graph.Vertex.prototype.getEdgeForVertex = function(v){
 	var i, e, len, arr=this._edges;
@@ -282,7 +396,7 @@ Graph.Vertex.prototype.getEdgeTo = function(v){
 }
 Graph.Vertex.prototype.addEdge = function(e){
 	if(e!==undefined && e!==null){
-		Code.addUnique(this._edges,e);
+		this._edges.push(e); // Code.addUnique(this._edges,e);
 	}
 	return e;
 }
@@ -291,6 +405,9 @@ Graph.Vertex.prototype.removeEdge = function(e){
 		Code.removeElementSimple(this._edges,e);
 	}
 	return e;
+}
+Graph.Vertex.prototype.edges = function(){
+	return this._edges;
 }
 Graph.Vertex.prototype.toString = function(){
 	return "[Vertex "+this._id+" ("+this._edges.length+")]";
@@ -313,6 +430,12 @@ Graph.Edge.prototype.id = function(i){
 		this._id = i;
 	}
 	return this._id;
+}
+Graph.Edge.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
 }
 Graph.Edge.DIRECTION_UNKNOWN = 0;
 Graph.Edge.DIRECTION_FORWARD = 1;
@@ -359,6 +482,14 @@ Graph.Edge.prototype.B = function(b){
 		}
 	}
 	return this._vertexB;
+}
+Graph.Edge.prototype.opposite = function(v){
+	if(this.A()==v){
+		return this.B();
+	}else if(this.B()==v){
+		return this.A();
+	}
+	return null;
 }
 Graph.Edge.prototype.toString = function(){
 	return "[Edge "+this._id+" ("+(this._vertexA ? ("("+this._vertexA.id()+")") : "(?)")+"->"+(this._vertexB ? ("("+this._vertexB.id()+")") : "(?)")+"]";

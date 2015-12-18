@@ -790,7 +790,7 @@ var imgGroups = this.colorImageWithGroups(pixels,wid,hei);
 	d.graphics().alpha(0.80);
 
 	// RECT
-
+	/*
 	var rect = null;
 	var count = 50;
 	while(count>0){//rect==null || rect.area()<400) {
@@ -803,7 +803,7 @@ var imgGroups = this.colorImageWithGroups(pixels,wid,hei);
 		--count;
 		//if(count==0){break;}
 	}
-
+	*/
 
 // graph from watershed grouping
 var watershedPixels = watershed.pixels;
@@ -825,30 +825,51 @@ if(extrema.length>1) {
 	if(!path){
 		console.log("no path exists, can't try cutting");
 	}
+
 	var cut = graph.minCut(vs,vt);
 	console.log("CUT:");
 	console.log(cut);
 	console.log(cut.length);
 
-	var graphs = graph.separateWithCut();
-	var graphA = graphs[0];
-	var graphB = graphs[1];
-	
-	// for(var i=0;i<cut.length;++i){
-	// 	console.log(cut[i].toString());
-	// }
+	// console.log("COPY");
+	// var copy = graph.copy();
+	// console.log(graph.toString());
+	// console.log(copy.toString());
+
+	console.log("SPLIT:");
+	var graphs = graph.splitWithCut(cut);
+	console.log(graphs);
+	if(graphs){
+		var graphA = graphs[0];
+		var graphB = graphs[1];
+		//console.log(graphA._vertexes.length);
+		//for(i=0;i<graphA._vertexes.length;++i){
+			//var v = graphA._vertexes[i];
+		for(i=0;i<graphA.length;++i){
+			var v = graphA[i];
+			var index = v.data(); // null = extrema, others = index
+			if(index!==null){
+				var rect = watershedRects[index];
+				this.drawRectFromRect(rect, 0xFF0000FF);
+			}
+		}
+	}
+
+	// FOR EACH INFINITE NODE, FIND THE IMAGE IT BELONGS TO
+		// GO THRU EACH GROUP AND USE PIXEL MAPPED TO FROM IMAGE
+	// 
 }
 	console.log("DONE");
 }
 
-Stitching.prototype.drawRectFromRect = function(rect, padding){
+Stitching.prototype.drawRectFromRect = function(rect, colorLine, colorFill, padding){
 	padding = padding!==undefined ? padding : 2;
 	var d = new DO();
 	this._root.addChild(d);
 	d.matrix().translate(0.0,300.0);
 	//
-	var colorFill= 0x0000FF00;
-	var colorLine = 0xFFFF0000;
+	colorFill = colorFill!==undefined ? colorFill : 0x0000FF00;
+	colorLine = colorLine!==undefined ? colorLine : 0xFFFF0000;
 	var lineWidth = 1.0;
 	d.graphics().setLine(lineWidth,colorLine);
 	d.graphics().beginPath();
@@ -908,6 +929,7 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 	// create infinite nodes
 	for(i=0;i<allSources.length;++i){
 		v = graph.addVertex();
+		v.data(null);
 		infiniteVertexes.push(v);
 	}
 	// create infinite node connections
@@ -940,6 +962,7 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 		} else { // 0 or 1 border
 			// add group vertex to graph 
 			v = graph.addVertex();
+			v.data(i);
 			vertexList[i] = v;
 			if(borderCount==1){ // touches 1 border
 				index = keys[0];
@@ -957,7 +980,7 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 
 			} // touches no borders
 			else {
-				s.drawRectFromRect(groupRects[i]);
+				//s.drawRectFromRect(groupRects[i]);
 			}
 		}
 	}

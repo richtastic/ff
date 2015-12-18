@@ -1736,6 +1736,7 @@ ImageMat._watershedPointSort = function(a,b){
 }
 
 ImageMat._watershed_internal = function(heightMap,width,height, inverseMask){
+	// TODO: OPTION TO LET GROUPS THAT ARE ENTIRELY CONTAINED TO BE SUBSUMED BY CONTAINER?
 	var i, j, index, h, v;
 	var pixelCount = width*height;
 	var groupMap = new Array(pixelCount);
