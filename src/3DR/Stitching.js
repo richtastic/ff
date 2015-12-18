@@ -826,15 +826,15 @@ if(extrema.length>1) {
 		console.log("no path exists, can't try cutting");
 	}
 
+	// console.log("COPY");
+	// var copy = graph.copy();
+	// console.log(graph.vertexes().length+" | "+graph.edges().length); // console.log(graph.toString());
+	// console.log(copy.vertexes().length+" | "+copy.edges().length); // console.log(copy.toString());
+
 	var cut = graph.minCut(vs,vt);
 	console.log("CUT:");
 	console.log(cut);
 	console.log(cut.length);
-
-	// console.log("COPY");
-	// var copy = graph.copy();
-	// console.log(graph.toString());
-	// console.log(copy.toString());
 
 	console.log("SPLIT:");
 	var graphs = graph.splitWithCut(cut);
@@ -842,22 +842,86 @@ if(extrema.length>1) {
 	if(graphs){
 		var graphA = graphs[0];
 		var graphB = graphs[1];
-		//console.log(graphA._vertexes.length);
-		//for(i=0;i<graphA._vertexes.length;++i){
-			//var v = graphA._vertexes[i];
-		for(i=0;i<graphA.length;++i){
-			var v = graphA[i];
-			var index = v.data(); // null = extrema, others = index
-			if(index!==null){
-				var rect = watershedRects[index];
-				this.drawRectFromRect(rect, 0xFF0000FF);
+		var vertexes;
+		var groupsA = [];
+		var groupsB = [];
+		var groups;
+		var pictureIndex;
+		// find which picture each graph corresponds to
+		console.log("A");
+		vertexes = graphA._vertexes;
+		groups = groupsA;
+		for(i=0;i<vertexes.length;++i){
+			var data = vertexes[i].data();
+			console.log(data.index);
+			if(data!==null){
+				if(data.index!==null){
+					groups.push(data.index);
+				}
+				if(data.node!==null){
+					//console.log("FOUND: "+data.node);
+					pictureIndex = data.node;
+				}
 			}
 		}
+		console.log("B");
+		vertexes = graphB._vertexes;
+		groups = groupsB;
+		for(i=0;i<vertexes.length;++i){
+			var data = vertexes[i].data();
+			if(data!==null){
+				if(data.index!==null){
+					groups.push(data.index);
+				}
+				if(data.node!==null){
+					//console.log("FOUND: "+data.node);
+					pictureIndex = data.node;
+				}
+			}
+		}
+		// GO THRU EACH GROUP AND USE PIXEL MAPPED TO FROM IMAGE
+		groups = groupsA;
+		console.log(groups.length)
+		for(i=0;i<groups.length;++i){
+			var index = groups[i];
+			var group = watershedGroups[index];
+			for(j=0;j<group.length;++i){
+				var pixel = group[j];
+				// index = pixel.x => get value from original or transformed
+			}
+		}
+		// 
+/*
+		vertexes = [];
+		Code.arrayInsertArray(vertexes,vertexes.length,graphA._vertexes);
+		Code.arrayInsertArray(vertexes,vertexes.length,graphB._vertexes);
+		// 
+		console.log(graphA._vertexes.length);
+		//for(i=0;i<graphA._vertexes.length;++i){
+		//	var v = graphA._vertexes[i];
+		for(i=0;i<vertexes.length;++i){
+			var v = vertexes[i];
+			var data = v.data();
+			console.log(data.node);
+			if (data.index) {
+				var index = data.index; // null = extrema, others = index
+				var color = data.node==0 ? 0xFFFF0000 : 0xFF0000FF;
+				if(index!==null){
+					var rect = watershedRects[index];
+					this.drawRectFromRect(rect, color);
+				}
+			}
+		}
+*/
+
+	// find EXACT LINE of border
+
+
+	// fade border on both sides +/- 2? pixels
+
+
 	}
 
-	// FOR EACH INFINITE NODE, FIND THE IMAGE IT BELONGS TO
-		// GO THRU EACH GROUP AND USE PIXEL MAPPED TO FROM IMAGE
-	// 
 }
 	console.log("DONE");
 }
@@ -929,7 +993,7 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 	// create infinite nodes
 	for(i=0;i<allSources.length;++i){
 		v = graph.addVertex();
-		v.data(null);
+		v.data( {"index":null,"node":i} );
 		infiniteVertexes.push(v);
 	}
 	// create infinite node connections
@@ -962,7 +1026,7 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 		} else { // 0 or 1 border
 			// add group vertex to graph 
 			v = graph.addVertex();
-			v.data(i);
+			v.data( {"index":i,"node":null} );
 			vertexList[i] = v;
 			if(borderCount==1){ // touches 1 border
 				index = keys[0];

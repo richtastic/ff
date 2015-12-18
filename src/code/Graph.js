@@ -193,65 +193,83 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 	}
 	return path;
 }
-Graph.prototype.splitWithCut = function(cut){
-	return Graph.splitGraphFromEdgeCut(this,cut);
+
+Graph.indexAndCopyVertexFromList = function(copyVertexList, vertexList){ // copy list verbatim
+	for(var i=0;i<vertexList.length;++i){
+		var v = vertexList[i];
+		v.temp(i);
+		var u = new Graph.Vertex();
+		u.id( v.id() );
+		u.data( v.data() );
+		copyVertexList[i] = u;
+	}
+	return copyVertexList
 }
-Graph.splitGraphFromEdgeCut = function(graph,cut){
-	if(cut.length==0){
+Graph.indexAndCopyEdgesFromLists = function(copyEdgeList, copyVertexList, vertexList, skippedEdges){ // replicate edges
+	var i, j, u, w, v, d, e, edges;
+	for(i=0;i<vertexList.length;++i){
+		v = vertexList[i];
+		u = copyVertexList[i];
+		edges = v.edges();
+		for(j=0;j<edges.length;++j){
+			e = edges[j];
+			if(!skippedEdges || !Code.elementExists(skippedEdges, e) ){
+				if(e.A()==v){
+					d = new Graph.Edge();
+					index = e.B().temp();
+					w = copyVertexList[index];
+					d.id( e.id() );
+					d.weight( e.weight() );
+					d.direction( e.direction() );
+					d.A( u );
+					d.B( w );
+					copyEdgeList.push(d);
+					u.addEdge(d);
+					w.addEdge(d);
+				}
+			}
+		}
+	}
+	return copyEdgeList;
+}
+Graph.splitGraphFromEdgeCut = function(graph,cut){ // this will likely break if the cut isn't a true cut
+	if(!cut || cut.length==0){
 		return null;
 	}
-	var i, edge, vertex;
-	var graphA = new Graph();
-	var graphB = new Graph();
+	var i, edge, vertex, v, u;
 	edge = cut[0];
 	var vertexA = edge.A();
 	var vertexB = edge.B();
 	//
 	// all reachable vertexes fromA
-	var listA = Graph.verticesReachableFromVertexWithoutEdges(graph, vertexA, cut);
-	var listB = Graph.verticesReachableFromVertexWithoutEdges(graph, vertexB, cut);
-
-	// TODO: TURN THESE INTO GRAPHS
-
-	return [listA,listB];
+	var vertexListA = Graph.verticesReachableFromVertexWithoutEdges(graph, vertexA, cut);
+	var vertexListB = Graph.verticesReachableFromVertexWithoutEdges(graph, vertexB, cut);
+	// copy vertexes and edges
+	var copyVertexListA = Graph.indexAndCopyVertexFromList([], vertexListA);
+	var copyVertexListB = Graph.indexAndCopyVertexFromList([], vertexListB);
+	var copyEdgeListA = Graph.indexAndCopyEdgesFromLists([], copyVertexListA, vertexListA, cut);
+	var copyEdgeListB = Graph.indexAndCopyEdgesFromLists([], copyVertexListB, vertexListB, cut);
+	// cleanup
+	graph.clearEdgeTemps();
+	graph.clearVertexTemps();
+	// create new
+	var graphA = new Graph();
+	var graphB = new Graph();
+	graphA._vertexes = copyVertexListA;
+	graphA._edges = copyEdgeListA;
+	graphB._vertexes = copyVertexListB;
+	graphB._edges = copyEdgeListB;
+	// return both craphs
+	return [graphA,graphB];
 }
 Graph.copy = function(graph){
 	var i, j, index, d, e, u, v, w, edges;
 	var vertexesA = graph.vertexes();
 	var edgesA = graph.edges();
-	var vertexesB = [];
-	var edgesB = [];
-	// copy vertexes verbatim
-	for(i=0;i<vertexesA.length;++i){
-		v = vertexesA[i];
-		v.temp(i);
-		u = new Graph.Vertex();
-		u.id( v.id() );
-		u.data( v.data() );
-		vertexesB[i] = u;
-	}
-	// replicate edges
-	for(i=0;i<vertexesA.length;++i){
-		v = vertexesA[i];
-		u = vertexesB[i];
-		edges = v.edges();
-		for(j=0;j<edges.length;++j){
-			e = edges[j];
-			if(e.A()==v){
-				d = new Graph.Edge();
-				index = e.B().temp();//Code.indexOfElement(vertexesA,e.B());
-				w = vertexesB[index];
-				d.id( e.id() );
-				d.weight( e.weight() );
-				d.direction( e.direction() );
-				d.A( u );
-				d.B( w );
-				edgesB.push(d);
-				u.addEdge(d);
-				w.addEdge(d);
-			}
-		}
-	}
+	// copy vertexes and edges
+	var vertexesB = Graph.indexAndCopyVertexFromList([], vertexesA);
+	var edgesB = Graph.indexAndCopyEdgesFromLists([], vertexesB, vertexesA, null);
+	// cleanup
 	graph.clearEdgeTemps();
 	graph.clearVertexTemps();
 	// new graph
@@ -280,6 +298,12 @@ Graph.prototype.edges = function(){
 }
 Graph.prototype.vertexes = function(){
 	return this._vertexes;
+}
+Graph.prototype.containsEdge = function(e){
+	return Code.elementExists(this._edges, e);
+}
+Graph.prototype.containsVertex = function(v){
+	return Code.elementExists(this._verte, v);
 }
 Graph.prototype.BFS = function(from, to){
 	return Graph.BFS(this, from,to, Graph.adjacencyMatrix(this));
@@ -322,6 +346,9 @@ Graph.prototype.minCut = function(source,sink){
 }
 Graph.prototype.copy = function(){
 	return Graph.copy(this);
+}
+Graph.prototype.splitWithCut = function(cut){
+	return Graph.splitGraphFromEdgeCut(this,cut);
 }
 Graph.prototype.toString = function(){
 	var i, len;
