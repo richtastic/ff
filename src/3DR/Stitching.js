@@ -829,6 +829,11 @@ if(extrema.length>1) {
 	console.log("CUT:");
 	console.log(cut);
 	console.log(cut.length);
+
+	var graphs = graph.separateWithCut();
+	var graphA = graphs[0];
+	var graphB = graphs[1];
+	
 	// for(var i=0;i<cut.length;++i){
 	// 	console.log(cut[i].toString());
 	// }

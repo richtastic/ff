@@ -160,6 +160,23 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 	}
 	return path;
 }
+Graph.allReachableNodes = function(graph,vertex){
+	return null;
+}
+Graph.splitGraphFromEdgeCut = function(graph,cut){
+	var i, edge, vertex;
+	var graphA = new Graph();
+	var graphB = new Graph();
+	edge = cut[0];
+	var vertexA = edge.A();
+	var vertexB = edge.B();
+
+	// all reachable vertexes fromA
+	Graph.allReachableNodes(vertexA);
+	Graph.allReachableNodes(vertexB);
+
+	return [graphA,graphB];
+}
 // ------------------------------------------------------------------------------------------------------------------------ 
 function Graph(){
 	this._vertexes = [];
@@ -185,7 +202,8 @@ Graph.prototype.getVertex = function(i){
 Graph.prototype.indexForVertex = function(v){
 	return Code.indexOfElement(this._vertexes,v);
 }
-Graph.prototype.addVertex = function(){
+Graph.prototype.addVertex = function(){ // vertex
+	// vertex = vertex!==undefined ? vertex : new Graph.Vertex();
 	var vertex = new Graph.Vertex();
 	this._vertexes.push(vertex);
 	return vertex;
