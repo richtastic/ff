@@ -702,10 +702,10 @@ maxPointDistanceB = 1.0;
 console.log("intersectionRect"+intersectionRect.toString()+"")
 
 // calculate intersection & mask
-var padLeft = 10;
-var padRight = 10;
-var padTop = 10;
-var padBot = 10;
+var padLeft = 1;
+var padRight = 1;
+var padTop = 1;
+var padBot = 1;
 var wid = Math.ceil(intersectionRect.width()) + padLeft + padRight;
 var hei = Math.ceil(intersectionRect.height()) + padTop + padBot;
 var intersectionImage = Code.newArrayZeros(wid*hei);
@@ -789,22 +789,6 @@ var imgGroups = this.colorImageWithGroups(pixels,wid,hei);
 	d.matrix().translate(0.0,300.0);
 	d.graphics().alpha(0.80);
 
-	// RECT
-	/*
-	var rect = null;
-	var count = 50;
-	while(count>0){//rect==null || rect.area()<400) {
-		var index = Math.floor(Math.random()*watershed.rects.length);
-		rect = watershed.rects[ index ];
-		//console.log(rect.toString())
-		// if(rect){
-		// 	this.drawRectFromRect(rect);
-		// }
-		--count;
-		//if(count==0){break;}
-	}
-	*/
-
 // graph from watershed grouping
 var watershedPixels = watershed.pixels;
 var watershedGroups = watershed.groups;
@@ -848,25 +832,10 @@ if(extrema.length>1) {
 		var groups;
 		var pictureIndex;
 		// find which picture each graph corresponds to
-		console.log("A");
-		vertexes = graphA._vertexes;
-		groups = groupsA;
-		for(i=0;i<vertexes.length;++i){
-			var data = vertexes[i].data();
-			console.log(data.index);
-			if(data!==null){
-				if(data.index!==null){
-					groups.push(data.index);
-				}
-				if(data.node!==null){
-					//console.log("FOUND: "+data.node);
-					pictureIndex = data.node;
-				}
-			}
-		}
-		console.log("B");
-		vertexes = graphB._vertexes;
-		groups = groupsB;
+	var groupList = [[groupsA,graphA._vertexes], [groupsB,graphB._vertexes]];
+	for(k=0; k<groupList.length; ++k){
+		vertexes = groupList[k][1];
+		groups = groupList[k][0];
 		for(i=0;i<vertexes.length;++i){
 			var data = vertexes[i].data();
 			if(data!==null){
@@ -874,23 +843,45 @@ if(extrema.length>1) {
 					groups.push(data.index);
 				}
 				if(data.node!==null){
-					//console.log("FOUND: "+data.node);
+					console.log("FOUND: "+data.node);
 					pictureIndex = data.node;
 				}
 			}
 		}
+	}
 		// GO THRU EACH GROUP AND USE PIXEL MAPPED TO FROM IMAGE
-		groups = groupsA;
-		console.log(groups.length)
-		for(i=0;i<groups.length;++i){
-			var index = groups[i];
-			var group = watershedGroups[index];
-			for(j=0;j<group.length;++i){
-				var pixel = group[j];
-				// index = pixel.x => get value from original or transformed
+		var groupBitmap = Code.newArrayZeros(wid*hei); // 0 = N/A, >0 = group
+		var bitmapValue;
+		//var groupList = [groupsA, groupsB];
+		for(k=0; k<groupList.length; ++k){
+			groups = groupList[k][0];
+			bitmapValue = k+1;
+			for(i=0;i<groups.length;++i){
+				var index = groups[i];
+				var group = watershedGroups[index];
+				for(j=0;j<group.length;++j){
+					var pixel = group[j];
+					index = pixel.y*wid + pixel.x;
+					groupBitmap[index] = bitmapValue;
+					// index = pixel.x => get value from original or transformed
+				}
 			}
 		}
-		// 
+		console.log("D");
+		
+
+
+	imgGroups = this.colorImageWithGroups(groupBitmap,wid,hei);
+	//
+	img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
+	//
+	d = new DOImage(img);
+	this._root.addChild(d);
+	//
+	d.matrix().translate(matrixOffX+offX,matrixOffY+offY);
+	d.graphics().alpha(0.80);
+
+
 /*
 		vertexes = [];
 		Code.arrayInsertArray(vertexes,vertexes.length,graphA._vertexes);
