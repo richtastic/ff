@@ -680,11 +680,11 @@ maxPointDistanceB = 1.0;
 	var intersectionRect = new Rect();
 	var intersectionPoly = null;
 	var maxArea = 0;
-	
-	d = this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
-		d.matrix().translate(matrixOffX,matrixOffY);
-	d = this.drawPolygon(polyB, 0xFF00CC00, 0xFF00CC00, 2.0);
-		d.matrix().translate(matrixOffX,matrixOffY);
+
+	// d = this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
+	// 	d.matrix().translate(matrixOffX,matrixOffY);
+	// d = this.drawPolygon(polyB, 0xFF00CC00, 0xFF00CC00, 2.0);
+	// 	d.matrix().translate(matrixOffX,matrixOffY);
 	console.log("DRAW ARROWS: "+polyC.length);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
@@ -694,10 +694,10 @@ maxPointDistanceB = 1.0;
 			intersectionRect.fromArray(con);
 			intersectionPoly = con;
 		}
-		//d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, false);
-		d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, true);
-		d.matrix().translate(matrixOffX,matrixOffY);
+		// d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, true);
+		// d.matrix().translate(matrixOffX,matrixOffY);
 	}
+
 
 console.log("intersectionRect"+intersectionRect.toString()+"")
 
@@ -845,6 +845,7 @@ if(extrema.length>1) {
 				if(data.node!==null){
 					console.log("FOUND: "+data.node);
 					pictureIndex = data.node;
+					groupList[k][2] = pictureIndex;
 				}
 			}
 		}
@@ -852,8 +853,14 @@ if(extrema.length>1) {
 		// GO THRU EACH GROUP AND USE PIXEL MAPPED TO FROM IMAGE
 		var groupBitmap = Code.newArrayZeros(wid*hei); // 0 = N/A, >0 = group
 		var bitmapValue;
+		//var mergedBitmapGry = Code.newArrayZeros(wid*hei);
+		var mergedBitmapRed = Code.newArrayZeros(wid*hei);
+		var mergedBitmapGrn = Code.newArrayZeros(wid*hei);
+		var mergedBitmapBlu = Code.newArrayZeros(wid*hei);
+		var mergedBitmapAlp = Code.newArrayZeros(wid*hei);
 		//var groupList = [groupsA, groupsB];
 		for(k=0; k<groupList.length; ++k){
+			var imageIndex = groupList[k][2];
 			groups = groupList[k][0];
 			bitmapValue = k+1;
 			for(i=0;i<groups.length;++i){
@@ -864,16 +871,70 @@ if(extrema.length>1) {
 					index = pixel.y*wid + pixel.x;
 					groupBitmap[index] = bitmapValue;
 					// index = pixel.x => get value from original or transformed
+					mergedBitmapAlp[index] = 1.0;
+					// find
+					var x = pixel.x - padLeft; // - offX 
+					var y = pixel.y - padTop; // - offXY
+					var ind;
+
+					var ptB = new V3D(x,y,1.0);
+					var to = ptB;
+					var ptA = Hinv.multV3DtoV3D(new V3D(), ptB);
+					var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
+
+
+HERE
+
+// ?
+// fr.x -= offsetBC.x;
+// fr.y -= offsetBC.y;
+
+//colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+//colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
+
+					var r,g,b;
+					if(imageIndex==0){
+						//ind = imageA.width*to.y + to.x;
+						r = ImageMat.getPointInterpolateCubic(imageBMatR, imageA.width,imageA.height, to.x,to.y);//imageBMatR[ind];
+						g = ImageMat.getPointInterpolateCubic(imageBMatG, imageA.width,imageA.height, to.x,to.y);//imageBMatG[ind];
+						b = ImageMat.getPointInterpolateCubic(imageBMatB, imageA.width,imageA.height, to.x,to.y);//imageBMatB[ind];
+						mergedBitmapRed[index] = r; // B <rect>
+						mergedBitmapGrn[index] = g;
+						mergedBitmapBlu[index] = b;
+					}else{
+// WRONG IMAGE ?
+// DRONG POINT ?
+						//var r = imageAMatR[ind];
+						r = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+						g = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
+						b = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
+						// var r = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, to.x,to.y);
+						// var g = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, to.x,to.y);
+						// var b = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, to.x,to.y);
+						mergedBitmapRed[index] = r; // A <warped>
+						mergedBitmapGrn[index] = g;
+						mergedBitmapBlu[index] = b;
+
+						// mergedBitmapRed[index] = 0.0;
+						// mergedBitmapGrn[index] = 0.0;
+						// mergedBitmapBlu[index] = 0.0;
+						// mergedBitmapAlp[index] = 0.0;
+
+						//offsetBC.x
+					}
+					//colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					//colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
 				}
 			}
 		}
 		console.log("D");
+// WHAT TO DO ABOUT CORNER POINTS --- ADD TO GROUP & GRAB ARBITRARY PICTURE PIXELS?
 		
 
 
-	imgGroups = this.colorImageWithGroups(groupBitmap,wid,hei);
-	//
-	img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
+	// imgGroups = this.colorImageWithGroups(groupBitmap,wid,hei);
+	// img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
+	img = this._stage.getFloatARGBAsImage(mergedBitmapAlp,  mergedBitmapRed,mergedBitmapGrn,mergedBitmapBlu  ,wid,hei, null);
 	//
 	d = new DOImage(img);
 	this._root.addChild(d);
@@ -905,10 +966,11 @@ if(extrema.length>1) {
 		}
 */
 
-	// find EXACT LINE of border
-
-
-	// fade border on both sides +/- 2? pixels
+	// FOR SMOOTHING / FADING BORDER: 
+	// 1 SEPARATE IMAGE, GAUSSED on A or B
+	// if == 0 => just grab A
+	// if == 1 => just grab B
+	// else => get combination of (1-p)*A + p*B
 
 
 	}
