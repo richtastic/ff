@@ -637,17 +637,11 @@ maxPointDistanceB = 1.0;
 				ptB.y += offsetBC.y;
 				var ptA = Hinv.multV3DtoV3D(new V3D(), ptB);
 				var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
-				//var isPointInside = Code.isPointInsidePolygon2D(ptA,);
-				isPointInside = (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height);
+				var isPointInside = (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height);
 				if(isPointInside){
-					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
-					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
 					imageCMatR[index] = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
 					imageCMatG[index] = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
 					imageCMatB[index] = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
 					imageCMatA[index] = 1.0;
 				} else {
 					imageCMatR[index] = 0.0;
@@ -661,7 +655,7 @@ maxPointDistanceB = 1.0;
 		imageC = this._stage.getFloatARGBAsImage(imageCMatA,imageCMatR,imageCMatG,imageCMatB, imageCWidth,imageCHeight, null);
 		// Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
 		var img = new DOImage(imageC);
-		img.graphics().alpha(0.75);
+		//img.graphics().alpha(0.75);
 		this._root.addChild(img);
 		//img.moveBackward();
 		//img.moveToBack();
@@ -766,10 +760,9 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 }		
 
 		intersectionImage = ImageMat.normalFloat01(intersectionImage);
-
-		imageC = this._stage.getFloatARGBAsImage(intersectionMask,intersectionImage,intersectionImage,intersectionImage, wid,hei, null);
-		img = new DOImage(imageC);
-		this._root.addChild(img);
+		// imageC = this._stage.getFloatARGBAsImage(intersectionMask,intersectionImage,intersectionImage,intersectionImage, wid,hei, null);
+		// img = new DOImage(imageC);
+		// this._root.addChild(img);
 
 // WATERSHEDDING:
 	var sigma = 2.4; // 1.4;
@@ -781,13 +774,13 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 var watershed = ImageMat.watershed(imageGrayFloatGauss,wid,hei, intersectionMask);
 var pixels = watershed.pixels;
 var imgGroups = this.colorImageWithGroups(pixels,wid,hei);
-	//
-	img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
-	//
-	d = new DOImage(img);
-	this._root.addChild(d);
-	d.matrix().translate(0.0,300.0);
-	d.graphics().alpha(0.80);
+	// //
+	// img = this._stage.getFloatARGBAsImage(imgGroups.alp,imgGroups.red,imgGroups.grn,imgGroups.blu,wid,hei, null);
+	// //
+	// d = new DOImage(img);
+	// this._root.addChild(d);
+	// d.matrix().translate(0.0,300.0);
+	// d.graphics().alpha(0.80);
 
 // graph from watershed grouping
 var watershedPixels = watershed.pixels;
@@ -858,9 +851,9 @@ if(extrema.length>1) {
 		var mergedBitmapGrn = Code.newArrayZeros(wid*hei);
 		var mergedBitmapBlu = Code.newArrayZeros(wid*hei);
 		var mergedBitmapAlp = Code.newArrayZeros(wid*hei);
-		//var groupList = [groupsA, groupsB];
 		for(k=0; k<groupList.length; ++k){
 			var imageIndex = groupList[k][2];
+			console.log("imageIndex: "+imageIndex);
 			groups = groupList[k][0];
 			bitmapValue = k+1;
 			for(i=0;i<groups.length;++i){
@@ -870,60 +863,31 @@ if(extrema.length>1) {
 					var pixel = group[j];
 					index = pixel.y*wid + pixel.x;
 					groupBitmap[index] = bitmapValue;
-					// index = pixel.x => get value from original or transformed
 					mergedBitmapAlp[index] = 1.0;
-					// find
-					var x = pixel.x - padLeft; // - offX 
-					var y = pixel.y - padTop; // - offXY
-					var ind;
+					// construct pixels to find colors in separate images
+					var x = pixel.x + offX ;//- padLeft;// - offsetBC.x; // - offX; //- padLeft; // - offX 
+					var y = pixel.y + offY; //- padTop;// - offsetBC.y; //offY; //- padTop; // - offXY
 
 					var ptB = new V3D(x,y,1.0);
 					var to = ptB;
 					var ptA = Hinv.multV3DtoV3D(new V3D(), ptB);
 					var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
-
-
-HERE
-
-// ?
-// fr.x -= offsetBC.x;
-// fr.y -= offsetBC.y;
-
-//colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-//colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
-
 					var r,g,b;
-					if(imageIndex==0){
-						//ind = imageA.width*to.y + to.x;
-						r = ImageMat.getPointInterpolateCubic(imageBMatR, imageA.width,imageA.height, to.x,to.y);//imageBMatR[ind];
-						g = ImageMat.getPointInterpolateCubic(imageBMatG, imageA.width,imageA.height, to.x,to.y);//imageBMatG[ind];
-						b = ImageMat.getPointInterpolateCubic(imageBMatB, imageA.width,imageA.height, to.x,to.y);//imageBMatB[ind];
-						mergedBitmapRed[index] = r; // B <rect>
+					if(imageIndex==0){ // B <rect>
+						r = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);//imageBMatR[ind];
+						g = ImageMat.getPointInterpolateCubic(imageBMatG, imageB.width,imageB.height, to.x,to.y);//imageBMatG[ind];
+						b = ImageMat.getPointInterpolateCubic(imageBMatB, imageB.width,imageB.height, to.x,to.y);//imageBMatB[ind];
+						mergedBitmapRed[index] = r;
 						mergedBitmapGrn[index] = g;
 						mergedBitmapBlu[index] = b;
-					}else{
-// WRONG IMAGE ?
-// DRONG POINT ?
-						//var r = imageAMatR[ind];
+					}else{ // A <warped>
 						r = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
 						g = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
 						b = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
-						// var r = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, to.x,to.y);
-						// var g = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, to.x,to.y);
-						// var b = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, to.x,to.y);
-						mergedBitmapRed[index] = r; // A <warped>
+						mergedBitmapRed[index] = r;
 						mergedBitmapGrn[index] = g;
 						mergedBitmapBlu[index] = b;
-
-						// mergedBitmapRed[index] = 0.0;
-						// mergedBitmapGrn[index] = 0.0;
-						// mergedBitmapBlu[index] = 0.0;
-						// mergedBitmapAlp[index] = 0.0;
-
-						//offsetBC.x
 					}
-					//colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-					//colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
 				}
 			}
 		}
@@ -940,7 +904,7 @@ HERE
 	this._root.addChild(d);
 	//
 	d.matrix().translate(matrixOffX+offX,matrixOffY+offY);
-	d.graphics().alpha(0.80);
+//	d.graphics().alpha(0.60);
 
 
 /*
