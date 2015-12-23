@@ -19,6 +19,8 @@ function Stitching(){
 	var imageList, imageLoader;
 	// import image to work with
 	imageList = ["snow1.png","snow2.png"];
+	//imageList = ["snow2.png","snow1.png"];
+//	imageList = ["panoramas/picA.jpg","panoramas/picB.jpg"];
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
@@ -321,7 +323,8 @@ if(i==0){
 		}
 		points = points.sort( fxn );
 
-		Code.truncateArray(points,30);
+		//Code.truncateArray(points,30);
+		Code.truncateArray(points,50);
 			// var gray = this._stage.getFloatGrayAsImage(points, imageMat.width,imageMat.height, null);
 			// d = new DOImage(gray);
 			// d.matrix().identity().translate(x,gray.height);
@@ -567,6 +570,10 @@ maxPointDistanceB = 1.0;
 		}
 
 	}
+	if (maxSupport<4){
+		console.log("NOT ENOUGH SUPPORT -> EXIT");
+		return;
+	}
 
 	// BEST RANSAC MODEL RESULT
 	console.log("+=+=+=+=+=+=+=+=+=+=+=+");
@@ -591,8 +598,6 @@ maxPointDistanceB = 1.0;
 	imageBCorners.push(new V2D(0,imageB.height)); // BL
 
 	imageACornersInB = this.pointListTransformedH(imageACorners, H);
-//	imageACornersInB = this.pointListTransformedH(imageACorners, Hinv);
-//imageACornersInB = this.pointListTransformedH(imageACornersInB, Hinv);
 	//imageBCornersInA = this.pointListTransformedH(imageBCorners, Hinv);
 	temp = V2D.extremaFromArray(imageACornersInB);
 	var imageATransMin = temp.min;
@@ -601,8 +606,9 @@ maxPointDistanceB = 1.0;
 	var imageATransHeight = imageATransMax.y-imageATransMin.y;
 	console.log(imageATransMin+" -> "+imageATransMax);
 	console.log(imageATransWidth+" x "+imageATransHeight);
-	if(imageATransWidth>2.0*imageA.width || imageATransHeight>2.0*imageA.height){
-		console.log("HOMOGRAPHY IS TOO WARPED");
+	if(imageATransWidth>5.0*imageA.width || imageATransHeight>5.0*imageA.height){
+		console.log("HOMOGRAPHY IS TOO WARPED: "+imageATransWidth+"x"+imageATransHeight);
+		return;
 	} else {
 		console.log("START TO WARP");
 		var imageMat;
@@ -675,10 +681,10 @@ maxPointDistanceB = 1.0;
 	var intersectionPoly = null;
 	var maxArea = 0;
 
-	// d = this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
-	// 	d.matrix().translate(matrixOffX,matrixOffY);
-	// d = this.drawPolygon(polyB, 0xFF00CC00, 0xFF00CC00, 2.0);
-	// 	d.matrix().translate(matrixOffX,matrixOffY);
+	d = this.drawPolygon(polyA, 0xFFCC0000, 0xFFCC0000, 2.0);
+		d.matrix().translate(matrixOffX,matrixOffY);
+	d = this.drawPolygon(polyB, 0xFF00CC00, 0xFF00CC00, 2.0);
+		d.matrix().translate(matrixOffX,matrixOffY);
 	console.log("DRAW ARROWS: "+polyC.length);
 	for(i=0;i<polyC.length;++i){
 		var con = polyC[i];
@@ -688,8 +694,8 @@ maxPointDistanceB = 1.0;
 			intersectionRect.fromArray(con);
 			intersectionPoly = con;
 		}
-		// d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, true);
-		// d.matrix().translate(matrixOffX,matrixOffY);
+		d = this.drawPolygon(con, 0xFF0000CC, 0xFF0000CC, 1.0, true);
+		d.matrix().translate(matrixOffX,matrixOffY);
 	}
 
 
@@ -726,16 +732,8 @@ for(j=0;j<hei;++j){
 				//
 				intersectionList[index] = [];
 				if(isPointInside){
-					//imageCMat[index] = ImageMat.getPointInterpolateLinear(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
-					//imageCMat[index] = ImageMat.getPointInterpolateCubic(imageAMat, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatR[index] = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatG[index] = ImageMat.getPointInterpolateCubic(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatB[index] = ImageMat.getPointInterpolateCubic(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatR[index] = ImageMat.getPointInterpolateLinear(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatG[index] = ImageMat.getPointInterpolateLinear(imageAMatG, imageA.width,imageA.height, fr.x,fr.y);
-					// imageCMatB[index] = ImageMat.getPointInterpolateLinear(imageAMatB, imageA.width,imageA.height, fr.x,fr.y);
-colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
-colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
+					colorA = ImageMat.getPointInterpolateCubic(imageAMatR, imageA.width,imageA.height, fr.x,fr.y);
+					colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.height, to.x,to.y);
 					// average:
 					//colorC = (colorA + colorB)*0.5;
 					// difference:
@@ -748,10 +746,6 @@ colorB = ImageMat.getPointInterpolateCubic(imageBMatR, imageB.width,imageB.heigh
 					intersectionMask[index] = 1.0 + (isPointInsideA ? 1.0 : 0) + (isPointInsideB ? 1.0 : 0);
 					if(isPointInsideA){ intersectionList[index].push(0); }
 					if(isPointInsideB){ intersectionList[index].push(1); }
-					// imageCMatR[index] = 0.0;
-					// imageCMatG[index] = 0.0;
-					// imageCMatB[index] = 0.0;
-					// imageCMatA[index] = 0.0;
 				}
 
 
@@ -786,6 +780,7 @@ var imgGroups = this.colorImageWithGroups(pixels,wid,hei);
 var watershedPixels = watershed.pixels;
 var watershedGroups = watershed.groups;
 var watershedRects = watershed.rects;
+console.log("intersectionList: "+intersectionList.length);
 var data = Stitching.graphFromGroupBitmap(watershedGroups, watershedRects, watershedPixels,wid,hei, intersectionMask, intersectionList, allIntersections, this);
 var graph = data.graph;
 var extrema = data.extrema;

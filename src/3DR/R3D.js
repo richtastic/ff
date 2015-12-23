@@ -1466,8 +1466,16 @@ minIndex = 0.0;
 }
 
 
-
-
+// -------------------------------------------------------------------------------------------- 2D homography projection type methods
+R3D.x = function(){
+	//
+}
+R3D.x = function(){
+	//
+}
+R3D.x = function(){
+	//
+}
 // -------------------------------------------------------------------------------------------- array image type operations
 R3D.gradientDirection = function(rect, wid,hei){
 	var rect, gradX, gradY;
