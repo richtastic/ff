@@ -19,6 +19,20 @@ Transparent/Alpha from 1-0 & 0-1
 1st Derivative?
 
 
+
+
+
+Laplacian Blending? multiple levels?
+
+
+
+
+
+
+
+
+
+
 ## Poisson Equation:
 Blending 2nd derivatives
 
@@ -38,6 +52,8 @@ Blending 2nd derivatives
 **f<sub>i,j</sub>**: final (target) image 
 <br/>
 **g<sub>i,j</sub>**: final (target) image gradient [doesn't look true based on equations]
+<br/>
+**q<sub>i,j</sub> = ~g<sub>i,j</sub>**: final (target) image gradient offsets (0 away from seams)
 <br/>
 **s<sub>i,j</sub>**: gradient constraints (smoothness weights)
 <br/>
@@ -115,31 +131,26 @@ E<sub>2</sub> = &Sum;<sub>i,j</sub> s<sup>x</sup><sub>i,j</sub>&middot;[h<sub>i+
 Multiple Offset Maps:
 <br/>
 
-f<sub>i,j</sub> = u<sup>l<sub>i,j</sub></sup><sub>i,j</sub> + h<sup>l<sub>i,j</sub></sup><sub>i,j</sub>
+f<sub>i,j</sub> = u<sup>l<sub>i,j</sub></sup><sub>i,j</sub> + h<sup>l<sub>i,j</sub></sup><sub>i,j</sub> [12]
 <br/>
 
-E<sub>3</sub> = &Sum;<sub>i,j</sub> s<sup>x</sup><sub>i,j</sub>&middot;[h<sup>l<sub>i+1,j</sub></sup><sub>i+1,j</sub> - h<sup>l<sub>i,j</sub></sup><sub>i,j</sub> - q<sup>x</sup><sub>i,j</sub>]<sup>2</sup> + s<sup>y</sup><sub>i,j</sub>&middot;[h<sup>l<sub>i,j+1</sub></sup><sub>i,j+1</sub> - h<sup>l<sub>i,j</sub></sup><sub>i,j</sub> - q<sup>y</sup><sub>i,j</sub>]<sup>2</sup> + w<sub>i,j</sub><sup>2</sup>&middot;[h<sup>l<sub>i,j</sub></sup><sub>i,j</sub>]<sup>2</sup>
+E<sub>3</sub> = &Sum;<sub>i,j</sub> s<sup>x</sup><sub>i,j</sub>&middot;[h<sup>l<sub>i+1,j</sub></sup><sub>i+1,j</sub> - h<sup>l<sub>i,j</sub></sup><sub>i,j</sub> - q<sup>x</sup><sub>i,j</sub>]<sup>2</sup> + s<sup>y</sup><sub>i,j</sub>&middot;[h<sup>l<sub>i,j+1</sub></sup><sub>i,j+1</sub> - h<sup>l<sub>i,j</sub></sup><sub>i,j</sub> - q<sup>y</sup><sub>i,j</sub>]<sup>2</sup> + w<sub>i,j</sub><sup>2</sup>&middot;[h<sup>l<sub>i,j</sub></sup><sub>i,j</sub>]<sup>2</sup> [13]
 
 <br/>
 <br/>
 Spline Offset Maps:
 
-c = ? spline control variables
+c = ? spline control variables -- encodes *h* somehow
 <br/>
 b(i) = 1D B-Spline Basis Function
 <br/>
-B(i,j) = b(i)&middot;b(j)
+B(i,j) = b(i)&middot;b(j) [15]
 <br/>
-h<sup>l</sup><sub>i,j</sub> = &Sum;<sub>k,m</sub> c<sup>l</sup><sub>k,m</sub>&middot;B(i-k&middot;S,j-m&middot;S)
+h<sup>l</sup><sub>i,j</sub> = &Sum;<sub>k,m</sub> c<sup>l</sup><sub>k,m</sub>&middot;B(i-k&middot;S,j-m&middot;S) [14]
 
 <br/>
 
 E<sub>4</sub> = E3 with new h substituted
-
-<br/>
-<br/>
-<br/>
-
 
 <br/>
 <br/>
@@ -153,11 +164,64 @@ d = dimensionality of field
 <br/>
 inner loop of least squares setup = iterating over all pixels, pulling out (K+1)<sup>d</sup> non-zero B-spline basis function values
 <br/>
+- sparse
+- 4 off diagonal smoothness terms
+- off diagonal terms at image boundaries
+<br/>
+nested dissection re-order
+<br/>
+<br/>
+
+
+Inside spline patches where all pixels are from same source, simplifications apply (precompute ahead of time):
+<br/>
+s = s<sup>x</sup><sub>i,j</sub> = s<sup>y</sup><sub>i,j</sub>
+<br/>
+w = w<sub>i,j</sub>
+<br/>
+<br/>
+
+ E<sup>l</sup> = &Sum;<sub>k,m</sub> s&middot;[c<sup>l</sup><sub>k+1,m</sub> - c<sup>l</sup><sub>k,m</sub>]<sup>2</sup> + s&middot;[c<sup>l</sup><sub>k,m+1</sub> - c<sup>l</sup><sub>k,m</sub>]<sup>2</sup> + S<sup>2</sup>&middot;w&middot;[c<sup>l</sup><sub>k,m</sub>]<sup>2</sup> [16]
+<br/>
+<br/>
+
+
+Multiplicative Gain: take logarithm of input images before computing seam difference
+<br/>
+<br/>
 <br/>
 <br/>
 
 <br/>
 <br/>
+<br/>
+
+
+<br/>
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+<br/>
+
+## Upsampling
+
+
+### Bilateral Filter
+https://en.wikipedia.org/wiki/Bilateral_filter
+
+http://www.sandia.gov/~egboman/papers/HUND.pdf
+http://www.cs.tau.ac.il/~stoledo/Pubs/wide-simax.pdf
+
+<br/>
+<br/>
+<br/>
+
+
+
+## Nested Dissection
 
 
 <br/>
@@ -169,3 +233,8 @@ inner loop of least squares setup = iterating over all pixels, pulling out (K+1)
 [Fast Poisson Blending using Multi-Splines](http://www.msr-waypoint.net/pubs/144582/Szeliski-ICCP11.pdf)
 
 [seamless image stitching gradient domain](http://www.wisdom.weizmann.ac.il/~levina/papers/blendingTR.pdf)
+
+
+[Efficient Poisson Blending for Seamless Image Stitching](http://zuhaagha.weebly.com/uploads/3/1/9/5/31957175/projectreport-poisson-14100196-14100103.pdf)
+
+
