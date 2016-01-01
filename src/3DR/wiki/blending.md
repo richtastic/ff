@@ -38,7 +38,27 @@ Blending 2nd derivatives
 
 &nabla;<sup>2</sup> &middot; &phi; = &fnof;
 <br/>
+**in 3D:**
+<br/>
 (&part;<sup>2</sup>/&part;x<sup>2</sup>,&part;<sup>2</sup>/&part;y<sup>2</sup>,&part;<sup>2</sup>/&part;z<sup>2</sup>) &middot; &phi;(x,y,z) = &fnof;(x,y,z)
+<br/>
+**in 2D:**
+<br/>
+(&part;<sup>2</sup>/&part;x<sup>2</sup>,&part;<sup>2</sup>/&part;y<sup>2</sup>) &middot; &phi;(x,y) = &fnof;(x,y)
+<br/>
+&approx;
+<br/>
+[&phi;(x+2&middot;&Delta;<sub>x</sub>,y) - 2&middot;&phi;(x+&Delta;<sub>x</sub>,y) + &phi;(x,y)]/&Delta;<sub>x</sub> + [&phi;(x,y+2&middot;&Delta;<sub>y</sub>) - 2&middot;&phi;(x,y+&Delta;<sub>y</sub>) + &phi;(x,y)]/&Delta;<sub>y</sub> = &fnof;(x,y)
+<br/>
+<br/>
+KNOWN: &phi;(x,y), &rArr; &nabla;<sup>2</sup>&middot;&phi;
+<br/>
+UNKNOWN: &fnof;(x,y) [solved for at energy minimization]
+<br/>
+In 2D pixel grid case: trying to solve for unknown pixel values [&phi;(x,y)] when some energy function describing border smoothness is minimized [ie SVD]
+
+<br/>
+<br/>
 
 <br/>
 <br/>
