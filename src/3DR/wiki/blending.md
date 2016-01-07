@@ -2,6 +2,7 @@
 *Removing Seams At Region Boundaries*
 
 
+
 1) Feathering 
 2) Gradient
 3) Poisson Equation
@@ -15,8 +16,6 @@ Transparent/Alpha from 1-0 & 0-1
 	
 
 
-## Gradient?
-1st Derivative?
 
 
 
@@ -25,15 +24,153 @@ Transparent/Alpha from 1-0 & 0-1
 Laplacian Blending? multiple levels?
 
 
+&int;
+&conint;
+&cwint;
+&cwconint;
+&awconint;
+
+&Int;
+&Conint;
+
+&iiint;
+&Cconint;
 
 
 
+## Common Definitions
+
+### Gradient (vector [directional] derivative) [of scalar f]
+*measure of direction (and magnitude) of greatest increase at a point*
+<br/>
+grad(f) &equiv; &nabla;f &equiv; &lt;&part;/&part;x,&part;/&part;y,&part;/&part;z&gt;f
+<br/>
+
+### Divergence (scalar [dot] derivative) [of vector f]
+*measure of flux (source/sink-ness) of a point*
+<br/>
+div(f) &equiv; &nabla;&middot;f &equiv; (&part;/&part;x,&part;/&part;y,&part;/&part;z) &middot; f &equiv; lim<sub>V&rarr;0</sub> &Conint;<sub>S</sub> (**f**&dot;d**A**)/||**V**|| ; S=&part;**V**
+
+### Curl (cross derivative) [of vector f]
+*measure of rotation (direction and magnitude) of a given point*
+<br/>
+curl(f) &equiv; &nabla;&times;f &equiv; &lt;&part;/&part;x,&part;/&part;y,&part;/&part;z&gt; &times; f &equiv; lim<sub>A&rarr;0</sub> &conint;<sub>C</sub>(**f**&middot;d**S**/||**A**||) ; C=&part;**A**
+<br/>
+
+### Laplacian (Operator [scalar]) [div(grad(f))] [of scalar f]
+Second derivative of a function
+<br/>
+**Laplacian** &equiv; &nabla;&middot;&nabla; &equiv; &nabla;<sup>2</sup> &equiv; (&part;<sup>2</sup>/&part;x<sup>2</sup> + &part;<sup>2</sup>/&part;y<sup>2</sup> + &hellip;)
+
+### First Derivative
+**1D numeric:**
+<br/>
+&fnof;&prime;(x) = [&fnof;(x+&Delta;) - &fnof;(x-&Delta;)] / [2&middot;&Delta;]
+<br/>
+**1D visualization:**
+<br/>
+```
+[-1, 0, 1] * 1/(2*delta) ~ [-0.5, 0, 0.5]
+```
+
+### Second Derivative
+**1D numeric:**
+<br/>
+&fnof;&Prime;(x) = [&fnof;(x+&Delta;) - 2&middot;&fnof;(x) + &fnof;(x-&Delta;)] / [&Delta;<sup>2</sup>]
+<br/>
+**1D Visual:**
+<br/>
+```
+[1, -2,  1] * 1/(delta) ~ [-1, 2, 1]
+```
+<br/>
+**2D visual:**
+<br/>
+```
+[0  -1  0]                              [ 0 -1  0]
+[-1 4 -1] * 1/(delta*delta) =  [-1  4 -1]
+[0  -1  0]                              [ 0 -1  0]
+```
+
+### Poisson Equation
+&nabla;<sup>2</sup>&middot;&fnof; = g ; [g = 4&pi;&rho;]
+
+### Laplace Equation
+*(poisson @ right hand null)*
+<br/>
+&nabla;<sup>2</sup>&middot;&fnof; = 0
+
+### Dirichlet Boundary Condition (of function) [on a surface &Omega; with boundary &part;&Omega;]
+&fnof;(x) = g(x) : &forall;x &isin; &part;&Omega;
+<br/>
+eg 1D: interval [a,b] : f(a) = &alpha;,  f(b) = &beta;
+
+### Neumann Boundary Condition (of normal derivative) [on a surface &Omega; with boundary &part;&Omega;]
+&nabla;&fnof;(x)&middot;**n**(x) = (&part;&fnof;/&part;**n**)(x) = g(x) : &forall;x &isin; &part;&Omega;
+<br/>
+eg 1D: interval [a,b] : f&prime;(a) = &alpha;,  f&prime;(b) = &beta;
+
+### Edgel
+
+<br/>
+<br/>
+
+<br/>
+
+
+### Wavelet
+
+
+<br/>
+<br/>
+
+<br/>
+
+
+
+
+## Poisson Image Edting Terms:
+
+
+<br/>
+
+
+
+
+<br/>
+<br/>
+
+<br/>
+
+....
+<br/>
+<br/>
+
+
+<br/>
+<br/>
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+<br/>
+
+
+<br/>
+<br/>
 
 
 
 
 
 ## Poisson Equation:
+
+
+
 Blending 2nd derivatives
 
 &nabla;<sup>2</sup> &middot; &phi; = &fnof;
@@ -249,12 +386,17 @@ http://www.cs.tau.ac.il/~stoledo/Pubs/wide-simax.pdf
 <br/>
 <br/>
 
+[Poisson Image Editing](https://www.cs.jhu.edu/~misha/Fall07/Papers/Perez03.pdf)
+
+[Drag-and-Drop Pasting](http://research.microsoft.com/pubs/69331/dragdroppasting_siggraph06.pdf)
+
+[Efficient Gradient-Domain Compositing Using Quadtrees](http://www.agarwala.org/efficient_gdc/preprint.pdf)
 
 [Fast Poisson Blending using Multi-Splines](http://www.msr-waypoint.net/pubs/144582/Szeliski-ICCP11.pdf)
 
-[seamless image stitching gradient domain](http://www.wisdom.weizmann.ac.il/~levina/papers/blendingTR.pdf)
+[Seamless Image Stitching in the Gradient Domain](http://www.wisdom.weizmann.ac.il/~levina/papers/blendingTR.pdf)
 
 
 [Efficient Poisson Blending for Seamless Image Stitching](http://zuhaagha.weebly.com/uploads/3/1/9/5/31957175/projectreport-poisson-14100196-14100103.pdf)
 
-
+http://htmlarrows.com/math/anticlockwise-contour-integral/
