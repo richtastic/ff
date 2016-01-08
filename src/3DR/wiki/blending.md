@@ -87,9 +87,9 @@ Second derivative of a function
 **2D visual:**
 <br/>
 ```
-[0  -1  0]                              [ 0 -1  0]
-[-1 4 -1] * 1/(delta*delta) =  [-1  4 -1]
-[0  -1  0]                              [ 0 -1  0]
+[0  -1  0]                      [ 0 -1  0]
+[-1  4 -1] * 1/(delta*delta) =  [-1  4 -1]
+[0  -1  0]                      [ 0 -1  0]
 ```
 
 ### Poisson Equation
@@ -127,7 +127,7 @@ eg 1D: interval [a,b] : f&prime;(a) = &alpha;,  f&prime;(b) = &beta;
 <br/>
 
 
-### Gauss-Seidel iteration
+### Gauss-Seidel Iteration
 
 
 
@@ -140,18 +140,18 @@ eg 1D: interval [a,b] : f&prime;(a) = &alpha;,  f&prime;(b) = &beta;
 
 ## Poisson Image Editing Terms:
 
-Place an image B onto image A, with final imaging in this intersect area appearing as C.
+Place an image ? on top of image ?, with final imaging in this intersect area appearing as ?.
 
 <br/>
-&fnof;&ast; = image destination (known) (A)
+&fnof;&ast; = image destination (known)
 <br/>
-&fnof; = image overlay (unknown) (C)
+&fnof; = image overlay (unknown)
 <br/>
-S = destination area?
+S = destination region (subset of &reals;<sup>2</sup>)
 <br/>
-&Omega; = intersect region
+&Omega; = destination region, subset of S
 <br/>
-&part;&Omega; = boundary of &Omega; (shared inner C/B? and outer boundary A, averaged)
+&part;&Omega; = boundary of &Omega;
 <br/>
 g = source image?
 <br/>
