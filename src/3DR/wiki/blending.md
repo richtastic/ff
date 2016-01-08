@@ -127,15 +127,136 @@ eg 1D: interval [a,b] : f&prime;(a) = &alpha;,  f&prime;(b) = &beta;
 <br/>
 
 
+### Gauss-Seidel iteration
 
 
-## Poisson Image Edting Terms:
 
+<br/>
+<br/>
 
 <br/>
 
 
 
+## Poisson Image Editing Terms:
+
+Place an image B onto image A, with final imaging in this intersect area appearing as C.
+
+<br/>
+&fnof;&ast; = image destination (known) (A)
+<br/>
+&fnof; = image overlay (unknown) (C)
+<br/>
+S = destination area?
+<br/>
+&Omega; = intersect region
+<br/>
+&part;&Omega; = boundary of &Omega; (shared inner C/B? and outer boundary A, averaged)
+<br/>
+g = source image?
+<br/>
+**v** = guidance field = &nabla;g (always? &rarr; &nabla;<sup>2</sup>f = &nabla;<sup>2</sup>g)
+<br/>
+~&fnof; = correction function
+<br/>
+&fnof; = g + ~&fnof; (if **v** is conservative)
+<br/>
+&nabla;<sup>2</sup>~&fnof; = 0 (over &Omega;)
+<br/>
+
+find minimum of the absolute gradient:
+<br/>
+min<sub>&fnof;</sub>&Int;<sub>&Omega;</sub>||&nabla;&fnof; - **v**||<sup>2</sup>
+<br/>
+with boundary equal:
+<br/>
+&fnof;|<sub>&part;&Omega;</sub> = &fnof;&ast;|<sub>&part;&Omega;</sub>
+<br/>
+&rArr;
+<br/>
+&Delta;&fnof; = &nabla;<sup>2</sup>&fnof; = div(**v**) (over &Omega;)
+<br/>
+
+<br/>
+**Discrete Definitions**
+<br/>
+p = pixel in &Omega;
+<br/>
+N<sub>p</sub> = 4-point neighborhood of pixel p
+<br/>
+|N<sub>p</sub>| = count of neighborhood of p &le; 4 (if S is on border)
+<br/>
+&lt;p,q&gt; = pixel pair p and q : q &isin; N<sub>p</sub>
+<br/>
+&part;&Omega; = {p &isin; S\&Omega; : N<sub>p</sub> &Intersection; &Omega; &ne; &empty;}
+<br/>
+&nu;<sub>p,q</sub> = projection of **v**((p+q)/2) on orientated edge [p,q]
+<br/>
+&nu;<sub>p,q</sub> = g<sub>p</sub> - g<sub>q</sub> [11] maybe not always?
+<br/>
+find minimization:
+<br/>
+min<sub>&fnof;|&Omega;</sub> &Sum;<sub>&lt;p,q&gt;&Intersection;&Omega;&ne;&empty;</sub> (&fnof;<sub>p</sub> - &fnof;<sub>q</sub> - &nu;<sub>p,q</sub>)<sup>2</sup> ; &fnof;<sub>p</sub> = &fnof;&ast;<sub>p</sub> , &forall;<sub>p</sub> &isin; &part;&Omega;
+<br/>
+will satisfy:
+<br/>
+|N<sub>p</sub>|&middot;&fnof;<sub>p</sub> - &Sum;<sub>q&isin;N<sub>p</sub>&Intersection;&Omega;</sub> &fnof;<sub>q</sub> = &Sum;<sub>q&isin;N<sub>p</sub>&Intersection;&part;&Omega;</sub> &fnof;&ast;<sub>q</sub> + &Sum;<sub>q&isin;N<sub>p</sub></sub> &nu;<sub>p,q</sub> , &forall;<sub>p</sub> &isin; &part;&Omega;
+<br/>
+
+<br/>
+
+
+<br/>
+**Mixing Gradients** -- retain stronger of guidance field [mixed seamless cloning?]
+<br/>
+&forall;<sub>**x** &isin; &Omega;</sub> **v**(**x**) = {&nabla;&fnof;&ast;(**x**) if |&nabla;&fnof;&ast;(**x**)| > |&nabla;g(**x**)| ; &nabla;g(**x**) else}
+<br/>
+&nu;<sub>p,q</sub> = { &fnof;&ast;<sub>p</sub> - &fnof;&ast;<sub>q</sub> if |&fnof;&ast;<sub>p</sub> - &fnof;&ast;<sub>q</sub>| > |g<sub>p</sub>-g<sub>q</sub>| , |g<sub>p</sub>-g<sub>q</sub>| else}
+<br/>
+
+<br/>
+
+<br/>
+<br/>
+||&nabla;&fnof;||<sup>2</sup> = &fnof;<sub>x</sub><sup>2</sup> + &fnof;<sub>y</sub><sup>2</sup>
+<br/>
+&Delta;&fnof;(x,y) &asymp; f<sub>x-1,y</sub> - 2&middot;f<sub>x,y</sub> + f<sub>x+1,y</sub>  +  f<sub>x,y-1</sub> - 2&middot;f<sub>x,y</sub> + f<sub>x,y+1</sub> = f<sub>x-1,y</sub> + f<sub>x,y-1</sub> + f<sub>x+1,y</sub> + f<sub>x,y+1</sub> - 4&middot;f<sub>x,y</sub>
+<br/>
+f<sub>x,y-1</sub> = x<sub>i-w</sub>
+<br/>
+f<sub>x,y+1</sub> = x<sub>i+w</sub>
+<br/>
+x<sub>i-w</sub> + x<sub>i-1</sub> - 4&middot;x<sub>i</sub> + x<sub>i+1</sub> = - f(x,y+1)
+<br/>
+**A**<sub>N&times;N</sub> &middot; **x**<sub>N&times;1</sub> = **b**<sub>N&times;1</sub>
+<br/>
+```
+[1 ... 1 -4 1 ... 1     ... ]   [x1]   [0]
+[ 1 ... 1 -4 1 ... 1    ... ]   [x2]   [0]
+[  1 ... 1 -4 1 ... 1   ... ] * [x3] = [b1]
+[                       ... ]   [..]   [b2]
+[                       ... ]   [..]   [0]
+```
+<br/>
+
+
+
+
+<br/>
+
+&ast;
+
+&midast;
+
+&star;
+
+&Star;
+
+&dot;
+
+&sdot;
+
+&middot;
 
 <br/>
 <br/>
@@ -367,8 +488,46 @@ Multiplicative Gain: take logarithm of input images before computing seam differ
 
 
 ### Bilateral Filter
+*nonlinear edge-preserving smoother*
+<br/>
+I = original image
+<br/>
+I&ast; = filtered image &equiv; J
+<br/>
+x = operating pixel point (reference) &equiv; **x** &equiv; &lt;x,y&gt;
+<br/>
+||I(x<sub>i</sub>) - I(x<sub>j</sub>)|| = absolute intensity difference between pixels
+<br/>
+||x<sub>i</sub> - x<sub>j</sub>|| = absolute distance between pixels
+<br/>
+&Omega; = window centered on x
+<br/>
+f<sub>r</sub> = range kernel for smoothing differences in intensities
+<br/>
+g<sub>s</sub> = spacial kernal for smoothing differences in coordinates
+<br/>
+W<sub>x</sub> = &Sum;<sub>&Omega;</sub> f<sub>r</sub>(||I(x<sub>i</sub>) - I(x)||) &middot; g<sub>s</sub>(||x<sub>i</sub> - x||)
+<br/>
+I&ast;(x) = (1/W<sub>x</sub>) &Sum;<sub>&Omega;</sub> I(x<sub>i</sub>) &middot; f<sub>r</sub>(||I(x<sub>i</sub>) - I(x)||) &middot; g<sub>s</sub>(||x<sub>i</sub> - x||)
+<br/>
+```
+for each pixel p in I
+	J[p] = 0
+    Wx = 0
+    for each pixel q in I // in neighborhood only, ||p-q|| le 2*sigma_d
+    	w = Gdis(distance(p,q)) * Gint(abs(I[p]-I[q]))
+        J[p] += w * I[q]
+        Wx += w
+    end
+    J[p] /= Wx
+end
+Gdis = Gaussian with sigma_d
+Gint = Gaussing with sigma_i
+```
+<br/>
+<br/>
 https://en.wikipedia.org/wiki/Bilateral_filter
-
+<br/>
 http://www.sandia.gov/~egboman/papers/HUND.pdf
 http://www.cs.tau.ac.il/~stoledo/Pubs/wide-simax.pdf
 
@@ -376,6 +535,26 @@ http://www.cs.tau.ac.il/~stoledo/Pubs/wide-simax.pdf
 <br/>
 <br/>
 
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
 
 
 ## Nested Dissection
@@ -400,3 +579,4 @@ http://www.cs.tau.ac.il/~stoledo/Pubs/wide-simax.pdf
 [Efficient Poisson Blending for Seamless Image Stitching](http://zuhaagha.weebly.com/uploads/3/1/9/5/31957175/projectreport-poisson-14100196-14100103.pdf)
 
 http://htmlarrows.com/math/anticlockwise-contour-integral/
+http://dev.w3.org/html5/html-author/charref
