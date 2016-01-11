@@ -21,6 +21,11 @@ function Stitching(){
 	imageList = ["snow1.png","snow2.png"];
 	//imageList = ["snow2.png","snow1.png"];
 //	imageList = ["panoramas/picA.jpg","panoramas/picB.jpg"];
+
+// poisson image blending:
+console.log("stitching");
+imageList = ["poisson/image_beach.png","poisson/image_bear.png"];
+
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
@@ -75,6 +80,7 @@ Stitching.prototype.handleKeyboardDownFxn = function(e){
 		this.iteration = this.iteration!==undefined ? this.iteration+1 : 0;
 		this.testPolyPoly();
 	}
+}
 Stitching.prototype.colorImageWithGroups = function(groups, width, height){
 	var i, j, p, len, len2, group, index;
 	var pixels = width*height;
@@ -97,7 +103,102 @@ Stitching.prototype.colorImageWithGroups = function(groups, width, height){
 	}
 	return {"red":imageRed, "blu":imageBlu, "grn":imageGrn, "alp":imageAlp};
 }
+
+Stitching.prototype.testPoisson = function(imageList){
+	var index, i, j, d, x=0, y=0;
+	var list = [];
+	var imageDestination = null;
+	var imageSource = null;
+	for(i=0;i<imageList.length;++i){
+		img = imageList[i];
+		list[i] = img;
+		d = new DOImage(img);
+this._root.addChild(d);
+		d.moveToBack();
+		d.enableDragging();
+		d.matrix().identity();
+		d.matrix().translate(x,y);
+		// d.graphics().setLine(1.0,0xFFFF0000);
+		// d.graphics().beginPath();
+		// d.graphics().endPath();
+		// d.graphics().strokeLine();
+		var imageMat = this._stage.getImageAsFloatGray(img);
+		if(i==0){
+			imageDestination = imageMat;
+		}else if(i==1){
+			imageSource = imageMat;
+		}
+		x += img.width;
+		y += 0;
+	}
+	// 
+	// create polygon;
+	var polygonCut = [new V2D(0.3,0.0), new V2D(0.95,0.0), new V2D(0.95,0.50), new V2D(0.80,0.80), new V2D(0.28,0.95), new V2D(0.09,0.70), new V2D(0.12,0.60), new V2D(0.30,0.45)]; // bottom left is origin, 
+	// DRAW POLYGON:
+	d = new DO();
+//	this._root.addChild(d);
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	var offsetX = 400.0;
+	var offsetY = 0.0;
+	d.matrix().translate(offsetX,offsetY);
+	for(i=0;i<polygonCut.length;++i){
+		var a = polygonCut[i];
+		var b = polygonCut[(i+1)%polygonCut.length];
+		a = new V2D(a.x*imageSource.width,a.y*imageSource.height);
+		b = new V2D(b.x*imageSource.width,b.y*imageSource.height);
+		d.graphics().moveTo(a.x,a.y);
+		d.graphics().lineTo(b.x,b.y);
+		console.log(a+"->"+b);
+		d.graphics().strokeLine();
+	}
+	d.graphics().endPath();
+
+	// create edge mask
+	var pixelsSource = imageSource.width*imageSource.height;
+	var imageSourceMask = new Array(pixelsSource);
+	var imageSourceMaskAlpha = new Array(pixelsSource);
+	for(j=0;j<imageSource.height;++j){
+		y = 1.0 - j/(imageSource.height-1);
+		for(i=0;i<imageSource.width;++i){
+			x = i/(imageSource.width-1);
+			var point = new V2D(x,y);
+			var isPixelInside = Code.isPointInsidePolygon2D(point, polygonCut);
+			index = j*imageSource.width + i;
+			if(isPixelInside){
+				imageSourceMask[index] = 1.0;
+				imageSourceMaskAlpha[index] = 0.1;
+			}else{
+				imageSourceMask[index] = 0.0;
+				imageSourceMaskAlpha[index] = 0.5;
+			}
+		}
+	}
+	var imageMask = this._stage.getFloatARGBAsImage(imageSourceMaskAlpha,imageSourceMask,imageSourceMask,imageSourceMask, imageSource.width,imageSource.height, null);
+	d = new DOImage(imageMask);
+	d.matrix().translate(400.0,0.0);
+	this._root.addChild(d);
+
+	// find boundary pixels
+
+	console.log("poisson");
+	// start poisson
+	// 
+
+	console.log("matrix");
+	// start matrx
+	var rows = 0;
+	var cols = 0;
+	var x = new Matrix(rows,1);
+	var b = new Matrix(rows,1);
+	var A = new Matrix(rows,cols);
+	//var svd = Matrix.svd(A,x,b);
+
+	console.log("done");
+}
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
+	this.testPoisson(imageInfo.images);
+	return;
 
 // this.testPolyPoly();
 // return;
@@ -931,8 +1032,6 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 	return {"graph":graph, "extrema":infiniteVertexes};
 }
 
-
-}
 Stitching.prototype.testPolyPoly = function(){
 //	console.log(this.iteration);
 	var polyA = [];
