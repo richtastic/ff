@@ -24,7 +24,7 @@ function Stitching(){
 
 // poisson image blending:
 console.log("stitching");
-imageList = ["poisson/image_beach.png","poisson/image_bear.png"];
+imageList = ["poisson/image_beach.png","poisson/image_bear_75x50.png"]; // "poisson/image_bear.png" "poisson/image_bear_150x100.png" "poisson/image_bear_75x50.png"
 
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
@@ -109,6 +109,7 @@ Stitching.prototype.testPoisson = function(imageList){
 	var list = [];
 	var imageDestination = null;
 	var imageSource = null;
+	var imageSourceOffset = new V2D(50,50);
 	for(i=0;i<imageList.length;++i){
 		img = imageList[i];
 		list[i] = img;
@@ -179,19 +180,124 @@ this._root.addChild(d);
 	d.matrix().translate(400.0,0.0);
 	this._root.addChild(d);
 
+	var x, y, N, indexSource, indexDestination, value;
+
 	// find boundary pixels
+	var minMaskX = imageSource.width;
+	var maxMaskX = -1;
+	var minMaskY = imageSource.height;
+	var maxMaskY = -1;
+	for(i=0;i<imageSource.width;++i){
+		for(j=0;j<imageSource.height;++j){
+			indexSource = j*imageSource.width + i;
+			if(imageSourceMask[indexSource]!=0.0){ // is masked
+				minMaskX = Math.min(minMaskX,i);
+				maxMaskX = Math.max(maxMaskX,i);
+				minMaskY = Math.min(minMaskY,j);
+				maxMaskY = Math.max(maxMaskY,j);
+			}
+		}
+	}
+	if(minMaskX==-1){
+		console.log("no mask values in destination area");
+		return;
+	}
+	// some part of mask is inside destination
+	// 			x = i+imageSourceOffset.x;
+	// 		y = j+imageSourceOffset.y;
+	// 		if(x>=0&&x<imageDestination.width){ // inside destination
+	// 			indexDestination = y*imageDestination.width + x;
+
+	//
+	console.log("limits: "+minMaskX+","+minMaskY+" => "+maxMaskX+","+maxMaskY);
+	var maskSizeX = maxMaskX - minMaskX + 1;
+	var maskSizeY = maxMaskY - minMaskY + 1;
+	console.log("mask size: "+maskSizeX+"x"+maskSizeY);
 
 	console.log("poisson");
 	// start poisson
-	// 
+	var gradientSourceGray = ImageMat.gradientMagnitude(imageSource,imageSource.width,imageSource.height);
 
 	console.log("matrix");
 	// start matrx
-	var rows = 0;
-	var cols = 0;
+	var rows = maskSizeX*maskSizeY;
+	var cols = rows;
+	console.log(cols+" x "+rows);
 	var x = new Matrix(rows,1);
+	console.log("x");
 	var b = new Matrix(rows,1);
+	console.log("b");
 	var A = new Matrix(rows,cols);
+	console.log("A");
+
+// console.log(imageDestination);
+// console.log(imageDestination.gray);
+
+	// construct matrix
+	var neighbor;
+	index = 0;
+	for(j=0;j<maskSizeY;++j){
+		for(i=0;i<maskSizeX;++i){
+			x = minMaskX + i;
+			y = minMaskY + j;
+			N = 0;
+			if(i>0){
+				indexSource = y*imageSource.width + (x-1);
+				if(imageSourceMask[indexSource]!=0.0){ // left neighbor
+					++N;
+					neighbor = j*maskSizeX + (i-1);
+					A.set(index,neighbor, -1);
+				}
+			}
+			if(i<maskSizeX){
+				indexSource = y*imageSource.width + (x+1);
+				if(imageSourceMask[indexSource]!=0.0){ // right neighbor
+					++N;
+					neighbor = j*maskSizeX + (i+1);
+					A.set(index,neighbor, -1);
+				}
+			}
+			if(j>0){
+				indexSource = (y-1)*imageSource.width + x;
+				if(imageSourceMask[indexSource]!=0.0){ // top neighbor
+					++N;
+					neighbor = (j-1)*maskSizeX + i;
+					A.set(index,neighbor, -1);
+				}
+			}
+			if(j<maskSizeY){
+				indexSource = (y+1)*imageSource.width + x;
+				if(imageSourceMask[indexSource]!=0.0){ // bottom neighbor
+					++N;
+					neighbor = (j+1)*maskSizeX + i;
+					A.set(index,neighbor, -1);
+				}
+			}
+			A.set(index,index, N); // -N ?
+			//A.set(index,index, 1); // identity diagonal?
+			/*
+			indexSource = y*imageSource.width + x;
+			indexDestination = (imageSourceOffset.y+y)*imageSource.width + (x-1);
+			if(imageSourceMask[indexSource]!=0.0){ // in mask
+				value = 0.0;
+				for(){ // all neighbors
+					index = neighbor4+i+j;
+					value += gradientSource[index];
+					if(mask){ // neighbor is not masked
+						index = neighbor4+i+j;
+						value += imageDestination[index];
+					}
+				}
+				b.set(index,1, value);
+			} else {
+				b.set(index,1, imageDestination.gray[indexDestination]);
+			}
+			*/
+			++index;
+		}
+	}
+
+	// solve matrix
 	//var svd = Matrix.svd(A,x,b);
 
 	console.log("done");

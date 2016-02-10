@@ -1415,6 +1415,40 @@ ImageMat.derivativeY = function(src,wid,hei, x,y){
 	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
 }
+ImageMat.gradientVector = function(src,wid,hei, x,y){
+	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
+	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
+	if(x!==undefined && y!==undefined){
+		return new V2D(gradX,gradY);
+	}
+	for(var i=gradX.length; i-- > 0;){
+		gradX[i] = new V2D(gradX[i],gradY[i]);
+	}
+	return gradX;
+}
+ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
+	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
+	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
+	if(x!==undefined && y!==undefined){
+		return gradX+gradY;
+	}
+	for(var i=gradX.length; i-- > 0;){
+		gradX[i] = Math.sqrt(gradX[i]*gradX[i] + gradY[i]*gradY[i]);
+	}
+	return gradX;
+}
+ImageMat.gradientAngle = function(src,wid,hei, x,y){
+	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
+	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
+	if(x!==undefined && y!==undefined){
+		return gradX+gradY;
+	}
+	for(var i=gradX.length; i-- > 0;){
+		console.log(i);
+		gradX[i] = Math.atan2(gradY[i],gradX[i]);
+	}
+	return gradX;
+}
 ImageMat.secondDerivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
 		return src[wid*y+(x-1)] - 2.0*src[wid*y+x] + src[wid*y+(x+1)];
@@ -1437,6 +1471,14 @@ ImageMat.laplacian = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [0,-1,0, -1,4,-1, 0,-1,0], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-1,-1,-1, -1,8,-1, -1,-1,-1], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-0.5,-1,-0.5, -1,6,-1, -0.5,-1,-0.5], 3,3);
+}
+ImageMat.sharpen = function(src,wid,hei, w,h){
+	// [0,0,0, 0,2,0, 0,0,0] - 1/9*[1,1,1, 1,1,1, 1,1,1] (OR GAUSSIAN)
+	// TODO
+}
+ImageMat.sobel = function(src,wid,hei, w,h){
+	// 1/8*[-1,0,1, -2,-0,2, -1,0,1] , 1/8*[1,2,1, 0,0,0, -1,-2,-1]
+	// TODO
 }
 ImageMat.meanFilter = function(src,wid,hei, w,h){
 	if(w!==undefined && w!==undefined){
