@@ -1,5 +1,8 @@
 // Manual3DR.js
 
+Manual3DR.KEY_IMAGE_FILE_LOCATION = "imageFileName";
+Manual3DR.KEY_IMAGE_SOURCE = "imageSource";
+
 function Manual3DR(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
@@ -12,6 +15,7 @@ function Manual3DR(){
 	// resources
 	this._resource = {};
 	// 3D stage
+/*
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage3D.setBackgroundColor(0x00000000);
@@ -30,6 +34,141 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+*/
+// MANUALLY DETERMINED POINTS
+	this._manualData = {
+		"entries": {
+			"A": {
+				"imageFileName": "caseStudy1-0.jpg"
+			},
+			"B": {
+				"imageFileName": "caseStudy1-9.jpg"
+			},
+			"C": {
+				"imageFileName": "caseStudy1-12.jpg"
+			},
+			"D": {
+				"imageFileName": "caseStudy1-14.jpg"
+			},
+			"E": {
+				"imageFileName": "caseStudy1-20.jpg"
+			},
+			"F": {
+				"imageFileName": "caseStudy1-24.jpg"
+			},
+			"G": {
+				"imageFileName": "caseStudy1-29.jpg"
+			}
+		},
+		"points" : [
+			{
+				"p3D" : {"x":0, "y":0, "z":0},
+				"entries" : {
+					"A" : { "p2D" : {"x":172, "y":107} },
+					"B" : { "p2D" : {"x":212, "y":46.5} },
+					"C" : { "p2D" : {"x":89, "y":147} },
+					//
+					"E" : { "p2D" : {"x":203, "y":150.5} },
+					"F" : { "p2D" : {"x":181.5, "y":161.5} },
+					"G" : { "p2D" : {"x":144, "y":175} }
+				}
+			},
+			{
+				"p3D" : {"x":4, "y":0, "z":0},
+				"entries" : {
+					"A" : { "p2D" : {"x":203, "y":116} },
+					"B" : { "p2D" : {"x":235, "y":68} },
+					"C" : { "p2D" : {"x":156, "y":149.5} },
+					//
+					"E" : { "p2D" : {"x":231, "y":155} },
+					"F" : { "p2D" : {"x":215, "y":166} },
+					"G" : { "p2D" : {"x":194.5, "y":189} }
+				}
+			},
+			{
+				"p3D" : {"x":4, "y":4, "z":0},
+				"entries" : {
+					"A" : { "p2D" : {"x":204, "y":74.5} },
+					"B" : { "p2D" : {"x":239, "y":34} },
+					"C" : { "p2D" : {"x":155, "y":80} },
+					"D" : { "p2D" : {"x":317, "y":71} },
+					"E" : { "p2D" : {"x":232, "y":116} },
+					"F" : { "p2D" : {"x":216.5, "y":126.5} },
+					"G" : { "p2D" : {"x":197.5, "y":117} }
+				}
+			},
+			{
+				"p3D" : {"x":0, "y":4, "z":0},
+				"entries" : {
+					"A" : { "p2D" : {"x":171, "y":68.5} },
+					"B" : { "p2D" : {"x":213, "y":12} },
+					"C" : { "p2D" : {"x":83, "y":78} },
+					"D" : { "p2D" : {"x":299, "y":64} },
+					"E" : { "p2D" : {"x":203, "y":115} },
+					"F" : { "p2D" : {"x":183, "y":124} },
+					"G" : { "p2D" : {"x":145, "y":110} }
+				}
+			},
+			{
+				"p3D" : {"x":0, "y":4, "z":4},
+				"entries" : {
+					"A" : { "p2D" : {"x":142, "y":76.5} },
+					"B" : { "p2D" : {"x":178.5, "y":26} },
+					"C" : { "p2D" : {"x":50, "y":87.5} },
+					// 
+					"E" : { "p2D" : {"x":178, "y":116} },
+					"F" : { "p2D" : {"x":162, "y":125} },
+					"G" : { "p2D" : {"x":87.5, "y":113} }
+				}
+			},
+			{
+				"p3D" : {"x":0, "y":0, "z":4},
+				"entries" : {
+					"A" : { "p2D" : {"x":144.5, "y":118.5} },
+					"B" : { "p2D" : {"x":180, "y":60} },
+					"C" : { "p2D" : {"x":58.5, "y":171} },
+					//
+					"E" : { "p2D" : {"x":177, "y":154.5} },
+					"F" : { "p2D" : {"x":160.5, "y":166.5} },
+					"G" : { "p2D" : {"x":88, "y":188.5} }
+				}
+			},
+			{
+				"p3D" : {"x":4, "y":0, "z":4},
+				"entries" : {
+					"A" : { "p2D" : {"x":175.5, "y":128} },
+					"B" : { "p2D" : {"x":202.5, "y":82.5} },
+					"C" : { "p2D" : {"x":140, "y":174.5} },
+					//
+					"E" : { "p2D" : {"x":204.5, "y":160} },
+					"F" : { "p2D" : {"x":195, "y":170.5} },
+					"G" : { "p2D" : {"x":140, "y":206.5} }
+				}
+			},
+			// 
+			{
+				"p3D" : null,
+				"entries" : {
+					// "A" : { "p2D" : {"x":1, "y":} }
+				}
+			},
+		]
+	};
+
+	var i, entries = this._manualData.entries;
+	console.log(entries);
+	var keys = Code.keys(entries);
+	var imageList = [];
+	for(i=0; i<keys.length; ++i){
+		key = keys[i];
+		imageList.push(entries[key][Manual3DR.KEY_IMAGE_FILE_LOCATION]);
+	}
+	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleManualImagesLoaded,null);
+	imageLoader.load();
+	return;
+
+
+// PREVIOUS
 	//
 	var imageList, imageLoader;
 	// calibration images:
@@ -42,6 +181,72 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 	imageLoader.load();
 //this.distortionStuff();
 }
+
+Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, list = [];
+	var entries = this._manualData.entries;
+	var points = this._manualData.points;
+	var keys = Code.keys(entries);
+	var x = 0;
+	var y = 0;
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		for(j=0;j<keys.length;++j){
+			key = keys[j];
+			var entry = entries[key];
+			var str = entry[Manual3DR.KEY_IMAGE_FILE_LOCATION];
+			if( file.endsWith(str) ){
+				entry[Manual3DR.KEY_IMAGE_SOURCE] = img;
+				break;
+			}
+		}
+		
+		var d = new DOImage(img);
+		this._root.addChild(d);
+		d.matrix().translate(x,y);
+		for(j=0;j<points.length;++j){
+			var point = points[j];
+			var pentries = point.entries;
+			if(pentries[key]){
+				var p = pentries[key]["p2D"];
+				var c = new DO();
+				var r = 3.0;
+				c.graphics().setLine(1.0, 0xFFFF0000);
+				c.graphics().beginPath();
+				c.graphics().drawCircle(p.x,p.y, r);
+				c.graphics().endPath();
+				c.graphics().strokeLine();
+				d.addChild(c);
+			}
+		}
+		x += img.width;
+		if (x>1200.0) {
+			x = 0.0;
+			y += img.height;
+		}
+		// if(i==6){
+		// 	break;
+		// }
+	}
+
+	// solve for matrices between each camera
+		// ...
+
+	//this._stage3D.start();
+}
+
+
+
+
+
+
+
+
+
+
 Manual3DR.prototype.distortionStuff = function(){
 	var d, i, j, k, x, y, img, arr, index, X, Y, u, v, w;
 	var wid = 400;

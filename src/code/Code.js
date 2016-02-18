@@ -235,6 +235,10 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 	}
 	return [middle];
 }
+// ------------------------------------------------------------------------------------------ EXTEND
+String.prototype.endsWith = function(suffix) {
+    return this.indexOf(suffix, this.length - suffix.length) !== -1;
+};
 // ------------------------------------------------------------------------------------------ ARRAY
 Code.setArray = function(arr){
 	var i, im1, len = arguments.length;

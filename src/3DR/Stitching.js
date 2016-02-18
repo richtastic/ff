@@ -23,8 +23,8 @@ function Stitching(){
 //	imageList = ["panoramas/picA.jpg","panoramas/picB.jpg"];
 
 // poisson image blending:
-console.log("stitching");
-imageList = ["poisson/image_beach.png","poisson/image_bear_75x50.png"]; // "poisson/image_bear.png" "poisson/image_bear_150x100.png" "poisson/image_bear_75x50.png"
+//console.log("stitching");
+//imageList = ["poisson/image_beach.png","poisson/image_bear_75x50.png"]; // "poisson/image_bear.png" "poisson/image_bear_150x100.png" "poisson/image_bear_75x50.png"
 
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
@@ -105,7 +105,7 @@ Stitching.prototype.colorImageWithGroups = function(groups, width, height){
 }
 
 Stitching.prototype.testPoisson = function(imageList){
-	var index, i, j, d, x=0, y=0;
+	var index, i, j, k, d, x=0, y=0;
 	var list = [];
 	var imageDestination = null;
 	var imageSource = null;
@@ -241,70 +241,79 @@ this._root.addChild(d);
 			x = minMaskX + i;
 			y = minMaskY + j;
 			N = 0;
+			var neighbors = [];
 			if(i>0){
+				neighbors.push(new V2D(i-1,j));
 				indexSource = y*imageSource.width + (x-1);
 				if(imageSourceMask[indexSource]!=0.0){ // left neighbor
 					++N;
 					neighbor = j*maskSizeX + (i-1);
-					A.set(index,neighbor, -1);
+					A.set(index,neighbor, 1);
 				}
 			}
 			if(i<maskSizeX){
 				indexSource = y*imageSource.width + (x+1);
+				neighbors.push(new V2D(i+1,j));
 				if(imageSourceMask[indexSource]!=0.0){ // right neighbor
 					++N;
 					neighbor = j*maskSizeX + (i+1);
-					A.set(index,neighbor, -1);
+					A.set(index,neighbor, 1);
 				}
 			}
 			if(j>0){
+				neighbors.push(new V2D(i,j-1));
 				indexSource = (y-1)*imageSource.width + x;
 				if(imageSourceMask[indexSource]!=0.0){ // top neighbor
 					++N;
 					neighbor = (j-1)*maskSizeX + i;
-					A.set(index,neighbor, -1);
+					A.set(index,neighbor, 1);
 				}
 			}
 			if(j<maskSizeY){
+				neighbors.push(new V2D(i,j+1));
 				indexSource = (y+1)*imageSource.width + x;
 				if(imageSourceMask[indexSource]!=0.0){ // bottom neighbor
 					++N;
 					neighbor = (j+1)*maskSizeX + i;
-					A.set(index,neighbor, -1);
+					A.set(index,neighbor, 1);
 				}
 			}
-			A.set(index,index, N); // -N ?
-			//A.set(index,index, 1); // identity diagonal?
-			/*
+			A.set(index,index, -N);
+			// b
 			indexSource = y*imageSource.width + x;
-			indexDestination = (imageSourceOffset.y+y)*imageSource.width + (x-1);
+			indexDestination = (imageSourceOffset.y+y)*imageSource.width + x;
+			var ind;
 			if(imageSourceMask[indexSource]!=0.0){ // in mask
 				value = 0.0;
-				for(){ // all neighbors
-					index = neighbor4+i+j;
-					value += gradientSource[index];
-					if(mask){ // neighbor is not masked
-						index = neighbor4+i+j;
-						value += imageDestination[index];
+				for(k=0; k<neighbors.length; ++k){ // all neighbors
+					neighbor = neighbors[k];
+					ind = (neighbor.y)*maskSizeX + neighbor.x;
+					value += gradientSourceGray[ind];
+					if(imageSourceMask[ind]!=0.0){ // neighbor is not masked
+						ind = (imageSourceOffset.y+neighbor.y)*imageSource.width + (neighbor.x);
+						value += imageDestination[ind];
 					}
 				}
-				b.set(index,1, value);
 			} else {
-				b.set(index,1, imageDestination.gray[indexDestination]);
+				value = imageDestination.gray[indexDestination];
 			}
-			*/
+			b.set(index,1, value);
 			++index;
 		}
 	}
 
 	// solve matrix
+	console.log("solve");
 	//var svd = Matrix.svd(A,x,b);
+	var solution = Matrix.solve(A,b);
+	console.log("solution:");
+	console.log(solution);
 
 	console.log("done");
 }
 Stitching.prototype.handleSceneImagesLoaded = function(imageInfo){
-	this.testPoisson(imageInfo.images);
-	return;
+//	this.testPoisson(imageInfo.images);
+//	return;
 
 // this.testPolyPoly();
 // return;

@@ -13,35 +13,6 @@ function ffLoadedFxn(){
 function classesLoadedFxn(){
 	var manual = new Manual3DR();
 }
-function checkLoadedListQuizzes(usedPopularCount, usedTrendingCount, duplicated){
-	var COUNT_DISPLAY_TOTAL_MAX = 10;
-	var COUNT_DISPLAY_POPULAR_MAX = 3;
-	var actualTrendingCount = Math.max(0,usedTrendingCount-duplicated); // simulate bug
-var availablePopularCount = usedPopularCount;
-var availableTrendingCount = usedTrendingCount;// - duplicated;
-var wasPop = usedPopularCount;
-var wasTre = usedTrendingCount;
-	if( (availablePopularCount+availableTrendingCount) <= COUNT_DISPLAY_TOTAL_MAX ){ // need to use everything
-            usedPopularCount = availablePopularCount;
-            usedTrendingCount = availableTrendingCount;
-    }else{ // select subset
-        if( availablePopularCount<COUNT_DISPLAY_POPULAR_MAX ){ // popular limiting
-            usedPopularCount = availablePopularCount;
-            usedTrendingCount = COUNT_DISPLAY_TOTAL_MAX - availablePopularCount;
-        }else if( availableTrendingCount < (COUNT_DISPLAY_TOTAL_MAX-COUNT_DISPLAY_POPULAR_MAX) ){ // trending limiting
-            usedPopularCount = COUNT_DISPLAY_TOTAL_MAX - availableTrendingCount;
-            usedTrendingCount = availableTrendingCount;
-        }else{ // nonlimiting
-            usedPopularCount = Math.min(availablePopularCount,COUNT_DISPLAY_POPULAR_MAX);
-            usedTrendingCount = COUNT_DISPLAY_TOTAL_MAX - usedPopularCount;
-        }
-    }
-    //console.log(wasPop+"/"+wasTre+"("+duplicated+")  =>  "+usedPopularCount+","+usedTrendingCount);
-//if(usedPopularCount>availablePopularCount || usedTrendingCount>availableTrendingCount){
-if(usedTrendingCount>actualTrendingCount){
-	console.log("fail: "+wasPop+"/"+wasTre+"("+duplicated+")  =>  "+usedPopularCount+","+usedTrendingCount);
-}
-}
 </script>
 <body onload="pageLoadedFxn();">
 </body>
