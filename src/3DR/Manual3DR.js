@@ -233,11 +233,74 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 	}
 
 	// solve for matrices between each camera
-		// ...
+	for(i=0; i<keys.length; ++i){
+		var keyA = keys[i];
+		var entryA = entries[keyA];
+		// for(j=i+1; j<keys.length; ++j){
+		// 	var keyB = keys[j];
+		// 	var entryB = entries[keyB];
+			var common = [];
+			for(k=0; k<points.length; ++k){
+				point = points[k];
+				if(point.entries[keyA]){// && point.entries[keyB]){
+					common.push(point);
+				}
+			}
+			//console.log(keyA+"+"+keyB+" = "+common.length);
+			if(common.length>5){
+				var rows = common.length*2.0;
+				var cols = 12;
+				//var b = new Matrix(rows,1);
+				var A = new Matrix(rows,cols);
+				for(k=0; k<common.length; ++k){
+					point = common[k];
+					var p3D = point["p3D"];
+					var p2DA = point.entries[keyA]["p2D"];
+					//var p2DB = point.entries[keyB]["p2D"];
+					var r = k*2;
+					//                            a       b       c     d       e       f       g     h             i             j             k       l 
+					A.setRowFromArray(r+0, [ -p3D.x, -p3D.y, -p3D.z, -1.0,    0.0,    0.0,    0.0,  0.0, p2DA.x*p3D.x, p2DA.x*p3D.y, p2DA.x*p3D.z, p2DA.x ]); // -Xa - Yb - Zc - 1d + xXi + xYj + xZk + xl = 0
+					A.setRowFromArray(r+1, [   -1.0,    0.0,    0.0,  0.0, -p3D.x, -p3D.y, -p3D.z, -1.0, p2DA.y*p3D.x, p2DA.y*p3D.y, p2DA.y*p3D.z, p2DA.y ]); // -Xe - Yf - Zg - 1h + yXi + yYj + yZk + yl = 0
+					// A.setRowFromArray(r+2, [ -p3D.x, -p3D.y, -p3D.z, -1.0,    0.0,    0.0,    0.0,  0.0, p2DB.x*p3D.x, p2DB.x*p3D.y, p2DB.x*p3D.z, p2DB.x ]);
+					// A.setRowFromArray(r+3, [   -1.0,    0.0,    0.0,  0.0, -p3D.x, -p3D.y, -p3D.z, -1.0, p2DB.y*p3D.x, p2DB.y*p3D.y, p2DB.y*p3D.z, p2DB.y ]);
+				}
+				// if common.length == 3 => solve
+				//var x = Matrix.solve(A,b);
+				var svd = Matrix.SVD(A);
+				var U = svd.U;
+				var S = svd.S;
+				var V = svd.V;
+				var x = V.getCol(cols-1); // V.cols() == cols
+				//console.log(x.toString())
+				var transform = new Matrix(4,4).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0),x.get(3,0), x.get(4,0),x.get(5,0),x.get(6,0),x.get(7,0), x.get(8,0),x.get(9,0),x.get(10,0),x.get(11,0), 0,0,0,1]);
+				console.log(transform.toString());
+				//var inverse = Matrix.inverse(transform);
+				//console.log(inverse.toString());
+				// if(!entries[keyA]["transforms"]){
+				// 	entries[keyA]["transforms"] = {};
+				// }
+				// if(!entries[keyB]["transforms"]){
+				// 	entries[keyB]["transforms"] = {};
+				// }
+				entries[keyA]["transform"] = transform.toArray();
 
+				// force to proper camera matrix P
+			// }
+			// break;
+		}
+		break;
+	}
 	//this._stage3D.start();
 }
 
+
+/*
+
+get transform A, B 
+
+
+
+*/
 
 
 
