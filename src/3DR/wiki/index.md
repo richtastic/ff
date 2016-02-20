@@ -4553,6 +4553,98 @@ Feathering - Transparancy Fading between images
 
 
 
+whole bunch of equations written out:
+<br/>
+A<sub>4&times;4</sub> = 4x4
+[a<sub>0,0</sub> a<sub>0,1</sub> a<sub>0,2</sub> a<sub>0,3</sub>]
+[a<sub>1,0</sub> a<sub>1,1</sub> a<sub>1,2</sub> 1<sub>0,3</sub>]
+[a<sub>2,0</sub> a<sub>2,1</sub> a<sub>2,2</sub> 2<sub>0,3</sub>]
+[0 0 0 1]
+A<sub>3&times;4</sub> = 3x4
+[]
+K<sub>3&times;3</sub> = 3x3
+[fx  s cx]
+[ 0 fy cy]
+[ 0  0  1]
+P<sub>3&times;3</sub> = 3x3
+[e f g h]
+[i j k l]
+
+
+A = K &middot; P
+
+
+*x*<sub>a</sub> = &lt;x<sub>a</sub>, y<sub>a</sub>&gt;
+
+*X*<sub>A</sub> = &lt;X<sub>A</sub>, Y<sub>A</sub>, Z<sub>A</sub>, 1&gt;
+
+*X*<sub>E</sub> = &lt;X<sub>E</sub>, Y<sub>E</sub>, Z<sub>E</sub>, 1&gt;
+
+
+**1) rotate from 3D world point to local camera model 3D point**
+<br/>
+
+**X**<sub>A</sub><sub>*4&times;1*</sub> = **A**<sub>*4&times;4*</sub> &middot; **X**<sub>E</sub><sub>*4&times;1*</sub>
+<br/>
+X<sub>A</sub> = a<sub>0,0</sub>&middot;X<sub>E</sub> + a<sub>0,1</sub>&middot;Z<sub>E</sub> + a<sub>0,2</sub>&middot;Y<sub>E</sub> + a<sub>0,3</sub>&middot;1
+<br/>
+Y<sub>A</sub> = a<sub>1,0</sub>&middot;X<sub>E</sub> + a<sub>1,1</sub>&middot;Z<sub>E</sub> + a<sub>1,2</sub>&middot;Y<sub>E</sub> + a<sub>1,3</sub>&middot;1
+<br/>
+Z<sub>A</sub> = a<sub>2,0</sub>&middot;X<sub>E</sub> + a<sub>2,1</sub>&middot;Z<sub>E</sub> + a<sub>2,2</sub>&middot;Y<sub>E</sub> + a<sub>2,3</sub>&middot;1
+<br/>
+W<sub>A</sub> = 1
+<br/>
+
+
+**2) project from camera model to 2D plane**
+<br/>
+
+x<sub>a</sub> = X<sub>A</sub> / Z<sub>A</sub> = 
+<br/>
+y<sub>a</sub> = Y<sub>A</sub> / Z<sub>A</sub>
+<br/>
+
+**3) orientate 2D plane to image skew**
+<br/>
+
+**x**<sub>a</sub><sub>*2&times;1*</sub> = **K**<sub>*3&times;3*</sub> &middot; **x**<sub>a</sub><sub>*2&times;1*</sub>
+<br/>
+
+x<sub>a</sub> = x<sub>a</sub>&middot;f<sub>x</sub> + x<sub>b</sub>&middot;s + c<sub>x</sub>
+<br/>
+y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
+
+<br/>
+
+
+
+<br/>
+
+
+
+
+
+
+
+projected:
+x<sub>a</sub> = 
+
+
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
+<br/>
+
+<br/>
+<br/>
 
 
 
