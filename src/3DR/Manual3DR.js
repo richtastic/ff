@@ -15,26 +15,31 @@ function Manual3DR(){
 	// resources
 	this._resource = {};
 	// 3D stage
-/*
-	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
-	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
-  	this._stage3D.setBackgroundColor(0x00000000);
-	this._stage3D.frustrumAngle(60);
-	this._stage3D.enableDepthTest();
-this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
-	// this._stage3D.start();
-	this._spherePointBegin = null;
-	this._spherePointEnd = null;
-	this._sphereMatrix = new Matrix3D();
-	this._sphereMatrix.identity();
-	this._userInteractionMatrix = new Matrix3D();
-	this._userInteractionMatrix.identity();
-	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
-	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
-	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
-	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
-	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
-*/
+
+// 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
+// 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
+//   	this._stage3D.setBackgroundColor(0x00000000);
+// 	this._stage3D.frustrumAngle(60);
+// 	this._stage3D.enableDepthTest();
+// this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, this);
+// 	// this._stage3D.start();
+// 	this._spherePointBegin = null;
+// 	this._spherePointEnd = null;
+// 	this._sphereMatrix = new Matrix3D();
+// 	this._sphereMatrix.identity();
+// 	this._userInteractionMatrix = new Matrix3D();
+// 	this._userInteractionMatrix.identity();
+// 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+// 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+// 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+// 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
+// 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+
+	
+	this._simulate3D();
+	return;
+
+
 // MANUALLY DETERMINED POINTS
 	this._manualData = {
 		"entries": {
@@ -180,6 +185,351 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 //this.distortionStuff();
+}
+/*
+	fx = 376.10038433315435
+	fy = 376.7410755028418
+	s  = -0.4399151157738108
+	cx = 201.61665699519267
+	cy = 152.26370698493383
+*/
+
+Manual3DR.prototype._simulate3D = function(){ // FORWARD
+	console.log("simulating...");
+	// set variable values
+	var imageWidth = 400;
+	var imageHeight = 300;
+	var fx = 200;
+	var fy = 200;
+	var s = 0.0;
+	var cx = imageWidth/2.0;
+	var cy = imageHeight/2.0;
+	// pick 3D points
+	var points3D = [
+						new V3D(0,0,0),
+						new V3D(1,0,0),
+						new V3D(1,1,0),
+						new V3D(0,1,0),
+						new V3D(0,0,1),
+						new V3D(1,0,1),
+						new V3D(1,1,1),
+						new V3D(0,1,1),
+						new V3D(0,0,2),
+					];
+	// sim data
+	var angleY = 30.0;
+	var cameraCenter = new V3D(-0.5,0.5,-2.0);
+	// generate source data
+	var matrixA = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+	matrixA = Matrix.transform3DRotateY(matrixA,(angleY/180.0)*Math.PI);
+	matrixA = Matrix.transform3DTranslate(matrixA,cameraCenter.x,cameraCenter.y,cameraCenter.z);
+	//
+	var matrixK = new Matrix(3,3).setFromArray([fx,s,cx,  0,fy,cy,  0,0,1]);
+	console.log("A: \n "+matrixA.toString());
+	console.log("K: \n "+matrixK.toString());
+
+	// determine some properties:
+		var cameraCenterA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+		var cameraForwardA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,0,1));
+		var cameraRightA = matrixA.multV3DtoV3D(new V3D(), new V3D(1,0,0));
+		var cameraUpA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,1,0));
+
+		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
+			cameraDirectionZA.norm();
+		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
+			cameraDirectionXA.norm();
+		var cameraDirectionYA = V3D.sub(cameraUpA,cameraCenterA);
+			cameraDirectionYA.norm();
+
+	var imageDO = new DO();
+	imageDO.graphics().clear();
+	// draw image BG:
+	imageDO.graphics().setFill(0xFFCCCCCC);
+	imageDO.graphics().beginPath();
+	imageDO.graphics().moveTo(0,0);
+	imageDO.graphics().lineTo(imageWidth,0);
+	imageDO.graphics().lineTo(imageWidth,imageHeight);
+	imageDO.graphics().lineTo(0,imageHeight);
+	imageDO.graphics().lineTo(0,0);
+	imageDO.graphics().endPath();
+	imageDO.graphics().fill();
+	// draw image border
+	imageDO.graphics().setLine(3.0, 0xFF000099);
+	imageDO.graphics().beginPath();
+	imageDO.graphics().moveTo(0,0);
+	imageDO.graphics().lineTo(imageWidth,0);
+	imageDO.graphics().lineTo(imageWidth,imageHeight);
+	imageDO.graphics().lineTo(0,imageHeight);
+	imageDO.graphics().lineTo(0,0);
+	imageDO.graphics().endPath();
+	imageDO.graphics().strokeLine();
+	// draw image reticule
+	imageDO.graphics().setLine(1.0, 0x99990000);
+	imageDO.graphics().beginPath();
+	imageDO.graphics().moveTo(imageWidth*0.5,0);
+	imageDO.graphics().lineTo(imageWidth*0.5,imageHeight);
+	imageDO.graphics().moveTo(0,imageHeight*0.5);
+	imageDO.graphics().lineTo(imageWidth,imageHeight*0.5);
+	imageDO.graphics().endPath();
+	imageDO.graphics().strokeLine();
+	// go over all points and render to image
+	for(var i=0; i<points3D.length; ++i){
+		console.log(i+".....................................");
+		var point3D_E = points3D[i];
+		console.log("X_E = "+point3D_E.toString());
+		// orientate from world 3D point to camera 3D point
+		var vector = new Matrix(4,1).setFromArray([point3D_E.x,point3D_E.y,point3D_E.z,1.0]);
+		vector = Matrix.mult(matrixA,vector);
+		var point3D_A = new V3D().setFromArray(vector.toArray());
+		console.log("X_A = "+point3D_A.toString());
+		// project onto camera 2D plane
+		if(point3D_A.z!=0){
+			var point2D_a = new V2D( point3D_A.x/point3D_A.z, point3D_A.y/point3D_A.z);
+			console.log("x_a_1 = "+point2D_a);
+			// orientate 2D plane to image position/scale/skew
+			vector = new Matrix(3,1).setFromArray([point2D_a.x,point2D_a.y,1.0]);
+			vector = Matrix.mult(matrixK,vector);
+			var point2D_a_image = new V2D().setFromArray(vector.toArray());
+			// flip y axis for image direction
+			//point2D_a_image.y = imageHeight - point2D_a_image.y;
+			console.log("x_a_2 = "+point2D_a_image);
+			if(point2D_a_image.x>=0 || point2D_a_image.x<=imageWidth || point2D_a_image.y>=0 || point2D_a_image.y<=imageHeight){
+				// draw point onto image:
+				var p = new V2D(point2D_a_image.x,point2D_a_image.y);
+				var c = new DO();
+				var r = 3.0;
+				c.graphics().setLine(1.0, 0xFF990000);
+				c.graphics().setFill(0xFFFF6666);
+				c.graphics().beginPath();
+				c.graphics().drawCircle(p.x,imageHeight-p.y, r);
+				c.graphics().endPath();
+				c.graphics().strokeLine();
+				c.graphics().fill();
+				imageDO.addChild(c);
+			}
+		}else{
+			console.log("X_A.z == 0");
+		}
+	}
+	this._root.addChild(imageDO);
+
+
+	var cameraImage = this._stage.renderImage(imageWidth,imageHeight,imageDO);
+	// var d = new DOImage(cameraImage);
+	// d.matrix().translate(500,50);
+	// this._root.addChild(d);
+
+
+	// START UP 3D STAGE:
+	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
+	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
+  	this._stage3D.setBackgroundColor(0x00000000);
+	this._stage3D.frustrumAngle(60);
+	this._stage3D.enableDepthTest();
+	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this._eff, this);
+	this._spherePointBegin = null;
+	this._spherePointEnd = null;
+	this._sphereMatrix = new Matrix3D();
+	this._sphereMatrix.identity();
+	this._userInteractionMatrix = new Matrix3D();
+	this._userInteractionMatrix.identity();
+	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
+	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+
+	// SET UP POINTS:
+	var points = [];
+	var colors = [];
+	for(var i=0; i<points3D.length; ++i){
+		var p = points3D[i];
+		points.push(p.x,p.y,p.z);
+		colors.push(1.0, 0.0, 0.0, 1.0);
+	}
+	// camera center
+		var p = cameraCenterA;
+		points.push(p.x,p.y,p.z);
+		colors.push(0.0, 0.0, 1.0, 1.0);
+	//
+	this._stage3D.selectProgram(3);
+	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	this._pointPointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
+	// SET UP LINES:
+	var prs = [];
+	for(var i=0; i<points3D.length; ++i){
+		var p = points3D[i];
+		prs.push([cameraCenter, p]);
+	}
+	var linPnt = [];
+	var linCol = [];
+	for(i=0; i<prs.length; ++i){
+		p = prs[i];
+		u = p[0];
+		v = p[1];
+		linPnt.push( u.x,u.y,u.z );
+		linPnt.push( v.x,v.y,v.z );
+		linCol.push(0.0,0.0,1.0,1.0);
+		linCol.push(1.0,0.0,1.0,1.0);
+	}
+	// camera direction
+		// X
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(1.0, 0.0, 0.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionXA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+		// Y
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 1.0, 0.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionYA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+		// Z
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 1.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionZA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+	// camera TL
+
+	// set globals
+	this._renderLinePointsList = linPnt;
+	this._renderLineColorsList = linCol;
+	// create objects
+	this._stage3D.selectProgram(2);
+	this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._programLineVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	this._programLinePoints = this._stage3D.getBufferFloat32Array(this._renderLinePointsList, 3);
+	this._programLineColors = this._stage3D.getBufferFloat32Array(this._renderLineColorsList, 4);
+
+
+	// SET UP TEXTURES:
+	this._textureUVPoints = [];
+	this._textureVertexPoints = [];
+	this._renderTextureUVList = [];
+	this._renderTexturePointList = [];
+	this._textures = [];
+	//
+	this._stage3D.selectProgram(1);
+	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
+	var texture;
+	var program = this._canvas3D._program;
+	// create textures
+	texture = cameraImage;
+	var obj = this.textureBase2FromImage(texture);
+	texture = obj["texture"];
+	var horz = obj["width"];
+	var vert = obj["height"];
+	this._textures.push( this._canvas3D.bindTextureImageRGBA(texture) );
+	// create triangles for camera images
+		// visualizing screen
+		var distance = 0.5;
+		var widX = distance*imageWidth/fx;//distance/fx; // imageWidth
+		var heiY = distance*imageHeight/fy;//distance/fy; // imageHeight
+		var cenX = distance*cx;
+		var cenY = distance*cy;
+			var dirX = cameraDirectionXA.copy().norm();//scale(distance);
+			var dirY = cameraDirectionYA.copy().norm();//scale(distance);
+			var dirZ = cameraDirectionZA.copy().norm();//scale(distance);
+		var lenX = dirX.copy().scale(widX);
+		var lenY = dirY.copy().scale(heiY);
+		var lenZ = dirY.copy().scale(distance);
+		var pOR = V3D.add(cameraCenterA,lenZ);
+		var pTL = pOR.copy().sub( dirX.copy().scale(cenX) ).sub( dirY.copy().scale(cenY) );
+		var pTR = V3D.add(pTL,lenX);
+		var pBL = V3D.sub(pTL,lenY);
+		var pBR = V3D.add(pBL,lenX);
+		console.log("CORNERS:");
+		console.log(pBL.toString());
+		console.log(pBR.toString());
+		console.log(pTR.toString());
+		console.log(pTL.toString());
+		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
+		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
+	// var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
+	// var vertList = [0,0,0, 1,0,0, 1,1,0,   1,1,0, 0,1,0, 0,0,0];
+	this._renderTextureUVList[0] = uvList;
+	this._renderTexturePointList[0] = vertList;
+
+
+
+	//Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureVertPoints){ /
+	//this.addCameraVisual(matrix, this._renderTextureUVList[i], this._renderTexturePointList[i]);
+// 	var matrix = matrixA;
+// 	this._renderTextureUVList[1] = [];
+// 	this._renderTexturePointList[1] = [];
+// 	this._textures.push( this._textures[0] );
+// 	this._intrinsicK = matrixK;
+// this._renderPointsList = [];
+// this._renderColorsList = [];
+// this._renderLinePointsList = [];
+// this._renderLineColorsList = [];
+// 	this.addCameraVisual(matrix, this._renderTextureUVList[1], this._renderTexturePointList[1]);
+	// buffer creation
+	var i, len = this._textures.length;
+	for(i=0;i<len;++i){
+		var texturePoints = this._renderTextureUVList[i];
+		var vertexPoints = this._renderTexturePointList[i];
+		this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+		this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+	}
+	// START
+	this._stage3D.start();
+}
+Manual3DR.prototype._eff = function(e){
+	//console.log(e);
+	var e = this.e?this.e:0;
+	this.e = e; ++this.e;
+	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
+	this._stage3D.clear();
+	this._stage3D.matrixIdentity();
+this._stage3D.matrixTranslate(-0.5,-0.5,-2.0);
+this._stage3D.matrixRotate(e*0.01, 0,1,0);
+	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
+//this._stage3D.matrixTranslate(0.0,0.0,-5.0);
+//	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
+	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
+//	this._stage3D.matrixRotate(e*0.0, e*0.0,0,1);
+
+// this._stage3D.matrixMultM3D(this._sphereMatrix);
+// this._stage3D.matrixMultM3D(this._userInteractionMatrix);
+
+	// RENDER POINTS
+	this._stage3D.selectProgram(3);
+	this._stage3D.disableCulling();
+	this._stage3D.matrixReset();
+	this._stage3D.bindArrayFloatBuffer(this._pointVertexPositionAttrib, this._pointPointBuffer);
+	this._stage3D.bindArrayFloatBuffer(this._pointVertexColorAttrib, this._pointColorBuffer);
+	this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
+	
+	// RENDER LINES
+	this._stage3D.selectProgram(2);
+	this._stage3D.matrixReset();
+	this._stage3D.disableCulling();
+	this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
+	this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
+	this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
+
+	// RENDER TEXTURES
+	this._stage3D.selectProgram(1);
+	this._stage3D.disableCulling();
+	this._stage3D.matrixReset();
+	for(i=0;i<this._textureUVPoints.length;++i){
+		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints[i]);
+		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+		this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
+		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
+		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
+		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+	}
 }
 
 Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
@@ -1570,7 +1920,7 @@ Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureV
 	var imageWidth = 400;
 	var imageHeight = 300;
 	// 
-	var focalLength = 1.0; // scales universe?
+	var focalLength = 0.00001; // scales universe?
 	var px = focalLength/fx;
 	var py = focalLength/fy;
 	var imgSizeX = px*imageWidth;

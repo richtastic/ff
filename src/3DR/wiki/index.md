@@ -4552,7 +4552,6 @@ Feathering - Transparancy Fading between images
 
 
 
-
 whole bunch of equations written out:
 <br/>
 A<sub>4&times;4</sub> = 4x4
@@ -4581,7 +4580,7 @@ A = K &middot; P
 *X*<sub>E</sub> = &lt;X<sub>E</sub>, Y<sub>E</sub>, Z<sub>E</sub>, 1&gt;
 
 
-**1) rotate from 3D world point to local camera model 3D point**
+**1) orientate from 3D world point to local camera model 3D point**
 <br/>
 
 **X**<sub>A</sub><sub>*4&times;1*</sub> = **A**<sub>*4&times;4*</sub> &middot; **X**<sub>E</sub><sub>*4&times;1*</sub>
@@ -4604,7 +4603,7 @@ x<sub>a</sub> = X<sub>A</sub> / Z<sub>A</sub> =
 y<sub>a</sub> = Y<sub>A</sub> / Z<sub>A</sub>
 <br/>
 
-**3) orientate 2D plane to image skew**
+**3) orientate 2D plane to image position/scale/skew**
 <br/>
 
 **x**<sub>a</sub><sub>*2&times;1*</sub> = **K**<sub>*3&times;3*</sub> &middot; **x**<sub>a</sub><sub>*2&times;1*</sub>
@@ -4615,7 +4614,6 @@ x<sub>a</sub> = x<sub>a</sub>&middot;f<sub>x</sub> + x<sub>b</sub>&middot;s + c<
 y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
 
 <br/>
-
 
 
 <br/>
