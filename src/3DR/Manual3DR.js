@@ -199,11 +199,14 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	// set variable values
 	var imageWidth = 400;
 	var imageHeight = 300;
-	var fx = 200;
-	var fy = 200;
+	var fx = 100;
+	var fy = 100;
 	var s = 0.0;
-	var cx = imageWidth/2.0;
-	var cy = imageHeight/2.0;
+	var cx = imageWidth/2.0;// - 100;
+	var cy = imageHeight/2.0;// - 100;
+	var camX = 0.5;
+	var camY = 0.5;
+	var camZ = -1.0;
 	// pick 3D points
 	var points3D = [
 						new V3D(0,0,0),
@@ -217,12 +220,13 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 						new V3D(0,0,2),
 					];
 	// sim data
-	var angleY = 30.0;
-	var cameraCenter = new V3D(-0.5,0.5,-2.0);
+	var angleY = 0.0;
+	var cameraCenter = new V3D(camX,camY,camZ);
+	console.log("cameraCenter: "+cameraCenter.toString());
 	// generate source data
 	var matrixA = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
 	matrixA = Matrix.transform3DRotateY(matrixA,(angleY/180.0)*Math.PI);
-	matrixA = Matrix.transform3DTranslate(matrixA,cameraCenter.x,cameraCenter.y,cameraCenter.z);
+	matrixA = Matrix.transform3DTranslate(matrixA,-cameraCenter.x,-cameraCenter.y,-cameraCenter.z);
 	//
 	var matrixK = new Matrix(3,3).setFromArray([fx,s,cx,  0,fy,cy,  0,0,1]);
 	console.log("A: \n "+matrixA.toString());
@@ -230,6 +234,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 
 	// determine some properties:
 		var cameraCenterA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+		console.log("cameraCenterA: "+cameraCenterA.toString());
 		var cameraForwardA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,0,1));
 		var cameraRightA = matrixA.multV3DtoV3D(new V3D(), new V3D(1,0,0));
 		var cameraUpA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,1,0));
@@ -266,10 +271,10 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	// draw image reticule
 	imageDO.graphics().setLine(1.0, 0x99990000);
 	imageDO.graphics().beginPath();
-	imageDO.graphics().moveTo(imageWidth*0.5,0);
-	imageDO.graphics().lineTo(imageWidth*0.5,imageHeight);
-	imageDO.graphics().moveTo(0,imageHeight*0.5);
-	imageDO.graphics().lineTo(imageWidth,imageHeight*0.5);
+	imageDO.graphics().moveTo(cx,0);
+	imageDO.graphics().lineTo(cx,imageHeight);
+	imageDO.graphics().moveTo(0,cy);
+	imageDO.graphics().lineTo(imageWidth,cy);
 	imageDO.graphics().endPath();
 	imageDO.graphics().strokeLine();
 	// go over all points and render to image
@@ -333,11 +338,11 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	this._sphereMatrix.identity();
 	this._userInteractionMatrix = new Matrix3D();
 	this._userInteractionMatrix.identity();
-	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
-	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
-	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
-	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
-	// this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
 
 	// SET UP POINTS:
 	var points = [];
@@ -348,7 +353,8 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		colors.push(1.0, 0.0, 0.0, 1.0);
 	}
 	// camera center
-		var p = cameraCenterA;
+		// WHY IS THIS NEGATIVE ???????????
+		var p = cameraCenterA.copy().scale(-1);
 		points.push(p.x,p.y,p.z);
 		colors.push(0.0, 0.0, 1.0, 1.0);
 	//
@@ -362,6 +368,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	var prs = [];
 	for(var i=0; i<points3D.length; ++i){
 		var p = points3D[i];
+// cameraCenterA ????
 		prs.push([cameraCenter, p]);
 	}
 	var linPnt = [];
@@ -385,7 +392,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		linCol.push(0.0, 0.0, 0.0, 1.0);
 		// Y
 		var p = cameraCenter;
-		linPnt.push(p.x,p.y,p.z);
+		linPnt.push(p.x,p.y,p.z);cameraCenter.copy().scale(-1);
 		linCol.push(0.0, 1.0, 0.0, 1.0);
 		p = V3D.add(cameraCenter,cameraDirectionYA);
 		linPnt.push(p.x,p.y,p.z);
@@ -431,18 +438,28 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	this._textures.push( this._canvas3D.bindTextureImageRGBA(texture) );
 	// create triangles for camera images
 		// visualizing screen
-		var distance = 0.5;
-		var widX = distance*imageWidth/fx;//distance/fx; // imageWidth
-		var heiY = distance*imageHeight/fy;//distance/fy; // imageHeight
-		var cenX = distance*cx;
-		var cenY = distance*cy;
-			var dirX = cameraDirectionXA.copy().norm();//scale(distance);
-			var dirY = cameraDirectionYA.copy().norm();//scale(distance);
-			var dirZ = cameraDirectionZA.copy().norm();//scale(distance);
+		var scale = 0.0025;
+		var focZ = scale*fx;
+		var widX = scale*imageWidth;//distance/fx; // imageWidth
+		var heiY = scale*imageHeight;//distance/fy; // imageHeight
+		var cenX = scale*cx;
+		var cenY = -scale*cy;
+			var dirX = cameraDirectionXA.copy().norm();
+			var dirY = cameraDirectionYA.copy().norm();
+			var dirZ = cameraDirectionZA.copy().norm();
+			console.log("DIRECTIONS:");
+			console.log(dirX.toString());
+			console.log(dirY.toString());
+			console.log(dirZ.toString());
 		var lenX = dirX.copy().scale(widX);
 		var lenY = dirY.copy().scale(heiY);
-		var lenZ = dirY.copy().scale(distance);
-		var pOR = V3D.add(cameraCenterA,lenZ);
+		var lenZ = dirZ.copy().scale(focZ);
+		//var pOR = cameraCenterA.copy().add(lenZ);
+		// WHY IS THIS NEGATIVE:
+		//cameraCenter
+		//cameraCenterA
+
+		var pOR = cameraCenter.copy().add(lenZ);
 		var pTL = pOR.copy().sub( dirX.copy().scale(cenX) ).sub( dirY.copy().scale(cenY) );
 		var pTR = V3D.add(pTL,lenX);
 		var pBL = V3D.sub(pTL,lenY);
@@ -491,16 +508,16 @@ Manual3DR.prototype._eff = function(e){
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
 	this._stage3D.matrixIdentity();
-this._stage3D.matrixTranslate(-0.5,-0.5,-2.0);
-this._stage3D.matrixRotate(e*0.01, 0,1,0);
+ this._stage3D.matrixTranslate(-0.5,-0.5,-3.0);
+// this._stage3D.matrixRotate(e*0.01, 0,1,0);
 	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
 //this._stage3D.matrixTranslate(0.0,0.0,-5.0);
 //	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
 	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
 //	this._stage3D.matrixRotate(e*0.0, e*0.0,0,1);
 
-// this._stage3D.matrixMultM3D(this._sphereMatrix);
-// this._stage3D.matrixMultM3D(this._userInteractionMatrix);
+this._stage3D.matrixMultM3D(this._sphereMatrix);
+this._stage3D.matrixMultM3D(this._userInteractionMatrix);
 
 	// RENDER POINTS
 	this._stage3D.selectProgram(3);
