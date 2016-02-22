@@ -202,16 +202,20 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	var fx = 100;
 	var fy = 100;
 	var s = 0.0;
-	var cx = imageWidth/2.0;// - 100;
-	var cy = imageHeight/2.0;// - 100;
+	var cx = imageWidth*0;//.65;
+	var cy = imageHeight*0;//.65;
 	var camX = 0.5;
 	var camY = 0.5;
 	var camZ = -1.0;
-	var camRotX = 0.0;
-	var camRotY = 30.0;
-	var camRotZ = 0.0;
+	var camRotXa = 20.0;
+	var camRotYa = 0.0;
+	var camRotZa = 30.0;
+	var camRotXb = 0.0;
+	var camRotYb = -30.0;
+	var camRotZb = 0.0;
 	// pick 3D points
 	var points3D = [
+	//new V3D(0,0,1),
 						new V3D(0,0,0),
 						new V3D(1,0,0),
 						new V3D(1,1,0),
@@ -222,49 +226,30 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 						new V3D(0,1,1),
 						new V3D(0,0,2),
 					];
-	// sim data
-	var cameraCenter = new V3D(camX,camY,camZ);
-	console.log("cameraCenter: "+cameraCenter.toString());
-	// generate source data
+	// generate extrinsic camera matrix
 	var matrixAForward = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotX/180.0)*Math.PI);
-	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotY/180.0)*Math.PI);
-	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZ/180.0)*Math.PI);
-	matrixAForward = Matrix.transform3DTranslate(matrixAForward,cameraCenter.x,cameraCenter.y,cameraCenter.z);
-
-	// THIS ONE DOESN'T WORK:
-	// matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotX/180.0)*Math.PI);
-	// matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotY/180.0)*Math.PI);
-	// matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZ/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXa/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYa/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZa/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DTranslate(matrixAForward,camX,camY,camZ);
+	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXb/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYb/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZb/180.0)*Math.PI);
+	
 	// move world in opposite direction
-
 	var matrixAReverse = Matrix.inverse(matrixAForward);
 
-	//var matrixAReverse = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-	//matrixAReverse = Matrix.transform3DRotateY(matrixAReverse,(camRotY/180.0)*Math.PI);
-	//matrixAReverse = Matrix.transform3DTranslate(matrixAReverse,-cameraCenter.x,-cameraCenter.y,-cameraCenter.z);
-	// //matrixAReverse = Matrix.transform3DRotateY(matrixAReverse,(-camRotY/180.0)*Math.PI);
+	// get actual camera center from forward matrix
+	var cameraCenter = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+	console.log("cameraCenter: "+cameraCenter.toString());
 
-	//
+	// generate intrinsic camera matrix
 	var matrixK = new Matrix(3,3).setFromArray([fx,s,cx,  0,fy,cy,  0,0,1]);
 	console.log("Af: \n "+matrixAForward.toString());
 	console.log("Ar: \n "+matrixAReverse.toString());
 	console.log("K: \n "+matrixK.toString());
 
-	// determine some properties:
-		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
-		var cameraRightA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(1,0,0));
-		var cameraUpA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,1,0));
-		var cameraForwardA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,1));
-		console.log("cameraCenterA: "+matrixAForward.toString());
-		//
-		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
-			cameraDirectionZA.norm();
-		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
-			cameraDirectionXA.norm();
-		var cameraDirectionYA = V3D.sub(cameraUpA,cameraCenterA);
-			cameraDirectionYA.norm();
-
+	// DRAW POINTS PROJECTED ONTO CAMERA MATRIX
 	var imageDO = new DO();
 	imageDO.graphics().clear();
 	// draw image BG:
@@ -292,8 +277,8 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	imageDO.graphics().beginPath();
 	imageDO.graphics().moveTo(cx,0);
 	imageDO.graphics().lineTo(cx,imageHeight);
-	imageDO.graphics().moveTo(0,cy);
-	imageDO.graphics().lineTo(imageWidth,cy);
+	imageDO.graphics().moveTo(0,imageHeight-cy); // flip y for image
+	imageDO.graphics().lineTo(imageWidth,imageHeight-cy); // flip y for image
 	imageDO.graphics().endPath();
 	imageDO.graphics().strokeLine();
 	// go over all points and render to image
@@ -307,7 +292,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		var point3D_A = new V3D().setFromArray(vector.toArray());
 		console.log("X_A = "+point3D_A.toString());
 		// project onto camera 2D plane
-		if(point3D_A.z!=0){
+		if(point3D_A.z!=0 && point3D_A.z > 0){ // infinity || behind
 			var point2D_a = new V2D( point3D_A.x/point3D_A.z, point3D_A.y/point3D_A.z);
 			console.log("x_a_1 = "+point2D_a);
 			// orientate 2D plane to image position/scale/skew
@@ -315,9 +300,9 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 			vector = Matrix.mult(matrixK,vector);
 			var point2D_a_image = new V2D().setFromArray(vector.toArray());
 			// flip y axis for image direction
-			//point2D_a_image.y = imageHeight - point2D_a_image.y;
+			point2D_a_image.y = imageHeight - point2D_a_image.y;
 			console.log("x_a_2 = "+point2D_a_image);
-			if(point2D_a_image.x>=0 || point2D_a_image.x<=imageWidth || point2D_a_image.y>=0 || point2D_a_image.y<=imageHeight){
+			if(point2D_a_image.x>=0 || point2D_a_image.x<=imageWidth || point2D_a_image.y>=0 || point2D_a_image.y<=imageHeight){ // inside image rectangle
 				// draw point onto image:
 				var p = new V2D(point2D_a_image.x,point2D_a_image.y);
 				var c = new DO();
@@ -325,7 +310,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 				c.graphics().setLine(1.0, 0xFF990000);
 				c.graphics().setFill(0xFFFF6666);
 				c.graphics().beginPath();
-				c.graphics().drawCircle(p.x,imageHeight-p.y, r);
+				c.graphics().drawCircle(p.x,p.y, r);
 				c.graphics().endPath();
 				c.graphics().strokeLine();
 				c.graphics().fill();
@@ -363,6 +348,21 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
 
+
+	// determine camera properties for display:
+		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+		var cameraRightA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(1,0,0));
+		var cameraUpA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,1,0));
+		var cameraForwardA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,1));
+		console.log("cameraCenterA: "+matrixAForward.toString());
+		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
+			cameraDirectionZA.norm();
+		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
+			cameraDirectionXA.norm();
+		var cameraDirectionYA = V3D.sub(cameraUpA,cameraCenterA);
+			cameraDirectionYA.norm();
+
+
 	// SET UP POINTS:
 	var points = [];
 	var colors = [];
@@ -384,9 +384,8 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 
 	// SET UP LINES:
 	var prs = [];
-	for(var i=0; i<points3D.length; ++i){
+	for(var i=0; i<points3D.length; ++i){ // camera-to-point
 		var p = points3D[i];
-// cameraCenterA ????
 		prs.push([cameraCenter, p]);
 	}
 	var linPnt = [];
@@ -410,7 +409,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		linCol.push(0.0, 0.0, 0.0, 1.0);
 		// Y
 		var p = cameraCenter;
-		linPnt.push(p.x,p.y,p.z);cameraCenter.copy().scale(-1);
+		linPnt.push(p.x,p.y,p.z);cameraCenter.copy();
 		linCol.push(0.0, 1.0, 0.0, 1.0);
 		p = V3D.add(cameraCenter,cameraDirectionYA);
 		linPnt.push(p.x,p.y,p.z);
@@ -422,8 +421,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		p = V3D.add(cameraCenter,cameraDirectionZA);
 		linPnt.push(p.x,p.y,p.z);
 		linCol.push(0.0, 0.0, 0.0, 1.0);
-	// camera TL
-
+	
 	// set globals
 	this._renderLinePointsList = linPnt;
 	this._renderLineColorsList = linCol;
@@ -456,12 +454,12 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	this._textures.push( this._canvas3D.bindTextureImageRGBA(texture) );
 	// create triangles for camera images
 		// visualizing screen
-		var scale = 0.0025;
+		var scale = 0.003;
 		var focZ = scale*fx;
-		var widX = scale*imageWidth;//distance/fx; // imageWidth
-		var heiY = scale*imageHeight;//distance/fy; // imageHeight
+		var widX = scale*imageWidth;
+		var heiY = scale*imageHeight;
 		var cenX = scale*cx;
-		var cenY = -scale*cy;
+		var cenY = scale*(imageHeight-cy); // flip from image
 			var dirX = cameraDirectionXA.copy().norm();
 			var dirY = cameraDirectionYA.copy().norm();
 			var dirZ = cameraDirectionZA.copy().norm();
@@ -472,27 +470,27 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		var lenX = dirX.copy().scale(widX);
 		var lenY = dirY.copy().scale(heiY);
 		var lenZ = dirZ.copy().scale(focZ);
-		//var pOR = cameraCenterA.copy().add(lenZ);
-		// WHY IS THIS NEGATIVE:
-		//cameraCenter
-		//cameraCenterA
-
+		// determine corners of projected image
 		var pOR = cameraCenter.copy().add(lenZ);
-		var pTL = pOR.copy().sub( dirX.copy().scale(cenX) ).sub( dirY.copy().scale(cenY) );
+		var pTL = pOR.copy().sub( dirX.copy().scale(cenX) ).add( dirY.copy().scale(cenY) );
 		var pTR = V3D.add(pTL,lenX);
 		var pBL = V3D.sub(pTL,lenY);
-		var pBR = V3D.add(pBL,lenX);
+		var pBR = V3D.add(pTL,lenX).sub(lenY);
 		console.log("CORNERS:");
 		console.log(pBL.toString());
 		console.log(pBR.toString());
 		console.log(pTR.toString());
 		console.log(pTL.toString());
 		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-		// projection is opposite 
+		// ORIGINAL:
 		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
+		// FLIP Y:
+		//var vertList = [pTL.x,pTL.y,pTL.z, pTR.x,pTR.y,pTR.z, pBR.x,pBR.y,pBR.z,   pBR.x,pBR.y,pBR.z, pBL.x,pBL.y,pBL.z, pTL.x,pTL.y,pTL.z];
+		// FLIP X:
 		//var vertList = [pBR.x,pBR.y,pBR.z, pBL.x,pBL.y,pBL.z, pTL.x,pTL.y,pTL.z,   pTL.x,pTL.y,pTL.z, pTR.x,pTR.y,pTR.z, pBR.x,pBR.y,pBR.z];
-	// var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-	// var vertList = [0,0,0, 1,0,0, 1,1,0,   1,1,0, 0,1,0, 0,0,0];
+		// FLIP X & Y:
+		//var vertList = [pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z,   pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z];
+
 	this._renderTextureUVList[0] = uvList;
 	this._renderTexturePointList[0] = vertList;
 
