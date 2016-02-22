@@ -207,6 +207,9 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	var camX = 0.5;
 	var camY = 0.5;
 	var camZ = -1.0;
+	var camRotX = 0.0;
+	var camRotY = 30.0;
+	var camRotZ = 0.0;
 	// pick 3D points
 	var points3D = [
 						new V3D(0,0,0),
@@ -220,25 +223,41 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 						new V3D(0,0,2),
 					];
 	// sim data
-	var angleY = 0.0;
 	var cameraCenter = new V3D(camX,camY,camZ);
 	console.log("cameraCenter: "+cameraCenter.toString());
 	// generate source data
-	var matrixA = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-	matrixA = Matrix.transform3DRotateY(matrixA,(angleY/180.0)*Math.PI);
-	matrixA = Matrix.transform3DTranslate(matrixA,-cameraCenter.x,-cameraCenter.y,-cameraCenter.z);
+	var matrixAForward = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotX/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotY/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZ/180.0)*Math.PI);
+	matrixAForward = Matrix.transform3DTranslate(matrixAForward,cameraCenter.x,cameraCenter.y,cameraCenter.z);
+
+	// THIS ONE DOESN'T WORK:
+	// matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotX/180.0)*Math.PI);
+	// matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotY/180.0)*Math.PI);
+	// matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZ/180.0)*Math.PI);
+	// move world in opposite direction
+
+	var matrixAReverse = Matrix.inverse(matrixAForward);
+
+	//var matrixAReverse = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+	//matrixAReverse = Matrix.transform3DRotateY(matrixAReverse,(camRotY/180.0)*Math.PI);
+	//matrixAReverse = Matrix.transform3DTranslate(matrixAReverse,-cameraCenter.x,-cameraCenter.y,-cameraCenter.z);
+	// //matrixAReverse = Matrix.transform3DRotateY(matrixAReverse,(-camRotY/180.0)*Math.PI);
+
 	//
 	var matrixK = new Matrix(3,3).setFromArray([fx,s,cx,  0,fy,cy,  0,0,1]);
-	console.log("A: \n "+matrixA.toString());
+	console.log("Af: \n "+matrixAForward.toString());
+	console.log("Ar: \n "+matrixAReverse.toString());
 	console.log("K: \n "+matrixK.toString());
 
 	// determine some properties:
-		var cameraCenterA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,0,0));
-		console.log("cameraCenterA: "+cameraCenterA.toString());
-		var cameraForwardA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,0,1));
-		var cameraRightA = matrixA.multV3DtoV3D(new V3D(), new V3D(1,0,0));
-		var cameraUpA = matrixA.multV3DtoV3D(new V3D(), new V3D(0,1,0));
-
+		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+		var cameraRightA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(1,0,0));
+		var cameraUpA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,1,0));
+		var cameraForwardA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,1));
+		console.log("cameraCenterA: "+matrixAForward.toString());
+		//
 		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
 			cameraDirectionZA.norm();
 		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
@@ -284,7 +303,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		console.log("X_E = "+point3D_E.toString());
 		// orientate from world 3D point to camera 3D point
 		var vector = new Matrix(4,1).setFromArray([point3D_E.x,point3D_E.y,point3D_E.z,1.0]);
-		vector = Matrix.mult(matrixA,vector);
+		vector = Matrix.mult(matrixAReverse,vector);
 		var point3D_A = new V3D().setFromArray(vector.toArray());
 		console.log("X_A = "+point3D_A.toString());
 		// project onto camera 2D plane
@@ -353,8 +372,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		colors.push(1.0, 0.0, 0.0, 1.0);
 	}
 	// camera center
-		// WHY IS THIS NEGATIVE ???????????
-		var p = cameraCenterA.copy().scale(-1);
+		var p = cameraCenter;
 		points.push(p.x,p.y,p.z);
 		colors.push(0.0, 0.0, 1.0, 1.0);
 	//
@@ -470,7 +488,9 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		console.log(pTR.toString());
 		console.log(pTL.toString());
 		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
+		// projection is opposite 
 		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
+		//var vertList = [pBR.x,pBR.y,pBR.z, pBL.x,pBL.y,pBL.z, pTL.x,pTL.y,pTL.z,   pTL.x,pTL.y,pTL.z, pTR.x,pTR.y,pTR.z, pBR.x,pBR.y,pBR.z];
 	// var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
 	// var vertList = [0,0,0, 1,0,0, 1,1,0,   1,1,0, 0,1,0, 0,0,0];
 	this._renderTextureUVList[0] = uvList;
