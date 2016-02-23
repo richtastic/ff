@@ -202,16 +202,16 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	var fx = 100;
 	var fy = 100;
 	var s = 0.0;
-	var cx = imageWidth*0;//.65;
-	var cy = imageHeight*0;//.65;
+	var cx = imageWidth*0.5;
+	var cy = imageHeight*0.5;
 	var camX = 0.5;
 	var camY = 0.5;
 	var camZ = -1.0;
 	var camRotXa = 20.0;
 	var camRotYa = 0.0;
-	var camRotZa = 30.0;
+	var camRotZa = -30.0;
 	var camRotXb = 0.0;
-	var camRotYb = -30.0;
+	var camRotYb = -20.0;
 	var camRotZb = 0.0;
 	// pick 3D points
 	var points3D = [
@@ -228,6 +228,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 					];
 	// generate extrinsic camera matrix
 	var matrixAForward = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+	matrixAForward = Matrix.transform3DScale(matrixAForward,1.5,2.0,0.5); // metric scale test
 	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZa/180.0)*Math.PI);
@@ -348,7 +349,6 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
 
-
 	// determine camera properties for display:
 		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
 		var cameraRightA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(1,0,0));
@@ -356,12 +356,15 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		var cameraForwardA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,1));
 		console.log("cameraCenterA: "+matrixAForward.toString());
 		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
-			cameraDirectionZA.norm();
 		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
-			cameraDirectionXA.norm();
 		var cameraDirectionYA = V3D.sub(cameraUpA,cameraCenterA);
+		var cameraScaleXA = cameraDirectionXA.length();
+		var cameraScaleYA = cameraDirectionYA.length();
+		var cameraScaleZA = cameraDirectionZA.length();
+		console.log("direction scales: "+cameraScaleXA+", "+cameraScaleYA+", "+cameraScaleZA+"");
+			cameraDirectionXA.norm();
 			cameraDirectionYA.norm();
-
+			cameraDirectionZA.norm();
 
 	// SET UP POINTS:
 	var points = [];
@@ -399,6 +402,19 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		linCol.push(0.0,0.0,1.0,1.0);
 		linCol.push(1.0,0.0,1.0,1.0);
 	}
+	// world direction
+		linPnt.push( 0.0, 0.0, 0.0 ); // X
+		linPnt.push( 1.0, 0.0, 0.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(1.0,0.0,0.0,1.0);
+		linPnt.push( 0.0, 0.0, 0.0 ); // Y
+		linPnt.push( 0.0, 1.0, 0.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(0.0,1.0,0.0,1.0);
+		linPnt.push( 0.0, 0.0, 0.0 ); // Z
+		linPnt.push( 0.0, 0.0, 1.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(0.0,0.0,1.0,1.0);
 	// camera direction
 		// X
 		var p = cameraCenter;
@@ -459,7 +475,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		var widX = scale*imageWidth;
 		var heiY = scale*imageHeight;
 		var cenX = scale*cx;
-		var cenY = scale*(imageHeight-cy); // flip from image
+		var cenY = scale*cy;
 			var dirX = cameraDirectionXA.copy().norm();
 			var dirY = cameraDirectionYA.copy().norm();
 			var dirZ = cameraDirectionZA.copy().norm();
@@ -470,44 +486,26 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		var lenX = dirX.copy().scale(widX);
 		var lenY = dirY.copy().scale(heiY);
 		var lenZ = dirZ.copy().scale(focZ);
+		// scale for metric
+		var lenXScaledMetric = lenX.copy().scale(cameraScaleXA);
+		var lenYScaledMetric = lenY.copy().scale(cameraScaleYA);
 		// determine corners of projected image
-		var pOR = cameraCenter.copy().add(lenZ);
-		var pTL = pOR.copy().sub( dirX.copy().scale(cenX) ).add( dirY.copy().scale(cenY) );
-		var pTR = V3D.add(pTL,lenX);
-		var pBL = V3D.sub(pTL,lenY);
-		var pBR = V3D.add(pTL,lenX).sub(lenY);
+		var pOR = cameraCenter.copy().add(lenZ.copy().scale(cameraScaleZA));
+		var pBL = pOR.copy().sub( dirX.copy().scale(cenX*cameraScaleXA) ).sub( dirY.copy().scale(cenY*cameraScaleYA) );
+		var pBR = V3D.add(pBL,lenXScaledMetric);
+		var pTL = V3D.add(pBL,lenYScaledMetric);
+		var pTR = V3D.add(pBL,lenXScaledMetric).add(lenYScaledMetric);
 		console.log("CORNERS:");
 		console.log(pBL.toString());
 		console.log(pBR.toString());
 		console.log(pTR.toString());
 		console.log(pTL.toString());
 		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-		// ORIGINAL:
 		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
-		// FLIP Y:
-		//var vertList = [pTL.x,pTL.y,pTL.z, pTR.x,pTR.y,pTR.z, pBR.x,pBR.y,pBR.z,   pBR.x,pBR.y,pBR.z, pBL.x,pBL.y,pBL.z, pTL.x,pTL.y,pTL.z];
-		// FLIP X:
-		//var vertList = [pBR.x,pBR.y,pBR.z, pBL.x,pBL.y,pBL.z, pTL.x,pTL.y,pTL.z,   pTL.x,pTL.y,pTL.z, pTR.x,pTR.y,pTR.z, pBR.x,pBR.y,pBR.z];
-		// FLIP X & Y:
-		//var vertList = [pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z,   pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z];
 
 	this._renderTextureUVList[0] = uvList;
 	this._renderTexturePointList[0] = vertList;
 
-
-
-	//Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureVertPoints){ /
-	//this.addCameraVisual(matrix, this._renderTextureUVList[i], this._renderTexturePointList[i]);
-// 	var matrix = matrixA;
-// 	this._renderTextureUVList[1] = [];
-// 	this._renderTexturePointList[1] = [];
-// 	this._textures.push( this._textures[0] );
-// 	this._intrinsicK = matrixK;
-// this._renderPointsList = [];
-// this._renderColorsList = [];
-// this._renderLinePointsList = [];
-// this._renderLineColorsList = [];
-// 	this.addCameraVisual(matrix, this._renderTextureUVList[1], this._renderTexturePointList[1]);
 	// buffer creation
 	var i, len = this._textures.length;
 	for(i=0;i<len;++i){
@@ -526,16 +524,11 @@ Manual3DR.prototype._eff = function(e){
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
 	this._stage3D.matrixIdentity();
- this._stage3D.matrixTranslate(-0.5,-0.5,-3.0);
-// this._stage3D.matrixRotate(e*0.01, 0,1,0);
-	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
-//this._stage3D.matrixTranslate(0.0,0.0,-5.0);
-//	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
-	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
-//	this._stage3D.matrixRotate(e*0.0, e*0.0,0,1);
+ this._stage3D.matrixTranslate(-0.5,-0.5,-2.5);
 
-this._stage3D.matrixMultM3D(this._sphereMatrix);
-this._stage3D.matrixMultM3D(this._userInteractionMatrix);
+	// transformation = absolute + shpere interaction
+	this._stage3D.matrixMultM3D(this._sphereMatrix);
+	this._stage3D.matrixMultM3D(this._userInteractionMatrix);
 
 	// RENDER POINTS
 	this._stage3D.selectProgram(3);

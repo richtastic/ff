@@ -418,7 +418,7 @@ Matrix.transform3DTranslate = function(a,tX,tY,tZ){
 Matrix.transform3DScale = function(a,sX,sY,sZ){
 	sY = sY!==undefined?sY:sX;
 	sZ = sZ!==undefined?sZ:sY;
-	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
+	var b = Matrix._transformTemp3D.setFromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateX = function(a,angle){
