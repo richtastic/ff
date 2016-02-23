@@ -4552,25 +4552,52 @@ Feathering - Transparancy Fading between images
 
 
 
+
+
 whole bunch of equations written out:
 <br/>
-A<sub>4&times;4</sub> = 4x4
+
+A<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) [forward]
+
+A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates [reverse]
+<br/>
 [a<sub>0,0</sub> a<sub>0,1</sub> a<sub>0,2</sub> a<sub>0,3</sub>]
-[a<sub>1,0</sub> a<sub>1,1</sub> a<sub>1,2</sub> 1<sub>0,3</sub>]
-[a<sub>2,0</sub> a<sub>2,1</sub> a<sub>2,2</sub> 2<sub>0,3</sub>]
+<br/>
+[a<sub>1,0</sub> a<sub>1,1</sub> a<sub>1,2</sub> a<sub>1,3</sub>]
+<br/>
+[a<sub>2,0</sub> a<sub>2,1</sub> a<sub>2,2</sub> a<sub>2,3</sub>]
+<br/>
 [0 0 0 1]
-A<sub>3&times;4</sub> = 3x4
-[]
-K<sub>3&times;3</sub> = 3x3
+<br/>
+
+
+A<sub>3&times;4</sub> = 3x4 : only changing part of A<sub>4&times;4</sub>
+<br/>
+
+X/Z & Y/Z projection from 3D points into 2D points on a plane in camera's units
+
+K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & scaled & skewed 2D points
+<br/>
 [fx  s cx]
+<br/>
 [ 0 fy cy]
+<br/>
 [ 0  0  1]
+<br/>
+
+height - cy : convert from plane y coordinate to image y coordinate (y starts at top and goes down)
+
+
 P<sub>3&times;3</sub> = 3x3
+<br/>
 [e f g h]
+<br/>
 [i j k l]
 
 
 A = K &middot; P
+
+3x4 = 3x3 * 3*4
 
 
 *x*<sub>a</sub> = &lt;x<sub>a</sub>, y<sub>a</sub>&gt;
@@ -4617,7 +4644,6 @@ y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
 
 
 <br/>
-
 
 
 
