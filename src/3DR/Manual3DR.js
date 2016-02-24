@@ -212,7 +212,10 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	var camRotZa = -30.0;
 	var camRotXb = 0.0;
 	var camRotYb = -20.0;
-	var camRotZb = 0.0;
+	var camRotZb = 20.0;
+	var camScaX = 1.0;
+	var camScaY = 1.0;
+	var camScaZ = 1.0;
 	// pick 3D points
 	var points3D = [
 	//new V3D(0,0,1),
@@ -228,7 +231,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 					];
 	// generate extrinsic camera matrix
 	var matrixAForward = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
-	matrixAForward = Matrix.transform3DScale(matrixAForward,1.5,2.0,0.5); // metric scale test
+	matrixAForward = Matrix.transform3DScale(matrixAForward,camScaX,camScaY,camScaZ); // metric scale test
 	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZa/180.0)*Math.PI);
@@ -292,14 +295,12 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 		vector = Matrix.mult(matrixAReverse,vector);
 		var point3D_A = new V3D().setFromArray(vector.toArray());
 		console.log("X_A = "+point3D_A.toString());
-		// project onto camera 2D plane
-		if(point3D_A.z!=0 && point3D_A.z > 0){ // infinity || behind
-			var point2D_a = new V2D( point3D_A.x/point3D_A.z, point3D_A.y/point3D_A.z);
-			console.log("x_a_1 = "+point2D_a);
-			// orientate 2D plane to image position/scale/skew
-			vector = new Matrix(3,1).setFromArray([point2D_a.x,point2D_a.y,1.0]);
-			vector = Matrix.mult(matrixK,vector);
-			var point2D_a_image = new V2D().setFromArray(vector.toArray());
+		vector = Matrix.mult(matrixK,vector); // projection onto camera 2D plane can be done before or after multiplication by K
+		var point2D_a = new V3D().setFromArray(vector.toArray());
+		console.log("point2D_a: "+point2D_a.toString());
+		if(point2D_a.z!=0 && point2D_a.z>0) { // not at infinity && not behind camera
+			// project onto 2D camera plane
+			var point2D_a_image = new V2D( point2D_a.x/point2D_a.z, point2D_a.y/point2D_a.z );
 			// flip y axis for image direction
 			point2D_a_image.y = imageHeight - point2D_a_image.y;
 			console.log("x_a_2 = "+point2D_a_image);

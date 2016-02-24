@@ -4557,9 +4557,9 @@ Feathering - Transparancy Fading between images
 whole bunch of equations written out:
 <br/>
 
-A<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) [forward]
+A<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) (forward)
 
-A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates [reverse]
+A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates (reverse)
 <br/>
 [a<sub>0,0</sub> a<sub>0,1</sub> a<sub>0,2</sub> a<sub>0,3</sub>]
 <br/>
@@ -4573,8 +4573,14 @@ A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates t
 
 A<sub>3&times;4</sub> = 3x4 : only changing part of A<sub>4&times;4</sub>
 <br/>
+[r<sub>0,0</sub> r<sub>0,1</sub> r<sub>0,2</sub> t<sub>x</sub>]
+<br/>
+[r<sub>1,0</sub> r<sub>1,1</sub> r<sub>1,2</sub> t<sub>y</sub>]
+<br/>
+[r<sub>2,0</sub> r<sub>2,1</sub> r<sub>2,2</sub> t<sub>z</sub>]
+<br/>
 
-X/Z & Y/Z projection from 3D points into 2D points on a plane in camera's units
+<br/>
 
 K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & scaled & skewed 2D points
 <br/>
@@ -4584,6 +4590,49 @@ K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & sca
 <br/>
 [ 0  0  1]
 <br/>
+
+
+
+P<sub>A</sub><sub>3&times;4</sub> = K&middot;A
+
+
+X/Z & Y/Z projection from 3D points into 2D points on a plane in camera's units
+
+
+####DIVISION BY Z BE DONE BEFORE/AFTER MULTIPLICATION BY K
+
+1) Before
+<br/>
+f<sub>x</sub>&middot;(X/Z) + s&middot;(Y/Z) + c<sub>x</sub>&middot;(1) = x
+<br/>
+f<sub>y</sub>&middot;(Y/Z) + c<sub>y</sub>&middot;(1) = y
+<br/>
+<br/>
+2) After
+<br/>
+f<sub>x</sub>&middot;X + s&middot;Y + c<sub>x</sub>&middot;Z = x
+<br/>
+f<sub>y</sub>&middot;Y + c<sub>y</sub>&middot;Z = y
+<br/>
+Z = z
+<br/>
+&rArr;
+<br/>
+x / z = (f<sub>x</sub>&middot;X + s&middot;Y + c<sub>x</sub>&middot;Z)/Z
+<br/>
+= f<sub>x</sub>&middot;X/Z + s&middot;Y/Z + c<sub>x</sub>
+<br/>
+= **YES**
+<br/>
+&rArr;
+<br/>
+y / z = (f<sub>y</sub>&middot;Y + c<sub>y</sub>&middot;Z)/Z
+<br/>
+= f<sub>y</sub>&middot;Y/Z + c<sub>y</sub>
+<br/>
+= **YES**
+
+
 
 height - cy : convert from plane y coordinate to image y coordinate (y starts at top and goes down)
 
@@ -4595,9 +4644,9 @@ P<sub>3&times;3</sub> = 3x3
 [i j k l]
 
 
-A = K &middot; P
 
-3x4 = 3x3 * 3*4
+
+
 
 
 *x*<sub>a</sub> = &lt;x<sub>a</sub>, y<sub>a</sub>&gt;
@@ -4644,6 +4693,7 @@ y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
 
 
 <br/>
+
 
 
 
