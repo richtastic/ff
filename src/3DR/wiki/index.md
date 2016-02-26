@@ -4644,16 +4644,82 @@ P<sub>3&times;3</sub> = 3x3
 [i j k l]
 
 
-
-
-
-
-
 *x*<sub>a</sub> = &lt;x<sub>a</sub>, y<sub>a</sub>&gt;
 
 *X*<sub>A</sub> = &lt;X<sub>A</sub>, Y<sub>A</sub>, Z<sub>A</sub>, 1&gt;
 
 *X*<sub>E</sub> = &lt;X<sub>E</sub>, Y<sub>E</sub>, Z<sub>E</sub>, 1&gt;
+
+
+
+
+
+
+
+
+
+
+
+### LISTED EQUATIONS:
+
+
+**P<sub>A</sub>** = **K** &middot; **A**
+<br/>
+...
+
+
+
+**A** = **A**<sub>3&times;4</sub> &middot; **E**
+<br/>
+A<sub>x</sub> = r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>x</sub> + t<sub>x</sub>&middot;1
+<br/>
+A<sub>y</sub> = r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>&middot;1
+<br/>
+A<sub>z</sub> = r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>&middot;1
+<br/>
+<br/>
+
+
+**a** = **K** &middot; **A**
+<br/>
+a<sub>x</sub> = f<sub>x</sub> &middot; A<sub>x</sub> + s &middot; A<sub>y</sub> + c<sub>x</sub> &middot; A<sub>z</sub>
+<br/>
+a<sub>y</sub> = f<sub>y</sub> &middot; A<sub>y</sub> + c<sub>y</sub> &middot; A<sub>z</sub>
+<br/>
+a<sub>z</sub> = A<sub>z</sub>
+<br/>
+&rArr;
+<br/>
+a<sub>x</sub> = f<sub>x</sub> &middot; (r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>x</sub> + t<sub>x</sub>) + s &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>x</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
+<br/>
+a<sub>y</sub> = f<sub>y</sub> &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>y</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
+<br/>
+a<sub>z</sub> = (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
+
+<br/>
+
+<br/>
+
+<br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 **1) orientate from 3D world point to local camera model 3D point**
