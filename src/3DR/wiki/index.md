@@ -4553,7 +4553,6 @@ Feathering - Transparancy Fading between images
 
 
 
-
 whole bunch of equations written out:
 <br/>
 
@@ -4584,9 +4583,9 @@ A<sub>3&times;4</sub> = 3x4 : only changing part of A<sub>4&times;4</sub>
 
 K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & scaled & skewed 2D points
 <br/>
-[fx  s cx]
+[f<sub>x</sub>  s c<sub>x</sub>]
 <br/>
-[ 0 fy cy]
+[ 0 f<sub>y</sub> c<sub>y</sub>]
 <br/>
 [ 0  0  1]
 <br/>
@@ -4594,7 +4593,22 @@ K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & sca
 
 
 P<sub>A</sub><sub>3&times;4</sub> = K&middot;A
+<br/>
+[r<sub>0,0</sub>&middot;f<sub>x</sub> + r<sub>1,0</sub>&middot;s  + r<sub>1,0</sub>&middot;c<sub>x</sub> | r<sub>0,1</sub>&middot;f<sub>x</sub> + r<sub>1,1</sub>&middot;s  + r<sub>1,1</sub>&middot;c<sub>x</sub> | r<sub>0,2</sub>&middot;f<sub>x</sub> + r<sub>1,2</sub>&middot;s  + r<sub>1,2</sub>&middot;c<sub>x</sub> | t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s  + t<sub>z</sub>&middot;c<sub>x</sub>]
+<br/>
+[r<sub>1,0</sub>&middot;f<sub>y</sub> + r<sub>2,0</sub>&middot;c<sub>y</sub> | r<sub>1,1</sub>&middot;f<sub>y</sub> + r<sub>2,1</sub>&middot;c<sub>y</sub> | r<sub>1,2</sub>&middot;f<sub>y</sub> + r<sub>2,2</sub>&middot;c<sub>y</sub> | t<sub>y</sub>&middot;f<sub>y</sub> + t<sub>z</sub>&middot;c<sub>y</sub>]
+<br/>
+[r<sub>2,0</sub>&middot;c<sub>y</sub> | r<sub>2,1</sub>&middot;c<sub>y</sub> | r<sub>2,2</sub>&middot;c<sub>y</sub> | t<sub>z</sub>&middot;c<sub>y</sub>]
+<br/>
+<br/>
+[p<sub>0,0</sub> p<sub>0,1</sub> p<sub>0,2</sub> p<sub>0,3</sub>]
+<br/>
+[p<sub>1,0</sub> p<sub>1,1</sub> p<sub>1,2</sub> p<sub>1,3</sub>]
+<br/>
+[p<sub>2,0</sub> p<sub>2,1</sub> p<sub>2,2</sub> p<sub>2,3</sub>]
+<br/>
 
+<br/>
 
 X/Z & Y/Z projection from 3D points into 2D points on a plane in camera's units
 
