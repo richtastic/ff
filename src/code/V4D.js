@@ -90,6 +90,23 @@ V4D.prototype.qInverse = function(){ // flip rotation angle, keep direction
 	this.x = -this.x; this.y = -this.y; this.z = -this.z;
 	return this;
 }
+V4D.prototype.qRotatePoint = function(b, a){ // b = a * q | assuming V3D
+	var q = this;
+	var xx  = q.x*q.x;
+	var xy2 = q.x*q.y*2.0;
+	var xz2 = q.x*q.z*2.0;
+	var xt2 = q.x*q.t*2.0;
+	var yy  = q.y*q.y;
+	var yz2 = q.y*q.z*2.0;
+	var yt2 = q.y*q.t*2.0;
+	var zz  = q.z*q.z;
+	var zt2 = q.z*q.t*2.0;
+	var tt  = q.t*q.t;
+	var x = a.x*(tt+xx-yy-zz) + a.y*(xy2-zt2) + a.z*(xz2+yt2);
+	var y = a.x*(xy2+zt2) + a.y*(tt-xx+yy-zz) + a.z*(yz2-xt2);
+	var z = a.x*(xz2-yt2) + a.y*(yz2+xt2) + a.z*(tt-xx-yy+zz);
+	b.set(x,y,z);
+}
 // ---------------------------------------------------------------------------------------------------------------------
 V4D.prototype.copy = function(a){
 	if(!a){ return new V4D(this.x, this.y, this.z, this.t); };

@@ -4553,12 +4553,15 @@ Feathering - Transparancy Fading between images
 
 
 
+
+
+
 whole bunch of equations written out:
 <br/>
 
-A<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) (forward)
+A<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates (forward)
 
-A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates (reverse)
+A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) (reverse)
 <br/>
 [a<sub>0,0</sub> a<sub>0,1</sub> a<sub>0,2</sub> a<sub>0,3</sub>]
 <br/>
@@ -4607,6 +4610,31 @@ P<sub>A</sub><sub>3&times;4</sub> = K&middot;A
 <br/>
 [p<sub>2,0</sub> p<sub>2,1</sub> p<sub>2,2</sub> p<sub>2,3</sub>]
 <br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+
+
+
+<br/>
+
 
 <br/>
 
@@ -4717,9 +4745,48 @@ a<sub>z</sub> = (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E
 <br/>
 
 
+#### getting extrinsic camera matrix parameters from point/screen matches
+
+KNOWN: N
+X | A | a (screen)
+X | B | b (screen)
+...
+
+UNKNOWN: 12 - 3 (dot self = 0) - 3 (dot others = 1) = 6
+r<sub>0,0</sub>
+r<sub>0,1</sub>
+r<sub>0,2</sub>
+<br/>
+r<sub>1,0</sub>
+r<sub>1,1</sub>
+r<sub>1,2</sub>
+<br/>
+r<sub>2,0</sub>
+r<sub>2,1</sub>
+r<sub>2,2</sub>
+<br/>
+t<sub>x</sub>
+t<sub>y</sub>
+t<sub>z</sub>
 
 
+<br/>
+<br/>
 
+6 actual extrinsic unknowns:
+r<sub>x</sub>
+r<sub>y</sub>
+r<sub>z</sub>
+<br/>
+t<sub>x</sub>
+t<sub>y</sub>
+t<sub>z</sub>
+
+<br/>
+
+<br/>
+
+<br/>
 
 
 
@@ -4773,6 +4840,8 @@ y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
 
 
 <br/>
+
+
 
 
 
