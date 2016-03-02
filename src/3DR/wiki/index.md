@@ -4597,11 +4597,11 @@ K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & sca
 
 P<sub>A</sub><sub>3&times;4</sub> = K&middot;A
 <br/>
-[r<sub>0,0</sub>&middot;f<sub>x</sub> + r<sub>1,0</sub>&middot;s  + r<sub>1,0</sub>&middot;c<sub>x</sub> | r<sub>0,1</sub>&middot;f<sub>x</sub> + r<sub>1,1</sub>&middot;s  + r<sub>1,1</sub>&middot;c<sub>x</sub> | r<sub>0,2</sub>&middot;f<sub>x</sub> + r<sub>1,2</sub>&middot;s  + r<sub>1,2</sub>&middot;c<sub>x</sub> | t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s  + t<sub>z</sub>&middot;c<sub>x</sub>]
+[r<sub>0,0</sub>&middot;f<sub>x</sub> + r<sub>2,0</sub>&middot;s  + r<sub>1,0</sub>&middot;c<sub>x</sub> | r<sub>0,1</sub>&middot;f<sub>x</sub> + r<sub>1,1</sub>&middot;s  + r<sub>2,1</sub>&middot;c<sub>x</sub> | r<sub>0,2</sub>&middot;f<sub>x</sub> + r<sub>1,2</sub>&middot;s  + r<sub>2,2</sub>&middot;c<sub>x</sub> | t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s  + t<sub>z</sub>&middot;c<sub>x</sub>]
 <br/>
 [r<sub>1,0</sub>&middot;f<sub>y</sub> + r<sub>2,0</sub>&middot;c<sub>y</sub> | r<sub>1,1</sub>&middot;f<sub>y</sub> + r<sub>2,1</sub>&middot;c<sub>y</sub> | r<sub>1,2</sub>&middot;f<sub>y</sub> + r<sub>2,2</sub>&middot;c<sub>y</sub> | t<sub>y</sub>&middot;f<sub>y</sub> + t<sub>z</sub>&middot;c<sub>y</sub>]
 <br/>
-[r<sub>2,0</sub>&middot;c<sub>y</sub> | r<sub>2,1</sub>&middot;c<sub>y</sub> | r<sub>2,2</sub>&middot;c<sub>y</sub> | t<sub>z</sub>&middot;c<sub>y</sub>]
+[r<sub>2,0</sub> | r<sub>2,1</sub> | r<sub>2,2</sub> | t<sub>z</sub>]
 <br/>
 <br/>
 [p<sub>0,0</sub> p<sub>0,1</sub> p<sub>0,2</sub> p<sub>0,3</sub>]
@@ -4868,6 +4868,7 @@ y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
 
 
 
+
 [r<sub>0,0</sub> | r<sub>0,1</sub> | r<sub>0,1</sub> | r<sub>1,0</sub> | r<sub>1,1</sub> | r<sub>1,2</sub> | r<sub>2,0</sub> | r<sub>2,1</sub> | r<sub>2,2</sub> | t<sub>x</sub> | t<sub>y</sub> | t<sub>z</sub>]
 
 <br/>
@@ -4924,6 +4925,87 @@ f<sub>y</sub>&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + f<sub>y</sub>&middot
 
 | 0 | 0 | 0 | f<sub>y</sub>&middot;E<sub>x</sub> | f<sub>y</sub>&middot;E<sub>y</sub> | f<sub>y</sub>&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>y</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) |  f<sub>y</sub>&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | = | 0 |
 <br/>
+
+
+<br/>
+- need minimum of 12 rows for matrix solution
+- every 3D world point  -to- 2D screen point provides 2 lines
+- &rarr; need minimum of 6 points
+
+
+<br/>
+<br/>
+
+#### WHAT IF camera intrinsic camera parameters are not known?
+
+
+<br/>
+
+
+**P**<sub>A</sub><sub>3&times;4</sub> = **K**&middot;**A**
+<br/>
+&rArr;
+<br/>
+p<sub>0,0</sub> = r<sub>0,0</sub>&middot;f<sub>x</sub> + r<sub>1,0</sub>&middot;s  + r<sub>2,0</sub>&middot;c<sub>x</sub>
+<br/>
+p<sub>0,1</sub> = r<sub>0,1</sub>&middot;f<sub>x</sub> + r<sub>1,1</sub>&middot;s  + r<sub>2,1</sub>&middot;c<sub>x</sub> 
+<br/>
+p<sub>0,2</sub> = r<sub>0,2</sub>&middot;f<sub>x</sub> + r<sub>1,2</sub>&middot;s  + r<sub>2,2</sub>&middot;c<sub>x</sub>
+<br/>
+p<sub>0,3</sub> = t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s  + t<sub>z</sub>&middot;c<sub>x</sub>
+<br/>
+p<sub>1,0</sub> = r<sub>1,0</sub>&middot;f<sub>y</sub> + r<sub>2,0</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>1,1</sub> = r<sub>1,1</sub>&middot;f<sub>y</sub> + r<sub>2,1</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>1,2</sub> = r<sub>1,2</sub>&middot;f<sub>y</sub> + r<sub>2,2</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>1,3</sub> = t<sub>y</sub>&middot;f<sub>y</sub> + t<sub>z</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>2,0</sub> = r<sub>2,0</sub>
+<br/>
+p<sub>2,1</sub> = r<sub>2,1</sub>
+<br/>
+p<sub>2,2</sub> =  r<sub>2,2</sub>
+<br/>
+p<sub>2,3</sub> = t<sub>z</sub>
+<br/>
+<br/>
+[p<sub>0,0</sub> p<sub>0,1</sub> p<sub>0,2</sub> p<sub>0,3</sub>]
+<br/>
+[p<sub>1,0</sub> p<sub>1,1</sub> p<sub>1,2</sub> p<sub>1,3</sub>]
+<br/>
+[p<sub>2,0</sub> p<sub>2,1</sub> p<sub>2,2</sub> p<sub>2,3</sub>]
+<br/>
+
+**a** = **P**&middot;**E**
+
+<br/>
+a<sub>x</sub> = ...
+<br/>
+a<sub>y</sub> = ...
+<br/>
+a<sub>z</sub> = ...
+
+<br/>
+
+
+...
+
+
+
+
+<br/>
+
+
+<br/>
+
+<br/>
+
+
+...
+
+
 
 
 
