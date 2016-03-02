@@ -57,8 +57,14 @@ V4D.prototype.qClear = function(){ // init to identity
 	this.set(0,0,0,1);
 }
 V4D.prototype.qRotateDir = function(x,y,z, a){
-	this.qDir(x,y,z);
-	this.qRotation(a);
+	// this.qDir(x,y,z);
+	// this.qRotation(a);
+	angle *= 0.5;
+	var sin = Math.sin(angle);
+	this.x = x * this.x*sin;
+	this.y = y * this.y*sin;
+	this.z = z * this.z*sin;
+	this.t = Math.cos(angle);
 }
 V4D.prototype.qRotation = function(angle){
 	angle *= 0.5;
@@ -74,12 +80,12 @@ V4D.prototype.qNorm = function(){
 	this.x /= dist; this.y /= dist; this.z /= dist; this.t /= dist;
 	return this;
 }
-V4D.prototype.qDir = function(x,y,z){
-	this.x = x;
-	this.y = y;
-	this.z = z;
-	this.t = 0;
-}
+// V4D.prototype.qDir = function(x,y,z){
+// 	this.x = x;
+// 	this.y = y;
+// 	this.z = z;
+// 	this.t = 0;
+// }
 V4D.prototype.qLength = function(){
 	return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z+this.t*this.t);
 }
