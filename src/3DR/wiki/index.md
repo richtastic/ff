@@ -4555,13 +4555,12 @@ Feathering - Transparancy Fading between images
 
 
 
+#### whole bunch of equations written out:
 
-whole bunch of equations written out:
-<br/>
 
-A<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates (forward)
+**A**<sup>-1</sup><sub>4&times;4</sub> = 4x4 matrix : convert 3D points from camera coordinates to world coordinates (reverse)
 
-A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) (reverse)
+**A**<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to camera coordinates (camera's persepective) (forward)
 <br/>
 [a<sub>0,0</sub> a<sub>0,1</sub> a<sub>0,2</sub> a<sub>0,3</sub>]
 <br/>
@@ -4573,7 +4572,7 @@ A<sub>4&times;4</sub> = 4x4 matrix : convert 3D points from world coordinates to
 <br/>
 
 
-A<sub>3&times;4</sub> = 3x4 : only changing part of A<sub>4&times;4</sub>
+**A**<sub>3&times;4</sub> = 3x4 matrix : only changing part of A<sub>4&times;4</sub>
 <br/>
 [r<sub>0,0</sub> r<sub>0,1</sub> r<sub>0,2</sub> t<sub>x</sub>]
 <br/>
@@ -4584,7 +4583,7 @@ A<sub>3&times;4</sub> = 3x4 : only changing part of A<sub>4&times;4</sub>
 
 <br/>
 
-K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & scaled & skewed 2D points
+**K**<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & scaled & skewed 2D points
 <br/>
 [f<sub>x</sub>  s c<sub>x</sub>]
 <br/>
@@ -4595,7 +4594,7 @@ K<sub>3&times;3</sub> = 3x3 : convert 2D plane points into screen-centered & sca
 
 
 
-P<sub>A</sub><sub>3&times;4</sub> = K&middot;A
+**P**<sub>A</sub><sub>3&times;4</sub> = **K**&middot;**A**
 <br/>
 [r<sub>0,0</sub>&middot;f<sub>x</sub> + r<sub>2,0</sub>&middot;s  + r<sub>1,0</sub>&middot;c<sub>x</sub> | r<sub>0,1</sub>&middot;f<sub>x</sub> + r<sub>1,1</sub>&middot;s  + r<sub>2,1</sub>&middot;c<sub>x</sub> | r<sub>0,2</sub>&middot;f<sub>x</sub> + r<sub>1,2</sub>&middot;s  + r<sub>2,2</sub>&middot;c<sub>x</sub> | t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s  + t<sub>z</sub>&middot;c<sub>x</sub>]
 <br/>
@@ -4613,35 +4612,16 @@ P<sub>A</sub><sub>3&times;4</sub> = K&middot;A
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <br/>
 <br/>
 <br/>
 
 
-
-<br/>
-
-
-<br/>
-
-X/Z & Y/Z projection from 3D points into 2D points on a plane in camera's units
+- X/Z & Y/Z is projection from 3D points into 2D points on a plane in camera's units
+- different focal lengths means pixels are not square
 
 
-####DIVISION BY Z BE DONE BEFORE/AFTER MULTIPLICATION BY K
+#### DIVISION BY Z BE DONE BEFORE/AFTER MULTIPLICATION BY K
 
 1) Before
 <br/>
@@ -4675,15 +4655,12 @@ y / z = (f<sub>y</sub>&middot;Y + c<sub>y</sub>&middot;Z)/Z
 = **YES**
 
 
+...
+
+
+#### continuing
 
 height - cy : convert from plane y coordinate to image y coordinate (y starts at top and goes down)
-
-
-P<sub>3&times;3</sub> = 3x3
-<br/>
-[e f g h]
-<br/>
-[i j k l]
 
 
 *x*<sub>a</sub> = &lt;x<sub>a</sub>, y<sub>a</sub>&gt;
@@ -4693,24 +4670,17 @@ P<sub>3&times;3</sub> = 3x3
 *X*<sub>E</sub> = &lt;X<sub>E</sub>, Y<sub>E</sub>, Z<sub>E</sub>, 1&gt;
 
 
+### LISTED EQUATIONS WRITTEN OUT EXPLICITLY:
 
-
-
-
-
-
-
-
-
-### LISTED EQUATIONS:
-
-
-**P<sub>A</sub>** = **K** &middot; **A**
+**E** = world 3D point &lt;E<sub>X</sub>,E<sub>Y</sub>,E<sub>Z</sub>&gt;
 <br/>
-...
-
-
-
+**A** = camera 3D point &lt;A<sub>X</sub>,A<sub>Y</sub>,A<sub>Z</sub>&gt;
+<br/>
+**a** = camera 2D point &lt;a<sub>x</sub>,a<sub>y</sub>&gt;
+<br/>
+**a**<sub>x/z,y/z</sub> = image 2D point &lt;a<sub>x/z</sub>,a<sub>y/z</sub>&gt;
+<br/>
+<br/>
 **A** = **A**<sub>3&times;4</sub> &middot; **E**
 <br/>
 A<sub>x</sub> = r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>x</sub> + t<sub>x</sub>&middot;1
@@ -4722,7 +4692,7 @@ A<sub>z</sub> = r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<
 <br/>
 
 
-**a** = **K** &middot; **A**
+**a** = **K** &middot; **A* = (**K** &middot; **A<sub>3&times;4</sub>**) &middot; **E** = **P** &middot; **E** 
 <br/>
 a<sub>x</sub> = f<sub>x</sub> &middot; A<sub>x</sub> + s &middot; A<sub>y</sub> + c<sub>x</sub> &middot; A<sub>z</sub>
 <br/>
@@ -4739,11 +4709,7 @@ a<sub>y</sub> = f<sub>y</sub> &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r
 a<sub>z</sub> = (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
 
 <br/>
-
 <br/>
-
-<br/>
-
 
 #### getting extrinsic camera matrix parameters from point/screen matches
 
@@ -4769,7 +4735,6 @@ t<sub>x</sub>
 t<sub>y</sub>
 t<sub>z</sub>
 
-
 <br/>
 <br/>
 
@@ -4783,42 +4748,8 @@ t<sub>y</sub>
 t<sub>z</sub>
 
 <br/>
-
 <br/>
-
 <br/>
-
-
-<br/>
-a<sub>x</sub> = f<sub>x</sub> &middot; (r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>x</sub> + t<sub>x</sub>) + s &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>x</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
-
-a<sub>x</sub> = f<sub>x</sub> &middot; (r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>x</sub> + t<sub>x</sub>) + s &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>x</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
-
-
-
-
-
-
-
-
-<br/>
-a<sub>y</sub> = f<sub>y</sub> &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>y</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
-<br/>
-a<sub>z</sub> = (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 **1) orientate from 3D world point to local camera model 3D point**
@@ -4855,37 +4786,24 @@ x<sub>a</sub> = x<sub>a</sub>&middot;f<sub>x</sub> + x<sub>b</sub>&middot;s + c<
 y<sub>a</sub> = y<sub>a</sub>&middot;f<sub>y</sub> + c<sub>y</sub>
 
 <br/>
-
-
 <br/>
 
 
+#### finding SVD least squares solutions from equations
 
-
-
-
-
-
-
-
-
-[r<sub>0,0</sub> | r<sub>0,1</sub> | r<sub>0,1</sub> | r<sub>1,0</sub> | r<sub>1,1</sub> | r<sub>1,2</sub> | r<sub>2,0</sub> | r<sub>2,1</sub> | r<sub>2,2</sub> | t<sub>x</sub> | t<sub>y</sub> | t<sub>z</sub>]
-
-<br/>
-
-a<sub>x</sub> = f<sub>x</sub> &middot; (r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>x</sub> + t<sub>x</sub>) + s &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>x</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
-
-a<sub>x</sub> = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>x</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
-
+[r<sub>0,0</sub> | r<sub>0,1</sub> | r<sub>0,2</sub> | r<sub>1,0</sub> | r<sub>1,1</sub> | r<sub>1,2</sub> | r<sub>2,0</sub> | r<sub>2,1</sub> | r<sub>2,2</sub> | t<sub>x</sub> | t<sub>y</sub> | t<sub>z</sub>]
 <br/>
 <br/>
-
+a<sub>x</sub> = f<sub>x</sub> &middot; (r<sub>0,0</sub>&middot;E<sub>x</sub> + r<sub>0,1</sub>&middot;E<sub>y</sub> + r<sub>0,2</sub>&middot;E<sub>z</sub> + t<sub>x</sub>) + s &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>x</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
+<br/>
+a<sub>x</sub> = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
+<br/>
+<br/>
 a<sub>y</sub> = f<sub>y</sub> &middot; (r<sub>1,0</sub>&middot;E<sub>x</sub> + r<sub>1,1</sub>&middot;E<sub>y</sub> + r<sub>1,2</sub>&middot;E<sub>z</sub> + t<sub>y</sub>) + c<sub>y</sub> &middot; (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
-
-a<sub>y</sub> = f<sub>y</sub>&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + f<sub>y</sub>&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + f<sub>y</sub>&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + f<sub>y</sub>&middot;t<sub>y</sub> + c<sub>y</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>y</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>y</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>y</sub>&middot;t<sub>z</sub>
-
 <br/>
-
+a<sub>y</sub> = f<sub>y</sub>&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + f<sub>y</sub>&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + f<sub>y</sub>&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + f<sub>y</sub>&middot;t<sub>y</sub> + c<sub>y</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>y</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>y</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>y</sub>&middot;t<sub>z</sub>
+<br/>
+<br/>
 a<sub>z</sub> = r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>
 
 
@@ -4896,16 +4814,16 @@ a<sub>x/z</sub> = a<sub>x</sub> / a<sub>z</sub> (screen point)
 <br/>
 &rArr;
 <br/>
-a<sub>x/z</sub> = (f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>x</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>) / (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
+a<sub>x/z</sub> = (f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>) / (r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>)
 <br/>
-a<sub>x/z</sub>&middot;(r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>) = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>x</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
+a<sub>x/z</sub>&middot;(r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>) = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
 <br/>
-a<sub>x/z</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + a<sub>x/z</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + a<sub>x/z</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + a<sub>x/z</sub>&middot;t<sub>z</sub> = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>x</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
+a<sub>x/z</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + a<sub>x/z</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + a<sub>x/z</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + a<sub>x/z</sub>&middot;t<sub>z</sub> = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
 <br/>
-f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>x</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + r<sub>2,0</sub>&middot;E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + r<sub>2,1</sub>&middot;E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + r<sub>2,2</sub>&middot;E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) = 0
+f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + r<sub>2,0</sub>&middot;E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + r<sub>2,1</sub>&middot;E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + r<sub>2,2</sub>&middot;E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) = 0
 <br/>
 <br/>
-| f<sub>x</sub>&middot;E<sub>x</sub> | f<sub>x</sub>&middot;E<sub>y</sub> | f<sub>x</sub>&middot;E<sub>x</sub> | s&middot;E<sub>x</sub> | s&middot;E<sub>y</sub> | s&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>)| E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | f<sub>x</sub>&middot;t<sub>x</sub> +  s&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | = | 0 | 
+| f<sub>x</sub>&middot;E<sub>x</sub> | f<sub>x</sub>&middot;E<sub>y</sub> | f<sub>x</sub>&middot;E<sub>z</sub> | s&middot;E<sub>x</sub> | s&middot;E<sub>y</sub> | s&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>)| E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | f<sub>x</sub>&middot;t<sub>x</sub> +  s&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | = | 0 | 
 
 <br/>
 <br/>
@@ -4977,16 +4895,76 @@ p<sub>2,3</sub> = t<sub>z</sub>
 <br/>
 [p<sub>2,0</sub> p<sub>2,1</sub> p<sub>2,2</sub> p<sub>2,3</sub>]
 <br/>
-
+<br/>
 **a** = **P**&middot;**E**
+<br/>
+<br/>
+a<sub>x</sub> = p<sub>0,0</sub>&middot;E<sub>x</sub> + p<sub>0,1</sub>&middot;E<sub>y</sub> + p<sub>0,2</sub>&middot;E<sub>z</sub> + p<sub>0,3</sub>&middot;1
+<br/>
+a<sub>y</sub> = p<sub>1,0</sub>&middot;E<sub>x</sub> + p<sub>1,1</sub>&middot;E<sub>y</sub> + p<sub>1,2</sub>&middot;E<sub>z</sub> + p<sub>1,3</sub>&middot;1
+<br/>
+a<sub>z</sub> = p<sub>2,0</sub>&middot;E<sub>x</sub> + p<sub>2,1</sub>&middot;E<sub>y</sub> + p<sub>2,2</sub>&middot;E<sub>z</sub> + p<sub>2,3</sub>&middot;1
+<br/>
+<br/>
+a<sub>x/z</sub> = a<sub>x</sub> / a<sub>z</sub>
+<br/>
+a<sub>x/z</sub> = (p<sub>0,0</sub>&middot;E<sub>x</sub> + p<sub>0,1</sub>&middot;E<sub>y</sub> + p<sub>0,2</sub>&middot;E<sub>z</sub> + p<sub>0,3</sub>) / (p<sub>2,0</sub>&middot;E<sub>x</sub> + p<sub>2,1</sub>&middot;E<sub>y</sub> + p<sub>2,2</sub>&middot;E<sub>z</sub> + p<sub>2,3</sub>)
+<br/>
+a<sub>x/z</sub>&middot;(p<sub>2,0</sub>&middot;E<sub>x</sub> + p<sub>2,1</sub>&middot;E<sub>y</sub> + p<sub>2,2</sub>&middot;E<sub>z</sub> + p<sub>2,3</sub>) = (p<sub>0,0</sub>&middot;E<sub>x</sub> + p<sub>0,1</sub>&middot;E<sub>y</sub> + p<sub>0,2</sub>&middot;E<sub>z</sub> + p<sub>0,3</sub>)
+<br/>
+a<sub>x/z</sub>&middot;p<sub>2,0</sub>&middot;E<sub>x</sub> + a<sub>x/z</sub>&middot;p<sub>2,1</sub>&middot;E<sub>y</sub> + a<sub>x/z</sub>&middot;p<sub>2,2</sub>&middot;E<sub>z</sub> + a<sub>x/z</sub>&middot;p<sub>2,3</sub> = p<sub>0,0</sub>&middot;E<sub>x</sub> + p<sub>0,1</sub>&middot;E<sub>y</sub> + p<sub>0,2</sub>&middot;E<sub>z</sub> + p<sub>0,3</sub>
+<br/>
+0 = p<sub>0,0</sub>&middot;E<sub>x</sub> + p<sub>0,1</sub>&middot;E<sub>y</sub> + p<sub>0,2</sub>&middot;E<sub>z</sub> + p<sub>0,3</sub> - a<sub>x/z</sub>&middot;p<sub>2,0</sub>&middot;E<sub>x</sub> - a<sub>x/z</sub>&middot;p<sub>2,1</sub>&middot;E<sub>y</sub> - a<sub>x/z</sub>&middot;p<sub>2,2</sub>&middot;E<sub>z</sub> - a<sub>x/z</sub>&middot;p<sub>2,3</sub>
+<br/>
+<br/>
+a<sub>y/z</sub> = a<sub>y</sub> / a<sub>z</sub>
+<br/>
+a<sub>y/z</sub> = (p<sub>1,0</sub>&middot;E<sub>x</sub> + p<sub>1,1</sub>&middot;E<sub>y</sub> + p<sub>1,2</sub>&middot;E<sub>z</sub> + p<sub>1,3</sub>) / (p<sub>2,0</sub>&middot;E<sub>x</sub> + p<sub>2,1</sub>&middot;E<sub>y</sub> + p<sub>2,2</sub>&middot;E<sub>z</sub> + p<sub>2,3</sub>)
+<br/>
+a<sub>y/z</sub>&middot;(p<sub>2,0</sub>&middot;E<sub>x</sub> + p<sub>2,1</sub>&middot;E<sub>y</sub> + p<sub>2,2</sub>&middot;E<sub>z</sub> + p<sub>2,3</sub>) = (p<sub>1,0</sub>&middot;E<sub>x</sub> + p<sub>1,1</sub>&middot;E<sub>y</sub> + p<sub>1,2</sub>&middot;E<sub>z</sub> + p<sub>1,3</sub>)
+<br/>
+a<sub>y/z</sub>&middot;p<sub>2,0</sub>&middot;E<sub>x</sub> + a<sub>y/z</sub>&middot;p<sub>2,1</sub>&middot;E<sub>y</sub> + a<sub>y/z</sub>&middot;p<sub>2,2</sub>&middot;E<sub>z</sub> + a<sub>y/z</sub>&middot;p<sub>2,3</sub> = p<sub>1,0</sub>&middot;E<sub>x</sub> + p<sub>1,1</sub>&middot;E<sub>y</sub> + p<sub>1,2</sub>&middot;E<sub>z</sub> + p<sub>1,3</sub>
+<br/>
+0 = p<sub>1,0</sub>&middot;E<sub>x</sub> + p<sub>1,1</sub>&middot;E<sub>y</sub> + p<sub>1,2</sub>&middot;E<sub>z</sub> + p<sub>1,3</sub> - a<sub>y/z</sub>&middot;p<sub>2,0</sub>&middot;E<sub>x</sub> - a<sub>y/z</sub>&middot;p<sub>2,1</sub>&middot;E<sub>y</sub> - a<sub>y/z</sub>&middot;p<sub>2,2</sub>&middot;E<sub>z</sub> - a<sub>y/z</sub>&middot;p<sub>2,3</sub>
+<br/>
+<br/>
+| E<sub>x</sub> | E<sub>y</sub> | E<sub>z</sub> | 1 | 0 | 0 | 0 | 0 | -a<sub>x/z</sub>&middot;E<sub>x</sub> | -a<sub>x/z</sub>&middot;E<sub>y</sub> | -a<sub>x/z</sub>&middot;E<sub>z</sub> | -a<sub>x/z</sub> | = | 0 |
+<br/>
+| 0 | 0 | 0 | 0 | E<sub>x</sub> | E<sub>y</sub> | E<sub>z</sub> | 1 | -a<sub>y/z</sub>&middot;E<sub>x</sub> | -a<sub>y/z</sub>&middot;E<sub>y</sub> | -a<sub>y/z</sub>&middot;E<sub>z</sub> | -a<sub>y/z</sub> | = | 0 |
+<br/>
 
 <br/>
-a<sub>x</sub> = ...
-<br/>
-a<sub>y</sub> = ...
-<br/>
-a<sub>z</sub> = ...
 
+<br/>
+
+<br/>
+| E<sub>x</sub> | E<sub>y</sub> | E<sub>z</sub> | 1 | 0 | 0 | 0 | 0 | -a<sub>x/z</sub>&middot;E<sub>x</sub> | -a<sub>x/z</sub>&middot;E<sub>y</sub> | -a<sub>x/z</sub>&middot;E<sub>z</sub> | -a<sub>x/z</sub> | = | 0 |
+<br/>
+| 0 | 0 | 0 | 0 | E<sub>x</sub> | E<sub>y</sub> | E<sub>z</sub> | 1 | -a<sub>y/z</sub>&middot;E<sub>x</sub> | -a<sub>y/z</sub>&middot;E<sub>y</sub> | -a<sub>y/z</sub>&middot;E<sub>z</sub> | -a<sub>y/z</sub> | = | 0 |
+<br/>
+[p<sub>0,0</sub> | p<sub>0,1</sub> | p<sub>0,2</sub> | p<sub>0,3</sub> | p<sub>1,0</sub> | p<sub>1,2</sub> | p<sub>1,2</sub> | p<sub>1,3</sub> | p<sub>2,0</sub> | p<sub>2,1</sub> | p<sub>2,2</sub> | p<sub>2,3</sub>]
+
+<br/>
+<br/>
+| f<sub>x</sub>&middot;E<sub>x</sub> | f<sub>x</sub>&middot;E<sub>y</sub> | f<sub>x</sub>&middot;E<sub>x</sub> | s&middot;E<sub>x</sub> | s&middot;E<sub>y</sub> | s&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>)| E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | f<sub>x</sub>&middot;t<sub>x</sub> +  s&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | = | 0 | 
+<br/>
+| 0 | 0 | 0 | E<sub>y</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | f<sub>y</sub>&middot;E<sub>x</sub> | f<sub>y</sub>&middot;E<sub>y</sub> | f<sub>y</sub>&middot;E<sub>z</sub> | E<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>x</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) |  f<sub>y</sub>&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | = | 0 |
+<br/>
+<br/>
+[r<sub>0,0</sub> | r<sub>0,1</sub> | r<sub>0,2</sub> | t<sub>x</sub> | r<sub>1,0</sub> | r<sub>1,1</sub> | r<sub>1,2</sub> | t<sub>y</sub> | r<sub>2,0</sub> | r<sub>2,1</sub> | r<sub>2,2</sub> | t<sub>z</sub>]
+<br/>
+...
+
+
+
+
+
+
+
+
+
+<br/>
+<br/>
 <br/>
 
 
@@ -4995,15 +4973,61 @@ a<sub>z</sub> = ...
 
 
 
+#### CHECKS:
+
+p<sub>0,0</sub> = r<sub>0,0</sub>&middot;f<sub>x</sub> + r<sub>1,0</sub>&middot;s  + r<sub>2,0</sub>&middot;c<sub>x</sub>
+<br/>
+p<sub>0,1</sub> = r<sub>0,1</sub>&middot;f<sub>x</sub> + r<sub>1,1</sub>&middot;s  + r<sub>2,1</sub>&middot;c<sub>x</sub> 
+<br/>
+p<sub>0,2</sub> = r<sub>0,2</sub>&middot;f<sub>x</sub> + r<sub>1,2</sub>&middot;s  + r<sub>2,2</sub>&middot;c<sub>x</sub>
+<br/>
+p<sub>0,3</sub> = t<sub>x</sub>&middot;f<sub>x</sub> + t<sub>y</sub>&middot;s  + t<sub>z</sub>&middot;c<sub>x</sub>
+<br/>
+<br/>
+p<sub>1,0</sub> = r<sub>1,0</sub>&middot;f<sub>y</sub> + r<sub>2,0</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>1,1</sub> = r<sub>1,1</sub>&middot;f<sub>y</sub> + r<sub>2,1</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>1,2</sub> = r<sub>1,2</sub>&middot;f<sub>y</sub> + r<sub>2,2</sub>&middot;c<sub>y</sub>
+<br/>
+p<sub>1,3</sub> = t<sub>y</sub>&middot;f<sub>y</sub> + t<sub>z</sub>&middot;c<sub>y</sub>
+<br/>
+<br/>
+p<sub>2,0</sub> = r<sub>2,0</sub>
+<br/>
+p<sub>2,1</sub> = r<sub>2,1</sub>
+<br/>
+p<sub>2,2</sub> =  r<sub>2,2</sub>
+<br/>
+p<sub>2,3</sub> = t<sub>z</sub>
+<br/>
 <br/>
 
-
+a<sub>x</sub> = f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>x</sub>&middot;t<sub>z</sub>
+<br/>
+a<sub>x</sub> = p<sub>0,0</sub>&middot;E<sub>x</sub> + p<sub>0,1</sub>&middot;E<sub>y</sub> + p<sub>0,2</sub>&middot;E<sub>z</sub> + p<sub>0,3</sub>&middot;1
+<br/>
+a<sub>x</sub> = (f<sub>x</sub>&middot;r<sub>0,0</sub> + s&middot;r<sub>1,0</sub> +  c<sub>x</sub>&middot;r<sub>2,0</sub>)&middot;E<sub>x</sub>  + (s&middot;r<sub>1,1</sub> + c<sub>x</sub>&middot;r<sub>2,1</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>)&middot;E<sub>y</sub> + (f<sub>x</sub>&middot;r<sub>0,2</sub> + s&middot;r<sub>1,2</sub> + c<sub>x</sub>&middot;r<sub>2,2</sub>)&middot;E<sub>z</sub> + (f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;t<sub>y</sub> + c<sub>x</sub>&middot;t<sub>z</sub>)
+<br/>
+<br/>
+<br/>
+a<sub>y</sub> = f<sub>y</sub>&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + f<sub>y</sub>&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + f<sub>y</sub>&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + f<sub>y</sub>&middot;t<sub>y</sub> + c<sub>y</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + c<sub>y</sub>&middot;r<sub>2,1</sub>&middot;E<sub>y</sub> + c<sub>y</sub>&middot;r<sub>2,2</sub>&middot;E<sub>z</sub> + c<sub>y</sub>&middot;t<sub>z</sub>
+<br/>
+a<sub>y</sub> = p<sub>1,0</sub>&middot;E<sub>x</sub> + p<sub>1,1</sub>&middot;E<sub>y</sub> + p<sub>1,2</sub>&middot;E<sub>z</sub> + p<sub>1,3</sub>&middot;1
+<br/>
+a<sub>y</sub> = (f<sub>y</sub>&middot;r<sub>1,0</sub> + c<sub>y</sub>&middot;r<sub>2,0</sub>)&middot;E<sub>x</sub> + (f<sub>y</sub>&middot;r<sub>1,1</sub> + c<sub>y</sub>&middot;r<sub>2,1</sub>)&middot;E<sub>y</sub> + (f<sub>y</sub>&middot;r<sub>1,2</sub> + c<sub>y</sub>&middot;r<sub>2,2</sub>)&middot;E<sub>z</sub> + (f<sub>y</sub>&middot;t<sub>y</sub> + c<sub>y</sub>&middot;t<sub>z</sub>)
 <br/>
 
 <br/>
+a<sub>z</sub> = r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>
+<br/>
+a<sub>z</sub> = p<sub>2,0</sub>&middot;E<sub>x</sub> + p<sub>2,1</sub>&middot;E<sub>y</sub> + p<sub>2,2</sub>&middot;E<sub>z</sub> + p<sub>2,3</sub>&middot;1
+<br/>
+a<sub>z</sub> = r<sub>2,0</sub>&middot;E<sub>x</sub> + r<sub>2,1</sub>&middot;E<sub>y</sub> + r<sub>2,2</sub>&middot;E<sub>z</sub> + t<sub>z</sub>
 
+<br/>
+<br/>
 
-...
 
 
 
