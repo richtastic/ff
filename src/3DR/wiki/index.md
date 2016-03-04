@@ -4803,7 +4803,7 @@ a<sub>x/z</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + a<sub>x/z</sub>&mi
 f<sub>x</sub>&middot;r<sub>0,0</sub>&middot;E<sub>x</sub> + f<sub>x</sub> &middot;r<sub>0,1</sub>&middot;E<sub>y</sub> + f<sub>x</sub>&middot;r<sub>0,2</sub>&middot;E<sub>z</sub> + f<sub>x</sub>&middot;t<sub>x</sub> + s&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + s&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + s&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + s&middot;t<sub>y</sub> + r<sub>2,0</sub>&middot;E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + r<sub>2,1</sub>&middot;E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + r<sub>2,2</sub>&middot;E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) = 0
 <br/>
 <br/>
-| f<sub>x</sub>&middot;E<sub>x</sub> | f<sub>x</sub>&middot;E<sub>y</sub> | f<sub>x</sub>&middot;E<sub>z</sub> | s&middot;E<sub>x</sub> | s&middot;E<sub>y</sub> | s&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>)| E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | f<sub>x</sub>&middot;t<sub>x</sub> +  s&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | = | 0 | 
+| f<sub>x</sub>&middot;E<sub>x</sub> | f<sub>x</sub>&middot;E<sub>y</sub> | f<sub>x</sub>&middot;E<sub>z</sub> | s&middot;E<sub>x</sub> | s&middot;E<sub>y</sub> | s&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>)| E<sub>y</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | E<sub>z</sub>&middot;(c<sub>x</sub> - a<sub>x/z</sub>) | f<sub>x</sub> | s | c<sub>x</sub> - a<sub>x/z</sub> | = | 0 | 
 <br/>
 <br/>
 
@@ -4820,7 +4820,7 @@ a<sub>y/z</sub>&middot;r<sub>2,0</sub>&middot;E<sub>x</sub> + a<sub>y/z</sub>&mi
 f<sub>y</sub>&middot;r<sub>1,0</sub>&middot;E<sub>x</sub> + f<sub>y</sub>&middot;r<sub>1,1</sub>&middot;E<sub>y</sub> + f<sub>y</sub>&middot;r<sub>1,2</sub>&middot;E<sub>z</sub> + f<sub>y</sub>&middot;t<sub>y</sub> + r<sub>2,0</sub>&middot;E<sub>x</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) + r<sub>2,1</sub>&middot;E<sub>y</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) + r<sub>2,2</sub>&middot;E<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) + t<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>)
 <br/>
 
-| 0 | 0 | 0 | f<sub>y</sub>&middot;E<sub>x</sub> | f<sub>y</sub>&middot;E<sub>y</sub> | f<sub>y</sub>&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>y</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) |  f<sub>y</sub>&middot;t<sub>y</sub> + t<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | = | 0 |
+| 0 | 0 | 0 | f<sub>y</sub>&middot;E<sub>x</sub> | f<sub>y</sub>&middot;E<sub>y</sub> | f<sub>y</sub>&middot;E<sub>z</sub> | E<sub>x</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>y</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | E<sub>z</sub>&middot;(c<sub>y</sub> - a<sub>y/z</sub>) | 0 | f<sub>y</sub> | c<sub>y</sub> - a<sub>y/z</sub> | = | 0 |
 <br/>
 <br/>
 

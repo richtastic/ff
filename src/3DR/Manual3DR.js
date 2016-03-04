@@ -243,6 +243,27 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	// move world in opposite direction
 	var matrixAReverse = Matrix.inverse(matrixAForward);
 
+
+// MADE UP:
+matrixCalc = new Matrix(4,4).setFromArray([
+	0.38881206629503806,-0.07957621406027582,0.12307550156276886,0.12046426773007128,
+	-0.1981264934856007,-0.5086643264707037,-0.1461422146671209,-0.1841656292079967,
+	0.3426080120725765,-0.0760449766190017,-0.3141998572660864,0.4875252971170084,
+	0,0,0,1]);
+
+matrixCalc = new Matrix(4,4).setFromArray([
+  8.9902E-1, -2.8222E-1,  1.9676E-1, -7.6045E-2 ,
+   2.7854E-1, -7.0267E-1, -8.1319E-1, -3.1420E-1 ,
+  -3.3791E-1, -6.5315E-1,  5.4772E-1,  4.8753E-1 ,
+   0.0000E+0,  0.0000E+0,  0.0000E+0,  1.0000E+0 ,
+]);
+// A
+// matrixAReverse = matrixCalc;
+// matrixAForward = Matrix.inverse(matrixAReverse);
+// B
+// matrixAForward = matrixCalc;
+// matrixAReverse = Matrix.inverse(matrixAForward);
+
 	// get actual camera center from forward matrix
 	var cameraCenter = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
 	console.log("cameraCenter: "+cameraCenter.toString());
@@ -285,6 +306,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	imageDO.graphics().lineTo(imageWidth,imageHeight-cy); // flip y for image
 	imageDO.graphics().endPath();
 	imageDO.graphics().strokeLine();
+	var points2DImage = [];
 	// go over all points and render to image
 	for(var i=0; i<points3D.length; ++i){
 		console.log(i+".....................................");
@@ -304,6 +326,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 			// flip y axis for image direction
 			point2D_a_image.y = imageHeight - point2D_a_image.y;
 			console.log("x_a_2 = "+point2D_a_image);
+			points2DImage.push(point2D_a_image.copy());
 			if(point2D_a_image.x>=0 || point2D_a_image.x<=imageWidth || point2D_a_image.y>=0 || point2D_a_image.y<=imageHeight){ // inside image rectangle
 				// draw point onto image:
 				var p = new V2D(point2D_a_image.x,point2D_a_image.y);
@@ -517,6 +540,98 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	}
 	// START
 	this._stage3D.start();
+
+
+	// SOLVING
+	console.log("SOLVING +++++++++++++++++++++++++++++++++++++++++++");
+	var pointMatchesCount = points3D.length;
+	var rows = 2*pointMatchesCount;
+	var cols = 12;
+	var r, E, a;
+	var f = new V2D(fx,fy);
+	var c = new V2D(cx,cy);
+	var A = new Matrix(rows,cols);
+	console.log("");
+	for(var i=0; i<pointMatchesCount; ++i) {
+		console.log(i+": "+points3D[i]+" => "+points2DImage[i]);
+		E = points3D[i];
+		a = points2DImage[i];
+		//
+		r = i*2;
+		A.set(r,0, f.x*E.x); // r00
+		A.set(r,1, f.x*E.y); // r01
+		A.set(r,2, f.x*E.z); // r02
+		A.set(r,3, s*E.x); // r10
+		A.set(r,4, s*E.y); // r11
+		A.set(r,5, s*E.z); // r12
+		A.set(r,6, (c.x-a.x)*E.x); // r20
+		A.set(r,7, (c.x-a.x)*E.y); // r21
+		A.set(r,8, (c.x-a.x)*E.z); // r22
+		A.set(r,9, f.x); // tx
+		A.set(r,10,s); // ty
+		A.set(r,11,(c.x-a.x)); // tz
+		//
+		r = i*2 + 1;
+		A.set(r,0, 0); // r00
+		A.set(r,1, 0); // r01
+		A.set(r,2, 0); // r02
+		A.set(r,3, f.y*E.x); // r10
+		A.set(r,4, f.y*E.y); // r11
+		A.set(r,5, f.y*E.z); // r12
+		A.set(r,6, (c.y-a.y)*E.x); // r20
+		A.set(r,7, (c.y-a.y)*E.y); // r21
+		A.set(r,8, (c.y-a.y)*E.z); // r22
+		A.set(r,9, 0); // tx
+		A.set(r,10,f.y); // ty
+		A.set(r,11,(c.y-a.y)); // tz
+	}
+	var svd = Matrix.SVD(A);
+	console.log(svd);
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+	var x = V.getCol(cols-1); // V.cols() == cols
+	x = x.toArray();
+	console.log(x+"");
+	var r00 = x[0];
+	var r01 = x[1];
+	var r02 = x[2];
+	var r10 = x[3];
+	var r11 = x[4];
+	var r12 = x[5];
+	var r20 = x[6];
+	var r21 = x[7];
+	var r22 = x[8];
+	var tx = x[9];
+	var ty = x[10];
+	var tz = x[11];
+	var calculatedA = new Matrix(4,4).setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0,0,0,1]);
+	// ...
+	var scaled = new Matrix(4,4).identity();
+	var sX = 1.0/0.43248584902187287;
+	var sY = 1.0/0.2819635796457478;
+	var sZ = 1.0/0.6255135698329369;
+	scaled = Matrix.transform3DScale(scaled,sX,sY,sZ);
+	//calculatedA = Matrix.mult(scaled,calculatedA);
+	calculatedA = Matrix.mult(calculatedA,scaled);
+	// ..
+	console.log("calculated:\n"+calculatedA.toString());
+	console.log("original A:\n"+matrixAForward.toString());
+	console.log("original B:\n"+matrixAReverse.toString());
+	console.log("");
+
+	// SOLUTION IS SCALED:
+
+
+	var o = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+	var x = calculatedA.multV3DtoV3D(new V3D(), new V3D(1,0,0));
+	var y = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,1,0));
+	var z = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,0,1));
+	console.log("o: "+o.toString());
+	console.log("x: "+x.toString() +" | "+ V3D.sub(x,o) +" | "+ V3D.sub(x,o).length());
+	console.log("y: "+y.toString() +" | "+ V3D.sub(y,o) +" | "+ V3D.sub(y,o).length());
+	console.log("z: "+z.toString() +" | "+ V3D.sub(z,o) +" | "+ V3D.sub(z,o).length());
+
 }
 Manual3DR.prototype._eff = function(e){
 	//console.log(e);
@@ -611,6 +726,7 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 		// }
 	}
 
+
 	// solve for matrices between each camera
 	for(i=0; i<keys.length; ++i){
 		var keyA = keys[i];
@@ -670,6 +786,7 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 		break;
 	}
 	//this._stage3D.start();
+
 }
 
 
