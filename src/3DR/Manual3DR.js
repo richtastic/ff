@@ -231,6 +231,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 						new V3D(0,0,3),
 						new V3D(0,0,4),
 						new V3D(0,0,5),
+						new V3D(0,0,6),
 					];
 	// generate extrinsic camera matrix
 	var matrixAForward = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
@@ -238,7 +239,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZa/180.0)*Math.PI);
-	matrixAForward = Matrix.transform3DTranslate(matrixAForward,camX,camY,camZ);
+	matrixAForward = Matrix.transform3DTranslate(matrixAForward,camX,camY,camZ);2
 	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXb/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYb/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZb/180.0)*Math.PI);
@@ -248,18 +249,8 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 
 
 // MADE UP:
-matrixCalc = new Matrix(4,4).setFromArray([
-	0.38881206629503806,-0.07957621406027582,0.12307550156276886,0.12046426773007128,
-	-0.1981264934856007,-0.5086643264707037,-0.1461422146671209,-0.1841656292079967,
-	0.3426080120725765,-0.0760449766190017,-0.3141998572660864,0.4875252971170084,
-	0,0,0,1]);
-
-matrixCalc = new Matrix(4,4).setFromArray([
-  3.2265E-2 , -9.9996E-1 , 7.5948E-1 , 7.2457E-2 ,
-  -9.9948E-1 , 8.5107E-3 , 6.5052E-1 , 1.0325E-2 , 
-  -4.0713E-16 , 4.0241E-16 , -9.2356E-17 , 2.7081E-1 , 
-   0.0000E+0 , 0.0000E+0 , 0.0000E+0 , 1.0000E+0 ,
-]);
+matrixCalc = new Matrix(4,4).setFromArray([-0.4411072332759227,0.0902792034032835,-0.13962913881690972,0.08627301503417362,-0.012551794954433275,-0.4128167702138896,-0.22725973883602174,0.1413279486314731,0.16579832151534277,0.20893587984179168,-0.38868874040760887,-0.5530973794422342,0,0,0,1]);
+//console.log("set? "+matrixCalc);
 // A
 // matrixAReverse = matrixCalc;
 // matrixAForward = Matrix.inverse(matrixAReverse);
@@ -328,10 +319,11 @@ matrixCalc = new Matrix(4,4).setFromArray([
 		if(point2D_a.z!=0 && point2D_a.z>0) { // not at infinity && not behind camera
 			// project onto 2D camera plane
 			var point2D_a_image = new V2D( point2D_a.x/point2D_a.z, point2D_a.y/point2D_a.z );
+			points2DImage.push(point2D_a_image.copy()); // BEFORE IMAGE FLIP
 			// flip y axis for image direction
 			point2D_a_image.y = imageHeight - point2D_a_image.y;
 			console.log("x_a_2 = "+point2D_a_image);
-			points2DImage.push(point2D_a_image.copy());
+			
 			if(point2D_a_image.x>=0 || point2D_a_image.x<=imageWidth || point2D_a_image.y>=0 || point2D_a_image.y<=imageHeight){ // inside image rectangle
 				// draw point onto image:
 				var p = new V2D(point2D_a_image.x,point2D_a_image.y);
@@ -579,15 +571,25 @@ matrixCalc = new Matrix(4,4).setFromArray([
 	var check_ax = f.x*(r00*E.x + r01*E.y + r02*E.z + tx) +   s*(r10*E.x + r11*E.y + r12*E.z + ty) + c.x*(r20*E.x + r21*E.y + r22*E.z + tz);
 	var check_ay = 0                                      + f.y*(r10*E.x + r11*E.y + r12*E.z + ty) + c.y*(r20*E.x + r21*E.y + r22*E.z + tz);
 	var check_az = r20*E.x + r21*E.y + r22*E.z + tz;
-	var lhs1 = f.x*r00*E.x + f.x*r01*E.y + f.x*r02*E.z + f.x*tx  +  s*r10*E.x + s*r11*E.y + s*r12*E.z + s*ty  +  r20*E.x*(c.y-b.y) + r21*E.y*(c.y-b.y) + r22*E.z*(c.y-b.y) + tz*(c.y-b.y);
-	var lhs2 = f.y*r10*E.x + f.y*r11*E.y + f.y*r12*E.z + f.y*ty  +  r20*E.x*(c.y-b.y) + r21*E.y*(c.y-b.y) + r22*E.z*(c.y-b.y) + tz*(c.y-b.y);
+
+	var check_ax_az = b.x;
+	var check_ay_az = b.y;
+
+	var lhs1 = f.x*r00*E.x + f.x*r01*E.y + f.x*r02*E.z + f.x*tx  +   s*r10*E.x +   s*r11*E.y +   s*r12*E.z +   s*ty  +  r20*E.x*(c.x-b.x) + r21*E.y*(c.x-b.x) + r22*E.z*(c.x-b.x) + tz*(c.x-b.x);
+	var lhs2 =                                                     f.y*r10*E.x + f.y*r11*E.y + f.y*r12*E.z + f.y*ty  +  r20*E.x*(c.y-b.y) + r21*E.y*(c.y-b.y) + r22*E.z*(c.y-b.y) + tz*(c.y-b.y);
+	console.log("a:" +a);
+	console.log("b:" +b);
+	console.log("CHECKS:" );
 	console.log(a.x, check_ax );
 	console.log(a.y, check_ay );
 	console.log(a.z, check_az );
+	console.log("EQU:" );
+	console.log(a.x/a.z, check_ax_az );
+	console.log(a.y/a.z, check_ay_az );
 	//console.log("a_x/z",check_ax/check_az,"v",b.x);
 	console.log("these should be zero:");
-	console.log(lhs1,lhs2);
-	// a_x_z = 
+	console.log(lhs1);
+	console.log(lhs2);
 	console.log("in");
 	var A = new Matrix(rows,cols);
 	var A2 = new Matrix(rows,cols);
@@ -624,6 +626,8 @@ matrixCalc = new Matrix(4,4).setFromArray([
 		A.set(r,9, (c.y-a.y)*E.y); // r21
 		A.set(r,10,(c.y-a.y)*E.z); // r22
 		A.set(r,11,(c.y-a.y)); // tz
+		// var lhs1 = f.x*r00*E.x + f.x*r01*E.y + f.x*r02*E.z + f.x*tx  +   s*r10*E.x +   s*r11*E.y +   s*r12*E.z +   s*ty  +  r20*E.x*(c.x-b.x) + r21*E.y*(c.x-b.x) + r22*E.z*(c.x-b.x) + tz*(c.x-b.x);
+		// var lhs2 =                                                     f.y*r10*E.x + f.y*r11*E.y + f.y*r12*E.z + f.y*ty  +  r20*E.x*(c.y-b.y) + r21*E.y*(c.y-b.y) + r22*E.z*(c.y-b.y) + tz*(c.y-b.y);
 		// /////////////////////////////////////////////////////////////////////////////////////////////////////
 		//console.log("-");
 		r = i*2;
@@ -656,13 +660,11 @@ matrixCalc = new Matrix(4,4).setFromArray([
 	}
 	console.log("out");
 	var svd = Matrix.SVD(A);
-	console.log(svd);
 	var U = svd.U;
 	var S = svd.S;
 	var V = svd.V;
 	var x = V.getCol(cols-1); // V.cols() == cols
 	x = x.toArray();
-	console.log(x+"");
 	var r00 = x[0];
 	var r01 = x[1];
 	var r02 = x[2];
@@ -675,10 +677,8 @@ matrixCalc = new Matrix(4,4).setFromArray([
 	var r21 = x[9];
 	var r22 = x[10];
 	var tz  = x[11];
-	console.log("1");
 	var calculatedA = new Matrix(4,4).setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0,0,0,1]);
 	//
-	console.log("2");
 	var calcA2 = new Matrix(4,4).identity().setFromArray( Matrix.SVD(A2).V.getCol(cols-1).toArray() );
 	// ...
 	/*
@@ -704,7 +704,7 @@ matrixCalc = new Matrix(4,4).setFromArray([
 	console.log("cA2->:\n"+Matrix.mult(matrixKinv,calcA2).toString());
 
 	// SOLUTION IS SCALED:
-
+	// console.log("calculated:\n"+calculatedA.toArray());
 
 	var o = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,0,0));
 	var x = calculatedA.multV3DtoV3D(new V3D(), new V3D(1,0,0));
@@ -714,8 +714,6 @@ matrixCalc = new Matrix(4,4).setFromArray([
 	console.log("x: "+x.toString() +" | "+ V3D.sub(x,o) +" | "+ V3D.sub(x,o).length());
 	console.log("y: "+y.toString() +" | "+ V3D.sub(y,o) +" | "+ V3D.sub(y,o).length());
 	console.log("z: "+z.toString() +" | "+ V3D.sub(z,o) +" | "+ V3D.sub(z,o).length());
-
-
 	console.log("");
 }
 Manual3DR.prototype._eff = function(e){
