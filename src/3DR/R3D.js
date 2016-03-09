@@ -1202,7 +1202,83 @@ R3D.euclieanScaleFromMatrix = function(calculatedA){ // [r00,r01,r02,tx, r10,r11
 	}
 	return scale;
 }
-
+R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageWidth,imageHeight){
+	var count = Math.min(points3D.length,pointsImage.length);
+	if(count<=6){
+		return null;
+	}
+	var fx = K.get(0,0);
+	var s = K.get(0,1);
+	var cx = K.get(0,2);
+	var fy = K.get(1,1);
+	var cy = K.get(1,2);
+	var f = new V2D(fx,fy);
+	var c = new V2D(cx,cy);
+	var rows = 2*count;
+	var cols = 12;
+	var r, E, a, p;
+	var A = new Matrix(rows,cols);
+	var cam = new Matrix(4,4).identity();
+	// NORMALIZATION HERE
+	for(var i=0; i<count; ++i){
+		E = points3D[i];
+		p = pointsImage[i];
+		a = new V2D(p.x,imageHeight-p.y);
+		r = i*2;
+		A.set(r,0, f.x*E.x); // r00
+		A.set(r,1, f.x*E.y); // r01
+		A.set(r,2, f.x*E.z); // r02
+		A.set(r,3, f.x); // tx
+		A.set(r,4, s*E.x); // r10
+		A.set(r,5, s*E.y); // r11
+		A.set(r,6, s*E.z); // r12
+		A.set(r,7, s); // ty
+		A.set(r,8, (c.x-a.x)*E.x); // r20
+		A.set(r,9, (c.x-a.x)*E.y); // r21
+		A.set(r,10,(c.x-a.x)*E.z); // r22
+		A.set(r,11,(c.x-a.x)); // tz
+		r = i*2 + 1;
+		A.set(r,0, 0); // r00
+		A.set(r,1, 0); // r01
+		A.set(r,2, 0); // r02
+		A.set(r,3, 0); // tx
+		A.set(r,4, f.y*E.x); // r10
+		A.set(r,5, f.y*E.y); // r11
+		A.set(r,6, f.y*E.z); // r12
+		A.set(r,7, f.y); // ty
+		A.set(r,8, (c.y-a.y)*E.x); // r20
+		A.set(r,9, (c.y-a.y)*E.y); // r21
+		A.set(r,10,(c.y-a.y)*E.z); // r22
+		A.set(r,11,(c.y-a.y)); // tz
+	}
+	//
+		// DLT -> nonlinear error minimization HERE
+	//
+	// DENORMALIZATION HERE
+	var svd = Matrix.SVD(A);
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+	var x = V.getCol(cols-1);
+	x = x.toArray();
+	var calculatedA = new Matrix(4,4).identity().setFromArray(x);
+	var euclideanScaleA = R3D.euclieanScaleFromMatrix(calculatedA);
+	calculatedA = Matrix.transform3DScale(calculatedA,euclideanScaleA,euclideanScaleA,euclideanScaleA);
+	var r00 = calculatedA.get(0,0);
+	var r01 = calculatedA.get(0,1);
+	var r02 = calculatedA.get(0,2);
+	var tx  = calculatedA.get(0,3);
+	var r10 = calculatedA.get(1,0);
+	var r11 = calculatedA.get(1,1);
+	var r12 = calculatedA.get(1,2);
+	var ty  = calculatedA.get(1,3);
+	var r20 = calculatedA.get(2,0);
+	var r21 = calculatedA.get(2,1);
+	var r22 = calculatedA.get(2,2);
+	var tz  = calculatedA.get(2,3);
+	cam.setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0.0,0.0,0.0,1.0]);
+	return cam;
+}
 
 R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
 	var i, j, to, fr, len=pointsFr.length;

@@ -36,8 +36,9 @@ function Manual3DR(){
 // 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
 
 	
-	this._simulate3D();
-	return;
+	// REVERSE TESTS
+	// this._simulate3D();
+	// return;
 
 
 // MANUALLY DETERMINED POINTS
@@ -253,8 +254,8 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 
 // A
 // YES:
-matrixAReverse = matrixCalc;
-matrixAForward = Matrix.inverse(matrixAReverse);
+// matrixAReverse = matrixCalc;
+// matrixAForward = Matrix.inverse(matrixAReverse);
 // B
 // matrixAForward = matrixCalc;
 // matrixAReverse = Matrix.inverse(matrixAForward);
@@ -302,6 +303,7 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	imageDO.graphics().endPath();
 	imageDO.graphics().strokeLine();
 	var points2DCamera = [];
+	var points2DScreen = [];
 	var points2DImage = [];
 	// go over all points and render to image
 	for(var i=0; i<points3D.length; ++i){
@@ -320,11 +322,11 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 		if(point2D_a.z!=0 && point2D_a.z>0) { // not at infinity && not behind camera
 			// project onto 2D camera plane
 			var point2D_a_image = new V2D( point2D_a.x/point2D_a.z, point2D_a.y/point2D_a.z );
-			points2DImage.push(point2D_a_image.copy()); // BEFORE IMAGE FLIP
+			points2DScreen.push(point2D_a_image.copy()); // BEFORE IMAGE FLIP
 			// flip y axis for image direction
 			point2D_a_image.y = imageHeight - point2D_a_image.y;
 			console.log("x_a_2 = "+point2D_a_image);
-			
+			points2DImage.push(point2D_a_image.copy()); // AFTER IMAGE FLIP
 			if(point2D_a_image.x>=0 || point2D_a_image.x<=imageWidth || point2D_a_image.y>=0 || point2D_a_image.y<=imageHeight){ // inside image rectangle
 				// draw point onto image:
 				var p = new V2D(point2D_a_image.x,point2D_a_image.y);
@@ -489,6 +491,7 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	texture = obj["texture"];
 	var horz = obj["width"];
 	var vert = obj["height"];
+	console.log(texture);
 	this._textures.push( this._canvas3D.bindTextureImageRGBA(texture) );
 	// create triangles for camera images
 		// visualizing screen
@@ -538,9 +541,10 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	}
 	// START
 	this._stage3D.start();
-
-
-
+	var calculatedA = R3D.cameraExternalMatrixFromParameters(matrixK,points3D,points2DImage, imageWidth,imageHeight);
+	console.log("calculated:\n"+calculatedA.toString());
+	console.log("   => "+calculatedA.toArray());
+/*
 	// SOLVING
 	console.log("SOLVING +++++++++++++++++++++++++++++++++++++++++++");
 	var pointMatchesCount = points3D.length;
@@ -567,7 +571,7 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	var r21 = A.get(2,1);
 	var r22 = A.get(2,2);
 	var tz =  A.get(2,3);
-	i = 0; E = points3D[i]; a = points2DCamera[i]; b = points2DImage[i];
+	i = 0; E = points3D[i]; a = points2DCamera[i]; b = points2DScreen[i];
 	//console.log(r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz)
 	var check_ax = f.x*(r00*E.x + r01*E.y + r02*E.z + tx) +   s*(r10*E.x + r11*E.y + r12*E.z + ty) + c.x*(r20*E.x + r21*E.y + r22*E.z + tz);
 	var check_ay = 0                                      + f.y*(r10*E.x + r11*E.y + r12*E.z + ty) + c.y*(r20*E.x + r21*E.y + r22*E.z + tz);
@@ -597,8 +601,8 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	for(var i=0; i<pointMatchesCount; ++i) {
 		//console.log(i+": "+points3D[i]+" => "+points2DImage[i]);
 		E = points3D[i];
-		a = points2DImage[i];
-		//console.log("...");
+		a = points2DScreen[i];
+		console.log(i+": "+E+" => "+a);
 		//b = points2DCamera[i]; // a.x/a.z | a.y/a.z
 		r = i*2;
 		A.set(r,0, f.x*E.x); // r00
@@ -679,6 +683,7 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	var tz  = calculatedA.get(2,3);
 	//
 	var calcA2 = new Matrix(4,4).identity().setFromArray( Matrix.SVD(A2).V.getCol(cols-1).toArray() );
+	
 	// ...
 	var matrixKinv = Matrix.inverse(matrixK);
 	var matrixK_A = Matrix.mult(matrixK,matrixAReverse);
@@ -691,6 +696,7 @@ matrixAForward = Matrix.inverse(matrixAReverse);
 	//console.log("original Rev:\n"+matrixAReverse.toString());
 	//console.log("cA2:\n"+calcA2.toString());
 	//console.log("cA2->:\n"+Matrix.mult(matrixKinv,calcA2).toString());
+	*/
 }
 Manual3DR.prototype._eff = function(e){
 	//console.log(e);
@@ -699,11 +705,25 @@ Manual3DR.prototype._eff = function(e){
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
 	this._stage3D.matrixIdentity();
- this._stage3D.matrixTranslate(-0.5,-0.5,-2.5);
+ 	//this._stage3D.matrixTranslate(-0.5,-0.5,-2.5);
+ 	
+ 	this._stage3D.matrixTranslate(-0.5,-0.5,-60.5);
+ 	this._stage3D.matrixRotate(-Math.PI*0.25, 0,1,0);
+ 	//
+ 	//this._stage3D.matrixTranslate(20.5,-0.5,-2.5);
 
-	// transformation = absolute + shpere interaction
+
+	// transformation = absolute + sphere interaction
+
+
+//
+
+	//this._stage3D.matrixMultM3D(this._translateMatrix);
+
 	this._stage3D.matrixMultM3D(this._sphereMatrix);
 	this._stage3D.matrixMultM3D(this._userInteractionMatrix);
+
+	this._stage3D.matrixMultM3D(this._translateMatrix);
 
 	// RENDER POINTS
 	this._stage3D.selectProgram(3);
@@ -732,6 +752,220 @@ Manual3DR.prototype._eff = function(e){
 		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
 		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+	}
+}
+
+Manual3DR.prototype._startStage3D = function() {
+	// START UP 3D STAGE:
+	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
+	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
+  	this._stage3D.setBackgroundColor(0xCC000000);
+	this._stage3D.frustrumAngle(60);
+	this._stage3D.enableDepthTest();
+	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this._eff, this);
+	this._spherePointBegin = null;
+	this._spherePointEnd = null;
+	this._sphereMatrix = new Matrix3D();
+	this._sphereMatrix.identity();
+	this._userInteractionMatrix = new Matrix3D();
+	this._userInteractionMatrix.identity();
+	this._translateMatrix = new Matrix3D();
+	this._translateMatrix.identity();
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+}
+Manual3DR.prototype._finishStage3D = function() {
+	this._stage3D.start();
+}
+Manual3DR.prototype._startStage3DPoints = function() {
+	this._stage3D_points3D_points = [];
+	this._stage3D_points3D_colors = [];
+}
+Manual3DR.prototype._addStage3DPoint = function(point3D,color3D) {
+	var points = this._stage3D_points3D_points;
+	var colors = this._stage3D_points3D_colors;
+	var p = point3D;
+	points.push(p.x,p.y,p.z);
+	colors.push(1.0, 0.0, 0.0, 1.0);
+}
+Manual3DR.prototype._finishStage3DPoints = function() {
+	var points = this._stage3D_points3D_points;
+	var colors = this._stage3D_points3D_colors;
+	this._stage3D.selectProgram(3);
+	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	this._pointPointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+}
+
+Manual3DR.prototype._startStage3DLines = function() {
+	var linPnt = [];
+	var linCol = [];
+	this._renderLinePointsList = linPnt;
+	this._renderLineColorsList = linCol;
+}
+Manual3DR.prototype._finishStage3DLines = function() {
+	// SET UP LINES:
+	var linPnt = this._renderLinePointsList;
+	var linCol = this._renderLineColorsList;
+	/*
+	var prs = [];
+	for(var i=0; i<points3D.length; ++i){ // camera-to-point
+		var p = points3D[i];
+		prs.push([cameraCenter, p]);
+	}
+	for(i=0; i<prs.length; ++i){
+		p = prs[i];
+		u = p[0];
+		v = p[1];
+		linPnt.push( u.x,u.y,u.z );
+		linPnt.push( v.x,v.y,v.z );
+		linCol.push(0.0,0.0,1.0,1.0);
+		linCol.push(1.0,0.0,1.0,1.0);
+	}
+	// world direction
+		linPnt.push( 0.0, 0.0, 0.0 ); // X
+		linPnt.push( 1.0, 0.0, 0.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(1.0,0.0,0.0,1.0);
+		linPnt.push( 0.0, 0.0, 0.0 ); // Y
+		linPnt.push( 0.0, 1.0, 0.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(0.0,1.0,0.0,1.0);
+		linPnt.push( 0.0, 0.0, 0.0 ); // Z
+		linPnt.push( 0.0, 0.0, 1.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(0.0,0.0,1.0,1.0);
+	// camera direction
+		// X
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(1.0, 0.0, 0.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionXA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+		// Y
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);cameraCenter.copy();
+		linCol.push(0.0, 1.0, 0.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionYA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+		// Z
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 1.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionZA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+	*/
+	// create objects
+	this._stage3D.selectProgram(2);
+	this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._programLineVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	this._programLinePoints = this._stage3D.getBufferFloat32Array(this._renderLinePointsList, 3);
+	this._programLineColors = this._stage3D.getBufferFloat32Array(this._renderLineColorsList, 4);
+
+}
+Manual3DR.prototype._startStage3DTextures = function() {
+	// SET UP TEXTURES:
+	this._textureUVPoints = [];
+	this._textureVertexPoints = [];
+	this._renderTextureUVList = [];
+	this._renderTexturePointList = [];
+	this._textures = [];
+}
+Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, cameraExternalMatrix, image) {
+	var nextIndex = this._textures.length;
+
+		var K = cameraInternalMatrix;
+		var fx = K.get(0,0);
+		var s = K.get(0,1);
+		var cx = K.get(0,2);
+		var fy = K.get(1,1);
+		var cy = K.get(1,2);
+		var imageWidth = image.width;
+		var imageHeight = image.height;
+
+		var matrixAReverse = cameraExternalMatrix;
+		var matrixAForward = Matrix.inverse(matrixAReverse);
+
+		var cameraCenter = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+		console.log("cameraCenter: "+cameraCenter.toString());
+		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
+		var cameraRightA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(1,0,0));
+		var cameraUpA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,1,0));
+		var cameraForwardA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,1));
+		console.log("cameraCenterA: "+matrixAForward.toString());
+		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
+		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
+		var cameraDirectionYA = V3D.sub(cameraUpA,cameraCenterA);
+		var cameraScaleXA = cameraDirectionXA.length();
+		var cameraScaleYA = cameraDirectionYA.length();
+		var cameraScaleZA = cameraDirectionZA.length();
+		console.log("direction scales: "+cameraScaleXA+", "+cameraScaleYA+", "+cameraScaleZA+"");
+			cameraDirectionXA.norm();
+			cameraDirectionYA.norm();
+			cameraDirectionZA.norm();
+
+	var program = this._canvas3D._program;
+	// create textures
+	var obj = this.textureBase2FromImage(image);
+	var texture = obj["texture"];
+	var horz = obj["width"];
+	var vert = obj["height"];
+	console.log("B");
+	this._textures.push( this._canvas3D.bindTextureImageRGBA(texture) );
+	// create triangles for camera images
+		// visualizing screen
+		var scale = 0.003;
+		var focZ = scale*fx;
+		var widX = scale*imageWidth;
+		var heiY = scale*imageHeight;
+		var cenX = scale*cx;
+		var cenY = scale*cy;
+			var dirX = cameraDirectionXA.copy().norm();
+			var dirY = cameraDirectionYA.copy().norm();
+			var dirZ = cameraDirectionZA.copy().norm();
+			console.log("DIRECTIONS:");
+			console.log(dirX.toString());
+			console.log(dirY.toString());
+			console.log(dirZ.toString());
+		var lenX = dirX.copy().scale(widX);
+		var lenY = dirY.copy().scale(heiY);
+		var lenZ = dirZ.copy().scale(focZ);
+		// scale for metric
+		var lenXScaledMetric = lenX.copy().scale(cameraScaleXA);
+		var lenYScaledMetric = lenY.copy().scale(cameraScaleYA);
+		// determine corners of projected image
+		var pOR = cameraCenter.copy().add(lenZ.copy().scale(cameraScaleZA));
+		var pBL = pOR.copy().sub( dirX.copy().scale(cenX*cameraScaleXA) ).sub( dirY.copy().scale(cenY*cameraScaleYA) );
+		var pBR = V3D.add(pBL,lenXScaledMetric);
+		var pTL = V3D.add(pBL,lenYScaledMetric);
+		var pTR = V3D.add(pBL,lenXScaledMetric).add(lenYScaledMetric);
+		console.log("CORNERS:");
+		console.log(pBL.toString());
+		console.log(pBR.toString());
+		console.log(pTR.toString());
+		console.log(pTL.toString());
+		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
+		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
+	this._renderTextureUVList[nextIndex] = uvList;
+	this._renderTexturePointList[nextIndex] = vertList;
+}
+Manual3DR.prototype._finishStage3DTextures = function() {
+	this._stage3D.selectProgram(1);
+	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
+	var i, len = this._textures.length;
+	for(i=0;i<len;++i){
+		var texturePoints = this._renderTextureUVList[i];
+		var vertexPoints = this._renderTexturePointList[i];
+		this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+		this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
 	}
 }
 
@@ -780,12 +1014,9 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 			x = 0.0;
 			y += img.height;
 		}
-		// if(i==6){
-		// 	break;
-		// }
 	}
 
-
+/*
 	// solve for matrices between each camera
 	for(i=0; i<keys.length; ++i){
 		var keyA = keys[i];
@@ -844,8 +1075,73 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 		}
 		break;
 	}
-	//this._stage3D.start();
+	*/
 
+
+this._startStage3D();
+
+this._startStage3DPoints();
+this._startStage3DLines();
+this._startStage3DTextures();
+
+var fx = 376.10038433315435;
+var fy = 376.7410755028418;
+var s  = -0.4399151157738108;
+var cx = 201.61665699519267;
+var cy = 152.26370698493383;
+
+var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	// find position of cameras in world
+	for(i=0; i<keys.length; ++i){
+		var keyA = keys[i];
+		var entryA = entries[keyA];
+		var points3D = [];
+		var points2D = [];
+		//console.log(entryA);
+		var imageSource = entryA[Manual3DR.KEY_IMAGE_SOURCE];
+		var imageWidth = imageSource.width;
+		var imageHeight = imageSource.height;
+		for(k=0; k<points.length; ++k){
+			var point = points[k];
+			var p3D = point["p3D"];
+			var p2D = point.entries[keyA];
+			if(p2D){
+				p2D = p2D["p2D"]
+				points2D.push(new V2D(p2D.x,p2D.y));
+				points3D.push(new V3D(p3D.x,p3D.y,p3D.z));
+			}
+		}
+		var matrix = R3D.cameraExternalMatrixFromParameters(K,points3D,points2D, imageWidth,imageHeight);
+		if (matrix) {
+			// camera screen
+			console.log(matrix.toArray()+"");
+			var image = entryA[Manual3DR.KEY_IMAGE_SOURCE];
+			this._addStage3DTextureCamera(K, matrix, image);
+			// camera to points
+		}
+	}
+
+
+	// show world points
+	for(i=0;i<points.length;++i){
+		var p3D = points[i]
+		if(p3D){
+			p3D = p3D["p3D"];
+			if(p3D){
+				p3D = new V3D(p3D.x,p3D.y,p3D.z);
+				console.log(p3D);
+				this._addStage3DPoint(p3D);
+			}
+		}
+	}
+
+
+this._finishStage3DPoints();
+this._finishStage3DLines();
+this._finishStage3DTextures();
+	// show positions visually
+
+this._finishStage3D();
 }
 
 
@@ -1263,7 +1559,18 @@ Manual3DR.prototype.onMouseUpFxn3D = function(e){
 	this._sphereMatrix.identity();
 }
 Manual3DR.prototype.onMouseWheelFxn3D = function(e){
+	var delta = 1.0 * e.z;
 	//
+	var transform = new Matrix3D();
+	transform.identity();
+	transform.translate(0,0,delta);
+	//transform.translate(0,delta,0);
+	//transform.translate(0,0,1);
+	//this._userInteractionMatrix.mult(this._userInteractionMatrix, transform);
+	//this._translateMatrix.mult(this._translateMatrix, transform);
+	//console.log(this._translateMatrix.toString());
+	//this._translateMatrix.mult(transform, this._translateMatrix);
+	this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
 }
 Manual3DR.prototype.onMouseClickFxn3D = function(e){
 return;
@@ -2114,7 +2421,7 @@ this._cameras.push({"extrinsic":projection
 	// generate depth map
 	// ... image A/B
 }
-Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureVertPoints){ // point/direction
+Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureVertPoints, focalLength){ // point/direction
 	var K = this._intrinsicK;
 	console.log(K.toString());
 	var fx = K.get(0,0);
@@ -2125,7 +2432,7 @@ Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureV
 	var imageWidth = 400;
 	var imageHeight = 300;
 	// 
-	var focalLength = 0.00001; // scales universe?
+	focalLength = focalLength!==undefined? focalLength : 0.0001; // scales universe?
 	var px = focalLength/fx;
 	var py = focalLength/fy;
 	var imgSizeX = px*imageWidth;
@@ -2268,10 +2575,11 @@ Manual3DR.prototype.render3DScene = function(){
 	this._stage3D.clear();
 	// 
 	//this._userMatrix.rotateY(0.03);
-	this._stage3D.matrixIdentity();
+this._stage3D.matrixIdentity();
 	//this._stage3D.matrixRotate(e*0.01, 0,1,0);
 	//this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
-	this._stage3D.matrixTranslate(0.0,0.0,-5.0);
+//this._stage3D.matrixTranslate(0.0,0.0,-5.0);
+
 //	this._stage3D.matrixRotate(-Math.PI*0.5, 1,0,0);
 	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
 //	this._stage3D.matrixRotate(e*0.0, e*0.0,0,1);
