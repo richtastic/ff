@@ -249,11 +249,12 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 
 
 // MADE UP:
-matrixCalc = new Matrix(4,4).setFromArray([-0.4411072332759227,0.0902792034032835,-0.13962913881690972,0.08627301503417362,-0.012551794954433275,-0.4128167702138896,-0.22725973883602174,0.1413279486314731,0.16579832151534277,0.20893587984179168,-0.38868874040760887,-0.5530973794422342,0,0,0,1]);
-//console.log("set? "+matrixCalc);
+matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974317,0.29619813272602386,-0.18301270189222013,0.026626377985028142,0.8757166128173102,0.48209070726490355,-0.2998018525454951,-0.3517113523585383,-0.4432199324079264,0.8245333323392322,1.1732967229803393,0,0,0,1]);
+
 // A
-// matrixAReverse = matrixCalc;
-// matrixAForward = Matrix.inverse(matrixAReverse);
+// YES:
+matrixAReverse = matrixCalc;
+matrixAForward = Matrix.inverse(matrixAReverse);
 // B
 // matrixAForward = matrixCalc;
 // matrixAReverse = Matrix.inverse(matrixAForward);
@@ -594,7 +595,7 @@ matrixCalc = new Matrix(4,4).setFromArray([-0.4411072332759227,0.090279203403283
 	var A = new Matrix(rows,cols);
 	var A2 = new Matrix(rows,cols);
 	for(var i=0; i<pointMatchesCount; ++i) {
-		console.log(i+": "+points3D[i]+" => "+points2DImage[i]);
+		//console.log(i+": "+points3D[i]+" => "+points2DImage[i]);
 		E = points3D[i];
 		a = points2DImage[i];
 		//console.log("...");
@@ -626,10 +627,6 @@ matrixCalc = new Matrix(4,4).setFromArray([-0.4411072332759227,0.090279203403283
 		A.set(r,9, (c.y-a.y)*E.y); // r21
 		A.set(r,10,(c.y-a.y)*E.z); // r22
 		A.set(r,11,(c.y-a.y)); // tz
-		// var lhs1 = f.x*r00*E.x + f.x*r01*E.y + f.x*r02*E.z + f.x*tx  +   s*r10*E.x +   s*r11*E.y +   s*r12*E.z +   s*ty  +  r20*E.x*(c.x-b.x) + r21*E.y*(c.x-b.x) + r22*E.z*(c.x-b.x) + tz*(c.x-b.x);
-		// var lhs2 =                                                     f.y*r10*E.x + f.y*r11*E.y + f.y*r12*E.z + f.y*ty  +  r20*E.x*(c.y-b.y) + r21*E.y*(c.y-b.y) + r22*E.z*(c.y-b.y) + tz*(c.y-b.y);
-		// /////////////////////////////////////////////////////////////////////////////////////////////////////
-		//console.log("-");
 		r = i*2;
 		A2.set(r,0, E.x); // p00
 		A2.set(r,1, E.y); // p01
@@ -665,56 +662,35 @@ matrixCalc = new Matrix(4,4).setFromArray([-0.4411072332759227,0.090279203403283
 	var V = svd.V;
 	var x = V.getCol(cols-1); // V.cols() == cols
 	x = x.toArray();
-	var r00 = x[0];
-	var r01 = x[1];
-	var r02 = x[2];
-	var tx  = x[3];
-	var r10 = x[4];
-	var r11 = x[5];
-	var r12 = x[6];	
-	var ty  = x[7];
-	var r20 = x[8];
-	var r21 = x[9];
-	var r22 = x[10];
-	var tz  = x[11];
-	var calculatedA = new Matrix(4,4).setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0,0,0,1]);
+	var calculatedA = new Matrix(4,4).identity().setFromArray(x);
+	var euclideanScaleA = R3D.euclieanScaleFromMatrix(calculatedA);
+	calculatedA = Matrix.transform3DScale(calculatedA,euclideanScaleA,euclideanScaleA,euclideanScaleA);
+	var r00 = calculatedA.get(0,0);
+	var r01 = calculatedA.get(0,1);
+	var r02 = calculatedA.get(0,2);
+	var tx  = calculatedA.get(0,2);
+	var r10 = calculatedA.get(1,0);
+	var r11 = calculatedA.get(1,1);
+	var r12 = calculatedA.get(1,2);
+	var ty  = calculatedA.get(1,3);
+	var r20 = calculatedA.get(2,0);
+	var r21 = calculatedA.get(2,1);
+	var r22 = calculatedA.get(2,2);
+	var tz  = calculatedA.get(2,3);
 	//
 	var calcA2 = new Matrix(4,4).identity().setFromArray( Matrix.SVD(A2).V.getCol(cols-1).toArray() );
 	// ...
-	/*
-	var scaled = new Matrix(4,4).identity();
-	var sX = 1.0/0.17861349278507882
-	var sY = 1.0/0.36394937312775705
-	var sZ = 1.0/0.8700250741751727
-	scaled = Matrix.transform3DScale(scaled,sX,sY,sZ);
-	//calculatedA = Matrix.mult(scaled,calculatedA);
-	calculatedA = Matrix.mult(calculatedA,scaled);
-	*/
-	// ..
 	var matrixKinv = Matrix.inverse(matrixK);
 	var matrixK_A = Matrix.mult(matrixK,matrixAReverse);
 	console.log("calculated:\n"+calculatedA.toString());
-	console.log("       inv:\n"+Matrix.inverse(calculatedA).toString());
-	console.log("original K*A:\n"+matrixK_A.toString());
-	//console.log("original A:\n"+matrixAForward.toString());
-	console.log("original Fwd:\n"+matrixAForward.toString());
-	console.log("original Rev:\n"+matrixAReverse.toString());
-	console.log("");
-	console.log("cA2:\n"+calcA2.toString());
-	console.log("cA2->:\n"+Matrix.mult(matrixKinv,calcA2).toString());
-
-	// SOLUTION IS SCALED:
-	// console.log("calculated:\n"+calculatedA.toArray());
-
-	var o = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,0,0));
-	var x = calculatedA.multV3DtoV3D(new V3D(), new V3D(1,0,0));
-	var y = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,1,0));
-	var z = calculatedA.multV3DtoV3D(new V3D(), new V3D(0,0,1));
-	console.log("o: "+o.toString());
-	console.log("x: "+x.toString() +" | "+ V3D.sub(x,o) +" | "+ V3D.sub(x,o).length());
-	console.log("y: "+y.toString() +" | "+ V3D.sub(y,o) +" | "+ V3D.sub(y,o).length());
-	console.log("z: "+z.toString() +" | "+ V3D.sub(z,o) +" | "+ V3D.sub(z,o).length());
-	console.log("");
+	console.log("   => "+calculatedA.toArray());
+	//console.log("       inv:\n"+Matrix.inverse(calculatedA).toString());
+	//console.log("original K*A:\n"+matrixK_A.toString());
+	// console.log("original A:\n"+matrixAForward.toString());
+	//console.log("original Fwd:\n"+matrixAForward.toString());
+	//console.log("original Rev:\n"+matrixAReverse.toString());
+	//console.log("cA2:\n"+calcA2.toString());
+	//console.log("cA2->:\n"+Matrix.mult(matrixKinv,calcA2).toString());
 }
 Manual3DR.prototype._eff = function(e){
 	//console.log(e);

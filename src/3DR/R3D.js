@@ -1182,7 +1182,26 @@ R3D.cubicDeterminantSolutionPercent3x3 = function(arrayA, arrayB){ // F = a*FA +
 
 
 
-
+R3D.euclieanScaleFromMatrix = function(calculatedA){ // [r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0,0,0,1]
+	// determine euclidean scale:
+	var o = calculatedA.multV3DtoV3D(new V3D(), V3D.ZERO);
+	var x = calculatedA.multV3DtoV3D(new V3D(), V3D.DIRX)
+	var y = calculatedA.multV3DtoV3D(new V3D(), V3D.DIRY);
+	var z = calculatedA.multV3DtoV3D(new V3D(), V3D.DIRZ);
+	x.sub(o);
+	y.sub(o);
+	z.sub(o);
+	var scale = 3.0/(x.length() + y.length() + z.length());
+	x.norm();
+	y.norm();
+	z.norm();
+	var xy = V3D.cross(x,y);
+	var crossed = V3D.dot(xy,z);
+	if (crossed<0) { // opposite direction // if the direction is opposite of the points (DOT) ==> scale -1
+		scale = -scale;
+	}
+	return scale;
+}
 
 
 R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
