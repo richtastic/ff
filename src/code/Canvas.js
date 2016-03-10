@@ -592,7 +592,13 @@ Canvas.prototype._canvasMouseOutFxn = function(e){
 	this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
 	//this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...
 	//this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	console.log("VENT_MOUSE_EXIT");
 	this.alertAll(Canvas.EVENT_MOUSE_EXIT,pos);
+	this._mouseDown = false; // UNKNOWN
+}
+Canvas.prototype.isMouseDown = function(){
+	console.log(this._mouseDown);
+	return this._mouseDown;
 }
 //  ------------------------------------------------------------------------------------------------------------------------ TOUCH POSITIONING
 // https://developer.mozilla.org/en-US/docs/DOM/TouchEvent

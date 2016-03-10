@@ -377,6 +377,7 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_EXIT, this.onMouseExitFxn3D, this);
 
 	// determine camera properties for display:
 		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
@@ -829,6 +830,7 @@ Manual3DR.prototype._startStage3D = function() {
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_EXIT, this.onMouseExitFxn3D, this);
 }
 Manual3DR.prototype._finishStage3D = function() {
 	this._stage3D.start();
@@ -1586,6 +1588,7 @@ Manual3DR.prototype.onEnterFrameFxn3D = function(e){
 	this.render3DScene();
 }
 Manual3DR.prototype.onMouseDownFxn3D = function(e){
+	console.log("onMouseDownFxn3D: "+e)
 	var point = e;
 	point = this.spherePointFromRectPoint(point);
 	this._spherePointBegin = point;
@@ -1601,6 +1604,7 @@ Manual3DR.prototype.onMouseMoveFxn3D = function(e){
 }
 Manual3DR.prototype.onMouseUpFxn3D = function(e){
 	// apply
+	console.log("onMouseUpFxn3D: "+e)
 	var point = e;
 	point = this.spherePointFromRectPoint(point);
 	this._spherePointEnd = point;
@@ -1608,9 +1612,17 @@ Manual3DR.prototype.onMouseUpFxn3D = function(e){
 	//this._userInteractionMatrix.mult(this._sphereMatrix, this._userInteractionMatrix);
 	this._userInteractionMatrix.mult(this._userInteractionMatrix, this._sphereMatrix);
 		// reset
+
 	this._spherePointBegin = null;
 	this._spherePointEnd = null;
 	this._sphereMatrix.identity();
+}
+Manual3DR.prototype.onMouseExitFxn3D = function(e){
+	console.log("onMouseExitFxn3D: "+e)
+	if( this._canvas.isMouseDown() ){
+		console.log("on up");
+		this.onMouseUpFxn3D(e);
+	}
 }
 Manual3DR.prototype.onMouseWheelFxn3D = function(e){
 	var delta = 1.0 * e.z;
