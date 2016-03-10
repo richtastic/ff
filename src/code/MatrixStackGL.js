@@ -16,8 +16,14 @@ MatrixStackGL.prototype.pop = function(){
 		this._working = this._stack.pop();
 	}
 }
-MatrixStackGL.prototype.matrix = function(){
+MatrixStackGL.prototype.matrix = function(){ // direct reference
 	return this._working;
+}
+MatrixStackGL.prototype.toArray = function(){ // mutable copy
+	return mat4.toArray(this._working);
+}
+MatrixStackGL.prototype.fromArray = function(arr){
+	return mat4.fromArray(this._working, arr);
 }
 MatrixStackGL.prototype.kill = function(){
 	Code.emptyArray(this._stack);

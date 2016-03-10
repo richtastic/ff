@@ -131,12 +131,16 @@ StageGL.prototype.matrixScale = function(x,y,z){
 	mat4.scale(this._modelViewMatrixStack.matrix(),[x,y,z]);
 }
 StageGL.prototype.matrixMultM3D = function(m){
-	//mat4.postMultM3D(this._modelViewMatrixStack.matrix(), this._modelViewMatrixStack.matrix(), m);
-	//mat4.postMultM3D(m, this._modelViewMatrixStack.matrix());
 	mat4.postMultM3D(this._modelViewMatrixStack.matrix(),m);
 }
 StageGL.prototype.matrixMultM3DPre = function(m){
 	mat4.preMultM3D(this._modelViewMatrixStack.matrix(),m);
+}
+StageGL.prototype.matrixSetFromMatrix3D = function(matrix3D){
+	this._modelViewMatrixStack.fromArray( matrix3D.toArray() );
+}
+StageGL.prototype.getMatrixAsArray = function(){
+	return this._modelViewMatrixStack.toArray();
 }
 StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
 	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);

@@ -87,6 +87,9 @@ Keyboard.prototype._keyUpFxn = function(e){
 Keyboard.prototype._keyIsDown = function(num){
 	return this._key[num];
 }
+Keyboard.prototype.isKeyDown = function(num){
+	return this._keyIsDown(num);
+}
 Keyboard.prototype.kill = function(){
 	Code.emptyArray(this._keys);
 	Keyboard._.kill.call(this);

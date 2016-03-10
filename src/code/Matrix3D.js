@@ -59,20 +59,65 @@ Matrix3D.prototype.toMatrix = function(){
 	return Matrix3D.matrixFromMatrix3D(this);
 }
 //if(mat4){
+	// mat4 == col major
 mat4.preMultM3D = function(a,b,m){
 	if(!m){
 		m = b;
-		return mat4.multiply(a,a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1]);
+		return mat4.multiply(a,a,[m.a,m.e,m.i,0, m.b,m.f,m.j,0, m.c,m.g,m.k,0, m.d,m.h,m.l,1]);
+		//return mat4.multiply(a,a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1]); // OLD
 	}
-	return mat4.multiply(a,b,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1]);
+	return mat4.multiply(a,b,[m.a,m.e,m.i,0, m.b,m.f,m.j,0, m.c,m.g,m.k,0, m.d,m.h,m.l,1]);
+	//return mat4.multiply(a,b,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1]); // OLD
 }
+// mat4.postMultM3D(this._modelViewMatrixStack.matrix(),m);
 mat4.postMultM3D = function(a,b,m){
 	if(!m){
 		m = b;
-		return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],a);
+		return mat4.multiply(a,[m.a,m.e,m.i,0, m.b,m.f,m.j,0, m.c,m.g,m.k,0, m.d,m.h,m.l,1],a);
+		//return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],a); // OLD
 	}
-	return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],b);
+	//return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],b); // OLD
+	return mat4.multiply(a,[m.a,m.e,m.i,0, m.b,m.f,m.j,0, m.c,m.g,m.k,0, m.d,m.h,m.l,1],b);
+	return null;
 }
+mat4.toArray = function(mat4){
+	var arr = [ mat4[0],mat4[4],mat4[8],mat4[12],  mat4[1],mat4[5],mat4[9],mat4[13],  mat4[2],mat4[6],mat4[10],mat4[14],  mat4[3],mat4[7],mat4[11],mat4[15] ]; // 3==0, 7==0, 11==0, 15==1
+	return arr;
+}
+mat4.fromArray = function(m, a){
+	if(a===undefined){
+		a = m;
+		m = mat4.create();
+	}
+	m[0] = a[0];
+	m[1] = a[4];
+	m[2] = a[8];
+	m[3] = a[12] ? a[12] : 0;
+	m[4] = a[1];
+	m[5] = a[5];
+	m[6] = a[9];
+	m[7] = a[13] ? a[13] : 0;
+	m[8] = a[2];
+	m[9] = a[6];
+	m[10] = a[10];
+	m[11] = a[14] ? a[14] : 0;
+	m[12] = a[3];
+	m[13] = a[7];
+	m[14] = a[11];
+	m[15] = a[15] ? a[15] : 1;
+}
+/*
+ROW MAJOR:
+[a b c d]
+[e f g h]
+[i j k l]
+[0 0 0 1]
+COL MAJOR:
+[a b c 0]
+[e f g 0]
+[i j k 0]
+[d h l ?]
+*/
 //}
 Matrix3D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.A, this.a);

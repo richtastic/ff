@@ -15,6 +15,11 @@ function Manual3DR(){
 	// resources
 	this._resource = {};
 	// 3D stage
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
+	this._keyboard.addListeners();
 
 // 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 // 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
@@ -698,68 +703,116 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 	//console.log("cA2->:\n"+Matrix.mult(matrixKinv,calcA2).toString());
 	*/
 }
+
+Manual3DR.prototype._currentMatrixInternal = function(){
+	//this._stage3D.matrixRotate( Math.PI, 0,1,0);
+	var transform = new Matrix3D();
+	var e = this.e !==undefined ? this.e : 0;
+	transform.identity();
+	transform.mult(this._sphereMatrix, transform);
+	transform.mult(this._userInteractionMatrix, transform);
+	//transform.mult(this._sphereMatrix, transform);
+	return Matrix3D.inverse(transform);
+	//return transform;
+}
+
+Manual3DR.prototype._currentMatrixOrientate = function(){
+
+	this._stage3D.clear();
+	var transform = this._currentMatrixInternal();
+	this._stage3D.matrixSetFromMatrix3D(transform);
+}
+/*
+var mat = new Matrix3D();
+mat.rotateVector(new V3D(0,1,0), e*0.01*0 + Math.PI);
+mat.translate(0,0.1*e,0);
+//console.log(mat.toString())
+console.log( this._stage3D._modelViewMatrixStack.matrix() )
+this._stage3D.matrixMultM3D(mat);
+
+this._stage3D.matrixRotate( e*0.01*0 + Math.PI, 0,1,0);
+this._stage3D.matrixTranslate(0,0.01*e,0);
+
+console.log( this._stage3D._modelViewMatrixStack.matrix() )
+console.log("............");
+*/
+//this._stage3D.matrixRotate(e*0.01, 0,1,0);
+	// transformation = absolute + sphere interaction
+	// 
+	// 
+	//this._stage3D.matrixMultM3D(this._translateMatrix);
+	//this._stage3D.matrixMultM3D(this._sphereMatrix);
+	//this._stage3D.matrixMultM3D(this._userInteractionMatrix);
+	//this._stage3D.matrixMultM3D(this._translateMatrix);
+
+Manual3DR.prototype._currentMatrixForward = function(){
+	// this._currentMatrixOrientate();
+	// var matrix = this._stage3D.getMatrixAsArray();
+	// return matrix;
+	return this._currentMatrixInternal().toArray();
+}
+Manual3DR.prototype._currentMatrix = function(){
+	// this._currentMatrixOrientate();
+	// var mat4 = this._stage3D.getMatrixAsArray();
+	var mat4 = this._currentMatrixForward();
+	var matrix = new Matrix3D().fromArray( mat4 );
+return matrix;
+	//console.log(matrix+"");
+	var inverse = Matrix3D.inverse(matrix);
+	//console.log(inverse+"");
+	return inverse;
+}
+
 Manual3DR.prototype._eff = function(e){
 	//console.log(e);
 	var e = this.e?this.e:0;
 	this.e = e; ++this.e;
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
-	this._stage3D.clear();
-	this._stage3D.matrixIdentity();
- 	//this._stage3D.matrixTranslate(-0.5,-0.5,-2.5);
- 	
- 	this._stage3D.matrixTranslate(-0.5,-0.5,-60.5);
- 	this._stage3D.matrixRotate(-Math.PI*0.25, 0,1,0);
- 	//
- 	//this._stage3D.matrixTranslate(20.5,-0.5,-2.5);
-
-
-	// transformation = absolute + sphere interaction
-
-
-//
-
-	//this._stage3D.matrixMultM3D(this._translateMatrix);
-
-	this._stage3D.matrixMultM3D(this._sphereMatrix);
-	this._stage3D.matrixMultM3D(this._userInteractionMatrix);
-
-	this._stage3D.matrixMultM3D(this._translateMatrix);
+	this._currentMatrixOrientate();
 
 	// RENDER POINTS
-	this._stage3D.selectProgram(3);
-	this._stage3D.disableCulling();
-	this._stage3D.matrixReset();
-	this._stage3D.bindArrayFloatBuffer(this._pointVertexPositionAttrib, this._pointPointBuffer);
-	this._stage3D.bindArrayFloatBuffer(this._pointVertexColorAttrib, this._pointColorBuffer);
-	this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
-	
-	// RENDER LINES
-	this._stage3D.selectProgram(2);
-	this._stage3D.matrixReset();
-	this._stage3D.disableCulling();
-	this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
-	this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
-	this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
+	if(this._pointPointBuffer.length>0){
+		this._stage3D.selectProgram(3);
+		this._stage3D.disableCulling();
+		this._stage3D.matrixReset();
+		this._stage3D.bindArrayFloatBuffer(this._pointVertexPositionAttrib, this._pointPointBuffer);
+		this._stage3D.bindArrayFloatBuffer(this._pointVertexColorAttrib, this._pointColorBuffer);
+		this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
+	}
 
 	// RENDER TEXTURES
-	this._stage3D.selectProgram(1);
-	this._stage3D.disableCulling();
-	this._stage3D.matrixReset();
-	for(i=0;i<this._textureUVPoints.length;++i){
-		this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints[i]);
-		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
-		this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
-		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
-		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
-		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+	if(this._textureUVPoints.length>0){
+		this._stage3D.selectProgram(1);
+		this._stage3D.disableCulling();
+		this._stage3D.matrixReset();
+		for(i=0;i<this._textureUVPoints.length;++i){
+			//console.log(this._textureUVPoints)
+			this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints[i]);
+			this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+			this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
+			this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
+			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
+			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+		}
 	}
+
+	// RENDER LINES
+	if(this._programLinePoints.length>0){
+		this._stage3D.selectProgram(2);
+		this._stage3D.matrixReset();
+		this._stage3D.disableCulling();
+		this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
+		this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
+		this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
+	}
+
 }
 
 Manual3DR.prototype._startStage3D = function() {
 	// START UP 3D STAGE:
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
-  	this._stage3D.setBackgroundColor(0xCC000000);
+  	this._stage3D.setBackgroundColor(0xFF000000);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
 	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this._eff, this);
@@ -806,6 +859,9 @@ Manual3DR.prototype._startStage3DLines = function() {
 	var linCol = [];
 	this._renderLinePointsList = linPnt;
 	this._renderLineColorsList = linCol;
+}
+Manual3DR.prototype._addStage3DLines = function() {
+	//
 }
 Manual3DR.prototype._finishStage3DLines = function() {
 	// SET UP LINES:
@@ -917,7 +973,6 @@ Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, ca
 	var texture = obj["texture"];
 	var horz = obj["width"];
 	var vert = obj["height"];
-	console.log("B");
 	this._textures.push( this._canvas3D.bindTextureImageRGBA(texture) );
 	// create triangles for camera images
 		// visualizing screen
@@ -1129,7 +1184,7 @@ var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 			p3D = p3D["p3D"];
 			if(p3D){
 				p3D = new V3D(p3D.x,p3D.y,p3D.z);
-				console.log(p3D);
+//				console.log(p3D);
 				this._addStage3DPoint(p3D);
 			}
 		}
@@ -1139,9 +1194,8 @@ var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 this._finishStage3DPoints();
 this._finishStage3DLines();
 this._finishStage3DTextures();
-	// show positions visually
-
 this._finishStage3D();
+
 }
 
 
@@ -1551,8 +1605,8 @@ Manual3DR.prototype.onMouseUpFxn3D = function(e){
 	point = this.spherePointFromRectPoint(point);
 	this._spherePointEnd = point;
 	this.updateSphereMatrixFromPoints(this._spherePointBegin, this._spherePointEnd);
-	this._userInteractionMatrix.mult(this._userInteractionMatrix, this._sphereMatrix);
 	//this._userInteractionMatrix.mult(this._sphereMatrix, this._userInteractionMatrix);
+	this._userInteractionMatrix.mult(this._userInteractionMatrix, this._sphereMatrix);
 		// reset
 	this._spherePointBegin = null;
 	this._spherePointEnd = null;
@@ -1563,15 +1617,78 @@ Manual3DR.prototype.onMouseWheelFxn3D = function(e){
 	//
 	var transform = new Matrix3D();
 	transform.identity();
-	transform.translate(0,0,delta);
-	//transform.translate(0,delta,0);
-	//transform.translate(0,0,1);
-	//this._userInteractionMatrix.mult(this._userInteractionMatrix, transform);
-	//this._translateMatrix.mult(this._translateMatrix, transform);
-	//console.log(this._translateMatrix.toString());
-	//this._translateMatrix.mult(transform, this._translateMatrix);
-	this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
+	var dir = this.getCameraDirectionForward();
+	dir.scale(delta);
+	transform.translate(dir.x,dir.y,dir.z);
+	this._userInteractionMatrix.mult(this._userInteractionMatrix,transform);
+	//this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
 }
+Manual3DR.prototype.getCameraDirectionForward = function(){
+	var matrix = this._currentMatrix();
+	var origin = new V3D(0,0,0);
+	var forward = new V3D(0,0,1);
+	matrix = new Matrix3D().fromArray(matrix);
+	origin = matrix.multV3D(new V3D(), origin);
+	forward = matrix.multV3D(new V3D(), forward);
+	forward.sub(origin);
+	forward.norm();
+	return forward;
+}
+Manual3DR.prototype.getCameraDirectionRight = function(){
+	var matrix = this._currentMatrix();
+	var origin = new V3D(0,0,0);
+	var right = new V3D(1,0,0);
+	matrix = new Matrix3D().fromArray(matrix);
+	origin = matrix.multV3D(new V3D(), origin);
+	right = matrix.multV3D(new V3D(), right);
+	right.sub(origin);
+	right.norm();
+	return right;
+}
+Manual3DR.prototype.getCameraDirectionUp = function(){
+	var matrix = this._currentMatrix();
+	var origin = new V3D(0,0,0);
+	var up = new V3D(0,1,0);
+	matrix = new Matrix3D().fromArray(matrix);
+	origin = matrix.multV3D(new V3D(), origin);
+	up = matrix.multV3D(new V3D(), up);
+	up.sub(origin);
+	up.norm();
+	return up;
+}
+Manual3DR.prototype.handleKeyboardUp = function(e){
+	//console.log(e);
+}
+Manual3DR.prototype.handleKeyboardDown = function(e){
+	//console.log(e);
+	var scale = 1.00;
+	var dir = null;
+	var rot = null;
+	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+		console.log("shift is down");
+	}else{
+		if(e.keyCode==Keyboard.KEY_LEFT){
+			dir = this.getCameraDirectionRight().scale(-1).scale(scale);
+		}else if(e.keyCode==Keyboard.KEY_RIGHT){
+			dir = this.getCameraDirectionRight().scale(scale);
+		}else if(e.keyCode==Keyboard.KEY_UP){
+			dir = this.getCameraDirectionUp().scale(scale);
+		}else if(e.keyCode==Keyboard.KEY_DOWN){
+			dir = this.getCameraDirectionUp().scale(-1).scale(scale);
+		}
+		if(dir!==null){
+			var translate = new Matrix3D();
+			translate.identity();
+			translate.translate(dir.x,dir.y,dir.z);
+			//this._userInteractionMatrix.mult(translate,this._userInteractionMatrix);
+			this._userInteractionMatrix.mult(this._userInteractionMatrix,translate);
+		}
+	}
+}
+Manual3DR.prototype.handleKeyboardStill = function(e){
+	//console.log(e);
+}
+
 Manual3DR.prototype.onMouseClickFxn3D = function(e){
 return;
 	var wid = 512;//texture.image.width;
@@ -2584,7 +2701,7 @@ this._stage3D.matrixIdentity();
 	//this._stage3D.matrixRotate(Math.PI*0.5, 0,1,0);
 //	this._stage3D.matrixRotate(e*0.0, e*0.0,0,1);
 
-this._stage3D.matrixMultM3D(this._sphereMatrix);
+//this._stage3D.matrixMultM3D(this._sphereMatrix);
 this._stage3D.matrixMultM3D(this._userInteractionMatrix);
 
 
