@@ -65,6 +65,12 @@ Canvas.EVENT_MOUSE_DOWN_OUTSIDE = "canevtmoudwnout";
 Canvas.EVENT_MOUSE_UP_OUTSIDE = "canevtmouupout";
 Canvas.EVENT_MOUSE_CLICK_OUTSIDE = "canevtmouclkout";
 Canvas.EVENT_MOUSE_MOVE_OUTSIDE = "canevtmoumovout";
+
+Canvas.BUTTON_UNKNOWN = 0;
+Canvas.BUTTON_LEFT = 1;
+Canvas.BUTTON_MIDDLE = 2;
+Canvas.BUTTON_RIGHT = 3;
+
 // 
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 Canvas.IMAGE_TYPE_PNG = "png";
@@ -539,10 +545,13 @@ Canvas.prototype.removeListeners = function(){
 //  ------------------------------------------------------------------------------------------------------------------------ MOUSE POSITIONING
 Canvas.prototype.getMouseDelta = function(e){
 	e = Code.getJSEvent(e);
-// console.log(e)
-// console.log(e.deltaX,e.deltaY,e.deltaZ, e.wheelDelta, e.wheelDeltaX, e.wheelDeltaY);
-	//var delta = e.wheelDelta/120.0;//e.deltaY/(e.wheelDelta?(e.wheelDelta):(120.0));
-	return e.wheelDelta/120.0;
+	if(e.wheelDelta) {
+	// console.log(e)
+	// console.log(e.deltaX,e.deltaY,e.deltaZ, e.wheelDelta, e.wheelDeltaX, e.wheelDeltaY);
+		//var delta = e.wheelDelta/120.0;//e.deltaY/(e.wheelDelta?(e.wheelDelta):(120.0));
+		return e.wheelDelta/120.0;
+	}
+	return 0;
 }
 Canvas.prototype.getMousePosition = function(e){
 	e = Code.getJSEvent(e);
@@ -557,47 +566,70 @@ Canvas.prototype.getMousePosition = function(e){
 	pos.y = e.pageY - pos.y;
 	return pos;
 }
+Canvas.prototype.getMouseButton = function(e){
+	e = Code.getJSEvent(e);
+	var button = e.which;
+	var but = Canvas.BUTTON_UNKNOWN;
+	if(button==1){
+		but = Canvas.BUTTON_LEFT;
+	}else if(button==2){
+		but = Canvas.BUTTON_MIDDLE;
+	}else if(button==3){
+		but = Canvas.BUTTON_RIGHT;
+	}
+	return but;
+}
+Canvas.prototype.getMouseObjectFromEvent = function(e){
+	var pos = this.getMousePosition(e);
+	var delta = this.getMouseDelta(e);
+	pos = new V3D(pos.x,pos.y,delta );
+	var but = this.getMouseButton(e);
+	var obj = {};
+	obj["location"] = pos;
+	obj["button"] = but;
+	obj["scroll"] = delta;
+	return obj;
+}
 Canvas.prototype._canvasClickFxn = function(e){
 	e.preventDefault();
-	pos = this.getMousePosition(e);
-	this.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+	var obj = this.getMouseObjectFromEvent(e);
+	this.alertAll(Canvas.EVENT_MOUSE_CLICK,obj);
 }
 Canvas.prototype._canvasMouseWheelFxn = function(e){
 	e.preventDefault();
-	pos = this.getMousePosition(e);
-	var posD = new V3D(pos.x,pos.y,this.getMouseDelta(e) );
-	this.alertAll(Canvas.EVENT_MOUSE_WHEEL,posD);
+	var obj = this.getMouseObjectFromEvent(e);
+	this.alertAll(Canvas.EVENT_MOUSE_WHEEL,obj);
 }
 Canvas.prototype._canvasMouseDownFxn = function(e){
 	e.preventDefault();
 	this._mouseDown = true;
-	pos = this.getMousePosition(e);
-	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+	var obj = this.getMouseObjectFromEvent(e);
+	this.alertAll(Canvas.EVENT_MOUSE_DOWN,obj);
 }
 Canvas.prototype._canvasMouseUpFxn = function(e){
 	e.preventDefault();
 	this._mouseDown = false;
-	pos = this.getMousePosition(e);
-	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	var obj = this.getMouseObjectFromEvent(e);
+	this.alertAll(Canvas.EVENT_MOUSE_UP,obj);
 }
 Canvas.prototype._canvasMouseMoveFxn = function(e){
 	e.preventDefault();
-	pos = this.getMousePosition(e);
+	var obj = this.getMouseObjectFromEvent(e);
+	var pos = obj.location;
 	this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
-	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+	this.alertAll(Canvas.EVENT_MOUSE_MOVE,obj);
 }
 Canvas.prototype._canvasMouseOutFxn = function(e){
 	e.preventDefault();
-	pos = this.getMousePosition(e);
+	var obj = this.getMouseObjectFromEvent(e);
+	var pos = obj.location;
 	this._mousePosition.x = pos.x; this._mousePosition.y = pos.y;
 	//this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos); // moving outside ...might be odd...
 	//this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
-	console.log("VENT_MOUSE_EXIT");
-	this.alertAll(Canvas.EVENT_MOUSE_EXIT,pos);
+	this.alertAll(Canvas.EVENT_MOUSE_EXIT,obj);
 	this._mouseDown = false; // UNKNOWN
 }
 Canvas.prototype.isMouseDown = function(){
-	console.log(this._mouseDown);
 	return this._mouseDown;
 }
 //  ------------------------------------------------------------------------------------------------------------------------ TOUCH POSITIONING

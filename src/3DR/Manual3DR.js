@@ -710,8 +710,11 @@ Manual3DR.prototype._currentMatrixInternal = function(){
 	var e = this.e !==undefined ? this.e : 0;
 	transform.identity();
 	transform.mult(transform, this._sphereMatrix);
-	transform.mult(this._userInteractionMatrix, transform);
-	return Matrix3D.inverse(transform);
+	transform.mult(transform, this._userInteractionMatrix);
+	//transform.mult(this._userInteractionMatrix, transform);
+	//transform.mult(this._sphereMatrix,transform);
+	//return Matrix3D.inverse(transform);
+	return transform;
 }
 
 Manual3DR.prototype._currentMatrixOrientate = function(){
@@ -810,7 +813,7 @@ Manual3DR.prototype._startStage3D = function() {
 	// START UP 3D STAGE:
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
-  	this._stage3D.setBackgroundColor(0xFF000000);
+  	this._stage3D.setBackgroundColor(0xFFFFFFFF);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
 	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this._eff, this);
@@ -1638,52 +1641,56 @@ Manual3DR.prototype.onEnterFrameFxn3D = function(e){
 	this.render3DScene();
 }
 Manual3DR.prototype.onMouseDownFxn3D = function(e){
-	console.log("onMouseDownFxn3D: "+e)
-	var point = e;
-	point = this.spherePointFromRectPoint(point);
-	this._spherePointBegin = point;
-	this._spherePointEnd = point.copy();
+	var point = e.location;
+	var button = e.button;
+	if(button==Canvas.BUTTON_LEFT){
+		point = this.spherePointFromRectPoint(point);
+		this._spherePointBegin = point;
+		this._spherePointEnd = point.copy();
+	}else if(button==Canvas.BUTTON_MIDDLE){
+		//
+	}else if(button==Canvas.BUTTON_RIGHT){
+		//
+	}
 }
 Manual3DR.prototype.onMouseMoveFxn3D = function(e){
+	var point = e.location;
 	if(this._spherePointBegin){
-		var point = e;
 		point = this.spherePointFromRectPoint(point);
 		this._spherePointEnd = point;
 		this.updateSphereMatrixFromPoints(this._spherePointBegin, this._spherePointEnd);
 	}
 }
 Manual3DR.prototype.onMouseUpFxn3D = function(e){
-	// apply
-	console.log("onMouseUpFxn3D: "+e)
-	var point = e;
-	point = this.spherePointFromRectPoint(point);
-	this._spherePointEnd = point;
-	this.updateSphereMatrixFromPoints(this._spherePointBegin, this._spherePointEnd);
-	//this._userInteractionMatrix.mult(this._sphereMatrix, this._userInteractionMatrix);
-	this._userInteractionMatrix.mult(this._userInteractionMatrix, this._sphereMatrix);
-		// reset
-
-	this._spherePointBegin = null;
-	this._spherePointEnd = null;
-	this._sphereMatrix.identity();
+	var point = e.location;
+	if(this._spherePointBegin){
+		point = this.spherePointFromRectPoint(point);
+		this._spherePointEnd = point;
+		this.updateSphereMatrixFromPoints(this._spherePointBegin, this._spherePointEnd);
+		this._userInteractionMatrix.mult(this._sphereMatrix, this._userInteractionMatrix);
+		this._spherePointBegin = null;
+		this._spherePointEnd = null;
+		this._sphereMatrix.identity();
+	}
 }
 Manual3DR.prototype.onMouseExitFxn3D = function(e){
-	console.log("onMouseExitFxn3D: "+e)
-	if( this._canvas.isMouseDown() ){
-		console.log("on up");
-		this.onMouseUpFxn3D(e);
+	if( this._canvas3D.isMouseDown() ){
+		var pos = e.location;
+		this.onMouseUpFxn3D(pos);
 	}
 }
 Manual3DR.prototype.onMouseWheelFxn3D = function(e){
-	var delta = 1.0 * e.z;
-	//
+	var pos = e.location;
+	var scale = 1.0 * pos.z;
+	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+		scale *= 0.1;
+	}
 	var transform = new Matrix3D();
 	transform.identity();
 	var dir = this.getCameraDirectionForward();
-	dir.scale(delta);
+	dir.scale(scale);
 	transform.translate(dir.x,dir.y,dir.z);
-	this._userInteractionMatrix.mult(this._userInteractionMatrix,transform);
-	//this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
+	this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
 }
 Manual3DR.prototype.getCameraDirectionForward = function(){
 	var matrix = this._currentMatrix();
@@ -1726,8 +1733,11 @@ Manual3DR.prototype.handleKeyboardDown = function(e){
 	var scale = null;
 	var dir = null;
 	var rot = null;
-	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+	if(this._keyboard.isKeyDown(Keyboard.KEY_CTRL)){
 		scale = Math.PI*0.01;
+		if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+			scale *= 0.1;
+		}
 		if(e.keyCode==Keyboard.KEY_RIGHT){
 			dir = this.getCameraDirectionUp();
 			rot = scale;
@@ -1745,26 +1755,27 @@ Manual3DR.prototype.handleKeyboardDown = function(e){
 			var translate = new Matrix3D();
 			translate.identity();
 			translate.rotateVector(dir, rot);
-			//this._userInteractionMatrix.mult(translate,this._userInteractionMatrix);
-			this._userInteractionMatrix.mult(this._userInteractionMatrix,translate);
+			this._userInteractionMatrix.mult(translate,this._userInteractionMatrix);
 		}
 	}else{
 		scale = 1.0;
+		if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+			scale *= 0.1;
+		}
 		if(e.keyCode==Keyboard.KEY_LEFT){
-			dir = this.getCameraDirectionRight().scale(-1).scale(scale);
-		}else if(e.keyCode==Keyboard.KEY_RIGHT){
 			dir = this.getCameraDirectionRight().scale(scale);
+		}else if(e.keyCode==Keyboard.KEY_RIGHT){
+			dir = this.getCameraDirectionRight().scale(-1).scale(scale);
 		}else if(e.keyCode==Keyboard.KEY_UP){
-			dir = this.getCameraDirectionUp().scale(scale);
-		}else if(e.keyCode==Keyboard.KEY_DOWN){
 			dir = this.getCameraDirectionUp().scale(-1).scale(scale);
+		}else if(e.keyCode==Keyboard.KEY_DOWN){
+			dir = this.getCameraDirectionUp().scale(scale);
 		}
 		if(dir!==null){
 			var translate = new Matrix3D();
 			translate.identity();
 			translate.translate(dir.x,dir.y,dir.z);
-			//this._userInteractionMatrix.mult(translate,this._userInteractionMatrix);
-			this._userInteractionMatrix.mult(this._userInteractionMatrix,translate);
+			this._userInteractionMatrix.mult(translate,this._userInteractionMatrix);
 		}
 	}
 }
@@ -1896,8 +1907,7 @@ Manual3DR.prototype.spherePointFromRectPoint = function(point){
 }
 Manual3DR.prototype.updateSphereMatrixFromPoints = function(pointA,pointB){
 	var angle = V3D.angle(pointA,pointB);
-	angle = -angle;
-	if(angle!=0){
+	if(angle!=0.0){
 		var direction = V3D.cross(pointA,pointB);
 		direction.norm();
 		this._sphereMatrix.identity();
