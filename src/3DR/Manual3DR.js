@@ -510,10 +510,10 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 			var dirX = cameraDirectionXA.copy().norm();
 			var dirY = cameraDirectionYA.copy().norm();
 			var dirZ = cameraDirectionZA.copy().norm();
-			console.log("DIRECTIONS:");
-			console.log(dirX.toString());
-			console.log(dirY.toString());
-			console.log(dirZ.toString());
+			// console.log("DIRECTIONS:");
+			// console.log(dirX.toString());
+			// console.log(dirY.toString());
+			// console.log(dirZ.toString());
 		var lenX = dirX.copy().scale(widX);
 		var lenY = dirY.copy().scale(heiY);
 		var lenZ = dirZ.copy().scale(focZ);
@@ -526,11 +526,11 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 		var pBR = V3D.add(pBL,lenXScaledMetric);
 		var pTL = V3D.add(pBL,lenYScaledMetric);
 		var pTR = V3D.add(pBL,lenXScaledMetric).add(lenYScaledMetric);
-		console.log("CORNERS:");
-		console.log(pBL.toString());
-		console.log(pBR.toString());
-		console.log(pTR.toString());
-		console.log(pTL.toString());
+		// console.log("CORNERS:");
+		// console.log(pBL.toString());
+		// console.log(pBR.toString());
+		// console.log(pTR.toString());
+		// console.log(pTL.toString());
 		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
 		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
 
@@ -548,8 +548,8 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 	// START
 	this._stage3D.start();
 	var calculatedA = R3D.cameraExternalMatrixFromParameters(matrixK,points3D,points2DImage, imageWidth,imageHeight);
-	console.log("calculated:\n"+calculatedA.toString());
-	console.log("   => "+calculatedA.toArray());
+	// console.log("calculated:\n"+calculatedA.toString());
+	// console.log("   => "+calculatedA.toArray());
 /*
 	// SOLVING
 	console.log("SOLVING +++++++++++++++++++++++++++++++++++++++++++");
@@ -706,15 +706,12 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 }
 
 Manual3DR.prototype._currentMatrixInternal = function(){
-	//this._stage3D.matrixRotate( Math.PI, 0,1,0);
 	var transform = new Matrix3D();
 	var e = this.e !==undefined ? this.e : 0;
 	transform.identity();
-	transform.mult(this._sphereMatrix, transform);
+	transform.mult(transform, this._sphereMatrix);
 	transform.mult(this._userInteractionMatrix, transform);
-	//transform.mult(this._sphereMatrix, transform);
 	return Matrix3D.inverse(transform);
-	//return transform;
 }
 
 Manual3DR.prototype._currentMatrixOrientate = function(){
@@ -920,6 +917,20 @@ Manual3DR.prototype._finishStage3DLines = function() {
 		linPnt.push(p.x,p.y,p.z);
 		linCol.push(0.0, 0.0, 0.0, 1.0);
 	*/
+
+	// world direction
+		linPnt.push( 0.0, 0.0, 0.0 ); // X
+		linPnt.push( 1.0, 0.0, 0.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(1.0,0.0,0.0,1.0);
+		linPnt.push( 0.0, 0.0, 0.0 ); // Y
+		linPnt.push( 0.0, 1.0, 0.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(0.0,1.0,0.0,1.0);
+		linPnt.push( 0.0, 0.0, 0.0 ); // Z
+		linPnt.push( 0.0, 0.0, 1.0 );
+		linCol.push(0.0,0.0,0.0,1.0);
+		linCol.push(0.0,0.0,1.0,1.0);
 	// create objects
 	this._stage3D.selectProgram(2);
 	this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
@@ -936,7 +947,7 @@ Manual3DR.prototype._startStage3DTextures = function() {
 	this._renderTexturePointList = [];
 	this._textures = [];
 }
-Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, cameraExternalMatrix, image) {
+Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, cameraExternalMatrix, image,  points2D, points3D) {
 	var nextIndex = this._textures.length;
 
 		var K = cameraInternalMatrix;
@@ -952,19 +963,19 @@ Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, ca
 		var matrixAForward = Matrix.inverse(matrixAReverse);
 
 		var cameraCenter = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
-		console.log("cameraCenter: "+cameraCenter.toString());
+		//console.log("cameraCenter: "+cameraCenter.toString());
 		var cameraCenterA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,0));
 		var cameraRightA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(1,0,0));
 		var cameraUpA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,1,0));
 		var cameraForwardA = matrixAForward.multV3DtoV3D(new V3D(), new V3D(0,0,1));
-		console.log("cameraCenterA: "+matrixAForward.toString());
+		//console.log("cameraCenterA: "+matrixAForward.toString());
 		var cameraDirectionZA = V3D.sub(cameraForwardA,cameraCenterA);
 		var cameraDirectionXA = V3D.sub(cameraRightA,cameraCenterA);
 		var cameraDirectionYA = V3D.sub(cameraUpA,cameraCenterA);
 		var cameraScaleXA = cameraDirectionXA.length();
 		var cameraScaleYA = cameraDirectionYA.length();
 		var cameraScaleZA = cameraDirectionZA.length();
-		console.log("direction scales: "+cameraScaleXA+", "+cameraScaleYA+", "+cameraScaleZA+"");
+		//console.log("direction scales: "+cameraScaleXA+", "+cameraScaleYA+", "+cameraScaleZA+"");
 			cameraDirectionXA.norm();
 			cameraDirectionYA.norm();
 			cameraDirectionZA.norm();
@@ -987,10 +998,10 @@ Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, ca
 			var dirX = cameraDirectionXA.copy().norm();
 			var dirY = cameraDirectionYA.copy().norm();
 			var dirZ = cameraDirectionZA.copy().norm();
-			console.log("DIRECTIONS:");
-			console.log(dirX.toString());
-			console.log(dirY.toString());
-			console.log(dirZ.toString());
+			// console.log("DIRECTIONS:");
+			// console.log(dirX.toString());
+			// console.log(dirY.toString());
+			// console.log(dirZ.toString());
 		var lenX = dirX.copy().scale(widX);
 		var lenY = dirY.copy().scale(heiY);
 		var lenZ = dirZ.copy().scale(focZ);
@@ -1003,15 +1014,54 @@ Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, ca
 		var pBR = V3D.add(pBL,lenXScaledMetric);
 		var pTL = V3D.add(pBL,lenYScaledMetric);
 		var pTR = V3D.add(pBL,lenXScaledMetric).add(lenYScaledMetric);
-		console.log("CORNERS:");
-		console.log(pBL.toString());
-		console.log(pBR.toString());
-		console.log(pTR.toString());
-		console.log(pTL.toString());
+
+		pBL.z -= 0;
+		// console.log("CORNERS:");
+		// console.log(pBL.toString());
+		// console.log(pBR.toString());
+		// console.log(pTR.toString());
+		// console.log(pTL.toString());
 		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
 		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
 	this._renderTextureUVList[nextIndex] = uvList;
 	this._renderTexturePointList[nextIndex] = vertList;
+
+	// LINES
+	var linPnt = this._renderLinePointsList;
+	var linCol = this._renderLineColorsList;
+	var i;
+	// camera center to 3d point
+	for(i=0; i<points3D.length; ++i){
+		var u = cameraCenter;
+		var v = points3D[i];
+		linPnt.push( u.x,u.y,u.z );
+		linPnt.push( v.x,v.y,v.z );
+		linCol.push(0.0,0.0,1.0,1.0);
+		linCol.push(1.0,0.0,1.0,1.0);
+	}
+	// camera direction
+		// X
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(1.0, 0.0, 0.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionXA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+		// Y
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);cameraCenter.copy();
+		linCol.push(0.0, 1.0, 0.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionYA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+		// Z
+		var p = cameraCenter;
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 1.0, 1.0);
+		p = V3D.add(cameraCenter,cameraDirectionZA);
+		linPnt.push(p.x,p.y,p.z);
+		linCol.push(0.0, 0.0, 0.0, 1.0);
+
 }
 Manual3DR.prototype._finishStage3DTextures = function() {
 	this._stage3D.selectProgram(1);
@@ -1171,9 +1221,9 @@ var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 		var matrix = R3D.cameraExternalMatrixFromParameters(K,points3D,points2D, imageWidth,imageHeight);
 		if (matrix) {
 			// camera screen
-			console.log(matrix.toArray()+"");
+			//console.log(matrix.toArray()+"");
 			var image = entryA[Manual3DR.KEY_IMAGE_SOURCE];
-			this._addStage3DTextureCamera(K, matrix, image);
+			this._addStage3DTextureCamera(K, matrix, image, points2D, points3D);
 			// camera to points
 		}
 	}
@@ -1673,12 +1723,33 @@ Manual3DR.prototype.handleKeyboardUp = function(e){
 }
 Manual3DR.prototype.handleKeyboardDown = function(e){
 	//console.log(e);
-	var scale = 1.00;
+	var scale = null;
 	var dir = null;
 	var rot = null;
 	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
-		console.log("shift is down");
+		scale = Math.PI*0.01;
+		if(e.keyCode==Keyboard.KEY_RIGHT){
+			dir = this.getCameraDirectionUp();
+			rot = scale;
+		}else if(e.keyCode==Keyboard.KEY_LEFT){
+			dir = this.getCameraDirectionUp();
+			rot = -scale;
+		}else if(e.keyCode==Keyboard.KEY_UP){
+			dir = this.getCameraDirectionRight();
+			rot = scale;
+		}else if(e.keyCode==Keyboard.KEY_DOWN){
+			dir = this.getCameraDirectionRight();
+			rot = -scale;
+		}
+		if (rot && dir) {
+			var translate = new Matrix3D();
+			translate.identity();
+			translate.rotateVector(dir, rot);
+			//this._userInteractionMatrix.mult(translate,this._userInteractionMatrix);
+			this._userInteractionMatrix.mult(this._userInteractionMatrix,translate);
+		}
 	}else{
+		scale = 1.0;
 		if(e.keyCode==Keyboard.KEY_LEFT){
 			dir = this.getCameraDirectionRight().scale(-1).scale(scale);
 		}else if(e.keyCode==Keyboard.KEY_RIGHT){
@@ -1699,6 +1770,7 @@ Manual3DR.prototype.handleKeyboardDown = function(e){
 }
 Manual3DR.prototype.handleKeyboardStill = function(e){
 	//console.log(e);
+	this.handleKeyboardDown(e);
 }
 
 Manual3DR.prototype.onMouseClickFxn3D = function(e){

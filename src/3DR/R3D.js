@@ -1191,14 +1191,17 @@ R3D.euclieanScaleFromMatrix = function(calculatedA){ // [r00,r01,r02,tx, r10,r11
 	x.sub(o);
 	y.sub(o);
 	z.sub(o);
-	var scale = 3.0/(x.length() + y.length() + z.length());
+	console.log("SCALES: "+x.length()+" / "+y.length() + " / "+z.length());
+	var scale = new V3D(x.length(),y.length(),z.length());
 	x.norm();
 	y.norm();
 	z.norm();
 	var xy = V3D.cross(x,y);
 	var crossed = V3D.dot(xy,z);
+	console.log("     CROSSED: "+crossed);
 	if (crossed<0) { // opposite direction // if the direction is opposite of the points (DOT) ==> scale -1
-		scale = -scale;
+//		scale = -scale;
+		scale.scale(-1);
 	}
 	return scale;
 }
@@ -1263,7 +1266,7 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	x = x.toArray();
 	var calculatedA = new Matrix(4,4).identity().setFromArray(x);
 	var euclideanScaleA = R3D.euclieanScaleFromMatrix(calculatedA);
-	calculatedA = Matrix.transform3DScale(calculatedA,euclideanScaleA,euclideanScaleA,euclideanScaleA);
+	calculatedA = Matrix.transform3DScale(calculatedA,1.0/euclideanScaleA.x,1.0/euclideanScaleA.y,1.0/euclideanScaleA.z);
 	var r00 = calculatedA.get(0,0);
 	var r01 = calculatedA.get(0,1);
 	var r02 = calculatedA.get(0,2);
