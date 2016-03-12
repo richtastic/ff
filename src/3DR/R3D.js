@@ -372,11 +372,16 @@ R3D.forceRank2 = function(fundamental){
 	m = Matrix.mult(m,V);
 	return m;
 }
+R3D.fundamentalInverse = function(fundamental){
+	return Matrix.transpose(fundamental);
+}
 R3D.fundamentalMatrix = function(pointsA,pointsB){
 	if(pointsA.length>=8){
 		return R3D.fundamentalMatrix8(pointsA,pointsB);
+	} else if(pointsA.length==7){
+		return R3D.fundamentalMatrix7(pointsA,pointsB);
 	}
-	return R3D.fundamentalMatrix7(pointsA,pointsB);
+	return null;
 }
 R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	if(pointsA.length<8){ return null; }
@@ -404,6 +409,10 @@ R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole
 	return Matrix.fromSVD(U,S,V);
 }
 R3D.fundamentalMatrix7 = function(pointsA,pointsB){
+
+	// needs to be fixed
+	
+	try{
 //F = FA + l*FB
 //F = a*FA + (1-a)*FB
 	if(pointsA.length<7){ return null; }
@@ -412,10 +421,12 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){
 	var F = new Matrix(3,3), f = new Matrix(size,1), A = new Matrix(size,9); // len,9
 	for(i=0;i<len;++i){
 		a = pointsA[i]; b = pointsA[i];
-		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, a.z*b.x, a.x*b.y, a.y*b.y, a.z*b.y, a.x*b.z, a.y*b.z, a.z*b.z]);
+		var az = a.z ? a.z : 1.0;
+		var bz = b.z ? b.z : 1.0;
+		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
 	}
 	// svd
-	// console.log(A.toString());
+	//console.log("A: \n"+A.toString());
 	svd = Matrix.SVD(A);
 	U = svd.U; // 7x7
 	S = svd.S; // 7x9
@@ -433,10 +444,8 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){
 // console.log(row8.toString())
 // console.log(row9.toString())
 	//var critical = Matrix.mult(r9i,row8t);
-
 var F1 = row8;
 var F2 = row9;
-
 // analytic attempt:
 var lambda = R3D.cubicDeterminantSolution3x3(F1.toArray(), F2.toArray());
 console.log("LAMBDA: "+lambda);
@@ -470,6 +479,10 @@ console.log("LAMBDA: "+lambda);
 		*/
 	}
 	return list;
+} catch(e){ // error no convergence
+	//console.log(e)
+}
+return null;
 }
 R3D.getEpipolesFromF = function(F,normed){
 	normed = normed!==undefined?normed:true;
@@ -1266,8 +1279,10 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	x = x.toArray();
 	var calculatedA = new Matrix(4,4).identity().setFromArray(x);
 	var euclideanScaleA = R3D.euclieanScaleFromMatrix(calculatedA);
+	euclideanScaleA.scale(-1); /// WHAT?!?!
 	console.log("   => euclideanScaleA: "+euclideanScaleA);
 	calculatedA = Matrix.transform3DScale(calculatedA,1.0/euclideanScaleA.x,1.0/euclideanScaleA.y,1.0/euclideanScaleA.z);
+	// actual geometry may need to be updated, this is iffy
 	var r00 = calculatedA.get(0,0);
 	var r01 = calculatedA.get(0,1);
 	var r02 = calculatedA.get(0,2);

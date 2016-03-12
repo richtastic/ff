@@ -2,6 +2,7 @@
 
 Manual3DR.KEY_IMAGE_FILE_LOCATION = "imageFileName";
 Manual3DR.KEY_IMAGE_SOURCE = "imageSource";
+Manual3DR.KEY_F_MATRIX = "f_matrix";
 
 function Manual3DR(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
@@ -1064,7 +1065,6 @@ Manual3DR.prototype._addStage3DTextureCamera = function(cameraInternalMatrix, ca
 		p = V3D.add(cameraCenter,cameraDirectionZA);
 		linPnt.push(p.x,p.y,p.z);
 		linCol.push(0.0, 0.0, 0.0, 1.0);
-
 }
 Manual3DR.prototype._finishStage3DTextures = function() {
 	this._stage3D.selectProgram(1);
@@ -1082,7 +1082,7 @@ Manual3DR.prototype._finishStage3DTextures = function() {
 Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
-	var i, list = [];
+	var i, j, k, list = [];
 	var entries = this._manualData.entries;
 	var points = this._manualData.points;
 	var keys = Code.keys(entries);
@@ -1216,7 +1216,7 @@ var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 			var p3D = point["p3D"];
 			var p2D = point.entries[keyA];
 			if(p2D){
-				p2D = p2D["p2D"]
+				p2D = p2D["p2D"];
 				points2D.push(new V2D(p2D.x,p2D.y));
 				points3D.push(new V3D(p3D.x,p3D.y,p3D.z));
 			}
@@ -1229,6 +1229,51 @@ var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 			this._addStage3DTextureCamera(K, matrix, image, points2D, points3D);
 			// camera to points
 		}
+		// inter-image F matrices
+		for(j=i+1; j<keys.length; ++j){
+			var keyB = keys[j];
+			var entryB = entries[keyB];
+			var pointsA = [];
+			var pointsB = [];
+			for(k=0; k<points.length; ++k){
+				var point = points[k];
+				var p2DA = point.entries[keyA];
+				var p2DB = point.entries[keyB];
+				if(p2DA && p2DB){
+					p2DA = p2DA["p2D"];
+					p2DB = p2DB["p2D"];
+					pointsA.push( new V2D(p2DA.x,p2DA.y) );
+					pointsB.push( new V2D(p2DB.x,p2DB.y) );
+				}
+			}
+			//console.log("matches: "+pointsA.length);
+			var F_AB = R3D.fundamentalMatrix(pointsA,pointsB);
+			//console.log("GOT A MATRIX ...\n"+F_AB);
+			if(F_AB){
+				console.log("GOT A MATRIX ...\n"+F_AB);
+				var FlistA = entryA[Manual3DR.KEY_F_MATRIX];
+				if(!FlistA){
+					FlistA = {};
+					entryA[Manual3DR.KEY_F_MATRIX] = FlistA;
+				}
+				var FlistB = entryB[Manual3DR.KEY_F_MATRIX];
+				if(!FlistB){
+					FlistB = {};
+					entryB[Manual3DR.KEY_F_MATRIX] = FlistB;
+				}
+				FlistA[keyB] = F_AB;
+				var F_BA = R3D.fundamentalInverse(F_AB);
+				FlistB[keyA] = F_BA;
+			}
+			
+			// if(pointsAB.length>7){
+			// 	//
+			// 	//R3D.fundamentalMatrix(pointsA,pointsB);
+			// 	console.log("GET F: "+pointsAB.length);
+			// }
+		}
+		//console.log(entries);
+		//R3D.fundamentalMatrix = function(pointsA,pointsB);
 	}
 
 
@@ -1250,6 +1295,15 @@ this._finishStage3DPoints();
 this._finishStage3DLines();
 this._finishStage3DTextures();
 this._finishStage3D();
+
+
+
+// pick 2 cameras
+// find a set of matching pixels [subsampled] & points of discontinuity
+//	F ?
+// project pixels backwards to find closest intersection (or robust algorithm)
+// put colored tri/quad at 3D location with pixel color
+// 
 
 }
 
@@ -1675,8 +1729,8 @@ Manual3DR.prototype.onMouseUpFxn3D = function(e){
 }
 Manual3DR.prototype.onMouseExitFxn3D = function(e){
 	if( this._canvas3D.isMouseDown() ){
-		var pos = e.location;
-		this.onMouseUpFxn3D(pos);
+		//var pos = e.location;
+		this.onMouseUpFxn3D(e);
 	}
 }
 Manual3DR.prototype.onMouseWheelFxn3D = function(e){

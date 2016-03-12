@@ -71,6 +71,10 @@ Canvas.BUTTON_LEFT = 1;
 Canvas.BUTTON_MIDDLE = 2;
 Canvas.BUTTON_RIGHT = 3;
 
+Canvas.MOUSE_EVENT_KEY_LOCATION = "location";
+Canvas.MOUSE_EVENT_KEY_SCROLL = "scroll";
+Canvas.MOUSE_EVENT_KEY_BUTTON = "button";
+
 // 
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 Canvas.IMAGE_TYPE_PNG = "png";
@@ -585,9 +589,9 @@ Canvas.prototype.getMouseObjectFromEvent = function(e){
 	pos = new V3D(pos.x,pos.y,delta );
 	var but = this.getMouseButton(e);
 	var obj = {};
-	obj["location"] = pos;
-	obj["button"] = but;
-	obj["scroll"] = delta;
+	obj[Canvas.MOUSE_EVENT_KEY_LOCATION] = pos;
+	obj[Canvas.MOUSE_EVENT_KEY_BUTTON] = but;
+	obj[Canvas.MOUSE_EVENT_KEY_SCROLL] = delta;
 	return obj;
 }
 Canvas.prototype._canvasClickFxn = function(e){
