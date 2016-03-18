@@ -1687,8 +1687,23 @@ R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, out
 }
 
 
-R3D.highDensityMatches = function(){
+R3D.highDensityMatches = function(imageA,widthA,heightA,pointsA, imageB,widthB,heightB,pointsB){
 	console.log("highDensityMatches");
+
+	var divider = 10; // make problem smaller
+
+
+	var areaMap = new AreaMap();
+
+	var rangeA = areaMap.addRangeImage(imageA,widthA,heightA, Math.floor(widthA/divider), Math.floor(heightA/divider));
+	var rangeB = areaMap.addRangeImage(imageB,widthB,heightB, Math.floor(widthB/divider), Math.floor(heightB/divider));
+	var i, len = Math.min(pointsA.length,pointsB.length);
+	for(i=0; i<len; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		areaMap.connectPoints(rangeA,pointA, rangeB,pointB);
+	}
+	areaMap.solve();
 /*
 start off from known points, work outward
  for each point blob / circle / pixel
@@ -1696,6 +1711,249 @@ start off from known points, work outward
 
 */
 }
+/*
+point group
+list
+blob
+section
+unit
+
+
+
+element
+unit
+item
+
+
+
+system
+
+area/range/space/
+	area-blob/group/section/segment/faction/
+		cells
+			feature
+
+*/
+
+// ----------------------------------------------------------------------------------- AreaMap
+AreaMap = function(){
+	this._ranges = [];
+}
+AreaMap.prototype.addRangeImage = function(image,width,height, rows,cols){
+	var range = new AreaMap.Range(image,width,height, rows,cols);
+	this._ranges.push(range);
+	return range;
+};
+AreaMap.prototype.connectPoints = function(rangeA,pointA, rangeB,pointB){
+	if( this.contains(rangeA) && this.contains(rangeB) ){
+		var cellA = rangeA.addPoint(pointA);
+		console.log(cellA)
+		var cellB = rangeB.addPoint(pointB);
+		console.log(cellB)
+		// connect as mapped
+	}
+};
+AreaMap.prototype.contains = function(range){
+	return Code.elementExists(this._ranges, range);
+};
+AreaMap.prototype.solve = function(){
+	console.log("solve");
+}
+// ----------------------------------------------------------------------------------- Range
+AreaMap.Range = function(image, width,height, rows,cols) { // image rect
+	this._sections = []; // unordered list of ranges
+	this._grid = []; // ordered grid of cells
+	this._image = null;
+	this._width = 0
+	this._height = 0;
+	this._rows = 0;
+	this._cols = 0;
+	this.image(image);
+	this.width(width);
+	this.height(height);
+	this.rows(rows);
+	this.cols(cols);
+	this.resetCells();
+};
+AreaMap.Range.prototype.image = function(image) {
+	if(image!==undefined){
+		this._image = image;
+	}
+	return this._image;
+};
+AreaMap.Range.prototype.width = function(width) {
+	if(width!==undefined){
+		this._width = width;
+	}
+	return this._width;
+};
+AreaMap.Range.prototype.height = function(height) {
+	if(height!==undefined){
+		this._height = height;
+	}
+	return this._height;
+};
+AreaMap.Range.prototype.rows = function(rows) {
+	if(rows!==undefined){
+		this._rows = rows;
+	}
+	return this._rows;
+};
+AreaMap.Range.prototype.cols = function(cols) {
+	if(cols!==undefined){
+		this._cols = cols;
+	}
+	return this._cols;
+};
+AreaMap.Range.prototype.resetCells = function() {
+	var i, len = this._rows * this._cols;
+	this._grid = new Array(len);
+	for(i=0; i<len; ++i){
+		this._grid[i] = null;
+	}
+};
+AreaMap.Range.prototype.rowFromPoint = function(point) {
+	var row = Math.floor(this._rows*point.y/this._height);
+	if (0<=row && row<this._rows){
+		return row;
+	}
+	return null;
+}
+AreaMap.Range.prototype.colFromPoint = function(point) {
+	var col = Math.floor(this._cols*point.x/this._width);
+	if (0<=col && col<this._cols){
+		return col;
+	}
+	return null;
+}
+AreaMap.Range.prototype.indexFromPoint = function(point) {
+	var row = this.rowFromPoint(point);
+	var col = this.colFromPoint(point);
+	if(row!=null && col!=null){
+		return this._cols*row + col;
+	}
+	return null;
+};
+AreaMap.Range.prototype.cellFromPoint = function(point) {
+	var index = this.indexFromPoint(point);
+	if(index){
+		return this._grid[index];
+	}
+	return null;
+};
+AreaMap.Range.prototype.regionFromPoint = function(point) {
+	var cell = this.cellFromPoint(point);
+	if(cell){
+		return cell.region();
+	}
+	return null;
+};
+AreaMap.Range.prototype.addPoint = function(point) {
+	var index = this.indexFromPoint(point);
+	if(index){ // valid point
+		var cell = this.cellFromPoint(point);
+		if(cell){
+			cell.addPoint(point);
+		}else{
+			var row = this.rowFromPoint(point);
+			var col = this.colFromPoint(point);
+			cell = new AreaMap.Cell(row,col);
+			cell.addPoint(point);
+			this._grid[index] = cell;
+			var region = new AreaMap.Region(this, cell);
+			//region.addCell(cell, point);
+		}
+	 	return cell;
+	}
+	var index
+	return null;
+}
+// ----------------------------------------------------------------------------------- Section
+AreaMap.Region = function(range, cell) { // area-blob section
+	this._range = range;
+	this._cells = []; // all containing cell members
+	this._perimeter = []; // elligible 
+	// initial cell is entirety of region
+	this._cells.push(cell);
+	this._perimeter.push(cell);
+	cell.region(this);
+};
+AreaMap.Region.prototype.range = function(range) {
+	if(range!==undefined){
+		this._range = range;
+	}
+	return this._range;
+};
+AreaMap.Region.prototype.addCell = function(cell,point) {
+	// var cell = this.cellFromPoint(point);
+	// if(!cell){
+	// 	cell = this.addPoint(point);
+	// }
+	// return cell;
+}
+// ----------------------------------------------------------------------------------- Cell
+AreaMap.Cell = function(row,col) { //
+	this._region = null;
+	this._left = null;
+	this._right = null;
+	this._up = null;
+	this._down = null;
+	this._features = []; // list of features inside cell
+	this._row = null;
+	this._col = null;
+	this.row(row);
+	this.col(col);
+};
+AreaMap.Cell.NEIGHBOR_UNKNOWN = 0;
+AreaMap.Cell.NEIGHBOR_NONE = 1;
+AreaMap.Cell.NEIGHBOR_EXISTS = 2;
+AreaMap.Cell.prototype.row = function(row) {
+	if(row!==undefined){
+		this._row = row;
+	}
+	return this._row;
+};
+AreaMap.Cell.prototype.col = function(col) {
+	if(col!==undefined){
+		this._col = col;
+	}
+	return this._col;
+};
+AreaMap.Cell.prototype.region = function(region) {
+	if(region!==undefined){
+		this._region = region;
+	}
+	return this._region;
+};
+AreaMap.Cell.prototype.features = function(features) {
+	if(features!==undefined){
+		this._features = features;
+	}
+	return this._features;
+};
+AreaMap.Cell.prototype.addPoint = function(point) {
+	if(point!=null){
+		var feature = new AreaMap.Feature(point);
+		this._features.push(feature);
+	}
+}
+// ----------------------------------------------------------------------------------- Feature
+AreaMap.Feature = function() {
+	this._point = null;
+};
+// AreaMap.Feature.prototype.addPoint = function(point) {
+// 	if(point!==undefined){
+// 		this._points.push(point);
+// 		return point;
+// 	}
+// 	return null;
+// };
+AreaMap.Feature.prototype.point = function(point) {
+	if(point!==undefined){
+		this._point = point;
+	}
+	return this._point;
+};
 
 
 /*

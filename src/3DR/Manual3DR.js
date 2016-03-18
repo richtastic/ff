@@ -1212,12 +1212,12 @@ for(k=0; k<points.length; ++k){
 	var p2DB = point.entries[keyB];
 	if(p2DA && p2DB){
 		p2DA = p2DA["p2D"];
+		p2DB = p2DB["p2D"];
 		pointsA.push(new V2D(p2DA.x,p2DA.y));
 		pointsB.push(new V2D(p2DB.x,p2DB.y));
 	}
 }
 
-console.log(pointsA,pointsB)
 
 var matches = R3D.highDensityMatches(imageSourceA,imageWidthA,imageHeightA,pointsA, imageSourceB,imageWidthB,imageHeightB,pointsB);
 
