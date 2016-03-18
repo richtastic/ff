@@ -1188,6 +1188,42 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 	*/
 
 
+// pick 2 cameras
+var keyA = "A";
+var keyB = "B";
+
+// A
+var entryA = entries[keyA];
+var imageSourceA = entryA[Manual3DR.KEY_IMAGE_SOURCE];
+var imageWidthA = imageSourceA.width;
+var imageHeightA = imageSourceA.height;
+// B
+var entryB = entries[keyB];
+var imageSourceB = entryB[Manual3DR.KEY_IMAGE_SOURCE];
+var imageWidthB = imageSourceB.width;
+var imageHeightB = imageSourceB.height;
+
+var pointsA = [];
+var pointsB = [];
+for(k=0; k<points.length; ++k){
+	var point = points[k];
+	var p3D = point["p3D"];
+	var p2DA = point.entries[keyA];
+	var p2DB = point.entries[keyB];
+	if(p2DA && p2DB){
+		p2DA = p2DA["p2D"];
+		pointsA.push(new V2D(p2DA.x,p2DA.y));
+		pointsB.push(new V2D(p2DB.x,p2DB.y));
+	}
+}
+
+console.log(pointsA,pointsB)
+
+var matches = R3D.highDensityMatches(imageSourceA,imageWidthA,imageHeightA,pointsA, imageSourceB,imageWidthB,imageHeightB,pointsB);
+
+return;
+
+
 this._startStage3D();
 
 this._startStage3DPoints();
@@ -1295,6 +1331,9 @@ this._finishStage3DPoints();
 this._finishStage3DLines();
 this._finishStage3DTextures();
 this._finishStage3D();
+
+
+
 
 
 

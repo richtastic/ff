@@ -1687,7 +1687,15 @@ R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, out
 }
 
 
+R3D.highDensityMatches = function(){
+	console.log("highDensityMatches");
+/*
+start off from known points, work outward
+ for each point blob / circle / pixel
+ 	
 
+*/
+}
 
 
 /*
