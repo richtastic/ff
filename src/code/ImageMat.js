@@ -158,7 +158,7 @@ ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
 	var d = 1.5*(B-C) + 0.5*(D-A);
 	return (a + b*t + c*tt + d*ttt);
 }
-ImageMat.linear2D = function(colR, x,y, colA,colB,colC,colD){
+ImageMat.linear2D = function(x,y, colA,colB,colC,colD){
 	return Code.linear2D(x,y, colA,colB,colC,colD);
 }
 ImageMat.linearColor = function(colR, x,y, colA,colB,colC,colD){
@@ -1281,7 +1281,7 @@ ImageMat.getPointInterpolateLinear = function(array, wid,hei, x,y){
 	if(x<0||x>wid){ minX=0.0;}
 	minY = y - minY;
 	if(y<0||y>hei){ minY=0.0;}
-	val = ImageMat.linear2D(val, minX,minY, colA,colB,colC,colD);
+	var val = ImageMat.linear2D(minX,minY, colA,colB,colC,colD);
 	if(isNaN(val)){
 		console.log("PT",wid,hei,x,y);
 	}

@@ -450,6 +450,7 @@ Code.arrayRandomItemPop = function(array){
 	var value = array.splice(index,1);
 	return value;
 }
+
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -1668,11 +1669,23 @@ Code.escapeURI = function(str){
 // escape(str)
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- formatting
+Code.padStringCenter = function(val,wid,fillerLeft,fillerRight){
+	if(val.length>=wid){
+		return val.substring(0,wid);
+	}
+	fillerLeft = fillerLeft!==undefined ? fillerLeft : " ";
+	fillerRight = fillerLeft!==undefined ? fillerRight : fillerLeft;
+	var left = Math.floor((wid-val.length)*0.5);
+	val = Code.padStringLeft(val,val.length+left,fillerLeft);
+	val = Code.padStringRight(val,wid,fillerRight);
+	return val;
+}
 Code.padString = function(val,wid,filler){
 	return Code.padStringLeft(val,wid,filler);
 }
 Code.padStringLeft = function(val,wid,filler){
 	filler = filler!==undefined?filler:" ";
+	if(filler.length==0){ filler = " "; }
 	var str = val;
 	while(str.length<wid){
 		str = str + filler;
@@ -1681,6 +1694,7 @@ Code.padStringLeft = function(val,wid,filler){
 }
 Code.padStringRight = function(val,wid,filler){
 	filler = filler!==undefined?filler:" ";
+	if(filler.length==0){ filler = " "; }
 	var str = val;
 	while(str.length<wid){
 		str = filler + str;

@@ -1102,7 +1102,10 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 		}
 		
 		var d = new DOImage(img);
-		this._root.addChild(d);
+if(i==0 || i==1){
+this._root.addChild(d);
+d.graphics().alpha(0.10);
+}
 		d.matrix().translate(x,y);
 		for(j=0;j<points.length;++j){
 			var point = points[j];
@@ -1218,8 +1221,9 @@ for(k=0; k<points.length; ++k){
 	}
 }
 
-
-var matches = R3D.highDensityMatches(imageSourceA,imageWidthA,imageHeightA,pointsA, imageSourceB,imageWidthB,imageHeightB,pointsB);
+var imageFloatA = this._stage.getImageAsFloatGray(imageSourceA).gray;
+var imageFloatB = this._stage.getImageAsFloatGray(imageSourceB).gray;
+var matches = R3D.highDensityMatches(imageFloatA,imageWidthA,imageHeightA,pointsA, imageFloatB,imageWidthB,imageHeightB,pointsB,   this._stage);
 
 return;
 
@@ -1768,7 +1772,7 @@ Manual3DR.prototype.onMouseUpFxn3D = function(e){
 }
 Manual3DR.prototype.onMouseExitFxn3D = function(e){
 	if( this._canvas3D.isMouseDown() ){
-		//var pos = e.location;
+		var pos = e.location;
 		this.onMouseUpFxn3D(e);
 	}
 }
@@ -2162,7 +2166,8 @@ this.calibrateCameraMatrix();
 	this._stage3D.start();
 }
 Manual3DR.prototype.handleMouseClickFxn = function(e){
-	console.log(e.x,e.y)
+	pos = e.location;
+	console.log(pos.x,pos.y)
 }
 Manual3DR.prototype.calibrateCameraMatrix = function(){
 	var i, j, rows, cols;

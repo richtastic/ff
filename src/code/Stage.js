@@ -338,41 +338,41 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	// arr = null; 
 	pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 }
-Stage.prototype._canvasMouseDown = function(pos){
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+Stage.prototype._canvasMouseDown = function(e){
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
+	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
 }
 Stage.prototype._canvasMouseUp = function(e){
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,e);
+	this.alertAll(Canvas.EVENT_MOUSE_UP,e);
 }
-Stage.prototype._canvasMouseClick = function(pos){
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_CLICK,pos);
+Stage.prototype._canvasMouseClick = function(e){
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_CLICK,e);
+	this.alertAll(Canvas.EVENT_MOUSE_CLICK,e);
 }
-Stage.prototype._canvasMouseMove = function(pos){
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+Stage.prototype._canvasMouseMove = function(e){
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,e);
+	this.alertAll(Canvas.EVENT_MOUSE_MOVE,e);
 }
 Stage.prototype._canvasMouseExit = function(e){
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_EXIT,pos); // ...
-	this.alertAll(Canvas.EVENT_MOUSE_EXIT,pos);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_EXIT,e); // ...
+	this.alertAll(Canvas.EVENT_MOUSE_EXIT,e);
 }
 
-Stage.prototype._canvasTouchStart = function(pos){
-	console.log("start "+pos);
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_DOWN,pos);
+Stage.prototype._canvasTouchStart = function(e){
+	console.log("start "+e);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
+	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
 }
-Stage.prototype._canvasTouchMove = function(pos){
-	console.log("move "+pos);
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_MOVE,pos);
+Stage.prototype._canvasTouchMove = function(e){
+	console.log("move "+e);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,e);
+	this.alertAll(Canvas.EVENT_MOUSE_MOVE,e);
 }
-Stage.prototype._canvasTouchEnd = function(pos){
-	console.log("end "+pos);
-	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,pos);
-	this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
+Stage.prototype._canvasTouchEnd = function(e){
+	console.log("end "+e);
+	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,e);
+	this.alertAll(Canvas.EVENT_MOUSE_UP,e);
 }
 
 Stage.prototype.kill = function(){
