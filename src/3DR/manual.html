@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["R3D.js","Manual3DR.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["AreaMap.js","R3D.js","Manual3DR.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	var manual = new Manual3DR();

@@ -1,7 +1,8 @@
 // PriorityQueue.js
 
 function PriorityQueue(fxn){
-	this._tree = new RedBlackTree(fxn);
+	this._tree = new RedBlackTree();
+	this.sorting(fxn);
 	this._tree.sortOnData(true);
 }
 // --------------------------------------------------------------------------------------------------------------------
