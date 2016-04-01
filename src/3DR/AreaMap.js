@@ -10,10 +10,10 @@ AreaMap.MatchSort = function(matchA,matchB){
 			return 0;
 		}
 		if(matchA.score()>matchB.score()){
-			return -1;
-		}
-		if(matchB.score()<matchB.score()){
 			return 1;
+		}
+		if(matchA.score()<matchB.score()){
+			return -1;
 		}
 	}
 	return 0;
@@ -35,14 +35,19 @@ AreaMap.prototype.connectPoints = function(rangeA,pointA, rangeB,pointB){
 	// 	this.mapCellFeatures(rangeA,featureA, rangeB,featureB);
 	// }
 
+
 	var match = new AreaMap.Match(rangeA,pointA, rangeB,pointB);
 	var windowA = AreaMap.Feature.getImage(rangeA,pointA);
 	var gradientA = AreaMap.Feature.calculateGradient(windowA);
-	windowA = AreaMap.Feature.getImage(rangeA,V2D.angle(gradientA,V2D.DIRX));
-
-	// var score = AreaMap.Feature.calculateScore(windowA, windowB);
-	// match.score(score);
-	// this._matches.insert(match);
+	windowA = AreaMap.Feature.getImage(rangeA,pointA,-V2D.angle(gradientA,V2D.DIRX));
+	var windowB = AreaMap.Feature.getImage(rangeB,pointB);
+	var gradientB = AreaMap.Feature.calculateGradient(windowB);
+	windowB = AreaMap.Feature.getImage(rangeB,pointB,-V2D.angle(gradientB,V2D.DIRX));
+	
+	var score = AreaMap.Feature.calculateScore(windowA, windowB);
+	match.score(score);
+	this._matches.push(match);
+	//console.log(this._matches.toString())
 };
 
 
@@ -105,6 +110,21 @@ AreaMap.prototype.mapCellFeatures = function(rangeA,featureA, rangeB,featureB){
 };
 AreaMap.prototype.solve = function(){
 	console.log("solve");
+	var isDone = false;
+	while(!isDone){
+		if(!this._matches.isEmpty()){
+			var match = this._matches.popMinimum();
+			console.log("MATCH: "+match);
+			if(match){
+				// ... 
+			}
+		}else{
+			isDone = true;
+		}
+		//
+		
+	}
+	/*
 	return;
 	var i, len;
 	for(i=0; i<this._ranges.length; ++i){
@@ -137,6 +157,7 @@ AreaMap.prototype.solve = function(){
 			}
 		}
 	}
+	*/
 }
 
 // ----------------------------------------------------------------------------------- Range
@@ -349,6 +370,10 @@ AreaMap.Match = function(rangeA,pointA, rangeB,pointB, score) { // area-blob sec
 	this.rangeB(rangeB);
 	this.pointB(pointA);
 	this.score(score);
+}
+AreaMap.Match.prototype.toString = function(){
+	var str = "["+this._score+": "+(this._pointA?"A":"x")+" | "+(this._pointB?"B":"x")+"]";
+	return str;
 }
 AreaMap.Match.prototype.pointA = function(pointA){
 	if(pointA!==undefined){
@@ -731,7 +756,8 @@ AreaMap.Feature.calculateGradient = function(window){
 }
 
 AreaMap.Feature.calculateScore = function(windowA, windowB){
-	var score = 0;
+	//var score = ImageMat.ssd(windowA.image,windowA.width,windowA.height, windowB.image,windowB.width,windowB.height);
+	var score = Code.SSDEqual(windowA.image,windowB.image);
 	return score;
 }
 

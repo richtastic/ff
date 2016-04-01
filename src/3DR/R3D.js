@@ -359,6 +359,30 @@ R3D.lmMinHomographyFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1x
 }
 
 // ------------------------------------------------------------------------------------------- F utilities
+R3D.fundamentalFromCamera = function(cam, K, Kinv){ // find relative transformation matrix  // points use F
+	Kinv = Kinv!==undefined ? Kinv : Matrix.inverse(K);
+	var KinvT = Matrix.transpose(Kinv);
+	var Kt = Matrix.transpose(K);
+	var r00 = cam.get(0,0);
+	var r01 = cam.get(0,1);
+	var r02 = cam.get(0,2);
+	var r10 = cam.get(1,0);
+	var r11 = cam.get(1,1);
+	var r12 = cam.get(1,2);
+	var r20 = cam.get(2,0);
+	var r21 = cam.get(2,1);
+	var r22 = cam.get(2,2);
+	var tx = cam.get(0,3);
+	var ty = cam.get(1,3);
+	var tz = cam.get(2,3);
+	var R = new Matrix(3,3).setFromArray([r00,r01,r02, r10,r11,r12, r20,r21,r22]);
+	var Tx = new Matrix(3,3).setFromArray([0,-tz,ty,  tz,0,-tx,  -ty,tx,0]); // crossMatrixFromV3D
+	// m.setFromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
+	var E = Matrix.mult(Tx,R);
+	//var F = Kt * E * K;
+	var F = Matrix.mult(Matrix.mult(KInvT, E), Kinv);
+	return F;
+}
 R3D.forceRank2 = function(fundamental){
 	var svd = Matrix.SVD(fundamental);
 	var U = svd.U;
