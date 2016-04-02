@@ -1104,7 +1104,7 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 		var d = new DOImage(img);
 if(i==0 || i==1){
 this._root.addChild(d);
-d.graphics().alpha(0.10);
+d.graphics().alpha(0.05);
 }
 		d.matrix().translate(x,y);
 		for(j=0;j<points.length;++j){

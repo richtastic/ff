@@ -1,6 +1,19 @@
 <?php
 // functions.php
 
+function BIN_LOCATION_COMPOSITE(){
+	return "/usr/local/bin/composite";
+}
+function BIN_LOCATION_CONVERT(){
+	return "/usr/local/bin/convert";
+}
+function BIN_LOCATION_IDENTIFY(){
+	return "/usr/local/bin/identify";
+}
+
+
+// $GLOBALS['BIN_LOCATION_CONVERT'] = "/usr/local/bin/convert";
+// echo $GLOBALS['BIN_LOCATION_CONVERT'];
 
 function requestedServerURL(){
 	$actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
@@ -59,11 +72,38 @@ function combineImageOntoImage($imageOver, $offsetX, $offsetY, $imageBase, $outF
 	}else{
 		$offsetY = "-".$offsetY;
 	}
-
-	$compositeLocation = "/usr/local/bin/composite";
-	$command = $compositeLocation." -geometry ".$offsetX.$offsetY." ".$imageOver." ".$imageBase."  ".$outFileName." 2>&1 ";
+	
+	$command = BIN_LOCATION_COMPOSITE()." -geometry ".$offsetX.$offsetY." ".$imageOver." ".$imageBase."  ".$outFileName." 2>&1 ";
 	$result = shell_exec($command);
 	return $result;
+}
+
+
+function splitImageIntoGridImages($imageSourceFilename, $offsetX, $offsetY, $cropWidth, $cropHeight, $imageDestinationFilename){ // if result is invalid image => returns original image
+	// $cropWidth = 100;
+	// $cropHeight = 60;
+	// $offsetX = 413;
+	// $offsetY = 100;
+	// $imageSourceFilename = "../3DR/images/catHat.jpg";
+	// $imageDestinationFilename = "./temp/"."temp.png";
+	$command = BIN_LOCATION_CONVERT().' -crop '.$cropWidth.'x'.$cropHeight.'+'.$offsetX.'+'.$offsetY.'  '.$imageSourceFilename.'  '.$imageDestinationFilename;
+	$result = shell_exec($command);
+	return $result;
+}
+
+
+function dimensionOfImage($imageSourceFilename){
+	$command = BIN_LOCATION_IDENTIFY().' -format "%[fx:w]x%[fx:h]"'.'  '.$imageSourceFilename;
+	//$result = $command;
+	$result = shell_exec($command);
+	if( strlen($result)>0 ){
+		$width = preg_replace('/x.*/i', "", $result);
+		$height = preg_replace('/.*x/i', "", $result);
+		$width = intval($width);
+		$height = intval($height);
+		return ["width"=>$width, "height"=>$height];
+	}
+	return null;
 }
 
 ?>

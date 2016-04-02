@@ -33,6 +33,24 @@ PriorityQueue.prototype.popMinimum = function(){
 PriorityQueue.prototype.popMaximum = function(){
 	return this._tree.popMaximum();
 }
+PriorityQueue.prototype.exists = function(o){
+	console.log("exists: "+o);
+	var node = this._tree.findNodeFromObject(o);
+	console.log(node);
+	return node != null;
+}
+PriorityQueue.prototype.linearSearchFxn = function(fxn, args){
+	var node = this._tree.minimumNode();
+	while(node!=null){
+		var val = fxn(node.data(), args);
+		if(val){
+			return val;
+		}
+		node = this._tree.nextNode(node);
+	}
+	return null;
+}
+
 PriorityQueue.prototype.toString = function(){
 	return this._tree.toString();
 }

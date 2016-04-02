@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Filtering</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Filter.js"],this,funLoadedFxn)).load();
+}
+function funLoadedFxn(){
+	var filter = new Filter();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

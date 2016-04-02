@@ -15,27 +15,29 @@ AreaMap.MatchSort = function(matchA,matchB){
 		if(matchA.score()<matchB.score()){
 			return -1;
 		}
+		return 0;
 	}
 	return 0;
+}
+AreaMap.MatchLinearSearch = function(matchA, matchB){
+	if(matchA && matchB){
+		var indexA_A = matchA.rangeA().indexFromPoint( matchA.pointA() );
+		var indexA_B = matchA.rangeB().indexFromPoint( matchA.pointB() );
+		var indexB_A = matchB.rangeA().indexFromPoint( matchB.pointA() );
+		var indexB_B = matchB.rangeB().indexFromPoint( matchB.pointB() );
+		if( ((indexA_A==indexB_A)&&(indexA_B==indexB_B)) || ((indexA_A==indexB_B)&&(indexA_B==indexB_A)) ){
+			return matchA;
+		}
+		return null;
+	}
+	return null;
 }
 AreaMap.prototype.addRangeImage = function(image,width,height, rows,cols){
 	var range = new AreaMap.Range(image,width,height, rows,cols);
 	this._ranges.push(range);
 	return range;
-};
+}
 AreaMap.prototype.connectPoints = function(rangeA,pointA, rangeB,pointB){
-	// if( this.contains(rangeA) && this.contains(rangeB) ){
-	// 	var featureA = new AreaMap.Feature(pointA);
-	// 	var cellA = rangeA.addFeature(featureA);
-	// 	featureA.calculateGradient();
-	// 	var featureB = new AreaMap.Feature(pointB);
-	// 	var cellB = rangeB.addFeature(featureB);
-	// 	featureB.calculateGradient();
-	// 	// connect as mapped
-	// 	this.mapCellFeatures(rangeA,featureA, rangeB,featureB);
-	// }
-
-
 	var match = new AreaMap.Match(rangeA,pointA, rangeB,pointB);
 	var windowA = AreaMap.Feature.getImage(rangeA,pointA);
 	var gradientA = AreaMap.Feature.calculateGradient(windowA);
@@ -43,12 +45,15 @@ AreaMap.prototype.connectPoints = function(rangeA,pointA, rangeB,pointB){
 	var windowB = AreaMap.Feature.getImage(rangeB,pointB);
 	var gradientB = AreaMap.Feature.calculateGradient(windowB);
 	windowB = AreaMap.Feature.getImage(rangeB,pointB,-V2D.angle(gradientB,V2D.DIRX));
-	
 	var score = AreaMap.Feature.calculateScore(windowA, windowB);
 	match.score(score);
+	//console.log( this.matchExists(match) );
 	this._matches.push(match);
-	//console.log(this._matches.toString())
-};
+	//console.log( this.matchExists(match) );
+}
+AreaMap.prototype.matchExists = function(match){
+	return this._matches.linearSearchFxn( AreaMap.MatchLinearSearch, match);
+}
 
 
 
@@ -66,7 +71,8 @@ AreaMap.prototype.connectPoints = function(rangeA,pointA, rangeB,pointB){
 
 AreaMap.prototype.contains = function(range){
 	return Code.elementExists(this._ranges, range);
-};
+}
+/*
 AreaMap.prototype.mapCellFeatures = function(rangeA,featureA, rangeB,featureB){
 	var cellA = rangeA.cellFromPoint(featureA.point());
 	var cellB = rangeB.cellFromPoint(featureB.point());
@@ -107,7 +113,8 @@ AreaMap.prototype.mapCellFeatures = function(rangeA,featureA, rangeB,featureB){
 	//featureB.match(featureA);
 	// featureA.cell().addMatchingCell(featureB.cell());
 	// featureB.cell().addMatchingCell(featureA.cell());
-};
+}
+*/
 AreaMap.prototype.solve = function(){
 	console.log("solve");
 	var isDone = false;
@@ -116,7 +123,31 @@ AreaMap.prototype.solve = function(){
 			var match = this._matches.popMinimum();
 			console.log("MATCH: "+match);
 			if(match){
-				// ... 
+				var pointA = match.pointA();
+				var rangeA = match.rangeA();
+				var pointB = match.pointB();
+				var rangeB = match.rangeB();
+				var cellA = rangeA.cellFromPoint(pointA);
+				var cellB = rangeB.cellFromPoint(pointB);
+				if(!cellA){
+					cellA = rangeA.newCellFromPoint(pointA);
+				}
+				if(!cellB){
+					cellB = rangeB.newCellFromPoint(pointB);
+				}
+				// search through neighbors trying to find potential match
+				var featureA = new AreaMap.Feature(pointA);
+				var featureB = new AreaMap.Feature(pointB);
+				featureA.cell(cellA);
+				featureB.cell(cellB);
+				featureA.match(featureB);
+				featureB.match(featureA);
+				//
+				rangeA.searchAddNeighborCells(cellA,this._matches);
+				rangeB.searchAddNeighborCells(cellB,this._matches);
+				//
+				console.log(cellA);
+				console.log(cellB);
 			}
 		}else{
 			isDone = true;
@@ -175,7 +206,7 @@ AreaMap.Range = function(image, width,height, rows,cols) { // image rect
 	this.rows(rows);
 	this.cols(cols);
 	this.resetCells();
-};
+}
 AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rotation){
 	scale = scale!==undefined ? scale : 1.0;
 	var matrix = null;
@@ -185,19 +216,20 @@ AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rot
 	}
 	var win = ImageMat.extractRectFromFloatImage(point.x,point.y,scale,null, width,height, this.image(),this.width(),this.height(), matrix);
 	return win;
-};
+}
 AreaMap.Range.prototype.matchingClear = function(){
 	// remove all unoriginal matches
-};
+}
 AreaMap.Range.prototype.cellSizeWidth = function(){
 	return this._width/this._cols;
-};
+}
 AreaMap.Range.prototype.cellSizeHeight = function(){
 	return this._height/this._rows;
-};
+}
 AreaMap.Range.prototype.hasPerimeter = function(){
 	return this.bestPerimeterCell() != null;
-};
+}
+/*
 AreaMap.Range.prototype.bestPerimeterCell = function(){
 
 
@@ -212,6 +244,7 @@ AreaMap.Range.prototype.bestPerimeterCell = function(){
 	}
 	return null;
 };
+*/
 AreaMap.Range.prototype.mergeRegions = function(regionA, regionB){
 	Code.removeElement(this._regions,regionA);
 	Code.removeElement(this._regions,regionB);
@@ -277,24 +310,108 @@ AreaMap.Range.prototype.indexFromPoint = function(point){
 };
 AreaMap.Range.prototype.indexFromRowCol = function(row,col){
 	if(row!=null && col!=null){
-		return this._cols*row + col;
+		if(0<=row && row<this.rows()){
+			if(0<=col && col<this.cols()){
+				return this._cols*row + col;
+			}
+		}
 	}
 	return null;
-};
-AreaMap.Range.prototype.cellFromPoint = function(point){
-	var index = this.indexFromPoint(point);
-	if(index){
+}
+AreaMap.Range.prototype.cellFromRowCol = function(row,col){
+	var index = this.indexFromRowCol(row,col-1);
+	if(index!=null){
 		return this._grid[index];
 	}
 	return null;
-};
+}
+
+AreaMap.Range.prototype.cellFromPoint = function(point){
+	var index = this.indexFromPoint(point);
+	if(index!=null){
+		return this._grid[index];
+	}
+	return null;
+}
 AreaMap.Range.prototype.regionFromPoint = function(point){
 	var cell = this.cellFromPoint(point);
 	if(cell){
 		return cell.region();
 	}
 	return null;
-};
+}
+AreaMap.Range.prototype.isPointInside = function(point){
+	if(0<=point.x && point.x<this.width()){
+		if(0<=point.y && point.y<this.height()){
+			return true;
+		}
+	}
+	return false;
+}
+AreaMap.Range.prototype.newCellFromPoint = function(point){
+	var cell = this.cellFromPoint(point);
+	if (!cell) {
+		var isInside = this.isPointInside(point);
+		if(isInside){
+			// create new cell
+			cell = new AreaMap.Cell();
+			var index = this.indexFromPoint(point);
+			this._grid[index] = cell;
+			// connect neighbors
+			var row = this.rowFromPoint(point);
+			var col = this.colFromPoint(point);
+			var left = this.cellFromRowCol(row,col-1);
+			var right = this.cellFromRowCol(row,col+1);
+			var top = this.cellFromRowCol(row-1,col);
+			var bot = this.cellFromRowCol(row+1,col);
+			console.log(left,right,top,bot);
+			if(left){
+				left.right(cell);
+				cell.left(left);
+			}
+			if(right){
+				right.left(cell);
+				cell.right(right);
+			}
+			if(top){
+				top.bottom(cell);
+				cell.top(top);
+			}
+			if(bot){
+				bot.top(cell);
+				cell.bottom(bot);
+			}
+			// ...
+			// SEARCH
+			// ...
+			return cell;
+		}
+	}
+	return null;
+}
+
+AreaMap.Range.prototype.searchAddNeighborCells = function(cell,matches){
+	// HERE
+	//
+	// for each UNKNOWN neighbor (l,r,u,d)
+	// check for best match starting at matched cell
+	//            bestMatchInNeighborCellPoint
+	// 
+	// if the combination CELL-MATCH is not already in matches queue, ADD IT
+//	var match = matches.exists()?
+	// 
+	//
+}
+AreaMap.Range.prototype.bestMatchInNeighborCellPoint = function(cellNeedle, cellHaystack, matches, recursiveCount, searchedList){
+	//  start at haystack
+	// do a SSD with cell to get a score
+	// add match to matches array
+	// 
+	// search all of haystack's-neighbors
+	//
+	// return best match in matches
+	// zero out searchedList
+}
 /*
 AreaMap.Range.prototype.removeFeature = function(feature){
 	var point = feature.point();
@@ -368,7 +485,7 @@ AreaMap.Match = function(rangeA,pointA, rangeB,pointB, score) { // area-blob sec
 	this.rangeA(rangeA);
 	this.pointA(pointA);
 	this.rangeB(rangeB);
-	this.pointB(pointA);
+	this.pointB(pointB);
 	this.score(score);
 }
 AreaMap.Match.prototype.toString = function(){
@@ -416,7 +533,7 @@ AreaMap.Region = function(range, cell) { // area-blob section
 	this._cells.push(cell);
 	this._perimeter.push(cell);
 	cell.region(this);
-};
+}
 AreaMap.Region._index = 0;
 AreaMap.Region.prototype.index = function() {
 	return this._index;
@@ -426,13 +543,6 @@ AreaMap.Region.prototype.range = function(range) {
 		this._range = range;
 	}
 	return this._range;
-};
-AreaMap.Region.prototype.addCell = function(cell,point) {
-	// var cell = this.cellFromPoint(point);
-	// if(!cell){
-	// 	cell = this.addPoint(point);
-	// }
-	// return cell;
 }
 AreaMap.Region.prototype.nextBestPerimeter = function(){
 	if(this._perimeter.length>0){
@@ -518,10 +628,37 @@ AreaMap.Cell.prototype.left = function(left, type){
 		this._leftType = type;
 	}
 	return this._left;
-};
+}
+AreaMap.Cell.prototype.right = function(right, type){
+	if(right!==undefined){
+		this._right = right;
+	}
+	if(type!==undefined){
+		this._rightType = type;
+	}
+	return this._right;
+}
+AreaMap.Cell.prototype.top = function(top, type){
+	if(top!==undefined){
+		this._top = top;
+	}
+	if(type!==undefined){
+		this._topType = type;
+	}
+	return this._top;
+}
+AreaMap.Cell.prototype.bottom = function(bottom, type){
+	if(bottom!==undefined){
+		this._bottom = bottom;
+	}
+	if(type!==undefined){
+		this._bottomType = bottom;
+	}
+	return this._bottom;
+}
 AreaMap.Cell.prototype.isPerimeterCell = function(){
 	return (this._leftType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN) || (this._rightType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN) || (this._upType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN) || (this._downType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN)
-};
+}
 /*
 AreaMap.Cell.prototype.makeNextMatch = function(){ // try to match any of un-paired neighbors
 	var cellA = this;
