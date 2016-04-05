@@ -841,9 +841,118 @@ Code.RGBFromYUV = function(y,u,v){
 Code.HSLFromRGB = function(rgb){
 	// 
 }
-Code.HSVFromRGB = function(rgb){
-	// 
+
+Code.HSVFromRGB = function(vout, vin){//, r,g,b){ // in [0,1]
+	if(vin===undefined){
+		vin = vout;
+		vout = new V3D();
+	}
+	var r = vin.x;
+	var g = vin.y;
+	var b = vin.z;
+	var h, s, v;
+	var min = Math.min(r,g,b);
+	var max = Math.max(r,g,b);
+	var range = max - min;
+	if(max!=0.0){
+		v = max;
+		s = range / max;
+		if(range==0){
+			h = 0;
+		}else{
+			if(r===max){ // y to m
+				h = (g-b)/range;
+			}else if(g===max){ // c to y
+				h = (b-r)/range;
+			}else{ // b===max m to c
+				h = (r-g)/range;
+			}
+		}
+		h *= Math.PI/3.0;
+		if(h<0){
+			h += Math.PI2;
+			//h += 2.0;
+		}
+		h /= Math.PI2;
+	}else{
+		s = 0.0;
+		h = -1;
+		v = 0;
+	}
+	vout.set(h,s,v);
+	return vout;
+	//return {"h":h, "s":s, "v":v};
 }
+Code.RGBFromHSV = function(vout, vin){ // h in [0,1], s in [0,1], v in [0,1]       (h usually 0-360 deg)
+	if(vin===undefined){
+		vin = vout;
+		vout = new V3D();
+	}
+	var h = vin.x;
+	var s = vin.y;
+	var v = vin.z;
+	var i, r, g, b, f, p, q, t;
+	if(s===0){
+		r = g = b = v;
+	}else{
+		//h /= (Math.PI/3.0);
+		h *= 6.0;
+		i = Math.floor(h);
+		f = h - i;
+		var oms = 1.0 - s;
+		//var omf = 1.0 - f;
+		var omsf = 1.0 - (s*f);
+		var omsomf = 1.0 - s*(1.0-f);
+		p = v * oms;
+		q = v * omsf;
+		t = v * omsomf;
+		switch(i){ // i in [0,]
+			case 0:
+				r = v;
+				g = t;
+				b = p;
+			break;
+			case 1:
+				r = q;
+				g = v;
+				b = p;
+			break;
+			case 2:
+				r = p;
+				g = v;
+				b = t;
+			break;
+			case 3:
+				r = p;
+				g = q;
+				b = v;
+			break;
+			case 4:
+				r = t;
+				g = p;
+				b = v;
+			case 5:
+				r = v;
+				g = p;
+				b = q;
+			break;
+			default:
+				//console.log(i,h);
+				r = 0.0;
+				g = 0.0;
+				b = 0.0;
+		}
+	}
+	r = Math.min(r,1.0);
+	g = Math.min(g,1.0);
+	b = Math.min(b,1.0);
+	r = Math.max(r,0.0);
+	g = Math.max(g,0.0);
+	b = Math.max(b,0.0);
+	vout.set(r,g,b);
+	return vout;
+}
+
 Code.CMYKFromRGB = function(rgb){
 	var r = Code.getRedARGB(rgb)/255.0;
 	var g = Code.getGrnARGB(rgb)/255.0;

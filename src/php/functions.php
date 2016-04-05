@@ -11,7 +11,6 @@ function BIN_LOCATION_IDENTIFY(){
 	return "/usr/local/bin/identify";
 }
 
-
 // $GLOBALS['BIN_LOCATION_CONVERT'] = "/usr/local/bin/convert";
 // echo $GLOBALS['BIN_LOCATION_CONVERT'];
 
@@ -54,12 +53,12 @@ function base64ToBinary($data64,$type) {
 	}
 }
 
-function createBlankImage($canvasWidth, $canvasHeight, $canvasFileName){
-	$convertLocation = "/usr/local/bin/convert";
-	$command = $convertLocation." -size ".$canvasWidth."x".$canvasHeight." xc:transparent ".$canvasFileName." 2>&1 ";
-	$result = shell_exec($command);
-	return $result;
-}
+// function createBlankImage($canvasWidth, $canvasHeight, $canvasFileName){
+// 	$convertLocation = "/usr/local/bin/convert";
+// 	$command = $convertLocation." -size ".$canvasWidth."x".$canvasHeight." xc:transparent ".$canvasFileName." 2>&1 ";
+// 	$result = shell_exec($command);
+// 	return $result;
+// }
 
 function combineImageOntoImage($imageOver, $offsetX, $offsetY, $imageBase, $outFileName){
 	if($offsetX>=0){
@@ -72,24 +71,41 @@ function combineImageOntoImage($imageOver, $offsetX, $offsetY, $imageBase, $outF
 	}else{
 		$offsetY = "-".$offsetY;
 	}
-	
 	$command = BIN_LOCATION_COMPOSITE()." -geometry ".$offsetX.$offsetY." ".$imageOver." ".$imageBase."  ".$outFileName." 2>&1 ";
 	$result = shell_exec($command);
 	return $result;
 }
 
+function createBlankImage($location,$width,$height,$background){
+	if(!isset($width)) {
+		$width = 1;
+	}
+	if(!isset($height)) {
+		$height = 1;
+	}
+	if(!isset($background)){
+		$background = 0x00000000;
+	}
+	$command = BIN_LOCATION_CONVERT().' -size '.$width.'x'.$height.' xc:"'.hexARGBToRGBAString($background).'" '.$location;
+	$result = shell_exec($command);
+	return $result;
+}
 
-function splitImageIntoGridImages($imageSourceFilename, $offsetX, $offsetY, $cropWidth, $cropHeight, $imageDestinationFilename){ // if result is invalid image => returns original image
-	// $cropWidth = 100;
-	// $cropHeight = 60;
-	// $offsetX = 413;
-	// $offsetY = 100;
-	// $imageSourceFilename = "../3DR/images/catHat.jpg";
-	// $imageDestinationFilename = "./temp/"."temp.png";
+function hexARGBToRGBAString($hex){
+	$a = ($hex>>24) & 0xFF;
+	$r = ($hex>>16) & 0xFF;
+	$g = ($hex>>8) & 0xFF;
+	$b = ($hex>>0) & 0xFF;
+	return "rgba(".$r.",".$g.",".$b.",".$a.")";
+}
+
+function cropImage($imageSourceFilename, $offsetX, $offsetY, $cropWidth, $cropHeight, $imageDestinationFilename){ // if result is invalid image => returns original image
 	$command = BIN_LOCATION_CONVERT().' -crop '.$cropWidth.'x'.$cropHeight.'+'.$offsetX.'+'.$offsetY.'  '.$imageSourceFilename.'  '.$imageDestinationFilename;
 	$result = shell_exec($command);
 	return $result;
 }
+//
+//splitImageIntoGridImages($sourceGridImageLocation, $offsetX,$offsetY, $gridSizeWidth,$gridSizeHeight, $imageLocation);
 
 
 function dimensionOfImage($imageSourceFilename){
