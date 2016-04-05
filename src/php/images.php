@@ -3,6 +3,11 @@
 
 require "functions.php";
 
+
+phpinfo();
+
+return;
+
 $data = '{"json":123}';
 
 
@@ -19,12 +24,11 @@ $data = '{"json":123}';
 	// $imageSourceFilename = "../3DR/images/catHat.jpg";
 	// $imageDestinationFilename = "./temp/"."temp.png";
 
-//for(){}
-$dimensions = dimensionOfImage("../3DR/images/catHat.jpg");
+$sourceGridImageLocation = "../3DR/images/catHat.jpg";
+$dimensions = dimensionOfImage($sourceGridImageLocation);
 if($dimensions!=null){
-$width = $dimensions["width"];
-$height = $dimensions["height"];
-	$soruceImageLocation = "../3DR/images/catHat.jpg";
+	$width = $dimensions["width"];
+	$height = $dimensions["height"];
 	$gridSizeWidth = 150;
 	$gridSizeHeight = 150;
 	$cols = ceil($width/$gridSizeWidth);
@@ -40,7 +44,6 @@ $height = $dimensions["height"];
 			$imageLocation = "./temp/".$imageFull;
 			$offsetX = $gridSizeWidth * $i;
 			$offsetY = $gridSizeHeight * $j;
-			//splitImageIntoGridImages($sourceGridImageLocation, $offsetX,$offsetY, $gridSizeWidth,$gridSizeHeight, $imageLocation);
 			cropImage($sourceGridImageLocation, $offsetX,$offsetY, $gridSizeWidth,$gridSizeHeight, $imageLocation);
 			$finalSize = dimensionOfImage($imageLocation);
 			$finalWidth = $finalSize["width"];

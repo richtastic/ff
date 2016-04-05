@@ -1,18 +1,39 @@
 <?php
 // functions.php
 
-function BIN_LOCATION_COMPOSITE(){
-	return "/usr/local/bin/composite";
+function IS_SERVER_OSX(){
+	return false;
 }
-function BIN_LOCATION_CONVERT(){
-	return "/usr/local/bin/convert";
-}
-function BIN_LOCATION_IDENTIFY(){
-	return "/usr/local/bin/identify";
+function IS_SERVER_LINUX(){
+	$command = 'uname -o'; // GNU/Linux
+	$value = shell_exec($command);
+	$matchesLinux = preg_match("/linux/i",$value);
+	if($matchesLinux.length>0){
+		return true;
+	}
+	return false;
 }
 
-// $GLOBALS['BIN_LOCATION_CONVERT'] = "/usr/local/bin/convert";
-// echo $GLOBALS['BIN_LOCATION_CONVERT'];
+// DEFAULT OSX
+$GLOBALS['BIN_LOCATION_COMPOSITE'] = "/usr/local/bin/composite";
+$GLOBALS['BIN_LOCATION_CONVERT'] = "/usr/local/bin/convert";
+$GLOBALS['BIN_LOCATION_IDENTIFY'] = "/usr/local/bin/identify";
+
+if(IS_SERVER_LINUX()){
+$GLOBALS['BIN_LOCATION_COMPOSITE'] = "/usr/bin/composite";
+$GLOBALS['BIN_LOCATION_CONVERT'] = "/usr/bin/convert";
+$GLOBALS['BIN_LOCATION_IDENTIFY'] = "/usr/bin/identify";
+}
+
+function BIN_LOCATION_COMPOSITE(){
+	return $GLOBALS['BIN_LOCATION_COMPOSITE'];
+}
+function BIN_LOCATION_CONVERT(){
+	return $GLOBALS['BIN_LOCATION_CONVERT'];
+}
+function BIN_LOCATION_IDENTIFY(){
+	return $GLOBALS['BIN_LOCATION_IDENTIFY'];
+}
 
 function requestedServerURL(){
 	$actual_link = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
