@@ -4,8 +4,8 @@
 require "functions.php";
 
 
-phpinfo();
-
+// phpinfo();
+echo "MAC: ".IS_SERVER_OSX();
 return;
 
 $data = '{"json":123}';

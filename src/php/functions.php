@@ -2,6 +2,12 @@
 // functions.php
 
 function IS_SERVER_OSX(){
+	$command = 'uname -a';// Darwin
+	$value = shell_exec($command);
+	$matchesDarwin = preg_match("/darwin/i",$value);
+	if($matchesDarwin.length>0){
+		return true;
+	}
 	return false;
 }
 function IS_SERVER_LINUX(){
