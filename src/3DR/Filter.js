@@ -8,13 +8,92 @@ function Filter(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
+
+	// KEYBOARD INTERACTION
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardDownStill,this);
+	this._keyboard.addListeners();
 	
 	// LOAD IMAGES
 	var imageList, imageLoader;
 	imageList = ["caseStudy1-0.jpg"];
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
+
+	this._filter = {
+		"active": "gamma",
+		"value": 1.0,
+		"filters": {
+			"saturation" : {
+				"default": 1.0,
+				"max": 5.0,
+				"min": 0.0,
+				"inc": 0.1
+			},
+			"brightness" : {
+				"default": 0.0,
+				"max": 1.0,
+				"min": -1.0,
+				"inc": 0.05
+			},
+			"contrast" : {
+				"default": 1.0,
+				"max": 5.0,
+				"min": 0.0,
+				"inc": 0.1
+			}
+
+			,
+			"gamma" : {
+				"default": 1.0,
+				"max": 10.0,
+				"min": 0.0,
+				"inc": 0.1
+			}
+		}
+	}
+	this._filter["value"] = this._filter["filters"][this._filter["active"]]["default"];
 }
+
+
+Filter.prototype.handleKeyboardUp = function(e){
+	//console.log(e);
+}
+Filter.prototype.handleKeyboardDownStill = function(e){
+	this.handleKeyboardDown(e);
+}
+Filter.prototype.handleKeyboardDown = function(e){
+	var filter = this._filter;
+	var active = filter.active;
+	var value = filter.value;
+	var settings = filter["filters"][active]
+		var inc = settings.inc;
+		var max = settings.max;
+		var min = settings.min;
+	if(e.keyCode==Keyboard.KEY_LEFT){
+		value -= 0.1;
+		value = Math.max(min,value);
+	}else if(e.keyCode==Keyboard.KEY_RIGHT){
+		value += 0.1;
+		value = Math.min(max,value);
+	}
+	//this.applyFilterSaturation(value);
+	//this.applyFilterBrightness(value);
+	this.applyFilterGamma(value);
+
+	filter.active = active;
+	filter.value = value;
+
+	console.log(active+" : "+value);
+	
+
+	//if(this._keyboard.isKeyDown(Keyboard.KEY_CTRL)){
+
+}
+
+
 
 Filter.prototype.handleSceneImagesLoaded = function(imageInfo){
 	console.log("loaded")
@@ -28,15 +107,57 @@ Filter.prototype.handleSceneImagesLoaded = function(imageInfo){
 	}
 	var image = list[0];
 	var imageSourceColors = this._stage.getImageAsFloatRGB(image);
-	console.log(imageSourceColors)
+	//console.log(imageSourceColors)
 	var imageSourceRed = imageSourceColors.red;
 	var imageSourceGrn = imageSourceColors.grn;
 	var imageSourceBlu = imageSourceColors.blu;
 	var imageSourceWidth = imageSourceColors.width;
 	var imageSourceHeight = imageSourceColors.height;
+
+	this._imageSource = {
+		"red" : imageSourceRed,
+		"grn" : imageSourceGrn,
+		"blu" : imageSourceBlu,
+		"width" : imageSourceWidth,
+		"height" : imageSourceHeight,
+	}
+}
+Filter.prototype.applyFilterSaturation = function(amount){
+	this.applyFilterFunction(Filter.filterSaturation, amount);
+}
+Filter.prototype.applyFilterBrightness = function(amount){
+	this.applyFilterFunction(Filter.filterBrightness, amount);
+}
+Filter.prototype.applyFilterGamma = function(amount){
+	this.applyFilterFunction(Filter.filterGamma, amount);
+}
+Filter.prototype.applyFilterFunction = function(fxn, args){
+	var red = Code.copyArray(this._imageSource.red);
+	var grn = Code.copyArray(this._imageSource.grn);
+	var blu = Code.copyArray(this._imageSource.blu);
+	var width = this._imageSource.width;
+	var height = this._imageSource.height;
+	fxn(red,grn,blu, width,height, args);
+
+	this._root.removeAllChildren();
+
+	var img, d;
+	// original
+	img = this._stage.getFloatRGBAsImage(this._imageSource.red,this._imageSource.grn,this._imageSource.blu, width,height);
+	d = new DOImage(img);
+	this._root.addChild(d);
+	d.matrix().translate(0,0);
+
+	// new
+	img = this._stage.getFloatRGBAsImage(red,grn,blu, width,height);
+	d = new DOImage(img);
+	this._root.addChild(d);
+	d.matrix().translate(width,0);
+}
+Filter.prototype.old = function(){
 	console.log(imageSourceWidth)
 	//Filter.filterSaturation(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight, 2.0);
-	Filter.filterV(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight, 2.0);
+//	Filter.filterV(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight, 2.0);
 	var img = this._stage.getFloatRGBAsImage(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight);
 	//console.log(img);
 	var d = new DOImage(img);
@@ -57,6 +178,54 @@ Filter._filterSaturationFxn = function(v, args){
 	v = Code.HSVFromRGB(v,v);
 	v.y = v.y * percent;
 	v = Code.RGBFromHSV(v,v);
+	return v;
+}
+
+Filter.filterBrightness = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> HSV, increase S
+	console.log("filterBrightness)")
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterBrightnessFxn, scale);
+}
+Filter._filterBrightnessFxn = function(v, args){
+	var inc = args;
+	v.x = v.x + inc;
+	v.y = v.y + inc;
+	v.z = v.z + inc;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+Filter.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterContrastFxn, scale);
+}
+Filter._filterContrastFxn = function(v, args){
+	var scale = args;
+	v.x = scale * (v.x - 0.5) + 0.5;
+	v.y = scale * (v.y - 0.5) + 0.5;
+	v.z = scale * (v.z - 0.5) + 0.5;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+Filter.filterGamma = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, gamma){ // brightness with nonlinear scaling
+	if(gamma>0.0){
+		gamma = 1.0/gamma;
+	}else{
+		gamma = 0.0;
+	}
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterGammaFxn, gamma);
+}
+Filter._filterGammaFxn = function(v, args){
+	var inc = args;
+	v.x = Math.pow(v.x,args);
+	v.y = Math.pow(v.y,args);
+	v.z = Math.pow(v.z,args);
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
 	return v;
 }
 
@@ -119,10 +288,12 @@ Filter.filter = function(){
 
 
 
-- brightness
+x brightness
 	- move everything toward 1.0 or 0.0 ?
 
-- contrast
+x gamma
+
+x contrast
 	- increases colors? (less gray)
 
 - structure
@@ -154,6 +325,23 @@ Filter.filter = function(){
 
 - vignette
 	- border/radial blackening
+
+- n-bitization
+	- round to nearest neighbor values
+
+- b-bit-dithered
+	- eror diffusion | Floyd-Steinberg 
+
+- solarize
+	- 
+
+- color inversion
+
+- gaussian
+
+- radial
+
+- directional
 
 */
 
