@@ -23,7 +23,7 @@ function Filter(){
 	imageLoader.load();
 
 	this._filter = {
-		"active": "gamma",
+		"active": "sharpen",
 		"value": 1.0,
 		"filters": {
 			"saturation" : {
@@ -42,6 +42,12 @@ function Filter(){
 				"default": 1.0,
 				"max": 5.0,
 				"min": 0.0,
+				"inc": 0.1
+			},
+			"sharpen" : {
+				"default": 0.0,
+				"max": 10.0,
+				"min": -10.0,
 				"inc": 0.1
 			}
 
@@ -81,7 +87,8 @@ Filter.prototype.handleKeyboardDown = function(e){
 	}
 	//this.applyFilterSaturation(value);
 	//this.applyFilterBrightness(value);
-	this.applyFilterGamma(value);
+	//this.applyFilterGamma(value);
+	this.applyFilterSharpen(value);
 
 	filter.active = active;
 	filter.value = value;
@@ -130,6 +137,9 @@ Filter.prototype.applyFilterBrightness = function(amount){
 }
 Filter.prototype.applyFilterGamma = function(amount){
 	this.applyFilterFunction(Filter.filterGamma, amount);
+}
+Filter.prototype.applyFilterSharpen = function(amount){
+	this.applyFilterFunction(Filter.filterSharpen, amount);
 }
 Filter.prototype.applyFilterFunction = function(fxn, args){
 	var red = Code.copyArray(this._imageSource.red);
@@ -217,6 +227,95 @@ Filter.filterGamma = function(imageSourceRed, imageSourceGrn, imageSourceBlu, wi
 		gamma = 0.0;
 	}
 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterGammaFxn, gamma);
+}
+Filter._filterGammaFxn = function(v, args){
+	var inc = args;
+	v.x = Math.pow(v.x,args);
+	v.y = Math.pow(v.y,args);
+	v.z = Math.pow(v.z,args);
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // 
+	var oneMP = 1.0 - percent;
+	var sigma = 0.6;
+	var gauss1D = ImageMat.gaussianWindow1DFromSigma(sigma, 5, 2);
+	//var padding = Math.floor(gaussSize/2.0);
+	//var tmp = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
+	// var newWid = wid+2.0*padding;
+	// var newHei = hei+2.0*padding;
+	// var tmp = ImageMat.gaussian2DFrom1DFloat(tmp, newWid,newHei, gauss1D);
+	// return ImageMat.unpadFloat(tmp, newWid,newHei, padding,padding,padding,
+	var redGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceRed, width,height, gauss1D);
+	var grnGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceGrn, width,height, gauss1D);
+	var bluGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceBlu, width,height, gauss1D);
+	var redDiff = ImageMat.subFloat(imageSourceRed,redGauss);
+	var grnDiff = ImageMat.subFloat(imageSourceGrn,grnGauss);
+	var bluDiff = ImageMat.subFloat(imageSourceBlu,bluGauss);
+	/*
+	var maxR = Code.maxArray(redDiff);
+	var maxG = Code.maxArray(grnDiff);
+	var maxB = Code.maxArray(bluDiff);
+	var max = Code.maxArray([maxR,maxG,maxB]);
+	var minR = Code.minArray(redDiff);
+	var minG = Code.minArray(grnDiff);
+	var minB = Code.minArray(bluDiff);
+	var min = Code.minArray([maxR,maxG,maxB]);
+	if(min<0){
+		range = Math.max(max,-min);
+	}else{
+		range = max;
+	}
+	if(range==0){ return; }
+	range = 1.0/range;
+	// ImageMat.normalFloatNegToOne(redDiff, max);
+	// ImageMat.normalFloatNegToOne(grnDiff, max);
+	// ImageMat.normalFloatNegToOne(bluDiff, max);
+	redDiff = ImageMat.scaleFloat(range,redDiff);
+	grnDiff = ImageMat.scaleFloat(range,grnDiff);
+	bluDiff = ImageMat.scaleFloat(range,bluDiff);
+	*/
+	var i, len = width*height;
+	for(i=0; i<len; ++i){
+		var red = imageSourceRed[i];
+		var grn = imageSourceGrn[i];
+		var blu = imageSourceBlu[i];
+		red = red + redDiff[i];
+		grn = grn + grnDiff[i];
+		grn = grn + grnDiff[i];
+		red = Math.min(Math.max(red, 0.0),1.0);
+		grn = Math.min(Math.max(grn, 0.0),1.0);
+		blu = Math.min(Math.max(blu, 0.0),1.0);
+		imageSourceRed[i] = red;
+		imageSourceGrn[i] = grn;
+		imageSourceBlu[i] = blu;
+	}
+/*
+	var redDX = ImageMat.derivativeX(imageSourceRed, width,height);
+	var grnDX = ImageMat.derivativeX(imageSourceGrn, width,height);
+	var bluDX = ImageMat.derivativeX(imageSourceBlu, width,height);
+	var redDY = ImageMat.derivativeY(imageSourceRed, width,height);
+	var grnDY = ImageMat.derivativeY(imageSourceGrn, width,height);
+	var bluDY = ImageMat.derivativeY(imageSourceBlu, width,height);
+	var i, len = width*height;
+	for(i=0; i<len; ++i){
+		var red = imageSourceRed[i];
+		var grn = imageSourceGrn[i];
+		var blu = imageSourceBlu[i];
+		red = red*oneMP + percent*redDX[i] + percent*redDY[i];
+		grn = grn*oneMP + percent*grnDX[i] + percent*grnDY[i];
+		blu = blu*oneMP + percent*bluDX[i] + percent*bluDY[i];
+		red = Math.min(Math.max(red, 0.0),1.0);
+		grn = Math.min(Math.max(grn, 0.0),1.0);
+		blu = Math.min(Math.max(blu, 0.0),1.0);
+		imageSourceRed[i] = red;
+		imageSourceGrn[i] = grn;
+		imageSourceBlu[i] = blu;
+	}
+*/
 }
 Filter._filterGammaFxn = function(v, args){
 	var inc = args;
@@ -343,5 +442,37 @@ x contrast
 
 - directional
 
+- mean
+
+- median
+
 */
+
+
+Filter.filterOddColorShift = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // 
+	var oneMP = 1.0 - percent;
+oneMP = 1.0;
+	var redDX = ImageMat.derivativeX(imageSourceRed, width,height);
+	var grnDX = ImageMat.derivativeX(imageSourceGrn, width,height);
+	var bluDX = ImageMat.derivativeX(imageSourceBlu, width,height);
+	var redDY = ImageMat.derivativeY(imageSourceRed, width,height);
+	var grnDY = ImageMat.derivativeY(imageSourceGrn, width,height);
+	var bluDY = ImageMat.derivativeY(imageSourceBlu, width,height);
+	var i, len = width*height;
+	for(i=0; i<len; ++i){
+		var red = imageSourceRed[i];
+		var grn = imageSourceGrn[i];
+		var blu = imageSourceBlu[i];
+		red = red*oneMP + percent*redDX[i] + percent*redDY[i];
+		grn = grn*oneMP + percent*grnDX[i] + percent*grnDY[i];
+		blu = blu*oneMP + percent*bluDX[i] + percent*bluDY[i];
+		red = Math.min(Math.max(red, 0.0),1.0);
+		grn = Math.min(Math.max(grn, 0.0),1.0);
+		blu = Math.min(Math.max(blu, 0.0),1.0);
+		imageSourceRed[i] = red;
+		imageSourceGrn[i] = grn;
+		imageSourceBlu[i] = blu;
+	}
+
+}
 

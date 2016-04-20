@@ -1225,6 +1225,29 @@ ImageMat.normalFloatAboutZero = function(data){
 	}
 	return data;
 }
+
+ImageMat.normalFloatNegToOne = function(data){
+	var i, len = data.length;
+	var max = data[0], min = data[0];
+	for(i=1;i<len;++i){
+		max = Math.max(max,data[i]);
+		min = Math.min(min,data[i]);
+	}
+	var range;
+	if(min<0){
+		range = Math.max(max,-min);
+	}else{
+		range = max;
+	}
+	if(range==0){
+		return;
+	}
+	for(i=0;i<len;++i){
+		data[i] = data[i]/range;
+	}
+	return data;
+}
+
 ImageMat.getNormalFloat01 = function(data){
 	return ImageMat.normalFloat01( Code.copyArray(new Array(),data) );
 }
