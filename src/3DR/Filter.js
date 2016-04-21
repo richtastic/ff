@@ -46,8 +46,8 @@ function Filter(){
 			},
 			"sharpen" : {
 				"default": 0.0,
-				"max": 10.0,
-				"min": -10.0,
+				"max": 5.0, // 3.0 starts saturating
+				"min": 0.0,
 				"inc": 0.1
 			}
 
@@ -255,7 +255,7 @@ Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 	var redDiff = ImageMat.subFloat(imageSourceRed,redGauss);
 	var grnDiff = ImageMat.subFloat(imageSourceGrn,grnGauss);
 	var bluDiff = ImageMat.subFloat(imageSourceBlu,bluGauss);
-	/*
+	
 	var maxR = Code.maxArray(redDiff);
 	var maxG = Code.maxArray(grnDiff);
 	var maxB = Code.maxArray(bluDiff);
@@ -263,7 +263,7 @@ Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 	var minR = Code.minArray(redDiff);
 	var minG = Code.minArray(grnDiff);
 	var minB = Code.minArray(bluDiff);
-	var min = Code.minArray([maxR,maxG,maxB]);
+	var min = Code.minArray([minR,minG,minB]);
 	if(min<0){
 		range = Math.max(max,-min);
 	}else{
@@ -277,15 +277,15 @@ Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 	redDiff = ImageMat.scaleFloat(range,redDiff);
 	grnDiff = ImageMat.scaleFloat(range,grnDiff);
 	bluDiff = ImageMat.scaleFloat(range,bluDiff);
-	*/
+	
 	var i, len = width*height;
 	for(i=0; i<len; ++i){
 		var red = imageSourceRed[i];
 		var grn = imageSourceGrn[i];
 		var blu = imageSourceBlu[i];
-		red = red + redDiff[i];
-		grn = grn + grnDiff[i];
-		grn = grn + grnDiff[i];
+		red = red + percent*redDiff[i];
+		grn = grn + percent*grnDiff[i];
+		blu = blu + percent*bluDiff[i];
 		red = Math.min(Math.max(red, 0.0),1.0);
 		grn = Math.min(Math.max(grn, 0.0),1.0);
 		blu = Math.min(Math.max(blu, 0.0),1.0);
