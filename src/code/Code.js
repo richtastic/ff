@@ -302,6 +302,30 @@ Code.arrayUnshiftArray = function(a,b){
 	}
 	return a;
 }
+// a = [0,1,2,3]
+// b = [0,1,2,3]
+// Code.arrayEquality(a,b)
+// a = [0,1,2]
+Code.arrayEquality = function(a,b, count, startA,startB){
+	var lenA = a.length;
+	var lenB = b.length;
+	count = count!==undefined ? count : lenA ;
+	startA = startA !== undefined ? startA : 0;
+	startB = startB !== undefined ? startB : 0;
+	count = Math.min(count,lenA-startA);
+	count = Math.min(count,lenB-startB);
+	var u, v, i;
+	var equal = true;
+	for(i=0; i<count; ++i){
+		u = a[startA+i];
+		v = b[startB+i];
+		// console.log(u,v);
+		if(u!=v){
+			return false;
+		}
+	}
+	return true;
+}
 // Code.pushFront = function(a,b){
 // 	a.unshift(a,b);
 // }
@@ -3344,6 +3368,12 @@ Code.setPixelRGBA = function(dat, x,y, r,g,b,a){
 Code.generateBMPImageSrc = function(wid,hei,imageData){
     return 'data:image/bmp;base64,'+window.btoa(Code.generateBMPImageHeader(wid,hei)+imageData.join(""));
 }
+Code.binaryToBase64String = function(binaryData){
+	return window.btoa(binaryData);
+}
+Code.base64StringToBinary = function(stringData){
+	return null; // ?
+}
 Code.generateImageFromData = function(wid,hei,imageData){
     var img = new Image(wid,hei);
     img.width = wid;
@@ -3754,6 +3784,14 @@ Code.insideTrianglePadded3D = function(a,b,c,pad){
 	return false;
 }
 
+Code.uint32FromByteArray = function(binaryArray,offset){
+	var out = binaryArray[offset+0]<<24 | binaryArray[offset+1]<<16 |  binaryArray[offset+2]<<8 |  binaryArray[offset+3]<<0;
+	return out;
+}
+Code.uint16FromByteArray = function(binaryArray,offset){
+	var out = binaryArray[offset+0]<<8 | binaryArray[offset+1]<<0;
+	return out;
+}
 
 
 

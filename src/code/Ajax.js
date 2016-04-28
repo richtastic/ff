@@ -56,6 +56,17 @@ function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	}
 }
 // --- get/set ---------------------------------------
+Ajax.prototype.binary = function(b){
+	if(b!==undefined){
+		if(b){
+			this._binary = true;
+			this._request.responseType = "arraybuffer";
+		}else{
+			this._request.responseType = "";
+		}
+	}
+	return this._binary;
+}
 Ajax.prototype.cache = function(c){
 	if(c!==undefined && c!==null){
 		this._cache = c;
@@ -189,17 +200,38 @@ Ajax.prototype._stateChangeCaller = function(e){
 Ajax.prototype._callCallback = function(response){
 	if(this._callback){
 		if(this._context){
-			this.callback.call( this._context, null, this );
+			this._callback.call( this._context, response, this );
 		}else{
-			this.callback(response, this);
+			this._callback(response, this);
 		}
 	}
 }
 Ajax.prototype._stateChange = function(){
 	if(this._request.readyState==4){ // should also look at 400, 304, ... differentiate types 
+		var response = null;
+		var responseCode = this._request.status;
 		if(this._binary){
-			var arrayBuffer = this._request.response;
-			if(arrayBuffer){
+			var response = this._request.response;
+			response = new Uint8Array(response);
+		}else{
+			response = this._request.responseText;
+		}
+		this._callbackResponseCheck(responseCode,response);
+		if(this._autoDestroy){
+			this.kill();
+		}
+	}
+}
+Ajax.prototype._callbackResponseCheck = function(responseCode,response){
+	if( Math.floor(responseCode/200)==1 || Math.floor(responseCode/300)==1 ){ // 200s or 300s  ////// 204, ... 300?
+			this._callCallback(response);
+	}else{ // 400, 500
+		this._callCallback(null);
+	}
+}
+
+			/*if(arrayBuffer){
+				console.log("converting");
 				var i, j;
 				//console.log(arrayBuffer.length);
 				var len = 1000;// arrayBuffer.length
@@ -212,25 +244,8 @@ Ajax.prototype._stateChange = function(){
 					}
 				}
 				var byteArray = new Uint8Array(arrayBuffer);
-				//console.log(byteArray);
-			}
-			return;
-		}else{
-
-			var response = this._request.responseText;
-			var responseCode = this._request.status;
-			console.log(response);
-			if( Math.floor(responseCode/200)==1 || Math.floor(responseCode/300)==1 ){ // 200s or 300s  ////// 204, ... 300?
-				this._callCallback(response);
-			}else{ // 400, 500
-				this._callCallback(null);
-			}
-		}
-		if(this._autoDestroy){
-			this.kill();
-		}
-	}
-}
+				console.log(byteArray);
+			}*/
 /*
 http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 100 - continue

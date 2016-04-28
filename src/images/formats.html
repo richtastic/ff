@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>Formats : PNG | JPG</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["Formats.js"],this,funLoadedFxn)).load();
+}
+function funLoadedFxn(){
+	console.log(Compress)
+	var formats = new Formats();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
