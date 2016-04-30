@@ -11,7 +11,7 @@ Compress.lz77Compress = function(inputArray, offset, length){
 	var outputTable = {};
 	return outputTable;
 }
-Compress.lz77Decompress = function(inputArray, offset, length){
+Compress.lz77Decompress = function(inputArray, offset, length){ // zlib
 	if(!inputArray){ return null; }
 	offset = offset!==undefined ? offset : 0;
 	length = length!==undefined ? length : inputArray.length;
@@ -63,10 +63,64 @@ Compress.lz77Decompress = function(inputArray, offset, length){
 	var compressedDataLength = length - 4 - (compressedDataOffset-offset);
 	console.log("uncompress data: @"+compressedDataOffset+" -> "+compressedDataLength);
 
+	var currentByteIndex = 0;
+	var currentBitIndex = 0;
+	// block begins with 3 header bits
+	var bfinal = Compress.readNBitsFromBytes(inputArray, offset, 0, 1); // first bit -- BFINAL == 1 if last black
+	var btype = Compress.readNBitsFromBytes(inputArray, offset, 1, 2); // next 2 bits -- 00==no compression, 01==fixed huffman, 10==dynamic huffman, 11 = N/A
+	console.log(inputArray[offset]);
+	console.log(" _ BFINAL: "+bfinal+"  BTYPE:"+btype);
+	if(btype==0x3){
+		console.log("error, type 0b0011 reserved");
+		
+	}else if(btype==0x0){
+		console.log("btype == 0");
+		// ignore bits up to next byte boundary
+		var len = 0;// first 2 bytes - LEN == number of bytes in data
+		var nlen = 0;// next 2 bytes - NLEN = 1s compliment of LEN
+	}else if(btype==0x1 || byte==0x2){ // compressed
+		// 0..255 == literal
+		// 256 == end-of-block
+		// 257..285 == length codes
+	}
 
 
-	var outputTable = {};
-	return outputTable;
+	// decompressed output bytes
+	var outputBytes = new Uint8Array();
+	return outputBytes;
+}
+
+Compress.readNBitsFromBytes = function(inputArray, offsetByte, offsetBit, lengthBits){
+	// FROM LEFT?
+	// FROM RIGHT?
+	/*
+	var value = 0x0;
+	//var lengthBytes = Math.ceil(lengthBits/8.0);
+	var byt, isOne;
+	var index = offsetByte;
+	var read = 0;
+	var division = offsetBit;
+	var mask = 0x80 >> offsetBit;
+	while(read < lengthBits){
+		byt = inputArray[index];
+		value = value << 1;
+		isOne = (mask & byt) !=0 ? 1 : 0;
+		value = value | isOne;
+		++division;
+		++read;
+		if(division%8==0){
+			++index;
+			mask = 0x1;
+		}
+	}
+	*/
+	// for(var i=0; i<length; ++i){
+	// 	var indexByte = offsetByte + i;
+	// 	for(var j=0; j<length; ++j){
+	// 		var bit = 
+	// 	}
+	// }
+	return value;
 }
 
 // http://www.ietf.org/rfc/rfc1950.txt

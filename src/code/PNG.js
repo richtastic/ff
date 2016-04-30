@@ -78,46 +78,19 @@ PNG.binaryArrayToFloatARGB = function(binaryArray){
 	var chunk = PNG._readChunk(binaryArray,i);
 	while(chunk!=null){
 		PNG._processChunk(chunk,binaryArray,outputResult);
-		//console.log(i);
-		//console.log(chunk);
-		//console.log(chunk.type);
 		i = chunk.next;
 		chunk = PNG._readChunk(binaryArray,i);
 	}
-	/*
-	var found;
-	for(k=i; k<len; ++k){
-		found = true;
-		for(j=0; j<PNG._CHUNK_IHDR.length; ++j, ++k){
-			a = binaryArray[k];
-			b = PNG._CHUNK_IHDR[j];
-			//console.log(a+" ?="+b);
-			if(a!=b){
-				found = false;
-				break;
-			}
-		}
-		if(found){
-			break;
-		}
-	}
-	// 0 0 0 13
-	// 0000 | 0000 | 0000 | 1101 = 13
-	if(found){
-		console.log("found: "+i+" / "+k);
-		i = k;
-	}else{
-		return null;
-	}
-	*/
-	console.log("DO SOME STUFF: "+i);
+	PNG._processImage(outputResult,binaryArray);
+
+	//console.log("DO SOME STUFF: "+i);
 	return null;
 	
-	console.log("end of data = CRC: "+(i + 13)+"+(i + 13");
-	for(i=0; i<len; ++i){
-		console.log("i:"+i+" = "+binaryArray[i])
-	}
-	return outputResult;
+	// console.log("end of data = CRC: "+(i + 13)+"+(i + 13");
+	// for(i=0; i<len; ++i){
+	// 	console.log("i:"+i+" = "+binaryArray[i])
+	// }
+	// return outputResult;
 }
 PNG._processChunk = function(chunk,binaryArray,outputResult){
 	var i;
@@ -250,13 +223,14 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 		var time = Date.UTC(year, month, day, hour, minute, second, millisecond);
 		outputResult["modified"] = time;
 		console.log("TIME: "+year+" "+month+" "+day+" "+hour+" "+minute+" "+second+"  = "+time);
-	}else if(type==PNG._CHUNK_TYPE_IDAT){
-		// multiple IDATs are conactenated (as compressed) then decompressed as a single stream
-		var colorType = outputResult.colorType;
-		var filterMethod = outputResult.filterMethod;
-		var decompressed = Compress.lz77Decompress(binaryArray, start, length);
-		console.log("IDAT: "+length);
-		// TODO
+	}else if(type==PNG._CHUNK_TYPE_IDAT){ // multiple IDATs are conactenated (as compressed) then decompressed as a single stream
+		var idatList = outputResult["imageData"]
+		if(!idatList){
+			idatList = [];
+			outputResult["imageData"] = idatList;
+		}
+		outputResult["imageData"].push([start,length])
+		console.log("IDAT: "+start+" : "+length);
 	}else{
 		//console.log("unknown type: "+type);
 	}
@@ -267,6 +241,66 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 	// 	default:
 	// 		console.log("unknown type: "+type);
 	// }
+}
+
+PNG._processImage = function(outputResult, binaryArray){
+	var imageData = outputResult["imageData"]
+	if(!imageData || imageData.length==0){ // empty image data
+		return null;
+	}
+	var i, j, index;
+	// combine all idata into single stream
+	console.log("  . combining compressed image data");
+	var totalDataLength = 0;
+	for(i=0; i<imageData.length; ++i){
+		totalDataLength += imageData[i][1];
+	}
+	var compressedImageData = new Uint8Array(totalDataLength);
+	index = 0;
+	for(i=0; i<imageData.length; ++i){
+		var start = imageData[i][0];
+		var length = imageData[i][1];
+		var end = start + length - 1;
+		for(j=start; j<end; ++j){
+			//console.log(j+": "+binaryArray[j]);
+			compressedImageData[index] = binaryArray[j];
+			++index;
+		}
+	}
+	console.log(compressedImageData.length);
+
+	var colorType = outputResult.colorType;
+	var filterMethod = outputResult.filterMethod;
+	// if filtered, inverse filter
+
+
+	//console.log(compressedImageData);
+	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
+	// interlace method
+	// 0 = left-right sequentially
+	// 1 = scanline
+	// 
+	// bit depth
+	// # of bits per color
+	// 
+	// color type
+	// 0 == grayscale
+	// 2 == truecolor
+	// 3 == indexed
+	// 4 == grayscale+alpha
+	// 6 == truecolor+alpha
+
+
+	// 10x8 = 80 entries exected for A) indexes, B)true-color
+	/*
+	45 = 101101
+		= 6 bits
+		6 * 10*8 = 480 / 8 = 60
+	*/
+
+
+	
+	//console.log("IDAT: "+decompressed.length);
 }
 
 PNG._readChunk = function(binaryArray,offset,length){ // header:4 | length:4 | data:N | crc:4

@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>AI</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["AI.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var ai = new AI();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
