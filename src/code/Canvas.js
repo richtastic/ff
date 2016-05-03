@@ -507,7 +507,7 @@ Canvas.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
 	if(siz==undefined || siz==null){ siz = 12; }
 	if(xP==undefined || xP==null){ xP=0; }
 	if(yP==undefined || yP==null){ yP=0; }
-	if(align==undefined || align==null){ align="left"; }
+	if(align==undefined || align==null){ align="left"; } // left, center, right
 	this._context.font = siz+"px "+fnt;
 	this._context.textAlign=align;
 	this._context.fillText(txt,xP,yP);

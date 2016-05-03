@@ -76,7 +76,10 @@ Graphics.drawText = function(txt,siz,fnt,xP,yP,align){
 	Graphics._canvas.drawText(txt,siz,fnt,xP,yP,align);
 }
 Graphics.measureText = function(str,callback){
-	Graphics._canvas.measureText(str,callback);
+	var res = Graphics._canvas.measureText(str);
+	if(callback){
+		callback(res);
+	}
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 function Graphics(){
@@ -90,6 +93,10 @@ Graphics.prototype.alpha = function(a){
 		this._alpha = a;
 	}
 	return this._alpha;
+}
+Graphics.prototype.measureTextImmediate = function(txt){
+	console.log("measure: "+txt);
+	return null;
 }
 Graphics.prototype.clear = function(){
 	Code.emptyArray(this._graphics);
