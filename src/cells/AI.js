@@ -24,6 +24,12 @@ display:
 
 */
 function AI(){
+
+	var fontdir = "../fonts/";
+	var font = new Font('monospice', fontdir+'monospice.ttf', null, 1.0/8.0, 0.0/8.0, 2.0/8.0);
+	font.load();
+
+
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 100);
 	this._root = new DO();
@@ -48,6 +54,8 @@ function AI(){
 	this.generateNeurons();
 	this.render();
 	this._isPlaying = true;
+	this._renderBG = true;
+	this._renderText = true;
 }
 AI.interpolateColorFromRangeARGB = function(range, colorRanges, colorValues){ // ordered increasing [0,1]
 	var i, len=colorRanges.length;
@@ -94,20 +102,22 @@ AI.interpolateColorFromRangeARGB = function(range, colorRanges, colorValues){ //
 AI.prototype.generateNeurons = function(){
 	var totalWidth = this._canvas.width();
 	var totalHeight = this._canvas.height();
-	var cellSizeWidth = 16;
-	var cellSizeHeight = 20;
+	// 12x15 = 1920x1080
+	// 10x15 = 1600x1200
+	var cellSizeWidth = 12; // 12
+	var cellSizeHeight = 15; // 15
 	var countWidth = Math.ceil(totalWidth/cellSizeWidth);
-	var countHeight = Math.ceil(totalWidth/cellSizeHeight);
+	var countHeight = Math.ceil(totalHeight/cellSizeHeight);
 
 	this._neuronCellSizeWidth = cellSizeWidth;
 	this._neuronCellSizeHeight = cellSizeHeight;
 	this._totalNeuronsWidth = countWidth;
-	this._totalNeuronsHeight = countWidth;
+	this._totalNeuronsHeight = countHeight;
 
 	this._neuronCount = this._totalNeuronsWidth * this._totalNeuronsHeight;
 	this._neurons = [];
 
-	var i, j, n, m, a, b, len, wid, hei;
+	var i, j, k, l, n, m, a, b, len, wid, hei;
 
 	// create neurons
 	len = this._neuronCount;
@@ -133,23 +143,58 @@ AI.prototype.generateNeurons = function(){
 					if(ii==i && jj==j){
 						// self
 					} else {
-						n.addNeighbor( this.neuronAt(ii,jj) );
+	 					n.addNeighbor( this.neuronAt(ii,jj) );
 					}
 				}
 			}
 		}
 	}
 	// sprinkle some life
-	var activeNeurons = 10;
+	var activeNeurons = 20;
 	for(k=0; k<activeNeurons; ++k){
 		i = Math.floor(Math.random()*this._totalNeuronsWidth);
 		j = Math.floor(Math.random()*this._totalNeuronsHeight);
-		n = this.neuronAt(i,j);
-		a = Math.random()*1.0;
-		n.activity(a);
-		b = Math.random()*0.1;
-		n.noise(b);
-		n.positivity(-1.0);
+		var r = 1;
+		for(var jj=j-r; jj<=j+r; ++jj){
+			for(var ii=i-r; ii<=i+r; ++ii){
+				n = this.neuronAt(ii,jj);
+				a = Math.random()*1.0;
+				n.activity(a);
+				b = Math.random()*0.1;
+				n.noise(b);
+				n.positivity(-1.0);
+			}
+		}
+	}
+
+	// do some walks
+	var totalWalks = 10;
+	var activeWalks = 100;
+	for(l=0; l<totalWalks; ++l){
+		i = Math.floor(Math.random()*this._totalNeuronsWidth);
+		j = Math.floor(Math.random()*this._totalNeuronsHeight);
+		for(k=0; k<activeWalks; ++k){
+			n = this.neuronAt(i,j);
+			n.activity(1.0);
+			var r = 2;
+			// i = i + Code.randomInt(-Math.floor(Math.random()*r), Math.floor(Math.random()*r));
+			// j = j + Code.randomInt(-Math.floor(Math.random()*r), Math.floor(Math.random()*r));
+			i = i + Code.randomInt(-1, 1);
+			j = j + Code.randomInt(-1, 1);
+			
+			if(i<0){
+				i += this._totalNeuronsWidth;
+			}
+			if(i>=this._totalNeuronsWidth){
+				i -= this._totalNeuronsWidth;
+			}
+			if(j<0){
+				j += this._totalNeuronsHeight;
+			}
+			if(j>=this._totalNeuronsHeight){
+				j -= this._totalNeuronsHeight;
+			}
+		}
 	}
 };
 
@@ -230,6 +275,18 @@ AI.Neuron.prototype.positivity = function(p){
 
 
 AI.prototype.neuronAt = function(i,j){
+	// wraparound
+	if(i<0){
+		i += this._totalNeuronsWidth;
+	} else if (i>=this._totalNeuronsWidth){
+		i -= this._totalNeuronsWidth;
+	}
+	if(j<0){
+		j += this._totalNeuronsHeight;
+	} else if (j>=this._totalNeuronsHeight){
+		j -= this._totalNeuronsHeight;
+	}
+	//
 	if(i<0 || i>=this._totalNeuronsWidth){
 		return null;
 	}
@@ -241,10 +298,48 @@ AI.prototype.neuronAt = function(i,j){
 }
 
 AI.prototype.render = function(){
-	var cellColorBGValues = [0xFF060016, 0xFF0055BB, 0xFF99AAAA, 0xFFB0B044];
-	var cellColorBGRanges = [0.0, 0.25, 0.5, 1.0];
-	var cellColorTextValues = [0xFF102030, 0xFF647EAA, 0xFF3F5560, 0xFF3366AA];
-	var cellColorTextRanges = [0.0, 0.25, 0.5, 1.0];
+	// 1 -- replica
+	var cellColorBGValues =   [0xFF060016, 0xFF111122, 0xFF005577, 0xFF001122, 0xFF224499, 0xFFCCCCCC, 0xFFFFEE33, 0xFF060016];
+	var cellColorBGRanges =   [0.2,        0.5,        0.7,        0.8,        0.85,       0.9,        0.95,       1.0       ];
+	var cellColorTextValues = [0xFF000000, 0xFF002244, 0xAA647EAA, 0xFFFFEE11, 0xAA777777, 0xFF99AAAA, 0xFF224499, 0xFF000000];
+	var cellColorTextRanges = [0.2,        0.5,        0.75,       0.8,        0.85,       0.9,        0.95,       1.0       ];
+
+	// 2 -- rainbow
+	// var cellColorBGValues =   [0xFF000011, 0xFF3366CC, 0xFF99CCFF, 0xFF119955, 0xFF44FF99, 0xFFEEDD66, 0xFFEEDD44, 0xFF992255, 0xFF110000];
+	// var cellColorBGRanges =   [0.0,        0.2,        0.3,        0.4,        0.5,        0.6,        0.7,        0.8,        1.0       ];
+	// var cellColorTextValues = [0x00000000, 0xFF000033, 0xFFFFFFFF, 0xFF33CC66, 0xFF002200, 0xFF339966, 0xFFCCAA44, 0xFF110000, 0x00000000];
+	// var cellColorTextRanges = [0.0,        0.2,        0.3,        0.4,        0.5,        0.6,        0.7,        0.8,        1.0       ];
+
+	// 3 -- red
+	// var cellColorBGValues =   [0xFF110000, 0xFF440011, 0xFF901133, 0xFF110000];
+	// var cellColorBGRanges =   [0.0,        0.3,        0.6,         1.0      ];
+	// var cellColorTextValues = [0x00660000, 0xFF660022, 0xFF330011, 0x00000000];
+	// var cellColorTextRanges = [0.0,        0.3,        0.6,         1.0       ];
+
+	// 4 -- blu
+	// var cellColorBGValues =   [0xFF000011, 0xFF002244, 0xFF002255, 0xFFAADDFF, 0xFF002244, 0xFF000011];
+	// var cellColorBGRanges =   [0.0,        0.2,        0.5,        0.7,        0.9,        1.0       ];
+	// var cellColorTextValues = [0x00005577, 0xFF112255, 0xFF110011, 0x00000000];
+	// var cellColorTextRanges = [0.0,        0.33,       0.66,        1.0       ];
+
+	// 5 -- fire
+	// var cellColorBGValues =   [0xFF110000, 0xFF440019, 0xFFCC6600, 0xFF661122, 0xFF110011];
+	// var cellColorBGRanges =   [0.0,        0.4,        0.6,        0.8,        1.0       ];
+	// var cellColorTextValues = [0x00660000, 0xFF660022,             0xFF330011, 0x99220000];
+	// var cellColorTextRanges = [0.0,        0.4,                    0.7,        1.0       ];
+
+	// 6 -- fire 2
+	// var cellColorBGValues =   [0xFF110000, 0xFF440019, 0xFFCC6600];
+	// var cellColorBGRanges =   [0.0,        0.8,        1.0       ];
+	// var cellColorTextValues = [0x00660000, 0xFF660022, 0xFF330011];
+	// var cellColorTextRanges = [0.0,        0.7,        1.0       ];
+
+	// 7 - fire reversed
+	// var cellColorBGValues =   [0xFF110000, 0xFFCC6600, 0xFF440019, 0xFF110000];
+	// var cellColorBGRanges =   [0.1,        0.2,        0.5,        1.0       ];
+	// var cellColorTextValues = [0x00660000, 0xFF330011, 0xFF660022, 0x00660000];
+	// var cellColorTextRanges = [0.0,        0.2,        0.5,        1.0       ];
+
 
 	var characters = "0123456789!@#$%^&*()-=_+qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM[]\\;',./{}|:\"<>?`~";
 	var i, j, d, t, len;
@@ -255,12 +350,14 @@ AI.prototype.render = function(){
 	var cellSizeHeight = this._neuronCellSizeHeight;
 	var countWidth = this._totalNeuronsWidth;
 	var countHeight = this._totalNeuronsHeight;
+	var col, pct;
 
-	// countWidth = 1
-	// countHeight = 1
-	var col, pct
+	var fontSize = 7;
+	var fontBaselineHeight = 3;
 
 	this._root.removeAllChildren();
+	this._root.graphics().clear();
+	this._root.graphics().setLine(1.0, 0x00000000);
 	for(j=0; j<countHeight; ++j){
 		for(i=0; i<countWidth; ++i){
 			var red = 1.0*Math.random();
@@ -268,44 +365,39 @@ AI.prototype.render = function(){
 			var blu = 1.0*Math.random();
 			//var col = Code.getColARGBFromFloat(1.0,red,grn,blu);
 			//pct = Math.sqrt(i*i + j*j)/Math.sqrt(countWidth*countWidth + countHeight*countHeight);
+			
 			pct = this.neuronAt(i,j).activity();
-			//console.log(pct);
-			//var pct = 0.75;
+			//pct = i/countWidth;
+			
 			col = AI.interpolateColorFromRangeARGB(pct, cellColorBGRanges, cellColorBGValues);
 			
 			var sizeX = cellSizeWidth;
 			var sizeY = cellSizeHeight;
+
+if(this._renderBG){
+			d = this._root;
 			
-			d = new DO();
-			
-			d.graphics().setLine(1.0, 0x00000000);
 			d.graphics().beginPath();
-			d.graphics().drawRect(0,0, sizeX,sizeY);
+			d.graphics().drawRect(cellSizeWidth*i, cellSizeHeight*j, sizeX,sizeY);
 			d.graphics().setFill( col );
 			d.graphics().strokeLine();
 			d.graphics().fill();
 			d.graphics().endPath();
-			
+}
+if(this._renderText){
 			var character = characters.charAt( Math.floor(Math.random()*characters.length) );
 
-			d.matrix().translate(cellSizeWidth*i, cellSizeHeight*j);
-			this._root.addChild(d);
-
-			var fontSize = 11;
-			var fontBaselineHeight = 4;
-			var t = new DO();
-			col = AI.interpolateColorFromRangeARGB(pct, cellColorTextRanges, cellColorTextValues);
-			t.graphics().setFill( col );
-			t.graphics().drawText(character,fontSize,"Arial",0,0,"left")
-			
-			// immediate measuring
-			this._stage.canvas().setFill( 0xFF00FF00 );
 			var size = this._stage.canvas().measureText(character);
 			var wid = size.width;
 			var hei = fontSize;
 
-			d.addChild(t);
-			t.matrix().translate( (sizeX-wid)*0.5, hei + (sizeY-hei-fontBaselineHeight)*0.5);
+			//var t = new DO();
+			col = AI.interpolateColorFromRangeARGB(pct, cellColorTextRanges, cellColorTextValues);
+			d.graphics().setFill( col );
+			var offX = (sizeX-wid)*0.5;
+			var offY = hei + (sizeY-hei-fontBaselineHeight)*0.5;
+			d.graphics().drawText(character,fontSize,"monospice",cellSizeWidth*i + offX,cellSizeHeight*j + offY,"left")
+}
 
 		}
 	}
@@ -317,8 +409,8 @@ AI.prototype.handleEnterFrame = function(e){
 		var dt = 0.001;
 		//console.log(e);
 		this.processTime(dt);
-		this.render();
 	}
+	this.render();
 }
 
 AI.prototype.processTime = function(dt){
@@ -336,8 +428,13 @@ AI.prototype.processTime = function(dt){
 
 AI.prototype.keyboardFxnKeyDown = function(e){
 	if(e.keyCode==Keyboard.KEY_SPACE){
-		//this.processTime();
 		this._isPlaying = !this._isPlaying;
+	}
+	if(e.keyCode==Keyboard.KEY_LET_Z){
+		this._renderBG = !this._renderBG;
+	}
+	if(e.keyCode==Keyboard.KEY_LET_X){
+		this._renderText = !this._renderText;
 	}
 	/*
 	if(e.keyCode==Keyboard.KEY_SPACE){
@@ -387,39 +484,6 @@ AI.prototype.handleMouseClickFxn = function(e){
 
 
 
-AI.prototype.generateCells = function(){
-	var cellSize = 24.0;
-	var availableWidth = this._canvas.width();
-	var availableHeight = this._canvas.height();
-	var rows = Math.floor(availableHeight/cellSize); // 150;
-	var cols = Math.floor(availableWidth/cellSize); // 180;
-	var d, i, j, index;
-	var len = rows*cols;
-	var grid = new Array(len);
-	var cells = new Array(len);
-	index = 0;
-	for(j=0;j<rows;++j){
-		for(i=0;i<cols;++i){
-			//d = new DO();
-			//this._root.addChild(d);
-			//var percent = 0.25;
-			cells[index] = new Cells.Cell();// (Math.random()<percent) ? Cells.STATE_ALIVE : Cells.STATE_DEAD );
-			//grid[index] = d;
-			++index;
-		}
-	}
-	this._cellSizeWidth = cellSize; // 5.0;
-	this._cellSizeHeight = cellSize; // 5.0;
-	this._grid = grid;
-	this._cells = cells;
-	this._rows = rows;
-	this._cols = cols;
-
-	this.connectCells();
-	this.globalCellOperation(this.cellRandomAlive,0.5);
-	this.renderCells();
-	this._isPlaying = true;
-}
 
 AI.prototype.keyboardFxnKeyUp = function(e){
 	// console.log("key up "+e);
@@ -432,272 +496,6 @@ AI.prototype.keyboardFxnKeyDown2 = function(e){
 	// console.log("key still down "+e);
 }
 
-AI.prototype.cellRandomAlive = function(percent, cell, row, col, index){
-	//cell.state( (Math.random()<percent) ? Cells.STATE_ALIVE : Cells.STATE_DEAD );
-}
-AI.prototype.cellFlipCellState = function(percent, cell, row, col, index){
-	/*if(cell.state()==Cells.STATE_ALIVE){
-		cell.state( Cells.STATE_DEAD );
-	}else if(cell.state()==Cells.STATE_DEAD){
-		cell.state( Cells.STATE_ALIVE );
-	}*/
-}
-AI.prototype.renderCells = function(e){
-	var d, i, j, index;
-	var rows = this._rows;
-	var cols = this._cols;
-	var grid = this._grid;
-	var cells = this._cells;
-	var grid = this._grid;
-	var sizeX = this._cellSizeWidth;
-	var sizeY = this._cellSizeHeight;
-	var cell;
-	d = this._root;
-	d.graphics().clear();
-	for(j=0;j<rows;++j){
-		for(i=0;i<cols;++i){
-			index = j*cols + i;
-			//d = grid[index];
-			cell = cells[index];
-			//d.graphics().clear();
-			if( cell.state()==Cells.STATE_ALIVE ){
-				//var col = Code.getColARGB(0x99, cell._colorRed,cell._colorGrn,cell._colorBlu);
-				var col = Code.getColARGBFromFloat(1.0,cell._colorRed,cell._colorGrn,cell._colorBlu);
-				d.graphics().setLine(1.0, 0x66000000);
-				//d.graphics().setLine(0.0, 0x0);
-				d.graphics().beginPath();
-				//d.graphics().moveTo(sizeX*i, sizeY*j);
-				//d.graphics().lineTo(sizeX*i, sizeY*j);
-				d.graphics().drawRect(sizeX*i,sizeY*j, sizeX,sizeY);
-				d.graphics().setFill( col );
-				d.graphics().strokeLine();
-				d.graphics().fill();
-				d.graphics().endPath();
-			}
-		}
-	}
-}
-
-AI.STATE_DEAD = 0;
-AI.STATE_ALIVE = 1;
-
-AI.Cell = function(s){
-	this._state = Cells.STATE_DEAD;
-	this._nextState = Cells.STATE_DEAD;
-	this._neighbors = [];
-	this._sourceColorRed = Math.random();//Math.floor(Math.random()*0xFF);
-	this._sourceColorGrn = Math.random();//Math.floor(Math.random()*0xFF);
-	this._sourceColorBlu = Math.random();//Math.floor(Math.random()*0xFF);
-	this._colorRed = Math.random();//Math.floor(Math.random()*0xFF);
-	this._colorGrn = Math.random();//Math.floor(Math.random()*0xFF);
-	this._colorBlu = Math.random();//Math.floor(Math.random()*0xFF);
-	this.state(s);
-}
-AI.Cell.prototype.influenceColor = function(cell,p1, p2){
-	var percent;
-	percent = p1;
-	this._colorRed = this._sourceColorRed*(1-percent) + cell._colorRed*percent;
-	this._colorGrn = this._sourceColorGrn*(1-percent) + cell._colorGrn*percent;
-	this._colorBlu = this._sourceColorBlu*(1-percent) + cell._colorBlu*percent;
-	// this._colorRed = Math.round( this._colorRed*(1-percent) + cell._colorRed*percent);
-	// this._colorGrn = Math.round( this._colorGrn*(1-percent) + cell._colorGrn*percent);
-	// this._colorBlu = Math.round( this._colorBlu*(1-percent) + cell._colorBlu*percent);
-	// percent = p2;
-	// this._sourceColorRed = Math.round( this._sourceColorRed*(1-percent) + cell._colorRed*percent);
-	// this._sourceColorGrn = Math.round( this._sourceColorGrn*(1-percent) + cell._colorGrn*percent);
-	// this._sourceColorBlu = Math.round( this._sourceColorBlu*(1-percent) + cell._colorBlu*percent);
-}
-AI.Cell.prototype.addNeighbor = function(n){
-	this._neighbors.push(n);
-}
-AI.Cell.prototype.clearNeighbors = function(){
-	Code.emptyArray(this._neighbors);
-}
-AI.Cell.prototype.state = function(s){
-	if (s!==undefined){
-		this._state = s;
-	}
-	return this._state;
-}
-AI.Cell.prototype.nextState = function(s){
-	if (s!==undefined){
-		this._nextState = s;
-	}
-	return this._nextState;
-}
-AI.Cell.prototype.gotoNextState = function(){
-	this._state = this._nextState;
-}
-AI.Cell.prototype.countAliveNeighbors = function(){
-	var i, n, alive=0, len=this._neighbors.length;
-	for(i=0;i<len;++i){
-		n = this._neighbors[i];
-		if(n.state()==Cells.STATE_ALIVE){
-			++alive;
-		}
-	}
-	return alive;
-}
-
-AI.prototype.processState = function(){
-	var i, index, cell;
-	var cols = this._cols;
-	var rows = this._rows;
-	for(j=0;j<rows;++j){
-		for(i=0;i<cols;++i){
-			index = j*cols + i;
-			cell = this._cells[index];
-			this.processCellState(cell);
-		}
-	}
-}
-AI.prototype.incrementState = function(){
-	var i, index, cell;
-	var cols = this._cols;
-	var rows = this._rows;
-	for(j=0;j<rows;++j){
-		for(i=0;i<cols;++i){
-			index = j*cols + i;
-			cell = this._cells[index];
-			for(var k=0;k<cell._neighbors.length;++k){
-				c = cell._neighbors[k];
-				cell.influenceColor(c,0.1, 0.01);
-			}
-			cell.gotoNextState();
-		}
-	}
-}
-AI.prototype.globalCellOperation= function(fxn,arg){
-	var i, index, cell;
-	var cols = this._cols;
-	var rows = this._rows;
-	for(j=0;j<rows;++j){
-		for(i=0;i<cols;++i){
-			index = j*cols + i;
-			cell = this._cells[index];
-			fxn(arg, cell, j, i, index);
-		}
-	}
-}
-AI.prototype.connectCells = function(){
-	var i, j, ii, jj, index, cell, n;
-	var cols = this._cols;
-	var rows = this._rows;
-	for(j=0;j<rows;++j){
-		for(i=0;i<cols;++i){
-			index = j*cols + i;
-			cell = this._cells[index];
-			cell.clearNeighbors();
-			var count = 0;
-			for(jj=Math.max(j-1,0); jj<=Math.min(j+1,rows-1); ++jj){
-				for(ii=Math.max(i-1,0); ii<=Math.min(i+1,cols-1); ++ii){
-					if(i==ii && j==jj){
-						//
-					}else{
-						index = jj*cols + ii;
-						n = this._cells[index];
-						cell.addNeighbor(n);
-						++count;
-					}
-				}
-			}
-		}
-	}
-}
-
-
-AI.prototype.processCellStateFun = function(cell){
-	var aliveNeighbors = cell.countAliveNeighbors();
-	cell.nextState( cell.state() );
-	if(cell.state()==Cells.STATE_ALIVE){
-		if(2<=aliveNeighbors && aliveNeighbors<=3){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{ // overcrowd or lonliness
-			cell.nextState(Cells.STATE_DEAD);
-		}
-		// mortality
-		if (Math.random()<0.05){
-			cell.nextState(Cells.STATE_DEAD);
-		}
-	}
-	if(cell.state()==Cells.STATE_DEAD){
-		if(2<=aliveNeighbors && aliveNeighbors<=3){
-			if (Math.random()<0.35){
-				cell.nextState(Cells.STATE_ALIVE);
-			}
-		}else{
-			cell.nextState(Cells.STATE_DEAD);
-		}
-		if (Math.random()<0.0001){
-			cell.nextState(Cells.STATE_ALIVE);
-		}
-	}
-}
-
-
-AI.prototype.processCellStateFlashyWorms = function(cell){
-	var aliveNeighbors = cell.countAliveNeighbors();
-	cell.nextState( cell.state() );
-	if(cell.state()==Cells.STATE_ALIVE){
-		if(3<=aliveNeighbors && aliveNeighbors<=3){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{ // overcrowd or lonliness
-			cell.nextState(Cells.STATE_DEAD);
-		}
-	}
-	if(cell.state()==Cells.STATE_DEAD){
-		if(2<=aliveNeighbors && aliveNeighbors<=4){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{
-			cell.nextState(Cells.STATE_DEAD);
-		}
-	}
-}
-
-AI.prototype.processCellStateMaze = function(cell){
-	var aliveNeighbors = cell.countAliveNeighbors();
-	cell.nextState( cell.state() );
-	if(cell.state()==Cells.STATE_ALIVE){
-		if(1<=aliveNeighbors && aliveNeighbors<=3){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{ // overcrowd or lonliness
-			cell.nextState(Cells.STATE_DEAD);
-		}
-	}
-	if(cell.state()==Cells.STATE_DEAD){
-		if(aliveNeighbors == 2){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{
-			cell.nextState(Cells.STATE_DEAD);
-		}
-	}
-}
-
-AI.prototype.processCellState = function(cell){
-	var aliveNeighbors = cell.countAliveNeighbors();
-	// default keep state:
-	cell.nextState( cell.state() );
-	// not 2 or 3 live neighbors kills
-	if(cell.state()==Cells.STATE_ALIVE){
-		if(2<=aliveNeighbors && aliveNeighbors<=3){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{ // overcrowd or lonliness
-			cell.nextState(Cells.STATE_DEAD);
-		}
-	}
-	// 3 live neighbors births
-	if(cell.state()==Cells.STATE_DEAD){
-		if(aliveNeighbors == 3){
-			cell.nextState(Cells.STATE_ALIVE);
-		}else{
-			cell.nextState(Cells.STATE_DEAD);
-		}
-		// spontaneous generation
-		// if (Math.random()<0.0001){
-		// 	cell.nextState(Cells.STATE_ALIVE);
-		// }
-	}
-}
 
 
 AI.prototype.handleCanvasTouchStartFxn = function(e){
