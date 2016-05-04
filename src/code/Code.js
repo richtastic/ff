@@ -3717,6 +3717,14 @@ Code.bezier2DCubicAtT = function(A,B,C,D, t){
 	var tD = t*t*t;
 	return new V2D( A.x*tA+B.x*tB+C.x*tC+D.x*tD, A.y*tA+B.y*tB+C.y*tC+D.y*tD );
 }
+Code.bezier1DCubicAtT = function(a,b,c,d, t){
+	var t1 = 1-t;
+	var tA = t1*t1*t1;
+	var tB = 3*t1*t1*t;
+	var tC = 3*t1*t*t;
+	var tD = t*t*t;
+	return a*tA+b*tB+c*tC+d*tD;
+}
 
 Code.bezier2DCubicTangentAtT = function(A,B,C,D, t){ // scaled tangent
 	var t1 = 1-t;

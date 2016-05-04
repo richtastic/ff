@@ -28,6 +28,9 @@ Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arg
 		}else{
 			this.list[str][i](a,b,c,d,e,f,g,h,i,j);
 		}
+		if(!this.list){ // .kill() called
+			return;
+		}
 		if(!this.list[str]){
 			return;
 		}

@@ -55,7 +55,7 @@ Ticker.prototype._next = function(){
 }
 // ------------------------------------------------------------------------------------------------------------------------ DEATH
 Ticker.prototype.kill = function(){
-	this._stop();
+	this.stop();
 	this._timer = null;
 	this._running = false;
 	this._delta = undefined;
