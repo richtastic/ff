@@ -1294,6 +1294,14 @@ Code.newInputTextArea = function(a, r,c){
 	return sub;
 };
 
+Code.newImage = function(t){
+	var i = new Image();
+	if(t!==undefined){
+		Code.appendChild(t,i);
+	}
+	return i;
+}
+
 Code.getTextAreaValue = function(a){
 	return a.value;
 }
@@ -1405,6 +1413,12 @@ Code.setEnabled = function(a){
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
+Code.getStyleWidth = function(ele){
+	return ele.style.width;
+};
+Code.setStyleHeight = function(ele,val){
+	ele.style.height = val;
+};
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
@@ -1435,6 +1449,16 @@ Code.setStyleRight = function(ele,style){
 Code.setStyleLeft = function(ele,style){
 	ele.style.left = style;
 };
+Code.setStyleTop = function(ele,style){
+	ele.style.top = style;
+};
+Code.setStyleBottom = function(ele,style){
+	ele.style.bottom = style;
+};
+Code.setSrc = function(i,s){
+	return i.src = s;
+};
+
 Code.getDomBody = function(){
 	return document.body;
 }
@@ -2381,6 +2405,17 @@ Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and poi
 
 
 
+Code.sizeToFitRectInRect = function(widthItem,heightItem, widthContainer,heightContainer){
+	var widthToHeight = widthItem/heightItem;
+	var width = heightContainer*widthToHeight;
+	var height = widthContainer/widthToHeight;
+	if(width>widthContainer){
+		height = heightContainer;
+	}else if(height>heightContainer){
+		width = widthContainer;
+	}
+	return {"width":width, "height":height};
+}
 
 /*
 
