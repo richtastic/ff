@@ -1437,8 +1437,17 @@ Code.removeAllStyle = function(style, property){ // property:attribute;
 	var reg = new RegExp(""+property+".*?:.*?;( )*", "gi");
 	return style.replace(reg,"");
 };
+Code.setStyleDisplay = function(ele,display){
+	ele.style.display = display;
+};
 Code.setStyleZIndex = function(ele,style){
 	ele.style.zIndex = style;
+};
+Code.setStylePadding = function(ele,style){
+	ele.style.padding = style;
+};
+Code.setStyleMargin = function(ele,style){
+	ele.style.margin = style;
 };
 Code.setStylePosition = function(ele,style){
 	ele.style.position = style;
