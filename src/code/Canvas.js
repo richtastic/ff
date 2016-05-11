@@ -85,7 +85,8 @@ Canvas.WEBGL_SHADER_TYPE_VERTEX = "vertex";
 Canvas.WEBGL_SHADER_TYPE_FRAGMENT = "fragment";
 function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas HTML object
 	Canvas._.constructor.call(this);
-	this._jsDispatch = new Dispatch();
+	this._dispatch = new Dispatch();
+	this._jsDispatch = new JSDispatch();
 	this._mouseDown = false;
 	this._mousePosition = new V2D();
 	this._matrix = new Matrix2D();
@@ -135,7 +136,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 	this._listening = false;
 	this._handleWindowResizedFxn();
 }
-Code.inheritClass(Canvas, JSDispatchable);
+Code.inheritClass(Canvas, Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ CANVAS 3D - WEB GL
 Canvas.prototype.createShaderFromString = function(str, type){
 	if(type==Canvas.WEBGL_SHADER_TYPE_FRAGMENT){
@@ -518,31 +519,31 @@ Canvas.prototype.measureText = function(str){
 //  ------------------------------------------------------------------------------------------------------------------------ LISTENERS
 Canvas.prototype.addListeners = function(){
 	if(!this._listening){
-		this.addJSEventListener(window, Code.JS_EVENT_RESIZE, this._handleWindowResizedFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_CLICK, this._canvasClickFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_DOWN, this._canvasMouseDownFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_WHEEL, this._canvasMouseWheelFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
-		this.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
-			this._handleWindowResizedFxn(); // expect a recheck, rather than trigger externally
+		this._jsDispatch.addJSEventListener(window, Code.JS_EVENT_RESIZE, this._handleWindowResizedFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_CLICK, this._canvasClickFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_DOWN, this._canvasMouseDownFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_WHEEL, this._canvasMouseWheelFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn, this);
+		this._handleWindowResizedFxn(); // expect a recheck, rather than trigger externally
 		this._listening = true;
 	}
 }
 Canvas.prototype.removeListeners = function(){
 	if(this._listening){
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_CLICK, this._canvasClickFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_DOWN, this._canvasMouseDownFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_WHEEL, this._canvasMouseWheelFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn);
-		this.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_CLICK, this._canvasClickFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_DOWN, this._canvasMouseDownFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_UP, this._canvasMouseUpFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_MOVE, this._canvasMouseMoveFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_OUT, this._canvasMouseOutFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_MOUSE_WHEEL, this._canvasMouseWheelFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn, this);
 		this._listening = false;
 	}
 }

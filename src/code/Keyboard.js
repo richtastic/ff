@@ -54,8 +54,9 @@ function Keyboard(){
 	Keyboard._.constructor.call(this);
 	this._key = new Array(255);
 	this._falseKeys();
+	this._jsDispatch = new JSDispatch();
 }
-Code.inheritClass(Keyboard, JSDispatchable);
+Code.inheritClass(Keyboard, Dispatchable);
 // ----------------------------------------------------------------------------
 Keyboard.prototype._falseKeys = function(){
 	for(var i=0;i<=255;++i){
@@ -63,12 +64,12 @@ Keyboard.prototype._falseKeys = function(){
 	}
 }
 Keyboard.prototype.addListeners = function(){
-	this.addJSEventListener(window, Code.JS_EVENT_KEY_UP, this._keyUpFxn);
-	this.addJSEventListener(window, Code.JS_EVENT_KEY_DOWN, this._keyDownFxn);
+	this._jsDispatch.addJSEventListener(window, Code.JS_EVENT_KEY_UP, this._keyUpFxn, this);
+	this._jsDispatch.addJSEventListener(window, Code.JS_EVENT_KEY_DOWN, this._keyDownFxn, this);
 }
 Keyboard.prototype.removeListeners = function(){
-	this.removeJSEventListener(window, Code.JS_EVENT_KEY_UP, this._keyUpFxn);
-	this.removeJSEventListener(window, Code.JS_EVENT_KEY_DOWN, this._keyDownFxn);
+	this._jsDispatch.removeJSEventListener(window, Code.JS_EVENT_KEY_UP, this._keyUpFxn, this);
+	this._jsDispatch.removeJSEventListener(window, Code.JS_EVENT_KEY_DOWN, this._keyDownFxn, this);
 }
 Keyboard.prototype._keyDownFxn = function(e){
 	var num = Code.getKeyCodeFromKeyboardEvent(e);
@@ -92,5 +93,7 @@ Keyboard.prototype.isKeyDown = function(num){
 }
 Keyboard.prototype.kill = function(){
 	Code.emptyArray(this._keys);
+	this._jsDispatch.kill();
+	this._jsDispatch = null;
 	Keyboard._.kill.call(this);
 }

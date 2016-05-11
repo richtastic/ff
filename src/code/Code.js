@@ -1464,6 +1464,21 @@ Code.setStyleTop = function(ele,style){
 Code.setStyleBottom = function(ele,style){
 	ele.style.bottom = style;
 };
+Code.setStyleTextAlign = function(ele,style){
+	ele.style.textAlign = style;
+};
+Code.setStyleColor = function(ele,style){
+	ele.style.color = style;
+};
+Code.setStyleFontSize = function(ele,style){
+	ele.style.fontSize = style;
+};
+Code.setStyleFontWeight = function(ele,style){ // lighter=100, normal=400, bold=700
+	ele.style.fontWeight = style;
+};
+Code.setStyleFontFamily = function(ele,style){
+	ele.style.fontFamily = style;
+};
 Code.setSrc = function(i,s){
 	return i.src = s;
 };
