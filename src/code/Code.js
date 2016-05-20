@@ -1410,6 +1410,9 @@ Code.setDisabled = function(a){
 Code.setEnabled = function(a){
 	a.disabled = false;
 }
+Code.setStyleOverflow = function(ele,val){
+	ele.style.overflow = val;
+}
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
@@ -1504,6 +1507,11 @@ Code.getClass = function(ele){
 }
 Code.setClass = function(ele,cla){
 	ele.setAttribute("class",cla);
+};
+Code.hasClass = function(ele,cla){
+	var c = Code.getClass(ele);
+	var hasClass = c.match(cla);
+	return hasClass != null;
 };
 Code.addClass = function(ele,cla){
 	var c = Code.getClass(ele)+" "+cla;
