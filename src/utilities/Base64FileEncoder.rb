@@ -35,6 +35,9 @@ def FileToBase64(file_name)
 	# TTF - 01000 - GUESSING
 	elsif prefix_arr.length>2 && (prefix_arr[0]==0 && prefix_arr[1]==1 && prefix_arr[2]==0 && prefix_arr[3]==0 && prefix_arr[4]==0)
 		file_type = "font/ttf;charset=utf-8"
+	# OTF - OTTO - GUESSING
+	elsif prefix_arr.length>3 && ("OTTO" == "#{prefix_arr[0].chr}#{prefix_arr[1].chr}#{prefix_arr[2].chr}#{prefix_arr[3].chr}")
+		file_type = "font/otf;charset=utf-8"
 	# UNKNOWN
 	else
 		puts "unknown file type"

@@ -683,25 +683,72 @@ Code.timerDifference = function(){
 Code.timerDifferenceSeconds = function(){
 	return Code.timerDifference()/1000.0;
 }
-Code.getTimeMilliseconds = function(){
+Code.getTimeMilliseconds = function(utc){
     var d = new Date();
-    return d.getTime();
+    var t = d.getTime();
+    if(utc){
+    	t += Code.getTimeZone()*360000;
+    }
+    return t;
 }
 Code.getTimeZone = function(){
 	var d = new Date();
 	var hours = Math.floor( -d.getTimezoneOffset()/60 );
 	return hours;
 }
-Code.getTimeStamp = function(){
-    var d = new Date( Code.getTimeMilliseconds() );
-	var str = d.getFullYear()
-	+"-"+Code.prependFixed(""+d.getMonth(),"0",2)
-	+"-"+Code.prependFixed(""+(d.getDate()+1),"0",2)
-	+" "+Code.prependFixed(""+d.getHours(),"0",2)
-	+":"+Code.prependFixed(""+d.getMinutes(),"0",2)
-	+":"+Code.prependFixed(""+d.getSeconds(),"0",2)
-	+"."+Code.postpendFixed(""+d.getMilliseconds(),"0",4);
+Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
+	var str = "";
+    if(arguments.length<=1){ // 0 or 1 args
+    	var d;
+    	if(year===undefined){
+    		d = Code.getTimeMilliseconds(true);
+    	}else{
+    		d = new Date(year);
+    	}
+		year = d.getFullYear();
+		month = d.getMonth()+1;
+		day = d.getDate();
+		hour = d.getHours();
+		min = d.getMinutes();
+		sec = d.getSeconds();
+		ms = d.getMilliseconds();
+    }
+    year = year!==undefined ? year : 0;
+    month = month!==undefined ? month : 1;
+    day = day!==undefined ? day : 1;
+    hour = hour!==undefined ? hour : 0;
+    min = min!==undefined ? min : 0;
+    sec = sec!==undefined ? sec : 0;
+    ms = ms!==undefined ? ms : 0;
+    str = ""+Code.prependFixed(""+year,"0",4)
+	+"-"+Code.prependFixed(""+month,"0",2)
+	+"-"+Code.prependFixed(""+day,"0",2)
+	+" "+Code.prependFixed(""+hour,"0",2)
+	+":"+Code.prependFixed(""+min,"0",2)
+	+":"+Code.prependFixed(""+sec,"0",2)
+	+"."+Code.postpendFixed(""+ms,"0",4);
 	return str;
+}
+Code.getTimeFromTimeStamp = function(timestamp){
+	if(timestamp!==undefined && timestamp.length==24){
+		var year = timestamp.substr(0,4);
+		var month = timestamp.substr(5,2);
+		var day = timestamp.substr(8,2);
+		var hour = timestamp.substr(11,2);
+		var min = timestamp.substr(14,2);
+		var sec = timestamp.substr(17,2);
+		var ms = timestamp.substr(20,4);
+		year = parseInt(year);
+		month = parseInt(month);
+		day = parseInt(day);
+		hour = parseInt(hour);
+		min = parseInt(min);
+		sec = parseInt(sec);
+		ms = parseInt(ms);
+		var d = new Date( year, month-1, day, hour, min, sec, ms );
+		return d.getTime();
+	}
+	return null;
 }
 Code.getAMPMFromDate = function(date){
 	return parseInt(date.getHours(),10)<12?"AM":"PM";
@@ -1425,6 +1472,15 @@ Code.setStyleHeight = function(ele,val){
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
+Code.setStyleBorder = function(ele,val){
+	ele.style.borderStyle = val;
+};
+Code.setStyleBorderColor = function(ele,val){
+	ele.style.borderColor = val;
+};
+Code.setStyleBorderWidth = function(ele,val){
+	ele.style.borderWidth = val;
+};
 Code.setStyleCursor = function(ele,styleIn){
 	var cursorStyle = "cursor: -moz-"+styleIn+"; cursor: -webkit-"+styleIn+"; cursor: "+styleIn+";";
 	var style = ele.getAttribute("style");
@@ -1469,6 +1525,9 @@ Code.setStyleBottom = function(ele,style){
 };
 Code.setStyleTextAlign = function(ele,style){
 	ele.style.textAlign = style;
+};
+Code.setStyleVerticalAlign = function(ele,style){
+	ele.style.verticalAlign = style;
 };
 Code.setStyleColor = function(ele,style){
 	ele.style.color = style;
@@ -1536,7 +1595,10 @@ Code.getStyle = function(ele,prop){
 	}
 	return c;*/
 };
-Code.addStyle = function(ele,prop,attr){
+Code.addStyle = function(ele,sty){//prop,attr){
+	var style = ele.getAttribute("style");
+	style += sty;//+";";
+	ele.setAttribute("style",style);
 	/*var c = Code.getClass(ele)+" "+cla;
 	c = c.replace("  "," ");
 	c = c.replace(/^ /,"");
