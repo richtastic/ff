@@ -1496,6 +1496,12 @@ Code.removeAllStyle = function(style, property){ // property:attribute;
 	var reg = new RegExp(""+property+".*?:.*?;( )*", "gi");
 	return style.replace(reg,"");
 };
+Code.setStyleMinHeight = function(ele,min){
+	ele.style.minHeight = min
+};
+Code.setStyleFloat = function(ele,float){
+	ele.style.float = float;
+};
 Code.setStyleDisplay = function(ele,display){
 	ele.style.display = display;
 };
@@ -1540,6 +1546,9 @@ Code.setStyleFontWeight = function(ele,style){ // lighter=100, normal=400, bold=
 };
 Code.setStyleFontFamily = function(ele,style){
 	ele.style.fontFamily = style;
+};
+Code.setStyleFontStyle = function(ele,style){
+	ele.style.fontStyle = style;
 };
 Code.setSrc = function(i,s){
 	return i.src = s;
