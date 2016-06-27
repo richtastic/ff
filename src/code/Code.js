@@ -75,7 +75,7 @@ Code.JS_EVENT_UNLOAD = "textinput";
 
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // getday(0) == sunday
 Code.daysOfWeekLong = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // ------------------------------------------------------------------------------------------
 function Code(){
@@ -1497,7 +1497,7 @@ Code.removeAllStyle = function(style, property){ // property:attribute;
 	return style.replace(reg,"");
 };
 Code.setStyleMinHeight = function(ele,min){
-	ele.style.minHeight = min
+	ele.style.minHeight = min;
 };
 Code.setStyleFloat = function(ele,float){
 	ele.style.float = float;
@@ -3940,7 +3940,34 @@ Code.uint16FromByteArray = function(binaryArray,offset){
 }
 
 
-
+Code.BROWSER_TYPE_UNKNOWN = "unknown";
+Code.BROWSER_TYPE_IE6 = "ie6";
+Code.getBrowser = function(){
+	if(!navigator){
+		return Code.BROWSER_TYPE_IE6;
+	}
+	console.log(navigator);
+	console.log(navigator.product);
+	console.log(navigator.appVersion);
+	console.log(navigator.platform);
+	console.log(navigator.userAgent);
+	return Code.BROWSER_TYPE_UNKNOWN;
+	//
+	// Opera 8.0+
+	var isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
+	    // Firefox 1.0+
+	var isFirefox = typeof InstallTrigger !== 'undefined';
+	    // At least Safari 3+: "[object HTMLElementConstructor]"
+	var isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
+	    // Internet Explorer 6-11
+	var isIE = /*@cc_on!@*/false || !!document.documentMode;
+	    // Edge 20+
+	var isEdge = !isIE && !!window.StyleMedia;
+	    // Chrome 1+
+	var isChrome = !!window.chrome && !!window.chrome.webstore;
+	    // Blink engine detection
+	var isBlink = (isChrome || isOpera) && !!window.CSS;
+}
 
 
 
