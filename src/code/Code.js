@@ -1324,6 +1324,17 @@ Code.setInputTextValue = function(a,b){
 	//a.setAttribute("value",b);
 	a.value = b;
 };
+Code.setAttribute = function(a,nam,val){
+	a.setAttribute(nam,val);
+};
+Code.getAttribute = function(a,nam){
+	a.getAttribute(nam);
+};
+
+Code.setTextPlaceholder = function(a,val){
+	Code.setAttribute(a,"placeholder",val);
+};
+
 Code.getInputTextValue = function(a){
 	return a.value;//Code.getProperty(a,"value");
 };

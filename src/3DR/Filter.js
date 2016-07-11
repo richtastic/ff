@@ -1,4 +1,10 @@
 // Filter.js
+Filter.FILTER_TYPE_SATURATION = "saturation";
+Filter.FILTER_TYPE_BRIGHTNESS = "brightness";
+Filter.FILTER_TYPE_CONTRAST = "contrast";
+Filter.FILTER_TYPE_SHARPEN = "sharpen";
+Filter.FILTER_TYPE_GAMMA = "gamma";
+Filter.FILTER_TYPE_UNKNOWN = "unknown";
 
 function Filter(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
@@ -23,43 +29,43 @@ function Filter(){
 	imageLoader.load();
 
 	this._filter = {
-		"active": "sharpen",
+		//"active": Filter.FILTER_TYPE_SHARPEN,
+		//"value": 1.0,
+		"active": Filter.FILTER_TYPE_CONTRAST,
 		"value": 1.0,
 		"filters": {
-			"saturation" : {
+		}
+	};
+	this._filter["filters"][Filter.FILTER_TYPE_SATURATION] = {
 				"default": 1.0,
 				"max": 5.0,
 				"min": 0.0,
 				"inc": 0.1
-			},
-			"brightness" : {
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_BRIGHTNESS] = {
 				"default": 0.0,
 				"max": 1.0,
 				"min": -1.0,
 				"inc": 0.05
-			},
-			"contrast" : {
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_CONTRAST] = {
 				"default": 1.0,
 				"max": 5.0,
 				"min": 0.0,
 				"inc": 0.1
-			},
-			"sharpen" : {
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_SHARPEN] = {
 				"default": 0.0,
 				"max": 5.0, // 3.0 starts saturating
 				"min": 0.0,
 				"inc": 0.1
-			}
-
-			,
-			"gamma" : {
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_GAMMA] = {
 				"default": 1.0,
 				"max": 10.0,
 				"min": 0.0,
 				"inc": 0.1
-			}
-		}
-	}
+			};
 	this._filter["value"] = this._filter["filters"][this._filter["active"]]["default"];
 }
 
@@ -71,10 +77,38 @@ Filter.prototype.handleKeyboardDownStill = function(e){
 	this.handleKeyboardDown(e);
 }
 Filter.prototype.handleKeyboardDown = function(e){
+
+	if(e.keyCode==Keyboard.KEY_ENTER){
+		console.log("segmenting to server");
+		this.segmentImageToServer();
+		return;
+	}
+	if(e.keyCode==Keyboard.KEY_LET_F){
+		console.log("apply filters");
+		var filters = {
+			"operations":[
+				{
+					"filter": "brightness",
+					"value": 0.01,
+				},
+				{
+					"filter": "contrast",
+					"value": 1.5,
+				},
+				{
+					"filter": "sharpen",
+					"value": 1.5,
+				},
+			]
+		}
+		this.applyFilters(filters);
+		return;
+	}
+
 	var filter = this._filter;
 	var active = filter.active;
 	var value = filter.value;
-	var settings = filter["filters"][active]
+	var settings = filter["filters"][active];
 		var inc = settings.inc;
 		var max = settings.max;
 		var min = settings.min;
@@ -85,22 +119,92 @@ Filter.prototype.handleKeyboardDown = function(e){
 		value += 0.1;
 		value = Math.min(max,value);
 	}
-	//this.applyFilterSaturation(value);
-	//this.applyFilterBrightness(value);
-	//this.applyFilterGamma(value);
-	this.applyFilterSharpen(value);
+	this.applyFilter(active,value);
 
 	filter.active = active;
 	filter.value = value;
 
 	console.log(active+" : "+value);
-	
-
 	//if(this._keyboard.isKeyDown(Keyboard.KEY_CTRL)){
 
 }
 
+Filter.prototype.segmentImageToServer = function(){
+	// convert into separate grid images
+	//this._stage.render();
+	var sourceDOImage = this._root.getChildAt(1);
+	//console.log(this._root._children)
+	if(!sourceDOImage){
+		console.log("no image");
+		return;
+	}
+	var totalImageWidth = sourceDOImage.width();
+	var totalImageHeight = sourceDOImage.height();
+	console.log(totalImageWidth+" x "+totalImageHeight);
 
+	var combineData = {
+						"width":totalImageWidth,
+						"height":totalImageHeight,
+						"images":[],
+						"filename":"combined.png"
+					};
+	var gridWidth = 150;
+	var gridHeight = 150;
+	var totalImageCols = Math.ceil(totalImageWidth/gridWidth);
+	var totalImageRows = Math.ceil(totalImageHeight/gridHeight);
+	var i, j, index;
+	index = 0;
+	for(j=0;j<totalImageRows;++j){
+		for(i=0;i<totalImageCols;++i){
+			var startPositionX = i*gridWidth;
+			var startPositionY = j*gridHeight;
+			var imageWidth = gridWidth;
+			var imageHeight = gridHeight;
+			if(startPositionX + imageWidth > totalImageWidth){
+				imageWidth = totalImageWidth - startPositionX;
+			}
+			if(startPositionY + imageHeight > totalImageHeight){
+				imageHeight = totalImageHeight - startPositionY;
+			}
+			var endPositionX = startPositionX + imageWidth;
+			var endPositionY = startPositionY + imageHeight;
+			var filename = "file"+index+".png";
+			combineData.images.push({"width":imageWidth,"height":imageHeight,"x":startPositionX,"y":startPositionY,"filename":filename});
+			++index;
+		}
+	}
+	// split image into grid
+	for(i=0; i<combineData.images.length; ++i){
+		var image = combineData.images[i];
+		var matrix = new Matrix2D();
+		matrix.inverse(sourceDOImage.matrix()); // back to origin
+		matrix.translate(-image.x,-image.y);
+		var img = this._stage.renderImage(image.width,image.height,sourceDOImage, matrix);
+		var base64Img = img.src;
+		//
+		var ajax = new Ajax();
+		ajax.method(Ajax.METHOD_TYPE_POST);
+		ajax.url("../php/images.php");
+		ajax.callback(function(e,f){
+			//console.log("called back");
+			//console.log(e,f);
+		});
+		ajax.params({"command":"upload","data":base64Img,"filename":image.filename,"width":image.width,"height":image.height});
+		ajax.send();
+	}
+	var data = JSON.stringify(combineData);
+	
+	// combine
+	var ajax = new Ajax();
+	ajax.method(Ajax.METHOD_TYPE_POST);
+	ajax.url("../php/images.php");
+	ajax.callback(function(e,f){
+		console.log("called back");
+		console.log(e);
+	});
+	ajax.params({"command":"combine","data":data});
+	ajax.send();
+}
 
 Filter.prototype.handleSceneImagesLoaded = function(imageInfo){
 	console.log("loaded")
@@ -129,22 +233,45 @@ Filter.prototype.handleSceneImagesLoaded = function(imageInfo){
 		"height" : imageSourceHeight,
 	}
 }
-Filter.prototype.applyFilterSaturation = function(amount){
-	this.applyFilterFunction(Filter.filterSaturation, amount);
+Filter.prototype.applyFilter = function(type,value, r,g,b){
+	console.log("active: "+type);
+	if(type==Filter.FILTER_TYPE_SATURATION){
+		this.applyFilterSaturation(value, r,g,b);
+	}else if(type==Filter.FILTER_TYPE_BRIGHTNESS){
+		this.applyFilterBrightness(value, r,g,b);
+	}else if(type==Filter.FILTER_TYPE_GAMMA){
+		this.applyFilterGamma(value, r,g,b);
+	}else if(type==Filter.FILTER_TYPE_SHARPEN){
+		this.applyFilterSharpen(value, r,g,b);
+	}else if(type==Filter.FILTER_TYPE_GAMMA){
+		this.applyFilterGamma(value, r,g,b);
+	}else if(type==Filter.FILTER_TYPE_CONTRAST){
+		this.applyFilterContrast(value, r,g,b);
+	}else if(type==Filter.FILTER_TYPE_UNKNOWN){
+		//
+	}
+
 }
-Filter.prototype.applyFilterBrightness = function(amount){
-	this.applyFilterFunction(Filter.filterBrightness, amount);
+Filter.prototype.applyFilterSaturation = function(amount, r,g,b){
+	this.applyFilterFunction(Filter.filterSaturation, amount, r,g,b);
 }
-Filter.prototype.applyFilterGamma = function(amount){
-	this.applyFilterFunction(Filter.filterGamma, amount);
+Filter.prototype.applyFilterBrightness = function(amount, r,g,b){
+	this.applyFilterFunction(Filter.filterBrightness, amount, r,g,b);
 }
-Filter.prototype.applyFilterSharpen = function(amount){
-	this.applyFilterFunction(Filter.filterSharpen, amount);
+Filter.prototype.applyFilterGamma = function(amount, r,g,b){
+	this.applyFilterFunction(Filter.filterGamma, amount, r,g,b);
 }
-Filter.prototype.applyFilterFunction = function(fxn, args){
-	var red = Code.copyArray(this._imageSource.red);
-	var grn = Code.copyArray(this._imageSource.grn);
-	var blu = Code.copyArray(this._imageSource.blu);
+Filter.prototype.applyFilterSharpen = function(amount, r,g,b){
+	this.applyFilterFunction(Filter.filterSharpen, amount, r,g,b);
+}
+Filter.prototype.applyFilterContrast = function(amount, r,g,b){
+	this.applyFilterFunction(Filter.filterContrast, amount, r,g,b);
+}
+Filter.prototype.applyFilterFunction = function(fxn, args, r,g,b){
+	console.log(r!==undefined,g!==undefined,b!==undefined)
+	var red = r!==undefined ? r : Code.copyArray(this._imageSource.red);
+	var grn = g!==undefined ? g : Code.copyArray(this._imageSource.grn);
+	var blu = b!==undefined ? b : Code.copyArray(this._imageSource.blu);
 	var width = this._imageSource.width;
 	var height = this._imageSource.height;
 	fxn(red,grn,blu, width,height, args);
@@ -192,7 +319,6 @@ Filter._filterSaturationFxn = function(v, args){
 }
 
 Filter.filterBrightness = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> HSV, increase S
-	console.log("filterBrightness)")
 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterBrightnessFxn, scale);
 }
 Filter._filterBrightnessFxn = function(v, args){
@@ -379,8 +505,22 @@ Filter.filterOperation = function(imageSourceRed, imageSourceGrn, imageSourceBlu
 
 
 
-Filter.filter = function(){
-	//
+Filter.prototype.applyFilters = function(json){
+	var operations = json["operations"];
+	var i, len;
+	var oldRed = Code.copyArray( this._imageSource.red );
+	var oldGrn = Code.copyArray( this._imageSource.grn );
+	var oldBlu = Code.copyArray( this._imageSource.blu );
+
+	for(i=0; i<operations.length; ++i){
+		var operation = operations[i];
+		var filterName = operation["filter"];
+		var filterValue = operation["value"];
+		this.applyFilter(filterName,filterValue, oldRed,oldGrn,oldBlu);
+	}
+	// this._imageSource.red = oldRed;
+	// this._imageSource.grn = oldGrn;
+	// this._imageSource.blu = oldBlu;
 }
 /*
 

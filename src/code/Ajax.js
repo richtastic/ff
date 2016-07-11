@@ -76,10 +76,10 @@ Ajax.prototype.cache = function(c){
 }
 Ajax.prototype.params = function(p){
 	if(p!==undefined && p!==null){
-		console.log(p);
+		//console.log(p);
 		var str="", count=0;
 		for(k in p){
-			console.log(k+" = "+p[k]);
+			//console.log(k+" = "+p[k]);
 			if(count>0){ str = str + "&"; }
 			str = str + k+"="+Code.escapeURI(p[k]);
 			++count;

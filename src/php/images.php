@@ -1,11 +1,69 @@
 <?php
 // images.php
 
-require "functions.php";
+include_once "functions.php";
 
+$COMMAND_UPLOAD = "upload";
+$COMMAND_COMBINE = "combine";
+
+$command = $_POST["command"];
+$data = $_POST["data"];
+$filename = $_POST["filename"];
+if(!$filename){
+	$filename = "out.png";
+}
 
 // phpinfo();
-echo "MAC: ".IS_SERVER_OSX();
+//echo "MAC: ".IS_SERVER_OSX();
+//return;
+
+
+if($command==$COMMAND_UPLOAD){
+	if(!$data){
+		echo "no data";
+		return;
+	}
+	$binaryFile = base64ToBinary($data);
+
+	$outputFilename = "./temp/".$filename;
+	//$saved = file_put_contents($outputFilename, $binaryFile);
+	$fileHandle = fopen($outputFilename,"w");
+	$saved = fwrite($fileHandle,$binaryFile);
+	fclose($fileHandle);
+	echo "saved: ".$saved;
+	return;
+}
+
+if($command==$COMMAND_COMBINE){
+	if(!$data){
+		echo "no data";
+		return;
+	}
+	$json = json_decode($data);
+	$fileDirectoryPrefix = "./temp/";
+
+	$imageFinalLocation = $fileDirectoryPrefix.$json->filename;
+	$fullImageSizeX = $json->width;
+	$fullImageSizeY = $json->height;
+	$imageList = $json->images;
+
+	createBlankImage($imageFinalLocation, $fullImageSizeX, $fullImageSizeY);
+	
+	// combine cells
+	$len = count($imageList);
+	for($i=0; $i<$len; ++$i){
+		$imageObject = $imageList[$i];
+		$filename = $fileDirectoryPrefix.$imageObject->filename;
+		$imageWidth = $imageObject->width;
+		$imageHeight = $imageObject->height;
+		$offsetX = $imageObject->x;
+		$offsetY = $imageObject->y;
+		combineImageOntoImage($filename, $offsetX, $offsetY, $imageFinalLocation, $imageFinalLocation);
+	}
+	return;
+}
+
+echo "COMMAND: '".$command."'";
 return;
 
 $data = '{"json":123}';
@@ -78,7 +136,7 @@ if($dimensions!=null){
 	}
 	echo "<br/>GRID SIZE: ".$fullGridSizeX .", ". $fullGridSizeY."<br/>";
 	createBlankImage($imageGridFinalLocation, $fullGridSizeX, $fullGridSizeY);
-
+echo "<br/>".$imageGridFinalLocation;
 	// combine cells
 	for($i=0; $i<$len; ++$i){
 		$imageObject = $imageGridFileList[$i];
