@@ -1,10 +1,19 @@
 // Filter.js
-Filter.FILTER_TYPE_SATURATION = "saturation";
+Filter.FILTER_TYPE_HUE = "hue"; // hsv
+Filter.FILTER_TYPE_SATURATION = "saturation"; // hsv
+Filter.FILTER_TYPE_SATURATION_RGB = "saturationrgb";
 Filter.FILTER_TYPE_BRIGHTNESS = "brightness";
 Filter.FILTER_TYPE_CONTRAST = "contrast";
 Filter.FILTER_TYPE_SHARPEN = "sharpen";
 Filter.FILTER_TYPE_GAMMA = "gamma";
+Filter.FILTER_TYPE_VIBRANCE = "vibrance";
+Filter.FILTER_TYPE_COLORIZE = "colorize";
+Filter.FILTER_TYPE_TINT = "tint";
+Filter.FILTER_TYPE_HISTOGRAM_EXPAND = "histogram_expand";
 Filter.FILTER_TYPE_UNKNOWN = "unknown";
+// invert
+// sephia
+// exposure
 
 function Filter(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
@@ -31,15 +40,29 @@ function Filter(){
 	this._filter = {
 		//"active": Filter.FILTER_TYPE_SHARPEN,
 		//"value": 1.0,
-		"active": Filter.FILTER_TYPE_CONTRAST,
+		// "active": Filter.FILTER_TYPE_CONTRAST,
+		// "value": 1.0,
+		"active": Filter.FILTER_TYPE_HUE,
 		"value": 1.0,
 		"filters": {
 		}
 	};
+	this._filter["filters"][Filter.FILTER_TYPE_SATURATION_RGB] = {
+				"default": 1.0,
+				"max": 2.0,
+				"min": 0.0,
+				"inc": 0.1
+			};
 	this._filter["filters"][Filter.FILTER_TYPE_SATURATION] = {
 				"default": 1.0,
 				"max": 5.0,
 				"min": 0.0,
+				"inc": 0.1
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_HUE] = {
+				"default": 0.0,
+				"max": 1.0,
+				"min": -1.0,
 				"inc": 0.1
 			};
 	this._filter["filters"][Filter.FILTER_TYPE_BRIGHTNESS] = {
@@ -66,6 +89,20 @@ function Filter(){
 				"min": 0.0,
 				"inc": 0.1
 			};
+	this._filter["filters"][Filter.FILTER_TYPE_VIBRANCE] = {
+				"default": 0.0,
+				"max": 5.0,
+				"min": -5.0,
+				"inc": 0.1
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_COLORIZE] = {
+				"color" : new V3D(0.0, 0.0, 1.0)
+			};
+	this._filter["filters"][Filter.FILTER_TYPE_TINT] = {
+				"color" : new V3D(0.0, 0.0, 1.0),
+				"scale" : 0.5
+			};
+			
 	this._filter["value"] = this._filter["filters"][this._filter["active"]]["default"];
 }
 
@@ -87,21 +124,52 @@ Filter.prototype.handleKeyboardDown = function(e){
 		console.log("apply filters");
 		var filters = {
 			"operations":[
+				// {
+				// 	"filter": "brightness",
+				// 	"value": 0.01,
+				// },
+				// {
+				// 	"filter": "contrast",
+				// 	"value": 1.5,
+				// },
+				// {
+				// 	"filter": "sharpen",
+				// 	"value": 1.5,
+				// },
+				// {
+				// 	"filter": "saturation",
+				// 	"value": 1.5,
+				// },
+				// {
+				// 	"filter": Filter.FILTER_TYPE_SATURATION_RGB,
+				// 	"value": 2.5,
+				// },
+				// {
+				// 	"filter": Filter.FILTER_TYPE_VIBRANCE,
+				// 	"value": 1.5,
+				// },
+				// {
+				// 	"filter": Filter.FILTER_TYPE_HUE,
+				// 	"value": 0.3333,
+				// },
+				// {
+				// 	"filter": Filter.FILTER_TYPE_COLORIZE,
+				// 	//"value": {"color":new V3D(1.0,0.0,0.0), "scale": 0.25 }
+				// 	//"value": {"color":new V3D(0.5,0.5,0.0), "exponent": 4, "percent": 1.0 } // olive
+				// 	//"value": {"color":new V3D(1.0,1.0,0.0), "exponent": 4, "percent": 1.0 } // yellow
+				// 	//"value": {"color":new V3D(1.0,0.0,0.0), "exponent": 4, "percent": 1.0 } // red
+				// 	//"value": {"color":new V3D(0.0,0.0,1.0), "exponent": 4, "percent": 1.0 } // blue
+				// 	"value": {"color":new V3D(0.70,0.70,0.0), "exponent": 4, "percent": 1.0 } // ?
+				// },
 				{
-					"filter": "brightness",
-					"value": 0.01,
-				},
-				{
-					"filter": "contrast",
-					"value": 1.5,
-				},
-				{
-					"filter": "sharpen",
-					"value": 1.5,
-				},
+					"filter": Filter.FILTER_TYPE_HISTOGRAM_EXPAND,
+					"value": {"window_percent":0.2, "percent": 1.0}
+				}
 			]
 		}
-		this.applyFilters(filters);
+		var obj = this.setupInternalApplyFilterFunction();
+		this.applyFilters(filters, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+		this.takedownInternalApplyFilterFunction(obj.red,obj.grn,obj.blu, obj.width, obj.height);
 		return;
 	}
 
@@ -119,7 +187,9 @@ Filter.prototype.handleKeyboardDown = function(e){
 		value += 0.1;
 		value = Math.min(max,value);
 	}
-	this.applyFilter(active,value);
+	var obj = this.setupInternalApplyFilterFunction();
+	this.applyFilter(active,value, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+	this.takedownInternalApplyFilterFunction(obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
 	filter.active = active;
 	filter.value = value;
@@ -233,52 +303,69 @@ Filter.prototype.handleSceneImagesLoaded = function(imageInfo){
 		"height" : imageSourceHeight,
 	}
 }
-Filter.prototype.applyFilter = function(type,value, r,g,b){
+Filter.prototype.applyFilter = function(type,value, r,g,b, wid,hei){
 	console.log("active: "+type);
-	if(type==Filter.FILTER_TYPE_SATURATION){
-		this.applyFilterSaturation(value, r,g,b);
+	if(type==Filter.FILTER_TYPE_HUE){
+		this.applyFilterHue(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_SATURATION){
+		this.applyFilterSaturation(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_SATURATION_RGB){
+		this.applyFilterSaturationRGB(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_BRIGHTNESS){
-		this.applyFilterBrightness(value, r,g,b);
+		this.applyFilterBrightness(value, r,g,b), wid,hei;
 	}else if(type==Filter.FILTER_TYPE_GAMMA){
-		this.applyFilterGamma(value, r,g,b);
+		this.applyFilterGamma(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_SHARPEN){
-		this.applyFilterSharpen(value, r,g,b);
+		this.applyFilterSharpen(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_GAMMA){
-		this.applyFilterGamma(value, r,g,b);
+		this.applyFilterGamma(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_CONTRAST){
-		this.applyFilterContrast(value, r,g,b);
+		this.applyFilterContrast(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_VIBRANCE){
+		this.applyFilterVibrance(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_COLORIZE){
+		this.applyFilterColorize(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_HISTOGRAM_EXPAND){
+		this.applyFilterHistogramExpand(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_UNKNOWN){
 		//
 	}
 
 }
-Filter.prototype.applyFilterSaturation = function(amount, r,g,b){
-	this.applyFilterFunction(Filter.filterSaturation, amount, r,g,b);
+Filter.prototype.applyFilterHue = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterHue, amount, r,g,b, wid,hei);
 }
-Filter.prototype.applyFilterBrightness = function(amount, r,g,b){
-	this.applyFilterFunction(Filter.filterBrightness, amount, r,g,b);
+Filter.prototype.applyFilterSaturation = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterSaturation, amount, r,g,b, wid,hei);
 }
-Filter.prototype.applyFilterGamma = function(amount, r,g,b){
-	this.applyFilterFunction(Filter.filterGamma, amount, r,g,b);
+Filter.prototype.applyFilterSaturationRGB = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterSaturationRGB, amount, r,g,b, wid,hei);
 }
-Filter.prototype.applyFilterSharpen = function(amount, r,g,b){
-	this.applyFilterFunction(Filter.filterSharpen, amount, r,g,b);
+Filter.prototype.applyFilterBrightness = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterBrightness, amount, r,g,b, wid,hei);
 }
-Filter.prototype.applyFilterContrast = function(amount, r,g,b){
-	this.applyFilterFunction(Filter.filterContrast, amount, r,g,b);
+Filter.prototype.applyFilterGamma = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterGamma, amount, r,g,b, wid,hei);
 }
-Filter.prototype.applyFilterFunction = function(fxn, args, r,g,b){
-	console.log(r!==undefined,g!==undefined,b!==undefined)
-	var red = r!==undefined ? r : Code.copyArray(this._imageSource.red);
-	var grn = g!==undefined ? g : Code.copyArray(this._imageSource.grn);
-	var blu = b!==undefined ? b : Code.copyArray(this._imageSource.blu);
-	var width = this._imageSource.width;
-	var height = this._imageSource.height;
-	fxn(red,grn,blu, width,height, args);
-
+Filter.prototype.applyFilterSharpen = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterSharpen, amount, r,g,b, wid,hei);
+}
+Filter.prototype.applyFilterContrast = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterContrast, amount, r,g,b, wid,hei);
+}
+Filter.prototype.applyFilterVibrance = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterVibrance, amount, r,g,b, wid,hei);
+}
+Filter.prototype.applyFilterColorize = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterColorize, amount, r,g,b, wid,hei);
+}
+Filter.prototype.applyFilterHistogramExpand = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterHistogramExpand, amount, r,g,b, wid,hei);
+}
+Filter.prototype.takedownInternalApplyFilterFunction = function(red,grn,blu, width,height){
 	this._root.removeAllChildren();
-
 	var img, d;
+
 	// original
 	img = this._stage.getFloatRGBAsImage(this._imageSource.red,this._imageSource.grn,this._imageSource.blu, width,height);
 	d = new DOImage(img);
@@ -291,20 +378,134 @@ Filter.prototype.applyFilterFunction = function(fxn, args, r,g,b){
 	this._root.addChild(d);
 	d.matrix().translate(width,0);
 }
-Filter.prototype.old = function(){
-	console.log(imageSourceWidth)
-	//Filter.filterSaturation(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight, 2.0);
-//	Filter.filterV(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight, 2.0);
-	var img = this._stage.getFloatRGBAsImage(imageSourceRed,imageSourceGrn,imageSourceBlu, imageSourceWidth,imageSourceHeight);
-	//console.log(img);
-	var d = new DOImage(img);
-	//console.log(d);
-	this._root.addChild(d);
-	d.matrix().translate(400,0);
 
-	console.log("X: ["+MIN_X+",",MAX_X+"]");
-	console.log("Y: ["+MIN_Y+",",MAX_Y+"]");
-	console.log("Z: ["+MIN_Z+",",MAX_Z+"]");
+Filter.filterHistogramExpand = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){
+	// 
+	// cdf(color) / pixelCount === % along curve => linear
+	// HOW TO MAKE CONTINUOUS ?
+	// bezier
+	// HOW TO MERGE COLORS ?  use intensity & scale in color direction?
+	// 100 levels
+}
+
+Filter.filterHistogramExpand2 = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){
+console.log(args);
+	var percent = args["percent"];
+	var sigmaSize = args["window_percent"] * width;
+	var windowPixels = Math.round(sigmaSize*0.25);
+	//sigmaSize *= 0.225;
+	var oneMP = 1.0 - percent;
+	var sigma = 1.6;// * sigmaSize; // 400pix window * = 10
+	
+	var gauss1D = ImageMat.gaussianWindow1DFromSigma(sigma, 5, 2);//ImageMat.gaussianWindow1DFromSigma(sigma, 5, 2);
+	//console.log(sigma,windowPixels,gauss1D.length);
+	var redGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceRed, width,height, gauss1D);
+	var grnGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceGrn, width,height, gauss1D);
+	var bluGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceBlu, width,height, gauss1D);
+
+	var win2 = Math.floor(windowPixels*0.5);
+	console.log(win2);
+	var i, j, ii, jj, len = width*height;
+	for(j=0; j<height; ++j){
+		//console.log(j)
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			var red = redGauss[index];
+			var grn = grnGauss[index];
+			var blu = bluGauss[index];
+			var minR = red;
+			var minG = grn;
+			var minB = blu;
+			var maxR = red;
+			var maxG = grn;
+			var maxB = blu;
+			for(jj=j-win2; jj<j+win2; ++jj){
+				for(ii=i-win2; ii<i+win2; ++ii){
+					if(jj>=0 && jj<height && ii>=0 && ii<width){
+						var ind = jj*width + ii;
+						var r = redGauss[ind];
+						var g = grnGauss[ind];
+						var b = bluGauss[ind];
+						minR = Math.min(minR,r);
+						minG = Math.min(minG,g);
+						minB = Math.min(minB,b);
+						maxR = Math.max(maxR,r);
+						maxG = Math.max(maxG,g);
+						maxB = Math.max(maxB,b);
+					}
+				}
+			}
+			var rangeR = maxR - minR;
+			var rangeG = maxG - minG;
+			var rangeB = maxB - minB;
+
+			var min = Code.minArray([minR,minG,minB]);
+			var max = Code.maxArray([maxR,maxG,maxB]);
+			var range = max-min;
+
+			var red = imageSourceRed[index];
+			var grn = imageSourceGrn[index];
+			var blu = imageSourceBlu[index];
+			var red2 = red;
+			var grn2 = grn;
+			var blu2 = blu;
+if(false){
+			if(rangeR>0.0){
+				red2 = (red2 - minR)/rangeR;
+				red2 = Math.min(Math.max(red2,0),1);
+			}
+			if(rangeG>0.0){
+				grn2 = (grn2 - minG)/rangeG;
+				grn2 = Math.min(Math.max(grn2,0),1);
+			}
+			if(rangeB>0.0){
+				blu2 = (blu2 - minB)/rangeB;
+				blu2 = Math.min(Math.max(blu2,0),1);
+			}
+}else{
+			if(range>0.0){
+				red2 = (red2 - min)/range;
+				grn2 = (grn2 - min)/range;
+				blu2 = (blu2 - min)/range;
+				red2 = Math.min(Math.max(red2,0),1);
+				grn2 = Math.min(Math.max(grn2,0),1);
+				blu2 = Math.min(Math.max(blu2,0),1);
+			}
+}
+			imageSourceRed[index] = red*oneMP + red2*percent;
+			imageSourceGrn[index] = grn*oneMP + grn2*percent;
+			imageSourceBlu[index] = blu*oneMP + blu2*percent;
+		}
+	}
+}
+
+
+Filter.prototype.setupInternalApplyFilterFunction = function(){
+	var r = Code.copyArray(this._imageSource.red);
+	var g = Code.copyArray(this._imageSource.grn);
+	var b = Code.copyArray(this._imageSource.blu);
+	var width = this._imageSource.width;
+	var height = this._imageSource.height;
+	return {"red":r, "grn":g, "blu": b, "width":width, "height":height};
+}
+Filter.prototype.applyFilterFunction = function(fxn, args, red,grn,blu, width, height){
+	fxn(red,grn,blu, width,height, args);
+}
+
+Filter.filterHue = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, rotate/shift colors around rainbow
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterHueFxn, percent);
+}
+Filter._filterHueFxn = function(v, args){
+	var percent = args;
+	v = Code.HSVFromRGB(v,v);
+	v = v.copy();
+	v.x = v.x + percent;
+		var remainder = Math.floor(v.x);
+		remainder = v.x - remainder;
+		v.x = remainder;
+	//v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v = Code.RGBFromHSV(v,v);
+	return v;
 }
 
 Filter.filterSaturation = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, increase S
@@ -318,14 +519,102 @@ Filter._filterSaturationFxn = function(v, args){
 	return v;
 }
 
+Filter.filterSaturationRGB = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // made up scaling about 0.5 (average)
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterSaturationRGBFxn, percent);
+}
+Filter._filterSaturationRGBFxn = function(v, args){
+	var percent = args;
+	v = v.copy();
+	var avg = (v.x+v.y+v.z)/3.0;
+	v.x = percent * (v.x - avg) + avg;
+	v.y = percent * (v.y - avg) + avg;
+	v.z = percent * (v.z - avg) + avg;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+Filter.filterColorize = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ // shift toward given color
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterColorizeFxn, args);
+}
+Filter._filterColorizeFxn = function(v, args){
+	var c = args["color"];
+	var percent = args["percent"];
+	var exponent = args["exponent"];
+	var omp = 1.0 - percent;
+	v = v.copy();
+	//var score = (1.0 + V3D.cosAngle(color,v))*0.5; // [0,1]
+	
+	var a = new V4D(v.x,v.y,v.z, (v.x+v.y+v.z)/3.0);
+	var b = new V4D(c.x,c.y,c.z, (c.x+c.y+c.z)/3.0);
+
+	// color angle
+	// var score = (1.0 + V3D.cosAngle(a,b))*0.5; // [0,1]
+	// score = Math.pow(score,exponent);
+
+
+	//var score = (1.0 + V4D.cosAngle(a,b))*0.5; // [0,1]
+	//var score = (Math.pow(a.x-b.x,exponent) + Math.pow(a.y-b.y,exponent) + Math.pow(a.z-b.z,exponent) + Math.pow(a.t-b.t,exponent))*0.25;
+	//var score = (Math.pow(a.x-b.x,exponent) + Math.pow(a.y-b.y,exponent) + Math.pow(a.z-b.z,exponent))*0.333333;
+
+	// euclidean distance
+	var score = 1.0 - (V3D.distance(a,b)*Math.sqrt(3.0)); // [0,1]
+	// score = Math.pow(score,exponent);
+	// score = score * Math.pow(a.t-b.t,2);
+	
+	v.x = v.x * omp + v.x * score * percent;
+	v.y = v.y * omp + v.y * score * percent;
+	v.z = v.z * omp + v.z * score * percent;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+Filter.filterTint = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ // shift toward given color
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterTintFxn, args);
+}
+Filter._filterTintFxn = function(v, args){
+	var color = args["color"];
+	var percent = args["scale"];
+	v = v.copy();
+	v.x = v.x + (color.x-v.x) * percent;
+	v.y = v.y + (color.y-v.y) * percent;
+	v.z = v.z + (color.z-v.z) * percent;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
 Filter.filterBrightness = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> HSV, increase S
 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterBrightnessFxn, scale);
 }
 Filter._filterBrightnessFxn = function(v, args){
 	var inc = args;
+	v = v.copy();
 	v.x = v.x + inc;
 	v.y = v.y + inc;
 	v.z = v.z + inc;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+Filter.filterVibrance = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // scales by max - avg, blocky after ~1.0
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterVibranceFxn, scale);
+}
+Filter._filterVibranceFxn = function(v, args){
+	var inc = args;
+	var max = Code.maxArray([v.x,v.y,v.z]);
+	var avg = (v.x+v.y+v.z)/3.0;
+	var amt = Math.abs(max - avg) * inc;
+	v = v.copy();
+	v.x = v.x + amt;
+	v.y = v.y + amt;
+	v.z = v.z + amt;
 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
@@ -337,9 +626,10 @@ Filter.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu,
 }
 Filter._filterContrastFxn = function(v, args){
 	var scale = args;
-	v.x = scale * (v.x - 0.5) + 0.5;
-	v.y = scale * (v.y - 0.5) + 0.5;
-	v.z = scale * (v.z - 0.5) + 0.5;
+	var avg = 0.5;
+	v.x = scale * (v.x - avg) + avg;
+	v.y = scale * (v.y - avg) + avg;
+	v.z = scale * (v.z - avg) + avg;
 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
@@ -505,22 +795,16 @@ Filter.filterOperation = function(imageSourceRed, imageSourceGrn, imageSourceBlu
 
 
 
-Filter.prototype.applyFilters = function(json){
+Filter.prototype.applyFilters = function(json, red,grn,blu, width, height){
 	var operations = json["operations"];
 	var i, len;
-	var oldRed = Code.copyArray( this._imageSource.red );
-	var oldGrn = Code.copyArray( this._imageSource.grn );
-	var oldBlu = Code.copyArray( this._imageSource.blu );
-
 	for(i=0; i<operations.length; ++i){
 		var operation = operations[i];
 		var filterName = operation["filter"];
 		var filterValue = operation["value"];
-		this.applyFilter(filterName,filterValue, oldRed,oldGrn,oldBlu);
+		var filterMask = operation["mask"];
+		this.applyFilter(filterName,filterValue, red,grn,blu, width, height);
 	}
-	// this._imageSource.red = oldRed;
-	// this._imageSource.grn = oldGrn;
-	// this._imageSource.blu = oldBlu;
 }
 /*
 

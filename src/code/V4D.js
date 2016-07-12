@@ -129,6 +129,25 @@ V4D.prototype.setFromArray = function(a){
 	this.set(a[0],a[1],a[2],a[3]);
 	return this;
 }
+V4D.dot = function(a,b){
+	return a.x*b.x + a.y*b.y + a.z*b.z + a.t*b.t;
+}
+V4D.angle = function(a,b){ // check
+	var lenA = a.length();
+	var lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return Math.acos( Math.max(Math.min( V4D.dot(a,b)/(lenA*lenB),1.0 ),-1.0) );
+	}
+	return 0;
+}
+V4D.cosAngle = function(a,b){
+	var lenA = a.length();
+	var lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return Math.max(Math.min( V4D.dot(a,b)/(lenA*lenB),1.0 ),-1.0);
+	}
+	return 0;
+}
 V4D.prototype.toArray = function(){
 	return Code.newArray(this.x,this.y,this.z,this.t);
 }

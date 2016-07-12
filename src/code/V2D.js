@@ -118,6 +118,14 @@ V2D.angle = function(a,b){
 	}
 	return 0;
 }
+V2D.cosAngle = function(a,b){
+	var lenA = a.length();
+	var lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return Math.max(Math.min( V2D.dot(a,b)/(lenA*lenB),1.0 ),-1.0);
+	}
+	return 0;
+}
 V2D.angleDirection = function(a,b){
 	var angle = V2D.angle(a,b);
 	var cross = V2D.cross(a,b);

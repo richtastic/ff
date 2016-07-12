@@ -11,6 +11,14 @@ V3D.angle = function(a,b){ // check
 	}
 	return 0;
 }
+V3D.cosAngle = function(a,b){
+	var lenA = a.length();
+	var lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return Math.max(Math.min( V3D.dot(a,b)/(lenA*lenB),1.0 ),-1.0);
+	}
+	return 0;
+}
 V3D.cross = function(a,b,c){ // axb
 	if(c!==undefined){
 		a.set(b.y*c.z-b.z*c.y, b.z*c.x-b.x*c.z, b.x*c.y-b.y*c.x);
@@ -31,6 +39,15 @@ V3D.rotate = function(to,from,org,dir,ang){ // to = (from-org).rotate(dir,ang)  
 	var Z = (c*(uu+vv) - w*(au+bv-ux_vy_wz))*m1c + z*cos + (a*v - b*u - v*x + u*y)*sin;
 	to.set(X,Y,Z);
 	return to;
+}
+V3D.norm = function(a,b){
+	if(b===undefined){
+		b = a;
+		a = b.copy();
+	}
+	a.copy(b);
+	V3D.prototype.norm.apply(a);
+	return a;
 }
 V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
 	if(ang===undefined){
