@@ -16,6 +16,7 @@ Filter.FILTER_TYPE_UNKNOWN = "unknown";
 // exposure
 
 function Filter(){
+	THIS = this;
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();
@@ -365,7 +366,7 @@ Filter.prototype.applyFilterHistogramExpand = function(amount, r,g,b, wid,hei){
 Filter.prototype.takedownInternalApplyFilterFunction = function(red,grn,blu, width,height){
 	this._root.removeAllChildren();
 	var img, d;
-
+	
 	// original
 	img = this._stage.getFloatRGBAsImage(this._imageSource.red,this._imageSource.grn,this._imageSource.blu, width,height);
 	d = new DOImage(img);
@@ -377,15 +378,256 @@ Filter.prototype.takedownInternalApplyFilterFunction = function(red,grn,blu, wid
 	d = new DOImage(img);
 	this._root.addChild(d);
 	d.matrix().translate(width,0);
+	
 }
 
-Filter.filterHistogramExpand = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){
-	// 
-	// cdf(color) / pixelCount === % along curve => linear
-	// HOW TO MAKE CONTINUOUS ?
-	// bezier
-	// HOW TO MERGE COLORS ?  use intensity & scale in color direction?
-	// 100 levels
+
+Filter.filterHistogramExpandA = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ // histogram equalization to adjust intensities & increase contrast by spreading out the intensities used the mose
+	var imageComputedGry = ImageMat.grayFromRGBFloat(imageSourceRed, imageSourceGrn, imageSourceBlu);
+	//var imageComputedGry = ImageMat.HSVFromRGBFloat(imageSourceRed, imageSourceGrn, imageSourceBlu);
+	
+	var totalBinCount = args["bins"] ? args["bins"] : 100;
+	var percentApply = args["percent"] ? args["percent"] : 1.0;
+
+//percentApply = 0.5;
+	var percentApplyM1 = 1.0 - percentApply;
+
+	var i;
+	
+	var histogramBinsRed = Code.newArrayZeros(totalBinCount);
+	var histogramBinsGrn = Code.newArrayZeros(totalBinCount);
+	var histogramBinsBlu = Code.newArrayZeros(totalBinCount);
+	var histogramBinsGry = Code.newArrayZeros(totalBinCount);
+
+	var pixelCount = width * height;
+	var maximumCountRed = 0;
+	var maximumCountGrn = 0;
+	var maximumCountBlu = 0;
+	var maximumCountGry = 0;
+	
+	// probability density function
+	for(i=0; i<pixelCount; ++i){
+		var levelRed = Code.convetRangeDiscreteRound(imageSourceRed[i], 0,1, 0,totalBinCount);
+		var levelGrn = Code.convetRangeDiscreteRound(imageSourceGrn[i], 0,1, 0,totalBinCount);
+		var levelBlu = Code.convetRangeDiscreteRound(imageSourceBlu[i], 0,1, 0,totalBinCount);
+		var levelGry = Code.convetRangeDiscreteRound(imageComputedGry[i], 0,1, 0,totalBinCount);
+		//var levelGry = Code.convetRangeDiscreteRound(imageComputedGry[i].z, 0,1, 0,totalBinCount);
+		histogramBinsRed[levelRed] += 1;
+		histogramBinsGrn[levelGrn] += 1;
+		histogramBinsBlu[levelBlu] += 1;
+		histogramBinsGry[levelGry] += 1;
+		maximumCountRed = Math.max(maximumCountRed, histogramBinsRed[levelRed]);
+		maximumCountGrn = Math.max(maximumCountGrn, histogramBinsGrn[levelGrn]);
+		maximumCountBlu = Math.max(maximumCountBlu, histogramBinsBlu[levelBlu]);
+		maximumCountGry = Math.max(maximumCountGry, histogramBinsGry[levelGry]);
+	}
+
+	// cumulative distribution function
+	var cumulativeDistributionRed = Code.newArrayZeros(totalBinCount);
+	var cumulativeDistributionGrn = Code.newArrayZeros(totalBinCount);
+	var cumulativeDistributionBlu = Code.newArrayZeros(totalBinCount);
+	var cumulativeDistributionGry = Code.newArrayZeros(totalBinCount);
+	cumulativeDistributionRed[0] = histogramBinsRed[0];
+	cumulativeDistributionGrn[0] = histogramBinsGrn[0];
+	cumulativeDistributionBlu[0] = histogramBinsBlu[0];
+	cumulativeDistributionGry[0] = histogramBinsGry[0];
+	for(i=1; i<totalBinCount; ++i){
+		cumulativeDistributionRed[i] = cumulativeDistributionRed[i-1] + histogramBinsRed[i];
+		cumulativeDistributionGrn[i] = cumulativeDistributionGrn[i-1] + histogramBinsGrn[i];
+		cumulativeDistributionBlu[i] = cumulativeDistributionBlu[i-1] + histogramBinsBlu[i];
+		cumulativeDistributionGry[i] = cumulativeDistributionGry[i-1] + histogramBinsGry[i];
+	}
+	var maxCDFValueRed = cumulativeDistributionRed[totalBinCount-1];
+	var maxCDFValueGrn = cumulativeDistributionGrn[totalBinCount-1];
+	var maxCDFValueBlu = cumulativeDistributionBlu[totalBinCount-1];
+	var maxCDFValueGry = cumulativeDistributionGry[totalBinCount-1];
+	// reverse mapping
+	var reverseMapRed = Code.newArrayZeros(totalBinCount);
+	var reverseMapGrn = Code.newArrayZeros(totalBinCount);
+	var reverseMapBlu = Code.newArrayZeros(totalBinCount);
+	var reverseMapGry = Code.newArrayZeros(totalBinCount);
+	for(i=1; i<totalBinCount; ++i){
+		reverseMapRed[i] = (cumulativeDistributionRed[i]/maxCDFValueRed);
+		reverseMapGrn[i] = (cumulativeDistributionGrn[i]/maxCDFValueGrn);
+		reverseMapBlu[i] = (cumulativeDistributionBlu[i]/maxCDFValueBlu);
+		reverseMapGry[i] = (cumulativeDistributionBlu[i]/maxCDFValueGry);
+	}
+	// remapping
+	for(i=0; i<pixelCount; ++i){
+		var red = imageSourceRed[i];
+		var grn = imageSourceGrn[i];
+		var blu = imageSourceBlu[i];
+		var gry = imageComputedGry[i];
+		// var gry = imageComputedGry[i].z;
+		// interpolate
+		var percentRed = red*(totalBinCount-1); // totalBinCount ?????
+		var percentGrn = grn*(totalBinCount-1);
+		var percentBlu = blu*(totalBinCount-1);
+		var percentGry = gry*(totalBinCount-1);
+		var indexRed = Math.min(Math.floor(percentRed),totalBinCount-1);
+		var indexGrn = Math.min(Math.floor(percentGrn),totalBinCount-1);
+		var indexBlu = Math.min(Math.floor(percentBlu),totalBinCount-1);
+		var indexGry = Math.min(Math.floor(percentGry),totalBinCount-1);
+		var redOut = Code.interpolate1D( new V2D(), new V2D(percentRed,0), new V2D(indexRed,reverseMapRed[indexRed]), indexRed<(totalBinCount) ? new V2D(indexRed+1,reverseMapRed[indexRed+1]) : null );
+		var grnOut = Code.interpolate1D( new V2D(), new V2D(percentGrn,0), new V2D(indexGrn,reverseMapGrn[indexGrn]), indexGrn<(totalBinCount) ? new V2D(indexGrn+1,reverseMapGrn[indexGrn+1]) : null );
+		var bluOut = Code.interpolate1D( new V2D(), new V2D(percentBlu,0), new V2D(indexBlu,reverseMapBlu[indexBlu]), indexBlu<(totalBinCount) ? new V2D(indexBlu+1,reverseMapBlu[indexBlu+1]) : null );
+		var gryOut = Code.interpolate1D( new V2D(), new V2D(percentGry,0), new V2D(indexGry,reverseMapBlu[indexGry]), indexGry<(totalBinCount) ? new V2D(indexGry+1,reverseMapBlu[indexGry+1]) : null );
+		// imageSourceRed[i] = redOut.y * percentApply + red * percentApplyM1;
+		// imageSourceGrn[i] = grnOut.y * percentApply + grn * percentApplyM1;
+		// imageSourceBlu[i] = bluOut.y * percentApply + blu * percentApplyM1;
+		// imageSourceRed[i] = Code.rangeForceMinMax(imageSourceRed[i], 0,1);
+		// imageSourceGrn[i] = Code.rangeForceMinMax(imageSourceGrn[i], 0,1);
+		// imageSourceBlu[i] = Code.rangeForceMinMax(imageSourceBlu[i], 0,1);
+
+//gryOut.y = Math.sqrt(gryOut.y);
+
+		var dir = new V3D(red,grn,blu);
+		dir.norm();
+		dir.scale(gryOut.y);
+
+		// red = gryOut.y;
+		// grn = gryOut.y;
+		// blu = gryOut.y;
+
+		red = dir.x;
+		grn = dir.y;
+		blu = dir.z;
+
+		imageSourceRed[i] = red;
+		imageSourceGrn[i] = grn;
+		imageSourceBlu[i] = blu;
+
+	}
+	var dPDFRed = DO.createLineGraph(histogramBinsRed);
+	var dCDFRed = DO.createLineGraph(cumulativeDistributionRed);
+}
+
+Filter.filterHistogramExpand = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ // histogram equalization to adjust intensities & increase contrast by spreading out the intensities used the mose
+	var totalBinCount = args["bins"] ? args["bins"] : 100;
+	var percentApply = args["percent"] ? args["percent"] : 1.0;
+	var percentApplyM1 = 1.0 - percentApply;
+
+	var i;
+	
+	var histogramBinsRed = Code.newArrayZeros(totalBinCount);
+	var histogramBinsGrn = Code.newArrayZeros(totalBinCount);
+	var histogramBinsBlu = Code.newArrayZeros(totalBinCount);
+	var pixelCount = width * height;
+	var maximumCountRed = 0;
+	var maximumCountGrn = 0;
+	var maximumCountBlu = 0;
+	console.log("bins:",totalBinCount);
+	// probability density function
+	for(i=0; i<pixelCount; ++i){
+		var levelRed = Code.convetRangeDiscreteRound(imageSourceRed[i], 0,1, 0,totalBinCount);
+		var levelGrn = Code.convetRangeDiscreteRound(imageSourceGrn[i], 0,1, 0,totalBinCount);
+		var levelBlu = Code.convetRangeDiscreteRound(imageSourceBlu[i], 0,1, 0,totalBinCount);
+		histogramBinsRed[levelRed] += 1;
+		histogramBinsGrn[levelGrn] += 1;
+		histogramBinsBlu[levelBlu] += 1;
+		maximumCountRed = Math.max(maximumCountRed, histogramBinsRed[levelRed]);
+		maximumCountGrn = Math.max(maximumCountGrn, histogramBinsGrn[levelGrn]);
+		maximumCountBlu = Math.max(maximumCountBlu, histogramBinsBlu[levelBlu]);
+	}
+	// cumulative distribution function
+	var cumulativeDistributionRed = Code.newArrayZeros(totalBinCount);
+	var cumulativeDistributionGrn = Code.newArrayZeros(totalBinCount);
+	var cumulativeDistributionBlu = Code.newArrayZeros(totalBinCount);
+	cumulativeDistributionRed[0] = histogramBinsRed[0];
+	cumulativeDistributionGrn[0] = histogramBinsGrn[0];
+	cumulativeDistributionBlu[0] = histogramBinsBlu[0];
+	for(i=1; i<totalBinCount; ++i){
+		cumulativeDistributionRed[i] = cumulativeDistributionRed[i-1] + histogramBinsRed[i];
+		cumulativeDistributionGrn[i] = cumulativeDistributionGrn[i-1] + histogramBinsGrn[i];
+		cumulativeDistributionBlu[i] = cumulativeDistributionBlu[i-1] + histogramBinsBlu[i];
+	}
+	var maxCDFValueRed = cumulativeDistributionRed[totalBinCount-1];
+	var maxCDFValueGrn = cumulativeDistributionGrn[totalBinCount-1];
+	var maxCDFValueBlu = cumulativeDistributionBlu[totalBinCount-1];
+	// reverse mapping
+	var reverseMapRed = Code.newArrayZeros(totalBinCount);
+	var reverseMapGrn = Code.newArrayZeros(totalBinCount);
+	var reverseMapBlu = Code.newArrayZeros(totalBinCount);
+	for(i=1; i<totalBinCount; ++i){
+		reverseMapRed[i] = (cumulativeDistributionRed[i]/maxCDFValueRed);
+		reverseMapGrn[i] = (cumulativeDistributionGrn[i]/maxCDFValueGrn);
+		reverseMapBlu[i] = (cumulativeDistributionBlu[i]/maxCDFValueBlu);
+	}
+	// remapping
+	for(i=0; i<pixelCount; ++i){
+		var red = imageSourceRed[i];
+		var grn = imageSourceGrn[i];
+		var blu = imageSourceBlu[i];
+		// interpolate
+		var percentRed = red*(totalBinCount-1); // totalBinCount ?????
+		var percentGrn = grn*(totalBinCount-1);
+		var percentBlu = blu*(totalBinCount-1);
+		var indexRed = Math.min(Math.floor(percentRed),totalBinCount-1);
+		var indexGrn = Math.min(Math.floor(percentGrn),totalBinCount-1);
+		var indexBlu = Math.min(Math.floor(percentBlu),totalBinCount-1);
+		var redOut = Code.interpolate1D( new V2D(), new V2D(percentRed,0), new V2D(indexRed,reverseMapRed[indexRed]), indexRed<(totalBinCount) ? new V2D(indexRed+1,reverseMapRed[indexRed+1]) : null );
+		var grnOut = Code.interpolate1D( new V2D(), new V2D(percentGrn,0), new V2D(indexGrn,reverseMapGrn[indexGrn]), indexGrn<(totalBinCount) ? new V2D(indexGrn+1,reverseMapGrn[indexGrn+1]) : null );
+		var bluOut = Code.interpolate1D( new V2D(), new V2D(percentBlu,0), new V2D(indexBlu,reverseMapBlu[indexBlu]), indexBlu<(totalBinCount) ? new V2D(indexBlu+1,reverseMapBlu[indexBlu+1]) : null );
+		imageSourceRed[i] = redOut.y * percentApply + red * percentApplyM1;
+		imageSourceGrn[i] = grnOut.y * percentApply + grn * percentApplyM1;
+		imageSourceBlu[i] = bluOut.y * percentApply + blu * percentApplyM1;
+		imageSourceRed[i] = Code.rangeForceMinMax(imageSourceRed[i], 0,1);
+		imageSourceGrn[i] = Code.rangeForceMinMax(imageSourceGrn[i], 0,1);
+		imageSourceBlu[i] = Code.rangeForceMinMax(imageSourceBlu[i], 0,1);
+		// // non-interpolated
+		// red = reverseMapRed[indexRed];
+		// grn = reverseMapGrn[indexGrn];
+		// blu = reverseMapBlu[indexBlu];
+		// imageSourceRed[i] = red;
+		// imageSourceGrn[i] = grn;
+		// imageSourceBlu[i] = blu;
+	}
+
+	// visualization
+	var graphWidth = 200;
+	var graphHeight = 100;
+
+
+	// var d = new DO();
+	// // graph
+	// d.graphics().setLine(1.0,0xFF000000);
+	// // x
+	// d.graphics().moveTo(0,0);
+	// d.graphics().lineTo( graphWidth, 0 );
+	// d.graphics().strokeLine();
+	// // y
+	// d.graphics().moveTo(0,0);
+	// d.graphics().lineTo( 0, -graphHeight);
+	// d.graphics().strokeLine();
+	// // graph - red
+	// d.graphics().setLine(1.0,0xFFFF0000);
+	// d.graphics().moveTo(0,0);
+	// for(i=0; i<totalBinCount; ++i){
+	// 	var count = histogramBinsRed[i];
+	// 	d.graphics().lineTo( (i/totalBinCount)*graphWidth, -(count/maximumCountRed)*graphHeight );
+	// }
+	// d.graphics().strokeLine();
+
+	var dPDFRed = DO.createLineGraph(histogramBinsRed);
+	var dCDFRed = DO.createLineGraph(cumulativeDistributionRed);
+
+	// d.graphics().beginPath();
+	// d.graphics().endPath();
+	
+	//d.matrix().identity().translate(20,graphHeight + 100);
+
+	var ticker = new Ticker(50);
+	ticker.start();
+	ticker.addFunction(Ticker.EVENT_TICK,
+	function(){
+		ticker.stop();
+		//THIS._root.removeAllChildren();
+		// THIS._root.addChild(dPDFRed);
+		// THIS._root.addChild(dCDFRed);
+	}, THIS);
+
+	
+	
 }
 
 Filter.filterHistogramExpand2 = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){

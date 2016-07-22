@@ -1973,6 +1973,16 @@ Code.padStringRight = function(val,wid,filler){
 	return str;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- MATHS
+Code.rangeForceMinMax = function(value, min, max){
+	return Math.min(Math.max(value,min),max);
+}
+Code.convetRangeDiscreteRound = function(value, oldMin, oldMax, newMin,newMax){
+	var oldRange = oldMax - oldMin;
+	if (oldRange==0) { return newMin; }
+	value = (value - oldMin) / oldRange; // [0,1]
+	var newRange = newMax - newMin;
+	return newMin + Math.min(Math.floor( value * newRange),newRange-1);
+}
 Code.gcd = function(a,b){
 	a = Math.abs(a); b = Math.abs(b);
 	temp = Math.max(a,b); b = Math.min(a,b); a = temp;
@@ -2132,6 +2142,45 @@ Code.mult2x2by2x1toV2D = function(v, tbt, tbo){
 	v.y = tbo[0]*tbt[2] + tbo[1]*tbt[3];
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
+Code.interpolate1D = function(locOut, locIn, a, b, c, d){ // list of V2D
+	if(!b){ // only a
+		locOut.x = a.x;
+		locOut.y = a.y;
+		return locOut;
+	}else if(!c){ // a & b == linear
+		var x = locIn.x - a.x;
+		var y = locIn.y - a.y;
+		var dx = b.x - a.x;
+		var dy = b.y - a.y;
+		if(dx==0){
+			locOut.y = a.y;
+		}else{
+			locOut.y = a.y + (x*dy/dx);
+		}
+		locOut.x = locIn.x;
+		return locOut;
+	}else if(d===undefined){ // a & b & c
+		var x = locIn.x - a.x;
+		var y = locIn.y - a.y;
+		var dx = c.x - a.x;
+		var dy = c.y - a.y;
+		// var dxAB = b.x-a.x;
+		// var dyAB = b.y-a.y;
+		// var dxBC = c.x-b.x;
+		// var dyBC = c.y-b.y;
+		var ddy = (c.y - 2.0*b.y + a.y)/dx;
+		// if(dx==0){
+		// 	locOut.y = a.y;
+		// }else{
+		// f(x+a) = f(x)  +  f'(x) * (x-a)  +  1/2 * f''(x) * (x-a)^2
+		locOut.y = a.y + (dy/dx)*x + 0.5*ddy*x*x;
+		locOut.x = locIn.x;
+		return locOut;
+	}else{ // all
+		//
+	}
+	return null;
+}
 Code.findMaxima1D = function(d){
 	var i, lenM1 = d.length-1, a,b,c, v, list = [];
 	for(i=1;i<lenM1;++i){

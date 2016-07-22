@@ -7,6 +7,14 @@ Dispatch.EVENT_COMPLETE = "disevtcmp";
 function Dispatch(){
 	this.list = new Array();
 }
+
+Dispatch.prototype.debounce = function(dt){
+	// set to only alert after dt has passed and no other method called
+}
+Dispatch.prototype.throttle = function(dt){ // time and/or method count
+	// set to only alert after chunks of time
+}
+
 Dispatch.prototype.showList = function(){
 	var key, str = "";
 	for(key in this.list){

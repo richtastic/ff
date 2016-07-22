@@ -297,6 +297,19 @@ ImageMat.ARGBFromFloat = function(data){
 	}
 	return a;
 }
+ImageMat.HSVFromRGBFloat = function(r,g,b){
+	var i, len = r.length;
+	var a = new Array(len);
+	var hsv = new V3D();
+	var rgb = new V3D();
+	for(i=0;i<len;++i){
+		rgb.set(r[i],g[i],b[i]);
+		Code.HSVFromRGB(hsv,rgb);
+		a[i] = new V3D(hsv.x,hsv.y,hsv.z);
+	}
+	return a;
+}
+
 ImageMat.grayFromRGBFloat = function(r,g,b){
 	var i, len = r.length;
 	var a = new Array(len);
@@ -305,14 +318,16 @@ ImageMat.grayFromRGBFloat = function(r,g,b){
 	}
 	return a;
 }
-ImageMat.grayFromFloats = function(r,g,b){
-	var i, len = r.length;
-	var a = new Array(len);
-	for(i=0;i<len;++i){
-		a[i] = (r[i]+g[i]+b[i])/3.0;
-	}
-	return a;
-}
+
+// ImageMat.grayFromFloats = function(r,g,b){
+// 	var i, len = r.length;
+// 	var a = new Array(len);
+// 	for(i=0;i<len;++i){
+// 		a[i] = (r[i]+g[i]+b[i])/3.0;
+// 	}
+// 	return a;
+// }
+
 ImageMat.ARGBFromFloats = function(rF,gF,bF){
 	var i, len = rF.length;
 	var col, r,g,b,a = new Array(len);

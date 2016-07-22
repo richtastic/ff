@@ -508,6 +508,57 @@ DO.prototype.print = function(){
 
 
 
+DO.createLineGraph = function(a, b, c){
+	var style = null;
+	var xValues = null;
+	var yValues = null;
+	if(arguments.length==3){ // xVal, yVal, style
+		xValues = a;
+		yValues = b;
+		style = c;
+	}else if(arguments.length==2){ // yVal, style
+		yValues = a;
+		style = b;
+	}else if(arguments.length==1){ // yVal
+		yValues = a;
+	}else{
+		return null;
+	}
+	var graphWidth = 300;
+	var graphHeight = 200;
+	var i;
+	var yCount = yValues.length;
+	var maxY = yValues[0];
+	for(i=0; i<yCount; ++i){
+		maxY = Math.max(yValues[i],maxY);
+	}
+	var d = new DO();
+	// graph
+	d.graphics().setLine(1.0,0xFF000000);
+	d.graphics().beginPath();
+	// x
+	d.graphics().moveTo(0,0);
+	d.graphics().lineTo( graphWidth, 0 );
+	d.graphics().strokeLine();
+	// y
+	d.graphics().moveTo(0,0);
+	d.graphics().lineTo( 0, -graphHeight);
+	d.graphics().strokeLine();
+	// graph - red
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().moveTo(0,0);
+	for(i=0; i<yCount; ++i){
+		var value = yValues[i];
+		d.graphics().lineTo( (i/yCount)*graphWidth, -(value/maxY)*graphHeight );
+	}
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(0,graphHeight);
+	return d;
+}
+
+
+
 
 /*
 	d.graphics().clear();
