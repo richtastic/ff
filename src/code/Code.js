@@ -1981,7 +1981,7 @@ Code.convetRangeDiscreteRound = function(value, oldMin, oldMax, newMin,newMax){
 	if (oldRange==0) { return newMin; }
 	value = (value - oldMin) / oldRange; // [0,1]
 	var newRange = newMax - newMin;
-	return newMin + Math.min(Math.floor( value * newRange),newRange-1);
+	return newMin + Math.min(Math.floor( value * newRange),newMax-1);
 }
 Code.gcd = function(a,b){
 	a = Math.abs(a); b = Math.abs(b);
