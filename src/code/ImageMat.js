@@ -15,8 +15,8 @@ ImageMat.tempM = new V3D();
 ImageMat.tempN = new V3D();
 ImageMat.tempO = new V3D();
 ImageMat.tempP = new V3D();
-function ImageMat(wid, hei){
-	this.init(wid,hei);
+function ImageMat(wid, hei, r,g,b){
+	this.init(wid,hei,r,g,b);
 }
 ImageMat.prototype.init = function(wid,hei,r,g,b){
 	this._width = wid;
@@ -179,6 +179,9 @@ ImageMat.prototype.grn = function(){
 }
 ImageMat.prototype.blu = function(){
 	return this._b;
+}
+ImageMat.prototype.gry = function(){
+	return ImageMat.grayFromRGBFloat(this._r,this._g,this._b);
 }
 ImageMat.prototype.width = function(w){
 	// if(w!==undefined){
@@ -948,6 +951,18 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 	return result;
 }
 // INNER CONVOLUTION?
+
+ImageMat.ssdEqual = function(windowA, windowB){
+	//var score = ImageMat.ssd(windowA.image,windowA.width,windowA.height, windowB.image,windowB.width,windowB.height);
+	var scoreRed = Code.SSDEqual(windowA.red(),windowB.red());
+	var scoreGrn = Code.SSDEqual(windowA.grn(),windowB.grn());
+	var scoreBlu = Code.SSDEqual(windowA.blu(),windowB.blu());
+	var scoreGry = Code.SSDEqual(windowA.gry(),windowB.gry());
+	var score = (scoreRed+scoreGrn+scoreBlu)/3.0 + scoreGry;
+	return score;
+}
+
+
 ImageMat.ssd = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
 	var i, j, n, m, sum, staN, endN, staM, endM, num;
@@ -1737,6 +1752,31 @@ ImageMat._BL = new V2D();
 
 ImageMat.extractRectFromFloatImageBasic = function(x,y, outWidth,outHeight, source,sourceWidth,sourceHeight){
 	return ImageMat.extractRectFromFloatImage(x,y,1.0,null, outWidth,outHeight, source,sourceWidth,sourceHeight,null);
+}
+
+ImageMat.prototype.extractRectFromFloatImage = function(x,y,scale,sigma,w,h,matrix){
+	var red = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._r,this._width,this._height, matrix);
+	var grn = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._g,this._width,this._height, matrix);
+	var blu = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._b,this._width,this._height, matrix);
+	return new ImageMat(w,h, red,grn,blu);
+}
+
+ImageMat.prototype.calculateGradient = function(x,y){
+	x = x!==undefined ? x : Math.floor(this._width/2);
+	y = y!==undefined ? y : Math.floor(this._height/2);
+	var w = this.width();
+	var h = this.height();
+	var size = 3;
+	var index = Math.floor(size/2);
+	var r = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, this._r,w,h);
+	var g = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, this._r,w,h);
+	var b = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, this._r,w,h);
+	var y = ImageMat.grayFromRGBFloat(r,g,b);
+	var Ix = ImageMat.derivativeX(r, w,h);
+	var Iy = ImageMat.derivativeY(r, w,h);
+	var dir = new V2D(Ix[index],Iy[index]);
+	dir.norm();
+	return dir;
 }
 
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 

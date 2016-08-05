@@ -1712,15 +1712,22 @@ R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, out
 
 
 R3D.highDensityMatches = function(imageA,widthA,heightA,pointsA, imageB,widthB,heightB,pointsB,     stage){
+	if(!Code.isArray(imageA)){
+		imageA = new ImageMat(imageA.width,imageA.height,imageA.red,imageA.grn,imageA.blu);
+	}
+	if(!Code.isArray(imageB)){
+		imageB = new ImageMat(imageB.width,imageB.height,imageB.red,imageB.grn,imageB.blu);
+	}
 GLOBALSTAGE = stage;
 	console.log("highDensityMatches");
 
-	var divider = 10; // make problem smaller
+	var divider = 25; // make problem smaller
 	var areaMap = new AreaMap();
-
+	console.log( Math.floor(widthA/divider), Math.floor(heightA/divider) )
 	var rangeA = areaMap.addRangeImage(imageA,widthA,heightA, Math.floor(widthA/divider), Math.floor(heightA/divider));
 	var rangeB = areaMap.addRangeImage(imageB,widthB,heightB, Math.floor(widthB/divider), Math.floor(heightB/divider));
 	var i, len = Math.min(pointsA.length,pointsB.length);
+	console.log("initial matches count: "+len);
 	for(i=0; i<len; ++i){
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
@@ -1735,10 +1742,10 @@ GLOBALSTAGE = stage;
 		// stage.root().addChild( d );
 
 	}
-	console.log("rangeA: ");
-	console.log(rangeA.toString());
-	console.log("rangeB: ");
-	console.log(rangeB.toString());
+	// console.log("rangeA: ");
+	// console.log(rangeA.toString());
+	// console.log("rangeB: ");
+	// console.log(rangeB.toString());
 	areaMap.solve();
 }
 

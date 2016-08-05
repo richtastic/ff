@@ -46,6 +46,14 @@ function Manual3DR(){
 	// return;
 
 
+// TESTING HIGH DENSITY MATCHING
+
+// var imageList = ["dense_test_a.png","dense_test_e.png"];
+// var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedDenseTest,null);
+// imageLoader.load();
+// return;
+
+
 // MANUALLY DETERMINED POINTS
 	this._manualData = {
 		"entries": {
@@ -192,6 +200,60 @@ function Manual3DR(){
 	imageLoader.load();
 //this.distortionStuff();
 }
+
+
+Manual3DR.prototype.handleImagesLoadedDenseTest = function(imageInfo){
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0;
+	var y = 0;
+
+	var imageSourceA = imageList[0];
+	var imageSourceB = imageList[1];
+	var imageWidthA = imageSourceA.width;
+	var imageHeightA = imageSourceA.height;
+	var imageWidthB = imageSourceB.width;
+	var imageHeightB = imageSourceB.height;
+
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		
+		var d = new DOImage(img);
+		this._root.addChild(d);
+		d.graphics().alpha(0.05);
+		d.matrix().translate(x,y);
+		// for(j=0;j<points.length;++j){
+		// 	var point = points[j];
+		// 	var pentries = point.entries;
+		// 	if(pentries[key]){
+		// 		var p = pentries[key]["p2D"];
+		// 		var c = new DO();
+		// 		var r = 3.0;
+		// 		c.graphics().setLine(1.0, 0xFFFF0000);
+		// 		c.graphics().beginPath();
+		// 		c.graphics().drawCircle(p.x,p.y, r);
+		// 		c.graphics().endPath();
+		// 		c.graphics().strokeLine();
+		// 		d.addChild(c);
+		// 	}
+		// }
+		x += img.width;
+	}
+var shift = new V2D(40,40);
+var pointsA = [new V2D(90,90)];
+var pointsB = [ (new V2D()).copy(pointsA[0]).add(shift) ];
+
+// var imageFloatA = this._stage.getImageAsFloatGray(imageSourceA);
+// var imageFloatB = this._stage.getImageAsFloatGray(imageSourceB);
+var imageFloatA = this._stage.getImageAsFloatRGB(imageSourceA);
+var imageFloatB = this._stage.getImageAsFloatRGB(imageSourceB);
+
+var matches = R3D.highDensityMatches(imageFloatA,imageWidthA,imageHeightA,pointsA, imageFloatB,imageWidthB,imageHeightB,pointsB,   this._stage);
+
+}
+
 /*
 	fx = 376.10038433315435
 	fy = 376.7410755028418
@@ -1103,7 +1165,7 @@ Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
 		var d = new DOImage(img);
 if(i==0 || i==1){
 this._root.addChild(d);
-d.graphics().alpha(0.05);
+d.graphics().alpha(0.15);
 }
 		d.matrix().translate(x,y);
 		for(j=0;j<points.length;++j){
@@ -1220,9 +1282,13 @@ for(k=0; k<points.length; ++k){
 	}
 }
 
-var imageFloatA = this._stage.getImageAsFloatGray(imageSourceA).gray;
-var imageFloatB = this._stage.getImageAsFloatGray(imageSourceB).gray;
+// var imageFloatA = this._stage.getImageAsFloatGray(imageSourceA).gray;
+// var imageFloatB = this._stage.getImageAsFloatGray(imageSourceB).gray;
+var imageFloatA = this._stage.getImageAsFloatRGB(imageSourceA);
+var imageFloatB = this._stage.getImageAsFloatRGB(imageSourceB);
 var matches = R3D.highDensityMatches(imageFloatA,imageWidthA,imageHeightA,pointsA, imageFloatB,imageWidthB,imageHeightB,pointsB,   this._stage);
+// single match
+//var matches = R3D.highDensityMatches(imageFloatA,imageWidthA,imageHeightA,[pointsA[0]], imageFloatB,imageWidthB,imageHeightB,[pointsB[0]],   this._stage);
 
 return;
 

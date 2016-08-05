@@ -81,6 +81,9 @@ Code.daysOfWeekLong = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "
 function Code(){
 	this.www = 234;
 }
+Code.getType = function(obj){
+	return (typeof obj);
+}
 Code.isNumber = function(obj){
 	return (typeof obj)==Code.TYPE_NUMBER;
 }
