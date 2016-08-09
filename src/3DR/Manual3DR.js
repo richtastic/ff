@@ -242,7 +242,7 @@ Manual3DR.prototype.handleImagesLoadedDenseTest = function(imageInfo){
 		x += img.width;
 	}
 var shift = new V2D(40,40);
-var pointsA = [new V2D(90,90)];
+var pointsA = [new V2D(100,100)];
 var pointsB = [ (new V2D()).copy(pointsA[0]).add(shift) ];
 
 // var imageFloatA = this._stage.getImageAsFloatGray(imageSourceA);
@@ -250,7 +250,138 @@ var pointsB = [ (new V2D()).copy(pointsA[0]).add(shift) ];
 var imageFloatA = this._stage.getImageAsFloatRGB(imageSourceA);
 var imageFloatB = this._stage.getImageAsFloatRGB(imageSourceB);
 
-var matches = R3D.highDensityMatches(imageFloatA,imageWidthA,imageHeightA,pointsA, imageFloatB,imageWidthB,imageHeightB,pointsB,   this._stage);
+// var matches = R3D.highDensityMatches(imageFloatA,imageWidthA,imageHeightA,pointsA, imageFloatB,imageWidthB,imageHeightB,pointsB,   this._stage);
+// return;
+
+// exhaustive matching test
+// -
+var imageMatA = new ImageMat(imageFloatA.width,imageFloatA.height,imageFloatA.red,imageFloatA.grn,imageFloatA.blu);
+var imageMatB = new ImageMat(imageFloatB.width,imageFloatB.height,imageFloatB.red,imageFloatB.grn,imageFloatB.blu);
+var scale = 1.0;
+var sigma = undefined;
+var matrix = null;
+var needleSize = 11;
+var haystackSizeWidth = 250;
+var haystackSizeHeight = 150;
+// 7/2 = 3 
+// 11/2 = 5 
+// 72,47 + 3 = 75,50 
+// 70,45 + 5 = 75,50 
+var needle = imageMatA.extractRectFromFloatImage(pointsA[0].x,pointsA[0].y,scale,sigma,needleSize,needleSize,matrix);
+var haystack = imageMatB.extractRectFromFloatImage(pointsB[0].x,pointsB[0].y,scale,sigma,haystackSizeWidth,haystackSizeHeight,matrix);
+
+	var d;
+	//d = new DOImage(this._stage.getFloatRGBAsImage(needle.red(),needle.grn(),needle.blu(), needle.width(),needle.height(), matrix, type){);
+	d = new DOImage( haystack.toImage(this._stage) );
+	d.matrix().translate(0,0);
+	this._stage.addChild(d);
+
+	d = new DOImage( needle.toImage(this._stage) );
+	d.matrix().translate(haystack.width(),0);
+	this._stage.addChild(d);
+
+/*
+- image size: [400x300]
+- cell size: [25x25]
+- scale it ?
+- comparrission [7x7]
+*/
+
+// var ssdResult = ImageMat.convolveSSD(haystack,needle);
+// ssdResult.normalFloat01();
+// ssdResult.invertFloat01();
+// d = new DOImage( ssdResult.toImage(this._stage) );
+var ssdResult = ImageMat.convolveSSDScores(haystack,needle);
+//var ssdResult = ImageMat.convolveSSDScores(needle,needle);
+var ssdResultValue = ssdResult.value;
+var ssdResultWidth = ssdResult.width;
+var ssdResultHeight = ssdResult.height;
+
+var extrema = Code.findExtrema2DFloat(ssdResultValue, ssdResultWidth, ssdResultHeight);
+
+// values
+/*
+var extrema = [];
+var max = null;
+var min = null;
+for(var i=0; i<ssdResultValue.length;++i){
+	var x = i%ssdResultWidth;
+	var y = Math.floor(i/ssdResultWidth);
+	extrema[i] = new V3D(x,y,ssdResultValue[i]);
+	if(min==null || ssdResultValue[i]<min){
+		min = ssdResultValue[i];
+	}
+	if(max==null || ssdResultValue[i]>max){
+		max = ssdResultValue[i];
+	}
+}
+console.log("MAX: "+max+" - MIN: "+min);
+*/
+extrema.sort(function(a,b){
+	if(a.z<b.z){
+		return -1;
+	}
+	return 1;
+});
+//console.log(extrema)
+ssdResultValue = ImageMat.normalFloat01(ssdResultValue);
+ssdResultValue = ImageMat.invertFloat01(ssdResultValue);
+var img = this._stage.getFloatGrayAsImage(ssdResultValue, ssdResultWidth, ssdResultHeight);
+d = new DOImage( img );
+
+
+
+	d.matrix().translate(200,100);
+	this._stage.addChild(d);
+
+
+
+for(var i=0; i<extrema.length; ++i){
+var best = extrema[i];
+var p = best;
+	//var r = Math.abs(3.0 * p.z * 0.01);
+	var r = Math.abs((1.0/p.z) * 0.1);
+	var c = new DO();
+	c.graphics().setLine(1.0, 0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(p.x,p.y, r);
+	c.graphics().endPath();
+	c.graphics().strokeLine();
+	this._stage.addChild(c);
+	c.matrix().translate(200,100);
+	console.log("... "+p);
+	if(i==0){
+		break;
+	}
+}
+
+
+
+
+
+/*
+// corner tests
+var imageMat = new ImageMat(imageWidthA,imageHeightA, imageFloatA.red,imageFloatA.grn,imageFloatA.blu);
+var corners = imageMat.corners();
+console.log(corners);
+
+for(var i=0; i<corners.length; ++i){
+	var corner = corners[i];
+	if(i==1000){
+		break;
+	}
+	var p = corner;
+	var r = 3.0;
+
+	var c = new DO();
+	c.graphics().setLine(1.0, 0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(p.x,p.y, r);
+	c.graphics().endPath();
+	c.graphics().strokeLine();
+	this._root.addChild(c);
+}
+*/
 
 }
 
@@ -815,19 +946,14 @@ Manual3DR.prototype._currentMatrixForward = function(){
 	return this._currentMatrixInternal().toArray();
 }
 Manual3DR.prototype._currentMatrix = function(){
-	// this._currentMatrixOrientate();
-	// var mat4 = this._stage3D.getMatrixAsArray();
 	var mat4 = this._currentMatrixForward();
 	var matrix = new Matrix3D().fromArray( mat4 );
-return matrix;
-	//console.log(matrix+"");
+	return matrix;
 	var inverse = Matrix3D.inverse(matrix);
-	//console.log(inverse+"");
 	return inverse;
 }
 
 Manual3DR.prototype._eff = function(e){
-	//console.log(e);
 	var e = this.e?this.e:0;
 	this.e = e; ++this.e;
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);

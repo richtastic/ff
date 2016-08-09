@@ -300,6 +300,7 @@ AreaMap.Range = function(image, width,height, rows,cols) { // image rect
 	this.resetCells();
 }
 AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rotation){
+	console.log("imageAtPoint: "+point);
 	scale = scale!==undefined ? scale : 1.0;
 	var matrix = null;
 	if(rotation!==undefined){
@@ -310,12 +311,6 @@ AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rot
 }
 AreaMap.Range.prototype.matchingClear = function(){
 	// remove all unoriginal matches
-}
-AreaMap.Range.prototype.cellSizeWidth = function(){
-	return this.width()/this._cols;
-}
-AreaMap.Range.prototype.cellSizeHeight = function(){
-	return this.height()/this._rows;
 }
 AreaMap.Range.prototype.mergeRegions = function(regionA, regionB){
 	Code.removeElement(this._regions,regionA);
@@ -640,7 +635,7 @@ AreaMap.Cell.prototype.flag = function(flag){
 		this._flag = flag;
 	}
 	return this._flag;
-}
+};
 AreaMap.Cell.prototype.match = function(match){
 	if(match!==undefined){ // TODO: check if duplicate ?
 		this._matches.push(match);
@@ -648,12 +643,65 @@ AreaMap.Cell.prototype.match = function(match){
 		return true;
 	}
 	return false;
-}
+};
+AreaMap.Cell.prototype.width = function(width){
+	return this.range().cellWidth();
+};
+AreaMap.Cell.prototype.height = function(height){
+	return this.range().cellHeight();
+};
+AreaMap.Cell.prototype.getSizeScale = function(){
+	return Math.max(this.cell().cellWidth()/AreaMap.Feature.CELL_IMAGE_WIDTH, this.cell().cellHeight()/AreaMap.Feature.CELL_IMAGE_HEIGHT);
+};
+AreaMap.Cell.prototype.getCellImage = function(){
+	var windowWidth = this.width();
+	var windowHeight = this.height();
+	var range = this.range();
+	var point = this.centerPoint();
+	console.log("cell image: "+point);
+
+	var windowWidth = AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
+	var windowHeight = AreaMap.Feature.NEEDLE_IMAGE_HEIGHT;
+	var rot = 0.0;
+	var imageToCellScale = Math.max(this.cell().cellWidth()/AreaMap.Feature.CELL_IMAGE_WIDTH, this.cell().cellHeight()/AreaMap.Feature.CELL_IMAGE_HEIGHT);
+	var scale = imageToCellScale;
+	var rotation = 0.0;
+
+	return range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
+};
 AreaMap.Cell.prototype.bestMatchForFeature = function(feature){
 	var cell = feature.cell();
 	var point = feature.point(); 
 	var range = cell.range();
-	var image = AreaMap.Feature.getImage(range, point);
+	console.log("bestMatchForFeature "+point)
+	var needle = AreaMap.Feature.getImage(range, point);
+	// get image based on comparable scle
+
+	// do SSD on internal window (+ margin)
+		// scale?
+		// rotation?
+	// pick best matching point
+		//
+
+	// var cellB = this;
+	// var featureB = cellB.definitiveUniqueFeature();
+	// var pointB = featureB.point();
+	// var rangeB = cellB.range();
+
+	
+	//var windowB = AreaMap.Feature.getImage(rangeB, pointB);
+	var haystack = this.getCellImage();
+
+	var ssds = ImageMat.ssds(haystack,needle);
+
+	if(ssds.length>0){
+		//
+	}else{
+		//
+	}
+
+
+
 	// var gradient = AreaMap.Feature.calculateGradient(image);
 	// var angle =  -V2D.angle(gradient,V2D.DIRX)
 	// var image = AreaMap.Feature.getImage(range, point, angle);
@@ -664,25 +712,19 @@ AreaMap.Cell.prototype.bestMatchForFeature = function(feature){
 				- possibly do some range of scaling [0.75-1.25] to incorporate size changes
 			- use best of all SSDs and add to global queue
 */
-	var cellB = this;
-	var pointB = cellB.centerPoint();
-	var featureB = new AreaMap.Feature(pointB, cellB);
-	var rangeB = cellB.range();
 
-	var windowA = AreaMap.Feature.getImage(range, point);
-	var windowB = AreaMap.Feature.getImage(rangeB, pointB);
 
-	var gradientA = AreaMap.Feature.calculateGradient(windowA);
-	var angleA = gradientA.directionToAngle();
-	var gradientB = AreaMap.Feature.calculateGradient(windowB);
-	var angleB = gradientB.directionToAngle();
+	// var gradientA = AreaMap.Feature.calculateGradient(windowA);
+	// var angleA = gradientA.directionToAngle();
+	// var gradientB = AreaMap.Feature.calculateGradient(windowB);
+	// var angleB = gradientB.directionToAngle();
 
-	windowA = AreaMap.Feature.getImage(range, point, angleA);
-	windowB = AreaMap.Feature.getImage(rangeB, pointB, angleB);
+	// windowA = AreaMap.Feature.getImage(range, point, angleA);
+	// windowB = AreaMap.Feature.getImage(rangeB, pointB, angleB);
 
-	var score = AreaMap.Feature.calculateScore(windowA, windowB);
-	var match = new AreaMap.Match(range,point, featureB.cell().range(),featureB.point(), score);
-	return match;
+	// var score = AreaMap.Feature.calculateScore(windowA, windowB);
+	// var match = new AreaMap.Match(range,point, featureB.cell().range(),featureB.point(), score);
+	// return match;
 };
 AreaMap.Cell.prototype.hasMatch = function(cell){
 	if(cell!==undefined){
@@ -793,10 +835,14 @@ AreaMap.Cell.prototype.isPerimeterCell = function(){
 	return (this._leftType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN) || (this._rightType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN) || (this._upType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN) || (this._downType==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN)
 }
 AreaMap.Cell.prototype.definitiveUniqueFeature = function(){ // most unique point inside cell || center
-	//console.log("most unique point inside cell || center");
-	var point = this.centerPoint();
-	var image = AreaMap.Feature.getImage(this.range(), point, false);
-	//var gradient = AreaMap.Feature.calculateGradient(image);
+	var image = this.getCellImage();
+	var corners = image.corners();
+	var point = null;
+	if(corners.length>0){ // best corner = first
+		point = new V2D(corners[0].x,corners[0].y);
+	}else{
+		point = this.centerPoint();
+	}
 	var feature = new AreaMap.Feature(point, this);
 	return feature;
 }
@@ -808,34 +854,36 @@ AreaMap.Feature = function(point, cell){
 	this._relativeScale = 1.0;
 	this.point(point);
 	this.cell(cell);
-}
+};
 AreaMap.Feature.prototype.point = function(point){
 	if(point!==undefined){
 		this._point = point;
 	}
 	return this._point;
-}
+};
 AreaMap.Feature.prototype.cell = function(cell){
 	if(cell!==undefined){
 		this._cell = cell;
 	}
 	return this._cell;
-}
+};
 AreaMap.Feature.prototype.gradientAngle = function(){
 	return V2D.angle(V2D.DIRX,this._gradientDirection);
-}
+};
 
-AreaMap.Feature.NEEDLE_IMAGE_WIDTH = 7; // should be scaled / sized based on cell size 
+AreaMap.Feature.NEEDLE_IMAGE_WIDTH = 7;
 AreaMap.Feature.NEEDLE_IMAGE_HEIGHT = 7;
+AreaMap.Feature.CELL_IMAGE_WIDTH = 25;
+AreaMap.Feature.CELL_IMAGE_HEIGHT = 25;
 
-AreaMap.Feature.getImage = function(range, point, rotated){
+AreaMap.Feature.getFeatureImage = function(range, point){
 	var windowWidth = AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
 	var windowHeight = AreaMap.Feature.NEEDLE_IMAGE_HEIGHT;
 	var rot = 0.0;
-	if (rotated!==undefined){
-		rot = rotated; // angle
-	}
-	return range.imageAtPoint(point,windowWidth,windowHeight,1.0, rot);
+	var imageToCellScale = this.cell().getSizeScale();
+	var scale = imageToCellScale;
+	var rotation = 0;
+	return range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
 };
 AreaMap.Feature.calculateGradient = function(windowImageMat){
 	return windowImageMat.calculateGradient();
@@ -843,16 +891,16 @@ AreaMap.Feature.calculateGradient = function(windowImageMat){
 AreaMap.Feature.calculateScore = function(windowA, windowB){
 	return ImageMat.ssdEqual(windowA, windowB);
 };
-AreaMap.Feature.prototype.getImage = function(rotated){
-	return AreaMap.Feature.getImage(this.range(),this.point(),rotated);
+AreaMap.Feature.prototype.getFeatureImage = function(rotated){
+	return AreaMap.Feature.getFeatureImage(this.range(),this.point(),rotated);
 };
 AreaMap.Feature.prototype.calculateGradient = function(){
-	var window = this.getImage(false);
+	var window = this.getImage();
 	this._gradientDirection = AreaMap.calculateGradient(window);
 };
 AreaMap.Feature.prototype.calculateScore = function(){
-	var windowA = this.getImage(true);
-	var windowB = this.match().getImage(true);
+	var windowA = this.getImage();
+	var windowB = this.match().getImage();
 	return AreaMap.calculateScore(windowA,windowB);
 };
 AreaMap.Feature.prototype.kill = function(){
@@ -861,7 +909,7 @@ AreaMap.Feature.prototype.kill = function(){
 	this._cell = null;
 	this._gradientDirection = null;
 	this._relativeScale = null;
-}
+};
 /*
 start off from known points, work outward
  for each point blob / circle / pixel

@@ -952,6 +952,118 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 }
 // INNER CONVOLUTION?
 
+ImageMat.convolveSSDScores = function(haystack,needle) {
+	/*
+	var result = ImageMat.convolveSSD(haystack,needle);
+	var wid = result.width();
+	var hei = result.height();
+	var count = wid*hei;
+	var scores = [];
+	var red = result.red();
+	var grn = result.grn();
+	var blu = result.blu();
+	for(i=0; i<count; ++i){
+		scores[i] = (red[i]+grn[i]+blu[i])/3.0;
+		scores[i] = (red[i]+grn[i]+blu[i])/3.0;
+		scores[i] = (red[i]+grn[i]+blu[i])/3.0;
+	}
+	return {"value":scores, "width":wid, "height":hei};
+	*/
+	var gry = ImageMat.convolveSSDFloat(haystack.gry(),haystack.width(),haystack.height(), needle.gry(),needle.width(),needle.height());
+	var red = ImageMat.convolveSSDFloat(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
+	var grn = ImageMat.convolveSSDFloat(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
+	var blu = ImageMat.convolveSSDFloat(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
+		gry = gry.value;
+		red = red.value;
+		grn = grn.value;
+		blu = blu.value;
+	var wid = haystack.width()-needle.width()+1;
+	var hei = haystack.height()-needle.height()+1;
+	var count = wid*hei;	
+	var scores = [];
+	for(i=0; i<count; ++i){
+		//scores[i] = (red[i]+grn[i]+blu[i]);
+		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
+		scores[i] = gry[i];
+	}
+	return {"value":scores, "width":wid, "height":hei};
+
+}
+ImageMat.convolveSSD = function(haystack,needle) {
+	var red = ImageMat.convolveSSDFloat(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
+	var grn = ImageMat.convolveSSDFloat(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
+	var blu = ImageMat.convolveSSDFloat(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
+	return new ImageMat(red.width,red.height, red.value,grn.value,blu.value);
+}
+ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, needle,needleWidth,needleHeight) { // normalized ssd single channel
+	if(needleWidth>haystackWidth){ // flipped
+		console.log("FLIPPED");
+		return null;
+	}
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth * resultHeight;
+	if(resultCount<=0){
+		return [];
+	}
+	//
+	var minN = Math.min.apply(this,needle);
+	var maxN = Math.max.apply(this,needle);
+	var rangeN = maxN-minN;
+	rangeN = rangeN==0.0 ? 1.0 : 1.0/rangeN;
+	//
+	var result = new Array();
+	for(var j=0; j<resultHeight; ++j){
+		for(var i=0; i<resultWidth; ++i){
+			var resultIndex = j*resultWidth + i;
+			var ssd = 0;
+			var maxH = null;
+			var minH = null;
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					maxN = maxN==null || maxN<n ? n : maxN;
+					minN = minN==null || minN>n ? n : minN;
+				}
+			}
+			var rangeH = maxH-minH;
+			rangeH = rangeH==0.0 ? 1.0 : 1.0/rangeH;
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					ssd += Math.pow( rangeN*(n-minN) - rangeH*(h-minH),2);
+				}
+			}
+			result[resultIndex] = ssd;
+		}
+	}
+	return {"value":result,"width":resultWidth,"height":resultHeight};
+}
+
+
+ImageMat.ssds = function(windowA, windowB){ // TODO: make tihs SSD not conv
+	var convolveRed = ImageMat.convolve(windowA.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());
+	var convolveGrn = ImageMat.convolve(windowA.grn(),windowA.width(),windowA.height(), windowB.grn(),windowB.width(),windowB.height());
+	var convolveBlu = ImageMat.convolve(windowA.blu(),windowA.width(),windowA.height(), windowB.blu(),windowB.width(),windowB.height());
+	var wid = windowA.width();
+	var hei = windowA.height();
+	var scores = [];
+	for(var i=0; i<convolveRed.length; ++i){
+		scores[i] = convolveRed[i] + convolveGrn[i] + convolveBlu[i];
+	}
+	var scores  = Code.findExtrema2DFloat(scores,wid,hei);
+	scores = scores.sort(function(a,b){
+		return Math.abs(a.z)<Math.abs(b.z) ? -1 : 1;
+	});
+	return scores;
+}
+
 ImageMat.ssdEqual = function(windowA, windowB){
 	//var score = ImageMat.ssd(windowA.image,windowA.width,windowA.height, windowB.image,windowB.width,windowB.height);
 	var scoreRed = Code.SSDEqual(windowA.red(),windowB.red());
@@ -1229,6 +1341,17 @@ ImageMat.normFloats3D = function(x,y,z){
 		}
 	}
 }
+ImageMat.prototype._op = function(fxn){
+	fxn(this._r);
+	fxn(this._g);
+	fxn(this._b);
+}
+ImageMat.prototype.normalFloat01 = function(){
+	this._op(ImageMat.normalFloat01);
+}
+ImageMat.prototype.invertFloat01 = function(){
+	this._op(ImageMat.invertFloat01);
+}
 ImageMat.normalFloat01 = function(data){
 	var i, len = data.length;
 	var max = data[0], min = data[0];
@@ -1237,6 +1360,7 @@ ImageMat.normalFloat01 = function(data){
 		min = Math.min(min,data[i]);
 	}
 	var range = max - min;
+	if(range==0){range = 1.0;}
 	for(i=0;i<len;++i){
 		data[i] = (data[i]-min)/range;
 	}
@@ -1598,6 +1722,26 @@ ImageMat.floatToOctave = function(src,wid,hei){
 	str += "mesh(tx,ty,tz);";
 	return str;
 }
+ImageMat.prototype.corners = function(){
+	var width = this.width();
+	var height = this.height();
+	// TODO add padding and trim edge corners
+	var cornerScores = R3D.harrisCornerDetection(this.gry(), width, height);//, konstant, sigma);
+	var corners  = Code.findExtrema2DFloat(cornerScores,width,height);
+	corners = corners.sort(function(a,b){
+		return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
+	});
+	return corners;
+	// // corners
+	// var cornerThreshold = 0.55;
+	// var cornerMat = [0.25,-0.5,0.25, -0.5,1,-0.5, 0.25,-0.5,0.25];
+	// var cornerRed = ImageMat.convolve(red,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerRed); ImageMat.applyFxnFloat(cornerRed, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerRed);
+	// var cornerGrn = ImageMat.convolve(grn,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerGrn); ImageMat.applyFxnFloat(cornerGrn, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerGrn);
+	// var cornerBlu = ImageMat.convolve(blu,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerBlu); ImageMat.applyFxnFloat(cornerBlu, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerBlu);
+	// var cornerGry = ImageMat.convolve(gry,wid,hei, cornerMat, 3,3); ImageMat.normalFloat01(cornerGry); ImageMat.applyFxnFloat(cornerGry, ImageMat.flipAbsFxn); ImageMat.normalFloat01(cornerGry);
+	// imageCornerRGB.setFromFloats(cornerRed, cornerGrn, cornerBlu);
+	// imageCornerGry.setFromFloats(cornerGry, cornerGry, cornerGry);
+}
 ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
 	console.log("USE R3D");
 	return null;
@@ -1753,7 +1897,9 @@ ImageMat._BL = new V2D();
 ImageMat.extractRectFromFloatImageBasic = function(x,y, outWidth,outHeight, source,sourceWidth,sourceHeight){
 	return ImageMat.extractRectFromFloatImage(x,y,1.0,null, outWidth,outHeight, source,sourceWidth,sourceHeight,null);
 }
-
+ImageMat.prototype.toImage = function(stage){
+	return stage.getFloatRGBAsImage(this.red(),this.grn(),this.blu(), this.width(),this.height());
+}
 ImageMat.prototype.extractRectFromFloatImage = function(x,y,scale,sigma,w,h,matrix){
 	var red = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._r,this._width,this._height, matrix);
 	var grn = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._g,this._width,this._height, matrix);

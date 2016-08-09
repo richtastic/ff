@@ -44,6 +44,13 @@ PNG._CHUNK_TYPE_BKGD = "bkgd";
 PNG._CHUNK_TYPE_HIST = "hist";
 PNG._CHUNK_TYPE_SPLT = "splt";
 PNG._CHUNK_TYPE_TIME = "time";
+// APNG:
+PNG._CHUNK_ACTL = [97,  99,  84,  76]; // acTL : ? - animation controle
+PNG._CHUNK_FCTL = [102, 99,  84,  76]; // fcTL : ? - frame control
+PNG._CHUNK_FDAT = [102, 100, 65,  84]; // fdAT : ? - frame data
+PNG._CHUNK_TYPE_ACTL = "actl";
+PNG._CHUNK_TYPE_FCTL = "fctl";
+PNG._CHUNK_TYPE_FDAT = "fdat";
 //                                                                   3         2         1
 //                                                                 210987654321098765432109876543210
 PNG._CRC_BEGIN = 0x0; // 32 26 23 22 16 12 11 10 8 7 5 4 2 1 0 =  0b100000100110000010001110110110111
@@ -97,6 +104,7 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 	var start = chunk.dataOffset; // length + header
 	var length = chunk.dataLength;
 	var end = start + length;
+	//console.log("----------------------------------------------------------------------- start:"+start+" length: "+length);
 	var type = chunk.type;
 	if(type==PNG._CHUNK_TYPE_IHDR){ // 4 | 4 | 1 | 1 | 1 | 1 | 1 = 13 bytes
 		var width = binaryArray[start+0]<<24 | 
@@ -250,7 +258,7 @@ PNG._processImage = function(outputResult, binaryArray){
 	}
 	var i, j, index;
 	// combine all idata into single stream
-	console.log("  . combining compressed image data");
+	console.log("  . combining compressed image data: "+imageData);
 	var totalDataLength = 0;
 	for(i=0; i<imageData.length; ++i){
 		totalDataLength += imageData[i][1];
@@ -267,13 +275,13 @@ PNG._processImage = function(outputResult, binaryArray){
 			++index;
 		}
 	}
-	console.log(compressedImageData.length);
+	console.log(" compressed data length: "+compressedImageData.length);
 
 	var colorType = outputResult.colorType;
 	var filterMethod = outputResult.filterMethod;
 	// if filtered, inverse filter
 
-
+	console.log("... DECOMPRESSING LZ77 ... : "+compressedImageData.length+" / "+totalDataLength);
 	//console.log(compressedImageData);
 	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
 	// interlace method
@@ -332,7 +340,7 @@ PNG._readChunk = function(binaryArray,offset,length){ // header:4 | length:4 | d
 					(binaryArray[i+3]<<0 );
 	i += 4;
 	var chunkType = PNG._chunkTypeFromArray(chunkHeader);
-	console.log("chunk: "+chunkHeader+" ("+chunkLength+") | "+chunkType);
+	console.log("  _ chunk: "+chunkHeader+" ("+chunkLength+") | "+chunkType);
 	return {"length":fullChunkLength, "offset":offset, "type":chunkType, "chunk":chunkHeader, "data":chunkData, "dataOffset":dataOffset, "dataLength":chunkLength, "crc":chunkCRC, "next":i};
 }
 PNG._chunkTypeFromArray = function(array){
