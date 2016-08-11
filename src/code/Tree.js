@@ -1,7 +1,7 @@
 // Tree.js
 
 function Tree(dat,par){
-	this._children = new Array();
+	this._children = [];
 	this._parent = null;
 	this._data = null;
 	this._ownsData = false;
@@ -45,6 +45,51 @@ Tree.prototype.lastChild = function(){
 
 Tree.prototype.children = function(){ // readonly
 	return this._children;
+}
+
+Tree.prototype.hasChildren = function(){
+	return this._children.length>0;
+}
+
+// binary tree
+Tree.prototype.left = function(l){
+	if(l!==undefined){
+		this._children[0] = l;
+	}
+	if(this._children.length>0){
+		return this._children[0];
+	}
+	return null;
+}
+Tree.prototype.right = function(r){
+	if(r!==undefined){
+		this._children[1] = r;
+	}
+	if(this._children.length>1){
+		return this._children[1];
+	}
+	return null;
+}
+
+Tree.prototype._toString = function(str, ind, bin){
+}
+
+Tree.prototype.toString = function(str, ind, bin){
+	str = str!==undefined ? str : "";
+	ind = ind!==undefined ? ind : "  ";
+	bin = bin!==undefined ? bin : true;
+	var i, len = this._children.length;
+	str = str + " [" + this.data() +"]  \n";
+	ind = ind + "  ";
+	for(i=0; i<len; ++i){
+		var let = bin ? (i==0?"L":"R") : "";
+		if(this._children[i]){
+			str = str + ind + (bin?" -"+let+"-> ":" ->") + this._children[i].toString("",ind,bin);
+		}else{
+			str = str + ind + (bin?" -"+let+"-> ":" ->") + " [X] \n";
+		}
+	}
+	return str;
 }
 
 // -------------------------------------------------------------------------------------------------------------------- 

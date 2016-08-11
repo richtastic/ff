@@ -664,6 +664,13 @@ Code.maxArray = function(a){
 Code.minArray = function(a){
 	return Math.min.apply(this,a);
 }
+Code.sumArray = function(a){
+	var i, sum = 0, len = a.length;
+	for(i=0; i<len;++i){
+		sum += a[i];
+	}
+	return sum;
+}
 //console.log( Code.secondMax(1,2,42,34,23,7) );
 	//console.log( Math.max([1,2,42,34,23,7]) ); // NO
 	//console.log( Math.max.call(this,[1,2,42,34,23,7]) ); // NO
@@ -775,6 +782,9 @@ Code.intToBinaryString = function(num,cnt){
 		ander <<= 1;
 	}
 	return str;
+}
+Code.getBitFromRight = function(binaryCode,i){
+	return ((binaryCode >> i) & 0x01);
 }
 // angles ----------------------------------------------------
 Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
