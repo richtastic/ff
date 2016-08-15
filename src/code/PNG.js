@@ -86,6 +86,7 @@ PNG.binaryArrayToFloatARGB = function(binaryArray){
 	while(chunk!=null){
 		PNG._processChunk(chunk,binaryArray,outputResult);
 		i = chunk.next;
+		console.log(" chunk: "+i+" / "+binaryArray.length);
 		chunk = PNG._readChunk(binaryArray,i);
 	}
 	PNG._processImage(outputResult,binaryArray);
@@ -106,6 +107,7 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 	var end = start + length;
 	//console.log("----------------------------------------------------------------------- start:"+start+" length: "+length);
 	var type = chunk.type;
+	console.log("type:                                               "+chunk.type);
 	if(type==PNG._CHUNK_TYPE_IHDR){ // 4 | 4 | 1 | 1 | 1 | 1 | 1 = 13 bytes
 		var width = binaryArray[start+0]<<24 | 
 					binaryArray[start+1]<<16 | 
@@ -196,7 +198,7 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 			}
 			// remaining assumed to be 0xFF
 			outputResult["alpha_palette"] = table;
-			console.log("PLTE: table="+length);
+			console.log("TRNS: table="+length);
 			// TODO - COMBINE ALPH AND COLOR PALETTES
 		}else{
 			console.log("TRNS: ERROR: "+length+" | "+colorType);
@@ -239,8 +241,10 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 		}
 		outputResult["imageData"].push([start,length])
 		console.log("IDAT: "+start+" : "+length);
+	}else if(type==PNG._CHUNK_TYPE_IEND){ // multiple IDATs are conactenated (as compressed) then decompressed as a single stream
+		console.log("IEND");
 	}else{
-		//console.log("unknown type: "+type);
+		console.log("unknown type: "+type);
 	}
 	// switch(type){
 	// 	PNG._CHUNK_TYPE_IHDR:
@@ -281,7 +285,7 @@ PNG._processImage = function(outputResult, binaryArray){
 	var filterMethod = outputResult.filterMethod;
 	// if filtered, inverse filter
 
-	console.log("... DECOMPRESSING LZ77 ... : "+compressedImageData.length+" / "+totalDataLength);
+	console.log("... DECOMPRESSING LZ77 ... : "+compressedImageData.length+" / "+totalDataLength+"              -----------------------------------------------------------------------------------------------------           ");
 	//console.log(compressedImageData);
 	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
 	// interlace method
@@ -314,31 +318,35 @@ PNG._processImage = function(outputResult, binaryArray){
 PNG._readChunk = function(binaryArray,offset,length){ // header:4 | length:4 | data:N | crc:4
 	length = length!==undefined ? length : binaryArray.length;
 	var i, j, k, a, b, found;
-	if(offset+4>=length){
+	if(offset+4>=length){ // no more headers can be read
 		return null;
 	}
 	var chunkLength =	(binaryArray[offset+3]<<0 ) |
 						(binaryArray[offset+2]<<8 ) |
 						(binaryArray[offset+1]<<16) |
 						(binaryArray[offset+0]<<24);
-	var fullChunkLength = 4 + 4 + chunkLength + 4;
+	var fullChunkLength = chunkLength;
 	if(offset+8>=length){
-		return null;
+		console.log("WHAT DOES THIS MEAN?");
+		// ????
+	}else{
+		fullChunkLength += 4 + 4 + 4;
+		var dataOffset = 4 + 4 + offset;
+		var chunkHeader = [binaryArray[offset+4], binaryArray[offset+5], binaryArray[offset+6], binaryArray[offset+7]];
+		var chunkData = [];
+		for(i=offset+8, j=0; i<length && j<chunkLength; ++i, ++j){
+			chunkData.push(binaryArray[i]);
+		}
+		if(i+4>=length){ // NO CRC
+			//return null;
+		}else { // CRC
+			var chunkCRC = (binaryArray[i+0] <<24) |
+							(binaryArray[i+1]<<16) |
+							(binaryArray[i+2]<<8 ) |
+							(binaryArray[i+3]<<0 );
+			i += 4;
+		}
 	}
-	var dataOffset = 4 + 4 + offset;
-	var chunkHeader = [binaryArray[offset+4], binaryArray[offset+5], binaryArray[offset+6], binaryArray[offset+7]];
-	var chunkData = [];
-	for(i=offset+8, j=0; i<length && j<chunkLength; ++i, ++j){
-		chunkData.push(binaryArray[i]);
-	}
-	if(i+4>=length){
-		return null;
-	}
-	var chunkCRC = (binaryArray[i+0] <<24) |
-					(binaryArray[i+1]<<16) |
-					(binaryArray[i+2]<<8 ) |
-					(binaryArray[i+3]<<0 );
-	i += 4;
 	var chunkType = PNG._chunkTypeFromArray(chunkHeader);
 	console.log("  _ chunk: "+chunkHeader+" ("+chunkLength+") | "+chunkType);
 	return {"length":fullChunkLength, "offset":offset, "type":chunkType, "chunk":chunkHeader, "data":chunkData, "dataOffset":dataOffset, "dataLength":chunkLength, "crc":chunkCRC, "next":i};

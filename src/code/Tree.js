@@ -80,7 +80,7 @@ Tree.prototype.toString = function(str, ind, bin){
 	bin = bin!==undefined ? bin : true;
 	var i, len = this._children.length;
 	str = str + " [" + this.data() +"]  \n";
-	ind = ind + "  ";
+	ind = ind + "   ";
 	for(i=0; i<len; ++i){
 		var let = bin ? (i==0?"L":"R") : "";
 		if(this._children[i]){

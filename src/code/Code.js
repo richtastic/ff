@@ -786,6 +786,14 @@ Code.intToBinaryString = function(num,cnt){
 Code.getBitFromRight = function(binaryCode,i){
 	return ((binaryCode >> i) & 0x01);
 }
+Code.reverseBits = function(value,bits){
+	var rev = 0;
+	for(var i=0; i<bits; ++i){
+		rev <<= 1;
+		rev |= ((value >> i)&0x1);
+	}
+	return rev;
+}
 // angles ----------------------------------------------------
 Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
 	var nB = a-b;

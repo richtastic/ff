@@ -27,6 +27,7 @@ function Formats(){
 	ajax.binary(true);
 	//ajax.binary(false);
 	ajax.get("./image_.1.png",this,this._handleLoaded,null);
+	//ajax.get("./image.png",this,this._handleLoaded,null);
 	//ajax.();
 }
 Formats.prototype._handleLoaded = function(response){
