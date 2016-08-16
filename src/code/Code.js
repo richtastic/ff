@@ -712,6 +712,7 @@ Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
     	var d;
     	if(year===undefined){
     		d = Code.getTimeMilliseconds(true);
+    		d = new Date(d);
     	}else{
     		d = new Date(year);
     	}

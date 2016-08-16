@@ -176,7 +176,7 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 		if(length%3==0){// && colorType==3){ // 3 | 2,6
 			var i, j, red, grn, blu;
 			var table = [];
-			for(i=0;i<length;i+=3,j+=1){
+			for(i=0,j=0;i<length;i+=3,j+=1){
 				red = binaryArray[start+i+0];
 				grn = binaryArray[start+i+1];
 				blu = binaryArray[start+i+2];
@@ -192,9 +192,9 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 		if(length>=0){ // && colorType==3){ // 0,2,3
 			var i, j, alp;
 			var table = [];
-			for(i=0;i<length;i+=3,j+=1){
-				alph = binaryArray[start+i+0];
-				table[j] = alp;
+			for(i=0;i<length;i+=1){
+				alp = binaryArray[start+i];
+				table[i] = alp;
 			}
 			// remaining assumed to be 0xFF
 			outputResult["alpha_palette"] = table;
@@ -272,9 +272,8 @@ PNG._processImage = function(outputResult, binaryArray){
 	for(i=0; i<imageData.length; ++i){
 		var start = imageData[i][0];
 		var length = imageData[i][1];
-		var end = start + length - 1;
+		var end = start + length;
 		for(j=start; j<end; ++j){
-			//console.log(j+": "+binaryArray[j]);
 			compressedImageData[index] = binaryArray[j];
 			++index;
 		}
@@ -287,7 +286,68 @@ PNG._processImage = function(outputResult, binaryArray){
 
 	console.log("... DECOMPRESSING LZ77 ... : "+compressedImageData.length+" / "+totalDataLength+"              -----------------------------------------------------------------------------------------------------           ");
 	//console.log(compressedImageData);
+
+//Compress.writeNBitsToBytes = function(outputArray, offsetOutputBits, sourceBits, lengthBits, fromLSB){
+	var outputArray = [];
+	var offsetOutput = 0;
+
+// TESTING WRITING BITS
+// 	offsetOutput += Compress.writeNBitsToBytes(outputArray, offsetOutput, 0x00000002, 4, false);
+// 	console.log(offsetOutput);
+// 	offsetOutput += Compress.writeNBitsToBytes(outputArray, offsetOutput, 0x00000013, 8, false);
+// 	console.log(offsetOutput);
+// 	offsetOutput += Compress.writeNBitsToBytes(outputArray, offsetOutput, 0x00000044, 6, false);
+// 	console.log(offsetOutput);
+// 	console.log(outputArray);
+// 	// 00000010|00010011|01000100
+// 	// 00100001|00110100|0100000 = 33 | 3
+// return;
+
 	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
+
+var stage = GLOBALSTAGE;
+
+var imageWidth = outputResult["width"];
+var imageHeight = outputResult["height"];
+var imageWidthP1 = imageWidth + 1;
+
+	console.log("outputResult")
+	console.log(outputResult)
+	console.log(imageWidth+"x"+imageHeight);
+	var palette = outputResult["palette"];
+	var alphaPallette = outputResult["alpha_palette"];
+
+	console.log(palette)
+	console.log(alphaPallette)
+
+	console.log("got decompressed data:"+decompressed.length);
+var d = new DO();
+stage.addChild(d);
+var size = 5;
+	for(i=0;i<decompressed.length;++i){
+		var x = (i%imageWidthP1);
+		var y = Math.floor(i/imageWidthP1);
+		// var x = (i%imageHeight);
+		// var y = Math.floor(i/imageHeight);
+		//console.log(x,y)
+		var index = decompressed[i];
+		//console.log(index);
+		var color = palette[index];
+		//console.log(color);
+		var r = color.x;
+		var g = color.y;
+		var b = color.z;
+		var a = alphaPallette[index];
+		//a = 0xFF;
+		color = Code.getColARGB(a,r,g,b);
+		d.graphics().setFill(color);
+		d.graphics().beginPath();
+		d.graphics().drawRect(x*size,y*size,size,size);
+		d.graphics().endPath();
+		d.graphics().fill();
+
+		//console.log(decompressed[i]);
+	}
 	// interlace method
 	// 0 = left-right sequentially
 	// 1 = scanline

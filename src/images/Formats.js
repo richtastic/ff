@@ -26,9 +26,10 @@ function Formats(){
 	var ajax = new Ajax();
 	ajax.binary(true);
 	//ajax.binary(false);
-	ajax.get("./image_.1.png",this,this._handleLoaded,null);
-	//ajax.get("./image.png",this,this._handleLoaded,null);
+	//ajax.get("./image_.1.png",this,this._handleLoaded,null);
+	ajax.get("./image.png",this,this._handleLoaded,null);
 	//ajax.();
+GLOBALSTAGE = this._stage;
 }
 Formats.prototype._handleLoaded = function(response){
 	//console.log(response);
