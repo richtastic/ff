@@ -145,214 +145,60 @@ if(true){
 	console.log("uncompress data: @"+compressedDataOffset+" -> "+compressedDataLength+" ================================================= ");
 	console.log(inputArray[currentIndex]);
 
-	// var adler32 = Compress.readNBitsFromBytes(inputArray, (compressedDataOffset+compressedDataLength)*8, 32);
-	// console.log(" ADLER32 FOUND: "+adler32);
 
-	// console.log("bytes:");
-	// for(var i=0; i<compressedDataLength; ++i){
-	// 	console.log(Code.prependFixed(i+"","0",3)+": "+inputArray[i+compressedDataOffset] );
-	// }
+var should = 0;
+var currentBitIndex = compressedDataOffset*8;
+var isLastBlock = false
+var blockCount = 0;
+while(!isLastBlock){
+	console.log("block: "+blockCount+".............................");
+	++blockCount;
+	if(blockCount>25){
+		break;
+	}
 
-	var uncompressedData = [];
+		// READ BLOCK HEADER
 
-	// READ BLOCK HEADER
-	var currentBitIndex = compressedDataOffset*8;
-	console.log("read block at bit: "+currentBitIndex+" ( "+compressedDataOffset+" bytes ) ");
-	// LZ77 starts at LSB of Byte:
-	// block begins with 3 header bits : BFINAL=1 | BTYPE=2
-	var bfinal = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 1, true); currentBitIndex += 1; // first bit -- BFINAL == 1 if last black
-	var btype = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 2, true); currentBitIndex += 2; // next 2 bits -- 00==no compression, 01==fixed huffman, 10==dynamic huffman, 11 = N/A
-	console.log(" _ BFINAL: "+bfinal+"  BTYPE:"+btype+"...........................................................................");
+		console.log("read block at bit: "+currentBitIndex+" ( "+compressedDataOffset+" bytes ) ");
+		// LZ77 starts at LSB of Byte:
+		// block begins with 3 header bits : BFINAL=1 | BTYPE=2
+		var bfinal = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 1, true); currentBitIndex += 1; // first bit -- BFINAL == 1 if last black
+		var btype = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 2, true); currentBitIndex += 2; // next 2 bits -- 00==no compression, 01==fixed huffman, 10==dynamic huffman, 11 = N/A
+		console.log(" _ BFINAL: "+bfinal+"  BTYPE:"+btype+"...........................................................................");
+	isLastBlock = bfinal==1;
 
-
-var huffmanTreeLiterals = null;
-var huffmanTreeDistances = null;
-
-
-
-var codeAlphabetOrder = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]; // random permutation lookup table -- 19
-var codeAlphabetOrderLength = codeAlphabetOrder.length;
-
-	if(btype==0x3){
-		console.log("error, type 0b0011 reserved");
-		
-	}else if(btype==0x0){
-		console.log("btype == 0 = NO COMPRESSION");
-		/*
-		// ignore bits up to next byte boundary
-		//var next = currentBitIndex+1;
-		var byt = inputArray[next];
-		console.log("TO READ: "+byt ); //  215 = 1101|0111
-		var len = Compress.readNBitsFromBytes(inputArray, currentBitIndex 16, true);// first 2 bytes - LEN == number of bytes in data
-		next += 2;
-		var nlen = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 16, true);// next 2 bytes - NLEN = 1s compliment of LEN
-		console.log("LEN: "+len+" | NLEN:"+nlen);
-		// LEN: 55139 | NLEN:24672
-	   // 9876543210987654321098765432109876543210
-		*/
-	}else if(btype==0x1 || btype==0x2){ // compressed
-		//console.log("btype == 01 || 10 = COMPRESSION");
-		if(btype==0x1){
-			console.log("01 = fixed huffman");
-			// generate literal code length array:
-			var huffman_code_literal_values = [0,144,256,280,288];
-			var huffman_code_literal_bits = [8,9,7,8];
-
-			var literalCodeLengths = [];
-			var literalIndex = 0;
-			var bitCount = huffman_code_literal_bits[literalIndex];
-			var literal = huffman_code_literal_values[literalIndex];
-			while(literalIndex<huffman_code_literal_values.length-1){
-				if(literal>=huffman_code_literal_values[literalIndex+1]){
-					++literalIndex;
-					literal = huffman_code_literal_values[literalIndex];
-					bitCount = huffman_code_literal_bits[literalIndex];
-				}else{
-					literalCodeLengths[literal] = bitCount;
-					++literal;
-				}
-			}
-			console.log(literalCodeLengths)
-			var literalHuffmanCodes = Compress.huffmanCodesFromLengths(literalCodeLengths);
-			console.log(literalHuffmanCodes)
-			var literalHuffmanTree = Compress.huffmanTreeFromCodes(literalHuffmanCodes);
-			console.log(literalHuffmanTree);
-
-			// generate distance array + codes + tree
-			var distanceCodeLengths = [];
-			for(i=0; i<32; ++i){ // 0-29 used, 30-31 unused
-				distanceCodeLengths[i] = 5;
-			}
-			var distanceHuffmanCodes = Compress.huffmanCodesFromLengths(distanceCodeLengths);
-			console.log(distanceHuffmanCodes);
-			var distanceHuffmanTree = Compress.huffmanTreeFromCodes(distanceHuffmanCodes);
-			console.log(distanceHuffmanTree);
-
-			huffmanTreeLiterals = literalHuffmanTree;
-			huffmanTreeDistances = distanceHuffmanTree;
-
-			// loooping...
-		}else if(btype==0x2){ // huffman tables provided in data
-			console.log("10 = dynamic huffman"); 
-			var huffman = [];
-				var HLIT = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 5, true); currentBitIndex += 5;
-					var codeLengthLiteralCount = HLIT + 257;
-				var HDIST = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 5, true); currentBitIndex += 5;
-					var codeLengthDistanceCount = HDIST + 1;
-				var HCLEN = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 4, true); currentBitIndex += 4;
-					var codeLengthsCodeCount = HCLEN + 4;
-				var codeLengthValuesCount = codeLengthLiteralCount + codeLengthDistanceCount; // HLIT + HDSIT + 258
-			console.log("HLIT: "+HLIT);
-			console.log(" -> codeLengthLiteralCount: "+codeLengthLiteralCount);
-			console.log("HDIST: "+HDIST);
-			console.log(" -> codeLengthDistanceCount: "+codeLengthDistanceCount);
-			console.log("HCLEN: "+HCLEN);
-			console.log(" -> codeLengthsCodeCount: "+codeLengthsCodeCount);
-			console.log("codeLengthValuesCount: "+codeLengthValuesCount);
+	var huffmanTreeLiterals = null;
+	var huffmanTreeDistances = null;
 
 
+
+		if(btype==0x3){
+			console.log("error, type 0b0011 reserved");
 			
-			var i, j;
-			var compressed_code_lengths = Code.newArrayZeros(codeAlphabetOrderLength);
-			// CODE LENGTHS
-			for(i=0; i<codeLengthsCodeCount; ++i){
-				var bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 3, true); currentBitIndex += 3;
-				//var bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 1, true); currentBitIndex += 1;
-				console.log(i+": "+bits);
-				//bits = Code.reverseBits(bits,3);
-				var index = codeAlphabetOrder[i]; // translate from read value to lookup table value
-				compressed_code_lengths[index] = bits;
-			}
-			var compressed_huffman_codes = Compress.huffmanCodesFromLengths(compressed_code_lengths);
-			var huffmanTree = Compress.huffmanTreeFromCodes(compressed_huffman_codes);
-			console.log("huffmanTree");
-			console.log(huffmanTree.toString());
-			console.log("huffman Tree Codes");
-			console.log( Compress.printHuffmanTree(huffmanTree) );
+		}else if(btype==0x0){
+			console.log("btype == 0 = NO COMPRESSION");
+			/*
+			// ignore bits up to next byte boundary
+			//var next = currentBitIndex+1;
+			var byt = inputArray[next];
+			console.log("TO READ: "+byt ); //  215 = 1101|0111
+			var len = Compress.readNBitsFromBytes(inputArray, currentBitIndex 16, true);// first 2 bytes - LEN == number of bytes in data
+			next += 2;
+			var nlen = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 16, true);// next 2 bytes - NLEN = 1s compliment of LEN
+			console.log("LEN: "+len+" | NLEN:"+nlen);
+			// LEN: 55139 | NLEN:24672
+		   // 9876543210987654321098765432109876543210
+			*/
 
-			// GET HUFFMAN CODES FROM LIST OF CODE LENGTHS
-
-		console.log("reading in literals and distances");
-			// LITERAL LENGTHS //  USING HUFFMAN TREE CODES
-var prevCodeLength = 0;
-var codeLengths = null;
-var codeLengthsLiterals = [];
-var codeLengthsDistances = [];
-			for(i=0; i<codeLengthValuesCount; ++i){
-				if(i<codeLengthLiteralCount){
-					codeLengths = codeLengthsLiterals;
-				}else{
-					codeLengths = codeLengthsDistances;
-				}
-				//console.log(i+" / "+codeLengthValuesCount);
-				if(i<codeLengthLiteralCount){
-					// literals & lengths sequence
-				}else{
-					// distance sequence
-				}
-// The code length repeat codes can cross from HLIT + 257 to the HDIST + 1 code lengths. In other words, all code lengths form a single sequence of HLIT + HDIST + 258 values.
-				var symbol = Compress.readSymbolWithHuffmanTree(inputArray,currentBitIndex,huffmanTree);
-				//console.log(symbol);
-				if(!symbol){
-					console.log("ERORR NO SYMBOL");
-					break;
-				}
-				var value = symbol["symbol"];
-				console.log("   "+i+" : ->: "+value+"                                      "+Math.random());
-				currentBitIndex += symbol["bitLength"];
-				var bits;
-				if(value<=15){ // code length of 0-15
-					//console.log("0-15");
-					codeLengths.push(value);
-					prevCodeLength = value;
-				}else if(value==16){ // copy previous code length, 3-6 times
-					//console.log("16");
-					// next 2 bits = repeat length
-					bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 2, true); currentBitIndex += 2;
-					var repeatLength = bits + 3;
-					for(j=0; j<repeatLength; ++j){
-						codeLengths.push(prevCodeLength);
-					}
-					i += repeatLength-1;
-				}else if(value<=17){ // repeat code length 0, 3-10 times
-					//console.log("17");
-					bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 3, true); currentBitIndex += 3;
-					var repeatLength = bits + 3;
-					for(j=0; j<repeatLength; ++j){
-						codeLengths.push(prevCodeLength);
-					}
-					i += repeatLength-1;
-				}else if(value==18){ // repeat code length 0, 11-138 times
-					//console.log("18");
-					bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 7, true); currentBitIndex += 7;
-					var repeatLength = bits + 11;
-					for(j=0; j<repeatLength; ++j){
-						codeLengths.push(0);
-					}
-					i += repeatLength-1;
-					prevCodeLength = 0; // is prev now 0 ?
-				}
-			}
-			// create huffman trees
-			console.log("COMPLETED READING IN LITERALS / DISTANCES:");
-			var literalHuffmanCodes = Compress.huffmanCodesFromLengths(codeLengthsLiterals);
-			console.log(literalHuffmanCodes);
-			var literalHuffmanTree = Compress.huffmanTreeFromCodes(literalHuffmanCodes);
-			console.log(literalHuffmanTree);
-
-console.log("distances");
-			var distanceHuffmanCodes = Compress.huffmanCodesFromLengths(codeLengthsDistances);
-			console.log(distanceHuffmanCodes);
-			var distanceHuffmanTree = Compress.huffmanTreeFromCodes(distanceHuffmanCodes);
-			console.log(distanceHuffmanTree);
-
-
-			huffmanTreeLiterals = literalHuffmanTree;
-			huffmanTreeDistances = distanceHuffmanTree;
-
-			console.log("RICHIE - END OF DYNAMIC");
+		}else if(btype==0x1 || btype==0x2){ // compressed
+			var returnValue = Compress.literalAndDistanceHuffmanTreesFromCompressed(btype, inputArray, currentBitIndex);
+			var huffmanTreeLiterals = returnValue["literalTree"];
+			var huffmanTreeDistances = returnValue["distanceTree"];
+			currentBitIndex = returnValue["nextBitIndex"];
+		}else{ // 11
+			console.log("RESERVED TYPE 11 - ERROR");
+			return null;
 		}
-console.log("RICHIE - here");
 
 		// lengths: 257 -> 285
 		var huffman_code_length_extra_bits = [0,0,0,0,0,0,0,  0, 1, 1, 1, 1, 2, 2,  2,  2,  3,  3,  3,  3,   4,   4,   4,   4,   5,   5,   5,    5,    0]; 
@@ -361,27 +207,32 @@ console.log("RICHIE - here");
 		var huffman_code_distance_extra_bits = [0,0,0,0,1,1,2,  2, 3, 3, 4, 4, 5, 5,  6,  6,  7,  7,  8,  8,   9,   9,  10,  10,  11,  11,  12,   12,   13,   13];
 		var huffman_code_distances_start = [1,2,3,4,5,7,9, 13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577]; // to 32768
 		
-console.log("read in data...");
+	console.log("read in data...");
 
-var count = 0;
-while(true){
-	console.log("READING ------------------------------------------------------------ "+currentBitIndex+"         WRITE INDEX: "+currentOutputBitIndex+" ("+(currentOutputBitIndex/8)+")");
-	if(count>1E10){
-		break;
-	}
-	var symbol = Compress.readSymbolWithHuffmanTree(inputArray,currentBitIndex,huffmanTreeLiterals);
-	if(!symbol){ break; } // error ?
-	var symbolValue = symbol["symbol"];
-	var symbolBinary = symbol["binaryCode"];
-	var symbolBitLength = symbol["bitLength"];
- 	currentBitIndex += symbolBitLength;
-console.log(count+" : "+symbolValue);
+	var count = 0;
+	while(true){
+	//	console.log("READING ------------------------------------------------------------ "+currentBitIndex+"         WRITE INDEX: "+currentOutputBitIndex+" ("+(currentOutputBitIndex/8)+")");
+		// if(count>1E10){
+		// 	break;
+		// }
+		var symbol = Compress.readSymbolWithHuffmanTree(inputArray,currentBitIndex,huffmanTreeLiterals);
+		if(!symbol){
+			console.log(huffmanTreeLiterals);
+			console.log(huffmanTreeLiterals.toString());
+			console.log( Compress.printHuffmanTree(huffmanTreeLiterals) );
+			return null;
+		} // bad tree error
+		var symbolValue = symbol["symbol"];
+		var symbolBinary = symbol["binaryCode"];
+		var symbolBitLength = symbol["bitLength"];
+	 	currentBitIndex += symbolBitLength;
 		if(symbolValue<=255){ // alphabet
-			// normal
 			//Compress.writeNBitsToBytes = function(outputArray, offsetOutputBits, sourceBits, lengthBits, fromLSB){
-			currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, symbolValue, symbolBitLength, false);
+			//currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, symbolValue, symbolBitLength, false); // this is a byte?
+			currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, symbolValue, 8, false); // this is a byte?
+should += 8;
 		}else if(symbolValue==256){ // done
-console.log("DONE");
+			console.log("DONE");
 			break;
 		}else if(257<=symbolValue && symbolValue<=285){ // <length, backwards>
 			// LENGTH
@@ -411,30 +262,44 @@ console.log("DONE");
 			// copy bits
 			var startRead = currentOutputBitIndex - distanceTotal;
 			var lengthRead = lengthTotal;
-			var resultRead = Compress.readNBitsFromBytes(outputBytes, startRead, lengthRead, true);
-			// paste bits
-			currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, resultRead, lengthRead, false);
+			should += lengthRead;
+
+			// for(j=0; j<lengthRead; ++j){
+			// 	var bit = Compress.readNBitsFromBytes(outputBytes, startRead+j, 1, true);
+			// 	currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, 1, 1, false); 
+			// }
+startRead /= 8;
+lengthRead /= 8;
+			for(j=0; j<lengthRead; ++j){
+				var byt = outputBytes[startRead+j];
+				//console.log(startRead,outputBytes.length,currentOutputBitIndex/8);
+				//console.log(outputBytes[Math.floor(currentOutputBitIndex/8 + j)] , byt);
+				outputBytes.push(byt);
+				//outputBytes[Math.floor(currentOutputBitIndex/8 + j)] = byt;
+				currentOutputBitIndex += 8;
+should += 8;
+			}
+
+			// var resultRead = Compress.readNBitsFromBytes(outputBytes, startRead, lengthRead, true);
+			// // paste bits
+			// currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, resultRead, lengthRead, false); // this is a byte multiple
 		}else{
 			console.log("dunno");
 		}		
-++count;
-}
-			// PROCESS COMPRESSED DATA
-	}else{ // 11
-		console.log("RESERVED TYPE 11 - ERROR");
-		return null;
+	++count;
 	}
+} // end for each block
+console.log("should: "+should)
  	// ADLER32 = uncompressed data checksum
  	var adlerLocation = Math.ceil(currentBitIndex/8)*8; // skip up to nearest byte
-	//var adler32 = Code.uint32FromByteArray(inputArray,adlerLocation);
-	//var adler32 = Code.uint32FromByteArray(inputArray,offset+length-4);
 	var adler32 = Compress.readNBitsFromBytes(inputArray, adlerLocation, 32, false);
+		currentBitIndex = adlerLocation + 32;
 	console.log(" ADLER32 FOUND: "+adler32+" @ "+adlerLocation);
 	var computedAdler32 = Compress.adler32(outputBytes, 0, outputBytes.length);
 	console.log(" ADLER32 CHECKSUM: "+adler32+" / "+computedAdler32);
 	if(adler32 != computedAdler32){
 		console.log("ADLER32 CHECKSUM NOT MATCH: "+adler32+" | "+computedAdler32);
-		return null;
+//		return null;
 	}
 
 var totalReadBits = currentBitIndex - offset*8;
@@ -443,6 +308,177 @@ var totalReadBytes = Math.ceil(totalReadBits/8);
 	console.log("FINAL WRITTEN BITS: "+currentOutputBitIndex+" = "+Math.ceil(currentOutputBitIndex/8)+" bytes || "+outputBytes.length);
 
 	return outputBytes;
+}
+
+
+
+
+Compress.literalAndDistanceHuffmanTreesFromCompressed = function(compressionType, inputArray, currentBitIndex){ // 0x1 or 02 compression type
+	var huffmanTreeLiterals;
+	var huffmanTreeDistances;
+	if(compressionType==0x1){ // fixed huffman
+		// generate literal code length array:
+		var huffman_code_literal_values = [0,144,256,280,288];
+		var huffman_code_literal_bits = [8,9,7,8];
+
+		var literalCodeLengths = [];
+		var literalIndex = 0;
+		var bitCount = huffman_code_literal_bits[literalIndex];
+		var literal = huffman_code_literal_values[literalIndex];
+		while(literalIndex<huffman_code_literal_values.length-1){
+			if(literal>=huffman_code_literal_values[literalIndex+1]){
+				++literalIndex;
+				literal = huffman_code_literal_values[literalIndex];
+				bitCount = huffman_code_literal_bits[literalIndex];
+			}else{
+				literalCodeLengths[literal] = bitCount;
+				++literal;
+			}
+		}
+		console.log(literalCodeLengths)
+		var literalHuffmanCodes = Compress.huffmanCodesFromLengths(literalCodeLengths);
+		console.log(literalHuffmanCodes)
+		var literalHuffmanTree = Compress.huffmanTreeFromCodes(literalHuffmanCodes);
+		console.log(literalHuffmanTree);
+
+
+		// generate distance array + codes + tree
+		var distanceCodeLengths = [];
+		for(i=0; i<32; ++i){ // 0-29 used, 30-31 unused
+			distanceCodeLengths[i] = 5;
+		}
+		var distanceHuffmanCodes = Compress.huffmanCodesFromLengths(distanceCodeLengths);
+		console.log(distanceHuffmanCodes);
+		var distanceHuffmanTree = Compress.huffmanTreeFromCodes(distanceHuffmanCodes);
+		console.log(distanceHuffmanTree);
+
+		huffmanTreeLiterals = literalHuffmanTree;
+		huffmanTreeDistances = distanceHuffmanTree;
+
+			// loooping...
+	}else if(compressionType==0x2){ // dynamic huffman tables provided in data
+		var huffman = [];
+		var HLIT = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 5, true); currentBitIndex += 5;
+			var codeLengthLiteralCount = HLIT + 257;
+		var HDIST = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 5, true); currentBitIndex += 5;
+			var codeLengthDistanceCount = HDIST + 1;
+		var HCLEN = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 4, true); currentBitIndex += 4;
+			var codeLengthsCodeCount = HCLEN + 4;
+		var codeLengthValuesCount = codeLengthLiteralCount + codeLengthDistanceCount; // HLIT + HDSIT + 258
+		console.log("HLIT: "+HLIT);
+		console.log(" -> codeLengthLiteralCount: "+codeLengthLiteralCount);
+		console.log("HDIST: "+HDIST);
+		console.log(" -> codeLengthDistanceCount: "+codeLengthDistanceCount);
+		console.log("HCLEN: "+HCLEN);
+		console.log(" -> codeLengthsCodeCount: "+codeLengthsCodeCount);
+		console.log("codeLengthValuesCount: "+codeLengthValuesCount);
+
+
+
+var codeAlphabetOrder = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]; // random permutation lookup table -- 19
+var codeAlphabetOrderLength = codeAlphabetOrder.length;
+			
+		var i, j;
+		var compressed_code_lengths = Code.newArrayZeros(codeAlphabetOrderLength);
+		// CODE LENGTHS
+		for(i=0; i<codeLengthsCodeCount; ++i){
+			var bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 3, true); currentBitIndex += 3;
+			//console.log(i+":   => "+bits);
+			var index = codeAlphabetOrder[i]; // translate from read value to lookup table value
+			compressed_code_lengths[index] = bits;
+		}
+console.log(compressed_code_lengths);
+		var compressed_huffman_codes = Compress.huffmanCodesFromLengths(compressed_code_lengths);
+		var huffmanTree = Compress.huffmanTreeFromCodes(compressed_huffman_codes);
+		// console.log("huffmanTree");
+		// console.log(huffmanTree.toString());
+		// console.log("huffman Tree Codes");
+		// console.log( Compress.printHuffmanTree(huffmanTree) );
+
+		// GET HUFFMAN CODES FROM LIST OF CODE LENGTHS
+//		console.log("reading in literals and distances");
+		// LITERAL LENGTHS //  USING HUFFMAN TREE CODES
+var prevCodeLength = 0;
+var codeLengths = null;
+var codeLengthsLiterals = [];
+var codeLengthsDistances = [];
+			for(i=0; i<codeLengthValuesCount; ++i){
+				if(i<codeLengthLiteralCount){
+					codeLengths = codeLengthsLiterals;
+				}else{
+					codeLengths = codeLengthsDistances;
+				}
+				//console.log(i+" / "+codeLengthValuesCount);
+				if(i<codeLengthLiteralCount){
+					// literals & lengths sequence
+				}else{
+					// distance sequence
+				}
+// The code length repeat codes can cross from HLIT + 257 to the HDIST + 1 code lengths. In other words, all code lengths form a single sequence of HLIT + HDIST + 258 values.
+				var symbol = Compress.readSymbolWithHuffmanTree(inputArray,currentBitIndex,huffmanTree);
+				//console.log(symbol);
+				if(!symbol){
+					console.log("ERORR NO SYMBOL");
+					break;
+				}
+				var value = symbol["symbol"];
+				//console.log("   "+i+" : inside ->: "+value+"                                      "+Math.random());
+				currentBitIndex += symbol["bitLength"];
+				var bits;
+				if(value<=15){ // code length of 0-15
+					codeLengths.push(value);
+					prevCodeLength = value;
+				}else if(value==16){ // copy previous code length, 3-6 times
+					// next 2 bits = repeat length
+					bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 2, true); currentBitIndex += 2;
+					var repeatLength = bits + 3;
+					for(j=0; j<repeatLength; ++j){
+						codeLengths.push(prevCodeLength);
+					}
+					i += repeatLength-1;
+				}else if(value<=17){ // repeat code length 0, 3-10 times
+					bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 3, true); currentBitIndex += 3;
+					var repeatLength = bits + 3;
+					for(j=0; j<repeatLength; ++j){
+						//codeLengths.push(prevCodeLength);
+						codeLengths.push(0);
+					}
+					i += repeatLength-1;
+				}else if(value==18){ // repeat code length 0, 11-138 times
+					//console.log("18");
+					bits = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 7, true); currentBitIndex += 7;
+					var repeatLength = bits + 11;
+					for(j=0; j<repeatLength; ++j){
+						codeLengths.push(0);
+					}
+					i += repeatLength-1;
+					prevCodeLength = 0; // is prev now 0 ?
+				}
+			}
+			// console.log("COMPLETED LITERALS / DISTS: ");
+			// console.log(codeLengthsLiterals+"");
+			// console.log(codeLengthsDistances+"");
+
+			// create huffman trees
+//			console.log("COMPLETED READING IN LITERALS / DISTANCES:");
+			var literalHuffmanCodes = Compress.huffmanCodesFromLengths(codeLengthsLiterals);
+//			console.log(literalHuffmanCodes);
+			var literalHuffmanTree = Compress.huffmanTreeFromCodes(literalHuffmanCodes);
+//			console.log(literalHuffmanTree);
+
+//console.log("distances");
+			var distanceHuffmanCodes = Compress.huffmanCodesFromLengths(codeLengthsDistances);
+//			console.log(distanceHuffmanCodes);
+			var distanceHuffmanTree = Compress.huffmanTreeFromCodes(distanceHuffmanCodes);
+//			console.log(distanceHuffmanTree);
+
+
+			huffmanTreeLiterals = literalHuffmanTree;
+			huffmanTreeDistances = distanceHuffmanTree;
+		}else{
+			return null;
+		}
+	return {"literalTree":huffmanTreeLiterals, "distanceTree":huffmanTreeDistances, "nextBitIndex":currentBitIndex}
 }
 
 Compress.printHuffmanTree = function(huffmanTree, table){
@@ -468,14 +504,14 @@ Compress.printHuffmanTree = function(huffmanTree, table){
 			var count = val[0];
 			var sym = val[1];
 			var bits = val[2];
-		str = str + Code.prependFixed(""+i," ",3)+" : "+Code.prependFixed(""+Code.intToBinaryString(bits,count)," ",10)+" = "+Code.prependFixed(""+sym," ",6);
+		str = str + Code.prependFixed(""+i," ",4)+" : "+Code.prependFixed(""+Code.intToBinaryString(bits,count)," ",16)+" = "+Code.prependFixed(""+sym," ",6);
 		str = str + "\n";
 	}
 	
 	return str;
 }
 Compress._printHuffmanTree = function(node, bits, count, table){
-	console.log("   => "+count+" = "+node.data());
+	//console.log("   => "+count+" = "+node.data());
 	if(node.left()){
 		Compress._printHuffmanTree( node.left(),  ((bits<<1)|0), count+1, table);
 	}
@@ -496,8 +532,8 @@ Compress.huffmanCodesFromLengths = function(huffmanCodeLengths){ // bit length f
 	for(var i=0; i<huffmanCodeLengths.length; ++i){
 		bitLengthCounts[huffmanCodeLengths[i]]++;
 	}
-	console.log("bitLengthCounts:")
-	console.log(bitLengthCounts)
+//	console.log("bitLengthCounts:")
+//	console.log(bitLengthCounts)
 
 	// STEP 2 - INITIALIZE CODES TO SMALLEST VALUE FOR EACH CODE LENGTH
 	var code = 0;
@@ -526,7 +562,7 @@ Compress.huffmanCodesFromLengths = function(huffmanCodeLengths){ // bit length f
 }
 Compress.writeNBitsToBytes = function(outputArray, offsetOutputBits, sourceBits, lengthBits, fromLSB){
 	fromLSB = false;
-	console.log("writeNBitsToBytes: "+offsetOutputBits+" + "+lengthBits);
+	//console.log("writeNBitsToBytes: "+offsetOutputBits+" + "+lengthBits);
 	if(lengthBits<=0){
 		return 0;
 	}
@@ -576,7 +612,7 @@ Compress.readSymbolWithHuffmanTree = function(byteArray,offset,huffman){
 			break;
 		}
 		bit = Compress.readNBitsFromBytes(byteArray, offset+read, 1, true); read += 1;
-		//console.log(c+": "+bit);
+//		console.log(c+": "+bit);
 		bitSequence <<= 1;
 		if(bit==0){
 			node = node.left();

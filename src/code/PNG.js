@@ -304,6 +304,7 @@ PNG._processImage = function(outputResult, binaryArray){
 // return;
 
 	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
+	console.log("decompressed: "+decompressed.length);
 
 var stage = GLOBALSTAGE;
 
@@ -320,6 +321,7 @@ var imageWidthP1 = imageWidth + 1;
 	console.log(palette)
 	console.log(alphaPallette)
 
+if(palette){
 	console.log("got decompressed data:"+decompressed.length);
 var d = new DO();
 stage.addChild(d);
@@ -361,18 +363,121 @@ var size = 5;
 	// 3 == indexed
 	// 4 == grayscale+alpha
 	// 6 == truecolor+alpha
+}else{ // only idat
 
-
-	// 10x8 = 80 entries exected for A) indexes, B)true-color
-	/*
-	45 = 101101
-		= 6 bits
-		6 * 10*8 = 480 / 8 = 60
-	*/
-
-
+	// INVERSE FILTERING
+	console.log("only idat");
+	var channels = Math.floor( decompressed.length/(imageHeight*imageWidth) ); // eg 4 = rgba | TODO: non-8-bit coloring scheme
+	var out = new Array(channels*imageWidth*imageHeight);
+	var channelGap = channels*8;
+	var lineWidthOut = imageWidth*channels;
+	var lineWidthIn = lineWidthOut + 1; // +1 for filter type
 	
-	//console.log("IDAT: "+decompressed.length);
+	var indexIn = 0;
+	var indexOut = 0;
+	for(j=0; j<imageHeight; ++j){
+		var filterType = decompressed[indexIn++];
+		if(filterType==0){ // N/A : recon(x) = filt(x)
+			for(i=0; i<lineWidthOut; ++i){
+				out[indexOut+i] = decompressed[indexIn+i];
+			}
+			indexOut += lineWidthOut;
+			indexIn += lineWidthOut;
+		}else if(filterType==1){ // SUB : recon(x) = filter(x) + recon(a)
+			for(i=0; i<channels; ++i){ // first few bytes
+				out[indexOut+i] = decompressed[indexIn+i];
+			}
+			for(i=channels; i<lineWidthOut; ++i){
+				out[indexOut+i] = decompressed[indexIn+i] + out[indexOut + i - channels]; // prev pixel
+				out[indexOut+i] = out[indexOut+i] & 0xFF;
+			}
+			indexOut += lineWidthOut;
+			indexIn += lineWidthOut;
+		}else if(filterType==2){ // UP : recon(x) = filter(x) + recon(b)
+			for(i=0; i<channels; ++i){ // first few bytes
+				out[indexOut+i] = decompressed[indexIn+i];
+				out[indexOut+i] = out[indexOut+i] & 0xFF;
+			}
+			for(i=0; i<lineWidthOut; ++i){
+				out[indexOut+i] = decompressed[indexIn+i] + out[indexOut + i - lineWidthOut]; // prev line
+				out[indexOut+i] = out[indexOut+i] & 0xFF;
+			}
+			indexOut += lineWidthOut;
+			indexIn += lineWidthOut;
+		}else if(filterType==3){ // AVG : recon(x) = filt(x) + floor( (recon(a)+recon(b))/2 )
+			for(i=0; i<lineWidthOut; ++i){
+				out[indexOut+i] = decompressed[indexIn+i] + Math.floor( (out[indexOut + i - channels] + out[indexOut + i - lineWidthOut]) * 0.5 ); // prev pixel + prev line pixel
+				out[indexOut+i] = out[indexOut+i] & 0xFF;
+			}
+			indexOut += lineWidthOut;
+			indexIn += lineWidthOut;
+		}else if(filterType==4){ // PAETH PREDICTOR : recon(x) = filt(x) + paeth(recon(a), recon(b), recon(c))
+			for(i=0; i<channels; ++i){ // first few bytes
+				out[indexOut+i] = decompressed[indexIn+i];
+			}
+			for(i=channels; i<lineWidthOut; ++i){
+				out[indexOut+i] = decompressed[indexIn+i] + PNG.paethPredictor( out[indexOut + i - channels], out[indexOut + i - lineWidthOut], out[indexOut + i - channels - lineWidthOut]);
+				out[indexOut+i] = out[indexOut+i] & 0xFF;
+			}
+			indexOut += lineWidthOut;
+			indexIn += lineWidthOut;
+		}else{
+			console.log("unknown filter "+ filterType);
+		}
+	}
+
+//  c b
+//  a x
+decompressed = out;
+
+	var d = new DO();
+	stage.addChild(d);
+	var size = 1;
+	var index = 0;
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+		var a = 0xFF;
+		var r = decompressed[index++];
+		var g = decompressed[index++];
+		var b = decompressed[index++];
+		if(channels==4){
+			a = decompressed[index++];
+		}
+		if(index>decompressed.length){
+			console.log("too far");
+			break;
+		}
+var x = i;
+var y = j;
+		var color = Code.getColARGB(a,r,g,b);
+		d.graphics().setFill(color);
+		d.graphics().beginPath();
+		d.graphics().drawRect(x*size,y*size,size,size);
+		d.graphics().endPath();
+		d.graphics().fill();
+
+if(i==100 && j==100){
+			console.log(r,g,b,a,color);
+		}
+
+		}
+	}
+	console.log(index);
+}
+
+}
+PNG.paethPredictor = function(a, b, c){
+	var p = a + b - c;
+	var pa = Math.abs(p - a); // b - c
+	var pb = Math.abs(p - b); // a - c
+	var pc = Math.abs(p - c); // a + b - 2c
+	if(pa<=pb && pa<=pc){
+		return a;
+	}else if(pb<=pc){
+		return b;
+	}
+	return c;
+	
 }
 
 PNG._readChunk = function(binaryArray,offset,length){ // header:4 | length:4 | data:N | crc:4
@@ -459,4 +564,11 @@ PNG.prototype._headerChunk = function(width,height,depth,colorType,compressionMe
 PNG.prototype._textKeywordChunk = function(title,author,description,copyright,created,software,disclaimer,warning,source,comment){
 	//
 }
+
+
+
+
+// JPEG: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
+
+
 
