@@ -1,5 +1,6 @@
 // PNG.js
 // https://www.w3.org/TR/PNG/
+// https://wiki.mozilla.org/APNG_Specification
 function PNG(){
 	//
 }
@@ -45,7 +46,7 @@ PNG._CHUNK_TYPE_HIST = "hist";
 PNG._CHUNK_TYPE_SPLT = "splt";
 PNG._CHUNK_TYPE_TIME = "time";
 // APNG:
-PNG._CHUNK_ACTL = [97,  99,  84,  76]; // acTL : ? - animation controle
+PNG._CHUNK_ACTL = [97,  99,  84,  76]; // acTL : ? - animation control
 PNG._CHUNK_FCTL = [102, 99,  84,  76]; // fcTL : ? - frame control
 PNG._CHUNK_FDAT = [102, 100, 65,  84]; // fdAT : ? - frame data
 PNG._CHUNK_TYPE_ACTL = "actl";
@@ -55,7 +56,11 @@ PNG._CHUNK_TYPE_FDAT = "fdat";
 //                                                                 210987654321098765432109876543210
 PNG._CRC_BEGIN = 0x0; // 32 26 23 22 16 12 11 10 8 7 5 4 2 1 0 =  0b100000100110000010001110110110111
 //                                                               0b011111011001111101110001001001000
-//                                                                                       
+PNG_APNG_DISPOSAL_OP_NONE = 0;
+PNG_APNG_DISPOSAL_OP_BACKGROUND = 1;
+PNG_APNG_DISPOSAL_OP_PREVIOUS = 2;
+PNG_APNG_BLEND_OP_SOURCE = 0; // overwrite
+PNG_APNG_BLEND_OP_OVER = 1; // blend (alpha)
 //    0xedb88320
 //    1110|1101|1011|1000|1000|0011|0010|0000
 
@@ -89,16 +94,9 @@ PNG.binaryArrayToFloatARGB = function(binaryArray){
 		console.log(" chunk: "+i+" / "+binaryArray.length);
 		chunk = PNG._readChunk(binaryArray,i);
 	}
-	PNG._processImage(outputResult,binaryArray);
-
-	//console.log("DO SOME STUFF: "+i);
-	return null;
-	
-	// console.log("end of data = CRC: "+(i + 13)+"+(i + 13");
-	// for(i=0; i<len; ++i){
-	// 	console.log("i:"+i+" = "+binaryArray[i])
-	// }
-	// return outputResult;
+	var image = PNG._processImage(outputResult,binaryArray);
+// image is some apng container
+	return image;
 }
 PNG._processChunk = function(chunk,binaryArray,outputResult){
 	var i;
@@ -243,16 +241,35 @@ PNG._processChunk = function(chunk,binaryArray,outputResult){
 		console.log("IDAT: "+start+" : "+length);
 	}else if(type==PNG._CHUNK_TYPE_IEND){ // multiple IDATs are conactenated (as compressed) then decompressed as a single stream
 		console.log("IEND");
+	}else if(type==PNG._CHUNK_TYPE_ACTL){ // APNG - animation control
+		console.log("APNG - ACTL : "+binaryArray.length);
+		var totalFrameCount = Code.uint32FromByteArray(binaryArray,start+0); // first 32 bits
+		var totalLoopCount = Code.uint32FromByteArray(binaryArray,start+4); // second 32 bits
+		totalFrameCount = totalFrameCount >>> 0;
+		totalLoopCount = totalLoopCount >>> 0;
+		console.log("  total frames: "+totalFrameCount);
+		console.log("   loop count: "+totalLoopCount);
+	}else if(type==PNG._CHUNK_TYPE_FCTL){ // APNG - frame control
+		console.log("APNG - FCTL");
+		var sequenceNumber = Code.uint32FromByteArray(binaryArray,start+0);
+		var frameWidth = Code.uint32FromByteArray(binaryArray,start+4);
+		var frameHeight = Code.uint32FromByteArray(binaryArray,start+8);
+		var frameXOffset = Code.uint32FromByteArray(binaryArray,start+12);
+		var frameYOffset = Code.uint32FromByteArray(binaryArray,start+16);
+		var frameDelayNumerator = Code.uint16FromByteArray(binaryArray,start+20);
+		var frameDelayDenominator = Code.uint16FromByteArray(binaryArray,start+22);
+		var frameDisposalOp = Code.uint8FromByteArray(binaryArray,start+24);
+		var frameBlendOp  = Code.uint8FromByteArray(binaryArray,start+25);
+		var frameDelay = frameDelayNumerator / frameDelayDenominator;
+		console.log("    frame: "+sequenceNumber);
+		console.log("    size: "+frameWidth+"x"+frameHeight+"    offset: "+frameXOffset+","+frameYOffset);
+		console.log("    delay: "+frameDelay);
+		console.log("    displsoal op: "+frameDisposalOp+"    blend op: "+frameBlendOp);
+	}else if(type==PNG._CHUNK_TYPE_FDAT){ // APNG - frame data
+		console.log("APNG - FDAT");
 	}else{
 		console.log("unknown type: "+type);
 	}
-	// switch(type){
-	// 	PNG._CHUNK_TYPE_IHDR:
-	// 		console.log("found ihdr");
-	// 		break;
-	// 	default:
-	// 		console.log("unknown type: "+type);
-	// }
 }
 
 PNG._processImage = function(outputResult, binaryArray){
@@ -285,70 +302,37 @@ PNG._processImage = function(outputResult, binaryArray){
 	// if filtered, inverse filter
 
 	console.log("... DECOMPRESSING LZ77 ... : "+compressedImageData.length+" / "+totalDataLength+"              -----------------------------------------------------------------------------------------------------           ");
-	//console.log(compressedImageData);
-
-//Compress.writeNBitsToBytes = function(outputArray, offsetOutputBits, sourceBits, lengthBits, fromLSB){
 	var outputArray = [];
 	var offsetOutput = 0;
-
-// TESTING WRITING BITS
-// 	offsetOutput += Compress.writeNBitsToBytes(outputArray, offsetOutput, 0x00000002, 4, false);
-// 	console.log(offsetOutput);
-// 	offsetOutput += Compress.writeNBitsToBytes(outputArray, offsetOutput, 0x00000013, 8, false);
-// 	console.log(offsetOutput);
-// 	offsetOutput += Compress.writeNBitsToBytes(outputArray, offsetOutput, 0x00000044, 6, false);
-// 	console.log(offsetOutput);
-// 	console.log(outputArray);
-// 	// 00000010|00010011|01000100
-// 	// 00100001|00110100|0100000 = 33 | 3
-// return;
-
 	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
 	console.log("decompressed: "+decompressed.length);
-
-var stage = GLOBALSTAGE;
 
 var imageWidth = outputResult["width"];
 var imageHeight = outputResult["height"];
 var imageWidthP1 = imageWidth + 1;
+var outputDataArray = [];
 
-	console.log("outputResult")
-	console.log(outputResult)
-	console.log(imageWidth+"x"+imageHeight);
+var outputDataObject = {};
+	outputDataObject["width"] = imageWidth;
+	outputDataObject["height"] = imageHeight;
+	outputDataObject["image"] = outputDataArray;
+	// console.log("outputResult")
+	// console.log(outputResult)
+	// console.log(imageWidth+"x"+imageHeight);
 	var palette = outputResult["palette"];
 	var alphaPallette = outputResult["alpha_palette"];
-
-	console.log(palette)
-	console.log(alphaPallette)
-
 if(palette){
 	console.log("got decompressed data:"+decompressed.length);
-var d = new DO();
-stage.addChild(d);
-var size = 5;
 	for(i=0;i<decompressed.length;++i){
 		var x = (i%imageWidthP1);
 		var y = Math.floor(i/imageWidthP1);
-		// var x = (i%imageHeight);
-		// var y = Math.floor(i/imageHeight);
-		//console.log(x,y)
 		var index = decompressed[i];
-		//console.log(index);
 		var color = palette[index];
-		//console.log(color);
 		var r = color.x;
 		var g = color.y;
 		var b = color.z;
 		var a = alphaPallette[index];
-		//a = 0xFF;
-		color = Code.getColARGB(a,r,g,b);
-		d.graphics().setFill(color);
-		d.graphics().beginPath();
-		d.graphics().drawRect(x*size,y*size,size,size);
-		d.graphics().endPath();
-		d.graphics().fill();
-
-		//console.log(decompressed[i]);
+outputDataArray[i] = Code.getColARGB(a,r,g,b);
 	}
 	// interlace method
 	// 0 = left-right sequentially
@@ -429,11 +413,8 @@ var size = 5;
 //  c b
 //  a x
 decompressed = out;
-
-	var d = new DO();
-	stage.addChild(d);
-	var size = 1;
 	var index = 0;
+	var outIndex = 0;
 	for(j=0; j<imageHeight; ++j){
 		for(i=0; i<imageWidth; ++i){
 		var a = 0xFF;
@@ -447,23 +428,13 @@ decompressed = out;
 			console.log("too far");
 			break;
 		}
-var x = i;
-var y = j;
-		var color = Code.getColARGB(a,r,g,b);
-		d.graphics().setFill(color);
-		d.graphics().beginPath();
-		d.graphics().drawRect(x*size,y*size,size,size);
-		d.graphics().endPath();
-		d.graphics().fill();
-
-if(i==100 && j==100){
-			console.log(r,g,b,a,color);
-		}
-
+outputDataArray[outIndex] = Code.getColARGB(a,r,g,b);
+++outIndex;
 		}
 	}
-	console.log(index);
 }
+
+return outputDataObject;
 
 }
 PNG.paethPredictor = function(a, b, c){
@@ -550,6 +521,10 @@ PNG._chunkLookupTable = function(){
 		chunkTypes.push([PNG._CHUNK_PHYS,PNG._CHUNK_TYPE_PHYS]);
 		chunkTypes.push([PNG._CHUNK_SPLT,PNG._CHUNK_TYPE_SPLT]);
 		chunkTypes.push([PNG._CHUNK_TIME,PNG._CHUNK_TYPE_TIME]);
+		// APNG
+		chunkTypes.push([PNG._CHUNK_ACTL,PNG._CHUNK_TYPE_ACTL]);
+		chunkTypes.push([PNG._CHUNK_FCTL,PNG._CHUNK_TYPE_FCTL]);
+		chunkTypes.push([PNG._CHUNK_FDAT,PNG._CHUNK_TYPE_FDAT]);
 		PNG._CHUNK_LOOKUP_TABLE = chunkTypes;
 	}
 	return PNG._CHUNK_LOOKUP_TABLE;
@@ -566,6 +541,21 @@ PNG.prototype._textKeywordChunk = function(title,author,description,copyright,cr
 }
 
 
+
+
+
+PNG.arrayARGB32ToBinaryArray = function(imageColorsARGB32){
+		// choose palette or IDAT
+			// choose compressions
+		// 
+	var outputBytes = [];
+	// create chunks
+		// create header
+		// calculate CRC32
+	// combine into array
+	// convert array to UINT8
+	return outputBytes;
+}
 
 
 // JPEG: https://www.w3.org/Graphics/JPEG/itu-t81.pdf

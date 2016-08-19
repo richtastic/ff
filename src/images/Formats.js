@@ -27,7 +27,8 @@ function Formats(){
 	ajax.binary(true);
 	//ajax.binary(false);
 	//ajax.get("./image_.1.png",this,this._handleLoaded,null);
-	ajax.get("./image.png",this,this._handleLoaded,null);
+	//ajax.get("./image.png",this,this._handleLoaded,null);
+	ajax.get("./apng.apng",this,this._handleLoaded,null);
 	//ajax.();
 GLOBALSTAGE = this._stage;
 }
@@ -48,7 +49,41 @@ Formats.prototype._handleLoaded = function(response){
 	//console.log(responseBase64);
 	//console.log("b");
 
-	PNG.binaryArrayToFloatARGB(response);
+	var imagePNG = PNG.binaryArrayToFloatARGB(response); // [[A,R,G,B]]
+	// PNG.binaryArrayToARGB32(response); [0XAARRGGBB]
+console.log(imagePNG)
+//var stage = GLOBALSTAGE;
+var stage = this._stage;
+var imageWidth = imagePNG["width"];
+var imageHeight = imagePNG["height"];
+var imageWidthP1 = imageWidth + 1;
+var imageData = imagePNG["image"];
+	var d = new DO();
+	stage.addChild(d);
+	var size = 1;
+	for(i=0;i<imageData.length;++i){
+		var x = (i%imageWidth);
+		var y = Math.floor(i/imageWidth);
+		var color = imageData[i];
+		//var color = palette[index];
+		// var a = Code.getAlpRGBA(color);
+		// var r = Code.getRedRGBA(color);
+		// var g = Code.getGrnRGBA(color);
+		// var b = Code.getBluRGBA(color);
+		// var a = alphaPallette[index];
+//		color = Code.getColARGB(a,r,g,b);
+		d.graphics().setFill(color);
+		d.graphics().beginPath();
+		d.graphics().drawRect(x*size,y*size,size,size);
+		d.graphics().endPath();
+		d.graphics().fill();
+	}
+
+
+
+// TEST WRITE
+	var image = []; // TODO FILL
+	PNG.arrayARGB32ToBinaryArray(image);
 }
 
 Formats.prototype._handleKeyboardUp = function(e){

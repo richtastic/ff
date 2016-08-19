@@ -4014,11 +4014,14 @@ Code.insideTrianglePadded3D = function(a,b,c,pad){
 
 Code.uint32FromByteArray = function(binaryArray,offset){
 	var out = binaryArray[offset+0]<<24 | binaryArray[offset+1]<<16 |  binaryArray[offset+2]<<8 |  binaryArray[offset+3]<<0;
-	return out;
+	return out >>> 0;
 }
 Code.uint16FromByteArray = function(binaryArray,offset){
 	var out = binaryArray[offset+0]<<8 | binaryArray[offset+1]<<0;
-	return out;
+	return out >>> 0;
+}
+Code.uint8FromByteArray = function(binaryArray,offset){
+	return binaryArray[offset+0] >>> 0;
 }
 
 
