@@ -28,7 +28,8 @@ function Formats(){
 	//ajax.binary(false);
 	//ajax.get("./image_.1.png",this,this._handleLoaded,null);
 	//ajax.get("./image.png",this,this._handleLoaded,null);
-	ajax.get("./apng.apng",this,this._handleLoaded,null);
+	//ajax.get("./apng.apng",this,this._handleLoaded,null);
+	ajax.get("./mri.png",this,this._handleLoaded,null);
 	//ajax.();
 GLOBALSTAGE = this._stage;
 }
@@ -44,42 +45,57 @@ Formats.prototype._handleLoaded = function(response){
 	}
 	responseString = responseString.join("");
 	//  137 80 78 71 13 10 26 10
-	//var responseBase64 = Code.binaryToBase64String(response);
-	var responseBase64 = Code.binaryToBase64String(responseString);
-	//console.log(responseBase64);
-	//console.log("b");
 
-	var imagePNG = PNG.binaryArrayToFloatARGB(response); // [[A,R,G,B]]
-	// PNG.binaryArrayToARGB32(response); [0XAARRGGBB]
-console.log(imagePNG)
+	var responseBase64 = Code.binaryToBase64String(responseString);
+
+var imagePNG = PNG.binaryArrayToPNG(response);
 //var stage = GLOBALSTAGE;
 var stage = this._stage;
-var imageWidth = imagePNG["width"];
-var imageHeight = imagePNG["height"];
-var imageWidthP1 = imageWidth + 1;
-var imageData = imagePNG["image"];
-	var d = new DO();
-	stage.addChild(d);
-	var size = 1;
-	for(i=0;i<imageData.length;++i){
-		var x = (i%imageWidth);
-		var y = Math.floor(i/imageWidth);
-		var color = imageData[i];
-		//var color = palette[index];
-		// var a = Code.getAlpRGBA(color);
-		// var r = Code.getRedRGBA(color);
-		// var g = Code.getGrnRGBA(color);
-		// var b = Code.getBluRGBA(color);
-		// var a = alphaPallette[index];
-//		color = Code.getColARGB(a,r,g,b);
-		d.graphics().setFill(color);
-		d.graphics().beginPath();
-		d.graphics().drawRect(x*size,y*size,size,size);
-		d.graphics().endPath();
-		d.graphics().fill();
-	}
+
+console.log("PNG: "+imagePNG.width()+"x"+imagePNG.height());
 
 
+var d = new DO();
+stage.addChild(d);
+var ticker = new Ticker(100); // initial offset
+var f = 0;
+ticker.addFunction(Ticker.EVENT_TICK, function(e){
+	d.graphics().clear();
+	f = (f+1) % imagePNG.framesTotal();
+//for(var f=0; f<imagePNG.framesTotal(); ++f){
+	var framePNG = imagePNG.frame(f);
+	var imageOffsetX = framePNG.x();
+	var imageOffsetY = framePNG.y();
+	var imageWidth = framePNG.width();
+	var imageHeight = framePNG.height();
+	var imageData = framePNG.imageData();
+	var delay = framePNG.duration();
+	var frameLength = delay*1000;
+		var size = 1;
+		for(i=0;i<imageData.length;++i){
+			var x = (i%imageWidth);
+			var y = Math.floor(i/imageWidth);
+			var color = imageData[i];
+			d.graphics().setFill(color);
+			d.graphics().beginPath();
+			d.graphics().drawRect( (imageOffsetX+x)*size, (imageOffsetY+y)*size,size,size);
+			d.graphics().endPath();
+			d.graphics().fill();
+		}
+	Code.timerStop();
+	console.log( Code.timerDifference() +" / "+frameLength);
+	Code.timerStart();
+
+
+	ticker.stop();
+	//console.log(frameLength);
+	ticker.frameSpeed(frameLength);
+	ticker.start(false);
+	//console.log(  getTimeFromTimeStamp( Code.getTimeStamp() ) );
+
+//	}
+}, this);
+ticker.start();
 
 // TEST WRITE
 	var image = []; // TODO FILL

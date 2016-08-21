@@ -63,7 +63,7 @@ Compress.testHuff = function(code_length_list){
 }
 
 Compress.lz77Decompress = function(inputArray, offset, length){ // zlib
-	console.log("lz77Decompress",inputArray, offset, length);
+	//console.log("lz77Decompress",inputArray, offset, length);
 	// 0      1      (opt 2-5)
     // 0..7 | 0..7 | 0 ... 32 | 0 ... n | 0 ... 32 |
 	// CMF  | FLG  |  DICTID  |   data  |  adler32 |
@@ -92,11 +92,10 @@ if(true){
 	//var adler32 = Code.uint32FromByteArray(inputArray,offset+length-4); // ADLER32 = uncompressed data checksum
 	currentIndex += 2;
 
-	console.log(" CMF: ");
-		console.log("  CM:"+compressionMethod+" | CINFO:"+compressionInfo);
-
-	console.log(" FLG: ");
-		console.log("  FCHECK:"+FCHECK+" | FDICT:"+FDICT+" | FLEVEL:"+FLEVEL);
+	// console.log(" CMF: ");
+	// 	console.log("  CM:"+compressionMethod+" | CINFO:"+compressionInfo);
+	// console.log(" FLG: ");
+	// 	console.log("  FCHECK:"+FCHECK+" | FDICT:"+FDICT+" | FLEVEL:"+FLEVEL);
 	if(compressionMethod==8){ // base-2 logarithm of the LZ77 window size, minus eight (CINFO=7 indicates a 32K window size) 
 		console.log("deflate compression method");
 		var exponent = compressionInfo + 8;
@@ -289,14 +288,14 @@ should += 8;
 	++count;
 	}
 } // end for each block
-console.log("should: "+should)
+	
  	// ADLER32 = uncompressed data checksum
  	var adlerLocation = Math.ceil(currentBitIndex/8)*8; // skip up to nearest byte
 	var adler32 = Compress.readNBitsFromBytes(inputArray, adlerLocation, 32, false);
 		currentBitIndex = adlerLocation + 32;
-	console.log(" ADLER32 FOUND: "+adler32+" @ "+adlerLocation);
+	//console.log(" ADLER32 FOUND: "+adler32+" @ "+);
 	var computedAdler32 = Compress.adler32(outputBytes, 0, outputBytes.length);
-	console.log(" ADLER32 CHECKSUM: "+adler32+" / "+computedAdler32);
+	console.log(" ADLER32 CHECKSUM: "+adler32+" / "+computedAdler32+" @ "+adlerLocation);
 	if(adler32 != computedAdler32){
 		console.log("ADLER32 CHECKSUM NOT MATCH: "+adler32+" | "+computedAdler32);
 //		return null;
@@ -304,8 +303,8 @@ console.log("should: "+should)
 
 var totalReadBits = currentBitIndex - offset*8;
 var totalReadBytes = Math.ceil(totalReadBits/8);
-	console.log("FINAL LOCATION: "+currentBitIndex+" / "+(inputArray.length*8)+"    read: "+totalReadBits+" bits (~"+totalReadBytes+" bytes)");
-	console.log("FINAL WRITTEN BITS: "+currentOutputBitIndex+" = "+Math.ceil(currentOutputBitIndex/8)+" bytes || "+outputBytes.length);
+	// console.log("FINAL LOCATION: "+currentBitIndex+" / "+(inputArray.length*8)+"    read: "+totalReadBits+" bits (~"+totalReadBytes+" bytes)");
+	// console.log("FINAL WRITTEN BITS: "+currentOutputBitIndex+" = "+Math.ceil(currentOutputBitIndex/8)+" bytes || "+outputBytes.length);
 
 	return outputBytes;
 }
@@ -365,15 +364,13 @@ Compress.literalAndDistanceHuffmanTreesFromCompressed = function(compressionType
 		var HCLEN = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 4, true); currentBitIndex += 4;
 			var codeLengthsCodeCount = HCLEN + 4;
 		var codeLengthValuesCount = codeLengthLiteralCount + codeLengthDistanceCount; // HLIT + HDSIT + 258
-		console.log("HLIT: "+HLIT);
-		console.log(" -> codeLengthLiteralCount: "+codeLengthLiteralCount);
-		console.log("HDIST: "+HDIST);
-		console.log(" -> codeLengthDistanceCount: "+codeLengthDistanceCount);
-		console.log("HCLEN: "+HCLEN);
-		console.log(" -> codeLengthsCodeCount: "+codeLengthsCodeCount);
-		console.log("codeLengthValuesCount: "+codeLengthValuesCount);
-
-
+		// console.log("HLIT: "+HLIT);
+		// console.log(" -> codeLengthLiteralCount: "+codeLengthLiteralCount);
+		// console.log("HDIST: "+HDIST);
+		// console.log(" -> codeLengthDistanceCount: "+codeLengthDistanceCount);
+		// console.log("HCLEN: "+HCLEN);
+		// console.log(" -> codeLengthsCodeCount: "+codeLengthsCodeCount);
+		// console.log("codeLengthValuesCount: "+codeLengthValuesCount);
 
 var codeAlphabetOrder = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]; // random permutation lookup table -- 19
 var codeAlphabetOrderLength = codeAlphabetOrder.length;
@@ -387,7 +384,6 @@ var codeAlphabetOrderLength = codeAlphabetOrder.length;
 			var index = codeAlphabetOrder[i]; // translate from read value to lookup table value
 			compressed_code_lengths[index] = bits;
 		}
-console.log(compressed_code_lengths);
 		var compressed_huffman_codes = Compress.huffmanCodesFromLengths(compressed_code_lengths);
 		var huffmanTree = Compress.huffmanTreeFromCodes(compressed_huffman_codes);
 		// console.log("huffmanTree");
