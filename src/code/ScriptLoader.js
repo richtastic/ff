@@ -30,7 +30,7 @@ ScriptLoader.prototype._next = function(e){
 	++ctx._index;
 	var url = ctx._index<ctx._files.length?ctx._files[ctx._index]:null;
 	if(ctx._progressFxn){
-		ctx._progressFxn.call(ctx.context, {loaded:ctx._index, total:ctx._files.length, files:ctx._files, next:url} );
+		ctx._progressFxn.call(ctx._context, {loaded:ctx._index, total:ctx._files.length, files:ctx._files, next:url} );
 	}
 	if(ctx._index>=ctx._files.length){
 		if(ctx._completeFxn){

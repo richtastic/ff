@@ -360,19 +360,16 @@ Stage.prototype._canvasMouseExit = function(e){
 }
 
 Stage.prototype._canvasTouchStart = function(e){
-	console.log("start "+e);
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
-	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
+//	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
 }
 Stage.prototype._canvasTouchMove = function(e){
-	console.log("move "+e);
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,e);
-	this.alertAll(Canvas.EVENT_MOUSE_MOVE,e);
+//	this.alertAll(Canvas.EVENT_MOUSE_MOVE,e);
 }
 Stage.prototype._canvasTouchEnd = function(e){
-	console.log("end "+e);
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,e);
-	this.alertAll(Canvas.EVENT_MOUSE_UP,e);
+//	this.alertAll(Canvas.EVENT_MOUSE_UP,e);
 }
 
 Stage.prototype.kill = function(){

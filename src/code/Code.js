@@ -865,6 +865,58 @@ Code.getColARGBFromFloat = function(a,r,g,b){
 Code.getColARGB = function(a,r,g,b){
 	return (a<<24)+(r<<16)+(g<<8)+b;
 }
+Code.getColARGBCombineOver = function(colorBase, colorOver){
+	var aBase = Code.getAlpARGB(colorBase);
+	var rBase = Code.getRedARGB(colorBase);
+	var gBase = Code.getGrnARGB(colorBase);
+	var bBase = Code.getBluARGB(colorBase);
+		var pBase = aBase / 255.0;
+		var pBm1 = 1.0 - pBase;
+	var aOver = Code.getAlpARGB(colorOver);
+	var rOver = Code.getRedARGB(colorOver);
+	var gOver = Code.getGrnARGB(colorOver);
+	var bOver = Code.getBluARGB(colorOver);
+		var pOver = aOver / 255.0;
+		var pOm1 = 1.0 - pOver;
+	//var pRatio = ;
+
+		// var aOut = Code.clampRound0255(aBase + aOver*pBm1);
+		// var rOut = Code.clampRound0255(rBase + rOver*pBm1);
+		// var gOut = Code.clampRound0255(gBase + gOver*pBm1);
+		// var bOut = Code.clampRound0255(bBase + bOver*pBm1);
+
+	//var aOut = Code.clampRound0255(aBase*pOm1 + aOver*pOver);
+	//var rOut = Code.clampRound0255(rBase*pOm1 + rOver*pOver);
+	// var gOut = Code.clampRound0255(gBase*pOm1 + gOver*pOver);
+	// var bOut = Code.clampRound0255(bBase*pOm1 + bOver*pOver);
+
+	// var aOut = Code.clampRound0255(aBase + aOver*pBm1);
+	// var rOut = Code.clampRound0255(rBase*pOm1 + rOver);
+	// var gOut = Code.clampRound0255(gBase*pOm1 + gOver);
+	// var bOut = Code.clampRound0255(bBase*pOm1 + bOver);
+
+	// var aOut = Code.clampRound0255(aBase*pOm1 + aOver*pOver);
+	// var rOut = Code.clampRound0255(rBase*pOm1 + rOver*pOver);
+	// var gOut = Code.clampRound0255(gBase*pOm1 + gOver*pOver);
+	// var bOut = Code.clampRound0255(bBase*pOm1 + bOver*pOver);
+
+	var aOut = Code.clampRound0255(aBase*pOm1 + aOver*pOver);
+	var rOut = Code.clampRound0255(rBase*pOm1 + rOver*pOver);
+	var gOut = Code.clampRound0255(gBase*pOm1 + gOver*pOver);
+	var bOut = Code.clampRound0255(bBase*pOm1 + bOver*pOver);
+
+
+	// var aOut = Code.clampRound0255(aBase  );
+	// var rOut = Code.clampRound0255(rBase  );
+	// var gOut = Code.clampRound0255(gBase  );
+	// var bOut = Code.clampRound0255(bBase   );
+
+	// console.log(aBase,rBase,gBase,bBase)
+	// console.log(aOver,rOver,gOver,bOver)
+	// console.log(aOut,rOut,gOut,bOut)
+	return Code.getColARGB(aOut,rOut,gOut,bOut)>>>0;
+	//return Code.getColARGB( Code.clampRound0255(aBase + aOver*pBm1), Code.clampRound0255(rBase + rOver*pBm1), Code.clampRound0255(gBase + gOver*pBm1), Code.clampRound0255(bBase + bOver*pBm1) );
+}
 Code.getRedARGB = function(col){
 	return (col>>16)&0xFF;
 }
@@ -889,12 +941,11 @@ Code.getFloatGrnARGB = function(col){
 Code.getFloatBluARGB = function(col){
 	return (col&0xFF)/255.0;
 }
+Code.clampRound0255 = function(n){
+	return Math.min(Math.max(Math.round(n),0),255);
+}
 Code.getFloatArrayARGBFromARGB = function(col){
-	var a = Code.getAlpARGB(col);
-	var r = Code.getRedARGB(col);
-	var g = Code.getGrnARGB(col);
-	var b = Code.getBluARGB(col);
-	return [a/255.0,r/255.0,g/255.0,b/255.0]; // col/256
+	//
 }
 // color functions ----------------------------------------------------
 Code.getJSColorFromRGBA = function(col){
@@ -1683,6 +1734,22 @@ Code.getTargetFromMouseEvent = function(e){
 	}
 	return e.srcElement; // IE
 }
+Code.getTouchPosition = function(e){
+	return Code.getMousePosition(e);
+}
+Code.getMousePosition = function(e){
+	e = Code.getJSEvent(e);
+	var pos = new V2D(0,0);
+	var ele = this._canvas;
+	while(ele != null){
+		pos.x += ele.offsetLeft;
+		pos.y += ele.offsetTop;
+		ele = ele.offsetParent;
+	}
+	pos.x = e.pageX - pos.x;
+	pos.y = e.pageY - pos.y;
+	return pos;
+}
 Code.getKeyCodeFromKeyboardEvent = function(e){
 	return e.keyCode;
 }
@@ -1748,6 +1815,14 @@ Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 	if(v.y>fitHei){
 		v.x = fitHei*ar; v.y = fitHei;
 	}
+}
+Code.sizeToFitOutside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
+	var s = new V2D();
+	return s;
+}
+Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
+	var s = new V2D();
+	return s;
 }
 
 // -------------------------------------------------------- COOKIES

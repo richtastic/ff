@@ -92,6 +92,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 	this._matrix = new Matrix2D();
 	this._alphaStack = [];
 	this._alphaComposite = 1.0;
+	this._guesticulate = new FF.Gesticulator();
 	if(canHTML){
 		this._canvas = canHTML;
 	}else{
@@ -558,19 +559,6 @@ Canvas.prototype.getMouseDelta = function(e){
 	}
 	return 0;
 }
-Canvas.prototype.getMousePosition = function(e){
-	e = Code.getJSEvent(e);
-	var pos = new V2D(0,0);
-	var ele = this._canvas;
-	while(ele != null){
-		pos.x += ele.offsetLeft;
-		pos.y += ele.offsetTop;
-		ele = ele.offsetParent;
-	}
-	pos.x = e.pageX - pos.x;
-	pos.y = e.pageY - pos.y;
-	return pos;
-}
 Canvas.prototype.getMouseButton = function(e){
 	e = Code.getJSEvent(e);
 	var button = e.which;
@@ -585,7 +573,7 @@ Canvas.prototype.getMouseButton = function(e){
 	return but;
 }
 Canvas.prototype.getMouseObjectFromEvent = function(e){
-	var pos = this.getMousePosition(e);
+	var pos = Code.getMousePosition(e);
 	var delta = this.getMouseDelta(e);
 	pos = new V3D(pos.x,pos.y,delta );
 	var but = this.getMouseButton(e);
@@ -639,30 +627,30 @@ Canvas.prototype.isMouseDown = function(){
 }
 //  ------------------------------------------------------------------------------------------------------------------------ TOUCH POSITIONING
 // https://developer.mozilla.org/en-US/docs/DOM/TouchEvent
-Canvas.prototype.getTouchPosition = function(e){
-	return this.getMousePosition(e);
-}
 Canvas.prototype._canvasTouchStartFxn = function(e){ // e.target.touchdata[]
-	console.log( "TOUCH START" );
-	e.preventDefault();
-	pos = this.getTouchPosition(e);
-	this.alertAll(Canvas.EVENT_TOUCH_START,pos);
-	pos = null;
+	//console.log(e);
+	this._canvasTouchProcessAlert(e, Canvas.EVENT_TOUCH_START);
 }
 Canvas.prototype._canvasTouchMoveFxn = function(e){
-	console.log( "TOUCH MOVE" );
-	e.preventDefault();
-	pos = this.getTouchPosition(e);
-	this.alertAll(Canvas.EVENT_TOUCH_MOVE,pos);
+	//console.log(e);
+	this._canvasTouchProcessAlert(e, Canvas.EVENT_TOUCH_MOVE);
 }
 Canvas.prototype._canvasTouchEndFxn = function(e){
-	console.log( "TOUCH END" );
-	e.preventDefault();
-	pos = this.getTouchPosition(e);
-	//this.alertAll(Canvas.EVENT_MOUSE_UP,pos);
-	this.alertAll(Canvas.EVENT_TOUCH_END,pos);
+	//console.log(e);
+	this._canvasTouchProcessAlert(e, Canvas.EVENT_TOUCH_END);
 }
-
+Canvas.prototype._canvasTouchProcessAlert = function(e, alertEventType){
+	this._guesticulate.updateTouchesFromTouchEvent(e,false);
+	e.preventDefault();
+	var events = this._guesticulate.getTouchEventsFromTouchEvent(e);
+	if(events){
+		for(var i=0; i<events.length; ++i){
+			var obj = events[i];
+			this.alertAll(alertEventType,obj);
+		}
+	}
+	this._guesticulate.updateTouchesFromTouchEvent(e,true);
+}
 // ------------------------------------------------------------------------------------------------------------------------ SCREEN OPERATIONS
 Canvas.prototype._handleWindowResizedFxn = function(e){
 	var p = new V2D(window.innerWidth,window.innerHeight);
@@ -672,7 +660,7 @@ Canvas.prototype._handleWindowResizedFxn = function(e){
 		Code.preserveAspectRatio2D(p,this.width(),this.height(),p.x,p.y);
 		this.width( Math.floor(p.x) ); this.height( Math.floor(p.y) );
 	} // Canvas.STAGE_FIT_FIXED
-	this.alertAll(Canvas.EVENT_WINDOW_RESIZE,p);
+	this.alertAll(Canvas.EVENT_WINDOW_RESIZE,{"pos":p});
 }
 
 Canvas.prototype.kill = function(e){

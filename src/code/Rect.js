@@ -105,6 +105,9 @@ Rect.prototype.fromArray = function(points2D){ // bounding box of points
 	}
 	return this;
 }
+Rect.prototype.toArray = function(){ // bounding box of points
+	return [new V2D(this.x(),this.y()), new V2D(this.x()+this.width(),this.y()), new V2D(this.x()+this.width(),this.y()+this.height()), new V2D(this.x(),this.y()+this.height())];
+}
 Rect.prototype.copy = function(r){
 	if(r){
 		Rect.copy(this,r);

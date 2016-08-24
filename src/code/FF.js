@@ -2,7 +2,7 @@
 FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","YAML.js","FileLoader.js","ScriptLoader.js","ImageLoader.js","AudioLoader.js","MultiLoader.js","ByteData.js","SerialString.js",
 				"LinkedList.js","Queue.js","RedBlackTree.js","LLRBT.js","IntervalTree.js","PriorityQueue.js","Tree.js",
 				"AudioManager.js","Compress.js","PNG.js",
-				"Rect.js","V2D.js","V3D.js","V4D.js","V5D.js","Tri2D.js","Tri3D.js","OctTree.js","Matrix.js","Matrix2D.js","Matrix3D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatch.js","Ajax.js","ImageMat.js",
+				"Rect.js","V2D.js","V3D.js","V4D.js","V5D.js","Tri2D.js","Tri3D.js","OctTree.js","Matrix.js","Matrix2D.js","Matrix3D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatch.js","Ajax.js","ImageMat.js","Gesticulator.js",
 				"Poly2D.js","Graph.js","UnionFind.js",
 				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","MatrixStackGL.js","StageGL.js","Minify.js",
 				"Resource.js","Keyboard.js","Cache.js","Diagram.js"]; // "Node.js"
@@ -15,9 +15,10 @@ match */
 var /* in the middle */ cat = /* another */ "max";
 var myString = /* strings should not be altered */ " This String  HAS SPACES!/* this comment should not be adjusted at all*/ // WOOT!";
 function FF(homeDir, completeFxn, progressFxn, context){
+	this._context = context;
 	this._homeDir = (homeDir==undefined||homeDir==null)?"":homeDir;
-	this._compFxn = completeFxn?completeFxn:null;
-	this._progFxn = progressFxn?progressFxn:null;
+	this._compFxn = completeFxn!==undefined ? completeFxn:null;
+	this._progFxn = progressFxn!==undefined ? progressFxn:null;
 	this._script = document.createElement("script");
 	this._script.type = "text/javascript";
 	this._script.src = this._homeDir+"ScriptLoader.js";
@@ -36,12 +37,20 @@ FF.prototype._startLoadingFxn = function(){
 }
 FF.prototype._classesProgressFxn = function(o){
 	if(this._progFxn!=null){
-		this._progFxn(o);
+		if(this._context){
+			this._progFxn.call(this._context,o);
+		}else{
+			this._progFxn(o);
+		}
 	}
 }
 FF.prototype._classesLoadedFxn = function(o){
 	if(this._compFxn!=null){
-		this._compFxn(o);
+		if(this._context){
+			this._compFxn.call(this._context,o);
+		}else{
+			this._compFxn(o);
+		}
 	}
 	this.kill();
 }

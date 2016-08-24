@@ -53,10 +53,38 @@ PNG.prototype.getIndependentImages = function(){
 }
 PNG.Frame = function(){
 	this._rect = new Rect();
-	this._blendType = null;
-	this._removeType = null;
+	this._blendType = PNG._APNG_BLEND_OP_OVER;
+	this._removeType = PNG._APNG_DISPOSAL_OP_NONE;
 	this._image = null;
 	this._duration = 0;
+}
+
+PNG.Frame.prototype.blendType = function(m){
+	if(m!==undefined){
+		this._blendType = m;
+	}
+	return this._blendType;
+}
+PNG.Frame.prototype.blendTypeIsCombine = function(m){ // alpha-combine with source
+	return this.blendType() == PNG._APNG_BLEND_OP_SOURCE;
+}
+PNG.Frame.prototype.blendTypeIsReplace = function(m){ // overwrite source
+	return this.blendType() == PNG._APNG_BLEND_OP_OVER;
+}
+PNG.Frame.prototype.removeType = function(m){
+	if(m!==undefined){
+		this._removeType = m;
+	}
+	return this._removeType;
+}
+PNG.Frame.prototype.removeTypeIsNone = function(m){ // N/A
+	return this.removeType() == PNG._APNG_DISPOSAL_OP_NONE;
+}
+PNG.Frame.prototype.removeTypeIsBackground = function(m){ // to BG color
+	return this.removeType() == PNG._APNG_DISPOSAL_OP_BACKGROUND;
+}
+PNG.Frame.prototype.removeTypeIsPrevious = function(m){ // to previous color
+	return this.removeType() == PNG._APNG_DISPOSAL_OP_PREVIOUS;
 }
 PNG.Frame.prototype.width = function(w){
 	if(w!==undefined){
@@ -147,11 +175,11 @@ PNG._CHUNK_TYPE_FDAT = "fdat";
 //                                                                 210987654321098765432109876543210
 PNG._CRC_BEGIN = 0x0; // 32 26 23 22 16 12 11 10 8 7 5 4 2 1 0 =  0b100000100110000010001110110110111
 //                                                               0b011111011001111101110001001001000
-PNG_APNG_DISPOSAL_OP_NONE = 0;
-PNG_APNG_DISPOSAL_OP_BACKGROUND = 1;
-PNG_APNG_DISPOSAL_OP_PREVIOUS = 2;
-PNG_APNG_BLEND_OP_SOURCE = 0; // overwrite
-PNG_APNG_BLEND_OP_OVER = 1; // blend (alpha)
+PNG._APNG_DISPOSAL_OP_NONE = 0;
+PNG._APNG_DISPOSAL_OP_BACKGROUND = 1;
+PNG._APNG_DISPOSAL_OP_PREVIOUS = 2;
+PNG._APNG_BLEND_OP_SOURCE = 0; // overwrite
+PNG._APNG_BLEND_OP_OVER = 1; // blend (alpha)
 //    0xedb88320
 //    1110|1101|1011|1000|1000|0011|0010|0000
 
@@ -211,6 +239,8 @@ PNG.binaryArrayToPNG = function(binaryArray){
 			imageFrame.width(frame["width"]);
 			imageFrame.height(frame["height"]);
 			imageFrame.imageData( frame["image"] );
+			imageFrame.blendType( frame["blend"] );
+			imageFrame.removeType( frame["dispose"] );
 			console.log(frame["delay"])
 			imageFrame.duration( frame["delay"] );
 			imagePNG.addFrame(imageFrame);
@@ -374,10 +404,9 @@ var frameData = outputResult["frameData"];
 		console.log("APNG - ACTL : "+binaryArray.length);
 		var totalFrameCount = Code.uint32FromByteArray(binaryArray,start+0); // first 32 bits
 		var totalLoopCount = Code.uint32FromByteArray(binaryArray,start+4); // second 32 bits
-		totalFrameCount = totalFrameCount >>> 0;
-		totalLoopCount = totalLoopCount >>> 0;
-		console.log("  total frames: "+totalFrameCount);
-		console.log("   loop count: "+totalLoopCount);
+		console.log("  total frames: "+totalFrameCount+"   loop count: "+totalLoopCount);
+		outputResult["totalLoopCount"] = totalLoopCount;
+		outputResult["totalFrameCount"] = totalFrameCount;
 	}else if(type==PNG._CHUNK_TYPE_FCTL){ // APNG - frame control
 		if(outputResult["imageData"] && outputResult["imageData"].length>0){ // has already filled in from other
 			readyToProcessImage = true;
@@ -405,6 +434,8 @@ var frameData = outputResult["frameData"];
 			frameData["width"] = frameWidth;
 			frameData["height"] = frameHeight;
 			frameData["delay"] = frameDelay;//frameDelayNumerator / frameDelayDenominator;
+			frameData["blend"] = frameBlendOp;
+			frameData["dispose"] = frameDisposalOp;
 		}
 	}else if(type==PNG._CHUNK_TYPE_FDAT){ // APNG - frame data
 		console.log("APNG - FDAT");
@@ -429,6 +460,8 @@ var frameData = outputResult["frameData"];
 			frame["width"] = frameData["width"];
 			frame["height"] = frameData["height"];
 			frame["image"] = imageData["image"];
+			frame["blend"] = frameData["blend"];
+			frame["dispose"] = frameData["dispose"];
 			
 			outputResult["frames"].push(frame);
 			Code.emptyArray( outputResult["imageData"] );

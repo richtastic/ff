@@ -1,6 +1,6 @@
 // Resource.js
 
-function Resource(){
+function Resource(complete, context){
 	Resource._.constructor.call(this);
 	this._tex = new Array();
 	this._fnt = new Array();
@@ -17,6 +17,8 @@ function Resource(){
 	this._fxnLoader.completeFxn(this._load5);
 	this._context = null;
 	this._fxnComplete = null;
+	this.completeFxn(complete);
+	this.context(context);
 }
 Code.inheritClass(Resource,Dispatchable);
 // --------------------------------------------------------------------------------------------
