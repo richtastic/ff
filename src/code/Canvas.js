@@ -127,7 +127,18 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 			console.log("could not initialize webGL");
 		}
 	}else{
-		this._context = this._canvas.getContext("2d");
+		var context = this._canvas.getContext("2d");
+		//window.devicePixelRatio = 1
+		var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStoreRatio = context.webkitBackingStorePixelRatio ||
+                            context.mozBackingStorePixelRatio ||
+                            context.msBackingStorePixelRatio ||
+                            context.oBackingStorePixelRatio ||
+                            context.backingStorePixelRatio || 1;
+		var ratio = devicePixelRatio / backingStoreRatio;
+		console.log("dpr: "+devicePixelRatio+"  | bsr: "+backingStoreRatio+"   ")
+		this._context = context;
+		this._browserContextScale = ratio;
 	}
 	if(!this._context){
 		console.log("unable to get any context");
@@ -139,6 +150,9 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
 }
 Code.inheritClass(Canvas, Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ CANVAS 3D - WEB GL
+Canvas.prototype.presentationScale = function(){
+	return this._browserContextScale;
+}
 Canvas.prototype.createShaderFromString = function(str, type){
 	if(type==Canvas.WEBGL_SHADER_TYPE_FRAGMENT){
 		return this._context.createShader(this._context.FRAGMENT_SHADER)
@@ -310,20 +324,34 @@ Canvas.prototype.contextTransform = function(matrix){
 	this._context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
 }
 Canvas.prototype.size = function(wid,hei){
-	this._canvas.width = wid;
-	this._canvas.height = hei;
+	//this._updateSizeFromAbsolute(wid,hei);
 }
 Canvas.prototype.width = function(wid){
 	if(arguments.length>0){
 		this._canvas.width = wid;
+		//this._updateSizeFromAbsolute(wid,null);
 	}
-	return this._canvas.width;
+	return this._canvas.width;// / this.presentationScale();
 }
 Canvas.prototype.height = function(hei){
 	if(arguments.length>0){
 		this._canvas.height = hei;
+		//this._updateSizeFromAbsolute(null,hei);
 	}
-	return this._canvas.height;
+	return this._canvas.height;// / this.presentationScale();
+}
+Canvas.prototype._updateSizeFromAbsolute = function(wid,hei){// upscale for rendering, downscale for css presentation
+	console.log("updateSizeFromAbsolute",wid,hei)
+	var ratio = this.presentationScale();
+	if(wid){
+		this._canvas.width = wid*ratio;
+		this._canvas.style.width = wid+'px';
+	}
+	if(hei){
+		this._canvas.height = hei*ratio;
+		this._canvas.style.height= hei+'px';
+	}
+	
 }
 //  ------------------------------------------------------------------------------------------------------------------------ CANVAS OPERATIONS
 Canvas.prototype.pushComposite = function(c){
@@ -509,10 +537,12 @@ Canvas.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
 	if(siz==undefined || siz==null){ siz = 12; }
 	if(xP==undefined || xP==null){ xP=0; }
 	if(yP==undefined || yP==null){ yP=0; }
-	if(align==undefined || align==null){ align="left"; } // left, center, right
-	this._context.font = siz+"px "+fnt;
+	if(align==undefined || align==null){ align='left'; } // left, center, right
+	this._context.font = siz+'px '+fnt;
 	this._context.textAlign=align;
 	this._context.fillText(txt,xP,yP);
+	//this._context.srokeText(txt,xP,yP);
+	//console.log(txt,siz,fnt,xP,yP,align)
 }
 Canvas.prototype.measureText = function(str){
 	return this._context.measureText(str);
@@ -656,6 +686,8 @@ Canvas.prototype._handleWindowResizedFxn = function(e){
 	var p = new V2D(window.innerWidth,window.innerHeight);
 	if(this._stageFit==Canvas.STAGE_FIT_FILL){
 		this.width(p.x); this.height(p.y);
+		//this.size(p.x,p.y);
+		this._updateSizeFromAbsolute(p.x,p.y);
 	}else if(this._stageFit==Canvas.STAGE_FIT_SCALE){
 		Code.preserveAspectRatio2D(p,this.width(),this.height(),p.x,p.y);
 		this.width( Math.floor(p.x) ); this.height( Math.floor(p.y) );

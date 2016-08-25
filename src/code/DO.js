@@ -50,8 +50,9 @@ DO.removedFromStageRecursive = function(ch){
 	ch._stage = null;
 	ch._mouseOver = ch._mouseWasOver = false;// if YES, alert mouse out
 	ch.removedFromStage(null);
+
 	for(i=0;i<ch._children.length;++i){
-		if(ch._children[i].stage() != null){
+		if(ch._children[i]._stage != null){
 			DO.removedFromStageRecursive(ch._children[i]);
 		}
 	}
@@ -284,7 +285,9 @@ DO.prototype.indexOfChild = function(ch){
 	return -1;
 }
 DO.prototype.removeParent = function(){
-	this._parent.removeChild(this);
+	if(this._parent){
+		this._parent.removeChild(this);
+	}
 }
 DO.prototype.removeChild = function(ch){
 	// make sure to remove all event listeners from stage

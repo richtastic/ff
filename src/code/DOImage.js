@@ -28,9 +28,7 @@ DOImage.prototype.image = function(img){
 		this._imageY = 0;
 		this._imageWidth = img.width;
 		this._imageHeight = img.height;	
-		( this.graphicsIllustration().clear() );
-		( this.graphicsIllustration().drawImage(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight) );
-//		this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight); // default
+		this.drawImageStatic();
 	}
 	return this._image;
 }
@@ -65,54 +63,45 @@ DOImage.prototype.height = function(hei){
 	}
 	return this._imageHeight;
 }
-// ------------------------------------------------------------------------------------------------------------------------ RENDERING
-// DOImage.prototype.drawSingle = function(pX,pY,w,h){ // this is questionable .............................................................................................................
-// 	this._setProperties(pX,pY,w,h);
-// 	Code.emptyArray(this._imageQueue);
-// 	this._imageQueue.push( Code.newArray(this.graphicsIllustration().clear,Code.newArray()) );
-// 	this._imageQueue.push( Code.newArray(this.graphicsIllustration().drawImage,Code.newArray(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight)) );
-// 	this._renderFxn = this._renderReset;
-// }
-// DOImage.prototype._renderReset = function(canvas){
-// 	if(this._imageQueue.length>0){
-// 		var i, j, fxn, args;
-// 		for(i=0; i<this._imageQueue.length; ++i){
-// 			fxn = this._imageQueue[i][0];
-// 			args = this._imageQueue[i][1];
-// 			for(j=0; j<args.length; ++j){
-// 				if(args[j]==null){
-// 					args[j] = canvas;
-// 				}
-// 			}
-// 			fxn.apply(this.graphicsIllustration(),args);
-// 		}
-// 		Code.emptyArray(this._imageQueue);
-// 	}
-// 	this._renderDefault(canvas);
-// 	this._renderFxn = this._renderDefault;
-// }
 DOImage.prototype._renderDefault = function(canvas){
-	//console.log(this.graphicsIllustration == this.graphicsIntersection);
-			//this.super(this.render).render.call(this,canvas);
 	DOImage._.render.call(this,canvas);
 }
 DOImage.prototype.render = function(canvas){
 	this._renderFxn(canvas);
 }
-DOImage.prototype.drawPattern = function(pX,pY,w,h){
-	this._setProperties(pX,pY,w,h);
-	Code.emptyArray(this._imageQueue);
-	this._imageQueue.push( Code.newArray(this.graphicsIllustration().clear,Code.newArray()) );
-	//console.log(this._imageX,this._imageY,this._imageWidth,this._imageHeight);
-	this._imageQueue.push( Code.newArray(this._drawPatternTerminal,Code.newArray(null,this._imageX,this._imageY,this._imageWidth,this._imageHeight)) );
-	this._renderFxn = this._renderReset;
-}
-DOImage.prototype._drawPatternTerminal = function(canvas,pX,pY,w,h){
+DOImage.prototype.drawImageStatic = function(){
 	this.graphicsIllustration().clear();
-	var context = canvas.getContext();
-	this._pattern = context.createPattern(this._image,'repeat');
-	this.graphicsIllustration().drawImagePattern(this._pattern,pX,pY,w,h);
+	this.graphicsIllustration().drawImage(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight);
+	this._pattern = null;
+	this._renderFxn = this._renderDefault;
 }
+
+DOImage.prototype.drawClippedImage = function(sX,sY,sW,sH, pX,pY,w,h){
+	this._setProperties(pX,pY,w,h);
+	this.graphicsIllustration().clear();
+	this.graphicsIllustration().drawImage(this._image, sX,sY, sW,sH, this._imageX,this._imageY,this._imageWidth,this._imageHeight);
+	this._pattern = null;
+	this._renderFxn = this._renderDefault;
+}
+
+DOImage.prototype.drawTilePattern = function(pX,pY,w,h){
+	this._setProperties(pX,pY,w,h);
+	this._pattern = null;
+	this._renderFxn = this._renderRect;
+}
+DOImage.prototype._renderRect = function(canvas){
+	var context = canvas.context();
+	if(!this._pattern){
+		var pattern = context.createPattern(this._image,'repeat'); // repeat, repeat-x, repeat-y no-repeat
+		this._pattern = pattern;
+		this.graphicsIllustration().clear();
+		this.graphicsIllustration().drawImagePattern(pattern, this._imageX,this._imageY,this._imageWidth,this._imageHeight);
+	}
+	this._renderFxn = this._renderDefault; // back to default
+	DOImage._.render.call(this,canvas);
+}
+
+
 // ------------------------------------------------------------------------------------------------------------------------ 
 DOImage.prototype.kill = function(){
 	this._image = null;
@@ -121,3 +110,4 @@ DOImage.prototype.kill = function(){
 		
 // ------------------------------------------------------------------------------------------------------------------------ 
 //this.drawSingle(this._imageX,this._imageY, this._imageWidth,this._imageHeight);
+

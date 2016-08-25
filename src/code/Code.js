@@ -855,6 +855,13 @@ Code.randomInt = function(min,max){
 	}
 	return min + Math.min( Math.floor(Math.random()*(max-min+1)), max-min);
 }
+Code.randomFloat = function(min,max){
+	if(max===undefined){
+		max = min;
+		min = 0;
+	}
+	return min + Math.random()*(max-min);
+}
 Code.getColARGBFromFloat = function(a,r,g,b){
 	a = Math.min(Math.floor(a*256.0),255);
 	r = Math.min(Math.floor(r*256.0),255);

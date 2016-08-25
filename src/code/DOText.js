@@ -9,7 +9,7 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this._size = 12;
 	this._fontObject = null;
 	this._font = "arial";
-	this._color = 0xFF000000;
+	this._color = 0xFFFF0000;
 	this._align = DOText.ALIGN_CENTER;
 	this.setText(textIN,sizeIN,fontIN,colIN,alignIN);
 }

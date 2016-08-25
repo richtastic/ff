@@ -203,8 +203,11 @@ Graphics.prototype.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch
 	}
 }
 Graphics.prototype.drawImagePattern = function(pat,pX,pY,wid,hei){
+	console.log("draw image pattern .... ",pat);
 	this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(pat)) );
 	this._graphics.push( Code.newArray(Graphics.canvasDrawRect,Code.newArray(pX,pY,wid,hei)) );
+	// ?
+	this._graphics.push( Code.newArray(Graphics.canvasFill,Code.newArray()) );
 }
 // ------------------------------------------------------------------------------------------------------------------------ TEXT
 Graphics.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
@@ -222,6 +225,7 @@ Graphics.prototype.drawGraphics = function(canvas){
 	for(i=0;i<len;++i){
 		fxn = arr[i][0];
 		args = arr[i][1];
+		//console.log(fxn,args)
 		fxn.apply(this,args);
 	}
 }
