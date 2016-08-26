@@ -75,10 +75,16 @@ Graphics.canvasDrawImagePattern = function(img,pX,pY,wX,hY){
 Graphics.drawText = function(txt,siz,fnt,xP,yP,align){
 	Graphics._canvas.drawText(txt,siz,fnt,xP,yP,align);
 }
-Graphics.measureText = function(str,callback){
-	var res = Graphics._canvas.measureText(str);
+Graphics.measureText = function(callback,stringList){
+	var returnList = [];
+	for(var i=0; i<stringList.length; ++i){
+		var str = stringList[i];
+		var res = Graphics._canvas.measureText(str);
+		var obj = {"text":str, "width":res.width};
+		returnList.push(obj);
+	}
 	if(callback){
-		callback(res);
+		callback(returnList);
 	}
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
@@ -213,9 +219,8 @@ Graphics.prototype.drawImagePattern = function(pat,pX,pY,wid,hei){
 Graphics.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
 	this._graphics.push( Code.newArray(Graphics.drawText,Code.newArray(txt,siz,fnt,xP,yP,align)) );
 }
-Graphics.prototype.measureText = function(str,callback){
-	//if(Graphics.canvas){ return Graphics.canvas.measureText(str); }
-	this._graphics.push( Code.newArray(Graphics.measureText,Code.newArray(str,callback)) );
+Graphics.prototype.measureText = function(callback,stringList){
+	this._graphics.push( Code.newArray(Graphics.measureText,Code.newArray(callback,stringList)) );
 }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 Graphics.prototype.drawGraphics = function(canvas){

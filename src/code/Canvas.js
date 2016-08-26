@@ -136,7 +136,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas 
                             context.oBackingStorePixelRatio ||
                             context.backingStorePixelRatio || 1;
 		var ratio = devicePixelRatio / backingStoreRatio;
-		console.log("dpr: "+devicePixelRatio+"  | bsr: "+backingStoreRatio+"   ")
+		//console.log("dpr: "+devicePixelRatio+"  | bsr: "+backingStoreRatio+"   ")
 		this._context = context;
 		this._browserContextScale = ratio;
 	}
@@ -341,7 +341,6 @@ Canvas.prototype.height = function(hei){
 	return this._canvas.height;// / this.presentationScale();
 }
 Canvas.prototype._updateSizeFromAbsolute = function(wid,hei){// upscale for rendering, downscale for css presentation
-	console.log("updateSizeFromAbsolute",wid,hei)
 	var ratio = this.presentationScale();
 	if(wid){
 		this._canvas.width = wid*ratio;
