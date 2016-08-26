@@ -7,7 +7,7 @@ function JSDispatch(){
 JSDispatch.prototype.addJSEventListener = function(object, type, fxn, ctx){
 	var context = {"element":object, "event":type, "function":fxn, "context":ctx};
 	var callback = function(e){
-		context.function.call(context.context,e);
+		context["function"].call(context["context"],e);
 	}
 	context["callback"] = callback;
 	Code.addEventListener(object, type, callback);
