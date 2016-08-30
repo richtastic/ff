@@ -259,16 +259,15 @@ Code.newArray = function(){
 	return arr;
 }
 Code.newArrayZeros = function(len){
-	var i, arr = new Array(len);
-	for(i=len;i--;){
-		arr[i] = 0.0;
-	}
-	return arr;
+	return Code.newArrayConstant(len, 0.0);
 }
 Code.newArrayOnes = function(len){
+	return Code.newArrayConstant(len, 1.0);
+}
+Code.newArrayConstant = function(len,val){
 	var i, arr = new Array(len);
 	for(i=len;i--;){
-		arr[i] = 1.0;
+		arr[i] = val;
 	}
 	return arr;
 }
@@ -2656,10 +2655,15 @@ Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
 	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
-Code.distancePointLine2D = function(org,dir, point){
+Code.distancePointRay2D = function(org,dir, point){ // point and RAY
 	var p = Code.closestPointLine2D(org,dir, point);
 	return V2D.distance(point,p);
 }
+Code.distancePointLine2D_ = function(a,b, point){ // point and RAY
+	var dir = V2D.sub(b,a);
+	return Code.distancePointRay2D(a,dir, point);
+}
+
 Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
 	if(t<=0){
@@ -3524,7 +3528,61 @@ Code.polygonArea2D = function(polyArray){
 	polygon.kill();
 	return area;
 }
+Code.rectContainingRectAtTangent = function(a,b,c,d, tan){
+	tan = V2D.norm(tan);
+	var per = V2D.rotate(tan,Math.PIO2);
+	var points = [a,b,c,d];
+	var i, j;
+	var maxDistance = 0;
+	var oppositePair = null;
+	var pointA, pointB, pointC, pointD;
+	for(i=0; i<4; ++i){
+		pointA = points[i];
+		for(j=i+1; j<4; ++j){
+			pointB = points[j];
+			var distance = Code.distancePointRay2D(pointA,tan, pointB);
+			if(distance>maxDistance){
+				maxDistance = distance;
+				oppositePair = [pointA,pointB];
+			}
+		}
+	}
+	pointA = oppositePair[0];
+		pointA2 = V2D.add(pointA,tan);
+	pointB = oppositePair[1];
+		pointB2 = V2D.add(pointB,tan);
+	Code.removeElementSimple(points, pointA);
+	Code.removeElementSimple(points, pointB);
+console.log(points)
+	pointC = points[0];
+		pointC2 = V2D.add(pointC,per);
+	pointD = points[1];
+		pointD2 = V2D.add(pointD,per);
+	// a = Code.rayLineIntersect2D(pointA,pointA2, pointC,pointC2);
+	// b = Code.rayLineIntersect2D(pointC,pointC2, pointB,pointB2);
+	// c = Code.rayLineIntersect2D(pointB,pointB2, pointD,pointD2);
+	// d = Code.rayLineIntersect2D(pointD,pointD2, pointA,pointA2);
+	a = Code.rayLineIntersect2D(pointA,tan, pointC,per);
+	b = Code.rayLineIntersect2D(pointC,per, pointB,tan);
+	c = Code.rayLineIntersect2D(pointB,tan, pointD,per);
+	d = Code.rayLineIntersect2D(pointD,per, pointA,tan);
+//return [pointA,pointC, a,a]
 
+//return [pointA,pointB, pointC,pointD]
+
+//return [pointA,pointA2, pointB,pointB2];
+//return [pointC,pointC2, pointD,pointD2];
+
+	return [a,b,c,d];
+	/*
+	var a = new V2D(0,0);
+	var b = new V2D(1,0);
+	var c = new V2D(1,-2);
+	var d = new V2D(0,-2);
+	var tan = new V2D(1,1);
+	Code.rectContainingRectAtTangent(a,b,c,d, tan);
+	*/
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));

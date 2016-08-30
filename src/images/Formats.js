@@ -32,6 +32,86 @@ function Formats(){
 	//ajax.get("./mri.png",this,this._handleLoaded,null);
 	//ajax.();
 GLOBALSTAGE = this._stage;
+
+
+/*
+	
+	var a = new V2D(0,0);
+	var b = new V2D(10,0);
+	var c = new V2D(10,-20);
+	var d = new V2D(0,-20);
+	var tan = new V2D(1,.5);
+
+	// var a = new V2D(0,0);
+	// var b = new V2D(20,12.5);
+	// var c = new V2D(40,-20);
+	// var d = new V2D(20,-32.5);
+	// var tan = new V2D(1,-1);
+
+	var rect = Code.rectContainingRectAtTangent(a,b,c,d, tan);
+	var A = rect[0];
+	var B = rect[1];
+	var C = rect[2];
+	var D = rect[3];
+	
+	var dd = new DO();
+	dd.matrix().scale(3,-3);
+	dd.matrix().translate(100,100);
+	
+	dd.graphics().clear();
+	dd.graphics().setLine(1.0, 0xFFFF0000);
+	dd.graphics().beginPath();
+	dd.graphics().moveTo(a.x,a.y);
+	dd.graphics().lineTo(b.x,b.y);
+	dd.graphics().lineTo(c.x,c.y);
+	dd.graphics().lineTo(d.x,d.y);
+	dd.graphics().lineTo(a.x,a.y);
+	dd.graphics().endPath();
+	dd.graphics().strokeLine();
+
+	a = A;
+	b = B;
+	c = C;
+	d = D;
+
+	// dd.graphics().setLine(1.0, 0xFF00FF00);
+	// dd.graphics().beginPath();
+	// dd.graphics().drawCircle(a.x,a.y, 3.0);
+	// dd.graphics().endPath();
+	// dd.graphics().strokeLine();
+
+	// dd.graphics().setLine(1.0, 0xFF00FFFF);
+	// dd.graphics().beginPath();
+	// dd.graphics().drawCircle(b.x,b.y, 3.0);
+	// dd.graphics().endPath();
+	// dd.graphics().strokeLine();
+
+	// dd.graphics().setLine(1.0, 0xFF0000FF);
+	// dd.graphics().beginPath();
+	// dd.graphics().drawCircle(c.x,c.y, 3.0);
+	// dd.graphics().endPath();
+	// dd.graphics().strokeLine();
+
+	// dd.graphics().setLine(1.0, 0xFF000000);
+	// dd.graphics().beginPath();
+	// dd.graphics().drawCircle(d.x,d.y, 3.0);
+	// dd.graphics().endPath();
+	// dd.graphics().strokeLine();
+
+
+	dd.graphics().setLine(1.0, 0xFF00FF00);
+	dd.graphics().beginPath();
+	dd.graphics().moveTo(a.x,a.y);
+	dd.graphics().lineTo(b.x,b.y);
+	dd.graphics().lineTo(c.x,c.y);
+	dd.graphics().lineTo(d.x,d.y);
+	dd.graphics().lineTo(a.x,a.y);
+	dd.graphics().endPath();
+	dd.graphics().strokeLine();
+
+	this._stage.addChild(dd);
+	console.log("yep");
+	*/
 }
 Formats.prototype._handleLoaded = function(response){
 	//console.log(response);
@@ -63,87 +143,127 @@ var animationFullWidth = imagePNG.width();
 var animationFullHeight = imagePNG.height();
 var currentAnimationValues = null;
 var currentFrame = null;
-var previousFrame = [];
-var backgroundColor = 0xFFFFFFFF;
+var previousFrame = null;
+var previousFrameValues = null;
+var backgroundColor = 0x00000000; // transparent black
+var lastCallTimestamp = -1;
 ticker.addFunction(Ticker.EVENT_TICK, function(e){
-	var i, j, index, color;
 
-	var tempFrame = currentFrame;
+if(f==2){
+	ticker.stop();
+	return;
+}
+
+	var currentTimeStamp = Code.getTimeMilliseconds();
+	var timeSinceLastCall = null;
+	if(lastCallTimestamp>0){
+		timeSinceLastCall =  currentTimeStamp - lastCallTimestamp;
+	}
+		lastCallTimestamp = currentTimeStamp;
+	var i, j, index, color;
+	var calculatedLatency = 0;
+//currentAnimationValues = Code.newArrayConstant(animationFullWidth*animationFullHeight, backgroundColor);
 	if(f==0 || !currentAnimationValues){
-		currentAnimationValues = Code.newArrayZeros(animationFullWidth*animationFullHeight);
+		currentAnimationValues = Code.newArrayConstant(animationFullWidth*animationFullHeight, backgroundColor);
+		previousFrameValues = null;
 	}
-	if(!previousFrame){
-		Code.copyArray(previousFrame, currentFrame);
+	if(previousFrameValues==null){
+		previousFrameValues = Code.copyArray(currentFrameValues);
 	}
-	var currentFrame = imagePNG.frame(f);
+	previousFrame = currentFrame;
+	// disposal of old content
+	if(previousFrame){
+		calculatedLatency = timeSinceLastCall ? timeSinceLastCall - previousFrame.duration()*1000 : 0;
+		var previousFrameWidth = previousFrame.width();
+		var previousFrameHeight = previousFrame.height();
+		var imageOffsetX = previousFrame.x();
+		var imageOffsetY = previousFrame.y();
+		console.log("PREV: "+previousFrameWidth+"x"+previousFrameHeight+" @ "+imageOffsetX+"x"+imageOffsetY+"  removal: "+previousFrame.removeType());
+var count = 0;
+		for(j=0; j<previousFrameHeight; ++j){
+			for(i=0; i<previousFrameWidth; ++i){
+				var x = i + imageOffsetX;
+				var y = j + imageOffsetY;
+				var indexAnimation = y*animationFullWidth + x;
+				// disposal type
+				if(currentFrame.removeTypeIsNone()){
+					// N/A
+				}else if(currentFrame.removeTypeIsBackground()){
+					currentAnimationValues[indexAnimation] = backgroundColor;
+				}else if(currentFrame.removeTypeIsPrevious()){
+					currentAnimationValues[indexAnimation] = previousFrameValues[indexAnimation];
+				}
+				//currentAnimationValues[indexAnimation] = backgroundColor;
+				++count;
+			}
+		}
+	}
+	console.log(count+" / ")
+	// new content
+	currentFrame = imagePNG.frame(f);
 	var currentFrameWidth = currentFrame.width();
 	var currentFrameHeight = currentFrame.height();
 	var imageOffsetX = currentFrame.x();
 	var imageOffsetY = currentFrame.y();
 	var currentFrameValues = currentFrame.imageData();
-	index = 0;
-console.log(currentFrameWidth+"x"+currentFrameHeight+" / "+animationFullWidth+"x"+animationFullHeight+" combine? : "+currentFrame.blendTypeIsCombine()+"  removal: "+currentFrame.removeType());
+	console.log("NEXT: "+currentFrameWidth+"x"+currentFrameHeight+" @ "+imageOffsetX+"x"+imageOffsetY+"  combine: "+currentFrame.blendType());
 	for(j=0; j<currentFrameHeight; ++j){
 		for(i=0; i<currentFrameWidth; ++i){
 			var x = i + imageOffsetX;
 			var y = j + imageOffsetY;
 			var indexFrame = j*currentFrameWidth + i;
 			var indexAnimation = y*animationFullWidth + x;
-
-			if(currentFrame.removeTypeIsNone()){
-				// N/A
-			}else if(currentFrame.removeTypeIsBackground()){
-				currentFrame[indexAnimation] = backgroundColor;
-			}else if(currentFrame.removeTypeIsPrevious()){
-				currentFrame[indexAnimation] = previousFrame[indexAnimation];
-			}
-			
-
 			var oldColorAnimation = currentAnimationValues[indexAnimation];
 			var colorFrame = currentFrameValues[indexFrame];
 			var newColorAnimation; // combine type
 			if(currentFrame.blendTypeIsCombine()){
 				newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
-			}else{ // currentFrame.blendTypeIsReplace()
-				newColorAnimation = colorFrame
+			}else{ // replace type currentFrame.blendTypeIsReplace()
+				newColorAnimation = colorFrame;
 			}
+			if(i==18 && j==21){
+				console.log("@"+i+","+j+" = "+colorFrame.toString(16));
+			}
+//newColorAnimation = colorFrame;
+newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
 			currentAnimationValues[indexAnimation] = newColorAnimation;
 		}
 	}
-	Code.copyArray(previousFrame, currentFrame);
-	
-	// if(currentFrame.removeTypeIsNone()){
-	// 	// N/A
-	// }else if(currentFrame.removeTypeIsBackground()){
-	// 	// N/A
-	// }else if(currentFrame.removeTypeIsPrevious()){
-	// 	// N/A
-	// }
-	
+	// save previous frame
+	previousFrameValues = Code.copyArray(currentAnimationValues);
+	// create display
 	var delay = currentFrame.duration();
 	var frameLength = delay*1000;
 	d.graphics().clear();
-		var size = 1;
-		for(i=0;i<currentAnimationValues.length;++i){
-			var x = (i%animationFullWidth);
-			var y = Math.floor(i/animationFullWidth);
-			var color = currentAnimationValues[i];
-			d.graphics().setFill(color);
-			d.graphics().beginPath();
-			d.graphics().drawRect( x*size, y*size,size,size);
-			d.graphics().endPath();
-			d.graphics().fill();
-		}
-Code.timerStop();
-console.log( Code.timerDifference() +" / "+frameLength);
-Code.timerStart();
+	var size = 1;
+	for(i=0;i<currentAnimationValues.length;++i){
+		var x = (i%animationFullWidth);
+		var y = Math.floor(i/animationFullWidth);
+		var color = currentAnimationValues[i];
+		d.graphics().setFill(color);
+		d.graphics().beginPath();
+		d.graphics().drawRect( x*size, y*size,size,size);
+		d.graphics().endPath();
+		d.graphics().fill();
+	}
+	// DRAWN AREA:
+
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect( imageOffsetX*size, imageOffsetY*size,currentFrameWidth*size,currentFrameHeight*size);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
 
 	// NEXT FRAME
 	f = (f+1) % imagePNG.framesTotal();
 
 	//ticker.stop();
 	//console.log(frameLength);
-	ticker.frameSpeed(frameLength);
+	var adjustedLength = frameLength - calculatedLatency;
+console.log("delta time: "+timeSinceLastCall+", latency: "+calculatedLatency+" next frame time: "+frameLength+" waiting: "+adjustedLength);
+	ticker.frameSpeed(adjustedLength);
+ticker.frameSpeed(1000);
+
 	//ticker.start(false);
 	//console.log(  getTimeFromTimeStamp( Code.getTimeStamp() ) );
 

@@ -38,6 +38,32 @@ PNG.prototype.frame = function(index, f){
 	}
 	return null;
 }
+PNG.prototype.frameModulo = function(index, f){
+	if(index!=-undefined){
+		index = index % this._frames.length;
+		if(index<0){
+			index += this._frames.length;
+		}
+		return this.frame(index,f);
+	}
+	return null;
+}
+PNG.prototype.nextFrameIndex = function(index){
+	if(index!=-undefined){
+		return (index + 1) % this._frames.length;
+	}
+	return null;
+}
+PNG.prototype.prevFrameIndex = function(index){
+	if(index!=-undefined){
+		index -= 1;
+		if(index<0){
+			index = this._frames.length - 1;
+		}
+		return index;
+	}
+	return null;
+}
 PNG.prototype.addFrame = function(frame){
 	if(frame!=undefined){
 		this._frames.push(frame);
@@ -53,7 +79,7 @@ PNG.prototype.getIndependentImages = function(){
 }
 PNG.Frame = function(){
 	this._rect = new Rect();
-	this._blendType = PNG._APNG_BLEND_OP_OVER;
+	this._blendType = PNG._APNG_BLEND_OP_SOURCE;
 	this._removeType = PNG._APNG_DISPOSAL_OP_NONE;
 	this._image = null;
 	this._duration = 0;
@@ -66,10 +92,10 @@ PNG.Frame.prototype.blendType = function(m){
 	return this._blendType;
 }
 PNG.Frame.prototype.blendTypeIsCombine = function(m){ // alpha-combine with source
-	return this.blendType() == PNG._APNG_BLEND_OP_SOURCE;
+	return this.blendType() ==  PNG._APNG_BLEND_OP_OVER;
 }
 PNG.Frame.prototype.blendTypeIsReplace = function(m){ // overwrite source
-	return this.blendType() == PNG._APNG_BLEND_OP_OVER;
+	return this.blendType() ==PNG._APNG_BLEND_OP_SOURCE;
 }
 PNG.Frame.prototype.removeType = function(m){
 	if(m!==undefined){
@@ -236,6 +262,7 @@ PNG.binaryArrayToPNG = function(binaryArray){
 		var imageFrame = new PNG.Frame();
 			imageFrame.x(frame["offsetX"]);
 			imageFrame.y(frame["offsetY"]);
+console.log("SET THE SIZE: "+frame["width"]+" x "+frame["height"]);
 			imageFrame.width(frame["width"]);
 			imageFrame.height(frame["height"]);
 			imageFrame.imageData( frame["image"] );
@@ -276,6 +303,8 @@ var frameData = outputResult["frameData"];
 		var interlaceMethod = binaryArray[start+12];
 		outputResult["width"] = width;
 		outputResult["height"] = height;
+	frameData["width"] = width; // if non animated
+	frameData["height"] = height;
 		outputResult["bitDepth"] = bitDepth;
 		outputResult["colorType"] = colorType;
 		outputResult["compressionMethod"] = compressionMethod;
@@ -447,7 +476,7 @@ var frameData = outputResult["frameData"];
 	if(readyToProcessImage){
 		if(outputResult["imageData"]){
 			console.log("new frame ++++++++++++++++++++++++++++++++++++++++++++++++ "+frameData["width"]+"x"+frameData["height"]);
-
+			console.log(frameData);
 			var imageData = PNG._processImage(outputResult,binaryArray, frameData["width"], frameData["height"]);
 			if(!outputResult["frames"]){
 				outputResult["frames"] = [];
@@ -473,6 +502,8 @@ var frameData = outputResult["frameData"];
 }
 
 PNG._processImage = function(outputResult, binaryArray, imageWidth, imageHeight){
+	console.log("PNG._processImage");
+
 	var imageData = outputResult["imageData"];
 	if(!imageData || imageData.length==0){ // empty image data
 		return null;
