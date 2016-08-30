@@ -214,7 +214,7 @@ PNG._APNG_BLEND_OP_OVER = 1; // blend (alpha)
 
 //PNG.binaryArrayToFloatARGB = function(binaryArray){
 PNG.binaryArrayToPNG = function(binaryArray){
-	console.log(binaryArray)
+//	console.log(binaryArray)
 	if(!binaryArray){
 		return null;
 	}
@@ -231,7 +231,6 @@ PNG.binaryArrayToPNG = function(binaryArray){
 
 		a = binaryArray[i];
 		b = PNG._HEADER_INT_LIST[i];
-		console.log(a,b);
 		if(a!==b){
 			console.log("exit B");
 			return null;
@@ -239,14 +238,13 @@ PNG.binaryArrayToPNG = function(binaryArray){
 	}
 
 	var chunk = PNG._readChunk(binaryArray,i);
-	console.log(chunk)
 	while(chunk!=null){
 		var redo = PNG._processChunk(chunk,binaryArray,outputResult);
-		if(redo){
-			continue;
-		}
+		// if(redo){
+		// 	continue;
+		// }
 		i = chunk.next;
-		console.log(" chunk: "+i+" / "+binaryArray.length);
+		//console.log(" chunk: "+i+" / "+binaryArray.length);
 		chunk = PNG._readChunk(binaryArray,i);
 	}
 	// put data into class structure
@@ -258,11 +256,10 @@ PNG.binaryArrayToPNG = function(binaryArray){
 	for(i=0; i<frames.length; ++i){
 		var frame = frames[i];
 		console.log("frame: "+i)
-		console.log(frame)
 		var imageFrame = new PNG.Frame();
 			imageFrame.x(frame["offsetX"]);
 			imageFrame.y(frame["offsetY"]);
-console.log("SET THE SIZE: "+frame["width"]+" x "+frame["height"]);
+//console.log("SET THE SIZE: "+frame["width"]+" x "+frame["height"]);
 			imageFrame.width(frame["width"]);
 			imageFrame.height(frame["height"]);
 			imageFrame.imageData( frame["image"] );
@@ -276,8 +273,8 @@ console.log("SET THE SIZE: "+frame["width"]+" x "+frame["height"]);
 }
 PNG._processChunk = function(chunk,binaryArray,outputResult){
 	var readyToProcessImage = false;
-var returnValue = null;
 var frameData = outputResult["frameData"];
+//console.log(frameData)
 	var i;
 	var start = chunk.dataOffset; // length + header
 	var length = chunk.dataLength;
@@ -422,28 +419,25 @@ var frameData = outputResult["frameData"];
 			outputResult["imageData"].push([start,length])
 		}else if(type==PNG._CHUNK_TYPE_FDAT){
 			var sequenceNumber = Code.uint32FromByteArray(binaryArray,start);
-			console.log("seq #:"+sequenceNumber)
+//			console.log("seq #:"+sequenceNumber)
 			outputResult["imageData"].push([start+4,length-4])
 		}
-		console.log("IDAT: "+start+" : "+length+" ........................");
+//		console.log("IDAT: "+start+" : "+length+" ........................");
 	}else if(type==PNG._CHUNK_TYPE_IEND){ // multiple IDATs are conactenated (as compressed) then decompressed as a single stream
 		console.log("IEND");
-		readyToProcessImage = true;
+		PNG._preProcessImage(outputResult, frameData, binaryArray);
 	}else if(type==PNG._CHUNK_TYPE_ACTL){ // APNG - animation control
-		console.log("APNG - ACTL : "+binaryArray.length);
+//		console.log("APNG - ACTL : "+binaryArray.length);
 		var totalFrameCount = Code.uint32FromByteArray(binaryArray,start+0); // first 32 bits
 		var totalLoopCount = Code.uint32FromByteArray(binaryArray,start+4); // second 32 bits
 		console.log("  total frames: "+totalFrameCount+"   loop count: "+totalLoopCount);
 		outputResult["totalLoopCount"] = totalLoopCount;
 		outputResult["totalFrameCount"] = totalFrameCount;
 	}else if(type==PNG._CHUNK_TYPE_FCTL){ // APNG - frame control
-		if(outputResult["imageData"] && outputResult["imageData"].length>0){ // has already filled in from other
-			readyToProcessImage = true;
-			returnValue = true;
-			// process previous image data
-		}else {
-			console.log("APNG - FCTL");
+			PNG._preProcessImage(outputResult, frameData, binaryArray);
+//			console.log("APNG - FCTL");
 			var sequenceNumber = Code.uint32FromByteArray(binaryArray,start+0);
+console.log("sequenceNumber: "+sequenceNumber)
 			var frameWidth = Code.uint32FromByteArray(binaryArray,start+4);
 			var frameHeight = Code.uint32FromByteArray(binaryArray,start+8);
 			var frameXOffset = Code.uint32FromByteArray(binaryArray,start+12);
@@ -454,10 +448,7 @@ var frameData = outputResult["frameData"];
 			var frameDisposalOp = Code.uint8FromByteArray(binaryArray,start+24);
 			var frameBlendOp  = Code.uint8FromByteArray(binaryArray,start+25);
 			var frameDelay = frameDelayNumerator / frameDelayDenominator;
-			console.log("    frame: "+sequenceNumber);
-			console.log("    size: "+frameWidth+"x"+frameHeight+"    offset: "+frameXOffset+","+frameYOffset);
-			console.log("    delay: "+frameDelay);
-			console.log("    displsoal op: "+frameDisposalOp+"    blend op: "+frameBlendOp);
+			console.log("    frame: "+sequenceNumber+"  size: "+frameWidth+"x"+frameHeight+"    offset: "+frameXOffset+","+frameYOffset+"  delay: "+frameDelay+" dispsosal op: "+frameDisposalOp+"    blend op: "+frameBlendOp);
 			frameData["offsetX"] = frameXOffset;
 			frameData["offsetY"] = frameYOffset;
 			frameData["width"] = frameWidth;
@@ -465,18 +456,18 @@ var frameData = outputResult["frameData"];
 			frameData["delay"] = frameDelay;//frameDelayNumerator / frameDelayDenominator;
 			frameData["blend"] = frameBlendOp;
 			frameData["dispose"] = frameDisposalOp;
-		}
+//outputResult["frameData"] = frameData;
 	}else if(type==PNG._CHUNK_TYPE_FDAT){ // APNG - frame data
 		console.log("APNG - FDAT");
 	}else{
 		console.log("unknown type: "+type);
 	}
+}
 
-
-	if(readyToProcessImage){
+PNG._preProcessImage = function(outputResult, frameData, binaryArray){
 		if(outputResult["imageData"]){
 			console.log("new frame ++++++++++++++++++++++++++++++++++++++++++++++++ "+frameData["width"]+"x"+frameData["height"]);
-			console.log(frameData);
+//			console.log(frameData);
 			var imageData = PNG._processImage(outputResult,binaryArray, frameData["width"], frameData["height"]);
 			if(!outputResult["frames"]){
 				outputResult["frames"] = [];
@@ -494,23 +485,19 @@ var frameData = outputResult["frameData"];
 			
 			outputResult["frames"].push(frame);
 			Code.emptyArray( outputResult["imageData"] );
-			outputResult["frameData"] = {};
+			//outputResult["frameData"] = {};
+			outputResult["imageData"] = null;
 		}
-	}
-
-	return returnValue;
 }
 
 PNG._processImage = function(outputResult, binaryArray, imageWidth, imageHeight){
-	console.log("PNG._processImage");
-
 	var imageData = outputResult["imageData"];
 	if(!imageData || imageData.length==0){ // empty image data
 		return null;
 	}
 	var i, j, index;
 	// combine all idata into single stream
-	console.log("  . combining compressed image data: "+imageData);
+//	console.log("  . combining compressed image data: "+imageData);
 	var totalDataLength = 0;
 	for(i=0; i<imageData.length; ++i){
 		totalDataLength += imageData[i][1];
@@ -531,7 +518,7 @@ PNG._processImage = function(outputResult, binaryArray, imageWidth, imageHeight)
 	var filterMethod = outputResult.filterMethod;
 	// if filtered, inverse filter
 
-	console.log("... DECOMPRESSING DATA ... : "+compressedImageData.length+" / "+totalDataLength+"              -----------------------------------------------------------------------------------------------------           ");
+//	console.log("... DECOMPRESSING DATA ... : "+compressedImageData.length+" / "+totalDataLength+"              -----------------------------------------------------------------------------------------------------           ");
 	var outputArray = [];
 	var offsetOutput = 0;
 	var decompressed = Compress.lz77Decompress(compressedImageData, 0, totalDataLength);
@@ -572,7 +559,7 @@ outputDataArray[i] = Code.getColARGB(a,r,g,b);
 }else{ // only idat
 	// INVERSE FILTERING
 	var channels = Math.floor( decompressed.length/(imageHeight*imageWidth) ); // eg 4 = rgba | TODO: non-8-bit coloring scheme
-console.log(channels,imageWidth,imageHeight);
+//console.log(channels,imageWidth,imageHeight);
 	var out = new Array(channels*imageWidth*imageHeight);
 	var channelGap = channels*8;
 	var lineWidthOut = imageWidth*channels;
@@ -581,47 +568,74 @@ console.log(channels,imageWidth,imageHeight);
 	var indexOut = 0;
 	for(j=0; j<imageHeight; ++j){
 		var filterType = decompressed[indexIn++];
+		console.log("  => "+j+"     --- filterType: "+filterType);
 		if(filterType==0){ // N/A : recon(x) = filt(x)
 			for(i=0; i<lineWidthOut; ++i){
-				out[indexOut+i] = decompressed[indexIn+i];
+				var val = decompressed[indexIn+i];
+				val = val & 0xFF;
+				out[indexOut+i] = val;
 			}
 			indexOut += lineWidthOut;
 			indexIn += lineWidthOut;
 		}else if(filterType==1){ // SUB : recon(x) = filter(x) + recon(a)
 			for(i=0; i<channels; ++i){ // first few bytes
-				out[indexOut+i] = decompressed[indexIn+i];
+				out[indexOut+i] = decompressed[indexIn+i] & 0xFF;
 			}
 			for(i=channels; i<lineWidthOut; ++i){
-				out[indexOut+i] = decompressed[indexIn+i] + out[indexOut + i - channels]; // prev pixel
-				out[indexOut+i] = out[indexOut+i] & 0xFF;
+				var a = out[indexOut + i - channels] & 0xFF; a >>>= 0;
+				var val = decompressed[indexIn+i] + a; // prev pixel
+				val = val & 0xFF;
+				out[indexOut+i] = val;
 			}
 			indexOut += lineWidthOut;
 			indexIn += lineWidthOut;
 		}else if(filterType==2){ // UP : recon(x) = filter(x) + recon(b)
-			for(i=0; i<channels; ++i){ // first few bytes
-				out[indexOut+i] = decompressed[indexIn+i];
-				out[indexOut+i] = out[indexOut+i] & 0xFF;
-			}
+			// for(i=0; i<channels; ++i){ // first few bytes
+			// 	out[indexOut+i] = decompressed[indexIn+i] & 0xFF;
+			// }
 			for(i=0; i<lineWidthOut; ++i){
-				out[indexOut+i] = decompressed[indexIn+i] + out[indexOut + i - lineWidthOut]; // prev line
-				out[indexOut+i] = out[indexOut+i] & 0xFF;
+				var b = out[indexOut + i - lineWidthOut] & 0xFF; b >>>= 0;
+				var val = decompressed[indexIn+i] + b; // prev line
+				val = val & 0xFF;
+				out[indexOut+i] = val;
+
 			}
 			indexOut += lineWidthOut;
 			indexIn += lineWidthOut;
 		}else if(filterType==3){ // AVG : recon(x) = filt(x) + floor( (recon(a)+recon(b))/2 )
-			for(i=0; i<lineWidthOut; ++i){
-				out[indexOut+i] = decompressed[indexIn+i] + Math.floor( (out[indexOut + i - channels] + out[indexOut + i - lineWidthOut]) * 0.5 ); // prev pixel + prev line pixel
-				out[indexOut+i] = out[indexOut+i] & 0xFF;
+			for(i=0; i<channels; ++i){ // first few bytes
+				var a = 0;
+				var b = out[indexOut + i - lineWidthOut]; b >>>= 0;
+				var val = decompressed[indexIn+i] + Math.floor( Math.floor(a+b)*0.5 );
+				val = val & 0xFF;
+				out[indexOut+i] = val;
+			
+			}
+			for(i=channels; i<lineWidthOut; ++i){
+				var a = out[indexOut + i - channels]; a >>>= 0;
+				var b = out[indexOut + i - lineWidthOut]; b >>>= 0;
+				var val = decompressed[indexIn+i] + Math.floor( Math.floor(a+b)*0.5 ); // prev pixel + prev line pixel
+				val = val & 0xFF;
+				out[indexOut+i] = val;
 			}
 			indexOut += lineWidthOut;
 			indexIn += lineWidthOut;
 		}else if(filterType==4){ // PAETH PREDICTOR : recon(x) = filt(x) + paeth(recon(a), recon(b), recon(c))
 			for(i=0; i<channels; ++i){ // first few bytes
-				out[indexOut+i] = decompressed[indexIn+i];
+				var a = 0;
+				var b = out[indexOut + i - lineWidthOut] & 0xFF; b >>>= 0;
+				var c = 0;
+				var val = decompressed[indexIn+i] + PNG.paethPredictor(a, b, c);
+				val = val & 0xFF;
+				out[indexOut+i] = val;
 			}
 			for(i=channels; i<lineWidthOut; ++i){
-				out[indexOut+i] = decompressed[indexIn+i] + PNG.paethPredictor( out[indexOut + i - channels], out[indexOut + i - lineWidthOut], out[indexOut + i - channels - lineWidthOut]);
-				out[indexOut+i] = out[indexOut+i] & 0xFF;
+				var a = out[indexOut + i - channels] & 0xFF; a >>>= 0;
+				var b = out[indexOut + i - lineWidthOut] & 0xFF; b >>>= 0;
+				var c = out[indexOut + i - channels - lineWidthOut] & 0xFF; c >>>= 0;
+				var val = decompressed[indexIn+i] + PNG.paethPredictor(a, b, c);
+				val = val & 0xFF;
+				out[indexOut+i] = val;
 			}
 			indexOut += lineWidthOut;
 			indexIn += lineWidthOut;
@@ -697,7 +711,7 @@ PNG._readChunk = function(binaryArray,offset,length){ // header:4 | length:4 | d
 		}
 	}
 	var chunkType = PNG._chunkTypeFromArray(chunkHeader);
-	console.log("  _ chunk: "+chunkHeader+" ("+chunkLength+") | "+chunkType);
+//	console.log("  _ chunk: "+chunkHeader+" ("+chunkLength+") | "+chunkType);
 	return {"length":fullChunkLength, "offset":offset, "type":chunkType, "chunk":chunkHeader, "data":chunkData, "dataOffset":dataOffset, "dataLength":chunkLength, "crc":chunkCRC, "next":i};
 }
 PNG._chunkTypeFromArray = function(array){

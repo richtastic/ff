@@ -149,7 +149,8 @@ var backgroundColor = 0x00000000; // transparent black
 var lastCallTimestamp = -1;
 ticker.addFunction(Ticker.EVENT_TICK, function(e){
 
-if(f==2){
+
+if(f==4){
 	ticker.stop();
 	return;
 }
@@ -197,8 +198,8 @@ var count = 0;
 				++count;
 			}
 		}
+console.log(count+" / "+(previousFrameWidth*previousFrameHeight))
 	}
-	console.log(count+" / ")
 	// new content
 	currentFrame = imagePNG.frame(f);
 	var currentFrameWidth = currentFrame.width();
@@ -221,10 +222,6 @@ var count = 0;
 			}else{ // replace type currentFrame.blendTypeIsReplace()
 				newColorAnimation = colorFrame;
 			}
-			if(i==18 && j==21){
-				console.log("@"+i+","+j+" = "+colorFrame.toString(16));
-			}
-//newColorAnimation = colorFrame;
 newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
 			currentAnimationValues[indexAnimation] = newColorAnimation;
 		}
@@ -235,7 +232,7 @@ newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
 	var delay = currentFrame.duration();
 	var frameLength = delay*1000;
 	d.graphics().clear();
-	var size = 1;
+	var size = 4;
 	for(i=0;i<currentAnimationValues.length;++i){
 		var x = (i%animationFullWidth);
 		var y = Math.floor(i/animationFullWidth);
@@ -247,12 +244,11 @@ newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
 		d.graphics().fill();
 	}
 	// DRAWN AREA:
-
-	d.graphics().setLine(1.0, 0xFFFF0000);
-	d.graphics().beginPath();
-	d.graphics().drawRect( imageOffsetX*size, imageOffsetY*size,currentFrameWidth*size,currentFrameHeight*size);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
+	// d.graphics().setLine(1.0, 0xFFFF0000);
+	// d.graphics().beginPath();
+	// d.graphics().drawRect( imageOffsetX*size, imageOffsetY*size,currentFrameWidth*size,currentFrameHeight*size);
+	// d.graphics().endPath();
+	// d.graphics().strokeLine();
 
 	// NEXT FRAME
 	f = (f+1) % imagePNG.framesTotal();
@@ -262,7 +258,7 @@ newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
 	var adjustedLength = frameLength - calculatedLatency;
 console.log("delta time: "+timeSinceLastCall+", latency: "+calculatedLatency+" next frame time: "+frameLength+" waiting: "+adjustedLength);
 	ticker.frameSpeed(adjustedLength);
-ticker.frameSpeed(1000);
+//ticker.frameSpeed(1000);
 
 	//ticker.start(false);
 	//console.log(  getTimeFromTimeStamp( Code.getTimeStamp() ) );

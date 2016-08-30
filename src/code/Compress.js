@@ -97,10 +97,10 @@ if(true){
 	// console.log(" FLG: ");
 	// 	console.log("  FCHECK:"+FCHECK+" | FDICT:"+FDICT+" | FLEVEL:"+FLEVEL);
 	if(compressionMethod==8){ // base-2 logarithm of the LZ77 window size, minus eight (CINFO=7 indicates a 32K window size) 
-		console.log("deflate compression method");
+//		console.log("deflate compression method");
 		var exponent = compressionInfo + 8;
 		var windowSize = Math.pow(2,exponent);
-		console.log("windowSize: "+windowSize+" bytes");
+//		console.log("windowSize: "+windowSize+" bytes");
 		// 2^(log(7)/log(2) - 8)
 	} else {
 		console.log("only compression method 8 is allowed");
@@ -114,7 +114,7 @@ if(true){
 	}
 	
 	if(FDICT==1){//FLG & Compress.LZ77_FLG_FDICT!=0){
-		console.log("dictionary present, defined for PNG (move this check outside / make setting)");
+//		console.log("dictionary present, defined for PNG (move this check outside / make setting)");
 		var dictionaryID = Code.uint32FromByteArray(inputArray,currentIndex); // DICTID
 		currentIndex += 4;
 	}else{
@@ -122,13 +122,13 @@ if(true){
 	}
 
 	if(FLEVEL==0){
-		console.log("compression = fastest algorithm");
+//		console.log("compression = fastest algorithm");
 	}else if(FLEVEL==1){
-		console.log("compression = fast algorithm");
+//		console.log("compression = fast algorithm");
 	}else if(FLEVEL==2){
-		console.log("compression = default algorithm");
+//		console.log("compression = default algorithm");
 	}else if(FLEVEL==3){
-		console.log("compression = maximum, slowest");
+//		console.log("compression = maximum, slowest");
 	}
 }else{
 
@@ -141,8 +141,8 @@ if(true){
 
 	var compressedDataOffset = currentIndex;
 	var compressedDataLength = length - 4 - (compressedDataOffset);
-	console.log("uncompress data: @"+compressedDataOffset+" -> "+compressedDataLength+" ================================================= ");
-	console.log(inputArray[currentIndex]);
+//	console.log("uncompress data: @"+compressedDataOffset+" -> "+compressedDataLength+" ================================================= ");
+//	console.log(inputArray[currentIndex]);
 
 
 var should = 0;
@@ -150,7 +150,7 @@ var currentBitIndex = compressedDataOffset*8;
 var isLastBlock = false
 var blockCount = 0;
 while(!isLastBlock){
-	console.log("block: "+blockCount+".............................");
+//	console.log("block: "+blockCount+".............................");
 	++blockCount;
 	if(blockCount>25){
 		break;
@@ -158,12 +158,12 @@ while(!isLastBlock){
 
 		// READ BLOCK HEADER
 
-		console.log("read block at bit: "+currentBitIndex+" ( "+compressedDataOffset+" bytes ) ");
+//		console.log("read block at bit: "+currentBitIndex+" ( "+compressedDataOffset+" bytes ) ");
 		// LZ77 starts at LSB of Byte:
 		// block begins with 3 header bits : BFINAL=1 | BTYPE=2
 		var bfinal = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 1, true); currentBitIndex += 1; // first bit -- BFINAL == 1 if last black
 		var btype = Compress.readNBitsFromBytes(inputArray, currentBitIndex, 2, true); currentBitIndex += 2; // next 2 bits -- 00==no compression, 01==fixed huffman, 10==dynamic huffman, 11 = N/A
-		console.log(" _ BFINAL: "+bfinal+"  BTYPE:"+btype+"...........................................................................");
+//		console.log(" _ BFINAL: "+bfinal+"  BTYPE:"+btype+"...........................................................................");
 	isLastBlock = bfinal==1;
 
 	var huffmanTreeLiterals = null;
@@ -205,8 +205,6 @@ while(!isLastBlock){
 		// distances: 0 -> 29
 		var huffman_code_distance_extra_bits = [0,0,0,0,1,1,2,  2, 3, 3, 4, 4, 5, 5,  6,  6,  7,  7,  8,  8,   9,   9,  10,  10,  11,  11,  12,   12,   13,   13];
 		var huffman_code_distances_start = [1,2,3,4,5,7,9, 13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577]; // to 32768
-		
-	console.log("read in data...");
 
 	var count = 0;
 	while(true){
@@ -231,7 +229,7 @@ while(!isLastBlock){
 			currentOutputBitIndex += Compress.writeNBitsToBytes(outputBytes, currentOutputBitIndex, symbolValue, 8, false); // this is a byte?
 should += 8;
 		}else if(symbolValue==256){ // done
-			console.log("DONE");
+//			console.log("DONE");
 			break;
 		}else if(257<=symbolValue && symbolValue<=285){ // <length, backwards>
 			// LENGTH
@@ -295,7 +293,7 @@ should += 8;
 		currentBitIndex = adlerLocation + 32;
 	//console.log(" ADLER32 FOUND: "+adler32+" @ "+);
 	var computedAdler32 = Compress.adler32(outputBytes, 0, outputBytes.length);
-	console.log(" ADLER32 CHECKSUM: "+adler32+" / "+computedAdler32+" @ "+adlerLocation);
+//	console.log(" ADLER32 CHECKSUM: "+adler32+" / "+computedAdler32+" @ "+adlerLocation);
 	if(adler32 != computedAdler32){
 		console.log("ADLER32 CHECKSUM NOT MATCH: "+adler32+" | "+computedAdler32);
 //		return null;
