@@ -3,6 +3,9 @@
 V2D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y;
 }
+V2D.dotNorm = function(a,b){
+	return (a.x*b.x + a.y*b.y)/(a.length()*b.length());
+}
 V2D.cross = function(a,b){ // z direction
 	return a.x*b.y-a.y*b.x;
 }

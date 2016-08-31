@@ -28,13 +28,13 @@ function Formats(){
 	//ajax.binary(false);
 	//ajax.get("./image_.1.png",this,this._handleLoaded,null);
 	//ajax.get("./image.png",this,this._handleLoaded,null);
-	ajax.get("./apng.apng",this,this._handleLoaded,null);
+//	ajax.get("./apng.apng",this,this._handleLoaded,null);
 	//ajax.get("./mri.png",this,this._handleLoaded,null);
 	//ajax.();
 GLOBALSTAGE = this._stage;
 
 
-/*
+
 	
 	var a = new V2D(0,0);
 	var b = new V2D(10,0);
@@ -109,9 +109,42 @@ GLOBALSTAGE = this._stage;
 	dd.graphics().endPath();
 	dd.graphics().strokeLine();
 
+
+	// grab 2 midpoints:
+	var lin = V2D.sub(A,D);
+	var mpA, mpB;
+	var dot = V2D.dotNorm(lin,tan);
+	console.log("dot1:"+dot)
+	if( Math.abs(dot) < 0.01 ){ // == 0
+		mpA = V2D.midpoint(B,C);
+		mpB = V2D.midpoint(D,A);
+	}else{
+		mpA = V2D.midpoint(A,B);
+		mpB = V2D.midpoint(C,D);
+	}
+	lin = V2D.sub(mpA,mpB);
+	dot = V2D.dotNorm(lin,tan);
+	console.log("dot2:"+dot)
+	if(dot>0){ // flip
+		var temp = mpB;
+		mpB = mpA;
+		mpA = temp;
+	}
+
+	console.log(mpA+" -> "+mpB);
+
+
+	dd.graphics().setLine(1.0, 0xFF0000FF);
+	dd.graphics().beginPath();
+	dd.graphics().moveTo(mpA.x,mpA.y);
+	dd.graphics().lineTo(mpB.x,mpB.y);
+	dd.graphics().endPath();
+	dd.graphics().strokeLine();
+
+
 	this._stage.addChild(dd);
 	console.log("yep");
-	*/
+	
 }
 Formats.prototype._handleLoaded = function(response){
 	//console.log(response);
@@ -150,10 +183,10 @@ var lastCallTimestamp = -1;
 ticker.addFunction(Ticker.EVENT_TICK, function(e){
 
 
-if(f==4){
-	ticker.stop();
-	return;
-}
+// if(f==4){
+// 	ticker.stop();
+// 	return;
+// }
 
 	var currentTimeStamp = Code.getTimeMilliseconds();
 	var timeSinceLastCall = null;
@@ -179,7 +212,7 @@ if(f==4){
 		var previousFrameHeight = previousFrame.height();
 		var imageOffsetX = previousFrame.x();
 		var imageOffsetY = previousFrame.y();
-		console.log("PREV: "+previousFrameWidth+"x"+previousFrameHeight+" @ "+imageOffsetX+"x"+imageOffsetY+"  removal: "+previousFrame.removeType());
+//		console.log("PREV: "+previousFrameWidth+"x"+previousFrameHeight+" @ "+imageOffsetX+"x"+imageOffsetY+"  removal: "+previousFrame.removeType());
 var count = 0;
 		for(j=0; j<previousFrameHeight; ++j){
 			for(i=0; i<previousFrameWidth; ++i){
@@ -198,7 +231,6 @@ var count = 0;
 				++count;
 			}
 		}
-console.log(count+" / "+(previousFrameWidth*previousFrameHeight))
 	}
 	// new content
 	currentFrame = imagePNG.frame(f);
@@ -207,7 +239,7 @@ console.log(count+" / "+(previousFrameWidth*previousFrameHeight))
 	var imageOffsetX = currentFrame.x();
 	var imageOffsetY = currentFrame.y();
 	var currentFrameValues = currentFrame.imageData();
-	console.log("NEXT: "+currentFrameWidth+"x"+currentFrameHeight+" @ "+imageOffsetX+"x"+imageOffsetY+"  combine: "+currentFrame.blendType());
+//	console.log("NEXT: "+currentFrameWidth+"x"+currentFrameHeight+" @ "+imageOffsetX+"x"+imageOffsetY+"  combine: "+currentFrame.blendType());
 	for(j=0; j<currentFrameHeight; ++j){
 		for(i=0; i<currentFrameWidth; ++i){
 			var x = i + imageOffsetX;
@@ -222,7 +254,6 @@ console.log(count+" / "+(previousFrameWidth*previousFrameHeight))
 			}else{ // replace type currentFrame.blendTypeIsReplace()
 				newColorAnimation = colorFrame;
 			}
-newColorAnimation = Code.getColARGBCombineOver(oldColorAnimation, colorFrame);
 			currentAnimationValues[indexAnimation] = newColorAnimation;
 		}
 	}
