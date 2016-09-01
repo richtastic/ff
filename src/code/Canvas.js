@@ -513,21 +513,49 @@ Canvas.prototype.drawRect = function(sX,sY,wX,hY){
 Canvas.prototype.clear = function(){
 	var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
 }
-Canvas.prototype.createLinearGradient = function(sX,sY,eX,eY, percentsAndColors){
+Canvas.prototype.createLinearGradient = function(sX,sY,eX,eY, locations, colors){ // locations || percentsAndColors
 	var gra = this._context.createLinearGradient(sX,sY,eX,eY);
-	for(var i=4; i<arguments.length; i+=2){
-		pct = arguments[i];
-		col = arguments[i+1];
-		gra.addColorStop(pct,Code.getJSColorFromARGB(col));
+	var pct, col, i;
+	if(colors!==undefined){
+		for(i=0; i<locations.length; ++i){
+			pct = locations[i];
+			col = colors[i];
+			gra.addColorStop(pct,Code.getJSColorFromARGB(col));
+		}
+	}else{
+		for(i=0; i<locations.length; i+=2){
+			pct = locations[i];
+			col = locations[i+1];
+			gra.addColorStop(pct,Code.getJSColorFromARGB(col));
+		}
 	}
 	return gra;
 }
-Canvas.prototype.createRadialGradient = function(sX,sY,sR, eX,eY,eR, percentsAndColors){
-	var gra = this._context.createRadialGradient(sX,sY,sR, eX,eY,eR);
-	for(var i=6; i<arguments.length; i+=2){
-		pct = arguments[i];
-		col = arguments[i+1];
-		gra.addColorStop(pct,Code.getJSColorFromARGB(col));
+Canvas.prototype.createRadialGradient = function(sX,sY,sR, eX,eY,eR, locations, colors){ // locations || percentsAndColors
+	var i, pct, col, gra;
+	if(eR===undefined && locations===undefined && colors===undefined){
+		locations = eX;
+		colors = eY;
+		eR = sR;
+		sR = 0;
+		eX = sX;
+		eY = sY;
+		gra = this._context.createRadialGradient(sX,sY,sR, eX,eY,eR);
+	}else{
+		gra = this._context.createRadialGradient(sX,sY,sR, eX,eY,eR);
+	}
+	if(colors!==undefined){
+		for(i=0; i<locations.length; ++i){
+			pct = locations[i];
+			col = colors[i];
+			gra.addColorStop(pct,Code.getJSColorFromARGB(col));
+		}
+	}else{
+		for(i=0; i<locations.length; i+=2){
+			pct = locations[i];
+			col = locations[i+1];
+			gra.addColorStop(pct,Code.getJSColorFromARGB(col));
+		}
 	}
 	return gra;
 }

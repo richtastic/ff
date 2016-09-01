@@ -40,7 +40,12 @@ GLOBALSTAGE = this._stage;
 	var b = new V2D(10,0);
 	var c = new V2D(10,-20);
 	var d = new V2D(0,-20);
-	var tan = new V2D(1,.5);
+	//var tan = new V2D(1,.5);
+	//var tan = new V2D(-1,1);
+	//var tan = new V2D(1,1);
+	//var tan = new V2D(0,-1);
+	//var tan = new V2D(0,1);
+	var tan = new V2D(1,0);
 
 	// var a = new V2D(0,0);
 	// var b = new V2D(20,12.5);
@@ -48,13 +53,15 @@ GLOBALSTAGE = this._stage;
 	// var d = new V2D(20,-32.5);
 	// var tan = new V2D(1,-1);
 
-	var rect = Code.rectContainingRectAtTangent(a,b,c,d, tan);
-	var A = rect[0];
-	var B = rect[1];
-	var C = rect[2];
-	var D = rect[3];
+	console.log("a:"+a)
+	console.log("b:"+b)
+	console.log("c:"+c)
+	console.log("d:"+d)
+
+	
 	
 	var dd = new DO();
+	this._stage.addChild(dd);
 	dd.matrix().scale(3,-3);
 	dd.matrix().translate(100,100);
 	
@@ -69,35 +76,21 @@ GLOBALSTAGE = this._stage;
 	dd.graphics().endPath();
 	dd.graphics().strokeLine();
 
+
+
+	var rect = Code.rectContainingRectAtTangent(a,b,c,d, tan);
+	var A = rect[0];
+	var B = rect[1];
+	var C = rect[2];
+	var D = rect[3];
+	console.log("A:"+A)
+	console.log("B:"+B)
+	console.log("C:"+C)
+	console.log("D:"+D)
 	a = A;
 	b = B;
 	c = C;
 	d = D;
-
-	// dd.graphics().setLine(1.0, 0xFF00FF00);
-	// dd.graphics().beginPath();
-	// dd.graphics().drawCircle(a.x,a.y, 3.0);
-	// dd.graphics().endPath();
-	// dd.graphics().strokeLine();
-
-	// dd.graphics().setLine(1.0, 0xFF00FFFF);
-	// dd.graphics().beginPath();
-	// dd.graphics().drawCircle(b.x,b.y, 3.0);
-	// dd.graphics().endPath();
-	// dd.graphics().strokeLine();
-
-	// dd.graphics().setLine(1.0, 0xFF0000FF);
-	// dd.graphics().beginPath();
-	// dd.graphics().drawCircle(c.x,c.y, 3.0);
-	// dd.graphics().endPath();
-	// dd.graphics().strokeLine();
-
-	// dd.graphics().setLine(1.0, 0xFF000000);
-	// dd.graphics().beginPath();
-	// dd.graphics().drawCircle(d.x,d.y, 3.0);
-	// dd.graphics().endPath();
-	// dd.graphics().strokeLine();
-
 
 	dd.graphics().setLine(1.0, 0xFF00FF00);
 	dd.graphics().beginPath();
@@ -110,8 +103,9 @@ GLOBALSTAGE = this._stage;
 	dd.graphics().strokeLine();
 
 
-	// grab 2 midpoints:
+	// grab 2 midpoints in direction of line:
 	var lin = V2D.sub(A,D);
+	console.log("lin:"+lin)
 	var mpA, mpB;
 	var dot = V2D.dotNorm(lin,tan);
 	console.log("dot1:"+dot)
@@ -142,7 +136,22 @@ GLOBALSTAGE = this._stage;
 	dd.graphics().strokeLine();
 
 
-	this._stage.addChild(dd);
+	// actual gradient coloring
+	dd.graphics().setLine(1.0, 0x660000FF);
+	dd.graphics().setFillGradientLinear(mpA.x,mpA.y, mpB.x,mpB.y, [0.0, 1.0], [0xCC000000, 0xCC00FFFF]);
+	//dd.graphics().setFillGradientRadial(mpA.x,mpA.y,16, [0.0, 1.0], [0xCC000000, 0xCC00FFFF]);
+	dd.graphics().beginPath();
+	dd.graphics().moveTo(a.x,a.y);
+	dd.graphics().lineTo(b.x,b.y);
+	dd.graphics().lineTo(c.x,c.y);
+	dd.graphics().lineTo(d.x,d.y);
+	dd.graphics().lineTo(a.x,a.y);
+	dd.graphics().endPath();
+	dd.graphics().fill();
+	dd.graphics().strokeLine();
+
+
+
 	console.log("yep");
 	
 }

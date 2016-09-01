@@ -22,6 +22,18 @@ Graphics.canvasSetLinearFill = function(a){
 Graphics.canvasSetFill = function(col){
 	Graphics._canvas.setFill(col);
 }
+Graphics.setFillGradientLinear = function(params, sX,sY, eX,eY, locations, colors){
+	var array = params[0];
+	var index = params[1];
+	var gradient = Graphics._canvas.createLinearGradient(sX,sY, eX,eY, locations, colors);
+	array[index] = Code.newArray(Graphics.canvasSetFill, Code.newArray(gradient));
+}
+Graphics.setFillGradientRadial = function(params, sX,sY,sR, eX,eY,eR, locations, colors){
+	var array = params[0];
+	var index = params[1];
+	var gradient = Graphics._canvas.createRadialGradient(sX,sY,sR, eX,eY,eR, locations, colors);
+	array[index] = Code.newArray(Graphics.canvasSetFill, Code.newArray(gradient));
+}
 Graphics.canvasBeginPath = function(){
 	Graphics._canvas.beginPath();
 }
@@ -119,12 +131,18 @@ Graphics.prototype.setRadialFill = function(){ // ?
 Graphics.prototype.setLinearFill = function(){ // ?
 	this._graphics.push( Code.newArray(Graphics.canvasSetLinearFill,arguments ) );
 }
-Graphics.prototype.setFill = function(col){ // 0xRRGGBBAA OR GRADIENT OBJECT
+Graphics.prototype.setFill = function(col){ // 0xAARRGGBB OR GRADIENT OBJECT
 	if( Code.isObject(col) ){
 		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(col)) );
 	}else{
 		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getJSColorFromARGB(col))) );
 	}
+}
+Graphics.prototype.setFillGradientLinear = function(sX,sY, eX,eY, locations, colors){
+	this._graphics.push( Code.newArray(Graphics.setFillGradientLinear,Code.newArray([this._graphics, this._graphics.length],sX,sY, eX,eY, locations, colors)) );
+}
+Graphics.prototype.setFillGradientRadial = function(sX,sY,sR, eX,eY,eR, locations, colors){
+	this._graphics.push( Code.newArray(Graphics.setFillGradientRadial,Code.newArray([this._graphics, this._graphics.length],sX,sY,sR, eX,eY,eR, locations, colors)) );
 }
 Graphics.prototype.beginPath = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasBeginPath,Code.newArray()) );
@@ -209,6 +227,7 @@ Graphics.prototype.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch
 	}
 }
 Graphics.prototype.drawImagePattern = function(pat,pX,pY,wid,hei){
+	// inject rather than append ?
 	console.log("draw image pattern .... ",pat);
 	this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(pat)) );
 	this._graphics.push( Code.newArray(Graphics.canvasDrawRect,Code.newArray(pX,pY,wid,hei)) );

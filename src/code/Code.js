@@ -3529,59 +3529,25 @@ Code.polygonArea2D = function(polyArray){
 	return area;
 }
 Code.rectContainingRectAtTangent = function(a,b,c,d, tan){
-	tan = V2D.norm(tan);
-	var per = V2D.rotate(tan,Math.PIO2);
 	var points = [a,b,c,d];
-	var i, j;
-	var maxDistance = 0;
-	var oppositePair = null;
-	var pointA, pointB, pointC, pointD;
-	for(i=0; i<4; ++i){
-		pointA = points[i];
-		for(j=i+1; j<4; ++j){
-			pointB = points[j];
-			var distance = Code.distancePointRay2D(pointA,tan, pointB);
-			if(distance>maxDistance){
-				maxDistance = distance;
-				oppositePair = [pointA,pointB];
-			}
-		}
+	var angle = V2D.angle(V2D.DIRX,tan);
+	// rotate
+	for(i=0;i<points.length;++i){
+		points[i] = V2D.rotate(points[i], -angle);
 	}
-	pointA = oppositePair[0];
-		pointA2 = V2D.add(pointA,tan);
-	pointB = oppositePair[1];
-		pointB2 = V2D.add(pointB,tan);
-	Code.removeElementSimple(points, pointA);
-	Code.removeElementSimple(points, pointB);
-console.log(points)
-	pointC = points[0];
-		pointC2 = V2D.add(pointC,per);
-	pointD = points[1];
-		pointD2 = V2D.add(pointD,per);
-	// a = Code.rayLineIntersect2D(pointA,pointA2, pointC,pointC2);
-	// b = Code.rayLineIntersect2D(pointC,pointC2, pointB,pointB2);
-	// c = Code.rayLineIntersect2D(pointB,pointB2, pointD,pointD2);
-	// d = Code.rayLineIntersect2D(pointD,pointD2, pointA,pointA2);
-	a = Code.rayLineIntersect2D(pointA,tan, pointC,per);
-	b = Code.rayLineIntersect2D(pointC,per, pointB,tan);
-	c = Code.rayLineIntersect2D(pointB,tan, pointD,per);
-	d = Code.rayLineIntersect2D(pointD,per, pointA,tan);
-//return [pointA,pointC, a,a]
-
-//return [pointA,pointB, pointC,pointD]
-
-//return [pointA,pointA2, pointB,pointB2];
-//return [pointC,pointC2, pointD,pointD2];
-
-	return [a,b,c,d];
-	/*
-	var a = new V2D(0,0);
-	var b = new V2D(1,0);
-	var c = new V2D(1,-2);
-	var d = new V2D(0,-2);
-	var tan = new V2D(1,1);
-	Code.rectContainingRectAtTangent(a,b,c,d, tan);
-	*/
+	// find bounding box
+	var extrema = V2D.extremaFromArray(points);
+	var min = extrema.min;
+	var max = extrema.max;
+	points[0].set(min.x,min.y);
+	points[1].set(max.x,min.y);
+	points[2].set(max.x,max.y);
+	points[3].set(min.x,max.y);
+	// rotate back
+	for(i=0;i<points.length;++i){
+		points[i] = V2D.rotate(points[i], angle);
+	}
+	return points;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
