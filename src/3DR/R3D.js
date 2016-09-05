@@ -1718,7 +1718,17 @@ R3D.highDensityMatches = function(imageA,widthA,heightA,pointsA, imageB,widthB,h
 	if(!Code.isArray(imageB)){
 		imageB = new ImageMat(imageB.width,imageB.height,imageB.red,imageB.grn,imageB.blu);
 	}
+
 GLOBALSTAGE = stage;
+	// console.log(imageA)
+	// 	var stage = GLOBALSTAGE;
+	// 	var img = stage.getFloatGrayAsImage(imageA._r, imageA.width(),imageA.height(), null, null);
+	// 	var d = new DOImage(img);
+	// 	d.matrix().scale(1);
+	// 	d.matrix().translate(0,0);
+	// 	stage.addChild(d);
+	// 	stage.render()
+	// throw new V3D()
 	console.log("highDensityMatches");
 
 	var divider = 25; // make problem smaller

@@ -83,8 +83,9 @@ Canvas._ID = 0;
 // 3D
 Canvas.WEBGL_SHADER_TYPE_VERTEX = "vertex";
 Canvas.WEBGL_SHADER_TYPE_FRAGMENT = "fragment";
-function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D){ // input is canvas HTML object
+function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D, autoscale){ // input is canvas HTML object
 	Canvas._.constructor.call(this);
+	this._autoScale = autoscale!==undefined ? autoscale : true
 	this._dispatch = new Dispatch();
 	this._jsDispatch = new JSDispatch();
 	this._mouseDown = false;
@@ -328,29 +329,39 @@ Canvas.prototype.size = function(wid,hei){
 }
 Canvas.prototype.width = function(wid){
 	if(arguments.length>0){
+		var ratio = this.presentationScale();
 		this._canvas.width = wid;
+		// this._canvas.width = wid*ratio;
+		// this._canvas.style.width = wid+'px';
 		//this._updateSizeFromAbsolute(wid,null);
 	}
 	return this._canvas.width;// / this.presentationScale();
 }
 Canvas.prototype.height = function(hei){
 	if(arguments.length>0){
+		var ratio = this.presentationScale();
 		this._canvas.height = hei;
+		// this._canvas.height = hei*ratio;
+		// this._canvas.style.height= hei+'px';
 		//this._updateSizeFromAbsolute(null,hei);
 	}
 	return this._canvas.height;// / this.presentationScale();
 }
 Canvas.prototype._updateSizeFromAbsolute = function(wid,hei){// upscale for rendering, downscale for css presentation
 	var ratio = this.presentationScale();
-	if(wid){
-		this._canvas.width = wid*ratio;
-		this._canvas.style.width = wid+'px';
+	console.log("_updateSizeFromAbsolute",wid,hei,"ratio: "+ratio)
+	if(this._autoScale){ // not exactly working as expected
+		if(wid){
+			this._canvas.width = wid*ratio;
+			this._canvas.style.width = wid+'px';
+			//this.width(wid);
+		}
+		if(hei){
+			this._canvas.height = hei*ratio;
+			this._canvas.style.height= hei+'px';
+			//this.height(hei);
+		}
 	}
-	if(hei){
-		this._canvas.height = hei*ratio;
-		this._canvas.style.height= hei+'px';
-	}
-	
 }
 //  ------------------------------------------------------------------------------------------------------------------------ CANVAS OPERATIONS
 Canvas.prototype.pushComposite = function(c){
@@ -388,9 +399,16 @@ Canvas.prototype.popAlpha = function(){
 	this._context.globalAlpha = this._alphaComposite;
 	return this._alphaComposite;
 }
-Canvas.prototype.getColorArrayARGB = function(a,b,c,d){
-	var imgData = this._context.getImageData(a,b,c,d).data;
-	var i, j, w=c, h=d, index, jw, jw4;
+Canvas.prototype.getColorArrayARGB = function(pX,pY,wid,hei){
+	console.log("getColorArrayARGB: "+this.presentationScale())
+	var matrix = new Matrix2D();
+
+	matrix.identity();
+	matrix.scale(1.0/this.presentationScale());
+	this.contextTransform(matrix);
+	
+	var imgData = this._context.getImageData(pX,pY,wid,hei).data;
+	var i, j, w=wid, h=hei, index, jw, jw4;
 	var colList = new Array(w*h);
 	for(j=0;j<h;++j){
 		jw = j*w; jw4 = jw*4;

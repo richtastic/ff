@@ -239,9 +239,13 @@ var imageASize = new V2D(rangeA.width(),rangeA.height());
 					}
 						var wid = rangeB.cellWidth();
 						var hei = rangeB.cellHeight();
-						var win = rangeB.imageAtPoint(pointB,wid,hei,1.0);
+						//var win = rangeB.cellFromPoint(pointB).//imageAtPoint(pointB,wid,hei,1.0);//rangeB.imageAtPoint(pointB,wid,hei,1.0);
+						// AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rotation){
+						var win = rangeB.imageAtPoint(pointB,wid,hei,1.0,0.0);
 						//var img = GLOBALSTAGE.getFloatGrayAsImage(win, wid,hei);
+						//console.log(win.red(),win.grn(),win.blu(), wid,hei)
 						var img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), wid,hei);
+						//console.log(img)
 						var d = new DOImage(img);
 						d.matrix().translate(pos.x+pointA.x,pos.y+pointA.y);
 						GLOBALSTAGE.addChild(d);
@@ -307,11 +311,14 @@ AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rot
 	//console.log("imageAtPoint: "+point);
 	scale = scale!==undefined ? scale : 1.0;
 	var matrix = null;
-	if(rotation!==undefined){
+	if(rotation!==undefined && rotation!=0){
 		matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DRotate(matrix,rotation);
 	}
-	return this._image.extractRectFromFloatImage(point.x,point.y,scale,null, width,height, matrix);
+	var img = this._image.extractRectFromFloatImage(point.x,point.y,scale,null, width,height, matrix);
+	// console.log(this._image)
+	// console.log(img)
+	return img;
 }
 AreaMap.Range.prototype.matchingClear = function(){
 	// remove all unoriginal matches
@@ -329,10 +336,12 @@ AreaMap.Range.prototype.image = function(image, width, height){
 			this._image = new ImageMat(width,height,image);
 		}else if( Code.ofa(image,ImageMat) ){ // imagemat
 			this._image = image;
+			//console.log(this._image)
 		}else{
 			console.log("found "+Code.getType(image));
 		}
 	}
+	// console.log(this._image)
 	return this._image;
 };
 AreaMap.Range.prototype.width = function(width){
@@ -665,7 +674,7 @@ AreaMap.Cell.prototype.getCellImage = function(){
 	var windowHeight = this.height();
 	var range = this.range();
 	var point = this.centerPoint();
-	console.log("cell image: "+point);
+//	console.log("cell image: "+point);
 
 	var windowWidth = AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
 	var windowHeight = AreaMap.Feature.NEEDLE_IMAGE_HEIGHT;
@@ -674,14 +683,42 @@ AreaMap.Cell.prototype.getCellImage = function(){
 	var scale = imageToCellScale;
 	var rotation = 0.0;
 
-	return range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
+	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);;
+	//console.log(img)
+	return img;
 };
 AreaMap.Cell.prototype.bestMatchForFeature = function(feature){
 	var cell = feature.cell();
 	var point = feature.point(); 
 	var range = cell.range();
-	console.log("bestMatchForFeature "+point)
+	//console.log("bestMatchForFeature "+point)
 	var needle = AreaMap.Feature.getFeatureImage(range, point);
+	//console.log(needle);
+
+
+
+	var stage = GLOBALSTAGE;
+// Stage.prototype.getFloatGrayAsImage = function(gray, wid,hei, matrix, type){
+	var wid = needle.width();
+	var hei = needle.height();
+	var gry = needle.gry();
+	//console.log(gry)
+		var img = stage.getFloatGrayAsImage(needle, wid,hei, null, null);
+		var d = new DOImage(img);
+		d.matrix().scale(4);
+		d.matrix().translate(800,90);
+		stage.addChild(d);
+		//console.log(img)
+	/*var d = new DO();
+	d.graphics().setFill(0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, 100,100);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().scale(4);
+	stage.addChild(d);
+	*/
+
 	// get image based on comparable scle
 
 	// do SSD on internal window (+ margin)
@@ -895,6 +932,7 @@ AreaMap.Feature.getFeatureImage = function(range, point){
 	var imageToCellScale = cell.getSizeScale();
 	var scale = imageToCellScale;
 	var rotation = 0;
+	//console.log(point,windowWidth,windowHeight,scale,rotation)
 	return range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
 };
 AreaMap.Feature.calculateGradient = function(windowImageMat){

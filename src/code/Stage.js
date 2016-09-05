@@ -81,6 +81,7 @@ Stage.prototype.getImageAsFloatGray = function(originalImage){
 	return {width:data.width, height:data.height, gray:gray}
 }
 Stage.prototype.getImageAsFloatRGB = function(originalImage, expand){
+	console.log("getImageAsFloatRGB scales with the canvas");
 	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
 	var doImage = new DOImage(originalImage);
 	dat = this.getDOAsARGB(doImage, wid,hei);
@@ -141,6 +142,8 @@ Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base
 }
 Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
 	this._renderCanvas.clear();
+	this._renderCanvas.width(wid);
+	this._renderCanvas.height(hei);
 	this._renderCanvas.size(wid,hei);
 	this._renderCanvas.contextIdentity();
 	if(matrix){
@@ -161,12 +164,7 @@ Stage.prototype._toDataURL = function(type){
 	return this._renderCanvas.toDataURL('image/jpeg');
 }
 Stage.prototype.getDOAsARGB = function(obj, wid,hei, matrix){
-	this._renderCanvas.clear();
-	this._renderCanvas.size(wid,hei);
-	this._renderCanvas.contextIdentity();
-	if(matrix){
-		this._renderCanvas.contextTransform(matrix); 
-	}
+	this._setupRenderCanvas(wid,hei,matrix);
 	obj.render(this._renderCanvas);
 	return this._renderCanvas.getColorArrayARGB(0,0,wid,hei);
 }
