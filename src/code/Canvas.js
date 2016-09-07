@@ -2,6 +2,8 @@
 Canvas.STAGE_FIT_FIXED = 0;
 Canvas.STAGE_FIT_FILL = 1;
 Canvas.STAGE_FIT_SCALE = 2;
+
+// TODO: REMOVE CURSOR TO CODE:
 Canvas.CURSOR_STYLE_NONE = "none";						// hides cursor
 Canvas.CURSOR_STYLE_DEFAULT = "auto";					// 
 Canvas.CURSOR_STYLE_DEFAULT = "default";				// ^
