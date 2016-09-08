@@ -1932,15 +1932,20 @@ Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,co
 
 // -------------------------------------------------------- COOKIES
 Code.setCookie = function(c_name, value, seconds){
-	seconds = seconds*1000;
+	seconds = seconds!==undefined ? seconds : (356*24*60*60) // 1 year
+	var miliseconds = seconds*1000;
 	var exdate = new Date();
-	exdate.setTime( exdate.getTime() + seconds);
-	var c_value = escape(value) + ((seconds==null) ? "" : "; expires="+exdate.toUTCString());
+	exdate.setTime( exdate.getTime() + miliseconds);
+	var c_value = escape(value) + ((miliseconds==null) ? "" : "; expires="+exdate.toUTCString());
 	document.cookie = c_name + "=" + c_value;
-}
+	console.log(document.cookie);
+};
 Code.deleteCookie = function(name){
 	Code.setCookie(name,"x",-1);
-}
+};
+Code.deleteAllCookies = function(name){
+	document.cookie = "";
+};
 Code.getCookie = function(c_name){
 	var c_value = document.cookie;
 	var c_start = c_value.indexOf(" " + c_name + "="); // not first
@@ -1958,13 +1963,13 @@ Code.getCookie = function(c_name){
 		c_value = unescape(c_value.substring(c_start,c_end));
 	}
 	return c_value;
-}
+};
 // -------------------------------------------------------- DATE FUNCTIONS
 Code.getDaysInMonth = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0);
 	return d.getDate();
-}
+};
 Code.getFirstMondayInWeek = function(milliseconds){
 	var m, d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0,0);
@@ -1977,15 +1982,15 @@ Code.getFirstMondayInWeek = function(milliseconds){
 		dow = d.getDay();
 	}
 	return milliseconds + remainder;
-}
+};
 Code.getNextDay = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 	return d.getTime();
-}
+};
 Code.formatDayString = function(year,month,day){
 	return Code.prependFixed(""+year,"0",4)+"-"+Code.prependFixed(""+month,"0",2)+"-"+Code.prependFixed(""+day,"0",2);
-}
+};
 //
 Code.dateFromString = function(str){
 	if( str.length<10 ){
