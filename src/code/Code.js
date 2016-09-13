@@ -73,6 +73,56 @@ Code.JS_EVENT_SELECT = "select";
 Code.JS_EVENT_SUBMIT = "submit";
 Code.JS_EVENT_UNLOAD = "textinput";
 
+
+Code.JS_CURSOR_STYLE_NONE = "none";						// hides cursor
+Code.JS_CURSOR_STYLE_DEFAULT = "auto";					// 
+Code.JS_CURSOR_STYLE_DEFAULT = "default";				// ^
+Code.JS_CURSOR_STYLE_CROSSHAIR = "crosshair";			// +
+Code.JS_CURSOR_STYLE_RESIZE_TOP = "n-resize";			// ^|
+Code.JS_CURSOR_STYLE_RESIZE_TOP_LEFT = "nw-resize";		// |\
+Code.JS_CURSOR_STYLE_RESIZE_TOP_RIGHT = "ne-resize";		// /|
+Code.JS_CURSOR_STYLE_RESIZE_BOTTOM = "s-resize";			// v
+Code.JS_CURSOR_STYLE_RESIZE_BOTTOM_LEFT = "se-resize";	// |/
+Code.JS_CURSOR_STYLE_RESIZE_BOTTOM_RIGHT = "sw-resize";	// \|
+Code.JS_CURSOR_STYLE_RESIZE_RIGHT = "e-resize";			// >|
+Code.JS_CURSOR_STYLE_RESIZE_LEFT = "w-resize";			// |<
+Code.JS_CURSOR_STYLE_RESIZE_TL_BR = "nwse-resize";		// \
+Code.JS_CURSOR_STYLE_RESIZE_TR_BL = "nesw-resize";		// /
+Code.JS_CURSOR_STYLE_RESIZE_TOP_BOTTOM = "ns-resize";	// |
+Code.JS_CURSOR_STYLE_RESIZE_LEFT_RIGHT = "ew-resize";	// |
+Code.JS_CURSOR_STYLE_SLIDE_HORIZONTAL = "col-resize";	// <-|->
+Code.JS_CURSOR_STYLE_SLIDE_VERTICAL = "row-resize";		// vertical version of: <-|->
+
+Code.JS_CURSOR_STYLE_ALIAS = "alias";					//  curvy arrow CW
+Code.JS_CURSOR_STYLE_SCROLL_ALL = "all-scroll";	 		// 4-arrows ~ move ()
+Code.JS_CURSOR_STYLE_MOVE_ARROWS = "move"; 				// 4-arrows OR a hand grabbing _m
+Code.JS_CURSOR_STYLE_ADD = "cell";						// crosshair - PLUS sign
+Code.JS_CURSOR_STYLE_MENU = "context-menu";				// arrow + little nav infographic
+Code.JS_CURSOR_STYLE_COPY = "copy";						// arrow + little add infographic
+Code.JS_CURSOR_STYLE_NO_DROP = "no-drop";				// arrow + no-smoking infographic ~ not-allowed
+Code.JS_CURSOR_STYLE_NO = "not-allowed";				// arrow + no-smoking infographic
+Code.JS_CURSOR_STYLE_PROGRESS = "progress";				// arrow + spinning ball infographic
+Code.JS_CURSOR_STYLE_WAIT = "wait";						// arrow + spinning ball infographic ~ progress
+
+Code.JS_CURSOR_STYLE_TEXT = "text";						// I
+Code.JS_CURSOR_STYLE_TEXT_VERTICAL = "vertical-text";	// I (vertical)
+Code.JS_CURSOR_STYLE_ZOOM_IN = "zoom-in";				// magnifying glass + PLUS
+Code.JS_CURSOR_STYLE_ZOOM_OUT = "zoom-out";				// magnifying glass + MINUS
+Code.JS_CURSOR_STYLE_HELP = "help";						// ?
+Code.JS_CURSOR_STYLE_GRAB = "move";						// _m
+Code.JS_CURSOR_STYLE_FINGER = "pointer";					// hand pointing
+//Code.JS_CURSOR_STYLE_POINT = "point";					// ^ / |m
+//Code.JS_CURSOR_STYLE_WAIT = "progress";					// tick
+
+//Code.JS_CURSOR_STYLE_ENTER_A_URL ... ("url('http://www.kirupa.com/html5/images/pointer_cursor.png')"); // external image - NOT USED?
+Code.JS_CURSOR_STYLE_CAN_GRAB = "grab";
+Code.JS_CURSOR_STYLE_GRABBING = "grabbing";
+
+// http://www.htmlgoodies.com/beyond/css/article.php/3470321
+Code.JS_CURSOR_STYLE_HAND = "hand"; // ~ pointer
+
+
+
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 Code.monthsLong = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // getday(0) == sunday
@@ -1540,7 +1590,17 @@ Code.setProperty = function(ele,pro,val){
 };
 Code.getProperty = function(ele,pro){
 	return ele.getAttribute(pro);
-}
+};
+Code.hasProperty = function(ele,par){
+	var p = Code.getProperty(ele,par);
+	return p !== undefined && p !== null;
+};
+Code.getPropertyOrDefault = function(ele,pro, def){
+	if(Code.hasProperty(ele,pro)){
+		return Code.getProperty(ele,pro);
+	}
+	return def;
+};
 Code.setDisabled = function(a){
 	a.disabled = true;
 }
@@ -1565,11 +1625,47 @@ Code.setStyleBackground = function(ele,val){
 Code.setStyleBorder = function(ele,val){
 	ele.style.borderStyle = val;
 };
+Code.setStyleBorderLeft = function(ele,val){
+	ele.style.borderLeftStyle = val;
+};
+Code.setStyleBorderRight = function(ele,val){
+	ele.style.borderRightStyle = val;
+};
+Code.setStyleBorderTop = function(ele,val){
+	ele.style.borderTopStyle = val;
+};
+Code.setStyleBorderBottom = function(ele,val){
+	ele.style.borderBottomStyle = val;
+};
 Code.setStyleBorderColor = function(ele,val){
 	ele.style.borderColor = val;
 };
+Code.setStyleBorderColorLeft = function(ele,val){
+	ele.style.borderLeftColor = val;
+};
+Code.setStyleBorderColorRight = function(ele,val){
+	ele.style.borderRightColor = val;
+};
+Code.setStyleBorderColorTop = function(ele,val){
+	ele.style.borderTopColor = val;
+};
+Code.setStyleBorderColorBottom = function(ele,val){
+	ele.style.borderBottomColor = val;
+};
 Code.setStyleBorderWidth = function(ele,val){
 	ele.style.borderWidth = val;
+};
+Code.setStyleBorderWidthLeft = function(ele,val){
+	ele.style.borderLeftWidth = val;
+};
+Code.setStyleBorderWidthRight = function(ele,val){
+	ele.style.borderRightWidth = val;
+};
+Code.setStyleBorderWidthTop = function(ele,val){
+	ele.style.borderTopWidth = val;
+};
+Code.setStyleBorderWidthBottom = function(ele,val){
+	ele.style.borderBottomWidth = val;
 };
 Code.setStyleCursor = function(ele,styleIn){
 	var cursorStyle = "cursor: -moz-"+styleIn+"; cursor: -webkit-"+styleIn+"; cursor: "+styleIn+";";
@@ -1639,6 +1735,9 @@ Code.setStyleFontFamily = function(ele,style){
 };
 Code.setStyleFontStyle = function(ele,style){
 	ele.style.fontStyle = style;
+};
+Code.setStyleFontStyleItalic = function(ele){
+	Code.setStyleFontStyle(ele,"italic");
 };
 Code.setSrc = function(i,s){
 	return i.src = s;
@@ -1833,15 +1932,20 @@ Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,co
 
 // -------------------------------------------------------- COOKIES
 Code.setCookie = function(c_name, value, seconds){
-	seconds = seconds*1000;
+	seconds = seconds!==undefined ? seconds : (356*24*60*60) // 1 year
+	var miliseconds = seconds*1000;
 	var exdate = new Date();
-	exdate.setTime( exdate.getTime() + seconds);
-	var c_value = escape(value) + ((seconds==null) ? "" : "; expires="+exdate.toUTCString());
+	exdate.setTime( exdate.getTime() + miliseconds);
+	var c_value = escape(value) + ((miliseconds==null) ? "" : "; expires="+exdate.toUTCString());
 	document.cookie = c_name + "=" + c_value;
-}
+	console.log(document.cookie);
+};
 Code.deleteCookie = function(name){
 	Code.setCookie(name,"x",-1);
-}
+};
+Code.deleteAllCookies = function(name){
+	document.cookie = "";
+};
 Code.getCookie = function(c_name){
 	var c_value = document.cookie;
 	var c_start = c_value.indexOf(" " + c_name + "="); // not first
@@ -1859,13 +1963,13 @@ Code.getCookie = function(c_name){
 		c_value = unescape(c_value.substring(c_start,c_end));
 	}
 	return c_value;
-}
+};
 // -------------------------------------------------------- DATE FUNCTIONS
 Code.getDaysInMonth = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0);
 	return d.getDate();
-}
+};
 Code.getFirstMondayInWeek = function(milliseconds){
 	var m, d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0,0);
@@ -1878,15 +1982,15 @@ Code.getFirstMondayInWeek = function(milliseconds){
 		dow = d.getDay();
 	}
 	return milliseconds + remainder;
-}
+};
 Code.getNextDay = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 	return d.getTime();
-}
+};
 Code.formatDayString = function(year,month,day){
 	return Code.prependFixed(""+year,"0",4)+"-"+Code.prependFixed(""+month,"0",2)+"-"+Code.prependFixed(""+day,"0",2);
-}
+};
 //
 Code.dateFromString = function(str){
 	if( str.length<10 ){
