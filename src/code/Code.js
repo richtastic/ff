@@ -52,7 +52,8 @@ Code.JS_EVENT_ERROR = "error";
 
 Code.JS_EVENT_SCROLL = "scroll"; // window.onscroll
 Code.JS_EVENT_BLUR = "blur";
-Code.JS_EVENT_CHANGE = "change";
+Code.JS_EVENT_CHANGE = "change"; // ?
+	Code.JS_EVENT_ONCHANGE = "onchange";
 Code.JS_EVENT_RIGHT_CLICK = "contextmenu";
 Code.JS_EVENT_COPY = "copy";
 Code.JS_EVENT_CUT = "cut";
@@ -71,7 +72,8 @@ Code.JS_EVENT_RESET = "reset";
 Code.JS_EVENT_SCROLL = "scroll";
 Code.JS_EVENT_SELECT = "select";
 Code.JS_EVENT_SUBMIT = "submit";
-Code.JS_EVENT_UNLOAD = "textinput";
+Code.JS_EVENT_TEXT_INPUT = "textinput";
+	Code.JS_EVENT_ON_INPUT = "oninput";
 
 
 Code.JS_CURSOR_STYLE_NONE = "none";						// hides cursor
@@ -157,6 +159,13 @@ Code.copyToClipboardPrompt = function(str){
 	Code.setStyleRight(txt,"0");
 	document.body.appendChild(txt);
 	txt.ondblclick = function(e){ document.body.removeChild(e.target); e.ondblclick=null; }
+}
+Code.parseJSON = function(str){
+	var obj = JSON.parse(str);
+	if(Code.isString(obj)){
+		obj = JSON.parse(obj);
+	}
+	return obj;	
 }
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {
@@ -1453,6 +1462,16 @@ Code.setInputTextValue = function(a,b){
 	//a.setAttribute("value",b);
 	a.value = b;
 };
+
+Code.newInputButton = function(val){
+	var button = Code.newElement("button");
+	if(val!==undefined){
+		Code.setAttribute(button,"value",val);
+		Code.setContent(button,val);
+	}
+	return button;
+};
+
 Code.setAttribute = function(a,nam,val){
 	a.setAttribute(nam,val);
 };
@@ -1832,12 +1851,15 @@ Code.getTypeFromEvent = function(e){
 	if(!e){ e = window.event; } // IE
 	return e.type;
 }
-Code.getTargetFromMouseEvent = function(e){
+Code.getTargetFromEvent = function(e){
 	if(!e){ e = window.event; } // IE
 	if(e.target){
 		return e.target;
 	}
 	return e.srcElement; // IE
+}
+Code.getTargetFromMouseEvent = function(e){
+	return Code.getTargetFromEvent(e);
 }
 Code.getTouchPosition = function(e){
 	return Code.getMousePosition(e);
@@ -1864,7 +1886,13 @@ Code.addEventListener = function(ele,str,fxn){
 		// ele["on"+str] = fxn
 		ele.attachEvent("on"+str,fxn);
 	}else{
-		ele.addEventListener(str,fxn);
+		// if(str=="onchange"){
+		// 	console.log("is change ....")
+		// 	//Code.addListenerChange(ele);
+		// 	ele.onchange = fxn;
+		// }else{
+			ele.addEventListener(str,fxn);
+		//}
 	}
 }
 Code.removeEventListener = function(ele,str,fxn){

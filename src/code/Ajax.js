@@ -159,6 +159,7 @@ Ajax.prototype.send = function(url,meth,cmp,params){
 	if (hasParameters && this._method==Ajax.METHOD_TYPE_GET) { // append parameters to URL
 		url = url + "?" + this._params; // TODO: better concatenation
 	}
+	console.log("url: "+url+" medho:"+this._method);
 	// begin request
 	this._request.open(this._method,url,true);
 	// set request headers
@@ -172,6 +173,7 @@ Ajax.prototype.send = function(url,meth,cmp,params){
 			this._request.send();
 		}else if(this._method==Ajax.METHOD_TYPE_POST) { // POST PARAMS
 			this._setPostHeaderParameters();
+			console.log(this._params);
 			this._request.send(this._params);
 		}else{ // 
 			this._request.send(this._params);
@@ -192,6 +194,7 @@ Ajax.prototype.responseContent = function(){
 }
 // ---- internal functions ---------------------------------------------------------
 Ajax.prototype._setPostHeaderParameters = function(){
+	console.log("_setPostHeaderParameters: ",Ajax.HEADER_CONTENT_TYPE,Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED)
 	this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED);
 }
 Ajax.prototype._stateChangeCaller = function(e){

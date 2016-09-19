@@ -5,6 +5,7 @@ Keyboard.KEY_SHIFT = 16;
 Keyboard.KEY_CTRL = Keyboard.KEY_CONTROL = 17;
 Keyboard.KEY_ALT = Keyboard.KEY_ALTERNATE = 18;
 Keyboard.KEY_CAP = Keyboard.KEY_CAPS = Keyboard.KEY_SPACE = CAPSLOCK = 20;
+Keyboard.KEY_ESC = 27;
 Keyboard.KEY_SPACE = 32;
 Keyboard.KEY_UP = 38;
 Keyboard.KEY_LF = Keyboard.KEY_LEFT = 37;

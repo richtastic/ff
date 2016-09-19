@@ -10,7 +10,11 @@ JSDispatch.prototype.addJSEventListener = function(object, type, fxn, ctx){
 		context["function"].call(context["context"],e);
 	}
 	context["callback"] = callback;
-	Code.addEventListener(object, type, callback);
+	// if(type=="onchange"){
+	// 	Code.addEventListener(object, type, callback);
+	// }else{
+		Code.addEventListener(object, type, callback);
+	//}
 	this._listenerList.push(context);
 }
 JSDispatch.prototype.removeJSEventListener = function(object, type, fxn, ctx){
