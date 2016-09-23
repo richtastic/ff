@@ -1351,6 +1351,16 @@ Code.newDiv = function(a){
 	}
 	return div;
 };
+Code.newAnchor = function(link,content){
+	var a = Code.newElement("a");
+	if(link!=undefined && link!=null){
+		Code.setProperty(a,"href",link);
+	}
+	if(content!=undefined && content!=null){
+		Code.setContent(a,content);
+	}
+	return a;
+};
 Code.newTable = function(){
 	return Code.newElement("table");
 };
@@ -1638,6 +1648,11 @@ Code.getStyleWidth = function(ele){
 Code.setStyleHeight = function(ele,val){
 	ele.style.height = val;
 };
+Code.setStyleBorderRadius = function(ele,val){
+	//ele.style.borderRadius = val; // not work
+	Code.removeStyle(ele, "border-radius");
+	Code.addStyle(ele, "border-radius:"+val);
+};
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
 };
@@ -1822,6 +1837,11 @@ Code.addStyle = function(ele,sty){//prop,attr){
 	ele.setAttribute("class",c);
 	ele.className = c;*/
 };
+Code.removeStyle = function(ele,sty){
+	var style = ele.getAttribute("style");
+//	style += sty;
+	ele.setAttribute("style",style);
+}
 // - 
 Code.getContent = function(ele){
 	return ele.innerHTML;
