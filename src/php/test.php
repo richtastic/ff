@@ -8,6 +8,9 @@ function getDirectoryListingRecursive($directory,& $array, $limit){
 	if($limit==null){
 		$limit = 2;
 	}
+	if($limit<=0){
+		return;
+	}
 	$list = scandir($directory);
 	$i;
 	$len = count($list);
@@ -28,9 +31,8 @@ function getDirectoryListingRecursive($directory,& $array, $limit){
 			"directories" => $isDir ? [] : null // nested arrays
 		];
 		array_push($array, $entry);
-		echo str_pad("",$limit," ").$path." - '".$isDir."'<br/>";
+		echo str_pad("",(10-$limit)*6*2,"&nbsp;").$item."  "."<br/>";//.$isDir."'<br/>";
 		if($isDir){
-			echo " SUB <br/>";
 			getDirectoryListingRecursive($entry["path"], $entry["directories"], --$limit);
 		}
 		// getDirectoryListingRecursive($directory, $array){
@@ -40,7 +42,7 @@ function getDirectoryListingRecursive($directory,& $array, $limit){
 
 
 $array = [];
-$directory = "../";
+$directory = "../3DR";
 getDirectoryListingRecursive($directory, $array, null);
 
 //print_r($array);
