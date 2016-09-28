@@ -1831,16 +1831,14 @@ Code.addStyle = function(ele,sty){//prop,attr){
 	var style = ele.getAttribute("style");
 	style += sty;//+";";
 	ele.setAttribute("style",style);
-	/*var c = Code.getClass(ele)+" "+cla;
-	c = c.replace("  "," ");
-	c = c.replace(/^ /,"");
-	ele.setAttribute("class",c);
-	ele.className = c;*/
 };
 Code.removeStyle = function(ele,sty){
-	var style = ele.getAttribute("style");
-//	style += sty;
-	ele.setAttribute("style",style);
+	var s = ele.getAttribute("style");
+	var reg = new RegExp(""+sty+"\:.*?;","g");
+	s = s.replace(reg," ");
+	s = s.replace("  "," ");
+	s = s.replace(/^ /,"");
+	ele.setAttribute("style",s);
 }
 // - 
 Code.getContent = function(ele){
