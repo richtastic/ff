@@ -14,7 +14,7 @@ function IS_SERVER_LINUX(){
 	$command = 'uname -o'; // GNU/Linux
 	$value = shell_exec($command);
 	$matchesLinux = preg_match("/linux/i",$value);
-	if($matchesLinux.length>0){
+	if(count($matchesLinux)>0){
 		return true;
 	}
 	return false;
