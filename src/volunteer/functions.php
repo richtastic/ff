@@ -484,7 +484,7 @@ function boolean01ToString($val){
 }
 
 
-function getPhoneAsNumbers($phone){
+function getOnlyAsNumbers($phone){
 	$i; $ch; $re; $result = ""; $len = strlen($phone);
 	for($i=0;$i<$len;++$i){
 		$ch = substr($phone,$i,1);
@@ -495,6 +495,20 @@ function getPhoneAsNumbers($phone){
 	}
 	return $result;
 }
+function getHumanReadablePhone($phone){
+	$phone = getOnlyAsNumbers($phone);
+	$phoneLength = strlen($phone);
+	if($phoneLength==7){ // XXX-XXXX
+		return substr($phoneLength, 0,2);
+	}
+	if($phoneLength==10){ // (XXX) XXX-XXXX
+		return substr($phoneLength, 0,2);
+	}
+	if($phoneLength==11){ // X-XXX-XXX-XXXX
+		return substr($phoneLength, 0,2);
+	}
+}
+
 
 function sendEmail($toEmail, $fromEmail, $replyEmail, $subject, $body){
 	if( $toEmail==null || count($toEmail)<1 ){
