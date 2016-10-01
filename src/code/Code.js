@@ -1731,6 +1731,19 @@ Code.setStyleZIndex = function(ele,style){
 Code.setStylePadding = function(ele,style){
 	ele.style.padding = style;
 };
+Code.setStylePaddingLeft = function(ele,style){
+	ele.style.paddingLeft = style;
+};
+Code.setStylePaddingRight = function(ele,style){
+	ele.style.paddingRight = style;
+};
+Code.setStylePaddingTop = function(ele,style){
+	ele.style.paddingTop = style;
+};
+Code.setStylePaddingBottom = function(ele,style){
+	ele.style.paddingBottom = style;
+};
+
 Code.setStyleMargin = function(ele,style){
 	ele.style.margin = style;
 };
