@@ -40,6 +40,7 @@ Ajax.HEADER_USER_AGENT = "User-Agent";
 function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	this._method = Ajax.METHOD_TYPE_GET;
 	this._params = null;
+	this._formData = null;
 	this._url = null;
 	this._context = null;
 	this._callback = null;
@@ -72,6 +73,14 @@ Ajax.prototype.cache = function(c){
 		this._cache = c;
 	}else{
 		return this._cache;
+	}
+}
+Ajax.prototype.append = function(key,value){
+	if(!this._formData){
+		this._formData = new FormData();
+	}
+	if(key && value){
+		this._formData.append(key,value);
 	}
 }
 Ajax.prototype.params = function(p){
@@ -159,7 +168,6 @@ Ajax.prototype.send = function(url,meth,cmp,params){
 	if (hasParameters && this._method==Ajax.METHOD_TYPE_GET) { // append parameters to URL
 		url = url + "?" + this._params; // TODO: better concatenation
 	}
-	console.log("url: "+url+" medho:"+this._method);
 	// begin request
 	this._request.open(this._method,url,true);
 	// set request headers
@@ -167,12 +175,15 @@ Ajax.prototype.send = function(url,meth,cmp,params){
 	for(o in this._header){
 		this._request.setRequestHeader(o,this._header[o]);
 	}
-	// set request parameters
-	if(hasParameters){ // care about parameters
+	hasParameters = this._params!==null;
+	if(this._formData){
+		this._request.send(this._formData);
+	}else if(hasParameters){ // care about parameters
 		if(this._method==Ajax.METHOD_TYPE_GET){ // GET PARAMS go in URL
 			this._request.send();
 		}else if(this._method==Ajax.METHOD_TYPE_POST) { // POST PARAMS
-			this._setPostHeaderParameters();
+//			this._setPostHeaderParameters();
+//this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,"multipart/form-data");
 			console.log(this._params);
 			this._request.send(this._params);
 		}else{ // 

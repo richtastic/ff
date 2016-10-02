@@ -1639,6 +1639,12 @@ Code.setEnabled = function(a){
 Code.setStyleOverflow = function(ele,val){
 	ele.style.overflow = val;
 }
+Code.setStyleOverflowX = function(ele,val){
+	ele.style.overflowX = val;
+}
+Code.setStyleOverflowY = function(ele,val){
+	ele.style.overflowY = val;
+}
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
@@ -2206,6 +2212,22 @@ Code.escapeURI = function(str){
 // escape(str)
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- formatting
+Code.clipStringToMaxChars = function(str,chr,filler){
+	if(chr<=0){
+		return "";
+	}
+	filler = filler!==undefined ? filler : "...";
+	var maxChar = chr + filler.length;
+	var strLen = str.length;
+	if(strLen>maxChar){
+		var rightLength = Math.floor(chr/2);
+		var leftLength = chr - rightLength;
+		var leftString = str.substring(0,leftLength);
+		var rightString = str.substring(strLen-rightLength,strLen);
+		return leftString+""+filler+""+rightString;
+	}
+	return str;
+}
 Code.padStringCenter = function(val,wid,fillerLeft,fillerRight){
 	if(val.length>=wid){
 		return val.substring(0,wid);

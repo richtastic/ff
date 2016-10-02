@@ -65,6 +65,24 @@ function printDirectoryListing(& $array, $depth = 0){
 }
 
 
+//echo exec('whoami');
+
+function relativePathToAbsolutePath($root, $relative){
+	echo $root."<br/>";
+	echo $relative."<br/>";
+	$relative = preg_replace('/\/\.\.\//', '/', $relative);
+	echo $relative."<br/>";
+	$absolutePath = $root."/".$relative;
+	echo $absolutePath."<br/>";
+	$absolutePath = realpath($absolutePath);
+	echo $absolutePath."<br/>";
+	return $absolutePath;
+}
+
+$result = relativePathToAbsolutePath("/tmp/php","bacon.png");
+
+exit(0);
+
 
 $array = [];
 $directory = "../3DR";
