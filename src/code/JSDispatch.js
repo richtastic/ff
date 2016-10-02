@@ -25,10 +25,19 @@ JSDispatch.prototype.removeJSEventListener = function(object, type, fxn, ctx){
 		}
 	}
 }
-JSDispatch.prototype.removeAllListeners = function(){
-	for(var i=this._listenerList.length; i--;){
-		var context = this._listenerList[i];
-		Code.removeEventListener(context.element, context.event, context.callback);
+JSDispatch.prototype.removeAllListeners = function(object){
+	if(object){ // remove specific element from all events
+		for(var i=this._listenerList.length; i--;){
+			var context = this._listenerList[i];
+			if(context.element == object){
+				Code.removeEventListener(context.element, context.event, context.callback);
+			}
+		}
+	}else{ // remove all elements
+		for(var i=this._listenerList.length; i--;){
+			var context = this._listenerList[i];
+			Code.removeEventListener(context.element, context.event, context.callback);
+		}
 	}
 }
 JSDispatch.prototype.kill = function(){

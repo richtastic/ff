@@ -1624,6 +1624,13 @@ Code.hasProperty = function(ele,par){
 	var p = Code.getProperty(ele,par);
 	return p !== undefined && p !== null;
 };
+Code.getValueOrDefault = function(obj,key, def){
+	var val = obj[key];
+	if(val!==undefined && val!==null){
+		return val;
+	}
+	return def;
+};
 Code.getPropertyOrDefault = function(ele,pro, def){
 	if(Code.hasProperty(ele,pro)){
 		return Code.getProperty(ele,pro);
