@@ -183,9 +183,15 @@ Code.extendClass = function extendClass(target, source) {
 Code.keys = function keys(object){
 	if(object){
 		return Object.keys(object);
-		var keys = []; for(var key in object){ keys.push(key); } return keys;
+		//var keys = []; for(var key in object){ keys.push(key); } return keys;
 	}
 	return [];
+}
+Code.hasKey = function keys(object, key){
+	if(object){
+		return key in object;
+	}
+	return false;
 }
 Code.inheritClass = function inheritClass(SubC, SuperC){
 	// console.log( Object.defineProperty );
@@ -1652,6 +1658,9 @@ Code.setStyleOverflowX = function(ele,val){
 Code.setStyleOverflowY = function(ele,val){
 	ele.style.overflowY = val;
 }
+Code.setStyleWordWrap = function(ele,val){
+	ele.style.wordWrap = val;
+};
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
@@ -1668,6 +1677,9 @@ Code.setStyleBorderRadius = function(ele,val){
 };
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
+};
+Code.setStyleBackgroundColor = function(ele,val){
+	ele.style.backgroundColor = val;
 };
 Code.setStyleBorder = function(ele,val){
 	ele.style.borderStyle = val;

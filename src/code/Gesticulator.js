@@ -1,9 +1,46 @@
 // Gesticulator.js
 
 FF.Gesticulator = function(){
+	V4D._.constructor.call(this);
 	this._touches = [];
+	this._jsDispatch = new JSDispatch();
+}
+Code.inheritClass(FF.Gesticulator, Dispatchable);
+
+FF.Gesticulator.EVENT_TAP = "gest_tap"; // complete press
+FF.Gesticulator.EVENT_TAP_LONG = "gest_long_tap"; // complete press
+FF.Gesticulator.EVENT_PRESS = "gest_press";
+FF.Gesticulator.EVENT_PRESS_LONG = "gest_long_press";
+FF.Gesticulator.EVENT_PINCH = "gest_pinch";
+FF.Gesticulator.EVENT_SWIPE = "gest_swipe";
+/*
+metadata:
+number of fingers
+time
+
+*/
+
+
+FF.Gesticulator.prototype.attachElement = function(element){
+	this._jsDispatch.addJSEventListener(element, Code.JS_EVENT_TOUCH_START, this._handleElementEventTouchStart, this);
+	this._jsDispatch.addJSEventListener(element, Code.JS_EVENT_TOUCH_MOVE, this._handleElementEventTouchMove, this);
+	this._jsDispatch.addJSEventListener(element, Code.JS_EVENT_TOUCH_END, this._handleElementEventTouchEnd, this);
 }
 
+FF.Gesticulator.prototype._handleElementEventTouchStart = function(e){
+	this._processTouchEvent(e);
+}
+FF.Gesticulator.prototype._handleElementEventTouchMove = function(e){
+	this._processTouchEvent(e);
+}
+FF.Gesticulator.prototype._handleElementEventTouchEnd = function(e){
+	this._processTouchEvent(e);
+}
+FF.Gesticulator.prototype._processTouchEvent = function(e, alertEventType){
+	this.updateTouchesFromTouchEvent(e,false);
+	e.preventDefault();
+	this.updateTouchesFromTouchEvent(e,true);
+}
 
 FF.Gesticulator.prototype._getTouchByID = function(identifier){
 	for(var i=0; i<this._touches.length; ++i){

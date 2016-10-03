@@ -4,10 +4,10 @@ function JSDispatch(){
 }
 // -------------------------------------------------------------
 
-JSDispatch.prototype.addJSEventListener = function(object, type, fxn, ctx){
-	var context = {"element":object, "event":type, "function":fxn, "context":ctx};
+JSDispatch.prototype.addJSEventListener = function(object, type, fxn, ctx, data){
+	var context = {"element":object, "event":type, "function":fxn, "context":ctx, "data":data};
 	var callback = function(e){
-		context["function"].call(context["context"],e);
+		context["function"].call(context["context"],e,data);
 	}
 	context["callback"] = callback;
 	// if(type=="onchange"){

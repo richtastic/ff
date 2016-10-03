@@ -95,7 +95,7 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D, autoscale){ // input
 	this._matrix = new Matrix2D();
 	this._alphaStack = [];
 	this._alphaComposite = 1.0;
-	this._guesticulate = new FF.Gesticulator();
+	this._gesticulate = new FF.Gesticulator();
 	if(canHTML){
 		this._canvas = canHTML;
 	}else{
@@ -717,16 +717,16 @@ Canvas.prototype._canvasTouchEndFxn = function(e){
 	this._canvasTouchProcessAlert(e, Canvas.EVENT_TOUCH_END);
 }
 Canvas.prototype._canvasTouchProcessAlert = function(e, alertEventType){
-	this._guesticulate.updateTouchesFromTouchEvent(e,false);
+	this._gesticulate.updateTouchesFromTouchEvent(e,false);
 	e.preventDefault();
-	var events = this._guesticulate.getTouchEventsFromTouchEvent(e);
+	var events = this._gesticulate.getTouchEventsFromTouchEvent(e);
 	if(events){
 		for(var i=0; i<events.length; ++i){
 			var obj = events[i];
 			this.alertAll(alertEventType,obj);
 		}
 	}
-	this._guesticulate.updateTouchesFromTouchEvent(e,true);
+	this._gesticulate.updateTouchesFromTouchEvent(e,true);
 }
 // ------------------------------------------------------------------------------------------------------------------------ SCREEN OPERATIONS
 Canvas.prototype._handleWindowResizedFxn = function(e){
