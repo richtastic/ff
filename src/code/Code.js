@@ -723,22 +723,28 @@ Code.secondMax = function(){
 	return nextMax;
 }
 Code.maxArray = function(a){
-	return Math.max.apply(this,a);
+	var max = a[0];
+	for(var i=a.length; i--; ){
+		max = Math.max(max,a[i]);
+	}
+	return max;
+	//return Math.max.apply(this,a); // max stack size exceeded
 }
 Code.minArray = function(a){
-	return Math.min.apply(this,a);
+	var min = a[0];
+	for(var i=a.length; i--; ){
+		min = Math.min(min,a[i]);
+	}
+	return min;
+	//return Math.min.apply(this,a); // max stack size exceeded
 }
 Code.sumArray = function(a){
-	var i, sum = 0, len = a.length;
-	for(i=0; i<len;++i){
+	var sum = 0;
+	for(var i=a.length; i--; ){
 		sum += a[i];
 	}
 	return sum;
 }
-//console.log( Code.secondMax(1,2,42,34,23,7) );
-	//console.log( Math.max([1,2,42,34,23,7]) ); // NO
-	//console.log( Math.max.call(this,[1,2,42,34,23,7]) ); // NO
-	//console.log( Math.max.apply(this,[1,2,42,34,23,7]) ); // WORKS\
 // ------------------------------------------------------------------------------------------ TIME
 Code._timerDates = [];
 Code._timerDateTop = 0;
@@ -1069,36 +1075,39 @@ Code.HSVFromRGB = function(vout, vin){//, r,g,b){ // in [0,1]
 	var min = Math.min(r,g,b);
 	var max = Math.max(r,g,b);
 	var range = max - min;
+	// V
+	v = max;
+	// S
 	if(max!=0.0){
-		v = max;
 		s = range / max;
-		if(range==0){
-			h = 0;
-		}else{
-			if(r===max){ // y to m
-				h = (g-b)/range;
-			}else if(g===max){ // c to y
-				h = (b-r)/range;
-			}else{ // b===max m to c
-				h = (r-g)/range;
-			}
-		}
-		h *= Math.PI/3.0;
-		if(h<0){
-			h += Math.PI2;
-			//h += 2.0;
-		}
-		h /= Math.PI2;
 	}else{
-		s = 0.0;
-		h = -1;
-		v = 0;
+		s = 0;
 	}
+	// H
+	if(range==0){
+		h = 0;
+	}else{
+		if(r===max){
+			h = (g-b)/range;
+		}else if(g===max){
+			h = (b-r)/range + 2.0;
+		}else if(b===max){
+			h = (r-g)/range + 4.0;
+		}
+		h /= 6.0;
+	}
+	h = Math.min(Math.max(h,0.0),1.0);
+	s = Math.min(Math.max(s,0.0),1.0);
+	v = Math.min(Math.max(v,0.0),1.0);
 	vout.set(h,s,v);
 	return vout;
 	//return {"h":h, "s":s, "v":v};
 }
+// Code.HSVFromRGB(new V3D(1,1,1))
 Code.RGBFromHSV = function(vout, vin){ // h in [0,1], s in [0,1], v in [0,1]       (h usually 0-360 deg)
+
+// some color yellow? is turned to black
+
 	if(vin===undefined){
 		vin = vout;
 		vout = new V3D();
@@ -1110,14 +1119,17 @@ Code.RGBFromHSV = function(vout, vin){ // h in [0,1], s in [0,1], v in [0,1]    
 	if(s===0){
 		r = g = b = v;
 	}else{
-		//h /= (Math.PI/3.0);
 		h *= 6.0;
 		i = Math.floor(h);
 		f = h - i;
 		var oms = 1.0 - s;
-		//var omf = 1.0 - f;
 		var omsf = 1.0 - (s*f);
 		var omsomf = 1.0 - s*(1.0-f);
+
+// omsf = Math.min(Math.max(omsf,0.0),1.0);
+// omsomf = Math.min(Math.max(omsomf,0.0),1.0);
+// oms = Math.min(Math.max(oms,0.0),1.0);
+
 		p = v * oms;
 		q = v * omsf;
 		t = v * omsomf;
@@ -1158,12 +1170,17 @@ Code.RGBFromHSV = function(vout, vin){ // h in [0,1], s in [0,1], v in [0,1]    
 				b = 0.0;
 		}
 	}
-	r = Math.min(r,1.0);
-	g = Math.min(g,1.0);
-	b = Math.min(b,1.0);
-	r = Math.max(r,0.0);
-	g = Math.max(g,0.0);
-	b = Math.max(b,0.0);
+	/*
+	if(h==1.0 || s==1.0 || v==1.0){
+	//if(h==0.0 || s==0.0 || v==0.0){
+		r = 1.0;
+		g = 1.0;
+		b = 1.0;
+	}
+	*/
+	r = Math.min(Math.max(r,0.0),1.0);
+	g = Math.min(Math.max(g,0.0),1.0);
+	b = Math.min(Math.max(b,0.0),1.0);
 	vout.set(r,g,b);
 	return vout;
 }

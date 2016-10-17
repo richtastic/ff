@@ -182,9 +182,9 @@ Ajax.prototype.send = function(url,meth,cmp,params){
 		if(this._method==Ajax.METHOD_TYPE_GET){ // GET PARAMS go in URL
 			this._request.send();
 		}else if(this._method==Ajax.METHOD_TYPE_POST) { // POST PARAMS
-//			this._setPostHeaderParameters();
+			this._setPostHeaderParameters();
 //this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,"multipart/form-data");
-			console.log(this._params);
+//			console.log(this._params);
 			this._request.send(this._params);
 		}else{ // 
 			this._request.send(this._params);
@@ -205,7 +205,7 @@ Ajax.prototype.responseContent = function(){
 }
 // ---- internal functions ---------------------------------------------------------
 Ajax.prototype._setPostHeaderParameters = function(){
-	console.log("_setPostHeaderParameters: ",Ajax.HEADER_CONTENT_TYPE,Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED)
+	//console.log("_setPostHeaderParameters: ",Ajax.HEADER_CONTENT_TYPE,Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED)
 	this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,Ajax.CONTENT_TYPE_VALUE_FORM_ENCODED);
 }
 Ajax.prototype._stateChangeCaller = function(e){

@@ -6,12 +6,21 @@ include_once "functions.php";
 $COMMAND_UPLOAD = "upload";
 $COMMAND_COMBINE = "combine";
 
+$filename = null;
+
 $command = $_POST["command"];
 $data = $_POST["data"];
-$filename = $_POST["filename"];
+if(isset($_POST["filename"])){
+	$filename = $_POST["filename"];
+}
 if(!$filename){
 	$filename = "out.png";
 }
+
+
+// error_log("filename:".$filename."");
+// error_log("command:".$command."");
+// error_log("data:".$data."");
 
 // phpinfo();
 //echo "MAC: ".IS_SERVER_OSX();
@@ -47,10 +56,11 @@ if($command==$COMMAND_COMBINE){
 	$fullImageSizeY = $json->height;
 	$imageList = $json->images;
 
-	createBlankImage($imageFinalLocation, $fullImageSizeX, $fullImageSizeY);
+	//createBlankImage($imageFinalLocation, $fullImageSizeX, $fullImageSizeY);
 	
 	// combine cells
 	$len = count($imageList);
+	$subImageList = [];
 	for($i=0; $i<$len; ++$i){
 		$imageObject = $imageList[$i];
 		$filename = $fileDirectoryPrefix.$imageObject->filename;
@@ -58,8 +68,16 @@ if($command==$COMMAND_COMBINE){
 		$imageHeight = $imageObject->height;
 		$offsetX = $imageObject->x;
 		$offsetY = $imageObject->y;
-		combineImageOntoImage($filename, $offsetX, $offsetY, $imageFinalLocation, $imageFinalLocation);
+		//combineImageOntoImage($filename, $offsetX, $offsetY, $imageFinalLocation, $imageFinalLocation);
+		array_push($subImageList,[
+			"filename" => $filename,
+			"x" => $offsetX,
+			"y" => $offsetY,
+			"width" => $imageWidth,
+			"height" => $imageHeight
+		]);
 	}
+	combineMultipleImagesOntoSingleImage($fullImageSizeX, $fullImageSizeY, $subImageList, $imageFinalLocation);
 	return;
 }
 

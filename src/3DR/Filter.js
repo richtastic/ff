@@ -11,6 +11,16 @@ Filter.FILTER_TYPE_COLORIZE = "colorize";
 Filter.FILTER_TYPE_TINT = "tint";
 Filter.FILTER_TYPE_HISTOGRAM_EXPAND = "histogram_expand";
 Filter.FILTER_TYPE_UNKNOWN = "unknown";
+
+
+
+
+// http://homepages.inf.ed.ac.uk/rbf/HIPR2/filtops.htm
+Filter.FILTER_TYPE_MEDIAN = "median";
+Filter.FILTER_TYPE_AVERAGE = "average";
+Filter.FILTER_TYPE_GAUSSIAN = "gaussian";
+
+
 // invert
 // sephia
 // exposure
@@ -36,6 +46,18 @@ function Filter(){
 	var imageList, imageLoader;
 	imageList = ["caseStudy1-0.jpg"];
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
+	
+
+	// hawaii:
+	imageList = ["hawaii_scene_10p.png"];
+	//imageList = ["hawaii_scene_15p.png"];
+	//imageList = ["hawaii_scene_20p.png"];
+	//imageList = ["hawaii_scene_50p.png"];
+	//imageList = ["hawaii_scene_100p.png"];
+	imageLoader = new ImageLoader("./images/panoramas/",imageList, this,this.handleSceneImagesLoaded,null);
+	// convert hawaii_scene.JPG -resize 100% hawaii_scene_100p.png
+
+	// LOAD
 	imageLoader.load();
 
 	this._filter = {
@@ -164,7 +186,7 @@ Filter.prototype.handleKeyboardDown = function(e){
 				// },
 				{
 					"filter": Filter.FILTER_TYPE_HISTOGRAM_EXPAND,
-					"value": {"window_percent":0.2, "percent": 1.0}
+					"value": {"window":0.5, "percent": 1.0}
 				}
 			]
 		}
@@ -174,6 +196,8 @@ Filter.prototype.handleKeyboardDown = function(e){
 		return;
 	}
 
+/*
+// ACTIVE
 	var filter = this._filter;
 	var active = filter.active;
 	var value = filter.value;
@@ -194,8 +218,134 @@ Filter.prototype.handleKeyboardDown = function(e){
 
 	filter.active = active;
 	filter.value = value;
+*/
+// CUSTOM
 
-	console.log(active+" : "+value);
+		var filterType = null;
+		var filterValue = 0.0;
+
+		var obj = this.setupInternalApplyFilterFunction();
+		
+		// OWN FILTERS:
+
+
+	// LONG
+	// 	filterType = Filter.FILTER_TYPE_HISTOGRAM_EXPAND;
+	// 	filterValue = {"window":0.10, "percent": 1.0};
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	// // AVERAGE
+	// 	filterType = Filter.FILTER_TYPE_AVERAGE;
+	// 	filterValue = {"window":0.001, "percent": 1.0};
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	// MEDIAN
+	// 	filterType = Filter.FILTER_TYPE_MEDIAN;
+	// 	filterValue = {"window":0.005, "percent": 1.0};
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	// GAUSS
+	// 	filterType = Filter.FILTER_TYPE_GAUSSIAN;
+	// 	filterValue = {"window":0.5, "percent": 1.0};
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+	
+/*
+		filterType = Filter.FILTER_TYPE_SHARPEN;
+		filterValue = 0.1;
+	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+		
+	// 	filterType = Filter.FILTER_TYPE_BRIGHTNESS;
+	// 	filterValue = 0.1;
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+	
+
+		filterType = Filter.FILTER_TYPE_CONTRAST;
+		filterValue = 1.25;
+	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	
+	// 	filterType = Filter.FILTER_TYPE_COLORIZE;
+	// 	filterValue =  {"color":new V3D(1.0,1.0,1.0), "exponent": 4, "percent": 0.25 }
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+		filterType = Filter.FILTER_TYPE_SATURATION;
+		filterValue = 1.5;
+	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	// 	filterType = Filter.FILTER_TYPE_SHARPEN;
+	// 	filterValue = 1.1;
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+		filterType = Filter.FILTER_TYPE_VIBRANCE;
+		filterValue = -0.5;
+	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+		filterType = Filter.FILTER_TYPE_GAMMA;
+		filterValue = 1.5;
+	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+
+	// 	filterType = Filter.FILTER_TYPE_HUE;
+	// 	filterValue = -0.25;
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+
+	// filterType = Filter.FILTER_TYPE_SHARPEN;
+	// 	filterValue = 0.25;
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+*/
+
+	// filterType = Filter.FILTER_TYPE_SHARPEN;
+	// 	filterValue = 1.0;
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	
+	
+	filterType = Filter.FILTER_TYPE_HISTOGRAM_EXPAND;
+		filterValue = {"window":0.05, "percent": 0.1};
+//		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_GAMMA;
+		filterValue = 1.1;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_GAUSSIAN;
+		filterValue = {"window":4.0, "percent": 0.25};
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+		
+
+	filterType = Filter.FILTER_TYPE_CONTRAST;
+		filterValue = 1.5;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_SATURATION;
+		filterValue = 1.25;
+//		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	// filterType = Filter.FILTER_TYPE_HUE;
+	// 	filterValue = -0.02;
+	// 	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_VIBRANCE;
+		filterValue = -.5;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+	
+	filterType = Filter.FILTER_TYPE_GAUSSIAN;
+		filterValue = {"window":2.0, "percent": 0.1};
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_SHARPEN;
+		filterValue = 0.25;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+
+	this.takedownInternalApplyFilterFunction(obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+
+	//console.log(active+" : "+value);
 	//if(this._keyboard.isKeyDown(Keyboard.KEY_CTRL)){
 
 }
@@ -256,11 +406,19 @@ Filter.prototype.segmentImageToServer = function(){
 		var ajax = new Ajax();
 		ajax.method(Ajax.METHOD_TYPE_POST);
 		ajax.url("../php/images.php");
+		ajax.context(this);
 		ajax.callback(function(e,f){
 			//console.log("called back");
 			//console.log(e,f);
 		});
 		ajax.params({"command":"upload","data":base64Img,"filename":image.filename,"width":image.width,"height":image.height});
+		/*
+		ajax.append("command","upload");
+		ajax.append("data",base64Img);
+		ajax.append("filename",image.filename);
+		ajax.append("width",image.width);
+		ajax.append("height",image.height);
+		*/
 		ajax.send();
 	}
 	var data = JSON.stringify(combineData);
@@ -313,7 +471,7 @@ Filter.prototype.applyFilter = function(type,value, r,g,b, wid,hei){
 	}else if(type==Filter.FILTER_TYPE_SATURATION_RGB){
 		this.applyFilterSaturationRGB(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_BRIGHTNESS){
-		this.applyFilterBrightness(value, r,g,b), wid,hei;
+		this.applyFilterBrightness(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_GAMMA){
 		this.applyFilterGamma(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_SHARPEN){
@@ -328,6 +486,15 @@ Filter.prototype.applyFilter = function(type,value, r,g,b, wid,hei){
 		this.applyFilterColorize(value, r,g,b, wid,hei);
 	}else if(type==Filter.FILTER_TYPE_HISTOGRAM_EXPAND){
 		this.applyFilterHistogramExpand(value, r,g,b, wid,hei);
+
+	}else if(type==Filter.FILTER_TYPE_AVERAGE){
+		this.applyFilterAverage(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_MEDIAN){
+		this.applyFilterMedian(value, r,g,b, wid,hei);
+	}else if(type==Filter.FILTER_TYPE_GAUSSIAN){
+		this.applyFilterGaussian(value, r,g,b, wid,hei);
+
+		
 	}else if(type==Filter.FILTER_TYPE_UNKNOWN){
 		//
 	}
@@ -363,6 +530,16 @@ Filter.prototype.applyFilterColorize = function(amount, r,g,b, wid,hei){
 Filter.prototype.applyFilterHistogramExpand = function(amount, r,g,b, wid,hei){
 	this.applyFilterFunction(Filter.filterHistogramExpand, amount, r,g,b, wid,hei);
 }
+Filter.prototype.applyFilterAverage = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterAverage, amount, r,g,b, wid,hei);
+}
+Filter.prototype.applyFilterMedian = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterMedian, amount, r,g,b, wid,hei);
+}
+Filter.prototype.applyFilterGaussian = function(amount, r,g,b, wid,hei){
+	this.applyFilterFunction(Filter.filterGaussian, amount, r,g,b, wid,hei);
+}
+
 Filter.prototype.takedownInternalApplyFilterFunction = function(red,grn,blu, width,height){
 	this._root.removeAllChildren();
 	var img, d;
@@ -372,6 +549,10 @@ Filter.prototype.takedownInternalApplyFilterFunction = function(red,grn,blu, wid
 	d = new DOImage(img);
 	this._root.addChild(d);
 	d.matrix().translate(0,0);
+
+	// for(var i=0; i<red.length; ++i){
+
+	// }
 
 	// new
 	img = this._stage.getFloatRGBAsImage(red,grn,blu, width,height);
@@ -493,6 +674,10 @@ Filter.filterHistogramExpandA = function(imageSourceRed, imageSourceGrn, imageSo
 		grn = dir.y;
 		blu = dir.z;
 
+		// red = Code.rangeForceMinMax(red, 0.0,1.0);
+		// grn = Code.rangeForceMinMax(red, 0.0,1.0);
+		// blu = Code.rangeForceMinMax(red, 0.0,1.0);
+
 		imageSourceRed[i] = red;
 		imageSourceGrn[i] = grn;
 		imageSourceBlu[i] = blu;
@@ -608,7 +793,7 @@ Filter.filterHistogramExpandAll = function(imageSourceRed, imageSourceGrn, image
 Filter.filterHistogramExpand = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ // histogram equalization to adjust intensities & increase contrast by spreading out the intensities used the mose
 	if(!args){ return null; }
 	var totalBinCount = args["bins"] ? args["bins"] : 25;
-	var percentWindow = args["window"] ? args["window"] : 0.01; // ~[0.1,0.5]
+	var percentWindow = args["window"] ? args["window"] : 0.05; // ~[0.1,0.5]
 	var percentApply = args["percent"] ? args["percent"] : 1.0;
 	var percentApplyM1 = 1.0 - percentApply;
 
@@ -617,6 +802,8 @@ Filter.filterHistogramExpand = function(imageSourceRed, imageSourceGrn, imageSou
 	var imageDestinationRed = Code.copyArray(imageSourceRed);
 	var imageDestinationGrn = Code.copyArray(imageSourceGrn);
 	var imageDestinationBlu = Code.copyArray(imageSourceBlu);
+
+console.log(percentWindow,width)
 
 	var windowSize = Math.floor(percentWindow*width);
 	console.log("windowSize",windowSize)
@@ -702,7 +889,6 @@ Filter.filterHistogramExpand = function(imageSourceRed, imageSourceGrn, imageSou
 }
 
 Filter.filterHistogramExpand2 = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){
-console.log(args);
 	var percent = args["percent"];
 	var sigmaSize = args["window_percent"] * width;
 	var windowPixels = Math.round(sigmaSize*0.25);
@@ -807,17 +993,26 @@ Filter.prototype.applyFilterFunction = function(fxn, args, red,grn,blu, width, h
 
 Filter.filterHue = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, rotate/shift colors around rainbow
 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterHueFxn, percent);
+	console.log(percent)
 }
 Filter._filterHueFxn = function(v, args){
 	var percent = args;
 	v = Code.HSVFromRGB(v,v);
 	v = v.copy();
+
 	v.x = v.x + percent;
-		var remainder = Math.floor(v.x);
-		remainder = v.x - remainder;
-		v.x = remainder;
-	//v.x = Math.min(Math.max(v.x, 0.0),1.0);
+		while(v.x>=1.0){
+			v.x -= 1.0;
+		}
+		while(v.x<0.0){
+			v.x += 1.0;
+		}
+
 	v = Code.RGBFromHSV(v,v);
+	
+		v.x = Math.min(Math.max(v.x, 0.0),1.0);
+		v.y = Math.min(Math.max(v.y, 0.0),1.0);
+		v.z = Math.min(Math.max(v.z, 0.0),1.0);
 	return v;
 }
 
@@ -984,7 +1179,6 @@ Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 	var redDiff = ImageMat.subFloat(imageSourceRed,redGauss);
 	var grnDiff = ImageMat.subFloat(imageSourceGrn,grnGauss);
 	var bluDiff = ImageMat.subFloat(imageSourceBlu,bluGauss);
-	
 	var maxR = Code.maxArray(redDiff);
 	var maxG = Code.maxArray(grnDiff);
 	var maxB = Code.maxArray(bluDiff);
@@ -1006,7 +1200,6 @@ Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 	redDiff = ImageMat.scaleFloat(range,redDiff);
 	grnDiff = ImageMat.scaleFloat(range,grnDiff);
 	bluDiff = ImageMat.scaleFloat(range,bluDiff);
-	
 	var i, len = width*height;
 	for(i=0; i<len; ++i){
 		var red = imageSourceRed[i];
@@ -1091,12 +1284,174 @@ Filter.filterOperation = function(imageSourceRed, imageSourceGrn, imageSourceBlu
 		var b = imageSourceBlu[i];
 		v.set(r, g, b);
 		v = fxn(v, args);
-		imageSourceRed[i] = v.x;
-		imageSourceGrn[i] = v.y;
-		imageSourceBlu[i] = v.z;
+		imageSourceRed[i] = v.x;//Code.rangeForceMinMax(v.x, 0.0,1.0);
+		imageSourceGrn[i] = v.y;//Code.rangeForceMinMax(v.y, 0.0,1.0);
+		imageSourceBlu[i] = v.z;//Code.rangeForceMinMax(v.z, 0.0,1.0);
 	}
 }
 
+
+Filter.filterAverage = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ //
+	var percent = args["percent"];
+	var windowPercent = args["window"];
+		windowPercent = windowPercent ? windowPercent : 0.05;
+	var windowSize = Math.floor(windowPercent * width);
+	var win2 = windowSize;
+	console.log(win2);
+	var oneMP = 1.0 - percent;
+	var redCopy = Code.copyArray(imageSourceRed);
+	var grnCopy = Code.copyArray(imageSourceGrn);
+	var bluCopy = Code.copyArray(imageSourceBlu);
+	var i, j, ii, jj, len = width*height;
+	for(j=0; j<height; ++j){
+		console.log(j+"/"+height+"  --- "+(j/height));
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			var red = redCopy[index];
+			var grn = grnCopy[index];
+			var blu = bluCopy[index];
+			var redList = [];
+			var grnList = [];
+			var bluList = [];
+			for(jj=j-win2; jj<j+win2; ++jj){
+				for(ii=i-win2; ii<i+win2; ++ii){
+					if(jj>=0 && jj<height && ii>=0 && ii<width){
+						var ind = jj*width + ii;
+						var r = redCopy[ind];
+						var g = grnCopy[ind];
+						var b = bluCopy[ind];
+						redList.push(r);
+						grnList.push(g);
+						bluList.push(b);
+					}
+				}
+			}
+			var redSum = Code.sumArray(redList);
+			var grnSum = Code.sumArray(grnList);
+			var bluSum = Code.sumArray(bluList);
+
+			var redAvg = redSum / redList.length;
+			var grnAvg = grnSum / grnList.length;
+			var bluAvg = bluSum / bluList.length;
+
+			var red2 = redAvg;
+			var grn2 = grnAvg;
+			var blu2 = bluAvg;
+			
+			imageSourceRed[index] = red*oneMP + red2*percent;
+			imageSourceGrn[index] = grn*oneMP + grn2*percent;
+			imageSourceBlu[index] = blu*oneMP + blu2*percent;
+		}
+	}
+}
+
+Filter.filterMedianSort = function(a,b){
+	if(a<b){
+		return -1;
+	}
+	return 1;
+}
+
+Filter.filterMedian = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ //
+	var percent = args["percent"];
+	var windowPercent = args["window"];
+		windowPercent = windowPercent ? windowPercent : 0.05;
+	var windowSize = Math.floor(windowPercent * width);
+	var win2 = windowSize;
+	console.log(win2);
+	var oneMP = 1.0 - percent;
+	var redCopy = Code.copyArray(imageSourceRed);
+	var grnCopy = Code.copyArray(imageSourceGrn);
+	var bluCopy = Code.copyArray(imageSourceBlu);
+	var i, j, ii, jj, len = width*height;
+	for(j=0; j<height; ++j){
+		console.log(j+"/"+height+"  --- "+(j/height));
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			var red = redCopy[index];
+			var grn = grnCopy[index];
+			var blu = bluCopy[index];
+			var redList = [];
+			var grnList = [];
+			var bluList = [];
+			for(jj=j-win2; jj<j+win2; ++jj){
+				for(ii=i-win2; ii<i+win2; ++ii){
+					if(jj>=0 && jj<height && ii>=0 && ii<width){
+						var ind = jj*width + ii;
+						var r = redCopy[ind];
+						var g = grnCopy[ind];
+						var b = bluCopy[ind];
+						redList.push(r);
+						grnList.push(g);
+						bluList.push(b);
+					}
+				}
+			}
+			redList.sort(Filter.filterMedianSort);
+			grnList.sort(Filter.filterMedianSort);
+			bluList.sort(Filter.filterMedianSort);
+
+			var redMed = redList[Math.floor(redList.length/2)];
+			var grnMed = grnList[Math.floor(grnList.length/2)];
+			var bluMed = bluList[Math.floor(bluList.length/2)];
+
+			var red2 = redMed;
+			var grn2 = grnMed;
+			var blu2 = bluMed;
+			
+			imageSourceRed[index] = red*oneMP + red2*percent;
+			imageSourceGrn[index] = grn*oneMP + grn2*percent;
+			imageSourceBlu[index] = blu*oneMP + blu2*percent;
+		}
+	}
+}
+
+Filter.filterGaussian = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ //
+	console.log("gaussian");
+	var percent = args["percent"];
+	var windowPercent = args["window"];
+		windowPercent = windowPercent ? windowPercent : 0.05;
+	var oneMP = 1.0 - percent;
+	var sigma = 1.6 * windowPercent;
+	console.log(sigma);
+	var gauss1D = ImageMat.gaussianWindow1DFromSigma(sigma, 5, 2);
+	var redGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceRed, width,height, gauss1D);
+	var grnGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceGrn, width,height, gauss1D);
+	var bluGauss = ImageMat.gaussian2DFrom1DFloat(imageSourceBlu, width,height, gauss1D);
+	
+	var i, j;
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			var red = imageSourceRed[index];
+			var grn = imageSourceGrn[index];
+			var blu = imageSourceBlu[index];
+			var red2 = redGauss[index];
+			var grn2 = grnGauss[index];
+			var blu2 = bluGauss[index];
+			imageSourceRed[index] = red*oneMP + red2*percent;
+			imageSourceGrn[index] = grn*oneMP + grn2*percent;
+			imageSourceBlu[index] = blu*oneMP + blu2*percent;
+		}
+	}
+}
+
+/*
+Filter.filterAverage = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> HSV, increase S
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterAverageFxn, scale);
+}
+Filter._filterAverageFxn = function(v, args){
+	var inc = args;
+	v = v.copy();
+	v.x = v.x + inc;
+	v.y = v.y + inc;
+	v.z = v.z + inc;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+*/
 	// 
 	// 
 	// 
@@ -1213,3 +1568,7 @@ oneMP = 1.0;
 
 }
 
+
+
+Filter.filterHistogramExpand = Filter.filterHistogramExpandAll;
+//Filter.filterHistogramExpand = Filter.filterHistogramExpandA;

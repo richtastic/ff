@@ -335,9 +335,24 @@ ImageMat.ARGBFromFloats = function(rF,gF,bF){
 	var i, len = rF.length;
 	var col, r,g,b,a = new Array(len);
 	for(i=0;i<len;++i){
-		r = Math.round(rF[i]*255.0);
-		g = Math.round(gF[i]*255.0);
-		b = Math.round(bF[i]*255.0);
+		// r = Math.round(rF[i]*255.0);
+		// g = Math.round(gF[i]*255.0);
+		// b = Math.round(bF[i]*255.0);
+		r = Math.min(Math.floor(rF[i]*256.0),255);
+		g = Math.min(Math.floor(gF[i]*256.0),255);
+		b = Math.min(Math.floor(bF[i]*256.0),255);
+		// r = Math.min(Math.floor(rF[i]*256.0),200);
+		// g = Math.min(Math.floor(gF[i]*256.0),200);
+		// b = Math.min(Math.floor(bF[i]*256.0),200);
+		// if(r>255){
+		// 	r = 255;
+		// }
+		// if(g>255){
+		// 	g = 255;
+		// }
+		// if(b>255){
+		// 	b = 255;
+		// }
 		a[i] = Code.getColARGB( 0xFF, r,g,b);
 	}
 	return a;

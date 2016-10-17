@@ -58,7 +58,7 @@ function parameterFromGETorPOST($key,$default){
 	return $imageDataValue;
 }
 
-function base64ToBinary($data64,$type) {
+function base64ToBinary($data64,$type=null) {
 	$base64content = $type;
 	$base64string = $data64;
 	if($base64string){ // find content type if not set
@@ -103,7 +103,24 @@ function combineImageOntoImage($imageOver, $offsetX, $offsetY, $imageBase, $outF
 	return $result;
 }
 
-function createBlankImage($location,$width,$height,$background){
+function combineMultipleImagesOntoSingleImage($imageWidth, $imageHeight, & $subImageList, $filename){ // faster than combineImageOntoImage
+	$command = BIN_LOCATION_CONVERT().' -size '.$imageWidth.'x'.$imageHeight.' xc:"rgba(255,255,255,255)" ';
+	foreach($subImageList as $index => $image){
+		$file = $image['filename'];
+		$offsetX = $image['x'];
+		$offsetY = $image['y'];
+		$width = $image['width'];
+		$height = $image['height'];
+		$signX = $offsetX < 0 ? '-' : '+';
+		$signY = $offsetY < 0 ? '-' : '+';
+		$command = $command . $file . ' -geometry '.$signX.abs($offsetX).$signY.abs($offsetY).'  -composite ';
+	}
+	$command = $command . '  ' . $filename;
+	$result = shell_exec($command);
+	return $result;
+}
+
+function createBlankImage($location,$width=null,$height=null,$background=null){
 	if(!isset($width)) {
 		$width = 1;
 	}
@@ -131,9 +148,6 @@ function cropImage($imageSourceFilename, $offsetX, $offsetY, $cropWidth, $cropHe
 	$result = shell_exec($command);
 	return $result;
 }
-//
-//splitImageIntoGridImages($sourceGridImageLocation, $offsetX,$offsetY, $gridSizeWidth,$gridSizeHeight, $imageLocation);
-
 
 function dimensionOfImage($imageSourceFilename){
 	$command = BIN_LOCATION_IDENTIFY().' -format "%[fx:w]x%[fx:h]"'.'  '.$imageSourceFilename;
@@ -148,5 +162,7 @@ function dimensionOfImage($imageSourceFilename){
 	}
 	return null;
 }
+
+
 
 ?>
