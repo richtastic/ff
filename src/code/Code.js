@@ -2249,6 +2249,10 @@ Code.escapeHTML = function(str){
 Code.escapeURI = function(str){
 	return encodeURIComponent(str);
 }
+Code.escapeSpaces = function(str){
+	return (str+"")
+         .replace(/ /g, "$20");
+}
 // ENCODE URL STRING SAFE FOR SENDING:
 // encodeURIComponent(str)
 // encodeURI(str)
