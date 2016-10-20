@@ -1345,6 +1345,13 @@ Code.getHead = function(){
 Code.setPageTitle = function(str){
 	document.head.getElementsByTagName("title")[0].innerHTML = str;
 	// if title DNE - make it
+};
+Code.getElementTag = function(ele){
+	var tag = ele.tagName;
+	if(!tag){
+		tag = "";
+	}
+	return tag.toLowerCase();
 }
 Code.getID = function(argA,argB){
 	if(arguments.length>1){
