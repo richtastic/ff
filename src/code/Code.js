@@ -1768,8 +1768,8 @@ Code.removeAllStyle = function(style, property){ // property:attribute;
 Code.setStyleMinHeight = function(ele,min){
 	ele.style.minHeight = min;
 };
-Code.setStyleFloat = function(ele,float){
-	ele.style.float = float;
+Code.setStyleFloat = function(ele,flt){
+	ele.style.cssFloat = flt;
 };
 Code.setStyleDisplay = function(ele,display){
 	ele.style.display = display;
@@ -2461,7 +2461,7 @@ Code.inverse3x3 = function(arr, a,b,c,d,e,f,g,h,i){
 	arr[8] = det*(a*e-b*d);
 	return arr;
 }
-Code.inverse4x4 = function(arr, a,b,c,d, e,f,g,h, i,j,h,k, l,m,n,o){ // http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
+Code.inverse4x4 = function(arr, a,b,c,d, e,f,g,h, i,j,k,l, m,n,o,p){ // http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
 	var det = 0;
 	if(det==0){ return null; }
 	det = 1/det;

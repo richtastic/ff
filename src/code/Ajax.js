@@ -1,4 +1,5 @@
 // Ajax.js
+
 Ajax.METHOD_TYPE_GET = "GET";
 Ajax.METHOD_TYPE_POST = "POST";
 Ajax.METHOD_TYPE_DELETE = "DELETE";
@@ -56,6 +57,9 @@ function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 		this._autoDestroy = false;
 	}
 }
+
+
+
 // --- get/set ---------------------------------------
 Ajax.prototype.binary = function(b){
 	if(b!==undefined){
@@ -132,6 +136,7 @@ Ajax.prototype.context = function(c){
 	}
 	return this._context;
 }
+
 // --- actual functions ---------------------------------------
 Ajax.prototype.cancel = function(){
 	this._request.abort();
@@ -141,22 +146,27 @@ Ajax.prototype.get = function(url,con,comp,params){
 	this.context(con);
 	this.send(url,Ajax.METHOD_TYPE_GET,comp,params);
 }
+
 Ajax.prototype.post = function(url,con,comp,params){
 	this.context(con);
 	this.send(url,Ajax.METHOD_TYPE_POST,comp,params);
 }
+
 Ajax.prototype.put = function(){
 	// ?
 }
-Ajax.prototype.delete = function(){
+
+Ajax.prototype.del = function(){ // "delete" is an invalid method
 	// ?
 }
+
 Ajax.prototype.clearHeader = function(){
 	this._header = {}; // better way of cleaning = null ?
 }
 Ajax.prototype.setHeader = function(param,value){
 	this._header[param] = value;
 }
+
 Ajax.prototype.send = function(url,meth,cmp,params){
 	this.url(url);
 	this.method(meth);
@@ -307,6 +317,7 @@ http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 504 - gateway timeout
 505 - http version not supported
 */
+
 Ajax.prototype.kill = function(){
 	if(this._request){
 		this._request.onreadystatechange = null;

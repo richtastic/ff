@@ -1271,6 +1271,7 @@ Matrix.eigen = function(A){ // eigenValues[], eigenVectors[[]]
 	}
 	return [lambda, eigVec];
 }
+
 Matrix.power = function(A,power){
 	var ret = Matrix.eigen(A);
 	var lambda = ret[0];
@@ -1322,7 +1323,10 @@ Matrix.power = function(A,power){
 /*
 array -only calculations
 */
-Matrix.matrixArrayMultiply = function(A,m,n, B,n,p){ // 
+Matrix.matrixArrayMultiply = function(A,m,n, B,nn,p){ // 
+	if(n!=nn){
+		return null;
+	}
 	var i, j, k, v;
 	C = Code.newArrayZeros(m*p);
 	for(j=0;j<m;++j){ // rowsA
@@ -1336,6 +1340,7 @@ Matrix.matrixArrayMultiply = function(A,m,n, B,n,p){ //
 	}
 	return C;
 }
+
 Matrix.matrixArrayTranspose = function(A,m,n){ // 
 	var i, j, C = new Array(m*n);
 	for(j=0;j<n;++j){ // rowsC

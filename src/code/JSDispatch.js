@@ -1,7 +1,9 @@
 // JSDispatch.js
+
 function JSDispatch(){
 	this._listenerList = [];
 }
+
 // -------------------------------------------------------------
 
 JSDispatch.prototype.addJSEventListener = function(object, type, fxn, ctx, data){
@@ -17,14 +19,16 @@ JSDispatch.prototype.addJSEventListener = function(object, type, fxn, ctx, data)
 	//}
 	this._listenerList.push(context);
 }
+
 JSDispatch.prototype.removeJSEventListener = function(object, type, fxn, ctx){
 	for(var i=this._listenerList.length; i--;){
 		var context = this._listenerList[i];
-		if(context.element == object && context.event == type && context.function == fxn && context.context == ctx){
+		if(context["element"] == object && context["event"] == type && context["function"] == fxn && context["context"] == ctx){
 			Code.removeEventListener(context.element, context.event, context.callback);
 		}
 	}
 }
+
 JSDispatch.prototype.removeAllListeners = function(object){
 	if(object){ // remove specific element from all events
 		for(var i=this._listenerList.length; i--;){
@@ -40,6 +44,7 @@ JSDispatch.prototype.removeAllListeners = function(object){
 		}
 	}
 }
+
 JSDispatch.prototype.kill = function(){
 	this.removeAllListeners();
 	this._listenerList = null;

@@ -104,7 +104,7 @@ ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 po
 	if(x<0||x>wid){ minX=0.0;}
 	minY = y - minY;
 	if(y<0||y>hei){ minY=0.0;}
-	ImageMat.cubicColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
+	ImageMat.cubicColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 }
 ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^2 = 9 points
 	// this maaaaaaaay not be useful
@@ -134,7 +134,7 @@ ImageMat.prototype.getPointInterpolateNearest = function(val, x,y){ // 1 point
 	val.y = this._g[index];
 	val.z = this._b[index];
 }
-ImageMat.cubicColor = function(colR, x,y, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP){
+ImageMat.cubicColor = function(colR, x,y, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP){
 	var r = ImageMat.cubic2D(x,y, colA.x,colB.x,colC.x,colD.x,colE.x,colF.x,colG.x,colH.x,colI.x,colJ.x,colK.x,colL.x,colM.x,colM.x,colN.x,colO.x,colP.x);
 	var g = ImageMat.cubic2D(x,y, colA.y,colB.y,colC.y,colD.y,colE.y,colF.y,colG.y,colH.y,colI.y,colJ.y,colK.y,colL.y,colM.y,colM.y,colN.y,colO.y,colP.y);
 	var b = ImageMat.cubic2D(x,y, colA.z,colB.z,colC.z,colD.z,colE.z,colF.z,colG.z,colH.z,colI.z,colJ.z,colK.z,colL.z,colM.z,colM.z,colN.z,colO.z,colP.z);
@@ -853,6 +853,7 @@ ImageMat.getPeaks = function(peaks, wid,hei){ // the problem with this is it mis
 	}
 	return vals;
 }
+
 ImageMat.findBlobs2 = function(a,wid,hei){ // px,py,area
 	var blobs = new Array();
 	var i, j, tl,to,tr, lf,se,rg, bl,bo,br, index;
