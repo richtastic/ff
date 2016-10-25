@@ -64,7 +64,7 @@ FragArray.prototype._trimToMaxLength = function(keepRight){
 					var removeCount = count - keepCount
 					console.log("keep this many: "+keepCount+", remove:"+removeCount);
 					// DIVIDE THIS BLOCK UP
-					HERE
+//					HERE
 					//
 					while(this._windows.length>i){ // drop remaining
 						this._windows.pop();
