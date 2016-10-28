@@ -5,8 +5,10 @@ function IS_SERVER_OSX(){
 	$command = 'uname -a';// Darwin
 	$value = shell_exec($command);
 	$matchesDarwin = preg_match("/darwin/i",$value);
-	if($matchesDarwin.length>0){
-		return true;
+	if(count($matchesDarwin)>0){
+		if(strlen($matchesDarwin[0])>0){
+			return true;
+		}
 	}
 	return false;
 }
@@ -15,7 +17,9 @@ function IS_SERVER_LINUX(){
 	$value = shell_exec($command);
 	$matchesLinux = preg_match("/linux/i",$value);
 	if(count($matchesLinux)>0){
-		return true;
+		if(strlen($matchesLinux[0])>0){
+			return true;
+		}
 	}
 	return false;
 }

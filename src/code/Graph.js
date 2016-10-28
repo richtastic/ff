@@ -299,6 +299,15 @@ Graph.prototype.edges = function(){
 Graph.prototype.vertexes = function(){
 	return this._vertexes;
 }
+Graph.prototype.vertexFromData = function(data){
+	for(var i=0; i<this._vertexes.length;++i){
+		var v = this._vertexes[i];
+		if(v.data()==data){
+			return v;
+		}
+	}
+	return null;
+}
 Graph.prototype.containsEdge = function(e){
 	return Code.elementExists(this._edges, e);
 }

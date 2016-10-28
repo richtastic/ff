@@ -49,11 +49,14 @@ function Filter(){
 	
 
 	// hawaii:
-	imageList = ["hawaii_scene_10p.png"];
+	//imageList = ["hawaii_scene_10p.png"];
 	//imageList = ["hawaii_scene_15p.png"];
 	//imageList = ["hawaii_scene_20p.png"];
 	//imageList = ["hawaii_scene_50p.png"];
 	//imageList = ["hawaii_scene_100p.png"];
+	// beach:
+this._SCALE_IMAGE_AMOUNT = 1.5;
+	imageList = ["beach_10p.png"];
 	imageLoader = new ImageLoader("./images/panoramas/",imageList, this,this.handleSceneImagesLoaded,null);
 	// convert hawaii_scene.JPG -resize 100% hawaii_scene_100p.png
 
@@ -301,12 +304,11 @@ Filter.prototype.handleKeyboardDown = function(e){
 	// 	filterValue = 1.0;
 	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
-	
-	
-	filterType = Filter.FILTER_TYPE_HISTOGRAM_EXPAND;
-		filterValue = {"window":0.05, "percent": 0.1};
-//		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
+
+	
+/*
+// HAWAII FILTER
 	filterType = Filter.FILTER_TYPE_GAMMA;
 		filterValue = 1.1;
 		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
@@ -315,19 +317,9 @@ Filter.prototype.handleKeyboardDown = function(e){
 		filterValue = {"window":4.0, "percent": 0.25};
 		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
-		
-
 	filterType = Filter.FILTER_TYPE_CONTRAST;
 		filterValue = 1.5;
 		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
-
-	filterType = Filter.FILTER_TYPE_SATURATION;
-		filterValue = 1.25;
-//		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
-
-	// filterType = Filter.FILTER_TYPE_HUE;
-	// 	filterValue = -0.02;
-	// 	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
 	filterType = Filter.FILTER_TYPE_VIBRANCE;
 		filterValue = -.5;
@@ -340,7 +332,20 @@ Filter.prototype.handleKeyboardDown = function(e){
 	filterType = Filter.FILTER_TYPE_SHARPEN;
 		filterValue = 0.25;
 		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+*/
 
+	// BEACH
+	// filterType = Filter.FILTER_TYPE_SHARPEN;
+	// 	filterValue = 0.5;
+	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_CONTRAST;
+		filterValue = 1.5;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
+	filterType = Filter.FILTER_TYPE_SHARPEN;
+		filterValue = 0.5;
+	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
 	this.takedownInternalApplyFilterFunction(obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
@@ -453,6 +458,26 @@ Filter.prototype.handleSceneImagesLoaded = function(imageInfo){
 	var imageSourceBlu = imageSourceColors.blu;
 	var imageSourceWidth = imageSourceColors.width;
 	var imageSourceHeight = imageSourceColors.height;
+
+	if(this._SCALE_IMAGE_AMOUNT!==undefined && this._SCALE_IMAGE_AMOUNT!=1.0){
+		var scale = this._SCALE_IMAGE_AMOUNT;
+		var newWidth = imageSourceWidth * scale;
+		var newHeight = imageSourceHeight * scale;
+		newWidth = Math.floor(newWidth);
+		newHeight = Math.floor(newHeight);
+		console.log(newWidth,newHeight)
+		//console.log(imageSourceRed)
+		//scale = 1.0/scale;
+		//imageSourceRed = ImageMat.extractRectFromFloatImage(imageSourceWidth*0.5,imageSourceHeight*0.5,1.0,null, newWidth,newHeight, imageSourceRed,imageSourceWidth,imageSourceHeight, null);
+		imageSourceRed = ImageMat.extractRectFromFloatImage(imageSourceWidth*0.5,imageSourceHeight*0.5,1.0/scale,null, newWidth,newHeight, imageSourceRed,imageSourceWidth,imageSourceHeight, null);
+		imageSourceGrn = ImageMat.extractRectFromFloatImage(imageSourceWidth*0.5,imageSourceHeight*0.5,1.0/scale,null, newWidth,newHeight, imageSourceGrn,imageSourceWidth,imageSourceHeight, null);
+		imageSourceBlu = ImageMat.extractRectFromFloatImage(imageSourceWidth*0.5,imageSourceHeight*0.5,1.0/scale,null, newWidth,newHeight, imageSourceBlu,imageSourceWidth,imageSourceHeight, null);
+		// imageSourceGrn = imageSourceRed;
+		// imageSourceBlu = imageSourceRed;
+
+		imageSourceWidth = newWidth;
+		imageSourceHeight = newHeight;
+	}
 
 	this._imageSource = {
 		"red" : imageSourceRed,

@@ -1521,7 +1521,8 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 }
 
 // projective transform
-ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection){ // projection is 3x3 Matrix
+ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection, interpolationType){ // projection is 3x3 Matrix
+	// interpolationType : 1=linear, 3=cubic
 	var i, j, fr = new V3D(), val = new V3D();
 	if( !(source instanceof Array) ){
 		var destination = new ImageMat(wid,hei);
@@ -1541,8 +1542,8 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection)
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
-				//destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
-				destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				//destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
 			}
 		}
 	}
@@ -1943,16 +1944,18 @@ ImageMat.prototype.calculateGradient = function(x,y){
 
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 
 	var blurr = (sigma!==undefined) && (sigma!=null);
-	var gaussSize, gauss1D, padding=0, fullX=(imgWid*x), fullY=(imgHei*y); // wtf
+	var gaussSize, gauss1D, padding=0;// fullX=(imgWid*x), fullY=(imgHei*y); // wtf
 	var img;
+	var fullX = x; // wtf
+	var fullY = y; // wtf
+	console.log(fullX,fullY)
+	console.log("blurr");
 	if(blurr){
-console.log("blurr");
 		gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 		padding = Math.floor(gaussSize/2.0);
 	}
-	fullX = x; // wtf
-	fullY = y; // wtf
+	
 	var left = fullX - (w*0.5)*scale - padding*scale;
 	var right = fullX + (w*0.5)*scale + padding*scale;
 	var top = fullY - (h*0.5)*scale - padding*scale;
@@ -1962,6 +1965,7 @@ console.log("blurr");
 	var TR = ImageMat._TR; TR.set(right,top);
 	var BR = ImageMat._BR; BR.set(right,bot);
 	var BL = ImageMat._BL; BL.set(left,bot);
+	console.log(left,right,top,bot)
 	if(matrix){
 		var matinv = matrix;
 		matrix = Matrix.inverse(matrix);
