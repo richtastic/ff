@@ -15,11 +15,15 @@ function IS_SERVER_OSX(){
 function IS_SERVER_LINUX(){
 	$command = 'uname -o'; // GNU/Linux
 	$value = shell_exec($command);
+	//echo "VALUE: '".$value."'";
 	$matchesLinux = preg_match("/linux/i",$value);
-	if(count($matchesLinux)>0){
-		if(strlen($matchesLinux[0])>0){
+	$matchesCount = count($matchesLinux);
+	if($matchesCount>0){
+		// echo "2: '".$matchesCount."'";
+		// echo "1: '".$matchesLinux[0]."'";
+		// if(strlen($matchesLinux[0])>0){
 			return true;
-		}
+		//}
 	}
 	return false;
 }

@@ -1,7 +1,7 @@
 // Gesticulator.js
 
 FF.Gesticulator = function(){
-	V4D._.constructor.call(this);
+	Gesticulator._.constructor.call(this);
 	this._touches = [];
 	this._jsDispatch = new JSDispatch();
 }

@@ -55,8 +55,11 @@ function Filter(){
 	//imageList = ["hawaii_scene_50p.png"];
 	//imageList = ["hawaii_scene_100p.png"];
 	// beach:
-this._SCALE_IMAGE_AMOUNT = 1.5;
-	imageList = ["beach_10p.png"];
+this._SCALE_IMAGE_AMOUNT = 1.0;
+	//imageList = ["beach_10p.png"];
+	imageList = ["beach_20p.png"];
+	//imageList = ["beach_50p.png"];
+	//imageList = ["beach_100p.png"]; // too massive
 	imageLoader = new ImageLoader("./images/panoramas/",imageList, this,this.handleSceneImagesLoaded,null);
 	// convert hawaii_scene.JPG -resize 100% hawaii_scene_100p.png
 
@@ -339,13 +342,20 @@ Filter.prototype.handleKeyboardDown = function(e){
 	// 	filterValue = 0.5;
 	// this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
+
+	
+
 	filterType = Filter.FILTER_TYPE_CONTRAST;
 		filterValue = 1.5;
 		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
+	filterType = Filter.FILTER_TYPE_GAMMA;
+		filterValue = 1.1;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+
 	filterType = Filter.FILTER_TYPE_SHARPEN;
-		filterValue = 0.5;
-	this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
+		filterValue = 0.25;
+		this.applyFilter(filterType,filterValue, obj.red,obj.grn,obj.blu, obj.width, obj.height);
 
 	this.takedownInternalApplyFilterFunction(obj.red,obj.grn,obj.blu, obj.width, obj.height);
 

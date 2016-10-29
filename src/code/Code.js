@@ -831,6 +831,11 @@ Code.getTimeFromTimeStamp = function(timestamp){
 	}
 	return null;
 }
+Code.getDateFromTimeStamp = function(timestamp){
+	var time = Code.getTimeFromTimeStamp(timestamp);
+	var date = new Date(time);
+	return date;
+}
 Code.getAMPMFromDate = function(date){
 	return parseInt(date.getHours(),10)<12?"AM":"PM";
 }
@@ -1368,6 +1373,29 @@ Code.getName = function(argA,argB){
 	}
 	return eles;
 };
+Code.getScrollBarSize = function(){
+	var inner = document.createElement('p');
+	inner.style.width = "100%";
+	inner.style.height = "200px";
+	var outer = document.createElement('div');
+	outer.style.position = "absolute";
+	outer.style.top = "0px";
+	outer.style.left = "0px";
+	outer.style.visibility = "hidden";
+	outer.style.width = "200px";
+	outer.style.height = "150px";
+	outer.style.overflow = "hidden";
+	outer.appendChild(inner);
+	document.body.appendChild(outer);
+	var w1 = inner.offsetWidth;
+	outer.style.overflow = 'scroll';
+	var w2 = inner.offsetWidth;
+	if (w1 == w2){
+		w2 = outer.clientWidth;
+	}
+	document.body.removeChild(outer);
+	return (w1 - w2);
+};
 Code.newElement = function(type){
 	return document.createElement(type);
 };
@@ -1768,6 +1796,15 @@ Code.removeAllStyle = function(style, property){ // property:attribute;
 Code.setStyleMinHeight = function(ele,min){
 	ele.style.minHeight = min;
 };
+Code.setStyleMaxHeight = function(ele,max){
+	ele.style.maxHeight = max;
+};
+Code.setStyleMinWidth = function(ele,min){
+	ele.style.minWidth = min;
+};
+Code.setStyleMaxWidth = function(ele,max){
+	ele.style.maxWidth = max;
+};
 Code.setStyleFloat = function(ele,flt){
 	ele.style.cssFloat = flt;
 };
@@ -1896,6 +1933,7 @@ Code.addStyle = function(ele,sty){//prop,attr){
 };
 Code.removeStyle = function(ele,sty){
 	var s = ele.getAttribute("style");
+	s = s ? s : ""; // style may not yet exist
 	var reg = new RegExp(""+sty+"\:.*?;","g");
 	s = s.replace(reg," ");
 	s = s.replace("  "," ");
@@ -2211,6 +2249,11 @@ Code.humanReadableRepeatString = function(alg){
 		}
 	}
 	return str;
+}
+
+Code.getHumanReadableDateString = function(timestamp){
+	var date = Code.getDateFromTimeStamp(timestamp);
+	return Code.getShortDateDescriptiveString(date);
 }
 
 Code.getShortDateDescriptiveString = function(date,timeOnly){
