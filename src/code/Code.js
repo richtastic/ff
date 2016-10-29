@@ -1713,6 +1713,7 @@ Code.setStyleOverflowY = function(ele,val){
 Code.setStyleWordWrap = function(ele,val){
 	ele.style.wordWrap = val;
 };
+//Code.setStyleWordBreak(elementField,"break-all"); // CJK
 Code.setStyleWidth = function(ele,val){
 	ele.style.width = val;
 };
