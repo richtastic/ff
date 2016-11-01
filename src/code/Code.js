@@ -167,6 +167,10 @@ Code.parseJSON = function(str){
 	}
 	return obj;	
 }
+Code.StringFromJSON = function(obj){
+	var str = JSON.stringify(obj);
+	return str;
+}
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {
 	if(Object && Object.getOwnPropertyNames!==undefined){
