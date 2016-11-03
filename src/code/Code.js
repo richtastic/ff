@@ -143,7 +143,8 @@ Code.isString = function(obj){
 	return (typeof obj)==Code.TYPE_STRING;
 }
 Code.isObject = function(obj){
-	return (typeof obj)==Code.TYPE_OBJECT;
+	return (obj && obj.constructor==Object);
+	//return (typeof obj)==Code.TYPE_OBJECT; // arrays show up as objects
 }
 Code.isFunction = function(obj){
 	return (typeof obj)==Code.TYPE_FUNCTION;
@@ -170,6 +171,155 @@ Code.parseJSON = function(str){
 Code.StringFromJSON = function(obj){
 	var str = JSON.stringify(obj);
 	return str;
+}
+
+Code.JSONToArray = function(json, index, array){
+	if(!json){
+		return null;
+	}
+	Code._nextJSONParseOperation(json, index);
+}
+
+Code.JSONToObject = function(json, index, object){
+	if(!json){
+		return null;
+	}
+	if(!object){
+		index = 0;
+	}
+	Code._nextJSONParseOperation(json, index);
+	return object;
+}
+Code._nextJSONParseOperation = function(json,index){
+	var i, len, ch, nx, indexCh, indexNx, ret;
+	i = index;
+	len = json.length;
+	var isInsideString = false;
+	var isEscapedChar = false;
+	var wasEscapedChar = false;
+	var isExpectingKey = false;
+	var isExpectingValueAfterKey = false;
+	while(i<len){;
+		wasEscapedChar = isEscapedChar;
+		ret = Code._nextJSONParseCharFromString(json,i);
+		ch = ret[0];
+		indexCh = ret[1];
+		console.log(ch);
+		i = indexCh + 1;
+		if(ch=='\\'){
+			if(!isEscapedChar){
+				console.log(" => ESCAPE");
+				isEscapedChar = true;
+			}else{
+				console.log(" => UNESCAPE");
+				isEscapedChar = false;
+			}
+		}else if(ch=='{'){
+			console.log(" => START OBJECT");
+var object = {};
+// Code.JSONToArray
+			isExpectingKey = true;
+		}else if(ch=='}'){
+			console.log(" => END OBJECT");
+		}else if(ch=='['){
+			console.log(" => START ARRAY");
+var array = [];
+// Code.JSONToObject
+		}else if(ch==']'){
+			console.log(" => END ARRAY");
+		}else if(ch=='"'){
+			if(!isInsideString){
+				console.log(" => START STRING");
+				isInsideString = true;
+			}else{
+				if(isEscapedChar){
+					console.log(" => STILL IN STRING");
+				}else{
+					console.log(" => END STRING");
+					isInsideString = false;
+				}
+			}
+		}else if(ch==':'){
+			console.log(" => SEPARATE KEY VALUE");
+			isExpectingValueAfterKey = true;
+		}
+		if(wasEscapedChar){ // second escape = back to normal
+			isEscapedChar = !isEscapedChar;
+		}
+	}
+
+}
+Code._nextJSONParseCharFromString = function(str,index){
+	var i, ch, len=str.length;
+	for(i=index; i<len; ++i){
+		ch  = str[i];
+		if(ch==" " || ch=="\t" || ch=="\n" || ch=="\r"){
+			continue;
+		}else{
+			return [ch, i];
+		}
+	}
+	return null;
+}
+Code.escapeJSONString = function(str){
+	return str.replace('"','\\"');
+}
+Code.arrayToJSON = function(array){
+	var json = "[";
+	var i, len, lm1, val;
+	len = array.length;
+	lm1 = len - 1;
+	var needsComma = false;
+	for(i=0; i<=lm1; ++i){
+		val = array[i];
+		val = Code._evaluateJSONElementToString(val);
+		if(val){
+			if(needsComma){
+				json += ",";
+			}
+			json += val;
+			needsComma = true;
+		}
+	}
+	json += "]";
+	return json;
+}
+Code.objectToJSON = function(object){
+	var json = "{";
+	var keys = Code.keys(object);
+	var i, j, key, val, len;
+	len = keys.length;
+	lm1 = len - 1;
+	var needsComma = false;
+	for(i=0; i<=lm1; ++i){
+		key = keys[i];
+		val = object[key];
+		key = Code._evaluateJSONElementToString(key);
+		val = Code._evaluateJSONElementToString(val);
+		if(key && val){
+			if(needsComma){
+				json += ",";
+			}
+			json += key+":"+val;
+			needsComma = true;
+		}
+	}
+	json += "}";
+	return json;
+}
+Code._evaluateJSONElementToString = function(element){
+	if(element==null || element==undefined){
+		return "null";
+	}else if(Code.isObject(element)){
+		return Code.objectToJSON(element);
+	}else if(Code.isArray(element)){
+		return Code.arrayToJSON(element);
+	}else if(Code.isString(element)){
+		return '"'+Code.escapeJSONString(element)+'"';
+	}else if(Code.isNumber(element)){
+		return ""+element;
+	} // function
+	return null;
 }
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
 Code.extendClass = function extendClass(target, source) {

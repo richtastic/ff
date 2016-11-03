@@ -26,6 +26,15 @@ Filter.FILTER_TYPE_GAUSSIAN = "gaussian";
 // exposure
 
 function Filter(){
+//var obj = {"key1":"value1"};
+var obj = {"key1":["string 1", "string 2", [1, 3, 4, 0, {"sub\"":"array"}]]};
+console.log(obj);
+var str = Code.objectToJSON(obj);
+console.log(str);
+obj = Code.JSONToObject(str);
+console.log(obj);
+
+return;
 	THIS = this;
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
