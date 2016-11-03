@@ -27,14 +27,19 @@ Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arg
 	for(var i=0;i<this.list[str].length;++i){
 		if( this.list[str][i] instanceof Array){
 			try{
-				this.list[str][i][0].call(this.list[str][i][1],a,b,c,d,e,f,g,h,i,j);
+				var entry = this.list[str][i];
+				if(entry.length>2){ // obj
+					entry[0].call(entry[1],entry[2],a);//,a,b,c,d,e,f,g,h,i,j);
+				}else{
+					entry[0].call(entry[1],a);//,a,b,c,d,e,f,g,h,i,j);
+				}
 			}catch(e){
 				console.log("CAUGHT ERROR FOR EVENT: ",str);
 				console.log(e);
 				console.log(this.list[str][i]);
 			}
 		}else{
-			this.list[str][i](a,b,c,d,e,f,g,h,i,j);
+			this.list[str][i](a);//,b,c,d,e,f,g,h,i,j);
 		}
 		if(!this.list){ // .kill() called
 			return;
@@ -65,8 +70,10 @@ Dispatch.prototype.removeFunction = function(str,fxn,ctx,obj){
 	var i, len = arr.length;
 	for(i=0;i<len;++i){
 		if(arr[i] instanceof Array){
-			if(arr[i][0]==fxn && arr[i][1]==ctx && arr[i][2]==obj){
-				arr[i].pop(); arr[i].pop(); arr[i].pop();
+			if(arr[i][0]==fxn && arr[i][1]==ctx && (obj==undefined || arr[i][2]==obj) ){
+				while(arr[i].length>0){
+					arr[i].pop();
+				}
 				arr[i] = arr[len-1];
 				arr.pop();
 				break;
