@@ -3426,7 +3426,6 @@ Code.quadQuadIntersection2DBoolean = function(a1,b1,c1,d1, a2,b2,c2,d2){
 	var checkB = Code.triTriIntersection2DBoolean(a1,b1,c1, a2,c2,d2);
 	var checkC = Code.triTriIntersection2DBoolean(a1,c1,d1, a2,b2,c2);
 	var checkD = Code.triTriIntersection2DBoolean(a1,c1,d1, a2,c2,d2);
-	console.log(checkA , checkB , checkC , checkD)
 	return checkA || checkB || checkC || checkD;
 }
 
