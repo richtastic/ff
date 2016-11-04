@@ -3420,6 +3420,17 @@ Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersect
 	return polygon; // remove duplicate (end) points ?
 	// this is a double-copy for exactly the same triangles
 }
+
+Code.quadQuadIntersection2DBoolean = function(a1,b1,c1,d1, a2,b2,c2,d2){ 
+	var checkA = Code.triTriIntersection2DBoolean(a1,b1,c1, a2,b2,c2);
+	var checkB = Code.triTriIntersection2DBoolean(a1,b1,c1, a2,c2,d2);
+	var checkC = Code.triTriIntersection2DBoolean(a1,c1,d1, a2,b2,c2);
+	var checkD = Code.triTriIntersection2DBoolean(a1,c1,d1, a2,c2,d2);
+	console.log(checkA , checkB , checkC , checkD)
+	return checkA || checkB || checkC || checkD;
+}
+
+
 Code.triTriIntersection2DBoolean = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
 	var ab1 = V2D.sub(b1,a1);
 	var bc1 = V2D.sub(c1,b1);
@@ -3916,6 +3927,9 @@ Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest dis
 	dC = V3D.distance(pC[0],pC[1]);
 //console.log(" "+dC+" "+pC[0]+" "+pC[1]);
 	return Math.min(dA,dB,dC);
+}
+Code.isPointInsideRect2D = function(p, a,b,c,d){ 
+	return Code.isPointInsidePolygon2D(p, [a,b,c,d]);
 }
 Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderflex.com/polygon/   || return: intersections % 2 != 0
 	var i, j, a, b, len=polygonArray.length;
