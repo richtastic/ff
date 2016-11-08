@@ -417,6 +417,15 @@ Code.log = function log(o){
 Code.objectHasProperty = function(o,p){
 	return o.hasOwnProperty(p);
 }
+Code.subProperty = function(o,list){ // Code.subProperty({"a":{"b":[{"c":666}]}},["a","b","0","c"])
+	var i = 0;
+	//while(o!==undefined && o!==null && i<list.length){
+	while( (Code.isArray(o) || Code.isObject(o)) && i<list.length ){
+		o = o[list[i]];
+		++i;
+	}
+	return o;
+}
 
 Code.booleanToString = function(b){
 	if(b===true || b==="true" || b==="t"){ // b===1 || b==="1"

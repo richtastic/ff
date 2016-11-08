@@ -23,13 +23,13 @@ MapDataDisplay.prototype.set = function(source, field, element, updateElement, u
 
 MapDataDisplay.prototype.updateDataFromElement = function(){
 	if(this._updateDataFxn!==null){
-		this._updateDataFxn(this.object(), this.element());
+		this._updateDataFxn(this.object(), this.field(), this.element());
 	}
 }
 
 MapDataDisplay.prototype.updateElementFromData = function(){
 	if(this._updateElementFxn!==null){
-		this._updateElementFxn(this.object(), this.element());
+		this._updateElementFxn(this.object(), this.field(), this.element());
 	}
 }
 
