@@ -152,7 +152,6 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 	}
 }
 DragNDrop.prototype._alertFxnIfExists = function(da, name){
-	console.log("_alertFxnIfExists: "+name);
 	var fxn = da["fxn"];
 	var ctx = da["ctx"];
 	var data = this._dragData;
@@ -182,8 +181,6 @@ DragNDrop.prototype._stopDragging = function(){
 	
 }
 DragNDrop.prototype._handleDragAvailableFxn = function(e){
-	console.log("got avail response: ");
-	console.log(e);
 	if(e){
 		var rect = e["rect"];
 		var fxn = e["fxn"];
@@ -241,7 +238,6 @@ DragNDrop.prototype._updateDragging = function(){
 	Code.setStyleTop(elementDrag,pos.y+"px");
 }
 DragNDrop.prototype._tickerTickFxn = function(e){
-	//console.log("tick");
 	this._updateDragging();
 	this._updateIntersections();
 }

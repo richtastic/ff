@@ -471,6 +471,19 @@ String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 // ------------------------------------------------------------------------------------------ ARRAY
+Code.arrayFromCommaSeparatedString = function(str){
+	return Code.arrayFromStringSeparatedString(str,",");
+}
+Code.arrayFromStringSeparatedString = function(str, separator){
+	if(str && separator){
+		return str.split(separator);
+	}
+	return [];
+}
+Code.stringFromCommaSeparatedArray = function(arr){
+	return arr.join(",");
+}
+
 Code.setArray = function(arr){
 	var i, im1, len = arguments.length;
 	for(im1=0,i=1;i<len;++i,++im1){
@@ -614,6 +627,27 @@ Code.emptyArray = function(a){
 }
 Code.truncateArray = function(a,length){
 	while(a.length>length){ a.pop(); }
+}
+Code.getElementsWithFunction = function(element, fxn, stop, arr){
+	arr = arr!==undefined ? arr : [];
+	if(element){
+		var result = fxn(element);
+		if(result){
+			arr.push(element);
+			if(stop){
+				return arr;
+			}
+		}
+		var i, child, len = Code.numChildren(element);
+		for(i=0; i<len; ++i){
+			child = Code.getChild(element,i);
+			Code.getElementsWithFunction(child, fxn, stop, arr);
+			if(stop && arr.length>0){
+				break;
+			}
+		}
+	}
+	return arr;
 }
 Code.elementExists = function(a,o){ // O(n)
 	for(var i=0; i<a.length; ++i){

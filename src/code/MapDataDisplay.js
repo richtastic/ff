@@ -21,15 +21,21 @@ MapDataDisplay.prototype.set = function(source, field, element, updateElement, u
 	return this;
 }
 
-MapDataDisplay.prototype.updateDataFromElement = function(){
+// MapDataDisplay.prototype.updateDataFromElement = function(){
+// 	if(this._updateDataFxn!==null){
+// 		this._updateDataFxn(this.object(), this.field(), this.element());
+// 	}
+// }
+
+MapDataDisplay.prototype.updateDataFromAction = function(action){
 	if(this._updateDataFxn!==null){
-		this._updateDataFxn(this.object(), this.field(), this.element());
+		this._updateDataFxn(this, action);//this.object(), this.field(), action);
 	}
 }
 
 MapDataDisplay.prototype.updateElementFromData = function(){
 	if(this._updateElementFxn!==null){
-		this._updateElementFxn(this.object(), this.field(), this.element());
+		this._updateElementFxn(this);//this.object(), this.field(), this.element());
 	}
 }
 
