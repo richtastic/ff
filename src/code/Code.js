@@ -1119,6 +1119,7 @@ Code.getBluRGBA = function(col){
 Code.getAlpRGBA = function(col){
 	return col&0xFF;
 }
+
 // color functions ----------------------------------------------------
 Code.randomInt = function(min,max){
 	if(max===undefined){
@@ -1207,6 +1208,22 @@ Code.getBluARGB = function(col){
 }
 Code.getAlpARGB = function(col){
 	return (col>>24)&0xFF;
+}
+Code.setRedARGB = function(col, r){
+	col = col & 0x00FFFFFF;
+	return col + (r << 0);
+}
+Code.setGrnARGB = function(col, g){
+	col = col & 0x00FFFFFF;
+	return col + (g << 8);
+}
+Code.setBluARGB = function(col, b){
+	col = col & 0x00FFFFFF;
+	return col + (b << 16);
+}
+Code.setAlpARGB = function(col, a){
+	col = col & 0x00FFFFFF;
+	return col + (a << 24);
 }
 Code.getFloatAlpARGB = function(col){
 	return ((col>>24)&0xFF)/255.0;

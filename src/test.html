@@ -1,0 +1,25 @@
+<html>
+<head>
+<title>Manual</title>
+<!-- <script src="../code/FF.js"></script> -->
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	console.log("page loaded");
+}
+function testOpen(){
+	console.log("testOpen");
+	var urlStore = "https://itunes.apple.com/app/id1086316112?mt=8";
+	var urlApp = "lol://";
+	//var opened = window.open(urlStore);
+	var opened = window.open(urlApp);
+	// ,"_blank", 
+	console.log("opened: '"+opened+"' ")
+}
+</script>
+<body onload="pageLoadedFxn();">
+<!-- <a href="lol://">LOL:</a>
+<a href="">https</a> -->
+<a onclick="javascript:testOpen();">do something</a>
+</body>
+</html>
