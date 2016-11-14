@@ -80,11 +80,26 @@ Ajax.prototype.cache = function(c){
 	}
 }
 Ajax.prototype.append = function(key,value){
-	if(!this._formData){
-		this._formData = new FormData();
+	if(value!==undefined){
+		if(!this._formData){
+			this._formData = new FormData();
+		}
+		if(key && value){
+			this._formData.append(key,value);
+		}
+	}else{ // only single parameter
+		this.appendList(key);
 	}
-	if(key && value){
-		this._formData.append(key,value);
+}
+Ajax.prototype.appendList = function(values){
+	if(values){
+		var keys = Code.keys(values);
+		var i = 0;
+		for(i=0; i<keys.length; ++i){
+			var key = keys[i];
+			var val = values[key];
+			this.append(key, val);
+		}
 	}
 }
 Ajax.prototype.params = function(p){

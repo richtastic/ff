@@ -1984,7 +1984,6 @@ Code.setStyleCursor = function(ele,styleIn){
 	ele.setAttribute("style",style);
 };
 Code.removeAllStyle = function(style, property){ // property:attribute;
-	console.log(style)
 	style = (style!==undefined && style!==null) ? style : "";
 	var reg = new RegExp(""+property+".*?:.*?;( )*", "gi");
 	return style.replace(reg,"");
