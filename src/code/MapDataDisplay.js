@@ -51,6 +51,17 @@ MapDataDisplay.prototype.field = function(f){
 	}
 	return this._objectField;
 }
+MapDataDisplay.prototype.value = function(v){
+	if(v!==undefined){
+		if(this._dataObject){
+			this._dataObject[this._objectField] = v;
+		}
+	}
+	if(this._dataObject){
+		return this._dataObject[this._objectField];
+	}
+	return null;
+}
 MapDataDisplay.prototype.updateDataFxn = function(u){
 	if(u!==undefined){
 		this._updateDataFxn = u;
