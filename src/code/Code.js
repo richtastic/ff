@@ -1135,6 +1135,50 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
+// Code.getColARGBFromString("0x456").toString(16)
+// Code.getColARGBFromString("0x3456").toString(16)
+// Code.getColARGBFromString("0x445566").toString(16)
+// Code.getColARGBFromString("0x33445566").toString(16)
+Code.getColARGBFromString = function(hexString){
+	if(!hexString){
+		return null;
+	}
+	hexString = hexString.replace("0x","");
+	hexString = hexString.replace("#","");
+	var a, r, g, b, col = parseInt(hexString,16);
+	if(hexString.length==3){ // RGB
+		a = 0xFF;
+		r = (col>>8) & 0x00F;
+		g = (col>>4) & 0x00F;
+		b = (col>>0) & 0x00F;
+		r = r + (r<<4);
+		g = g + (g<<4);
+		b = b + (b<<4);
+	}else if(hexString.length==4){ // ARGB
+		a = (col>>12) & 0x000F;
+		r = (col>>8) & 0x000F;
+		g = (col>>4) & 0x000F;
+		b = (col>>0) & 0x000F;
+		a = a + (a<<4);
+		r = r + (r<<4);
+		g = g + (g<<4);
+		b = b + (b<<4);
+	}else if(hexString.length==6){ // RRGGBB
+		a = 0xFF;
+		r = (col>>16) & 0x000000FF;
+		g = (col>>8) & 0x000000FF;
+		b = (col>>0) & 0x000000FF;
+	}else if(hexString.length==8){ // AARRGGBB
+		a = (col>>24) & 0x000000FF;
+		r = (col>>16) & 0x000000FF;
+		g = (col>>8) & 0x000000FF;
+		b = (col>>0) & 0x000000FF;
+	}else{
+		return null;
+	}
+	col = ((a << 24) + (r << 16) + (g << 8) + (b << 0)) >>> 0;
+	return col;
+}
 Code.getColARGBFromFloat = function(a,r,g,b){
 	a = Math.min(Math.floor(a*256.0),255);
 	r = Math.min(Math.floor(r*256.0),255);
