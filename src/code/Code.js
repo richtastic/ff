@@ -173,32 +173,68 @@ Code.StringFromJSON = function(obj){
 	return str;
 }
 
-Code.JSONToArray = function(json, index, array){
-	if(!json){
-		return null;
-	}
-	Code._nextJSONParseOperation(json, index);
+Code.JSONToObject = function(json){
+	//return Code._JSONToObject(json);
+	var data = Code._nextJSONParseOperation(json, 0, null, null);
+	console.log("got data:",data);
+	var object = data["object"];
+	console.log(object);
+	return object;
+	/*
+	object
+	array
+	index - next index
+	*/
 }
 
-Code.JSONToObject = function(json, index, object){
+/*
+- start a new object
+	=> {...}
+- start a new array
+	=> [...]
+- start a new string
+	=> "..."
+- start a new number
+	=> #..(E)
+- start a new bool
+	=> true || false
+- separate array elements or object elements
+	,
+*/
+/*
+Code._JSONToObject = function(json, index, object){
 	if(!json){
 		return null;
 	}
 	if(!object){
 		index = 0;
 	}
-	Code._nextJSONParseOperation(json, index);
-	return object;
+	var data = Code._nextJSONParseOperation(json, index, object, null);
+	return data;
 }
-Code._nextJSONParseOperation = function(json,index){
+Code._JSONToArray = function(json, index, array){
+	if(!json){
+		return null;
+	}
+	Code._nextJSONParseOperation(json, index, null, array);
+}
+*/
+Code._nextJSONParseOperation = function(json,index, containerObject, containerArray){
 	var i, len, ch, nx, indexCh, indexNx, ret;
 	i = index;
 	len = json.length;
+	var object = null;
+	var array = null;
+	var data = null;
 	var isInsideString = false;
 	var isEscapedChar = false;
 	var wasEscapedChar = false;
 	var isExpectingKey = false;
+		var objectKeyIndex = null;
+		var objectValue = null;
 	var isExpectingValueAfterKey = false;
+		var previousString = null;
+		var previousMark = index;
 	while(i<len){;
 		wasEscapedChar = isEscapedChar;
 		ret = Code._nextJSONParseCharFromString(json,i);
@@ -216,20 +252,44 @@ Code._nextJSONParseOperation = function(json,index){
 			}
 		}else if(ch=='{'){
 			console.log(" => START OBJECT");
-var object = {};
-// Code.JSONToArray
+object = {};
+if(containerObject==null){
+	containerObject = object;
+}else{
+	data = Code._nextJSONParseOperation(json,i, object, null);
+	i = data["index"];
+	if(containerObject){
+		containerObject[objectKeyIndex] = object;
+	}else if(containerArray){
+		containerArray.push(object);
+	}
+}
 			isExpectingKey = true;
 		}else if(ch=='}'){
 			console.log(" => END OBJECT");
+			break;
 		}else if(ch=='['){
 			console.log(" => START ARRAY");
-var array = [];
+array = [];
+if(containerArray==null){
+	containerArray = array;
+}else{
+	data = Code._nextJSONParseOperation(json,i, null, array);
+	i = data["index"];
+	if(containerObject){
+		containerObject[objectKeyIndex] = array;
+	}else if(containerArray){
+		containerArray.push(array);
+	}
+}
 // Code.JSONToObject
 		}else if(ch==']'){
 			console.log(" => END ARRAY");
+			break;
 		}else if(ch=='"'){
 			if(!isInsideString){
 				console.log(" => START STRING");
+				previousMark = i;
 				isInsideString = true;
 			}else{
 				if(isEscapedChar){
@@ -237,17 +297,49 @@ var array = [];
 				}else{
 					console.log(" => END STRING");
 					isInsideString = false;
+					previousString = json.substring(previousMark,i-1);
+						console.log("   == '"+previousString+"'");
+						if(isExpectingKey){
+							objectKeyIndex = previousString;
+							isExpectingKey = false;
+						}else{
+							objectValue = previousString;
+//							isExpectingValueAfterKey = true;
+							console.log("ASSIGNING: "+objectKeyIndex+" = "+objectValue);
+							containerObject[objectKeyIndex] = objectValue;
+						}
 				}
 			}
 		}else if(ch==':'){
 			console.log(" => SEPARATE KEY VALUE");
 			isExpectingValueAfterKey = true;
+		}else{
+			// boolean = true / false
+			// number = [0-9]*(.)[0-9]*(e|E)[0-9]*
+			if(ch=='t'){
+				console.log("TRUE?")
+			}else if(ch=='f'){
+				console.log("FALSE?")
+			}
 		}
 		if(wasEscapedChar){ // second escape = back to normal
 			isEscapedChar = !isEscapedChar;
 		}
 	}
-
+	var returnData = {};
+	returnData["index"] = i;
+	if(containerObject!=null){
+		returnData["object"] = containerObject;
+	}else if(containerArray!=null){
+		returnData["array"] = containerArray;
+	}if(object!=null){
+		returnData["object"] = object;
+	}else if(array!=null){
+		returnData["array"] = array;
+	}
+	console.log(returnData);
+	return returnData;
+	
 }
 Code._nextJSONParseCharFromString = function(str,index){
 	var i, ch, len=str.length;
@@ -1985,6 +2077,22 @@ Code.setStyleBorderRadius = function(ele,val){
 	//ele.style.borderRadius = val; // not work
 	Code.removeStyle(ele, "border-radius");
 	Code.addStyle(ele, "border-radius:"+val);
+};
+Code.setStyleBorderTopLeftRadius = function(ele,val){
+	Code.removeStyle(ele, "border-top-left-radius");
+	Code.addStyle(ele, "border-top-left-radius:"+val);
+};
+Code.setStyleBorderTopRightRadius = function(ele,val){
+	Code.removeStyle(ele, "border-top-right-radius");
+	Code.addStyle(ele, "border-top-right-radius:"+val);
+};
+Code.setStyleBorderBottomRightRadius = function(ele,val){
+	Code.removeStyle(ele, "border-bottom-right-radius");
+	Code.addStyle(ele, "border-bottom-right-radius:"+val);
+};
+Code.setStyleBorderBottomLeftRadius = function(ele,val){
+	Code.removeStyle(ele, "border-bottom-left-radius");
+	Code.addStyle(ele, "border-bottom-left-radius:"+val);
 };
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
