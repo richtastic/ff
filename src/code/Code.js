@@ -2009,6 +2009,9 @@ Code.removeChild = function(a,b){
 		a.removeChild(b);
 	}
 };
+Code.removeChildAt = function(a,index){
+	return Code.removeChild(a, Code.getChild(a,index));
+};
 Code.removeAllChildren = function(a){
 	while(Code.numChildren(a)>0){
 		Code.removeChild(a,Code.getChild(a,0));
