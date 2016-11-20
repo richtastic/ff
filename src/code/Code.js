@@ -54,6 +54,7 @@ Code.JS_EVENT_SCROLL = "scroll"; // window.onscroll
 Code.JS_EVENT_BLUR = "blur";
 Code.JS_EVENT_CHANGE = "change"; // ?
 	Code.JS_EVENT_ONCHANGE = "onchange";
+Code.JS_EVENT_INPUT_CHANGE = "input";
 Code.JS_EVENT_RIGHT_CLICK = "contextmenu";
 Code.JS_EVENT_COPY = "copy";
 Code.JS_EVENT_CUT = "cut";
@@ -2230,8 +2231,14 @@ Code.setStyleFontSize = function(ele,style){
 Code.setStyleFontWeight = function(ele,style){ // lighter=100, normal=400, bold=700
 	ele.style.fontWeight = style;
 };
+Code.setStyleFontBold = function(ele,style){
+	Code.setStyleFontWeight(ele,"bold");
+};
 Code.setStyleFontFamily = function(ele,style){
 	ele.style.fontFamily = style;
+};
+Code.setStyleLineHeight = function(ele,style){
+	ele.style.lineHeight = style;
 };
 Code.setStyleFontStyle = function(ele,style){
 	ele.style.fontStyle = style;
