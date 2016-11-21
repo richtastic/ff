@@ -207,8 +207,8 @@ DragNDrop.prototype._handleDragRequestStartFxn = function(e){
 	// put cover over window
 	var div = Code.newDiv();
 	// window is full height of body
-	var screenWidth = $(window).width();
-	var screenHeight = $(window).height();
+	var screenWidth = $(document).width();//$(window).width();
+	var screenHeight = $(document).height();//$(window).height();
 	var bgColor = 0x33000000;
 		bgColor = Code.getJSColorFromARGB(bgColor);
 	Code.setStyleWidth(div,screenWidth+"px");
