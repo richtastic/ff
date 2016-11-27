@@ -163,9 +163,15 @@ Code.copyToClipboardPrompt = function(str){
 	txt.ondblclick = function(e){ document.body.removeChild(e.target); e.ondblclick=null; }
 }
 Code.parseJSON = function(str){
-	var obj = JSON.parse(str);
-	if(Code.isString(obj)){
-		obj = JSON.parse(obj);
+	var obj = str;
+	if(obj===undefined || obj===null){
+		console.log("UNDEFINED VARIALBE");
+		obj = {};
+	}else{
+		//var obj = JSON.parse(str);
+		if(Code.isString(obj)){
+			obj = JSON.parse(obj);
+		}
 	}
 	return obj;	
 }
@@ -2197,9 +2203,20 @@ Code.setStylePaddingTop = function(ele,style){
 Code.setStylePaddingBottom = function(ele,style){
 	ele.style.paddingBottom = style;
 };
-
 Code.setStyleMargin = function(ele,style){
 	ele.style.margin = style;
+};
+Code.setStyleMarginLeft = function(ele,style){
+	ele.style.marginLeft = style;
+};
+Code.setStyleMarginRight = function(ele,style){
+	ele.style.marginRight = style;
+};
+Code.setStyleMarginTop = function(ele,style){
+	ele.style.marginTop = style;
+};
+Code.setStyleMarginBottom = function(ele,style){
+	ele.style.marginBottom = style;
 };
 Code.setStylePosition = function(ele,style){
 	ele.style.position = style;
@@ -2233,6 +2250,12 @@ Code.setStyleFontWeight = function(ele,style){ // lighter=100, normal=400, bold=
 };
 Code.setStyleFontBold = function(ele,style){
 	Code.setStyleFontWeight(ele,"bold");
+};
+Code.setStyleFontLighter = function(ele,style){
+	Code.setStyleFontWeight(ele,"lighter");
+};
+Code.setStyleFontBolder = function(ele,style){
+	Code.setStyleFontWeight(ele,"bolder");
 };
 Code.setStyleFontFamily = function(ele,style){
 	ele.style.fontFamily = style;

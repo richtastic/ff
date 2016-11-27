@@ -206,16 +206,20 @@ DragNDrop.prototype._handleDragRequestStartFxn = function(e){
 
 	// put cover over window
 	var div = Code.newDiv();
-	// window is full height of body
-	var screenWidth = $(document).width();//$(window).width();
-	var screenHeight = $(document).height();//$(window).height();
+	var screenWidth = $(document).width();
+	var screenHeight = $(document).height();
+	console.log(screenWidth,screenHeight);
 	var bgColor = 0x33000000;
 		bgColor = Code.getJSColorFromARGB(bgColor);
+	Code.setStyleLeft(div,0+"px");
+	Code.setStyleTop(div,0+"px");
 	Code.setStyleWidth(div,screenWidth+"px");
 	Code.setStyleHeight(div,screenHeight+"px");
 	Code.setStyleBackgroundColor(div,bgColor);
 	Code.setStylePosition(div,"absolute");
+	Code.setStyleZIndex(div,"9999999");
 	Code.addChild(document.body,div);
+	console.log(div)
 
 	this._dragCover = div;
 	this._dragElement = elementDrag;
