@@ -2042,6 +2042,9 @@ Code.hasProperty = function(ele,par){
 	var p = Code.getProperty(ele,par);
 	return p !== undefined && p !== null;
 };
+Code.removeProperty = function(ele,pro){
+	return ele.removeAttribute(pro);
+};
 Code.getValueOrDefault = function(obj,key, def){
 	var val = obj[key];
 	if(val!==undefined && val!==null){

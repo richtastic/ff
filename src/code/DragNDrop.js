@@ -149,6 +149,7 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 				this._alertFxnIfExists(da,DragNDrop.EVENT_DRAG_INTERSECT_AREA_STOP);
 			}
 		}
+		this.clearDropAreas();
 	}
 }
 DragNDrop.prototype._alertFxnIfExists = function(da, name){
