@@ -1072,6 +1072,10 @@ Code.getTimeZone = function(){
 	var hours = Math.floor( -d.getTimezoneOffset()/60 );
 	return hours;
 }
+Code.getTimeStampFromMilliseconds = function(milliseconds){
+	var d = new Date(milliseconds);
+	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+}
 Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args
@@ -1788,8 +1792,20 @@ Code.newTableRow = function(){
 Code.newTableCol = function(){
 	return Code.newElement("td");
 };
-Code.newSelect = function(){
-	return Code.newElement("select");
+Code.newSelect = function(array){ // [.., [DISPLAY, VALUE (,SELECTED)], ..]
+	var sel = Code.newElement("select");
+	if(array){
+		var i, len=array.length;
+		for(i=0; i<len; ++i){
+			var itm = array[i];
+			var a = itm.length>0 ? itm[0] : undefined;
+			var b = itm.length>1 ? itm[1] : undefined;
+			var c = itm.length>2 ? itm[2] : undefined;
+			var opn = Code.newOption(a,b,c);
+			Code.addChild(sel,opn);
+		}
+	}
+	return sel;
 };
 Code.newOption = function(a,b,c){
 	var opt = Code.newElement("option");
@@ -2326,7 +2342,10 @@ Code.getStyle = function(ele,prop){
 	}
 	return c;*/
 };
-Code.addStyle = function(ele,sty){//prop,attr){
+Code.addStyle = function(ele,sty,val){
+	if(val!==undefined){
+		sty = sty+":"+val;
+	}
 	var style = ele.getAttribute("style");
 	style += sty;//+";";
 	ele.setAttribute("style",style);
@@ -2511,6 +2530,19 @@ Code.getCookie = function(c_name){
 	return c_value;
 };
 // -------------------------------------------------------- DATE FUNCTIONS
+Code.getFirstDayOfWeekInMonth = function(milliseconds){ // 0=SUN, 6=SAT
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0,0);
+	return d.getDay();
+};
+Code.getMonthOfYear = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getMonth();
+};
+Code.getDayOfMonth = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getDate();
+};
 Code.getDaysInMonth = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0);
@@ -2528,6 +2560,22 @@ Code.getFirstMondayInWeek = function(milliseconds){
 		dow = d.getDay();
 	}
 	return milliseconds + remainder;
+};
+Code.getPrevMonthFirstDay = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth()-1, 1,0,0,0,0);
+	return d.getTime();
+};
+Code.getNextMonthFirstDay = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth()+1, 1,0,0,0,0);
+	return d.getTime();
+};
+
+Code.getPrevDay = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate()-1, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
 };
 Code.getNextDay = function(milliseconds){
 	var d = new Date(milliseconds);
