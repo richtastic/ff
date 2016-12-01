@@ -168,6 +168,13 @@ Stage.prototype.getDOAsARGB = function(obj, wid,hei, matrix){
 	obj.render(this._renderCanvas);
 	return this._renderCanvas.getColorArrayARGB(0,0,wid,hei);
 }
+
+Stage.prototype.getDOAsImage = function(obj, wid,hei, matrix){
+	var type = Canvas.IMAGE_TYPE_PNG;
+	var argb = this.getDOAsARGB(obj, wid,hei, matrix);
+	var img = this.getARGBAsImage(argb, wid,hei, matrix, type);
+	return img;
+}
 Stage.prototype.render = function(){
 	this._canvas.clear();
 	this.alertAll(Stage.EVENT_ON_ENTER_FRAME,this._time);

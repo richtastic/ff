@@ -4,7 +4,11 @@ Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
 Math.PIO2 = Math.PI*0.5;
 // 
-Code.IS_IE = ( (navigator.appName).toLowerCase().indexOf("explorer") >=0 );// (document.body.attachEvent && window.ActiveXObject);
+Code.IS_IE = navigator && navigator.appName && (navigator.appName).toLowerCase().indexOf("explorer") >= 0; // (document.body.attachEvent && window.ActiveXObject);
+Code.IS_OPERA = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("opera") >= 0; // guess
+Code.IS_SAFARI = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("safari") >= 0;
+Code.IS_FF = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("mozilla") >= 0; // guess
+Code.IS_CHROME = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("chrome") >= 0;
 
 Code.TYPE_OBJECT = "object";
 Code.TYPE_ARRAY = 'array';
@@ -2080,6 +2084,47 @@ Code.setDisabled = function(a){
 Code.setEnabled = function(a){
 	a.disabled = false;
 }
+
+Code.setStyleLinearGradient = function(ele,def, angle, colors,locations){
+	angle = Math.round((180.0/Math.PI)*angle);
+	var styleSafari = "-webkit-linear-gradient";
+	var styleOpera = "-o-linear-gradient";
+	var styleFireFox = "-moz-linear-gradient";
+	var styleStandard = "linear-gradient";
+	var style = styleStandard;
+	if(Code.IS_SAFARI){
+		style = styleSafari;
+	}else if(Code.IS_OPERA){
+		style = styleOpera;
+	}else if(Code.IS_FF){
+		style = styleFireFox;
+	}
+	style += "(";
+	style += angle+"deg,";
+	var i, len = Math.min(colors.length, locations.length);
+	var lm1 = len-1;
+	for(i=0; i<len; ++i){
+		var color = colors[i];
+		var location = locations[i];
+		color = Code.getJSColorFromARGB(color);
+		location = Math.round(location*100.0);
+		style += color+" "+location+"%";
+		if(i<lm1){
+			style += ",";
+		}
+	}
+	style += ")";
+	Code.removeStyle(ele, "background");
+	if(def){
+		Code.addStyle(ele, "background", def);
+	}
+	// background-image ?
+	Code.addStyle(ele, "background", style);
+}
+Code.setStyleRadialGradient = function(ele,def, locationX,locationY, dirX,dirY, colors,locations){
+	// ...
+}
+
 Code.setStyleOverflow = function(ele,val){
 	ele.style.overflow = val;
 }
@@ -2125,6 +2170,9 @@ Code.setStyleBorderBottomLeftRadius = function(ele,val){
 };
 Code.setStyleBackground = function(ele,val){
 	ele.style.background = val;
+};
+Code.setStyleBackgroundImage = function(ele,val){
+	ele.style.backgroundImage = val;
 };
 Code.setStyleBackgroundColor = function(ele,val){
 	ele.style.backgroundColor = val;
@@ -2404,7 +2452,9 @@ Code.getTouchPosition = function(e){
 Code.getMousePosition = function(e){
 	e = Code.getJSEvent(e);
 	var pos = new V2D(0,0);
-	var ele = this._canvas;
+	throw "where is this used?"
+	var ele = null;
+	//var ele = this._canvas; // CANVAS ???
 	while(ele != null){
 		pos.x += ele.offsetLeft;
 		pos.y += ele.offsetTop;
@@ -2413,6 +2463,22 @@ Code.getMousePosition = function(e){
 	pos.x = e.pageX - pos.x;
 	pos.y = e.pageY - pos.y;
 	return pos;
+}
+Code.getMousePositionLocal = function(e){
+	e = Code.getJSEvent(e);
+	return new V2D(e.offsetX,e.offsetY);
+}
+Code.getMouseLeftClick = function(e){
+	e = Code.getJSEvent(e);
+	return e.button === 0;
+}
+Code.getMouseMiddleClick = function(e){
+	e = Code.getJSEvent(e);
+	return e.button === 1;
+}
+Code.getMouseRightClick = function(e){
+	e = Code.getJSEvent(e);
+	return e.button === 2;
 }
 Code.getKeyCodeFromKeyboardEvent = function(e){
 	return e.keyCode;

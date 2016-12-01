@@ -125,10 +125,10 @@ Graphics.prototype.setLine = function(wid,col){ // 3, 0xAARRGGBB
 Graphics.prototype.setLineJoinCap = function(j,c){
 	this._graphics.push( Code.newArray(Graphics.canvasSetLineJoinCap,Code.newArray(j,c)) );
 }
-Graphics.prototype.setRadialFill = function(){ // ?
+Graphics.prototype.setRadialFill = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasSetRadialFill,arguments ) );
 }
-Graphics.prototype.setLinearFill = function(){ // ?
+Graphics.prototype.setLinearFill = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasSetLinearFill,arguments ) );
 }
 Graphics.prototype.setFill = function(col){ // 0xAARRGGBB OR GRADIENT OBJECT
@@ -138,12 +138,12 @@ Graphics.prototype.setFill = function(col){ // 0xAARRGGBB OR GRADIENT OBJECT
 		this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(Code.getJSColorFromARGB(col))) );
 	}
 }
-Graphics.prototype.setFillGradientLinear = function(sX,sY, eX,eY, locations, colors){
-	this._graphics.push( Code.newArray(Graphics.setFillGradientLinear,Code.newArray([this._graphics, this._graphics.length],sX,sY, eX,eY, locations, colors)) );
-}
-Graphics.prototype.setFillGradientRadial = function(sX,sY,sR, eX,eY,eR, locations, colors){
-	this._graphics.push( Code.newArray(Graphics.setFillGradientRadial,Code.newArray([this._graphics, this._graphics.length],sX,sY,sR, eX,eY,eR, locations, colors)) );
-}
+// Graphics.prototype.setFillGradientLinear = function(sX,sY, eX,eY, locations, colors){
+// 	this._graphics.push( Code.newArray(Graphics.setFillGradientLinear,Code.newArray([this._graphics, this._graphics.length],sX,sY, eX,eY, locations, colors)) );
+// }
+// Graphics.prototype.setFillGradientRadial = function(sX,sY,sR, eX,eY,eR, locations, colors){
+// 	this._graphics.push( Code.newArray(Graphics.setFillGradientRadial,Code.newArray([this._graphics, this._graphics.length],sX,sY,sR, eX,eY,eR, locations, colors)) );
+// }
 Graphics.prototype.beginPath = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasBeginPath,Code.newArray()) );
 }
