@@ -141,6 +141,9 @@ function Code(){
 Code.getType = function(obj){
 	return (typeof obj);
 }
+Code.isNaN = function(obj){
+	return isNaN(obj);
+}
 Code.isNumber = function(obj){
 	return (typeof obj)==Code.TYPE_NUMBER;
 }
@@ -1286,6 +1289,13 @@ Code.getColARGBFromString = function(hexString){
 	col = ((a << 24) + (r << 16) + (g << 8) + (b << 0)) >>> 0;
 	return col;
 }
+Code.getHexNumber = function(num,pad){
+	var str = num.toString(16).toUpperCase();
+	if(pad!==undefined){
+		str = Code.prependFixed(str,"0",pad);
+	}
+	return str;
+}
 Code.getColARGBFromFloat = function(a,r,g,b){
 	a = Math.min(Math.floor(a*256.0),255);
 	r = Math.min(Math.floor(r*256.0),255);
@@ -2174,6 +2184,38 @@ Code.setStyleBackground = function(ele,val){
 Code.setStyleBackgroundImage = function(ele,val){
 	ele.style.backgroundImage = val;
 };
+Code.setStyleBackgroundImageFit = function(ele){ // big enough to fit inside
+	var sty = "background-size";
+	var val = "contain";
+	Code.removeStyle(ele, sty);
+	Code.addStyle(ele, sty, val);
+}
+Code.setStyleBackgroundImageFill = function(ele){ // entire area
+	var sty = "background-size";
+	var val = "cover";
+	Code.removeStyle(ele, sty);
+	Code.addStyle(ele, sty, val);
+}
+Code.setStyleBackgroundImageSize = function(ele,wid,hei){
+	var sty = "background-size";
+	var val = wid+" "+hey;
+	Code.removeStyle(ele, sty);
+	Code.addStyle(ele, sty, val);
+}
+Code.setStyleBackgroundImageRepeat = function(ele,x,y){
+	//var sty = "background-repeat";
+	var repeatType = "repeat";
+	if(x!==undefined && y!==undefined){
+		if(!x && !y){
+			repeatType = "no-repeat";
+		}else if(x && !y){
+			repeatType = "repeat-x";
+		}else if(!x && y){
+			repeatType = "repeat-y";
+		}
+	}
+	ele.style.backgroundRepeat = repeatType;
+}
 Code.setStyleBackgroundColor = function(ele,val){
 	ele.style.backgroundColor = val;
 };
