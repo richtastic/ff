@@ -128,6 +128,9 @@ Code.JS_CURSOR_STYLE_GRABBING = "grabbing";
 // http://www.htmlgoodies.com/beyond/css/article.php/3470321
 Code.JS_CURSOR_STYLE_HAND = "hand"; // ~ pointer
 
+Code.INT_MAX_VALUE = +2147483647; // 2^31 - 1
+Code.INT_MIN_VALUE = -2147483648; // 2^31
+
 
 
 Code.monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1287,12 +1290,16 @@ Code.getColARGBFromString = function(hexString){
 		return null;
 	}
 	col = ((a << 24) + (r << 16) + (g << 8) + (b << 0)) >>> 0;
-	return col;
+	return col >>> 0;
 }
-Code.getHexNumber = function(num,pad){
+Code.getHexNumber = function(num,pad, post){
 	var str = num.toString(16).toUpperCase();
 	if(pad!==undefined){
-		str = Code.prependFixed(str,"0",pad);
+		if(post){
+			str = Code.postpendFixed(str,"0",pad);
+		}else{
+			str = Code.prependFixed(str,"0",pad);
+		}
 	}
 	return str;
 }
@@ -1304,7 +1311,7 @@ Code.getColARGBFromFloat = function(a,r,g,b){
 	return Code.getColARGB(a,r,g,b);
 }
 Code.getColARGB = function(a,r,g,b){
-	return (a<<24)+(r<<16)+(g<<8)+b;
+	return ((a<<24)+(r<<16)+(g<<8)+b) >>> 0;
 }
 Code.getColARGBCombineOver = function(colorBase, colorOver){
 	var aBase = Code.getAlpARGB(colorBase);
@@ -1917,6 +1924,49 @@ Code.setInputTextValue = function(a,b){
 	//a.setAttribute("value",b);
 	a.value = b;
 };
+Code.getInputTextSelectedRange = function(e){
+	var start = e.selectionStart;
+	var end = e.selectionEnd;
+	var len = end-start;
+	return {"start":start, "end":end, "length":len};
+}
+Code.setInputTextSelectedRange = function(e, start, end){
+	//if(e.createTextRange){
+	if(e.createTextRange){
+		console.log("RANGE A");
+		var range = e.createTextRange();
+		range.move('character',start);
+		// TODO: end ?
+		range.select();
+	}else if(e.selectionStart || e.selectionStart === 0){
+		console.log("RANGE B");
+		//e.setSelectionRange(start,end);
+		//var selDir = forward backward none
+		//e.setSelectionRange(0,0);
+		//e.selectionStart = 0
+		//e.selectionEnd = 0
+		var newStart = start
+		var newEnd = end
+setTimeout(function() {
+		//e.setSelectionRange(0,0+1,"none");
+		console.log("BEFORE: "+e.selectionStart+" | "+start+":"+end)
+		e.focus();
+		//e.setSelectionRange(start,end-1);
+		//e.setSelectionRange(0,0);
+		e.setSelectionRange(newStart,newEnd);
+		console.log("AFTER: "+e.selectionStart)
+},10);
+		//e.focus();
+	}else{
+		console.log("?");
+	}
+}
+//  rangeObj.execCommand ('cut');
+//  rangeObj.deleteContents ();
+	// var oldPosStart = this._colorField.selectionStart;
+	// var oldPosEnd = this._colorField.selectionEnd;
+	// console.log(this._colorField);
+	// console.log(this._colorField.selectionStart);
 
 Code.newInputButton = function(val){
 	var button = Code.newElement("button");
@@ -2133,6 +2183,56 @@ Code.setStyleLinearGradient = function(ele,def, angle, colors,locations){
 }
 Code.setStyleRadialGradient = function(ele,def, locationX,locationY, dirX,dirY, colors,locations){
 	// ...
+}
+
+// .width .height
+// getBoundingClientRect()
+// can return 0 certain DOM modifications to the element recently --- display:none
+Code.getElementWidth = function(ele){
+	return Math.max(ele.clientWidth,ele.offsetWidth,ele.scrollWidth);
+}
+Code.getElementHeight = function(ele){
+	return Math.max(ele.clientHeight,ele.offsetHeight,ele.scrollHeight);
+}
+Code.getElementLeftRelative = function(ele){
+	return ele.offsetLeft;
+}
+Code.getElementLeftAbsolute = function(ele){
+	var left = 0;
+	var e = ele;
+	while(e){
+		left += e.offsetLeft;
+		e = e.offsetParent;
+	}
+	return left;
+}
+Code.getElementTopRelative = function(ele){
+	return ele.offsetTop;
+}
+Code.getElementTopAbsolute = function(ele){
+	var top = 0;
+	var e = ele;
+	while(e){
+		top += e.offsetTop;
+		e = e.offsetParent;
+	}
+	return top;
+}
+Code.getElementPositionAbsolute = function(ele){
+	var left = Code.getElementLeftAbsolute(ele);
+	var top = Code.getElementTopAbsolute(ele);
+	return new V2D(left,top);
+}
+Code.getElementPositionRelative = function(ele){
+	var left = Code.getElementLeftRelative(ele);
+	var top = Code.getElementTopRelative(ele);
+	return new V2D(left,top);
+}
+Code.documentHTML = function(){
+	return document.documentElement;
+}
+Code.documentBody = function(){
+	return document.body;
 }
 
 Code.setStyleOverflow = function(ele,val){
@@ -2502,6 +2602,7 @@ Code.getMousePosition = function(e){
 		pos.y += ele.offsetTop;
 		ele = ele.offsetParent;
 	}
+	// these lines undo the entire loop???
 	pos.x = e.pageX - pos.x;
 	pos.y = e.pageY - pos.y;
 	return pos;
@@ -2509,6 +2610,10 @@ Code.getMousePosition = function(e){
 Code.getMousePositionLocal = function(e){
 	e = Code.getJSEvent(e);
 	return new V2D(e.offsetX,e.offsetY);
+}
+Code.getMousePositionAbsolute = function(e){
+	e = Code.getJSEvent(e);
+	return new V2D(e.pageX,e.pageY);
 }
 Code.getMouseLeftClick = function(e){
 	e = Code.getJSEvent(e);
