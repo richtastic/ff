@@ -1090,7 +1090,7 @@ Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args
     	var d;
-    	if(year===undefined){
+    	if(year===undefined){ // use NOW
     		d = Code.getTimeMilliseconds(true);
     		d = new Date(d);
     	}else{
@@ -2748,6 +2748,10 @@ Code.getFirstDayOfWeekInMonth = function(milliseconds){ // 0=SUN, 6=SAT
 	d = new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0,0);
 	return d.getDay();
 };
+Code.getYear = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getFullYear();
+};
 Code.getMonthOfYear = function(milliseconds){
 	var d = new Date(milliseconds);
 	return d.getMonth();
@@ -2784,7 +2788,16 @@ Code.getNextMonthFirstDay = function(milliseconds){
 	d = new Date(d.getFullYear(), d.getMonth()+1, 1,0,0,0,0);
 	return d.getTime();
 };
-
+Code.getPrevMonth = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth()-1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+};
+Code.getNextMonth = function(milliseconds){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+};
 Code.getPrevDay = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth(), d.getDate()-1, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
