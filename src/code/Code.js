@@ -1086,6 +1086,15 @@ Code.getTimeStampFromMilliseconds = function(milliseconds){
 	var d = new Date(milliseconds);
 	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 }
+Code.stringRemovePrefix = function(str,prefix){
+	if(!str){ return ""; }
+	var regex = new RegExp("^("+prefix+")*", "gi");
+	return str.replace(regex,"");
+}
+Code.stringFilterNumbersOnly = function(str){ // [0-9]+[.[0-9]+][(E|e)[+.-][0-9]+]  -- possibly allow scientific notation
+	if(!str){ return ""; }
+	return str.replace(/[^0-9]/g,""); // remove non-digits
+}
 Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args
@@ -1813,6 +1822,21 @@ Code.newTableRow = function(){
 Code.newTableCol = function(){
 	return Code.newElement("td");
 };
+Code.getSelected = function(select){ 
+	return Code.getProperty(select.options[select.selectedIndex],"value");
+}
+Code.setSelected = function(select,value){ 
+	var i, len = Code.numChildren(select);
+	for(i=0; i<len; ++i){
+		var child = Code.getChild(select,i);
+		var v = Code.getProperty(child,"value");
+		if(v==value){
+			Code.setProperty(child,"selected","selected");
+		}else{
+			Code.removeProperty(child,"selected");
+		}
+	}
+}
 Code.newSelect = function(array){ // [.., [DISPLAY, VALUE (,SELECTED)], ..]
 	var sel = Code.newElement("select");
 	if(array){
@@ -2786,6 +2810,16 @@ Code.getPrevMonthFirstDay = function(milliseconds){
 Code.getNextMonthFirstDay = function(milliseconds){
 	var d = new Date(milliseconds);
 	d = new Date(d.getFullYear(), d.getMonth()+1, 1,0,0,0,0);
+	return d.getTime();
+};
+Code.getSetYear = function(milliseconds, year){
+	var d = new Date(milliseconds);
+	d = new Date(year, d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+};
+Code.getSetMonth = function(milliseconds, month){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), month, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 	return d.getTime();
 };
 Code.getPrevMonth = function(milliseconds){
