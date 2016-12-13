@@ -1732,9 +1732,25 @@ Code.median = function(list,key){
 	return mu / len;
 }
 // -------------------------------------------------------- HTML
+Code.getWindow = function(){
+	return window;
+};
+Code.getDocument = function(){
+	return document;
+};
 Code.getBody = function(){
 	return document.body;
 };
+// Code.getDomBody = function(){
+// 	return document.body;
+// };
+Code.getDocumentHTML = function(){
+	return document.documentElement;
+}
+Code.documentBody = function(){
+	return document.body;
+}
+
 Code.getHead = function(){
 	return document.head;
 };
@@ -2252,11 +2268,12 @@ Code.getElementPositionRelative = function(ele){
 	var top = Code.getElementTopRelative(ele);
 	return new V2D(left,top);
 }
-Code.documentHTML = function(){
-	return document.documentElement;
-}
-Code.documentBody = function(){
-	return document.body;
+Code.getPageScrollLocation = function(){
+	var doc = Code.getDocumentHTML();
+	var win = Code.getWindow();
+	var left = (win.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+	var top = (win.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+	return {"left":left,"top":top};
 }
 
 Code.setStyleOverflow = function(ele,val){
@@ -2506,9 +2523,6 @@ Code.setSrc = function(i,s){
 	return i.src = s;
 };
 
-Code.getDomBody = function(){
-	return document.body;
-}
 Code.emptyDom = function(ele){
 	while(ele.firstChild){
 		Code.removeChild(ele,ele.firstChild);
@@ -2772,6 +2786,22 @@ Code.getFirstDayOfWeekInMonth = function(milliseconds){ // 0=SUN, 6=SAT
 	d = new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0,0);
 	return d.getDay();
 };
+Code.getHour = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getHours();
+};
+Code.getMinute = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getMinutes()
+};
+Code.getSecond = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getSeconds();
+};
+Code.getMillisecond = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getMilliseconds()*10;
+};
 Code.getYear = function(milliseconds){
 	var d = new Date(milliseconds);
 	return d.getFullYear();
@@ -2812,6 +2842,32 @@ Code.getNextMonthFirstDay = function(milliseconds){
 	d = new Date(d.getFullYear(), d.getMonth()+1, 1,0,0,0,0);
 	return d.getTime();
 };
+Code.getSetMillisecond = function(milliseconds, millisecond){
+	millisecond = Math.floor(millisecond / 10); // input is 0-9999, -> 0,999
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), millisecond);
+	return d.getTime();
+};
+Code.getSetSecond = function(milliseconds, second){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), second, d.getMilliseconds());
+	return d.getTime();
+};
+Code.getSetMinute = function(milliseconds, minute){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), minute, d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+};
+Code.getSetHour = function(milliseconds, hour){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour, d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+};
+Code.getSetDay = function(milliseconds, day){
+	var d = new Date(milliseconds);
+	d = new Date(d.getFullYear(), d.getMonth(), day, d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+	return d.getTime();
+};
 Code.getSetYear = function(milliseconds, year){
 	var d = new Date(milliseconds);
 	d = new Date(year, d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
@@ -2846,7 +2902,7 @@ Code.formatDayString = function(year,month,day){
 	return Code.prependFixed(""+year,"0",4)+"-"+Code.prependFixed(""+month,"0",2)+"-"+Code.prependFixed(""+day,"0",2);
 };
 //
-Code.dateFromString = function(str){
+Code.dateFromString = function(str){ // YYYY-MM-DD[XHH:MM:SSSS[.NNNN]]
 	if( str.length<10 ){
 		return null;
 	}
@@ -2863,6 +2919,7 @@ Code.dateFromString = function(str){
 			nnnn = arr[3];
 		}
 	}
+	nnnn = Math.floor(nnnn/10); // [0,9999] => [0,999]
 	var date = new Date(yyyy,mm,dd,hh,nn,ss,nnnn);
 	return date;
 }
