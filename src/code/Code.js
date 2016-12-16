@@ -23,9 +23,9 @@ Code.JS_EVENT_RESIZE = "resize";
 Code.JS_EVENT_MOUSE_UP = "mouseup";
 Code.JS_EVENT_MOUSE_DOWN = "mousedown";
 Code.JS_EVENT_MOUSE_MOVE = "mousemove";
-Code.JS_EVENT_MOUSE_OUT = "mouseout";
-	//Code.JS_EVENT_MOUSE_ENTER = "mouseenter";
-	//Code.JS_EVENT_MOUSE_LEAVE = "mouseleave";
+Code.JS_EVENT_MOUSE_OUT = "mouseout"; // mouse leave w/o bubbling
+Code.JS_EVENT_MOUSE_LEAVE = "mouseleave"; // mouse out w/ bubbling
+Code.JS_EVENT_MOUSE_ENTER = "mouseenter";
 Code.JS_EVENT_MOUSE_OVER = "mouseover";
 Code.JS_EVENT_MOUSE_WHEEL = "mousewheel";
 	//Code.JS_EVENT_WHEEL = "wheel";
@@ -1083,6 +1083,7 @@ Code.getTimeZone = function(){
 	return hours;
 }
 Code.getTimeStampFromMilliseconds = function(milliseconds){
+	milliseconds = milliseconds!==undefined ? milliseconds : Code.getTimeMilliseconds();
 	var d = new Date(milliseconds);
 	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 }
@@ -1781,6 +1782,7 @@ Code.getName = function(argA,argB){
 	return eles;
 };
 Code.getScrollBarSize = function(){
+	// window width - documentHTML
 	var inner = document.createElement('p');
 	inner.style.width = "100%";
 	inner.style.height = "200px";
@@ -1973,13 +1975,11 @@ Code.getInputTextSelectedRange = function(e){
 Code.setInputTextSelectedRange = function(e, start, end){
 	//if(e.createTextRange){
 	if(e.createTextRange){
-		console.log("RANGE A");
 		var range = e.createTextRange();
 		range.move('character',start);
 		// TODO: end ?
 		range.select();
 	}else if(e.selectionStart || e.selectionStart === 0){
-		console.log("RANGE B");
 		//e.setSelectionRange(start,end);
 		//var selDir = forward backward none
 		//e.setSelectionRange(0,0);
@@ -1989,25 +1989,103 @@ Code.setInputTextSelectedRange = function(e, start, end){
 		var newEnd = end
 setTimeout(function() {
 		//e.setSelectionRange(0,0+1,"none");
-		console.log("BEFORE: "+e.selectionStart+" | "+start+":"+end)
+		//console.log("BEFORE: "+e.selectionStart+" | "+start+":"+end)
 		e.focus();
 		//e.setSelectionRange(start,end-1);
 		//e.setSelectionRange(0,0);
 		e.setSelectionRange(newStart,newEnd);
-		console.log("AFTER: "+e.selectionStart)
-},10);
+		//console.log("AFTER: "+e.selectionStart)
+},1);
 		//e.focus();
 	}else{
 		console.log("?");
 	}
 }
-//  rangeObj.execCommand ('cut');
-//  rangeObj.deleteContents ();
-	// var oldPosStart = this._colorField.selectionStart;
-	// var oldPosEnd = this._colorField.selectionEnd;
-	// console.log(this._colorField);
-	// console.log(this._colorField.selectionStart);
+Code.startTrackInputRange = function(input, dispatch){
+	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_DOWN, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_DOWN, "input":input});
+	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_UP, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_OUT, "input":input});
+	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_MOVE, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_OUT, "input":input});
+	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_OUT, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_OUT, "input":input});
+	dispatch.addJSEventListener(input, Code.JS_EVENT_KEY_DOWN, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_OUT, "input":input});
+	dispatch.addJSEventListener(input, Code.JS_EVENT_KEY_UP, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_KEY_UP, "input":input});
+}
+Code.stopTrackInputRange = function(input, dispatch){
+	dispatch.removeJSEventListener(input, Code.JS_EVENT_MOUSE_DOWN, Code._trackInputRangeFxn, Code);
+	dispatch.removeJSEventListener(input, Code.JS_EVENT_MOUSE_UP, Code._trackInputRangeFxn, Code);
+	dispatch.removeJSEventListener(input, Code.JS_EVENT_MOUSE_MOVE, Code._trackInputRangeFxn, Code);
+	dispatch.removeJSEventListener(input, Code.JS_EVENT_MOUSE_OUT, Code._trackInputRangeFxn, Code);
+	dispatch.removeJSEventListener(input, Code.JS_EVENT_KEY_DOWN, Code._trackInputRangeFxn, Code);
+	dispatch.removeJSEventListener(input, Code.JS_EVENT_KEY_UP, Code._trackInputRangeFxn, Code);
+	// change focus mouseenter mouseleave
+}
+Code._trackInputRangeFxn = function(e,data){ // the selected range is not always determinable by JS UI events
+	var event = data["event"];
+	var input = data["input"];
+	var cursorRange = Code.getInputTextSelectedRange(input);
+	var rangeStart = cursorRange["start"];
+	var rangeEnd = cursorRange["end"];
+	Code.setProperty(input,"data-selection-start",rangeStart);
+	Code.setProperty(input,"data-selection-end",rangeEnd);
+	if(event==Code.JS_EVENT_MOUSE_OUT){
+		var data = {"event":null, "input":input};
+		setTimeout(function() {
+			Code._trackInputRangeFxn(null,data);
+		},1);
+	}
+}
 
+Code.inputTextUpdateWithLength = function(input, maxLength, filler, postFxn){
+	filler = filler ? filler : " ";
+	var eStart = Code.getProperty(input,"data-selection-start");
+	var eEnd = Code.getProperty(input,"data-selection-end");
+	var value = Code.getInputTextValue(input);
+	var cursorRange = Code.getInputTextSelectedRange(input);
+	var cursorPosition = Math.max(cursorRange.start,cursorRange.end);
+	var cursorRemovedCount = 0;
+	if(eStart && eEnd){
+		eStart = parseInt(eStart);
+		eEnd = parseInt(eEnd);
+		cursorRemovedCount = eEnd - eStart;
+	}
+	var newCursorLocation = null;
+	var newValue = null;
+	if(cursorPosition==value.length){ // replace first
+		if(cursorRemovedCount>0){ // selected values already replaced
+			newValue = value;
+			newCursorLocation = cursorPosition;
+		}else{
+			newValue = value.substring(1,cursorPosition);
+			newCursorLocation = newValue.length;
+		}
+	}else{ // replace selected
+		if(cursorRemovedCount>0){ // selected values already replaced
+			newValue = value;
+			newCursorLocation = cursorPosition;
+		}else{
+			var stringA = value.substring(0,cursorPosition);
+			var stringB = value.substring(cursorPosition+1,value.length);
+			var newString = stringA+""+stringB;
+			newValue = newString;
+			newCursorLocation = cursorPosition;
+		}
+	}
+
+	// LENGTH CHECK
+	if(newValue.length>=maxLength){ // get right end
+		newValue = newValue.substring(newValue.length-maxLength,newValue.length);
+	}else{ // pad left end
+		newValue = Code.prependFixed(newValue,filler,maxLength)
+	}
+
+	// UPDATE
+	Code.setInputTextValue(input,newValue);
+	Code.setInputTextSelectedRange(input,newCursorLocation,newCursorLocation); // postFxn
+
+	// RETURN
+	return newValue;
+
+	//giau.InputFieldColor.hexFieldUpdateOverwrite = function(elementField,count){
+}
 Code.newInputButton = function(val){
 	var button = Code.newElement("button");
 	if(val!==undefined){
@@ -2274,6 +2352,31 @@ Code.getPageScrollLocation = function(){
 	var left = (win.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
 	var top = (win.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
 	return {"left":left,"top":top};
+}
+Code.getWindowScrollLocation = function(){
+// TODO:
+	var doc = Code.getDocumentHTML();
+	var win = Code.getWindow();
+	var left = (win.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+	var top = (win.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+	return {"left":left,"top":top};
+}
+Code.getWindowSize = function(){ // viewport
+	var win = Code.getWindow();
+	var doc = Code.getDocumentHTML();
+
+	var widthWindow = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+	var widthHTML = Code.getElementWidth(doc);
+		var width = Math.min(widthWindow,widthHTML); // subtract 15px for scrollbar
+	var height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+	return {"width":width,"height":height};
+}
+
+Code.getPageSize = function(){ // actual content
+	var doc = Code.getDocumentHTML();
+	var width = Code.getElementWidth(doc);
+	var height = Code.getElementHeight(doc);
+	return {"width":width,"height":height};
 }
 
 Code.setStyleOverflow = function(ele,val){
