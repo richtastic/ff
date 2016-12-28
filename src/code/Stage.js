@@ -21,6 +21,16 @@ function Stage(can, fr){
 	this._root.graphics().clear();
 }
 Code.inheritClass(Stage,Dispatchable);
+// ------------------------------------------------------------------------------------------------------------------------ STATIC
+Stage._instance = null;
+Stage.instance = function(r){ // this
+	if(!Stage._instance){
+		var canvas = new Canvas(null,0,0, null, true);
+		var stage = new Stage(canvas);
+		Stage._instance = stage;
+	}
+	return Stage._instance;
+}
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET PROPERTIES
 Stage.prototype.root = function(r){
 	if(r!==undefined){

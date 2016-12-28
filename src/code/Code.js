@@ -1303,6 +1303,7 @@ Code.getColARGBFromString = function(hexString){
 	return col >>> 0;
 }
 Code.getHexNumber = function(num,pad, post){
+	if(!num){ return 0; }
 	var str = num.toString(16).toUpperCase();
 	if(pad!==undefined){
 		if(post){
@@ -2613,6 +2614,10 @@ Code.setStyleFontBolder = function(ele,style){
 Code.setStyleFontFamily = function(ele,style){
 	ele.style.fontFamily = style;
 };
+Code.setStyleFontMonospace = function(ele){
+	Code.setStyleFontFamily(ele,"Courier, monospace");// Courier New, Courier, FreeMono, sans-serif
+};
+
 Code.setStyleLineHeight = function(ele,style){
 	ele.style.lineHeight = style;
 };
@@ -2916,6 +2921,10 @@ Code.getMonthOfYear = function(milliseconds){
 Code.getDayOfMonth = function(milliseconds){
 	var d = new Date(milliseconds);
 	return d.getDate();
+};
+Code.getDayOfWeek = function(milliseconds){
+	var d = new Date(milliseconds);
+	return d.getDay();
 };
 Code.getDaysInMonth = function(milliseconds){
 	var d = new Date(milliseconds);
