@@ -558,8 +558,47 @@ String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 // ------------------------------------------------------------------------------------------ ARRAY
+// Code.arrayFromCommaSeparatedString("this,is,comma,, separated,values")
+// Code.arrayFromCommaSeparatedString("this,is,comma,, separated,values,,")
+// Code.arrayFromCommaSeparatedString("this,is,comma,, separated,values,, ")
+// Code.arrayFromCommaSeparatedString(",this,is,comma,, separated,values,, ")
+// Code.arrayFromCommaSeparatedString(",this,is,comma,, separated,values,,, ,")
+// Code.arrayFromCommaSeparatedString(",this,is,,,,,,,comma,, separated,values,,, ,")
 Code.arrayFromCommaSeparatedString = function(str){
-	return Code.arrayFromStringSeparatedString(str,",");
+	if(!str){ return []; }
+	var arr = [];
+	var index = 0;
+	var i, sub;
+	var len = str.length;
+	var regeExAll = new RegExp(/,,/,"g");
+	for(i=0; i<len; ++i){
+		var ch = str[i];
+		if(ch==","){
+			var ch2 = null;
+			if(i+1 < len){
+				ch2 = str[i+1];
+			}
+			if(ch2==","){ // keep the comma
+				i+=1; // skip next comma
+			}else{
+				// separate
+				if(index!==i){
+					sub = str.substring(index,i);
+					sub = sub.replace(regeExAll,","); // merge duplicates
+					arr.push(sub);
+				}
+				index = i+1;
+			}
+		}
+	}
+	// last element
+	if(index!==i){
+		sub = str.substring(index,i);
+		sub = sub.replace(regeExAll,","); // merge duplicates
+		arr.push(sub);
+	}
+	return arr;
+	//return Code.arrayFromStringSeparatedString(str,",");
 }
 Code.arrayFromStringSeparatedString = function(str, separator){
 	if(str && separator){
