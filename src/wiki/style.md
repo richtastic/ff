@@ -17,7 +17,7 @@ use tabs
 
 
 ### semicolons
-use semicolons after every statement
+use semicolons after statements
 **correct**
 ```javascript
 	var myCat = {
@@ -27,7 +27,9 @@ use semicolons after every statement
 
 **wrong**
 ```javascript
-    // n spaces
+	var myCat = {
+		// cat stuff
+	}
 ```
 
 
@@ -112,7 +114,7 @@ use descriptive naming to clarify the purpose of a label when logic/procedure is
 
 
 ### constants
-use uppercase-underscore, and attach to some type of global-ish object for context
+use uppercase-underscore, and attach to some type of container-ish object for context
 
 **correct**
 ```javascript
@@ -135,9 +137,13 @@ use lowercase-underscore, for literal keys, use quotes and not literals. separat
 ```javascript
 	var data = {
 		"item_count": 1,
-		"item_list": [
-			// ...
-		]
+		"big_item_list": [
+			{
+				"value_a": 1
+				// ...
+			},
+		],
+		"small_item_list": ["a","b","c"]
 	};
 ```
 
@@ -172,9 +178,9 @@ getter and setter functions should be used to modify any internal variables
 ```
 
 ### function
-attach functions to objects, avoid anonymous function declarations. an exception would be where you were generating methods dynamically and appending to eg an array, or are otherwise somehow correct track of.
+attach functions to objects, avoid anonymous function declarations. an exception would be where you were generating methods dynamically and appending to eg an array, or are otherwise somehow keeping track of.
 
-**kep**
+**correct**
 ```javascript
 	MyClass.operation = function(){
 		// ...
@@ -194,10 +200,27 @@ attach functions to objects, avoid anonymous function declarations. an exception
 
 
 ### classes
+use starting-uppercase camel-case for class names
+
+**correct**
+```javascript
+	MyClass = function(){
+		// ...
+	}
+```
+
+**wrong**
+```javascript
+	myClass = function(){
+		// ...
+	}
+```
+
 
 
 ### enums
 enums should be mimicked using external constants, confined to a container or otherwise. use ints rather than strings or objects unless special case.
+
 **correct**
 ```javascript
 	MyClass.ENUM_TYPE_A = 0;
@@ -223,26 +246,9 @@ enums should be mimicked using external constants, confined to a container or ot
 
 
 
-### class / object constants
-use starting-uppercase camel-case for class names
-
-
-**correct**
-```javascript
-	MyClass = function(){
-		// ...
-	}
-```
-
-**wrong**
-```javascript
-	myClass = function(){
-		// ...
-	}
-```
 
 ### switch
-switch cases are ugly, have problems with non-primitives, don't deal with complicated logic, aren't quickly extendible if use cases change
+switch cases are ugly, only longer than if/else, have problems with non-primitives, don't deal with complicated logic, aren't quickly extendible where use cases change
 <br/>
 use if statements instead, or iterating over a logic-type-array to handle cases
 
@@ -272,7 +278,8 @@ use if statements instead, or iterating over a logic-type-array to handle cases
 ```
 
 ### optimizing vertical space
-fit as much as possible onto a screen, we live in a universe where more than 80 characters is now possible. non-procedureal code, like constants or lists can be separated into lines, but operations and calls should fit onto a single line if possible. separable sections of code may be separated by spaces or comments. Use parenthesis, indentes, spaces to emphasize if necessary.
+fit as much as possible onto a screen, we live in a universe where more than 80 characters per line is now possible. non-procedureal code, like constants or lists can be separated into lines, but operations and calls should fit onto a single line if possible. separable sections of code may be separated by spaces or comments. Use parenthesis, indents, spaces to emphasize if necessary.
+
 **correct**
 ```javascript
 	LONG LINE
@@ -287,6 +294,7 @@ fit as much as possible onto a screen, we live in a universe where more than 80 
 
 ### optimizing horizontaly space
 don't put extra spaces around unless it really helps out readability with a long line
+
 **correct**
 ```javascript
 	
@@ -300,8 +308,8 @@ don't put extra spaces around unless it really helps out readability with a long
 
 
 
-### comments
-multiline comments should only be used for long-winded info, or temporarily . use single-line comments where possible. place a space before and after comment-beginning to clarify readability. place single line comments at end of line where possible to optimize vertical space
+### comments / documentation
+multiline comments should only be used for long-winded info, or temporarily sectioning off code. use single-line comments where possible. place a space before and after comment-beginning to clarify readability. place single line comments at end of line where possible to optimize vertical space. if documentation requires many lines of code it's a sign the construct needs more isolation/encapsulation/simplification
 **correct**
 ```javascript
 	function cos(a,b,c){ // a = b^c get taylor series cosine approx of b to cth iteration
@@ -324,37 +332,78 @@ multiline comments should only be used for long-winded info, or temporarily . us
 ```
 
 
-
-class inheritance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### try/catch
+don't use throw or try catch blocks, use if/else and return values instead. try/catch separates the error/problem from the context of code, they relieve you of handling your own problems, and avoid encapsulation.
 
 **correct**
 ```javascript
-	
+	var num = 0;
+	var den = 0;
+	if(den!=0){
+		return num/den;
+	}
+	return 0;
 ```
 
 **wrong**
 ```javascript
-	
+	var num = 0;
+	var den = 0;
+	try{
+		return num/den;
+	}catch(e){
+		console.log("division by zero? "+e);
+	}finally{
+		// always
+	}
+	throw "should not be here";
 ```
+
+
+
+---
+
+===
+
+
+### Usage
+
+**parent-child inheritance** via *prototype chain*
+```
+ParentClassName = function(paramA){
+	// ...
+}
+
+ChildClassName = function(paramA, paramB){  // constructor
+	Code.constructorClass(ChildClassName, this, paramA); // ChildClassName._.constructor.call(this, paramA);
+	// ...
+}
+Code.inheritClass(ChildClassName, ParentClassName); // inherit prototype chain
+```
+
+**call super method:**
+```
+ChildClassName.prototype.kill = function(){
+	// ...
+	ChildClassName._.kill.call(this); // super method
+	// ...
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

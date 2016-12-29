@@ -93,7 +93,7 @@ Although I'll probably use fewer lines. I chose Apache 2.0, because GNU GPLs are
 
 ## Style
 <br/>
-[Color Conversion Analysis](./src/wiki/style.md)
+[Style Guide](./src/wiki/style.md)
 
 Code.JS_EVENT_CLICK = "click";
 

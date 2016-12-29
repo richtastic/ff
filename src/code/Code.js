@@ -450,20 +450,20 @@ Code.keys = function keys(object){
 	}
 	return [];
 }
-Code.hasKey = function keys(object, key){
+Code.hasKey = function hasKeys(object, key){
 	if(object){
 		return key in object;
 	}
 	return false;
 }
+Code.constructorClass = function constructorClass(subClass, self){ // ClassName._.constructor.call(this, paramA); // constructor
+	var params = [];
+	for(var i=2; i<arguments.length; ++i){
+		params.push(arguments[i]);
+	}
+	subClass._.constructor.apply(self, params); // constructor
+}
 Code.inheritClass = function inheritClass(SubC, SuperC){
-	// console.log( Object.defineProperty );
-	// console.log( Object.getProperties );
-	// console.log( Object.getOwnPropertyNames );
-	// console.log( Object.getOwnPropertyDescriptor );
-//console.log( Object.hasOwnProperty ); // YES
-//console.log(SuperC); // YES
-//console.log(SuperC.prototype); // YES
     var subProto = null;
     if(Object && Object.create!==undefined){
     	subProto = Object.create(SuperC.prototype);
@@ -471,28 +471,6 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
     	SubC.prototype = subProto;
     	SubC._ = SuperC.prototype;
     }else{ // IE
-    	/*
-		subProto = new Object();
-// console.log(subProto.constructor.prototype);
-// console.log(SuperC.constructor.prototype);
-		//subProto.prototype = SuperC.prototype;
-		//subProto.prototype = new SuperC();
-		//subProto.prototype = (new SuperC()).prototype;
-		for(var key in SuperC.prototype){
-			//subProto.prototype[key] = SuperC.prototype[key];
-			subProto.constructor.prototype[key] = SuperC.prototype[key];
-			//subProto[key] = SuperC.prototype[key];
-		}
-		//subProto.prototype = SuperC.prototype;
-		//subProto.__proto__ = SuperC.prototype;
-		//subProto.constructor.prototype = SuperC.constructor.prototype;
-		//subProto.constructor.prototype = SuperC.prototype;
-		//
-		Code.extendClass(subProto, SubC.prototype);
-    	SubC.prototype = subProto;
-    	SubC._ = SuperC.prototype;
-    	//SubC._ = SuperC.constructor.prototype;
-    	*/
     	SubC.prototype = new SuperC();
     	SubC._ = SuperC.constructor.prototype;
     }
@@ -514,7 +492,7 @@ Code.log = function log(o){
 				console.log( o );
 			}else if(typeof o == Code.TYPE_FUNCTION){
 				console.log( o );
-			}else if(false){//typeof o == Code.TYPE_OBJECT && o.toString!==null && o.toString!==undefined){
+			}else if(false){ // typeof o == Code.TYPE_OBJECT && o.toString!==null && o.toString!==undefined){
 				console.log( o.toString() );
 			}else{
 				console.log( o );
