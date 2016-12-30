@@ -553,49 +553,81 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 	}
 	return [middle];
 }
+Code.recursiveProperty = function(object, def){
+	if(object){
+		var value = object;
+		var i, len = arguments.length;
+		for(i=2; i<len; ++i){
+			var index = arguments[i];
+			if(value && Code.hasKey(value,index)){
+				value = value[index];
+			}else{ // not make it to end
+				return def;
+			}
+		}
+		return value;
+	}
+	return def;
+}
 // ------------------------------------------------------------------------------------------ EXTEND
 String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
+Code.stringReplaceAll = function(haystack,needle,replacement){
+	//needle = escape(needle)
+	// NOT WORK WITH \
+	var regex = new RegExp(needle,"g");
+	return haystack.replace(regex,replacement);
+}
 // ------------------------------------------------------------------------------------------ ARRAY
-// Code.arrayFromCommaSeparatedString("this,is,comma,, separated,values")
-// Code.arrayFromCommaSeparatedString("this,is,comma,, separated,values,,")
-// Code.arrayFromCommaSeparatedString("this,is,comma,, separated,values,, ")
-// Code.arrayFromCommaSeparatedString(",this,is,comma,, separated,values,, ")
-// Code.arrayFromCommaSeparatedString(",this,is,comma,, separated,values,,, ,")
-// Code.arrayFromCommaSeparatedString(",this,is,,,,,,,comma,, separated,values,,, ,")
-Code.arrayFromCommaSeparatedString = function(str){
-	if(!str){ return []; }
-	var arr = [];
-	var index = 0;
-	var i, sub;
-	var len = str.length;
-	var regeExAll = new RegExp(/,,/,"g");
+Code.commaSeparatedStringFromArray = function(arr){ 
+	var str = "";
+	var i, s;
+	var len = arr.length;
+	var lm1 = len - 1;
 	for(i=0; i<len; ++i){
-		var ch = str[i];
-		if(ch==","){
-			var ch2 = null;
-			if(i+1 < len){
-				ch2 = str[i+1];
-			}
-			if(ch2==","){ // keep the comma
-				i+=1; // skip next comma
-			}else{
-				// separate
-				if(index!==i){
-					sub = str.substring(index,i);
-					sub = sub.replace(regeExAll,","); // merge duplicates
-					arr.push(sub);
-				}
-				index = i+1;
-			}
+		s = arr[i];
+		console.log(s);
+		s = s.replace(/\\/g,"\\\\"); //Code.stringReplaceAll(s,"\\","\\\\");
+		s = s.replace(/,/g,"\\,");  //Code.stringReplaceAll(s,",","\\,");
+		console.log("=> "+s);
+		str += s;
+		if(i<lm1){
+			str += ",";
 		}
 	}
-	// last element
-	if(index!==i){
-		sub = str.substring(index,i);
-		sub = sub.replace(regeExAll,","); // merge duplicates
-		arr.push(sub);
+	return str;
+};
+Code.arrayFromCommaSeparatedString = function(str){ // only things that should be escaped are \ and ,
+	if(!str){ return []; }
+	console.log(str);
+	var arr = [];
+	var index = 0;
+	var i, ch;
+	var len = str.length;
+	var currentTag = "";
+	for(i=0; i<=len; ++i){
+		ch = null;
+		if(i<len){
+			ch = str[i];
+		}
+		if(ch=="\\"){ // escape character
+			var chNext = null;
+			if(i+1 < len){
+				chNext = str[i+1];
+			}
+				if(chNext){
+					currentTag += chNext;
+					i += 1;
+				}
+		}else if(i==len || ch==","){ // split
+				if(currentTag.length>0){
+					arr.push(currentTag);
+					currentTag = "";
+				}
+		}else{ // normal character
+			currentTag += ch;
+		}
 	}
 	return arr;
 	//return Code.arrayFromStringSeparatedString(str,",");
