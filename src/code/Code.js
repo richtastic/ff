@@ -587,10 +587,8 @@ Code.commaSeparatedStringFromArray = function(arr){
 	var lm1 = len - 1;
 	for(i=0; i<len; ++i){
 		s = arr[i];
-		console.log(s);
 		s = s.replace(/\\/g,"\\\\"); //Code.stringReplaceAll(s,"\\","\\\\");
 		s = s.replace(/,/g,"\\,");  //Code.stringReplaceAll(s,",","\\,");
-		console.log("=> "+s);
 		str += s;
 		if(i<lm1){
 			str += ",";
@@ -600,7 +598,6 @@ Code.commaSeparatedStringFromArray = function(arr){
 };
 Code.arrayFromCommaSeparatedString = function(str){ // only things that should be escaped are \ and ,
 	if(!str){ return []; }
-	console.log(str);
 	var arr = [];
 	var index = 0;
 	var i, ch;
@@ -671,7 +668,6 @@ Code.newArrayConstant = function(len,val){
 	return arr;
 }
 Code.newArrayIndexes = function(fr,to){
-	console.log(fr,to);
 	if(to===undefined){
 		to = fr;
 		fr = 0;
@@ -1108,7 +1104,7 @@ Code.getTimeDivisionsFromMilliseconds = function(value){
 	var days = Math.floor(value/(1000*60*60*24));
 		value -= days*1000*60*60*24;
 	var hours = Math.floor(value/(1000*60*60));
-		value -= days*1000*60*60;
+		value -= hours*1000*60*60;
 	var minutes = Math.floor(value/(1000*60));
 		value -= minutes*1000*60;
 	var seconds = Math.floor(value/(1000));
