@@ -1101,6 +1101,22 @@ Code.sumArray = function(a){
 	return sum;
 }
 // ------------------------------------------------------------------------------------------ TIME
+Code.getTimeDivisionsFromMilliseconds = function(value){
+	if(value===undefined){ value = 0;}
+	var years = Math.floor(value/(1000*60*60*24*365));
+		value -= years*1000*60*60*24*365;
+	var days = Math.floor(value/(1000*60*60*24));
+		value -= days*1000*60*60*24;
+	var hours = Math.floor(value/(1000*60*60));
+		value -= days*1000*60*60;
+	var minutes = Math.floor(value/(1000*60));
+		value -= minutes*1000*60;
+	var seconds = Math.floor(value/(1000));
+		value -= seconds*1000;
+	var millis = value;
+	return {"years":years, "days":days, "hours":hours, "minutes":minutes, "seconds":seconds, "milliseconds":millis};
+}
+
 Code._timerDates = [];
 Code._timerDateTop = 0;
 Code.timerStart = function(){
