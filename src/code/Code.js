@@ -475,7 +475,17 @@ Code.inheritClass = function inheritClass(SubC, SuperC){
     	SubC._ = SuperC.constructor.prototype;
     }
 }
-
+Code.methodClass = function(subClass, self, method){
+	var params = [];
+	for(var i=3; i<arguments.length; ++i){
+		params.push(arguments[i]);
+	}
+	// this._.kill.call(this);
+	var fxn = subClass._[method].apply(self, params);
+	// 
+	// subClass._.constructor.apply(self, params); // constructor
+	// 
+}
 Code.isa = function(obj, klass){ // only this?
 	return (obj && obj.constructor && obj.constructor==klass);
 }
