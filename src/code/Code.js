@@ -74,7 +74,6 @@ Code.JS_EVENT_KEY_PRESS = "keypress";
 Code.JS_EVENT_KEY_UP = "keyup";
 Code.JS_EVENT_LOAD = "load";
 Code.JS_EVENT_RESET = "reset";
-Code.JS_EVENT_SCROLL = "scroll";
 Code.JS_EVENT_SELECT = "select";
 Code.JS_EVENT_SUBMIT = "submit";
 Code.JS_EVENT_TEXT_INPUT = "textinput";
@@ -154,15 +153,19 @@ Code.isString = function(obj){
 	return (typeof obj)==Code.TYPE_STRING;
 }
 Code.isObject = function(obj){
-	return (obj && obj.constructor==Object);
-	//return (typeof obj)==Code.TYPE_OBJECT; // arrays show up as objects
+	return (obj && (typeof obj)==Code.TYPE_OBJECT && obj.constructor==Object);
 }
 Code.isFunction = function(obj){
 	return (typeof obj)==Code.TYPE_FUNCTION;
 }
 Code.isArray = function(obj){
-	return (obj && obj.constructor==Array); // instanceofArray
-	//return (typeof obj)==Code.TYPE_ARRAY;
+	return (obj && (typeof obj)==Code.TYPE_OBJECT && obj.constructor==Array); // instanceofArray
+}
+Code.isInstance = function(obj){
+	return (obj && (typeof obj)==Code.TYPE_OBJECT && obj.constructor!=Object && obj.constructor!=Array);
+}
+Code.isObjectOrInstance = function(obj){ // not an array
+	return (obj && (typeof obj)==Code.TYPE_OBJECT && obj.constructor!=Array);
 }
 Code.copyToClipboardPrompt = function(str){
 	var txt = Code.newInputTextArea(str, 3,10);

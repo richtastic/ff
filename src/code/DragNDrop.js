@@ -25,6 +25,8 @@ DragNDrop = function(bus, start, select, avail){
 	this._ticker = new Ticker(30);
 	this._ticker.addFunction(Ticker.EVENT_TICK, this._tickerTickFxn, this);
 
+	this._mouseTracker = new PointerTracker();
+
 	this._jsDispatch = new JSDispatch();
 
 	this._dropAreas = [];
@@ -53,7 +55,7 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 	var da, rect, quad;
 	//
 	var elementDrag = this._dragElement;
-	var point = THIS.mouseTracker.pos();
+	var point = this._mouseTracker.pos();//THIS.mouseTracker.pos();
 	var off = this._dragOffset;
 	var elementWidth = $(elementDrag).width();
 	var elementHeight = $(elementDrag).height();
@@ -164,10 +166,12 @@ DragNDrop.prototype._alertFxnIfExists = function(da, name){
 		}
 	}
 }
-DragNDrop.prototype._handleCoverMouseDownEvent = function(e){
-	console.log("stop drag");
+DragNDrop.prototype._handleCoverMouseDownEventFxn = function(e){
 	this._stopDragging();
-}
+};
+DragNDrop.prototype._handleWindowScrollEventFxn = function(e){
+	// this._tickerTickFxn();
+};
 DragNDrop.prototype._stopDragging = function(){
 	this._ticker.stop();
 	this._updateDragging();
@@ -179,7 +183,8 @@ DragNDrop.prototype._stopDragging = function(){
 	this._dragElement = null;
 	this._dragOffset = null;
 	
-	
+	this._jsDispatch.removeJSEventListener(this._dragCover, Code.JS_EVENT_MOUSE_DOWN, this._handleCoverMouseDownEventFxn, this);
+	this._jsDispatch.removeJSEventListener(Code.getWindow(), Code.JS_EVENT_SCROLL, this._handleWindowScrollEventFxn, this);
 }
 DragNDrop.prototype._handleDragAvailableFxn = function(e){
 	if(e){
@@ -209,7 +214,6 @@ DragNDrop.prototype._handleDragRequestStartFxn = function(e){
 	var div = Code.newDiv();
 	var screenWidth = $(document).width();
 	var screenHeight = $(document).height();
-	console.log(screenWidth,screenHeight);
 	var bgColor = 0x33000000;
 		bgColor = Code.getJSColorFromARGB(bgColor);
 	Code.setStyleLeft(div,0+"px");
@@ -220,7 +224,6 @@ DragNDrop.prototype._handleDragRequestStartFxn = function(e){
 	Code.setStylePosition(div,"absolute");
 	Code.setStyleZIndex(div,"9999999");
 	Code.addChild(document.body,div);
-	console.log(div)
 
 	this._dragCover = div;
 	this._dragElement = elementDrag;
@@ -228,13 +231,14 @@ DragNDrop.prototype._handleDragRequestStartFxn = function(e){
 	this._dragData = dataDrag;
 	this._updateDragging();
 
-	this._jsDispatch.addJSEventListener(this._dragCover, Code.JS_EVENT_MOUSE_DOWN, this._handleCoverMouseDownEvent, this);
+	this._jsDispatch.addJSEventListener(this._dragCover, Code.JS_EVENT_MOUSE_DOWN, this._handleCoverMouseDownEventFxn, this);
+	this._jsDispatch.addJSEventListener(Code.getWindow(), Code.JS_EVENT_SCROLL, this._handleWindowScrollEventFxn, this);
 	this._ticker.start();
 }
 
 DragNDrop.prototype._updateDragging = function(){
 	var elementDrag = this._dragElement;
-	var pos = THIS.mouseTracker.pos();
+	var pos = this._mouseTracker.pos();//THIS.mouseTracker.pos();
 	var off = this._dragOffset;
 	pos.x -= off.x;
 	pos.y -= off.y;
