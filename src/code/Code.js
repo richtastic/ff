@@ -181,6 +181,10 @@ Code.setURLParameter = function(url,key,value){
 	datum["parameters"][key] = value+"";
 	return Code.generateURL(datum["protocol"], datum["fulldomain"], datum["path"], datum["parameters"], datum["fragment"]);
 }
+Code.getURLParameter = function(url,key){
+	var datum = Code.parseURL(url);
+	return datum["parameters"][key];
+}
 Code.generateURL = function(protocol, fulldomain, path, parameters, fragment){
 	if(path && path.length>0){
 		if(path[0]!=="/"){
@@ -1584,6 +1588,9 @@ Code.getColARGBFromString = function(hexString){
 	col = ((a << 24) + (r << 16) + (g << 8) + (b << 0)) >>> 0;
 	return col >>> 0;
 }
+Code.getHexColorARGB = function(col){
+	return "0x"+Code.getHexNumber(col,8);
+}
 Code.getHexNumber = function(num,pad, post){
 	if(!num){ return 0; }
 	var str = num.toString(16).toUpperCase();
@@ -2024,6 +2031,9 @@ Code.getDocument = function(){
 };
 Code.getBody = function(){
 	return document.body;
+};
+Code.getURL = function(){
+	return document.location+"";
 };
 // Code.getDomBody = function(){
 // 	return document.body;

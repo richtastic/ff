@@ -62,7 +62,8 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 		var intersectionRectCorner = point.copy().sub(off);
 	var intersectionRect = new Rect(intersectionRectCorner.x,intersectionRectCorner.y,elementWidth,elementHeight);
 	var intersectionQuad = intersectionRect.toArray();
-	//
+	// VISUALIZE AVAILABLE AREAS
+	var caViz = [];
 	Code.removeAllChildren(this._dragCover);
 	for(i=0; i<this._dropAreas.length; ++i){
 		da = this._dropAreas[i];
@@ -73,8 +74,10 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 			Code.setStyleTop(div,rect.y()+"px");
 			Code.setStyleWidth(div,rect.width()+"px");
 			Code.setStyleHeight(div,rect.height()+"px");
-			Code.setStyleBackgroundColor(div,"#00FF00");
+			var color = Code.getJSColorFromARGB(0x99DDDD66);
+			Code.setStyleBackgroundColor(div,color);
 		Code.addChild(this._dragCover,div);
+		caViz.push({"da":da,"element":div});
 	}
 	//
 	var collisionsArea = [];
@@ -82,11 +85,11 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 	//
 	len = this._dropAreas.length;
 	for(i=0; i<len; ++i){
-		da = this._dropAreas[i];
-		rect = da["rect"];
-		quad = rect.toArray();
-		isPoint = Code.isPointInsideRect2D(point, quad[0],quad[1],quad[2],quad[3]); //isPoint = Code.isPointInsidePolygon2D(point, quad);
-		isRect = Code.quadQuadIntersection2DBoolean(quad[0],quad[1],quad[2],quad[3], intersectionQuad[0],intersectionQuad[1],intersectionQuad[2],intersectionQuad[3]);
+		var da = this._dropAreas[i];
+		var rect = da["rect"];
+		var quad = rect.toArray();
+		var isPoint = Code.isPointInsideRect2D(point, quad[0],quad[1],quad[2],quad[3]); //isPoint = Code.isPointInsidePolygon2D(point, quad);
+		var isRect = Code.quadQuadIntersection2DBoolean(quad[0],quad[1],quad[2],quad[3], intersectionQuad[0],intersectionQuad[1],intersectionQuad[2],intersectionQuad[3]);
 		if(isPoint){
 			collisionsPointer.push(da);
 		}
@@ -94,10 +97,10 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 			collisionsArea.push(da);
 		}
 	}
-// VISUALIZE
+	// VISUALIZE INTERSECTION AREAS
 	for(i=0; i<collisionsArea.length; ++i){
-		da = collisionsArea[i];
-		rect = da["rect"];
+		var da = collisionsArea[i];
+		var rect = da["rect"];
 		var div = Code.newDiv();
 			Code.setStylePosition(div,"absolute");
 			Code.setStyleLeft(div,rect.x()+"px");
@@ -105,8 +108,18 @@ DragNDrop.prototype._updateIntersections = function(isEnd){
 			Code.setStyleWidth(div,rect.width()+"px");
 			Code.setStyleHeight(div,rect.height()+"px");
 			Code.setStyleZIndex(div,"999");
-			Code.setStyleBackgroundColor(div,"#FFFF00");
+			var color = Code.getJSColorFromARGB(0x9999FF99);
+			Code.setStyleBackgroundColor(div,color);
 		Code.addChild(this._dragCover,div);
+		// remove collision item
+		for(var j=0; j<caViz.length; ++j){
+			var viz = caViz[i];
+			var da2 = viz["da"];
+			if(da2==da){
+				var element = viz["element"];
+				Code.removeFromParent(element);
+			}
+		}
 	}
 
 	var existsOld, existsNew;
@@ -214,7 +227,7 @@ DragNDrop.prototype._handleDragRequestStartFxn = function(e){
 	var div = Code.newDiv();
 	var screenWidth = $(document).width();
 	var screenHeight = $(document).height();
-	var bgColor = 0x33000000;
+	var bgColor = 0x00000000;
 		bgColor = Code.getJSColorFromARGB(bgColor);
 	Code.setStyleLeft(div,0+"px");
 	Code.setStyleTop(div,0+"px");
