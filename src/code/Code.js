@@ -175,10 +175,218 @@ Code.copyToClipboardPrompt = function(str){
 	document.body.appendChild(txt);
 	txt.ondblclick = function(e){ document.body.removeChild(e.target); e.ondblclick=null; }
 }
+
+Code.setURLParameter = function(url,key,value){
+	var datum = Code.parseURL(url);
+	datum["parameters"][key] = value+"";
+	return Code.generateURL(datum["protocol"], datum["fulldomain"], datum["path"], datum["parameters"], datum["fragment"]);
+}
+Code.generateURL = function(protocol, fulldomain, path, parameters, fragment){
+	if(path && path.length>0){
+		if(path[0]!=="/"){
+			path = "/"+path;
+		}
+	}else{
+		path = "/";
+	}
+	var url = protocol+"://"+fulldomain+""+path+"";
+	if(parameters){
+		var keys = Code.keys(parameters);
+		for(i=0; i<keys.length;++i){
+			var key = keys[i];
+			var val = parameters[key];
+			if(i==0){
+				url = url+"?";
+			}else{
+				url = url+"&";
+			}
+			if(Code.isArray(val)){
+				for(j=0; j<val.length; ++j){
+					var v = val[j];
+					url = url+key+"[]="+v;
+					if(j<val.length-1){
+						url = url+"&";
+					}
+				}
+			}else{
+				url = url+key+"="+val;
+			}
+		}
+	}
+	if(fragment){
+		url = url+"#"+fragment;
+	}
+	return url;
+}
+Code.parseURL = function(url){ // https://tools.ietf.org/html/rfc3986#section-4.1  |  rfc1808.txt
+	//  https://   my.username   @     abc      .   123.www.123.com  :   80    /a/b/location  ?    a=b&b=c&d=c   ;    #    here
+	// [protocol]   [userinfo]     [subdomain]            [domain]     [port]      [path]        [query string]      []   [fragment/anchor]
+	// SPACE = %20
+	// & sepraates
+	// ; also separates
+	// + = 
+	// multivalued: field1=a&field2=b&field3=...
+	//          OR: field=a,b,...
+	//          OR: field[0]=1&field[1]=b&...
+	// 
+	// eg: https://video.google.co.uk/site/home?basic=123&arr[]=0&arr[]=1&arr[]=2;list[0]=a;list[1]=b;list[2]=c&items=first,second,third#end
+	//url = "https://video.google.co.uk/site/home?basic=123&arr[]=0&arr[]=1&arr[]=2;list[0]=a;list[1]=b;list[2]=c&items=first,second,third#end";
+	// http://localhost/wordpress/wp-admin/admin.php?page=giau-plugin-submenu-data-entry&table=languages
+	// file:///var/www/html/index.php
+	var datum = {};
+	var parameters = [];
+	datum["subdomain"] = null; // eg: video
+	datum["domain"] = null; // eg: google.co.uk
+	//
+	var i, len=url.length, lm1 = len-1;
+	var ch;
+	var skip = [];
+	var current = "";
+	var protocol = null;
+	var fulldomain = null;
+	var fullpath = null;
+		var hasStartedParameters = false;
+		var isExpectingKey = false;
+		var isExpectingValue = false;
+		var currentKey = null;
+		var currentValue = null;
+	var hasStartedAnchor = false;
+	var anchor = null;
+	for(i=0;i<len;++i){
+		ch = url[i];
+		if(skip.length>0){
+			if(skip[0]==ch){
+				skip.shift();
+			}else{
+				console.log("expected: '"+skip[0]+"' , found: '"+ch+"' ")
+				return null;
+			}
+			continue;
+		}
+		if(!protocol){
+			if(ch==":"){
+				protocol = current;
+				current = "";
+				skip = ['/','/'];
+			}else{
+				current += ch;
+			}
+		}else if(!fulldomain){
+			if(ch=="/"){
+				fulldomain = current;
+				current = "/";
+			}else{
+				current += ch;
+			}
+		}else if(!fullpath){
+			if(ch=="?" || ch=="#"){
+				fullpath = current;
+				current = "";
+				--i;
+			}else{
+				current += ch;
+			}
+		}else{ // parameters || anchor
+			if(hasStartedAnchor){
+				current += ch;
+			}else{
+				if(ch=="?"){ // start params
+					if(hasStartedParameters){
+						console.log("unexpected '?' ");
+						return null;
+					}
+					current = "";
+					hasStartedParameters = true;
+					isExpectingKey = true;
+					isExpectingValue = false;
+				}else if(ch=="="){ // assignment
+					if(!isExpectingKey){
+						console.log("not expecting key assignment '='");
+						return null;
+					}
+					currentKey = current;
+					current = "";
+					isExpectingKey = false;
+					isExpectingValue = true;
+				}else if(ch=="&" || ch==";"){ // next var
+					if(!isExpectingValue){
+						console.log("not expecting value assignment '&' / ';'");
+						return null;
+					}
+					currentValue = current;
+					current = "";
+					isExpectingKey = true;
+					isExpectingValue = false;
+					Code._appendParameter(parameters, currentKey, currentValue);
+				}else if(ch=="#"){ // start anchor
+					// TODO: CHECK IF IS IN THE MIDDLE OF PARAM ASSIGNMENT
+					if(isExpectingValue){ // last value
+						currentValue = current;
+						current = "";
+						Code._appendParameter(parameters, currentKey, currentValue);
+					}
+					hasStartedAnchor = true;
+					current = "";
+				}else{
+					current += ch;
+				}
+			}
+		}
+	}
+	if(hasStartedAnchor){ // everything after anchor is client side
+		anchor = current;
+		current = "";
+	}else if(isExpectingValue){ // last value
+		currentValue = current;
+		current = "";
+		Code._appendParameter(parameters, currentKey, currentValue);
+	}
+	// console.log(protocol);
+	// console.log(fulldomain);
+	// console.log(fullpath);
+	// console.log(parameters);
+	// console.log(anchor);
+	datum["protocol"] = protocol;
+	datum["fulldomain"] = fulldomain;
+	datum["path"] = fullpath;
+	datum["parameters"] = parameters;
+	datum["fragment"] = anchor;
+	return datum;
+}
+Code._appendParameter = function(container, key, value){ //
+	//console.log("ASSIGN: "+key+"="+value);
+	var regeExArrayPush = new RegExp("\\[\\]$","g");
+	var regeExArrayIndex = new RegExp("\\[([0-9]+)\\]$","g"); // non-integer indexes?
+	var matchArrayPush = key.match(regeExArrayPush);
+	var matchArrayIndex = key.match(regeExArrayIndex);
+	// value could be an array
+	value = Code.unescapeURI(value);
+	var matchValueArray = value.match(",");
+	if(false){//if( matchValueArray && matchValueArray.length>0 ){ // value has commas: a,b,c // NOT SUPPORTED
+		value = Code.arrayFromStringSeparatedString(value,",");
+	}
+	if(matchArrayPush && matchArrayPush.length==1 && matchArrayPush[0]!==""){ // varname[] // PREFERRED (PHP)
+		var arr = key.replace(regeExArrayPush,"");
+		if(!Code.hasKey(container,arr)){
+			container[arr] = [];
+		}
+		container[arr].push(value);
+	}else if(matchArrayIndex && matchArrayIndex.length==1 && matchArrayIndex[0]!==""){ // varname[i] // ONLY SEMI SUPPORTED
+		var arr = key.replace(matchArrayIndex,"");
+		var index = matchArrayIndex[0].replace(new RegExp("(\\[|\\])","g"),"");
+			index = parseInt(index);
+		if(!Code.hasKey(container,arr)){
+			container[arr] = [];
+		}
+		container[arr][index] = value;
+	}else{ // regular
+		container[key] = value;
+	}
+}
 Code.parseJSON = function(str){
 	var obj = str;
 	if(obj===undefined || obj===null){
-		console.log("UNDEFINED VARIALBE");
+		console.log("UNDEFINED VARIABLE");
 		obj = {};
 	}else{
 		//var obj = JSON.parse(str);
@@ -3243,9 +3451,16 @@ Code.escapeHTML = function(str){
 Code.escapeURI = function(str){
 	return encodeURIComponent(str);
 }
+/*
+<SPACE> %20
+
+*/
+Code.unescapeURI = function(str){
+	return decodeURIComponent(str);
+}
 Code.escapeSpaces = function(str){
 	return (str+"")
-         .replace(/ /g, "$20");
+         .replace(/ /g, "%20");
 }
 // ENCODE URL STRING SAFE FOR SENDING:
 // encodeURIComponent(str)
