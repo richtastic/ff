@@ -351,7 +351,7 @@ Canvas.prototype.height = function(hei){
 }
 Canvas.prototype._updateSizeFromAbsolute = function(wid,hei){// upscale for rendering, downscale for css presentation
 	var ratio = this.presentationScale();
-	console.log("_updateSizeFromAbsolute",wid,hei,"ratio: "+ratio)
+	//console.log("_updateSizeFromAbsolute",wid,hei,"ratio: "+ratio)
 	if(this._autoScale){ // not exactly working as expected
 		if(wid){
 			this._canvas.width = wid*ratio;
@@ -402,9 +402,8 @@ Canvas.prototype.popAlpha = function(){
 	return this._alphaComposite;
 }
 Canvas.prototype.getColorArrayARGB = function(pX,pY,wid,hei){
-	console.log("getColorArrayARGB: "+this.presentationScale())
+//	console.log("getColorArrayARGB: "+this.presentationScale())
 	var matrix = new Matrix2D();
-
 	matrix.identity();
 	matrix.scale(1.0/this.presentationScale());
 	this.contextTransform(matrix);

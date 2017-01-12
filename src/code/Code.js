@@ -1029,14 +1029,26 @@ Code.getElementsWithFunction = function(element, fxn, stop, arr){
 	return arr;
 }
 Code.elementExists = function(a,o){ // O(n)
-	for(var i=0; i<a.length; ++i){
-		if(a[i]==o){ return true; }
+	if( Code.isFunction(o) ){ // function
+		for(var i=0; i<a.length; ++i){
+			if( o(a) ){ return true; }
+		}
+	}else{ // object
+		for(var i=0; i<a.length; ++i){
+			if(a[i]==o){ return true; }
+		}
 	}
 	return false;
 }
 Code.indexOfElement = function(a,o){ // O(n)
-	for(var i=0; i<a.length; ++i){
-		if(a[i]==o){ return i; }
+	if( Code.isFunction(o) ){ // function
+		for(var i=0; i<a.length; ++i){
+			if( o(a) ){ return i; }
+		}
+	} else {
+		for(var i=0; i<a.length; ++i){
+			if(a[i]==o){ return i; }
+		}
 	}
 	return null;
 }
