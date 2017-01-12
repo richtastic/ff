@@ -1007,6 +1007,9 @@ Code.emptyArray = function(a){
 Code.truncateArray = function(a,length){
 	while(a.length>length){ a.pop(); }
 }
+Code.getElements = function(element, fxn, stop, arr){
+	return Code.getElementsWithFunction(element, fxn, stop, arr);
+}
 Code.getElementsWithFunction = function(element, fxn, stop, arr){
 	arr = arr!==undefined ? arr : [];
 	if(element){
@@ -5636,7 +5639,9 @@ Code.getBrowser = function(){
 	var isBlink = (isChrome || isOpera) && !!window.CSS;
 }
 
-
+Code.open = function(url){
+	window.open(url);
+}
 
 
 
