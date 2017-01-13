@@ -983,7 +983,7 @@ Code.copyArray = function(a,b,start,end){ // a = b
 		a[j] = b[i];
 	}
 	return a;
-}
+};
 Code.arrayReverse = function(a, b){
 	if(b===undefined){
 		b = a; a = new Array();
@@ -1000,13 +1000,16 @@ Code.arrayReverse = function(a, b){
 		a[j] = temp;
 	}
 	return a;
-}
+};
 Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
-}
+};
 Code.truncateArray = function(a,length){
 	while(a.length>length){ a.pop(); }
-}
+};
+Code.getElements = function(element, fxn, stop, arr){
+	return Code.getElementsWithFunction(element, fxn, stop, arr);
+};
 Code.getElementsWithFunction = function(element, fxn, stop, arr){
 	arr = arr!==undefined ? arr : [];
 	if(element){
@@ -1027,8 +1030,8 @@ Code.getElementsWithFunction = function(element, fxn, stop, arr){
 		}
 	}
 	return arr;
-}
-Code.elementExists = function(a,o){ // O(n)
+};
+Code.elementExists = function(a,o){ // O(n)   --- this wont work for an array of functions ....
 	if( Code.isFunction(o) ){ // function
 		for(var i=0; i<a.length; ++i){
 			if( o(a) ){ return true; }
@@ -5635,7 +5638,9 @@ Code.getBrowser = function(){
 	    // Blink engine detection
 	var isBlink = (isChrome || isOpera) && !!window.CSS;
 }
-
+Code.open = function(url){
+	window.open(url);
+}
 
 
 
