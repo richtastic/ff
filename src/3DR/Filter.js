@@ -26,6 +26,98 @@ Filter.FILTER_TYPE_GAUSSIAN = "gaussian";
 // exposure
 
 function Filter(){
+	var fxn = function(){
+		//
+	};
+
+var sync = new FF.SyncData();
+	var fxnPrint = function(){
+		var timestamp = Code.getTimeMilliseconds();
+		var lcl = sync.local();
+		var src = sync.source();
+		var pnd = sync.pending();
+		var res = sync.residual();
+		var val = sync.value();
+		var str = "";
+			str += Code.postpendFixed(timestamp+""," ",20);
+			str += Code.postpendFixed("L: "+lcl," ",10);
+			str += Code.postpendFixed("S: "+src," ",10);
+			str += Code.postpendFixed("P: "+pnd," ",10);
+			str += Code.postpendFixed("R: "+res," ",10);
+			str += Code.postpendFixed("V: "+val," ",10);
+		console.log(str);
+	};
+
+	fxnPrint();
+	sync.source(100);
+	//sync.local(1);0
+	sync.append(1);
+	fxnPrint();
+
+	setTimeout(function(){
+		sync.append(1);
+		fxnPrint();
+	}, 200);
+
+	setInterval(function(){
+		fxnPrint();
+	}, 100);
+
+	
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,function(e){
+		///
+	});
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,function(e){
+		//console.log("add fav");
+		if(e.keyCode==Keyboard.KEY_LEFT){
+			console.log("add one");
+			sync.append(1);
+		}else if(e.keyCode==Keyboard.KEY_RIGHT){
+			console.log("sub one");
+			sync.append(-1);
+		}
+	});
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,function(e){
+		///
+	});
+	this._keyboard.addListeners();
+	
+
+/*
+var tracker = new giau.Tracker();
+	tracker.value();
+tracker.local(0);
+tracker.source(0);
+	tracker.value();
+tracker.append(1);
+tracker.append(1);
+	tracker.value();
+tracker.flush();
+	tracker.value();
+*/
+
+/*
+keep pending values with timestamp AFTER source
+*/
+
+
+
+/*
+get source at 100 								S: 100  L:   0  P:   0   V: 100
+set local to 10 								S: 100  L:  10  P:   0   V: 110
+send pending 10, reset local to 0 				S: 100  L:   0  P:  10   V: 110
+pending is a success, reset pending to 0 		S: 100  L:   0  P:   0   V: 100
+get source at 110 								S: 110  L:   0  P:   0   V: 110
+*/
+
+
+
+
+console.log("out");
+return;
+
+
 //var obj = {"key1":"value1"};
 var obj = {"key1":["string 1", "string 2", [1, 3, 4, 0, {"sub\"":"array"}]]};
 console.log(obj);

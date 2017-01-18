@@ -1046,7 +1046,7 @@ Code.elementExists = function(a,o){ // O(n)   --- this wont work for an array of
 Code.indexOfElement = function(a,o){ // O(n)
 	if( Code.isFunction(o) ){ // function
 		for(var i=0; i<a.length; ++i){
-			if( o(a) ){ return i; }
+			if( o(a[i]) ){ return i; }
 		}
 	} else {
 		for(var i=0; i<a.length; ++i){
@@ -1370,7 +1370,8 @@ Code.timerDifference = function(){
 Code.timerDifferenceSeconds = function(){
 	return Code.timerDifference()/1000.0;
 }
-Code.getTimeMilliseconds = function(utc){
+Code.getTimeMilliseconds = function(utc){ 
+	utc = utc!==undefined ? utc : true;
     var d = new Date();
     var t = d.getTime();
     if(utc){
