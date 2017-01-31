@@ -389,7 +389,7 @@ Code._appendParameter = function(container, key, value){ //
 }
 Code.parseJSON = function(str){
 	var obj = str;
-	if(obj===undefined || obj===null){
+	if(obj===undefined || obj===null || obj===""){
 		console.log("UNDEFINED VARIABLE");
 		obj = {};
 	}else{
