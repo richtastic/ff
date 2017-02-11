@@ -1607,6 +1607,36 @@ Code.getColARGBFromString = function(hexString){
 Code.getHexColorARGB = function(col){
 	return "0x"+Code.getHexNumber(col,8);
 }
+// Code.getHex( Code.colorARGBFromJSColor( "rgba(23,50,244,0.5)" ) );
+Code.colorARGBFromJSColor = function(jsColor){
+	if(jsColor){
+		if(jsColor.length >= 3){
+			if(jsColor.substring(0,4)=="rgba"){ // rgba(r,g,b,a)
+				var inside = jsColor.substring(jsColor.indexOf("(")+1,jsColor.indexOf(")"));
+				var items = inside.split(",");
+				if(items.length==4){
+					var r = parseInt(items[0]) / 255.0;
+					var g = parseInt(items[1]) / 255.0;
+					var b = parseInt(items[2]) / 255.0;
+					var a = parseFloat(items[3]);
+					return Code.getColARGBFromFloat(a,r,g,b);
+				}
+			}else if(jsColor.substring(0,3)=="rgb"){ // rgb(r,g,b)
+				var inside = jsColor.substring(jsColor.indexOf("(")+1,jsColor.indexOf(")"));
+				var items = inside.split(",");
+				if(items.length==3){
+					var r = parseInt(items[0]) / 255.0;
+					var g = parseInt(items[1]) / 255.0;
+					var b = parseInt(items[2]) / 255.0;
+					return Code.getColARGBFromFloat(1.0,r,g,b);
+				}
+			}else{ // (#|0x)RGB
+				return Code.getColARGBFromString(jsColor);
+			}
+		}
+	}
+	return 0x00000000; // default clear
+}
 Code.getHexNumber = function(num,pad, post){
 	if(!num){ return 0; }
 	var str = num.toString(16).toUpperCase();
@@ -2119,6 +2149,10 @@ Code.newElement = function(type){
 };
 Code.newScript = function(type){
 	return Code.newElement("script");
+};
+Code.newBreak = function(){
+	var div = Code.newElement("br");
+	return div;
 };
 Code.newDiv = function(a){
 	var div = Code.newElement("div");
@@ -2771,6 +2805,11 @@ Code.setStyleBackgroundImageRepeat = function(ele,x,y){
 }
 Code.setStyleBackgroundColor = function(ele,val){
 	ele.style.backgroundColor = val;
+};
+Code.getStyleBackgroundColor = function(ele){
+	var bg = ele.style.backgroundColor; // rgba() | #FGA
+	var hex = Code.colorARGBFromJSColor(bg);
+	return hex;
 };
 Code.setStyleBorder = function(ele,val){
 	ele.style.borderStyle = val;
