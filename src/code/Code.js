@@ -812,8 +812,8 @@ Code.commaSeparatedStringFromArray = function(arr){
 	var lm1 = len - 1;
 	for(i=0; i<len; ++i){
 		s = arr[i];
-		s = s.replace(/\\/g,"\\\\"); //Code.stringReplaceAll(s,"\\","\\\\");
-		s = s.replace(/,/g,"\\,");  //Code.stringReplaceAll(s,",","\\,");
+		s = s.replace(/\\/g,"\\\\"); // escape backslashes
+		s = s.replace(/,/g,"\\,"); // escape commas
 		str += s;
 		if(i<lm1){
 			str += ",";
@@ -821,7 +821,7 @@ Code.commaSeparatedStringFromArray = function(arr){
 	}
 	return str;
 };
-Code.arrayFromCommaSeparatedString = function(str){ // only things that should be escaped are \ and ,
+Code.arrayFromCommaSeparatedString = function(str){ // only things that should be escaped are , and \
 	if(!str){ return []; }
 	var arr = [];
 	var index = 0;
@@ -838,10 +838,10 @@ Code.arrayFromCommaSeparatedString = function(str){ // only things that should b
 			if(i+1 < len){
 				chNext = str[i+1];
 			}
-				if(chNext){
-					currentTag += chNext;
-					i += 1;
-				}
+			if(chNext){
+				currentTag += chNext;
+				i += 1;
+			}
 		}else if(i==len || ch==","){ // split
 				if(currentTag.length>0){
 					arr.push(currentTag);
@@ -852,7 +852,6 @@ Code.arrayFromCommaSeparatedString = function(str){ // only things that should b
 		}
 	}
 	return arr;
-	//return Code.arrayFromStringSeparatedString(str,",");
 }
 Code.arrayFromStringSeparatedString = function(str, separator){
 	if(str && separator){
@@ -861,7 +860,7 @@ Code.arrayFromStringSeparatedString = function(str, separator){
 	return [];
 }
 Code.stringFromCommaSeparatedArray = function(arr){
-	return arr.join(",");
+	return Code.commaSeparatedStringFromArray(arr);
 }
 
 Code.setArray = function(arr){
