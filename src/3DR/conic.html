@@ -10,8 +10,104 @@ function pageLoadedFxn(){
 function ffLoadedFxn(){
 	(new ScriptLoader("./",["Conic2D.js"],this,classesLoadedFxn)).load();
 }
+
+
+
+function Work(n,d,s){
+	this._name = "";
+	this._duration = 0;
+	this._start = 0;
+	this.duration(d);
+	this.name(n);
+	this.start(s);
+}
+Work.prototype.duration = function(d){
+	if(d!==undefined){
+		this._duration = d;
+	}
+	return this._duration;
+}
+Work.prototype.name = function(n){
+	if(n!==undefined){
+		this._name = n;
+	}
+	return this._name;
+}
+Work.prototype.start = function(s){
+	if(s!==undefined){
+		this._start = s;
+	}
+	return this._start;
+}
 function classesLoadedFxn(){
-	var conic = new Conic2D();
+	console.log("do evaluation");
+	// .. scheduling
+	// Code.getTimeStamp = function(year, month, day, hour, min, sec, ms)
+	// Code.getDuration = function(years,days, hours,minutes,seconds, milliseconds){ // ms
+	var weekdays = ["S","U"]; // avoid sat and sun
+	var holidays = []; // avoid holidays
+	var otherdays = []; // avoid certain days off
+	// durations
+	var startDate = Code.getTimeStamp(2017,02,10, 00,00,00,0000);
+	var timeDesign = Code.getDuration(0, 4*8, 0,0,0,0); // 4 days
+	var timeEngineering = Code.getDuration(0, 12*8, 0,0,0,0); // 12 days
+	var timeSecurity = Code.getDuration(0, 4*8, 0,0,0,0); // 4 days
+	var timePrivacy = Code.getDuration(0, 1*8, 0,0,0,0); // 1 day
+	var timeQAInternal = Code.getDuration(0, 2*8, 0,0,0,0); // 2 days
+	var timeQAApple = Code.getDuration(0, 5*8, 0,0,0,0); // 5 days
+	var timeRelease = Code.getDuration(0, 0, 0,0,0,0); // immediate
+	// work
+	var design = new Work("design", timeDesign);
+	var engineering = new Work("engineering", timeEngineering);
+	var security = new Work("security", timeSecurity);
+	var privacy = new Work("privacy", timePrivacy);
+	var qaInternal = new Work("qa-internal", timeQAInternal);
+	var qaApple = new Work("qa-apple", timeQAApple);
+	var release = new Work("release", timeRelease);
+	// dependency
+	var dependency = new Dependency();
+	dependency.addElement(design);
+	dependency.addElement(engineering);
+	dependency.addElement(security);
+	dependency.addElement(privacy);
+	dependency.addElement(qaInternal);
+	dependency.addElement(qaApple);
+	dependency.addElement(release);
+	// ... 
+	dependency.addDependencyTo(release,engineering);
+	dependency.addDependencyTo(release,qaInternal);
+	dependency.addDependencyTo(release,security);
+	dependency.addDependencyTo(release,privacy);
+	dependency.addDependencyTo(release,qaApple);
+	dependency.addDependencyTo(qaInternal,engineering);
+	dependency.addDependencyTo(engineering,design);
+	dependency.addDependencyTo(privacy,engineering);
+	dependency.addDependencyTo(security,engineering);
+	dependency.addDependencyTo(qaApple,qaInternal);
+
+
+	var order = dependency.evaluateOrder();
+	console.log("ORDER:");
+	console.log(order);
+	var i, len = order.length;
+	var hours = 0;
+	var work;
+	for(i=0; i<len; ++i){
+		work = order[i];
+		var vert = dependency._graph.vertexFromData(work);
+		console.log(vert);
+		var adjacent = vert.adjacent();
+		console.log(adjacent);
+		//console.log(order[i]);
+		// list of all dependencies for element
+			// start time is at end of latest dependent
+			// ...
+	}
+
+
+	//var conic = new Conic2D();
+
+
 }
 </script>
 <body onload="pageLoadedFxn();">

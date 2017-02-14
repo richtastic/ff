@@ -299,6 +299,15 @@ Graph.prototype.edges = function(){
 Graph.prototype.vertexes = function(){
 	return this._vertexes;
 }
+Graph.prototype.allVertexes = function(){ // copy return
+	console.log(this._vertexes);
+	var i, len = this._vertexes.length;
+	var arr = [];
+	for(i=0; i<len; ++i){
+		arr.push(this._vertexes[i]);
+	}
+	return arr;
+}
 Graph.prototype.vertexFromData = function(data){
 	for(var i=0; i<this._vertexes.length;++i){
 		var v = this._vertexes[i];
@@ -398,6 +407,15 @@ Graph.Vertex.prototype.data = function(d){
 	}
 	return this._data;
 }
+Graph.Vertex.prototype.adjacent = function(){ // vertexes touching
+	var vertexes = [];
+	var edge, i, len = this._edges.length;
+	for(i=0; i<len; ++i){
+		edge = this._edges[i];
+		vertexes.push(edge.opposite(this));
+	}
+	return vertexes;
+}
 Graph.Vertex.prototype.getEdgeForVertex = function(v){
 	var i, e, len, arr=this._edges;
 	len = arr.length;
@@ -444,6 +462,44 @@ Graph.Vertex.prototype.removeEdge = function(e){
 }
 Graph.Vertex.prototype.edges = function(){
 	return this._edges;
+}
+Graph.Vertex.prototype.edgesTo = function(){
+	var edges = [];
+	var i, e, len = this._edges.length;
+	for(i=0; i<len; ++i){
+		e = this._edges[i];
+		if(e.direction()==Graph.Edge.DIRECTION_FORWARD){
+			if(e.B()==this){
+				edges.push(e);
+			}
+		}else if(e.direction()==Graph.Edge.DIRECTION_REVERSE){
+			if(e.A()==this){
+				edges.push(e);
+			}
+		}else if(e.direction()==Graph.Edge.DIRECTION_DUPLEX){
+			edges.push(e);
+		}
+	}
+	return edges;
+}
+Graph.Vertex.prototype.edgesFrom = function(){
+	var edges = [];
+	var i, e, len = this._edges.length;
+	for(i=0; i<len; ++i){
+		e = this._edges[i];
+		if(e.direction()==Graph.Edge.DIRECTION_FORWARD){
+			if(e.A()==this){
+				edges.push(e);
+			}
+		}else if(e.direction()==Graph.Edge.DIRECTION_REVERSE){
+			if(e.B()==this){
+				edges.push(e);
+			}
+		}else if(e.direction()==Graph.Edge.DIRECTION_DUPLEX){
+			edges.push(e);
+		}
+	}
+	return edges;
 }
 Graph.Vertex.prototype.toString = function(){
 	return "[Vertex "+this._id+" ("+this._edges.length+")]";

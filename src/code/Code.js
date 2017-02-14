@@ -1470,6 +1470,15 @@ Code.getHourStringFromDate = function(date){
 	}
 	return Code.prependFixed(hour+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+""+Code.getAMPMFromDate(date);
 }
+Code.getDuration = function(years,days, hours,minutes,seconds, milliseconds){ // ms
+	var y = years*365*24*60*60*1000;
+	var d = days*24*60*60*1000;
+	var h = hours*60*60*1000;
+	var m = minutes*60*1000;
+	var s = seconds*1000;
+	var u = milliseconds;
+	return y + d + h + m + s + u;
+}
 // ------------------------------------------------------------------------------------------ BINARY REPRESENTATIONS
 Code.intToBinaryString = function(num,cnt){
 	var i, len = (cnt!=null)?cnt:32, ander = 1;
