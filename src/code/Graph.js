@@ -378,6 +378,18 @@ Graph.prototype.toString = function(){
 	str += "]";
 	return str;
 }
+Graph.prototype.adjacent = function(data){
+	var vertex = this.vertexFromData(data);
+	var result = [];
+	if(vertex){
+		var adjacent = vertex.adjacent();
+		for(var i=0; i<adjacent.length; ++i){
+			var adj = adjacent[i];
+			result.push(adj.data());
+		}
+	}
+	return result;
+}
 Graph.prototype.kill = function(){
 	//
 }

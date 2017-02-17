@@ -46,7 +46,9 @@ Dependency.prototype.evaluateOrder = function(){ // [0] = first, [1] = second, .
 	}
 	return result;
 }
-
+Dependency.prototype.graph = function(){
+	return this._graph;
+}
 Dependency.visitVertex = function(orderedList, unvisited, v){
 	if(v.temp()==1){ // marked, not DAG
 		return false;

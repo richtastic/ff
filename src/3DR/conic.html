@@ -39,6 +39,14 @@ Work.prototype.start = function(s){
 	}
 	return this._start;
 }
+Work.prototype.end = function(s){
+	return this._start + this._duration;
+}
+Work.prototype.toString = function(){
+	var str = "";
+	str = "[Work: "+this.name()+" ("+this.duration()+") : "+this.start()+" => "+this.end()+" ]";
+	return str;
+}
 function classesLoadedFxn(){
 	console.log("do evaluation");
 	// .. scheduling
@@ -89,19 +97,33 @@ function classesLoadedFxn(){
 	var order = dependency.evaluateOrder();
 	console.log("ORDER:");
 	console.log(order);
-	var i, len = order.length;
+	var i, j, len = order.length;
 	var hours = 0;
 	var work;
+	// find absolute times
+	var startDate = Code.getTimeStamp(2017, 2, 14, 8, 0, 0, 0); // 2017-02-14 8:00:00 AM
+	var endDate = Code.getTimeStamp(2017, 3, 1, 8, 0, 0, 0);
+		startDate = Code.getTimeFromTimeStamp(startDate);
+		endDate = Code.getTimeFromTimeStamp(endDate);
+	
+
+	var availableTime = calculateAvailable(startDate, endDate);
+	console.log(availableTime);
+
+
+	
+
+	console.log("startDate: "+startDate);
 	for(i=0; i<len; ++i){
 		work = order[i];
-		var vert = dependency._graph.vertexFromData(work);
-		console.log(vert);
-		var adjacent = vert.adjacent();
-		console.log(adjacent);
-		//console.log(order[i]);
-		// list of all dependencies for element
-			// start time is at end of latest dependent
-			// ...
+		var adjacent = dependency.graph().adjacent(work);
+		var start = 0; // if no dependents
+		for(j=0; j<adjacent.length; ++j){
+			var w = adjacent[j];
+			start = Math.max(start, w.end());
+		}
+		work.start(start);
+		console.log(work+"");
 	}
 
 
@@ -109,6 +131,29 @@ function classesLoadedFxn(){
 
 
 }
+
+function calculateAvailable(fromdate,todate, specificDatesExclude, daysOfWeekExclude, timesOfDayExclude){
+	var times = [];
+	var time;
+	var date = fromdate;
+	// remove all time outside of 8 hour day
+	while(date < todate){
+		// ignore specific dow
+
+		// ignore specific exact dates
+		time = {};
+		time["start"] = date;
+		time["duration"] = 24*60*60*1000; // full day
+		// ignore specific times of day
+			// subtract time outside 
+
+		times.push(time);
+		date = Code.getNextDay(date);
+	}
+	//
+	return times;
+}
+
 </script>
 <body onload="pageLoadedFxn();">
 </body>
