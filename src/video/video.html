@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>FF Video Playback</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){}
+function defaultClassesLoadedFxn(){
+	var list = ["VideoPlayer.js"];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){}
+function customClassesLoadedFxn(o){
+	var player = new VideoPlayer();
+	player.setSourceURL("video.MOV");
+	player.defaultControlsOn();
+	var keyboard = new Keyboard();
+}
+
+/*
+http://www.htmlgoodies.com/html5/client/how-to-embed-video-using-html5.html#fbid=x9uqEe_rjvC
+https://www.w3schools.com/html/html5_video.asp
+
+H.264
+
+*/
+
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<!-- <video id="sampleMovie" src="video.MOV" controls>Video Playback Not Supported On This Browser</video> -->
+</body>
+</html>
+

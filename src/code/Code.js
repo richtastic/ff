@@ -2169,6 +2169,10 @@ Code.newDiv = function(a){
 	}
 	return div;
 };
+Code.newVideo = function(a){
+	var div = Code.newElement("video");
+	return div;
+};
 Code.newAnchor = function(link,content){
 	var a = Code.newElement("a");
 	if(link!=undefined && link!=null){
