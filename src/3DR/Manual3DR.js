@@ -4,6 +4,25 @@ Manual3DR.KEY_IMAGE_FILE_LOCATION = "imageFileName";
 Manual3DR.KEY_IMAGE_SOURCE = "imageSource";
 Manual3DR.KEY_F_MATRIX = "f_matrix";
 
+
+/*
+PSNR:
+	= 10 * log_10(max_I^2/MSE)
+	= 20 * log_10(max_I)- 10 * log_10(MSE)
+
+SSIM:
+
+MSE: == SSD
+	1/(m*n) * SUM(n,m) (Ii,j - Ji,j)^2
+
+
+STDEV?:
+
+GRADIENT COMPARRISONS ?
+
+*/
+
+
 function Manual3DR(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
@@ -2674,6 +2693,7 @@ Manual3DR.vRowFromCols = function(hi0,hi1,hi2, hj0,hj1,hj2){
 	return new Matrix(1,6).setFromArray(arr);
 }
 Manual3DR.prototype.handleLoaded = function(){
+	console.log("handleLoaded");
 	var imagePixelWidth, imagePixelHeight;
 	var i, j, len, d, img, imgs, o, obj, p, v;
 	var imageSources = this._imageSources;

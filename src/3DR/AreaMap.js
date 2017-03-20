@@ -455,13 +455,16 @@ AreaMap.Range.prototype.isPointInside = function(point){
 }
 AreaMap.prototype.searchAddNeighborCells = function(cellA,cellB){ // add best matches for all neighbors of cellA
 	var neighbors = cellB.neighbors();
+	console.log("neighbors: "+neighbors.length);
 	for(var i=0; i<neighbors.length; ++i){
 		var neighbor = neighbors[i];
 		if(true || !neighbor.hasMatch()){ // not already have a match
 			var feature = neighbor.definitiveUniqueFeature();
 //			console.log("feature "+feature);
 			if(feature){
+				console.log("feature: "+feature);
 				var match = AreaMap.Range.bestMatchForFeatureStartingAtCell(feature, cellA);
+				console.log("match: "+match);
 //				console.log(" "+neighbor+" new match: "+match.score());
 				if(match){ // found possible match
 console.log("possible match:"+matches.length);
@@ -473,6 +476,7 @@ matches.push(match);
 	}
 }
 AreaMap.Range.bestMatchForFeatureStartingAtCell = function(featureNeedle, cellHaystack, maxRecursiveCount){
+console.log("HERE");
 	console.log("bestMatchForFeatureStartingAtCell")
 	maxRecursiveCount = maxRecursiveCount!==undefined ? maxRecursiveCount : AreaMap.Cell.MAXIMUM_NEIGHBOR_ITERATIONS;
 	var cellNeedle = featureNeedle.cell();

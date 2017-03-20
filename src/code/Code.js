@@ -3097,6 +3097,8 @@ Code.getTouchPosition = function(e){
 	return Code.getMousePosition(e);
 }
 Code.getMousePosition = function(e){
+	return Code.getMousePositionAbsolute(e);
+	/*
 	e = Code.getJSEvent(e);
 	var pos = new V2D(0,0);
 	throw "where is this used?"
@@ -3111,6 +3113,7 @@ Code.getMousePosition = function(e){
 	pos.x = e.pageX - pos.x;
 	pos.y = e.pageY - pos.y;
 	return pos;
+	*/
 }
 Code.getMousePositionLocal = function(e){
 	e = Code.getJSEvent(e);

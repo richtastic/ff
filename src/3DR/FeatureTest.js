@@ -50,7 +50,9 @@ FeatureTest.prototype.getScaledImage = function(o){
 	document.body.appendChild(i);
 }
 FeatureTest.prototype.handleMouseClickFxn = function(e){
-	console.log(e.x,e.y);
+	console.log(e);
+	var point = e.location;
+	//console.log(e.x,e.y);
 }
 FeatureTest.prototype.imagesLoadComplete = function(o){
 	this._imageSourceList = [];

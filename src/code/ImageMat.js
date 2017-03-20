@@ -1948,8 +1948,8 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	var img;
 	var fullX = x; // wtf
 	var fullY = y; // wtf
-	console.log(fullX,fullY)
-	console.log("blurr");
+//	console.log(fullX,fullY)
+//	console.log("blurr");
 	if(blurr){
 		gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
@@ -1965,7 +1965,7 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	var TR = ImageMat._TR; TR.set(right,top);
 	var BR = ImageMat._BR; BR.set(right,bot);
 	var BL = ImageMat._BL; BL.set(left,bot);
-	console.log(left,right,top,bot)
+//	console.log(left,right,top,bot)
 	if(matrix){
 		var matinv = matrix;
 		matrix = Matrix.inverse(matrix);
