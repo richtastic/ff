@@ -1667,8 +1667,8 @@ R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // ha
 	return harrisValue;
 }
 
-R3D.pointsCornerDetector = function(src, width, height, konstant, sigma){ // uses harris
-	var percentExclude = 0.05;
+R3D.pointsCornerDetector = function(src, width, height, konstant, sigma, percentExclude){ // uses harris
+	percentExclude = percentExclude!==undefined ? percentExclude : 0.05;
 	var harrisValues = R3D.harrisCornerDetection(src, width, height, konstant, sigma);
 	var extrema = Code.findExtrema2DFloat(harrisValues, width,height);
 	var cornerPoints = [];
@@ -1680,7 +1680,7 @@ R3D.pointsCornerDetector = function(src, width, height, konstant, sigma){ // use
 			maxValue = Math.max(maxValue, extrema[i].z);
 			minValue = Math.max(minValue, extrema[i].z);
 		}
-		var limitMin = maxValue*percentExclude;
+		var limitMin = minValue + (maxValue-minValue)*percentExclude;
 		var limitMax = maxValue;
 		for(i=0;i<len;++i){
 			var val = extrema[i].z;
@@ -1756,7 +1756,10 @@ GLOBALSTAGE = stage;
 	// console.log(rangeA.toString());
 	// console.log("rangeB: ");
 	// console.log(rangeB.toString());
-	areaMap.solve();
+//	areaMap.solve();
+
+	areaMap.show(rangeA, rangeB);
+
 }
 
 

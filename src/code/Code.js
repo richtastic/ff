@@ -3932,7 +3932,8 @@ Code.findExtrema2DFloat = function(d, wid,hei){
 	var jW0, jW1, jW2, i0,i1,i2;
 	var d0,d1,d2,d3,d4,d5,d6,d7,d8;
 	var result, count = 0;
-	var eps = 1.0; // 0.5;
+	//var eps = 1.0; // 0.5;
+	var eps = 0.0;
 	for(j=1;j<hm1;++j){
 		jW0 = (j-1)*wid; jW1 = j*wid; jW2 = (j+1)*wid;
 		for(i=1;i<wm1;++i){
@@ -3940,8 +3941,21 @@ Code.findExtrema2DFloat = function(d, wid,hei){
 			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
 			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
 			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
+
+				// result = new V3D(i+1,j+1,d4);
+				// list.push(result);
+				// continue;
+
+
 				result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
 				if(result==null){ continue; }
+
+				// result.x += i; result.y += j;
+				// list.push(result);
+				// continue;
+
+
+
 				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
 					result.x += i; result.y += j;
 					list.push(result);

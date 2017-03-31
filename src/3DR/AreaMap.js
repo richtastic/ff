@@ -116,6 +116,93 @@ AreaMap.prototype.mapCellFeatures = function(rangeA,featureA, rangeB,featureB){
 	// featureB.cell().addMatchingCell(featureA.cell());
 }
 */
+
+
+AreaMap.prototype.show = function(rangeA, rangeB){ 
+	// display the grid cells
+	var i, j;
+
+
+	var sizeX = 25;
+	var sizeY = 25;
+
+	var offsetX = 0;
+	var offsetY = 0;
+
+	var ranges = [rangeA, rangeB];
+	for(k=0; k<ranges.length; ++k){
+		range = ranges[k];
+		//var rangeA = match.rangeA();
+		var rows = range.rows();
+		var cols = range.cols();
+		var image = range._image;
+		for(j=0; j<rows; ++j){
+			for(i=0; i<cols; ++i){
+
+					if(i!=7){
+						continue;
+					}
+
+				// if(k==0){
+				// 	if(i!=7 || j!=4){
+				// 		continue;
+				// 	}
+				// }else{
+				// 	if(i!=8 || j!=2){
+				// 		continue;
+				// 	}
+				// }
+				//console.log(i+","+j);
+				var cell = range.cell(i,j);
+				//var cellImage = cell.getCellImage();
+				var cellImage = cell.getCellMaskImage();
+				// 
+				//var img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), wid,hei);
+				var img = cellImage;
+				var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				//console.log(img)
+					var d = new DOImage(img);
+					//console.log(d);
+					//d.matrix().translate(50,50);
+
+					d.matrix().scale(sizeX/AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH);
+					d.matrix().translate(offsetX, offsetY);
+					d.matrix().translate(sizeX*i,sizeY*j);
+					GLOBALSTAGE.addChild(d);
+				//break;
+				//AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
+				//var windowHeight = AreaMap.Feature.NEEDLE_IMAGE_HEIGHT;
+				var featurePoint = cell.getBestFeaturePoint();
+				if(featurePoint){
+					//console.log(featurePoint);
+					var p = featurePoint;
+					var c = new DO();
+					c.graphics().setLine(1.0, 0xFF990000);
+					c.graphics().setFill(0xFFFF6666);
+					c.graphics().beginPath();
+					c.graphics().drawCircle(sizeX*i + p.x, sizeY*j + p.y, 1);
+					c.graphics().endPath();
+					c.graphics().strokeLine();
+					c.graphics().fill();
+						c.matrix().translate(offsetX, offsetY);
+					GLOBALSTAGE.addChild(c);
+				}
+			}
+		}
+		offsetX += 400;
+	}
+
+
+	// TODO: show neighborhood with best matching SSOD
+
+HERE
+
+
+	//var rangeB = match.rangeB();
+}
+
+
+
 AreaMap.prototype.solve = function(){ // input: 2 ranges with initial best matches, output: ranges with cells pointing to matches in opposite range
 	console.log("solve");
 this._finalMatches = [];
@@ -307,6 +394,14 @@ AreaMap.Range = function(image, width,height, rows,cols) { // image rect
 	this.cols(cols);
 	this.resetCells();
 }
+AreaMap.Range.prototype.cell = function(col,row){
+	if(arguments.length == 2){
+		return this.cellFromRowCol(row,col);
+	}else if(arguments.length == 1){
+		return this.cellFromPoint(col);
+	}
+	return null;
+}
 AreaMap.Range.prototype.imageAtPoint = function(point, width, height, scale, rotation){
 	//console.log("imageAtPoint: "+point);
 	scale = scale!==undefined ? scale : 1.0;
@@ -476,8 +571,8 @@ matches.push(match);
 	}
 }
 AreaMap.Range.bestMatchForFeatureStartingAtCell = function(featureNeedle, cellHaystack, maxRecursiveCount){
-console.log("HERE");
-	console.log("bestMatchForFeatureStartingAtCell")
+//console.log("HERE");
+	console.log("bestMatchForFeatureStartingAtCell     ="+cellHaystack)
 	maxRecursiveCount = maxRecursiveCount!==undefined ? maxRecursiveCount : AreaMap.Cell.MAXIMUM_NEIGHBOR_ITERATIONS;
 	var cellNeedle = featureNeedle.cell();
 	var haystack = [cellHaystack];
@@ -486,11 +581,15 @@ console.log("HERE");
 	var match, bestMatch = null;
 	var searchedList = [];
 	var count = 0;
+	var iteration = 0;
 	while(haystack.length>0){
+++iteration;
+//
 		var cell = haystack.shift(); // remove from left
 		searchedList.push(cell);
 		AreaMap.Range.addNeighborCells(cell, haystack, maxRecursiveCount);
 		var match = cell.bestMatchForFeature(featureNeedle);
+console.log("   IN HAYSTACK: "+iteration+" match: "+match);
 		if(bestMatch==null || match.isBetterThanMatch(bestMatch)){
 			bestMatch = match;
 		}
@@ -680,17 +779,97 @@ AreaMap.Cell.prototype.getCellImage = function(){
 	var point = this.centerPoint();
 //	console.log("cell image: "+point);
 
-	var windowWidth = AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
-	var windowHeight = AreaMap.Feature.NEEDLE_IMAGE_HEIGHT;
+	// var windowWidth = AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
+	// var windowHeight = AreaMap.Feature.NEEDLE_IMAGE_HEIGHT;
+var windowWidth = this.width();
+var windowHeight = this.height();
 	var rot = 0.0;
 	var imageToCellScale = this.getSizeScale();//Math.max(this.cell().cellWidth()/AreaMap.Feature.CELL_IMAGE_WIDTH, this.cell().cellHeight()/AreaMap.Feature.CELL_IMAGE_HEIGHT);
 	var scale = imageToCellScale;
 	var rotation = 0.0;
 
-	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);;
+	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
+	return img;
+};
+AreaMap.Cell.prototype.getCellMaskImage = function(){
+	var windowWidth = this.width();
+	var windowHeight = this.height();
+	var range = this.range();
+	var point = this.centerPoint();
+	var rot = 0.0;
+	var scale = 1;
+	var rotation = 0.0;
+
+
+	var windowWidth = AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH;
+	var windowHeight = AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT;
+	var scale = Math.min(this.width()/windowWidth, this.height()/windowHeight);
+
+	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
+
+return img;
+
+	var gry = img.gry();
+
+	// img = new ImageMat(img.width(), img.height(), gry);
+	// return img;
+	var corner = R3D.harrisCornerDetection(gry, img.width(), img.height());
+//console.log(corner);
+		img = new ImageMat(img.width(), img.height(), corner);
+		img.normalFloat01();
+	return img;
+
 	//console.log(img)
 	return img;
 };
+
+AreaMap.Cell.prototype.getBestFeaturePoint = function(){
+	var sides = 1; // include pixel border for calculations
+	var windowWidth = this.width();
+	var windowHeight = this.height();
+	var range = this.range();
+	var point = this.centerPoint();
+
+	var windowWidth = AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH;
+	var windowHeight = AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT;
+	var scale = Math.min(this.width()/windowWidth, this.height()/windowHeight);
+
+	windowWidth += 2*sides;
+	windowHeight += 2*sides;
+
+	var rot = 0.0;
+	
+	var rotation = 0.0;
+	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
+	
+	var gry = img.gry();
+
+	var points = R3D.pointsCornerDetector(gry, img.width(), img.height());//, 0.05, 1.0, 0.05);
+	if(points && points.length>0){
+		points = points.sort(function(a,b){
+			//return Math.abs(a.z)<Math.abs(b.z) ? -1 : 1;
+			return Math.abs(a.z)<Math.abs(b.z) ? 1 : -1;
+		});
+		for(var i=0; i<points.length; ++i){
+			points[i].x -= sides;
+			points[i].x *= scale;
+			points[i].y -= sides;
+			points[i].y *= scale;
+		}
+		//console.log(points.length)
+		point = points.shift();
+		while(point && (point.x < 0 || point.x >= this.width() || point.y < 0 || point.y >= this.height())){ // can't use point outside cell
+			console.log(point.x+"|"+point.y+"    ? "+windowWidth+" | "+windowHeight)
+			point = points.shift();
+		}
+		if(point){
+			return new V2D().copy(point);
+		}
+	}
+	// default to center
+	return new V2D(this.width()*0.5, this.height()*0.5);
+};
+
 AreaMap.Cell.prototype.bestMatchForFeature = function(feature){
 	var cell = feature.cell();
 	var point = feature.point(); 
@@ -927,6 +1106,10 @@ AreaMap.Feature.NEEDLE_IMAGE_WIDTH = 7;
 AreaMap.Feature.NEEDLE_IMAGE_HEIGHT = 7;
 AreaMap.Feature.CELL_IMAGE_WIDTH = 25;
 AreaMap.Feature.CELL_IMAGE_HEIGHT = 25;
+
+AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 5;//11;
+AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 5;//11;
+
 
 AreaMap.Feature.getFeatureImage = function(range, point){
 	var windowWidth = AreaMap.Feature.NEEDLE_IMAGE_WIDTH;
