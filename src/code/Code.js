@@ -3948,40 +3948,47 @@ Code.findExtrema2DFloat = function(d, wid,hei){
 
 
 				result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
-				if(result==null){ continue; }
+				if(result==null){ console.log("COULD NOT FIND EXTREMA"); continue; }
+				result.x += i; result.y += j;
+				list.push(result);
 
+				// // result.x += i; result.y += j;
+				// // list.push(result);
+				// // continue;
+				// console.log(result);
 				// result.x += i; result.y += j;
+				// //result = new V3D(i+1,j+1,d4);
 				// list.push(result);
-				// continue;
 
-
-
-				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
-					result.x += i; result.y += j;
-					list.push(result);
-				}else{ // need to interpolate at a neighbor ... is this not already done?
-					//console.log("result; "+result.toString());
-					result.x += i; result.y += j;
-					list.push(result);
-				}
+//				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
+//					result.x += i; result.y += j;
+//					list.push(result);
+//				}else{ // need to interpolate at a neighbor ... is this not already done?
+//					//console.log("result; "+result.toString());
+//					result.x += i; result.y += j;
+//					list.push(result);
+//				}
 			}
 		}
 	}
 	return list;
 }
+// https://www.value-at-risk.net/ordinary-interpolation-methodology/
+
+https://www.quora.com/What-is-the-Hessian-matrix
 Code._tempMatrixArray2 = [0,0];
 Code._tempMatrixArray4 = [0,0,0,0];
-Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // 
+Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // want to know where dx and dy are simultaneously equal to zero
 	var dx = (d5-d3)*0.5;
 	var dy = (d7-d1)*0.5;
 	var dxdx = (d5-2.0*d4+d3);
 	var dydy = (d7-2.0*d4+d1);
 	var dxdy = (d8-d6-d2+d0)*0.25;
 	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
-	if(!Hinv){ return null; }
+	if(!Hinv){ console.log("COULD NOT FIND INVERSE"); return null; }
 	var dD = Code.setArray(Code._tempMatrixArray2,dx,dy);
 	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
-	loc.x = -loc.x; loc.y = -loc.y;
+	loc.x = loc.x; loc.y = loc.y;
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
 	return loc;
 }

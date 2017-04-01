@@ -53,13 +53,20 @@ cell > [feature] > [matches]
 - add seed matches to **Q<sub>g</sub>**
 - while **Q<sub>g</sub>** has GOOD potential matches
 	- **M<sub>top</sub>** = pop off top match
-	- set cells **a** and **b** of **M<sub>top</sub>** as matched 
-	- for each _neighbor_ in a (**a<sub>i</sub>**):
-		- calculate best match **M<sub>best<sub>a<sub>i</sub>,b<sub>i</sub></sub></sub>** from each of (**b<sub>i</sub>**)
-		- add to **Q<sub>g</sub>**
-	- for each _neighbor_ in b (**b<sub>i</sub>**):
-		- calculate best match **M<sub>best<sub>b<sub>i</sub>,a<sub>i</sub></sub></sub>** from each of (**a<sub>i</sub>**)
-		- add to **Q<sub>g</sub>**
+	- get **a** and **b** of **M<sub>top</sub>** 
+	- if cell **a** doesn't have a better match, add match to **a**
+		- for each _neighbor_ in a (**a<sub>i</sub>**):
+			- calculate best match **M<sub>best<sub>a<sub>i</sub>,b<sub>i</sub></sub></sub>** from each of (**b<sub>i</sub>**)
+			- add to **Q<sub>g</sub>**
+	- if cell **b** doesn't have a better match, add match to **b**
+		- for each _neighbor_ in b (**b<sub>i</sub>**):
+			- calculate best match **M<sub>best<sub>b<sub>i</sub>,a<sub>i</sub></sub></sub>** from each of (**a<sub>i</sub>**)
+			- add to **Q<sub>g</sub>**
+<br/>
+<br/>
+**Output:** List of cells & best matches;
+<br/>
+if cell **a** from match **M<sub>i,j</sub>** maps to cell **b**, cell  **b** doesn't necessarily have a corresponding match **M<sub>k,l</sub>** that maps to cell **a**
 <br/>
 
 
@@ -82,4 +89,20 @@ For a given cell **C<sub>needle</sub>** and cell **B<sub>haystack</sub>**:
 ... could use new features as seeds & iterate again on finer-mesh
 ... could use individual grids(& surroundings) as new images
 
+
 <br/>
+
+
+
+
+a good point migh be one that if you move left/right or rotate or scale a little has a big change in SoSD
+	- move left/right/up/down 
+		- value = sum of 4 movements
+		- best point has highest cost
+
+=> spots with MOST texture will fit this best
+
+
+
+
+

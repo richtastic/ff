@@ -942,6 +942,71 @@ ImageMat.printBadData = function(data, wid,hei){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ fxns
+ImageMat.totalCostToMoveAny = function(image){
+	var result = ImageMat.costToMoveAny(image);
+	var red = result.red();
+	var grn = result.grn();
+	var blu = result.blu();
+	var wid = result.width();
+	var hei = result.height();
+	var len = wid * hei;
+	var sum = Code.newArrayZeros(len);
+	var i;
+	for(i=0; i<len; ++i){ // square?
+		//sum[i] = red[i] + grn[i] + blu[i];
+		//sum[i] = red[i] * grn[i] * blu[i];
+		sum[i] = (red[i] * grn[i] * blu[i]) / (red[i] + grn[i] + blu[i]);
+	}
+	return sum;
+}
+ImageMat.costToMoveAny = function(image){ // 4 main directions
+	var result = ImageMat.costToMove(image,1,0);
+	ImageMat.costToMove(image,0,1, result);
+	ImageMat.costToMove(image,-1,0, result);
+	ImageMat.costToMove(image,0,-1, result);
+	// +4 diagonal directions
+	ImageMat.costToMove(image,-1,-1, result);
+	ImageMat.costToMove(image,1,-1, result);
+	ImageMat.costToMove(image,-1,1, result);
+	ImageMat.costToMove(image,1,1, result);
+	return result;
+}
+ImageMat.costToMove = function(image, dx,dy, sum){ // assume image stretches in all directions
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
+	var wid = image.width();
+	var hei = image.height();
+	var resultLen = wid * hei;
+	var r = sum!==undefined ? sum.red() : Code.newArrayZeros(resultLen);
+	var g = sum!==undefined ? sum.grn() : Code.newArrayZeros(resultLen);
+	var b = sum!==undefined ? sum.blu() : Code.newArrayZeros(resultLen);
+	var i, j, x, y;
+	var indexA, indexB;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			indexA = j*wid + i;
+			x = i + dx;
+			y = j + dy;
+			x = Math.min(Math.max(0,x),wid-1);
+			y = Math.min(Math.max(0,y),hei-1);
+			indexB = y*wid + x;
+				r[indexA] += Math.abs(red[indexA] - red[indexB]);
+				g[indexA] += Math.abs(grn[indexA] - grn[indexB]);
+				b[indexA] += Math.abs(blu[indexA] - blu[indexB]);
+				// r[indexA] += Math.pow(red[indexA] - red[indexB],2);
+				// g[indexA] += Math.pow(grn[indexA] - grn[indexB],2);
+				// b[indexA] += Math.pow(blu[indexA] - blu[indexB],2);
+		// (A * B) / (A + B)
+		}
+	}
+	if(sum){
+		return sum;
+	}
+	var result = new ImageMat(wid,hei,r,g,b);
+	return result;
+}
+
 ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
 	var i, j, n, m, sum, staN, endN, staM, endM;
@@ -969,22 +1034,6 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 // INNER CONVOLUTION?
 
 ImageMat.convolveSSDScores = function(haystack,needle) {
-	/*
-	var result = ImageMat.convolveSSD(haystack,needle);
-	var wid = result.width();
-	var hei = result.height();
-	var count = wid*hei;
-	var scores = [];
-	var red = result.red();
-	var grn = result.grn();
-	var blu = result.blu();
-	for(i=0; i<count; ++i){
-		scores[i] = (red[i]+grn[i]+blu[i])/3.0;
-		scores[i] = (red[i]+grn[i]+blu[i])/3.0;
-		scores[i] = (red[i]+grn[i]+blu[i])/3.0;
-	}
-	return {"value":scores, "width":wid, "height":hei};
-	*/
 	var gry = ImageMat.convolveSSDFloat(haystack.gry(),haystack.width(),haystack.height(), needle.gry(),needle.width(),needle.height());
 	var red = ImageMat.convolveSSDFloat(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
 	var grn = ImageMat.convolveSSDFloat(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
@@ -993,14 +1042,21 @@ ImageMat.convolveSSDScores = function(haystack,needle) {
 		red = red.value;
 		grn = grn.value;
 		blu = blu.value;
+			// gry = ImageMat.normalFloat01(gry);
+			// red = ImageMat.normalFloat01(red);
+			// grn = ImageMat.normalFloat01(grn);
+			// blu = ImageMat.normalFloat01(blu);
 	var wid = haystack.width()-needle.width()+1;
 	var hei = haystack.height()-needle.height()+1;
 	var count = wid*hei;	
 	var scores = [];
 	for(i=0; i<count; ++i){
-		//scores[i] = (red[i]+grn[i]+blu[i]);
+		scores[i] = (red[i]+grn[i]+blu[i]); // OK
 		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
-		scores[i] = gry[i];
+		//scores[i] = gry[i];
+		//scores[i] = red[i]*grn[i]*blu[i];
+		scores[i] = red[i]*grn[i]*blu[i] + gry[i];
+		//scores[i] = red[i]*grn[i]*blu[i]*gry[i];
 	}
 	return {"value":scores, "width":wid, "height":hei};
 
@@ -1012,7 +1068,7 @@ ImageMat.convolveSSD = function(haystack,needle) {
 	return new ImageMat(red.width,red.height, red.value,grn.value,blu.value);
 }
 ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, needle,needleWidth,needleHeight) { // normalized ssd single channel
-	if(needleWidth>haystackWidth){ // flipped
+	if(needleWidth>haystackWidth || needleHeight>haystackHeight){ // flipped
 		console.log("FLIPPED");
 		return null;
 	}

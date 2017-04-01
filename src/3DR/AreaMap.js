@@ -128,6 +128,20 @@ AreaMap.prototype.show = function(rangeA, rangeB){
 
 	var offsetX = 0;
 	var offsetY = 0;
+var testAI = 6;
+var testAJ = 4;
+var testBI = 7;
+var testBJ = 2;
+
+// var testAI = 9;
+// var testAJ = 3;
+// var testBI = 9;
+// var testBJ = 4;
+
+// var testAI = 7;
+// var testAJ = 7;
+// var testBI = 6;
+// var testBJ = 7;
 
 	var ranges = [rangeA, rangeB];
 	for(k=0; k<ranges.length; ++k){
@@ -139,19 +153,19 @@ AreaMap.prototype.show = function(rangeA, rangeB){
 		for(j=0; j<rows; ++j){
 			for(i=0; i<cols; ++i){
 
-					if(i!=7){
+					// if(i!=7){
+					// 	continue;
+					// }
+
+				if(k==0){
+					if(i!=testAI || j!=testAJ){
 						continue;
 					}
-
-				// if(k==0){
-				// 	if(i!=7 || j!=4){
-				// 		continue;
-				// 	}
-				// }else{
-				// 	if(i!=8 || j!=2){
-				// 		continue;
-				// 	}
-				// }
+				}else{
+					if(i!=testBI || j!=testBJ){
+						continue;
+					}
+				}
 				//console.log(i+","+j);
 				var cell = range.cell(i,j);
 				//var cellImage = cell.getCellImage();
@@ -192,11 +206,20 @@ AreaMap.prototype.show = function(rangeA, rangeB){
 		offsetX += 400;
 	}
 
+	// show neighborhood with best matching SSOD
+	var cellA = rangeA.cell(testAI,testAJ);
+	var cellB = rangeB.cell(testBI,testBJ);
+	console.log(cellA);
+	console.log(cellB);
+	console.log("---------------------");
+	var match = cellB.bestMatchForCell(cellA);
+	//var match = cellA.bestMatchForCell(cellA);
+	console.log(match);
 
-	// TODO: show neighborhood with best matching SSOD
 
-HERE
-
+	// TODO: find all matches in neighborhood
+	console.log("++++++++++++++++++++++++++++ best neighborhood");
+	cellB.bestMatchForCellInNeighborhood(cellA);
 
 	//var rangeB = match.rangeB();
 }
@@ -807,6 +830,8 @@ AreaMap.Cell.prototype.getCellMaskImage = function(){
 
 	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
 
+	img = ImageMat.costToMoveAny(img);
+
 return img;
 
 	var gry = img.gry();
@@ -823,7 +848,46 @@ return img;
 	return img;
 };
 
+AreaMap.Cell.prototype.getFeatureImageFromPoint = function(point){
+	//return this.getImageFromPoint(point, AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH, AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT);
+	var scaleX = AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH / this.width();
+	var scaleY = AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT / this.height();
+		scaleX = 1/scaleX;
+		scaleY = 1/scaleY;
+	var scale = Math.max(scaleX, scaleY);
+	var width = AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH;
+	var height = AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT;
+	console.log("NEEDLE SIZE: "+width+"x"+height+". @ "+scale);
+	return this.getImageFromPoint(point, width, height, scale);
+}
+AreaMap.Cell.prototype.getHaystackImageForOtherCell = function(cell){
+	// there is some overall cell size scaling as well
+	// var width = Math.ceil(cell.width() / AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH);
+	// var height = Math.ceil(cell.height() / AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT);
+	var scaleX = AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH / cell.width();
+	var scaleY = AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT / cell.height();
+		scaleX = 1/scaleX;
+		scaleY = 1/scaleY;
+	var scale = Math.max(scaleX, scaleY);
+	var width = Math.ceil(this.width()/scale) + Math.ceil(AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH*0.5)*2; // border around for SoSD
+	var height = Math.ceil(this.height()/scale) + Math.ceil(AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT*0.5)*2;
+	console.log("HAYSTACK SIZE: "+width+"x"+height+". @ "+scale);
+	return this.getImageFromPoint(this.centerPoint(), width, height, scale);
+}
+AreaMap.Cell.prototype.getImageFromPoint = function(point, sizeX, sizeY, scale){
+	var range = this.range();
+	var windowWidth = sizeX;
+	var windowHeight = sizeY;
+	scale = scale !== undefined ? scale : Math.min(this.width()/windowWidth, this.height()/windowHeight);
+	var rotation = 0.0; // ????? SHOULD ROTATE TO primary gradient direction?
+	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
+	return img;
+}
+
 AreaMap.Cell.prototype.getBestFeaturePoint = function(){
+//return new V2D(this.width()*0.5, this.height()*0.5);
+
+
 	var sides = 1; // include pixel border for calculations
 	var windowWidth = this.width();
 	var windowHeight = this.height();
@@ -836,15 +900,19 @@ AreaMap.Cell.prototype.getBestFeaturePoint = function(){
 
 	windowWidth += 2*sides;
 	windowHeight += 2*sides;
-
-	var rot = 0.0;
 	
 	var rotation = 0.0;
 	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
-	
-	var gry = img.gry();
 
-	var points = R3D.pointsCornerDetector(gry, img.width(), img.height());//, 0.05, 1.0, 0.05);
+	// IF YOU LIKE TEXTURES:
+	var result = ImageMat.totalCostToMoveAny(img);
+	var points = Code.findExtrema2DFloat(result, img.width(),img.height());
+
+	// IF YOU LIKE CORNERS:
+	// var gry = img.gry();
+	// var points = R3D.pointsCornerDetector(gry, img.width(), img.height());//, 0.05, 1.0, 0.05);
+
+
 	if(points && points.length>0){
 		points = points.sort(function(a,b){
 			//return Math.abs(a.z)<Math.abs(b.z) ? -1 : 1;
@@ -869,6 +937,133 @@ AreaMap.Cell.prototype.getBestFeaturePoint = function(){
 	// default to center
 	return new V2D(this.width()*0.5, this.height()*0.5);
 };
+
+
+AreaMap.Cell.prototype.bestMatchForCellInNeighborhood = function(cell){
+	var cellA = this;
+	var cellB = cell;
+	// go thru all A's
+	var match;
+	var bestMatch = null;
+	match = bestMatchForCell(cellA);
+	if(bestMatch==null || match.score()>bestMatch.score()){
+		bestMatch = match;
+	}
+}
+
+AreaMap.Cell.prototype.bestMatchForCell = function(cell){
+	// ...
+	var cellA = this;
+	var cellB = cell;
+	// get feature image from cellB
+	var featurePoint = cellB.getBestFeaturePoint();
+	var topLeftPoint = cellB.topLeftPoint();
+	var absoluteFeaturePoint = featurePoint.copy().add(topLeftPoint);
+	var needleImage = cellB.getFeatureImageFromPoint(absoluteFeaturePoint);
+	console.log(needleImage)
+
+	// do SOSD on THIS cell
+	var haystackImage = cellA.getHaystackImageForOtherCell(cellB);
+	console.log(haystackImage)
+
+
+	// pick point with best SOSD
+	var sosdImage = ImageMat.convolveSSD(haystackImage, needleImage);
+	console.log(sosdImage)
+
+	// scores
+	var scores = ImageMat.convolveSSDScores(haystackImage, needleImage);
+
+
+	var locations  = Code.findExtrema2DFloat(scores.value,scores.width,scores.height);
+	locations = locations.sort(function(a,b){
+		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
+	});
+
+
+var diffSizeX = haystackImage.width() - sosdImage.width();
+var diffSizeY = haystackImage.height() - sosdImage.height();
+var needleSizeX = needleImage.width();
+var needleSizeY = needleImage.height();
+
+	var bestLocation = null;
+	if(locations.length>0){
+		bestLocation = locations[0].copy();
+		// bestLocation.x += diffSizeX*0.5 + needleSizeX*0.5;
+		// bestLocation.y += diffSizeY*0.5 + needleSizeY*0.5;
+	}
+
+var img, d;
+var sca = 3.0;
+//img = needle.gry();
+img = needleImage;
+img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(100,150);
+GLOBALSTAGE.addChild(d);
+
+img = haystackImage;
+img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(500,150);
+GLOBALSTAGE.addChild(d);
+
+
+img = sosdImage;
+img.normalFloat01();
+img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(350,200);
+GLOBALSTAGE.addChild(d);
+
+
+	console.log(locations);
+	// if(locations.length>0){
+	// 	locations = [locations[0]];
+	// }
+	for(var i=0; i<locations.length; ++i){
+		var p, c;
+		p = locations[i];
+			c = new DO();
+			c.graphics().setLine(1.0, 0xFF990000);
+			c.graphics().setFill(0xFFFF6666);
+			c.graphics().beginPath();
+			c.graphics().drawCircle(0 + p.x*sca, 0 + p.y*sca, 2);
+			c.graphics().endPath();
+			c.graphics().strokeLine();
+			c.graphics().fill();
+				c.matrix().translate(350, 200);
+			GLOBALSTAGE.addChild(c);
+		//
+		p = locations[i];
+		c = new DO();
+		c.graphics().setLine(1.0, 0x66990000);
+		c.graphics().setFill(0x00FF6666);
+		c.graphics().beginPath();
+		//c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca, Math.pow(p.z,0.25)*0.75);
+		//c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca, Math.pow(p.z,1)*0.5);
+		c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca,  3 + i*2);
+		c.graphics().endPath();
+		c.graphics().strokeLine();
+		c.graphics().fill();
+			c.matrix().translate(500, 150);
+		GLOBALSTAGE.addChild(c);
+	}
+	var topLeftA = cellA.topLeftPoint();
+	var topLeftB = cellB.topLeftPoint();
+	var pointA = new V2D(topLeftA.x, topLeftA.y);
+	var pointB = new V2D(topLeftB.x + bestLocation.x + diffSizeX*0.5 + needleSizeX*0.5, topLeftB.y + bestLocation.y + diffSizeY*0.5 + needleSizeY*0.5);
+	var rangeA = cellA.range();
+	var rangeB = cellB.range();
+	var featureA = new AreaMap.Feature(pointA);
+	var featureB = new AreaMap.Feature(pointB);
+	var score = bestLocation.z;
+	var match = new AreaMap.Match(rangeA,featureA, rangeB,featureB, score);
+	return match;
+}
 
 AreaMap.Cell.prototype.bestMatchForFeature = function(feature){
 	var cell = feature.cell();
@@ -1030,19 +1225,34 @@ AreaMap.Cell.prototype.removeFeature = function(feature){
 		feature.kill();
 	}
 };
-AreaMap.Cell.prototype.neighbors = function(){
-	var row = this.row();
-	var col = this.col();
-	var neighbors = [];
-	var left = this.left();
-	var right = this.right();
-	var top = this.top();
-	var bottom = this.bottom();
-	if(left){ neighbors.push( left ); }
-	if(right){ neighbors.push( right ); }
-	if(top){ neighbors.push( top ); }
-	if(bottom){ neighbors.push( bottom ); }
-	return neighbors;
+AreaMap.Cell.prototype.neighbors = function(distance, list, notFirst){
+	list = list!==undefined ? list : [];
+	HERE
+	for(){
+		// add immediate neighbors
+		if(distance>0){
+			neighbor.neighbors(distance-1, list, true);
+		}
+	}
+	// zero list before return
+	if (!notFirst){
+		for(i=0; i<list.length; ++i){
+			list[i].flag(0);
+		}
+	}
+	return list;
+	// var row = this.row();
+	// var col = this.col();
+	// var neighbors = [];
+	// var left = this.left();
+	// var right = this.right();
+	// var top = this.top();
+	// var bottom = this.bottom();
+	// if(left){ neighbors.push( left ); }
+	// if(right){ neighbors.push( right ); }
+	// if(top){ neighbors.push( top ); }
+	// if(bottom){ neighbors.push( bottom ); }
+	// return neighbors;
 }
 AreaMap.Cell.prototype.left = function(left, type){
 	return this.range().cellFromRowCol(this._row,this._col-1);
@@ -1080,11 +1290,11 @@ AreaMap.Cell.prototype.definitiveUniqueFeature = function(){ // most unique poin
 // ------------------------------------------------------------------------------------------------------------------------------------------------ Feature
 AreaMap.Feature = function(point, cell){
 	this._point = null;
-	this._cell = null;
-	this._gradientDirection = new V2D(0,0);
-	this._relativeScale = 1.0;
+	//this._cell = null;
+	//this._gradientDirection = new V2D(0,0);
+	//this._relativeScale = 1.0;
 	this.point(point);
-	this.cell(cell);
+	//this.cell(cell);
 };
 AreaMap.Feature.prototype.point = function(point){
 	if(point!==undefined){
@@ -1107,8 +1317,11 @@ AreaMap.Feature.NEEDLE_IMAGE_HEIGHT = 7;
 AreaMap.Feature.CELL_IMAGE_WIDTH = 25;
 AreaMap.Feature.CELL_IMAGE_HEIGHT = 25;
 
-AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 5;//11;
-AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 5;//11;
+AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 11;
+AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 11;
+
+AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH = 5; // low => very localized, high => very general
+AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT = 5;
 
 
 AreaMap.Feature.getFeatureImage = function(range, point){
