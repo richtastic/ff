@@ -3942,9 +3942,9 @@ Code.findExtrema2DFloat = function(d, wid,hei){
 			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
 			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
 
-				// result = new V3D(i+1,j+1,d4);
-				// list.push(result);
-				// continue;
+				result = new V3D(i+1,j+1,d4);
+				list.push(result);
+				continue;
 
 
 				result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);

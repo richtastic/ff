@@ -1051,7 +1051,8 @@ ImageMat.convolveSSDScores = function(haystack,needle) {
 	var count = wid*hei;	
 	var scores = [];
 	for(i=0; i<count; ++i){
-		scores[i] = (red[i]+grn[i]+blu[i]); // OK
+		//scores[i] = (red[i]+grn[i]+blu[i]);
+		//scores[i] = red[i] + grn[i] + blu[i] + gry[i];
 		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
 		//scores[i] = gry[i];
 		//scores[i] = red[i]*grn[i]*blu[i];
@@ -1083,6 +1084,7 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 	var maxN = Math.max.apply(this,needle);
 	var rangeN = maxN-minN;
 	rangeN = rangeN==0.0 ? 1.0 : 1.0/rangeN;
+rangeN = 1.0;
 	//
 	var result = new Array();
 	for(var j=0; j<resultHeight; ++j){
@@ -1103,6 +1105,7 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 			}
 			var rangeH = maxH-minH;
 			rangeH = rangeH==0.0 ? 1.0 : 1.0/rangeH;
+rangeH = 1.0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
 					var nIndex = nJ*needleWidth + nI;

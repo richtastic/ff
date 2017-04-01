@@ -128,10 +128,15 @@ AreaMap.prototype.show = function(rangeA, rangeB){
 
 	var offsetX = 0;
 	var offsetY = 0;
-var testAI = 6;
-var testAJ = 4;
-var testBI = 7;
-var testBJ = 2;
+// var testAI = 6;
+// var testAJ = 4;
+// var testBI = 7;
+// var testBJ = 2;
+
+// var testAI = 6;
+// var testAJ = 4;
+// var testBI = 7;
+// var testBJ = 4;
 
 // var testAI = 9;
 // var testAJ = 3;
@@ -142,6 +147,11 @@ var testBJ = 2;
 // var testAJ = 7;
 // var testBI = 6;
 // var testBJ = 7;
+
+var testAI = 6;
+var testAJ = 4;
+var testBI = 7;
+var testBJ = 3;
 
 	var ranges = [rangeA, rangeB];
 	for(k=0; k<ranges.length; ++k){
@@ -207,8 +217,11 @@ var testBJ = 2;
 	}
 
 	// show neighborhood with best matching SSOD
-	var cellA = rangeA.cell(testAI,testAJ);
+	//var cellA = rangeA.cell(testAI,testAJ);
+			//var cellA = rangeB.cell(testBI+1,testBJ-1);
+			var cellA = rangeB.cell(testBI+1,testBJ-1);
 	var cellB = rangeB.cell(testBI,testBJ);
+
 	console.log(cellA);
 	console.log(cellB);
 	console.log("---------------------");
@@ -769,7 +782,8 @@ AreaMap.Cell.prototype.toString = function(){
 	return "["+this._id+" | "+this._row+","+this._col+"]";
 }
 AreaMap.Cell._ID = 0;
-AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN = -1;
+AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN = 0;
+AreaMap.Cell.NEIGHBOR_TYPE_VISITED = 1;
 // AreaMap.Cell.NEIGHBOR_TYPE_SEARCHED = 1;
 AreaMap.Cell.MAXIMUM_NEIGHBOR_ITERATIONS = 3;
 AreaMap.Cell.prototype.flag = function(flag){
@@ -857,7 +871,7 @@ AreaMap.Cell.prototype.getFeatureImageFromPoint = function(point){
 	var scale = Math.max(scaleX, scaleY);
 	var width = AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH;
 	var height = AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT;
-	console.log("NEEDLE SIZE: "+width+"x"+height+". @ "+scale);
+	//console.log("NEEDLE SIZE: "+width+"x"+height+". @ "+scale);
 	return this.getImageFromPoint(point, width, height, scale);
 }
 AreaMap.Cell.prototype.getHaystackImageForOtherCell = function(cell){
@@ -871,7 +885,7 @@ AreaMap.Cell.prototype.getHaystackImageForOtherCell = function(cell){
 	var scale = Math.max(scaleX, scaleY);
 	var width = Math.ceil(this.width()/scale) + Math.ceil(AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH*0.5)*2; // border around for SoSD
 	var height = Math.ceil(this.height()/scale) + Math.ceil(AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT*0.5)*2;
-	console.log("HAYSTACK SIZE: "+width+"x"+height+". @ "+scale);
+	//console.log("HAYSTACK SIZE: "+width+"x"+height+". @ "+scale);
 	return this.getImageFromPoint(this.centerPoint(), width, height, scale);
 }
 AreaMap.Cell.prototype.getImageFromPoint = function(point, sizeX, sizeY, scale){
@@ -943,12 +957,84 @@ AreaMap.Cell.prototype.bestMatchForCellInNeighborhood = function(cell){
 	var cellA = this;
 	var cellB = cell;
 	// go thru all A's
-	var match;
+	var data, match, score;
 	var bestMatch = null;
-	match = bestMatchForCell(cellA);
-	if(bestMatch==null || match.score()>bestMatch.score()){
-		bestMatch = match;
+	// var neighborhood = cellA.neighborhood(0);
+	// console.log(neighborhood.length);
+	// match = bestMatchForCell(cellA);
+	// if(bestMatch==null || match.score()>bestMatch.score()){
+	// 	bestMatch = match;
+	// }
+
+	var neighbors = cellA.neighborhood(3);
+	var i, cell, match;
+var bestMatch = null;
+	for(i=0; i<neighbors.length; ++i){
+		cell = neighbors[i];
+
+		data = cell.bestMatchForCell(cellB);
+
+
+var img, d, c, p;
+var sca = 1.0;
+var topLeft = cell.topLeftPoint();
+img = cell.getCellImage();
+img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(400 + topLeft.x, 0 + topLeft.y);
+GLOBALSTAGE.addChild(d);
+	
+		if(data){
+			match = data["match"];
+			var root = data["root"];
+			root.matrix().translate(0 + i*60, 300);
+			//console.log(match);
+			var pointB = match.pointA().point();
+			var score = match.score();
+			console.log(i+"SCORE: "+score)
+if(bestMatch==null || bestMatch.score() > score){
+	bestMatch = match;
+}
+//			console.log(pointB+"");
+
+
+p = pointB;
+c = new DO();
+c.graphics().setLine(1.0, 0xFF990000);
+c.graphics().setFill(0x00FF6666);
+c.graphics().beginPath();
+//c.graphics().drawCircle(0 + p.x, 0 + p.y, 3);
+c.graphics().drawCircle(0, 0, 2*Math.pow(score,0.15));
+c.graphics().endPath();
+c.graphics().strokeLine();
+c.graphics().fill();
+	//c.matrix().translate(400 + topLeft.x, 0 + topLeft.y);
+	c.matrix().translate(400, 0);
+	c.matrix().translate(p.x, p.y);
+GLOBALSTAGE.addChild(c);
+		}
+
 	}
+
+	// BEST:
+	//console.log(bestMatch)
+score = bestMatch.score();
+console.log("bestMatch : "+score);
+p = bestMatch.pointA().point();
+c = new DO();
+c.graphics().setLine(1.0, 0xFF00FF55);
+c.graphics().setFill(0x006666FF);
+c.graphics().beginPath();
+//c.graphics().drawCircle(0, 0, 2*Math.pow(score,0.15));
+c.graphics().drawCircle(0, 0, 5);
+c.graphics().endPath();
+c.graphics().strokeLine();
+c.graphics().fill();
+	c.matrix().translate(400, 0);
+	c.matrix().translate(p.x, p.y);
+GLOBALSTAGE.addChild(c);
+
 }
 
 AreaMap.Cell.prototype.bestMatchForCell = function(cell){
@@ -960,16 +1046,16 @@ AreaMap.Cell.prototype.bestMatchForCell = function(cell){
 	var topLeftPoint = cellB.topLeftPoint();
 	var absoluteFeaturePoint = featurePoint.copy().add(topLeftPoint);
 	var needleImage = cellB.getFeatureImageFromPoint(absoluteFeaturePoint);
-	console.log(needleImage)
+//	console.log(needleImage)
 
 	// do SOSD on THIS cell
 	var haystackImage = cellA.getHaystackImageForOtherCell(cellB);
-	console.log(haystackImage)
+//	console.log(haystackImage)
 
 
 	// pick point with best SOSD
 	var sosdImage = ImageMat.convolveSSD(haystackImage, needleImage);
-	console.log(sosdImage)
+//	console.log(sosdImage)
 
 	// scores
 	var scores = ImageMat.convolveSSDScores(haystackImage, needleImage);
@@ -989,26 +1075,30 @@ var needleSizeY = needleImage.height();
 	var bestLocation = null;
 	if(locations.length>0){
 		bestLocation = locations[0].copy();
+		//console.log(bestLocation+" = "+locations[0])
 		// bestLocation.x += diffSizeX*0.5 + needleSizeX*0.5;
 		// bestLocation.y += diffSizeY*0.5 + needleSizeY*0.5;
 	}
 
+var root = new DO();
+
+GLOBALSTAGE.addChild(root);
 var img, d;
-var sca = 3.0;
+var sca = 2.0;
 //img = needle.gry();
 img = needleImage;
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 d = new DOImage(img);
 d.matrix().scale(sca);
-d.matrix().translate(100,150);
-GLOBALSTAGE.addChild(d);
+d.matrix().translate(0, 50);
+root.addChild(d);
 
 img = haystackImage;
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 d = new DOImage(img);
 d.matrix().scale(sca);
-d.matrix().translate(500,150);
-GLOBALSTAGE.addChild(d);
+d.matrix().translate(0,100);
+root.addChild(d);
 
 
 img = sosdImage;
@@ -1016,11 +1106,16 @@ img.normalFloat01();
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 d = new DOImage(img);
 d.matrix().scale(sca);
-d.matrix().translate(350,200);
-GLOBALSTAGE.addChild(d);
+d.matrix().translate(0,200);
+root.addChild(d);
 
 
-	console.log(locations);
+
+if(!bestLocation){
+	return null;
+}
+
+//	console.log(locations);
 	// if(locations.length>0){
 	// 	locations = [locations[0]];
 	// }
@@ -1028,15 +1123,16 @@ GLOBALSTAGE.addChild(d);
 		var p, c;
 		p = locations[i];
 			c = new DO();
-			c.graphics().setLine(1.0, 0xFF990000);
-			c.graphics().setFill(0xFFFF6666);
-			c.graphics().beginPath();
-			c.graphics().drawCircle(0 + p.x*sca, 0 + p.y*sca, 2);
-			c.graphics().endPath();
-			c.graphics().strokeLine();
-			c.graphics().fill();
-				c.matrix().translate(350, 200);
-			GLOBALSTAGE.addChild(c);
+			// c.graphics().setLine(1.0, 0xFF990000);
+			// c.graphics().setFill(0x00FF6666);
+			// c.graphics().beginPath();
+			// //c.graphics().drawCircle(0 + p.x*sca, 0 + p.y*sca, 2);
+			// c.graphics().drawCircle(diffSizeX*0.5 + p.x*sca, diffSizeY*0.5 + p.y*sca,  3 + i*2);
+			// c.graphics().endPath();
+			// c.graphics().strokeLine();
+			// c.graphics().fill();
+			// 	c.matrix().translate(0, 100);
+			// root.addChild(c);
 		//
 		p = locations[i];
 		c = new DO();
@@ -1045,24 +1141,34 @@ GLOBALSTAGE.addChild(d);
 		c.graphics().beginPath();
 		//c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca, Math.pow(p.z,0.25)*0.75);
 		//c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca, Math.pow(p.z,1)*0.5);
-		c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca,  3 + i*2);
+		//c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca,  3 + i*2);
+		//c.graphics().drawCircle((diffSizeX*0.5 + needleSizeX*0.5 + p.x)*sca, (diffSizeY*0.5 + needleSizeY*0.5 + p.y)*sca,  3 + i*2);
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*2);
 		c.graphics().endPath();
 		c.graphics().strokeLine();
 		c.graphics().fill();
-			c.matrix().translate(500, 150);
-		GLOBALSTAGE.addChild(c);
+			c.matrix().translate(0, 200);
+		root.addChild(c);
 	}
 	var topLeftA = cellA.topLeftPoint();
 	var topLeftB = cellB.topLeftPoint();
-	var pointA = new V2D(topLeftA.x, topLeftA.y);
-	var pointB = new V2D(topLeftB.x + bestLocation.x + diffSizeX*0.5 + needleSizeX*0.5, topLeftB.y + bestLocation.y + diffSizeY*0.5 + needleSizeY*0.5);
+//	console.log(topLeftB+""+topLeftA);
+	//var pointA = new V2D(topLeftA.x, topLeftA.y);
+	//var pointB = new V2D(topLeftB.x + bestLocation.x + diffSizeX*0.5 + needleSizeX*0.5, topLeftB.y + bestLocation.y + diffSizeY*0.5 + needleSizeY*0.5);
+	//var pointB = new V2D(topLeftB.x + bestLocation.x, topLeftB.y + bestLocation.y);
+	//var pointB = new V2D(topLeftB.x + 0, topLeftB.y + 0);
+	var pointA = new V2D(topLeftA.x + diffSizeX*0.5 + bestLocation.x, topLeftA.y + diffSizeY*0.5 + bestLocation.y);
+	var pointB = new V2D(topLeftB.x, topLeftB.y);
 	var rangeA = cellA.range();
 	var rangeB = cellB.range();
 	var featureA = new AreaMap.Feature(pointA);
 	var featureB = new AreaMap.Feature(pointB);
 	var score = bestLocation.z;
 	var match = new AreaMap.Match(rangeA,featureA, rangeB,featureB, score);
-	return match;
+
+
+	var data = {"match": match, "root":root};
+	return data;
 }
 
 AreaMap.Cell.prototype.bestMatchForFeature = function(feature){
@@ -1225,34 +1331,53 @@ AreaMap.Cell.prototype.removeFeature = function(feature){
 		feature.kill();
 	}
 };
-AreaMap.Cell.prototype.neighbors = function(distance, list, notFirst){
+AreaMap.Cell.prototype.neighborhood = function(distance, list, notFirst){ // 0=1, 1=5, 2=13, 3=25, 4=41, ... 1 + 2*i*(i+1)
+	distance = distance!==undefined ? distance : 0;
 	list = list!==undefined ? list : [];
-	HERE
-	for(){
-		// add immediate neighbors
-		if(distance>0){
-			neighbor.neighbors(distance-1, list, true);
+	var nextDistance = distance - 1;
+	var i, neighbor, neighbors = [];
+	if(distance>=0){
+		neighbors.push(this);
+	}
+	if(nextDistance>=0){
+		var immediate = this.neighborsImmediate();
+		Code.arrayPushArray(neighbors, immediate);
+	}
+	for(i=0; i<neighbors.length; ++i){
+		neighbor = neighbors[i];
+		if(neighbor.flag()==AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN){
+			list.push(neighbor);
+			neighbor.flag(AreaMap.Cell.NEIGHBOR_TYPE_VISITED);
+		}
+	}
+	if(nextDistance>=0){
+		for(i=0; i<neighbors.length; ++i){
+			neighbor = neighbors[i];
+			neighbor.neighborhood(nextDistance, list, true);
 		}
 	}
 	// zero list before return
 	if (!notFirst){
 		for(i=0; i<list.length; ++i){
-			list[i].flag(0);
+			list[i].flag(AreaMap.Cell.NEIGHBOR_TYPE_UNKNOWN);
 		}
 	}
 	return list;
-	// var row = this.row();
-	// var col = this.col();
-	// var neighbors = [];
-	// var left = this.left();
-	// var right = this.right();
-	// var top = this.top();
-	// var bottom = this.bottom();
-	// if(left){ neighbors.push( left ); }
-	// if(right){ neighbors.push( right ); }
-	// if(top){ neighbors.push( top ); }
-	// if(bottom){ neighbors.push( bottom ); }
-	// return neighbors;
+}
+AreaMap.Cell.prototype.neighborsImmediate = function(){
+	var row = this.row();
+	var col = this.col();
+	var neighbors = [];
+	var left = this.left();
+	var right = this.right();
+	var top = this.top();
+	var bottom = this.bottom();
+	var neighbors = [];
+	if(left){ neighbors.push( left ); }
+	if(right){ neighbors.push( right ); }
+	if(top){ neighbors.push( top ); }
+	if(bottom){ neighbors.push( bottom ); }
+	return neighbors;
 }
 AreaMap.Cell.prototype.left = function(left, type){
 	return this.range().cellFromRowCol(this._row,this._col-1);
@@ -1317,11 +1442,11 @@ AreaMap.Feature.NEEDLE_IMAGE_HEIGHT = 7;
 AreaMap.Feature.CELL_IMAGE_WIDTH = 25;
 AreaMap.Feature.CELL_IMAGE_HEIGHT = 25;
 
-AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 11;
-AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 11;
+AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 25;
+AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 25;
 
-AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH = 5; // low => very localized, high => very general
-AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT = 5;
+AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH =  25; // low => very localized, high => very general
+AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT = 25;
 
 
 AreaMap.Feature.getFeatureImage = function(range, point){
