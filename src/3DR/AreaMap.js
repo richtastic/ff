@@ -467,6 +467,7 @@ AreaMap.Range.prototype.mergeRegions = function(regionA, regionB){
 }
 AreaMap.Range.prototype.image = function(image, width, height){
 	if(image!==undefined){
+		console.log(image)
 		if(Code.isArray(image)){
 			this._image = new ImageMat(width,height,image);
 		}else if( Code.ofa(image,ImageMat) ){ // imagemat
@@ -1058,11 +1059,14 @@ AreaMap.Cell.prototype.bestMatchForCell = function(cell){
 
 
 	// pick point with best SOSD
-	var sosdImage = ImageMat.convolveSSD(haystackImage, needleImage);
+	//var sosdImage = ImageMat.convolveSSD(haystackImage, needleImage);
+	var sosdImage = ImageMat.convolveConv(haystackImage, needleImage);
+	
 //	console.log(sosdImage)
 
 	// scores = ssds
-	var scores = ImageMat.convolveSSDScores(haystackImage, needleImage);
+	//var scores = ImageMat.convolveSSDScores(haystackImage, needleImage);
+	var scores = ImageMat.convolveConvScores(haystackImage, needleImage);
 	var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height);
 	locations = locations.sort(function(a,b){
 		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
@@ -1589,12 +1593,89 @@ https://www1.ethz.ch/igp/photogrammetry/education/lehrveranstaltungen/PCV_HS14/c
 
 
 
-/*
+ZFeature = function(){
+	this._eigen = 1.0 // ratio of gradient/primary scale over secondary scale
+	this._scale = 1.0; // overall image scale
+	this._rotation = 0.0; // main gradient orientation
+	this._zoneCols = 4; // rows/cols
+	this._zoneSize = 4; // pixels a zone edge covers
+	this._zones = [];
+	// zone count =  this._zoneCols * this._zoneCols
+}
+ZFeature.prototype.setupWithImage = function(range, point, scale){
+	// get square
+	var size = this._zoneSize * this._zoneCols;
+	var win = range.imageAtPoint(point,size,size,1.0,0.0);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
+	var d;
+	d = new DOImage(img);
+	d.matrix().translate(100, 200);
+	GLOBALSTAGE.addChild(d);
+	// find best scale space location
+	// find best rotation
+	var scale = 1.0;
+	console.log(point,size)
+	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size);
+	// ge = function(x,y,scale,sigma,w,h,matrix){
+	// x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix
 
-TODO:
-avoid cells with no texture
+console.log("SETUP BLUR");
+	var gradientR = ImageMat.gradientVector(img.red(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
+	var gradientG = ImageMat.gradientVector(img.grn(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
+	var gradientB = ImageMat.gradientVector(img.blu(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
+	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
+	//var gradientAll = ImageMat.gradientVector(img.red(),img.width(),img.height());
+	//console.log(gradientAll)
+	var win = img;
+	img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
+	var d;
+	d = new DOImage(img);
+	d.matrix().translate(200, 300);
+	GLOBALSTAGE.addChild(d);
 
-*/
+	// find best skewing
+	
+	// get new square @ correct rotation & scale
+
+
+	// ...here
+	// generate zones
+	var zone = new ZFeature.Zone();
+}
+
+ZFeature.Zone = function(){
+	this._rotations = [];
+}
+ZFeature.Zone.prototype.setupWithImage = function(gradients){ // image should be ready for extraction
+	// ...
+	this._rotations = [];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

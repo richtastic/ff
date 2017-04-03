@@ -501,7 +501,7 @@ ImageMat.getLaplaceOfGaussianWindow = function(width,height, sigma){
 	return matrix;
 }
 ImageMat.gaussian2DFrom1DFloat = function(source, wid,hei, gauss1D){
-	return ImageMat.convolve( ImageMat.convolve(source,wid,hei, gauss1D,1,gauss1D.length), wid,hei, gauss1D,gauss1D.length,1);
+	return ImageMat.convolve( ImageMat.convolve(source,wid,hei, gauss1D,1,gauss1D.length).value, wid,hei, gauss1D,gauss1D.length,1).value;
 }
 
 
@@ -950,11 +950,25 @@ ImageMat.totalCostToMoveAny = function(image){
 	var hei = result.height();
 	var len = wid * hei;
 	var sum = Code.newArrayZeros(len);
-	var i;
+	var i, den, num;
 	for(i=0; i<len; ++i){ // square?
 		//sum[i] = red[i] + grn[i] + blu[i];
 		//sum[i] = red[i] * grn[i] * blu[i];
-		sum[i] = (red[i] * grn[i] * blu[i]) / (red[i] + grn[i] + blu[i]);
+		num = (red[i] * grn[i] * blu[i]);
+		den = (red[i] + grn[i] + blu[i]);
+
+		sum[i] = den;
+
+		// if(den==0){
+		// 	den = 1.0;
+		// }
+		// sum[i] = num / den;
+
+		// if(num==0){
+		// 	num = 1.0;
+		// }
+		// sum[i] = den/num;
+		
 	}
 	return sum;
 }
@@ -1028,29 +1042,35 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 			result[jIW+i] = sum;
 		}
 	}
-	return result;
+	return {"value":result,"width":imageWidth,"height":imageHeight};
 }
 // INNER CONVOLUTION?
 
 ImageMat.convolveConvScores = function(haystack,needle) {
-	//var gry = ImageMat.convolve(haystack.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());
 	var gry = ImageMat.convolve(haystack.gry(),haystack.width(),haystack.height(), needle.gry(),needle.width(),needle.height());
 	var red = ImageMat.convolve(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
 	var grn = ImageMat.convolve(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
 	var blu = ImageMat.convolve(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
-	var wid = haystack.width()-needle.width()+1;
-	var hei = haystack.height()-needle.height()+1;
-	var count = wid*hei;	
+	var wid = red.width;
+	var hei = red.height;
+	var count = wid*hei;
+		gry = gry.value;
+		red = red.value;
+		grn = grn.value;
+		blu = blu.value;
 	var scores = [];
 	for(i=0; i<count; ++i){
 		//scores[i] = (red[i]+grn[i]+blu[i]);
 		//scores[i] = red[i] + grn[i] + blu[i] + gry[i];
-		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
+		scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
 		//scores[i] = gry[i];
 		//scores[i] = red[i]*grn[i]*blu[i];
 		//scores[i] = red[i]*grn[i]*blu[i] + gry[i];
-		scores[i] = Math.abs(red[i]*grn[i]*blu[i]*gry[i]);
+		//scores[i] = Math.abs(red[i]*grn[i]*blu[i]*gry[i]);
+		//scores[i] = grn[i]*blu[i]*gry[i];
 	}
+	//scores = red[i];
+	//scores = haystack.gry();
 	return {"value":scores, "width":wid, "height":hei};
 }
 
@@ -1063,21 +1083,18 @@ ImageMat.convolveSSDScores = function(haystack,needle) {
 		red = red.value;
 		grn = grn.value;
 		blu = blu.value;
-			// gry = ImageMat.normalFloat01(gry);
-			// red = ImageMat.normalFloat01(red);
-			// grn = ImageMat.normalFloat01(grn);
-			// blu = ImageMat.normalFloat01(blu);
 	var wid = haystack.width()-needle.width()+1;
 	var hei = haystack.height()-needle.height()+1;
-	var count = wid*hei;	
+	var count = wid*hei;
 	var scores = [];
 	for(i=0; i<count; ++i){
-		//scores[i] = (red[i]+grn[i]+blu[i]);
+		//scores[i] = red[i]+grn[i]+blu[i];
 		//scores[i] = red[i] + grn[i] + blu[i] + gry[i];
 		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
 		//scores[i] = gry[i];
 		//scores[i] = red[i]*grn[i]*blu[i];
 		//scores[i] = red[i]*grn[i]*blu[i] + gry[i];
+		//scores[i] = red[i]*grn[i]*blu[i]*gry[i];
 		scores[i] = red[i]*grn[i]*blu[i]*gry[i];
 	}
 	return {"value":scores, "width":wid, "height":hei};
@@ -1087,6 +1104,12 @@ ImageMat.convolveSSD = function(haystack,needle) {
 	var red = ImageMat.convolveSSDFloat(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
 	var grn = ImageMat.convolveSSDFloat(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
 	var blu = ImageMat.convolveSSDFloat(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
+	return new ImageMat(red.width,red.height, red.value,grn.value,blu.value);
+}
+ImageMat.convolveConv = function(haystack,needle) {
+	var red = ImageMat.convolve(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
+	var grn = ImageMat.convolve(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
+	var blu = ImageMat.convolve(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
 	return new ImageMat(red.width,red.height, red.value,grn.value,blu.value);
 }
 ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, needle,needleWidth,needleHeight) { // normalized ssd single channel
@@ -1101,39 +1124,43 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 		return [];
 	}
 	//
-	var minN = Math.min.apply(this,needle);
-	var maxN = Math.max.apply(this,needle);
-	var rangeN = maxN-minN;
-	rangeN = rangeN==0.0 ? 1.0 : 1.0/rangeN;
-rangeN = 1.0;
+	// var minN = Math.min.apply(this,needle);
+	// var maxN = Math.max.apply(this,needle);
+// 	var rangeN = maxN-minN;
+// 	rangeN = rangeN==0.0 ? 1.0 : 1.0/rangeN;
+// rangeN = 1.0;
 	//
 	var result = new Array();
 	for(var j=0; j<resultHeight; ++j){
 		for(var i=0; i<resultWidth; ++i){
 			var resultIndex = j*resultWidth + i;
 			var ssd = 0;
-			var maxH = null;
-			var minH = null;
+			// var maxH = null;
+			// var minH = null;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
 					var nIndex = nJ*needleWidth + nI;
 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
 					var n = needle[nIndex];
 					var h = haystack[hIndex];
-					maxN = maxN==null || maxN<n ? n : maxN;
-					minN = minN==null || minN>n ? n : minN;
+					// maxN = maxN==null || maxN<n ? n : maxN;
+					// minN = minN==null || minN>n ? n : minN;
 				}
 			}
-			var rangeH = maxH-minH;
-			rangeH = rangeH==0.0 ? 1.0 : 1.0/rangeH;
-rangeH = 1.0;
+// 			var rangeH = maxH-minH;
+// 			rangeH = rangeH==0.0 ? 1.0 : 1.0/rangeH;
+// rangeH = 1.0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
 					var nIndex = nJ*needleWidth + nI;
 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
 					var n = needle[nIndex];
 					var h = haystack[hIndex];
-					ssd += Math.pow( rangeN*(n-minN) - rangeH*(h-minH),2);
+					//ssd += Math.pow( rangeN*(n-minN) - rangeH*(h-minH),2);
+					//ssd += Math.abs( rangeN*(n-minN) - rangeH*(h-minH));
+					//ssd += Math.abs( (n-minN) - (h-minH));
+					ssd += Math.abs(n - h);
+					//ssd += Math.pow(n - h,2);
 				}
 			}
 			result[resultIndex] = ssd;
@@ -1727,6 +1754,7 @@ ImageMat.derivativeY = function(src,wid,hei, x,y){
 ImageMat.gradientVector = function(src,wid,hei, x,y){
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
 	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
+	console.log(gradX,gradY);
 	if(x!==undefined && y!==undefined){
 		return new V2D(gradX,gradY);
 	}

@@ -106,3 +106,31 @@ a good point migh be one that if you move left/right or rotate or scale a little
 
 
 
+
+
+
+
+
+
+
+
+
+
+matching individual features
+
+
+- start with SSD to limit potential points
+- 
+
+
+- SSD off by 0.5 a pixel results in trash
+- SAD is better than SSD
+- dynamic ranging (normalized) SSD is worse than without ranging
+
+
+
+
+
+
+
+

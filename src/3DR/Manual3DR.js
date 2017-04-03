@@ -1354,16 +1354,29 @@ var imageWidthB = imageSourceB.width;
 var imageHeightB = imageSourceB.height;
 
 
-var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
-var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
-
-	var original = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	
+	var original = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+	var testing = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
 	//var point = new V2D(original.width()*0.5, original.height()*0.5);
-	var point = new V2D(200,130);
+	//var point = new V2D(200,130);
+	//var point = new V2D(201,41.0); // ...
+	//var point = new V2D(200.5,40.5); // ...
+	//var point = new V2D(200.5,40);
+	//var point = new V2D(200,40);
+	//var point = new V2D(210,70);
+	//var point = new V2D(215,83);
+			// FROM A:
+			//var point = new V2D(227,83); // face
+			//var point = new V2D(189,187); // glasses
+			var point = new V2D(364,176); // mouse
+	// .5 is exact
 	var scale = 1.0;
-	var newWidth = 17;
-	var newHeight = 17;
-	var scaled = original.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
+	var newWidth = 11;
+	var newHeight = 11;
+	//var scaled = original.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
+	var scaled = testing.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
 	img = GLOBALSTAGE.getFloatRGBAsImage(scaled.red(),scaled.grn(),scaled.blu(), scaled.width(),scaled.height());
 	var d;
 	d = new DOImage(img);
@@ -1371,8 +1384,26 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
 	GLOBALSTAGE.addChild(d);
 
 
+
+	console.log("MOVE COST");
+	var moveCost = ImageMat.totalCostToMoveAny(original);
+	
+	ImageMat.normalFloat01(moveCost);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(moveCost,moveCost,moveCost, original.width(),original.height());
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(400,300);
+	GLOBALSTAGE.addChild(d);
+
+
+/*
 	console.log("SSD");
 	var sosdImage = ImageMat.convolveSSD(original, scaled);
+	//console.log("CON");
+	//var sosdImage = ImageMat.convolveConv(original, scaled);
+
+	console.log("A");
 	img = sosdImage;
 	img.normalFloat01();
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
@@ -1380,34 +1411,42 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
 	d.matrix().scale(1.0);
 	d.matrix().translate(800,0);
 	GLOBALSTAGE.addChild(d);
-
+*/
 	console.log("colorize");
 	var scores = ImageMat.convolveSSDScores(original, scaled);
+	var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height, true);
+	locations = locations.sort(function(a,b){
+		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
+	});
+	// var scores = ImageMat.convolveConvScores(original, scaled);
+	// var locations  = Code.findMaxima2DFloat(scores.value,scores.width,scores.height);
+	// locations = locations.sort(function(a,b){
+	// 	return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
+	// });
+	
 	displayValues = Code.copyArray(scores.value);
 	displayValues = ImageMat.normalFloat01(displayValues);
 	displayValues = ImageMat.invertFloat01(displayValues);
+	displayValues = ImageMat.pow(displayValues,200);
+	//displayValues = ImageMat.pow(displayValues,200);
+	//displayValues = ImageMat.pow(displayValues,200);
+
+
 	//displayValues = ImageMat.pow(displayValues,10);
-	//displayValues = ImageMat.pow(displayValues,100);
-	displayValues = ImageMat.pow(displayValues,200);
-	displayValues = ImageMat.pow(displayValues,200);
 	img = GLOBALSTAGE.getFloatRGBAsImage(displayValues,displayValues,displayValues, scores.width,scores.height);
 	d = new DOImage(img);
 	d.matrix().scale(1.0);
 	d.matrix().translate(800,300);
 	GLOBALSTAGE.addChild(d);
-	
-	//var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height);
 
-	var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height);
-	locations = locations.sort(function(a,b){
-		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
-	});
+	console.log("loc");
+	
 
 	var i, c;
 	var sca = 1.0;
-console.log(locations);
 	for(i=0;i<locations.length;++i){
 		var p = locations[i];
+		console.log(i+" "+p.z);
 		c = new DO();
 		if(i==0){
 			c.graphics().setLine(2.0, 0xFF3399FF);
@@ -1427,7 +1466,32 @@ console.log(locations);
 		}
 	}
 
-	//
+
+	// show best
+	var p = locations[0];
+		c = new DO();
+			c.graphics().setLine(2.0, 0xFF33FF99);
+		c.graphics().setFill(0x00FF6666);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca, 7);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.graphics().fill();
+			c.matrix().translate(400 + newWidth*0.5,0 + newHeight*0.5);
+		GLOBALSTAGE.addChild(c);
+	
+
+var feature;
+var rangeA = new AreaMap.Range(testing,testing.width(),testing.height(), 10,10);
+//var point = 
+console.log(point+"");
+// TODO:
+	// create a feature to describe each of the features @ potential locations
+	feature = new ZFeature();
+	console.log(feature);
+	feature.setupWithImage(rangeA, point, 1.0);
+	console.log(feature);
+	// compare to find best
 
 
 
