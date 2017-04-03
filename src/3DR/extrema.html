@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Extrema</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["R3D.js","Extrema.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var extrema = new Extrema();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

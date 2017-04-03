@@ -4,8 +4,12 @@ Matrix.YAML = {
 	COLS:"col",
 	DATA:"data"
 }
-function Matrix(r,c){
-	this._init(r,c);
+function Matrix(r,c, vals){
+	if(vals){
+		this.fromArray(vals,r,c);
+	}else{
+		this._init(r,c);
+	}
 }
 Matrix.prototype._init = function(r,c){
 	this._rowCount = r;
@@ -21,7 +25,7 @@ Matrix.prototype._init = function(r,c){
 	}
 }
 Matrix.prototype.saveToYAML = function(yaml){
-	var i, j, r, row=this._rowCount, col=this._colCount;
+	var i, j, r, row=this._rowCount, col=this._colCount;	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
 	var DATA = Matrix.YAML;
 	yaml.writeNumber(DATA.ROWS, this._rowCount);
 	yaml.writeNumber(DATA.COLS, this._colCount);

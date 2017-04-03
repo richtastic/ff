@@ -69,6 +69,7 @@ ImageMat.prototype.setPoint = function(x,y, val){
 }
 ImageMat.prototype.getPoint = function(val, x,y){
 	this.getPointInterpolateCubic(val,x,y);
+	//return getPointInterpolateNearest(val,x,y);
 }
 ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 points
 	var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
@@ -101,10 +102,8 @@ ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 po
 		throw("undefined");
 	}
 	minX = x - minX;
-	if(x<0||x>wid){ minX=0.0;}
 	minY = y - minY;
-	if(y<0||y>hei){ minY=0.0;}
-	ImageMat.cubicColor(val, minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
+	ImageMat.cubicColor(val, minX,minY, colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP);
 }
 ImageMat.prototype.getPointInterpolateQuadric = function(val, x,y){ // 3^2 = 9 points
 	// this maaaaaaaay not be useful
@@ -134,10 +133,10 @@ ImageMat.prototype.getPointInterpolateNearest = function(val, x,y){ // 1 point
 	val.y = this._g[index];
 	val.z = this._b[index];
 }
-ImageMat.cubicColor = function(colR, x,y, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP){
-	var r = ImageMat.cubic2D(x,y, colA.x,colB.x,colC.x,colD.x,colE.x,colF.x,colG.x,colH.x,colI.x,colJ.x,colK.x,colL.x,colM.x,colM.x,colN.x,colO.x,colP.x);
-	var g = ImageMat.cubic2D(x,y, colA.y,colB.y,colC.y,colD.y,colE.y,colF.y,colG.y,colH.y,colI.y,colJ.y,colK.y,colL.y,colM.y,colM.y,colN.y,colO.y,colP.y);
-	var b = ImageMat.cubic2D(x,y, colA.z,colB.z,colC.z,colD.z,colE.z,colF.z,colG.z,colH.z,colI.z,colJ.z,colK.z,colL.z,colM.z,colM.z,colN.z,colO.z,colP.z);
+ImageMat.cubicColor = function(colR, x,y, colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP){
+	var r = ImageMat.cubic2D(x,y, colA.x,colB.x,colC.x,colD.x,colE.x,colF.x,colG.x,colH.x,colI.x,colJ.x,colK.x,colL.x,colM.x,colN.x,colO.x,colP.x);
+	var g = ImageMat.cubic2D(x,y, colA.y,colB.y,colC.y,colD.y,colE.y,colF.y,colG.y,colH.y,colI.y,colJ.y,colK.y,colL.y,colM.y,colN.y,colO.y,colP.y);
+	var b = ImageMat.cubic2D(x,y, colA.z,colB.z,colC.z,colD.z,colE.z,colF.z,colG.z,colH.z,colI.z,colJ.z,colK.z,colL.z,colM.z,colN.z,colO.z,colP.z);
 	colR.x = Math.min(Math.max(r,0.0),1.0);
 	colR.y = Math.min(Math.max(g,0.0),1.0);
 	colR.z = Math.min(Math.max(b,0.0),1.0);
@@ -1033,6 +1032,28 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 }
 // INNER CONVOLUTION?
 
+ImageMat.convolveConvScores = function(haystack,needle) {
+	//var gry = ImageMat.convolve(haystack.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());
+	var gry = ImageMat.convolve(haystack.gry(),haystack.width(),haystack.height(), needle.gry(),needle.width(),needle.height());
+	var red = ImageMat.convolve(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
+	var grn = ImageMat.convolve(haystack.grn(),haystack.width(),haystack.height(), needle.grn(),needle.width(),needle.height());
+	var blu = ImageMat.convolve(haystack.blu(),haystack.width(),haystack.height(), needle.blu(),needle.width(),needle.height());
+	var wid = haystack.width()-needle.width()+1;
+	var hei = haystack.height()-needle.height()+1;
+	var count = wid*hei;	
+	var scores = [];
+	for(i=0; i<count; ++i){
+		//scores[i] = (red[i]+grn[i]+blu[i]);
+		//scores[i] = red[i] + grn[i] + blu[i] + gry[i];
+		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
+		//scores[i] = gry[i];
+		//scores[i] = red[i]*grn[i]*blu[i];
+		//scores[i] = red[i]*grn[i]*blu[i] + gry[i];
+		scores[i] = Math.abs(red[i]*grn[i]*blu[i]*gry[i]);
+	}
+	return {"value":scores, "width":wid, "height":hei};
+}
+
 ImageMat.convolveSSDScores = function(haystack,needle) {
 	var gry = ImageMat.convolveSSDFloat(haystack.gry(),haystack.width(),haystack.height(), needle.gry(),needle.width(),needle.height());
 	var red = ImageMat.convolveSSDFloat(haystack.red(),haystack.width(),haystack.height(), needle.red(),needle.width(),needle.height());
@@ -1056,8 +1077,8 @@ ImageMat.convolveSSDScores = function(haystack,needle) {
 		//scores[i] = (red[i]+grn[i]+blu[i])/3.0 + gry[i];
 		//scores[i] = gry[i];
 		//scores[i] = red[i]*grn[i]*blu[i];
-		scores[i] = red[i]*grn[i]*blu[i] + gry[i];
-		//scores[i] = red[i]*grn[i]*blu[i]*gry[i];
+		//scores[i] = red[i]*grn[i]*blu[i] + gry[i];
+		scores[i] = red[i]*grn[i]*blu[i]*gry[i];
 	}
 	return {"value":scores, "width":wid, "height":hei};
 
@@ -1121,16 +1142,16 @@ rangeH = 1.0;
 	return {"value":result,"width":resultWidth,"height":resultHeight};
 }
 
-
+/*
 ImageMat.ssds = function(windowA, windowB){ // TODO: make tihs SSD not conv
-	var convolveRed = ImageMat.convolve(windowA.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());
-	var convolveGrn = ImageMat.convolve(windowA.grn(),windowA.width(),windowA.height(), windowB.grn(),windowB.width(),windowB.height());
-	var convolveBlu = ImageMat.convolve(windowA.blu(),windowA.width(),windowA.height(), windowB.blu(),windowB.width(),windowB.height());
+	var ssdRed = ImageMat.convolve(windowA.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());
+	var ssdGrn = ImageMat.convolve(windowA.grn(),windowA.width(),windowA.height(), windowB.grn(),windowB.width(),windowB.height());
+	var ssdeBlu = ImageMat.convolve(windowA.blu(),windowA.width(),windowA.height(), windowB.blu(),windowB.width(),windowB.height());
 	var wid = windowA.width();
 	var hei = windowA.height();
 	var scores = [];
 	for(var i=0; i<convolveRed.length; ++i){
-		scores[i] = convolveRed[i] + convolveGrn[i] + convolveBlu[i];
+		scores[i] = convolveRed[i]*convolveGrn[i]*convolveBlu[i];
 	}
 	var scores  = Code.findExtrema2DFloat(scores,wid,hei);
 	scores = scores.sort(function(a,b){
@@ -1139,6 +1160,24 @@ ImageMat.ssds = function(windowA, windowB){ // TODO: make tihs SSD not conv
 	return scores;
 }
 
+ImageMat.convsss = function(windowA, windowB){ // TODO: make tihs SSD not conv
+	var convolveRed = ImageMat.convolve(windowA.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());
+	var convolveGrn = ImageMat.convolve(windowA.grn(),windowA.width(),windowA.height(), windowB.grn(),windowB.width(),windowB.height());
+	var convolveBlu = ImageMat.convolve(windowA.blu(),windowA.width(),windowA.height(), windowB.blu(),windowB.width(),windowB.height());
+	var wid = windowA.width();
+	var hei = windowA.height();
+	var scores = [];
+	for(var i=0; i<convolveRed.length; ++i){
+		//scores[i] = convolveRed[i] + convolveGrn[i] + convolveBlu[i];
+		scores[i] = convolveRed[i]*convolveGrn[i] + convolveBlu[i];
+	}
+	var scores  = Code.findExtrema2DFloat(scores,wid,hei);
+	scores = scores.sort(function(a,b){
+		return Math.abs(a.z)<Math.abs(b.z) ? -1 : 1;
+	});
+	return scores;
+}
+*/
 ImageMat.ssdEqual = function(windowA, windowB){
 	//var score = ImageMat.ssd(windowA.image,windowA.width,windowA.height, windowB.image,windowB.width,windowB.height);
 	var scoreRed = Code.SSDEqual(windowA.red(),windowB.red());
@@ -1518,6 +1557,21 @@ ImageMat.log = function(data){
 	}
 	return data;
 }
+ImageMat.pow = function(data,power){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		data[i] = Math.pow(data[i],power);
+	}
+	return data;
+}
+
+ImageMat.getPointInterpolateNearest = function(array, wid,hei, x,y){
+	var hm1 = hei-1, wm1 = wid-1;
+	x = Math.min(Math.max(Math.round(x),0),wm1);
+	y = Math.min(Math.max(Math.round(y),0),hm1);
+	index = y*wid + x;
+	return array[index];
+}
 
 ImageMat.getPointInterpolateLinear = function(array, wid,hei, x,y){
 	var hm1 = hei-1, wm1 = wid-1;
@@ -1569,13 +1623,14 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	var colP = array[maaY*wid + maaX];
 	minX = x - minX;
 	minY = y - minY;
-	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP);
+	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 	if(isNaN(val)){
 		console.log("PT",wid,hei,x,y);
-		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colM,colN,colO,colP );
+		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP );
 		console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
 		return 0;
 	}
+	val = Math.min(Math.max(val,0.0),1.0);
 	return val
 }
 
@@ -1603,6 +1658,7 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 				fr.x /= fr.z; fr.y /= fr.z;
 				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
 				//destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				//destination[wid*j+i] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
 			}
 		}
 	}

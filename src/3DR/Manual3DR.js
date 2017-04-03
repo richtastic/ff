@@ -1335,6 +1335,154 @@ d.graphics().alpha(0.15);
 		}
 	}
 
+
+
+// TESTING SSD INTERPOLATION
+GLOBALSTAGE = this._stage;
+// test scaling:
+var keyA = "A";
+var keyB = "B";
+// A
+var entryA = entries[keyA];
+var imageSourceA = entryA[Manual3DR.KEY_IMAGE_SOURCE];
+var imageWidthA = imageSourceA.width;
+var imageHeightA = imageSourceA.height;
+// B
+var entryB = entries[keyB];
+var imageSourceB = entryB[Manual3DR.KEY_IMAGE_SOURCE];
+var imageWidthB = imageSourceB.width;
+var imageHeightB = imageSourceB.height;
+
+
+var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+
+	var original = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+	//var point = new V2D(original.width()*0.5, original.height()*0.5);
+	var point = new V2D(200,130);
+	var scale = 1.0;
+	var newWidth = 17;
+	var newHeight = 17;
+	var scaled = original.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
+	img = GLOBALSTAGE.getFloatRGBAsImage(scaled.red(),scaled.grn(),scaled.blu(), scaled.width(),scaled.height());
+	var d;
+	d = new DOImage(img);
+	d.matrix().translate(100, 100);
+	GLOBALSTAGE.addChild(d);
+
+
+	console.log("SSD");
+	var sosdImage = ImageMat.convolveSSD(original, scaled);
+	img = sosdImage;
+	img.normalFloat01();
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(800,0);
+	GLOBALSTAGE.addChild(d);
+
+	console.log("colorize");
+	var scores = ImageMat.convolveSSDScores(original, scaled);
+	displayValues = Code.copyArray(scores.value);
+	displayValues = ImageMat.normalFloat01(displayValues);
+	displayValues = ImageMat.invertFloat01(displayValues);
+	//displayValues = ImageMat.pow(displayValues,10);
+	//displayValues = ImageMat.pow(displayValues,100);
+	displayValues = ImageMat.pow(displayValues,200);
+	displayValues = ImageMat.pow(displayValues,200);
+	img = GLOBALSTAGE.getFloatRGBAsImage(displayValues,displayValues,displayValues, scores.width,scores.height);
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(800,300);
+	GLOBALSTAGE.addChild(d);
+	
+	//var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height);
+
+	var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height);
+	locations = locations.sort(function(a,b){
+		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
+	});
+
+	var i, c;
+	var sca = 1.0;
+console.log(locations);
+	for(i=0;i<locations.length;++i){
+		var p = locations[i];
+		c = new DO();
+		if(i==0){
+			c.graphics().setLine(2.0, 0xFF3399FF);
+		}else{
+			c.graphics().setLine(1.0, 0x66990000);
+		}
+		c.graphics().setFill(0x00FF6666);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.graphics().fill();
+			c.matrix().translate(800,300);
+		GLOBALSTAGE.addChild(c);
+		if(i>20){
+			break;
+		}
+	}
+
+	//
+
+
+
+
+
+	// SSD:
+
+	// var scaledUp = ;
+
+
+return ; // HERE
+
+/*
+// TESTING CUBIC INTERPOLATION
+GLOBALSTAGE = this._stage;
+// test scaling:
+var keyA = "A";
+var keyB = "B";
+// A
+var entryA = entries[keyA];
+var imageSourceA = entryA[Manual3DR.KEY_IMAGE_SOURCE];
+var imageWidthA = imageSourceA.width;
+var imageHeightA = imageSourceA.height;
+// B
+var entryB = entries[keyB];
+var imageSourceB = entryB[Manual3DR.KEY_IMAGE_SOURCE];
+var imageWidthB = imageSourceB.width;
+var imageHeightB = imageSourceB.height;
+
+
+var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+
+	var original = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+	var point = new V2D(original.width()*0.5, original.height()*0.5);
+
+	var point = new V2D(200,130);
+	var scale = 10.0;
+	var newWidth = 400;//Math.ceil(scale*original.width());
+	var newHeight = 400;//Math.ceil(scale*original.height());
+	var scaled = original.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
+	img = GLOBALSTAGE.getFloatRGBAsImage(scaled.red(),scaled.grn(),scaled.blu(), scaled.width(),scaled.height());
+	//console.log(img);
+
+	var d;
+	d = new DOImage(img);
+	//d.matrix().scale();
+	d.matrix().translate(400, 0);
+	GLOBALSTAGE.addChild(d);
+
+	// var scaledUp = ;
+
+
+return ; // HERE
+*/
 /*
 	// solve for matrices between each camera
 	for(i=0; i<keys.length; ++i){

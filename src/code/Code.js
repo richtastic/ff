@@ -3725,7 +3725,7 @@ Code.separateAffine2D = function(a,b,c,d, tx,ty){
 Code.inverse2x2 = function(arr, a,b,c,d){
 	var det = a*d - b*c;
 	if(det==0){ return null; }
-	det = 1/det;
+	det = 1.0/det;
 	arr[0] = det*d;
 	arr[1] = -det*b;
 	arr[2] = -det*c;
@@ -3927,47 +3927,69 @@ Code.gradient2D = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){
 	loc.x = (d5-d3)*0.5;
 	loc.y = (d7-d1)*0.5;
 }
-Code.findExtrema2DFloat = function(d, wid,hei){
+Code.findMaxima2DFloat = function(d, wid,hei, inte){
+	return Code.findExtrema2DFloat(d,wid,hei, inte, true, false);
+}
+Code.findMinima2DFloat = function(d, wid,hei, inte){
+	return Code.findExtrema2DFloat(d,wid,hei, inte, false, true);
+}
+Code.findExtrema2DFloat = function(d, wid,hei,   inte, maxi,mini){
+	inte = inte!==undefined ? inte : false;
+	maxi = maxi!==undefined ? maxi : true;
+	mini = mini!==undefined ? mini : true;
 	var i, j, hm1=hei-1, wm1=wid-1, list = [];
 	var jW0, jW1, jW2, i0,i1,i2;
 	var d0,d1,d2,d3,d4,d5,d6,d7,d8;
 	var result, count = 0;
-	//var eps = 1.0; // 0.5;
-	var eps = 0.0;
 	for(j=1;j<hm1;++j){
 		jW0 = (j-1)*wid; jW1 = j*wid; jW2 = (j+1)*wid;
 		for(i=1;i<wm1;++i){
 			i0 = i-1; i1 = i; i2 = i+1;
 			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
-			if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
-			||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
+			var isGT = d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4 && maxi;
+			var isLT = d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4 && mini;
+			//var isGTE = d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4;
+			//var isLTE = d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4;
+//inte = true;
+			if(isGT || isLT){
+				if(inte){
+					result = new V3D(i,j,d4);
+					list.push(result);
+				}else{
+					result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+					if(result==null){ console.log("COULD NOT FIND EXTREMA"); continue; }
+					if(Math.abs(result.x)<1.0 && Math.abs(result.y<1.0)){ // outside area, numerical error?
+						result.x += i; result.y += j;
+						list.push(result);
+					}else{ // need to look at neighbor
+						// console.log(" "+d0+" "+d1+" "+d2+" "+d3+" "+d4+" "+d5+" "+d6+" "+d7+" "+d8+" ");
+						result = new V3D(i,j,d4);
+						list.push(result);
+					}
+				}
 
-				result = new V3D(i+1,j+1,d4);
-				list.push(result);
-				continue;
-
-
-				result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
-				if(result==null){ console.log("COULD NOT FIND EXTREMA"); continue; }
-				result.x += i; result.y += j;
-				list.push(result);
-
-				// // result.x += i; result.y += j;
-				// // list.push(result);
-				// // continue;
-				// console.log(result);
-				// result.x += i; result.y += j;
-				// //result = new V3D(i+1,j+1,d4);
-				// list.push(result);
-
-//				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps){ // inside window
-//					result.x += i; result.y += j;
-//					list.push(result);
-//				}else{ // need to interpolate at a neighbor ... is this not already done?
-//					//console.log("result; "+result.toString());
-//					result.x += i; result.y += j;
-//					list.push(result);
-//				}
+			// if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
+			// ||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
+			// if( (d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4) // maxima
+			// ||  (d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4) ){ // minima
+			// if(true){
+			// if(isGTE || isLTE){
+			// 	if(inte && (isGT || isLT)){
+			// 		result = new V3D(i,j,d4);
+			// 		list.push(result);
+			// 		continue;
+			// 	}else{
+			// 		result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+			// 		if(result==null){ console.log("COULD NOT FIND EXTREMA"); continue; }
+			// 			d4 = result.z;
+			// 			isGT = d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4;
+			// 			isLT = d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4;
+			// 			if(isGT || isLT){
+			// 				result.x += i; result.y += j;
+			// 				list.push(result);
+			// 				continue;
+			// 			}
+			// 	}
 			}
 		}
 	}
@@ -3985,10 +4007,13 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 	var dydy = (d7-2.0*d4+d1);
 	var dxdy = (d8-d6-d2+d0)*0.25;
 	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
+		//var H = new Matrix(2,2, [dxdx,dxdy, dxdy,dydy]);
+		//var Hinv = Matrix.inverse(H);
+		//Hinv = Hinv.toArray();
 	if(!Hinv){ console.log("COULD NOT FIND INVERSE"); return null; }
 	var dD = Code.setArray(Code._tempMatrixArray2,dx,dy);
 	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
-	loc.x = loc.x; loc.y = loc.y;
+	loc.x = -loc.x; loc.y = -loc.y;
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
 	return loc;
 }
@@ -3998,7 +4023,6 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 	var i, j, hm1=hei-1, wm1=wid-1, list = [];
 	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7;
 	var jW0,jW1,jW2, i0,i1,i2, result;
-	var eps = 1.0; // 0.5
 	for(j=1;j<hm1;++j){
 		jW0 = (j-1)*wid, jW1 = j*wid, jW2 = (j+1)*wid;
 		for(i=1;i<wm1;++i){
@@ -4013,20 +4037,13 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k){ // a=-1, b=0, c=+1
 			(a0>b4&&a1>b4&&a2>b4&&a3>b4&&a4>b4&&a5>b4&&a6>b4&&a7>b4&&a8>b4 // minima
 			&& b0>b4&&b1>b4&&b2>b4&&b3>b4    &&   b5>b4&&b6>b4&&b7>b4&&b8>b4
 			&& c0>b4&&c1>b4&&c2>b4&&c3>b4&&c4>b4&&c5>b4&&c6>b4&&c7>b4&&c8>b4) ){
-			// 	result = new V4D(i,j,0,b4); // --- close enough
-			// 	list.push(result);
-			// continue;
 				result = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
 				if(result==null){ console.log("null result"); continue; }
-				if(Math.abs(result.x)<eps && Math.abs(result.y)<eps && Math.abs(result.z)<eps){ // inside window
+				if(Math.abs(result.x)<1.0 && Math.abs(result.y)<1.0 && Math.abs(result.z)<1.0){ // inside window
 					result.x += i; result.y += j; result.z += k;
 					list.push(result);
 				}else{ // need to interpolate at a neighbor
-					// console.log("neighbor - result; "+result.toString()+"----------    ");
-					// console.log("          var a = ["+a0+","+a1+","+a2+","+a3+","+a4+","+a5+","+a6+","+a7+","+a8+"] ");
-					// console.log("          var b = ["+b0+","+b1+","+b2+","+b3+","+b4+","+b5+","+b6+","+b7+","+b8+"] ");
-					// console.log("          var c = ["+c0+","+c1+","+c2+","+c3+","+c4+","+c5+","+c6+","+c7+","+c8+"] ");
-					result.x += i; result.y += j; result.z += k;
+					result = new V4D(i,j,k,b4);
 					list.push(result);
 				}
 			}

@@ -188,7 +188,6 @@ var testBJ = 3;
 					var d = new DOImage(img);
 					//console.log(d);
 					//d.matrix().translate(50,50);
-
 					d.matrix().scale(sizeX/AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH);
 					d.matrix().translate(offsetX, offsetY);
 					d.matrix().translate(sizeX*i,sizeY*j);
@@ -201,12 +200,12 @@ var testBJ = 3;
 					//console.log(featurePoint);
 					var p = featurePoint;
 					var c = new DO();
-					c.graphics().setLine(1.0, 0xFF990000);
+					c.graphics().setLine(1.0, 0xFFFF0000);
 					c.graphics().setFill(0xFFFF6666);
 					c.graphics().beginPath();
 					c.graphics().drawCircle(sizeX*i + p.x, sizeY*j + p.y, 1);
-					c.graphics().endPath();
 					c.graphics().strokeLine();
+					c.graphics().endPath();
 					c.graphics().fill();
 						c.matrix().translate(offsetX, offsetY);
 					GLOBALSTAGE.addChild(c);
@@ -218,8 +217,13 @@ var testBJ = 3;
 
 	// show neighborhood with best matching SSOD
 	//var cellA = rangeA.cell(testAI,testAJ);
+			var cellA = rangeB.cell(testBI-1,testBJ-2);
 			//var cellA = rangeB.cell(testBI+1,testBJ-1);
-			var cellA = rangeB.cell(testBI+1,testBJ-1);
+			//var cellA = rangeB.cell(testBI-1,testBJ-1);
+			//var cellA = rangeB.cell(testBI+1,testBJ-1);
+			//var cellA = rangeB.cell(testBI+1,testBJ-2);
+			//var cellA = rangeB.cell(testBI+1,testBJ+1);
+			//var cellA = rangeB.cell(testBI+2,testBJ+2);
 	var cellB = rangeB.cell(testBI,testBJ);
 
 	console.log(cellA);
@@ -919,12 +923,12 @@ AreaMap.Cell.prototype.getBestFeaturePoint = function(){
 	var img = range.imageAtPoint(point,windowWidth,windowHeight,scale,rotation);
 
 	// IF YOU LIKE TEXTURES:
-	var result = ImageMat.totalCostToMoveAny(img);
-	var points = Code.findExtrema2DFloat(result, img.width(),img.height());
+	// var result = ImageMat.totalCostToMoveAny(img);
+	// var points = Code.findExtrema2DFloat(result, img.width(),img.height());
 
 	// IF YOU LIKE CORNERS:
-	// var gry = img.gry();
-	// var points = R3D.pointsCornerDetector(gry, img.width(), img.height());//, 0.05, 1.0, 0.05);
+	var gry = img.gry();
+	var points = R3D.pointsCornerDetector(gry, img.width(), img.height());//, 0.05, 1.0, 0.05);
 
 
 	if(points && points.length>0){
@@ -1018,7 +1022,7 @@ GLOBALSTAGE.addChild(c);
 	}
 
 	// BEST:
-	//console.log(bestMatch)
+	console.log(bestMatch)
 score = bestMatch.score();
 console.log("bestMatch : "+score);
 p = bestMatch.pointA().point();
@@ -1057,14 +1061,19 @@ AreaMap.Cell.prototype.bestMatchForCell = function(cell){
 	var sosdImage = ImageMat.convolveSSD(haystackImage, needleImage);
 //	console.log(sosdImage)
 
-	// scores
+	// scores = ssds
 	var scores = ImageMat.convolveSSDScores(haystackImage, needleImage);
-
-
-	var locations  = Code.findExtrema2DFloat(scores.value,scores.width,scores.height);
+	var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height);
 	locations = locations.sort(function(a,b){
 		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
 	});
+	
+	// scores = conv
+	// var scores = ImageMat.convolveConvScores(haystackImage, needleImage);
+	// var locations  = Code.findMaxima2DFloat(scores.value,scores.width,scores.height);
+	// locations = locations.sort(function(a,b){
+	// 	return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
+	// });
 
 
 var diffSizeX = haystackImage.width() - sosdImage.width();
@@ -1078,13 +1087,17 @@ var needleSizeY = needleImage.height();
 		//console.log(bestLocation+" = "+locations[0])
 		// bestLocation.x += diffSizeX*0.5 + needleSizeX*0.5;
 		// bestLocation.y += diffSizeY*0.5 + needleSizeY*0.5;
+
+		bestLocation.x +=  needleSizeX*0.5;
+		bestLocation.y +=  needleSizeY*0.5;
+
 	}
 
 var root = new DO();
 
 GLOBALSTAGE.addChild(root);
 var img, d;
-var sca = 2.0;
+var sca = 3.0;
 //img = needle.gry();
 img = needleImage;
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
@@ -1144,8 +1157,8 @@ if(!bestLocation){
 		//c.graphics().drawCircle(diffSizeX*0.5 + needleSizeX*0.5 + p.x*sca, diffSizeY*0.5 + needleSizeY*0.5 + p.y*sca,  3 + i*2);
 		//c.graphics().drawCircle((diffSizeX*0.5 + needleSizeX*0.5 + p.x)*sca, (diffSizeY*0.5 + needleSizeY*0.5 + p.y)*sca,  3 + i*2);
 		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*2);
-		c.graphics().endPath();
 		c.graphics().strokeLine();
+		c.graphics().endPath();
 		c.graphics().fill();
 			c.matrix().translate(0, 200);
 		root.addChild(c);
@@ -1442,11 +1455,11 @@ AreaMap.Feature.NEEDLE_IMAGE_HEIGHT = 7;
 AreaMap.Feature.CELL_IMAGE_WIDTH = 25;
 AreaMap.Feature.CELL_IMAGE_HEIGHT = 25;
 
-AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 25;
-AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 25;
+AreaMap.Feature.STATIC_CELL_COMPARE_WIDTH = 11;
+AreaMap.Feature.STATIC_CELL_COMPARE_HEIGHT = 11;
 
-AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH =  25; // low => very localized, high => very general
-AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT = 25;
+AreaMap.Feature.STATIC_CELL_FEATURE_WIDTH = 9; // low => very localized, high => very general
+AreaMap.Feature.STATIC_CELL_FEATURE_HEIGHT = 9;
 
 
 AreaMap.Feature.getFeatureImage = function(range, point){
