@@ -1502,13 +1502,15 @@ Code.reverseBits = function(value,bits){
 }
 // angles ----------------------------------------------------
 Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
+	// a = Code.angleZeroTwoPi(a);
+	// b = Code.angleZeroTwoPi(b);
 	var nB = a-b;
 	if(nB>Math.PI){
 		return nB - 2*Math.PI;
 	}else if(nB<-Math.PI){
 		return nB + 2*Math.PI;
 	}
-	return nB;
+	return -nB;
 }
 
 Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]

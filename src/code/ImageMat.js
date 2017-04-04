@@ -2062,6 +2062,7 @@ ImageMat.extractRectFromFloatImageBasic = function(x,y, outWidth,outHeight, sour
 ImageMat.prototype.toImage = function(stage){
 	return stage.getFloatRGBAsImage(this.red(),this.grn(),this.blu(), this.width(),this.height());
 }
+// (point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-this._angle.t, 1.0, 0.25));
 ImageMat.prototype.extractRectFromFloatImage = function(x,y,scale,sigma,w,h,matrix){
 	var red = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._r,this._width,this._height, matrix);
 	var grn = ImageMat.extractRectFromFloatImage(x,y,scale,sigma,w,h, this._g,this._width,this._height, matrix);
@@ -2086,7 +2087,6 @@ ImageMat.prototype.calculateGradient = function(x,y){
 	dir.norm();
 	return dir;
 }
-
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 
 	var blurr = (sigma!==undefined) && (sigma!=null);
 	var gaussSize, gauss1D, padding=0;// fullX=(imgWid*x), fullY=(imgHei*y); // wtf
@@ -2111,6 +2111,7 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	var BR = ImageMat._BR; BR.set(right,bot);
 	var BL = ImageMat._BL; BL.set(left,bot);
 //	console.log(left,right,top,bot)
+
 	if(matrix){
 		var matinv = matrix;
 		matrix = Matrix.inverse(matrix);

@@ -131,6 +131,52 @@ matching individual features
 
 
 
+- COMPARE @ OPTIMAL ROTATION:
+	- want to create a 'rotation field'
+- COMPARE @ OPTIMAL SCALE:
+	- want to create a 'scale field'
+- want major/minor scale directions
+	- moment at area ?
 
 
+RESULTS:
+
+
+- rotated, asym-scaled:
+
+zone rotations only:
+
+Manual3DR.js:1560 0 = 6.741067661839523
+Manual3DR.js:1560 1 = 14.862101371268377
+Manual3DR.js:1560 2 = 16.891412876089106
+Manual3DR.js:1560 3 = 19.914475886726883
+Manual3DR.js:1560 4 = 22.448424954363453
+Manual3DR.js:1560 5 = 29.09700466015
+
+
+
+
+zone bin SAD:
+Manual3DR.js:1560 0 = 640
+Manual3DR.js:1560 1 = 874
+Manual3DR.js:1560 2 = 882
+Manual3DR.js:1560 3 = 898
+Manual3DR.js:1560 4 = 916
+Manual3DR.js:1560 5 = 926
+Manual3DR.js:1560 6 = 926
+Manual3DR.js:1560 
+
+
+
+bin + rots:
+
+
+Manual3DR.js:1560 0 = 57.71538843113383
+Manual3DR.js:1560 1 = 77.4641341359983
+Manual3DR.js:1560 2 = 86.2029626290181
+Manual3DR.js:1560 3 = 98.27441132388014
+Manual3DR.js:1560 4 = 99.83426214829632
+Manual3DR.js:1560 5 = 102.5561866609676
+Manual3DR.js:1560 6 = 103.3541176910412
+Manual3DR.js:1560 
 

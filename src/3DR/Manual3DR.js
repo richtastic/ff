@@ -1370,7 +1370,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 			// FROM A:
 			//var point = new V2D(227,83); // face
 			//var point = new V2D(189,187); // glasses
-			var point = new V2D(364,176); // mouse
+			var point = new V2D(364,174); // mouse
 			//var point = new V2D(190,160); // corner tankman
 			nextPoint = new V2D(281,236); // 
 	// .5 is exact
@@ -1446,27 +1446,27 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 
 	var i, c;
 	var sca = 1.0;
-	for(i=0;i<locations.length;++i){
-		var p = locations[i];
-		//console.log(i+" "+p.z);
-		c = new DO();
-		if(i==0){
-			c.graphics().setLine(2.0, 0xFF3399FF);
-		}else{
-			c.graphics().setLine(1.0, 0x66990000);
-		}
-		c.graphics().setFill(0x00FF6666);
-		c.graphics().beginPath();
-		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.5);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-		c.graphics().fill();
-			c.matrix().translate(800,300);
-		GLOBALSTAGE.addChild(c);
-		if(i>20){
-			break;
-		}
-	}
+	// for(i=0;i<locations.length;++i){
+	// 	var p = locations[i];
+	// 	//console.log(i+" "+p.z);
+	// 	c = new DO();
+	// 	if(i==0){
+	// 		c.graphics().setLine(2.0, 0xFF3399FF);
+	// 	}else{
+	// 		c.graphics().setLine(1.0, 0x66990000);
+	// 	}
+	// 	c.graphics().setFill(0x00FF6666);
+	// 	c.graphics().beginPath();
+	// 	c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.5);
+	// 	c.graphics().strokeLine();
+	// 	c.graphics().endPath();
+	// 	c.graphics().fill();
+	// 		c.matrix().translate(800,300);
+	// 	GLOBALSTAGE.addChild(c);
+	// 	if(i>20){
+	// 		break;
+	// 	}
+	// }
 
 
 	// show best
@@ -1484,14 +1484,14 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	
 
 var feature1, feature2;
-var rangeA = new AreaMap.Range(testing,testing.width(),testing.height(), 10,10);
-var rangeB = new AreaMap.Range(original,original.width(),original.height(), 10,10);
+var rangeA = new AreaMap.Range(testing,testing.width(),testing.height(), 10,10); // "B"
+var rangeB = new AreaMap.Range(original,original.width(),original.height(), 10,10); // "A"
 //var point = 
 console.log(point+"");
 // TODO:
 	// create a feature to describe each of the features @ potential locations
 	feature1 = new ZFeature();
-	feature1.setupWithImage(rangeA, point, 1.0);
+	feature1.setupWithImage(rangeA, point, 1.0,    true);
 	feature1.visualize(175,200);
 
 	feature2 = new ZFeature();
@@ -1500,53 +1500,74 @@ console.log(point+"");
 	feature2.visualize(325,200);
 
 	var score = ZFeature.compareScore(feature1, feature2);
-	console.log("score: "+score);
+	console.log("1 & 2 score: "+score);
 
-
+//return;
 	// go thru board
 	var gridX = 1, gridY = 1;
-	var gX = Math.floor(rangeB.width()/gridX);
-	var gY = Math.floor(rangeB.height()/gridY);
+
+var loc = new V2D(220,160);
+var siz = new V2D(100,100);
+
+	var gX = Math.floor(siz.x/gridX);
+	var gY = Math.floor(siz.y/gridY);
 	var gridSize = gX * gY;
 	var grid = Code.newArrayZeros(gridSize);
 	var index = 0;
-var ratioSize = rangeB.width()/gX;	
+//var ratioSize = rangeB.width()/gX;
+var featureX
+var ratioSize = gridX;//gridX;
 	for(j=0; j<gY; ++j){
 		for(i=0; i<gX; ++i){
 			index = j*gX + i;
-			var p = new V2D(i*gridX, j*gridY);
+			var p = new V2D(loc.x + i*gridX, loc.y + j*gridY);
 			//console.log(p+"  "+index+"/"+gridSize);
 			console.log(index+"/"+gridSize+" = "+(index/gridSize));
-			feature2 = new ZFeature();
-			feature2.setupWithImage(rangeB, p, 1.0);
-			score = ZFeature.compareScore(feature1, feature2);
+			featureX = new ZFeature();
+			featureX.setupWithImage(rangeB, p, 1.0);
+			//score = ZFeature.compareScore(feature1, feature2);
+			score = ZFeature.compareScore(featureX, feature1);
+			//score = ZFeature.compareScore(featureX, feature2); // SHOULD BE 0
 			grid[index] = score;
 			//grid[index] = i*j;
 		}
 	}
-	grid = ImageMat.normalFloat01(grid);
-	grid = ImageMat.pow(grid,4);
-	img = GLOBALSTAGE.getFloatRGBAsImage(grid,grid,grid, gX,gY);
-	d = new DOImage(img);
-	d.matrix().scale(ratioSize);
-	d.matrix().translate(800,0);
-	//d.graphics().alpha(0.5);
-	GLOBALSTAGE.addChild(d);
-
-
-
-	// show new maxima:
+// show new maxima:
 	var locations  = Code.findMinima2DFloat(grid,gX,gY, true);
+	//var locations  = Code.findMinima2DFloat(grid,gX,gY, false);
 	locations = locations.sort(function(a,b){
 		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
 	});
 
+	grid = ImageMat.normalFloat01(grid);
+	//grid = ImageMat.pow(grid,2);
+	img = GLOBALSTAGE.getFloatRGBAsImage(grid,grid,grid, gX,gY);
+	d = new DOImage(img);
+	d.matrix().scale(ratioSize);
+	//d.matrix().translate(800,0);
+	//d.matrix().translate(400,0);
+	d.matrix().translate(400+loc.x,0+loc.y);
+	d.graphics().alpha(0.50);
+	GLOBALSTAGE.addChild(d);
+
+
+
+	
+
 	sca = ratioSize;
 	for(i=0;i<locations.length;++i){
 		var p = locations[i];
+		console.log(i+" = "+p.z)
+//p = p.copy();
+// p.x += 16/2
+// p.y += 16/2
+// p.x -= 16/2
+// p.y -= 16/2
+// p.x -= 4
+// p.y -= 4
 		c = new DO();
 		if(i==0){
-			c.graphics().setLine(2.0, 0xFF3399FF);
+			c.graphics().setLine(1.0, 0xFF0000FF);
 		}else{
 			c.graphics().setLine(1.0, 0x66990000);
 		}
@@ -1556,14 +1577,33 @@ var ratioSize = rangeB.width()/gX;
 		c.graphics().strokeLine();
 		c.graphics().endPath();
 		c.graphics().fill();
-			c.matrix().translate(800,0);
+			//c.matrix().translate(800,0);
+			//c.matrix().translate(400,0);
+			c.matrix().translate(400+loc.x,0+loc.y);
 		GLOBALSTAGE.addChild(c);
-		if(i>20){
+		if(i>10){
 			break;
 		}
+		//break;
 	}
-	
+console.log("done")
 
+
+// // TESTING minAngleAlg
+// for(i=0; i<10; ++i){
+// 	var angA = Math.random()*2.0*Math.PI;
+// 	var angB = Math.random()*2.0*Math.PI;
+// 	var a = Code.minAngle(angA,angB);
+// 		var v = new V2D(1.0,0).rotate(angA);
+// 		var u = new V2D(1.0,0).rotate(angB);
+// 	var b = V2D.angleDirection(v,u);
+// 	console.log(i+": "+a+" | "+b);
+// }
+			// var a = Code.minAngle(Math.PI*0.25, Math.PI*2 - Math.PI*0.25);
+			// console.log(a*180/Math.PI);
+
+			// var a = Code.minAngle(Math.PI*2 - Math.PI*0.25, Math.PI*0.25);
+			// console.log(a*180/Math.PI);
 	
 
 	// SSD:
