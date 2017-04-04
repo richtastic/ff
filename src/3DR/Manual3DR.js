@@ -1371,6 +1371,8 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 			//var point = new V2D(227,83); // face
 			//var point = new V2D(189,187); // glasses
 			var point = new V2D(364,176); // mouse
+			//var point = new V2D(190,160); // corner tankman
+			nextPoint = new V2D(281,236); // 
 	// .5 is exact
 	var scale = 1.0;
 	var newWidth = 11;
@@ -1446,7 +1448,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var sca = 1.0;
 	for(i=0;i<locations.length;++i){
 		var p = locations[i];
-		console.log(i+" "+p.z);
+		//console.log(i+" "+p.z);
 		c = new DO();
 		if(i==0){
 			c.graphics().setLine(2.0, 0xFF3399FF);
@@ -1481,21 +1483,88 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 		GLOBALSTAGE.addChild(c);
 	
 
-var feature;
+var feature1, feature2;
 var rangeA = new AreaMap.Range(testing,testing.width(),testing.height(), 10,10);
+var rangeB = new AreaMap.Range(original,original.width(),original.height(), 10,10);
 //var point = 
 console.log(point+"");
 // TODO:
 	// create a feature to describe each of the features @ potential locations
-	feature = new ZFeature();
-	console.log(feature);
-	feature.setupWithImage(rangeA, point, 1.0);
-	console.log(feature);
+	feature1 = new ZFeature();
+	feature1.setupWithImage(rangeA, point, 1.0);
+	feature1.visualize(175,200);
+
+	feature2 = new ZFeature();
+	feature2.setupWithImage(rangeB, nextPoint, 1.0);
 	// compare to find best
+	feature2.visualize(325,200);
+
+	var score = ZFeature.compareScore(feature1, feature2);
+	console.log("score: "+score);
+
+
+	// go thru board
+	var gridX = 1, gridY = 1;
+	var gX = Math.floor(rangeB.width()/gridX);
+	var gY = Math.floor(rangeB.height()/gridY);
+	var gridSize = gX * gY;
+	var grid = Code.newArrayZeros(gridSize);
+	var index = 0;
+var ratioSize = rangeB.width()/gX;	
+	for(j=0; j<gY; ++j){
+		for(i=0; i<gX; ++i){
+			index = j*gX + i;
+			var p = new V2D(i*gridX, j*gridY);
+			//console.log(p+"  "+index+"/"+gridSize);
+			console.log(index+"/"+gridSize+" = "+(index/gridSize));
+			feature2 = new ZFeature();
+			feature2.setupWithImage(rangeB, p, 1.0);
+			score = ZFeature.compareScore(feature1, feature2);
+			grid[index] = score;
+			//grid[index] = i*j;
+		}
+	}
+	grid = ImageMat.normalFloat01(grid);
+	grid = ImageMat.pow(grid,4);
+	img = GLOBALSTAGE.getFloatRGBAsImage(grid,grid,grid, gX,gY);
+	d = new DOImage(img);
+	d.matrix().scale(ratioSize);
+	d.matrix().translate(800,0);
+	//d.graphics().alpha(0.5);
+	GLOBALSTAGE.addChild(d);
 
 
 
+	// show new maxima:
+	var locations  = Code.findMinima2DFloat(grid,gX,gY, true);
+	locations = locations.sort(function(a,b){
+		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
+	});
 
+	sca = ratioSize;
+	for(i=0;i<locations.length;++i){
+		var p = locations[i];
+		c = new DO();
+		if(i==0){
+			c.graphics().setLine(2.0, 0xFF3399FF);
+		}else{
+			c.graphics().setLine(1.0, 0x66990000);
+		}
+		c.graphics().setFill(0x00FF6666);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.graphics().fill();
+			c.matrix().translate(800,0);
+		GLOBALSTAGE.addChild(c);
+		if(i>20){
+			break;
+		}
+	}
+	
+
+	
 
 	// SSD:
 

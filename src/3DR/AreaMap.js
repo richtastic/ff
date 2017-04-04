@@ -1596,21 +1596,148 @@ https://www1.ethz.ch/igp/photogrammetry/education/lehrveranstaltungen/PCV_HS14/c
 ZFeature = function(){
 	this._eigen = 1.0 // ratio of gradient/primary scale over secondary scale
 	this._scale = 1.0; // overall image scale
-	this._rotation = V4D(); // main gradient orientation - RGBY
+	this._angle = new V4D(); // main gradient orientation - RGBY
 	this._zoneCols = 4; // rows/cols of zones
 	this._zoneSize = 4; // pixels a zone edge covers
 	this._zones = [];
 	// zone count =  this._zoneCols * this._zoneCols
 }
+ZFeature.compareScore = function(a,b){
+	var i, j, k, l, zA, zB, index;
+	var rA, gA, bA, yA;
+	var rB, gB, bB, yB;
+	var binsA, binsB, binA, binB;
+	var score = 0;
+	var binScore = 0;
+	for(j=0; j<a._zoneCols; ++j){
+		for(i=0; i<a._zoneCols; ++i){
+			index = j*a._zoneCols + i;
+			zA = a._zones[index];
+			zB = b._zones[index];
+			binsA = zA.rotations();
+			binsB = zB.rotations();
+			binScore = 0;
+			for(k=0; k<binsA.length; ++k){ // r g b a
+				binA = binsA[k];
+				binB = binsB[k];
+				binA = binA.bins();
+				binB = binB.bins();
+				for(l=0; l<binA.length; ++l){ // 0-7
+					binScore += Math.abs(binA[l] - binB[l]); // SSD - SAD
+				}
+			}
+
+			score += binScore*1.0;
+		}
+	}
+	return score;
+}
+ZFeature.MatrixWithRotation = function(rotation){
+	if(rotation!==undefined && rotation!=0){
+		matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix,rotation);
+	}
+}
+ZFeature.drawArrow = function(a,b, color){
+	var dir = V2D.sub(a,b);
+	var len = dir.length();
+	//dir.norm();
+	var tan = dir.copy().rotate(Math.PI*0.5);
+	d = new DO();
+	d.graphics().setLine(1.0, color);
+	d.graphics().setFill(color);
+	d.graphics().beginPath();
+	d.graphics().moveTo(a.x,-a.y);
+	d.graphics().lineTo(b.x,-b.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	// head
+	d.graphics().beginPath();
+	d.graphics().moveTo(b.x, -b.y);
+	d.graphics().lineTo(b.x + dir.x*0.25 - tan.x*0.1, -(b.y + dir.y*0.25 - tan.y*0.1));
+	d.graphics().lineTo(b.x + dir.x*0.25 + tan.x*0.1, -(b.y + dir.y*0.25 + tan.y*0.1));
+	d.graphics().lineTo(b.x, -b.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.graphics().fill();
+	return d;
+}
+ZFeature.prototype.visualize = function(x,y){
+	var i, j, k, l, b, d, c;
+	var size = 100;
+	var viz = new DO();
+		//viz.matrix().rotate(this._angle.t);
+		viz.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(viz);
+	// BG
+	d = new DO();
+	d.graphics().setLine(1.0, 0xFF666666);
+	d.graphics().setFill(0x66666666);
+	d.graphics().beginPath();
+	d.graphics().drawRect(-size*0.5,-size*0.5, size,size);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.graphics().fill();
+	d.matrix().translate(0,0);
+	viz.addChild(d);
+	var zone;
+	var mini = size / this._zoneCols;
+	for(j=0; j<this._zoneCols; ++j){
+		for(i=0; i<this._zoneCols; ++i){
+			index = j*this._zoneCols + i;
+			zone = this._zones[index];
+			//console.log(zone);
+			d = new DO();
+			d.graphics().setLine(1.0, 0xFF666666);
+			d.graphics().beginPath();
+			d.graphics().drawRect(mini*i - size*0.5, mini*j - size*0.5, mini,mini);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			viz.addChild(d);
+			var bins = zone.rotations();
+			var bin = bins[3].bins();
+			for(k=0; k<bin.length; ++k){
+				b = bin[k];
+				v = new V2D(1,0).rotate(k * 2.0*Math.PI/bin.length).scale(b*2);
+				d = ZFeature.drawArrow(new V2D(0,0),v, 0xFF000000);
+				d.matrix().translate(mini*(i+0.5) - size*0.5, mini*(j+0.5) - size*0.5);
+				viz.addChild(d);
+			}
+			//console.log(bins);
+		}
+	}
+	// main gradients
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.x), 0xFFCC0000);
+		d.matrix().rotate(this._angle.t);
+	viz.addChild(d);
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.y), 0xFF00CC00);
+		d.matrix().rotate(this._angle.t);
+	viz.addChild(d);
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.z), 0xFF0000CC);
+		d.matrix().rotate(this._angle.t);
+	viz.addChild(d);
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.t), 0xFFCCCCCC);
+		d.matrix().rotate(this._angle.t);
+	viz.addChild(d);
+	// SHOW
+	// var win = img;
+	// img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
+	// var d;
+	// d = new DOImage(img);
+	// d.matrix().translate(200, 300);
+	// GLOBALSTAGE.addChild(d);
+
+}
+
 ZFeature.prototype.setupWithImage = function(range, point, scale){
 	// get square
 	var size = this._zoneSize * this._zoneCols;
 	var win = range.imageAtPoint(point,size,size,1.0,0.0);
 	var img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 	var d;
-	d = new DOImage(img);
-	d.matrix().translate(100, 200);
-	GLOBALSTAGE.addChild(d);
+// d = new DOImage(img);
+// d.matrix().translate(100, 200);
+// GLOBALSTAGE.addChild(d);
 	// find best scale space location
 	// find best rotation
 	var scale = 1.0;
@@ -1620,13 +1747,11 @@ ZFeature.prototype.setupWithImage = function(range, point, scale){
 	// ge = function(x,y,scale,sigma,w,h,matrix){
 	// x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix
 
-console.log("SETUP BLUR");
 	var gradientR = ImageMat.gradientVector(img.red(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientG = ImageMat.gradientVector(img.grn(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientB = ImageMat.gradientVector(img.blu(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
-	console.log(angle);
 	this._angle = angle;
 // // SHOW
 // 	var win = img;
@@ -1639,16 +1764,22 @@ console.log("SETUP BLUR");
 	// find best skewing
 	
 	// get new square @ correct rotation & scale
-	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size);
+	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(this._angle.t));
 	var gradientAllRed = ImageMat.gradientVector(img.red(),img.width(),img.height());
 	var gradientAllGrn = ImageMat.gradientVector(img.grn(),img.width(),img.height());
 	var gradientAllBlu = ImageMat.gradientVector(img.blu(),img.width(),img.height());
 	var gradientAllGry = ImageMat.gradientVector(img.gry(),img.width(),img.height());
+// // SHOW
+// var win = img;
+// img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
+// var d;
+// d = new DOImage(img);
+// d.matrix().translate(200, 300);
+// GLOBALSTAGE.addChild(d);
+	
 
 var i, j, k, l;
-	//var gradients = gradientAllRed;//.value;
-	//console.log(gradientAll.length)
-	// ...here
+
 	// generate zones
 	this._zones = [];
 	for(j=0; j<this._zoneCols; ++j){
@@ -1701,8 +1832,10 @@ ZFeature.Zone = function(){
 		this._rotations.push( new ZFeature.Rotation() );
 	}
 }
-ZFeature.Zone.prototype.addAngles = function(angles){//R, angleG, andleB, angleY){
-	//var angles = [angleR, angleG, andleB, angleY];
+ZFeature.Zone.prototype.rotations = function(){
+	return this._rotations;
+}
+ZFeature.Zone.prototype.addAngles = function(angles){
 	for(i=0; i<this._rotations.length; ++i){
 		this._rotations[i].addAngle(angles[i]);
 	}
@@ -1710,10 +1843,10 @@ ZFeature.Zone.prototype.addAngles = function(angles){//R, angleG, andleB, angleY
 
 
 ZFeature.Zone.prototype.setGradient = function(subz, suby, gradR, gradG, gradB, gradY){
+	// record the exact gradient values
 	//
 	HERE
 }
-
 
 
 ZFeature.Rotation = function(){
@@ -1724,8 +1857,14 @@ ZFeature.Rotation.prototype.addAngle = function(angle){ // [-pi,pi] =>
 	var offset = Math.PI2 / this._bins;
 	angle = Code.angleZeroTwoPi(angle + offset);
 	var bin = Math.min(Math.floor(((angle/Math.PI2)*this._bins)), this._bins);
-	console.log(bin+" | "+(angle * 180/Math.PI));
+	//console.log(bin+" | "+(angle * 180/Math.PI));
 	this._rotations[bin] += 1;
+}
+ZFeature.Rotation.prototype.bins = function(){
+	return this._rotations;
+}
+ZFeature.Rotation.prototype.count = function(){
+	return this._bins;
 }
 
 /*

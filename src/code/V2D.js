@@ -166,6 +166,7 @@ V2D.prototype.flip = function(a){
 }
 V2D.prototype.rotate = function(a){
 	V2D.rotate(this,this,a);
+	return this;
 }
 V2D.prototype.setFromArray = function(a){
 	this.set(a[0],a[1]);
