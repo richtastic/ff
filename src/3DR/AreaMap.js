@@ -1596,8 +1596,8 @@ https://www1.ethz.ch/igp/photogrammetry/education/lehrveranstaltungen/PCV_HS14/c
 ZFeature = function(){
 	this._eigen = 1.0 // ratio of gradient/primary scale over secondary scale
 	this._scale = 1.0; // overall image scale
-	this._rotation = 0.0; // main gradient orientation
-	this._zoneCols = 4; // rows/cols
+	this._rotation = V4D(); // main gradient orientation - RGBY
+	this._zoneCols = 4; // rows/cols of zones
 	this._zoneSize = 4; // pixels a zone edge covers
 	this._zones = [];
 	// zone count =  this._zoneCols * this._zoneCols
@@ -1614,8 +1614,9 @@ ZFeature.prototype.setupWithImage = function(range, point, scale){
 	// find best scale space location
 	// find best rotation
 	var scale = 1.0;
-	console.log(point,size)
-	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size);
+	//console.log(point,size)
+	// large sigma
+	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,2.0, size,size);
 	// ge = function(x,y,scale,sigma,w,h,matrix){
 	// x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix
 
@@ -1624,32 +1625,116 @@ console.log("SETUP BLUR");
 	var gradientG = ImageMat.gradientVector(img.grn(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientB = ImageMat.gradientVector(img.blu(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
-	//var gradientAll = ImageMat.gradientVector(img.red(),img.width(),img.height());
-	//console.log(gradientAll)
-	var win = img;
-	img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-	var d;
-	d = new DOImage(img);
-	d.matrix().translate(200, 300);
-	GLOBALSTAGE.addChild(d);
+	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
+	console.log(angle);
+	this._angle = angle;
+// // SHOW
+// 	var win = img;
+// 	img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
+// 	var d;
+// 	d = new DOImage(img);
+// 	d.matrix().translate(200, 300);
+// 	GLOBALSTAGE.addChild(d);
 
 	// find best skewing
 	
 	// get new square @ correct rotation & scale
+	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size);
+	var gradientAllRed = ImageMat.gradientVector(img.red(),img.width(),img.height());
+	var gradientAllGrn = ImageMat.gradientVector(img.grn(),img.width(),img.height());
+	var gradientAllBlu = ImageMat.gradientVector(img.blu(),img.width(),img.height());
+	var gradientAllGry = ImageMat.gradientVector(img.gry(),img.width(),img.height());
 
-
+var i, j, k, l;
+	//var gradients = gradientAllRed;//.value;
+	//console.log(gradientAll.length)
 	// ...here
 	// generate zones
-	var zone = new ZFeature.Zone();
+	this._zones = [];
+	for(j=0; j<this._zoneCols; ++j){
+		for(i=0; i<this._zoneCols; ++i){
+			var startY = j*this._zoneCols*this._zoneSize*this._zoneSize;
+			var startX = i*this._zoneSize;
+			var startIndex = startY + startX;
+			var zone = new ZFeature.Zone();
+			this._zones.push(zone);
+			for(k=0; k<this._zoneSize; ++k){
+				for(l=0; l<this._zoneSize; ++l){
+					var index = startIndex + k*this._zoneCols*this._zoneSize + l;
+					var angles = [];
+					angles.push( ZFeature.angleFromGradient(gradientAllRed[index]) );
+					angles.push( ZFeature.angleFromGradient(gradientAllGrn[index]) );
+					angles.push( ZFeature.angleFromGradient(gradientAllBlu[index]) );
+					angles.push( ZFeature.angleFromGradient(gradientAllGry[index]) );
+					zone.addAngles(angles);
+				}
+			}
+		}
+	}
 }
 
+ZFeature.V4DAngleFromGradients = function(v, g){
+	if(g===undefined){
+		g = v;
+		v = new V4D();
+	}
+	var gR = g[0];
+	var gG = g[1];
+	var gB = g[2];
+	var gY = g[3];
+	v.x = ZFeature.angleFromGradient(gR);
+	v.y = ZFeature.angleFromGradient(gG);
+	v.z = ZFeature.angleFromGradient(gB);
+	v.t = ZFeature.angleFromGradient(gY);
+	return v;
+}
+
+ZFeature.angleFromGradient = function(g){
+	var angle = V2D.angleDirection(g,V2D.DIRX);
+	return angle;
+}
+
+
 ZFeature.Zone = function(){
-	this._rotations = [];
+	this._rotations = []; // R G B Y
+	for(i=0; i<4; ++i){
+		this._rotations.push( new ZFeature.Rotation() );
+	}
 }
-ZFeature.Zone.prototype.setupWithImage = function(gradients){ // image should be ready for extraction
-	// ...
-	this._rotations = [];
+ZFeature.Zone.prototype.addAngles = function(angles){//R, angleG, andleB, angleY){
+	//var angles = [angleR, angleG, andleB, angleY];
+	for(i=0; i<this._rotations.length; ++i){
+		this._rotations[i].addAngle(angles[i]);
+	}
 }
+
+
+ZFeature.Zone.prototype.setGradient = function(subz, suby, gradR, gradG, gradB, gradY){
+	//
+	HERE
+}
+
+
+
+ZFeature.Rotation = function(){
+	this._bins = 8;
+	this._rotations = Code.newArrayZeros(this._bins);
+}
+ZFeature.Rotation.prototype.addAngle = function(angle){ // [-pi,pi] => 
+	var offset = Math.PI2 / this._bins;
+	angle = Code.angleZeroTwoPi(angle + offset);
+	var bin = Math.min(Math.floor(((angle/Math.PI2)*this._bins)), this._bins);
+	console.log(bin+" | "+(angle * 180/Math.PI));
+	this._rotations[bin] += 1;
+}
+
+/*
+
+compare 
+
+
+*/
+
 
 
 

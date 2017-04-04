@@ -1754,14 +1754,16 @@ ImageMat.derivativeY = function(src,wid,hei, x,y){
 ImageMat.gradientVector = function(src,wid,hei, x,y){
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
 	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
-	console.log(gradX,gradY);
 	if(x!==undefined && y!==undefined){
 		return new V2D(gradX,gradY);
 	}
-	for(var i=gradX.length; i-- > 0;){
-		gradX[i] = new V2D(gradX[i],gradY[i]);
+	var vectors = [];
+	gradX = gradX.value;
+	gradY = gradY.value;
+	for(var i=0; i<gradX.length; ++i){
+		vectors[i] = new V2D(gradX[i],gradY[i]);
 	}
-	return gradX;
+	return vectors;
 }
 ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
