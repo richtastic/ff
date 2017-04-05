@@ -1359,7 +1359,86 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	
 	var original = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 	var testing = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
-	//var point = new V2D(original.width()*0.5, original.height()*0.5);
+
+
+TODO: find fxn that corresponds to some kind of minimum / maximum at evenly-scaled x & y
+
+	console.log("GRADIENTS");
+	var imageGradAngR = ImageMat.gradientAngle(original.red(), original.width(),original.height());
+	var imageGradAngG = ImageMat.gradientAngle(original.grn(), original.width(),original.height());
+	var imageGradAngB = ImageMat.gradientAngle(original.blu(), original.width(),original.height());
+		imageGradAngR = imageGradAngR.value;
+		imageGradAngG = imageGradAngG.value;
+		imageGradAngB = imageGradAngB.value;
+
+	// var imageGradMagR = ImageMat.gradientMagnitude(original.red(), original.width(),original.height());
+	// var imageGradMagG = ImageMat.gradientMagnitude(original.grn(), original.width(),original.height());
+	// var imageGradMagB = ImageMat.gradientMagnitude(original.blu(), original.width(),original.height());
+	// 	imageGradMagR = imageGradMagR.value;
+	// 	imageGradMagG = imageGradMagG.value;
+	// 	imageGradMagB = imageGradMagB.value;
+	
+	var originalGrad = new ImageMat(original.width(), original.height(), imageGradAngR, imageGradAngG, imageGradAngR);
+
+	imageGradAngR = ImageMat.normalFloat01(imageGradAngR);
+	imageGradAngG = ImageMat.normalFloat01(imageGradAngG);
+	imageGradAngB = ImageMat.normalFloat01(imageGradAngB);
+	img = GLOBALSTAGE.getFloatRGBAsImage(imageGradAngR,imageGradAngG,imageGradAngB, original.width(),original.height());
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(  0,300);
+	GLOBALSTAGE.addChild(d);
+
+
+
+	var imageGradAngR = ImageMat.gradientAngle(testing.red(), testing.width(),testing.height());
+	var imageGradAngG = ImageMat.gradientAngle(testing.grn(), testing.width(),testing.height());
+	var imageGradAngB = ImageMat.gradientAngle(testing.blu(), testing.width(),testing.height());
+		imageGradAngR = imageGradAngR.value;
+		imageGradAngG = imageGradAngG.value;
+		imageGradAngB = imageGradAngB.value;
+
+
+	var testingGrad = new ImageMat(original.width(), original.height(), imageGradAngR, imageGradAngG, imageGradAngR);
+
+	imageGradAngR = ImageMat.normalFloat01(imageGradAngR);
+	imageGradAngG = ImageMat.normalFloat01(imageGradAngG);
+	imageGradAngB = ImageMat.normalFloat01(imageGradAngB);
+	img = GLOBALSTAGE.getFloatRGBAsImage(imageGradAngR,imageGradAngG,imageGradAngB, original.width(),original.height());
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(400,300);
+	GLOBALSTAGE.addChild(d);
+
+
+	// ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
+	// ImageMat.gradientAngle
+	// imageGradAngR = ImageMat.normalFloat01(imageGradAngR);
+	// imageGradAngG = ImageMat.normalFloat01(imageGradAngG);
+	// imageGradAngB = ImageMat.normalFloat01(imageGradAngB);
+	// imageGradMagR = ImageMat.normalFloat01(imageGradMagR);
+	// imageGradMagG = ImageMat.normalFloat01(imageGradMagG);
+	// imageGradMagB = ImageMat.normalFloat01(imageGradMagB);
+	// img = GLOBALSTAGE.getFloatRGBAsImage(imageGradMagR,imageGradMagG,imageGradMagB, original.width(),original.height());
+	// d = new DOImage(img);
+	// d.matrix().scale(1.0);
+	// d.matrix().translate(400,300);
+	// GLOBALSTAGE.addChild(d);
+
+	console.log("MOVE COST");
+	var moveCost = ImageMat.totalCostToMoveAny(original);
+	
+	ImageMat.normalFloat01(moveCost);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(moveCost,moveCost,moveCost, original.width(),original.height());
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(400,300);
+//	GLOBALSTAGE.addChild(d);
+
+
+	//
+		//var point = new V2D(original.width()*0.5, original.height()*0.5);
 	//var point = new V2D(200,130);
 	//var point = new V2D(201,41.0); // ...
 	//var point = new V2D(200.5,40.5); // ...
@@ -1372,6 +1451,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 			//var point = new V2D(189,187); // glasses
 			var point = new V2D(364,174); // mouse
 			//var point = new V2D(190,160); // corner tankman
+//var point = new V2D(225,100);
 			nextPoint = new V2D(281,236); // 
 	// .5 is exact
 	var scale = 1.0;
@@ -1379,6 +1459,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var newHeight = 11;
 	//var scaled = original.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
 	var scaled = testing.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
+//var scaled = testingGrad.extractRectFromFloatImage(point.x,point.y,1.0/scale,null, newWidth,newHeight, null);
 	img = GLOBALSTAGE.getFloatRGBAsImage(scaled.red(),scaled.grn(),scaled.blu(), scaled.width(),scaled.height());
 	var d;
 	d = new DOImage(img);
@@ -1386,17 +1467,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	GLOBALSTAGE.addChild(d);
 
 
-
-	console.log("MOVE COST");
-	var moveCost = ImageMat.totalCostToMoveAny(original);
-	
-	ImageMat.normalFloat01(moveCost);
-
-	img = GLOBALSTAGE.getFloatRGBAsImage(moveCost,moveCost,moveCost, original.width(),original.height());
-	d = new DOImage(img);
-	d.matrix().scale(1.0);
-	d.matrix().translate(400,300);
-	GLOBALSTAGE.addChild(d);
+//TODO: MOMENT | COV | ASYM-SCALE
 
 
 /*
@@ -1414,8 +1485,10 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	d.matrix().translate(800,0);
 	GLOBALSTAGE.addChild(d);
 */
+
 	console.log("colorize");
 	var scores = ImageMat.convolveSSDScores(original, scaled);
+//var scores = ImageMat.convolveSSDScores(originalGrad, scaled);
 	var locations  = Code.findMinima2DFloat(scores.value,scores.width,scores.height, true);
 	locations = locations.sort(function(a,b){
 		return Math.abs(a.z)>Math.abs(b.z) ? 1 : -1;
@@ -1429,7 +1502,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	displayValues = Code.copyArray(scores.value);
 	displayValues = ImageMat.normalFloat01(displayValues);
 	displayValues = ImageMat.invertFloat01(displayValues);
-	displayValues = ImageMat.pow(displayValues,200);
+	displayValues = ImageMat.pow(displayValues,100);
 	//displayValues = ImageMat.pow(displayValues,200);
 	//displayValues = ImageMat.pow(displayValues,200);
 
@@ -1446,28 +1519,40 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 
 	var i, c;
 	var sca = 1.0;
-	// for(i=0;i<locations.length;++i){
-	// 	var p = locations[i];
-	// 	//console.log(i+" "+p.z);
-	// 	c = new DO();
-	// 	if(i==0){
-	// 		c.graphics().setLine(2.0, 0xFF3399FF);
-	// 	}else{
-	// 		c.graphics().setLine(1.0, 0x66990000);
-	// 	}
-	// 	c.graphics().setFill(0x00FF6666);
-	// 	c.graphics().beginPath();
-	// 	c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.5);
-	// 	c.graphics().strokeLine();
-	// 	c.graphics().endPath();
-	// 	c.graphics().fill();
-	// 		c.matrix().translate(800,300);
-	// 	GLOBALSTAGE.addChild(c);
-	// 	if(i>20){
-	// 		break;
-	// 	}
-	// }
+	for(i=0;i<locations.length;++i){
+		var p = locations[i];
+		//console.log(i+" "+p.z);
+		c = new DO();
+		if(i==0){
+			c.graphics().setLine(2.0, 0xFF3399FF);
+		}else{
+			c.graphics().setLine(1.0, 0x66990000);
+		}
+		c.graphics().setFill(0x00FF6666);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.graphics().fill();
+			c.matrix().translate(800,300);
+		GLOBALSTAGE.addChild(c);
+		if(i>20){
+			break;
+		}
+	}
 
+	// show actual:
+	var p = point;
+		c = new DO();
+			c.graphics().setLine(2.0, 0xFF660066);
+		c.graphics().setFill(0x0);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca, 7);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.graphics().fill();
+			c.matrix().translate(400 + newWidth*0.5,0 + newHeight*0.5);
+		GLOBALSTAGE.addChild(c);
 
 	// show best
 	var p = locations[0];
@@ -1482,13 +1567,13 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 			c.matrix().translate(400 + newWidth*0.5,0 + newHeight*0.5);
 		GLOBALSTAGE.addChild(c);
 	
-
+return;
 var feature1, feature2;
 var rangeA = new AreaMap.Range(testing,testing.width(),testing.height(), 10,10); // "B"
 var rangeB = new AreaMap.Range(original,original.width(),original.height(), 10,10); // "A"
 //var point = 
 console.log(point+"");
-// TODO:
+
 	// create a feature to describe each of the features @ potential locations
 	feature1 = new ZFeature();
 	feature1.setupWithImage(rangeA, point, 1.0,    true);
@@ -1502,7 +1587,7 @@ console.log(point+"");
 	var score = ZFeature.compareScore(feature1, feature2);
 	console.log("1 & 2 score: "+score);
 
-//return;
+return;
 	// go thru board
 	var gridX = 1, gridY = 1;
 

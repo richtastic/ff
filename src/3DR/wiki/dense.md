@@ -108,6 +108,37 @@ a good point migh be one that if you move left/right or rotate or scale a little
 
 
 
+Image Moment: &Sigma;&Sigma;(x<sub>i</sub>-x<sub>c</sub>)&middot;(y<sub>i</sub>-y<sub>c</sub>) * I(x<sub>i</sub>,y<sub>i</sub>)
+
+
+Covariance matrix eigenvectors / eigenvalues
+COV = measure of dispersion
+inv(COV) = concentration matrix = precision matrix = measure of precision
+[cov(x,x)  cov(x,y)  cov(x,z)]
+[cov(y,x)  cov(y,y)  cov(y,z)]
+[cov(z,x)  cov(z,y)  cov(z,z)]
+
+R3D.covariance3D
+
+
+
+
+var(X) = Sum_i_to_n( (x_i - x_c)*(y_i - y_c) ) / (n-1)
+
+x_c is the centroid
+x_i == coordinate ? value I(x) ?
+
+
+?:
+
+[I1,I2]
+[I3,I4]
+Im = (I1+I2+I3+I4)/4.0
+Iim = Ii / Im
+=>
+[I1m,I2m]
+[I3m,I4m]
+
 
 
 
@@ -129,6 +160,9 @@ matching individual features
 
 
 
+- comparrisions:
+	- SSD of gradient
+
 
 
 - COMPARE @ OPTIMAL ROTATION:
@@ -137,6 +171,13 @@ matching individual features
 	- want to create a 'scale field'
 - want major/minor scale directions
 	- moment at area ?
+
+
+NAIEVE TEST:
+	- pick random point/feature from image 1
+	- do ssd matching with entire other image
+	- use best match to calculate disparity
+	- repeat
 
 
 RESULTS:
