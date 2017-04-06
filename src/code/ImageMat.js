@@ -1085,7 +1085,7 @@ ImageMat.prototype.calculateCentroid = function(){
 	var gry = ImageMat.calculateCentroid(this.gry(), this.width(), this.height());
 	return {"red":red, "grn":grn, "blu":blu, "gry":gry, "width":this.width(), "height":this.height()};
 }
-// THIS IS MORE LIKE THE MOMENT
+// THIS IS MORE LIKE THE CENTRAL MOMENT
 ImageMat.prototype.calculateCovariance = function(mean){
 	var matrix = ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean);
 	matrix = new Matrix(2,2,matrix);
