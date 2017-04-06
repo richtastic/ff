@@ -39,7 +39,7 @@ R3D.uniformScale3D = function(pointsA,pointsB, centroidA, centroidB){
 R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
 	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
 	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
-	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0;
+	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0;
 	for(it=0;it<len;++it){
 		pA = pointsA[it].copy().sub(centroidA);
 		pB = pointsB[it].copy().sub(centroidB);

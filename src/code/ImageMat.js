@@ -1019,6 +1019,29 @@ ImageMat.costToMove = function(image, dx,dy, sum){ // assume image stretches in 
 	var result = new ImageMat(wid,hei,r,g,b);
 	return result;
 }
+ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
+	var cX = (imageWidth-1)/2.0;
+	var cY = (imageHeight-1)/2.0;
+	// var sigmaX = cX/Math.sqrt(2); sigmaX = 2.0*sigmaX*sigmaX;
+	// var sigmaY = cY/Math.sqrt(2); sigmaY = 2.0*sigmaY*sigmaY;
+	var sigmaX = cX/2; sigmaX = 2.0*sigmaX*sigmaX;
+	var sigmaY = cY/2; sigmaY = 2.0*sigmaY*sigmaY;
+	var i, j, x, y, index, value;
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+			index = j*imageWidth + i;
+			value = image[index];
+			value = value * Math.exp( -( Math.pow(i-cX,2)/sigmaX  +  Math.pow(j-cY,2)/sigmaY ) );
+			image[index] = value;
+		}
+	}
+	return {"value":image, "width":imageWidth, "height":imageHeight};
+}
+ImageMat.prototype.applyGaussianMask = function(){
+	ImageMat.applyGaussianMask(this.red(), this.width(), this.height());
+	ImageMat.applyGaussianMask(this.grn(), this.width(), this.height());
+	ImageMat.applyGaussianMask(this.blu(), this.width(), this.height());
+}
 ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
 	var cen = new V2D();
 	var length = imageWidth * imageHeight;
@@ -1042,6 +1065,9 @@ ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mea
 	var covXX = 0;
 	var covYY = 0;
 	var covXY = 0;
+		// var covXZ = 0;
+		// var covYZ = 0;
+		// var covZZ = 0;
 	var size = 0; // imageWidth * imageHeight; // if assuming non-constant weights, do inside loop
 	for(j=0; j<imageHeight; ++j){
 		for(i=0; i<imageWidth; ++i){
@@ -1053,14 +1079,23 @@ ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mea
 			covXX += value*x*x;
 			covYY += value*y*y;
 			covXY += value*x*y;
+				// covXZ = value*x;
+				// covYZ = value*y;
+				// covZZ = value;
 		}
 	}
-	covXX *= 1.0/size;
-	covYY *= 1.0/size;
-	covXY *= 1.0/size;
+	size = 1.0/size;
+	covXX *= size;
+	covYY *= size;
+	covXY *= size;
+		// covXZ *= size;
+		// covYZ *= size;
+		// covZZ *= size;
 	var cov = Code.inverse2x2([], covXX, covXY, covXY, covYY);
+	//var cov = Code.inverse3x3([], covXX, covXY, covXZ,  covXY, covYY, covYZ,  covXZ, covYZ, covZZ);
 	return cov;
 }
+
 /*
 R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
 	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
@@ -1089,6 +1124,58 @@ ImageMat.prototype.calculateCentroid = function(){
 ImageMat.prototype.calculateCovariance = function(mean){
 	var matrix = ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean);
 	matrix = new Matrix(2,2,matrix);
+		//matrix = new Matrix(3,3,matrix);
+	var eigens = Matrix.eigenValuesAndVectors(matrix);
+	var eigenVectors = eigens.vectors
+	eigenVectors[0] = eigenVectors[0].toArray();
+	eigenVectors[1] = eigenVectors[1].toArray();
+		//eigenVectors[2] = eigenVectors[2].toArray();
+	var eigenValues = eigens.values;
+	var ev1 = new V3D(eigenVectors[0][0],eigenVectors[0][1],eigenValues[0]);
+	var ev2 = new V3D(eigenVectors[1][0],eigenVectors[1][1],eigenValues[1]);
+		//var ev3 = new V3D(eigenVectors[2][0],eigenVectors[2][1],eigenValues[2]);
+	if(ev1.z<ev2.z){ // show largest first
+		var temp = ev2;
+		ev2 = ev1;
+		ev1 = temp;
+	}
+	return [ev1,ev2];
+		//return [ev1,ev2,ev3];
+}
+ImageMat.calculateRawMoment = function(image, imageWidth,imageHeight, expX, expY, mean){
+	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
+	var i, j, x, y, index, value;
+	var moment = 0;
+	var totalWeight = 0;
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+			index = j*imageWidth + i;
+			value = image[index];
+			totalWeight += value;
+			x = i - mean.x;
+			y = j - mean.y;
+			// x = i;
+			// y = j;
+			moment += value * Math.pow(x,expX) * Math.pow(y,expY);
+		}
+	}
+	return moment/totalWeight;
+}
+ImageMat.prototype.calculateMoment = function(mean){
+	var gry = this.gry();
+	var wid = this.width();
+	var hei = this.height();
+	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(gry, wid,hei);
+	
+	//var totalWeight = ImageMat.sumFloat(gry);
+	// var m01 = ImageMat.calculateRawMoment(gry,wid,hei,0,1,mean);
+	// var m10 = ImageMat.calculateRawMoment(gry,wid,hei,1,0,mean);
+
+	var m11 = ImageMat.calculateRawMoment(gry,wid,hei,1,1,mean);
+	var m20 = ImageMat.calculateRawMoment(gry,wid,hei,2,0,mean);
+	var m02 = ImageMat.calculateRawMoment(gry,wid,hei,0,2,mean);
+	var matrix = new Matrix(2,2,[m20,m11,m11,m02]);
+
 	var eigens = Matrix.eigenValuesAndVectors(matrix);
 	var eigenVectors = eigens.vectors
 	eigenVectors[0] = eigenVectors[0].toArray();
@@ -1102,9 +1189,6 @@ ImageMat.prototype.calculateCovariance = function(mean){
 		ev1 = temp;
 	}
 	return [ev1,ev2];
-}
-ImageMat.prototype.calculateMoment = function(mean){
-	//
 }
 
 ImageMat.prototype.calculateX = function(){
@@ -1242,6 +1326,9 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 // 			var rangeH = maxH-minH;
 // 			rangeH = rangeH==0.0 ? 1.0 : 1.0/rangeH;
 // rangeH = 1.0;
+// ?
+// not MIN, but average ?
+// ?
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
 					var nIndex = nJ*needleWidth + nI;

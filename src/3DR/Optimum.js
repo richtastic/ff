@@ -8,15 +8,15 @@ function Optimum(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
-	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// resources
 	this._resource = {};
 	// 3D stage
 	this._keyboard = new Keyboard();
-	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
-	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
-	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
-	this._keyboard.addListeners();
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
+	// this._keyboard.addListeners();
 
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	var imageList = ["caseStudy1-9.jpg"];
@@ -58,18 +58,29 @@ var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
 var imageMatrixOriginal = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
 
 //var imageMatrixBlur = new ImageMat();
-//for(j=0;j<8;++j){
-j = 0;
 	var testSize = new V2D(21,21);
 	var testPoint = new V2D(281,236); // mouse
 	var testScale = new V2D(1.0,1.0); // 1.005133638650043 [1.0]
+
+	var testPoint = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // mouse
+
+
+var testPoint = new V2D(188.56468934493222,61.18091100486489);    
+	console.log("TEST POINT:    var testPoint = new V2D("+testPoint.x+","+testPoint.y+");    ");
+for(j=0;j<14;++j){
+//j = 0;
+	
+		var s = 1.0 + (j-7)*0.1;
+		testScale.x = 1.0*Math.sqrt(s);
+		testScale.y = 1.0/Math.sqrt(s);
 	//var testScale = new V2D(0.8164965809277261,1.224744871391589); // 1.0322774458814319 [1.5] ~ 1.453
 	//var testScale = new V2D(1.224744871391589,0.8164965809277261); // 1.0203998663625025 [1.5] ~ 1.47
 	//var testScale = new V2D(1.4142135623730951,0.7071067811865475); // 1.0574604457308097 [2.0] ~ 1.89
 	//var testScale = new V2D(0.7071067811865475,1.4142135623730951); // 1.059192986996738 [2.0] ~ 1.88
 	// 1.01689434759 & 1.3148033097015661
 	var testRotation = 0.0; 
-	var testRotation = Math.PI*0.1*j;
+	//var testRotation = Math.PI*0.15*(j-5);
+	//var testRotation = Math.PI*0.2;
 		var testMatrix = new Matrix(3,3).identity();
 		testMatrix = Matrix.transform2DScale(testMatrix,testScale.x,testScale.y);
 		testMatrix = Matrix.transform2DRotate(testMatrix,testRotation);
@@ -78,27 +89,69 @@ j = 0;
 		// SHOW
 		img = GLOBALSTAGE.getFloatRGBAsImage(featureOriginal.red(),featureOriginal.grn(),featureOriginal.blu(), featureOriginal.width(),featureOriginal.height());
 		d = new DOImage(img);
-		d.matrix().translate(400 + j*100, 50);
+		d.matrix().translate(450 + j*30, 10);
 		GLOBALSTAGE.addChild(d);
 // get blurred image
-	var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,1.6, testSize.x,testSize.y, testMatrix);
-// TODO: APPLY GAUSSIAN MASK OVER BLURRED FEATURE
-			// SHOW
+	var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,2.6, testSize.x,testSize.y, testMatrix);
+	var featureGradient = ImageMat.gradientVector(featureBlur.gry(),featureBlur.width(),featureBlur.height(), Math.floor(testSize.x*0.5),Math.floor(testSize.y*0.5));
+	// APPLY GAUSSIAN MASK OVER BLURRED FEATURE
+	featureBlur.applyGaussianMask();
+		// SHOW
 		img = GLOBALSTAGE.getFloatRGBAsImage(featureBlur.red(),featureBlur.grn(),featureBlur.blu(), featureBlur.width(),featureBlur.height());
 		d = new DOImage(img);
-		d.matrix().translate(450 + j*100, 50);
+		d.matrix().translate(450 + j*30, 50);
 		GLOBALSTAGE.addChild(d);
-// calculate MOMENT
+
 	var centroid = featureBlur.calculateCentroid();
 	//console.log(centroid)
 	var featureMoment = null;
 // calculate COV
 	var featureCovariance = featureBlur.calculateCovariance(new V2D(testSize.x*0.5,testSize.y*0.5));
+	//console.log(featureCovariance+"");
+	//console.log(" .............. ");
+
+	// calculate MOMENT
+	//var featureCovariance = featureBlur.calculateMoment();
+
+
+
 	var vector1 = featureCovariance[0];
 	var vector2 = featureCovariance[1];
 	var ratio = vector1.z / vector2.z;
-	console.log("RATIO: "+ratio+" @ "+vector1.z+" , "+vector2.z+" ... "+vector1+" & "+vector2);
-	var sca = 10.0;
+	//console.log("RATIO: "+ratio+" @ "+vector1.z+" , "+vector2.z);//+" ... "+vector1+" & "+vector2);
+	// to find directional rotation dot product primary vector with gradient
+	var dot = V2D.dot(vector1,featureGradient);
+var wasV1 = vector1.copy();
+var wasV2 = vector2.copy();
+	if(dot<0){
+		vector1.rotate(Math.PI);
+		vector2.rotate(Math.PI);
+	}
+
+	var recoverRatioScale = ratio;
+	var recoverActualScale =Math.sqrt(ratio);  // actual scale
+		recoverRatioScale = Math.sqrt(recoverActualScale); // dispersed scale
+
+recoverRatioScale = ratio; // keep ... 
+	var recoverScaleX = 1.0*recoverRatioScale;
+	var recoverScaleY = 1.0/recoverRatioScale;
+	//console.log(ratio+" ... "+recoverScaleX+","+recoverScaleY+"  vs   "+(1.0/testScale.x)+","+(1.0/testScale.y));
+	console.log(j+": "+ratio+" ... "+"  vs   "+(Math.max(testScale.x,testScale.y)/Math.min(testScale.x,testScale.y)));
+// recoverScaleX = 1.0/testScale.x;
+// recoverScaleY = 1.0/testScale.y;
+	var recoverRotation = V2D.angleDirection(V2D.DIRX,vector1);
+	var recoverMatrix = new Matrix(3,3).identity();
+	recoverMatrix = Matrix.transform2DRotate(testMatrix,-recoverRotation);
+	recoverMatrix = Matrix.transform2DScale(testMatrix,recoverScaleX,recoverScaleY);
+	//recoverMatrix = Matrix.transform2DRotate(testMatrix,recoverRotation);
+	var featureRecovered = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, recoverMatrix);
+		// SHOW
+		img = GLOBALSTAGE.getFloatRGBAsImage(featureRecovered.red(),featureRecovered.grn(),featureRecovered.blu(), featureRecovered.width(),featureRecovered.height());
+		d = new DOImage(img);
+		d.matrix().translate(450 + j*30, 80);
+		GLOBALSTAGE.addChild(d);
+
+	var sca = 20.0;
 		// SHOW
 		d = new DO();
 		color = 0xFFFF0000;
@@ -106,33 +159,53 @@ j = 0;
 		d.graphics().setLine(1.0, color);
 		d.graphics().beginPath();
 		d.graphics().moveTo(0,0);
-		d.graphics().lineTo(vector1.x*sca*ratio,vector1.y*sca*ratio);
+		d.graphics().lineTo(wasV1.x*sca,wasV1.y*sca);
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 		d.matrix().translate((testSize.x-1)*0.5, (testSize.y-1)*0.5);
-		d.matrix().translate(450 + j*100, 50);
+		d.matrix().translate(450 + j*30, 50);
 		GLOBALSTAGE.addChild(d);
-				d = new DO();
+		d = new DO();
 		color = 0xFF6699FF;
 		d.graphics().clear();
 		d.graphics().setLine(1.0, color);
 		d.graphics().beginPath();
 		d.graphics().moveTo(0,0);
-		d.graphics().lineTo(vector2.x*sca*ratio,vector2.y*sca*ratio);
+		d.graphics().lineTo(wasV2.x*sca,wasV2.y*sca);
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 		d.matrix().translate(testSize.x*0.5, testSize.y*0.5);
-		d.matrix().translate(450 + j*100, 50);
+		d.matrix().translate(450 + j*30, 50);
 		GLOBALSTAGE.addChild(d);
-//}
+		// GRADIENT
+		var grad = featureGradient.copy().norm();
+		d = new DO();
+		color = 0xFF00FF00;
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(grad.x*sca,grad.y*sca);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate((testSize.x-1)*0.5, (testSize.y-1)*0.5);
+		d.matrix().translate(450 + j*30, 50);
+		GLOBALSTAGE.addChild(d);
+		
+}
 // calculate eigenvectors
 // do scales & see if can revert scales
 	// test fxn at different scales
-	var scales = [0.7,0.8,0.9,1.0,1.1,1.2,1.3];
+	var scales = [0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
 	for(i=0; i<scales.length; ++i){
 		var scale = scales[i];
 		//var featureScale = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,scale,1.6, testSize.x,testSize.y, testMatrix);
 		var featureScale = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,scale,null, testSize.x,testSize.y, testMatrix);
+			// SHOW
+			img = GLOBALSTAGE.getFloatRGBAsImage(featureScale.red(),featureScale.grn(),featureScale.blu(), featureScale.width(),featureScale.height());
+			d = new DOImage(img);
+			d.matrix().translate(450 + i*30, 150);
+			GLOBALSTAGE.addChild(d);
 		// laplacian ?
 		// gaussian
 		var fxn = null;
@@ -141,11 +214,99 @@ j = 0;
 
 
 
-var ratio = 2.0;
-var scaleA = Math.sqrt(ratio);
-var scaleB = 1.0/Math.sqrt(ratio);
-var ratio = scaleA/scaleB;
-console.log(ratio+" = "+scaleA+" * "+scaleB);
+var data = [];
+var dataLen = 1000;
+var p;
+var scaA = 2.0;
+var scaB = 1.0;
+for(i=0; i<dataLen; ++i){
+	p = new V2D(1,0);
+	var ang = Math.PI*2.0*(i/dataLen);
+	p.rotate(ang);
+	p.x *= scaA;
+	p.y *= scaB;
+	p.rotate(Math.PI*0.5); // 45
+	//p = V2D.rotate(p, ang);
+	p = new V3D(p.x,p.y, 1.0);
+	data.push(p);
+}
+
+var vectors = R3D.covariance2D(data);
+var v1 = vectors[0];
+var v2 = vectors[1];
+console.log( v1+"" );
+console.log( v2+"" );
+var ratio = v1.z/v2.z;
+var scale = Math.sqrt(ratio);
+console.log("=> "+scale+" vs "+(Math.max(scaA,scaB)/Math.min(scaA,scaB)));
+
+}
+R3D.covariance2D = function(points, centroid){
+	var c = new V2D(0,0);
+	var i, len=points.length;
+	var p, cov = 0, weights = 0;
+	var covXX = 0;
+	var covYY = 0;
+	var covXY = 0;
+	for(i=0;i<len;++i){
+		p = points[i];
+		x = p.x - c.x;
+		y = p.y - c.y;
+		weights += p.z;
+		covXX += p.z*x*x;
+		covYY += p.z*y*y;
+		covXY += p.z*x*y;
+	}
+	if(weights==0){
+		weights = 1.0;
+	}
+	weights = 1.0/weights;
+	covXX *= weights;
+	covYY *= weights;
+	covXY *= weights;
+	console.log(covXX, covXY, covXY, covYY)
+	var matrix = Code.inverse2x2([], covXX, covXY, covXY, covYY);
+	console.log(matrix);
+
+	matrix = new Matrix(2,2,matrix);
+	var eigens = Matrix.eigenValuesAndVectors(matrix);
+	var eigenVectors = eigens.vectors
+	eigenVectors[0] = eigenVectors[0].toArray();
+	eigenVectors[1] = eigenVectors[1].toArray();
+	var eigenValues = eigens.values;
+	var ev1 = new V3D(eigenVectors[0][0],eigenVectors[0][1],eigenValues[0]);
+	var ev2 = new V3D(eigenVectors[1][0],eigenVectors[1][1],eigenValues[1]);
+	if(ev1.z<ev2.z){ // show largest first
+		var temp = ev2;
+		ev2 = ev1;
+		ev1 = temp;
+	}
+	return [ev1,ev2];
+}
+
+// R3D.covariance2D = function(points){
+// 	var c = new V2D(0,0);
+// 	var i, len=points.length;
+// 	var p, cov = 0, weights = 0;
+// 	for(i=0;i<len;++i){
+// 		p = points[i];
+// 		x = p.x - c.x;
+// 		y = p.y - c.y;
+// 		weights += p.z;
+// 		cov += x * y;
+// 	}
+// 	if(weights==0){
+// 		weights = 1.0;
+// 	}
+// 	cov /= weights;
+// 	return cov;
+// }
+Optimum.wft = function(){//
+// var ratio = 2.0;
+// var scaleA = Math.sqrt(ratio);
+// var scaleB = 1.0/Math.sqrt(ratio);
+// var ratio = scaleA/scaleB;
+// console.log(ratio+" = "+scaleA+" * "+scaleB);
 return;
 
 
