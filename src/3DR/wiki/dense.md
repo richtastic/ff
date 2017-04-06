@@ -118,8 +118,25 @@ inv(COV) = concentration matrix = precision matrix = measure of precision
 [cov(y,x)  cov(y,y)  cov(y,z)]
 [cov(z,x)  cov(z,y)  cov(z,z)]
 
-R3D.covariance3D
 
+**(co)variance**: VAR(X,Y) = &sigma;(x,y) = E[x - E(x)]&middot;E[y - E(y)] = (1/N)&middot;&Sum;((x<sub>i</sub>-&mu;<sub>x</sub>)&middot;(y<sub>i</sub>-&mu;<sub>y</sub>))
+<br/>
+
+could have x = .x, y = .y, z = value @ I[y*w+i]
+could have x = .x, y = .y, weighted by z
+
+
+COV(x,y) = E[x*y] - E[x]*E[y]
+
+
+
+
+
+GETTING ACCURATE OVERALL SCALE:
+	- centroid of feature should be @ 0.5 of total size ?
+	- maximum of laplacian / gaussian at different scales ?
+GETTING ACCURATE ASYMMETRIC SCALE:
+	- 
 
 
 
@@ -140,6 +157,45 @@ Iim = Ii / Im
 [I3m,I4m]
 
 
+GRADIENT: directional flow of a scaler field (direction of maximum change) [directional derivative]
+<br/>
+grad(f) = (VECTOR) &nabla;&middot;f
+<br/>
+
+DIVERGENCE: vector field gradient measurement of sinkness/sourceness, flux density @ point, div = flux / vol
+<br/>
+div(F) = (SCALAR) &nabla; &middot; F
+<br/>
+
+CURL: vector field measurement of twist at a point == cross product of vector field
+<br/>
+curl(F) = (VECTOR) &nabla; &times; F
+<br/>
+
+LAPLACIAN: div(grad), curvature of a field ?, change of change of a scaler field [&nabla;<sup>2</sup> &ne; &nabla;<sup></sup> &middot; &nabla;<sup></sup>]
+<br/>
+laplacian(f) = (SCALAR) &nabla;<sup>2</sup>f =  &nabla; &middot; &nabla;f = &Sigma;  &part;<sup>2</sup>f/&part;x<sub>i</sub><sup>2</sup>
+<br/>
+second derivative DOT PRODUCT
+tells you where there's a maximum / minimum at = 0
+
+
+
+SCALE IMAGE UP / DOWN, get LAPLACIAN at all scales, plot, look for maxima/minima ?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -150,7 +206,7 @@ Iim = Ii / Im
 matching individual features
 
 
-- start with SSD to limit potential points
+- start with SSD to limit potential points [does not account for large rotation / scaling]
 - 
 
 
@@ -220,4 +276,22 @@ Manual3DR.js:1560 4 = 99.83426214829632
 Manual3DR.js:1560 5 = 102.5561866609676
 Manual3DR.js:1560 6 = 103.3541176910412
 Manual3DR.js:1560 
+
+
+
+
+**f**: 2D scalar field
+<br/>
+**&nabla;**: &part;f/&part; **i** + &part;f/&part;y **j**
+<br/>
+**gradient**: grad(f) = &nabla; &middot; f = &part;f/&part;x **i** + &part;f/&part;y **j**
+<br/>
+**grad(grad(f))**: = &part;[&part;f/&part;x **i** + &part;f/&part;y **j**]&part;x **i**  + &part;[&part;f/&part;x **i** + &part;f/&part;y **j**]&part;x **j** 
+<br/>
+= tensor ?
+<br/>
+**laplacian**: &nabla;<sup>2</sup> &middot; f = &part;f/&part;x **i** + &part;f/&part;y **j**
+<br/>
+
+
 

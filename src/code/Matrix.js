@@ -873,7 +873,7 @@ var me = A;
     return {H:A, Q:Q};
 }
 Matrix.eigenValues = function(A){ // eigenValues[]
-	return eigenValuesAndVectors(A).values;
+	return Matrix.eigenValuesAndVectors(A).values;
 	/*var arr = new Array();
 	// upper hessian
 	// QR 
@@ -921,7 +921,7 @@ Matrix.eigenVectorsFromValues = function(A,values){ // eigenVectors[ [] ]
 	return null;
 }
 Matrix.eigenVectors = function(A){
-	return eigenValuesAndVectors(A).vectors;
+	return Matrix.eigenValuesAndVectors(A).vectors;
 	/*
 	return Matrix.eigenVectorsFromValues(A, Matrix.eigenValues(A));
 	*/

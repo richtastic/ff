@@ -5,7 +5,15 @@ function R3D(){
 }
 
 // ------------------------------------------------------------------------------------------- conditioning utilities
-R3D.centroid3D = function(points3D){
+R3D.centroid2D = function(points2D){ // currently assumes constant weights
+	var cen = new V2D();
+	for(var i=points2D.length-1; i>=0; i--){
+		cen.add(points2D[i]);
+	}
+	cen.scale(1.0/len);
+	return cen;
+}
+R3D.centroid3D = function(points3D){ // currently assumes constant weights
 	var i, len=points3D.length;
 	var cen = new V3D();
 	for(i=0;i<len;++i){
@@ -27,6 +35,21 @@ R3D.uniformScale3D = function(pointsA,pointsB, centroidA, centroidB){
 	}
 	scale /= len;
 	return scale;
+}
+R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
+	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
+	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
+	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0;
+	for(it=0;it<len;++it){
+		pA = pointsA[it].copy().sub(centroidA);
+		pB = pointsB[it].copy().sub(centroidB);
+		a += pA.x*pB.x;
+		b += pA.x*pB.y;
+		c += pA.y*pB.x;
+		d += pA.y*pB.y;
+	}
+	var cov = new Matrix(2,2).setFromArray([a, b, c, d]);
+	return cov;
 }
 R3D.covariance3D = function(pointsA,pointsB, centroidA, centroidB){
 	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);

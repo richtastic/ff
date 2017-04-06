@@ -1019,6 +1019,98 @@ ImageMat.costToMove = function(image, dx,dy, sum){ // assume image stretches in 
 	var result = new ImageMat(wid,hei,r,g,b);
 	return result;
 }
+ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
+	var cen = new V2D();
+	var length = imageWidth * imageHeight;
+	var totalWeight = 0;
+	var i, j, index, value;
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+			index = j*imageWidth + i;
+			value = image[index];
+			totalWeight += value;
+			cen.x += i*value;
+			cen.y += j*value;
+		}
+	}
+	cen.scale(1.0/totalWeight);
+	return cen;
+}
+ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean){
+	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
+	var i, j, x, y, index, value;
+	var covXX = 0;
+	var covYY = 0;
+	var covXY = 0;
+	var size = 0; // imageWidth * imageHeight; // if assuming non-constant weights, do inside loop
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+			index = j*imageWidth + i;
+			value = image[index];
+			size += value;
+			x = i - mean.x;
+			y = j - mean.y;
+			covXX += value*x*x;
+			covYY += value*y*y;
+			covXY += value*x*y;
+		}
+	}
+	covXX *= 1.0/size;
+	covYY *= 1.0/size;
+	covXY *= 1.0/size;
+	var cov = Code.inverse2x2([], covXX, covXY, covXY, covYY);
+	return cov;
+}
+/*
+R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
+	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
+	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
+	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0;
+	for(it=0;it<len;++it){
+		pA = pointsA[it].copy().sub(centroidA);
+		pB = pointsB[it].copy().sub(centroidB);
+		a += pA.x*pB.x;
+		b += pA.x*pB.y;
+		c += pA.y*pB.x;
+		d += pA.y*pB.y;
+	}
+	var cov = new Matrix(2,2).setFromArray([a, b, c, d]);
+	return cov;
+}
+*/
+ImageMat.prototype.calculateCentroid = function(){
+	var red = ImageMat.calculateCentroid(this.red(), this.width(), this.height());
+	var grn = ImageMat.calculateCentroid(this.grn(), this.width(), this.height());
+	var blu = ImageMat.calculateCentroid(this.blu(), this.width(), this.height());
+	var gry = ImageMat.calculateCentroid(this.gry(), this.width(), this.height());
+	return {"red":red, "grn":grn, "blu":blu, "gry":gry, "width":this.width(), "height":this.height()};
+}
+// THIS IS MORE LIKE THE MOMENT
+ImageMat.prototype.calculateCovariance = function(mean){
+	var matrix = ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean);
+	matrix = new Matrix(2,2,matrix);
+	var eigens = Matrix.eigenValuesAndVectors(matrix);
+	var eigenVectors = eigens.vectors
+	eigenVectors[0] = eigenVectors[0].toArray();
+	eigenVectors[1] = eigenVectors[1].toArray();
+	var eigenValues = eigens.values;
+	var ev1 = new V3D(eigenVectors[0][0],eigenVectors[0][1],eigenValues[0]);
+	var ev2 = new V3D(eigenVectors[1][0],eigenVectors[1][1],eigenValues[1]);
+	if(ev1.z<ev2.z){ // show largest first
+		var temp = ev2;
+		ev2 = ev1;
+		ev1 = temp;
+	}
+	return [ev1,ev2];
+}
+ImageMat.prototype.calculateMoment = function(mean){
+	//
+}
+
+ImageMat.prototype.calculateX = function(){
+	
+}
+
 
 ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
