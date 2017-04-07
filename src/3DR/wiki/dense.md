@@ -189,7 +189,10 @@ SCALE IMAGE UP / DOWN, get LAPLACIAN at all scales, plot, look for maxima/minima
 
 
 
-
+DISPARITY
+2D disparity = leftImagePos.x - rightImagePos.x
+(positions are from the camera center line?)
+z/f = 
 
 
 
@@ -298,9 +301,51 @@ Manual3DR.js:1560
 TODO:
 x average median offset mean SSD NOT BETTER
 x normalize height SSD NOT BETTER
-- page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
+x page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
+- compare SSD & SAD in more detail
+- get initial best points
+	- high visual disparity (texture)
+	- high gradient
+	- high cornerness
+	- 
+- rank initial best points
+	- how to similarize scores
+		- scale all from 0 to 1 & multiply
+- get way to compare features
+	x overall orientation
+	- overall scale
+		- could do comparrison at several different zooms/scales and choose best
+			=> more processing but also more generalized for any point type
+			- ? interpolate the maximum score?
+		- 
+	- affine scale
+		- shitty covariance approx only works for accidental grabs
+- compare features (in circular window)
+	- overall SAD
+	- overall rotation via difference in gradient angles R G B Y
+		- gradient magnitudes ?
+	- local summed descriptors
+		- zones
+			- overall rotation via gradient R G B Y : error = angle / PI
+				- scale based on gradient magnitudes?
+			- gradient magnitudes R G B Y : error = 1.0 + lenLarger/lenSmaller || magLarger - magSmaller
+			=> total gradient error = mag * rot
+			- binning SAD
+				=> error introduced in small bin change
+			// 8 bins and 16 vectors
+	- SSD OF OTHER FEATURES?
+		- 1st derivative ?
+		- 2nd derivative ? EDGES (laplacian)
+	- how to combine different levels of sub-comparrisons
+		- top is 1.0
+			- zone is 1/4 or 1/16
+
+
+- equations for depth from disparity
 - iteritive asymmetric scale space
 - more ways to get optimum scale & compare imageA and imageB results
+
+
 - try SSDing with gaussianMask  -- weigh outside window less
 
 

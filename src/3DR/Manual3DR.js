@@ -1404,7 +1404,14 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	imageGradAngR = ImageMat.normalFloat01(imageGradAngR);
 	imageGradAngG = ImageMat.normalFloat01(imageGradAngG);
 	imageGradAngB = ImageMat.normalFloat01(imageGradAngB);
-	img = GLOBALSTAGE.getFloatRGBAsImage(imageGradAngR,imageGradAngG,imageGradAngB, original.width(),original.height());
+
+	// img = GLOBALSTAGE.getFloatRGBAsImage(imageGradAngR,imageGradAngG,imageGradAngB, original.width(),original.height());
+	// d = new DOImage(img);
+	// d.matrix().scale(1.0);
+	// d.matrix().translate(400,300);
+	// GLOBALSTAGE.addChild(d);
+	var gry = ImageMat.gradientAngle(testing.gry(), testing.width(),testing.height());
+	img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, original.width(),original.height());
 	d = new DOImage(img);
 	d.matrix().scale(1.0);
 	d.matrix().translate(400,300);
@@ -1453,7 +1460,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 			//var point = new V2D(190,160); // corner tankman
 //var point = new V2D(225,100);
 			nextPoint = new V2D(281,236); // 
-var point = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // random
+//var point = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // random
 //var point = new V2D(323,175); // 
 	// .5 is exact
 	var scale = 1.0;

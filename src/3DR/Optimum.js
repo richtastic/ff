@@ -68,6 +68,8 @@ var imageMatrixOriginal = new ImageMat(imageFloat["width"],imageFloat["height"],
 //var testPoint = new V2D(188.56468934493222,61.18091100486489);    // grid point
 // var testPoint = new V2D(209.2493662082469,65.70961901224916);  // lighter grid point
 //var testPoint = new V2D(124.44547770393197,159.53057013526828);    // useless almost edge-ok point
+//var testPoint = new V2D(61.32659105135039,58.84629411812288);  // cup corner
+
 	console.log("TEST POINT:    var testPoint = new V2D("+testPoint.x+","+testPoint.y+");    ");
 for(j=0;j<14;++j){
 //j = 0;

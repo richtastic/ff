@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Affine</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["AreaMap.js","R3D.js","Affine.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var affine = new Affine();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

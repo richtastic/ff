@@ -64,7 +64,7 @@ Disparity.prototype.handleImagesLoaded = function(imageInfo){
 
 	// scale in half
 	var matrix;
-	var sF = 0.25;
+	var sF = 0.5;
 	// 1
 	matrix = new Matrix(3,3).identity();
 	matrix = Matrix.transform2DScale(matrix,sF,sF);
@@ -80,7 +80,7 @@ Disparity.prototype.handleImagesLoaded = function(imageInfo){
 	this.disparityImage = new DOImage();
 
 	this.indexArray = [];
-	var margin = 10;
+	var margin = 6;
 	for(i=margin; i<this.imageMatrixA.width()-margin; ++i){
 		for(j=margin; j<this.imageMatrixA.height()-margin; ++j){
 			this.indexArray.push( new V2D(i,j) );
@@ -111,7 +111,7 @@ Disparity.prototype.newRandomDisparityTest = function(imageInfo){
 	// pick point from array of indexes, remove index on iteration
 
 
-	var testSize = new V2D(11,11);
+	var testSize = new V2D(13,13);
 	var testScale = new V2D(1.0,1.0);
 	var testRotation = 0.0; 
 	var testMatrix = new Matrix(3,3).identity();
