@@ -170,13 +170,26 @@ ImageMat.linearColor = function(colR, x,y, colA,colB,colC,colD){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ get
-ImageMat.prototype.red = function(){
+ImageMat.prototype.copy = function(){
+	var mat = new ImageMat(this.width(), this.height(), this.red(), this.grn(), this.blu());
+	return mat;
+}
+ImageMat.prototype.red = function(r){
+	if(r!==undefined){
+		Code.copyArray(this._r, r);
+	}
 	return this._r;
 }
-ImageMat.prototype.grn = function(){
+ImageMat.prototype.grn = function(g){
+	if(g!==undefined){
+		Code.copyArray(this._g, g);
+	}
 	return this._g;
 }
-ImageMat.prototype.blu = function(){
+ImageMat.prototype.blu = function(b){
+	if(b!==undefined){
+		Code.copyArray(this._b, b);
+	}
 	return this._b;
 }
 ImageMat.prototype.gry = function(){
@@ -1037,6 +1050,23 @@ ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
 	}
 	return {"value":image, "width":imageWidth, "height":imageHeight};
 }
+/*
+width = 101;
+center = width*0.5;
+sigma = center/2; % 2 not enough
+ss = 2.0 * sigma * sigma;
+x = [0:1:width-1];
+sigs = exp( -(x-center).^2 /ss );
+sigs
+2: 0.13534
+3: 0.011109
+4: 3.3546e-04
+*/
+
+ImageMat.applyCirclenMask = function(image, imageWidth,imageHeight){
+	// TODO
+	var minDiameter = Math.min(imageWidth,imageHeight);
+}
 ImageMat.prototype.applyGaussianMask = function(){
 	ImageMat.applyGaussianMask(this.red(), this.width(), this.height());
 	ImageMat.applyGaussianMask(this.grn(), this.width(), this.height());
@@ -1062,57 +1092,35 @@ ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
 ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
 	var i, j, x, y, index, value;
-	var covXX = 0;
-	var covYY = 0;
-	var covXY = 0;
-		// var covXZ = 0;
-		// var covYZ = 0;
-		// var covZZ = 0;
-	var size = 0; // imageWidth * imageHeight; // if assuming non-constant weights, do inside loop
+	var covXX = 0 ,covYY = 0, covXY = 0;
+		// var covXZ = 0, covYZ = 0, covZZ = 0;
+	var totalWeight = 0;
 	for(j=0; j<imageHeight; ++j){
 		for(i=0; i<imageWidth; ++i){
 			index = j*imageWidth + i;
 			value = image[index];
-			size += value;
+			totalWeight += value;
 			x = i - mean.x;
 			y = j - mean.y;
 			covXX += value*x*x;
 			covYY += value*y*y;
 			covXY += value*x*y;
-				// covXZ = value*x;
-				// covYZ = value*y;
-				// covZZ = value;
+				// covXZ = value*x; covYZ = value*y; covZZ = value;
 		}
 	}
-	size = 1.0/size;
-	covXX *= size;
-	covYY *= size;
-	covXY *= size;
-		// covXZ *= size;
-		// covYZ *= size;
-		// covZZ *= size;
+	if(totalWeight==0){
+		totalWeight = 1.0;
+	}
+	totalWeight = 1.0/totalWeight;
+	covXX *= totalWeight;
+	covYY *= totalWeight;
+	covXY *= totalWeight;
+		// covXZ *= size; covYZ *= size; covZZ *= size;
 	var cov = Code.inverse2x2([], covXX, covXY, covXY, covYY);
-	//var cov = Code.inverse3x3([], covXX, covXY, covXZ,  covXY, covYY, covYZ,  covXZ, covYZ, covZZ);
+		//var cov = Code.inverse3x3([], covXX, covXY, covXZ,  covXY, covYY, covYZ,  covXZ, covYZ, covZZ);
 	return cov;
 }
 
-/*
-R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
-	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
-	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
-	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0, e=0, f=0, g=0, h=0, i=0;
-	for(it=0;it<len;++it){
-		pA = pointsA[it].copy().sub(centroidA);
-		pB = pointsB[it].copy().sub(centroidB);
-		a += pA.x*pB.x;
-		b += pA.x*pB.y;
-		c += pA.y*pB.x;
-		d += pA.y*pB.y;
-	}
-	var cov = new Matrix(2,2).setFromArray([a, b, c, d]);
-	return cov;
-}
-*/
 ImageMat.prototype.calculateCentroid = function(){
 	var red = ImageMat.calculateCentroid(this.red(), this.width(), this.height());
 	var grn = ImageMat.calculateCentroid(this.grn(), this.width(), this.height());
@@ -1299,42 +1307,42 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 	if(resultCount<=0){
 		return [];
 	}
-	//
-	// var minN = Math.min.apply(this,needle);
-	// var maxN = Math.max.apply(this,needle);
-// 	var rangeN = maxN-minN;
-// 	rangeN = rangeN==0.0 ? 1.0 : 1.0/rangeN;
-// rangeN = 1.0;
+	
+	var minN = Math.min.apply(this,needle);
+	var maxN = Math.max.apply(this,needle);
+	var rangeN = maxN-minN;
+	var midN = minN + rangeN*0.5;
+	var invRangeN = rangeN != 0 ? rangeN : 1.0;
+
 	//
 	var result = new Array();
 	for(var j=0; j<resultHeight; ++j){
 		for(var i=0; i<resultWidth; ++i){
 			var resultIndex = j*resultWidth + i;
 			var ssd = 0;
-			// var maxH = null;
-			// var minH = null;
+			var maxH = null;
+			var minH = null;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
 					var nIndex = nJ*needleWidth + nI;
 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
 					var n = needle[nIndex];
 					var h = haystack[hIndex];
-					// maxN = maxN==null || maxN<n ? n : maxN;
-					// minN = minN==null || minN>n ? n : minN;
+					maxN = maxN==null || maxN<n ? n : maxN;
+					minN = minN==null || minN>n ? n : minN;
 				}
 			}
-// 			var rangeH = maxH-minH;
-// 			rangeH = rangeH==0.0 ? 1.0 : 1.0/rangeH;
-// rangeH = 1.0;
-// ?
-// not MIN, but average ?
-// ?
+			var rangeH = maxH-minH;
+			var midH = minH + rangeH*0.5;
+			var invRangeH = rangeH != 0 ? rangeH : 1.0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
 					var nIndex = nJ*needleWidth + nI;
 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
 					var n = needle[nIndex];
 					var h = haystack[hIndex];
+						// n = (n - midN)*invRangeN;
+						// h = (h - midH)*invRangeH;
 					//ssd += Math.pow( rangeN*(n-minN) - rangeH*(h-minH),2);
 					//ssd += Math.abs( rangeN*(n-minN) - rangeH*(h-minH));
 					//ssd += Math.abs( (n-minN) - (h-minH));
@@ -1985,10 +1993,17 @@ ImageMat.secondDerivativeXY = function(src,wid,hei, x,y){ // ?
 	}
 	return ImageMat.convolve(src,wid,hei, [0.25,0,-0.25, 0,0,0, -0.25,0,0.25], 3,3);
 }
-ImageMat.laplacian = function(src,wid,hei){
+ImageMat.laplacian = function(src,wid,hei){ // 2nd derivative (spatial)
 	return ImageMat.convolve(src,wid,hei, [0,-1,0, -1,4,-1, 0,-1,0], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-1,-1,-1, -1,8,-1, -1,-1,-1], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-0.5,-1,-0.5, -1,6,-1, -0.5,-1,-0.5], 3,3);
+}
+ImageMat.prototype.laplacian = function(){
+	var width = this.width();
+	var height = this.height();
+	this.red( ImageMat.laplacian(this.red(), width, height).value );
+	this.grn( ImageMat.laplacian(this.grn(), width, height).value );
+	this.blu( ImageMat.laplacian(this.blu(), width, height).value );
 }
 ImageMat.sharpen = function(src,wid,hei, w,h){
 	// [0,0,0, 0,2,0, 0,0,0] - 1/9*[1,1,1, 1,1,1, 1,1,1] (OR GAUSSIAN)
@@ -2100,11 +2115,14 @@ ImageMat.harrisDetector = function(src,wid,hei, SMM, threshold, sigma, kMult){
 	gaussSource = ImageMat.padFloat(src, wid,hei, padding,padding,padding,padding);
 	gaussSource = ImageMat.gaussian2DFrom1DFloat(gaussSource, wid+2*padding,hei+2*padding, gauss1D); // now it's actually a gaussian
 	// image derivatives
-	Ix = ImageMat.derivativeX(gaussSource, wid+2*padding,hei+2*padding);
-	Iy = ImageMat.derivativeY(gaussSource, wid+2*padding,hei+2*padding);
-	IxIx = ImageMat.mulFloat(Ix,Ix);
-	IxIy = ImageMat.mulFloat(Ix,Iy);
-	IyIy = ImageMat.mulFloat(Iy,Iy);
+	Ix = ImageMat.derivativeX(gaussSource, wid+2*padding,hei+2*padding).value;
+	Iy = ImageMat.derivativeY(gaussSource, wid+2*padding,hei+2*padding).value;
+	// IxIx = ImageMat.mulFloat(Ix,Ix);
+	// IxIy = ImageMat.mulFloat(Ix,Iy);
+	// IyIy = ImageMat.mulFloat(Iy,Iy);
+	IxIx = ImageMat.derivativeX(Ix,width,height).value;
+	IyIy = ImageMat.derivativeY(Iy,width,height).value;
+	IxIy = ImageMat.derivativeY(Ix,width,height).value;
 	// sum of products - whatever that means
 	Sxx = IxIx;
 	Sxy = IxIy;
@@ -2196,9 +2214,12 @@ ImageMat.harrisDetectorSMM = function(src,wid,hei, sigma){
 	// image derivatives
 	Ix = ImageMat.derivativeX(gaussSource, wid+2*padding,hei+2*padding);
 	Iy = ImageMat.derivativeY(gaussSource, wid+2*padding,hei+2*padding);
-	IxIx = ImageMat.mulFloat(Ix,Ix);
-	IxIy = ImageMat.mulFloat(Ix,Iy);
-	IyIy = ImageMat.mulFloat(Iy,Iy);
+	// IxIx = ImageMat.mulFloat(Ix,Ix);
+	// IxIy = ImageMat.mulFloat(Ix,Iy);
+	// IyIy = ImageMat.mulFloat(Iy,Iy);
+	IxIx = ImageMat.derivativeX(Ix,width,height).value;
+	IyIy = ImageMat.derivativeY(Iy,width,height).value;
+	IxIy = ImageMat.derivativeY(Ix,width,height).value;
 	// sum of products - whatever that means
 	Sxx = IxIx;
 	Sxy = IxIy;

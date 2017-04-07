@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Disparity</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["AreaMap.js","R3D.js","Disparity.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var disparity = new Disparity();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

@@ -5,12 +5,20 @@ function R3D(){
 }
 
 // ------------------------------------------------------------------------------------------- conditioning utilities
-R3D.centroid2D = function(points2D){ // currently assumes constant weights
-	var cen = new V2D();
+R3D.centroid2D = function(points2D){
+	var p, weight, cen = new V2D(0,0);
+	var weightTotal = 0.0;
 	for(var i=points2D.length-1; i>=0; i--){
-		cen.add(points2D[i]);
+		p = points2D[i];
+		weight = p.z !== undefined ? p.z : 1.0;
+		cen.x += weight*p.x;
+		cen.y += weight*p.y;
+		weightTotal += weight;
 	}
-	cen.scale(1.0/len);
+	if(weightTotal==0){
+		weightTotal = 1.0;
+	}
+	cen.scale(1.0/weightTotal);
 	return cen;
 }
 R3D.centroid3D = function(points3D){ // currently assumes constant weights
@@ -36,20 +44,57 @@ R3D.uniformScale3D = function(pointsA,pointsB, centroidA, centroidB){
 	scale /= len;
 	return scale;
 }
-R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
-	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
-	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
-	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0;
-	for(it=0;it<len;++it){
-		pA = pointsA[it].copy().sub(centroidA);
-		pB = pointsB[it].copy().sub(centroidB);
-		a += pA.x*pB.x;
-		b += pA.x*pB.y;
-		c += pA.y*pB.x;
-		d += pA.y*pB.y;
+// R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
+// 	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
+// 	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
+// 	var it, len=pointsA.length, pA, pB, a=0, b=0, c=0, d=0;
+// 	for(it=0;it<len;++it){
+// 		pA = pointsA[it].copy().sub(centroidA);
+// 		pB = pointsB[it].copy().sub(centroidB);
+// 		a += pA.x*pB.x;
+// 		b += pA.x*pB.y;
+// 		c += pA.y*pB.x;
+// 		d += pA.y*pB.y;
+// 	}
+// 	var cov = new Matrix(2,2).setFromArray([a, b, c, d]);
+// 	return cov;
+// }
+R3D.covariance2D = function(points, centroid){
+	var c = centroid!==undefined ? centroid : R3D.centroid2D(points);
+	var i, len=points.length;
+	var p, cov = 0, weights = 0;
+	var covXX = 0, covYY = 0, covXY = 0;
+	for(i=0;i<len;++i){
+		p = points[i];
+		x = p.x - c.x;
+		y = p.y - c.y;
+		weights += p.z;
+		covXX += p.z*x*x;
+		covYY += p.z*y*y;
+		covXY += p.z*x*y;
 	}
-	var cov = new Matrix(2,2).setFromArray([a, b, c, d]);
-	return cov;
+	if(weights==0){
+		weights = 1.0;
+	}
+	weights = 1.0/weights;
+	covXX *= weights;
+	covYY *= weights;
+	covXY *= weights;
+	var matrix = Code.inverse2x2([], covXX, covXY, covXY, covYY);
+	matrix = new Matrix(2,2,matrix);
+	var eigens = Matrix.eigenValuesAndVectors(matrix);
+	var eigenVectors = eigens.vectors
+	eigenVectors[0] = eigenVectors[0].toArray();
+	eigenVectors[1] = eigenVectors[1].toArray();
+	var eigenValues = eigens.values;
+	var ev1 = new V3D(eigenVectors[0][0],eigenVectors[0][1],eigenValues[0]);
+	var ev2 = new V3D(eigenVectors[1][0],eigenVectors[1][1],eigenValues[1]);
+	if(ev1.z<ev2.z){ // show largest first
+		var temp = ev2;
+		ev2 = ev1;
+		ev1 = temp;
+	}
+	return [ev1,ev2];
 }
 R3D.covariance3D = function(pointsA,pointsB, centroidA, centroidB){
 	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
@@ -1661,11 +1706,14 @@ R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // ha
 	konstant = konstant ? konstant : 0.04; // 0.04-0.06
 	sigma = sigma ? sigma : 1.6;
 	var i, j, a, b, c, d;
-	var Ix = ImageMat.derivativeX(src,width,height);
-	var Iy = ImageMat.derivativeY(src,width,height);
-	var Ix2 = ImageMat.mulFloat(Ix,Ix);
-	var Iy2 = ImageMat.mulFloat(Iy,Iy);
-	var IxIy = ImageMat.mulFloat(Ix,Iy);
+	var Ix = ImageMat.derivativeX(src,width,height).value;
+	var Iy = ImageMat.derivativeY(src,width,height).value;
+	// var Ix2 = ImageMat.mulFloat(Ix,Ix);
+	// var Iy2 = ImageMat.mulFloat(Iy,Iy);
+	// var IxIy = ImageMat.mulFloat(Ix,Iy);
+	var Ix2 = ImageMat.derivativeX(Ix,width,height).value;
+	var Iy2 = ImageMat.derivativeY(Iy,width,height).value;
+	var IxIy = ImageMat.derivativeY(Ix,width,height).value;
 	// gaussian Ix2, Iy2, IxIy
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);

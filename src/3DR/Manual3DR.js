@@ -1361,7 +1361,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var testing = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
 
 
-TODO: find fxn that corresponds to some kind of minimum / maximum at evenly-scaled x & y
+// TODO: find fxn that corresponds to some kind of minimum / maximum at evenly-scaled x & y
 
 	console.log("GRADIENTS");
 	var imageGradAngR = ImageMat.gradientAngle(original.red(), original.width(),original.height());
@@ -1453,6 +1453,8 @@ TODO: find fxn that corresponds to some kind of minimum / maximum at evenly-scal
 			//var point = new V2D(190,160); // corner tankman
 //var point = new V2D(225,100);
 			nextPoint = new V2D(281,236); // 
+var point = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // random
+//var point = new V2D(323,175); // 
 	// .5 is exact
 	var scale = 1.0;
 	var newWidth = 11;
@@ -1465,6 +1467,16 @@ TODO: find fxn that corresponds to some kind of minimum / maximum at evenly-scal
 	d = new DOImage(img);
 	d.matrix().translate(100, 100);
 	GLOBALSTAGE.addChild(d);
+
+	// SHOW POINT ON IMAGE 1:
+		c = new DO();
+		c.graphics().setLine(1.0,0xFF000000);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(point.x, point.y,  3);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(c);
 
 
 //TODO: MOMENT | COV | ASYM-SCALE
@@ -1541,18 +1553,18 @@ TODO: find fxn that corresponds to some kind of minimum / maximum at evenly-scal
 		}
 	}
 
-	// show actual:
-	var p = point;
-		c = new DO();
-			c.graphics().setLine(2.0, 0xFF660066);
-		c.graphics().setFill(0x0);
-		c.graphics().beginPath();
-		c.graphics().drawCircle((p.x)*sca, (p.y)*sca, 7);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-		c.graphics().fill();
-			c.matrix().translate(400 + newWidth*0.5,0 + newHeight*0.5);
-		GLOBALSTAGE.addChild(c);
+	// // show actual:
+	// var p = point;
+	// 	c = new DO();
+	// 		c.graphics().setLine(2.0, 0xFF660066);
+	// 	c.graphics().setFill(0x0);
+	// 	c.graphics().beginPath();
+	// 	c.graphics().drawCircle((p.x)*sca, (p.y)*sca, 7);
+	// 	c.graphics().strokeLine();
+	// 	c.graphics().endPath();
+	// 	c.graphics().fill();
+	// 		c.matrix().translate(400 + newWidth*0.5,0 + newHeight*0.5);
+	// 	GLOBALSTAGE.addChild(c);
 
 	// show best
 	var p = locations[0];

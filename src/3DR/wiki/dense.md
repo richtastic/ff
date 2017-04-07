@@ -295,3 +295,14 @@ Manual3DR.js:1560
 
 
 
+TODO:
+x average median offset mean SSD NOT BETTER
+x normalize height SSD NOT BETTER
+- page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
+- iteritive asymmetric scale space
+- more ways to get optimum scale & compare imageA and imageB results
+- try SSDing with gaussianMask  -- weigh outside window less
+
+
+
+
