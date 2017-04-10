@@ -1640,9 +1640,9 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 
 
 			for(k=0; k<zA.pixels.angles.length; ++k){
-//				score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
+				score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
 			}
-			
+/*
 			// bin score per each zone
 			binsA = zA.rotations();
 			binsB = zB.rotations();
@@ -1659,6 +1659,7 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 				}
 			}
 			score += binScore*(1.0/16.0);
+*/
 		}
 	}
 	// SSD
@@ -1808,14 +1809,19 @@ ZFeature.scoreForMagnitudeAngleRGB = function(magA, magB, angA,angB){
 	bly = Math.abs(blu);
 	gry = Math.abs(gry);
 	var magRed = 1.0 + Math.abs(magA.x-magB.x);
-	var magGrn = 1.0 + Math.abs(magA.x-magB.x);
-	var magBlu = 1.0 + Math.abs(magA.x-magB.x);
-	var magGry = 1.0 + Math.abs(magA.x-magB.x);
+	var magGrn = 1.0 + Math.abs(magA.y-magB.y);
+	var magBlu = 1.0 + Math.abs(magA.z-magB.z);
+	var magGry = 1.0 + Math.abs(magA.t-magB.t);
+	var magRed = 1.0;
+	var magGrn = 1.0;
+	var magBlu = 1.0;
+	var magGry = 1.0;
 	var errorRed = magRed * red;
 	var errorGrn = magGrn * grn;
 	var errorBlu = magBlu * blu;
 	var errorGry = magGry * gry;
-	var error = errorRed + errorGrn + errorBlu + errorGry;
+	//var error = errorRed + errorGrn + errorBlu + errorGry;
+	var error = errorRed * errorGrn * errorBlu * errorGry;
 	return error;
 }
 ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
@@ -1905,7 +1911,7 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 // d.matrix().translate(30, 30);
 // GLOBALSTAGE.addChild(d);
 	}else {
-		img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance));
+		img = range._image.extractRectFromFloatImage(point.x,point.y,scale,2.0, size,size, ZFeature.MatrixWithRotation(-covariance));
 // var win = img;
 // img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 // var d;

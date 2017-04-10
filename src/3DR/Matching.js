@@ -116,17 +116,17 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	// var loc = new V2D(240,200);
 	// var siz = new V2D(60,60);
 	// origin
-	// var featurePointA = new V2D(173,107);
-	// var featurePointB = new V2D(212,46);
-	// var loc = new V2D(190,25);
-	// var siz = new V2D(50,50);
+	var featurePointA = new V2D(173,107);
+	var featurePointB = new V2D(212,46);
+	var loc = new V2D(190,25);
+	var siz = new V2D(50,50);
 	// glasses corner
-	var featurePointA = new V2D(189,180);
-	var featurePointB = new V2D(169,180);
-	var loc = new V2D(140,160);
-	var siz = new V2D(60,60);
-		this.drawAround([featurePointA], 0,0);
-		this.drawAround([featurePointB], 400,0);
+	// var featurePointA = new V2D(189,180);
+	// var featurePointB = new V2D(169,180);
+	// var loc = new V2D(140,160);
+	// var siz = new V2D(60,60);
+	// 	this.drawAround([featurePointA], 0,0);
+	// 	this.drawAround([featurePointB], 400,0);
 
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
 	var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
@@ -149,6 +149,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	console.log("2 & 2 score: "+score);
 	// get best score in area ...
 
+//return;
 		// go thru board
 	var gridX = 1, gridY = 1;
 	var gX = Math.floor(siz.x/gridX);
@@ -179,7 +180,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	grid = ImageMat.getNormalFloat01(grid);
 	grid = ImageMat.invertFloat01(grid);
 	//grid = ImageMat.pow(grid,2);
-	grid = ImageMat.pow(grid,10);
+	grid = ImageMat.pow(grid,20);
 	//grid = ImageMat.pow(grid,1000);
 	img = GLOBALSTAGE.getFloatRGBAsImage(grid,grid,grid, gX,gY);
 	d = new DOImage(img);
