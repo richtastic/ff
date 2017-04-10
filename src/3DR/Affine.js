@@ -51,16 +51,19 @@ Affine.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 	// scale in half
-	var matrix;
-	var sF = 0.5;
-	// 1
-	matrix = new Matrix(3,3).identity();
-	matrix = Matrix.transform2DScale(matrix,sF,sF);
-	var imageMatrixA = imageMatrixA.extractRectFromFloatImage(imageMatrixA.width()*0.5,imageMatrixA.height()*0.5,1.0,null, Math.floor(imageMatrixA.width()*sF), Math.floor(imageMatrixA.height()*sF), matrix);
-	// 2
-	matrix = new Matrix(3,3).identity()
-	matrix = Matrix.transform2DScale(matrix,sF,sF);
-	var imageMatrixB = imageMatrixA.extractRectFromFloatImage(imageMatrixB.width()*0.5,imageMatrixB.height()*0.5,1.0,null, Math.floor(imageMatrixB.width()*sF), Math.floor(imageMatrixB.height()*sF), matrix);
+	// var matrix;
+	// var sF = 0.5;
+	// // 1
+	// matrix = new Matrix(3,3).identity();
+	// matrix = Matrix.transform2DScale(matrix,sF,sF);
+	// var imageMatrixA = imageMatrixA.extractRectFromFloatImage(imageMatrixA.width()*0.5,imageMatrixA.height()*0.5,1.0,null, Math.floor(imageMatrixA.width()*sF), Math.floor(imageMatrixA.height()*sF), matrix);
+	// // 2
+	// matrix = new Matrix(3,3).identity()
+	// matrix = Matrix.transform2DScale(matrix,sF,sF);
+	// var imageMatrixB = imageMatrixA.extractRectFromFloatImage(imageMatrixB.width()*0.5,imageMatrixB.height()*0.5,1.0,null, Math.floor(imageMatrixB.width()*sF), Math.floor(imageMatrixB.height()*sF), matrix);
 
-	
+
+
+	// find local optimum affine region
+
 }

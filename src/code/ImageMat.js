@@ -954,13 +954,89 @@ ImageMat.printBadData = function(data, wid,hei){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ fxns
-ImageMat.totalCostToMoveAny = function(image){
-	var result = ImageMat.costToMoveAny(image);
-	var red = result.red();
-	var grn = result.grn();
-	var blu = result.blu();
-	var wid = result.width();
-	var hei = result.height();
+ImageMat.range = function(data, wid,hei){
+	if(wid==0||hei==0){
+		return 0;
+	}
+	var len = wid*hei;
+	var minValue = null;
+	var maxValue = null;
+	for(var i=len-1; i>=0; i--){
+		var value = data[i];
+		//console.log(i+": "+value);
+		if(minValue==null || value<minValue){
+			minValue = value;
+		}
+		if(maxValue==null || value>maxValue){
+			maxValue = value;
+		}
+	}
+	var range = maxValue - minValue;
+	return range;
+}
+ImageMat.rangeInWindow = function(data, wid,hei, winX,winY){ // win = 1/2 actual window
+	if(winX==undefined || winY==undefined){
+		return 
+	}
+	var variation = Code.newArrayZeros(wid*hei);
+	var i, j, nJ, nI, index, range;
+	var wm1 = wid-1, hm1 = hei-1;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			index = j*wid + i;
+			var iStart = Math.max(0,i-winX);
+			var iEnd = Math.min(wm1,i+winX);
+			var jStart = Math.max(0,j-winY);
+			var jEnd = Math.min(hm1,j+winY);
+			var minValue = null;
+			var maxValue = null;
+			for(nJ=jStart; nJ<jEnd; ++nJ){
+				for(nI=iStart; nI<iEnd; ++nI){ 
+					var iIndex = nJ*wid + nI;
+					var value = data[iIndex];
+					if(minValue==null || value<minValue){
+						minValue = value;
+					}
+					if(maxValue==null || value>maxValue){
+						maxValue = value;
+					}
+				}
+			}
+			range = maxValue - minValue;
+			variation[index] = range;
+		}
+	}
+	return {"value":variation, "width":wid, "height":hei};
+}
+ImageMat.totalRangeInWindow = function(r,g,b, wid,hei, winX,winY){ 
+	var len = wid*hei;
+	var total = Code.newArrayZeros(len);
+	var i;
+	r = ImageMat.rangeInWindow(r,wid,hei,winX,winY).value;
+	g = ImageMat.rangeInWindow(g,wid,hei,winX,winY).value;
+	b = ImageMat.rangeInWindow(b,wid,hei,winX,winY).value;
+	for(i=0; i<len; ++i){
+		total[i] = r[i] + g[i] + b[i];
+	}
+	return {"value":total, "width":wid, "height":hei};
+}
+
+ImageMat.totalCostToMoveAny = function(image, g,b,wid,hei){
+	var result, red, grn, blu;
+	if(wid!==undefined && hei!==undefined){
+		red = image;
+		grn = g;
+		blu = b;
+	}else{
+		red = image.red();
+		grn = image.grn();
+		blu = image.blu();
+		wid = image.width();
+		hei = image.height();
+	}
+	var red = ImageMat.costToMoveAny(red, wid,hei).value;
+	var grn = ImageMat.costToMoveAny(grn, wid,hei).value;
+	var blu = ImageMat.costToMoveAny(blu, wid,hei).value;
 	var len = wid * hei;
 	var sum = Code.newArrayZeros(len);
 	var i, den, num;
@@ -971,6 +1047,7 @@ ImageMat.totalCostToMoveAny = function(image){
 		den = (red[i] + grn[i] + blu[i]);
 
 		sum[i] = den;
+		//sum[i] = num;
 
 		// if(den==0){
 		// 	den = 1.0;
@@ -983,26 +1060,37 @@ ImageMat.totalCostToMoveAny = function(image){
 		// sum[i] = den/num;
 		
 	}
-	return sum;
+	//return sum;
+	return {"value":sum, "width":wid, "height":hei};
 }
-ImageMat.costToMoveAny = function(image){ // 4 main directions
-	var result = ImageMat.costToMove(image,1,0);
-	ImageMat.costToMove(image,0,1, result);
-	ImageMat.costToMove(image,-1,0, result);
-	ImageMat.costToMove(image,0,-1, result);
-	// +4 diagonal directions
-	ImageMat.costToMove(image,-1,-1, result);
-	ImageMat.costToMove(image,1,-1, result);
-	ImageMat.costToMove(image,-1,1, result);
-	ImageMat.costToMove(image,1,1, result);
+ImageMat.costToMoveAny = function(image,wid,hei){ // 4 main directions | +4 diagonal directions
+	var result = null;
+	if(wid!==undefined && hei!==undefined){
+		var r = image;
+		result = ImageMat.costToMove(image,wid,hei, 1,0);
+		ImageMat.costToMove(image,wid,hei, 0,1, result);
+		ImageMat.costToMove(image,wid,hei, -1,0, result);
+		ImageMat.costToMove(image,wid,hei, 0,-1, result);
+		ImageMat.costToMove(image,wid,hei,-1,-1, result);
+		ImageMat.costToMove(image,wid,hei,1,-1, result);
+		ImageMat.costToMove(image,wid,hei,-1,1, result);
+		ImageMat.costToMove(image,wid,hei,1,1, result);
+	}else{
+		result = ImageMat.costToMoveImage(image,1,0);
+		ImageMat.costToMoveImage(image,0,1, result);
+		ImageMat.costToMoveImage(image,-1,0, result);
+		ImageMat.costToMoveImage(image,0,-1, result);
+		// ImageMat.costToMove(image,-1,-1, result);
+		// ImageMat.costToMove(image,1,-1, result);
+		// ImageMat.costToMove(image,-1,1, result);
+		// ImageMat.costToMove(image,1,1, result);
+	}
 	return result;
 }
-ImageMat.costToMove = function(image, dx,dy, sum){ // assume image stretches in all directions
-	var red = image.red();
-	var grn = image.grn();
-	var blu = image.blu();
-	var wid = image.width();
-	var hei = image.height();
+ImageMat.costToMoveImage = function(image, dx,dy, sum){
+	return ImageMat.costToMove(image.red(),image.grn(),image.blu(),image.width(),image.height(), dx,dy, sum);
+}
+ImageMat.costToMoveImage = function(red,grn,blu, wid,hei, dx,dy, sum){ // assume image stretches in all directions
 	var resultLen = wid * hei;
 	var r = sum!==undefined ? sum.red() : Code.newArrayZeros(resultLen);
 	var g = sum!==undefined ? sum.grn() : Code.newArrayZeros(resultLen);
@@ -1032,6 +1120,29 @@ ImageMat.costToMove = function(image, dx,dy, sum){ // assume image stretches in 
 	var result = new ImageMat(wid,hei,r,g,b);
 	return result;
 }
+
+
+ImageMat.costToMove = function(channel, wid,hei, dx,dy, sum){ // assume image stretches in all directions
+	var resultLen = wid * hei;
+	sum = sum!==undefined ? sum : Code.newArrayZeros(resultLen);
+	var i, j, x, y;
+	var indexA, indexB;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			indexA = j*wid + i;
+			x = i + dx;
+			y = j + dy;
+			x = Math.min(Math.max(0,x),wid-1);
+			y = Math.min(Math.max(0,y),hei-1);
+			indexB = y*wid + x;
+			sum[indexA] += Math.abs(channel[indexA] - channel[indexB]);
+		// (A * B) / (A + B)
+		}
+	}
+	return {"value":sum, "width":wid, "height":hei};
+}
+
+
 ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
 	var cX = (imageWidth-1)/2.0;
 	var cY = (imageHeight-1)/2.0;
@@ -1958,10 +2069,12 @@ ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
 		return gradX+gradY;
 	}
+	gradX = gradX.value;
+	gradY = gradY.value;
 	for(var i=gradX.length; i-- > 0;){
 		gradX[i] = Math.sqrt(gradX[i]*gradX[i] + gradY[i]*gradY[i]);
 	}
-	return gradX;
+	return {"value":gradX, "width":wid, "height":hei};
 }
 ImageMat.gradientAngle = function(src,wid,hei, x,y){
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
@@ -1969,11 +2082,12 @@ ImageMat.gradientAngle = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
 		return gradX+gradY;
 	}
+	gradX = gradX.value;
+	gradY = gradY.value;
 	for(var i=gradX.length; i-- > 0;){
-		console.log(i);
 		gradX[i] = Math.atan2(gradY[i],gradX[i]);
 	}
-	return gradX;
+	return {"value":gradX, "width":wid, "height":hei};
 }
 ImageMat.secondDerivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
@@ -1988,12 +2102,16 @@ ImageMat.secondDerivativeY = function(src,wid,hei, x,y){
 	return ImageMat.convolve(src,wid,hei, [1.0,-2,1.0], 1,3);
 }
 ImageMat.secondDerivativeXY = function(src,wid,hei, x,y){ // ?
+	//return ImageMat.laplacian(src,wid,hei, x,y);
 	if(x!==undefined && y!==undefined){
 		return 0.25*src[wid*(y-1)+(x-1)] - 0.25*src[wid*(y-1)+(x+1)] - 0.25*src[wid*(y+1)+(x-1)] + 0.25*src[wid*(y+1)+(x+1)];
 	}
 	return ImageMat.convolve(src,wid,hei, [0.25,0,-0.25, 0,0,0, -0.25,0,0.25], 3,3);
 }
-ImageMat.laplacian = function(src,wid,hei){ // 2nd derivative (spatial)
+ImageMat.laplacian = function(src,wid,hei, x,y){ // 2nd derivative (spatial)
+	if(x!==undefined && y!==undefined){
+		return -1.0*src[wid*(y-1)+(x+0)] - 1.0*src[wid*(y+0)+(x-1)] + 4.0*src[wid*(y+0)+(x+0)] - 1.0*src[wid*(y+0)+(x+1)] - 1*src[wid*(y+1)+(x+0)];
+	}
 	return ImageMat.convolve(src,wid,hei, [0,-1,0, -1,4,-1, 0,-1,0], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-1,-1,-1, -1,8,-1, -1,-1,-1], 3,3);
 	//return ImageMat.convolve(src,wid,hei, [-0.5,-1,-0.5, -1,6,-1, -0.5,-1,-0.5], 3,3);

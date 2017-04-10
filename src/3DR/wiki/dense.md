@@ -302,6 +302,12 @@ TODO:
 x average median offset mean SSD NOT BETTER
 x normalize height SSD NOT BETTER
 x page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
+- optimum scale
+	- maximize range, minimize scale/area/size
+		=> will try to include the nearest black / white elements
+	- penaltiy for high area (including many other features)
+	- penalty for too small area (blurry - not enough of feature)
+	- even number of high / low areas
 - compare SSD & SAD in more detail
 - get initial best points
 	- high visual disparity (texture)
@@ -349,5 +355,9 @@ x page that selects points at random from image 1, computes best match from imag
 - try SSDing with gaussianMask  -- weigh outside window less
 
 
+
+- feature size = size where half of the SCORE(or other ) value is inside window
+	- has to contain at least one 0 and one 1 (+/- some percentage?)
+	- areas of constant intensity will have a very large scale (or jsut forget)
 
 

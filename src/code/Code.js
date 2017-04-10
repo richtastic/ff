@@ -3924,6 +3924,18 @@ Code.interpolateExtrema1DDiff = function(ext, xA,yA, xB,yB, xC,yC){ // unequal x
 	ext.x = x + xB;
 	return ext;
 }
+Code.interpolateArray1D = function(array,value){ // linear interpolate
+	var min = Math.floor(value);
+	var nex = min+1;
+	if(array.length>nex){
+		var diff = value - min;
+		var dim1 = 1.0 - diff;
+		var a = array[min];
+		var b = array[nex];
+		return a*dim1 + b*diff;
+	}
+	return value;
+}
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 2D
 Code.gradient2D = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){
 	loc.x = (d5-d3)*0.5;

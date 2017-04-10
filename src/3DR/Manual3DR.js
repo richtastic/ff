@@ -1391,9 +1391,9 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 
 
 
-	var imageGradAngR = ImageMat.gradientAngle(testing.red(), testing.width(),testing.height());
-	var imageGradAngG = ImageMat.gradientAngle(testing.grn(), testing.width(),testing.height());
-	var imageGradAngB = ImageMat.gradientAngle(testing.blu(), testing.width(),testing.height());
+	var imageGradAngR = ImageMat.gradientMagnitude(testing.red(), testing.width(),testing.height());
+	var imageGradAngG = ImageMat.gradientMagnitude(testing.grn(), testing.width(),testing.height());
+	var imageGradAngB = ImageMat.gradientMagnitude(testing.blu(), testing.width(),testing.height());
 		imageGradAngR = imageGradAngR.value;
 		imageGradAngG = imageGradAngG.value;
 		imageGradAngB = imageGradAngB.value;
@@ -1405,17 +1405,21 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	imageGradAngG = ImageMat.normalFloat01(imageGradAngG);
 	imageGradAngB = ImageMat.normalFloat01(imageGradAngB);
 
-	// img = GLOBALSTAGE.getFloatRGBAsImage(imageGradAngR,imageGradAngG,imageGradAngB, original.width(),original.height());
-	// d = new DOImage(img);
-	// d.matrix().scale(1.0);
-	// d.matrix().translate(400,300);
-	// GLOBALSTAGE.addChild(d);
-	var gry = ImageMat.gradientAngle(testing.gry(), testing.width(),testing.height());
-	img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, original.width(),original.height());
+	img = GLOBALSTAGE.getFloatRGBAsImage(imageGradAngR,imageGradAngG,imageGradAngB, original.width(),original.height());
 	d = new DOImage(img);
 	d.matrix().scale(1.0);
 	d.matrix().translate(400,300);
 	GLOBALSTAGE.addChild(d);
+
+	//var gry = ImageMat.gradientAngle(testing.gry(), testing.width(),testing.height());
+	//var gry = ImageMat.gradientMagnitude(testing.gry(), testing.width(),testing.height());
+	// gry = gry.value;
+	// gry = ImageMat.normalFloat01(gry);
+	// img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, original.width(),original.height());
+	// d = new DOImage(img);
+	// d.matrix().scale(1.0);
+	// d.matrix().translate(400,300);
+	// GLOBALSTAGE.addChild(d);
 
 
 	// ImageMat.gradientMagnitude = function(src,wid,hei, x,y){

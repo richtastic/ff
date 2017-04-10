@@ -8,7 +8,7 @@ function Optimum(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
-	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// resources
 	this._resource = {};
 	// 3D stage
@@ -22,6 +22,9 @@ function Optimum(){
 	var imageList = ["caseStudy1-9.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
+}
+Optimum.prototype.handleMouseClickFxn = function(e){
+	console.log(e.location+"");
 }
 Optimum.prototype.handleImagesLoaded = function(imageInfo){
 	var imageList = imageInfo.images;
@@ -62,19 +65,27 @@ var imageMatrixOriginal = new ImageMat(imageFloat["width"],imageFloat["height"],
 	var testPoint = new V2D(281,236); // mouse
 	var testScale = new V2D(1.0,1.0); // 1.005133638650043 [1.0]
 
-	var testPoint = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // mouse
-
-
+	
+var testPoint = new V2D(); // 
+	var testPoint = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // RANDOM
+// var testPoint = new V2D(286,206); // middle of cup
+//var testPoint = new V2D(133,195); // glasses center
+//var testPoint = new V2D(218,117); // captain side
 //var testPoint = new V2D(188.56468934493222,61.18091100486489);    // grid point
 // var testPoint = new V2D(209.2493662082469,65.70961901224916);  // lighter grid point
 //var testPoint = new V2D(124.44547770393197,159.53057013526828);    // useless almost edge-ok point
 //var testPoint = new V2D(61.32659105135039,58.84629411812288);  // cup corner
+//var testPoint = new V2D(270.6196718540066,235.9599497436766); // mouse by ear
+//var testPoint = new V2D(278.27625765373034,241.50570519405397);  // mouse center
+//var testPoint = new V2D(127.92178393876246,237.46267396095368); // nomax
+//var testPoint = new V2D(57.54537183497834,170.7810879422064);  // lighter corner
+var testPoint = new V2D(235.16432944460433,135.46335940020367); // centered tankman
 
 	console.log("TEST POINT:    var testPoint = new V2D("+testPoint.x+","+testPoint.y+");    ");
 for(j=0;j<14;++j){
 //j = 0;
 	//var optimumScale = 7.8;
-	var optimumScale = 4.0;
+	var optimumScale = 3.0;
 		var s = 1.0 + (j-7)*0.1;
 		testScale.x = 1.0*Math.sqrt(s);
 		testScale.y = 1.0/Math.sqrt(s);
@@ -144,10 +155,7 @@ var wasV2 = vector2.copy();
 recoverRatioScale = ratio;
 	var recoverScaleX = 1.0*recoverRatioScale;
 	var recoverScaleY = 1.0/recoverRatioScale;
-	//console.log(ratio+" ... "+recoverScaleX+","+recoverScaleY+"  vs   "+(1.0/testScale.x)+","+(1.0/testScale.y));
-	console.log(j+": "+ratio+" ... "+"  vs   "+(Math.max(testScale.x,testScale.y)/Math.min(testScale.x,testScale.y)));
-// recoverScaleX = 1.0/testScale.x;
-// recoverScaleY = 1.0/testScale.y;
+//	console.log(j+": "+ratio+" ... "+"  vs   "+(Math.max(testScale.x,testScale.y)/Math.min(testScale.x,testScale.y)));
 	var recoverRotation = V2D.angleDirection(V2D.DIRX,vector1);
 	var recoverMatrix = new Matrix(3,3).identity();
 	recoverMatrix = Matrix.transform2DRotate(testMatrix,-recoverRotation);
@@ -206,19 +214,41 @@ recoverRatioScale = ratio;
 // do scales & see if can revert scales
 	// test fxn at different scales
 	var scales = [];//[0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
-	var scaleTimes = 20;
+	var scaleTimes = 25;
+	var minScalePower = -2;
+	var maxScalePower = 3;
 	for(i=0; i<scaleTimes; ++i){
-		scales.push( 1.0*Math.pow(1.1, i - scaleTimes*0.5) );
+		//scales.push( 1.0*Math.pow(1.25, i - scaleTimes*0.4) );
+		var p = i/(scaleTimes-1);
+		var power = minScalePower + (maxScalePower - minScalePower)*p;
+		scales.push( Math.pow(2, power) );
 	}
 	console.log(scales)
+	//console.log(imageMatrixOriginal.width(),testSize.x,imageMatrixOriginal.width()/testSize.x)
+
+var costMove = ImageMat.totalCostToMoveAny(imageMatrixOriginal.red(),imageMatrixOriginal.grn(),imageMatrixOriginal.blu(),imageMatrixOriginal.width(),imageMatrixOriginal.height()).value;
+costMove = ImageMat.applyGaussianFloat(costMove, imageMatrixOriginal.width(),imageMatrixOriginal.height(), 1.6);
+
 var displayScores = [];
+var maxScores = [];
+var maxScales = [];
 	for(i=0; i<scales.length; ++i){
 		var scale = scales[i];
+//var pixels = scale * (imageMatrixOriginal.width()/testSize.x);
+var pixels = (imageMatrixOriginal.width()/testSize.x)/scale;
+//pixels = Math.floor(pixels);
+//console.log(i+" : "+pixels)
+//console.log(imageMatrixOriginal.width()/testSize.x)
+// *imageMatrixOriginal.height()
 		var testMatrix = new Matrix(3,3).identity();
 			testMatrix = Matrix.transform2DScale(testMatrix,scale,scale);
 			//testMatrix = Matrix.transform2DRotate(testMatrix,testRotation);
 		//var featureScale = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,scale,1.6, testSize.x,testSize.y, testMatrix);
 		var featureScale = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, testMatrix);
+		// rangeness
+		// var featureScale = ImageMat.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, costMove,imageMatrixOriginal.width(),imageMatrixOriginal.height(),   testMatrix);
+		// featureScale = new ImageMat(testSize.x,testSize.y, featureScale);
+		//ImageMat.extractRectFromFloatImage(                          x,y,scale,sigma,w,h,                             this._r,  this._width,this._height, matrix);
 			// SHOW
 			img = GLOBALSTAGE.getFloatRGBAsImage(featureScale.red(),featureScale.grn(),featureScale.blu(), featureScale.width(),featureScale.height());
 			d = new DOImage(img);
@@ -243,13 +273,36 @@ score = corners[index]; // harrisValue
 // set score to max disparity
 
 
-// set score to eigen ratios
-var featureCovariance = featureBlur.calculateCovariance(new V2D(testSize.x*0.5,testSize.y*0.5));
+// set score to eigen ratios 
 //score = featureCovariance[0].z / featureCovariance[1].z;
 
 // set score to edge / nonedge ratio
 
 // set score to max gradient
+
+// set score to max range
+// var featureScaleRange = ImageMat.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, costMove,imageMatrixOriginal.width(),imageMatrixOriginal.height(),   testMatrix);
+// featureScaleRange = new ImageMat(testSize.x,testSize.y, featureScaleRange);
+// var range = ImageMat.range(featureScaleRange.gry(),featureScaleRange.width(),featureScaleRange.height());
+var range = ImageMat.range(featureScale.gry(),featureScale.width(),featureScale.height());
+//range = Math.sqrt(range);
+//range = Math.pow(range,2);
+//var range = ImageMat.range(featureBlur.gry(),featureBlur.width(),featureBlur.height());
+
+// var featureCost = ImageMat.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, costMove,imageMatrixOriginal.width(),imageMatrixOriginal.height(),   testMatrix);
+// range = ImageMat.range(featureCost, testSize.x,testSize.y);
+
+
+//score = range/Math.pow(featureScale.width()*featureScale.height(),2);
+//score = range / (Math.pow(pixels,2));
+//score = range / pixels;
+//score = range / Math.pow(pixels,0.5);
+
+//score = range / pixels;
+score = range / (pixels*pixels); // average range per pixel
+//score = range / ((pixels+1)*(pixels+1));
+//score =  (pixels-1) * range / (pixels*pixels);
+//score = range*range / (pixels*pixels);
 
 // set score to ?
 
@@ -268,13 +321,20 @@ var featureCovariance = featureBlur.calculateCovariance(new V2D(testSize.x*0.5,t
 			d = new DOImage(img);
 			d.matrix().translate(450 + i*30, 180);
 			GLOBALSTAGE.addChild(d);
+			d = new DOText(""+i);
+			d.matrix().translate(450 + i*30 + testSize.x*0.5, 140);
+			GLOBALSTAGE.addChild(d);
 		// score?:
 
 		// gaussian
 		var fxn = null;
 		// PLOT scale vs fxn
 
-		displayScores.push( new V2D(scale, score) );
+		displayScores.push( new V2D(Math.log(scale), score) );
+		//displayScores.push( new V2D(scale, score) );
+		maxScores.push(score);
+		maxScales.push(scale);
+		console.log(i+" : "+pixels+" w/ "+range+" @ "+scale+" = "+score)
 	}
 
 var minX = V2D.minX(displayScores);
@@ -306,15 +366,59 @@ displayDO.graphics().endPath();
 displayDO.graphics().strokeLine();
 // MOVE
 displayDO.matrix().translate((testSize.x-1)*0.5, (testSize.y-1)*0.5);
-displayDO.matrix().translate(800, 200);
+displayDO.matrix().translate(420, 200);
 GLOBALSTAGE.addChild(displayDO);
 //console.log(minX.x,maxX.x, minY.y,maxY.y);
 displayDO.graphics().setLine(1.0, 0xFF990000);
 displayDO.graphics().beginPath();
 
 
+var optimumScale = null;
+var maximum = Code.findGlobalExtrema1D(maxScores,true);
+// console.log("GLOBAL: "+maximum.max);
+if(!maximum || !maximum.max){
+	maximum = Code.findMaxima1D(maxScores);
+	console.log("local");
+	// console.log("LOCAL: "+maximum);
+	// console.log(maximum);
+	if(maximum.length>0){
+		for(var i=0; i<maximum.length; ++i){
+			if(optimumScale==null || optimumScale < maximum[i].x){
+				optimumScale = (maximum[i].x);
+			}
+		}
+	}
+}else{
+	console.log("global");
+	optimumScale = (maximum.max.x);
+}
+if(optimumScale==null){
+	optimumScale = 0;
+}
+// optimumScale = Math.floor(optimumScale);
+// optimumScale = displayScores[optimumScale].x; // should interpolate instead
+optimumScale = Code.interpolateArray1D(maxScales,optimumScale);
+d = new DOText(""+optimumScale+"");
+d.matrix().translate(700, 300);
+GLOBALSTAGE.addChild(d);
+
+// SHOW BEST:
+		var transScale = 0.25;
+		scale = optimumScale*transScale;
+		var testMatrix = new Matrix(3,3).identity();
+			testMatrix = Matrix.transform2DScale(testMatrix,scale,scale);
+		var featureScale = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, testMatrix);
+		// SHOW
+		img = GLOBALSTAGE.getFloatRGBAsImage(featureScale.red(),featureScale.grn(),featureScale.blu(), featureScale.width(),featureScale.height());
+		d = new DOImage(img);
+		d.matrix().translate(800, 250);
+		GLOBALSTAGE.addChild(d);
+
+
+
 for(i=0; i<displayScores.length; ++i){
 	var p = displayScores[i];
+//console.log(i+": "+Math.pow(p.x,2)+" = "+p.y);
 		d = new DO();
 		d.graphics().clear();
 		d.graphics().setLine(1.0, 0xFFCC3366);
@@ -339,7 +443,7 @@ displayDO.graphics().strokeLine();
 displayDO.graphics().endPath();
 
 
-console.log("local maxima (that is not the ends)? => local minima (that is not the ends)? => ???");
+//console.log("local maxima (that is not the ends)? => local minima (that is not the ends)? => ???");
 // ELSE? is a very plane point ... take at is ?
 // find maxima, & pos
 

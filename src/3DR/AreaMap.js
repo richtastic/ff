@@ -467,7 +467,6 @@ AreaMap.Range.prototype.mergeRegions = function(regionA, regionB){
 }
 AreaMap.Range.prototype.image = function(image, width, height){
 	if(image!==undefined){
-		console.log(image)
 		if(Code.isArray(image)){
 			this._image = new ImageMat(width,height,image);
 		}else if( Code.ofa(image,ImageMat) ){ // imagemat
@@ -1602,7 +1601,7 @@ ZFeature = function(){
 	this._zones = [];
 	// zone count =  this._zoneCols * this._zoneCols
 }
-ZFeature.compareScore = function(a,b){
+ZFeature.compareScore = function(a,b, rangeA, rangeB){
 	var i, j, k, l, zA, zB, index;
 	var rA, gA, bA, yA;
 	var rB, gB, bB, yB;
@@ -1611,39 +1610,39 @@ ZFeature.compareScore = function(a,b){
 	var score = 0;
 	var binScore = 0;
 	// overall score orientation
-	var rotA_red = Code.minAngle(a._angle.t,a._angle.x);
-	var rotA_grn = Code.minAngle(a._angle.t,a._angle.y);
-	var rotA_blu = Code.minAngle(a._angle.t,a._angle.z);
-	var rotB_red = Code.minAngle(b._angle.t,b._angle.x);
-	var rotB_grn = Code.minAngle(b._angle.t,b._angle.y);
-	var rotB_blu = Code.minAngle(b._angle.t,b._angle.z);
+	// var rotA_red = Code.minAngle(a._angle.t,a._angle.x);
+	// var rotA_grn = Code.minAngle(a._angle.t,a._angle.y);
+	// var rotA_blu = Code.minAngle(a._angle.t,a._angle.z);
+	// var rotB_red = Code.minAngle(b._angle.t,b._angle.x);
+	// var rotB_grn = Code.minAngle(b._angle.t,b._angle.y);
+	// var rotB_blu = Code.minAngle(b._angle.t,b._angle.z);
 	// angle = Math.abs(Code.minAngle(rotA_red,rotB_red));
 	// 	score += angle;
 	// angle = Math.abs(Code.minAngle(rotA_grn,rotB_grn));
 	// 	score += angle;
 	// angle = Math.abs(Code.minAngle(rotA_blu,rotB_blu));
 	// 	score += angle;
+
+	// overall angle score
+	var ratioOverall = 1.0;
+	var ratioZones = 1.0;//1.0/(a._zoneCols); // 1/4
+	var ratioPixels = 1.0;//1.0/(a._zoneCols*a._zoneSize); // 1/16
+//	score += ratioOverall * ZFeature.scoreForMagnitudeAngleRGB(a._magnitude, b._magnitude, a._angle, b._angle);
+
 	for(j=0; j<a._zoneCols; ++j){
 		for(i=0; i<a._zoneCols; ++i){
 			// get zone
 			index = j*a._zoneCols + i;
 			zA = a._zones[index];
 			zB = b._zones[index];
-
-
 			// zone orientations
-			
-			var rotScore = 0.0;
-			var rotZA = zA._angle;
-			var rotZB = zB._angle;
-			var rotZone_red = Code.minAngle(rotZA.x,rotZB.x);
-			var rotZone_grn = Code.minAngle(rotZA.y,rotZB.y);
-			var rotZone_blu = Code.minAngle(rotZA.z,rotZB.z);
-			var rotZone_gry = Code.minAngle(rotZA.t,rotZB.t);
-			//rotScore += Math.abs(rotZone_red) + Math.abs(rotZone_grn) + Math.abs(rotZone_blu) + Math.abs(rotZone_gry);
-			rotScore += Math.abs(rotZone_red) * Math.abs(rotZone_grn) * Math.abs(rotZone_blu) * Math.abs(rotZone_gry);
-			score += rotScore*1.0;
+//			score += ratioZones * ZFeature.scoreForMagnitudeAngleRGB(zA._magnitude, zB._magnitude, zA._angle, zB._angle);
 
+
+			for(k=0; k<zA.pixels.angles.length; ++k){
+//				score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
+			}
+			
 			// bin score per each zone
 			binsA = zA.rotations();
 			binsB = zB.rotations();
@@ -1662,13 +1661,27 @@ ZFeature.compareScore = function(a,b){
 			score += binScore*(1.0/16.0);
 		}
 	}
+	// SSD
+	//var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.50));
+	/*
+	var angleA = -a._covarianceAngle;
+	var angleB = -b._covarianceAngle;
+	var size = a._zoneCols*a._zoneSize;
+	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, 1.0, 1.0));
+	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, 1.0, 1.0));
+	var ssdScore = ImageMat.convolveSSDScores(imgA, imgB);
+		ssdScore = ssdScore.value[0];
+	score += ssdScore;
+	*/
+
+	// ssdScores are much bigger than angle scores & not really related -> scale final results to 0-1 ?
+
 	return score;
 }
 ZFeature.MatrixWithRotation = function(rotation, scaleX,scaleY){
 	if(rotation!==undefined && rotation!=0){
 		matrix = new Matrix(3,3).identity();
 		if(scaleX && scaleY){
-			console.log("SCALED: "+scaleX+" & "+scaleY);
 			matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
 		}
 		matrix = Matrix.transform2DRotate(matrix,rotation);
@@ -1699,13 +1712,28 @@ ZFeature.drawArrow = function(a,b, color){
 	d.graphics().fill();
 	return d;
 }
-ZFeature.prototype.visualize = function(x,y){
+ZFeature.prototype.visualize = function(x,y, range){
 	var i, j, k, l, b, d, c;
 	var size = 100;
 	var viz = new DO();
-		//viz.matrix().rotate(this._angle.t);
 		viz.matrix().translate(x,y);
 		GLOBALSTAGE.addChild(viz);
+	var primaryAngle = 0;//this._covarianceAngle;
+	// image
+	if(range){
+		var point = this._point;
+		var side = this._zoneCols * this._zoneSize;
+		//var img = this.range().getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
+		var img = range.imageAtPoint(point,side,side,1.0,primaryAngle);
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		
+		var sca = size/side;
+		d = new DOImage(img);
+		d.matrix().translate(-side*0.5, -side*0.5);
+		//d.matrix().rotate(-primaryAngle);
+		d.matrix().scale(sca);
+		viz.addChild(d);
+	}
 	// BG
 	d = new DO();
 	d.graphics().setLine(1.0, 0xFF666666);
@@ -1745,16 +1773,16 @@ ZFeature.prototype.visualize = function(x,y){
 	}
 	// main gradients
 	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.x), 0xFFCC0000);
-		d.matrix().rotate(this._angle.t);
+		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
 	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.y), 0xFF00CC00);
-		d.matrix().rotate(this._angle.t);
+		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
 	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.z), 0xFF0000CC);
-		d.matrix().rotate(this._angle.t);
+		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
 	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.t), 0xFFCCCCCC);
-		d.matrix().rotate(this._angle.t);
+		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
 	// SHOW
 	// var win = img;
@@ -1765,31 +1793,96 @@ ZFeature.prototype.visualize = function(x,y){
 	// GLOBALSTAGE.addChild(d);
 
 }
-
+ZFeature.scoreForMagnitudeAngleRGB = function(magA, magB, angA,angB){
+	var red = Code.minAngle(angA.x,angB.x);
+	var grn = Code.minAngle(angA.y,angB.y);
+	var blu = Code.minAngle(angA.z,angB.z);
+	var gry = Code.minAngle(angA.t,angB.t);
+	var scale = 1.0/Math.PI;
+	red = red * scale;
+	grn = grn * scale;
+	blu = blu * scale;
+	gry = gry * scale;
+	red = Math.abs(red);
+	grn = Math.abs(grn);
+	bly = Math.abs(blu);
+	gry = Math.abs(gry);
+	var magRed = 1.0 + Math.abs(magA.x-magB.x);
+	var magGrn = 1.0 + Math.abs(magA.x-magB.x);
+	var magBlu = 1.0 + Math.abs(magA.x-magB.x);
+	var magGry = 1.0 + Math.abs(magA.x-magB.x);
+	var errorRed = magRed * red;
+	var errorGrn = magGrn * grn;
+	var errorBlu = magBlu * blu;
+	var errorGry = magGry * gry;
+	var error = errorRed + errorGrn + errorBlu + errorGry;
+	return error;
+}
 ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	// get square
+	this._point = point;
 	var size = this._zoneSize * this._zoneCols;
 	var win = range.imageAtPoint(point,size,size,1.0,0.0);
 	var img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 	var d;
+
+
+
 // d = new DOImage(img);
 // d.matrix().translate(100, 200);
 // GLOBALSTAGE.addChild(d);
-	// find best scale space location
-	// find best rotation
+	
+	// TODO: find local optimal overall scale
+		// ...
 	var scale = 1.0;
-	//console.log(point,size)
+	this._scale = scale;
 	// large sigma
 	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,2.0, size,size);
-	// ge = function(x,y,scale,sigma,w,h,matrix){
-	// x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix
-
+		// img.red(ImageMat.applyGaussianMask(img.red(),img.width(),img.height()).value );
+		// img.grn(ImageMat.applyGaussianMask(img.grn(),img.width(),img.height()).value );
+		// img.blu(ImageMat.applyGaussianMask(img.blu(),img.width(),img.height()).value );
 	var gradientR = ImageMat.gradientVector(img.red(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientG = ImageMat.gradientVector(img.grn(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientB = ImageMat.gradientVector(img.blu(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
+	
+	// TODO: find local optimum affine region
+		// ...
+	// primary direction
+	/*
+	var covariance = img.calculateCovariance(new V2D(size*0.5,size*0.5));
+	var scaleRatio = covariance[0].z / covariance[1].z;
+	//console.log(scaleRatio);
+	covariance = covariance[0];
+	var dot = V2D.dot(covariance,gradientY);
+	if(dot<0){
+		covariance.rotate(Math.PI);
+	}
+	covariance = V2D.angleDirection(V2D.DIRX,covariance);
+	this._covarianceAngle = covariance;
+	*/
+
+	// this is very finicky ...
+	var covariance = V2D.angleDirection(V2D.DIRX,gradientY);
+	this._covarianceAngle = covariance;
+
+
+
+
+
+
+	// gradient directions
 	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
+	angle.x += covariance;
+	angle.y += covariance;
+	angle.z += covariance;
+	angle.t += covariance;
+//console.log(angle.t)
 	this._angle = angle;
+	var magnitude = ZFeature.V4DMagnitudeFromGradients([gradientR,gradientG,gradientB,gradientY]);
+	this._magnitude = magnitude;
+
+
 // // SHOW
 // 	var win = img;
 // 	img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
@@ -1804,7 +1897,7 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	var img;
 	//if(false){
 	if(squeeze){
-		var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(this._angle.t, 1.0, 0.50));
+		var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(covariance, 1.0, 0.50));
 // var win = img;
 // img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 // var d;
@@ -1812,7 +1905,7 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 // d.matrix().translate(30, 30);
 // GLOBALSTAGE.addChild(d);
 	}else {
-		img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(this._angle.t));
+		img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance));
 // var win = img;
 // img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 // var d;
@@ -1847,6 +1940,8 @@ var index;
 			// overall zone grad @ center
 			index = startIndex + Math.floor(this._zoneSize*0.5)*this._zoneCols*this._zoneSize + Math.floor(this._zoneSize*0.5);
 			zone.setGradient(gradientAllRed[index], gradientAllGrn[index], gradientAllBlu[index], gradientAllGry[index]);
+
+
 			//
 			for(k=0; k<this._zoneSize; ++k){
 				for(l=0; l<this._zoneSize; ++l){
@@ -1857,6 +1952,18 @@ var index;
 					angles.push( ZFeature.angleFromGradient(gradientAllBlu[index]) );
 					angles.push( ZFeature.angleFromGradient(gradientAllGry[index]) );
 					zone.addAngles(angles);
+
+					// ....
+					// var magnitudes = [];
+					// magnitudes.push( ZFeature.magnitudeFromGradient(gradientAllRed[index]) );
+					// magnitudes.push( ZFeature.magnitudeFromGradient(gradientAllGrn[index]) );
+					// magnitudes.push( ZFeature.magnitudeFromGradient(gradientAllBlu[index]) );
+					// magnitudes.push( ZFeature.magnitudeFromGradient(gradientAllGry[index]) );
+					var grads = [gradientAllRed[index], gradientAllGrn[index], gradientAllBlu[index], gradientAllGry[index]];
+					var angle = ZFeature.V4DAngleFromGradients(grads);
+					var magnitude = ZFeature.V4DMagnitudeFromGradients(grads);
+					zone.pixels.angles.push(angle);
+					zone.pixels.magnitudes.push(magnitude);
 				}
 			}
 		}
@@ -1879,13 +1986,35 @@ ZFeature.V4DAngleFromGradients = function(v, g){
 	return v;
 }
 
+ZFeature.V4DMagnitudeFromGradients = function(v, g){
+	if(g===undefined){
+		g = v;
+		v = new V4D();
+	}
+	var gR = g[0];
+	var gG = g[1];
+	var gB = g[2];
+	var gY = g[3];
+	v.x = ZFeature.magnitudeFromGradient(gR);
+	v.y = ZFeature.magnitudeFromGradient(gG);
+	v.z = ZFeature.magnitudeFromGradient(gB);
+	v.t = ZFeature.magnitudeFromGradient(gY);
+	return v;
+}
+
 ZFeature.angleFromGradient = function(g){
 	var angle = V2D.angleDirection(g,V2D.DIRX);
 	return angle;
 }
 
+ZFeature.magnitudeFromGradient = function(g){
+	var angle = g.length();
+	return angle;
+}
+
 
 ZFeature.Zone = function(){
+	this.pixels = {"magnitudes":[], "angles":[]};
 	this._rotations = []; // R G B Y
 	for(i=0; i<4; ++i){
 		this._rotations.push( new ZFeature.Rotation() );
@@ -1904,11 +2033,9 @@ ZFeature.Zone.prototype.addAngles = function(angles){
 ZFeature.Zone.prototype.setGradient = function(gradR, gradG, gradB, gradY){
 	var angle = ZFeature.V4DAngleFromGradients([gradR,gradG,gradB,gradY]);
 	this._angle = angle;
+	var magnitude = ZFeature.V4DMagnitudeFromGradients([gradR,gradG,gradB,gradY]);
+	this._magnitude = magnitude;
 }
-// ZFeature.Zone.prototype.setGradient = function(subz, suby, gradR, gradG, gradB, gradY){
-// 	}
-
-
 ZFeature.Rotation = function(){
 	this._bins = 8;
 	this._rotations = Code.newArrayZeros(this._bins);
