@@ -1639,10 +1639,10 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 //			score += ratioZones * ZFeature.scoreForMagnitudeAngleRGB(zA._magnitude, zB._magnitude, zA._angle, zB._angle);
 
 
-			for(k=0; k<zA.pixels.angles.length; ++k){
-				score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
-			}
-/*
+			// for(k=0; k<zA.pixels.angles.length; ++k){
+			// 	score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
+			// }
+
 			// bin score per each zone
 			binsA = zA.rotations();
 			binsB = zB.rotations();
@@ -1658,8 +1658,8 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 					//binScore *= Math.abs(binA[l] - binB[l]);
 				}
 			}
-			score += binScore*(1.0/16.0);
-*/
+			score += binScore;//(1.0/16.0);
+
 		}
 	}
 	// SSD
@@ -1675,7 +1675,16 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 		ssdScore = ssdScore.value[0];
 	score += ssdScore;
 	*/
-
+	//var img = range._imageGradient.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.10));
+/*
+	var angleA = -a._covarianceAngle;
+	var angleB = -b._covarianceAngle;
+	var size = a._zoneCols*a._zoneSize;
+	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, 1.0, 1.0));
+	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, 1.0, 1.0));
+	var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
+	score += sadScore;
+*/
 	// ssdScores are much bigger than angle scores & not really related -> scale final results to 0-1 ?
 
 	return score;
@@ -1720,13 +1729,15 @@ ZFeature.prototype.visualize = function(x,y, range){
 	var viz = new DO();
 		viz.matrix().translate(x,y);
 		GLOBALSTAGE.addChild(viz);
-	var primaryAngle = 0;//this._covarianceAngle;
+	var primaryAngle = 0;
+	//var primaryAngle = -this._covarianceAngle;
 	// image
 	if(range){
 		var point = this._point;
 		var side = this._zoneCols * this._zoneSize;
 		//var img = this.range().getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-		var img = range.imageAtPoint(point,side,side,1.0,primaryAngle);
+		var angle = -this._covarianceAngle;
+		var img = range.imageAtPoint(point,side,side,1.0,angle);
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 		
 		var sca = size/side;
@@ -1893,8 +1904,6 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 
 
 
-
-
 	// gradient directions
 	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
 	angle.x += covariance;
@@ -1919,17 +1928,17 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	
 	// get new square @ correct rotation & scale
 	var img;
-	//if(false){
-	if(squeeze){
-		var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(covariance, 1.0, 0.50));
+	if(false){
+	//if(squeeze){
+//		var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(covariance, 1.0, 0.50));
 // var win = img;
 // img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 // var d;
 // d = new DOImage(img2);
 // d.matrix().translate(30, 30);
 // GLOBALSTAGE.addChild(d);
-	}else {
-		img = range._image.extractRectFromFloatImage(point.x,point.y,scale,2.0, size,size, ZFeature.MatrixWithRotation(-covariance));
+	}else{
+		img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,2.0, size,size, ZFeature.MatrixWithRotation(-covariance, scale, scale));
 // var win = img;
 // img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
 // var d;

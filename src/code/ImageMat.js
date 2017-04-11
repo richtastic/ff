@@ -1519,7 +1519,23 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 	}
 	return {"value":result,"width":resultWidth,"height":resultHeight};
 }
-
+ImageMat.SADFloatSimpleChannelsRGB = function(aRed,aGrn,aBlu, wid,hei, bRed,bGrn,bBlu){
+	var scoreR = ImageMat.SADFloatSimple(aRed,wid,hei,bRed);
+	var scoreG = ImageMat.SADFloatSimple(aGrn,wid,hei,bGrn);
+	var scoreB = ImageMat.SADFloatSimple(aBlu,wid,hei,bBlu);
+	return scoreR * scoreG * scoreB;
+	//return scoreR + scoreG + scoreB;
+}
+ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
+	var i, a, b, len = wid*hei;
+	var sad = 0;
+	for(i=0; i<len; ++i){
+		a = imageA[i];
+		b = imageB[i];
+		sad += Math.abs(a - b);
+	}
+	return sad;
+}
 /*
 ImageMat.ssds = function(windowA, windowB){ // TODO: make tihs SSD not conv
 	var ssdRed = ImageMat.convolve(windowA.red(),windowA.width(),windowA.height(), windowB.red(),windowB.width(),windowB.height());

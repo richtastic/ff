@@ -244,43 +244,6 @@ RESULTS:
 
 - rotated, asym-scaled:
 
-zone rotations only:
-
-Manual3DR.js:1560 0 = 6.741067661839523
-Manual3DR.js:1560 1 = 14.862101371268377
-Manual3DR.js:1560 2 = 16.891412876089106
-Manual3DR.js:1560 3 = 19.914475886726883
-Manual3DR.js:1560 4 = 22.448424954363453
-Manual3DR.js:1560 5 = 29.09700466015
-
-
-
-
-zone bin SAD:
-Manual3DR.js:1560 0 = 640
-Manual3DR.js:1560 1 = 874
-Manual3DR.js:1560 2 = 882
-Manual3DR.js:1560 3 = 898
-Manual3DR.js:1560 4 = 916
-Manual3DR.js:1560 5 = 926
-Manual3DR.js:1560 6 = 926
-Manual3DR.js:1560 
-
-
-
-bin + rots:
-
-
-Manual3DR.js:1560 0 = 57.71538843113383
-Manual3DR.js:1560 1 = 77.4641341359983
-Manual3DR.js:1560 2 = 86.2029626290181
-Manual3DR.js:1560 3 = 98.27441132388014
-Manual3DR.js:1560 4 = 99.83426214829632
-Manual3DR.js:1560 5 = 102.5561866609676
-Manual3DR.js:1560 6 = 103.3541176910412
-Manual3DR.js:1560 
-
-
 
 
 **f**: 2D scalar field
@@ -302,14 +265,14 @@ TODO:
 x average median offset mean SSD NOT BETTER
 x normalize height SSD NOT BETTER
 x page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
+- compare SSD & SAD in more detail
+	- SSD of gradients instead of intensities
 - optimum scale
 	- maximize range, minimize scale/area/size
 		=> will try to include the nearest black / white elements
 	- penaltiy for high area (including many other features)
 	- penalty for too small area (blurry - not enough of feature)
 	- even number of high / low areas
-- compare SSD & SAD in more detail
-	- SSD of gradients instead of intensities
 - get initial best points
 	- high visual disparity (texture)
 	- high gradient
