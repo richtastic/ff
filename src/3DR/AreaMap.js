@@ -1663,8 +1663,9 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 		}
 	}
 	// SSD
-	//var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.50));
 	/*
+	//var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.50));
+	var img = range._imageGradient.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.50));
 	var angleA = -a._covarianceAngle;
 	var angleB = -b._covarianceAngle;
 	var size = a._zoneCols*a._zoneSize;
@@ -1795,6 +1796,23 @@ ZFeature.prototype.visualize = function(x,y, range){
 
 }
 ZFeature.scoreForMagnitudeAngleRGB = function(magA, magB, angA,angB){
+	// error based on head-to=-tail vector
+	var redA = new V2D.fromMagnitudeAndAngle(magA.x,angA.x);
+	var grnA = new V2D.fromMagnitudeAndAngle(magA.y,angA.y);
+	var bluA = new V2D.fromMagnitudeAndAngle(magA.z,angA.z);
+	var gryA = new V2D.fromMagnitudeAndAngle(magA.t,angA.t);
+	var redB = new V2D.fromMagnitudeAndAngle(magB.x,angB.x);
+	var grnB = new V2D.fromMagnitudeAndAngle(magB.y,angB.y);
+	var bluB = new V2D.fromMagnitudeAndAngle(magB.z,angB.z);
+	var gryB = new V2D.fromMagnitudeAndAngle(magB.t,angB.t);
+	var redD = V2D.sub(redA,redB);
+	var grnD = V2D.sub(grnA,grnB);
+	var bluD = V2D.sub(bluA,bluB);
+	var gryD = V2D.sub(gryA,gryB);
+	var distance = redD.length() + grnD.length() + bluD.length() + gryD.length();
+	return distance;
+
+
 	var red = Code.minAngle(angA.x,angB.x);
 	var grn = Code.minAngle(angA.y,angB.y);
 	var blu = Code.minAngle(angA.z,angB.z);

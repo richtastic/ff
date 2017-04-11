@@ -147,6 +147,12 @@ V2D.shiftPoints = function(a,b,c){
 		a[i].y += c;
 	}
 }
+V2D.fromMagnitudeAndAngle = function(mag, ang){
+	var v = new V2D(1,0); // assumed starting from x axis
+	v.scale(mag);
+	v.rotate(ang);
+	return v;
+}
 function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;

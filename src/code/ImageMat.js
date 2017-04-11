@@ -954,6 +954,60 @@ ImageMat.printBadData = function(data, wid,hei){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ fxns
+ImageMat.histogram = function(data, wid, hei, buckets){ // range assumed [0,1]  |  16 => 4  |  100 => 10
+	var value, i, bin, len = wid*hei;
+	buckets = buckets!==undefined ? buckets : Math.round(Math.sqrt(len));
+//buckets = Math.round(len*0.5);
+//buckets = Math.round(10);
+// 10 = 1.59
+// 20 = 2.14
+// 30 = 2.48
+// 40 = 2.72
+// 50 = 2.90
+// 100 = 3.52
+// 1000 = 5.12
+	var bm1 = buckets - 1;
+	var histogram = Code.newArrayZeros(buckets);
+	for(i=0; i<len; ++i){
+		value = data[i];
+		bin = Math.min(Math.floor( value*buckets ),bm1);
+		histogram[bin] += 1;
+	}
+	return histogram;
+}
+ImageMat.entropy = function(data, wid, hei, buckets){ // e = - SUM p_i * log(p_i)
+	var i, count, value, bin, len = wid*hei;
+	// get histogram, 10~100 buckets
+	var histogram = ImageMat.histogram(data, wid,hei, buckets);
+	buckets = histogram.length;
+	var bm1 = buckets - 1;
+	var entropy = 0;
+	// go over all pixels
+	//for(i=0; i<len; ++i){
+	// var nonEmpty = 0;
+	// for(i=0; i<buckets; ++i){
+	// 	count = histogram[i];
+	// 	if(count>0){
+	// 		nonEmpty += 1;
+	// 	}
+	// }
+	//var dx = 1.0/buckets;
+	for(i=0; i<buckets; ++i){
+		value = data[i];
+		//bin = Math.min(Math.floor( value*buckets ),bm1);
+		//count = histogram[bin];
+		// get probability from histogram
+		count = histogram[i];
+		//p = count / len;
+		p = count / len;
+		if(p > 0){
+			entropy += p * Math.log2(p); // * dx;
+		}
+	}
+	// var min = 0; // Math.pow(2,-buckets); // all same color
+	// var max = Math.log2(1.0/buckets);////buckets; // uniform buckets
+	return -entropy;
+}
 ImageMat.range = function(data, wid,hei){
 	if(wid==0||hei==0){
 		return 0;
@@ -963,7 +1017,6 @@ ImageMat.range = function(data, wid,hei){
 	var maxValue = null;
 	for(var i=len-1; i>=0; i--){
 		var value = data[i];
-		//console.log(i+": "+value);
 		if(minValue==null || value<minValue){
 			minValue = value;
 		}

@@ -3768,6 +3768,63 @@ Code.mult2x2by2x1toV2D = function(v, tbt, tbo){
 	v.y = tbo[0]*tbt[2] + tbo[1]*tbt[3];
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
+Code.findGlobalValue1D = function(array, value){
+	var i, len=array.length;
+	var lm1 = len - 1;
+	var prev;
+	locations = [];
+// TODO: return all matches, nit just first
+	for(i=0; i<lm1; ++i){
+		var a = array[i];
+		var b = array[i+1];
+
+		
+		if((a<=value && value<=b) || (a>=value && value>=b)){
+			//console.log(a+ " <= "+value+" <= "+b)
+			// linear:
+			var range = b-a;
+			if(range==0){
+				return a + 0.5; // center
+			}
+			var p = (value - a)/range;
+			var pm1 = 1.0 - p;
+			locations.push(i + p);
+			//value = Code.interpolate1D(new V2D(), new V2D(),  new V2D(), new V2D());
+		}
+	}
+	if(array[lm1]<=value && locations.length==0){
+		locations.push(lm1);
+	}
+	if(array[0]>=value && locations.length==0){
+		locations.push(0);
+	}
+	return locations;
+}
+Code.interpolateValue1D = function(array, location){
+	if(array.length==0){
+		return null;
+	}
+	if(location>0 && location < array.length-1){
+		var min = Math.floor(location);
+		var max = min + 1;
+		var a = array[min];
+		var b = array[max];
+		console.log("interpolate: "+min+" | "+location+" | "+max);
+		var range = b-a;
+		if(range==0){
+			return a;
+		}
+		var p = (location - min);
+		var pm1 = 1.0 - p;
+		return a*pm1 + b*p;
+		//value = Code.interpolate1D(new V2D(), new V2D(location,0),  new V2D(min,array[min]), new V2D(max,array[max]));
+		//return value.y;
+	}
+	if(location<0){
+		return array[0];
+	}
+	return array[array.length-1];
+}
 Code.interpolate1D = function(locOut, locIn, a, b, c, d){ // list of V2D
 	if(!b){ // only a
 		locOut.x = a.x;

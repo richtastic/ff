@@ -72,14 +72,16 @@ var testPoint = new V2D(); //
 //var testPoint = new V2D(133,195); // glasses center
 //var testPoint = new V2D(218,117); // captain side
 //var testPoint = new V2D(188.56468934493222,61.18091100486489);    // grid point
-// var testPoint = new V2D(209.2493662082469,65.70961901224916);  // lighter grid point
+//var testPoint = new V2D(209.2493662082469,65.70961901224916);  // lighter grid point
 //var testPoint = new V2D(124.44547770393197,159.53057013526828);    // useless almost edge-ok point
 //var testPoint = new V2D(61.32659105135039,58.84629411812288);  // cup corner
-//var testPoint = new V2D(270.6196718540066,235.9599497436766); // mouse by ear
+var testPoint = new V2D(270.6196718540066,235.9599497436766); // mouse by ear
 //var testPoint = new V2D(278.27625765373034,241.50570519405397);  // mouse center
 //var testPoint = new V2D(127.92178393876246,237.46267396095368); // nomax
 //var testPoint = new V2D(57.54537183497834,170.7810879422064);  // lighter corner
-var testPoint = new V2D(235.16432944460433,135.46335940020367); // centered tankman
+//var testPoint = new V2D(235.16432944460433,135.46335940020367); // centered tankman
+//var testPoint = new V2D(237.26626207337966,81.96316184765035); // tankman head
+//var testPoint = new V2D(323.04254379798556,53.41574624876708); // wall
 
 	console.log("TEST POINT:    var testPoint = new V2D("+testPoint.x+","+testPoint.y+");    ");
 for(j=0;j<14;++j){
@@ -214,9 +216,11 @@ recoverRatioScale = ratio;
 // do scales & see if can revert scales
 	// test fxn at different scales
 	var scales = [];//[0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5];
-	var scaleTimes = 25;
-	var minScalePower = -2;
-	var maxScalePower = 3;
+	var scaleTimes = 10;
+	var minScalePower = -2; // 0.25
+	var maxScalePower = 5; // 16
+	// var minScalePower = 0;
+	// var maxScalePower = 2;
 	for(i=0; i<scaleTimes; ++i){
 		//scales.push( 1.0*Math.pow(1.25, i - scaleTimes*0.4) );
 		var p = i/(scaleTimes-1);
@@ -284,7 +288,7 @@ score = corners[index]; // harrisValue
 // var featureScaleRange = ImageMat.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, costMove,imageMatrixOriginal.width(),imageMatrixOriginal.height(),   testMatrix);
 // featureScaleRange = new ImageMat(testSize.x,testSize.y, featureScaleRange);
 // var range = ImageMat.range(featureScaleRange.gry(),featureScaleRange.width(),featureScaleRange.height());
-var range = ImageMat.range(featureScale.gry(),featureScale.width(),featureScale.height());
+var range = ImageMat.range(featureBlur.gry(),featureScale.width(),featureScale.height());
 //range = Math.sqrt(range);
 //range = Math.pow(range,2);
 //var range = ImageMat.range(featureBlur.gry(),featureBlur.width(),featureBlur.height());
@@ -299,10 +303,37 @@ var range = ImageMat.range(featureScale.gry(),featureScale.width(),featureScale.
 //score = range / Math.pow(pixels,0.5);
 
 //score = range / pixels;
-score = range / (pixels*pixels); // average range per pixel
+//score = range / (pixels*pixels); // average range per pixel
 //score = range / ((pixels+1)*(pixels+1));
 //score =  (pixels-1) * range / (pixels*pixels);
 //score = range*range / (pixels*pixels);
+
+//
+
+//var entropy = ImageMat.entropy(featureBlur.gry(), featureScale.width(), featureScale.height());
+// var entropy = ImageMat.entropy(featureScale.gry(), featureScale.width(), featureScale.height());
+// score = entropy;
+
+var entropyR = ImageMat.entropy(featureBlur.red(), featureScale.width(), featureScale.height());
+var entropyG = ImageMat.entropy(featureBlur.grn(), featureScale.width(), featureScale.height());
+var entropyB = ImageMat.entropy(featureBlur.blu(), featureScale.width(), featureScale.height());
+score = (entropyR + entropyG + entropyB)/3.0;
+//score = Math.sqrt(score); // zoom out slightly
+score = Math.pow(score, 2); //zoom in slightly
+score = score * Math.sqrt(range);
+//score = (entropyR * entropyG * entropyB)/3.0;
+
+/*
+var entropy = ImageMat.entropy(featureScale.gry(), featureScale.width(), featureScale.height());
+//score = entropy*range;
+score = entropy*Math.sqrt(range);
+*/
+
+
+
+//score = entropy/range;
+//score = entropy;
+
 
 // set score to ?
 
@@ -374,6 +405,10 @@ displayDO.graphics().beginPath();
 
 
 var optimumScale = null;
+
+
+/*
+ // FOR MAXIMA
 var maximum = Code.findGlobalExtrema1D(maxScores,true);
 // console.log("GLOBAL: "+maximum.max);
 if(!maximum || !maximum.max){
@@ -392,19 +427,58 @@ if(!maximum || !maximum.max){
 	console.log("global");
 	optimumScale = (maximum.max.x);
 }
+optimumScale = Code.interpolateArray1D(maxScales,optimumScale);
+
+*/
+
+
+
+
+//FOR EXACT VALUE:
+
+// find when optimum scale crosses 1.0 for first tiem
+//var expectedEntropy = 3.0;
+//var expectedEntropy = 2.0;
+//var expectedEntropy = 1.5;
+//var expectedEntropy = 1.0;
+var expectedEntropy = 0.5;
+var locations = Code.findGlobalValue1D(maxScores,expectedEntropy);
+var location = locations[locations.length-1]; // last = smallest
+console.log("LCOATION  : "+location+"");
+
 if(optimumScale==null){
 	optimumScale = 0;
 }
+
+optimumScale = Code.interpolateValue1D(maxScales, location);
+console.log("optimumScale  : "+optimumScale+"");
+
+
+
+
+
+
+
 // optimumScale = Math.floor(optimumScale);
 // optimumScale = displayScores[optimumScale].x; // should interpolate instead
-optimumScale = Code.interpolateArray1D(maxScales,optimumScale);
+
+
+
+
+
 d = new DOText(""+optimumScale+"");
 d.matrix().translate(700, 300);
 GLOBALSTAGE.addChild(d);
 
 // SHOW BEST:
-		var transScale = 0.25;
-		scale = optimumScale*transScale;
+		//var transScale = 0.25;
+		var transScale = 0.5;
+		//var transScale = optimumScale;//1.0;
+		//var transScale = 1.0;
+		//scale = optimumScale*transScale;
+		//scale = Math.pow(optimumScale,0.5);
+		scale = Math.exp(Math.log(optimumScale) - 0.5);
+		//scale = Math.exp(Math.log(optimumScale) - 1.0);
 		var testMatrix = new Matrix(3,3).identity();
 			testMatrix = Matrix.transform2DScale(testMatrix,scale,scale);
 		var featureScale = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,null, testSize.x,testSize.y, testMatrix);

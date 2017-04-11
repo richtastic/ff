@@ -309,6 +309,7 @@ x page that selects points at random from image 1, computes best match from imag
 	- penalty for too small area (blurry - not enough of feature)
 	- even number of high / low areas
 - compare SSD & SAD in more detail
+	- SSD of gradients instead of intensities
 - get initial best points
 	- high visual disparity (texture)
 	- high gradient

@@ -35,7 +35,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-//		d.graphics().alpha(0.15);
+		d.graphics().alpha(0.15);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -49,6 +49,39 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+
+// ideal ~ scale = 1
+	var scale = 1.0;
+		scale = 1.0 / scale;
+	var size = 16;
+	var point = new V2D(200,100);
+	var sample = imageMatrixA.extractRectFromFloatImage(point.x,point.y,scale,null, size,size);
+
+/*
+.05 = 2.4480987042462834
+.12 = 2.3734776017941805
+.25 = 2.3667601024053297
+.5  = 2.0886700702798433
+1   = 1.8424887209994043
+2   = 1.1885297584971346
+3   = 0.8126137478008941
+4   = 0.784609773806054
+8.  = 0.6930251052799065
+16  = 0.5827920531943336
+*/
+	img = GLOBALSTAGE.getFloatRGBAsImage(sample.red(),sample.grn(),sample.blu(), sample.width(),sample.height());
+	d = new DOImage(img);
+	//d.matrix().scale(1.0);
+	d.matrix().translate(100, 100);
+	GLOBALSTAGE.addChild(d);
+
+
+	var histogram = ImageMat.histogram(sample.gry(), sample.width(), sample.height());
+	console.log(histogram);
+
+	var entropy = ImageMat.entropy(sample.gry(), sample.width(), sample.height());
+	console.log(entropy);
+return;
 
 	//this.showComparrison(imageMatrixA, imageMatrixB);
 
