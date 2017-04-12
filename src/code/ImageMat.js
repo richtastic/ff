@@ -954,6 +954,94 @@ ImageMat.printBadData = function(data, wid,hei){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ fxns
+ImageMat.cdf = function(data){ // cumulative distribution function | range assumed [0,1]
+	var i, len = data.length;
+	var lm1 = len - 1;
+	var sorted = data.sort(function(a,b){
+		return a < b ? -1 : 1;
+	});
+	var division;
+	var currentCDF = 0;
+	var cdf = [];
+	var xValues = [];
+	for(i=0; i<=lm1;++i){
+		value = sorted[i];
+		division = 1;
+		while(i<lm1 && sorted[i+1]==value){
+			division += 1;
+			++i;
+		}
+		currentCDF += division / len;
+		cdf.push(currentCDF);
+		xValues.push(value);
+	}
+	return {"x":xValues, "y":cdf};
+}
+ImageMat.probabilityFromCDF = function(cdf,value){ 
+	var x = cdf["x"];
+	var y = cdf["y"];
+	var len = x.length;
+	var lm1 = len - 1;
+	if(len==0){
+		return 0;
+	}
+	var value0 = x[0];
+	var valueN = x[lm1];
+	if(value < value0){
+		return 0;
+	}
+	if(value > valueN){
+		return 1;
+	}
+	// TODO: faster search to find i
+	var i, a, b;
+	for(i=0; i<lm1; ++i){
+		a = x[i];
+		b = x[i+1];
+		if(a<=value && value<=b){
+			if(i>0){
+				return y[i] - y[i-1];
+			}else{
+				return y[i];
+			}
+		}
+	}
+	return 0;
+}
+
+ImageMat.valueFromCDF = function(cdf,value){ 
+	var x = cdf["x"];
+	var y = cdf["y"];
+	var len = x.length;
+	var lm1 = len - 1;
+	if(len==0){
+		return 0;
+	}
+	if(value < x[0]){
+		return 0;
+	}
+	var i, a, b;
+	for(i=0; i<lm1; ++i){
+		a = x[i];
+		b = x[i+1];
+		if(a<=value && value<=b){
+			return y[i];
+		}
+	}
+	return 1;
+}
+
+ImageMat.entropy = function(data, wid, hei){
+	return ImageMat.entropySimple(data, wid, hei);
+
+	var bins = Math.round(3 + Math.log2(data.length) * Math.log(data.length));
+	return ImageMat.entropySimple(data, wid, hei, bins);
+
+	var i, len = wid*hei;
+	var cdf = ImageMat.cdf(data);
+	var entropy = 0;
+	return entropy;
+}
 ImageMat.histogram = function(data, wid, hei, buckets){ // range assumed [0,1]  |  16 => 4  |  100 => 10
 	var value, i, bin, len = wid*hei;
 	buckets = buckets!==undefined ? buckets : Math.round(Math.sqrt(len));
@@ -975,7 +1063,7 @@ ImageMat.histogram = function(data, wid, hei, buckets){ // range assumed [0,1]  
 	}
 	return histogram;
 }
-ImageMat.entropy = function(data, wid, hei, buckets){ // e = - SUM p_i * log(p_i)
+ImageMat.entropySimple = function(data, wid, hei, buckets){ // e = - SUM p_i * log(p_i)
 	var i, count, value, bin, len = wid*hei;
 	// get histogram, 10~100 buckets
 	var histogram = ImageMat.histogram(data, wid,hei, buckets);
@@ -1529,11 +1617,43 @@ ImageMat.SADFloatSimpleChannelsRGB = function(aRed,aGrn,aBlu, wid,hei, bRed,bGrn
 ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
 	var i, a, b, len = wid*hei;
 	var sad = 0;
+	var medianA = 0;
+	var medianB = 0;
+	var rangeA = 0;
+	var rangeB = 0;
+	var minA = imageA[0];
+	var minB = imageB[0];
+	var maxA = minA;
+	var maxB = minB;
 	for(i=0; i<len; ++i){
 		a = imageA[i];
 		b = imageB[i];
-		sad += Math.abs(a - b);
+		medianA += a;
+		medianB += b;
+		minA = Math.min(minA,a);
+		minB = Math.min(minB,b);
+		maxA = Math.max(maxA,a);
+		maxB = Math.max(maxB,b);
 	}
+	rangeA = maxA - minA;
+	rangeB = maxB - minB;
+	medianA = medianA / len;
+	medianB = medianB / len;
+	for(i=0; i<len; ++i){
+		a = imageA[i];
+		b = imageB[i];
+		a -= medianA;
+		b -= medianB;
+		sad += Math.abs(a - b);
+		//sad += Math.pow(a - b,2);
+	}
+//	console.log("RANGES: "+rangeA+" | "+rangeB);
+	//var range = (rangeA+rangeB)*0.5;
+	var range = Math.min(rangeA,rangeB);
+//		range = Math.pow(range,2); // too much
+		range = range!=0 ? range : 1.0;
+//console.log("RANGE: "+range);
+	sad = sad / range; // higher range is better score
 	return sad;
 }
 /*

@@ -1642,7 +1642,7 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 			// for(k=0; k<zA.pixels.angles.length; ++k){
 			// 	score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
 			// }
-
+/*
 			// bin score per each zone
 			binsA = zA.rotations();
 			binsB = zB.rotations();
@@ -1659,7 +1659,7 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 				}
 			}
 			score += binScore;//(1.0/16.0);
-
+*/
 		}
 	}
 	// SSD
@@ -1676,15 +1676,17 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 	score += ssdScore;
 	*/
 	//var img = range._imageGradient.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.10));
-/*
+
 	var angleA = -a._covarianceAngle;
 	var angleB = -b._covarianceAngle;
+	var scaleA = a._scale;
+	var scaleB = b._scale;
 	var size = a._zoneCols*a._zoneSize;
-	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, 1.0, 1.0));
-	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, 1.0, 1.0));
+	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, scaleA, scaleA));
+	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, scaleB, scaleB));
 	var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
 	score += sadScore;
-*/
+
 	// ssdScores are much bigger than angle scores & not really related -> scale final results to 0-1 ?
 
 	return score;
@@ -1869,9 +1871,9 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	
 	// TODO: find local optimal overall scale
 		// ...
-	var scale = 1.0;
 	this._scale = scale;
 	// large sigma
+		scale = 1.0 / scale; // inverse
 	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,2.0, size,size);
 		// img.red(ImageMat.applyGaussianMask(img.red(),img.width(),img.height()).value );
 		// img.grn(ImageMat.applyGaussianMask(img.grn(),img.width(),img.height()).value );

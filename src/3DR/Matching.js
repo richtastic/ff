@@ -35,7 +35,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		//d.graphics().alpha(0.15);
+		d.graphics().alpha(0.1);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -50,7 +50,27 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
-/*
+
+
+// var data = [.1,.25,.5,.5,.75];
+// var cdf = ImageMat.cdf(data);
+// console.log(cdf);
+// var x = cdf.x;
+// var y = cdf.y;
+// console.log(x);
+// console.log(y);
+
+
+// var probabilities = [];
+// var count = 10;
+// for(i=0; i<=count; ++i){
+// 	var p = i/count;
+// 	var prob = ImageMat.probabilityFromCDF(cdf,p);
+// 	probabilities.push(prob);
+// }
+// console.log(probabilities);
+// return;
+
 // ideal ~ scale = 1
 	var scale = 1.0;
 		scale = 1.0 / scale;
@@ -65,12 +85,63 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	GLOBALSTAGE.addChild(d);
 
 
+var data = sample.gry();
+var cdf = ImageMat.cdf(data);
+//console.log(cdf);
+var x = cdf.x;
+var y = cdf.y;
+// console.log("x = ["+x+"];");
+// console.log("y = ["+y+"];");
+
+
+/*
+var probabilities = [];
+var x = [];
+var count = 16;
+for(i=0; i<=count; ++i){
+	var p = i/count;
+	var prob = ImageMat.probabilityFromCDF(cdf,p);
+	x.push(p);
+	probabilities.push(prob);
+}
+console.log("x = ["+x+"];");
+console.log("z = ["+probabilities+"];");
+*/
+/*
+var probabilities = [];
+var dx = [];
+var dy = [];
+var count = 50;
+var u = 0;
+for(i=0; i<=count; ++i){
+	var p = i/count;
+	var v = ImageMat.valueFromCDF(cdf,p);
+	//var prob = ImageMat.probabilityFromCDF(cdf,p);
+	dx.push(p);
+	dy.push(v-u);
+	u = v;
+	//probabilities.push(prob);
+}
+console.log("x = ["+dx+"];");
+console.log("y = ["+dy+"];");
+//console.log("x = ["+x+"];");
+//console.log("z = ["+probabilities+"];");
+
+return;
+*/
+
+
 	var histogram = ImageMat.histogram(sample.gry(), sample.width(), sample.height());
 	console.log(histogram);
 
+	var cdf = ImageMat.cdf(sample.gry(), sample.width(), sample.height());
+	console.log("cdf: "+cdf);
+
+	var entropySimple = ImageMat.entropySimple(sample.gry(), sample.width(), sample.height());
+	console.log("entropySimple: "+entropySimple);
+
 	var entropy = ImageMat.entropy(sample.gry(), sample.width(), sample.height());
-	console.log(entropy);
-*/
+	console.log("entropy: "+entropy);
 
 
 	//this.showComparrison(imageMatrixA, imageMatrixB);
@@ -155,6 +226,10 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	this.showComparrison(imageBestPointsA, imageBestPointsB);
 */
 
+
+// DO CHECKING
+
+
 	var bestFeaturesA = R3D.bestFeatureListRGB(imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
 	var bestFeaturesB = R3D.bestFeatureListRGB(imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height());
 	
@@ -171,30 +246,34 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var scores = [];
 	var i, j, k;
 	console.log("START");
+// TODO: only retain the top top match, remove dups
+// TRIM OUT ITEMS THAT HAVE LOTS OF DISPARATE MATCHES (not unique) -- many matches and scores of top mathches are within % of eachother
+// TRY ZOOMING OUT MORE ?
+var zoomScale = 0.5;
 	for(i=0; i<bestFeaturesA.length; ++i){
 		var pointA = bestFeaturesA[i];
 		var featureA = new ZFeature();
-		featureA.setupWithImage(rangeA, pointA, 1.0);
+		featureA.setupWithImage(rangeA, pointA, zoomScale);
 		for(j=0; j<bestFeaturesB.length; ++j){
 			var pointB = bestFeaturesB[j];
 			var featureB = new ZFeature();
-			featureB.setupWithImage(rangeB, pointB, 1.0);
+			featureB.setupWithImage(rangeB, pointB, zoomScale);
 			var score = ZFeature.compareScore(featureA, featureB, rangeA,rangeB);
 			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
-			if(j>250){
-				break;
-			}
+			// if(j>150){
+			// 	break;
+			// }
 		}
 		console.log(i+" / "+bestFeaturesA.length);
-		if(i>250){
-			break;
-		}
+		// if(i>150){
+		// 	break;
+		// }
 	}
 	scores = scores.sort(function(a,b){
 		return a.score < b.score ? -1 : 1;
 	});
-	scores = Code.copyArray(scores,0,50);
-	this.drawMatches(scores, 0,0, 300,0);
+	scores = Code.copyArray(scores,0,200);
+	this.drawMatches(scores, 0,0, 400,0);
 
 return;
 
@@ -223,12 +302,27 @@ return;
 	// var siz = new V2D(40,40);
 
 	// glasses corner
-	var featurePointA = new V2D(189,180);
-	var featurePointB = new V2D(169,180);
-	var loc = new V2D(140,160);
-	var siz = new V2D(60,60);
-		this.drawAround([featurePointA]);
-		this.drawAround([featurePointB]);
+	// var featurePointA = new V2D(189,180);
+	// var featurePointB = new V2D(169,180);
+	// var loc = new V2D(140,160);
+	// var siz = new V2D(60,60);
+
+// EMPERICAL
+	// MATCH FOUND 1:
+	// var featurePointA = new V2D(34,162,0.00013104349268416014);
+	// var featurePointB = new V2D(56.94719580396991,115.05367402314562,0.0003274267731163911);
+	// var loc = new V2D(30,100);
+	// var siz = new V2D(50,50);
+
+	// MATCH FOUND 2:
+	var featurePointA = new V2D(34,162);
+	var featurePointB = new V2D(67.38821449115696,110.6536037232915);
+	var loc = new V2D(45,100);
+	var siz = new V2D(50,50);
+
+
+		this.drawAround([featurePointA], 0,0);
+		this.drawAround([featurePointB], 400,0);
 
 
 
@@ -286,6 +380,10 @@ return;
 	console.log("2 & 2 score: "+score);
 	// get best score in area ...
 
+	var matches = [];
+	matches.push({"score":1, "pointA":featurePointA, "pointB":featurePointB});
+	Matching.prototype.drawMatches(matches, 0,0, 400,0);
+
 return;
 
 	// go thru board
@@ -333,14 +431,14 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 	for(i=0; i<matches.length; ++i){
 		var match = matches[i];
 		var score = match.score;
-console.log(i+": "+score);
 		var pA = match.pointA;
 		var pB = match.pointB;
+console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
 		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
 		// var percem1 = 1 - percent;
 		// var p = locations[i];
 		//var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
-		var color = 0xFF000000;
+		var color = 0x66000000;
 		
 		// A
 		c = new DO();
@@ -376,12 +474,13 @@ Matching.prototype.drawAround = function(locations, offX, offY){
 	var i, c;
 	var sca = 1.0;
 	var count = Math.min(locations.length-1,2000);
+	console.log("drawAround",offX,offY)
 	for(i=0;i<locations.length;++i){
-		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
-		// var percem1 = 1 - percent;
-		// var p = locations[i];
+		var percent = (i+0.0)/((count==0?1.0:count)+0.0);
+		var percem1 = 1 - percent;
+		var p = locations[i];
 		c = new DO();
-		//var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
+		var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
 		var color = 0xFF000000;
 		c.graphics().setLine(2.0, color);
 		c.graphics().beginPath();

@@ -263,6 +263,21 @@ RESULTS:
 
 TODO:
 x average median offset mean SSD NOT BETTER
+	=> YES IT MIGHT BE ?
+- remove low-range points before they are selected for the search ?
+
+SSD LEARNINGS
+	CHANGES IN LIGHTING CAN MAGNIFY DIFFERENCE
+		=> SUBTRACT MEDIAN 
+	SCORES WITH LOW RANGE HAVE BETTER SCORE THAN HIGH-RANGE COUNTERPARTS
+		=> divide by average of range
+			=> average of range OR minimum of range?
+			=> optimum division ?
+
+
+
+
+	//
 x normalize height SSD NOT BETTER
 x page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
 - compare SSD & SAD in more detail

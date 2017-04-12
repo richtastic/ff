@@ -75,7 +75,7 @@ var testPoint = new V2D(); //
 //var testPoint = new V2D(209.2493662082469,65.70961901224916);  // lighter grid point
 //var testPoint = new V2D(124.44547770393197,159.53057013526828);    // useless almost edge-ok point
 //var testPoint = new V2D(61.32659105135039,58.84629411812288);  // cup corner
-var testPoint = new V2D(270.6196718540066,235.9599497436766); // mouse by ear
+//var testPoint = new V2D(270.6196718540066,235.9599497436766); // mouse by ear
 //var testPoint = new V2D(278.27625765373034,241.50570519405397);  // mouse center
 //var testPoint = new V2D(127.92178393876246,237.46267396095368); // nomax
 //var testPoint = new V2D(57.54537183497834,170.7810879422064);  // lighter corner
@@ -318,10 +318,14 @@ var entropyR = ImageMat.entropy(featureBlur.red(), featureScale.width(), feature
 var entropyG = ImageMat.entropy(featureBlur.grn(), featureScale.width(), featureScale.height());
 var entropyB = ImageMat.entropy(featureBlur.blu(), featureScale.width(), featureScale.height());
 score = (entropyR + entropyG + entropyB)/3.0;
+//score = Math.log(score);
 //score = Math.sqrt(score); // zoom out slightly
-score = Math.pow(score, 2); //zoom in slightly
-score = score * Math.sqrt(range);
+
 //score = (entropyR * entropyG * entropyB)/3.0;
+
+
+//score = Math.pow(score, 2); //zoom in slightly
+//score = score * Math.sqrt(range);
 
 /*
 var entropy = ImageMat.entropy(featureScale.gry(), featureScale.width(), featureScale.height());
@@ -441,7 +445,11 @@ optimumScale = Code.interpolateArray1D(maxScales,optimumScale);
 //var expectedEntropy = 2.0;
 //var expectedEntropy = 1.5;
 //var expectedEntropy = 1.0;
-var expectedEntropy = 0.5;
+//var expectedEntropy = 0.5;
+
+// NEW EXPECTED WITH NEW ENTROPY CALVULATOR:
+var expectedEntropy = 2.0;
+
 var locations = Code.findGlobalValue1D(maxScores,expectedEntropy);
 var location = locations[locations.length-1]; // last = smallest
 console.log("LCOATION  : "+location+"");
