@@ -2799,10 +2799,25 @@ Code.setStyleBackgroundImageFill = function(ele){ // entire area
 }
 Code.setStyleBackgroundImageSize = function(ele,wid,hei){
 	var sty = "background-size";
-	var val = wid+" "+hey;
+	var val = wid+" "+hei;
 	Code.removeStyle(ele, sty);
 	Code.addStyle(ele, sty, val);
 }
+Code.setStyleTextDecoration = function(ele,val){
+	var sty = "text-decoration";
+	Code.removeStyle(ele, sty);
+	Code.addStyle(ele, sty, val);
+}
+Code.setStyleTextUnderline = function(ele){
+	Code.setStyleTextDecoration(ele,"underline");
+}
+Code.setStyleTextOverline = function(ele){
+	Code.setStyleTextDecoration(ele,"overline");
+}
+Code.setStyleTextThroughLine = function(ele){
+	Code.setStyleTextDecoration(ele,"line-through");
+}
+
 Code.setStyleBackgroundImageRepeat = function(ele,x,y){
 	//var sty = "background-repeat";
 	var repeatType = "repeat";
