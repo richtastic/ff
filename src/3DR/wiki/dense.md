@@ -282,12 +282,18 @@ x normalize height SSD NOT BETTER
 x page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
 - compare SSD & SAD in more detail
 	- SSD of gradients instead of intensities
+		=> what is SSD of a vector?
+			- head-to-head distance?
+
+HERE
+
 - optimum scale
 	- maximize range, minimize scale/area/size
 		=> will try to include the nearest black / white elements
 	- penaltiy for high area (including many other features)
 	- penalty for too small area (blurry - not enough of feature)
 	- even number of high / low areas
+	- at entropy = some common value
 - get initial best points
 	- high visual disparity (texture)
 	- high gradient
@@ -338,5 +344,9 @@ x page that selects points at random from image 1, computes best match from imag
 - feature size = size where half of the SCORE(or other ) value is inside window
 	- has to contain at least one 0 and one 1 (+/- some percentage?)
 	- areas of constant intensity will have a very large scale (or jsut forget)
+
+
+
+
 
 

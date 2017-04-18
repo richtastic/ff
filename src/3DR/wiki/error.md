@@ -102,3 +102,26 @@ w_avg =  0.81650
 x_avg =  3.3333
 w_avg =  1.1547
 
+
+
+
+%%% COMBINING MULTIPLE MEASUREMENTS WITH DIFFERENT VALUES / ERROR WINDOWS
+% get normal distribution
+mu = 1.0;
+sigma = 2.0;
+N = 10;
+x = zeros(1,N);
+w = zeros(1,N);
+% various error windows
+for i=1:N
+	value = normrnd(mu,sigma);
+	x(1,i) = value;
+	% err = normrnd(0,1.0);
+	w(1,i) = abs(value-mu).^2 * 2.0;
+end
+% combine for best measurement:
+x_avg = sum(x./w) ./ sum(1./w);  % combined measurement
+w_avg = ( 1./sum( w.^-1 ) )^0.5; % combined window
+x_avg
+w_avg
+
