@@ -268,7 +268,13 @@ x average median offset mean SSD NOT BETTER
 
 SSD LEARNINGS
 	CHANGES IN LIGHTING CAN MAGNIFY DIFFERENCE
-		=> SUBTRACT MEDIAN 
+		=> SUBTRACT MEDIAN ???
+			=> subtracting median puts all levels of noise on equal field (black, grey, white)
+	=> darker items will also  have a lower range 
+		=> normalize ??
+			=> low range points and high range points are then equal
+			=> suseptible to noise
+				=> multiply final score by difference in normalization required (or similar penalty)
 	SCORES WITH LOW RANGE HAVE BETTER SCORE THAN HIGH-RANGE COUNTERPARTS
 		=> divide by average of range
 			=> average of range OR minimum of range?

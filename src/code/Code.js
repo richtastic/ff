@@ -3241,7 +3241,7 @@ Code.setCookie = function(c_name, value, seconds){
 	exdate.setTime( exdate.getTime() + miliseconds);
 	var c_value = escape(value) + ((miliseconds==null) ? "" : "; expires="+exdate.toUTCString());
 	document.cookie = c_name + "=" + c_value;
-	console.log(document.cookie);
+	//console.log(document.cookie);
 };
 Code.deleteCookie = function(name){
 	Code.setCookie(name,"x",-1);

@@ -1598,8 +1598,8 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 					//ssd += Math.pow( rangeN*(n-minN) - rangeH*(h-minH),2);
 					//ssd += Math.abs( rangeN*(n-minN) - rangeH*(h-minH));
 					//ssd += Math.abs( (n-minN) - (h-minH));
-					ssd += Math.abs(n - h);
-					//ssd += Math.pow(n - h,2);
+					//ssd += Math.abs(n - h);
+					ssd += Math.pow(n - h,2);
 				}
 			}
 			result[resultIndex] = ssd;
@@ -1646,11 +1646,13 @@ ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
 		b -= medianB;
 		sad += Math.abs(a - b);
 		//sad += Math.pow(a - b,2);
+		// for values between 0 - 1, squared makes it better
+		//sad += (Math.pow( 1 + Math.abs(a-b),2) - 1);
 	}
 //	console.log("RANGES: "+rangeA+" | "+rangeB);
 	//var range = (rangeA+rangeB)*0.5;
 	var range = Math.min(rangeA,rangeB);
-//		range = Math.pow(range,2); // too much
+//		range = Math.pow(range,2); // too m
 		range = range!=0 ? range : 1.0;
 //console.log("RANGE: "+range);
 	sad = sad / range; // higher range is better score
@@ -1974,11 +1976,21 @@ ImageMat.prototype._op = function(fxn){
 	fxn(this._g);
 	fxn(this._b);
 }
+ImageMat.prototype.clipFloat01 = function(){
+	this._op(ImageMat.clipFloat01);
+}
 ImageMat.prototype.normalFloat01 = function(){
 	this._op(ImageMat.normalFloat01);
 }
 ImageMat.prototype.invertFloat01 = function(){
 	this._op(ImageMat.invertFloat01);
+}
+ImageMat.clipFloat01 = function(data){
+	var i, len = data.length;
+	for(i=1;i<len;++i){
+		data[i] = Math.min(Math.max(data[i],0.0),1.0);
+	}
+	return data;
 }
 ImageMat.normalFloat01 = function(data){
 	var i, len = data.length;

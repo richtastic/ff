@@ -35,7 +35,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(0.75);
+		d.graphics().alpha(0.15);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -145,6 +145,168 @@ return;
 
 
 	//this.showComparrison(imageMatrixA, imageMatrixB);
+
+// TEST SAD & SSD
+
+
+//var point = new V2D(150,115);
+var point = new V2D(173,107); // origin
+var sSize = 21;
+var scores = [];
+var i, samples;
+var sampleScale = 1.0;
+var testOriginal = imageMatrixA.extractRectFromFloatImage(point.x,point.y,sampleScale,null, sSize,sSize);
+
+
+this.showComparrison(testOriginal, testOriginal, false);
+
+
+// NOSE
+samples = 10;
+for(i=0; i<samples; ++i){
+	var testNoisy = testOriginal.copy();
+	var noiseRange = i/(samples-1);
+	var noiseOffset = -noiseRange*0.5;
+	var red = testNoisy.red();
+	var grn = testNoisy.grn();
+	var blu = testNoisy.blu();
+	red = ImageMat.randomAdd(red,noiseRange,noiseOffset);
+	grn = ImageMat.randomAdd(grn,noiseRange,noiseOffset);
+	blu = ImageMat.randomAdd(blu,noiseRange,noiseOffset);
+	red = ImageMat.clipFloat01(red);
+	grn = ImageMat.clipFloat01(grn);
+	blu = ImageMat.clipFloat01(blu);
+	testNoisy.red(red);
+	testNoisy.grn(grn);
+	testNoisy.blu(blu);
+	score = ImageMat.SADFloatSimpleChannelsRGB(testOriginal.red(),testOriginal.grn(),testOriginal.blu(),testOriginal.width(),testOriginal.height(), testNoisy.red(),testNoisy.grn(),testNoisy.blu());
+	//scores.push(score);
+}
+
+// LIGHT
+samples = 10;
+for(i=0; i<samples; ++i){
+	var testLight = testOriginal.copy();
+	var offset = i/(samples-1);
+	offset = offset * 0.5;
+	var red = testLight.red();
+	var grn = testLight.grn();
+	var blu = testLight.blu();
+	red = ImageMat.addConst(red,offset);
+	grn = ImageMat.addConst(grn,offset);
+	blu = ImageMat.addConst(blu,offset);
+	red = ImageMat.clipFloat01(red);
+	grn = ImageMat.clipFloat01(grn);
+	blu = ImageMat.clipFloat01(blu);
+	testLight.red(red);
+	testLight.grn(grn);
+	testLight.blu(blu);
+	score = ImageMat.SADFloatSimpleChannelsRGB(testOriginal.red(),testOriginal.grn(),testOriginal.blu(),testOriginal.width(),testOriginal.height(), testLight.red(),testLight.grn(),testLight.blu());
+	//scores.push(score);
+}
+
+// DARK
+samples = 10;
+for(i=0; i<samples; ++i){
+	var testDark = testOriginal.copy();
+	var offset = i/(samples-1);
+	offset = offset * 0.5;
+	var red = testDark.red();
+	var grn = testDark.grn();
+	var blu = testDark.blu();
+	red = ImageMat.addConst(red,-offset);
+	grn = ImageMat.addConst(grn,-offset);
+	blu = ImageMat.addConst(blu,-offset);
+	red = ImageMat.clipFloat01(red);
+	grn = ImageMat.clipFloat01(grn);
+	blu = ImageMat.clipFloat01(blu);
+	testDark.red(red);
+	testDark.grn(grn);
+	testDark.blu(blu);
+	score = ImageMat.SADFloatSimpleChannelsRGB(testOriginal.red(),testOriginal.grn(),testOriginal.blu(),testOriginal.width(),testOriginal.height(), testDark.red(),testDark.grn(),testDark.blu());
+	//scores.push(score);
+}
+
+// RANDOM
+samples = 2000;
+//for(i=0; i<samples; ++i){
+// for(i=100; i<200; ++i){
+// 	for(j=100; j<150; ++j){
+// for(i=150; i<200; ++i){
+// 	for(j=100; j<125; ++j){
+for(i=175; i<200; ++i){
+	for(j=150; j<175; ++j){
+// V2D(150,115);
+	//var pRandom = new V2D( Code.randomInt(50,350),  Code.randomInt(50,250) );
+	//var pRandom = new V2D( Code.randomInt(100,200),  Code.randomInt(100,150) );
+	var pRandom = new V2D( i, j );
+	//console.log(point+" - "+pRandom)
+	if(point.x == pRandom.x && point.y == pRandom.y){
+		console.log("EQUAL");
+	}
+	var testRandom = imageMatrixA.extractRectFromFloatImage(pRandom.x,pRandom.y,sampleScale,null, sSize,sSize);
+	//var testRandom = imageMatrixA.extractRectFromFloatImage(point.x,point.y,1.0,null, sSize,sSize);
+	var red = testRandom.red();
+	var grn = testRandom.grn();
+	var blu = testRandom.blu();
+	// red = ImageMat.addConst(red,-offset);
+	// grn = ImageMat.addConst(grn,-offset);
+	// blu = ImageMat.addConst(blu,-offset);
+	// red = ImageMat.clipFloat01(red);
+	// grn = ImageMat.clipFloat01(grn);
+	// blu = ImageMat.clipFloat01(blu);
+	testRandom.red(red);
+	testRandom.grn(grn);
+	testRandom.blu(blu);
+	score = ImageMat.SADFloatSimpleChannelsRGB(testOriginal.red(),testOriginal.grn(),testOriginal.blu(),testOriginal.width(),testOriginal.height(), testRandom.red(),testRandom.grn(),testRandom.blu());
+	scores.push(score);
+}
+}
+
+var str = "";
+str = str + "x = [";
+for(i=0; i<scores.length; ++i){
+	//scores[i] = Math.log(scores[i]);
+	scores[i] = Math.floor(scores[i]);
+	if(scores[i]<0.1){
+		console.log(scores[i]);
+		scores[i] = 0.1;
+	}
+	str = str + " "+scores[i];
+}
+str = str + "];";
+console.log(str);
+/*
+
+plot(x,"r-");
+semilogy(x,"r-");
+
+
+
+*/
+//var score = ImageMat.SADFloatSimpleChannelsRGB(sample.red(),sample.grn(),sample.blu(),sample.width(),sample.height(), sample.red(),sample.grn(),sample.blu());
+
+
+
+
+
+//this.showComparrison(testOriginal, testNoisy, true);
+
+/*
+see how score reacts with various amounts of noise:
+0-1 [10%]
+see how score reacts with various amounts of darkness:
+1.0->0.0
+see how score reacts with various amounts of brightness:
+0.0-1.0
+see how score reacts to random other points
+[10]
+see how score reacts to various random static
+0-1 [10%]
+*/
+
+return;
+
 
 
 
