@@ -36,6 +36,26 @@ e<sub>3</sub> = ?
 
 
 
+
+x<sub>combined</sub> = &Sigma;<sub>i</sub>[x<sub>i</sub>/w<sub>i</sub>] / &Sigma;<sub>i</sub>[1/w<sub>i</sub>]
+<br/>
+= (x<sub>0</sub>/w<sub>0</sub> + &hellip; + x<sub>n-1</sub>/w<sub>n-1</sub>) / (1/w<sub>0</sub> + &hellip; + 1/w<sub>i</sub>)
+<br/>
+<br/>
+w<sub>combined</sub> = 1/&radic;&Sigma;[1/(w<sub>i</sub>)])
+<br/>
+= 1/&radic;1/w<sub>0</sub> + &hellip; + 1/w<sub>n-1</sub>)
+<br/>
+&sigma;<sup>2</sup> = w
+
+
+
+x_avg = sum(x./w) ./ sum(1./w);  % combined measurement
+w_avg = ( 1./sum( w.^-1 ) )^0.5; % combined window
+
+
+
+
 covariance multipliction
 
 
