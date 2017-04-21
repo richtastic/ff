@@ -35,6 +35,11 @@ v<sub>3</sub> = ?
 e<sub>3</sub> = ?
 
 
+#### Uncertainty Propagation
+
+
+1/&sigma;&radic;2&pi;) * e<sup>-(x-&mu;)<sup>2</sup>/(2&sigma;<sup>2</sup>)</sup>
+
 
 
 x<sub>combined</sub> = &Sigma;<sub>i</sub>[x<sub>i</sub>/w<sub>i</sub>] / &Sigma;<sub>i</sub>[1/w<sub>i</sub>]
@@ -47,6 +52,19 @@ w<sub>combined</sub> = 1/&radic;&Sigma;[1/(w<sub>i</sub>)])
 = 1/&radic;1/w<sub>0</sub> + &hellip; + 1/w<sub>n-1</sub>)
 <br/>
 &sigma;<sup>2</sup> = w
+<br/>
+
+
+with measurement x<sub>i</sub> &plusmn; e<sub>i</sub>:
+<br/>
+assume e<sub>i</sub> = &sigma;
+
+
+
+
+x_avg = SUM(x_i / s_i / SUM(1/s_i) 
+x_avg = [1/s_i * SUM(x_i)]/[ N / s_i ]
+x_avg = 1/N * SUM(x_i)
 
 
 
@@ -72,6 +90,10 @@ s_x^2 = ( 1/(sum(s_i^-2)) )^0.5
 
 
 http://www.webassign.net/question_assets/unccolphysmechl1/measurements/manual.html
+
+http://ipl.physics.harvard.edu/wp-uploads/2013/03/PS3_Error_Propagation_sp13.pdf
+
+https://en.wikipedia.org/wiki/Propagation_of_uncertainty
 
 
 
@@ -144,4 +166,120 @@ x_avg = sum(x./w) ./ sum(1./w);  % combined measurement
 w_avg = ( 1./sum( w.^-1 ) )^0.5; % combined window
 x_avg
 w_avg
+
+
+
+### emperically why s = ...1/N-1 is not better than 1/N:
+```
+
+
+
+// estimates
+var popMean = 2;
+var popVariance = 4;
+var popStdDev = Math.sqrt(popVariance);
+var samples = 20;
+var sampleList = [];
+var str = "x = [";
+
+var tests = 10000;
+var error_x = 0;
+var error_s = 0;
+for(j=0; j<tests; ++j){
+//var stry = "y = [";
+for(i=0; i<samples; ++i){
+	var sample = Code.randGauss();
+	sample = (sample * popStdDev) + popMean;
+	sampleList.push(sample);
+	//console.log(sample);
+	str = str + sample+" ";
+	//stry = stry + i+" ";
+}
+
+
+var x_estimated = 0;
+var s_estimated = 0;
+var N = sampleList.length;
+
+for(i=0; i<sampleList.length; ++i){
+	var sample = sampleList[i];
+	x_estimated += sample;
+}
+x_estimated = x_estimated * (1.0/(N));
+for(i=0; i<sampleList.length; ++i){
+	var sample = sampleList[i];
+	s_estimated += Math.pow(sample - x_estimated, 2);
+}
+// s_estimated = s_estimated * (1.0/(N-1));
+s_estimated = s_estimated * (1.0/(N));
+error_x += Math.abs(x_estimated-popMean);
+error_s += Math.abs(s_estimated-popVariance);
+//console.log("N: "+x_estimated+" & "+s_estimated+" => "+(x_estimated/popMean)+" & "+(s_estimated/popVariance));
+}
+error_x = error_x / tests;
+error_s = error_s / tests;
+console.log("ERROR: X: "+error_x+"  S: "+error_s);
+
+// AGGREGATED:
+// N @ 10k & 20:
+// X: 0.010171537715168193  S: 0.026244029764377716.  [2.58]
+// X: 0.008408973875459944  S: 0.013207679045854464.  [1.57]
+// X: 0.005789194575139369  S: 0.01434390243625075.   [2.47]
+//      & 0.01793187041
+//
+// N-1 @ 10k & 20:
+// X: 0.005450045354247298  S: 0.027262865072992467.  [5.00]
+// X: 0.008961241158141018  S: 0.030953132866280323.  [3.45]
+// X: 0.006134307205512736  S: 0.018307177948700255.  [2.98]
+
+// N     @ 10k & 10:
+// ERROR: X: 0.007762821957347239  S: 0.019499489417222852. []
+// ERROR: X: 0.010252822528260831  S: 0.07121504387130675.  []
+// ERROR: X: 0.005471236332167926  S: 0.02241726264357304.  []
+//
+// N-1 @  @ 10k & 10:
+// ERROR: X: 0.007455169352202575  S: 0.024925373557877332. []
+// ERROR: X: 0.009465612799499382  S: 0.02089171516581277.  []
+// ERROR: X: 0.015548541668697877  S: 0.04981123578215828.  []
+
+// N @ 10k & 5
+// X: 0.02076282054702618   S: 0.04956882339157864
+// X: 0.018423255403122667  S: 0.02464755123383738
+// X: 0.020445589999276904  S: 0.04288936506995899
+
+// N-1 @1k @ 5
+// X: 0.0204126638010845.   S: 0.07432888574771175
+// X: 0.019579319303822302  S: 0.025914802899428525
+// X: 0.017250174054895026  S: 0.05406594154357116
+
+
+// n-1 is for finding SOME population .. not necessarily THE population ... 
+
+
+
+
+
+
+
+// N
+// 10   2.098698019707279 & 4.457225784151487 => 1.0493490098536395 & 1.1143064460378718
+// 50   2.224110106787248 & 4.171577588152065 => 1.1120550533936242 & 1.0428943970380162
+// 100  1.976588026802131 & 4.458588232574254 => 0.9882940134010655 & 1.1146470581435635
+// 500  2.091814634790062 & 3.574484241718978 => 1.045907317395031  & 0.8936210604297447
+
+// N-1
+// 10  2.708465612015692 & 7.032599729117983 => 1.354232806007846  & 1.7581499322794958
+// 50  1.724706097197921 & 3.592799433402003 => 0.8623530485989604 & 0.8981998583505009
+// 100 1.786921959765507 & 4.125880542291376 => 0.8934609798827535 & 1.031470135572844
+// 500 2.088094479579666 & 4.034692133865853 => 1.044047239789833  & 1.0086730334664633
+
+str = str + "];\n";
+str = str + "y = ones(1,size(x,2));\n";
+str = str + 'stem(x,y);\m';
+str = str + "\n";
+//str = str + 'plot(x,""r-*)';
+//console.log(str);
+
+return;
+```
 
