@@ -151,7 +151,7 @@ return;
 	//this.showComparrison(imageMatrixA, imageMatrixB);
 
 // TEST SAD & SSD
-
+/*
 
 //var point = new V2D(150,115);
 var point = new V2D(173,107); // origin
@@ -280,13 +280,10 @@ for(i=0; i<scores.length; ++i){
 }
 str = str + "];";
 console.log(str);
+*/
 /*
-
 plot(x,"r-");
 semilogy(x,"r-");
-
-
-
 */
 //var score = ImageMat.SADFloatSimpleChannelsRGB(sample.red(),sample.grn(),sample.blu(),sample.width(),sample.height(), sample.red(),sample.grn(),sample.blu());
 
@@ -308,9 +305,6 @@ see how score reacts to random other points
 see how score reacts to various random static
 0-1 [10%]
 */
-
-return;
-
 
 
 
@@ -408,12 +402,35 @@ return;
 	// this.drawAround(bestFeaturesB, 400,300);
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
-return;
+
 	// compare points
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
 	var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
 	var scores = [];
 	var i, j, k;
+
+	// UNIQUENESS
+	//- of final 'best points' then score based on uniqueness -- best = WORST SSD score amongst others in same image
+	//- only match top unique ones / drop worst under threshold
+var zoomScale = 0.5;
+	var list = bestFeaturesA;
+	for(i=0; i<list.length; ++i){
+		var pointA = list[i];
+		var featureA = new ZFeature();
+		featureA.setupWithImage(rangeA, pointA, zoomScale);
+		for(j=i+1; j<list.length; ++j){
+			var pointB = list[i];
+			var featureB = new ZFeature();
+			featureB.setupWithImage(rangeA, pointA, zoomScale);
+			var score = ZFeature.calculateUniqueness(featureA,featureB);
+			console.log("unique?");
+		}
+	}
+
+
+
+
+
 	console.log("START");
 // TODO: only retain the top top match, remove dups
 // TRIM OUT ITEMS THAT HAVE LOTS OF DISPARATE MATCHES (not unique) -- many matches and scores of top mathches are within % of eachother

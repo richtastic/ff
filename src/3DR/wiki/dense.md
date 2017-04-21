@@ -286,6 +286,10 @@ SSD LEARNINGS
 	//
 x normalize height SSD NOT BETTER
 x page that selects points at random from image 1, computes best match from image 2, displays disparity match updated every iteration
+
+- of final 'best points' then score based on uniqueness -- best = WORST SSD score amongst others in same image
+- only match top unique ones / drop worst under threshold
+
 - compare SSD & SAD in more detail
 	- SSD of gradients instead of intensities
 		=> what is SSD of a vector?
