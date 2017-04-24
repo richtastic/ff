@@ -5787,6 +5787,51 @@ Code.uint16FromByteArray = function(binaryArray,offset){
 Code.uint8FromByteArray = function(binaryArray,offset){
 	return binaryArray[offset+0] >>> 0;
 }
+Code.uint32LittleEndianFromByteArray = function(binaryArray,offset){
+	var out = binaryArray[offset+0]<<0 | binaryArray[offset+1]<<8 |  binaryArray[offset+2]<<16 |  binaryArray[offset+3]<<24;
+	return out >>> 0;
+}
+Code.uint16LittleEndianFromByteArray = function(binaryArray,offset){
+	var out = binaryArray[offset+0]<<0 | binaryArray[offset+1]<<8;
+	return out >>> 0;
+}
+Code.float32LittleEndianFromByteArray = function(binaryArray,offset){
+	var word = Code.uint32LittleEndianFromByteArray(binaryArray, offset);
+	var sign =     (word & 0x80000000) >> 31; sign >>> 0;
+	var exponent = (word & 0x7F800000) >> 23; exponent >>> 0;
+	var fraction = (word & 0x007FFFFF) >>  0; fraction >>> 0;
+	//console.log(sign,exponent,fraction);
+// 
+// 1098765432109876543210
+// seeeeeeeefffffffffffff
+// (a & 0x7fffff | 0x800000) * 1.0 / Math.pow(2,23) * Math.pow(2,  ((a>>23 & 0xff) - 127))
+
+	if(exponent==0x00){
+		//console.log("exp A");
+		if(fraction==0){ // zeros
+			return sign==0 ? +0 : -0;
+		} //  denormalized numbers
+		return (sign==0 ? +1 : -1) * (fraction * Math.pow(2,-126));
+	}else if(exponent==0xFF){
+		//console.log("exp B");
+		if(fraction==0){ // 
+			return sign==0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+		}
+		return Number.NaN;
+	}else{
+		exponent -= 127;
+		//fraction += 0x100000;
+	}
+	//console.log("exp C");
+	// var a = (1 + (fraction*Math.pow(2,-23)));
+	// var b = Math.pow(2,exponent);
+	//return (sign==0 ? +1 : -1) * a * b;
+	//return (sign==0 ? +1 : -1) * fraction * Math.pow(2,exponent);
+	//return (sign==0 ? +1 : -1) * (fraction/Math.pow(2,23)) * Math.pow(2,exponent);
+	return (sign==0 ? +1 : -1) * (1 + (fraction*Math.pow(2,-23))) * Math.pow(2,exponent);
+	
+}
+
 
 
 Code.BROWSER_TYPE_UNKNOWN = "unknown";
