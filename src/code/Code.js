@@ -5787,6 +5787,46 @@ Code.uint16FromByteArray = function(binaryArray,offset){
 Code.uint8FromByteArray = function(binaryArray,offset){
 	return binaryArray[offset+0] >>> 0;
 }
+Code.charStringFromByteArray = function(binaryArray,offset, count){
+	var i, c, str = "";
+	if( Code.isNumber(count) ){
+		for(i=0; i<count; ++i){
+			c = Code.uint8FromByteArray(binaryArray, offset+i);
+			c = String.fromCharCode(c);
+			str = str + c;
+		}
+		return str;
+	}else{ // read till newline
+		var newline = false;
+		i = offset;
+		var read = 0;
+		while(!newline){
+			if(i>=binaryArray.length){
+				break;
+			}
+			c = Code.uint8FromByteArray(binaryArray, i);
+			c = String.fromCharCode(c);
+			if(c==count){
+				newline = true;
+			}else{
+				str = str + c;
+			}
+			++read;
+			++i;
+		}
+		return {"value":str,"count":read};
+	}
+	
+}
+Code.stringStartsWith = function(str,beg){
+	if(str.length>=beg.length){
+		var beginning = str.substr(0,beg.length);
+		if(beginning===beg){
+			return true;
+		}
+	}
+	return false;
+}
 Code.uint32LittleEndianFromByteArray = function(binaryArray,offset){
 	var out = binaryArray[offset+0]<<0 | binaryArray[offset+1]<<8 |  binaryArray[offset+2]<<16 |  binaryArray[offset+3]<<24;
 	return out >>> 0;
@@ -5800,38 +5840,45 @@ Code.float32LittleEndianFromByteArray = function(binaryArray,offset){
 	var sign =     (word & 0x80000000) >> 31; sign >>> 0;
 	var exponent = (word & 0x7F800000) >> 23; exponent >>> 0;
 	var fraction = (word & 0x007FFFFF) >>  0; fraction >>> 0;
-	//console.log(sign,exponent,fraction);
-// 
-// 1098765432109876543210
-// seeeeeeeefffffffffffff
-// (a & 0x7fffff | 0x800000) * 1.0 / Math.pow(2,23) * Math.pow(2,  ((a>>23 & 0xff) - 127))
-
 	if(exponent==0x00){
-		//console.log("exp A");
 		if(fraction==0){ // zeros
 			return sign==0 ? +0 : -0;
 		} //  denormalized numbers
 		return (sign==0 ? +1 : -1) * (fraction * Math.pow(2,-126));
 	}else if(exponent==0xFF){
-		//console.log("exp B");
-		if(fraction==0){ // 
+		if(fraction==0){ // INF
 			return sign==0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-		}
+		} // NAN
 		return Number.NaN;
 	}else{
 		exponent -= 127;
-		//fraction += 0x100000;
+		fraction += 0x800000;
 	}
-	//console.log("exp C");
-	// var a = (1 + (fraction*Math.pow(2,-23)));
-	// var b = Math.pow(2,exponent);
-	//return (sign==0 ? +1 : -1) * a * b;
-	//return (sign==0 ? +1 : -1) * fraction * Math.pow(2,exponent);
-	//return (sign==0 ? +1 : -1) * (fraction/Math.pow(2,23)) * Math.pow(2,exponent);
-	return (sign==0 ? +1 : -1) * (1 + (fraction*Math.pow(2,-23))) * Math.pow(2,exponent);
-	
+	return (sign==0 ? +1 : -1) * (fraction*Math.pow(2,-23)) * Math.pow(2,exponent);
 }
-
+Code.float64LittleEndianFromByteArray = function(binaryArray,offset){
+	var word1 = Code.uint32LittleEndianFromByteArray(binaryArray, offset+4);
+	var word2 = Code.uint32LittleEndianFromByteArray(binaryArray, offset+0);
+	var sign =      (word1 >> 31) & 0x00000001; sign >>> 0;
+	var exponent =  (word1 >> 20) & 0x000007FF; exponent >>> 0;
+	var fractionA = (word2 >>  0) & 0x007FFFFF; fractionA >>> 0;
+	var fractionB = word2; fractionB >>> 0; // 52 = 20 | 32
+	if(exponent==0x0){
+		if(fractionA==0 && fractionB==0){ // zeros
+			return sign==0 ? +0 : -0;
+		} //  subnormals
+		return (sign==0 ? +1 : -1) * (fractionA * Math.pow(2,-1022) + fractionB * Math.pow(2,-1022-20));
+	}else if(exponent==0x7FF){
+		if(fractionA==0 && fractionB==0){ // INF
+			return sign==0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+		} // NAN
+		return Number.NaN;
+	}else{
+		exponent -= 1023;
+		fractionA += 0x800000;
+	}
+	return (sign==0 ? +1 : -1) * (fractionA*Math.pow(2,-52) + fractionB*Math.pow(2,-52-20)) * Math.pow(2,exponent);
+}
 
 
 Code.BROWSER_TYPE_UNKNOWN = "unknown";

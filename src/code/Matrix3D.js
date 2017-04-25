@@ -307,6 +307,7 @@ Matrix3D.prototype.mult = function(mA,mB){
 	return this;
 }
 Matrix3D.prototype.multV3D = function(aV,bV){ // a = trans(b)
+	if(bV===undefined){ bV = aV; aV = new V3D(); }
 	var ax = this.a*bV.x + this.b*bV.y + this.c*bV.z + this.d;
 	var ay = this.e*bV.x + this.f*bV.y + this.g*bV.z + this.h;
 	aV.z =   this.i*bV.x + this.j*bV.y + this.k*bV.z + this.l;
@@ -315,6 +316,7 @@ Matrix3D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	return aV;
 }
 Matrix3D.prototype.multV4D = function(aV,bV){ // a = trans(b)
+	if(bV===undefined){ bV = aV; aV = new V4D(); }
 	var ax = this.a*bV.x + this.b*bV.y + this.c*bV.z + this.d*bV.t;
 	var ay = this.e*bV.x + this.f*bV.y + this.g*bV.z + this.h*bV.t;
 	aV.z =   this.i*bV.x + this.j*bV.y + this.k*bV.z + this.l*bV.t;

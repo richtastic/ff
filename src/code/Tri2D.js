@@ -14,6 +14,9 @@ Tri2D.fromList = function(ax,ay, bx,by, cx,cy){
 	return new Tri2D(new V2D(ax,ay), new V2D(bx,by), new V2D(cx,cy));
 }
 // -------------------------------------------------------------------------------------------------------------------- 
+Tri2D.prototype.isPoint = function(){
+	return this.area() < 1E-32;
+}
 Tri2D.prototype.A = function(a){
 	if(a!==undefined){
 		this._a = a;

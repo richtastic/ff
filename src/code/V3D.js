@@ -173,12 +173,20 @@ V3D.prototype.setLength = function(l){
 	this.x *= l; this.y *= l;  this.z *= l;
 	return this;
 }
-V3D.prototype.add = function(v){
-	this.x += v.x; this.y += v.y; this.z += v.z;
+V3D.prototype.add = function(v,w,u){
+	if(u!==undefined){
+		this.x += v; this.y += w; this.z += u;
+	}else{
+		this.x += v.x; this.y += v.y; this.z += v.z;
+	}
 	return this;
 }
-V3D.prototype.sub = function(v){
-	this.x -= v.x; this.y -= v.y; this.z -= v.z;
+V3D.prototype.sub = function(v,w,u){
+	if(u!==undefined){
+		this.x -= v; this.y -= w; this.z -= u;
+	}else{
+		this.x -= v.x; this.y -= v.y; this.z -= v.z;
+	}
 	return this;
 }
 V3D.prototype.toArray = function(){

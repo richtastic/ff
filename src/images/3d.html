@@ -8,10 +8,18 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["Formats3D.js"],this,funLoadedFxn)).load();
+	(new ScriptLoader("./",["Formats3D.js","../3DR/Cam2D.js","../3DR/Cam3D.js"],this,funLoadedFxn)).load();
 }
 function funLoadedFxn(){
 	var formats = new Formats3D();
+
+
+// 	var f = Code.float32LittleEndianFromByteArray([0x00,0x00,0x20,0x3E],0);
+// 	console.log(f);
+
+// 	var f = Code.float64LittleEndianFromByteArray([0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],0);
+// 	console.log(f);
+// return;
 }
 </script>
 <body onload="pageLoadedFxn();">
