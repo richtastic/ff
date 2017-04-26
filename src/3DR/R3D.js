@@ -1720,32 +1720,75 @@ R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 	return list;
 }
 
-R3D.bestUniqueFeatureList = function(list, range){
+R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
+	listB = listB!==undefined ? listB : [];
 	var i, j;
 	var zoomScale = 0.5;
 	var uniqueScore;
 
+	// var list = [];
+	// for(i=0; i<listA.length; ++i){
+	// 	list.push(listA[i]);
+	// }
+	// for(i=0; i<listB.length; ++i){
+	// 	list.push(listA[i]);
+	// }
+
+	var totalLength = listA.length + listB.length;
+
 	var uniqueFeaturesA = [];
-	for(i=0; i<list.length; ++i){
-		var point = list[i];
+	var uniqueFeaturesB = [];
+	for(i=0; i<totalLength; ++i){
+		var list = listA;
+		var index = i;
 		var feature = {};
+		if(i<listA.length){
+			uniqueFeaturesA.push(feature);
+		}else{
+			list = listB;
+			index -= listA.length;
+			uniqueFeaturesB.push(feature);
+		}
+		var point = list[index];
 		feature["point"] = point;
 		feature["featureScore"] = point.z;
 		feature["uniqueScore"] = null;
-		uniqueFeaturesA.push(feature);
 	}
 
-	for(i=0; i<uniqueFeaturesA.length; ++i){
-		var uniqueA = uniqueFeaturesA[i];
+	for(i=0; i<totalLength; ++i){
+		var index, list, range;
+		if(i<listA.length){
+			range = rangeA;
+			list = uniqueFeaturesA;
+			index = i;
+		}else{
+			range = rangeB;
+			list = uniqueFeaturesB;
+			index = i - uniqueFeaturesA.length;
+		}
+		var rangeI = range;
+		var uniqueA = list[i];
 		var pointA = uniqueA["point"];
 		var featureA = new ZFeature();
 		featureA.setupWithImage(range, pointA, zoomScale);
-		for(j=i+1; j<list.length; ++j){
-			var uniqueB = uniqueFeaturesA[j];
+		for(j=i+1; j<totalLength; ++j){
+			var index, list, range;
+			if(j<listA.length){
+				range = rangeA;
+				list = uniqueFeaturesA;
+				index = j;
+			}else{
+				range = rangeB;
+				list = uniqueFeaturesB;
+				index = j - uniqueFeaturesA.length;
+			}
+//console.log()
+			var rangeJ = range;
+			var uniqueB = list[index];
 			var pointB = uniqueB["point"];
 			var featureB = new ZFeature();
 			featureB.setupWithImage(range, pointB, zoomScale);
-			var score = ZFeature.calculateUniqueness(featureA,featureB, range, range);
+			var score = ZFeature.calculateUniqueness(featureA,featureB, rangeI, rangeJ);
 			// keep max of both
 			uniqueScore = uniqueA["uniqueScore"];
 			uniqueScore = Math.max(uniqueScore);
@@ -1757,19 +1800,29 @@ R3D.bestUniqueFeatureList = function(list, range){
 		break;
 	}
 	// get overall score from unique score
-	for(i=0; i<uniqueFeaturesA.length; ++i){
-		unique = uniqueFeaturesA[i];
+	for(i=0; i<totalLength; ++i){
+		var index, list;
+		if(i<listA.length){
+			list = uniqueFeaturesA;
+			index = i;
+		}else{
+			list = uniqueFeaturesB;
+			index = i - uniqueFeaturesA.length;
+		}
+		unique = list[index];
 		var uniqueScore = unique["uniqueScore"];
 		var featureScore = unique["featureScore"];
 		var overallScore = uniqueScore * featureScore;
 		unique["score"] = overallScore;
 	}
-	uniqueFeaturesA = uniqueFeaturesA.sort(function(a,b){
+	var sorting = function(a,b){
 		var uA = a["uniqueScore"];
 		var uB = b["uniqueScore"];
 		return uA < uB ? 1 : -1; // smaller score is better
-	});
-	return uniqueFeaturesA;
+	}
+	uniqueFeaturesA = uniqueFeaturesA.sort(sorting);
+	uniqueFeaturesB = uniqueFeaturesB.sort(sorting);
+	return {"A":uniqueFeaturesA, "B":uniqueFeaturesB};
 }
 
 

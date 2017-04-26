@@ -1,7 +1,6 @@
 // Formats3D.js
 
 function Formats3D(){
-	console.log("F3D");
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();
@@ -42,6 +41,12 @@ Formats3D.prototype._handleEnterFrameFxn = function(e){
 if(triangles.length==0){
 	return;
 }
+
+	var screenWidth = this._canvas.width();
+	var screenHeight = this._canvas.height();
+	var centerX = screenWidth * 0.5;
+	var centerY = screenHeight * 0.5;
+
 	// find center & edges of triangles:
 	var extremaModel = Tri3D.extremaFromArray(triangles);
 	var maxModel = extremaModel.max;
@@ -50,11 +55,8 @@ if(triangles.length==0){
 	var modelCenter = minModel.copy().add(sizeModel.copy().scale(0.5));
 	//modelCenter = maxModel
 
-	var displaySize = 250.0;
+	var displaySize = Math.min(screenWidth,screenHeight);
 	var scale = displaySize / Math.max(sizeModel.x,sizeModel.y,sizeModel.z);
-
-	//console.log(modelCenter+"")
-	console.log(minModel+"   && "+maxModel)
 
 	var cam = new Cam3D();
 		//cam.translate(1, 2, -3);
@@ -85,10 +87,7 @@ if(triangles.length==0){
 	// transform coordinates into local space
 	// offset by size
 	// 
-var screenWidth = this._canvas.width();
-var screenHeight = this._canvas.height();
-var centerX = screenWidth * 0.5;
-var centerY = screenHeight * 0.5;
+
 
 	
 var lightSource = new V3D(0,10,10);
@@ -143,10 +142,11 @@ display.graphics().clear();
 		if(false){//A.z<0 || B.z<0|| C.z<0){
 			//
 		}else{
-			var colorZero = [1.0,1.0,0.0,0.0];
-			var colorOne =  [1.0,0.0,0.0,1.0];
-			//display.graphics().setLine(1.0, 0x11000000);
-			display.graphics().setLine(1.0, 0x00000000);
+			var colorZero = [0.5,1.0,0.0,0.0];
+			var colorOne =  [0.5,0.0,0.0,1.0];
+			//display.graphics().setLine(1.0, 0x33000000);
+			display.graphics().setLine(1.0, 0x99EECC00);
+			//display.graphics().setLine(1.0, 0x00000000);
 			//display.graphics().setFill(0xCC667788);
 			//display.graphics().setFill(0x99667799);
 			var alp = colorZero[0]*dot + colorOne[0]*dm1;

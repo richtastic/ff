@@ -266,6 +266,24 @@ x average median offset mean SSD NOT BETTER
 	=> YES IT MIGHT BE ?
 - remove low-range points before they are selected for the search ?
 
+
+2 BEST MATCHING ALGORITHMS:
+	- global optimized connections minimiziation of total error:
+		- have list of next best match
+		- initialize the current match-set by popping the next-best-available matches off the top and matching those
+		- take the top match from list
+			- match 2 points, and recursively re-match andy changed sets until stable match-set is reached
+			- if the final result is a better global minimum than previously, keep the new match-set
+				- else: take the NEXT top match from list
+	- limit non-unique matching:
+		for each point in [A | B]
+			- if point has multiple good matches, add to list of non-unique-to-remove
+		for each non-unique-point
+			- remove the point from all existing matches & remove these matches from their lists
+		reassess best possible matches (goto top)
+		=> non-unique points will be removed from 
+
+
 SSD LEARNINGS
 	CHANGES IN LIGHTING CAN MAGNIFY DIFFERENCE
 		=> SUBTRACT MEDIAN ???

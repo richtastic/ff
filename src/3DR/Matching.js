@@ -418,28 +418,81 @@ var zoomScale = 0.5;
 //console.log(bestFeaturesA);
 
 
-bestUniqueFeaturesA = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA);
-bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
+// bestUniqueFeaturesA = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
+// bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB, bestFeaturesA, rangeA,);
+
+bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
+bestUniqueFeaturesA = bestUniqueFeatures["A"];
+bestUniqueFeaturesB = bestUniqueFeatures["B"];
 
 // BEST UNIQUE FEATURES SHOULD ALSO BE UNIQUE AMONG THE SEPARATE IMAGES
 
-HERE 1
+/*
+var x = "x = [";
+var list = bestUniqueFeaturesB;
+for(i=0; i<list.length; ++i){
+	x = x + " "+list[i]["score"];
+}
+x = x + "];";
+console.log("\n"+x+"\n");
+*/
+/*
+plot(x,"r-*");
+plot(y,"b-*"");
+*/
 
-// console.log(bestUniqueFeaturesA.length);
-// console.log(bestUniqueFeaturesB.length);
+
+var dropThreshold = 0.01;
+
+
+var uA = bestUniqueFeaturesA[0];
+var uB = bestUniqueFeaturesA[bestUniqueFeaturesA.length-1];
+var scoreMaxA = uA["score"];
+var scoreMinA = uB["score"];
+var scoreRangeA = scoreMaxA - scoreMinA;
+var minScoreA = scoreMinA + scoreRangeA*dropThreshold;
+
+var uA = bestUniqueFeaturesB[0];
+var uB = bestUniqueFeaturesB[bestUniqueFeaturesB.length-1];
+var scoreMaxB = uA["score"];
+var scoreMinB = uB["score"];
+var scoreRangeB = scoreMaxB - scoreMinB;
+var minScoreB = scoreMinB + scoreRangeB*dropThreshold;
 
 
 // TODO: ONLY DROP ITEMS UNDER BOTTOM 50% OF MAX/MIN SCORE (excluding inf)
-while(bestUniqueFeaturesA.length>100){
-	bestUniqueFeaturesA.pop();
+// while(bestUniqueFeaturesA.length>100){
+// 	bestUniqueFeaturesA.pop();
+// }
+// while(bestUniqueFeaturesB.length>100){
+// 	bestUniqueFeaturesB.pop();
+// }
+while(bestUniqueFeaturesA.length>0){
+	var last = bestUniqueFeaturesA[bestUniqueFeaturesA.length-1];
+	if(last["score"]<minScoreA){
+		bestUniqueFeaturesA.pop();
+	}else{
+		break;
+	}
 }
-while(bestUniqueFeaturesB.length>100){
-	bestUniqueFeaturesB.pop();
+
+while(bestUniqueFeaturesB.length>0){
+	var last = bestUniqueFeaturesB[bestUniqueFeaturesB.length-1];
+	if(last["score"]<minScoreB){
+		bestUniqueFeaturesB.pop();
+	}else{
+		break;
+	}
 }
+
+console.log(bestUniqueFeaturesA.length);
+console.log(bestUniqueFeaturesB.length);
 //bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
 
 this.drawAround(bestUniqueFeaturesA, 0,0, "point");
 this.drawAround(bestUniqueFeaturesB, 400,0, "point");
+
+
 
 //console.log(bestUniqueFeaturesA);
 
@@ -505,43 +558,101 @@ var zoomScale = 0.5;
 			featureB.setupWithImage(rangeB, pointB, zoomScale);
 			var score = ZFeature.compareScore(featureA, featureB, rangeA,rangeB);
 			var match = {};
+				match["keep"] = true;
 				match["score"] = score;
 				match["A"] = uniqueA;
 				match["B"] = uniqueB;
 				uniqueA["matches"].push(match);
 				uniqueB["matches"].push(match);
 //			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
-			if(j>10){
-				break;
-			}
+			// if(j>10){
+			// 	break;
+			// }
 		}
 		//console.log(i+" / "+bestFeaturesA.length);
 		console.log(i+" / "+bestUniqueFeaturesA.length);
-		
-		if(i>10){
-			break;
-		}
+		// if(i>10){
+		// 	break;
+		// }
+	}
+
+	// SORT THE MATCHES OF EACH FEATURE
+	var matchSort = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	}
+	for(i=0; i<bestUniqueFeaturesA.length; ++i){
+		var uniqueA = bestUniqueFeaturesA[i];
+		uniqueA["matches"] = uniqueA["matches"].sort(matchSort);
+	}
+	for(i=0; i<bestUniqueFeaturesB.length; ++i){
+		var uniqueA = bestUniqueFeaturesB[i];
+		uniqueA["matches"] = uniqueA["matches"].sort(matchSort);
 	}
 
 // TODO: DROP UN-UNIQUE FEATURES
-// remove / correct for items with a lot of matches (nearly the same)
+// match has to have survived purge in A and purge in B
+var scoresA = Matching.recordLowMatches(bestUniqueFeaturesA);
+var scoresB = Matching.recordLowMatches(bestUniqueFeaturesB);
+/*
+//			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
+	for(i=0; i<bestUniqueFeaturesA.length; ++i){
+		var uniqueA = bestUniqueFeaturesA[i];
+		var matches = uniqueA["matches"];
+		if(matches && matches.length>0){
+			var minScore = matches[0]["score"];
+			var maxScore = matches[matches.length-1]["score"];
+			var rangeScore = maxScore - minScore;
+			//var score10 = matches[9]["score"];
+			var score10 = matches[3]["score"];
+			var percent = (minScore - score10)/score10;
+				percent = Math.abs(percent);
+			console.log(i,maxScore, minScore, rangeScore, score10, percent);
+			//console.log(matches);
+			if(percent<0.9){ // different enough
+				var match = matches[0];
+				var score = match["score"];
+				var uniqueA = match["A"];
+				var uniqueB = match["B"];
+				var pointA = uniqueA["point"];
+				var pointB = uniqueB["point"];
+				var score = {"score":score, "pointA":pointA, "pointB":pointB};
+				scoresA.push(score);
+				match["keep"] = true;
+			}else{
+				match["keep"] = false;
+			}
+		}
+	}
+*/
+var scores = [];
+for(i=0; i<scoresA.length; ++i){
+	var score = scoresA[i];
+	var match = score["match"];
+	if(match["keep"]){
+		scores.push(score);
+	}
+}
 
-
+for(i=0; i<scoresB.length; ++i){
+	var score = scoresB[i];
+	var match = score["match"];
+	if(match["keep"]){
+		scores.push(score);
+	}
+}
+console.log("matches:"+scores.length);
 // HERE 2
 
-// scores with same item in top 3(?) use that 
-
-console.log(uniqueA);
-console.log(uniqueB);
 
 
-/*
+
 	scores = scores.sort(function(a,b){
 		return a.score < b.score ? -1 : 1;
 	});
-	scores = Code.copyArray(scores,0,200);
+	//scores = Code.copyArray(scores,0,200);
+	scores = Code.copyArray(scores,0,100);
 	this.drawMatches(scores, 0,0, 400,0);
-*/
+
 return;
 
 
@@ -692,6 +803,49 @@ return;
 
 
 }
+
+Matching.recordLowMatches = function(bestUniqueFeaturesA){
+	var i;
+	var scoresA = [];
+	for(i=0; i<bestUniqueFeaturesA.length; ++i){
+		var uniqueA = bestUniqueFeaturesA[i];
+		var matches = uniqueA["matches"];
+		if(matches && matches.length>0){
+			var minScore = matches[0]["score"];
+			var maxScore = matches[matches.length-1]["score"];
+			var rangeScore = maxScore - minScore;
+			//var score10 = matches[9]["score"];
+			var score10 = matches[3]["score"];
+			//var percent = (maxScore - score10)/score10;
+				var percent = (minScore - score10)/score10;
+				percent = Math.abs(percent);
+			console.log(i,maxScore, minScore, rangeScore, score10, percent);
+			//console.log(matches);
+			//if(percent<0.9){ // different enough
+			if(percent<0.50){ // different enough
+				var match = matches[0];
+				var keep = match["keep"];
+				if(keep){
+					var score = match["score"];
+					var uniqueA = match["A"];
+					var uniqueB = match["B"];
+					var pointA = uniqueA["point"];
+					var pointB = uniqueB["point"];
+					var score = {"score":score, "pointA":pointA, "pointB":pointB, "match":match};
+					scoresA.push(score);
+					//match["keep"] = true; // keep keep
+				}
+			}else{
+				// drop all matches because of non-uniqueness:
+				for(j=0; j<matches.length; ++j){
+					match = matches[j];
+					match["keep"] = false;
+				}
+			}
+		}
+	}
+	return scoresA;
+}
 Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 	if(!matches){
 		return;
@@ -700,10 +854,13 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 	var sca = 1.0;
 	for(i=0; i<matches.length; ++i){
 		var match = matches[i];
+		if(!match){
+			continue;
+		}
 		var score = match.score;
 		var pA = match.pointA;
 		var pB = match.pointB;
-console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
+//console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
 		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
 		// var percem1 = 1 - percent;
 		// var p = locations[i];
