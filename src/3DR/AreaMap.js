@@ -1691,6 +1691,16 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 
 	return score;
 }
+
+ZFeature.calculateUniqueness = function(featureA, featureB, rangeA, rangeB){
+	var score = ZFeature.compareScore(featureA, featureB, rangeA, rangeB);
+	if(score==0){ // max similarity
+		return inf;
+	}
+	return 1.0/score;
+}
+
+
 ZFeature.MatrixWithRotation = function(rotation, scaleX,scaleY){
 	if(rotation!==undefined && rotation!=0){
 		matrix = new Matrix(3,3).identity();

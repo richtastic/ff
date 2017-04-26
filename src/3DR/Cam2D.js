@@ -1,14 +1,22 @@
 // Cam2D.js
 
-function Cam2D(p, a, l,f){
+function Cam2D(p, a, l,f, s){
 	this._pos = new V2D(0,0);
 	this._rot = 0;
+	this._scale = 1.0;
 	this._focalLength = 100;
 	this._fieldOfView = 100;
 	this.position(p);
 	this.rotation(a);
 	this.focalLength(l);
-	this.focalLength(f);
+	this.fieldOfView(f);
+	this.scale(s);
+}
+Cam2D.prototype.scale = function(s){
+	if(s!==undefined){
+		this._scale = s;
+	}
+	return this._scale;
 }
 Cam2D.prototype.position = function(p){
 	if(p!==undefined){

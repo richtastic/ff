@@ -295,6 +295,10 @@ x page that selects points at random from image 1, computes best match from imag
 		=> what is SSD of a vector?
 			- head-to-head distance?
 
+
+points with a lot of 'good' /  matches ('similar' match scores) should be dropped ...
+	- because of 
+
 HERE
 
 - optimum scale

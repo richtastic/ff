@@ -23,34 +23,147 @@ function Formats3D(){
 	// LOAD IMAGES
 	var ajax = new Ajax();
 	ajax.binary(true);
-	ajax.get("./cube.stl",this,this._handleLoaded,null);
 	//ajax.get("./cube.ply",this,this._handleLoaded,null);
+	//ajax.get("./cube.stl",this,this._handleLoaded,null);
+	ajax.get("../../fb/phone_mount/stl/mount_simple_iphone7.stl",this,this._handleLoaded,null);
+	//ajax.get("../../fb/monitor_mount/output/stl/connection_plate.stl ",this,this._handleLoaded,null);
+	//ajax.get("../../fb/monitor_mount/output/stl/connection_plate.stl ",this,this._handleLoaded,null);
+	
+	// 
+	
 	//ajax.();
+	this._display3D = new DO();
+	this._root.addChild(this._display3D);
 GLOBALSTAGE = this._stage;
 }
 Formats3D.prototype._handleEnterFrameFxn = function(e){
-	// console.log(e);
-	var cam = new Cam3D();
-		cam.translate(1, 2, -3);
-		cam.rotate(0, 0, 0);
-		// console.log(cam._pos)
-		// console.log(cam._rot)
-	var mat = cam.reverseMatrix();
+	var i, len;
+	var triangles = this._triangles;
+if(triangles.length==0){
+	return;
+}
+	// find center & edges of triangles:
+	var extremaModel = Tri3D.extremaFromArray(triangles);
+	var maxModel = extremaModel.max;
+	var minModel = extremaModel.min;
+	var sizeModel = extremaModel.size;
+	var modelCenter = minModel.copy().add(sizeModel.copy().scale(0.5));
+	//modelCenter = maxModel
 
+	var displaySize = 250.0;
+	var scale = displaySize / Math.max(sizeModel.x,sizeModel.y,sizeModel.z);
+
+	//console.log(modelCenter+"")
+	console.log(minModel+"   && "+maxModel)
+
+	var cam = new Cam3D();
+		//cam.translate(1, 2, -3);
+		//cam.translate(0, 0, 0);
+		//cam.rotate(0.5*e, 0.1*e, 0);
+		
+		cam.translate(modelCenter.x, modelCenter.y, modelCenter.z);
+		cam.rotate(0.05*e, 0.01*e, 0);
+		cam.scale(scale);
+	var mat = cam.reverseMatrix();
+	//var mat = cam.forwardMatrix();
+	//var mat = new Matrix3D();
+	//mat.scale(scale);
+	//mat.translate(-modelCenter.x*scale, -modelCenter.y*scale, -modelCenter.z*scale);
+	// mat.translate(-modelCenter.x, -modelCenter.y, -modelCenter.z);
+	// mat.rotateXYZ(0.5*e, 0.1*e, 0);
+	// mat.scale(scale);
+
+	
+	// mat.translate(-modelCenter.x, -modelCenter.y, -modelCenter.z);
+	// mat.rotateXYZ(0.5*e, 0.1*e, 0);
+	// mat.scale(scale);
+	
+	
+
+	var display = this._display3D;
 
 	// transform coordinates into local space
 	// offset by size
 	// 
+var screenWidth = this._canvas.width();
+var screenHeight = this._canvas.height();
+var centerX = screenWidth * 0.5;
+var centerY = screenHeight * 0.5;
 
-	var triangles = this._triangles;
-	var i, len;
+	
+var lightSource = new V3D(0,10,10);
+
+
+	var triangleDO = [];
+	
 	for(i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
 		var A = mat.multV3D(tri.A());
 		var B = mat.multV3D(tri.B());
 		var C = mat.multV3D(tri.C());
+
+		var center = tri.center();
+		var centerToLight = V3D.sub(lightSource,center);
+			centerToLight.norm();
+		var norm = tri.normal();
+		var dotLight = V3D.dot(centerToLight,norm);
+
+		var disp = {};
+		disp["A"] = A;
+		disp["B"] = B;
+		disp["C"] = C;
+		disp["Z"] = (A.z + B.z + C.z)/3.0;
+		disp["light"] = dotLight;
+		triangleDO.push(disp);
+	}
+
+	triangleDO.sort(function(a,b){
+		if(a["Z"] > b["Z"]){
+			return 1;
+		}
+		return -1;
+	});
+
+
+
+display.matrix().identity();
+display.matrix().translate(centerX,centerY);
+display.graphics().clear();
+
+	for(i=0; i<triangleDO.length; ++i){
+		var disp = triangleDO[i];
+		var A = disp["A"];
+		var B = disp["B"];
+		var C = disp["C"];
+		var light = disp["light"];
+			var dot = (light+1.0)*0.5;
+			var dm1 = 1.0 - dot;
 		// clipping ?
-		console.log(A+"");
+		//console.log(A+"");
+		if(false){//A.z<0 || B.z<0|| C.z<0){
+			//
+		}else{
+			var colorZero = [1.0,1.0,0.0,0.0];
+			var colorOne =  [1.0,0.0,0.0,1.0];
+			//display.graphics().setLine(1.0, 0x11000000);
+			display.graphics().setLine(1.0, 0x00000000);
+			//display.graphics().setFill(0xCC667788);
+			//display.graphics().setFill(0x99667799);
+			var alp = colorZero[0]*dot + colorOne[0]*dm1;
+			var red = colorZero[1]*dot + colorOne[1]*dm1;
+			var grn = colorZero[2]*dot + colorOne[2]*dm1;
+			var blu = colorZero[3]*dot + colorOne[3]*dm1;
+			var color = Code.getColARGBFromFloat(alp,red,grn,blu);
+			//console.log(color);
+			display.graphics().setFill(color);
+			display.graphics().beginPath();
+			display.graphics().moveTo(A.x,A.y,A.z);
+			display.graphics().lineTo(B.x,B.y,B.z);
+			display.graphics().lineTo(C.x,C.y,C.z);
+			display.graphics().strokeLine();
+			display.graphics().endPath();
+			display.graphics().fill();
+		}
 	}
 
 	// CLIP to area

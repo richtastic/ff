@@ -26,6 +26,13 @@ Tri3D.prototype.area = function(){
 Tri3D.prototype.center = function(){ // barycenter
 	return new V3D((this._a.x+this._b.x+this._c.x)/3.0, (this._a.y+this._b.y+this._c.y)/3.0, (this._a.z+this._b.z+this._c.z)/3.0);
 }
+Tri3D.prototype.boundingBox = function(){
+	var min = null;
+	var min = new V3D();
+	var max = new V3D();
+	var size = new V3D();
+	return {"min":min, "max":max, "size":size};
+}
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri3D.prototype.jitter = function(amplitude){
 	this._a = this._a.copy();
@@ -52,4 +59,31 @@ Tri3D.prototype.toString = function(){
 	str += this._c?(this._c.toString()):("[null]");
 	str += "]";
 	return str;
+}
+
+
+
+Tri3D.extremaFromArray = function(triangles){
+	var min = null;
+	var max = null;
+	for(var i=0; i<triangles.length; ++i){
+		var tri = triangles[i];
+		var A = tri.A();
+		var B = tri.B();
+		var C = tri.C();
+		if(min==null){
+			min = A.copy();
+		}
+		if(max==null){
+			max = A.copy();
+		}
+		V3D.min(min, min,A);
+		V3D.min(min, min,B);
+		V3D.min(min, min,C);
+		V3D.max(max, max,A);
+		V3D.max(max, max,B);
+		V3D.max(max, max,C);
+	}
+	var size = V3D.sub(max,min);
+	return {"min":min, "max":max, "size":size};
 }

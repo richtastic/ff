@@ -210,3 +210,27 @@ V3D.ZERO = new V3D(0.0,0.0,0.0);
 V3D.DIRX = new V3D(1.0,0.0,0.0);
 V3D.DIRY = new V3D(0.0,1.0,0.0);
 V3D.DIRZ = new V3D(0.0,0.0,1.0);
+
+
+
+// HELPERS:
+V3D.extremaFromArray = function(pointList){
+	var i, len=pointList.length, pt;
+	var minImageX = pointList[0].x, minImageY = pointList[0].y, minImageZ = pointList[0].z;
+	var maxImageX = minImageX, maxImageY = minImageY, maxImageZ = minImageZ;
+	for(i=1; i<len; ++i){
+		pt = pointList[i];
+		minImageX = pt.x<minImageX ? pt.x : minImageX;
+		maxImageX = pt.x>maxImageX ? pt.x : maxImageX;
+		minImageY = pt.y<minImageY ? pt.y : minImageY;
+		maxImageY = pt.y>maxImageY ? pt.y : maxImageY;
+		minImageZ = pt.z<minImageZ ? pt.z : minImageZ;
+		maxImageZ = pt.z>maxImageZ ? pt.z : maxImageZ;
+	}
+	var minPoint = new V2D(minImageX, minImageY, minImageZ);
+	var maxPoint = new V2D(maxImageX, maxImageY, maxImageZ);
+	var size = V3D.sub(maxPoint, minPoint);
+	return {"min":minPoint, "max":maxPoint, "size":size};
+}
+
+

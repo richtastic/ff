@@ -1,7 +1,7 @@
 // Cam3D.js
 
-function Cam3D(p, r, l,f){
-	Cam3D._.constructor.call(this,  p, r, l,f); // Code.constructorClass(Cam3D, this);
+function Cam3D(p, r, l,f, s){
+	Cam3D._.constructor.call(this,  p, r, l,f, s); // Code.constructorClass(Cam3D, this);
 	this._pos = new V3D(0,0,0);
 	this._rot = new V3D(0,0,0);
 	this.position(p);
@@ -26,12 +26,20 @@ Cam3D.prototype.rotate = function(rx,ry,rz){
 }
 Cam3D.prototype.forwardMatrix = function(){
 	var matrix = new Matrix3D();
+	var scale = this._scale;
+	matrix.scale(scale);
 	matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
-	matrix.translate(this._pos.x,this._pos.y,this._pos.z);
+	matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
 	return matrix;
 }
 Cam3D.prototype.reverseMatrix = function(){
-	return Matrix3D.inverse( this.forwardMatrix() );
+	var matrix = new Matrix3D();
+	var scale = this._scale;
+	matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
+	matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
+	matrix.scale(scale);
+	return matrix;
+	//return Matrix3D.inverse( this.forwardMatrix() );
 }
 Cam3D.prototype.toString = function(){
 	var str = "";

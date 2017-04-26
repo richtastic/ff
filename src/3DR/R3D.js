@@ -1720,6 +1720,58 @@ R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 	return list;
 }
 
+R3D.bestUniqueFeatureList = function(list, range){
+	var i, j;
+	var zoomScale = 0.5;
+	var uniqueScore;
+
+	var uniqueFeaturesA = [];
+	for(i=0; i<list.length; ++i){
+		var point = list[i];
+		var feature = {};
+		feature["point"] = point;
+		feature["featureScore"] = point.z;
+		feature["uniqueScore"] = null;
+		uniqueFeaturesA.push(feature);
+	}
+
+	for(i=0; i<uniqueFeaturesA.length; ++i){
+		var uniqueA = uniqueFeaturesA[i];
+		var pointA = uniqueA["point"];
+		var featureA = new ZFeature();
+		featureA.setupWithImage(range, pointA, zoomScale);
+		for(j=i+1; j<list.length; ++j){
+			var uniqueB = uniqueFeaturesA[j];
+			var pointB = uniqueB["point"];
+			var featureB = new ZFeature();
+			featureB.setupWithImage(range, pointB, zoomScale);
+			var score = ZFeature.calculateUniqueness(featureA,featureB, range, range);
+			// keep max of both
+			uniqueScore = uniqueA["uniqueScore"];
+			uniqueScore = Math.max(uniqueScore);
+			uniqueA["uniqueScore"] = score;
+			uniqueScore = uniqueB["uniqueScore"];
+			uniqueScore = Math.max(uniqueScore);
+			uniqueB["uniqueScore"] = score;
+		}
+		break;
+	}
+	// get overall score from unique score
+	for(i=0; i<uniqueFeaturesA.length; ++i){
+		unique = uniqueFeaturesA[i];
+		var uniqueScore = unique["uniqueScore"];
+		var featureScore = unique["featureScore"];
+		var overallScore = uniqueScore * featureScore;
+		unique["score"] = overallScore;
+	}
+	uniqueFeaturesA = uniqueFeaturesA.sort(function(a,b){
+		var uA = a["uniqueScore"];
+		var uB = b["uniqueScore"];
+		return uA < uB ? 1 : -1; // smaller score is better
+	});
+	return uniqueFeaturesA;
+}
+
 
 R3D.gradientDirection = function(rect, wid,hei){
 	var rect, gradX, gradY;

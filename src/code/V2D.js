@@ -253,7 +253,8 @@ V2D.extremaFromArray = function(pointList){
 	}
 	var minPoint = new V2D(minImageX, minImageY);
 	var maxPoint = new V2D(maxImageX, maxImageY);
-	return {"min":minPoint, "max":maxPoint};
+	var size = V2D.sub(maxPoint, minPoint);
+	return {"min":minPoint, "max":maxPoint, "size":size};
 }
 V2D.minX = function(pointList){
 	var i, p;

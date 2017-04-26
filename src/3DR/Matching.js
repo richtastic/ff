@@ -400,8 +400,8 @@ see how score reacts to various random static
 	console.log(bestFeaturesB.length);
 	// this.drawAround(bestFeaturesA, 0,300);
 	// this.drawAround(bestFeaturesB, 400,300);
-	this.drawAround(bestFeaturesA, 0,0);
-	this.drawAround(bestFeaturesB, 400,0);
+	// this.drawAround(bestFeaturesA, 0,0);
+	// this.drawAround(bestFeaturesB, 400,0);
 
 	// compare points
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
@@ -413,54 +413,135 @@ see how score reacts to various random static
 	//- of final 'best points' then score based on uniqueness -- best = WORST SSD score amongst others in same image
 	//- only match top unique ones / drop worst under threshold
 var zoomScale = 0.5;
-	var list = bestFeaturesA;
-	for(i=0; i<list.length; ++i){
-		var pointA = list[i];
-		var featureA = new ZFeature();
-		featureA.setupWithImage(rangeA, pointA, zoomScale);
-		for(j=i+1; j<list.length; ++j){
-			var pointB = list[i];
-			var featureB = new ZFeature();
-			featureB.setupWithImage(rangeA, pointA, zoomScale);
-			var score = ZFeature.calculateUniqueness(featureA,featureB);
-			console.log("unique?");
-		}
-	}
 
 
+//console.log(bestFeaturesA);
 
+
+bestUniqueFeaturesA = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA);
+bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
+
+// BEST UNIQUE FEATURES SHOULD ALSO BE UNIQUE AMONG THE SEPARATE IMAGES
+
+HERE 1
+
+// console.log(bestUniqueFeaturesA.length);
+// console.log(bestUniqueFeaturesB.length);
+
+
+// TODO: ONLY DROP ITEMS UNDER BOTTOM 50% OF MAX/MIN SCORE (excluding inf)
+while(bestUniqueFeaturesA.length>100){
+	bestUniqueFeaturesA.pop();
+}
+while(bestUniqueFeaturesB.length>100){
+	bestUniqueFeaturesB.pop();
+}
+//bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
+
+this.drawAround(bestUniqueFeaturesA, 0,0, "point");
+this.drawAround(bestUniqueFeaturesB, 400,0, "point");
+
+//console.log(bestUniqueFeaturesA);
+
+// var uniqueFeaturesA = [];
+// for(i=0; i<list.length; ++i){
+// 	var point = list[i];
+// 	var feature = {};
+// 	feature["point"] = point;
+// 	feature["uniqueScore"] = null;
+// 	uniqueFeaturesA.push(feature);
+// }
+
+// 	for(i=0; i<uniqueFeaturesA.length; ++i){
+// 		var pointA = uniqueFeaturesA[i];
+// 		var featureA = new ZFeature();
+// 		featureA.setupWithImage(rangeA, pointA, zoomScale);
+// 		uniqueFeaturesA = 
+// 		for(j=i+1; j<list.length; ++j){
+// 			var pointB = uniqueFeaturesA[j];
+// 			var featureB = new ZFeature();
+// 			featureB.setupWithImage(rangeA, pointB, zoomScale);
+// 			var score = ZFeature.calculateUniqueness(featureA,featureB, rangeA, rangeA);
+// 			//featureA.uniqueness();
+// 			uniqueScore = featureA["uniqueScore"];
+// 			uniqueScore = 
+// 			featureA["uniqueScore"] = score;
+// 			//console.log("unique?:"+score);
+// 		}
+// 		break;
+// 	}
+
+
+// return;
 
 
 	console.log("START");
 // TODO: only retain the top top match, remove dups
 // TRIM OUT ITEMS THAT HAVE LOTS OF DISPARATE MATCHES (not unique) -- many matches and scores of top mathches are within % of eachother
 // TRY ZOOMING OUT MORE ?
+
+bestUniqueFeatures = bestUniqueFeaturesA;
+for(i=0; i<bestUniqueFeatures.length; ++i){
+	var unique = bestUniqueFeatures[i];
+	unique["matches"] = [];
+}
+bestUniqueFeatures = bestUniqueFeaturesB;
+for(i=0; i<bestUniqueFeatures.length; ++i){
+	var unique = bestUniqueFeatures[i];
+	unique["matches"] = [];
+}
+
 var zoomScale = 0.5;
-	for(i=0; i<bestFeaturesA.length; ++i){
-		var pointA = bestFeaturesA[i];
+	for(i=0; i<bestUniqueFeaturesA.length; ++i){
+		var uniqueA = bestUniqueFeaturesA[i];
+		var pointA = uniqueA["point"];
 		var featureA = new ZFeature();
 		featureA.setupWithImage(rangeA, pointA, zoomScale);
-		for(j=0; j<bestFeaturesB.length; ++j){
-			var pointB = bestFeaturesB[j];
+		for(j=0; j<bestUniqueFeaturesB.length; ++j){
+			var uniqueB = bestUniqueFeaturesB[j];
+			//console.log(uniqueB)
+			var pointB = uniqueB["point"];
 			var featureB = new ZFeature();
 			featureB.setupWithImage(rangeB, pointB, zoomScale);
 			var score = ZFeature.compareScore(featureA, featureB, rangeA,rangeB);
-			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
-			// if(j>150){
-			// 	break;
-			// }
+			var match = {};
+				match["score"] = score;
+				match["A"] = uniqueA;
+				match["B"] = uniqueB;
+				uniqueA["matches"].push(match);
+				uniqueB["matches"].push(match);
+//			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
+			if(j>10){
+				break;
+			}
 		}
-		console.log(i+" / "+bestFeaturesA.length);
-		// if(i>150){
-		// 	break;
-		// }
+		//console.log(i+" / "+bestFeaturesA.length);
+		console.log(i+" / "+bestUniqueFeaturesA.length);
+		
+		if(i>10){
+			break;
+		}
 	}
+
+// TODO: DROP UN-UNIQUE FEATURES
+// remove / correct for items with a lot of matches (nearly the same)
+
+
+// HERE 2
+
+// scores with same item in top 3(?) use that 
+
+console.log(uniqueA);
+console.log(uniqueB);
+
+
+/*
 	scores = scores.sort(function(a,b){
 		return a.score < b.score ? -1 : 1;
 	});
 	scores = Code.copyArray(scores,0,200);
 	this.drawMatches(scores, 0,0, 400,0);
-
+*/
 return;
 
 
@@ -612,7 +693,10 @@ return;
 
 }
 Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
-		var i, c;
+	if(!matches){
+		return;
+	}
+	var i, c;
 	var sca = 1.0;
 	for(i=0; i<matches.length; ++i){
 		var match = matches[i];
@@ -656,18 +740,21 @@ console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
 	}
 
 	}
-Matching.prototype.drawAround = function(locations, offX, offY){
+Matching.prototype.drawAround = function(locations, offX, offY, param){
 	var i, c;
 	var sca = 1.0;
 	var count = Math.min(locations.length-1,2000);
-	console.log("drawAround",offX,offY)
+	//console.log("drawAround",offX,offY)
 	for(i=0;i<locations.length;++i){
 		var percent = (i+0.0)/((count==0?1.0:count)+0.0);
 		var percem1 = 1 - percent;
 		var p = locations[i];
+		if(param){
+			p = p[param];
+		}
 		c = new DO();
 		var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
-		var color = 0xFF000000;
+		//var color = 0xFF000000;
 		c.graphics().setLine(2.0, color);
 		c.graphics().beginPath();
 		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.0);

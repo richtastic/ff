@@ -1647,7 +1647,9 @@ ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
 		sad += Math.abs(a - b);
 		//sad += Math.pow(a - b,2);
 		// for values between 0 - 1, squared makes it better
-		//sad += (Math.pow( 1 + Math.abs(a-b),2) - 1);
+
+		// more what looking for: 0=>0, 1=>3
+		//sad += (Math.pow( 1 + Math.abs(a-b),2) - 1); == x*x + 2x; -- mostly just linear anyway
 	}
 //	console.log("RANGES: "+rangeA+" | "+rangeB);
 	//var range = (rangeA+rangeB)*0.5;
