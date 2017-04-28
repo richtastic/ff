@@ -395,13 +395,12 @@ see how score reacts to various random static
 	// GRADIENT IMAGES
 	// var bestFeaturesA = R3D.bestFeatureListRGB(imageGradARed, imageGradAGrn, imageGradABlu, imageMatrixA.width(), imageMatrixA.height());
 	// var bestFeaturesB = R3D.bestFeatureListRGB(imageGradBRed, imageGradBGrn, imageGradBBlu, imageMatrixB.width(), imageMatrixB.height());
-	
+	console.log(bestFeaturesA)
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
-	// this.drawAround(bestFeaturesA, 0,300);
-	// this.drawAround(bestFeaturesB, 400,300);
 	// this.drawAround(bestFeaturesA, 0,0);
 	// this.drawAround(bestFeaturesB, 400,0);
+
 
 	// compare points
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
@@ -421,9 +420,27 @@ var zoomScale = 0.5;
 // bestUniqueFeaturesA = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
 // bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB, bestFeaturesA, rangeA,);
 
-bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
+//bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
+//bestUniqueFeaturesA = bestUniqueFeatures["A"];
+//bestUniqueFeaturesB = bestUniqueFeatures["B"];
+// in own image = faster
+bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA);
 bestUniqueFeaturesA = bestUniqueFeatures["A"];
-bestUniqueFeaturesB = bestUniqueFeatures["B"];
+bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
+bestUniqueFeaturesB = bestUniqueFeatures["A"];
+
+console.log(bestUniqueFeaturesA.length);
+console.log(bestUniqueFeaturesB.length);
+console.log(bestUniqueFeaturesA);
+
+
+bestUniqueFeaturesA = Code.copyArray(bestUniqueFeaturesA,0,100);
+//bestUniqueFeaturesB = Code.copyArray(bestUniqueFeaturesB,0,100);
+
+this.drawAround(bestUniqueFeaturesA, 0,0, "point");
+//this.drawAround(bestUniqueFeaturesB, 400,0, "point");
+
+return;
 
 // BEST UNIQUE FEATURES SHOULD ALSO BE UNIQUE AMONG THE SEPARATE IMAGES
 
@@ -442,7 +459,9 @@ plot(y,"b-*"");
 */
 
 
-var dropThreshold = 0.01;
+var dropThreshold = 0.001;
+// 0.0001 too low
+// 0.001
 
 
 var uA = bestUniqueFeaturesA[0];
@@ -544,6 +563,7 @@ for(i=0; i<bestUniqueFeatures.length; ++i){
 	unique["matches"] = [];
 }
 
+var globalMatches = [];
 var zoomScale = 0.5;
 	for(i=0; i<bestUniqueFeaturesA.length; ++i){
 		var uniqueA = bestUniqueFeaturesA[i];
@@ -564,6 +584,7 @@ var zoomScale = 0.5;
 				match["B"] = uniqueB;
 				uniqueA["matches"].push(match);
 				uniqueB["matches"].push(match);
+				globalMatches.push(match);
 //			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
 			// if(j>10){
 			// 	break;
@@ -575,26 +596,57 @@ var zoomScale = 0.5;
 		// 	break;
 		// }
 	}
+	// best matches at top
+	globalMatches = globalMatches.sort(function(a,b){
+		return a.score < b.score ? -1 : 1;
+	});
 
-	// SORT THE MATCHES OF EACH FEATURE
-	var matchSort = function(a,b){
-		return a["score"] < b["score"] ? -1 : 1;
-	}
-	for(i=0; i<bestUniqueFeaturesA.length; ++i){
-		var uniqueA = bestUniqueFeaturesA[i];
-		uniqueA["matches"] = uniqueA["matches"].sort(matchSort);
-	}
-	for(i=0; i<bestUniqueFeaturesB.length; ++i){
-		var uniqueA = bestUniqueFeaturesB[i];
-		uniqueA["matches"] = uniqueA["matches"].sort(matchSort);
-	}
+	Matching.sortMatches(bestUniqueFeaturesA);
+	Matching.sortMatches(bestUniqueFeaturesB);
 
-// TODO: DROP UN-UNIQUE FEATURES
-// match has to have survived purge in A and purge in B
-var scoresA = Matching.recordLowMatches(bestUniqueFeaturesA);
-var scoresB = Matching.recordLowMatches(bestUniqueFeaturesB);
+// var scoresA = Matching.recordLowMatches(bestUniqueFeaturesA);
+// var scoresB = Matching.recordLowMatches(bestUniqueFeaturesB);
+
+
+
+// remove items / matches where there is high-matches
+
+var nonUniqueRemovalList = [];
+Matching.recordHighMatches(bestUniqueFeaturesA, nonUniqueRemovalList);
+Matching.recordHighMatches(bestUniqueFeaturesB, nonUniqueRemovalList);
+console.log("removal: "+nonUniqueRemovalList.length);
+console.log(nonUniqueRemovalList);
+var removalFxn = function(a){
+	return a === match ? true : false;
+};
+for(i=0; i<nonUniqueRemovalList.length; ++i){
+	var item = nonUniqueRemovalList[i];
+	var matches = item["matches"];
+	for(j=0; j<matches.length; ++j){
+		var match = matches[j];
+		//console.log(match);
+		// remove MATCH from all items
+		Code.removeElements(nonUniqueRemovalList, removalFxn);
+		Code.removeElements(nonUniqueRemovalList, removalFxn);
+		// remove ITEM from self matches?
+		// remove ITEM from all other items
+		var other = match["A"]!==item ? match["A"] : match["B"];
+		var otherMatches = other["matches"];
+		Code.removeElements( otherMatches, function(a){
+			return (a["A"] === item || a["B"] === item) ? true : false;
+		});
+		// REMOVE FROM GLOBAL MATCH LIST
+		Code.removeElements(nonUniqueRemovalList, removalFxn);
+	}
+	// froms self ?
+	Code.emptyArray(matches);
+}
+
+
+
+
+
 /*
-//			scores.push({"score":score, "pointA":pointA, "pointB":pointB});
 	for(i=0; i<bestUniqueFeaturesA.length; ++i){
 		var uniqueA = bestUniqueFeaturesA[i];
 		var matches = uniqueA["matches"];
@@ -619,11 +671,41 @@ var scoresB = Matching.recordLowMatches(bestUniqueFeaturesB);
 				scoresA.push(score);
 				match["keep"] = true;
 			}else{
-				match["keep"] = false;
+				//match["keep"] = false;
+				nonUniqueRemovalList[]
 			}
 		}
 	}
 */
+console.log("globalMatches: "+globalMatches.length); // 19460 ~ 140 matches per item
+// order matches, go down list matching best features:
+var totalMatchCount = 0;
+var completeMatches = [];
+var scores = [];
+for(i=0; i<globalMatches.length; ++i){
+	var match = globalMatches[i];
+	var itemA = match["A"];
+	var itemB = match["B"];
+	var bestA = itemA["bestMatch"];
+	var bestB = itemB["bestMatch"];
+//	if(!bestA && !bestB){
+		itemA["bestMatch"] = match;
+		itemB["bestMatch"] = match;
+		var pointA = itemA["point"];
+		var pointB = itemB["point"];
+		var score = {"score":score, "pointA":pointA, "pointB":pointB, "match":match};
+		scores.push(score);
+		++totalMatchCount;
+//	}
+	if(totalMatchCount>2000){
+		break;
+	}
+}
+
+
+
+
+/*
 var scores = [];
 for(i=0; i<scoresA.length; ++i){
 	var score = scoresA[i];
@@ -641,9 +723,7 @@ for(i=0; i<scoresB.length; ++i){
 	}
 }
 console.log("matches:"+scores.length);
-// HERE 2
-
-
+*/
 
 
 	scores = scores.sort(function(a,b){
@@ -652,6 +732,31 @@ console.log("matches:"+scores.length);
 	//scores = Code.copyArray(scores,0,200);
 	scores = Code.copyArray(scores,0,100);
 	this.drawMatches(scores, 0,0, 400,0);
+
+
+
+	// show top matches: & visualize
+	var score = scores[0];
+	var match = score["match"];
+	var itemA = match["A"];
+	var itemB = match["B"];
+	var pointA = itemA["point"];
+	var pointB = itemB["point"];
+	var featureA = new ZFeature();
+	var featureB = new ZFeature();
+	featureA.setupWithImage(rangeA, pointA, 1.0,    true);
+	featureB.setupWithImage(rangeB, pointB, 1.0,    true);
+	// 
+	featureA.visualize(875,200, rangeA);
+	featureB.visualize(875,325, rangeB);
+	//this.showComparrison(testA, testB, 0,0, 300,0);
+
+	
+
+this.drawAround([pointA], 0,0, null, 0xFF0000FF);
+this.drawAround([pointB], 400,0, null, 0xFF0000FF);
+
+
 
 return;
 
@@ -803,6 +908,38 @@ return;
 
 
 }
+Matching.sortMatches = function(features){
+	var i, feature, matches;
+	for(i=0; i<features.length; ++i){
+		feature = features[i];
+		matches = feature["matches"];
+		feature["matches"] = matches.sort(function(a,b){
+			return a["score"] < b["score"] ? -1 : 1;
+		});
+	}
+	console.log(feature["matches"])
+}
+Matching.recordHighMatches = function(features, highMatchList){
+	var i;
+	for(i=0; i<features.length; ++i){
+		var feature = features[i];
+		var matches = feature["matches"];
+		if(matches && matches.length>1){
+			var match0 = matches[0];
+			var match1 = matches[1];
+			var score0 = match0["score"];
+			var score1 = match1["score"];
+			if(score0!==0){
+				var ratio = (score1-score0)/score0;
+				console.log(i+": "+ratio+"    "+(score0)+" / "+score1);
+				//if(ratio < 0.1){ // low differential
+				if(ratio < 0.5){ // low differential
+					highMatchList.push(feature);
+				}
+			}
+		}
+	}
+}
 
 Matching.recordLowMatches = function(bestUniqueFeaturesA){
 	var i;
@@ -897,7 +1034,7 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 	}
 
 	}
-Matching.prototype.drawAround = function(locations, offX, offY, param){
+Matching.prototype.drawAround = function(locations, offX, offY, param, colorCircle){ // RED TO BLUE
 	var i, c;
 	var sca = 1.0;
 	var count = Math.min(locations.length-1,2000);
@@ -911,6 +1048,9 @@ Matching.prototype.drawAround = function(locations, offX, offY, param){
 		}
 		c = new DO();
 		var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
+		if(colorCircle){
+			color = colorCircle;
+		}
 		//var color = 0xFF000000;
 		c.graphics().setLine(2.0, color);
 		c.graphics().beginPath();

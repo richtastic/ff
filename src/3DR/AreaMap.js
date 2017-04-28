@@ -1635,14 +1635,14 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 			index = j*a._zoneCols + i;
 			zA = a._zones[index];
 			zB = b._zones[index];
-			// zone orientations
+			// zone orientations∂
 //			score += ratioZones * ZFeature.scoreForMagnitudeAngleRGB(zA._magnitude, zB._magnitude, zA._angle, zB._angle);
 
 
 			// for(k=0; k<zA.pixels.angles.length; ++k){
 			// 	score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
 			// }
-/*
+			/*
 			// bin score per each zone
 			binsA = zA.rotations();
 			binsB = zB.rotations();
@@ -1655,27 +1655,13 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 				binB = binB.bins();
 				for(l=0; l<binA.length; ++l){ // 0-7
 					binScore += Math.abs(binA[l] - binB[l]); // SSD - SAD
-					//binScore *= Math.abs(binA[l] - binB[l]);
 				}
 			}
 			score += binScore;//(1.0/16.0);
-*/
+			*/
 		}
 	}
 	// SSD
-	/*
-	//var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.50));
-	var img = range._imageGradient.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.50));
-	var angleA = -a._covarianceAngle;
-	var angleB = -b._covarianceAngle;
-	var size = a._zoneCols*a._zoneSize;
-	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, 1.0, 1.0));
-	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, 1.0, 1.0));
-	var ssdScore = ImageMat.convolveSSDScores(imgA, imgB);
-		ssdScore = ssdScore.value[0];
-	score += ssdScore;
-	*/
-	//var img = range._imageGradient.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(-covariance, 1.0, 0.10));
 
 	var angleA = -a._covarianceAngle;
 	var angleB = -b._covarianceAngle;
@@ -1686,6 +1672,7 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, scaleB, scaleB));
 	var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
 	score += sadScore;
+
 
 	// ssdScores are much bigger than angle scores & not really related -> scale final results to 0-1 ?
 

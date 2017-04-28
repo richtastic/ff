@@ -1058,7 +1058,16 @@ Code.addUnique = function(a,o){ // O(n)
 	if( !Code.elementExists(a,o) ){ a.push(o); return true; }
 	return false;
 }
-Code.removeElement = function(a,o){ // preserves order O(n)
+Code.removeElements = function(a,f){ // preserves order O(n)
+	for(var i=0; i<a.length; ++i){
+		if(f(a[i])){
+			a.splice(i,1);
+			--i;
+		}
+	}
+}
+Code.removeElement = function(a,o){  // preserves order O(n)
+	// TODO USE SPLICE
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){
@@ -1336,6 +1345,9 @@ Code.sumArray = function(a){
 	return sum;
 }
 // ------------------------------------------------------------------------------------------ TIME
+Code.scientificNotation = function(number, count){
+	return number.toExponential(count);
+}
 Code.getTimeDivisionsFromMilliseconds = function(value){
 	if(value===undefined){ value = 0;}
 	var years = Math.floor(value/(1000*60*60*24*365));
@@ -3727,7 +3739,28 @@ Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
 	x3 = -rc*(Math.cos(theta/3.0)-Math.sqrt(3.0)*Math.sin(theta/3.0)) - AO3;
 	return [x1,x2,x3];
 }
-
+// ------------------------------------------------------------------------------------------------------------------------------------------------- function fitting
+Code.bestFitLine2D = function(points, count){ // line fitting
+	var i, len = points.length;
+	if(count!==undefined){
+		len = Math.min(len,count);
+	}
+	var A = new Matrix(len,3);
+	for(i=0;i<len;++i){
+		p = points[i];
+		A.set(i,0, p.x);
+		A.set(i,1, 1.0);
+		A.set(i,2, -p.y);
+	}
+	svd = Matrix.SVD(A);
+	coeff = svd.V.colToArray(2);
+	m = coeff[0];
+	b = coeff[1];
+	y = coeff[2]; // deviates from 1
+	m /= y;
+	b /= y;
+	return {"m":m, "b":b};
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- transform matrices
 Code.separateAffine2D = function(a,b,c,d, tx,ty){
 	var scaleX = Math.sqrt(a*a+b*b);

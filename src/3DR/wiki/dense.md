@@ -266,6 +266,11 @@ x average median offset mean SSD NOT BETTER
 	=> YES IT MIGHT BE ?
 - remove low-range points before they are selected for the search ?
 
+- compare GRADIENT of SAD?
+	- x SAD x
+	- y SAD y
+
+- best match is one where match is top choice in both of the items lists'
 
 2 BEST MATCHING ALGORITHMS:
 	- global optimized connections minimiziation of total error:
@@ -282,6 +287,11 @@ x average median offset mean SSD NOT BETTER
 			- remove the point from all existing matches & remove these matches from their lists
 		reassess best possible matches (goto top)
 		=> non-unique points will be removed from 
+
+
+
+HERE
+
 
 
 SSD LEARNINGS
@@ -317,7 +327,6 @@ x page that selects points at random from image 1, computes best match from imag
 points with a lot of 'good' /  matches ('similar' match scores) should be dropped ...
 	- because of 
 
-HERE
 
 - optimum scale
 	- maximize range, minimize scale/area/size
