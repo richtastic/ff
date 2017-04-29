@@ -1682,6 +1682,19 @@ R3D.x = function(){
 R3D.x = function(){
 	//
 }
+R3D.totalGradientMagnitude = function(r, g, b, wid, hei) {
+	var gradientR = ImageMat.gradientMagnitude(r,wid,hei).value;
+	var gradientG = ImageMat.gradientMagnitude(g,wid,hei).value;
+	var gradientB = ImageMat.gradientMagnitude(b,wid,hei).value;
+	var len = wid*hei;
+	var total = new Array(len);
+	var i;
+	for(i=0; i<len; ++i){
+		//total[i] = gradientR[i] + gradientG[i] + gradientB[i];
+		total[i] = gradientR[i] * gradientG[i] * gradientB[i];
+	};
+	return total;
+}
 // -------------------------------------------------------------------------------------------- array image type operations
 R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		r = ImageMat.applyGaussianFloat(r, wid,hei, 1.0);
@@ -1697,29 +1710,43 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 //		costMove = ImageMat.getNormalFloat01(costMove);
 	// VARIATION OF R G B
 	var range = ImageMat.totalRangeInWindow(r,g,b,wid,hei, 4,4).value;
-		range = ImageMat.applyGaussianFloat(range, wid,hei, 1.6);
+//		range = ImageMat.applyGaussianFloat(range, wid,hei, 1.6);
 		var maxRange = Code.maxArray(range);
 		var minRange = Code.minArray(range);
 		var ranRange = maxRange - minRange;
 //		range = ImageMat.getNormalFloat01(range);
 	// CORNERNESS OF R G B
 	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei);
-		corners = ImageMat.applyGaussianFloat(corners, wid,hei, 1.6);
+//		corners = ImageMat.applyGaussianFloat(corners, wid,hei, 1.6);
 //		corners = ImageMat.getNormalFloat01(corners);
+	
+	var gradientMag = R3D.totalGradientMagnitude(r,g,b,wid,hei);
+		gradientMag = ImageMat.applyGaussianFloat(gradientMag, wid,hei, 1.6);
+	// ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
+
+	var gradients
 // HOW TO CORRECTLY SCALE RANGES ?
 	var i, len = wid*hei;
 	for(i=0; i<len; ++i){
 		var rangeLocal = (ranRange - (range[i] - minRange)) + minRange;
 		//scores[i] = rangeLocal;
 		var moveLocal = (ranMove - (costMove[i] - minMove)) + minMove;
-		scores[i] = moveLocal;
+		//scores[i] = moveLocal;
 
 		var cornerLocal = corners[i];
 		//scores[i] = cornerLocal;
 
 		var highMoveHighRange = rangeLocal + moveLocal;
 		//scores[i] = highMoveHighRange;
-		
+
+
+		scores[i] = range[i] * corners[i];
+
+		//scores[i] = gradientMag[i] * corners[i];
+
+		//scores[i] = gradientMag[i];
+		//scores[i] = costMove[i];
+		//scores[i] = range[i];
 		//scores[i] = corners[i];
 		//scores[i] = costMove[i]*range[i];
 		//scores[i] = costMove[i]*range[i]*corners[i];
@@ -1734,9 +1761,22 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 }
 R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 	scores = R3D.bestFeatureFilterRGB(r,g,b, wid,hei);
-	var list = Code.findMaxima2DFloat(scores, wid,hei);
+	var list = Code.findMaxima2DFloat(scores, wid,hei, true);
+	// drop items near edge:
+	var edgePercent = 0.01;
+	var edgeDistance = Math.floor(edgePercent * Math.max(wid,hei));
+	var rightDistance = wid - edgeDistance;
+	var bottomDistance = hei - edgeDistance;
+	for(i=0; i<list.length; ++i){
+		point = list[i];
+		if(point.x < edgeDistance || point.x > rightDistance || point.y < edgeDistance || point.y > bottomDistance){
+			Code.removeElementAt(list,i);
+			--i;
+		}
+	}
 	list = list.sort(function(a,b){ // smallest first
-		return a.z<b.z ? -1 : 1;
+		//return a.z<b.z ? -1 : 1;
+		return a.z<b.z ? 1 : -1;
 	});
 	return list;
 }
@@ -1753,14 +1793,16 @@ R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 	var uniqueFeaturesB = [];
 	// convert to local objects
 	for(i=0; i<totalLength; ++i){
-		var list = listA;
-		var index = i;
+		var list;
+		var index;
 		var feature = {};
 		if(i<listA.length){
+			index = i;
+			list = listA;
 			uniqueFeaturesA.push(feature);
 		}else{
 			list = listB;
-			index -= listA.length;
+			index = i - listA.length;
 			uniqueFeaturesB.push(feature);
 		}
 		var point = list[index];
@@ -1782,7 +1824,7 @@ R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 			index = i - uniqueFeaturesA.length;
 		}
 		var rangeI = range;
-		var uniqueA = list[i];
+		var uniqueA = list[index];
 		var pointA = uniqueA["point"];
 		var featureA = new ZFeature();
 		featureA.setupWithImage(range, pointA, zoomScale);
@@ -1797,54 +1839,20 @@ R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 				list = uniqueFeaturesB;
 				index = j - uniqueFeaturesA.length;
 			}
-// uniqueness:
-// if more items have a lower score => less unique
-// histogram that is 'right heavy'
+
 			var rangeJ = range;
 			var uniqueB = list[index];
 			var pointB = uniqueB["point"];
 			var featureB = new ZFeature();
 			featureB.setupWithImage(range, pointB, zoomScale);
-			var score = ZFeature.calculateUniqueness(featureA,featureB, rangeI, rangeJ);
+			//var score = ZFeature.calculateUniqueness(featureA,featureB, rangeI, rangeJ);
+			var score = ZFeature.compareScore(featureA,featureB, rangeI, rangeJ);
 			uniqueA["scores"].push(score);
 			uniqueB["scores"].push(score);
 			// keep top N scores => make a line
-
-
-			/*
-			
-			// keep max of both
-			uniqueScore = uniqueA["uniqueScore"];
-			uniqueScore = uniqueScore  + score;
-			uniqueA["uniqueScore"] = uniqueScore;
-			//uniqueScore = uniqueScore + score; //Math.max(uniqueScore, score);
-			//uniqueScore = Math.max(uniqueScore);
-			//uniqueA["uniqueScore"] = score;
-			uniqueScore = uniqueB["uniqueScore"];
-			uniqueScore = uniqueScore + score;
-			uniqueB["uniqueScore"] = uniqueScore;
-			//uniqueScore = uniqueScore + score; //Math.max(uniqueScore, score);
-			//uniqueScore = Math.max(uniqueScore);
-			*/
 		}
-// var keep = uniqueA["scores"];
-// keep = keep.sort(function(a,b){ return a<b ? -1 : 1 ;})
-// var str = "x = [";
-// for(k=0; k<keep.length; ++k){
-// 	var score = keep[k];
-// 	str = str + ""+(Code.scientificNotation(score,5))+" ";
-// }
-// str = str + "];";
-// console.log("\n"+str+"\n");
-
-		
-// if(i==3){
-// 		break;
-// }
-	console.log("i: "+i+" / "+totalLength);
-
+		console.log("i: "+i+" / "+totalLength);
 	}
-
 	// calculate score based on results:
 	for(i=0; i<totalLength; ++i){
 		var index, list, range;
@@ -1862,24 +1870,16 @@ R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 		scores = scores.sort(function(a,b){ return a<b? -1 : 1});
 		unique["scores"] = scores;
 		var points = [];
-		var pointCount = 5;
+		var pointCount = 2; // 2-5
 		for(j=0; j<Math.min(pointCount,scores.length); ++j){
 			var score = scores[j];
 			score = score;
-			// flip: score = max + min - score
 			var point = new V2D(j,score);
 			points.push(point);
 		}
 		var line = Code.bestFitLine2D(points, pointCount);
-//console.log(line);
-
-// console.log(points);
-// console.log(points.length);
-// break;
 		var m = line["m"];
 		var b = line["b"];
-		// console.log("\nm = "+m+"; b = "+b+";\n");
-		// console.log(m + "   "+ points);
 		unique["uniqueScore"] = 1.0/m;
 		//unique["uniqueScore"] = m;
 		console.log("i: "+i+" / "+totalLength);
@@ -1906,7 +1906,8 @@ R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 	var sorting = function(a,b){
 		var uA = a["uniqueScore"];
 		var uB = b["uniqueScore"];
-		return uA < uB ? 1 : -1; // smaller score is better
+		//return uA < uB ? 1 : -1; // smaller score is better
+		return uA < uB ? -1 : 1; // smaller score is better
 	}
 	uniqueFeaturesA = uniqueFeaturesA.sort(sorting);
 	uniqueFeaturesB = uniqueFeaturesB.sort(sorting);

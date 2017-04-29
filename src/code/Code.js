@@ -1071,29 +1071,19 @@ Code.removeElement = function(a,o){  // preserves order O(n)
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){
-			len-=1;
-			while(i<len){
-				a[i] = a[i+1];
-				++i;
-			}
-			a.pop();
-			return;
+			return a.splice(i,1);
 		}
 	}
 }
 Code.removeElementAt = function(a,i){ // preserve order
-	var len = a.length;
-	while(i<len){
-		a[i] = a[i+1];
-		++i;
-	}
-	a.pop();
-	return;
-}
-Code.removeElementAtSimple = function(a,i){ // not preserve order O(n/2)
-	var len = a.length;
-	a[i] = a[len-1];
-	a.pop();
+	return a.splice(i,1);
+	// var len = a.length;
+	// while(i<len){
+	// 	a[i] = a[i+1];
+	// 	++i;
+	// }
+	// a.pop();
+	// return;
 }
 Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 	var i, len = a.length;
@@ -1106,9 +1096,10 @@ Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 	}
 }
 Code.removeElementAtSimple = function(a,i){ // not preserve order
-	a[i] = a[a.length-1];
-	a.pop();
-	return;
+	return a.splice(i,1);
+	// a[i] = a[a.length-1];
+	// a.pop();
+	// return;
 }
 Code.subSampleArray = function(a,count){
 	var i, index, len = a.length - count;
@@ -3740,10 +3731,20 @@ Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
 	return [x1,x2,x3];
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- function fitting
-Code.bestFitLine2D = function(points, count){ // line fitting
+Code.bestFitLine2D = function(points, count){ // line fitting: y = mx + b
 	var i, len = points.length;
 	if(count!==undefined){
 		len = Math.min(len,count);
+	}
+	if(len<2){
+		return null;
+	}
+	if(len==2){
+		var dx = points[1].x - points[0].x;
+		var dy = points[1].y - points[0].y;
+		var m = dy/dx;
+		b = ((points[0].y - m*points[0].x) + (points[1].y - m*points[1].x))*0.5;
+		return {"m":m, "b":b};
 	}
 	var A = new Matrix(len,3);
 	for(i=0;i<len;++i){

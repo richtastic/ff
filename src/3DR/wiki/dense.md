@@ -264,6 +264,15 @@ RESULTS:
 TODO:
 x average median offset mean SSD NOT BETTER
 	=> YES IT MIGHT BE ?
+
+> FILTER ITERITIVELY RATHER THAN ALL AT ONCE:
+-> GET CORNERS
+-> REMOVE LOW RANGE [bottom %?]
+-> REMOVE LOW GRADIENT [?]
+-> REMOVE LOW MOVE-COST
+=> REMOVE HIGH-SIMILARITY MATCHES
+=> 
+
 - remove low-range points before they are selected for the search ?
 
 - compare GRADIENT of SAD?
@@ -288,9 +297,20 @@ x average median offset mean SSD NOT BETTER
 		reassess best possible matches (goto top)
 		=> non-unique points will be removed from 
 
+UNIQUENESS:
+	- if more items have a lower score => less unique
+	- histogram that is 'right heavy'
+	- of final 'best points' then score based on uniqueness -- best = WORST SSD score amongst others in same image
+	- only match top unique ones / drop worst under threshold
+	- METRIC 1: line slope at first best matches [2~10]
+	- METRIC 2: feature which is the first (top N) match to others
+		- 1/CHOICE_IN_F_1 + 1/CHOICE_IN_F_2 + ... 
+		- 1/1 + 1/2 + 1/3 ... 1/100
+		- N * N * LOG(N)
+	- ... 
+=> SIMILARITY SHOULD NOT USE RANGE DIVISION ?
+=> SHOULD REGULAR COMPARRISION USE IT?
 
-
-HERE
 
 
 

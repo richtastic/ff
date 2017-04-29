@@ -35,7 +35,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(0.15);
+		d.graphics().alpha(0.5);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -395,11 +395,18 @@ see how score reacts to various random static
 	// GRADIENT IMAGES
 	// var bestFeaturesA = R3D.bestFeatureListRGB(imageGradARed, imageGradAGrn, imageGradABlu, imageMatrixA.width(), imageMatrixA.height());
 	// var bestFeaturesB = R3D.bestFeatureListRGB(imageGradBRed, imageGradBGrn, imageGradBBlu, imageMatrixB.width(), imageMatrixB.height());
-	console.log(bestFeaturesA)
+
+	// drop bottom half:
+	// bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.floor(bestFeaturesA.length*0.5));
+	// bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.floor(bestFeaturesB.length*0.5));
+
+	console.log(bestFeaturesA);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
-	// this.drawAround(bestFeaturesA, 0,0);
-	// this.drawAround(bestFeaturesB, 400,0);
+	this.drawAround(bestFeaturesA, 0,0);
+	this.drawAround(bestFeaturesB, 400,0);
+
+return;
 
 
 	// compare points
@@ -408,22 +415,20 @@ see how score reacts to various random static
 	var scores = [];
 	var i, j, k;
 
-	// UNIQUENESS
-	//- of final 'best points' then score based on uniqueness -- best = WORST SSD score amongst others in same image
-	//- only match top unique ones / drop worst under threshold
 var zoomScale = 0.5;
 
-
-//console.log(bestFeaturesA);
-
-
 // bestUniqueFeaturesA = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
-// bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB, bestFeaturesA, rangeA,);
+// bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB, bestFeaturesA, rangeA);
 
-//bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
-//bestUniqueFeaturesA = bestUniqueFeatures["A"];
-//bestUniqueFeaturesB = bestUniqueFeatures["B"];
-// in own image = faster
+
+// bestFeaturesA = Code.copyArray(bestFeaturesA,0,100);
+// bestFeaturesB = Code.copyArray(bestFeaturesB,0,100);
+
+// bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA, bestFeaturesB, rangeB);
+// bestUniqueFeaturesA = bestUniqueFeatures["A"];
+// bestUniqueFeaturesB = bestUniqueFeatures["B"];
+
+// // in own image = faster
 bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesA, rangeA);
 bestUniqueFeaturesA = bestUniqueFeatures["A"];
 bestUniqueFeatures = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
@@ -433,16 +438,20 @@ console.log(bestUniqueFeaturesA.length);
 console.log(bestUniqueFeaturesB.length);
 console.log(bestUniqueFeaturesA);
 
-
-bestUniqueFeaturesA = Code.copyArray(bestUniqueFeaturesA,0,100);
-//bestUniqueFeaturesB = Code.copyArray(bestUniqueFeaturesB,0,100);
+// drop half
+bestUniqueFeaturesA = Code.copyArray(bestUniqueFeaturesA,0,Math.round(bestUniqueFeaturesA.length*0.75));
+bestUniqueFeaturesB = Code.copyArray(bestUniqueFeaturesB,0,Math.round(bestUniqueFeaturesB.length*0.75));
 
 this.drawAround(bestUniqueFeaturesA, 0,0, "point");
-//this.drawAround(bestUniqueFeaturesB, 400,0, "point");
+this.drawAround(bestUniqueFeaturesB, 400,0, "point");
+//bestUniqueFeaturesA = Code.copyArray(bestUniqueFeaturesA,0,100);
+//bestUniqueFeaturesB = Code.copyArray(bestUniqueFeaturesB,0,100);
 
-return;
 
-// BEST UNIQUE FEATURES SHOULD ALSO BE UNIQUE AMONG THE SEPARATE IMAGES
+
+//return;
+
+// BEST UNIQUE FEATURES SHOULD ALSO BE UNIQUE AMONG THE SEPARATE IMAGES -- or ONLY check opposite images ? -- or do same image then separate image separately
 
 /*
 var x = "x = [";
@@ -463,7 +472,7 @@ var dropThreshold = 0.001;
 // 0.0001 too low
 // 0.001
 
-
+/*
 var uA = bestUniqueFeaturesA[0];
 var uB = bestUniqueFeaturesA[bestUniqueFeaturesA.length-1];
 var scoreMaxA = uA["score"];
@@ -503,13 +512,14 @@ while(bestUniqueFeaturesB.length>0){
 		break;
 	}
 }
+*/
 
-console.log(bestUniqueFeaturesA.length);
-console.log(bestUniqueFeaturesB.length);
-//bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
+// console.log(bestUniqueFeaturesA.length);
+// console.log(bestUniqueFeaturesB.length);
+// //bestUniqueFeaturesB = R3D.bestUniqueFeatureList(bestFeaturesB, rangeB);
 
-this.drawAround(bestUniqueFeaturesA, 0,0, "point");
-this.drawAround(bestUniqueFeaturesB, 400,0, "point");
+// this.drawAround(bestUniqueFeaturesA, 0,0, "point");
+// this.drawAround(bestUniqueFeaturesB, 400,0, "point");
 
 
 

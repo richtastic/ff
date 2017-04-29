@@ -1611,6 +1611,7 @@ ImageMat.SADFloatSimpleChannelsRGB = function(aRed,aGrn,aBlu, wid,hei, bRed,bGrn
 	var scoreR = ImageMat.SADFloatSimple(aRed,wid,hei,bRed);
 	var scoreG = ImageMat.SADFloatSimple(aGrn,wid,hei,bGrn);
 	var scoreB = ImageMat.SADFloatSimple(aBlu,wid,hei,bBlu);
+	/// WHICH IS EMPIRICALLLY BETTER?
 	return scoreR * scoreG * scoreB;
 	//return scoreR + scoreG + scoreB;
 }
@@ -1644,10 +1645,10 @@ ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
 		b = imageB[i];
 		a -= medianA;
 		b -= medianB;
+		// a = a / (rangeA!==0.0 ? rangeA : 1.0);
+		// b = b / (rangeB!==0.0 ? rangeB : 1.0);
 		sad += Math.abs(a - b);
 		//sad += Math.pow(a - b,2);
-		// for values between 0 - 1, squared makes it better
-
 		// more what looking for: 0=>0, 1=>3
 		//sad += (Math.pow( 1 + Math.abs(a-b),2) - 1); == x*x + 2x; -- mostly just linear anyway
 	}
@@ -1656,8 +1657,12 @@ ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
 	var range = Math.min(rangeA,rangeB);
 //		range = Math.pow(range,2); // too m
 		range = range!=0 ? range : 1.0;
+//		range = range * range;
+//		range = Math.sqrt(range);
 //console.log("RANGE: "+range);
-	sad = sad / range; // higher range is better score
+//	console.log("RANGE: "+sad+" / "+range+" = "+(sad/range));
+// higher range is better score 0---- 
+//sad = sad / range; // worse results
 	return sad;
 }
 /*
