@@ -1030,6 +1030,34 @@ Code.getElementsWithFunction = function(element, fxn, stop, arr){
 	}
 	return arr;
 };
+
+Code.arrayIntersect = function(c,a,b){ // c = a && b
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = [];
+	}
+	var i;
+	for(i=0; i<a.length; ++i){
+		if(Code.elementExists(b, a[i])){
+			c.push(a[i]);
+		}
+	}
+	return c;
+};
+Code.arrayUnion = function(c,a,b){ // c = a + b
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = [];
+	}
+	Code.arrayPushArray(c,a);
+	var i;
+	for(i=0; i<b.length; ++i){
+		Code.addUnique(c, b[i]);
+	}
+	return c;
+};
 Code.elementExists = function(a,o){ // O(n)   --- this wont work for an array of functions ....
 	if( Code.isFunction(o) ){ // function
 		for(var i=0; i<a.length; ++i){

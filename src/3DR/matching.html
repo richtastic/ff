@@ -11,9 +11,300 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","Matching.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	var matching = new Matching();
+	//var matching = new Matching();
+	//return;
+
+	//var matches = new PriorityQueue(MatchingMatch.sorting);
+	var matches = [];
+
+	var A_A = new MatchingItem("A_A");
+	var A_B = new MatchingItem("A_B");
+	var A_C = new MatchingItem("A_C");
+
+	var B_A = new MatchingItem("B_A");
+	var B_B = new MatchingItem("B_B");
+	var B_C = new MatchingItem("B_C");
+
+	var allA = [A_A,A_B,A_C];
+	var allB = [B_A,B_B,B_C];
+	var all = [];
+	Code.arrayPushArray(all,allA);
+	Code.arrayPushArray(all,allB);
+
+	// TEST 1
+	matches.push(new MatchingMatch(A_A,B_A, 1));
+	matches.push(new MatchingMatch(A_A,B_B, 4));
+	matches.push(new MatchingMatch(A_A,B_C, 5));
+
+	matches.push(new MatchingMatch(A_B,B_A, 5));
+	matches.push(new MatchingMatch(A_B,B_B, 7));
+	matches.push(new MatchingMatch(A_B,B_C, 6));
+
+	matches.push(new MatchingMatch(A_C,B_A, 5));
+	matches.push(new MatchingMatch(A_C,B_B, 8));
+	matches.push(new MatchingMatch(A_C,B_C, 8));
+
+
+	// TEST 2
+	// matches.push(new MatchingMatch(A_A,A_B, 250));
+	// matches.push(new MatchingMatch(A_A,B_B, 400));
+	// matches.push(new MatchingMatch(A_A,B_C, 250));
+
+	// matches.push(new MatchingMatch(A_B,B_A, 400));
+	// matches.push(new MatchingMatch(A_B,B_B, 600));
+	// matches.push(new MatchingMatch(A_B,B_C, 350));
+
+	// matches.push(new MatchingMatch(A_C,B_A, 200));
+	// matches.push(new MatchingMatch(A_C,B_B, 400));
+	// matches.push(new MatchingMatch(A_C,B_C, 250));
+
+
+	//var arr = matches.toArray();
+	arr = matches;
+	console.log(arr.length);
+	console.log(arr+"");
+
+	// convert to graph:
+	var graph = new Graph();
+	// make a vertex for each bipartite side
+	for(var i=0; i<all.length; ++i){
+		var e = all[i];
+		var vertex = graph.addVertex();
+		e._vertex = vertex;
+	}
+	// TODO: make INFINITE EDGE MATCHES for non-existant vertexes
+	
+	for(var i=0; i<arr.length; ++i){
+		var match = arr[i];
+		var A = match.A();
+		var B = match.B();
+		var vertA = A._vertex;
+		var vertB = B._vertex;
+		var weight = match.score();
+		var edge = graph.addEdge(vertA,vertB, weight);
+	}
+
+	console.log(graph.toString());
+
+	//var result = Graph.minVertexCover(graph);
+	var result = Graph.minAssignment(graph);
+console.log("RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ ");
+	console.log(result+"");
+
+return;
+
+
+
+	
+	var matches = new PriorityQueue(MatchingMatch.sorting);//, 3);
+
+	var A_A = new MatchingItem("A_A");
+	var A_B = new MatchingItem("A_B");
+	var A_C = new MatchingItem("A_C");
+	var A_D = new MatchingItem("A_D");
+	var A_E = new MatchingItem("A_E");
+	var A_F = new MatchingItem("A_F");
+
+	var B_A = new MatchingItem("B_A");
+	var B_B = new MatchingItem("B_B");
+	var B_C = new MatchingItem("B_C");
+	var B_D = new MatchingItem("B_D");
+	var B_E = new MatchingItem("B_E");
+
+	var allA = [A_A,A_B,A_C,A_D,A_E,A_F];
+	var allB = [B_A,B_B,B_C,B_D,B_E];
+
+	
+	matches.push(new MatchingMatch(A_A,B_A, 1.1));
+	matches.push(new MatchingMatch(A_A,B_E, 1));
+	matches.push(new MatchingMatch(A_A,B_C, 3));
+
+	matches.push(new MatchingMatch(A_B,B_B, 1.5));
+	matches.push(new MatchingMatch(A_B,B_D, 1.4));
+	matches.push(new MatchingMatch(A_B,B_E, 2));
+
+	matches.push(new MatchingMatch(A_C,B_C, 2));
+	matches.push(new MatchingMatch(A_C,B_A, 3));
+	matches.push(new MatchingMatch(A_C,B_B, 4));
+
+	matches.push(new MatchingMatch(A_D,B_D, 0.5));
+	matches.push(new MatchingMatch(A_D,B_A, 1.5));
+	matches.push(new MatchingMatch(A_D,B_B, 2));
+
+	matches.push(new MatchingMatch(A_E,B_E, 2));
+	matches.push(new MatchingMatch(A_E,B_A, 3));
+	matches.push(new MatchingMatch(A_E,B_B, 4));
+
+	matches.push(new MatchingMatch(A_F,B_A, 7));
+	matches.push(new MatchingMatch(A_F,B_C, 8));
+	matches.push(new MatchingMatch(A_F,B_E, 5));
+
+	var arr = matches.toArray();
+	console.log(arr.length);
+	console.log(arr+"");
+	//console.log(arr);
+
+	MatchingMatch.initialMatch(matches, allA, allB);
+
+	MatchingMatch.optimumMatchPairs(matches, allA, allB);
+
 }
+function MatchingItem(name){
+	this._name = name;
+	this._matches = new RedBlackTree();
+	this._match = null;
+	this._temp = null;
+}
+MatchingItem.prototype.toString = function(){
+	return "["+this._name+"]";
+}
+MatchingItem.prototype.match = function(m){
+	if(m!==undefined){ this._match = m; }
+	return this._match;
+}
+MatchingItem.prototype.temp = function(t){
+	if(t!==undefined){ this._temp = t; }
+	return this._temp;
+}
+
+function MatchingMatch(a,b,s){
+	this._A = a;
+	this._B = b;
+	this._score = s;
+}
+MatchingMatch.prototype.A = function(a){
+	if(a!==undefined){ this._A = a; }
+	return this._A;
+}
+MatchingMatch.prototype.B = function(b){
+	if(b!==undefined){ this._B = b; }
+	return this._B;
+}
+MatchingMatch.prototype.score = function(s){
+	if(s!==undefined){ this._score = s; }
+	return this._score;
+}
+
+MatchingMatch.sorting = function(a,b){
+	if(a===b){
+		return 0;
+	}
+	return a.score() < b.score() ? -1 : 1;
+}
+MatchingMatch.prototype.toString = function(){
+	return "["+this._A+"-"+this._B+" ("+this._score+")]";
+}
+
+MatchingMatch.initialMatch = function(allMatches, itemsA, itemsB){
+	var i, j, item;
+	var matches = allMatches.toArray();
+	for(i=0; i<itemsA.length; ++i){
+		item = itemsA[i];
+		item.match(null);
+		item.temp(null);
+	}
+	for(i=0; i<itemsB.length; ++i){
+		item = itemsB[i];
+		item.match(null);
+		item.temp(null);
+	}
+	// initial match = get first best match
+	for(i=0; i<matches.length; ++i){
+		match = matches[i];
+		itemA = match.A();
+		itemB = match.B();
+		if(!itemA.match() && !itemB.match()){
+			itemA.match(match);
+			itemB.match(match);
+		}
+	}
+	var globalScore = MatchingMatch.globalScore(allMatches, itemsA, itemsB);
+}
+MatchingMatch.globalScore = function(allMatches, itemsA, itemsB){
+	var i, matches, A, B;
+	var matches = allMatches.toArray();
+	var totalScore = 0;
+	var totalMatches = 0;
+	for(i=0; i<itemsA.length; ++i){
+		item = itemsA[i];
+		var match = item.match();
+		if(match){
+			totalScore += match.score();
+			++totalMatches;
+		}
+	}
+	for(i=0; i<itemsB.length; ++i){
+		item = itemsB[i];
+		var match = item.match();
+		if(match){
+			totalScore += match.score();
+			++totalMatches;
+		}
+	}
+	totalMatches /= 2;
+	totalScore /= 2;
+	console.log("totalMatches: "+totalMatches);
+	console.log("totalScore: "+totalScore);
+	totalScore = totalScore / (totalMatches!==0 ? totalMatches : 1.0);
+	console.log("   =>  "+totalScore);
+
+	// for(i=0; i<matches.length; ++i){
+	// 	match = matches[i];
+	// 	if(match.A() && 
+	// }
+	return totalScore;
+}
+// matches ! 
+MatchingMatch.optimumMatchPairs = function(allMatches, itemsA, itemsB){
+	var i, j, k;
+	var itemA1, itemA2;
+	matches = allMatches.toArray();
+
+	for(i=0; i<matches.length; ++i){
+		matchA = matches[i];
+		// set match to active, set match to inactive
+		for(i=j+1; j<matches.length; ++j){
+			matchB = matches[j];
+		}
+	}
+
+	// for(i=0; i<itemsA.length; ++i){
+	// 	itemA1 = itemsA[i];
+	// 	for(i=j+; j<itemsA.length; ++j){
+	// 		itemA2 = itemsA[j];
+	// 	}
+	// }
+
+	/*
+	test all combinations:
+		(m*n)*(m*n)
+	
+
+
+	*/
+
+// NOT ITERITIVE
+	// for each match
+	// if set => unset
+	// 	=> move to bottom of list with maximal score
+	// if unset => set
+	//  => move to top of list with minimal score
+	// record global score ?
+	// 
+/*
+	pick a random edge to flip off/on
+	=> ON:
+		A & B partners look for best next choice (up/down)
+	=> OFF:
+		A & B look for next best choice
+			=> recursive
+	when done make suer everyone that can have a match does
+
+*/
+}
+
 </script>
 <body onload="pageLoadedFxn();">
 </body>
 </html>
+

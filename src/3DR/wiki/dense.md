@@ -200,6 +200,55 @@ z/f =
 
 
 
+:
+
+**Hungarian [Kuhn-Munkres] Algorithm**: solve **Assignment Problem** in O(n<sup>4</sup>)
+<br/>
+Bipartite graph 
+<br/>
+minimize cost of &Sigma;<sub>i</sub> cost(e<sub>a<sub>i</sub>,b<sub>j</sub></sub>)
+<br/>
+**1)**
+<br/>
+- for each e<sub>a<sub>i</sub></sub> &isin; a<sub>i</sub>
+	- e<sub>a<sub>i</sub></sub> = e<sub>a<sub>i</sub></sub> - min(e<sub>a<sub>i</sub></sub>)
+- for each e<sub>b<sub>i</sub></sub> &isin; b<sub>i</sub>
+	- e<sub>b<sub>i</sub></sub> = e<sub>b<sub>i</sub></sub> - min(e<sub>b<sub>i</sub></sub>)
+<br/>
+**2)**
+<br/>
+- create graph using only 0-weight edges
+- find max flow / min cut
+	- perfect => done ?
+- find min vertex cover V of 0-weight graph (max matching)
+<br/>
+**3)**
+<br/>
+- &Delta; = min(e<sub>i,j</sub>)
+- adjust weights:
+	- w<sub>a<sub>i</sub>,b<sub>j</sub></sub> += 
+		- &plus;&Delta; : a<sub>i</sub> &isin; V && b<sub>j</sub> &isin; V
+		- &minus;&Delta; : a<sub>i</sub> &notin; V && b<sub>j</sub> &notin; V
+		- 0 :  a<sub>i</sub> &isin; V || b<sub>j</sub> &isin; V
+
+
+
+**Konig's Theorem**:
+
+
+
+O(n<sup>3</sup>):
+
+
+<br/>
+*_https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/*
+
+
+
+
+
+
+min<sub>a<sub>i</sub></sub> = &Sigma;e<sub>i</sub>
 
 
 
@@ -265,8 +314,10 @@ TODO:
 x average median offset mean SSD NOT BETTER
 	=> YES IT MIGHT BE ?
 
+WANT GRADIENT + ORTHOGONAL GRADIENT
+
 > FILTER ITERITIVELY RATHER THAN ALL AT ONCE:
--> GET CORNERS
+x> GET CORNERS
 -> REMOVE LOW RANGE [bottom %?]
 -> REMOVE LOW GRADIENT [?]
 -> REMOVE LOW MOVE-COST

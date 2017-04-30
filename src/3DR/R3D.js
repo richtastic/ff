@@ -1781,6 +1781,76 @@ R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 	return list;
 }
 
+
+R3D._filterFeatureListRGBFxn = function(originalList, wid,hei, fxn, arg, opt, copyOver){
+	opt = opt ? opt : function(a){ return a; };
+	copyOver = copyOver !== undefined ? copyOver : false;
+
+	console.log(originalList, fxn, arg, opt, copyOver);
+
+	var scores = [];
+	var i, score, index, point, len = originalList.length;
+	var costMove = opt( fxn.apply(this, arg) );
+	for(i=0; i<len; ++i){
+		point = originalList[i];
+		index = Math.floor(point.y)*wid + Math.floor(point.x);
+		score = costMove[index];
+		scores[i] = [score, point];
+	}
+	scores = scores.sort(function(a,b){
+		return a[0]<b[0] ? -1 : 1;
+	});
+	var list = [];
+	for(i=0; i<len; ++i){
+		score = scores[i][0];
+		list[i] = scores[i][1];
+		if(copyOver){
+			list[i].z = score;
+		}
+	}
+	return list;
+}
+R3D.filterFeatureListMoveCostRGB = function(originalList, r,g,b, wid,hei){
+	return R3D._filterFeatureListRGBFxn(originalList, wid,hei, ImageMat.totalCostToMoveAny, [ r,g,b, wid,hei], function(a){ return a.value }, true);
+}
+R3D.filterFeatureListRangeRGB = function(originalList, r,g,b, wid,hei){
+	console.log("filterFeatureListRangeRGB");
+	return R3D._filterFeatureListRGBFxn(originalList, wid,hei, ImageMat.totalRangeInWindow, [r,g,b, wid,hei,4,4], function(a){ return a.value }, true);
+}
+R3D.filterFeatureListGradientRGB = function(originalList, r,g,b, wid,hei){
+	var grad = R3D.totalGradientMagnitude(r, g, b, wid, hei);
+	return R3D._filterFeatureListRGBFxn(originalList, wid,hei, ImageMat.totalRangeInWindow, [ grad,grad,grad, wid,hei, 4,4], function(a){ return a.value }, true);
+}
+
+
+
+R3D.filterFeatureListGradientRGB = function(originalList, r,g,b, wid,hei){
+//bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
+	return originalList;
+}
+
+
+R3D.optimumMatchPairs = function(allMatches, itemsA, itemsB){
+	//...
+}
+/*
+item:
+	matches [sorted list]
+	match [match]
+	temp [match/null]
+match:
+	A [item]
+	B [item]
+	score [number]
+
+GLOBAL SCORE:
+	sum of all scores of matches with both A & B
+		/ divided by total matched items
+*/
+
+
+
+
 R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 	listB = listB!==undefined ? listB : [];
 	var i, j;
@@ -1942,8 +2012,8 @@ R3D.gradientDirection = function(rect, wid,hei){
 	var gauss1D = ImageMat.getGaussianWindow(7,1, sigma);
 	src = ImageMat.gaussian2DFrom1DFloat(rect, wid,hei, gauss1D);
 	// find gradient
-	Ix = ImageMat.derivativeX(src, wid,hei);
-	Iy = ImageMat.derivativeY(src, wid,hei);
+	Ix = ImageMat.derivativeX(src, wid,hei).value;
+	Iy = ImageMat.derivativeY(src, wid,hei).value;
 	dir.set(Ix[wid*cenY + cenX], Iy[wid*cenY + cenX]);
 	// angle with x-axis
 	mag = dir.length();
@@ -2034,12 +2104,13 @@ R3D.pointsCornerDetector = function(src, width, height, konstant, sigma, percent
 	var extrema = Code.findExtrema2DFloat(harrisValues, width,height);
 	var cornerPoints = [];
 	var i, len=extrema.length;
+
 	if(len>0){
 		var maxValue = extrema[0].z;
 		var minValue = maxValue;
 		for(i=1;i<len;++i){
 			maxValue = Math.max(maxValue, extrema[i].z);
-			minValue = Math.max(minValue, extrema[i].z);
+			minValue = Math.min(minValue, extrema[i].z);
 		}
 		var limitMin = minValue + (maxValue-minValue)*percentExclude;
 		var limitMax = maxValue;

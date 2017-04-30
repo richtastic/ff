@@ -1,9 +1,11 @@
 // PriorityQueue.js
 
-function PriorityQueue(fxn){
+function PriorityQueue(fxn, capacity){
+	capacity = capacity!==undefined ? capacity : -1;
 	this._tree = new RedBlackTree();
 	this.sorting(fxn);
 	this._tree.sortOnData(true);
+	this._capacity = capacity
 }
 // --------------------------------------------------------------------------------------------------------------------
 PriorityQueue.prototype.sorting = function(fxn){
@@ -19,7 +21,13 @@ PriorityQueue.prototype.clear = function(){
 	return this._tree.clear();
 }
 PriorityQueue.prototype.push = function(o){
-	return this._tree.insertObject(o);
+	var item = this._tree.insertObject(o);
+	if(this._capacity>=0){
+		if(this._tree.length()>this._capacity){
+			this.popMaximum();
+		}
+	}
+	return item;
 }
 PriorityQueue.prototype.minimum = function(){
 	return this._tree.minimum();

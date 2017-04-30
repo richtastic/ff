@@ -1,5 +1,6 @@
 // Graph.js
 Graph.WEIGHT_INFINITY = 1E10;
+Graph.WEIGHT_EPSILON = 1E-12;
 Graph.WEIGHT_NONE = 0;
 // ------------------------------------------------------------------------------------------------------------------------ 
 Graph.adjacencyMatrix = function(graph){
@@ -29,7 +30,520 @@ Graph.adjacencyMatrix = function(graph){
 	}
 	return matrix;
 }
-Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
+
+Graph.minAssignment = function(graph){
+	var N = graph.vertexCount();
+	var labelsX = Code.newArrayZeros(N);
+	var labelsY = Code.newArrayZeros(N);
+	var slack = Code.newArrayZeros(N);
+	var slackX = Code.newArrayZeros(N);
+	var costMatrix = Graph.adjacencyMatrix(graph);
+	var xy = Code.newArrayZeros(N);
+	var yx = Code.newArrayZeros(N);
+	var S = Code.newArrayZeros(N);
+	var T = Code.newArrayZeros(N);
+	var prev = Code.newArrayZeros(N);
+	var i, j, n, maxMatch;
+	// Graph.WEIGHT_INFINITY
+
+	console.log(costMatrix);
+
+	var hungarian = function(){
+		maxMatch = 0;
+		Code.setArrayConstant(xy,-1);
+		Code.setArrayConstant(yx,-1);
+		initLabels();
+		augment();
+		var ret = 0;
+		for(var i=0; i<N; ++i){
+			console.log(i)
+			ret += costMatrix[i*N + xy[i]];
+		}
+		return ret;
+	}
+	var initLabels = function(){
+		console.log("INIT LABELS");
+		Code.setArrayConstant(labelsX, 0);
+		Code.setArrayConstant(labelsY, 0);
+		for(i=0; i<N; ++i){
+			for(j=0; j<N; ++j){
+				labelsX[i] = Math.max(labelsX[i],costMatrix[i*N + j]);
+			}
+		}
+	}
+	var augment = function(){
+		console.log("AUGMENT");
+		if(maxMatch==N){
+			return;
+		}
+		var i, j, root;
+		var q = Code.newArrayZeros(N);
+		var wr = 0;
+		var rd = 0;
+		Code.setArrayConstant(S, false);
+		Code.setArrayConstant(T, false);
+		Code.setArrayConstant(prev, -1);
+		for(i=0; i<N; ++i){
+			if(xy[i] == -1){
+				root = i;
+				q[wr++] = root;
+				prev[i] = -2;
+				S[i] = true;
+				break;
+			}
+		}
+		for(j=0; j<N; ++j){
+			slack[j] = labelsX[root] + labelsY[j] - costMatrix[root*N + j];
+			slackX[j] = root;
+		}
+		// 2
+var loopLimit = 0;
+		while(true){
+loopLimit++;
+if(loopLimit>10){
+break;
+}
+			while(rd < wr){
+				i = q[rd++];
+				for(j=0; j<N; ++j){
+					if(costMatrix[i*N + j] == labelsX[i] + labelsY[j] && !T[j]){
+						if(yx[j]==-1){
+							break; // augmenting path exists
+						}
+						T[j] = true;
+						q[wr++] = yx[j];
+						addToTree(yx[j], i);
+					}
+				}
+				if(j<n){
+					break;
+				}
+			}
+			if(j<n){
+				break;
+			}
+			// no augmenting path
+			updateLabels();
+			rd = 0;
+			wr = 0;
+			for(j=0; j<N; ++j){
+				if(!T[j] && slack[j]==0){
+					if(yx[j]==-1){
+						i = slackX[j];
+						break;
+					}else{
+						T[j] = true;
+					}
+					if(!S[yx[j]]){
+						q[wr++] = yx[j];
+						addToTree(yx[j], slackX[j]);
+					}
+				}
+			}
+			if(j<N){ // augmenting path
+				break;
+			}
+		}
+		if(j<N){ // augmenting path
+			maxMatch++;
+			for(var cx=i, cy=j, ty; cx!=-2; cx = prev[cx], cy=ty){ // inverse edges along augmenting path
+				ty = xy[cx];
+				yx[cy] = cx;
+				xy[cx] = cy;
+			}
+			augment(); // back to step 1
+		}
+	}
+	var addToTree = function(i, prevX){
+		console.log("ADD TO TREE");
+		var j;
+		S[i] = true;
+		prev[i] = prevX;
+		for(j=0; j<N; ++j){
+			if(labelsX[i] + labelsY[j] - cost[i*N + y] < slack[j]){
+				slack[j] = labelsX[i] + labelsY[j] - cost[i*N + j];
+				slackX[j] = i;
+			}
+		}
+	}
+	var updateLabels = function(){
+		console.log("UPDATE LABELS");
+		var i, j, delta = Graph.WEIGHT_INFINITY;
+		for(j=0; j<N; ++j){
+			if(!T[j]){
+				delta = Math.min(delta, slack[j]);
+			}
+		}
+		for(i=0; i<N; ++i){
+			if(S[i]){
+				labelsX[i] -= delta;
+			}
+		}
+		for(j=0; j<N; ++j){
+			if(T[j]){
+				labelsY[j] += delta;
+			}else{
+				slack[j] -= delta;
+			}
+		}
+	}
+
+	//
+	// https://github.com/mvpossum/eldiego/blob/master/grafos/hungarian.cpp#L9
+	return hungarian();
+}
+
+
+Graph.minAssignmentStuck = function(graph){ // assignment problem => hungarian algorithm +  O(n^4)
+	var i, j, arr, a, b, e, weight, edge, edges, vertex, v, vertexes, bipartite;
+	bipartite = Graph._bipartiteSeparated(graph);
+	// determing bipartitness
+	var leftVertexes = bipartite["left"];
+	var rightVertexes = bipartite["right"];
+	var allVertexes = graph.vertexes();
+	var allEdges = graph.edges();
+	console.log(rightVertexes+"");
+	console.log(leftVertexes+"");
+	// PREPARE: subtract min weight from each edge-group
+	// SAVE ORIGINAL WEIGHT:
+	arr = allEdges;
+	for(i=0; i<arr.length; ++i){
+		edge = arr[i];
+		edge.temp(edge.weight());
+	}
+	// SUBTRACT TO GET ZERO-WEIGHT EDGES
+	Graph._subtractMinEdgeWeights(rightVertexes);
+	Graph._subtractMinEdgeWeights(leftVertexes);
+
+
+var loops = 0;
+// BACK TO LOOP HERE HERE
+while(loops<2){
+	++loops;
+	console.log("    >>>>>     >>>>>     >>>>>     >>>>>     >>>>>     >>>>>     >>>>>     >>>>>     >>>>>    "+loops);
+	console.log(graph+"");
+	// 1: create 0-weight graph
+		var graphZero = new Graph();
+		arr = allVertexes;
+		for(i=0; i<arr.length; ++i){
+			vertex = arr[i];
+			v = graphZero.addVertex();
+			vertex.temp(v);
+			v.id(vertex.id()+"_"+v.id()); 
+		}
+
+
+		// left forward
+		var leftZeroVertexes = [];
+		var rightZeroVertexes = [];
+		arr = leftVertexes;
+		for(i=0; i<arr.length; ++i){
+			vertex = arr[i];
+			edges = vertex.edges();
+			for(j=0; j<edges.length; ++j){
+				edge = edges[j];
+				if(edge.weight()==0){
+					v = edge.opposite(vertex);
+					a = vertex.temp();
+					b = v.temp();
+					//e = graphZero.addEdge(a,b,edge.temp(), Graph.Edge.DIRECTION_FORWARD);
+					e = graphZero.addEdge(a,b,1, Graph.Edge.DIRECTION_FORWARD);
+
+					if(!Code.elementExists(leftZeroVertexes,a)){
+						leftZeroVertexes.push(a);
+					}
+					if(!Code.elementExists(rightZeroVertexes,b)){
+						rightZeroVertexes.push(b);
+					}
+				}
+			}
+		}
+		// console.log("GRAPH ZERO:");
+		// console.log(graphZero+"");
+		// find maximum matching:
+		console.log(leftZeroVertexes.length, rightZeroVertexes.length);
+		bipartite = Graph._addSourceSink(graphZero, leftZeroVertexes, rightZeroVertexes);
+		var source = bipartite["source"];
+		var sink = bipartite["sink"];
+		console.log("GRAPH ZERO:");
+		console.log(graphZero+"");
+
+		// FLIP EDGES:
+		for(i=0; i<arr.length; ++i){
+
+		}
+
+		var maxFlow = graphZero.maxFlow(source,sink);
+		var maxMatching = maxFlow["edges"];
+		var excludedEdges = maxFlow["unused"];
+		var maxCut = maxFlow["minCut"];
+		graphZero.removeVertex(source);
+		graphZero.removeVertex(sink);
+		// remove sink/source ends
+		for(i=0; i<maxMatching.length; ++i){
+			edge = maxMatching[i];
+			if(edge.A()==null || edge.B()==null){
+				Code.removeElementAt(maxMatching,i);
+				--i;
+			}
+		}
+		for(i=0; i<excludedEdges.length; ++i){
+			edge = excludedEdges[i];
+			if(edge.A()==null || edge.B()==null){
+				Code.removeElementAt(excludedEdges,i);
+				--i;
+			}
+		}
+		for(i=0; i<maxCut.length; ++i){
+			edge = maxCut[i];
+			if(edge.A()==null || edge.B()==null){
+				Code.removeElementAt(maxCut,i);
+				--i;
+			}
+		}
+		console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+		console.log(maxMatching+"");
+		console.log(maxCut+"");
+		//console.log(excludedEdges+"");
+		console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+		// check if matching perfect: (each vertex is included [only once])
+		var count = 0;
+		arr = graphZero.vertexes();
+		for(i=0; i<arr.length; ++i){
+			v = arr[i];
+			v.temp(1);
+		}
+		arr = maxMatching;
+		var included = [];
+		for(i=0; i<arr.length; ++i){
+			edge = arr[i];
+			console.log(edge+"");
+			a = edge.A();
+			b = edge.B();
+			if(a.temp()>0){
+				count += a.temp();
+				a.temp(0);
+				included.push(a);
+			}
+			if(b.temp()>0){
+				count += b.temp();
+				b.temp(0);
+				included.push(b);
+			}
+		}
+		var excluded = [];
+		arr = graphZero.vertexes();
+		for(i=0; i<arr.length; ++i){
+			vertex = arr[i];
+			if(vertex.temp()>0){
+				excluded.push(vertex);
+				vertex.temp(0);
+			}
+		}
+		console.log(count+" / "+graphZero.vertexes().length);
+		var isPerfect = count == graphZero.vertexes().length;
+		if(isPerfect){
+			//TODO - convert this to actual graph edges
+			return maxMatching;
+		}
+
+		// find minimum vertex cover 
+		console.log("GRAPH ZERO:");
+		console.log(graphZero+"");
+
+
+		var allCuts = [];
+		var leftCuts = [];
+		var rightCuts = [];
+		for(i=0; i<maxCut.length; ++i){
+			edge = maxCut[i];
+			console.log(edge+"");
+			a = edge.A();
+			b = edge.B();
+			console.log("    "+a);
+			console.log("    "+b);
+			if(Code.elementExists(leftZeroVertexes,a)){
+				leftCuts.push(a);
+			}
+			if(Code.elementExists(leftZeroVertexes,b)){
+				leftCuts.push(b);
+			}
+			if(Code.elementExists(rightZeroVertexes,a)){
+				rightCuts.push(a);
+			}
+			if(Code.elementExists(rightZeroVertexes,b)){
+				rightCuts.push(b);
+			}
+			allCuts.push(a);
+			allCuts.push(b);
+		}
+		console.log("LLL: "+leftZeroVertexes+"");
+		console.log("RRR: "+rightZeroVertexes+"");
+		console.log("ALL: "+allCuts+"");
+		console.log("LEF: "+leftCuts+"");
+		console.log("RIG: "+rightCuts+"");
+		minVertexCover = Graph.minVertexCover(graphZero, leftZeroVertexes, rightZeroVertexes, allCuts, leftCuts, rightCuts);
+		console.log("MIN VERTEX COVER");
+		console.log(""+minVertexCover);
+
+
+		//minVertexCover = [ minVertexCover[] ];
+		minVertexCover = allCuts;
+
+		var minWeight = 0;
+		arr = graph.edges();
+		for(i=0; i<arr.length; ++i){
+			edge = arr[i];
+			weight = edge.weight();
+			a = edge.A().temp();
+			b = edge.B().temp();
+			var isAInV = Code.elementExists(minVertexCover,a);
+			var isBInV = Code.elementExists(minVertexCover,b);
+			if(!isAInV && !isBInV){
+				minWeight = Math.min(minWeight, arr[i].weight());
+			}
+		}
+		console.log("minWeight: "+minWeight);
+	// 2) perform weight updates:
+		arr = graph.edges();
+		for(i=0; i<arr.length; ++i){
+			edge = arr[i];
+			weight = edge.weight();
+			a = edge.A().temp();
+			b = edge.B().temp();
+			var isAInV = Code.elementExists(minVertexCover,a);
+			var isBInV = Code.elementExists(minVertexCover,b);
+			if(isAInV && isBInV){
+				edge.weight(weight + minWeight);
+			}else if(!isAInV && !isBInV){
+				edge.weight(weight - minWeight);
+			}else{
+				// keep
+			}
+		}
+		console.log("GRAPH :");
+		console.log(graph+"");
+	}
+	return null;
+};
+Graph._addSourceSink = function(graph, leftVertexes, rightVertexes, weight){ // for a bartite graph, separate into 2 halves
+	weight = weight!==undefined ? weight : 1.0;
+	//weight = weight!==undefined ? weight : 999;
+	var i;
+	// var bipartite = Graph._bipartiteSeparated(graph);
+	// var leftVertexes = bipartite["left"];
+	// var rightVertexes = bipartite["right"];
+	var left = graph.addVertex();
+	var right = graph.addVertex();
+	for(i=0; i<leftVertexes.length; ++i){
+		graph.addEdge(left, leftVertexes[i], weight, Graph.Edge.DIRECTION_FORWARD);
+	}
+	for(i=0; i<rightVertexes.length; ++i){
+		graph.addEdge(rightVertexes[i], right, weight, Graph.Edge.DIRECTION_FORWARD);
+	}
+	console.log("left: "+left+" / "+leftVertexes.length);
+	console.log("right: "+right+" / "+rightVertexes.length);
+	return {"graph":graph, "source":left, "sink":right};
+}
+Graph._bipartiteSeparated = function(graph){ // for a bartite graph, separate into 2 halves
+	var i, v, temp, edge, arr, vertex, edges;
+	var leftVertexes = [];
+	var rightVertexes = [];
+	var allVertexes = graph.vertexes();
+	var allEdges = graph.edges();
+	var edge = allEdges[0];
+	var left = edge.A();
+	var right = edge.B();
+	// check direction
+	if( edge.direction()==Graph.Edge.DIRECTION_REVERSE ){
+		var temp = left;
+		left = right;
+		right = temp;
+	}
+	// LEFT
+	arr = leftVertexes;
+	vertex = left;
+	edges = vertex.edges();
+	for(i=0; i<edges.length; ++i){
+		edge = edges[i];
+		v = edge.opposite(vertex);
+		arr.push(v);
+	}
+	// RIGHT
+	arr = rightVertexes;
+	vertex = right;
+	edges = vertex.edges();
+	for(i=0; i<edges.length; ++i){
+		edge = edges[i];
+		v = edge.opposite(vertex);
+		arr.push(v);
+	}
+	// TODO: check that all vertexes are accounted for & proper bartite graph
+	// TODO: check that there are as many edges as there are vertexes for each vertex
+	return {"graph":graph, "left":leftVertexes, "right":rightVertexes};
+};
+Graph._subtractMinEdgeWeights = function(vertexes){
+	var i, j, vertex, edge, minEdge;
+	for(i=0; i<vertexes.length;++i){
+		vertex = vertexes[i];
+		edges = vertex.edges();
+		minEdge = edges[0].weight();
+		for(j=1; j<edges.length; ++j){
+			minEdge = Math.min(minEdge,edges[j].weight());
+		}
+		for(j=0; j<edges.length; ++j){
+			edge = edges[j];
+			edge.weight( edge.weight() - minEdge );
+		}
+	}
+}
+Graph.minVertexCover = function(graph, leftVertexes, rightVertexes, allCuts, leftCuts, rightCuts){
+	var i, j, l, r, edge, vertex;
+	var S = allCuts;
+	var L1 = leftCuts; // left cuts
+	var L2 = []; // left not cuts
+	for(i=0; i<leftVertexes.length; ++i){
+		vertex = leftVertexes[i];
+		if( !Code.elementExists(leftCuts, vertex) ){
+			L2.push(vertex);
+		}
+	}
+	// 
+	var R1 = rightCuts;
+	var R2 = [];
+	for(i=0; i<rightVertexes.length; ++i){
+		vertex = rightVertexes[i];
+		if( !Code.elementExists(rightCuts, vertex) ){
+			R2.push(vertex);
+		}
+	}
+	//
+	var B = []; // R2 with neighbors in L1
+	for(i=0; i<R2.length; ++i){
+		r = R2[i];
+		for(j=0; j<L1.length; ++j){
+			l = L1[j];
+			if(r.isAdjacent(l)){
+				B.push(r);
+			}
+		}
+	}
+	console.log("===================================================================================================================");
+	console.log(S+"  S");
+	console.log(L1+" L1");
+	console.log(L2+" L2");
+	console.log(R1+" R1");
+	console.log(R2+" R2");
+	console.log(B+"  B");
+	// find union
+	var C = null;
+	C = Code.arrayUnion(L2,R1);
+	C = Code.arrayUnion(C,B);
+	console.log(C+"");
+	return C;
+}
+
+Graph._minCut = function(graph,source,sink,returnCut){ // Ford Fulkerson Max Flow
 	if(!graph || !source || !sink){
 		return null;
 	}
@@ -42,13 +556,13 @@ Graph._minCut = function(graph,source,sink){ // Ford Fulkerson Max Flow
 	// create residual network - flow
 	var flowMatrix = Code.newArray2DZeros(vertexCount,vertexCount);
 	//
-	var i, v, path;
+	var i, j, v, path;
 	var maxFlow = 0.0;
 	path = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true);
 var iteration = 0;
 	while(path && path.length>0){
 if(iteration%100==0){
-console.log(iteration);
+console.log("ITERATION: "+iteration);
 }
 if(iteration>=1E4){
 	break;
@@ -71,13 +585,43 @@ if(iteration>=1E4){
 		path = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true);
 ++iteration;
 	}
-	console.log("max flow: "+maxFlow)
+
+
+
+	console.log(Code.array2DtoString(flowMatrix,8,8));
+
 	var cuts = Graph.BFS(graph, sourceIndex,sinkIndex, capacityMatrix, flowMatrix, true, true);
 	for(i=0;i<cuts.length;++i){
 		cuts[i] = graph.getVertex(cuts[i][0]).getEdgeTo( graph.getVertex(cuts[i][1]) );
 	}
-	//console.log(cuts);
+	console.log("CUTS: "+cuts.length);
+	console.log("CUTS: "+cuts);
 	//return maxFlow;
+
+
+	if(!returnCut){ // return flow instead : set of edges -- resulting flow weights? not internal weights?
+		flowEdges = [];
+		unusedEdges = [];
+		var vertexes = graph.vertexes();
+		for(i=0; i<vertexCount; ++i){
+			for(j=i+1; j<vertexCount; ++j){
+				var a = vertexes[i];
+				var b = vertexes[j]; // graph.getVertex(i) ?
+				var edge = a.getEdgeTo(b);
+				if(!edge){ // opposite direction or N/A
+					edge = b.getEdgeTo(a);
+				}
+				if(flowMatrix[i][j]!==0){ // look at bottom half
+					flowEdges.push(edge);
+				}else{
+					if(edge){
+						unusedEdges.push(edge);
+					}
+				}
+			}
+		}
+		return {"edges":flowEdges, "unused":unusedEdges, "maxFlow":maxFlow, "minCut":cuts};
+	}
 	return cuts;
 }
 Graph._minPath = function(graph,source,target,adjacency){ // dijkstra
@@ -348,6 +892,28 @@ Graph.prototype.addVertex = function(vertex){
 	this._vertexes.push(vertex);
 	return vertex;
 }
+Graph.prototype.removeVertex = function(v){
+	if(v!==undefined && v!==null){
+		var edges = Code.copyArray(v.edges());
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			this.removeEdge(edge);
+		}
+		Code.removeElementSimple(this._vertexes,v);
+	}
+	return v;
+}
+Graph.prototype.removeEdge = function(e){
+	if(e!==undefined && e!==null){
+		var a = e.A();
+		var b = e.B();
+		a.removeEdge(e);
+		b.removeEdge(e);
+		Code.removeElementSimple(this._edges,e);
+		e.kill();
+	}
+	return e;
+}
 Graph.prototype.vertexCount = function(){
 	return this._vertexes.length;
 }
@@ -360,7 +926,10 @@ Graph.prototype.edgeCount = function(){
 	return this._edges.length;
 }
 Graph.prototype.minCut = function(source,sink){
-	return Graph._minCut(this,source,sink);
+	return Graph._minCut(this,source,sink, true);
+}
+Graph.prototype.maxFlow = function(source,sink){
+	return Graph._minCut(this,source,sink, false);
 }
 Graph.prototype.copy = function(){
 	return Graph.copy(this);
@@ -373,12 +942,17 @@ Graph.prototype.toString = function(){
 	var str = "[Graph: (v:"+this._vertexes.length+") (e:"+this._edges.length+") \n";
 	len = this._vertexes.length;
 	for(i=0; i<len; ++i){
-		str += "  "+this._vertexes[i].toString()+"\n";
+		str += "  "+Code.postpendFixed(i+""," ",5)+this._vertexes[i].toString()+"\n";
+	}
+	str += "...\n";
+	len = this._edges.length;
+	for(i=0; i<len; ++i){
+		str += "  "+Code.postpendFixed(i+""," ",5)+this._edges[i].toString()+"\n";
 	}
 	str += "]";
 	return str;
 }
-Graph.prototype.adjacent = function(data){
+Graph.prototype.adjacent = function(data){ // connects to vertex via edge : neighbors
 	var vertex = this.vertexFromData(data);
 	var result = [];
 	if(vertex){
@@ -394,13 +968,24 @@ Graph.prototype.kill = function(){
 	//
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
-Graph.Vertex = function(){
+Graph.Vertex = function(d){
 	this._data = null;
 	this._id = Graph.Vertex._index++;
 	this._edges = [];
 	this._temp = null;
+	this.data(d);
 }
 Graph.Vertex._index = 0;
+Graph.Vertex.prototype.kill = function(){
+	this._id = null;
+	this._data = null;
+	edges = this._edges;
+	if(edges){
+		Code.emptyArray(edges);
+	}
+	this._edges = null;
+	this._temp = null;
+}
 Graph.Vertex.prototype.id = function(i){
 	if(i!==undefined){
 		this._id = i;
@@ -419,7 +1004,11 @@ Graph.Vertex.prototype.data = function(d){
 	}
 	return this._data;
 }
-Graph.Vertex.prototype.adjacent = function(){ // vertexes touching
+Graph.Vertex.prototype.isAdjacent = function(v){
+	var adjacent = this.adjacent();
+	return Code.elementExists(adjacent,v);
+}
+Graph.Vertex.prototype.adjacent = function(){ // vertexes touching : neighbors
 	var vertexes = [];
 	var edge, i, len = this._edges.length;
 	for(i=0; i<len; ++i){
@@ -523,12 +1112,21 @@ Graph.Edge = function(a,b,w,d){
 	this._vertexB = null;
 	this._weight = Graph.WEIGHT_NONE;
 	this._direction = Graph.Edge.DIRECTION_UNKNOWN;
+	this._temp = null;
 	this.A(a);
 	this.B(b);
 	this.weight(w);
 	this.direction(d);
 }
 Graph.Edge._index = 0;
+Graph.Edge.prototype.kill = function(){
+	this._id = null;
+	this._vertexA = null;
+	this._vertexB = null;
+	this._weight = null;
+	this._direction = Graph.Edge.DIRECTION_UNKNOWN;
+	this._temp = null;
+}
 Graph.Edge.prototype.id = function(i){
 	if(i!==undefined){
 		this._id = i;
@@ -596,7 +1194,7 @@ Graph.Edge.prototype.opposite = function(v){
 	return null;
 }
 Graph.Edge.prototype.toString = function(){
-	return "[Edge "+this._id+" ("+(this._vertexA ? ("("+this._vertexA.id()+")") : "(?)")+"->"+(this._vertexB ? ("("+this._vertexB.id()+")") : "(?)")+"]";
+	return "[Edge "+this._id+" ("+(this._vertexA ? ("("+this._vertexA.id()+")") : "(?)")+"-"+this._weight+"->"+(this._vertexB ? ("("+this._vertexB.id()+")") : "(?)")+"]";
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 

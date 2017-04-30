@@ -133,8 +133,7 @@ console.log("y = ["+dy+"];");
 
 return;
 */
-
-
+/*
 	var histogram = ImageMat.histogram(sample.gry(), sample.width(), sample.height());
 	console.log(histogram);
 
@@ -146,7 +145,7 @@ return;
 
 	var entropy = ImageMat.entropy(sample.gry(), sample.width(), sample.height());
 	console.log("entropy: "+entropy);
-
+*/
 
 	//this.showComparrison(imageMatrixA, imageMatrixB);
 
@@ -395,16 +394,55 @@ see how score reacts to various random static
 	// GRADIENT IMAGES
 	// var bestFeaturesA = R3D.bestFeatureListRGB(imageGradARed, imageGradAGrn, imageGradABlu, imageMatrixA.width(), imageMatrixA.height());
 	// var bestFeaturesB = R3D.bestFeatureListRGB(imageGradBRed, imageGradBGrn, imageGradBBlu, imageMatrixB.width(), imageMatrixB.height());
-
-	// drop bottom half:
-	// bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.floor(bestFeaturesA.length*0.5));
-	// bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.floor(bestFeaturesB.length*0.5));
-
-	console.log(bestFeaturesA);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
+
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
+
+	// drop bottom half:
+	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
+	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	console.log(bestFeaturesA.length);
+	console.log(bestFeaturesB.length);
+
+	this.drawCover();
+	this.drawAround(bestFeaturesA, 0,0);
+	this.drawAround(bestFeaturesB, 400,0);
+
+// return;
+	//bestFeaturesA = R3D.filterFeatureListGradientRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
+	//bestFeaturesB = R3D.filterFeatureListGradientRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height());
+	// bestFeaturesA = R3D.filterFeatureListMoveCostRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
+	// bestFeaturesB = R3D.filterFeatureListMoveCostRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height());
+
+	bestFeaturesA = R3D.filterFeatureListRangeRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
+	bestFeaturesB = R3D.filterFeatureListRangeRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height());
+	console.log(bestFeaturesA.length);
+	console.log(bestFeaturesB.length);
+
+	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.1, "z", false);
+	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.1, "z", false);
+
+	// range
+	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.25, "z", false);
+	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.25, "z", false);
+	console.log(bestFeaturesA.length);
+	console.log(bestFeaturesB.length);
+
+	this.drawCover();
+
+	this.drawAround(bestFeaturesA, 0,0);
+	this.drawAround(bestFeaturesB, 400,0);
+
+
+	bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
+	this.drawAround(bestFeaturesA, 0,0);
+
+	// drop bottom half:
+	// var drop = 0.1;
+	// bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.floor(bestFeaturesA.length*drop));
+	// bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.floor(bestFeaturesB.length*drop));
 
 return;
 
@@ -918,6 +956,38 @@ return;
 
 
 }
+Matching.dropArrayPoints = function(array, threshold, property, isLess){
+	console.log("dropArrayPoints "+isLess)
+	isLess = isLess!==undefined ? isLess : true;
+	var i, value, len = array.length;
+	var max = null;
+	var min = null;
+	for(i=0; i<len; ++i){
+		value = array[i];
+		value = value[property];
+		if(min===null || min>value){
+			min = value;
+		}
+		if(max===null || max<value){
+			max = value;
+		}
+	}
+	var range = max - min;
+	var a = [];
+	if(range > 0){
+		var limit = min + threshold*range;
+		for(i=0; i<len; ++i){
+			value = array[i];
+			value = value[property];
+			console.log(value+" "+(isLess?"<":">")+" "+limit);
+			if( (isLess && value < limit) || (!isLess && value > limit) ){
+				a.push(array[i]);
+			}
+		}
+	}
+	return a;
+}
+
 Matching.sortMatches = function(features){
 	var i, feature, matches;
 	for(i=0; i<features.length; ++i){
@@ -1043,7 +1113,20 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 		GLOBALSTAGE.addChild(c);
 	}
 
-	}
+}
+Matching.prototype.drawCover = function(wid, hei){
+	wid = wid !== undefined ? wid : 1000.0;
+	hei = hei !== undefined ? hei : 1000.0;
+	var c = new DO();
+	var color = 0xBBFFFFFF;
+	c.graphics().setFill(color);
+	c.graphics().beginPath();
+	c.graphics().drawRect(0,0, wid, hei);
+	c.graphics().endPath();
+	c.graphics().fill();
+	//c.matrix().translate(offX,offY);
+	GLOBALSTAGE.addChild(c);
+}
 Matching.prototype.drawAround = function(locations, offX, offY, param, colorCircle){ // RED TO BLUE
 	var i, c;
 	var sca = 1.0;

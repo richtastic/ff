@@ -354,7 +354,8 @@ if(i==0){
 		d.graphics().strokeLine();
 		//
 		var imageMat = this._stage.getImageAsFloatGray(img);
-		var points = R3D.pointsCornerDetector(imageMat.gray, imageMat.width,imageMat.height);
+
+		var points = R3D.pointsCornerDetector(imageMat.gray, imageMat.width,imageMat.height, null, null, 0.05);
 		var fxn = function(a,b){
 			if(b.z>a.z){
 				return 1;
@@ -364,6 +365,8 @@ if(i==0){
 			return 0;
 		}
 		points = points.sort( fxn );
+
+		console.log(points.length)
 
 		//Code.truncateArray(points,30);
 		Code.truncateArray(points,50);
@@ -390,6 +393,7 @@ if(i==0){
 					var obj = R3D.gradientDirection(win,winSize,winSize);
 					var primaryAngle = obj.angle;
 					matrix = Matrix.transform2DRotate( new Matrix(3,3).identity(), -primaryAngle);
+
 					win = ImageMat.extractRectFromFloatImage(px,py,scale,sigma, winSize,winSize, imageMat.gray,imageMat.width,imageMat.height, matrix);
 // ORIENTATE IMAGE ST PRIMARY GRADIENT DIRECTION IS HORIZONTAL IN +X
 				var feature = {center:point,image:win,matches:[]};

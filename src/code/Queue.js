@@ -1,8 +1,10 @@
 // Queue.js
 
-function Queue(){
+function Queue(capacity){
+	// TODO: use REDBLACKTREE
+	capacity = capacity!==undefined ? capacity : -1;
 	this._list = [];
-	this._capacity = -1;
+	this._capacity = capacity;
 }
 Queue.prototype.push = function(o){
 	if(this._capacity>=0){
