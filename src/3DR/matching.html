@@ -13,7 +13,7 @@ function ffLoadedFxn(){
 function classesLoadedFxn(){
 	//var matching = new Matching();
 	//return;
-
+/*
 	//var matches = new PriorityQueue(MatchingMatch.sorting);
 	var matches = [];
 
@@ -81,7 +81,7 @@ function classesLoadedFxn(){
 		var vertA = A._vertex;
 		var vertB = B._vertex;
 		var weight = match.score();
-		var edge = graph.addEdge(vertA,vertB, weight);
+		var edge = graph.addEdge(vertA,vertB, weight, Graph.Edge.DIRECTION_FORWARD);
 	}
 
 	console.log(graph.toString());
@@ -90,7 +90,77 @@ function classesLoadedFxn(){
 	var result = Graph.minAssignment(graph);
 console.log("RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ ");
 	console.log(result+"");
+*/
 
+
+var matches = [];
+
+	var A_A = new MatchingItem("A_A");
+	var A_B = new MatchingItem("A_B");
+	var A_C = new MatchingItem("A_C");
+	var A_D = new MatchingItem("A_C");
+
+	var B_A = new MatchingItem("B_A");
+	var B_B = new MatchingItem("B_B");
+	var B_C = new MatchingItem("B_C");
+	var B_D = new MatchingItem("B_D");
+
+	var allA = [A_A,A_B,A_C,A_D];
+	var allB = [B_A,B_B,B_C,B_D];
+	var all = [];
+	Code.arrayPushArray(all,allA);
+	Code.arrayPushArray(all,allB);
+
+	// TEST 1
+	matches.push(new MatchingMatch(A_A,B_A, 5));
+	matches.push(new MatchingMatch(A_A,B_B, 6));
+	matches.push(new MatchingMatch(A_A,B_C, 2)); /// BEST
+	matches.push(new MatchingMatch(A_A,B_D, 7));
+
+	matches.push(new MatchingMatch(A_B,B_A, 7));
+	matches.push(new MatchingMatch(A_B,B_B, 6));
+	matches.push(new MatchingMatch(A_B,B_C, 5));
+	matches.push(new MatchingMatch(A_B,B_D, 3)); /// BEST
+
+	matches.push(new MatchingMatch(A_C,B_A, 6)); /// BEST
+	matches.push(new MatchingMatch(A_C,B_B, 4));
+	matches.push(new MatchingMatch(A_C,B_C, 7));
+	matches.push(new MatchingMatch(A_C,B_D, 5));
+
+	matches.push(new MatchingMatch(A_D,B_A, 1));
+	matches.push(new MatchingMatch(A_D,B_B, 5)); /// BEST
+	matches.push(new MatchingMatch(A_D,B_C, 5));
+	matches.push(new MatchingMatch(A_D,B_D, 5));
+
+	arr = matches;
+	console.log(arr.length);
+	console.log(arr+"");
+
+	// convert to graph:
+	var graph = new Graph();
+	// make a vertex for each bipartite side
+	for(var i=0; i<all.length; ++i){
+		var e = all[i];
+		var vertex = graph.addVertex();
+		e._vertex = vertex;
+	}
+	// TODO: make INFINITE EDGE MATCHES for non-existant vertexes
+	
+	for(var i=0; i<arr.length; ++i){
+		var match = arr[i];
+		var A = match.A();
+		var B = match.B();
+		var vertA = A._vertex;
+		var vertB = B._vertex;
+		var weight = match.score();
+		var edge = graph.addEdge(vertA,vertB, weight, Graph.Edge.DIRECTION_FORWARD);
+	}
+
+	console.log(graph.toString());
+
+	//var result = Graph.minVertexCover(graph);
+	var result = Graph.minAssignment(graph);
+	console.log(result+"");
 return;
 
 

@@ -30,167 +30,56 @@ Graph.adjacencyMatrix = function(graph){
 	}
 	return matrix;
 }
-
-Graph.minAssignment = function(graph){
+Graph.toBipartiteCostMatrix = function(graph){
 	var N = graph.vertexCount();
-	var labelsX = Code.newArrayZeros(N);
-	var labelsY = Code.newArrayZeros(N);
-	var slack = Code.newArrayZeros(N);
-	var slackX = Code.newArrayZeros(N);
-	var costMatrix = Graph.adjacencyMatrix(graph);
-	var xy = Code.newArrayZeros(N);
-	var yx = Code.newArrayZeros(N);
-	var S = Code.newArrayZeros(N);
-	var T = Code.newArrayZeros(N);
-	var prev = Code.newArrayZeros(N);
-	var i, j, n, maxMatch;
-	// Graph.WEIGHT_INFINITY
-
-	console.log(costMatrix);
-
-	var hungarian = function(){
-		maxMatch = 0;
-		Code.setArrayConstant(xy,-1);
-		Code.setArrayConstant(yx,-1);
-		initLabels();
-		augment();
-		var ret = 0;
-		for(var i=0; i<N; ++i){
-			console.log(i)
-			ret += costMatrix[i*N + xy[i]];
-		}
-		return ret;
-	}
-	var initLabels = function(){
-		console.log("INIT LABELS");
-		Code.setArrayConstant(labelsX, 0);
-		Code.setArrayConstant(labelsY, 0);
-		for(i=0; i<N; ++i){
-			for(j=0; j<N; ++j){
-				labelsX[i] = Math.max(labelsX[i],costMatrix[i*N + j]);
+	var bipartite = Graph._bipartiteSeparated(graph);
+	var left = bipartite["left"];
+	var right = bipartite["right"];
+	var leftCount = left.length;
+	var rightCount = right.length;
+	var maxCount = Math.max(leftCount,rightCount);
+	var costMatrix = Code.newArray2DZeros(maxCount,maxCount);
+	for(i=0; i<leftCount; ++i){
+		var A = left[i];
+		for(j=0; j<rightCount; ++j){
+			var B = right[j];
+			var edge = A.getEdgeForVertex(B);
+			if(edge){
+				costMatrix[i][j] = edge.weight();
 			}
 		}
 	}
-	var augment = function(){
-		console.log("AUGMENT");
-		if(maxMatch==N){
-			return;
+	console.log( Code.array2DtoString(costMatrix) );
+	// turn cost matrix with highest-weights as non-connections
+	for(i=0; i<leftCount; ++i){
+		for(j=0; j<rightCount; ++j){
+			costMatrix[i][j] = Math.abs(costMatrix[i][j]);
 		}
-		var i, j, root;
-		var q = Code.newArrayZeros(N);
-		var wr = 0;
-		var rd = 0;
-		Code.setArrayConstant(S, false);
-		Code.setArrayConstant(T, false);
-		Code.setArrayConstant(prev, -1);
-		for(i=0; i<N; ++i){
-			if(xy[i] == -1){
-				root = i;
-				q[wr++] = root;
-				prev[i] = -2;
-				S[i] = true;
-				break;
-			}
+	}
+	var costInfo = Code.info2DArray(costMatrix);
+	var minCost = costInfo["min"];
+	var maxCost = costInfo["max"];
+	var range = maxCost - minCost; //costInfo["range"];
+	console.log(minCost,maxCost);
+	for(i=0; i<leftCount; ++i){
+		for(j=0; j<rightCount; ++j){
+			//costMatrix[i][j] = maxCost - (costMatrix[i][j]-minCost) + minCost;
+			costMatrix[i][j] = maxCost - costMatrix[i][j];
 		}
-		for(j=0; j<N; ++j){
-			slack[j] = labelsX[root] + labelsY[j] - costMatrix[root*N + j];
-			slackX[j] = root;
-		}
-		// 2
-var loopLimit = 0;
-		while(true){
-loopLimit++;
-if(loopLimit>10){
-break;
+	}
+	// mapping is important ... 
+	return {"left":left, "right":right, "costMatrix":costMatrix};
 }
-			while(rd < wr){
-				i = q[rd++];
-				for(j=0; j<N; ++j){
-					if(costMatrix[i*N + j] == labelsX[i] + labelsY[j] && !T[j]){
-						if(yx[j]==-1){
-							break; // augmenting path exists
-						}
-						T[j] = true;
-						q[wr++] = yx[j];
-						addToTree(yx[j], i);
-					}
-				}
-				if(j<n){
-					break;
-				}
-			}
-			if(j<n){
-				break;
-			}
-			// no augmenting path
-			updateLabels();
-			rd = 0;
-			wr = 0;
-			for(j=0; j<N; ++j){
-				if(!T[j] && slack[j]==0){
-					if(yx[j]==-1){
-						i = slackX[j];
-						break;
-					}else{
-						T[j] = true;
-					}
-					if(!S[yx[j]]){
-						q[wr++] = yx[j];
-						addToTree(yx[j], slackX[j]);
-					}
-				}
-			}
-			if(j<N){ // augmenting path
-				break;
-			}
-		}
-		if(j<N){ // augmenting path
-			maxMatch++;
-			for(var cx=i, cy=j, ty; cx!=-2; cx = prev[cx], cy=ty){ // inverse edges along augmenting path
-				ty = xy[cx];
-				yx[cy] = cx;
-				xy[cx] = cy;
-			}
-			augment(); // back to step 1
-		}
-	}
-	var addToTree = function(i, prevX){
-		console.log("ADD TO TREE");
-		var j;
-		S[i] = true;
-		prev[i] = prevX;
-		for(j=0; j<N; ++j){
-			if(labelsX[i] + labelsY[j] - cost[i*N + y] < slack[j]){
-				slack[j] = labelsX[i] + labelsY[j] - cost[i*N + j];
-				slackX[j] = i;
-			}
-		}
-	}
-	var updateLabels = function(){
-		console.log("UPDATE LABELS");
-		var i, j, delta = Graph.WEIGHT_INFINITY;
-		for(j=0; j<N; ++j){
-			if(!T[j]){
-				delta = Math.min(delta, slack[j]);
-			}
-		}
-		for(i=0; i<N; ++i){
-			if(S[i]){
-				labelsX[i] -= delta;
-			}
-		}
-		for(j=0; j<N; ++j){
-			if(T[j]){
-				labelsY[j] += delta;
-			}else{
-				slack[j] -= delta;
-			}
-		}
-	}
-
-	//
-	// https://github.com/mvpossum/eldiego/blob/master/grafos/hungarian.cpp#L9
-	return hungarian();
+Graph.minAssignment = function(graph){ // list of edges
+	var costMatrix = Graph.toBipartiteCostMatrix(graph);
+	var leftVertexes = costMatrix["left"];
+	var rightVertexes = costMatrix["right"];
+	costMatrix = costMatrix["costMatrix"];
+	var solution = Code.minimizedAssignmentProblem(costMatrix);//, leftVertexes, rightVertexes);
+	console.log(solution);
+	var cost = solution["cost"];
+	var edges = solution["edges"];
+	return edges;
 }
 
 
@@ -1028,6 +917,7 @@ Graph.Vertex.prototype.getEdgeForVertex = function(v){
 	}
 	return null;
 }
+
 Graph.Vertex.prototype.getEdgeTo = function(v){
 	var i, e, len, arr=this._edges;
 	len = arr.length;
@@ -1064,6 +954,7 @@ Graph.Vertex.prototype.removeEdge = function(e){
 Graph.Vertex.prototype.edges = function(){
 	return this._edges;
 }
+
 Graph.Vertex.prototype.edgesTo = function(){
 	var edges = [];
 	var i, e, len = this._edges.length;
