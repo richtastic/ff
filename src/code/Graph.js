@@ -30,7 +30,7 @@ Graph.adjacencyMatrix = function(graph){
 	}
 	return matrix;
 }
-Graph.toBipartiteCostMatrix = function(graph){
+Graph._toBipartiteCostMatrix = function(graph){
 	var N = graph.vertexCount();
 	var bipartite = Graph._bipartiteSeparated(graph);
 	var left = bipartite["left"];
@@ -71,15 +71,32 @@ Graph.toBipartiteCostMatrix = function(graph){
 	return {"left":left, "right":right, "costMatrix":costMatrix};
 }
 Graph.minAssignment = function(graph){ // list of edges
-	var costMatrix = Graph.toBipartiteCostMatrix(graph);
+	var costMatrix = Graph._toBipartiteCostMatrix(graph);
 	var leftVertexes = costMatrix["left"];
 	var rightVertexes = costMatrix["right"];
 	costMatrix = costMatrix["costMatrix"];
-	var solution = Code.minimizedAssignmentProblem(costMatrix);//, leftVertexes, rightVertexes);
+	var solution = Code.minimizedAssignmentProblem(costMatrix);
+	var edges = solution["edges"];
+	solution = Graph._minAssignmentToEdgeList(edges, leftVertexes, rightVertexes);
 	console.log(solution);
 	var cost = solution["cost"];
-	var edges = solution["edges"];
 	return edges;
+}
+Graph._minAssignmentToEdgeList = function(edges,leftVertexes,rightVertexes){ // return actual edges -- togo inside graph and not here ?
+	var i, left, right, pair, edge, len = edges.length;
+	var edgeList = [];
+	var totalCost = 0;
+	for(i=0; i<len; ++i){
+		pair = edges[i];
+		left = pair[0];
+		right = pair[1];
+		left = leftVertexes[left];
+		right = rightVertexes[right];
+		edge = left.getEdgeForVertex(right);
+		edgeList.push(edge);
+		totalCost += edge.weight();
+	}
+	return {"cost":totalCost, "edges":edgeList};
 }
 
 

@@ -1386,78 +1386,57 @@ Code.sumArray = function(a){
 	return sum;
 }
 // https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/
-Code.minimizedAssignmentProblem = function(costMatrix, leftVertexes, rightVertexes){ // hungarian solution to assignment problem O(n^3) : list of edges
-	var N = costMatrix.length; // assuming square matrix representing bipartite  workers : jobs costs -- find minimal cost
-	var labelsX = Code.newArrayZeros(N);
+Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to assignment problem O(n^3) : list of edges
+	var WEIGHT_INFINITY = 1E10;
+	var EPSILON = 0;
+	var N = costMatrix.length; // assuming square matrix representing bipartite  workers (X) : jobs (Y) costs -- find minimal cost
+	var labelsX = Code.newArrayZeros(N); // X & Y labels
 	var labelsY = Code.newArrayZeros(N);
-	var slack = Code.newArrayZeros(N);
-	var slackX = Code.newArrayZeros(N);
-	var xy = Code.newArrayZeros(N);
-	var yx = Code.newArrayZeros(N);
-	var S = Code.newArrayZeros(N);
-	var T = Code.newArrayZeros(N);
-	var prev = Code.newArrayZeros(N);
+	var slack = Code.newArrayZeros(N); // deltas between weight changes between augmented array
+	var slackX = Code.newArrayZeros(N); // label(slackX[y]) + label(y) - w(slackX[y],y) = slack[y]
+	var xy = Code.newArrayZeros(N); // vertex matched with i [Xi]
+	var yx = Code.newArrayZeros(N); // vertex matched with j [Yi]
+	var S = Code.newArrayZeros(N); // 
+	var T = Code.newArrayZeros(N); // 
+	var prev = Code.newArrayZeros(N); // 
 	var i, j, n, maxMatch;
 
 	var hungarian = function(){
 		maxMatch = 0;
 		Code.setArrayConstant(xy,-1);
 		Code.setArrayConstant(yx,-1);
-		initLabels();
-		augment();
-		// internal cost
-		totalCost = 0;
-		var solution = {};
-		var edgeList = [];
-		if(leftVertexes && rightVertexes){ // return actual edges -- togo inside graph and not here ?
-			totalCost = 0;
-			for(i=0; i<leftVertexes.length; ++i){
-				var v = leftVertexes[i];
-				j = xy[i];
-				var u = rightVertexes[j];
-				var edge = v.getEdgeForVertex(u);
-				console.log(edge);
-				edgeList.push(edge);
-				totalCost += edge.weight();
-			}
-			console.log(edgeList+"");
-			console.log(" == "+totalCost);
-			
-		}else{ // return index paired edges
-			for(i=0; i<N; ++i){
-				j = xy[i];
-				edgeList.push([i,j]);
-				totalCost += costMatrix[i][xy[i]];
-			}
-		}
-		solution["cost"] = totalCost;
-		solution["edges"] = edgeList;
-		return solution;
-	}
-	var initLabels = function(){
-		console.log("INIT LABELS");
-		Code.setArrayConstant(labelsX, 0);
-		Code.setArrayConstant(labelsY, 0);
+		// labelsX & labelsY already zeroed out initialty
 		for(i=0; i<N; ++i){
 			for(j=0; j<N; ++j){
 				labelsX[i] = Math.max(labelsX[i],costMatrix[i][j]);
 			}
 		}
+		// while an augmenting path exists:
+		augment();
+		// internal cost
+		totalCost = 0;
+		var solution = {};
+		var edgeList = [];
+		for(i=0; i<N; ++i){
+			j = xy[i];
+			edgeList.push([i,j]);
+			totalCost += costMatrix[i][xy[i]];
+		}
+		solution["cost"] = totalCost;
+		solution["edges"] = edgeList;
+		return solution;
 	}
-	var augment = function(){
-		console.log("AUGMENT");
-		if(maxMatch==N){
-			console.log("FOUND MAX MATCH");
+	var augment = function(){ // find & fllip an alternating path
+		if(maxMatch==N){ // found match
 			return;
 		}
 		var i, j, root;
-		var q = Code.newArrayZeros(N);
-		var wr = 0;
-		var rd = 0;
-		Code.setArrayConstant(S, false);
-		Code.setArrayConstant(T, false);
+		var q = Code.newArrayZeros(N); // queue
+		var rd = 0, wr = 0; // read / write flags
+		Code.setArrayConstant(S, false); // 
+		Code.setArrayConstant(T, false); // 
 		Code.setArrayConstant(prev, -1);
-		for(i=0; i<N; ++i){
+		for(i=0; i<N; ++i){ // find root of tree
 			if(xy[i] == -1){
 				root = i;
 				q[wr++] = root;
@@ -1466,29 +1445,27 @@ Code.minimizedAssignmentProblem = function(costMatrix, leftVertexes, rightVertex
 				break;
 			}
 		}
-		for(j=0; j<N; ++j){
+		for(j=0; j<N; ++j){ // init delta array: 
 			slack[j] = labelsX[root] + labelsY[j] - costMatrix[root][j];
 			slackX[j] = root;
 		}
-		// 2
-var loopLimit = 0; // just in case
-		while(true){
+		// 
+var loopLimit = 0;
+		while(true){ // improve labels
 loopLimit++;
 if(loopLimit>100){
-	console.log("READHED LOOP LIMIT: "+loopLimit);
+	console.log("REACHED LOOP LIMIT: "+loopLimit);
 break;
 }
-			while(rd < wr){
-				console.log(" rd: "+rd+" < wr: "+wr);
+			while(rd < wr){ // breadth first search
 				i = q[rd++];
-				for(j=0; j<N; ++j){
-					console.log(" "+j+" : "+costMatrix[i][j]+" "+labelsX[i]+" / "+labelsY[j]+" "+T[j]);
+				for(j=0; j<N; ++j){ // for all edges in equality graph
 					if(costMatrix[i][j] == labelsX[i] + labelsY[j] && !T[j]){
-						if(yx[j]==-1){
+						if(yx[j]==-1){ // exposed vertex
 							break; // augmenting path exists
 						}
 						T[j] = true;
-						q[wr++] = yx[j];
+						q[wr++] = yx[j]; // add vertex to queue
 						addToTree(yx[j], i);
 					}
 				}
@@ -1503,16 +1480,16 @@ break;
 			updateLabels();
 			rd = 0;
 			wr = 0;
-			for(j=0; j<N; ++j){
+			for(j=0; j<N; ++j){ // aff edge slackX[j]->y iff :
 				if(!T[j] && slack[j]==0){
-					if(yx[j]==-1){
+					if(yx[j]==-1){ // exposed vertex = augmenting path
 						i = slackX[j];
 						break;
 					}else{
 						T[j] = true;
 					}
 					if(!S[yx[j]]){
-						q[wr++] = yx[j];
+						q[wr++] = yx[j]; // add vertex to queue
 						addToTree(yx[j], slackX[j]);
 					}
 				}
@@ -1522,7 +1499,7 @@ break;
 			}
 		}
 		if(j<N){ // augmenting path
-			maxMatch++;
+			++maxMatch;
 			for(var cx=i, cy=j, ty; cx!=-2; cx = prev[cx], cy=ty){ // inverse edges along augmenting path
 				ty = xy[cx];
 				yx[cy] = cx;
@@ -1531,19 +1508,19 @@ break;
 			augment(); // back to step 1
 		}
 	}
-	var addToTree = function(i, prevX){
-		var j;
-		S[i] = true;
+	var addToTree = function(i, prevX){ // add new edges to alternating tree, i = current vertex, prevX = vertex before i in alternating path
+		// add edges prevX->xy[i] && sy[x]->x
+		S[i] = true; // i now in S
 		prev[i] = prevX;
 		for(j=0; j<N; ++j){
-			if(labelsX[i] + labelsY[j] - costMatrix[i][j] < slack[j]){
+			if(labelsX[i] + labelsY[j] - costMatrix[i][j] < slack[j] - EPSILON){
 				slack[j] = labelsX[i] + labelsY[j] - costMatrix[i][j];
 				slackX[j] = i;
 			}
 		}
 	}
-	var updateLabels = function(){
-		var i, j, delta = Graph.WEIGHT_INFINITY;
+	var updateLabels = function(){ //  improve labels
+		var i, j, delta = WEIGHT_INFINITY;
 		for(j=0; j<N; ++j){
 			if(!T[j]){
 				delta = Math.min(delta, slack[j]);

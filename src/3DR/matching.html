@@ -11,8 +11,8 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","Matching.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	//var matching = new Matching();
-	//return;
+	var matching = new Matching();
+	return;
 /*
 	//var matches = new PriorityQueue(MatchingMatch.sorting);
 	var matches = [];
@@ -92,7 +92,7 @@ console.log("RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESULT _ RESU
 	console.log(result+"");
 */
 
-
+/*
 var matches = [];
 
 	var A_A = new MatchingItem("A_A");
@@ -136,6 +136,7 @@ var matches = [];
 	console.log(arr.length);
 	console.log(arr+"");
 
+
 	// convert to graph:
 	var graph = new Graph();
 	// make a vertex for each bipartite side
@@ -161,6 +162,31 @@ var matches = [];
 	//var result = Graph.minVertexCover(graph);
 	var result = Graph.minAssignment(graph);
 	console.log(result+"");
+*/
+
+// square:
+	var sizeN = 2;
+	var cost = [[5,8],
+				[7,3]];
+// HEAVY EXAMPLE:
+	// var sizeN = 100;
+	// var cost = Code.newArray2DZeros(sizeN,sizeN);
+	// var i, j;
+	// for(var i=0; i<sizeN; ++i){
+	// 	for(var j=0; j<sizeN; ++j){
+	// 		cost[i][j] = Math.abs(sizeN*i - j);
+	// 	}
+	// }
+
+
+	Code.array2DtoString(cost);
+	var result = Code.minimizedAssignmentProblem(cost);
+	var edges = result["edges"];
+	var cost = result["cost"];
+	console.log(cost);
+	for(var i=0; i<sizeN; ++i){
+		console.log(i+": "+edges[i][0]+" => "+edges[i][1]);
+	}
 return;
 
 

@@ -1824,9 +1824,85 @@ R3D.filterFeatureListGradientRGB = function(originalList, r,g,b, wid,hei){
 
 
 
-R3D.filterFeatureListGradientRGB = function(originalList, r,g,b, wid,hei){
-//bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
-	return originalList;
+R3D.filterFeatureListSimilarRGB = function(originalList, r,g,b, wid,hei, range){ // 
+	// create similarity score
+	var i, j, len = originalList.length;
+	var sorting = function(a,b){
+		if(a===b){ return 0; }
+		return a["score"] < b["score"] ? -1 : 1;
+	}
+	// convert to local objects
+	var features = [];
+	for(i=0; i<originalList.length; ++i){
+		var matches = new PriorityQueue(sorting, 10);
+		features[i] = {"point":originalList[i], "matches":matches, "score":0};
+	}
+	// record similarities
+	var zoomScale = 0.5;
+	for(i=0; i<features.length; ++i){
+		var featureA = features[i];
+		var pointA = featureA["point"];
+			var zA = new ZFeature();
+			zA.setupWithImage(range, pointA, zoomScale);
+		for(j=i+1; j<features.length; ++j){
+			var featureB = features[j];
+			var pointB = featureB["point"];
+				var zB = new ZFeature();
+				zB.setupWithImage(range, pointB, zoomScale);
+				var score = ZFeature.compareScore(zA, zB, range, range);
+			var match = {"A":featureA, "B":featureB, "score":score};
+			featureA["matches"].push(match);
+			featureB["matches"].push(match);
+		}
+		console.log("i: "+i+"/"+features.length);
+	}
+	// from priority queue to array
+	for(i=0; i<features.length; ++i){
+		var featureA = features[i];
+		var matches = featureA["matches"];
+		featureA["matches"] = matches.toArray();
+	}
+	// record final similarity scores
+	for(i=0; i<features.length; ++i){
+		var featureA = features[i];
+		var matches = featureA["matches"];
+		for(j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var featureB = match["A"];
+			if(featureB==featureA){
+				featureB = match["B"];
+			}
+			// score based on how close it is to 
+			var n = (j+1);
+			//n = Math.pow(n,2);
+			featureB["score"] += 1.0/n;
+			//featureB["score"] += n;
+		}
+	}
+
+	var newList = [];
+	for(i=0; i<features.length; ++i){
+		var feature = features[i];
+		var score = feature["score"];
+		var point = feature["point"];
+// score = score==0 ? 1.0 : score;
+// score = 1.0 / score;
+		var item = new V3D(point.x,point.y, score);
+		newList.push(item);
+	}
+	newList = newList.sort(function(a,b){
+		return a.z<b.z ? -1 : 1;
+	});
+	// scale to [0,1]
+	var min = newList[0].z;
+	var max = newList[newList.length-1].z;
+	var range = max-min; range = range==0 ? 1.0 : 1.0/range;
+	console.log(min,max,range);
+	for(i=0; i<newList.length; ++i){
+	 	newList[i].z = (newList[i].z-min)*range;
+	 	console.log(newList[i].z);
+	}
+	return newList;
 }
 
 

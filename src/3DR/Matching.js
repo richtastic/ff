@@ -435,14 +435,55 @@ see how score reacts to various random static
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
 
+	//bestFeaturesA = Code.copyArray(bestFeaturesA, 0,25);
 
-	bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
+	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
+	var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
+	bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height(), rangeA);
+	bestFeaturesB = R3D.filterFeatureListSimilarRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height(), rangeB);
+
+	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.5, "z", true);
+	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.5, "z", true);
+	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
+	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	console.log(bestFeaturesA.length);
+	console.log(bestFeaturesB.length);
+
+// TODO: PLOT THE SCORES & DELTA SCORES 
+// WHEN TO CUT OFF?
+
+	this.drawCover();
 	this.drawAround(bestFeaturesA, 0,0);
+	this.drawAround(bestFeaturesB, 400,0);
 
-	// drop bottom half:
-	// var drop = 0.1;
-	// bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.floor(bestFeaturesA.length*drop));
-	// bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.floor(bestFeaturesB.length*drop));
+return;
+
+	var zoomScale = 0.5;
+	for(i=0; i<bestFeaturesA.length; ++i){
+		var pointA = bestFeaturesA[i];
+		var featureA = new ZFeature();
+		featureA.setupWithImage(rangeA, pointA, zoomScale);
+		for(j=0; j<bestFeaturesB.length; ++j){
+			var pointB = bestFeaturesB[j];;
+			var featureB = new ZFeature();
+			featureB.setupWithImage(rangeB, pointB, zoomScale);
+			var score = ZFeature.compareScore(featureA, featureB, rangeA,rangeB);
+// HERE
+		}
+	}
+	var maxLen = Math.max(bestFeaturesA.length, bestFeaturesB.length);
+	var cost = Code.newArray2DZeros(maxLen,maxLen);
+
+	Code.array2DtoString(cost);
+	var result = Code.minimizedAssignmentProblem(cost);
+	var edges = result["edges"];
+	var cost = result["cost"];
+	console.log(cost);
+	for(var i=0; i<sizeN; ++i){
+		console.log(i+": "+edges[i][0]+" => "+edges[i][1]);
+	}
+	
+
 
 return;
 
