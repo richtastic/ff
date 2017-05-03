@@ -396,19 +396,20 @@ see how score reacts to various random static
 	// var bestFeaturesB = R3D.bestFeatureListRGB(imageGradBRed, imageGradBGrn, imageGradBBlu, imageMatrixB.width(), imageMatrixB.height());
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
-
+/*
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
-
+*/
 	// drop bottom half:
 	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
 	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
-
+/*
 	this.drawCover();
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
+*/
 
 // return;
 	//bestFeaturesA = R3D.filterFeatureListGradientRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
@@ -429,16 +430,18 @@ see how score reacts to various random static
 	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.25, "z", false);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
-
+/*
 	this.drawCover();
 
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
+*/
 
 	//bestFeaturesA = Code.copyArray(bestFeaturesA, 0,25);
 
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
 	var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
+
 	bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height(), rangeA);
 	bestFeaturesB = R3D.filterFeatureListSimilarRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height(), rangeB);
 
@@ -450,12 +453,12 @@ see how score reacts to various random static
 	console.log(bestFeaturesB.length);
 
 // TODO: PLOT THE SCORES & DELTA SCORES 
-// WHEN TO CUT OFF?
-
+// WHEN TO CUT OFF TO BE BASED OFF OF GRAPH
+/*
 	this.drawCover();
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
-
+*/
 //return;
 
 	var sorting = function(a,b){
@@ -531,17 +534,26 @@ see how score reacts to various random static
 	var cost = result["cost"];
 	var sizeN = edges.length;
 	var matches = [];
+	console.log(bestFeaturesA.length,bestFeaturesB.length);
 	for(var i=0; i<sizeN; ++i){
 		var I = edges[i][0];
 		var J = edges[i][1];
 		console.log(i+": "+I+" => "+J);
-		var featureA = bestFeaturesA[I];
-		var pointA = featureA["point"];
-		var featureB = bestFeaturesB[J];
-		var pointB = featureB["point"];
-		matches.push({"score":0, "pointA":pointA, "pointB":pointB});
+		if(I>=bestFeaturesA.length || J>=bestFeaturesB.length){
+			console.log("outside range .. donot use");
+		}else{
+			var featureA = bestFeaturesA[I];
+			var pointA = featureA["point"];
+			var featureB = bestFeaturesB[J];
+			var pointB = featureB["point"];
+			matches.push({"score":0, "pointA":pointA, "pointB":pointB});
+		}
 	}
-
+	matches = matches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1
+		//return a["score"] < b["score"] ? 1 : -1
+	})
+	matches = Code.copyArray(matches, 0, 50);
 	this.drawMatches(matches, 0,0, 400,0);
 	
 
