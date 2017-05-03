@@ -456,32 +456,93 @@ see how score reacts to various random static
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
 
-return;
+//return;
 
-	var zoomScale = 0.5;
-	for(i=0; i<bestFeaturesA.length; ++i){
-		var pointA = bestFeaturesA[i];
-		var featureA = new ZFeature();
-		featureA.setupWithImage(rangeA, pointA, zoomScale);
-		for(j=0; j<bestFeaturesB.length; ++j){
-			var pointB = bestFeaturesB[j];;
-			var featureB = new ZFeature();
-			featureB.setupWithImage(rangeB, pointB, zoomScale);
-			var score = ZFeature.compareScore(featureA, featureB, rangeA,rangeB);
-// HERE
-		}
+	var sorting = function(a,b){
+		if(a===b){ return 0; }
+		return a["score"] < b["score"] ? -1 : 1;
 	}
+
+	// convert to local object:
+	for(i=0; i<bestFeaturesA.length; ++i){
+		var point = bestFeaturesA[i];
+		var matches = new PriorityQueue(sorting, 10);
+		var feature = {"point":point, "matches":matches};
+		bestFeaturesA[i] = feature;
+	}
+	for(i=0; i<bestFeaturesB.length; ++i){
+		var point = bestFeaturesB[i];
+		var matches = new PriorityQueue(sorting, 10);
+		var feature = {"point":point, "matches":matches};
+		bestFeaturesB[i] = feature;
+	}
+	// pushed all matches, now to make a craph
 	var maxLen = Math.max(bestFeaturesA.length, bestFeaturesB.length);
 	var cost = Code.newArray2DZeros(maxLen,maxLen);
 
-	Code.array2DtoString(cost);
+	console.log("RUNNING COST MATRIX");
+	var zoomScale = 0.5;
+	for(i=0; i<bestFeaturesA.length; ++i){
+		var featureA = bestFeaturesA[i];
+		var pointA = featureA["point"];
+		var matchesA = featureA["matches"];
+		var zA = new ZFeature();
+		zA.setupWithImage(rangeA, pointA, zoomScale);
+		for(j=0; j<bestFeaturesB.length; ++j){
+			var featureB = bestFeaturesB[j];
+			var pointB = featureB["point"];
+			var matchesB = featureB["matches"];
+			var zB = new ZFeature();
+			zB.setupWithImage(rangeB, pointB, zoomScale);
+			var score = ZFeature.compareScore(zA, zB, rangeA,rangeB);
+			// var match = {"A":featureA, "B":featureB, "score": score};
+			// matchesA.push(match);
+			// matchesB.push(match);
+			cost[i][j] = score;
+		}
+		console.log("  => "+i+" / "+bestFeaturesA.length);
+	}
+
+	console.log(cost);
+	// convert from finding the MINIMIZED COST to finding the MAXIMIZED COST
+	var info = Code.info2DArray(cost);
+	var max = info["max"];
+	var min = info["min"];
+	var range = info["range"];
+	for(i=0; i<bestFeaturesA.length; ++i){
+		for(j=0; j<bestFeaturesB.length; ++j){
+			cost[i][j] = max - cost[i][j];
+		}
+	}
+	console.log("minimizing .........");
+
+	// for(i=0; i<bestFeaturesA.length; ++i){
+	// 	var featureA = bestFeaturesA[i];
+	// 	var pointA = featureA["point"];
+	// 	var matchesA = featureA["matches"];
+	// 	for()
+	// 	cost[i][j] = 
+	// }
+	// replace missings with 
+
+	//Code.array2DtoString(cost);
 	var result = Code.minimizedAssignmentProblem(cost);
 	var edges = result["edges"];
 	var cost = result["cost"];
-	console.log(cost);
+	var sizeN = edges.length;
+	var matches = [];
 	for(var i=0; i<sizeN; ++i){
-		console.log(i+": "+edges[i][0]+" => "+edges[i][1]);
+		var I = edges[i][0];
+		var J = edges[i][1];
+		console.log(i+": "+I+" => "+J);
+		var featureA = bestFeaturesA[I];
+		var pointA = featureA["point"];
+		var featureB = bestFeaturesB[J];
+		var pointB = featureB["point"];
+		matches.push({"score":0, "pointA":pointA, "pointB":pointB});
 	}
+
+	this.drawMatches(matches, 0,0, 400,0);
 	
 
 

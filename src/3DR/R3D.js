@@ -1834,7 +1834,7 @@ R3D.filterFeatureListSimilarRGB = function(originalList, r,g,b, wid,hei, range){
 	// convert to local objects
 	var features = [];
 	for(i=0; i<originalList.length; ++i){
-		var matches = new PriorityQueue(sorting, 10);
+		var matches = new PriorityQueue(sorting, 20); // 10 ? -> 100 ?
 		features[i] = {"point":originalList[i], "matches":matches, "score":0};
 	}
 	// record similarities
