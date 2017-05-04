@@ -59,6 +59,7 @@ R3D.uniformScale3D = function(pointsA,pointsB, centroidA, centroidB){
 // 	var cov = new Matrix(2,2).setFromArray([a, b, c, d]);
 // 	return cov;
 // }
+
 R3D.covariance2D = function(points, centroid){
 	var c = centroid!==undefined ? centroid : R3D.centroid2D(points);
 	var i, len=points.length;
@@ -1903,6 +1904,98 @@ R3D.filterFeatureListSimilarRGB = function(originalList, r,g,b, wid,hei, range){
 	 	console.log(newList[i].z);
 	}
 	return newList;
+}
+
+
+
+R3D.optimumScaleForPoint = function(imageSource, size, point, offset){ // imageMat
+	offset = offset!==undefined ? offset : V2D(0,0);
+	//var expectedEntropy = 2.0; // 1= zoomed in, 3 = zoomed out
+	var expectedEntropy = 2.0; 
+	var entropyToScaleRatio = 0.5;
+	// record entropy at various scales, record entropy that reached the point
+	// if optiumum scale is outside range => scale it back in by a gradual equation
+	var scaleTimes = 10;
+	// var minScalePower = -3; // 0.125
+	// var maxScalePower = 5; // 32
+	var minScalePower = -2; // 0.25
+	var maxScalePower = 4; // 16
+	var entropyValues = [];
+	var scaleValues = [];
+	for(i=0; i<scaleTimes; ++i){
+		/*
+R3D.js:1926 0 : 0.25
+R3D.js:1926 1 : 0.4286219914265364
+R3D.js:1926 2 : 0.7348672461377993
+R3D.js:1926 3 : 1.259921049894873
+R3D.js:1926 4 : 2.1601194777846118
+R3D.js:1926 5 : 3.7034988491491627
+R3D.js:1926 6 : 6.349604207872796
+R3D.js:1926 7 : 10.886320001395017
+R3D.js:1926 8 : 18.664464633217854
+R3D.js:1926 9 : 32
+		*/
+		var p = i/(scaleTimes-1);
+		var power = minScalePower + (maxScalePower - minScalePower)*p;
+		scale = Math.pow(2, power);
+		// 
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DScale(matrix,scale,scale);
+		//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
+		// var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,1.6, testSize.x,testSize.y, testMatrix);
+		// BLUR
+		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,1.6, size.x,size.y, matrix);
+		// RECAPTURE
+
+		//maskOutCenter = undefined;// ImageMat.circleMask(size.x,size.y);
+		maskOutCenter = ImageMat.circleMask(size.x,size.y);
+
+		//
+		var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
+		var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
+		var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
+		var entropy = (entropyR + entropyG + entropyB)/3.0;
+		scaleValues.push(scale);
+		entropyValues.push(entropy);
+		console.log(i+" : "+scale+". == "+entropy);
+
+		var gry = image.gry();
+		var img = GLOBALSTAGE.getFloatRGBAsImage(gry, gry, gry, image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().translate(offset.x, offset.y + size.y*i);
+		GLOBALSTAGE.addChild(d);
+	}
+	console.log("DONE SCALES");
+
+	var locations = Code.findGlobalValue1D(entropyValues,expectedEntropy);
+	console.log("locations: "+locations.length);
+	if(locations.length>0){
+		var location = locations[locations.length-1]; // last = smallest
+		var optimumScale = Code.interpolateValue1D(scaleValues, location);
+		//optimumScale = Math.exp(Math.log(optimumScale) - 0.5);
+
+		optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+
+		// 0.25 - 4.0 == acceptible range
+		// 0 - 0.25 => scale up
+		// 4.0 - INF => scale down
+		// IF OUTSIDE THIS RANGE => probly not a good scale
+
+
+		scale = optimumScale;
+
+		var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DScale(matrix,scale,scale);
+		image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
+		var gry = image.gry();
+		var img = GLOBALSTAGE.getFloatRGBAsImage(gry, gry, gry, image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().translate(offset.x, offset.y + size.y*i);
+		GLOBALSTAGE.addChild(d);
+
+		return optimumScale;
+	}
+	return null;
 }
 
 

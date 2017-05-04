@@ -461,18 +461,8 @@ if(optimumScale==null){
 optimumScale = Code.interpolateValue1D(maxScales, location);
 console.log("optimumScale  : "+optimumScale+"");
 
-
-
-
-
-
-
 // optimumScale = Math.floor(optimumScale);
 // optimumScale = displayScores[optimumScale].x; // should interpolate instead
-
-
-
-
 
 d = new DOText(""+optimumScale+"");
 d.matrix().translate(700, 300);

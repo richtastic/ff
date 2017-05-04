@@ -1031,20 +1031,20 @@ ImageMat.valueFromCDF = function(cdf,value){
 	return 1;
 }
 
-ImageMat.entropy = function(data, wid, hei){
-	return ImageMat.entropySimple(data, wid, hei);
+ImageMat.entropy = function(data, wid, hei, maskOutCenter){
+	return ImageMat.entropySimple(data, wid, hei, null, maskOutCenter);
 
 	var bins = Math.round(3 + Math.log2(data.length) * Math.log(data.length));
-	return ImageMat.entropySimple(data, wid, hei, bins);
+	return ImageMat.entropySimple(data, wid, hei, bins, maskOutCenter);
 
 	var i, len = wid*hei;
 	var cdf = ImageMat.cdf(data);
 	var entropy = 0;
 	return entropy;
 }
-ImageMat.histogram = function(data, wid, hei, buckets){ // range assumed [0,1]  |  16 => 4  |  100 => 10
+ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range assumed [0,1]  |  16 => 4  |  100 => 10
 	var value, i, bin, len = wid*hei;
-	buckets = buckets!==undefined ? buckets : Math.round(Math.sqrt(len));
+	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
 //buckets = Math.round(len*0.5);
 //buckets = Math.round(10);
 // 10 = 1.59
@@ -1056,17 +1056,23 @@ ImageMat.histogram = function(data, wid, hei, buckets){ // range assumed [0,1]  
 // 1000 = 5.12
 	var bm1 = buckets - 1;
 	var histogram = Code.newArrayZeros(buckets);
+	var mask = true;
 	for(i=0; i<len; ++i){
-		value = data[i];
-		bin = Math.min(Math.floor( value*buckets ),bm1);
-		histogram[bin] += 1;
+		if(maskOutCenter){
+			mask = maskOutCenter[i] != 0;
+		}
+		if(mask){
+			value = data[i];
+			bin = Math.min(Math.floor( value*buckets ),bm1);
+			histogram[bin] += 1;
+		}
 	}
 	return histogram;
 }
-ImageMat.entropySimple = function(data, wid, hei, buckets){ // e = - SUM p_i * log(p_i)
+ImageMat.entropySimple = function(data, wid, hei, buckets, maskOutCenter){ // e = - SUM p_i * log(p_i)
 	var i, count, value, bin, len = wid*hei;
 	// get histogram, 10~100 buckets
-	var histogram = ImageMat.histogram(data, wid,hei, buckets);
+	var histogram = ImageMat.histogram(data, wid,hei, buckets, maskOutCenter);
 	buckets = histogram.length;
 	var bm1 = buckets - 1;
 	var entropy = 0;
@@ -1315,9 +1321,35 @@ sigs
 4: 3.3546e-04
 */
 
-ImageMat.applyCirclenMask = function(image, imageWidth,imageHeight){
-	// TODO
-	var minDiameter = Math.min(imageWidth,imageHeight);
+ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ?
+	var i, j;
+	var len = imageWidth * imageHeight;
+	var mask = Code.newArrayZeros(len);
+	var cx = imageWidth * 0.5;
+	var cy = imageHeight * 0.5;
+	var rx = imageWidth * 0.5;
+	var ry = imageHeight * 0.5;
+	cx = Math.floor(cx);
+	cy = Math.floor(cy);
+	for(i=0; i<imageWidth; ++i){
+		for(j=0; j<imageHeight; ++j){
+			var d = Math.pow((i-cx)/rx,2) + Math.pow((j-cy)/ry,2);
+			if( d <= 1){
+				mask[j*imageWidth + i] = 1.0;
+			}
+		}
+	}
+	return mask;
+}
+
+ImageMat.prototype.applyCirclenMask = function(image, imageWidth, imageHeight){
+	var i;
+	var mask = ImageMat.circleMask(imageWidth, imageHeight);
+	var len = imageWidth*imageHeight;
+	for(i=0; i<len; ++i){
+		image[i] *= mask[i];
+	}
+	return image;
 }
 ImageMat.prototype.applyGaussianMask = function(){
 	ImageMat.applyGaussianMask(this.red(), this.width(), this.height());

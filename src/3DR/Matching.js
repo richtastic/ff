@@ -52,6 +52,35 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 
 
 
+// TEST OUT OPTIMUM ENTROPIES
+
+// right tankman corner
+// var pointA = new V2D(248,130);
+// var pointB = new V2D(252,115);
+// cup right corner
+var pointA = new V2D(94,138);
+var pointB = new V2D(117,90);
+
+var size = new V2D(25,25);
+
+var mask = ImageMat.circleMask(size.x,size.y);
+//console.log(Code.array1Das2DtoString(mask, size.x,size.y, 2) );
+
+
+scale = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(10, 300));
+console.log("A: "+scale);
+scale = R3D.optimumScaleForPoint(imageMatrixB, size, pointB, new V2D(50, 300));
+console.log("B: "+scale);
+
+this.drawAround([pointA], 0,0);
+this.drawAround([pointB], 400,0);
+
+return;
+//
+
+
+
+
 // var data = [.1,.25,.5,.5,.75];
 // var cdf = ImageMat.cdf(data);
 // console.log(cdf);
@@ -553,7 +582,7 @@ see how score reacts to various random static
 		return a["score"] < b["score"] ? -1 : 1
 		//return a["score"] < b["score"] ? 1 : -1
 	})
-	matches = Code.copyArray(matches, 0, 50);
+//	matches = Code.copyArray(matches, 0, 50);
 	this.drawMatches(matches, 0,0, 400,0);
 	
 
