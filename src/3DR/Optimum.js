@@ -318,6 +318,16 @@ var entropyR = ImageMat.entropy(featureBlur.red(), featureScale.width(), feature
 var entropyG = ImageMat.entropy(featureBlur.grn(), featureScale.width(), featureScale.height());
 var entropyB = ImageMat.entropy(featureBlur.blu(), featureScale.width(), featureScale.height());
 score = (entropyR + entropyG + entropyB)/3.0;
+
+
+var residualR = ImageMat.entropyResidual(featureBlur.red(), featureScale.width(), featureScale.height());
+var residualG = ImageMat.entropyResidual(featureBlur.grn(), featureScale.width(), featureScale.height());
+var residualB = ImageMat.entropyResidual(featureBlur.blu(), featureScale.width(), featureScale.height());
+
+score = (residualR + residualG + residualB)/3.0;
+
+
+//score = (residualR*entropyR + residualG*entropyG + residualB*entropyB)/3.0;
 //score = Math.log(score);
 //score = Math.sqrt(score); // zoom out slightly
 

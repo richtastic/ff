@@ -954,8 +954,18 @@ ImageMat.printBadData = function(data, wid,hei){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------ fxns
-ImageMat.cdf = function(data){ // cumulative distribution function | range assumed [0,1]
+ImageMat.cdf = function(data, mask){ // cumulative distribution function | range assumed [0,1]
 	var i, len = data.length;
+	if(mask){
+		var newData = [];
+		for(i=0; i<len; ++i){
+			if(mask[i] != 0){
+				newData.push(data[i]);
+			}
+		}
+		data = newData;
+		len = data.length;
+	}
 	var lm1 = len - 1;
 	var sorted = data.sort(function(a,b){
 		return a < b ? -1 : 1;
@@ -1043,8 +1053,13 @@ ImageMat.entropy = function(data, wid, hei, maskOutCenter){
 	return entropy;
 }
 ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range assumed [0,1]  |  16 => 4  |  100 => 10
-	var value, i, bin, len = wid*hei;
+	var value, i, bin, len = data.length;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
+	//buckets =  Math.pow(len,0.5);
+	//buckets =  Math.round(Math.pow(len,0.33333));
+	//console.log(buckets)
+	// buckets = Math.round(Math.pow(len,0.333333333)); buckets = Math.round(Math.pow(len,0.333333333));
+	// Math.round(Math.pow(len,0.333333333));
 //buckets = Math.round(len*0.5);
 //buckets = Math.round(10);
 // 10 = 1.59
@@ -1070,7 +1085,7 @@ ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range a
 	return histogram;
 }
 ImageMat.entropySimple = function(data, wid, hei, buckets, maskOutCenter){ // e = - SUM p_i * log(p_i)
-	var i, count, value, bin, len = wid*hei;
+	var i, count, value, p, bin;
 	// get histogram, 10~100 buckets
 	var histogram = ImageMat.histogram(data, wid,hei, buckets, maskOutCenter);
 	buckets = histogram.length;
@@ -1085,23 +1100,117 @@ ImageMat.entropySimple = function(data, wid, hei, buckets, maskOutCenter){ // e 
 	// 		nonEmpty += 1;
 	// 	}
 	// }
-	//var dx = 1.0/buckets;
+	var totalCount =Code.sumArray(histogram);
 	for(i=0; i<buckets; ++i){
-		value = data[i];
+		//value = data[i];
 		//bin = Math.min(Math.floor( value*buckets ),bm1);
 		//count = histogram[bin];
 		// get probability from histogram
 		count = histogram[i];
 		//p = count / len;
-		p = count / len;
+		p = count / totalCount;
 		if(p > 0){
 			entropy += p * Math.log2(p); // * dx;
+			//entropy += p * Math.log2(1/p); // * dx;
 		}
 	}
 	// var min = 0; // Math.pow(2,-buckets); // all same color
 	// var max = Math.log2(1.0/buckets);////buckets; // uniform buckets
 	return -entropy;
 }
+ImageMat.entropyResidual = function(data, wid, hei, maskOutCenter){
+	var i, count, value, p, bin, len = data.length;
+	var histogram = ImageMat.histogram(data, wid,hei, null, maskOutCenter);
+	buckets = histogram.length;
+	var bm1 = buckets - 1;
+	var entropy = 0;
+	var currentCount = 0;
+	var totalCount =Code.sumArray(histogram);
+	var cdf = [];
+	count = 0;
+	for(i=0; i<buckets; ++i){
+		count += histogram[i];
+		cdf.push(count);
+	}
+	var mask = 1;
+	for(i=0; i<data.length; ++i){
+		value = data[i];
+		if(maskOutCenter){
+			mask = maskOutCenter[i];
+		}
+		if(mask!==0){
+			bin = Math.min(Math.floor( value*buckets ),bm1);
+			p = cdf[i] / totalCount;
+			if(p > 0){
+				entropy += p * Math.log2(p); // * dx;
+			}
+		}
+	}
+	return -entropy;
+}
+ImageMat.entropyResidualX = function(data, wid, hei, maskOutCenter){
+	var i, p, count;
+	//var histogram = ImageMat.histogram(data, wid,hei, null, maskOutCenter);
+	var cdf = ImageMat.cdf(data, maskOutCenter);
+		var cdfX = cdf["x"];
+		var cdfY = cdf["y"];
+	var len = cdfX.length;
+	var lm1 = len-1;
+	var entropy = 0;
+	var totalCount = cdf[lm1];
+	var count = 0;
+	var mask = 1;
+	for(i=0; i<data.length; ++i){
+		if(maskOutCenter){
+			mask = maskOutCenter[i];
+		}
+		if(mask!=0){
+			var value = data[i];
+			var p = ImageMat.valueFromCDF(cdf,value);
+			entropy += p * Math.log2(p);
+		}
+		//console.log(i+": "+count+" / "+totalCount);
+	}
+	console.log(-entropy);
+	return -entropy;
+}
+
+ImageMat.entropyInWindow = function(data, wid,hei, winX,winY){
+	if(winX==undefined || winY==undefined){
+		return 
+	}
+	var testSizeX = winX*2 + 1;
+	var testSizeY = winY*2 + 1;
+
+	var mask = ImageMat.circleMask(testSizeX,testSizeY)
+	var totalEntropy = Code.newArrayZeros(wid*hei);
+	var i, j, nJ, nI, index, range;
+	var wm1 = wid-1, hm1 = hei-1;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			index = j*wid + i;
+			var d = [];
+			var iStart = i - winX;
+			var iEnd = i + winX;
+			var jStart = j - winY;
+			var jEnd = j + winY;
+			for(nJ=jStart; nJ<=jEnd; ++nJ){
+				for(nI=iStart; nI<=iEnd; ++nI){ 
+					var ii = Math.min(Math.max(nI,0),wm1);
+					var jj = Math.min(Math.max(nJ,0),hm1);
+					var iIndex = jj*wid + ii;
+					var value = data[iIndex];
+					d.push(value);
+				}
+			}
+			//entropy = ImageMat.entropy(d, testSizeX, testSizeY, mask);
+			entropy = ImageMat.entropyResidual(d, testSizeX, testSizeY, mask);
+			totalEntropy[index] = entropy;
+		}
+	}
+	return {"value":totalEntropy, "width":wid, "height":hei};
+}
+
 ImageMat.range = function(data, wid,hei){
 	if(wid==0||hei==0){
 		return 0;
@@ -2190,9 +2299,10 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	minY = y - minY;
 	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 	if(isNaN(val)){
+
 		console.log("PT",wid,hei,x,y);
 		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP );
-		console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
+		//console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
 		return 0;
 	}
 	val = Math.min(Math.max(val,0.0),1.0);
@@ -2651,8 +2761,8 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	var img;
 	var fullX = x; // wtf
 	var fullY = y; // wtf
-//	console.log(fullX,fullY)
-//	console.log("blurr");
+	// console.log(fullX,fullY)
+	// console.log("blurr: "+blurr);
 	if(blurr){
 		gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);

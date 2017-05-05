@@ -51,15 +51,45 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
-
 // TEST OUT OPTIMUM ENTROPIES
 
+// left tankmen toe
+// var pointA = new V2D(209,149);
+// var pointB = new V2D(209,133);
+// right tankmen goggle
+var pointA = new V2D(250,71);
+var pointB = new V2D(245,94);
 // right tankman corner
 // var pointA = new V2D(248,130);
 // var pointB = new V2D(252,115);
 // cup right corner
-var pointA = new V2D(94,138);
-var pointB = new V2D(117,90);
+// var pointA = new V2D(94,138);
+// var pointB = new V2D(117,90);
+// glasses center
+// var pointA = new V2D(145,203);
+// var pointB = new V2D(131,194);
+// mouse neck
+// var pointA = new V2D(348,182);
+// var pointB = new V2D(270,236);
+// origin
+// var pointA = new V2D(172,107);
+// var pointB = new V2D(212,46.5);
+// grid bottom
+// var pointA = new V2D(173,121);
+// var pointB = new V2D(203,72);
+// 12"
+// var pointA = new V2D(237.5,250.5);
+// var pointB = new V2D(179.5,253);
+// lighter handle
+// var pointA = new V2D(22,165);
+// var pointB = new V2D(49,149);
+// power bar - not good - noncircular
+// var pointA = new V2D(134.5,86.5);
+// var pointB = new V2D(156,61);
+// glassed dot right
+// var pointA = new V2D(189,180);
+// var pointB = new V2D(170,178.5);
+
 
 var size = new V2D(25,25);
 
@@ -67,15 +97,43 @@ var mask = ImageMat.circleMask(size.x,size.y);
 //console.log(Code.array1Das2DtoString(mask, size.x,size.y, 2) );
 
 
-scale = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(10, 300));
+scale = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(810, 20));
 console.log("A: "+scale);
-scale = R3D.optimumScaleForPoint(imageMatrixB, size, pointB, new V2D(50, 300));
+scale = R3D.optimumScaleForPoint(imageMatrixB, size, pointB, new V2D(850, 20));
 console.log("B: "+scale);
 
 this.drawAround([pointA], 0,0);
 this.drawAround([pointB], 400,0);
 
+
 return;
+
+// ENTROPY IMAGE:
+
+var size = 10;
+var entropyImage = ImageMat.entropyInWindow(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height(), size, size);
+entropyImage = entropyImage.value;
+entropyImage = ImageMat.getNormalFloat01(entropyImage);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(entropyImage, entropyImage, entropyImage, imageMatrixA.width(), imageMatrixA.height());
+	d = new DOImage(img);
+	d.matrix().translate(400, 300);
+	GLOBALSTAGE.addChild(d);
+
+return;
+
+// OPTIMUM ENTROPY
+
+	entropyImage = R3D.optimumScaleForImage(imageMatrixA);
+	entropyImage = ImageMat.normalFloat01(entropyImage);
+	img = GLOBALSTAGE.getFloatRGBAsImage(entropyImage, entropyImage, entropyImage, imageMatrixA.width(), imageMatrixA.height());
+	d = new DOImage(img);
+	d.matrix().translate(400, 300);
+	GLOBALSTAGE.addChild(d);
+
+return;
+
+
 //
 
 
@@ -101,6 +159,7 @@ return;
 // return;
 
 // ideal ~ scale = 1
+/*
 	var scale = 1.0;
 		scale = 1.0 / scale;
 	var size = 16;
@@ -123,7 +182,7 @@ var y = cdf.y;
 // console.log("y = ["+y+"];");
 
 
-
+*/
 
 
 
@@ -379,14 +438,14 @@ see how score reacts to various random static
 	// this.showComparrison(imageGradA, imageGradB);
 
 	
-	var imageGradARed = ImageMat.gradientMagnitude(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
-	var imageGradAGrn = ImageMat.gradientMagnitude(imageMatrixA.grn(), imageMatrixA.width(), imageMatrixA.height()).value;
-	var imageGradABlu = ImageMat.gradientMagnitude(imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height()).value;
-	var imageGradMagA = new ImageMat(imageMatrixA.width(), imageMatrixA.height(), imageGradARed, imageGradAGrn, imageGradABlu);
-	var imageGradBRed = ImageMat.gradientMagnitude(imageMatrixB.red(), imageMatrixB.width(), imageMatrixB.height()).value;
-	var imageGradBGrn = ImageMat.gradientMagnitude(imageMatrixB.grn(), imageMatrixB.width(), imageMatrixB.height()).value;
-	var imageGradBBlu = ImageMat.gradientMagnitude(imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height()).value;
-	var imageGradMagB = new ImageMat(imageMatrixB.width(), imageMatrixB.height(), imageGradBRed, imageGradBGrn, imageGradBBlu);
+	// var imageGradARed = ImageMat.gradientMagnitude(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
+	// var imageGradAGrn = ImageMat.gradientMagnitude(imageMatrixA.grn(), imageMatrixA.width(), imageMatrixA.height()).value;
+	// var imageGradABlu = ImageMat.gradientMagnitude(imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height()).value;
+	// var imageGradMagA = new ImageMat(imageMatrixA.width(), imageMatrixA.height(), imageGradARed, imageGradAGrn, imageGradABlu);
+	// var imageGradBRed = ImageMat.gradientMagnitude(imageMatrixB.red(), imageMatrixB.width(), imageMatrixB.height()).value;
+	// var imageGradBGrn = ImageMat.gradientMagnitude(imageMatrixB.grn(), imageMatrixB.width(), imageMatrixB.height()).value;
+	// var imageGradBBlu = ImageMat.gradientMagnitude(imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height()).value;
+	// var imageGradMagB = new ImageMat(imageMatrixB.width(), imageMatrixB.height(), imageGradBRed, imageGradBGrn, imageGradBBlu);
 	//this.showComparrison(imageGradMagA, imageGradMagB);
 
 	// var imageGradARed = ImageMat.gradientAngle(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
@@ -465,7 +524,6 @@ see how score reacts to various random static
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
 */
-
 	//bestFeaturesA = Code.copyArray(bestFeaturesA, 0,25);
 
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
@@ -1122,7 +1180,7 @@ Matching.dropArrayPoints = function(array, threshold, property, isLess){
 		for(i=0; i<len; ++i){
 			value = array[i];
 			value = value[property];
-			console.log(value+" "+(isLess?"<":">")+" "+limit);
+			//console.log(value+" "+(isLess?"<":">")+" "+limit);
 			if( (isLess && value < limit) || (!isLess && value > limit) ){
 				a.push(array[i]);
 			}

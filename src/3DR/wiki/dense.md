@@ -332,6 +332,20 @@ x> GET CORNERS
 
 - best match is one where match is top choice in both of the items lists'
 
+- save global arrays to lazily generate as features are procured, of:
+	- optimum scale
+	- optimum affine scale
+
+x OPTIMUM ENTROPY SCALE:
+	for s different scales (~10)
+	*) scale image to s
+	*) blur image
+	*) calcualate entropy at each point by summing inside window (~25) [circle mask? gaussian mask?]
+	*) scale entropy image up to orginal size
+	*) blur entropies (?)
+	*) record entropy at scale @ entropy-scale image
+	=> for each pixel : find when entropy is @ value & convert to optimum scale value
+
 2 BEST MATCHING ALGORITHMS:
 	- global optimized connections minimiziation of total error:
 		- have list of next best match

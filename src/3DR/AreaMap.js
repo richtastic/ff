@@ -1868,6 +1868,7 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	
 	// TODO: find local optimal overall scale
 		// ...
+//	scale = R3D.optimumScaleForPoint(win, new V2D(size,size), point, null);
 	this._scale = scale;
 	// large sigma
 		scale = 1.0 / scale; // inverse

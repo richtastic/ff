@@ -878,6 +878,13 @@ Code.newArray = function(){
 	}
 	return arr;
 }
+Code.newArrayArrays = function(len){
+	var i, arr = new Array(len);
+	for(i=len;i--;){
+		arr[i] = [];
+	}
+	return arr;
+}
 Code.newArrayZeros = function(len){
 	return Code.newArrayConstant(len, 0.0);
 }
@@ -4064,7 +4071,7 @@ Code.interpolateValue1D = function(array, location){
 		var max = min + 1;
 		var a = array[min];
 		var b = array[max];
-		console.log("interpolate: "+min+" | "+location+" | "+max);
+//		console.log("interpolate: "+min+" | "+location+" | "+max);
 		var range = b-a;
 		if(range==0){
 			return a;
