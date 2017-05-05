@@ -18,7 +18,8 @@ function Matching(){
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
 	// this._keyboard.addListeners();
 
-	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
@@ -51,14 +52,22 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
+
+// var img = [0,0,0,0,0,1,2,3,4,5,5,5,5,5,5];
+// var his = ImageMat.histogram(img, 3,4);
+// console.log(img);
+// console.log(his);
+// return;
+
+
 // TEST OUT OPTIMUM ENTROPIES
 
 // left tankmen toe
 // var pointA = new V2D(209,149);
 // var pointB = new V2D(209,133);
 // right tankmen goggle
-var pointA = new V2D(250,71);
-var pointB = new V2D(245,94);
+// var pointA = new V2D(250,71);
+// var pointB = new V2D(245,94);
 // right tankman corner
 // var pointA = new V2D(248,130);
 // var pointB = new V2D(252,115);
@@ -90,11 +99,30 @@ var pointB = new V2D(245,94);
 // var pointA = new V2D(189,180);
 // var pointB = new V2D(170,178.5);
 
+/// 29: - mask
+// var pointA = new V2D(303,81);
+// var pointB = new V2D(245,94);
+/// 29 - foot
+var pointA = new V2D(195,255);
+var pointB = new V2D(209,133);
 
-var size = new V2D(25,25);
+
+// MORE BUCKET SIZES SCALES THE ENTROPY UP
+
+// A LARGER AREA IS SHIFTED UP VERTICALLY FOR SOME REASON? -- shows a higher entropy ?
+// SOMETHING TO DO WITH BUCKET / DENSITY / SAMPLES
+// EX: @40 = ~0.035 
+
+// A LARGER AREA == A LESS ZOOMED IN AREA:
+// @40 = 1/2 of @20
+//var size = new V2D(50,50);
+//var size = new V2D(39,39);
+//var size = new V2D(40,40);
+var size = new V2D(20,20);
 
 var mask = ImageMat.circleMask(size.x,size.y);
 //console.log(Code.array1Das2DtoString(mask, size.x,size.y, 2) );
+
 
 
 scale = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(810, 20));
@@ -106,7 +134,7 @@ this.drawAround([pointA], 0,0);
 this.drawAround([pointB], 400,0);
 
 
-return;
+//return;
 
 // ENTROPY IMAGE:
 

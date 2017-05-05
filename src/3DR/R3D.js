@@ -1998,8 +1998,8 @@ R3D.optimumScaleForPoint = function(imageSource, size, point, offset){ // imageM
 -3 => 5 :
 	*/
 	//offset = offset!==undefined ? offset : V2D(0,0);
-	//var expectedEntropy = 3.0; 
-	var expectedEntropy = 0.25; 
+	var expectedEntropy = 0.15; 
+	//var expectedEntropy = 0.25;  // residual
 	// record entropy at various scales, record entropy that reached the point
 	// if optiumum scale is outside range => scale it back in by a gradual equation
 	var scaleTimes = 20;
@@ -2007,7 +2007,9 @@ R3D.optimumScaleForPoint = function(imageSource, size, point, offset){ // imageM
 	// var maxScalePower = 5; // 32
 	// var minScalePower = -2; // 0.25
 	// var maxScalePower = 4; // 16
-	var minScalePower = -4;
+	// var minScalePower = -4;
+	// var maxScalePower = 8;
+	var minScalePower = -2;
 	var maxScalePower = 8;
 	var entropyValues = [];
 	var scaleValues = [];
@@ -2031,12 +2033,14 @@ R3D.optimumScaleForPoint = function(imageSource, size, point, offset){ // imageM
 		maskOutCenter = ImageMat.circleMask(size.x,size.y);
 
 		//
-		// var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
-		// var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
-		// var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
-var entropyR = ImageMat.entropyResidual(image.red(), size.x, size.y, maskOutCenter);
-var entropyG = ImageMat.entropyResidual(image.grn(), size.x, size.y, maskOutCenter);
-var entropyB = ImageMat.entropyResidual(image.blu(), size.x, size.y, maskOutCenter);
+		var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
+		var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
+		var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
+// console.log("ENTROPY MAX SHOULD BE: "+( -Math.log2(1/(size.x*size.y)) ) );
+// console.log("ENTROPY MIN SHOULD BE: "+ (1/(size.x*size.y) ) );
+// var entropyR = ImageMat.entropyResidual(image.red(), size.x, size.y, maskOutCenter);
+// var entropyG = ImageMat.entropyResidual(image.grn(), size.x, size.y, maskOutCenter);
+// var entropyB = ImageMat.entropyResidual(image.blu(), size.x, size.y, maskOutCenter);
 		var entropy = (entropyR + entropyG + entropyB)/3.0;
 		scaleValues.push(scale);
 		entropyValues.push(entropy);
@@ -2050,18 +2054,20 @@ GLOBALSTAGE.addChild(d);
 }
 	}
 	var locations = Code.findGlobalValue1D(entropyValues,expectedEntropy);
+
+
+console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
+
+
 	//console.log("locations: "+locations.length);
 	if(locations.length>0){
 		var location = locations[locations.length-1]; // last = smallest
 var optimumEntropy = Code.interpolateValue1D(entropyValues, location);
 console.log(" "+Code.minArray(entropyValues)+" - "+Code.maxArray(entropyValues));
 console.log(".   => OPT ENT: "+optimumEntropy);
-
-console.log("\n\nx = ["+entropyValues+"];\n\n");
-
 		var optimumScale = Code.interpolateValue1D(scaleValues, location);
-		//optimumScale = Math.exp(Math.log(optimumScale) - 0.5);
 		optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+		//optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
 
 		// 0.25 - 4.0 == acceptible range
 		// 0 - 0.25 => scale up

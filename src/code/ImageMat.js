@@ -1054,21 +1054,22 @@ ImageMat.entropy = function(data, wid, hei, maskOutCenter){
 }
 ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range assumed [0,1]  |  16 => 4  |  100 => 10
 	var value, i, bin, len = data.length;
-	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
-	//buckets =  Math.pow(len,0.5);
+	//buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
+	//buckets = Math.round(len/10);
+	buckets =  Math.round( Math.pow(len,0.5) );
+//buckets = Math.round(len/10);
 	//buckets =  Math.round(Math.pow(len,0.33333));
 	//console.log(buckets)
 	// buckets = Math.round(Math.pow(len,0.333333333)); buckets = Math.round(Math.pow(len,0.333333333));
 	// Math.round(Math.pow(len,0.333333333));
-//buckets = Math.round(len*0.5);
-//buckets = Math.round(10);
-// 10 = 1.59
-// 20 = 2.14
-// 30 = 2.48
-// 40 = 2.72
-// 50 = 2.90
-// 100 = 3.52
-// 1000 = 5.12
+	var info = Code.infoArray(data);
+	var infoMax = info["max"];
+	var infoMin = info["min"];
+	var infoRange = info["range"];
+		infoMin = 0;
+		infoMax = 1;
+		infoRange = infoMax - infoMin;
+
 	var bm1 = buckets - 1;
 	var histogram = Code.newArrayZeros(buckets);
 	var mask = true;
@@ -1078,6 +1079,7 @@ ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range a
 		}
 		if(mask){
 			value = data[i];
+			value = (value - infoMin)/infoRange;
 			bin = Math.min(Math.floor( value*buckets ),bm1);
 			histogram[bin] += 1;
 		}
@@ -1086,21 +1088,12 @@ ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range a
 }
 ImageMat.entropySimple = function(data, wid, hei, buckets, maskOutCenter){ // e = - SUM p_i * log(p_i)
 	var i, count, value, p, bin;
-	// get histogram, 10~100 buckets
 	var histogram = ImageMat.histogram(data, wid,hei, buckets, maskOutCenter);
 	buckets = histogram.length;
 	var bm1 = buckets - 1;
 	var entropy = 0;
-	// go over all pixels
-	//for(i=0; i<len; ++i){
-	// var nonEmpty = 0;
-	// for(i=0; i<buckets; ++i){
-	// 	count = histogram[i];
-	// 	if(count>0){
-	// 		nonEmpty += 1;
-	// 	}
-	// }
-	var totalCount =Code.sumArray(histogram);
+	var entropyCount = 0;
+	var totalCount = Code.sumArray(histogram);
 	for(i=0; i<buckets; ++i){
 		//value = data[i];
 		//bin = Math.min(Math.floor( value*buckets ),bm1);
@@ -1112,11 +1105,26 @@ ImageMat.entropySimple = function(data, wid, hei, buckets, maskOutCenter){ // e 
 		if(p > 0){
 			entropy += p * Math.log2(p); // * dx;
 			//entropy += p * Math.log2(1/p); // * dx;
+			entropyCount++;
 		}
 	}
+
+	var maxE = -Math.log2(1.0/data.length);
+//	console.log("MAX:",entropyCount,totalCount,data.length,maxE,histogram);
+
+
 	// var min = 0; // Math.pow(2,-buckets); // all same color
 	// var max = Math.log2(1.0/buckets);////buckets; // uniform buckets
-	return -entropy;
+// /entropyCount
+	return -entropy/maxE;
+	//return -entropy/Math.pow(entropyCount,1/3);
+	//return -entropy/Math.pow(wid,1/2);
+	// MAX ENTROPY @ ?
+	// MIN ENTROPY @ ?
+	
+	// return -entropy/maxE;
+	//return -entropy/wid; // NO
+	//return -entropy/entropyCount; // NO
 }
 ImageMat.entropyResidual = function(data, wid, hei, maskOutCenter){
 	var i, count, value, p, bin, len = data.length;
@@ -1125,7 +1133,7 @@ ImageMat.entropyResidual = function(data, wid, hei, maskOutCenter){
 	var bm1 = buckets - 1;
 	var entropy = 0;
 	var currentCount = 0;
-	var totalCount =Code.sumArray(histogram);
+	var totalCount = Code.sumArray(histogram);
 	var cdf = [];
 	count = 0;
 	for(i=0; i<buckets; ++i){
@@ -1203,8 +1211,8 @@ ImageMat.entropyInWindow = function(data, wid,hei, winX,winY){
 					d.push(value);
 				}
 			}
-			//entropy = ImageMat.entropy(d, testSizeX, testSizeY, mask);
-			entropy = ImageMat.entropyResidual(d, testSizeX, testSizeY, mask);
+			entropy = ImageMat.entropy(d, testSizeX, testSizeY, mask);
+			//entropy = ImageMat.entropyResidual(d, testSizeX, testSizeY, mask);
 			totalEntropy[index] = entropy;
 		}
 	}

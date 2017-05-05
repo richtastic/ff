@@ -1258,7 +1258,7 @@ Code.min2DArray = function(array2D){
 }
 Code.info2DArray = function(array2D){
 	var element, arr, i, j, lenJ, lenI = array2D.length;
-	var min = array2D[0][0]
+	var min = array2D[0][0];
 	var max = min;
 	for(i=0; i<lenI; ++i){
 		arr = array2D[i];
@@ -1268,6 +1268,18 @@ Code.info2DArray = function(array2D){
 			min = Math.min(min, element);
 			max = Math.max(max, element);
 		}
+	}
+	var range = max - min;
+	return {"max":max, "min":min, "range":range};
+}
+Code.infoArray = function(array){
+	var element, arr, i, len = array.length;
+	var min = array[0];
+	var max = min;
+	for(i=0; i<len; ++i){
+		element = array[i];
+		min = Math.min(min, element);
+		max = Math.max(max, element);
 	}
 	var range = max - min;
 	return {"max":max, "min":min, "range":range};

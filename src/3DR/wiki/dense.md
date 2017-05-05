@@ -255,6 +255,23 @@ min<sub>a<sub>i</sub></sub> = &Sigma;e<sub>i</sub>
 
 
 
+
+
+entropy max @ 
+
+entropy min @ all equal:
+p = 1/n
+sum p * log(p) = 
+n * [ (1/n) * log(1/n) ] = 
+
+[log(1/n)] = 
+
+
+
+
+
+
+
 matching individual features
 
 
