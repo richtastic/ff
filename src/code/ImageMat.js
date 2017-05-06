@@ -1249,6 +1249,14 @@ ImageMat.entropyInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, 
 			d.push(value);
 		}
 	}
+	// TRY NORMALIZING
+	var minValue = Code.minArray(d);
+	var maxValue = Code.maxArray(d);
+	var range = maxValue - minValue;
+	range = 1.0/(range!=0 ? range : 1.0);
+	for(i=0; i<d.length; ++i){
+		d[i] = d[i] / range;
+	}
 	//console.log(d);
 	entropy = ImageMat.entropy(d, winX, winY, mask);
 	return entropy;

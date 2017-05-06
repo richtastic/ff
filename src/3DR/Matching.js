@@ -100,11 +100,26 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 
 /// 29: - mask
 // var pointA = new V2D(303,81);
-// var pointB = new V2D(245,94);
+// var pointB = new V2D(243,101);
 /// 29 - foot
-var pointA = new V2D(195,255);
-var pointB = new V2D(209,133);
+// var pointA = new V2D(195,255);
+// var pointB = new V2D(209,133);
+/// 29 origin - bad
+// var pointA = new V2D(144.5,175);
+// var pointB = new V2D(211,46);
+/// 29 grid end - poor
+// var pointA = new V2D(141,206);
+// var pointB = new V2D(202,82);
+/// 29 battery base - 
+// var pointA = new V2D(60,236);
+// var pointB = new V2D(166,102);
+/// 29 brick corner
+// var pointA = new V2D(298,243);
+// var pointB = new V2D(253,133);
 
+/// 29 grid cross
+// var pointA = new V2D(182,150);
+// var pointB = new V2D(229,46);
 
 // MORE BUCKET SIZES SCALES THE ENTROPY UP
 
@@ -124,7 +139,7 @@ var mask = ImageMat.circleMask(size.x,size.y);
 
 
 
-pointA = new V2D( Math.random()*(400-80) + 40, Math.random()*(300-80) + 40 );
+//pointA = new V2D( Math.random()*(400-80) + 40, Math.random()*(300-80) + 40 );
 
 
 //pointA = new V3D(42.80739301492822,228.66508665936004); // light
@@ -134,96 +149,88 @@ pointA = new V2D( Math.random()*(400-80) + 40, Math.random()*(300-80) + 40 );
 //pointA = new V3D(302.37055083046306,78.13764202690865); // eye corner
 //pointA = new V3D(271.30243794283433,97.52262218232931); // mouth with high scale
 //pointA = new V3D(152.74792531499037,214.98671609135167); // open area - corner
+//pointA = new V3D(163.16450327907205,145.95838173533863); // grid with high scale
+//pointA = new V3D(285.7995608466945,223.02049820508222); // knee top
+//pointA = new V3D(233.52002044901178,224.04385786541434);
+//pointA = new V3D(184.4083162171843,115.39080100771517); // grid corner
+
 
 console.log("pointA = new V3D("+pointA.x+","+pointA.y+");");
 var copyPointA = pointA.copy();
 var copyImageMatrixA = imageMatrixA;
 this.drawAround([pointA], 0,0);
+var copyPointB = pointB.copy();
+var copyImageMatrixB = imageMatrixB;
+this.drawAround([pointB], 400,0);
 
-// INCREASE AREA TO REMOVE NOISE:
-var scaler = 1.0;
-var sigma = null; // 1.0
-imageMatrixA = imageMatrixA.extractRectFromFloatImage(imageMatrixA.width()*0.5,imageMatrixA.width()*0.5,1.0/scaler,  sigma  ,imageMatrixA.width()*scaler,imageMatrixA.width()*scaler);
+
+
+
+var referenceScale = 15;
+
+
+var scaler = 2.0;
+imageMatrixA = imageMatrixA.extractRectFromFloatImage(imageMatrixA.width()*0.5,imageMatrixA.width()*0.5,1.0/scaler,  null, imageMatrixA.width()*scaler,imageMatrixA.width()*scaler);
 	var imageGradARed = ImageMat.gradientMagnitude(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
 	var imageGradAGrn = ImageMat.gradientMagnitude(imageMatrixA.grn(), imageMatrixA.width(), imageMatrixA.height()).value;
 	var imageGradABlu = ImageMat.gradientMagnitude(imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height()).value;
 	var imageGradMagA = new ImageMat(imageMatrixA.width(), imageMatrixA.height(), imageGradARed, imageGradAGrn, imageGradABlu);
-pointA.x *= scaler;
-pointA.y *= scaler;
+	var imageGradMagAGry = imageGradMagA.gry();
+	//var imageGradMagAGry = imageMatrixA.gry();
+pointA.scale(scaler);
 
-//var pointA = new V2D(195,255);
-// 5 - 21
-// var winStart = 1;
-// var winEnd = 101;
-
-var winStart = 1; // grid points
-var winEnd = 105; // wide open areas
-var referenceScale = 15;
-var expectedEntropy = 0.25; // [0-0.5] 0.2 is about when noise more reliably ends
-// derivative: 0.1 - 0.15
-var winInc = 1;
-var pointX = Math.round(pointA.x);
-var pointY = Math.round(pointA.y);
-var entropies = [];
-var entropies2 = [];
-var scales = [];
-
-var imageGry = imageMatrixA.gry();
-var gradientGry = imageGradMagA.gry();
-for(i=winStart; i<=winEnd; i+=winInc){ // only need to go until past expected --- binary search?
-	var scale = referenceScale/i;
-	var mask = ImageMat.circleMask(i,i);
-	//var entropy = ImageMat.entropyInPixelArea(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
-	//entropy = ImageMat.rangeInPixelArea(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
-	//entropy = ImageMat.rangeInPixelArea(imageGradMagA.red(), imageGradMagA.width(), imageGradMagA.height(), pointX,pointY, i, i, mask); /// @11 : 0.3(corner), 0.1(blob), 0.35(high gradient area)
-		//entropy = entropy / i;
-		//entropy = entropy / (i*i);
-		//entropy = (i*i) / entropy;
-	var entropyImage = ImageMat.entropyInPixelArea(imageGry, imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
-	var entropyGrad = ImageMat.entropyInPixelArea(gradientGry, imageGradMagA.width(), imageGradMagA.height(), pointX,pointY, i, i, mask);
-	var rangeImage = ImageMat.rangeInPixelArea(imageGry, imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
-	var rangeGrad = ImageMat.rangeInPixelArea(gradientGry, imageGradMagA.width(), imageGradMagA.height(), pointX,pointY, i, i, mask);
-	var area = i * i;
-	var perimeter = i;
-	//entropy = rangeGrad / rangeImage ;
-	//entropy = rangeImage / rangeGrad;
-
-	//entropy = rangeGrad / Math.sqrt(i) ;
-
-	//entropy = entropyGrad;
-	entropy = entropyImage;
-
-scale = i;
-	entropies.push(entropy);
-	entropies2.push(entropyGrad);
-	scales.push(scale);
-}
-
-console.log("\nhold off;\nx1=["+scales+"];\n" + "\ny1=["+entropies+"];\n" + "plot(x1,y1,\"r-x\");\n\n");
-console.log("\nhold on;\nx2=["+scales+"];\n" + "\ny2=["+entropies2+"];\n" + "plot(x2,y2,\"b-x\");\n\n");
-var optimumScale = null;
+imageMatrixB = imageMatrixB.extractRectFromFloatImage(imageMatrixB.width()*0.5,imageMatrixB.width()*0.5,1.0/scaler,  null, imageMatrixB.width()*scaler,imageMatrixB.width()*scaler);
+	var imageGradBRed = ImageMat.gradientMagnitude(imageMatrixB.red(), imageMatrixB.width(), imageMatrixB.height()).value;
+	var imageGradBGrn = ImageMat.gradientMagnitude(imageMatrixB.grn(), imageMatrixB.width(), imageMatrixB.height()).value;
+	var imageGradBBlu = ImageMat.gradientMagnitude(imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height()).value;
+	var imageGradMagB = new ImageMat(imageMatrixB.width(), imageMatrixB.height(), imageGradBRed, imageGradBGrn, imageGradBBlu);
+	var imageGradMagBGry = imageGradMagB.gry();
+	//var imageGradMagBGry = imageMatrixB.gry();
+pointB.scale(scaler);
 
 
-	var locations = Code.findGlobalValue1D(entropies,expectedEntropy);
-	if(locations.length>0){
-		var location = locations[locations.length-1]; // last = largest
-		console.log(location);
-		optimumScale = Code.interpolateValue1D(scales, location);
-		optimumScale = referenceScale/optimumScale;
-		optimumScale = optimumScale * 0.5; // 2 times scaled in
-	}else{
-		console.log("missing a value .. "+j);
-	}
-	console.log(optimumScale);
-if(optimumScale){
+
+
+
+var optimumScaleA = R3D.optimumScaleForPoint(imageGradMagAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
+var optimumScaleB = R3D.optimumScaleForPoint(imageGradMagBGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
+// optimumScaleA /= 8;
+// optimumScaleB /= 8;
+// console.log(optimumScaleA);
+// console.log(optimumScaleA-4);
+// console.log( Math.log2(optimumScaleA - 4));
+// console.log( Math.pow(2,Math.log2(optimumScaleA - 4)) );
+// optimumScaleA = Math.pow(2,Math.log2(optimumScaleA - 4));
+// optimumScaleB = Math.pow(2,Math.log2(optimumScaleB - 4));
+// var optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+// optimumScaleA = Math.pow(2, Math.log2(optimumScaleA)-2);
+// optimumScaleB = Math.pow(2, Math.log2(optimumScaleB)-2);
+optimumScaleA = Math.pow(2, Math.log2(optimumScaleA)-2);
+optimumScaleB = Math.pow(2, Math.log2(optimumScaleB)-2);
+
+console.log(optimumScaleA);
+console.log(optimumScaleB);
+
+if(optimumScaleA){
 	pointA = copyPointA;
 	imageMatrixA = copyImageMatrixA;
-	var entropyImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0/optimumScale,null, referenceScale, referenceScale);
+	var entropyImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0/optimumScaleA,null, referenceScale, referenceScale);
 	console.log(entropyImage);
 	img = GLOBALSTAGE.getFloatRGBAsImage(entropyImage.red(), entropyImage.grn(), entropyImage.blu(), entropyImage.width(), entropyImage.height());
 	d = new DOImage(img);
 	d.matrix().scale(2.0);
 	d.matrix().translate(400, 300);
+	GLOBALSTAGE.addChild(d);
+}
+
+if(optimumScaleB){
+	pointB = copyPointB;
+	imageMatrixB = copyImageMatrixB;
+	var entropyImage = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y, 1.0/optimumScaleB,null, referenceScale, referenceScale);
+	img = GLOBALSTAGE.getFloatRGBAsImage(entropyImage.red(), entropyImage.grn(), entropyImage.blu(), entropyImage.width(), entropyImage.height());
+	d = new DOImage(img);
+	d.matrix().scale(2.0);
+	d.matrix().translate(500, 300);
 	GLOBALSTAGE.addChild(d);
 }
 
