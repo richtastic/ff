@@ -1667,6 +1667,7 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 	var angleB = -b._covarianceAngle;
 	var scaleA = a._scale;
 	var scaleB = b._scale;
+//console.log(scaleA,scaleB);
 	var size = a._zoneCols*a._zoneSize;
 	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, scaleA, scaleA));
 	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, scaleB, scaleB));
@@ -1868,7 +1869,8 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	
 	// TODO: find local optimal overall scale
 		// ...
-//	scale = R3D.optimumScaleForPoint(win, new V2D(size,size), point, null);
+//scale = R3D.optimumScaleForPoint(win, new V2D(size,size), point, null);
+scale = R3D.optimumScaleForPoint(win, new V2D(20,20), point, null);
 	this._scale = scale;
 	// large sigma
 		scale = 1.0 / scale; // inverse
@@ -1928,24 +1930,7 @@ ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
 	
 	// get new square @ correct rotation & scale
 	var img;
-	if(false){
-	//if(squeeze){
-//		var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,1.6, size,size, ZFeature.MatrixWithRotation(covariance, 1.0, 0.50));
-// var win = img;
-// img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-// var d;
-// d = new DOImage(img2);
-// d.matrix().translate(30, 30);
-// GLOBALSTAGE.addChild(d);
-	}else{
-		img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,2.0, size,size, ZFeature.MatrixWithRotation(-covariance, scale, scale));
-// var win = img;
-// img2 = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-// var d;
-// d = new DOImage(img2);
-// d.matrix().translate(60, 30);
-// GLOBALSTAGE.addChild(d);
-	}
+	img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,2.0, size,size, ZFeature.MatrixWithRotation(-covariance, this._scale, this._scale));
 	var gradientAllRed = ImageMat.gradientVector(img.red(),img.width(),img.height());
 	var gradientAllGrn = ImageMat.gradientVector(img.grn(),img.width(),img.height());
 	var gradientAllBlu = ImageMat.gradientVector(img.blu(),img.width(),img.height());

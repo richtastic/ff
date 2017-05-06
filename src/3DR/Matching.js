@@ -19,7 +19,7 @@ function Matching(){
 	// this._keyboard.addListeners();
 
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
-	var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"];
+	var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
@@ -36,7 +36,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(0.5);
+		d.graphics().alpha(1.0);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -50,7 +50,6 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
-
 
 
 // var img = [0,0,0,0,0,1,2,3,4,5,5,5,5,5,5];
@@ -125,17 +124,143 @@ var mask = ImageMat.circleMask(size.x,size.y);
 
 
 
-scale = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(810, 20));
-console.log("A: "+scale);
-scale = R3D.optimumScaleForPoint(imageMatrixB, size, pointB, new V2D(850, 20));
-console.log("B: "+scale);
+pointA = new V2D( Math.random()*(400-80) + 40, Math.random()*(300-80) + 40 );
+
+
+//pointA = new V3D(42.80739301492822,228.66508665936004); // light
+//pointA = new V3D(153.89768824000612,150.63907516461467); // grid area
+// pointA = new V3D(207.48487376954955,225.1363595710788);// above boot
+//pointA = new V3D(97.8366688192515,256.54378117045184);// open area
+//pointA = new V3D(302.37055083046306,78.13764202690865); // eye corner
+//pointA = new V3D(271.30243794283433,97.52262218232931); // mouth with high scale
+//pointA = new V3D(152.74792531499037,214.98671609135167); // open area - corner
+
+console.log("pointA = new V3D("+pointA.x+","+pointA.y+");");
+var copyPointA = pointA.copy();
+var copyImageMatrixA = imageMatrixA;
+this.drawAround([pointA], 0,0);
+
+// INCREASE AREA TO REMOVE NOISE:
+var scaler = 1.0;
+var sigma = null; // 1.0
+imageMatrixA = imageMatrixA.extractRectFromFloatImage(imageMatrixA.width()*0.5,imageMatrixA.width()*0.5,1.0/scaler,  sigma  ,imageMatrixA.width()*scaler,imageMatrixA.width()*scaler);
+	var imageGradARed = ImageMat.gradientMagnitude(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
+	var imageGradAGrn = ImageMat.gradientMagnitude(imageMatrixA.grn(), imageMatrixA.width(), imageMatrixA.height()).value;
+	var imageGradABlu = ImageMat.gradientMagnitude(imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height()).value;
+	var imageGradMagA = new ImageMat(imageMatrixA.width(), imageMatrixA.height(), imageGradARed, imageGradAGrn, imageGradABlu);
+pointA.x *= scaler;
+pointA.y *= scaler;
+
+//var pointA = new V2D(195,255);
+// 5 - 21
+// var winStart = 1;
+// var winEnd = 101;
+
+var winStart = 1; // grid points
+var winEnd = 105; // wide open areas
+var referenceScale = 15;
+var expectedEntropy = 0.25; // [0-0.5] 0.2 is about when noise more reliably ends
+// derivative: 0.1 - 0.15
+var winInc = 1;
+var pointX = Math.round(pointA.x);
+var pointY = Math.round(pointA.y);
+var entropies = [];
+var entropies2 = [];
+var scales = [];
+
+var imageGry = imageMatrixA.gry();
+var gradientGry = imageGradMagA.gry();
+for(i=winStart; i<=winEnd; i+=winInc){ // only need to go until past expected --- binary search?
+	var scale = referenceScale/i;
+	var mask = ImageMat.circleMask(i,i);
+	//var entropy = ImageMat.entropyInPixelArea(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
+	//entropy = ImageMat.rangeInPixelArea(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
+	//entropy = ImageMat.rangeInPixelArea(imageGradMagA.red(), imageGradMagA.width(), imageGradMagA.height(), pointX,pointY, i, i, mask); /// @11 : 0.3(corner), 0.1(blob), 0.35(high gradient area)
+		//entropy = entropy / i;
+		//entropy = entropy / (i*i);
+		//entropy = (i*i) / entropy;
+	var entropyImage = ImageMat.entropyInPixelArea(imageGry, imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
+	var entropyGrad = ImageMat.entropyInPixelArea(gradientGry, imageGradMagA.width(), imageGradMagA.height(), pointX,pointY, i, i, mask);
+	var rangeImage = ImageMat.rangeInPixelArea(imageGry, imageMatrixA.width(), imageMatrixA.height(), pointX,pointY, i, i, mask);
+	var rangeGrad = ImageMat.rangeInPixelArea(gradientGry, imageGradMagA.width(), imageGradMagA.height(), pointX,pointY, i, i, mask);
+	var area = i * i;
+	var perimeter = i;
+	//entropy = rangeGrad / rangeImage ;
+	//entropy = rangeImage / rangeGrad;
+
+	//entropy = rangeGrad / Math.sqrt(i) ;
+
+	//entropy = entropyGrad;
+	entropy = entropyImage;
+
+scale = i;
+	entropies.push(entropy);
+	entropies2.push(entropyGrad);
+	scales.push(scale);
+}
+
+console.log("\nhold off;\nx1=["+scales+"];\n" + "\ny1=["+entropies+"];\n" + "plot(x1,y1,\"r-x\");\n\n");
+console.log("\nhold on;\nx2=["+scales+"];\n" + "\ny2=["+entropies2+"];\n" + "plot(x2,y2,\"b-x\");\n\n");
+var optimumScale = null;
+
+
+	var locations = Code.findGlobalValue1D(entropies,expectedEntropy);
+	if(locations.length>0){
+		var location = locations[locations.length-1]; // last = largest
+		console.log(location);
+		optimumScale = Code.interpolateValue1D(scales, location);
+		optimumScale = referenceScale/optimumScale;
+		optimumScale = optimumScale * 0.5; // 2 times scaled in
+	}else{
+		console.log("missing a value .. "+j);
+	}
+	console.log(optimumScale);
+if(optimumScale){
+	pointA = copyPointA;
+	imageMatrixA = copyImageMatrixA;
+	var entropyImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0/optimumScale,null, referenceScale, referenceScale);
+	console.log(entropyImage);
+	img = GLOBALSTAGE.getFloatRGBAsImage(entropyImage.red(), entropyImage.grn(), entropyImage.blu(), entropyImage.width(), entropyImage.height());
+	d = new DOImage(img);
+	d.matrix().scale(2.0);
+	d.matrix().translate(400, 300);
+	GLOBALSTAGE.addChild(d);
+}
+
+
+
+/*
+
+*/
+return;
+
+
+var scaleA = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(810, 20));
+console.log("A: "+scaleA);
+var scaleB = R3D.optimumScaleForPoint(imageMatrixB, size, pointB, new V2D(850, 20));
+console.log("B: "+scaleB);
+// scaleA = 1/scaleA
+// scaleB = 1/scaleB
 
 this.drawAround([pointA], 0,0);
 this.drawAround([pointB], 400,0);
 
+	var zoomSize = 25
+	var zoomedA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,1/scaleA,null, zoomSize,zoomSize);
+	var zoomedB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,1/scaleB,null, zoomSize,zoomSize);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(zoomedA.red(),zoomedA.grn(),zoomedA.blu(), zoomedA.width(),zoomedA.height());
+	d = new DOImage(img);
+	d.matrix().translate(100, 310);
+	GLOBALSTAGE.addChild(d);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(zoomedB.red(),zoomedB.grn(),zoomedB.blu(), zoomedB.width(),zoomedB.height());
+	d = new DOImage(img);
+	d.matrix().translate(200, 310);
+	GLOBALSTAGE.addChild(d);
 
 //return;
-
+/*
 // ENTROPY IMAGE:
 
 var size = 10;
@@ -161,7 +286,7 @@ return;
 
 return;
 
-
+*/
 //
 
 
@@ -517,8 +642,8 @@ see how score reacts to various random static
 	this.drawAround(bestFeaturesB, 400,0);
 */
 	// drop bottom half:
-	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
-	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
+	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 /*
@@ -538,12 +663,9 @@ see how score reacts to various random static
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 
-	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.1, "z", false);
-	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.1, "z", false);
-
 	// range
-	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.25, "z", false);
-	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.25, "z", false);
+	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.25, "z", false);
+	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.25, "z", false);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 /*
@@ -560,10 +682,8 @@ see how score reacts to various random static
 	bestFeaturesA = R3D.filterFeatureListSimilarRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height(), rangeA);
 	bestFeaturesB = R3D.filterFeatureListSimilarRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height(), rangeB);
 
-	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.5, "z", true);
-	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.5, "z", true);
-	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
-	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.5, "z", true);
+	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.5, "z", true);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 

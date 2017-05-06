@@ -341,6 +341,29 @@ x> GET CORNERS
 => REMOVE HIGH-SIMILARITY MATCHES
 => 
 
+
+HOW TO GET : MINIMIUM VIABLE TEXTURE AREA
+- RANGE:
+	- a 
+	- range can be low if there are enough different variations
+	- very low range == not so much variation
+
+- RANGE OF GRADIENT:
+	- if item is centered exactly on a high-gradient point, then not so useful
+
+- AVERAGE GRADIENT ?
+
+
+
+
+
+x change entropy best scale to only use oriinal image data points --- NOT HELP AT ALL
+	- start at 5x5 => 21x21, record entropy value at each point
+	- relative scale assumes eg a 15x15 pixel area:
+		reference_size / entropy_size
+		eg: 15 / 5, 15 / 21
+
+
 - remove low-range points before they are selected for the search ?
 
 - compare GRADIENT of SAD?

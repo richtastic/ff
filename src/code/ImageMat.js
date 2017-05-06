@@ -1183,12 +1183,16 @@ ImageMat.entropyResidualX = function(data, wid, hei, maskOutCenter){
 	return -entropy;
 }
 
-ImageMat.entropyInWindow = function(data, wid,hei, winX,winY){
+ImageMat.entropyInWindow = function(data, wid,hei, winX,winY, useWin){
 	if(winX==undefined || winY==undefined){
 		return 
 	}
 	var testSizeX = winX*2 + 1;
 	var testSizeY = winY*2 + 1;
+	if(useWin){
+		testSizeX = winX;
+		testSizeY = winY;
+	}
 
 	var mask = ImageMat.circleMask(testSizeX,testSizeY)
 	var totalEntropy = Code.newArrayZeros(wid*hei);
@@ -1218,6 +1222,68 @@ ImageMat.entropyInWindow = function(data, wid,hei, winX,winY){
 	}
 	return {"value":totalEntropy, "width":wid, "height":hei};
 }
+
+
+ImageMat.entropyInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, mask){
+	if(winX==undefined || winY==undefined){
+		return 
+	}
+	var winXLeft = Math.floor(winX/2.0);
+	var winXRight = winX - winXLeft;
+	var winYTop = Math.floor(winY/2.0);
+	var winYBot = winY - winYTop;
+	var wm1 = wid-1, hm1 = hei-1;
+	var i, j;
+	var entropy = 0;
+	var d = [];
+	var iStart = pointX - winXLeft;
+	var iEnd = pointX + winXRight;
+	var jStart = pointY - winY;
+	var jEnd = pointY + winY;
+	for(j=jStart; j<=jEnd; ++j){
+		for(i=iStart; i<=iEnd; ++i){ 
+			var ii = Math.min(Math.max(i,0),wm1);
+			var jj = Math.min(Math.max(j,0),hm1);
+			var index = jj*wid + ii;
+			var value = data[index];
+			d.push(value);
+		}
+	}
+	//console.log(d);
+	entropy = ImageMat.entropy(d, winX, winY, mask);
+	return entropy;
+}
+
+ImageMat.rangeInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, mask){
+	if(winX==undefined || winY==undefined){
+		return 
+	}
+	var winXLeft = Math.floor(winX/2.0);
+	var winXRight = winX - winXLeft;
+	var winYTop = Math.floor(winY/2.0);
+	var winYBot = winY - winYTop;
+	var wm1 = wid-1, hm1 = hei-1;
+	var i, j;
+	var entropy = 0;
+	var d = [];
+	var iStart = pointX - winXLeft;
+	var iEnd = pointX + winXRight;
+	var jStart = pointY - winY;
+	var jEnd = pointY + winY;
+	for(j=jStart; j<=jEnd; ++j){
+		for(i=iStart; i<=iEnd; ++i){ 
+			var ii = Math.min(Math.max(i,0),wm1);
+			var jj = Math.min(Math.max(j,0),hm1);
+			var index = jj*wid + ii;
+			var value = data[index];
+			d.push(value);
+		}
+	}
+	var maxValue = Code.maxArray(d);
+	var minValue = Code.minArray(d);
+	return maxValue - minValue;
+}
+
 
 ImageMat.range = function(data, wid,hei){
 	if(wid==0||hei==0){

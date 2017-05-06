@@ -2002,7 +2002,7 @@ R3D.optimumScaleForPoint = function(imageSource, size, point, offset){ // imageM
 	//var expectedEntropy = 0.25;  // residual
 	// record entropy at various scales, record entropy that reached the point
 	// if optiumum scale is outside range => scale it back in by a gradual equation
-	var scaleTimes = 20;
+	var scaleTimes = 10;
 	// var minScalePower = -3; // 0.125
 	// var maxScalePower = 5; // 32
 	// var minScalePower = -2; // 0.25
@@ -2056,18 +2056,18 @@ GLOBALSTAGE.addChild(d);
 	var locations = Code.findGlobalValue1D(entropyValues,expectedEntropy);
 
 
-console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
+console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n("+point+")");
 
 
 	//console.log("locations: "+locations.length);
 	if(locations.length>0){
 		var location = locations[locations.length-1]; // last = smallest
 var optimumEntropy = Code.interpolateValue1D(entropyValues, location);
-console.log(" "+Code.minArray(entropyValues)+" - "+Code.maxArray(entropyValues));
-console.log(".   => OPT ENT: "+optimumEntropy);
+// console.log(" "+Code.minArray(entropyValues)+" - "+Code.maxArray(entropyValues));
+// console.log(".   => OPT ENT: "+optimumEntropy);
 		var optimumScale = Code.interpolateValue1D(scaleValues, location);
-		optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
-		//optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
+		//optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+		optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
 
 		// 0.25 - 4.0 == acceptible range
 		// 0 - 0.25 => scale up
@@ -2087,6 +2087,7 @@ GLOBALSTAGE.addChild(d);
 }
 
 
+		//return 1.0/optimumScale;
 		return optimumScale;
 	}
 	console.log("ERROR => 1.0");
