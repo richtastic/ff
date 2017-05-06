@@ -118,8 +118,8 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 // var pointB = new V2D(253,133);
 
 /// 29 grid cross
-// var pointA = new V2D(182,150);
-// var pointB = new V2D(229,46);
+var pointA = new V2D(182,150);
+var pointB = new V2D(229,46);
 
 // MORE BUCKET SIZES SCALES THE ENTROPY UP
 

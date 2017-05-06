@@ -352,8 +352,18 @@ HOW TO GET : MINIMIUM VIABLE TEXTURE AREA
 	- if item is centered exactly on a high-gradient point, then not so useful
 
 - AVERAGE GRADIENT ?
+	- 
 
 
+- loop thru all image pairs to show all at once
+- show changed non-asymetric scaling
+	-> covariant matrix
+	-> gradient
+		=> primary & secondary gradient values
+		=> are max and min gradients always orthogonal?
+- create rotation field that populates as queried
+	=> start off at NULL
+	=> determine rotation on request, & return
 
 
 
