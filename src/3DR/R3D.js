@@ -1993,7 +1993,7 @@ R3D.optimumScaleForPoint = function(gradientGry, imageWidth, imageHeight, pointX
 var winStart = 1; // grid points
 var winEnd = 121; // wide open areas
 var referenceScale = 15;
-var expectedEntropy = 0.125;
+var expectedEntropy = 0.25;
 //var expectedEntropy = 0.05;//normalized
 //var expectedEntropy = 0.125; // gradient
 //var expectedEntropy = 0.15;
@@ -2003,33 +2003,34 @@ pointX = Math.round(pointX);
 pointY = Math.round(pointY);
 var entropies = [];
 var scales = [];
-
+//var scalerMax = 14;
 for(i=winStart; i<=winEnd; i+=winInc){ // only need to go until past expected --- binary search?
 	var scale = referenceScale/i;
 	var mask = ImageMat.circleMask(i,i);
 	//mask = undefined;
 	var entropy = ImageMat.entropyInPixelArea(gradientGry, imageWidth, imageHeight, pointX,pointY, i, i, mask);
 	if(entropy!=0){
-
-//return i/10;
-return Math.sqrt(i);
-
-		return i/14;
+//return Math.sqrt(i);
 	}
 	scale = i;
 	entropies.push(entropy);
 	scales.push(scale);
 }
 
-console.log("\nhold off;\nx1=["+scales+"];\n" + "\ny1=["+entropies+"];\n" + "plot(x1,y1,\"r-x\");\n\n");
+//return 1;
+
+//console.log("\nhold off;\nx1=["+scales+"];\n" + "\ny1=["+entropies+"];\n" + "plot(x1,y1,\"r-x\");\n\n");
 var optimumScale = null;
 	var locations = Code.findGlobalValue1D(entropies,expectedEntropy);
 	if(locations.length>0){
 		var location = locations[locations.length-1]; // last = largest
-		console.log(location);
+//		console.log(location);
 		optimumScale = Code.interpolateValue1D(scales, location);
-		optimumScale = referenceScale/optimumScale;
-		optimumScale = optimumScale*2.0; // 2 times scaled in
+		//optimumScale = referenceScale/optimumScale;
+		//optimumScale = optimumScale*2.0; // 2 times scaled in
+		//optimumScale = 1.0 / optimumScale;
+		var outScale = 6;
+		optimumScale = Math.pow(2, Math.log2(optimumScale)-outScale);
 	}else{
 		console.log("missing a value .. "+j);
 	}

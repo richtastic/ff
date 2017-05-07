@@ -1564,15 +1564,22 @@ ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
 	cen.scale(1.0/totalWeight);
 	return cen;
 }
-ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean){
+ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean, maskOutCenter){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
 	var i, j, x, y, index, value;
 	var covXX = 0 ,covYY = 0, covXY = 0;
 		// var covXZ = 0, covYZ = 0, covZZ = 0;
 	var totalWeight = 0;
+	var mask = 1;
 	for(j=0; j<imageHeight; ++j){
 		for(i=0; i<imageWidth; ++i){
 			index = j*imageWidth + i;
+			if(maskOutCenter){
+				mask = maskOutCenter[index];
+			}
+			if(!(mask!=0)){
+				continue;
+			}
 			value = image[index];
 			totalWeight += value;
 			x = i - mean.x;
@@ -1580,7 +1587,7 @@ ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mea
 			covXX += value*x*x;
 			covYY += value*y*y;
 			covXY += value*x*y;
-				// covXZ = value*x; covYZ = value*y; covZZ = value;
+			// covXZ = value*x; covYZ = value*y; covZZ = value;
 		}
 	}
 	if(totalWeight==0){
@@ -1604,8 +1611,8 @@ ImageMat.prototype.calculateCentroid = function(){
 	return {"red":red, "grn":grn, "blu":blu, "gry":gry, "width":this.width(), "height":this.height()};
 }
 // THIS IS MORE LIKE THE CENTRAL MOMENT
-ImageMat.prototype.calculateCovariance = function(mean){
-	var matrix = ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean);
+ImageMat.prototype.calculateCovariance = function(mean, mask){
+	var matrix = ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean, mask);
 	matrix = new Matrix(2,2,matrix);
 		//matrix = new Matrix(3,3,matrix);
 	var eigens = Matrix.eigenValuesAndVectors(matrix);
@@ -2381,7 +2388,6 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	minY = y - minY;
 	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 	if(isNaN(val)){
-
 		console.log("PT",wid,hei,x,y);
 		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP );
 		//console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
@@ -2820,19 +2826,35 @@ ImageMat.prototype.extractRectFromFloatImage = function(x,y,scale,sigma,w,h,matr
 	return new ImageMat(w,h, red,grn,blu);
 }
 
-ImageMat.prototype.calculateGradient = function(x,y){
-	x = x!==undefined ? x : Math.floor(this._width/2);
-	y = y!==undefined ? y : Math.floor(this._height/2);
+ImageMat.prototype.calculateGradient = function(x,y, blur){
+	x = (x!==undefined && x!==null) ? x : Math.floor((this._width-1)*.5);
+	y = (y!==undefined && x!==null) ? y : Math.floor((this._height-1)*.5);
 	var w = this.width();
 	var h = this.height();
 	var size = 3;
 	var index = Math.floor(size/2);
-	var r = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, this._r,w,h);
-	var g = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, this._r,w,h);
-	var b = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, this._r,w,h);
+
+	var rB, gB, bB;
+	if(blur){
+		var gaussSize = Math.round(Math.sqrt((w+h)*0.5));
+		var sigma = 1.6;
+		var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+		var rB = ImageMat.gaussian2DFrom1DFloat(this._r, w,h, gauss1D);
+		var gB = ImageMat.gaussian2DFrom1DFloat(this._g, w,h, gauss1D);
+		var bB = ImageMat.gaussian2DFrom1DFloat(this._b, w,h, gauss1D);
+	}else{
+		rB = this._r;
+		gB = this._g;
+		bB = this._b;
+	}
+	var r = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, rB,w,h);
+	var g = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, gB,w,h);
+	var b = ImageMat.extractRectFromFloatImageBasic(x,y,size,size, bB,w,h);
 	var y = ImageMat.grayFromRGBFloat(r,g,b);
-	var Ix = ImageMat.derivativeX(r, w,h);
-	var Iy = ImageMat.derivativeY(r, w,h);
+	var Ix = ImageMat.derivativeX(y, size,size);
+	var Iy = ImageMat.derivativeY(y, size,size);
+	Ix = Ix.value;
+	Iy = Iy.value;
 	var dir = new V2D(Ix[index],Iy[index]);
 	dir.norm();
 	return dir;
