@@ -328,6 +328,23 @@ RESULTS:
 
 
 TODO:
+
+
+---- ENTROPY SELECTION: SHOULD USE:
+	MAX ENTROPY
+	OR ENTROPY AT A SPECIFIC VALUE ? (0.5)
+	OR (0.5 OF A MAX VALUE)
+
+- test differntly scaled identical images
+
+- test more points
+- R3D.optimalpointdescriptor?
+	- scale
+	- rotation
+	- 
+- AREA SAVE FEATURES IN MEMORY TO REDUCE REPEATED PROCESSING
+
+
 x average median offset mean SSD NOT BETTER
 	=> YES IT MIGHT BE ?
 
@@ -352,6 +369,9 @@ HOW TO GET : MINIMIUM VIABLE TEXTURE AREA
 	- if item is centered exactly on a high-gradient point, then not so useful
 
 - AVERAGE GRADIENT ?
+	- 
+
+- ENTROPY
 	- 
 
 
@@ -395,6 +415,9 @@ x OPTIMUM ENTROPY SCALE:
 	*) blur entropies (?)
 	*) record entropy at scale @ entropy-scale image
 	=> for each pixel : find when entropy is @ value & convert to optimum scale value
+
+- calcuating primary rotation from COV:
+	- highly unstable around straight edges (after asymm scaling)
 
 2 BEST MATCHING ALGORITHMS:
 	- global optimized connections minimiziation of total error:

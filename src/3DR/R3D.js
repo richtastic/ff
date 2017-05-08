@@ -1991,13 +1991,16 @@ console.log(i+": "+scale);
 
 R3D.optimumScaleForPoint = function(gradientGry, imageWidth, imageHeight, pointX, pointY){
 var winStart = 1; // grid points
-var winEnd = 121; // wide open areas
+var winEnd = 101; // wide open areas
 var referenceScale = 15;
-var expectedEntropy = 0.25;
+var expectedEntropy = 0.25; // too high
+//var expectedEntropy = 0.10;
 //var expectedEntropy = 0.05;//normalized
 //var expectedEntropy = 0.125; // gradient
 //var expectedEntropy = 0.15;
 //var expectedEntropy = 0.25; // image
+//var bins = undefined;
+var bins = 100;
 var winInc = 1;
 pointX = Math.round(pointX);
 pointY = Math.round(pointY);
@@ -2008,7 +2011,7 @@ for(i=winStart; i<=winEnd; i+=winInc){ // only need to go until past expected --
 	var scale = referenceScale/i;
 	var mask = ImageMat.circleMask(i,i);
 	//mask = undefined;
-	var entropy = ImageMat.entropyInPixelArea(gradientGry, imageWidth, imageHeight, pointX,pointY, i, i, mask);
+	var entropy = ImageMat.entropyInPixelArea(gradientGry, imageWidth, imageHeight, pointX,pointY, i, i, mask, bins);
 	if(entropy!=0){
 //return Math.sqrt(i);
 	}
@@ -2019,7 +2022,7 @@ for(i=winStart; i<=winEnd; i+=winInc){ // only need to go until past expected --
 
 //return 1;
 
-//console.log("\nhold off;\nx1=["+scales+"];\n" + "\ny1=["+entropies+"];\n" + "plot(x1,y1,\"r-x\");\n\n");
+console.log("\nhold off;\nx1=["+scales+"];\n" + "\ny1=["+entropies+"];\n" + "plot(x1,y1,\"r-x\");\n\n");
 var optimumScale = null;
 	var locations = Code.findGlobalValue1D(entropies,expectedEntropy);
 	if(locations.length>0){
@@ -2038,7 +2041,8 @@ var optimumScale = null;
 }
 
 // 
-R3D.optimumScaleForPointOLD = function(imageSource, size, point, offset){ // imageMat
+R3D.optimumScaleForPointOLD = function(imageSource, size, point){ // imageMat
+	size = new V2D(15,15);
 	/*
 -2 => 4 :
 	2.7562557114127966 - 3.591004211729764
@@ -2047,27 +2051,22 @@ R3D.optimumScaleForPointOLD = function(imageSource, size, point, offset){ // ima
 -3 => 5 :
 	*/
 	//offset = offset!==undefined ? offset : V2D(0,0);
-	var expectedEntropy = 0.15; 
+	//var expectedEntropy = 0.15; 
+	var expectedEntropy = 0.25; 
 	//var expectedEntropy = 0.25;  // residual
 	// record entropy at various scales, record entropy that reached the point
 	// if optiumum scale is outside range => scale it back in by a gradual equation
-	var scaleTimes = 10;
-	// var minScalePower = -3; // 0.125
-	// var maxScalePower = 5; // 32
-	// var minScalePower = -2; // 0.25
-	// var maxScalePower = 4; // 16
-	// var minScalePower = -4;
-	// var maxScalePower = 8;
-	var minScalePower = -2;
-	var maxScalePower = 8;
+	var scaleTimes = 50;
+	var minScalePower = -10;
+	var maxScalePower = 4;
 	var entropyValues = [];
 	var scaleValues = [];
-//	console.log("START");
+	console.log("START");
 	for(i=0; i<scaleTimes; ++i){
 		var p = i/(scaleTimes-1);
 		var power = minScalePower + (maxScalePower - minScalePower)*p;
 		scale = Math.pow(2, power);
-//console.log("scale: "+scale);
+//console.log(i+": scale: "+scale);
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,scale,scale);
 		//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
@@ -2075,32 +2074,27 @@ R3D.optimumScaleForPointOLD = function(imageSource, size, point, offset){ // ima
 		// BLUR
 //console.log("matrix: "+matrix);
 //console.log(point.x,point.y,1.0,1.6, size.x,size.y, matrix)
-		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,1.6, size.x,size.y, matrix);
+		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
 		// RECAPTURE
 
 		//maskOutCenter = undefined;// ImageMat.circleMask(size.x,size.y);
 		maskOutCenter = ImageMat.circleMask(size.x,size.y);
-
-		//
+/*
 		var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
 		var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
 		var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
-// console.log("ENTROPY MAX SHOULD BE: "+( -Math.log2(1/(size.x*size.y)) ) );
+//console.log("ENTROPY MAX SHOULD BE: "+( -Math.log2(1/(size.x*size.y)) ) );
 // console.log("ENTROPY MIN SHOULD BE: "+ (1/(size.x*size.y) ) );
 // var entropyR = ImageMat.entropyResidual(image.red(), size.x, size.y, maskOutCenter);
 // var entropyG = ImageMat.entropyResidual(image.grn(), size.x, size.y, maskOutCenter);
 // var entropyB = ImageMat.entropyResidual(image.blu(), size.x, size.y, maskOutCenter);
 		var entropy = (entropyR + entropyG + entropyB)/3.0;
+*/
+	var entropy = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter);
+//	var entropy = ImageMat.entropyResidual(image.gry(), size.x, size.y, maskOutCenter);
+//var entropy = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, 10);
 		scaleValues.push(scale);
 		entropyValues.push(entropy);
-//		console.log(i+" : "+scale+". == "+entropy);
-if(offset){
-var gry = image.gry();
-var img = GLOBALSTAGE.getFloatRGBAsImage(gry, gry, gry, image.width(),image.height());
-var d = new DOImage(img);
-d.matrix().translate(offset.x, offset.y + size.y*i);
-GLOBALSTAGE.addChild(d);
-}
 	}
 	var locations = Code.findGlobalValue1D(entropyValues,expectedEntropy);
 
@@ -2116,27 +2110,16 @@ var optimumEntropy = Code.interpolateValue1D(entropyValues, location);
 // console.log(".   => OPT ENT: "+optimumEntropy);
 		var optimumScale = Code.interpolateValue1D(scaleValues, location);
 		//optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
-		optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
+		//optimumScale = Math.exp(Math.log(optimumScale) + 0.0);
+		//optimumScale = Math.exp(-Math.log(optimumScale) - 2.0);
+		optimumScale = Math.exp(Math.log(optimumScale) + 0.0);
 
 		// 0.25 - 4.0 == acceptible range
 		// 0 - 0.25 => scale up
 		// 4.0 - INF => scale down
 		// IF OUTSIDE THIS RANGE => probly not a good scale
-
-if(offset){
-scale = optimumScale;
-var matrix = new Matrix(3,3).identity();
-matrix = Matrix.transform2DScale(matrix,scale,scale);
-image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
-var gry = image.gry();
-var img = GLOBALSTAGE.getFloatRGBAsImage(gry, gry, gry, image.width(),image.height());
-var d = new DOImage(img);
-d.matrix().translate(offset.x, offset.y + size.y*i);
-GLOBALSTAGE.addChild(d);
-}
-
-
 		//return 1.0/optimumScale;
+// NEW:
 		return optimumScale;
 	}
 	console.log("ERROR => 1.0");

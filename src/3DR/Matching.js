@@ -8,7 +8,7 @@ function Matching(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
-	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// resources
 	this._resource = {};
 	// 3D stage
@@ -19,9 +19,17 @@ function Matching(){
 	// this._keyboard.addListeners();
 
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
-	var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
+	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
+	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
+}
+Matching.prototype.handleMouseClickFxn = function(e){
+	var p = e.location;
+	if(p.x>400){
+		p.x -= 400;
+	}
+	console.log(p+"")
 }
 Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageList = imageInfo.images;
@@ -140,21 +148,42 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 
 var pointsA = [
 	new V2D(303,81),
-	new V2D(195,255),
-	new V2D(144.5,175),
+//	new V2D(195,255),
+	new V2D(144,175),
 	new V2D(141,206),
-	new V2D(60,236),
-	new V2D(298,243),
+	// new V2D(60,236), // 5
+	// new V2D(298,243),
 	new V2D(181,150),
+	// new V2D(36,288),
+	// new V2D(146,109),
+	// new V2D(88,113), // 10
+	// new V2D(55,107),
 ];
 var pointsB = [
-	new V2D(243,101),
-	new V2D(209,133),
-	new V2D(211,46),
-	new V2D(202,82),
-	new V2D(166,102),
-	new V2D(253,133),
-	new V2D(229,46),
+	// large
+	new V2D(330,94),
+//	new V2D(209,133), // x
+	new V2D(93,235),
+	new V2D(87,283),
+	// new V2D(166,102), // 5
+	// new V2D(253,133),
+	new V2D(149,198),
+	// new V2D(154,138),
+	// new V2D(213,11),
+	// new V2D(179,24.5), // 10
+	// new V2D(159,58),
+	// 1-29 testing
+	// new V2D(243,101),
+	// new V2D(209,133),
+	// new V2D(211,46),
+	// new V2D(202,83),
+	// new V2D(166,102), // 5
+	// new V2D(253,133),
+	// new V2D(229,46),
+	// new V2D(154,138),
+	// new V2D(213,11),
+	// new V2D(179,24.5), // 10
+	// new V2D(159,58),
 ];
 
 // MORE BUCKET SIZES SCALES THE ENTROPY UP
@@ -181,14 +210,16 @@ var copyImageMatrixA = imageMatrixA;
 var copyImageMatrixB = imageMatrixB;
 
 
-var scaler = 2.0;
+var scaler = 1.0;
 imageMatrixA = imageMatrixA.extractRectFromFloatImage(imageMatrixA.width()*0.5,imageMatrixA.width()*0.5,1.0/scaler,  null, imageMatrixA.width()*scaler,imageMatrixA.width()*scaler);
 	var imageGradARed = ImageMat.gradientMagnitude(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
 	var imageGradAGrn = ImageMat.gradientMagnitude(imageMatrixA.grn(), imageMatrixA.width(), imageMatrixA.height()).value;
 	var imageGradABlu = ImageMat.gradientMagnitude(imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height()).value;
 	var imageGradMagA = new ImageMat(imageMatrixA.width(), imageMatrixA.height(), imageGradARed, imageGradAGrn, imageGradABlu);
 	var imageGradMagAGry = imageGradMagA.gry();
-	//var imageGradMagAGry = imageMatrixA.gry();
+	var imageGradMagAGry = imageMatrixA.gry();
+	var imageMatrixAGry = imageMatrixA.gry();
+	//imageMatrixAGry = ImageMat.applyGaussianFloat(imageMatrixAGry, imageMatrixA.width(), imageMatrixA.height(), 2.0);
 
 
 imageMatrixB = imageMatrixB.extractRectFromFloatImage(imageMatrixB.width()*0.5,imageMatrixB.width()*0.5,1.0/scaler,  null, imageMatrixB.width()*scaler,imageMatrixB.width()*scaler);
@@ -197,7 +228,9 @@ imageMatrixB = imageMatrixB.extractRectFromFloatImage(imageMatrixB.width()*0.5,i
 	var imageGradBBlu = ImageMat.gradientMagnitude(imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height()).value;
 	var imageGradMagB = new ImageMat(imageMatrixB.width(), imageMatrixB.height(), imageGradBRed, imageGradBGrn, imageGradBBlu);
 	var imageGradMagBGry = imageGradMagB.gry();
-	//var imageGradMagBGry = imageMatrixB.gry();
+	var imageGradMagBGry = imageMatrixB.gry();
+	var imageMatrixBGry = imageMatrixB.gry();
+	//imageMatrixBGry = ImageMat.applyGaussianFloat(imageMatrixBGry, imageMatrixB.width(), imageMatrixB.height(), 2.0);
 
 
 
@@ -217,8 +250,18 @@ pointA.scale(scaler);
 pointB.scale(scaler);
 
 
-var optimumScaleA = R3D.optimumScaleForPoint(imageGradMagAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
-var optimumScaleB = R3D.optimumScaleForPoint(imageGradMagBGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
+// var optimumScaleA = R3D.optimumScaleForPoint(imageGradMagAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
+// var optimumScaleB = R3D.optimumScaleForPoint(imageGradMagBGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
+
+// var optimumScaleA = R3D.optimumScaleForPoint(imageMatrixAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
+// var optimumScaleB = R3D.optimumScaleForPoint(imageMatrixBGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
+
+var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, 21, pointA);
+var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, 21, pointB);
+// var optimumScaleA = R3D.optimumScaleForPointOLD(imageGradMagA, 21, pointA);
+// var optimumScaleB = R3D.optimumScaleForPointOLD(imageGradMagB, 21, pointB);
+
+
 
 // var outScale = 1;
 // optimumScaleA = Math.pow(2, Math.log2(optimumScaleA)-outScale);
@@ -230,6 +273,8 @@ var optimumScaleB = R3D.optimumScaleForPoint(imageGradMagBGry, imageMatrixB.widt
 // console.log(optimumScaleA);
 // console.log(optimumScaleB);
 
+console.log("     ..................... "+k+" - "+optimumScaleA+" | "+optimumScaleB);
+
 if(optimumScaleA){
 	pointA = copyPointA;
 	imageMatrixA = copyImageMatrixA;
@@ -238,7 +283,7 @@ if(optimumScaleA){
 	img = GLOBALSTAGE.getFloatRGBAsImage(entropyImage.red(), entropyImage.grn(), entropyImage.blu(), entropyImage.width(), entropyImage.height());
 	d = new DOImage(img);
 	d.matrix().scale(2.0);
-	d.matrix().translate(400, 300 + k*referenceScale*2);
+	d.matrix().translate(300, 300 + k*referenceScale*2);
 	GLOBALSTAGE.addChild(d);
 
 
@@ -248,7 +293,10 @@ var mask = ImageMat.circleMask( entropyImage.width(), entropyImage.height() );
 //console.log(entropyImage.gry(), entropyImage.width(), entropyImage.height(), new V2D(entropyImage.width()*0.5,entropyImage.height()*0.5), mask);
 //var dir = ImageMat.calculateCovarianceMatrix(entropyImage.gry(), entropyImage.width(), entropyImage.height(), new V2D(entropyImage.width()*0.5,entropyImage.height()*0.5), mask);
 
-
+					// MORE UNSTABLE:
+					// entropyImage._r = ImageMat.getNormalFloat01(entropyImage._r);
+					// entropyImage._g = ImageMat.getNormalFloat01(entropyImage._g);
+					// entropyImage._b = ImageMat.getNormalFloat01(entropyImage._b);
 var dir = entropyImage.calculateCovariance(new V2D((entropyImage.width()-1)*0.5, (entropyImage.height()-1)*0.5), mask);
 // <-0.7793007907743846,0.6266500438828828,0.09100750595704268>,<-0.6266500438828827,-0.7793007907743847,0.045722309234423164>
 var v1 = dir[0];
@@ -257,6 +305,7 @@ var vScale = v1.z / v2.z;
 // ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean, maskOutCenter){
 	//console.log(""+v1);
 	//console.log(""+vScale);
+console.log("A: "+vScale);
 
 	var s = 15;
 	var c = new DO();
@@ -272,49 +321,57 @@ var vScale = v1.z / v2.z;
 		c.graphics().lineTo(v2.x*s/vScale, v2.y*s/vScale);
 		c.graphics().strokeLine();
 		c.graphics().endPath();
-			c.matrix().translate(400 + referenceScale, 300 + k*referenceScale*2 + referenceScale); // middle
+			c.matrix().translate(300 + referenceScale, 300 + k*referenceScale*2 + referenceScale); // middle
 		GLOBALSTAGE.addChild(c);
 	// 
 
 	// STRETCH:
 	matrix = new Matrix(3,3).identity();
 		var angleX = V2D.angleDirection(V2D.DIRX, v1);
+		console.log(angleX*180/Math.PI)
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
 			matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
+			//matrix = Matrix.transform2DScale(matrix,Math.sqrt(vScale),1.0/Math.sqrt(vScale));
+			//matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(vScale),Math.sqrt(vScale));
 			matrix = Matrix.transform2DRotate(matrix,angleX);
 			matrix = Matrix.transform2DScale(matrix,optimumScaleA,optimumScaleA);
 
 	var covImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0, null, referenceScale, referenceScale, matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(covImage.red(), covImage.grn(), covImage.blu(), covImage.width(), covImage.height());
+		d = new DOImage(img);
+		d.matrix().scale(2.0);
+		d.matrix().translate(300 + referenceScale*2 + 10, 300 + k*referenceScale*2);
+		GLOBALSTAGE.addChild(d);
 
 	// ROTATE TO GRAD
 	var grad = covImage.calculateGradient(null,null, true);
 		grad = V2D.angleDirection(V2D.DIRX, grad);
 			//matrix = Matrix.transform2DRotate(matrix,grad);
 
+			// TODO: BLURR
 			var gaussSize = Math.round(Math.sqrt(referenceScale));
 			var sigma = 1.6;
 			var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+					covImage._r = ImageMat.getNormalFloat01(covImage._r);
+					covImage._g = ImageMat.getNormalFloat01(covImage._g);
+					covImage._b = ImageMat.getNormalFloat01(covImage._b);
 			var rB = ImageMat.gaussian2DFrom1DFloat(covImage._r, referenceScale,referenceScale, gauss1D);
 			var gB = ImageMat.gaussian2DFrom1DFloat(covImage._g, referenceScale,referenceScale, gauss1D);
 			var bB = ImageMat.gaussian2DFrom1DFloat(covImage._b, referenceScale,referenceScale, gauss1D);
 			covImage._r = rB;
 			covImage._g = gB;
 			covImage._b = bB;
-			
-			// TODO: BLURR
-			//covImage = covImage.blurr();
 			var bdir = entropyImage.calculateCovariance(new V2D((covImage.width()-1)*0.5, (covImage.height()-1)*0.5), mask);
 			bdir = bdir[0];
 			angleX = V2D.angleDirection(V2D.DIRX, bdir);
-
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
-	var covImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0, null, referenceScale, referenceScale, matrix);
+			var covImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0, null, referenceScale, referenceScale, matrix);
 	//
 
 		img = GLOBALSTAGE.getFloatRGBAsImage(covImage.red(), covImage.grn(), covImage.blu(), covImage.width(), covImage.height());
 		d = new DOImage(img);
 		d.matrix().scale(2.0);
-		d.matrix().translate(400 + referenceScale*2 + 20, 300 + k*referenceScale*2);
+		d.matrix().translate(300 + referenceScale*4 + 20, 300 + k*referenceScale*2);
 		GLOBALSTAGE.addChild(d);
 }
 
@@ -337,8 +394,10 @@ if(optimumScaleB){
 var mask = ImageMat.circleMask( entropyImage.width(), entropyImage.height() );
 //console.log(entropyImage.gry(), entropyImage.width(), entropyImage.height(), new V2D(entropyImage.width()*0.5,entropyImage.height()*0.5), mask);
 //var dir = ImageMat.calculateCovarianceMatrix(entropyImage.gry(), entropyImage.width(), entropyImage.height(), new V2D(entropyImage.width()*0.5,entropyImage.height()*0.5), mask);
-
-
+					// MORE UNSTABLE:
+					// entropyImage._r = ImageMat.getNormalFloat01(entropyImage._r);
+					// entropyImage._g = ImageMat.getNormalFloat01(entropyImage._g);
+					// entropyImage._b = ImageMat.getNormalFloat01(entropyImage._b);
 var dir = entropyImage.calculateCovariance(new V2D((entropyImage.width()-1)*0.5, (entropyImage.height()-1)*0.5), mask);
 // <-0.7793007907743846,0.6266500438828828,0.09100750595704268>,<-0.6266500438828827,-0.7793007907743847,0.045722309234423164>
 var v1 = dir[0];
@@ -346,7 +405,7 @@ var v2 = dir[1];
 var vScale = v1.z / v2.z;
 // ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean, maskOutCenter){
 	//console.log(""+v1);
-	//console.log(""+vScale);
+	console.log("B: "+vScale);
 
 	var s = 15;
 	var c = new DO();
@@ -362,7 +421,7 @@ var vScale = v1.z / v2.z;
 		c.graphics().lineTo(v2.x*s/vScale, v2.y*s/vScale);
 		c.graphics().strokeLine();
 		c.graphics().endPath();
-			c.matrix().translate(400 + referenceScale, 300 + k*referenceScale*2 + referenceScale); // middle
+			c.matrix().translate(500 + referenceScale, 300 + k*referenceScale*2 + referenceScale); // middle
 		GLOBALSTAGE.addChild(c);
 	// 
 
@@ -371,38 +430,44 @@ var vScale = v1.z / v2.z;
 		var angleX = V2D.angleDirection(V2D.DIRX, v1);
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
 			matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
+			//matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(vScale),Math.sqrt(vScale));
+			//matrix = Matrix.transform2DScale(matrix,Math.sqrt(vScale),1.0/Math.sqrt(vScale));
 			matrix = Matrix.transform2DRotate(matrix,angleX);
 			matrix = Matrix.transform2DScale(matrix,optimumScaleB,optimumScaleB);
 			// 
 	var covImage = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y, 1.0, null, referenceScale, referenceScale, matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(covImage.red(), covImage.grn(), covImage.blu(), covImage.width(), covImage.height());
+		d = new DOImage(img);
+		d.matrix().scale(2.0);
+		d.matrix().translate(500 + referenceScale*2 + 10, 300 + k*referenceScale*2);
+		GLOBALSTAGE.addChild(d);
 	// ROTATE TO GRAD
 	var grad = covImage.calculateGradient(null,null, true);
 		grad = V2D.angleDirection(V2D.DIRX, grad);
 			//matrix = Matrix.transform2DRotate(matrix,grad);
-
+			// TODO: BLURR
 			var gaussSize = Math.round(Math.sqrt(referenceScale));
 			var sigma = 1.6;
 			var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+					covImage._r = ImageMat.getNormalFloat01(covImage._r);
+					covImage._g = ImageMat.getNormalFloat01(covImage._g);
+					covImage._b = ImageMat.getNormalFloat01(covImage._b);
 			var rB = ImageMat.gaussian2DFrom1DFloat(covImage._r, referenceScale,referenceScale, gauss1D);
 			var gB = ImageMat.gaussian2DFrom1DFloat(covImage._g, referenceScale,referenceScale, gauss1D);
 			var bB = ImageMat.gaussian2DFrom1DFloat(covImage._b, referenceScale,referenceScale, gauss1D);
 			covImage._r = rB;
 			covImage._g = gB;
 			covImage._b = bB;
-
-			// TODO: BLURR
-			//covImage = covImage.blurr();
 			var bdir = entropyImage.calculateCovariance(new V2D((covImage.width()-1)*0.5, (covImage.height()-1)*0.5), mask);
 			bdir = bdir[0];
 			angleX = V2D.angleDirection(V2D.DIRX, bdir);
-
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
-	var covImage = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y, 1.0, null, referenceScale, referenceScale, matrix);
+			var covImage = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y, 1.0, null, referenceScale, referenceScale, matrix);
 	//
 		img = GLOBALSTAGE.getFloatRGBAsImage(covImage.red(), covImage.grn(), covImage.blu(), covImage.width(), covImage.height());
 		d = new DOImage(img);
 		d.matrix().scale(2.0);
-		d.matrix().translate(500 + referenceScale*2 + 20, 300 + k*referenceScale*2);
+		d.matrix().translate(500 + referenceScale*4 + 20, 300 + k*referenceScale*2);
 		GLOBALSTAGE.addChild(d);
 }
 
