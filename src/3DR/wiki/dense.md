@@ -334,6 +334,9 @@ TODO:
 	MAX ENTROPY
 	OR ENTROPY AT A SPECIFIC VALUE ? (0.5)
 	OR (0.5 OF A MAX VALUE)
+- try fitting parabola?
+- first substantial max?
+- try blurring
 
 - test differntly scaled identical images
 

@@ -161,7 +161,7 @@ var pointsA = [
 ];
 var pointsB = [
 	// large
-	new V2D(330,94),
+	new V2D(331,95),
 //	new V2D(209,133), // x
 	new V2D(93,235),
 	new V2D(87,283),
