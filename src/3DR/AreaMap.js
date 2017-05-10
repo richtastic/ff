@@ -1746,15 +1746,27 @@ ZFeature.prototype.visualize = function(x,y, range){
 		var point = this._point;
 		var side = this._zoneCols * this._zoneSize;
 		//var img = this.range().getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-		var angle = -this._covarianceAngle;
-		var img = range.imageAtPoint(point,side,side,1.0,angle);
+		//var angle = -this._covarianceAngle;
+		//var img = range.imageAtPoint(point,side,side,1.0,angle);
+var matrix = new Matrix(3,3).identity();
+matrix = Matrix.transform2DScale(matrix,this._scale,this._scale);
+matrix = Matrix.transform2DRotate(matrix,-this._covarianceAngle);
+//matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(this._covarianceRatio),Math.sqrt(this._covarianceRatio));
+//matrix = Matrix.transform2DRotate(matrix,this._covarianceAngle);
+//matrix = Matrix.transform2DRotate(matrix,-this._angle); // gradient angle
+sample = 25;
+var additionalScale = size/side;
+//console.log("additionalScale: "+additionalScale);
+//matrix = Matrix.transform2DScale(matrix,additionalScale,additionalScale);
+img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,null, sample,sample, matrix);
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 		
-		var sca = size/side;
+		var sca = size/sample;
 		d = new DOImage(img);
-		d.matrix().translate(-side*0.5, -side*0.5);
+		// d.matrix().translate(-size*0.5, -size*0.5);
 		//d.matrix().rotate(-primaryAngle);
 		d.matrix().scale(sca);
+		d.matrix().translate(-size*0.5, -size*0.5);
 		viz.addChild(d);
 	}
 	// BG
@@ -1770,6 +1782,7 @@ ZFeature.prototype.visualize = function(x,y, range){
 	viz.addChild(d);
 	var zone;
 	var mini = size / this._zoneCols;
+/*
 	for(j=0; j<this._zoneCols; ++j){
 		for(i=0; i<this._zoneCols; ++i){
 			index = j*this._zoneCols + i;
@@ -1794,19 +1807,29 @@ ZFeature.prototype.visualize = function(x,y, range){
 			//console.log(bins);
 		}
 	}
+*/
 	// main gradients
-	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.x), 0xFFCC0000);
-		d.matrix().rotate(primaryAngle);
+
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.x - this._covarianceAngle), 0xFFCC0000);
+//		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
-	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.y), 0xFF00CC00);
-		d.matrix().rotate(primaryAngle);
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.y - this._covarianceAngle), 0xFF00CC00);
+//		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
-	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.z), 0xFF0000CC);
-		d.matrix().rotate(primaryAngle);
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.z - this._covarianceAngle), 0xFF0000CC);
+//		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
-	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.t), 0xFFCCCCCC);
-		d.matrix().rotate(primaryAngle);
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.t - this._covarianceAngle), 0xFFCCCCCC);
+//		d.matrix().rotate(primaryAngle);
 	viz.addChild(d);
+
+	
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._covarianceAngle - this._covarianceAngle), 0xFF000000);
+	viz.addChild(d);
+
+	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._gradientAngle - this._covarianceAngle), 0xFFFF00FF);
+	viz.addChild(d);
+
 	// SHOW
 	// var win = img;
 	// img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
@@ -1863,100 +1886,79 @@ ZFeature.scoreForMagnitudeAngleRGB = function(magA, magB, angA,angB){
 	var error = errorRed * errorGrn * errorBlu * errorGry;
 	return error;
 }
-ZFeature.prototype.setupWithImage = function(range, point, scale,    squeeze){
+ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze){
 	// get square
+	var size = 25;
+	var mask = ImageMat.circleMask(size,size);
 	this._point = point;
-	var size = this._zoneSize * this._zoneCols;
-	var win = range.imageAtPoint(point,size,size,1.0,0.0);
-	var img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-	var d;
-
-
-
-// d = new DOImage(img);
-// d.matrix().translate(100, 200);
-// GLOBALSTAGE.addChild(d);
+	this._scale = R3D.optimumScaleForPoint(range.image(), point);
+//this._scale  = 1.0
+	// find local direction:
+	var img;
+	//var size = this._zoneSize * this._zoneCols;
 	
-	// TODO: find local optimal overall scale
-		// ...
-//scale = R3D.optimumScaleForPoint(win, new V2D(size,size), point, null);
-scale = R3D.optimumScaleForPoint(win, new V2D(20,20), point, null);
-	this._scale = scale;
-	// large sigma
-		scale = 1.0 / scale; // inverse
-	var img = range._image.extractRectFromFloatImage(point.x,point.y,scale,2.0, size,size);
-		// img.red(ImageMat.applyGaussianMask(img.red(),img.width(),img.height()).value );
-		// img.grn(ImageMat.applyGaussianMask(img.grn(),img.width(),img.height()).value );
-		// img.blu(ImageMat.applyGaussianMask(img.blu(),img.width(),img.height()).value );
+	//var win = range.imageAtPoint(point,size,size,1.0,0.0);
+	console.log(this._scale)
+
+	// find local optimum affine region
+	img = range._image.extractRectFromFloatImage(this._point.x,this._point.y,1.0/this._scale,null, size,size);
+	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor((img.width()-1)*0.5),Math.floor((img.height()-1)*0.5));
+	var covariance = img.calculateCovariance(new V2D((size-1)*0.5,(size-1)*0.5), mask);
+		var v1 = covariance[0];
+		var v2 = covariance[1];
+	var scaleRatio = v1.z / v2.z;
+	var dot = V2D.dot(v1,gradientY);
+	if(dot<0){
+		v1.scale(-1); //covariance.rotate(Math.PI);
+	}
+	var covarianceAngle = V2D.angleDirection(V2D.DIRX,v1);
+	this._covarianceAngle = covarianceAngle;
+	this._covarianceRatio = scaleRatio;
+	
+
+
+// 		//1.0/this._scale
+// 	img = range._image.extractRectFromFloatImage(this._point.x,this._point.y,1.0/this._scale,2.0, size,size);
+
+
+
+	// get new square @ correct rotation & scale
+	var matrix = new Matrix(3,3).identity();
+		var angleX = V2D.angleDirection(V2D.DIRX, v1);
+			matrix = Matrix.transform2DScale(matrix,this._scale,this._scale);
+			matrix = Matrix.transform2DRotate(matrix,-this._covarianceAngle);
+			// matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(this._covarianceRatio),Math.sqrt(this._covarianceRatio));
+			//matrix = Matrix.transform2DRotate(matrix,this._covarianceAngle);
+			//matrix = Matrix.transform2DRotate(matrix,-this._angle); // gradient angle
+	img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,null, size,size, matrix);
+	this._image = img;
+
+	
+	img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,2.0, size,size, matrix);
 	var gradientR = ImageMat.gradientVector(img.red(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientG = ImageMat.gradientVector(img.grn(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientB = ImageMat.gradientVector(img.blu(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
-	
-	// TODO: find local optimum affine region
-		// ...
-	// primary direction
-	/*
-	var covariance = img.calculateCovariance(new V2D(size*0.5,size*0.5));
-	var scaleRatio = covariance[0].z / covariance[1].z;
-	//console.log(scaleRatio);
-	covariance = covariance[0];
-	var dot = V2D.dot(covariance,gradientY);
-	if(dot<0){
-		covariance.rotate(Math.PI);
-	}
-	covariance = V2D.angleDirection(V2D.DIRX,covariance);
-	this._covarianceAngle = covariance;
-	*/
+	var gradientAngle = V2D.angleDirection(V2D.DIRX,gradientY);
+	this._gradientAngle = gradientAngle;
 
-	// this is very finicky ...
-	var covariance = V2D.angleDirection(V2D.DIRX,gradientY);
-	this._covarianceAngle = covariance;
-
-
-
-
-	// gradient directions
-	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
-	angle.x += covariance;
-	angle.y += covariance;
-	angle.z += covariance;
-	angle.t += covariance;
-//console.log(angle.t)
-	this._angle = angle;
-	var magnitude = ZFeature.V4DMagnitudeFromGradients([gradientR,gradientG,gradientB,gradientY]);
-	this._magnitude = magnitude;
-
-
-// // SHOW
-// 	var win = img;
-// 	img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-// 	var d;
-// 	d = new DOImage(img);
-// 	d.matrix().translate(200, 300);
-// 	GLOBALSTAGE.addChild(d);
-
-	// find best skewing
-	
-	// get new square @ correct rotation & scale
-	var img;
-	img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,2.0, size,size, ZFeature.MatrixWithRotation(-covariance, this._scale, this._scale));
 	var gradientAllRed = ImageMat.gradientVector(img.red(),img.width(),img.height());
 	var gradientAllGrn = ImageMat.gradientVector(img.grn(),img.width(),img.height());
 	var gradientAllBlu = ImageMat.gradientVector(img.blu(),img.width(),img.height());
 	var gradientAllGry = ImageMat.gradientVector(img.gry(),img.width(),img.height());
-// // SHOW
-// var win = img;
-// img = GLOBALSTAGE.getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-// var d;
-// d = new DOImage(img);
-// d.matrix().translate(200, 300);
-// GLOBALSTAGE.addChild(d);
-	
 
-var i, j, k, l;
-var index;
+
+	// gradient directions
+	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
+	this._angle = angle;
+	var magnitude = ZFeature.V4DMagnitudeFromGradients([gradientR,gradientG,gradientB,gradientY]);
+	this._magnitude = magnitude;
+
+	
+	var i, j, k, l;
+	var index;
 	// generate zones
+/*
 	this._zones = [];
 	for(j=0; j<this._zoneCols; ++j){
 		for(i=0; i<this._zoneCols; ++i){
@@ -1996,6 +1998,7 @@ var index;
 			}
 		}
 	}
+*/
 }
 
 ZFeature.V4DAngleFromGradients = function(v, g){

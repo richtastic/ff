@@ -20,8 +20,8 @@ function Matching(){
 
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
-	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
-	var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
+	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
@@ -150,7 +150,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 var pointsA = [
 	new V2D(303,81),
 	new V2D(144,175),
-	new V2D(141,206),
+	new V2D(140,206),
 	new V2D(181,150),
 /*
 	new V2D(303,81),
@@ -168,16 +168,17 @@ var pointsA = [
 ];
 var pointsB = [
 	// stretch
-	new V2D(304,63),
-	new V2D(145,219),
-	new V2D(141,274),
-	new V2D(183,178), // +1 is big diff
-/*
+	// new V2D(304,63),
+	// new V2D(145,220),
+	// new V2D(141,273),
+	// new V2D(182,178), // +1 is big diff
+
 	// large
 	new V2D(331,95),
 	new V2D(93,235),
 	new V2D(87,283),
 	new V2D(149,198),
+/*
 	// large
 	new V2D(331,95),
 //	new V2D(209,133), // x
@@ -216,13 +217,13 @@ var pointsB = [
 //var size = new V2D(50,50);
 //var size = new V2D(39,39);
 //var size = new V2D(40,40);
+/*
 var size = new V2D(20,20);
 
 var mask = ImageMat.circleMask(size.x,size.y);
 
 
 var referenceScale = 15;
-
 
 
 var copyImageMatrixA = imageMatrixA;
@@ -250,8 +251,10 @@ imageMatrixB = imageMatrixB.extractRectFromFloatImage(imageMatrixB.width()*0.5,i
 	var imageGradMagBGry = imageMatrixB.gry();
 	var imageMatrixBGry = imageMatrixB.gry();
 	//imageMatrixBGry = ImageMat.applyGaussianFloat(imageMatrixBGry, imageMatrixB.width(), imageMatrixB.height(), 2.0);
+*/
 
-
+var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
+var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
 
 for(k=0; k<pointsA.length; ++k){
 var pointA = pointsA[k];
@@ -264,6 +267,23 @@ this.drawAround([pointA], 0,0);
 var copyPointB = pointB.copy();
 this.drawAround([pointB], 400,0);
 
+
+var featureA = new ZFeature();
+var featureB = new ZFeature();
+featureA.setupWithImage(rangeA, pointA);
+featureB.setupWithImage(rangeB, pointB);
+
+
+featureA.visualize(50 + k*100,400, rangeA);
+featureB.visualize(50 + k*100,500, rangeB);
+//ZFeature.prototype.visualize = function(x,y, range){
+
+// imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
+// var rangeB = new AreaMap.ZFeature(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
+	//setupWithImage();
+
+}
+/*
 
 pointA.scale(scaler);
 pointB.scale(scaler);
@@ -284,8 +304,8 @@ pointB.scale(scaler);
 // var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, new V2D(5,5), pointB);
 // var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, new V2D(35,35), pointA);
 // var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, new V2D(35,35), pointB);
-var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, null, pointA);
-var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, null, pointB);
+var optimumScaleA = R3D.optimumScaleForPoint(copyImageMatrixA, pointA);
+var optimumScaleB = R3D.optimumScaleForPoint(copyImageMatrixB, pointB);
 
 
 
@@ -345,9 +365,9 @@ console.log("A: "+vScale);
 	matrix = new Matrix(3,3).identity();
 		var angleX = V2D.angleDirection(V2D.DIRX, v1);
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
-			matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
+			//matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
+			matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(vScale),Math.sqrt(vScale));
 			//matrix = Matrix.transform2DScale(matrix,Math.sqrt(vScale),1.0/Math.sqrt(vScale));
-			//matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(vScale),Math.sqrt(vScale));
 			matrix = Matrix.transform2DRotate(matrix,angleX);
 			matrix = Matrix.transform2DScale(matrix,optimumScaleA,optimumScaleA);
 
@@ -452,8 +472,8 @@ var vScale = v1.z / v2.z;
 	matrix = new Matrix(3,3).identity();
 		var angleX = V2D.angleDirection(V2D.DIRX, v1);
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
-			matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
-			//matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(vScale),Math.sqrt(vScale));
+			//matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
+			matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(vScale),Math.sqrt(vScale));
 			//matrix = Matrix.transform2DScale(matrix,Math.sqrt(vScale),1.0/Math.sqrt(vScale));
 			matrix = Matrix.transform2DRotate(matrix,angleX);
 			matrix = Matrix.transform2DScale(matrix,optimumScaleB,optimumScaleB);
@@ -509,7 +529,7 @@ if( Math.abs(grad) > Math.PI*0.5){
 
 
 }
-
+*/
 
 /*
 

@@ -1989,7 +1989,7 @@ console.log(i+": "+scale);
 }
 
 
-R3D.optimumScaleForPoint = function(gradientGry, imageWidth, imageHeight, pointX, pointY){
+R3D.optimumScaleForPointSimpleNotExactlyWorking = function(gradientGry, imageWidth, imageHeight, pointX, pointY){
 var winStart = 1; // grid points
 var winEnd = 101; // wide open areas
 var referenceScale = 15;
@@ -2042,8 +2042,10 @@ var optimumScale = null;
 }
 
 // 
-R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){ // imageMat
+//R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){ // imageMat
+R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	size = size ? size : new V2D(25,25);
+	//size = size ? size : new V2D(45,45);
 	maskOutCenter = maskOutCenter ? maskOutCenter : ImageMat.circleMask(size.x,size.y);
 	var scaleTimes = 100;
 	var minScalePower = -4; // -4 = 0.0625
@@ -2062,11 +2064,11 @@ R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){
 		// BLUR
 		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
 		// RECAPTURE
-	//var entropy = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter);
-	var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
-	var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
-	var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
-	var entropy = (entropyR + entropyG + entropyB)/3.0;
+	var entropy = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter);
+	// var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
+	// var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
+	// var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
+	// var entropy = (entropyR + entropyG + entropyB)/3.0;
 
 	if(!hasFoundDip){
 		if(prevEntropy!==null){
@@ -2088,7 +2090,7 @@ R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){
 		entropyValues.push(entropy);
 	}
 console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n("+point+")");
-/*
+
 	var expectedEntropy = 0.5;  
 	var locations = Code.findGlobalValue1D(entropyValues,expectedEntropy);
 	//console.log("locations: "+locations.length);
@@ -2099,7 +2101,7 @@ console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n("+point+")")
 		optimumScale = Math.exp(Math.log(optimumScale) - 0.0);
 		return optimumScale;
 	}
-*/	
+
 	console.log("ERROR => 1.0");
 	return null;
 }
