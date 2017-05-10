@@ -255,11 +255,14 @@ pointB.scale(scaler);
 
 // var optimumScaleA = R3D.optimumScaleForPoint(imageMatrixAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
 // var optimumScaleB = R3D.optimumScaleForPoint(imageMatrixBGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
-
-var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, 21, pointA);
-var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, 21, pointB);
 // var optimumScaleA = R3D.optimumScaleForPointOLD(imageGradMagA, 21, pointA);
 // var optimumScaleB = R3D.optimumScaleForPointOLD(imageGradMagB, 21, pointB);
+
+
+// var optimumScaleA = R3D.optimumScaleForPoint(imageMatrixAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
+// var optimumScaleB = R3D.optimumScaleForPoint(imageMatrixAGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
+var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, 21, pointA);
+var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, 21, pointB);
 
 
 
@@ -406,6 +409,7 @@ var vScale = v1.z / v2.z;
 // ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean, maskOutCenter){
 	//console.log(""+v1);
 	console.log("B: "+vScale);
+// TODO: ALSO CALCULATE GRADIENT AND MAKE SURE PRIMARy COV DIR IS IN SAME DIRECTION OR FLIP BY PI
 
 	var s = 15;
 	var c = new DO();
