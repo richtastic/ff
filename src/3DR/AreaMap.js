@@ -433,6 +433,16 @@ AreaMap.Range = function(image, width,height, rows,cols) { // image rect
 	this.rows(rows);
 	this.cols(cols);
 	this.resetCells();
+	this._features = Code.newArrayNulls(width*height);
+}
+AreaMap.Range.prototype.feature = function(i,j){
+	i = Math.floor(i);
+	j = Math.floor(j);
+	var feature = this._features[j * this._image.width + i];
+	if(feature!=null){
+		return feature;
+	}
+	return null;
 }
 AreaMap.Range.prototype.cell = function(col,row){
 	if(arguments.length == 2){

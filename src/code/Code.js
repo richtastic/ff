@@ -885,6 +885,9 @@ Code.newArrayArrays = function(len){
 	}
 	return arr;
 }
+Code.newArrayNulls = function(len){
+	return Code.newArrayConstant(len, null);
+}
 Code.newArrayZeros = function(len){
 	return Code.newArrayConstant(len, 0.0);
 }

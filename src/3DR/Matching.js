@@ -20,7 +20,8 @@ function Matching(){
 
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
-	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
@@ -148,6 +149,11 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 
 var pointsA = [
 	new V2D(303,81),
+	new V2D(144,175),
+	new V2D(141,206),
+	new V2D(181,150),
+/*
+	new V2D(303,81),
 //	new V2D(195,255),
 	new V2D(144,175),
 	new V2D(141,206),
@@ -158,8 +164,20 @@ var pointsA = [
 	// new V2D(146,109),
 	// new V2D(88,113), // 10
 	// new V2D(55,107),
+*/
 ];
 var pointsB = [
+	// stretch
+	new V2D(304,63),
+	new V2D(145,219),
+	new V2D(141,274),
+	new V2D(183,178), // +1 is big diff
+/*
+	// large
+	new V2D(331,95),
+	new V2D(93,235),
+	new V2D(87,283),
+	new V2D(149,198),
 	// large
 	new V2D(331,95),
 //	new V2D(209,133), // x
@@ -184,6 +202,7 @@ var pointsB = [
 	// new V2D(213,11),
 	// new V2D(179,24.5), // 10
 	// new V2D(159,58),
+*/
 ];
 
 // MORE BUCKET SIZES SCALES THE ENTROPY UP
@@ -261,20 +280,14 @@ pointB.scale(scaler);
 
 // var optimumScaleA = R3D.optimumScaleForPoint(imageMatrixAGry, imageMatrixA.width(), imageMatrixA.height(), pointA.x, pointA.y);
 // var optimumScaleB = R3D.optimumScaleForPoint(imageMatrixAGry, imageMatrixB.width(), imageMatrixB.height(), pointB.x, pointB.y);
-var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, 21, pointA);
-var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, 21, pointB);
+// var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, new V2D(5,5), pointA);
+// var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, new V2D(5,5), pointB);
+// var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, new V2D(35,35), pointA);
+// var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, new V2D(35,35), pointB);
+var optimumScaleA = R3D.optimumScaleForPointOLD(copyImageMatrixA, null, pointA);
+var optimumScaleB = R3D.optimumScaleForPointOLD(copyImageMatrixB, null, pointB);
 
 
-
-// var outScale = 1;
-// optimumScaleA = Math.pow(2, Math.log2(optimumScaleA)-outScale);
-// optimumScaleB = Math.pow(2, Math.log2(optimumScaleB)-outScale);
-
-// optimumScaleA = 1.0/optimumScaleA;
-// optimumScaleB = 1.0/optimumScaleB;
-
-// console.log(optimumScaleA);
-// console.log(optimumScaleB);
 
 console.log("     ..................... "+k+" - "+optimumScaleA+" | "+optimumScaleB);
 
@@ -331,7 +344,6 @@ console.log("A: "+vScale);
 	// STRETCH:
 	matrix = new Matrix(3,3).identity();
 		var angleX = V2D.angleDirection(V2D.DIRX, v1);
-		console.log(angleX*180/Math.PI)
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
 			matrix = Matrix.transform2DScale(matrix,vScale/2,2/vScale);
 			//matrix = Matrix.transform2DScale(matrix,Math.sqrt(vScale),1.0/Math.sqrt(vScale));
@@ -348,7 +360,7 @@ console.log("A: "+vScale);
 
 	// ROTATE TO GRAD
 	var grad = covImage.calculateGradient(null,null, true);
-		grad = V2D.angleDirection(V2D.DIRX, grad);
+		//grad = V2D.angleDirection(V2D.DIRX, grad);
 			//matrix = Matrix.transform2DRotate(matrix,grad);
 
 			// TODO: BLURR
@@ -366,6 +378,13 @@ console.log("A: "+vScale);
 			covImage._b = bB;
 			var bdir = entropyImage.calculateCovariance(new V2D((covImage.width()-1)*0.5, (covImage.height()-1)*0.5), mask);
 			bdir = bdir[0];
+			
+grad = V2D.angleDirection(bdir, grad);
+//console.log("GRAD: "+(grad*180/Math.PI));
+if( Math.abs(grad) > Math.PI*0.5){
+	//bdir.rotate(Math.PI);
+	bdir.scale(-1);
+}
 			angleX = V2D.angleDirection(V2D.DIRX, bdir);
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
 			var covImage = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y, 1.0, null, referenceScale, referenceScale, matrix);
@@ -447,8 +466,11 @@ var vScale = v1.z / v2.z;
 		GLOBALSTAGE.addChild(d);
 	// ROTATE TO GRAD
 	var grad = covImage.calculateGradient(null,null, true);
-		grad = V2D.angleDirection(V2D.DIRX, grad);
+		//grad = V2D.angleDirection(V2D.DIRX, grad);
 			//matrix = Matrix.transform2DRotate(matrix,grad);
+
+			//
+
 			// TODO: BLURR
 			var gaussSize = Math.round(Math.sqrt(referenceScale));
 			var sigma = 1.6;
@@ -464,6 +486,14 @@ var vScale = v1.z / v2.z;
 			covImage._b = bB;
 			var bdir = entropyImage.calculateCovariance(new V2D((covImage.width()-1)*0.5, (covImage.height()-1)*0.5), mask);
 			bdir = bdir[0];
+			
+grad = V2D.angleDirection(bdir, grad);
+//console.log("GRAD: "+(grad*180/Math.PI));
+if( Math.abs(grad) > Math.PI*0.5){
+	//bdir.rotate(Math.PI);
+	bdir.scale(-1);
+}
+
 			angleX = V2D.angleDirection(V2D.DIRX, bdir);
 			matrix = Matrix.transform2DRotate(matrix,-angleX);
 			var covImage = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y, 1.0, null, referenceScale, referenceScale, matrix);
