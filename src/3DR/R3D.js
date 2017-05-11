@@ -2043,33 +2043,75 @@ var optimumScale = null;
 
 // 
 //R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){ // imageMat
+var XCALL = 0;
 R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
+++XCALL;
 	size = size ? size : new V2D(25,25);
-	//size = size ? size : new V2D(45,45);
-	maskOutCenter = maskOutCenter ? maskOutCenter : ImageMat.circleMask(size.x,size.y);
-	var scaleTimes = 100;
+	//size = size ? size : new V2D(85,85);
+	//maskOutCenter = maskOutCenter ? maskOutCenter : ImageMat.circleMask(size.x,size.y);
+	maskOutCenter = null;
+	var scaleTimes = 80;
 	var minScalePower = -4; // -4 = 0.0625
-	var maxScalePower = 8; // 4 = 16
+	var maxScalePower = 6; // 4 = 16
 	var entropyValues = [];
 	var scaleValues = [];
 	var prevEntropy = null;
 	var hasFoundDip = false;
-	for(i=0; i<scaleTimes; ++i){
-		var p = 1.0 - i/(scaleTimes-1); // start zoomed in
-		var power = minScalePower + (maxScalePower - minScalePower)*p;
-		scale = Math.pow(2, power);
+
+	var scales = [16.0,8.0,4.0,2.0,1.0,0.5,0.25,0.125,0.0625];
+	for(i=0; i<scales.length; ++i){
+		scale = scales[i];
+	// for(i=0; i<scaleTimes; ++i){
+	// 	var p = 1.0 - i/(scaleTimes-1); // start zoomed in
+	// 	var power = minScalePower + (maxScalePower - minScalePower)*p;
+	// 	scale = Math.pow(2, power);
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,scale,scale);
 		// var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,1.6, testSize.x,testSize.y, testMatrix);
 		// BLUR
-		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0,null, size.x,size.y, matrix);
+		//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, null, size.x,size.y, matrix);
+		blur = scale;
+		if(blur < 1){
+			blur = null;
+		}
+// what is the most accurate way to scale IN to an item?
+if(scale < 1){
+	// 2x : blur by 2 pixels, scale up
+	//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, blur, size.x,size.y, matrix);
+}else{
+	// what is the most accurate way to scale OUT from an item?
+	// 1/2: blur by 2 pixels, scale down
+}
+
+		blur = 2.0;
+			var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, blur, size.x,size.y, matrix);
 		// RECAPTURE
 	var entropy = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter);
+
+
+var img = GLOBALSTAGE.getFloatGrayAsImage(image.gry(), image.width(),image.height(), null, null);
+var d = new DOImage(img);
+d.matrix().scale(1);
+d.matrix().translate(0 + i*25, 0 + XCALL*25);
+GLOBALSTAGE.addChild(d);
+
+	
+	var bins = 5;
+	// var entropyA = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, bins, 0.0);
+	// var entropyB = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, bins, 0.1);
+	// var entropyC = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, bins, 0.2);
+	// var entropyD = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, bins, 0.3);
+	// var entropyE = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, bins, 0.4);
+	// var entropy = (entropyA + entropyB + entropyC + entropyD + entropyE) / 5.0;
+
+	var entropy = ImageMat.entropy(image.gry(), size.x, size.y, maskOutCenter, bins, 0.0);
+	//entropy = Math.sqrt(entropy);
+
 	// var entropyR = ImageMat.entropy(image.red(), size.x, size.y, maskOutCenter);
 	// var entropyG = ImageMat.entropy(image.grn(), size.x, size.y, maskOutCenter);
 	// var entropyB = ImageMat.entropy(image.blu(), size.x, size.y, maskOutCenter);
 	// var entropy = (entropyR + entropyG + entropyB)/3.0;
-
+/*
 	if(!hasFoundDip){
 		if(prevEntropy!==null){
 			if(entropy>=prevEntropy){
@@ -2085,20 +2127,22 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 			prevEntropy = entropy;
 		}
 	}
-
+*/
 		scaleValues.push(scale);
 		entropyValues.push(entropy);
 	}
 console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n("+point+")");
 
-	var expectedEntropy = 0.5;  
+	//var expectedEntropy = 0.5;
+	var expectedEntropy = 0.5;
 	var locations = Code.findGlobalValue1D(entropyValues,expectedEntropy);
 	//console.log("locations: "+locations.length);
 	if(locations.length>0){
-		var location = locations[locations.length-1]; // last = smallest
+		var location = locations[0];//locations[locations.length-1]; // last = smallest
 		var optimumEntropy = Code.interpolateValue1D(entropyValues, location);
 		var optimumScale = Code.interpolateValue1D(scaleValues, location);
-		optimumScale = Math.exp(Math.log(optimumScale) - 0.0);
+		//optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+		optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
 		return optimumScale;
 	}
 

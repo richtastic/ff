@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>Entropy</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["AreaMap.js","R3D.js","Entropy.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var entropy = new Entropy();
+	return;
+/*
+
+x different binning - 
+	round over / out
+
+#1: 200%
+#2: 100%
+#3:  50%
+
+
+
+--- graphs are very hard to be identical
+	- maximas are therefore not conssitent
+--- entropy @ % is more consistent
+	- lower values are even more consistent but have much less features
+--- blurring is very much required
+
+
+
+first to entropy = 0.5, or if a max is reached before that
+
+or if a max is reached before 0.5 => it is not a useable point?
+
+*/
+}
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
+

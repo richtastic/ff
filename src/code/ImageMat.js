@@ -1041,27 +1041,18 @@ ImageMat.valueFromCDF = function(cdf,value){
 	return 1;
 }
 
-ImageMat.entropy = function(data, wid, hei, maskOutCenter, bins){
-	return ImageMat.entropySimple(data, wid, hei, bins, maskOutCenter);
-
-	var bins = Math.round(3 + Math.log2(data.length) * Math.log(data.length));
-	return ImageMat.entropySimple(data, wid, hei, bins, maskOutCenter);
-
-	var i, len = wid*hei;
-	var cdf = ImageMat.cdf(data);
-	var entropy = 0;
-	return entropy;
+ImageMat.entropy = function(data, wid, hei, maskOutCenter, bins, bucketOffset){
+	return ImageMat.entropySimple(data, wid, hei, bins, maskOutCenter, bucketOffset);
+	// var bins = Math.round(3 + Math.log2(data.length) * Math.log(data.length));
+	// return ImageMat.entropySimple(data, wid, hei, bins, maskOutCenter);
+	// var i, len = wid*hei;
+	// var cdf = ImageMat.cdf(data);
+	// var entropy = 0;
+	// return entropy;
 }
-ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range assumed [0,1]  |  16 => 4  |  100 => 10
+ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter, bucketOffset){// range assumed [0,1]  |  16 => 4  |  100 => 10
 	var value, i, bin, len = data.length;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
-	//buckets = Math.round(len/10);
-	//buckets =  Math.round( Math.pow(len,0.5) );
-//buckets = Math.round(len/10);
-	//buckets =  Math.round(Math.pow(len,0.33333));
-	//console.log(buckets)
-	// buckets = Math.round(Math.pow(len,0.333333333)); buckets = Math.round(Math.pow(len,0.333333333));
-	// Math.round(Math.pow(len,0.333333333));
 	var info = Code.infoArray(data);
 	var infoMax = info["max"];
 	var infoMin = info["min"];
@@ -1079,6 +1070,9 @@ ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter){// range a
 		}
 		if(mask){
 			value = data[i];
+			if(bucketOffset){
+				value = (value + bucketOffset) % 1.0;
+			}
 			value = (value - infoMin)/infoRange;
 			bin = Math.min(Math.floor( value*buckets ),bm1);
 			histogram[bin] += 1;
