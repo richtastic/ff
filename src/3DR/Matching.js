@@ -150,8 +150,12 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 var pointsA = [
 	new V2D(303,81),
 	new V2D(144,175),
-	new V2D(140,206),
+	new V2D(140.5,207),
 	new V2D(181,150),
+	new V2D(221,177),
+	new V2D(145.5,110),
+	new V2D(251,76),
+	new V2D(231,135),
 /*
 	new V2D(303,81),
 //	new V2D(195,255),
@@ -176,8 +180,13 @@ var pointsB = [
 	// large
 	new V2D(331,95),
 	new V2D(93,235),
-	new V2D(87,283),
+	new V2D(87,284),
 	new V2D(149,198),
+	new V2D(208,239),
+	new V2D(96,138),
+	new V2D(253,88),
+	new V2D(225,175),
+	
 /*
 	// large
 	new V2D(331,95),
@@ -255,6 +264,8 @@ imageMatrixB = imageMatrixB.extractRectFromFloatImage(imageMatrixB.width()*0.5,i
 
 var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
 var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
+var featuresA = Code.newArrayNulls(imageMatrixA.width()*imageMatrixA.height());
+var featuresB = Code.newArrayNulls(imageMatrixB.width()*imageMatrixB.height());
 
 for(k=0; k<pointsA.length; ++k){
 var pointA = pointsA[k];
@@ -274,15 +285,32 @@ featureA.setupWithImage(rangeA, pointA);
 featureB.setupWithImage(rangeB, pointB);
 
 
+var index = Math.floor(featureA.point().y)*imageMatrixA.width() + Math.floor(featureA.point().x);
+featuresA[index] = featureA;
+var index = Math.floor(featureB.point().y)*imageMatrixB.width() + Math.floor(featureB.point().x);
+featuresB[index] = featureB;
+
+
 featureA.visualize(50 + k*100,400, rangeA);
 featureB.visualize(50 + k*100,500, rangeB);
-//ZFeature.prototype.visualize = function(x,y, range){
-
-// imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
-// var rangeB = new AreaMap.ZFeature(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
-	//setupWithImage();
 
 }
+
+
+return;
+
+
+// TODO: COMPARE each
+
+// TODO: ASSIGN each
+
+
+
+
+
+
+
+
 /*
 
 pointA.scale(scaler);
@@ -533,10 +561,6 @@ if( Math.abs(grad) > Math.PI*0.5){
 
 /*
 
-*/
-return;
-
-
 var scaleA = R3D.optimumScaleForPoint(imageMatrixA, size, pointA, new V2D(810, 20));
 console.log("A: "+scaleA);
 var scaleB = R3D.optimumScaleForPoint(imageMatrixB, size, pointB, new V2D(850, 20));
@@ -561,7 +585,9 @@ this.drawAround([pointB], 400,0);
 	d.matrix().translate(200, 310);
 	GLOBALSTAGE.addChild(d);
 
-//return;
+*/
+
+return;
 /*
 // ENTROPY IMAGE:
 

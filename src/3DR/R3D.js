@@ -2056,9 +2056,9 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	//maskOutCenter = maskOutCenter ? maskOutCenter : ImageMat.circleMask(size.x,size.y);
 	//maskOutCenter = null;
 	maskOutCenter = ImageMat.circleMask(size.x,size.y);
-	var scaleTimes = 80;
-	var minScalePower = -5; // -4 = 0.0625
-	var maxScalePower = 5; // 4 = 16
+	var scaleTimes = 50;
+	var minScalePower = -4; // -4 = 0.0625
+	var maxScalePower = 4; // 4 = 16
 	var entropyValues = [];
 	var scaleValues = [];
 	var prevEntropy = null;
@@ -2084,12 +2084,12 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 		var blur = 2.0;
 		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, blur, size.x,size.y, matrix);
 
-
+		var imageGray = image.gry();
+/*
 		// METRIC:
-		var metrix = 0;
+		var metric = 0;
 		// average roughness B: 1/n SUM |y-yavg|
 		metric = 0;
-		var imageGray = image.gry();
 		//imageGray = ImageMat.sharpen(imageGray,size.x,size.y).value;
 // var imageGrayGrad = ImageMat.gradientMagnitude(imageGray,size.x,size.y).value;
 // imageGray = imageGrayGrad;
@@ -2152,7 +2152,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 		//var buckets = 50;
 		var buckets = 625;
 		var entropySimple = ImageMat.entropySimple(imageGray, size.x, size.y, buckets, maskOutCenter);
-
+*/
 		//metric = rangeValue;
 		//metric = (1.0 / pixelCount) * Math.sqrt(metric);
 		//metric = (1.0 / pixelCount) * metric;
@@ -2179,7 +2179,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 		//metric = entropySimple / moment; // nice spikes, wrong order
 		//metric = moment / (entropySimple>0 ? entropySimple : 1.0);
 		//metric = Math.pow(entropySimple, 2);
-		metric = entropySimple;
+		//metric = entropySimple;
 		//metric = moment;
 		//metric = ssdGaussian;
 
@@ -2208,100 +2208,58 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
         //var DoG = ImageMat.subFloat(imageGray,imageB);
         var DoGCenter = DoG[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
         //console.log(DoGCenter);
+// CURRENTLY BEST
 		var entropy = DoGCenter;
-		
 
-/*
-// VISUALIZE
-//var img = GLOBALSTAGE.getFloatGrayAsImage(image.gry(), image.width(),image.height(), null, null);
-//var show = ImageMat.getNormalFloat01(imageGrayGrad);
-var show = image.gry();
-//show = ImageMat.sharpen(show,size.x,size.y).value;
-var img = GLOBALSTAGE.getFloatGrayAsImage(show, image.width(),image.height(), null, null);
-var d = new DOImage(img);
-var sca = 2
-d.matrix().scale(sca);
-d.matrix().translate(0 + i*size.x*sca, 0 + XCALL*size.y*sca);
-GLOBALSTAGE.addChild(d);
-*/
+		//var laplacian = ImageMat.laplacian(imageGray, size.x,size.y).value;
+		//var laplacianCenter = laplacian[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
+		//var laplacianCenter = ImageMat.laplacian(imageGray, size.x,size.y,  Math.floor(size.y*0.5), Math.floor(size.x*0.5));
+		//var entropy = laplacianCenter;
+
+	//entropy = entropySimple;
+		
 		scaleValues.push(scale);
 		entropyValues.push(entropy);
 	}
 
 	// remove noise:
-	var gauss = Code.gaussianWindow(1.0);
+	//var gauss = Code.gaussianWindow(0.1, 5);
+	//var gauss = Code.gaussianWindow(0.5, 5);
+	var gauss = Code.gaussianWindow(1.0, 7);
 	var conv = Code.convolve1D(entropyValues, gauss, false);
 	entropyValues = conv;
 
-	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n("+point+")");
+	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
 
-
-
-
+	for(m=0;m<scaleValues.length;++m){
+		scaleValues[m] = Math.log2(scaleValues[m]);
+	}
+var location = null;
 var info = Code.infoArray(entropyValues);
 var range = info["range"];
 var minProm = range*0.5*0.1;
 var prominence = Code.findExtremaProminence1D(entropyValues);
-var maxima = prominence["max"];
-var minima = prominence["min"];
 var extrema = prominence["extrema"];
-//var maxima = extrema;
-
-	// TODO:
-	// find range of graph
-	// find first maxima with at least %5 prominence
-	//var locations = Code.findMaxima1D(entropyValues);
-	//var locations = Code.findMaxima1D(entropyValues);
-	//var locations = Code.findGlobalExtrema1D(entropyValues, false);
-	
-
-	//console.log("locations: "+locations.length);
-	// console.log(locations);
-	// console.log(scaleValues)
-	//console.log(scaleValues)
-	var location = null;
-	var locations = [];
-	var arr, m;
-	arr = minima;
-	if(arr.length>0){
-		for(m=0; m<arr.length; ++m){
-			if(arr[m].z>minProm){
-				locations.push(arr[m]);
-				break;
-			}
-		}
-	}
-	arr = maxima;
-	if(arr.length>0){
-		for(m=0; m<arr.length; ++m){
-			if(arr[m].z>minProm){
-				locations.push(arr[m]);
-				break;
-			}
-		}
-	}
-// just use max prominence:
-//locations = extrema;
+// just use first prominence:
+locations = extrema;
 	for(m=0; m<locations.length; ++m){
-		if(location==null){
+		if(locations[m].z>minProm){
 			location = locations[m];
-		}else{
-			if(locations[m].z>location.z){
-				location = locations[m];
-			}
+			break;
 		}
 	}
-		if(location==null){
-			console.log("no best prominence location");
-		}else{
-			//var location = locations[0];
-			//var location = locations[locations.length - 1];
-			var optimumEntropy = Code.interpolateValue1D(entropyValues, location.x);
-			var optimumScale = Code.interpolateValue1D(scaleValues, location.x);
-			//console.log(optimumScale);
-			//optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
-			return optimumScale;
-		}
+	if(location==null){
+		console.log("no best prominence location");
+	}else{
+		//var location = locations[0];
+		//var location = locations[locations.length - 1];
+		var optimumEntropy = Code.interpolateValue1D(entropyValues, location.x);
+		var optimumScale = Code.interpolateValue1D(scaleValues, location.x);
+			optimumScale = Math.pow(2,optimumScale);// undo log2
+		//console.log(optimumScale);
+optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+		return optimumScale;
+	}
 	return 1.0;
 }
 // 

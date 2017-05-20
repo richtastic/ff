@@ -1609,7 +1609,21 @@ ZFeature = function(){
 	this._zoneCols = 4; // rows/cols of zones
 	this._zoneSize = 4; // pixels a zone edge covers
 	this._zones = [];
+	this._point = null;
+	this._area = null;
 	// zone count =  this._zoneCols * this._zoneCols
+}
+ZFeature.prototype.point = function(p){
+	if(p!==undefined){
+		this._point = p;//.copy();
+	}
+	return this._point;
+}
+ZFeature.prototype.area = function(a){
+	if(a!==undefined){
+		this._area = a;
+	}
+	return this._area;
 }
 ZFeature.compareScore = function(a,b, rangeA, rangeB){
 	var i, j, k, l, zA, zB, index;
@@ -1679,8 +1693,10 @@ ZFeature.compareScore = function(a,b, rangeA, rangeB){
 	var scaleB = b._scale;
 //console.log(scaleA,scaleB);
 	var size = a._zoneCols*a._zoneSize;
-	var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, scaleA, scaleA));
-	var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, scaleB, scaleB));
+	// var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, scaleA, scaleA));
+	// var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, scaleB, scaleB));
+	var imgA = rangeA.area();
+	var imgB = rangeB.area();
 	var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
 	score += sadScore;
 
@@ -1887,6 +1903,7 @@ ZFeature.scoreForMagnitudeAngleRGB = function(magA, magB, angA,angB){
 	return error;
 }
 ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze){
+	this.point(point);
 	// get square
 	var size = 25;
 	var mask = ImageMat.circleMask(size,size);
@@ -1898,7 +1915,7 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	//var size = this._zoneSize * this._zoneCols;
 	
 	//var win = range.imageAtPoint(point,size,size,1.0,0.0);
-	console.log(this._scale)
+	//console.log(this._scale)
 
 	// find local optimum affine region
 	img = range._image.extractRectFromFloatImage(this._point.x,this._point.y,1.0/this._scale,null, size,size);
@@ -1933,8 +1950,9 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,null, size,size, matrix);
 	this._image = img;
 
-	
-	img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,2.0, size,size, matrix);
+	img = range._image.extractRectFromFloatImage(point.x,point.y,2.0,null, size*2,size*2, matrix);
+		// img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,1.0, size*2,size*2, null);
+		// img = img.extractRectFromFloatImage(point.x,point.y,1.0,null, size,size, matrix);
 	var gradientR = ImageMat.gradientVector(img.red(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientG = ImageMat.gradientVector(img.grn(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
 	var gradientB = ImageMat.gradientVector(img.blu(),img.width(),img.height(), Math.floor(img.width()*0.5),Math.floor(img.height()*0.5));
@@ -1954,6 +1972,10 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	var magnitude = ZFeature.V4DMagnitudeFromGradients([gradientR,gradientG,gradientB,gradientY]);
 	this._magnitude = magnitude;
 
+	//var size = a._zoneCols*a._zoneSize;
+	//var size = ;
+	var area = range._image.extractRectFromFloatImage(this._point.x,this._point.y,this._scale,null, size,size, matrix);
+	this._area = area;
 	
 	var i, j, k, l;
 	var index;
