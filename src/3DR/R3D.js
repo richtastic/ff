@@ -2057,8 +2057,8 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	//maskOutCenter = null;
 	maskOutCenter = ImageMat.circleMask(size.x,size.y);
 	var scaleTimes = 80;
-	var minScalePower = -4; // -4 = 0.0625
-	var maxScalePower = 9; // 4 = 16
+	var minScalePower = -5; // -4 = 0.0625
+	var maxScalePower = 5; // 4 = 16
 	var entropyValues = [];
 	var scaleValues = [];
 	var prevEntropy = null;
@@ -2208,11 +2208,10 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
         //var DoG = ImageMat.subFloat(imageGray,imageB);
         var DoGCenter = DoG[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
         //console.log(DoGCenter);
-
 		var entropy = DoGCenter;
 		
 
-
+/*
 // VISUALIZE
 //var img = GLOBALSTAGE.getFloatGrayAsImage(image.gry(), image.width(),image.height(), null, null);
 //var show = ImageMat.getNormalFloat01(imageGrayGrad);
@@ -2224,7 +2223,7 @@ var sca = 2
 d.matrix().scale(sca);
 d.matrix().translate(0 + i*size.x*sca, 0 + XCALL*size.y*sca);
 GLOBALSTAGE.addChild(d);
-
+*/
 		scaleValues.push(scale);
 		entropyValues.push(entropy);
 	}
@@ -2243,10 +2242,10 @@ var info = Code.infoArray(entropyValues);
 var range = info["range"];
 var minProm = range*0.5*0.1;
 var prominence = Code.findExtremaProminence1D(entropyValues);
-	console.log(prominence);
-	var maxima = prominence["max"];
-	console.log(maxima+" ... " + minProm);
-
+var maxima = prominence["max"];
+var minima = prominence["min"];
+var extrema = prominence["extrema"];
+//var maxima = extrema;
 
 	// TODO:
 	// find range of graph
@@ -2260,46 +2259,51 @@ var prominence = Code.findExtremaProminence1D(entropyValues);
 	// console.log(locations);
 	// console.log(scaleValues)
 	//console.log(scaleValues)
-	if(maxima.length>0){
-		var location = null;
-		for(m=0; m<maxima.length; ++m){
-			if(maxima[m].z>minProm){
-				location = maxima[m];
+	var location = null;
+	var locations = [];
+	var arr, m;
+	arr = minima;
+	if(arr.length>0){
+		for(m=0; m<arr.length; ++m){
+			if(arr[m].z>minProm){
+				locations.push(arr[m]);
 				break;
 			}
 		}
-/*
-var location = null;
-if(GLOBS==0){
-	location = locations[1];
-}else if(GLOBS==1){
-	location = locations[1];
-}else if(GLOBS==2){
-	location = locations[0];
-}
-*/
-
-
-
-
-++GLOBS;
+	}
+	arr = maxima;
+	if(arr.length>0){
+		for(m=0; m<arr.length; ++m){
+			if(arr[m].z>minProm){
+				locations.push(arr[m]);
+				break;
+			}
+		}
+	}
+// just use max prominence:
+//locations = extrema;
+	for(m=0; m<locations.length; ++m){
 		if(location==null){
-			console.log("no min prominence location");
+			location = locations[m];
+		}else{
+			if(locations[m].z>location.z){
+				location = locations[m];
+			}
+		}
+	}
+		if(location==null){
+			console.log("no best prominence location");
 		}else{
 			//var location = locations[0];
-
 			//var location = locations[locations.length - 1];
 			var optimumEntropy = Code.interpolateValue1D(entropyValues, location.x);
 			var optimumScale = Code.interpolateValue1D(scaleValues, location.x);
-			console.log(optimumScale);
+			//console.log(optimumScale);
 			//optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
 			return optimumScale;
 		}
-	}
 	return 1.0;
 }
-GLOBS = 0;
-
 // 
 //R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){ // imageMat
 var XCALL = 0;

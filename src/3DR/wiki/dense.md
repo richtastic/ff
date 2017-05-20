@@ -433,7 +433,7 @@ FEEDBACK:
 
 
 
-
+for feature matching, can also see how well the scale-space graphs line up -- since that is generated anyway
 
 ---- ENTROPY SELECTION: SHOULD USE:
 	MAX ENTROPY
