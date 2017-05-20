@@ -438,7 +438,7 @@ ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc, does){
 	return ImageMat.getGaussianWindow(size,1, sigma);
 	// SHOULD USE A 1D GENERATOR HERE
 }
-ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter){
+ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter, norm2){
 	if(sigmaY==undefined){ sigmaY = sigmaX; }
 	var len = width*height;
 	var matrix = new Array(len);
@@ -464,14 +464,14 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter){
 		for(i=0;i<len;++i){ // total == 1.0
 			matrix[i] *= val;
 		}
-	}else{
+	}else if(!norm2){
 		for(i=0;i<len;++i){ // total == 1.0
 			matrix[i] /= sum;
 		}
 	}
 	return matrix;
 }
-ImageMat.getGaussianWindowSimple = function(width,height, sigma){ // === ImageMat.getGaussianWindow(width,height, sigma,sigma,true)
+ImageMat.getGaussianWindowSimple = function(width,height, sigma){ // === ImageMat.getGaussianWindow(width,height, sigma,sigma,true). --- to simplify: mirror 2ce
 	var len = width*height;
 	var matrix = new Array(len);
 	var c = 1/(2*sigma*sigma);
@@ -1685,7 +1685,127 @@ ImageMat.prototype.calculateMoment = function(mean){
 ImageMat.prototype.calculateX = function(){
 	
 }
+ImageMat.cooccurrenceMatrix = function(image, wid, hei, imageMask, levels, offX, offY, dontNormalize){
+	if(offX===undefined || offY===undefined){
+		offX = 1; offY = 0; // right
+	}
+	var lm1 = levels - 1;
+	var size = levels*levels;
+	var com = Code.newArrayZeros(size);
+	var i, j, k, indexU, indexV, u, v;
+	var count = 0;
+	var mask = 1;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			indexU = j*wid + i;
+			if(imageMask){
+				mask = imageMask[indexU];
+			}
+			if(mask==0){
+				continue;
+			}
+			var ii = (i+offX);
+			var jj = (j+offY);
+			if(ii>=wid || jj>=hei){
+				continue;
+			}
+			indexV = jj*wid + ii;
+			u = image[indexU];
+			v = image[indexV];
+			u = Math.min(Math.floor(u*levels),lm1);
+			v = Math.min(Math.floor(v*levels),lm1);
+			com[u*levels + v] += 1;
+			++count;
+		}
+	}
+	if(!dontNormalize && count>0){
+		for(i=0; i<size; ++i){
+			com[i] = com[i]/count;
+		}
+	}
+	return com;
+}
+/*
+energy
+entropy
+contrast
+homogeneity
+correlation
+*/
+ImageMat.cooccurrenceMatrixEnergy = function(com, levels){
+	var i, value;
+	var size = com.length;//levels*levels;
+	var result = 0;
+	var min = null;
+	var max = null;
+	for(i=0; i<size; ++i){
+		value = com[i];
+	}
+	var range = max - min;
+	var avg = (max+min)*0.5;
+	for(i=0; i<size; ++i){
+		value = com[i];
+		value = value - avg;
+		value = Math.abs(value);
+		value = value * value;
+		result += value;
+	}
+	return result;
+}
 
+ImageMat.cooccurrenceMatrixEntropy = function(com, levels){
+	var i, value;
+	var size = com.length;//levels*levels;
+	var result = 0;
+	for(i=0; i<size; ++i){
+		value = com[i];
+		if(value>0){
+			value = value * Math.log2(value);
+			result += value;
+		}
+	}
+	//var maxEntropy = -Math.log2(1.0/levels);
+	//result = result / maxEntropy;
+	result = result / (levels-1);
+	return -result;
+}
+
+ImageMat.cooccurrenceMatrixHomogeneity = function(com, levels){
+	var i, value;
+	var size = com.length;
+	var result = 0;
+	for(j=0; j<levels; ++j){
+		for(i=0; i<levels; ++i){
+			var index = j*levels + i;
+			value = com[index];
+			value = value / (1 + Math.abs(i - j));
+			result += value;
+		}
+	}
+	return result;
+}
+
+ImageMat.cooccurrenceMatrixCorrelation = function(com, levels){
+	var i, value;
+	var size = com.length;
+	var result = 0;
+	/*
+	var muI = ?;
+	var muJ = ?;
+	var sigI = ?;
+	var sigJ = ?;
+	for(j=0; j<levels; ++j){
+		for(i=0; i<levels; ++i){
+			var index = j*levels + i;
+			value = com[index];
+			// value = value / (1 + Math.abs(i - j));
+			// result += value;
+		}
+	}
+	result = result / ( ? );
+	*/
+	return result;
+}
 
 ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
@@ -2420,8 +2540,8 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
-				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
-				//destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				//destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
 				//destination[wid*j+i] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
 			}
 		}
@@ -2562,7 +2682,17 @@ ImageMat.prototype.laplacian = function(){
 	this.grn( ImageMat.laplacian(this.grn(), width, height).value );
 	this.blu( ImageMat.laplacian(this.blu(), width, height).value );
 }
-ImageMat.sharpen = function(src,wid,hei, w,h){
+ImageMat.sharpen = function(src,wid,hei){
+	var val = ImageMat.convolve(src,wid,hei, [0,-0.25,0, -0.25,2.0,-0.25, 0,-0.25,0], 3,3);
+	var arr = val.value;
+	ImageMat.clipFloat01(arr);
+	return val;
+	//return ImageMat.convolve(src,wid,hei, [0,-1,0, -1,5,-1, 0,-1,0], 3,3);
+	//return ImageMat.convolve(src,wid,hei, [-1,-1,-1, -1,9,-1, -1,-1,-1], 3,3);
+	// create gaussian,
+	// sharp = gaussian - image
+	// normalize to [+1,-1]
+	// add sharp to image
 	// [0,0,0, 0,2,0, 0,0,0] - 1/9*[1,1,1, 1,1,1, 1,1,1] (OR GAUSSIAN)
 	// TODO
 }

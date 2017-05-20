@@ -1163,6 +1163,15 @@ Code.newIndexArray = function(start,end){ // inclusive
 	}
 	return array;
 }
+Code.reverseArray = function(array){
+	var i, len = array.length;
+	var lm1 = len - 1;
+	var a = new Array(len);
+	for(i=0; i<len; ++i){
+		a[i] = array[lm1-i];
+	}
+	return a;
+}
 Code.arrayRandomItemPop = function(array){
 	if(array.length==0){ return null; }
 	var index = Math.floor(Math.random()*array.length);
@@ -2308,6 +2317,84 @@ Code.median = function(list,key){
 		mu += item;
 	}
 	return mu / len;
+}
+
+
+Code.gaussianWindow = function(sigma, len, unit){ // to simplify: mirror
+	len = len!==undefined ? len : (Math.round(sigma*1.5)*2 + 1);
+	unit = unit!==undefined ? unit : true;
+	var array = new Array(len);
+	var c = 1/(2*sigma*sigma);
+	var wo2 = Math.floor(len*0.5);
+	var i, x, xx, sum = 0;
+	for(i=0; i<len; ++i){
+		x = wo2 - i;
+		xx = x * x;
+		val = Math.exp(-xx*c);
+		array[i] = val;
+		sum += val;
+	}
+	if(unit){
+		for(i=0; i<len; ++i){
+			array[i] = array[i]/sum;
+		}
+	}
+	return array;
+}
+Code.convolve1D = function(array, filter, reverse, popPadding){
+	reverse = reverse!==undefined ? reverse : true;
+	if(reverse==true){
+		filter = Code.reverseArray(filter);
+	}
+	return Code.slideWindow(array, filter, popPadding);
+}
+Code.slideWindow = function(array, filter, popPadding){ // sliding window -- convolve should flip filter
+	popPadding = popPadding!==undefined ? popPadding : true
+	if(filter.length>array.length){
+		var temp = array;
+		array = filter;
+		filter = temp;
+	}
+	var i, j, k, c;
+	var lenA = array.length;
+	var lenAm1 = lenA-1;
+	var lenF = filter.length;
+	var lenFm1 = lenF-1;
+	var lenR = lenA + lenFm1;
+	var lenRm1 = lenR - lenFm1;
+	var result = new Array(lenR);
+	var count, value;
+	//console.log("  "+lenR+" = "+lenA+" + "+lenF);
+	for(k=0; k<lenR; ++k){
+		if(k<lenFm1){
+			//console.log("A");
+			i = 0;
+			j = lenFm1 - k;
+			count = lenF - j;
+		}else if(k>=lenRm1){
+			//console.log("B: ");
+			i = k - lenFm1;
+			j = 0;
+			count = lenA - i;
+		}else{
+			//console.log("C");
+			i = k - lenFm1;
+			j = 0;
+			count = lenF;
+		}
+		//console.log("  "+k+"   .......... "+i+" | "+j+" | "+count);
+		value = 0;
+		for(c=0; c<count; ++c){
+			value += array[i+c] * filter[j+c];
+		}
+		result[k] = value;
+	}
+	if(popPadding && lenF>1){
+		var start = Math.floor(lenF*0.5);
+		var end = lenF - start;
+		result = Code.copyArray(result,start,lenR-end);
+	}
+	return result;
 }
 // -------------------------------------------------------- HTML
 Code.getWindow = function(){
@@ -3848,7 +3935,7 @@ Code.padStringRight = function(val,wid,filler){
 Code.rangeForceMinMax = function(value, min, max){
 	return Math.min(Math.max(value,min),max);
 }
-Code.convetRangeDiscreteRound = function(value, oldMin, oldMax, newMin,newMax){
+Code.convetRangeDiscreteRound = function(value, oldMin, oldMax, newMin,newMax){ // CONVERT?
 	var oldRange = oldMax - oldMin;
 	if (oldRange==0) { return newMin; }
 	value = (value - oldMin) / oldRange; // [0,1]
@@ -4173,6 +4260,84 @@ Code.findExtrema1D = function(d){
 		}
 	}
 	return list;
+}
+Code.findExtremaProminence1D = function(d){
+	var wasIncreasing = false;
+	var wasDecreasing = false;
+	var isIncreasing = false;
+	var isDecreasing = false;
+	var previousMaxima = null;
+	var previousMinima = null;
+	var i, len = d.length;
+	var lm1 = len - 1;
+	var value, prevValue = null;
+	var maxima = [];
+	var minima = [];
+	var extrema = [];
+	var v;
+	var wasMaxima = false;
+	var hasChanged = false;
+	for(i=0; i<len; ++i){
+		value = d[i];
+		isIncreasing = value >= prevValue;
+		isDecreasing = value <= prevValue;
+//		console.log(" "+i+": "+value);
+		if(i==0){
+			previousMaxima = new V2D(0,d[i]);
+			previousMinima = previousMaxima;
+		}else{
+			if(prevValue!==null && prevValue!==value && hasChanged){
+				if((isIncreasing && wasDecreasing) || (isDecreasing && wasIncreasing)){ // switched
+					v = Code.interpolateExtrema1D(new V3D(), d[i-2],d[i-1],d[i]);
+					v.x += i-1;
+					v.z = 0; // unset
+					if(isIncreasing && wasDecreasing){ // switched == minimum
+//						console.log(" MIN => "+d[i-1]);
+						wasMaxima = false;
+						minima.push(v);
+						extrema.push(v);
+						if(maxima.length>0){ // PREVIOUS MAXIMA CHECK LAST 2 MINIMA => SET PROMINENCE
+							max = maxima[maxima.length-1];
+							max.z = max.y - Math.max(previousMinima.y,v.y);
+						}
+						previousMinima = v;
+					}else if(isDecreasing && wasIncreasing){ // switched == maxima
+//						console.log(" MAX => "+d[i-1]);
+						wasMaxima = true;
+						maxima.push(v);
+						extrema.push(v);
+						if(minima.length>0){ // PREVIOUS MINIMA CHECK LAST 2 MAXIMA => SET PROMINENCE
+							min = minima[minima.length-1];
+							min.z = Math.min(previousMaxima.y,v.y) - min.y;
+						}
+						previousMaxima = v;
+					}
+				}
+			}
+			if(prevValue != value){ // first series of repeats has changed
+				hasChanged = true;
+			}
+		}
+		if(i==lm1){ // at end
+			v = new V2D(0,d[i]);
+			if(wasMaxima){
+				if(maxima.length>0){
+					max = maxima[maxima.length-1];
+					max.z = max.y - Math.max(previousMinima.y,v.y);
+				}
+			}else{
+				if(minima.length>0){ // PREVIOUS MINIMA CHECK LAST 2 MAXIMA => SET PROMINENCE
+					min = minima[minima.length-1];
+					min.z = Math.min(previousMaxima.y,v.y) - min.y;
+				}
+			}
+		}
+
+		wasIncreasing = isIncreasing;
+		wasDecreasing = isDecreasing;
+		prevValue = value;
+	}
+	return {"max":maxima, "min":minima, "extrema":extrema};
 }
 Code.findExtrema1DSecondary = function(value, linearValues){
 	var base = Math.floor(value.x);

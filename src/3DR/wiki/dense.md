@@ -329,6 +329,111 @@ RESULTS:
 
 TODO:
 
+------
+	other scale-space metrics:
+		- 
+
+
+- roughness: https://en.wikipedia.org/wiki/Surface_roughness
+- http://www.mitutoyo.com/wp-content/uploads/2012/11/1984_Surf_Roughness_PG.pdf
+- http://www.mitutoyo.com/wp-content/uploads/2015/04/Surface_Roughness_Measurement.pdf
+x 1/n SUM |y|
+x 1/n SUM y^2
+	(subtract median)
+	- SSDish
+x 1/n SUM |dy|
+	- dy & dx in 2D
+
+TEXTURE MEASUREMENTS: https://en.wikipedia.org/wiki/Image_texture
+x 2nd angular moment
+x CONTRAST
+- CORRELATION
+
+CO-OCCURRENCE MATRIX:
+- discretize image into levels L: [0,L-1]
+- size of COM is L-1 x L-1
+- multiple types of COM: right,down,diag
+- for each pixel i
+	u = I[i]
+	- NEXT pixel j [j is right / down / diag of i] [except borders where j is not defined]
+		v = I[j]
+		- COM[u][v] += 1
+http://courses.cs.washington.edu/courses/cse576/book/ch7.pdf
+- EDGE DENSITY
+	- | {p | Mag(p) >= T} |/N
+
+- HISTOGRAM L1 DISTANCE:
+	- SUM |H1(i) - H2(i)|
+
+x TEXTURE ENERGY
+	- SUM (N(i,j)^2)
+
+- CONTRAST:
+	- SUM (i-j)^2 * N(i,j)
+
+x HOMOGENEITY:
+	SUM N(i,j) / (1 + |i-j|)
+
+- CORRELATION:
+	SUM (i-mu)*(j-mu)*N(i,j) / [sigI * sigJ]
+
+
+
+https://courses.cs.washington.edu/courses/cse455/09wi/Lects/lect12.pdf
+
+
+CONTRAST: https://en.wikipedia.org/wiki/Contrast_(vision)
+	I - Ib / Ib
+sqrt ( 1/N * SUM [I(i,j) - I]^2 )
+
+
+https://www.ics.uci.edu/~irani/pubs/apgv06.pdf
+
+https://www.google.com/search?q=surface+roughness+measurement&oq=surface+roughness+measurement&aqs=chrome..69i57j0l5.4231j0j7&sourceid=chrome&ie=UTF-8#safe=off&q=image+texture+measurement
+
+
+https://courses.cs.washington.edu/courses/cse455/09wi/Lects/lect12.pdf
+Edges per area:
+	(|gradient| >= thresh) / N
+histogram direction region:
+	Fmagdir = Hmag(R), Hdir(R)
+
+
+
+
+FEEDBACK:
+
+// average roughness A: 1/n SUM |y|
+	=> mostly increasing with scale
+	=> graphs are shifted, yvalues not precicely similar
+	=> y=const is probly best, but lots of local min. max
+// average roughness B: 1/n SUM |y-yavg|
+	=> graphs are roughly shifted, yvalues are not precicely similar
+	=> minimum is probly best, but not very accurate
+*/ average roughness C: 1/n SUM |y-yavg|^2
+	=> graphs are roughly shifted, yvalues are not precicely similar
+	=> minimum , but x-shift does not look exact
+// average derivative roughness A: 1/n SUM |dy|
+	=> shifts not clearly visible
+// average derivative roughness B: 1/n SUM |dy-avg|
+	=> shifts not clearly visible
+// average derivative roughness c: 1/n SUM |dy-avg|^2
+	=> shifts not clearly visible
+// covariance | moment
+	=> all over the place
+	=> first maxima from high zoom
+// moment
+	=> all over the place
+	=> first maxima from high zoom
+	=> or global maxima
+// covariance | moment ratio
+	=> all over the place
+	=> first maxima from high zoom
+// contrast
+
+
+
+
 
 ---- ENTROPY SELECTION: SHOULD USE:
 	MAX ENTROPY

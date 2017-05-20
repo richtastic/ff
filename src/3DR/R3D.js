@@ -1910,7 +1910,8 @@ R3D.optimumAffineScaleForImage = function(imageSource){
 	// calculate primary gradient & secondary gradient & magnitude differences
 }
 
-R3D.optimumScaleForImage = function(imageSource){
+
+R3D.optimumScaleForImageEntropy = function(imageSource){
 	var wid = imageSource.width();
 	var hei = imageSource.height();
 	var len = wid * hei;
@@ -2041,10 +2042,268 @@ var optimumScale = null;
 	return optimumScale;
 }
 
+
+
+
+
+var XCALL = 0;
+R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
+//var imageSourceGradient = ImageMat.gradientMagnitude(imageSource.gry(),imageSource.width(),imageSource.height()).value;
+//imageSource = new ImageMat(imageSource.width(),imageSource.height(),imageSourceGradient);
+	++XCALL;
+	size = size ? size : new V2D(25,25);
+	//size = size ? size : new V2D(85,85);
+	//maskOutCenter = maskOutCenter ? maskOutCenter : ImageMat.circleMask(size.x,size.y);
+	//maskOutCenter = null;
+	maskOutCenter = ImageMat.circleMask(size.x,size.y);
+	var scaleTimes = 80;
+	var minScalePower = -4; // -4 = 0.0625
+	var maxScalePower = 9; // 4 = 16
+	var entropyValues = [];
+	var scaleValues = [];
+	var prevEntropy = null;
+	var hasFoundDip = false;
+
+	var sigma = 5.0; // sqrt
+	var gaussianPlane = ImageMat.getGaussianWindow(size.x,size.y, sigma, sigma, false, false, true);
+
+	// var scales = [16.0,8.0,4.0,2.0,1.0,0.5,0.25,0.125,0.0625];
+	// for(i=0; i<scales.length; ++i){
+	// 	scale = scales[i];
+	for(i=0; i<scaleTimes; ++i){
+		var p = 1.0 - i/(scaleTimes-1); // start zoomed in
+		var power = minScalePower + (maxScalePower - minScalePower)*p;
+		scale = Math.pow(2, power);
+		// ...
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DScale(matrix,scale,scale);
+		// var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,1.6, testSize.x,testSize.y, testMatrix);
+		// BLUR
+		//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, null, size.x,size.y, matrix);
+		//var blur = null;
+		var blur = 2.0;
+		var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, blur, size.x,size.y, matrix);
+
+
+		// METRIC:
+		var metrix = 0;
+		// average roughness B: 1/n SUM |y-yavg|
+		metric = 0;
+		var imageGray = image.gry();
+		//imageGray = ImageMat.sharpen(imageGray,size.x,size.y).value;
+// var imageGrayGrad = ImageMat.gradientMagnitude(imageGray,size.x,size.y).value;
+// imageGray = imageGrayGrad;
+
+		// var cov = image.calculateCovariance();
+		// metric = cov[0].z;
+		//metric = cov[0].z/cov[1].z;
+		// var mom = image.calculateMoment();
+		// metric = mom[0].z;
+		//metric = mom[0].z / mom[1].z;
+
+		var imageCount = imageGray.length;
+		var pixelCount = 0;
+		var mask = 1;
+		var minValue = null;
+		var maxValue = null;
+		var sumValue = 0;
+		for(var j=0; j<imageCount; ++j){
+			if(maskOutCenter){
+				mask = maskOutCenter[j];
+			}
+			if(mask!=0){
+				++pixelCount;
+				var value = imageGray[j];
+				sumValue += value;
+				minValue = minValue==null ? value : Math.min(minValue,value);
+				maxValue = maxValue==null ? value : Math.max(maxValue,value);
+			}
+		}
+		var rangeValue = maxValue - minValue;
+		var middleValue = (maxValue + minValue)*0.5;
+		var averageValue = sumValue/pixelCount;
+		var stdDev = 0;
+		var moment = 0;
+		var ssdGaussian = 0;
+		for(var j=0; j<imageCount; ++j){
+			if(maskOutCenter){
+				mask = maskOutCenter[j];
+			}
+			if(mask!=0){
+				var value = imageGray[j];
+				var cx = (size.x-1)*0.5;
+				var cy = (size.y-1)*0.5;
+				var y = Math.floor(j/size.x);
+				var x = j - y*size.x;
+				var dist = Math.sqrt(Math.pow(y-cy, 2) + Math.pow(x-cx, 2));
+				stdDev += Math.pow(value - averageValue, 2);
+				moment += dist*Math.pow(value - averageValue, 2);
+				ssdGaussian += Math.abs(value - gaussianPlane[j]);
+			}
+		}
+		moment = Math.sqrt(moment);
+		stdDev = Math.sqrt(stdDev / pixelCount);
+		//metric = stdDev;
+
+		//var buckets = 2;
+		//var buckets = 5;
+		//var buckets = 10;
+		//var buckets = 25;
+		//var buckets = 50;
+		var buckets = 625;
+		var entropySimple = ImageMat.entropySimple(imageGray, size.x, size.y, buckets, maskOutCenter);
+
+		//metric = rangeValue;
+		//metric = (1.0 / pixelCount) * Math.sqrt(metric);
+		//metric = (1.0 / pixelCount) * metric;
+		
+
+		/*
+		// ImageMat.cooccuranceMatrix = function(image, imageMask, wid, hei, levels, offX, offY, dontNormalize){
+		var levels = 10;
+		var com = ImageMat.cooccurrenceMatrix(imageGray, size.x, size.y, maskOutCenter, levels, 1,1, false);
+		//console.log(com)
+		metric = ImageMat.cooccurrenceMatrixEnergy(com, levels);
+		//metric = ImageMat.cooccurrenceMatrixEntropy(com, levels);
+		//metric = ImageMat.cooccurrenceMatrixHomogeneity(com, levels);
+		//metric = ImageMat.cooccurrenceMatrixCorrelation(com, levels);
+		
+
+		// var img = new ImageMat(levels,levels, com);
+		// var cov = img.calculateCovariance();
+		// metric = cov[0].z;
+		// metric = cov[0].z/(cov[1].z>0 ? cov[1].z : 1.0);
+		*/
+
+		//metric = entropySimple * moment;
+		//metric = entropySimple / moment; // nice spikes, wrong order
+		//metric = moment / (entropySimple>0 ? entropySimple : 1.0);
+		//metric = Math.pow(entropySimple, 2);
+		metric = entropySimple;
+		//metric = moment;
+		//metric = ssdGaussian;
+
+		//metric = moment;
+
+// TODO: TRY ORIGINAL IMAGE - BLUR
+// TODO: TRY DIFFERENT SIGMAS - move graph? change intensities ?
+// TODO: APPLY TO GET OPTIMAL SCALE
+// - base-to-tip elevation should be substantial (able to ignore small noisiness)
+// 			-- feature prominence ?
+// - 
+		// DOG:
+		/*
+            //- start zoomed out
+            - blur A : 2
+            - blur B : 4
+            - DoG = B - A
+            - value at center
+        */
+        var sigmaA = 1.0;
+        var sigmaB = 2.0;
+        var imageA = ImageMat.applyGaussianFloat(imageGray, size.x,size.y, sigmaA);
+        var imageB = ImageMat.applyGaussianFloat(imageGray, size.x,size.y, sigmaB);
+        var DoG = ImageMat.subFloat(imageA,imageB);
+        //var DoG = ImageMat.subFloat(imageGray,imageA);
+        //var DoG = ImageMat.subFloat(imageGray,imageB);
+        var DoGCenter = DoG[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
+        //console.log(DoGCenter);
+
+		var entropy = DoGCenter;
+		
+
+
+// VISUALIZE
+//var img = GLOBALSTAGE.getFloatGrayAsImage(image.gry(), image.width(),image.height(), null, null);
+//var show = ImageMat.getNormalFloat01(imageGrayGrad);
+var show = image.gry();
+//show = ImageMat.sharpen(show,size.x,size.y).value;
+var img = GLOBALSTAGE.getFloatGrayAsImage(show, image.width(),image.height(), null, null);
+var d = new DOImage(img);
+var sca = 2
+d.matrix().scale(sca);
+d.matrix().translate(0 + i*size.x*sca, 0 + XCALL*size.y*sca);
+GLOBALSTAGE.addChild(d);
+
+		scaleValues.push(scale);
+		entropyValues.push(entropy);
+	}
+
+	// remove noise:
+	var gauss = Code.gaussianWindow(1.0);
+	var conv = Code.convolve1D(entropyValues, gauss, false);
+	entropyValues = conv;
+
+	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n("+point+")");
+
+
+
+
+var info = Code.infoArray(entropyValues);
+var range = info["range"];
+var minProm = range*0.5*0.1;
+var prominence = Code.findExtremaProminence1D(entropyValues);
+	console.log(prominence);
+	var maxima = prominence["max"];
+	console.log(maxima+" ... " + minProm);
+
+
+	// TODO:
+	// find range of graph
+	// find first maxima with at least %5 prominence
+	//var locations = Code.findMaxima1D(entropyValues);
+	//var locations = Code.findMaxima1D(entropyValues);
+	//var locations = Code.findGlobalExtrema1D(entropyValues, false);
+	
+
+	//console.log("locations: "+locations.length);
+	// console.log(locations);
+	// console.log(scaleValues)
+	//console.log(scaleValues)
+	if(maxima.length>0){
+		var location = null;
+		for(m=0; m<maxima.length; ++m){
+			if(maxima[m].z>minProm){
+				location = maxima[m];
+				break;
+			}
+		}
+/*
+var location = null;
+if(GLOBS==0){
+	location = locations[1];
+}else if(GLOBS==1){
+	location = locations[1];
+}else if(GLOBS==2){
+	location = locations[0];
+}
+*/
+
+
+
+
+++GLOBS;
+		if(location==null){
+			console.log("no min prominence location");
+		}else{
+			//var location = locations[0];
+
+			//var location = locations[locations.length - 1];
+			var optimumEntropy = Code.interpolateValue1D(entropyValues, location.x);
+			var optimumScale = Code.interpolateValue1D(scaleValues, location.x);
+			console.log(optimumScale);
+			//optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
+			return optimumScale;
+		}
+	}
+	return 1.0;
+}
+GLOBS = 0;
+
 // 
 //R3D.optimumScaleForPointOLD = function(imageSource, size, point, maskOutCenter){ // imageMat
 var XCALL = 0;
-R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
+R3D.optimumScaleForPointEntropy = function(imageSource, point, maskOutCenter, size){
 ++XCALL;
 	size = size ? size : new V2D(25,25);
 	//size = size ? size : new V2D(85,85);

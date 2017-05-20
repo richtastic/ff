@@ -26,7 +26,7 @@ GLOBALSTAGE = this._stage;
 }
 Entropy.prototype.handleMouseClickFxn = function(e){
 	var p = e.location;
-	if(p.x>400){
+	while(p.x>400){
 		p.x -= 400;
 	}
 	console.log(p+"")
@@ -60,15 +60,31 @@ Entropy.prototype.handleImagesLoaded = function(imageInfo){
 
 
 var points = [
-	new V2D(200,150),
-	new V2D(200.5,149.5),
-	new V2D(199.5,149.5),
+	// CENTER
+	// new V2D(200,150),
+	// new V2D(200.5,149.5),
+	// new V2D(199.5,149.5),
+	// ELBOW
+	// new V2D(313,170),
+	// new V2D(258,161),
+	// new V2D(229,155),
+	// ARROW UP
+	// new V2D(150,166),
+	// new V2D(175,157.5),
+	// new V2D(187,153.5),
+	// MASK CORNER
+	new V2D(352.5,65),
+	new V2D(277,107.5),
+	new V2D(238,129.5),
 ];
 
 for(i=0; i<imageMatrixes.length; ++i){
 	//var imageMatrix = imageMatrixes[i];
 	var point = points[i];
 	var range = ranges[i];
+	
+	this.drawAround([point], i*400, 0);
+
 	var feature = new ZFeature();
 	feature.setupWithImage(range, point);
 	feature.visualize(50 + i*110, 400, range);
@@ -943,4 +959,39 @@ see how score reacts to various random static
 		imageBestPointsB = new ImageMat(imageMatrixB.width(), imageMatrixB.height(), imageBestPointsB);
 	this.showComparrison(imageBestPointsA, imageBestPointsB);
 */
+}
+
+
+Entropy.prototype.drawAround = function(locations, offX, offY, param, colorCircle){ // RED TO BLUE
+	var i, c;
+	var sca = 1.0;
+	var count = Math.min(locations.length-1,2000);
+	//console.log("drawAround",offX,offY)
+	for(i=0;i<locations.length;++i){
+		var percent = (i+0.0)/((count==0?1.0:count)+0.0);
+		var percem1 = 1 - percent;
+		var p = locations[i];
+		if(param){
+			p = p[param];
+		}
+		c = new DO();
+		var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
+		if(colorCircle){
+			color = colorCircle;
+		}
+		//var color = 0xFF000000;
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((p.x)*sca, (p.y)*sca,  3 + i*0.0);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		//c.graphics().fill();
+		//c.graphics().alpha(1.0/(i+1));
+			c.matrix().translate(offX,offY);
+		GLOBALSTAGE.addChild(c);
+		if(i>=count){
+			break;
+		}
+	}
+
 }
