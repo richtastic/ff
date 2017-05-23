@@ -1741,7 +1741,8 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		//scores[i] = highMoveHighRange;
 
 
-		scores[i] = range[i] * corners[i];
+		//scores[i] = range[i] * corners[i];
+
 
 		//scores[i] = gradientMag[i] * corners[i];
 
@@ -1751,6 +1752,8 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		//scores[i] = corners[i];
 		//scores[i] = costMove[i]*range[i];
 		//scores[i] = costMove[i]*range[i]*corners[i];
+		scores[i] = costMove[i]*range[i]*corners[i];
+		//scores[i] = costMove[i] + range[i] + corners[i];
 		// HIGH COST TO MOVE
 		// HIGH RANGE
 		// HIGH CORNER RATIO ?
@@ -2229,7 +2232,8 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	var conv = Code.convolve1D(entropyValues, gauss, false);
 	entropyValues = conv;
 
-	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
+//	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
+	console.log("...iterated");
 
 	for(m=0;m<scaleValues.length;++m){
 		scaleValues[m] = Math.log2(scaleValues[m]);

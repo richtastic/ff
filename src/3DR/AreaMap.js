@@ -1619,7 +1619,9 @@ ZFeature = function(){
 	this._point = null;
 	this._area = null;
 	this._range = null;
-	this._matches = new PriorityQueue(ZFeature.sortingMatches, 1000);
+	this._matches = [];
+	this._similarity = 0;
+	//this._matches = new PriorityQueue(ZFeature.sortingMatches, 1000);
 }
 ZFeature.sortingMatches = function(a,b){
 	if(a===b){ return 0; }
@@ -1651,50 +1653,103 @@ ZFeature.compareFeatureLists = function(featuresA, featuresB){
 	for(i=0; i<featuresA.length; ++i){
 		var featureA = featuresA[i];
 		var rangeA = featureA.range();
-		// var pointA = featureA["point"];
 		var matchesA = featureA.matches();
 		for(j=0; j<featuresB.length; ++j){
 			var featureB = featuresB[j];
 			var rangeB = featureB.range();
-			// var pointB = featureB["point"];
 			var matchesB = featureB.matches();
 			var score = ZFeature.compareScore(featureA, featureB);
-			//cost[i][j] = score;
-			var match = {"A":featureA, "B":featureB};
+			var match = {"A":featureA, "B":featureB, "score":score};
 			matchesA.push(match);
 			matchesB.push(match);
 		}
 		console.log("  => "+i+" / "+featuresA.length);
 	}
+}
+
+ZFeature._addUniqueness = function(featuresA, featuresB){
+	var i, j;
+	for(i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		var matches = featureA.matches();
+		for(j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var featureB = match["A"];
+			if(featureA==featureB){
+				featureB = match["B"];
+			}
+			featureB._similarity += 1.0/(j+1);
+		}
+	}
 
 }
-// TODO: ASSIGN each
-ZFeature.assignFeatureLists = function(featuresA, featuresB){
-	HERE
+ZFeature.calculateUniqueness = function(featuresA, featuresB){
+	ZFeature._addUniqueness(featuresA, featuresB);
 
-// convert from finding the MINIMIZED COST to finding the MAXIMIZED COST
+	
+	var score = 0;
+	
+	if(score==0){ // max similarity
+		return inf;
+	}
+	return 1.0/score;
+}
+ZFeature.assignFeatureLists = function(featuresA, featuresB){
+	// if featuresA.length != featuresB.length
+	var maxLength = Math.max(featuresA.length, featuresB.length);
+	var cost = Code.newArray2D(maxLength,maxLength);
+	for(i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		var matches = featureA.matches();
+		for(j=0; j<matches.length; ++j){
+			var match = matches[j];
+			cost[i][j] = match["score"];
+		}
+	}
+	// possible a & b don't have total matches between eachother ?
+	/*for(i=0; i<featuresB.length; ++i){
+		var featureB = featuresB[i];
+		var matches = featureB.matches();
+		for(j=0; j<matches.length; ++j){
+			var match = matches[j];
+			cost[j][i] = match["score"];
+		}
+	}*/
+	// convert from finding the MINIMIZED COST to finding the MAXIMIZED COST
 	var info = Code.info2DArray(cost);
 	var max = info["max"];
 	var min = info["min"];
-	var range = info["range"];
-	for(i=0; i<bestFeaturesA.length; ++i){
-		for(j=0; j<bestFeaturesB.length; ++j){
+	for(i=0; i<maxLength; ++i){
+		for(j=0; j<maxLength; ++j){
 			cost[i][j] = max - cost[i][j];
 		}
 	}
-	console.log("minimizing .........");
-
-	// for(i=0; i<bestFeaturesA.length; ++i){
-	// 	var featureA = bestFeaturesA[i];
-	// 	var pointA = featureA["point"];
-	// 	var matchesA = featureA["matches"];
-	// 	for()
-	// 	cost[i][j] = 
-	// }
-	// replace missings with 
-
-	//Code.array2DtoString(cost);
+	console.log("minimizing ......... "+featuresA.length+" , "+featuresB.length);
 	var result = Code.minimizedAssignmentProblem(cost);
+	var edges = result["edges"];
+	var totalCost = result["cost"];
+	var sizeN = edges.length;
+	var matches = [];
+	for(var i=0; i<sizeN; ++i){
+		var I = edges[i][0];
+		var J = edges[i][1];
+		console.log(i+": "+I+" => "+J);
+		if(I>=featuresA.length || J>=featuresB.length){
+			console.log("outside range .. do not use");
+		}else{
+			var featureA = featuresA[I];
+			var pointA = featureA.point();
+			var featureB = featuresB[J];
+			var pointB = featureB.point();
+			var score = cost[I][J];
+			scores = max - score;
+			matches.push({"score":score, "pointA":pointA, "pointB":pointB, "A":featureA, "B":featureB});
+		}
+	}
+	matches = matches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1
+	})
+	return matches;
 }
 
 ZFeature.compareScore = function(a,b){
@@ -1711,14 +1766,6 @@ ZFeature.compareScore = function(a,b){
 	score += sadScore;
 	return score;
 }
-
-// ZFeature.calculateUniqueness = function(featureA, featureB, rangeA, rangeB){
-// 	var score = ZFeature.compareScore(featureA, featureB, rangeA, rangeB);
-// 	if(score==0){ // max similarity
-// 		return inf;
-// 	}
-// 	return 1.0/score;
-// }
 
 
 ZFeature.MatrixWithRotation = function(rotation, scaleX,scaleY){
@@ -1980,7 +2027,6 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 
 	var area = range._image.extractRectFromFloatImage(this._point.x,this._point.y,this._scale,null, size,size, matrix);
 	this._area = area;
-//console.log(area);
 	// get infos
 	var red = this._area.red();
 	var grn = this._area.grn();
@@ -1999,15 +2045,15 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	var stdDB = Code.stdDev(blu,null,meanB);
 	var stdDY = Code.stdDev(gry,null,meanY);
 	// subtract mean value
-	red = ImageMat.subFloat(red, meanR);
-	grn = ImageMat.subFloat(grn, meanG);
-	blu = ImageMat.subFloat(blu, meanB);
-	gry = ImageMat.subFloat(gry, meanY);
+	red = ImageMat.addConst(red, -meanR);
+	grn = ImageMat.addConst(grn, -meanG);
+	blu = ImageMat.addConst(blu, -meanB);
+	gry = ImageMat.addConst(gry, -meanY);
 	// scale by stddev
-	red = stdDR > 0.0 ? ImageMat.mulFloat(red, 1.0/stdDR) : red;
-	grn = stdDG > 0.0 ? ImageMat.mulFloat(grn, 1.0/stdDG) : grn;
-	blu = stdDB > 0.0 ? ImageMat.mulFloat(blu, 1.0/stdDB) : blu;
-	gry = stdDY > 0.0 ? ImageMat.mulFloat(gry, 1.0/stdDY) : gry;
+	red = stdDR > 0.0 ? ImageMat.mulConst(red, 1.0/stdDR) : red;
+	grn = stdDG > 0.0 ? ImageMat.mulConst(grn, 1.0/stdDG) : grn;
+	blu = stdDB > 0.0 ? ImageMat.mulConst(blu, 1.0/stdDB) : blu;
+	gry = stdDY > 0.0 ? ImageMat.mulConst(gry, 1.0/stdDY) : gry;
 	this._area = {"red":red, "grn":grn, "blu":blu, "gry":gry};
 	//console.log(this._area);
 

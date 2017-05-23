@@ -1489,7 +1489,10 @@ Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to
 var loopLimit = 0;
 		while(true){ // improve labels
 loopLimit++;
-if(loopLimit>100){
+if(loopLimit%1000==0){
+	console.log("LOOPED: "+loopLimit);
+	}
+if(loopLimit>100000){
 	console.log("REACHED LOOP LIMIT: "+loopLimit);
 break;
 }
