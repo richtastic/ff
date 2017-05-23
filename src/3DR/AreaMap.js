@@ -434,15 +434,22 @@ AreaMap.Range = function(image, width,height, rows,cols) { // image rect
 	this.cols(cols);
 	this.resetCells();
 	this._features = Code.newArrayNulls(width*height);
+	this._featureList = [];
 }
-AreaMap.Range.prototype.feature = function(i,j){
+AreaMap.Range.prototype.addFeature = function(f){
+	var point = f.point();
+	return this.feature(point.x, point.y, f);
+}
+AreaMap.Range.prototype.feature = function(i,j, f){
 	i = Math.floor(i);
 	j = Math.floor(j);
-	var feature = this._features[j * this._image.width + i];
-	if(feature!=null){
-		return feature;
+	var index = j * this._image.width + i;
+	if(f!==undefined){
+		// TODO: REMOVE OLD
+		this._features[index] = f;
+		this._featureList.push(f);
 	}
-	return null;
+	return this._features[index];
 }
 AreaMap.Range.prototype.cell = function(col,row){
 	if(arguments.length == 2){
@@ -1611,7 +1618,12 @@ ZFeature = function(){
 	this._zones = [];
 	this._point = null;
 	this._area = null;
-	// zone count =  this._zoneCols * this._zoneCols
+	this._range = null;
+	this._matches = new PriorityQueue(ZFeature.sortingMatches, 1000);
+}
+ZFeature.sortingMatches = function(a,b){
+	if(a===b){ return 0; }
+	return a["score"] < b["score"] ? -1 : 1;
 }
 ZFeature.prototype.point = function(p){
 	if(p!==undefined){
@@ -1619,90 +1631,84 @@ ZFeature.prototype.point = function(p){
 	}
 	return this._point;
 }
+ZFeature.prototype.range = function(r){
+	if(r!==undefined){
+		this._range = r;
+	}
+	return this._range;
+}
 ZFeature.prototype.area = function(a){
 	if(a!==undefined){
 		this._area = a;
 	}
 	return this._area;
 }
-ZFeature.compareScore = function(a,b, rangeA, rangeB){
+ZFeature.prototype.matches = function(){
+	return this._matches;
+	//var feature = {"point":point, "matches":matches};
+}
+ZFeature.compareFeatureLists = function(featuresA, featuresB){
+	for(i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		var rangeA = featureA.range();
+		// var pointA = featureA["point"];
+		var matchesA = featureA.matches();
+		for(j=0; j<featuresB.length; ++j){
+			var featureB = featuresB[j];
+			var rangeB = featureB.range();
+			// var pointB = featureB["point"];
+			var matchesB = featureB.matches();
+			var score = ZFeature.compareScore(featureA, featureB);
+			//cost[i][j] = score;
+			var match = {"A":featureA, "B":featureB};
+			matchesA.push(match);
+			matchesB.push(match);
+		}
+		console.log("  => "+i+" / "+featuresA.length);
+	}
+
+}
+// TODO: ASSIGN each
+ZFeature.assignFeatureLists = function(featuresA, featuresB){
+	HERE
+
+// convert from finding the MINIMIZED COST to finding the MAXIMIZED COST
+	var info = Code.info2DArray(cost);
+	var max = info["max"];
+	var min = info["min"];
+	var range = info["range"];
+	for(i=0; i<bestFeaturesA.length; ++i){
+		for(j=0; j<bestFeaturesB.length; ++j){
+			cost[i][j] = max - cost[i][j];
+		}
+	}
+	console.log("minimizing .........");
+
+	// for(i=0; i<bestFeaturesA.length; ++i){
+	// 	var featureA = bestFeaturesA[i];
+	// 	var pointA = featureA["point"];
+	// 	var matchesA = featureA["matches"];
+	// 	for()
+	// 	cost[i][j] = 
+	// }
+	// replace missings with 
+
+	//Code.array2DtoString(cost);
+	var result = Code.minimizedAssignmentProblem(cost);
+}
+
+ZFeature.compareScore = function(a,b){
 	var i, j, k, l, zA, zB, index;
 	var rA, gA, bA, yA;
 	var rB, gB, bB, yB;
 	var binsA, binsB, binA, binB;
 	var angle;
 	var score = 0;
-	var binScore = 0;
-	// overall score orientation
-	// var rotA_red = Code.minAngle(a._angle.t,a._angle.x);
-	// var rotA_grn = Code.minAngle(a._angle.t,a._angle.y);
-	// var rotA_blu = Code.minAngle(a._angle.t,a._angle.z);
-	// var rotB_red = Code.minAngle(b._angle.t,b._angle.x);
-	// var rotB_grn = Code.minAngle(b._angle.t,b._angle.y);
-	// var rotB_blu = Code.minAngle(b._angle.t,b._angle.z);
-	// angle = Math.abs(Code.minAngle(rotA_red,rotB_red));
-	// 	score += angle;
-	// angle = Math.abs(Code.minAngle(rotA_grn,rotB_grn));
-	// 	score += angle;
-	// angle = Math.abs(Code.minAngle(rotA_blu,rotB_blu));
-	// 	score += angle;
-
-	// overall angle score
-	var ratioOverall = 1.0;
-	var ratioZones = 1.0;//1.0/(a._zoneCols); // 1/4
-	var ratioPixels = 1.0;//1.0/(a._zoneCols*a._zoneSize); // 1/16
-//	score += ratioOverall * ZFeature.scoreForMagnitudeAngleRGB(a._magnitude, b._magnitude, a._angle, b._angle);
-
-	for(j=0; j<a._zoneCols; ++j){
-		for(i=0; i<a._zoneCols; ++i){
-			// get zone
-			index = j*a._zoneCols + i;
-			zA = a._zones[index];
-			zB = b._zones[index];
-			// zone orientations∂
-//			score += ratioZones * ZFeature.scoreForMagnitudeAngleRGB(zA._magnitude, zB._magnitude, zA._angle, zB._angle);
-
-
-			// for(k=0; k<zA.pixels.angles.length; ++k){
-			// 	score += ratioPixels * ZFeature.scoreForMagnitudeAngleRGB(zA.pixels.magnitudes[k], zB.pixels.magnitudes[k], zA.pixels.angles[k], zB.pixels.angles[k]);
-			// }
-			/*
-			// bin score per each zone
-			binsA = zA.rotations();
-			binsB = zB.rotations();
-			binScore = 0;
-			//binScore = 1;
-			for(k=0; k<binsA.length; ++k){ // r g b a
-				binA = binsA[k];
-				binB = binsB[k];
-				binA = binA.bins();
-				binB = binB.bins();
-				for(l=0; l<binA.length; ++l){ // 0-7
-					binScore += Math.abs(binA[l] - binB[l]); // SSD - SAD
-				}
-			}
-			score += binScore;//(1.0/16.0);
-			*/
-		}
-	}
-	// SSD
-
-	var angleA = -a._covarianceAngle;
-	var angleB = -b._covarianceAngle;
-	var scaleA = a._scale;
-	var scaleB = b._scale;
-//console.log(scaleA,scaleB);
-	var size = a._zoneCols*a._zoneSize;
-	// var imgA = rangeA._image.extractRectFromFloatImage(a._point.x,a._point.y,a._scale,null, size,size, ZFeature.MatrixWithRotation(angleA, scaleA, scaleA));
-	// var imgB = rangeB._image.extractRectFromFloatImage(b._point.x,b._point.y,b._scale,null, size,size, ZFeature.MatrixWithRotation(angleB, scaleB, scaleB));
-	var imgA = rangeA.area();
-	var imgB = rangeB.area();
-	var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
+	var imgA = a._area;
+	var imgB = b._area;
+	//var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
+	var sadScore = ImageMat.SADFloatAsIsChannels(imgA.red,imgA.grn,imgA.blu, imgB.red,imgB.grn,imgB.blu);
 	score += sadScore;
-
-
-	// ssdScores are much bigger than angle scores & not really related -> scale final results to 0-1 ?
-
 	return score;
 }
 
@@ -1903,6 +1909,7 @@ ZFeature.scoreForMagnitudeAngleRGB = function(magA, magB, angA,angB){
 	return error;
 }
 ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze){
+	this.range(range);
 	this.point(point);
 	// get square
 	var size = 25;
@@ -1965,20 +1972,47 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	var gradientAllBlu = ImageMat.gradientVector(img.blu(),img.width(),img.height());
 	var gradientAllGry = ImageMat.gradientVector(img.gry(),img.width(),img.height());
 
-
 	// gradient directions
 	var angle = ZFeature.V4DAngleFromGradients([gradientR,gradientG,gradientB,gradientY]);
 	this._angle = angle;
 	var magnitude = ZFeature.V4DMagnitudeFromGradients([gradientR,gradientG,gradientB,gradientY]);
 	this._magnitude = magnitude;
 
-	//var size = a._zoneCols*a._zoneSize;
-	//var size = ;
 	var area = range._image.extractRectFromFloatImage(this._point.x,this._point.y,this._scale,null, size,size, matrix);
 	this._area = area;
-	
-	var i, j, k, l;
-	var index;
+//console.log(area);
+	// get infos
+	var red = this._area.red();
+	var grn = this._area.grn();
+	var blu = this._area.blu();
+	var gry = this._area.gry();
+	var infoR = Code.infoArray(red);
+	var infoG = Code.infoArray(grn);
+	var infoB = Code.infoArray(blu);
+	var infoY = Code.infoArray(gry);
+	var meanR = infoR["mean"];
+	var meanG = infoG["mean"];
+	var meanB = infoB["mean"];
+	var meanY = infoY["mean"];
+	var stdDR = Code.stdDev(red,null,meanR);
+	var stdDG = Code.stdDev(grn,null,meanG);
+	var stdDB = Code.stdDev(blu,null,meanB);
+	var stdDY = Code.stdDev(gry,null,meanY);
+	// subtract mean value
+	red = ImageMat.subFloat(red, meanR);
+	grn = ImageMat.subFloat(grn, meanG);
+	blu = ImageMat.subFloat(blu, meanB);
+	gry = ImageMat.subFloat(gry, meanY);
+	// scale by stddev
+	red = stdDR > 0.0 ? ImageMat.mulFloat(red, 1.0/stdDR) : red;
+	grn = stdDG > 0.0 ? ImageMat.mulFloat(grn, 1.0/stdDG) : grn;
+	blu = stdDB > 0.0 ? ImageMat.mulFloat(blu, 1.0/stdDB) : blu;
+	gry = stdDY > 0.0 ? ImageMat.mulFloat(gry, 1.0/stdDY) : gry;
+	this._area = {"red":red, "grn":grn, "blu":blu, "gry":gry};
+	//console.log(this._area);
+
+	// var i, j, k, l;
+	// var index;
 	// generate zones
 /*
 	this._zones = [];

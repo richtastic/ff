@@ -1958,6 +1958,20 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 	}
 	return {"value":result,"width":resultWidth,"height":resultHeight};
 }
+ImageMat.SADFloatAsIsChannels = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu){
+	var scoreR = ImageMat.SADFloatAsIs(aRed,bRed);
+	var scoreG = ImageMat.SADFloatAsIs(aGrn,bGrn);
+	var scoreB = ImageMat.SADFloatAsIs(aBlu,bBlu);
+	return (scoreR + scoreG + scoreB) / 3.0;
+}
+ImageMat.SADFloatAsIs = function(a,b){
+	var score = 0;
+	var i, len = Math.min(a.length, b.length);
+	for(i=0; i<len; ++i){
+		score += Math.abs(a[i]-b[i]);
+	}
+	return score;
+}
 ImageMat.SADFloatSimpleChannelsRGB = function(aRed,aGrn,aBlu, wid,hei, bRed,bGrn,bBlu){
 	var scoreR = ImageMat.SADFloatSimple(aRed,wid,hei,bRed);
 	var scoreG = ImageMat.SADFloatSimple(aGrn,wid,hei,bGrn);

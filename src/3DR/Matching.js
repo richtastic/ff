@@ -264,8 +264,10 @@ imageMatrixB = imageMatrixB.extractRectFromFloatImage(imageMatrixB.width()*0.5,i
 
 var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
 var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
-var featuresA = Code.newArrayNulls(imageMatrixA.width()*imageMatrixA.height());
-var featuresB = Code.newArrayNulls(imageMatrixB.width()*imageMatrixB.height());
+// var featuresA = Code.newArrayNulls(imageMatrixA.width()*imageMatrixA.height());
+// var featuresB = Code.newArrayNulls(imageMatrixB.width()*imageMatrixB.height());
+// var featureListA = [];
+// var featureListB = [];
 
 for(k=0; k<pointsA.length; ++k){
 var pointA = pointsA[k];
@@ -283,13 +285,17 @@ var featureA = new ZFeature();
 var featureB = new ZFeature();
 featureA.setupWithImage(rangeA, pointA);
 featureB.setupWithImage(rangeB, pointB);
+rangeA.addFeature(featureA);
+rangeB.addFeature(featureB);
 
 
-var index = Math.floor(featureA.point().y)*imageMatrixA.width() + Math.floor(featureA.point().x);
-featuresA[index] = featureA;
-var index = Math.floor(featureB.point().y)*imageMatrixB.width() + Math.floor(featureB.point().x);
-featuresB[index] = featureB;
+// var index = Math.floor(featureA.point().y)*imageMatrixA.width() + Math.floor(featureA.point().x);
+// featuresA[index] = featureA;
+// var index = Math.floor(featureB.point().y)*imageMatrixB.width() + Math.floor(featureB.point().x);
+// featuresB[index] = featureB;
 
+// featureListA.push(featureA);
+// featureListB.push(featureB);
 
 featureA.visualize(50 + k*100,400, rangeA);
 featureB.visualize(50 + k*100,500, rangeB);
@@ -297,12 +303,20 @@ featureB.visualize(50 + k*100,500, rangeB);
 }
 
 
-return;
-
-
 // TODO: COMPARE each
+var featureListA = rangeA._featureList;
+var featureListB = rangeB._featureList;
+ZFeature.compareFeatureLists(featureListA, featureListB);
+
 
 // TODO: ASSIGN each
+ZFeature.assignFeatureLists(featureListA, featureListB);
+
+return;
+//
+
+
+
 
 
 

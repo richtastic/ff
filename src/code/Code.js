@@ -1288,13 +1288,18 @@ Code.infoArray = function(array){
 	var element, arr, i, len = array.length;
 	var min = array[0];
 	var max = min;
+	var avg = 0;
 	for(i=0; i<len; ++i){
 		element = array[i];
+		avg += element;
 		min = Math.min(min, element);
 		max = Math.max(max, element);
 	}
+	if(len>0){
+		avg = avg / len;
+	}
 	var range = max - min;
-	return {"max":max, "min":min, "range":range};
+	return {"max":max, "min":min, "range":range, "mean":avg};
 }
 // ------------------------------------------------------------------------------------------ SIMULATED ARRAY 2D
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes
@@ -2304,7 +2309,10 @@ Code.stdDev = function(list,key,mean){
 	var i, sig=0, item, len=list.length;
 	if(len==0){ return 0; }
 	for(i=len;i--;){
-		item = list[key]
+		item = list[i];
+		if(key!==undefined && key!==null){
+			item = item[key];
+		}
 		sig += Math.pow(item-mean,2);
 	}
 	return Math.sqrt(sig / len);
@@ -2313,7 +2321,10 @@ Code.median = function(list,key){
 	var i, mu=0, item, len=list.length;
 	if(len==0){ return 0; }
 	for(i=len;i--;){
-		item = list[key]
+		item = list[i];
+		if(key!==undefined && key!==null){
+			item = item[key];
+		}
 		mu += item;
 	}
 	return mu / len;
