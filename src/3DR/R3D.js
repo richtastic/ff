@@ -922,9 +922,10 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 	var pOutlier = 0.5; // inital assumption
 	var pDesired = 0.99; // to have selected a valid subset
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
-maxIterations = 1E3;
-maxIterations = 10;
 	console.log("maxIterations: "+maxIterations);
+maxIterations = 1E4;
+//maxIterations = 10;
+	
 	for(i=0;i<maxIterations;++i){
 		// reset for iteration
 		Code.emptyArray(subsetPointsA);
@@ -1749,10 +1750,10 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		//scores[i] = gradientMag[i];
 		//scores[i] = costMove[i];
 		//scores[i] = range[i];
-		//scores[i] = corners[i];
+		scores[i] = corners[i];
 		//scores[i] = costMove[i]*range[i];
 		//scores[i] = costMove[i]*range[i]*corners[i];
-		scores[i] = costMove[i]*range[i]*corners[i];
+		//scores[i] = costMove[i]*range[i]*corners[i];
 		//scores[i] = costMove[i] + range[i] + corners[i];
 		// HIGH COST TO MOVE
 		// HIGH RANGE

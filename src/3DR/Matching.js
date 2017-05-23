@@ -131,6 +131,18 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 // var pointB = new V2D(229,46);
 
 
+pointsA ?
+pointsB ?
+
+// TODO: RANSAC
+console.log("RANSAC");
+var matrix = R3D.fundamentalRANSACFromPoints(pointsA, pointsB);
+console.log(matrix);
+
+
+
+return;
+
 
 //pointA = new V3D(42.80739301492822,228.66508665936004); // light
 //pointA = new V3D(153.89768824000612,150.63907516461467); // grid area
@@ -157,8 +169,10 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	this.drawAround(bestFeaturesB, 400,0);
 
 	// drop bottom half:
-	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
-	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
+	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.001, "z", false);
+	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.001, "z", false);
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 
@@ -230,19 +244,42 @@ console.log(k+"/"+pointsB.length);
 // COMPARE each
 var featureListA = rangeA._featureList;
 var featureListB = rangeB._featureList;
+ZFeature.compareFeatureLists(featureListA, featureListB, true);
+
+// DROP HIGH-SIMILARITY RATE POINTS
+ZFeature.calculateUniqueness(featureListA, featureListB);
+ZFeature.dropUniqueness(featureListA, featureListB);
+console.log("DROPPED:",featureListA.length, featureListB.length);
+	this.drawCover();
+	this.drawAround(bestFeaturesA, 0,0);
+	this.drawAround(bestFeaturesB, 400,0);
+
+// NEED TO RECOMPARE WITH NEWLY SIZED FEATURE LISTS FOR INDEXES TO BE UPDATED
 ZFeature.compareFeatureLists(featureListA, featureListB);
 
-// TODO: DROP HIGH-SIMILARITY RATE POINTS
-// ...
-
-
-// TODO: ASSIGN each
+// ASSIGN each
 matches = ZFeature.assignFeatureLists(featureListA, featureListB);
-matches = Code.copyArray(matches, 0, Math.floor(matches.length*0.5));
+//matches = Code.copyArray(matches, 0, Math.floor(matches.length*0.50)); // get best results
 
 console.log(matches);
 //	matches = Code.copyArray(matches, 0, 50);
 this.drawMatches(matches, 0,0, 400,0);
+
+
+// TODO: RANSAC
+console.log("RANSAC");
+var pointsA = [];
+var pointsB = [];
+for(i=0; i<featureListA.length; ++i){
+	var point = featureListA[i].point();
+	pointsA.push(point);
+}
+for(i=0; i<featureListB.length; ++i){
+	var point = featureListB[i].point();
+	pointsB.push(point);
+}
+var matrix = R3D.fundamentalRANSACFromPoints(pointsA, pointsB);
+console.log(matrix);
 
 return;
 //

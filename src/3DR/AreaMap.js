@@ -1645,25 +1645,53 @@ ZFeature.prototype.area = function(a){
 	}
 	return this._area;
 }
-ZFeature.prototype.matches = function(){
+ZFeature.prototype.matches = function(m){
+	if(m!==undefined){
+		this._matches = m;
+	}
 	return this._matches;
 	//var feature = {"point":point, "matches":matches};
 }
-ZFeature.compareFeatureLists = function(featuresA, featuresB){
+ZFeature._compareItemsMatch = function(featureA, featureB){
+	var matchesA = featureA.matches();
+	var matchesB = featureB.matches();
+	var score = ZFeature.compareScore(featureA, featureB);
+	var match = {"A":featureA, "B":featureB, "score":score};
+	matchesA.push(match);
+	matchesB.push(match);
+}
+ZFeature.compareFeatureLists = function(featuresA, featuresB, andSelf){
+	// remove old matches
+	for(i=0; i<featuresA.length; ++i){
+		featuresA[i].matches([]);
+	}
+	for(i=0; i<featuresB.length; ++i){
+		featuresB[i].matches([]);
+	}
+	// create matches
+	// OPPOSITE
 	for(i=0; i<featuresA.length; ++i){
 		var featureA = featuresA[i];
-		var rangeA = featureA.range();
-		var matchesA = featureA.matches();
 		for(j=0; j<featuresB.length; ++j){
 			var featureB = featuresB[j];
-			var rangeB = featureB.range();
-			var matchesB = featureB.matches();
-			var score = ZFeature.compareScore(featureA, featureB);
-			var match = {"A":featureA, "B":featureB, "score":score};
-			matchesA.push(match);
-			matchesB.push(match);
+			ZFeature._compareItemsMatch(featureA, featureB);
 		}
-		console.log("  => "+i+" / "+featuresA.length);
+	}
+	if(andSelf===true){
+		for(i=0; i<featuresA.length; ++i){
+			var featureA = featuresA[i];
+			for(j=i+1; j<featuresA.length; ++j){
+				var featureB = featuresA[j];
+				ZFeature._compareItemsMatch(featureA, featureB);
+			}
+		}
+		for(i=0; i<featuresB.length; ++i){
+			var featureA = featuresB[i];
+			for(j=i+1; j<featuresB.length; ++j){
+				var featureB = featuresB[j];
+				ZFeature._compareItemsMatch(featureA, featureB);
+			}
+		}
 	}
 }
 
@@ -1684,15 +1712,50 @@ ZFeature._addUniqueness = function(featuresA, featuresB){
 
 }
 ZFeature.calculateUniqueness = function(featuresA, featuresB){
-	ZFeature._addUniqueness(featuresA, featuresB);
-
-	
-	var score = 0;
-	
-	if(score==0){ // max similarity
-		return inf;
+	var i;
+	// clear uniqueness
+	for(i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		featureA._similarity = 0;
 	}
-	return 1.0/score;
+	for(i=0; i<featuresB.length; ++i){
+		var featureB = featuresB[i];
+		featureB._similarity = 0;
+	}
+	//
+	ZFeature._addUniqueness(featuresA, featuresB);
+	ZFeature._addUniqueness(featuresB, featuresA);
+	var similarity = [];
+	for(var i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		var sim = featureA._similarity;
+		similarity.push(sim);
+	}
+	console.log("\n\nx=["+similarity+"];\nplot(x,'r-x');\n\n");
+}
+ZFeature._dropUniqueness = function(features){
+	var sort = function(a,b){
+		return a._similarity < b._similarity ? -1 : 1;
+	}//
+	var i, j, len = features.length;
+	var uniqueFeatures = [];
+	//features = features.sort(sort);
+	var limitUniquenessThreshold = Math.sqrt(len) * 0.5; // 100 => 5 | 200 => 7
+	console.log(limitUniquenessThreshold);
+	//limitUniquenessThreshold = 2;
+	for(i=0; i<len; ++i){
+		var feature = features[i];
+		var unique = feature._similarity;
+		if(unique < limitUniquenessThreshold){ // how to determine / sort ?
+			uniqueFeatures.push(feature);
+		}
+	}
+	Code.emptyArray(features);
+	Code.copyArray(features,uniqueFeatures);
+}
+ZFeature.dropUniqueness = function(featuresA, featuresB){
+	ZFeature._dropUniqueness(featuresA);
+	ZFeature._dropUniqueness(featuresB);
 }
 ZFeature.assignFeatureLists = function(featuresA, featuresB){
 	// if featuresA.length != featuresB.length
