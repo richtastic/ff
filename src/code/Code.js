@@ -993,6 +993,16 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	}
 	return a;
 };
+Code.copyArrayIndexes = function(a,b, indexes){
+	if(indexes===undefined){
+		indexes = b; b = a; a = new Array();
+	}
+	var i, len=indexes.length;
+	for(i=0; i<len; ++i){
+		a.push( b[indexes[i]]);
+	}
+	return a;
+}
 Code.arrayReverse = function(a, b){
 	if(b===undefined){
 		b = a; a = new Array();
@@ -1804,6 +1814,25 @@ Code.getAlpRGBA = function(col){
 }
 
 // color functions ----------------------------------------------------
+
+Code.randomIntervalSet = function(count, min,max){
+	if(max===undefined){
+		max = min;
+		min = 0;
+	}
+	var maxMinusMin = max-min;
+	var maxMinusMinP1 = maxMinusMin + 1;
+	if(maxMinusMin < count){
+		return null; // impossible
+	}
+	set = [];
+	for(i=0; i<=maxMinusMin; ++i){
+		set[i] = i + min;
+	}
+	Code.randomizeArray(set);
+	return set;
+}
+
 Code.randomInt = function(min,max){
 	if(max===undefined){
 		max = min;
@@ -2250,6 +2279,7 @@ Code.randomizedArray = function(len){
 	Code.randomizeArray(arr, false);
 }
 Code.randomizeArray = function(arr, guarantee){
+	guarantee = guarantee!==undefined ? guarantee : false;
 	var i, len = arr.length;
 	if(len<=1){return;}
 	var indexA, indexB, temp;

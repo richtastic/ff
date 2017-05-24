@@ -131,8 +131,101 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 // var pointB = new V2D(229,46);
 
 
-pointsA ?
-pointsB ?
+var pointsA = [
+	// // large
+	// new V2D(303,81),
+	// new V2D(144,175),
+	// new V2D(140.5,207),
+	// new V2D(181,150),
+	// new V2D(221,177),
+	// new V2D(145.5,110),
+	// new V2D(251,76),
+	// new V2D(231,135),
+
+	// ?
+	// new V2D(303,81),
+	// new V2D(195,255),
+	// new V2D(144,175),
+	// new V2D(141,206),
+	// new V2D(60,236), // 5
+	// new V2D(298,243),
+	// new V2D(181,150),
+	// new V2D(36,288),
+	// new V2D(146,109),
+	// new V2D(88,113), // 10
+	// new V2D(55,107),
+
+
+	// 1-29 testing
+	new V2D(248,83),
+	new V2D(208,150),
+	new V2D(172,107), // 3
+	new V2D(176,128),
+	new V2D(145,144), // 5
+	new V2D(253,149),
+	new V2D(194,95),
+	new V2D(148,165),
+	new V2D(172,67),
+	new V2D(142,76), // 10
+	new V2D(138,84),
+	// OUTLIERS:
+	// ...
+
+];
+var pointsB = [
+	// stretch
+	// new V2D(304,63),
+	// new V2D(145,220),
+	// new V2D(141,273),
+	// new V2D(182,178), // +1 is big diff
+
+	// // large
+	// new V2D(331,95),
+	// new V2D(93,235),
+	// new V2D(87,284),
+	// new V2D(149,198),
+	// new V2D(208,239),
+	// new V2D(96,138),
+	// new V2D(253,88),
+	// new V2D(225,175),
+	
+
+// 	// large
+// 	new V2D(331,95),
+// //	new V2D(209,133), // x
+// 	new V2D(93,235),
+// 	new V2D(87,283),
+// 	// new V2D(166,102), // 5
+// 	// new V2D(253,133),
+// 	new V2D(149,198),
+// 	// new V2D(154,138),
+// 	// new V2D(213,11),
+// 	// new V2D(179,24.5), // 10
+// 	// new V2D(159,58),
+
+	// 1-29 testing
+	new V2D(243,101),
+	new V2D(209,133),
+	new V2D(211,46), // 3
+	new V2D(202,83),
+	new V2D(166,102), // 5
+	new V2D(253,133),
+	new V2D(229,46),
+	new V2D(154,138),
+	new V2D(213,11),
+	new V2D(179,24.5), // 10
+	new V2D(159,58),
+	// OUTLIERS:
+	// ...
+];
+
+var matches = [];
+for(i=0; i<pointsA.length; ++i){
+	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+}
+this.drawMatches(matches, 0,0, 400,0);
+this.drawAround(pointsA, 0,0);
+this.drawAround(pointsB, 400,0);
 
 // TODO: RANSAC
 console.log("RANSAC");
