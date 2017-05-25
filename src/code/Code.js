@@ -5468,6 +5468,56 @@ Code.quadricFromCoefficients = function(a,b,c,d,e,f,g,h,i,j){ // M4D?
 	//return new Matrix3D().setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- Array Matrix Math
+Code.eigenValuesAndVectors2D = function(a,b,c,d){
+	var trace = a + d;
+	var det = a*d - b*c;
+	var left = trace*0.5;
+	var right = Math.sqrt(trace*trace*0.25 - det);
+	var l1 = left - right;
+	var l2 = left + right;
+
+	var a1 = (a-l1);
+	var v1x = 0, v1y = 1;
+	if(a1!=0){
+		v1x = -b/a1;
+	}else{
+		var d1 = (d-l1);
+		if(d1!=0){
+			v1x = -c/d1;
+		}else{
+			v1x = 1; v1y = 0;
+		}
+	}
+	var m1 = Math.sqrt(v1x*v1x + v1y*v1y);
+
+	var a2 = (a-l2);
+	var v2x = 0, v2y = 1;
+	if(a2!=0){
+		v2x = -b/a2;
+	}else{
+		var d2 = (d-l2);
+		if(d2!=0){
+			v2x = -c/d2;
+		}else{
+			v2x = 0; v2y = 1;
+		}
+	}
+	var m2 = Math.sqrt(v2x*v2x + v2y*v2y);
+	return {values:[l1,l2], vectors:[[v1x/m1,v1y/m1],[v2x/m2,v2y/m2]]};
+}
+Code.eigenValues2D = function(a,b,c,d){
+	//Code.quadraticSolution
+	var trace = a + d;
+	var det = a*d - b*c;
+	var left = trace*0.5;
+	var right = Math.sqrt(trace*trace*0.25 - det);
+	var l1 = left - right;
+	var l2 = left + right;
+	return [l1, l2];
+}
+Code.eigenVectors2D = function(a,b,c,d){
+	return eigenValuesAndVectors2D(a,b,c,d).vectors;
+}
 Code.matrix3x3xV3D = function(z,m,x){ // z = matrix*x
 	if(!x){ x=m; m=z; z=new V3D(); }
 	z.set(m[0]*x.x+m[1]*x.y+m[2]*x.z, m[3]*x.x+m[4]*x.y+m[5]*x.z, m[6]*x.x+m[7]*x.y+m[8]*x.z);

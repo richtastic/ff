@@ -1434,6 +1434,9 @@ ImageMat.costToMoveImage = function(red,grn,blu, wid,hei, dx,dy, sum){ // assume
 	var r = sum!==undefined ? sum.red() : Code.newArrayZeros(resultLen);
 	var g = sum!==undefined ? sum.grn() : Code.newArrayZeros(resultLen);
 	var b = sum!==undefined ? sum.blu() : Code.newArrayZeros(resultLen);
+		// var r = sum!==undefined ? sum.red() : Code.newArrayOnes(resultLen);
+		// var g = sum!==undefined ? sum.grn() : Code.newArrayOnes(resultLen);
+		// var b = sum!==undefined ? sum.blu() : Code.newArrayOnes(resultLen);
 	var i, j, x, y;
 	var indexA, indexB;
 	for(j=0; j<hei; ++j){
@@ -1447,6 +1450,9 @@ ImageMat.costToMoveImage = function(red,grn,blu, wid,hei, dx,dy, sum){ // assume
 				r[indexA] += Math.abs(red[indexA] - red[indexB]);
 				g[indexA] += Math.abs(grn[indexA] - grn[indexB]);
 				b[indexA] += Math.abs(blu[indexA] - blu[indexB]);
+					// r[indexA] *= Math.abs(red[indexA] - red[indexB]);
+					// g[indexA] *= Math.abs(grn[indexA] - grn[indexB]);
+					// b[indexA] *= Math.abs(blu[indexA] - blu[indexB]);
 				// r[indexA] += Math.pow(red[indexA] - red[indexB],2);
 				// g[indexA] += Math.pow(grn[indexA] - grn[indexB],2);
 				// b[indexA] += Math.pow(blu[indexA] - blu[indexB],2);
@@ -1464,6 +1470,7 @@ ImageMat.costToMoveImage = function(red,grn,blu, wid,hei, dx,dy, sum){ // assume
 ImageMat.costToMove = function(channel, wid,hei, dx,dy, sum){ // assume image stretches in all directions
 	var resultLen = wid * hei;
 	sum = sum!==undefined ? sum : Code.newArrayZeros(resultLen);
+	//sum = sum!==undefined ? sum : Code.newArrayOnes(resultLen);
 	var i, j, x, y;
 	var indexA, indexB;
 	for(j=0; j<hei; ++j){
@@ -1475,6 +1482,7 @@ ImageMat.costToMove = function(channel, wid,hei, dx,dy, sum){ // assume image st
 			y = Math.min(Math.max(0,y),hei-1);
 			indexB = y*wid + x;
 			sum[indexA] += Math.abs(channel[indexA] - channel[indexB]);
+			//sum[indexA] *= Math.abs(channel[indexA] - channel[indexB]);
 		// (A * B) / (A + B)
 		}
 	}

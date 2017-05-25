@@ -272,6 +272,14 @@ var pointsB = [
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 
+	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
+	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
+	bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.min(150,bestFeaturesA.length-1));
+	bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.min(150,bestFeaturesB.length-1));
+
+	console.log(bestFeaturesA.length);
+	console.log(bestFeaturesB.length);
+
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
 return;

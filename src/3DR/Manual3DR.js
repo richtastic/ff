@@ -1387,7 +1387,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	d = new DOImage(img);
 	d.matrix().scale(1.0);
 	d.matrix().translate(  0,300);
-	GLOBALSTAGE.addChild(d);
+	//GLOBALSTAGE.addChild(d);
 
 
 
@@ -1409,7 +1409,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	d = new DOImage(img);
 	d.matrix().scale(1.0);
 	d.matrix().translate(400,300);
-	GLOBALSTAGE.addChild(d);
+//	GLOBALSTAGE.addChild(d);
 
 	//var gry = ImageMat.gradientAngle(testing.gry(), testing.width(),testing.height());
 	//var gry = ImageMat.gradientMagnitude(testing.gry(), testing.width(),testing.height());
@@ -1436,16 +1436,44 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	// d.matrix().translate(400,300);
 	// GLOBALSTAGE.addChild(d);
 
+
+	console.log("TEST");
+//original = testing
+	//var moveCost = ImageMat.totalCostToMoveAny(original);
+	var gry = original.gry();
+	var dX = ImageMat.derivativeX(gry,original.width(),original.height()).value;
+	var dY = ImageMat.derivativeY(gry,original.width(),original.height()).value;
+	var show = ImageMat.mulFloat(dX,dY);
+	show = ImageMat.absFloat(show);
+
+
+	//show = R3D.cornerDetection(gry,original.width(),original.height());
+	show = R3D.hessianCornerDetection(gry,original.width(),original.height());
+	console.log(show)
+	show = ImageMat.normalFloat01(show);
+	//ImageMat.normalFloat01(show);
+	//ImageMat.normalFloat01(show);
+	show = ImageMat.pow(show,0.25);
+	//show = ImageMat.pow(show,0.1);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(show,show,show, original.width(),original.height());
+	d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(400,300);
+	GLOBALSTAGE.addChild(d);
+
+return;
+
 	console.log("MOVE COST");
-	var moveCost = ImageMat.totalCostToMoveAny(original);
-	
-	ImageMat.normalFloat01(moveCost);
+	var moveCost = ImageMat.totalCostToMoveAny(original).value;
+	moveCost =ImageMat.normalFloat01(moveCost);
 
 	img = GLOBALSTAGE.getFloatRGBAsImage(moveCost,moveCost,moveCost, original.width(),original.height());
 	d = new DOImage(img);
 	d.matrix().scale(1.0);
 	d.matrix().translate(400,300);
-//	GLOBALSTAGE.addChild(d);
+	GLOBALSTAGE.addChild(d);
+return;
 
 
 	//

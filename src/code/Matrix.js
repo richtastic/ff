@@ -1213,53 +1213,13 @@ Matrix.LU = function(A){ // A = L*U
 
 
 Matrix.eigenValuesAndVectors2D = function(a,b,c,d){
-	var trace = a + d;
-	var det = a*d - b*c;
-	var left = trace*0.5;
-	var right = Math.sqrt(trace*trace*0.25 - det);
-	var l1 = left - right;
-	var l2 = left + right;
-
-	var a1 = (a-l1);
-	var v1x = 0, v1y = 1;
-	if(a1!=0){
-		v1x = -b/a1;
-	}else{
-		var d1 = (d-l1);
-		if(d1!=0){
-			v1x = -c/d1;
-		}else{
-			v1x = 1; v1y = 0;
-		}
-	}
-	var m1 = Math.sqrt(v1x*v1x + v1y*v1y);
-
-	var a2 = (a-l2);
-	var v2x = 0, v2y = 1;
-	if(a2!=0){
-		v2x = -b/a2;
-	}else{
-		var d2 = (d-l2);
-		if(d2!=0){
-			v2x = -c/d2;
-		}else{
-			v2x = 0; v2y = 1;
-		}
-	}
-	var m2 = Math.sqrt(v2x*v2x + v2y*v2y);
-	return {values:[l1,l2], vectors:[[v1x/m1,v1y/m1],[v2x/m2,v2y/m2]]};
+	return Code.eigenValuesAndVectors2D(a,b,c,d);
 }
 Matrix.eigenValues2D = function(a,b,c,d){
-	var trace = a + d;
-	var det = a*d - b*c;
-	var left = trace*0.5;
-	var right = Math.sqrt(trace*trace*0.25 - det);
-	var l1 = left - right;
-	var l2 = left + right;
-	return [l1, l2];
+	return  Code.eigenValues2D(a,b,c,d);
 }
 Matrix.eigenVectors2D = function(a,b,c,d){
-	return eigenValuesAndVectors2D(a,b,c,d).vectors;
+	return Matrix.eigenValuesAndVectors2D(a,b,c,d).vectors;
 }
 Matrix.eigen = function(A){ // eigenValues[], eigenVectors[[]] 
 	var ret = numeric.eig(A._rows);

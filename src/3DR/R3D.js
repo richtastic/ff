@@ -1649,13 +1649,17 @@ R3D.totalGradientMagnitude = function(r, g, b, wid, hei) {
 }
 // -------------------------------------------------------------------------------------------- array image type operations
 R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
-		r = ImageMat.applyGaussianFloat(r, wid,hei, 1.0);
-		g = ImageMat.applyGaussianFloat(g, wid,hei, 1.0);
-		b = ImageMat.applyGaussianFloat(b, wid,hei, 1.0);
+		// r = ImageMat.applyGaussianFloat(r, wid,hei, 1.0);
+		// g = ImageMat.applyGaussianFloat(g, wid,hei, 1.0);
+		// b = ImageMat.applyGaussianFloat(b, wid,hei, 1.0);
+	var y = ImageMat.grayFromRGBFloat(r,g,b);
+	y = ImageMat.applyGaussianFloat(b, wid,hei, 1.0);
+
 	var scores = Code.newArrayZeros(wid*hei);
 	// COST TO MOVE R G B
-	var costMove = ImageMat.totalCostToMoveAny(r,g,b,wid,hei).value;
-		costMove = ImageMat.applyGaussianFloat(costMove, wid,hei, 1.6);
+	//var costMove = ImageMat.totalCostToMoveAny(r,g,b,wid,hei).value;
+	var costMove = ImageMat.costToMoveAny(y,wid,hei).value;
+		//costMove = ImageMat.applyGaussianFloat(costMove, wid,hei, 1.6);
 		var maxMove = Code.maxArray(costMove);
 		var minMove = Code.minArray(costMove);
 		var ranMove = maxMove - minMove;
@@ -1668,9 +1672,13 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		var ranRange = maxRange - minRange;
 //		range = ImageMat.getNormalFloat01(range);
 	// CORNERNESS OF R G B
-	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei, 0.1);
+	HERE
+//	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei);
 //		corners = ImageMat.applyGaussianFloat(corners, wid,hei, 1.6);
 //		corners = ImageMat.getNormalFloat01(corners);
+
+//corners = R3D.harrisCornerDetection(y, wid,hei);
+corners = R3D.hessianCornerDetection(y, wid,hei);
 	
 	var gradientMag = R3D.totalGradientMagnitude(r,g,b,wid,hei);
 		gradientMag = ImageMat.applyGaussianFloat(gradientMag, wid,hei, 1.6);
@@ -1711,12 +1719,13 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		//scores[i] = costMove[i];
 		 /// range[i]; // / (range[i]*corners[i]);
 	}
-	scores = ImageMat.applyGaussianFloat(scores, wid,hei, 1.6);
+	//scores = ImageMat.applyGaussianFloat(scores, wid,hei, 1.6);
 	return scores;
 }
 R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 	scores = R3D.bestFeatureFilterRGB(r,g,b, wid,hei);
 	var list = Code.findMaxima2DFloat(scores, wid,hei, true);
+	var harrisThreshold = 0.000001;
 	// drop items near edge:
 	var edgePercent = 0.01;
 	var edgeDistance = Math.floor(edgePercent * Math.max(wid,hei));
@@ -1724,7 +1733,15 @@ R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 	var bottomDistance = hei - edgeDistance;
 	for(i=0; i<list.length; ++i){
 		point = list[i];
+		var shouldRemove = false;
 		if(point.x < edgeDistance || point.x > rightDistance || point.y < edgeDistance || point.y > bottomDistance){
+			shouldRemove = true;
+		}
+		console.log(point.z+" > "+harrisThreshold);
+		if(point.z<harrisThreshold){
+			// shouldRemove = true;
+		}
+		if(shouldRemove){
 			Code.removeElementAt(list,i);
 			--i;
 		}
@@ -2518,27 +2535,26 @@ R3D.gradientDirection = function(rect, wid,hei){
 	return {direction:dir, angle:ang, magnitude:mag};
 }
 
-R3D.totalHarrisCornerDetection = function(r,g,b, width, height, konstant, sigma){
+R3D.totalHarrisCornerDetection = function(r,g,b, width, height, sigma){
 	var len = width*height;
 	var total = Code.newArrayZeros(len);
 	var i;
-	r = R3D.harrisCornerDetection(r, width, height, konstant, sigma);
-	g = R3D.harrisCornerDetection(g, width, height, konstant, sigma);
-	b = R3D.harrisCornerDetection(b, width, height, konstant, sigma);
+	r = R3D.harrisCornerDetection(r, width, height, sigma);
+	g = R3D.harrisCornerDetection(g, width, height, sigma);
+	b = R3D.harrisCornerDetection(b, width, height, sigma);
 	for(i=0; i<len; ++i){
 		total[i] = r[i] + g[i] + b[i];
 	}
 	return total; //{"value":total, "width":wid, "height":hei};
 }
-R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // harris
-	konstant = konstant ? konstant : 0.05; // 0.04-0.06
-	konstant = 1.0;
+R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
+	var konstant = 0.04; // 0.04 - 0.06
 	sigma = sigma ? sigma : 2.0;
 	
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-//	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
 
 	var i, j, a, b, c, d;
 	var Ix = ImageMat.derivativeX(src,width,height).value;
@@ -2546,12 +2562,13 @@ R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // ha
 	var Ix2 = ImageMat.mulFloat(Ix,Ix);
 	var Iy2 = ImageMat.mulFloat(Iy,Iy);
 	var IxIy = ImageMat.mulFloat(Ix,Iy);
-	Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
-	Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
-	IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
+	// Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	// Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
+	// IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
 
 	var harrisValue = new Array(width*height);
 	var i, j, a, b, c, d, tra, det;
+	var ratio;
 	for(j=0;j<height;++j){
 		for(i=0;i<width;++i){
 			index = j*width + i;
@@ -2559,18 +2576,104 @@ R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // ha
 			b = IxIy[index];
 			c = IxIy[index];
 			d = Iy2[index];
+			/*
+			var eigs = Code.eigenValues2D(a,b,c,d);
+			//var ratio = eigs[0]/eigs[1];
+			ratio = 0;
+			if(eigs[1]!=0){
+				eigs[0]/eigs[1];
+			}
+			harrisValue[index] = eigs[1];//ratio;
+			*/
 			tra = a + d;
 			det = a*d - c*b;
-        	harrisValue[index] = det - konstant*tra*tra;
-        	harrisValue[index] = Math.abs(harrisValue[index]);
+			var har = det - konstant*tra*tra;
+			//var har = det/(konstant*tra*tra);
+        	harrisValue[index] = Math.abs(har);
+        	
 		}
+		//console.log(a,b,c,d,"...",ratio,eigs[0],eigs[1]);
 	}
 	return harrisValue;
 }
+/*
 
-R3D.hessianCornerDetection = function(src, width, height, konstant, sigma){ // hessian ish
-	konstant = konstant ? konstant : 0.081; // 0.04-0.06
+Code.eigenValues2D(a,b,c,d);
+Code.eigenValues2D(0.07146012217523175, -0.0003494382502456308, -0.0003494382502456308, 0.0000017087444999786286);
+*/
+
+R3D.hessianCornerDetection = function(src, width, height, sigma){ // hessian ish
+	sigma = sigma ? sigma : 1.0;
+	//var konstant =  0.081;
+	
+	var gaussSize = Math.round(2+sigma)*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	var padding = Math.floor(gaussSize/2.0);
+	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+	
+
+	var Ix = ImageMat.derivativeX(src,width,height).value;
+	var Iy = ImageMat.derivativeY(src,width,height).value;
+	var IxyS = ImageMat.mulFloat(Ix,Iy);
+
+	var IxS = ImageMat.mulFloat(Ix,Ix);
+	var IyS = ImageMat.mulFloat(Iy,Iy);
+
+	IxS = ImageMat.gaussian2DFrom1DFloat(IxS, width,height, gauss1D);
+	IyS = ImageMat.gaussian2DFrom1DFloat(IyS, width,height, gauss1D);
+	IxyS = ImageMat.gaussian2DFrom1DFloat(IxyS, width,height, gauss1D);
+
+	var Ix2 = ImageMat.secondDerivativeX(src,width,height).value;
+	var Iy2 = ImageMat.secondDerivativeY(src,width,height).value;
+	var IxIy = ImageMat.secondDerivativeXY(src,width,height).value;
+
+	Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
+	IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
+
+	var hessianValue = Code.newArrayZeros(width*height);
+	var i, j, a, b, c, d;
+	var ratio, eigs;
+	for(j=1;j<height-1;++j){
+		for(i=1;i<width-1;++i){
+			index = j*width + i;
+			// a = Ix2[index];
+			// b = IxIy[index];
+			// c = IxIy[index];
+			// d = Iy2[index];
+			a = IxS[index];
+			b = IxyS[index];
+			c = IxyS[index];
+			d = IyS[index];
+			eigs = Code.eigenValues2D(a,b,c,d);
+			// //var ratio = eigs[0]/eigs[1];
+			var a = eigs[0];
+			var b = eigs[1];
+			a = Math.abs(a);
+			b = Math.abs(b);
+			ratio = 0;
+			if(eigs[0]!=0){
+				ratio = Math.abs(eigs[0]/eigs[1]);
+			}
+			//hessianValue[index] = (a*b)/(a+b);
+			//hessianValue[index] = (a+b);
+			//hessianValue[index] = (a*b);
+			//hessianValue[index] = a*b - 0.04*Math.pow(a+b,2);
+			hessianValue[index] = a*b - 0.00015*Math.pow(a+b,2);
+			//hessianValue[index] = hessianValue[index] > 0.0001;
+			//hessianValue[index] = ratio;
+        	//hessianValue[index] = a*d - konstant*b*c;
+        	//hessianValue[index] = Math.abs(hessianValue[index]);
+		}
+		//console.log(eigs+"")
+	}
+	return hessianValue;
+}
+
+
+R3D.cornerDetection = function(src, width, height, sigma){ //
 	sigma = sigma ? sigma : 1.6;
+	var konstant =  0.081;
 	
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
@@ -2595,6 +2698,7 @@ R3D.hessianCornerDetection = function(src, width, height, konstant, sigma){ // h
 	}
 	return hessianValue;
 }
+
 
 R3D.pointsCornerDetector = function(src, width, height, konstant, sigma, percentExclude){ // uses harris
 	percentExclude = percentExclude!==undefined ? percentExclude : 0.05;
