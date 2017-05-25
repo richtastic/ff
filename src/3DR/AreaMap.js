@@ -1742,7 +1742,7 @@ ZFeature._dropUniqueness = function(features){
 	//features = features.sort(sort);
 	var limitUniquenessThreshold = Math.sqrt(len) * 0.5; // 100 => 5 | 200 => 7
 	console.log(limitUniquenessThreshold);
-	//limitUniquenessThreshold = 2;
+	//limitUniquenessThreshold = 3;
 	for(i=0; i<len; ++i){
 		var feature = features[i];
 		var unique = feature._similarity;

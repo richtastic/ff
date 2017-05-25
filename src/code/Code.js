@@ -1814,22 +1814,22 @@ Code.getAlpRGBA = function(col){
 }
 
 // color functions ----------------------------------------------------
-
+// Code.randomIntervalSet(5, 0, 10);
 Code.randomIntervalSet = function(count, min,max){
-	if(max===undefined){
-		max = min;
-		min = 0;
-	}
+	if(max===undefined){ max = min; min = 0; }
 	var maxMinusMin = max-min;
 	var maxMinusMinP1 = maxMinusMin + 1;
 	if(maxMinusMin < count){
-		return null; // impossible
+		return []; // impossible
 	}
-	set = [];
+	var i, set = [];
 	for(i=0; i<=maxMinusMin; ++i){
 		set[i] = i + min;
 	}
-	Code.randomizeArray(set);
+	Code.randomizeArray(set); // unnecessaru
+	while(set.length>count){ // remove a random index
+		set.splice( Math.min(Math.floor(Math.random()*set.length),set.length-1), 1);
+	}
 	return set;
 }
 
@@ -1847,6 +1847,49 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
+
+Code.interpolateColorGradientARGB = function(percent, colors,locations){
+	if(colors.length==0){
+		return colors[0];
+	}
+	if(!locations){
+		locations = [];
+		for(var i=0; i<colors.length; ++i){
+			locations.push(i/(colors.length-1));
+		}
+	}
+	var lm1 = colors.length - 1;
+	for(var i=0; i<lm1; ++i){
+		var locationA = locations[i];
+		var locationB = locations[i+1];
+		if(locationA<=percent && percent<=locationB){
+			var colorA = colors[i];
+			var colorB = colors[i+1];
+			var r = (locationB-locationA);
+			if(r==0){
+				return colorA;
+			}
+			var p = (percent-locationA)/r;
+			var pm1 = 1.0 - p;
+			var alpA = Code.getFloatAlpARGB(colorA);
+			var alpB = Code.getFloatAlpARGB(colorB);
+			var redA = Code.getFloatRedARGB(colorA);
+			var redB = Code.getFloatRedARGB(colorB);
+			var grnA = Code.getFloatGrnARGB(colorA);
+			var grnB = Code.getFloatGrnARGB(colorB);
+			var bluA = Code.getFloatBluARGB(colorA);
+			var bluB = Code.getFloatBluARGB(colorB);
+			var alp = pm1*alpA + p*alpB;
+			var red = pm1*redA + p*redB;
+			var grn = pm1*grnA + p*grnB;
+			var blu = pm1*bluA + p*bluB;
+			var color = Code.getColARGBFromFloat(alp,red,grn,blu);
+			return color;
+		}
+	}
+	return null; // error?
+}
+
 // Code.getColARGBFromString("0x456").toString(16)
 // Code.getColARGBFromString("0x3456").toString(16)
 // Code.getColARGBFromString("0x445566").toString(16)

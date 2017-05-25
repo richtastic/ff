@@ -197,11 +197,11 @@ Matrix.prototype.closeToIdentity = function(thresh){
 		for(i=0;i<col;++i){
 			if(i==j){
 				if( Math.abs(this._rows[j][i]-1.0 )>thresh ){
-					console.log(j,i,"==");
+					//console.log(j,i,"==");
 					return false;
 				}
 			}else if( Math.abs(this._rows[j][i])>thresh ){
-				console.log(j,i,"!=");
+				//console.log(j,i,"!=");
 				return false;
 			}
 		}

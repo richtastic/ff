@@ -479,12 +479,13 @@ R3D.fundamentalMatrix = function(pointsA,pointsB){
 	return null;
 }
 R3D.fundamentalMatrix8 = function(pointsA,pointsB){
-//	console.log("R3D.fundamentalMatrix8")
 	if(pointsA.length<8){ return null; }
 	var i, a, b, svd, U, S, V, len = pointsA.length, F = new Matrix(3,3), A = new Matrix(len,9);
 	for(i=0;i<len;++i){
 		a = pointsA[i]; b = pointsB[i];
-		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, a.z*b.x, a.x*b.y, a.y*b.y, a.z*b.y, a.x*b.z, a.y*b.z, a.z*b.z]);
+		var az = a.z ? a.z : 1.0;
+		var bz = b.z ? b.z : 1.0;
+		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
 	}
 	// last column of V
 	svd = Matrix.SVD(A);
@@ -493,8 +494,6 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	V = svd.V;
 	F.setFromArray( V.colToArray(8) );
 	F = R3D.forceRank2F(F);
-	// nonlinear improvement goes here
-		// R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
 	return F;
 }
 R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole
@@ -506,12 +505,6 @@ R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole
 	return Matrix.fromSVD(U,S,V);
 }
 R3D.fundamentalMatrix7 = function(pointsA,pointsB){
-
-	console.log("needs to be fixed");
-	
-	try{
-//F = FA + l*FB
-//F = a*FA + (1-a)*FB
 	if(pointsA.length<7){ return null; }
 	var i, a, b, svd, U, S, V, len = pointsA.length;
 	var size = 7;
@@ -522,64 +515,30 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){
 		var bz = b.z ? b.z : 1.0;
 		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
 	}
-	// svd
-	//console.log("A: \n"+A.toString());
 	svd = Matrix.SVD(A);
 	U = svd.U; // 7x7
 	S = svd.S; // 7x9
 	V = svd.V; // 9x9
-	// console.log(U.toString());
-	// console.log(S.toString());
-	// console.log(V.toString());
-	// V(7,8) = right nul(A)
-	var row8 = new Matrix(3,3).setFromArray(V.colToArray(7));
-	var row8t = Matrix.transpose(row8);
-	var row9 = new Matrix(3,3).setFromArray(V.colToArray(8));
-	//var row9t = Matrix.transpose(row9)
-	//var r9i = Matrix.inverse(row9t);
-	var r9i = Matrix.inverse(row9);
-// console.log(row8.toString())
-// console.log(row9.toString())
-	//var critical = Matrix.mult(r9i,row8t);
-var F1 = row8;
-var F2 = row9;
-// analytic attempt:
-var lambda = R3D.cubicDeterminantSolution3x3(F1.toArray(), F2.toArray());
-console.log("LAMBDA: "+lambda);
-
-	var critical = Matrix.mult(r9i,row8);
-	var eigs = Matrix.eigenValuesAndVectors(critical);
-	// rank2: det (F1 + lambda*F2) = a*l^3 + b*l^2 + c*l + d = 0
-	// eigen values
-	var values = eigs.values;
+	var F1 = new Matrix(3,3).setFromArray(V.colToArray(7));
+	var F2 = new Matrix(3,3).setFromArray(V.colToArray(8));
+	F1 = R3D.forceRank2F(F1);
+	F2 = R3D.forceRank2F(F2);
+	var lambda = R3D.cubicDeterminantSolutionPercent3x3(F1.toArray(), F2.toArray());
 	var list = [];
-	// solution = row8^T - lambda*row9^T
-	console.log(values);
-// var diag0 = new Matrix().identity().scale(values[0]);
-// var diag1 = new Matrix().identity().scale(values[1]);
-// var diag2 = new Matrix().identity().scale(values[2]);
-// list.push(diag0,diag1,diag2);
-	for(i=0;i<values.length;++i){ // only 1 or 3 solutions
-		//if( !Matrix.isZero(values[i]) ){
-			var F = new Matrix(3,3);
-			F.copy(F2);
-			F.scale(values[i]);
-			F = Matrix.add(F1,F);
-			list[i] = F;
-			console.log(list[i].toString())
-		//}
-		/*
-		var diag = new Matrix(3,3).identity().scale(values[i]);
-		var M = Matrix.mult(diag,F2);
-		list[i] = Matrix.add( F1, M );
-		console.log(list[i].toString())
-		*/
+	for(i=0; i<lambda.length; ++i){
+		var a = lambda[i];
+
+		var Fa = new Matrix(3,3);
+		Fa.copy(F1);
+		Fa.scale(a);
+		var Fb = new Matrix(3,3);
+		Fb.copy(F2);
+		Fb.scale(1.0-a);
+		F = Matrix.add(Fa,Fb);
+			F = R3D.forceRank2F(F);
+		list.push(F);
 	}
 	return list;
-} catch(e){ // error no convergence
-	//console.log(e)
-}
-return null;
 }
 R3D.getEpipolesFromF = function(F,normed){
 	normed = normed!==undefined?normed:true;
@@ -907,7 +866,7 @@ R3D.drawPointAt = function(pX,pY, r,g,b, rad){
 	return d;
 }
 
-R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){ 
+R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB, errorPosition){ 
 	if(!pointsA || !pointsB || pointsA.length<7 || pointsB.length<7){
 		return null;
 	}
@@ -917,93 +876,95 @@ R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB){
 		pointsB[i] = new V3D(pointsB[i].x, pointsB[i].y, 1.0);
 	}
 
+	var imageSize = new V2D(400,300); // TODO: pass
+	var imageHypotenuse = imageSize.length();
+	var maxErrorDistance = (1.0/100.0) * imageHypotenuse;
 
-	var maxErrorDistance = 1.0/100.0; // % ~ 2 pixels?
+	if(errorPosition!==undefined){
+		maxErrorDistance = errorPosition;
+	}
+	//var maxErrorTransfer = maxErrorDistance*maxErrorDistance;
 
-	var maxErrorDistance = 10;
-	/*
-	point normalization
-	*/
 	var i, j, k, p, arr, fxn, args, xVals, yVals, result, fundamental;
 	var ptA=new V3D(), ptB=new V3D(), pointA, pointB, distanceA, distanceB;
 	var lineA=new V3D(), lineB=new V3D();
 	var subsetPointsA=[], subsetPointsB=[];
 	var consensus=[], consensusSet = [];
-	var support, maxSupportCount = 0;
+	var support, maxSupportCount = 0, maxSupportError = null;
 	var minCount = 7;
-	minCount = 9;
+//minCount = 8;
 	var epsilon = 1/pointsLength;
 	var pOutlier = 0.5; // inital assumption
 	var pDesired = 0.99; // to have selected a valid subset
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
-	console.log("maxIterations: "+maxIterations);
-//maxIterations = 1E4;
-maxIterations = 10;	
+	console.log("maxErrorDistance: "+maxErrorDistance+"     maxErrorDistance: "+maxErrorDistance+"      itr: "+maxIterations+"   points: "+minCount);
+//maxIterations = 1E5; // 50%
+maxIterations = 1E5;
+//maxIterations = 10; // test
 	for(i=0;i<maxIterations;++i){
-console.log(" ___ RANSAC ___ "+i)+" ---- ---- ---- ---- ---- ---- ---- ---- ---- ";
 		// reset for iteration
 		Code.emptyArray(subsetPointsA);
 		Code.emptyArray(subsetPointsB);
-
-		// GET PARAMS
-		// 7 pionts = minimum
-		// Code.randomSubsetFromArray(subsetPointsA, 7, pointsA);
-		// Code.randomSubsetFromArray(subsetPointsB, 7, pointsB);
-		
-		// 8 points = exact
-			// ...
-		
-		// 9 points = safe
+		//  
 		var indexes = Code.randomIntervalSet(minCount, 0, pointsLength-1);
+		//console.log(" ___ RANSAC ___ "+i+" ---- ---- ---- ---- ---- ---- ---- ---- ---- "+indexes.length+"");
 		Code.copyArrayIndexes(subsetPointsA, pointsA, indexes);
 		Code.copyArrayIndexes(subsetPointsB, pointsB, indexes);
-		// subsetPointsA = pointsA;
-		// subsetPointsB = pointsB;
 		var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
 		var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
-		arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
-		arr = Matrix.mult(arr, pointsANorm.forward[0]);
-		arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
- 		arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
-		var FFwd = arr;
-		var FRev = R3D.fundamentalInverse(FFwd);
-		// 
-		console.log(""+FFwd);
-		console.log(""+FRev);
-		support = 0;
-		var dir = new V2D();
-		var org = new V2D();
-		for(j=0; j<subsetPointsA.length; ++j){
-			a = subsetPointsA[j];
-			b = subsetPointsB[j];
-			console.log(a+" => "+b);
-			a = new V3D(a.x,a.y,1.0);
-			b = new V3D(b.x,b.y,1.0);
-				// fundamental.multV3DtoV3D(lineA, pointA);
-				// fundamentalInverse.multV3DtoV3D(lineB, pointB);
-			lineB = FFwd.multV3DtoV3D(new V3D(), a);
-			Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-			distanceB = Code.distancePointRay2D(org,dir, a);
-			// B
-			lineA = FRev.multV3DtoV3D(new V3D(), b);
-			Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-			distanceA = Code.distancePointRay2D(org,dir, a);
-			//
-			console.log("DISTANCES: "+distanceA+" & "+distanceB);
-			if(distanceA<maxErrorDistance && distanceB<maxErrorDistance){
-				++support;
-				consensus.push([pointA,pointB]);
-			}
+		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
+		for(k=0; k<m.length; ++k){
+				arr = m[k];
+				arr = Matrix.mult(arr, pointsANorm.forward[0]);
+				arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
+		 		//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
+		 			//arr = R3D.fundamentalMatrixNonlinear(arr, subsetPointsA, subsetPointsB);
+				var FFwd = arr;
+				var FRev = R3D.fundamentalInverse(FFwd);
+				support = 0;
+				var dir = new V2D();
+				var org = new V2D();
+				var transferError;
+				var totalTransferError = 0;
+				consensus = [];
+				for(j=0; j<pointsA.length; ++j){
+					a = pointsA[j];
+					b = pointsB[j];
+					a = new V3D(a.x,a.y,1.0);
+					b = new V3D(b.x,b.y,1.0);
+					lineB = FFwd.multV3DtoV3D(new V3D(), a);
+					Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+					distanceB = Code.distancePointRay2D(org,dir, b);
+					// B
+					lineA = FRev.multV3DtoV3D(new V3D(), b);
+					Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+					distanceA = Code.distancePointRay2D(org,dir, a);
+					// error
+					transferError = distanceA*distanceA + distanceB*distanceB;
+					if(distanceA<maxErrorDistance && distanceB<maxErrorDistance){
+						++support;
+						totalTransferError += transferError;
+						consensus.push([a,b]);
+					}
+				}
+				var avgTransferError = totalTransferError / support; // if AVERAGE ERROR GOES DOWN ?
+				if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
+				//if(support>=maxSupportCount && (maxSupportError==null || avgTransferError < maxSupportError)){ // ? trade lower average error for higher support count ?
+					console.log(i+": "+totalTransferError+"/"+maxSupportError+" support: "+support+" / "+maxSupportCount +"     avg:"+(totalTransferError/support));
+						//console.log(feedback+"");
+					maxSupportCount = support;
+					maxSupportError = totalTransferError;
+					//maxSupportError = avgTransferError;
+					Code.emptyArray(consensusSet);
+					Code.copyArray(consensusSet, consensus);
+					// TODO: use all of new consensus points & try to refine F approximation
+					// if support count has increased, 
+				}
+				if(support>0){
+					// console.log(i+": "+totalTransferError+"/"+maxSupportError+" support: "+support+" / "+maxSupportCount);
+				}
 		}
-		if(support>0){
-			console.log(i+": support: "+support);
-		}
-		if(support>maxSupportCount){
-			maxSupportCount = support;
-			Code.emptyArray(consensusSet);
-			Code.copyArray(consensusSet, consensus);
-		}
-return;
 	}
 console.log("MAX CONSENSUS: "+maxSupportCount);
 	// f using all inliers
@@ -1013,80 +974,21 @@ console.log("MAX CONSENSUS: "+maxSupportCount);
 		subsetPointsA.push( consensusSet[i][0] );
 		subsetPointsB.push( consensusSet[i][1] );
 	}
-	arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
+	//return {"F":bestF, "matches":[subsetPointsA,subsetPointsB]};
 	if(!arr){
 		return null;
 	}
-// TODO: USE ALREADY BUILT METHOD : R3D.fundamentalMatrixNonlinear
-	// nonlinear estimation
-console.log("MINIMIZING");
-	fxn = R3D.lmMinFundamentalFxn;
-	args = [subsetPointsA,subsetPointsB];
-	xVals = arr.toArray();
-	args = [];//[ points1.norm.normalized[0], points1.norm.normalized[1] ];
-	yVals = Code.newArrayZeros(maxSupportCount*4);
-	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
-	// matrix/point un-normalization
+	console.log("MINIMIZING");
+	var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
+	arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 	arr = Matrix.mult(arr, pointsANorm.forward[0]);
 	arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
-	return arr;
-/*
-points0.norm = R3D.calculateNormalizedPoints([points0.pos3D,points0.pos2D]);
-points1.norm = R3D.calculateNormalizedPoints([points1.pos3D,points1.pos2D]);
-points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
-...
-forward = points0.norm.forward[0];
-reverse = points0.norm.reverse[1];
-H = H0;
-H = Matrix.mult(H,forward);
-H = Matrix.mult(reverse,H);
-H0 = H;
-*/
-/*
-// try 1 or 3 possibilities
-		for(j=0;j<arr.length;++j){
-			fundamental = arr[j];
-			var fundamentalInverse = Matrix.transpose(fundamental);
-			support = 0;
-			Code.emptyArray(consensus);
-			//console.log("f: "+fundamental.toString());
-			// find inliers
-			for(k=0;k<pointsA.length;++k){
-				pointA = pointsA[k];
-				pointB = pointsB[k];
-//console.log(pointA+"      "+pointB)
-				// fundamental.multV3DtoV3D(ptB, pointA);
-				// fundamentalInverse.multV3DtoV3D(ptA, pointB);
-				fundamental.multV3DtoV3D(lineA, pointA);
-				fundamentalInverse.multV3DtoV3D(lineB, pointB);
-				// fundamental.multV3DtoV3D(ptA, pointB);
-				// fundamentalInverse.multV3DtoV3D(ptB, pointA);
-				// ptA.homo();
-				// ptB.homo();
-//console.log(pointA+""+ptA)
-// ax + by + c(z) = 0
-//var org = lineA.copy();
-//org.homo();
-//org.scale(-1)
-var org = new V2D(-lineA.x/lineA.z,-lineA.y/lineA.z);
-// var dir = new V2D(org.x,org.y);
-// dir.norm();
-// V2D.rotate(dir, dir,Math.PIO2);
-// dir.norm();
-var dir = new V2D(org.y,-org.x);
-var point = pointB.copy();
-
-
-// 
-// var dotA = pointB.x*lineA.x + pointB.y*lineA.y + pointB.z*lineA.z;
-// var dotB = pointA.x*lineB.x + pointA.y*lineB.y + pointA.z*lineB.z;
-// console.log("dot: "+dotA+" | "+dotB);
-// var num = dotA*dotA;
-// var den = (lineA.x*lineA.x + lineA.y*lineA.y) + (lineB.x*lineB.x + lineB.y*lineB.y);
-// var err = num/den;
-// console.log(err);
-*/
+	arr = R3D.fundamentalMatrixNonlinear(arr, subsetPointsA, subsetPointsB);
+	return {"F":arr, "matches":[subsetPointsA,subsetPointsB]};	
+	// BREAKS IF 7 OR LESS RETURNED
 }
+
 
 R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1xm, e:1xm
 	var pointsA = args[0];
@@ -1255,24 +1157,6 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 	return H;
 }
 
-// USE fundamentalRANSACFromPoints
-// R3D.projectiveRANSAC = function(pointsFr,pointsTo){ // 2D point pairs
-// 	// ...
-// 	var H = new Matrix(3,3);
-// 	var subsetFr = [];
-// 	var subsetTo = [];
-// 	// find minimal sets
-// 	// remove outliers
-// 	// constuct consensus set
-// 	var obj = {}
-// 	obj.H = H;
-// 	obj.pointsA = subsetFr;
-// 	obj.pointsB = subsetTo;
-// 	return obj;
-// }
-
-
-
 
 R3D.euclieanTransform3D = function(pointsFr,pointsTo){ // find euclid matrix [3x4] : from->to
 	var centroidFr = R3D.centroid3D(pointsFr);
@@ -1310,12 +1194,51 @@ R3D.cubicDeterminantSolution3x3 = function(arrayA, arrayB){ // F = FA + l*FB
 	return Code.cubicSolution(c3,c2,c1,c0); // lambda
 }
 R3D.cubicDeterminantSolutionPercent3x3 = function(arrayA, arrayB){ // F = a*FA + (1-a)*FB
-	// 
-	return null;
+	var X00 = arrayA[0], X01 = arrayA[1], X02 = arrayA[2], X10 = arrayA[3], X11 = arrayA[4], X12 = arrayA[5], X20 = arrayA[6], X21 = arrayA[7], X22 = arrayA[8];
+	var Y00 = arrayB[0], Y01 = arrayB[1], Y02 = arrayB[2], Y10 = arrayB[3], Y11 = arrayB[4], Y12 = arrayB[5], Y20 = arrayB[6], Y21 = arrayB[7], Y22 = arrayB[8];
+	// 1 : A(EI-FH)
+	var a = X11*X22 - X12*X21;
+	var b = X11*Y22 + X22*Y11 - X12*Y21 - X21*Y12;
+	var c = Y11*Y22 - Y12*Y21;
+	var a3 = X00*a;
+	var a2 = X00*b + Y00*a;
+	var a1 = X00*c + Y00*b;
+	var a0 =         Y00*c;
+	// 2 : - B(DI-FG)
+	var d = X12*X20 - X10*X22;
+	var e = X12*Y20 + X20+Y12 - X10*Y22 - X22*Y10;
+	var f = Y20*Y12 - Y10*Y22;
+	a0 += X01*d;
+	a1 += X01*e + Y01*d;
+	a2 += X01*f + Y01*e;
+	a3 +=         Y01*f;
+	// 3 : C(DH-EG)
+	var g = X10*X21 - X11*X20;
+	var h = X10*Y21 + X21*Y10 - X11*Y20 - X20*Y11;
+	var i = Y10*Y21 - Y11*Y20;
+	a0 += X02*g;
+	a1 += X02*h + Y02*g;
+	a2 += X02*i + Y02*h;
+	a3 +=         Y02*i;
+	return Code.cubicSolution(a3,a2,a1,a0);
 }
+/*
+	A(EI-FH)
+		(a*X00+Y00) * [ (a*X11+Y11)*(a*X22+Y22) - (a*X12+Y12)*(a*X21+Y21) ]
+		(a*X00+Y00) * [ (a*X11*a*X22 + a*X11*Y22 + a*X22*Y11  + Y11*Y22 ) - (a*X12*a*X21 + a*X12*Y21 + a*X21*Y12 + Y12*Y21) ]
+		(a*X00+Y00) * [ a2(X11*X22 - X12*X21) + a(X11*Y22 + X22*Y11 - X12*Y21 - X21*Y12) + (Y11*Y22 - Y12*Y21) ]
 
-
-
+   - B(DI - FG)
+		- (a*X01+Y01) * [ (a*X10+Y10)*(a*X22+Y22) - (a*X12+Y12)*(a*X20+Y20) ]
+		(a*X01+Y01) * [ (a*X12+Y12)*(a*X20+Y20) - (a*X10+Y10)*(a*X22+Y22) ]
+		(a*X01+Y01) * [ (a2*X12*X20 + a*X12*Y20 + a*X20*Y12 + Y20*Y12) - (a2*X10*X22 + a*X10*Y22 + a*X22*Y10 + Y10*Y22) ]
+		(a*X01+Y01) * [ a2(*X12*X20 - X10*X22) + a*(X12*Y20 + a*X20*Y12 - X10*Y22 - X22*Y10) + (Y20*Y12 - Y10*Y22) ]
+		
+	C(DH-EG)
+		(a*X02+Y02) * [ (a*X10+Y10)*(a*X21+Y21) - (a*X11+Y11)*(a*X20+Y20) ]
+		(a*X02+Y02) * [ (a2*X10*X21 + a*X10*Y21 + a*X21*Y10 + Y10*Y21) - (a2*X11*X20 + a*X11*Y20 + a*X20*Y11 + Y11*Y20) ]
+		(a*X02+Y02) * [ a2(X10*X21 - X11*X20) + a(X10*Y21 + X21*Y10 - X11*Y20 - X20*Y11) + (Y10*Y21 - Y11*Y20) ]
+*/
 R3D.euclieanScaleFromMatrix = function(calculatedA){ // [r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0,0,0,1]
 	// determine euclidean scale:
 	var o = calculatedA.multV3DtoV3D(new V3D(), V3D.ZERO);
@@ -1745,7 +1668,7 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		var ranRange = maxRange - minRange;
 //		range = ImageMat.getNormalFloat01(range);
 	// CORNERNESS OF R G B
-	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei);
+	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei, 0.1);
 //		corners = ImageMat.applyGaussianFloat(corners, wid,hei, 1.6);
 //		corners = ImageMat.getNormalFloat01(corners);
 	
@@ -2261,7 +2184,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	entropyValues = conv;
 
 //	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
-	console.log("...iterated");
+//	console.log("...iterated");
 
 	for(m=0;m<scaleValues.length;++m){
 		scaleValues[m] = Math.log2(scaleValues[m]);
@@ -2609,7 +2532,8 @@ R3D.totalHarrisCornerDetection = function(r,g,b, width, height, konstant, sigma)
 }
 R3D.harrisCornerDetection = function(src, width, height, konstant, sigma){ // harris
 	konstant = konstant ? konstant : 0.05; // 0.04-0.06
-	sigma = sigma ? sigma : 1.6;
+	konstant = 1.0;
+	sigma = sigma ? sigma : 2.0;
 	
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);

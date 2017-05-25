@@ -91,7 +91,7 @@ Stage.prototype.getImageAsFloatGray = function(originalImage){
 	return {width:data.width, height:data.height, gray:gray}
 }
 Stage.prototype.getImageAsFloatRGB = function(originalImage, expand){
-	console.log("getImageAsFloatRGB scales with the canvas");
+	//console.log("getImageAsFloatRGB scales with the canvas");
 	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
 	var doImage = new DOImage(originalImage);
 	dat = this.getDOAsARGB(doImage, wid,hei);
