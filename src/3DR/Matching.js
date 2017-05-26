@@ -60,6 +60,8 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
+	var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
 
 // var img = [0,0,0,0,0,1,2,3,4,5,5,5,5,5,5];
 // var his = ImageMat.histogram(img, 3,4);
@@ -170,16 +172,16 @@ var pointsA = [
 	new V2D(138,84),
 	new V2D(299,195),
 	// OUTLIERS:
-	new V2D(18,226),
-	new V2D(145,204),
-	new V2D(239,251),
-	new V2D(330,248),
-	new V2D(372,180),
-	new V2D(86,215),
-	new V2D(28,101),
-	new V2D(187,166),
-	new V2D(48,157),
-	new V2D(108,134),
+	// new V2D(18,226),
+	// new V2D(145,204),
+	// new V2D(239,251),
+	// new V2D(330,248),
+	// new V2D(372,180),
+	// new V2D(86,215),
+	// new V2D(28,101),
+	// new V2D(187,166),
+	// new V2D(48,157),
+	// new V2D(108,134),
 
 ];
 var pointsB = [
@@ -227,16 +229,16 @@ var pointsB = [
 	new V2D(159,58),
 	new V2D(252,209),
 	// OUTLIERS:
-	new V2D(271,130),
-	new V2D(80,108),
-	new V2D(221,83),
-	new V2D(15,210),
-	new V2D(322,294),
-	new V2D(170,187),
-	new V2D(115,70),
-	new V2D(253,162),
-	new V2D(116,86),
-	new V2D(369,203),
+	// new V2D(271,130),
+	// new V2D(80,108),
+	// new V2D(221,83),
+	// new V2D(15,210),
+	// new V2D(322,294),
+	// new V2D(170,187),
+	// new V2D(115,70),
+	// new V2D(253,162),
+	// new V2D(116,86),
+	// new V2D(369,203),
 
 ];
 // TEST RANSAC HERE
@@ -262,7 +264,7 @@ var pointsB = [
 //pointA = new V3D(285.7995608466945,223.02049820508222); // knee top
 //pointA = new V3D(233.52002044901178,224.04385786541434);
 //pointA = new V3D(184.4083162171843,115.39080100771517); // grid corner
-
+/*
 	// BASE IMAGES
 	var bestFeaturesA = R3D.bestFeatureListRGB(imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
 	var bestFeaturesB = R3D.bestFeatureListRGB(imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height());
@@ -272,33 +274,63 @@ var pointsB = [
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 
-	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.01, "z", false);
-	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.01, "z", false);
-	bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.min(150,bestFeaturesA.length-1));
-	bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.min(150,bestFeaturesB.length-1));
-
-	console.log(bestFeaturesA.length);
-	console.log(bestFeaturesB.length);
-
-	this.drawAround(bestFeaturesA, 0,0);
-	this.drawAround(bestFeaturesB, 400,0);
-return;
-	// drop bottom half:
 	bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.1, "z", false);
 	bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.1, "z", false);
-	// bestFeaturesA = Matching.dropArrayPoints(bestFeaturesA, 0.001, "z", true);
-	// bestFeaturesB = Matching.dropArrayPoints(bestFeaturesB, 0.001, "z", true);
+	bestFeaturesA = Code.copyArray(bestFeaturesA,0,Math.min(250,bestFeaturesA.length-1));
+	bestFeaturesB = Code.copyArray(bestFeaturesB,0,Math.min(250,bestFeaturesB.length-1));
+
 	console.log(bestFeaturesA.length);
 	console.log(bestFeaturesB.length);
 
-	this.drawCover();
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
 
-	console.log(bestFeaturesA);
-	console.log(bestFeaturesA.length);
-	console.log(bestFeaturesB.length);
 
+pointsA = [];
+pointsB = [];
+for(k=0; k<bestFeaturesA.length; ++k){
+	pointsA[k] = new V2D(bestFeaturesA[k].x, bestFeaturesA[k].y);
+}
+for(k=0; k<bestFeaturesB.length; ++k){
+	pointsB[k] = new V2D(bestFeaturesB[k].x, bestFeaturesB[k].y);
+}
+*/
+
+
+	this.drawAround(pointsA, 0,0);
+	this.drawAround(pointsB, 400,0);
+
+var pCount = 175;
+pointsA = Code.copyArray(pointsA, 0, Math.min(pointsA.length-1, pCount-1));
+pointsB = Code.copyArray(pointsB, 0, Math.min(pointsB.length-1, pCount-1));
+
+var featuresA = ZFeature.setupFeaturesFromPoints(rangeA, pointsA);
+var featuresB = ZFeature.setupFeaturesFromPoints(rangeB, pointsB);
+/*
+// VISUALIZE
+for(k=0; k<featuresA.length; ++k){
+	var perRow = 25;
+	var offY = Math.floor(k/perRow);
+	var offX = k%perRow;
+	featuresA[k].visualize(50 + offX*51, 350 + offY*51, rangeA);
+}
+for(k=0; k<featuresB.length; ++k){
+	var perRow = 25;
+	var offY = Math.floor(k/perRow);
+	var offX = k%perRow;
+	var p = new V2D(50 + offX*51, 350 + 50*2+5 + offY*51);
+	featuresB[k].visualize(p.x,p.y, rangeB);
+		var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(p.x,p.y);
+		d.graphics().lineTo(featuresB[k].point().x + 400,featuresB[k].point().y + 0);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	GLOBALSTAGE.addChild(d);
+}
+*/
 /*
 return;
 	//bestFeaturesA = R3D.filterFeatureListGradientRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
@@ -323,52 +355,45 @@ return;
 	//bestFeaturesA = Code.copyArray(bestFeaturesA, 0,25);
 */
 
-
-var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
-var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
-
-console.log(bestFeaturesA)
-
-var pointsA = bestFeaturesA;
-var pointsB = bestFeaturesB;
-
-pointsA = Code.copyArray(pointsA, 0, Math.min(pointsA.length-1, pointsB.length-1));
-pointsB = Code.copyArray(pointsB, 0, Math.min(pointsA.length-1, pointsB.length-1));
-
-// SOMETHING WRONG HERE ^
-
-// TO COMPARE
-for(k=0; k<pointsA.length; ++k){
-	var pointA = pointsA[k];
-	var copyPointA = pointA.copy();
-	var featureA = new ZFeature();
-	featureA.setupWithImage(rangeA, pointA);
-	rangeA.addFeature(featureA);
-// this.drawAround([pointA], 0,0);
-// featureA.visualize(50 + k*100,400, rangeA);
-if(k%10==0){
-console.log(k+"/"+pointsA.length);
-}
-}
-
-for(k=0; k<pointsB.length; ++k){
-	var pointB = pointsB[k];
-	var copyPointB = pointB.copy();
-var featureB = new ZFeature();
-featureB.setupWithImage(rangeB, pointB);
-rangeB.addFeature(featureB);
-// this.drawAround([pointB], 400,0);
-// featureB.visualize(50 + k*100,500, rangeB);
-if(k%10==0){
-console.log(k+"/"+pointsB.length);
-}
-}
-
 // COMPARE each
 var featureListA = rangeA._featureList;
 var featureListB = rangeB._featureList;
-ZFeature.compareFeatureLists(featureListA, featureListB, true);
+ZFeature.compareFeatureLists(featureListA, featureListB, false);
 
+console.log(featureListA)
+
+var feature = featureListA[2];
+console.log(feature)
+feature.visualize(50, 350, rangeA);
+var matches = feature.matches().sort(ZFeature.sortingMatches);
+for(k=0; k<matches.length; ++k){
+	var match = matches[k];
+	var A = match["A"];
+	var B = match["B"];
+	if(feature==B){
+		B = A;
+	}
+	var p = new V2D(100 + k*50, 400);
+	B.visualize(p.x,p.y);
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(p.x,p.y);
+		d.graphics().lineTo(B.point().x + 400,B.point().y + 0);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	GLOBALSTAGE.addChild(d);
+}
+
+var scores = [];
+for(k=0; k<matches.length; ++k){
+	scores.push(matches[k]["score"]);
+}
+console.log("\n\ny=["+scores+"];\n\n");
+
+
+/*
 // DROP HIGH-SIMILARITY RATE POINTS
 ZFeature.calculateUniqueness(featureListA, featureListB);
 ZFeature.dropUniqueness(featureListA, featureListB);
@@ -376,10 +401,9 @@ console.log("DROPPED:",featureListA.length, featureListB.length);
 	this.drawCover();
 	this.drawAround(bestFeaturesA, 0,0);
 	this.drawAround(bestFeaturesB, 400,0);
-
 // NEED TO RECOMPARE WITH NEWLY SIZED FEATURE LISTS FOR INDEXES TO BE UPDATED
 ZFeature.compareFeatureLists(featureListA, featureListB);
-
+*/
 // ASSIGN each
 matches = ZFeature.assignFeatureLists(featureListA, featureListB);
 //matches = Code.copyArray(matches, 0, Math.floor(matches.length*0.50)); // get best results
@@ -388,6 +412,12 @@ console.log(matches);
 //	matches = Code.copyArray(matches, 0, 50);
 this.drawMatches(matches, 0,0, 400,0);
 
+var scores = [];
+for(k=0; k<matches.length; ++k){
+	scores.push(matches[k]["score"]);
+}
+console.log("\n\nx=["+scores+"];\n\n");
+return;
 
 // RANSAC
 console.log("RANSAC");
@@ -411,7 +441,6 @@ this.drawCover();
 
 var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
 // SHOW F LINES ON EACH
-//for(var k=0;k<pointsA.length;++k){
 for(var k=0;k<matches.length;++k){
 	var percent = k / (matches.length-1);
 	//if(!pointsA[k] || !pointsB[k]){ continue; }

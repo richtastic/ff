@@ -1394,7 +1394,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	maxIterations = maxIterations!==undefined?maxIterations:50;
 	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
 	xTolerance = xTolerance!==undefined?xTolerance:1E-10;
-	lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
+	//lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
 	var i, j;
 	var x = new Matrix(n,1).setFromArray(xInitial);
 	var xTemp = new Matrix(n,1);
@@ -1409,9 +1409,9 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var epsilon = 1E-8; // should be on scale of ~min(x)/1E-6
 	var lambda = 1E-3;
 	var lambdaScale = 10.0;
-	if(lambdaScaleFlip){
-		lambdaScale = 1.0/lambdaScale;
-	}
+	// if(lambdaScaleFlip){
+	// 	lambdaScale = 1.0/lambdaScale;
+	// }
 	// initial
 	fxn(args, x,y,error);
 	errorCurr = error.getNorm();
@@ -1456,9 +1456,9 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 			x.copy(xTemp);
 			y.copy(yTemp);
 			errorCurr = errorNext;
-			lambda /= lambdaScale;
-		}else{
 			lambda *= lambdaScale;
+		}else{
+			lambda /= lambdaScale;
 		}
 	}
 	x.toArray(xInitial);

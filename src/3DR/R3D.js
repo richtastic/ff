@@ -389,9 +389,7 @@ R3D.homographyMatrixNonlinearVars = function(H,pointsA,pointsB){
 	args = [pointsA,pointsB];
 	xVals = H.toArray();
 	yVals = Code.newArrayZeros(maxSupportCount*4);
-	var flip = undefined;
-	flip = true;
-	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, flip );
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10);
 	H = new Matrix(3,3).setFromArray(xVals);
 	return {"H":H, "x":yVals};
 }
@@ -527,7 +525,6 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){
 	var list = [];
 	for(i=0; i<lambda.length; ++i){
 		var a = lambda[i];
-
 		var Fa = new Matrix(3,3);
 		Fa.copy(F1);
 		Fa.scale(a);
@@ -838,9 +835,7 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){ // nonli
 	args = [pointsA,pointsB];
 	xVals = fundamental.toArray();
 	yVals = Code.newArrayZeros(maxSupportCount*4);
-	var flip = undefined;
-	flip = true;
-	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, flip );
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10);
 	fundamental = new Matrix(3,3).setFromArray(xVals);
 	// FORCE RANK 2
 	fundamental = R3D.forceRank2(fundamental);
@@ -1672,13 +1667,13 @@ R3D.bestFeatureFilterRGB = function(r,g,b, wid,hei){
 		var ranRange = maxRange - minRange;
 //		range = ImageMat.getNormalFloat01(range);
 	// CORNERNESS OF R G B
-	HERE
-//	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei);
+//	HERE
+	var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei);
 //		corners = ImageMat.applyGaussianFloat(corners, wid,hei, 1.6);
 //		corners = ImageMat.getNormalFloat01(corners);
 
 //corners = R3D.harrisCornerDetection(y, wid,hei);
-corners = R3D.hessianCornerDetection(y, wid,hei);
+//corners = R3D.hessianCornerDetection(y, wid,hei);
 	
 	var gradientMag = R3D.totalGradientMagnitude(r,g,b,wid,hei);
 		gradientMag = ImageMat.applyGaussianFloat(gradientMag, wid,hei, 1.6);
@@ -1737,7 +1732,7 @@ R3D.bestFeatureListRGB = function(r,g,b, wid,hei){
 		if(point.x < edgeDistance || point.x > rightDistance || point.y < edgeDistance || point.y > bottomDistance){
 			shouldRemove = true;
 		}
-		console.log(point.z+" > "+harrisThreshold);
+//		console.log(point.z+" > "+harrisThreshold);
 		if(point.z<harrisThreshold){
 			// shouldRemove = true;
 		}
@@ -2544,17 +2539,17 @@ R3D.totalHarrisCornerDetection = function(r,g,b, width, height, sigma){
 	b = R3D.harrisCornerDetection(b, width, height, sigma);
 	for(i=0; i<len; ++i){
 		total[i] = r[i] + g[i] + b[i];
+		//total[i] = r[i] * g[i] * b[i];
 	}
 	return total; //{"value":total, "width":wid, "height":hei};
 }
 R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
-	var konstant = 0.04; // 0.04 - 0.06
-	sigma = sigma ? sigma : 2.0;
+	sigma = sigma ? sigma : 1.0;
 	
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+	//src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
 
 	var i, j, a, b, c, d;
 	var Ix = ImageMat.derivativeX(src,width,height).value;
@@ -2562,9 +2557,9 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 	var Ix2 = ImageMat.mulFloat(Ix,Ix);
 	var Iy2 = ImageMat.mulFloat(Iy,Iy);
 	var IxIy = ImageMat.mulFloat(Ix,Iy);
-	// Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
-	// Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
-	// IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
+	Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
+	IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
 
 	var harrisValue = new Array(width*height);
 	var i, j, a, b, c, d, tra, det;
@@ -2576,23 +2571,23 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 			b = IxIy[index];
 			c = IxIy[index];
 			d = Iy2[index];
-			/*
-			var eigs = Code.eigenValues2D(a,b,c,d);
-			//var ratio = eigs[0]/eigs[1];
-			ratio = 0;
-			if(eigs[1]!=0){
-				eigs[0]/eigs[1];
-			}
-			harrisValue[index] = eigs[1];//ratio;
-			*/
 			tra = a + d;
 			det = a*d - c*b;
-			var har = det - konstant*tra*tra;
-			//var har = det/(konstant*tra*tra);
+			var har = det - 0.000001*tra*tra;
         	harrisValue[index] = Math.abs(har);
-        	
+   			/*
+        	eigs = Code.eigenValues2D(a,b,c,d);
+			a = eigs[0];
+			b = eigs[1];
+			a = Math.abs(a);
+			b = Math.abs(b);
+			ratio = 0;
+			if(eigs[0]!=0){
+				ratio = Math.abs(eigs[0]/eigs[1]);
+			}
+			harrisValue[index] = a*b; - 0.00001*Math.pow(a+b,1);
+        	*/
 		}
-		//console.log(a,b,c,d,"...",ratio,eigs[0],eigs[1]);
 	}
 	return harrisValue;
 }

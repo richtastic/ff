@@ -1652,6 +1652,20 @@ ZFeature.prototype.matches = function(m){
 	return this._matches;
 	//var feature = {"point":point, "matches":matches};
 }
+ZFeature.setupFeaturesFromPoints = function(range, points){
+	var i;
+	var features = [];
+	console.log(points.length)
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
+		point = point.copy();
+		var feature = new ZFeature();
+		feature.setupWithImage(range, point);
+		range.addFeature(feature);
+		features.push(feature);
+	}
+	return features;
+}
 ZFeature._compareItemsMatch = function(featureA, featureB){
 	var matchesA = featureA.matches();
 	var matchesB = featureB.matches();
@@ -1661,6 +1675,7 @@ ZFeature._compareItemsMatch = function(featureA, featureB){
 	matchesB.push(match);
 }
 ZFeature.compareFeatureLists = function(featuresA, featuresB, andSelf){
+	var i, j;
 	// remove old matches
 	for(i=0; i<featuresA.length; ++i){
 		featuresA[i].matches([]);
@@ -1669,7 +1684,6 @@ ZFeature.compareFeatureLists = function(featuresA, featuresB, andSelf){
 		featuresB[i].matches([]);
 	}
 	// create matches
-	// OPPOSITE
 	for(i=0; i<featuresA.length; ++i){
 		var featureA = featuresA[i];
 		for(j=0; j<featuresB.length; ++j){
@@ -1677,7 +1691,7 @@ ZFeature.compareFeatureLists = function(featuresA, featuresB, andSelf){
 			ZFeature._compareItemsMatch(featureA, featureB);
 		}
 	}
-	if(andSelf===true){
+	/*if(andSelf===true){
 		for(i=0; i<featuresA.length; ++i){
 			var featureA = featuresA[i];
 			for(j=i+1; j<featuresA.length; ++j){
@@ -1692,7 +1706,7 @@ ZFeature.compareFeatureLists = function(featuresA, featuresB, andSelf){
 				ZFeature._compareItemsMatch(featureA, featureB);
 			}
 		}
-	}
+	}*/
 }
 
 ZFeature._addUniqueness = function(featuresA, featuresB){
@@ -1742,7 +1756,7 @@ ZFeature._dropUniqueness = function(features){
 	//features = features.sort(sort);
 	var limitUniquenessThreshold = Math.sqrt(len) * 0.5; // 100 => 5 | 200 => 7
 	console.log(limitUniquenessThreshold);
-	//limitUniquenessThreshold = 3;
+	limitUniquenessThreshold = 3;
 	for(i=0; i<len; ++i){
 		var feature = features[i];
 		var unique = feature._similarity;
@@ -1816,15 +1830,9 @@ ZFeature.assignFeatureLists = function(featuresA, featuresB){
 }
 
 ZFeature.compareScore = function(a,b){
-	var i, j, k, l, zA, zB, index;
-	var rA, gA, bA, yA;
-	var rB, gB, bB, yB;
-	var binsA, binsB, binA, binB;
-	var angle;
 	var score = 0;
 	var imgA = a._area;
 	var imgB = b._area;
-	//var sadScore = ImageMat.SADFloatSimpleChannelsRGB(imgA.red(),imgA.grn(),imgA.blu(),imgA.width(),imgA.height(), imgB.red(),imgB.grn(),imgB.blu());
 	var sadScore = ImageMat.SADFloatAsIsChannels(imgA.red,imgA.grn,imgA.blu, imgB.red,imgB.grn,imgB.blu);
 	score += sadScore;
 	return score;
@@ -1866,27 +1874,24 @@ ZFeature.drawArrow = function(a,b, color){
 	return d;
 }
 ZFeature.prototype.visualize = function(x,y, range){
+	range = range!==undefined ? range : this.range();
 	var i, j, k, l, b, d, c;
-	var size = 100;
+	//var size = 100;
+	var size = 50;
 	var viz = new DO();
 		viz.matrix().translate(x,y);
 		GLOBALSTAGE.addChild(viz);
 	var primaryAngle = 0;
-	//var primaryAngle = -this._covarianceAngle;
-	// image
 	if(range){
-		var point = this._point;
+		var point = this.point();
 		var side = this._zoneCols * this._zoneSize;
-		//var img = this.range().getFloatRGBAsImage(win.red(),win.grn(),win.blu(), win.width(),win.height());
-		//var angle = -this._covarianceAngle;
-		//var img = range.imageAtPoint(point,side,side,1.0,angle);
-var matrix = new Matrix(3,3).identity();
-matrix = Matrix.transform2DScale(matrix,this._scale,this._scale);
-matrix = Matrix.transform2DRotate(matrix,-this._covarianceAngle);
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DScale(matrix,this._scale,this._scale);
+			matrix = Matrix.transform2DRotate(matrix,-this._covarianceAngle);
 //matrix = Matrix.transform2DScale(matrix,1.0/Math.sqrt(this._covarianceRatio),Math.sqrt(this._covarianceRatio));
 //matrix = Matrix.transform2DRotate(matrix,this._covarianceAngle);
 //matrix = Matrix.transform2DRotate(matrix,-this._angle); // gradient angle
-sample = 25;
+			sample = 25;
 var additionalScale = size/side;
 //console.log("additionalScale: "+additionalScale);
 //matrix = Matrix.transform2DScale(matrix,additionalScale,additionalScale);
@@ -1895,8 +1900,6 @@ img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,null, sample,sa
 		
 		var sca = size/sample;
 		d = new DOImage(img);
-		// d.matrix().translate(-size*0.5, -size*0.5);
-		//d.matrix().rotate(-primaryAngle);
 		d.matrix().scale(sca);
 		d.matrix().translate(-size*0.5, -size*0.5);
 		viz.addChild(d);
@@ -1940,6 +1943,19 @@ img = range._image.extractRectFromFloatImage(point.x,point.y,1.0,null, sample,sa
 		}
 	}
 */
+
+	// cover
+	d = new DO();
+		d.graphics().setFill(0x99000000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(size*0.5, size*0.5, size*0.5);
+		// d.graphics().endPath();
+		// d.graphics().beginPath();
+		d.graphics().drawRect(0,0, size,size);
+		d.graphics().endPath();
+		d.graphics().fill("evenodd");
+		d.matrix().translate(-size*0.5,-size*0.5);
+	viz.addChild(d);
 	// main gradients
 
 	d = ZFeature.drawArrow(new V2D(0,0), (new V2D(size*0.5,0.0)).rotate(this._angle.x - this._covarianceAngle), 0xFFCC0000);
@@ -2025,8 +2041,8 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	var size = 25;
 	var mask = ImageMat.circleMask(size,size);
 	this._point = point;
-	this._scale = R3D.optimumScaleForPoint(range.image(), point);
-//this._scale  = 1.0
+//	this._scale = R3D.optimumScaleForPoint(range.image(), point);
+this._scale  = 1.0;
 	// find local direction:
 	var img;
 	//var size = this._zoneSize * this._zoneCols;

@@ -515,14 +515,17 @@ Canvas.prototype.strokeLine = function(){
 Canvas.prototype.arc = function(pX,pY, rad, sA,eA, cw){
 	this._context.arc(pX,pY, rad, sA,eA, cw);
 }
-Canvas.prototype.fill = function(){
-	this._context.fill();
+Canvas.prototype.fill = function(rule){ // "nonzero" "evenodd"
+	if(rule!==undefined){
+		this._context.fill(rule);
+	}else{
+		this._context.fill();
+	}
 }
 Canvas.prototype.endPath = function(){
 	this._context.closePath();
 }
 Canvas.prototype.drawRect = function(sX,sY,wX,hY){
-	//this._context.fillRect(sX,sY,wX,hY);
 	this._context.rect(sX,sY,wX,hY);
 }
 // Canvas.prototype.strokeRect = function(sX,sY,wX,hY){

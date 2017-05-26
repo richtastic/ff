@@ -1448,7 +1448,9 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 
 
 	//show = R3D.cornerDetection(gry,original.width(),original.height());
-	show = R3D.hessianCornerDetection(gry,original.width(),original.height());
+	//show = R3D.hessianCornerDetection(gry,original.width(),original.height());
+	show = R3D.harrisCornerDetection(gry,original.width(),original.height());
+	
 	console.log(show)
 	show = ImageMat.normalFloat01(show);
 	//ImageMat.normalFloat01(show);
@@ -2946,17 +2948,17 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 	xVals = H0.toArray();
 	args = [ points0.norm.normalized[0], points0.norm.normalized[1] ];
 	yVals = Code.newArrayZeros(args[0].length*4);
-	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals ); // NEED TO PASS TRUE ?
 	// H1
 	xVals = H1.toArray();
 	args = [ points1.norm.normalized[0], points1.norm.normalized[1] ];
 	yVals = Code.newArrayZeros(args[0].length*4);
-	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals ); // NEED TO PASS TRUE ?
 	// H2
 	xVals = H2.toArray();
 	args = [ points2.norm.normalized[0], points2.norm.normalized[1] ];
 	yVals = Code.newArrayZeros(args[0].length*4);
-	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals );
+	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals ); // NEED TO PASS TRUE ?
 	
 	// unnormalize:
 	var H, forward, reverse;

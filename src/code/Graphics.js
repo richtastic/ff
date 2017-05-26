@@ -1,6 +1,8 @@
 // Graphics.js
 Graphics._canvas = null;
 // ------------------------------------------------------------------------------------------------------------------------ 
+Graphics.FILL_STYLE_NON_ZERO = "nonzero";
+Graphics.FILL_STYLE_EVEN_ODD = "evenodd";
 Graphics.setCanvas = function(canvas){
 	Graphics._canvas = canvas;
 }
@@ -55,8 +57,8 @@ Graphics.arc = function(pX,pY, rad, sA,eA, cw){
 Graphics.canvasStrokeLine = function(){
 	Graphics._canvas.strokeLine();
 }
-Graphics.canvasFill = function(){
-	Graphics._canvas.fill();
+Graphics.canvasFill = function(rule){
+	Graphics._canvas.fill(rule);
 }
 Graphics.canvasEndPath = function(){
 	Graphics._canvas.endPath();
@@ -166,8 +168,11 @@ Graphics.prototype.arc = function(pX,pY, rad, sA,eA, cw){
 Graphics.prototype.strokeLine = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasStrokeLine,Code.newArray()) );
 }
-Graphics.prototype.fill = function(){
-	this._graphics.push( Code.newArray(Graphics.canvasFill,Code.newArray()) );
+Graphics.prototype.fillEvenOdd = function(rule){
+	this.fill(Graphics.FILL_STYLE_EVEN_ODD);
+}
+Graphics.prototype.fill = function(rule){
+	this._graphics.push( Code.newArray(Graphics.canvasFill,Code.newArray(rule)) );
 }
 Graphics.prototype.endPath = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasEndPath,Code.newArray()) );

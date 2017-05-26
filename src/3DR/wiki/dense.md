@@ -433,6 +433,17 @@ FEEDBACK:
 
 
 
+
+PROBS:
+- optimal scales are very unstable by point
+	- try corner detector scale-space - harris
+- orientations seem very unstable
+	- some more binaryish way to choose optimal orientation
+- some (iteritive) way to determine asymm scaling
+- visually confirm that assignment algorithm working with 
+
+
+
 for feature matching, can also see how well the scale-space graphs line up -- since that is generated anyway
 
 ---- ENTROPY SELECTION: SHOULD USE:
