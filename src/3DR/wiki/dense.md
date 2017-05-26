@@ -433,6 +433,13 @@ FEEDBACK:
 
 
 
+TODO: try refining the points to more accurate maxima in area
+	- zoom, look at max in area, interpolate
+	- sub-sub pixel ?
+	- follow gradient ?
+TODO: find maxima harris at multiple scales [200,100,50]
+	- scale space maximized harris ?
+TODO: use circular mask on harris detector ?
 
 PROBS:
 - optimal scales are very unstable by point
@@ -441,6 +448,9 @@ PROBS:
 	- some more binaryish way to choose optimal orientation
 - some (iteritive) way to determine asymm scaling
 - visually confirm that assignment algorithm working with 
+
+
+
 
 
 

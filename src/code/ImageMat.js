@@ -1542,7 +1542,7 @@ ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ?
 	return mask;
 }
 
-ImageMat.prototype.applyCirclenMask = function(image, imageWidth, imageHeight){
+ImageMat.prototype.applyCircleMask = function(image, imageWidth, imageHeight){
 	var i;
 	var mask = ImageMat.circleMask(imageWidth, imageHeight);
 	var len = imageWidth*imageHeight;

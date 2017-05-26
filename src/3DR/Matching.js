@@ -163,7 +163,7 @@ var pointsA = [
 	new V2D(208,150),
 	new V2D(172,107), // 3
 	new V2D(176,128),
-	new V2D(145,144), // 5
+	new V2D(144,144), // 5
 	new V2D(253,149),
 	new V2D(194,95),
 	new V2D(148,165),
@@ -306,7 +306,7 @@ pointsB = Code.copyArray(pointsB, 0, Math.min(pointsB.length-1, pCount-1));
 
 var featuresA = ZFeature.setupFeaturesFromPoints(rangeA, pointsA);
 var featuresB = ZFeature.setupFeaturesFromPoints(rangeB, pointsB);
-/*
+
 // VISUALIZE
 for(k=0; k<featuresA.length; ++k){
 	var perRow = 25;
@@ -330,9 +330,11 @@ for(k=0; k<featuresB.length; ++k){
 		d.graphics().strokeLine();
 	GLOBALSTAGE.addChild(d);
 }
-*/
-/*
+
+
 return;
+
+/*
 	//bestFeaturesA = R3D.filterFeatureListGradientRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());
 	//bestFeaturesB = R3D.filterFeatureListGradientRGB(bestFeaturesB, imageMatrixB.red(), imageMatrixB.grn(), imageMatrixB.blu(), imageMatrixB.width(), imageMatrixB.height());
 	// bestFeaturesA = R3D.filterFeatureListMoveCostRGB(bestFeaturesA, imageMatrixA.red(), imageMatrixA.grn(), imageMatrixA.blu(), imageMatrixA.width(), imageMatrixA.height());

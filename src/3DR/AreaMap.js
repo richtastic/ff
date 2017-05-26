@@ -2041,8 +2041,8 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 	var size = 25;
 	var mask = ImageMat.circleMask(size,size);
 	this._point = point;
-//	this._scale = R3D.optimumScaleForPoint(range.image(), point);
-this._scale  = 1.0;
+	this._scale = R3D.optimumScaleForPoint(range.image(), point);
+//this._scale  = 1.0;
 	// find local direction:
 	var img;
 	//var size = this._zoneSize * this._zoneCols;

@@ -2022,7 +2022,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	//maskOutCenter = maskOutCenter ? maskOutCenter : ImageMat.circleMask(size.x,size.y);
 	//maskOutCenter = null;
 	maskOutCenter = ImageMat.circleMask(size.x,size.y);
-	var scaleTimes = 50;
+	var scaleTimes = 80;
 	var minScalePower = -4; // -4 = 0.0625
 	var maxScalePower = 4; // 4 = 16
 	var entropyValues = [];
@@ -2165,6 +2165,8 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
             - DoG = B - A
             - value at center
         */
+/*
+        // CURRENTLY BEST
         var sigmaA = 1.0;
         var sigmaB = 2.0;
         var imageA = ImageMat.applyGaussianFloat(imageGray, size.x,size.y, sigmaA);
@@ -2174,8 +2176,15 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
         //var DoG = ImageMat.subFloat(imageGray,imageB);
         var DoGCenter = DoG[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
         //console.log(DoGCenter);
-// CURRENTLY BEST
 		var entropy = DoGCenter;
+*/
+	// HARRIS DETECTOR:
+		
+		//var harris = R3D.harrisCornerDetection(imageGray, size.x,size.y);
+		var harris = R3D.cornerScaleOptimum(imageGray, size.x,size.y);
+		var index = Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5);
+		var centerValue = harris[index];
+		var entropy = centerValue;
 
 		//var laplacian = ImageMat.laplacian(imageGray, size.x,size.y).value;
 		//var laplacianCenter = laplacian[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
@@ -2195,7 +2204,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	var conv = Code.convolve1D(entropyValues, gauss, false);
 	entropyValues = conv;
 
-//	console.log("\n\nx = ["+entropyValues+"];\ny=["+scaleValues+"];\n\n");
+	console.log("\n\ny = ["+entropyValues+"];\nx=["+scaleValues+"];\n\n");
 //	console.log("...iterated");
 
 	for(m=0;m<scaleValues.length;++m){
@@ -2205,15 +2214,17 @@ var location = null;
 var info = Code.infoArray(entropyValues);
 var range = info["range"];
 var minProm = range*0.5*0.1;
+//var minProm = range*1E-12;
 var prominence = Code.findExtremaProminence1D(entropyValues);
 var extrema = prominence["extrema"];
+//var extrema = prominence["max"];
 // just use first prominence:
 locations = extrema;
 	for(m=0; m<locations.length; ++m){
-		if(locations[m].z>minProm){
+		//if(locations[m].z>minProm){
 			location = locations[m];
 			break;
-		}
+		//}
 	}
 	if(location==null){
 		console.log("no best prominence location");
@@ -2224,7 +2235,8 @@ locations = extrema;
 		var optimumScale = Code.interpolateValue1D(scaleValues, location.x);
 			optimumScale = Math.pow(2,optimumScale);// undo log2
 		//console.log(optimumScale);
-optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+//optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
 		return optimumScale;
 	}
 	return 1.0;
@@ -2549,7 +2561,7 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	//src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
 
 	var i, j, a, b, c, d;
 	var Ix = ImageMat.derivativeX(src,width,height).value;
@@ -2587,6 +2599,63 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 			}
 			harrisValue[index] = a*b; - 0.00001*Math.pow(a+b,1);
         	*/
+		}
+	}
+	return harrisValue;
+}
+R3D.cornerScaleOptimum = function(src, width, height){
+	var sigma = 1.0;
+	
+	var gaussSize = Math.round(2+sigma)*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	var padding = Math.floor(gaussSize/2.0);
+	//src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+
+	var i, j, a, b, c, d;
+	var Ix = ImageMat.derivativeX(src,width,height).value;
+	var Iy = ImageMat.derivativeY(src,width,height).value;
+	var Ix2 = ImageMat.mulFloat(Ix,Ix);
+	var Iy2 = ImageMat.mulFloat(Iy,Iy);
+	var IxIy = ImageMat.mulFloat(Ix,Iy);
+	Ix2 = ImageMat.gaussian2DFrom1DFloat(Ix2, width,height, gauss1D);
+	Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
+	IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
+
+	var harrisValue = new Array(width*height);
+	var i, j, a, b, c, d, tra, det;
+	var ratio;
+	for(j=0;j<height;++j){
+		for(i=0;i<width;++i){
+			index = j*width + i;
+			a = Ix2[index];
+			b = IxIy[index];
+			c = IxIy[index];
+			d = Iy2[index];
+			/*
+			tra = a + d;
+			det = a*d - c*b;
+			var har = det - 0.000001*tra*tra;
+        	harrisValue[index] = Math.abs(har); // poor
+        	continue;
+        	*/
+   			
+        	eigs = Code.eigenValues2D(a,b,c,d);
+			a = eigs[0];
+			b = eigs[1];
+			a = Math.abs(a);
+			b = Math.abs(b);
+			ratio = 0;
+			if(eigs[0]!=0){
+				ratio = Math.max(a,b)/Math.min(a,b);
+			}
+
+			// a - b ?
+			//harrisValue[index] = Math.max(a,b); // poor
+			//harrisValue[index] = a+b; // poor
+			//harrisValue[index] = Math.min(a,b); // nope
+			//harrisValue[index] = a*b / (a+b); // 
+			//harrisValue[index] = a*b; // nope
+			harrisValue[index] = Math.max(a,b)/Math.min(a,b); // ok
 		}
 	}
 	return harrisValue;

@@ -61,9 +61,9 @@ Entropy.prototype.handleImagesLoaded = function(imageInfo){
 
 var points = [
 	// CENTER
-	// new V2D(200,150),
-	// new V2D(200.5,149.5),
-	// new V2D(199.5,149.5),
+	new V2D(200.5,150),
+	new V2D(200.5,149.5),
+	new V2D(199.5,150),
 	// ELBOW
 	// new V2D(313,170),
 	// new V2D(258,161),
@@ -73,16 +73,16 @@ var points = [
 	// new V2D(175,157.5),
 	// new V2D(187,153.5),
 	// MASK CORNER
-	new V2D(352.5,65),
-	new V2D(277,107.5),
-	new V2D(238,129.5),
+	// new V2D(352.5,65),
+	// new V2D(277,107.5),
+	// new V2D(238,129.5),
 ];
 
 for(i=0; i<imageMatrixes.length; ++i){
 	//var imageMatrix = imageMatrixes[i];
 	var point = points[i];
 	var range = ranges[i];
-	
+
 	this.drawAround([point], i*400, 0);
 
 	var feature = new ZFeature();
