@@ -169,8 +169,9 @@ var pointsA = [
 	new V2D(148,165),
 	new V2D(172,67),
 	new V2D(142,76), // 10
-	new V2D(138,84),
+	new V2D(136,85),
 	new V2D(299,195),
+	new V2D(190,179),
 	// OUTLIERS:
 	// new V2D(18,226),
 	// new V2D(145,204),
@@ -226,8 +227,9 @@ var pointsB = [
 	new V2D(154,138),
 	new V2D(213,11),
 	new V2D(179,24.5), // 10
-	new V2D(159,58),
+	new V2D(157,59),
 	new V2D(252,209),
+	new V2D(169,179),
 	// OUTLIERS:
 	// new V2D(271,130),
 	// new V2D(80,108),
@@ -241,6 +243,18 @@ var pointsB = [
 	// new V2D(369,203),
 
 ];
+
+var index = 0;
+pointsA = [pointsA[index]];
+pointsB = [pointsB[index]];
+
+// REFINE POINTS FROM MANUAL CORNER DETECTION:
+pointsA = imageMatrixA.refineCornerPoints(pointsA);
+pointsB = imageMatrixB.refineCornerPoints(pointsB);
+
+
+
+
 // TEST RANSAC HERE
 // var matches = [];
 // for(i=0; i<pointsA.length; ++i){
@@ -320,15 +334,15 @@ for(k=0; k<featuresB.length; ++k){
 	var offX = k%perRow;
 	var p = new V2D(50 + offX*51, 350 + 50*2+5 + offY*51);
 	featuresB[k].visualize(p.x,p.y, rangeB);
-		var d = new DO();
-		d.graphics().clear();
-		d.graphics().setLine(1.0, 0xFFFF0000);
-		d.graphics().beginPath();
-		d.graphics().moveTo(p.x,p.y);
-		d.graphics().lineTo(featuresB[k].point().x + 400,featuresB[k].point().y + 0);
-		d.graphics().endPath();
-		d.graphics().strokeLine();
-	GLOBALSTAGE.addChild(d);
+	// 	var d = new DO();
+	// 	d.graphics().clear();
+	// 	d.graphics().setLine(1.0, 0xFFFF0000);
+	// 	d.graphics().beginPath();
+	// 	d.graphics().moveTo(p.x,p.y);
+	// 	d.graphics().lineTo(featuresB[k].point().x + 400,featuresB[k].point().y + 0);
+	// 	d.graphics().endPath();
+	// 	d.graphics().strokeLine();
+	// GLOBALSTAGE.addChild(d);
 }
 
 

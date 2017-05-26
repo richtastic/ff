@@ -2787,6 +2787,31 @@ ImageMat.floatToOctave = function(src,wid,hei){
 	str += "mesh(tx,ty,tz);";
 	return str;
 }
+ImageMat.prototype.refineCornerPoints = function(points, distance){ // assuming only a few pixels off ?
+	distance = distance!==undefined ? distance : 10;
+	var width = this.width();
+	var height = this.height();
+	var winSize = 2*distance + 1;
+	var pointOffset = Math.floor(winSize*0.5);
+	var nextPoints = [];
+	var i, len = points.length;
+	var point, win, next, local;
+	for(var i=0; i<len; ++i){
+		point = points[i];
+		win = this.extractRectFromFloatImage(point.x,point.y, 1.0, null, winSize, winSize, null); // TODO: not efficient if only getting gry
+		win = win.gry();
+		local = new V2D( pointOffset, pointOffset );
+		next = R3D.harrisCornerRefine(win, winSize,winSize, local);
+		if(next){
+			next = new V2D(point.x + next.x - pointOffset, point.y + next.y - pointOffset);
+			nextPoints.push(next);
+		}else{
+			nextPoints.push(next);
+		}
+	}
+	return nextPoints;
+}
+
 ImageMat.prototype.corners = function(){
 	var width = this.width();
 	var height = this.height();

@@ -432,6 +432,13 @@ FEEDBACK:
 // contrast
 
 
+TODO: CORNER SCALE SPACE
+	- SET SCALE SPACE UP TO NEXT-NEAREST CORNER NEIGHBOR
+	- PAIRS OF CORNERS
+		- any 2?
+		- me-to-next-highest peak?
+	- GROUPS OF (K) corners
+
 
 TODO: try refining the points to more accurate maxima in area
 	- zoom, look at max in area, interpolate

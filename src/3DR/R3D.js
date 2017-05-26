@@ -2023,8 +2023,8 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 	//maskOutCenter = null;
 	maskOutCenter = ImageMat.circleMask(size.x,size.y);
 	var scaleTimes = 80;
-	var minScalePower = -4; // -4 = 0.0625
-	var maxScalePower = 4; // 4 = 16
+	var minScalePower = -5; // -4 = 0.0625
+	var maxScalePower = 5; // 4 = 16
 	var entropyValues = [];
 	var scaleValues = [];
 	var prevEntropy = null;
@@ -2197,12 +2197,23 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 		entropyValues.push(entropy);
 	}
 
+
 	// remove noise:
 	//var gauss = Code.gaussianWindow(0.1, 5);
 	//var gauss = Code.gaussianWindow(0.5, 5);
+	/*
 	var gauss = Code.gaussianWindow(1.0, 7);
 	var conv = Code.convolve1D(entropyValues, gauss, false);
 	entropyValues = conv;
+
+	// pop off ends
+	for(m=0;m<2;++m){
+		scaleValues.shift();
+		entropyValues.shift();
+		scaleValues.pop();
+		entropyValues.pop();
+	}
+	*/
 
 	console.log("\n\ny = ["+entropyValues+"];\nx=["+scaleValues+"];\n\n");
 //	console.log("...iterated");
@@ -2235,8 +2246,8 @@ locations = extrema;
 		var optimumScale = Code.interpolateValue1D(scaleValues, location.x);
 			optimumScale = Math.pow(2,optimumScale);// undo log2
 		//console.log(optimumScale);
-//optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
-optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
+optimumScale = Math.exp(Math.log(optimumScale) - 1.0);
+//optimumScale = Math.exp(Math.log(optimumScale) - 2.0);
 		return optimumScale;
 	}
 	return 1.0;
@@ -2557,11 +2568,10 @@ R3D.totalHarrisCornerDetection = function(r,g,b, width, height, sigma){
 }
 R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 	sigma = sigma ? sigma : 1.0;
-	
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+	//src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
 
 	var i, j, a, b, c, d;
 	var Ix = ImageMat.derivativeX(src,width,height).value;
@@ -2603,13 +2613,37 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 	}
 	return harrisValue;
 }
+R3D.harrisCornerRefine = function(src, width,height, point){
+	var harrisValues = R3D.harrisCornerDetection(src, width,height);
+	var harrisMaxima = Code.findExtrema2DFloat(harrisValues, width,height);
+	var i, d, p, len = harrisMaxima.length;
+	var closestPoint = null;
+	var closestDistance = null;
+	// pick closest neighbor
+	for(i=0; i<len; ++i){
+		p = harrisMaxima[i];
+		d = V2D.distance(p,point);
+		score = 1/d;
+		//var score = p.z/d;
+		//var score = p.z/(d*d);
+		if(closestPoint==null || score > closestDistance){
+		//if(closestPoint==null || d<closestDistance){
+		//	closestDistance = d;
+			closestDistance = score;
+			closestPoint = p;
+		}
+	}
+	// TODO: try following gradient around? --- this should inevidibly reach the closest maxima anyway? if around saddle might reach a more prominent maxima?
+	// TODO: multi-scale checks?
+	return closestPoint;
+}
 R3D.cornerScaleOptimum = function(src, width, height){
 	var sigma = 1.0;
 	
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	var padding = Math.floor(gaussSize/2.0);
-	//src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
+	src = ImageMat.gaussian2DFrom1DFloat(src, width,height, gauss1D);
 
 	var i, j, a, b, c, d;
 	var Ix = ImageMat.derivativeX(src,width,height).value;

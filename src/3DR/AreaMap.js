@@ -1655,7 +1655,6 @@ ZFeature.prototype.matches = function(m){
 ZFeature.setupFeaturesFromPoints = function(range, points){
 	var i;
 	var features = [];
-	console.log(points.length)
 	for(i=0; i<points.length; ++i){
 		var point = points[i];
 		point = point.copy();
@@ -2052,7 +2051,7 @@ ZFeature.prototype.setupWithImage = function(range, point){//, scale,    squeeze
 
 	// find local optimum affine region
 	img = range._image.extractRectFromFloatImage(this._point.x,this._point.y,1.0/this._scale,null, size,size);
-	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor((img.width()-1)*0.5),Math.floor((img.height()-1)*0.5));
+	var gradientY = ImageMat.gradientVector(img.gry(),img.width(),img.height(), Math.floor((img.width()-1)*0.5),Math.floor((img.height()-1)*0.5)); // should -1 be used?
 	var covariance = img.calculateCovariance(new V2D((size-1)*0.5,(size-1)*0.5), mask);
 		var v1 = covariance[0];
 		var v2 = covariance[1];
