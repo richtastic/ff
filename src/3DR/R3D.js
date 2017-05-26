@@ -2178,6 +2178,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
         //console.log(DoGCenter);
 		var entropy = DoGCenter;
 */
+/*
 	// HARRIS DETECTOR:
 		
 		//var harris = R3D.harrisCornerDetection(imageGray, size.x,size.y);
@@ -2185,11 +2186,17 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 		var index = Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5);
 		var centerValue = harris[index];
 		var entropy = centerValue;
+*/
+		// laplacian
+			var sigma = 1.0;
+			var gaussSize = Math.round(2+sigma)*2+1;
+			var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+		var imageBlur = ImageMat.gaussian2DFrom1DFloat(imageGray, size.x,size.y, gauss1D);
+		var laplacian = ImageMat.laplacian(imageGray, size.x,size.y).value;
 
-		//var laplacian = ImageMat.laplacian(imageGray, size.x,size.y).value;
-		//var laplacianCenter = laplacian[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
-		//var laplacianCenter = ImageMat.laplacian(imageGray, size.x,size.y,  Math.floor(size.y*0.5), Math.floor(size.x*0.5));
-		//var entropy = laplacianCenter;
+		var laplacianCenter = laplacian[ Math.floor(size.y*0.5)*size.x + Math.floor(size.x*0.5) ];
+		var laplacianCenter = ImageMat.laplacian(imageGray, size.x,size.y,  Math.floor(size.y*0.5), Math.floor(size.x*0.5));
+		var entropy = laplacianCenter;
 
 	//entropy = entropySimple;
 		
@@ -2227,8 +2234,9 @@ var range = info["range"];
 var minProm = range*0.5*0.1;
 //var minProm = range*1E-12;
 var prominence = Code.findExtremaProminence1D(entropyValues);
-var extrema = prominence["extrema"];
+//var extrema = prominence["extrema"];
 //var extrema = prominence["max"];
+var extrema = prominence["min"];
 // just use first prominence:
 locations = extrema;
 	for(m=0; m<locations.length; ++m){
