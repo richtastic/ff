@@ -2902,5 +2902,103 @@ GLOBALSTAGE = stage;
 
 }
 
+R3D.SIFTExtract = function(imageSource){
+	var sigmaStart = 1.6;
+	var kStart = Math.sqrt(2.0);
+	var i, j, k;
+	// first image
+	var originalGray = imageSource.gry();
+	var imageCurrentGry = imageSource.gry();
+	var imageCurrentWid = imageSource.width();
+	var imageCurrentHei = imageSource.height();
+		imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid,imageCurrentHei, 1.0); // TODO: CHANGE TO 2.0
+			imageCurrentWid = imageCurrentGry["width"];
+			imageCurrentHei = imageCurrentGry["height"];
+			imageCurrentGry = imageCurrentGry["value"];
+		
+	var exponentCount = 4; // octaves
+	var gaussianCount = 6; // gaussians per octave
+
+	var siftPoints = [];
+	for(i=0; i<exponentCount; ++i){
+		//console.log("........"+i);
+		var gaussianImages = [];
+		var differenceImages = [];
+		for(j=0; j<gaussianCount; ++j){
+			//console.log("   "+j);
+			var currentGaussPercent = (j/(gaussianCount-1));
+			var gaussianSigma = Math.pow(2,2*currentGaussPercent);
+			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
+			
+			// img = GLOBALSTAGE.getFloatRGBAsImage(imageCurrentGry, imageCurrentGry, imageCurrentGry, imageCurrentWid, imageCurrentHei);
+			// d = new DOImage(img);
+			// d.matrix().translate(0, 0);
+			// GLOBALSTAGE.addChild(d);
+
+			gaussianImages.push(gaussianImage);
+			// gaussian pyramid
+			if(gaussianImages.length==2){
+				var prevGauss = gaussianImages[0];
+				var nextGauss = gaussianImages[1];
+				var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
+				differenceImages.push(differenceImage);
+				gaussianImages.shift();
+			}
+			// difference of gaussian pyramid
+			if(differenceImages.length==3){
+				var layerA = differenceImages[0];
+				var layerB = differenceImages[1];
+				var layerC = differenceImages[2];
+				var extrema = Code.findExtrema3D(layerA,layerB,layerC, imageCurrentWid,imageCurrentHei, 0);
+				// offset extrema to scale space
+				var currentScale = i + currentGaussPercent;
+				for(k=0; k<extrema.length; ++k){
+					var ext = extrema[k];
+// TODO: SCALE SIZE
+// ext[k].z = Math.pow(2, i + j/scalesPerOctave + ext[k].z/scalesPerOctave ) / startScale;
+					var point = new V4D(ext.x/imageCurrentWid, ext.y/imageCurrentHei, currentScale); // ext.z
+					if( Math.abs(ext.t) > 0.01){
+						siftPoints.push(point);
+					}
+				}
+				differenceImages.shift();
+			}
+		}
+
+		if(i<exponentCount-1){ // prep for next loop
+			imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid, imageCurrentHei, 0.5, 2.0); // subsampled
+				imageCurrentWid = imageCurrentGry["width"];
+				imageCurrentHei = imageCurrentGry["height"];
+				imageCurrentGry = imageCurrentGry["value"];
+		}
+	}
+	var goodPoints = [];
+	// remove low contrast points
+	console.log("checking");
+	for(i=0; i<siftPoints.length; ++i){
+		console.log(i+" / "+siftPoints.length);
+		point = siftPoints[i];
+		var winSize = 11;
+		var win = R3D.getScaleSpacePoint(point.x,point.y,point.z,null, winSize,winSize, null, originalGray,imageSource.width(),imageSource.height());
+		var center = Math.floor(winSize * 0.5);
+		var Lxx = ImageMat.secondDerivativeX(win,winSize,winSize, center,center);
+		//console.log(Lxx)
+		var Lyy = ImageMat.secondDerivativeY(win,winSize,winSize, center,center);
+		var Lxy = ImageMat.secondDerivativeXY(win,winSize,winSize, center,center);
+		var tra = Lxx + Lyy;
+		var det = Lxx*Lyy - Lxy*Lxy;
+		var measure = tra*tra/det;
+		if(measure>1.0){
+			goodPoints.push(point);
+		}
+	}
+
+	return goodPoints;
+}
+R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
+	var val = ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, source,width,height);
+	return val;
+}
+
 
 

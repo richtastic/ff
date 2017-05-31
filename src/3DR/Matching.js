@@ -60,6 +60,28 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+
+var featuresA = R3D.SIFTExtract(imageMatrixA);
+
+for(k=0; k<featuresA.length; ++k){
+	var point = featuresA[k];
+		var x = point.x * imageMatrixA.width();
+		var y = point.y * imageMatrixA.height();
+		var z = point.z + 2;
+	var c = new DO();
+		color = 0xFFFF0000;
+		c.graphics().setLine(1.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(x, y, z);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(0, 0);
+		GLOBALSTAGE.addChild(c);
+}
+
+return;
+
+
 	var rangeA = new AreaMap.Range(imageMatrixA,imageMatrixA.width(),imageMatrixA.height(), 10,10);
 	var rangeB = new AreaMap.Range(imageMatrixB,imageMatrixB.width(),imageMatrixB.height(), 10,10);
 
