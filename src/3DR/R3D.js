@@ -2967,7 +2967,7 @@ R3D.SIFTExtract = function(imageSource){
 // k * k === 2^(1/s) * 2^(1/s) === 2^(2/s)
 // sigma = 1.6
 	var i, j, k;
-
+GLOBALSTAGE.root().matrix().scale(0.5);
 	// first image
 	var preSigma = null; //0.5;
 	var preScale = 1.0;
@@ -2996,20 +2996,20 @@ R3D.SIFTExtract = function(imageSource){
 		for(j=0; j<gaussianCount; ++j){
 			var currentGaussPercent = (j/(gaussianCount-1));
 			var gaussianSigma = sigmaPrefix * Math.pow(2,currentGaussPercent*2 - 0.5 );
+				//var gaussianSigma =  sigmaPrefix*sigmaPrefix * Math.pow(Math.pow(kStart,j),2) * (kStart*kStart - 1);
 			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
-			//imageCurrentGry = gaussianImage; // same
+			imageCurrentGry = gaussianImage; // same
 			gaussianImages.push(gaussianImage);
 			
 // var OFFX = 0 + i*322;
 // var OFFY = 0 + j*200;
-var OFFX = 0 + i*200;
-var OFFY = 0 + j*150;
+var OFFX = 0 + i*imageSource.width();
+var OFFY = 0 + j*imageSource.height();
 img = GLOBALSTAGE.getFloatRGBAsImage(gaussianImage, gaussianImage, gaussianImage, imageCurrentWid, imageCurrentHei);
 d = new DOImage(img);
 d.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
 d.matrix().translate(OFFX, OFFY);
 GLOBALSTAGE.addChild(d);
-//return [];
 			// gaussian pyramid
 			if(gaussianImages.length==2){
 				var prevGauss = gaussianImages[0];
@@ -3017,13 +3017,21 @@ GLOBALSTAGE.addChild(d);
 				var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
 				differenceImages.push(differenceImage);
 				nextImage = gaussianImages.shift(); // on last iteration keep 2nd from top
+var float = ImageMat.getNormalFloat01(differenceImage);
+//ImageMat.pow(float,0.1);
+var heat = ImageMat.heatImage(float, imageCurrentWid, imageCurrentHei, true);
+img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+d = new DOImage(img);
+d.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
+d.matrix().translate(OFFX, OFFY);
+GLOBALSTAGE.addChild(d);
 			}
 			// difference of gaussian pyramid
 			if(differenceImages.length==3){
 				var layerA = differenceImages[0];
 				var layerB = differenceImages[1];
 				var layerC = differenceImages[2];
-				var extrema = Code.findExtrema3D(layerA,layerB,layerC, imageCurrentWid,imageCurrentHei, 0);
+				var extrema = Code.findExtrema3D(layerA,layerB,layerC, imageCurrentWid,imageCurrentHei, 0, true);
 				var dogOffset = 1.0/(differenceGaussianCount*differenceGaussianCount);
 				var dogScale = i + (j-2.0)/differenceGaussianCount - dogOffset;
 //var effectiveDOG = Math.pow(2, dogScale );
@@ -3055,9 +3063,10 @@ var errH = imageSource.height()/apprH;
 					//if(true){
 					if( Math.abs(ext.t) > 1E-16 ){
 						//if(i > 0){
-						if(i == 2){
+						//if(i == 2){
 							siftPoints.push(point);
-						}
+						//}
+						
 								var x = point.x * imageCurrentWid;
 								var y = point.y * imageCurrentHei;
 								var z = 4;//point.z + 0;
@@ -3072,6 +3081,7 @@ var errH = imageSource.height()/apprH;
 								c.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
 								c.matrix().translate(OFFX, OFFY);
 								GLOBALSTAGE.addChild(c);
+						
 					}
 				}
 				differenceImages.shift();
@@ -3087,8 +3097,11 @@ var errH = imageSource.height()/apprH;
 	}
 	var goodPoints = [];
 	// remove low contrast points
-	goodPoints = siftPoints
-/*
+	//goodPoints = siftPoints
+	// TODO: CONTRAST TEST
+		// ...
+	// TODO: CORNER TEST
+
 	console.log("checking");
 	for(i=0; i<siftPoints.length; ++i){
 		point = siftPoints[i];
@@ -3117,11 +3130,11 @@ var errH = imageSource.height()/apprH;
 		var tra = Ix2 + Iy2;
 		var det = Ix2*Iy2 - IxIy*IxIy;
 		var measure = tra*tra/det;
-		if(measure>10.0){
+		if(measure>100.0){
 			goodPoints.push(point);
 		}
 	}
-*/
+
 	return goodPoints;
 }
 
@@ -3130,62 +3143,223 @@ R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 	return val;
 }
 
-
+var HARRIS_CALL = 0;
 R3D.HarrisExtract = function(imageSource){
-	var imageGray = imageSource.gry();
-	var imageWidth = imageSource.width();
-	var imageHeight = imageSource.height();
+	++HARRIS_CALL;
+	var imageSourceGray = imageSource.gry();
+	var imageSourceWidth = imageSource.width();
+	var imageSourceHeight = imageSource.height();
+	var scaleSpaceHarrisMaximum = Code.newArrayNulls(imageSourceWidth*imageSourceHeight);
 	var iterations = 4;
-var k;
-for(k=0;k<5;++k){
-	var imageGray = imageSource.gry();
-	var i;
-	for(i=0; i<k; ++i){
-		imageGray = ImageMat.getBlurredImage(imageGray,imageWidth,imageHeight, 2.0);
-	}
-	// sigma
-	var corners = R3D.harrisCornerDetection(imageGray, imageWidth, imageHeight);
-
-	//console.log(corners)
-	for(var i=0; i<imageWidth; ++i){
-		for(var j=0; j<imageHeight; ++j){
-			var index = j*imageWidth + i;
-			var dist = 3;
-			if(j>dist && j<imageHeight-dist && i>dist && i<imageWidth-dist){
-				//
-			}else{
-				//corners[index] = 0;
+	var i, j, k;
+var cornerPoints = [];
+var displayScale = 0.5;
+var OFFX = 0; OFFX = (HARRIS_CALL-1)*300;
+var OFFY = 0;
+var imageGray = imageSourceGray;
+var imageWidth = imageSourceWidth;
+var imageHeight = imageSourceHeight;
+var scaleMax = 1.0; // 2.0
+var scaleMin = -1.0; // 0.25
+var scaleRange = scaleMax - scaleMin;
+var scaleCount = 6; // [2, 1.32, 0.87, 0.57, 0.38, 0.25]
+var scales = [];
+for(i=0; i<scaleCount; ++i){
+	scales[i] = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
+}
+	for(k=0;k<scaleCount;++k){
+		var currentScale = scales[k];
+		if(k>0){
+			OFFX += 0;
+			OFFY += imageSourceHeight*displayScale;
+		}
+		// imageGray = ImageMat.getBlurredImage(imageGray,imageWidth,imageHeight, 1.6);
+		imageGray = ImageMat.getScaledImage(imageSourceGray,imageSourceWidth,imageSourceHeight, currentScale, 1.0);//, currentScale<1.0 ? 1.0 : null); // TODO: DOWNSAMPLING SIGMA
+		imageWidth = imageGray["width"];
+		imageHeight = imageGray["height"];
+		imageGray = imageGray["value"];
+		// sigma
+		var corners = R3D.harrisCornerDetection(imageGray, imageWidth, imageHeight);
+			var cornersSame = ImageMat.getScaledImage(corners,imageWidth,imageHeight, 1.0/currentScale, null);//, imageSourceWidth,imageSourceHeight);
+			cornersSame = cornersSame["value"];
+			//cornersSame = ImageMat.getNormalFloat01(cornersSame);
+		for(var i=0; i<imageSourceWidth; ++i){
+			for(var j=0; j<imageSourceHeight; ++j){
+				var indexA = j*imageSourceWidth + i;
+				var wasA = scaleSpaceHarrisMaximum[indexA];
+				var wasB = cornersSame[indexA];
+				var setIt = false;
+				if(wasA==null){
+					setIt=true;
+				}else{
+					wasA = wasA[0];
+					if(wasB>wasA){
+						setIt = true;
+					}
+				}
+				// if(i==30 && j==100){
+				// 	console.log(wasA,wasB);
+				// }
+				if(setIt){
+					scaleSpaceHarrisMaximum[indexA] = [wasB, currentScale];
+				}
 			}
 		}
-		//console.log(i)
+		//scaleSpaceHarrisMaximum = cornersSame;
+
+
+		//var corners = ImageMat.costToMoveAny(imageGray, imageWidth, imageHeight).value;
+		//console.log(corners)
+		for(var i=0; i<imageWidth; ++i){
+			for(var j=0; j<imageHeight; ++j){
+				var index = j*imageWidth + i;
+				var dist = 2;
+				if(j>dist && j<imageHeight-dist && i>dist && i<imageWidth-dist){
+					//
+				}else{
+					corners[index] = 0;
+				}
+			}
+			//console.log(i)
+		}
+var currentScale = imageSourceWidth/imageWidth;
+		corners = ImageMat.getNormalFloat01(corners);
+		//ImageMat.pow(corners,0.1);
+		ImageMat.pow(corners,0.5);
+		var heat = ImageMat.heatImage(corners, imageWidth, imageHeight, true);
+		
+		img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
+		d = new DOImage(img);
+		d.matrix().scale(displayScale*currentScale);
+		d.matrix().translate(OFFX, OFFY);
+		GLOBALSTAGE.addChild(d);
+
+
+		var extrema = Code.findExtrema2DFloat(corners, imageWidth, imageHeight);
+		//console.log("extrema: "+extrema.length);
+				for(var e=0; e<extrema.length; ++e){
+					var ext = extrema[e];
+					//if(Math.abs(ext.z)>0.5){ // moveany - 
+					if(Math.abs(ext.z)>0.4){ // corner - restrictive: 0.5, lenient: 0.1
+								var point = new V3D(ext.x/imageWidth, ext.y/imageHeight, currentScale);
+								cornerPoints.push(point);
+
+								var x = point.x * imageWidth;
+								var y = point.y * imageHeight;
+								var z = 4;//point.z + 0;
+								var c = new DO();
+								color = 0xFFFF0000;
+								c.graphics().setLine(0.50, color);
+								c.graphics().beginPath();
+								c.graphics().drawCircle(x, y, z);
+								c.graphics().strokeLine();
+								c.graphics().endPath();
+								//c.matrix().translate(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
+								c.matrix().scale(imageSource.width()/imageWidth, imageSource.height()/imageHeight);
+								c.matrix().scale(displayScale);
+								c.matrix().translate(OFFX, OFFY);
+								GLOBALSTAGE.addChild(c);
+					}
+				}
+
 	}
+OFFY = 0;
 
-	console.log(corners);
+	// // show optimum scale:
+	// for(var i=0; i<imageSourceWidth; ++i){
+	// 	for(var j=0; j<imageSourceHeight; ++j){
+	// 		var indexA = j*imageSourceWidth + i;
+	// 		scaleSpaceHarrisMaximum[indexA] = scaleSpaceHarrisMaximum[indexA][1];
+	// 	}
+	// }
+	// 	scaleSpaceHarrisMaximum = ImageMat.getNormalFloat01(scaleSpaceHarrisMaximum);
+	// 	ImageMat.pow(scaleSpaceHarrisMaximum,0.5);
+	// 	var heat = ImageMat.heatImage(scaleSpaceHarrisMaximum, imageSourceWidth, imageSourceHeight, true);
+	// 	img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageSourceWidth, imageSourceHeight);
+	// 	d = new DOImage(img);
+	// 	d.matrix().scale(displayScale);
+	// 	d.matrix().translate(OFFX, OFFY);
+	// 	GLOBALSTAGE.addChild(d);
 
-	var OFFX = 0;
-	var OFFY = 0 + k*150;
-	corners = ImageMat.getNormalFloat01(corners);
-	ImageMat.pow(corners,0.1);
-	
-	var colors = [0xFFFF0000, 0xFF00FF00, 0xFF0000FF];
-		colors = Code.reverseArray(colors);
-	var r = [];
-	var g = [];
-	var b = [];
-	for(i=0; i<corners.length; ++i){
-		var percent = corners[i];
-		var color = Code.interpolateColorGradientARGB(percent, colors);
-		r[i] = Code.getFloatRedARGB(color);
-		g[i] = Code.getFloatGrnARGB(color);
-		b[i] = Code.getFloatBluARGB(color);
+
+	// pick some random points and log their harris scores in various scales
+	var test = 10;
+	var testString = "\n";
+	var colors = ["r","m","b","g","k","o"];
+	testString += "hold off;\n";
+	for(k=0; k<test; ++k){
+		point = Code.arrayRandomItem(cornerPoints);
+		var pointX = point.x*imageSourceWidth;
+		var pointY = point.y*imageSourceHeight;
+		console.log(point+"");
+		var scaleMax = 1.0; // 2.0
+		var scaleMin = -6.0; // 0.125
+		var scaleRange = scaleMax - scaleMin;
+		var scaleCount = 25; // [2, 1.32, 0.87, 0.57, 0.38, 0.25]
+		var scales = [];
+		var values = [];
+		for(i=0; i<scaleCount; ++i){
+			var scale = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
+			imageWidth = 21;
+			imageHeight = imageWidth;
+			maskOutCenter = ImageMat.circleMask(imageWidth,imageHeight);
+			var centerX = Math.floor(imageWidth*0.5);
+			var centerY = Math.floor(imageHeight*0.5);
+			imageGray = ImageMat.extractRectFromFloatImage(pointX,pointY,scale,null, imageWidth,imageHeight,  imageSourceGray,imageSourceWidth,imageSourceHeight, null);
+			//var corners = R3D.harrisCornerDetection(imageGray, imageWidth, imageHeight);
+			//var value = corners[centerY*imageWidth + centerX];
+
+			var value = ImageMat.entropy(imageGray, imageWidth,imageHeight, maskOutCenter);
+
+			// var moveAny = ImageMat.costToMoveAny(imageGray,imageWidth, imageHeight).value;
+			// var value = moveAny[centerY*imageWidth + centerX];
+
+			// var value = ImageMat.range(imageGray, imageWidth,imageHeight, maskOutCenter);
+
+			scales.push(scale);
+			values.push(value);
+		}
+		testString += "x=["+scales+"];\ny=["+values+"];\nplot(log(x),y,'"+colors[k%colors.length]+"-x');\n";
+		if(k==0){
+			testString += "hold on;\n";
+		}
 	}
-	//img = GLOBALSTAGE.getFloatRGBAsImage(corners, corners, corners, imageWidth, imageHeight);
-	img = GLOBALSTAGE.getFloatRGBAsImage(r, g, b, imageWidth, imageHeight);
-	d = new DOImage(img);
-	d.matrix().scale(0.5);
-	d.matrix().translate(OFFX, OFFY);
-	GLOBALSTAGE.addChild(d);
+	testString += "\n";
+	console.log(testString);
+
+	console.log("initial point count: "+cornerPoints.length);
+	// remove overshadowed / duplicate points
+	/*
+	var duplicateCount = 0;
+	var groupings = [];
+	for(var i=0; i<cornerPoints.length; ++i){
+		var tooClose
+		var pointA = cornerPoints[i];
+		var group = [];
+		group.push(pointA);
+		for(var j=i+1; j<cornerPoints.length; ++j){
+			var pointB = cornerPoints[j];
+			if( V2D.distance(pointA,pointB) < 0.1 ){ // ~ less than a pixel close
+				tooClose = true;
+				++duplicateCount;
+				group.push(pointB);
+			}
+		}
+		groupings.push(group);
+	}
+	console.log("tooClose: "+duplicateCount);
+	*/
+	// find maxima scale for each point & save as g
+	return cornerPoints;
 }
+
+R3D.HarrisDescriptors = function(imageSource, points){ // create features from points
+	// orientation assignment
+	// bin gathering
+	// normalize
 }
 
 
+/*
+L1 - minkowski distance
+*/

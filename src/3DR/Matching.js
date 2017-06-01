@@ -63,10 +63,9 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
-var featuresA = R3D.HarrisExtract(imageMatrixA);
-
-
-return;
+// var featuresA = R3D.HarrisExtract(imageMatrixA);
+// var featuresB = R3D.HarrisExtract(imageMatrixB);
+//return;
 
 var featuresA = R3D.SIFTExtract(imageMatrixA);
 
