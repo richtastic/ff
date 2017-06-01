@@ -2964,14 +2964,16 @@ R3D.SIFTExtract = function(imageSource){
 // k = 2^(1/s)
 // k * k === 2^(1/s) * 2^(1/s) === 2^(2/s)
 // sigma = 1.6
-	
 	var i, j, k;
+
 	// first image
+	var preSigma = null; //0.5;
+	var preScale = 1.0;
 	var originalGray = imageSource.gry();
 	var imageCurrentGry = imageSource.gry();
 	var imageCurrentWid = imageSource.width();
 	var imageCurrentHei = imageSource.height();
-		imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid,imageCurrentHei, 1.0); // TODO: CHANGE TO 2.0
+		imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid,imageCurrentHei, preScale, preSigma); // TODO: CHANGE TO 2.0
 			imageCurrentWid = imageCurrentGry["width"];
 			imageCurrentHei = imageCurrentGry["height"];
 			imageCurrentGry = imageCurrentGry["value"];
@@ -2991,31 +2993,28 @@ R3D.SIFTExtract = function(imageSource){
 		var differenceImages = [];
 		for(j=0; j<gaussianCount; ++j){
 			var currentGaussPercent = (j/(gaussianCount-1));
-			var gaussianSigma = Math.pow(2,currentGaussPercent*2 - 0.5 );
-			//gaussianSigma = sigmaPrefix * gaussianSigma;
+			var gaussianSigma = sigmaPrefix * Math.pow(2,currentGaussPercent*2 - 0.5 );
 			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
-			//var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, sigmaPrefix);
-			//imageCurrentGry = gaussianImage;
+			//imageCurrentGry = gaussianImage; // same
 			gaussianImages.push(gaussianImage);
-			var effectiveSigma = Math.pow(2, i + (j/(gaussianCount-1)*2 - 0.5) );
-			console.log(" effectiveSigma: "+effectiveSigma);
 			
-var OFFX = 0 + i*322;
-var OFFY = 0 + j*200;
+// var OFFX = 0 + i*322;
+// var OFFY = 0 + j*200;
+var OFFX = 0 + i*200;
+var OFFY = 0 + j*150;
 img = GLOBALSTAGE.getFloatRGBAsImage(gaussianImage, gaussianImage, gaussianImage, imageCurrentWid, imageCurrentHei);
 d = new DOImage(img);
 d.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
 d.matrix().translate(OFFX, OFFY);
 GLOBALSTAGE.addChild(d);
-
+//return [];
 			// gaussian pyramid
 			if(gaussianImages.length==2){
 				var prevGauss = gaussianImages[0];
 				var nextGauss = gaussianImages[1];
 				var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
 				differenceImages.push(differenceImage);
-				// on last iteration keep 2nd from top
-				nextImage = gaussianImages.shift();
+				nextImage = gaussianImages.shift(); // on last iteration keep 2nd from top
 			}
 			// difference of gaussian pyramid
 			if(differenceImages.length==3){
@@ -3048,11 +3047,11 @@ var apprW = Math.pow(2,i)*imageCurrentWid;
 var errW = imageSource.width()/apprW;
 var apprH = Math.pow(2,i)*imageCurrentHei;
 var errH = imageSource.height()/apprH;
-console.log(apprW+" / "+imageSource.width()+" = "+errW+" | " + apprH+" / "+imageSource.height()+" = "+errH);
+//console.log(apprW+" / "+imageSource.width()+" = "+errW+" | " + apprH+" / "+imageSource.height()+" = "+errH);
 					point.x = point.x * errW;
 					point.y = point.y * errW;
 					//if(true){
-					if( Math.abs(ext.t) > 0.001 ){
+					if( Math.abs(ext.t) > 1E-16 ){
 						//if(i > 0){
 						if(i == 2){
 							siftPoints.push(point);
