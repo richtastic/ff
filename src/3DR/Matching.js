@@ -18,8 +18,9 @@ function Matching(){
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
 	// this._keyboard.addListeners();
 
-	var imageList = ["sunflowers.png","sunflowers.png"];
-	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	//var imageList = ["sunflowers_real.png","sunflowers.png"];
+	//var imageList = ["sunflowers.png","sunflowers.png"];
+	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
@@ -61,6 +62,11 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+
+var featuresA = R3D.HarrisExtract(imageMatrixA);
+
+
+return;
 
 var featuresA = R3D.SIFTExtract(imageMatrixA);
 

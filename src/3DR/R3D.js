@@ -2591,9 +2591,11 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 	Iy2 = ImageMat.gaussian2DFrom1DFloat(Iy2, width,height, gauss1D);
 	IxIy = ImageMat.gaussian2DFrom1DFloat(IxIy, width,height, gauss1D);
 
-	var harrisValue = new Array(width*height);
+	var harrisValue = Code.newArrayZeros(width*height);
 	var i, j, a, b, c, d, tra, det;
 	var ratio;
+	// for(j=1;j<height-1;++j){
+	// 	for(i=1;i<width-1;++i){
 	for(j=0;j<height;++j){
 		for(i=0;i<width;++i){
 			index = j*width + i;
@@ -3128,5 +3130,62 @@ R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 	return val;
 }
 
+
+R3D.HarrisExtract = function(imageSource){
+	var imageGray = imageSource.gry();
+	var imageWidth = imageSource.width();
+	var imageHeight = imageSource.height();
+	var iterations = 4;
+var k;
+for(k=0;k<5;++k){
+	var imageGray = imageSource.gry();
+	var i;
+	for(i=0; i<k; ++i){
+		imageGray = ImageMat.getBlurredImage(imageGray,imageWidth,imageHeight, 2.0);
+	}
+	// sigma
+	var corners = R3D.harrisCornerDetection(imageGray, imageWidth, imageHeight);
+
+	//console.log(corners)
+	for(var i=0; i<imageWidth; ++i){
+		for(var j=0; j<imageHeight; ++j){
+			var index = j*imageWidth + i;
+			var dist = 3;
+			if(j>dist && j<imageHeight-dist && i>dist && i<imageWidth-dist){
+				//
+			}else{
+				//corners[index] = 0;
+			}
+		}
+		//console.log(i)
+	}
+
+	console.log(corners);
+
+	var OFFX = 0;
+	var OFFY = 0 + k*150;
+	corners = ImageMat.getNormalFloat01(corners);
+	ImageMat.pow(corners,0.1);
+	
+	var colors = [0xFFFF0000, 0xFF00FF00, 0xFF0000FF];
+		colors = Code.reverseArray(colors);
+	var r = [];
+	var g = [];
+	var b = [];
+	for(i=0; i<corners.length; ++i){
+		var percent = corners[i];
+		var color = Code.interpolateColorGradientARGB(percent, colors);
+		r[i] = Code.getFloatRedARGB(color);
+		g[i] = Code.getFloatGrnARGB(color);
+		b[i] = Code.getFloatBluARGB(color);
+	}
+	//img = GLOBALSTAGE.getFloatRGBAsImage(corners, corners, corners, imageWidth, imageHeight);
+	img = GLOBALSTAGE.getFloatRGBAsImage(r, g, b, imageWidth, imageHeight);
+	d = new DOImage(img);
+	d.matrix().scale(0.5);
+	d.matrix().translate(OFFX, OFFY);
+	GLOBALSTAGE.addChild(d);
+}
+}
 
 
