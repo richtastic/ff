@@ -45,7 +45,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(1.0);
+		d.graphics().alpha(0.01);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -70,7 +70,7 @@ for(k=0; k<featuresA.length; ++k){
 		var z = point.z + 2;
 	var c = new DO();
 		color = 0xFFFF0000;
-		c.graphics().setLine(1.0, color);
+		c.graphics().setLine(0.50, color);
 		c.graphics().beginPath();
 		c.graphics().drawCircle(x, y, z);
 		c.graphics().strokeLine();

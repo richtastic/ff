@@ -2901,10 +2901,70 @@ GLOBALSTAGE = stage;
 	areaMap.show(rangeA, rangeB);
 
 }
+/*
+======= SCALE 1
+	--- 1
+	--- 1.25
+	--- 1.5
+	--- 1.75
+	--- 2
+		DOG:
+		=> 1.25 - 1.00
+		=> 1.50 - 1.25
+		=> 1.55 - 1.50
+		=> 2.00 - 1.75
+			EXT:
+				-> (1.25-1.00) && (1.50-1.25) && (1.75-1.50)
+					== [1.00, 1.25, 1.50, 1.75]
+				-> (1.50-1.25) && (1.75-1.50) && (2.00-1.75)
+					== [1.25, 1.50, 1.75, 2.00]
+======= SCALE 2
+	--- 2
+	--- 2.5
+	--- 3
+	--- 3.5
+	--- 4
+		DOG:
+			=> 2.5 - 2.0
+			=> 3.0 - 2.5
+			=> 3.5 - 3.0
+			=> 4.0 - 3.5
+				EXT:
+					-> 
+======= SCALE 4
+	--- 4
+	--- 5
+	--- 6
+	--- 7
+	--- 8
+======= SCALE 8
 
+A 0.8 + 1.2 + 1.7   => 1.2
+A 1.2 + 1.7 + 2.4   => 1.7
+
+B 1.7 + 2.4 + 3.4   => 2.4
+B 2.4 + 3.4 + 4.8   => 3.4
+
+
+
+R3D.js:2995 differenceSigma: 1.189207115002721
+R3D.js:2995 differenceSigma: 1.6817928305074292
+R3D.js:2995 differenceSigma: 2.378414230005442
+R3D.js:2995 differenceSigma: 3.3635856610148585
+
+dogSigma: 2.378414230005442
+R3D.js:3012 dogSigma: 3.3635856610148585
+
+C 
+*/
 R3D.SIFTExtract = function(imageSource){
-	var sigmaStart = 1.6;
-	var kStart = Math.sqrt(2.0);
+// each octave doubles sigma
+// each octave has s number of intervals
+// s + 3 iterations
+// k = 2^(1/s)
+// k * k === 2^(1/s) * 2^(1/s) === 2^(2/s)
+// sigma = 1.6
+	
 	var i, j, k;
 	// first image
 	var originalGray = imageSource.gry();
@@ -2916,26 +2976,29 @@ R3D.SIFTExtract = function(imageSource){
 			imageCurrentHei = imageCurrentGry["height"];
 			imageCurrentGry = imageCurrentGry["value"];
 		
+	var differenceGaussianCount = 2;
 	var exponentCount = 4; // octaves
-	var gaussianCount = 6; // gaussians per octave
+	var gaussianCount = differenceGaussianCount+3; // gaussians per octave
+	var sigmaPrefix = 1.6;
+	var kStart = Math.pow(2.0, 1/differenceGaussianCount);
+	console.log("kStart:"+kStart);
 
 	var siftPoints = [];
 	for(i=0; i<exponentCount; ++i){
-		//console.log("........"+i);
+		console.log("........"+i);
 		var gaussianImages = [];
 		var differenceImages = [];
+img = GLOBALSTAGE.getFloatRGBAsImage(imageCurrentGry, imageCurrentGry, imageCurrentGry, imageCurrentWid, imageCurrentHei);
+d = new DOImage(img);
+d.matrix().translate(0, 0);
+GLOBALSTAGE.addChild(d);
 		for(j=0; j<gaussianCount; ++j){
-			//console.log("   "+j);
 			var currentGaussPercent = (j/(gaussianCount-1));
-			var gaussianSigma = Math.pow(2,2*currentGaussPercent);
+			var gaussianSigma = Math.pow(2,currentGaussPercent*2 - 0.5 );
+			//gaussianSigma = sigmaPrefix * gaussianSigma;
 			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
-			
-			// img = GLOBALSTAGE.getFloatRGBAsImage(imageCurrentGry, imageCurrentGry, imageCurrentGry, imageCurrentWid, imageCurrentHei);
-			// d = new DOImage(img);
-			// d.matrix().translate(0, 0);
-			// GLOBALSTAGE.addChild(d);
-
 			gaussianImages.push(gaussianImage);
+			
 			// gaussian pyramid
 			if(gaussianImages.length==2){
 				var prevGauss = gaussianImages[0];
@@ -2943,20 +3006,48 @@ R3D.SIFTExtract = function(imageSource){
 				var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
 				differenceImages.push(differenceImage);
 				gaussianImages.shift();
+//var differenceSigma = Math.sqrt(2) * Math.pow(2,(j + 1 + 0.5 - 1)*0.5 - 0.5) * Math.pow(2,i);
+//console.log("differenceSigma: "+differenceSigma);
 			}
 			// difference of gaussian pyramid
 			if(differenceImages.length==3){
+/*
+var dogSigmaMin = Math.sqrt(2) * Math.pow(2,((j - 3) + 0.5 - 1)*0.5 - 0.5 + i);
+var dogSigmaCen = Math.sqrt(2) * Math.pow(2,((j - 2) + 0.5 - 1)*0.5 - 0.5 + i);
+var dogSigmaMax = Math.sqrt(2) * Math.pow(2,((j - 1) + 0.5 - 1)*0.5 - 0.5 + i);
+var dogSigmaRange = dogSigmaMax - dogSigmaMin;
+var startLinear = ((j - 2) + 0.5 - 1)*0.5 - 0.5 + i;
+var midLinear = ((j - 1) + 0.5 - 1)*0.5 - 0.5 + i;
+var endLinear = ((j - 0) + 0.5 - 1)*0.5 - 0.5 + i;
+var rangeLinear = endLinear - startLinear; // == 1
+console.log("midLinear "+midLinear);
+*/
+/*
+
+-0.25 => 0.75  [0.25]
+ 0.25 => 1.25  [0.75]
+
+0.75 => 1.75  [1.25]
+1.25 => 2.25  [1.75]
+
+1.75 => 2.75  [2.25]
+2.25 => 3.25  [2.75]
+
+2.75 => 3.75  [3.25]
+3.25 => 4.25  [3.75]
+*/
 				var layerA = differenceImages[0];
 				var layerB = differenceImages[1];
 				var layerC = differenceImages[2];
 				var extrema = Code.findExtrema3D(layerA,layerB,layerC, imageCurrentWid,imageCurrentHei, 0);
+				var dogScale = (j-2.0)/differenceGaussianCount - 1.0/(differenceGaussianCount*differenceGaussianCount);
+				var dogScaleRange = 1.0/differenceGaussianCount;
 				// offset extrema to scale space
-				var currentScale = i + currentGaussPercent;
 				for(k=0; k<extrema.length; ++k){
 					var ext = extrema[k];
-// TODO: SCALE SIZE
-// ext[k].z = Math.pow(2, i + j/scalesPerOctave + ext[k].z/scalesPerOctave ) / startScale;
-					var point = new V4D(ext.x/imageCurrentWid, ext.y/imageCurrentHei, currentScale); // ext.z
+					var scale = ((ext.z)/2.0) * dogScaleRange/2.0 + dogScale;
+					scale = sigmaPrefix * Math.pow(2.0, scale);
+					var point = new V4D(ext.x/imageCurrentWid, ext.y/imageCurrentHei, scale);
 					if( Math.abs(ext.t) > 0.01){
 						siftPoints.push(point);
 					}
@@ -2966,7 +3057,12 @@ R3D.SIFTExtract = function(imageSource){
 		}
 
 		if(i<exponentCount-1){ // prep for next loop
-			imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid, imageCurrentHei, 0.5, 2.0); // subsampled
+			//var sigma = Math.pow(j-2, sigmaPrefix); // "2 from top"
+			//var sigma = 2.0;
+			var a = (j-2)/(gaussianCount-1);
+			var b = Math.pow(2,currentGaussPercent*2 - 0.5 );
+			var sigma = b;
+			imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid, imageCurrentHei, 0.5, sigma);
 				imageCurrentWid = imageCurrentGry["width"];
 				imageCurrentHei = imageCurrentGry["height"];
 				imageCurrentGry = imageCurrentGry["value"];
@@ -2976,7 +3072,7 @@ R3D.SIFTExtract = function(imageSource){
 	// remove low contrast points
 	console.log("checking");
 	for(i=0; i<siftPoints.length; ++i){
-		console.log(i+" / "+siftPoints.length);
+//		console.log(i+" / "+siftPoints.length);
 		point = siftPoints[i];
 		var winSize = 11;
 		var win = R3D.getScaleSpacePoint(point.x,point.y,point.z,null, winSize,winSize, null, originalGray,imageSource.width(),imageSource.height());
@@ -2995,6 +3091,62 @@ R3D.SIFTExtract = function(imageSource){
 
 	return goodPoints;
 }
+/*
+
+goal is to make the DOG images equal distance from eachother in scale space
+var dogCount = 2;
+var levelCount = dogCount + 2; // add ends
+var gaussCount = dogCount + 1; // add additional gaussian
+var dogStart = dogCount==1 ? 0.5 : 2/(dogCount*dogCount);
+var dogDifference = 1/dogCount;
+var octaveMultiplier = Math.pow(2,?);
+
+1
+2  2-1
+3  3-2 => dog1  [0.5] 1/1 - 1/2
+4  4-3
+
+1
+2  2-1
+3  3-2 => dog1  [0.25] 1/2 - 1/4    j = 2 | j-1 = 1
+4  4-3 => dog2  [0.75] 2/2 - 1/4
+5  5-4
+
+
+1
+2  2-1
+3  3-2 => dog1  [0.2222] 1/3 - 1/9
+4  4-3 => dog2  [0.5555] 2/3 - 1/9
+5  5-4 => dog3  [0.8888] 3/3 - 1/9
+6  6-5
+
+1
+2  2-1
+3  3-2 => dog1  [0.1875] 1/4 - 1/16
+4  4-3 => dog2  [0.4375] 2/4 - 1/16
+5  5-4 => dog3  [0.6875] 3/4 - 1/16
+6  6-5 => dog3  [0.9375] 4/4 - 1/16
+7  7-6
+
+IF 1:
+ = 1/2
+ELSE
+= 1/DOG - 1/(DOG*DOG)
+= 2/(DOG*DOG)
+
+2/(DOG*DOG) + j/(DoG-1)
+
+1: ~ 1.5
+  = ? 
+2: sqrt(2) = 1.414
+  = 2^(.5)
+3: ~ 1.3
+  = 2^(1/3) = 1.26
+4 ~ 1.2
+  = 2^(1/4) = 1.189
+
+*/
+
 R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 	var val = ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, source,width,height);
 	return val;
