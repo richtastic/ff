@@ -18,7 +18,8 @@ function Matching(){
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
 	// this._keyboard.addListeners();
 
-	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	var imageList = ["sunflowers.png","sunflowers.png"];
+	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
@@ -67,7 +68,7 @@ for(k=0; k<featuresA.length; ++k){
 	var point = featuresA[k];
 		var x = point.x * imageMatrixA.width();
 		var y = point.y * imageMatrixA.height();
-		var z = point.z + 2;
+		var z = point.z + 0;
 	var c = new DO();
 		color = 0xFFFF0000;
 		c.graphics().setLine(0.50, color);
