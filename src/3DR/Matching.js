@@ -63,10 +63,12 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
-var featuresA = R3D.HarrisExtract(imageMatrixA);
-var featuresB = R3D.HarrisExtract(imageMatrixB);
+// var featuresA = R3D.HarrisExtract(imageMatrixA);
+// var featuresB = R3D.HarrisExtract(imageMatrixB);
 
-//var featuresA = R3D.SIFTExtract(imageMatrixA);
+var featuresA = R3D.SIFTExtract(imageMatrixA);
+var featuresB = R3D.SIFTExtract(imageMatrixB);
+//var featuresB = [];
 console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
