@@ -3172,7 +3172,7 @@ R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 
 var HARRIS_CALL = 0;
 R3D.HarrisExtract = function(imageSource){
-GLOBALSTAGE.root().matrix().scale(0.75);
+//GLOBALSTAGE.root().matrix().scale(0.75);
 	++HARRIS_CALL;
 	var imageSourceGray = imageSource.gry();
 	var imageSourceWidth = imageSource.width();
@@ -3195,6 +3195,8 @@ var scales = [];
 for(i=0; i<scaleCount; ++i){
 	scales[i] = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
 }
+
+var cornersStack = [];
 	for(k=0;k<scaleCount;++k){
 		var currentScale = scales[k];
 		OFFX += imageSourceWidth*displayScale;
@@ -3207,9 +3209,10 @@ for(i=0; i<scaleCount; ++i){
 		imageGray = imageGray["value"];
 		// sigma
 		var corners = R3D.harrisCornerDetection(imageGray, imageWidth, imageHeight);
-			var cornersSame = ImageMat.getScaledImage(corners,imageWidth,imageHeight, 1.0/currentScale, null);//, imageSourceWidth,imageSourceHeight);
+			var cornersSame = ImageMat.getScaledImage(corners,imageWidth,imageHeight, 1.0/currentScale, null, imageSourceWidth,imageSourceHeight);
 			cornersSame = cornersSame["value"];
 			//cornersSame = ImageMat.getNormalFloat01(cornersSame);
+cornersStack.push(cornersSame);
 		for(var i=0; i<imageSourceWidth; ++i){
 			for(var j=0; j<imageSourceHeight; ++j){
 				var indexA = j*imageSourceWidth + i;
@@ -3265,7 +3268,7 @@ var currentScale = imageSourceWidth/imageWidth;
 		d.matrix().translate(OFFX, OFFY);
 		GLOBALSTAGE.addChild(d);
 
-
+if(true){
 
 		var extrema = Code.findExtrema2DFloat(corners, imageWidth, imageHeight);
 		//console.log("extrema: "+extrema.length);
@@ -3306,6 +3309,25 @@ var currentScale = imageSourceWidth/imageWidth;
 		// TODO:
 		// ALSO HESSIAN TEST ?
 	}
+}
+
+
+if(false){
+	console.log("finx extrema:"+cornersStack.length);
+	cornerPoints = Code.findExtrema3DVolume(cornersStack, imageSourceWidth, imageSourceHeight);
+	var outPoints = [];
+	for(var p=0; p<cornerPoints.length; ++p){
+		var point = cornerPoints[p];
+		var scale = (point.z/scaleCount)*scaleRange + scaleMin;
+		console.log(point.z+" => "+scale);
+		scale = Math.pow(2, -scale);
+
+		point = new V4D(point.x/imageSourceWidth, point.y/imageSourceHeight, scale, point.t);
+		outPoints.push(point)
+	}
+	return outPoints;
+}
+
 OFFY = 0;
 
 	// // show optimum scale:

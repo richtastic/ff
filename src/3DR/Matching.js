@@ -19,10 +19,10 @@ function Matching(){
 	// this._keyboard.addListeners();
 
 	//var imageList = ["sunflowers_real.png","sunflowers.png"];
-	//var imageList = ["sunflowers.png","sunflowers.png"];
+	var imageList = ["sunflowers.png","sunflowers.png"];
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
-	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
@@ -67,14 +67,15 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 // var featuresB = R3D.HarrisExtract(imageMatrixB);
 
 var featuresA = R3D.SIFTExtract(imageMatrixA);
-var featuresB = R3D.SIFTExtract(imageMatrixB);
-//var featuresB = [];
+// var featuresB = R3D.SIFTExtract(imageMatrixB);
+var featuresB = [];
 console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
 	var features = lists[f];
 	for(k=0; k<features.length; ++k){
 		var point = features[k];
+		//console.log(""+point)
 			var x = point.x * imageMatrixA.width();
 			var y = point.y * imageMatrixA.height();
 			var z = point.z + 0.0;
