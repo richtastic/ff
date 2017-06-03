@@ -13,6 +13,36 @@ function ffLoadedFxn(){
 function classesLoadedFxn(){
 	var matching = new Matching();
 	return;
+
+
+	
+	var size = 5;
+	var gridA = // -1
+	[0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0];
+	var gridB = // 0
+	[0, 0, 0, 0, 0,
+	 0, 1, 1.5, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0];
+	 var gridC = // 1
+	[0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0,
+	 0, 0, 0, 0, 0];
+	var extrema = Code.findExtrema3D(gridA,gridB,gridC, size,size, 0);
+	console.log("extrema: "+extrema.length);
+	for(var i=0; i<extrema.length; ++i){
+		var point = extrema[i];
+		console.log(point+"");
+	}
+	
+	return;
 /*
 	//var matches = new PriorityQueue(MatchingMatch.sorting);
 	var matches = [];

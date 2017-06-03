@@ -3,30 +3,35 @@ SIFTDescriptor.BIN_COUNT = 8;
 SIFTDescriptor.BIN_COUNT_OVERALL = 36;
 SIFTDescriptor.BIN_NORMALIZE_MAX = 0.50; // 0.20
 SIFTDescriptor.BIN_OVERALL_THRESHOLD_MAX = 0.80; // 0.80
-//SIFTDescriptor.GAUSSIAN = ImageMat.getGaussianWindowSimple(16,16, 8);
+
 function SIFTDescriptor(){
-	this._width = 4;
-	this._height = 4;
-	this._bins = new Array(this._width*this._height);
-	for(var i=0;i<this._bins.length;++i){
-		this._bins[i] = new GradBinDescriptor(SIFTDescriptor.BIN_COUNT);
-	}
+	this._cellCountSize = 4; // 4 x 4 cells
+	this._cellPixelSize = 4; // 4 x 4 pixels
+	var perCell = this._cellCountSize;
+	var perPixel = this._cellPixelSize;
+	var totalPixels = perPixel*perPixel * perCell*perCell;
+	var totalBins = SIFTDescriptor.BIN_COUNT * perCell * perCell;
+	this._vector = Code.newArrayZeros(totalPixels);
+	this._orientationAngle = 0.0;
 }
-SIFTDescriptor._gauss = null;
-SIFTDescriptor.gaussian = function(){
-	if(!SIFTDescriptor._gauss){
-		SIFTDescriptor._gauss = ImageMat.getGaussianWindowSimple(16,16, 1.6);
-	}
-	return SIFTDescriptor._gauss;
-}
-SIFTDescriptor.compare = function(descA,descB){
+//SIFTDescriptor._gauss = null;
+// SIFTDescriptor.gaussian = function(){
+// 	if(!SIFTDescriptor._gauss){
+// 		SIFTDescriptor._gauss = ImageMat.getGaussianWindowSimple(16,16, 1.6);
+// 	}
+// 	return SIFTDescriptor._gauss;
+// }
+SIFTDescriptor.compare = function(descA,descB){ // L1 distance
 	var i, score = 0;
-	for(i=0;i<descA._bins.length;++i){
-		score += GradBinDescriptor.compare(descA._bins[i],descB._bins[i]);
+	var vectorA = descA.vector();
+	var vectorB = descB.vector();
+	for(i=0; i<vectorA.length; ++i){
+		score += Math.abs(vectorA[i] - vectorB[i]);
 	}
 	return score;
 }
 SIFTDescriptor.findMaximumOrientations = function(Ix,Iy,w,h){
+	/*
 	var bW = bH = 16; // descriptor window size
 	var offX = Math.floor((w-bW)*0.5);
 	var offY = Math.floor((h-bH)*0.5);
@@ -60,17 +65,25 @@ SIFTDescriptor.findMaximumOrientations = function(Ix,Iy,w,h){
 		peaks[i] = peaks[i].x;
 	}
 	return peaks;
+	*/
 }
 
 
 
 SIFTDescriptor.prototype.normalize = function(){
-	for(var i=0;i<this._bins.length;++i){
-		this._bins[i].normalize();
-		this._bins[i].capPeak(BIN_NORMALIZE_MAX);
-		this._bins[i].normalize();
+	var i, len = this._vector.length;
+	var total = 0;
+	for(i=0; i<len ;++i){
+		total += this._vector[i];
+	}
+	if(total>0){
+		total = 1.0/total;
+		for(i=0; i<len;++i){
+			this._vector[i] = this._vector[i] * total;
+		}
 	}
 }
+/*
 SIFTDescriptor.prototype.fromGradients = function(Ix,Iy,w,h){
 	var gauss = SIFTDescriptor.gaussian();
 	var bW = bH = 16; // descriptor window size
@@ -123,3 +136,7 @@ SIFTDescriptor.prototype.toString = function(){
 	}
 	return str;
 }
+*/
+/*
+GradBinDescriptor
+*/

@@ -20,9 +20,9 @@ function Matching(){
 
 	//var imageList = ["sunflowers_real.png","sunflowers.png"];
 	//var imageList = ["sunflowers.png","sunflowers.png"];
-	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
-	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
@@ -47,7 +47,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(0.01);
+		d.graphics().alpha(1.0);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -63,26 +63,29 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
-// var featuresA = R3D.HarrisExtract(imageMatrixA);
-// var featuresB = R3D.HarrisExtract(imageMatrixB);
-//return;
+var featuresA = R3D.HarrisExtract(imageMatrixA);
+var featuresB = R3D.HarrisExtract(imageMatrixB);
 
-var featuresA = R3D.SIFTExtract(imageMatrixA);
-
-for(k=0; k<featuresA.length; ++k){
-	var point = featuresA[k];
-		var x = point.x * imageMatrixA.width();
-		var y = point.y * imageMatrixA.height();
-		var z = point.z + 0;
-	var c = new DO();
-		color = 0xFFFF0000;
-		c.graphics().setLine(0.50, color);
-		c.graphics().beginPath();
-		c.graphics().drawCircle(x, y, z);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-		c.matrix().translate(0, 0);
-		GLOBALSTAGE.addChild(c);
+//var featuresA = R3D.SIFTExtract(imageMatrixA);
+console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+var lists = [featuresA,featuresB];
+for(var f=0; f<lists.length; ++f){
+	var features = lists[f];
+	for(k=0; k<features.length; ++k){
+		var point = features[k];
+			var x = point.x * imageMatrixA.width();
+			var y = point.y * imageMatrixA.height();
+			var z = point.z + 0.0;
+		var c = new DO();
+			color = 0xFFFF0000;
+			c.graphics().setLine(0.50, color);
+			c.graphics().beginPath();
+			c.graphics().drawCircle(x, y, z);
+			c.graphics().strokeLine();
+			c.graphics().endPath();
+			c.matrix().translate(0 + f*imageMatrixA.width(), 0);
+			GLOBALSTAGE.addChild(c);
+	}
 }
 
 return;
