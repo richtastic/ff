@@ -2578,10 +2578,31 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 	return destination;
 }
 ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){ // generates homography beforehand
-	var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
+	//var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
+	var fromPoints = [new V2D(0,0), new V2D(wid,0), new V2D(wid,hei), new V2D(0,hei)];
 	var toPoints = [new V2D(aX,aY), new V2D(bX,bY), new V2D(cX,cY), new V2D(dX,dY)];
 	var projection = Matrix.get2DProjectiveMatrix(fromPoints,toPoints);
 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
+}
+
+
+
+ImageMat.extractRectSimple = function(source, width,height, x,y,w,h, wid,hei){
+	var size = wid*hei;
+	var destination = Code.newArrayZeros(size);
+	var i, j, index, fromX, fromY, value;
+	var wm1 = wid - 1;
+	var hm1 = hei - 1;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			index = wid*j + i;
+			fromX = x + w*(i/wm1);
+			fromY = y + h*(j/hm1);
+			value = ImageMat.getPointInterpolateCubic(source, width,height, fromX, fromY);
+			destination[index] = value;
+		}
+	}
+	return destination;
 }
 
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
@@ -3045,8 +3066,6 @@ ImageMat.prototype.calculateGradient = function(x,y, blur){
 	return dir;
 }
 ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forceHeight){
-	var x = wid*0.5;
-	var y = hei*0.5;
 	var newWid = Math.round(scale*wid);
 	var newHei = Math.round(scale*hei);
 	if(forceWidth && forceHeight){
@@ -3056,7 +3075,10 @@ ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forc
 	if(sigma){
 		source = ImageMat.getBlurredImage(source, wid,hei, sigma);
 	}
-	var newImg = ImageMat.extractRectFromFloatImage(x,y,1.0/scale,null, newWid,newHei, source,wid,hei, null);
+	//var x = wid*0.5;
+	//var y = hei*0.5;
+	//var newImg = ImageMat.extractRectFromFloatImage(x,y,1.0/scale,null, newWid,newHei, source,wid,hei, null);
+	var newImg = ImageMat.extractRectSimple(source,wid,hei, 0,0,wid-1,hei-1, newWid,newHei);
 	return {"width":newWid, "height":newHei, "value":newImg};
 }
 ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding and unpadding to avoid shadow on image edges
@@ -3068,7 +3090,8 @@ ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding
 	padding = Math.ceil(gaussSize/2.0);
 	var totWid = wid+2*padding;
 	var totHei = hei+2*padding;
-	source = ImageMat.extractRectFromFloatImage(x,y,1.0,null, totWid,totHei, source,wid,hei, null);
+	//source = ImageMat.extractRectFromFloatImage(x,y,1.0,null, totWid,totHei, source,wid,hei, null);
+	source = ImageMat.padFloat(source,wid,hei, padding,padding,padding,padding);
 	source = ImageMat.gaussian2DFrom1DFloat(source, totWid,totHei, gauss1D);
 	source = ImageMat.unpadFloat(source, totWid,totHei, padding,padding,padding,padding);
 	return source;

@@ -2995,121 +2995,218 @@ R3D.js:3012 dogSigma: 3.3635856610148585
 
 C 
 */
+CALLED_SIFT = -1;
 R3D.SIFTExtract = function(imageSource){
+CALLED_SIFT += 1;
+/*
+	var extremumLowContrastMinimum = 0.00; // 0.03
+
+	//siftPoints = Code.findExtrema3DVolume(differenceImages, imageSource.width(), imageSource.height());
+	var imageCurrentGry = imageSource.gry();
+	var imageCurrentWid = imageSource.width();
+	var imageCurrentHei = imageSource.height();
+	var gaussStart = 1.6;
+	var gauss = gaussStart;
+	var gaussImages =[];
+	for(var i=0; i<6; ++i){
+		gaussImages.push(imageCurrentGry);
+		//gauss = gauss * gaussStart;
+		gauss = gauss * 1.6;
+		//gauss = gauss + 0.5;
+		imageCurrentGry = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gauss);
+	}
+	gaussImages.push(imageCurrentGry);
+	// var differenceImages = [];
+	// for(var i=1; i<gaussImages.length; ++i){
+	// 	var nextGauss = gaussImages[i];
+	// 	var prevGauss = gaussImages[i-1];
+	// 	var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
+	// 	differenceImages.push(differenceImage);
+	// }
+
+	var differenceImages = [];
+	for(var i=0; i<gaussImages.length; ++i){
+		var image = gaussImages[i];
+		var laplace = ImageMat.laplacian(image, imageCurrentWid,imageCurrentHei).value;
+		differenceImages.push(laplace);
+
+//var show = ImageMat.extractRectSimple(image, imageCurrentWid,imageCurrentHei, 0,0,imageCurrentWid,imageCurrentHei, imageCurrentWid,imageCurrentHei);
+//var show = ImageMat.extractRectSimple(image, imageCurrentWid,imageCurrentHei, 0,0,40,40*(imageCurrentHei/imageCurrentWid), imageCurrentWid,imageCurrentHei);
+
+// var show = ImageMat.getNormalFloat01(laplace);
+// 	show = ImageMat.pow(show,0.5);
+var show = image;
+
+var OFFX = 0;// + i*imageSource.width();
+var OFFY = 0 + i*imageSource.height();
+img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, imageCurrentWid, imageCurrentHei);
+d = new DOImage(img);
+d.matrix().translate(OFFX, OFFY);
+GLOBALSTAGE.addChild(d);
+
+	}
+
+*/
+	
 // each octave doubles sigma
 // each octave has s number of intervals
 // s + 3 iterations
 // k = 2^(1/s)
 // k * k === 2^(1/s) * 2^(1/s) === 2^(2/s)
 // sigma = 1.6
+
 	var i, j, k;
-//GLOBALSTAGE.root().matrix().scale(0.5);
 	// first image
-	var extremumLowContrastMinimum = 0.03; // 0.03
-	var preSigma = null; //0.5;
-	var preScale = 1.0;
+	var extremumLowContrastMinimum = 0.01; // 0.03
+	var preSigma = null; // TODO: 0.5 ?
+	var preScale = 1.0; // TODO: CHANGE TO 2.0
 	var originalGray = imageSource.gry();
-	var imageCurrentGry = imageSource.gry();
-	var imageCurrentWid = imageSource.width();
-	var imageCurrentHei = imageSource.height();
-		imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid,imageCurrentHei, preScale, preSigma); // TODO: CHANGE TO 2.0
+	var originalWid = imageSource.width();
+	var originalHei = imageSource.height();
+
+	var imageCurrentGry = originalGray;
+	var imageCurrentWid = originalWid;
+	var imageCurrentHei = originalHei;
+		imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid,imageCurrentHei, preScale, preSigma);
 			imageCurrentWid = imageCurrentGry["width"];
 			imageCurrentHei = imageCurrentGry["height"];
 			imageCurrentGry = imageCurrentGry["value"];
-		
-	var differenceGaussianCount = 2;
-	var exponentCount = 4; // octaves
-	var gaussianCount = differenceGaussianCount+3; // gaussians per octave
-	var sigmaPrefix = 1.6;
-	var kStart = Math.pow(2.0, 1/differenceGaussianCount);
-	console.log("kStart:"+kStart);
-	var nextImage = null;
 
+	var differenceGaussianCount = 2;
+	var octaveCount = 4; // octaves
+	var gaussianCount = differenceGaussianCount+3; // gaussians per octave
+	var sigmaPrefix = 1.0; // 1.6
+	var nextImage = null;
 	var differenceImages = [];
-	
-	var siftPoints = [];
-	for(i=0; i<exponentCount; ++i){
+var scaleSpaceImages = [];
+	for(i=0; i<octaveCount; ++i){
 		console.log("........"+i);
 		var gaussianImages = [];
 		
 		for(j=0; j<gaussianCount; ++j){
 			var currentGaussPercent = (j/(gaussianCount-1));
-			var gaussianSigma = sigmaPrefix * Math.pow(2,currentGaussPercent*2 - 0.5 );
-				//var gaussianSigma =  sigmaPrefix*sigmaPrefix * Math.pow(Math.pow(kStart,j),2) * (kStart*kStart - 1);
+			//var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent*2 - 0.5 );
+			var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent - 0.5 );
 			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
-			imageCurrentGry = gaussianImage; // same
+			imageCurrentGry = gaussianImage;
 			gaussianImages.push(gaussianImage);
-/*			
-var OFFX = 0 + i*imageSource.width();
-var OFFY = 0 + j*imageSource.height();
-img = GLOBALSTAGE.getFloatRGBAsImage(gaussianImage, gaussianImage, gaussianImage, imageCurrentWid, imageCurrentHei);
-d = new DOImage(img);
-d.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
-d.matrix().translate(OFFX, OFFY);
-GLOBALSTAGE.addChild(d);
-*/
+			console.log(gaussianSigma);
 			// gaussian pyramid
 			if(gaussianImages.length==2){
 				var prevGauss = gaussianImages[0];
 				var nextGauss = gaussianImages[1];
 				var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
-				//differenceImage is wrong size for searching
+				// differenceImage is wrong size for searching > upsample
 				var scaled = Math.pow(2,i);
+				//var differenceImageSame = differenceImage;
 				var differenceImageSame = ImageMat.getScaledImage(differenceImage,imageCurrentWid,imageCurrentHei, scaled, null, imageSource.width(),imageSource.height());
 					differenceImageSame = differenceImageSame["value"];
-				differenceImages.push(differenceImageSame);
+					differenceImages.push(differenceImageSame);
 				nextImage = gaussianImages.shift(); // on last iteration keep 2nd from top
 			}
 		}
-
-		if(i<exponentCount-1){ // prep for next loop
+		// prep for next loop
+		if(i<octaveCount-1){
 			imageCurrentGry = ImageMat.getScaledImage(nextImage, imageCurrentWid, imageCurrentHei, 0.5); nextImage = null;
 				imageCurrentWid = imageCurrentGry["width"];
 				imageCurrentHei = imageCurrentGry["height"];
 				imageCurrentGry = imageCurrentGry["value"];
+		}else{
+			scaleSpaceImages.push(gaussianImage);
 		}
 	}
-	/*
-	// 3d interpolate across DoG images
-	for(i=0; i<differenceImages.length; ++i){
-		var differenceImage = differenceImages[i+0];
 
-		var float = ImageMat.getNormalFloat01(differenceImage);
-		var heat = ImageMat.heatImage(float, imageSource.width(), imageSource.height(), true);
-		img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
-		d = new DOImage(img);
-		var skip = 8
-		d.matrix().translate(800+ (i%skip)*200, 100 + Math.floor(i/skip)*150);
-		GLOBALSTAGE.addChild(d);
+	var siftPoints = [];
+
+var maxScaleValues = Code.newArrayNulls(originalWid*originalHei);
+for(k=0; k<differenceImages.length; ++k){
+	var differenceImage = differenceImages[k];
+	for(j=0; j<originalHei; ++j){
+		for(i=0; i<originalWid; ++i){
+			var index = j*originalWid + i;
+			var checkValue = differenceImage[index];
+			var wasValue = maxScaleValues[index];
+			var isValue = wasValue;
+			if(wasValue===null || wasValue[0]<checkValue){
+				isValue = [checkValue, k];
+			}
+			maxScaleValues[index] = isValue;
+		}
 	}
-	*/
+}
+for(j=0; j<originalHei; ++j){
+	for(i=0; i<originalWid; ++i){
+		var index = j*originalWid + i;
+		maxScaleValues[index] = maxScaleValues[index][1];
+	}
+}
+var show = ImageMat.getNormalFloat01(maxScaleValues);
+var OFFX = CALLED_SIFT*originalWid;
+var OFFY = originalHei;
+img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, originalWid, originalHei);
+d = new DOImage(img);
+//d.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
+d.matrix().translate(OFFX, OFFY);
+GLOBALSTAGE.addChild(d);
+
+
 	// difference of gaussian pyramid
 if(true){
-	siftPoints = Code.findExtrema3DVolume(differenceImages, imageSource.width(), imageSource.height());
-var OFFX = 0;
-var OFFY = 0;
-	for(i=0; i<siftPoints.length; ++i){
-// 				var layerA = differenceImages[i+0];
-// 				var layerB = differenceImages[i+1];
-// 				var layerC = differenceImages[i+2];
-// console.log(layerA.length,layerB.length,layerC.length);
-// 				var extrema = Code.findExtrema3DVolume(layerA,layerB,layerC, imageSource.width(), imageSource.height(), 0);//, true);
-// 				var dogOffset = 1.0/(differenceGaussianCount*differenceGaussianCount);
-// 				var dogScale = i + (j-2.0)/differenceGaussianCount - dogOffset;
-// 				var dogScaleRange = 1.0/differenceGaussianCount;
 
-				// HESSIAN EDGE CHECK
-				// var hessianThreshold = 10;
-				// hessianThreshold = Math.pow(hessianThreshold+1,2)/hessianThreshold;
+	var hessianThreshold = 10;
+	hessianThreshold = Math.pow(hessianThreshold+1,2)/hessianThreshold;
+
+	hessianThreshold = 0.00000001;
+
+	var dogOffset = 1.0/(differenceGaussianCount*differenceGaussianCount);
+	// var dogScaleRange = 2^(octaveCount*gaussianCount);
+	extrema = Code.findExtrema3DVolume(differenceImages, imageSource.width(), imageSource.height());
+	var imageWidth = imageSource.width();
+	var imageHeight = imageSource.height();
+	for(i=0; i<extrema.length; ++i){
+				var ext = extrema[i];
+				// // HESSIAN EDGE CHECK -- remove edges, keep points
+				// -- get hessian at rounded (/clipped) DoG location
+// should this be gaussian pyramid ?
+				var depth = Math.min(Math.max(Math.round(ext.z),0),differenceImages.length);
+				var dog = differenceImages[depth];
+				var x = Math.floor(ext.x);
+				var y = Math.floor(ext.y);
+				var x0 = x - 1;
+				var x1 = x + 0;
+				var x2 = x + 1;
+				var y0 = y - 1;
+				var y1 = y + 0;
+				var y2 = y + 1;
+				var dxx = dog[y1*imageWidth + x0] + dog[y1*imageWidth + x2] - 2.0*dog[y1*imageWidth + x1];
+				var dyy = dog[y0*imageWidth + x1] + dog[y2*imageWidth + x1] - 2.0*dog[y1*imageWidth + x1];
+				var dxy = (dog[y0*imageWidth + x0] + dog[y2*imageWidth + x2] - dog[y2*imageWidth + x0] - dog[y0*imageWidth + x2])*0.25;
+				var tra = dxx*dyy;
+				var det = dxx*dyy - dxy*dxy;
+				if(det<=0){
+					continue;
+				}
+				var hessianScore = tra*tra/det;
+				console.log(hessianScore+" < "+hessianThreshold)
+				if(hessianScore<hessianThreshold){
+					continue;
+				}
 				// var hessianScores = R3D.hessianCornerDetection(layerB, imageCurrentWid,imageCurrentHei);
 //console.log(i+"/"+differenceImages.length+" = "+extrema.length);
 				// offset extrema to scale space
 
-					var ext = siftPoints[i];
-					// var scale = (ext.z)*dogScaleRange + dogScale;
-					// scale = sigmaPrefix * Math.pow(2.0, scale);
+// or scale up the image to scale & do harris check
+					
 					var point = new V4D(ext.x/imageSource.width(), ext.y/imageSource.height(), Math.abs(ext.z)*1.0, 0);
-					//point.z = 0.0 + point.z*1.0;
+					var z = point.z;
+					point.z = (dogOffset + z*2)/2;
+					//console.log(z+" => "+point.z);
+					
+					// 
+					// 
+
+
+					//point.z = 0.0 + Math.pow(2,point.z);
 					//point.z = 10;
 					//var point = new V4D(ext.x, ext.y, ext.z*1.0, 0);
 
@@ -3133,13 +3230,15 @@ var OFFY = 0;
 					GLOBALSTAGE.addChild(c);
 					*/
 
-					
+					var edgeLimit = 0.05;
 					if( Math.abs(ext.t) > extremumLowContrastMinimum ){ // contrast threshold
-						//var hessianScore = hessianScores[ Math.floor(point.y*imageCurrentHei)*imageCurrentWid + Math.floor(point.x*imageCurrentWid) ];
-						//console.log(point.x+","+point.y+" = "+hessianScore)
-						//console.log(hessianScore+" >?> "+hessianThreshold)
-						//if (hessianScore > hessianThreshold) { // edge threshold
-							siftPoints.push(point);	
+						// var hessianScore = hessianScores[ Math.floor(point.y*imageCurrentHei)*imageCurrentWid + Math.floor(point.x*imageCurrentWid) ];
+						// console.log(point.x+","+point.y+" = "+hessianScore)
+						// console.log(hessianScore+" >?> "+hessianThreshold)
+						// if (hessianScore > hessianThreshold) { // edge threshold
+							if(edgeLimit<=point.x && point.x<=(1.0-edgeLimit) && edgeLimit<=point.y && point.y<=(1.0-edgeLimit)){
+								siftPoints.push(point);	
+							}
 						//}
 					}
 					
@@ -3326,7 +3425,7 @@ if(false){
 		outPoints.push(point)
 	}
 	return outPoints;
-}
+} 
 
 OFFY = 0;
 
