@@ -21,7 +21,7 @@ function Matching(){
 	//var imageList = ["sunflowers_real.png"];
 	//var imageList = ["sunflowers.png"];
 	//var imageList = ["sunflowers.png","sunflowers.png"];
-	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	var imageList = ["caseStudy1-0.jpg"];//, "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
@@ -59,19 +59,19 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
 	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
 
-	var imageSourceB = images[1];
-	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
-	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+	// var imageSourceB = images[1];
+	// var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	// var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
 // var featuresA = R3D.HarrisExtract(imageMatrixA);
 // var featuresB = R3D.HarrisExtract(imageMatrixB);
 
 var featuresA = R3D.SIFTExtract(imageMatrixA);
-var featuresB = R3D.SIFTExtract(imageMatrixB);
-console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
-//var featuresB = [];
-//console.log("featuresA: "+featuresA.length);
+//var featuresB = R3D.SIFTExtract(imageMatrixB);
+//console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+var featuresB = [];
+console.log("featuresA: "+featuresA.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
 	var features = lists[f];

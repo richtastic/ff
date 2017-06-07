@@ -2604,6 +2604,13 @@ ImageMat.extractRectSimple = function(source, width,height, x,y,w,h, wid,hei){
 	}
 	return destination;
 }
+ImageMat.extractRectFromPointSimple = function(source, width,height, x,y,scale, wid,hei){
+	var w = wid/scale;
+	var h = hei/scale;
+	var sX = x - w*0.5;
+	var sY = y - h*0.5;
+	return ImageMat.extractRectSimple(source, width,height, sX,sY,w,h, wid,hei);
+}
 
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 	var newWid = wid+left+right, newHei = hei+top+bot;

@@ -67,7 +67,69 @@ SIFTDescriptor.findMaximumOrientations = function(Ix,Iy,w,h){
 	return peaks;
 	*/
 }
+SIFT_CALL = -1;
+SIFTDescriptor.fromPointGray = function(source, width, height, point){
+++SIFT_CALL;
+	var overallSize = 21;
+	var location = new V2D(point.x*width, point.y*height);
+	var radius = point.z;
+	var scale = overallSize/radius/2.0;
+	var descriptorScale = 1.5;
+	var overallScale = scale/descriptorScale;
+//overallScale = 1.0;
+	var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
+	// BLUR IMAGE
+	var blurred = ImageMat.getBlurredImage(area, overallSize,overallSize, 1.25);
+	// GET DERIVATIVES
+	var gradients = ImageMat.gradientVector(blurred, overallSize,overallSize);
+	//
 
+var show = area;
+img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
+d = new DOImage(img);
+d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
+GLOBALSTAGE.addChild(d);
+
+	var circleMask = ImageMat.circleMask(overallSize,overallSize);
+	var i;
+	var count = 0;
+	var mask;
+	var bins = Code.newArrayZeros(SIFTDescriptor.BIN_COUNT_OVERALL);
+	for(i=0; i<circleMask.length; ++i){
+		count += circleMask[i];
+		mask = circleMask[i];
+		if(mask!=0.0){
+			var v = gradients[i];
+			var m = v.length();
+			var a = V2D.angleDirection(V2D.DIRX,v);
+			a = Code.angleZeroTwoPi(a);
+			//console.log(a*180/Math.PI);
+			var bin = Math.min(Math.floor((a/Math.PI2) * SIFTDescriptor.BIN_COUNT_OVERALL),SIFTDescriptor.BIN_COUNT_OVERALL-1);
+			//console.log(a+" => "+bin);
+			bins[bin] += m;
+		}
+	}
+	// find peak direction
+	// parabola / interpolate estimate the best angle
+
+	// extract image at new orientation
+
+	// get 16 separate bins
+		// weight on gaussian
+
+	// convert bins into vector
+
+	// normalize vector ||m||
+
+	// clip high-value vector components
+
+	// normalize vector ||m||
+
+	//var s = "\n\nhold off;\nx=["+bins+"];\nbar(x);\n";
+	console.log(s)
+	var s = new SIFTDescriptor();
+	return s;
+}
 
 
 SIFTDescriptor.prototype.normalize = function(){

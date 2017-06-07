@@ -3063,6 +3063,10 @@ GLOBALSTAGE.addChild(d);
 	var originalGray = imageSource.gry();
 	var originalWid = imageSource.width();
 	var originalHei = imageSource.height();
+	var scaleStart = 1.0;
+	originalGray = ImageMat.extractRectSimple(originalGray, originalWid,originalHei, 0,0,originalWid,originalHei, originalWid*scaleStart,originalHei*scaleStart);
+	originalWid = scaleStart * originalWid;
+	originalHei = scaleStart * originalHei;
 
 	var imageCurrentGry = originalGray;
 	var imageCurrentWid = originalWid;
@@ -3080,7 +3084,7 @@ GLOBALSTAGE.addChild(d);
 	var differenceImages = [];
 var scaleSpaceImages = [];
 	for(i=0; i<octaveCount; ++i){
-		console.log("........"+i);
+		
 		var gaussianImages = [];
 		
 		for(j=0; j<gaussianCount; ++j){
@@ -3090,7 +3094,7 @@ var scaleSpaceImages = [];
 			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
 			imageCurrentGry = gaussianImage;
 			gaussianImages.push(gaussianImage);
-			console.log(gaussianSigma);
+			
 			// gaussian pyramid
 			if(gaussianImages.length==2){
 				var prevGauss = gaussianImages[0];
@@ -3099,7 +3103,7 @@ var scaleSpaceImages = [];
 				// differenceImage is wrong size for searching > upsample
 				var scaled = Math.pow(2,i);
 				//var differenceImageSame = differenceImage;
-				var differenceImageSame = ImageMat.getScaledImage(differenceImage,imageCurrentWid,imageCurrentHei, scaled, null, imageSource.width(),imageSource.height());
+				var differenceImageSame = ImageMat.getScaledImage(differenceImage,imageCurrentWid,imageCurrentHei, scaled, null, originalWid,originalHei);
 					differenceImageSame = differenceImageSame["value"];
 					differenceImages.push(differenceImageSame);
 				nextImage = gaussianImages.shift(); // on last iteration keep 2nd from top
@@ -3145,9 +3149,8 @@ var OFFX = CALLED_SIFT*originalWid;
 var OFFY = originalHei;
 img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, originalWid, originalHei);
 d = new DOImage(img);
-//d.matrix().scale(imageSource.width()/imageCurrentWid, imageSource.height()/imageCurrentHei);
 d.matrix().translate(OFFX, OFFY);
-GLOBALSTAGE.addChild(d);
+//GLOBALSTAGE.addChild(d);
 
 
 	// difference of gaussian pyramid
@@ -3160,9 +3163,9 @@ if(true){
 
 	var dogOffset = 1.0/(differenceGaussianCount*differenceGaussianCount);
 	// var dogScaleRange = 2^(octaveCount*gaussianCount);
-	extrema = Code.findExtrema3DVolume(differenceImages, imageSource.width(), imageSource.height());
-	var imageWidth = imageSource.width();
-	var imageHeight = imageSource.height();
+	extrema = Code.findExtrema3DVolume(differenceImages, originalWid,originalHei);
+	var imageWidth = originalWid;
+	var imageHeight = originalHei;
 	for(i=0; i<extrema.length; ++i){
 				var ext = extrema[i];
 				// // HESSIAN EDGE CHECK -- remove edges, keep points
@@ -3187,7 +3190,7 @@ if(true){
 					continue;
 				}
 				var hessianScore = tra*tra/det;
-				console.log(hessianScore+" < "+hessianThreshold)
+				//console.log(hessianScore+" < "+hessianThreshold)
 				if(hessianScore<hessianThreshold){
 					continue;
 				}
@@ -3197,7 +3200,7 @@ if(true){
 
 // or scale up the image to scale & do harris check
 					
-					var point = new V4D(ext.x/imageSource.width(), ext.y/imageSource.height(), Math.abs(ext.z)*1.0, 0);
+					var point = new V4D(ext.x/originalWid, ext.y/originalHei, Math.abs(ext.z)*1.0, 0);
 					var z = point.z;
 					point.z = (dogOffset + z*2)/2;
 					//console.log(z+" => "+point.z);
@@ -3246,10 +3249,10 @@ if(true){
 }else{
 	for(i=0; i<differenceImages.length; ++i){
 		var differenceImages = differenceImages[i];
-		var extrema = Code.findExtrema2DFloat(differenceImages, imageSource.width(), imageSource.height());
+		var extrema = Code.findExtrema2DFloat(differenceImages, originalWid,originalHei);
 		for(j=0; j<extrema.length; ++j){
 			var point = extrema[j];
-			point = new V3D(point.x/imageSource.width(), point.y/imageSource.height(), i);
+			point = new V3D(point.x/originalWid, point.y/originalHei, i);
 			siftPoints.push(point);
 		}
 	}
@@ -3261,6 +3264,19 @@ if(true){
 	// TODO: FLAT-CONTRAST TEST
 		// ...
 	//return goodPoints;
+	console.log("making sift points");
+	var originalGray = imageSource.gry();
+	var originalWid = imageSource.width();
+	var originalHei = imageSource.height();
+	for(i=0; i<siftPoints.length; ++i){
+		var point = siftPoints[i];
+		//console.log(point+"")
+		var s = SIFTDescriptor.fromPointGray(originalGray, originalWid,originalHei, point);
+		if(i>100){
+			break;
+		}
+
+	}
 	return siftPoints;
 }
 
