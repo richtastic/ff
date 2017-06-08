@@ -1193,7 +1193,17 @@ Code.arrayRandomItem = function(array){
 	var index = Math.floor(Math.random()*array.length);
 	return array[index];
 }
-
+Code.normalizeArray = function(array){ // L2 length
+	var length = 0;
+	var value, i, len = array.length;
+	for(i=0; i<len; ++i){
+		value = array[i];
+		length += value*value;
+	}
+	for(i=0; i<len; ++i){
+		array[i] = array[i]/length;
+	}
+}
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -1303,18 +1313,27 @@ Code.infoArray = function(array){
 	var element, arr, i, len = array.length;
 	var min = array[0];
 	var max = min;
-	var avg = 0;
+	var minIndex = 0;
+	var maxIndex = minIndex;
+	var total = 0;
 	for(i=0; i<len; ++i){
 		element = array[i];
-		avg += element;
-		min = Math.min(min, element);
-		max = Math.max(max, element);
+		total += element;
+		if(element<min){
+			min = element;
+			minIndex = i;
+		}
+		if(element>max){
+			max = element;
+			maxIndex = i;
+		}
 	}
+	var avg = 0;
 	if(len>0){
-		avg = avg / len;
+		avg = total / len;
 	}
 	var range = max - min;
-	return {"max":max, "min":min, "range":range, "mean":avg};
+	return {"max":max, "min":min, "range":range, "mean":avg, "total":total, "indexMax":maxIndex, "indexMin":minIndex};
 }
 // ------------------------------------------------------------------------------------------ SIMULATED ARRAY 2D
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes
@@ -4974,20 +4993,34 @@ Code.sizeToFitRectInRect = function(widthItem,heightItem, widthContainer,heightC
 
 
 */
-Code.parabolaABCFromFocusDirectrix = function(focA,c){
+Code.parabolaABCFromFocusDirectrix = function(focA,c){ // ax^2 + bx + c
 	var a = focA.x, b = focA.y;
 	var A = 1/(2.0*(b-c));
 	var B = -2.0*a*A;
 	var C = (a*a + b*b - c*c)*A;
-	return {a:A,b:B,c:C};
-	//return [A,B,C];
+	return {"a":A,"b":B,"c":C};
 }
 Code.parabolaFocusDirectrixFromABC = function(A,B,C){
 	if(A==0){ return null; }
 	var h = -0.5*B/A;
 	var k = A*h*h + B*h + C;
 	var p = 0.25/A;
-	return {focus:new V2D(h,k+p), directrix:k-p};
+	return {"focus":new V2D(h,k+p), "directrix":k-p};
+}
+Code.parabolaABCFromPoints = function(x1,y1, x2,y2, x3,y3){
+	var den = (x1-x2)*(x1-x3)*(x2-x3);
+	var a = (x3*(y2-y1) + x2*(y1-y3) + x1*(y3-y2))/den;
+	var b = (x3*x3*(y1-y2) + x2*x2*(y3-y1) + x1*x1*(y2-y3))/den;
+	var c = (x2*x3*(x2-x3)*y1 + x3*x1*(x3-x1)*y2 + x1*x2*(x1-x2)*y3)/den;
+	//Code.inverse3x3(arr, a,b,c,d,e,f,g,h,i);
+	return {"a":a,"b":b,"c":c};
+}
+Code.parabolaVertexFromABC = function(a,b,c){ // peak/min
+	var parabola = Code.parabolaFocusDirectrixFromABC(a,b,c);
+	var focus = parabola["focus"];
+	var x = focus.x;
+	var y = a*x*x + b*x + c;
+	return new V2D(x, y);
 }
 Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	var a1 = focA.x, b1 = focA.y, c1 = dirA;
@@ -5036,7 +5069,7 @@ Code.intersectionParabolas = function(focA,dirA, focB,dirB){
 	intBy = A1*intBx*intBx + B1*intBx + C1;
 	return [new V2D(intAx,intAy), new V2D(intBx,intBy)];
 }
-Code.pointAboveParabola = function(focus,directrix, point){
+Code.isPointAboveParabola = function(focus,directrix, point){
 	var abc = Code.parabolaABCFromFocusDirectrix(focus,directrix);
 	var a = abc[0], b = abc[1],c = abc[2];
 	var yVal = a*point.x*point.x + b*point.x + c;

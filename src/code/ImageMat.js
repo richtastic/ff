@@ -1500,9 +1500,7 @@ ImageMat.costToMove = function(channel, wid,hei, dx,dy, sum){ // assume image st
 ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
 	var cX = (imageWidth-1)/2.0;
 	var cY = (imageHeight-1)/2.0;
-	// var sigmaX = cX/Math.sqrt(2); sigmaX = 2.0*sigmaX*sigmaX;
-	// var sigmaY = cY/Math.sqrt(2); sigmaY = 2.0*sigmaY*sigmaY;
-	var sigmaX = cX/2; sigmaX = 2.0*sigmaX*sigmaX;
+	var sigmaX = cX/2; sigmaX = 2.0*sigmaX*sigmaX; // TODO: THIS LOOKS WRONG
 	var sigmaY = cY/2; sigmaY = 2.0*sigmaY*sigmaY;
 	var i, j, x, y, index, value;
 	for(j=0; j<imageHeight; ++j){
@@ -1515,18 +1513,28 @@ ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
 	}
 	return {"value":image, "width":imageWidth, "height":imageHeight};
 }
-/*
-width = 101;
-center = width*0.5;
-sigma = center/2; % 2 not enough
-ss = 2.0 * sigma * sigma;
-x = [0:1:width-1];
-sigs = exp( -(x-center).^2 /ss );
-sigs
-2: 0.13534
-3: 0.011109
-4: 3.3546e-04
-*/
+
+ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY){ // area ~ 1
+	if(sigmaX===undefined){ // 3sigma = 99.7%
+		sigmaX = Math.min(width,height)*0.5/3.0;
+		sigmaX = sigmaX;
+	}
+	sigmaY = sigmaY!==undefined ? sigmaY : sigmaX;
+	var cX = (width-1)*0.5;
+	var cY = (height-1)*0.5;
+	var prefix = 1.0/(2.0*Math.PI*sigmaX*sigmaY);
+	var divX = 2.0*sigmaX*sigmaX;
+	var divY = 2.0*sigmaY*sigmaY;
+	var i, j, x, y, index, value;
+	var image = [];
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			index = j*width + i;
+			image[index] = prefix * Math.exp( -( Math.pow(i-cX,2)/divX  +  Math.pow(j-cY,2)/divY ) );
+		}
+	}
+	return image;
+}
 
 ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ?
 	var i, j;
@@ -2611,7 +2619,11 @@ ImageMat.extractRectFromPointSimple = function(source, width,height, x,y,scale, 
 	var sY = y - h*0.5;
 	return ImageMat.extractRectSimple(source, width,height, sX,sY,w,h, wid,hei);
 }
-
+ImageMat.extractRectFromMatrix = function(source, width,height, newWidth,newHeight, matrix){
+	// TODO: VERIFY ?
+	// source,sW,sH, wid,hei, projection, interpolationType
+	return ImageMat.extractRectWithProjection(source, width,height, newWidth,newHeight, matrix);
+}
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 	var newWid = wid+left+right, newHei = hei+top+bot;
 	var newLen = newWid*newHei;

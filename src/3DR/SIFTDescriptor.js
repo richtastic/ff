@@ -21,6 +21,7 @@ function SIFTDescriptor(){
 // 	}
 // 	return SIFTDescriptor._gauss;
 // }
+
 SIFTDescriptor.compare = function(descA,descB){ // L1 distance
 	var i, score = 0;
 	var vectorA = descA.vector();
@@ -91,10 +92,11 @@ d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(ov
 GLOBALSTAGE.addChild(d);
 
 	var circleMask = ImageMat.circleMask(overallSize,overallSize);
-	var i;
+	var i, j, k;
 	var count = 0;
 	var mask;
-	var bins = Code.newArrayZeros(SIFTDescriptor.BIN_COUNT_OVERALL);
+	var totalBinCount = SIFTDescriptor.BIN_COUNT_OVERALL;
+	var bins = Code.newArrayZeros(totalBinCount);
 	for(i=0; i<circleMask.length; ++i){
 		count += circleMask[i];
 		mask = circleMask[i];
@@ -104,39 +106,132 @@ GLOBALSTAGE.addChild(d);
 			var a = V2D.angleDirection(V2D.DIRX,v);
 			a = Code.angleZeroTwoPi(a);
 			//console.log(a*180/Math.PI);
-			var bin = Math.min(Math.floor((a/Math.PI2) * SIFTDescriptor.BIN_COUNT_OVERALL),SIFTDescriptor.BIN_COUNT_OVERALL-1);
+			var bin = Math.min(Math.floor((a/Math.PI2)*totalBinCount),totalBinCount-1);
 			//console.log(a+" => "+bin);
 			bins[bin] += m;
 		}
 	}
 	// find peak direction
+	var info = Code.infoArray(bins);
+	var binMaxValue = info["max"];
+	var binMaxIndex = info["indexMax"];
+	//console.log(binMaxIndex+" : "+binMaxValue);
 	// parabola / interpolate estimate the best angle
-
+	var x0 = (binMaxIndex-1)%totalBinCount; x0 = (x0>=0) ? x0 : (x0+totalBinCount);
+	var x1 = binMaxIndex;
+	var x2 = (binMaxIndex+1)%totalBinCount;
+	var y0 = bins[x0];
+	var y1 = bins[x1];
+	var y2 = bins[x2];
+	//console.log(x0,y0," ",x1,y1," ",x2,y2," ")
+	var parabola = Code.parabolaABCFromPoints(-1,y0, 0,y1, 1,y2);
+	var binAngle = Math.PI2/totalBinCount;
+	var binHalfAngle = binAngle*0.5;
+	var angle0 = x0*binAngle + binHalfAngle;
+	var angle1 = x1*binAngle + binHalfAngle;
+	var angle2 = x2*binAngle + binHalfAngle;
+	//console.log(parabola)
+	var parabolaPeak = Code.parabolaVertexFromABC(parabola["a"],parabola["b"],parabola["c"]);
+	//console.log(parabolaPeak)
+	// interpolate to find optimum orientation
+	var optimalOrientation = 0.0;
+	if(angle0>angle1){
+		angle0 -= Math.PI2;
+	}
+	if(angle2<angle1){
+		angle2 += Math.PI2;
+	}
+	if(parabolaPeak.x<0){ // left 2
+		var per = 1 + parabolaPeak.x;
+		var pm1 = 1 - per;
+		optimalOrientation = pm1*angle0 + per*angle1;
+	}else{ // right 2
+		var per = parabolaPeak.x;
+		var pm1 = 1 - per;
+		optimalOrientation = pm1*angle1 + per*angle2;
+	}
+	//console.log("optimalOrientation: "+optimalOrientation+" ["+angle0+"|"+angle1+"|"+angle2+"]");
 	// extract image at new orientation
-
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix, optimalOrientation);
+		matrix = Matrix.transform2DTranslate(matrix, location.x,location.y);
+		matrix = Matrix.transform2DScale(matrix, overallScale);
+	var insideSet = 16;
+	var padding = 2;
+	var outsideSet = insideSet + 2*padding;
+	// GET IMAGE
+	area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
+	// BLUR IMAGE
+	blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, 1.25);
+	// GET DERIVATIVES
+	gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet);
+	// UNPAD
+	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
+	area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);
+	
 	// get 16 separate bins
-		// weight on gaussian
+	//circleMask = ImageMat.circleMask(insideSet,insideSet);
+	var gaussianMask = ImageMat.gaussianMask(insideSet,insideSet);
+	var bins = [];
+	var binCount = 8;
+	// for each grid component: 4x4 = 16
+	for(j=0; j<4; ++j){
+		for(i=0; i<4; ++i){
+			var bin = Code.newArrayZeros(binCount);
+			bins.push(bin);
+			for(jj=0; jj<4; ++jj){
+				for(ii=0; ii<4; ++ii){
+					var index = (j*4+jj)*insideSet + (i*4+ii);
+					var gradient = gradients[index];
+					//console.log(gradient);
+					var m = gradient.length();
+					var a = V2D.angleDirection(V2D.DIRX,gradient);
+						a = Code.angleZeroTwoPi(a);
+					var w = gaussianMask[index];// weight on gaussian
+					//console.log(m,w);
+					var b = Math.min(Math.floor((a/Math.PI2)*binCount),binCount-1);
+					bin[b] += m*w;
+				}
+			}
+			
+		}
+	}
 
 	// convert bins into vector
-
+	var vector = [];
+	//console.log(bins);
+	for(i=0; i<bins.length; ++i){
+		var bin = bins[i];
+		for(j=0; j<bin.length; ++j){
+			vector.push(bin[j]);
+		}
+	}
+	//console.log(vector);
 	// normalize vector ||m||
-
+	Code.normalizeArray(vector);
 	// clip high-value vector components
 
 	// normalize vector ||m||
 
 	//var s = "\n\nhold off;\nx=["+bins+"];\nbar(x);\n";
-	console.log(s)
+	//console.log(s)
 	var s = new SIFTDescriptor();
+	s.vector(vector);
 	return s;
 }
 
+SIFTDescriptor.prototype.vector = function(v){
+	if(v!==undefined){
+		this._vector = v;
+	}
+	return this._vector;
+}
 
 SIFTDescriptor.prototype.normalize = function(){
 	var i, len = this._vector.length;
 	var total = 0;
 	for(i=0; i<len ;++i){
-		total += this._vector[i];
+		total += this._vector[i]*this._vector[i];
 	}
 	if(total>0){
 		total = 1.0/total;

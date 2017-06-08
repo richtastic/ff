@@ -11,8 +11,15 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","SIFTDescriptor.js","Matching.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-
-
+	/*
+	var size = 100;
+	var mask = ImageMat.gaussianMask(size,size);
+	console.log(mask);
+	var info = Code.infoArray(mask);
+	console.log(info);
+	console.log(info.total);
+	return;
+	*/
 	var matching = new Matching();
 	return;
 
