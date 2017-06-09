@@ -13,6 +13,7 @@ function SIFTDescriptor(){
 	var totalBins = SIFTDescriptor.BIN_COUNT * perCell * perCell;
 	this._vector = Code.newArrayZeros(totalPixels);
 	this._orientationAngle = 0.0;
+	this._matches = [];
 }
 //SIFTDescriptor._gauss = null;
 // SIFTDescriptor.gaussian = function(){
@@ -27,10 +28,119 @@ SIFTDescriptor.compare = function(descA,descB){ // L1 distance
 	var vectorA = descA.vector();
 	var vectorB = descB.vector();
 	for(i=0; i<vectorA.length; ++i){
-		score += Math.abs(vectorA[i] - vectorB[i]);
+		score += Math.abs(vectorA[i] - vectorB[i]); // L1
+		//score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
 	}
+	// if(Code.isNaN(score)){
+	// 	console.log("compare: "+vectorA.length+" | "+vectorB.length+" = "+score);
+	// 	console.log(vectorA);
+	// 	console.log(vectorB);
+	// }
 	return score;
 }
+
+SIFTDescriptor._sortMatch = function(a, b){
+	return a.score < b.score ? -1 : 1;
+}
+
+SIFTDescriptor.match = function(listA, listB){
+	console.log("matching...");
+	var i, j;
+	var matches = [];
+	var matchesA = [];
+	var matchesB = [];
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = [];
+	}
+	for(i=0; i<listB.length; ++i){
+		matchesB[i] = [];
+	}
+	for(i=0; i<listA.length; ++i){
+		var descA = listA[i];
+		for(j=0; j<listB.length; ++j){
+			var descB = listB[j];
+			var score = SIFTDescriptor.compare(descA, descB);
+			var match = {"A":descA, "B":descB, "score":score};
+			matchesA[i].push(match);
+			matchesB[j].push(match);
+			matches.push(match);
+		}
+	}
+	// sort matches finally
+	matches = matches.sort(SIFTDescriptor._sortMatch);
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
+	}
+	for(i=0; i<listB.length; ++i){
+		matchesB[i] = matchesB[i].sort(SIFTDescriptor._sortMatch);
+	}
+	return {"matches":matches, "A":matchesA, "B":matchesB};
+}
+
+SIFTDescriptor.confidences = function(matchesA, matchesB){ // matches belonging to each feature
+	console.log("confidences...");
+	var totalMatches = [];
+	var i;
+	for(i=0; i<matchesA.length; ++i){
+		totalMatches.push({"feature":matchesA[i][0]["A"], "matches":matchesA[i], "confidence":SIFTDescriptor.confidence(matchesA[i]) });
+	}
+	for(i=0; i<matchesB.length; ++i){
+		totalMatches.push({"feature":matchesB[i][0]["B"], "matches":matchesB[i], "confidence":SIFTDescriptor.confidence(matchesB[i]) });
+	}
+	totalMatches = totalMatches.sort(SIFTDescriptor._sortConfidence);
+	return totalMatches;
+}
+SIFTDescriptor.matchesFromConfidences = function(confidences){
+	var i;
+	var matches = [];
+	var minimumConfidenceScore = 1.25;
+	for(i=0; i<confidences.length; ++i){
+		var confidence = confidences[i];
+		var feature = confidence["feature"];
+		var score = confidence["confidence"];
+
+		if(i>50 || score < minimumConfidenceScore){
+			break;
+		}
+
+		var matchings = confidence["matches"];
+		var match = matchings[0];
+		var featureA = null;
+		var featureB = null;
+		if(match["A"]==feature){
+			featureA = feature;
+			featureB = match["B"];
+		}else{
+			featureA = match["A"];
+			featureB = feature;
+		}
+
+		//var confA = 
+
+		var match = {"A":featureA, "B":featureB, "confidence":score};
+		matches.push(match);
+		
+	}
+	return matches;
+}
+SIFTDescriptor._sortConfidence = function(a, b){
+	return a["confidence"] > b["confidence"] ? -1 : 1;
+	//return SIFTDescriptor.confidence(a) > SIFTDescriptor.confidence(b);
+}
+// TODO: mutual confidence -- lowest of the 2, or some ratio ?
+SIFTDescriptor.confidence = function(matches){ // sorted matches list, higher confidence is better
+	if(matches.length>=2){
+		var match0 = matches[0];
+		var match1 = matches[1];
+		//console.log(match0.score,match1.score)
+		if(match0.score==0){
+			return 100;
+		}
+		return match1.score / match0.score; // smaller score is better, eg: 100/90
+	}
+	return 0;
+}
+
 SIFTDescriptor.findMaximumOrientations = function(Ix,Iy,w,h){
 	/*
 	var bW = bH = 16; // descriptor window size
@@ -75,8 +185,8 @@ SIFTDescriptor.fromPointGray = function(source, width, height, point){
 	var location = new V2D(point.x*width, point.y*height);
 	var radius = point.z;
 	var scale = overallSize/radius/2.0;
-	var descriptorScale = 1.5;
-	var overallScale = scale/descriptorScale;
+	var descriptorScale = 3.0;//2.0;//1.5;
+	var overallScale = scale/descriptorScale; // TODO: SHOULD THIS BE ADDITIVE ?
 //overallScale = 1.0;
 	var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
 	// BLUR IMAGE
@@ -85,11 +195,11 @@ SIFTDescriptor.fromPointGray = function(source, width, height, point){
 	var gradients = ImageMat.gradientVector(blurred, overallSize,overallSize);
 	//
 
-var show = area;
-img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
-d = new DOImage(img);
-d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
-GLOBALSTAGE.addChild(d);
+// var show = area;
+// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
+// d = new DOImage(img);
+// d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
+// GLOBALSTAGE.addChild(d);
 
 	var circleMask = ImageMat.circleMask(overallSize,overallSize);
 	var i, j, k;
@@ -151,16 +261,23 @@ GLOBALSTAGE.addChild(d);
 		optimalOrientation = pm1*angle1 + per*angle2;
 	}
 	//console.log("optimalOrientation: "+optimalOrientation+" ["+angle0+"|"+angle1+"|"+angle2+"]");
-	// extract image at new orientation
-	var matrix = new Matrix(3,3).identity();
-		matrix = Matrix.transform2DRotate(matrix, optimalOrientation);
-		matrix = Matrix.transform2DTranslate(matrix, location.x,location.y);
-		matrix = Matrix.transform2DScale(matrix, overallScale);
 	var insideSet = 16;
 	var padding = 2;
 	var outsideSet = insideSet + 2*padding;
+	// extract image at new orientation
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		matrix = Matrix.transform2DScale(matrix, overallScale);
+		matrix = Matrix.transform2DRotate(matrix, -optimalOrientation);
+		matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
+		matrix = Matrix.inverse(matrix);
 	// GET IMAGE
 	area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
+var show = area;
+img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, outsideSet, outsideSet);
+d = new DOImage(img);
+d.matrix().translate((SIFT_CALL%20)*(outsideSet+2),Math.floor(SIFT_CALL/20)*(outsideSet+2)+350);
+GLOBALSTAGE.addChild(d);
 	// BLUR IMAGE
 	blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, 1.25);
 	// GET DERIVATIVES
@@ -168,6 +285,12 @@ GLOBALSTAGE.addChild(d);
 	// UNPAD
 	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
 	area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);
+
+// var show = area;
+// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, insideSet, insideSet);
+// d = new DOImage(img);
+// d.matrix().translate((SIFT_CALL%20)*(insideSet+2),Math.floor(SIFT_CALL/20)*(insideSet+2)+350);
+// GLOBALSTAGE.addChild(d);
 	
 	// get 16 separate bins
 	//circleMask = ImageMat.circleMask(insideSet,insideSet);
@@ -190,6 +313,9 @@ GLOBALSTAGE.addChild(d);
 					var w = gaussianMask[index];// weight on gaussian
 					//console.log(m,w);
 					var b = Math.min(Math.floor((a/Math.PI2)*binCount),binCount-1);
+					if(Code.isNaN(m) || Code.isNaN(w)){
+						console.log("m: "+m+" w: "+w);
+					}
 					bin[b] += m*w;
 				}
 			}
@@ -199,32 +325,56 @@ GLOBALSTAGE.addChild(d);
 
 	// convert bins into vector
 	var vector = [];
+	var vectorSize = 0;
 	//console.log(bins);
 	for(i=0; i<bins.length; ++i){
 		var bin = bins[i];
 		for(j=0; j<bin.length; ++j){
-			vector.push(bin[j]);
+			if(Code.isNaN(bin[j])){
+				console.log("bin[j]: "+bin[j]);
+			}
+			var value = bin[j];
+			vectorSize += value;
+			vector.push(value);
 		}
 	}
 	//console.log(vector);
-	// normalize vector ||m||
-	Code.normalizeArray(vector);
-	// clip high-value vector components
+	if(vectorSize>0){
+		// normalize vector ||m||
+		Code.normalizeArray(vector);
+		// skew vector? vector = Math.pow(vector, 0.5) ?
+		vector = ImageMat.pow(vector,0.5);
+		Code.normalizeArray(vector);
 
-	// normalize vector ||m||
+		// clip high-value vector components
 
-	//var s = "\n\nhold off;\nx=["+bins+"];\nbar(x);\n";
-	//console.log(s)
-	var s = new SIFTDescriptor();
-	s.vector(vector);
-	return s;
+		// normalize vector ||m||
+
+		//var s = "\n\nhold off;\nx=["+bins+"];\nbar(x);\n";
+		//console.log(s)
+		var s = new SIFTDescriptor();
+		s.vector(vector);
+		s.point(point);
+		return s;
+	}else{
+		console.log("VECTOR SIZE IS ZERO: "+overallScale);
+	}
+	return null;
 }
+
 
 SIFTDescriptor.prototype.vector = function(v){
 	if(v!==undefined){
 		this._vector = v;
 	}
 	return this._vector;
+}
+
+SIFTDescriptor.prototype.point = function(p){
+	if(p!==undefined){
+		this._point = new V2D(p.x,p.y);
+	}
+	return this._point;
 }
 
 SIFTDescriptor.prototype.normalize = function(){

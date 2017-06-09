@@ -1200,8 +1200,10 @@ Code.normalizeArray = function(array){ // L2 length
 		value = array[i];
 		length += value*value;
 	}
-	for(i=0; i<len; ++i){
-		array[i] = array[i]/length;
+	if(length>0){
+		for(i=0; i<len; ++i){
+			array[i] = array[i]/length;
+		}
 	}
 }
 // ------------------------------------------------------------------------------------------ ARRAY 2D

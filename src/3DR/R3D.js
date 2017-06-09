@@ -3144,13 +3144,13 @@ for(j=0; j<originalHei; ++j){
 		maxScaleValues[index] = maxScaleValues[index][1];
 	}
 }
-var show = ImageMat.getNormalFloat01(maxScaleValues);
-var OFFX = CALLED_SIFT*originalWid;
-var OFFY = originalHei;
-img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, originalWid, originalHei);
-d = new DOImage(img);
-d.matrix().translate(OFFX, OFFY);
-//GLOBALSTAGE.addChild(d);
+// var show = ImageMat.getNormalFloat01(maxScaleValues);
+// var OFFX = CALLED_SIFT*originalWid;
+// var OFFY = originalHei;
+// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, originalWid, originalHei);
+// d = new DOImage(img);
+// d.matrix().translate(OFFX, OFFY);
+//. GLOBALSTAGE.addChild(d);
 
 
 	// difference of gaussian pyramid
@@ -3263,21 +3263,26 @@ if(true){
 	//goodPoints = siftPoints
 	// TODO: FLAT-CONTRAST TEST
 		// ...
-	//return goodPoints;
-	console.log("making sift points");
+	return siftPoints;
+}
+
+R3D.pointsToSIFT = function(imageSource, points){
+	console.log("making sift points..");
 	var originalGray = imageSource.gry();
 	var originalWid = imageSource.width();
 	var originalHei = imageSource.height();
-	for(i=0; i<siftPoints.length; ++i){
-		var point = siftPoints[i];
-		//console.log(point+"")
+	var features = [];
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
 		var s = SIFTDescriptor.fromPointGray(originalGray, originalWid,originalHei, point);
-		if(i>100){
-			break;
+		if(s){
+			features.push(s);
 		}
-
+		// if(i>100){
+		// 	break;
+		// }
 	}
-	return siftPoints;
+	return features;
 }
 
 R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){

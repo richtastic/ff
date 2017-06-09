@@ -21,9 +21,9 @@ function Matching(){
 	//var imageList = ["sunflowers_real.png"];
 	//var imageList = ["sunflowers.png"];
 	//var imageList = ["sunflowers.png","sunflowers.png"];
-	var imageList = ["caseStudy1-0.jpg"];//, "caseStudy1-9.jpg"];
+	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
-	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
@@ -59,19 +59,46 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
 	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
 
-	// var imageSourceB = images[1];
-	// var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
-	// var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+	var imageSourceB = images[1];
+	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
 // var featuresA = R3D.HarrisExtract(imageMatrixA);
 // var featuresB = R3D.HarrisExtract(imageMatrixB);
 
 var featuresA = R3D.SIFTExtract(imageMatrixA);
-//var featuresB = R3D.SIFTExtract(imageMatrixB);
-//console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
-var featuresB = [];
-console.log("featuresA: "+featuresA.length);
+var featuresB = R3D.SIFTExtract(imageMatrixB);
+var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
+var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
+// featuresA["features"];
+// var siftB = featuresB["features"];
+// 	featuresA = featuresA["points"];
+// 	featuresB = featuresB["points"];
+
+console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+
+
+var matching = SIFTDescriptor.match(siftA, siftB);
+//console.log(matching);
+var matches = matching["matches"];
+var matchesA = matching["A"];
+var matchesB = matching["B"];
+
+var siftMatches = matchesA.length;
+
+//var confidences = SIFTDescriptor.confidences(matchesA,matchesB);
+var confidences = SIFTDescriptor.confidences(matchesA,[]);
+var bestMatches = SIFTDescriptor.matchesFromConfidences(confidences);
+console.log(bestMatches);
+
+
+this.drawMatches(bestMatches, 0,0, 400,0);
+
+console.log("done");
+
+//var featuresB = [];
+//console.log("featuresA: "+featuresA.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
 	var features = lists[f];
@@ -2010,12 +2037,24 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 		var score = match.score;
 		var pA = match.pointA;
 		var pB = match.pointB;
-//console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
+		if(pA==undefined){
+			pA = match["A"].point();
+			pB = match["B"].point();
+			score = match["confidence"];
+			pA = pA.copy();
+			pB = pB.copy();
+			pA.x *= 400;
+			pA.y *= 300;
+			pB.x *= 400;
+			pB.y *= 300;
+		}
+console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
 		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
 		// var percem1 = 1 - percent;
 		// var p = locations[i];
 		//var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
-		var color = 0x66000000;
+		//var color = 0x66000000;
+		var color = 0x9900FF00;
 		
 		// A
 		c = new DO();
