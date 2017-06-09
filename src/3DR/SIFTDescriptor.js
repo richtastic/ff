@@ -60,7 +60,7 @@ SIFTDescriptor.match = function(listA, listB){
 		for(j=0; j<listB.length; ++j){
 			var descB = listB[j];
 			var score = SIFTDescriptor.compare(descA, descB);
-			var match = {"A":descA, "B":descB, "score":score};
+			var match = {"A":descA, "B":descB, "score":score, "a":i, "b":j};
 			matchesA[i].push(match);
 			matchesB[j].push(match);
 			matches.push(match);
@@ -93,7 +93,7 @@ SIFTDescriptor.confidences = function(matchesA, matchesB){ // matches belonging 
 SIFTDescriptor.matchesFromConfidences = function(confidences){
 	var i;
 	var matches = [];
-	var minimumConfidenceScore = 1.25;
+	var minimumConfidenceScore = 1.05;
 	for(i=0; i<confidences.length; ++i){
 		var confidence = confidences[i];
 		var feature = confidence["feature"];
@@ -184,10 +184,9 @@ SIFTDescriptor.fromPointGray = function(source, width, height, point){
 	var overallSize = 21;
 	var location = new V2D(point.x*width, point.y*height);
 	var radius = point.z;
-	var scale = overallSize/radius/2.0;
-	var descriptorScale = 3.0;//2.0;//1.5;
-	var overallScale = scale/descriptorScale; // TODO: SHOULD THIS BE ADDITIVE ?
-//overallScale = 1.0;
+	var descriptorScale = 8.0; // increase window to N * radius
+	var ratioSize = descriptorScale * (radius/2.0);
+	var overallScale = overallSize/ratioSize;
 	var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
 	// BLUR IMAGE
 	var blurred = ImageMat.getBlurredImage(area, overallSize,overallSize, 1.25);
@@ -195,11 +194,11 @@ SIFTDescriptor.fromPointGray = function(source, width, height, point){
 	var gradients = ImageMat.gradientVector(blurred, overallSize,overallSize);
 	//
 
-// var show = area;
-// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
-// d = new DOImage(img);
-// d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
-// GLOBALSTAGE.addChild(d);
+var show = area;
+img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
+d = new DOImage(img);
+d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
+GLOBALSTAGE.addChild(d);
 
 	var circleMask = ImageMat.circleMask(overallSize,overallSize);
 	var i, j, k;
@@ -273,11 +272,11 @@ SIFTDescriptor.fromPointGray = function(source, width, height, point){
 		matrix = Matrix.inverse(matrix);
 	// GET IMAGE
 	area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
-var show = area;
-img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, outsideSet, outsideSet);
-d = new DOImage(img);
-d.matrix().translate((SIFT_CALL%20)*(outsideSet+2),Math.floor(SIFT_CALL/20)*(outsideSet+2)+350);
-GLOBALSTAGE.addChild(d);
+// var show = area;
+// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, outsideSet, outsideSet);
+// d = new DOImage(img);
+// d.matrix().translate((SIFT_CALL%20)*(outsideSet+2),Math.floor(SIFT_CALL/20)*(outsideSet+2)+350);
+// GLOBALSTAGE.addChild(d);
 	// BLUR IMAGE
 	blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, 1.25);
 	// GET DERIVATIVES
@@ -355,13 +354,66 @@ GLOBALSTAGE.addChild(d);
 		var s = new SIFTDescriptor();
 		s.vector(vector);
 		s.point(point);
+		s._orientationAngle = optimalOrientation;
+		s._overallScale = ratioSize;//radius;
 		return s;
 	}else{
 		console.log("VECTOR SIZE IS ZERO: "+overallScale);
 	}
 	return null;
 }
+SIFTDescriptor.prototype.visualize = function(imageSource, displaySize){
+	var sourceWidth = imageSource.width();
+	var sourceHeight = imageSource.height();
+	var size = this._overallScale;
+	var angle = this._orientationAngle;
+	var point = this.point();
+	var location = new V2D(point.x*sourceWidth, point.y*sourceHeight);
+	var overallScale = displaySize/size;
+	//console.log("overallScale: "+overallScale);
+	var halfSize = displaySize*0.5;
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		matrix = Matrix.transform2DScale(matrix, overallScale);
+		matrix = Matrix.transform2DRotate(matrix, -angle);
+		matrix = Matrix.transform2DTranslate(matrix, halfSize, halfSize);
+		matrix = Matrix.inverse(matrix);
+	// GET IMAGE
+	var source = imageSource.gry();
+	var width = imageSource.width();
+	var height = imageSource.height();
+	var area = ImageMat.extractRectFromMatrix(source, width,height, displaySize,displaySize, matrix);
+	var show = area;
+	img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, displaySize, displaySize);
+	
 
+	var display = new DO();
+	var image = new DOImage(img);
+	//var image = new DO();
+		//image.matrix().translate(displaySize*0.5,displaySize*0.5);
+	var outline = new DO();
+		display.addChild(image);
+		display.addChild(outline);
+	var color = 0xFF00FF00;
+	var c = new DO();
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(0,0, displaySize*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(displaySize*0.5,displaySize*0.5);
+		outline.addChild(c);
+	var d = new DO();
+		d.graphics().setLine(2.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(Math.cos(angle)*displaySize*0.5,Math.sin(angle)*displaySize*0.5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(displaySize*0.5,displaySize*0.5);
+		outline.addChild(d);
+	return display;
+}
 
 SIFTDescriptor.prototype.vector = function(v){
 	if(v!==undefined){
@@ -390,6 +442,44 @@ SIFTDescriptor.prototype.normalize = function(){
 		}
 	}
 }
+
+SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA,matchesB){
+	console.log("crossMatches");
+	var same = [];
+	var i, j;
+	for(i=0; i<allMatches.length; ++i){
+		// var matches = matchesA[i];
+		// for(j=0; j<matches.length; ++j){
+			var match = allMatches[i];
+			var a = match["a"];
+			var b = match["b"];
+			var A = featuresA[a];
+			var B = featuresB[b];
+			var matchedA = matchesA[a];
+			var matchedB = matchesB[b];
+			var matchA0 = matchedA[0];
+			var matchB0 = matchedB[0];
+			if(matchA0["b"]==b && matchB0["a"]==a){
+				var minConfidence = 1.05;
+				var confidenceA = SIFTDescriptor.confidence(matchedA);
+				var confidenceB = SIFTDescriptor.confidence(matchedB);
+				var confidence = (confidenceA + confidenceB) * 0.5;
+				console.log("FOUND MATCHING: "+a+" <=> "+b+" @ "+confidenceA+" | "+confidenceB+" score: "+match.score);
+				//if(confidence>1.01){
+				if(confidenceA>=minConfidence && confidenceB >= minConfidence){
+					match["confidence"] = Math.min(confidenceA,confidenceB);
+					same.push(match);
+				}
+			}
+		//}
+	}
+	same = same.sort(function(a,b){
+		return a["confidence"] > b["confidence"] ? -1 : 1;
+	});
+	same = Code.copyArray(same,0,50);
+	return same;
+}
+
 /*
 SIFTDescriptor.prototype.fromGradients = function(Ix,Iy,w,h){
 	var gauss = SIFTDescriptor.gaussian();

@@ -3319,6 +3319,7 @@ for(i=0; i<scaleCount; ++i){
 var cornersStack = [];
 	for(k=0;k<scaleCount;++k){
 		var currentScale = scales[k];
+			currentScale = currentScale;
 		OFFX += imageSourceWidth*displayScale;
 		OFFY = (imageSourceHeight*1.0)*HARRIS_CALL;
 		
@@ -3377,16 +3378,14 @@ cornersStack.push(cornersSame);
 		*/
 		
 var currentScale = imageSourceWidth/imageWidth;
-		var cornersX = ImageMat.getNormalFloat01(corners);
-		//ImageMat.pow(corners,0.1);
-		ImageMat.pow(cornersX,0.5);
-		var heat = ImageMat.heatImage(cornersX, imageWidth, imageHeight, true);
-		
-		img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
-		d = new DOImage(img);
-		d.matrix().scale(displayScale*currentScale);
-		d.matrix().translate(OFFX, OFFY);
-		GLOBALSTAGE.addChild(d);
+		//var cornersX = ImageMat.getNormalFloat01(corners);
+		// ImageMat.pow(cornersX,0.5);
+		// var heat = ImageMat.heatImage(cornersX, imageWidth, imageHeight, true);
+		// img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
+		// d = new DOImage(img);
+		// d.matrix().scale(displayScale*currentScale);
+		// d.matrix().translate(OFFX, OFFY);
+		// GLOBALSTAGE.addChild(d);
 
 if(true){
 
@@ -3395,12 +3394,27 @@ if(true){
 				for(var e=0; e<extrema.length; ++e){
 					var ext = extrema[e];
 					//if(Math.abs(ext.z)>0.5){ // moveany - 
-					if(Math.abs(ext.z)>0.00001){ // corner - restrictive: 0.5, lenient: 0.1
+					if(Math.abs(ext.z)>0.000001){ // corner - restrictive: 0.0001, lenient: 0.000001
 						// var hessianScore = hessianScores[ Math.floor(ext.y*1.0)*imageWidth + Math.floor(ext.x*1.0) ];
 						// hessianThreshold = 1.0;
 						// if (hessianScore > hessianThreshold) { // edge threshold
-							var point = new V3D(ext.x/imageWidth, ext.y/imageHeight, currentScale);
-							cornerPoints.push(point);
+							
+
+// this scale is horribly wrong
+							var radiusScale = currentScale;
+
+							// 0.5, 0.87, 1.5, 2.6, 4.6, 8
+
+							radiusScale = currentScale * 4.0; // area aound corner  ~ window
+
+							var point = new V3D(ext.x/imageWidth, ext.y/imageHeight, radiusScale);
+
+
+							// drop items too far outside of range
+							var edgeLimit = 0.05;
+							if(edgeLimit<=point.x && point.x<=(1.0-edgeLimit) && edgeLimit<=point.y && point.y<=(1.0-edgeLimit)){
+								cornerPoints.push(point);	
+							}
 						//}
 					}
 					

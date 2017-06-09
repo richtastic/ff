@@ -22,8 +22,8 @@ function Matching(){
 	//var imageList = ["sunflowers.png"];
 	//var imageList = ["sunflowers.png","sunflowers.png"];
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
-	//var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
-	var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
+	var imageList = ["caseStudy1-29.jpg", "caseStudy1-9.jpg"]; // for testing bigger scale differences
+	//var imageList = ["caseStudy1-29.jpg", "large.png"]; // for testing bigger scale differences
 	//var imageList = ["caseStudy1-29.jpg", "stretch.png"]; // for testing bigger scale differences
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
@@ -63,44 +63,20 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+// CORNER SCALE SPACE
+var featuresA = R3D.HarrisExtract(imageMatrixA);
+var featuresB = R3D.HarrisExtract(imageMatrixB);
+// SIFT SCALE SPACE
+// var featuresA = R3D.SIFTExtract(imageMatrixA);
+// var featuresB = R3D.SIFTExtract(imageMatrixB);
 
-// var featuresA = R3D.HarrisExtract(imageMatrixA);
-// var featuresB = R3D.HarrisExtract(imageMatrixB);
-
-var featuresA = R3D.SIFTExtract(imageMatrixA);
-var featuresB = R3D.SIFTExtract(imageMatrixB);
-var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
-var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
-// featuresA["features"];
-// var siftB = featuresB["features"];
-// 	featuresA = featuresA["points"];
-// 	featuresB = featuresB["points"];
-
-console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
-
-
-var matching = SIFTDescriptor.match(siftA, siftB);
-//console.log(matching);
-var matches = matching["matches"];
-var matchesA = matching["A"];
-var matchesB = matching["B"];
-
-var siftMatches = matchesA.length;
-
-//var confidences = SIFTDescriptor.confidences(matchesA,matchesB);
-var confidences = SIFTDescriptor.confidences(matchesA,[]);
-var bestMatches = SIFTDescriptor.matchesFromConfidences(confidences);
-console.log(bestMatches);
-
-
-this.drawMatches(bestMatches, 0,0, 400,0);
-
-console.log("done");
+// SHOW POINTS
 
 //var featuresB = [];
 //console.log("featuresA: "+featuresA.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
+break;
 	var features = lists[f];
 	for(k=0; k<features.length; ++k){
 		var point = features[k];
@@ -120,6 +96,64 @@ for(var f=0; f<lists.length; ++f){
 	}
 }
 
+//return;
+
+
+
+// CONTINUE TO CREATE FEATURES:
+
+var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
+var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
+// featuresA["features"];
+// var siftB = featuresB["features"];
+// 	featuresA = featuresA["points"];
+// 	featuresB = featuresB["points"];
+
+console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+
+
+// ASSIGNMENT ?
+
+var matching = SIFTDescriptor.match(siftA, siftB);
+//console.log(matching);
+var matches = matching["matches"];
+var matchesA = matching["A"];
+var matchesB = matching["B"];
+
+var siftMatches = matchesA.length;
+
+//var confidences = SIFTDescriptor.confidences(matchesA,matchesB);
+/*
+var confidences = SIFTDescriptor.confidences(matchesA,[]);
+var bestMatches = SIFTDescriptor.matchesFromConfidences(confidences);
+*/
+
+var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
+console.log(bestMatches);
+
+
+this.drawMatches(bestMatches, 0,0, 400,0);
+
+
+// VISUALIZE TOP MATCHES
+var displaySize = 100;
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var featureA = match["A"];
+	var featureB = match["B"];
+	var vizA = featureA.visualize(imageMatrixA, displaySize);
+	var vizB = featureB.visualize(imageMatrixB, displaySize);
+	vizA.matrix().translate(100,300 + m*displaySize);
+	vizB.matrix().translate(100+displaySize,300 + m*displaySize);
+	GLOBALSTAGE.addChild(vizA);
+	GLOBALSTAGE.addChild(vizB);
+	if(m>=5){
+		break;
+	}
+}
+
+
+console.log("done");
 return;
 
 
@@ -2040,7 +2074,8 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 		if(pA==undefined){
 			pA = match["A"].point();
 			pB = match["B"].point();
-			score = match["confidence"];
+			//score = match["confidence"];
+			score = match["score"];
 			pA = pA.copy();
 			pB = pB.copy();
 			pA.x *= 400;

@@ -433,11 +433,13 @@ FEEDBACK:
 
 
 TODO:
-- RETRY CORNER SCALE SPACE -- is it just there are too many points?
+x RETRY CORNER SCALE SPACE -- is it just there are too many points?
 - SIFT POINTS ARE NOT CONSISTENT
-- TRY USING SIFT SCAPE SPACE MAXIMA (with blur) AS CORNER SPACE SCALE SIZE
-- 
-
+- BETTER 
+- TRY USING SIFT SCAPE SPACE MAXIMA (with blur) AS CORNER SPACE SCALE SIZE -- would need to possibly remove duplicated corner-detected-points ?
+- SOLVE USING ASSIGNMENT PROBLEM
+- RGB vectors
+- IDENTIFY ASYMM SCALING / DIRECTION
 
 
 TODO: CORNER SCALE SPACE
