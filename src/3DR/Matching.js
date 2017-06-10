@@ -73,9 +73,7 @@ var featuresB = R3D.HarrisExtract(imageMatrixB);
 
 // SHOW POINTS
 //var featuresB = [];
-
 console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
-
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
 //break;
@@ -85,7 +83,7 @@ for(var f=0; f<lists.length; ++f){
 		//console.log(""+point)
 			var x = point.x * imageMatrixA.width();
 			var y = point.y * imageMatrixA.height();
-			var z = point.z + 0.0;
+			var z = point.z;
 		var c = new DO();
 			color = 0xFFFF0000;
 			c.graphics().setLine(0.50, color);
@@ -114,6 +112,23 @@ var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 console.log("siftA: "+siftA.length+" | "+"siftB: "+siftB.length);
 
 
+// visualize features in place
+var lists = [[siftA,imageMatrixA],[siftA,imageMatrixB]];
+var offset = new V2D();
+for(var f=0; f<lists.length; ++f){
+break;
+	var features = lists[f][0];
+	var imageMatrix = lists[f][1];
+	for(k=0; k<features.length; ++k){
+		var feature = features[k];
+		var display = feature.visualizeInSitu(imageMatrix, offset);
+			GLOBALSTAGE.addChild(display);
+	}
+	offset.x += imageMatrix.width();
+}
+
+
+
 var displaySize = 50;
 var maxDisp = Math.min(siftA.length, 10);
 for(m=0; m<maxDisp; ++m){
@@ -126,7 +141,7 @@ for(m=0; m<maxDisp; ++m){
 }
 
 
-return;
+// return;
 
 
 // ASSIGNMENT ?
@@ -147,7 +162,7 @@ var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matc
 console.log("crossMatches: "+bestMatches.length);
 
 
-this.drawMatches(bestMatches, 0,0, 400,0);
+//this.drawMatches(bestMatches, 0,0, 400,0);
 
 // VISUALIZE TOP MATCHES
 var displaySize = 50;
@@ -166,7 +181,7 @@ for(m=0; m<bestMatches.length; ++m){
 	}
 }
 
-//return;
+// return;
 
 
 // RANSAC PREP
@@ -176,8 +191,8 @@ for(m=0; m<bestMatches.length; ++m){
 	var match = bestMatches[m];
 	var A = match["A"];
 	var B = match["B"];
-	pointsA.push( A.point().scale(400,300) );
-	pointsB.push( B.point().scale(400,300) );
+	pointsA.push( A.point().copy().scale(400,300) );
+	pointsB.push( B.point().copy().scale(400,300) );
 }
 
 // RANSAC
@@ -189,12 +204,66 @@ var ransacMatches = ransac["matches"];
 var matrixFfwd = ransac["F"];
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
+console.log(matrixFfwd+"");
+
+/*
+var matrixFfwd = new Matrix(3,3).fromArray([
+	3.7154E-3,  2.1437E-3, -7.7814E+0,
+	7.8342E-3,  7.9840E-3, -6.9009E+0, 
+	2.4358E+0,  3.5105E+0,  6.7593E+2,]);
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+  5.0406E-5  1.4173E-4 -1.3428E-2 ; 
+  -5.4788E-5  2.3924E-5  1.7197E-2 ; 
+  -1.6119E-2 -3.8469E-2  4.3942E+0 ; 
+
+*/
+
+
+//this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
+
+// return;
+
+// only do matches within probable distance
+matching = SIFTDescriptor.matchF(siftA, siftB, imageMatrixA,imageMatrixB, matrixFfwd, matrixFrev);
+var matches = matching["matches"];
+var matchesA = matching["A"];
+var matchesB = matching["B"];
+console.log("matches: "+matches.length);
+
+var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
+console.log("crossMatches: "+bestMatches.length);
+//bestMatches = Code.copyArray(matches,0,50);
+this.drawMatches(bestMatches, 0,0, 400,0);
+
+
+
+// RANSAC 2
+
+
+// RANSAC PREP
+var pointsA = [];
+var pointsB = [];
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var A = match["A"];
+	var B = match["B"];
+	pointsA.push( A.point().copy().scale(400,300) );
+	pointsB.push( B.point().copy().scale(400,300) );
+}
+
+// RANSAC
+console.log("RANSAC");
+var ransac = R3D.fundamentalRANSACFromPoints(pointsA, pointsB, 1.5);
+var ransacMatches = ransac["matches"];
+	pointsA = ransacMatches[0];
+	pointsB = ransacMatches[1];
+var matrixFfwd = ransac["F"];
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+
 this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
 
-
-console.log("with basic ransac, now look for matches ONLY WITHIN SOME DISTANCE OF F LINE");
-
-SIFTDescriptor.matchF(siftA, siftB, matrixFfwd, matrixFrev);
 
 
 console.log("done");

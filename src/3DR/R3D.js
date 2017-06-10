@@ -3082,7 +3082,7 @@ GLOBALSTAGE.addChild(d);
 		
 		for(j=0; j<gaussianCount; ++j){
 			var currentGaussPercent = (j/(gaussianCount-1));
-		  	var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent*2 - 0.5);
+		  	var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent);
 			//var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent*2 - 0.5 );
 			console.log(i+" / "+j+" / "+gaussianCount+": "+gaussianSigma);
 			var gaussianImage = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gaussianSigma);
@@ -3283,8 +3283,8 @@ R3D.pointsToSIFT = function(imageSource, points){
 		var point = points[i];
 		//var s = SIFTDescriptor.fromPointGray(originalGray, originalWid,originalHei, point);
 		var s = SIFTDescriptor.fromPointGray(originalGray, originalRed,originalGrn,originalBlu, originalWid,originalHei, point);
-		if(s){
-			features.push(s);
+		if(s && s.length>0){
+			Code.arrayPushArray(features,s);
 		}
 	}
 	return features;
@@ -3320,7 +3320,7 @@ var scales = [];
 for(i=0; i<scaleCount; ++i){
 	scales[i] = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
 }
-console.log(scales+"")
+
 var cornersStack = [];
 	for(k=0;k<scaleCount;++k){
 		var currentScale = scales[k];
@@ -3399,7 +3399,7 @@ if(true){
 				for(var e=0; e<extrema.length; ++e){
 					var ext = extrema[e];
 					//if(Math.abs(ext.z)>0.5){ // moveany - 
-					if(Math.abs(ext.z)>0.000001){ // corner - restrictive: 0.0001, lenient: 0.000001
+					if(Math.abs(ext.z)>0.000005){ // corner - restrictive: 0.0001, lenient: 0.000001
 						// var hessianScore = hessianScores[ Math.floor(ext.y*1.0)*imageWidth + Math.floor(ext.x*1.0) ];
 						// hessianThreshold = 1.0;
 						// if (hessianScore > hessianThreshold) { // edge threshold
@@ -3532,8 +3532,7 @@ OFFY = 0;
 	}
 	testString += "\n";
 //	console.log(testString);
-
-	console.log("initial point count: "+cornerPoints.length);
+	
 	// remove overshadowed / duplicate points
 	/*
 	var duplicateCount = 0;

@@ -1588,7 +1588,7 @@ ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
 	cen.scale(1.0/totalWeight);
 	return cen;
 }
-ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean, maskOutCenter){
+ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mean, maskOutCenter){ // mean == center
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
 	var i, j, x, y, index, value;
 	var covXX = 0 ,covYY = 0, covXY = 0;
@@ -1601,10 +1601,10 @@ ImageMat.calculateCovarianceMatrix = function(image, imageWidth,imageHeight, mea
 			if(maskOutCenter){
 				mask = maskOutCenter[index];
 			}
-			if(!(mask!=0)){
+			if(mask==0){
 				continue;
 			}
-			value = image[index];
+			value = mask*image[index];
 			totalWeight += value;
 			x = i - mean.x;
 			y = j - mean.y;
@@ -1636,7 +1636,10 @@ ImageMat.prototype.calculateCentroid = function(){
 }
 // THIS IS MORE LIKE THE CENTRAL MOMENT
 ImageMat.prototype.calculateCovariance = function(mean, mask){
-	var matrix = ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean, mask);
+	return ImageMat.calculateCovarianceMatrix(this.gry(), this.width(), this.height(), mean, mask);
+}
+ImageMat.calculateCovariance = function(gry, width, height, mean, mask){
+	var matrix = ImageMat.calculateCovarianceMatrix(gry, width, height, mean, mask);
 	matrix = new Matrix(2,2,matrix);
 		//matrix = new Matrix(3,3,matrix);
 	var eigens = Matrix.eigenValuesAndVectors(matrix);
@@ -1654,7 +1657,7 @@ ImageMat.prototype.calculateCovariance = function(mean, mask){
 		ev1 = temp;
 	}
 	return [ev1,ev2];
-		//return [ev1,ev2,ev3];
+	//return [ev1,ev2,ev3];
 }
 ImageMat.calculateRawMoment = function(image, imageWidth,imageHeight, expX, expY, mean){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);

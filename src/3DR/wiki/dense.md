@@ -256,59 +256,81 @@ min<sub>a<sub>i</sub></sub> = &Sigma;e<sub>i</sub>
 
 
 
+## ways to estimate optimum scale
+- entropy = val
+	- ?: seems to change a lot between images & appropriate zooms
+- highest corner value
+	- no: harris corner detector continually increases as you zoom out
+- range = val
+	- ?: seems to have high variability among same images
+	- points with black/white have different behavior than grey
+		-> fix with using each channel?
+- covariant matrix maximum ? eigen ratios?
+- ?
 
-entropy max @ 
+- Difference of Gaussian Scale space
+	- ok ?
 
-entropy min @ all equal:
-p = 1/n
-sum p * log(p) = 
-n * [ (1/n) * log(1/n) ] = 
-
-[log(1/n)] = 
-
-
-
-
-
-
-
-matching individual features
-
-
-- start with SSD to limit potential points [does not account for large rotation / scaling]
-- 
+- http://courses.cs.washington.edu/courses/cse576/book/ch7.pdf
+	- EDGE DENSITY
+		- | {p | Mag(p) >= T} |/N
+	- HISTOGRAM L1 DISTANCE:
+		- SUM |H1(i) - H2(i)|
+	- TEXTURE ENERGY x
+		- SUM (N(i,j)^2)
+	- CONTRAST:
+		- SUM (i-j)^2 * N(i,j)
+	- HOMOGENEITY: x
+		SUM N(i,j) / (1 + |i-j|)
+	- CORRELATION:
+		- SUM (i-mu)*(j-mu)*N(i,j) / [sigI * sigJ]
 
 
+
+FEEDBACK:
+
+// average roughness A: 1/n SUM |y|
+	=> mostly increasing with scale
+	=> graphs are shifted, yvalues not precicely similar
+	=> y=const is probly best, but lots of local min. max
+// average roughness B: 1/n SUM |y-yavg|
+	=> graphs are roughly shifted, yvalues are not precicely similar
+	=> minimum is probly best, but not very accurate
+*/ average roughness C: 1/n SUM |y-yavg|^2
+	=> graphs are roughly shifted, yvalues are not precicely similar
+	=> minimum , but x-shift does not look exact
+// average derivative roughness A: 1/n SUM |dy|
+	=> shifts not clearly visible
+// average derivative roughness B: 1/n SUM |dy-avg|
+	=> shifts not clearly visible
+// average derivative roughness c: 1/n SUM |dy-avg|^2
+	=> shifts not clearly visible
+// covariance | moment
+	=> all over the place
+	=> first maxima from high zoom
+// moment
+	=> all over the place
+	=> first maxima from high zoom
+	=> or global maxima
+// covariance | moment ratio
+	=> all over the place
+	=> first maxima from high zoom
+// contrast
+
+
+## ways to estimate optimum rotation
+- gradient at center
+	- can be picky at symmetric
+- average gradient across 
+	- 
+- do several top choices
+
+
+## SSD | SAD tests:
 - SSD off by 0.5 a pixel results in trash
 - SAD is better than SSD
 - dynamic ranging (normalized) SSD is worse than without ranging
 
-
-
-- comparrisions:
-	- SSD of gradient
-
-
-
-- COMPARE @ OPTIMAL ROTATION:
-	- want to create a 'rotation field'
-- COMPARE @ OPTIMAL SCALE:
-	- want to create a 'scale field'
-- want major/minor scale directions
-	- moment at area ?
-
-
-NAIEVE TEST:
-	- pick random point/feature from image 1
-	- do ssd matching with entire other image
-	- use best match to calculate disparity
-	- repeat
-
-
-RESULTS:
-
-
-- rotated, asym-scaled:
 
 
 
@@ -358,24 +380,7 @@ CO-OCCURRENCE MATRIX:
 	- NEXT pixel j [j is right / down / diag of i] [except borders where j is not defined]
 		v = I[j]
 		- COM[u][v] += 1
-http://courses.cs.washington.edu/courses/cse576/book/ch7.pdf
-- EDGE DENSITY
-	- | {p | Mag(p) >= T} |/N
 
-- HISTOGRAM L1 DISTANCE:
-	- SUM |H1(i) - H2(i)|
-
-x TEXTURE ENERGY
-	- SUM (N(i,j)^2)
-
-- CONTRAST:
-	- SUM (i-j)^2 * N(i,j)
-
-x HOMOGENEITY:
-	SUM N(i,j) / (1 + |i-j|)
-
-- CORRELATION:
-	SUM (i-mu)*(j-mu)*N(i,j) / [sigI * sigJ]
 
 
 
@@ -400,36 +405,6 @@ histogram direction region:
 
 
 
-
-FEEDBACK:
-
-// average roughness A: 1/n SUM |y|
-	=> mostly increasing with scale
-	=> graphs are shifted, yvalues not precicely similar
-	=> y=const is probly best, but lots of local min. max
-// average roughness B: 1/n SUM |y-yavg|
-	=> graphs are roughly shifted, yvalues are not precicely similar
-	=> minimum is probly best, but not very accurate
-*/ average roughness C: 1/n SUM |y-yavg|^2
-	=> graphs are roughly shifted, yvalues are not precicely similar
-	=> minimum , but x-shift does not look exact
-// average derivative roughness A: 1/n SUM |dy|
-	=> shifts not clearly visible
-// average derivative roughness B: 1/n SUM |dy-avg|
-	=> shifts not clearly visible
-// average derivative roughness c: 1/n SUM |dy-avg|^2
-	=> shifts not clearly visible
-// covariance | moment
-	=> all over the place
-	=> first maxima from high zoom
-// moment
-	=> all over the place
-	=> first maxima from high zoom
-	=> or global maxima
-// covariance | moment ratio
-	=> all over the place
-	=> first maxima from high zoom
-// contrast
 
 
 TODO:

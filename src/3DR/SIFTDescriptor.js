@@ -4,6 +4,7 @@ SIFTDescriptor.BIN_COUNT_OVERALL = 36;
 //SIFTDescriptor.BIN_NORMALIZE_MAX = 0.50; // 0.20
 //SIFTDescriptor.BIN_OVERALL_THRESHOLD_MAX = 0.80; // 0.80
 SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT = 1.0;
+SIFTDescriptor.DESCRIPTOR_SCALE = 8.0; // increase window to N * radius
 
 function SIFTDescriptor(){
 	this._cellCountSize = 4; // 4 x 4 cells
@@ -77,8 +78,8 @@ SIFTDescriptor.match = function(listA, listB){
 	return {"matches":matches, "A":matchesA, "B":matchesB};
 }
 
-SIFTDescriptor.matchF = function(listA, listB, matrixFfwd, matrixFrev, lineMaxDistance){
-	lineMaxDistance = lineMaxDistance!==undefined ? lineMaxDistance : 50; // 
+SIFTDescriptor.matchF = function(listA, listB,  imageMatrixA,imageMatrixB, matrixFfwd, matrixFrev, lineMaxDistance){
+	lineMaxDistance = lineMaxDistance!==undefined ? lineMaxDistance : 50;
 	console.log("matching...");
 	var i, j;
 	var matches = [];
@@ -90,15 +91,48 @@ SIFTDescriptor.matchF = function(listA, listB, matrixFfwd, matrixFrev, lineMaxDi
 	for(i=0; i<listB.length; ++i){
 		matchesB[i] = [];
 	}
+	var orgA = new V2D();
+	var dirA = new V2D();
+	var orgB = new V2D();
+	var dirB = new V2D();
 	for(i=0; i<listA.length; ++i){
-		//var descA = listA[i];
-		// only consider matches B that are within D of line
+		var descA = listA[i];
+		var pointA = descA.point();
+			pointA = new V3D(pointA.x,pointA.y,1.0);
+			pointA.scale(imageMatrixA.width(), imageMatrixA.height(), 1.0);
+		var lineB = matrixFfwd.multV3DtoV3D(new V3D(), pointA);
+			Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineB.x,lineB.y,lineB.z);
+		for(j=0; j<listB.length; ++j){
+			var descB = listB[j];
+			var pointB = descB.point();
+				var pointB = new V3D(pointB.x,pointB.y,1.0);
+				pointB.scale(imageMatrixB.width(), imageMatrixB.height(), 1.0);
+				var lineA = matrixFrev.multV3DtoV3D(new V3D(), pointB);
+			Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineA.x,lineA.y,lineA.z);
+
+			var distanceA = Code.distancePointRay2D(orgA,dirA, pointB);
+			var distanceB = Code.distancePointRay2D(orgB,dirB, pointA);
+			if(distanceA<lineMaxDistance && distanceB<lineMaxDistance){
+				//console.log(distanceA+" | "+distanceB);
+				var score = SIFTDescriptor.compare(descA, descB);
+				var match = {"A":descA, "B":descB, "score":score, "a":i, "b":j};
+				matchesA[i].push(match);
+				matchesB[j].push(match);
+				matches.push(match);
+			}else{
+				//console.log("cant use");
+			}
+		}
+		
+	}
+	matches = matches.sort(SIFTDescriptor._sortMatch);
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
 	}
 	for(i=0; i<listB.length; ++i){
-		//var descA = listA[i];
-		// only consider matches A that are within D of line
+		matchesB[i] = matchesB[i].sort(SIFTDescriptor._sortMatch);
 	}
-	//return {"matches":matches, "A":matchesA, "B":matchesB};
+	return {"matches":matches, "A":matchesA, "B":matchesB};
 }
 
 SIFTDescriptor.confidences = function(matchesA, matchesB){ // matches belonging to each feature
@@ -172,8 +206,7 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 	var overallSize = 21;
 	var location = new V2D(point.x*width, point.y*height);
 	var radius = point.z;
-	var descriptorScale = 8.0; // increase window to N * radius
-	var ratioSize = descriptorScale * (radius/2.0);
+	var ratioSize = SIFTDescriptor.DESCRIPTOR_SCALE*(radius/2.0);
 	var overallScale = overallSize/ratioSize;
 	var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
 	// BLUR IMAGE
@@ -246,16 +279,24 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 		optimalOrientation = pm1*angle1 + per*angle2;
 	}
 
-
-	console.log("TODO: ASYMM SCALING");
-
+	// asymmetric scaling
+	var circleMask = ImageMat.circleMask(overallSize,overallSize);
+	var areaCenter = new V2D( (overallSize-1)*0.5, (overallSize-1)*0.5 );
+	var covariance = ImageMat.calculateCovariance(area, overallSize,overallSize, areaCenter, circleMask);
+	var covarianceRatio = covariance[0].z/covariance[1].z;
+	var covarianceAngle = V2D.angleDirection(V2D.DIRX, covariance[0]);
+	//var angleMinimum = V2D.angleDirection(V2D.DIRX, covariance[1]);
+	var covarianceScale = Math.pow(covarianceRatio,1.0);
+	// ignore:
+	// covarianceAngle = 0.0;
+	// covarianceScale = 1.0;
 
 
 	//var vector = SIFTDescriptor.vectorFromImage(source, width,height, location,overallScale, optimalOrientation);
 	var vector = null;
-	var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale, optimalOrientation);
-	var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale, optimalOrientation);
-	var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale, optimalOrientation);
+	var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale, optimalOrientation, covarianceAngle, covarianceScale);
+	var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale, optimalOrientation, covarianceAngle, covarianceScale);
+	var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale, optimalOrientation, covarianceAngle, covarianceScale);
 	if(vectorR && vectorG && vectorB){
 		vector = [];
 		Code.arrayPushArray(vector,vectorR);
@@ -269,11 +310,20 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 		s.point(point);
 		s._orientationAngle = optimalOrientation;
 		s._overallScale = ratioSize;
-		return s;
+		s._scaleRadius = radius;
+		//s._covariance = covariance;
+		s._covarianceAngle = covarianceAngle;
+		s._covarianceScale = covarianceScale;
+		return [s];
 	}
 	return null;
 }
-SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimalScale,optimalOrientation){
+SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimalScale,optimalOrientation,covarianceAngle,covarianceScale){
+	optimalScale = optimalScale!==undefined ? optimalScale : 1.0;
+	optimalOrientation = optimalOrientation!==undefined ? optimalOrientation : 0.0;
+	covarianceAngle = covarianceAngle!==undefined ? covarianceAngle : 0.0;
+	covarianceScale = covarianceScale!==undefined ? covarianceScale : 1.0;
+
 	var i, j, ii, jj;
 	var insideSet = 16;
 	var padding = 2;
@@ -281,6 +331,11 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 	// extract image at new orientation
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		// asymm scale
+		matrix = Matrix.transform2DRotate(matrix, -covarianceAngle);
+		matrix = Matrix.transform2DScale(matrix, covarianceScale,1.0/covarianceScale);
+		matrix = Matrix.transform2DRotate(matrix, covarianceAngle);
+		// scaling
 		matrix = Matrix.transform2DScale(matrix, optimalScale);
 		matrix = Matrix.transform2DRotate(matrix, -optimalOrientation);
 		matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
@@ -346,7 +401,66 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 	}
 	return null;
 }
+SIFTDescriptor.prototype.visualizeInSitu = function(imageSource, offset){
+	offset = offset!==undefined ? offset : new V2D(0,0);
+	var sourceWidth = imageSource.width();
+	var sourceHeight = imageSource.height();
+	var size = this._overallScale;
+	var angle = this._orientationAngle;
+	var point = this.point();
+	var location = new V2D(point.x*sourceWidth, point.y*sourceHeight);
+	//var overallScale = displaySize/size;
+	//var radius = 2.0*size/SIFTDescriptor.DESCRIPTOR_SCALE;
+	var radius = 2.0*this._scaleRadius;
 
+
+	// var covariance = this._covariance;
+	// var covarianceRatio = covariance[0].z/covariance[1].z;
+	// var angleMaximum = V2D.angleDirection(V2D.DIRX, covariance[0]);
+	// var angleMinimum = V2D.angleDirection(V2D.DIRX, covariance[1]);
+	// console.log(covarianceRatio,angleMaximum,angleMinimum,Code.minAngle(angleMaximum,angleMinimum));
+	// var covarianceScale = Math.pow(covarianceRatio,0.5);
+	var covarianceAngle = this._covarianceAngle;
+	var covarianceScale = this._covarianceScale;
+
+	var displaySize = size;
+	var c, d;
+	
+	var display = new DO();
+	var outline = new DO();
+		display.addChild(outline);
+	var color = 0xFFFF00FF;
+	c = new DO();
+		c.graphics().setLine(1.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(0,0, radius*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		outline.addChild(c);
+	color = 0xFF00FF00;
+	c = new DO();
+		c.graphics().setLine(1.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(0,0, displaySize*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		outline.addChild(c);
+	d = new DO();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(Math.cos(angle)*displaySize*0.5,Math.sin(angle)*displaySize*0.5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		outline.addChild(d);
+	display.matrix().identity();
+		display.matrix().rotate(-covarianceAngle);
+		//display.matrix().scale(1.0/covarianceScale,covarianceScale);
+		display.matrix().scale(covarianceScale,1.0/covarianceScale);
+		display.matrix().rotate(covarianceAngle);
+	display.matrix().translate(offset.x+location.x, offset.y+location.y);
+	return display;
+}
 SIFTDescriptor.prototype.visualize = function(imageSource, displaySize){
 	var sourceWidth = imageSource.width();
 	var sourceHeight = imageSource.height();
@@ -408,7 +522,7 @@ SIFTDescriptor.prototype.point = function(p){
 	if(p!==undefined){
 		this._point = new V2D(p.x,p.y);
 	}
-	return this._point;
+	return this._point.copy();
 }
 
 SIFTDescriptor.prototype.normalize = function(){
@@ -455,9 +569,9 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 	same = same.sort(function(a,b){
 		return a["confidence"] > b["confidence"] ? -1 : 1;
 	});
-	var maxNeeded = 100;
-	if(same.length>maxNeeded){
-		same = Code.copyArray(same,0,maxNeeded);
+	var maxNeeded = 150; // need more if confidence quality is poor
+	if(same.length>=maxNeeded){
+		same = Code.copyArray(same,0,maxNeeded-1);
 	}
 	return same;
 }

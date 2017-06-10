@@ -920,9 +920,11 @@ Code.setArrayConstant = function(arr,c){
 	return arr;
 }
 Code.arrayPushArray = function(a,b){
-	var i, len=b.length;
-	for(i=0;i<len;++i){
-		a.push(b[i]);
+	if(a && b){
+		var i, len=b.length;
+		for(i=0;i<len;++i){
+			a.push(b[i]);
+		}
 	}
 	return a;
 }
