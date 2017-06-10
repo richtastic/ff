@@ -64,17 +64,18 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 // CORNER SCALE SPACE
-// var featuresA = R3D.HarrisExtract(imageMatrixA);
-// var featuresB = R3D.HarrisExtract(imageMatrixB);
+var featuresA = R3D.HarrisExtract(imageMatrixA);
+var featuresB = R3D.HarrisExtract(imageMatrixB);
 // SIFT SCALE SPACE
-var featuresA = R3D.SIFTExtract(imageMatrixA);
-var featuresB = R3D.SIFTExtract(imageMatrixB);
+// var featuresA = R3D.SIFTExtract(imageMatrixA);
+// var featuresB = R3D.SIFTExtract(imageMatrixB);
 
 
 // SHOW POINTS
-console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
 //var featuresB = [];
-//console.log("featuresA: "+featuresA.length);
+
+console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
 //break;
@@ -113,6 +114,21 @@ var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 console.log("siftA: "+siftA.length+" | "+"siftB: "+siftB.length);
 
 
+var displaySize = 50;
+var maxDisp = Math.min(siftA.length, 10);
+for(m=0; m<maxDisp; ++m){
+	var featureA = siftA[m];
+	var vizA = featureA.visualize(imageMatrixA, displaySize);
+	//var vizB = featureB.visualize(imageMatrixB, displaySize);
+	vizA.matrix().translate(800,10 + m*displaySize);
+	GLOBALSTAGE.addChild(vizA);
+	//GLOBALSTAGE.addChild(vizB);
+}
+
+
+return;
+
+
 // ASSIGNMENT ?
 
 var matching = SIFTDescriptor.match(siftA, siftB);
@@ -128,12 +144,10 @@ var bestMatches = SIFTDescriptor.matchesFromConfidences(confidences);
 */
 
 var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
-console.log(bestMatches);
+console.log("crossMatches: "+bestMatches.length);
 
 
 this.drawMatches(bestMatches, 0,0, 400,0);
-
-return;
 
 // VISUALIZE TOP MATCHES
 var displaySize = 50;
@@ -152,6 +166,7 @@ for(m=0; m<bestMatches.length; ++m){
 	}
 }
 
+//return;
 
 
 // RANSAC PREP
@@ -164,15 +179,7 @@ for(m=0; m<bestMatches.length; ++m){
 	pointsA.push( A.point().scale(400,300) );
 	pointsB.push( B.point().scale(400,300) );
 }
-// matches = [];
-// for(i=0; i<pointsA.length; ++i){
-// 	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
-// }
 
-
-console.log(pointsA.length);
-console.log(pointsB.length);
-console.log(matches.length);
 // RANSAC
 console.log("RANSAC");
 var ransac = R3D.fundamentalRANSACFromPoints(pointsA, pointsB, 1.5);
@@ -182,62 +189,12 @@ var ransacMatches = ransac["matches"];
 var matrixFfwd = ransac["F"];
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
+this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
 
-matches = [];
-for(i=0; i<pointsA.length; ++i){
-	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
-}
-// SHOW RANSAC:
 
-var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
-// SHOW F LINES ON EACH
-for(var k=0;k<matches.length;++k){
-	var percent = k / (matches.length-1);
-	
-	var pointA = pointsA[k];
-	var pointB = pointsB[k];
-	pointA = new V3D(pointA.x,pointA.y,1.0);
-	pointB = new V3D(pointB.x,pointB.y,1.0);
-	var lineA = new V3D();
-	var lineB = new V3D();
+console.log("with basic ransac, now look for matches ONLY WITHIN SOME DISTANCE OF F LINE");
 
-	matrixFfwd.multV3DtoV3D(lineA, pointA);
-	matrixFrev.multV3DtoV3D(lineB, pointB);
-
-	var d, v;
-	var dir = new V2D();
-	var org = new V2D();
-	var imageWidth = 400;
-	var imageHeight = 300;
-	var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
-	//
-
-	var color = Code.interpolateColorGradientARGB(percent, colors);
-	//
-	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-	dir.scale(scale);
-	d = new DO();
-	d.graphics().clear();
-	d.graphics().setLine(1.0, color);
-	d.graphics().beginPath();
-	d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
-	d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-	GLOBALSTAGE.addChild(d);
-	//
-	Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-	dir.scale(scale);
-	d = new DO();
-	d.graphics().clear();
-	d.graphics().setLine(1.0, color);
-	d.graphics().beginPath();
-	d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
-	d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-	GLOBALSTAGE.addChild(d);
-}
+SIFTDescriptor.matchF(siftA, siftB, matrixFfwd, matrixFrev);
 
 
 console.log("done");
@@ -2296,6 +2253,64 @@ Matching.prototype.showComparrison = function(imageA, imageB, invert){
 	GLOBALSTAGE.addChild(d);
 
 	Matching._DY += 300;
+}
+Matching.prototype.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
+
+	var matches = [];
+	for(i=0; i<pointsA.length; ++i){
+		matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+	}
+	// SHOW RANSAC:
+
+	var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
+	// SHOW F LINES ON EACH
+	for(var k=0;k<matches.length;++k){
+		var percent = k / (matches.length-1);
+		
+		var pointA = pointsA[k];
+		var pointB = pointsB[k];
+		pointA = new V3D(pointA.x,pointA.y,1.0);
+		pointB = new V3D(pointB.x,pointB.y,1.0);
+		var lineA = new V3D();
+		var lineB = new V3D();
+
+		matrixFfwd.multV3DtoV3D(lineA, pointA);
+		matrixFrev.multV3DtoV3D(lineB, pointB);
+
+		var d, v;
+		var dir = new V2D();
+		var org = new V2D();
+		var imageWidth = 400;
+		var imageHeight = 300;
+		var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
+		//
+
+		var color = Code.interpolateColorGradientARGB(percent, colors);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
+		d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
+		d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+	}
 }
 /*
 - get initial best points

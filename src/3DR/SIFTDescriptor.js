@@ -77,6 +77,30 @@ SIFTDescriptor.match = function(listA, listB){
 	return {"matches":matches, "A":matchesA, "B":matchesB};
 }
 
+SIFTDescriptor.matchF = function(listA, listB, matrixFfwd, matrixFrev, lineMaxDistance){
+	lineMaxDistance = lineMaxDistance!==undefined ? lineMaxDistance : 50; // 
+	console.log("matching...");
+	var i, j;
+	var matches = [];
+	var matchesA = [];
+	var matchesB = [];
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = [];
+	}
+	for(i=0; i<listB.length; ++i){
+		matchesB[i] = [];
+	}
+	for(i=0; i<listA.length; ++i){
+		//var descA = listA[i];
+		// only consider matches B that are within D of line
+	}
+	for(i=0; i<listB.length; ++i){
+		//var descA = listA[i];
+		// only consider matches A that are within D of line
+	}
+	//return {"matches":matches, "A":matchesA, "B":matchesB};
+}
+
 SIFTDescriptor.confidences = function(matchesA, matchesB){ // matches belonging to each feature
 	console.log("confidences...");
 	var totalMatches = [];
@@ -221,6 +245,9 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 		var pm1 = 1 - per;
 		optimalOrientation = pm1*angle1 + per*angle2;
 	}
+
+
+	console.log("TODO: ASYMM SCALING");
 
 
 
@@ -414,7 +441,7 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 		var matchA0 = matchedA[0];
 		var matchB0 = matchedB[0];
 		if(matchA0["b"]==b && matchB0["a"]==a){
-			var minConfidence = 1.05;
+			var minConfidence = 1.01;
 			var confidenceA = SIFTDescriptor.confidence(matchedA);
 			var confidenceB = SIFTDescriptor.confidence(matchedB);
 			var confidence = (confidenceA + confidenceB) * 0.5;
@@ -428,8 +455,9 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 	same = same.sort(function(a,b){
 		return a["confidence"] > b["confidence"] ? -1 : 1;
 	});
-	// if(same.length>50){
-	// 	same = Code.copyArray(same,0,50);
-	// }
+	var maxNeeded = 100;
+	if(same.length>maxNeeded){
+		same = Code.copyArray(same,0,maxNeeded);
+	}
 	return same;
 }
