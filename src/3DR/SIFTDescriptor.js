@@ -1,8 +1,9 @@
 // SIFTDescriptor.js
 SIFTDescriptor.BIN_COUNT = 8;
 SIFTDescriptor.BIN_COUNT_OVERALL = 36;
-SIFTDescriptor.BIN_NORMALIZE_MAX = 0.50; // 0.20
-SIFTDescriptor.BIN_OVERALL_THRESHOLD_MAX = 0.80; // 0.80
+//SIFTDescriptor.BIN_NORMALIZE_MAX = 0.50; // 0.20
+//SIFTDescriptor.BIN_OVERALL_THRESHOLD_MAX = 0.80; // 0.80
+SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT = 1.0;
 
 function SIFTDescriptor(){
 	this._cellCountSize = 4; // 4 x 4 cells
@@ -66,7 +67,6 @@ SIFTDescriptor.match = function(listA, listB){
 			matches.push(match);
 		}
 	}
-	// sort matches finally
 	matches = matches.sort(SIFTDescriptor._sortMatch);
 	for(i=0; i<listA.length; ++i){
 		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
@@ -141,45 +141,9 @@ SIFTDescriptor.confidence = function(matches){ // sorted matches list, higher co
 	return 0;
 }
 
-SIFTDescriptor.findMaximumOrientations = function(Ix,Iy,w,h){
-	/*
-	var bW = bH = 16; // descriptor window size
-	var offX = Math.floor((w-bW)*0.5);
-	var offY = Math.floor((h-bH)*0.5);
-	var gauss = SIFTDescriptor.gaussian();
-	var bin = new GradBinDescriptor(SIFTDescriptor.BIN_COUNT_OVERALL);
-	var i, j, index, gIndex = 0;
-	for(j=0;j<bH;++j){
-		for(i=0;i<bW;++i,++gIndex){
-			index = w*(offY+j) + offX+i;
-			bin.addVector(Ix[index], Iy[index], Math.sqrt( Math.pow(Ix[index],2)+Math.pow(Iy[index],2) )*gauss[gIndex]);
-		}
-	}
-	// find interpolated maximums
-	var peaks = bin.getPeaks();
-	if(peaks.length==0){ return peaks; } // no peaks
-	// - find all maximal orientations within threshold
-	var max = peaks[0].y;
-	for(i=0;i<peaks.length;++i){
-		max = Math.max(max,peaks[i].y);
-	}
-	max = max * SIFTDescriptor.BIN_OVERALL_THRESHOLD_MAX;
-	for(i=0;i<peaks.length;++i){
-		if( peaks[i].y < max){ // remove from list
-			peaks[i] = peaks[peaks.length-1]; peaks.pop();
-			--i; // recheck
-		}
-	}
-	// convert peaks to list of angles
-	for(i=0;i<peaks.length;++i){
-		//console.log(peaks[i].y);
-		peaks[i] = peaks[i].x;
-	}
-	return peaks;
-	*/
-}
+
 SIFT_CALL = -1;
-SIFTDescriptor.fromPointGray = function(source, width, height, point){
+SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, point){
 ++SIFT_CALL;
 	var overallSize = 21;
 	var location = new V2D(point.x*width, point.y*height);
@@ -189,16 +153,16 @@ SIFTDescriptor.fromPointGray = function(source, width, height, point){
 	var overallScale = overallSize/ratioSize;
 	var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
 	// BLUR IMAGE
-	var blurred = ImageMat.getBlurredImage(area, overallSize,overallSize, 1.25);
+	var blurred = ImageMat.getBlurredImage(area, overallSize,overallSize, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
 	// GET DERIVATIVES
 	var gradients = ImageMat.gradientVector(blurred, overallSize,overallSize);
 	//
 
-var show = area;
-img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
-d = new DOImage(img);
-d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
-GLOBALSTAGE.addChild(d);
+// var show = area;
+// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, overallSize, overallSize);
+// d = new DOImage(img);
+// d.matrix().translate((SIFT_CALL%20)*(overallSize+2),Math.floor(SIFT_CALL/20)*(overallSize+2)+350);
+// GLOBALSTAGE.addChild(d);
 
 	var circleMask = ImageMat.circleMask(overallSize,overallSize);
 	var i, j, k;
@@ -214,9 +178,7 @@ GLOBALSTAGE.addChild(d);
 			var m = v.length();
 			var a = V2D.angleDirection(V2D.DIRX,v);
 			a = Code.angleZeroTwoPi(a);
-			//console.log(a*180/Math.PI);
 			var bin = Math.min(Math.floor((a/Math.PI2)*totalBinCount),totalBinCount-1);
-			//console.log(a+" => "+bin);
 			bins[bin] += m;
 		}
 	}
@@ -259,40 +221,54 @@ GLOBALSTAGE.addChild(d);
 		var pm1 = 1 - per;
 		optimalOrientation = pm1*angle1 + per*angle2;
 	}
-	//console.log("optimalOrientation: "+optimalOrientation+" ["+angle0+"|"+angle1+"|"+angle2+"]");
+
+
+
+	//var vector = SIFTDescriptor.vectorFromImage(source, width,height, location,overallScale, optimalOrientation);
+	var vector = null;
+	var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale, optimalOrientation);
+	var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale, optimalOrientation);
+	var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale, optimalOrientation);
+	if(vectorR && vectorG && vectorB){
+		vector = [];
+		Code.arrayPushArray(vector,vectorR);
+		Code.arrayPushArray(vector,vectorG);
+		Code.arrayPushArray(vector,vectorB);
+	}
+
+	if(vector){
+		var s = new SIFTDescriptor();
+		s.vector(vector);
+		s.point(point);
+		s._orientationAngle = optimalOrientation;
+		s._overallScale = ratioSize;
+		return s;
+	}
+	return null;
+}
+SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimalScale,optimalOrientation){
+	var i, j, ii, jj;
 	var insideSet = 16;
 	var padding = 2;
 	var outsideSet = insideSet + 2*padding;
 	// extract image at new orientation
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
-		matrix = Matrix.transform2DScale(matrix, overallScale);
+		matrix = Matrix.transform2DScale(matrix, optimalScale);
 		matrix = Matrix.transform2DRotate(matrix, -optimalOrientation);
 		matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
 		matrix = Matrix.inverse(matrix);
 	// GET IMAGE
-	area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
-// var show = area;
-// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, outsideSet, outsideSet);
-// d = new DOImage(img);
-// d.matrix().translate((SIFT_CALL%20)*(outsideSet+2),Math.floor(SIFT_CALL/20)*(outsideSet+2)+350);
-// GLOBALSTAGE.addChild(d);
+	var area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
 	// BLUR IMAGE
-	blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, 1.25);
+	var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
 	// GET DERIVATIVES
-	gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet);
+	var gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet);
 	// UNPAD
 	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
-	area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);
-
-// var show = area;
-// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, insideSet, insideSet);
-// d = new DOImage(img);
-// d.matrix().translate((SIFT_CALL%20)*(insideSet+2),Math.floor(SIFT_CALL/20)*(insideSet+2)+350);
-// GLOBALSTAGE.addChild(d);
-	
+	//area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);
 	// get 16 separate bins
-	//circleMask = ImageMat.circleMask(insideSet,insideSet);
+	// circleMask = ImageMat.circleMask(insideSet,insideSet);
 	var gaussianMask = ImageMat.gaussianMask(insideSet,insideSet);
 	var bins = [];
 	var binCount = 8;
@@ -305,16 +281,12 @@ GLOBALSTAGE.addChild(d);
 				for(ii=0; ii<4; ++ii){
 					var index = (j*4+jj)*insideSet + (i*4+ii);
 					var gradient = gradients[index];
-					//console.log(gradient);
 					var m = gradient.length();
 					var a = V2D.angleDirection(V2D.DIRX,gradient);
 						a = Code.angleZeroTwoPi(a);
 					var w = gaussianMask[index];// weight on gaussian
-					//console.log(m,w);
+					//w = 1.0;
 					var b = Math.min(Math.floor((a/Math.PI2)*binCount),binCount-1);
-					if(Code.isNaN(m) || Code.isNaN(w)){
-						console.log("m: "+m+" w: "+w);
-					}
 					bin[b] += m*w;
 				}
 			}
@@ -325,19 +297,14 @@ GLOBALSTAGE.addChild(d);
 	// convert bins into vector
 	var vector = [];
 	var vectorSize = 0;
-	//console.log(bins);
 	for(i=0; i<bins.length; ++i){
 		var bin = bins[i];
 		for(j=0; j<bin.length; ++j){
-			if(Code.isNaN(bin[j])){
-				console.log("bin[j]: "+bin[j]);
-			}
 			var value = bin[j];
 			vectorSize += value;
 			vector.push(value);
 		}
 	}
-	//console.log(vector);
 	if(vectorSize>0){
 		// normalize vector ||m||
 		Code.normalizeArray(vector);
@@ -348,20 +315,11 @@ GLOBALSTAGE.addChild(d);
 		// clip high-value vector components
 
 		// normalize vector ||m||
-
-		//var s = "\n\nhold off;\nx=["+bins+"];\nbar(x);\n";
-		//console.log(s)
-		var s = new SIFTDescriptor();
-		s.vector(vector);
-		s.point(point);
-		s._orientationAngle = optimalOrientation;
-		s._overallScale = ratioSize;//radius;
-		return s;
-	}else{
-		console.log("VECTOR SIZE IS ZERO: "+overallScale);
+		return vector;
 	}
 	return null;
 }
+
 SIFTDescriptor.prototype.visualize = function(imageSource, displaySize){
 	var sourceWidth = imageSource.width();
 	var sourceHeight = imageSource.height();
@@ -386,17 +344,14 @@ SIFTDescriptor.prototype.visualize = function(imageSource, displaySize){
 	var show = area;
 	img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, displaySize, displaySize);
 	
-
 	var display = new DO();
 	var image = new DOImage(img);
-	//var image = new DO();
-		//image.matrix().translate(displaySize*0.5,displaySize*0.5);
 	var outline = new DO();
 		display.addChild(image);
 		display.addChild(outline);
 	var color = 0xFF00FF00;
 	var c = new DO();
-		c.graphics().setLine(2.0, color);
+		c.graphics().setLine(1.0, color);
 		c.graphics().beginPath();
 		c.graphics().drawCircle(0,0, displaySize*0.5);
 		c.graphics().strokeLine();
@@ -404,7 +359,7 @@ SIFTDescriptor.prototype.visualize = function(imageSource, displaySize){
 		c.matrix().translate(displaySize*0.5,displaySize*0.5);
 		outline.addChild(c);
 	var d = new DO();
-		d.graphics().setLine(2.0, color);
+		d.graphics().setLine(1.0, color);
 		d.graphics().beginPath();
 		d.graphics().moveTo(0,0);
 		d.graphics().lineTo(Math.cos(angle)*displaySize*0.5,Math.sin(angle)*displaySize*0.5);
@@ -448,92 +403,33 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 	var same = [];
 	var i, j;
 	for(i=0; i<allMatches.length; ++i){
-		// var matches = matchesA[i];
-		// for(j=0; j<matches.length; ++j){
-			var match = allMatches[i];
-			var a = match["a"];
-			var b = match["b"];
-			var A = featuresA[a];
-			var B = featuresB[b];
-			var matchedA = matchesA[a];
-			var matchedB = matchesB[b];
-			var matchA0 = matchedA[0];
-			var matchB0 = matchedB[0];
-			if(matchA0["b"]==b && matchB0["a"]==a){
-				var minConfidence = 1.05;
-				var confidenceA = SIFTDescriptor.confidence(matchedA);
-				var confidenceB = SIFTDescriptor.confidence(matchedB);
-				var confidence = (confidenceA + confidenceB) * 0.5;
-				console.log("FOUND MATCHING: "+a+" <=> "+b+" @ "+confidenceA+" | "+confidenceB+" score: "+match.score);
-				//if(confidence>1.01){
-				if(confidenceA>=minConfidence && confidenceB >= minConfidence){
-					match["confidence"] = Math.min(confidenceA,confidenceB);
-					same.push(match);
-				}
+		//console.log(i+"/"+allMatches.length);
+		var match = allMatches[i];
+		var a = match["a"];
+		var b = match["b"];
+		var A = featuresA[a];
+		var B = featuresB[b];
+		var matchedA = matchesA[a];
+		var matchedB = matchesB[b];
+		var matchA0 = matchedA[0];
+		var matchB0 = matchedB[0];
+		if(matchA0["b"]==b && matchB0["a"]==a){
+			var minConfidence = 1.05;
+			var confidenceA = SIFTDescriptor.confidence(matchedA);
+			var confidenceB = SIFTDescriptor.confidence(matchedB);
+			var confidence = (confidenceA + confidenceB) * 0.5;
+			//console.log("FOUND MATCHING: "+a+" <=> "+b+" @ "+confidenceA+" | "+confidenceB+" score: "+match.score+" confidence: "+confidence);
+			if(confidenceA>=minConfidence && confidenceB >= minConfidence){
+				match["confidence"] = Math.min(confidenceA,confidenceB);
+				same.push(match);
 			}
-		//}
+		}
 	}
 	same = same.sort(function(a,b){
 		return a["confidence"] > b["confidence"] ? -1 : 1;
 	});
-	same = Code.copyArray(same,0,50);
+	// if(same.length>50){
+	// 	same = Code.copyArray(same,0,50);
+	// }
 	return same;
 }
-
-/*
-SIFTDescriptor.prototype.fromGradients = function(Ix,Iy,w,h){
-	var gauss = SIFTDescriptor.gaussian();
-	var bW = bH = 16; // descriptor window size
-	var offX = Math.floor((w-bW)*0.5);
-	var offY = Math.floor((h-bH)*0.5);
-	var i, j, x, y, bin, cenX = Math.floor(w*0.5), cenY = Math.floor(h*0.5);
-	var cntW = w/this._width, cntH = h/this._height;
-	this.clear();
-	var gIndex = 0;
-	for(j=0;j<bH;++j){
-		for(i=0;i<bW;++i,++gIndex){
-			index = w*(j+offY) + i+offX;
-			bin = this._width*Math.floor(j/cntH) + Math.floor(i/cntW);
-			//var mag = Math.sqrt( Math.pow(Ix[index],2)+Math.pow(Iy[index],2) )*gauss[gIndex];
-			var mag = Math.sqrt( Math.pow(Ix[index],2)+Math.pow(Iy[index],2) );
-			//var mag = 1.0;
-			var ang = Math.atan2(Iy[index],Ix[index]);
-			this._bins[bin].addAngle(ang, mag);
-		}
-	}
-	return this;
-}
-SIFTDescriptor.prototype.clear = function(){
-	for(var i=0;i<this._bins.length;++i){
-		this._bins[i].clear();
-	}
-}
-SIFTDescriptor.prototype.kill = function(){
-	for(var i=0;i<this._bins.length;++i){
-		this._bins[i].kill();
-	}
-	Code.emptyArray(this._bins);
-	this._bins = null;
-	this._width = 0;
-	this._height = 0;
-}
-SIFTDescriptor.prototype.toString = function(){
-	var b = this._bins;
-	var i, len, j, bin, max = 16;
-	var str = "";
-	len = b[0]._bins.length;
-	for(j=0;j<len;++j){
-		str += "|"+Code.prependFixed(" "+(j*360.0/(len))+" "," ",5);
-		for(i=0;i<b.length;++i){
-			bin = b[i]._bins;
-			str += "|";
-			str += Code.postpendFixed(Code.prependFixed("","*",bin[j]*20)," ",max);
-		}
-		str += "\n";
-	}
-	return str;
-}
-*/
-/*
-GradBinDescriptor
-*/

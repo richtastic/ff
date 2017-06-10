@@ -986,6 +986,7 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	}else if(arguments.length==4){
 		//
 	}
+	//end = Math.min(b.length-1,end);
 	//if(b===undefined){ b=a; a=new Array(); }
 	Code.emptyArray(a);
 	for(var j=0,i=start; i<=end; ++i,++j){

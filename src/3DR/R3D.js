@@ -3269,12 +3269,16 @@ if(true){
 R3D.pointsToSIFT = function(imageSource, points){
 	console.log("making sift points..");
 	var originalGray = imageSource.gry();
+	var originalRed = imageSource.red();
+	var originalGrn = imageSource.grn();
+	var originalBlu = imageSource.blu();
 	var originalWid = imageSource.width();
 	var originalHei = imageSource.height();
 	var features = [];
 	for(i=0; i<points.length; ++i){
 		var point = points[i];
-		var s = SIFTDescriptor.fromPointGray(originalGray, originalWid,originalHei, point);
+		//var s = SIFTDescriptor.fromPointGray(originalGray, originalWid,originalHei, point);
+		var s = SIFTDescriptor.fromPointGray(originalGray, originalRed,originalGrn,originalBlu, originalWid,originalHei, point);
 		if(s){
 			features.push(s);
 		}
@@ -3307,7 +3311,7 @@ var OFFY = 0;
 var imageGray = imageSourceGray;
 var imageWidth = imageSourceWidth;
 var imageHeight = imageSourceHeight;
-var scaleMax = 1.0; // 2.0
+var scaleMax = 1.0; // 1.0  // really small ones have smooth feature window = bad
 var scaleMin = -3.0; // 0.25
 var scaleRange = scaleMax - scaleMin;
 var scaleCount = 6; // [2, 1.32, 0.87, 0.57, 0.38, 0.25]
@@ -3315,7 +3319,7 @@ var scales = [];
 for(i=0; i<scaleCount; ++i){
 	scales[i] = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
 }
-
+console.log(scales+"")
 var cornersStack = [];
 	for(k=0;k<scaleCount;++k){
 		var currentScale = scales[k];
@@ -3405,7 +3409,7 @@ if(true){
 
 							// 0.5, 0.87, 1.5, 2.6, 4.6, 8
 
-							radiusScale = currentScale * 4.0; // area aound corner  ~ window
+							radiusScale = currentScale * 5.0; // area aound corner  ~ window
 
 							var point = new V3D(ext.x/imageWidth, ext.y/imageHeight, radiusScale);
 
@@ -3526,7 +3530,7 @@ OFFY = 0;
 		}
 	}
 	testString += "\n";
-	console.log(testString);
+//	console.log(testString);
 
 	console.log("initial point count: "+cornerPoints.length);
 	// remove overshadowed / duplicate points

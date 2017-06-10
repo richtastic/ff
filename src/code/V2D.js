@@ -190,8 +190,9 @@ V2D.prototype.norm = function(){
 	this.x = this.x/dist; this.y = this.y/dist;
 	return this;
 }
-V2D.prototype.scale = function(c){
-	this.x *= c; this.y *= c;
+V2D.prototype.scale = function(c,d){
+	d = d!==undefined ? d : c;
+	this.x *= c; this.y *= d;
 	return this;
 }
 V2D.prototype.setLength = function(l){

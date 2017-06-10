@@ -64,19 +64,20 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 // CORNER SCALE SPACE
-var featuresA = R3D.HarrisExtract(imageMatrixA);
-var featuresB = R3D.HarrisExtract(imageMatrixB);
+// var featuresA = R3D.HarrisExtract(imageMatrixA);
+// var featuresB = R3D.HarrisExtract(imageMatrixB);
 // SIFT SCALE SPACE
-// var featuresA = R3D.SIFTExtract(imageMatrixA);
-// var featuresB = R3D.SIFTExtract(imageMatrixB);
+var featuresA = R3D.SIFTExtract(imageMatrixA);
+var featuresB = R3D.SIFTExtract(imageMatrixB);
+
 
 // SHOW POINTS
-
+console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
 //var featuresB = [];
 //console.log("featuresA: "+featuresA.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
-break;
+//break;
 	var features = lists[f];
 	for(k=0; k<features.length; ++k){
 		var point = features[k];
@@ -109,18 +110,16 @@ var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 // 	featuresA = featuresA["points"];
 // 	featuresB = featuresB["points"];
 
-console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+console.log("siftA: "+siftA.length+" | "+"siftB: "+siftB.length);
 
 
 // ASSIGNMENT ?
 
 var matching = SIFTDescriptor.match(siftA, siftB);
-//console.log(matching);
 var matches = matching["matches"];
 var matchesA = matching["A"];
 var matchesB = matching["B"];
-
-var siftMatches = matchesA.length;
+console.log("matches: "+matches.length);
 
 //var confidences = SIFTDescriptor.confidences(matchesA,matchesB);
 /*
@@ -134,22 +133,110 @@ console.log(bestMatches);
 
 this.drawMatches(bestMatches, 0,0, 400,0);
 
+return;
 
 // VISUALIZE TOP MATCHES
-var displaySize = 100;
+var displaySize = 50;
 for(m=0; m<bestMatches.length; ++m){
 	var match = bestMatches[m];
 	var featureA = match["A"];
 	var featureB = match["B"];
 	var vizA = featureA.visualize(imageMatrixA, displaySize);
 	var vizB = featureB.visualize(imageMatrixB, displaySize);
-	vizA.matrix().translate(100,300 + m*displaySize);
-	vizB.matrix().translate(100+displaySize,300 + m*displaySize);
+	vizA.matrix().translate(800,10 + m*displaySize);
+	vizB.matrix().translate(800+displaySize,10 + m*displaySize);
 	GLOBALSTAGE.addChild(vizA);
 	GLOBALSTAGE.addChild(vizB);
-	if(m>=5){
+	if(m>=10){
 		break;
 	}
+}
+
+
+
+// RANSAC PREP
+var pointsA = [];
+var pointsB = [];
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var A = match["A"];
+	var B = match["B"];
+	pointsA.push( A.point().scale(400,300) );
+	pointsB.push( B.point().scale(400,300) );
+}
+// matches = [];
+// for(i=0; i<pointsA.length; ++i){
+// 	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+// }
+
+
+console.log(pointsA.length);
+console.log(pointsB.length);
+console.log(matches.length);
+// RANSAC
+console.log("RANSAC");
+var ransac = R3D.fundamentalRANSACFromPoints(pointsA, pointsB, 1.5);
+var ransacMatches = ransac["matches"];
+	pointsA = ransacMatches[0];
+	pointsB = ransacMatches[1];
+var matrixFfwd = ransac["F"];
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+
+matches = [];
+for(i=0; i<pointsA.length; ++i){
+	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+}
+// SHOW RANSAC:
+
+var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
+// SHOW F LINES ON EACH
+for(var k=0;k<matches.length;++k){
+	var percent = k / (matches.length-1);
+	
+	var pointA = pointsA[k];
+	var pointB = pointsB[k];
+	pointA = new V3D(pointA.x,pointA.y,1.0);
+	pointB = new V3D(pointB.x,pointB.y,1.0);
+	var lineA = new V3D();
+	var lineB = new V3D();
+
+	matrixFfwd.multV3DtoV3D(lineA, pointA);
+	matrixFrev.multV3DtoV3D(lineB, pointB);
+
+	var d, v;
+	var dir = new V2D();
+	var org = new V2D();
+	var imageWidth = 400;
+	var imageHeight = 300;
+	var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
+	//
+
+	var color = Code.interpolateColorGradientARGB(percent, colors);
+	//
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	dir.scale(scale);
+	d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, color);
+	d.graphics().beginPath();
+	d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
+	d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	GLOBALSTAGE.addChild(d);
+	//
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+	dir.scale(scale);
+	d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, color);
+	d.graphics().beginPath();
+	d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
+	d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	GLOBALSTAGE.addChild(d);
 }
 
 
@@ -2083,7 +2170,7 @@ Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
 			pB.x *= 400;
 			pB.y *= 300;
 		}
-console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
+//console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
 		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
 		// var percem1 = 1 - percent;
 		// var p = locations[i];

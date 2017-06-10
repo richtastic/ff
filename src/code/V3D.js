@@ -164,8 +164,10 @@ V3D.prototype.norm = function(){
 	this.x = this.x/dist; this.y = this.y/dist; this.z = this.z/dist;
 	return this;
 }
-V3D.prototype.scale = function(c){
-	this.x *= c; this.y *= c; this.z *= c;
+V3D.prototype.scale = function(c,d,e){
+	d = d!==undefined ? d : c;
+	e = e!==undefined ? e : c;
+	this.x *= c; this.y *= d; this.z *= e;
 	return this;
 }
 V3D.prototype.setLength = function(l){
