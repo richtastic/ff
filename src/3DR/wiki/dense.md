@@ -349,7 +349,29 @@ FEEDBACK:
 
 
 
+
+with camera calibration, a similarity camera transform can be determined [metric matrix]
+without camera calibration, only a projective transform can be determined
+	=> want the best projective transform that minimizes some error ?
+	- in order to constrain a 3D point in 3+ images it must be marked as the same 3D point in those images
+		- other 3D points may take the projected location in other 2D scenes, so the same projected point != same 3D point
+
+
+dense depth ordering constraint
+	- when searching along epipolar lines, ordering in cameras of points should be consistend: A-B-C-D...
+
 TODO:
+
+
+self calibration ???? using a grid
+auto calibration : doing it via code
+quasi-Euclidean initialization
+kruppa equations : find OMEGA_inf -- weaker constraints
+modulus constraint : find pi_inf -- stratified solution: 
+trifocal tensor | 
+cholskey decomposition
+
+
 
 ------
 	other scale-space metrics:

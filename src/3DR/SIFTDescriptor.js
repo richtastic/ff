@@ -79,7 +79,7 @@ SIFTDescriptor.match = function(listA, listB){
 }
 
 SIFTDescriptor.matchF = function(listA, listB,  imageMatrixA,imageMatrixB, matrixFfwd, matrixFrev, lineMaxDistance){
-	lineMaxDistance = lineMaxDistance!==undefined ? lineMaxDistance : 50;
+	lineMaxDistance = lineMaxDistance!==undefined ? lineMaxDistance : 1.0;//25;//50; // ~0.25 is about minimum accuracy
 	console.log("matching...");
 	var i, j;
 	var matches = [];
@@ -570,7 +570,7 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 		return a["confidence"] > b["confidence"] ? -1 : 1;
 	});
 	var maxNeeded = 150; // need more if confidence quality is poor
-	if(same.length>=maxNeeded){
+	if(same.length>maxNeeded){
 		same = Code.copyArray(same,0,maxNeeded-1);
 	}
 	return same;

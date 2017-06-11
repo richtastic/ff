@@ -861,7 +861,8 @@ R3D.drawPointAt = function(pX,pY, r,g,b, rad){
 	return d;
 }
 
-R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB, errorPosition){ 
+R3D.fundamentalRANSACFromPoints = function(pointsA,pointsB, errorPosition, initialF){ 
+	// TODO: use initial F estimate in some capacity
 	if(!pointsA || !pointsB || pointsA.length<7 || pointsB.length<7){
 		return null;
 	}
@@ -3297,8 +3298,8 @@ R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 
 var HARRIS_CALL = 0;
 R3D.HarrisExtract = function(imageSource){
-//GLOBALSTAGE.root().matrix().scale(0.75);
 	++HARRIS_CALL;
+	var extremaMinimumContrast = 0.000001; // corner - restrictive: 0.0001, lenient: 0.000001
 	var imageSourceGray = imageSource.gry();
 	var imageSourceWidth = imageSource.width();
 	var imageSourceHeight = imageSource.height();
@@ -3313,9 +3314,9 @@ var imageGray = imageSourceGray;
 var imageWidth = imageSourceWidth;
 var imageHeight = imageSourceHeight;
 var scaleMax = 1.0; // 1.0  // really small ones have smooth feature window = bad
-var scaleMin = -2.0; // 0.25
+var scaleMin = -3.0; // 0.25
 var scaleRange = scaleMax - scaleMin;
-var scaleCount = 6; // [2, 1.32, 0.87, 0.57, 0.38, 0.25]
+var scaleCount = 10; // 6 = [2, 1.32, 0.87, 0.57, 0.38, 0.25]
 var scales = [];
 for(i=0; i<scaleCount; ++i){
 	scales[i] = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
@@ -3395,11 +3396,9 @@ var currentScale = imageSourceWidth/imageWidth;
 if(true){
 
 		var extrema = Code.findExtrema2DFloat(corners, imageWidth, imageHeight);
-		//console.log("extrema: "+extrema.length);
 				for(var e=0; e<extrema.length; ++e){
 					var ext = extrema[e];
-					//if(Math.abs(ext.z)>0.5){ // moveany - 
-					if(Math.abs(ext.z)>0.000005){ // corner - restrictive: 0.0001, lenient: 0.000001
+					if(Math.abs(ext.z)>extremaMinimumContrast){
 						// var hessianScore = hessianScores[ Math.floor(ext.y*1.0)*imageWidth + Math.floor(ext.x*1.0) ];
 						// hessianThreshold = 1.0;
 						// if (hessianScore > hessianThreshold) { // edge threshold
