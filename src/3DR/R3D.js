@@ -3599,12 +3599,150 @@ R3D.detectCheckerboard = function(imageSource, useCorner){
 			}
 		}
 	}
+	//console.log(points3D.length);
 	// get grayscale
+	var imageWidth = imageSource.width();
+	var imageHeight = imageSource.height();
+	var imageGry = imageSource.gry();
 	// threshold image => black & white
-	// find blobs - decimate
+	var imageBinary = ImageMat.ltFloat(imageGry,0.3);
+	imageBinary = ImageMat.retractBlob(imageBinary, imageWidth,imageHeight);
+	// imageBinary = ImageMat.retractBlob(imageBinary, imageWidth,imageHeight);
+	// imageBinary = ImageMat.retractBlob(imageBinary, imageWidth,imageHeight);
 	// find corners
+	//var corners = R3D.harrisCornerDetection(imageGry, imageWidth,imageHeight);
+	var corners = R3D.pointsCornerDetector(imageGry, imageWidth,imageHeight, null); // TODO: 
+
+var img = GLOBALSTAGE.getFloatRGBAsImage(imageBinary, imageBinary, imageBinary, imageWidth,imageHeight);
+var d = new DOImage(img);
+GLOBALSTAGE.addChild(d);
+d.graphics().alpha(1.0);
+d.matrix().translate(imageWidth,0);
+	// find blobs - decimate
+var blobs = ImageMat.findBlobsCOM(imageBinary,imageWidth,imageHeight);
+/*
+blobs = ImageMat.normalFloat01(blobs);
+var img = GLOBALSTAGE.getFloatRGBAsImage(blobs, blobs, blobs, imageWidth,imageHeight);
+var d = new DOImage(img);
+GLOBALSTAGE.addChild(d);
+d.graphics().alpha(1.0);
+d.matrix().translate(imageWidth,0);
+return;
+*/
+
+//var blobs = ImageMat.findBlobs(imageBinary,imageWidth,imageHeight);
+
+	for(i=0; i<blobs.length; ++i){
+		var blob = blobs[i];
+			var bX = blob.x;
+			var bY = blob.y;
+		var d = new DO();
+		//d.graphics().setLine(2.0, colLine );
+		d.graphics().beginPath();
+		d.graphics().setFill(0xFFFF00FF);
+		d.graphics().drawRect(-1,-1,2,2);
+		d.graphics().endPath();
+		d.graphics().fill();
+		//d.graphics().strokeLine();
+		d.matrix().translate(bX,bY);
+		GLOBALSTAGE.addChild(d);
+	}
+
+	for(i=0; i<corners.length; ++i){
+		var corner = corners[i];
+			var bX = corner.x;
+			var bY = corner.y;
+		var d = new DO();
+		d.graphics().beginPath();
+		d.graphics().setFill(0xFFFF0000);
+		d.graphics().drawRect(-2,-2,4,4);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.matrix().translate(bX,bY);
+		GLOBALSTAGE.addChild(d);
+	}
 	// find boxes = blobs + 4 bordering blob-corners
+	var sorting = function(a,b){
+		return a["distance"]<b["distance"] ? -1 : 1;
+	}
+
+	// create objects
+	for(i=0; i<corners.length; ++i){
+		var corner = corners[i];
+		corner = {"point":corner, "boxes":[], "id":i};
+		corners[i] = corner;
+	}
+	
+	var boxes = [];
+	for(i=0; i<blobs.length; ++i){
+		var blob = blobs[i];
+		var cen = new V2D(blob.x,blob.y);
+		var closest = new PriorityQueue(sorting, 4);
+		for(j=0; j<corners.length; ++j){
+			var corner = corners[j];
+			var distance = V2D.distance(corner["point"],cen);
+			closest.push({"distance":distance, "corner":corner});
+		}
+		closest = closest.toArray();
+		closest = closest.sort(function(a,b){ // CCW about box
+			if(a==b){ return 0; }
+			a = a["corner"];
+			b = b["corner"];
+			var toA = new V2D(a.x-cen.x,a.y-cen.y);
+			var toB = new V2D(b.x-cen.x,b.y-cen.y);
+			return V2D.angleDirection(V2D.DIRX,toA)<V2D.angleDirection(V2D.DIRX,toB) ? -1 : 1;
+		});
+		// TODO:
+		// check if box is inside area ==> if no then continue
+
+		var list = [];
+		var box = {"corners":list, "point":cen};
+		for(j=0; j<closest.length; ++j){
+			var corner = closest[j]["corner"];
+			//console.log(corner["id"]+" ... "+j);
+			list.push(corner);
+			corner["boxes"].push(box);
+		}
+		boxes.push(box);
+	}
+	console.log("CORNERS: "+corners.length);
+	console.log("BOXES: "+boxes.length);
+	
+	for(i=0; i<boxes.length; ++i){
+		var box = boxes[i];
+		var points = box["corners"];
+		//console.log(points["boxes"].length)
+		//var offset = Math.random()*10;
+		var d = new DO();
+		d.graphics().setLine(1.0, 0xFF0000CC);
+		d.graphics().beginPath();
+		d.graphics().setFill(0x660000FF);
+		d.graphics().moveTo(points[0]["point"].x,points[0]["point"].y);
+		d.graphics().lineTo(points[1]["point"].x,points[1]["point"].y);
+		d.graphics().lineTo(points[2]["point"].x,points[2]["point"].y);
+		d.graphics().lineTo(points[3]["point"].x,points[3]["point"].y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.graphics().fill();
+		d.matrix().translate(0 + Math.random()*10,0 + Math.random()*10);
+		GLOBALSTAGE.addChild(d);
+	}
+	
 	// find grids = connect boxes at corners
+	var grid = [];
+	for(i=0; i<boxes.length; ++i){
+		var boxA = boxes[i];
+		var corners = boxA["corners"];
+		for(j=0; j<corners.length; ++j){
+			var corner = corners[j];
+			var bs = corner["boxes"];
+			for(k=0; k<bs.length; ++k){
+				var b = bs[k];
+				// 
+			}
+		}
+	}
+	// prune out nodes
 	// find board = final grid that is most checkerboard-like : connected boxes match count, 4 corner, n-side, n*n inner
 	// orientate board by picking random corner as corner || pick corner box closest to R/G/B reference point
 	// refine corners on original image
@@ -3735,12 +3873,12 @@ R3D.correctCameraDistortion = function(points3D, points2D, K){ // 3D -> K -> dis
 		var r_d6 = r_d4*r_d2;
 		var x_c = projected2D.x;
 		var y_c = projected2D.y;
-		var a0 = ;
-		var a1 = ;
-		var a2 = ;
-		var a3 = ;
-		var a4 = ;
-		var a5 = ;
+		var a0 = 0;
+		var a1 = 0;
+		var a2 = 0;
+		var a3 = 0;
+		var a4 = 0;
+		var a5 = 0;
 		A.set(i,0, a0);
 		A.set(i,1, a1);
 		A.set(i,2, a2);
@@ -3767,8 +3905,7 @@ p2: (r_c^2 + 2*x_c^2) + 2*x_c*y_c)
 	var p2 = coeff[4];
 	var s = coeff[5];
 	// TODO: SCALE BY S ?
-	{"k1":k1, "k2":k2, "k3":k3, "p1":p1, "p1":k2};
-	return ;
+	return {"k1":k1, "k2":k2, "k3":k3, "p1":p1, "p1":k2};
 }
 R3D.calibrateCameraFromPoints = function(pointGroups3D, pointGroups2D){
 	var i, len = Math.min(pointGroups2D.length, pointGroups3D.length);

@@ -678,7 +678,7 @@ ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
 					if(j>0){
 						tl = a[(j-1)*wid + (i-1)];
 					}
-					if(j<wm1){
+					if(j<hm1){
 						bl = a[(j+1)*wid + (i-1)];
 					}
 				}
@@ -723,14 +723,15 @@ ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
 	return ImageMat.getPeaks(sumResult, wid,hei);
 }
 ImageMat.findBlobsCOM = function(a,wid,hei){
-	var a = Code.copyArray(new Array(), a);
+	a = Code.copyArray(new Array(), a);
 	var blobs = new Array();
-	var i, j, im1, ip1, jm1, jp1, tl,to,tr, lf,se,ri, bl,bo,br, index;
+	var i, j, k, im1, ip1, jm1, jp1, tl,to,tr, lf,se,ri, bl,bo,br, index;
 	var len = wid*hei, blob, max;
 	var wm1 = wid-1, hm1 = hei-1;
-	for(i=0;i<len;++i){ // all non-zero => -1, 0 => 2
+	for(i=0;i<len;++i){ // all non-zero => -1, 0 => -2
 		a[i] = (a[i]==0) ? -2 : -1;
 	}
+	var joinMap = [];
 	blob = 0;
 	for(j=0;j<hei;++j){ // assign all blobs to index
 		for(i=0;i<wid;++i){
@@ -740,63 +741,96 @@ ImageMat.findBlobsCOM = function(a,wid,hei){
 			if(i>0){ // lefts
 				lf = a[j*wid + (i-1)];
 				if(j>0){
-					tl = a[(j-1)*wid + (i-1)];
+					bl = a[(j-1)*wid + (i-1)];
 				}
-				if(j<wm1){
-					bl = a[(j+1)*wid + (i-1)];
+				if(j<hm1){
+					tl = a[(j+1)*wid + (i-1)];
 				}
 			}
 			if(i<wm1){ // rights
 				ri = a[j*wid + (i+1)];
-				if(j<hm1){
-					br = a[(j+1)*wid + (i+1)];
-				}
 				if(j>0){
-					tr = a[(j-1)*wid + (i+1)];
+					br = a[(j-1)*wid + (i+1)];
+				}
+				if(j<hm1){
+					tr = a[(j+1)*wid + (i+1)];
 				}
 			}
 			if(j>0){ // tops
-				to = a[(j-1)*wid + i];
+				bo = a[(j-1)*wid + i];
 			}
 			if(j<hm1){ // bots
-				bo = a[(j+1)*wid + i];
+				to = a[(j+1)*wid + i];
 			}
 			if(se==-1){ // object
 				max = Math.max(tl,to,tr, lf,se,ri, bl,bo,br);
-				if(max==-1){// new blob
+				if(max==-1){ // new blob
+					//console.log("NEW: "+i+","+j+" = "+[tl,to,tr, lf,se,ri, bl,bo,br])
 					a[index] = blob;
-					blobs.push( {x:i, y:j, count:1} );
+					joinMap[blob] = [blob];
 					++blob;
-				}else{ // part of existing blob
-					a[index] = max;
-					blobs[max].x += i;
-					blobs[max].y += j;
-					blobs[max].count++;
+				}else{
+					se = max;
+					a[index] = se;
+					var list = [tl,to,tr, lf,se,ri, bl,bo,br];
+					for(k=0; k<list.length;++k){
+						if(list[k]<0){
+							list.splice(k,1);
+							--k;
+						}
+					}
+					if(list.length>1){
+						var min = Code.minArray(list);
+						for(k=0; k<list.length; ++k){
+							var item = list[k];
+							if(item>min){ // merge arrays
+								joinMap[item] = joinMap[min];
+							}
+						}
+					}
 				}
+			} // else -2
+		}
+	}
+	// join adjacent blobmasses
+	for(i=0; i<joinMap.length; ++i){
+		var map = joinMap[i];
+		var merge = map[0];
+		if(merge==i){ continue; }
+		for(k=0; k<len; ++k){
+			if(a[k]==i){
+				a[k] = merge;
 			}
 		}
 	}
-	len = blobs.length;
-	for(i=0;i<len;++i){
-		blobs[i].count *= 1.0;
-		blobs[i].x /= blobs[i].count;
-		blobs[i].y /= blobs[i].count;
+	// record blobs
+	var blobs = [];
+	for(j=0;j<hei;++j){ // assign all blobs to index
+		for(i=0;i<wid;++i){
+			var index = j*wid + i;
+			var item = a[index];
+			if(item>=0){
+				var blob = blobs[item];
+				if(!blob){
+					blob = {x:0, y:0, count:0};
+					blobs[item] = blob;
+				}
+				blob.x += i;
+				blob.y += j;
+				blob.count++;
+			}
+		}
 	}
-	return blobs;
-	//return a;
-	/*
-pass 3:
-for each element, if it is nonzero
-	add x,y location and area count to an array 'blobs'
-
-for each blob, calculate com(x) = SUM OF X / TOTAL COUNT
-
-
-
-
-
-	*/
-	// 
+	var output = [];
+	for(i=0;i<blobs.length;++i){
+		if(blobs[i]){
+			var blob = blobs[i];
+			blob.x /= blobs[i].count;
+			blob.y /= blobs[i].count;
+			output.push(blob);
+		}
+	}
+	return output;
 }
 ImageMat.dropBelow = function(img,value){
 	var i, len = img.length;
