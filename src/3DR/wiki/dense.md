@@ -93,6 +93,16 @@ For a given cell **C<sub>needle</sub>** and cell **B<sub>haystack</sub>**:
 <br/>
 
 
+## DENSE MATCHING USING F
+	=> epipolar line in image A matches up with epipolar line in image B
+	- uniqueness constraint: each feature on epipolar line has 0 or at most 1 matches on corresponding epipolar line
+	- order constraint: sequences of features have same order on given epipolar line pairs
+	- smoothness behavior: typically 
+		- discontinuity / occlusion: obstruction in image (something comes in front or goes behind) preventing 
+	- start coarse [bound areas to blocks] -- use lower resolution image pairs
+		- move to fine => only search in box [+error] for subsequent 
+	- points on the lines also have relationships with points above/below as well [should also behave same?]
+- can minimize energy fxn with graph cut [Fast Approximate Energy Minimization via Graph Cuts,]
 
 
 a good point migh be one that if you move left/right or rotate or scale a little has a big change in SoSD
@@ -101,6 +111,11 @@ a good point migh be one that if you move left/right or rotate or scale a little
 		- best point has highest cost
 
 => spots with MOST texture will fit this best
+
+
+http://ivizlab.sfu.ca/arya/Papers/IEEE/TransactMM/CD/DATA/00748168.PDF
+https://pdfs.semanticscholar.org/c222/bde241a3916465423788eccd3d0623824f44.pdf
+
 
 
 

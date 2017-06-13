@@ -378,6 +378,14 @@ R3D.homographyMatrixLinear = function(pointsA,pointsB){
 	return null;
 }
 R3D.homographyMatrixNonlinear = function(H,pointsA,pointsB){
+	if(pointsB===undefined){ // initialize H
+		pointsB = pointsA;
+		pointsA = H;
+		H = R3D.homographyMatrixLinear(pointsA,pointsB);
+		if(!H){
+			return null;
+		}
+	}
 	var result = R3D.homographyMatrixNonlinearVars(H,pointsA,pointsB);
 	return result.H;
 }
@@ -604,31 +612,43 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 	return {max:max, min:min, angles:angles, increasing:(angles[0]<angles[1])};
 }
 R3D.polarRectification = function(source,epipole){
+	var width = 0;
+	var height = 0;
+	if(source && Code.isa(source,ImageMat)){
+		width = source.width();
+		height = source.height();
+	}else{
+		width = source["width"];
+		height = source["height"];
+	}
 	if(epipole.y<0){
-		if(epipole.x<0){ // 1
+		if(epipole.x<0){
+			return R3D._rectifyRegion0(source,epipole);
+		}else if(epipole.x<width){
 			return R3D._rectifyRegion1(source,epipole);
-		}else if(epipole.x<source.width){ // 2
+		}else{
 			return R3D._rectifyRegion2(source,epipole);
-		}else{ // 3
+		}
+	}else if(epipole.y<height){
+		if(epipole.x<0){
 			return R3D._rectifyRegion3(source,epipole);
-		}
-	}else if(epipole.y<source.height){
-		if(epipole.x<0){ // 4
+		}else if(epipole.x<width){
 			return R3D._rectifyRegion4(source,epipole);
-		}else if(epipole.x<source.width){ // 5
+		}else{
 			return R3D._rectifyRegion5(source,epipole);
-		}else{ // 6
-			return R3D._rectifyRegion6(source,epipole);
 		}
-	}else{// epipole.y>=source.height
-		if(epipole.x<0){ // 7
+	}else{ // epipole.y>=source.height
+		if(epipole.x<0){
+			return R3D._rectifyRegion6(source,epipole);
+		}else if(epipole.x<width){
 			return R3D._rectifyRegion7(source,epipole);
-		}else if(epipole.x<source.width){ // 8
+		}else{
 			return R3D._rectifyRegion8(source,epipole);
-		}else{ // 9
-			return R3D._rectifyRegion9(source,epipole);
 		}
 	}
+}
+R3D._rectifyRegion0 = function(source,epipole){
+	return R3D._rectifyRegionAll(source,epipole, 0);
 }
 R3D._rectifyRegion1 = function(source,epipole){
 	return R3D._rectifyRegionAll(source,epipole, 1);
@@ -654,15 +674,16 @@ R3D._rectifyRegion7 = function(source,epipole){
 R3D._rectifyRegion8 = function(source,epipole){
 	return R3D._rectifyRegionAll(source,epipole, 8);
 }
-R3D._rectifyRegion9 = function(source,epipole){
-	return R3D._rectifyRegionAll(source,epipole, 9);
-}
 R3D._rectifyRegionAll = function(source,epipole, region){ // convention is always CW & seamless border-interface
 	var image, width, height;
-	if( source.source && Code.isa(source.source,ImageMat) ){ // is already imagemat
-		image = source.source;
-		width = source.width;
-		height = source.height;
+	//if( source.source && Code.isa(source.source,ImageMat) ){ // is already imagemat
+		// image = source.source;
+		// width = source.width;
+		// height = source.height;
+	if( source && Code.isa(source,ImageMat) ){ // is already imagemat
+		image = source;
+		width = source.width();
+		height = source.height();
 	}else{ // is floats
 		width = source.width;
 		height = source.height;
@@ -671,33 +692,34 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		image.setGrnFromFloat(source.grn);
 		image.setBluFromFloat(source.blu);
 	}
+	
 	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
 	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D(), point = new V3D();
 	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;
 	var radiusCount, thetaCount, intersect;
 	var rectifiedR, rectifiedG, rectifiedB;
 	var angleTable = [];
-	if(region==1){
+	if(region==0){
 		corners = [TR,BR,BL, TL];
 		radiusMin = Math.floor( V2D.distance(epipole,TL) );
 		radiusMax = Math.ceil( V2D.distance(epipole,BR) );
 		thetaCount = width + height - 2;
-	}else if(region==2){
+	}else if(region==1){
 		corners = [TR,BR,BL,TL, TR];
 		radiusMin = Math.floor( -epipole.y );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,BL), V2D.distance(epipole,BR) ) );
 		thetaCount = width + 2.0*height - 3;
-	}else if(region==3){
+	}else if(region==2){
 		corners = [BR,BL,TL, TR];
 		radiusMin = Math.floor( V2D.distance(epipole,TR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
 		thetaCount = width + height - 2;
-	}else if(region==4){
+	}else if(region==3){
 		corners = [TL,TR,BR,BL, TL];
 		radiusMin = Math.floor( -epipole.x );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TR), V2D.distance(epipole,BR) ) );
 		thetaCount = 2.0*width + height - 3;
-	}else if(region==5){
+	}else if(region==4){
 		radiusMin = 0.0;
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR), V2D.distance(epipole,BR), V2D.distance(epipole,BL) ) );
 		thetaCount = 2.0*width + 2.0*height - 4;
@@ -726,33 +748,33 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			end.set(epipole.x,0);
 			corners = [pt,BL,TL,TR,BR,pt,end];
 		}
-	}else if(region==6){
+	}else if(region==5){
 		corners = [BR,BL,TL,TR, BR];
 		radiusMin = Math.floor( epipole.x-width );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,BL) ) );
 		thetaCount = 2.0*width + height - 3;
-	}else if(region==7){
+	}else if(region==6){
 		corners = [TL,TR,BR, BL];
 		radiusMin = Math.floor( V2D.distance(epipole,BL) );
 		radiusMax = Math.ceil( V2D.distance(epipole,TR) );
 		thetaCount = width + height - 2;
-	}else if(region==8){
+	}else if(region==7){
 		corners = [BL,TL,TR,BR, BL];
 		radiusMin = Math.floor( epipole.y-height );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR) ) );
 		thetaCount = width + 2.0*height - 3;
-	}else if(region==9){
+	}else if(region==8){
 		corners = [BL,TL,TR, BR];
 		radiusMin = Math.floor( V2D.distance(epipole,BR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,TL) );
 		thetaCount = width + height - 2;
 	}
-	// 
 	radiusCount = radiusMax-radiusMin + 1;
 	len = thetaCount*radiusCount; // maximum length - cannot predict exact length
 	rectifiedR = Code.newArrayZeros(len);
 	rectifiedG = Code.newArrayZeros(len);
 	rectifiedB = Code.newArrayZeros(len);
+
 	edge.copy(corners.shift());
 	V2D.sub(dir, corners[0],edge);
 	dir.norm();
@@ -784,12 +806,8 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		len = Math.floor(ray.length());
 		ray.norm();
 		angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
-		// for each line - radius
-		for(i = Math.floor(len), point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i>=0; --i){ // this has problems everywhere
-		//for(i=0, point.set(0,0); 0<=Math.ceil(point.x) && Math.floor(point.x)<=width && 0<=Math.ceil(point.y) && Math.floor(point.y)<=height && i<=len; ++i){ // this has problems everywhere
-		//for(i=radiusMax;i>=radiusMin;--i){
-				index = radiusCount*j + i-radiusMin ; // 7 needs +1, 5 needs none
-			//index = radiusCount*j + (radiusMax-i-1);
+		for(i=radiusMax;i>=radiusMin;--i){
+			index = radiusCount*j + i-radiusMin; // 7 needs +1, 5 needs none
 			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
 			image.getPointInterpolateLinear(color,point.x,point.y);
 			// image.getPointInterpolateCubic(color,point.x,point.y);
@@ -3314,9 +3332,9 @@ var imageGray = imageSourceGray;
 var imageWidth = imageSourceWidth;
 var imageHeight = imageSourceHeight;
 var scaleMax = 1.0; // 1.0  // really small ones have smooth feature window = bad
-var scaleMin = -3.0; // 0.25
+var scaleMin = -2.0; // 0.25
 var scaleRange = scaleMax - scaleMin;
-var scaleCount = 10; // 6 = [2, 1.32, 0.87, 0.57, 0.38, 0.25]
+var scaleCount = 6; // 6 = [2, 1.32, 0.87, 0.57, 0.38, 0.25]
 var scales = [];
 for(i=0; i<scaleCount; ++i){
 	scales[i] = Math.pow(2, scaleMin + scaleRange*(1.0 - i/(scaleCount-1)));
@@ -3564,6 +3582,224 @@ R3D.HarrisDescriptors = function(imageSource, points){ // create features from p
 }
 
 
+R3D.detectCheckerboard = function(imageSource, useCorner){
+	useCorner = useCorner!==undefined ? useCorner : false;
+	var i, j;
+	var gridCountX = 10; // white + black
+	var gridCountY = 10;
+	var points3D = Code.newArray();
+	var zIndex = 0;
+	for(j=0; j<=gridCountY; ++j){ // bottom to top
+		for(i=0; i<=gridCountX; ++i){ // left to right
+			if(i==gridCountX && j==0){ // missing bottom right index 
+			}else if(i==0 && j==gridCountY){ // missing top left index
+			}else{
+				var point = new V3D(j,i,zIndex);
+				points3D.push(point);
+			}
+		}
+	}
+	// get grayscale
+	// threshold image => black & white
+	// find blobs - decimate
+	// find corners
+	// find boxes = blobs + 4 bordering blob-corners
+	// find grids = connect boxes at corners
+	// find board = final grid that is most checkerboard-like : connected boxes match count, 4 corner, n-side, n*n inner
+	// orientate board by picking random corner as corner || pick corner box closest to R/G/B reference point
+	// refine corners on original image
+	// iterate thru 2D points & return
+	return null; // if could not decipher
+	return {"points2D":points2D, "points3D":points3D};
+}
+R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){ // 
+	console.log(" calibrateCameraK ");
+	var i, k;
+	var listH = [H0,H1,H2];
+	for(k=0; k<pointGroups2D; ++k){ // for each image projection
+		var points2D = pointGroups2D[k];
+		var points3D = pointGroups3D[k];
+		// TODO: REQUIREMENTS ON POINTS2D TO HAVE z = 1?
+		var norm = R3D.calculateNormalizedPoints([points3D,points2D]);
+		//var H = R3D.projectiveDLT(norm.normalized[0],norm.normalized[1]);
+		// Levenberg Marquardt nonlinear minimization goes here
+		//var result = R3D.homographyMatrixNonlinear(H);
+		var H = R3D.homographyMatrixNonlinear(norm.normalized[0],norm.normalized[1]);
+		// 
+		var xVals = H.toArray();
+		args = [ points0.norm.normalized[0], points0.norm.normalized[1] ];
+		yVals = Code.newArrayZeros(args[0].length*4);
+		Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals ); // NEED TO PASS TRUE ?
+
+		// unnormalize:
+		var forward, reverse;
+		forward = norm.forward[0];
+		reverse = norm.reverse[1];
+		H = Matrix.mult(H,forward);
+		H = Matrix.mult(reverse,H);
+
+		// arbitrary scale last element
+		H.scale(1.0/H.get(2,2));
+
+		listH.push(H);
+	}
+	console.log(" making V ");
+	var hCount = listH.length;
+	// CONSTRUCT V:
+	var V = new Matrix(2*hCount,6);//.setFromArrayMatrix(vArr);
+	var h00, h01, h10, h11, h20, h21;
+	for(i=0;i<hCount;++i){ // row,col: 0i*0j, 0i*1j + 1i*0j, 1i*1j, 2i*0j + 0i*2j, 2i*1j + 1i*2j, 2i*2j
+		H = listH[i];
+		h00 = H.get(0,0); // 0
+		h01 = H.get(0,1); // 1
+		h10 = H.get(1,0); // 3
+		h11 = H.get(1,1); // 4
+		h20 = H.get(2,0); // 6
+		h21 = H.get(2,1); // 7
+		// v01
+		V.set(i*2+0,0, h00*h01 );
+		V.set(i*2+0,1, h00*h11 + h10*h01 );
+		V.set(i*2+0,2, h10*h11 );
+		V.set(i*2+0,3, h20*h01 + h00*h21 );
+		V.set(i*2+0,4, h20*h11 + h10*h21 );
+		V.set(i*2+0,5, h20*h21 );
+		// v00 - v11
+		V.set(i*2+1,0, h00*h00 - h01*h01 );
+		V.set(i*2+1,1, 2.0*(h00*h10 - h01*h11) );
+		V.set(i*2+1,2, h10*h10 - h11*h11 );
+		V.set(i*2+1,3, 2.0*(h20*h00 - h21*h01) );
+ 		V.set(i*2+1,4, 2.0*(h20*h10 - h21*h11) );
+ 		V.set(i*2+1,5, h20*h20 - h21*h21 );
+	// normalize row ? 
+	}
+	var svd = Matrix.SVD(V);
+	var coeff = svd.V.colToArray(5);
+	//console.log(coeff)
+	var b00 = coeff[0];
+	var b01 = coeff[1];
+	var b11 = coeff[2];
+	var b02 = coeff[3];
+	var b12 = coeff[4];
+	var b22 = coeff[5];
+	console.log(" making K ");
+	// compute K properties - requirements: den1!=0, b00!=0, fy>0
+		var ratio;
+		var num1 = b01*b02 - b00*b12;
+		var den1 = b00*b11 - b01*b01;
+	var v0 = num1/den1;
+	var lambda = b22 - ((b02*b02 + v0*num1)/b00);
+		ratio = lambda/b00;
+		if(ratio<0){
+			ratio = Math.abs( ratio );
+			console.log("bad ratio A");
+		}
+	var fx = Math.sqrt( ratio ); // Math.abs(
+		ratio = (lambda*b00)/den1;
+		if(ratio<0){
+			ratio = Math.abs( ratio );
+			console.log("bad ratio B");
+		}
+	var fy = Math.sqrt( ratio ); // Math.abs(
+	var s = -b01*fx*fx*fy/lambda;
+	var u0 = ((s*v0)/fx) - ((b02*fx*fx)/lambda);
+	//console.log(lambda,b00,den1,fx,fy)
+	// construct K
+	var K = new Matrix(3,3).setFromArray([fx,s,u0, 0,fy,v0, 0,0,1]);
+	console.log("K: ");
+	console.log(K.toString());
+	this._intrinsicK = K;
+
+
+
+	var K = new Matrix(3,3);
+	return K;
+}
+R3D.correctCameraDistortion = function(points3D, points2D, K){ // 3D -> K -> distortion -> 2D
+	var i, j;
+	var len = Math.min(points3D, points2D);
+	var rows = len;
+	var cols = 6;
+	var x_center = K.get(0,2);
+	var y_center = K.get(1,2);
+	var A = new Matrix();
+	for(i=0; i<len;++i){ // assuming extrinsic camera matrix is identity
+		var point2D = points2D[i];
+		var point3D = points3D[i];
+		var projected2D = K * points3D; // matrix
+		// ACTUAL DISTORTED
+		// ESTIMATED DISTORTED
+		var x_d = points2D.x;
+		var y_d = points2D.y;
+		var r_d2 = Math.pow(x_d-x_center,2) + Math.pow(y_d-y_center);
+		var r_d4 = r_d2*r_d2;
+		var r_d6 = r_d4*r_d2;
+		var x_c = projected2D.x;
+		var y_c = projected2D.y;
+		var a0 = ;
+		var a1 = ;
+		var a2 = ;
+		var a3 = ;
+		var a4 = ;
+		var a5 = ;
+		A.set(i,0, a0);
+		A.set(i,1, a1);
+		A.set(i,2, a2);
+		A.set(i,3, a3);
+		A.set(i,4, a4);
+		A.set(i,5, a5);
+
+	}
+	var SVD = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(5);
+		/*
+k1: (x_c*r_d^2 + y_c*r_d^2)
+k2: (x_c*r_d^4 + y_c*r_d^4)
+k3: (x_c*r_d^6 + y_c*r_d^6)
+p1: (2*x_c*y_c + (r_c^2 + 2*y_c^2))
+p2: (r_c^2 + 2*x_c^2) + 2*x_c*y_c)
+1:  (x_c - x_d + y_c - y_d)
+[ (x_c*r_d^2 + y_c*r_d^2)  (x_c*r_d^4 + y_c*r_d^4)  (x_c*r_d^6 + y_c*r_d^6)  (2*x_c*y_c + (r_c^2 + 2*y_c^2)) ((r_c^2 + 2*x_c^2) + 2*x_c*y_c) (x_c - x_d) ] * [k1  k2  k3  p1  p2  1]' = [0] 
+	*/
+	var k1 = coeff[0];
+	var k2 = coeff[1];
+	var k3 = coeff[2];
+	var p1 = coeff[3];
+	var p2 = coeff[4];
+	var s = coeff[5];
+	// TODO: SCALE BY S ?
+	{"k1":k1, "k2":k2, "k3":k3, "p1":p1, "p1":k2};
+	return ;
+}
+R3D.calibrateCameraFromPoints = function(pointGroups3D, pointGroups2D){
+	var i, len = Math.min(pointGroups2D.length, pointGroups3D.length);
+	var K = null, distortions = null;
+	// expand groups into single list
+	var points2D = [], points3D = [];
+	for(i=0; i<len; ++i){
+		Code.arrayPushArray(points2D,pointGroups2D[i]);
+		Code.arrayPushArray(points3D,pointGroups3D[i]);
+	}
+	// iterate till convergence:
+	var maxIterations = 1;
+	for(i=0; i<maxIterations; ++i){
+		var K = R3D.calibrateCameraK(pointGroups3D, pointGroups2D);
+		var distortions = R3D.correctCameraDistortion(K, points3D, points2D);
+	}
+	return {"K":K, "distortion":distortions};
+}
+
+R3D.imageCorrectDistortion = function(imageSource, distortions){
+	var k1 = distortions["k1"];
+	var k2 = distortions["k2"];
+	var k3 = distortions["k3"];
+	var p1 = distortions["p1"];
+	var p2 = distortions["p2"];
+	// determine maximum edge points / size
+	imageSource = new ImageMat(0,0);
+	return imageSource;
+}
+
 /*
 L1 - minkowski distance
+
 */

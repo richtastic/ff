@@ -1127,10 +1127,19 @@ r = sqrt(x&middot;x + y&middot;y)
 x & y measured from center (principal point)
 
 
+x_dis = x + k1*r^2 + k2*r^4 + k3*r^6   + 2p1*x*y + p2*(r^2 + 2*x*2*y)
+
+[x    k2  k3  p1  p2  p3] * [1 k1 k2 k3 p1 p2] = 0
+
+=> SVD for k1,k2,k3, p1,p2
+
+
 ITERATE:
 A) calculate intrinsic matrix
-B) calculate radial (+ tangental) distortion
+B) calculate radial (+ tangental) distortion [set of coefficients]
+	==> where it SHOULD be vs where it is
 
+delta_i = actual position - predicted position
 
 
 

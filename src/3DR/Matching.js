@@ -64,19 +64,20 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 // CORNER SCALE SPACE
-var featuresA = R3D.HarrisExtract(imageMatrixA);
-var featuresB = R3D.HarrisExtract(imageMatrixB);
+// var featuresA = R3D.HarrisExtract(imageMatrixA);
+// var featuresB = R3D.HarrisExtract(imageMatrixB);
 // SIFT SCALE SPACE
 // var featuresA = R3D.SIFTExtract(imageMatrixA);
 // var featuresB = R3D.SIFTExtract(imageMatrixB);
-
+featuresA = [];
+featuresB = [];
 
 // SHOW POINTS
 //var featuresB = [];
 console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
-//break;
+break;
 	var features = lists[f];
 	for(k=0; k<features.length; ++k){
 		var point = features[k];
@@ -241,10 +242,36 @@ var matrixFfwd = new Matrix(3,3).fromArray([
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
   
 
+// pointsA = featuresA;
+// pointsB = featuresB;
 
 //this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
 
-// return;
+var epipole = R3D.getEpipolesFromF(matrixFfwd);
+var epipoleA = epipole["A"];
+var epipoleB = epipole["B"];
+
+//epipole = new V2D(100,100);
+//epipole = new V2D(225,75);
+var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
+	var rectifiedA = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
+		rectified = rectifiedA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
+	var d = new DOImage(img);
+	//d.matrix().scale(1.0);
+	d.matrix().translate(800, 0);
+	GLOBALSTAGE.addChild(d);
+
+var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
+	var rectifiedB = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
+		rectified = rectifiedB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
+	var d = new DOImage(img);
+	//d.matrix().scale(1.0);
+	d.matrix().translate(800+rectifiedA.width(), 0);
+	GLOBALSTAGE.addChild(d);
+
+return;
 
 // only do matches within probable distance
 matching = SIFTDescriptor.matchF(siftA, siftB, imageMatrixA,imageMatrixB, matrixFfwd, matrixFrev);
@@ -256,7 +283,7 @@ console.log("matches: "+matches.length);
 var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
 console.log("crossMatches: "+bestMatches.length);
 //bestMatches = Code.copyArray(matches,0,50);
-this.drawMatches(bestMatches, 0,0, 400,0);
+//this.drawMatches(bestMatches, 0,0, 400,0);
 
 
 

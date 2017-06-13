@@ -1286,6 +1286,11 @@ Manual3DR.prototype._finishStage3DTextures = function() {
 }
 
 Manual3DR.prototype.handleManualImagesLoaded = function(imageInfo){
+	console.log("calibration");
+	this.calibrateCameraMatrix();
+return;
+
+
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
 	var i, j, k, list = [];
