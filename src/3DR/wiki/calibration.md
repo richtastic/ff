@@ -45,6 +45,9 @@ ALG:
 
 
 
+https://github.com/fchemotti/canwarp/blob/master/canwarp.py
+
+http://ksimek.github.io/2013/08/13/intrinsic/
 
 
 http://inside.mines.edu/~whoff/courses/EENG512/lectures/23-CameraCalibration.pdf

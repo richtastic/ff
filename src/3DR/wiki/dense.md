@@ -112,9 +112,70 @@ a good point migh be one that if you move left/right or rotate or scale a little
 
 => spots with MOST texture will fit this best
 
-
+http://www.ifp.uni-stuttgart.de/publications/phowo13/080Wenzel.pdf
 http://ivizlab.sfu.ca/arya/Papers/IEEE/TransactMM/CD/DATA/00748168.PDF
 https://pdfs.semanticscholar.org/c222/bde241a3916465423788eccd3d0623824f44.pdf
+
+remotesensing-08-00799.pdf
+
+
+global:
+	- minimize costs globally
+SGM (semi global matching) algorithm
+	 (Hirschmüller, 2008).
+	 [Hirschmüller, 2005] Accurate and Efficient Stereo Processing by Semi-Global Matching and Mutual Information
+SURE (tSGM = tube shaped disparity range) algorithm
+MI (mutual information) cost function
+
+
+
+
+bundle block adjustment
+
+stereo-pair vs multi-view
+
+global solve via: 
+	energy minimization approach, based on regularized Markov fields (MRFs), graph-cut, dynamic programming, or max-flow method
+		http://www.dlr.de/rm/Portaldata/3/Resources/papers/modeler/cvpr05hh.pdf
+census matching
+cost
+
+median filter
+DIM point cloud
+
+DIM (dense image matching)
+joint ilateral filter & guided filter
+-- should only consider the intersection area
+
+start with very low resolution
+	conceptualize 2D grid-graph projected over image
+
+REFINEMENT: (MEDIUM DENSITY)
+each match has a point & confidence
+	- choose F-row with next-highest-confidence match
+		- go over row and find most salient features (in image A & image B)
+	- add highest matches in row to list of potentials
+
+
+HIGH DENSITY:
+...
+
+
+http://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XL-5/93/2014/isprsarchives-XL-5-93-2014.pdf
+
+https://www.slideshare.net/KonradWenzel/150225-presentation-avila3darchdenseimagematching
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

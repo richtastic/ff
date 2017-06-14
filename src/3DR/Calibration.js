@@ -17,13 +17,15 @@ function Calibration(){
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
 	// this._keyboard.addListeners();
-	var imageList = ["calibrate_0.png"];
+	//var imageList = ["calibrate_0.png","calibrate_2.png","calibrate_4.png","calibrate_5.png"];
+	//var imageList = ["calibrate_1.png"];
+	var imageList = ["calibrate_5.png"];
 	// 0 is good
-	// 1 has glare
+	// 1 has glare - x 
 	// 2 is good
-	// 3 is ok
+	// 3 is ok - x => NOT ENOUGH CORNERS
 	// 4 is good
-	// 5 is small
+	// 5 is small - x => CORNERS NOT CLOSE ENOUGH | MERGE?
 	var imageLoader = new ImageLoader("./images/calibration/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
@@ -48,7 +50,7 @@ GLOBALSTAGE = this._stage;
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(1.0);
+		d.graphics().alpha(0.10);
 		d.matrix().translate(x,y);
 		x += img.width;
 		//
@@ -57,9 +59,22 @@ GLOBALSTAGE = this._stage;
 		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
 		imageMatrixList.push(imageMatrix);
 	}
-	// yep
+	// get checkerboard points
+	var pointList2D = [];
+	var pointList3D = [];
 	for(i=0; i<imageMatrixList.length; ++i){
 		var imageMatrix = imageMatrixList[i];
-		R3D.detectCheckerboard(imageMatrix);
+		var pointMatches = R3D.detectCheckerboard(imageMatrix);
+		var points2D = pointMatches["points2D"];
+		var points3D = pointMatches["points3D"];
+		pointList2D.push(points2D);
+		pointList3D.push(points3D);
 	}
+	return;
+	// console.log(pointList2D+"");
+	// console.log(pointList3D+"");
+	var result = R3D.calibrateCameraK(pointList3D,pointList2D);
 }
+
+
+

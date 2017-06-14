@@ -5786,6 +5786,14 @@ Code.closestPointsLines3D = function(oa,da, ob,db){ // infinite ray-ray closet p
 	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	return [A,B];
 }
+Code.medianPointLines3D = function(lines){ // list of o+d lines
+	// if 2 lines => return Code.closestPointsLines3D
+	// if 3+ lines:
+	// cost = ||(l-o) x d)|| / ||d||
+	// minimized at deriviative = 0
+	// => least squares solution
+	// SUMi=0_to_m: l - o - d*[(l-o)*d]/||d||
+}
 
 Code.closestPointPlane3D = function(q,n, p){ // 
 	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y + (q.z-p.z)*n.z)/(n.x*n.x+n.y*n.y+n.z*n.z);
@@ -5866,6 +5874,13 @@ Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest dis
 	dC = V3D.distance(pC[0],pC[1]);
 //console.log(" "+dC+" "+pC[0]+" "+pC[1]);
 	return Math.min(dA,dB,dC);
+}
+
+Code.radians = function(degrees){
+	return degrees*(Math.PI/180.0);
+}
+Code.degrees = function(radians){
+	return radians*(180.0/Math.PI);
 }
 Code.isPointInsideRect2D = function(p, a,b,c,d){ 
 	return Code.isPointInsidePolygon2D(p, [a,b,c,d]);
