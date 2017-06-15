@@ -752,6 +752,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	var radiusCount, thetaCount, intersect;
 	var rectifiedR, rectifiedG, rectifiedB;
 	var angleTable = [];
+	var radiusTable = [];
 	if(region==0){
 		corners = [TR,BR,BL, TL];
 		radiusMin = Math.floor( V2D.distance(epipole,TL) );
@@ -858,16 +859,28 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		V2D.sub(ray, mid,epipole);
 		len = Math.floor(ray.length());
 		ray.norm();
-		angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
+		//angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
+		angleTable.push(V2D.angleDirection(V2D.DIRX, ray));
+		var radiusStart = null;
+		var radiusEnd = null;
 		for(i=radiusMax;i>=radiusMin;--i){
+			
 			index = radiusCount*j + i-radiusMin; // 7 needs +1, 5 needs none
 			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
+			var isInside = point.x>=0 && point.y<width;
+			if(!isInside && radiusStart==null){
+				radiusStart = i;
+			}
+			if(isInside && radiusEnd==null){
+				radiusEnd = i;
+			}
 			image.getPointInterpolateLinear(color,point.x,point.y);
 			// image.getPointInterpolateCubic(color,point.x,point.y);
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
 		}
+		radiusTable.push([radiusStart,radiusEnd]);
 		if(corners.length>1){
 			var dd = new V2D(corners[0].x-corners[1].x,corners[0].y-corners[1].y);
 			dd.set(corners[0].x + dd.x, corners[0].y + dd.y);
@@ -889,13 +902,14 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			break;
 		}
 	}
+	radiusTable.pop(); // ?
 	angleTable.pop(); // one extra ...
 	thetaCount = j; // actual resulting length
 	len = thetaCount*radiusCount;
 	rectifiedR = rectifiedR.slice(0,len);
 	rectifiedG = rectifiedG.slice(0,len);
 	rectifiedB = rectifiedB.slice(0,len);
-	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax};
+	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares
@@ -4208,14 +4222,115 @@ R3D.imageCorrectDistortion = function(imageSource, distortions){
 	imageSource = new ImageMat(0,0);
 	return imageSource;
 }
+R3D.lineRayFromPointF = function(F, point){
+	point = new V3D(point.x,point.y, 1.0)
+	var line = F.multV3DtoV3D(new V3D(), point);
+	var org = new V2D();
+	var dir = new V2D();
+	Code.lineOriginAndDirection2DFromEquation(org,dir, line.x,line.y,line.z);
+	return {"org":org, "dir":dir}
+}
+
+R3D.mediumDensityMatches = function(imageSourceA,imageSourceB, rectifiedInfoA,rectifiedInfoB, Ffwd, matches){ // find additional sift features
+	console.log("mediumDensityMatches");
+	var i, j;
+var Frev = R3D.fundamentalInverse(Ffwd);
+var epipole = R3D.getEpipolesFromF(Ffwd);
+var epipoleA = epipole["A"];
+var epipoleB = epipole["B"];
+
+		var anglesA = rectifiedInfoA["angles"];
+	console.log(rectifiedInfoA);
+	imageRectifiedA = new ImageMat(rectifiedInfoA.width,rectifiedInfoA.height, rectifiedInfoA.red,rectifiedInfoA.grn,rectifiedInfoA.blu);
+	imageRectifiedB = new ImageMat(rectifiedInfoB.width,rectifiedInfoB.height, rectifiedInfoB.red,rectifiedInfoB.grn,rectifiedInfoB.blu);
 
 
-R3D.mediumDensityMatches = function(imageSourceA,imageSourceB, imageRectifiedA,imageRectifiedB, Ffwd, matches){ // find additional sift features
+var pointA = new V2D(192,182);
+var pointB = new V2D(171,181);
+
+	var lineA = R3D.lineRayFromPointF(Ffwd, pointA);
+		var orgA = lineA["org"];
+		var dirA = lineA["dir"];
+	var lineB = R3D.lineRayFromPointF(Frev, pointB);
+		var orgB = lineB["org"];
+		var dirB = lineB["dir"];
+var angleB = V2D.angleDirection(V2D.DIRX,dirB);
+var lineBIndex = null;
+for(i=0; i<anglesA.length-1; ++i){
+	var angle0 = anglesA[i];
+	var angle1 = anglesA[i+1];
+	if( (angle0<=angleB && angleB<angle1) ){
+		lineBIndex = i;
+		break;
+	}
+}
+console.log(lineBIndex);
+
+	var startA = new V2D(0, lineBIndex);
+	var endA = new V2D(imageRectifiedA.width(), lineBIndex);
+	// A
+	d = new DO();
+	d.graphics().setLine(1.0, 0xFF00FF00);
+	d.graphics().beginPath();
+	d.graphics().moveTo(startA.x,startA.y);
+	d.graphics().lineTo(endA.x,endA.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+	/*
+	angles[] (height)
+	radius[] (widths)
+	radiusMin (left)
+	radiusMax (right)
+
+
+	R3D._rectifyRegionAll
+
+	how to get from point in image to point in rectified image?
+		[how to reverse]
+	how to match line in rectified A with line in rectified B
+
+	*/
+
+var c, d;
+for(i=0; i<10; ++i){
+	return;
+	var pct = (i/9);
+	var startA = new V2D(0, pct*imageRectifiedA.height());
+	var endA = new V2D(imageRectifiedA.width(), pct*imageRectifiedA.height());
+	var startB = new V2D(0, pct*imageRectifiedB.height());
+	var endB = new V2D(imageRectifiedB.width(), pct*imageRectifiedB.height());
+	// A
+	d = new DO();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(startA.x,startA.y);
+	d.graphics().lineTo(endA.x,endA.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+	// B
+	d = new DO();
+	d.graphics().setLine(1.0, 0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().moveTo(startB.x,startB.y);
+	d.graphics().lineTo(endB.x,endB.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(imageRectifiedA.width(),0);
+	GLOBALSTAGE.addChild(d);
+
+}
 	// compute image overlap
 	// go down line by line
 	// create features at corners
 	// match features across images features
 	// matched features should be consistent (within error) of F
+	var matches = [];
+	return matches;
 }
 
 R3D.highDensityMatches = function(imageSourceA,imageSourceB, imageRectifiedA,imageRectifiedB, Ffwd, matches){ // pixel-resolution using features as start point

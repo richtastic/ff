@@ -254,26 +254,29 @@ var epipoleB = epipole["B"];
 //epipole = new V2D(100,100);
 //epipole = new V2D(225,75);
 var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
+	var rectifiedInfoA = rectified;
 	var rectifiedA = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
 		rectified = rectifiedA;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 	var d = new DOImage(img);
 	//d.matrix().scale(1.0);
-	d.matrix().translate(800, 0);
+	d.matrix().translate(0, 0);
 	GLOBALSTAGE.addChild(d);
 
 var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
+	var rectifiedInfoB = rectified;
 	var rectifiedB = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
 		rectified = rectifiedB;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 	var d = new DOImage(img);
 	//d.matrix().scale(1.0);
-	d.matrix().translate(800+rectifiedA.width(), 0);
+	d.matrix().translate(0+rectifiedA.width(), 0);
 	GLOBALSTAGE.addChild(d);
 
 
 
-var moreMatches = R3D.mediumDensityMatches();
+var matches = [];
+var moreMatches = R3D.mediumDensityMatches(imageMatrixA,imageMatrixB, rectifiedInfoA,rectifiedInfoB, matrixFfwd, matches);
 //var allMatches = R3D.highDensityMatches();
 
 return;
