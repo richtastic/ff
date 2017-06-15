@@ -2967,7 +2967,7 @@ R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, out
 }
 
 
-R3D.highDensityMatches = function(imageA,widthA,heightA,pointsA, imageB,widthB,heightB,pointsB,     stage){
+R3D.highDensityMatchesOLD = function(imageA,widthA,heightA,pointsA, imageB,widthB,heightB,pointsB,     stage){
 	if(!Code.isArray(imageA)){
 		imageA = new ImageMat(imageA.width,imageA.height,imageA.red,imageA.grn,imageA.blu);
 	}
@@ -3017,62 +3017,8 @@ GLOBALSTAGE = stage;
 	areaMap.show(rangeA, rangeB);
 
 }
-/*
-======= SCALE 1
-	--- 1
-	--- 1.25
-	--- 1.5
-	--- 1.75
-	--- 2
-		DOG:
-		=> 1.25 - 1.00
-		=> 1.50 - 1.25
-		=> 1.55 - 1.50
-		=> 2.00 - 1.75
-			EXT:
-				-> (1.25-1.00) && (1.50-1.25) && (1.75-1.50)
-					== [1.00, 1.25, 1.50, 1.75]
-				-> (1.50-1.25) && (1.75-1.50) && (2.00-1.75)
-					== [1.25, 1.50, 1.75, 2.00]
-======= SCALE 2
-	--- 2
-	--- 2.5
-	--- 3
-	--- 3.5
-	--- 4
-		DOG:
-			=> 2.5 - 2.0
-			=> 3.0 - 2.5
-			=> 3.5 - 3.0
-			=> 4.0 - 3.5
-				EXT:
-					-> 
-======= SCALE 4
-	--- 4
-	--- 5
-	--- 6
-	--- 7
-	--- 8
-======= SCALE 8
-
-A 0.8 + 1.2 + 1.7   => 1.2
-A 1.2 + 1.7 + 2.4   => 1.7
-
-B 1.7 + 2.4 + 3.4   => 2.4
-B 2.4 + 3.4 + 4.8   => 3.4
 
 
-
-R3D.js:2995 differenceSigma: 1.189207115002721
-R3D.js:2995 differenceSigma: 1.6817928305074292
-R3D.js:2995 differenceSigma: 2.378414230005442
-R3D.js:2995 differenceSigma: 3.3635856610148585
-
-dogSigma: 2.378414230005442
-R3D.js:3012 dogSigma: 3.3635856610148585
-
-C 
-*/
 CALLED_SIFT = -1;
 R3D.SIFTExtract = function(imageSource){
 CALLED_SIFT += 1;
@@ -4261,6 +4207,24 @@ R3D.imageCorrectDistortion = function(imageSource, distortions){
 	// determine maximum edge points / size
 	imageSource = new ImageMat(0,0);
 	return imageSource;
+}
+
+
+R3D.mediumDensityMatches = function(imageSourceA,imageSourceB, imageRectifiedA,imageRectifiedB, Ffwd, matches){ // find additional sift features
+	// compute image overlap
+	// go down line by line
+	// create features at corners
+	// match features across images features
+	// matched features should be consistent (within error) of F
+}
+
+R3D.highDensityMatches = function(imageSourceA,imageSourceB, imageRectifiedA,imageRectifiedB, Ffwd, matches){ // pixel-resolution using features as start point
+	// start at lower resolution
+	// start at known matches
+	// expand line left-right
+	// match via SAD ?? entropy ?? 
+	// KD TREE ??
+	//
 }
 
 /*

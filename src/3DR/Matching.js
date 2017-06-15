@@ -271,6 +271,11 @@ var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 	d.matrix().translate(800+rectifiedA.width(), 0);
 	GLOBALSTAGE.addChild(d);
 
+
+
+var moreMatches = R3D.mediumDensityMatches();
+//var allMatches = R3D.highDensityMatches();
+
 return;
 
 // only do matches within probable distance
