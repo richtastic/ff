@@ -329,6 +329,8 @@ var pointsB = [
 // pointsA = imageMatrixA.refineCornerPoints(pointsA);
 // pointsB = imageMatrixB.refineCornerPoints(pointsB);
 matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
+matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+
 console.log(matrixFfwd.toArray()+"");
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
@@ -391,7 +393,7 @@ var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 //var moreMatches = R3D.mediumDensityMatches(imageMatrixA,imageMatrixB, rectifiedInfoA,rectifiedInfoB, matrixFfwd, matches);
 var allMatches = R3D.highDensityMatches(imageMatrixA,imageMatrixB, rectifiedInfoA,rectifiedInfoB, matrixFfwd, matches);
 
-GLOBALSTAGE.root().matrix().scale(2.0);
+//GLOBALSTAGE.root().matrix().scale(2.0);
 
 return;
 

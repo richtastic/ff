@@ -255,6 +255,16 @@ ImageMat.prototype.getScaledImage = function(scale, sigma){
 	var centerY = this.height()*0.5;
 	return this.extractRectFromFloatImage(centerX,centerY,1.0/scale,sigma, finalWidth,finalHeight, null);
 }
+ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include 
+	var sub = [wid*hei];
+	var i, j;
+	for(j=0; j<=hei; ++j){
+		for(i=0; i<=wid; ++i){
+			sub[j*wid+i] = image[(offY+j)*width + (offX+i)];
+		}
+	}
+	return sub;
+}
 // ------------------------------------------------------------------------------------------------------------------------ set
 ImageMat.prototype.setFromArrayARGB = function(data){
 	var i, len = this._r.length;
