@@ -63,14 +63,17 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+// NOTHING
+featuresA = [];
+featuresB = [];
+
 // CORNER SCALE SPACE
 // var featuresA = R3D.HarrisExtract(imageMatrixA);
 // var featuresB = R3D.HarrisExtract(imageMatrixB);
 // SIFT SCALE SPACE
 // var featuresA = R3D.SIFTExtract(imageMatrixA);
 // var featuresB = R3D.SIFTExtract(imageMatrixB);
-featuresA = [];
-featuresB = [];
+
 
 // SHOW POINTS
 //var featuresB = [];
@@ -153,15 +156,13 @@ var matchesA = matching["A"];
 var matchesB = matching["B"];
 console.log("matches: "+matches.length);
 
-//var confidences = SIFTDescriptor.confidences(matchesA,matchesB);
-/*
-var confidences = SIFTDescriptor.confidences(matchesA,[]);
-var bestMatches = SIFTDescriptor.matchesFromConfidences(confidences);
-*/
 
 var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
 console.log("crossMatches: "+bestMatches.length);
 
+//bestMatches = Code.copyArray(bestMatches, 0, 30); // same problems with too many
+//bestMatches = Code.copyArray(bestMatches, 0, 20);
+//bestMatches = Code.copyArray(bestMatches, 0, 15); // too low
 
 //this.drawMatches(bestMatches, 0,0, 400,0);
 
@@ -183,7 +184,6 @@ for(m=0; m<bestMatches.length; ++m){
 }
 
 // return;
-
 /*
 // RANSAC PREP
 var pointsA = [];
@@ -198,27 +198,16 @@ for(m=0; m<bestMatches.length; ++m){
 
 // RANSAC
 console.log("RANSAC");
-var ransac = R3D.fundamentalRANSACFromPoints(pointsA, pointsB, 1.5);
+var ransac = R3D.fundamentalRANSACFromPoints(pointsA, pointsB, 2.5); // larger error allows for wider range use of points
 var ransacMatches = ransac["matches"];
 	pointsA = ransacMatches[0];
 	pointsB = ransacMatches[1];
 var matrixFfwd = ransac["F"];
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
-console.log(matrixFfwd+"");
+console.log(matrixFfwd.toArray()+"");
 */
-/*
-var matrixFfwd = new Matrix(3,3).fromArray([
-	3.7154E-3,  2.1437E-3, -7.7814E+0,
-	7.8342E-3,  7.9840E-3, -6.9009E+0, 
-	2.4358E+0,  3.5105E+0,  6.7593E+2,]);
-var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
-  5.0406E-5  1.4173E-4 -1.3428E-2 ; 
-  -5.4788E-5  2.3924E-5  1.7197E-2 ; 
-  -1.6119E-2 -3.8469E-2  4.3942E+0 ; 
-
-*/
 var matrixFfwd = new Matrix(3,3).fromArray([
 	//0.000008725603920070428,-0.000010287681376109525,0.017492051721540253,0.000008336568707143996,-0.0000030546941712306783,0.006893868502814782,-0.018686314880793062,-0.0034673998830981457,-0.5033336084252676
 	//-0.0000026936490116081374,0.000053351014098918076,-0.022223282499400508,-0.0000675872629154857,0.000004767046874719313,0.002260355785683234,0.0220017383051247,-0.005069558910564499,0.7406906765906947
@@ -237,19 +226,137 @@ var matrixFfwd = new Matrix(3,3).fromArray([
 	//0.000019082853750995374,-0.00002813038700150432,0.022564221943391503,0.00004012166257890554,-0.0000047775275782798625,0.007575061298375405,-0.028878496716445396,-0.003885509761924703,-0.08156744774856416 // 80
 	//-0.000012428881720870453,0.00002052758057480736,-0.01565906539343557,-0.00002721225508588404,0.000004153435925457325,-0.0053317131337877076,0.01955427119704501,0.0022260967021619426,0.13276128332906542 // 84
 	//0.000010285967327239862,-0.000018406037058736857,0.01388681749883487,0.000024318317568990588,-0.000003618622820971085,0.004629458649339574,-0.01715307924933799,-0.0018931033946967134,-0.12303058208127739 // 89
-	0.000013719650172959019,-0.00002552372357372709,0.019368576656903513,0.000035194163079632916,-0.000004113348551602964,0.005915787861829249,-0.023914368700829337,-0.0026417763385129947,-0.14167298596505815 // 93
+	//0.000013719650172959019,-0.00002552372357372709,0.019368576656903513,0.000035194163079632916,-0.000004113348551602964,0.005915787861829249,-0.023914368700829337,-0.0026417763385129947,-0.14167298596505815 // 93
+	
+
+	// BEST FOR NOW:
+	//0.0000027269946673859867,0.0000058666378526400515,-0.022218004013060053,-0.000013044017866634529,-0.000004253022893215171,-0.011491994391747789,0.020950228936843587,0.010483614147638562,0.38960882503981586 
+	
+	
+	// -0.0000021282641382183547,-0.0000025208282484006327,0.015282588392599224,0.000002430338442916747,0.000001177835707433044,0.011495073134182089,-0.013071008814792071,-0.009947526076059778,-0.33474678881804865 // CLOSER TO INF
+	// -0.00003056312793134558,0.0002663195394272707,-0.058489427931641115,-0.00025032765020170124,0.00006016308819630021,0.0014819204506886798,0.05544469619764387,-0.025243291719573274,2.37175268566093 // INSIDE
+	//0.000015673824975906284,-0.000003816070325626309,-0.028221862837928283,-0.000009777264422075691,-0.000010832524023088601,-0.013204993887143482,0.02432594656769992,0.01313577043687154,0.6391418121077695 // IN OPPOSITE GRID CELLS
+	//0.000010335607435676833,-0.00004356997460113225,-0.021883388742149613,0.0000022179534588576523,-0.000031936207612821995,-0.013736199925209124,0.02277976816153545,0.02345767592180197,-0.4069494482772368 // IN OPPOSITE GRID CELLS
+	//0.0005289611427380936,-0.0000840998346695529,-1.2001094897362008,-0.0011610763018171655,-0.0007512728869154221,-0.4302121308044441,1.1022088283897775,0.5934285022659168,16.270968114548683
+
+
+	-0.0002391010427254328,0.000278648500154903,0.45471667012159595,0.00023278204689539464,0.00042474144018037757,0.22912673397760688,-0.4086345253804511,-0.3319720720813846,-2.9639521048581763,
+	
    ]);
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
-  
+
 
 // pointsA = featuresA;
 // pointsB = featuresB;
 
-//this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
+// matches = [
+// 			[new V2D(192,182), new V2D(171,181)],
+// 			[new V2D(171,108), new V2D(209,46) ],
+// 			[new V2D(22,168),  new V2D(50,149) ],
+// 			[new V2D(361,183), new V2D(278,241)],
+// 		];
+
+var pointsA = [
+				new V2D(86,209), // glasses corner left
+				new V2D(190,180), // glasses corner right
+				new V2D(172,107), // origin
+				new V2D(22.5,166), // lighter button
+				new V2D(361,183), // mouse eye
+				new V2D(18,225), // bic corner left
+				new V2D(37,216), // bic corner right
+				new V2D(65,169), // cup 
+				new V2D(226,87), // face BL
+				new V2D(219,66), // glasses TL
+				new V2D(250,72), // glasses TR
+				new V2D(260,103), // elbow
+				new V2D(216,154), // toe left
+				new V2D(245,158), // toe right
+				new V2D(202,127), // brick
+				new V2D(240,248), // 12
+				new V2D(332,249), // 16
+				new V2D(145,203), // glasses center
+				new V2D(172,68), // grid top
+				new V2D(141,76), // grid TL
+				new V2D(204,75), // grid TR
+				new V2D(144,119), // grid BL
+				new V2D(175,128), // grid bot
+				new V2D(362,213), // U
+				new V2D(326,176), // tail
+				new V2D(190,173), // base left
+				new V2D(265,178), // base right
+				new V2D(372,181), // nose
+				new V2D(129,88), // power top
+				new V2D(132,141), // power bot
+				new V2D(62,107), // cup
+				new V2D(94,176), // glass tip left
+				new V2D(131,166), // glass tip right
+			];
+var pointsB = [
+				new V2D(87,193),
+				new V2D(170,178),
+				new V2D(212,46),
+				new V2D(50,149),
+				new V2D(278,241),
+				new V2D(52,179), // left
+				new V2D(64,172), // right//new V2D(18,225), // right
+				new V2D(94,124), 
+				new V2D(225,98), // face BL
+				new V2D(221,80), // glasses TL
+				new V2D(246,95), // glasses TR
+				new V2D(250,121),
+				new V2D(214,139), // tow left
+				new V2D(237,150), // toe right
+				new V2D(213,106), // brick
+				new V2D(180,252), // 12
+				new V2D(245,271), // 16
+				new V2D(131,193), // glasses center
+				new V2D(213,12), // grid top
+				new V2D(177,26), // grid TL
+				new V2D(239,33), // grid TR
+				new V2D(180,61), // grid BL
+				new V2D(202,83), // grid bot
+				new V2D(282,251), // U
+				new V2D(256,225), // tail
+				new V2D(187,153), // base left
+				new V2D(245,173), // base right
+				new V2D(290,240), // nose
+				new V2D(150,63), // power top
+				new V2D(155,100), // power bot
+				new V2D(85,92), // cup
+				new V2D(113,138), // glass tip left
+				new V2D(145,132), // glass tip right
+			];
+// pointsA = imageMatrixA.refineCornerPoints(pointsA);
+// pointsB = imageMatrixB.refineCornerPoints(pointsB);
+matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
+console.log(matrixFfwd.toArray()+"");
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+matches = [];
+for(i=0; i<pointsA.length; ++i){
+	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+}
+
+console.log("showRansac");
+this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
+
+//return;
+
+//GLOBALSTAGE.root().matrix().scale(2.0);
+this.drawMatches(matches, 0,0, 400,0);
+
+//return;
 
 var epipole = R3D.getEpipolesFromF(matrixFfwd);
 var epipoleA = epipole["A"];
 var epipoleB = epipole["B"];
+
+// TODO: rotate 2nd rectification by 180 if necessary
+// if 1 is down and 1 is above => 180
+// if 1 is left and 1 is right => 180
+var rotation = R3D.polarRectificationRelativeRotation(imageMatrixA,epipoleA, imageMatrixB,epipoleB);
+console.log("relative rotation:"+rotation);
+
 
 //epipole = new V2D(100,100);
 //epipole = new V2D(225,75);
@@ -263,6 +370,11 @@ var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
 	d.matrix().translate(0, 0);
 	GLOBALSTAGE.addChild(d);
 
+// TODO:
+// IMAGES NEED TO BE ROTATED SO THAT EPIPOLES ARE IN SAME QUADRANT (GREATER THAN 90DEG)
+// ROTATE TILL EPIPOLE TO IMAGE CENTER IS AT 0,0
+
+
 var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 	var rectifiedInfoB = rectified;
 	var rectifiedB = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
@@ -275,11 +387,14 @@ var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 
 
 
-var matches = [];
-var moreMatches = R3D.mediumDensityMatches(imageMatrixA,imageMatrixB, rectifiedInfoA,rectifiedInfoB, matrixFfwd, matches);
-//var allMatches = R3D.highDensityMatches();
+//var matches = [];
+//var moreMatches = R3D.mediumDensityMatches(imageMatrixA,imageMatrixB, rectifiedInfoA,rectifiedInfoB, matrixFfwd, matches);
+var allMatches = R3D.highDensityMatches(imageMatrixA,imageMatrixB, rectifiedInfoA,rectifiedInfoB, matrixFfwd, matches);
+
+GLOBALSTAGE.root().matrix().scale(2.0);
 
 return;
+
 
 // only do matches within probable distance
 matching = SIFTDescriptor.matchF(siftA, siftB, imageMatrixA,imageMatrixB, matrixFfwd, matrixFrev);
@@ -2406,6 +2521,7 @@ Matching.prototype.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFre
 		
 		var pointA = pointsA[k];
 		var pointB = pointsB[k];
+//console.log(pointA+" - "+pointB);
 		pointA = new V3D(pointA.x,pointA.y,1.0);
 		pointB = new V3D(pointB.x,pointB.y,1.0);
 		var lineA = new V3D();
@@ -2425,6 +2541,7 @@ Matching.prototype.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFre
 		var color = Code.interpolateColorGradientARGB(percent, colors);
 		//
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+//console.log(org+" - "+dir);
 		dir.scale(scale);
 		d = new DO();
 		d.graphics().clear();

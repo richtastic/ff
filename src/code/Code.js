@@ -745,6 +745,7 @@ Code.booleanToString = function(b){
 	}
 	return "false";
 }
+/*
 Code.binarySearchArrayFloatDecreasing = function(needle,hay){
 	return hay-needle;
 }
@@ -777,6 +778,35 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 		}
 	}
 	return [middle];
+}
+*/
+Code.binarySearch = function(a, f){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
+	if(a.length==0){
+		return null;
+	}
+	var minIndex = 0;
+	var maxIndex = a.length-1;
+	var value, result, middleIndex;
+	while(minIndex<=maxIndex){
+		middleIndex = (minIndex+maxIndex) >> 1;
+		value = a[middleIndex];
+		//console.log(middleIndex+": "+value)
+		result = f(value);
+		if(result==0){
+			return middleIndex;
+		}else if(result<0){
+			maxIndex = middleIndex - 1;
+		}else{ // result>0
+			minIndex = middleIndex + 1;
+		}
+	}
+	if(minIndex==a.length){ // return [a.length]
+		return [a.length-1];
+	}
+	if(maxIndex==-1){ // return [-1]
+		return [0];
+	}
+	return [maxIndex,minIndex];
 }
 Code.recursiveProperty = function(object, def){
 	if(object){
