@@ -4622,6 +4622,9 @@ for(i=0; i<mappingAtoB.length; ++i){
 		//console.log(windowTo);
 
 	// compute path costs
+	var path = R3D.bestDisparityPath(windowFr,  windowTo);
+	console.log("   -> "+i+"/"+mappingAtoB.length);
+//	break;
 }
 
 
@@ -4632,9 +4635,70 @@ for(i=0; i<mappingAtoB.length; ++i){
 	// expand line left-right
 	// match via SAD ?? entropy ?? 
 	// KD TREE ??
+	console.log("oot");
+}
+R3D.bestDisparityPath = function(lineA, lineB, dMin, dMax){
+	//console.log("bestDisparityPath ");
+	dMin = dMin!==undefined ? dMin : 999;
+	dMax = dMax!==undefined ? dMax : 999;
+	var dRange = dMax - dMin + 1;
+	var i, j;
+	var widthA = lineA.length;
+	var widthB = lineB.length;
 	//
+	//var infiniteCost = -1;
+	var matchCostMatrix = Code.newArrayNulls(widthA*widthB);//Code.newArrayConstant(widthA*widthB, infiniteCost);
+	for(i=0; i<widthA; ++i){
+		for(j=0; j<widthB; ++j){
+			var score = R3D._disparityPixel(lineA,i, lineB,j);
+			//matchCostMatrix[i*widthB + j] = score;
+			matchCostMatrix[j*widthA + i] = score;
+		}
+	}
+	var predecessorA;
+	var predecessorB;
+	console.log(lineA+"");
+	console.log(lineB+"");
+	console.log(matchCostMatrix)
+	console.log( Code.array1Das2DtoString(matchCostMatrix,widthA,widthB, 1) );
+	//
+
+	var disparityMatrix = [];
+	// C1: disparity between dMin & dMax
+	// C2: matching order ml_i < ml_j => mr_i < mr_j
+	// C3: no double-gap [either L or R is continuous]
+	// C4: ?
+	return null;
+
 }
 R3D._disparityPixel = function(winA,i, winB,j){
+	var i0 = i>0 ? i-1 : i;
+	var i1 = i;
+	var i2 = i<winA.length-1 ? i+1 : i;
+	var a0 = winA[i0];
+	var a1 = winA[i1];
+	var a2 = winA[i2];
+	var j0 = j>0 ? j-1 : j;
+	var j1 = j;
+	var j2 = j<winB.length-1 ? j+1 : j;
+	var b0 = winB[j0];
+	var b1 = winB[j1];
+	var b2 = winB[j2];
+	// midpoints:
+	var iL0 = (a0+a1)*0.5;
+	var iL1 = a1;
+	var iL2 = (a1+a2)*0.5;
+	var iLMax = Math.max(iL0,iL1,iL2);
+	var iLMin = Math.min(iL0,iL1,iL2);
+	var iR0 = (b0+b1)*0.5;
+	var iR1 = b1;
+	var iR2 = (b1+b2)*0.5;
+	var iRMax = Math.max(iR0,iR1,iR2);
+	var iRMin = Math.min(iR0,iR1,iR2);
+	var scoreLeft = Math.max(0, iL0-iRMax, iRMin-iL0);
+	var scoreRight = Math.max(0, iR0-iLMax, iLMin-iR0);
+return Math.abs(a1-b1);
+	return Math.max(scoreLeft,scoreRight);
 
 }
 

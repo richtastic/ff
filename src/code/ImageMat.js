@@ -3131,6 +3131,29 @@ ImageMat.prototype.calculateGradient = function(x,y, blur){
 	dir.norm();
 	return dir;
 }
+ImageMat.prototype.getScaledImage = function(scale){
+	var sigma = null;
+	if(scale<1.0){
+		if(scale==0.75){
+			sigma = 0.75;
+		}else if(scale==0.5){
+			sigma = 1.0; // 0.5 - 1.0
+		}else if(scale==0.25){
+			sigma = 2.0;
+		}
+	}
+	var newWidth = Math.round(scale*this.width());
+	var newHeight = Math.round(scale*this.height());
+	var red = ImageMat.getScaledImage(this.red(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+	var grn = ImageMat.getScaledImage(this.grn(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+	var blu = ImageMat.getScaledImage(this.blu(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+		red = red["value"];
+		grn = grn["value"];
+		blu = blu["value"];
+	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
+	return image;
+}
+
 ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forceHeight){
 	var newWid = Math.round(scale*wid);
 	var newHei = Math.round(scale*hei);

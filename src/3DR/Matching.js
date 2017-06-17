@@ -63,6 +63,10 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+var imageProcessingScale = 0.25;
+	imageMatrixA = imageMatrixA.getScaledImage(imageProcessingScale);
+	imageMatrixB = imageMatrixB.getScaledImage(imageProcessingScale);
+
 // NOTHING
 featuresA = [];
 featuresB = [];
@@ -326,6 +330,11 @@ var pointsB = [
 				new V2D(113,138), // glass tip left
 				new V2D(145,132), // glass tip right
 			];
+
+for(i=0; i<pointsA.length; ++i){
+	pointsA[i].scale(imageProcessingScale);
+	pointsB[i].scale(imageProcessingScale);
+}
 // pointsA = imageMatrixA.refineCornerPoints(pointsA);
 // pointsB = imageMatrixB.refineCornerPoints(pointsB);
 matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
@@ -368,6 +377,7 @@ var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
 		rectified = rectifiedA;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 	var d = new DOImage(img);
+	
 	//d.matrix().scale(1.0);
 	d.matrix().translate(0, 0);
 	GLOBALSTAGE.addChild(d);
@@ -387,6 +397,14 @@ var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 	d.matrix().translate(0+rectifiedA.width(), 0);
 	GLOBALSTAGE.addChild(d);
 
+
+
+var lineA = [2,3,4,5,6,7,8,2,3, 4, 9,10,14,13,12,11];
+var lineB = [4,5,6,7,8,1,2,3,4,14,13,12,11,10, 9, 8];
+
+R3D.bestDisparityPath(lineA, lineB);
+
+return;
 
 
 //var matches = [];
