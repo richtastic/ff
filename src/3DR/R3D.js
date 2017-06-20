@@ -4639,35 +4639,127 @@ for(i=0; i<mappingAtoB.length; ++i){
 }
 R3D.bestDisparityPath = function(lineA, lineB, dMin, dMax){
 	//console.log("bestDisparityPath ");
-	dMin = dMin!==undefined ? dMin : 999;
-	dMax = dMax!==undefined ? dMax : 999;
-	var dRange = dMax - dMin + 1;
-	var i, j;
+	dMin = dMin!==undefined ? dMin : -20; //-3;
+	dMax = dMax!==undefined ? dMax :  20; //3;
+dMin = -4;
+dMax = 2;
+	var i, j, k, d;
 	var widthA = lineA.length;
 	var widthB = lineB.length;
+	dMin = Math.max(dMin, -widthA*0.5 | 0);
+	dMax = Math.min(dMax, widthA*0.5 | 0);
+	var dRange = dMax - dMin + 1;
+	console.log(dMin,dMax,dRange)
 	//
-	//var infiniteCost = -1;
-	var matchCostMatrix = Code.newArrayNulls(widthA*widthB);//Code.newArrayConstant(widthA*widthB, infiniteCost);
+	var matchCostMatrix = Code.newArrayNulls(widthA*dRange);
 	for(i=0; i<widthA; ++i){
-		for(j=0; j<widthB; ++j){
-			var score = R3D._disparityPixel(lineA,i, lineB,j);
-			//matchCostMatrix[i*widthB + j] = score;
-			matchCostMatrix[j*widthA + i] = score;
+		for(d=0; d<dRange; ++d){
+			var del = d+dMin;
+			j = i+del;
+			if(j>=0 && j<widthB){
+				var score = R3D._disparityPixel(lineA,i, lineB,j);
+				matchCostMatrix[d*widthA + i] = score;
+			}
 		}
 	}
+
 	var predecessorA;
 	var predecessorB;
 	console.log(lineA+"");
 	console.log(lineB+"");
 	console.log(matchCostMatrix)
-	console.log( Code.array1Das2DtoString(matchCostMatrix,widthA,widthB, 1) );
+	console.log( Code.array1Das2DtoString(matchCostMatrix,widthA,dRange, 1) );
+/*
+	i = 7;
+	j = 4;
+	d = dRange - ((i-j) + dMax);
+	// i = 2;
+	// d = 4;
+	index = d*widthA + i;
+	console.log(i+","+j+" ["+(i-j)+"] ("+d+") = "+matchCostMatrix[index])
+*/
 	//
-
-	var disparityMatrix = [];
-	// C1: disparity between dMin & dMax
-	// C2: matching order ml_i < ml_j => mr_i < mr_j
+	//var disparityMatrix = [];
+	// C1: only check matches within range between dMin & dMax
+	// C2: uniqueness & order ml_i < ml_j => mr_i < mr_j
 	// C3: no double-gap [either L or R is continuous]
-	// C4: ?
+	// C4: first match () should be left end or right end
+	// C5: leveled disparity limited to [d_smin + DS(xL), dsmax + DS(xL)]
+	var pathCostMatrix = Code.newArrayNulls(widthA*dRange);
+	var predecessorAMatrix = [];
+	var predecessorBMatrix = [];
+	//
+	for(i=0; i<widthA; ++i){ // for every left node
+		for(d=0; d<dRange; ++d){ // for each comparable right node
+			var del = d+dMin;
+			j = i+del;
+			if(j<0 || j>=widthB){
+				continue;
+			}
+			var myIndex = d*widthA + i;
+			var myCost = matchCostMatrix[myIndex];
+			// TODO: GRADIENT COST
+			// TODO: OCCLUSION COST
+			var predecessors = [];
+			if(i==0 || j==0){
+				console.log("START NODE: "+i+","+j);
+				pathCostMatrix[myIndex] = myCost;
+			}else{
+				var minimumCost = null, minimumIndexes = null;
+				var dd, ii, jj, jjStart, jjEnd, iiStart, iiEnd;
+				// i predecessors
+				ii = i-1;
+				jjStart = (j-1) - Math.max(0, -dMin - (i-j) );
+				jjEnd = j;//Math.min(j,widthB-dMax-1);
+				for(var jj=jjStart; jj<jjEnd; ++jj){
+					predecessors.push([ii,jj]);
+					//predecessors.push(" <"+ii+","+jj+" /  "+(dd)+" > ");
+				}
+				// j predecessors
+				jj = j-1;
+				iiStart = (i-1) - Math.max(0, dMax - (j-i) );
+				iiEnd = i-1;//Math.min(i-1,widthA-dMax-1);
+				//console.log(""+i+","+j+" = "+iiStart+" -> "+iiEnd);
+				for(var ii=iiStart; ii<iiEnd; ++ii){ // diffferent limit to not repeat same k,k
+					predecessors.push([ii,jj]);
+					//predecessors.push(" <"+ii+","+jj+" /  "+(dd)+" > ");
+				}
+				//console.log(" PRED: "+i+","+j+"  =  "+predecessors);
+			}
+			console.log(predecessors);
+			var parentCost, parentIndex;
+			var parentMinCost = null, parentMinIndex = null;
+			for(k=0; k<predecessors.length; ++k){
+				var parent = predecessors[k];
+				ii = parent[0];
+				jj = parent[1];
+//console.log(i+","+j+" => "+ii+","+jj);
+//continue;
+				dd = (ii-jj+dMax);
+				dd = dRange - dd - 1; // flip
+				parentIndex = dd*widthA + ii;
+				parentCost = matchCostMatrix[parentIndex];
+				if(parentCost==null){
+					continue; // first elements are not existant -- TODO: remove this case before now
+				}
+				if(parentMinCost==null || parentCost<parentMinCost){
+					parentMinCost = parentCost;
+					parentMinIndex = [ii,jj,parentIndex];
+				}
+				console.log(i+","+j+" = "+k+":  "+ii+","+jj+"      ["+(ii-jj)+"] ...  ("+ii+","+dd+") == "+" "+parentCost);
+			}
+			pathCost = myCost + parentMinCost;
+			console.log("ADDING PATH COSTS: "+pathCost+" = "+myCost+" + "+parentMinCost);
+			pathCostMatrix[myIndex] = pathCost;
+
+			if(i==widthA-1 || j==widthB-1){
+				console.log("END NODE: "+i+","+j);
+			}
+		}
+	}
+	console.log(pathCostMatrix)
+	console.log( Code.array1Das2DtoString(pathCostMatrix,widthA,dRange, 1) );
+	// 
 	return null;
 
 }

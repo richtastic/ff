@@ -1311,11 +1311,15 @@ Code.array1Das2DtoString = function(arr, wid,hei, exp){
 		for(i=0;i<wid;++i,++index){
 			//str += arr[index]+" ";
 			num = arr[index];
-			val = num.toExponential(exp);
-			if(num<0){
-				str += Code.padStringLeft(val,minLen," ");
+			if(num!==undefined && num!==null){
+				val = num.toExponential(exp);
+				if(num<0){
+					str += Code.padStringLeft(val,minLen," ");
+				}else{
+					str += " "+Code.padStringLeft(val,minLen-1," ");
+				}
 			}else{
-				str += " "+Code.padStringLeft(val,minLen-1," ");
+				str += Code.padStringLeft("x",minLen," ");
 			}
 		}
 		str += "\n";
