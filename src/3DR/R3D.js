@@ -4678,113 +4678,152 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 	dMin = dMin!==undefined ? dMin : -3; // -4
 	dMax = dMax!==undefined ? dMax :  3; // 2
 	lineOffset = lineOffset!==undefined ? lineOffset : null;
-	var i, j, k, d, iO, jO;
+	var i, j, k, d, ds;
+	var dL, dR, index, cost, myIndex;
 	var widthA = lineA.length;
 	var widthB = lineB.length;
-	dMin = Math.max(dMin, -widthA*0.5 | 0);
-	dMax = Math.min(dMax, widthA*0.5 | 0);
 	var dRange = dMax - dMin + 1;
-	console.log(dMin,dMax,dRange);
-	// calculate costs for each index
-	var matchCostMatrix = Code.newArrayNulls(widthA*dRange);
+	var matrixSize = widthA*dRange;
+	var matchCostMatrix = Code.newArrayNulls(matrixSize);
+	var pathCostMatrix = Code.newArrayNulls(matrixSize);
+	var predecessorMatrix = Code.newArrayNulls(matrixSize);
 	var o = 0;
+	var indexList = Code.newArrayNulls(matrixSize);
+	for(i=0; i<widthA; ++i){
+		if(lineOffset){ o = lineOffset[i]; }
+		for(d=0; d<dRange; ++d){
+			ds = d + dMin + o;
+			j = i + ds;
+			if(j>=0 && j<widthB){
+				index = d*widthA + i;
+				indexList[index] = i+","+j;
+			}
+		}
+	}
+	// print for debugging
+	var str = "";
+	var line = "";
+	for(d=0; d<dRange; ++d){
+		line = "";
+		for(i=0; i<widthA; ++i){
+			index = d*widthA + i;
+			value = indexList[index];
+			if(value===null){
+				value = "(x)";
+			}
+			line = line+" "+Code.centerpendFixed(value," ",7);
+		}
+		str = str + "\n" + line;
+	}
+	console.log(str);
+
+	// calculate costs
 	for(i=0; i<widthA; ++i){
 		if(lineOffset){
 			o = lineOffset[i];
 		}
 		for(d=0; d<dRange; ++d){
-			var del = d+dMin;
-			jO = i + del - o;
-			iO = i + o;
-			if(jO>=0 && jO<widthB && iO>=0 && iO<widthA){
-				var score = R3D._disparityPixel(lineA,iO, lineB,jO);
-				matchCostMatrix[d*widthA + iO] = score;
+			ds = d + dMin + o;
+			j = i + ds;
+			if(j>=0 && j<widthB){
+				cost = R3D._disparityPixel(lineA,i, lineB,j);
+				index = d*widthA + i;
+				matchCostMatrix[index] = cost;
 			}
 		}
 	}
 	console.log( Code.array1Das2DtoString(matchCostMatrix,widthA,dRange, 1) );
-	// C1: only check matches within range between dMin & dMax
-	// C2: uniqueness & order ml_i < ml_j => mr_i < mr_j
-	// C3: no double-gap [either L or R is continuous]
-	// C4: first match () should be left end or right end
-	// C5: leveled disparity limited to [d_smin + DS(xL), dsmax + DS(xL)]
-	var pathCostMatrix = Code.newArrayNulls(widthA*dRange);
-	var predecessorMatrix = [];
-	var bestEndCost = null;
-	var bestEndIndex = null;
-	//
-	for(i=0; i<widthA; ++i){ // for every left node
+	var endNodes = [];
+	// find all successors
+	for(i=0; i<widthA; ++i){
 		if(lineOffset){
 			o = lineOffset[i];
 		}
-		for(d=0; d<dRange; ++d){ // for each comparable right node
-			var del = d+dMin;
-			j = i + del + 0;
-			if(j<0 || j>=(widthB)){
-				continue;
-			}
-			var myIndex = d*widthA + i;
-			var myCost = matchCostMatrix[myIndex];
-			// TODO: GRADIENT COST
-			// TODO: OCCLUSION COST
-			var predecessors = [];
-			if(i==0 || j==0){
-				//console.log("START NODE: "+i+","+j);
-				pathCostMatrix[myIndex] = myCost;
-			}else{
-				var minimumCost = null, minimumIndexes = null;
-				var dd, ii, jj, jjStart, jjEnd, iiStart, iiEnd;
-				// i predecessors
-				ii = i-1;
-				jjStart = (j-1) - Math.max(0, -dMin - (i-j) );
-				jjEnd = j;
-				for(var jj=jjStart; jj<jjEnd; ++jj){
-					predecessors.push([ii,jj]);
+		for(d=0; d<dRange; ++d){
+			ds = d + dMin + o;
+			j = i + ds;
+			if(j>=0 && j<widthB){
+				myIndex = d*widthA + i;
+				myCost = matchCostMatrix[myIndex];
+				myPathCost = pathCostMatrix[myIndex];
+				if(myPathCost==null){ // START NODE
+					myPathCost = 0;
 				}
-				// j predecessors
-				jj = j-1;
-				iiStart = (i-1) - Math.max(0, dMax - (j-i) );
-				iiEnd = i-1;
-				for(var ii=iiStart; ii<iiEnd; ++ii){ // different limit to not repeat same k,k
-					predecessors.push([ii,jj]);
+				// add my cost to complete prior path cost
+				myPathCost +=  myCost;
+				pathCostMatrix[myIndex] = myPathCost;
+				var successors = [];
+
+				// i+1 : next column
+				if(i<widthA-1){
+					ii = i+1;
+					var oi = lineOffset ? lineOffset[ii] : 0;
+					var rel = oi - o;
+					var rowStart = Math.max(0,d - rel);
+					for(k=rowStart; k<dRange; ++k){
+						dd = oi + k;
+						jj = ii + dMin + dd;
+						if(jj>=0 && jj<widthB){
+							// console.log("("+i+"|"+d+") -  ["+k+": "+rel+"]   "+i+","+j+"  => "+ii+","+jj);
+							index = dd*widthA + ii;
+							successors.push([ii,jj, index]);
+						}
+					}
 				}
-			}
-			// find minimum cost predecessor and store
-			var parentCost, parentIndex;
-			var parentMinCost = null, parentMinIndex = null;
-			for(k=0; k<predecessors.length; ++k){
-				var parent = predecessors[k];
-				ii = parent[0];
-				jj = parent[1];
-				dd = (ii-jj+dMax);
-				dd = dRange - dd - 1; // flip
-				parentIndex = dd*widthA + ii;
-				parentCost = matchCostMatrix[parentIndex];
-				if(parentCost==null){
-					continue; // first elements are not existant -- TODO: remove this case before now
+				// j+1 2+ columns
+				var kEnd =  widthA - (i + 2);
+				for(k=0; k<kEnd; ++k){ // look for j+1 // max 1 in each column
+					ii = i + 2 + k;
+					var oi = lineOffset ? lineOffset[ii] : 0;
+					var rel = oi - o;
+					var dd = d - k - 1 - rel;
+					if(dd>=0 && dd<dRange){
+						jj = ii + dd + dMin + oi;
+						if(jj>=0 && jj<widthB){
+							//console.log("  "+i+","+j+"  ["+k+"]  =>  "+ii+","+jj+"  ..  "+d+"->"+dd+" ("+rel+")");
+							index = dd*widthA + ii;
+							successors.push([ii,jj, index]);
+						}
+					}
 				}
-				if(parentMinCost==null || parentCost<parentMinCost){
-					parentMinCost = parentCost;
-					parentMinIndex = [ii,jj,parentIndex];
+				if(successors.length==0){ // END NODE
+					endNodes.push([i,j,myIndex]);
 				}
-				//console.log(i+","+j+" = "+k+":  "+ii+","+jj+"      ["+(ii-jj)+"] ...  ("+ii+","+dd+") == "+" "+parentCost);
-			}
-			pathCost = myCost + parentMinCost;
-			pathCostMatrix[myIndex] = pathCost;
-			predecessorMatrix[myIndex] = parentMinIndex;
-			if(i==widthA-1 || j==(widthB-1)){
-				console.log("END NODE: "+i+","+j);
-				if(bestEndCost==null || pathCost<bestEndCost){
-					bestEndCost = pathCost;
-					bestEndIndex = [i,j,myIndex];
+				for(k=0; k<successors.length; ++k){
+					var s = successors[k];
+					ii = s[0];
+					jj = s[1];
+					index = s[2];
+					//console.log(" "+i+","+j+" =s=> "+ii+","+jj+"  ["+"]");
+					cost = pathCostMatrix[index];
+					if(cost==null || myPathCost<cost){ // set path cost as minimum of successors
+						pathCostMatrix[index] = myPathCost;
+						predecessorMatrix[index] = [i,j,myIndex];
+					}
 				}
 			}
 		}
 	}
-	//console.log(pathCostMatrix)
+	
 	console.log( Code.array1Das2DtoString(pathCostMatrix,widthA,dRange, 1) );
-	// backwards iterate
-	var index = bestEndIndex;
+
+	// find best of end nodes
+	var minCost = null;
+	var minIndex = null;
+	for(k=0; k<endNodes.length; ++k){
+		var node = endNodes[k];
+		i = node[0];
+		j = node[1];
+		index = node[2];
+		pathCost = pathCostMatrix[index];
+		if(minCost==null || pathCost<minCost){
+			minCost = pathCost;
+			minIndex = node;
+		}
+	}
+	console.log("best cost: "+minCost);
+	// backtrace from best endnode to find optimal path
+	var index = minIndex;
 	var matching = [];
 	var iterations = 15;
 	var path;
@@ -4792,13 +4831,14 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 		matching.push(index);
 		i = index[0];
 		j = index[1];
+		path = index[2];
 		if(lineOffset){
 			o = lineOffset[i];
 		}
 		j -= 2*o; // 2 ???
-		matching.unshift([i,j]); // opposite stack
-		path = index[2];
 		console.log(" => ("+i+","+j+") = "+matchCostMatrix[path]);
+		matching.unshift([i,j]); // opposite stack
+		
 		index = predecessorMatrix[path];
 		if(i==0 || j==0){
 			break;
@@ -4810,9 +4850,10 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 	}
 	console.log(matching);
 	return matching;
-
 }
 R3D._disparityPixel = function(winA,i, winB,j){
+	i = Math.min(Math.max(i,0),winA.length-1);
+	j = Math.min(Math.max(j,0),winB.length-1);
 	var i0 = i>0 ? i-1 : i;
 	var i1 = i;
 	var i2 = i<winA.length-1 ? i+1 : i;

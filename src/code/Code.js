@@ -2346,6 +2346,19 @@ Code.postpendFixed = function(start,pad,count){
 	}
 	return str;
 }
+Code.centerpendFixed = function(start,pad,count){
+	var str = start;
+	var toggle = 0;
+	while(str.length<count){
+		if(toggle%2==0){
+			str = pad+str;
+		}else{
+			str = str+pad;
+		}
+		++toggle;
+	}
+	return str;
+}
 Code.sign = function(num){
 	return num>=0.0 ? 1.0 : -1.0;
 }

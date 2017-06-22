@@ -402,13 +402,15 @@ var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 this.drawCover();
 this.drawCover();
 this.drawCover();
-
-var lineA = [2,3,4,5,6,7,8,2,3, 4, 9,10,14,13,12,11];
-var lineB = [4,5,6,7,8,1,2,3,4,14,13,12,11,10, 9, 8];
-var lineO = [];
+//           0 1 2  3 4 5 6 7 8  9  0  1  2  3  4  5
+var lineA = [2,3,4, 5,6,7,8,2,3, 4, 9, 10,14,13,12, 11];
+var lineB = [4,5,6, 7,8,1,2,3,4,14,13, 12,11,10, 9,  8];
+var lineO = [0,0,0,-1,0,1,2,3,4, 0,-1, 1,  2, 3, 0,  0];
 for(i=0; i<lineA.length; ++i){
-	lineO[i] = 2;
+	lineO[i] = -1;
 }
+
+
 
 R3D.bestDisparityPath(lineA, lineB, lineO);
 
