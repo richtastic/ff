@@ -4591,6 +4591,16 @@ var mappingAtoB = R3D.mappingRectifiedImages(epipoleA, anglesA, radiusMinA, radi
 var mappingBtoA = R3D.mappingRectifiedImages(epipoleB, anglesB, radiusMinB, radiusB,  Frev,  anglesA, radiusMinA, radiusA, angleOffsetA);
 
 
+// NEED MULTIPLE RESOLUTIONS AT SAME TIME
+/*
+- save all lines
+- use widest line as width of 'image'
+- put all lines inside image and pad missing ends with fill
+- pass 2 images to disparity fxn
+*/
+var linesA = [];
+var linesB = [];
+
 for(i=0; i<mappingAtoB.length; ++i){
 	var map = mappingAtoB[i];
 	var fr = map["fr"]; // === i
@@ -4623,8 +4633,9 @@ for(i=0; i<mappingAtoB.length; ++i){
 
 	// compute path costs
 	var path = R3D.bestDisparityPath(windowFr,  windowTo);
+	var sequence = R3D.disparityFromPath(path, windowFr,  windowTo);
 	console.log("   -> "+i+"/"+mappingAtoB.length);
-//	break;
+	break;
 }
 
 
@@ -4647,7 +4658,11 @@ R3D.downsample1D = function(array, scale){
 	}
 	return down;
 }
-R3D.bestDisparityPathLeveled = function(lineA, lineB){ // Hierarchical
+R3D.bestDisparityPathLeveled = function(linesA, lineB, rangesA, rangesB){ // Hierarchical
+
+	/*
+	scale original image will desired witdh 
+
 	// start of
 	// downsample 2, 4, 8
 	var widthA = lineA.length;
@@ -4672,9 +4687,44 @@ R3D.bestDisparityPathLeveled = function(lineA, lineB){ // Hierarchical
 		matches = R3D.bestDisparityPath (lA, lB, lO);
 		// ...
 	}
+	*/
 }
-R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
-	//console.log("bestDisparityPath ");
+
+R3D.disparityFromPath = function(sequence, lineA, lineB){
+	var index = [0,0];
+	var s, i, j, k, len = lineA.length, p=null;
+	var disparity = [];//Code.newArrayNulls(len);
+	var index = 0;
+	k = 0;
+	s = sequence[k];
+	while(index < len){
+		i = s[0];
+		j = s[1];
+		if(index<i){
+			if(p){ // interpolate inside
+				var ii = p[0];
+				var jj = p[1];
+				var r = (index-ii)/(i-ii);
+				var q = 1.0 - r;
+				disparity[index] = Math.round((ii-jj)*q + r*(i-j));
+			}else{ // nothing before
+				disparity[index] = null;
+			}
+		}else if(index>i){ // nothing after
+			disparity[index] = null;
+		}else if(index==i){ // exact
+			disparity[index] = i-j;
+			p = s;
+			++k;
+			s = sequence[k];
+		}
+		//console.log(index+": "+disparity[index]);
+		++index;
+	}
+	return disparity;
+}
+R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax){
+	prevLineA = prevLineA!==undefined ? prevLineA : null;
 	dMin = dMin!==undefined ? dMin : -3; // -4
 	dMax = dMax!==undefined ? dMax :  3; // 2
 	lineOffset = lineOffset!==undefined ? lineOffset : null;
@@ -4700,6 +4750,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 			}
 		}
 	}
+	/*
 	// print for debugging
 	var str = "";
 	var line = "";
@@ -4716,7 +4767,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 		str = str + "\n" + line;
 	}
 	console.log(str);
-
+	*/
 	// calculate costs
 	for(i=0; i<widthA; ++i){
 		if(lineOffset){
@@ -4732,7 +4783,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 			}
 		}
 	}
-	console.log( Code.array1Das2DtoString(matchCostMatrix,widthA,dRange, 1) );
+	//console.log( Code.array1Das2DtoString(matchCostMatrix,widthA,dRange, 1) );
 	var endNodes = [];
 	// find all successors
 	for(i=0; i<widthA; ++i){
@@ -4745,11 +4796,14 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 			if(j>=0 && j<widthB){
 				myIndex = d*widthA + i;
 				myCost = matchCostMatrix[myIndex];
-				myPathCost = pathCostMatrix[myIndex];
-				if(myPathCost==null){ // START NODE
+				if(i==0 || j==0){ // START NODE
 					myPathCost = 0;
+					//pathCostMatrix[myIndex] = myPathCost;
+				}else{
+					myPathCost = pathCostMatrix[myIndex];
 				}
 				// add my cost to complete prior path cost
+//console.log("------------------------- "+i+","+j+" = "+myPathCost+" ["+myCost+"] = ("+(myPathCost+myCost)+")");
 				myPathCost +=  myCost;
 				pathCostMatrix[myIndex] = myPathCost;
 				var successors = [];
@@ -4761,10 +4815,10 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 					var rel = oi - o;
 					var rowStart = Math.max(0,d - rel);
 					for(k=rowStart; k<dRange; ++k){
-						dd = oi + k;
-						jj = ii + dMin + dd;
+						dd = k;
+						jj = ii + dMin + dd + oi;
 						if(jj>=0 && jj<widthB){
-							// console.log("("+i+"|"+d+") -  ["+k+": "+rel+"]   "+i+","+j+"  => "+ii+","+jj);
+							//console.log("("+i+"|"+d+") -  ["+k+"_"+o+"_"+oi+": "+rel+" : "+dd+"]   "+i+","+j+"  => "+ii+","+jj);
 							index = dd*widthA + ii;
 							successors.push([ii,jj, index]);
 						}
@@ -4787,6 +4841,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 					}
 				}
 				if(successors.length==0){ // END NODE
+				//if(i==widthA-1||j==widthB-1 || successors.length==0){ // END NODE
 					endNodes.push([i,j,myIndex]);
 				}
 				for(k=0; k<successors.length; ++k){
@@ -4794,9 +4849,9 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 					ii = s[0];
 					jj = s[1];
 					index = s[2];
-					//console.log(" "+i+","+j+" =s=> "+ii+","+jj+"  ["+"]");
 					cost = pathCostMatrix[index];
-					if(cost==null || myPathCost<cost){ // set path cost as minimum of successors
+					if(cost==null || cost>myPathCost){ // set path cost as minimum of successors
+						//console.log("replacing: "+cost+" => "+myPathCost);
 						pathCostMatrix[index] = myPathCost;
 						predecessorMatrix[index] = [i,j,myIndex];
 					}
@@ -4804,9 +4859,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 			}
 		}
 	}
-	
-	console.log( Code.array1Das2DtoString(pathCostMatrix,widthA,dRange, 1) );
-
+	// console.log( Code.array1Das2DtoString(pathCostMatrix,widthA,dRange, 1) );
 	// find best of end nodes
 	var minCost = null;
 	var minIndex = null;
@@ -4816,6 +4869,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 		j = node[1];
 		index = node[2];
 		pathCost = pathCostMatrix[index];
+		console.log(" found cost: "+i+","+j+"="+pathCost);
 		if(minCost==null || pathCost<minCost){
 			minCost = pathCost;
 			minIndex = node;
@@ -4827,18 +4881,14 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 	var matching = [];
 	var iterations = 15;
 	var path;
+var str = "";
 	while(index!==null){
 		matching.push(index);
 		i = index[0];
 		j = index[1];
 		path = index[2];
-		if(lineOffset){
-			o = lineOffset[i];
-		}
-		j -= 2*o; // 2 ???
-		console.log(" => ("+i+","+j+") = "+matchCostMatrix[path]);
+str = " ("+i+","+j+") " + str;
 		matching.unshift([i,j]); // opposite stack
-		
 		index = predecessorMatrix[path];
 		if(i==0 || j==0){
 			break;
@@ -4848,7 +4898,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, dMin, dMax){
 			break;
 		}
 	}
-	console.log(matching);
+console.log(str);
 	return matching;
 }
 R3D._disparityPixel = function(winA,i, winB,j){

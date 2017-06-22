@@ -405,14 +405,27 @@ this.drawCover();
 //           0 1 2  3 4 5 6 7 8  9  0  1  2  3  4  5
 var lineA = [2,3,4, 5,6,7,8,2,3, 4, 9, 10,14,13,12, 11];
 var lineB = [4,5,6, 7,8,1,2,3,4,14,13, 12,11,10, 9,  8];
-var lineO = [0,0,0,-1,0,1,2,3,4, 0,-1, 1,  2, 3, 0,  0];
+//var lineO = [0,0,0,-1,0,1,2,3,4, 0,-1, 1,  2, 3, 0,  0];
+var lineO = Code.newArrayZeros(lineA.length);
+/*
 for(i=0; i<lineA.length; ++i){
-	lineO[i] = -1;
+	if(i%3==0){
+		lineO[i] = -1;
+	}else if(i%3==1){
+		lineO[i] = 0;
+	}else{
+		lineO[i] = 1;
+	}
+	//lineO[i] = 0;
 }
+*/
+//    1      2      3      4      5      6      7      8      9        10       11       12
+// (2,0)  (3,1)  (4,2)  (5,3)  (6,4)  (7,6)  (8,7)  (9,8)  (12,9)  (13,10)  (14,11)  (15,12) 
 
+var path = R3D.bestDisparityPath(lineA, lineB, lineO);
 
-
-R3D.bestDisparityPath(lineA, lineB, lineO);
+var sequence = R3D.disparityFromPath(path, lineA,  lineB);
+console.log(sequence+"");
 
 return;
 
