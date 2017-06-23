@@ -4593,13 +4593,18 @@ var mappingBtoA = R3D.mappingRectifiedImages(epipoleB, anglesB, radiusMinB, radi
 
 // NEED MULTIPLE RESOLUTIONS AT SAME TIME
 /*
-- save all lines
-- use widest line as width of 'image'
-- put all lines inside image and pad missing ends with fill
-- pass 2 images to disparity fxn
+- save all lines into array of arrays
+- pass array list to R3D.disparityFromPath
+
+x use widest line as width of 'image'
+x put all lines inside image and pad missing ends with fill
+x pass 2 images to disparity fxn
 */
 var linesA = [];
 var linesB = [];
+var offsets = [];
+
+var maxWindowWidth = 0;
 
 for(i=0; i<mappingAtoB.length; ++i){
 	var map = mappingAtoB[i];
@@ -4619,6 +4624,9 @@ for(i=0; i<mappingAtoB.length; ++i){
 		var endX = radFr[1];
 		var lenX = endX - startX + 1;
 	var windowFr = ImageMat.subImage(rectifiedAGry,rectifiedAWidth,rectifiedAHeight,  startX,startY, lenX,lenY);
+var offsetA = startX;
+var lengthA = lenX;
+maxWindowWidth = Math.max(maxWindowWidth, lengthA);
 
 		var startY = to;
 		var lenY = 1;
@@ -4627,19 +4635,47 @@ for(i=0; i<mappingAtoB.length; ++i){
 		var endX = radTo[1];
 		var lenX = endX - startX + 1;
 	var windowTo = ImageMat.subImage(rectifiedBGry,rectifiedBWidth,rectifiedBHeight,  startX,startY, lenX,lenY);
-
+var offsetB = startX;
+var lengthB = lenX;
 		//console.log(windowFr);
 		//console.log(windowTo);
-
+	linesA.push(windowFr);
+	linesB.push(windowTo);
+	offsets.push([offsetA,offsetB]);
 	// compute path costs
-	var path = R3D.bestDisparityPath(windowFr,  windowTo);
-	var sequence = R3D.disparityFromPath(path, windowFr,  windowTo);
-	console.log("   -> "+i+"/"+mappingAtoB.length);
-	break;
+	// var path = R3D.bestDisparityPath(windowFr,  windowTo);
+	// var sequence = R3D.disparityFromPath(path, windowFr,  windowTo);
+	// console.log("   -> "+i+"/"+mappingAtoB.length);
 }
+var disparities = R3D.bestDisparity(linesA, linesB);
+var disparityImageWidth = maxWindowWidth;
+var disparityImageHeight = disparities.length;
+var disparityImage = Code.newArrayZeros(disparityImageWidth*disparityImageHeight);
+	for(j=0; j<disparities.length; ++j){
+		var disparity = disparities[j];
+		var offset = offsets[j];
+		var offsetA = offset[0];
+		var offsetB = offset[1];
+		for(i=0; i<disparity.length; ++i){
+			var disp = disparity[i];
+			if(disp===null){
+				disp = 0;
+			}
+			var index = j*disparityImageWidth + i;
+			disparityImage[index] = disp;
+		}
+	}
+disparityImage = ImageMat.normalFloat01(disparityImage);
+//console.log(disparityImage);
 
-
-
+var show = ImageMat.normalFloat01(disparityImage);
+var wid = disparityImageWidth;
+var hei = disparityImageHeight;
+var img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, wid,hei);
+var d = new DOImage(img);
+	d.matrix().scale(2.0);
+	d.matrix().translate(400, 0);
+	GLOBALSTAGE.addChild(d);
 
 	// start at lower resolution
 	// start at known matches
@@ -4658,7 +4694,45 @@ R3D.downsample1D = function(array, scale){
 	}
 	return down;
 }
-R3D.bestDisparityPathLeveled = function(linesA, lineB, rangesA, rangesB){ // Hierarchical
+//R3D.bestDisparityPathLeveled = function(linesA, lineB, rangesA, rangesB){ // Hierarchical
+//R3D.bestDisparityPathLeveled = function(linesA, lineB){ // Hierarchical
+R3D.bestDisparity = function(linesA, linesB){
+	var i, j, k;
+	var lineCount = Math.min(linesA.length,linesB.length);
+	console.log("bestDisparity: "+lineCount);
+	var previousLines = [];
+	var lineA, lineB, linePrev, lineOffset;
+	var path, disparity;
+	var disparities = [];
+	for(i=0; i<lineCount; ++i){
+		lineA = linesA[i];
+		lineB = linesB[i];
+		// need to set the initial offset to 'center' the line (effectively padding+center the smaller line to the larger line)
+		// also need to change relative search area --- eg: 3/30 = 10x disparity size will have no chance of assigning correct pixels with a +/- 3 search
+		// => this search area +/- needs to be large enough to have some overlap [+/- separation distance ?]
+		console.log(i+": "+lineA.length+" | "+lineB.length+"  ----- ");
+		// TODO create lower res versions
+		// R3D.downsample1D
+		lineOffset = null;
+		linePrev = null;
+		// console.log(lineA+"");
+		// console.log(lineB+"");
+		path = R3D.bestDisparityPath(lineA, lineB, lineOffset, linePrev);
+		disparity = R3D.disparityFromPath(path, lineA, lineB);
+		//console.log(path+"");
+		//console.log(disparity+"");
+		disparities.push(disparity);
+//		break;
+	}
+
+	return disparities;
+	/*
+	- save progressive resolutions [2^1, 2^-1, 2^-2 ... ]
+	- compare lines at a time
+		- get offset
+		- save in-progress disparity to use for next level
+	- store final disparity
+	*/
 
 	/*
 	scale original image will desired witdh 
@@ -4732,6 +4806,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax
 	var dL, dR, index, cost, myIndex;
 	var widthA = lineA.length;
 	var widthB = lineB.length;
+console.log(widthA+" | "+widthB);
 	var dRange = dMax - dMin + 1;
 	var matrixSize = widthA*dRange;
 	var matchCostMatrix = Code.newArrayNulls(matrixSize);
@@ -4770,9 +4845,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax
 	*/
 	// calculate costs
 	for(i=0; i<widthA; ++i){
-		if(lineOffset){
-			o = lineOffset[i];
-		}
+		if(lineOffset){ o = lineOffset[i]; }
 		for(d=0; d<dRange; ++d){
 			ds = d + dMin + o;
 			j = i + ds;
@@ -4787,9 +4860,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax
 	var endNodes = [];
 	// find all successors
 	for(i=0; i<widthA; ++i){
-		if(lineOffset){
-			o = lineOffset[i];
-		}
+		if(lineOffset){ o = lineOffset[i]; }
 		for(d=0; d<dRange; ++d){
 			ds = d + dMin + o;
 			j = i + ds;
@@ -4869,17 +4940,17 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax
 		j = node[1];
 		index = node[2];
 		pathCost = pathCostMatrix[index];
-		console.log(" found cost: "+i+","+j+"="+pathCost);
+		//console.log(" found cost: "+i+","+j+"="+pathCost);
 		if(minCost==null || pathCost<minCost){
 			minCost = pathCost;
 			minIndex = node;
 		}
 	}
-	console.log("best cost: "+minCost);
+	//console.log("best cost: "+minCost+" @ "+node[0]+","+node[1]);
 	// backtrace from best endnode to find optimal path
 	var index = minIndex;
 	var matching = [];
-	var iterations = 15;
+	var iterations = 1E6; // can remove now ?
 	var path;
 var str = "";
 	while(index!==null){
@@ -4898,7 +4969,7 @@ str = " ("+i+","+j+") " + str;
 			break;
 		}
 	}
-console.log(str);
+//console.log(str);
 	return matching;
 }
 R3D._disparityPixel = function(winA,i, winB,j){
