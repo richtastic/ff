@@ -66,6 +66,7 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 var imageProcessingScale = 0.25;
 	imageMatrixA = imageMatrixA.getScaledImage(imageProcessingScale);
 	imageMatrixB = imageMatrixB.getScaledImage(imageProcessingScale);
+console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height())
 
 // NOTHING
 featuresA = [];
@@ -397,9 +398,9 @@ var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 	d.matrix().translate(0+rectifiedA.width(), 0);
 	GLOBALSTAGE.addChild(d);
 
-this.drawCover();
-this.drawCover();
-this.drawCover();
+// this.drawCover();
+// this.drawCover();
+// this.drawCover();
 
 /*
 //           0 1 2  3 4 5 6 7 8  9  0  1  2  3  4  5

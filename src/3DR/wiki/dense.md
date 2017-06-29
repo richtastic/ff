@@ -38,6 +38,27 @@ To rank matches, queues area used
 
 
 
+
+
+
+HIGH DESNE PROBLEMS WITH HIERARCHICAL ALGORITHM:
+- areas with large 'stretch' don't fit error metric well
+	=> need sub-pixel matching ?
+- if an error in matching happens early on, then it is propagated thru the match sequence
+	=> want anchor points at most reliable (best score) points beforehand
+- want to force all pixels in A have a match in B AND all pixels in B have a match in A - order & uniqueness preserved too
+	=> 
+
+
+
+
+
+
+
+
+
+
+
 cell > [feature] > [matches]
 
 

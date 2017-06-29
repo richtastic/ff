@@ -258,8 +258,8 @@ ImageMat.prototype.getScaledImage = function(scale, sigma){
 ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include 
 	var sub = [wid*hei];
 	var i, j;
-	for(j=0; j<=hei; ++j){
-		for(i=0; i<=wid; ++i){
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
 			sub[j*wid+i] = image[(offY+j)*width + (offX+i)];
 		}
 	}

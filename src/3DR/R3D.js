@@ -4605,7 +4605,7 @@ var linesB = [];
 var offsets = [];
 
 var maxWindowWidth = 0;
-
+//var maxWindowOffset = 0;
 for(i=0; i<mappingAtoB.length; ++i){
 	var map = mappingAtoB[i];
 	var fr = map["fr"]; // === i
@@ -4623,11 +4623,12 @@ for(i=0; i<mappingAtoB.length; ++i){
 		var startX = radFr[0];
 		var endX = radFr[1];
 		var lenX = endX - startX + 1;
+		//console.log("lenX: "+lenX,rectifiedAWidth,rectifiedAHeight,  startX,startY, lenX,lenY);
 	var windowFr = ImageMat.subImage(rectifiedAGry,rectifiedAWidth,rectifiedAHeight,  startX,startY, lenX,lenY);
 var offsetA = startX;
 var lengthA = lenX;
-maxWindowWidth = Math.max(maxWindowWidth, lengthA);
-
+maxWindowWidth = Math.max(maxWindowWidth, lengthA + offsetA);
+//console.log(i+": "+lengthA+" =?= "+windowFr.length);
 		var startY = to;
 		var lenY = 1;
 	var radTo = radiusB[to];
@@ -4637,16 +4638,58 @@ maxWindowWidth = Math.max(maxWindowWidth, lengthA);
 	var windowTo = ImageMat.subImage(rectifiedBGry,rectifiedBWidth,rectifiedBHeight,  startX,startY, lenX,lenY);
 var offsetB = startX;
 var lengthB = lenX;
+//console.log(" => "+windowFr.length+" | "+windowTo.length);
 		//console.log(windowFr);
 		//console.log(windowTo);
 	linesA.push(windowFr);
 	linesB.push(windowTo);
 	offsets.push([offsetA,offsetB]);
+
+
+var sca = 3.0
+
+var show = windowFr;
+	var show = ImageMat.normalFloat01(windowFr);
+var wid = lengthB;
+var hei = 1;
+var img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, wid,hei);
+var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(800 + offsetA, 10+sca*(i*2));
+	GLOBALSTAGE.addChild(d);
+
+var show = windowTo;
+	var show = ImageMat.normalFloat01(windowTo);
+var wid = lengthB;
+var hei = 1;
+var img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, wid,hei);
+var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(800 + offsetB, 10+sca*(i*2+1));
+	GLOBALSTAGE.addChild(d);
+
+if(i==44){
+	var d = new DO();
+		d.graphics().beginPath();
+		d.graphics().setFill(0xFFFF0000);
+		d.graphics().drawRect(-4,-4,4,4);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.matrix().translate(800 + offsetB, 10+sca*(i*2+1));
+		d.matrix().translate(100,0);
+		GLOBALSTAGE.addChild(d);
+		console.log("EXAMPLE: "+i+": ....\n");
+		console.log("var windowFr = ["+windowFr+"];\n");
+		console.log("var windowTo = ["+windowTo+"];\n");
+}
+
 	// compute path costs
 	// var path = R3D.bestDisparityPath(windowFr,  windowTo);
 	// var sequence = R3D.disparityFromPath(path, windowFr,  windowTo);
 	// console.log("   -> "+i+"/"+mappingAtoB.length);
 }
+//console.log("maxWindowWidth: "+maxWindowWidth);
+//console.log("maxWindowOffset: "+maxWindowOffset)
 var disparities = R3D.bestDisparity(linesA, linesB);
 var disparityImageWidth = maxWindowWidth;
 var disparityImageHeight = disparities.length;
@@ -4656,12 +4699,18 @@ var disparityImage = Code.newArrayZeros(disparityImageWidth*disparityImageHeight
 		var offset = offsets[j];
 		var offsetA = offset[0];
 		var offsetB = offset[1];
+		// offsetA
+//		console.log( (disparity.length + 0) + " / " + disparityImageWidth);
+		//offsetA = 0;
 		for(i=0; i<disparity.length; ++i){
 			var disp = disparity[i];
 			if(disp===null){
 				disp = 0;
 			}
-			var index = j*disparityImageWidth + i;
+			var index = j*disparityImageWidth + i + offsetA;
+			if(Code.isNaN(index) || index==null || index==undefined){
+				console.log(index);
+			}
 			disparityImage[index] = disp;
 		}
 	}
@@ -4694,6 +4743,25 @@ R3D.downsample1D = function(array, scale){
 	}
 	return down;
 }
+R3D.upscale1D = function(array, newSize, round){
+	round = round!==undefined ? round : true;
+	var newArray = Code.newArrayZeros(newSize);
+	var i, j, k, p, r, len = array.length;
+	var lm1 = len - 1;
+	for(i=0; i<newSize; ++i){
+		p = i/(newSize-1);
+		j = Math.max(Math.floor(p*lm1));
+		k = Math.min(Math.ceil(p*lm1),lm1);
+		r = p*lm1 - j;
+		value = (1.0-r)*array[j] + r*array[k];
+		//console.log(value);
+		if(round){
+			value = Math.round(value);
+		}
+		newArray[i] = value;
+	}
+	return newArray;
+}
 //R3D.bestDisparityPathLeveled = function(linesA, lineB, rangesA, rangesB){ // Hierarchical
 //R3D.bestDisparityPathLeveled = function(linesA, lineB){ // Hierarchical
 R3D.bestDisparity = function(linesA, linesB){
@@ -4710,19 +4778,53 @@ R3D.bestDisparity = function(linesA, linesB){
 		// need to set the initial offset to 'center' the line (effectively padding+center the smaller line to the larger line)
 		// also need to change relative search area --- eg: 3/30 = 10x disparity size will have no chance of assigning correct pixels with a +/- 3 search
 		// => this search area +/- needs to be large enough to have some overlap [+/- separation distance ?]
-		console.log(i+": "+lineA.length+" | "+lineB.length+"  ----- ");
-		// TODO create lower res versions
-		// R3D.downsample1D
-		lineOffset = null;
-		linePrev = null;
-		// console.log(lineA+"");
-		// console.log(lineB+"");
-		path = R3D.bestDisparityPath(lineA, lineB, lineOffset, linePrev);
-		disparity = R3D.disparityFromPath(path, lineA, lineB);
-		//console.log(path+"");
-		//console.log(disparity+"");
-		disparities.push(disparity);
-//		break;
+		//console.log(i+": "+lineA.length+" | "+lineB.length+"  ----- ");
+		var flipped = false;
+		if(lineA.length>lineB.length){
+			var temp = lineA;
+			lineA = lineB;
+			lineB = temp;
+		}
+		//var minLineLength = Math.min(lineA.length,lineB.length);
+		var minResolution = 4; // between n & 2n, eg: 4: [0 0 0 0] - [0 0 0 0 0 0 0 0]
+		var resolutionCount = Math.floor(Math.log2(lineA.length/minResolution)); // 4-
+		var disparityPrev = null;
+// resolutionCount = 1;
+//console.log(i+":  "+lineA.length+" | "+lineB.length+" +++++++++++++++++++++++ ");
+console.log("res: "+resolutionCount);
+		for(j=resolutionCount; j>=0; --j){
+			var scale = Math.pow(2,-j);
+			var sizeA = Math.round(lineA.length * scale);
+			var sizeB = Math.round(lineB.length * scale);
+//console.log(j,": ",scale,sizeA,"/",lineA.length,sizeB,"/",lineB.length);
+			var lA, lB;
+			lineOffset = null;
+			linePrev = null;
+			if(j==0){ // use original set
+				lA = lineA;
+				lB = lineB;
+			}else{ // use scaled set
+				lA = R3D.downsample1D(lineA, scale, scale);
+				lB = R3D.downsample1D(lineB, scale, scale);
+			}
+			//console.log( j+": "+(disparityPrev ? disparityPrev.length : 0)+" | "+lA.length+" / "+lB.length );
+			if(disparityPrev){
+				lineOffset = R3D.upscale1D(disparityPrev,lA.length);
+				//console.log("lineOffset: "+lineOffset+"");
+			}
+			// console.log(lineA+"");
+			// console.log(lineB+"");
+			path = R3D.bestDisparityPath(lA, lB, lineOffset, linePrev);
+			disparity = R3D.disparityFromPath(path, lA, lB);
+				disparityPrev = disparity;
+			if(j==0){
+				if(flipped){
+					disparity = ImageMat.mulConst(disparity,-1.0);
+					//console.log("FLIPPED");
+				}
+				disparities.push(disparity);
+			}
+		}
 	}
 
 	return disparities;
@@ -4784,6 +4886,8 @@ R3D.disparityFromPath = function(sequence, lineA, lineB){
 			}else{ // nothing before
 				disparity[index] = null;
 			}
+// INTERPOLATE REMOVE
+//disparity[index] = null;
 		}else if(index>i){ // nothing after
 			disparity[index] = null;
 		}else if(index==i){ // exact
@@ -4806,7 +4910,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax
 	var dL, dR, index, cost, myIndex;
 	var widthA = lineA.length;
 	var widthB = lineB.length;
-console.log(widthA+" | "+widthB);
+//console.log(widthA+" | "+widthB);
 	var dRange = dMax - dMin + 1;
 	var matrixSize = widthA*dRange;
 	var matchCostMatrix = Code.newArrayNulls(matrixSize);
@@ -4869,19 +4973,39 @@ console.log(widthA+" | "+widthB);
 				myCost = matchCostMatrix[myIndex];
 				if(i==0 || j==0){ // START NODE
 					myPathCost = 0;
-					//pathCostMatrix[myIndex] = myPathCost;
+					//pa1hCostMatrix[myIndex] = myPathCost;
 				}else{
 					myPathCost = pathCostMatrix[myIndex];
 				}
 				// add my cost to complete prior path cost
 //console.log("------------------------- "+i+","+j+" = "+myPathCost+" ["+myCost+"] = ("+(myPathCost+myCost)+")");
-				myPathCost +=  myCost;
+				// dissimilarity cost
+				myPathCost += myCost;
+				// occlusion cost
+				var beta = 0.25; // 0-1
+				var predecessor = predecessorMatrix[myIndex];
+				if(predecessor){
+					//console.log(predecessor);
+					ii = predecessor[0];
+					jj = predecessor[1];
+					var diffI = i - ii - 1;
+					var diffJ = j - jj - 1;
+					//console.log(diffI,diffJ);
+					myPathCost += beta*diffI;
+					myPathCost += beta*diffJ;
+				}
+				
+				// vertical cost : d-sequence difference * gradientY
+					var alpha = 1.0;
+					// TODO
+				// 
 				pathCostMatrix[myIndex] = myPathCost;
 				var successors = [];
 
 				// i+1 : next column
 				if(i<widthA-1){
 					ii = i+1;
+//ii = i; // start at self
 					var oi = lineOffset ? lineOffset[ii] : 0;
 					var rel = oi - o;
 					var rowStart = Math.max(0,d - rel);
@@ -4897,6 +5021,7 @@ console.log(widthA+" | "+widthB);
 				}
 				// j+1 2+ columns
 				var kEnd =  widthA - (i + 2);
+//var kEnd =  widthA - (i + 1); // start at self
 				for(k=0; k<kEnd; ++k){ // look for j+1 // max 1 in each column
 					ii = i + 2 + k;
 					var oi = lineOffset ? lineOffset[ii] : 0;
@@ -4973,6 +5098,19 @@ str = " ("+i+","+j+") " + str;
 	return matching;
 }
 R3D._disparityPixel = function(winA,i, winB,j){
+	//R3D._disparityPixelNCCR(winA,i, winB,j);
+	//return R3D._disparityPixelBirchfield(winA,i, winB,j);
+	return R3D._disparityPixelAD(winA,i, winB,j);
+}
+R3D._disparityPixelNCCR = function(winA,i, winB,j){ // TODO: also vertical neighborhood
+	// TODO:...
+	i = Math.min(Math.max(i,0),winA.length-1);
+	j = Math.min(Math.max(j,0),winB.length-1);
+	var diff = Math.abs(winA[i]-winB[j]);
+	diff = Math.pow(diff,2);
+	return diff;
+}
+R3D._disparityPixelBirchfield = function(winA,i, winB,j){
 	i = Math.min(Math.max(i,0),winA.length-1);
 	j = Math.min(Math.max(j,0),winB.length-1);
 	var i0 = i>0 ? i-1 : i;
@@ -5000,9 +5138,12 @@ R3D._disparityPixel = function(winA,i, winB,j){
 	var iRMin = Math.min(iR0,iR1,iR2);
 	var scoreLeft = Math.max(0, iL0-iRMax, iRMin-iL0);
 	var scoreRight = Math.max(0, iR0-iLMax, iLMin-iR0);
-return Math.abs(a1-b1);
 	return Math.max(scoreLeft,scoreRight);
-
+}
+R3D._disparityPixelAD = function(winA,i, winB,j){
+	i = Math.min(Math.max(i,0),winA.length-1);
+	j = Math.min(Math.max(j,0),winB.length-1);
+	return Math.abs(winA[i]-winB[j]);
 }
 
 
@@ -5086,6 +5227,114 @@ R3D.rectificationPoint = function(pointA, epipoleA, radiusMinA, radiusA, anglesA
 	var rectifiedPointA = new V2D(distanceA,rectifiedAngleA);
 	return rectifiedPointA;
 }
+
+
+
+
+R3D.bestDisparityX = function(linesA, linesB){
+	var i, j, disparity;
+	var disparities = [];
+	for(i=0; i<linesA.length; ++i){
+		lineA = linesA[i];
+		lineB = linesB[i];
+		disparity = R3D.bestDisparityLineHierarchy(lineA, lineB);
+		disparities.push(disparity);
+	}
+	return disparities;
+}
+R3D.bestDisparityLineHierarchy = function(lineA, lineB){
+	console.log("R3D.bestDisparityLineHierarchy");
+	// scale smaller line up to larger line
+	if(lineA.length==lineB.length){
+		// equal already
+	}else if(lineA.length<lineB.length){
+		lineA = R3D.downsample1D(lineA, lineB.length/lineA.length);
+	}else{
+		lineB = R3D.downsample1D(lineB, lineA.length/lineB.length);
+	}
+	var i;
+	var lA, lB;
+	var minResolution = 4;
+	var scaleCount = Math.floor(Math.log2(lineA.length/minResolution));
+scaleCount = 1;
+	for(i=0; i<scaleCount; --i){
+		if(i==0){ // use original set
+			lA = lineA;
+			lB = lineB;
+		}else{ // use scaled set
+			lA = R3D.downsample1D(lineA, scale, scale);
+			lB = R3D.downsample1D(lineB, scale, scale);
+		}
+		var lineOA = null;
+		var lineOB = null;
+		path = R3D.bestDisparityLine(lA, lB, lineOA, lineOB);
+		//disparity = R3D.disparityFromPath(path, lA, lB);
+		if(i==0){ // last
+			return path;
+		}
+	}
+	return null;
+}
+R3D.bestDisparityLine = function(lineA, lineB, lineOA, lineOB){
+	console.log("R3D.bestDisparityLine");
+	var disparityMin = -3;
+	var disparityMax = 3;
+	var disparityRange = disparityMax - disparityMin + 1;
+	var i, j, d, o, index, ii, jj;
+	var countA = lineA.length;
+	var countB = lineB.length;
+	var pixelCount = Math.max(countA, countB);
+	// costs for matches
+	var matchCostsA = Code.newArrayNulls(countA*disparityRange);
+	var matchCostsB = Code.newArrayNulls(countB*disparityRange);
+	// costs for paths
+	//var pathCostsA = Code.newArrayNulls(countA*disparityRange);
+	//var pathCostsB = Code.newArrayNulls(countA*disparityRange);
+	var pathCosts = Code.newArrayNulls(pixelCount*disparityRange);
+	// find costs
+	o = 0;
+	for(j=0; j<disparityRange; ++j){
+		for(i=0; i<countA; ++i){
+			if(lineOA){ o = lineA[i]; }
+			index = j*countA + i;
+			d = i + disparityMin + o;
+			ii = j + d;
+//console.log(j+":"+i+" = "+d+" || "+ii+"/"+countB);
+			if(0<=ii && ii<countB){
+				//matchCostsA[index] = R3D._disparityPixelBirchfield(lineA,j, lineB,ii);
+				matchCostsA[index] = R3D._disparityPixelAD(lineA,j, lineB,ii);
+				//matchCostsA[index] = 1.0;
+			}
+		}
+	}
+	console.log( Code.array1Das2DtoString(matchCostsA,countA,disparityRange, 1) );
+	//console.log( Code.array1Das2DtoString(matchCostsB,countA,disparityRange, 1) );
+	
+	// console.log(pathCosts);
+	// paths
+	for(i=0; i<pixelCount; ++i){
+		if(i<countA){
+			// A to B
+		}
+		if(i<countB){
+			// B to A
+		}
+		// force ordering of match pairs -- only consider these 
+	}
+	// force each pixel in lineA to have a match in lineB
+	// force each pixel in lineB to have a match in lineA
+	// allow sub-pixel matches (+epsilon)
+	// preserve ordering
+	// preserve uniqueness
+	//
+	//
+	var path = [];
+	return path;
+}
+
+
+
+
 
 /*
 L1 - minkowski distance
