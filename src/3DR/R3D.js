@@ -4982,7 +4982,7 @@ R3D.bestDisparityPath = function(lineA, lineB, lineOffset, prevLineA, dMin, dMax
 				// dissimilarity cost
 				myPathCost += myCost;
 				// occlusion cost
-				var beta = 0.25; // 0-1
+				var beta = 0.5; // 0-1
 				var predecessor = predecessorMatrix[myIndex];
 				if(predecessor){
 					//console.log(predecessor);
@@ -5099,8 +5099,8 @@ str = " ("+i+","+j+") " + str;
 }
 R3D._disparityPixel = function(winA,i, winB,j){
 	//R3D._disparityPixelNCCR(winA,i, winB,j);
-	//return R3D._disparityPixelBirchfield(winA,i, winB,j);
-	return R3D._disparityPixelAD(winA,i, winB,j);
+	return R3D._disparityPixelBirchfield(winA,i, winB,j);
+	//return R3D._disparityPixelAD(winA,i, winB,j);
 }
 R3D._disparityPixelNCCR = function(winA,i, winB,j){ // TODO: also vertical neighborhood
 	// TODO:...

@@ -59,6 +59,7 @@ HIGH DESNE PROBLEMS WITH HIERARCHICAL ALGORITHM:
 
 
 
+
 cell > [feature] > [matches]
 
 
@@ -190,6 +191,12 @@ https://www.slideshare.net/KonradWenzel/150225-presentation-avila3darchdenseimag
 
 
 
+
+REGION GROWING:
+region->region tracking
+ - search around point at perimeter [connected cell chunk]
+- keep track of local scale (for optimal compare)
+- keep track of local AREA/SIZE?
 
 
 
