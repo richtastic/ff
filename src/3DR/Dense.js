@@ -166,3 +166,21 @@ Dense.Match = function(){
 	this._scaleB = null;
 	// 
 }
+/*
+- global queue (Q) keeps track of next-best-matches
+  - Q is initialized with seed points (S)v
+
+while(next match exists and has at least minimum score):
+  - choose next best satallite point-match from Q
+    => satellite operation =>
+    - set as matched:
+      - remove from Q
+      - create areas Ai & Aj if features are not already inside an area
+      - join/attach area cells to adjacent area(s)if possible
+        - (seed point may not join any areas)
+    - for all un-searched meighbor cells in I (Ai) and in J (Aj):
+      - select cell definitive feature point (eg highest corner score)
+      - search corresponding area's cell's neighbors [not just perimeter] for best match
+      - add best match to global queue
+
+*/
