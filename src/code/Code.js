@@ -1910,6 +1910,29 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
+Code.lineSpace = function(start,end,count){
+	count = count!==undefined ? count : 1.0;
+	var i, arr = [];
+	if(count==0){
+		return [start];
+	}
+	if(end<start){ // decreasing
+		if(count>0){
+			count = -count;
+		}
+		for(i=start; i>=end; i+=count){
+			arr.push(i);
+		}
+	}else{
+		if(count<0){
+			count = -count;
+		}
+		for(i=start; i<=end; i+=count){
+			arr.push(i);
+		}
+	}
+	return arr;
+}
 
 Code.interpolateColorGradientARGB = function(percent, colors,locations){
 	if(colors.length==0){

@@ -147,35 +147,32 @@ GLOBALSTAGE = this._stage;
 		GLOBALSTAGE.addChild(c);
 	}
 
-	this.testFeatureComparrison(imageMatrixA,pointsA, imageMatrixB,pointsB);
+	this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 
 	//Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB);
 }
-Dense.prototype.testFeatureComparrison = function(imageA,seedsA, imageB,seedsB){
-	var i, j, pointA, pointB;
-	var scale, rotation, sigma, matrix;
+Dense.prototype.testFeatureComparison = function(imageA,seedsA, imageB,seedsB){
+	var i, pointA, pointB;
 	var imageAGry = imageA.gry();
 	var imageBGry = imageB.gry();
-	var d, img;
-	var windowSize = 25;
 	len = Math.min(seedsA.length,seedsB.length);
 	for(i=0; i<len; ++i){
-		scale = 1.0;
-		sigma = 1.0;
-		rotation = 0.0;
 		pointA = seedsA[i];
 		pointB = seedsB[i];
-		matrix = new Matrix(3,3).identity();
-			//matrix = Matrix.transform2DScale(matrix,scale,scale);
-			matrix = Matrix.transform2DRotate(matrix,rotation);
-			a = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,scale,sigma,windowSize,windowSize, imageAGry,imageA.width(),imageA.height(), matrix);
-
-			img = GLOBALSTAGE.getFloatRGBAsImage(a, a, a, windowSize,windowSize);
-			d = new DOImage(img);
-			d.matrix().translate(400, 300);
-			GLOBALSTAGE.addChild(d);
-
-		break;
+console.log(i+" ...... ");
+		Dense.OFFY = 300;
+		var optimumA = Dense.featuresFromPoints(imageAGry,imageA.width(),imageA.height(),pointA, imageBGry,imageB.width(),imageB.height(),pointB);
+		Dense.OFFY = 350;
+		var optimumB = Dense.featuresFromPoints(imageBGry,imageB.width(),imageB.height(),pointB, imageAGry,imageA.width(),imageA.height(),pointA);
+		if(optimumA.score<optimumB.score){
+			optimum = optimumA;
+		}else{
+			optimum = optimumB;
+		}
+		//console.log(optimum["A"]);
+// if(i==10){
+// break;
+// }
 	}
 }
 
@@ -212,15 +209,136 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB){
 Dense.addSatelliteFeature = function(pointA, pointB){
 	//
 }
-Dense.featuresFromPoints = function(pointA, pointB){ // only for seed points
- // compare at cell size ?
+Dense.OFFX = 10;
+Dense.OFFY = 0;
+Dense.featuresFromPoints = function(floatA,widthA,heightA, pointA, floatB,widthB,heightB, pointB){ // only for seed points
+//Dense.OFFY = 300;
+var offIN = Dense.OFFY;
+var calculateScale = 0.5; // 0.25;
+ 	var windowSize = 11;// compare at cell size ?
+ 	var center = Math.floor(windowSize * 0.5);
+ 	var i, j, k, l, score;
+ 	var d, img;
+ 	var scale, rotation, sigma, matrix;
 	// assumed correctly matched
 	// find optimum rotation / scale for this matching
 	// for each A & B (should agree)
 	// try ~8 scales about center 2^[-2.0,-1.5,-1.0,0.0,0.5,1.0,1.5,2.0]
 	// try ~5 rotations about average gradient [-10,-5,0,5,10]
 	// == 40 comparrisons
-	return {"A":null, "B":null};
+	var scales = Code.lineSpace(-2,0,0.5); // negatives should be done on opposite image -- scaling down
+	var rotations = Code.lineSpace(-90,90,10);
+	var matrix, a, b, u, v;
+	var angleA, angleB;
+	// console.log(scales);
+	// console.log(rotations);
+	var minScore = null;
+	var optimumScale = null;
+	var optimumRotation = null;
+	var optimumAsymmAngle = null;
+	var optimumAsymmScale = null;
+	// do A
+		sigma = 4.0;
+		scale = 1.0;
+		rotation = 0.0;
+		matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix,rotation);
+// GET ANGLE FROM SIFT FEATURE ESTIMATE
+		// get local image
+		a = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,scale*calculateScale,sigma,windowSize,windowSize, floatA,widthA,heightA, matrix);
+		u = ImageMat.gradientVector(a, windowSize,windowSize, center,center);
+		angleA = V2D.angle(V2D.DIRX,u);
+		// get local image
+		b = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,scale*calculateScale,sigma,windowSize,windowSize, floatB,widthB,heightB, matrix);
+		u = ImageMat.gradientVector(b, windowSize,windowSize, center,center);
+		angleB = V2D.angle(V2D.DIRX,u);
+		// get 0-angled image
+		sigma = null;
+		scale = 1.0;
+		rotation = -angleA;
+		matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix,rotation);
+		a = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,scale*calculateScale,sigma,windowSize,windowSize, floatA,widthA,heightA, matrix);
+		// show A
+		img = GLOBALSTAGE.getFloatRGBAsImage(a, a, a, windowSize,windowSize);
+			d = new DOImage(img);
+			d.matrix().translate(Dense.OFFX, Dense.OFFY);
+			GLOBALSTAGE.addChild(d);
+Dense.OFFY += 30;
+// TODO: angle by which to scale asymm
+// TODO: scale asumm
+	var asymmScales = Code.lineSpace(0.0,0.75,0.25);
+	//var asymmScales = Code.lineSpace(0.0,1.0,0.25);
+	//var asymmAngles = Code.lineSpace(-80,80,10);
+	var asymmAngles = Code.lineSpace(-90,70,30);
+	// do Bs
+	for(i=0; i<scales.length; ++i){
+		scale = scales[i];
+		scale = Math.pow(2,scale);
+		for(j=0; j<rotations.length; ++j){
+			rotation = rotations[j];
+			rotation = Code.radians(rotation);
+			rotation -= angleB;
+for(k=0; k<asymmScales.length; ++k){
+var asymmScale = asymmScales[k];
+asymmScale = Math.pow(2,asymmScale);
+for(l=0; l<asymmAngles.length; ++l){
+var asymmAngle = asymmAngles[l];
+asymmAngle = Code.radians(asymmAngle);
+			sigma = null;
+			matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,asymmAngle);
+			matrix = Matrix.transform2DScale(matrix,asymmScale);
+			matrix = Matrix.transform2DRotate(matrix,-asymmAngle);
+			matrix = Matrix.transform2DRotate(matrix,rotation);
+			matrix = Matrix.transform2DScale(matrix,scale);
+
+			b = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, floatB,widthB,heightB, matrix);
+			// SCORE
+			score = ImageMat.SADFloatSimple(a,windowSize,windowSize, b);
+			//score = ImageMat.ssd(a,windowSize,windowSize, b,windowSize,windowSize); // NaN ?
+			//score = ImageMat.ssdInner(a,windowSize,windowSize, b,windowSize,windowSize);
+			// show B
+			// img = GLOBALSTAGE.getFloatRGBAsImage(b, b, b, windowSize,windowSize);
+			// d = new DOImage(img);
+			// d.matrix().translate(Dense.OFFX, Dense.OFFY);
+			// GLOBALSTAGE.addChild(d);
+			// show score
+			// d = new DOText((Math.round(score*100)/100)+"", 10, DOText.FONT_ARIAL, 0xFF000000, DOText.ALIGN_LEFT);
+			// d.matrix().translate(Dense.OFFX + windowSize, Dense.OFFY + 14);
+			// GLOBALSTAGE.addChild(d);
+			if(minScore==null || score<minScore){
+				minScore = score;
+				optimumRotation = rotation;//angleA + rotation + 2*angleB;
+				optimumAsymmScale = asymmScale;
+				optimumAsymmAngle = asymmAngle;
+				optimumScale = scale;
+
+			}
+Dense.OFFY += windowSize;
+}
+}
+		}
+	}
+	// SHOW FINAL:
+	sigma = null;
+	matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,optimumAsymmAngle);
+			matrix = Matrix.transform2DScale(matrix,optimumAsymmScale);
+			matrix = Matrix.transform2DRotate(matrix,-optimumAsymmAngle);
+			matrix = Matrix.transform2DRotate(matrix,optimumRotation);
+			matrix = Matrix.transform2DScale(matrix,optimumScale);
+	
+	b = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, floatB,widthB,heightB, matrix);
+	img = GLOBALSTAGE.getFloatRGBAsImage(b, b, b, windowSize,windowSize);
+	d = new DOImage(img);
+	d.matrix().translate(Dense.OFFX + windowSize, offIN);
+	GLOBALSTAGE.addChild(d);
+console.log(minScore, optimumRotation, optimumScale, optimumAsymmAngle, optimumAsymmScale);
+
+Dense.OFFX += windowSize*2 + 10;
+	//return {"A":{"angle":optimumRotation, "scale":1.0/optimumScale}, "B":{"angle":-optimumRotation, "scale":optimumScale}};
+	return {"score":minScore, "angle":optimumRotation, "scale":optimumScale};
 }
 Dense.bestMatchFromNeighborhood = function(pointA, pointB){ // for all putative points
  // compare at cell size ?

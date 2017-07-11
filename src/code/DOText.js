@@ -2,13 +2,15 @@
 DOText.ALIGN_LEFT = "left";
 DOText.ALIGN_CENTER = "center";
 DOText.ALIGN_RIGHT = "left";
+
+DOText.FONT_ARIAL = "arial";
 // ------------------------------------------------------------------------------------------------------------------------ 
 function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	DOText._.constructor.call(this,parentDO);
 	this._text = "";
 	this._size = 12;
 	this._fontObject = null;
-	this._font = "arial";
+	this._font = DOText.FONT_ARIAL;
 	this._color = 0xFFFF0000;
 	this._align = DOText.ALIGN_CENTER;
 	this.setText(textIN,sizeIN,fontIN,colIN,alignIN);
@@ -31,8 +33,12 @@ DOText.prototype.size = function(s){
 }
 DOText.prototype.font = function(f){
 	if(f!==undefined && f!==null){
-		this._fontObject = f;
-		this._font = f.name();
+		if(Code.isString(f)){
+			this._font = f;
+		}else{
+			this._fontObject = f;
+			this._font = f.name();
+		}
 		this._updateGraphics();
 	}
 	return this._font;
