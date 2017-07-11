@@ -147,24 +147,110 @@ GLOBALSTAGE = this._stage;
 		GLOBALSTAGE.addChild(c);
 	}
 
+	this.testFeatureComparrison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 
-	Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB);
+	//Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB);
 }
+Dense.prototype.testFeatureComparrison = function(imageA,seedsA, imageB,seedsB){
+	var i, j, pointA, pointB;
+	var scale, rotation, sigma, matrix;
+	var imageAGry = imageA.gry();
+	var imageBGry = imageB.gry();
+	var d, img;
+	var windowSize = 25;
+	len = Math.min(seedsA.length,seedsB.length);
+	for(i=0; i<len; ++i){
+		scale = 1.0;
+		sigma = 1.0;
+		rotation = 0.0;
+		pointA = seedsA[i];
+		pointB = seedsB[i];
+		matrix = new Matrix(3,3).identity();
+			//matrix = Matrix.transform2DScale(matrix,scale,scale);
+			matrix = Matrix.transform2DRotate(matrix,rotation);
+			a = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,scale,sigma,windowSize,windowSize, imageAGry,imageA.width(),imageA.height(), matrix);
 
+			img = GLOBALSTAGE.getFloatRGBAsImage(a, a, a, windowSize,windowSize);
+			d = new DOImage(img);
+			d.matrix().translate(400, 300);
+			GLOBALSTAGE.addChild(d);
+
+		break;
+	}
+}
 
 Dense.denseMatch = function(imageA,seedsA, imageB,seedsB){
-	//
+	var MINIMUM_SCORE = 0.0;
+	var i, len, featureA, featureB, match;
+	// global best-match queue
+	var queue = new PriorityQueue();
+	// global list of successful matches
+	var matches = [];
+	// convert seeds to matches
+	lem = Math.min(seedsA.length, seedsB.length);
+	for(i=0; i<len; ++i){
+		featureA = [];
+		featureB = [];
+		match = new Dense.Match();
+	}
+	while(!queue.isEmpty()){
+		var bestMatch = queue.pop();
+		if(bestMatch.score<MINIMUM_SCORE){break;}
+		// satellite operation
+		// if both features are still not matched ...
+		// set features as matched & add them to matches & areas & cells ... ?
+		// get area for existing features // else create a new area
+		// attach area cell to neighbor areas if possible
+		// for each neighbor cell of I
+			// create definitive feature for un-inited cells if not 
+			// compare definitive feature in cell_i with all features in neighbors of cell_j
+			// add (best OR all?) match to global queue
+		// for each neighbor cell of J
+			// ditto
+	}
+}
+Dense.addSatelliteFeature = function(pointA, pointB){
 	//
 }
-
-
-
+Dense.featuresFromPoints = function(pointA, pointB){ // only for seed points
+ // compare at cell size ?
+	// assumed correctly matched
+	// find optimum rotation / scale for this matching
+	// for each A & B (should agree)
+	// try ~8 scales about center 2^[-2.0,-1.5,-1.0,0.0,0.5,1.0,1.5,2.0]
+	// try ~5 rotations about average gradient [-10,-5,0,5,10]
+	// == 40 comparrisons
+	return {"A":null, "B":null};
+}
+Dense.bestMatchFromNeighborhood = function(pointA, pointB){ // for all putative points
+ // compare at cell size ?
+	// start at given reference rotation / scale
+	// try ~ 9 different scales about reference [-40,-30,-20,-10,0.0,10,20,30,40];
+	// try ~ 5 different orientations about reference 2^[-1.0,-0.5,0.0,0.5,1.0];
+	// == 45 comparrisons
+	// do NCC of pointA w/ rotation and scale at image window centered at pointB
+}
+Dense.Grid = function(){
+	this._image = null;
+	this._cells = [];
+	this._areas = [];
+}
+Dense.Area = function(){
+	this._cells = [];
+}
+Dense.Cell = function(){
+	this._area = null;
+	this._features = [];
+}
+Dense.Feature = function(){
+	this._point = null;
+	this._relativeScale = 1.0;
+	this._relativeRotation = 0.0;
+}
 Dense.Match = function(){
-	this._pointA = null;
-	this._scaleA = null;
-	this._pointB = null;
-	this._scaleB = null;
-	// 
+	this._featureA = null;
+	this._featureB = null;
+	this._score = null;
 }
 /*
 - global queue (Q) keeps track of next-best-matches
@@ -176,9 +262,8 @@ while(next match exists and has at least minimum score):
     - set as matched:
       - remove from Q
       - create areas Ai & Aj if features are not already inside an area
-      - join/attach area cells to adjacent area(s)if possible
-        - (seed point may not join any areas)
-    - for all un-searched meighbor cells in I (Ai) and in J (Aj):
+      - join/attach area cells to adjacent area(s)if possible (possible that satellite / seed point may not join any areas)
+    - for all un-searched neighbor cells in I (Ai) and in J (Aj):
       - select cell definitive feature point (eg highest corner score)
       - search corresponding area's cell's neighbors [not just perimeter] for best match
       - add best match to global queue
