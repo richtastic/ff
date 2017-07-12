@@ -147,6 +147,18 @@ GLOBALSTAGE = this._stage;
 		GLOBALSTAGE.addChild(c);
 	}
 
+// var a = [0, 0, 0, 1, 2, 1, 0, 0, 0];
+// var b = [0, 0, 0, 1, 2, 1, 0, 2, 0];
+// var a = [0, 1, 0,
+//          0, 1, 0,
+//          0, 1, 0];
+// var b = [0, 0, 0,
+//          1, 1, 1,
+//          0, 0, 0];
+// var score = Dense.ncc(a,b);
+// console.log(score);
+// return;
+
 	this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 
 	//Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB);
@@ -164,11 +176,11 @@ console.log(i+" ...... ");
 		var optimumA = Dense.featuresFromPoints(imageAGry,imageA.width(),imageA.height(),pointA, imageBGry,imageB.width(),imageB.height(),pointB);
 		Dense.OFFY = 350;
 		var optimumB = Dense.featuresFromPoints(imageBGry,imageB.width(),imageB.height(),pointB, imageAGry,imageA.width(),imageA.height(),pointA);
-		if(optimumA.score<optimumB.score){
-			optimum = optimumA;
-		}else{
-			optimum = optimumB;
-		}
+		// if(optimumA.score<optimumB.score){
+		// 	optimum = optimumA;
+		// }else{
+		// 	optimum = optimumB;
+		// }
 		//console.log(optimum["A"]);
 if(i==10){
 break;
@@ -215,7 +227,7 @@ Dense.featuresFromPoints = function(floatA,widthA,heightA, pointA, floatB,widthB
 //Dense.OFFY = 300;
 var offIN = Dense.OFFY;
 var calculateScale = 0.5; // 0.25;
- 	var windowSize = 21;// compare at cell size ?
+ 	var windowSize = 11;// compare at cell size ?
  	var mask = ImageMat.circleMask(windowSize);
  	var center = Math.floor(windowSize * 0.5);
  	var i, j, k, l, score;
@@ -223,10 +235,14 @@ var calculateScale = 0.5; // 0.25;
  	var scale, rotation, sigma, matrix;
 	
 	// == 40 comparrisons
-var sca = 2.0;
+var sca = 1.0;
 	var scales = Code.lineSpace(-2,0,0.5); // negatives should be done on opposite image -- scaling down
-	var rotations = Code.lineSpace(-90,90,30);
+	//var rotations = Code.lineSpace(-90,90,30);
+//var rotations = Code.lineSpace(-25,25,25);
 	//var rotations = Code.lineSpace(-180,170,10);
+	var rotations = Code.lineSpace(-180,160,20);
+// var scales = [0];
+// var rotations = [0];
 	var matrix, a, b, u, v;
 	var angleA, angleB;
 	// console.log(scales);
@@ -268,11 +284,14 @@ var sca = 2.0;
 Dense.OFFY += 30;
 // TODO: angle by which to scale asymm
 // TODO: scale asumm
-	var asymmScales = Code.lineSpace(0.0,0.75,0.25);
-	//var asymmScales = Code.lineSpace(0.0,1.0,0.25);
+	// var asymmScales = Code.lineSpace(0.0,1.0,0.25);
+	// var asymmAngles = Code.lineSpace(-90,60,30);
 	//var asymmAngles = Code.lineSpace(-80,80,10);
 	//var asymmAngles = Code.lineSpace(-90,80,10);
-	var asymmAngles = Code.lineSpace(-90,60,30);
+	//var asymmScales = Code.lineSpace(0.0,0.75,0.25);
+	var asymmAngles = [0];
+	var asymmScales = [0];
+	// at asymmScale ==0 => all angles are always the same
 	// do Bs
 	for(i=0; i<scales.length; ++i){
 		scale = scales[i];
@@ -290,7 +309,7 @@ asymmAngle = Code.radians(asymmAngle);
 			sigma = null;
 			matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DRotate(matrix,asymmAngle);
-			matrix = Matrix.transform2DScale(matrix,asymmScale);
+			matrix = Matrix.transform2DScale(matrix,asymmScale,1.0);
 			matrix = Matrix.transform2DRotate(matrix,-asymmAngle);
 			matrix = Matrix.transform2DRotate(matrix,rotation);
 			matrix = Matrix.transform2DScale(matrix,scale);
@@ -298,21 +317,22 @@ asymmAngle = Code.radians(asymmAngle);
 			b = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, floatB,widthB,heightB, matrix);
 			// SCORE
 			score = Dense.ncc(a,b, mask);
-				//score = 1.0 / score;
+			score = Dense.sad(a,b, mask);
+			//score = 1.0 / score;
 			//score = ImageMat.SADFloatSimple(a,windowSize,windowSize, b, mask);
 			//score = ImageMat.ssd(a,windowSize,windowSize, b,windowSize,windowSize); // NaN ?
 			//score = ImageMat.ssdInner(a,windowSize,windowSize, b,windowSize,windowSize);
 			// show B
 			// img = GLOBALSTAGE.getFloatRGBAsImage(b, b, b, windowSize,windowSize);
 			// d = new DOImage(img);
-			// d.matrix().translate(Dense.OFFX, Dense.OFFY);
+			// d.matrix().translate(Dense.OFFX, Dense.OFFY + windowSize*sca);
 			// GLOBALSTAGE.addChild(d);
-			// show score
+			// // show score
 			// d = new DOText((Math.round(score*100)/100)+"", 10, DOText.FONT_ARIAL, 0xFF000000, DOText.ALIGN_LEFT);
-			// d.matrix().translate(Dense.OFFX + windowSize, Dense.OFFY + 14);
+			// d.matrix().translate(Dense.OFFX + windowSize, Dense.OFFY + 14 + windowSize*sca);
 			// GLOBALSTAGE.addChild(d);
-			//if(minScore==null || score<minScore){ // ssd | sad
-			if(minScore==null || score>minScore){ // zncc
+			if(minScore==null || score<minScore){ // ssd | sad
+			//if(minScore==null || score>minScore){ // zncc
 				minScore = score;
 				optimumRotation = rotation;//angleA + rotation + 2*angleB;
 				optimumAsymmScale = asymmScale;
@@ -320,6 +340,7 @@ asymmAngle = Code.radians(asymmAngle);
 				optimumScale = scale;
 
 			}
+if(asymmScale==1.0){break;}
 Dense.OFFY += windowSize;
 }
 }
@@ -343,7 +364,7 @@ Dense.OFFY += windowSize;
 	GLOBALSTAGE.addChild(d);
 console.log(minScore, optimumRotation, optimumScale, optimumAsymmAngle, optimumAsymmScale);
 
-Dense.OFFX += windowSize*2 + 10;
+Dense.OFFX += windowSize*sca*2 + 20;
 	//return {"A":{"angle":optimumRotation, "scale":1.0/optimumScale}, "B":{"angle":-optimumRotation, "scale":optimumScale}};
 	return {"score":minScore, "angle":optimumRotation, "scale":optimumScale};
 }
@@ -403,12 +424,37 @@ Dense.ncc = function(a,b, m){ // normalized cross correlation
 		aa += ai * ai * mask;
 		bb += bi * bi * mask;
 		ab += ai * bi * mask;
-//ab += Math.abs(a[i] - b[i]);
-//ab += Math.abs(ai - bi);
-//ab += Math.pow(ai - bi,2);
 	}
 	score = ab / Math.sqrt(aa*bb);
 	//score = ab;
+	return score;
+}
+Dense.sad = function(a,b, m){ // sum of absolute differences
+	var score = 0;
+	var aa = 0, bb = 0, ab = 0;
+	var aMean = 0, bMean = 0;
+	var ai, bi;
+	var i, len = a.length;
+	var maskCount = 0;
+	var mask = 1.0;
+	if(len==0){ return 0; }
+	for(i=0; i<len; ++i){
+		if(m){ mask = m[i]; }
+		if(mask==0){ continue; }
+		maskCount += mask;
+		aMean += a[i] * mask;
+		bMean += b[i] * mask;
+	}
+	aMean /= maskCount;
+	bMean /= maskCount;
+	for(i=0; i<len; ++i){
+		if(m){ mask = m[i]; }
+		if(mask==0){ continue; }
+		ai = a[i] - aMean;
+		bi = b[i] - bMean;
+		ab += Math.abs(ai - bi);
+	}
+	score = ab;
 	return score;
 }
 /*
