@@ -1580,7 +1580,8 @@ ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY){ // area ~ 1
 	return image;
 }
 
-ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ?
+ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ? [currently oval]
+	imageHeight = imageHeight!==undefined ? imageHeight : imageWidth;
 	var i, j;
 	var len = imageWidth * imageHeight;
 	var mask = Code.newArrayZeros(len);
@@ -2050,7 +2051,7 @@ ImageMat.SADFloatSimpleChannelsRGB = function(aRed,aGrn,aBlu, wid,hei, bRed,bGrn
 	return scoreR * scoreG * scoreB;
 	//return scoreR + scoreG + scoreB;
 }
-ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
+ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB, maskArea){
 	var i, a, b, len = wid*hei;
 	var sad = 0;
 	var medianA = 0;
@@ -2075,23 +2076,27 @@ ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB){
 	rangeB = maxB - minB;
 	medianA = medianA / len;
 	medianB = medianB / len;
+	var mask = 1.0;
 	for(i=0; i<len; ++i){
+		if(maskArea){
+			mask = maskArea[i];
+		}
 		a = imageA[i];
 		b = imageB[i];
 		a -= medianA;
 		b -= medianB;
 		// a = a / (rangeA!==0.0 ? rangeA : 1.0);
 		// b = b / (rangeB!==0.0 ? rangeB : 1.0);
-		sad += Math.abs(a - b);
+		sad += mask * Math.abs(a - b);
 		//sad += Math.pow(a - b,2);
 		// more what looking for: 0=>0, 1=>3
 		//sad += (Math.pow( 1 + Math.abs(a-b),2) - 1); == x*x + 2x; -- mostly just linear anyway
 	}
 //	console.log("RANGES: "+rangeA+" | "+rangeB);
 	//var range = (rangeA+rangeB)*0.5;
-	var range = Math.min(rangeA,rangeB);
+	//var range = Math.min(rangeA,rangeB);
 //		range = Math.pow(range,2); // too m
-		range = range!=0 ? range : 1.0;
+//		range = range!=0 ? range : 1.0;
 //		range = range * range;
 //		range = Math.sqrt(range);
 //console.log("RANGE: "+range);

@@ -170,9 +170,9 @@ console.log(i+" ...... ");
 			optimum = optimumB;
 		}
 		//console.log(optimum["A"]);
-// if(i==10){
-// break;
-// }
+if(i==10){
+break;
+}
 	}
 }
 
@@ -211,23 +211,22 @@ Dense.addSatelliteFeature = function(pointA, pointB){
 }
 Dense.OFFX = 10;
 Dense.OFFY = 0;
-Dense.featuresFromPoints = function(floatA,widthA,heightA, pointA, floatB,widthB,heightB, pointB){ // only for seed points
+Dense.featuresFromPoints = function(floatA,widthA,heightA, pointA, floatB,widthB,heightB, pointB){ // only for seed points, // assumed correctly matched
 //Dense.OFFY = 300;
 var offIN = Dense.OFFY;
 var calculateScale = 0.5; // 0.25;
- 	var windowSize = 11;// compare at cell size ?
+ 	var windowSize = 21;// compare at cell size ?
+ 	var mask = ImageMat.circleMask(windowSize);
  	var center = Math.floor(windowSize * 0.5);
  	var i, j, k, l, score;
  	var d, img;
  	var scale, rotation, sigma, matrix;
-	// assumed correctly matched
-	// find optimum rotation / scale for this matching
-	// for each A & B (should agree)
-	// try ~8 scales about center 2^[-2.0,-1.5,-1.0,0.0,0.5,1.0,1.5,2.0]
-	// try ~5 rotations about average gradient [-10,-5,0,5,10]
+	
 	// == 40 comparrisons
+var sca = 2.0;
 	var scales = Code.lineSpace(-2,0,0.5); // negatives should be done on opposite image -- scaling down
-	var rotations = Code.lineSpace(-90,90,10);
+	var rotations = Code.lineSpace(-90,90,30);
+	//var rotations = Code.lineSpace(-180,170,10);
 	var matrix, a, b, u, v;
 	var angleA, angleB;
 	// console.log(scales);
@@ -262,7 +261,9 @@ var calculateScale = 0.5; // 0.25;
 		// show A
 		img = GLOBALSTAGE.getFloatRGBAsImage(a, a, a, windowSize,windowSize);
 			d = new DOImage(img);
-			d.matrix().translate(Dense.OFFX, Dense.OFFY);
+			d.matrix().scale(sca);
+			d.matrix().translate(Dense.OFFX + 0, Dense.OFFY);
+
 			GLOBALSTAGE.addChild(d);
 Dense.OFFY += 30;
 // TODO: angle by which to scale asymm
@@ -270,7 +271,8 @@ Dense.OFFY += 30;
 	var asymmScales = Code.lineSpace(0.0,0.75,0.25);
 	//var asymmScales = Code.lineSpace(0.0,1.0,0.25);
 	//var asymmAngles = Code.lineSpace(-80,80,10);
-	var asymmAngles = Code.lineSpace(-90,70,30);
+	//var asymmAngles = Code.lineSpace(-90,80,10);
+	var asymmAngles = Code.lineSpace(-90,60,30);
 	// do Bs
 	for(i=0; i<scales.length; ++i){
 		scale = scales[i];
@@ -295,7 +297,9 @@ asymmAngle = Code.radians(asymmAngle);
 
 			b = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, floatB,widthB,heightB, matrix);
 			// SCORE
-			score = ImageMat.SADFloatSimple(a,windowSize,windowSize, b);
+			score = Dense.ncc(a,b, mask);
+				//score = 1.0 / score;
+			//score = ImageMat.SADFloatSimple(a,windowSize,windowSize, b, mask);
 			//score = ImageMat.ssd(a,windowSize,windowSize, b,windowSize,windowSize); // NaN ?
 			//score = ImageMat.ssdInner(a,windowSize,windowSize, b,windowSize,windowSize);
 			// show B
@@ -307,7 +311,8 @@ asymmAngle = Code.radians(asymmAngle);
 			// d = new DOText((Math.round(score*100)/100)+"", 10, DOText.FONT_ARIAL, 0xFF000000, DOText.ALIGN_LEFT);
 			// d.matrix().translate(Dense.OFFX + windowSize, Dense.OFFY + 14);
 			// GLOBALSTAGE.addChild(d);
-			if(minScore==null || score<minScore){
+			//if(minScore==null || score<minScore){ // ssd | sad
+			if(minScore==null || score>minScore){ // zncc
 				minScore = score;
 				optimumRotation = rotation;//angleA + rotation + 2*angleB;
 				optimumAsymmScale = asymmScale;
@@ -332,7 +337,9 @@ Dense.OFFY += windowSize;
 	b = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, floatB,widthB,heightB, matrix);
 	img = GLOBALSTAGE.getFloatRGBAsImage(b, b, b, windowSize,windowSize);
 	d = new DOImage(img);
-	d.matrix().translate(Dense.OFFX + windowSize, offIN);
+	d.matrix().scale(sca);
+	d.matrix().translate(Dense.OFFX + windowSize*sca, offIN);
+
 	GLOBALSTAGE.addChild(d);
 console.log(minScore, optimumRotation, optimumScale, optimumAsymmAngle, optimumAsymmScale);
 
@@ -370,6 +377,43 @@ Dense.Match = function(){
 	this._featureB = null;
 	this._score = null;
 }
+Dense.ncc = function(a,b, m){ // normalized cross correlation
+	var score = 0;
+	var aa = 0, bb = 0, ab = 0;
+	var aMean = 0, bMean = 0;
+	var ai, bi;
+	var i, len = a.length;
+	var maskCount = 0;
+	var mask = 1.0;
+	if(len==0){ return 0; }
+	for(i=0; i<len; ++i){
+		if(m){ mask = m[i]; }
+		if(mask==0){ continue; }
+		maskCount += mask;
+		aMean += a[i] * mask;
+		bMean += b[i] * mask;
+	}
+	aMean /= maskCount;
+	bMean /= maskCount;
+	for(i=0; i<len; ++i){
+		if(m){ mask = m[i]; }
+		if(mask==0){ continue; }
+		ai = a[i] - aMean;
+		bi = b[i] - bMean;
+		aa += ai * ai * mask;
+		bb += bi * bi * mask;
+		ab += ai * bi * mask;
+//ab += Math.abs(a[i] - b[i]);
+//ab += Math.abs(ai - bi);
+//ab += Math.pow(ai - bi,2);
+	}
+	score = ab / Math.sqrt(aa*bb);
+	//score = ab;
+	return score;
+}
+/*
+SUM_i((x_i - x_avg)*(y_i - y_avg)) / [sqrt( SUM_i((x_i - x_avg)^2) ) * sqrt( SUM_i((y_i - y_avg)^2) )]
+*/
 /*
 - global queue (Q) keeps track of next-best-matches
   - Q is initialized with seed points (S)v
