@@ -1975,6 +1975,22 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 	}
 	return null; // error?
 }
+Code.grayscaleFloatToHeatMapFloat = function(gry, colors){ // in [0,1]
+	colors = colors!==undefined ? colors : [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
+	var i, len = gry.length;
+	var a = Code.newArray(len);
+	var r = Code.newArray(len);
+	var g = Code.newArray(len);
+	var b = Code.newArray(len);
+	for(var i=0;i<len;++i){
+		var color = Code.interpolateColorGradientARGB(gry[i], colors);
+		a[i] = Code.getFloatAlpARGB(color);
+		r[i] = Code.getFloatRedARGB(color);
+		g[i] = Code.getFloatGrnARGB(color);
+		b[i] = Code.getFloatBluARGB(color);
+	}
+	return {"alp":a, "red":r, "grn":g, "blu":b};
+}
 
 // Code.getColARGBFromString("0x456").toString(16)
 // Code.getColARGBFromString("0x3456").toString(16)
