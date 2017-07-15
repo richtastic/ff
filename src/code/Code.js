@@ -1239,6 +1239,15 @@ Code.normalizeArray = function(array){ // L2 length
 		}
 	}
 }
+Code.clipArray = function(array, min,max){
+	min = min!==undefined ? min : 0.0;
+	max = max!==undefined ? max : 1.0;
+	var i, len = array.length;
+	for(i=0; i<len; ++i){
+		array[i] = Math.min(Math.max(min,array[i]),max);
+	}
+	return array;
+}
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -2428,7 +2437,14 @@ Code.randChiSquareN = function(n){ // N DOF
 	}
 	return sum;
 }
-
+Code.addRandomNoise = function(arr,mag){
+	var i, n;
+	for(i=0; i<arr.length; ++i){
+		n = (Math.random()-0.5)*mag;
+		arr[i] += n;
+	}
+	return arr;
+}
 Code.randomizedArray = function(len){
 	var i, arr = [], len = len?len:10;
 	for(i=0;i<len;++i){
@@ -6058,6 +6074,53 @@ Code.SSDEqual = function(a,b){
 		ssd += Math.pow( rangeA*(a[i]-minA) - rangeB*(b[i]-minB),2);
 	}
 	return ssd;
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+//Code.subRect = function(image,width,height, point,newWidth,newHeight, matrix){
+	// var newWidth = Math.round(width*scale);
+	// var newHeight = Math.round(height*scale);
+	//var sigma = 
+	// matrix = new Matrix(3,3).identity();
+	// var scale = matrix.getScale();
+	// if(scale>1.0){ // zoom in
+	// 	//
+	// }else{ // zoom out
+	// 	// 
+	// }
+	/*
+	find extent of resulting rect, extract only that, gaussian blur that, transfer from that
+	*/
+// }
+Code.scaleImage = function(image,width,height, point,scale){
+	var newWidth = Math.round(width*scale);
+	var newHeight = Math.round(height*scale);
+	if(scale>1.0){ // zoom in
+		// extract only the rect area (+ padding?)
+	}else{ // zoom out
+		// only interpolate
+	}
+	//HERE
+	return null;
+}
+Code.pointInterpolate2DLinear = function(array, wid,hei, x,y){
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var indexA = minY*wid + minX; var colA = array[indexA];
+	var indexB = minY*wid + maxX; var colB = array[indexB];
+	var indexC = maxY*wid + minX; var colC = array[indexC];
+	var indexD = maxY*wid + maxX; var colD = array[indexD];
+	minX = x - minX;
+	if(x<0||x>wid){ minX=0.0;}
+	minY = y - minY;
+	if(y<0||y>hei){ minY=0.0;}
+	var val = Code.linear2D(minX,minY, colA,colB,colC,colD);
+	if(isNaN(val)){
+		console.log("PT",wid,hei,x,y);
+	}
+	return val;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 

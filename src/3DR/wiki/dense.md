@@ -202,11 +202,60 @@ region->region tracking
 
 
 
+LATEST:.....
+
+* how to correctly scale an image up / down
+
+need to determine best window matching (cost aggregation) method:
+TEST:
+- pic matching point across 2 images: [use exact same image & different images]
+- see how well each scoring method works:
+	*) same
+	*) rotation
+	*) scale
+	*) rot + scale
+	*) asymm scale
+	*) noise
+	*) ligthing increase / decrease
+	*) blurring
+- how to the maximum peaks change?
+METRIC:
+point at which match becomes wrong (eg which rotation, which scale, which noise level, ...)
+
+EX:
+SAD
+SSD
+NCC
+ZNCC
+* flat
+* gradient
+* gaussian
+maxValue
+minValue
+range
+entropy
+cornerness
+histograms [eg: intensities]
 
 
+CONCLUSIONS:
+CC: BAD
+	will find best offset of SELF signal, not under unknown signal
+	eg: white image will match better than itself
+NCC: normalized : BAD
+	will match anything shifted
+
+ZNCC: normalized + zero mean : BAD
+	will match anything shifted or scaled
+	eg: noise on gray solid BG could happen to match up well
+
+SAD:
 
 
+NSAD:
 
+
+GRAD-SAD
 
 
 
