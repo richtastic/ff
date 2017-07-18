@@ -2910,16 +2910,21 @@ ImageMat.prototype.refineCornerPoints = function(points, distance){ // assuming 
 	return nextPoints;
 }
 
-ImageMat.prototype.corners = function(){
-	var width = this.width();
-	var height = this.height();
-	// TODO add padding and trim edge corners
-	var cornerScores = R3D.harrisCornerDetection(this.gry(), width, height);//, konstant, sigma);
+ImageMat.corners = function(image, width, height){
+	var cornerScores = R3D.harrisCornerDetection(image, width, height);//, konstant, sigma);
 	var corners  = Code.findExtrema2DFloat(cornerScores,width,height);
 	corners = corners.sort(function(a,b){
 		return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
 	});
+	// TODO add padding and trim edge corners
+	
 	return corners;
+}
+
+ImageMat.prototype.corners = function(){
+	var width = this.width();
+	var height = this.height();
+	return ImageMat.corners(this.gry(), width, height);
 	// // corners
 	// var cornerThreshold = 0.55;
 	// var cornerMat = [0.25,-0.5,0.25, -0.5,1,-0.5, 0.25,-0.5,0.25];

@@ -2001,7 +2001,8 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 	return null; // error?
 }
 Code.grayscaleFloatToHeatMapFloat = function(gry, colors){ // in [0,1]
-	colors = colors!==undefined ? colors : [0xFFFF0000, 0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
+	// 0xFFFF0000, 
+	colors = colors!==undefined ? colors : [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
 	var i, len = gry.length;
 	var a = Code.newArray(len);
 	var r = Code.newArray(len);

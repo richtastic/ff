@@ -150,6 +150,7 @@ GLOBALSTAGE = this._stage;
 	//this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testImageScaling(imageMatrixA,pointsA);
 	//this.testSimilarityMetrics(imageMatrixA,pointsA);
+//GLOBALSTAGE.root().matrix().scale(0.75);
 	Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB, this);
 }
 Dense.prototype.testImageScaling = function(image,points){
@@ -162,20 +163,23 @@ Dense.prototype.testImageScaling = function(image,points){
 	console.log(scaled);
 }
 Dense.prototype.testSimilarityMetrics = function(image,points){
-GLOBALSTAGE.root().matrix().scale(2.0);
+//GLOBALSTAGE.root().matrix().scale(0.70);
 	var i, j, matrix, img, a, b, c, d;
 	var imageGry = image.gry();
 	var imageWidth = image.width();
 	var imageHeight = image.height();
-	var point = new V2D(208,149); // foot
+	//var point = new V2D(208,149); // foot
 	//var point = new V2D(173,107); // grid corner
-	//var point = new V2D(243,100); //armpit
-	var needleSize = 21;
+	var point = new V2D(243,100); //armpit
+//var needleSize = 21;
+//var needleSize = 12;
+//var needleSize = 24;
+var needleSize = 20;
 	var haystackSize = 150;
 	var mask = ImageMat.circleMask(needleSize);
-	var rotation = Code.radians(20.0); // Code.radians(45.0);
+	var rotation = Code.radians(25.0); // Code.radians(45.0);
 	var scale = 1.0; // 0.5; // 1.5; // 1.0;
-	var noise = 0.5; // 0.0;
+	var noise = 0.0; // 0.0;
 	var sigma = null;
 	matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DScale(matrix,scale);
@@ -391,7 +395,7 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	// global list of successful matches
 	var matches = [];
 	// grid of matching cells
-	var cellSizeA = 25;
+	var cellSizeA = 10;//25;
 	var cellSizeB = cellSizeA;
 	var gridACols = Math.ceil(imageAWidth/cellSizeA);
 	var gridARows = Math.ceil(imageAHeight/cellSizeA);
@@ -407,9 +411,18 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 		var seedB = seedsB[i];
 		var match = Dense.matchFromPoints(imageAGry,imageAWidth,imageAHeight,seedA,gridA, imageBGry,imageBWidth,imageBHeight,seedB,gridB);
 		queue.push(match);
+			// // want to initialize a lot of neighbors initially ????
+			// var cellA = match.cellA();
+			// var cellB = match.cellA();
+			// Dense.checkAddNeighbors(cellA, cellB, queue, gridA, gridB, match);
+			// Dense.checkAddNeighbors(cellB, cellA, queue, gridB, gridA, match);
 		if(i==10){break;}
 	}
 	// start at about 16th of total size
+
+	
+
+
 	
 // show grids
 for(var j=0; j<gridARows; ++j){
@@ -441,10 +454,9 @@ Dense.QUEUE = queue;
 Dense.GRIDA = gridA;
 Dense.GRIDB = gridB;
 Dense.ITERATION = 0;
-	Dense.TICKER = new Ticker(200000);
+	Dense.TICKER = new Ticker(2000000);
 	Dense.TICKER.addFunction(Ticker.EVENT_TICK, Dense.denseMatch_iteration_ticker, Dense);
 	Dense.TICKER.start();
-
 
 	Dense.KEYBOARD = new Keyboard();
 	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_DOWN,Dense.denseMatch_iteration_key,Dense);
@@ -501,11 +513,13 @@ if(iteration>10){
 console.log("best match: "+bestMatch);
 		var featureA = bestMatch.featureA();
 		var featureB = bestMatch.featureB();
-		var cellA = gridA.cell(featureA.point());
-		var cellB = gridB.cell(featureB.point());
+		// var cellA = gridA.cell(featureA.point());
+		// var cellB = gridB.cell(featureB.point());
+		var cellA = bestMatch.cellA();
+		var cellB = bestMatch.cellB();
 		console.log(featureA+" | "+featureB);
-		console.log(cellA+" + "+cellB);
-		console.log(cellA.grid()+" VS "+gridA+" = "+(cellA.grid()===gridA)+" = "+(cellB.grid()===gridA));
+		//console.log(cellA+" + "+cellB);
+		//console.log(cellA.grid()+" VS "+gridA+" = "+(cellA.grid()===gridA)+" = "+(cellB.grid()===gridB));
 		if(cellA.grid()!=gridA){ // flip
 			console.log("flip");
 			var temp = cellA;
@@ -556,7 +570,7 @@ c.graphics().lineTo(cellB.center().x+400,cellB.center().y+0);
 c.graphics().strokeLine();
 c.graphics().endPath();
 GLOBALSTAGE.addChild(c);
-console.log(cellA.center()+"")
+//console.log(cellA.center()+"")
 
 		// check neighbor matches
 		Dense.BESTMATCHOFFY = 0;
@@ -576,6 +590,7 @@ Dense.addSatelliteFeature = function(pointA, pointB){
 	// Q score should be based not solely on the absolute matching score, but on how unique the match is compared to other neighbor matches (confidence)
 }
 Dense.checkAddNeighbors = function(cellA, cellB, queue, gridA, gridB, match){ // A = needle, B = haystack
+	console.log("     checkAddNeighbors: "+gridA+" / "+gridB);
 var display = Dense.DISPLAY;
 Dense.BESTMATCHOFFX = 0;
 Dense.BESTMATCHOFFY += 130;
@@ -583,7 +598,9 @@ Dense.BESTMATCHOFFY += 130;
 
 	var offsetScale = match.scale();// TODO: get from matched neighbor & append: 2^[-0.1,0,0.1]
 	var offsetRotation = match.rotation();// TODO: get from matched neighbor & append: [-10,0,10]
-	if(match.cellA()!=cellA){ // opposite direction
+	//if(match.cellA()!=cellA){ // opposite direction
+if(match.cellA()==cellA){ // opposite direction
+		console.log("FLIPP .................");
 		offsetScale = 1.0/offsetScale;
 		offsetRotation = -offsetRotation;
 	}
@@ -596,19 +613,49 @@ Dense.BESTMATCHOFFY += 130;
 		}
 		// create definitive feature for un-inited cells if not 
 		var featureA = neighborA.feature();
+		var cornerValues = null;
 		if(!featureA){
-			featureA = Dense.definitiveFeature(neighborA.center(), null);
+			var centerPoint = neighborA.center();
+			var cellSize = gridA.cellSize();
+			var cellImage = ImageMat.extractRectFromFloatImage(centerPoint.x,centerPoint.y,1.0,null,cellSize,cellSize, gridA.image(),gridA.width(),gridA.height(), null);
+				var sigma = 2.0;
+			cellImage = ImageMat.getBlurredImage(cellImage,cellSize,cellSize, sigma);
+			cornerValues = ImageMat.corners(cellImage,cellSize,cellSize);
+			//console.log(cornerValues)
+			// TODO: if corner is bad enough, ignore
+				if(cornerValues.length==0){ continue; }
+			var bestCorner = cornerValues[0];
+			if(bestCorner.z<0.00001){ continue; }
+			//console.log("bestCorner : "+bestCorner.z);
+			bestCorner.x += centerPoint.x - cellSize*0.5;
+			bestCorner.y += centerPoint.y - cellSize*0.5;
+			var point = new V2D(bestCorner.x,bestCorner.y);
+			// featureA = Dense.definitiveFeature(neighborA.center(), null);
+			featureA = Dense.definitiveFeature(point, null);
 			neighborA.feature(featureA);
 		}
 		// 
 			// do SSD with window that covers 3x3 || 5x5 block of cellB
-		var needleSize = gridA.cellSize()*0.75 | 0;
+		var needleSize = gridA.cellSize()*1.0 | 0;
 		var haystackSize = gridB.cellSize()*5 | 0; // 4x4 + 1 padding
-
-// get originator offset from match
-//console.log("MATCH: "+match);
 		
 		var bestPoints = Dense.bestMatchFromNeighborhood(gridA.image(),gridA.width(),gridA.height(),featureA.point(), gridB.image(),gridB.width(),gridB.height(),cellB.center(),   offsetScale,offsetRotation, needleSize,needleSize, haystackSize,haystackSize);
+
+if(cornerValues){
+for(i=0; i<cornerValues.length; ++i){
+	var corner = cornerValues[i];
+	var c = new DO();
+	c.graphics().setLine(1, 0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(0,0, 2);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	//c.matrix().translate(30 + Dense.BESTMATCHOFFX + corner.x + 0, Dense.BESTMATCHOFFY + corner.y + 0);
+	c.matrix().translate(neighborA.center().x - gridA.cellSize()*0.5 + corner.x + 0, neighborA.center().y - gridA.cellSize()*0.5 + corner.y + 0);
+	Dense.DISPLAY.addChild(c);
+}
+}
+
 		for(var j=0; j<bestPoints.length; ++j){
 			var best = bestPoints[j];
 			var pointB = best["point"];
@@ -621,7 +668,7 @@ Dense.BESTMATCHOFFY += 130;
 			var featureB = new Dense.Feature(pointB);
 				var b = gridB.cell(pointB);
 			var match = new Dense.Match(featureA,featureB, score, relativeScaleAtoB,relativeAngleAtoB, neighborA, b);
-			console.log(" add: "+score+" = "+featureA+", "+featureB);
+			console.log(" add: "+score+" = "+neighborA+", "+b+"        | "+gridA+" | "+gridB);
 			queue.push(match);
 			
 		}
@@ -647,8 +694,9 @@ Dense.OFFY = 0;
 Dense.featuresFromPoints = function(floatA,widthA,heightA, pointA, floatB,widthB,heightB, pointB){ // only for seed points, // assumed correctly matched
 //Dense.OFFY = 300;
 var offIN = Dense.OFFY;
-var calculateScale = 0.50; // 0.25;
- 	var windowSize = 21;// compare at cell size ?
+var calculateScale = 1.0;//0.50; // 0.25;
+ 	//var windowSize = 21;// compare at cell size ?
+var windowSize = 21;
  	var mask = ImageMat.circleMask(windowSize);
  	var center = Math.floor(windowSize * 0.5);
  	var i, j, k, l, score;
@@ -811,7 +859,7 @@ var display = Dense.DISPLAY;
 Dense.BESTMATCHOFFX += 25;
 var offsetDisplayHeight = 220 + Dense.BESTMATCHOFFY;
 
-var calculateScale = 0.50;
+var calculateScale = 1.0;//0.50;
 var sigma = null;
 windowWidth = windowWidth!==undefined ? windowWidth : 21;
 windowHeight = windowHeight!==undefined ? windowHeight : windowWidth;
@@ -923,7 +971,9 @@ Dense.DISPLAY.addChild(d);
 	}
 	return matches;
 }
+
 Dense.Grid = function(width,height,image, cols,rows,size){
+	this._id = Dense.Grid.ID++;
 	this._image = image;
 	this._width = width;
 	this._height = height;
@@ -939,6 +989,7 @@ Dense.Grid = function(width,height,image, cols,rows,size){
 	}
 	this._areas = [];
 }
+Dense.Grid.ID = 0;
 Dense.Grid.prototype._indexFromColRow = function(col,row){
 	if(0<=row && row<this._rows  &&  0<=col && col<this._cols){
 		var index = row*this._cols + col;
@@ -990,6 +1041,10 @@ Dense.Grid.prototype.cell = function(a,b){
 	}
 	return null;
 }
+Dense.Grid.prototype.toString = function(){
+	return "[Grid: "+this._id+"]";
+}
+
 
 Dense.Cell = function(grid, col, row){
 	this._grid = grid;
@@ -1267,6 +1322,12 @@ type = type!==undefined ? type : Dense.SAD;
 					cc += n*h;
 				}
 			}
+// penaltiy for featureless-ness
+//sad = sad / Math.min(rangeH,rangeN);
+//sad = sad / Math.abs(rangeH-rangeN); // bad
+// non-featureness drop feature
+//sad = sad / Math.abs(rangeH-rangeN); // bad
+//sad = 1.0;
 			psad = sad / (sigmaHH*sigmaNN);// sad * Math.abs(rangeN-rangeH)
 			ncc = sigmaNH;
 			zncc = sigmaNH/(sigmaHH*sigmaNN);
@@ -1342,8 +1403,8 @@ Dense.siftVectorFromGradient = function(data, width, height, masking, groupSize,
 		}
 	}
 	Code.normalizeArray(vector);
-	// vector = ImageMat.pow(vector,0.5);
-	// Code.normalizeArray(vector);
+	vector = ImageMat.pow(vector,0.5);
+	Code.normalizeArray(vector);
 	return vector;
 	
 }
