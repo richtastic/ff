@@ -1239,6 +1239,22 @@ Code.normalizeArray = function(array){ // L2 length
 		}
 	}
 }
+Code.sad = function(a,b){
+	var sad = 0;
+	var i, len = Math.min(a.length,b.length);
+	for(i=0; i<len; ++i){
+		sad += Math.abs(a[i]-b[i]);
+	}
+	return sad;
+}
+Code.ssd = function(a,b){
+	var sad = 0;
+	var i, len = Math.min(a.length,b.length);
+	for(i=0; i<len; ++i){
+		sad += Math.pow(a[i]-b[i],2);
+	}
+	return sad;
+}
 Code.clipArray = function(array, min,max){
 	min = min!==undefined ? min : 0.0;
 	max = max!==undefined ? max : 1.0;
@@ -1985,7 +2001,7 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 	return null; // error?
 }
 Code.grayscaleFloatToHeatMapFloat = function(gry, colors){ // in [0,1]
-	colors = colors!==undefined ? colors : [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
+	colors = colors!==undefined ? colors : [0xFFFF0000, 0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
 	var i, len = gry.length;
 	var a = Code.newArray(len);
 	var r = Code.newArray(len);

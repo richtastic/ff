@@ -249,13 +249,69 @@ ZNCC: normalized + zero mean : BAD
 	will match anything shifted or scaled
 	eg: noise on gray solid BG could happen to match up well
 
-SAD:
-
-
+SAD: OK - BEST
+	matches items with similar brightness
 NSAD:
+	- 
 
+GRAD-X: BAD
+	- using gradient as-is, in place of image intensity, does not work well
 
-GRAD-SAD
+SIFT-ISH-GRAD?:
+	TODO: get histogram of each point
+		- preblur to drop noise and average gradient
+		- 12 / 12 window: 3 x 3 of 4x4s (=16 minus 4 corners that will be ignored =12) weighted by inverse distance from center ?
+			- each histogram is can be ~8 angles
+			- 
+		|UL|UR|
+		|BL|BR|
+	...
+	- 
+
+NEXT:
+	- use local scale / rotation as offset
+
+ACTUALLY:
+|x x x x|x x o x|x x x x|
+|x x x o|o o o o|o o x x|
+|x x o o|o o o o|o o o x|
+|x o o o|o o o o|o o o o|
+-------------------------
+|o
+|
+|
+|
+...
+
+|x x x x|o o o o|x x x x|
+|x x o o|o o o o|o o x x|
+|x o o o|o o o o|o o o x|
+|x o o o|o o o o|o o o x|
+-------------------------
+|o o o o|o o o o|o o o o|
+|o o o o|o o o o|o o o o|
+|o o o o|o o o o|o o o o|
+|o o o o|o o o o|o o o o|
+-------------------------
+|x o o o|o o o o|o o o x|
+|x o o o|o o o o|o o o x|
+|x x o o|o o o o|o o x x|
+|x x x x|o o o o|x x x x|
+= 
+------------
+ 8 | 16 |  8
+------------
+16 | 16 | 16
+------------
+ 8 | 16 |  8
+------------
+* get gradient vector
+* separate into 3x3 = 9 histogram
+* histogram into bins 45-deg apart, scaled by gradient
+* scale entire histogram to 1
+SAD histograms as comparrison
+
+ 
 
 
 

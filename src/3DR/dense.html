@@ -11,6 +11,14 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","Dense.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	// var size = 12;
+	// var mask = ImageMat.circleMask(size);
+	// var str = Code.array1Das2DtoString(mask, size,size, 0);
+	// console.log(str);
+	// mask = ImageMat.gradientVector(mask, size,size);
+	// Dense.siftVectorFromGradient(mask,size,size);
+	// Dense.searchNeedleHaystackGradient(mask, size,size, null, mask, size,size);
+
 	var dense = new Dense();
 }
 </script>

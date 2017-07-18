@@ -1581,16 +1581,15 @@ ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY){ // area ~ 1
 }
 
 ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ? [currently oval]
+	// SHOULD BE SYMMETRIC
 	imageHeight = imageHeight!==undefined ? imageHeight : imageWidth;
 	var i, j;
 	var len = imageWidth * imageHeight;
 	var mask = Code.newArrayZeros(len);
-	var cx = imageWidth * 0.5;
-	var cy = imageHeight * 0.5;
-	var rx = imageWidth * 0.5;
-	var ry = imageHeight * 0.5;
-	cx = Math.floor(cx);
-	cy = Math.floor(cy);
+	var cx = (imageWidth-1.0)*0.5;
+	var cy = (imageHeight-1.0)*0.5;
+	var rx = imageWidth*0.5;
+	var ry = imageHeight*0.5;
 	for(i=0; i<imageWidth; ++i){
 		for(j=0; j<imageHeight; ++j){
 			var d = Math.pow((i-cx)/rx,2) + Math.pow((j-cy)/ry,2);
@@ -1602,7 +1601,7 @@ ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ? [curr
 	return mask;
 }
 
-ImageMat.prototype.applyCircleMask = function(image, imageWidth, imageHeight){
+ImageMat.prototype.applyCircleMask = function(image, imageWidth, imageHeight){ // TODO: FXN = APPLY MASK, choose circle === ImageMat.mul
 	var i;
 	var mask = ImageMat.circleMask(imageWidth, imageHeight);
 	var len = imageWidth*imageHeight;
@@ -2729,7 +2728,7 @@ ImageMat.derivativeY = function(src,wid,hei, x,y){
 	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
 }
-ImageMat.gradientVector = function(src,wid,hei, x,y){
+ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with other value/width/height
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
 	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
 	if(x!==undefined && y!==undefined){
