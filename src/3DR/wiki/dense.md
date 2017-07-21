@@ -248,70 +248,69 @@ NCC: normalized : BAD
 ZNCC: normalized + zero mean : BAD
 	will match anything shifted or scaled
 	eg: noise on gray solid BG could happen to match up well
-
 SAD: OK - BEST
 	matches items with similar brightness
 NSAD:
 	- 
+ZSAD: seems to cause more false matches than SAD
 
 GRAD-X: BAD
 	- using gradient as-is, in place of image intensity, does not work well
 
 SIFT-ISH-GRAD?:
-	TODO: get histogram of each point
-		- preblur to drop noise and average gradient
-		- 12 / 12 window: 3 x 3 of 4x4s (=16 minus 4 corners that will be ignored =12) weighted by inverse distance from center ?
-			- each histogram is can be ~8 angles
-			- 
-		|UL|UR|
-		|BL|BR|
-	...
-	- 
+	- is OK, larger area is better
+
 
 NEXT:
-	- use local scale / rotation as offset
+ignore FLAT / non-textured areas (do last)
+	TEST:
+	x do multiple calculations to find local optimum score via rot/sca
+		- does this find THE BEST match? or waste time finding other bad matches?
+	ALG:
+	x use local scale / rotation as offset to find local optimal
 
-ACTUALLY:
-|x x x x|x x o x|x x x x|
-|x x x o|o o o o|o o x x|
-|x x o o|o o o o|o o o x|
-|x o o o|o o o o|o o o o|
--------------------------
-|o
-|
-|
-|
-...
+	ALG:
+	- use smaller cells / smaller search areas to limit large-offset errors
 
-|x x x x|o o o o|x x x x|
-|x x o o|o o o o|o o x x|
-|x o o o|o o o o|o o o x|
-|x o o o|o o o o|o o o x|
--------------------------
-|o o o o|o o o o|o o o o|
-|o o o o|o o o o|o o o o|
-|o o o o|o o o o|o o o o|
-|o o o o|o o o o|o o o o|
--------------------------
-|x o o o|o o o o|o o o x|
-|x o o o|o o o o|o o o x|
-|x x o o|o o o o|o o x x|
-|x x x x|o o o o|x x x x|
-= 
-------------
- 8 | 16 |  8
-------------
-16 | 16 | 16
-------------
- 8 | 16 |  8
-------------
-* get gradient vector
-* separate into 3x3 = 9 histogram
-* histogram into bins 45-deg apart, scaled by gradient
-* scale entire histogram to 1
-SAD histograms as comparrison
+	ALG:
+	- initial SAD estimates seem different than the local ones
 
- 
+	ALG:
+	- try 1,2,4 cell size
+
+
+
+
+400 = 2/2/2/2/5/5
+300 = 2/2/3/5/5
+=> 2 2 5 5
+2*2 = 4
+2*5 = 10
+2*2*5 = 20
+5*5 = 25
+2*2*5*5 = 100
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

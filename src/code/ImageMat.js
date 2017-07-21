@@ -2302,6 +2302,18 @@ ImageMat.squareFloat = function(data){
 	for(i=0;i<len;++i){
 		data[i] = data[i]*data[i];
 	}
+	return data;
+}
+ImageMat.invertFloat = function(data){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		if(data[i]==0){
+			data[i]=0;
+		}else{
+			data[i] = 1.0/data[i];
+		}
+	}
+	return data;
 }
 ImageMat.vectorSumFloat = function(a,b){
 	var i, len = a.length;
@@ -2912,7 +2924,7 @@ ImageMat.prototype.refineCornerPoints = function(points, distance){ // assuming 
 
 ImageMat.corners = function(image, width, height){
 	var cornerScores = R3D.harrisCornerDetection(image, width, height);//, konstant, sigma);
-	var corners  = Code.findExtrema2DFloat(cornerScores,width,height);
+	var corners = Code.findExtrema2DFloat(cornerScores,width,height);
 	corners = corners.sort(function(a,b){
 		return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
 	});
