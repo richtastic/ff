@@ -3329,7 +3329,6 @@ if(true){
 }
 
 R3D.pointsToSIFT = function(imageSource, points){
-	console.log("making sift points..");
 	var originalGray = imageSource.gry();
 	var originalRed = imageSource.red();
 	var originalGrn = imageSource.grn();
@@ -3351,6 +3350,10 @@ R3D.pointsToSIFT = function(imageSource, points){
 R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 	var val = ImageMat.extractRectFromFloatImage(x,y,s,u, w,h, source,width,height);
 	return val;
+}
+
+R3D.entropyExtract = function(imageSource, percentKeep){
+	// use entropy at various scales to get best
 }
 
 var HARRIS_CALL = 0;

@@ -2010,7 +2010,7 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 }
 Code.grayscaleFloatToHeatMapFloat = function(gry, colors){ // in [0,1]
 	// 0xFFFF0000, 
-	colors = colors!==undefined ? colors : [0xFFFF0000,   0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
+	colors = colors!==undefined ? colors : [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
 	var i, len = gry.length;
 	var a = Code.newArray(len);
 	var r = Code.newArray(len);
@@ -6318,6 +6318,29 @@ Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
 }
 
+
+Code.histogram = function(data, buckets){
+	var value, i, bin, len = data.length;
+	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
+	var info = Code.infoArray(data);
+	var infoMax = info["max"];
+	var infoMin = info["min"];
+	var infoRange = info["range"];
+		infoRange = infoMax - infoMin;
+	var bm1 = buckets - 1;
+	var histogram = Code.newArrayZeros(buckets);
+	for(i=0; i<len; ++i){
+		value = (data[i]-infoMin)/infoRange;
+		bin = Math.min(Math.floor( value*buckets ),bm1);
+		//console.log(value+" => "+bin);
+		histogram[bin] += 1;
+	}
+	var bucketSize = 0;
+	if(buckets>0){
+		bucketSize = infoRange/buckets;
+	}
+	return {"histogram":histogram, "size":bucketSize};
+}
 
 
 // // bezier curves:

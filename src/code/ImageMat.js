@@ -1103,29 +1103,29 @@ ImageMat.entropy = function(data, wid, hei, maskOutCenter, bins, bucketOffset){
 }
 ImageMat.histogram = function(data, wid, hei, buckets, maskOutCenter, bucketOffset){// range assumed [0,1]  |  16 => 4  |  100 => 10
 	var value, i, bin, len = data.length;
+	bucketOffset = bucketOffset!==undefined ? bucketOffset : 0.0;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
-	var info = Code.infoArray(data);
-	var infoMax = info["max"];
-	var infoMin = info["min"];
-	var infoRange = info["range"];
-		infoMin = 0;
-		infoMax = 1;
-		infoRange = infoMax - infoMin;
-
+	// var info = Code.infoArray(data);
+	// var infoMax = info["max"];
+	// var infoMin = info["min"];
+	// var infoRange = info["range"];
+	// 	infoMin = 0;
+	// 	infoMax = 1;
+	// 	infoRange = infoMax - infoMin;
+	// console.log(infoRange)
 	var bm1 = buckets - 1;
 	var histogram = Code.newArrayZeros(buckets);
-	var mask = true;
+	var mask = 1.0;
 	for(i=0; i<len; ++i){
-		if(maskOutCenter){
-			mask = maskOutCenter[i] != 0;
-		}
-		if(mask){
+		if(maskOutCenter){ mask = maskOutCenter[i]; }
+		if(mask!=0.0){
 			value = data[i];
-			if(bucketOffset){
-				value = (value + bucketOffset) % 1.0;
-			}
-			value = (value - infoMin)/infoRange;
+			// if(bucketOffset){
+			// 	value = (value + bucketOffset) % 1.0;
+			// }
+			// value = (value - infoMin)/infoRange;
 			bin = Math.min(Math.floor( value*buckets ),bm1);
+			console.log(i+" = "+value+" => "+bin)
 			histogram[bin] += 1;
 		}
 	}

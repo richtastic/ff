@@ -278,6 +278,50 @@ ignore FLAT / non-textured areas (do last)
 	ALG:
 	- try 1,2,4 cell size
 
+	~ show disparity map for current progress
+	- measure non-texturedness & penalize scores for non-uniqueness
+		- energy?
+		- entropy?
+		- moment?
+		- entropy-from-center ? [remove 'average' color?]
+		- directional entropy
+		- homogeneity
+		- contrast
+
+		- 
+	- backtracking if a bad situtation is found?
+		- if a lot of cells are mapped to a particular cell:
+			- remove all mapped .. and mark to not repeat?
+	- areas with a lot of similar (peak) scores should be penalized
+		- unstable points
+	- indistinguishable cells / areas SHOULD have an ordering constraint
+		- also uniqueness constraint?
+	- penalize for further-away matches (higher disparity)
+		- large 'delta' disparities == discontinutities
+		- already-matched-neighbor's disparity == 9
+	- 
+
+- Zenforce some kind of directional flow
+- instead of searching thru all neighbors, try to use matching 'flow'
+	- maybe narrow down to half-plane ?
+	- (assumes previous matchings were good)
+
+PROBLEM: clearly the 'best' matches aren't getting chosen first
+	- the metric for best is wrong
+
+
+score: 1.0
+	* SAD [lower better]
+	* 1/textureness [higher better] entropy
+	* uniqueness [lower better] score=histogram
+	* 
+
+
+
+http://www.cis.upenn.edu/~jshi/papers/ICCV99b_final.pdf
+
+
+
 
 
 
