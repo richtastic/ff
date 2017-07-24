@@ -1272,6 +1272,15 @@ Code.clipArray = function(array, min,max){
 	}
 	return array;
 }
+Code.nonZero = function(a){
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		if(a[i]!==0.0){
+			return true;
+		}
+	}
+	return false;
+}
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -5092,7 +5101,7 @@ Code.distancePointRay2D = function(org,dir, point){ // point and RAY
 	var p = Code.closestPointLine2D(org,dir, point);
 	return V2D.distance(point,p);
 }
-Code.distancePointLine2D_ = function(a,b, point){ // point and RAY
+Code.distancePointLine2D = function(a,b, point){ // point and RAY
 	var dir = V2D.sub(b,a);
 	return Code.distancePointRay2D(a,dir, point);
 }
@@ -6319,7 +6328,7 @@ Code.fuzzyTruncate = function(a,b){
 }
 
 
-Code.histogram = function(data, buckets){
+Code.histogram = function(data, masking, buckets){
 	var value, i, bin, len = data.length;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
 	var info = Code.infoArray(data);
@@ -6329,18 +6338,54 @@ Code.histogram = function(data, buckets){
 		infoRange = infoMax - infoMin;
 	var bm1 = buckets - 1;
 	var histogram = Code.newArrayZeros(buckets);
+	var mask = 1.0;
 	for(i=0; i<len; ++i){
-		value = (data[i]-infoMin)/infoRange;
-		bin = Math.min(Math.floor( value*buckets ),bm1);
-		//console.log(value+" => "+bin);
-		histogram[bin] += 1;
+		if(masking){ mask = masking[i]; }
+		if(mask!=0.0){
+			value = (data[i]-infoMin)/infoRange;
+			bin = Math.min(Math.floor( value*buckets ),bm1);
+			histogram[bin] += 1;
+		}
 	}
 	var bucketSize = 0;
 	if(buckets>0){
 		bucketSize = infoRange/buckets;
 	}
-	return {"histogram":histogram, "size":bucketSize};
+	return {"histogram":histogram, "size":bucketSize, "min":null, "max":null};
 }
+
+Code.entropy01 = function(data, masking, buckets){
+	buckets = (buckets!==undefined && buckets!==null)? buckets : 10;
+	var i, count, p;
+	var histogram = Code.histogram01(data, masking,buckets);
+	var totalCount = Code.sumArray(histogram);
+	var entropy = 0;
+	for(i=0; i<buckets; ++i){
+		count = histogram[i];
+		p = count / totalCount;
+		if(p>0){
+			entropy += p * Math.log2(p);
+		}
+	}
+	var maxE = -Math.log2(1.0/buckets);
+	return -entropy/maxE;
+}
+Code.histogram01 = function(data, masking, buckets){
+	var value, i, bin, len = data.length;
+	buckets = (buckets!==undefined && buckets!==null)? buckets : Math.sqrt(len);
+	var bm1 = buckets - 1;
+	var histogram = Code.newArrayZeros(buckets);
+	var mask = 1.0;
+	for(i=0; i<len; ++i){
+		if(masking){ mask = masking[i]; }
+		if(mask!=0.0){
+			bin = Math.min(Math.floor( data[i]*buckets ),bm1);
+			histogram[bin] += 1;
+		}
+	}
+	return histogram;
+}
+
 
 
 // // bezier curves:

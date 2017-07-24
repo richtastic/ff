@@ -147,7 +147,7 @@ GLOBALSTAGE = this._stage;
 		c.matrix().translate(imageMatrixA.width(), 0);
 		//GLOBALSTAGE.addChild(c);
 	}
-	GLOBALSTAGE.root().matrix().scale(1.5);
+	//GLOBALSTAGE.root().matrix().scale(1.5);
 	//this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testImageScaling(imageMatrixA,pointsA);
 	//this.testSimilarityMetrics(imageMatrixA,pointsA, imageMatrixB,pointsB);
@@ -280,26 +280,32 @@ Dense.entropyImage = function(imageAGry, imageAWidth,imageAHeight){
 	for(j=0; j<imageAHeight; ++j){
 		for(i=0; i<imageAWidth; ++i){
 			var needle = ImageMat.subImage(imageAGry,imageAWidth,imageAHeight, i-needleCenter,j-needleCenter, needleSize,needleSize);
-			var entropy = Dense.entropy(needle,needleSize,needleSize, needleMask);
+			var entropy = Code.entropy01(needle, needleMask);
 			imageEntropy[j*imageAWidth + i] = entropy;
 		}
 	}
 	return imageEntropy;
 }
 Dense.prototype.testEntropy = function(imageA,pointsA, imageB,pointsB){
+
+	
+
+	
 	var imageAGry = imageA.gry();
 	var imageAWidth = imageA.width();
 	var imageAHeight = imageA.height();
 	var imageBGry = imageB.gry();
 	var imageBWidth = imageB.width();
 	var imageBHeight = imageB.height();
+
+
 	
 	imageEntropy = Dense.entropyImage(imageAGry,imageAWidth,imageAHeight);
 	var c = ImageMat.normalFloat01(Code.copyArray(imageEntropy));
 	c = Code.grayscaleFloatToHeatMapFloat(c);
 	img = GLOBALSTAGE.getFloatRGBAsImage(c["red"],c["grn"],c["blu"], imageAWidth,imageAHeight);
 	d = new DOImage(img);
-	d.matrix().translate(0,300);
+	d.matrix().translate(0,0);
 	GLOBALSTAGE.addChild(d);
 
 	imageEntropy = Dense.entropyImage(imageBGry,imageBWidth,imageBHeight);
@@ -307,9 +313,59 @@ Dense.prototype.testEntropy = function(imageA,pointsA, imageB,pointsB){
 	c = Code.grayscaleFloatToHeatMapFloat(c);
 	img = GLOBALSTAGE.getFloatRGBAsImage(c["red"],c["grn"],c["blu"], imageAWidth,imageAHeight);
 	d = new DOImage(img);
-	d.matrix().translate(400,300);
+	d.matrix().translate(400,0);
 	GLOBALSTAGE.addChild(d);
 
+
+
+
+	//var points = R3D.entropyExtract(imageA);
+	var points = R3D.HarrisExtract(imageA);
+	console.log(points)
+
+	for(var k=0; k<points.length; ++k){
+		var point = points[k];
+		//console.log(""+point)
+		var x = point.x*imageA.width();
+		var y = point.y*imageA.height();
+		var z = point.z;
+		var c = new DO();
+		//color = 0xFFFF0000;
+		color = 0xFFFFFFFF;
+		c.graphics().setLine(2, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(x, y, z);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		//c.matrix().translate(0 + (f>0 ? images[f-1].width(): 0), 0);
+		GLOBALSTAGE.addChild(c);
+	}
+
+
+	//var points = R3D.entropyExtract(imageB);
+	var points = R3D.HarrisExtract(imageB);
+	console.log(points)
+
+	for(var k=0; k<points.length; ++k){
+		var point = points[k];
+		//console.log(""+point)
+		var x = point.x*imageA.width();
+		var y = point.y*imageB.height();
+		var z = point.z;
+		var c = new DO();
+		//color = 0xFFFF0000;
+		color = 0xFFFFFFFF;
+		c.graphics().setLine(2, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(x, y, z);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		//c.matrix().translate(0 + (f>0 ? images[f-1].width(): 0), 0);
+		c.matrix().translate(400,0);
+		GLOBALSTAGE.addChild(c);
+	}
+
+return;
 
 
 
@@ -331,10 +387,9 @@ var zoom = 4.0;
 		matrix = Matrix.transform2DRotate(matrix,rotation);
 	
 	var needleMask = ImageMat.circleMask(needleSize);
-	var needle = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,1.0,sigma,needleSize,needleSize, imageAGry,imageAWidth,imageAHeight, matrix);
-
-	var entropy = Dense.entropy(needle,needleSize,needleSize, needleMask);
-	console.log(entropy+"")
+	var needle = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,1.0,sigma,needleSize,needleSize, imageAGry,imageAWidth,imageAHeight, matrix);	
+	var entropy = Code.entropy01(needle, needleMask);
+	console.log(entropy+"");
 
 	img = GLOBALSTAGE.getFloatRGBAsImage(needle,needle,needle, needleSize,needleSize);
 	d = new DOImage(img);
@@ -1969,41 +2024,6 @@ Dense.searchNeedleHaystackGradient = function(needle,needleWidth,needleHeight,ne
 	}
 	return {"value":result,"width":resultWidth,"height":resultHeight};
 }
-
-Dense.entropy = function(data,wid,hei, masking){
-	var buckets = 10;
-	//var buckets = Math.round(Math.sqrt(wid*hei));
-	var i, count, value, p, bin;
-	var histogram = Dense.histogram(data, wid,hei, buckets, masking);
-	//buckets = histogram
-	var entropy = 0;
-	var totalCount = Code.sumArray(histogram);
-	for(i=0; i<buckets; ++i){
-		count = histogram[i];
-		p = count / totalCount;
-		if(p > 0){
-			entropy += p * Math.log2(p);
-		}
-	}
-	var maxE = -Math.log2(1.0/buckets);
-	return -entropy/maxE;
-}
-Dense.histogram = function(data, wid, hei, buckets, maskOutCenter){
-	var value, i, bin, len = data.length;
-	var bm1 = buckets - 1;
-	var histogram = Code.newArrayZeros(buckets);
-	var mask = 1.0;
-	for(i=0; i<len; ++i){
-		if(maskOutCenter){ mask = maskOutCenter[i]; }
-		if(mask!=0.0){
-			value = data[i];
-			bin = Math.min(Math.floor( value*buckets ),bm1);
-			histogram[bin] += 1;
-		}
-	}
-	return histogram;
-}
-
 
 Dense._handleKeyboardDown = function(e){
 	if(e.keyCode==Keyboard.KET_SPACE){

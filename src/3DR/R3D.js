@@ -3327,7 +3327,40 @@ if(true){
 		// ...
 	return siftPoints;
 }
-
+R3D.limitedSearchFromF = function(featuresA,imageMatrixA, featuresB,imageMatrixB, matrixFfwd){
+	var i, j, k;
+	var putatives = [];
+	for(k=0; k<featuresA.length; ++k){
+		var pointA = featuresA[i];
+		point = new V3D(pointA.x*imageMatrixA.width(),pointA.y*imageMatrixA.height(),1.0);
+		var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
+		// find relevant B
+		var errorY = 5;
+		for(i=0; i<featuresB.length; ++i){
+			f = featuresB[i];
+			// var fx = f.x * rectifiedB.width();
+			// var fy = f.y * rectifiedB.height();
+			var fx = f.x * imageMatrixB.width();
+			var fy = f.y * imageMatrixB.height();
+			f = new V2D(fx,fy);
+			//if(lineAIndex-errorY<fy && fy<lineAIndex+errorY){
+			var dist = Code.distancePointRay2D(lineA.org,lineA.dir, f);
+			//var dist = Code.distancePointLine2D(lineA.start,lineA.end, f);
+			if(dist<errorY){
+				var c = new DO();
+				color = 0xFF0000FF;
+				c.graphics().setLine(2.0, color);
+				c.graphics().beginPath();
+				c.graphics().drawCircle(fx, fy, 5);
+				c.graphics().strokeLine();
+				c.graphics().endPath();
+				//c.matrix().translate(rectifiedA.width(), 0);
+				c.matrix().translate(imageMatrixA.width(), 0);
+				GLOBALSTAGE.addChild(c);
+			}
+		}
+	}
+}
 R3D.pointsToSIFT = function(imageSource, points){
 	var originalGray = imageSource.gry();
 	var originalRed = imageSource.red();
@@ -3353,7 +3386,76 @@ R3D.getScaleSpacePoint = function(x,y,s,u, w,h, matrix, source,width,height){
 }
 
 R3D.entropyExtract = function(imageSource, percentKeep){
-	// use entropy at various scales to get best
+	percentKeep = percentKeep!==undefined ? percentKeep : 0.75;
+	var iterations = 3;
+	// use entropy at various scales to get best points
+	var imageSourceGray = imageSource.gry();
+	var imageSourceWidth = imageSource.width();
+	var imageSourceHeight = imageSource.height();
+	
+	var needleSize = 7;
+	var needleCenter = needleSize*0.5 | 0;
+	var needleMask = ImageMat.circleMask(needleSize);
+
+	var imageGray = imageSourceGray;
+	var imageWidth = imageSourceWidth;
+	var imageHeight = imageSourceHeight;
+
+	var features = [];
+	var i, j, k;
+	for(k=0; k<iterations; ++k){
+
+		var imageEntropy = Code.newArrayZeros(imageWidth*imageHeight);
+		for(j=0; j<imageHeight; ++j){
+			for(i=0; i<imageWidth; ++i){
+				var needle = ImageMat.subImage(imageGray,imageWidth,imageHeight, i-needleCenter,j-needleCenter, needleSize,needleSize);
+				var entropy = Code.entropy01(needle, needleMask);
+				imageEntropy[j*imageWidth + i] = entropy;
+			}
+		}
+		imageEntropy = ImageMat.getNormalFloat01(imageEntropy);
+		// imageEntropy = ImageMat.gtFloat(imageEntropy,0.5);
+		// while(Code.nonZero(imageEntropy)){
+		// 	retract = ImageMat.retractBlob(imageEntropy, imageWidth,imageHeight);
+		// 	console.log(retract);
+		// 	imageEntropy = retract["value"];
+		// 	var removed = retract["removed"];
+		// 	Code.arrayPushArray(features,removed);
+		// }
+// img = GLOBALSTAGE.getFloatRGBAsImage(imageEntropy,imageEntropy,imageEntropy, imageWidth,imageWidth);
+// d = new DOImage(img);
+// d.matrix().translate(20, 300*(k+1));
+// GLOBALSTAGE.addChild(d);
+		
+		var peaks = Code.findMaxima2DFloat(imageEntropy,imageWidth,imageHeight);
+		peaks = peaks.sort( function(a,b){ return a<b ? -1 : 1 } );
+		for(i=0; i<peaks.length; ++i){
+			peak = peaks[i];
+			if(peak.z>percentKeep){
+				peak.z = needleCenter * Math.pow(2,k);
+				peak.scale(1.0/imageWidth, 1.0/imageHeight, 1.0);
+				features.push(peak);
+			}
+		}
+		if(k<iterations-1){
+			imageGray = ImageMat.getScaledImage(imageGray,imageWidth,imageHeight, 0.5, 1.0);
+			imageWidth = imageGray["width"];
+			imageHeight = imageGray["height"];
+			imageGray = imageGray["value"];
+		}
+	}
+	var padding = 0.03;
+	var finals = [];
+	for(i=0;i<features.length; ++i){
+		var feature = features[i];
+		if(feature.x<padding || feature.x>1.0-padding || feature.y<padding || feature.y>1.0-padding){
+			// outside
+		}else{
+			//finals.push( feature.copy().scale() );
+			finals.push( feature.copy() );
+		}
+	}
+	return finals;
 }
 
 var HARRIS_CALL = 0;
@@ -5169,7 +5271,12 @@ R3D.mappingRectifiedImages = function(epipoleA, anglesA, radiusMinA, radiusA,  F
 	return mappingA;
 }
 
+R3D.rectificationLineFromrectificationPoint = function(rectPointA,what){
+	return null;
+}
+
 R3D.rectificationLine = function(pointA, Ffwd, epipoleA, radiusMinA, radiusB, anglesB, angleOffset){ // point in image A to line in image B
+	pointA = new V3D(pointA.x,pointA.y,1.0);
 	var lineA = R3D.lineRayFromPointF(Ffwd, pointA);
 		var orgA = lineA["org"];
 		var dirA = lineA["dir"];

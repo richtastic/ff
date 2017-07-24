@@ -44,9 +44,70 @@ SIFTDescriptor.compare = function(descA,descB){ // L1 distance
 SIFTDescriptor._sortMatch = function(a, b){
 	return a.score < b.score ? -1 : 1;
 }
-
+SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // putatives are lists of best candidates for each sift in list
+	console.log("matchSubset...");
+	var i, j;
+	var matches = [];
+	var matchesA = Code.newArrayArrays(listA.length);
+	var matchesB = Code.newArrayArrays(listB.length);
+	// for(i=0; i<listA.length; ++i){
+	// 	matchesA[i] = [];
+	// }
+	// for(i=0; i<listB.length; ++i){
+	// 	matchesB[i] = [];
+	// }
+	for(i=0; i<listA.length; ++i){
+		var descA = listA[i];
+		
+		for(j=0; j<putativeB.length; ++j){
+			var descB = putativeB[j];
+			var score = SIFTDescriptor.compare(descA, descB);
+			var match = {"A":descA, "B":descB, "score":score, "a":i, "b":j};
+			matchesA[i].push(match);
+			matchesB[j].push(match);
+			matches.push(match);
+		}
+	}
+	matches = matches.sort(SIFTDescriptor._sortMatch);
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
+	}
+	for(i=0; i<listB.length; ++i){
+		matchesB[i] = matchesB[i].sort(SIFTDescriptor._sortMatch);
+	}
+	return {"matches":matches, "A":matchesA, "B":matchesB};
+}
 SIFTDescriptor.match = function(listA, listB){
 	console.log("matching...");
+	var i, j;
+	var matches = [];
+	var matchesA = [];
+	var matchesB = [];
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = [];
+	}
+	for(i=0; i<listB.length; ++i){
+		matchesB[i] = [];
+	}
+	for(i=0; i<listA.length; ++i){
+		var descA = listA[i];
+		for(j=0; j<listB.length; ++j){
+			var descB = listB[j];
+			var score = SIFTDescriptor.compare(descA, descB);
+			var match = {"A":descA, "B":descB, "score":score, "a":i, "b":j};
+			matchesA[i].push(match);
+			matchesB[j].push(match);
+			matches.push(match);
+		}
+	}
+	matches = matches.sort(SIFTDescriptor._sortMatch);
+	for(i=0; i<listA.length; ++i){
+		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
+	}
+	for(i=0; i<listB.length; ++i){
+		matchesB[i] = matchesB[i].sort(SIFTDescriptor._sortMatch);
+	}
+	return {"matches":matches, "A":matchesA, "B":matchesB};
 	var i, j;
 	var matches = [];
 	var matchesA = [];

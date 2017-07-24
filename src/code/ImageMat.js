@@ -624,6 +624,7 @@ ImageMat.retractBlob = function(a,wid,hei){
 	var wm1 = wid-1, hm1 = hei-1;
 	var len = wid*hei;
 	var result = new Array(len);
+	var removed = [];
 	for(i=0;i<wid;++i){
 		for(j=0;j<hei;++j){
 			index = j*wid + i;
@@ -657,10 +658,17 @@ ImageMat.retractBlob = function(a,wid,hei){
 				result[index] = 1;
 			}else{
 				result[index] = 0;
+				if(se){
+					if(!tl && !to && !tr && !lf && !ri && !bl && !bo && !br){
+						//console.log("disappeared: "+i+","+j);
+						removed.push(new V2D(i,j));
+					}
+				}
 			}
 		}
 	}
-	return result;
+	//return result;
+	return {"value":result, "removed":removed};
 }
 ImageMat.findBlobs = function(a,wid,hei){ // px,py,area
 	var i, j, im1, ip1, jm1, jp1, tl,to,tr, lf,se,ri, bl,bo,br, index;

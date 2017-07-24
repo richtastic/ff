@@ -170,7 +170,9 @@ Medium.prototype.testSearchLine = function(imageMatrixA,pointsA, imageMatrixB,po
 		
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0, 0);
-		GLOBALSTAGE.addChild(d);
+		//GLOBALSTAGE.addChild(d);
+
+console.log(rectifiedInfoA);
 
 	var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
 		var rectifiedInfoB = rectified;
@@ -180,46 +182,220 @@ Medium.prototype.testSearchLine = function(imageMatrixA,pointsA, imageMatrixB,po
 		var d = new DOImage(img);
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0+rectifiedA.width(), 0);
-		GLOBALSTAGE.addChild(d);
+		//GLOBALSTAGE.addChild(d);
 
 	console.log("features...")
-	var featuresA = R3D.HarrisExtract(rectifiedA);
-	console.log(featuresA.length);
-	var featuresB = R3D.HarrisExtract(rectifiedB);
-	console.log(featuresB.length);
+	var featuresA = R3D.HarrisExtract(imageMatrixA);
+	var featuresB = R3D.HarrisExtract(imageMatrixB);
+	//var featuresA = R3D.HarrisExtract(rectifiedA);
+	//var featuresB = R3D.HarrisExtract(rectifiedB);
 	// if outside the window, drop
-	for(var k=0; f<featuresA.length; ++f){
-		var f = featuresA[k];
-	}
+	// for(var k=0; f<featuresA.length; ++f){
+	// 	var f = featuresA[k];
+	// }
 	console.log(featuresA.length);
 	console.log(featuresB.length);
 	//var featuresB = [];
 
 	var lists = [featuresA,featuresB];
-	var images = [rectifiedA,rectifiedB];
-for(var f=0; f<lists.length; ++f){
-	var features = lists[f];
-	for(k=0; k<features.length; ++k){
-		var point = features[k];
-		//console.log(""+point)
-			var x = point.x * images[f].width();
-			var y = point.y * images[f].height();
-			var z = point.z;
-		var c = new DO();
-			color = 0xFFFF0000;
-			c.graphics().setLine(0.50, color);
+	//var images = [rectifiedA,rectifiedB];
+	var images = [imageMatrixA,imageMatrixB];
+
+	for(var f=0; f<lists.length; ++f){
+		var features = lists[f];
+		for(k=0; k<features.length; ++k){
+break;
+			var point = features[k];
+				var x = point.x * images[f].width();
+				var y = point.y * images[f].height();
+				var z = point.z;
+			var c = new DO();
+				color = 0xFFFF0000;
+				c.graphics().setLine(0.50, color);
+				c.graphics().beginPath();
+				c.graphics().drawCircle(x, y, z);
+				c.graphics().strokeLine();
+				c.graphics().endPath();
+				c.matrix().translate(0 + (f>0 ? images[f-1].width(): 0), 0);
+				GLOBALSTAGE.addChild(c);
+		}
+	}
+
+
+var pointA = featuresA[100];
+//pointA = point.copy().scale(imageMatrixA.width(),imageMatrixA.height(),1.0);
+pointA = new V3D(pointA.x*imageMatrixA.width(),pointA.y*imageMatrixA.height(),1.0);
+
+/*
+// convert point in rectified image A to point in rectified image B
+	var pointA = featuresA[300];
+	// 3   => 5
+	// 100 => 5
+	// 200 => 5
+	// 300 => 5
+	pointA = pointA.copy().scale(rectifiedA.width(),rectifiedA.height());
+	console.log(pointA);
+	var col = pointA.x | 0;
+	var row = pointA.y | 0;
+	console.log(col,row);
+	var angle = rectifiedInfoA["angles"][row];
+	console.log(angle);
+	var radiusStart = rectifiedInfoA["radiusMin"];
+	var radiusMin = rectifiedInfoA["radius"][row][0];
+	var radiusMax = rectifiedInfoA["radius"][row][1];
+	if(col<radiusMin || col>radiusMax){
+		console.log("OUTSIDE: "+col+" | "+radiusMin+" < "+radiusMax);
+	}
+	var radius = radiusStart + col;
+	console.log("radius: "+radius);
+	console.log("angle: "+angle);
+	console.log("epipole: "+epipoleA);
+	angle -= rectifiedInfoA["angleOffset"];
+
+// IN RECTIFIED IMAGE
+// var c = new DO();
+// color = 0xFF0000FF;
+// c.graphics().setLine(2.0, color);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(pointA.x, pointA.y, 5);
+// c.graphics().strokeLine();
+// c.graphics().endPath();
+// c.matrix().translate(0 , 0);
+// GLOBALSTAGE.addChild(c);
+
+// IN ORIGINAL IMAGE
+pointA = new V2D(1,0).scale(-radius).rotate(angle);
+pointA = V2D.add(pointA,epipoleA);
+console.log(pointA+"");
+
+*/
+
+var c = new DO();
+color = 0xFF0000FF;
+c.graphics().setLine(2.0, color);
+c.graphics().beginPath();
+c.graphics().drawCircle(pointA.x, pointA.y, 5);
+c.graphics().strokeLine();
+c.graphics().endPath();
+c.matrix().translate(0 , 0);
+GLOBALSTAGE.addChild(c);
+
+				
+/*
+	pointA = V3D.copy();
+	pointB = V3D.copy();
+	pointA.z = 1.0;
+	pointB.z = 1.0;
+	var lineA = new V3D();
+	var lineB = new V3D();
+
+	matrixFfwd.multV3DtoV3D(lineA, pointA);
+	matrixFrev.multV3DtoV3D(lineB, pointB);
+	
+	var dir = new V2D();
+	var org = new V2D();
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	console.log(org+" -> "+dir);
+	var angleA = V2D.angle(V2D.DIRX,dir);
+	console.log(angleA);
+
+	lineAIndex = Code.binarySearch(rectifiedInfoA["angles"], function(a){ return a==angleA ? 0 : (a>angleA ? -1 : 1) });
+	if(Code.isArray(lineAIndex)){
+		lineAIndex = lineAIndex[0];
+	}
+*/
+	//pointA = new V2D(lineAIndex);
+//var lineA = R3D.rectificationLine(pointA, matrixFfwd, epipoleA, rectifiedInfoB["radiusMin"], rectifiedInfoB["radius"], rectifiedInfoB["angles"], rectifiedInfoB["angleOffset"]);
+var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
+console.log(lineA);
+	// pointA should be in original image
+	var location = R3D.rectificationLine(pointA, matrixFfwd, epipoleA, rectifiedInfoA["radiusMin"], rectifiedInfoB["radius"], rectifiedInfoB["angles"], rectifiedInfoB["angleOffset"]);
+	console.log(location)
+	lineAIndex = location["start"].y;
+	console.log(lineAIndex);
+
+	// find relevant B
+	var errorY = 5;
+	for(i=0; i<featuresB.length; ++i){
+		f = featuresB[i];
+		// var fx = f.x * rectifiedB.width();
+		// var fy = f.y * rectifiedB.height();
+		var fx = f.x * imageMatrixB.width();
+		var fy = f.y * imageMatrixB.height();
+		f = new V2D(fx,fy);
+		//if(lineAIndex-errorY<fy && fy<lineAIndex+errorY){
+		var dist = Code.distancePointRay2D(lineA.org,lineA.dir, f);
+		//var dist = Code.distancePointLine2D(lineA.start,lineA.end, f);
+		if(dist<errorY){
+			var c = new DO();
+			color = 0xFF0000FF;
+			c.graphics().setLine(2.0, color);
 			c.graphics().beginPath();
-			c.graphics().drawCircle(x, y, z);
+			c.graphics().drawCircle(fx, fy, 5);
 			c.graphics().strokeLine();
 			c.graphics().endPath();
-			c.matrix().translate(0 + (f>0 ? images[f-1].width(): 0), 0);
+			//c.matrix().translate(rectifiedA.width(), 0);
+			c.matrix().translate(imageMatrixA.width(), 0);
 			GLOBALSTAGE.addChild(c);
+		}
+	}
+
+console.log(featuresA[0]);
+
+return; 
+var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
+var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
+
+/*
+// visualize features in place
+var lists = [[siftA,imageMatrixA],[siftB,imageMatrixB]];
+var offset = new V2D();
+for(var f=0; f<lists.length; ++f){
+	var features = lists[f][0];
+	console.log(features);
+	var imageMatrix = lists[f][1];
+	for(k=0; k<features.length; ++k){
+		var feature = features[k];
+		var display = feature.visualizeInSitu(imageMatrix, offset);
+			GLOBALSTAGE.addChild(display);
+	}
+	offset.x += imageMatrix.width();
+}
+*/
+
+var putativeA = R3D.limitedSearchFromF(featuresA,imageMatrixA,featuresB,imageMatrixB,matrixFfwd);
+var putativeB = R3D.limitedSearchFromF(featuresB,imageMatrixB,featuresA,imageMatrixA,matrixFrev);
+
+HERE
+
+//var matching = SIFTDescriptor.match(siftA, siftB);
+var matching = SIFTDescriptor.matchSubset(siftA, putativeA, siftB, putativeB);
+var matches = matching["matches"];
+var matchesA = matching["A"];
+var matchesB = matching["B"];
+var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
+
+
+var displaySize = 50;
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var featureA = match["A"];
+	var featureB = match["B"];
+	var vizA = featureA.visualize(imageMatrixA, displaySize);
+	var vizB = featureB.visualize(imageMatrixB, displaySize);
+	vizA.matrix().translate(800,10 + m*displaySize);
+	vizB.matrix().translate(800+displaySize,10 + m*displaySize);
+	GLOBALSTAGE.addChild(vizA);
+	GLOBALSTAGE.addChild(vizB);
+	if(m>=10){
+		break;
 	}
 }
 
 
+	// R3D.lineRayFromPointF
 
-	console.log("sift...");
+	// console.log("sift...");
 	// var siftA = R3D.pointsToSIFT(rectifiedA, featuresA);
 	// var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 	// 
