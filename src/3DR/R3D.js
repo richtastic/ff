@@ -3327,39 +3327,70 @@ if(true){
 		// ...
 	return siftPoints;
 }
-R3D.limitedSearchFromF = function(featuresA,imageMatrixA, featuresB,imageMatrixB, matrixFfwd){
-	var i, j, k;
-	var putatives = [];
-	for(k=0; k<featuresA.length; ++k){
-		var pointA = featuresA[i];
-		point = new V3D(pointA.x*imageMatrixA.width(),pointA.y*imageMatrixA.height(),1.0);
-		var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
-		// find relevant B
-		var errorY = 5;
-		for(i=0; i<featuresB.length; ++i){
-			f = featuresB[i];
-			// var fx = f.x * rectifiedB.width();
-			// var fy = f.y * rectifiedB.height();
-			var fx = f.x * imageMatrixB.width();
-			var fy = f.y * imageMatrixB.height();
-			f = new V2D(fx,fy);
-			//if(lineAIndex-errorY<fy && fy<lineAIndex+errorY){
-			var dist = Code.distancePointRay2D(lineA.org,lineA.dir, f);
-			//var dist = Code.distancePointLine2D(lineA.start,lineA.end, f);
-			if(dist<errorY){
-				var c = new DO();
-				color = 0xFF0000FF;
-				c.graphics().setLine(2.0, color);
-				c.graphics().beginPath();
-				c.graphics().drawCircle(fx, fy, 5);
-				c.graphics().strokeLine();
-				c.graphics().endPath();
-				//c.matrix().translate(rectifiedA.width(), 0);
-				c.matrix().translate(imageMatrixA.width(), 0);
-				GLOBALSTAGE.addChild(c);
+
+R3D.removeDuplicatePoints = function(points, bigger, maxDist, transform){ // take
+	maxDist = (maxDist!==undefined&&maxDist!==null) ? maxDist : 0.1;
+	bigger = (bigger!==undefined&&bigger!==null) ? bigger : false; // remove based on larger ?
+	var i, j;
+	for(i=0; i<points.length; ++i){
+		var pointI = points[i];
+		if(transform){ pointI = transform(pointI); }
+		for(j=i-1; j>=0; --j){
+			var pointJ = points[j];
+			if(transform){ pointJ = transform(pointJ); }
+			var dist = V2D.distance(pointI,pointJ);
+			if(dist<maxDist){
+				var is3D = pointI.z !== undefined && pointJ.z !== undefined;
+				var removeI = false;
+				if(is3D){
+					if(bigger){ // keep the bigger one
+						if(pointI.z>pointJ.z){ // 
+							removeI = true;
+						}else{
+							removeI = false;
+						}
+					}else{ // keep the smaller one
+						if(pointI.z<pointJ.z){ // 
+							removeI = true;
+						}else{
+							removeI = false;
+						}
+					}
+				}else{ // don't care
+					removeI = true;
+				}
+				if(removeI){
+					Code.removeElementAtSimple(points,i);
+				}else{
+					Code.removeElementAtSimple(points,j);
+				}
+				--i;
+				break;
 			}
 		}
 	}
+}
+R3D.limitedSearchFromF = function(featuresA,imageMatrixA, featuresB,imageMatrixB, matrixFfwd, errorDistance){
+	errorDistance = (errorDistance!==null && errorDistance!==undefined) ? errorDistance : 5;
+	var i, j, putatives = [];
+	for(j=0; j<featuresA.length; ++j){
+		var featureA = featuresA[j];
+		var pointA = featureA.point();
+			pointA = new V3D(pointA.x*imageMatrixA.width(),pointA.y*imageMatrixA.height(),1.0);
+		var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
+		// find relevant B points
+		putatives[j] = [];
+		for(i=0; i<featuresB.length; ++i){
+			var featureB = featuresB[i];
+			var pointB = featureB.point();
+				pointB = new V3D(pointB.x*imageMatrixB.width(),pointB.y*imageMatrixB.height(),1.0);
+			var dist = Code.distancePointRay2D(lineA.org,lineA.dir, pointB);
+			if(dist<errorDistance){
+				putatives[j].push(featureB);
+			}
+		}
+	}
+	return putatives;
 }
 R3D.pointsToSIFT = function(imageSource, points){
 	var originalGray = imageSource.gry();
@@ -3459,7 +3490,7 @@ R3D.entropyExtract = function(imageSource, percentKeep){
 }
 
 var HARRIS_CALL = 0;
-R3D.HarrisExtract = function(imageSource){
+R3D.harrisExtract = function(imageSource){
 	++HARRIS_CALL;
 	var extremaMinimumContrast = 0.000001; // corner - restrictive: 0.0001, lenient: 0.000001
 	var imageSourceGray = imageSource.gry();

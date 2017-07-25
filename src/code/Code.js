@@ -1256,12 +1256,28 @@ Code.ssd = function(a,b){
 	return sad;
 }
 Code.cc = function(a,b){
-	var sad = 0;
+	var cc = 0;
 	var i, len = Math.min(a.length,b.length);
 	for(i=0; i<len; ++i){
-		sad += a[i]*b[i];
+		cc += a[i]*b[i];
 	}
-	return sad;
+	return c;
+}
+Code.sad_cc = function(a,b){ // smaller is better
+	var sad = 0;
+	var cc = 0;
+	var i, len = Math.min(a.length,b.length);
+	for(i=0; i<len; ++i){
+		cc += a[i]*b[i];
+		sad += Math.abs(a[i]-b[i]);
+	}
+	if(sad==0){
+		sad = 1E-6;
+	}
+	// sad 
+	// -cc
+	return -cc/sad;
+	//return -cc*sad;
 }
 Code.clipArray = function(array, min,max){
 	min = min!==undefined ? min : 0.0;
@@ -5101,7 +5117,7 @@ Code.distancePointRay2D = function(org,dir, point){ // point and RAY
 	var p = Code.closestPointLine2D(org,dir, point);
 	return V2D.distance(point,p);
 }
-Code.distancePointLine2D = function(a,b, point){ // point and RAY
+Code.distancePointLine2D_ = function(a,b, point){ // point and RAY
 	var dir = V2D.sub(b,a);
 	return Code.distancePointRay2D(a,dir, point);
 }

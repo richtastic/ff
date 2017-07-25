@@ -31,13 +31,13 @@ SIFTDescriptor.compare = function(descA,descB){ // L1 distance
 	var vectorB = descB.vector();
 	for(i=0; i<vectorA.length; ++i){
 		score += Math.abs(vectorA[i] - vectorB[i]); // L1
-		//score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
+//		score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
 	}
-	// if(Code.isNaN(score)){
-	// 	console.log("compare: "+vectorA.length+" | "+vectorB.length+" = "+score);
-	// 	console.log(vectorA);
-	// 	console.log(vectorB);
+	// CONV
+	// for(i=0; i<vectorA.length; ++i){
+	// 	score += (vectorA[i]*vectorB[i]);
 	// }
+	// score = -score;
 	return score;
 }
 
@@ -46,28 +46,46 @@ SIFTDescriptor._sortMatch = function(a, b){
 }
 SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // putatives are lists of best candidates for each sift in list
 	console.log("matchSubset...");
-	var i, j;
+	var i, j, k;
 	var matches = [];
 	var matchesA = Code.newArrayArrays(listA.length);
 	var matchesB = Code.newArrayArrays(listB.length);
-	// for(i=0; i<listA.length; ++i){
-	// 	matchesA[i] = [];
-	// }
-	// for(i=0; i<listB.length; ++i){
-	// 	matchesB[i] = [];
-	// }
+	// A to putative B
 	for(i=0; i<listA.length; ++i){
 		var descA = listA[i];
-		
-		for(j=0; j<putativeB.length; ++j){
-			var descB = putativeB[j];
+		var putative = putativeA[i];
+		for(j=0; j<putative.length; ++j){
+			var descB = putative[j];
 			var score = SIFTDescriptor.compare(descA, descB);
-			var match = {"A":descA, "B":descB, "score":score, "a":i, "b":j};
-			matchesA[i].push(match);
-			matchesB[j].push(match);
-			matches.push(match);
+			var index = Code.indexOfElement(listB,descB); // TODO: SLOW
+			if(index){
+				var match = {"A":descA, "B":descB, "score":score, "a":i, "b":index};
+				matchesA[i].push(match);
+				matchesB[index].push(match);
+				matches.push(match);
+			}
 		}
 	}
+	
+	// B to putative A
+	for(i=0; i<listB.length; ++i){
+		var descB = listB[i];
+		var putative = putativeB[i];
+		for(j=0; j<putative.length; ++j){
+			var descA = putative[j];
+			var score = SIFTDescriptor.compare(descA, descB);
+			var index = Code.indexOfElement(listA,descA); // TODO: SLOW
+			if(index){
+				var match = {"A":descA, "B":descB, "score":score, "a":index, "b":i};
+				matchesA[index].push(match);
+				matchesB[i].push(match);
+				matches.push(match);
+			}
+		}
+	}
+	//
+	// TODO: prevent / remove duplicates ... [a->b && b->a]
+	// 
 	matches = matches.sort(SIFTDescriptor._sortMatch);
 	for(i=0; i<listA.length; ++i){
 		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
@@ -600,12 +618,13 @@ SIFTDescriptor.prototype.normalize = function(){
 	}
 }
 
-SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA,matchesB){
+SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA,matchesB, minConfidence, maxNeeded){
 	console.log("crossMatches");
+	minConfidence = (minConfidence!==undefined && minConfidence!==null) ? minConfidence : 1.01;
+	maxNeeded = (maxNeeded!==undefined && maxNeeded!==null) ? maxNeeded : 150; // need more if confidence quality is poor
 	var same = [];
 	var i, j;
 	for(i=0; i<allMatches.length; ++i){
-		//console.log(i+"/"+allMatches.length);
 		var match = allMatches[i];
 		var a = match["a"];
 		var b = match["b"];
@@ -616,11 +635,9 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 		var matchA0 = matchedA[0];
 		var matchB0 = matchedB[0];
 		if(matchA0["b"]==b && matchB0["a"]==a){
-			var minConfidence = 1.01;
 			var confidenceA = SIFTDescriptor.confidence(matchedA);
 			var confidenceB = SIFTDescriptor.confidence(matchedB);
 			var confidence = (confidenceA + confidenceB) * 0.5;
-			//console.log("FOUND MATCHING: "+a+" <=> "+b+" @ "+confidenceA+" | "+confidenceB+" score: "+match.score+" confidence: "+confidence);
 			if(confidenceA>=minConfidence && confidenceB >= minConfidence){
 				match["confidence"] = Math.min(confidenceA,confidenceB);
 				same.push(match);
@@ -630,7 +647,6 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 	same = same.sort(function(a,b){
 		return a["confidence"] > b["confidence"] ? -1 : 1;
 	});
-	var maxNeeded = 150; // need more if confidence quality is poor
 	if(same.length>maxNeeded){
 		same = Code.copyArray(same,0,maxNeeded-1);
 	}

@@ -185,10 +185,26 @@ console.log(rectifiedInfoA);
 		//GLOBALSTAGE.addChild(d);
 
 	console.log("features...")
-	var featuresA = R3D.HarrisExtract(imageMatrixA);
-	var featuresB = R3D.HarrisExtract(imageMatrixB);
-	//var featuresA = R3D.HarrisExtract(rectifiedA);
-	//var featuresB = R3D.HarrisExtract(rectifiedB);
+	// var featuresA = R3D.entropyExtract(imageMatrixA);
+	// var featuresB = R3D.entropyExtract(imageMatrixB);
+	// var featuresA = R3D.SIFTExtract(imageMatrixA);
+	// var featuresB = R3D.SIFTExtract(imageMatrixB);
+	var featuresA = R3D.harrisExtract(imageMatrixA);
+	var featuresB = R3D.harrisExtract(imageMatrixB);
+
+var transformA = function(p){
+	return new V3D(p.x*imageMatrixA.width(),p.y*imageMatrixA.height(),p.z);
+}
+var transformB = function(p){
+	return new V3D(p.x*imageMatrixB.width(),p.y*imageMatrixB.height(),p.z);
+}
+console.log(featuresA[0]+"");
+console.log(featuresB[0]+"");
+	R3D.removeDuplicatePoints(featuresA, false, null, transformA);
+	R3D.removeDuplicatePoints(featuresB, false, null, transformB);
+
+	// var featuresA = R3D.harrisExtract(rectifiedA);
+	// var featuresB = R3D.harrisExtract(rectifiedB);
 	// if outside the window, drop
 	// for(var k=0; f<featuresA.length; ++f){
 	// 	var f = featuresA[k];
@@ -222,7 +238,7 @@ break;
 	}
 
 
-var pointA = featuresA[100];
+var pointA = featuresA[20];
 //pointA = point.copy().scale(imageMatrixA.width(),imageMatrixA.height(),1.0);
 pointA = new V3D(pointA.x*imageMatrixA.width(),pointA.y*imageMatrixA.height(),1.0);
 
@@ -315,7 +331,7 @@ console.log(lineA);
 	console.log(lineAIndex);
 
 	// find relevant B
-	var errorY = 5;
+	var errorY = 2;
 	for(i=0; i<featuresB.length; ++i){
 		f = featuresB[i];
 		// var fx = f.x * rectifiedB.width();
@@ -342,7 +358,7 @@ console.log(lineA);
 
 console.log(featuresA[0]);
 
-return; 
+//return; 
 var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
 var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 
@@ -363,31 +379,60 @@ for(var f=0; f<lists.length; ++f){
 }
 */
 
-var putativeA = R3D.limitedSearchFromF(featuresA,imageMatrixA,featuresB,imageMatrixB,matrixFfwd);
-var putativeB = R3D.limitedSearchFromF(featuresB,imageMatrixB,featuresA,imageMatrixA,matrixFrev);
-
-HERE
+var error = 5;
+var putativeA = R3D.limitedSearchFromF(siftA,imageMatrixA,siftB,imageMatrixB,matrixFfwd, error);
+var putativeB = R3D.limitedSearchFromF(siftB,imageMatrixB,siftA,imageMatrixA,matrixFrev, error);
 
 //var matching = SIFTDescriptor.match(siftA, siftB);
 var matching = SIFTDescriptor.matchSubset(siftA, putativeA, siftB, putativeB);
 var matches = matching["matches"];
 var matchesA = matching["A"];
 var matchesB = matching["B"];
-var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
+var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB, 1.0, 250);
+console.log("bestMatches: "+bestMatches.length);
 
+console.log("bestMatches has double-duplicated points, remove them");
+for(i=0; i<bestMatches.length; ++i){
+	var matchA = bestMatches[i];
+	var found = false;
+	for(j=i-1; j>=0; --j){
+		var matchB = bestMatches[j];
+		var pAA = matchA["A"].point();
+		var pAB = matchA["B"].point();
+		var pBA = matchB["A"].point();
+		var pBB = matchB["B"].point();
+		pAA = new V2D( pAA.x*imageMatrixA.width(), pAA.y*imageMatrixA.height() );
+		pAB = new V2D( pAB.x*imageMatrixB.width(), pAB.y*imageMatrixB.height() );
+		pBA = new V2D( pBA.x*imageMatrixA.width(), pBA.y*imageMatrixA.height() );
+		pBB = new V2D( pBB.x*imageMatrixB.width(), pBB.y*imageMatrixB.height() );
+		var distA = V2D.distance(pAA,pBA);
+		var distB = V2D.distance(pAB,pBB);
+		var maxDist = 0.5;
+		if( distA<maxDist && distB<maxDist ){
+			//console.log("duplicated: "+pAA+" - "+pBA+" & "+pAB+" - "+pBB);
+			Code.removeElementAtSimple(bestMatches,i);
+			found = true;
+			--i;
+			break;
+		}
+	}
+}
 
 var displaySize = 50;
+var lineCount = 16;
 for(m=0; m<bestMatches.length; ++m){
 	var match = bestMatches[m];
 	var featureA = match["A"];
 	var featureB = match["B"];
 	var vizA = featureA.visualize(imageMatrixA, displaySize);
 	var vizB = featureB.visualize(imageMatrixB, displaySize);
-	vizA.matrix().translate(800,10 + m*displaySize);
-	vizB.matrix().translate(800+displaySize,10 + m*displaySize);
+	var offX = (displaySize * 2 + 5) * ((m/lineCount) | 0);
+	var offY = 10 + displaySize * (m%lineCount);
+	vizA.matrix().translate(800+offX, 0 + offY);
+	vizB.matrix().translate(800+offX+displaySize, 0 + offY);
 	GLOBALSTAGE.addChild(vizA);
 	GLOBALSTAGE.addChild(vizB);
-	if(m>=10){
+	if(m>=160){
 		break;
 	}
 }

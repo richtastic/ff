@@ -308,6 +308,16 @@ ignore FLAT / non-textured areas (do last)
 
 PROBLEM: clearly the 'best' matches aren't getting chosen first
 	- the metric for best is wrong
+=> ATTEMPT:
+	- try a different sift gradient metric for better similarity accuracy
+	- disreguard elements with low range
+	- disreguard elements wtih low gradients
+	- try directional/ordering constraints on 2d-grids
+	- if rectified images are very accurate (error < +/- 1 line), can use projective stereo line-matching
+		- pinning of KNOWN points
+			- no given point is actually 100% reliable even though the average is.
+
+
 
 
 score: 1.0
@@ -319,6 +329,11 @@ score: 1.0
 
 
 http://www.cis.upenn.edu/~jshi/papers/ICCV99b_final.pdf
+
+
+
+
+
 
 
 
