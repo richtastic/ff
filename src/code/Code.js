@@ -1406,31 +1406,44 @@ Code.info2DArray = function(array2D){
 	var range = max - min;
 	return {"max":max, "min":min, "range":range};
 }
-Code.infoArray = function(array){
+Code.infoArray = function(array, masking){
 	var element, arr, i, len = array.length;
-	var min = array[0];
-	var max = min;
-	var minIndex = 0;
+	var min = null;
+	var max = null;
+	var minIndex = -1;
 	var maxIndex = minIndex;
 	var total = 0;
+	var count = 0;
+	var mask = 1.0;
 	for(i=0; i<len; ++i){
-		element = array[i];
-		total += element;
-		if(element<min){
-			min = element;
-			minIndex = i;
-		}
-		if(element>max){
-			max = element;
-			maxIndex = i;
+		if(masking){ mask = masking[i]; }
+		if(mask!==0.0){
+			element = array[i];
+			if(element!==null && element!==undefined){
+				++count;
+				total += element;
+				if(min==null || element<min){
+					min = element;
+					minIndex = i;
+				}
+				if(max==null || element>max){
+					max = element;
+					maxIndex = i;
+				}
+			}
 		}
 	}
 	var avg = 0;
-	if(len>0){
-		avg = total / len;
+	if(count>0){
+		avg = total / count;
 	}
-	var range = max - min;
-	return {"max":max, "min":min, "range":range, "mean":avg, "total":total, "indexMax":maxIndex, "indexMin":minIndex};
+	if(max!==null && min!==null){
+		var range = max - min;
+	}
+	// if(max==undefined){
+	// 	console.log(array)
+	// }
+	return {"max":max, "min":min, "range":range, "mean":avg, "total":total, "indexMax":maxIndex, "indexMin":minIndex, "count":count};
 }
 // ------------------------------------------------------------------------------------------ SIMULATED ARRAY 2D
 Code.subArray2D = function(a,wid,hei, staX,endX, staY,endY){ // inclusive indexes

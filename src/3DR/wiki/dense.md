@@ -335,6 +335,48 @@ http://www.cis.upenn.edu/~jshi/papers/ICCV99b_final.pdf
 
 
 
+areas of flat-white match well with areas of flat-white
+	- non-unique areas should be penalized so they aren't used first
+		- lots of good-scoring OTHER-similarity matches in nearby window
+		- lots of good scoring SELF-similarity matches in self-neighborhood
+		=> some kind of summation in a neighborhood needle / haystack based off of similarity measurement SAD
+
+		- flat areas should be penalized so that they are not at the top of the queue
+			- low gradient
+			- low entropy
+			- low range
+
+	=> HOW TO TRADE OFF GOOD SCORE WITH PENALIZING FACTOR ?
+		[50/50, 10/90, ...]
+
+		1 unique point is great
+		2 is ok
+		3+ starts to get bad
+
+
+		weightidly ignore first few? 0, 0.1, 0.5, 0.9, 0.999 .... ?
+	=> otherwise things with NO MATCHES (perfect uniqueness) will get weighted more
+		=> some ideal histogram that should be desired ...
+
+
+???
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
