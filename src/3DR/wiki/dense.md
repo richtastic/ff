@@ -331,7 +331,9 @@ score: 1.0
 http://www.cis.upenn.edu/~jshi/papers/ICCV99b_final.pdf
 
 
-
+PROBLEM:
+	- floating optimal scale tends to zoom out
+	=> should always opt to compare with ZOOMED-IN image, rather than always zoom the needle
 
 
 
@@ -359,11 +361,20 @@ areas of flat-white match well with areas of flat-white
 		=> some ideal histogram that should be desired ...
 
 
-???
+- 
+- TEST ALG WITH IDENTICAL IMAGES
+- TEST ALG WITH ROT/SCALED IMAGES
+- 
 
 
+DeepMatching Notes:
 
+R = sift quadrant bin in 2x2x8
+Ri,j is histogram of oriented gradients [pooled over local neighborhood]
+sim(R,R') = 1/4 * max( sum( sim(R_i,R_i') ) )
+sim(R,R') = 1/16 * sum( sum( Ri,j^T * R'i,j ) )
 
+cap strong gradients with sigmoid: 2/(1 + exp(-a*x))
 
 
 
