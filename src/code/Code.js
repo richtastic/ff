@@ -6356,7 +6356,6 @@ Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
 }
 
-
 Code.histogram = function(data, masking, buckets){
 	var value, i, bin, len = data.length;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
