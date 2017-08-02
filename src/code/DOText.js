@@ -13,6 +13,14 @@ function DOText(textIN,sizeIN,fontIN,colIN,alignIN,parentDO){
 	this._font = DOText.FONT_ARIAL;
 	this._color = 0xFFFF0000;
 	this._align = DOText.ALIGN_CENTER;
+	this._shadowColor = null;
+	this._shadowOffsetX = null;
+	this._shadowOffsetY = null;
+	this._shadowBlur = null;
+	// this._shadowColor = 0xFF000000;
+	// this._shadowOffsetX = 1;
+	// this._shadowOffsetY = 1;
+	// this._shadowBlur = 2;
 	this.setText(textIN,sizeIN,fontIN,colIN,alignIN);
 }
 Code.inheritClass(DOText,DO);
@@ -66,6 +74,13 @@ DOText.prototype.setText = function(txt,siz,fnt,col,aln){
 	this.align(aln);
 	this._updateGraphics();
 }
+DOText.prototype.shadow = function(color,rad,x,y){
+	this._shadowColor = color;
+	this._shadowBlur = rad;
+	this._shadowOffsetX = x;
+	this._shadowOffsetY = y;
+	this._updateGraphics();
+}
 // ------------------------------------------------------------------------------------------------------------------------ OVERRIDES
 DOText.prototype.render = function(canvas){
 	DOText._.render.call(this,canvas);
@@ -82,8 +97,26 @@ DOText.prototype.outSpace = function(){
 }
 DOText.prototype._updateGraphics = function(){
 	this.graphics().clear();
+	if(this._shadowColor){
+		this.graphics().shadowColor(this._shadowColor);
+	}
+	if(this._shadowOffsetX && this._shadowOffsetY){
+		this.graphics().shadowOffset(this._shadowOffsetX, this._shadowOffsetY);
+	}
+	if(this._shadowBlur){
+		this.graphics().shadowBlur(this._shadowBlur);
+	}
 	this.graphics().setFill(this._color);
 	this.graphics().drawText(this._text,this._size,this._font,0,0,this._align);
+	if(this._shadowColor){
+		this.graphics().shadowColor(null);
+	}
+	if(this._shadowOffsetX && this._shadowOffsetY){
+		this.graphics().shadowOffset(null);
+	}
+	if(this._shadowBlur){
+		this.graphics().shadowBlur(null);
+	}
 }
 
 // wtf?

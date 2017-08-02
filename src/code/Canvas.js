@@ -581,6 +581,16 @@ Canvas.prototype.createRadialGradient = function(sX,sY,sR, eX,eY,eR, locations, 
 	}
 	return gra;
 }
+Canvas.prototype.shadowColor = function(color){
+	this._context.shadowColor = color;
+}
+Canvas.prototype.shadowOffset = function(offsetX,offsetY){
+	this._context.shadowOffsetX = offsetX;
+	this._context.shadowOffsetY = offsetY;
+}
+Canvas.prototype.shadowBlur = function(radius){
+	this._context.shadowBlur = radius;
+}
 //  ------------------------------------------------------------------------------------------------------------------------ TEXT
 Canvas.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
 	if(siz==undefined || siz==null){ siz = 12; }
@@ -590,6 +600,7 @@ Canvas.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
 	this._context.font = siz+'px '+fnt;
 	this._context.textAlign=align;
 	this._context.fillText(txt,xP,yP);
+	// this._context.textBaseline = "top";
 	//this._context.srokeText(txt,xP,yP);
 	//console.log(txt,siz,fnt,xP,yP,align)
 }

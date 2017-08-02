@@ -4327,7 +4327,7 @@ Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
 	return [x1,x2,x3];
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- function fitting
-Code.bestFitLine2D = function(points, count){ // line fitting: y = mx + b
+Code.bestFitLine2D = function(points, count, weights){ // line fitting: y = mx + b
 	var i, len = points.length;
 	if(count!==undefined){
 		len = Math.min(len,count);
@@ -4341,6 +4341,9 @@ Code.bestFitLine2D = function(points, count){ // line fitting: y = mx + b
 		var m = dy/dx;
 		b = ((points[0].y - m*points[0].x) + (points[1].y - m*points[1].x))*0.5;
 		return {"m":m, "b":b};
+	}
+	if(weights){
+		return Code.bestFitLine2DWeights(points, count, weights);
 	}
 	var A = new Matrix(len,3);
 	for(i=0;i<len;++i){
@@ -4357,6 +4360,43 @@ Code.bestFitLine2D = function(points, count){ // line fitting: y = mx + b
 	m /= y;
 	b /= y;
 	return {"m":m, "b":b};
+}
+Code.bestFitLine2DWeights = function(points, count, weights){ // weighted least squares, NON-homoscedasticity
+	// weights are inverse of importance , ie: 1/sigma^2 = 1/var
+	var i, j, len = points.length;
+	if(count!==undefined){
+		len = Math.min(len,count);
+	}
+	var n = len;
+	var X = new Matrix(n,n);
+	var Y = new Matrix(n,n);
+	var W = new Matrix(n,n);
+	// TODO: filter out 0 weights
+	for(i=0; i<len; ++i){
+		var point = points[i];
+		var weight = weights[i];
+		X.set(i,i, point.x);
+		Y.set(i,i, point.y);
+		weight = 1.0/weight;
+		W.set(i,i, weight);
+	}
+	console.log(X+"");
+	console.log(Y+"");
+	console.log(W+"");
+	var Xt = Matrix.transpose(X);
+	var A = Matrix.mult(W,X);
+	A = Matrix.mult(Xt,A);
+	A = Matrix.inverse(A);
+	var B = Matrix.mult(W,Y);
+	B = Matrix.mult(Xt,B);
+	var beta = Matrix.mult(A,B);
+	console.log("....");
+	console.log(beta+"");
+	// 
+	// A = X^T * W * X
+	// B = X^T * W * Y
+	// argmin = Ainv * B
+
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- transform matrices
 Code.separateAffine2D = function(a,b,c,d, tx,ty){

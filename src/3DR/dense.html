@@ -11,6 +11,24 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","Dense.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+/*
+	var points = [
+		new V2D(1,1),
+		new V2D(2,2),
+		new V2D(3,3),
+		new V2D(4,1),
+	];
+	var weights = [
+		1,
+		1,
+		1,
+		1,
+	];
+	var line = Code.bestFitLine2DWeights(points,points.length,weights);
+	console.log("line: ");
+	console.log(line);
+return;
+*/
 	// var size = 12;
 	// var mask = ImageMat.circleMask(size);
 	// var str = Code.array1Das2DtoString(mask, size,size, 0);

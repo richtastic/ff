@@ -388,7 +388,14 @@ cap strong gradients with sigmoid: 2/(1 + exp(-a*x))
 
 
 
+- can enforce ordering constraint around areas of low accuracy / non-uniqueness
+	- if uniqueness is poorer than some metric
+		=> use direction?
+		=> use ?
 
+s(a) = roughness metric
+d(a,b) = image intensity / color difference between neighborhooZ
+relaiability measure: r(a,b) = min(s(a),s(b)) / d(a,b)
 
 
 

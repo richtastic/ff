@@ -164,8 +164,14 @@ pointsB = [
 			new V2D( 71.0,209.0), // grid corner
 			new V2D(144.5,234.0), // brick
 			new V2D(325.0,166.0), // right mouth
-			// new V2D(,),
+			
 			];
+
+
+// exact for testUniq
+// pointsB = pointsA;
+// imageMatrixB = imageMatrixA;
+
 // flip for tests:
 // var imageMatrixC = imageMatrixA;
 // var pointsC = pointsA;
@@ -177,13 +183,13 @@ pointsB = [
 Dense.DISPLAY = new DO();
 GLOBALSTAGE.addChild(Dense.DISPLAY);
 
-	//GLOBALSTAGE.root().matrix().scale(1.5);
+	GLOBALSTAGE.root().matrix().scale(1.5);
 	//this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testImageScaling(imageMatrixA,pointsA);
 	//this.testSeedOptimization(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testSimilarityMetrics(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testEntropy(imageMatrixA,pointsA, imageMatrixB,pointsB);
-	//this.testUniqueness(imageMatrixA,pointsA, imageMatrixB,pointsB);
+//this.testUniqueness(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB, this);
 }
 Dense.prototype.testSeedOptimization = function(imageA,pointsA, imageB,pointsB){
@@ -209,8 +215,41 @@ Dense.prototype.testUniqueness = function(imageA,pointsA, imageB,pointsB){
 	var imageBWidth = imageB.width();
 	var imageBHeight = imageB.height();
 
-	var pointA = pointsA[0];
-	var pointB = pointsB[0];
+	var index = 0;
+	var pointA = pointsA[index];
+	var pointB = pointsB[index];
+
+
+	// trash
+	// pointA = new V2D(89,163);
+	// pointB = new V2D(200,200);
+	// pointA = new V2D(240,270);
+	// pointB = new V2D(200,50);
+	// pointA = new V2D(11,265);
+	// pointB = new V2D(250,130);
+
+
+	// pattern
+	// pointA = new V2D(165,150);
+	// pointB = new V2D(160,150);
+	// pointA = new V2D(50,50);
+	// pointB = new V2D(100,100);
+	// pointA = new V2D(350,40);
+	// pointB = new V2D(350,70);
+
+
+	// blank
+	// pointA = new V2D(130,250);
+	// pointB = new V2D(150,250);
+	// pointA = new V2D(30,260);
+	// pointB = new V2D(170,240);
+
+
+
+
+
+
+
 
 	// blank space
 	// pointA = new V2D(45,209);
@@ -219,6 +258,8 @@ Dense.prototype.testUniqueness = function(imageA,pointsA, imageB,pointsB){
 	// pattern top right
 	// pointA = new V2D(356,63);
 	// pointB = new V2D(363,87);
+
+
 
 	var scale = 1.0;
 	var rotation = Code.radians(0.0);
@@ -949,7 +990,8 @@ Dense.matchFromPoints = function(imageAGry,imageAWidth,imageAHeight,pointA,gridA
 
 		var uniqueness = Dense.uniquenessFromPoints(pointA,needleSize,needleSize,needleMask, imageAGry,imageAWidth,imageAHeight,  pointB,haystackSize,haystackSize, imageBGry,imageBWidth,imageBHeight, relativeScaleAtoB,relativeAngleAtoB);
 // console.log("score: "+score+" | uniqueness: "+uniqueness);
-		score = score * uniqueness;
+		//score = score * uniqueness;
+		score = uniqueness;
 
 		var featureA = new Dense.Feature(pointA);
 		var featureB = new Dense.Feature(pointB);
@@ -1048,8 +1090,8 @@ Dense.QUEUE = queue;
 Dense.GRIDA = gridA;
 Dense.GRIDB = gridB;
 Dense.ITERATION = 0;
-	//Dense.TICKER = new Ticker(2000000);
-	Dense.TICKER = new Ticker(1);
+	Dense.TICKER = new Ticker(2000000);
+	//Dense.TICKER = new Ticker(1);
 	Dense.TICKER.addFunction(Ticker.EVENT_TICK, Dense.denseMatch_iteration_ticker, Dense);
 	Dense.TICKER.start();
 
@@ -1384,8 +1426,10 @@ if(b==null){ // outside of grid for some reason
 d = new DOText(uniqueness.toExponential(3)+"", 10, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
 d.matrix().translate(Dense.BESTMATCHOFFX + 0, Dense.BESTMATCHOFFY + 14 + 15 + needleSize*2);
 Dense.DISPLAY.addChild(d);
-				score = score * uniqueness;
-d = new DOText(score.toExponential(3)+"", 10, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
+				//score = score * uniqueness;
+				score = uniqueness;
+d = new DOText(score.toExponential(3)+"", 10, DOText.FONT_ARIAL, 0xFFFF9999, DOText.ALIGN_LEFT);
+d.shadow(0xFFF000000,1,0,0);
 d.matrix().translate(Dense.BESTMATCHOFFX + 0, Dense.BESTMATCHOFFY + 14 + 30 + needleSize*2);
 Dense.DISPLAY.addChild(d);
 
@@ -2379,6 +2423,8 @@ Dense.uniquenessFromPoints = function(needlePoint,needleWidth,needleHeight,needl
 }
 
 Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type){
+	
+
 	var scores = Dense.searchNeedleHaystack(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type);
 	var values = scores.value;
 	var width = scores.width;
@@ -2387,13 +2433,16 @@ Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack
 	var result = 0;
 	var count = 0;
 	var values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
-// var str = "x=[";
-// for(var i=0; i<values.length; ++i){
-// 	str = str+values[i].toExponential(4) +",";
-// }
-// str += "];";
-// console.log("\n\n"+str+"\n\n");
-// console.log(values);
+var str = "x=[";
+for(var i=0; i<values.length; ++i){
+	str = str+values[i].toExponential(4) +",";
+}
+str += "];";
+console.log("\n\n"+str+"\n\n");
+
+return Dense.uniqueness2(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type);
+
+console.log(values);
 	var minValue = values[0];
 	for(i=0; i<values.length; ++i){
 		var value = values[i];
@@ -2407,7 +2456,7 @@ Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack
 		//comp = (1.0 - value);
 		//comp = Math.pow(comp,2);
 		//comp = comp * 
-		var comp = 1.0/Math.pow(value,3);
+		var comp = 1.0/Math.pow(value,2);
 		//comp = comp * decay;
 		//console.log(i+": "+value+"   =>  "+comp);
 		result += comp * decay;
@@ -2446,6 +2495,212 @@ Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack
 		lower uniqueness is better
 	*/
 }
+Dense.moment = function(data, mom){
+	mom = mom!==undefined ? mom : 3;
+	var i, len=data.length;
+	if(len==0){
+		return 0;
+	}
+	var total = 0;
+	for(i=0; i<len; ++i){
+		total += data[i];
+	}
+	var mean = total / len;
+	var variance = 0;
+	for(i=0; i<len; ++i){
+		variance += Math.pow(data[i]-mean,2);
+	}
+	variance = variance / mean;
+	var stddev = Math.sqrt(variance);
+	var moment = 0;
+	for(i=0; i<len; ++i){
+		moment += Math.pow(data[i]-mean,mom);
+	}
+	moment = moment / ( total * Math.pow(stddev,mom) )
+	return moment;
+}
+Dense.skew = function(data){
+	return Dense.moment(data, 3);
+}
+Dense.kertosis = function(data){
+	return Dense.moment(data, 4);
+}
+Dense.slope = function(values,start,count,skip){
+	skip = skip!==undefined ? skip : 0;
+	var i;
+	var points = [];
+	for(i=0; i<count; ++i){
+		var index = start + i + skip*i;
+		var value = values[index];
+		var point = new V2D(i,value);
+		points.push( point );
+	}
+	var line = Code.bestFitLine2D(points);
+	var intercept = line["b"];
+	var slope = line["m"];
+	return slope;
+}
+Dense.uniqueness2 = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type){
+
+
+
+
+	var MAX_SCORE = 1E9;
+	var scores = Dense.searchNeedleHaystack(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type);
+	var values = scores.value;
+	var width = scores.width;
+	var height = scores.height;
+	var values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
+
+	var skew = Dense.skew(values);
+	var kertosis = Dense.kertosis(values);
+
+	console.log("SKEW: "+skew+" KERTOSIS: "+kertosis);
+	var metric = Math.pow(2,-skew * 1E5) * Math.pow(2,kertosis * 1E5) * 1.0;
+	//console.log("metric: "+metric);
+	// tail on left = positive, want opposite
+	//return Math.pow(2,-skew * 1E6); // BAD
+	// smaller tails = negative 
+	//return Math.pow(2,-kertosis * 1E6); // BAD
+	//return Math.pow(2,skew * 1E6); // OK
+	//return Math.pow(2,skew * 1E6) *  Math.pow(2,kertosis * 1E6); // BAD
+	// 
+	//return metric;
+
+
+
+/*
+	// use line of first 5%~20% of points
+	var pctCount = Math.floor(0.1*values.length);
+	var points = [];
+	var i;
+	var count = 10;
+	if(pctCount<count){
+		pctCount = count;
+	}
+	for(i=0; i<count; ++i){
+		//var index = Math.round( (i/(count-1))*pctCount );
+			//index += 1; // ignore first value ???
+		index = i;
+		var value = values[index];
+			var exp = Math.log(value);
+		//var point = new V2D(i,exp);
+		var point = new V2D(i,value);
+		console.log(i+": "+index+" = "+point+"");
+		points.push( point );
+	}
+
+	console.log(points);
+	var line = Code.bestFitLine2D(points);
+	var intercept = line["b"];
+	var slope = line["m"];
+	console.log("intercept: "+intercept);
+	console.log("slope: "+slope);
+	*/
+
+	var mag = 1.0;
+	for(i=0; i<3; ++i){
+		var s = Dense.slope(values, i*5, 5, 0);
+		mag = mag/s;
+	}
+	mag = Math.pow(mag,0.1);
+	console.log("mag: "+mag.toExponential(4));
+
+	slopeShort = Dense.slope(values, 0, 5, 0);
+	slopeLong =  Dense.slope(values, 5,10, 1);
+	console.log("slope shrt-term: "+slopeShort);
+	console.log("slope long-term: "+slopeLong);
+	var ratio = slopeLong/slopeShort;
+	console.log("slope ratio: "+ratio);
+	//return ratio;
+
+	return mag;
+
+	// short term slope (first 3~5)
+	// long term slope (first 10%) 
+	// long term / short term
+	// 0.1 / 2.5 = 0.04
+	// 0.2 / 0.5 = 0.4
+	// if equal -> 1 === bad
+	// if start faster -> 
+
+// y = m * exp(b * x)
+
+
+	var i;
+	var result = 0;
+	var count = 0;
+	var values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
+	if(!values || values.length<=1){
+		return MAX_SCORE;
+	}
+	var minValue = values[0];
+	var maxValue = values[values.length-1];
+	var rangeValue = maxValue - minValue;
+	if(rangeValue==0){
+		return MAX_SCORE;
+	}
+	var sad = 0.0;
+	for(i=0; i<values.length; ++i){
+		var value = values[i];
+		if(value===undefined || value===null){
+			continue;
+		}
+		var ideal = 1.0 - Math.exp(-0.95 * i / values.length);
+		var adjusted = (value - minValue)/rangeValue;
+		var diff = Math.abs(ideal-adjusted);
+		//sad += diff;
+		if(adjusted>0){
+			//sad += 1.0/adjusted;
+		}
+		sad += adjusted;
+	}
+	/*
+	https://brownmath.com/stat/shape.htm
+	https://en.wikipedia.org/wiki/Standardized_moment
+	https://en.wikipedia.org/wiki/Skewness
+	https://en.wikipedia.org/wiki/Kurtosis
+	https://www.spcforexcel.com/knowledge/basic-statistics/are-skewness-and-kurtosis-useful-statistics
+
+	distribution analysis:
+
+	skewness ~ pulled to side
+		- 3rd moment
+	kurtosis ~ pinched vertically - fatness of tails [normal kurtosis = 3] excess kurtosis = kertosis - 3
+		- 4th central moment
+	moment
+
+	0 skew = no swek
+	-skew = left
+	+skew = right
+
+	mean, median, mode
+
+
+	want a left-skewed (right heavy) (negative skew), mean < median < mode
+	
+	skew = sum( (x_i - avg)^3 / (n*s^3) )
+	avg = average
+	x_i = ith sample
+	n = total samples
+	s = stddev
+
+	kertosis = sum( (x_i - avg)^4 / (n*s^4) )
+
+	*/
+	// 0 / 99
+	// 1 / 98
+	// ... ?
+	sad = 1.0 / sad;
+	var result = sad / values.length;
+	// a low range is bad
+	//var result = sad * (1.0/rangeValue);
+	return result;
+}
+/*
+
+z-score = i - avg / total
+*/
 
 Dense._handleKeyboardDown = function(e){
 	if(e.keyCode==Keyboard.KEY_SPACE){

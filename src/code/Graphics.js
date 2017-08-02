@@ -85,6 +85,25 @@ Graphics.canvasDrawImage8 = function(img,aX,aY,bX,bY,cX,cY,dX,dY){
 Graphics.canvasDrawImagePattern = function(img,pX,pY,wX,hY){
 	Graphics._canvas.drawImagePattern(pat,pX,pY,wX,hY);
 }
+Graphics.shadowColor = function(color){
+	Graphics._canvas.shadowColor(color);
+}
+Graphics.shadowOffset = function(offsetX,offsetY){
+	Graphics._canvas.shadowOffset(offsetX,offsetY);
+}
+Graphics.shadowBlur = function(radius){
+	Graphics._canvas.shadowBlur(radius);
+}
+
+	// if(this._shadowColor){
+	// 	this.graphics().shadowColor(this._shadowColor);
+	// }
+	// if(this._shadowOffsetX && this._shadowOffsetY){
+	// 	this.graphics().shadowOffset(this._shadowOffsetX, this._shadowOffsetY);
+	// }
+	// if(this._shadowBlur){
+	// 	this.graphics().shadowBlur(this._shadowBlur);
+	// }
 // ---- text
 Graphics.drawText = function(txt,siz,fnt,xP,yP,align){
 	Graphics._canvas.drawText(txt,siz,fnt,xP,yP,align);
@@ -238,6 +257,30 @@ Graphics.prototype.drawImagePattern = function(pat,pX,pY,wid,hei){
 	this._graphics.push( Code.newArray(Graphics.canvasDrawRect,Code.newArray(pX,pY,wid,hei)) );
 	// ?
 	this._graphics.push( Code.newArray(Graphics.canvasFill,Code.newArray()) );
+}
+Graphics.prototype.shadowColor = function(color){
+	if(color){
+		color = Code.getJSColorFromARGB(color);
+	}else{
+		color = 0x0;
+	}
+	this._graphics.push( Code.newArray(Graphics.shadowColor,Code.newArray(color)) );
+}
+Graphics.prototype.shadowOffset = function(offsetX,offsetY){
+	if(!offsetX){
+		offsetX = 0;
+	}
+	if(!offsetY){
+		offsetY = 0;
+	}
+	this._graphics.push( Code.newArray(Graphics.shadowOffset,Code.newArray(offsetX,offsetY)) );
+}
+Graphics.prototype.shadowBlur = function(radius){
+	if(!radius){
+		radius = 0;
+	}
+	//radius = ''+radius;
+	this._graphics.push( Code.newArray(Graphics.shadowBlur,Code.newArray(radius)) );
 }
 // ------------------------------------------------------------------------------------------------------------------------ TEXT
 Graphics.prototype.drawText = function(txt,siz,fnt,xP,yP,align){
