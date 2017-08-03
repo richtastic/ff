@@ -37,7 +37,7 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		//d.graphics().alpha(0.01);
+		d.graphics().alpha(0.1);
 		//d.graphics().alpha(1.0);
 		//d.graphics().alpha(0.0);
 		d.matrix().translate(x,y);
@@ -183,7 +183,7 @@ pointsB = [
 Dense.DISPLAY = new DO();
 GLOBALSTAGE.addChild(Dense.DISPLAY);
 
-	GLOBALSTAGE.root().matrix().scale(1.5);
+	//GLOBALSTAGE.root().matrix().scale(1.5);
 	//this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testImageScaling(imageMatrixA,pointsA);
 	//this.testSeedOptimization(imageMatrixA,pointsA, imageMatrixB,pointsB);
@@ -319,106 +319,6 @@ console.log(str);
 	console.log(uniqueness);
 
 }
-/*
-Dense.uniquenessFromPair = function(pointA,imageA,widthA,heightA, pointB,imageB,widthB,heightB, scaleAtoB, angleAtoB){
-	var sigma = 1.0;
-	var needleSize = 11;
-	var masking = ImageMat.circleMask(needleSize);
-	var needleA, needleB;
-	var matrix = new Matrix(3,3).identity();
-	// scaleAtoB = 1.0;
-	// angleAtoB = 0.0;
-	if(scaleAtoB>0){ // always opt to zoom into feature
-		matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-		matrix = Matrix.transform2DRotate(matrix,angleAtoB);
-		needleA = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,1.0,sigma,needleSize,needleSize, imageA,widthA,heightA, matrix);
-		needleB = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0,sigma,needleSize,needleSize, imageB,widthB,heightB, null);
-	}else{
-		matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-		matrix = Matrix.transform2DRotate(matrix,angleAtoB);
-		needleA = ImageMat.extractRectFromFloatImage(pointA.x,pointA.y,1.0,sigma,needleSize,needleSize, imageA,widthA,heightA, null);
-		needleB = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0,sigma,needleSize,needleSize, imageB,widthB,heightB, matrix);
-	}
-	// larger penalty  for 
-	var rangeA = 0;
-	var rangeB = 0;
-	var minA = 0;
-	var maxA = 0;
-	var minB = 0;
-	var maxB = 0;
-	var len = needleSize*needleSize;
-	var mask = 1.0;
-	for(var i=0; i<len; ++i){
-		if(masking){ mask = masking[i]; }
-		if(mask!==0.0){
-			var a = needleA[i];
-			var b = needleB[i];
-			if(minA==null || a<minA){
-				minA = a;
-			}
-			if(minB==null || b<minB){
-				minB = b;
-			}
-			if(maxA==null || a>maxA){
-				maxA = a;
-			}
-			if(maxB==null || b>maxB){
-				maxB = b;
-			}
-		}
-	}
-	var rangeA = maxA - minA;
-	var rangeB = maxB - minB;
-	var minRange = Math.min(rangeA,rangeB);
-	var maxRange = Math.min(rangeA,rangeB);
-	var entropyA = Code.entropy01(needleA, masking);
-	var entropyB = Code.entropy01(needleB, masking);
-	//console.log(rangeA,rangeB)
-	//return Math.pow(rangeA*rangeB*minRange,.75);
-	//return maxRange / minRange;
-	return Math.pow (entropyA * entropyB, -1);
-}
-
-Dense.uniquenessFromScores = function(scores){ // lower is better
-	return 1.0;
-	
-	// var i, len = scores.length;
-	// var ordered = scores.sort( function(a,b){ return a<b ? -1 : 1; } );
-	// var score = 0;
-	// for(var i=0; i<ordered.length;++i){
-	// 	//score += ordered[i]/Math.pow(i+1.0,1);
-	// 	score += ordered[i];
-	// }
-	// return score;
-	
-	//var sum = Code.sumArray(scores);
-	//return sum/scores.length;
-	//return Math.sqrt();
-	// histogram inverse
-	var histogram = Code.histogram(scores);
-	var size = histogram["size"];
-	histogram = histogram["histogram"];
-	//console.log(histogram);
-	var score = 0;
-	var count = 0;
-	for(var i=0; i<histogram.length;++i){
-		score += histogram[i]/Math.pow(i+1.0,2);
-		count ++;
-	}
-	score = score / size;
-	score = Math.sqrt(score);
-	//score = score / 10.0;
-	return score;
-	// uniqueness === y intercept of histogramed scores
-	// var points = [];
-	// for(var i=0; i<histogram.length;++i){
-	// 	points.push( new V2D( i*size, histogram[i]) );
-	// }
-	// var line = Code.bestFitLine2D(points);
-	// console.log(line);
-	// return Math.max(line["b"],0);
-}
-*/
 Dense.entropyImage = function(imageAGry, imageAWidth,imageAHeight){
 	var imageEntropy = Code.newArrayZeros(imageAWidth*imageAHeight);
 	var needleSize = 11; // 11
@@ -859,7 +759,7 @@ Dense.prototype.testFeatureComparison = function(imageA,seedsA, imageB,seedsB){
 	var imageBWidth = imageB.width();
 	var imageBHeight = imageB.height();
 
-	var cellSizeA = 10; // 2 4 10 20 25 50 100
+	var cellSizeA = 20; // 2 4 10 20 25 50 100
 	var cellSizeB = cellSizeA;
 	var gridACols = Math.ceil(imageAWidth/cellSizeA);
 	var gridARows = Math.ceil(imageAHeight/cellSizeA);
@@ -991,7 +891,7 @@ Dense.matchFromPoints = function(imageAGry,imageAWidth,imageAHeight,pointA,gridA
 		var uniqueness = Dense.uniquenessFromPoints(pointA,needleSize,needleSize,needleMask, imageAGry,imageAWidth,imageAHeight,  pointB,haystackSize,haystackSize, imageBGry,imageBWidth,imageBHeight, relativeScaleAtoB,relativeAngleAtoB);
 // console.log("score: "+score+" | uniqueness: "+uniqueness);
 		//score = score * uniqueness;
-		score = uniqueness;
+		//score = uniqueness;
 
 		var featureA = new Dense.Feature(pointA);
 		var featureB = new Dense.Feature(pointB);
@@ -999,9 +899,9 @@ Dense.matchFromPoints = function(imageAGry,imageAWidth,imageAHeight,pointA,gridA
 		var cellB = gridB.cell(pointB);
 		var match;
 		if(flipped){ // keep in external A->B order
-			match = new Dense.Match(featureB,featureA, score, 1.0/relativeScaleAtoB, -relativeAngleAtoB, cellB, cellA);
+			match = new Dense.Match(featureB,featureA, score, uniqueness, 1.0/relativeScaleAtoB, -relativeAngleAtoB, cellB, cellA);
 		}else{
-			match = new Dense.Match(featureA,featureB, score, relativeScaleAtoB, relativeAngleAtoB, cellA, cellB);
+			match = new Dense.Match(featureA,featureB, score, uniqueness, relativeScaleAtoB, relativeAngleAtoB, cellA, cellB);
 		}
 // console.log(match+"");
 		return match;
@@ -1010,7 +910,7 @@ Dense.matchFromPoints = function(imageAGry,imageAWidth,imageAHeight,pointA,gridA
 Dense._matchSorting = function(a,b){
 	if(a===b){ return 0; }
 	// sad & ncc
-	return a.score() < b.score() ? -1 : 1;
+	return a.rank() < b.rank() ? -1 : 1;
 }
 
 Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
@@ -1086,12 +986,14 @@ for(var i=0; i<gridBCols; ++i){
 }
 */
 
+Dense.imageMatrixA = imageA;
+Dense.imageMatrixB = imageB;
 Dense.QUEUE = queue;
 Dense.GRIDA = gridA;
 Dense.GRIDB = gridB;
 Dense.ITERATION = 0;
-	Dense.TICKER = new Ticker(2000000);
-	//Dense.TICKER = new Ticker(1);
+	//Dense.TICKER = new Ticker(2000000);
+	Dense.TICKER = new Ticker(1);
 	Dense.TICKER.addFunction(Ticker.EVENT_TICK, Dense.denseMatch_iteration_ticker, Dense);
 	Dense.TICKER.start();
 
@@ -1100,9 +1002,8 @@ Dense.ITERATION = 0;
 	Dense.KEYBOARD.addListeners();
 }
 Dense.denseMatch_iteration_key = function(e){
-	console.log("denseMatch_iteration_key");
+	//console.log("denseMatch_iteration_key");
 	if(e.keyCode==Keyboard.KEY_SPACE){
-		console.log("space");
 		Dense.TICKER.stop();
 		Dense.denseMatch_iteration();
 		Dense.TICKER.start();
@@ -1132,48 +1033,39 @@ Dense.denseMatch_iteration = function(){
 	var cellSizeA = gridA.cellSize();
 	var cellSizeB = gridB.cellSize();
 	var iteration = Dense.ITERATION;
+	var imageMatrixA = Dense.imageMatrixA;
+	var imageMatrixB = Dense.imageMatrixB;
 
 	if(iteration>1E10 || queue.isEmpty()){
 		return;
 	}
 
 	console.log("denseMatch_iteration: "+queue.length());
-	//var MINIMUM_SCORE = 0.10;
-	//var MINIMUM_SCORE = 0.01;
-	var MAXIMUM_SCORE = 10.0;
-// clear display:
-var display = Dense.DISPLAY;
+	var MAXIMUM_SCORE = 0.05; // max average SAD score per pixel // TODO: ARBITRARY
+	// clear display:
+	var display = Dense.DISPLAY;
+
 	// pick up best match ad infinitum
 	while(!queue.isEmpty()){
 		++iteration;
-		// sad
 var q = queue.toArray();
 for(var k=0; k<q.length && k<3; ++k){
 	console.log("    "+k+" : "+q[k]);
 }
-
 		var bestMatch = queue.popMinimum();
-		// ncc
-		//queue.popMaximum();
-		//if(bestMatch.score()<MINIMUM_SCORE){break;}
-//		console.log(" "+iteration+" : "+bestMatch.score());
-		//if(bestMatch.score()>MAXIMUM_SCORE){break;}
-		
+console.log("best score: "+bestMatch.score()+" / "+MAXIMUM_SCORE+"            ("+bestMatch.rank()+") ");
+if(bestMatch.score()>MAXIMUM_SCORE){
+	break;
+}
 		// satellite operation
-//console.log("best match: "+bestMatch);
 		var featureA = bestMatch.featureA();
 		var featureB = bestMatch.featureB();
-		// var cellA = gridA.cell(featureA.point());
-		// var cellB = gridB.cell(featureB.point());
 		var cellA = bestMatch.cellA();
 		var cellB = bestMatch.cellB();
-		// console.log(featureA+" | "+featureB);
-		// console.log(cellA+" + "+cellB);
 if(cellA==null || cellB==null){
 	console.log("null cell");
 	throw "null";
 }
-		//console.log(cellA.grid()+" VS "+gridA+" = "+(cellA.grid()===gridA)+" = "+(cellB.grid()===gridB));
 		if(cellA.grid()!=gridA){ // flip
 			var temp = cellA;
 			cellA = cellB;
@@ -1184,7 +1076,6 @@ if(cellA==null || cellB==null){
 		if(cellA.isJoined() || cellB.isJoined()){ // uniqueness => not match everything
 			continue;
 		}
-console.log("best: "+bestMatch.score());
 
 // clear on successful join
 display.removeAllChildren();
@@ -1195,7 +1086,6 @@ display.removeAllChildren();
 
 		cellA.join(bestMatch);
 		cellB.join(bestMatch);
-
 
 		// display each grid's disparity
 		var minDisparity = null;
@@ -1218,6 +1108,46 @@ display.removeAllChildren();
 			for(var j=0; j<gridA.rows(); ++j){
 				for(var i=0; i<gridA.cols(); ++i){
 					var cell = gridA.cell(i,j);
+
+var match = cell.match();
+if(match){ // var matches = cell.matches();
+	if(match.cellA().grid()==gridB){ // swap
+		match = match.inverse();
+	}
+	//console.log((match.cellA().grid()==gridA)+" | "+(match.cellB().grid()==gridB));
+	var cA = match.cellA();
+	var cB = match.cellB();
+	var fA = match.featureA();
+	var fB = match.featureB();
+	var rotationAtoB = match.rotation();
+	var scaleAtoB = match.scale();
+
+		var pA = fA.point();
+		var pB = fB.point();
+		//console.log("  ang "+scaleAtoB+"  rot "+Code.degrees(rotationAtoB));
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,-rotationAtoB);
+			matrix = Matrix.transform2DScale(matrix,1.0/scaleAtoB);
+		var bR = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.red(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		var bG = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.grn(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		var bB = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.blu(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+// CELL LOCATION IS VERY WRONG
+		var diff = V2D.sub(pA,cellA.center());
+		img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+		d = new DOImage(img);
+		//d.matrix().translate(0 + i*cellSizeA, 0 + j*cellSizeA);
+		//d.matrix().translate(800 + i*cellSizeA + diff.x, 0 + j*cellSizeA + diff.y);
+		//d.matrix().translate(800 + pA.x, 0 + pA.y);
+		//d.matrix().translate(0 + pA.x, 0 + pA.y);
+		d.matrix().translate(0 + pA.x, 0 + pA.y);
+
+
+		display.addChild(d);
+
+		//console.log("   "+j+","+i+"   "+cell.center()+"  "+pA);
+}
+					
+/*
 					var disparity = cell.disparity();
 					if(disparity==null){ continue; }
 					disparity = (disparity-minDisparity)/rangeDisparity;
@@ -1233,6 +1163,7 @@ display.removeAllChildren();
 					c.graphics().fill();
 					c.matrix().translate(800 + i*cellSizeA, 0 + j*cellSizeA);
 					display.addChild(c);
+*/
 				}
 			}
 		}
@@ -1244,16 +1175,16 @@ display.removeAllChildren();
 // show matches
 var color = 0x990000FF;
 
-var i = cellA._col;
-var j = cellA._row;
-var c = new DO();
-c.graphics().setFill(color);
-c.graphics().beginPath();
-c.graphics().drawRect(0,0, cellSizeA,cellSizeA);
-c.graphics().endPath();
-c.graphics().fill();
-c.matrix().translate(0 + i*cellSizeA, 0 + j*cellSizeA);
-GLOBALSTAGE.addChild(c);
+// var i = cellA._col;
+// var j = cellA._row;
+// var c = new DO();
+// c.graphics().setFill(color);
+// c.graphics().beginPath();
+// c.graphics().drawRect(0,0, cellSizeA,cellSizeA);
+// c.graphics().endPath();
+// c.graphics().fill();
+// c.matrix().translate(0 + i*cellSizeA, 0 + j*cellSizeA);
+// GLOBALSTAGE.addChild(c);
 
 var i = cellB._col;
 var j = cellB._row;
@@ -1268,7 +1199,7 @@ GLOBALSTAGE.addChild(c);
 
 // line
 var c = new DO();
-c.graphics().setLine(1.0, 0x99FF0000);
+c.graphics().setLine(1.0, 0x33FF0000);
 c.graphics().beginPath();
 c.graphics().moveTo(cellA.center().x+0  ,cellA.center().y+0);
 c.graphics().lineTo(cellB.center().x+400,cellB.center().y+0);
@@ -1369,7 +1300,7 @@ if(match.cellA()==cellB){ // opposite direction
 		var score = best.score;
 		if(score){
 			var pointB = new V2D(location.x,location.y);
-			console.log("BEST: "+scale+" | "+Code.degrees(angle));
+			//console.log("BEST: "+scale+" | "+Code.degrees(angle));
 			var featureB = new Dense.Feature(pointB);
 
 var sigma = null;
@@ -1389,7 +1320,7 @@ var height = scores.height;
 var windowCenterX = Math.floor(needleSize*0.5);
 var windowCenterY = Math.floor(needleSize*0.5);
 
-
+/*
 img = GLOBALSTAGE.getFloatRGBAsImage(a,a,a, needleSize,needleSize);
 d = new DOImage(img);
 d.matrix().translate(10 + Dense.BESTMATCHOFFX + 0, Dense.BESTMATCHOFFY + 0);
@@ -1414,7 +1345,7 @@ Dense.DISPLAY.addChild(d);
 d = new DOText(score.toExponential(3)+"", 10, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
 d.matrix().translate(Dense.BESTMATCHOFFX + 0, Dense.BESTMATCHOFFY + 14 + needleSize*2);
 Dense.DISPLAY.addChild(d);
-
+*/
 
 			var b = gridB.cell(pointB);
 if(b==null){ // outside of grid for some reason
@@ -1423,21 +1354,22 @@ if(b==null){ // outside of grid for some reason
 				//var uniqueness = Dense.uniquenessFromPair(featureA.point(),gridA.image(),gridA.width(),gridA.height(), featureB.point(),gridB.image(),gridB.width(),gridB.height(),  scale,angle);
 				var uniqueness = Dense.uniquenessFromPoints(featureA.point(),needleSize,needleSize,needleMask, gridA.image(),gridA.width(),gridA.height(),  featureB.point(),haystackSize,haystackSize, gridB.image(),gridB.width(),gridB.height(), scale,angle);
 				//console.log("uniqueness: "+uniqueness)
+/*
 d = new DOText(uniqueness.toExponential(3)+"", 10, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
 d.matrix().translate(Dense.BESTMATCHOFFX + 0, Dense.BESTMATCHOFFY + 14 + 15 + needleSize*2);
 Dense.DISPLAY.addChild(d);
 				//score = score * uniqueness;
-				score = uniqueness;
+				//score = uniqueness;
 d = new DOText(score.toExponential(3)+"", 10, DOText.FONT_ARIAL, 0xFFFF9999, DOText.ALIGN_LEFT);
 d.shadow(0xFFF000000,1,0,0);
 d.matrix().translate(Dense.BESTMATCHOFFX + 0, Dense.BESTMATCHOFFY + 14 + 30 + needleSize*2);
 Dense.DISPLAY.addChild(d);
-
+*/
 				var match;
 				if(flipped){
-					var match = new Dense.Match(featureA,featureB, score, 1.0/scale,-angle, neighborA, b);
+					var match = new Dense.Match(featureB,featureA, score, uniqueness, 1.0/scale,-angle, b, neighborA);
 				}else{
-					var match = new Dense.Match(featureA,featureB, score, scale,angle, neighborA, b);
+					var match = new Dense.Match(featureA,featureB, score, uniqueness, scale,angle, neighborA, b);
 				}
 				console.log("ADD MATCH: "+featureA.point()+" => "+featureB.point()+" ["+scale+" | "+Code.degrees(angle)+"]");
 				//match = new Dense.Match(featureA,featureB, score, scale,angle, neighborA, b);
@@ -1872,6 +1804,12 @@ Dense.Cell.prototype.join = function(match){
 Dense.Cell.prototype.isJoined = function(){
 	return this._joins.length>0;
 }
+Dense.Cell.prototype.match = function(){ // TODO: BEST match
+	if(this._joins.length>0){
+		return this._joins[0];
+	}
+	return null;
+}
 Dense.Cell.prototype.neighbors = function(){
 	var n, neighbors = [];
 	for(var j=-1; j<=1; ++j){
@@ -1926,21 +1864,27 @@ Dense.Feature.prototype.point = function(p){
 }
 
 
-Dense.Match = function(featureA,featureB, score, scale, rotation, cellA, cellB){
+Dense.Match = function(featureA,featureB, score, rank, scale, rotation, cellA, cellB){
 	this._featureA = null;
 	this._featureB = null;
 	this._score = null;
+	this._rank = null;
 	this._rotation = 0.0;
 	this._scale = 1.0;
 	this.featureA(featureA);
 	this.featureB(featureB);
 	this.score(score);
+	this.rank(rank);
 	this.scale(scale);
 	this.rotation(rotation);
 	this._cellA = null;
 	this._cellB = null;
 	this.cellA(cellA);
 	this.cellB(cellB);
+}
+Dense.Match.prototype.inverse = function(){
+	var match = new Dense.Match(this.featureB(),this.featureA(),this.score(),this.rank(),1.0/this.scale(),-this.rotation(),this.cellB(),this.cellA());
+	return match;
 }
 Dense.Match.prototype.featureA = function(a){
 	if(a!==undefined){
@@ -1959,6 +1903,12 @@ Dense.Match.prototype.score = function(s){
 		this._score = s;
 	}
 	return this._score;
+}
+Dense.Match.prototype.rank = function(r){
+	if(r!==undefined){
+		this._rank = r;
+	}
+	return this._rank;
 }
 Dense.Match.prototype.scale = function(s){
 	if(s!==undefined){
@@ -2130,7 +2080,7 @@ Dense.optimalNeedleHaystack = function(sourceN,sourceNWidth,sourceNHeight, needl
 // GLOBALSTAGE.addChild(d);
 		}
 	} // TODO: interpolate / follow gradient to best solution
-console.log( Code.array1Das2DtoString(scoreGrid, scaleRangeExp.length,angleRangeDeg.length) );
+//console.log( Code.array1Das2DtoString(scoreGrid, scaleRangeExp.length,angleRangeDeg.length) );
 	return best;
 }
 Dense.searchNeedleHaystack = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight,  type){ // make smaller output better
@@ -2422,9 +2372,8 @@ Dense.uniquenessFromPoints = function(needlePoint,needleWidth,needleHeight,needl
 	return uniqueness;
 }
 
-Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type){
-	
-
+Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type){	
+/*
 	var scores = Dense.searchNeedleHaystack(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type);
 	var values = scores.value;
 	var width = scores.width;
@@ -2439,7 +2388,7 @@ for(var i=0; i<values.length; ++i){
 }
 str += "];";
 console.log("\n\n"+str+"\n\n");
-
+*/
 return Dense.uniqueness2(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type);
 
 console.log(values);
@@ -2541,22 +2490,19 @@ Dense.slope = function(values,start,count,skip){
 	return slope;
 }
 Dense.uniqueness2 = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type){
-
-
-
-
 	var MAX_SCORE = 1E9;
 	var scores = Dense.searchNeedleHaystack(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type);
 	var values = scores.value;
 	var width = scores.width;
 	var height = scores.height;
 	var values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
-
+	/*
 	var skew = Dense.skew(values);
 	var kertosis = Dense.kertosis(values);
 
 	console.log("SKEW: "+skew+" KERTOSIS: "+kertosis);
 	var metric = Math.pow(2,-skew * 1E5) * Math.pow(2,kertosis * 1E5) * 1.0;
+	*/
 	//console.log("metric: "+metric);
 	// tail on left = positive, want opposite
 	//return Math.pow(2,-skew * 1E6); // BAD
@@ -2598,22 +2544,32 @@ Dense.uniqueness2 = function(needle,needleWidth,needleHeight,needleMask, haystac
 	console.log("slope: "+slope);
 	*/
 
+	//var count25 = Math.floor(values.length * 0.25);
+	var samp = 3;
+	var starts = Math.floor(values.length*0.25/samp);
 	var mag = 1.0;
-	for(i=0; i<3; ++i){
-		var s = Dense.slope(values, i*5, 5, 0);
+	for(i=0; i<samp; ++i){
+		//var s = Dense.slope(values, i*10, 5, 0);
+		var s = Dense.slope(values, i*starts, 5, 0);
 		mag = mag/s;
 	}
 	mag = Math.pow(mag,0.1);
-	console.log("mag: "+mag.toExponential(4));
-
+	//console.log("mag: "+mag.toExponential(4));
+	/*
 	slopeShort = Dense.slope(values, 0, 5, 0);
-	slopeLong =  Dense.slope(values, 5,10, 1);
+	slopeLong =  Dense.slope(values, 5,10, 1); // near start
+	//slopeLong =  Dense.slope(values, Math.floor(0.25*values.length),10, 1); // at 25%
+	//slopeLong =  Dense.slope(values, 0,10, Math.floor(0.25*values.length/10.0)); // from start to 25%
 	console.log("slope shrt-term: "+slopeShort);
 	console.log("slope long-term: "+slopeLong);
 	var ratio = slopeLong/slopeShort;
 	console.log("slope ratio: "+ratio);
+	//return 1.0/slopeShort;
 	//return ratio;
-
+	*/
+	// too sensitive
+	// var minScore = values[0];
+	// mag = mag * minScore; 
 	return mag;
 
 	// short term slope (first 3~5)
@@ -2623,8 +2579,6 @@ Dense.uniqueness2 = function(needle,needleWidth,needleHeight,needleMask, haystac
 	// 0.2 / 0.5 = 0.4
 	// if equal -> 1 === bad
 	// if start faster -> 
-
-// y = m * exp(b * x)
 
 
 	var i;

@@ -362,9 +362,11 @@ areas of flat-white match well with areas of flat-white
 
 
 - 
-- TEST ALG WITH IDENTICAL IMAGES
-- TEST ALG WITH ROT/SCALED IMAGES
-- 
+http://mathworld.wolfram.com/LeastSquaresFittingLogarithmic.html
+
+
+
+
 
 
 DeepMatching Notes:
@@ -379,24 +381,14 @@ cap strong gradients with sigmoid: 2/(1 + exp(-a*x))
 
 
 
-
-
-
-
-
-
-
-
-
-- can enforce ordering constraint around areas of low accuracy / non-uniqueness
+- can enforce ordering constraint around areas of low accuracy / non-uniqueness 
 	- if uniqueness is poorer than some metric
 		=> use direction?
 		=> use ?
 
 s(a) = roughness metric
 d(a,b) = image intensity / color difference between neighborhooZ
-relaiability measure: r(a,b) = min(s(a),s(b)) / d(a,b)
-
+reliability measure: r(a,b) = min(s(a),s(b)) / d(a,b)
 
 
 
@@ -410,6 +402,16 @@ relaiability measure: r(a,b) = min(s(a),s(b)) / d(a,b)
 2*2*5*5 = 100
 
 
+- separate RANK/ORDER from SCORE
+- 
+- display matching of A<->B
+- determine what needle/haystack size to use based on 
+- [variable] scale discrepancy throws off matching cell accuracy
+- try on actual different image
+- 
+- how to estimate image [relative] blurriness -- https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry/7768918#7768918
+- how to optimize depth location (metric vs projective)
+- 
 
 
 
