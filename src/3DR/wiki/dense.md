@@ -402,18 +402,45 @@ reliability measure: r(a,b) = min(s(a),s(b)) / d(a,b)
 2*2*5*5 = 100
 
 
-- separate RANK/ORDER from SCORE
-- 
-- display matching of A<->B
-- determine what needle/haystack size to use based on 
+x separate RANK/ORDER from SCORE
+x display matching of A<->B
+x try on actual different image
+x determine what needle/haystack size to use based on cell size
+
+- how to use initial findings (@ cell size 1) to guide next findings (@ cell size 2)
+	- allow for possbile missmatches
+	- enforce more ordering constraints
+
+- first unique-match the group, then non-unique match to fill in gaps (should save for last to limit error)
+
+- add R G B colors to scoring
+
+- is there a limit to how distorted (scaled / rotation) a cell should be allowd to changed ? detect problems?
+	- also sort by least mutated cell pairs ?
+
 - [variable] scale discrepancy throws off matching cell accuracy
-- try on actual different image
+
 - 
 - how to estimate image [relative] blurriness -- https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry/7768918#7768918
 - how to optimize depth location (metric vs projective)
 - 
 
 
+
+
+
+- do low-dense 1:1 cell matching
+- increase density, using previous grid as start search locations
+- after 1-pixel matching
+	A) do many-to-many cell matching, limiting 
+	B) do gap-filling for all cells who have at least 2 neighbors
+- extend areas radially about perimeter
+	- enforce some kind of ordering
+
+- stop criteria?
+	- SAD scores limiting stops much too early
+	- uniqueness N/A ?
+- if reach border ... do ?
 
 
 
