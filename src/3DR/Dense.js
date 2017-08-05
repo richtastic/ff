@@ -896,6 +896,12 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	// Dense.DISPLAY = new DO();
 	// GLOBALSTAGE.addChild(Dense.DISPLAY);
 
+var pointsA = seedsA;
+var pointsB = seedsB;
+var matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
+var matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
 	var i, len, featureA, featureB, match;
 	// local image vars
 	var imageAGry = imageA.gry();
@@ -918,13 +924,15 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	//cellSizeA = 
 	var gridA = new Dense.Grid(imageAWidth,imageAHeight,imageAGry, gridACols,gridARows,cellSizeA);
 	var gridB = new Dense.Grid(imageBWidth,imageBHeight,imageBGry, gridBCols,gridBRows,cellSizeB);
+	gridA.F(matrixFfwd);
+	gridB.F(matrixFrev);
 	// convert seeds to matches
 	len = Math.min(seedsA.length, seedsB.length);
 	for(i=0; i<len; ++i){
 		var seedA = seedsA[i];
 		var seedB = seedsB[i];
 		var match = Dense.matchFromPoints(imageAGry,imageAWidth,imageAHeight,seedA,gridA, imageBGry,imageBWidth,imageBHeight,seedB,gridB);
-		queue.push(match);
+		Dense.addMatchToQueue(queue, match);
 		console.log("   pimary match: "+match);
 //		if(i==10){break;}
 	}
@@ -1000,7 +1008,17 @@ Dense.denseMatch_iteration_ticker = function(t){
 
 
 
-
+Dense.addMatchToQueue = function(queue, match){
+	var MAXIMUM_SCORE = 0.5; // max average SAD score per pixel // TODO: ARBITRARY
+	var MAXIMUM_RANK = 1E6; // 15; // max rank score // TODO: ARBITRARY    ... 14 starts to get bad, but accurate results appear at least to 25
+	if(match.score()>MAXIMUM_SCORE){
+		return;
+	}
+	if(match.rank()>MAXIMUM_RANK){
+		return;
+	}
+	queue.push(match);
+}
 Dense.denseMatch_iteration = function(){
 	// re-init
 	var queue = Dense.QUEUE;
@@ -1017,23 +1035,22 @@ Dense.denseMatch_iteration = function(){
 	}
 
 	console.log("denseMatch_iteration: "+queue.length());
-	var MAXIMUM_SCORE = 0.5; // max average SAD score per pixel // TODO: ARBITRARY
-	var MAXIMUM_RANK = 50; // max rank score // TODO: ARBITRARY    ... 14 starts to get bad, but accurate results appear at least to 25
+	// var MAXIMUM_SCORE = 0.5; // max average SAD score per pixel // TODO: ARBITRARY
+	// var if(bestMatch.score()>MAXIMUM_SCORE){
+// 	break;
+// } = 15; // max rank score // TODO: ARBITRARY    ... 14 starts to get bad, but accurate results appear at least to 25
 	// clear display:
 	var display = Dense.DISPLAY;
 
 	// pick up best match ad infinitum
 	while(!queue.isEmpty()){
 		++iteration;
-var q = queue.toArray();
-for(var k=0; k<q.length && k<3; ++k){
-	console.log("    "+k+" : "+q[k]);
-}
+// var q = queue.toArray();
+// for(var k=0; k<q.length && k<3; ++k){
+// 	console.log("    "+k+" : "+q[k]);
+// }
 		var bestMatch = queue.popMinimum();
-console.log("best score: "+bestMatch.score()+" / "+MAXIMUM_SCORE+"            ("+bestMatch.rank()+")  @ scale:"+bestMatch.scale()+" | angle:"+Code.degrees(bestMatch.rotation())+"");
-if(bestMatch.score()>MAXIMUM_SCORE){
-	break;
-}
+console.log("best score: "+bestMatch.score()+"            ("+bestMatch.rank()+")  @ scale:"+bestMatch.scale()+" | angle:"+Code.degrees(bestMatch.rotation())+"");
 		// satellite operation
 		var featureA = bestMatch.featureA();
 		var featureB = bestMatch.featureB();
@@ -1238,14 +1255,15 @@ if(match.cellA()==cellB){ // opposite direction
 			featureA = Dense.definitiveFeature(point, null);
 			neighborA.feature(featureA);
 		}
-		var cellSizeA = gridA.cellSize();
-		var cellSizeB = gridB.cellSize();
+		var cellSizeA = Math.max(gridA.cellSize(),Dense.MINIMUM_CELL_SIZE);
+		var cellSizeB = Math.max(gridB.cellSize(),Dense.MINIMUM_CELL_SIZE);
 		//var needleSize = Math.max(cellSizeA,5);
 		var needleSize = Dense.COMPARE_CELL_SIZE;
 		var needleScaleCellToCompare = needleSize / cellSizeA;
 console.log("needleScaleCellToCompare: "+needleScaleCellToCompare);
-		//var haystackSize = cellSizeB * 4; // 3x3 window + padding
-		var haystackSize = needleSize * 4; // 3x3 window + padding
+		var neighborhoodMagnitude = 4; // cellSizeA > 11 ? 4 : (cellSizeA * 2);
+		var haystackSize = needleSize * neighborhoodMagnitude; // 3x3 window + padding
+		// for small cell sizes (~ 1 px) neighborhood is tiny
 		
 		var centerB = cellB.center();
 	var needleMask = ImageMat.circleMask(needleSize);
@@ -1329,7 +1347,8 @@ Dense.DISPLAY.addChild(d);
 					var match = new Dense.Match(featureA,featureB, score, uniqueness, scale,angle, neighborA, b);
 				}
 				console.log("ADD MATCH: "+featureA.point()+" => "+featureB.point()+" ["+scale+" | "+Code.degrees(angle)+"]      score: "+match.score()+" | rank: "+match.rank());
-				queue.push(match);
+				//queue.push(match);
+				Dense.addMatchToQueue(queue, match);
 			}
 		}
 	}
@@ -1518,8 +1537,15 @@ Dense.Grid = function(width,height,image, cols,rows,size){
 		}
 	}
 	this._areas = [];
+	this._F = null;
 }
 Dense.Grid.ID = 0;
+Dense.Grid.prototype.F = function(f){
+	if(f!==undefined){
+		this._F = f;
+	}
+	return this._F;
+}
 Dense.Grid.prototype._indexFromColRow = function(col,row){
 	if(0<=row && row<this._rows  &&  0<=col && col<this._cols){
 		var index = row*this._cols + col;
@@ -1814,7 +1840,56 @@ Dense.sad = function(a,b, m){ // sum of absolute differences
 	return score;
 
 }
+/*
+Dense.Match.prototype.checkPenalizeF = function(){ // TODO: THIS SHOULD GO TO WHEN MATCH IS MADE, TO FIND SECOND (/3rd, ...) CHOICE OPTIMAL LOCATION
+		var cellA = this.cellA();
+		var cellB = this.cellA();
+		if(cellA && cellB){
+			var gridA = cellA.grid();
+			var gridB = cellB.grid();
+			var featureA = this.featureA();
+			var featureB = this.featureB();
+			var FA = gridA.F();
+			var FB = gridB.F();
+			if(FA && FB){
+				var matrixFfwd = FA;
+				var matrixFrev = FB;
+				var pointA = featureA.point();
+				var pointB = featureB.point();
+				pointA = new V3D(pointA.x,pointA.y,1.0);
+				pointB = new V3D(pointB.x,pointB.y,1.0);
+				var lineA = new V3D();
+				var lineB = new V3D();
+				matrixFfwd.multV3DtoV3D(lineA, pointA);
+				matrixFrev.multV3DtoV3D(lineB, pointB);
+				var dir = new V2D();
+				var org = new V2D();
+				Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+				var distA = Code.distancePointRay2D(org,dir, pointB);
+				Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+				var distB = Code.distancePointRay2D(org,dir, pointA);
+				//console.log("DISTANCES: "+distA+" | "+distB);
+				var rank = this.rank();
+				var dist = Math.sqrt(distA*distA + distB*distB); // RMS ERROR
+				var MAX_DIST = 5; // ERROR MARGIN
+				if(dist > MAX_DIST){
+					dist = 100;
+				}
+				//dist = Math.pow(dist,0.1);
+				//dist = Math.pow(dist,0.5);
+				rank = rank * (1.0 + dist);
+				this.rank(rank);
+				// 100 ^ 0.01 = 1.047
+				// 100 ^ 0.1 = 1.6
+				// 100 ^ 0.5 = 10
+			}
+		}
+	}
+*/
 Dense.optimalNeedleHaystack = function(sourceN,sourceNWidth,sourceNHeight, needlePoint,needleWidth,needleHeight, needleMask, sourceH,sourceHWidth,sourceHHeight, haystackPoint,haystackWidth,haystackHeight,  type,  baseScale, baseAngle){ 
+	/*
+		TODO: USE F TO LIMIT SEARCH ANESERS:
+	*/
 	var angleRangeDeg = [-10, 0, 10];
 	var scaleRangeExp = [-0.1,0.0,0.1]; // 2^-0.2 = 0.87 | 2^-0.1 = 0.93
 	var angle, scale;

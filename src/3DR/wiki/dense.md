@@ -415,6 +415,9 @@ x determine what needle/haystack size to use based on cell size
 
 - add R G B colors to scoring
 
+- limit matches by relating distance from nearest neighbor (in 2nd image) with relative scale -- if too large, is probably a bad match
+	- displarity gradient limit?
+
 - is there a limit to how distorted (scaled / rotation) a cell should be allowd to changed ? detect problems?
 	- also sort by least mutated cell pairs ?
 
@@ -422,13 +425,20 @@ x determine what needle/haystack size to use based on cell size
 
 - 
 - how to estimate image [relative] blurriness -- https://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry/7768918#7768918
+	- laplacian:
+		gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+		numpy.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image,3)))
+	- http://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/
+		variance of laplacian
 - how to optimize depth location (metric vs projective)
 - 
 
 
 
 
-
+- allow a better match to replace a previous match (& invalidate?) -- 
+- when placing a match is there a way to statistically validate if the match is viable
+	- may be off @ occlusions
 - do low-dense 1:1 cell matching
 - increase density, using previous grid as start search locations
 - after 1-pixel matching
@@ -445,12 +455,33 @@ x determine what needle/haystack size to use based on cell size
 
 
 
+2ND MATCHING
+for each cell
+	- prioritized based on average uniqueness of neighbors (based solely on neighbor count => perpetually matching only existing areas)
+		- further prioritize on uniqueness ?
+	- estimate approx location based on neighbor locations
+		- use narrow window ??
+	- allow one->many matching 
+
+EXPANDING TO AREAS OF UNIFORM SIMILARITY
+- ordering constraint ????
 
 
+ORDERING CONSTRAINT:
+	- mapping a lattice to a lattice
+		- neighbors are consistent
+	- 'pin' a match down
+	- any new match must have positive area about neighbors (/consistent orientation)
+	- HOW TO UNDO BAD CHANGES ?
+
+when choosing a single dell match
+	- look at top N choices: from best match > to worst match (in neighborhood)
+		- see what average group score would be at each scenario [up to 8 unmatched neighbors]
+			- use best of group
 
 
-
-
+FUNDAMETNAL MATRIX ORDERING CONSTRAINT
+	- penzlize matches for distance from projected line ( *= 1+pixels)
 
 
 

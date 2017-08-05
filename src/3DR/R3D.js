@@ -1443,7 +1443,6 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	cam.setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0.0,0.0,0.0,1.0]);
 	return cam;
 }
-
 R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
 	var i, j, to, fr, len=pointsFr.length;
 	var rows = 4, cols = 4;
@@ -1487,7 +1486,7 @@ R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points
 }
 
 
-R3D.triangulatePoints = function(fundamental, pointsA,pointsB){
+R3D.triangulatePoints = function(fundamental, pointsA,pointsB){ // projective invariant - TODO: this been tested?
 	var i, j, val, min, tMin, F, t, len=pointsA.length;
 	var pointA, pointB, lineA, lineB;
 	var TAfwd=new Matrix(3,3), TBfwd=new Matrix(3,3), TArev=new Matrix(3,3), TBrev=new Matrix(3,3);
