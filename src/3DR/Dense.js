@@ -798,7 +798,7 @@ Dense.matchFromPoints = function(imageAGry,imageAWidth,imageAHeight,pointA,gridA
 	// use a small window to localize the match
 	var cellSizeA = Math.max(gridA.cellSize(),Dense.MINIMUM_CELL_SIZE);
 	var cellSizeB = Math.max(gridB.cellSize(),Dense.MINIMUM_CELL_SIZE);
-	var needleSize = Dense.COMPARE_CELL_SIZE;
+	var needleSize = Math.min(Dense.COMPARE_CELL_SIZE,cellSizeA);
 	var haystackSize = Math.round(Dense.COMPARE_CELL_SIZE * 2.0); //cellSizeA + Math.max(Dense.COMPARE_CELL_SIZE); // limited area, assumed close already -- need some kind of error window in pixels
 	var needleMask = ImageMat.circleMask(needleSize);
 	var needleScaleCellToCompare = needleSize / cellSizeA;
@@ -915,7 +915,7 @@ var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	// global list of successful matches
 	var matches = [];
 	// grid of matching cells
-	var cellSizeA = 4; // 2 4 10 20 25 50 100
+	var cellSizeA = 2; // 2 4 10 20 25 50 100
 	var cellSizeB = cellSizeA;
 	var gridACols = Math.ceil(imageAWidth/cellSizeA);
 	var gridARows = Math.ceil(imageAHeight/cellSizeA);
@@ -1017,6 +1017,7 @@ Dense.addMatchToQueue = function(queue, match){
 	if(match.rank()>MAXIMUM_RANK){
 		return;
 	}
+	//console.log("ADD MATCH: "+featureA.point()+" => "+featureB.point()+" ["+scale+" | "+Code.degrees(angle)+"]      score: "+match.score()+" | rank: "+match.rank());
 	queue.push(match);
 }
 Dense.denseMatch_iteration = function(){
@@ -1188,7 +1189,7 @@ if(match){
 	//d.matrix().translate(800 + i*cellSizeA + diff.x, 0 + j*cellSizeA + diff.y);
 	//d.matrix().translate(800 + pA.x, 0 + pA.y);
 	//d.matrix().translate(0 + pA.x, 0 + pA.y);
-	d.matrix().translate(0 + pA.x, 0 + pA.y);
+	d.matrix().translate(0 + pA.x - cellSizeA*0.5, 0 + pA.y - cellSizeA*0.5);
 	GLOBALSTAGE.addChild(d);
 }
 		// check neighbor matches
@@ -1207,17 +1208,14 @@ Dense.addSatelliteFeature = function(pointA, pointB){
 	// Q score should be based not solely on the absolute matching score, but on how unique the match is compared to other neighbor matches (confidence)
 }
 Dense.checkAddNeighbors = function(cellA, cellB, queue, gridA, gridB, match){ // A = needle, B = haystack
-	//console.log("     checkAddNeighbors: "+gridA+" / "+gridB);
 var display = Dense.DISPLAY;
 Dense.BESTMATCHOFFX = 0;
 Dense.BESTMATCHOFFY += 130;
 	var neighborsA = cellA.neighbors();
-console.log("MATCH: "+match);
 	var offsetScaleMatch = match.scale();// TODO: get from matched neighbor & append: 2^[-0.1,0,0.1]
 	var offsetRotationMatch = match.rotation();// TODO: get from matched neighbor & append: [-10,0,10]
-	//if(match.cellA()!=cellA){ // opposite direction
-		var flipped = false;
-if(match.cellA()==cellB){ // opposite direction
+	var flipped = false;
+	if(match.cellA()==cellB){ // opposite direction
 		flipped = true;
 		offsetScaleMatch = 1.0/offsetScaleMatch;
 		offsetRotationMatch = -offsetRotationMatch;
@@ -1227,7 +1225,6 @@ if(match.cellA()==cellB){ // opposite direction
 	for(var i=0; i<neighborsA.length; ++i){
 		var neighborA = neighborsA[i];
 		if(neighborA.isJoined()){
-//			console.log("JOINED "+neighborA);
 			continue;
 		}
 		// create definitive feature for un-inited cells if not 
@@ -1257,11 +1254,10 @@ if(match.cellA()==cellB){ // opposite direction
 		}
 		var cellSizeA = Math.max(gridA.cellSize(),Dense.MINIMUM_CELL_SIZE);
 		var cellSizeB = Math.max(gridB.cellSize(),Dense.MINIMUM_CELL_SIZE);
-		//var needleSize = Math.max(cellSizeA,5);
-		var needleSize = Dense.COMPARE_CELL_SIZE;
+		var needleSize = Math.min(Dense.COMPARE_CELL_SIZE,cellSizeA);
 		var needleScaleCellToCompare = needleSize / cellSizeA;
-console.log("needleScaleCellToCompare: "+needleScaleCellToCompare);
-		var neighborhoodMagnitude = 4; // cellSizeA > 11 ? 4 : (cellSizeA * 2);
+		var neighborhoodMagnitude = 5; // cellSizeA > 11 ? 4 : (cellSizeA * 2);
+		// larger neighborhood decreases uniqueness odds
 		var haystackSize = needleSize * neighborhoodMagnitude; // 3x3 window + padding
 		// for small cell sizes (~ 1 px) neighborhood is tiny
 		
@@ -1346,8 +1342,6 @@ Dense.DISPLAY.addChild(d);
 				}else{
 					var match = new Dense.Match(featureA,featureB, score, uniqueness, scale,angle, neighborA, b);
 				}
-				console.log("ADD MATCH: "+featureA.point()+" => "+featureB.point()+" ["+scale+" | "+Code.degrees(angle)+"]      score: "+match.score()+" | rank: "+match.rank());
-				//queue.push(match);
 				Dense.addMatchToQueue(queue, match);
 			}
 		}
@@ -1888,7 +1882,9 @@ Dense.Match.prototype.checkPenalizeF = function(){ // TODO: THIS SHOULD GO TO WH
 */
 Dense.optimalNeedleHaystack = function(sourceN,sourceNWidth,sourceNHeight, needlePoint,needleWidth,needleHeight, needleMask, sourceH,sourceHWidth,sourceHHeight, haystackPoint,haystackWidth,haystackHeight,  type,  baseScale, baseAngle){ 
 	/*
-		TODO: USE F TO LIMIT SEARCH ANESERS:
+		TODO: USE F TO LIMIT SEARCH ANWSERS:
+
+		TODO: USE GRADIENT DISPARITY LIMIT TO SEARCH ANSWERS
 	*/
 	var angleRangeDeg = [-10, 0, 10];
 	var scaleRangeExp = [-0.1,0.0,0.1]; // 2^-0.2 = 0.87 | 2^-0.1 = 0.93
@@ -2150,6 +2146,7 @@ type = (type!==undefined && type!==null) ? type : def;
 // result[resultIndex] = sad;//sad;
 
 result[resultIndex] = sad / maskCount;
+//result[resultIndex] = nsad / maskCount;
 		}
 	}
 	return {"value":result,"width":resultWidth,"height":resultHeight};
@@ -2433,12 +2430,15 @@ Dense.uniqueness2 = function(needle,needleWidth,needleHeight,needleMask, haystac
 	*/
 
 	//var count25 = Math.floor(values.length * 0.25);
-	var samp = 3;
-	var starts = Math.floor(values.length*0.25/samp);
+	var carePortion = 0.25;
+	var careAmount = values.length*carePortion;
+	var sections = 3;
+	var starts = careAmount/sections;
+	var samps = 5;//Math.floor(careAmount);// this can be a lot
+	var skips = 0;//Math.floor(starts/samps);
 	var mag = 1.0;
-	for(i=0; i<samp; ++i){
-		//var s = Dense.slope(values, i*10, 5, 0);
-		var s = Dense.slope(values, i*starts, 5, 0);
+	for(i=0; i<sections; ++i){
+		var s = Dense.slope(values, Math.floor(i*starts), samps, skips);
 		mag = mag/s;
 	}
 	mag = Math.pow(mag,0.1);
@@ -2459,85 +2459,6 @@ Dense.uniqueness2 = function(needle,needleWidth,needleHeight,needleMask, haystac
 	// var minScore = values[0];
 	// mag = mag * minScore; 
 	return mag;
-
-	// short term slope (first 3~5)
-	// long term slope (first 10%) 
-	// long term / short term
-	// 0.1 / 2.5 = 0.04
-	// 0.2 / 0.5 = 0.4
-	// if equal -> 1 === bad
-	// if start faster -> 
-
-
-	var i;
-	var result = 0;
-	var count = 0;
-	var values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
-	if(!values || values.length<=1){
-		return MAX_SCORE;
-	}
-	var minValue = values[0];
-	var maxValue = values[values.length-1];
-	var rangeValue = maxValue - minValue;
-	if(rangeValue==0){
-		return MAX_SCORE;
-	}
-	var sad = 0.0;
-	for(i=0; i<values.length; ++i){
-		var value = values[i];
-		if(value===undefined || value===null){
-			continue;
-		}
-		var ideal = 1.0 - Math.exp(-0.95 * i / values.length);
-		var adjusted = (value - minValue)/rangeValue;
-		var diff = Math.abs(ideal-adjusted);
-		//sad += diff;
-		if(adjusted>0){
-			//sad += 1.0/adjusted;
-		}
-		sad += adjusted;
-	}
-	/*
-	https://brownmath.com/stat/shape.htm
-	https://en.wikipedia.org/wiki/Standardized_moment
-	https://en.wikipedia.org/wiki/Skewness
-	https://en.wikipedia.org/wiki/Kurtosis
-	https://www.spcforexcel.com/knowledge/basic-statistics/are-skewness-and-kurtosis-useful-statistics
-
-	distribution analysis:
-
-	skewness ~ pulled to side
-		- 3rd moment
-	kurtosis ~ pinched vertically - fatness of tails [normal kurtosis = 3] excess kurtosis = kertosis - 3
-		- 4th central moment
-	moment
-
-	0 skew = no swek
-	-skew = left
-	+skew = right
-
-	mean, median, mode
-
-
-	want a left-skewed (right heavy) (negative skew), mean < median < mode
-	
-	skew = sum( (x_i - avg)^3 / (n*s^3) )
-	avg = average
-	x_i = ith sample
-	n = total samples
-	s = stddev
-
-	kertosis = sum( (x_i - avg)^4 / (n*s^4) )
-
-	*/
-	// 0 / 99
-	// 1 / 98
-	// ... ?
-	sad = 1.0 / sad;
-	var result = sad / values.length;
-	// a low range is bad
-	//var result = sad * (1.0/rangeValue);
-	return result;
 }
 /*
 

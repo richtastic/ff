@@ -407,6 +407,47 @@ x display matching of A<->B
 x try on actual different image
 x determine what needle/haystack size to use based on cell size
 
+- use lattice/mesh to enforce locations
+	- global Q with all matches
+	- add each seed [ADD FXN]
+	- pop next best match off Q
+		- if satisfies constraints:
+			- doesn't cross lattice edge [only calculate with matched neighbors]
+			- is minimum of 0.N pixels from neighbor
+		=> set as matched point
+			- remove all local scores from Q
+			- for each neighbor:
+				- search local neighborhood as self.scale * cellSize * 4
+		- else:
+			- resolve by moving crossed neighbor & lowering score if average score is better
+			- or NO-OP
+
+
+	ADD FXN: [GOOD seeds don't need to, bad seeds might in order to readjust later]
+		- record top ~10 matches in neighborhood in local Q
+		- add top matches to global Q
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - how to use initial findings (@ cell size 1) to guide next findings (@ cell size 2)
 	- allow for possbile missmatches
 	- enforce more ordering constraints
@@ -482,6 +523,90 @@ when choosing a single dell match
 
 FUNDAMETNAL MATRIX ORDERING CONSTRAINT
 	- penzlize matches for distance from projected line ( *= 1+pixels)
+
+
+
+
+disparity gradient
+	- stero images:
+		- rL = vector from 2 points in left image
+		- rR = vector from 2 points in right image
+		- |rL - rR| / |rL + rR|
+	- only correct case if limit < 2
+
+	ALSO:
+	- disp(A)-disp(B) / S
+	- cyclopean separation S = distance between midpoints of each pair = [ .5*(x+x') + y^2 ]^.5
+
+
+disparity = difference in distance from (along) epipolar line?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1079,3 +1204,52 @@ points with a lot of 'good' /  matches ('similar' match scores) should be droppe
 
 
 
+
+
+
+
+REMOVED::
+
+
+
+
+	https://brownmath.com/stat/shape.htm
+	https://en.wikipedia.org/wiki/Standardized_moment
+	https://en.wikipedia.org/wiki/Skewness
+	https://en.wikipedia.org/wiki/Kurtosis
+	https://www.spcforexcel.com/knowledge/basic-statistics/are-skewness-and-kurtosis-useful-statistics
+
+	distribution analysis:
+
+	skewness ~ pulled to side
+		- 3rd moment
+	kurtosis ~ pinched vertically - fatness of tails [normal kurtosis = 3] excess kurtosis = kertosis - 3
+		- 4th central moment
+	moment
+
+	0 skew = no swek
+	-skew = left
+	+skew = right
+
+	mean, median, mode
+
+
+	want a left-skewed (right heavy) (negative skew), mean < median < mode
+	
+	skew = sum( (x_i - avg)^3 / (n*s^3) )
+	avg = average
+	x_i = ith sample
+	n = total samples
+	s = stddev
+
+	kertosis = sum( (x_i - avg)^4 / (n*s^4) )
+
+	*/
+	// 0 / 99
+	// 1 / 98
+	// ... ?
+	sad = 1.0 / sad;
+	var result = sad / values.length;
+	// a low range is bad
+	//var result = sad * (1.0/rangeValue);
+	return result;
