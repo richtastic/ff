@@ -5,7 +5,7 @@ function PriorityQueue(fxn, capacity){
 	this._tree = new RedBlackTree();
 	this.sorting(fxn);
 	this._tree.sortOnData(true);
-	this._capacity = capacity
+	this._capacity = capacity;
 }
 // --------------------------------------------------------------------------------------------------------------------
 PriorityQueue.prototype.sorting = function(fxn){

@@ -2594,7 +2594,7 @@ Dense.Lattice.prototype._indexFromColRow = function(col,row){
 	}
 	return null;
 }
-Dense.Transform = function(){
+Dense.Transform = function(to, scale,angle score, rank){
 	this._score = null;
 	this._rank = null;
 	this._to = null;
@@ -2637,12 +2637,18 @@ Dense.Vertex = function(lattice, row, col, from){
 	this._col = col;
 	this._pointFrom = null;
 	this._current = null;
-	this._matches = new PriorityQueue(Dense.Vertex._queueSorting, 10);
+	this._matches = [];
 	this.from(from);
 }
 Dense.Vertex.prototype.toString = function(){
 	var str = "[Vertex: "+this._col+","+this._row+" : "+this.from()+"=>"+this.to()+" @ "+this.scale()+" @"+this.angle()+" deg "+"]";
 	return str;
+}
+Dense.Vertex.prototype.lattice = function(l){
+	if(l!==undefined){
+		this._lattice = l;
+	}
+	return this._lattice;
 }
 Dense.Vertex.prototype.TL = function(){
 	return this._lattice.vertex(this._row-1,this._col-1);
@@ -2690,7 +2696,13 @@ Dense.Vertex.prototype.transform = function(t){
 	if(t!==undefined){
 		this._currentTransform = t;
 	}
-	return this._currentTransform;
+	return this._matches[this._currentTransform];
+}
+Dense.Vertex.prototype.transform = function(m){
+	if(m!==undefined){
+		this._matches = m;
+	}
+	return this._matches;
 }
 Dense.Vertex.prototype.to = function(t){
 	return this.transform().to(t);
@@ -2933,24 +2945,19 @@ Dense.vertexFromMatch = function(pointA,pointB, lattice){
 Dense.bestNeedlesInHaystack = function(vertex,haystackPoint){
 	var needlePoint = vertex.from();
 	var lattice = vertex.lattice();
-	var cellSize = lattice.cellSize();
+	var cellSize = Math.max(lattice.cellSize(), Dense.MINIMUM_CELL_SIZE);
 	var imageN = lattice.imageFrom();
 	var imageH = lattice.imageTo();
-	HERE:
 	var needleSize = cellSize;
 	var haystackSize = needleSize * 4;
 	var needleMask = ImageMat.circleMask(needleSize);
-	//
+	var needlePoint = vertex.to();
 	// use vertex.to and haystack middle to find top choices for 
 
-
-	vertex.setMatches(transforms);
-
-
-
-	???????
-TODO: GET TOP N PEAKS [10x] & keep as transforms
---- diffferent orientations & different locations
+	var queue = new PriorityQueue(Dense.Vertex._queueSorting, 10);
+	
+//TODO: GET TOP N PEAKS [10x] & keep as transforms
+//--- diffferent orientations & different locations
 
 
 	/*
@@ -2959,7 +2966,7 @@ TODO: GET TOP N PEAKS [10x] & keep as transforms
 		TODO: USE GRADIENT DISPARITY LIMIT TO SEARCH ANSWERS
 	*/
 	var angleRangeDeg = [-10, 0, 10];
-	var scaleRangeExp = [-0.1,0.0,0.1]; // 2^-0.2 = 0.87 | 2^-0.1 = 0.93
+	var scaleRangeExp = [-0.1,0.0,0.1];
 	var angle, scale;
 	var matrix = null;
 	var i, j, k;
@@ -2986,19 +2993,25 @@ TODO: GET TOP N PEAKS [10x] & keep as transforms
 				var width = scores.width;
 				var height = scores.height;
 			// this may have 0 peaks
-			var peaks = Code.findMinima2DFloat(values,width,height);
-			peaks = peaks.sort(function(a,b){ return a.z<b.z ? -1 : 1 });
-			if(peaks.length==0){
-				var info = Code.infoArray(values);
-				var index = info["indexMin"];
-				var xLoc = index % width;
-				var yLoc = index/width | 0;
-				var zLoc = info["min"];
-				var peak = new V3D(xLoc,yLoc,zLoc);
-				var peaks = [peak];
-			}
-// peak = peaks[0];
-// var loc = new V2D(peak.x + haystackPoint.x - (width-1)*0.5, peak.y + haystackPoint.y - (height-1)*0.5);
+			// var peaks = Code.findMinima2DFloat(values,width,height);
+			// peaks = peaks.sort(function(a,b){ return a.z<b.z ? -1 : 1 });
+
+			var uniqueness = ...
+			var rank = ;
+
+				for(k=0; k<values.length; ++k){
+					var transform = Dense.Transform();
+					transform.scale(scale);
+					transform.angle(angle);
+					transform.to( new V2D(peak.x, peak.y) );
+				}
+				// var info = Code.infoArray(values);
+				// var index = info["indexMin"];
+				// var xLoc = index % width;
+				// var yLoc = index/width | 0;
+				// var zLoc = info["min"];
+				// var peak = new V3D(xLoc,yLoc,zLoc);
+				// var peaks = [peak];
 			for(k=0; k<peaks.length; ++k){
 				var peak = peaks[k];
 				//console.log("scale: "+scale+"  angle: "+angle+" = "+peak.z+"");
@@ -3010,21 +3023,23 @@ TODO: GET TOP N PEAKS [10x] & keep as transforms
 					best["angle"] = angle;
 					best["score"] = bestScore;
 					best["location"] = new V2D(peak.x + haystackPoint.x - (width-1)*0.5, peak.y + haystackPoint.y - (height-1)*0.5);
-
+					
 
 				}
 				break; // only first
 			}
-
-
-
-
-
-
+	vertex.matches(queue.toArray());
+	vertex.transform(0);
+	return vertex.matches();
 }
 Dense.Vertex._queueSorting = function(a,b){
 	if(a===b){ return 0; }
-	return a.rank() < b.rank() ? -1 : 1;
+	var rankA = a.rank();
+	var rankB = b.rank();
+	if(rankA==rankB){
+		return a.score() < b.score() ? -1 : 1;
+	}
+	return rankA < rankB ? -1 : 1;
 }
 
 Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
