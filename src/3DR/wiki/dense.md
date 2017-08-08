@@ -408,16 +408,26 @@ x try on actual different image
 x determine what needle/haystack size to use based on cell size
 
 - use lattice/mesh to enforce locations
+	-- get entire list of best corners
+	-- generate LATTICE and assign each cell from point to best corner OR center
+
+
+	- HOW TO INCORPORATE F MATRIX RESTRICTION ???
+		- 
+
 	- global Q with all matches
 	- add each seed [ADD FXN]
 	- pop next best match off Q
 		- if satisfies constraints:
 			- doesn't cross lattice edge [only calculate with matched neighbors]
-			- is minimum of 0.N pixels from neighbor
+			- is minimum of 0.N pixels from neighbor [and perimiter line]
 		=> set as matched point
-			- remove all local scores from Q
+			- remove all local scores from global Q
 			- for each neighbor:
 				- search local neighborhood as self.scale * cellSize * 4
+				- F restriction affect rank:
+					- distance from projection line:
+						eg:   *  [ 1.0 + Math.max(distance - error,0) ]
 		- else:
 			- resolve by moving crossed neighbor & lowering score if average score is better
 			- or NO-OP
@@ -428,8 +438,7 @@ x determine what needle/haystack size to use based on cell size
 		- add top matches to global Q
 
 
-
-
+	.. 
 
 
 

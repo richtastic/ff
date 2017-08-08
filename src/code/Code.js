@@ -1098,6 +1098,15 @@ Code.arrayIntersect = function(c,a,b){ // c = a && b
 	}
 	return c;
 };
+Code.arrayPushNotEqual = function(a,o,v){
+	if(o!==v){
+		a.push(o);
+	}
+	return a;
+}
+Code.arrayPushNotNull = function(a,o){
+	Code.arrayPushNotEqual(a,o,null);
+}
 Code.arrayUnion = function(c,a,b){ // c = a + b
 	if(b===undefined){
 		b = a;

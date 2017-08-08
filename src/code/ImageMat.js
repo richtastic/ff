@@ -21,6 +21,7 @@ function ImageMat(wid, hei, r,g,b){
 ImageMat.prototype.init = function(wid,hei,r,g,b){
 	this._width = wid;
 	this._height = hei;
+	this._y = null; // hold for reuse
 	if(wid>0 && hei>0){
 		var len = wid*hei;
 		this._r = new Array(len);
@@ -38,6 +39,7 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 
 ImageMat.prototype.zeroAll = function(){
 	var i, len = this._width*this._height;
+	this._y = null;
 	for(i=0;i<len;++i){
 		this._r[i] = 0;
 		this._g[i] = 0;
@@ -50,11 +52,15 @@ ImageMat.prototype.to3Array = function(){
 ImageMat.prototype.unset = function(){
 	this._width = undefined;
 	this._height = undefined;
+	this._y = null;
 	this._r = null;
 	this._g = null;
 	this._b = null;
 }
 ImageMat.prototype.kill = function(){
+	if(this._y){
+		Code.emptyArray(this._y);
+	}
 	Code.emptyArray(this._r);
 	Code.emptyArray(this._g);
 	Code.emptyArray(this._b);
@@ -176,24 +182,30 @@ ImageMat.prototype.copy = function(){
 }
 ImageMat.prototype.red = function(r){
 	if(r!==undefined){
+		this._y = null;
 		Code.copyArray(this._r, r);
 	}
 	return this._r;
 }
 ImageMat.prototype.grn = function(g){
 	if(g!==undefined){
+		this._y = null;
 		Code.copyArray(this._g, g);
 	}
 	return this._g;
 }
 ImageMat.prototype.blu = function(b){
 	if(b!==undefined){
+		this._y = null;
 		Code.copyArray(this._b, b);
 	}
 	return this._b;
 }
 ImageMat.prototype.gry = function(){
-	return ImageMat.grayFromRGBFloat(this._r,this._g,this._b);
+	if(!this._y){
+		this._y = ImageMat.grayFromRGBFloat(this._r,this._g,this._b);
+	}
+	return this._y;
 }
 ImageMat.prototype.width = function(w){
 	// if(w!==undefined){
