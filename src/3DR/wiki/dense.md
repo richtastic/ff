@@ -408,12 +408,12 @@ x try on actual different image
 x determine what needle/haystack size to use based on cell size
 
 - use lattice/mesh to enforce locations
-	-- get entire list of best corners
-	-- generate LATTICE and assign each cell from point to best corner OR center
+	- use homography to estimate next best guess location for unassigned cells
+	- use angles to limit next choice ?
+	- use scales / relative distances to limit next choice?
+	- NEED SOME KIND OF READJUSTMENT TO BACKTRACK FROM BAD ASSIGNMENTS
+	- re-check uniqueness evaluation
 
-
-	- HOW TO INCORPORATE F MATRIX RESTRICTION ???
-		- 
 
 	- global Q with all matches
 	- add each seed [ADD FXN]

@@ -2264,6 +2264,25 @@ Code.getFloatGrnARGB = function(col){
 Code.getFloatBluARGB = function(col){
 	return (col&0xFF)/255.0;
 }
+Code.getFloatARGB = function(col){
+	var a = Code.getFloatAlpARGB(col);
+	var r = Code.getFloatRedARGB(col);
+	var g = Code.getFloatGrnARGB(col);
+	var b = Code.getFloatBluARGB(col);
+	return [a,r,g,b];
+}
+Code.linear2DColorARGB = function(x,y, colA,colB,colC,colD){
+	var tl = Code.getFloatARGB(colA);
+	var tr = Code.getFloatARGB(colB);
+	var bl = Code.getFloatARGB(colC);
+	var br = Code.getFloatARGB(colD);
+	var a = Code.linear2D(x,y, tl[0],tr[0],bl[0],br[0]);
+	var r = Code.linear2D(x,y, tl[1],tr[1],bl[1],br[1]);
+	var g = Code.linear2D(x,y, tl[2],tr[2],bl[2],br[2]);
+	var b = Code.linear2D(x,y, tl[3],tr[3],bl[3],br[3]);
+	var color = Code.getColARGBFromFloat(a,r,g,b);
+	return color;
+}
 Code.clampRound0255 = function(n){
 	return Math.min(Math.max(Math.round(n),0),255);
 }
@@ -5033,7 +5052,7 @@ Code.extrema3DInterpolate = function(loc, a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b
 	return loc;
 }
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------- SINGLE-FUNCTION INTERPOLATION
+// ------------------------------------------------------------------------------------------------------------------------------------- gb------------ SINGLE-FUNCTION INTERPOLATION
 Code.linear1DRatio = function(C, A,B){
 	return (C-A)/(B-A);
 }
@@ -5043,7 +5062,6 @@ Code.linear1D = function(t, A,B){
 Code.linear2D = function(x,y, A,B,C,D){
 	return Code.linear1D(y, Code.linear1D(x,A,B), Code.linear1D(x,C,D));
 }
-
 
 Code.lineSegCollinear2D = function(a,b, c,d){
 	var AB = V2D.sub(b,a);
