@@ -14,7 +14,7 @@ Voronoi.pointsEqualToEpsilon = function(a,b){
 	}
 	return false;
 }
-Voronoi.removeDuplicatePoints2D = function(array){
+Voronoi.removeDuplicatePoints2D = function(array, attachments){
 	var i, j, a, b, len = array.length;
 	for(i=0;i<len;++i){
 		a = array[i];
@@ -25,6 +25,10 @@ Voronoi.removeDuplicatePoints2D = function(array){
 				--len;
 				array[j] = array[len];
 				array.pop();
+				if(attachments){
+					attachments[j] = attachments[len];
+					attachments.pop();
+				}
 				--j;
 			}
 		}
@@ -59,19 +63,19 @@ Voronoi.sortPointsY = function(a,b){
 	}
 	return 0;
 }
-// Voronoi.prototype.fortune = function(points){
-// 	Voronoi.fortune(this,points);
-// }
 
-Voronoi.fortune = function(points){
+Voronoi.fortune = function(points, attachments){
 	var i, e, p;
  	points = Code.copyArray(points);
-	Voronoi.removeDuplicatePoints2D(points);
+	Voronoi.removeDuplicatePoints2D(points, attachments);
 	var Q = new Voronoi.Queue();
 	for(i=0; i<points.length;++i){
 		p = points[i];
 		e = new Voronoi.Event(p, Voronoi.EVENT_TYPE_SITE);
 		e.site( new Voronoi.Site(p) );
+		if(attachments){
+			e.site().data(attachments[i]);
+		}
 		Q.addEvent( e );
 	}
 	var T = new Voronoi.WaveFront();
@@ -86,7 +90,7 @@ Voronoi.fortune = function(points){
 			T.removeArcAtCircleWithDirectrixAndQueueAndGraph(next, directrix, Q, D);
 		}
 	}
-	D.removeDuplicates();
+	//D.removeDuplicates(); // this infitesimal points are actually needed for delauny generation
 	return D;
 }
 
@@ -98,8 +102,8 @@ Voronoi._circleEvent = function(Q,T,D,gamma){
 }
 
 
-Voronoi.delaunay = function(points){ // TODO: insertion-based delauny good for iteritive surface definition
-	var D = Voronoi.fortune(points);
+Voronoi.delaunay = function(points, attachments){ // TODO: insertion-based delauny good for iteritive surface definition
+	var D = Voronoi.fortune(points, attachments);
 	return D.triangulate();
 }
 
@@ -340,12 +344,10 @@ Voronoi.Arc.prototype.copy = function(a){ // identical
 }
 // -------------------------------------------------------------------------------------------------------------------- class
 Voronoi.Arc.isArcToLeftOfArc = function(a,b){
-	// console.log(a);
-	// console.log(b);
 	var avgA = a.intersectionAverage();
 	var avgB = b.intersectionAverage();
-	if(avgA==null || avgB==null){
-		return false;
+	if(avgA==null || avgB==null){ // no intersections
+		return a.center().point().x < b.center().point().x;
 	}
 	return avgA < avgB;
 }
@@ -670,6 +672,7 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 	var arc, node, list, i, left, center, right, edge, point, site;
 	point = siteEvent.point();
 	site = siteEvent.site();
+	//console.log(" \n"+queue+"\n");
 	if(this.isEmpty()){ // infiniarc(s)
 		var prevArc = null;
 		while(site){ // multiple initial sites with same y
@@ -889,16 +892,24 @@ Voronoi.WaveFront.prototype.toString = function(){
 
 // --------------------------------------------------------------------------------------------------------------------
 /* Site (Fortune) */
-Voronoi.Site = function(p){
+Voronoi.Site = function(p,d){
 	this._point = new V2D();
 	this._edges = [];
+	this._data = null;
 	this.point(p);
+	this.data(d);
 }
 Voronoi.Site.prototype.point = function(p){
 	if(p!==undefined){
 		this._point.copy(p);
 	}
 	return this._point;
+}
+Voronoi.Site.prototype.data = function(d){
+	if(d!==undefined){
+		this._data = d;
+	}
+	return this._data;
 }
 Voronoi.Site.prototype.addEdge = function(e){
 	this._edges.push(e);
@@ -1549,11 +1560,32 @@ Voronoi.EdgeGraph.prototype.triangulate = function(){ // tesselation / triangle 
 		for(j=0; j<edgesA.length; ++j){
 			var edgeA = edgesA[j];
 			var nextA = edgeA.next();
-			if(nextA){
-				var siteB = edgeA.opposite().site();
-				var pointB = siteB.point();
-				var siteC = nextA.opposite().site();
-				var pointC = siteC.point();
+			var prevA = edgeA.prev();
+			var edgeB = edgeA.opposite();
+			var prevB = edgeB.prev();
+			var nextB = edgeB.next();
+			var siteB = edgeB.site();
+			var pointB = siteB.point();
+			var siteCA = null;
+			var siteCB = null;
+			// NEXT
+			if(nextA && nextA.opposite()){
+				siteCA = edgeA.next().opposite().site();
+			}
+			if(prevB && prevB.opposite()){
+				siteCB = prevB.opposite().site();
+			}
+			// ELSE PREV
+			if(!nextA){
+				if(prevA && prevA.opposite()){
+					siteCA = prevA.opposite().site();
+				}
+				if(nextB && nextB.opposite()){
+					siteCB = nextB.opposite().site();
+				}
+			}
+			if(siteA && siteB && siteCA && (siteCA == siteCB)){ // guaranteeing consistency not necessary
+				var pointC = siteCA.point();
 				var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._pointSorting);
 				var tri = new Tri2D(list[0],list[1],list[2]);
 				triangles.insertObjectUnique(tri);				

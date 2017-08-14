@@ -75,30 +75,39 @@ Vor.prototype.voronoi = function(){
 	// points.push( new V2D(20,6) );
 
 // VALENCE 4 VERTEX IN HERE SOMEWHERE:
-	points.push( new V2D(-3,7) );
-	points.push( new V2D(-2,4) );
-	points.push( new V2D(-1,5) );
-	points.push( new V2D(-0.5,1) );
-	points.push( new V2D(0,3) );
-	points.push( new V2D(1,8) );
-	points.push( new V2D(2,4.5) );
-	points.push( new V2D(2.5,3) );
-	points.push( new V2D(3,7) );
-	points.push( new V2D(4,0) );
-	points.push( new V2D(4.5,4) );
-	points.push( new V2D(5,9) );
-	points.push( new V2D(6,2) );
-	points.push( new V2D(7,6) );
-	points.push( new V2D(7.5,3) );
-	points.push( new V2D(8,8) );
-	points.push( new V2D(9,6) );
-	points.push( new V2D(10,4) );
-	points.push( new V2D(11,3) );
-	points.push( new V2D(12,2) );
-	points.push( new V2D(13,0) );
-	points.push( new V2D(14,6) );
-	//points.push( new V2D(15,9) );
-	//points.push( new V2D(15.5,4) );
+	// points.push( new V2D(-3,7) );
+	// points.push( new V2D(-2,4) );
+	// points.push( new V2D(-1,5) );
+	// points.push( new V2D(-0.5,1) );
+	// points.push( new V2D(0,3) );
+	// points.push( new V2D(1,8) );
+	// points.push( new V2D(2,4.5) );
+	// points.push( new V2D(2.5,3) );
+	// points.push( new V2D(3,7) );
+	// points.push( new V2D(4,0) );
+	// points.push( new V2D(4.5,4) );
+	// points.push( new V2D(5,9) );
+	// points.push( new V2D(6,2) );
+	// points.push( new V2D(7,6) );
+	// points.push( new V2D(7.5,3) );
+	// points.push( new V2D(8,8) );
+	// points.push( new V2D(9,6) );
+	// points.push( new V2D(10,4) );
+	// points.push( new V2D(11,3) );
+	// points.push( new V2D(12,2) );
+	// points.push( new V2D(13,0) );
+	// points.push( new V2D(14,6) );
+	// points.push( new V2D(15,9) );
+	// points.push( new V2D(15.5,4) );
+
+
+// NEW TEST
+points.push( new V2D(226,87) );
+points.push( new V2D(172,107) );
+points.push( new V2D(216,154) );
+points.push( new V2D(22.5,166) );
+points.push( new V2D(361,183) );
+points.push( new V2D(18,225) );
 
 
 // TEST GROUP:
@@ -164,10 +173,11 @@ Vor.prototype.voronoi = function(){
 Voronoi.removeDuplicatePoints2D(points);
 //Voronoi.removePointsBelow(points, new V2D(0,5.0));
 	voronoi = new Voronoi();
-	var scale = 1*50.0;
+	var scale = 1;//1*30.0;
 	for(i=0;i<points.length;++i){
 		points[i].x *= scale;
 		points[i].y *= scale;
+		points[i].y -= 100;
 		this._root.addChild( Vor.makePoint(points[i]) );
 	}
 	// IF
@@ -192,15 +202,50 @@ if(false){
 GLOBALSTAGE = this._root;
 	//var triangles = Voronoi.delaunay(ponits);
 	var display = GLOBALSTAGE;
+	
+/*
+var sites = this._D.sites();
+for(i=0; i<sites.length; ++i){
+	var site = sites[i];
+	//if(true){
+	//if(i==0){ // 0, 1, 2, 6, 7, 11
+		var edges = site.edges();
+		for(j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			console.log(edge.vertexA()+" => "+edge.vertexB());
+			var a = edge.site();
+			var b = edge.opposite().site();
+			display.graphics().beginPath();
+			display.graphics().setLine(5.0,0xFF00FF00);
+			//display.graphics().setFill(0x330000FF);
+			display.graphics().moveTo(a.point().x,a.point().y);
+			display.graphics().lineTo(b.point().x,b.point().y);
+			display.graphics().endPath();
+			display.graphics().strokeLine();
+			display.graphics().fill();
+		}
+	//}
+}
+*/
+
 	var triangles = this._D.triangulate();
+	// OR
+	// var d = new Delaunay();
+	// d.fromVoronoi(this._D.sites(),this._D.edges());
+	// var triangles = d.triangles();
+
 	for(i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
+		//tri.jitter(20);
 		var pointA = tri.A();
 		var pointB = tri.B();
 		var pointC = tri.C();
+			// pointA = pointA.point();
+			// pointB = pointB.point();
+			// pointC = pointC.point();
 		display.graphics().beginPath();
 		display.graphics().setLine(1.0,0xFFFF0000);
-		display.graphics().setFill(0x330000FF);
+		display.graphics().setFill(0x110000FF);
 		display.graphics().moveTo(pointA.x,pointA.y);
 		display.graphics().lineTo(pointB.x,pointB.y);
 		display.graphics().lineTo(pointC.x,pointC.y);
@@ -212,19 +257,8 @@ GLOBALSTAGE = this._root;
 	display.graphics().beginPath();
 	display.graphics().setLine(2.0,0xFF00FF00);
 	display.graphics().drawPolygon(convexHull,true);
-	// for(i=0; i<convexHull.length; ++i){
-	// 	//var point = convexHull[(i+1)%convexHull.length];
-	// 	var point = convexHull[i];
-	// 	if(i==0){
-	// 		display.graphics().moveTo(point.x,point.y);
-	// 	}else{
-	// 		display.graphics().lineTo(point.x,point.y);
-	// 	}
-	// }
-	//
-	//display.graphics().endPath();
 	display.graphics().strokeLine();
-	//
+	
 
 	this._D.finalize(this._animParabolas);
 		this._animParabolas.graphics().clear();
@@ -301,7 +335,7 @@ Vor.prototype.animation_tick = function(t){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 420;//420;
+	var offYStart = 400;//420;
 	var rateStart = 0.5;//12.5;
 
 
@@ -312,7 +346,8 @@ Vor.prototype.animation_tick = function(t){
 var looped = false;
 		while(next && next.point().y>this._directrix.y){
 looped = true;
-//console.log(this._Q.toString()+"    + "+this._directrix.toString());
+//console.log(" \n"+this._Q.toString()+"    + "+this._directrix.toString());
+// console.log(" TREE A:\n"+this._T._tree+"\n");
 var temp = new V2D(this._directrix.x,this._directrix.y);
 			e = this._Q.next();
 this._directrix.copy( e.point() );
@@ -328,6 +363,9 @@ this._directrix.copy( temp );
 		if(looped){ // pause at event
 			this._ticker.stop();
 		}
+		console.log(" TREE B:\n"+this._T._tree+"\n");
+		//console.log(" TREE B:\n"+this._T._tree.toArray()+"\n");
+
 	}else{
 		this._ticker.stop();
 console.log("FINALIZE!");

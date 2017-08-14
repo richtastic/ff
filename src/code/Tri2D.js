@@ -45,6 +45,7 @@ Tri2D.prototype.center = function(){ // barycenter
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri2D.prototype.jitter = function(amplitude){
+	amplitude = amplitude!==undefined ? amplitude : 1.0;
 	this._a = this._a.copy();
 	this._b = this._b.copy();
 	this._c = this._c.copy();

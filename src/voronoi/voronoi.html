@@ -9,7 +9,7 @@ function pageLoadedFxn(){
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
-	var list = ["Vertex.js","Edge.js","Graph.js","Voronoi.js","Delaunay.js","Vor.js"];
+	var list = ["Vertex.js","Edge.js","Graph.js","Delaunay.js","Vor.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }

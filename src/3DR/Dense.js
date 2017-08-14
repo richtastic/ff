@@ -3319,6 +3319,7 @@ Dense.visualizeLattice = function(lattice, display){
 	var colorBR = 0xFF000000;
 	var cell;
 
+
 			// var cells = lattice.allValidCells(null, 14);
 			// var pointsA = [];
 			// var pointsB = [];
@@ -3644,6 +3645,40 @@ Dense.visualizeLattice = function(lattice, display){
 			*/
 		}
 	}
+
+
+	var cells = lattice.allValidCells(null);
+	var points = [];
+	for(i=0; i<cells.length; ++i){
+		cell = cells[i];
+		points.push(cell.from());
+	}
+	// console.log(points+"");
+	// for(i=0; i<points.length; ++i){
+	// 	console.log("points.push( new V2D("+points[i].x+","+points[i].y+") );");
+	// }
+
+	console.log("ATTACH THE CELLS TO THE POINTS");
+	if(points.length>=3){
+		var triangulation = Voronoi.delaunay(points, cells);
+		console.log(triangulation);
+		var triangles = triangulation;
+		for(i=0; i<triangles.length; ++i){
+			var tri = triangles[i];
+			console.log(tri+"")
+				d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(2.0, 0xFFFF0000);
+				d.graphics().beginPath();
+				d.graphics().drawPolygon([tri.A(),tri.B(),tri.C()], true);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				display.addChild(d);
+				//d.matrix().translate(offX,offY);
+		}
+	}
+
+
 	// for each vertex
 	// 	draw self solid/open if joined/nonjoined
 	// 	draw dotted lines to unlinked neighbors

@@ -12,11 +12,11 @@ Delaunay.prototype.vertexes = function(){
 	return this._vertexes;
 }
 // -----------------------------------------------------------------------------------
-Delaunay.prototype.fromVoronoi = function(voronoi){ // Voronoi.EdgeGraph
+Delaunay.prototype.fromVoronoi = function(sites, edges){ // Voronoi.EdgeGraph
 	var i, len, sites, site, edges, edge, prev, firstEdge, tri;
 	Code.emptyArray(this._vertexes);
 	Code.emptyArray(this._triangles);
-	sites = voronoi.sites();
+//	sites = voronoi.sites();
 	// less than 3 sites, nothing to do:
 	if(sites.length<3){
 		return;
@@ -28,7 +28,7 @@ Delaunay.prototype.fromVoronoi = function(voronoi){ // Voronoi.EdgeGraph
 		site.vertex = new Delaunay.Vertex(site.point());
 	}
 	// zero out all edge triangle counts
-	edges = voronoi.edges();
+//	edges = voronoi.edges();
 	len = sites.length;
 	for(i=0;i<len;++i){
 		edges[i].triangle = 0;
@@ -67,6 +67,7 @@ count = 0;
 	// half-infinite edges have a max value of 1
 	// regular edges have a max value of 2
 			//if( edge.triangle<2 && edge.next().triangle<2 && edge.opposite().prev().triangle<2 ){
+		if(edge.next() && edge.next().next() && edge.prev()){
 				var limitA = (edge.next().opposite()&&edge.prev().opposite())?2:1;
 				var limitB = (edge.next().next().opposite()&&edge.opposite())?2:1;
 				var limitC = (edge.opposite().next().opposite()&&edge.opposite().prev().opposite())?2:1;
@@ -91,6 +92,7 @@ count = 0;
 				edge.opposite().prev().triangle++;
 				edge.opposite().prev().opposite().triangle++;
 			}
+		}
 			// mark edge with triangle-edge for non-duplication and later connections
 			edge = edge.next();
 			if( edge==firstEdge){
@@ -102,13 +104,13 @@ count = 0;
 count = 0;
 	}
 	// clear site simple vertexes
-	sites = voronoi.sites();
+	//sites = voronoi.sites();
 	len = sites.length;
 	for(i=0;i<len;++i){
 		sites[i].vertex = null;
 	}
 	// clear all edge triangle counts
-	edges = voronoi.edges();
+	//edges = voronoi.edges();
 	len = edges.length;
 	for(i=0;i<len;++i){
 		edges[i].triangle = 0;
