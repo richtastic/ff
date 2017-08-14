@@ -649,7 +649,7 @@ Alone, this will create each triangle 3 times, but doing some limiting based on 
 <br/>
 [Voronoy](http://www.google.com/search?q=voronoy)
 <br/>
-[Delaunay](http://www.google.com/search?q=Robert+Delaunay)
+[Delaunay](http://www.google.com/search?q=Boris+Delaunay)
 <br/>
 [Fortune's Algorithm](http://www.google.com/search?q=Steven+Fortune+Algorithm)
 <br/>

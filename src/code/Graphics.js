@@ -181,6 +181,18 @@ Graphics.prototype.bezierTo = function(a,b, c,d, e,f){
 		this._graphics.push( Code.newArray(Graphics.canvasBezierCurveTo,Code.newArray(a,b,c,d,e,f)) );
 	}
 }
+Graphics.prototype.drawPolygon = function(pointList,loop){
+	var i, len = pointList.length;
+	var count = loop ? pointList.length+1 : pointList.length;
+	for(i=0; i<count; ++i){
+		p = pointList[i%len];
+		if(i==0){
+			this.moveTo(p.x,p.y);
+		}else{
+			this.lineTo(p.x,p.y);
+		}
+	}
+}
 Graphics.prototype.arc = function(pX,pY, rad, sA,eA, cw){
 	this._graphics.push( Code.newArray(Graphics.arc,Code.newArray(pX,pY, rad, sA,eA, cw)) );
 }

@@ -63,10 +63,7 @@ Voronoi.sortPointsY = function(a,b){
 // 	Voronoi.fortune(this,points);
 // }
 
-
-
 Voronoi.fortune = function(points){
-	console.log("fortune ... ");
 	var i, e, p;
  	points = Code.copyArray(points);
 	Voronoi.removeDuplicatePoints2D(points);
@@ -81,26 +78,16 @@ Voronoi.fortune = function(points){
 	var D = new Voronoi.EdgeGraph();
 	var directrix = new V2D();
 	while( !Q.isEmpty() ){
-		console.log("Q1: "+Q);
 		var next = Q.next();
-		console.log("next:"+next);
 		directrix.copy( next.point() );
-		console.log(directrix+"");
 		if(next.isSiteEvent()){
-			console.log("site");
 			T.addArcAboveSiteAndDirectrixAndQueueAndGraph(next, directrix, Q, D);
 		}else{
-			console.log("circ");
 			T.removeArcAtCircleWithDirectrixAndQueueAndGraph(next, directrix, Q, D);
 		}
 	}
 	D.removeDuplicates();
-	// var site, sites, edge, edges, A, B;
-	// sites = D.sites();
-
 	return D;
-
-
 }
 
 Voronoi._siteEvent = function(Q,T,D,p){
@@ -111,9 +98,9 @@ Voronoi._circleEvent = function(Q,T,D,gamma){
 }
 
 
-Voronoi.prototype.delaunay = function(points){
-	console.log("delaunay ... ");
-	// ...
+Voronoi.delaunay = function(points){ // TODO: insertion-based delauny good for iteritive surface definition
+	var D = Voronoi.fortune(points);
+	return D.triangulate();
 }
 
 
@@ -1527,13 +1514,103 @@ if(infiniEdges.length==1){
 		} // if
 	} // sites
 }
+Voronoi.EdgeGraph._pointSorting = function(a,b){
+	if(a.x==b.x){
+		if(a.y==b.y){
+			return 0;
+		}else if(a.y<b.y){
+			return -1;
+		} // a.y > b.y
+		return 1;
+	}else if(a.x<b.x){
+		return -1;
+	} // a0.x > b0.x
+	return 1;
+}
+Voronoi.EdgeGraph._triangleSorting = function(a,b){
+	var eq0 = Voronoi.EdgeGraph._pointSorting(a.A(),b.A());
+	if(eq0==0){
+		var eq1 = Voronoi.EdgeGraph._pointSorting(a.B(),b.B());
+		if(eq1==0){
+			return Voronoi.EdgeGraph._pointSorting(a.C(),b.C());
+		}
+		return eq1;
+	}
+	return eq0;
+}
+Voronoi.EdgeGraph.prototype.triangulate = function(){ // tesselation / triangle set [] of cells
+	var triangles = new RedBlackTree(Voronoi.EdgeGraph._triangleSorting);
+	var i, j;
+	var sites = this._sites;
+	for(i=0; i<sites.length; ++i){
+		var siteA = sites[i];
+		var edgesA = siteA.edges();
+		var pointA = siteA.point();
+		for(j=0; j<edgesA.length; ++j){
+			var edgeA = edgesA[j];
+			var nextA = edgeA.next();
+			if(nextA){
+				var siteB = edgeA.opposite().site();
+				var pointB = siteB.point();
+				var siteC = nextA.opposite().site();
+				var pointC = siteC.point();
+				var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._pointSorting);
+				var tri = new Tri2D(list[0],list[1],list[2]);
+				triangles.insertObjectUnique(tri);				
+			}
+		}
+	}
+	triangles = triangles.toArray();
+	return triangles; // TODO: keep track of hull points (have a prev==null or next==null)
+}
 
-Voronoi.EdgeGraph.prototype.convexHull = function(root){
-	var siteList = [];
-	// go about perimeter from some start site back to itself
-	// first edge: .prev()-most finite edge
-	// rotate edge till .next()-most finite edge
-	return siteList;
+Voronoi.EdgeGraph.prototype.convexHull = function(){ // convex hull = set of all points that have infinite edges
+	var pointList = [];
+	var sites = this._sites;
+	var i, j, k;
+	for(i=0; i<sites.length; ++i){ // find first site with an edge.next == null
+		var site0 = sites[i];
+		var edges0 = site0.edges();
+		for(j=0; j<edges0.length; ++j){
+			var edge0 = edges0[j];
+			if(edge0.next()==null){
+				pointList.push(site0.point());
+				var sitePrev = site0;
+				var site = edge0.opposite().site();
+				var iterations = 0;
+				while(site){ // go about perimeter from some start site back to initial site
+					++iterations;
+					if(iterations>1E4){ // TODO: REMOVE ERROR CHECK
+						console.log("fix me");
+						break;
+					}
+					if(site==site0){
+						return pointList;
+					}
+					pointList.push(site.point());
+					var edges = site.edges();
+					for(k=0; k<edges.length; ++k){
+						var edge = edges[k];
+						// if(edge.prev()==null){
+						// 	if(edge.opposite().site() != sitePrev){
+						// 		site = edge.opposite().site();
+						// 		break;
+						// 	}
+						// }
+						if(edge.next()==null){
+							if(edge.opposite().site() != sitePrev){
+								sitePrev = site;
+								site = edge.opposite().site();
+								break;
+							}
+						}
+					}
+				}
+				return pointList;
+			}
+		}
+	}
+	return pointList;
 }
 
 /*

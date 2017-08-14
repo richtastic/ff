@@ -227,17 +227,23 @@ RedBlackTree.prototype.rotateRight = function(node){
 	this.updateAfterRotation(b);
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.prototype.insertObject = function(o){
+RedBlackTree.prototype.insertObjectUnique = function(o){
+	return this.insertObject(o, true);
+}
+RedBlackTree.prototype.insertObject = function(o, unique){
 	var node = new RedBlackTree.Node(o);
-	this.insertNode(node);
+	node = this.insertNode(node, unique);
 	return node;
 }
-RedBlackTree.prototype.insertNode = function(newNode){
+RedBlackTree.prototype.insertNode = function(newNode, unique){
 	var fxn = this._sorting;
 	var value, node = this.root(), parent = this.nil(), o = newNode.data();
 	while( !this.isNil(node) ){
 		parent = node;
 		value = this._sortOnData ? fxn(o,node.data()) : fxn(newNode,node);
+		if(value==0 && unique){ // found dup, don't insert
+			return null;
+		}
 		if(value<0){ node = node.left();
 		}else{ node = node.right(); }
 	}
@@ -262,6 +268,7 @@ RedBlackTree.prototype.insertNode = function(newNode){
 			this.popMaximum();
 		}
 	}
+	return newNode;
 }
 RedBlackTree.prototype._insertFixup = function(node){
 	var sib;
