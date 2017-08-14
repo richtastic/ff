@@ -898,6 +898,13 @@ Voronoi.Site = function(p,d){
 	this._data = null;
 	this.point(p);
 	this.data(d);
+	this._index = null;
+}
+Voronoi.Site.prototype.index = function(i){
+	if(i!==undefined){
+		this._index = i;
+	}
+	return this._index;
 }
 Voronoi.Site.prototype.point = function(p){
 	if(p!==undefined){
@@ -1525,6 +1532,9 @@ if(infiniEdges.length==1){
 		} // if
 	} // sites
 }
+Voronoi.EdgeGraph._siteSorting = function(a,b){
+	return Voronoi.EdgeGraph._pointSorting(a.point(), b.point());
+}
 Voronoi.EdgeGraph._pointSorting = function(a,b){
 	if(a.x==b.x){
 		if(a.y==b.y){
@@ -1539,11 +1549,11 @@ Voronoi.EdgeGraph._pointSorting = function(a,b){
 	return 1;
 }
 Voronoi.EdgeGraph._triangleSorting = function(a,b){
-	var eq0 = Voronoi.EdgeGraph._pointSorting(a.A(),b.A());
+	var eq0 = Voronoi.EdgeGraph._pointSorting(a[0].point(),b[0].point());
 	if(eq0==0){
-		var eq1 = Voronoi.EdgeGraph._pointSorting(a.B(),b.B());
+		var eq1 = Voronoi.EdgeGraph._pointSorting(a[1].point(),b[1].point());
 		if(eq1==0){
-			return Voronoi.EdgeGraph._pointSorting(a.C(),b.C());
+			return Voronoi.EdgeGraph._pointSorting(a[2].point(),b[2].point());
 		}
 		return eq1;
 	}
@@ -1553,6 +1563,10 @@ Voronoi.EdgeGraph.prototype.triangulate = function(){ // tesselation / triangle 
 	var triangles = new RedBlackTree(Voronoi.EdgeGraph._triangleSorting);
 	var i, j;
 	var sites = this._sites;
+	for(i=0; i<sites.length; ++i){
+		var site = sites[i];
+		site.index(i);
+	}
 	for(i=0; i<sites.length; ++i){
 		var siteA = sites[i];
 		var edgesA = siteA.edges();
@@ -1585,18 +1599,79 @@ Voronoi.EdgeGraph.prototype.triangulate = function(){ // tesselation / triangle 
 				}
 			}
 			if(siteA && siteB && siteCA && (siteCA == siteCB)){ // guaranteeing consistency not necessary
-				var pointC = siteCA.point();
-				var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._pointSorting);
-				var tri = new Tri2D(list[0],list[1],list[2]);
-				triangles.insertObjectUnique(tri);				
+				// var pointC = siteCA.point();
+				// pointA = new V2D(pointA.x,pointA.y);
+				//	pointA._data = siteA.data();
+				// pointB = new V2D(pointB.x,pointB.y);
+				//	pointB._data = siteB.data();
+				// pointC = new V2D(pointC.x,pointC.y);
+				//	pointC._data = siteCA.data();
+				//var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._pointSorting);
+				//var tri = new Tri2D(list[0],list[1],list[2]);
+				pointA = siteA;
+				pointB = siteB;
+				pointC = siteCA;
+				var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._siteSorting);
+				triangles.insertObjectUnique(list);
 			}
 		}
 	}
 	triangles = triangles.toArray();
-	return triangles; // TODO: keep track of hull points (have a prev==null or next==null)
+	var tris = [];
+	var data = [];
+	var points = [];
+	var perimeters = [];
+	var rays = [];
+	for(i=0; i<sites.length; ++i){
+		var site = sites[i];
+		points[i] = site.point();
+		data[i] = site.data();
+		var edges = site.edges();
+		var perimeter = false;
+		for(j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			if(edge.prev()==null || edge.next()==null){
+				perimeter = true;
+			}
+		}
+		perimeters[i] = perimeter;
+		rays[i] = null;
+	}
+	for(i=0; i<triangles.length; ++i){
+		var sites = triangles[i];
+		var siteA = sites[0];
+		var siteB = sites[1];
+		var siteC = sites[2];
+		var tri = [siteA.index(), siteB.index(), siteC.index()];
+		tris[i] = tri;
+	}
+	var hull = this._convexSites();
+	for(i=0; i<=hull.length; ++i){
+		var site = hull[ i%hull.length ];
+		prev = hull[ (i-1+hull.length)%hull.length ];
+		next = hull[ (i+1)%hull.length ];
+		var v1 = V2D.sub(site.point(),prev.point());
+			v1.norm();
+		var v2 = V2D.sub(site.point(),next.point());
+			v2.norm();
+		var angle = V2D.angleDirection(v2,v1) * 0.5;
+		ray = V2D.rotate(v2.copy(),angle)
+		rays[site.index()] = ray;
+	}
+	for(i=0; i<hull.length; ++i){
+		hull[i] = hull[i].index();
+	}
+	return {"points":points, "triangles":tris, "datas":data, "perimeters":perimeters, "perpendiculars":rays, "convexHull":hull};
 }
-
-Voronoi.EdgeGraph.prototype.convexHull = function(){ // convex hull = set of all points that have infinite edges
+Voronoi.EdgeGraph.prototype.convexHull = function(){ 
+	var sites = this._convexSites();
+	var i, len = sites.length;
+	for(i=0; i<len; ++i){
+		sites[i] = sites[i].point();
+	}
+	return sites;
+}
+Voronoi.EdgeGraph.prototype._convexSites = function(){ // convex hull = set of all points that have infinite edges
 	var pointList = [];
 	var sites = this._sites;
 	var i, j, k;
@@ -1606,7 +1681,8 @@ Voronoi.EdgeGraph.prototype.convexHull = function(){ // convex hull = set of all
 		for(j=0; j<edges0.length; ++j){
 			var edge0 = edges0[j];
 			if(edge0.next()==null){
-				pointList.push(site0.point());
+				//pointList.push(site0.point());
+				pointList.push(site0);
 				var sitePrev = site0;
 				var site = edge0.opposite().site();
 				var iterations = 0;
@@ -1619,7 +1695,8 @@ Voronoi.EdgeGraph.prototype.convexHull = function(){ // convex hull = set of all
 					if(site==site0){
 						return pointList;
 					}
-					pointList.push(site.point());
+					//pointList.push(site.point());
+					pointList.push(site);
 					var edges = site.edges();
 					for(k=0; k<edges.length; ++k){
 						var edge = edges[k];

@@ -109,7 +109,8 @@ V2D.norm = function(a,b){
 		a = b.copy();
 	}
 	a.copy(b);
-	V2D.prototype.norm.apply(a);
+	//V2D.prototype.norm.apply(a);
+	a.norm();
 	return a;
 }
 V2D.angle = function(a,b){

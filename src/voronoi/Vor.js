@@ -102,12 +102,16 @@ Vor.prototype.voronoi = function(){
 
 
 // NEW TEST
-points.push( new V2D(226,87) );
-points.push( new V2D(172,107) );
-points.push( new V2D(216,154) );
-points.push( new V2D(22.5,166) );
-points.push( new V2D(361,183) );
+// points.push( new V2D(226,87) );
+// points.push( new V2D(172,107) );
+// points.push( new V2D(216,154) );
+// points.push( new V2D(22.5,166) );
+// points.push( new V2D(361,183) );
+// points.push( new V2D(18,225) );
+
 points.push( new V2D(18,225) );
+points.push( new V2D(172,107) );
+points.push( new V2D(22.5,166) );
 
 
 // TEST GROUP:
@@ -228,7 +232,13 @@ for(i=0; i<sites.length; ++i){
 }
 */
 
-	var triangles = this._D.triangulate();
+	
+	var triangulate = this._D.triangulate();
+	var triangles = triangulate["triangles"];
+	var points = triangulate["points"];
+	var perimeters = triangulate["perimeters"];
+	var rays = triangulate["perpendiculars"];
+	//
 	// OR
 	// var d = new Delaunay();
 	// d.fromVoronoi(this._D.sites(),this._D.edges());
@@ -236,10 +246,13 @@ for(i=0; i<sites.length; ++i){
 
 	for(i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
+		var pointA = points[tri[0]];
+		var pointB = points[tri[1]];
+		var pointC = points[tri[2]];
 		//tri.jitter(20);
-		var pointA = tri.A();
-		var pointB = tri.B();
-		var pointC = tri.C();
+		// var pointA = tri.A();
+		// var pointB = tri.B();
+		// var pointC = tri.C();
 			// pointA = pointA.point();
 			// pointB = pointB.point();
 			// pointC = pointC.point();
@@ -253,6 +266,26 @@ for(i=0; i<sites.length; ++i){
 		display.graphics().strokeLine();
 		display.graphics().fill();
 	}
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
+		var perimeter = perimeters[i];
+		var ray = rays[i];
+		console.log(point,perimeter,ray);
+		if(ray){
+			ray = ray.copy().scale(100.0);
+			var fr = points[i];
+			var to = V2D.add(fr,ray);
+			d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(2.0, 0xFF0000BB);
+			d.graphics().beginPath();
+			d.graphics().drawPolygon([fr,to]);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			display.addChild(d);
+		}
+	}
+
 	var convexHull = this._D.convexHull();
 	display.graphics().beginPath();
 	display.graphics().setLine(2.0,0xFF00FF00);

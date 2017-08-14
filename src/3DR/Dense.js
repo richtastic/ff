@@ -183,6 +183,9 @@ pointsB = [
 Dense.DISPLAY = new DO();
 GLOBALSTAGE.addChild(Dense.DISPLAY);
 
+
+	GLOBALSTAGE.root().matrix().identity().translate(100,100);
+
 	//GLOBALSTAGE.root().matrix().scale(1.5);
 	//this.testFeatureComparison(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testImageScaling(imageMatrixA,pointsA);
@@ -3320,156 +3323,88 @@ Dense.visualizeLattice = function(lattice, display){
 	var cell;
 
 
-			// var cells = lattice.allValidCells(null, 14);
-			// var pointsA = [];
-			// var pointsB = [];
-			// for(k=0; k<cells.length; ++k){
-			// 	cell = cells[k];
-			// 	pointsA.push(cell.from());
-			// 	pointsB.push(cell.to());
-			// }
-			// console.log("COUNT: "+pointsA.length);
-			// var H = R3D.homographyFromPoints(pointsA,pointsB);
+	var cells = lattice.allValidCells(null);
+	var points = [];
+	for(i=0; i<cells.length; ++i){
+		cell = cells[i];
+		points.push(cell.from());
+	}
+
+	var interpolator = new Dense.Interpolator(cells);
 	for(j=0; j<rows; ++j){
 		for(i=0; i<cols; ++i){
 			var vertex = lattice.vertex(i,j);
 			var from = vertex.from();
 			var to = vertex.to();
-
-
-			//var cells = lattice.allValidCells(vertex.from(), 3); // 3-5
-			var cells = lattice.allValidCells(vertex.from(), 3); // 
-			var info = [];
-			var distFT = 0;
-
-			vertex._projected = new V2D(from.x,from.y);
-			// barycentric
-			if(cells.length==1){
-				cell = cells[0];
-				var originA = cell.from();
-				var originB = cell.to();
-				var angle = cell.angle();
-				var scale = cell.scale();
+			var nextPos = new V2D(0,0);
+			var interp = interpolator.value(from);
+			for(k=0; k<interp.length; ++k){
+				var int = interp[k];
+				var c = int["value"];
+				var p = int["percent"];
+				var originA = c.from();
+				var originB = c.to();
+				var angle = c.angle();
+				var scale = c.scale();
 				var relativeDirA = V2D.sub(from,originA);
-				var nextPos = relativeDirA.copy().rotate(angle).scale(scale).add(originB);
-				vertex._projected = nextPos;
-			}else if(cells.length==2){
-				var cell0 = cells[0];
-				var cell1 = cells[1];
-				var origin0A = cell0.from();
-				var origin0B = cell0.to();
-				var origin1A = cell1.from();
-				var origin1B = cell1.to();
-				var angle0 = cell0.angle();
-				var scale0 = cell0.scale();
-				var angle1 = cell1.angle();
-				var scale1 = cell1.scale();
-				// 
-				var relativeDir0A = V2D.sub(from,origin0A);
-				var relativeDir1A = V2D.sub(from,origin1A);
-				var nextPos0 = relativeDir0A.copy().rotate(angle0).scale(scale0).add(origin0B);
-				var nextPos1 = relativeDir1A.copy().rotate(angle1).scale(scale1).add(origin1B);
-				var len0A = relativeDir0A.length();
-				var len1A = relativeDir1A.length();
-				var lensA = len0A + len1A;
-				var p0 = 1 - len0A/lensA;
-				var p1 = 1 - len1A/lensA;
-				nextPos0.scale(p0);
-				nextPos1.scale(p1);
-				var nextPos = V2D.add(nextPos0,nextPos1);
-				vertex._projected = nextPos;
-				//vertex._projected = new V2D(from.x,from.y);
-			}else{
-				var points = "";
-				var nextPos = new V2D(0,0);
-				var inside = Code.isPointInsideTri2D(from, cells[0].from(),cells[1].from(),cells[2].from());
-				if(inside){
-					var areaTotal = V2D.areaTri(cells[0].from(),cells[1].from(),cells[2].from());
-					for(k=0; k<3; ++k){
-						cell = cells[k];
-						var area = V2D.areaTri(cells[(k+1)%3].from(),cells[(k+2)%3].from(),from);
-						var percent = area / areaTotal;
-						var originA = cell.from();
-						var originB = cell.to();
-						var relativeDirA = V2D.sub(from,originA);
-						var originA = cell.from();
-						var originB = cell.to();
-						var angle = cell.angle();
-						var scale = cell.scale();
-						var relativeDirA = V2D.sub(from,originA);
-						var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB);
-						pos.scale(percent);
-						nextPos.add(pos);
-					}
-
-					vertex._projected = nextPos;
-				}else{ // outside == use closest side
-					//vertex._projected = new V2D(0,0);
-				}
+				var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
+				//var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB);
+				nextPos.add(pos);
 			}
-
-
-			// distance based
-			var cells = lattice.allValidCells(vertex.from(), 3); // 3-5
-			for(k=0; k<cells.length; ++k){
-				cell = cells[k];
-				distFr = V2D.distance(cell.from(),from);
-				distFr = distFr * distFr; // best
-				//distFr = Math.sqrt(distFr); // worst
-				if(distFr<1E-6){
-					info = [[1, cell.from(), cell.to(), from, to, V2D.sub(cell.to(),cell.from()) ]];
-					distFT = 1;
-					break;
-				}
-				distFr = 1.0/distFr;
-				info.push([distFr, cell.from(), cell.to(), from, to, V2D.sub(cell.to(),cell.from())]);
-				distFT += distFr;
-			}
-			var x = 0;
-			var y = 0;
-			for(k=0; k<info.length; ++k){
-				var inf = info[k]; 
-				var p = inf[0]/distFT;
-				x += p*inf[5].x;
-				y += p*inf[5].y;
-			}
-			vertex._projected = new V2D(from.x+x,from.y+y);
-			
-
-			// var fr = new V3D(from.x, from.y, 1.0);
-			// var to = H.multV3DtoV3D(fr);
-			// to.homo();
-			// vertex._projected = to;
-
-			/*
-			var cells = lattice.allValidCells(vertex.from(), 4);
-			//var cells = lattice.allValidCells(null, 4);
-			var pointsA = [];
-			var pointsB = [];
-			for(k=0; k<cells.length; ++k){
-				cell = cells[k];
-				pointsA.push(cell.from());
-				pointsB.push(cell.to());
-			}
-			console.log("COUNT: "+pointsA.length);
-			var H = R3D.homographyFromPoints(pointsA,pointsB);
-			//console.log(H+"");
-			//var to = H.multV2DtoV2D(from);
-			var fr = new V3D(from.x, from.y, 1.0);
-			var to = H.multV3DtoV3D(fr);
-			to.homo();
-			vertex._projected = to;
-
-				var Hinv = Matrix.inverse(H);
-				for(var k=0; k<pointsA.length; ++k){
-					var u = H.multV2DtoV2D(pointsA[k]);
-					var v = Hinv.multV2DtoV2D(pointsB[k]);
-					console.log(pointsA[k]+" => "+u);
-					console.log(v+" <= "+pointsB[k]);
-				}
-			*/
+			vertex._projected = nextPos;
 		}
 	}
+
+
+	var triangles = interpolator._triangles;
+	var datas = interpolator._datas;
+	var rays = interpolator._rays;
+	for(i=0; i<triangles.length; ++i){
+		var tri = triangles[i];
+		var cA = datas[tri[0]];
+		var cB = datas[tri[1]];
+		var cC = datas[tri[2]];
+			d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(2.0, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawPolygon([cA.from(),cB.from(),cC.from()], true);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			display.addChild(d);
+			d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(2.0, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawPolygon([cA.to(),cB.to(),cC.to()], true);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			display.addChild(d);
+			d.matrix().translate(offX,offY);
+		for(j=0;j<3;++j){
+			var ray = rays[tri[j]];
+			if(ray){
+				ray = ray.copy().scale(100.0);
+				var fr = datas[tri[j]].from();
+				var to = V2D.add(fr,ray);
+				d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(2.0, 0xFF0000BB);
+				d.graphics().beginPath();
+				d.graphics().drawPolygon([fr,to]);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				display.addChild(d);
+			}
+		}
+			//d.graphics().drawPolygon([tri.A(),tri.B(),tri.C()], true);
+	}
+
+
+
+
+
+
 	for(j=0; j<rows; ++j){
 		for(i=0; i<cols; ++i){
 			var vertex = lattice.vertex(i,j);
@@ -3647,37 +3582,6 @@ Dense.visualizeLattice = function(lattice, display){
 	}
 
 
-	var cells = lattice.allValidCells(null);
-	var points = [];
-	for(i=0; i<cells.length; ++i){
-		cell = cells[i];
-		points.push(cell.from());
-	}
-	// console.log(points+"");
-	// for(i=0; i<points.length; ++i){
-	// 	console.log("points.push( new V2D("+points[i].x+","+points[i].y+") );");
-	// }
-
-	console.log("ATTACH THE CELLS TO THE POINTS");
-	if(points.length>=3){
-		var triangulation = Voronoi.delaunay(points, cells);
-		console.log(triangulation);
-		var triangles = triangulation;
-		for(i=0; i<triangles.length; ++i){
-			var tri = triangles[i];
-			console.log(tri+"")
-				d = new DO();
-				d.graphics().clear();
-				d.graphics().setLine(2.0, 0xFFFF0000);
-				d.graphics().beginPath();
-				d.graphics().drawPolygon([tri.A(),tri.B(),tri.C()], true);
-				d.graphics().strokeLine();
-				d.graphics().endPath();
-				display.addChild(d);
-				//d.matrix().translate(offX,offY);
-		}
-	}
-
 
 	// for each vertex
 	// 	draw self solid/open if joined/nonjoined
@@ -3687,8 +3591,264 @@ Dense.visualizeLattice = function(lattice, display){
 }
 
 
+Dense.Interpolator = function(cells){
+	this._cells = cells;
+	this._triangles = [];
+	this._rays = [];
+	this._vertexes = [];
+	this._hull = [];
+	// copy points from cells ...
+	var i;
+	var points = [];
+	for(i=0; i<cells.length; ++i){
+		points.push( cells[i].from() );
+	}
+	this._points = points;
+
+	if(points.length==0){
+		// N/A
+	}else if(points.length==1){
+		// everything is from single point
+	}else if(points.length==2){
+		// everything is outside
+	}else if(points.length>=3){
+		var triangulation = Voronoi.delaunay(points, cells);
+		var datas = triangulation["datas"];
+		var points = triangulation["points"];
+		var triangles = triangulation["triangles"];
+		var perimeters = triangulation["perimeters"];
+		var rays = triangulation["perpendiculars"];
+		var hull = triangulation["convexHull"];
+
+		this._points = points;
+		this._triangles = triangles;
+		this._datas = datas;
+		this._hull = hull;
+		this._rays = rays;
+		this._hullFilled = [];
+
+		for(i=0; i<hull.length; ++i){
+			this._hullFilled.push( points[hull[i]] );
+		}
+
+		// for(i=0; i<triangles.length; ++i){
+		// 	var tri = triangles[i];
+		// 	var cA = datas[tri[0]];
+		// 	var cB = datas[tri[1]];
+		// 	var cC = datas[tri[2]];
+		// 		d = new DO();
+		// 		d.graphics().clear();
+		// 		d.graphics().setLine(2.0, 0xFFFF0000);
+		// 		d.graphics().beginPath();
+		// 		d.graphics().drawPolygon([cA.from(),cB.from(),cC.from()], true);
+		// 		d.graphics().strokeLine();
+		// 		d.graphics().endPath();
+		// 		display.addChild(d);
+		// 		d = new DO();
+		// 		d.graphics().clear();
+		// 		d.graphics().setLine(2.0, 0xFFFF0000);
+		// 		d.graphics().beginPath();
+		// 		d.graphics().drawPolygon([cA.to(),cB.to(),cC.to()], true);
+		// 		d.graphics().strokeLine();
+		// 		d.graphics().endPath();
+		// 		display.addChild(d);
+		// 		d.matrix().translate(offX,offY);
+		// 	for(j=0;j<3;++j){
+		// 		var ray = rays[tri[j]];
+		// 		console.log(ray);
+		// 		if(ray){
+		// 			console.log(ray);
+		// 			ray = ray.copy().scale(100.0);
+		// 			var fr = datas[tri[j]].from();
+		// 			var to = V2D.add(fr,ray);
+		// 			d = new DO();
+		// 			d.graphics().clear();
+		// 			d.graphics().setLine(2.0, 0xFF0000BB);
+		// 			d.graphics().beginPath();
+		// 			d.graphics().drawPolygon([fr,to]);
+		// 			d.graphics().strokeLine();
+		// 			d.graphics().endPath();
+		// 			display.addChild(d);
+		// 		}
+		// 	}
+		// 		//d.graphics().drawPolygon([tri.A(),tri.B(),tri.C()], true);
+		// }
+	}
 
 
+}
+
+Dense.Interpolator.prototype.value = function(point){
+	var i, j, k;
+	var items = [];
+	var points = this._points;
+	var cells = this._cells;
+	var tris = this._triangles;
+	var datas = this._datas;
+	var hull = this._hull;
+	var rays = this._rays;
+	if(points.length==0){
+		// items.push({"value":null, "percent":1.0});
+	}else if(points.length==1){
+		items.push({"value":cells[0], "percent":1.0});
+	}else if(points.length==2){
+		var cellA = cells[0];
+		var cellB = cells[1];
+		var pointA = cellA.from();
+		var pointB = cellB.from();
+		var rayAB = V2D.sub(pointB,pointA);
+		// find closest point on line 0-1
+		var distanceAB = rayAB.length();
+		var closest = Code.closestPointLine2D(pointA,rayAB, point);
+		var dA = V2D.distance(closest, pointA);
+		var dB = V2D.distance(closest, pointB);
+		if(dA<distanceAB && dB<distanceAB){
+			var fracA = dB/distanceAB;
+			var fracB = 1.0 - fracA; // dA/distanceAB;
+			items.push({"value":cellA, "percent":fracA});
+			items.push({"value":cellB, "percent":fracB});
+		}else if(dB<dA){ // all B
+			items.push({"value":cellB, "percent":1.0});
+		}else if(dA<dB){ // all A
+			items.push({"value":cellA, "percent":1.0});
+		}
+	}else if(points.length>=3){
+		//console.log("3");
+		var isInside = Code.isPointInsidePolygon2D(point, this._hullFilled);
+		if(isInside){
+			var tri = null;
+			for(i=0; i<tris.length; ++i){// find containing triangle
+				var t = tris[i];
+				var a = points[t[0]];
+				var b = points[t[1]];
+				var c = points[t[2]];
+				var inside = Code.isPointInsideTri2D(point, a,b,c);
+				if(inside){
+					tri = [ datas[t[0]], datas[t[1]], datas[t[2]]];
+					break;
+				}
+			}
+			if(tri){
+				var areaTotal = V2D.areaTri(tri[0].from(),tri[1].from(),tri[2].from());
+				for(k=0; k<3; ++k){
+					var c = tri[k];
+					var area = V2D.areaTri(tri[(k+1)%3].from(),tri[(k+2)%3].from(),point);
+					var percent = area / areaTotal;
+					items.push({"value":c, "percent":percent});
+				}
+			}
+		}else{
+			// find closest perimeter point & choose adjacent neighbors
+			var closestCells = null;
+			var closestSet = null;
+			var closestRays = null;
+			var closestDistance = null;
+			for(i=0; i<hull.length; ++i){
+				var p = points[ hull[i] ];
+				var distance = V2D.distance(point,p);
+				if(closestDistance==null || distance<closestDistance){
+					closestDistance = distance;
+					var curr = hull[i];
+					var prev = hull[(i-1+hull.length)%hull.length];
+					var next = hull[(i+1)%hull.length];
+					closestSet = [ points[prev], points[curr], points[next] ];
+					closestRays = [ rays[prev], rays[curr], rays[next] ];
+					closestCells = [ datas[prev], datas[curr], datas[next] ];
+				}
+			}
+			//console.log( closestSet, closestRays, closestCells );
+			var prev = closestSet[0];
+			var curr = closestSet[1];
+			var next = closestSet[2];
+			var rayP = closestRays[0];
+			var rayC = closestRays[1];
+			var rayN = closestRays[2];
+// d = new DO();
+// d.graphics().clear();
+// d.graphics().setLine(2.0, 0xFFFF0000);
+// d.graphics().beginPath();
+// d.graphics().moveTo(prev.x,prev.y);
+// d.graphics().lineTo(curr.x,curr.y);
+// d.graphics().lineTo(next.x,next.y);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+// GLOBALSTAGE.addChild(d);
+
+			
+			var o, d, intersectA, intersectB;
+			intersectA = Code.rayFiniteInfinitePositiveIntersect2D(point, V2D.sub(prev,point), curr,rayC);
+			intersectB = Code.rayFiniteInfinitePositiveIntersect2D(point, V2D.sub(next,point), curr,rayC);
+			var startA, startB, rayA, rayB, gamma, cellA, cellB;
+			// drop neighbor who has intersection with infinte-ray
+			if(intersectA){ // use next
+				cellA = closestCells[1];
+				cellB = closestCells[2];
+				startA = curr;
+				startB = next;
+				rayA = rayC;
+				rayB = rayN;
+			}else{ // must intersect next, use prev
+				cellA = closestCells[0];
+				cellB = closestCells[1];
+				startA = prev;
+				startB = curr;
+				rayA = rayP;
+				rayB = rayC;
+			}
+
+			var pointA = startA;
+			var pointB = startB;
+			var rayAB = V2D.sub(pointB,pointA);
+			var distanceAB = rayAB.length();
+			var closest = Code.closestPointLine2D(startA,rayAB, point);
+			var dA = V2D.distance(closest, pointA);
+			var dB = V2D.distance(closest, pointB);
+			if(dA<distanceAB && dB<distanceAB){
+				var fracA = dB/distanceAB;
+				var fracB = 1.0 - fracA; // dA/distanceAB;
+				items.push({"value":cellA, "percent":fracA});
+				items.push({"value":cellB, "percent":fracB});
+			}else if(dB<dA){ // all B
+				items.push({"value":cellB, "percent":1.0});
+			}else if(dA<dB){ // all A
+				items.push({"value":cellA, "percent":1.0});
+			}
+
+
+			/*
+			// extended close point
+			gamma = V2D.sub(startB,startA).norm();
+			// form ray from 2 remaining points & set endpoints to A/B infinite-ray intersections
+			// rayLineIntersect2D
+			// rayIntersect2D
+			var A = Code.rayLineIntersect2D(point,gamma, startA,rayA);
+			var B = Code.rayLineIntersect2D(point,gamma, startB,rayB);
+			if(A && B){
+				//console.log("intersect: "+point+" | "+gamma+" | "+startA+" | "+rayA+" | "+A);
+// d = new DO();
+// d.graphics().clear();
+// d.graphics().setLine(2.0, 0x33FF0000);
+// d.graphics().beginPath();
+// d.graphics().moveTo(A.x,A.y);
+// d.graphics().lineTo(B.x,B.y);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+// GLOBALSTAGE.addChild(d);
+
+				var dAB = V2D.distance(A,B);
+				var dA = V2D.distance(A,point);
+				var dB = V2D.distance(B,point);
+				var pA = 1.0 - dA/dAB;
+				var pB = 1.0 - dB/dAB;
+				items.push({"value":cellA, "percent":pA});
+				items.push({"value":cellB, "percent":pB});
+			}
+		*/
+		}
+		
+	}
+	return items;
+}
 
 
 

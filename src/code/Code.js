@@ -780,6 +780,16 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 	return [middle];
 }
 */
+Code.hash = function(string){
+	if(string==null || string.length==0){ return 0; }
+	var i, char, hash = 0;
+	for(i=string.length; --i; ){
+		char = string.charCodeAt(i);
+		hash = ((hash<<5)-hash)+char;
+		hash = hash & hash; // >>> 0
+	}
+	return hash;
+}
 Code.binarySearch = function(a, f){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
 	if(a.length==0){
 		return null;
@@ -790,7 +800,6 @@ Code.binarySearch = function(a, f){ // assumed increasing | if AT INDEX: return 
 	while(minIndex<=maxIndex){
 		middleIndex = (minIndex+maxIndex) >> 1;
 		value = a[middleIndex];
-		//console.log(middleIndex+": "+value)
 		result = f(value);
 		if(result==0){
 			return middleIndex;
