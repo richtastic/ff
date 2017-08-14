@@ -4,8 +4,12 @@ function Vor(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas,(1/10)*1000);
 	this._root = new DO();
-	this._stage.root().addChild(this._root);
+	this._stage.addChild(this._root);
 	this._root.matrix().scale(1.0,-1.0);
+	//this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
 	//this._root.matrix().scale(2.0);
 	this._root.matrix().translate(200,600);
 	this._stage.start();
@@ -15,6 +19,7 @@ function Vor(){
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN, this.keyboardFxnKeyDown2, this);
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP, this.keyboardFxnKeyUp, this);
 	this._keyboard.addListeners();
+	
 }
 	
 Vor.prototype.keyboardFxnKeyUp = function(e){
@@ -165,20 +170,67 @@ Voronoi.removeDuplicatePoints2D(points);
 		points[i].y *= scale;
 		this._root.addChild( Vor.makePoint(points[i]) );
 	}
-	// animation:
+	// IF
+if(false){
+	animation:
 	this._animPoints = points;
 	var speed = 50;
 	this._ticker = new Ticker(speed);
 	this._ticker.addFunction(Ticker.EVENT_TICK,this.animation_tick,this);
 	this._ticker.start();
-	
-	//voronoi.fortune(points);
+	return;
+}else{
+	// ELSE
+	this._D = Voronoi.fortune(points);
+	var col = 0x0000FF00;
+	var site, sites, edge, edges, A, B;
+		sites = this._D.sites();
+	this._animParabolas = new DO();
+	this._root.addChild( this._animParabolas );
 
+this._D.finalize(this._animParabolas);
+		this._animParabolas.graphics().clear();
+		// DRAW FINAL IMAGE
+		//this._animParabolas.graphics().setLine(1.0,0xFF333399);
+		for(i=0;i<sites.length;++i){
+			//console.log("SITE:"+i);
+			site = sites[i];
+			edges = site.edges();
+			var count = 0;
+			edge = edges[0];
+			var firstEdge = edge;
+			count = 0;
+			A = edge.vertexA();
+			B = edge.vertexB();
+			this._animParabolas.graphics().beginPath();
+			//var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
+			this._animParabolas.graphics().setFill(col);
+			this._animParabolas.graphics().setLine(2.0,0xFF330099);
+			if(A){
+				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
+			}
+			while(edge && count<15){
+				B = edge.vertexB();
+				if(B && (edge.next()!==firstEdge) ){
+					this._animParabolas.graphics().lineTo(B.point().x+Vor.magRand(),B.point().y+Vor.magRand());
+				}
+				edge = edge.next();
+				if(edge==firstEdge){
+					break;
+				}
+				++count;
+			}
+			this._animParabolas.graphics().endPath();
+			this._animParabolas.graphics().strokeLine();
+			this._animParabolas.graphics().fill();
+		}
 	//console.log( voronoi.toString() );
 
-	//voronoi.delaunay();
+	var triangles = voronoi.delaunay();
+	console.log(triangles);
 }
-Vor.prototype.animation_tick = function(){
+}
+Vor.prototype.animation_tick = function(t){
 	var x, y, a, b, c, p, e, i, j, len, arc;
 	var limitLeft = -200, limitRight = 1000;
 	if(this._animationTick===undefined){
@@ -215,12 +267,13 @@ Vor.prototype.animation_tick = function(){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 500;//420;
+	var offYStart = 420;//420;
 	var rateStart = 0.5;//12.5;
 
 
 	// ALGORITHM
 	if( !this._Q.isEmpty() ){
+//console.log("Q: "+this._Q);
 		next = this._Q.peek();
 var looped = false;
 		while(next && next.point().y>this._directrix.y){
@@ -229,18 +282,12 @@ looped = true;
 var temp = new V2D(this._directrix.x,this._directrix.y);
 			e = this._Q.next();
 this._directrix.copy( e.point() );
-//console.log("popped "+e);
-//console.log(this._T.toString());
 			if(e.isSiteEvent()){
 				this._T.addArcAboveSiteAndDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}else{
 				this._T.removeArcAtCircleWithDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
 			}
 			next = this._Q.peek();
-// console.log("\n");
-// console.log(this._T.toString());
-// console.log("\n");
-// console.log(this._Q.toString()+"    + "+this._directrix.toString());
 this._directrix.copy( temp );
 //console.log("-------------------------------------------------------------------------------------------------------");
 		}

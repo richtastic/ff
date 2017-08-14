@@ -519,9 +519,9 @@ RedBlackTree.Node.prototype.colorBlack = function(){
 // --------------------------------------------------------------------------------------------------------------------
 RedBlackTree.Node.prototype.findNodeFromObject = function(o,fxn,nil, sod){ // if sod==false o isa node
 	var value, node = this;
-	while( node!=nil ){
+	while(node!=nil){
 		value = sod ? fxn(o.data(),node.data(), true) : fxn(o,node.data(), true);
-		if( value==0 ){
+		if(value==0){
 			return node;
 		}else if(value<0){
 			node = node.left();

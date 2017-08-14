@@ -6114,6 +6114,9 @@ Code.radians = function(degrees){
 Code.degrees = function(radians){
 	return radians*(180.0/Math.PI);
 }
+Code.isPointInsideTri2D = function(p, a,b,c){ 
+	return Code.isPointInsidePolygon2D(p, [a,b,c]);
+}
 Code.isPointInsideRect2D = function(p, a,b,c,d){ 
 	return Code.isPointInsidePolygon2D(p, [a,b,c,d]);
 }

@@ -413,6 +413,20 @@ Matrix.transform2DRotate = function(a,ang){
 	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
+Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
+	if(isAngle){
+		ang = Math.tan(ang);
+	}
+	var b = Matrix._transformTemp2D.setFromArray([1.0,ang,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DSkewY = function(a,ang, isAngle){ // give an angle
+	if(isAngle){
+		ang = Math.tan(ang);
+	}
+	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,0.0, ang,1.0,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
 //
 Matrix._transformTemp3D = new Matrix(4,4);
 Matrix.transform3DTranslate = function(a,tX,tY,tZ){
@@ -496,12 +510,14 @@ Matrix.covarianceMatrix = function(matrix){
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE MATHS
 Matrix.prototype.multV2DtoV2D = function(out, inn){
+	if(!inn){ inn = out; out = new V2D(); }
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
 	out.y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
 	out.x = x;
 	return out;
 }
 Matrix.prototype.multV2DtoV3D = function(out, inn){
+	if(!inn){ inn = out; out = new V3D(); }
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
 	var y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
 	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2];
@@ -509,6 +525,7 @@ Matrix.prototype.multV2DtoV3D = function(out, inn){
 	return out;
 }
 Matrix.prototype.multV3DtoV3D = function(out, inn){
+	if(!inn){ inn = out; out = new V3D(); }
 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2]*inn.z + (this._rows[0].length<4?0:this._rows[0][3]);
 	var y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2]*inn.z + (this._rows[1].length<4?0:this._rows[1][3]);
 	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2]*inn.z + (this._rows[2].length<4?0:this._rows[2][3]);

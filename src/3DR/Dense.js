@@ -55,14 +55,14 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 	var pointsA = [
-				new V2D(86,208), // glasses corner left
-				new V2D(190,180), // glasses corner right
+//				new V2D(86,208), // glasses corner left
+//				new V2D(190,180), // glasses corner right
 				new V2D(172,107), // origin
 				new V2D(22.5,166), // lighter button
 				new V2D(361,183), // mouse eye
 				new V2D(18,225), // bic corner left
-				new V2D(37,216), // bic corner right
-				new V2D(65,169), // cup 
+				//new V2D(37,216), // bic corner right
+				//new V2D(65,169), // cup 
 				new V2D(226,87), // face BL
 				new V2D(219,66), // glasses TL
 				new V2D(250,72), // glasses TR
@@ -90,14 +90,14 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 				new V2D(131,166), // glass tip right
 			];
 var pointsB = [
-				new V2D(87,192),
-				new V2D(170,178),
+//				new V2D(87,192),
+//				new V2D(170,178),
 				new V2D(212,46),
 				new V2D(50,149),
 				new V2D(278,241),
 				new V2D(52,179), // left
-				new V2D(64,172), // right//new V2D(18,225), // right
-				new V2D(94,124), 
+				//new V2D(64,172), // bic right
+				//new V2D(94,124), 
 				new V2D(225,98), // face BL
 				new V2D(221,80), // glasses TL
 				new V2D(246,95), // glasses TR
@@ -740,7 +740,7 @@ Dense.prototype.testFeatureComparison = function(imageA,seedsA, imageB,seedsB){
 	var imageBWidth = imageB.width();
 	var imageBHeight = imageB.height();
 
-	var cellSizeA = 20; // 2 4 10 20 25 50 100
+	var cellSizeA = 10; // 2 4 10 20 25 50 100
 	var cellSizeB = cellSizeA;
 	var gridACols = Math.ceil(imageAWidth/cellSizeA);
 	var gridARows = Math.ceil(imageAHeight/cellSizeA);
@@ -2557,6 +2557,49 @@ Dense.Lattice.prototype._indexFromColRow = function(col,row){
 	}
 	return null;
 }
+Dense.Lattice.prototype.allValidCells = function(fromPoint, maximumCount, maximumDistance){
+	var i, j, v, list = [];
+	var rows = this._rows;
+	var cols = this._cols;
+	for(j=0; j<rows; ++j){
+		for(i=0; i<cols; ++i){
+			v = this.vertex(i,j);
+			if(v.to() && v.isJoined()){
+				var distance = 1E12;
+				if(fromPoint){
+					distance = V2D.distance(fromPoint,v.from());
+				}
+				list.push([v,distance]);
+			}
+		}
+	}
+	if(maximumCount || maximumDistance){
+		list = list.sort(function(a,b){
+			var distanceA = a[1];
+			var distanceB = b[1];
+			return distanceA<distanceB ? -1 : 1;
+		});
+		if(maximumCount){
+			if(maximumCount<list.length){
+				list = Code.copyArray(list,0,maximumCount-1);
+			}
+		}else if(maximumDistance){
+			for(i=0; i<list.length; ++i){
+				var distance = list[i][1];
+				if(distance>maximumDistance){
+					list = Code.copyArray(list,0,i-1);
+					break;
+				}
+			}
+		}
+	}
+	for(i=0; i<list.length; ++i){ // remove appended distances
+		list[i] = list[i][0];
+	}
+	return list;
+}
+// var distanceA = V2D.distanceSquare(fromPoint,a.from());
+// var distanceB = V2D.distanceSquare(fromPoint,b.from());
 Dense.Transform = function(to, scale, angle, score, rank){
 	this._score = null;
 	this._rank = null;
@@ -2606,6 +2649,13 @@ Dense.Vertex = function(lattice, row, col, from){
 	this._currentTransform = 0;
 	this.from(from);
 	this._joined = false;
+	this._temp = null;
+}
+Dense.Vertex.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
 }
 Dense.Vertex.prototype.toString = function(){
 	var str = "[Vertex: "+this._col+","+this._row+" : "+this.from()+"=>"+this.to()+" @ "+this.scale()+" @ "+this.angle()+" deg "+"]";
@@ -2817,6 +2867,14 @@ Dense.Vertex.prototype.assignNeighbors = function(queue){
 			queue.push(n);
 		}
 	}
+}
+Dense.Vertex.prototype.neighborhoodRange = function(maximumCount, maximumDistance, list, origin){ // get all neighbors within: distance of to() ||  count
+	if(!origin){ // starting point
+		origin = this;
+		list = [];
+	}
+	var neighbors = [];
+	// ... ?
 }
 // Dense.Vertex.crossed = function(directNeighbor, nA,nB){
 // 	o,d, 
@@ -3131,7 +3189,8 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	var cornersA = R3D.harrisCornerDetection(imageAGry, imageAWidth, imageAHeight, sigmaCorners);
 
 	// LATTICE
-	var cellSize = 15;
+	//var cellSize = 15;
+	var cellSize = 10;
 	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA, cellSize, matrixFfwd);
 	var globalQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 
@@ -3142,16 +3201,16 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 		var pointB = pointsB[i];
 		var vertex = Dense.vertexFromMatch(pointA,pointB, latticeAtoB);
 		globalQueue.push(vertex);
-		// if(i>=1){
-		// 	break;
-		// }
+		if(i>=10){
+			break;
+		}
 	}
 	
 	Dense.QUEUE = globalQueue;
 	Dense.LATTICE = latticeAtoB;
 	Dense.ITERATION = 0;
-	//Dense.TICKER = new Ticker(2000000);
-	Dense.TICKER = new Ticker(1);
+	Dense.TICKER = new Ticker(2000000);
+	//Dense.TICKER = new Ticker(1);
 	Dense.TICKER.addFunction(Ticker.EVENT_TICK, Dense.denseMatch_iteration_ticker, Dense);
 	Dense.TICKER.start();
 	Dense.KEYBOARD = new Keyboard();
@@ -3172,17 +3231,32 @@ Dense.denseMatch_iteration = function(){
 	while(!globalQueue.isEmpty()){
 		++iteration;
 		var nextVertex = globalQueue.popMinimum();
-		console.log("NEXT: "+nextVertex);
-		var crossed = nextVertex.crossedNeighbors(nextVertex.to());
+		console.log("NEXT: "+iteration+" = "+nextVertex);
+		/*var crossed = nextVertex.crossedNeighbors(nextVertex.to());
 		console.log(crossed);
 		if(crossed.length>0){
 			console.log("can't join");
 			break;
 			continue;
-		}
+		}*/
 		nextVertex.join();
-		nextVertex.assignNeighbors(globalQueue);
-
+//		nextVertex.assignNeighbors(globalQueue);
+		/*
+		if(iteration==1){
+			//nextVertex.from(new V2D(10,10));
+			nextVertex._matches[0].to(new V2D(300,200));
+			nextVertex._matches[0].angle( Code.radians(90) );
+			nextVertex._matches[0].scale(0.5);
+		}else if(iteration==2){
+			nextVertex._matches[0].to(new V2D(300,350));
+			nextVertex._matches[0].angle( Code.radians(100) );
+			nextVertex._matches[0].scale(1.5);
+		}else if(iteration==3){
+			nextVertex._matches[0].to(new V2D(150,200));
+			nextVertex._matches[0].angle( Code.radians(80) );
+			nextVertex._matches[0].scale(1.0);
+		}
+		*/
 		// SHOW MATCHING
 		var vertex = nextVertex;
 		if(vertex){
@@ -3195,6 +3269,7 @@ Dense.denseMatch_iteration = function(){
 
 			var pA = vertex.from();
 			var pB = vertex.to();
+			// B to A
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DRotate(matrix,-rotationAtoB);
 				matrix = Matrix.transform2DScale(matrix,1.0/scaleAtoB);
@@ -3205,12 +3280,26 @@ Dense.denseMatch_iteration = function(){
 			d = new DOImage(img);
 			d.matrix().translate(0 + pA.x - cellSizeA*0.5, 0 + pA.y - cellSizeA*0.5);
 			GLOBALSTAGE.addChild(d);
+
+			// A to B
+			var matrix = new Matrix(3,3).identity();
+				matrix = Matrix.transform2DRotate(matrix,rotationAtoB);
+				matrix = Matrix.transform2DScale(matrix,scaleAtoB);
+			var bR = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.red(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+			var bG = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.grn(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+			var bB = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.blu(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+			img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+			d = new DOImage(img);
+			d.matrix().translate(400,0);
+			d.matrix().translate(0 + pB.x - cellSizeA*0.5, 0 + pB.y - cellSizeA*0.5);
+			GLOBALSTAGE.addChild(d);
 		}
-	//TODO: NEIGHBOR MATCHING
+		// TODO: NEIGHBOR MATCHING
 		break; // ticker loop
 	}
-
+	Dense.ITERATION = iteration;
 	display.moveToFront();
+	display.graphics().alpha(0.15);
 	Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
 }
 
@@ -3220,7 +3309,7 @@ Dense.visualizeLattice = function(lattice, display){
 	var imageB = lattice.imageTo();
 	var offX = imageA.width();
 	var offY = 0; 
-	var i, j, k;
+	var i, j, k, l;
 	var d, color, rad;
 	var rows = lattice.rows();
 	var cols = lattice.cols();
@@ -3228,6 +3317,158 @@ Dense.visualizeLattice = function(lattice, display){
 	var colorTR = 0xFF0000FF;
 	var colorBL = 0xFF00FF00;
 	var colorBR = 0xFF000000;
+	var cell;
+
+			// var cells = lattice.allValidCells(null, 14);
+			// var pointsA = [];
+			// var pointsB = [];
+			// for(k=0; k<cells.length; ++k){
+			// 	cell = cells[k];
+			// 	pointsA.push(cell.from());
+			// 	pointsB.push(cell.to());
+			// }
+			// console.log("COUNT: "+pointsA.length);
+			// var H = R3D.homographyFromPoints(pointsA,pointsB);
+	for(j=0; j<rows; ++j){
+		for(i=0; i<cols; ++i){
+			var vertex = lattice.vertex(i,j);
+			var from = vertex.from();
+			var to = vertex.to();
+
+
+			//var cells = lattice.allValidCells(vertex.from(), 3); // 3-5
+			var cells = lattice.allValidCells(vertex.from(), 3); // 
+			var info = [];
+			var distFT = 0;
+
+			vertex._projected = new V2D(from.x,from.y);
+			// barycentric
+			if(cells.length==1){
+				cell = cells[0];
+				var originA = cell.from();
+				var originB = cell.to();
+				var angle = cell.angle();
+				var scale = cell.scale();
+				var relativeDirA = V2D.sub(from,originA);
+				var nextPos = relativeDirA.copy().rotate(angle).scale(scale).add(originB);
+				vertex._projected = nextPos;
+			}else if(cells.length==2){
+				var cell0 = cells[0];
+				var cell1 = cells[1];
+				var origin0A = cell0.from();
+				var origin0B = cell0.to();
+				var origin1A = cell1.from();
+				var origin1B = cell1.to();
+				var angle0 = cell0.angle();
+				var scale0 = cell0.scale();
+				var angle1 = cell1.angle();
+				var scale1 = cell1.scale();
+				// 
+				var relativeDir0A = V2D.sub(from,origin0A);
+				var relativeDir1A = V2D.sub(from,origin1A);
+				var nextPos0 = relativeDir0A.copy().rotate(angle0).scale(scale0).add(origin0B);
+				var nextPos1 = relativeDir1A.copy().rotate(angle1).scale(scale1).add(origin1B);
+				var len0A = relativeDir0A.length();
+				var len1A = relativeDir1A.length();
+				var lensA = len0A + len1A;
+				var p0 = 1 - len0A/lensA;
+				var p1 = 1 - len1A/lensA;
+				nextPos0.scale(p0);
+				nextPos1.scale(p1);
+				var nextPos = V2D.add(nextPos0,nextPos1);
+				vertex._projected = nextPos;
+				//vertex._projected = new V2D(from.x,from.y);
+			}else{
+				var points = "";
+				var nextPos = new V2D(0,0);
+				var inside = Code.isPointInsideTri2D(from, cells[0].from(),cells[1].from(),cells[2].from());
+				if(inside){
+					var areaTotal = V2D.areaTri(cells[0].from(),cells[1].from(),cells[2].from());
+					for(k=0; k<3; ++k){
+						cell = cells[k];
+						var area = V2D.areaTri(cells[(k+1)%3].from(),cells[(k+2)%3].from(),from);
+						var percent = area / areaTotal;
+						var originA = cell.from();
+						var originB = cell.to();
+						var relativeDirA = V2D.sub(from,originA);
+						var originA = cell.from();
+						var originB = cell.to();
+						var angle = cell.angle();
+						var scale = cell.scale();
+						var relativeDirA = V2D.sub(from,originA);
+						var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB);
+						pos.scale(percent);
+						nextPos.add(pos);
+					}
+
+					vertex._projected = nextPos;
+				}else{ // outside == use closest side
+					//vertex._projected = new V2D(0,0);
+				}
+			}
+
+
+			// distance based
+			var cells = lattice.allValidCells(vertex.from(), 3); // 3-5
+			for(k=0; k<cells.length; ++k){
+				cell = cells[k];
+				distFr = V2D.distance(cell.from(),from);
+				distFr = distFr * distFr; // best
+				//distFr = Math.sqrt(distFr); // worst
+				if(distFr<1E-6){
+					info = [[1, cell.from(), cell.to(), from, to, V2D.sub(cell.to(),cell.from()) ]];
+					distFT = 1;
+					break;
+				}
+				distFr = 1.0/distFr;
+				info.push([distFr, cell.from(), cell.to(), from, to, V2D.sub(cell.to(),cell.from())]);
+				distFT += distFr;
+			}
+			var x = 0;
+			var y = 0;
+			for(k=0; k<info.length; ++k){
+				var inf = info[k]; 
+				var p = inf[0]/distFT;
+				x += p*inf[5].x;
+				y += p*inf[5].y;
+			}
+			vertex._projected = new V2D(from.x+x,from.y+y);
+			
+
+			// var fr = new V3D(from.x, from.y, 1.0);
+			// var to = H.multV3DtoV3D(fr);
+			// to.homo();
+			// vertex._projected = to;
+
+			/*
+			var cells = lattice.allValidCells(vertex.from(), 4);
+			//var cells = lattice.allValidCells(null, 4);
+			var pointsA = [];
+			var pointsB = [];
+			for(k=0; k<cells.length; ++k){
+				cell = cells[k];
+				pointsA.push(cell.from());
+				pointsB.push(cell.to());
+			}
+			console.log("COUNT: "+pointsA.length);
+			var H = R3D.homographyFromPoints(pointsA,pointsB);
+			//console.log(H+"");
+			//var to = H.multV2DtoV2D(from);
+			var fr = new V3D(from.x, from.y, 1.0);
+			var to = H.multV3DtoV3D(fr);
+			to.homo();
+			vertex._projected = to;
+
+				var Hinv = Matrix.inverse(H);
+				for(var k=0; k<pointsA.length; ++k){
+					var u = H.multV2DtoV2D(pointsA[k]);
+					var v = Hinv.multV2DtoV2D(pointsB[k]);
+					console.log(pointsA[k]+" => "+u);
+					console.log(v+" <= "+pointsB[k]);
+				}
+			*/
+		}
+	}
 	for(j=0; j<rows; ++j){
 		for(i=0; i<cols; ++i){
 			var vertex = lattice.vertex(i,j);
@@ -3238,6 +3479,8 @@ Dense.visualizeLattice = function(lattice, display){
 			var bottom = vertex.bottom();
 			var left = vertex.left();
 			var top = vertex.top();
+
+			var projected = vertex._projected;
 
 			var xPercent = i/(cols-1);
 			var yPercent = j/(rows-1);
@@ -3253,8 +3496,20 @@ Dense.visualizeLattice = function(lattice, display){
 				d.graphics().strokeLine();
 				d.graphics().endPath();
 				display.addChild(d);
+
+				d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(1.0, color);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(projected.x,projected.y, rad);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				display.addChild(d);
+				d.matrix().translate(offX,offY);
+
 				if(bottom){
 					var fr = bottom.from();
+					var pr = bottom._projected;
 					if(fr){
 						d = new DO();
 						d.graphics().clear();
@@ -3265,10 +3520,23 @@ Dense.visualizeLattice = function(lattice, display){
 						d.graphics().strokeLine();
 						d.graphics().endPath();
 						display.addChild(d);
+					}
+					if(pr){
+						d = new DO();
+						d.graphics().clear();
+						d.graphics().setLine(1.0, color);
+						d.graphics().beginPath();
+						d.graphics().moveTo(projected.x,projected.y);
+						d.graphics().lineTo(pr.x,pr.y);
+						d.graphics().strokeLine();
+						d.graphics().endPath();
+						display.addChild(d);
+						d.matrix().translate(offX,offY);
 					}
 				}
 				if(right){
 					var fr = right.from();
+					var pr = right._projected;
 					if(fr){
 						d = new DO();
 						d.graphics().clear();
@@ -3280,8 +3548,22 @@ Dense.visualizeLattice = function(lattice, display){
 						d.graphics().endPath();
 						display.addChild(d);
 					}
+					if(pr){
+						d = new DO();
+						d.graphics().clear();
+						d.graphics().setLine(1.0, color);
+						d.graphics().beginPath();
+						d.graphics().moveTo(projected.x,projected.y);
+						d.graphics().lineTo(pr.x,pr.y);
+						d.graphics().strokeLine();
+						d.graphics().endPath();
+						display.addChild(d);
+						d.matrix().translate(offX,offY);
+					}
 				}
 			}
+			
+			/*
 			// FOR TO LOCATIONS:
 			// want to do some kind of homography interpolation to estimate best guess for the unassigned points
 			//
@@ -3359,6 +3641,7 @@ Dense.visualizeLattice = function(lattice, display){
 					}
 				}
 			}
+			*/
 		}
 	}
 	// for each vertex
@@ -3367,13 +3650,6 @@ Dense.visualizeLattice = function(lattice, display){
 	// 	draw solid lines to joined neighbors
 	// ...
 }
-
-
-
-
-
-
-
 
 
 

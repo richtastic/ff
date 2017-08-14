@@ -11,8 +11,42 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","Dense.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-/*
+
+	var pointsA = [
+		new V2D(2,1),
+		new V2D(3,1),
+		new V2D(4,2),
+	];
+	var pointsB = [
+		new V2D(1,2),
+		new V2D(3,3),
+		new V2D(2,3),
+	];
+	// var pointsA = [
+	// 	new V2D(2,1),
+	// 	new V2D(3,1),
+	// 	new V2D(4,2),
+	// ];
+	// var pointsB = [
+	// 	new V2D(4,2),
+	// 	new V2D(6,2),
+	// 	new V2D(6,4),
+	// ];
+	var H = R3D.homographyFromPoints(pointsA,pointsB);
+	//var H = R3D.homographyFromPoints(pointsB,pointsA);
+	var Hinv = Matrix.inverse(H);
+	console.log(H+"");
+	for(var i=0; i<pointsA.length; ++i){
+		var u = H.multV2DtoV2D(pointsA[i]);
+		var v = Hinv.multV2DtoV2D(pointsB[i]);
+		console.log(pointsA[i]+" => "+u);
+		console.log(v+" <= "+pointsB[i]);
+		console.log("\n\n"+pointsA[i]+" | "+pointsB[i]+"\n\n");
+	}
+	//return;
 	
+/*
+
 	var points = [
 		new V2D(1,1),
 		new V2D(2,2),

@@ -371,6 +371,29 @@ R3D.screenNormalizedPointsFromPixelPoints = function(points,width,height){
 	return list;
 }
 // ------------------------------------------------------------------------------------------- H utilities
+R3D.affineMatrixLinear = function(pointsA,pointsB){
+	if (pointsA && pointsB && pointsA.length>=3 && pointsB.length>=3){
+		return R3D.affineDLT(pointsA,pointsB);
+	}
+	return null;
+}
+R3D.projectX = function(pointsA,pointsB){ // NOT TESTED YET
+	var ptsA = [];
+	var ptsB = [];
+	var i;
+	for(i=0; i<pointsA.length; ++i){
+		ptsA[i] = new V3D(pointsA[i].x,pointsA[i].y,1.0);
+		ptsB[i] = new V3D(pointsB[i].x,pointsB[i].y,1.0);
+	}
+	var norm = R3D.calculateNormalizedPoints([ptsA,ptsB]);
+	var H = R3D.projectiveMatrixNonlinear(norm.normalized[0],norm.normalized[1]);
+	var forward = norm.forward[0];
+	var reverse = norm.reverse[1];
+	H = Matrix.mult(H,forward);
+	H = Matrix.mult(reverse,H);
+	//H.scale(1.0/H.get(2,2));
+	return H;
+}
 R3D.projectiveMatrixLinear = function(pointsA,pointsB){
 	if (pointsA && pointsB && pointsA.length>=4 && pointsB.length>=4){
 		return R3D.projectiveDLT(pointsA,pointsB);
@@ -1210,13 +1233,189 @@ R3D.normalizePoints2D = function(currentPoints, nextPoints, matrix, inverse){ //
 	return matrix;
 }
 
+R3D.homographyFromPoints = function(pointsA,pointsB, angle){
+	var len = pointsA.length;
+	var H;
+	if(len==0){
+		H = new Matrix(3,3).identity();
+	}else if(len==1){
+		var pA0 = pointsA[0];
+		var pB0 = pointsB[0];
+		var tx = pB0.x - pA0.x;
+		var ty = pB0.y - pA0.y;
+		if(angle){ // trans + rot
+			var s = Math.sin(angle);
+			var c = Math.cos(angle);
+			H = new Matrix(3,3).setFromArray([c, -s, tx,  s, c, ty,  0, 0, 1]);
+		}else{ // trans
+			H = new Matrix(3,3).setFromArray([1, 0, tx,  0, 1, ty,  0, 0, 1]);
+		}
+	}else if(len==2){ // trans + rot + scale
+		var pA0 = pointsA[0];
+		var pA1 = pointsA[1];
+		var pB0 = pointsB[0];
+		var pB1 = pointsB[1];
+		var tx = pB0.x - pA0.x;
+		var ty = pB0.y - pA0.y;
+		var pB01 = V2D.sub(pB1,pB0);
+		var pA01 = V2D.sub(pA1,pA0);
+		var angle = V2D.angle(pA01,pB01);
+		var scale = pB01.length()/pA01.length();
+		var s = Math.sin(angle);
+		var c = Math.cos(angle);
+		//console.log("scale: "+scale+"  trans: "+tx+","+ty+"  angle: "+Code.degrees(angle)+" ... ");
+		//H = new Matrix(3,3).setFromArray([scale*c, -scale*s, tx,  scale*s, scale*c, ty,  0, 0, 1]);
+		H = new Matrix(3,3).identity();
+		H = Matrix.transform2DTranslate(H, -pA0.x,-pA0.y);
+		H = Matrix.transform2DScale(H, scale);
+		H = Matrix.transform2DRotate(H, angle);
+		H = Matrix.transform2DTranslate(H, pA0.x,pA0.y);
+		H = Matrix.transform2DTranslate(H, tx,ty);
+	}else if(len==3){ // affine. ---- does order matter?
+		// if area of either triangle is 0 -> bad
+		//H = R3D.affineMatrixLinear(pointsA,pointsB);
+		var pA0 = pointsA[0];
+		var pA1 = pointsA[1];
+		var pA2 = pointsA[2];
+		var pB0 = pointsB[0];
+		var pB1 = pointsB[1];
+		var pB2 = pointsB[2];
+		var pA01 = V2D.sub(pA1,pA0);
+		var pA12 = V2D.sub(pA2,pA1);
+		var pB01 = V2D.sub(pB1,pB0);
+		var pB12 = V2D.sub(pB2,pB1);
+		var area1 = Math.abs(V2D.cross(pA01,pA12));
+		var area2 = Math.abs(V2D.cross(pB01,pB12));
+		var limit = 1E-12;
+		if(area1<=limit || area2<=limit){
+			var a = Code.copyArray(pointsA,0,1);
+			var b = Code.copyArray(pointsB,0,1);
+			return R3D.homographyFromPoints(a,b,angle);
+		}
+		
+		var tx = pB0.x - pA0.x;
+		var ty = pB0.y - pA0.y;
+		var angleAB = V2D.angle(pA01,pB01);
+		var lenA01 = pA01.length();
+		var lenB01 = pB01.length();
+		var lenA12 = pA12.length();
+		var lenB12 = pB12.length();
+		var angleA = V2D.angle(pA01,V2D.DIRX);
+		var angleB = V2D.angle(pB01,V2D.DIRX);
+		var scaleX = lenB01/lenA01;
+			// A
+			var nDotA = V2D.dot(pA01,pA12) / lenA01;
+			var paraA01 = pA01.copy().scale(nDotA/lenA01);
+			var perpA12 = V2D.sub(pA12,paraA01);
+			var lenPerpA12 = perpA12.length();
+			// B
+			var nDotB = V2D.dot(pB01,pB12) / lenB01;
+			var paraB01 = pB01.copy().scale(nDotB/lenB01);
+			var perpB12 = V2D.sub(pB12,paraB01);
+			var lenPerpB12 = perpB12.length();
+		var scaleY = lenPerpB12/lenPerpA12;
+		// skew
+		var soloA12 = V2D.rotate(pA12,-angleA);
+		var soloB12 = V2D.rotate(pB12,-angleB);
+		soloA12.scale(scaleX,scaleY);
+		var skew = (soloB12.x - soloA12.x)/soloB12.y;
+		H = new Matrix(3,3).identity();
+		H = Matrix.transform2DTranslate(H, -pA0.x,-pA0.y);
+		H = Matrix.transform2DRotate(H, -angleA);
+		H = Matrix.transform2DScale(H, scaleX, scaleY);
+		H = Matrix.transform2DSkewX(H, skew);
+		H = Matrix.transform2DRotate(H, angleB);
+		H = Matrix.transform2DTranslate(H, pB0.x,pB0.y);
+	}else{ // if(len>=4){ // projective
+		H = R3D.projectiveMatrixLinear(pointsA,pointsB);
+		//H.scale( 1.0/H.get(2,2) );
+		//H = R3D.projectX(pointsA,pointsB);
+		//H = R3D.DLT2D(pointsA,pointsB);
+	}
+	return H;
+}
+
+R3D.DLT2D = function(pointsFr,pointsTo){
+	var i, j, fr, to, len = pointsFr.length;
+	var v = new V2D(), u = new V2D();
+	var rows = len*2;
+	var cols = 9;
+	var A = new Matrix(rows,cols);
+	for(i=0;i<len;++i){
+		fr = pointsFr[i];
+		to = pointsTo[i];
+		u.x=fr.x; u.y=fr.y;
+		v.x=to.x; v.y=to.y;
+		A.set(i*2+0,0, u.x);
+		A.set(i*2+0,1, u.y);
+		A.set(i*2+0,2, 1.0);
+		A.set(i*2+0,3, 0.0);
+		A.set(i*2+0,4, 0.0);
+		A.set(i*2+0,5, 0.0);
+		A.set(i*2+0,6, -v.x*u.x);
+		A.set(i*2+0,7, -v.x*u.y);
+		A.set(i*2+0,8, -v.x);
+		//
+		A.set(i*2+1,0, 0.0);
+		A.set(i*2+1,1, 0.0);
+		A.set(i*2+1,2, 0.0);
+		A.set(i*2+1,3, u.x);
+		A.set(i*2+1,4, u.y);
+		A.set(i*2+1,5, 1.0);
+		A.set(i*2+1,6, -v.y*u.x);
+		A.set(i*2+1,7, -v.y*u.y);
+		A.set(i*2+1,8, -v.y);
+	}
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(8);
+	var H = new Matrix(3,3).setFromArray(coeff);
+	H.scale( 1.0/H.get(2,2) );
+	return H;
+}
+
+
+R3D.affineDLT = function(pointsFr,pointsTo){ // 3 points = affine matrix tranformation
+	var i, j, fr, to, len = pointsFr.length;
+	var v = new V3D(), u = new V3D();
+	var rows = len*2;
+	var cols = 7;
+	var A = new Matrix(rows,cols);
+	for(i=0;i<len;++i){
+		fr = pointsFr[i];
+		to = pointsTo[i];
+		u.x=fr.x; u.y=fr.y;
+		v.x=to.x; v.y=to.y;
+		A.set(i*2+0,0, u.x);
+		A.set(i*2+0,1, u.y);
+		A.set(i*2+0,2, 1.0);
+		A.set(i*2+0,3, 0.0);
+		A.set(i*2+0,4, 0.0);
+		A.set(i*2+0,5, 0.0);
+		A.set(i*2+0,6, -v.x);
+		//
+		A.set(i*2+1,0, 0.0);
+		A.set(i*2+1,1, 0.0);
+		A.set(i*2+1,2, 0.0);
+		A.set(i*2+1,3, u.x);
+		A.set(i*2+1,4, u.y);
+		A.set(i*2+1,5, 1.0);
+		A.set(i*2+1,6, -v.y);
+	}
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(6);
+	coeff = [ coeff[0]/coeff[6], coeff[1]/coeff[6], coeff[2]/coeff[6], coeff[3]/coeff[6], coeff[4]/coeff[6], coeff[5]/coeff[6] ];
+	coeff.push(0,0,1);
+	var H = new Matrix(3,3).setFromArray(coeff);
+	return H;
+}
+
+
 R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x3 homography / projection matrix -- need 2nx9 == 4 correspondences
 	var i, j, fr, to, len = pointsFr.length;
 	var v = new V3D(), u = new V3D();
 	var rows = len*3;
 	var cols = 9;
 	var A = new Matrix(rows,cols);
-//	var B = new Matrix(rows,1); // zeros
 	for(i=0;i<len;++i){
 		fr = pointsFr[i];
 		to = pointsTo[i];
