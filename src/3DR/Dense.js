@@ -37,8 +37,8 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(0.1);
-		//d.graphics().alpha(1.0);
+		//d.graphics().alpha(0.1);
+		d.graphics().alpha(1.0);
 		//d.graphics().alpha(0.0);
 		d.matrix().translate(x,y);
 		x += img.width;
@@ -3302,7 +3302,7 @@ Dense.denseMatch_iteration = function(){
 	}
 	Dense.ITERATION = iteration;
 	display.moveToFront();
-	display.graphics().alpha(0.15);
+	display.graphics().alpha(0.5);
 	Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
 }
 
@@ -3347,8 +3347,8 @@ Dense.visualizeLattice = function(lattice, display){
 				var angle = c.angle();
 				var scale = c.scale();
 				var relativeDirA = V2D.sub(from,originA);
+				//scale = 1.0;
 				var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
-				//var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB);
 				nextPos.add(pos);
 			}
 			vertex._projected = nextPos;
@@ -3630,52 +3630,7 @@ Dense.Interpolator = function(cells){
 		for(i=0; i<hull.length; ++i){
 			this._hullFilled.push( points[hull[i]] );
 		}
-
-		// for(i=0; i<triangles.length; ++i){
-		// 	var tri = triangles[i];
-		// 	var cA = datas[tri[0]];
-		// 	var cB = datas[tri[1]];
-		// 	var cC = datas[tri[2]];
-		// 		d = new DO();
-		// 		d.graphics().clear();
-		// 		d.graphics().setLine(2.0, 0xFFFF0000);
-		// 		d.graphics().beginPath();
-		// 		d.graphics().drawPolygon([cA.from(),cB.from(),cC.from()], true);
-		// 		d.graphics().strokeLine();
-		// 		d.graphics().endPath();
-		// 		display.addChild(d);
-		// 		d = new DO();
-		// 		d.graphics().clear();
-		// 		d.graphics().setLine(2.0, 0xFFFF0000);
-		// 		d.graphics().beginPath();
-		// 		d.graphics().drawPolygon([cA.to(),cB.to(),cC.to()], true);
-		// 		d.graphics().strokeLine();
-		// 		d.graphics().endPath();
-		// 		display.addChild(d);
-		// 		d.matrix().translate(offX,offY);
-		// 	for(j=0;j<3;++j){
-		// 		var ray = rays[tri[j]];
-		// 		console.log(ray);
-		// 		if(ray){
-		// 			console.log(ray);
-		// 			ray = ray.copy().scale(100.0);
-		// 			var fr = datas[tri[j]].from();
-		// 			var to = V2D.add(fr,ray);
-		// 			d = new DO();
-		// 			d.graphics().clear();
-		// 			d.graphics().setLine(2.0, 0xFF0000BB);
-		// 			d.graphics().beginPath();
-		// 			d.graphics().drawPolygon([fr,to]);
-		// 			d.graphics().strokeLine();
-		// 			d.graphics().endPath();
-		// 			display.addChild(d);
-		// 		}
-		// 	}
-		// 		//d.graphics().drawPolygon([tri.A(),tri.B(),tri.C()], true);
-		// }
 	}
-
-
 }
 
 Dense.Interpolator.prototype.value = function(point){
@@ -3704,7 +3659,7 @@ Dense.Interpolator.prototype.value = function(point){
 		var dB = V2D.distance(closest, pointB);
 		if(dA<distanceAB && dB<distanceAB){
 			var fracA = dB/distanceAB;
-			var fracB = 1.0 - fracA; // dA/distanceAB;
+			var fracB = dA/distanceAB; // 1.0 - fracA; //
 			items.push({"value":cellA, "percent":fracA});
 			items.push({"value":cellB, "percent":fracB});
 		}else if(dB<dA){ // all B
@@ -3738,71 +3693,73 @@ Dense.Interpolator.prototype.value = function(point){
 				}
 			}
 		}else{
-			// find closest perimeter point & choose adjacent neighbors
-			var closestCells = null;
-			var closestSet = null;
-			var closestRays = null;
 			var closestDistance = null;
-			for(i=0; i<hull.length; ++i){
-				var p = points[ hull[i] ];
-				var distance = V2D.distance(point,p);
-				if(closestDistance==null || distance<closestDistance){
-					closestDistance = distance;
-					var curr = hull[i];
-					var prev = hull[(i-1+hull.length)%hull.length];
-					var next = hull[(i+1)%hull.length];
-					closestSet = [ points[prev], points[curr], points[next] ];
-					closestRays = [ rays[prev], rays[curr], rays[next] ];
-					closestCells = [ datas[prev], datas[curr], datas[next] ];
+			var closestPoint = null;
+			var cellA = null;
+			var cellB = null;
+			var rayA = null;
+			var rayB = null;
+			for(i=0; i<hull.length; ++i){ // for every pair of hull points
+				var curr = hull[i];
+				var next = hull[(i+1)%hull.length];
+				var a = points[curr];
+				var b = points[next];
+				var ab = V2D.sub(b,a);
+				var rA = rays[curr];
+				var rB = rays[next];
+				var ap = V2D.sub(p,a);
+				var bp = V2D.sub(p,b);
+				var angleAPR = V2D.angleDirection(ap,rA);
+				var angleRPB = V2D.angleDirection(rA,bp);
+				//var consistent = (angleAPR<0 && angleRPB<0) ; // || (angleAPR>0 && angleRPB>0);
+				if(true){
+					var closest = Code.closestPointLineSegment2D(a,ab, point);
+					var distance = V2D.distance(point,closest);
+					if(closestDistance==null || distance<closestDistance){ // || (distance==closestDistance&&consistent) ){
+						closestDistance = distance;
+						closestPoint = closest;
+						cellA = datas[curr];
+						cellB = datas[next];
+						rayA = rays[curr];
+						rayB = rays[next];
+					}
 				}
 			}
-			//console.log( closestSet, closestRays, closestCells );
-			var prev = closestSet[0];
-			var curr = closestSet[1];
-			var next = closestSet[2];
-			var rayP = closestRays[0];
-			var rayC = closestRays[1];
-			var rayN = closestRays[2];
-// d = new DO();
-// d.graphics().clear();
-// d.graphics().setLine(2.0, 0xFFFF0000);
-// d.graphics().beginPath();
-// d.graphics().moveTo(prev.x,prev.y);
-// d.graphics().lineTo(curr.x,curr.y);
-// d.graphics().lineTo(next.x,next.y);
-// d.graphics().strokeLine();
-// d.graphics().endPath();
-// GLOBALSTAGE.addChild(d);
+			var cA = cellA.from();
+			var cB = cellB.from();
+
+			// use rays
+			// var gamma = V2D.sub(cB,cA);
+			// var pointA = Code.rayLineIntersect2D(point,gamma, cA,rayA);
+			// var pointB = Code.rayLineIntersect2D(point,gamma, cB,rayB);
+			// var dA = V2D.distance(point, pointA);
+			// var dB = V2D.distance(point, pointB);
+			// use nearest
+			var pointA = cellA.from();
+			var pointB = cellB.from();
+			var dA = V2D.distance(closestPoint, pointA);
+			var dB = V2D.distance(closestPoint, pointB);
 
 			
-			var o, d, intersectA, intersectB;
-			intersectA = Code.rayFiniteInfinitePositiveIntersect2D(point, V2D.sub(prev,point), curr,rayC);
-			intersectB = Code.rayFiniteInfinitePositiveIntersect2D(point, V2D.sub(next,point), curr,rayC);
-			var startA, startB, rayA, rayB, gamma, cellA, cellB;
-			// drop neighbor who has intersection with infinte-ray
-			if(intersectA){ // use next
-				cellA = closestCells[1];
-				cellB = closestCells[2];
-				startA = curr;
-				startB = next;
-				rayA = rayC;
-				rayB = rayN;
-			}else{ // must intersect next, use prev
-				cellA = closestCells[0];
-				cellB = closestCells[1];
-				startA = prev;
-				startB = curr;
-				rayA = rayP;
-				rayB = rayC;
-			}
+/*
+if(point.x==5 && point.y==265){
+//if(point.x==5 && point.y==225){
+//if(point.x==5 && point.y==145){
+d = new DO();
+d.graphics().clear();
+d.graphics().setLine(2.0, 0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().moveTo(pointA.x,pointA.y);
+d.graphics().lineTo(pointB.x,pointB.y);
+d.graphics().drawCircle(point.x,point.y, 3.0);
+d.graphics().strokeLine();
+d.graphics().endPath();
+GLOBALSTAGE.addChild(d);
 
-			var pointA = startA;
-			var pointB = startB;
-			var rayAB = V2D.sub(pointB,pointA);
-			var distanceAB = rayAB.length();
-			var closest = Code.closestPointLine2D(startA,rayAB, point);
-			var dA = V2D.distance(closest, pointA);
-			var dB = V2D.distance(closest, pointB);
+}
+*/
+			
+			var distanceAB = V2D.distance(pointA, pointB);
 			if(dA<distanceAB && dB<distanceAB){
 				var fracA = dB/distanceAB;
 				var fracB = 1.0 - fracA; // dA/distanceAB;
@@ -3813,37 +3770,6 @@ Dense.Interpolator.prototype.value = function(point){
 			}else if(dA<dB){ // all A
 				items.push({"value":cellA, "percent":1.0});
 			}
-
-
-			/*
-			// extended close point
-			gamma = V2D.sub(startB,startA).norm();
-			// form ray from 2 remaining points & set endpoints to A/B infinite-ray intersections
-			// rayLineIntersect2D
-			// rayIntersect2D
-			var A = Code.rayLineIntersect2D(point,gamma, startA,rayA);
-			var B = Code.rayLineIntersect2D(point,gamma, startB,rayB);
-			if(A && B){
-				//console.log("intersect: "+point+" | "+gamma+" | "+startA+" | "+rayA+" | "+A);
-// d = new DO();
-// d.graphics().clear();
-// d.graphics().setLine(2.0, 0x33FF0000);
-// d.graphics().beginPath();
-// d.graphics().moveTo(A.x,A.y);
-// d.graphics().lineTo(B.x,B.y);
-// d.graphics().strokeLine();
-// d.graphics().endPath();
-// GLOBALSTAGE.addChild(d);
-
-				var dAB = V2D.distance(A,B);
-				var dA = V2D.distance(A,point);
-				var dB = V2D.distance(B,point);
-				var pA = 1.0 - dA/dAB;
-				var pB = 1.0 - dB/dAB;
-				items.push({"value":cellA, "percent":pA});
-				items.push({"value":cellB, "percent":pB});
-			}
-		*/
 		}
 		
 	}
@@ -3873,6 +3799,20 @@ while(next match exists and has at least minimum score):
       - select cell definitive feature point (eg highest corner score)
       - search corresponding area's cell's neighbors [not just perimeter] for best match
       - add best match to global queue
+
+
+check that match will be consistenf before allowing [consistency may have changed since added]
+- should not make match if:
+	an affected triangle will swap directions
+
+on match:
+	- update inerpolation-matching model
+	for each unmatched neighbor cell:
+		- search for match ONLY IN DIRECTION AWAY FROM CENTER CELL + error
+		- use projected model for TO
+
+	
+
 
 */
 
