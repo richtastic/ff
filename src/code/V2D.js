@@ -201,12 +201,20 @@ V2D.prototype.setLength = function(l){
 	this.x *= l; this.y *= l;
 	return this;
 }
-V2D.prototype.add = function(v){
-	this.x += v.x; this.y += v.y;
+V2D.prototype.add = function(v,w){
+	if(w!==undefined){
+		this.x += v; this.y += w;
+	}else{
+		this.x += v.x; this.y += v.y;
+	}
 	return this;
 }
 V2D.prototype.sub = function(v){
-	this.x -= v.x; this.y -= v.y;
+	if(w!==undefined){
+		this.x -= v; this.y -= w;
+	}else{
+		this.x -= v.x; this.y -= v.y;
+	}
 	return this;
 }
 V2D.prototype.toArray = function(){
