@@ -388,26 +388,32 @@ Voronoi.Arc._mergeArcs2 = function(arcL,arcC,arcR){
 	newR.edgeRight(arcR.edgeRight());
 	var centerDistance = arcC.intersectionAverage();
 	var intersections = Code.intersectionParabolas(newL.center().point(),newL.directrix().y, newR.center().point(),newR.directrix().y);
-	if(intersections.length==2){
-		if(intersections[0].x>intersections[1].x){ // order
-			intersections = [intersections[1],intersections[0]];
-		}
-		var distanceA = Math.abs(intersections[0].x-centerDistance);
-		var distanceB = Math.abs(intersections[1].x-centerDistance);
-		/*if(distanceA==distanceB){
+	if(!intersections){
+		throw "NO intersections";
+	}
+//	if(intersections){
+if(true){
+		if(intersections.length==2){
+			if(intersections[0].x>intersections[1].x){ // order
+				intersections = [intersections[1],intersections[0]];
+			}
+			var distanceA = Math.abs(intersections[0].x-centerDistance);
+			var distanceB = Math.abs(intersections[1].x-centerDistance);
+			/*if(distanceA==distanceB){
+				newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+				newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+			}else*/ if(distanceA<distanceB){
+				newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+				newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+			}else{
+				newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
+				newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
+			}
+		}else if(intersections.length==1){
+			// doesn't matter
 			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
-		}else*/ if(distanceA<distanceB){
-			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
-			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
-		}else{
-			newL.rightDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
-			newR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
 		}
-	}else if(intersections.length==1){
-		// doesn't matter
-		newL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
-		newR.leftDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
 	}else{ // 
 		console.log("????????");
 	}
@@ -802,7 +808,9 @@ Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right,
 	// queue point
 	var point = new V2D(circle.center.x,circle.center.y-circle.radius);
 	 // find node to attach to by point search
-	var arc = this._tree.findNodeFromObject(circle.center).data();
+	var arc = this._tree.findNodeFromObject(circle.center);
+	if(!arc){ return; } // TODO: WHY IS ARC NULL?
+	arc = arc.data();
 	var aboveCenter = Code.isPointAboveParabola(arc.center().point(),directrix.y, circle.center);
 	if(!aboveCenter && point.y<=directrix.y){
 		var circleEvent = new Voronoi.Event(point,Voronoi.EVENT_TYPE_CIRCLE);
@@ -814,7 +822,7 @@ Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right,
 	} // else point is in past
 }
 Voronoi.WaveFront.prototype.removeArcAtCircleWithDirectrixAndQueueAndGraph = function(circleEvent, directrix, queue, graph){
-//console.log("BEFORE MERGE:        -------------------- -------------------------------");
+//console.log("BEFORE MERGE:        -------------------- ------------------------------- "+circleEvent+" | "+directrix);
 	var i, list, left, center, right, node, vertex, nc;
 	center = circleEvent.center();
 	nc = center.node();

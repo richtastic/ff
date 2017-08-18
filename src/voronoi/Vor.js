@@ -109,9 +109,22 @@ Vor.prototype.voronoi = function(){
 // points.push( new V2D(361,183) );
 // points.push( new V2D(18,225) );
 
-points.push( new V2D(18,225) );
-points.push( new V2D(172,107) );
-points.push( new V2D(22.5,166) );
+// points.push( new V2D(18,225) );
+// points.push( new V2D(172,107) );
+// points.push( new V2D(22.5,166) );
+
+
+// points.push( new V2D(18,225) );
+// points.push( new V2D(172,225) );
+// points.push( new V2D(22.5,225) );
+// points.push( new V2D(100,200) );
+
+//<15,215> | <15,205> | <15,175> ::: false
+
+points.push( new V2D(15,215) );
+points.push( new V2D(15,205) );
+points.push( new V2D(15,175) );
+Code.colinear(new V2D(15,215), new V2D(15,205), new V2D(15,175));
 
 
 // TEST GROUP:

@@ -386,9 +386,44 @@ cap strong gradients with sigmoid: 2/(1 + exp(-a*x))
 		=> use direction?
 		=> use ?
 
-s(a) = roughness metric
-d(a,b) = image intensity / color difference between neighborhooZ
-reliability measure: r(a,b) = min(s(a),s(b)) / d(a,b)
+i,j = pixel in image
+a = pixel in image A
+b = pixel in image B
+N_w(i) = w x w window around pixel i
+n(a,b) = weighted intensity measure difference of pixels
+	= 0.299*|r_a-r_b| + 0.587*|g_a-g_b| + 0.114*|b_a-b_b|
+s(i) = roughness metric
+	= max() n(i,j), i-j in {(1,0),(-1,0),(0,1),0,-1} )   [4-neighborhood pixel difference maximum]
+s0 = lower threshold of roughness
+	= 0.04
+d(a,b) = image intensity / color difference between neighborhood
+	= (1/9) * sum n(a+del,b+del) ; del in [-1,0,1]x[-1,0,1]
+d0 = upper threshold of intensity difference
+	= 0.07
+r(a,b) = reliability measure of pixel pair [higher is better]
+	= smallest of roughness estimate / intensity difference
+	= min(s(a),s(b)) / d(a,b)
+
+
+
+--- force some minimum distance from nearest neighbor ?
+	go thru all matched cells
+		find nearest in TO space
+			if nearestTo/nearestFrom >= MIN_DIST_SCALE [~0.1 == 10x scale] 
+				=> can match
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

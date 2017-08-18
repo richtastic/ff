@@ -5371,7 +5371,30 @@ Code.intersectionRayParabola = function(org,dir, foc,drx){
 	return [new V2D(x1,y1), new V2D(x2,y2)];
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
+Code.colinear = function(a,b,c){
+	var EPSILON = 1E-12;
+	var OME = 1.0 - EPSILON;
+	var ab = V2D.sub(b,a);
+	var bc = V2D.sub(c,b);
+	var ca = V2D.sub(a,c);
+	ab.norm();
+	bc.norm();
+	ca.norm();
+	var dot1 = V2D.dot(ab,bc);
+	var dot2 = V2D.dot(bc,ca);
+	var dot3 = V2D.dot(ca,ab);
+	dot1 = Math.abs(dot1);
+	dot2 = Math.abs(dot2);
+	dot3 = Math.abs(dot3);
+	if(dot1>=OME || dot2>=OME || dot3>=OME ){
+		return true;
+	}
+	return false;
+}
 Code.circleFromPoints = function(a,b,c){
+	if(Code.colinear(a,b,c)){
+		return null;
+	}
 	var lineAB = V2D.sub(a,b);
 	var lineBC = V2D.sub(b,c);
 	//var lineAC = V2D.sub(a,c);

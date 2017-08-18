@@ -2629,6 +2629,8 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	minY = y - minY;
 	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 	if(isNaN(val)){
+		//if(isNaN(x))
+		throw("Image Mat NaN "+wid+" "+hei+" "+x+" "+y);
 		console.log("PT",wid,hei,x,y);
 		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP );
 		//console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
