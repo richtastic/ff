@@ -413,8 +413,9 @@ r(a,b) = reliability measure of pixel pair [higher is better]
 				=> can match
 
 
-
-
+--- why is haystack location off by small amount
+--- better reliability metric
+--- iterate over all perimeters before choosing
 
 
 

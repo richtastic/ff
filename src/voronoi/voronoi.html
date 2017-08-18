@@ -9,7 +9,9 @@ function pageLoadedFxn(){
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
-	var list = ["Vertex.js","Edge.js","Graph.js","Delaunay.js","Vor.js"];
+	var list = ["Vor.js"];
+	// "Vertex.js", "Delaunay.js"
+	// ,"Graph.js", "Edge.js",
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }
@@ -34,6 +36,8 @@ console.log(tree.toString());
 tree.insertNode(node);
 console.log(tree.toString());
 */
+
+
 	var voronoi = new Vor();
 }
 

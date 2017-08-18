@@ -120,11 +120,146 @@ Vor.prototype.voronoi = function(){
 // points.push( new V2D(100,200) );
 
 //<15,215> | <15,205> | <15,175> ::: false
-
+/*
 points.push( new V2D(15,215) );
 points.push( new V2D(15,205) );
 points.push( new V2D(15,175) );
 Code.colinear(new V2D(15,215), new V2D(15,205), new V2D(15,175));
+*/
+
+// real example:
+points.push( new V2D(219,66) );
+points.push( new V2D(250,72) );
+points.push( new V2D(252.5,77.5) );
+points.push( new V2D(247.5,82.5) );
+points.push( new V2D(252.5,82.5) );
+points.push( new V2D(226,87) );
+points.push( new V2D(237.5,87.5) );
+points.push( new V2D(242.5,87.5) );
+points.push( new V2D(247.5,87.5) );
+points.push( new V2D(227.5,92.5) );
+points.push( new V2D(237.5,92.5) );
+points.push( new V2D(242.5,92.5) );
+points.push( new V2D(222.5,97.5) );
+points.push( new V2D(242.5,97.5) );
+points.push( new V2D(247.5,97.5) );
+points.push( new V2D(252.5,97.5) );
+points.push( new V2D(260,103) );
+points.push( new V2D(172,107) );
+points.push( new V2D(197.5,107.5) );
+points.push( new V2D(202.5,107.5) );
+points.push( new V2D(257.5,107.5) );
+points.push( new V2D(167.5,112.5) );
+points.push( new V2D(182.5,112.5) );
+points.push( new V2D(192.5,112.5) );
+points.push( new V2D(197.5,112.5) );
+points.push( new V2D(202.5,112.5) );
+points.push( new V2D(252.5,112.5) );
+points.push( new V2D(182.5,117.5) );
+points.push( new V2D(187.5,117.5) );
+points.push( new V2D(192.5,117.5) );
+points.push( new V2D(197.5,117.5) );
+points.push( new V2D(202.5,117.5) );
+points.push( new V2D(187.5,122.5) );
+points.push( new V2D(202.5,122.5) );
+points.push( new V2D(207.5,122.5) );
+points.push( new V2D(202,127) );
+points.push( new V2D(202.5,132.5) );
+points.push( new V2D(207.5,132.5) );
+points.push( new V2D(197.5,137.5) );
+points.push( new V2D(202.5,137.5) );
+points.push( new V2D(222.5,137.5) );
+points.push( new V2D(227.5,137.5) );
+points.push( new V2D(237.5,137.5) );
+points.push( new V2D(192.5,142.5) );
+points.push( new V2D(197.5,142.5) );
+points.push( new V2D(202.5,142.5) );
+points.push( new V2D(207.5,142.5) );
+points.push( new V2D(212.5,142.5) );
+points.push( new V2D(232.5,142.5) );
+points.push( new V2D(187.5,147.5) );
+points.push( new V2D(192.5,147.5) );
+points.push( new V2D(207.5,147.5) );
+points.push( new V2D(212.5,147.5) );
+points.push( new V2D(217.5,147.5) );
+points.push( new V2D(222.5,147.5) );
+points.push( new V2D(227.5,147.5) );
+points.push( new V2D(232.5,147.5) );
+points.push( new V2D(242.5,147.5) );
+points.push( new V2D(247.5,147.5) );
+points.push( new V2D(182.5,152.5) );
+points.push( new V2D(192.5,152.5) );
+points.push( new V2D(197.5,152.5) );
+points.push( new V2D(202.5,152.5) );
+points.push( new V2D(207.5,152.5) );
+points.push( new V2D(212.5,152.5) );
+points.push( new V2D(216,154) );
+points.push( new V2D(222.5,152.5) );
+points.push( new V2D(227.5,152.5) );
+points.push( new V2D(232.5,152.5) );
+points.push( new V2D(242.5,152.5) );
+points.push( new V2D(247.5,152.5) );
+points.push( new V2D(252.5,152.5) );
+points.push( new V2D(257.5,152.5) );
+points.push( new V2D(212.5,157.5) );
+points.push( new V2D(222.5,157.5) );
+points.push( new V2D(227.5,157.5) );
+points.push( new V2D(232.5,157.5) );
+points.push( new V2D(237.5,157.5) );
+points.push( new V2D(245,158) );
+points.push( new V2D(247.5,157.5) );
+points.push( new V2D(252.5,157.5) );
+points.push( new V2D(257.5,157.5) );
+points.push( new V2D(12.5,162.5) );
+points.push( new V2D(232.5,162.5) );
+points.push( new V2D(237.5,162.5) );
+points.push( new V2D(247.5,162.5) );
+points.push( new V2D(12.5,167.5) );
+points.push( new V2D(17.5,167.5) );
+points.push( new V2D(22.5,166) ); /////// no
+points.push( new V2D(2.5,172.5) );
+points.push( new V2D(7.5,172.5) );
+points.push( new V2D(12.5,172.5) );
+points.push( new V2D(17.5,172.5) );
+points.push( new V2D(27.5,172.5) );
+points.push( new V2D(7.5,177.5) );
+points.push( new V2D(12.5,177.5) );
+points.push( new V2D(17.5,177.5) );
+points.push( new V2D(27.5,182.5) );
+points.push( new V2D(361,183) );
+points.push( new V2D(27.5,187.5) );
+points.push( new V2D(12.5,192.5) );
+points.push( new V2D(22.5,192.5) );
+points.push( new V2D(27.5,192.5) );
+points.push( new V2D(32.5,192.5) );
+points.push( new V2D(17.5,197.5) );
+points.push( new V2D(22.5,197.5) );
+points.push( new V2D(27.5,197.5) );
+points.push( new V2D(32.5,197.5) );
+points.push( new V2D(32.5,202.5) );
+points.push( new V2D(17.5,207.5) );
+points.push( new V2D(27.5,207.5) );
+points.push( new V2D(32.5,207.5) );
+points.push( new V2D(17.5,212.5) );
+points.push( new V2D(22.5,212.5) );
+points.push( new V2D(27.5,212.5) );
+points.push( new V2D(32.5,212.5) );
+points.push( new V2D(37.5,212.5) );
+points.push( new V2D(42.5,212.5) );
+points.push( new V2D(27.5,217.5) );
+points.push( new V2D(32.5,217.5) );
+points.push( new V2D(37.5,217.5) );
+points.push( new V2D(7.5,222.5) );
+points.push( new V2D(12.5,222.5) );
+points.push( new V2D(18,225) );
+points.push( new V2D(22.5,222.5) );
+points.push( new V2D(27.5,222.5) );
+points.push( new V2D(7.5,227.5) );
+points.push( new V2D(12.5,227.5) );
+points.push( new V2D(17.5,227.5) );
+
+// causal
+points.push( new V2D(7.5,232.5) );
 
 
 // TEST GROUP:
@@ -187,18 +322,36 @@ Code.colinear(new V2D(15,215), new V2D(15,205), new V2D(15,175));
 // 	points.push( new V2D(Math.random()*30,Math.random()*10) );
 // }
 // remove duplicate points 
+
+for(var i=0;i<points.length;++i){
+		//if(points[i].y<-100){
+		if(points[i].y<170 || points[i].y>200){
+			points[i] = points[points.length-1];
+			points.pop();
+			--i;
+		}else{
+			console.log(points[i])
+		}
+	}
+console.log(points.length)
+
 Voronoi.removeDuplicatePoints2D(points);
+	
+
 //Voronoi.removePointsBelow(points, new V2D(0,5.0));
 	voronoi = new Voronoi();
 	var scale = 1;//1*30.0;
+	//console.log( Code.infoArray(points) )
 	for(i=0;i<points.length;++i){
-		points[i].x *= scale;
-		points[i].y *= scale;
-		points[i].y -= 100;
+		// points[i].x *= scale;
+		// points[i].y *= scale;
+		//points[i].y -= 57.502;
+		//points[i].y += 100;
+		//console.log( points[i]+"" )
 		this._root.addChild( Vor.makePoint(points[i]) );
 	}
 	// IF
-if(false){
+if(true){
 	animation:
 	this._animPoints = points;
 	var speed = 50;
@@ -207,6 +360,13 @@ if(false){
 	this._ticker.start();
 	return;
 }else{
+
+	//delaunay
+	//var res = Voronoi.delaunay(points, null);
+	var res = Voronoi.delaunay(points, points);
+	console.log(res)
+	
+
 	// ELSE
 	this._D = Voronoi.fortune(points);
 	var col = 0x0000FF00;
@@ -283,7 +443,7 @@ for(i=0; i<sites.length; ++i){
 		var point = points[i];
 		var perimeter = perimeters[i];
 		var ray = rays[i];
-		console.log(point,perimeter,ray);
+		//console.log(point,perimeter,ray);
 		if(ray){
 			ray = ray.copy().scale(100.0);
 			var fr = points[i];
@@ -301,11 +461,11 @@ for(i=0; i<sites.length; ++i){
 
 	var convexHull = this._D.convexHull();
 	display.graphics().beginPath();
-	display.graphics().setLine(2.0,0xFF00FF00);
+	display.graphics().setLine(2.0,0x9900FF00);
 	display.graphics().drawPolygon(convexHull,true);
 	display.graphics().strokeLine();
 	
-
+// SHOW VORONOI DIAGRAM
 	this._D.finalize(this._animParabolas);
 		this._animParabolas.graphics().clear();
 		// DRAW FINAL IMAGE
@@ -323,7 +483,7 @@ for(i=0; i<sites.length; ++i){
 			this._animParabolas.graphics().beginPath();
 			//var col = Code.getColARGB(0x33,Math.floor(Math.random()*256.0),Math.floor(Math.random()*256.0),0xFF);
 			this._animParabolas.graphics().setFill(col);
-			this._animParabolas.graphics().setLine(2.0,0xFF330099);
+			this._animParabolas.graphics().setLine(2.0,0x11330099);
 			if(A){
 				this._animParabolas.graphics().moveTo(A.point().x+Vor.magRand(),A.point().y+Vor.magRand());
 			}
@@ -381,7 +541,7 @@ Vor.prototype.animation_tick = function(t){
 	this._directrix.y = this._animPosY;
 	directrix = this._directrix.y;
 	//
-	var offYStart = 400;//420;
+	var offYStart = 250;//420;
 	var rateStart = 0.5;//12.5;
 
 
@@ -407,9 +567,10 @@ this._directrix.copy( temp );
 //console.log("-------------------------------------------------------------------------------------------------------");
 		}
 		if(looped){ // pause at event
-			this._ticker.stop();
+			//this._ticker.stop();
 		}
-		console.log(" TREE B:\n"+this._T._tree+"\n");
+		console.log("DIR: "+directrix);
+		//console.log(" TREE B:\n"+this._T._tree+"\n");
 		//console.log(" TREE B:\n"+this._T._tree.toArray()+"\n");
 
 	}else{

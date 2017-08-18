@@ -5372,7 +5372,7 @@ Code.intersectionRayParabola = function(org,dir, foc,drx){
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
 Code.colinear = function(a,b,c){
-	var EPSILON = 1E-12;
+	var EPSILON = 1E-10;
 	var OME = 1.0 - EPSILON;
 	var ab = V2D.sub(b,a);
 	var bc = V2D.sub(c,b);

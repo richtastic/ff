@@ -3501,6 +3501,7 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_DOWN,Dense.denseMatch_iteration_key,Dense);
 	Dense.KEYBOARD.addListeners();
 }
+
 Dense.denseMatch_iteration = function(){
 	var localQueue = Dense.LOCALQUEUE;
 	var globalQueue = Dense.GLOBALQUEUE;
@@ -3527,6 +3528,8 @@ Dense.denseMatch_iteration = function(){
 		var nextVertex = globalQueue.popMinimum();
 		console.log("NEXT: "+iteration+" = "+nextVertex);
 
+		// @ 247
+
 		// set vertex as finalized
 		nextVertex.join();
 
@@ -3536,6 +3539,12 @@ Dense.denseMatch_iteration = function(){
 		for(i=0; i<cells.length; ++i){
 			cell = cells[i];
 			points.push(cell.from());
+		}
+		//if(iteration==247){
+		if(true){
+			console.log(points);
+			console.log("A IN");
+			console.log("B OUT");
 		}
 
 		interpolator = new Dense.Interpolator(cells);
@@ -3797,7 +3806,7 @@ Dense.Interpolator = function(cells){
 	var i;
 	var points = [];
 	for(i=0; i<cells.length; ++i){
-		points.push( cells[i].from() );
+		points.push( cells[i].from().copy() );
 	}
 	this._points = points;
 
@@ -3808,6 +3817,7 @@ Dense.Interpolator = function(cells){
 	}else if(points.length==2){
 		// everything is outside
 	}else if(points.length>=3){
+		console.log(points)
 		var triangulation = Voronoi.delaunay(points, cells);
 		var datas = triangulation["datas"];
 		var points = triangulation["points"];

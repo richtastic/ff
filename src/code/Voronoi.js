@@ -67,6 +67,9 @@ Voronoi.sortPointsY = function(a,b){
 Voronoi.fortune = function(points, attachments){
 	var i, e, p;
  	points = Code.copyArray(points);
+ 	if(attachments){
+ 		attachments = Code.copyArray(attachments);
+ 	}
 	Voronoi.removeDuplicatePoints2D(points, attachments);
 	var Q = new Voronoi.Queue();
 	for(i=0; i<points.length;++i){
@@ -78,6 +81,7 @@ Voronoi.fortune = function(points, attachments){
 		}
 		Q.addEvent( e );
 	}
+try{
 	var T = new Voronoi.WaveFront();
 	var D = new Voronoi.EdgeGraph();
 	var directrix = new V2D();
@@ -90,6 +94,18 @@ Voronoi.fortune = function(points, attachments){
 			T.removeArcAtCircleWithDirectrixAndQueueAndGraph(next, directrix, Q, D);
 		}
 	}
+}catch(x){
+	console.log("got error ");
+	var str = "\n";
+	for(var i=0; i<points.length; ++i){
+		//console.log(points[i]);
+		var p = points[i];
+		str += "points.push( new V2D("+p.x+","+p.y+") );\n";
+	}
+	str += "\n";
+	//console.log(str);
+	throw("yep");
+}
 	//D.removeDuplicates(); // this infitesimal points are actually needed for delauny generation
 	return D;
 }
@@ -675,6 +691,7 @@ Voronoi.WaveFront.prototype.nextNode = function(arc){
 	return this._tree.nextNode(node);
 }
 Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = function(siteEvent,directrix,queue,graph){
+	//console.log(siteEvent,directrix,queue,graph)
 	var arc, node, list, i, left, center, right, edge, point, site;
 	point = siteEvent.point();
 	site = siteEvent.site();
@@ -722,6 +739,13 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 	}else{
 		// find arc to split
 		node = this._tree.findObject( site.point() );
+		if(!node){
+			console.log(site+"");
+			console.log(site);
+			console.log(site.point()+"");
+			console.log(site.point());
+			throw "node is null";
+		}
 		arc = node.data();
 		// remove false-alarm circle events
 		queue.removeEvent( arc.circleEvent() );
