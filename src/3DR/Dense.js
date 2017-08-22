@@ -3444,7 +3444,6 @@ Dense.Vertex._queueSorting = function(a,b){
 Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	var pointsA = seedsA;
 	var pointsB = seedsB;
-
 	// IMAGES
 	var imageARed = imageA.red();
 	var imageAGrn = imageA.grn();
@@ -3469,8 +3468,8 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 
 	// LATTICE
 	//var cellSize = 15;
-	//var cellSize = 10;
-	var cellSize = 5;
+	var cellSize = 10;
+	//Zvar cellSize = 5;
 	//var cellSize = 2;
 
 	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA, cellSize, matrixFfwd);
@@ -3501,7 +3500,6 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_DOWN,Dense.denseMatch_iteration_key,Dense);
 	Dense.KEYBOARD.addListeners();
 }
-
 Dense.denseMatch_iteration = function(){
 	var localQueue = Dense.LOCALQUEUE;
 	var globalQueue = Dense.GLOBALQUEUE;
@@ -3528,8 +3526,6 @@ Dense.denseMatch_iteration = function(){
 		var nextVertex = globalQueue.popMinimum();
 		console.log("NEXT: "+iteration+" = "+nextVertex);
 
-		// @ 247
-
 		// set vertex as finalized
 		nextVertex.join();
 
@@ -3539,12 +3535,6 @@ Dense.denseMatch_iteration = function(){
 		for(i=0; i<cells.length; ++i){
 			cell = cells[i];
 			points.push(cell.from());
-		}
-		//if(iteration==247){
-		if(true){
-			console.log(points);
-			console.log("A IN");
-			console.log("B OUT");
 		}
 
 		interpolator = new Dense.Interpolator(cells);
@@ -3612,7 +3602,7 @@ console.log("CELL POINTS: "+pA+" => "+pB);
 	display.moveToFront();
 	display.graphics().alpha(0.5);
 	Dense.interpolator = interpolator;
-//	Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
+	//Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
 }
 
 Dense.visualizeLattice = function(lattice, display){
@@ -3806,9 +3796,12 @@ Dense.Interpolator = function(cells){
 	var i;
 	var points = [];
 	for(i=0; i<cells.length; ++i){
-		points.push( cells[i].from().copy() );
+		points.push( cells[i].from() );
 	}
+	//console.log("ORIGINAL POINTS:");
+	//console.log(points);
 	this._points = points;
+	//Code.printPoints(this._points);
 
 	if(points.length==0){
 		// N/A
@@ -3817,7 +3810,6 @@ Dense.Interpolator = function(cells){
 	}else if(points.length==2){
 		// everything is outside
 	}else if(points.length>=3){
-		console.log(points)
 		var triangulation = Voronoi.delaunay(points, cells);
 		var datas = triangulation["datas"];
 		var points = triangulation["points"];
@@ -3896,6 +3888,8 @@ Dense.Interpolator.prototype.value = function(point){
 		}
 	}else if(points.length>=3){
 		//console.log("3");
+		//console.log(this._hullFilled)
+		//Code.printPoints(this._points);
 		var isInside = Code.isPointInsidePolygon2D(point, this._hullFilled);
 		if(isInside){
 			var tri = null;

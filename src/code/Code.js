@@ -1165,6 +1165,14 @@ Code.removeElements = function(a,f){ // preserves order O(n)
 		}
 	}
 }
+Code.printPoints = function(points){
+	var i, point, str = "";
+	for(i=0; i<points.length; ++i){
+		point = points[i];
+		str = str + "points.push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
+	}
+	console.log("\n\n"+str+"\n\n");
+}
 Code.removeElement = function(a,o){  // preserves order O(n)
 	// TODO USE SPLICE
 	var i, len = a.length;
@@ -5372,7 +5380,7 @@ Code.intersectionRayParabola = function(org,dir, foc,drx){
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
 Code.colinear = function(a,b,c){
-	var EPSILON = 1E-10;
+	var EPSILON = 1E-12;
 	var OME = 1.0 - EPSILON;
 	var ab = V2D.sub(b,a);
 	var bc = V2D.sub(c,b);
