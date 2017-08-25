@@ -1,5 +1,5 @@
 // Voronoi.js
-Voronoi.EPSILON = 1E-10;
+Voronoi.EPSILON = 1E-8;
 
 
 function Voronoi(){
@@ -7,7 +7,7 @@ function Voronoi(){
 	this._points = new Array();
 }
 // -----------------------------------------------------------------------------------------------
-Voronoi.pointsEqualToEpsilon = function(a,b){
+Voronoi.pointsEqualToEpsilon = function(a,b){ // TODO: USE SQUARE, NOT HYPOTENUSE
 	var dist = V2D.distance(a,b);
 	if(dist<Voronoi.EPSILON){
 		return true;
@@ -117,6 +117,7 @@ Voronoi._circleEvent = function(Q,T,D,gamma){
 
 Voronoi.delaunay = function(points, attachments){ // TODO: insertion-based delauny good for iteritive surface definition
 	var D = Voronoi.fortune(points, attachments);
+	//D.removeDuplicates();
 	return D.triangulate();
 }
 
@@ -225,6 +226,9 @@ Voronoi.Event.prototype.toString = function(){
 		str += "[CIRC ";
 	}
 	str += this._point+"";
+	if( this._type==Voronoi.EVENT_TYPE_CIRCLE){
+		str += this._circle.radius+"";
+	}
 	str += "]";
 	return str;
 }
@@ -234,16 +238,71 @@ Voronoi.Event.prototype.toString = function(){
 Voronoi.Queue = function(){
 	this._list = [];
 }
-Voronoi.Queue.sortPointY = function(a,b){ // since added after all site events, circle events are always first?
+Voronoi.equal = function(a,b){
+	return Voronoi.order(a,b)==0;
+}
+Voronoi.order = function(a,b){
+	if(a==b){
+		return 0;
+	}else{
+		return a<b ? -1 : 1;
+	}
+
+	var epsilon = Voronoi.EPSILON;
+	var diff = Math.abs(a-b);
+	if(diff<=epsilon){
+		return 0;
+	}
+	return a<b ? -1 : 1;
+}
+Voronoi.Queue.sortPointY = function(a,b){ // since added after all site events, circle events are always first ---- larger y > end, smaller x > end
 	var pointA = a.point();
 	var pointB = b.point();
+
+	var sortY = Voronoi.order(pointA.y,pointB.y);
+	var sortX = Voronoi.order(pointA.x,pointB.x);
+//	console.log(a.type()+" | "+b.type()+" @ "+sortY+" - "+sortX);
+	if(a.type()==Voronoi.EVENT_TYPE_CIRCLE && b.type()==Voronoi.EVENT_TYPE_SITE){
+		if(sortY==0){
+			return 1; // circle always
+		}else if(sortY==-1){
+			return -1; // site to end
+		} // else sortY==1
+		return 1; // circle to end
+	}else if(a.type()==Voronoi.EVENT_TYPE_SITE && b.type()==Voronoi.EVENT_TYPE_CIRCLE){
+		if(sortY==0){
+			return -1; // circle always
+		}else if(sortY==-1){
+			return -1; // circle to end
+		} // else sortY==1
+		return 1; // site to end
+	} // same types
+	if(sortY==0){
+		if(sortX==0){
+			return 0;
+		}else if(sortX==-1){
+			return -1;
+		} // else sortX==1
+		return 1;
+	}else if(sortY==-1){
+		return -1;
+	} // else sortY==1
+	return 1;
+	
+/*
 	if(pointA.y == pointB.y){
 		if(pointA.x == pointB.x){
+			if(a.type()==Voronoi.EVENT_TYPE_CIRCLE && b.type()==Voronoi.EVENT_TYPE_SITE){
+				return 1;
+			}else if(a.type()==Voronoi.EVENT_TYPE_SITE && b.type()==Voronoi.EVENT_TYPE_CIRCLE){
+				return -1;
+			}
 			return 0;
 		}
-		return pointA.x < pointB.x ? -1 : 1;
+		return pointA.x < pointB.x ? -1 : 1; // ???
 	}
 	return pointA.y < pointB.y ? -1 : 1;
+	*/
 }
 Voronoi.Queue.prototype.addEvent = function(e){
 	Code.addUnique(this._list,e);
@@ -284,6 +343,7 @@ Voronoi.Queue.prototype.removeCircleEventWithArcAndTree = function(arc,tree){
 	}
 }
 Voronoi.Queue.prototype.isEmpty = function(){
+	//console.log(this._list.length)
 	if(this._list.length>0){
 		return false;
 	}
@@ -361,8 +421,8 @@ Voronoi.Arc.prototype.copy = function(a){ // identical
 }
 // -------------------------------------------------------------------------------------------------------------------- class
 Voronoi.Arc.isArcToLeftOfArc = function(a,b){
-	console.log("isArcToLeftOfArc");
-	console.log(a,b);
+	// console.log("isArcToLeftOfArc");
+	// console.log(a,b);
 	var avgA = a.intersectionAverage();
 	var avgB = b.intersectionAverage();
 	// if(avgA==null || avgB==null){ // no intersections
@@ -380,18 +440,17 @@ Voronoi.Arc.isArcToLeftOfArc = function(a,b){
 }
 Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 	if(arc.containsPointBoolean(site.point())){
-		console.log("SPLIT: "+arc+"    @   "+site.point());
+		// console.log("SPLIT: "+arc+"    @   "+site.point());
 		var i = arc.intersections();
+		//console.log(i+" = "+i.length);
 		var l = i[0];
 		var r = i[1];
 		var dropLeft = false;
 		var dropRight = false;
-		//console.log("SPLIT ARC: "+arc+" @ "+site);
-		console.log(site.point(),arc.center().point());
+		var arcL, arcC, arcR;
 		if(site.point().y==arc.center().point().y){
-			console.log("parallel intersect ..."+site.point().x+" / "+arc.center().point().x);
-			var arcL, arcC, arcR;
 			if(site.point().x<arc.center().point().x){
+				//console.log("LEFT");
 				arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), site, arc.center(),Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
 				arcL.edgeLeft(arc.edgeLeft());
 				arcL.edgeRight(null);
@@ -399,6 +458,7 @@ Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 				arcR.edgeLeft(null);
 				arcR.edgeRight(arc.edgeRight());
 			}else{ //
+				//console.log("RIGHT");
 				arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
 				arcL.edgeLeft(arc.edgeLeft());
 				arcL.edgeRight(null);
@@ -406,19 +466,95 @@ Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 				arcR.edgeLeft(null);
 				arcR.edgeRight(arc.edgeRight());
 			}
-			console.log(" => "+arcL+" , "+arcR);
+			// console.log(" => "+arcL+" , "+arcR);
 			return [arcL,arcR];
 		}
+
+//there's a circle event right by a site event, and the intersected arc is off by epsilon
+
+
+// Voronoi.js:388 <213.3772233983162,126.75444679663246>,<235,125> = 2
+// Voronoi.js:421 IS CLOSENESS RIGHT: <235,115> | <235,125>
 		// parL,dirL, parC, parR,dirR, dirX){
+			//console.log(".       ARC: "+arc);
 		if( l && Math.abs(l.x-site.point().x) < 1E-10 ){
-			console.log("IS CLOSENESS LEFT: "+site.point());
+			// console.log("IS CLOSENESS LEFT: "+site.point()+" | "+l);
 			dropLeft = true;
 		}
 		if( r && Math.abs(r.x-site.point().x) < 1E-10 ){
-			console.log("IS CLOSENESS RIGHT: "+site.point());
+			// console.log("IS CLOSENESS RIGHT: "+site.point()+" | "+r);
 			dropRight = true;
 		}
-		var arcL, arcC, arcR;
+		if(dropLeft || dropRight){
+			// console.log(".   arcL: "+tree.prevNode(arc.node()).data());
+			// console.log(".   arcC: "+arc);
+			// console.log(".   arcR: "+tree.nextNode(arc.node()).data());
+			// find dieing arc
+			var skip = false;
+			var epsilon = 1E-10;
+			var width = arc.width();
+			// console.log("width:  "+width);
+			if(width>=0 && width<=epsilon){
+				// console.log("SKIP A");
+				skip = true;
+			}
+			var l = tree.prevNode(arc.node())
+			if(l){
+				l = l.data();
+				var width = l.width();
+				// console.log("width:  "+width);
+				if(width>=0 && width<=epsilon){
+					// console.log("SKIP B");
+					// arc = l;
+					// dropLeft = true;
+					// dropRight = false;
+					skip = true;
+				}
+			}
+			var r = tree.nextNode(arc.node())
+			if(r){
+				r = r.data();
+				var width = r.width();
+				// console.log("width:  "+width);
+				if(width>=0 && width<=epsilon){
+					//console.log("SKIP C");
+					// arc = r;
+					// dropLeft = true;
+					// dropRight = false;
+					skip = true;
+				}
+			}
+			if(skip){
+				throw "skip should never happen because circles are before sites";
+				//console.log( "skip should never happen because circles are before sites" );
+				return [];
+			}
+			//return [];
+			// NOT SURE WHAT TO DO ????
+			if(!skip){
+				if(dropLeft){
+					arcR = arc;
+					node = tree.prevNode(arc.node());
+					arcL = node.data();
+				}
+				if(dropRight){
+					arcL = arc;
+					node = tree.nextNode(arc.node());
+					arcR = node.data();
+				}
+				var ints = Code.intersectionParabolas(arcL.center().point(),arc.directrix().y, arcR.center().point(),arc.directrix().y);
+				var inter = ints[0]; // assuming 1
+					// TODO: multiple intersection return one closest to vertex x
+				arcC = new Voronoi.Arc(arcL.center(),Voronoi.ARC_PARABOLA_INT_LEFT, site, arcR.center(),Voronoi.ARC_PARABOLA_INT_RIGHT, arc.directrix());
+				arcC.edgeLeft(null); // to be added
+				arcC.edgeRight(null); // to be added
+				arcL.right(arcC.center());
+				arcL.rightDirection(Voronoi.ARC_PARABOLA_INT_LEFT);
+				arcR.left(arcC.center());
+				arcR.leftDirection(Voronoi.ARC_PARABOLA_INT_RIGHT);
+				return [arcL,arcC,arcR,inter];
+			}
+		}
 		arcL = new Voronoi.Arc(arc.left(),arc.leftDirection(), arc.center(), site,Voronoi.ARC_PARABOLA_INT_LEFT, arc.directrix());
 		arcL.edgeLeft(arc.edgeLeft());
 		arcL.edgeRight(null); // to be added
@@ -428,23 +564,7 @@ Voronoi.Arc.splitArcAtSite = function(arc,site, tree){
 		arcR = new Voronoi.Arc(site,Voronoi.ARC_PARABOLA_INT_RIGHT, arc.center(), arc.right(),arc.rightDirection(), arc.directrix());
 		arcR.edgeLeft(null); // to be added
 		arcR.edgeRight(arc.edgeRight());
-		console.log(" => "+arcL+" , "+arcC+" , "+arcR);
-		// /// // ///// Voronoi.Arc = function(parL,dirL, parC, parR,dirR, dirX
-		// if(dropLeft){
-		// 	arcC.left( arcL.left() );
-		// 	arcC.leftDirection( arcL.leftDirection() );
-		// 	return [arcC,arcR,null];
-		// }
-		// if(dropRight){
-		// 	arcC.right( arcL.right() );
-		// 	arcC.rightDirection( arcL.rightDirection() );
-		// 	return [arcL,arcC,null];
-		// }
-		var list = [arcL,arcC,arcR];
-		// if(dropLeft || dropRight){
-		// 	list.push(null);
-		// }
-		return list;
+		return [arcL,arcC,arcR];
 	}
 	return null;
 }
@@ -540,6 +660,7 @@ Voronoi.Arc.prototype.removeAllCircleEvents = function(queue){
 	if(queue){
 		var circles = this.circleEvents();
 		for(var i=0; i<circles.length; ++i){
+			//console.log("REMOVE EVENT: "+i+": "+circles[i]);
 			queue.removeEvent( circles[i] );
 		}
 	}
@@ -582,6 +703,14 @@ Voronoi.Arc.prototype.directrix = function(d){
 		this._directrix = d;
 	}
 	return this._directrix;
+}
+Voronoi.Arc.prototype.width = function(){
+	var ints = this.intersections();
+	if(ints.length==2 && ints[0] && ints[1]){
+		var width = Math.abs(ints[0].x-ints[1].x);
+		return width;
+	}
+	return -1;
 }
 Voronoi.Arc.prototype.toString = function(){
 	var str = "";
@@ -750,11 +879,11 @@ Voronoi.WaveFront = function(){
 Voronoi.WaveFront.sortingArcPoint = function(a,b){
 	if( Code.isa(b,V2D) ){ // arc and point - search
 		var contains = a.containsPoint(b);
-		console.log("ARC CONTAINS:   "+a+"  ?  "+b+" ?? "+contains);
+		// console.log("ARC CONTAINS:   "+a+"  ?  "+b+" ?? "+contains);
 		return contains;
 	}else if( Code.isa(a,V2D) ){ // arc and point - search
 		var contains = b.containsPoint(a);
-		console.log("ARC CONTAINS:   "+b+"  ?  "+a+" ?? "+contains);
+		// console.log("ARC CONTAINS:   "+b+"  ?  "+a+" ?? "+contains);
 		return contains;
 	}else{ // two arcs - insert
 		if(a==b){ // this only happens at arc search
@@ -784,7 +913,7 @@ Voronoi.WaveFront.prototype.nextNode = function(arc){
 	return this._tree.nextNode(node);
 }
 Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = function(siteEvent,directrix,queue,graph){
-	console.log("addArcAboveSiteAndDirectrixAndQueueAndGraph: "+siteEvent);
+	//console.log("addArcAboveSiteAndDirectrixAndQueueAndGraph: "+siteEvent);
 	var arc, node, list, i, left, center, right, edge, point, site;
 	point = siteEvent.point();
 	site = siteEvent.site();
@@ -798,22 +927,26 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 		graph.addSite(arc.center());
 	}else{ // find arc to split
 		node = this._tree.findObject( site.point() );
+		// console.log(".         SITE: "+site);
+		// console.log("FIND FOR SITE: "+site.point());
 		arc = node.data();
 		// remove false-alarm circle events
 		arc.removeAllCircleEvents(queue);
 		// get list of new arc set
 		list = Voronoi.Arc.splitArcAtSite(arc,site, this._tree);
-		if(list.length==2){ // parallel parabolas
+		if(list.length==2){ // parallel parabolas -- first sequence only
+			//console.log("parallel 1");
 			var left = list[0];
 			var right = list[1];
 			arc.physicalCopy(left);
 			left.kill();
 			left = arc;
-			graph.addSite(left.center());
 			node = this._tree.newEmptyNode(right);
 			this._tree.insertNode(node);
 			right.node(node);
+			graph.addSite(left.center());
 			graph.addSite(right.center());
+			// new
 			edge = Voronoi.HalfEdge.newTwins();
 				graph.addEdge(edge);
 				graph.addEdge(edge.opposite());
@@ -821,50 +954,112 @@ Voronoi.WaveFront.prototype.addArcAboveSiteAndDirectrixAndQueueAndGraph = functi
 				edge.site(left.center());
 			right.center().addEdge(edge.opposite());
 				edge.opposite().site(right.center());
-			right.edgeRight(left.edgeRight());
+			// SET NEW
 			right.edgeLeft(edge.opposite());
 			left.edgeRight(edge);
-			
 		}else{
-			var left = list[0];
-			var center = list[1];
-			var right = list[2];
-			// copy over new left arc
-			arc.physicalCopy(left);
-			left.kill(); // - never used, replace
-			left = arc;
-			// only add 2 new arcs
-			for(i=1;i<list.length;++i){
-				arc = list[i];
-				node = this._tree.newEmptyNode(arc);
+			if(list.length==4){
+				//console.log("parallel 2");
+				var twoEdges = list.pop();
+				var left = list[0];
+				var center = list[1];
+				var right = list[2];
+				left.removeAllCircleEvents(queue);
+				right.removeAllCircleEvents(queue);
+				// add single new arc
+				node = this._tree.newEmptyNode(center);
 				this._tree.insertNode(node);
-				arc.node(node);
-			}
-			// graph
-			graph.addSite(center.center());
-			// left interface
-			edge = Voronoi.HalfEdge.newTwins();
-			graph.addEdge(edge);
-			graph.addEdge(edge.opposite());
-			center.center().addEdge(edge);
-			left.center().addEdge(edge.opposite()); // left + right
-			// add sites to edges
-			edge.site(center.center()); // center
-			edge.opposite().site(left.center()); // left + right
-			// edgeLeft already copied over
-			left.edgeRight(edge.opposite());
-			center.edgeLeft(edge);
-			center.edgeRight(edge);
-			// right
-			if(right){
-				right.edgeLeft(edge.opposite());
+				center.node(node);
+				graph.addSite(center.center());
+				// vertex
+				var vertex = new Voronoi.Vertex(twoEdges);
+				// terminals
+				graph.addVertex(vertex);
+				vertex.addEdge(left.edgeRight()); // are opposites of eachother
+				vertex.addEdge(right.edgeLeft()); // console.log(left.edgeRight().opposite() == right.edgeLeft()); // should be true
+				// add vertex+edges to closing cell
+				var prevLeftEdgeRight = left.edgeRight();
+				var prevRightEdgeLeft = right.edgeLeft();
+
+				// new edges
+				var edgeL = Voronoi.HalfEdge.newTwins();
+				var edgeR = Voronoi.HalfEdge.newTwins();
+				graph.addEdge(edgeL);
+				graph.addEdge(edgeL.opposite());
+				graph.addEdge(edgeR);
+				graph.addEdge(edgeR.opposite());
+				//
+				left.center().addEdge(edgeL);
+				center.center().addEdge(edgeL.opposite());
+				center.center().addEdge(edgeR.opposite());
+				right.center().addEdge(edgeR);
+				//
+				edgeL.site(left.center());
+				edgeL.opposite().site(center.center());
+				edgeR.site(right.center());
+				edgeR.opposite().site(center.center());
+				// new update
+				left.edgeRight(edgeL);
+				center.edgeLeft(edgeL.opposite());
+				center.edgeRight(edgeR.opposite());
+				right.edgeLeft(edgeR);
+				// news
+				vertex.addEdge(edgeL);
+				vertex.addEdge(edgeL.opposite());
+				vertex.addEdge(edgeR);
+				vertex.addEdge(edgeR.opposite());
+				// add vertex+edges to opening cell
+				prevLeftEdgeRight.vertexAndEdgeAdd(vertex, edgeL);
+				prevRightEdgeLeft.vertexAndEdgeAdd(vertex, edgeR);
+				edgeL.vertexAndEdgeAdd(vertex, prevLeftEdgeRight);
+				edgeL.opposite().vertexAndEdgeAdd(vertex, edgeR);
+				edgeR.vertexAndEdgeAdd(vertex, prevRightEdgeLeft);
+				edgeR.opposite().vertexAndEdgeAdd(vertex, edgeL);
+
+			}else if(list.length==3){ // single new edge
+				//var prevLeftEdgeRight = arc.edgeRight();
+				//console.log("parallel 3");
+				var left = list[0];
+				var center = list[1];
+				var right = list[2];
+				// copy over new left arc
+				arc.physicalCopy(left);
+				left.kill(); // - never used, replace
+				left = arc;
+				// only add 2 new arcs
+				for(i=1;i<list.length;++i){
+					arc = list[i];
+					node = this._tree.newEmptyNode(arc);
+					this._tree.insertNode(node);
+					arc.node(node);
+				}
+				// graph
+				graph.addSite(left.center());
+				graph.addSite(center.center());
 				graph.addSite(right.center());
+				// left interface
+				edge = Voronoi.HalfEdge.newTwins();
+				graph.addEdge(edge);
+				graph.addEdge(edge.opposite());
+				center.center().addEdge(edge);
+				left.center().addEdge(edge.opposite()); // left + right
+				// add sites to edges
+				edge.site(center.center()); // center
+				edge.opposite().site(left.center()); // left + right
+				// edgeLeft already copied over
+				left.edgeRight(edge.opposite());
+				center.edgeLeft(edge);
+				center.edgeRight(edge);
+				// right
+				right.edgeLeft(edge.opposite());
 				// edgeRight stays
 			}
-			// left triplets of points
-			this.checkAddCircleWithRight(center,directrix,queue);
-	 		// right triplets of points
-	 		this.checkAddCircleWithLeft(center,directrix,queue);
+			if(center){
+				// left triplets of points
+				this.checkAddCircleWithRight(center,directrix,queue);
+		 		// right triplets of points
+		 		this.checkAddCircleWithLeft(center,directrix,queue);
+		 	}
 	 	}
 	}
 	siteEvent.kill();
@@ -897,13 +1092,14 @@ Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right,
 	center.removeAllCircleEvents(queue);
 	// queue.removeEvent( center.circleEvent() );
 	// center.circleEvent(null);
-	console.log("circleFromPoints: "+left.center().point(),center.center().point(),right.center().point());
+	// console.log("circleFromPoints: "+left.center().point(),center.center().point(),right.center().point());
 	var circle = Code.circleFromPoints(left.center().point(),center.center().point(),right.center().point());
 	if(!circle){  return; } // not colinear
 	// convergence = CW around 
 	var AB = V2D.sub(left.center().point(), center.center().point());
 	var CB = V2D.sub(right.center().point(), center.center().point());
 	var isConvergence = V2D.cross(AB,CB)>=0;
+	//console.log("CIRCLE FROM POINTS: "+left.center().point()+" "+center.center().point()+" "+right.center().point()+"  =  "+circle+" | "+isConvergence);
 	if(!isConvergence){
 		return;
 	}
@@ -911,7 +1107,7 @@ Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right,
 	var point = new V2D(circle.center.x,circle.center.y-circle.radius);
 	 // find node to attach to by point search
 	var arc = this._tree.findNodeFromObject(circle.center);
-	if(!arc){ return; } // TODO: WHY IS ARC NULL?
+	if(!arc){ console.log("FIND NODE FROM CIRCLE: "+circle.center); return; } // TODO: WHY IS ARC NULL?
 	arc = arc.data();
 	var aboveCenter = Code.isPointAboveParabola(arc.center().point(),directrix.y, circle.center);
 	if(!aboveCenter && point.y<=directrix.y){
@@ -924,7 +1120,7 @@ Voronoi.WaveFront.prototype.addCirclePointFromArcs = function(left,center,right,
 	} // else point is in past
 }
 Voronoi.WaveFront.prototype.removeArcAtCircleWithDirectrixAndQueueAndGraph = function(circleEvent, directrix, queue, graph){
-	console.log("removeArcAtCircleWithDirectrixAndQueueAndGraph "+circleEvent);
+	//console.log("removeArcAtCircleWithDirectrixAndQueueAndGraph "+circleEvent+"  @  "+directrix);
 //console.log("BEFORE MERGE:        -------------------- ------------------------------- "+circleEvent+" | "+directrix);
 	var left, center, right, node;
 	center = circleEvent.center();
@@ -967,11 +1163,11 @@ Voronoi.WaveFront.prototype.mergeArcs = function(left,center,right, queue,graph,
 	var e, o, d;
 	vertex = new Voronoi.Vertex(pt);
 	graph.addVertex(vertex);
-
 	var l = left.edgeRight();
 	var r = right.edgeLeft();
-	console.log(l);
-	console.log(r);
+	if(!l || !r){
+		throw "merge is broked: "+l+" | "+r;
+	}
 	// add old edges to vertex
 	vertex.addEdge(l);
 	vertex.addEdge(l.opposite());
@@ -1046,6 +1242,18 @@ Voronoi.Site.prototype.removeEdge = function(e){
 Voronoi.Site.prototype.edges = function(){
 	return this._edges;
 }
+Voronoi.Site.prototype.adjacentSites = function(){
+	var edges = this.edges();
+	var i, edge, oppo, site, sites = [];
+	for(i=0; i<edges.length; ++i){
+		edge = edges[i];
+		oppo = edge.opposite();
+		site = oppo.site();
+		Code.addUnique(sites,site);
+	}
+	return sites;
+}
+
 Voronoi.Site.prototype.toString = function(){
 	var str = "[Site: ";
 	str += this._point.toString()+"]";
@@ -1095,8 +1303,20 @@ Voronoi.HalfEdge.prototype.vertexAndEdgeAdd = function(v,e){ // assigns external
 		this._next = e;
 		this.checkOrientation();
 	}else{
-		throw "BOTH VERTEXES ALREADY ASSIGNED";
+		// console.log(this._vertexA);
+		// console.log(this._vertexB);
+		// console.log(this._vertexA+"");
+		// console.log(this._vertexB+"");
+		//this.checkOrientation();
+		// console.log("EQUAL VERTEXES: "+this._vertexA.point()+" && "+this._vertexB.point());
+		// console.log("    => : "+this.opposite()+". ");
+		console.log( "BOTH VERTEXES ALREADY ASSIGNED" );
+		//throw "BOTH VERTEXES ALREADY ASSIGNED";
 	} // if I know the site, I can calculate CCW and correct my direction if necessary
+	if(this._vertexA && this._vertexB && V2D.equal(this._vertexA.point(),this._vertexB.point())){
+		// console.log("EQUAL VERTEXES: "+this._vertexA.point()+" && "+this._vertexB.point());
+		// console.log("    => : "+this.opposite()+". ");
+	}
 }
 Voronoi.HalfEdge.prototype.vertexA = function(a){
 	if(a!==undefined){
@@ -1110,15 +1330,43 @@ Voronoi.HalfEdge.prototype.vertexB = function(b){
 	}
 	return this._vertexB;
 }
+Voronoi.HalfEdge.prototype.isZero = function(){
+	if(this._vertexA && this._vertexB && V2D.equal(this._vertexA.point(),this._vertexB.point())){
+		return true;
+	}
+	return false;
+}
 Voronoi.HalfEdge.prototype.next = function(n){
-	if(n!==undefined){
+	if(n!==undefined && n!==true){
 		this._next = n;
+	}
+	if(n===true){
+		var t = this._next;
+		if(t && t.isZero()){
+			var n = t.next();
+			var p = t.prev();
+			if(n==this){
+				return p;
+			}
+			return n;
+		}
 	}
 	return this._next;
 }
 Voronoi.HalfEdge.prototype.prev = function(p){
 	if(p!==undefined){
 		this._prev = p;
+	}
+	if(n===true){
+		var t = this._prev;
+		if(t && t.isZero()){
+			var n = t.next();
+			var p = t.prev();
+			if(n==this){
+				return p;
+			}
+			return n;
+		}
 	}
 	return this._prev;
 }
@@ -1130,8 +1378,40 @@ Voronoi.HalfEdge.prototype.flipDirection = function(){
 	this._vertexA = this._vertexB;
 	this._vertexB = temp;
 }
+Voronoi.HalfEdge.prototype.fixZeroOrientation = function(){
+	if(this.isZero()){
+		var n, p, t;
+		t = this._next;
+		if(t){
+			n = t.next();
+			p = t.prev();
+			if(n==this){
+				// inconsistent
+				consistent.log("inconsistent");
+			}else if(p==this){
+				// consistent
+			}
+		}else{ // no next
+			t = this._prev;
+			if(t){
+				n = t.next();
+				p = t.prev();
+				if(p==this){
+					// inconsistent
+					consistent.log("inconsistent");
+				}else if(n==this){
+					// consistent
+				}
+			}
+		}
+		//var p = this._p;
+	}
+}
 Voronoi.HalfEdge.prototype.checkOrientation = function(){
 	if(this._vertexA && this._vertexB && this._site){
+		if(this._vertexA && this._vertexB && V2D.equal(this._vertexA.point(), this._vertexB.point()) ){
+			// can remove self ...
+		}
 		var AC = V2D.sub(this._vertexA.point(),this._site.point());
 		var BC = V2D.sub(this._vertexB.point(),this._site.point());
 		if( V2D.cross(AC,BC)<0 ){
@@ -1225,7 +1505,8 @@ Voronoi.EdgeGraph.prototype.removeVertex = function(v){
 	Code.removeElementSimple(this._vertexes,v);
 }
 Voronoi.EdgeGraph.prototype.addSite = function(s){ // parabolas
-	this._sites.push(s);
+	Code.addUnique(this._sites, s);
+	//this._sites.push(s);
 }
 Voronoi.EdgeGraph.prototype.sites = function(){
 	return this._sites;
@@ -1246,7 +1527,11 @@ Voronoi.EdgeGraph.prototype.toString = function(){
 	}
 	return str;
 }
-Voronoi.EdgeGraph.prototype.removeDuplicates = function(){ // remove vertices with same point
+Voronoi.EdgeGraph.prototype.removeDuplicates = function(){ // remove edges with same endpoints
+	//console.log("removeDuplicates ...");
+}
+Voronoi.EdgeGraph.prototype.removeDuplicatesX = function(){ // remove vertices with same point
+	//console.log("removeDuplicates ...");
 	var i, len, j, sites, site, edges, edge, oppo, prev, next, temp, A, B, PA, PB, NA, NB;
 	sites = this._sites;
 	len = sites.length;
@@ -1263,7 +1548,7 @@ Voronoi.EdgeGraph.prototype.removeDuplicates = function(){ // remove vertices wi
 				// edgeside
 				prev = edge.prev();
 				next = edge.next();
-console.log("STA A: "+A.edges().length);
+//console.log("STA A: "+A.edges().length);
 				if(prev.next()==edge){
 					prev.next(next);
 					if(prev.vertexB()==A){ prev.vertexB(B); A.removeEdge(prev); B.addEdge(prev); }
@@ -1278,7 +1563,7 @@ console.log("STA A: "+A.edges().length);
 					next.prev(prev);
 					if(next.vertexA()==A){ next.vertexA(B); A.removeEdge(next); B.addEdge(next); }
 				}
-console.log("S1- A: "+A.edges().length);
+//console.log("S1- A: "+A.edges().length);
 				PA = prev; NA = next;
 				// opposite
 				prev = oppo.prev();
@@ -1297,22 +1582,19 @@ console.log("S1- A: "+A.edges().length);
 					next.prev(prev);
 					if(next.vertexA()==A){ next.vertexA(B); A.removeEdge(next); B.addEdge(next); }
 				}
-console.log("S2- A: "+A.edges().length);
+// console.log("S2- A: "+A.edges().length);
 				// 
 				PB = prev; NB = next;
 				// ARE THE OPPOSITES STILL VALID?
 				A.removeEdge(edge);
 				A.removeEdge(oppo);
-console.log("NEW A: "+A.edges().length);
+// console.log("NEW A: "+A.edges().length);
 var remA = A.edges()[0];
 var remB = A.edges()[1];
-				console.log( remA+"" );
-				console.log( remB+"" );
-console.log(" ");
-console.log(" ");
-
+				// console.log( remA+"" );
+				// console.log( remB+"" );
 				// remove from history
-				console.log("STA B: "+B.edges().length);
+				// console.log("STA B: "+B.edges().length);
 				// edge
 				// 
 				B.removeEdge(edge);
@@ -1328,7 +1610,7 @@ console.log(" ");
 				// A
 
 				this.removeVertex(A);
-				console.log("OLD B: "+B.edges().length);
+				// console.log("OLD B: "+B.edges().length);
 				var k, ed, ee = A.edges();
 				for(k=0;k<ee.length;++k){
 					ed = ee[k];
@@ -1340,11 +1622,8 @@ console.log(" ");
 						console.log("errrrr");
 					}
 				}
-				console.log("NEW B: "+B.edges().length);
-				//console.log("STA A: "+A.edges().length);
-				//console.log("OLD A: "+A.edges().length);
-				//console.log("NEW A: "+A.edges().length);
-console.log("LAS A: "+A.edges().length);
+				// console.log("NEW B: "+B.edges().length);
+// console.log("LAS A: "+A.edges().length);
 				A.kill();
 
 				// 
@@ -1651,16 +1930,16 @@ Voronoi.EdgeGraph._siteSorting = function(a,b){
 	return Voronoi.EdgeGraph._pointSorting(a.point(), b.point());
 }
 Voronoi.EdgeGraph._pointSorting = function(a,b){
-	if(a.x==b.x){
-		if(a.y==b.y){
+	if(a.y==b.y){
+		if(a.x==b.x){
 			return 0;
-		}else if(a.y<b.y){
+		}else if(a.x<b.x){
 			return -1;
-		} // a.y > b.y
+		}
 		return 1;
-	}else if(a.x<b.x){
+	}else if(a.y<b.y){
 		return -1;
-	} // a0.x > b0.x
+	}
 	return 1;
 }
 Voronoi.EdgeGraph._triangleSorting = function(a,b){
@@ -1684,19 +1963,46 @@ Voronoi.EdgeGraph.prototype.triangulate = function(){ // tesselation / triangle 
 	}
 	for(i=0; i<sites.length; ++i){
 		var siteA = sites[i];
-		var edgesA = siteA.edges();
-		var pointA = siteA.point();
+		var adjacentA = siteA.adjacentSites();
+		//console.log("     SITE   "+i+".   "+siteA.point()+"  | adj:"+adjacentA.length);
+		for(j=0; j<adjacentA.length; ++j){
+			var siteB = adjacentA[j];
+			var adjacentB = siteB.adjacentSites();
+			//console.log("         SITE   "+j+".   "+siteB.point()+"  | adj:"+adjacentB.length);
+			for(k=0; k<adjacentB.length; ++k){
+				var siteC = adjacentB[k];
+				//var adjacentC = siteC.adjacentSites();
+				var exists = Code.elementExists(adjacentA,siteC);
+				//console.log("            SITE   "+k+".   "+siteC.point()+"");
+				if(exists){
+					pointA = siteA;
+					pointB = siteB;
+					pointC = siteC;
+					var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._siteSorting);
+					//console.log("TRIANGLE: "+list[0].point()+" - "+list[1].point()+" - "+list[2].point()+"  ");
+					triangles.insertObjectUnique(list);
+				}
+			}
+		}
+		/*
 		for(j=0; j<edgesA.length; ++j){
 			var edgeA = edgesA[j];
+				//edgeA.fixZeroOrientation();
 			var nextA = edgeA.next();
 			var prevA = edgeA.prev();
 			var edgeB = edgeA.opposite();
+				//edgeB.fixZeroOrientation();
 			var prevB = edgeB.prev();
 			var nextB = edgeB.next();
 			var siteB = edgeB.site();
 			var pointB = siteB.point();
 			var siteCA = null;
 			var siteCB = null;
+			//console.log("            "+j+".        ");
+			console.log("               "+j+".  "+edgeA+"    :   "+edgeA.vertexA()+", "+edgeA.vertexB());
+			console.log("                        "+siteB+" ... ");
+			//console.log("                        ");
+			
 			// NEXT
 			if(nextA && nextA.opposite()){
 				siteCA = edgeA.next().opposite().site();
@@ -1714,22 +2020,30 @@ Voronoi.EdgeGraph.prototype.triangulate = function(){ // tesselation / triangle 
 				}
 			}
 			if(siteA && siteB && siteCA && (siteCA == siteCB)){ // guaranteeing consistency not necessary
-				// var pointC = siteCA.point();
-				// pointA = new V2D(pointA.x,pointA.y);
-				//	pointA._data = siteA.data();
-				// pointB = new V2D(pointB.x,pointB.y);
-				//	pointB._data = siteB.data();
-				// pointC = new V2D(pointC.x,pointC.y);
-				//	pointC._data = siteCA.data();
-				//var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._pointSorting);
-				//var tri = new Tri2D(list[0],list[1],list[2]);
 				pointA = siteA;
 				pointB = siteB;
 				pointC = siteCA;
 				var list = [pointA,pointB,pointC].sort(Voronoi.EdgeGraph._siteSorting);
+				console.log("TRIANGLE: "+list[0].point()+" - "+list[1].point()+" - "+list[2].point()+"  ");
 				triangles.insertObjectUnique(list);
 			}
-		}
+			*/
+			/*
+			go over each edge in site A & get a list of adjacent sites
+				for each adjacnet site, if this site also is adjacent to another site as site A => triangle
+			*/
+		/*
+			var edgeA = edgesA[j];
+			var edgeAO = edgeA.opposite();
+			var siteB = edgeAO.site();
+			var edgesB = siteB.edges();
+			for(k=0; k<edgesB.length; ++k){
+				var edgeB = edgesB[k];
+				//
+			}
+			//var pointA = siteA.point();
+			*/
+		
 	}
 	triangles = triangles.toArray();
 	var tris = [];
@@ -1761,7 +2075,7 @@ if(siteB.index()==null){
 	console.log("NULL INDEX: "+siteB+" "+siteB.index()+" / "+triangles.length);
 }
 		var tri = [siteA.index(), siteB.index(), siteC.index()];
-		console.log("TRI "+i+" : "+tri);
+//		console.log("TRI "+i+" : "+tri);
 		tris[i] = tri;
 	}
 	var hull = this._convexSites();

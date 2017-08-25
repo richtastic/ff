@@ -2924,6 +2924,7 @@ Dense.Vertex.prototype.assignNeighbors = function(queue, interpolator){
 	for(var i=0; i<neighbors.length; ++i){
 		var n = neighbors[i];
 		if(!n.isJoined()){
+			queue.remove(n); // TODO: BECAUSE 
 			Dense.assignBestNeedleInHaystack(interpolator, n, queue);
 		}
 	}
@@ -3798,10 +3799,9 @@ Dense.Interpolator = function(cells){
 	for(i=0; i<cells.length; ++i){
 		points.push( cells[i].from() );
 	}
-	//console.log("ORIGINAL POINTS:");
-	//console.log(points);
 	this._points = points;
-	//Code.printPoints(this._points);
+console.log("ORIGINAL POINTS:");
+Code.printPoints(this._points);
 
 	if(points.length==0){
 		// N/A

@@ -72,6 +72,9 @@ PriorityQueue.prototype.toStringLinear = function(){
 	}
 	return str;
 }
+PriorityQueue.prototype.remove = function(o){
+	return this.removeObject(o);
+}
 PriorityQueue.prototype.removeObject = function(o){
 	return this._tree.deleteObject(o);
 }

@@ -329,18 +329,284 @@ points.push( new V2D(7.5,232.5) );
 // }
 // remove duplicate points 
 
-
-points.push( new V2D(226,87) ); // 0
-points.push( new V2D(172,107) ); // 1
-points.push( new V2D(216,154) ); // 2
-points.push( new V2D(22.5,166) ); // 3
-points.push( new V2D(361,183) ); // 4
-points.push( new V2D(18,225) ); // 5
-points.push( new V2D(25,225) ); // 6
 /*
-for(var i=0;i<points.length;++i){
-		//if(points[i].y<-100){
-		if(points[i].y<170 || points[i].y>200){
+// ALREADY ASSIGNED
+points.push( new V2D(219,66) ); // 0
+points.push( new V2D(225,65) ); // 1
+points.push( new V2D(255,65) ); // 2
+points.push( new V2D(145,75) ); // 3
+points.push( new V2D(250,72) ); // 4
+points.push( new V2D(255,75) ); // 5
+points.push( new V2D(145,85) ); // 6
+points.push( new V2D(155,85) ); // 7
+points.push( new V2D(165,85) ); // 8
+points.push( new V2D(175,85) ); // 9
+points.push( new V2D(195,85) ); // 10
+points.push( new V2D(205,85) ); // 11
+points.push( new V2D(226,87) ); // 12
+points.push( new V2D(245,85) ); // 13
+points.push( new V2D(145,95) ); // 14
+points.push( new V2D(155,95) ); // 15
+points.push( new V2D(165,95) ); // 16
+points.push( new V2D(175,95) ); // 17
+points.push( new V2D(185,95) ); // 18
+points.push( new V2D(235,95) ); // 19
+points.push( new V2D(245,95) ); // 20
+points.push( new V2D(145,105) ); // 21
+points.push( new V2D(155,105) ); // 22
+points.push( new V2D(165,105) ); // 23
+points.push( new V2D(172,107) ); // 24
+points.push( new V2D(260,103) ); // 25
+points.push( new V2D(145,115) ); // 26
+points.push( new V2D(155,115) ); // 27
+points.push( new V2D(165,115) ); // 28
+points.push( new V2D(175,115) ); // 29
+points.push( new V2D(185,115) ); // 30
+points.push( new V2D(165,125) ); // 31
+points.push( new V2D(185,125) ); // 32
+points.push( new V2D(175,135) ); // 33
+points.push( new V2D(205,135) ); // 34
+points.push( new V2D(225,135) ); // 35
+points.push( new V2D(175,145) ); // 36
+points.push( new V2D(205,145) ); // 37
+points.push( new V2D(215,145) ); // 38
+points.push( new V2D(235,145) ); // 39
+points.push( new V2D(255,145) ); // 40
+points.push( new V2D(265,145) ); // 41
+points.push( new V2D(216,154) ); // 42
+points.push( new V2D(225,155) ); // 43
+points.push( new V2D(235,155) ); // 44
+points.push( new V2D(245,158) ); // 45
+points.push( new V2D(255,155) ); // 46
+points.push( new V2D(15,165) ); // 47
+points.push( new V2D(22.5,166) ); // 48
+points.push( new V2D(15,175) ); // 49
+points.push( new V2D(25,175) ); // 50
+points.push( new V2D(355,175) ); // 51
+points.push( new V2D(345,185) ); // 52
+points.push( new V2D(355,185) ); // 53
+points.push( new V2D(361,183) ); // 54
+points.push( new V2D(375,185) ); // 55
+points.push( new V2D(25,195) ); // 56
+points.push( new V2D(35,195) ); // 57
+points.push( new V2D(355,195) ); // 58
+points.push( new V2D(365,195) ); // 59
+points.push( new V2D(45,205) ); // 60
+points.push( new V2D(375,205) ); // 61
+points.push( new V2D(15,215) ); // 62
+points.push( new V2D(35,215) ); // 63
+points.push( new V2D(5,225) ); // 64
+points.push( new V2D(18,225) ); // 65
+points.push( new V2D(25,225) ); // 66
+*/
+
+points.push( new V2D(225,55) ); // 0
+points.push( new V2D(255,55) ); // 1
+points.push( new V2D(165,65) ); // 2
+points.push( new V2D(175,65) ); // 3
+points.push( new V2D(185,65) ); // 4
+points.push( new V2D(219,66) ); // 5
+points.push( new V2D(225,65) ); // 6
+points.push( new V2D(245,65) ); // 7
+points.push( new V2D(255,65) ); // 8
+points.push( new V2D(145,75) ); // 9
+points.push( new V2D(165,75) ); // 10
+points.push( new V2D(185,75) ); // 11
+points.push( new V2D(225,75) ); // 12
+points.push( new V2D(250,72) ); // 13
+points.push( new V2D(255,75) ); // 14
+points.push( new V2D(145,85) ); // 15
+points.push( new V2D(155,85) ); // 16
+points.push( new V2D(165,85) ); // 17
+points.push( new V2D(175,85) ); // 18
+points.push( new V2D(185,85) ); // 19
+points.push( new V2D(215,85) ); // 20
+points.push( new V2D(226,87) ); // 21
+points.push( new V2D(245,85) ); // 22
+points.push( new V2D(145,95) ); // 23
+points.push( new V2D(155,95) ); // 24
+points.push( new V2D(165,95) ); // 25
+points.push( new V2D(185,95) ); // 26
+points.push( new V2D(215,95) ); // 27
+points.push( new V2D(225,95) ); // 28
+points.push( new V2D(235,95) ); // 29
+points.push( new V2D(245,95) ); // 30
+points.push( new V2D(145,105) ); // 31
+points.push( new V2D(155,105) ); // 32
+points.push( new V2D(165,105) ); // 33
+points.push( new V2D(172,107) ); // 34
+points.push( new V2D(225,105) ); // 35
+points.push( new V2D(235,105) ); // 36
+points.push( new V2D(260,103) ); // 37
+points.push( new V2D(265,105) ); // 38
+points.push( new V2D(75,115) ); // 39
+points.push( new V2D(85,115) ); // 40
+points.push( new V2D(105,115) ); // 41
+points.push( new V2D(135,115) ); // 42
+points.push( new V2D(145,115) ); // 43
+points.push( new V2D(155,115) ); // 44
+points.push( new V2D(165,115) ); // 45
+points.push( new V2D(175,115) ); // 46
+points.push( new V2D(185,115) ); // 47
+points.push( new V2D(205,115) ); // 48
+points.push( new V2D(215,115) ); // 49
+points.push( new V2D(225,115) ); // 50
+points.push( new V2D(235,115) ); // 51
+points.push( new V2D(85,125) ); // 52
+points.push( new V2D(95,125) ); // 53
+points.push( new V2D(105,125) ); // 54
+points.push( new V2D(115,125) ); // 55
+points.push( new V2D(135,125) ); // 56
+points.push( new V2D(165,125) ); // 57
+points.push( new V2D(175,125) ); // 58
+points.push( new V2D(185,125) ); // 59
+points.push( new V2D(195,125) ); // 60
+points.push( new V2D(215,125) ); // 61
+points.push( new V2D(225,125) ); // 62
+points.push( new V2D(235,125) ); // 63
+points.push( new V2D(65,135) ); // 64
+points.push( new V2D(75,135) ); // 65
+points.push( new V2D(95,135) ); // 66
+points.push( new V2D(105,135) ); // 67
+points.push( new V2D(125,135) ); // 68
+points.push( new V2D(135,135) ); // 69
+points.push( new V2D(145,135) ); // 70
+points.push( new V2D(155,135) ); // 71
+points.push( new V2D(165,135) ); // 72
+points.push( new V2D(175,135) ); // 73
+points.push( new V2D(185,135) ); // 74
+points.push( new V2D(195,135) ); // 75
+points.push( new V2D(205,135) ); // 76
+points.push( new V2D(225,135) ); // 77
+points.push( new V2D(235,135) ); // 78
+points.push( new V2D(55,145) ); // 79
+points.push( new V2D(85,145) ); // 80
+points.push( new V2D(95,145) ); // 81
+points.push( new V2D(105,145) ); // 82
+points.push( new V2D(115,145) ); // 83
+points.push( new V2D(135,145) ); // 84
+points.push( new V2D(145,145) ); // 85
+points.push( new V2D(175,145) ); // 86
+points.push( new V2D(185,145) ); // 87
+points.push( new V2D(205,145) ); // 88
+points.push( new V2D(215,145) ); // 89
+points.push( new V2D(225,145) ); // 90
+points.push( new V2D(235,145) ); // 91
+points.push( new V2D(245,145) ); // 92
+points.push( new V2D(255,145) ); // 93
+points.push( new V2D(265,145) ); // 94
+points.push( new V2D(45,155) ); // 95
+points.push( new V2D(65,155) ); // 96
+points.push( new V2D(85,155) ); // 97
+points.push( new V2D(95,155) ); // 98
+points.push( new V2D(125,155) ); // 99
+points.push( new V2D(145,155) ); // 100
+points.push( new V2D(165,155) ); // 101
+points.push( new V2D(195,155) ); // 102
+points.push( new V2D(216,154) ); // 103
+points.push( new V2D(225,155) ); // 104
+points.push( new V2D(235,155) ); // 105
+points.push( new V2D(245,158) ); // 106
+points.push( new V2D(255,155) ); // 107
+points.push( new V2D(15,165) ); // 108
+points.push( new V2D(22.5,166) ); // 109
+points.push( new V2D(35,165) ); // 110
+points.push( new V2D(45,165) ); // 111
+points.push( new V2D(75,165) ); // 112
+points.push( new V2D(85,165) ); // 113
+points.push( new V2D(95,165) ); // 114
+points.push( new V2D(105,165) ); // 115
+points.push( new V2D(115,165) ); // 116
+points.push( new V2D(125,165) ); // 117
+points.push( new V2D(135,165) ); // 118
+points.push( new V2D(155,165) ); // 119
+points.push( new V2D(235,165) ); // 120
+points.push( new V2D(15,175) ); // 121
+points.push( new V2D(25,175) ); // 122
+points.push( new V2D(85,175) ); // 123
+points.push( new V2D(95,175) ); // 124
+points.push( new V2D(115,175) ); // 125
+points.push( new V2D(165,175) ); // 126
+points.push( new V2D(175,175) ); // 127
+points.push( new V2D(195,175) ); // 128
+points.push( new V2D(205,175) ); // 129
+points.push( new V2D(215,175) ); // 130
+points.push( new V2D(225,175) ); // 131
+points.push( new V2D(245,175) ); // 132
+points.push( new V2D(255,175) ); // 133
+points.push( new V2D(265,175) ); // 134
+points.push( new V2D(285,175) ); // 135
+points.push( new V2D(355,175) ); // 136
+points.push( new V2D(25,185) ); // 137
+points.push( new V2D(75,185) ); // 138
+points.push( new V2D(95,185) ); // 139
+points.push( new V2D(105,185) ); // 140
+points.push( new V2D(165,185) ); // 141
+points.push( new V2D(175,185) ); // 142
+points.push( new V2D(185,185) ); // 143
+points.push( new V2D(205,185) ); // 144
+points.push( new V2D(275,185) ); // 145
+points.push( new V2D(335,185) ); // 146
+points.push( new V2D(345,185) ); // 147
+points.push( new V2D(355,185) ); // 148
+points.push( new V2D(361,183) ); // 149
+points.push( new V2D(375,185) ); // 150
+points.push( new V2D(5,195) ); // 151
+points.push( new V2D(25,195) ); // 152
+points.push( new V2D(35,195) ); // 153
+points.push( new V2D(45,195) ); // 154
+points.push( new V2D(75,195) ); // 155
+points.push( new V2D(85,195) ); // 156
+points.push( new V2D(95,195) ); // 157
+points.push( new V2D(185,195) ); // 158
+points.push( new V2D(215,195) ); // 159
+points.push( new V2D(225,195) ); // 160
+points.push( new V2D(265,195) ); // 161
+points.push( new V2D(325,195) ); // 162
+points.push( new V2D(335,195) ); // 163
+points.push( new V2D(355,195) ); // 164
+points.push( new V2D(365,195) ); // 165
+points.push( new V2D(5,205) ); // 166
+points.push( new V2D(25,205) ); // 167
+points.push( new V2D(35,205) ); // 168
+points.push( new V2D(45,205) ); // 169
+points.push( new V2D(65,205) ); // 170
+points.push( new V2D(185,205) ); // 171
+points.push( new V2D(345,205) ); // 172
+points.push( new V2D(375,205) ); // 173
+points.push( new V2D(5,215) ); // 174
+points.push( new V2D(15,215) ); // 175
+points.push( new V2D(25,215) ); // 176
+points.push( new V2D(35,215) ); // 177
+points.push( new V2D(55,215) ); // 178
+points.push( new V2D(165,215) ); // 179
+points.push( new V2D(175,215) ); // 180
+points.push( new V2D(375,215) ); // 181
+points.push( new V2D(5,225) ); // 182
+points.push( new V2D(18,225) ); // 183
+points.push( new V2D(25,225) ); // 184
+points.push( new V2D(35,225) ); // 185
+points.push( new V2D(55,225) ); // 186
+points.push( new V2D(5,235) ); // 187
+
+
+/*
+points.push( new V2D(190,75) ); // 0
+points.push( new V2D(200,55) ); // 0
+points.push( new V2D(205,50) ); // 1
+points.push( new V2D(205,60) ); // 2
+points.push( new V2D(210,55) ); // 3
+*/
+
+
+// ~145
+
+	for(var i=0;i<points.length;++i){
+	// 134.5
+	if(points[i].y<120 || points[i].x > 550 || points[i].x < 0){
+		//if(points[i].y<150 || points[i].x > 150 || points[i].x < 70){
+		//if(points[i].y<170 || points[i].y>200){
+//		if(false){
 			points[i] = points[points.length-1];
 			points.pop();
 			--i;
@@ -348,18 +614,18 @@ for(var i=0;i<points.length;++i){
 			console.log(points[i])
 		}
 	}
-*/
+
 console.log(points.length)
 
 Voronoi.removeDuplicatePoints2D(points);
 	
 
 	var matrix = new Matrix2D();
-	// var origin = new V2D(10,180);
-	// var offset = new V2D(100,-100);
-	var origin = new V2D(0,0);
+	var origin = new V2D(10,180);
 	var offset = new V2D(0,0);
-	var scale = 1.0;
+	// var origin = new V2D(0,0);
+	// var offset = new V2D(0,0);
+	var scale = 3.0;
 	matrix.translate(-origin.x,-origin.y);
 	matrix.scale(scale);
 	matrix.translate(origin.x+offset.x,origin.y+offset.y);
@@ -390,6 +656,7 @@ if(false){
 	this._ticker.start();
 	return;
 }else{
+
 
 	//delaunay
 	//var res = Voronoi.delaunay(points, null);
@@ -449,7 +716,7 @@ for(i=0; i<sites.length; ++i){
 
 	for(i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
-		console.log(tri[0],tri[1],tri[2])
+		//console.log(tri[0],tri[1],tri[2])
 		var pointA = points[tri[0]];
 		var pointB = points[tri[1]];
 		var pointC = points[tri[2]];
@@ -551,7 +818,7 @@ if(!(pointA && pointB && pointC)){
 Vor.prototype.animation_tick = function(t){
 var matrix = this._MATRIX;
 	var x, y, a, b, c, p, e, i, j, len, arc;
-	var limitLeft = -500, limitRight = 600;
+	var limitLeft = -500, limitRight = 800;
 	if(this._animationTick===undefined){
 		this._animationTick = 0;
 		this._animDirectrix = new DO();
@@ -588,21 +855,26 @@ var matrix = this._MATRIX;
 	//
 	//var offYStart = 720;//210;//420;
 	//var offYStart = 250;
-	var offYStart = 224;
+	var offYStart = 200;//224;
 	var rateStart = 0.5;//12.5;
 
-
+console.log("ITERATION");
 	// ALGORITHM
 	if( !this._Q.isEmpty() ){
+		console.log("A");
 //console.log("Q: "+this._Q);
 		next = this._Q.peek();
+		console.log("NEXT: "+next+" | "+next.point().y+" | "+this._directrix.y+" = "+(next.point().y>this._directrix.y) );
 var looped = false;
+		
 		while(next && next.point().y>this._directrix.y){
+			console.log("B");
 looped = true;
 //console.log(" \n"+this._Q.toString()+"    + "+this._directrix.toString());
 // console.log(" TREE A:\n"+this._T._tree+"\n");
 var temp = new V2D(this._directrix.x,this._directrix.y);
 			e = this._Q.next();
+			console.log("NEXT: "+e);
 this._directrix.copy( e.point() );
 			if(e.isSiteEvent()){
 				this._T.addArcAboveSiteAndDirectrixAndQueueAndGraph(e, this._directrix, this._Q, this._D);
@@ -618,7 +890,19 @@ this._directrix.copy( temp );
 		}
 		console.log("DIR: "+directrix);
 		//console.log(" TREE B:\n"+this._T._tree+"\n");
-		console.log(" TREE B:\n"+this._T._tree.toArray()+"\n");
+		var list = this._T._tree.toArray();
+		var str = "";
+		for(var kk=0; kk<list.length; ++kk){
+			str = str + list[kk]+ "\n";
+		}
+		console.log(" TREE B:\n"+str+"\n");
+
+		var list = this._Q._list;
+		var str = "";
+		for(var kk=0; kk<list.length; ++kk){
+			str = str + list[kk]+ "\n";
+		}
+		console.log(" QUEUE B:\n"+str+"\n");
 
 	}else{
 		this._ticker.stop();
@@ -633,6 +917,20 @@ console.log("FINALIZE!");
 		// 	edges = site.edges();
 		// 	edge.checkOrientation();
 		// }
+		var str = "";
+		for(var kk=0; kk<sites.length; ++kk){
+			var site = sites[kk];
+			var edges = site._edges;
+			str += "  "+kk+": "+site.point()+" \n";
+			for(jj=0; jj<edges.length; ++jj){
+				var edge = edges[jj];
+				str += "      "+jj+": "+edge.vertexA()+" => "+edge.vertexB()+"\n";
+			}
+			//console.log(kk+": "+site);
+			//console.log(site);
+		}
+		console.log(str);
+
 
 this._D.finalize(this._animParabolas);
 // CLEAR CURRENT SCREEN:
@@ -762,7 +1060,7 @@ this._animDirectrix.graphics().clear();
 	this._animParabolas.graphics().beginPath();
 	len = this._animPoints.length;
 	var focus, left=limitLeft, right=limitRight;
-	var deltaJ = (right-left)/500.0;
+	var deltaJ = (right-left)/500.0; // EACH PARABOLA
 	for(i=0;i<len;++i){
 		focus = this._animPoints[i];
 		a = focus.x;
@@ -797,9 +1095,9 @@ this._animDirectrix.graphics().clear();
 			if(intersections[0]){
 				if(intersections[0].x>left.x){
 					left = intersections[0];
-					left = matrix.multV2D(new V2D(), left);
+						var ll = matrix.multV2D(new V2D(), left);
 					this._stillVornoi.graphics().beginPath();
-					this._stillVornoi.graphics().drawCircle(left.x,left.y,2.0);
+					this._stillVornoi.graphics().drawCircle(ll.x,ll.y,2.0);
 					this._stillVornoi.graphics().endPath();
 					this._stillVornoi.graphics().fill();
 				}
@@ -809,14 +1107,14 @@ this._animDirectrix.graphics().clear();
 			if(intersections[1]){
 				if(intersections[1].x<right.x){
 					right = intersections[1];
-					right = matrix.multV2D(new V2D(), right);
+						var rr = matrix.multV2D(new V2D(), right);
 					this._stillVornoi.graphics().beginPath();
-					this._stillVornoi.graphics().drawCircle(right.x,right.y,2.0);
+					this._stillVornoi.graphics().drawCircle(rr.x,rr.y,2.0);
 					this._stillVornoi.graphics().endPath();
 					this._stillVornoi.graphics().fill();
 				}
 			}
-			deltaJ = (right.x-left.x)/300.0;
+			deltaJ = (right.x-left.x)/100.0;
 			arr = Code.parabolaABCFromFocusDirectrix(parabola,directrix);
 			a = arr.a, b = arr.b, c = arr.c;
 			//a = parabola.x; b = parabola.y; c = directrix;
@@ -850,22 +1148,24 @@ this._animDirectrix.graphics().clear();
 		var e = eventList[i];
 		if(e.isCircleEvent()){
 			var circle = e.circle();
+			var point = matrix.multV2D(new V2D(), circle.center);
 			// center
 			this._animParabolas.graphics().setFill(0xFF0000FF);
 			this._animParabolas.graphics().beginPath();
-			this._animParabolas.graphics().drawCircle(circle.center.x,circle.center.y,3.0);
+			this._animParabolas.graphics().drawCircle(point.x,point.y,3.0);
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().fill();
 			// perimeter
 			this._animParabolas.graphics().setLine(1.0,0xFF3333CC);
 			this._animParabolas.graphics().beginPath();
-			this._animParabolas.graphics().drawCircle(circle.center.x,circle.center.y,circle.radius);
+			this._animParabolas.graphics().drawCircle(point.x,point.y,circle.radius); // neet to muld radius by matrix scale
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().strokeLine();
 			// bottom
+			var point = matrix.multV2D(new V2D(), e.point());
 			this._animParabolas.graphics().setFill(0xFF00CCFF);
 			this._animParabolas.graphics().beginPath();
-			this._animParabolas.graphics().drawCircle(e.point().x,e.point().y,3.0);
+			this._animParabolas.graphics().drawCircle(point.x,point.y,3.0);
 			this._animParabolas.graphics().endPath();
 			this._animParabolas.graphics().fill();
 		}
@@ -882,6 +1182,8 @@ this._animDirectrix.graphics().clear();
 			if(halfEdge.vertexA() && halfEdge.vertexB()){
 				var pointA = halfEdge.vertexA().point();
 				var pointB = halfEdge.vertexB().point();
+					pointA = matrix.multV2D(new V2D(), pointA);
+					pointB = matrix.multV2D(new V2D(), pointB);
 				this._animParabolas.graphics().beginPath();
 				this._animParabolas.graphics().moveTo(pointA.x,pointA.y);
 				this._animParabolas.graphics().lineTo(pointB.x,pointB.y);
@@ -927,8 +1229,8 @@ Vor.makeCircle = function(v,r,col,wid){
 	return d;
 }
 Vor.makePoint = function(v,r,cf,cl){
-	r = r!==undefined?r:2.0;
-	cf = cf!==undefined?cf:0xFF666666;
+	r = r!==undefined?r:5.0;
+	cf = cf!==undefined?cf:0xFF333333;
 	cl = cl!==undefined?cl:0x00000000;
 	r *= 2.0;
 	var d = new DO();
