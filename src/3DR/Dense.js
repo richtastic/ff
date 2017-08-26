@@ -2171,8 +2171,9 @@ type = (type!==undefined && type!==null) ? type : def;
 //result[resultIndex] = Math.pow(zsad * delta,0.1);
 // result[resultIndex] = sad;//sad;
 
-result[resultIndex] = sad / maskCount;
+//result[resultIndex] = sad / maskCount;
 //result[resultIndex] = nsad / maskCount;
+result[resultIndex] = zsad / maskCount;
 		}
 	}
 	return {"value":result,"width":resultWidth,"height":resultHeight};
@@ -2438,6 +2439,7 @@ Dense.uniquenessFromValues = function(valuesIn){
 	}
 	return peakness;
 	*/
+	// VERSION 2:
 	
 	var carePortion = 0.10;
 	var careAmount = values.length*carePortion;
@@ -2455,6 +2457,14 @@ Dense.uniquenessFromValues = function(valuesIn){
 	//mag = range / mag;
 	return mag;
 	
+	/*
+	// VERSION 2:
+	var dy01 = values[1]-values[0];
+	var dy12 = values[2]-values[1];
+	var dyy = values[2] - 2*values[1] + values[0];
+	return dyy;
+	*/
+	return Dense.slope(values, 0, 5, 0);
 }
 
 Dense._handleKeyboardDown = function(e){
@@ -3053,14 +3063,12 @@ Dense.vertexFromMatch = function(pointA,pointB, lattice){
 		relativeAngleAtoB = -optimum["angle"];
 		relativeScaleAtoB = 1.0/optimum["scale"];
 	}
-	// relativeScaleAtoB = 1.0;
-	// relativeAngleAtoB = 0.0;
 	// reassign/override closest vertex to known seed point
 	var vertex = lattice.closestVertex(pointA);
 	vertex.from(pointA);
 	vertex.to(pointB);
 	Dense.assignBestNeedlesInHaystack(vertex,pointB, relativeScaleAtoB,relativeAngleAtoB, 2.0);
-	console.log(pointA+"   closest: "+vertex+"  ");
+	console.log(pointA+"  vertexFromMatch - closest: "+vertex+"  ");
 	return vertex;
 }
 Dense.lineFromF = function(FA,pointA){
@@ -3075,7 +3083,6 @@ Dense.lineFromF = function(FA,pointA){
 }
 Dense.ITER = 0;
 Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
-	var compareScale = 1.0;
 	var i, j, k, sigma, matrix, angle, scale;
 	var lattice = vertex.lattice();
 	var imageFr = lattice.imageFrom();
@@ -3097,8 +3104,18 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 	var toScale = center["scale"];
 	var toPoint = center["point"];
 //console.log(".  TOS: ",Code.degrees(toAngle),toScale,toPoint);
+
+	var compareSizeMax = 11;
+	var neighborhoodScale = 0.75; // compare window = 1.5 / 
+	var finalScale = 1.0; // compare scale + window size
+	var compareSizeNatural = Math.ceil(cellSize/neighborhoodScale);
+	var compareSize = Math.min(compareSizeNatural,compareSizeMax);
+	var cellScale = (cellSize/neighborhoodScale/compareSize);
+	//console.log(" CELL SIZE: "+cellSize+" scaled up by: "+neighborhoodScale+" = "+(cellSize/neighborhoodScale)+" scaled to fit inside "+compareSize+" = "+(cellSize/neighborhoodScale/compareSize)+"  =?=  "+cellScale);
+	// cellScale = 1.0 / cellScale;
+
 	var needlePoint = CE; // ?
-	var needleWidth = Math.max(Dense.MINIMUM_CELL_SIZE, cellSize);
+	var needleWidth = compareSize;
 	var needleHeight = needleWidth;
 	var needleMask = ImageMat.circleMask(needleWidth,needleHeight);
 	// find bounding box for haystack, minimum size of cellSize if necessary
@@ -3108,7 +3125,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 	var haystackHeight = Math.max(Math.ceil(boundingBox.height()), needleHeight);
 	matrix = new Matrix(3,3).identity();
 	sigma = null;
-	var haystack = imageTo.extractRectFromFloatImage(haystackPoint.x,haystackPoint.y,compareScale,sigma,haystackWidth,haystackHeight, matrix);
+	var haystack = imageTo.extractRectFromFloatImage(haystackPoint.x,haystackPoint.y,cellScale,sigma,haystackWidth,haystackHeight, matrix);
 	// extract needle at relative scales / rotations
 	var angleRangeDeg = [-10, 0, 10];
 	var scaleRangeExp = [-0.1,0.0,0.1];
@@ -3124,7 +3141,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 			matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DScale(matrix,scale);
 				matrix = Matrix.transform2DRotate(matrix,angle);
-			var needle = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,compareScale,sigma,needleWidth,needleHeight, matrix);
+			var needle = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,cellScale,sigma,needleWidth,needleHeight, matrix);
 			var scores = Dense.searchNeedleHaystackImage(needle,needleMask, haystack);
 				var values = scores.value;
 				var valueWidth = scores.width;
@@ -3156,38 +3173,44 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 			}
 		}
 	}
-	console.log("needle: "+needlePoint);
-	console.log("haystack: "+haystackPoint);
-	console.log("best 1: "+bestPoint);
+	// console.log("needle: "+needlePoint);
+	// console.log("haystack: "+haystackPoint);
+	// console.log("best 1: "+bestPoint);
 
 	var dist = V2D.distance(haystackPoint, bestPoint);
-var distanceToFrom = dist;
-	console.log("distance from haystack: "+dist+"");
+	var distanceToFrom = dist;
+	//console.log("distance from haystack: "+dist+"");
 	// keep best score
 	// calculate uniqueness : extract a haystack at best score credentials, window ~3-4 size of haystack
 	if(bestScore){
-		console.log(needlePoint+"")
-		console.log(bestPoint+"")
+		// console.log(needlePoint+"")
+		// console.log(bestPoint+"")
 			matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,bestScale);
 			matrix = Matrix.transform2DRotate(matrix,bestAngle);
-		var needle = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,compareScale,sigma,needleWidth,needleHeight, matrix);
+		var needle = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,cellScale,sigma,needleWidth,needleHeight, matrix);
 		//var needle = bestNeedle;
 		// var neighborhoodWidth = haystackWidth;//Math.round(cellSize * 2);
 		// var neighborhoodHeight = haystackHeight;//Math.round(cellSize * 2);
-		var neighborhoodWidth = Math.round(cellSize * 3);
-		var neighborhoodHeight = Math.round(cellSize * 3);
+		var neighborhoodWidth = Math.round(compareSize * 4);
+		var neighborhoodHeight = Math.round(compareSize * 4);
 			matrix = new Matrix(3,3).identity();
-		var haystack = imageTo.extractRectFromFloatImage(bestPoint.x,bestPoint.y,compareScale,sigma,neighborhoodWidth,neighborhoodHeight, matrix);
+		var haystack = imageTo.extractRectFromFloatImage(bestPoint.x,bestPoint.y,cellScale,sigma,neighborhoodWidth,neighborhoodHeight, matrix);
 		var scores = Dense.searchNeedleHaystackImage(needle,needleMask, haystack);
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
 		var uniquenessNH = Dense.uniquenessFromValues(values);
-		console.log(".  values: "+valueWidth+"x"+valueHeight);
+		//console.log(".  values: "+valueWidth+"x"+valueHeight);
 		//console.log("    values: \n"+values);
 
+		// distance from F-line ?
 
+		// change in local orientation ?
+
+		// change in local scale ?
+
+		// only choose points in direction of original neighbor
 
 
 /*
@@ -3251,9 +3274,9 @@ GLOBALSTAGE.addChild(d);
 			matrix = Matrix.transform2DScale(matrix,1.0/bestScale);
 			matrix = Matrix.transform2DRotate(matrix,-bestAngle);
 			//console.log(" A "+bestPoint+" => "+needleWidth+"x"+needleHeight+" @ "+bestScale+" / "+bestAngle);
-		var needle = imageTo.extractRectFromFloatImage(bestPoint.x,bestPoint.y,compareScale,sigma,needleWidth,needleHeight, matrix);
+		var needle = imageTo.extractRectFromFloatImage(bestPoint.x,bestPoint.y,cellScale,sigma,needleWidth,needleHeight, matrix);
 			matrix = new Matrix(3,3).identity();
-		var haystack = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,compareScale,sigma,neighborhoodWidth,neighborhoodHeight, matrix);
+		var haystack = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,cellScale,sigma,neighborhoodWidth,neighborhoodHeight, matrix);
 		var scores = Dense.searchNeedleHaystackImage(needle,needleMask, haystack);
 			var values = scores.value;
 			var valueWidth = scores.width;
@@ -3281,17 +3304,18 @@ GLOBALSTAGE.addChild(d);
 			}
 			break; // only first
 		}
-		console.log(bestPoint2+"")
+		//console.log(bestPoint2+"")
 		var dist = V2D.distance(needlePoint, bestPoint2);
 var distanceFromTo = dist;
 
-		console.log("best 2: "+bestPoint2);
-		console.log("distance from best: "+dist+"");
+		// console.log("best 2: "+bestPoint2);
+		// console.log("distance from best: "+dist+"");
 
 		// pick worst of uniqueness
 		var uniqueness = Math.max(uniquenessNH,uniquenessHN);
 		//uniqueness = uniqueness * (1+distanceToFrom) * (1+distanceFromTo);
-		uniqueness = uniqueness * (1+distanceFromTo); // pretty good
+		//uniqueness = uniqueness * (1+distanceFromTo); // pretty good
+		uniqueness = uniqueness * (1+Math.sqrt(distanceFromTo)); // pretty good
 		
 		// add best as single transform
 		var transform = new Dense.Transform();
@@ -3468,13 +3492,10 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	var cornersA = R3D.harrisCornerDetection(imageAGry, imageAWidth, imageAHeight, sigmaCorners);
 
 	// LATTICE
-	//var cellSize = 15;
-	var cellSize = 10;
-	//Zvar cellSize = 5;
-	//var cellSize = 2;
-
+	var cellSize = 5; // 15 10, 5, 2
 	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA, cellSize, matrixFfwd);
 	var globalQueue = new PriorityQueue(Dense.Vertex._queueSorting);
+	var localQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 
 	// add seed locations
 	var i, len = Math.max(pointsA.length,pointsB.length);
@@ -3483,18 +3504,18 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 		var pointB = pointsB[i];
 		var vertex = Dense.vertexFromMatch(pointA,pointB, latticeAtoB);
 		globalQueue.push(vertex);
-		if(i>=10){
-			break;
-		}
+		// if(i>=10){
+		// 	break;
+		// }
 	}
-	var localQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 
+	// SAVE FOR VISUAL ITERATIONS
 	Dense.LOCALQUEUE = localQueue;
 	Dense.GLOBALQUEUE = globalQueue;
 	Dense.LATTICE = latticeAtoB;
 	Dense.ITERATION = 0;
 	//Dense.TICKER = new Ticker(2000000);
-	Dense.TICKER = new Ticker(1);
+	Dense.TICKER = new Ticker(10);
 	Dense.TICKER.addFunction(Ticker.EVENT_TICK, Dense.denseMatch_iteration_ticker, Dense);
 	Dense.TICKER.start();
 	Dense.KEYBOARD = new Keyboard();
@@ -3507,95 +3528,36 @@ Dense.denseMatch_iteration = function(){
 	var latticeAtoB = Dense.LATTICE;
 	var iteration = Dense.ITERATION;
 
-	//console.log("denseMatch_iteration: "+globalQueue.length());
-
 	var display = Dense.DISPLAY;
 	display.removeAllChildren();
 
-
 	var interpolator;
 
-	// go thu all perimeters to record best next matches
+	// TODO: go thru all perimeters to record best next matches
 	while(!localQueue.isEmpty()){
 		// .. 
 	}
 
 	// pick up best match ad infinitum
 	while(!globalQueue.isEmpty()){
-		// look at ALL seed points & propagate at all perimeters
+		// TODO: look at ALL seed points & propagate at all perimeters before choosing ?
 		++iteration;
 		var nextVertex = globalQueue.popMinimum();
-		console.log("NEXT: "+iteration+" = "+nextVertex);
+		console.log("NEXT: "+iteration+" = "+nextVertex+"        ----- rank:"+nextVertex.rank());
 
-		// set vertex as finalized
+		// MAP BEST CHOICE
 		nextVertex.join();
 
-		// update model predictor
+		// UPDATE MODEL PREDICTOR
 		var cells = latticeAtoB.allValidCells(null);
-		var points = [];
-		for(i=0; i<cells.length; ++i){
-			cell = cells[i];
-			points.push(cell.from());
-		}
-
 		interpolator = new Dense.Interpolator(cells);
+
+		// CHECK / ADD BEST CELL'S PERIMETER POINTS
 		nextVertex.assignNeighbors(globalQueue, interpolator);
-
-//		nextVertex.assignNeighbors(globalQueue);
 		
-		// if(iteration==1){
-		// 	//nextVertex.from(new V2D(10,10));
-		// 	nextVertex._matches[0].to(new V2D(300,200));
-		// 	nextVertex._matches[0].angle( Code.radians(90) );
-		// 	nextVertex._matches[0].scale(0.5);
-		// }else if(iteration==2){
-		// 	nextVertex._matches[0].to(new V2D(300,350));
-		// 	nextVertex._matches[0].angle( Code.radians(100) );
-		// 	nextVertex._matches[0].scale(1.5);
-		// }else if(iteration==3){
-		// 	nextVertex._matches[0].to(new V2D(150,200));
-		// 	nextVertex._matches[0].angle( Code.radians(80) );
-		// 	nextVertex._matches[0].scale(1.0);
-		// }
-		
-		// SHOW MATCHING
-		var vertex = nextVertex;
-		if(vertex){
-			var cellSizeA = latticeAtoB.cellSize();
-			var imageMatrixA = latticeAtoB.imageFrom();
-			var imageMatrixB = latticeAtoB.imageTo();
-			var rotationAtoB = vertex.transform().angle();
-			var scaleAtoB = vertex.transform().scale();
-			console.log(Code.degrees(rotationAtoB),scaleAtoB);
+		// VISUAL: SHOW MATCHING
+		Dense.showMatchingMapping(latticeAtoB, nextVertex);
 
-			var pA = vertex.from();
-			var pB = vertex.to();
-console.log("CELL POINTS: "+pA+" => "+pB);
-			// B to A
-			var matrix = new Matrix(3,3).identity();
-				matrix = Matrix.transform2DRotate(matrix,-rotationAtoB);
-				matrix = Matrix.transform2DScale(matrix,1.0/scaleAtoB);
-			var bR = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.red(),imageMatrixB.width(),imageMatrixB.height(), matrix);
-			var bG = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.grn(),imageMatrixB.width(),imageMatrixB.height(), matrix);
-			var bB = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.blu(),imageMatrixB.width(),imageMatrixB.height(), matrix);
-			img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
-			d = new DOImage(img);
-			d.matrix().translate(0 + pA.x - cellSizeA*0.5, 0 + pA.y - cellSizeA*0.5);
-			GLOBALSTAGE.addChild(d);
-
-			// A to B
-			var matrix = new Matrix(3,3).identity();
-				matrix = Matrix.transform2DRotate(matrix,rotationAtoB);
-				matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-			var bR = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.red(),imageMatrixA.width(),imageMatrixA.height(), matrix);
-			var bG = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.grn(),imageMatrixA.width(),imageMatrixA.height(), matrix);
-			var bB = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.blu(),imageMatrixA.width(),imageMatrixA.height(), matrix);
-			img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
-			d = new DOImage(img);
-			d.matrix().translate(400,0);
-			d.matrix().translate(0 + pB.x - cellSizeA*0.5, 0 + pB.y - cellSizeA*0.5);
-			GLOBALSTAGE.addChild(d);
-		}
 		// TODO: NEIGHBOR MATCHING
 		break; // ticker loop
 	}
@@ -3604,6 +3566,44 @@ console.log("CELL POINTS: "+pA+" => "+pB);
 	display.graphics().alpha(0.5);
 	Dense.interpolator = interpolator;
 	//Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
+}
+
+Dense.showMatchingMapping = function(latticeAtoB, vertex){
+	if(vertex){
+		var cellSizeA = latticeAtoB.cellSize();
+		var imageMatrixA = latticeAtoB.imageFrom();
+		var imageMatrixB = latticeAtoB.imageTo();
+		var rotationAtoB = vertex.transform().angle();
+		var scaleAtoB = vertex.transform().scale();
+		//console.log(Code.degrees(rotationAtoB),scaleAtoB);
+		var pA = vertex.from();
+		var pB = vertex.to();
+		// console.log("CELL POINTS: "+pA+" => "+pB);
+		// B to A
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,-rotationAtoB);
+			matrix = Matrix.transform2DScale(matrix,1.0/scaleAtoB);
+		var bR = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.red(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		var bG = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.grn(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		var bB = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.blu(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+		d = new DOImage(img);
+		d.matrix().translate(0 + pA.x - cellSizeA*0.5, 0 + pA.y - cellSizeA*0.5);
+		GLOBALSTAGE.addChild(d);
+
+		// A to B
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,rotationAtoB);
+			matrix = Matrix.transform2DScale(matrix,scaleAtoB);
+		var bR = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.red(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+		var bG = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.grn(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+		var bB = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.blu(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+		d = new DOImage(img);
+		d.matrix().translate(400,0);
+		d.matrix().translate(0 + pB.x - cellSizeA*0.5, 0 + pB.y - cellSizeA*0.5);
+		GLOBALSTAGE.addChild(d);
+	}
 }
 
 Dense.visualizeLattice = function(lattice, display){
@@ -3800,8 +3800,8 @@ Dense.Interpolator = function(cells){
 		points.push( cells[i].from() );
 	}
 	this._points = points;
-console.log("ORIGINAL POINTS:");
-Code.printPoints(this._points);
+// console.log("ORIGINAL POINTS:");
+// Code.printPoints(this._points);
 
 	if(points.length==0){
 		// N/A
@@ -3887,9 +3887,6 @@ Dense.Interpolator.prototype.value = function(point){
 			items.push({"value":cellA, "percent":1.0});
 		}
 	}else if(points.length>=3){
-		//console.log("3");
-		//console.log(this._hullFilled)
-		//Code.printPoints(this._points);
 		var isInside = Code.isPointInsidePolygon2D(point, this._hullFilled);
 		if(isInside){
 			var tri = null;
