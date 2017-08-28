@@ -368,13 +368,16 @@ http://mathworld.wolfram.com/LeastSquaresFittingLogarithmic.html
 
 
 RELIABILITY / UNIQUENESS / PENALTIES 
-- distance from F-line
+~ distance from F-line
 - local relationship with assigned / neighbors
+	-> DIRECTION / angle from CURRENT
 - assigned orietnation should not be too much more crazy than current status (angle / scale can only change slightly)
+	- this is already restricted somewhat by the choice of where
 - WHEN COMPARING: compare size should include more than just the CELL neighborhood
 	~ 2.0 x cell size (or cell min size)
-
-
+- should remove old match-points that are no longer consistent with prediction ?
+- seed point shouldn't change cell location
+	- if seed point was inaccurate, then is perpetually a wrong change
 
 
 

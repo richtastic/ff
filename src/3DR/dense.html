@@ -11,6 +11,27 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["AreaMap.js","R3D.js","Dense.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	var tri = [
+		new V2D(0,0),
+		new V2D(1,0),
+		new V2D(0,1),
+	];
+	var point = new V2D(0.5,-0.5);
+
+	var areaTotal = V2D.areaTri(tri[0],tri[1],tri[2]);
+	console.log(areaTotal);
+	var k;
+	for(k=0; k<3; ++k){
+		var c = tri[k];
+		var area = V2D.areaTri(tri[(k+1)%3],tri[(k+2)%3],point);
+		
+		var percent = area / areaTotal;
+		console.log(area+" / "+percent)
+		//items.push({"value":c, "percent":percent});
+	}
+//return;
+
+
 	/*
 	var pointsA = [
 		new V2D(2,1),
