@@ -209,7 +209,7 @@ V2D.prototype.add = function(v,w){
 	}
 	return this;
 }
-V2D.prototype.sub = function(v){
+V2D.prototype.sub = function(v,w){
 	if(w!==undefined){
 		this.x -= v; this.y -= w;
 	}else{

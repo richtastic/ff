@@ -369,15 +369,22 @@ http://mathworld.wolfram.com/LeastSquaresFittingLogarithmic.html
 
 RELIABILITY / UNIQUENESS / PENALTIES 
 ~ distance from F-line
-- local relationship with assigned / neighbors
-	-> DIRECTION / angle from CURRENT
-- assigned orietnation should not be too much more crazy than current status (angle / scale can only change slightly)
+~ 1 seed point shouldn't change cell location
+	=> do haystack search still around TO point (with enough error for 2x scale change)
+	- if seed point was inaccurate, then is perpetually a wrong change
+2 local relationship with assigned / neighbors
+	=> MASK OUT INVALID AREA
+~ 3 update affected queue cell points
+	=> should remove old match-points that are no longer consistent with prediction ?
+
+
+
+
+- assigned orientation should not be too much more crazy than current status (angle / scale can only change slightly)
 	- this is already restricted somewhat by the choice of where
 - WHEN COMPARING: compare size should include more than just the CELL neighborhood
 	~ 2.0 x cell size (or cell min size)
-- should remove old match-points that are no longer consistent with prediction ?
-- seed point shouldn't change cell location
-	- if seed point was inaccurate, then is perpetually a wrong change
+
 
 
 
@@ -424,7 +431,7 @@ N_w(i) = w x w window around pixel i
 n(a,b) = weighted intensity measure difference of pixels
 	= 0.299*|r_a-r_b| + 0.587*|g_a-g_b| + 0.114*|b_a-b_b|
 s(i) = roughness metric
-	= max() n(i,j), i-j in {(1,0),(-1,0),(0,1),0,-1} )   [4-neighborhood pixel difference maximum]
+	= max( n(i,j), i-j in {(1,0),(-1,0),(0,1),0,-1} )   [4-neighborhood pixel difference maximum]
 s0 = lower threshold of roughness
 	= 0.04
 d(a,b) = image intensity / color difference between neighborhood
