@@ -389,11 +389,35 @@ RELIABILITY / UNIQUENESS / PENALTIES
 
 
 
+Iteritive triangulation method:
+	- is point inside hull?
+		- find intersecting triangle
+		- split triangle from 2 to 4 including that includes new point
+	- else
+		- add triangle
+	=> recursively adjust triangles until angles are happy
 
 
 
 
 
+SLOWNESS:
+faster way to find intersected triangle
+	-> quad-tree triangle placement
+faster way to create delauny triangulation from voronoi diagram
+
+
+
+dense match output:
+	pointsA, pointsB
+
+
+OVERALL NEXT TASKS:
+* medium-seed point matching
+* 2D iteritive point triangulation
+* 2D -> 3D points
+* visualize 3D points
+* texture-map triangles / 3D points
 
 
 

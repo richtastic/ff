@@ -390,7 +390,7 @@ var matchesA = matching["A"];
 var matchesB = matching["B"];
 var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB, 1.0, 250);
 console.log("bestMatches: "+bestMatches.length);
-
+/*
 console.log("bestMatches has double-duplicated points, remove them");
 for(i=0; i<bestMatches.length; ++i){
 	var matchA = bestMatches[i];
@@ -436,6 +436,20 @@ for(m=0; m<bestMatches.length; ++m){
 		break;
 	}
 }
+*/
+// print out for usage elsewhere
+var strA = "var pointsA = [];";
+var strB = "var pointsB = [];";
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var featureA = match["A"];
+	var featureB = match["B"];
+	var pointA = featureA.point();
+	var pointB = featureB.point();
+	strA = strA + "pointsA.push(new V2D(" + (pointA.x*400) + "," + (pointA.y*300) + "));\n";
+	strB = strB + "pointsB.push(new V2D(" + (pointB.x*400) + "," + (pointB.y*300) + "));\n";
+}
+console.log("\n\n"+strA+"\n\n"+strB+"\n\n");
 
 
 	// R3D.lineRayFromPointF

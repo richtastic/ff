@@ -4488,6 +4488,13 @@ Code.inverse4x4 = function(arr, a,b,c,d, e,f,g,h, i,j,k,l, m,n,o,p){ // http://w
 	det = 1/det;
 	return arr;
 }
+
+Code.determinant4x4 = function(a,b,c,d, e,f,g,h, i,j,k,l, m,n,o,p){ // TODO ^
+	var mat = new Matrix(4,4,[a,b,c,d, e,f,g,h, i,j,k,l, m,n,o,p]);
+	var det = mat.det();
+	return det;
+}
+
 Code.mult3x3by3x1toV3D = function(v, tbt, tbo){
 	v.x = tbo[0]*tbt[0] + tbo[1]*tbt[1] + tbo[2]*tbt[2];
 	v.y = tbo[0]*tbt[3] + tbo[1]*tbt[4] + tbo[2]*tbt[5];
@@ -7032,5 +7039,8 @@ Code.getBrowser = function(){
 Code.open = function(url){
 	window.open(url);
 }
+
+
+
 
 

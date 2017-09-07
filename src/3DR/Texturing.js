@@ -1,6 +1,7 @@
 // Texturing.js
 
 function Texturing(){
+	console.log("Texturing");
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();
@@ -8,9 +9,13 @@ function Texturing(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
-	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	// resources
 	this._resource = {};
+
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+
+
+
 	/*
 	// 3D stage
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
@@ -33,12 +38,125 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
 	*/
 	//
+GLOBALSTAGE = this._stage;
+// GLOBALSTAGE.root().matrix().scale(1.0,-1.0);
+// GLOBALSTAGE.root().matrix().translate(300.0,300.0);
+	this.triangulate();
+	return;
 	var imageList, imageLoader;
 	// import image to work with
 	imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
 	imageLoader = new ImageLoader("./images/",imageList, this,this.handleSceneImagesLoaded,null);
 	imageLoader.load();
 }
+
+Texturing.prototype.triangulate = function(){
+	console.log("triangulate");
+
+// lookup table for data from point
+/*
+
+point - 2d coord + data object
+tri - 
+*/
+
+
+
+	var i, j, k;
+	var points = [
+		new V2D(1,0),
+		//new V2D(0,1),
+		new V2D(2,1),
+new V2D(0.8,0.8),
+		new V2D(1,1),
+new V2D(1,-1),
+		new V2D(2,-1),
+		//new V2D(0.8,0.8),
+		new V2D(2,2),
+	];
+// random tests
+points = [];
+var minX = -2;
+var maxX = 2;
+var minY = -2;
+var maxY = 2;
+for(i=0; i<15; ++i){
+	points[i] = new V2D(Code.randomFloat(minX,maxX),Code.randomFloat(minY,maxY));
+}
+Triangulator.removeDuplicates(points);
+
+
+	var matrix = new Matrix2D();
+	matrix.identity();
+	matrix.scale(1.0);
+	for(i=0; i<points.length; ++i){
+		points[i] = matrix.multV2D(new V2D(), points[i]);
+	}
+var matrix = new Matrix2D();
+matrix.identity();
+matrix.scale(1.0,-1.0);
+matrix.scale(40.0);
+matrix.translate(140.0,180.0);
+	// show points:
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
+		var color = 0xFFFF0000;
+		var rad = 3.0;
+		var c = new DO();
+		point = matrix.multV2D(new V2D(), point);
+		c.graphics().setLine(1.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(point.x, point.y, rad);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix();
+		GLOBALSTAGE.addChild(c);
+	}
+	// ... do triangulation
+	var triangulator = new Triangulator();
+	triangulator.addPoints(points);
+	var tri = triangulator.triangle( new V2D(0.5,0.25) );
+	// console.log(tri);
+	// if(tri){
+	// 	var ps = tri.points();
+	// 	console.log(ps);
+	// }
+
+	var triangles = triangulator.triangles();
+	for(i=0; i<triangles.length; ++i){
+		var tri = triangles[i];
+		var pts = tri.points();
+		var pointA = pts[0].point();
+		var pointB = pts[1].point();
+		var pointC = pts[2].point();
+		pointA = matrix.multV2D(new V2D(), pointA);
+		pointB = matrix.multV2D(new V2D(), pointB);
+		pointC = matrix.multV2D(new V2D(), pointC);
+		var color = 0xFF00FF00;
+		//var color = Code.getColARGBFromFloat(1.0,Math.random(),Math.random(),Math.random());
+		var c = new DO();
+		console.log()
+		c.graphics().setLine(1.0, color);
+		c.graphics().beginPath();
+		var sc = 0.0;
+		var ss = 0.0;
+		var offX = (Math.random()-0.5)*ss;
+		var offY = (Math.random()-0.5)*ss;
+		pointA.x += (Math.random()-0.5)*sc + offX;
+		pointA.y += (Math.random()-0.5)*sc + offY;
+		pointB.x += (Math.random()-0.5)*sc + offX;
+		pointB.y += (Math.random()-0.5)*sc + offY;
+		pointC.x += (Math.random()-0.5)*sc + offX;
+		pointC.y += (Math.random()-0.5)*sc + offY;
+
+		c.graphics().drawPolygon([pointA,pointB,pointC], true);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		GLOBALSTAGE.addChild(c);
+	}
+}
+
+
 Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 	var pointsA = [];
 	var pointsB = [];

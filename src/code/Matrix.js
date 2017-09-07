@@ -1549,7 +1549,9 @@ http://www.youtube.com/watch?v=abYAUqs_n6I
 
 */
 
-
+Matrix.prototype.determinant = function(){
+	return this.det();
+}
 Matrix.prototype.det = function(){
 	return numeric.det(this._rows);
 }
