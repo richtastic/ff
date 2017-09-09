@@ -936,6 +936,7 @@ Dense.denseMatch_iteration_key = function(e){
 		}
 	}
 	if(e.keyCode==Keyboard.KEY_LET_Q){
+		console.log("DRAW LATTICE");
 		var latticeAtoB = Dense.LATTICE;
 		Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
 	}
@@ -2800,10 +2801,13 @@ Dense.Vertex.prototype.assignNeighbors = function(queue, interpolator){
 		if(!n.isJoined()){
 			//console.log("neighbor: "+i);
 			//queue.remove(n); // TODO: BECAUSE 
-			var same = Dense.assignBestNeedleInHaystack(interpolator, n, queue, true);
-			if(same){
+			//var same = Dense.assignBestNeedleInHaystack(interpolator, n, queue, true);
+			//if(same){
+			interpolator.setAsTri();
 				Dense.assignBestNeedleInHaystack(interpolator, n, queue);
-			}
+			// interpolator.setAsNeighbor();
+			// 	Dense.assignBestNeedleInHaystack(interpolator, n, queue);
+			//}
 		}
 	}
 }
@@ -3340,27 +3344,33 @@ var distanceFromTo = dist;
 		// ignore points that have minimal differences
 
 		if(worstRangeScore < 0.01){
-			return null;
+			return vertex;
 		}
-		
+
+		// ignore points outside image window
+		if(bestPoint.x<0 || bestPoint.y<0 || bestPoint.x>=imageTo.width() || bestPoint.y>=imageTo.height() ){
+			console.log("POINT OUTSIDE TO WINDOW");
+			return vertex;
+		}
+/*		
 		// ignore points with really low scores
 		if(bestScore > 0.25){
-			return null;
+			return vertex;
 		}
 
 		// ignore points with poor uniqueness
 		//console.log(uniqueness);
-		if(uniqueness > 100.0){
-			return null;
+		if(uniqueness > 1E6){
+			return vertex;
 		}
 		
 		if(distanceFromTo>cellSize || distanceToFrom>cellSize){
-			return null;
+			return vertex;
 		}
-		// ignore points outside image window
+		
 
 		// ignore points too close to neighbors
-
+*/
 	// penalty type 2:
 		var rank = 1.0;
 		rank = rank * uniqueness;
@@ -3375,21 +3385,22 @@ var distanceFromTo = dist;
 
 		//console.log(rank);
 
-		if(rank>1E8){
-			return null;
+		if(rank>1E10){
+			return vertex;
 		}
 
 		// TODO: NOT JUST NEIGHBORS -- ANY CELL AROUND POINT
-		var ns = vertex.neighbors();
+		var v = vertex.lattice().vertex(bestPoint);
+		var ns = v.neighbors();
 		//console.log(ns.length);
 		for(k=0; k<ns.length; ++k){
 			var n = ns[k];
 			if(n.isJoined()){
 				var d = V2D.distance(n.to(),bestPoint);
 				//console.log("DIST: "+d);
-				if(d<cellSize*0.1){
-					// console.log("too close to neighbor: "+d);
-					return null;
+				if(d<cellSize*0.01){
+					console.log("too close to neighbor: "+d);
+					return vertex;
 				}
 			}
 		}
@@ -3918,6 +3929,7 @@ if(points){
 
 
 Dense.Interpolator = function(cells){
+	this._pA = 0.0;
 	this._cells = [];
 	this._triangulator = new Triangulator();
 	if(cells){
@@ -3976,7 +3988,8 @@ Dense.Interpolator.prototype.projected = function(from){
 	var nextPos = new V2D(0,0);
 	var nextScale = 0.0;
 	var nextAngle = 0.0;
-	var interp = this.value(from);
+	var interp = this.value(from); // PASS IN VALUE:
+
 //var pointCount = this._triangulator.points().length;///this._points.length; // if points == 1 => double projected area ? === seed point
 //interp.push({"value":});
 var pointCount = this._cells.length;
@@ -3992,9 +4005,13 @@ if(interp.length==0){
 		var angle = c.angle();
 		var scale = c.scale();
 		var relativeDirA = V2D.sub(from,originA);
-		var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
-		//var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p); // better for 1/d^2
-		//var pos = relativeDirA.copy().add(originB).scale(p); // better for triangle interpolation
+		if(this._pA==0.0){
+			var pos = relativeDirA.copy().add(originB).scale(p); // better for triangle interpolation
+		}else{
+			var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
+		}
+		// var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p); // better for 1/d^2
+		// var pos = relativeDirA.copy().add(originB).scale(p); // better for triangle interpolation
 		nextScale += scale*p;
 		nextAngle += angle*p;
 		nextPos.add(pos);
@@ -4039,6 +4056,13 @@ Dense.Interpolator.prototype.hull = function(){
 Dense.Interpolator.prototype.hullFilled = function(){
 	return this._hullFilled;
 }
+Dense.Interpolator.prototype.setAsTri = function(){
+	this._pA = 0.0;
+}
+Dense.Interpolator.prototype.setAsNeighbor = function(){
+	this._pA = 1.0;
+}
+
 Dense.Interpolator.prototype.value = function(point){
 	// only care about top 5~10
 	// nearest:
@@ -4348,7 +4372,11 @@ return items;
 		}
 		
 	//}
-	var pA = 1.0;
+	//var pA = 1.0;
+// TODO: if occlusion is detected (overlapping triangles)
+//       => use distance metrics instead
+
+	var pA = this._pA;
 	var pB = 1.0 - pA;
 	var triangleItems = items;
 	var distanceItems;

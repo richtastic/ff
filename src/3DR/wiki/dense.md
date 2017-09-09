@@ -443,7 +443,9 @@ FORMAT OF IN/OUTPUTS FROM VARIOUS FXNs
 	[bad because of occlusions]
 
 
-=> try interpolator on both modes to advance front
+=> try interpolator in both modes to advance front
+
+
 
 camera info:
 	- radial distortion params
