@@ -459,6 +459,13 @@ points.push( new V2D(95,255) ); // 365
 points.push( new V2D(375,195) ); // 366
 
 
+points = [];
+points.push( new V2D(245,165) ); // 0
+points.push( new V2D(185,185) ); // 1
+points.push( new V2D(185,215) ); //
+// <185,185> (1) ] | [P: <245,165> (0) 
+
+
 
 	var matrix = new Matrix2D();
 	matrix.identity();
@@ -490,7 +497,7 @@ matrix.translate(100.0,600.0);
 		GLOBALSTAGE.addChild(c);
 	}
 
-		point = matrix.multV2D(new V2D(), new V2D(155,95));
+		point = matrix.multV2D(new V2D(), new V2D(185,215));
 		c.graphics().setLine(1.0, 0xFF000000);
 		c.graphics().beginPath();
 		c.graphics().drawCircle(point.x, point.y, 4.0);

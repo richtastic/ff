@@ -126,6 +126,24 @@ var pointsB = [
 			];
 
 
+/*
+// TEST zoom/rotated images
+pointsA = [
+			new V2D(240.5,161.5), // armpit
+			new V2D(187.5,181.0), // origin
+			new V2D(182.0,218.0), // grid corner
+			new V2D(220.0,211.0), // brick
+			new V2D(280.0,137.0), // right mouth
+			];
+pointsB = [
+			new V2D(230.0,169.0),
+			new V2D(120.5,151.5), // origin
+			new V2D( 71.0,209.0), // grid corner
+			new V2D(144.5,234.0), // brick
+			new V2D(325.0,166.0), // right mouth
+			];
+*/
+
 // from medium:
 /// ...
 
@@ -179,23 +197,6 @@ GLOBALSTAGE = this._stage;
 		//GLOBALSTAGE.addChild(c);
 	}
 
-/*
-// TEST zoom/rotated images
-pointsA = [
-			new V2D(240.5,161.5), // armpit
-			new V2D(187.5,181.0), // origin
-			new V2D(182.0,218.0), // grid corner
-			new V2D(220.0,211.0), // brick
-			new V2D(280.0,137.0), // right mouth
-			];
-pointsB = [
-			new V2D(230.0,169.0),
-			new V2D(120.5,151.5), // origin
-			new V2D( 71.0,209.0), // grid corner
-			new V2D(144.5,234.0), // brick
-			new V2D(325.0,166.0), // right mouth
-			];
-*/
 
 // exact for testUniq
 // pointsB = pointsA;
@@ -2803,10 +2804,10 @@ Dense.Vertex.prototype.assignNeighbors = function(queue, interpolator){
 			//queue.remove(n); // TODO: BECAUSE 
 			//var same = Dense.assignBestNeedleInHaystack(interpolator, n, queue, true);
 			//if(same){
-			interpolator.setAsTri();
-				Dense.assignBestNeedleInHaystack(interpolator, n, queue);
-			// interpolator.setAsNeighbor();
+			// interpolator.setAsTri();
 			// 	Dense.assignBestNeedleInHaystack(interpolator, n, queue);
+			//interpolator.setAsNeighbor();
+				Dense.assignBestNeedleInHaystack(interpolator, n, queue);
 			//}
 		}
 	}
@@ -3589,14 +3590,16 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 
 	// F
 	var matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
-	var matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+	if(matrixFfwd){
+		matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+	}
 
 	// CORNERS
 	var sigmaCorners = 1.0;
 	var cornersA = R3D.harrisCornerDetection(imageAGry, imageAWidth, imageAHeight, sigmaCorners);
 
 	// LATTICE
-	var cellSize = 5; // 15 10, 5, 2 // CELLSIZEHERE
+	var cellSize = 10; // 15 10, 5, 2 // CELLSIZEHERE
 	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA, cellSize, matrixFfwd);
 	var globalQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 	var localQueue = new PriorityQueue(Dense.Vertex._queueSorting);
@@ -3660,11 +3663,13 @@ Dense.denseMatch_iteration = function(){
 			console.log("FOUND JOINED -- ignore");
 			break;
 		}
+
 		console.log("NEXT: "+iteration+" = "+nextVertex+"        ----- rank:"+nextVertex.rank()+" ");
 
 		// MAP BEST CHOICE
 		nextVertex.join();
 		interpolator.addCell(nextVertex);
+		//Code.printPoints(interpolator.points());
 
 		// UPDATE MODEL PREDICTOR
 		// Code.timerStart();
@@ -3932,6 +3937,8 @@ Dense.Interpolator = function(cells){
 	this._pA = 0.0;
 	this._cells = [];
 	this._triangulator = new Triangulator();
+	//this.setAsNeighbor();
+	this.setAsTri();
 	if(cells){
 		var i;
 		for(i=0; i<cells.length; ++i){
@@ -4010,6 +4017,7 @@ if(interp.length==0){
 		}else{
 			var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
 		}
+		//var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
 		// var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p); // better for 1/d^2
 		// var pos = relativeDirA.copy().add(originB).scale(p); // better for triangle interpolation
 		nextScale += scale*p;
@@ -4100,7 +4108,7 @@ Dense.Interpolator.prototype.value = function(point){
 		items = items.sort(function(a,b){
 			return a["percent"] < b["percent"] ? 1 : -1;
 		});
-		var maxCount = 1;
+		var maxCount = 10;
 		if(items.length>maxCount){
 			items.splice(maxCount,items.length-maxCount+1);
 		}
@@ -4127,7 +4135,7 @@ Dense.Interpolator.prototype.value = function(point){
 //return items;
 
 	var distanceItems = items;
-
+//return distanceItems;
 
 
 
@@ -4379,7 +4387,7 @@ return items;
 	var pA = this._pA;
 	var pB = 1.0 - pA;
 	var triangleItems = items;
-	var distanceItems;
+
 
 //return triangleItems;
 

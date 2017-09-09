@@ -156,9 +156,6 @@ Triangulator.Mesh.prototype.perimeter = function(){
 	var internals = [];
 	var i, len = edges.length;
 	var dummyPoints = this._dummyPoints();
-	
-
-
 	for(i=0; i<len; ++i){
 		var edge = edges[i];
 		var oppo = edge.opposite();
@@ -166,17 +163,18 @@ Triangulator.Mesh.prototype.perimeter = function(){
 		var point = oppo.tri().opposite(oppo);
 		if( Code.elementExists(dummyPoints, point) && !Code.elementExists(dummyPoints, edge.a()) && !Code.elementExists(dummyPoints, edge.b()) ){
 			//if(edge.opposite()){}
-			internals.push(edge);
+			//if(edge.opposite() && edge.opposite().prev().opposite() && edge.opposite().prev().opposite().prev().opposite()){
+				internals.push(edge);
+			//}
 		}
 	}
 	var sequence = [];
 	if(internals.length>0){
 		var edge, next;
+		//console.log(internals);
 		var edgeStart = internals[0];
 		//var edgeStart = internals[2];
 		var i = 0;
-		//console.log(edgeStart.tri()+"");
-			//edgeStart = edgeStart.opposite();
 		edge = edgeStart;
 		sequence.push(edge.a().id());
 		next = Triangulator.nextEdge(edge, dummyPoints);
@@ -186,6 +184,7 @@ Triangulator.Mesh.prototype.perimeter = function(){
 			edge = next;
 			sequence.push(next.a().id());
 			next = Triangulator.nextEdge(edge, dummyPoints);
+			console.log();
 			++i;
 			if(i>1000){
 				console.log("PERIMETER IS BAD");
@@ -199,10 +198,17 @@ Triangulator.Mesh.prototype.perimeter = function(){
 Triangulator.nextEdge = function(edge, dummyPoints){
 	//var next = edge.next().opposite().next();
 	var next = edge.opposite().prev().opposite().prev().opposite();
-	if( Code.elementExists(dummyPoints, next.b()) ){
-		//console.log("hop");
-		next = next.prev().opposite();
-	}
+		while( Code.elementExists(dummyPoints, next.b()) ){
+			//console.log("hop");
+			next = next.prev().opposite();
+			// if( Code.elementExists(dummyPoints, next.b()) ){
+			// 	console.log("hop 2");
+			// 	next = next.opposite().prev().opposite();
+			// }
+		}
+	// }else{
+	// 	return null;
+	// }
 	return next;
 }
 
