@@ -35,13 +35,13 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 		var file = fileList[i];
 		var img = imageList[i];
 		images[i] = img;
-		var d = new DOImage(img);
-		this._root.addChild(d);
-		d.graphics().alpha(0.25);
-		//d.graphics().alpha(1.0);
-		//d.graphics().alpha(0.0);
-		d.matrix().translate(x,y);
-		x += img.width;
+	// 	var d = new DOImage(img);
+	// 	this._root.addChild(d);
+	// 	d.graphics().alpha(0.25);
+	// 	//d.graphics().alpha(1.0);
+	// 	//d.graphics().alpha(0.0);
+	// 	d.matrix().translate(x,y);
+	// 	x += img.width;
 	}
 
 	GLOBALSTAGE = this._stage;
@@ -129,6 +129,26 @@ var pointsB = [
 // from medium:
 /// ...
 
+// // flip for tests:
+// var imageMatrixC = imageMatrixA;
+// var pointsC = pointsA;
+// imageMatrixA = imageMatrixB;
+// pointsA = pointsB;
+// imageMatrixB = imageMatrixC;
+// pointsB = pointsC;
+
+	var images = [];
+	//var imageList = Code.arrayReverse(imageList);
+	for(i=0;i<imageList.length;++i){
+		var img = imageList[i];
+		var d = new DOImage(img);
+		this._root.addChild(d);
+		d.graphics().alpha(0.25);
+		//d.graphics().alpha(1.0);
+		//d.graphics().alpha(0.0);
+		d.matrix().translate(x,y);
+		x += img.width;
+	}
 
 
 
@@ -181,17 +201,10 @@ pointsB = [
 // pointsB = pointsA;
 // imageMatrixB = imageMatrixA;
 
-// flip for tests:
-// var imageMatrixC = imageMatrixA;
-// var pointsC = pointsA;
-// imageMatrixA = imageMatrixB;
-// pointsA = pointsB;
-// imageMatrixB = imageMatrixC;
-// pointsB = pointsC;
 
 Dense.DISPLAY = new DO();
 GLOBALSTAGE.addChild(Dense.DISPLAY);
-
+this._stage.root().matrix().translate(30,50);
 
 	//GLOBALSTAGE.root().matrix().identity().translate(100,100);
 
@@ -752,7 +765,7 @@ Dense.prototype.testFeatureComparison = function(imageA,seedsA, imageB,seedsB){
 	var imageBWidth = imageB.width();
 	var imageBHeight = imageB.height();
 
-	var cellSizeA = 10; // 2 4 10 20 25 50 100
+	var cellSizeA = 50; // 2 4 10 20 25 50 100
 	var cellSizeB = cellSizeA;
 	var gridACols = Math.ceil(imageAWidth/cellSizeA);
 	var gridARows = Math.ceil(imageAHeight/cellSizeA);
@@ -822,7 +835,7 @@ var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	// global list of successful matches
 	var matches = [];
 	// grid of matching cells
-	var cellSizeA = 2; // 2 4 10 20 25 50 100
+	var cellSizeA = 50; // 2 4 10 20 25 50 100
 	var cellSizeB = cellSizeA;
 	var gridACols = Math.ceil(imageAWidth/cellSizeA);
 	var gridARows = Math.ceil(imageAHeight/cellSizeA);
@@ -890,6 +903,7 @@ Dense.ITERATION = 0;
 
 	Dense.KEYBOARD = new Keyboard();
 	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_DOWN,Dense.denseMatch_iteration_key,Dense);
+	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_DOWN_,Dense.denseMatch_iteration_key,Dense);
 	Dense.KEYBOARD.addListeners();
 }
 Dense.denseMatch_iteration_key = function(e){
@@ -921,13 +935,19 @@ Dense.denseMatch_iteration_key = function(e){
 			Dense.showMatchingMapping(latticeAtoB, cell, GLOBALSTAGE);
 		}
 	}
+	if(e.keyCode==Keyboard.KEY_LET_Q){
+		var latticeAtoB = Dense.LATTICE;
+		Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
+	}
 	
 }
 Dense.denseMatch_iteration_ticker = function(t){
 	//console.log("denseMatch_iteration_ticker: "+t)
 	Dense.TICKER.stop();
 	Dense.denseMatch_iteration();
-	Dense.TICKER.start();
+	if(Dense.IS_DONE!==true){
+		Dense.TICKER.start();
+	}
 }
 
 
@@ -2007,6 +2027,8 @@ type = (type!==undefined && type!==null) ? type : def;
 result[resultIndex] = sad / maskCount;
 //result[resultIndex] = nsad / maskCount;
 //result[resultIndex] = zsad / maskCount;
+//result[resultIndex] = 1.0/zncc / maskCount;
+
 		}
 	}
 	return {"value":result,"width":resultWidth,"height":resultHeight};
@@ -2243,21 +2265,29 @@ Dense.uniquenessFromValues = function(valuesIn){
 	// var sigma = 1.0;
 	// var filter = ImageMat.gaussianWindow1DFromSigma(sigma);
 	// var averaged = Code.convolve1D(values,filter);
-	//values = averaged;
+	// values = averaged;
 	// peaked = averaged[1] - averaged[0];
 	// return 1.0/peaked;
 	// var range = values[values.length-1] - values[0];
 	// peaked = values[10] - values[0];
 	// return range/peaked;
-	/*
-	var s = Dense.slope(averaged, 0, 5, 1);
-	if(s>0){
-		s = 1.0/s;
-	}else{
-		s = 1E10;
-	}
-	return s;
-	*/
+	
+
+
+	// VERSION 3
+	var s0 = Dense.slope(values, 0, 5, 0);
+	var s1 = Dense.slope(values, 0, 10, 0);
+	//var s = Dense.slope(values, 0, 2, 0);
+	//var s = Dense.slope(averaged, 0, 5, 0);
+	//var s = Dense.slope(values, 0, 10, 1);
+	//var s = Dense.slope(values, 0, 25, 1);
+	s0 = Math.max(s0,1E-10);
+	s1 = Math.max(s1,1E-10);
+	var uniqueness = 1.0/s1/s0;
+	uniqueness = Math.pow(uniqueness,0.1);
+	return uniqueness;
+	//return 1.0/s0;
+	
 
 	/*
 	var count = 3;
@@ -2273,7 +2303,7 @@ Dense.uniquenessFromValues = function(valuesIn){
 	return peakness;
 	*/
 	// VERSION 2:
-	
+	/*
 	var carePortion = 0.10;
 	var careAmount = values.length*carePortion;
 	var sections = 2;
@@ -2289,7 +2319,8 @@ Dense.uniquenessFromValues = function(valuesIn){
 	mag = Math.pow(mag,0.1); // to human readable scale
 	//mag = range / mag;
 	return mag;
-	
+	*/
+
 	/*
 	// VERSION 2:
 	var dy01 = values[1]-values[0];
@@ -2767,6 +2798,7 @@ Dense.Vertex.prototype.assignNeighbors = function(queue, interpolator){
 	for(var i=0; i<neighbors.length; ++i){
 		var n = neighbors[i];
 		if(!n.isJoined()){
+			//console.log("neighbor: "+i);
 			//queue.remove(n); // TODO: BECAUSE 
 			var same = Dense.assignBestNeedleInHaystack(interpolator, n, queue, true);
 			if(same){
@@ -2939,7 +2971,8 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 	var fromPoint = vertex.from();
 		//if(!useFrom){ fromPoint = vertex.pointCenter(); }
 	var fromPoint = vertex.pointCenter(); // always center 
-	var halfCellSize = cellSize;
+	//var halfCellSize = 2.0*cellSize;
+	var halfCellSize = 0.5*cellSize;
 	var TL = vertex.pointTL().add(-halfCellSize,-halfCellSize);
 	var TR = vertex.pointTR().add(halfCellSize,-halfCellSize);
 	var BL = vertex.pointBL().add(-halfCellSize,halfCellSize);
@@ -2975,11 +3008,13 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 		}
 		return true;
 	}
+//	console.log(CE+" => "+toPoint);
 	fromPoint = CE;
 	var boundingBox = new Rect().fromArray([TLto,TRto,BLto,BRto]);
 
+	//var compareSizeMax = 11;
 	var compareSizeMax = 11;
-	var neighborhoodScale = 0.75; // compare window = 1.5 / 
+	var neighborhoodScale = 0.8; // compare window = 1.5 / 
 	var finalScale = 1.0; // compare scale + window size
 	var compareSizeNatural = Math.ceil(cellSize/neighborhoodScale);
 	var compareSize = Math.min(compareSizeNatural,compareSizeMax);
@@ -3003,7 +3038,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 	
 
 	var haystackMask = Code.newArrayOnes(haystackWidth*haystackHeight);
-
+	
 	//var haystackMask = Code.newArrayZeros(haystackWidth*haystackHeight);
 	var localTL = V2D.sub(TLto,haystackPoint);
 	var localTR = V2D.sub(TRto,haystackPoint);
@@ -3027,7 +3062,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 		}
 	}
 	haystackMask = ImageMat.expandBlob(haystackMask, haystackWidth,haystackHeight);
-
+	
 	//console.log( Code.array1Das2DtoString(haystackMask, haystackWidth,haystackHeight, 1) );
 	var offX = Math.floor(needleWidth*0.5);
 	var offY = Math.floor(needleHeight*0.5);
@@ -3118,8 +3153,9 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 			matrix = Matrix.transform2DRotate(matrix,bestAngle);
 		var needle = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,cellScale,sigma,needleWidth,needleHeight, matrix);
 		//var needle = bestNeedle;
-		var neighborhoodWidth = Math.round(compareSize * 3);
-		var neighborhoodHeight = Math.round(compareSize * 3);
+		var uniquenessWindow = 3;
+		var neighborhoodWidth = Math.round(compareSize * uniquenessWindow);
+		var neighborhoodHeight = Math.round(compareSize * uniquenessWindow);
 			matrix = new Matrix(3,3).identity();
 		var haystack = imageTo.extractRectFromFloatImage(bestPoint.x,bestPoint.y,cellScale,sigma,neighborhoodWidth,neighborhoodHeight, matrix);
 		var scores = Dense.searchNeedleHaystackImage(needle,needleMask, haystack);
@@ -3127,12 +3163,13 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
 		var uniquenessNH = Dense.uniquenessFromValues(values);
-		//console.log(".  values: "+valueWidth+"x"+valueHeight);
-		//console.log("    values: \n"+values);
 
 		var infoNeedle = Code.infoArray(needle.gry(), needleMask);
 		var rangeNeedle = infoNeedle["range"];
 		
+var gradientNeedle = ImageMat.gradientMagnitude(needle.gry(), needle.width(),needle.height());
+	gradientNeedle = ImageMat.absFloat(gradientNeedle);
+	gradientNeedle = ImageMat.sumFloat(gradientNeedle);
 		
 
 		// distance from F-line ?
@@ -3264,24 +3301,30 @@ var distanceFromTo = dist;
 		//uniqueness = uniqueness * (1+distanceToFrom) * (1+distanceFromTo);
 		//uniqueness = uniqueness * (1+distanceFromTo); // pretty good
 
+		var worstRangeScore = Math.min(rangeNeedle, rangeHaystackNeedle);
+		worstRangeScore = Math.max(worstRangeScore,1E-10);
+/*
+
 		// PENALTY FOR MATCH DISTANCE BASED ON 
 		// PENALTY MATCH DISTANCE
-		uniqueness = uniqueness * (1+distanceFromTo);
+		//uniqueness = uniqueness * (1+distanceFromTo);
+		uniqueness = uniqueness * (1+distanceFromTo*distanceFromTo);
 			//uniqueness = uniqueness * (1+Math.sqrt(distanceFromTo));
 		// PENALTY F DISTANCE
 		//uniqueness = uniqueness * (1+lineFDistanceError);
-			uniqueness = uniqueness * (1+Math.sqrt(lineFDistanceError));
+			uniqueness = uniqueness * (1+Math.pow(lineFDistanceError,0.5));
 		// PENALTY NON-TEXTURENESS
-		var worstRangeScore = Math.min(rangeNeedle, rangeHaystackNeedle);
-		worstRangeScore = Math.max(worstRangeScore,1E-10);
-		worstRangeScore = Math.pow(1.0/worstRangeScore,0.25);  // 0.1 to 1.0  //uniqueness = uniqueness * (1 + 1.0/rangeNeedle); //uniqueness = uniqueness * (1 + (1.0-rangeNeedle));
+		
+		//worstRangeScore = Math.pow(1.0/worstRangeScore,0.25);  // 0.1 to 1.0  //uniqueness = uniqueness * (1 + 1.0/rangeNeedle); //uniqueness = uniqueness * (1 + (1.0-rangeNeedle));
+		worstRangeScore = Math.pow(1.0/worstRangeScore,0.1);
+		//worstRangeScore = Math.pow(1.0/worstRangeScore,0.25);
 		uniqueness = uniqueness * worstRangeScore;
 
-		uniqueness = uniqueness * (1.0+bestScore);
+		//uniqueness = uniqueness * (1.0+bestScore);
 
 		//uniqueness = bestScore * worstRangeScore * distanceFromTo * lineFDistanceError;
 		
-		// PENALTY: brightness difference
+		// PENALTY: brightness difference -- median color ?
 		// ...
 		// PENALTY: range difference
 		// ...
@@ -3291,12 +3334,70 @@ var distanceFromTo = dist;
 		//
 
 		// TODO: if range is too low: do nothing
+		var rank = uniqueness
+*/
 
+		// ignore points that have minimal differences
+
+		if(worstRangeScore < 0.01){
+			return null;
+		}
+		
+		// ignore points with really low scores
+		if(bestScore > 0.25){
+			return null;
+		}
+
+		// ignore points with poor uniqueness
+		//console.log(uniqueness);
+		if(uniqueness > 100.0){
+			return null;
+		}
+		
+		if(distanceFromTo>cellSize || distanceToFrom>cellSize){
+			return null;
+		}
+		// ignore points outside image window
+
+		// ignore points too close to neighbors
+
+	// penalty type 2:
+		var rank = 1.0;
+		rank = rank * uniqueness;
+		//rank = rank * bestScore;
+		rank = rank * (1.0 + Math.pow(1.0/worstRangeScore,2.0));
+		//rank = rank * (1.0 + Math.pow(1.0 - worstRangeScore,1.0));
+		// 	gradientNeedle = Math.max(gradientNeedle,1E-10);
+		// rank = rank * Math.pow(1.0/gradientNeedle,0.1);
+		rank = rank * (1.0 + Math.pow(lineFDistanceError,1.0));
+		rank = rank * Math.pow(1.0+distanceFromTo,2.0);
+		rank = rank * Math.pow(1.0+distanceToFrom,2.0);
+
+		//console.log(rank);
+
+		if(rank>1E8){
+			return null;
+		}
+
+		// TODO: NOT JUST NEIGHBORS -- ANY CELL AROUND POINT
+		var ns = vertex.neighbors();
+		//console.log(ns.length);
+		for(k=0; k<ns.length; ++k){
+			var n = ns[k];
+			if(n.isJoined()){
+				var d = V2D.distance(n.to(),bestPoint);
+				//console.log("DIST: "+d);
+				if(d<cellSize*0.1){
+					// console.log("too close to neighbor: "+d);
+					return null;
+				}
+			}
+		}
 
 
 		var currentRank = vertex.rank();//vertex.transform();
 		if(currentRank!==null){
-			if(uniqueness > currentRank){
+			if(rank > currentRank){
 				return null; // not better, don't change
 			}
 		}
@@ -3310,7 +3411,7 @@ var distanceFromTo = dist;
 			transform.angle(bestAngle);
 			transform.to(bestPoint);
 			transform.score(bestScore);
-			transform.rank(uniqueness); // transform.rank(bestScore);
+			transform.rank(rank); // transform.rank(bestScore);
 			vertex.matches([transform]);
 			//vertex.matches(queue.toArray());
 			vertex.transform(0); // default to best location 
@@ -3484,7 +3585,7 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	var cornersA = R3D.harrisCornerDetection(imageAGry, imageAWidth, imageAHeight, sigmaCorners);
 
 	// LATTICE
-	var cellSize = 5; // 15 10, 5, 2
+	var cellSize = 5; // 15 10, 5, 2 // CELLSIZEHERE
 	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA, cellSize, matrixFfwd);
 	var globalQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 	var localQueue = new PriorityQueue(Dense.Vertex._queueSorting);
@@ -3500,7 +3601,8 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 		// 	break;
 		// }
 	}
-
+	var interpolator = new Dense.Interpolator();
+	Dense.INTERPOLATOR = interpolator;
 	// SAVE FOR VISUAL ITERATIONS
 	Dense.LOCALQUEUE = localQueue;
 	Dense.GLOBALQUEUE = globalQueue;
@@ -3512,6 +3614,8 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	Dense.TICKER.start();
 	Dense.KEYBOARD = new Keyboard();
 	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_DOWN,Dense.denseMatch_iteration_key,Dense);
+	Dense.KEYBOARD.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,Dense.denseMatch_iteration_key,Dense);
+	
 	Dense.KEYBOARD.addListeners();
 }
 Dense.denseMatch_iteration = function(){
@@ -3523,11 +3627,12 @@ Dense.denseMatch_iteration = function(){
 	var display = Dense.DISPLAY;
 	display.removeAllChildren();
 
-	var interpolator;
+	var interpolator = Dense.INTERPOLATOR;
 
 	// TODO: go thru all perimeters to record best next matches
-	while(!localQueue.isEmpty()){
-		// .. 
+	if(globalQueue.isEmpty()){
+		Dense.IS_DONE = true;
+		return; 
 	}
 
 	// pick up best match ad infinitum
@@ -3535,17 +3640,27 @@ Dense.denseMatch_iteration = function(){
 		// TODO: look at ALL seed points & propagate at all perimeters before choosing ?
 		++iteration;
 		var nextVertex = globalQueue.popMinimum();
+
+
+
+		
+		//console.log("IS JOINED: "+nextVertex.isJoined());
+		if(nextVertex.isJoined()){ // TODO: remove beforehand
+			console.log("FOUND JOINED -- ignore");
+			break;
+		}
 		console.log("NEXT: "+iteration+" = "+nextVertex+"        ----- rank:"+nextVertex.rank()+" ");
 
 		// MAP BEST CHOICE
 		nextVertex.join();
+		interpolator.addCell(nextVertex);
 
 		// UPDATE MODEL PREDICTOR
-		Code.timerStart();
-		var cells = latticeAtoB.allValidCells(null);
-		interpolator = new Dense.Interpolator(cells);
-		Code.timerStop();
-		console.log("timer: "+Code.timerDifference());
+		// Code.timerStart();
+		// //var cells = latticeAtoB.allValidCells(null);
+		// //interpolator = new Dense.Interpolator(cells);
+		// Code.timerStop();
+		// console.log("timer: "+Code.timerDifference());
 // Code.timerStart = function(){
 // 	Code._timerDates.push( Code.getTimeMilliseconds() );
 // }
@@ -3554,7 +3669,7 @@ Dense.denseMatch_iteration = function(){
 // }
 // Code.timerQuickDifferenceSeconds 
 
-		console.log("ALL VALID CELLS: "+cells.length);
+//		console.log("ALL VALID CELLS: "+cells.length);
 
 		// CHECK / ADD BEST CELL'S PERIMETER POINTS
 		nextVertex.assignNeighbors(globalQueue, interpolator);
@@ -3586,8 +3701,9 @@ Dense.denseMatch_iteration = function(){
 	Dense.ITERATION = iteration;
 	display.moveToFront();
 	display.graphics().alpha(0.5);
-	Dense.interpolator = interpolator;
+	//Dense.interpolator = interpolator;
 	//Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
+	//Code.printPoints(interpolator.points());
 }
 
 Dense.showMatchingMapping = function(latticeAtoB, vertex, displayStage){
@@ -3629,7 +3745,7 @@ Dense.showMatchingMapping = function(latticeAtoB, vertex, displayStage){
 }
 
 Dense.visualizeLattice = function(lattice, display){
-	interpolator = Dense.interpolator;
+	var interpolator = Dense.INTERPOLATOR;
 
 	//console.log(lattice);
 	var imageA = lattice.imageFrom();
@@ -3653,10 +3769,14 @@ Dense.visualizeLattice = function(lattice, display){
 		}
 	}
 
+	var triangles = interpolator.triangles();
+	var datas = interpolator.datas();
+	var rays = interpolator.rays();
 
-	var triangles = interpolator._triangles;
-	var datas = interpolator._datas;
-	var rays = interpolator._rays;
+	var points = interpolator.points();
+if(points){
+	//Code.printPoints(points);
+
 	for(i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
 		var cA = datas[tri[0]];
@@ -3664,7 +3784,7 @@ Dense.visualizeLattice = function(lattice, display){
 		var cC = datas[tri[2]];
 			d = new DO();
 			d.graphics().clear();
-			d.graphics().setLine(2.0, 0xFFFF0000);
+			d.graphics().setLine(2.0, 0x99FF0000);
 			d.graphics().beginPath();
 			d.graphics().drawPolygon([cA.from(),cB.from(),cC.from()], true);
 			d.graphics().strokeLine();
@@ -3672,7 +3792,7 @@ Dense.visualizeLattice = function(lattice, display){
 			display.addChild(d);
 			d = new DO();
 			d.graphics().clear();
-			d.graphics().setLine(2.0, 0xFFFF0000);
+			d.graphics().setLine(2.0, 0x99FF0000);
 			d.graphics().beginPath();
 			d.graphics().drawPolygon([cA.to(),cB.to(),cC.to()], true);
 			d.graphics().strokeLine();
@@ -3687,7 +3807,7 @@ Dense.visualizeLattice = function(lattice, display){
 				var to = V2D.add(fr,ray);
 				d = new DO();
 				d.graphics().clear();
-				d.graphics().setLine(2.0, 0xFF0000BB);
+				d.graphics().setLine(2.0, 0x990000BB);
 				d.graphics().beginPath();
 				d.graphics().drawPolygon([fr,to]);
 				d.graphics().strokeLine();
@@ -3695,12 +3815,8 @@ Dense.visualizeLattice = function(lattice, display){
 				display.addChild(d);
 			}
 		}
-			//d.graphics().drawPolygon([tri.A(),tri.B(),tri.C()], true);
 	}
-
-
-
-
+}
 
 
 	for(j=0; j<rows; ++j){
@@ -3798,66 +3914,75 @@ Dense.visualizeLattice = function(lattice, display){
 			}
 		}
 	}
-
-
-
-	// for each vertex
-	// 	draw self solid/open if joined/nonjoined
-	// 	draw dotted lines to unlinked neighbors
-	// 	draw solid lines to joined neighbors
-	// ...
 }
 
 
 Dense.Interpolator = function(cells){
-	this._cells = cells;
-	this._triangles = [];
-	this._rays = [];
-	this._vertexes = [];
-	this._hull = [];
-	// copy points from cells ...
-	var i;
-	var points = [];
-	for(i=0; i<cells.length; ++i){
-		points.push( cells[i].from() );
-	}
-	this._points = points;
-// console.log("ORIGINAL POINTS:");
-// Code.printPoints(this._points);
-
-	if(points.length==0){
-		// N/A
-	}else if(points.length==1){
-		// everything is from single point
-	}else if(points.length==2){
-		// everything is outside
-	}else if(points.length>=3){
-		var triangulation = Voronoi.delaunay(points, cells);
-		var datas = triangulation["datas"];
-		var points = triangulation["points"];
-		var triangles = triangulation["triangles"];
-		var perimeters = triangulation["perimeters"];
-		var rays = triangulation["perpendiculars"];
-		var hull = triangulation["convexHull"];
-
-		this._points = points;
-		this._triangles = triangles;
-		this._datas = datas;
-		this._hull = hull;
-		this._rays = rays;
-		this._hullFilled = [];
-
-		for(i=0; i<hull.length; ++i){
-			this._hullFilled.push( points[hull[i]] );
+	this._cells = [];
+	this._triangulator = new Triangulator();
+	if(cells){
+		var i;
+		for(i=0; i<cells.length; ++i){
+			//this._cells.push(cells[i]);
+			this.addCell(cells[i]);
 		}
 	}
+}
+Dense.Interpolator.prototype.addCell = function(cell){
+	//console.log("ADD CELL: "+cell.from());
+
+this._cells.push(cell);
+//return;
+//console.log("ADD CELL "+cell);
+	this._triangulator.addPoint(cell.from(), cell);
+	//console.log("TOTAL POINTS: "+this._triangulator._mesh._points.length);
+	var points = this._triangulator.points(); // this.points();
+	var datas = this._triangulator.datas()
+	var tris = this._triangulator.triangles();
+	var perim = this._triangulator.perimeter();
+	//console.log("perim: "+perim.length);
+	var hull = perim;
+	if(hull.length>0){
+		var rays = [];
+		for(i=0; i<=hull.length; ++i){
+			var site = hull[ i%hull.length ];
+			var prev = hull[ (i-1+hull.length)%hull.length ];
+			var next = hull[ (i+1)%hull.length ];
+			var sitePoint = points[site];
+			var prevPoint = points[prev];
+			var nextPoint = points[next];
+			var v1 = V2D.sub(sitePoint,prevPoint);
+				v1.norm();
+			var v2 = V2D.sub(sitePoint,nextPoint);
+				v2.norm();
+			var angle = V2D.angleDirection(v2,v1) * 0.5;
+			ray = V2D.rotate(v2.copy(),angle);
+			rays[site] = ray;
+		}
+	}
+	var hullFilled = [];
+	for(i=0; i<hull.length; ++i){
+		hullFilled.push( points[hull[i]] );
+	}
+	this._points = points;
+	this._datas = datas;
+	this._triangles = tris;
+	this._perimeter = perim;
+	this._hull = hull;
+	this._hullFilled = hullFilled;
+	this._rays = rays;
 }
 Dense.Interpolator.prototype.projected = function(from){
 	var nextPos = new V2D(0,0);
 	var nextScale = 0.0;
 	var nextAngle = 0.0;
 	var interp = this.value(from);
-	var pointCount = this._points.length; // if points == 1 => double projected area ? === seed point
+//var pointCount = this._triangulator.points().length;///this._points.length; // if points == 1 => double projected area ? === seed point
+//interp.push({"value":});
+var pointCount = this._cells.length;
+if(interp.length==0){
+	console.log("NO VALUES TO INTERPRET: "+interp.length);
+}
 	for(k=0; k<interp.length; ++k){
 		var int = interp[k];
 		var c = int["value"];
@@ -3868,27 +3993,140 @@ Dense.Interpolator.prototype.projected = function(from){
 		var scale = c.scale();
 		var relativeDirA = V2D.sub(from,originA);
 		var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
+		//var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p); // better for 1/d^2
+		//var pos = relativeDirA.copy().add(originB).scale(p); // better for triangle interpolation
 		nextScale += scale*p;
 		nextAngle += angle*p;
 		nextPos.add(pos);
 	}
 	nextScale = Math.max(0.1,Math.min(10.0,nextScale));
+	if(nextPos.x==0 || nextPos.y==0 || Code.isNaN(nextPos.x) || Code.isNaN(nextPos.y)){
+		console.log("GOT INTERP: ");
+		console.log(interp.length);
+		for(k=0; k<interp.length; ++k){
+			var c = int["value"];
+			var p = int["percent"];
+			console.log(". "+k);
+			console.log("value: "+c);
+			console.log("percent: "+p);
+		}
+	}
+	//console.log("NEXT POS: "+nextPos);
 	return {"point":nextPos, "scale":nextScale, "angle":nextAngle};
 }
+Dense.Interpolator.prototype.points = function(){
+	//var points = this._triangulator.points();
+	return this._points;
+}
+Dense.Interpolator.prototype.triangles = function(){
+	//var triangles = this._triangulator.triangles();//this._triangles;
+	return this._triangles;
+}
+Dense.Interpolator.prototype.datas = function(){
+	//var datas = this._triangulator.datas();//this._cells;
+	return this._datas;
+}
+Dense.Interpolator.prototype.perimeter = function(){
+	//var perimeter = this._triangulator.perimeter();//this._datas;
+	return this._perimeter;
+}
+Dense.Interpolator.prototype.rays = function(){
+	return this._rays;
+}
+Dense.Interpolator.prototype.hull = function(){
+	return this._hull;
+}
+Dense.Interpolator.prototype.hullFilled = function(){
+	return this._hullFilled;
+}
 Dense.Interpolator.prototype.value = function(point){
+	// only care about top 5~10
+	// nearest:
+		var items = [];
+		var cells = this._cells;
+//		console.log(cells);
+		var i;
+		var cell, distance, fraction;
+		var total = 0;
+		var largest = -1;
+		for(i=0; i<cells.length; ++i){
+			cell = cells[i];
+			distance = V2D.distance(cell.from(), point);
+			if(distance==0){
+				return [{"value":cell, "percent":1.0}];
+			}
+			//fraction = 1.0/(distance*distance); // OK -- very pinchy locally
+			//fraction = 1.0/(distance); // bad
+			//fraction = 1.0/Math.pow(distance,1.5); // poor
+			//fraction = 1.0/Math.pow(distance,2.0); // OK
+			//fraction = 1.0/Math.pow(distance,0.5); // OK
+			//fraction = Math.exp(-0.001*distance); // OK
+			//fraction = distance - 400; // OK
+			//fraction = 1.0 / Math.pow(distance,2);
+			//fraction = 1.0 / Math.pow( Math.exp(-distance), 2);
+			//fraction = 1.0 / Math.pow( Math.exp(-distance), 2);
+			//fraction = 1.0 / Math.pow( distance, 10);
+			fraction = 1.0 / (1 + Math.pow( distance, 2) );
+			//fraction = 1.0 / Math.pow( distance, 1);
+			//total += fraction;
+			largest = Math.max(largest,fraction);
+			items.push({"value":cell, "percent":fraction});
+		}
+		//return [{"value":cell, "percent":largest}];
+		items = items.sort(function(a,b){
+			return a["percent"] < b["percent"] ? 1 : -1;
+		});
+		var maxCount = 1;
+		if(items.length>maxCount){
+			items.splice(maxCount,items.length-maxCount+1);
+		}
+// add in one:
+	
+// how to smooth this out ?
+
+		//console.log(items);
+		for(i=0; i<items.length; ++i){
+			//var factor = Math.pow(i+1,0.25);//(Math.pow(i,2)+1);
+			//
+			//items[i]["percent"] = Math.pow(items[i]["percent"],i+1);
+			//var factor = 1.0 * Math.exp(-0.1*i);
+			//var factor = 1.0 * Math.exp(-0.5*i);
+			//var factor = 1.0/(i+1);
+			var factor = 1.0;
+			items[i]["percent"] = items[i]["percent"] * factor;
+			total += items[i]["percent"];
+		}
+		for(i=0; i<items.length; ++i){
+			items[i]["percent"] /= total;
+		}
+// simple distance only
+//return items;
+
+	var distanceItems = items;
+
+
+
+
 	var i, j, k;
 	var items = [];
-	var points = this._points;
-	var cells = this._cells;
-	var tris = this._triangles;
-	var datas = this._datas;
-	var hull = this._hull;
-	var rays = this._rays;
+	var points = this.points();
+	var datas = this.datas();
+	var cells = datas;
+	var tris = this.triangles();
+	var rays = this.rays();
+	var hull = this.hull();
+	var hullFilled = this.hullFilled();
+//console.log(points);
+if(points.length<3){
+	return distanceItems;
+}
+	/*
 	if(points.length==0){
 		// items.push({"value":null, "percent":1.0});
 	}else if(points.length==1){
 		items.push({"value":cells[0], "percent":1.0});
 	}else if(points.length==2){
+// THIS SEEMS HIGHLY OFF
 		var cellA = cells[0];
 		var cellB = cells[1];
 		var pointA = cellA.from();
@@ -3903,7 +4141,7 @@ Dense.Interpolator.prototype.value = function(point){
 		var fracB = 1.0 - distanceB/distanceTotal;
 		items.push({"value":cellA, "percent":fracA});
 		items.push({"value":cellB, "percent":fracB});
-		/*
+		
 		var rayAB = V2D.sub(pointB,pointA);
 		// find closest point on line 0-1
 		var distanceAB = rayAB.length();
@@ -3920,11 +4158,11 @@ Dense.Interpolator.prototype.value = function(point){
 		}else if(dA<dB){ // all A
 			items.push({"value":cellA, "percent":1.0});
 		}
-		*/
+		
 	}else if(points.length>=3){
-		var isInside = Code.isPointInsidePolygon2D(point, this._hullFilled);
-		if(isInside){
-			var tri = null;
+*/
+		//var isInside = Code.isPointInsidePolygon2D(point, hullFilled); // THIS IS BAD
+		var tri = null;
 			for(i=0; i<tris.length; ++i){// find containing triangle
 				var t = tris[i];
 				var a = points[t[0]];
@@ -3936,15 +4174,41 @@ Dense.Interpolator.prototype.value = function(point){
 					break;
 				}
 			}
-			if(tri){
+		var isInside = tri !== null;
+		if(isInside){
+			// var tri = null;
+			// for(i=0; i<tris.length; ++i){// find containing triangle
+			// 	var t = tris[i];
+			// 	var a = points[t[0]];
+			// 	var b = points[t[1]];
+			// 	var c = points[t[2]];
+			// 	var inside = Code.isPointInsideTri2D(point, a,b,c);
+			// 	if(inside){
+			// 		tri = [ datas[t[0]], datas[t[1]], datas[t[2]]];
+			// 		break;
+			// 	}
+			// }
+			//if(tri){
+				
+				// HAVE TRI 
+				// [Vertex: 17,5 : <175,55>=><207.7,-1.5> @ 0.9330329915368074 @ 0.5555558916430421 deg ],
+				// [Vertex: 20,7 : <205,75>=><207.866413593637,68.16666666666666> @ 2.2980970388562794 @ 0.7687919849233975 deg ],
+				// [Vertex: 20,7 : <205,75>=><207.866413593637,68.16666666666666> @ 2.2980970388562794 @ 0.7687919849233975 deg ] >>> 0
+
 				var areaTotal = V2D.areaTri(tri[0].from(),tri[1].from(),tri[2].from());
+				if(areaTotal==0){
+					Code.printPoints(this._triangulator.points());
+					console.log(tri[0].row(),tri[0].col(),"  ",tri[1].row(),tri[1].col(),"  ",tri[2].row(),tri[2].col());
+					console.log(tri[0].from(),tri[1].from(),tri[2].from());
+				}
+				// console.log("HAVE TRI "+tri+" >>> "+areaTotal);
 				for(k=0; k<3; ++k){
 					var c = tri[k];
 					var area = V2D.areaTri(tri[(k+1)%3].from(),tri[(k+2)%3].from(),point);
 					var percent = area / areaTotal;
 					items.push({"value":c, "percent":percent});
 				}
-			}
+			//}
 		}else{
 			var closestDistance = null;
 			var closestPoint = null;
@@ -4083,7 +4347,26 @@ return items;
 			}
 		}
 		
+	//}
+	var pA = 1.0;
+	var pB = 1.0 - pA;
+	var triangleItems = items;
+	var distanceItems;
+
+//return triangleItems;
+
+items = [];
+	for(i=0; i<distanceItems.length; ++i){
+		var item = distanceItems[i];
+		item["percent"] *= pA;
+		items.push( item );
 	}
+	for(i=0; i<triangleItems.length; ++i){
+		var item = triangleItems[i];
+		item["percent"] *= pB;
+		items.push( item );
+	}
+
 	return items;
 }
 

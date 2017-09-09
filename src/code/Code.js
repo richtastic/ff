@@ -5525,6 +5525,7 @@ Code.planePlaneIntersection = function(pA,nA, pB,nB){ // infinite plane intersec
 	Code.matrix3x3xV3D(b, A, b);
 	return [b, dir];
 }
+
 Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
 	// var ab1 = V2D.sub(a1,b1); // CW
 	// var bc1 = V2D.sub(c1,a1);
@@ -6161,9 +6162,48 @@ Code.radians = function(degrees){
 Code.degrees = function(radians){
 	return radians*(180.0/Math.PI);
 }
-Code.isPointInsideTri2D = function(p, a,b,c){ 
+Code.isPointInsideTri2DFast = function(p, a,b,c){ 
+	if(p.x < Math.min(a.x,b.x,c.x)){
+		return false;
+	}
+	if(p.x > Math.max(a.x,b.x,c.x)){
+		return false;
+	}
+	if(p.y < Math.min(a.y,b.y,c.y)){
+		return false;
+	}
+	if(p.y > Math.max(a.y,b.y,c.y)){
+		return false;
+	}
 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
 }
+Code.isPointInsideTri2D = function(p, a,b,c){
+	var ab = V2D.sub(b,a); 
+	var bc = V2D.sub(c,b); 
+	var ca = V2D.sub(a,c); 
+	var ap = V2D.sub(p,a); 
+	var bp = V2D.sub(p,b); 
+	var cp = V2D.sub(p,c); 
+	var angleA = V2D.angleDirection(ab,ap);
+	var angleB = V2D.angleDirection(bc,bp);
+	var angleC = V2D.angleDirection(ca,cp);
+	var eps = 1E-5;
+	if(angleA<=eps && angleB<=eps && angleC <=eps){
+		return true;
+	}
+	if(angleA>=-eps && angleB>=-eps && angleC >=-eps){
+		return true;
+	}
+	return false;
+	// var dotAA = V2D.dot(ab);
+	// var dotAA = V2D.dot(ab);
+	// var dotAA = V2D.dot(ab);
+	// var dotAA = V2D.dot(ab);
+	// var dotAA = V2D.dot(ab);
+}
+// Code.isPointInsideTri2D = function(p, a,b,c){ /// not correct at borders for whatever reason
+// 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
+// }
 Code.isPointInsideRect2D = function(p, a,b,c,d){ 
 	return Code.isPointInsidePolygon2D(p, [a,b,c,d]);
 }
@@ -6176,7 +6216,7 @@ Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderfle
 		b = polygonArray[j];
 		if( ((a.y<p.y && b.y>=p.y) || (b.y<p.y && a.y>=p.y)) && (a.x<=p.x || b.x<=p.x) ){
 			var intersect = (a.x+(p.y-a.y)/(b.y-a.y)*(b.x-a.x));
-			intersect = (intersect < p.x);
+			intersect = (intersect < p.x); // <= ? le
 			oddNodes = (oddNodes==intersect) ? false : true; // xor
 			//oddNodes ^= intersect;
 		}

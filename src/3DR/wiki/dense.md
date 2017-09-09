@@ -414,10 +414,115 @@ dense match output:
 
 OVERALL NEXT TASKS:
 * medium-seed point matching
-* 2D iteritive point triangulation
+	- need a more selective criteria to remove all false positives
+		- comparrision at multiple scales [1,2,3,...]
+		- score based on uniqueness
+		- score based on mapping 
+		- - does poorly around repeating pattern
+- restict points that fall outside of neighbor image
+- matching seems to fail aroudn occusions
+	- repeated texture mapped elsewhere?
+- better ranking (uniqueness)
+
+--- map left->right && right->left => then only use points that are within ~pixel of eachother in mapping
+
+
 * 2D -> 3D points
 * visualize 3D points
 * texture-map triangles / 3D points
+
+
+
+
+FORMAT OF IN/OUTPUTS FROM VARIOUS FXNs
+
+
+... expand locally based on nearest neighbor
+	[bad???]
+... expand globally based on triangulation
+	[bad because of occlusions]
+
+
+=> try interpolator on both modes to advance front
+
+camera info:
+	- radial distortion params
+	- K matrix
+
+initial point matches:
+	imageA
+		- file
+		- scale
+	imageB: file, ...
+	pairList:[
+		[pixelA.x,pixelA.y,pixelB.x,pixelB.y]
+		..
+		]
+
+medium point match:
+	...?
+
+dense point match:
+
+3d point set
+	imageA
+	imageB
+	match list
+
+model
+	texture images
+		- location
+	triangles
+		- 3d location
+		- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
