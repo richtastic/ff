@@ -4,6 +4,9 @@ Triangulator.EPSILON = 1E-10;
 function Triangulator(pointsStart){
 	this._mesh = new Triangulator.Mesh();
 }
+Triangulator.prototype.mesh = function(){
+	return this._mesh;
+}
 Triangulator.prototype.setLimits = function(min,max){
 	this._mesh.setLimits(min,max);
 }
@@ -268,7 +271,16 @@ Triangulator.Mesh.prototype.setLimits = function(minIn,maxIn){
 Triangulator.Mesh.prototype._expandDummyForPoint = function(point){ // expand dummy points to continue to maintain the containing triangles
 	this.setLimits(point,point);
 }
-
+Triangulator.Mesh.prototype.isExternal = function(tri){
+	var a = tri.a();
+	var b = tri.b();
+	var c = tri.c();
+	var dummyPoints = this._dummyPoints();
+	if( Code.elementExists(dummyPoints, a) || Code.elementExists(dummyPoints, b) || Code.elementExists(dummyPoints, c) ){
+		return true;
+	}
+	return false;
+}
 Triangulator.Mesh.prototype.triangle = function(point, dropExternal){
 	var i, tri, tris = this._tris;
 	var len = tris.length;
@@ -281,9 +293,61 @@ Triangulator.Mesh.prototype.triangle = function(point, dropExternal){
 		var isInside = Code.isPointInsideTri2DFast(point, a,b,c);
 		//var isInside = Code.isPointInsideTri2D(point, a,b,c);
 		if(isInside){
+			if(dropExternal){
+				if( this.isExternal(tri) ){
+					return null;
+				}
+			}
 			return tri;
 		}
 	}
+	return null;
+}
+//Triangulator.Mesh.prototype.triangleNeighbors = function(point,andSelf){
+Triangulator.Mesh.prototype.triangleNeighbors = function(point,andSelf){
+	var triangle = null;
+	if(Code.isa(point,V2D)){
+		//console.log("point: "+point);
+		var triangle = this.triangle(point,true);
+	}
+	//console.log("triangle: "+triangle);
+	var neighbors = [];
+	if(triangle){
+		var i, t;
+		// var dummyPoints = this._dummyPoints();
+		// neighbors.push( triangle.edgeA().opposite.tri() ); // side direct
+		// neighbors.push( triangle.edgeB().opposite.tri() );
+		// neighbors.push( triangle.edgeC().opposite.tri() );
+		if(andSelf){
+			neighbors.push( triangle );
+		}
+		// neighbors.push( triangle.opposite(triangle.edgeA()) ); // side direct
+		// neighbors.push( triangle.opposite(triangle.edgeB()) );
+		// neighbors.push( triangle.opposite(triangle.edgeC()) );
+		// neighbors.push( triangle.opposite(triangle.a()) ); // point indirect
+		// neighbors.push( triangle.opposite(triangle.b()) );
+		// neighbors.push( triangle.opposite(triangle.c()) );
+		// want triangles:
+		neighbors.push( triangle.edgeA().opposite().tri() ); // side direct
+		neighbors.push( triangle.edgeB().opposite().tri() );
+		neighbors.push( triangle.edgeC().opposite().tri() );
+		neighbors.push( triangle.edgeA().opposite().next().opposite().tri() ); // side indirect
+		neighbors.push( triangle.edgeB().opposite().next().opposite().tri() );
+		neighbors.push( triangle.edgeC().opposite().next().opposite().tri() );
+
+		Code.removeDuplicates(neighbors);
+		// convert to point list ?????
+		for(i=0; i<neighbors.length; ++i){
+			t = neighbors[i];
+			//if( Code.elementExists(dummyPoints, a) && !Code.elementExists(dummyPoints, b) && !Code.elementExists(dummyPoints, c) ){
+			if(this.isExternal(t)){
+				//Code.removeElementSimple(neighbors,i);
+				neighbors.splice(i,1);
+				--i;
+			}
+		}
+	}
+	return neighbors;
 }
 Triangulator.Mesh.prototype.subdivide = function(tri, point){
 	//console.log("subdivide");
@@ -689,6 +753,15 @@ Triangulator.Tri.prototype.edgeB = function(){
 }
 Triangulator.Tri.prototype.edgeC = function(){
 	return this.edges(2);
+}
+Triangulator.Tri.prototype.a = function(){
+	return this.edgeA().a();
+}
+Triangulator.Tri.prototype.b = function(){
+	return this.edgeB().a();
+}
+Triangulator.Tri.prototype.c = function(){
+	return this.edgeC().a();
 }
 Triangulator.Tri.prototype.edges = function(a,b,c){
 	if(a!==undefined && b!==undefined && c!==undefined){

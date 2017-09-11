@@ -446,7 +446,6 @@ FORMAT OF IN/OUTPUTS FROM VARIOUS FXNs
 => try interpolator in both modes to advance front
 
 
-
 camera info:
 	- radial distortion params
 	- K matrix
@@ -480,10 +479,23 @@ model
 
 
 
+WHEN TO INTERPLATE VALUE:
 
 
+- get triangles for a given cell
+- get rotation direction for all triangles
+	CCW += 1
+	CW  += 1
+- if CCW and CW both > 0:
+	use local 
+- else
+	use triangular
 
 
+- optimal tests are wrong
+
+
+...
 
 
 

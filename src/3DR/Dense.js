@@ -940,6 +940,8 @@ Dense.denseMatch_iteration_key = function(e){
 		console.log("DRAW LATTICE");
 		var latticeAtoB = Dense.LATTICE;
 		Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
+		var interpolator = Dense.INTERPOLATOR;
+		Code.printPoints(interpolator.points());
 	}
 	
 }
@@ -3043,7 +3045,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 	
 
 	var haystackMask = Code.newArrayOnes(haystackWidth*haystackHeight);
-	
+	/*
 	//var haystackMask = Code.newArrayZeros(haystackWidth*haystackHeight);
 	var localTL = V2D.sub(TLto,haystackPoint);
 	var localTR = V2D.sub(TRto,haystackPoint);
@@ -3067,7 +3069,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, c
 		}
 	}
 	haystackMask = ImageMat.expandBlob(haystackMask, haystackWidth,haystackHeight);
-	
+	*/
 	//console.log( Code.array1Das2DtoString(haystackMask, haystackWidth,haystackHeight, 1) );
 	var offX = Math.floor(needleWidth*0.5);
 	var offY = Math.floor(needleHeight*0.5);
@@ -3350,7 +3352,7 @@ var distanceFromTo = dist;
 
 		// ignore points outside image window
 		if(bestPoint.x<0 || bestPoint.y<0 || bestPoint.x>=imageTo.width() || bestPoint.y>=imageTo.height() ){
-			console.log("POINT OUTSIDE TO WINDOW");
+			//console.log("POINT OUTSIDE TO WINDOW");
 			return vertex;
 		}
 /*		
@@ -3374,13 +3376,13 @@ var distanceFromTo = dist;
 */
 	// penalty type 2:
 		var rank = 1.0;
-		rank = rank * uniqueness;
-		//rank = rank * bestScore;
+		//rank = rank * uniqueness;
+		rank = rank * bestScore;
 		rank = rank * (1.0 + Math.pow(1.0/worstRangeScore,2.0));
 		//rank = rank * (1.0 + Math.pow(1.0 - worstRangeScore,1.0));
 		// 	gradientNeedle = Math.max(gradientNeedle,1E-10);
 		// rank = rank * Math.pow(1.0/gradientNeedle,0.1);
-		rank = rank * (1.0 + Math.pow(lineFDistanceError,1.0));
+		//rank = rank * (1.0 + Math.pow(lineFDistanceError,1.0));
 		rank = rank * Math.pow(1.0+distanceFromTo,2.0);
 		rank = rank * Math.pow(1.0+distanceToFrom,2.0);
 
@@ -3932,13 +3934,12 @@ if(points){
 	}
 }
 
-
 Dense.Interpolator = function(cells){
 	this._pA = 0.0;
 	this._cells = [];
 	this._triangulator = new Triangulator();
 	//this.setAsNeighbor();
-	this.setAsTri();
+	//this.setAsTri();
 	if(cells){
 		var i;
 		for(i=0; i<cells.length; ++i){
@@ -3947,6 +3948,7 @@ Dense.Interpolator = function(cells){
 		}
 	}
 }
+
 Dense.Interpolator.prototype.addCell = function(cell){
 	//console.log("ADD CELL: "+cell.from());
 
@@ -3960,25 +3962,26 @@ this._cells.push(cell);
 	var tris = this._triangulator.triangles();
 	var perim = this._triangulator.perimeter();
 	//console.log("perim: "+perim.length);
+	var rays = Code.rayFromPointPerimeter(points,perim, true);
 	var hull = perim;
-	if(hull.length>0){
-		var rays = [];
-		for(i=0; i<=hull.length; ++i){
-			var site = hull[ i%hull.length ];
-			var prev = hull[ (i-1+hull.length)%hull.length ];
-			var next = hull[ (i+1)%hull.length ];
-			var sitePoint = points[site];
-			var prevPoint = points[prev];
-			var nextPoint = points[next];
-			var v1 = V2D.sub(sitePoint,prevPoint);
-				v1.norm();
-			var v2 = V2D.sub(sitePoint,nextPoint);
-				v2.norm();
-			var angle = V2D.angleDirection(v2,v1) * 0.5;
-			ray = V2D.rotate(v2.copy(),angle);
-			rays[site] = ray;
-		}
-	}
+	// if(hull.length>0){
+	// 	var rays = [];
+	// 	for(i=0; i<=hull.length; ++i){
+	// 		var site = hull[ i%hull.length ];
+	// 		var prev = hull[ (i-1+hull.length)%hull.length ];
+	// 		var next = hull[ (i+1)%hull.length ];
+	// 		var sitePoint = points[site];
+	// 		var prevPoint = points[prev];
+	// 		var nextPoint = points[next];
+	// 		var v1 = V2D.sub(sitePoint,prevPoint);
+	// 			v1.norm();
+	// 		var v2 = V2D.sub(sitePoint,nextPoint);
+	// 			v2.norm();
+	// 		var angle = V2D.angleDirection(v2,v1) * 0.5;
+	// 		ray = V2D.rotate(v2.copy(),angle);
+	// 		rays[site] = ray;
+	// 	}
+	// }
 	var hullFilled = [];
 	for(i=0; i<hull.length; ++i){
 		hullFilled.push( points[hull[i]] );
@@ -4012,7 +4015,9 @@ if(interp.length==0){
 		var angle = c.angle();
 		var scale = c.scale();
 		var relativeDirA = V2D.sub(from,originA);
-		if(this._pA==0.0){
+		var isTriangular = int["triangular"] === true;
+		//if(this._pA==0.0){
+		if(isTriangular){
 			var pos = relativeDirA.copy().add(originB).scale(p); // better for triangle interpolation
 		}else{
 			var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
@@ -4072,7 +4077,16 @@ Dense.Interpolator.prototype.setAsNeighbor = function(){
 }
 
 Dense.Interpolator.prototype.value = function(point){
+	var interpolateTriangular = true;
+	//var interpolateTriangular = false;
 	// only care about top 5~10
+
+// TODO: get all connected cells & triangles
+// use cells.to & determine orientation of all connected cells
+// if all triangles are in same direction => use triangular interpolation
+// else use nearest neighbor interpolation
+
+
 	// nearest:
 		var items = [];
 		var cells = this._cells;
@@ -4102,13 +4116,13 @@ Dense.Interpolator.prototype.value = function(point){
 			//fraction = 1.0 / Math.pow( distance, 1);
 			//total += fraction;
 			largest = Math.max(largest,fraction);
-			items.push({"value":cell, "percent":fraction});
+			items.push({"value":cell, "percent":fraction, "triangular":false});
 		}
 		//return [{"value":cell, "percent":largest}];
 		items = items.sort(function(a,b){
 			return a["percent"] < b["percent"] ? 1 : -1;
 		});
-		var maxCount = 10;
+		var maxCount = 1;
 		if(items.length>maxCount){
 			items.splice(maxCount,items.length-maxCount+1);
 		}
@@ -4148,7 +4162,16 @@ Dense.Interpolator.prototype.value = function(point){
 	var rays = this.rays();
 	var hull = this.hull();
 	var hullFilled = this.hullFilled();
-//console.log(points);
+
+	//var triangle = this._triangulator.triangle(point);
+	//neighbors = triangle.neighbors();
+	//var triangle = this._triangulator.mesh().triangle(point);
+	//console.log(triangle);
+	
+	var triangleNeighbors = this._triangulator.mesh().triangleNeighbors(point,true);
+	//console.log(triangleNeighbors);
+//throw "T";
+
 if(points.length<3){
 	return distanceItems;
 }
@@ -4208,25 +4231,43 @@ if(points.length<3){
 			}
 		var isInside = tri !== null;
 		if(isInside){
-			// var tri = null;
-			// for(i=0; i<tris.length; ++i){// find containing triangle
-			// 	var t = tris[i];
-			// 	var a = points[t[0]];
-			// 	var b = points[t[1]];
-			// 	var c = points[t[2]];
-			// 	var inside = Code.isPointInsideTri2D(point, a,b,c);
-			// 	if(inside){
-			// 		tri = [ datas[t[0]], datas[t[1]], datas[t[2]]];
-			// 		break;
-			// 	}
-			// }
-			//if(tri){
-				
-				// HAVE TRI 
-				// [Vertex: 17,5 : <175,55>=><207.7,-1.5> @ 0.9330329915368074 @ 0.5555558916430421 deg ],
-				// [Vertex: 20,7 : <205,75>=><207.866413593637,68.16666666666666> @ 2.2980970388562794 @ 0.7687919849233975 deg ],
-				// [Vertex: 20,7 : <205,75>=><207.866413593637,68.16666666666666> @ 2.2980970388562794 @ 0.7687919849233975 deg ] >>> 0
+			//???
+			//console.log("triangleNeighbors: "+triangleNeighbors.length);
+			var cw = 0;
+			var ccw = 0;
+			
+			for(var k=0; k<triangleNeighbors.length; ++k){
+				var t = triangleNeighbors[k];
+				//console.log(k+": "+t+" .............");
+				var a = t.a();
+				var b = t.b();
+				var c = t.c();
+				var vA = cells[a.id()];
+				var vB = cells[b.id()];
+				var vC = cells[c.id()];
+				var toA = vA.to();
+				var toB = vB.to();
+				var toC = vC.to();
+				// console.log(toA);
+				// console.log(toB);
+				// console.log(toC);
+				// throw("X")
+				var isCCW = Code.isCCW(toA,toB,toC);
+				if(isCCW){
+					ccw += 1;
+				}else{
+					cw += 1;
+				}
+			}
+			if(cw>0 && ccw>0){
+				// USE LOCAL EXPANSIONONLY, NOT TRIANGULAR EXPANSION
+				//console.log("FLIPPED");
+				//interpolateTriangular = false;
+			}else{
+				interpolateTriangular = true;
 
+			}
+			
 				var areaTotal = V2D.areaTri(tri[0].from(),tri[1].from(),tri[2].from());
 				if(areaTotal==0){
 					Code.printPoints(this._triangulator.points());
@@ -4238,7 +4279,7 @@ if(points.length<3){
 					var c = tri[k];
 					var area = V2D.areaTri(tri[(k+1)%3].from(),tri[(k+2)%3].from(),point);
 					var percent = area / areaTotal;
-					items.push({"value":c, "percent":percent});
+					items.push({"value":c, "percent":percent,"triangular":true});
 				}
 			//}
 		}else{
@@ -4365,17 +4406,18 @@ items.push({"value":cellA, "percent":fracA});
 items.push({"value":cellB, "percent":fracB});
 return items;
 				*/
+				var tr = interpolateTriangular;
 				if(dA<distanceAB && dB<distanceAB){
 					var fracA = dB/distanceAB;
 					var fracB = 1.0 - fracA; // dA/distanceAB;
-					items.push({"value":cellA, "percent":fracA});
-					items.push({"value":cellB, "percent":fracB});
+					items.push({"value":cellA, "percent":fracA, "triangular":tr});
+					items.push({"value":cellB, "percent":fracB, "triangular":tr});
 				}else if(dB<dA){ // all B
-					items.push({"value":cellB, "percent":1.0});
+					items.push({"value":cellB, "percent":1.0, "triangular":tr});
 				}else if(dA<dB){ // all A
-					items.push({"value":cellA, "percent":1.0});
+					items.push({"value":cellA, "percent":1.0, "triangular":tr});
 				}
-				
+				return items;
 			}
 		}
 		
@@ -4387,6 +4429,13 @@ return items;
 	var pA = this._pA;
 	var pB = 1.0 - pA;
 	var triangleItems = items;
+
+
+if(interpolateTriangular){
+	return triangleItems;
+}else{
+	return distanceItems;
+}
 
 
 //return triangleItems;

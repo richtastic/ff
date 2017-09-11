@@ -1141,6 +1141,22 @@ Code.elementExists = function(a,o){ // O(n)   --- this wont work for an array of
 	}
 	return false;
 }
+Code.removeDuplicates = function(array){
+	var i,j,a,b;
+	for(i=0; i<array.length; ++i){
+		a = array[i];
+		for(j=i+1; j<array.length; ++j){
+			b = array[j];
+			if(a==b){
+				array[j] = array[array.length-1];
+				array.pop();
+				--j;
+			}
+		}
+	}
+
+	return array;
+}
 Code.indexOfElement = function(a,o){ // O(n)
 	if( Code.isFunction(o) ){ // function
 		for(var i=0; i<a.length; ++i){
@@ -5513,6 +5529,31 @@ Code.intersectRayQuad = function(org,dir, a,b,c,d, nrm){ // finite ray - quad in
 	}
 	return null;
 }
+Code.rayFromPointPerimeter = function(points,hull,forSite){
+	var rays = [];
+	if(hull.length>1){
+		for(i=0; i<=hull.length; ++i){
+			var site = hull[ i%hull.length ];
+			var prev = hull[ (i-1+hull.length)%hull.length ];
+			var next = hull[ (i+1)%hull.length ];
+			var sitePoint = points[site];
+			var prevPoint = points[prev];
+			var nextPoint = points[next];
+			var v1 = V2D.sub(sitePoint,prevPoint);
+				v1.norm();
+			var v2 = V2D.sub(sitePoint,nextPoint);
+				v2.norm();
+			var angle = V2D.angleDirection(v2,v1) * 0.5;
+			var ray = V2D.rotate(v2.copy(),angle);
+			if(forSite){
+				rays[site] = ray;
+			}else{
+				rays[i] = ray;
+			}
+		}
+	}
+	return rays;
+}
 Code._temp_A = [];
 // var A = Code._temp_A;
 // A[0]=nA.x, A[1]=nA.y, A[2]=nA.z, A[3]=nB.x, A[4]=nB.y, A[5]=nB.z, A[6]=dir.x, A[7]=dir.y, A[8]=dir.z;
@@ -5525,7 +5566,16 @@ Code.planePlaneIntersection = function(pA,nA, pB,nB){ // infinite plane intersec
 	Code.matrix3x3xV3D(b, A, b);
 	return [b, dir];
 }
-
+Code.isCCW = function(a,b,c){
+	var ab = V2D.sub(b,a);
+	var bc = V2D.sub(c,b);
+	//var ca = V2D.sub(a,c);
+	var cross = V2D.cross(ab,bc);
+	//cross2 = V2D.cross(bc,V2D.sub(orgA,b2));
+	//cross3 = V2D.cross(ca,V2D.sub(orgA,c2));
+	// strictly inside
+	return cross >= 0;
+}
 Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
 	// var ab1 = V2D.sub(a1,b1); // CW
 	// var bc1 = V2D.sub(c1,a1);

@@ -163,6 +163,12 @@ V2D.prototype.copy = function(a){
 	this.x = a.x; this.y = a.y;
 	return this;
 }
+V2D.prototype.wiggle = function(a,b){
+	if(b===undefined){ b = a; }
+	this.x += (Math.random()-0.5)*a;
+	this.y += (Math.random()-0.5)*b;
+	return this;
+}
 V2D.prototype.set = function(xV,yV){
 	this.x = xV; this.y = yV;
 	return this;
