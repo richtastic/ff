@@ -1607,6 +1607,79 @@ Code.sumArray = function(a){
 	}
 	return sum;
 }
+Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
+	var i, j, k, c;
+	var sizeX = x.length;
+	var epsilon = 1E-6;
+	var cost = fxn(args, x); // current cost
+	var currCost, nextCost;
+	var maxIterations = iter!=null ? iter : 50;
+	var minDifference = diff!=null ? diff : 1E-10;
+	var lambda = 1.0;
+	var scaler = 10.0;
+	if(!dx){
+		dx = Code.newArrayZeros(sizeX);
+		for(i=0; i<sizeX; ++i){
+			dx[i] = epsilon;
+		}
+	}
+	for(k=0; k<maxIterations; ++k){
+		var dy = Code.newArrayZeros(sizeX);
+		for(i=0; i<sizeX; ++i){
+			var tx = Code.copyArray(x);
+			tx[i] += dx[i];
+			c = fxn(args, tx);
+			dy[i] = c - cost;
+		}
+		// console.log("dx: "+dx);
+		// console.log("dy: "+dy);
+		var nextX = Code.newArrayZeros(sizeX);
+		for(i=0; i<sizeX; ++i){
+			nextX[i] = x[i] - lambda*dy[i];
+		}
+		var newCost = fxn(args, nextX);
+		//console.log("   "+k+". => "+cost+" / "+newCost+".           "+lambda);
+		if(newCost<cost){
+			if(cost-newCost<minDifference){
+				//console.log("close enough: "+k);
+				break;
+			}
+			cost = newCost;
+			x = nextX;
+			lambda *= scaler;
+		}else{
+			lambda /= scaler;
+		}
+		/*
+		// if all / ANY directions are too large, try smaller epsilon:
+		for(i=0; i<sizeX; ++i){
+			dx[i] = dx[i] / 10.0;
+		}
+		*/
+		//break;
+	}
+/*
+	// find best score & use
+	var bestIndex = null;
+	currCost = null;
+	for(i=0; i<sizeX; ++i){
+		c = cost[i];
+		if(currCost==null || c<currCost){
+			currCost = c;
+			bestIndex = i;
+		}
+	}
+	console.log(bestIndex, currCost);
+	if(currCost<bestCost){
+		console.log("improved");
+
+	}else{
+		console.log("no better");
+	}
+	*/
+	// if all costs are more, epsilon needs to be reduced in scale
+	return {"x":x,"cost":cost};
+}
 // https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/
 Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to assignment problem O(n^3) : list of edges
 	var WEIGHT_INFINITY = 1E10;
@@ -5575,6 +5648,18 @@ Code.isCCW = function(a,b,c){
 	//cross3 = V2D.cross(ca,V2D.sub(orgA,c2));
 	// strictly inside
 	return cross >= 0;
+}
+Code.minimumTriAngle = function(a,b,c){ // CCW
+	var ab = V2D.sub(b,a);
+	var bc = V2D.sub(c,b);
+	var ca = V2D.sub(a,c);
+	var ba = ab.copy().scale(-1);
+	var cb = bc.copy().scale(-1);
+	var ac = ca.copy().scale(-1);
+	var angleA = V2D.angle(ab,ac);
+	var angleB = V2D.angle(ab,ac);
+	var angleC = V2D.angle(ca,cb);
+	return Math.min(angleA,angleB,angleC);
 }
 Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
 	// var ab1 = V2D.sub(a1,b1); // CW

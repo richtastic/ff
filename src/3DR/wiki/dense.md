@@ -479,23 +479,22 @@ model
 
 
 
-WHEN TO INTERPLATE VALUE:
+debugging:
+	display seed-seed match area
+	display needle & haystack & top scoring locations & SAD score
+	display each possible final matched needleA-needleB
 
 
-- get triangles for a given cell
-- get rotation direction for all triangles
-	CCW += 1
-	CW  += 1
-- if CCW and CW both > 0:
-	use local 
-- else
-	use triangular
+=> may need to revisit:
+	- best score for a point should be based on reliability?, not just on score ?
+		- maybe include wobbliness with uniqueness (best of best scores)
+	- what scale should seed points be at originally?
+		- 
+	- scoring based on gradient / SIFT
+	- combinging different scores
 
+- simultaneous grid/mesh matching ?
 
-- optimal tests are wrong
-
-
-...
 
 
 

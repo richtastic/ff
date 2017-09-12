@@ -1396,7 +1396,7 @@ Matrix.matrixArrayToString = function(A, m,n){
 }
 
 
-Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance, lambdaScaleFlip){ // levenberg marquardt nonlinear minimization - reference: lmdif
+Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance, lambdaScaleFlip, epsilon){ // levenberg marquardt nonlinear minimization - reference: lmdif
 	// fxn = function to evaluate y && error from a given x
 	// m = number of functions
 	// n = number of (unknowns) variables (n<=m)
@@ -1411,6 +1411,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	maxIterations = maxIterations!==undefined?maxIterations:50;
 	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
 	xTolerance = xTolerance!==undefined?xTolerance:1E-10;
+	epsilon = epsilon!=null ? epsilon : 1E-8; // should be on scale of ~min(x)/1E-6
 	//lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
 	var i, j;
 	var x = new Matrix(n,1).setFromArray(xInitial);
@@ -1423,7 +1424,8 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var jacobian = new Matrix(m,n); 
 	var L = new Matrix(n,n);
 	var errorPrev = -1, errorNext, errorCurr;
-	var epsilon = 1E-8; // should be on scale of ~min(x)/1E-6
+	
+//console.log(epsilon)
 	var lambda = 1E-3;
 	var lambdaScale = 10.0;
 	// if(lambdaScaleFlip){
@@ -1432,6 +1434,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	// initial
 	fxn(args, x,y,error);
 	errorCurr = error.getNorm();
+//console.log("errorCurr: "+errorCurr);
 	for(i=0;i<maxIterations; ++i){
 //console.log(i+": "+errorCurr);
 		// check function error
@@ -1458,7 +1461,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		dx = Matrix.mult(Jinv, error);
 		// check x tolernce
 // console.log(Jinv.toString())
-// console.log(dx.getNorm())
+//console.log(dx.getNorm())
 		if(dx.getNorm()<xTolerance){
 //			console.log("converge x");
 			break;

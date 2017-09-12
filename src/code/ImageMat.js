@@ -307,6 +307,26 @@ ImageMat.prototype.setFromFloats = function(r,g,b){
 	this.setBluFromFloat(b);
 	return this;
 }
+
+ImageMat.prototype.roughness = function(){ // local max of dx, -dx, dy, -dy
+	return 0;
+	var i, j, index;
+	var wid = this.width();
+	var hei = this.height();
+	var x,a,b,c,d;
+	var result = Code.newArrayZeros(wid*hei);
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			index = j*wid + i;
+			x = this._r[index];
+			a = this._r[index];
+			b = this._r[index];
+			c = this._r[index];
+			d = this._r[index];
+		}
+	}
+	return roughness;
+}
 // ------------------------------------------------------------------------------------------------------------------------ utilities
 ImageMat.newZeroFloat = function(wid,hei){
 	var i, len = wid*hei;
@@ -1090,6 +1110,7 @@ ImageMat.probabilityFromCDF = function(cdf,value){
 	return 0;
 }
 
+
 ImageMat.valueFromCDF = function(cdf,value){ 
 	var x = cdf["x"];
 	var y = cdf["y"];
@@ -1366,10 +1387,11 @@ ImageMat.rangeInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, ma
 
 
 ImageMat.range = function(data, wid,hei){
-	if(wid==0||hei==0){
-		return 0;
-	}
-	var len = wid*hei;
+	// if(wid==0||hei==0){
+	// 	return 0;
+	// }
+	// var len = wid*hei;
+	var len = data.length;
 	var minValue = null;
 	var maxValue = null;
 	for(var i=len-1; i>=0; i--){
