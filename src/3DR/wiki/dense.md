@@ -497,6 +497,76 @@ debugging:
 
 
 
+uniqueness heat map:
+	- for each pixel/area
+	- SAD scores in neighborhood size [2-4x]
+		- rotation?
+		- scale?
+	- 
+
+distinct
+reliable
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -191,6 +191,13 @@ V3D.prototype.sub = function(v,w,u){
 	}
 	return this;
 }
+V3D.prototype.wiggle = function(a,b,c){
+	if(b===undefined){ b = a; c = a; }
+	this.x += (Math.random()-0.5)*a;
+	this.y += (Math.random()-0.5)*b;
+	this.z += (Math.random()-0.5)*c;
+	return this;
+}
 V3D.prototype.toArray = function(){
 	return Code.newArray(this.x,this.y,this.z);
 }

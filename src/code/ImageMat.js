@@ -326,6 +326,11 @@ ImageMat.prototype.roughness = function(){ // local max of dx, -dx, dy, -dy
 		}
 	}
 	return roughness;
+/*
+
+find mean, find max difference from mean
+
+*/
 }
 // ------------------------------------------------------------------------------------------------------------------------ utilities
 ImageMat.newZeroFloat = function(wid,hei){

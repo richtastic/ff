@@ -1623,25 +1623,23 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 			dx[i] = epsilon;
 		}
 	}
+	var dy = Code.newArrayZeros(sizeX);
+	var tx = Code.newArrayZeros(sizeX);
 	for(k=0; k<maxIterations; ++k){
-		var dy = Code.newArrayZeros(sizeX);
 		for(i=0; i<sizeX; ++i){
-			var tx = Code.copyArray(x);
+			Code.copyArray(tx,x);
 			tx[i] += dx[i];
 			c = fxn(args, tx);
 			dy[i] = c - cost;
+			tx[i] = 0;
 		}
-		// console.log("dx: "+dx);
-		// console.log("dy: "+dy);
 		var nextX = Code.newArrayZeros(sizeX);
 		for(i=0; i<sizeX; ++i){
 			nextX[i] = x[i] - lambda*dy[i];
 		}
 		var newCost = fxn(args, nextX);
-		//console.log("   "+k+". => "+cost+" / "+newCost+".           "+lambda);
 		if(newCost<cost){
 			if(cost-newCost<minDifference){
-				//console.log("close enough: "+k);
 				break;
 			}
 			cost = newCost;
@@ -1650,34 +1648,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		}else{
 			lambda /= scaler;
 		}
-		/*
-		// if all / ANY directions are too large, try smaller epsilon:
-		for(i=0; i<sizeX; ++i){
-			dx[i] = dx[i] / 10.0;
-		}
-		*/
-		//break;
 	}
-/*
-	// find best score & use
-	var bestIndex = null;
-	currCost = null;
-	for(i=0; i<sizeX; ++i){
-		c = cost[i];
-		if(currCost==null || c<currCost){
-			currCost = c;
-			bestIndex = i;
-		}
-	}
-	console.log(bestIndex, currCost);
-	if(currCost<bestCost){
-		console.log("improved");
-
-	}else{
-		console.log("no better");
-	}
-	*/
-	// if all costs are more, epsilon needs to be reduced in scale
 	return {"x":x,"cost":cost};
 }
 // https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/
@@ -2433,7 +2404,10 @@ Code.RGBFromYUV = function(y,u,v){
 Code.HSLFromRGB = function(rgb){
 	// 
 }
-
+Code.LUVFromRGB = function(){ // CIE / LUV. : L=[0,100] U=[-134,220], V=[-140,122]
+	
+	//
+}
 Code.HSVFromRGB = function(vout, vin){//, r,g,b){ // in [0,1]
 	if(vin===undefined){
 		vin = vout;
