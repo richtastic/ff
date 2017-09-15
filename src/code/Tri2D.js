@@ -14,6 +14,20 @@ Tri2D.fromList = function(ax,ay, bx,by, cx,cy){
 	return new Tri2D(new V2D(ax,ay), new V2D(bx,by), new V2D(cx,cy));
 }
 // -------------------------------------------------------------------------------------------------------------------- 
+Tri2D.prototype.rotate = function(origin,angle){
+	if(angle===undefined){
+		angle = origin;
+		origin = new V2D(0,0);
+	}
+	this.A().sub(origin).rotate(angle).add(origin);
+	this.B().sub(origin).rotate(angle).add(origin);
+	this.C().sub(origin).rotate(angle).add(origin);
+}
+Tri2D.prototype.translate = function(t){
+	this.A().add(t);
+	this.B().add(t);
+	this.C().add(t);
+}
 Tri2D.prototype.isPoint = function(){
 	return this.area() < 1E-32;
 }
@@ -35,13 +49,63 @@ Tri2D.prototype.C = function(c){
 	}
 	return this._c;
 }
+Tri2D.prototype.AB = function(){
+	return V2D.sub(this.B(),this.A());
+}
+Tri2D.prototype.BC = function(){
+	return V2D.sub(this.C(),this.B());
+}
+Tri2D.prototype.CA = function(){
+	return V2D.sub(this.A(),this.C());
+}
+Tri2D.prototype.ABLength = function(){
+	return this.AB().length();
+}
+Tri2D.prototype.BCLength = function(){
+	return this.BC().length();
+}
+Tri2D.prototype.CALength = function(){
+	return this.CA().length();
+}
+Tri2D.prototype.EdgeLengths = function(){
+	return [this.ABLength(),this.BCLength(),this.CALength()];
+}
+Tri2D.prototype.points = function(){
+	return [this.A(),this.B(),this.C()];
+}
+Tri2D.prototype.minimumRect = function(){
+	return Code.minRectFromPolygon(this.points());
+}
+Tri2D.prototype.min = function(){
+	var v = this.A().copy();
+	V2D.min(v, v,this.B());
+	V2D.min(v, v,this.C());
+	return v;
+}
+Tri2D.prototype.max = function(){
+	var v = this.A().copy();
+	V2D.max(v, v,this.B());
+	V2D.max(v, v,this.C());
+	return v;
+}
+Tri2D.prototype.boundingRect = function(){
+	var info = V2D.extremaFromArray([this.A(),this.B(),this.C()]);
+	return new Rect(info["min"].x,info["min"].y, info["size"].x,info["size"].y);
+}
 Tri2D.prototype.area = function(){
 	var AB = V2D.sub(this._b,this._a);
 	var AC = V2D.sub(this._c,this._a);
-	return V2D.cross(AB, AB,AC);
+	return Math.abs(V2D.cross(AB,AC)) * 0.5; // ?
 }
 Tri2D.prototype.center = function(){ // barycenter
 	return new V2D((this._a.x+this._b.x+this._c.x)/3.0, (this._a.y+this._b.y+this._c.y)/3.0);
+}
+Tri2D.prototype.copy = function(a){
+	if(a===undefined){ return new Tri2D(this.A(),this.B(),this.C()); }
+	this.A(a.A());
+	this.B(a.B());
+	this.C(a.C());
+	return this;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri2D.prototype.jitter = function(amplitude){
@@ -72,4 +136,9 @@ Tri2D.prototype.kill = function(){ // doesn't own points
 	this._a = null;
 	this._b = null;
 	this._c = null;
+}
+
+
+Tri2D.copy = function(a){
+	return (new Tri2D()).copy(a);
 }

@@ -234,6 +234,16 @@ Canvas.prototype.enableDepthTest = function(){
 	//this._context.enable(this._context.DEPTH_TEST); // disable?
 	//this._context.colorMask(true,true,true,false);
 }
+Canvas.prototype.clipStart = function(){
+	this._context.save();
+	return this._context.clip();
+// void ctx.clip();
+// void ctx.clip(fillRule);
+// void ctx.clip(path, fillRule);
+}
+Canvas.prototype.clipEnd = function(){
+	this._context.restore();
+}
 Canvas.prototype.enableCulling = function(){
 	return this._context.enable(this._context.CULL_FACE);
 }
@@ -322,9 +332,13 @@ Canvas.prototype.context = function(){
 Canvas.prototype.contextIdentity = function(){
 	this._context.setTransform(1,0,0,1,0,0);
 }
-Canvas.prototype.contextTransform = function(matrix){
-	var a = matrix.get();
-	this._context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
+Canvas.prototype.contextTransform = function(matrix,b,c,d,e,f){
+	if(arguments.length>1){
+		this._context.transform(matrix,c,b,d,e,f);
+	}else{
+		var a = matrix.get();
+		this._context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
+	}
 }
 Canvas.prototype.size = function(wid,hei){
 	//this._updateSizeFromAbsolute(wid,hei);

@@ -58,7 +58,7 @@ StageGL.prototype.getBufferUint16ArrayElement = function(list, itemSize){
 
 StageGL.prototype.setBackgroundColor = function(r,g,b,a){
 	if(arguments.length==1){
-		a = Code.getFloatArrayARGBFromARGB(r);
+		a = Code.getFloatARGB(r);
 		r = a[1]; g = a[2]; b = a[3]; a = a[0];
 	}
     return this._canvas.setBackgroundColor(r,g,b,a);

@@ -9,7 +9,7 @@ function MLSTri(a,b,c){
 	// 	this.generateEdgesFromVerts();
 	// }
 }
-Code.inheritClass(MLSTri, Tri);
+Code.inheritClass(MLSTri, Tri3D);
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSTri.prototype.edgeAB = function(e){
 	if(e!==undefined){

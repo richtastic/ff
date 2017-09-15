@@ -329,6 +329,8 @@ ImageMat.prototype.roughness = function(){ // local max of dx, -dx, dy, -dy
 /*
 
 find mean, find max difference from mean
+	- MAX
+	- AVERAGE (RMS)
 
 */
 }

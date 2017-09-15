@@ -91,6 +91,7 @@ function Rect(xPos,yPos, w,h){
 	this._y = 0;
 	this._width = 0;
 	this._height = 0;
+	//this._angle = 0; // origin @ x,y
 	this.x(xPos);
 	this.y(yPos);
 	this.width(w);

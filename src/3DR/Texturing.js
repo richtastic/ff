@@ -9,6 +9,7 @@ function Texturing(){
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
+	this._stage.root().matrix().scale(2.0);
 	// resources
 	this._resource = {};
 
@@ -41,8 +42,10 @@ this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn3D, 
 GLOBALSTAGE = this._stage;
 // GLOBALSTAGE.root().matrix().scale(1.0,-1.0);
 // GLOBALSTAGE.root().matrix().translate(300.0,300.0);
+/*
 	this.triangulate();
 	return;
+*/
 	var imageList, imageLoader;
 	// import image to work with
 	imageList = ["caseStudy1-0.jpg","caseStudy1-26.jpg"];
@@ -74,6 +77,7 @@ new V2D(1,-1),
 		//new V2D(0.8,0.8),
 		new V2D(2,2),
 	];
+	/*
 // random tests
 points = [];
 var minX = -2;
@@ -84,7 +88,7 @@ for(i=0; i<15; ++i){
 	points[i] = new V2D(Code.randomFloat(minX,maxX),Code.randomFloat(minY,maxY));
 }
 Triangulator.removeDuplicates(points);
-
+*/
 
 
 	var matrix = new Matrix2D();
@@ -246,10 +250,10 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 	pntXZ = new V3D(1,0,1);
 	pntYZ = new V3D(0,1,1);
 	// A
-	var pntAO = new V2D(173,108);
-	var pntAX = new V2D(204,118);
-	var pntAY = new V2D(172,69);
-	var pntAXY = new V2D(205,76);
+	var pntAO = new V2D(172.5,107);
+	var pntAX = new V2D(202.5,116);
+	var pntAY = new V2D(172,67.5);
+	var pntAXY = new V2D(204,76);
 	// 1
 	tri = new Tri2D( pntAY, pntAO, pntAX );
 	tris.push([tri]);
@@ -259,10 +263,19 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 	tris.push([tri]);
 	pointsA.push(tri.A(),tri.B(),tri.C());
 	// B
-	var pntBO = new V2D(173,108);
-	var pntBX = new V2D(204,118);
-	var pntBY = new V2D(172,69);
-	var pntBXY = new V2D(205,76);
+	var oFF = new V2D(0,0);
+	var pntBO = new V2D(191.5,146);
+	var pntBX = new V2D(230,151.5);
+	var pntBY = new V2D(193,100);
+	var pntBXY = new V2D(233,102);
+
+
+	pntBO.add(oFF);
+	pntBX.add(oFF);
+	pntBY.add(oFF);
+	pntBXY.add(oFF);
+
+
 	// 1
 	tri = new Tri2D( pntBY, pntBO, pntBX );
 	tris.push([tri]);
@@ -271,9 +284,18 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 	tri = new Tri2D( pntBX, pntBXY, pntBY );
 	tris.push([tri]);
 	pointsB.push(tri.A(),tri.B(),tri.C());
-
 	// 
 	var imageList = imageInfo.images;
+
+	var imageSourceA = imageList[0];
+	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+
+	var imageSourceB = imageList[1];
+	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+// this.imageA = new ImageMatrix(imageList[0];
+// this.imageB = imageList[1];
 	var i, j, list = [], d, img, x=0, y=0;
 	for(i=0;i<imageList.length;++i){
 		img = imageList[i];
@@ -287,14 +309,15 @@ Texturing.prototype.handleSceneImagesLoaded = function(imageInfo){
 		//
 		d.graphics().setLine(1.0,0xFFFF0000);
 		d.graphics().beginPath();
-		for(j=0;j<=points[i].length;++j){
-			v = points[i][j % points[i].length];
-			if(j==0){
-				d.graphics().moveTo(v.x,v.y);
-			}else{
-				d.graphics().lineTo(v.x,v.y);
-			}
-		}
+		d.graphics().drawPolygon(points[i]);
+		// for(j=0;j<=points[i].length;++j){
+		// 	v = points[i][j % points[i].length];
+		// 	if(j==0){
+		// 		d.graphics().moveTo(v.x,v.y);
+		// 	}else{
+		// 		d.graphics().lineTo(v.x,v.y);
+		// 	}
+		// }
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 		//
@@ -312,6 +335,226 @@ this.calibrateCameraMatrix();
 	this._tris = tris;
 	this._imgs = list;
 	this.combineTriangles();
+
+
+
+	// if triangle relative sizes are over some ratio (eg 2) then don't consider the smaller one at all
+	var maxAreaDifference = 2.0;
+
+	var imageA = this.imageA;
+	var imageB = this.imageB;
+	// TODO: sort out what to do if not CCW
+
+	var triProjected = new Tri2D( V2D.copy(pntO), V2D.copy(pntX), V2D.copy(pntY));
+console.log(triProjected+"")
+	//var triProjected = new Tri2D(new V2D(2,4), new V2D(3,2), new V2D(6,2));
+	var rect = triProjected.minimumRect();
+	console.log(rect);
+	triProjected.rotate( -rect["angle"] );
+	//triProjected.translate(rect["min"].copy().scale(-1));
+	var min = triProjected.min();
+	var max = triProjected.max();
+	triProjected.translate(min.copy().scale(-1));
+	rect = triProjected.boundingRect();
+	console.log(rect);
+
+//	throw "X"
+
+	var triO = triProjected.copy();
+
+//	var triO = new Tri2D(pntO, pntX, pntY); // projected 2D plane optimum area triangle [absolute size does not matter]
+	var triOrigin = triO.copy();// triangle aligned into minimum area rectangle aligned at origin & positive x & positive y
+console.log(triOrigin+"")
+	var triA = new Tri2D(pntAO, pntAX, pntAY);
+	var triB = new Tri2D(pntBO, pntBX, pntBY);
+	var sameTriList = [triA,triB];
+	var sameImageList = [imageMatrixA,imageMatrixB];
+	var sameAreaList = [];
+	var sameErrorList = [];
+	var totalTriArea = 0;
+	var maxTriArea = null;
+	var tri, lengths, length;
+	var maxEdgeIndex = null;
+	var maxEdge = null;
+	var maxEdgeLength = null;
+	var i, j;
+	for(i=0; i<sameTriList.length; ++i){
+		tri = sameTriList[i];
+		var area = tri.area();
+		sameAreaList[i] = area;
+		totalTriArea += area;
+		if(maxTriArea==null || maxTriArea<area){
+			maxTriArea = area;
+		}
+		lengths = tri.EdgeLengths();
+		for(j=0; j<lengths.length; ++j){
+			length = lengths[j];
+			console.log(j+": "+length);
+			if(maxEdge==null || maxEdgeLength<length){
+				maxEdge = i;
+				maxEdgeLength = length;
+				maxEdgeIndex = i;
+			}
+		}
+	}
+	for(i=0; i<sameAreaList.length; ++i){
+		var area = sameAreaList[i];
+		if(area<maxTriArea/maxAreaDifference){
+			console.log("TODO: drop this tri");
+		}
+		sameErrorList[i] = area/totalTriArea;
+	}
+	console.log(sameAreaList+". "+sameErrorList);
+	//console.log("longest edge: "+maxEdge+" @ "+maxEdgeLength);
+	var textureScale = 4.0;
+	var tri = sameTriList[maxEdgeIndex];
+	var relativeScale = 1.0;
+	if(maxEdge==0){
+		relativeScale = maxEdgeLength/triOrigin.ABLength();
+	}else if(maxEdge==1){
+		relativeScale = maxEdgeLength/triOrigin.BCLength();
+	}else{ // if(maxEdge==2){
+		relativeScale = maxEdgeLength/triOrigin.CALength();
+	}
+	//console.log("relativeScale: "+relativeScale);
+	var triangleScale = relativeScale * textureScale;
+	console.log("triangleScale: "+triangleScale);
+
+	var boundingRect = triOrigin.boundingRect();
+	console.log("boundingRect: "+boundingRect);
+	var textureWidth = Math.ceil(triangleScale*boundingRect.width());
+	var textureHeight = Math.ceil(triangleScale*boundingRect.height());
+	var textureMatrix = new ImageMat(textureWidth,textureHeight);
+
+	// triOrigin.A().scale(triangleScale,-triangleScale);
+	// triOrigin.B().scale(triangleScale,-triangleScale);
+	// triOrigin.C().scale(triangleScale,-triangleScale);
+	triOrigin.A().scale(triangleScale);
+	triOrigin.B().scale(triangleScale);
+	triOrigin.C().scale(triangleScale);
+
+console.log(triOrigin+"");
+	//console.log(texture);
+	var texturePoint = new V2D();
+	var trianglePoint = new V3D();
+	var val = new V3D();
+	var listH = [];
+	for(i=0; i<sameTriList.length; ++i){
+		tri = sameTriList[i];
+		listH[i] = R3D.homographyFromPoints([triOrigin.A(),triOrigin.B(),triOrigin.C()],[tri.A(),tri.B(),tri.C()]);
+		console.log(listH[i]+"");
+	}
+	for(j=0; j<textureHeight; ++j){
+		for(i=0; i<textureWidth; ++i){
+			texturePoint.set(i,j);
+			var isInside = true;
+			//var isInside = Code.isPointInsideTri2D(texturePoint, triOrigin.A(),triOrigin.B(),triOrigin.C()); // also want to check if point is NEAR an edge for aliasing
+			if(isInside){ //  limit texture to points inside triangle
+				var colors = [];
+				var reds = [];
+				var grns = [];
+				var blus = [];
+				for(k=0; k<sameTriList.length; ++k){
+					var tri = sameTriList[k];
+					var imageMatrix = sameImageList[k];
+					var H = listH[k];
+					H.multV2DtoV3D(trianglePoint, texturePoint);
+					trianglePoint.homo();
+					imageMatrix.getPoint(val, trianglePoint.x,trianglePoint.y);
+					colors.push(val.copy());
+					reds.push(val.x);
+					grns.push(val.y);
+					blus.push(val.z);
+				}
+				// use error in pixel area to decide which colors to use in what percentage
+				var red = Code.combineErrorMeasurements(reds,sameErrorList)["value"];
+				var grn = Code.combineErrorMeasurements(grns,sameErrorList)["value"];
+				var blu = Code.combineErrorMeasurements(blus,sameErrorList)["value"];
+				val.set(red,grn,blu);
+				// var count = colors.length;
+				// for(k=0; k<count; ++k){
+				// 	val.add(colors[k]);
+				// }
+				// val.scale(1.0/count);
+				textureMatrix.setPoint(i,j, val);
+			}
+		}
+	}
+
+	// display texture:
+	var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
+	var d = new DOImage(img);
+	d.matrix().translate(810, 10);
+	GLOBALSTAGE.addChild(d);
+
+//d.graphics().setFill(0xFF00FF00);
+//d.graphics().fill();
+	//var renderTri = new Tri2D( new V2D(100,100), new V2D(150,100), new V2D(100,150) );
+	var renderTri = new Tri2D( new V2D(100,100), new V2D(150,100), new V2D(100,50) );
+	var d = new DO();
+	var tri = renderTri;
+	d.graphics().clear();
+	d.graphics().beginPath();
+		//d.graphics().drawRect(0,0, 100,100);
+		d.graphics().moveTo(tri.A().x,tri.A().y);
+		d.graphics().lineTo(tri.B().x,tri.B().y);
+		d.graphics().lineTo(tri.C().x,tri.C().y);
+		d.graphics().lineTo(tri.A().x,tri.A().y);
+	d.graphics().endPath();
+	d.graphics().clipStart();
+	// clipped content here
+		var trans = R3D.homographyFromPoints([triOrigin.A(),triOrigin.B(),triOrigin.C()], [tri.A(),tri.B(),tri.C()]); // FROM texture TO SCREEN
+		var a = trans.toArray();
+		var matrix = new Matrix2D();
+		matrix.set(a[0],a[1],a[3],a[4], a[2],a[5]);
+		d.graphics().contextTransform(matrix);
+			d.graphics().drawImage(img,0,0,textureMatrix.width(),textureMatrix.height());
+	d.graphics().clipEnd();
+
+	// more stuff:
+	//d.graphics().drawImage(img,50,50,100,100);
+
+	GLOBALSTAGE.addChild(d);
+
+	//this.graphicsIllustration().drawImage(this._image,this._imageX,this._imageY,this._imageWidth,this._imageHeight);
+
+
+
+
+	// render texture to screen in context
+/*
+
+x = [3, 4]; % measurement
+w = [2, 1]; % window
+N = size(x,2); % sample size
+pTot = sum(w); % total window
+p = 1 - (w / pTot); % probabilities of x -- smaller window is 'more likely' ?
+u = (1/N) * sum( x );
+s = (sum( (p.*x).^2 ))^0.5;
+N
+u
+s
+*/
+
+	
+// minimumRect
+/*
+			var areaA = V2D.areaTri(texturePoint,triOrigin.B(),triOrigin.C());
+			var areaB = V2D.areaTri(texturePoint,triOrigin.A(),triOrigin.C());
+			var areaC = V2D.areaTri(texturePoint,triOrigin.A(),triOrigin.B());
+			var areaT = V2D.areaTri(triOrigin.A(),triOrigin.B(),triOrigin.C());
+				// areaA = Math.max(0,areaA);
+				// areaB = Math.max(0,areaB);
+				// areaC = Math.max(0,areaC);
+				// areaT = areaA + areaB + areaC;
+			var pA = areaA/areaT;
+			var pB = areaB/areaT;
+			var pC = areaC/areaT;
+			
+			trianglePoint.set(pA*triA.A().x + pB*triA.B().x + pC*triA.C().x, pA*triA.A().y + pB*triA.B().y + pC*triA.C().y);
+			*/
+
+
 }
 Texturing.prototype.combineTriangles = function(){
 	var triList = this._tris;
@@ -369,8 +612,44 @@ Texturing.prototype.handleEnterFrame = function(e){ // 2D canvas
 	//console.log(e);
 }
 Texturing.prototype.handleMouseClickFxn = function(e){
-	console.log(e.x%400,e.y)
+	var loc = e["location"];
+	console.log(loc.x%400,loc.y)
 }
+
+
+
+TextureMesh = function(){
+	this._triangles = [];
+	this._textures = [];
+}
+TextureMesh.prototype.kill = function(){
+	if(this._triangles){
+		Code.emptyArray(this._triangles);
+	}
+	this._triangles = null;
+}
+TextureMesh.Triangle = function(t,u,m){
+	this._tri = new V3D();
+	this._uv = new V2D();
+	this._mesh = null;
+}
+
+TextureMesh.Texture = function(t,u){
+	this._url = null;
+	this._isLoading = false;
+	this._isLoaded = false;
+	this._data = null;
+}
+TextureMesh.Texture.prototype.load = function(){
+	// load from file
+}
+TextureMesh.Texture.prototype.unload = function(){
+	// release stucc
+}
+
+
+
+
 
 
 

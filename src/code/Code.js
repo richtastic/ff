@@ -1558,10 +1558,39 @@ Code.checkPoints2DToZeroOne = function(arr, width, height){
 	}
 }
 Code.points2DToZeroOne = function(arr, width, height){
-	for(var i=arr.length;i--;){
+	for(var i=arr.length; i--;){
 		arr.x /= width;
-		arr.y /= width;
+		arr.y /= height;
 	}
+}
+
+Code.sum = function(a){
+	var i, sum=0;
+	for(i=a.length; --i;){
+		sum += a[i];
+	}
+	return sum;
+}
+Code.combineErrorMeasurements = function(estimates,errors){
+	var i;
+	var N = estimates.length;
+	var sumEstimates = Code.sum(estimates);
+	var sumErrors = Code.sum(estimates);
+	var probErrors = [];
+	// for(i=0; i<N; ++i){
+	// 	probErrors[i] = 1.0 - (errors[i]/sumErrors);
+	// }
+	var estimateTop = 0;
+	var estimateBot = 0;
+	for(i=0; i<N; ++i){
+		estimateTop += estimates[i]/errors[i];
+		estimateBot += 1.0/errors[i];
+		//estimate += Math.pow(probErrors[i]*estimates[i], 2);
+	}
+	var estimate = estimateTop/estimateBot;
+	//combined = Math.sqrt(combined);
+	var error = 1.0/estimateBot;
+	return {"value":estimate, "error":error};
 }
 // ------------------------------------------------------------------------------------------ 
 Code.isUnique = function(val){ // val, ...array
@@ -2363,9 +2392,9 @@ Code.linear2DColorARGB = function(x,y, colA,colB,colC,colD){
 Code.clampRound0255 = function(n){
 	return Math.min(Math.max(Math.round(n),0),255);
 }
-Code.getFloatArrayARGBFromARGB = function(col){
-	//
-}
+// Code.getFloatArrayARGBFromARGB = function(col){
+// 	return Code.getFloatARGB(colA);
+// }
 // color functions ----------------------------------------------------
 Code.getJSColorFromRGBA = function(col){
 	return "rgba("+Code.getRedRGBA(col)+","+Code.getGrnRGBA(col)+","+Code.getBluRGBA(col)+","+Code.getAlpRGBA(col)/255.0+")";
@@ -2405,7 +2434,7 @@ Code.HSLFromRGB = function(rgb){
 	// 
 }
 Code.LUVFromRGB = function(){ // CIE / LUV. : L=[0,100] U=[-134,220], V=[-140,122]
-	
+
 	//
 }
 Code.HSVFromRGB = function(vout, vin){//, r,g,b){ // in [0,1]
@@ -5622,6 +5651,43 @@ Code.isCCW = function(a,b,c){
 	//cross3 = V2D.cross(ca,V2D.sub(orgA,c2));
 	// strictly inside
 	return cross >= 0;
+}
+Code.minRectFromPolygon = function(points){ // min-area-rect: epects convex hull - n^2 - TODO: rotating calipers
+	// ...
+	var i, j, a, b, p, len=points.length;
+	var ab = new V2D();
+	var p = new V2D();
+	var angle;
+	var min, max, width, height, area;
+	var minArea = null;
+	var minRect = null;
+	var q = new V2D();
+	for(i=0; i<len; ++i){ // each edge
+		a = points[i];
+		b = points[(i+1)%len];
+		V2D.sub(ab, b,a);
+		angle = V2D.angleDirection(V2D.DIRX,ab);
+		min = null;
+		max = null;
+		for(j=0; j<len; ++j){ // find rect of 
+			p = points[j];
+			V2D.rotate(q, p,-angle);
+			if(!min){
+				min = q.copy();
+			}
+			if(!max){ max = q.copy(); }
+			V2D.min(min, min,q);
+			V2D.max(max, max,q);
+		}
+		width = max.x-min.x;
+		height = max.y-min.y;
+		area = width*height;
+		if(minArea==null || area<minArea){
+			minArea = area;
+			minRect = {"origin":new V2D(min.x,min.y),"width":width,"height":height,"angle":angle};
+		}
+	}
+	return minRect;
 }
 Code.minimumTriAngle = function(a,b,c){ // CCW
 	var ab = V2D.sub(b,a);

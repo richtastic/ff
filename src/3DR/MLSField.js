@@ -30,8 +30,16 @@ MLSField.prototype.preCalculations = function(){
 	len = points.length;
 	for(i=0;i<len;++i){
 		point = points[i];
-		data = this.projectToSurfaceData(point);
-		point.curvature(data.max);
+		try{
+			data = this.projectToSurfaceData(point);
+			point.curvature(data.max);
+		}catch(e){
+			console.log("bandaid");
+			points[i] = points[len-1];
+			--len;
+			--i;
+		}
+		
 	} // record bivariate coefficients?
 }
 MLSField.prototype.maxCurvatureInSphere = function(center, radius){ // maximum curvature = minimum arc length
@@ -54,7 +62,9 @@ MLSField.prototype.maxCurvatureInSphere = function(center, radius){ // maximum c
 	return idealLength;
 }
 MLSField.prototype.idealEdgeLengthAtPoint = function(p){
-	return this._rho/this._pointCloud.closestPointToPoint(p).curvature();
+	var closest = this._pointCloud.closestPointToPoint(p);
+	console.log(closest);
+	return this._rho/closest.curvature();
 }
 MLSField.prototype.minimumInSphere = function(center, radius){ 
 	return this._rho/this.maxCurvatureInSphere(center, radius);
@@ -176,6 +186,7 @@ var weightSum = 0;
 	}
 	var cov = new Matrix(3,3).setFromArray([A,B,C, B,E,F, C,F,I]);
 //	cov.scale(1/weightSum); // unnecessary
+//console.log(cov)
 	var eig = Matrix.eigenValuesAndVectors(cov);
 	var values = eig.values;
 	var vectors = eig.vectors;

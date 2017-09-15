@@ -343,6 +343,7 @@ console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, c2,d2,a2,n3) );
 }
 
 SurfaceTri.prototype.loadPointFile = function(){
+	console.log("loadPointFile");
 	var sourceFileName = "./images/points/saltdome_1019.pts";
 	//var sourceFileName = "./images/points/foot_5092.pts";
 	//var sourceFileName = "./images/points/bunny_30571.pts";
@@ -376,6 +377,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 			// }
 		}
 		this.startPointCloud(list);
+		//this.setupSphere3D();
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(){
@@ -404,6 +406,8 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 	// TRIANGULATE
 	this._pointCloud.initWithPointArray(pts, true);
+	console.log(pts);
+	console.log(this._pointCloud);
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
 }

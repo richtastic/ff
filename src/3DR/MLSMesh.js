@@ -40,7 +40,8 @@ MLSMesh.prototype.triangulateSurfaceIteration = function(){
 	var frontList = this.frontList;
 	var count = 0;
 this.crap.fronts = frontList;
-	while( frontList.count()>0  && count<1){ // 21
+console.log(frontList)
+	while(frontList && frontList.count()>0  && count<1){ // 21
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+this.frontList.count()+" ("+count+") ");
 frontList.checkYourself();
 

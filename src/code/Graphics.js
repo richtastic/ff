@@ -9,6 +9,17 @@ Graphics.setCanvas = function(canvas){
 Graphics.getCanvas = function(canvas){
 	return Graphics._canvas;
 }
+
+Graphics.clipStart = function(){
+	Graphics._canvas.clipStart();
+}
+Graphics.clipEnd = function(){
+	Graphics._canvas.clipEnd();
+}
+Graphics.contextTransform = function(matrix){
+	Graphics._canvas.contextTransform(matrix);
+}
+
 Graphics.canvasSetLine = function(wid,col){
 	Graphics._canvas.setLine(wid,col);
 }
@@ -140,6 +151,18 @@ Graphics.prototype.measureTextImmediate = function(txt){
 Graphics.prototype.clear = function(){
 	Code.emptyArray(this._graphics);
 }
+Graphics.prototype.clipStart = function(){
+	this._graphics.push( Code.newArray(Graphics.clipStart) );
+}
+Graphics.prototype.clipEnd = function(){
+	this._graphics.push( Code.newArray(Graphics.clipEnd) );
+}
+
+Graphics.prototype.contextTransform = function(matrix){
+	matrix = matrix.copy(); // static copy
+	this._graphics.push( Code.newArray(Graphics.contextTransform,Code.newArray(matrix)) );
+}
+
 Graphics.prototype.setLine = function(wid,col){ // 3, 0xAARRGGBB
 	this._graphics.push( Code.newArray(Graphics.canvasSetLine,Code.newArray(wid,Code.getJSColorFromARGB(col))) );
 }

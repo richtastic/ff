@@ -506,7 +506,8 @@ console.log("matches: "+matches.length);
 		}
 		pointsANormalized = R3D.calculateNormalizedPoints([pointsA]);
 		pointsBNormalized = R3D.calculateNormalizedPoints([pointsB]);
-		H = R3D.homographyMatrixLinear(pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
+		//H = R3D.homographyMatrixLinear(pointsANormalized.normalized[0], pointsBNormalized.normalized[0]); // OLD
+		H = R3D.homographyFromPoints(pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
 		var optimalResult = R3D.homographyMatrixNonlinearVars(H, pointsANormalized.normalized[0], pointsBNormalized.normalized[0]);
 		var optimalPoints = optimalResult.x;
 		var optimalA = [];

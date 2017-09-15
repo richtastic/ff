@@ -456,7 +456,8 @@ R3D.homographyMatrixNonlinear = function(H,pointsA,pointsB){
 	if(pointsB===undefined){ // initialize H
 		pointsB = pointsA;
 		pointsA = H;
-		H = R3D.homographyMatrixLinear(pointsA,pointsB);
+		//H = R3D.homographyMatrixLinear(pointsA,pointsB);
+		H = R3D.homographyFromPoints(pointsA,pointsB);
 		if(!H){
 			return null;
 		}
@@ -1272,6 +1273,9 @@ R3D.homographyFromPoints = function(pointsA,pointsB, angle){
 		H = Matrix.transform2DTranslate(H, pA0.x,pA0.y);
 		H = Matrix.transform2DTranslate(H, tx,ty);
 	}else if(len==3){ // affine. ---- does order matter?
+		H = R3D.affineMatrixLinear(pointsA,pointsB);
+/*
+// SKEPTICAL IF THIS ACTUALLY WORKS ... OFFSET BY # ?
 		// if area of either triangle is 0 -> bad
 		//H = R3D.affineMatrixLinear(pointsA,pointsB);
 		var pA0 = pointsA[0];
@@ -1326,6 +1330,7 @@ R3D.homographyFromPoints = function(pointsA,pointsB, angle){
 		H = Matrix.transform2DSkewX(H, skew);
 		H = Matrix.transform2DRotate(H, angleB);
 		H = Matrix.transform2DTranslate(H, pB0.x,pB0.y);
+*/
 	}else{ // if(len>=4){ // projective
 		H = R3D.projectiveMatrixLinear(pointsA,pointsB);
 		//H.scale( 1.0/H.get(2,2) );

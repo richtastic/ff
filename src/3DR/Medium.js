@@ -444,10 +444,17 @@ for(m=0; m<bestMatches.length; ++m){
 	var match = bestMatches[m];
 	var featureA = match["A"];
 	var featureB = match["B"];
+	//console.log(featureA);
 	var pointA = featureA.point();
 	var pointB = featureB.point();
-	strA = strA + "pointsA.push(new V2D(" + (pointA.x*400) + "," + (pointA.y*300) + "));\n";
-	strB = strB + "pointsB.push(new V2D(" + (pointB.x*400) + "," + (pointB.y*300) + "));\n";
+	// _overallScale _scaleRadius _covarianceScale
+	// _orientationAngle _covarianceAngle
+	var scaleA = featureA._overallScale;
+	var angleA = featureA._orientationAngle;
+	var scaleB = featureB._overallScale;
+	var angleB = featureB._orientationAngle;
+	strA = strA + "pointsA.push(new V3D(" + (pointA.x*400) + "," + (pointA.y*300) + "," + scaleA + "," + angleA + "));\n";
+	strB = strB + "pointsB.push(new V3D(" + (pointB.x*400) + "," + (pointB.y*300) + "," + scaleB + "," + angleB + "));\n";
 }
 console.log("\n\n"+strA+"\n\n"+strB+"\n\n");
 

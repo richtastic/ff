@@ -4483,6 +4483,13 @@ e&middot;e = (-f&middot;i - g&middot;j)&middot;(b&middot;f + c&middot;g)/(b&midd
 
 
 
+## Minimum Area Rectangle Bounding polygon (convex hull).  / smallest surrounding rectangle
+alg 1: n^2: for each edge: rotate polygon to find area => record minimal area rect
+alg 2: n*lg(n) ? - rotating calipers: rotate incrementally about each side
+https://www.geometrictools.com/Documentation/MinimumAreaRectangle.pdf
+
+
+
 
 ### ?
 ![?](./images/?.png "?")

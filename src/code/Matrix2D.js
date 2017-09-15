@@ -7,9 +7,10 @@ Matrix2D.YAML = {
 	X:"x",
 	Y:"y"
 }
-function Matrix2D(){
+function Matrix2D(a){
 	this.a=0; this.b=0; this.c=0; this.d=0; this.x=0; this.y=0;
 	this.identity();
+	//this.fromArray(a);
 }
 Matrix2D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.A, this.a);
@@ -20,11 +21,17 @@ Matrix2D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.Y, this.y);
 }
 Matrix2D.prototype.readFromObject = function(obj){
-	var DATA = Matrix3D.YAML;
+	var DATA = Matrix2D.YAML;
 	this.set(obj[DATA.A],obj[DATA.B],obj[DATA.C],obj[DATA.D], obj[DATA.X],obj[DATA.Y]);
 }
 Matrix2D.prototype.identity = function(){
 	this.a = 1; this.b = 0; this.c = 0; this.d = 1; this.x = 0; this.y = 0;
+	return this;
+}
+Matrix2D.prototype.fromArray = function(a){
+	if(a!==undefined){
+		this.set(a[0],a[1],a[2],a[3],a[4],a[5]); // ????
+	}
 	return this;
 }
 Matrix2D.prototype.set = function(tA,tB,tC,tD,tX,tY){
@@ -113,6 +120,7 @@ Matrix2D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	return aV;
 }
 Matrix2D.prototype.copy = function(m){
+	if(m===undefined){ return new Matrix2D().copy(this); }
 	this.set(m.a,m.b,m.c,m.d,m.x,m.y);
 	return this;
 }

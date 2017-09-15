@@ -509,18 +509,20 @@ reliable
 
 
 
+- some initial points have very wrong rotation/scale
+- reliable points will have consistent rotation/scale ratio at various scales around 'optimum' scale
+
+	- see what angle is at various scales at 'ideal' rotation / scale
+		=> throw out non-scaling points
 
 
 
 
+--- initial seed points are being incorrectly scale-matched
 
 
 
-
-
-
-
-
+- show 
 
 
 
