@@ -31,7 +31,7 @@ function Calibration(){
 
 	var directory = "./images/phone6/calibrate/";
 	//var imageList = ["calib-1.png","calib-2.png","calib-5.png","calib-6.png"];
-	var imageList = ["calib-4.png"];
+	var imageList = ["calib-6.png"];
 	// GOOD: 0 3
 	// ? : 1 2 5 6
 	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoaded,null);
@@ -73,15 +73,20 @@ GLOBALSTAGE = this._stage;
 	for(i=0; i<imageMatrixList.length; ++i){
 		var imageMatrix = imageMatrixList[i];
 		var pointMatches = R3D.detectCheckerboard(imageMatrix);
-		// var points2D = pointMatches["points2D"];
-		// var points3D = pointMatches["points3D"];
-		// pointList2D.push(points2D);
-		// pointList3D.push(points3D);
+		if(pointMatches){
+			var points2D = pointMatches["points2D"];
+			var points3D = pointMatches["points3D"];
+			pointList2D.push(points2D);
+			pointList3D.push(points3D);
+		}else{
+			console.log("pointMatches null "+i);
+		}
 	}
-	return;
+	//return;
 	// console.log(pointList2D+"");
 	// console.log(pointList3D+"");
 	var result = R3D.calibrateCameraK(pointList3D,pointList2D);
+	console.log(result);
 }
 
 

@@ -3282,7 +3282,7 @@ R3D.cornerDetection = function(src, width, height, sigma){ //
 			c = IxIy[index];
 			d = Iy2[index];
         	hessianValue[index] = a*d - konstant*b*c;
-        	hessianValue[index] = Math.abs(hessianValue[index]);
+        	//hessianValue[index] = Math.abs(hessianValue[index]);
 		}
 	}
 	return hessianValue;
@@ -3308,7 +3308,8 @@ R3D.pointsCornerDetector = function(src, width, height, konstant, sigma, percent
 		for(i=0;i<len;++i){
 			var val = extrema[i].z;
 			if(valueExclude!==undefined){
-				if(Math.abs(val)>valueExclude){
+				//if(Math.abs(val)>valueExclude){
+				if(val>valueExclude){
 					cornerPoints.push(extrema[i]);
 				}
 			}else{
@@ -3350,7 +3351,6 @@ R3D.pointsCornerMaxima = function(src, width, height){
 	var sigma = 1.0;
 	src = Code.copyArray(src);
 	src = ImageMat.mulConst(src,256);
-	//console.log(src)
 	var konstant = 0.04;
 	var gaussSize = Math.round(2+sigma)*2+1;
 	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
@@ -3371,7 +3371,9 @@ R3D.pointsCornerMaxima = function(src, width, height){
 	var dxdx = ImageMat.mulFloat(dx,dx);
 	var dydy = ImageMat.mulFloat(dy,dy);
 	var dxdy = ImageMat.mulFloat(dx,dy);
-
+	// var sigma = 2.0;
+	// var gaussSize = Math.round(2+sigma)*2+1;
+	// var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	dxdx = ImageMat.gaussian2DFrom1DFloat(dxdx, width,height, gauss1D);
 	dxdy = ImageMat.gaussian2DFrom1DFloat(dxdy, width,height, gauss1D);
 	dydy = ImageMat.gaussian2DFrom1DFloat(dydy, width,height, gauss1D);
@@ -3406,14 +3408,15 @@ R3D.pointsCornerMaxima = function(src, width, height){
         	// val = eig[0]*eig[1];
         	//val = Math.max( eig[0], eig[1]);
         	//val = Math.max( Math.abs(eig[0]), Math.abs(eig[1]) );
-        	val = Math.abs(val);
+        	//val = Math.abs(val);
         	H[index] = val;
         	//hessianValue[index] = Math.abs(hessianValue[index]);
 		}
 	}
 
 	//non-maximal suppression: use small window to drop non-maximal values in neighborhood
-	var winSize = 3; // TODO: from where
+	/*
+	var winSize = 5; // TODO: from where
 	var newH = Code.copyArray(H);
 	for(j=0;j<height;++j){
 		for(i=0;i<width;++i){
@@ -3427,8 +3430,19 @@ R3D.pointsCornerMaxima = function(src, width, height){
 			}
 		}
 	}
-	H = newH;
-	//H = ImageMat.gaussian2DFrom1DFloat(H, width,height, gauss1D);
+	//H = newH;
+	*/
+	for(i=0;i<H.length;++i){
+		if(H[i]<0){
+			H[i] = 0;
+		}
+	}
+	
+	var sigma = 2.0;
+	var gaussSize = Math.round(2+sigma)*2+1;
+	var gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	H = ImageMat.gaussian2DFrom1DFloat(H, width,height, gauss1D);
+	//H = ImageMat.normalFloat01(H);
 
 	for(i=0; i<H.length; ++i){
 		val = H[i];
@@ -3436,32 +3450,51 @@ R3D.pointsCornerMaxima = function(src, width, height){
 	    if(min==null || val<min){ min = val; }
 	}
 
-var x = Code.copyArray(H);
-	x = ImageMat.normalFloat01(x);
-	//x = ImageMat.pow(x,0.1);
-	//x = ImageMat.pow(x,2.0);
-	x = ImageMat.normalFloat01(x);
-var img = GLOBALSTAGE.getFloatRGBAsImage(x, x, x, width,height);
-var d = new DOImage(img);
-GLOBALSTAGE.addChild(d);
-d.graphics().alpha(1.0);
-d.matrix().translate(width,0);
-
-
+// var x = Code.copyArray(H);
+// 	x = ImageMat.normalFloat01(x);
+// 	//x = ImageMat.pow(x,0.1);
+// 	//x = ImageMat.pow(x,2.0);
+// 	x = ImageMat.normalFloat01(x);
+// 	var img = GLOBALSTAGE.getFloatRGBAsImage(x, x, x, width,height);
+// 	var d = new DOImage(img);
+// 	GLOBALSTAGE.addChild(d);
+// 	d.graphics().alpha(1.0);
+// 	d.matrix().translate(width,0);
 
 	var range = max-min;
-	var thresh = 0.75;
-	//var thresh = 0.9; // WANT
+	var thresh = 0.9;
 	var limit = range*(1.0-thresh) + min;
-	//var extrema = Code.findExtrema2DFloat(H, width,height);
-	var extrema = Code.findExtrema2DFloat(H, width,height, true);
-console.log("min: "+min+"  max: "+max+".  range: "+range+". limit: "+limit);
+	console.log("min: "+min+"  max: "+max+".  range: "+range+". limit: "+limit);
 	var pass = [];
+
+	// blob method: extrema maximum not always has peak
+	for(i=0; i<H.length; ++i){
+		if(H[i]>limit){
+			H[i] = 1.0;
+		}else{
+			H[i] = 0.0;
+		}
+	}
+
+	var blobInfo = ImageMat.findBlobsCOM(H,width,height);
+	var labels = blobInfo["value"];
+	var blobs = blobInfo["blobs"];
+	for(i=0; i<blobs.length; ++i){
+		var blob = blobs[i];
+		var point = new V2D(blob["x"],blob["y"]);
+		pass.push(point);
+	}
+	/*
+	//var extrema = Code.findExtrema2DFloat(H, width,height);
+	//var extrema = Code.findExtrema2DFloat(H, width,height, true, false, true);
+	var extrema = Code.findMaxima2DFloat(H, width,height);//, true);
+	
 	for(i=0; i<extrema.length; ++i){
 	// if(i==0){
 	// 	console.log(extrema[i]);
 	// }
 		a = extrema[i];
+		//if(true){
 		if(a.z>limit){
 		//if(a.z<limit){
 			pass.push(a);
@@ -3469,6 +3502,7 @@ console.log("min: "+min+"  max: "+max+".  range: "+range+". limit: "+limit);
 	}
 	console.log(pass.length);
 	//throw "X";
+	*/
 	return pass;
 }
 
@@ -4245,7 +4279,7 @@ R3D.HarrisDescriptors = function(imageSource, points){ // create features from p
 }
 
 
-R3D.detectCheckerboard = function(imageSource, useCorner){
+R3D.detectCheckerboardNAN = function(imageSource, useCorner){
 	/*
 	find blobs
 		get average size (radius) of blob
@@ -4278,12 +4312,10 @@ R3D.detectCheckerboard = function(imageSource, useCorner){
 			}
 		}
 	}
-	//console.log(points3D.length);
 	// get grayscale
 	var imageWidth = imageSource.width();
 	var imageHeight = imageSource.height();
 	var imageGry = imageSource.gry();
-
 	var imageAdjusted = imageSource.copy();
 
 //result = ImageMat.filterContrast(imageSource.red(),imageSource.grn(),imageSource.blu(), imageSource.width(),imageSource.height(), 2.0);
@@ -4315,37 +4347,39 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(imageAdjusted.red(),imageAdjusted.grn()
 
 	//var corners = R3D.pointsCornerMaxima(imageSource.gry(),imageWidth,imageHeight);
 	//imageThreshold = ImageMat.expandBlob(imageThreshold,imageWidth,imageHeight).value;
-	imageThreshold = ImageMat.retractBlob(imageThreshold,imageWidth,imageHeight).value;
+	//imageThreshold = ImageMat.retractBlob(imageThreshold,imageWidth,imageHeight).value;
 	//imageThreshold = ImageMat.applyGaussianFloat(imageThreshold, imageWidth,imageHeight, 0.50);
+
+	//imageThreshold = ImageMat.expandBlob(imageThreshold,imageWidth,imageHeight).value;
+	//imageThreshold = ImageMat.applyGaussianFloat(imageThreshold, imageWidth,imageHeight, 1.0);
 	var corners = R3D.pointsCornerMaxima(imageThreshold,imageWidth,imageHeight);
 	//var corners = R3D.pointsCornerMaxima(imageSource.gry(),imageWidth,imageHeight);
 
 	// IF THERE'S A FAIL => TRY ADDING LESS / MORE CORNERS
 	// TRY MERGING CORNERS
 	// (src, width, height, konstant, sigma, percentExclude, valueExclude
-//console.log(corners.length);
-//return;
+
+// SHOW CORNERS:
+
+for(i=0; i<corners.length; ++i){
+	var corner = corners[i];
+	var d = new DO();
+	d.graphics().beginPath();
+	d.graphics().setFill(0xFF000000);
+	d.graphics().drawRect(-1,-1,2,2);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(corner.x,corner.y);
+	GLOBALSTAGE.addChild(d);
+}
+
+/*
 var img = GLOBALSTAGE.getFloatRGBAsImage(imageBinary, imageBinary, imageBinary, imageWidth,imageHeight);
 var d = new DOImage(img);
 GLOBALSTAGE.addChild(d);
 d.graphics().alpha(1.0);
 d.matrix().translate(imageWidth*2,0);
-
-
-// SHOW CORNERS:
-for(i=0; i<corners.length; ++i){
-	var corner = corners[i];
-var d = new DO();
-d.graphics().beginPath();
-d.graphics().setFill(0xFFFF00FF);
-d.graphics().drawRect(-1,-1,2,2);
-d.graphics().endPath();
-d.graphics().fill();
-d.matrix().translate(corner.x,corner.y);
-GLOBALSTAGE.addChild(d);
-}
-
-//return null;
+*/
 
 	// find blobs - decimate
 var blobInfo = ImageMat.findBlobsCOM(imageBinary,imageWidth,imageHeight);
@@ -4390,11 +4424,16 @@ ImageMat.describeBlobs(blobInfo);
 				points.push(p);
 			}
 			var self = this;
-			points.sort(function(a,b){
+			this._points = points.sort(function(a,b){
 				var dA = V2D.sub(a, self.center());
 				var dB = V2D.sub(b, self.center());
-				var angleAB = V2D.angleDirection(dA,dB);
-				return angleAB<0 ? true : false;
+				var angleA = V2D.angleDirection(V2D.DIRX,dA);
+				var angleB = V2D.angleDirection(V2D.DIRX,dB);
+				angleA = Code.angleZeroTwoPi(angleA);
+				angleB = Code.angleZeroTwoPi(angleB);
+				return angleA<angleB ? -1 : 1;
+				//var angleAB = V2D.angleDirection(dA,dB);
+				//return angleAB<0 ? true : false;
 			});
 			return true;
 		};
@@ -4434,6 +4473,9 @@ ImageMat.describeBlobs(blobInfo);
 			if(l.a()==this && l.b()==this){
 				return false;
 			}
+			if(!(l.a()==this || l.b()==this)){
+				return false;
+			}
 			var opposite = l.opposite(this);
 			var i, link;
 			for(i=0; i<links.length; ++i){
@@ -4444,15 +4486,18 @@ ImageMat.describeBlobs(blobInfo);
 			}
 			links.push(l);
 			var self = this;
-			links.sort(function(a,b){
+			this._links = links.sort(function(a,b){
 				var aO = a.opposite(self);
 				var bO = b.opposite(self);
 				var dA = V2D.sub(aO.center(), self.center());
 				var dB = V2D.sub(bO.center(), self.center());
-				//var angleA = V2D.angleDirection(V2D.DIRX,dA);
-				//var angleB = V2D.angleDirection(V2D.DIRX,dB);
-				var angleAB = V2D.angleDirection(dA,dB);
-				return angleAB<0 ? true : false;
+				var angleA = V2D.angleDirection(V2D.DIRX,dA);
+				var angleB = V2D.angleDirection(V2D.DIRX,dB);
+				angleA = Code.angleZeroTwoPi(angleA);
+				angleB = Code.angleZeroTwoPi(angleB);
+				return angleA<angleB ? -1 : 1;
+				// var angleAB = V2D.angleDirection(dA,dB);
+				// return angleAB<0 ? true : false;
 			});
 			return true;
 		}
@@ -4484,8 +4529,10 @@ ImageMat.describeBlobs(blobInfo);
 		this.opposite = function(a){
 			if(a==this._a){
 				return this._b;
+			}else if(a==this._b){
+				return this._a;
 			}
-			return this._a;
+			throw "doesn't contain "+a;
 		}
 		this.a = function(a){
 			if(a!==undefined){
@@ -4575,7 +4622,7 @@ ImageMat.describeBlobs(blobInfo);
 			}
 		}
 		// drop too big or too small rectangles
-		if( !(4<=ps.length && ps.length<10) ){
+		if( !(4<=ps.length && ps.length<=4) ){
 			for(j=0; j<ps.length; ++j){
 				var p = ps[j];
 				Code.removeElement(p["rectangles"],rectangle);
@@ -4585,7 +4632,7 @@ ImageMat.describeBlobs(blobInfo);
 			--i;
 		}
 	}
-	var maxRadiusRatio = 1.5;
+	var maxRadiusRatio = 1.25;
 	for(i=0; i<rectangles.length; ++i){
 		var rectangle = rectangles[i];
 		if(rectangle){
@@ -4635,7 +4682,7 @@ ImageMat.describeBlobs(blobInfo);
 						// d.graphics().endPath();
 						// d.graphics().strokeLine();
 						// d.graphics().fill();
-						//GLOBALSTAGE.addChild(d);
+						// GLOBALSTAGE.addChild(d);
 					}else{
 						shouldRemove = true;
 						break;
@@ -4665,6 +4712,7 @@ ImageMat.describeBlobs(blobInfo);
 		var rectangle = rectangles[i];
 		var node = rectangle["node"];
 var r1 = rectangle["blob"]["radiusMax"];
+
 var color = Code.getColARGBFromFloat(0.5,Math.random(),Math.random(),Math.random());
 var d = new DO();
 d.graphics().beginPath();
@@ -4673,6 +4721,7 @@ d.graphics().drawCircle(node.center().x,node.center().y, r1);
 d.graphics().endPath();
 d.graphics().fill();
 GLOBALSTAGE.addChild(d);
+
 		var points = rectangle["points"];
 		for(j=0; j<points.length; ++j){
 			var point = points[j];
@@ -4680,27 +4729,27 @@ GLOBALSTAGE.addChild(d);
 			for(k=0; k<rects.length; ++k){
 				var r = rects[k];
 				var n = r["node"];
-				// var r2 = r["blob"]["radiusMax"];
-				// var ratio = r2/r1;
-				// if(ratio<1.0){
-				// 	ratio = 1.0/ratio;
-				// }
-				// if(ratio<maxRadiusRatio){
 				var link = new Link();
 				link.a(node);
 				link.b(n);
-				if( node.addLink(link) && n.addLink(link) ){
-					graphLinks.push(link);
+				if(node!=n){
+					var addA = node.addLink(link)
+					var addB = n.addLink(link);
+					//console.log("added: "+addA+" | "+addB);
+					if(addA!==addB){
+						throw "wtc"
+					}
+					if( addA && addB ){
+						graphLinks.push(link);
+					}
 				}
-				//}
 			}
-			// HERE
 			node.addPoint(point["center"]);
 		}
 	}
 	console.log(graphNodes.length);
 	console.log(graphLinks.length);
-	/*for(i=0;i<graphLinks.length; ++i){
+	for(i=0;i<graphLinks.length; ++i){
 		var link = graphLinks[i];
 		var a = link.a();
 		var b = link.b();
@@ -4715,7 +4764,7 @@ var sy = Math.random()*5;
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 		GLOBALSTAGE.addChild(d);
-	}*/
+	}
 	var startNodes = [];
 	for(i=0; i<graphNodes.length; ++i){
 		var node = graphNodes[i];
@@ -4729,7 +4778,7 @@ var sy = Math.random()*5;
 		// GLOBALSTAGE.addChild(d);
 	}
 
-	console.log(startNodes);
+	//console.log(startNodes);
 	var pointList = [];
 	var startNode = startNodes[0];
 	var node, link, next, temp;
@@ -4740,33 +4789,211 @@ var sy = Math.random()*5;
 	var cornerLink = startNode.links()[0];
 	node = cornerNode;
 	link = cornerLink;
+	var endPoints = [];
+	var row1Points = [];
+	var row2Points = [];
 	for(j=0; j<5; ++j){
+		row1Points = [];
 		for(i=0; i<5;++i){
-			// label d
+
+
+
+
+// var d = new DO();
+// d.graphics().beginPath();
+// d.graphics().setLine(3.0,0xFF00CC00);
+// var sx = 0;//Math.random()*5;
+// var sy = 0;//Math.random()*5;
+// // d.graphics().moveTo(point0.x,point0.y);
+// // d.graphics().lineTo(point1.x,point1.y);
+// d.graphics().moveTo(node.center().x,node.center().y);
+// d.graphics().lineTo(link.opposite(node).center().x,link.opposite(node).center().y);
+// d.graphics().endPath();
+// d.graphics().strokeLine();
+// GLOBALSTAGE.addChild(d);
+// // if(visited==43){
+// // 	return;
+// // }
+
 			d = new DOText(" "+visited+" ", 10, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_LEFT);
 			d.matrix().translate(node.center().x,node.center().y);
 			GLOBALSTAGE.addChild(d);
-console.log(node._points.length);
-			var point = node.pointForLink(link);
-			//console.log(point+"");
-			var d = new DO();
-			d.graphics().beginPath();
-			d.graphics().setFill(0xFF003333);
-			d.graphics().drawRect(-2,-2,4,4);
-			d.graphics().endPath();
-			d.graphics().fill();
-			d.matrix().translate(point.x,point.y);
-			GLOBALSTAGE.addChild(d);
+			var point0 = node.pointForLink(link);
+			var point1 = node.nextPoint(point0);
+			var point2 = node.nextPoint(point1);
+			var point3 = node.nextPoint(point2);
+			if(i==0){
+				row1Points.push(point3);
+			}
+			pointList.push(point2);
+			pointList.push(point1);
+if(i<4){
+			next = link.opposite(node);
+			temp = next.prevLink(link);
 
-			point = node.nextPoint(point);
-			var d = new DO();
-			d.graphics().beginPath();
-			d.graphics().setFill(0xFF009933);
-			d.graphics().drawRect(-2,-2,4,4);
-			d.graphics().endPath();
-			d.graphics().fill();
-			d.matrix().translate(point.x,point.y);
+// var d = new DO();
+// d.graphics().beginPath();
+// d.graphics().setLine(3.0,0xFF0000CC);
+// var sx = 0;//Math.random()*5;
+// var sy = 0;//Math.random()*5;
+// // d.graphics().moveTo(point0.x,point0.y);
+// // d.graphics().lineTo(point1.x,point1.y);
+// d.graphics().moveTo(next.center().x,next.center().y);
+// d.graphics().lineTo(temp.opposite(next).center().x,temp.opposite(next).center().y);
+// d.graphics().endPath();
+// d.graphics().strokeLine();
+// GLOBALSTAGE.addChild(d);
+
+
+// if(visited==41){
+// 	console.log("HERE ........");
+// var aL = temp;
+// var bL = next.nextLink(aL);
+// var cL = next.nextLink(bL);
+// var dL = next.nextLink(cL);
+
+// c = new DO();
+// c.graphics().setFill(0xFFFF0000);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(aL.opposite(next).center().x,aL.opposite(next).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// c = new DO();
+// c.graphics().setFill(0xFF00FF00);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(bL.opposite(next).center().x,bL.opposite(next).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// c = new DO();
+// c.graphics().setFill(0xFF0000FF);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(cL.opposite(next).center().x,cL.opposite(next).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// c = new DO();
+// c.graphics().setFill(0xFF00FFFF);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(dL.opposite(next).center().x,dL.opposite(next).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// }
+
+			node = temp.opposite(next);
+			link = node.nextLink(temp);
+			console.log();
+
+
+
+// if(visited==41){
+// 	console.log("HERE ........");
+// var aL = temp;
+// var bL = node.nextLink(aL);
+// var cL = node.nextLink(bL);
+// var dL = node.nextLink(cL);
+
+// console.log(" A ");
+// c = new DO();
+// c.graphics().setFill(0xFFFF0000);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(aL.opposite(node).center().x,aL.opposite(node).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// console.log(" B ");
+// c = new DO();
+// c.graphics().setFill(0xFF00FF00);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(bL.opposite(node).center().x,bL.opposite(node).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// console.log(" C ");
+// c = new DO();
+// c.graphics().setFill(0xFF0000FF);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(cL.opposite(node).center().x,cL.opposite(node).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+// console.log(" D ");
+// c = new DO();
+// c.graphics().setFill(0xFF00FFFF);
+// c.graphics().beginPath();
+// c.graphics().drawCircle(dL.opposite(node).center().x,dL.opposite(node).center().y, 10.0);
+// c.graphics().endPath();
+// c.graphics().fill();
+// GLOBALSTAGE.addChild(c);
+
+// }
+
+// var d = new DO();
+// d.graphics().beginPath();
+// d.graphics().setLine(3.0,0xFFCC0000);
+// d.graphics().moveTo(node.center().x,node.center().y);
+// d.graphics().lineTo(link.opposite(node).center().x,link.opposite(node).center().y);
+// d.graphics().endPath();
+// d.graphics().strokeLine();
+// GLOBALSTAGE.addChild(d);
+
+
+
+
+//console.log(node._links);
+// if(visited==41){
+// return;
+// }
+
+
+		}
+			++visited;
+
+		} // next row:
+		// top left corner
+		Code.arrayPushArray(pointList,row2Points);
+		Code.arrayPushArray(pointList,row1Points);
+		  
+		row2Points = [];
+
+		node = cornerNode;
+		link = cornerLink;
+		next = link.opposite(node);
+		temp = next.prevLink(link);
+		node = next;
+		link = temp;
+		for(i=0; i<5;++i){
+			d = new DOText(" "+visited+" ", 10, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_LEFT);
+			d.matrix().translate(node.center().x,node.center().y);
 			GLOBALSTAGE.addChild(d);
+			var point0 = node.pointForLink(link);
+			var point1 = node.nextPoint(point0);
+			var point2 = node.nextPoint(point1);
+			var point3 = node.nextPoint(point2);
+			if(i==4){
+				if(node._links.length==1){
+					pointList.push(point0);
+					pointList.push(point3);
+				}else if(node._links.length==2){
+					pointList.push(point3);
+					pointList.push(point2);
+					row2Points.push(point1);
+				}
+			}else{ // 4
+				pointList.push(point1);
+				pointList.push(point0);
+			}
+			if(j==4){
+				if(i==4){
+					endPoints.push(point1);
+					endPoints.push(point2);
+				}else{
+					endPoints.push(point2);
+					endPoints.push(point3);
+				}
+			}
 
 
 			next = link.opposite(node);
@@ -4774,58 +5001,39 @@ console.log(node._points.length);
 			node = temp.opposite(next);
 			link = node.prevLink(temp);
 
-
-
-
-
-			++ visited;
-		} // next row:
-		node = cornerNode;
-		link = cornerLink;
-		next = link.opposite(node);
-		temp = next.nextLink(link);
-		node = next;
-		link = temp;
-		for(i=0; i<5;++i){
-			d = new DOText(" "+visited+" ", 10, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_LEFT);
-			d.matrix().translate(node.center().x,node.center().y);
-			GLOBALSTAGE.addChild(d);
-			next = link.opposite(node);
-			temp = next.prevLink(link);
-			node = temp.opposite(next);
-			link = node.nextLink(temp);
+			
 			++visited;
 		} // NEXT ROW:
 		node = cornerNode;
 		link = cornerLink;
+			
 		next = link.opposite(node);
-		temp = next.prevLink(link);
+		temp = next.nextLink(link);
 		node = temp.opposite(next);
-		link = node.prevLink(temp);
+		link = node.nextLink(temp);
 		cornerNode = node;
 		cornerLink = link;
 	}
+	Code.arrayPushArray(pointList,endPoints);
+//return;
+	for(i=0; i<pointList.length; ++i){
+		//console.log(i);
+		var point = pointList[i];
+		d = new DOText(""+i, 10, DOText.FONT_ARIAL, 0xFF000000, DOText.ALIGN_CENTER);
+		d.matrix().translate(point.x,point.y);
+		GLOBALSTAGE.addChild(d);
+	}
 
-//console.log(node,next);
+	var points2D = [];
+	for(i=0; i<pointList.length; ++i){
+		points2D[i] = new V3D(pointList[i].x,pointList[i].y,1.0);
+	}
+	// console.log(points3D.length);
+	// console.log(points2D.length);
+	return {"points2D":points2D, "points3D":points3D};
 
 
-// var d = new DO();
-// d.graphics().beginPath();
-// d.graphics().setLine(1.0,0xFF0000FF);
-// d.graphics().moveTo(node.center().x,node.center().y);
-// d.graphics().lineTo(next.center().x,next.center().y);
-// d.graphics().endPath();
-// d.graphics().strokeLine();
-// GLOBALSTAGE.addChild(d);
 
-// var d = new DO();
-// d.graphics().beginPath();
-// d.graphics().setLine(2.0,0xFF00CC00);
-// d.graphics().moveTo(temp.a().center().x,temp.a().center().y);
-// d.graphics().lineTo(temp.b().center().x,temp.b().center().y);
-// d.graphics().endPath();
-// d.graphics().strokeLine();
-// GLOBALSTAGE.addChild(d);
 return null;
 
 
@@ -4865,6 +5073,11 @@ return null;
 			angleA = Code.angleZeroTwoPi(angleA);
 			angleB = Code.angleZeroTwoPi(angleB);
 			return angleA<angleB ? 1 : -1;
+			// var angleA = V2D.angleDirection(V2D.DIRX,toA);
+			// var angleB = V2D.angleDirection(V2D.DIRX,toB);
+			// angleA = Code.angleZeroTwoPi(angleA);
+			// angleB = Code.angleZeroTwoPi(angleB);
+			// return angleA<angleB ? 1 : -1;
 		});
 		// check if box is inside area ==> if no then continue
 		var a = closest[0]["corner"]["point"];
