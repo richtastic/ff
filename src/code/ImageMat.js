@@ -656,7 +656,7 @@ ImageMat.expandBlob = function(a,wid,hei){
 			}
 		}
 	}
-	return result;
+	return {"value":result};
 }
 ImageMat.retractBlob = function(a,wid,hei){
 	var i, j, tl,to,tr, lf,se,ri, bl,bo,br, index;
@@ -862,6 +862,7 @@ ImageMat.findBlobsCOM = function(a,wid,hei){
 	}
 	// record blobs
 	var blobs = [];
+	var idMin = 0;
 	for(j=0;j<hei;++j){ // assign all blobs to index
 		for(i=0;i<wid;++i){
 			var index = j*wid + i;
@@ -869,26 +870,96 @@ ImageMat.findBlobsCOM = function(a,wid,hei){
 			if(item>=0){
 				var blob = blobs[item];
 				if(!blob){
-					blob = {x:0, y:0, count:0};
+					blob = {x:0, y:0, count:0, id:idMin};
 					blobs[item] = blob;
+					++idMin;
 				}
 				blob.x += i;
 				blob.y += j;
 				blob.count++;
+				a[index] = blob.id;
 			}
 		}
 	}
+	// // rename all labels from 0 to N-1
+	// for(j=0;j<hei;++j){ // assign all blobs to index
+	// 	for(i=0;i<wid;++i){
+	// 		var index = j*wid + i;
+	// 		var item = a[index];
+	// 	}
+	// }
 	var output = [];
 	for(i=0;i<blobs.length;++i){
 		if(blobs[i]){
 			var blob = blobs[i];
 			blob.x /= blobs[i].count;
 			blob.y /= blobs[i].count;
+			//blob["id"] = i;
+			//blob["id"] = output.length;
 			output.push(blob);
 		}
 	}
-	return output;
+	return {"blobs":output, "value":a, "width":wid, "height":hei};
 }
+ImageMat.describeBlobs = function(info){
+	var image = info["value"];
+	var blobs = info["blobs"];
+	var width = info["width"];
+	var height = info["height"];
+	// ...
+	var i, j, k, index, value, blob, min, max, dist;
+	var loc = new V2D();
+	var com = new V2D();
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			index = j*width + i;
+			value = image[index];
+			//console.log(value);
+			if(value!==undefined && value>=0){
+				blob = blobs[value];
+
+				if(!blob){
+					//console.log(i,j) // ?
+				//	throw("NO BLOB "+i+","+j+" @ "+value);
+					continue;
+				}
+				com.set(blob["x"],blob["y"]);
+				//console.log(" "+com);
+				loc.set(i,j);
+				dist = V2D.distance(com,loc);
+				min = blob["radiusMin"]; // this needs to check if any neighbors are NOT the same id as self
+				max = blob["radiusMax"];
+				min = min!==undefined ? min : dist;
+				max = max!==undefined ? max : dist;
+				min = Math.min(min,dist);
+				max = Math.max(max,dist);
+				blob["radiusMin"] = min;
+				blob["radiusMax"] = max;
+			}
+		}
+	}
+}
+ImageMat.closestBlobFromPoint = function(info, point){
+	var image = info["value"];
+	var blobs = info["blobs"];
+	var width = info["width"];
+	var height = info["height"];
+	var i, index, value;
+	var x = Math.floor(point.x);
+	var y = Math.floor(point.y);
+	index = y*width + x;
+	value = image[index];
+	if(value>=0){
+		return value;
+	}else{
+		// need to search outward
+	}
+	// for(i=0; i<blobs.length; ++i){
+	// 	var blob = blobs[i];
+	// }
+	return null;
+}
+
 ImageMat.dropBelow = function(img,value){
 	var i, len = img.length;
 	var a = new Array(len);
@@ -2791,6 +2862,21 @@ ImageMat.derivativeY = function(src,wid,hei, x,y){
 	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
 }
+
+ImageMat.derX2 = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [1,0,-1, 2,0,-2, 1,0,-1], 3,3);
+}
+ImageMat.derY2 = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [1,2,1, 0,0,0, -1,-2,-1], 3,3);
+}
+
+ImageMat.mean3x3 = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [1,1,1, 1,1,1, 1,1,1], 3,3);
+}
+ImageMat.mean5x5 = function(src,wid,hei){
+	return ImageMat.convolve(src,wid,hei, [1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1,], 5,5);
+}
+
 ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with other value/width/height
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
 	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
@@ -3532,3 +3618,96 @@ this.quadric1DBAD = function(t,tt,ttt,A,B,C,D){ // less clear
 }
 */
 
+
+
+ImageMat.filterOperation = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, fxn, args){ // RGB -> HSV, increase S
+	var v = new V3D();
+	var i, length = width*height;
+	for(i=0;i<length;++i){
+		var r = imageSourceRed[i];
+		var g = imageSourceGrn[i];
+		var b = imageSourceBlu[i];
+		v.set(r, g, b);
+		v = fxn(v, args);
+		imageSourceRed[i] = v.x;//Code.rangeForceMinMax(v.x, 0.0,1.0);
+		imageSourceGrn[i] = v.y;//Code.rangeForceMinMax(v.y, 0.0,1.0);
+		imageSourceBlu[i] = v.z;//Code.rangeForceMinMax(v.z, 0.0,1.0);
+	}
+}
+ImageMat.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
+	ImageMat.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, ImageMat._filterContrastFxn, scale);
+}
+ImageMat._filterContrastFxn = function(v, args){
+	var scale = args!==undefined ? args : 0.5;
+	var avg = 0.5;
+	v.x = scale * (v.x - avg) + avg;
+	v.y = scale * (v.y - avg) + avg;
+	v.z = scale * (v.z - avg) + avg;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+
+
+
+
+ImageMat.filterSaturation = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, increase S
+	ImageMat.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, ImageMat._filterSaturationFxn, percent);
+}
+ImageMat._filterSaturationFxn = function(v, args){
+	var percent = args;
+	v = Code.HSVFromRGB(v,v);
+	v.y = v.y * percent;
+	v = Code.RGBFromHSV(v,v);
+	return v;
+}
+
+ImageMat.filterSaturationRGB = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // made up scaling about 0.5 (average)
+	ImageMat.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, ImageMat._filterSaturationRGBFxn, percent);
+}
+ImageMat._filterSaturationRGBFxn = function(v, args){
+	var percent = args;
+	v = v.copy();
+	var avg = (v.x+v.y+v.z)/3.0;
+	v.x = percent * (v.x - avg) + avg;
+	v.y = percent * (v.y - avg) + avg;
+	v.z = percent * (v.z - avg) + avg;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+
+
+ImageMat.filterGamma = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, gamma){ // brightness with nonlinear scaling
+	if(gamma>0.0){
+		gamma = 1.0/gamma;
+	}else{
+		gamma = 0.0;
+	}
+	ImageMat.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, ImageMat._filterGammaFxn, gamma);
+}
+// Filter._filterGammaFxn = function(v, args){
+// 	var inc = args;
+// 	v.x = Math.pow(v.x,args);
+// 	v.y = Math.pow(v.y,args);
+// 	v.z = Math.pow(v.z,args);
+// 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+// 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+// 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+// 	return v;
+// }
+
+ImageMat._filterGammaFxn = function(v, args){
+	var inc = args;
+	v.x = Math.pow(v.x,args);
+	v.y = Math.pow(v.y,args);
+	v.z = Math.pow(v.z,args);
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}

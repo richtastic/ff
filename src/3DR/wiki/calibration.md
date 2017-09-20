@@ -129,18 +129,75 @@ p2: (r_c^2 + 2*x_c^2) + 2*x_c*y_c)
 
 
 
+BROWN:
+https://en.wikipedia.org/wiki/Distortion_(optics)
+
+
+x_u = undistorted x coordinate [from ideal pinhole]
+x_d = distorted x coordinate
+x_c = distortion center [asumed principal point ]
+ki = ith radial distortion coefficient
+pi = ith tangental distortion coefficient
+r = sqrt((x_d-x_c)^2 + (y_d-y_c)^2)
+r2 = r^2
+r4 = r^4
+x_r = x_d-x_c = relative distortion from x_c
+
+x_u = x_d + x_r*(k1*r2 + k2*r4 + ...) + [p1*(r2 + 2*x_r^2) + 2*p2*x_r*y_r] * (1 + p3*r2 + p4*r4 + ...)
+y_u = y_d + y_r*(k1*r2 + k2*r4 + ...) + [2*p1*x_r*y_r + p2*(r2 + 2*y_r^2)] * (1 + p3*r2 + p4*r4 + ...)
+
+DIVISION MODEL:
+
+x_u = x_c + [x_r]/[1 + k1*r2 + k2+r4 + ...]
+y_u = y_c + [y_r]/[1 + k1*r2 + k2+r4 + ...]
+
+
+
+
+[barrel == ki<0   &   pincushin == k1>0]
+
+3D => 2D prooj => K => radial / tangental > X
+
+
+nonlinear optimize:
+min: SUM[ (x_i - x'(K,k,R,t,X) )^2 ]
+
+
+
+
+undistorting process:
+
+
+known: x_d
+find: x_u
+
+
+from DISTORTED (original) image to => UNDISTORTED (rectified) image
+
+for each pixel in rectified image: x_u,y_u
+    x_d,y_d = f(x_u,y_u)
+    pixel value = distorted(x_d,y_d)
+    rectified(x_u,y_u) = pixel value
+
+
+
+function that takes undistorted locations, outputs: distorted locations:
+    f(x_u,y_u) => x_d,y_d
 
 
 
 
 
 
+iterate on all values:
+    K(5?), k1,k2,k3, p1,p2
+calculate total error:
+    SUM( (x_d_i,y_d_i) - f(x_i,y_i) )
 
+    f(3D point, K, ki, pi)
+        3D => K => ki,pi => x_u_i,y_u_i => distort() => x_d'_i,y_d'_i
 
-
-
-
-
+follow error gradient to solution
 
 
 

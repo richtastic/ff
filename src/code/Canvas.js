@@ -334,7 +334,10 @@ Canvas.prototype.contextIdentity = function(){
 }
 Canvas.prototype.contextTransform = function(matrix,b,c,d,e,f){
 	if(arguments.length>1){
+		//console.log(matrix,b,c,d,e,f);
 		this._context.transform(matrix,c,b,d,e,f);
+		//this._context.transform(matrix,c,b,d,e,f);
+		//this._context.transform(matrix,b,c,d,e,f);
 	}else{
 		var a = matrix.get();
 		this._context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);

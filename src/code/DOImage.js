@@ -1,7 +1,6 @@
 // DOImage.js
 function DOImage(img, options, parentDO){
-	DOImage._.constructor.call(this);
-	this._imageQueue = new Array();
+	DOImage._.constructor.call(this,parentDO);
 	this._renderFxn = this._renderDefault;
 	this.image(img);
 	if(options){

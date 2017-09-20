@@ -1268,39 +1268,39 @@ Filter._filterVibranceFxn = function(v, args){
 	return v;
 }
 
-Filter.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
-	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterContrastFxn, scale);
-}
-Filter._filterContrastFxn = function(v, args){
-	var scale = args;
-	var avg = 0.5;
-	v.x = scale * (v.x - avg) + avg;
-	v.y = scale * (v.y - avg) + avg;
-	v.z = scale * (v.z - avg) + avg;
-	v.x = Math.min(Math.max(v.x, 0.0),1.0);
-	v.y = Math.min(Math.max(v.y, 0.0),1.0);
-	v.z = Math.min(Math.max(v.z, 0.0),1.0);
-	return v;
-}
+// Filter.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
+// 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterContrastFxn, scale);
+// }
+// Filter._filterContrastFxn = function(v, args){
+// 	var scale = args;
+// 	var avg = 0.5;
+// 	v.x = scale * (v.x - avg) + avg;
+// 	v.y = scale * (v.y - avg) + avg;
+// 	v.z = scale * (v.z - avg) + avg;
+// 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+// 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+// 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+// 	return v;
+// }
 
-Filter.filterGamma = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, gamma){ // brightness with nonlinear scaling
-	if(gamma>0.0){
-		gamma = 1.0/gamma;
-	}else{
-		gamma = 0.0;
-	}
-	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterGammaFxn, gamma);
-}
-Filter._filterGammaFxn = function(v, args){
-	var inc = args;
-	v.x = Math.pow(v.x,args);
-	v.y = Math.pow(v.y,args);
-	v.z = Math.pow(v.z,args);
-	v.x = Math.min(Math.max(v.x, 0.0),1.0);
-	v.y = Math.min(Math.max(v.y, 0.0),1.0);
-	v.z = Math.min(Math.max(v.z, 0.0),1.0);
-	return v;
-}
+// Filter.filterGamma = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, gamma){ // brightness with nonlinear scaling
+// 	if(gamma>0.0){
+// 		gamma = 1.0/gamma;
+// 	}else{
+// 		gamma = 0.0;
+// 	}
+// 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterGammaFxn, gamma);
+// }
+// Filter._filterGammaFxn = function(v, args){
+// 	var inc = args;
+// 	v.x = Math.pow(v.x,args);
+// 	v.y = Math.pow(v.y,args);
+// 	v.z = Math.pow(v.z,args);
+// 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+// 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+// 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+// 	return v;
+// }
 
 Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // 
 	var oneMP = 1.0 - percent;
@@ -1378,16 +1378,16 @@ Filter.filterSharpen = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 	}
 */
 }
-Filter._filterGammaFxn = function(v, args){
-	var inc = args;
-	v.x = Math.pow(v.x,args);
-	v.y = Math.pow(v.y,args);
-	v.z = Math.pow(v.z,args);
-	v.x = Math.min(Math.max(v.x, 0.0),1.0);
-	v.y = Math.min(Math.max(v.y, 0.0),1.0);
-	v.z = Math.min(Math.max(v.z, 0.0),1.0);
-	return v;
-}
+// Filter._filterGammaFxn = function(v, args){
+// 	var inc = args;
+// 	v.x = Math.pow(v.x,args);
+// 	v.y = Math.pow(v.y,args);
+// 	v.z = Math.pow(v.z,args);
+// 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+// 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+// 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+// 	return v;
+// }
 
 Filter.filterV = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, increase S
 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterVFxn, percent);

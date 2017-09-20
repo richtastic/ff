@@ -16,10 +16,12 @@ Graphics.clipStart = function(){
 Graphics.clipEnd = function(){
 	Graphics._canvas.clipEnd();
 }
-Graphics.contextTransform = function(matrix){
+Graphics.contextTransformMatrix = function(matrix){
 	Graphics._canvas.contextTransform(matrix);
 }
-
+Graphics.contextTransformValues = function(a,b,c,d,e,f){
+	Graphics._canvas.contextTransform(a,b,c,d,e,f);
+}
 Graphics.canvasSetLine = function(wid,col){
 	Graphics._canvas.setLine(wid,col);
 }
@@ -158,9 +160,13 @@ Graphics.prototype.clipEnd = function(){
 	this._graphics.push( Code.newArray(Graphics.clipEnd) );
 }
 
-Graphics.prototype.contextTransform = function(matrix){
-	matrix = matrix.copy(); // static copy
-	this._graphics.push( Code.newArray(Graphics.contextTransform,Code.newArray(matrix)) );
+Graphics.prototype.contextTransform = function(matrix,b,c,d,e,f){
+	if(arguments.length==1){
+		matrix = matrix.copy(); // static copy
+		this._graphics.push( Code.newArray(Graphics.contextTransformMatrix,Code.newArray(matrix)) );
+	}else{
+		this._graphics.push( Code.newArray(Graphics.contextTransformValues,Code.newArray(matrix,b,c,d,e,f)) );
+	}
 }
 
 Graphics.prototype.setLine = function(wid,col){ // 3, 0xAARRGGBB

@@ -18,15 +18,23 @@ function Calibration(){
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
 	// this._keyboard.addListeners();
 	//var imageList = ["calibrate_0.png","calibrate_2.png","calibrate_4.png","calibrate_5.png"];
+	//var imageList = ["calibrate_2.png"];
 	//var imageList = ["calibrate_1.png"];
-	var imageList = ["calibrate_5.png"];
+	//var imageList = ["calibrate_5.png"];
+	//var directory = "./images/calibration/";
 	// 0 is good
 	// 1 has glare - x 
 	// 2 is good
 	// 3 is ok - x => NOT ENOUGH CORNERS
 	// 4 is good
 	// 5 is small - x => CORNERS NOT CLOSE ENOUGH | MERGE?
-	var imageLoader = new ImageLoader("./images/calibration/",imageList, this,this.handleImagesLoaded,null);
+
+	var directory = "./images/phone6/calibrate/";
+	//var imageList = ["calib-1.png","calib-2.png","calib-5.png","calib-6.png"];
+	var imageList = ["calib-4.png"];
+	// GOOD: 0 3
+	// ? : 1 2 5 6
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
 Calibration.prototype.handleMouseClickFxn = function(e){
@@ -34,7 +42,7 @@ Calibration.prototype.handleMouseClickFxn = function(e){
 	if(p.x>400){
 		p.x -= 400;
 	}
-	console.log(p+"")
+	console.log(p+"");
 }
 Calibration.prototype.handleImagesLoaded = function(imageInfo){
 GLOBALSTAGE = this._stage;
@@ -65,10 +73,10 @@ GLOBALSTAGE = this._stage;
 	for(i=0; i<imageMatrixList.length; ++i){
 		var imageMatrix = imageMatrixList[i];
 		var pointMatches = R3D.detectCheckerboard(imageMatrix);
-		var points2D = pointMatches["points2D"];
-		var points3D = pointMatches["points3D"];
-		pointList2D.push(points2D);
-		pointList3D.push(points3D);
+		// var points2D = pointMatches["points2D"];
+		// var points3D = pointMatches["points3D"];
+		// pointList2D.push(points2D);
+		// pointList3D.push(points3D);
 	}
 	return;
 	// console.log(pointList2D+"");

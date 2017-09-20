@@ -6,7 +6,7 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"Poly2D.js","Graph.js","UnionFind.js","SyncData.js","Dependency.js",
 				"PointerTracker.js","DragNDrop.js","MapDataDisplay.js",
 				"Voronoi.js","Triangulator.js",
-				"Canvas.js","Graphics.js","DO.js","DOImage.js","Font.js","DOText.js","Stage.js","MatrixStackGL.js","StageGL.js","Minify.js",
+				"Canvas.js","Graphics.js","DO.js","DOImage.js","DOTri.js","Font.js","DOText.js","Stage.js","MatrixStackGL.js","StageGL.js","Minify.js",
 				"Resource.js","Keyboard.js","Cache.js","Diagram.js"]; // "Node.js"
 FF.LOCATION = "";
 /* this is a match */
