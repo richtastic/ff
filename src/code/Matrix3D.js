@@ -261,16 +261,17 @@ Matrix3D.prototype.rotateZ = function(tZ){
 	this.mult(mat,this);
 	return this;
 }
-Matrix3D.prototype.rotateXYZ = function(tX,tY,tZ){
-	this.rotateX(tX);
-	this.rotateY(tY);
-	this.rotateZ(tZ);
+Matrix3D.prototype.rotateXYZ = function(rX,rY,rZ){
+	console.log(rX,rY,rZ)
+	this.rotateX(rX);
+	this.rotateY(rY);
+	this.rotateZ(rZ);
 	return this;
 }
-Matrix3D.prototype.rotateZYX = function(tX,tY,tZ){
-	this.rotateZ(tZ);
-	this.rotateY(tY);
-	this.rotateX(tX);
+Matrix3D.prototype.rotateZYX = function(rX,rY,rZ){
+	this.rotateZ(rZ);
+	this.rotateY(rY);
+	this.rotateX(rX);
 	return this;
 }
 Matrix3D.prototype.scale = function(sX,sY,sZ){

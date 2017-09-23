@@ -658,13 +658,18 @@ Canvas.prototype.removeListeners = function(){
 //  ------------------------------------------------------------------------------------------------------------------------ MOUSE POSITIONING
 Canvas.prototype.getMouseDelta = function(e){
 	e = Code.getJSEvent(e);
+	if(e.deltaX){
+		var delta = new V3D();
+		delta.set(e.deltaX, e.deltaY, e.deltaZ);
+		return delta;
+	}
 	if(e.wheelDelta) {
 	// console.log(e)
 	// console.log(e.deltaX,e.deltaY,e.deltaZ, e.wheelDelta, e.wheelDeltaX, e.wheelDeltaY);
 		//var delta = e.wheelDelta/120.0;//e.deltaY/(e.wheelDelta?(e.wheelDelta):(120.0));
-		return e.wheelDelta/120.0;
+		return new V3D(e.wheelDeltaX/120.0,e.wheelDeltaY/120,0);
 	}
-	return 0;
+	return null;
 }
 Canvas.prototype.getMouseButton = function(e){
 	e = Code.getJSEvent(e);
@@ -682,7 +687,7 @@ Canvas.prototype.getMouseButton = function(e){
 Canvas.prototype.getMouseObjectFromEvent = function(e){
 	var pos = Code.getMousePosition(e);
 	var delta = this.getMouseDelta(e);
-	pos = new V3D(pos.x,pos.y,delta );
+	pos = new V3D(pos.x,pos.y);
 	var but = this.getMouseButton(e);
 	var obj = {};
 	obj[Canvas.MOUSE_EVENT_KEY_LOCATION] = pos;

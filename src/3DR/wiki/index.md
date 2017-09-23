@@ -1036,7 +1036,7 @@ x<sub>i</sub> = P &middot; H<sup>-1</sup> &middot; X<sub>Ei</sub>
 ```
 - i & j are reference image indexes
 - H = [h<sub>1</sub> h<sub>2</sub> h<sub>3</sub>] = &lambda; &middot; K &middot; [r1 r2 t]
-	- ? H is found form knowing that a set of 3D points X homographize into image points x
+	- ? H is found from knowing that a set of 3D points X homographize into image points x
 		- solve
 - by the magic of matrix algebra (no idea):
     - r1 & r2 are orthonormal
@@ -1097,6 +1097,30 @@ each point-set defines 1/8 points for an H matrix
 
 
 [Camera Calibration - Zhang](http://research.microsoft.com/en-us/um/people/zhang/papers/zhangpami-02-calib.pdf)
+
+
+
+http://staff.fh-hagenberg.at/burger/publications/reports/2016Calibration/Burger-CameraCalibration-20160516.pdf
+https://webserver2.tecgraf.puc-rio.br/~mgattass/calibration/zhang_latex/zhang.pdf
+
+
+http://www.cs.jhu.edu/~hager/Public/teaching/cs461/ZhangCalibrationTR.pdf
+https://www.microsoft.com/en-us/research/wp-content/uploads/2016/11/download.pdf
+Getting extrinsic camera matrix:
+
+A === K here:
+
+r<sub>1</sub> = &lambda; &middot; A<sup>-1</sup> &middot; h<sub>1</sub>
+r<sub>2</sub> = &lambda; &middot; A<sup>-1</sup> &middot; h<sub>2</sub>
+r<sub>3</sub> = r<sub>1</sub> &multiply; r<sub>2</sub>
+t = &lambda; &middot; A<sup>-1</sup> &middot; h<sub>3</sub>
+
+&lambda; = 1 / || A<sup>-1</sup> &middot; h<sub>1</sub> ||
+&lambda; = 1 / || A<sup>-1</sup> &middot; h<sub>2</sub> ||
+
+=> R = [r<sub>1</sub>,r<sub>2</sub>,r<sub>3</sub>]
+=> force R to be rotation matrix
+
 
 
 

@@ -53,18 +53,50 @@ V4D.qMatrix = function (m,q){
 		   (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz), 0 );
 	return m;
 }
+V4D.prototype.eulerAngles = function(){ // x=[-pi,pi]  y=[-pi/2,-pi/2], z=[-pi,pi]
+	var m = new Matrix3D();
+	V4D.qMatrix(m,this);
+	var c = m.toArray();
+	var r00 = c[0];
+	var r01 = c[1];
+	var r02 = c[2];
+	var r10 = c[4];
+	var r11 = c[5];
+	var r12 = c[6];
+	var r20 = c[8];
+	var r21 = c[9];
+	var r22 = c[10];
+	var x = Math.atan2(r21, r22);
+	var y = Math.atan2(-r20, Math.sqrt(r21*r21 + r22*r22));
+	var z = Math.atan2(r10, r00);
+	return new V3D(x,y,z);
+	/*
+	x = atan2(R(3,2), R(3,3));
+	y = atan2(-R(3,1), sqrt(R(3,2)*R(3,2) + R(3,3)*R(3,3)));
+	z = atan2(R(2,1), R(1,1));
+	
+	x = atan2(R(2,1), R(2,2));
+	y = atan2(-R(2,0), sqrt(R(2,1)*R(2,1) + R(2,2)*R(2,2)));
+	z = atan2(R(1,0), R(0,0));
+	*/
+}
 V4D.prototype.qClear = function(){ // init to identity
 	this.set(0,0,0,1);
 }
-V4D.prototype.qRotateDir = function(x,y,z, a){
-	// this.qDir(x,y,z);
-	// this.qRotation(a);
+V4D.prototype.qRotateDir = function(x,y,z, angle){
+	if(angle===undefined){
+		angle = y;
+		z = x.z;
+		y = x.y;
+		x = x.x;
+	}
 	angle *= 0.5;
 	var sin = Math.sin(angle);
 	this.x = x * this.x*sin;
 	this.y = y * this.y*sin;
 	this.z = z * this.z*sin;
 	this.t = Math.cos(angle);
+	console.log(""+this)
 }
 V4D.prototype.qRotation = function(angle){
 	angle *= 0.5;

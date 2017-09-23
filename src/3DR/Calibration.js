@@ -31,7 +31,10 @@ function Calibration(){
 
 	var directory = "./images/phone6/calibrate/";
 	//var imageList = ["calib-1.png","calib-2.png","calib-5.png","calib-6.png"];
-	var imageList = ["calib-6.png"];
+	//var imageList = ["calib-6.png"];
+	var imageList = ["calib-0.png","calib-1.png","calib-2.png","calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
+	//var imageList = ["calib-0.png","calib-1.png","calib-2.png"];
+	//var imageList = ["calib-0.png"];
 	// GOOD: 0 3
 	// ? : 1 2 5 6
 	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoaded,null);
@@ -87,6 +90,8 @@ GLOBALSTAGE = this._stage;
 	// console.log(pointList3D+"");
 	var result = R3D.calibrateCameraK(pointList3D,pointList2D);
 	console.log(result);
+	var K = result["K"];
+	console.log(K+"");
 }
 
 
