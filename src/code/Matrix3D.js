@@ -355,8 +355,12 @@ Matrix3D.prototype.inverse = function(m){ // http://www.cg.info.hiroshima-cu.ac.
 	this.a = a; this.b = b; this.c = c; this.d = d; this.e = e; this.f = f; this.g = g; this.h = h; this.i = i; this.j = j; this.k = k; this.l = l;
 	return this;
 }
-Matrix3D.prototype.get = function(){
-	return new Array(this.a,this.b,this.c,this.d,this.e,this.f,this.g,this.h,this.i,this.j,this.k,this.l);
+Matrix3D.prototype.get = function(r,c){
+	var a = new Array(this.a,this.b,this.c,this.d,this.e,this.f,this.g,this.h,this.i,this.j,this.k,this.l);
+	if(r!==undefined){
+		return a[r*4+c];
+	}
+	return a;
 }
 Matrix3D.prototype.toString = function(){
 	return "[ "+this.a+" "+this.b+" "+this.c+" "+this.d+" ]\n"

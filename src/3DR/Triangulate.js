@@ -94,16 +94,24 @@ Triangulate.prototype._renderScene = function(t){
 	var pointList = this._pointList;
 	var display = this._display3D;
 	var i, j, k;
+	var availWidth = this._canvas.width();
+	var availHeight = this._canvas.height();
 
 
+	//camera.K(10,10, 200,200, -1);
+	var cx = this._canvas.width()*0.5;
+	var cy = this._canvas.height()*0.5;
+	camera.K(cx,cy, 1000,1000, -1);
+	// camera.distortion(1E-10,1E-19,1E-28 ,0,0);
+	camera.distortion(1E-8,1E-14,1E-20, 1E-4,1E-8);
 
 	var radius = 150;
 	var angle = t*0.01;
 	// var x = 0;//radius*Math.sin(angle) + 100;
 	// var z = 0;//radius*Math.cos(angle) + 100;
-	var x = radius*Math.sin(angle);// + 100;
-	var z = radius*Math.cos(angle);// + 100;
-	var y = 50;
+	var x = radius*Math.sin(angle) - 10;
+	var z = radius*Math.cos(angle) + 10;
+	var y = 80;
 	this._camera.location( new V3D(x,y,z) );
 	//this._camera.updateFromTarget();
 	//this._camera.rotation( new V3D(0,radius,0) );
@@ -111,40 +119,31 @@ Triangulate.prototype._renderScene = function(t){
 	//this._camera.location(new V3D(0,0,0) );
 	//this._camera.location(new V3D(100,100,0) );
 	//this._camera.rotation( new V3D(0,Code.radians(10),0) );
-	this._camera.rotation( new V3D( Code.radians(30) ,Math.PI +angle,0) );
+	this._camera.rotation( new V3D( Code.radians(30) ,Math.PI + angle,0) );
 
 	//this._camera.location(new V3D(0,0,0) );
 	//this._camera.location(new V3D(100,100,0) );
 	//this._camera.rotation( new V3D( Code.radians(0) ,0,0) );
-// TODO: ORDER ON Z
 
 	var cameraMatrix = camera.matrix();
 	var cameraK = camera.K();
-//console.log("cameraK: \n"+cameraK+"");
 	display.removeAllChildren();
+	var dList = [];
 	for(i=0; i<pointList.length; ++i){
 		var point3D = pointList[i];
 		var local3D = cameraMatrix.multV3D(new V3D(), point3D);
 		if(local3D.z<0){
 			continue;
 		}
-		//console.log(i+": "+local3D+"");
-		//console.log(local3D.z)
-		var screen3D = cameraK.multV3D(new V3D(), local3D);
-		//console.log(point3D+" => "+local3D+" => "+screen3D+"");
-		//console.log(screen3D.z)
-		var point = new V3D(screen3D.x/screen3D.z,screen3D.y/screen3D.z,screen3D.z);
+		var projected3D = cameraK.multV3D(new V3D(), local3D);
+		var image3D = new V3D(projected3D.x/projected3D.z,projected3D.y/projected3D.z,projected3D.z);
+		var screen3D = camera.applyDistortion(new V2D(), image3D);
+		var point = new V3D(screen3D.x,screen3D.y,image3D.z);
 		point.y = -point.y; // image flip
-		//point.scale();
-		//var point = new V3D(local3D.x/local3D.z, local3D.y/local3D.z, local3D.z );
-
-		//point.scale(.01);
-		//point.scale(10000);
-		//console.log(point.z)
-		//console.log(point)
 		var d = new DO();
-		var rad = Math.min(10,10.0/point.z);
-		var rad = 5;
+		//console.log(point.z)
+		var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
+		//var rad = 5;
 		d.graphics().setFill(0xFF00FF00);
 		d.graphics().setLine(1.0, 0xFFFF0000);
 		d.graphics().beginPath();
@@ -152,8 +151,28 @@ Triangulate.prototype._renderScene = function(t){
 		d.graphics().fill();
 		d.graphics().strokeLine();
 		d.graphics().endPath();
+		//display.addChild(d);
+		dList.push([d,point.z]);
+	}
+	dList = dList.sort(function(a,b){
+		return a[1] < b[1];
+	});
+	for(i=0; i<dList.length; ++i){
+		var o = dList[i];
+		var d = o[0];
 		display.addChild(d);
 	}
+	var d = new DO();
+		d.graphics().setLine(1.0, 0xFF000000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(availWidth*0.5,0);
+		d.graphics().lineTo(availWidth*0.5,-availHeight);
+		//d.graphics().strokeLine();
+		d.graphics().moveTo(0,-availHeight*0.5);
+		d.graphics().lineTo(availWidth,-availHeight*0.5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		display.addChild(d);
 	// camera.location();
 	// this._camera.rotate(0,0.01,0);
 
@@ -166,7 +185,8 @@ Triangulate.prototype._handleResizeFxn = function(e){
 	var hei = this._canvas.height();
 	console.log("resize: "+wid+"x"+hei);
 	display.matrix().identity();
-	display.matrix().translate(wid*0.5,hei*0.5);
+	//display.matrix().translate(wid*0.5,hei*0.5);
+	display.matrix().translate(0,hei);
 }
 Triangulate.prototype._handleEnterFrameFxn = function(e){
 	if(this._camera){

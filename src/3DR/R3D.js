@@ -5844,44 +5844,19 @@ R3D.applyDistortionParameters = function(distorted, undistorted, K, distortions)
 	var fs = K.get(0,1);
 	var xO = K.get(0,2);
 	var yO = K.get(1,2);
-
 	var xR = xU - xO;
 	var yR = yU - yO;
-	var r = Math.sqrt(xR*xR + yR*yR);
-	var r2 = r*r;
+	var r2 = xR*xR + yR*yR;
 	var r4 = r2*r2;
 	var r6 = r4*r2;
 
 	// var xD = xO + xR*(k1*r2 + k2*r4 + k3*r6)  +  (p1*(r2 + 2*xR*sR) + 2*p2*xR*yR) * (1 + p3*r2 + p4*r4);
 	// var yD = yO + yR*(k1*r2 + k2*r4 + k3*r6)  +  (p2*(r2 + 2*yR*yR) + 2*p1*xR*yR) * (1 + p3*r2 + p4*r4);
-
-
-	var xD = xO + xR*(1 + k1*r2 + k2*r4 + k3*r6)  +  (p1*(r2 + 2*xR*sR) + 2*p2*xR*yR);
+	var xD = xO + xR*(1 + k1*r2 + k2*r4 + k3*r6)  +  (p1*(r2 + 2*xR*xR) + 2*p2*xR*yR);
 	var yD = yO + yR*(1 + k1*r2 + k2*r4 + k3*r6)  +  (p2*(r2 + 2*yR*yR) + 2*p1*xR*yR);
 
 	distorted.set(xD,yD);
 	return distorted;
-/*
-
-
-x_u = x_d + x_r*(k1*r2 + k2*r4 + ...) + [p1*(r2 + 2*x_r^2) + 2*p2*x_r*y_r] * (1 + p3*r2 + p4*r4 + ...)
-y_u = y_d + y_r*(k1*r2 + k2*r4 + ...) + [2*p1*x_r*y_r + p2*(r2 + 2*y_r^2)] * (1 + p3*r2 + p4*r4 + ...)
-
-DIVISION MODEL:
-
-x_u = x_c + [x_r]/[1 + k1*r2 + k2+r4 + ...]
-y_u = y_c + [y_r]/[1 + k1*r2 + k2+r4 + ...]
-
-
-**Camera parameter matrix**:
-```
-    [fx  s  x0]
-K = [0  fy  y0]
-    [0   0   1]
-```
-
-K = 
-*/
 }
 R3D.lineRayFromPointF = function(F, point){
 	var epipole = R3D.getEpipolesFromF(F);

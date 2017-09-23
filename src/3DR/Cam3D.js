@@ -6,12 +6,13 @@ function Cam3D(p, r, l,f, s){
 	this._rot = new V3D(0,0,0);
 	this._K = new Matrix3D();
 	this._target = new V3D(0,0,0);
-	this._distortion = 
+	this._distortion = null;
 	this.position(p);
 	this.rotation(r);
 	//this.K(0,0, .0001,.0001, 0);
 	//this.K(0,0, 10000,10000, 0);
-	this.K(10,10, 200,200, -1);
+	this.K(0,0, 100,100, 0);
+	this.distortion(0,0,0 ,0,0);
 }
 Code.inheritClass(Cam3D,Cam2D);
 Cam3D.prototype.updateFromTarget = function(){ // rotate to face target
@@ -29,6 +30,16 @@ Cam3D.prototype.updateFromTarget = function(){ // rotate to face target
 	var angles = q.eulerAngles();
 	// console.log(angles+"")
 	this._rot.copy(angles);
+}
+Cam3D.prototype.distortion = function(k1,k2,k3,p1,p2){
+	if(k1!==undefined){
+		if(p2!==undefined){
+			this._distortion = {"k1":k1, "k2":k2, "k3":k3, "p1":p1, "p2":p2};
+		}else{
+			this._distortion = k1;
+		}
+	}
+	return this._distortion;
 }
 Cam3D.prototype.rotation = function(r){
 	if(r!==undefined){
@@ -60,28 +71,32 @@ Cam3D.prototype.K = function(cx,cy, fx,fy, s){
 }
 Cam3D.prototype.matrix = function(){ // transform the world to what it would look like to camera
 	var matrix = new Matrix3D();
-	//var scale = this._scale;
+	var scale = this._scale;
 	//matrix.scale(scale);
 	//matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
 	//matrix.rotateXYZ(-this._rot.x,-this._rot.y,-this._rot.z);
 // matrix.rotateY(-this._rot.y);
 // matrix.rotateX(-this._rot.x);
+
 matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
 	//matrix.rotateXYZ(-this._rot.x,-this._rot.y,-this._rot.z);
 	//rotateXYZ
 matrix.rotateY(-this._rot.y);
 matrix.rotateX(-this._rot.x);
-	
-	matrix.scale(1);
+	matrix.scale(scale);
 	//matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
 	//matrix.translate(0,0,10);
 	//matrix.translate(0,0,10);
 	return matrix;
-	//return this.forwardMatrix();
 	//return this.reverseMatrix();
 }
-Cam3D.prototype.distortion = function(c,a){ // c = distort(a)
-
+Cam3D.prototype.applyDistortion = function(d,u){ // c = distort(a)
+	if(u===undefined){
+		u = d;
+		d = new V2D();
+	}
+	var d = R3D.applyDistortionParameters(d, u, this.K(), this.distortion());
+	return d;
 }
 Cam3D.prototype.forwardMatrix = function(){
 	var matrix = new Matrix3D();
