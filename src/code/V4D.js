@@ -70,15 +70,29 @@ V4D.prototype.eulerAngles = function(){ // x=[-pi,pi]  y=[-pi/2,-pi/2], z=[-pi,p
 	var y = Math.atan2(-r20, Math.sqrt(r21*r21 + r22*r22));
 	var z = Math.atan2(r10, r00);
 	return new V3D(x,y,z);
-	/*
-	x = atan2(R(3,2), R(3,3));
-	y = atan2(-R(3,1), sqrt(R(3,2)*R(3,2) + R(3,3)*R(3,3)));
-	z = atan2(R(2,1), R(1,1));
-	
-	x = atan2(R(2,1), R(2,2));
-	y = atan2(-R(2,0), sqrt(R(2,1)*R(2,1) + R(2,2)*R(2,2)));
-	z = atan2(R(1,0), R(0,0));
-	*/
+	// option 2
+	if(r20!=1){
+		var y1 = -Math.asin(r20);
+		var cosY1 = Math.cos(y1);
+		var x1 = Math.atan2(r21/cosY1, r22/cosY1);
+		var z1 = Math.atan2(r10/cosY1, r11/cosY1);
+		return new V3D(x1,y1,z1);
+		var y2 = Math.PI + Math.asin(r20);
+		var cosY2 = Math.cos(y2);
+		var x2 = Math.atan2(r21/cosY2, r22/cosY2);
+		var z2 = Math.atan2(r10/cosY2, r11/cosY2);
+		return new V3D(x2,y2,z2);
+	}else{
+		var z = 0;
+		if(r20==-1){
+			y = Math.PI*0.5;
+			x = z + Math.atan2(r01,r02);
+		}else{
+			y = -Math.PI*0.5;
+			x = -z + Math.atan2(-r01,-r02);
+		}
+	}
+	return new V3D(x,y,z);
 }
 V4D.prototype.qClear = function(){ // init to identity
 	this.set(0,0,0,1);

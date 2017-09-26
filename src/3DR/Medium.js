@@ -156,6 +156,7 @@ Medium.prototype.testSearchLine = function(imageMatrixA,pointsA, imageMatrixB,po
 		matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
 	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	//console.log(matrixFfwd.toArray());
+	console.log("F = "+matrixFfwd.toArray()+"; ");
 
 	var epipole = R3D.getEpipolesFromF(matrixFfwd);
 	var epipoleA = epipole["A"];

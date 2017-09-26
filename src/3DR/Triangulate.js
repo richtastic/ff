@@ -87,6 +87,115 @@ function Triangulate(){
 	this._camera = camera;
 	this._pointList = points3D;
 	//this._renderScene();
+
+	this.caseStudy();
+}
+Triangulate.prototype.caseStudy = function(t){
+	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+
+	var pointsA = [
+//				new V2D(86,208), // glasses corner left
+//				new V2D(190,180), // glasses corner right
+		new V2D(172,107), // origin
+		new V2D(22.5,166), // lighter button
+		new V2D(361,183), // mouse eye
+		new V2D(18,225), // bic corner left
+		//new V2D(37,216), // bic corner right
+		//new V2D(65,169), // cup 
+		new V2D(226,87), // face BL
+		new V2D(219,66), // glasses TL
+		new V2D(250,72), // glasses TR
+		new V2D(260,103), // elbow
+		new V2D(216,154), // toe left
+		new V2D(245,158), // toe right
+		new V2D(202,127), // brick
+		new V2D(240,248), // 12
+		new V2D(332,249), // 16
+		new V2D(145,203), // glasses center
+		new V2D(172,68), // grid top
+		new V2D(141,76), // grid TL
+		new V2D(204,75), // grid TR
+		new V2D(144,119), // grid BL
+		new V2D(175,128), // grid bot
+		new V2D(362,213), // U
+		new V2D(326,176), // tail
+		new V2D(190,173), // base left
+		new V2D(265,178), // base right
+		new V2D(372,181), // nose
+		new V2D(129,88), // power top
+		new V2D(132,141), // power bot
+		new V2D(62,107), // cup
+		new V2D(94,176), // glass tip left
+		new V2D(131,166), // glass tip right
+	];
+	var pointsB = [
+//				new V2D(87,192),
+//				new V2D(170,178),
+		new V2D(212,46),
+		new V2D(50,149),
+		new V2D(278,241),
+		new V2D(52,179), // left
+		//new V2D(64,172), // bic right
+		//new V2D(94,124), 
+		new V2D(225,98), // face BL
+		new V2D(221,80), // glasses TL
+		new V2D(246,95), // glasses TR
+		new V2D(250,121),
+		new V2D(214,139), // tow left
+		new V2D(237,150), // toe right
+		new V2D(213,106), // brick
+		new V2D(180,252), // 12
+		new V2D(245,271), // 16
+		new V2D(131,193), // glasses center
+		new V2D(213,12), // grid top
+		new V2D(177,26), // grid TL
+		new V2D(239,33), // grid TR
+		new V2D(180,61), // grid BL
+		new V2D(202,83), // grid bot
+		new V2D(282,251), // U
+		new V2D(256,225), // tail
+		new V2D(187,153), // base left
+		new V2D(245,173), // base right
+		new V2D(290,240), // nose
+		new V2D(150,63), // power top
+		new V2D(155,100), // power bot
+		new V2D(85,92), // cup
+		new V2D(113,138), // glass tip left
+		new V2D(145,132), // glass tip right
+	];
+	// 
+	//var F = [ -0.0000218799600098825,-0.000016678046601020086,0.030221911114160567,0.000037792474581084344,0.00001199578702154598,0.007524048770802543,-0.023411954918794626,-0.008461981862046705,-0.9992048326931983];
+	var F = [0.0000027269946673859867,0.0000058666378526400515,-0.022218004013060053,-0.000013044017866634529,-0.000004253022893215171,-0.011491994391747789,0.020950228936843587,0.010483614147638562,0.38960882503981586];
+	var K = [ 3.7576E+2 , -1.7370E+0 , 1.9356E+2 ,  0.0000E+0 , 3.8050E+2 , 1.6544E+2 ,  0.0000E+0 , 0.0000E+0 , 1.0000E+0 ];
+	F = new Matrix(3,3).fromArray(F);
+	K = new Matrix(3,3).fromArray(K);
+		//K.set(0,1, 0);
+	// var pointsA = [];
+	// var pointsB = [];
+	var P = R3D.transformFromFundamental(pointsA, pointsB, F, K);
+	console.log(F+"");
+	console.log(K+"");
+	console.log(P+"");
+	console.log("var P = ["+P.toArray()+"];");
+	var P = [0.9475207831216185,-0.1382261910413648,0.28826703880740556,-0.4827392727498371,0.2593875851740767,0.8594799396070502,-0.44046828951767153,0.6289791729798363,-0.18687548317035932,0.4921257497055592,0.8502292633558233,0.6093832903046816,0,0,0,1];
+	P = new Matrix(4,4).fromArray(P);
+	// 
+	// 
+	// GET 3D POINTS:
+	var cameraA = new Matrix(4,4).identity();
+	var cameraB = P;
+	var pointsFr = pointsA;
+	var pointsTo = pointsB;
+	console.log("TRY: DLT");
+	//K = null;
+	var points3D = R3D.triangulationDLT(cameraA,cameraB,pointsFr,pointsTo, K);
+	// DISPLAY
+	console.log(points3D);
+	var pointList = this._pointList;
+	Code.emptyArray(pointList);
+	for(var i=0; i<points3D.length; ++i){
+		pointList.push(points3D[i]);
+	}
 }
 Triangulate.prototype._renderScene = function(t){
 	//console.log("render")
@@ -101,17 +210,18 @@ Triangulate.prototype._renderScene = function(t){
 	//camera.K(10,10, 200,200, -1);
 	var cx = this._canvas.width()*0.5;
 	var cy = this._canvas.height()*0.5;
-	camera.K(cx,cy, 1000,1000, -1);
+	//camera.K(cx,cy, 1000,1000, -1);
+	camera.K(cx,cy, 2000,2000, 0);
 	// camera.distortion(1E-10,1E-19,1E-28 ,0,0);
-	camera.distortion(1E-8,1E-14,1E-20, 1E-4,1E-8);
+	//camera.distortion(1E-8,1E-14,1E-20, 1E-4,1E-8);
 
-	var radius = 150;
+	var radius = 50;
 	var angle = t*0.01;
 	// var x = 0;//radius*Math.sin(angle) + 100;
 	// var z = 0;//radius*Math.cos(angle) + 100;
-	var x = radius*Math.sin(angle) - 10;
-	var z = radius*Math.cos(angle) + 10;
-	var y = 80;
+	var x = radius*Math.sin(angle) - 5;
+	var z = radius*Math.cos(angle) + 5;
+	var y = 30;
 	this._camera.location( new V3D(x,y,z) );
 	//this._camera.updateFromTarget();
 	//this._camera.rotation( new V3D(0,radius,0) );

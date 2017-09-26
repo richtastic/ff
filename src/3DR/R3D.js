@@ -154,11 +154,17 @@ R3D.calculateCovariance2D = function(points){ // self covariance
 }
 R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // find relative transformation matrix  // points use F
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-	var KaInv = Matrix.inverse(Ka);
-	var KbInv = Matrix.inverse(Kb);
+	Kb = Kb ? Kb : Ka;
+	// var KaInv = Matrix.inverse(Ka);
+	// var KbInv = Matrix.inverse(Kb);
+	// var KaT = Matrix.transpose(Ka);
+	// var KbT = Matrix.transpose(Kb);
+	var KaInv = Matrix.transpose(Ka);
+	var KbInv = Matrix.transpose(Kb);
 	//
-	var E = Matrix.mult(F,Ka);
-	E = Matrix.mult(KbT,E);
+	var E = Matrix.mult(F,Ka); // KaInv?
+	E = Matrix.mult(KbInv,E); // Kb?
+	// E = K<sup>T</sup>&middot;F&middot;K
 	// NORMALIZE POINTS ???????
 	//
 	var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
@@ -184,10 +190,14 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 	var t = U.getCol(2);
 	var tNeg = t.copy().scale(-1.0);
 	// one of 4 possible solutions
-	var possibleA = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
-	var possibleB = Matrix.mult(U,Matrix.mult(W,Vt)). appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	var possibleA = Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
+	var possibleB = Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
 	var possibleC = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t.toArray()   ).appendRowFromArray([0,0,0,1]);
 	var possibleD = Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg.toArray()).appendRowFromArray([0,0,0,1]);
+	// console.log(possibleA+"")
+	// console.log(possibleB+"")
+	// console.log(possibleC+"")
+	// console.log(possibleD+"")
 	var possibles = [];
 	possibles.push( possibleA );
 	possibles.push( possibleB );
@@ -197,6 +207,7 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 		var m = possibles[i];
 		var r = m.getSubMatrix(0,0, 3,3);
 		var det = r.det();
+		//console.log(" "+i+" : "+det);
 		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
 			//console.log("FLIP "+i+" : "+det);
 			r.scale(-1.0);
@@ -205,19 +216,27 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 			possibles[i] = r;
 		}
 	}
-
 	// find single matrix that results in 3D point in front of both cameras Z>0
 	var index = 0;
+	// console.log(pointsA);
+	// console.log(pointsB);
 	var pA = pointsA[index];
 	var pB = pointsB[index];
+	console.log(pA+"")
+	console.log(pB+"")
+	pA = new V3D(pA.x, pA.y, 1.0);
+	pB = new V3D(pB.x, pB.y, 1.0);
+// NEED TO DO?
 	pA = KaInv.multV3DtoV3D(new V3D(), pA);
-	pB = KbInv.multV3DtoV3D(new V3D(), pB);
-
+	pB = KbInv.multV3DtoV3D(new V3D(), pB);		
+console.log(pA+"")
+console.log(pB+"")
 	var pAx = Matrix.crossMatrixFromV3D( pA );
 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
 	var projection = null;
 	len = possibles.length;
+	console.log("possibles: "+len);
 	for(i=0;i<len;++i){
 		var possible = possibles[i];
 		var possibleInv = Matrix.inverse(possible);
@@ -237,12 +256,12 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 		//var P2 = Matrix.mult(possible,P1est);
 		var p2Norm = new V4D().setFromArray(P2.toArray());
 		//p2Norm.homo(); // not necessary?
-		
+		console.log(i+": option: "+p1Norm+" && "+p2Norm);
 		if(p1Norm.z>0 && p2Norm.z>0){
 		//if(p1Norm.z<=0 && p2Norm.z<=0){
 			console.log(".......................>>XXX");
 			projection = possible;
-break;
+//break; // look at others still
 		}
 	}
 	return projection;
@@ -518,6 +537,8 @@ R3D.essentialFromFundamental = function(K1, K2, F){  // K maps from 1 to 2  |  E
 	var temp = Matrix.mult(F,K2);
 	var K1T = Matrix.transpose(K1);
 	var E = Matrix.mult(K1T,temp);
+	// var E = Matrix.mult(F,Ka);
+	// E = Matrix.mult(KbT,E);
 	return E;
 }
 // R3D.cameraFromFundamental = function(K1, K2, F){ // E = R[t]x = [t]xR
@@ -532,7 +553,7 @@ R3D.essentialFromFundamental = function(K1, K2, F){  // K maps from 1 to 2  |  E
 // 	var R = U * W * Vt
 // 	R = U * Wt * 
 // }
-R3D.fundamentalFromCamera = function(cam, K, Kinv){ // find relative transformation matrix  // points use F
+R3D.fundamentalFromCamera = function(cam, K, Kinv, optionallyKb){ // find relative transformation matrix  // points use F
 	Kinv = Kinv!==undefined ? Kinv : Matrix.inverse(K);
 	var KinvT = Matrix.transpose(Kinv);
 	var Kt = Matrix.transpose(K);
@@ -1668,40 +1689,67 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	cam.setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0.0,0.0,0.0,1.0]);
 	return cam;
 }
-R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
+R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo, Ka, Kb){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
+	// TODO: are these normalized (E) image coords ?
+	var KaInv = null;
+	var KbInv = null;
+	if(Ka || Kb){
+		if(Kb===undefined){
+			Kb = Ka;
+		}
+		KaInv = Matrix.inverse(Ka);
+		KbInv = Matrix.inverse(Kb);
+	}
 	var i, j, to, fr, len=pointsFr.length;
 	var rows = 4, cols = 4;
 	var points3D = new Array(len);
 	var A = new Matrix(rows,cols);
+	console.log("TRAINGULATE");
+	console.log("A:\n"+cameraA);
+	console.log("B:\n"+cameraB);
+	console.log("Ka:\n"+Ka);
+	console.log("Ka:\n"+Kb);
 	//var arr = new Array();
 	for(i=0;i<len;++i){
+		//console.log("     "+i);
 		fr = pointsFr[i];
 		to = pointsFr[i];
+		if(KaInv && KbInv){ // to normalized image coords
+			fr = KaInv.multV3DtoV3D(new V3D(), new V3D(fr.x,fr.y,1.0));
+			to = KbInv.multV3DtoV3D(new V3D(), new V3D(fr.x,fr.y,1.0));
+		}
+		// console.log(fr+"")
+		// console.log(to+"")
 		// fr
-		A.set(0,0, fr.x*cameraA.get(2,0) - cameraA.get(0,0) );
-		A.set(0,1, fr.x*cameraA.get(2,1) - cameraA.get(0,1) );
-		A.set(0,2, fr.x*cameraA.get(2,2) - cameraA.get(0,2) );
-		A.set(0,3, -cameraA.get(0,3) );
-		A.set(1,0, fr.y*cameraA.get(2,0) - cameraA.get(1,0) );
-		A.set(1,1, fr.y*cameraA.get(2,1) - cameraA.get(1,1) );
-		A.set(1,2, fr.y*cameraA.get(2,2) - cameraA.get(1,2) );
-		A.set(1,3, -cameraA.get(1,3) );
+		A.set(0,0, fr.x*cameraA.get(2,0) - cameraA.get(0,0) ); // X
+		A.set(0,1, fr.x*cameraA.get(2,1) - cameraA.get(0,1) ); // Y
+		A.set(0,2, fr.x*cameraA.get(2,2) - cameraA.get(0,2) ); // Z
+		A.set(0,3, fr.x*cameraA.get(2,3) - cameraA.get(0,3) ); // W
+		//A.set(0,3, -cameraA.get(0,3) );						   // W
+		A.set(1,0, fr.y*cameraA.get(2,0) - cameraA.get(1,0) ); // X
+		A.set(1,1, fr.y*cameraA.get(2,1) - cameraA.get(1,1) ); // Y
+		A.set(1,2, fr.y*cameraA.get(2,2) - cameraA.get(1,2) ); // Z
+		A.set(1,3, fr.y*cameraA.get(2,3) - cameraA.get(1,3) ); // W
+		//A.set(1,3, -cameraA.get(1,3) );						   // W
 		// to
-		A.set(2,0, to.x*cameraB.get(2,0) - cameraB.get(0,0) );
-		A.set(2,1, to.x*cameraB.get(2,1) - cameraB.get(0,1) );
-		A.set(2,2, to.x*cameraB.get(2,2) - cameraB.get(0,2) );
-		A.set(2,3, -cameraB.get(0,3) );
-		A.set(3,0, to.y*cameraB.get(2,0) - cameraB.get(1,0) );
-		A.set(3,1, to.y*cameraB.get(2,1) - cameraB.get(1,1) );
-		A.set(3,2, to.y*cameraB.get(2,2) - cameraB.get(1,2) );
-		A.set(3,3, -cameraB.get(1,3) );
-		// 
+		A.set(2,0, to.x*cameraB.get(2,0) - cameraB.get(0,0) ); // X
+		A.set(2,1, to.x*cameraB.get(2,1) - cameraB.get(0,1) ); // Y
+		A.set(2,2, to.x*cameraB.get(2,2) - cameraB.get(0,2) ); // Z
+		A.set(2,3, to.x*cameraB.get(2,3) - cameraB.get(0,3) ); // W
+		//A.set(2,3, -cameraB.get(0,3) );                        // W
+		A.set(3,0, to.y*cameraB.get(2,0) - cameraB.get(1,0) ); // X
+		A.set(3,1, to.y*cameraB.get(2,1) - cameraB.get(1,1) ); // Y
+		A.set(3,2, to.y*cameraB.get(2,2) - cameraB.get(1,2) ); // Z
+		A.set(3,3, to.y*cameraB.get(2,3) - cameraB.get(1,3) ); // W
+		//A.set(3,3, -cameraB.get(1,3) );                        // W
+		//console.log("     = "+A);
 		var svd = Matrix.SVD(A);
 		var coeff = svd.V.colToArray(3);
 //		console.log(coeff);
 		var point = new V3D(coeff[0],coeff[1],coeff[2]);
 		point.scale(1.0/coeff[3]);
 		points3D[i] = point;
+		//console.log("     = "+point);
 //		console.log(point+"");
 	}
 	// var svd = Matrix.SVD(A);

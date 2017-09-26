@@ -534,6 +534,7 @@ Matrix.prototype.multV3DtoV3D = function(out, inn){
 }
 Matrix.prototype.scale = function(c){
 	var row, rows = this._rowCount, cols = this._colCount;
+	var i, j;
 	for(j=0;j<rows;++j){
 		row = this._rows[j];
 		for(i=0;i<cols;++i){
@@ -544,6 +545,7 @@ Matrix.prototype.scale = function(c){
 }
 Matrix.prototype.offset = function(c){
 	var row, rows = this._rowCount, cols = this._colCount;
+	var i, j;
 	for(j=0;j<rows;++j){
 		row = this._rows[j];
 		for(i=0;i<cols;++i){

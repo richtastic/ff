@@ -4833,6 +4833,7 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	if(matrixFfwd){
 		matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
 	}
+	console.log(matrixFfwd+"");
 
 	// CORNERS
 	var sigmaCorners = 1.0;
