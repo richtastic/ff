@@ -248,6 +248,16 @@ V2D.DIRY = new V2D(0.0,1.0);
 
 
 // HELPERS:
+V2D.meanFromArray = function(pointList){
+	var i, len=pointList.length, pt;
+	var mean = new V2D();
+	for(i=0; i<len; ++i){
+		pt = pointList[i];
+		mean.x += pt.x;
+		mean.y += pt.y;
+	}
+	return mean;
+}
 V2D.extremaFromArray = function(pointList){
 	var i, len=pointList.length, pt;
 	var minImageX = null, minImageY = null;

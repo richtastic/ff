@@ -25,7 +25,7 @@ function Triangulate(){
 	
 	this._canvas.addListeners();
 	this._stage.addListeners();
-	this._stage.start();
+	//this._stage.start();
 	this._keyboard.addListeners();
 	// import image to work with
 	//var imageLoader = new ImageLoader("./images/",["desktop1.png"], this,this.handleImageLoaded,null);
@@ -89,6 +89,8 @@ function Triangulate(){
 	//this._renderScene();
 
 	this.caseStudy();
+
+	this._stage.start();
 }
 Triangulate.prototype.caseStudy = function(t){
 	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
@@ -190,14 +192,173 @@ Triangulate.prototype.caseStudy = function(t){
 	//K = null;
 	var points3D = R3D.triangulationDLT(cameraA,cameraB,pointsFr,pointsTo, K);
 	// DISPLAY
+	// console.log(points3D);
+	// var pointList = this._pointList;
+	// Code.emptyArray(pointList);
+	// for(var i=0; i<points3D.length; ++i){
+	// 	pointList.push(points3D[i]);
+	// }
+	this._syntheticPoints();
+	var result = this._synthetic();
+	var pointsA = result["pointsA"];
+	var pointsB = result["pointsA"];
+	var points3D = result["points3D"];
+	var pointsRev = result["pointsRev"];
+	var F = result["K"];
+	var K = result["F"];
+	var P = result["P"];
+	console.log(pointsA);
+	console.log(pointsB);
 	console.log(points3D);
-	var pointList = this._pointList;
-	Code.emptyArray(pointList);
-	for(var i=0; i<points3D.length; ++i){
-		pointList.push(points3D[i]);
+	console.log(F+"");
+	console.log(P+"");
+	console.log(pointsRev);
+	this._pointList = points3D;
+//if(false){
+if(true){
+Code.emptyArray(points3D); // remove all existing completely
+}
+	for(var i=0; i<pointsRev.length; ++i){
+		//console.log(""+pointsRev[i]);
+		//pointsRev[i].scale(100);
+		points3D.push(pointsRev[i]);
 	}
+	console.log("TOTAL POINTS: "+this._pointList.length);
+}
+Triangulate.prototype._syntheticPoints = function(){
+	var points3D = [];
+	this._pointList = points3D;
+	var i, j, k;
+	points3D.push( new V3D(0,0,100) );
+	points3D.push( new V3D(0,1,50) );
+	points3D.push( new V3D(1,0,50) );
+	points3D.push( new V3D(10,10,200) );
+	points3D.push( new V3D(-10,-10,200) );
+	points3D.push( new V3D(-10,50,200) );
+	for(i=0;i<20;++i){
+		points3D.push( new V3D(-100 + i*10, -20 + i*5, 150- i*5) );
+		points3D.push( new V3D(-20 + i*10, -25 + i*5, 160) );
+	}
+	//points3D.push( new V3D(-10,-10,-10) );
+	// cube
+
+	points3D.push( new V3D(-10,-10,100) );
+	points3D.push( new V3D(10,-10,100) );
+	points3D.push( new V3D(10,10,100) );
+	points3D.push( new V3D(-10,10,100) );
+	points3D.push( new V3D(-10,-10,120) );
+	points3D.push( new V3D(10,-10,120) );
+	points3D.push( new V3D(10,10,120) );
+	points3D.push( new V3D(-10,10,120) );
+}
+
+Triangulate.prototype._synthetic = function(){
+	var camera = this._camera;
+	var pointList = this._pointList;
+	console.log(pointList)
+	var sizeWidth = 800;
+	var sizeHeight = 600;
+sizeWidth = this._canvas.width()
+sizeHeight = this._canvas.height();
+	var cx = sizeWidth*0.5;
+	var cy = sizeHeight*0.5;
+	camera.K(cx,cy, 1000,1000, 0);
+	var cameraK = camera.K();
+	
+	// SETUP
+	var matches = [];
+	for(i=0; i<pointList.length; ++i){
+		var point3D = pointList[i];
+		matches[i] = [point3D, null, null];
+	}
+	
+	// A
+	this._camera.location( new V3D(0,0,0) );
+	this._camera.rotation( new V3D(0,0,0) );
+	var cameraMatrix = camera.matrix();
+var cameraA = cameraMatrix.copy();
+	for(i=0; i<pointList.length; ++i){
+		var point3D = pointList[i];
+		matches[i][1] = this.toScreenPoint(point3D, camera,cameraMatrix,cameraK, sizeWidth,sizeHeight);
+	}
+
+	// B
+	var radius = 100;
+	var x = -5; //radius*Math.sin(angle) - 5;
+	var z = -1; //radius*Math.cos(angle) + 5;
+	var y = 2;
+	var angle = 0;
+	this._camera.location( new V3D(x,y,z) );
+	x = 0;
+	y = .1;
+	z = -.1;
+	this._camera.rotation( new V3D(x,y,z) );
+	var cameraMatrix = camera.matrix();
+var cameraB = cameraMatrix.copy();
+	for(i=0; i<pointList.length; ++i){
+		var point3D = pointList[i];
+		matches[i][2] = this.toScreenPoint(point3D, camera,cameraMatrix,cameraK, sizeWidth,sizeHeight);
+	}
+
+	// combine results
+	var points3D = [];
+	var pointsA = [];
+	var pointsB = [];
+	for(i=0; i<matches.length; ++i){
+		var point3D = matches[i][0];
+		var pointA = matches[i][1];
+		var pointB = matches[i][2];
+		if(pointA && pointB){
+			pointsA.push(pointA);
+			pointsB.push(pointB);
+			points3D.push(point3D);
+		}
+	}
+//console.log(cameraK.toArray()+"")
+console.log("ACTUAL K: \n"+cameraK+"");
+console.log("ACTUAL A: \n"+cameraA+"");
+console.log("ACTUAL B: \n"+cameraB+"");
+	// F
+	var K = new Matrix(4,4).fromArray(cameraK.toArray());
+	K = K.getSubMatrix(0,0, 3,3);
+	var F = null;
+	var P = null;
+	var pointsRev = null;
+	if(pointsA.length>8){
+		F = R3D.fundamentalMatrix(pointsA,pointsB);
+		F = R3D.fundamentalMatrixNonlinear(F,pointsA,pointsB);
+			//F = R3D.fundamentalInverse(F);
+		P = R3D.transformFromFundamental(pointsA, pointsB, F, K);
+		//
+		var cameraA = new Matrix(4,4).identity();
+		var cameraB = P;
+		//var Kinv = Matrix.transpose(K);
+		//var cameraB = Matrix.mult(Kinv,P);
+//			cameraB = new Matrix(4,4).fromArray(cameraB.toArray());
+		var pointsFr = pointsA;
+		var pointsTo = pointsB;
+		pointsRev = R3D.triangulationDLT(cameraA,cameraB,pointsFr,pointsTo, K);
+	}
+
+	return {"pointsA":pointsA, "pointsB":pointsB, "points3D":points3D, "F":F, "K":K, "P":P, "pointsRev":pointsRev};
+}
+Triangulate.prototype.toScreenPoint = function(point3D, camera,cameraMatrix,cameraK, screenWidth,screenHeight){
+	var local3D = cameraMatrix.multV3D(new V3D(), point3D);
+	if(local3D.z>0){
+		var projected3D = cameraK.multV3D(new V3D(), local3D);
+		var image3D = new V3D(projected3D.x/projected3D.z,projected3D.y/projected3D.z,projected3D.z);
+		var screen3D = camera.applyDistortion(new V2D(), image3D);
+		var point = new V3D(screen3D.x,screen3D.y,image3D.z);
+		if(0<=point.x && point.x<screenWidth){
+			if(0<=point.y && point.y<screenHeight){
+				return point;
+			}
+		}
+	}
+	return null;
 }
 Triangulate.prototype._renderScene = function(t){
+	
 	//console.log("render")
 	var camera = this._camera;
 	var pointList = this._pointList;
@@ -206,22 +367,22 @@ Triangulate.prototype._renderScene = function(t){
 	var availWidth = this._canvas.width();
 	var availHeight = this._canvas.height();
 
-
+//if(false){
+if(true){
 	//camera.K(10,10, 200,200, -1);
 	var cx = this._canvas.width()*0.5;
 	var cy = this._canvas.height()*0.5;
 	//camera.K(cx,cy, 1000,1000, -1);
-	camera.K(cx,cy, 2000,2000, 0);
+	camera.K(cx,cy, 1000,1000, 0);
 	// camera.distortion(1E-10,1E-19,1E-28 ,0,0);
 	//camera.distortion(1E-8,1E-14,1E-20, 1E-4,1E-8);
-
-	var radius = 50;
-	var angle = t*0.01;
+	var radius =100;
+	var angle = Math.PI + t*0.01;
 	// var x = 0;//radius*Math.sin(angle) + 100;
 	// var z = 0;//radius*Math.cos(angle) + 100;
-	var x = radius*Math.sin(angle) - 5;
-	var z = radius*Math.cos(angle) + 5;
-	var y = 30;
+	var x = radius*Math.sin(angle) - 0;
+	var z = radius*Math.cos(angle) + 0;
+	var y = 50;
 	this._camera.location( new V3D(x,y,z) );
 	//this._camera.updateFromTarget();
 	//this._camera.rotation( new V3D(0,radius,0) );
@@ -229,11 +390,14 @@ Triangulate.prototype._renderScene = function(t){
 	//this._camera.location(new V3D(0,0,0) );
 	//this._camera.location(new V3D(100,100,0) );
 	//this._camera.rotation( new V3D(0,Code.radians(10),0) );
-	this._camera.rotation( new V3D( Code.radians(30) ,Math.PI + angle,0) );
+	this._camera.rotation( new V3D( Code.radians(20) ,Math.PI + angle,0) );
 
 	//this._camera.location(new V3D(0,0,0) );
 	//this._camera.location(new V3D(100,100,0) );
 	//this._camera.rotation( new V3D( Code.radians(0) ,0,0) );
+}
+
+
 
 	var cameraMatrix = camera.matrix();
 	var cameraK = camera.K();
@@ -253,6 +417,7 @@ Triangulate.prototype._renderScene = function(t){
 		var d = new DO();
 		//console.log(point.z)
 		var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
+		rad = 1;
 		//var rad = 5;
 		d.graphics().setFill(0xFF00FF00);
 		d.graphics().setLine(1.0, 0xFFFF0000);

@@ -9,6 +9,7 @@ function Cam3D(p, r, l,f, s){
 	this._distortion = null;
 	this.position(p);
 	this.rotation(r);
+	this._scale = 1.0;
 	//this.K(0,0, .0001,.0001, 0);
 	//this.K(0,0, 10000,10000, 0);
 	this.K(0,0, 100,100, 0);
