@@ -152,41 +152,152 @@ R3D.calculateCovariance2D = function(points){ // self covariance
 	sigXX /= len; sigXY /= len; sigYY /= len;
 	return new Matrix(2,2).setFromArray([sigXX, sigXY, sigXY, sigYY]);
 }
+R3D.PFromKRT = function(K,R,t){
+	R = R!==undefined ? R : new Matrix(3,3).identity();
+	t = t!==undefined ? t : new Matrix(3,1);
+	var tempR = Matrix.mult(K,R);
+	var tempT = Matrix.mult(K,t);
+		tempT.scale(-1.0);
+	var transform = tempR.copy().appendColFromArray(tempT.toArray());
+	return transform;
+	// #R = R.T
+	// transformTemp = K.dot(R)
+	// transform = np.zeros((3,4))
+	// transform[:,:-1] = transformTemp
+	// c = K.dot(c)
+	// transform[:,-1] = -c[:]
+	// return transform
+}
 R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // find relative transformation matrix  // points use F
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-	console.log("M1: \n"+M1);
+	//console.log("M1: \n"+M1);
 	Kb = Kb ? Kb : Ka;
-	var KaInv = Matrix.transpose(Ka);
-	var KbInv = Matrix.transpose(Kb);
+	var KaInv = Matrix.inverse(Ka);
+	var KbInv = Matrix.inverse(Kb);
+	console.log("K: \n"+Ka);
+	console.log("K^-1: \n"+KaInv);
+	/*
+	// FORWARD: ...
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbInv,E);
-	var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
-	var Wt = Matrix.transpose(W);
+	console.log("INCOMING E [from F]:\n"+E);
+	*/
+	
+/*
+	var eA = [];
+	var eB = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		a = new V3D(a.x,a.y,1.0);
+		b = new V3D(b.x,b.y,1.0);
+		a = KaInv.multV3DtoV3D(new V3D(), a);
+		b = KbInv.multV3DtoV3D(new V3D(), b);
+		eA[i] = new V2D(a.x,a.y);
+		eB[i] = new V2D(b.x,b.y);
+	}
+	var norm = R3D.calculateNormalizedPoints([eA,eB]);
+	E = R3D.essentialMatrix(norm.normalized[0],norm.normalized[1]);
+	var T1 = norm.reverse[0];
+	var T2 = norm.forward[1];
+	E = Matrix.mult(E,T2);
+	E = Matrix.mult(T1,E);
+	// E = Matrix.mult(E,norm.forward[1]);
+	// E = Matrix.mult(norm.reverse[0],E);
+	// E = Matrix.mult(E,norm.forward[0]);
+	// E = Matrix.mult(norm.reverse[1],E);
+	// E = Matrix.mult(E,norm.reverse[1]);
+	// E = Matrix.mult(norm.forward[0],E);
+*/
+
+	// MAKE MY OWN E:
+	// get normalized image points:
+	var eA = [];
+	var eB = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		a = new V3D(a.x,a.y,1.0);
+		b = new V3D(b.x,b.y,1.0);
+		a = KaInv.multV3DtoV3D(new V3D(), a);
+		b = KbInv.multV3DtoV3D(new V3D(), b);
+		eA[i] = a;
+		eB[i] = b;
+	}
+	// scale & translate points to  sqrt 2
+	var avgA = V2D.meanFromArray(eA);
+	var avgB = V2D.meanFromArray(eB);
+	var distA = 0;
+	var distB = 0;
+	for(var i=0; i<eA.length; ++i){
+		var a = eA[i];
+		var b = eB[i];
+		distA += V2D.distance(a,avgA);
+		distB += V2D.distance(b,avgB);
+	}
+	distA = distA/eA.length;
+	distB = distB/eB.length;
+	console.log("distA: "+distA);
+	var scaleA = Math.sqrt(2)/distA;
+	var scaleB = Math.sqrt(2)/distB;
+	console.log("scaleA: "+scaleA);
+	var T1 = new Matrix(3,3).setFromArray( [scaleA,0,-scaleA*avgA.x, 0,scaleA,-scaleA*avgA.y, 0,0,1] );
+	var T2 = new Matrix(3,3).setFromArray( [scaleB,0,-scaleB*avgB.x, 0,scaleB,-scaleB*avgB.y, 0,0,1] );
+	var T1t = Matrix.transpose(T1);
+	console.log("T1: \n"+T1);
+	console.log("T2: \n"+T2);
+	var xnA = [];
+	var xnB = [];
+	for(var i=0; i<eA.length; ++i){
+		var a = eA[i];
+		var b = eB[i];
+		a = new V3D(a.x,a.y,0.0);
+		b = new V3D(b.x,b.y,0.0);
+		xnA[i] = T1.multV3DtoV3D(new V3D(), a);
+		xnB[i] = T2.multV3DtoV3D(new V3D(), b);
+		//console.log(i+": "+a+" => "+xnA[i]);
+	}
+	var E = R3D.essentialMatrix(xnA,xnB);
+		E = R3D.essentialMatrixNonlinear(E,xnA,xnB);
+	// undo scaling
+	E = Matrix.mult(E, T2);
+	E = Matrix.mult(T1t,E);
+
+		//E = R3D.essentialMatrix(eA,eB);
+		//E = R3D.fundamentalMatrix(eA,eB);
+		//E = R3D.fundamentalMatrixNonlinear(E,eA,eB);
+
+
+	console.log("INCOMING E [self]:\n"+E);
+
+	//console.log(pointsA+" ????");
+
 	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
 	var svd, U, S, V, Vt;
-	/*
+	
 	// force D = 1,1,0 ----------------------
 	svd = Matrix.SVD(E);
 	U = svd.U;
 	S = svd.S;
 	V = svd.V;
-	console.log("U:"+U.toString());
-	console.log("S:"+S.toString());
-	console.log("V:"+V.toString());
-	S = diag110;
 	Vt = Matrix.transpose(V);
 	// RE-GET matrix
 	E = Matrix.mult(diag110,Vt);
-	E = Matrix.mult(U,E);
-	console.log("E:\n"+E);
-	*/
+		E = Matrix.mult(U,E);
+	// new decomposition
 	svd = Matrix.SVD(E);
 	U = svd.U;
 	S = svd.S;
 	V = svd.V;
 	Vt = Matrix.transpose(V);
+//		Vt = V;
 	// console.log("U: \n"+U)
 	// console.log("Vt: \n"+Vt)
+
+	var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
+		// W.set(2,2, U.det()*V.det());
+	var Wt = Matrix.transpose(W);
+	// 
 	var t = U.getCol(2);
 	var tNeg = t.copy().scale(-1.0);
 	t = t.toArray();
@@ -194,7 +305,7 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 	console.log("t: \n"+t);
 	console.log("n: \n"+tNeg);
 	// one of 4 possible solutions
-	var possibles = [];
+	var possibles = []; // U*W*V | t
 	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
 	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
 	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
@@ -202,45 +313,47 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 	for(i=0;i<possibles.length;++i){
 		var m = possibles[i];
 		var r = m.getSubMatrix(0,0, 3,3);
+		var t = m.getSubMatrix(0,3, 3,1);
 		var det = r.det();
 		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
 			r.scale(-1.0);
 		}
 		var r = R3D.rotationFromApproximate(r);
-		r.appendColFromArray( m.getSubMatrix(0,3, 3,1).toArray() );
-		r.appendRowFromArray([0,0,0,1]);
-		possibles[i] = r;
+		// NONE
+		var trans = r.copy().appendColFromArray(t.toArray());
+		// FORWARD????
+		// var trans = R3D.PFromKRT(Ka,r,t);
+		// REVERSE???
+		// var trans = R3D.PFromKRT(KaInv,r,t);
+		// console.log("trans: "+trans);
+		trans.appendRowFromArray([0,0,0,1]);
+		possibles[i] = trans;
+		// r.appendColFromArray( m.getSubMatrix(0,3, 3,1).toArray() );
+		// r.appendRowFromArray([0,0,0,1]);
+		//possibles[i] = r;
 	}
 	// find single matrix that results in 3D point in front of both cameras Z>0
 	var index = 0;
-	// console.log(pointsA);
-	// console.log(pointsB);
 	var pA = pointsA[index];
 	var pB = pointsB[index];
-	console.log(pA+"")
-	console.log(pB+"")
 	pA = new V3D(pA.x, pA.y, 1.0);
 	pB = new V3D(pB.x, pB.y, 1.0);
-// NEED TO DO?
 	pA = KaInv.multV3DtoV3D(new V3D(), pA);
 	pB = KbInv.multV3DtoV3D(new V3D(), pB);
-// console.log(pA+"")
-// console.log(pB+"")
+	console.log("NORMALIZED: "+pA);
 	var pAx = Matrix.crossMatrixFromV3D( pA );
 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
 	var projection = null;
-	len = possibles.length;
-	console.log("possibles: "+len);
-	for(i=0;i<len;++i){
+	for(i=0; i<possibles.length; ++i){
 		var possible = possibles[i];
 		var possibleInv = Matrix.inverse(possible);
+console.log(i+": \n"+possibleInv);
 		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
 		var pAM = Matrix.mult(pAx,M1);
 		var pBM = Matrix.mult(pBx,M2);
 		
 		var A = pAM.copy().appendMatrixBottom(pBM);
-
 		svd = Matrix.SVD(A);
 		var P1 = svd.V.getCol(3);
 		var p1Norm = new V4D().setFromArray(P1.toArray());
@@ -248,12 +361,18 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 
 		var P2 = Matrix.mult(possibleInv,P1est);
-		//var P2 = Matrix.mult(possible,P1est);
+		var P2 = Matrix.mult(possible,P1est);
 		var p2Norm = new V4D().setFromArray(P2.toArray());
-		//p2Norm.homo(); // not necessary?
+		p2Norm.homo(); // not necessary?
 		console.log(i+": option: "+p1Norm+" && "+p2Norm);
+// ??? 
+// X = triangulatePoints(pts1,pts2,F,p1,p2)
+// ???
+		// if(i==0){
+		// if(i==1){
+		// if(i==2){
+		// if(i==3){
 		if(p1Norm.z>0 && p2Norm.z>0){
-		//if(p1Norm.z<=0 && p2Norm.z<=0){
 			console.log(".......................>>XXX");
 			projection = possible;
 			//break; // look at others still
@@ -261,11 +380,26 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 	}
 	//projection = Matrix.mult(Ka,projection);
 	//projection = Matrix.mult(KaInv,projection);
-	//var KK =     Ka.copy().appendColFromArray([0,0,0]).appendRowFromArray([0,0,0,1]);
-	//var KKI = KaInv.copy().appendColFromArray([0,0,0]).appendRowFromArray([0,0,0,1]);
+	// var KK =     Ka.copy().appendColFromArray([0,0,0]).appendRowFromArray([0,0,0,1]);
+	// var KKI = KaInv.copy().appendColFromArray([0,0,0]).appendRowFromArray([0,0,0,1]);
 	//projection = Matrix.mult(projection,KKI);
 	//projection = Matrix.mult(projection,KK);
+
+	//projection = R3D.PFromKRT(Ka,projection.getSubMatrix(0,0,3,3),projection.getSubMatrix(0,3,3,1));
+	
+	projection = R3D.inverseCameraMatrix(projection);
+	
 	return projection;
+}
+R3D.inverseCameraMatrix = function(P){
+	var R = P.getSubMatrix(0,0,3,3);
+	var t = P.getSubMatrix(0,3,3,1);
+	t.scale(-1);
+	console.log(R+"")
+	//R = Matrix.transpose(R); // inverse
+	R = Matrix.inverse(R);
+	P = R.copy().appendColFromArray(t.toArray()).appendRowFromArray([0,0,0,1]);
+	return P;
 }
 R3D.points3DFromTransform = function(pointsA,pointsB, F, Ka, Kb, M2, M1){ // points use F
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
@@ -312,7 +446,7 @@ R3D.calculatePrinciple = function(points){
 	var ratio = Math.sqrt(eigVal[0]/eigVal[1]);
 	return {direction:dirEigA, angle:angle, scale:ratio}
 }
-R3D.calculateNormalizedPoints = function(inputPoints){ // array of arrays
+R3D.calculateNormalizedPoints = function(inputPoints){ // array of arrays ---- 2D
 	//if(!Code.isArray(inputPoints)){ inputPoints = [inputPoints]; }
 	var i, j, len, T, cenX, cenY, rmsX, rmsY;
 	var dirInfo, angle, ratio, tmp = new V2D(), v = new V3D();
@@ -585,12 +719,31 @@ R3D.forceRank2 = function(fundamental){
 	var V = svd.V;
 	var s0 = S.get(0,0);
 	var s1 = S.get(1,1);
-	S = new Matrix(3,3).setFromArray([s0,0,0, 0,s1,0, 0,0,0]);
+	//S = new Matrix(3,3).setFromArray([s0,0,0, 0,s1,0, 0,0,0]);
+	S = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
 	V = Matrix.transpose(V);
 	var m = Matrix.mult(U,S);
 	m = Matrix.mult(m,V);
 	return m;
 }
+R3D.essentialMatrix = function(pointsA,pointsB){
+	var i, a, b, svd, U, S, V, len = pointsA.length;
+	var A = new Matrix(len,9);
+	for(i=0;i<len;++i){
+		a = pointsA[i];
+		b = pointsB[i];
+		A.setRowFromArray(i,[a.x*b.x, a.x*b.y, a.x, a.y*b.x, a.y*b.y, a.y, b.x, b.y, 1.0]);
+	}
+	// last column of V
+	svd = Matrix.SVD(A);
+	U = svd.U;
+	S = svd.S;
+	V = svd.V;
+	var E = new Matrix(3,3).setFromArray( V.colToArray(8) );
+	E = R3D.forceRank2F(E);
+	return E;
+}
+
 R3D.fundamentalInverse = function(fundamental){
 	return Matrix.transpose(fundamental);
 }
@@ -606,7 +759,8 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	if(pointsA.length<8){ return null; }
 	var i, a, b, svd, U, S, V, len = pointsA.length, F = new Matrix(3,3), A = new Matrix(len,9);
 	for(i=0;i<len;++i){
-		a = pointsA[i]; b = pointsB[i];
+		a = pointsA[i];
+		b = pointsB[i];
 		var az = a.z ? a.z : 1.0;
 		var bz = b.z ? b.z : 1.0;
 		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
@@ -634,7 +788,7 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){
 	var size = 7;
 	var F = new Matrix(3,3), f = new Matrix(size,1), A = new Matrix(size,9); // len,9
 	for(i=0;i<len;++i){
-		a = pointsA[i]; b = pointsA[i];
+		a = pointsA[i]; b = pointsB[i];
 		var az = a.z ? a.z : 1.0;
 		var bz = b.z ? b.z : 1.0;
 		A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
@@ -997,6 +1151,21 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax, angleOffset:regionAngleOffset};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
+R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSquares
+return E;
+	var maxIterations = 30;
+	var fxn, args, xVals, yVals, maxSupportCount;
+	maxSupportCount = pointsA.length;
+	fxn = R3D.lmMinEssentialFxn;
+	args = [pointsA,pointsB];
+	xVals = E.toArray();
+	yVals = Code.newArrayZeros(maxSupportCount*4);
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10);
+	E = new Matrix(3,3).setFromArray(xVals);
+	// FORCE RANK 2
+	E = R3D.forceRank2(E);
+	return E;
+}
 R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares
 	var maxIterations = 30;
 	var fxn, args, xVals, yVals, maxSupportCount;
@@ -1207,6 +1376,46 @@ R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1
 }
 
 
+
+R3D.lmMinEssentialFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1xm, e:1xm
+	var pointsA = args[0];
+	var pointsB = args[1];
+	var unknowns = 9;
+	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
+	var Frev = new Matrix(3,3), Ffwd = new Matrix(3,3);
+	var orgA = new V3D(), orgB = new V3D(), dirA = new V3D(), dirB = new V3D();
+	var onA, onB;
+	var i, len = pointsA.length;
+	var rows = 2*2*len;
+	// convert unknown list to matrix
+	for(i=0;i<unknowns;++i){
+		Ffwd.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
+	}
+	Frev = Matrix.transpose(Ffwd);
+	// find forward / reverse distances from line
+ 	for(i=0;i<len;++i){
+		pointA = pointsA[i];
+		pointB = pointsB[i];
+		Ffwd.multV3DtoV3D(lineA, pointA);
+		Frev.multV3DtoV3D(lineB, pointB);
+		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
+		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
+		onA = Code.closestPointLine2D(orgA,dirA, pointB);
+		onB = Code.closestPointLine2D(orgB,dirB, pointA);
+ 		if(yMatrix){
+ 			yMatrix.set(i*4+0,0, onA.x);
+ 			yMatrix.set(i*4+1,0, onA.y);
+ 			yMatrix.set(i*4+2,0, onB.x);
+ 			yMatrix.set(i*4+3,0, onB.y);
+ 		}
+ 		if(eMatrix){
+ 			eMatrix.set(i*4+0,0, Math.pow(onB.x-pointA.x,2) );
+ 			eMatrix.set(i*4+1,0, Math.pow(onB.y-pointA.y,2) );
+ 			eMatrix.set(i*4+2,0, Math.pow(onA.x-pointB.x,2) );
+ 			eMatrix.set(i*4+3,0, Math.pow(onA.y-pointB.y,2) );
+ 		}
+ 	}
+}
 
 
 

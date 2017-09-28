@@ -166,6 +166,7 @@ Triangulate.prototype.caseStudy = function(t){
 		new V2D(145,132), // glass tip right
 	];
 	// 
+/*
 	//var F = [ -0.0000218799600098825,-0.000016678046601020086,0.030221911114160567,0.000037792474581084344,0.00001199578702154598,0.007524048770802543,-0.023411954918794626,-0.008461981862046705,-0.9992048326931983];
 	var F = [0.0000027269946673859867,0.0000058666378526400515,-0.022218004013060053,-0.000013044017866634529,-0.000004253022893215171,-0.011491994391747789,0.020950228936843587,0.010483614147638562,0.38960882503981586];
 	var K = [ 3.7576E+2 , -1.7370E+0 , 1.9356E+2 ,  0.0000E+0 , 3.8050E+2 , 1.6544E+2 ,  0.0000E+0 , 0.0000E+0 , 1.0000E+0 ];
@@ -191,6 +192,7 @@ Triangulate.prototype.caseStudy = function(t){
 	console.log("TRY: DLT");
 	//K = null;
 	var points3D = R3D.triangulationDLT(cameraA,cameraB,pointsFr,pointsTo, K);
+*/
 	// DISPLAY
 	// console.log(points3D);
 	// var pointList = this._pointList;
@@ -214,14 +216,17 @@ Triangulate.prototype.caseStudy = function(t){
 	console.log(P+"");
 	console.log(pointsRev);
 	this._pointList = points3D;
-//if(false){
-if(true){
+if(false){
+// if(true){
 Code.emptyArray(points3D); // remove all existing completely
 }
 	for(var i=0; i<pointsRev.length; ++i){
 		//console.log(""+pointsRev[i]);
 		//pointsRev[i].scale(100);
-		points3D.push(pointsRev[i]);
+		var x = pointsRev[i];
+		x.scale(1);
+		//x.scale(50);
+		points3D.push(x);
 	}
 	console.log("TOTAL POINTS: "+this._pointList.length);
 }
@@ -235,13 +240,23 @@ Triangulate.prototype._syntheticPoints = function(){
 	points3D.push( new V3D(10,10,200) );
 	points3D.push( new V3D(-10,-10,200) );
 	points3D.push( new V3D(-10,50,200) );
-	for(i=0;i<20;++i){
-		points3D.push( new V3D(-100 + i*10, -20 + i*5, 150- i*5) );
-		points3D.push( new V3D(-20 + i*10, -25 + i*5, 160) );
-	}
+	// for(i=0;i<20;++i){
+	// 	points3D.push( new V3D(-100 + i*10, -20 + i*5, 150- i*5) );
+	// 	points3D.push( new V3D(-20 + i*10, -25 + i*5, 160) );
+	// 	points3D.push( new V3D(20 + i*5, 5 + i*2, 90) );
+	// }
 	//points3D.push( new V3D(-10,-10,-10) );
-	// cube
+	var i, j, k;
+	for(k=0; k<5; ++k){
+		for(j=0;j<10;++j){
+			for(i=0;i<10;++i){
+				points3D.push( new V3D(-50 + i*10, -50 + j*10, 160 + k*10) );
+			}
+		}
+	}
 
+
+	// cube
 	points3D.push( new V3D(-10,-10,100) );
 	points3D.push( new V3D(10,-10,100) );
 	points3D.push( new V3D(10,10,100) );
@@ -309,8 +324,8 @@ var cameraB = cameraMatrix.copy();
 		var pointA = matches[i][1];
 		var pointB = matches[i][2];
 		if(pointA && pointB){
-			pointsA.push(pointA);
-			pointsB.push(pointB);
+			pointsA.push( new V2D(pointA.x,pointA.y,1.0) );
+			pointsB.push( new V2D(pointB.x,pointB.y,1.0) );
 			points3D.push(point3D);
 		}
 	}
@@ -325,8 +340,33 @@ console.log("ACTUAL B: \n"+cameraB+"");
 	var P = null;
 	var pointsRev = null;
 	if(pointsA.length>8){
-		F = R3D.fundamentalMatrix(pointsA,pointsB);
-		F = R3D.fundamentalMatrixNonlinear(F,pointsA,pointsB);
+		/*
+		var norm = R3D.calculateNormalizedPoints([ptsA,ptsB]);
+	var H = R3D.projectiveMatrixNonlinear(norm.normalized[0],norm.normalized[1]);
+	var forward = norm.forward[0];
+	var reverse = norm.reverse[1];
+	H = Matrix.mult(H,forward);
+	H = Matrix.mult(reverse,H);
+		*/
+		
+		var norm = R3D.calculateNormalizedPoints([pointsA,pointsB]);
+		var forward = norm.forward[0];
+		var reverse = norm.reverse[1];
+	// console.log(pointsA+"")
+	// console.log(norm.normalized[0]+"")
+		F = R3D.fundamentalMatrix(norm.normalized[0],norm.normalized[1]);
+		//	F = R3D.fundamentalMatrix(norm.normalized[1],norm.normalized[0]); /// like E
+		// F = R3D.essentialMatrix(norm.normalized[0],norm.normalized[1]);
+		//F = R3D.fundamentalMatrixNonlinear(F,norm.normalized[0],norm.normalized[1]);
+		// F = Matrix.mult(F,forward);
+		// F = Matrix.mult(reverse,F);
+		F = Matrix.mult(F,norm.forward[0]);
+		F = Matrix.mult(norm.reverse[1],F);
+		// F = Matrix.mult(F,norm.reverse[0]);
+		// F = Matrix.mult(norm.forward[1],F);
+		
+		//F = R3D.fundamentalMatrix(pointsA,pointsB);
+		// F = R3D.fundamentalMatrixNonlinear(F,pointsA,pointsB);
 			//F = R3D.fundamentalInverse(F);
 		P = R3D.transformFromFundamental(pointsA, pointsB, F, K);
 		//
@@ -376,13 +416,13 @@ if(true){
 	camera.K(cx,cy, 1000,1000, 0);
 	// camera.distortion(1E-10,1E-19,1E-28 ,0,0);
 	//camera.distortion(1E-8,1E-14,1E-20, 1E-4,1E-8);
-	var radius =100;
+	var radius = 100; // 100 vs 500
 	var angle = Math.PI + t*0.01;
 	// var x = 0;//radius*Math.sin(angle) + 100;
 	// var z = 0;//radius*Math.cos(angle) + 100;
 	var x = radius*Math.sin(angle) - 0;
 	var z = radius*Math.cos(angle) + 0;
-	var y = 50;
+	var y = 50; // 50 vs 200
 	this._camera.location( new V3D(x,y,z) );
 	//this._camera.updateFromTarget();
 	//this._camera.rotation( new V3D(0,radius,0) );

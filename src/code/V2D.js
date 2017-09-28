@@ -256,6 +256,7 @@ V2D.meanFromArray = function(pointList){
 		mean.x += pt.x;
 		mean.y += pt.y;
 	}
+	mean.scale(1.0/len);
 	return mean;
 }
 V2D.extremaFromArray = function(pointList){
