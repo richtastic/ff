@@ -518,48 +518,24 @@ reliable
 
 
 
---- initial seed points are being incorrectly scale-matched
-
-
-
-- show 
 
 
 
 
-#### checkerboard
-x find blobs
-x find blob corners [after inset separation]
-	- assign to closest blob
-- find true corners
-	=> nearest corners merge at centerpoint average
+triangulation:
+- show cameras in scene
+- show lines to points in scene
+- show images (behind)
 
+camera control:
+- center/scale points inside window
+- rotate camera about given COM
+- zoom in/out about given COM
 
-
-x find squares
-	- each corner will belong to a labeled blob
-	- ...
-	- ...
-- connect squares by corners to form board
-
-- find RGB corner
-	- red vs non-red
-	- grn vs non-green
-	- blu vs non-blue
-
-- find box closest to RBG-box-group
-	
-
-
-
-
-
-
-
-
-
-
-
+texturing:
+- cut image based on points
+- make texture map
+- put triangles in 3D space
 
 
 
