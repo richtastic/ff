@@ -14,6 +14,7 @@ function Cam3D(p, r, l,f, s){
 	//this.K(0,0, 10000,10000, 0);
 	this.K(0,0, 100,100, 0);
 	this.distortion(0,0,0 ,0,0);
+this._matrix = new Matrix3D();
 }
 Code.inheritClass(Cam3D,Cam2D);
 Cam3D.prototype.updateFromTarget = function(){ // rotate to face target
@@ -71,6 +72,8 @@ Cam3D.prototype.K = function(cx,cy, fx,fy, s){
 	return this._K;
 }
 Cam3D.prototype.matrix = function(){ // transform the world to what it would look like to camera
+	return this._matrix;
+
 	var matrix = new Matrix3D();
 	var scale = this._scale;
 	//matrix.scale(scale);
@@ -79,11 +82,23 @@ Cam3D.prototype.matrix = function(){ // transform the world to what it would loo
 // matrix.rotateY(-this._rot.y);
 // matrix.rotateX(-this._rot.x);
 
+// NORMAL:
 matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
-	//matrix.rotateXYZ(-this._rot.x,-this._rot.y,-this._rot.z);
-	//rotateXYZ
 matrix.rotateY(-this._rot.y);
 matrix.rotateX(-this._rot.x);
+	matrix.scale(scale);
+
+
+/*
+matrix.rotateY(-this._rot.y);
+matrix.rotateX(-this._rot.x);
+matrix.rotateZ(-this._rot.z);
+matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
+// matrix.set(0,3, -this._pos.x);
+// matrix.set(1,3, -this._pos.y);
+// matrix.set(2,3, -this._pos.z);
+//matrix.setTranslation(-this._pos.x,-this._pos.y,-this._pos.z);
+*/
 	matrix.scale(scale);
 	//matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
 	//matrix.translate(0,0,10);

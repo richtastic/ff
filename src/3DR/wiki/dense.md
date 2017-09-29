@@ -537,6 +537,8 @@ texturing:
 - make texture map
 - put triangles in 3D space
 
+radial distortion:
+- cost function nonlinear optimization determine k1,k2,p1
 
 
 

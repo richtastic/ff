@@ -126,7 +126,7 @@ var pointsB = [
 			];
 
 
-
+/*
 var pointsA = [];pointsA.push(new V3D(235.97865315636457,115.28420955717579,10,4.791087469183674));
 pointsA.push(new V3D(349.1873946962186,149.64341003974414,52.631578947368425,1.7817229431532593));
 pointsA.push(new V3D(321.46916984800936,204.43217874215344,34.78260869565217,1.8929534330187712));
@@ -629,7 +629,7 @@ pointsB.push(new V3D(312.68701339627466,209.98307486764367,80,1.6403995284325885
 pointsB.push(new V3D(329.7140286958257,27.503975599268987,80,5.3958292185829695));
 pointsB.push(new V3D(312.68701339627466,209.98307486764367,80,1.6403995284325885));
 pointsB.push(new V3D(169.018031830852,181.79481938523045,15.151515151515152,0.25278505104202426));
-
+*/
 
 
 /*
@@ -699,7 +699,7 @@ pointsB = [
 		c.graphics().drawCircle(point.x, point.y, rad);
 		c.graphics().strokeLine();
 		c.graphics().endPath();
-		//GLOBALSTAGE.addChild(c);
+		GLOBALSTAGE.addChild(c);
 		//
 		point = pointsB[i];
 		color = 0xFF0000FF;
@@ -710,7 +710,7 @@ pointsB = [
 		c.graphics().strokeLine();
 		c.graphics().endPath();
 		c.matrix().translate(imageMatrixA.width(), 0);
-		//GLOBALSTAGE.addChild(c);
+		GLOBALSTAGE.addChild(c);
 	}
 
 

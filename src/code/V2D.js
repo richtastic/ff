@@ -182,6 +182,9 @@ V2D.prototype.rotate = function(a){
 	return this;
 }
 V2D.prototype.setFromArray = function(a){
+	throw "dont use";
+}
+V2D.prototype.fromArray = function(a){
 	this.set(a[0],a[1]);
 	return this;
 }
@@ -253,6 +256,7 @@ V2D.meanFromArray = function(pointList){
 	var mean = new V2D();
 	for(i=0; i<len; ++i){
 		pt = pointList[i];
+		//mean.add(pt);
 		mean.x += pt.x;
 		mean.y += pt.y;
 	}

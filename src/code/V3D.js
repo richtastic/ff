@@ -149,6 +149,9 @@ V3D.prototype.set = function(xV,yV,zV){
 	return this;
 }
 V3D.prototype.setFromArray = function(a){
+	throw "not this";
+}
+V3D.prototype.fromArray = function(a){
 	this.set(a[0],a[1],a[2]);
 	return this;
 }
@@ -223,12 +226,27 @@ V3D.DIRZ = new V3D(0.0,0.0,1.0);
 
 
 // HELPERS:
+V3D.meanFromArray = function(pointList){
+	// var i, len=pointList.length, pt;
+	// var mean = new V3D();
+	// for(i=0; i<len; ++i){
+	// 	pt = pointList[i];
+	// 	mean.add(pt);
+	// }
+	// mean.scale(1.0/len);
+	return V3D.infoFromArray(pointList)["mean"];
+}
+V3D.infoFromArray = function(pointList){
+	return V3D.extremaFromArray(pointList);
+}
 V3D.extremaFromArray = function(pointList){
 	var i, len=pointList.length, pt;
 	var minImageX = pointList[0].x, minImageY = pointList[0].y, minImageZ = pointList[0].z;
 	var maxImageX = minImageX, maxImageY = minImageY, maxImageZ = minImageZ;
+	var mean = pointList[0].copy();
 	for(i=1; i<len; ++i){
 		pt = pointList[i];
+		mean.add(pt);
 		minImageX = pt.x<minImageX ? pt.x : minImageX;
 		maxImageX = pt.x>maxImageX ? pt.x : maxImageX;
 		minImageY = pt.y<minImageY ? pt.y : minImageY;
@@ -236,10 +254,12 @@ V3D.extremaFromArray = function(pointList){
 		minImageZ = pt.z<minImageZ ? pt.z : minImageZ;
 		maxImageZ = pt.z>maxImageZ ? pt.z : maxImageZ;
 	}
-	var minPoint = new V2D(minImageX, minImageY, minImageZ);
-	var maxPoint = new V2D(maxImageX, maxImageY, maxImageZ);
+	mean.scale(1.0/len);
+	var minPoint = new V3D(minImageX, minImageY, minImageZ);
+	var maxPoint = new V3D(maxImageX, maxImageY, maxImageZ);
 	var size = V3D.sub(maxPoint, minPoint);
-	return {"min":minPoint, "max":maxPoint, "size":size};
+	var center = size.copy().scale(0.5).add(minPoint);
+	return {"min":minPoint, "max":maxPoint, "size":size, "mean":mean, "center":center };
 }
 
 

@@ -658,7 +658,7 @@ Canvas.prototype.removeListeners = function(){
 //  ------------------------------------------------------------------------------------------------------------------------ MOUSE POSITIONING
 Canvas.prototype.getMouseDelta = function(e){
 	e = Code.getJSEvent(e);
-	if(e.deltaX){
+	if(e.deltaX!==undefined){
 		var delta = new V3D();
 		delta.set(e.deltaX, e.deltaY, e.deltaZ);
 		return delta;
@@ -687,7 +687,7 @@ Canvas.prototype.getMouseButton = function(e){
 Canvas.prototype.getMouseObjectFromEvent = function(e){
 	var pos = Code.getMousePosition(e);
 	var delta = this.getMouseDelta(e);
-	pos = new V3D(pos.x,pos.y);
+	pos = new V3D(pos.x,pos.y,0);
 	var but = this.getMouseButton(e);
 	var obj = {};
 	obj[Canvas.MOUSE_EVENT_KEY_LOCATION] = pos;

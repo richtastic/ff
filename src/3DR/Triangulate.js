@@ -83,6 +83,9 @@ function Triangulate(){
 	var camera = new Cam3D();
 	
 	camera.translate(0,5,-15);
+
+	this._targetRotation = new V3D();
+	this._userRotation = new Matrix3D();
 	//
 	this._camera = camera;
 	this._pointList = points3D;
@@ -189,18 +192,22 @@ Triangulate.prototype.caseStudy = function(t){
 	var cameraB = P;
 	var pointsFr = pointsA;
 	var pointsTo = pointsB;
-	console.log("TRY: DLT");
+this._cameraA = cameraA;
+this._cameraB = cameraB;
 	//K = null;
-	var points3D = R3D.triangulationDLT(cameraA,cameraB,pointsFr,pointsTo, K);
+	console.log("triangulationDLT");
+	var points3D = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, K);
 
 	// DISPLAY
 	console.log(points3D);
 	var pointList = this._pointList;
 	Code.emptyArray(pointList);
 	for(var i=0; i<points3D.length; ++i){
-		points3D[i].scale(20.0);
+		//points3D[i].scale(20.0);
 		pointList.push(points3D[i]);
 	}
+	//this._syntheticPoints();
+
 	/*
 	this._syntheticPoints();
 	var result = this._synthetic();
@@ -243,21 +250,27 @@ Triangulate.prototype._syntheticPoints = function(){
 	points3D.push( new V3D(10,10,200) );
 	points3D.push( new V3D(-10,-10,200) );
 	points3D.push( new V3D(-10,50,200) );
-	for(i=0;i<20;++i){
-		points3D.push( new V3D(-100 + i*10, -20 + i*5, 150- i*5) );
-		points3D.push( new V3D(-20 + i*10, -25 + i*5, 160) );
-		points3D.push( new V3D(20 + i*5, 5 + i*2, 90) );
-	}
-	//points3D.push( new V3D(-10,-10,-10) );
-	var i, j, k;
-	for(k=0; k<5; ++k){
-		for(j=0;j<10;++j){
-			for(i=0;i<10;++i){
-				points3D.push( new V3D(-50 + i*10, -50 + j*10, 160 + k*10) );
-			}
-		}
-	}
+	// for(i=0;i<20;++i){
+	// 	points3D.push( new V3D(-100 + i*10, -20 + i*5, 150- i*5) );
+	// 	points3D.push( new V3D(-20 + i*10, -25 + i*5, 160) );
+	// 	points3D.push( new V3D(20 + i*5, 5 + i*2, 90) );
+	// }
+	// //points3D.push( new V3D(-10,-10,-10) );
+	// var i, j, k;
+	// for(k=0; k<5; ++k){
+	// 	for(j=0;j<10;++j){
+	// 		for(i=0;i<10;++i){
+	// 			points3D.push( new V3D(-50 + i*10, -50 + j*10, 160 + k*10) );
+	// 		}
+	// 	}
+	// }
+	// for(i=0;i<20;++i){
+	// 	points3D.push( new V3D(-20 + i*2, 0, 0) );
+	// 	points3D.push( new V3D(0, -20 + i*2, 0) );
+	// 	points3D.push( new V3D(0, 0, -20 + i*2) );
+	// }
 
+	points3D.push( new V3D(0,0,0) );
 
 	// cube
 	points3D.push( new V3D(-10,-10,100) );
@@ -350,20 +363,16 @@ console.log("ACTUAL B: \n"+cameraB+"");
 		//F = R3D.fundamentalMatrixNonlinear(F,norm.normalized[0],norm.normalized[1]);
 		F = Matrix.mult(F,norm.forward[1]);
 		F = Matrix.mult(Matrix.transpose(norm.forward[0]),F);
-		
 		//F = R3D.fundamentalMatrix(pointsA,pointsB);
 		// F = R3D.fundamentalMatrixNonlinear(F,pointsA,pointsB);
 			//F = R3D.fundamentalInverse(F);
+
 		P = R3D.transformFromFundamental(pointsA, pointsB, F, K);
-		//
 		var cameraA = new Matrix(4,4).identity();
 		var cameraB = P;
-		//var Kinv = Matrix.transpose(K);
-		//var cameraB = Matrix.mult(Kinv,P);
-//			cameraB = new Matrix(4,4).fromArray(cameraB.toArray());
 		var pointsFr = pointsA;
 		var pointsTo = pointsB;
-		pointsRev = R3D.triangulationDLT(cameraA,cameraB,pointsFr,pointsTo, K);
+		pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, K);
 	}
 
 	return {"pointsA":pointsA, "pointsB":pointsB, "points3D":points3D, "F":F, "K":K, "P":P, "pointsRev":pointsRev};
@@ -392,23 +401,27 @@ Triangulate.prototype._renderScene = function(t){
 	var i, j, k;
 	var availWidth = this._canvas.width();
 	var availHeight = this._canvas.height();
+	var cx = this._canvas.width()*0.5;
+	var cy = this._canvas.height()*0.5;
+	var fx = 1000;
+	var fy = 1000;
+	var s = 0;
 
 //if(false){
 if(true){
 	//camera.K(10,10, 200,200, -1);
-	var cx = this._canvas.width()*0.5;
-	var cy = this._canvas.height()*0.5;
+	
 	//camera.K(cx,cy, 1000,1000, -1);
-	camera.K(cx,cy, 1000,1000, 0);
+	camera.K(cx,cy, fx,fy, s);
 	// camera.distortion(1E-10,1E-19,1E-28 ,0,0);
 	//camera.distortion(1E-8,1E-14,1E-20, 1E-4,1E-8);
 	var radius = 100; // 100 vs 500
 	var angle = Math.PI + t*0.01;
 	// var x = 0;//radius*Math.sin(angle) + 100;
 	// var z = 0;//radius*Math.cos(angle) + 100;
-	var x = radius*Math.sin(angle) - 0;
-	var z = radius*Math.cos(angle) + 0;
-	var y = 50; // 50 vs 200
+	var x = radius*Math.sin(angle) + 10;
+	var z = radius*Math.cos(angle) + 10;
+	var y = 10; // 50 vs 200
 	this._camera.location( new V3D(x,y,z) );
 	//this._camera.updateFromTarget();
 	//this._camera.rotation( new V3D(0,radius,0) );
@@ -416,7 +429,7 @@ if(true){
 	//this._camera.location(new V3D(0,0,0) );
 	//this._camera.location(new V3D(100,100,0) );
 	//this._camera.rotation( new V3D(0,Code.radians(10),0) );
-	this._camera.rotation( new V3D( Code.radians(20) ,Math.PI + angle,0) );
+	this._camera.rotation( new V3D( Code.radians(10) ,Math.PI + angle,0) );
 
 	//this._camera.location(new V3D(0,0,0) );
 	//this._camera.location(new V3D(100,100,0) );
@@ -424,24 +437,100 @@ if(true){
 }
 
 
+// position camera based on user input
+var ellipsoid = V3D.infoFromArray(pointList); // R3D.ellipsoidFromPoints(pointList);
+//console.log(ellipsoid)
+var min = ellipsoid["min"];
+var max = ellipsoid["max"];
+var size = ellipsoid["size"];
+var radius = Math.max(size.x,size.y,size.z) * 0.5;
+// put camera at center of ellipsoid
+var center = ellipsoid["center"].copy();
+//console.log("center: "+center+" | "+size);
+//console.log("center: "+center+" | "+min+" | "+max);
+//center.scale(-1);
+//console.log(radius+"");
+var dX = fx * 2.0*radius/availWidth;
+var dY = fy * 2.0*radius/availHeight;
+
+dX = radius / ((availWidth/2)/fx);
+dY = radius / ((availHeight/2)/fy);
+
+var dist = Math.max(dX,dY);
+//center.z -= dist;
+//center.z += dist;
+//this._camera.location( center );
+//this._camera.rotation( new V3D(0,0,0) );
+//this._camera.rotation( new V3D(t*0.1,t*0.2,0) );
+//this._camera.rotation( this._targetRotation );
+
+//center.set(0,0,0)
+//console.log(dist);
+var r = this._userRotation;
+var m = camera.matrix();
+m.identity();
+
+//m.translate(0,0,dist);
+m.translate(0,0,-dist);
+//m.translate(-center.x,-center.y,-center.z);
+//m.mult(m,r);
+m.mult(r,m);
+//m.translate(-center.x,-center.y,-center.z);
+m.translate(center.x,center.y,center.z);
+
+
+/*
+m.translate(center.x,center.y,center.z);
+//m.mult(r,m);
+m.mult(m,r);
+m.translate(0,0,dist);
+*/
+
+
+//m.translate(center.x,center.y,center.z);
+//m.mult(m,r);
+
+
+// rotate camera
+//this._camera.rotation( new V3D( Code.radians(10) ,Math.PI + angle,0) );
+
+
+
+var cameraA = this._cameraA;
+var cameraB = this._cameraB;
+// var cameraPointA = cameraA.mult(new V3D, V3D.ZERO);
+// var cameraPointB = cameraB.mult(new V3D, V3D.ZERO);
+var colZero = new Matrix(4,1).fromArray([0,0,0,1]);
+var cameraPointA = Matrix.mult(cameraA,colZero);
+	cameraPointA.scale(1.0/cameraPointA.get(3,0));
+	cameraPointA = new V3D().fromArray(cameraPointA.toArray());
+var cameraPointB = Matrix.mult(cameraB,colZero);
+	cameraPointB.scale(1.0/cameraPointB.get(3,0));
+	cameraPointB = new V3D().fromArray(cameraPointB.toArray());
+
+// cameraPointA = new V3D();
+// cameraPointB = new V3D();
+
+// cameraPointA = pointList[0];
+// cameraPointB = pointList[1];
 
 	var cameraMatrix = camera.matrix();
 	var cameraK = camera.K();
 	display.removeAllChildren();
+	var pList = [];
 	var dList = [];
 	for(i=0; i<pointList.length; ++i){
 		var point3D = pointList[i];
-		var local3D = cameraMatrix.multV3D(new V3D(), point3D);
-		if(local3D.z<0){
-			continue;
+		//console.log(point3D+"")
+		var point = Triangulate.projectedPointFromWorldPoint(point3D, camera);
+		if(point){
+			pList.push(point);
 		}
-		var projected3D = cameraK.multV3D(new V3D(), local3D);
-		var image3D = new V3D(projected3D.x/projected3D.z,projected3D.y/projected3D.z,projected3D.z);
-		var screen3D = camera.applyDistortion(new V2D(), image3D);
-		var point = new V3D(screen3D.x,screen3D.y,image3D.z);
+	}
+	for(i=0; i<pList.length; ++i){
+		var point = pList[i];
 		point.y = -point.y; // image flip
 		var d = new DO();
-		//console.log(point.z)
 		var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
 		rad = 1;
 		//var rad = 5;
@@ -452,9 +541,9 @@ if(true){
 		d.graphics().fill();
 		d.graphics().strokeLine();
 		d.graphics().endPath();
-		//display.addChild(d);
 		dList.push([d,point.z]);
 	}
+	// TODO: outside viewport cipping
 	dList = dList.sort(function(a,b){
 		return a[1] < b[1];
 	});
@@ -463,7 +552,50 @@ if(true){
 		var d = o[0];
 		display.addChild(d);
 	}
-	var d = new DO();
+
+
+	// // show camera lines to points
+	var camPointA2D = Triangulate.projectedPointFromWorldPoint(cameraPointA, camera, true);
+	var camPointB2D = Triangulate.projectedPointFromWorldPoint(cameraPointB, camera, true);
+
+	var list = [];
+	if(camPointA2D){
+		camPointA2D.y = -camPointA2D.y;
+		list.push(camPointA2D);
+	}
+	if(camPointB2D){
+		camPointB2D.y = -camPointB2D.y;
+		list.push(camPointB2D);
+	}
+	for(i=0; i<list.length; ++i){
+		var point = list[i];
+		var d = new DO();
+		d.graphics().setFill(0xFF0000FF);
+		d.graphics().setLine(1.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x, point.y, 3.0);
+		d.graphics().fill();
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		display.addChild(d);
+		// lines
+		var d = new DO();
+			d.graphics().setLine(1.0, 0x996699CC);
+		for(j=0; j<pList.length; ++j){
+			var p = pList[j];
+			
+			d.graphics().beginPath();
+			d.graphics().moveTo(point.x,point.y);
+			d.graphics().lineTo(p.x,p.y);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			
+		}
+		display.addChild(d);
+		
+	}
+		// crosshair
+		var d = new DO();
 		d.graphics().setLine(1.0, 0xFF000000);
 		d.graphics().beginPath();
 		d.graphics().moveTo(availWidth*0.5,0);
@@ -479,12 +611,30 @@ if(true){
 
 	
 }
+Triangulate.projectedPointFromWorldPoint = function(point3D, camera, anywhere){
+	anywhere = anywhere!==undefined ? anywhere : false;
+	var cameraMatrix = camera.matrix();
+	var cameraK = camera.K();
+	var local3D = cameraMatrix.multV3D(new V3D(), point3D);
+	if(local3D.z<0){
+		if(!anywhere){
+			return null;
+		}
+		//local3D.z = 1.0;//
+		//local3D.z = -local3D.z;
+	}
+	
+	var projected3D = cameraK.multV3D(new V3D(), local3D);
+	var image3D = new V3D(projected3D.x/projected3D.z,projected3D.y/projected3D.z,projected3D.z);
+	var screen3D = camera.applyDistortion(new V2D(), image3D);
+	var point = new V3D(screen3D.x,screen3D.y,image3D.z);
+	return point;
+}
 Triangulate.prototype._handleResizeFxn = function(e){
-	console.log(e);
 	var display = this._display3D;
 	var wid = this._canvas.width();
 	var hei = this._canvas.height();
-	console.log("resize: "+wid+"x"+hei);
+	//console.log("resize: "+wid+"x"+hei);
 	display.matrix().identity();
 	//display.matrix().translate(wid*0.5,hei*0.5);
 	display.matrix().translate(0,hei);
@@ -501,7 +651,7 @@ Triangulate.prototype._handleKeyboardUpFxn = function(e){
 	}
 }
 Triangulate.prototype._handleKeyboardDownFxn = function(e){
-	console.log("key down");
+	console.log("key down: "+e.keyCode);
 	if(e.keyCode==Keyboard.KEY_SPACE){
 		//console.log("space");
 	}
@@ -512,11 +662,36 @@ Triangulate.prototype._handleMouseClickFxn = function(e){
 }
 Triangulate.prototype._handleMouseWheelFxn = function(e){
 	//var location = e["location"];
+	var rotation = this._targetRotation;
 	var location = e[Canvas.MOUSE_EVENT_KEY_LOCATION];
 	var scroll = e[Canvas.MOUSE_EVENT_KEY_SCROLL];
-	console.log(location+"");
-	console.log(scroll+"");
-	console.log("mouse wheel: ");
+	//console.log(scroll.y+"")
+	//var direction = scroll[""]
+	if(this._keyboard.isKeyDown(Keyboard.KEY_COMMAND)){
+		// move in x / y / z
+	}else if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+		if(scroll.y!=0){
+			var r = 0.001 * scroll.y;
+			//console.log(r)
+			this._userRotation.rotateZ(r);
+			//rotation.z += 0.01 * scroll.y;
+		}
+	}else{
+		if(scroll.x!=0){
+			var r = 0.001 * scroll.x;
+			this._userRotation.rotateY(r);
+			//rotation.y += 0.01 * scroll.x;
+			
+		}
+		if(scroll.y!=0){
+			var r = 0.001 * scroll.y;
+			this._userRotation.rotateX(r);
+			//rotation.x += 0.01 * scroll.y;
+		}
+	}
+	// console.log(location+"");
+	// console.log(scroll+"");
+	// console.log("mouse wheel: ");
 }
 
 Triangulate.prototype.cameraToCenter = function(){ // move camera to center of points

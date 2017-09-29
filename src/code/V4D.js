@@ -172,6 +172,9 @@ V4D.prototype.set = function(xV,yV,zV,tV){
 	this.t = tV;
 }
 V4D.prototype.setFromArray = function(a){
+	throw "don't call"
+}
+V4D.prototype.fromArray = function(a){
 	this.set(a[0],a[1],a[2],a[3]);
 	return this;
 }

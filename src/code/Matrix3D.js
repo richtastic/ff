@@ -151,7 +151,11 @@ Matrix3D.prototype.translate = function(tx,ty,tz){
 	this.mult(mat,this);
 	return this;
 }
-
+Matrix3D.prototype.setTranslation = function(tx,ty,tz){
+	this.d = tx;
+	this.h = ty;
+	this.l = tz;
+}
 // skewing by x, y, z
 
 Matrix3D.prototype.toTranslation = function(v){

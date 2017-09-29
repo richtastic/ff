@@ -3,7 +3,7 @@ Keyboard.KEY_TAB = 9;
 Keyboard.KEY_ENTER = 13;
 Keyboard.KEY_SHIFT = 16;
 Keyboard.KEY_CTRL = Keyboard.KEY_CONTROL = 17;
-Keyboard.KEY_ALT = Keyboard.KEY_ALTERNATE = 18;
+Keyboard.KEY_ALT = Keyboard.KEY_ALTERNATE = 18; // mac: option
 Keyboard.KEY_CAP = Keyboard.KEY_CAPS = Keyboard.KEY_SPACE = CAPSLOCK = 20;
 Keyboard.KEY_ESC = 27;
 Keyboard.KEY_SPACE = 32;
@@ -47,6 +47,7 @@ Keyboard.KEY_NUM_6 = 54;
 Keyboard.KEY_NUM_7 = 55;
 Keyboard.KEY_NUM_8 = 56;
 Keyboard.KEY_NUM_9 = 57;
+Keyboard.KEY_COMMAND = 91; // mac
 Keyboard.EVENT_KEY_UP = "kbdevtkup";
 Keyboard.EVENT_KEY_DOWN = "kbdevtkdn";
 Keyboard.EVENT_KEY_STILL_DOWN = "kbdevtksd";

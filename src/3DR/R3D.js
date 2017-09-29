@@ -44,6 +44,21 @@ R3D.uniformScale3D = function(pointsA,pointsB, centroidA, centroidB){
 	scale /= len;
 	return scale;
 }
+R3D.ellipsoidFromPoints = function(points){
+	// var i, p, len=points.length;
+	// var center = V3D.meanFromArray(points);
+	// var info = V3D.infoFromArray(points);
+	// var size = new V3D();
+	// = function(pointList){
+	// var i, len=pointList.length, pt;
+	// var mean = new V2D();
+	// for(i=0; i<len; ++i){
+	// 	pt = pointList[i];
+	// 	mean.add(pt);
+	// }
+	// mean.scale(1.0/len);
+	return V3D.infoFromArray(points);
+}
 // R3D.covariance2D = function(pointsA,pointsB, centroidA, centroidB){
 // 	centroidA = centroidA ? centroidA : R3D.centroid3D(pointsA);
 // 	centroidB = centroidB ? centroidB : R3D.centroid3D(pointsB);
@@ -271,13 +286,13 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 		var A = pAM.copy().appendMatrixBottom(pBM);
 		svd = Matrix.SVD(A);
 		var P1 = svd.V.getCol(3);
-		var p1Norm = new V4D().setFromArray(P1.toArray());
+		var p1Norm = new V4D().fromArray(P1.toArray());
 		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
 		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 
 		var P2 = Matrix.mult(possibleInv,P1est);
 		var P2 = Matrix.mult(possible,P1est);
-		var p2Norm = new V4D().setFromArray(P2.toArray());
+		var p2Norm = new V4D().fromArray(P2.toArray());
 		p2Norm.homo(); // not necessary?
 		//console.log(i+": option: "+p1Norm+" && "+p2Norm);
 		if(p1Norm.z>0 && p2Norm.z>0){
@@ -286,6 +301,7 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 			//break; // look at others still
 		}
 	}
+	console.log("projection: \n"+projection);
 	projection = R3D.inverseCameraMatrix(projection);
 	return projection;
 }
@@ -1798,7 +1814,7 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	cam.setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0.0,0.0,0.0,1.0]);
 	return cam;
 }
-R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo, Ka, Kb){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
+R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
 	// TODO: are these normalized (E) image coords ?
 	pointsFr = Code.copyArray(pointsFr);
 	pointsTo = Code.copyArray(pointsTo);
@@ -1812,86 +1828,50 @@ R3D.triangulationDLT = function(cameraA,cameraB,pointsFr,pointsTo, Ka, Kb){ // 3
 		KbInv = Matrix.inverse(Kb);
 	}
 	var i, j, to, fr, len=pointsFr.length;
-	var rows = 4, cols = 4;
 	var points3D = new Array(len);
-	var A = new Matrix(rows,cols);
+	
 	console.log("TRAINGULATE");
 	console.log("A:\n"+cameraA);
 	console.log("B:\n"+cameraB);
 	console.log("Ka:\n"+Ka);
 	console.log("Kb:\n"+Kb);
 	//var arr = new Array();
-	// NORMALIZED POINTS:
+	// 
 	for(i=0;i<len;++i){
 		fr = pointsFr[i];
 		to = pointsTo[i];
-		if(KaInv && KbInv){ // to normalized image coords
-			fr = KaInv.multV3DtoV3D(new V3D(), new V3D(fr.x,fr.y,1.0));
-			to = KbInv.multV3DtoV3D(new V3D(), new V3D(to.x,to.y,1.0));
-			pointsFr[i] = fr;
-			pointsTo[i] = to;
-		}
+		points3D[i] = R3D.triangulatePointDLT(fr,to, cameraA,cameraB, KaInv, KbInv);
 	}
-	//
-	//var norm = R3D.calculateNormalizedPoints([points3D,points2D]);
-	var meanFr = V2D.meanFromArray(pointsFr);
-	var meanTo = V2D.meanFromArray(pointsTo);
-	var distFr = new V2D();
-	var distTo = new V2D();
-	for(i=0;i<len;++i){
-		fr = pointsFr[i];
-		to = pointsFr[i];
-		// mean from center
-		distFr.x += fr.x - meanFr.x;
-		distFr.y += fr.y - meanFr.y;
-		distTo.x += to.x - meanTo.x;
-		distTo.y += to.y - meanTo.y;
-	}
-	// TODO: NORMALIZE ...
-	//
-	for(i=0;i<len;++i){
-		fr = pointsFr[i];
-		to = pointsTo[i];
-		// console.log(fr+"")
-		// console.log(to+"")
-		// fr
-		A.set(0,0, fr.x*cameraA.get(2,0) - cameraA.get(0,0) ); // X
-		A.set(0,1, fr.x*cameraA.get(2,1) - cameraA.get(0,1) ); // Y
-		A.set(0,2, fr.x*cameraA.get(2,2) - cameraA.get(0,2) ); // Z
-		A.set(0,3, fr.x*cameraA.get(2,3) - cameraA.get(0,3) ); // W
-//			A.set(0,3, -cameraA.get(0,3) );						   // W
-		A.set(1,0, fr.y*cameraA.get(2,0) - cameraA.get(1,0) ); // X
-		A.set(1,1, fr.y*cameraA.get(2,1) - cameraA.get(1,1) ); // Y
-		A.set(1,2, fr.y*cameraA.get(2,2) - cameraA.get(1,2) ); // Z
-		A.set(1,3, fr.y*cameraA.get(2,3) - cameraA.get(1,3) ); // W
-//			A.set(1,3, -cameraA.get(1,3) );						   // W
-		// to
-		A.set(2,0, to.x*cameraB.get(2,0) - cameraB.get(0,0) ); // X
-		A.set(2,1, to.x*cameraB.get(2,1) - cameraB.get(0,1) ); // Y
-		A.set(2,2, to.x*cameraB.get(2,2) - cameraB.get(0,2) ); // Z
-		A.set(2,3, to.x*cameraB.get(2,3) - cameraB.get(0,3) ); // W
-//			A.set(2,3, -cameraB.get(0,3) );                        // W
-		A.set(3,0, to.y*cameraB.get(2,0) - cameraB.get(1,0) ); // X
-		A.set(3,1, to.y*cameraB.get(2,1) - cameraB.get(1,1) ); // Y
-		A.set(3,2, to.y*cameraB.get(2,2) - cameraB.get(1,2) ); // Z
-		A.set(3,3, to.y*cameraB.get(2,3) - cameraB.get(1,3) ); // W
-//			A.set(3,3, -cameraB.get(1,3) );                        // W
-	// TODO: SCALE EACH ROW BY INVERSE OF NORMAL VALUE:
-	//       A(row) = A(row) / norm(A(row))
-		//console.log("     = "+A);
-		var svd = Matrix.SVD(A);
-		var coeff = svd.V.colToArray(3);
-//		console.log(coeff);
-		var point = new V3D(coeff[0],coeff[1],coeff[2]);
-		point.scale(1.0/coeff[3]);
-		points3D[i] = point;
-		//console.log("     = "+point);
-//		console.log(point+"");
-	}
-	// var svd = Matrix.SVD(A);
-	// var coeff = svd.V.colToArray(8);
-	// var H = new Matrix(3,3).setFromArray(coeff);
 	return points3D;
+}
+R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from cameras
+	var rows = 4, cols = 4;
+	var A = new Matrix(rows,cols);
+	fr = KaInv.multV3DtoV3D(new V3D(), new V3D(fr.x,fr.y,1.0));
+	to = KbInv.multV3DtoV3D(new V3D(), new V3D(to.x,to.y,1.0));
+	// fr
+	A.set(0,0, fr.x*cameraA.get(2,0) - cameraA.get(0,0) ); // X
+	A.set(0,1, fr.x*cameraA.get(2,1) - cameraA.get(0,1) ); // Y
+	A.set(0,2, fr.x*cameraA.get(2,2) - cameraA.get(0,2) ); // Z
+	A.set(0,3, fr.x*cameraA.get(2,3) - cameraA.get(0,3) ); // W
+	A.set(1,0, fr.y*cameraA.get(2,0) - cameraA.get(1,0) ); // X
+	A.set(1,1, fr.y*cameraA.get(2,1) - cameraA.get(1,1) ); // Y
+	A.set(1,2, fr.y*cameraA.get(2,2) - cameraA.get(1,2) ); // Z
+	A.set(1,3, fr.y*cameraA.get(2,3) - cameraA.get(1,3) ); // W
+	// to
+	A.set(2,0, to.x*cameraB.get(2,0) - cameraB.get(0,0) ); // X
+	A.set(2,1, to.x*cameraB.get(2,1) - cameraB.get(0,1) ); // Y
+	A.set(2,2, to.x*cameraB.get(2,2) - cameraB.get(0,2) ); // Z
+	A.set(2,3, to.x*cameraB.get(2,3) - cameraB.get(0,3) ); // W
+	A.set(3,0, to.y*cameraB.get(2,0) - cameraB.get(1,0) ); // X
+	A.set(3,1, to.y*cameraB.get(2,1) - cameraB.get(1,1) ); // Y
+	A.set(3,2, to.y*cameraB.get(2,2) - cameraB.get(1,2) ); // Z
+	A.set(3,3, to.y*cameraB.get(2,3) - cameraB.get(1,3) ); // W
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(3);
+	var point = new V3D(coeff[0],coeff[1],coeff[2]);
+	point.scale(1.0/coeff[3]);
+	return point;
 }
 R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList){ // get rectangular image texture from 3D tri + 3D tris in images
 	var textureScale = 2.0;
@@ -2138,9 +2118,9 @@ bestPointB.z = 1.0;
 		bestA2D.push(bestPointA);
 		bestB2D.push(bestPointB);
 		// convert results from 2D to 3D via cams back-projection rays:
-//var list = R3D.triangulationDLT(camA,camB,[pointA],[pointB]);
+//var list = R3D.triangulationDLT([pointA],[pointB],camA,camB);
 console.log(bestPointA+"");
-		var list = R3D.triangulationDLT(camA,camB,[bestPointA],[bestPointB]);
+		var list = R3D.triangulationDLT([bestPointA],[bestPointB], camA,camB); // need a k now
 		var p = list[0]
 		//console.log(list[0]+"");
 		//p.homo();
