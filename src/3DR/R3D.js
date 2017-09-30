@@ -295,6 +295,7 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 		var p2Norm = new V4D().fromArray(P2.toArray());
 		p2Norm.homo(); // not necessary?
 		//console.log(i+": option: "+p1Norm+" && "+p2Norm);
+		//if(i==3){
 		if(p1Norm.z>0 && p2Norm.z>0){
 			console.log(".......................>>XXX");
 			projection = possible;
@@ -4460,9 +4461,44 @@ R3D.HarrisDescriptors = function(imageSource, points){ // create features from p
 	// bin gathering
 	// normalize
 }
+// list of images with checkerboards on them
+// list of 2D planar points + 3D counterparts
+R3D.calibrateFromCheckerboards = function(pointList2Ds){ // list of planar 2D points
+	return R3D.calibrateFromPlanarPoints(pointList2Ds, true);
+}
+R3D.calibrateFromPlanarPoints = function(planarListMaps, isChecker){ // planarListMaps is [[2d,3d],..] OR [image]
+	isChecker = isChecker!==undefined ? isChecker : false;
+	var pointList2D = [];
+	var pointList3D = [];
+	for(i=0; i<planarListMaps.length; ++i){
+		var points2D = planarListMaps[i];
+		var pointMatches = null;
+		if(isChecker){
+			pointMatches = R3D.detectCheckerboard(points2D);
+		}else{
+			pointMatches = {"points2D":points2D[0], "points3D":points2D[1]};
+		}
+		if(pointMatches){
+			var points2D = pointMatches["points2D"];
+			var points3D = pointMatches["points3D"];
+			pointList2D.push(points2D);
+			pointList3D.push(points3D);
+		}else{
+			console.log("pointMatches null "+i);
+		}
+	}
+	var result = R3D.calibrateCameraK(pointList3D,pointList2D);
+	console.log(result);
+	var K = result["K"];
+	return result;
+}
 CALLED = 0;
-R3D.detectCheckerboard = function(imageSource, useCorner){
-	useCorner = useCorner!==undefined ? useCorner : false;
+R3D.detectCheckerboard = function(imageSource){
+	//useCorner = useCorner!==undefined ? useCorner : false;
+	var corners = null;
+	if(Code.isArray(imageSource)){ // already given points
+		corners = imageSource;
+	}else{
 	var i, j;
 	var gridCountX = 10; // white + black
 	var gridCountY = 10;
@@ -4524,7 +4560,8 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(imageAdjusted.red(),imageAdjusted.grn()
 //var showFeedback = false;
 var showFeedback = true;
 
-	var corners = R3D.pointsCornerMaxima(imageThreshold,imageWidth,imageHeight);
+	corners = R3D.pointsCornerMaxima(imageThreshold,imageWidth,imageHeight);
+}
 	//var corners = R3D.pointsCornerMaxima(imageSource.gry(),imageWidth,imageHeight);
 
 	// IF THERE'S A FAIL => TRY ADDING LESS / MORE CORNERS

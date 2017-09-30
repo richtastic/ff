@@ -70,6 +70,7 @@ GLOBALSTAGE = this._stage;
 		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
 		imageMatrixList.push(imageMatrix);
 	}
+	/*
 	// get checkerboard points
 	var pointList2D = [];
 	var pointList3D = [];
@@ -92,6 +93,8 @@ GLOBALSTAGE = this._stage;
 	console.log(result);
 	var K = result["K"];
 	console.log(K+"");
+	*/
+	R3D.calibrateFromCheckerboards(imageMatrixList);
 }
 
 

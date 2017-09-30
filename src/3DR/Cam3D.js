@@ -86,6 +86,7 @@ Cam3D.prototype.matrix = function(){ // transform the world to what it would loo
 matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
 matrix.rotateY(-this._rot.y);
 matrix.rotateX(-this._rot.x);
+matrix.rotateZ(-this._rot.z);
 	matrix.scale(scale);
 
 
@@ -99,7 +100,6 @@ matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
 // matrix.set(2,3, -this._pos.z);
 //matrix.setTranslation(-this._pos.x,-this._pos.y,-this._pos.z);
 */
-	matrix.scale(scale);
 	//matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
 	//matrix.translate(0,0,10);
 	//matrix.translate(0,0,10);
