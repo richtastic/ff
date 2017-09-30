@@ -523,19 +523,19 @@ reliable
 
 
 triangulation:
-- show cameras in scene
-- show lines to points in scene
+~ show cameras in scene
+~ show lines to points in scene
 - show images (behind)
 
 camera control:
-- center/scale points inside window
-- rotate camera about given COM
+~ center/scale points inside window
+~ rotate camera about given COM
 - zoom in/out about given COM
 
 texturing:
-- cut image based on points
+~ cut image based on points
 - make texture map
-- put triangles in 3D space
+~ put triangles in 3D space
 
 radial distortion:
 - cost function nonlinear optimization determine k1,k2,p1

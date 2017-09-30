@@ -93,8 +93,8 @@ Tri2D.prototype.boundingRect = function(){
 	return new Rect(info["min"].x,info["min"].y, info["size"].x,info["size"].y);
 }
 Tri2D.prototype.area = function(){
-	var AB = V2D.sub(this._b,this._a);
-	var AC = V2D.sub(this._c,this._a);
+	var AB = this.AB();
+	var AC = this.CA();
 	return Math.abs(V2D.cross(AB,AC)) * 0.5; // ?
 }
 Tri2D.prototype.center = function(){ // barycenter

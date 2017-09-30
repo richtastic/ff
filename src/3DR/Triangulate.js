@@ -96,59 +96,51 @@ function Triangulate(){
 	this._stage.start();
 }
 Triangulate.prototype.caseStudy = function(t){
-	//var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
-
+	
+	
 	var pointsA = [
-//				new V2D(86,208), // glasses corner left
-//				new V2D(190,180), // glasses corner right
-		new V2D(172,107), // origin
-		new V2D(22.5,166), // lighter button
-		new V2D(361,183), // mouse eye
-		new V2D(18,225), // bic corner left
-		//new V2D(37,216), // bic corner right
-		//new V2D(65,169), // cup 
-		new V2D(226,87), // face BL
-		new V2D(219,66), // glasses TL
-		new V2D(250,72), // glasses TR
-		new V2D(260,103), // elbow
-		new V2D(216,154), // toe left
-		new V2D(245,158), // toe right
-		new V2D(202,127), // brick
-		new V2D(240,248), // 12
-		new V2D(332,249), // 16
-		new V2D(145,203), // glasses center
-		new V2D(172,68), // grid top
-		new V2D(141,76), // grid TL
-		new V2D(204,75), // grid TR
-		new V2D(144,119), // grid BL
-		new V2D(175,128), // grid bot
-		new V2D(362,213), // U
-		new V2D(326,176), // tail
-		new V2D(190,173), // base left
-		new V2D(265,178), // base right
-		new V2D(372,181), // nose
-		new V2D(129,88), // power top
-		new V2D(132,141), // power bot
-		new V2D(62,107), // cup
-		new V2D(94,176), // glass tip left
-		new V2D(131,166), // glass tip right
+		new V2D(172,107), // origin				// 0
+		new V2D(22.5,166), // lighter button	// 1
+		new V2D(361,183), // mouse eye			// 2
+		new V2D(18,225), // bic corner left		// 3
+		new V2D(226,87), // face blu 			// 4
+		new V2D(219,66), // glasses TL 			// 5
+		new V2D(250,72), // glasses TR 			// 6
+		new V2D(260,103), // elbow				// 7
+		new V2D(216,154), // toe left 			// 8
+		new V2D(245,158), // toe right 			// 9
+		new V2D(202,127), // brick 				// 10
+		new V2D(240,248), // 12 				// 11
+		new V2D(332,249), // 16 				// 12
+		new V2D(145,203), // glasses center 	// 13
+		new V2D(172,68), // grid top 			// 14
+		new V2D(141,76), // grid TL 			// 15
+		new V2D(204,75), // grid TR 			// 16
+		new V2D(144,119), // grid BL 			// 17
+		new V2D(175,128), // grid bot 			// 18
+		new V2D(362,213), // U 					// 19
+		new V2D(326,176), // tail 				// 20
+		new V2D(190,173), // base left 			// 21
+		new V2D(265,178), // base right 		// 22
+		new V2D(372,181), // nose 				// 23
+		new V2D(129,88), // power top 			// 24
+		new V2D(132,141), // power bot 			// 25
+		new V2D(62,107), // cup 				// 26
+		new V2D(94,176), // glass tip left 		// 27
+		new V2D(131,166), // glass tip right 	// 28
 	];
 	var pointsB = [
-//				new V2D(87,192),
-//				new V2D(170,178),
-		new V2D(212,46),
+		new V2D(212,46),						// 0 
 		new V2D(50,149),
 		new V2D(278,241),
 		new V2D(52,179), // left
-		//new V2D(64,172), // bic right
-		//new V2D(94,124), 
 		new V2D(225,98), // face BL
 		new V2D(221,80), // glasses TL
 		new V2D(246,95), // glasses TR
 		new V2D(250,121),
 		new V2D(214,139), // tow left
 		new V2D(237,150), // toe right
-		new V2D(213,106), // brick
+		new V2D(213,106), // brick				// 10
 		new V2D(180,252), // 12
 		new V2D(245,271), // 16
 		new V2D(131,193), // glasses center
@@ -158,7 +150,7 @@ Triangulate.prototype.caseStudy = function(t){
 		new V2D(180,61), // grid BL
 		new V2D(202,83), // grid bot
 		new V2D(282,251), // U
-		new V2D(256,225), // tail
+		new V2D(256,225), // tail				// 20
 		new V2D(187,153), // base left
 		new V2D(245,173), // base right
 		new V2D(290,240), // nose
@@ -166,7 +158,7 @@ Triangulate.prototype.caseStudy = function(t){
 		new V2D(155,100), // power bot
 		new V2D(85,92), // cup
 		new V2D(113,138), // glass tip left
-		new V2D(145,132), // glass tip right
+		new V2D(145,132), // glass tip right 	// 28
 	];
 	// 
 
@@ -206,6 +198,17 @@ this._cameraB = cameraB;
 		//points3D[i].scale(20.0);
 		pointList.push(points3D[i]);
 	}
+this._cameraPointsA =  pointsA;
+this._cameraPointsB =  pointsB;
+this._cameraPoints3D =  points3D;
+
+	// images
+	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	var imageLoader = new ImageLoader("./images/",imageList, this,this._caseStudyImagesLoaded,null);
+	imageLoader.load();
+
+	return;
+
 	//this._syntheticPoints();
 
 	/*
@@ -239,6 +242,123 @@ Code.emptyArray(points3D); // remove all existing completely
 	}
 	console.log("TOTAL POINTS: "+this._pointList.length);
 	*/
+}
+Triangulate.prototype._caseStudyImagesLoaded = function(imageInfo){
+	console.log("images loaded");
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0;
+	var y = 0;
+	var images = [];
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+	/*
+		var d = new DOImage(img);
+		this._root.addChild(d);
+	// 	d.graphics().alpha(0.25);
+	// 	//d.graphics().alpha(1.0);
+	// 	//d.graphics().alpha(0.0);
+		d.matrix().translate(x,y);
+		x += img.width;
+		*/
+	}
+
+	GLOBALSTAGE = this._stage;
+
+	var imageSourceA = images[0];
+	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+
+	var imageSourceB = images[1];
+	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+	
+	// create textures
+	var pointsA = this._cameraPointsA;
+	var pointsB = this._cameraPointsB;
+	var points3D = this._cameraPoints3D;
+	var textureMap = new TextureMap();
+	this._textureMap = textureMap;
+	var groups = [];
+	var mapping = null;
+	groups.push([ 0,14,15]); // grid org, top, top-left
+	groups.push([ 0,15,17]); // grid org, top-left, bot-left
+	groups.push([ 0,17,18]); // grid bot
+	groups.push([ 0,14,16]); // grid right 1
+	groups.push([11,12,22]); // ruler base
+	groups.push([21,22, 9]); // base L
+	groups.push([ 9, 8,21]); // base R
+	groups.push([ 8, 9, 4]); // bod A
+	groups.push([ 4, 9, 7]); // bod B
+	groups.push([ 7, 6, 4]); // upper bod l
+	groups.push([ 4, 6, 5]); // upper bod r
+	var triA, triB, tri3D;
+	var renderTris = [];
+	for(i=0; i<groups.length; ++i){
+		var g = groups[i];
+		var a = g[0];
+		var b = g[1];
+		var c = g[2];
+		triA = new Tri2D(pointsA[a], pointsA[b], pointsA[c]);
+		triB = new Tri2D(pointsB[a], pointsB[b], pointsB[c]);
+		tri3D = new Tri3D(points3D[a], points3D[b], points3D[c]);
+		mapping = textureMap.addTriangle(tri3D, [triA,triB], [imageMatrixA,imageMatrixB]);
+		//mapping = textureMap.addTriangle(tri3D, [triB], [imageMatrixB]);
+		
+/*
+var d = new DO();
+d.graphics().setLine(2.0,0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().moveTo(triA.A().x,triA.A().y);
+d.graphics().lineTo(triA.B().x,triA.B().y);
+d.graphics().lineTo(triA.C().x,triA.C().y);
+d.graphics().endPath();
+d.graphics().strokeLine();
+this._root.addChild(d);
+
+var d = new DO();
+d.graphics().setLine(2.0,0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().moveTo(triB.A().x,triB.A().y);
+d.graphics().lineTo(triB.B().x,triB.B().y);
+d.graphics().lineTo(triB.C().x,triB.C().y);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().translate(400,0);
+this._root.addChild(d);
+*/
+		//
+		var textureMatrix = mapping["image"];
+		var triOrigin = mapping["tri"];
+		var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
+		//Code.addChild(Code.getBody(), img);
+		var renderTri = null;//new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
+		var tri = new DOTri(img, renderTri, triOrigin);
+		renderTris.push([tri,tri3D]);
+
+
+	}
+	
+
+	this._renderTris = renderTris;
+
+	/*
+	var textureMatrix = mapping["image"];
+	var triOrigin = mapping["tri"];
+	// display texture:
+	var renderTri = new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
+
+	var d = new DOTri(img, renderTri, triOrigin);
+	GLOBALSTAGE.addChild(d);
+	
+
+	var triangleGroups = [];
+	*/
+
+
 }
 Triangulate.prototype._syntheticPoints = function(){
 	var points3D = [];
@@ -522,14 +642,17 @@ var cameraPointB = Matrix.mult(cameraB,colZero);
 	for(i=0; i<pointList.length; ++i){
 		var point3D = pointList[i];
 		//console.log(point3D+"")
-		var point = Triangulate.projectedPointFromWorldPoint(point3D, camera);
+		var point = Triangulate.renderPointFromWorldPoint(point3D, camera);
+// if(i==0){
+// 	console.log("TO: "+point);
+// }
 		if(point){
 			pList.push(point);
 		}
 	}
 	for(i=0; i<pList.length; ++i){
 		var point = pList[i];
-		point.y = -point.y; // image flip
+		//point.y = -point.y; // image flip
 		var d = new DO();
 		var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
 		rad = 1;
@@ -553,18 +676,61 @@ var cameraPointB = Matrix.mult(cameraB,colZero);
 		display.addChild(d);
 	}
 
+//console.log(" vs "+this._cameraPointsA.length+", "+this._cameraPointsB.length+", "+this._cameraPoints3D.length+", ")
+	// RENDER TRIS
+	var renderTris = this._renderTris;
+	if(renderTris){
+		for(i=0; i<renderTris.length; ++i){
+			var dat = renderTris[i];
+			var triDO = dat[0];
+			var tri3D = dat[1];
+			var a = Triangulate.renderPointFromWorldPoint(tri3D.A(), camera);
+			var b = Triangulate.renderPointFromWorldPoint(tri3D.B(), camera);
+			var c = Triangulate.renderPointFromWorldPoint(tri3D.C(), camera);
+			if(a && b && c){
+				// a.y = -a.y;
+				// b.y = -b.y;
+				// c.y = -c.y;
+				// 3d point to 2d point
+				a = V2D.copy(a);
+				b = V2D.copy(b);
+				c = V2D.copy(c);
+				//console.log(a)
+				var tri = new Tri2D(a,b,c);
+				// var renderTri = new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
+				//console.log(tri)
+				triDO.displayTri(tri);
+				display.addChild(triDO);
+
+				var pts = [a,b,c];
+				var rad = 4.0;
+				for(j=0;j<pts.length;++j){
+					var point = pts[j];
+					d.graphics().setFill(0xFF0000FF);
+					d.graphics().setLine(1.0, 0xFFFF0000);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(point.x, point.y, rad);
+					d.graphics().fill();
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+					display.addChild(d);
+				}
+			}
+		}
+	}
+
 
 	// // show camera lines to points
-	var camPointA2D = Triangulate.projectedPointFromWorldPoint(cameraPointA, camera, true);
-	var camPointB2D = Triangulate.projectedPointFromWorldPoint(cameraPointB, camera, true);
+	var camPointA2D = Triangulate.renderPointFromWorldPoint(cameraPointA, camera, true);
+	var camPointB2D = Triangulate.renderPointFromWorldPoint(cameraPointB, camera, true);
 
 	var list = [];
 	if(camPointA2D){
-		camPointA2D.y = -camPointA2D.y;
+		//camPointA2D.y = -camPointA2D.y;
 		list.push(camPointA2D);
 	}
 	if(camPointB2D){
-		camPointB2D.y = -camPointB2D.y;
+		//camPointB2D.y = -camPointB2D.y;
 		list.push(camPointB2D);
 	}
 	for(i=0; i<list.length; ++i){
@@ -594,6 +760,7 @@ var cameraPointB = Matrix.mult(cameraB,colZero);
 		display.addChild(d);
 		
 	}
+	
 		// crosshair
 		var d = new DO();
 		d.graphics().setLine(1.0, 0xFF000000);
@@ -610,6 +777,13 @@ var cameraPointB = Matrix.mult(cameraB,colZero);
 	// this._camera.rotate(0,0.01,0);
 
 	
+}
+Triangulate.renderPointFromWorldPoint = function(point3D, camera, anywhere){
+	var point = Triangulate.projectedPointFromWorldPoint(point3D, camera, anywhere);
+	if(point){
+		//point.y = -point.y;
+	}
+	return point;
 }
 Triangulate.projectedPointFromWorldPoint = function(point3D, camera, anywhere){
 	anywhere = anywhere!==undefined ? anywhere : false;
@@ -637,7 +811,8 @@ Triangulate.prototype._handleResizeFxn = function(e){
 	//console.log("resize: "+wid+"x"+hei);
 	display.matrix().identity();
 	//display.matrix().translate(wid*0.5,hei*0.5);
-	display.matrix().translate(0,hei);
+	//display.matrix().translate(0,hei);
+	// ???
 }
 Triangulate.prototype._handleEnterFrameFxn = function(e){
 	if(this._camera){
