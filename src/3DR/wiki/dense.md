@@ -522,23 +522,37 @@ reliable
 
 
 
+radial distortion:
+x cost function nonlinear optimization determine k1,k2,p1
+x synthetic - planar to 3D - to estimate K / distortion
+- calculate inverse image distortion from params
+
+texturing:
+- make compiled texture map
+
+optimal point detection
+- revisit corners
+	- how to get a non-peaked corner [all neighbors are peaks]
+- multiple scales
+
+medium matching
+- fewer false positivies
+
+optimal dense matching points
+- multiple scales
+- 
+
+
 triangulation:
-~ show cameras in scene
-~ show lines to points in scene
+- show cameras in scene == rect (400x300?) + direction
 - show images (behind)
 
 camera control:
-~ center/scale points inside window
-~ rotate camera about given COM
+- center/scale points inside window
+	- use spherical non-infinite projection
 - zoom in/out about given COM
 
-texturing:
-~ cut image based on points
-- make texture map
-~ put triangles in 3D space
 
-radial distortion:
-- cost function nonlinear optimization determine k1,k2,p1
 
 
 

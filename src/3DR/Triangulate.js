@@ -91,8 +91,8 @@ function Triangulate(){
 	this._pointList = points3D;
 	//this._renderScene();
 
-	//this.caseStudy();
-	this.syntheticStudy();
+	this.caseStudy();
+	//this.syntheticStudy();
 
 	this._stage.start();
 }
@@ -456,8 +456,11 @@ sizeHeight = this._canvas.height();
 	var s = 0;
 	var k1 = 1E-10;
 	var k2 = 1E-15;
-	var p1 = E-190;
+	var k3 = 1E-15;
+	var p1 = 1E-20;
+	var p2 = 1E-25;
 	camera.K(cx,cy, fx,fy, s);
+	camera.distortion(k1,k2,k3, p1,p2);
 	var cameraK = camera.K();
 	
 	// SETUP
@@ -517,16 +520,74 @@ var cameraB = cameraMatrix.copy();
 
 //console.log(cameraK.toArray()+"")
 console.log("ACTUAL K: \n"+cameraK+"");
-console.log("ACTUAL distortion: \n"+p1+","+p2+","+p3+"");
+console.log("ACTUAL distortion: \n"+k1+","+k2+","+k3+" & "+p1+","+p2);
 console.log("ACTUAL A: \n"+cameraA+"");
 console.log("ACTUAL B: \n"+cameraB+"");
 	// F
 
-	HERE
-
+	// estimate K
+	var planarPoints3D = [];
+	for(j=0; j<=10; ++j){
+		for(i=0; i<=10; ++i){
+			var point3D = new V3D(i,j,1.0);
+			planarPoints3D.push(point3D);
+		}
+	}
+	//console.log(planarPoints3D+"")
+	var cameraPositions = [	{"t":new V3D(-5,-5,15), "r":new V3D(0.1,0.0,0.1)},
+							{"t":new V3D(-6,-3,10), "r":new V3D(0.3,0.2,0.1)},
+							{"t":new V3D(-10,-1,20), "r":new V3D(0.1,0.5,-0.7)},
+							{"t":new V3D(-25,-15,35), "r":new V3D(-0.1,0.4,0.3)},
+							{"t":new V3D(5,-10,50), "r":new V3D(-0.2,-0.2,-0.4)},
+						];
+	// ..
+	var matches = [];
+	for(k=0; k<cameraPositions.length; ++k){
+		var cameraInfo = cameraPositions[k];
+		var t = cameraInfo["t"];
+		var r = cameraInfo["r"];
+		var P = new Matrix3D().identity();
+			P.translate(t.x,t.y,t.z);
+			P.rotateY(r.y);
+			P.rotateX(r.x);
+			P.rotateZ(r.z);
+		var points2D = [];
+		var points3D = [];
+		for(i=0; i<planarPoints3D.length; ++i){
+			var point3D = planarPoints3D[i];
+			var point2D = this.toScreenPoint(point3D, camera,P,cameraK, sizeWidth,sizeHeight);
+			if(point2D){
+				//console.log(point3D+" => "+point2D)
+				points3D.push(point3D);
+				points2D.push(point2D);
+			}
+		}
+		console.log(points2D.length+" && "+points3D.length);
+		if(points2D.length >= points3D.length && points3D.length > 10){
+			matches.push([points2D, points3D]);
+		}
+	}
+//throw "what"
 	//var camData = R3D.calibrateFromCheckerboards(imagePointList);
-	var camData = R3D.calibrateFromPlanarPoints([p2d1,p3d1]);
+	var camData = R3D.calibrateFromPlanarPoints(matches);
 
+	console.log(camData);
+	var estimatedK = camData["K"];
+	var estimatedDistortion = camData["distortion"];
+	console.log("estimatedK: \n"+estimatedK);
+	console.log("estimatedDistortion: \n",estimatedDistortion);
+
+	console.log("ERROR FX: "+(estimatedK.get(0,0) / cameraK.get(0,0)));
+	console.log("ERROR FY: "+(estimatedK.get(1,1) / cameraK.get(1,1)));
+	console.log("ERROR FS: "+(estimatedK.get(0,1) / cameraK.get(0,1)));
+	console.log("ERROR CX: "+(estimatedK.get(0,2) / cameraK.get(0,2)));
+	console.log("ERROR CY: "+(estimatedK.get(1,2) / cameraK.get(1,2)));
+	console.log("ERROR K1: "+(estimatedDistortion["k1"] / camera.distortion()["k1"]));
+	console.log("ERROR K2: "+(estimatedDistortion["k2"] / camera.distortion()["k2"]));
+	console.log("ERROR K3: "+(estimatedDistortion["k3"] / camera.distortion()["k3"]));
+	console.log("ERROR P1: "+(estimatedDistortion["p1"] / camera.distortion()["p1"]));
+	console.log("ERROR P2: "+(estimatedDistortion["p2"] / camera.distortion()["p2"]));
+	//console.log( camera.distortion() );
 
 	var K = new Matrix(4,4).fromArray(cameraK.toArray());
 	K = K.getSubMatrix(0,0, 3,3);
@@ -557,6 +618,7 @@ console.log("ACTUAL B: \n"+cameraB+"");
 }
 Triangulate.prototype.toScreenPoint = function(point3D, camera,cameraMatrix,cameraK, screenWidth,screenHeight){
 	var local3D = cameraMatrix.multV3D(new V3D(), point3D);
+	//console.log(local3D+"")
 	if(local3D.z>0){
 		var projected3D = cameraK.multV3D(new V3D(), local3D);
 		var image3D = new V3D(projected3D.x/projected3D.z,projected3D.y/projected3D.z,projected3D.z);
