@@ -4,7 +4,15 @@ Rect.pack = function(rectList, bound){ // updates rectList to locations inside b
 	var area = 0;
 	for(i=0;i<len;++i){ area += rectList[i].area(); }
 	if( area>bound.area() ){ return false; }
-	rectList.sort(Rect.sortBigger);
+	//rectList.sort(Rect.sortBigger);
+
+
+	var memory = new Memory2D( bound, rectList );
+	// memory.addFunction( Memory2D.EVENT_SUCCESS, this.handleMemorySuccess, this);
+	// memory.addFunction( Memory2D.EVENT_SERIES, this.handleMemorySeries, this);
+	// memory.addFunction( Memory2D.EVENT_FAILURE, this.handleMemoryFailure, this);
+	memory.run(false);
+	
 	for(i=0;i<len;++i){
 		console.log( i+": "+rectList[i].area() );
 	}
@@ -86,16 +94,18 @@ Rect.intersect = function(a,b){
 	}
 	return null;
 }
-function Rect(xPos,yPos, w,h){
+function Rect(xPos,yPos, w,h, d){
 	this._x = 0;
 	this._y = 0;
 	this._width = 0;
 	this._height = 0;
+	this._data = null;
 	//this._angle = 0; // origin @ x,y
 	this.x(xPos);
 	this.y(yPos);
 	this.width(w);
 	this.height(h);
+	this.data(d);
 }
 Rect.prototype.fromArray = function(points2D){ // bounding box of points
 	if(points2D && points2D.length>0){
@@ -122,6 +132,12 @@ Rect.prototype.set = function(pX,pY,wid,hei){
 	this.width(wid);
 	this.height(hei);
 	return this;
+}
+Rect.prototype.data = function(d){
+	if(d!==undefined){
+		this._data = d;
+	}
+	return this._data;
 }
 Rect.prototype.x = function(pX){
 	if(pX!==undefined){

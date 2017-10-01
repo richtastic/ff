@@ -14,7 +14,7 @@ Memory2D.EVENT_SUCCESS = "EVENT_SUCCESS";
 Memory2D.EVENT_SERIES = "EVENT_SERIES";
 Memory2D.EVENT_FAILURE = "EVENT_FAILURE";
 
-function Memory2D( bound, pList){
+function Memory2D(bound, pList){
 	Memory2D._.constructor.call(this);
 	this._tree = new Tree();
 	this._stack = new Array();
@@ -28,10 +28,11 @@ function Memory2D( bound, pList){
 	var dat = Memory2D.getObjFromRect(bound);
 	this._tree.data( dat );
 	this._memory.push( this._tree );
-	this._process = pList;
+	this._process = Code.copyArray(pList);
 	this._count = this._process.length;
 }
-Code.inheritClass(Memory2D,Dispatchable);
+Code.inheritClass(Memory2D, Dispatchable);
+
 // --------------------------------------------------------------------------------------------------------
 Memory2D.sortFxn = function(a,b){
 	return Rect.sortSmaller(a.data().rect, b.data().rect);
@@ -167,6 +168,7 @@ Memory2D.prototype.iteration = function(){
 	return false;
 }
 Memory2D.prototype._handle_success_fxn = function(){
+	console.log("memory success");
 	this._run_complete = true;
 	this._run_success = false;
 	this._run_finalize();
@@ -175,6 +177,7 @@ Memory2D.prototype._handle_series_fxn = function(){
 	//this._run_complete = true; this._run_success = false;
 }
 Memory2D.prototype._handle_failure_fxn = function(){
+	console.log("memory failure");
 	this._run_complete = true;
 	this._run_success = false;
 	this._run_finalize();
@@ -182,7 +185,8 @@ Memory2D.prototype._handle_failure_fxn = function(){
 Memory2D.prototype.quit = function(){
 	this.alertAll(Memory2D.EVENT_FAILURE,this);
 }
-Memory2D.prototype.run = function(){
+Memory2D.prototype.run = function(async){
+	async = async!==undefined ? async : true; // default to async operation
 	var i, len = this._process.length, area = 0;
 	this.addFunction(Memory2D.EVENT_SUCCESS,this._handle_success_fxn, this);
 	this.addFunction(Memory2D.EVENT_FAILURE,this._handle_failure_fxn, this);
@@ -196,12 +200,26 @@ Memory2D.prototype.run = function(){
 	}
 	this._run_setup();
 	this._run_timer.addFunction(Ticker.EVENT_TICK, this._run_iteration, this);
-	this._run_timer.start();
+	if(async){
+		this._run_timer.start();
+	}else{
+		this._run_all();
+	}
 	return true;
 }
 Memory2D.prototype._run_setup = function(){
 	this._process.sort( Rect.sortBigger );
 	this._run_complete = false;
+}
+Memory2D.prototype._run_all = function(){
+	var i = 0;
+	var maxIterations = 1E8;
+	while(i<maxIterations && !this._run_complete){
+		this.iteration();
+		++i;
+		++this._iii;
+	}
+	console.log("completed?");
 }
 Memory2D.prototype._run_iteration = function(){
 	this._run_timer.stop();
@@ -234,3 +252,4 @@ Memory2D.prototype._run_finalize = function(){
 	this.removeFunction(Memory2D.EVENT_FAILURE,this._handle_failure_fxn);
 	this.removeFunction(Memory2D.EVENT_SERIES,this._handle_series_fxn);
 }
+

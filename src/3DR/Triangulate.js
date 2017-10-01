@@ -165,9 +165,20 @@ Triangulate.prototype.caseStudy = function(t){
 	//var F = [ -0.0000218799600098825,-0.000016678046601020086,0.030221911114160567,0.000037792474581084344,0.00001199578702154598,0.007524048770802543,-0.023411954918794626,-0.008461981862046705,-0.9992048326931983];
 	var F = [0.0000027269946673859867,0.0000058666378526400515,-0.022218004013060053,-0.000013044017866634529,-0.000004253022893215171,-0.011491994391747789,0.020950228936843587,0.010483614147638562,0.38960882503981586];
 	var K = [ 3.7576E+2 , -1.7370E+0 , 1.9356E+2 ,  0.0000E+0 , 3.8050E+2 , 1.6544E+2 ,  0.0000E+0 , 0.0000E+0 , 1.0000E+0 ];
+	/*
+	  3.7601E+2 -1.7019E+0  1.9350E+2 ; 
+	   0.0000E+0  3.8070E+2  1.6545E+2 ; 
+	   0.0000E+0  0.0000E+0  1.0000E+0 ; 
+	*/
 	F = new Matrix(3,3).fromArray(F);
 	K = new Matrix(3,3).fromArray(K);
-		//K.set(0,1, 0);
+	 // distortions:
+  // k1: 0.000008307734426799319
+  // k2: -3.377152135790497e-10
+  // k3: 3.5230315771502345e-15
+  // p1: 0.000013584543511478514
+  // p2: 0.000012701653003035555
+	
 	// var pointsA = [];
 	// var pointsB = [];
 	var P = R3D.transformFromFundamental(pointsA, pointsB, F, K);
@@ -261,6 +272,7 @@ Triangulate.prototype._caseStudyImagesLoaded = function(imageInfo){
 	groups.push([ 4, 6, 5]); // upper bod r
 	var triA, triB, tri3D;
 	var renderTris = [];
+	var mappings = [];
 	for(i=0; i<groups.length; ++i){
 		var g = groups[i];
 		var a = g[0];
@@ -271,6 +283,7 @@ Triangulate.prototype._caseStudyImagesLoaded = function(imageInfo){
 		tri3D = new Tri3D(points3D[a], points3D[b], points3D[c]);
 		mapping = textureMap.addTriangle(tri3D, [triA,triB], [imageMatrixA,imageMatrixB]);
 		//mapping = textureMap.addTriangle(tri3D, [triB], [imageMatrixB]);
+		mappings.push(mapping);
 		
 /*
 var d = new DO();
@@ -294,17 +307,23 @@ d.graphics().strokeLine();
 d.matrix().translate(400,0);
 this._root.addChild(d);
 */
-		//
-		var textureMatrix = mapping["image"];
-		var triOrigin = mapping["tri"];
-		var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
+
+	}
+	textureMap.pack();
+	for(i=0; i<mappings.length; ++i){
+		var mapping = mappings[i];
+		var textureMatrix = mapping.image();
+		var triOrigin = mapping.triImage();
+		var tri3D = mapping.tri3D();
+		var img = mapping.imageDOM();
+		//console.log(triOrigin)
+		//var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
 		//Code.addChild(Code.getBody(), img);
 		var renderTri = null;//new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
 		var tri = new DOTri(img, renderTri, triOrigin);
 		renderTris.push([tri,tri3D]);
-
-
 	}
+
 	
 
 	this._renderTris = renderTris;

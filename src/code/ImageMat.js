@@ -277,6 +277,47 @@ ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include
 	}
 	return sub;
 }
+ImageMat.prototype.subImage = function(offX,offY,wid,hei){
+	var image = new ImageMat(wid,hei);
+	var width = this.width();
+	var height = this.height();
+	var red = ImageMat.subImage(this.red(),width,height, offX,offY,wid,hei);
+	var grn = ImageMat.subImage(this.grn(),width,height, offX,offY,wid,hei);
+	var blu = ImageMat.subImage(this.blu(),width,height, offX,offY,wid,hei);
+	image.red(red);
+	image.grn(grn);
+	image.blu(blu);
+	return image;
+}
+ImageMat.prototype.insert = function(imageB, offX,offY){
+	var iA, iB, jA, jB;
+	var imageA = this;
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthB = imageB.width();
+	var heightB = imageB.height();
+	var startX = Math.max(offX,0);
+	var startY = Math.max(offY,0);
+	var endX = Math.min(offX+widthB,widthA);
+	var endY = Math.min(offY+heightB,heightA);
+	var indexA, indexB;
+	var redA = imageA.red();
+	var grnA = imageA.grn();
+	var bluA = imageA.blu();
+	var redB = imageB.red();
+	var grnB = imageB.grn();
+	var bluB = imageB.blu();
+	console.log(startX,startY,endX,endY,widthA," ... ",heightA,widthB,heightB);
+	for(jB=0, jA=startY; jB<heightB && jA<endY; ++jB, ++jA){
+		for(iB=0, iA=startX; iB<widthB && iA<endX; ++iB, ++iA){
+			indexA = jA*widthA + iA;
+			indexB = jB*widthB + iB;
+			redA[indexA] = redB[indexB];
+			grnA[indexA] = grnB[indexB];
+			bluA[indexA] = bluB[indexB];
+		}
+	}
+}
 // ------------------------------------------------------------------------------------------------------------------------ set
 ImageMat.prototype.setFromArrayARGB = function(data){
 	var i, len = this._r.length;

@@ -525,15 +525,15 @@ reliable
 radial distortion:
 x cost function nonlinear optimization determine k1,k2,p1
 x synthetic - planar to 3D - to estimate K / distortion
-- calculate inverse image distortion from params
+x calculate inverse image distortion from params
 
 texturing:
-- make compiled texture map
+x make compiled texture map
 
 optimal point detection
 - revisit corners
 	- how to get a non-peaked corner [all neighbors are peaks]
-- multiple scales
+- combine scores at multiple scales
 
 medium matching
 - fewer false positivies
