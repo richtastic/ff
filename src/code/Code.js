@@ -357,6 +357,18 @@ Code.parseURL = function(url){ // https://tools.ietf.org/html/rfc3986#section-4.
 	datum["fragment"] = anchor;
 	return datum;
 }
+Code.printMatlabArray = function(array,name){
+	name = name!==undefined ? name : "x";
+	var str = name+" = [";
+	for(var i=0; i<array.length; ++i){
+		str = str + array[i] + "";
+		if(i<array.length-1){
+			str = str + ",";
+		}
+	}
+	str = str + "];";
+	console.log(str);
+}
 Code._appendParameter = function(container, key, value){ //
 	//console.log("ASSIGN: "+key+"="+value);
 	var regeExArrayPush = new RegExp("\\[\\]$","g");
@@ -2096,7 +2108,16 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
-Code.lineSpace = function(start,end,count){
+Code.divSpace = function(start,end,count){ // start+end / count
+	count -= 1;
+	var range = end-start;
+	var i, arr = [];
+	for(i=0; i<=count; ++i){
+		arr[i] = start + i*range/count;
+	}
+	return arr;
+}
+Code.lineSpace = function(start,end,count){ // start +count ... end
 	count = count!==undefined ? count : 1.0;
 	var i, arr = [];
 	if(count==0){
@@ -6717,7 +6738,82 @@ Code.histogram = function(data, masking, buckets){
 	}
 	return {"histogram":histogram, "size":bucketSize, "min":null, "max":null};
 }
+Code.range = function(data, masking){
+	var i, len=data.length;
+	var min = null;
+	var max = null;
+	for(i=0; i<len; ++i){
+		var value = data[i];
+		if(!min){min = value;}
+		if(!max){max = value;}
+		min = Math.min(min,value);
+		max = Math.max(max,value);
+	}
+	var range = max - min;
+	return range;
+}
+Code.variabality = function(data, width, height, masking){ // roughness measure of a 2D surface
+	var i, j, x, y, len = data.length;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var roughness = 0;
+	var minX, maxX, minY, maxY, value, val, ind, index, m, diff, result, mCount;
+	var mask = 1.0;
+	var total = 0;
+	var maskCount = 0;
+	// console.log(masking);
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			if(masking){
+				mask = masking[index];
+			}
+			if(mask!==0){
+				++maskCount;
+				value = data[index];
+				minX = Math.max(0,i-1);
+				maxX = Math.min(i+1,wm1);
+				minY = Math.max(0,j-1);
+				maxY = Math.min(j+1,hm1);
+				m = 1.0;
+				tot = null;
+				mCount = 0;
+				for(y=minY; y<=maxY; ++y){
+					for(x=minX; x<=maxX; ++x){
+						ind = y*width + x;
+						if(ind!==index){ // no differential with self
+							if(masking){
+								m = masking[ind];
+							}
+							if(m!==0){
+								++mCount;
+								val = data[ind];
+								diff = Math.abs(value - val); // directional difference ?
 
+								if(tot===null){
+									tot = diff;
+								}else{
+									//tot = Math.min(tot,diff); // minimum variablity
+									//tot = Math.max(tot,diff); // maximum variablity
+									tot += diff; // average variablity
+								}
+							}
+						}
+					}
+				}
+				if(tot && mCount>0){
+					tot = tot / mCount; // average variablity
+					total += tot;
+				}
+			}
+		}
+	}
+	//console.log("maskCount: "+maskCount)
+	if(maskCount>0){ // average of each individual
+		return total/maskCount;
+	}
+	return 0;
+}
 Code.entropy01 = function(data, masking, buckets){
 	buckets = (buckets!==undefined && buckets!==null)? buckets : 10;
 	var i, count, p;

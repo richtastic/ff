@@ -63,14 +63,25 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
-var imageProcessingScale = 0.25;
-	imageMatrixA = imageMatrixA.getScaledImage(imageProcessingScale);
-	imageMatrixB = imageMatrixB.getScaledImage(imageProcessingScale);
+
+
+
+// var imageProcessingScale = 0.25;
+// 	imageMatrixA = imageMatrixA.getScaledImage(imageProcessingScale);
+// 	imageMatrixB = imageMatrixB.getScaledImage(imageProcessingScale);
 console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height())
 
 // NOTHING
 featuresA = [];
 featuresB = [];
+
+/*
+
+console.log("finding features...");
+featuresA = R3D.cornerScaleSpaceExtract(imageMatrixA);
+featuresB = R3D.cornerScaleSpaceExtract(imageMatrixB);
+console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+
 
 // CORNER SCALE SPACE
 // var featuresA = R3D.HarrisExtract(imageMatrixA);
@@ -82,11 +93,23 @@ featuresB = [];
 
 // SHOW POINTS
 //var featuresB = [];
-console.log("featuresA: "+featuresA.length+" | "+"featuresB: "+featuresB.length);
+
 var lists = [featuresA,featuresB];
 for(var f=0; f<lists.length; ++f){
 break;
 	var features = lists[f];
+	var min = null;
+	var max = null;
+	for(k=0; k<features.length; ++k){
+		if(!min){
+			min = features[k].t;
+		}
+		if(!max){
+			max = features[k].t;
+		}
+		var min = Math.min(min,features[k].t);
+		var max = Math.max(max,features[k].t);
+	}
 	for(k=0; k<features.length; ++k){
 		var point = features[k];
 		//console.log(""+point)
@@ -95,6 +118,7 @@ break;
 			var z = point.z;
 		var c = new DO();
 			color = 0xFFFF0000;
+			color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
 			c.graphics().setLine(0.50, color);
 			c.graphics().beginPath();
 			c.graphics().drawCircle(x, y, z);
@@ -105,12 +129,63 @@ break;
 	}
 }
 
-//return;
+
+
+
+//show items in place
+var lists = [featuresA,featuresB];
+for(var f=0; f<lists.length; ++f){
+break;
+	var features = lists[f];
+	console.log(features);
+	var min = null;
+	var max = null;
+	for(k=0; k<features.length; ++k){
+		if(!min){
+			min = features[k].t;
+		}
+		if(!max){
+			max = features[k].t;
+		}
+		var min = Math.min(min,features[k].t);
+		var max = Math.max(max,features[k].t);
+	}
+	for(k=0; k<features.length; ++k){
+		var point = features[k];
+		//console.log(""+point)
+			var x = point.x * imageMatrixA.width();
+			var y = point.y * imageMatrixA.height();
+			var z = point.z;
+		var c = new DO();
+			color = 0xFFFF0000;
+			color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
+			c.graphics().setLine(0.50, color);
+			c.graphics().beginPath();
+			c.graphics().drawCircle(x, y, z);
+			c.graphics().strokeLine();
+			c.graphics().endPath();
+			c.matrix().translate(0 + f*imageMatrixA.width(), 0);
+			GLOBALSTAGE.addChild(c);
+	}
+}
+
+
+var filterType = Matching.FILTER_TYPE_VARIABILITY;
+var filterKeep = 0.95;
+featuresA = Matching.filterFeaturesBasedOn(featuresA, imageMatrixA, filterType, filterKeep);
+featuresB = Matching.filterFeaturesBasedOn(featuresB, imageMatrixB, filterType, filterKeep);
+
+
+var filterType = Matching.FILTER_TYPE_UNIQUENESS;
+//var filterKeep = .75;
+var filterKeep = 0.95;
+featuresA = Matching.filterFeaturesBasedOn(featuresA, imageMatrixA, filterType, filterKeep);
+featuresB = Matching.filterFeaturesBasedOn(featuresB, imageMatrixB, filterType, filterKeep);
 
 
 
 // CONTINUE TO CREATE FEATURES:
-
+console.log("creating sifts...");
 var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
 var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 // featuresA["features"];
@@ -122,12 +197,13 @@ console.log("siftA: "+siftA.length+" | "+"siftB: "+siftB.length);
 
 
 // visualize features in place
-var lists = [[siftA,imageMatrixA],[siftA,imageMatrixB]];
+var lists = [[siftA,imageMatrixA],[siftB,imageMatrixB]];
 var offset = new V2D();
 for(var f=0; f<lists.length; ++f){
 break;
 	var features = lists[f][0];
 	var imageMatrix = lists[f][1];
+	console.log(imageMatrix.width())
 	for(k=0; k<features.length; ++k){
 		var feature = features[k];
 		var display = feature.visualizeInSitu(imageMatrix, offset);
@@ -137,24 +213,24 @@ break;
 }
 
 
-
+// show separated visualizations
 var displaySize = 50;
-var maxDisp = Math.min(siftA.length, 10);
+var rowSize = 10;
+var maxDisp = Math.min(siftA.length, 200);
 for(m=0; m<maxDisp; ++m){
+break;
 	var featureA = siftA[m];
 	var vizA = featureA.visualize(imageMatrixA, displaySize);
 	//var vizB = featureB.visualize(imageMatrixB, displaySize);
-	vizA.matrix().translate(800,10 + m*displaySize);
+	vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*displaySize,10 + (m%rowSize)*displaySize);
 	GLOBALSTAGE.addChild(vizA);
 	//GLOBALSTAGE.addChild(vizB);
 }
 
 
-// return;
 
-
-// ASSIGNMENT ?
-
+// TODO: sift at 3+ scales
+console.log("matching...");
 var matching = SIFTDescriptor.match(siftA, siftB);
 var matches = matching["matches"];
 var matchesA = matching["A"];
@@ -162,34 +238,126 @@ var matchesB = matching["B"];
 console.log("matches: "+matches.length);
 
 
-var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB);
+var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB, 1.005, 150); // 1.01, 100
 console.log("crossMatches: "+bestMatches.length);
 
-//bestMatches = Code.copyArray(bestMatches, 0, 30); // same problems with too many
-//bestMatches = Code.copyArray(bestMatches, 0, 20);
-//bestMatches = Code.copyArray(bestMatches, 0, 15); // too low
-
-//this.drawMatches(bestMatches, 0,0, 400,0);
-
-// VISUALIZE TOP MATCHES
+// VISUALIZE TOP MATCHES separately
 var displaySize = 50;
+var rowSize = 10;
 for(m=0; m<bestMatches.length; ++m){
 	var match = bestMatches[m];
 	var featureA = match["A"];
 	var featureB = match["B"];
 	var vizA = featureA.visualize(imageMatrixA, displaySize);
 	var vizB = featureB.visualize(imageMatrixB, displaySize);
-	vizA.matrix().translate(800,10 + m*displaySize);
-	vizB.matrix().translate(800+displaySize,10 + m*displaySize);
+	vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+	vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
 	GLOBALSTAGE.addChild(vizA);
 	GLOBALSTAGE.addChild(vizB);
-	if(m>=10){
+	// visualize top matches in place
+	// line
+	// var d = new DO();
+	// 	d.graphics().clear();
+	// 	d.graphics().setLine(1.0, 0x99FF0000);
+	// 	d.graphics().beginPath();
+	// 	d.graphics().moveTo(featureA.point().x*imageMatrixA.width(),featureA.point().y*imageMatrixA.height());
+	// 	d.graphics().lineTo(400 + featureB.point().x*imageMatrixB.width(),featureB.point().y*imageMatrixB.height());
+	// 	d.graphics().endPath();
+	// 	d.graphics().strokeLine();
+	// GLOBALSTAGE.addChild(d);
+
+	if(m>=100){
 		break;
 	}
 }
 
-// return;
-/*
+
+
+/// TODO: PREP FOR SAD:
+// pointsA = imageMatrixA.refineCornerPoints(pointsA);
+// pointsB = imageMatrixB.refineCornerPoints(pointsB);
+
+var compareSize = 11;
+var compareScale = 0.5;
+var compareMask = ImageMat.circleMask(compareSize);
+var matchSADs = [];
+var matchScores = [];
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var featureA = match["A"];
+	var featureB = match["B"];
+	var imageA = featureA.imageFromFeature(imageMatrixA,compareSize, compareScale);
+	var imageB = featureA.imageFromFeature(imageMatrixB,compareSize, compareScale);
+	// var scores = Dense.searchNeedleHaystackImage(imageA,compareMask, imageB);
+	// var value = scores.value[0];
+	var value = Dense.sad(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+
+	value = 1.0 / value;
+	matchSADs.push([value,match]);
+	matchScores.push(value);
+}
+matchScores = matchScores.sort(function(a,b){
+	return a < b ? -1 : 1;
+});
+Code.printMatlabArray(matchScores,"x");
+
+matchSADs = matchSADs.sort(function(a,b){
+	return a[0] < b[0] ? -1 : 1;
+});
+var minScore = matchSADs[0][0];
+var maxScore = matchSADs[matchSADs.length-1][0];
+var rangeScore = maxScore - minScore;
+var keepPercent = 0.0;
+var keepScoreMin = minScore + (1.0-keepPercent)*rangeScore;
+var bestSADMatches = [];
+for(i=0; i<matchSADs.length; ++i){
+	var score = matchSADs[i][0];
+	var match = matchSADs[i][1];
+	if(score<=keepScoreMin){
+		bestSADMatches.push(match);
+	}
+}
+console.log("bestSADMatches: "+bestSADMatches.length);
+
+bestMatches = bestSADMatches;
+
+
+
+
+var displaySize = 50;
+var rowSize = 10;
+for(m=0; m<bestMatches.length; ++m){
+	var match = bestMatches[m];
+	var featureA = match["A"];
+	var featureB = match["B"];
+	var vizA = featureA.visualize(imageMatrixA, displaySize);
+	var vizB = featureB.visualize(imageMatrixB, displaySize);
+	vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + 900, 10 + (m%rowSize)*displaySize);
+	vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize + 900,10 + (m%rowSize)*displaySize);
+	GLOBALSTAGE.addChild(vizA);
+	GLOBALSTAGE.addChild(vizB);
+	// visualize top matches in place
+	// line
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, 0x99FF0000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(featureA.point().x*imageMatrixA.width(),featureA.point().y*imageMatrixA.height());
+		d.graphics().lineTo(400 + featureB.point().x*imageMatrixB.width(),featureB.point().y*imageMatrixB.height());
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	GLOBALSTAGE.addChild(d);
+}
+
+
+
+
+//bestMatches = Code.copyArray(bestMatches,0,50);
+
+
+
+
+console.log("RANSACing...");
 // RANSAC PREP
 var pointsA = [];
 var pointsB = [];
@@ -332,15 +500,17 @@ var pointsB = [
 				new V2D(145,132), // glass tip right
 			];
 
-for(i=0; i<pointsA.length; ++i){
-	pointsA[i].scale(imageProcessingScale);
-	pointsB[i].scale(imageProcessingScale);
-}
+// for(i=0; i<pointsA.length; ++i){
+// 	pointsA[i].scale(imageProcessingScale);
+// 	pointsB[i].scale(imageProcessingScale);
+// }
+
 // pointsA = imageMatrixA.refineCornerPoints(pointsA);
 // pointsB = imageMatrixB.refineCornerPoints(pointsB);
+
 matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
 matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
-
+console.log("HERE")
 console.log(matrixFfwd.toArray()+"");
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
@@ -352,10 +522,17 @@ for(i=0; i<pointsA.length; ++i){
 console.log("showRansac");
 this.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
 
+
+return;
+
+
+
 //return;
 
 //GLOBALSTAGE.root().matrix().scale(2.0);
 this.drawMatches(matches, 0,0, 400,0);
+
+
 
 //return;
 
@@ -2614,6 +2791,139 @@ Matching.prototype.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFre
 		d.graphics().strokeLine();
 		GLOBALSTAGE.addChild(d);
 	}
+}
+Matching.FILTER_TYPE_NONE = 0;
+Matching.FILTER_TYPE_UNIQUENESS = 1;
+Matching.FILTER_TYPE_VARIABILITY = 2;
+Matching.FILTER_TYPE_ENTROPY = 3;
+Matching.FILTER_TYPE_CORNERNESS = 4;
+Matching.FILTER_TYPE_RANGENESS = 5;
+Matching.FILTER_TYPE_ROUGHNESS = 6;
+Matching.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, percentKeep){
+	if(!featuresA || featuresA.length==0){
+		return featuresA;
+	}
+	percentKeep = percentKeep!==undefined ? percentKeep : 0.90;
+	var i;
+	var compareSize = 21;
+	var neighborhoodSize = 3 * compareSize;
+	var halfSize = compareSize*0.5;
+	var compareMask = ImageMat.circleMask(compareSize);
+	var sourceGry = imageMatrixA.gry();
+	var sourceWidth = imageMatrixA.width();
+	var sourceHeight = imageMatrixA.height();
+
+	var scores = [];
+	var scoresList = [];
+	for(i=0; i<featuresA.length; ++i){
+		var point = featuresA[i];
+		var x = point.x * sourceWidth;
+		var y = point.y * sourceHeight;
+		var z = point.z;
+		var overallScale = 0.5 * (compareSize / z);
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DTranslate(matrix, -x , -y );
+			matrix = Matrix.transform2DScale(matrix, overallScale);
+			matrix = Matrix.inverse(matrix);
+		var area = imageMatrixA.extractRectFromMatrix(compareSize,compareSize, matrix);
+		var areaGry = area.gry();
+
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(area.red(),area.grn(),area.blu(), area.width(), area.height());
+		// var d = new DOImage(img);
+		// d.matrix().translate(800 + 10 + i*compareSize, 10 );
+		// GLOBALSTAGE.addChild(d);
+
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(neighborhood.red(),neighborhood.grn(),neighborhood.blu(), neighborhood.width(), neighborhood.height());
+		// var d = new DOImage(img);
+		// d.matrix().translate(800 + 10 + i*compareSize, 10 + compareSize + 100 + (i%4)*100 );
+		// GLOBALSTAGE.addChild(d);
+
+		var score = null;
+		if(filterType==Matching.FILTER_TYPE_ENTROPY){
+			score = Code.entropy01(areaGry, compareMask);
+		}
+		
+		if(filterType==Matching.FILTER_TYPE_UNIQUENESS){
+			var neighborhood = imageMatrixA.extractRectFromMatrix(neighborhoodSize,neighborhoodSize, matrix);
+			score = R3D.uniquessNeedleinHaystack(area,compareMask, neighborhood);
+			score = 1.0 / score; // invert from SAD score
+		}
+		if(filterType==Matching.FILTER_TYPE_RANGENESS){
+			score = Code.range(areaGry, compareMask);
+		}
+
+		if(filterType==Matching.FILTER_TYPE_VARIABILITY){
+			score = Code.variabality(areaGry, compareSize, compareSize, compareMask);
+		}
+
+		// INVERT FOR TESTING
+		//score = 1.0/score;
+
+		// TODO: roughness
+
+		// TODO: cornerness: sum corner scores
+
+		// TODO: edgeness: how edgy image is = sum of edge scores
+
+		// var d = new DOText(entropy.toExponential(4)+"", 8, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
+		// d.matrix().translate(800 + 10 + i*compareSize, 10 + compareSize + 10 + 15*(i%5));
+		// GLOBALSTAGE.addChild(d);
+
+		scores.push(score);
+		scoresList.push([score,point]);
+
+		//entropies.push(entropy);
+		/*
+		var halfSize = displaySize*0.5;
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+			matrix = Matrix.transform2DScale(matrix, overallScale);
+			matrix = Matrix.transform2DRotate(matrix, -angle);
+			matrix = Matrix.transform2DTranslate(matrix, halfSize, halfSize);
+			matrix = Matrix.inverse(matrix);
+		// GET IMAGE
+		var source = imageSource.gry();
+		var width = imageSource.width();
+		var height = imageSource.height();
+		var area = ImageMat.extractRectFromMatrix(source, width,height, displaySize,displaySize, matrix);
+		var show = area;
+		*/
+		// if(i>=30){
+		// 	break;
+		// }
+
+	}
+	// scores = scores.sort(function(a,b){
+	// 	return a<b ? -1 : 1;
+	// });
+	// Code.print
+
+	scoresList = scoresList.sort(function(a,b){
+		return a[0]<b[0] ? 1 : -1;
+	});
+
+	var changeList = scoresList;
+
+	var scoreMinimum = changeList[changeList.length-1][0];
+	var scoreMaximum = changeList[0][0];
+	var scoreDifference = scoreMaximum - scoreMinimum;
+	var scoreKeepPercent = percentKeep;
+	var scoreThresholdMin = scoreMinimum + (1.0-scoreKeepPercent)*scoreDifference;
+	console.log(scoreMinimum+" - "+scoreMaximum+" @ "+scoreDifference+"  trhes: "+scoreThresholdMin);
+	var keepFeatures = [];
+	for(i=0; i<changeList.length; ++i){
+		var score = changeList[i][0];
+		var feature = changeList[i][1];
+		if(score>=scoreThresholdMin){
+			keepFeatures.push(feature);
+		}else{
+			//break; // sorted, ignore
+		}
+	}
+	console.log("features keep: "+keepFeatures.length);
+
+	return keepFeatures;
+
 }
 /*
 - get initial best points

@@ -2850,6 +2850,15 @@ ImageMat.extractRectFromMatrix = function(source, width,height, newWidth,newHeig
 	// source,sW,sH, wid,hei, projection, interpolationType
 	return ImageMat.extractRectWithProjection(source, width,height, newWidth,newHeight, matrix);
 }
+
+ImageMat.prototype.extractRectFromMatrix = function(newWidth,newHeight, matrix){
+	var width = this.width();
+	var height = this.height();
+	var red = ImageMat.extractRectWithProjection(this.red(), width,height, newWidth,newHeight, matrix);
+	var grn = ImageMat.extractRectWithProjection(this.grn(), width,height, newWidth,newHeight, matrix);
+	var blu = ImageMat.extractRectWithProjection(this.blu(), width,height, newWidth,newHeight, matrix);
+	return new ImageMat(newWidth,newHeight, red, grn, blu);
+}
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 	var newWid = wid+left+right, newHei = hei+top+bot;
 	var newLen = newWid*newHei;

@@ -531,17 +531,17 @@ texturing:
 x make compiled texture map
 
 optimal point detection
-- revisit corners
-	- how to get a non-peaked corner [all neighbors are peaks]
+x revisit corners
+x how to get a non-peaked corner [all neighbors are peaks]
 - combine scores at multiple scales
 
 medium matching
 - fewer false positivies
+- 
 
 optimal dense matching points
 - multiple scales
 - 
-
 
 triangulation:
 - show cameras in scene == rect (400x300?) + direction
@@ -554,7 +554,20 @@ camera control:
 
 
 
-
+bad / ok / good
+entropies - ok
+	- doesn't differentiate gradual changes vs immediate changes
+uniqueness - good
+	- doesn't bias feature/non-feature, is 
+	- takes longer to compute
+	- precise metric (eg slope or difference or ratio) not known which is best yet
+rangeness - ok
+	- preference for black/white images
+variability - good
+	- items with more 'edges' / 'corners' are favored
+	- can't differentiate simple patterns
+roughness - ?
+	- typically from the mean: rms, avg,  -- would seem to be overall & not differentiate locally
 
 
 

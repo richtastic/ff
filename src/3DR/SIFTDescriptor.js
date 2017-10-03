@@ -364,23 +364,28 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 	var covariance = ImageMat.calculateCovariance(area, overallSize,overallSize, areaCenter, circleMask);
 	var covarianceRatio = covariance[0].z/covariance[1].z;
 	var covarianceAngle = V2D.angleDirection(V2D.DIRX, covariance[0]);
-	//var angleMinimum = V2D.angleDirection(V2D.DIRX, covariance[1]);
 	var covarianceScale = Math.pow(covarianceRatio,1.0);
-	// ignore:
-	// covarianceAngle = 0.0;
-	// covarianceScale = 1.0;
-
 
 	//var vector = SIFTDescriptor.vectorFromImage(source, width,height, location,overallScale, optimalOrientation);
-	var vector = null;
-	var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale, optimalOrientation, covarianceAngle, covarianceScale);
-	var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale, optimalOrientation, covarianceAngle, covarianceScale);
-	var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale, optimalOrientation, covarianceAngle, covarianceScale);
-	if(vectorR && vectorG && vectorB){
-		vector = [];
+	//var vector = null;
+	//var vectorScales = [0.8,1.0,1.25];
+	//var vectorScales = [.6666,1.0,1.5];
+	//var vectorScales = [.5,1.0,2.0];
+	//var vectorScales = Code.divSpace(-1, 1, 4); // 0.5...2.0
+	var vectorScales = Code.divSpace(-1, 1, 5); // 0.5...1.0
+	var gry = source;
+	var vector = [];
+	for(i=0; i<vectorScales.length; ++i){
+		var scale = vectorScales[i];
+			scale = Math.pow(2,scale);
+		var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+		var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+		var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+		//var vectorY = SIFTDescriptor.vectorFromImage(gry, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
 		Code.arrayPushArray(vector,vectorR);
 		Code.arrayPushArray(vector,vectorG);
 		Code.arrayPushArray(vector,vectorB);
+		//Code.arrayPushArray(vector,vectorY);
 	}
 
 	if(vector){
@@ -390,7 +395,6 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 		s._orientationAngle = optimalOrientation;
 		s._overallScale = ratioSize;
 		s._scaleRadius = radius;
-		//s._covariance = covariance;
 		s._covarianceAngle = covarianceAngle;
 		s._covarianceScale = covarianceScale;
 		return [s];
@@ -480,6 +484,30 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 	}
 	return null;
 }
+SIFTDescriptor.prototype.imageFromFeature = function(imageSource, displaySize, offsetScale){
+	offsetScale = offsetScale!==undefined? offsetScale : 1.0;
+	var sourceWidth = imageSource.width();
+	var sourceHeight = imageSource.height();
+	var size = this._overallScale;
+	var angle = this._orientationAngle;
+	var point = this.point();
+	var location = new V2D(point.x*sourceWidth, point.y*sourceHeight);
+	var overallScale = displaySize/size;
+	//console.log("overallScale: "+overallScale);
+	var halfSize = displaySize*0.5;
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		matrix = Matrix.transform2DScale(matrix, overallScale/offsetScale);
+		matrix = Matrix.transform2DRotate(matrix, -angle);
+		matrix = Matrix.transform2DTranslate(matrix, halfSize, halfSize);
+		matrix = Matrix.inverse(matrix);
+	// GET IMAGE
+	// var source = imageSource.gry();
+	// var width = imageSource.width();
+	// var height = imageSource.height();
+	var area = imageSource.extractRectFromMatrix(displaySize,displaySize, matrix);
+	return area;
+}
 SIFTDescriptor.prototype.visualizeInSitu = function(imageSource, offset){
 	offset = offset!==undefined ? offset : new V2D(0,0);
 	var sourceWidth = imageSource.width();
@@ -541,28 +569,30 @@ SIFTDescriptor.prototype.visualizeInSitu = function(imageSource, offset){
 	return display;
 }
 SIFTDescriptor.prototype.visualize = function(imageSource, displaySize){
-	var sourceWidth = imageSource.width();
-	var sourceHeight = imageSource.height();
-	var size = this._overallScale;
+	// var sourceWidth = imageSource.width();
+	// var sourceHeight = imageSource.height();
+	// var size = this._overallScale;
 	var angle = this._orientationAngle;
 	var point = this.point();
-	var location = new V2D(point.x*sourceWidth, point.y*sourceHeight);
-	var overallScale = displaySize/size;
-	//console.log("overallScale: "+overallScale);
-	var halfSize = displaySize*0.5;
-	var matrix = new Matrix(3,3).identity();
-		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
-		matrix = Matrix.transform2DScale(matrix, overallScale);
-		matrix = Matrix.transform2DRotate(matrix, -angle);
-		matrix = Matrix.transform2DTranslate(matrix, halfSize, halfSize);
-		matrix = Matrix.inverse(matrix);
-	// GET IMAGE
-	var source = imageSource.gry();
-	var width = imageSource.width();
-	var height = imageSource.height();
-	var area = ImageMat.extractRectFromMatrix(source, width,height, displaySize,displaySize, matrix);
-	var show = area;
-	img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, displaySize, displaySize);
+	// var location = new V2D(point.x*sourceWidth, point.y*sourceHeight);
+	// var overallScale = displaySize/size;
+	// //console.log("overallScale: "+overallScale);
+	// var halfSize = displaySize*0.5;
+	// var matrix = new Matrix(3,3).identity();
+	// 	matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+	// 	matrix = Matrix.transform2DScale(matrix, overallScale);
+	// 	matrix = Matrix.transform2DRotate(matrix, -angle);
+	// 	matrix = Matrix.transform2DTranslate(matrix, halfSize, halfSize);
+	// 	matrix = Matrix.inverse(matrix);
+	// // GET IMAGE
+	// var source = imageSource.gry();
+	// var width = imageSource.width();
+	// var height = imageSource.height();
+	// var area = ImageMat.extractRectFromMatrix(source, width,height, displaySize,displaySize, matrix);
+	// var show = area;
+	// img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, displaySize, displaySize);
+	var show = this.imageFromFeature(imageSource,displaySize);
+	img = GLOBALSTAGE.getFloatRGBAsImage(show.red(), show.grn(), show.blu(), displaySize, displaySize);
 	
 	var display = new DO();
 	var image = new DOImage(img);

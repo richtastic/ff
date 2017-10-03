@@ -1087,6 +1087,7 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){ // nonli
 	var fxn, args, xVals, yVals, maxSupportCount;
 	maxSupportCount = pointsA.length;
 	fxn = R3D.lmMinFundamentalFxn;
+//fxn = R3D.lmMinEssentialFxn;
 	args = [pointsA,pointsB];
 	xVals = fundamental.toArray();
 	yVals = Code.newArrayZeros(maxSupportCount*4);
@@ -1242,6 +1243,9 @@ console.log("MAX CONSENSUS: "+maxSupportCount);
 
 
 R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1xm, e:1xm
+
+	HERE
+
 	var pointsA = args[0];
 	var pointsB = args[1];
 	var unknowns = 9;
@@ -3525,7 +3529,11 @@ R3D.maxInWindow = function(src, width,height, x,y, winWid,winHei){
 	}
 	return max;
 }
-R3D.pointsCornerMaxima = function(src, width, height){
+R3D.CORNER_SELECT_RESTRICTED = 0.95; // constrained, restrictive
+R3D.CORNER_SELECT_REGULAR = 0.999; // 0.99-0.9999 average, regular
+R3D.CORNER_SELECT_RELAXED = 0.99999; // relaxed, detailed, loose
+WASCALLED = -1;
+R3D.cornerScaleScores = function(src, width, height){
 	var sigma = 1.0;
 	src = Code.copyArray(src);
 	src = ImageMat.mulConst(src,256);
@@ -3562,13 +3570,11 @@ R3D.pointsCornerMaxima = function(src, width, height){
 	// dxdx = ImageMat.mean5x5(dxdx,width,height).value;
 	// dxdy = ImageMat.mean5x5(dxdy,width,height).value;
 	// dydy = ImageMat.mean5x5(dydy,width,height).value;
-	//console.log(dxdx)
 
 	//console.log(dxdy);
 	var i, j, a, b, c, d;
 	var H = Code.newArrayZeros(width*height);
-	var max = null;
-	var min = null;
+	
 	for(j=0;j<height;++j){
 		for(i=0;i<width;++i){
 			index = j*width + i;
@@ -3576,8 +3582,6 @@ R3D.pointsCornerMaxima = function(src, width, height){
 			b = dxdy[index];
 			c = dxdy[index];
 			d = dydy[index];
-        	//val = a*d - konstant*b*c;
-        	//val = (a*d - b*c) - konstant*Math.pow(a+d,2);
         	val = (a*d - b*c) - konstant*Math.pow(a+d,2);
         	//val = a*b*c*d;
         	//val = dx[index] * dy[index];
@@ -3590,6 +3594,20 @@ R3D.pointsCornerMaxima = function(src, width, height){
         	//hessianValue[index] = Math.abs(hessianValue[index]);
 		}
 	}
+	for(i=0;i<H.length;++i){
+		if(H[i]<0){
+			H[i] = 0;
+		}
+	}
+	
+	return {"value":H, "width":width, "height":height};
+}
+R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore){
+++WASCALLED;
+	var i, val;
+	var max = null;
+	var min = null;
+	var H = R3D.cornerScaleScores(src,width,height).value;
 
 	//non-maximal suppression: use small window to drop non-maximal values in neighborhood
 	/*
@@ -3609,11 +3627,6 @@ R3D.pointsCornerMaxima = function(src, width, height){
 	}
 	//H = newH;
 	*/
-	for(i=0;i<H.length;++i){
-		if(H[i]<0){
-			H[i] = 0;
-		}
-	}
 	
 	var sigma = 2.0;
 	var gaussSize = Math.round(2+sigma)*2+1;
@@ -3627,24 +3640,15 @@ R3D.pointsCornerMaxima = function(src, width, height){
 	    if(min==null || val<min){ min = val; }
 	}
 
-// var x = Code.copyArray(H);
-// 	x = ImageMat.normalFloat01(x);
-// 	//x = ImageMat.pow(x,0.1);
-// 	//x = ImageMat.pow(x,2.0);
-// 	x = ImageMat.normalFloat01(x);
-// 	var img = GLOBALSTAGE.getFloatRGBAsImage(x, x, x, width,height);
-// 	var d = new DOImage(img);
-// 	GLOBALSTAGE.addChild(d);
-// 	d.graphics().alpha(1.0);
-// 	d.matrix().translate(width,0);
-
 	var range = max-min;
-	var thresh = 0.8; // first: .9, second: .8, 3rd: .95
-// if blobs are too close to eachother this will group them together
-	var limit = range*(1.0-thresh) + min;
-	console.log("min: "+min+"  max: "+max+".  range: "+range+". limit: "+limit);
+	var thresh = keepPercentScore!==undefined ? keepPercentScore : R3D.CORNER_SELECT_REGULAR;
+	
+	var limit = min + range*(1.0-thresh) + min;
+	//console.log("min: "+min+"  max: "+max+".  range: "+range+". limit: "+limit);
 	var pass = [];
 
+	/*
+	// if blobs are too close to eachother this will group them together
 	// blob method: extrema maximum not always has peak
 	for(i=0; i<H.length; ++i){
 		if(H[i]>limit){
@@ -3653,7 +3657,6 @@ R3D.pointsCornerMaxima = function(src, width, height){
 			H[i] = 0.0;
 		}
 	}
-
 	var blobInfo = ImageMat.findBlobsCOM(H,width,height);
 	var labels = blobInfo["value"];
 	var blobs = blobInfo["blobs"];
@@ -3662,26 +3665,93 @@ R3D.pointsCornerMaxima = function(src, width, height){
 		var point = new V2D(blob["x"],blob["y"]);
 		pass.push(point);
 	}
-	/*
-	//var extrema = Code.findExtrema2DFloat(H, width,height);
-	//var extrema = Code.findExtrema2DFloat(H, width,height, true, false, true);
-	var extrema = Code.findMaxima2DFloat(H, width,height);//, true);
+	*/
 	
+
+	// peak method
+	var extrema = Code.findMaxima2DFloat(H, width,height, true);
+	var borderIgnore = 0.01;
+	var border = Math.round(Math.min(borderIgnore*width,borderIgnore*height));
+	var zpb = border;
+	var wmb = width - 1 - border;
+	var hmb = height - 1 - border;
 	for(i=0; i<extrema.length; ++i){
-	// if(i==0){
-	// 	console.log(extrema[i]);
-	// }
 		a = extrema[i];
-		//if(true){
 		if(a.z>limit){
-		//if(a.z<limit){
-			pass.push(a);
+			if(zpb<a.x && a.x<wmb && zpb<a.y && a.y<hmb){ // ignore perimater
+				pass.push(a);
+			}
 		}
 	}
-	console.log(pass.length);
-	//throw "X";
-	*/
+	//console.log(pass.length,(pass.length/extrema.length));
+	
 	return pass;
+}
+R3D.cornerScaleSpaceExtract = function(imageSource){
+	var i, j, k;
+	var image;
+	var sourceWidth = imageSource.width();
+	var sourceHeight = imageSource.height();
+	//var scales = Code.divSpace(1.0, -2.0, 8); // 2 -> 0.25
+	var scales = Code.divSpace(1.0, -2.0, 6); // 2 -> 0.25
+	var featurePoints = [];
+	for(i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		scale = Math.pow(2,scale);
+		//console.log(scale)
+		image = imageSource.getScaledImage(scale);
+		//console.log(image);
+		var gry = image.gry();
+		var width = image.width();
+		var height = image.height();
+		var corners = R3D.pointsCornerMaxima(gry, width, height,  R3D.CORNER_SELECT_REGULAR); // CORNER_SELECT_REGULAR CORNER_SELECT_RESTRICTED
+		//console.log(i+": @"+scale+" = "+corners.length);
+		for(j=0; j<corners.length; ++j){
+			var corner = corners[j];
+			point = new V4D(corner.x * (sourceWidth/width),corner.y * (sourceHeight/height), 1.0/scale, corner.z);
+			featurePoints.push(point);
+		}
+	}
+	// remove duplicate points
+	featurePoints = featurePoints.sort(function(a,b){
+		return a.t > b.t ? -1 : 1;
+	});
+	if(true){
+	//if(false){
+	for(i=0; i<featurePoints.length; ++i){
+		//console.log(i+" / "+featurePoints.length);
+		var a = featurePoints[i];
+		var radA = a.z;
+		for(j=i+1; j<featurePoints.length; ++j){
+			var b = featurePoints[j];
+			var radB = b.z;
+			var dist = V2D.distance(new V2D(a.x,a.y), new V2D(b.x,b.y));
+			var radMin = Math.min(radA,radB);
+			var radMax = Math.max(radA,radB);
+			var ratio = radMax/radMin
+			var ratioMax = 1.25;
+			if( dist<radMax && ratio>ratioMax ){
+				// drop one
+				if(a.t>b.t){ // remove b
+					Code.removeElementAt(featurePoints, j);
+					--j; // redo b
+				}else{ // remove a
+					Code.removeElementAt(featurePoints, i);
+					--i;
+					break;
+				}
+			}
+		}
+	}
+	}
+	// scale to normalized coords
+	for(i=0; i<featurePoints.length; ++i){
+		var a = featurePoints[i];
+		featurePoints[i] = new V3D(a.x/sourceWidth,a.y/sourceHeight,4.0*a.z);
+	}
+	//console.log(""+corners.length);
+	//console.log(scale)
+	return featurePoints;
 }
 
 
@@ -4187,6 +4257,19 @@ R3D.entropyExtract = function(imageSource, percentKeep){
 		}
 	}
 	return finals;
+}
+
+
+
+R3D.uniquessNeedleinHaystack = function(needle,needleMask, haystack){
+	var scores = Dense.searchNeedleHaystackImage(needle,needleMask, haystack);
+		var values = scores.value;
+		var valueWidth = scores.width;
+		var valueHeight = scores.height;
+	var values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
+	// 
+	var diff = Math.max(values[1] - values[0],1E-6);
+	return 1.0/diff;
 }
 
 var HARRIS_CALL = 0;
