@@ -2326,16 +2326,18 @@ Dense.sad = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu, m, rangeYes){ // sum of abs
 	for(i=0; i<len; ++i){
 		if(m){ mask = m[i]; }
 		if(mask==0){ continue; }
-		ai = a[i] - aMean;
-		bi = b[i] - bMean;
+		// ai = a[i] - aMean;
+		// bi = b[i] - bMean;
+		ai = a[i];
+		bi = b[i];
 		ab += Math.abs(ai - bi);
 		//ab += Math.pow(Math.abs(ai - bi),2);
 		//ab += Math.abs(a[i] - b[i]);
 	}
 	score = ab/maskCount;
-	if(rangeYes===true){
-		score = score * (1.0 + Math.abs(aMean-bMean));
-	}
+	// if(rangeYes===true){
+	// 	score = score * (1.0 + Math.abs(aMean-bMean));
+	// }
 	return score;
 }
 

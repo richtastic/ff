@@ -664,7 +664,7 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 		var matchedB = matchesB[b];
 		var matchA0 = matchedA[0];
 		var matchB0 = matchedB[0];
-		if(matchA0["b"]==b && matchB0["a"]==a){
+		if(matchA0["b"]==b && matchB0["a"]==a){ // if each are the top choice of the other
 			var confidenceA = SIFTDescriptor.confidence(matchedA);
 			var confidenceB = SIFTDescriptor.confidence(matchedB);
 			var confidence = (confidenceA + confidenceB) * 0.5;

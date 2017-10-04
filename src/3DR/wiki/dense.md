@@ -520,8 +520,6 @@ reliable
 
 
 
-
-
 radial distortion:
 x cost function nonlinear optimization determine k1,k2,p1
 x synthetic - planar to 3D - to estimate K / distortion
@@ -534,6 +532,13 @@ optimal point detection
 x revisit corners
 x how to get a non-peaked corner [all neighbors are peaks]
 - combine scores at multiple scales
+
+
+
+OPTIMIZING F:
+- try minimizing lm iteritively by moving the epipole(s?) rather than F
+
+
 
 medium matching
 - fewer false positivies

@@ -66,6 +66,18 @@ Matching.prototype.handleImagesLoaded = function(imageInfo){
 
 
 
+
+
+
+
+
+
+
+
+
+
+// START
+
 // var imageProcessingScale = 0.25;
 // 	imageMatrixA = imageMatrixA.getScaledImage(imageProcessingScale);
 // 	imageMatrixB = imageMatrixB.getScaledImage(imageProcessingScale);
@@ -75,7 +87,7 @@ console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height())
 featuresA = [];
 featuresB = [];
 
-/*
+
 
 console.log("finding features...");
 featuresA = R3D.cornerScaleSpaceExtract(imageMatrixA);
@@ -171,14 +183,16 @@ break;
 
 
 var filterType = Matching.FILTER_TYPE_VARIABILITY;
-var filterKeep = 0.95;
+//var filterKeep = 0.95;
+var filterKeep = 0.99;
 featuresA = Matching.filterFeaturesBasedOn(featuresA, imageMatrixA, filterType, filterKeep);
 featuresB = Matching.filterFeaturesBasedOn(featuresB, imageMatrixB, filterType, filterKeep);
 
 
 var filterType = Matching.FILTER_TYPE_UNIQUENESS;
 //var filterKeep = .75;
-var filterKeep = 0.95;
+//var filterKeep = 0.95;
+var filterKeep = 0.99;
 featuresA = Matching.filterFeaturesBasedOn(featuresA, imageMatrixA, filterType, filterKeep);
 featuresB = Matching.filterFeaturesBasedOn(featuresB, imageMatrixB, filterType, filterKeep);
 
@@ -238,13 +252,14 @@ var matchesB = matching["B"];
 console.log("matches: "+matches.length);
 
 
-var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB, 1.005, 150); // 1.01, 100
+var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB, 1.001, 150); // 1.01, 100
 console.log("crossMatches: "+bestMatches.length);
 
 // VISUALIZE TOP MATCHES separately
 var displaySize = 50;
 var rowSize = 10;
 for(m=0; m<bestMatches.length; ++m){
+break;
 	var match = bestMatches[m];
 	var featureA = match["A"];
 	var featureB = match["B"];
@@ -278,7 +293,9 @@ for(m=0; m<bestMatches.length; ++m){
 // pointsB = imageMatrixB.refineCornerPoints(pointsB);
 
 var compareSize = 11;
-var compareScale = 0.5;
+//var compareScale = 1.0;
+//var compareScale = 0.5;
+var compareScales = [0.25,0.5,1.0,2.0,3.0,4.0];
 var compareMask = ImageMat.circleMask(compareSize);
 var matchSADs = [];
 var matchScores = [];
@@ -286,13 +303,19 @@ for(m=0; m<bestMatches.length; ++m){
 	var match = bestMatches[m];
 	var featureA = match["A"];
 	var featureB = match["B"];
-	var imageA = featureA.imageFromFeature(imageMatrixA,compareSize, compareScale);
-	var imageB = featureA.imageFromFeature(imageMatrixB,compareSize, compareScale);
-	// var scores = Dense.searchNeedleHaystackImage(imageA,compareMask, imageB);
-	// var value = scores.value[0];
-	var value = Dense.sad(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
-
-	value = 1.0 / value;
+	var value = 1.0;
+	for(i=0; i<compareScales.length; ++i){
+		var compareScale = compareScales[i];
+		var imageA = featureA.imageFromFeature(imageMatrixA,compareSize, compareScale);
+		var imageB = featureB.imageFromFeature(imageMatrixB,compareSize, compareScale);
+		// A
+		// var scores = Dense.searchNeedleHaystackImage(imageA,compareMask, imageB);
+		// var value = scores.value[0];
+		// B
+		var v = Dense.sad(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+		//value = 1.0 / value;
+		value = value * v;
+	}
 	matchSADs.push([value,match]);
 	matchScores.push(value);
 }
@@ -307,8 +330,14 @@ matchSADs = matchSADs.sort(function(a,b){
 var minScore = matchSADs[0][0];
 var maxScore = matchSADs[matchSADs.length-1][0];
 var rangeScore = maxScore - minScore;
-var keepPercent = 0.0;
-var keepScoreMin = minScore + (1.0-keepPercent)*rangeScore;
+//var keepPercent = 1.0;//0.95;
+//var keepPercent = 0.75; // 91-89
+//var keepPercent = 0.5; // 91-89
+//var keepPercent = 0.05; // 91-87
+//var keepPercent = 0.01; // 91-83
+var keepPercent = 0.001; // 91-75
+var keepScoreMin = minScore + keepPercent*rangeScore;
+//keepScoreMin = 0;
 var bestSADMatches = [];
 for(i=0; i<matchSADs.length; ++i){
 	var score = matchSADs[i][0];
@@ -379,10 +408,27 @@ var matrixFfwd = ransac["F"];
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
 console.log(matrixFfwd.toArray()+"");
-*/
+
+Code.printPoints(pointsA);
+Code.printPoints(pointsB);
+
+// END
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 
 var matrixFfwd = new Matrix(3,3).fromArray([
-	//0.000008725603920070428,-0.000010287681376109525,0.017492051721540253,0.000008336568707143996,-0.0000030546941712306783,0.006893868502814782,-0.018686314880793062,-0.0034673998830981457,-0.5033336084252676
+	0.000008725603920070428,-0.000010287681376109525,0.017492051721540253,0.000008336568707143996,-0.0000030546941712306783,0.006893868502814782,-0.018686314880793062,-0.0034673998830981457,-0.5033336084252676
 	//-0.0000026936490116081374,0.000053351014098918076,-0.022223282499400508,-0.0000675872629154857,0.000004767046874719313,0.002260355785683234,0.0220017383051247,-0.005069558910564499,0.7406906765906947
 	//0.0012890538645052851,-0.0033931611314522714,-4.962352477081496,0.007511297244601534,0.0013520510789218898,-5.3251596859181545,4.773483152006199,3.91205229363878,25.08523821187749
 	//0.00010123415835172275,-0.0004194926458748483,0.25026705237695995,0.0007203828405846506,-0.0000051486687109940835,0.003270394249988104,-0.29441617613659754,0.004718880008086687,-2.896302253380877
@@ -412,8 +458,11 @@ var matrixFfwd = new Matrix(3,3).fromArray([
 	//0.000010335607435676833,-0.00004356997460113225,-0.021883388742149613,0.0000022179534588576523,-0.000031936207612821995,-0.013736199925209124,0.02277976816153545,0.02345767592180197,-0.4069494482772368 // IN OPPOSITE GRID CELLS
 	//0.0005289611427380936,-0.0000840998346695529,-1.2001094897362008,-0.0011610763018171655,-0.0007512728869154221,-0.4302121308044441,1.1022088283897775,0.5934285022659168,16.270968114548683
 
+	// BEST:
+//	-0.0002391010427254328,0.000278648500154903,0.45471667012159595,0.00023278204689539464,0.00042474144018037757,0.22912673397760688,-0.4086345253804511,-0.3319720720813846,-2.9639521048581763,
 
-	-0.0002391010427254328,0.000278648500154903,0.45471667012159595,0.00023278204689539464,0.00042474144018037757,0.22912673397760688,-0.4086345253804511,-0.3319720720813846,-2.9639521048581763,
+
+// 1.34
 	
    ]);
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
@@ -429,6 +478,101 @@ var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 // 			[new V2D(361,183), new V2D(278,241)],
 // 		];
 
+*/
+
+/*
+var points = [];
+
+Code.js:1202 
+
+points.push( new V2D(142.5287356321839,143.67816091954023) ); // 0
+points.push( new V2D(197.5,148.5) ); // 1
+points.push( new V2D(93.93939393939394,175.75757575757575) ); // 2
+points.push( new V2D(194,112.5) ); // 3
+points.push( new V2D(148.48484848484847,75) ); // 4
+points.push( new V2D(194,74.5) ); // 5
+points.push( new V2D(172,106.5) ); // 6
+points.push( new V2D(133.91304347826087,143.02325581395348) ); // 7
+points.push( new V2D(164.5,99.5) ); // 8
+points.push( new V2D(355.2631578947369,244.73684210526318) ); // 9
+points.push( new V2D(198.5,145.5) ); // 10
+points.push( new V2D(157.57575757575756,81.81818181818181) ); // 11
+points.push( new V2D(167,124.5) ); // 12
+points.push( new V2D(164.3939393939394,90.9090909090909) ); // 13
+points.push( new V2D(323.68421052631584,244.73684210526318) ); // 14
+points.push( new V2D(157.57575757575756,92.42424242424242) ); // 15
+points.push( new V2D(160,111.5) ); // 16
+points.push( new V2D(279,141.5) ); // 17
+points.push( new V2D(147.82608695652175,81.97674418604652) ); // 18
+points.push( new V2D(170.43478260869566,66.27906976744185) ); // 19
+points.push( new V2D(178.03030303030303,69.6969696969697) ); // 20
+points.push( new V2D(168.5,74) ); // 21
+points.push( new V2D(150.5,94.5) ); // 22
+points.push( new V2D(171,94) ); // 23
+points.push( new V2D(202.29885057471262,125.28735632183907) ); // 24
+points.push( new V2D(25.757575757575758,175) ); // 25
+points.push( new V2D(159.0909090909091,100.75757575757575) ); // 26
+points.push( new V2D(187.35632183908044,181.60919540229884) ); // 27
+points.push( new V2D(164.3939393939394,79.54545454545455) ); // 28
+points.push( new V2D(28.030303030303035,184.0909090909091) ); // 29
+points.push( new V2D(24,216) ); // 30
+points.push( new V2D(82.57575757575758,202.27272727272728) ); // 31
+points.push( new V2D(347.82608695652175,176.1627906976744) ); // 32
+points.push( new V2D(89.47368421052633,176.31578947368422) ); // 33
+points.push( new V2D(193.04347826086956,87.20930232558139) ); // 34
+points.push( new V2D(165.2173913043478,122.09302325581396) ); // 35
+points.push( new V2D(197.3684210526316,86.8421052631579) ); // 36
+points.push( new V2D(228.73563218390802,149.42528735632183) ); // 37
+points.push( new V2D(28.999999999999996,189) ); // 38
+
+pointsA = points;
+
+points = [];
+
+points.push( new V2D(163.2183908045977,102.29885057471263) ); // 0
+points.push( new V2D(201.5,127.5) ); // 1
+points.push( new V2D(112.87878787878786,137.87878787878788) ); // 2
+points.push( new V2D(227.99999999999997,60.5) ); // 3
+points.push( new V2D(186.36363636363637,22.727272727272727) ); // 4
+points.push( new V2D(230.50000000000003,28.5) ); // 5
+points.push( new V2D(212,46) ); // 6
+points.push( new V2D(156.32183908045977,102.29885057471263) ); // 7
+points.push( new V2D(204,41) ); // 8
+points.push( new V2D(258.6206896551724,274.71264367816093) ); // 9
+points.push( new V2D(208,117) ); // 10
+points.push( new V2D(196.21212121212122,27.272727272727273) ); // 11
+points.push( new V2D(195.45454545454544,75.75757575757575) ); // 12
+points.push( new V2D(203.78787878787875,33.333333333333336) ); // 13
+points.push( new V2D(238.2608695652174,266.86046511627904) ); // 14
+points.push( new V2D(195.45454545454544,36.36363636363636) ); // 15
+points.push( new V2D(197.5,52) ); // 16
+points.push( new V2D(243.00000000000003,174) ); // 17
+points.push( new V2D(186.08695652173913,29.651162790697676) ); // 18
+points.push( new V2D(212.17391304347822,10.465116279069766) ); // 19
+points.push( new V2D(219.6969696969697,16.666666666666668) ); // 20
+points.push( new V2D(209.50000000000003,17) ); // 21
+points.push( new V2D(187.35632183908044,40.229885057471265) ); // 22
+points.push( new V2D(211.36363636363637,35.60606060606061) ); // 23
+points.push( new V2D(187.5,142) ); // 24
+points.push( new V2D(53,153.5) ); // 25
+points.push( new V2D(196.96969696969697,42.42424242424242) ); // 26
+points.push( new V2D(168.93939393939394,181.0606060606061) ); // 27
+points.push( new V2D(204.5977011494253,22.988505747126435) ); // 28
+points.push( new V2D(55.00000000000001,158.5) ); // 29
+points.push( new V2D(53.91304347826087,174.41860465116278) ); // 30
+points.push( new V2D(87.35632183908045,187.35632183908044) ); // 31
+points.push( new V2D(269.6969696969697,234.0909090909091) ); // 32
+points.push( new V2D(108,140) ); // 33
+points.push( new V2D(229.88505747126436,40.229885057471265) ); // 34
+points.push( new V2D(194.78260869565216,71.51162790697674) ); // 35
+points.push( new V2D(231.30434782608694,41.860465116279066) ); // 36
+points.push( new V2D(214,152.5) ); // 37
+points.push( new V2D(50.574712643678154,168.9655172413793) ); // 38
+
+pointsB = points;
+*/
+
+/*
 var pointsA = [
 				new V2D(86,209), // glasses corner left
 				new V2D(190,180), // glasses corner right
@@ -499,7 +643,7 @@ var pointsB = [
 				new V2D(113,138), // glass tip left
 				new V2D(145,132), // glass tip right
 			];
-
+*/
 // for(i=0; i<pointsA.length; ++i){
 // 	pointsA[i].scale(imageProcessingScale);
 // 	pointsB[i].scale(imageProcessingScale);
@@ -508,9 +652,44 @@ var pointsB = [
 // pointsA = imageMatrixA.refineCornerPoints(pointsA);
 // pointsB = imageMatrixB.refineCornerPoints(pointsB);
 
+for(i=0; i<pointsA.length; ++i){
+	pointsA[i] = new V3D(pointsA[i].x,pointsA[i].y,1.0);
+	pointsB[i] = new V3D(pointsB[i].x,pointsB[i].y,1.0);
+}
+
+// fundamentalMatrix
+
+
+	console.log("NORMALIZING");
+	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	var normA = pointsANorm.normalized[0];
+	var normB = pointsBNorm.normalized[0];
+
+	console.log("MINIMIZING");
+	var F = R3D.fundamentalMatrix(normA,normB);
+	F = R3D.forceRank2F(F);
+	// F = R3D.fundamentalMatrixNonlinear(F, normA, normB);
+	//F = R3D.fundamentalMatrixNonlinear(F, normA, normB);
+	//F = R3D.fundamentalMatrixNonlinearGD(F, normA, normB);
+	//F = R3D.fundamentalMatrixNonlinearLM(F, normA, normB);
+	//F = R3D.fundamentalMatrixNonlinearGD(F, normA, normB);
+
+	F = Matrix.mult(F, pointsANorm.forward[0]);
+	F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F);
+	F = R3D.forceRank2F(F);
+
+	// already does normalizing:
+	//F = R3D.fundamentalMatrixNonlinearLM(F,pointsA,pointsB);
+	F = R3D.fundamentalMatrixNonlinearGD(F, pointsA, pointsA);
+
+	var matrixFfwd = F;
+/*
 matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
-matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
-console.log("HERE")
+//matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+matrixFfwd = R3D.fundamentalMatrixNonlinearGD(matrixFfwd,pointsA,pointsB);
+*/
+console.log(matrixFfwd+"");
 console.log(matrixFfwd.toArray()+"");
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
@@ -2909,7 +3088,7 @@ Matching.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, p
 	var scoreDifference = scoreMaximum - scoreMinimum;
 	var scoreKeepPercent = percentKeep;
 	var scoreThresholdMin = scoreMinimum + (1.0-scoreKeepPercent)*scoreDifference;
-	console.log(scoreMinimum+" - "+scoreMaximum+" @ "+scoreDifference+"  trhes: "+scoreThresholdMin);
+	console.log(scoreMinimum+" - "+scoreMaximum+" @ "+scoreDifference+"  thresh: "+scoreThresholdMin);
 	var keepFeatures = [];
 	for(i=0; i<changeList.length; ++i){
 		var score = changeList[i][0];

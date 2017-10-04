@@ -1679,12 +1679,15 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 			nextX[i] = x[i] - lambda*dy[i];
 		}
 		var newCost = fxn(args, nextX);
+		//console.log(cost+" vs "+newCost);
 		if(newCost<cost){
+			//console.log("better: "+(cost-newCost)+" < "+minDifference);
 			if(cost-newCost<minDifference){
 				break;
 			}
 			cost = newCost;
 			x = nextX;
+			fxn(args,x, true);
 			lambda *= scaler;
 		}else{
 			lambda /= scaler;
