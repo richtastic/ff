@@ -25,7 +25,7 @@ Matrix.prototype._init = function(r,c){
 	}
 }
 Matrix.prototype.saveToYAML = function(yaml){
-	var i, j, r, row=this._rowCount, col=this._colCount;	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
+	var i, j, r, row=this._rowCount, col=this._colCount;
 	var DATA = Matrix.YAML;
 	yaml.writeNumber(DATA.ROWS, this._rowCount);
 	yaml.writeNumber(DATA.COLS, this._colCount);

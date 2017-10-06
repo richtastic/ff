@@ -1197,7 +1197,15 @@ Code.printPoints = function(points){
 	var i, point, str = "";
 	for(i=0; i<points.length; ++i){
 		point = points[i];
-		str = str + "points.push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
+		if(point.v!==undefined){
+			str = str + "var pt = new V4D("+point.x+","+point.y+","+point.z+","+point.t+"); pt.u = "+point.u+"; pt.v = "+point.v+"; points.push( pt ); // " + i + "\n";
+		}else if(point.t!==undefined){
+			str = str + "points.push( new V4D("+point.x+","+point.y+","+point.z+","+point.t+") ); // " + i + "\n";
+		}else if(point.z!==undefined){
+			str = str + "points.push( new V3D("+point.x+","+point.y+","+point.z+") ); // " + i + "\n";
+		}else{
+			str = str + "points.push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
+		}
 	}
 	console.log("\n\n"+str+"\n\n");
 }
@@ -1908,6 +1916,7 @@ Code.getTimeZone = function(){
 Code.getTimeStampFromMilliseconds = function(milliseconds){
 	milliseconds = milliseconds!==undefined ? milliseconds : Code.getTimeMilliseconds();
 	var d = new Date(milliseconds);
+	console.log(d+" == DATE");
 	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 }
 Code.stringRemovePrefix = function(str,prefix){
@@ -1922,11 +1931,14 @@ Code.stringFilterNumbersOnly = function(str){ // [0-9]+[.[0-9]+][(E|e)[+.-][0-9]
 Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args
+    	console.log("IN A:");
     	var d;
     	if(year===undefined){ // use NOW
+    		console.log("USE NOW");
     		d = Code.getTimeMilliseconds(true);
     		d = new Date(d);
     	}else{
+    		console.log("YEAR???");
     		d = new Date(year);
     	}
 		year = d.getFullYear();

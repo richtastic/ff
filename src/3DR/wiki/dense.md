@@ -515,8 +515,32 @@ reliable
 	- see what angle is at various scales at 'ideal' rotation / scale
 		=> throw out non-scaling points
 
+=> SPARSE
+obtain a good F
+
+~1000 initial feature sites
+~500 initial SIFT locations
+~100 matched SIFT locations
+~75 correctly matched sift locations
+~50 F-matrix matched points
 
 
+=> MEDIUM
+given an F, find a lot of good matches
+
+~1000 initial feature sites
+~500 SIFT locations
+~200 SIFT matches
+~100 matched points
+
+=> DENSE
+given F & good seed points, match as many pixels/pixel-areas as possible
+
+~100 initial seed sites
+~mxn * 0.5 pixel-areas
+~1/10 pixels matched
+
+=>
 
 
 
@@ -531,11 +555,20 @@ x make compiled texture map
 optimal point detection
 x revisit corners
 x how to get a non-peaked corner [all neighbors are peaks]
-- combine scores at multiple scales
+x combine scores at multiple scales
+
+OPTIMIZING POINTS:
+- pass in skew params to optimal check
+- figure out: scale,rotation,s_s,s_r from a given matrix transformation
+	- -theta,scalex,+theta ~ skew_x & skew_y & scale
+
 
 
 
 OPTIMIZING F:
+- optimize good points by shifting based on SAD needle/haystack
+	- discard bad points by testing SAD needle/haystack point distances
+- 
 - try minimizing lm iteritively by moving the epipole(s?) rather than F
 
 

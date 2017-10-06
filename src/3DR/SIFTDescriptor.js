@@ -16,6 +16,19 @@ function SIFTDescriptor(){
 	this._vector = Code.newArrayZeros(totalPixels);
 	this._orientationAngle = 0.0;
 	this._matches = [];
+	this._scaleRadius = null;
+}
+SIFTDescriptor.prototype.orientation = function(){
+	return this._orientationAngle;
+}
+SIFTDescriptor.prototype.scale = function(){
+	return this._overallScale;
+}
+SIFTDescriptor.prototype.skewAngle = function(){
+	return this._covarianceAngle;
+}
+SIFTDescriptor.prototype.skewScale = function(){
+	return this._covarianceScale;
 }
 //SIFTDescriptor._gauss = null;
 // SIFTDescriptor.gaussian = function(){
