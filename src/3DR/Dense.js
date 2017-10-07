@@ -18,12 +18,28 @@ function Dense(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 	
+	var dataLoader = new FileLoader();
+		dataLoader.setLoadList("./images/flow/",["sparseA.yaml"], this, this._handleFileDataLoadedFxn);
+		dataLoader.load();
+}
+
+Dense.prototype._handleFileDataLoadedFxn = function(o){
+	var files = o.files;
+	var datas = o.contents;
+	var i = 0;
+	var file = files[i];
+	var data = datas[i];
+	var sparse = R3D.inputSparsePoints(data);
+	console.log("loaded: "+file);
+	this._seedData = sparse;
+	this.loadImages();
+}
+Dense.prototype.loadImages = function(){
 	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	//var imageList = ["zoom_03.png","zoom_scale.png"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
-
 Dense.prototype.handleImagesLoaded = function(imageInfo){
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
@@ -53,7 +69,7 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
-
+/*
 	var pointsA = [
 //				new V2D(86,208), // glasses corner left
 //				new V2D(190,180), // glasses corner right
@@ -124,7 +140,7 @@ var pointsB = [
 				new V2D(113,138), // glass tip left
 				new V2D(145,132), // glass tip right
 			];
-
+*/
 
 /*
 // only 1:
@@ -178,7 +194,10 @@ pointsB = [
 		x += img.width;
 	}
 
-
+	var seedData = this._seedData;
+	var pointsA = seedData["pointsA"];
+	var pointsB = seedData["pointsB"];
+	var transforms = seedData["transforms"];
 
 
 	var i, j, c, d, point, color, rad;
@@ -226,7 +245,10 @@ this._stage.root().matrix().translate(30,50);
 	//this.testSimilarityMetrics(imageMatrixA,pointsA, imageMatrixB,pointsB);
 	//this.testEntropy(imageMatrixA,pointsA, imageMatrixB,pointsB);
 //this.testUniqueness(imageMatrixA,pointsA, imageMatrixB,pointsB);
-	Dense.denseMatch(imageMatrixA,pointsA, imageMatrixB,pointsB, this);
+
+	
+
+	Dense.denseMatch(imageMatrixA,imageMatrixB, pointsA,pointsB,transforms, this);
 }
 Dense.prototype.testSeedOptimization = function(imageA,pointsA, imageB,pointsB){
 
@@ -2467,7 +2489,7 @@ Dense._handleKeyboardDown = function(e){
 
 
 
-Dense.Lattice = function(imageFr, imageTo, corners, size, matrixFfwd){
+Dense.Lattice = function(imageFr, imageTo, cornersFr, cornersTo, size, matrixFfwd){
 	this._imageFr = imageFr;
 	this._imageTo = imageTo;
 	this._cellSize = null;
@@ -2490,7 +2512,7 @@ Dense.Lattice = function(imageFr, imageTo, corners, size, matrixFfwd){
 			index = j*cols + i;
 			var startX = Math.floor(i*sizeX);
 			var startY = Math.floor(j*sizeY);
-			var cell = ImageMat.subImage(corners, imageWidth,imageHeight, startX,startY, sizeX,sizeY);
+			var cell = ImageMat.subImage(cornersFr, imageWidth,imageHeight, startX,startY, sizeX,sizeY);
 			var info = Code.infoArray(cell);
 			var maxIndex = info["indexMax"];
 			var maxX = maxIndex%sizeX;
@@ -2558,21 +2580,9 @@ Dense.Lattice.prototype.closestVertex = function(point){
 	}
 	var vertex = this._vertexFromColRow(col,row);
 	if(!vertex){ // outside area ? 
-		console.log("VERTEX NULL - WHAT ?");
+		throw("VERTEX NULL - WHAT ?");
 	}
-	var neighbors = vertex.neighborhood();
-	var i;
-	var closest = null, minDistance = null;
-	for(i=0; i<neighbors.length; ++i){
-		var n = neighbors[i];
-		var from = n.from();
-		var distance = V2D.distance(point,from);
-		if(!closest || distance<minDistance){
-			closest = n;
-			minDistance = distance;
-		}
-	}
-	return closest;
+	return vertex;
 }
 Dense.Lattice.prototype.vertex = function(a,b){
 	if(arguments.length==2){
@@ -3358,10 +3368,12 @@ Dense._lmScaleRotationOptimiumFxn = function(args, xMatrix,yMatrix,eMatrix){
 	// }
 }
 Dense.VVV = 0;
-Dense.vertexFromMatch = function(pointA,pointB, lattice){
+Dense.vertexFromMatch = function(pointA,pointB,transform, lattice){
 	var imageA = lattice.imageFrom();
 	var imageB = lattice.imageTo();
 	var cellSize = lattice.cellSize();
+	/*
+	// THIS SHOULD HAVE ALREADY BEEN PERFORMED
 	var bestA = Dense.bestTransformationFromPoints(imageA,pointA, imageB,pointB, cellSize);
 	var bestB = Dense.bestTransformationFromPoints(imageB,pointB, imageA,pointA, cellSize, true);
 	// 1.0, 2.0, 4.0, ... ?
@@ -3402,7 +3414,7 @@ Dense.vertexFromMatch = function(pointA,pointB, lattice){
 		return null;
 	}
 	console.log("seedScore:"+seedRangeSAD+" | "+seedMaxSAD+"  -   "+seedRangeNCC+" | "+seedMaxNCC);
-
+	*/
 
 
 /*
@@ -3472,8 +3484,12 @@ Dense.DISPLAY.addChild(d);
 
 ++Dense.VVV;
 */
-
-
+	
+	var approximate = R3D.approximateScaleRotationFromTransform2D(transform);
+	var relativeScaleAtoB = approximate["scale"];
+	var relativeAngleAtoB = approximate["angle"];
+	// console.log("transform: "+transform)
+	//console.log(relativeScaleAtoB+" "+Code.degrees(relativeAngleAtoB));
 
 	// use closest cell to approximate seed location
 	var vertex = lattice.closestVertex(pointA);
@@ -3482,6 +3498,7 @@ Dense.DISPLAY.addChild(d);
 	vertex.to(pointB); // neighborhood
 	vertex.scale(relativeScaleAtoB);
 	vertex.angle(relativeAngleAtoB);
+	//vertex.transform(transform);
 			var cells = [vertex];
 			var interpolator = new Dense.Interpolator(cells);
 	Dense.assignBestNeedleInHaystack(interpolator,vertex,null);
@@ -4312,9 +4329,10 @@ Dense.Vertex._queueSorting = function(a,b){
 	return rankA < rankB ? -1 : 1;
 }
 
-Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
+Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, dense){
 	var pointsA = seedsA;
 	var pointsB = seedsB;
+
 	// IMAGES
 	var imageARed = imageA.red();
 	var imageAGrn = imageA.grn();
@@ -4339,10 +4357,11 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	// CORNERS
 	var sigmaCorners = 1.0;
 	var cornersA = R3D.harrisCornerDetection(imageAGry, imageAWidth, imageAHeight, sigmaCorners);
+	var cornersB = R3D.harrisCornerDetection(imageBGry, imageBWidth, imageBHeight, sigmaCorners);
 
 	// LATTICE
-	var cellSize = 11; // 15 10, 5, 3 // CELLSIZEHERE
-	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA, cellSize, matrixFfwd);
+	var cellSize = 5; // 15 10, 5, 3 // CELLSIZEHERE
+	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA,cornersB, cellSize, matrixFfwd);
 	var globalQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 	var localQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 
@@ -4351,7 +4370,8 @@ Dense.denseMatch = function(imageA,seedsA, imageB,seedsB, dense){
 	for(i=0; i<len; ++i){
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
-		var vertex = Dense.vertexFromMatch(pointA,pointB, latticeAtoB);
+		var transform = transforms[i];
+		var vertex = Dense.vertexFromMatch(pointA,pointB,transform, latticeAtoB);
 		if(vertex){
 			globalQueue.push(vertex);
 		}

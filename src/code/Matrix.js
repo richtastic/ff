@@ -12,9 +12,10 @@ function Matrix(r,c, vals){
 	}
 }
 Matrix.prototype._init = function(r,c){
+	r = r!==undefined ? r : 0;
+	c = c!==undefined ? c : 0;
 	this._rowCount = r;
 	this._colCount = c;
-	this._total = r*c;
 	this._rows = new Array();
 	var i, j, row = this._rowCount, col = this._colCount;
 	for(j=0;j<row;++j){
@@ -37,6 +38,13 @@ Matrix.prototype.saveToYAML = function(yaml){
 			}
 		}
 	yaml.writeArrayEnd();
+}
+Matrix.prototype.loadFromObject = function(obj){
+	var DATA = Matrix.YAML;
+	var rows = obj[DATA.ROWS];
+	var cols = obj[DATA.COLS];
+	var data = obj[DATA.DATA];
+	this.fromArray(data, rows,cols);
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 Matrix.prototype.fromArray = function(list, newRow,newCol){

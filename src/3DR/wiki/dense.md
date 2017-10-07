@@ -558,19 +558,35 @@ x how to get a non-peaked corner [all neighbors are peaks]
 x combine scores at multiple scales
 
 OPTIMIZING POINTS:
-- pass in skew params to optimal check
-- figure out: scale,rotation,s_s,s_r from a given matrix transformation
-	- -theta,scalex,+theta ~ skew_x & skew_y & scale
+x pass in skew params to optimal check
+x figure out: scale,rotation,s_s,s_r from a given matrix transformation
+	x -theta,scalex,+theta ~ skew_x & skew_y & scale
+- how to decompose an affine matrix into usable interpolation elements
+- sx
+- sy
+- rot
+- skew
+
+
+DENSE error correction:
+- if a neighbor is matched, but the score is poorer than a new match, can the match be un-joined?
+	- use RANK score ?
+	- use SAD score ?
+	- does this increase processing time?
 
 
 
 
 OPTIMIZING F:
+- FIX LM METHOD
 - optimize good points by shifting based on SAD needle/haystack
 	- discard bad points by testing SAD needle/haystack point distances
 - 
 - try minimizing lm iteritively by moving the epipole(s?) rather than F
 
+
+IMAGE-MATCHING-OPTIMIZING:
+	- use r,sx,sy to find optimal SAD score
 
 
 medium matching

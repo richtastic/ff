@@ -167,8 +167,8 @@ V2D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.X, this.x);
 	yaml.writeNumber(DATA.Y, this.y);
 }
-V2D.prototype.readFromObject = function(obj){
-	var DATA = Matrix3D.YAML;
+V2D.prototype.loadFromObject = function(obj){
+	var DATA = V2D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y]);
 }
 V2D.prototype.copy = function(a){

@@ -81,41 +81,82 @@ NeuralNetwork.prototype._cascadeOutputs = function(){
 		}
 	}
 }
-NeuralNetwork.prototype.learn = function(inputVector, outputVector){
-	var i, j, layers = this._layers;
+NeuralNetwork.prototype.learn = function(inputVectors, outputVectors, loopCount, loopCompleteFxn){
+	var i, j, k, layers = this._layers;
+	var loopMaxSteps = loopCount? loopCount : 10;
+	var reporting = 1;
+	//var loopMinError = 0.1 * outputVector.length;
+	var loopMinError = 0.1;
+	var minTotalError = null;
+	for(i=0; i<loopMaxSteps; ++i){
+		if(i%reporting==0){
+			console.log("loop: "+i);
+		}
+		for(j=0; j<inputVectors.length; ++j){
+			//console.log("      "+j);
+
+			var inputVector = inputVectors[j];
+			var outputVector = outputVectors[j];
+			// forward
+			this._setInput(inputVector);
+			this._cascadeOutputs();
+			// forward
+			var output = this._getOutput();
+			/*
+			var totalError = 0;
+			for(k=0; k<output.length; ++k){
+				error = Math.pow(output[k]-outputVector[k],2) * 0.5;
+				totalError += error;
+			}
+			*/
+			// classification distance
+			// var distance = null;
+			// var idx = null;
+			// for(i=0; i<?; ++i){
+			// 	var dist = Math.abs(?-output[i]);
+			// 	if(distance==null || dist<distance){
+			// 		distance = dist;
+			// 		idx = i;
+			// 	}
+			// }
+			//
+			// backward -- WHEN CORRECT ONLY?
+			this._backward(outputVector);
+
+			/*
+			// save best
+			if(minTotalError==null || totalError<minTotalError){
+				minTotalError = totalError;
+				var layers = this._layers;
+				var ii, jj, kk;
+				for(ii=1; ii<layers.length; ++ii){ // input layer should already be set
+					var layer = layers[ii];
+					for(jj=0; jj<layer.length; ++jj){
+						var neuron = layer[jj];
+						var connections = neuron.connections();
+						for(kk=0; kk<connections.length; ++kk){
+							var connection = connections[kk];
+							connection.weightBest(connection.weight());
+						}
+					}
+				}
+			}
+			*/
+			// console.log("backward error: "+error);
+			// console.log(j+" VECTOR")
+		}
+		if(loopCompleteFxn){
+			loopCompleteFxn(this);
+		}
+	}
+	return minTotalError;
+}
+
+NeuralNetwork.prototype.predict = function(inputVector){
 	this._setInput(inputVector);
 	this._cascadeOutputs();
 	var output = this._getOutput();
-	var totalError = 0;
-	var error, diff;
-	// for(i=0; i<output.length; ++i){
-	// 	error = Math.pow(output[i]-outputVector[i],2);
-	// 	totalError += error;
-	// }
-	this._backward(outputVector);
-	/*
-	var working = Code.copyArray(inputVector);
-	var workings = []; // a
-		workings.push( Code.copyArray(working) );
-	// forward propagation
-	for(i=0; i<layers.length; ++i){
-		working.splice(0,0, 1.0);
-		layer = layers[i];
-		var temp = Code.newArrayZeros(layer.length);
-		this._forward(temp, working, layer);
-		this._forwardFxn(temp);
-		working = temp;
-		workings.push( Code.copyArray(working) );
-	}
-	console.log("FWD: workings: ",workings);
-	var error = this._backward(outputVector, workings);
-	*/
-
-	//Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, flip );
-	//Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance, lambdaScaleFlip){ 
-
-	
-	return false;
+	return output;
 }
 
 NeuralNetwork.prototype._forward = function(next, prev, weight){
@@ -130,7 +171,7 @@ NeuralNetwork.prototype._forward = function(next, prev, weight){
 	return next;
 }
 
-NeuralNetwork.prototype._backward = function(outputVector, results){
+NeuralNetwork.prototype._backward = function(outputVector){
 var learningRate = 0.1;
 var momentum = 0.7;
 	var i, j, neuron, layer;
@@ -145,94 +186,130 @@ var momentum = 0.7;
 		var connections = neuron.connections();
 		for(j=0; j<connections.length; ++j){
 			var connection = connections[j];
-			var prevWeight = connection.opposite(neuron).output();
-			console.log(prevWeight);
-
+			var outputPrev = connection.opposite(neuron).output();
+			//console.log(outputPrev);
 			var derivative = (outputReal - outputNeuron) * outputNeuron * (1.0 - outputNeuron);
-			var deltaWeight = learningRate * derivative * prevWeight;
-
-			var newConnWeight = connection.weight() + deltaWeight;
-			connection.weightDelta(newConnWeight);
-			connection.weight(newConnWeight + momentum*connection.weightDeltaPrev());
+			//console.log("derivative: "+derivative);
+			var deltaWeight = learningRate * derivative * outputPrev;
+			var newWeight = connection.weight() + deltaWeight;
+			var nextWeight = newWeight + momentum*connection.weightDeltaPrev();
+			//var newConnDelta = connection.weight() + deltaWeight;
+			connection.weightDelta(deltaWeight);
+			connection.weight(nextWeight);
 		}
 	}
-	console.log("others");
-	var prevDerivatives = [];
+	//console.log("others");
+	var prevDerivatives = null;
 	var lastHiddenLayerIndex = layers.length-2;
 	for(i=lastHiddenLayerIndex; i>0; --i){ // init backwards
 		layer = layers[i];
-		var nextDerivatives = [];
+		var nextDerivatives = [];//Code.newArrayZeros(layer.length);
 		for(j=0; j<layer.length; ++j){
+			//console.log(prevDerivatives)
 			neuron = layer[j];
 			var neuronOutput = neuron.output();
+			//console.log(j+": neuronOutput :"+neuronOutput);
 			var sumOutput = 0;
 			if(i==lastHiddenLayerIndex){
-				console.log("last");
+				//console.log("last");
 				for(k=0; k<outputLayer.length; ++k){
+
 					var n = outputLayer[k];
 					var conn = n.connection(neuron);
 					var wjk = conn.weight();
 					var dy = outputVector[k];
 					var yk = n.output();
+					//console.log(wjk+" | "+dy+" | "+yk);
 					sumOutput += (dy-yk)*yk*(1-yk)*wjk;
+					if(Code.isNaN(sumOutput)){
+						throw "sumOutput"
+					}
 				}
 			}else{
-				console.log("not last");
+				//console.log("not last");
 				var nextLayer = layers[i+1];
 				for(k=0; k<nextLayer.length; ++k){
 					var n = nextLayer[k];
 					var wjk = n.connection(neuron).weight();
-					sumOutput += prevDerivatives[k]*wjk;
+					//console.log(k+": "+wjk+" @ "+prevDerivatives[k])
+					sumOutput += (prevDerivatives?prevDerivatives[k]:0)*wjk;
+				}
+				if(Code.isNaN(sumOutput)){
+					throw "sumOutput"
 				}
 			}
 			var derivative = neuronOutput*(1-neuronOutput)*sumOutput;
+//			console.log(j+": "+derivative);
 			nextDerivatives[j] = derivative;
+			
 			var connections = neuron.connections();
 			for(k=0; k<connections.length; ++k){
 				var connection = connections[k];
 				var prevOutput = connection.opposite(neuron).output();
+				//console.log(k+": "+prevOutput);
 				var deltaWeight = learningRate * derivative * prevOutput;
+				//console.log(k+": "+derivative);
 				var newWeight = connection.weight() + deltaWeight;
+				var nextWeight = newWeight + momentum * connection.weightDeltaPrev();
+				//console.log(k+": "+connection.weight()+" ? "+connection.weightDeltaPrev());
+				if(Code.isNaN(newWeight)){
+					throw "newWeight: "+newWeight
+				}
+				if(Code.isNaN(nextWeight)){
+					throw "nextWeight"
+				}
 				connection.weightDelta(deltaWeight);
-				connection.weight(newWeight + momentum * connection.weightDeltaPrev());
+				connection.weight(nextWeight);
 			}
-			prevDerivatives = nextDerivatives;
+		}
+		prevDerivatives = nextDerivatives;
+		nextDerivatives = [];
+	}
+}
+NeuralNetwork.prototype.toString = function(){
+	console.log("toString")
+	var maxSize = 0;
+	var i, j;
+	var layer, neuron, value, isNeg, offset;
+	var layers = this._layers;
+	var str = "NeuralNetwork: ["+this._layers.length+"] |";
+	for(i=0; i<layers.length; ++i){
+		layer = layers[i];
+		maxSize = Math.max(maxSize,layer.length);
+		var str = str + " "+layer.length;
+	}
+	
+	var lines = Code.newArray(maxSize);
+	var line;
+	for(j=0; j<maxSize; ++j){
+		lines[j] = "";
+	}
+	var spaceBlank = "           ";
+	for(i=0; i<layers.length; ++i){
+		layer = layers[i];
+		line = lines[i];
+		offset = Math.round((maxSize-1-layer.length)*0.5);
+		offset = Math.max(0,offset);
+		for(j=0; j<offset; ++j){
+			lines[j] = lines[j] + spaceBlank; // 8 empty
+		}
+		for(j=0; j<layer.length; ++j){
+			neuron = layer[j];
+			value = neuron.output();
+			isNeg = value < 0;
+			value = Code.centerpendFixed((isNeg?"-":"+")+""+(Math.abs(value).toExponential(5))," ",10);
+			lines[j+offset] = lines[j+offset] + value;
+		}
+		for(j+=offset;j<=maxSize; ++j){
+			lines[j] = lines[j] + spaceBlank; // 8 empty
 		}
 	}
-
-	//
-
-	/*
-	var i, j, layer;
-	var layers = this._layers;
-	var predicted = results[results.length-1];
-	var deltas = [];
-	var delta = Code.newArrayZeros(outputVector.length);
-	for(i=0; i<delta.length; ++i){
-		delta[i] = predicted[i] - outputVector[i];
+	str = str + "\n";
+	for(j=0; j<maxSize; ++j){
+		str = str + Code.postpendFixed(" "+j+":"," ",6) + lines[j] + "\n";
 	}
-	deltas.shift( Code.copyArray(delta) );
-	for(i=results.length-1; i>=1; --i){
-		console.log("i: "+i);
-		layer = layers[i-1];
-		var z = results[i];
-		var gz = this._backwardFxn(z);
-		// console.log(layer);
-		// console.log(delta);
-		// console.log(gz);
-		var temp = Code.newArrayZeros(results[i-1].length);
-		//temp = layer * delta * gz;
-			console.log(layer.length, delta.length, gz.length, "=> "+temp.length);
-			temp = ImageMat.mulFloat(layer, delta);
-			//temp = ImageMat.mulFloat(layer, delta);
-			//temp = ImageMat.mulFloat(temp, gz);
-		delta = temp;
-		deltas.shift( Code.copyArray(delta) );
-	}
-	console.log("DELTAS: "+deltas.length);
-	console.log(deltas);
-	return deltas;
-	*/
+	str = str + "\n";
+	return str;
 }
 
 // NeuralNetwork.prototype._updateError = function(deltas){
@@ -280,10 +357,7 @@ NeuralNetwork._sigmoidGradient = function(v){
 	return NeuralNetwork.sigmoid(v)*(1.0-NeuralNetwork.sigmoid(v));
 }
 
-NeuralNetwork.prototype.toString = function(){
-	var str = "";
-	return str;
-}
+
 // connections:
 NeuralNetwork.Connection = function(a,b, w){
 	this._id = NeuralNetwork.Connection._id++;
@@ -292,8 +366,8 @@ NeuralNetwork.Connection = function(a,b, w){
 	this._b = null;
 	this._weight = null;
 	this._weightBest = null;
-	this._weightDelta = null;
-	this._weightDeltaPrev = null;
+	this._weightDelta = 0;
+	this._weightDeltaPrev = 0;
 	this.a(a);
 	this.b(b);
 	this.weight(w);
@@ -403,6 +477,7 @@ NeuralNetwork.Neuron.prototype.connectionWeights = function(weights){
 	// for(i=0; i<keys.length; ++i){
 	// 	key = keys[i];
 	for(i=0; i<connections.length; ++i){
+		//console.log(i+" : "+weights[i]);
 		connection = connections[i];
 		connection.weight(weights[i]);
 	}

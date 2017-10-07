@@ -18,7 +18,7 @@ YAML.STACK_UNKNOWN=0;
 YAML.STACK_OBJECT=1;
 YAML.STACK_ARRAY=2;
 
-function YAML(){
+function YAML(inputString){
 	this._lines = new Array();
 	this._lineNumber = 0;
 	this._indent = 0;
@@ -26,6 +26,9 @@ function YAML(){
 	this._documents = new Array();
 	this._references = new Object(); // [name] = {ref:object , table:[[obj,key],..]}
 	this._refCount = 0; // writing
+	// if(inputString!==undefined){
+	// 	this.parse(inputString);
+	// }
 }
 YAML.parse = function(inputString){
 	return new YAML().parse(inputString);

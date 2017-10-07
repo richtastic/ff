@@ -1,4 +1,9 @@
 // V3D.js
+V3D.YAML = {
+	X:"x",
+	Y:"y",
+	Z:"z",
+}
 V3D.EPSILON = 1E-10;
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
@@ -139,6 +144,16 @@ function V3D(xP,yP,zP){
 	// }
 }
 Code.inheritClass(V3D, V2D);
+V3D.prototype.saveToYAML = function(yaml){
+	var DATA = V2D.YAML;
+	yaml.writeNumber(DATA.X, this.x);
+	yaml.writeNumber(DATA.Y, this.y);
+	yaml.writeNumber(DATA.Z, this.z);
+}
+V3D.prototype.loadFromObject = function(obj){
+	var DATA = V3D.YAML;
+	this.set(obj[DATA.X],obj[DATA.Y],obj[DATA.Z]);
+}
 V3D.prototype.copy = function(a){
 	if(!a){  return new V3D(this.x,this.y,this.z); }
 	this.x = a.x; this.y = a.y; this.z = a.z;

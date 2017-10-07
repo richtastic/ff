@@ -1158,7 +1158,15 @@ var F = fundamental;
 	return F;
 }
 
-R3D.fundamentalMatrixNonlinear = R3D.fundamentalMatrixNonlinearLM;
+//R3D.fundamentalMatrixNonlinear = R3D.fundamentalMatrixNonlinearLM;
+R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
+	try{
+		fundamental = R3D.fundamentalMatrixNonlinearGD(fundamental,pointsA,pointsB);
+	}catch(e){
+		console.log("TODO: FIX");
+	}
+	return fundamental;
+}
 
 // ------------------------------------------------------------------------------------------- drawling utilities
 R3D.drawPointAt = function(pX,pY, r,g,b, rad){
@@ -4407,7 +4415,23 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 }
 
 
-
+R3D.approximateScaleRotationFromTransform2D = function(matrix){
+	var pointO = new V2D(0,0);
+	var pointX = new V2D(0,1);
+	var pointY = new V2D(1,0);
+	var outO = matrix.multV2DtoV2D(pointO);
+	var outX = matrix.multV2DtoV2D(pointX);
+	var outY = matrix.multV2DtoV2D(pointY);
+	outX = V2D.sub(outX,outO);
+	outY = V2D.sub(outY,outO);
+	var scaleX = outX.length();//V2D.distance(outX,pointX);
+	var scaleY = outY.length();//V2D.distance(outY,pointY);
+	var angleX = V2D.angleDirection(V2D.DIRX,outX);
+	var angleY = V2D.angleDirection(V2D.DIRY,outY);
+	var angle = (angleX+angleY)*0.5;
+	var scale = (scaleX+scaleY)*0.5;
+	return {"scale":scale,"angle":angle,"translation":outO};
+}
 
 
 R3D.bestTransformationFromPoints = function(imageA,pointA, imageB,pointB, cellSize, inputScales, inputRotations, inputSkewScales, inputSkewRotations){
@@ -4571,21 +4595,34 @@ R3D.outputSparsePoints = function(imageA,imageB, pointsA,pointsB,transforms){
 	yaml.writeArrayEnd();
 	yaml.writeDocument();
 	return yaml.toString();
-/*
-
-# dense mapping 
-created: 2017-09-13 19:59:55.8760
-imageFrom: 
-imageTo: 
-mapping: 
-	-
-		from:
-			x: 185
-			y: 5
-		to:
-			x: 280.59795959344524
-			y: 11.487877006695896
-*/
+}
+R3D.inputSparsePoints = function(yaml){
+	var object = yaml;
+	if(Code.isString(object)){
+		object = YAML.parse(object);
+	}
+	if(Code.isArray(object)){
+		object = object[0];
+	}
+	console.log(object);
+	var pointsA = [];
+	var pointsB = [];
+	var transforms = [];
+	var matches = object["matches"];
+	console.log(matches)
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var matrix = new Matrix();
+		matrix.loadFromObject(match["transform"]);
+		transforms.push(matrix);
+		var pointA = new V2D();
+		pointA.loadFromObject(match["from"]);
+		pointsA.push(pointA);
+		var pointB = new V2D();
+		pointB.loadFromObject(match["to"]);
+		pointsB.push(pointB);
+	}
+	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms};
 }
 R3D.outputMedium = function(imageA,imageB, pointsA,pointsB){
 	//
