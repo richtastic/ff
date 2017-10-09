@@ -737,11 +737,11 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){ // b * F * a = 0
 R3D.getEpipolesFromF = function(F,normed){
 	normed = normed!==undefined?normed:true;
 	var svd = Matrix.SVD(F);
-	var a = (new V3D()).setFromArray(svd.V.getColAsArray(2));
+	var a = (new V3D()).fromArray(svd.V.getColAsArray(2));
 	if(normed){
 		a.homo(); // epipole IN IMAGE A: F * ea = 0
 	}
-	var b = (new V3D()).setFromArray(svd.U.getColAsArray(2));
+	var b = (new V3D()).fromArray(svd.U.getColAsArray(2));
 	if(normed){
 		b.homo(); // epipole IN IMAGE B: F' * eb = 0
 	}
@@ -3980,7 +3980,7 @@ R3D.optimalFeaturePointsInImage = function(imageMatrixA){
 	return featuresA;
 }
 
-R3D.optimalFetureMatchesInImages = function(imageMatrixA,imageMatrixB, featuresA,featuresB) {
+R3D.optimalFeatureMatchesInImages = function(imageMatrixA,imageMatrixB, featuresA,featuresB) {
 	console.log("creating sifts...");
 	var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
 	var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
@@ -4191,6 +4191,74 @@ R3D.bestPointNeedleInHaystack = function(needle, haystack){ // point in haystack
 	}
 	return new V2D(bestPoint.x,bestPoint.y);
 }
+R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA,skewXA,skewYA, pointB,scaleB,angleB){ // nonlinearLeastSquares
+	var xVals = [pointA.x,pointA.y,scaleA,angleA,skewXA,skewYA];
+	var args = [imageA,imageB, pointB,scaleB,angleB];
+	result = Code.gradientDescent(R3D._refinementGD, args, xVals, null, 100, 1E-20);
+	xVals = result["x"];
+	var newA = new V2D(xVals[0],xVals[1]);
+	return {"pointA":newA, "scaleA":xVals[2], "angleA":xVals[3], "skewXA":xVals[4], "skewYA":xVals[5]};
+}
+R3D._refinementGD = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	var compareSize = 11;
+	var compareScale = 1.0;
+	var compareMask = ImageMat.circleMask(compareSize);
+	var imageA = args[0];
+	var imageB = args[1];
+	var pointB = args[2];
+	var scaleB = args[3];
+	var angleB = args[4];
+	var pointAX = x[0];
+	var pointAY = x[1];
+	var scaleA = x[2];
+	var angleA = x[3];
+	var skewXA = x[4];
+	var skewYA = x[5];
+	var matrix = new Matrix(3,3);
+	var pointA = new V2D(pointAX,pointAY);
+	// console.log(pointA.x,pointA.y)
+	/*
+var compareScaleB = compareScale * compareSize/scaleA;
+	
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
+		matrix = Matrix.transform2DRotate(matrix, angleA - angleB);
+		matrix = Matrix.transform2DSkewX(matrix, skewXA);
+	var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,compareScaleB,null,compareSize,compareSize, matrix);
+	matrix.identity();
+		// matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
+		// matrix = Matrix.transform2DRotate(matrix, angleB);
+	var needleB = imageA.extractRectFromFloatImage(pointB.x,pointB.y,compareScaleB,null,compareSize,compareSize, null);
+	*/
+	matrix.identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-pointA.x) , (-pointA.y) );
+		matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
+		matrix = Matrix.transform2DRotate(matrix, -angleA);
+		matrix = Matrix.transform2DSkewX(matrix, skewXA);
+		matrix = Matrix.transform2DSkewY(matrix, skewYA);
+		matrix = Matrix.transform2DTranslate(matrix, compareSize*0.5, compareSize*0.5);
+		matrix = Matrix.inverse(matrix);
+	var needleA = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
+
+	// matrix.identity();
+	// 	matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
+	// 	matrix = Matrix.transform2DRotate(matrix, angleB);
+	//var imageB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,compareScaleB,null,compareSize,compareSize, null);
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-pointB.x) , (-pointB.y) );
+		matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
+		matrix = Matrix.transform2DRotate(matrix, -angleB);
+		matrix = Matrix.transform2DTranslate(matrix, compareSize*0.5, compareSize*0.5);
+		matrix = Matrix.inverse(matrix);
+	var needleB = imageB.extractRectFromMatrix(compareSize,compareSize, matrix);
+
+	var cost = R3D.sadRGB(needleA.red(),needleA.grn(),needleA.blu(), needleB.red(),needleB.grn(),needleB.blu(), compareMask);
+console.log("_refinementGD: "+pointAX+","+pointAY+" | scaleA: "+scaleA+" | angle: "+angleA+" |  skew: "+skewXA+" | "+skewYA+" ("+scaleB+" | "+angleB+") = "+cost);
+	return cost;
+}
 REFINER = -1;
 R3D.refinedMatchPoints = function(imageA,imageB, pointsA,pointsB){ // V4D: x,y,scale-radius,angle
 	var i;
@@ -4225,7 +4293,7 @@ pointB.t = 0;
 		var needleB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrixB);
 		var haystackB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,neighborhoodSize,neighborhoodSize, matrixB);
 
-		
+/*
 		var img = GLOBALSTAGE.getFloatRGBAsImage(needleA.red(), needleA.grn(), needleA.blu(), needleA.width(), needleA.height());
 		var d = new DOImage(img);
 		d.matrix().scale(4.0);
@@ -4237,7 +4305,7 @@ pointB.t = 0;
 		d.matrix().scale(4.0);
 		d.matrix().translate(100, 0 + REFINER*50);
 		GLOBALSTAGE.addChild(d);
-		
+*/
 		//continue;
 
 
@@ -4356,7 +4424,7 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 
 
 
-
+/*
 		var img = GLOBALSTAGE.getFloatRGBAsImage(needleA.red(), needleA.grn(), needleA.blu(), needleA.width(), needleA.height());
 		var d = new DOImage(img);
 		d.matrix().scale(4.0);
@@ -4368,7 +4436,7 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 		d.matrix().scale(4.0);
 		d.matrix().translate(300, 0 + REFINER*50);
 		GLOBALSTAGE.addChild(d);
-
+*/
 
 
 
@@ -4412,6 +4480,67 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 		// Dense.assignBestNeedleInHaystack(interpolator,vertex,null);
 	}
 	return {"transforms":transformsOut, "pointsA":pointsAOut, "pointsB":pointsBOut};
+}
+
+R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
+
+	var matches = [];
+	for(i=0; i<pointsA.length; ++i){
+		matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+	}
+	// SHOW RANSAC:
+
+	var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
+	// SHOW F LINES ON EACH
+	for(var k=0;k<matches.length;++k){
+		var percent = k / (matches.length-1);
+		
+		var pointA = pointsA[k];
+		var pointB = pointsB[k];
+//console.log(pointA+" - "+pointB);
+		pointA = new V3D(pointA.x,pointA.y,1.0);
+		pointB = new V3D(pointB.x,pointB.y,1.0);
+		var lineA = new V3D();
+		var lineB = new V3D();
+
+		matrixFfwd.multV3DtoV3D(lineA, pointA);
+		matrixFrev.multV3DtoV3D(lineB, pointB);
+
+		var d, v;
+		var dir = new V2D();
+		var org = new V2D();
+		var imageWidth = 400;
+		var imageHeight = 300;
+		var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
+		//
+
+		var color = Code.interpolateColorGradientARGB(percent, colors);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+//console.log(org+" - "+dir);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
+		d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
+		d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+	}
 }
 
 
@@ -4772,7 +4901,7 @@ R3D.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, percen
 		}
 
 		if(filterType==R3D.FILTER_TYPE_VARIABILITY){
-			score = Code.variabality(areaGry, compareSize, compareSize, compareMask);
+			score = Code.variability(areaGry, compareSize, compareSize, compareMask);
 		}
 
 		// INVERT FOR TESTING

@@ -1218,9 +1218,10 @@ Dense.BESTMATCHOFFY += 130;
 
 	for(var i=0; i<neighborsA.length; ++i){
 		var neighborA = neighborsA[i];
-		if(neighborA.isJoined()){
-			continue;
-		}
+		// UNCOMMENT TO IGNORE JOINED
+		// if(neighborA.isJoined()){
+		// 	continue;
+		// }
 		// create definitive feature for un-inited cells if not 
 		var featureA = neighborA.feature();
 		var cornerValues = null;
@@ -2765,6 +2766,9 @@ Dense.Vertex.prototype.join = function(j){
 	}
 	return this._joined;
 }
+Dense.Vertex.prototype.unjoin = function(match){
+	this._joined = false;
+}
 Dense.Vertex.prototype.pointCenter = function(){
 	var cellSize = this._lattice.cellSize();
 	return new V2D(this._col*cellSize + cellSize*0.5, this._row*cellSize + cellSize*0.5);
@@ -2970,7 +2974,8 @@ Dense.Vertex.prototype.assignNeighbors = function(queue, interpolator){
 	var scale = this.scale();
 	for(var i=0; i<neighbors.length; ++i){
 		var n = neighbors[i];
-		if(!n.isJoined()){
+		if(true){ // todo: uncomment to not reconsider joined neighbors
+		//if(!n.isJoined()){
 			//console.log("neighbor: "+i);
 			//queue.remove(n); // TODO: BECAUSE 
 			//var same = Dense.assignBestNeedleInHaystack(interpolator, n, queue, true);
@@ -3804,6 +3809,16 @@ bestIndex = peak.copy();
 			var valueHeight = scores.height;
 		var uniquenessNH = Dense.uniquenessFromValues(values);
 
+		var isMin = true;
+		var variabilityNeedleR = Code.variability(needle.red(), needleWidth, needleHeight, null, isMin);
+		var variabilityNeedleG = Code.variability(needle.grn(), needleWidth, needleHeight, null, isMin);
+		var variabilityNeedleB = Code.variability(needle.blu(), needleWidth, needleHeight, null, isMin);
+		var variabilityNeedle = (variabilityNeedleR + variabilityNeedleG + variabilityNeedleB) / 3.0;
+		//variabilityNeedle = 1.0 / variabilityNeedle;
+		//console.log("variabilityNeedle: "+variabilityNeedle);
+
+		// 0.01 ~ 0.1
+		// -> 10 ~ 100
 
 /*
 if(Dense.ITER==2){ // 2 | 5
@@ -4030,6 +4045,8 @@ console.log(str);
 		worstRangeScore = Math.max(worstRangeScore,1E-10);
 		var reliability = (0.0); // min(s(a),s(b)) / d(a,b)
 
+
+
 		
 /*
 
@@ -4078,16 +4095,19 @@ console.log(str);
 		}
 
 		// ignore points with really poor scores
-		if(bestScore > 0.25){
+		if(bestScore > 0.15){
 			return vertex;
 		}
 
 		// ignore points with poor uniqueness
 		
-		if(uniqueness > 50000){ // TODO: ONCE UNIQNESS METRIC IS DETERMINED > FIND THIS VALUE
+		if(uniqueness > 100000){ // TODO: ONCE UNIQNESS METRIC IS DETERMINED > FIND THIS VALUE
 			return vertex;
 		}
 		//console.log("uniqueness: "+uniqueness);
+
+		// ignore points with no variablity?
+
 		
 /*
 		if(distanceFromTo>cellSize || distanceToFrom>cellSize){
@@ -4096,7 +4116,7 @@ console.log(str);
 */
 	// penalty type 2:
 		var rank = 1.0;
-		rank = rank * Math.pow(1.0+uniqueness,2.0);
+		rank = rank * Math.pow(1.0+uniqueness,3.0);
 		//rank = rank * Math.pow(1.0+uniquenessNH,2.0);
 		//rank = rank * uniquenessTotal;
 		//rank = rank * Math.pow(1.0+bestScore,1.0);
@@ -4105,10 +4125,14 @@ console.log(str);
 		//rank = rank * (1.0 + Math.pow(1.0 - worstRangeScore,1.0));
 		// 	gradientNeedle = Math.max(gradientNeedle,1E-10);
 		// rank = rank * Math.pow(1.0/gradientNeedle,2.0);
-		//rank = rank * Math.pow(1.0+lineFDistanceError,1.0);
+//rank = rank * Math.pow(1.0+lineFDistanceError,1.0);
 		rank = rank * Math.pow(1.0+distanceFromTo,2.0);
 		rank = rank * Math.pow(1.0+distanceToFrom,2.0);
 		//rank = rank * Math.pow(1.0/entropyNeedle,1.0);
+
+rank = rank * Math.pow(1.0/variabilityNeedle,0.10);
+//rank = rank * Math.pow(1.0/variabilityNeedle,2.0);
+		//console.log("VAR COMPONENT: "+Math.pow(0.0+variabilityNeedle,0.50));
 
 		//console.log(rank);
 
@@ -4140,7 +4164,25 @@ console.log(str);
 			}
 		}
 		if(globalQueue){
+			//console.log("ADDING ...");
 			// remove current entry if exists, and add new entry
+			if(vertex.isJoined()){
+				//console.log("FOUND A JOINED");
+				//var ratio = vertex.rank()/rank;
+				//var ratioMin = 10.0;
+				var ratio = vertex.score()/bestScore;
+				var diff = vertex.score()-bestScore;
+				var differenceMin = 0.005;
+				var ratioMin = 1.01; // scores might want to use basic subtraction
+				//if(ratio>ratioMin){
+				if(diff>differenceMin){
+					console.log("FOUND JOINED VERTEX -> UNJOINING: "+vertex.rank()+" < "+rank+" | "+vertex.score()+" < "+bestScore+"   @ "+diff+" | "+ratio);
+					vertex.unjoin();
+				}else{
+					return null;
+				}
+			}
+			// necessary ?
 			globalQueue.remove(vertex);
 			
 			// add best as single transform
@@ -4695,6 +4737,10 @@ Dense.Interpolator = function(cells){
 	}
 }
 
+Dense.Interpolator.prototype.removeCell = function(cell){
+	this._triangulator.removePoint(cell.from(), cell);
+	Code.removeElement(this._cells,cell);
+}
 Dense.Interpolator.prototype.addCell = function(cell){
 	//console.log("ADD CELL: "+cell.from());
 

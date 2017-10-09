@@ -30,6 +30,17 @@ SIFTDescriptor.prototype.skewAngle = function(){
 SIFTDescriptor.prototype.skewScale = function(){
 	return this._covarianceScale;
 }
+SIFTDescriptor.prototype.toPoint = function(width,height){
+	var point = this.point();
+		point.x*=width;
+		point.y*=height;
+	var scale = this.scale();
+	var angle = this.orientation();
+	v = new V4D(point.x,point.y, scale, angle);
+	v.u = this.skewScale();
+	v.v = this.skewAngle();
+	return v;
+}
 //SIFTDescriptor._gauss = null;
 // SIFTDescriptor.gaussian = function(){
 // 	if(!SIFTDescriptor._gauss){
@@ -80,6 +91,7 @@ SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // puta
 		}
 	}
 	
+	// TODO: CHECK TO SEE IF A HAS ALREADY MACHED B BEFORE RE-COMPARE
 	// B to putative A
 	for(i=0; i<listB.length; ++i){
 		var descB = listB[i];
@@ -99,11 +111,40 @@ SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // puta
 	//
 	// TODO: prevent / remove duplicates ... [a->b && b->a]
 	// 
+	var k;
 	matches = matches.sort(SIFTDescriptor._sortMatch);
 	for(i=0; i<listA.length; ++i){
+		// REMOVE DUPLICATES:
+		var list = matchesA[i];
+		for(j=0; j<list.length; ++j){
+			var m = list[j];
+			for(k=j+1; k<list.length; ++k){
+				var n = list[k];
+				if(n["a"]==m["a"] && n["b"]==m["b"]){
+					list[k] = list[list.length-1];
+					list.pop();
+					--j;
+				}
+			}
+		}
+		// SORT
 		matchesA[i] = matchesA[i].sort(SIFTDescriptor._sortMatch);
 	}
 	for(i=0; i<listB.length; ++i){
+		// REMOVE DUPLICATES:
+		var list = matchesB[i];
+		for(j=0; j<list.length; ++j){
+			var m = list[j];
+			for(k=j+1; k<list.length; ++k){
+				var n = list[k];
+				if(n["a"]==m["a"] && n["b"]==m["b"]){
+					list[k] = list[list.length-1];
+					list.pop();
+					--j;
+				}
+			}
+		}
+		// SORT
 		matchesB[i] = matchesB[i].sort(SIFTDescriptor._sortMatch);
 	}
 	return {"matches":matches, "A":matchesA, "B":matchesB};
@@ -678,6 +719,20 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 		var matchA0 = matchedA[0];
 		var matchB0 = matchedB[0];
 		if(matchA0["b"]==b && matchB0["a"]==a){ // if each are the top choice of the other
+// a = featuresA[a];
+// b = featuresB[b];
+// var aa = featuresA[matchB0["a"]];
+// var bb = featuresB[matchA0["b"]];		
+// var pSA = a;//a.point();
+// var pMA = aa;//matchB0["a"].point();
+// var pSB = b;//b.point();
+// var pMB = bb;//matchA0["b"].point();
+// var lim = 0.01;
+// //console.log(pSA+" | "+pMA);
+// if(V2D.distance(pSB,pMB)<lim && V2D.distance(pSA,pMA)){ // if each are the top choice of the other
+
+
+
 			var confidenceA = SIFTDescriptor.confidence(matchedA);
 			var confidenceB = SIFTDescriptor.confidence(matchedB);
 			var confidence = (confidenceA + confidenceB) * 0.5;
@@ -686,6 +741,10 @@ SIFTDescriptor.crossMatches = function(featuresA,featuresB, allMatches, matchesA
 				same.push(match);
 			}
 		}
+
+
+
+
 	}
 	same = same.sort(function(a,b){
 		return a["confidence"] > b["confidence"] ? -1 : 1;

@@ -970,6 +970,7 @@ Code.setArrayConstant = function(arr,c){
 	}
 	return arr;
 }
+// Code.appendArray = function(a,b){
 Code.arrayPushArray = function(a,b){
 	if(a && b){
 		var i, len=b.length;
@@ -1691,6 +1692,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		if(newCost<cost){
 			//console.log("better: "+(cost-newCost)+" < "+minDifference);
 			if(cost-newCost<minDifference){
+				console.log("cost quit");
 				break;
 			}
 			cost = newCost;
@@ -1700,6 +1702,9 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		}else{
 			lambda /= scaler;
 		}
+	}
+	if(k==maxIterations){
+		console.log("iteration quit");
 	}
 	return {"x":x,"cost":cost};
 }
@@ -6767,8 +6772,8 @@ Code.range = function(data, masking){
 	var range = max - min;
 	return range;
 }
-Code.variabality = function(data, width, height, masking){ // roughness measure of a 2D surface
-	var i, j, x, y, len = data.length;
+Code.variability = function(data, width, height, masking, isMin){ // roughness measure of a 2D surface
+	var i, j, x, y, m, len = data.length;
 	var wm1 = width - 1;
 	var hm1 = height - 1;
 	var roughness = 0;
@@ -6776,7 +6781,6 @@ Code.variabality = function(data, width, height, masking){ // roughness measure 
 	var mask = 1.0;
 	var total = 0;
 	var maskCount = 0;
-	// console.log(masking);
 	for(j=0; j<height; ++j){
 		for(i=0; i<width; ++i){
 			var index = j*width + i;
@@ -6804,26 +6808,30 @@ Code.variabality = function(data, width, height, masking){ // roughness measure 
 								++mCount;
 								val = data[ind];
 								diff = Math.abs(value - val); // directional difference ?
-
+								//console.log(value)
 								if(tot===null){
 									tot = diff;
 								}else{
-									//tot = Math.min(tot,diff); // minimum variablity
-									//tot = Math.max(tot,diff); // maximum variablity
-									tot += diff; // average variablity
+									if(isMin){
+										tot = Math.min(tot,diff); // minimum variablity
+										//tot = Math.max(tot,diff); // maximum variablity
+									}else{
+										tot += diff; // average variablity
+									}
 								}
 							}
 						}
 					}
 				}
 				if(tot && mCount>0){
-					tot = tot / mCount; // average variablity
+					if(!isMin){
+						tot = tot / mCount; // average variablity
+					}
 					total += tot;
 				}
 			}
 		}
 	}
-	//console.log("maskCount: "+maskCount)
 	if(maskCount>0){ // average of each individual
 		return total/maskCount;
 	}

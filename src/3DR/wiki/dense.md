@@ -569,10 +569,10 @@ x figure out: scale,rotation,s_s,s_r from a given matrix transformation
 
 
 DENSE error correction:
-- if a neighbor is matched, but the score is poorer than a new match, can the match be un-joined?
+x if a neighbor is matched, but the score is poorer than a new match, can the match be un-joined?
 	- use RANK score ?
-	- use SAD score ?
-	- does this increase processing time?
+	- use SAD score [better?]
+	- is this worth increases processing time?
 
 
 
