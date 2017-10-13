@@ -174,6 +174,181 @@ Medium.prototype.testSearchLine = function(imageMatrixA,pointsA, imageMatrixB,po
 	console.log("showRansac");
 	R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
 
+
+
+
+/*
+// VARIABILITY TESTING:
+console.log("VAR");
+var gryA = imageMatrixA.gry();
+//var gryA = imageMatrixB.gry();
+var widA = imageMatrixA.width();
+var heiA = imageMatrixA.height();
+var blrA = gryA;
+//var blrA = ImageMat.getBlurredImage(gryA,widA,heiA, 1.0);
+//var blrA = ImageMat.getBlurredImage(gryA,widA,heiA, 2.0);
+//var blrA = ImageMat.getBlurredImage(gryA,widA,heiA, 4.0);
+//var blrA = ImageMat.getBlurredImage(gryA,widA,heiA, 8.0);
+//var varA = Code.variabilityImage(blrA, widA, heiA, null, true);
+//var varA = Code.variabilityImage(gryA, widA, heiA, null, true);
+//var varA = ImageMat.getBlurredImage(varA,widA,heiA, 1.0);
+//var crnA = R3D.cornerScaleScores(gryA,widA,heiA).value;
+var crnA = R3D.cornerScaleScores(blrA,widA,heiA).value;
+
+//var useA = varA;
+var useA = crnA;
+	var heat = ImageMat.normalFloat01(Code.copyArray(useA));
+		//heat = ImageMat.invertFloat01(heat);
+		heat = ImageMat.pow(heat,.1);
+		heat = Code.grayscaleFloatToHeatMapFloat(heat);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat["red"],heat["grn"],heat["blu"], widA, heiA);
+		img = new DOImage(img);
+		img.matrix().scale(1.0);
+		img.matrix().translate(810, 10);
+		GLOBALSTAGE.addChild(img);
+
+return;
+*/
+
+
+/*
+
+//REFINE TESTING:
+console.log("REFINE TESTING:");
+// var pointA = new V2D();
+// var pointB = new V2D();
+// var scaleA = ;
+// var angleA = ;
+// var scaleB = ;
+// var angleB = ;
+
+// A
+// var pointA = new V2D(0.4826086956521739,0.2906976744186046);
+// var pointB = new V2D(0.5747126436781609,0.13409961685823754);
+// var scaleA = 27.857618025475976;
+// var angleA = 3.0537559696380288;
+// var scaleB = 18.37917367995256;
+// var angleB = 3.226816531704016;
+
+// 7
+// var pointA = new V2D(0.06,0.72);
+// var pointB = new V2D(0.13478260869565217,0.5813953488372092);
+// var scaleA = 64;
+// var angleA = 2.933224599082247;
+// var scaleB = 27.857618025475976;
+// var angleB = 3.0500680222948797;
+
+// 10
+// var pointA = new V2D(0.4130434782608695,0.4069767441860465);
+// var pointB = new V2D(0.4869565217391304,0.2383720930232558);
+// var scaleA = 27.857618025475976;
+// var angleA = 4.803505667844803;
+// var scaleB = 27.857618025475976;
+// var angleB = 4.798063837041702;
+
+// 34
+// var pointA = new V2D(0.35526315789473684,0.6666666666666666);
+// var pointB = new V2D(0.32894736842105265,0.6403508771929824);
+// var scaleA = 42.224253144732614;
+// var angleA = 4.652359071438693;
+// var scaleB = 42.224253144732614;
+// var angleB = 4.600310944356706;
+
+// 100 --- bad orientation
+// var pointA = new V2D(0.3735632183908046,0.2796934865900383);
+// var pointB = new V2D(0.4683908045977011,0.10344827586206895);
+// var scaleA = 1.837917e+1;
+// var angleA = 3.050936e+0;
+// var scaleB = 1.837917e+1;
+// var angleB = 1.150317e+0;
+
+
+var scaleAToB = scaleB/scaleA;
+var angleAToB = 0;
+var skewXAToB = 0;
+var skewYAToB = 0;
+var tranXAToB = 0;
+var tranYAToB = 0;
+pointA.scale(imageMatrixA.width(),imageMatrixA.height());
+pointB.scale(imageMatrixB.width(),imageMatrixB.height());
+
+
+
+console.log(imageMatrixA,imageMatrixB, pointA,scaleA,angleA,skewXAToB,skewYAToB, pointB,scaleB,angleB);
+var result = R3D.refineTransformNonlinearGD(imageMatrixA,imageMatrixB, pointA,scaleA,angleA, pointB,scaleB,angleB, scaleAToB,angleAToB,skewXAToB,skewYAToB,tranXAToB,tranYAToB);
+//console.log(result);
+var scaleAToB = result["scale"];
+var angleAToB = result["angle"];
+var skewXAToB = result["skewX"];
+var skewYAToB = result["skewY"];
+var transAToB = result["trans"];
+var tranXAToB = transAToB.x;
+var tranYAToB = transAToB.y;
+
+
+
+console.log(" scale: "+scaleAToB+" | angle: "+angleAToB+" | skewX: "+skewXAToB+" |  skewY: "+skewYAToB+" | trans: "+tranXAToB+","+tranYAToB);
+// show single AFTER
+
+var compareSize = 51;
+var compareScale = 1.0;
+
+
+matrix = new Matrix(3,3);
+var imageA = imageMatrixA;
+var imageB = imageMatrixB;
+	
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
+			matrix = Matrix.transform2DScale(matrix, scaleA/compareSize);
+			matrix = Matrix.transform2DRotate(matrix, -angleA);
+			matrix = Matrix.transform2DScale(matrix, scaleAToB);
+			matrix = Matrix.transform2DRotate(matrix, angleAToB);
+			matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
+			matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
+			matrix = Matrix.transform2DTranslate(matrix, tranXAToB, tranYAToB );
+		matrix = Matrix.transform2DTranslate(matrix, pointA.x, pointA.y );
+	var needleA = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
+	
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
+		matrix = Matrix.transform2DScale(matrix, scaleB/compareSize);
+		matrix = Matrix.transform2DRotate(matrix, -angleB);
+		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y );
+	var needleB = imageB.extractRectFromMatrix(compareSize,compareSize, matrix);
+
+
+
+
+var sca = 4.0;
+	var vizA = GLOBALSTAGE.getFloatRGBAsImage(needleA.red(), needleA.grn(), needleA.blu(), needleA.width(), needleA.height());
+	var vizA = new DOImage(vizA);
+	var vizB = GLOBALSTAGE.getFloatRGBAsImage(needleB.red(), needleB.grn(), needleB.blu(), needleB.width(), needleB.height());
+	var vizB = new DOImage(vizB);
+i = 0;
+	vizA.matrix().scale(sca);
+	vizA.matrix().translate(810 + Math.floor(i/10)*compareSize*sca*2 + 0, 10 + (i%10)*compareSize*sca);
+	vizB.matrix().scale(sca);
+	vizB.matrix().translate(810 + Math.floor(i/10)*compareSize*sca* 2 + compareSize*sca, 10 + (i%10)*compareSize*sca);
+	GLOBALSTAGE.addChild(vizA);
+	GLOBALSTAGE.addChild(vizB);
+
+return;
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 	var epipole = R3D.getEpipolesFromF(matrixFfwd);
 	var epipoleA = epipole["A"];
@@ -384,6 +559,24 @@ console.log(lineA);
 
 console.log(featuresA[0]);
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 console.log("creating sift points...");
 
 var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
@@ -408,7 +601,7 @@ for(var f=0; f<lists.length; ++f){
 
 console.log("limited search putatives");
 
-var error = 2;
+var error = 3;
 var putativeA = R3D.limitedSearchFromF(siftA,imageMatrixA,siftB,imageMatrixB,matrixFfwd, error);
 var putativeB = R3D.limitedSearchFromF(siftB,imageMatrixB,siftA,imageMatrixA,matrixFrev, error);
 
@@ -463,32 +656,39 @@ console.log("cross matching...");
 
 //console.log(matchesA);
 
-// SHOW EACH SIFT'S TOP MATCH
-var displaySize = 50;
-var rowSize = 10;
-for(m=0; m<matchesA.length; ++m){
-	break;
-	var sA = siftA[m];
-	var ms = matchesA[m];
-	if(ms.length>0){
-		var ma = ms[0];
-		var sB = ma["B"];
-		console.log("   "+m+": score:"+ma["score"]+" > "+( ms.length>1 ? ms[1]["score"] : "" )+" > "+( ms.length>2 ? ms[2]["score"] : "" ));
-		//var match = bestMatches[m];
-			var vizA = sA.visualize(imageMatrixA, displaySize);
-			var vizB = sB.visualize(imageMatrixB, displaySize);
-			vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
-			vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
-			GLOBALSTAGE.addChild(vizA);
-			GLOBALSTAGE.addChild(vizB);
-	}
-	if(m>100){
-		break;
-	}
-}
+// // SHOW EACH SIFT'S TOP MATCH
+// var displaySize = 50;
+// var rowSize = 10;
+// for(m=0; m<matchesA.length; ++m){
+// 	break;
+// 	var sA = siftA[m];
+// 	var ms = matchesA[m];
+// 	if(ms.length>0){
+// 		var ma = ms[0];
+// 		var sB = ma["B"];
+// 		console.log("   "+m+": score:"+ma["score"]+" > "+( ms.length>1 ? ms[1]["score"] : "" )+" > "+( ms.length>2 ? ms[2]["score"] : "" ));
+// 		//var match = bestMatches[m];
+// 			var vizA = sA.visualize(imageMatrixA, displaySize);
+// 			var vizB = sB.visualize(imageMatrixB, displaySize);
+// 			vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+// 			vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+// 			GLOBALSTAGE.addChild(vizA);
+// 			GLOBALSTAGE.addChild(vizB);
+// 	}
+// 	if(m>200){
+// 		break;
+// 	}
+// }
+
+
+
+
+
+
 
 // put all 'top' matches into single list, 
 var totalMatches = Code.arrayPushArray(Code.arrayPushArray([],matchesA), matchesB);
+var validTotalMatches = [];
 for(i=0; i<totalMatches.length; ++i){
 	var list = totalMatches[i];
 	if(list.length>0){
@@ -496,22 +696,39 @@ for(i=0; i<totalMatches.length; ++i){
 		var score0 = match0["score"];
 		var sA = match0["A"];
 		var sB = match0["B"];
-		score = score0;
-		if(list.length>1){
-			var match1 = list[1];
-			var score1 = match1["score"];
-			var delta = score1 - score0;
-			// score = score0 / delta
-			score = 1.0 / delta;
+		if(sA && sB){
+			var siftScore = score0;
+			/*
+			if(list.length>1){
+				var match1 = list[1];
+				var score1 = match1["score"];
+				var delta = score1 - score0;
+				// score = score0 / delta
+				//score = 1.0 / delta;
+				score = score / delta;
+			}
+			*/
+		var compareMask = null;
+		var compareSize = 11;
+		var compareScale = 1.0;//compareScales[j];
+		compareScale = Math.pow(2,compareScale);
+		var imageA = sA.imageFromFeature(imageMatrixA,compareSize, compareScale);
+		var imageB = sB.imageFromFeature(imageMatrixB,compareSize, compareScale);
+		var sadScore = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+		//value = value * v;
+
+			if(!score){
+				score = 1E10;
+			}
+//score = sadScore * siftScore;
+score = sadScore;
+//score = siftScore;
+			var entry = {"score":score, "A":sA, "B":sB, "SAD":sadScore, "SIFT":siftScore};
+			validTotalMatches.push(entry)
 		}
-		if(!score){
-			score = 1E10;
-		}
-		var entry = {"score":score, "A":sA, "B":sB};
-		totalMatches.push(entry)
 	}
 }
-
+totalMatches = validTotalMatches;
 // remove dups:
 for(i=0; i<totalMatches.length; ++i){
 	var matchI = totalMatches[i];
@@ -529,6 +746,42 @@ for(i=0; i<totalMatches.length; ++i){
 totalMatches = totalMatches.sort(function(a,b){
 	return a["score"] < b["score"] ? -1 : 1;
 });
+
+console.log("TOTAL MATCHES A & B : "+totalMatches.length);
+
+// SHOW EACH SIFT'S TOP MATCH
+var displaySize = 50;
+var rowSize = 10;
+for(m=0; m<totalMatches.length; ++m){
+	var match = totalMatches[m];
+	//console.log(match);
+	//if(ms.length>0){
+		var sA = match["A"];
+		var sB = match["B"];
+		var score = match["score"];
+		var sad = match["SAD"];
+		var sift = match["SIFT"];
+		console.log("   "+m+" : "+Code.digits(score,5)+"  SAD: "+Code.digits(sad,5)+"  SIFT: "+Code.digits(sift,5)+" scaleA: "+Code.digits(sA.scale(),6)+" angleA: "+Code.digits(sA.orientation(),6)+" scaleB: "+Code.digits(sB.scale(),6)+" angleB: "+Code.digits(sB.orientation(),6)+"   @ "+sA.point()+" => "+sB.point());
+		//var match = bestMatches[m];
+			var vizA = sA.visualize(imageMatrixA, displaySize);
+			var vizB = sB.visualize(imageMatrixB, displaySize);
+			vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+			vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+			GLOBALSTAGE.addChild(vizA);
+			GLOBALSTAGE.addChild(vizB);
+	//}
+	if(m>200){
+		break;
+	}
+}
+
+return;
+
+/*
+
+
+
+
 
 console.log("REFINE AAAAA");
 var index = 3;
@@ -561,14 +814,14 @@ var compareSize = 11;
 var compareScale = 1.0;
 compareScaleB = compareSize/scaleB;
 matrix = new Matrix(3,3);
-/*
-		matrix.identity();
-		matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
-		matrix = Matrix.transform2DRotate(matrix, angleA);
-		matrix = Matrix.transform2DSkewX(matrix, skewA);
-		//matrix = Matrix.transform2DScale(matrix, -compareSize/scaleB);
-	var imageA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
-	*/
+
+	// 	matrix.identity();
+	// 	matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
+	// 	matrix = Matrix.transform2DRotate(matrix, angleA);
+	// 	matrix = Matrix.transform2DSkewX(matrix, skewA);
+	// 	//matrix = Matrix.transform2DScale(matrix, -compareSize/scaleB);
+	// var imageA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
+	
 	
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, (-pointA.x) , (-pointA.y) );
@@ -607,6 +860,17 @@ i = 0;
 	GLOBALSTAGE.addChild(vizB);
 
 return;
+
+
+
+*/
+
+
+
+
+
+
+
 
 console.log("DONE: "+totalMatches.length);
 /*
@@ -723,7 +987,7 @@ totalMatches = totalMatches.sort(function(a,b){
 
 
 return;
-*/
+
 
 var displaySize = 50;
 var rowSize = 10;

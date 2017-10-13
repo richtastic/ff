@@ -561,11 +561,23 @@ OPTIMIZING POINTS:
 x pass in skew params to optimal check
 x figure out: scale,rotation,s_s,s_r from a given matrix transformation
 	x -theta,scalex,+theta ~ skew_x & skew_y & scale
-- how to decompose an affine matrix into usable interpolation elements
-- sx
-- sy
-- rot
-- skew
+x how to decompose an affine matrix into usable interpolation elements
+
+AFFINE MATRIX: 6 DOF
+	- x, y, angle, skew, scaleX, scaleY
+	 - tx
+	 - ty
+	 - sx
+	 - sy
+	 - rot
+	 - skew (x & y)
+
+- possible not getting equal matching points to allow for good matching
+	- different key point / scale detection
+		- variability
+
+- for each match, do refinement, discard points that don't reach some SAD minimum [over 3+ scales] [~1E-5 ^ 3]
+
 
 
 DENSE error correction:

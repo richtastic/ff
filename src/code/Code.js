@@ -1692,7 +1692,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		if(newCost<cost){
 			//console.log("better: "+(cost-newCost)+" < "+minDifference);
 			if(cost-newCost<minDifference){
-				console.log("cost quit");
+				// console.log("cost quit");
 				break;
 			}
 			cost = newCost;
@@ -1704,7 +1704,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		}
 	}
 	if(k==maxIterations){
-		console.log("iteration quit");
+		// console.log("iteration quit");
 	}
 	return {"x":x,"cost":cost};
 }
@@ -6382,6 +6382,11 @@ Code.radians = function(degrees){
 Code.degrees = function(radians){
 	return radians*(180.0/Math.PI);
 }
+Code.digits = function(value, d){
+	d = d!==undefined ? d : 5;
+	return value.toExponential(d);
+}
+
 Code.isPointInsideTri2DFast = function(p, a,b,c){ 
 	if(p.x < Math.min(a.x,b.x,c.x)){
 		return false;
@@ -6771,6 +6776,47 @@ Code.range = function(data, masking){
 	}
 	var range = max - min;
 	return range;
+}
+Code.variabilityImage = function(data, width, height){
+	var i, j, x, y, m, len = data.length;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var roughness = 0;
+	var minX, maxX, minY, maxY, value, val, ind, index, m, diff, result, mCount;
+	var mask = 1.0;
+	var total = 0;
+	var maskCount = 0;
+	var result = Code.newArrayZeros(width*height);
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			value = data[index];
+			minX = Math.max(0,i-1);
+			maxX = Math.min(i+1,wm1);
+			minY = Math.max(0,j-1);
+			maxY = Math.min(j+1,hm1);
+			tot = null;
+			mCount = 0;
+			for(y=minY; y<=maxY; ++y){
+				for(x=minX; x<=maxX; ++x){
+					ind = y*width + x;
+					if(ind!==index){ // no differential with self
+						val = data[ind];
+						diff = Math.abs(value - val); // directional difference ?
+						if(tot===null){
+							tot = diff;
+						}else{
+							tot = Math.min(tot,diff); // minimum variablity
+						}
+					}
+				}
+			}
+			if(tot){
+				result[index] = tot;
+			}
+		}
+	}
+	return result;
 }
 Code.variability = function(data, width, height, masking, isMin){ // roughness measure of a 2D surface
 	var i, j, x, y, m, len = data.length;

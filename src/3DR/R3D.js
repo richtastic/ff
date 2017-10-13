@@ -3810,11 +3810,42 @@ R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore){
 	
 	return pass;
 }
-R3D.cornerScaleSpaceExtract = function(imageSource){
+R3D.cornerScaleSpaceExtract = function(imageSource, typo){
+	//typo = typo!==undefined ? typo : R3D.CORNER_SELECT_RESTRICTED;
+	//typo = typo!==undefined ? typo : R3D.CORNER_SELECT_REGULAR;
+	typo = typo!==undefined ? typo : R3D.CORNER_SELECT_RELAXED;
 	var i, j, k;
 	var image;
 	var sourceWidth = imageSource.width();
 	var sourceHeight = imageSource.height();
+	var sourceGry = imageSource.gry();
+
+	// SMOOTHING VERSION
+	var scaleRadius = 2.0;
+	var counts = 4;
+	var featurePoints = [];
+	for(i=0; i<counts; ++i){
+		//var scaleSize = Math.pow(2,(i+1));
+		var scaleSize = (i+1);
+		// 1 2 4 8
+		var gry = sourceGry;
+		var width = sourceWidth;
+		var height = sourceHeight;
+		var corners = R3D.pointsCornerMaxima(gry, width, height,  typo);
+		//console.log(i+": @"+i+" = "+corners.length);
+		for(j=0; j<corners.length; ++j){
+			var corner = corners[j];
+
+			point = new V4D(corner.x * (sourceWidth/width),corner.y * (sourceHeight/height), scaleSize, corner.z);
+			featurePoints.push(point);
+		}
+		if(i<counts-1){
+			sourceGry = ImageMat.getBlurredImage(sourceGry,sourceWidth,sourceHeight, 1.0*scaleSize);
+		}
+	}
+	/*
+	// SCALING VERSION
+	var scaleRadius = 4.0;
 	//var scales = Code.divSpace(1.0, -2.0, 8); // 2 -> 0.25
 	var scales = Code.divSpace(1.0, -2.0, 6); // 2 -> 0.25
 	var featurePoints = [];
@@ -3827,7 +3858,7 @@ R3D.cornerScaleSpaceExtract = function(imageSource){
 		var gry = image.gry();
 		var width = image.width();
 		var height = image.height();
-		var corners = R3D.pointsCornerMaxima(gry, width, height,  R3D.CORNER_SELECT_REGULAR); // CORNER_SELECT_REGULAR CORNER_SELECT_RESTRICTED
+		var corners = R3D.pointsCornerMaxima(gry, width, height,  typo); // CORNER_SELECT_REGULAR CORNER_SELECT_RESTRICTED CORNER_SELECT_RELAXED
 		//console.log(i+": @"+scale+" = "+corners.length);
 		for(j=0; j<corners.length; ++j){
 			var corner = corners[j];
@@ -3835,12 +3866,14 @@ R3D.cornerScaleSpaceExtract = function(imageSource){
 			featurePoints.push(point);
 		}
 	}
-	// remove duplicate points
+	*/
+	// sorting:
 	featurePoints = featurePoints.sort(function(a,b){
 		return a.t > b.t ? -1 : 1;
 	});
-	if(true){
-	//if(false){
+	// remove duplicate points
+	//if(true){
+	if(false){
 	for(i=0; i<featurePoints.length; ++i){
 		//console.log(i+" / "+featurePoints.length);
 		var a = featurePoints[i];
@@ -3870,7 +3903,7 @@ R3D.cornerScaleSpaceExtract = function(imageSource){
 	// scale to normalized coords
 	for(i=0; i<featurePoints.length; ++i){
 		var a = featurePoints[i];
-		featurePoints[i] = new V3D(a.x/sourceWidth,a.y/sourceHeight,4.0*a.z);
+		featurePoints[i] = new V3D(a.x/sourceWidth,a.y/sourceHeight,scaleRadius*a.z);
 	}
 
 	return featurePoints;
@@ -4191,72 +4224,68 @@ R3D.bestPointNeedleInHaystack = function(needle, haystack){ // point in haystack
 	}
 	return new V2D(bestPoint.x,bestPoint.y);
 }
-R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA,skewXA,skewYA, pointB,scaleB,angleB){ // nonlinearLeastSquares
-	var xVals = [pointA.x,pointA.y,scaleA,angleA,skewXA,skewYA];
-	var args = [imageA,imageB, pointB,scaleB,angleB];
-	result = Code.gradientDescent(R3D._refinementGD, args, xVals, null, 100, 1E-20);
+// var result = R3D.refineTransformNonlinearGD(imageMatrixA,imageMatrixB, pointA,scaleA,angleA, pointB,scaleB,angleB, scaleAToB,angleAtoB,skewXA,skewYA);
+R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB, scaleAToB,angleAToB,skewXA,skewYA,tranXA,tranYA){ // nonlinearLeastSquares
+	scaleAToB = scaleAToB!==undefined ? scaleAToB : scaleB/scaleA;
+	angleAToB = angleAToB!==undefined ? angleAToB : 0;
+	skewXA = skewXA!==undefined ? skewXA : 0.0;
+	skewYA = skewYA!==undefined ? skewYA : 0.0;
+	tranXA = tranXA!==undefined ? tranXA : 0.0;
+	tranYA = tranYA!==undefined ? tranYA : 0.0;
+	var xVals = [scaleAToB, angleAToB, skewXA, skewYA, tranXA, tranYA];
+	var args = [imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB];
+	result = Code.gradientDescent(R3D._refinementGD, args, xVals, null, 30, 1E-16);
 	xVals = result["x"];
-	var newA = new V2D(xVals[0],xVals[1]);
-	return {"pointA":newA, "scaleA":xVals[2], "angleA":xVals[3], "skewXA":xVals[4], "skewYA":xVals[5]};
+	return {"scale":xVals[0], "angle":xVals[1], "skewX":xVals[2], "skewY":xVals[3], "trans":new V2D(xVals[4],xVals[5])};
 }
+
 R3D._refinementGD = function(args, x, isUpdate){
 	if(isUpdate){
 		return;
 	}
 	var compareSize = 11;
 	var compareScale = 1.0;
-	var compareMask = ImageMat.circleMask(compareSize);
+	//var compareMask = ImageMat.circleMask(compareSize);
+	//var compareMask = Code.newArrayOnes(compareSize*compareSize);
+	var compareMask = null;
 	var imageA = args[0];
 	var imageB = args[1];
-	var pointB = args[2];
-	var scaleB = args[3];
-	var angleB = args[4];
-	var pointAX = x[0];
-	var pointAY = x[1];
-	var scaleA = x[2];
-	var angleA = x[3];
-	var skewXA = x[4];
-	var skewYA = x[5];
-	var matrix = new Matrix(3,3);
-	var pointA = new V2D(pointAX,pointAY);
-	// console.log(pointA.x,pointA.y)
-	/*
-var compareScaleB = compareScale * compareSize/scaleA;
-	
-		matrix.identity();
-		matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
-		matrix = Matrix.transform2DRotate(matrix, angleA - angleB);
-		matrix = Matrix.transform2DSkewX(matrix, skewXA);
-	var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,compareScaleB,null,compareSize,compareSize, matrix);
-	matrix.identity();
-		// matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
-		// matrix = Matrix.transform2DRotate(matrix, angleB);
-	var needleB = imageA.extractRectFromFloatImage(pointB.x,pointB.y,compareScaleB,null,compareSize,compareSize, null);
-	*/
-	matrix.identity();
-		matrix = Matrix.transform2DTranslate(matrix, (-pointA.x) , (-pointA.y) );
-		matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
-		matrix = Matrix.transform2DRotate(matrix, -angleA);
-		matrix = Matrix.transform2DSkewX(matrix, skewXA);
-		matrix = Matrix.transform2DSkewY(matrix, skewYA);
-		matrix = Matrix.transform2DTranslate(matrix, compareSize*0.5, compareSize*0.5);
-		matrix = Matrix.inverse(matrix);
-	var needleA = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
+	var pointA = args[2];
+	var scaleA = args[3];
+	var angleA = args[4];
+	var pointB = args[5];
+	var scaleB = args[6];
+	var angleB = args[7];
 
-	// matrix.identity();
-	// 	matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
-	// 	matrix = Matrix.transform2DRotate(matrix, angleB);
-	//var imageB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,compareScaleB,null,compareSize,compareSize, null);
+	var scaleAToB = x[0];
+	var angleAToB = x[1];
+	var skewXAToB = x[2];
+	var skewYAToB = x[3];
+	var tranXAToB = x[4];
+	var tranYAToB = x[5];
+	var matrix = new Matrix(3,3);
+
 	var matrix = new Matrix(3,3).identity();
-		matrix = Matrix.transform2DTranslate(matrix, (-pointB.x) , (-pointB.y) );
-		matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
+		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
+			matrix = Matrix.transform2DScale(matrix, scaleA/compareSize);
+			matrix = Matrix.transform2DRotate(matrix, -angleA);
+			matrix = Matrix.transform2DScale(matrix, scaleAToB);
+			matrix = Matrix.transform2DRotate(matrix, angleAToB);
+			matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
+			matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
+			matrix = Matrix.transform2DTranslate(matrix, tranXAToB, tranYAToB );
+		matrix = Matrix.transform2DTranslate(matrix, pointA.x, pointA.y );
+	var needleA = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
+	
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
+		matrix = Matrix.transform2DScale(matrix, scaleB/compareSize);
 		matrix = Matrix.transform2DRotate(matrix, -angleB);
-		matrix = Matrix.transform2DTranslate(matrix, compareSize*0.5, compareSize*0.5);
-		matrix = Matrix.inverse(matrix);
+		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y );
 	var needleB = imageB.extractRectFromMatrix(compareSize,compareSize, matrix);
 
 	var cost = R3D.sadRGB(needleA.red(),needleA.grn(),needleA.blu(), needleB.red(),needleB.grn(),needleB.blu(), compareMask);
-console.log("_refinementGD: "+pointAX+","+pointAY+" | scaleA: "+scaleA+" | angle: "+angleA+" |  skew: "+skewXA+" | "+skewYA+" ("+scaleB+" | "+angleB+") = "+cost);
+	//console.log(" _refinementGD: "+" | scaleA: "+scaleA+" | angle: "+angleA+" |  skew: "+skewXAToB+" | "+skewYAToB+" ("+scaleB+" | "+angleB+") = "+cost);
 	return cost;
 }
 REFINER = -1;
