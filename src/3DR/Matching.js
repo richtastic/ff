@@ -2698,7 +2698,66 @@ Matching.prototype.showComparrison = function(imageA, imageB, invert){
 
 	Matching._DY += 300;
 }
+Matching.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
 
+	var matches = [];
+	for(i=0; i<pointsA.length; ++i){
+		matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+	}
+	// SHOW RANSAC:
+
+	var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
+	// SHOW F LINES ON EACH
+	for(var k=0;k<matches.length;++k){
+		var percent = k / (matches.length-1);
+		
+		var pointA = pointsA[k];
+		var pointB = pointsB[k];
+//console.log(pointA+" - "+pointB);
+		pointA = new V3D(pointA.x,pointA.y,1.0);
+		pointB = new V3D(pointB.x,pointB.y,1.0);
+		var lineA = new V3D();
+		var lineB = new V3D();
+
+		matrixFfwd.multV3DtoV3D(lineA, pointA);
+		matrixFrev.multV3DtoV3D(lineB, pointB);
+
+		var d, v;
+		var dir = new V2D();
+		var org = new V2D();
+		var imageWidth = 400;
+		var imageHeight = 300;
+		var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
+		//
+
+		var color = Code.interpolateColorGradientARGB(percent, colors);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+//console.log(org+" - "+dir);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
+		d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
+		d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+	}
+}
 /*
 - get initial best points
 	- VISUALIZE:

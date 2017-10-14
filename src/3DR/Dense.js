@@ -655,7 +655,7 @@ if(optimal){
 	var c = new DO();
 		c.graphics().setLine(1, 0xFF00FF00);
 		c.graphics().beginPath();
-		c.graphics().drawCircle(0,0, 2.0 );
+		c.graphics().drawCircle(0,0, 2.0);
 		c.graphics().strokeLine();
 		c.graphics().endPath();
 		c.matrix().translate(400 + location.x,location.y);

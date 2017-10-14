@@ -572,9 +572,24 @@ AFFINE MATRIX: 6 DOF
 	 - rot
 	 - skew (x & y)
 
+- USE 2x IMAGE WITH CORNER DETECTION
+- TRY REFINEMENT ON ALL MATCHES TO GET BEST
+
+--- REFINE SAD => REFINE SIFT & use SIFT SCORE AT END
+	- show refined image comparrisions
+	- extract sift vector from transformed images
+	- compare sift score for ordering
+
 - possible not getting equal matching points to allow for good matching
 	- different key point / scale detection
 		- variability
+
+x point-based scaling
+	- use nearest 2/3 points to create size
+	- picked points is not reliable enough to do this
+
+- SIFT dominant angles are sometimes not matching up
+
 
 - for each match, do refinement, discard points that don't reach some SAD minimum [over 3+ scales] [~1E-5 ^ 3]
 

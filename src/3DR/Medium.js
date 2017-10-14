@@ -166,14 +166,14 @@ Medium.prototype.testSearchLine = function(imageMatrixA,pointsA, imageMatrixB,po
 	console.log(matrixFfwd+"");
 	//console.log(matrixFfwd.toArray()+"");
 
-	matches = [];
-	for(i=0; i<pointsA.length; ++i){
-		matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
-	}
-
+	// matches = [];
+	// for(i=0; i<pointsA.length; ++i){
+	// 	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+	// }
+/*
 	console.log("showRansac");
 	R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev);
-
+*/
 
 
 
@@ -398,6 +398,10 @@ console.log(featuresB[0]+"");
 	R3D.removeDuplicatePoints(featuresB, false, null, transformB);
 */
 
+
+
+// SHOW FEATURE POINTS
+
 var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
 var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
 console.log(featuresA[0]+"")
@@ -437,6 +441,8 @@ console.log(featuresA[0]+"")
 				GLOBALSTAGE.addChild(c);
 		}
 	}
+
+
 
 /*
 var pointA = featuresA[20];
@@ -601,7 +607,7 @@ for(var f=0; f<lists.length; ++f){
 
 console.log("limited search putatives");
 
-var error = 3;
+var error = 5;
 var putativeA = R3D.limitedSearchFromF(siftA,imageMatrixA,siftB,imageMatrixB,matrixFfwd, error);
 var putativeB = R3D.limitedSearchFromF(siftB,imageMatrixB,siftA,imageMatrixA,matrixFrev, error);
 
@@ -650,6 +656,7 @@ var matching = SIFTDescriptor.matchSubset(siftA, putativeA, siftB, putativeB);
 var matches = matching["matches"];
 var matchesA = matching["A"];
 var matchesB = matching["B"];
+var matchesBest = matching["best"];
 console.log("cross matching...");
 //var bestMatches = SIFTDescriptor.crossMatches(featuresA,featuresB, matches, matchesA,matchesB, 1.00000001, 250);
 //console.log("bestMatches: "+bestMatches.length);
@@ -684,10 +691,38 @@ console.log("cross matching...");
 
 
 
+// SHOW EACH SIFT'S TOP MATCH
+var displaySize = 50;
+var rowSize = 10;
+for(m=0; m<matchesBest.length; ++m){
+	var match = matchesBest[m];
+	console.log(match)
+	var sA = match["A"];
+	var sB = match["B"];
+	var vizA = sA.visualize(imageMatrixA, displaySize);
+	var vizB = sB.visualize(imageMatrixB, displaySize);
+	vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+	vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+	GLOBALSTAGE.addChild(vizA);
+	GLOBALSTAGE.addChild(vizB);
+	//}
+	if(m>200){
+		break;
+	}
+}
+return;
+
+// TODO: OUTPUT TO MEDIUM HERE
+
+
+
+
+
 
 
 // put all 'top' matches into single list, 
 var totalMatches = Code.arrayPushArray(Code.arrayPushArray([],matchesA), matchesB);
+console.log(totalMatches.length);
 var validTotalMatches = [];
 for(i=0; i<totalMatches.length; ++i){
 	var list = totalMatches[i];
@@ -696,18 +731,18 @@ for(i=0; i<totalMatches.length; ++i){
 		var score0 = match0["score"];
 		var sA = match0["A"];
 		var sB = match0["B"];
+		var relativeScore = 1E9;
+		var matchScore = 1E9;
 		if(sA && sB){
 			var siftScore = score0;
-			/*
 			if(list.length>1){
 				var match1 = list[1];
 				var score1 = match1["score"];
 				var delta = score1 - score0;
-				// score = score0 / delta
-				//score = 1.0 / delta;
-				score = score / delta;
+				relativeScore = 1.0 / delta;
+				matchScore = 1.0 / matchScore;
 			}
-			*/
+			
 		var compareMask = null;
 		var compareSize = 11;
 		var compareScale = 1.0;//compareScales[j];
@@ -715,14 +750,18 @@ for(i=0; i<totalMatches.length; ++i){
 		var imageA = sA.imageFromFeature(imageMatrixA,compareSize, compareScale);
 		var imageB = sB.imageFromFeature(imageMatrixB,compareSize, compareScale);
 		var sadScore = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+		var nccScore = Dense.ncc(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
 		//value = value * v;
 
 			if(!score){
 				score = 1E10;
 			}
+//score = matchScore;
 //score = sadScore * siftScore;
-score = sadScore;
-//score = siftScore;
+//score = sadScore;
+score = siftScore;
+//score = relativeScore;
+//score = nccScore;
 			var entry = {"score":score, "A":sA, "B":sB, "SAD":sadScore, "SIFT":siftScore};
 			validTotalMatches.push(entry)
 		}
@@ -749,6 +788,41 @@ totalMatches = totalMatches.sort(function(a,b){
 
 console.log("TOTAL MATCHES A & B : "+totalMatches.length);
 
+
+/*
+
+// ITERATE ON EASH TO FIND BEST
+for(i=0; i<totalMatches.length; ++i){
+	var match = totalMatches[i];
+	var sA = match["A"];
+	var sB = match["B"];
+	var score = match["score"];
+	var result = R3D.refineFromSIFT(sA,sB, imageMatrixA,imageMatrixB);
+	var newScore = result["score"];
+	console.log(i+" refining: "+score+" => "+newScore);
+	match["REFINE"] = result;
+	match["score"] = newScore;
+
+	// SIFTDescriptor.fromPointGray(source, red,grn,blu, width, height, point)
+	// SIFTDescriptor.vectorFromImage(source, width,height, location,optimalScale,optimalOrientation,covarianceAngle,covarianceScale)
+
+	//if(false){
+	// if(i>=0){
+	// 	break;
+	// }
+}
+
+totalMatches = totalMatches.sort(function(a,b){
+	return a["score"] < b["score"] ? -1 : 1;
+});
+
+console.log("TEST OUT");
+//return;
+
+*/
+
+
+
 // SHOW EACH SIFT'S TOP MATCH
 var displaySize = 50;
 var rowSize = 10;
@@ -763,12 +837,44 @@ for(m=0; m<totalMatches.length; ++m){
 		var sift = match["SIFT"];
 		console.log("   "+m+" : "+Code.digits(score,5)+"  SAD: "+Code.digits(sad,5)+"  SIFT: "+Code.digits(sift,5)+" scaleA: "+Code.digits(sA.scale(),6)+" angleA: "+Code.digits(sA.orientation(),6)+" scaleB: "+Code.digits(sB.scale(),6)+" angleB: "+Code.digits(sB.orientation(),6)+"   @ "+sA.point()+" => "+sB.point());
 		//var match = bestMatches[m];
+		var refine = match["REFINE"];
+		if(refine){
+			//var compareSize = 11;
+			var compareSize = displaySize;
+			// 
+			var pointA = sA.point().copy().scale(imageMatrixA.width(),imageMatrixA.height());
+			var scaleA = sA.scale()/compareSize;
+			var angleA = sA.orientation();
+			var skewXA = 0;
+			var skewYA = 0;
+			var pointB = sB.point().copy().scale(imageMatrixB.width(),imageMatrixB.height());
+			var scaleB = sB.scale()/compareSize;
+			var angleB = sB.orientation();
+			var skewXB = 0;
+			var skewYB = 0;
+			//
+			scaleA = scaleA * refine["scale"];
+			angleA = angleA + refine["angle"];
+			skewXA = refine["skewX"];
+			skewYA = refine["skewY"];
+			pointA = pointA.add(refine["trans"]);
+			
+			var image = R3D.imageFromParameters(imageMatrixA, pointA,scaleA,angleA,skewXA,skewYA, compareSize,compareSize);
+			var vizA = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+			var vizA = new DOImage(vizA);
+
+			var image = R3D.imageFromParameters(imageMatrixB, pointB,scaleB,angleB,skewXB,skewYB, compareSize,compareSize);
+			var vizB = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+			var vizB = new DOImage(vizB);
+		}else{
 			var vizA = sA.visualize(imageMatrixA, displaySize);
 			var vizB = sB.visualize(imageMatrixB, displaySize);
-			vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
-			vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
-			GLOBALSTAGE.addChild(vizA);
-			GLOBALSTAGE.addChild(vizB);
+			
+		}
+		vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+		vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+		GLOBALSTAGE.addChild(vizA);
+		GLOBALSTAGE.addChild(vizB);
 	//}
 	if(m>200){
 		break;

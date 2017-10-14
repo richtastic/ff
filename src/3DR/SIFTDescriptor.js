@@ -90,7 +90,6 @@ SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // puta
 			}
 		}
 	}
-	
 	// TODO: CHECK TO SEE IF A HAS ALREADY MACHED B BEFORE RE-COMPARE
 	// B to putative A
 	for(i=0; i<listB.length; ++i){
@@ -108,6 +107,7 @@ SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // puta
 			}
 		}
 	}
+
 	//
 	// TODO: prevent / remove duplicates ... [a->b && b->a]
 	// 
@@ -147,7 +147,33 @@ SIFTDescriptor.matchSubset = function(listA,putativeA, listB,putativeB){ // puta
 		// SORT
 		matchesB[i] = matchesB[i].sort(SIFTDescriptor._sortMatch);
 	}
-	return {"matches":matches, "A":matchesA, "B":matchesB};
+
+
+	// check to see if top match comparrisions:
+	var bestMatches = [];
+	for(i=0; i<matchesA.length; ++i){
+		var lA = matchesA[i];
+		if(lA.length>0){
+			var mA = lA[0];
+			var aA = mA["a"];
+			var aB = mA["b"];
+			var lB = matchesB[aB];
+			if(lB && lB.length>0){
+				var mB = lB[0];
+				var bA = mB["a"];
+				var bB = mB["b"];
+				if(aA==bA && aB == bB){
+					//console.log("MATCHING PAIR: "+aA+" & "+aB);
+					bestMatches.push(mA);
+				}
+			}
+		}
+	}
+	bestMatches = bestMatches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	});
+
+	return {"matches":matches, "A":matchesA, "B":matchesB, "best":bestMatches};
 }
 SIFTDescriptor.match = function(listA, listB){
 	console.log("matching...");
