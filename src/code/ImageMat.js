@@ -3393,6 +3393,12 @@ ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding
 	source = ImageMat.unpadFloat(source, totWid,totHei, padding,padding,padding,padding);
 	return source;
 }
+ImageMat.prototype.getBlurredImage = function(sigma){ 
+	var red = ImageMat.getBlurredImage(this.red(),this.width(),this.height(), sigma);
+	var grn = ImageMat.getBlurredImage(this.grn(),this.width(),this.height(), sigma);
+	var blu = ImageMat.getBlurredImage(this.blu(),this.width(),this.height(), sigma);
+	return new ImageMat(this.width(),this.height(), red,grn,blu);
+}
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 
 	var blurr = (sigma!==undefined) && (sigma!=null);
 	var gaussSize, gauss1D, padding=0;// fullX=(imgWid*x), fullY=(imgHei*y); // wtf

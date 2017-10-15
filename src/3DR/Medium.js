@@ -647,8 +647,8 @@ for(i=0; i<Bs.length; ++i){
 // return;
 
 
-console.log(putativeA)
-console.log(putativeB)
+// console.log(putativeA)
+// console.log(putativeB)
 
 console.log("subset matching...");
 //var matching = SIFTDescriptor.match(siftA, siftB);
@@ -689,34 +689,147 @@ console.log("cross matching...");
 
 
 
+// REFINE BEST
+for(m=0; m<matchesBest.length; ++m){
+	var match = matchesBest[m];
+	var sA = match["A"];
+	var sB = match["B"];
+	var refine = R3D.refineFromSIFT(sA,sB, imageMatrixA,imageMatrixB);
+	match["REFINE"] = refine;
+	//Medium.displayfromRefine(sA,sB, result, imageMatrixA,imageMatrixB, m);
+	//
+	var vectorA = R3D.vectorFromParameters(sA, imageMatrixA, refine);
+	var vectorB = R3D.vectorFromParameters(sB, imageMatrixB);
+	var siftScore = SIFTDescriptor.compareVector(vectorA,vectorB);
+	//match["score"] = siftScore;
 
+	//var scales = [-1.0,0.0,1.0];
+	var scales = [0.0,0.5,1.0];
+	//var scales = [0.0];
+	var sadScore = 1.0;
+	//var sadScore = 0.0;
+	for(i=0; i<scales.length; ++i){
+		var scale = scales[i];
+			scale = Math.pow(2,scale);
+		var compareMask = null;
+		var imageA = R3D.imageFromParameters(imageMatrixA, sA.point().scale(imageMatrixA.width(),imageMatrixA.height()).add(refine["trans"]), scale*sA.scale()*refine["scale"], sA.orientation()+refine["angle"],refine["skewX"],refine["skewY"]);
+		var imageB = R3D.imageFromParameters(imageMatrixB, sB.point().scale(imageMatrixB.width(),imageMatrixB.height()), scale*sB.scale(),sB.orientation(),0.0,0.0);
+			// imageA = imageA.getBlurredImage(1.0);
+			// imageB = imageB.getBlurredImage(1.0);
+		var sad = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask, true);
+		sadScore = sadScore * sad;
+		//var variability = Code.variabilityImage(imageA.gry(), imageA.width(), imageA.height());
+		// var variability = Code.variability(imageA.gry(), imageA.width(), imageA.height(), null, true);
+		// sadScore /= variability;
+		//sadScore = sadScore + sad;
+	}
+	sadScore = sadScore / scales.length;
+	match["SAD"] = sadScore;
+
+	//match["score"] = sadScore * siftScore;
+	match["score"] = sadScore;
+	//match["score"] = siftScore;
+}
+matchesBest = matchesBest.sort(function(a,b){
+	return a["score"] < b["score"] ? -1 : 1;
+});
+
+var percentKeep = 0.001;
+var minScore = matchesBest[0]["score"];
+var maxScore = matchesBest[matchesBest.length-1]["score"];
+var rangeScore = maxScore - minScore;
+var maximumAllowed = minScore + percentKeep*rangeScore;
+
+var finalSet = [];
+for(m=0; m<matchesBest.length; ++m){
+	var match = matchesBest[m];
+	var sA = match["A"];
+	var sB = match["B"];
+	var refine = match["REFINE"];
+	var sadScore = match["SAD"];
+	var score = match["score"];
+		//var score = match["score"];
+//		console.log(m+": "+score+" | "+sadScore);
+	if(refine["scale"]<=0.1 || refine["scale"]>=2.0 || Math.abs(refine["scaleX"])>0.5 || Math.abs(refine["scaleY"])>0.5  || sadScore > 0.01){
+		continue;
+	}
+	if(score<=maximumAllowed){
+		finalSet.push(match);
+	}
+}
+
+matchesBest = finalSet;
 
 // SHOW EACH SIFT'S TOP MATCH
 var displaySize = 50;
 var rowSize = 10;
 for(m=0; m<matchesBest.length; ++m){
 	var match = matchesBest[m];
-	console.log(match)
+	//console.log(match)
 	var sA = match["A"];
 	var sB = match["B"];
-	var vizA = sA.visualize(imageMatrixA, displaySize);
-	var vizB = sB.visualize(imageMatrixB, displaySize);
-	vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
-	vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
-	GLOBALSTAGE.addChild(vizA);
-	GLOBALSTAGE.addChild(vizB);
-	//}
+	var refine = match["REFINE"];
+	var sadScore = match["SAD"];
+	if(refine){
+		Medium.displayfromRefine(sA,sB, refine, imageMatrixA,imageMatrixB, m);
+	}else{
+		var vizA = sA.visualize(imageMatrixA, displaySize);
+		var vizB = sB.visualize(imageMatrixB, displaySize);
+		vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+		vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+		GLOBALSTAGE.addChild(vizA);
+		GLOBALSTAGE.addChild(vizB);
+	}
 	if(m>200){
 		break;
 	}
 }
-return;
+
+//return;
 
 // TODO: OUTPUT TO MEDIUM HERE
+var pointsA = [];
+var pointsB = [];
+var transforms = [];
+for(i=0; i<matchesBest.length; ++i){
+	var match = matchesBest[i];
+	var sA = match["A"];
+	var sB = match["B"];
+	var refine = match["REFINE"];
+	var pointA = sA.point().copy().scale(imageMatrixA.width(),imageMatrixA.height());
+	var pointB = sB.point().copy().scale(imageMatrixB.width(),imageMatrixB.height());
+	var transform = R3D.transformFromSiftRefine(imageMatrixA,imageMatrixB, sA,sB,refine);
+	pointsA.push(pointA);
+	pointsB.push(pointB);
+	transforms.push(transform);
 
 
+	var compareSize = 50;
 
+	var matrix = transform.copy();
+		//matrix = Matrix.transform2DTranslate(matrix, pointA.x,pointA.y);
+	//var imageA = imageMatrixA.extractRectFromMatrix(compareSize,compareSize, matrix);
+		var imageA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
+	var matrix = new Matrix(3,3).identity();
+		//matrix = Matrix.transform2DTranslate(matrix, pointB.x,pointB.y);
+	//var imageB = imageMatrixA.extractRectFromMatrix(compareSize,compareSize, matrix);
+		var imageB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
 
+	var image = imageA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+		img = new DOImage(img);
+		img.matrix().translate(10, 300 + i*compareSize);
+		GLOBALSTAGE.addChild(img);
+	var image = imageB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+		img = new DOImage(img);
+		img.matrix().translate(100, 300 + i*compareSize);
+		GLOBALSTAGE.addChild(img);
+}
+var output = R3D.outputMediumPoints(imageMatrixA,imageMatrixB, pointsA,pointsB, transforms);
+console.log(output);
+
+return;
 
 
 
@@ -1233,6 +1346,50 @@ for(m=0; m<bestMatches.length; ++m){
 	// var siftA = R3D.pointsToSIFT(rectifiedA, featuresA);
 	// var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 	// 
+}
+Medium.displayfromRefine = function(sA,sB, refine, imageMatrixA,imageMatrixB, m){
+	m = m!==undefined ? m : 0;
+	var displaySize = 50;
+	var rowSize = 10;
+	//var refine = match["REFINE"];
+		if(refine){
+			//var compareSize = 11;
+			var compareSize = displaySize;
+			// 
+			var pointA = sA.point().copy().scale(imageMatrixA.width(),imageMatrixA.height());
+			var scaleA = sA.scale()/compareSize;
+			var angleA = sA.orientation();
+			var skewXA = 0;
+			var skewYA = 0;
+			var pointB = sB.point().copy().scale(imageMatrixB.width(),imageMatrixB.height());
+			var scaleB = sB.scale()/compareSize;
+			var angleB = sB.orientation();
+			var skewXB = 0;
+			var skewYB = 0;
+			//
+			scaleA = scaleA * refine["scale"];
+			angleA = angleA + refine["angle"];
+			skewXA = refine["skewX"];
+			skewYA = refine["skewY"];
+			pointA = pointA.add(refine["trans"]);
+			
+			var image = R3D.imageFromParameters(imageMatrixA, pointA,scaleA,angleA,skewXA,skewYA, compareSize,compareSize);
+			var vizA = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+			var vizA = new DOImage(vizA);
+
+			var image = R3D.imageFromParameters(imageMatrixB, pointB,scaleB,angleB,skewXB,skewYB, compareSize,compareSize);
+			var vizB = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+			var vizB = new DOImage(vizB);
+		}else{
+			var vizA = sA.visualize(imageMatrixA, displaySize);
+			var vizB = sB.visualize(imageMatrixB, displaySize);
+			
+		}
+		vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+		vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+		GLOBALSTAGE.addChild(vizA);
+		GLOBALSTAGE.addChild(vizB);
+	//}
 }
 Medium.mediumMatch = function(){
 	/*

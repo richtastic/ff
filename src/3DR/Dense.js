@@ -19,7 +19,8 @@ function Dense(){
 	// this._tickCount = 0;
 	
 	var dataLoader = new FileLoader();
-		dataLoader.setLoadList("./images/flow/",["sparseA.yaml"], this, this._handleFileDataLoadedFxn);
+		//dataLoader.setLoadList("./images/flow/",["sparseA.yaml"], this, this._handleFileDataLoadedFxn);
+		dataLoader.setLoadList("./images/flow/",["mediumA.yaml"], this, this._handleFileDataLoadedFxn);
 		dataLoader.load();
 }
 

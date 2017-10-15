@@ -563,6 +563,13 @@ x figure out: scale,rotation,s_s,s_r from a given matrix transformation
 	x -theta,scalex,+theta ~ skew_x & skew_y & scale
 x how to decompose an affine matrix into usable interpolation elements
 
+MEDIUM BASICS
+x refine from top results
+- drop worst [SAD? NCC? SIFT?]
+- export in format
+- import in format
+
+
 AFFINE MATRIX: 6 DOF
 	- x, y, angle, skew, scaleX, scaleY
 	 - tx
@@ -589,6 +596,7 @@ x point-based scaling
 	- picked points is not reliable enough to do this
 
 - SIFT dominant angles are sometimes not matching up
+	- look for multiple (80%)
 
 
 - for each match, do refinement, discard points that don't reach some SAD minimum [over 3+ scales] [~1E-5 ^ 3]

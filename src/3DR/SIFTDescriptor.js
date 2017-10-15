@@ -49,10 +49,13 @@ SIFTDescriptor.prototype.toPoint = function(width,height){
 // 	return SIFTDescriptor._gauss;
 // }
 
-SIFTDescriptor.compare = function(descA,descB){ // L1 distance
-	var i, score = 0;
+SIFTDescriptor.compare = function(descA,descB){
 	var vectorA = descA.vector();
 	var vectorB = descB.vector();
+	return SIFTDescriptor.compareVector(vectorA,vectorB);
+}
+SIFTDescriptor.compareVector = function(vectorA,vectorB){ // L1 distance
+	var i, score = 0;
 	for(i=0; i<vectorA.length; ++i){
 		score += Math.abs(vectorA[i] - vectorB[i]); // L1
 //		score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
