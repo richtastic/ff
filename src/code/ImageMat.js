@@ -2845,6 +2845,7 @@ ImageMat.extractRectFromPointSimple = function(source, width,height, x,y,scale, 
 	var sY = y - h*0.5;
 	return ImageMat.extractRectSimple(source, width,height, sX,sY,w,h, wid,hei);
 }
+
 ImageMat.extractRectFromMatrix = function(source, width,height, newWidth,newHeight, matrix){
 	// TODO: VERIFY ?
 	// source,sW,sH, wid,hei, projection, interpolationType

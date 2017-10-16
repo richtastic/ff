@@ -57,8 +57,8 @@ SIFTDescriptor.compare = function(descA,descB){
 SIFTDescriptor.compareVector = function(vectorA,vectorB){ // L1 distance
 	var i, score = 0;
 	for(i=0; i<vectorA.length; ++i){
-		score += Math.abs(vectorA[i] - vectorB[i]); // L1
-//		score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
+//		score += Math.abs(vectorA[i] - vectorB[i]); // L1
+		score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
 	}
 	// CONV
 	// for(i=0; i<vectorA.length; ++i){
@@ -401,45 +401,47 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 			bins[bin] += m;
 		}
 	}
-	// find peak direction
+	// // find peak direction
 	var info = Code.infoArray(bins);
-	var binMaxValue = info["max"];
 	var binMaxIndex = info["indexMax"];
-	//console.log(binMaxIndex+" : "+binMaxValue);
-	// parabola / interpolate estimate the best angle
-	var x0 = (binMaxIndex-1)%totalBinCount; x0 = (x0>=0) ? x0 : (x0+totalBinCount);
-	var x1 = binMaxIndex;
-	var x2 = (binMaxIndex+1)%totalBinCount;
-	var y0 = bins[x0];
-	var y1 = bins[x1];
-	var y2 = bins[x2];
-	//console.log(x0,y0," ",x1,y1," ",x2,y2," ")
-	var parabola = Code.parabolaABCFromPoints(-1,y0, 0,y1, 1,y2);
-	var binAngle = Math.PI2/totalBinCount;
-	var binHalfAngle = binAngle*0.5;
-	var angle0 = x0*binAngle + binHalfAngle;
-	var angle1 = x1*binAngle + binHalfAngle;
-	var angle2 = x2*binAngle + binHalfAngle;
-	//console.log(parabola)
-	var parabolaPeak = Code.parabolaVertexFromABC(parabola["a"],parabola["b"],parabola["c"]);
-	//console.log(parabolaPeak)
-	// interpolate to find optimum orientation
-	var optimalOrientation = 0.0;
-	if(angle0>angle1){
-		angle0 -= Math.PI2;
-	}
-	if(angle2<angle1){
-		angle2 += Math.PI2;
-	}
-	if(parabolaPeak.x<0){ // left 2
-		var per = 1 + parabolaPeak.x;
-		var pm1 = 1 - per;
-		optimalOrientation = pm1*angle0 + per*angle1;
-	}else{ // right 2
-		var per = parabolaPeak.x;
-		var pm1 = 1 - per;
-		optimalOrientation = pm1*angle1 + per*angle2;
-	}
+	// var binMaxValue = info["max"];
+	// //console.log(binMaxIndex+" : "+binMaxValue);
+	// // parabola / interpolate estimate the best angle
+	// var x0 = (binMaxIndex-1)%totalBinCount; x0 = (x0>=0) ? x0 : (x0+totalBinCount);
+	// var x1 = binMaxIndex;
+	// var x2 = (binMaxIndex+1)%totalBinCount;
+	// var y0 = bins[x0];
+	// var y1 = bins[x1];
+	// var y2 = bins[x2];
+	// //console.log(x0,y0," ",x1,y1," ",x2,y2," ")
+	// var parabola = Code.parabolaABCFromPoints(-1,y0, 0,y1, 1,y2);
+	// var binAngle = Math.PI2/totalBinCount;
+	// var binHalfAngle = binAngle*0.5;
+	// var angle0 = x0*binAngle + binHalfAngle;
+	// var angle1 = x1*binAngle + binHalfAngle;
+	// var angle2 = x2*binAngle + binHalfAngle;
+	// //console.log(parabola)
+	// var parabolaPeak = Code.parabolaVertexFromABC(parabola["a"],parabola["b"],parabola["c"]);
+	// //console.log(parabolaPeak)
+	// // interpolate to find optimum orientation
+	// var optimalOrientation = 0.0;
+	// if(angle0>angle1){
+	// 	angle0 -= Math.PI2;
+	// }
+	// if(angle2<angle1){
+	// 	angle2 += Math.PI2;
+	// }
+	// if(parabolaPeak.x<0){ // left 2
+	// 	var per = 1 + parabolaPeak.x;
+	// 	var pm1 = 1 - per;
+	// 	optimalOrientation = pm1*angle0 + per*angle1;
+	// }else{ // right 2
+	// 	var per = parabolaPeak.x;
+	// 	var pm1 = 1 - per;
+	// 	optimalOrientation = pm1*angle1 + per*angle2;
+	// }
+	// TODO: add multiple angles:
+	var optimalOrientation = R3D.interpolateAngleMaxima(bins, binMaxIndex);
 
 	// asymmetric scaling
 	var circleMask = ImageMat.circleMask(overallSize,overallSize);
@@ -461,6 +463,7 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 	for(i=0; i<vectorScales.length; ++i){
 		var scale = vectorScales[i];
 			scale = Math.pow(2,scale);
+// TODO: OVERALL SCALE NEEDS TO CONSIDER  vectorFromImage's scale in
 		var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
 		var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
 		var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);

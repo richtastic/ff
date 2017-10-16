@@ -402,9 +402,19 @@ console.log(featuresB[0]+"");
 
 // SHOW FEATURE POINTS
 
-var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
-var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
-console.log(featuresA[0]+"")
+// var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
+// var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
+var featuresA = R3D.testExtract1(imageMatrixA);
+var featuresB = R3D.testExtract1(imageMatrixB);
+for(i=0; i<featuresA.length; ++i){
+	featuresA[i].scale(1.0/imageMatrixA.width(),1.0/imageMatrixA.height(),1.5);
+}
+for(i=0; i<featuresB.length; ++i){
+	featuresB[i].scale(1.0/imageMatrixB.width(),1.0/imageMatrixB.height(),1.5);
+}
+
+console.log(featuresA.length+" + "+featuresB.length);
+console.log(featuresA[0]+"");
 //var bestMatches = R3D.optimalFeatureMatchesInImages(imageMatrixA,imageMatrixB, featuresA,featuresB);
 
 
@@ -663,6 +673,36 @@ console.log("cross matching...");
 
 //console.log(matchesA);
 
+
+/*
+// SHOW EACH SIFT'S TOP MATCH
+var displaySize = 50;
+var rowSize = 10;
+for(m=0; m<matchesBest.length; ++m){
+	var match = matchesBest[m];
+	//console.log(match)
+	var sA = match["A"];
+	var sB = match["B"];
+	var refine = match["REFINE"];
+	var sadScore = match["SAD"];
+	if(refine){
+		Medium.displayfromRefine(sA,sB, refine, imageMatrixA,imageMatrixB, m);
+	}else{
+		var vizA = sA.visualize(imageMatrixA, displaySize);
+		var vizB = sB.visualize(imageMatrixB, displaySize);
+		vizA.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize, 10 + (m%rowSize)*displaySize);
+		vizB.matrix().translate(800 + 10 + Math.floor(m/rowSize)*2*displaySize + displaySize,10 + (m%rowSize)*displaySize);
+		GLOBALSTAGE.addChild(vizA);
+		GLOBALSTAGE.addChild(vizB);
+	}
+	if(m>200){
+		break;
+	}
+}
+
+*/
+//return;
+
 // // SHOW EACH SIFT'S TOP MATCH
 // var displaySize = 50;
 // var rowSize = 10;
@@ -784,7 +824,6 @@ for(m=0; m<matchesBest.length; ++m){
 		break;
 	}
 }
-
 //return;
 
 // TODO: OUTPUT TO MEDIUM HERE
@@ -826,6 +865,7 @@ for(i=0; i<matchesBest.length; ++i){
 		img.matrix().translate(100, 300 + i*compareSize);
 		GLOBALSTAGE.addChild(img);
 }
+console.log("OUTPUT:");
 var output = R3D.outputMediumPoints(imageMatrixA,imageMatrixB, pointsA,pointsB, transforms);
 console.log(output);
 
