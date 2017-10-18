@@ -304,6 +304,7 @@ if(k<0){
 	}
 
 
+console.log("TODO: REFINE THESE");
 // HERE
 	var pointsA = [];
 	var pointsB = [];
@@ -331,7 +332,7 @@ if(k<0){
 	// UNDO B
 	matrix = Matrix.transform2DScale(matrix, scaleB);
 	matrix = Matrix.transform2DRotate(matrix, angleB);
-
+//matrix = Matrix.inverse(matrix); // noooo
 		pointsA.push(pointA);
 		pointsB.push(pointB);
 		transforms.push(matrix);

@@ -5167,8 +5167,40 @@ R3D.inputMediumPoints = function(yaml){
 	// want point positions & matrix to transform A to B
 	HERE
 }
-R3D.outputDense = function(imageA,imageB, pointsA,pointsB){
-	//
+R3D.outputDensePoints = function(imageA,imageB, pointsA,pointsB,scales,angles,scores){
+	console.log(pointsA,pointsB,scales,angles,scores);
+	var yaml = new YAML();
+	var pointA = new V2D(1,2);
+	var pointB = new V2D(3,4);
+	yaml.writeComment("dense mapping");
+	yaml.writeComment("created: "+Code.getTimeStamp());
+	yaml.writeBlank();
+	yaml.writeString("imageFrom","TODO");
+	yaml.writeString("imageTo","TODO");
+	yaml.writeArrayStart("matches");
+	var i, len=pointsA.length;
+	yaml.writeComment(" count: "+len);
+	for(i=0; i<len; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var scale = scales[i];
+		var angle = angles[i];
+		var score = scores[i];
+		yaml.writeObjectStart();
+			yaml.writeObjectStart("from");
+				pointA.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("to");
+				pointB.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+			yaml.writeNumber("score",score);
+			yaml.writeNumber("scale",scale);
+			yaml.writeNumber("angle",angle);
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+	yaml.writeDocument();
+	return yaml.toString();
 }
 R3D.fundamentalRefineFromPoints = function(pointsA,pointsB){
 	var i;

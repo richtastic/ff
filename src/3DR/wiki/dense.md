@@ -566,8 +566,27 @@ x how to decompose an affine matrix into usable interpolation elements
 MEDIUM BASICS
 x refine from top results
 - drop worst [SAD? NCC? SIFT?]
-- export in format
-- import in format
+x export in format
+x import in format
+
+DENSE MATCHING LIMITING
+x don't add point if SAD score is too different than neighbors
+x SHOULD HAVE A RANK
+
+
+
+- SEE HOW DIFFERENT 'SAD' score calculations change final result
+- SEE HOW DIFFERENT 'uniqueness' score calculations change final result
+
+- use best output score points from dense match as input to new dense matching ?
+
+- SAD score is only good for comparing a single match with others'
+	- NOT for comparing across different matches
+- CURRENTLY: most unique goes next
+	- most unique doesn't mean correct
+	- want unique and correct
+	- correct: in line with F location, good SAD score, good NCC score, good 
+	- if the most unique item has no match, it will falsly select wrong one
 
 
 AFFINE MATRIX: 6 DOF
