@@ -4489,7 +4489,8 @@ R3D.bestPointNeedleInHaystack = function(needle, haystack){ // point in haystack
 	return new V2D(bestPoint.x,bestPoint.y);
 }
 // var result = R3D.refineTransformNonlinearGD(imageA,imageB, pointA,scaleA,angleA,skewXA,skewYA, pointB,scaleB,angleB);
-R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB, scaleAToB,angleAToB,skewXA,skewYA,tranXA,tranYA){ // nonlinearLeastSquares
+R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB, scaleAToB,angleAToB,skewXA,skewYA,tranXA,tranYA, ignoreSkew){ // nonlinearLeastSquares
+	ignoreSkew = ignoreSkew!==undefined ? ignoreSkew : true;
 	scaleAToB = scaleAToB!==undefined ? scaleAToB : scaleB/scaleA;
 	angleAToB = angleAToB!==undefined ? angleAToB : 0;
 	skewXA = skewXA!==undefined ? skewXA : 0.0;
@@ -4497,17 +4498,21 @@ R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA, p
 	tranXA = tranXA!==undefined ? tranXA : 0.0;
 	tranYA = tranYA!==undefined ? tranYA : 0.0;
 	var xVals = [scaleAToB, angleAToB, skewXA, skewYA, tranXA, tranYA];
-	var args = [imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB];
+	var args = [imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB, ignoreSkew];
 	result = Code.gradientDescent(R3D._refinementGD, args, xVals, null, 30, 1E-16);
 	xVals = result["x"];
+	if(ignoreSkew){
+		xVals[2] = 0;
+		xVals[3] = 0;
+	}
 	return {"scale":xVals[0], "angle":xVals[1], "skewX":xVals[2], "skewY":xVals[3], "trans":new V2D(xVals[4],xVals[5])};
 }
-
+R3D._compareSize = 11;
 R3D._refinementGD = function(args, x, isUpdate){
 	if(isUpdate){
 		return;
 	}
-	var compareSize = 11;
+	var compareSize = R3D._compareSize;
 	var compareScale = 1.0;
 	//var compareMask = ImageMat.circleMask(compareSize);
 	//var compareMask = Code.newArrayOnes(compareSize*compareSize);
@@ -4520,6 +4525,7 @@ R3D._refinementGD = function(args, x, isUpdate){
 	var pointB = args[5];
 	var scaleB = args[6];
 	var angleB = args[7];
+	var ignoreSkew = args[8];
 	var scaleAToB = x[0];
 	var angleAToB = x[1];
 	var skewXAToB = x[2];
@@ -4529,40 +4535,28 @@ R3D._refinementGD = function(args, x, isUpdate){
 
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-			matrix = Matrix.transform2DScale(matrix, scaleA/compareSize);
+			//matrix = Matrix.transform2DScale(matrix, scaleA/compareSize);
+			//matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
+			matrix = Matrix.transform2DScale(matrix, scaleA);
 			matrix = Matrix.transform2DRotate(matrix, -angleA);
 			matrix = Matrix.transform2DScale(matrix, scaleAToB);
 			matrix = Matrix.transform2DRotate(matrix, angleAToB);
-			matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
-			matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
+			if(!ignoreSkew){
+				matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
+				matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
+			}
 			matrix = Matrix.transform2DTranslate(matrix, tranXAToB, tranYAToB );
 		matrix = Matrix.transform2DTranslate(matrix, pointA.x, pointA.y );
 	var needleA = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
 	
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-		matrix = Matrix.transform2DScale(matrix, scaleB/compareSize);
+		//matrix = Matrix.transform2DScale(matrix, scaleB/compareSize);
+		//matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
+		matrix = Matrix.transform2DScale(matrix, scaleB);
 		matrix = Matrix.transform2DRotate(matrix, -angleB);
 		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y );
 	var needleB = imageB.extractRectFromMatrix(compareSize,compareSize, matrix);
-
-/*
-var sca = 4.0;
-imageA = needleA;
-imageB = needleB;
-	var vizA = GLOBALSTAGE.getFloatRGBAsImage(imageA.red(), imageA.grn(), imageA.blu(), imageA.width(), imageA.height());
-	var vizA = new DOImage(vizA);
-	var vizB = GLOBALSTAGE.getFloatRGBAsImage(imageB.red(), imageB.grn(), imageB.blu(), imageB.width(), imageB.height());
-	var vizB = new DOImage(vizB);
-var i = 0;
-	vizA.matrix().scale(sca);
-	vizA.matrix().translate(810 + Math.floor(i/10)*compareSize*sca*2 + 0, 10 + (i%10)*compareSize*sca);
-	vizB.matrix().scale(sca);
-	vizB.matrix().translate(810 + Math.floor(i/10)*compareSize*sca* 2 + compareSize*sca, 10 + (i%10)*compareSize*sca);
-	GLOBALSTAGE.addChild(vizA);
-	GLOBALSTAGE.addChild(vizB);
-*/
-
 	var cost = R3D.sadRGB(needleA.red(),needleA.grn(),needleA.blu(), needleB.red(),needleB.grn(),needleB.blu(), compareMask);
 	//console.log(" _refinementGD: "+" | scaleA: "+scaleA+" | angle: "+angleA+" |  skew: "+skewXAToB+" | "+skewYAToB+" ("+scaleB+" | "+angleB+") = "+cost);
 	//console.log(cost);
@@ -5167,7 +5161,7 @@ R3D.inputMediumPoints = function(yaml){
 	// want point positions & matrix to transform A to B
 	HERE
 }
-R3D.outputDensePoints = function(imageA,imageB, pointsA,pointsB,scales,angles,scores){
+R3D.outputDensePoints = function(imageA,imageB, cellSize, pointsA,pointsB,scales,angles,scores){
 	console.log(pointsA,pointsB,scales,angles,scores);
 	var yaml = new YAML();
 	var pointA = new V2D(1,2);
@@ -5177,6 +5171,7 @@ R3D.outputDensePoints = function(imageA,imageB, pointsA,pointsB,scales,angles,sc
 	yaml.writeBlank();
 	yaml.writeString("imageFrom","TODO");
 	yaml.writeString("imageTo","TODO");
+	yaml.writeNumber("cellSize",cellSize);
 	yaml.writeArrayStart("matches");
 	var i, len=pointsA.length;
 	yaml.writeComment(" count: "+len);
@@ -5202,6 +5197,37 @@ R3D.outputDensePoints = function(imageA,imageB, pointsA,pointsB,scales,angles,sc
 	yaml.writeDocument();
 	return yaml.toString();
 }
+R3D.inputDensePoints = function(yaml){
+	var object = R3D._getYAMLSparseObject(yaml);
+	console.log(object);
+	var pointsA = [];
+	var pointsB = [];
+	var transforms = [];
+	var matches = object["matches"];
+	var maxScore = 0.025;
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var score = match["score"];
+		if(score<maxScore){ // ignore low-scoring points
+			continue;
+		}
+		var scale = match["scale"];
+		var angle = match["angle"];
+		var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DRotate(matrix,angle);
+		transforms.push(matrix);
+		var pointA = new V2D();
+		pointA.loadFromObject(match["from"]);
+		pointsA.push(pointA);
+		var pointB = new V2D();
+		pointB.loadFromObject(match["to"]);
+		pointsB.push(pointB);
+	}
+	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms};
+}
+
 R3D.fundamentalRefineFromPoints = function(pointsA,pointsB){
 	var i;
 	for(i=0; i<pointsA.length; ++i){
@@ -5309,8 +5335,9 @@ R3D.sadRGB = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu, m, rangeYes){ // sum of ab
 		var red = R3D.sadRGB(aRed,bRed,m);
 		var grn = R3D.sadRGB(aGrn,bGrn,m);
 		var blu = R3D.sadRGB(aBlu,bBlu,m);
-		//var sum = (red + grn + blu)/3.0;
+		// var sum = (red + grn + blu)/3.0;
 		var sum = (red * grn * blu)/3.0;
+		//var sum = (red * grn * blu)*(red + grn + blu)/3.0;
 		return sum;
 	} // else
 	var a = aRed;
@@ -5351,9 +5378,11 @@ R3D.sadRGB = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu, m, rangeYes){ // sum of ab
 	bMean /= maskCount;
 	var rangeA = maxA - minA;
 	var rangeB = maxB - minB;
+ab = 0.0;
 	for(i=0; i<len; ++i){
 		if(m){ mask = m[i]; }
 		if(mask==0){ continue; }
+		
 		if(rangeYes){
 			ai = a[i] - aMean;
 			bi = b[i] - bMean;
@@ -5362,17 +5391,24 @@ R3D.sadRGB = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu, m, rangeYes){ // sum of ab
 		}else{
 			ai = a[i];
 			bi = b[i];
+			ai = a[i] - aMean;
+			bi = b[i] - bMean;
 		}
 		ab += Math.abs(ai - bi);
 		//ab += Math.pow(Math.abs(ai - bi),2);
+		//ab += Math.pow(Math.abs(ai - bi),2);
+		//ab = ab * Math.abs(ai - bi);
+		//ab = ab + (ai*bi);
 	}
+	//ab = -ab;
+	//ab = Math.max(ab,1E-9);
+	//score = ab/maskCount;
 	score = ab/maskCount;
 	// if(rangeYes===true){
 	//score = score * (1.0 + Math.abs(aMean-bMean));
 	// }
 	return score;
 }
-
 R3D.refineFromSIFT = function(sA,sB, imageMatrixA,imageMatrixB){
 	var pointA = sA.point().copy().scale(imageMatrixA.width(),imageMatrixA.height());
 	var pointB = sB.point().copy().scale(imageMatrixB.width(),imageMatrixB.height());
@@ -5380,36 +5416,47 @@ R3D.refineFromSIFT = function(sA,sB, imageMatrixA,imageMatrixB){
 	var scaleB = sB.scale();
 	var angleA = sA.orientation();
 	var angleB = sB.orientation();
-
-	var result = R3D.refineTransformNonlinearGD(imageMatrixA,imageMatrixB, pointA,scaleA,angleA, pointB,scaleB,angleB);
+	var compareSize = 11;
+	var sizeA = compareSize/scaleA;
+	var sizeB = compareSize/scaleB;
+	return R3D.refineFromFeatures(pointA,sizeA,angleA, pointB,sizeB,angleB, imageMatrixA,imageMatrixB);
+}
+R3D.refineFromFeatures = function(pointA,sizeA,angleA, pointB,sizeB,angleB, imageMatrixA,imageMatrixB, andSkew){
+	// get score single AFTER
+	var compareSize = R3D._compareSize;
+	var compareScale = 1.0;
+	var compareMask = null;
+	var scaleA = sizeA/compareSize;
+	var scaleB = sizeB/compareSize;
+//console.log("SCALE: "+sizeA+" / "+compareSize+" = "+scaleA+". && "+sizeB+" / "+compareSize+" = "+scaleB);
+	var result = R3D.refineTransformNonlinearGD(imageMatrixA,imageMatrixB, pointA,scaleA,angleA, pointB,scaleB,angleB); // andSkew
 	var scaleAToB = result["scale"];
 	var angleAToB = result["angle"];
 	var skewXAToB = result["skewX"];
 	var skewYAToB = result["skewY"];
 	var transAToB = result["trans"];
 
-	// get score single AFTER
-	var compareSize = 11;
-	var compareScale = 1.0;
-	var compareMask = null;
-
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-		matrix = Matrix.transform2DScale(matrix, scaleA/compareSize);
+		//matrix = Matrix.transform2DScale(matrix, scaleA*compareSize);
+		//matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
+		matrix = Matrix.transform2DScale(matrix, scaleA);
+		matrix = Matrix.transform2DRotate(matrix, -angleA);
 			matrix = Matrix.transform2DScale(matrix, scaleAToB);
-			matrix = Matrix.transform2DRotate(matrix, -angleA);
-		matrix = Matrix.transform2DRotate(matrix, angleAToB);
+			matrix = Matrix.transform2DRotate(matrix, angleAToB);
 			matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
 			matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
-		matrix = Matrix.transform2DTranslate(matrix, pointA.x, pointA.y );
-			matrix = Matrix.transform2DTranslate(matrix, transAToB.x, transAToB.y );
+		matrix = Matrix.transform2DTranslate(matrix, pointA.x, pointA.y);
+			matrix = Matrix.transform2DTranslate(matrix, transAToB.x, transAToB.y);
 	var imageA = imageMatrixA.extractRectFromMatrix(compareSize,compareSize, matrix);
 	
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-		matrix = Matrix.transform2DScale(matrix, scaleB/compareSize);
+		//matrix = Matrix.transform2DScale(matrix, scaleB*compareSize);
+		//matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
+		matrix = Matrix.transform2DScale(matrix, scaleB);
 		matrix = Matrix.transform2DRotate(matrix, -angleB);
-		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y );
+		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y);
 	var imageB = imageMatrixB.extractRectFromMatrix(compareSize,compareSize, matrix);
 	var scoreSAD = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
 	result["score"] = scoreSAD;
@@ -6116,10 +6163,12 @@ R3D.pointsToSIFT = function(imageSource, points){
 	var originalWid = imageSource.width();
 	var originalHei = imageSource.height();
 	var features = [];
-	for(i=0; i<points.length; ++i){
+	for(var i=0; i<points.length; ++i){
+		//console.log("point: "+i);
 		var point = points[i];
 		//var s = SIFTDescriptor.fromPointGray(originalGray, originalWid,originalHei, point);
-		var s = SIFTDescriptor.fromPointGray(originalGray, originalRed,originalGrn,originalBlu, originalWid,originalHei, point);
+		//var s = SIFTDescriptor.fromPointGray(originalGray, originalRed,originalGrn,originalBlu, originalWid,originalHei, point);
+		var s = SIFTDescriptor.fromPointGray(imageSource, point);
 		if(s && s.length>0){
 			Code.arrayPushArray(features,s);
 		}

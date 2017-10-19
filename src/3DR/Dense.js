@@ -18,9 +18,17 @@ function Dense(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 	
+	//this._loadingDense = true;
+	this._loadingDense = true;
+	this._cellSize = 5; // 6.6% = 20  |  3.3% = 10 | 1.6% = 5
 	var dataLoader = new FileLoader();
 		//dataLoader.setLoadList("./images/flow/",["sparseA.yaml"], this, this._handleFileDataLoadedFxn);
-		dataLoader.setLoadList("./images/flow/",["mediumA.yaml"], this, this._handleFileDataLoadedFxn);
+		if(!this._loadingDense){
+			dataLoader.setLoadList("./images/flow/",["mediumA.yaml"], this, this._handleFileDataLoadedFxn);
+		}else{
+			dataLoader.setLoadList("./images/flow/",["denseA_10.yaml"], this, this._handleFileDataLoadedFxn);
+			//dataLoader.setLoadList("./images/flow/",["denseA_5.yaml"], this, this._handleFileDataLoadedFxn);
+		}
 		dataLoader.load();
 }
 
@@ -30,10 +38,19 @@ Dense.prototype._handleFileDataLoadedFxn = function(o){
 	var i = 0;
 	var file = files[i];
 	var data = datas[i];
-	var sparse = R3D.inputSparsePoints(data);
+	var isDense = this._loadingDense;
+	// IF DENSE
+	var sparse = null;
+	var maxSeedCount = 200;
+	if(isDense){
+		sparse = R3D.inputDensePoints(data);
+		maxSeedCount = 1000;
+	}else{
+		sparse = R3D.inputSparsePoints(data);
+	}
 	console.log("loaded: "+file);
 		// limit to count
-		var maxSeedCount = 50;
+		
 		//var maxSeedCount = 150;
 		var pointsA = sparse["pointsA"];
 		var pointsB = sparse["pointsB"];
@@ -3710,7 +3727,7 @@ Dense.DISPLAY.addChild(d);
 			var cells = [vertex];
 			var interpolator = new Dense.Interpolator(cells);
 	Dense.assignBestNeedleInHaystack(interpolator,vertex,queue);
-	//console.log(pointA+"  seed assignBestNeedleInHaystack - closest: "+vertex.rank()+"  ");
+	//console.log(pointA+"  seed assignBestNeedleInHaystack - closest: "+vertex.rank()+"  "+vertex.score());
 	return vertex;
 }
 Dense.seedScaleCheck = function(pointA,pointB, imageA,imageB, compareSize, relativeScaleAtoB,relativeAngleAtoB,relativeAsymmScaleAtoB,relativeAsymmAngleAtoB){
@@ -4244,7 +4261,6 @@ console.log(str);
 		//var reliability = (0.0); // min(s(a),s(b)) / d(a,b)
 
 
-
 		
 /*
 
@@ -4308,7 +4324,12 @@ console.log(str);
 		if(lineFDistanceError>10){
 			return null;
 		}
-
+		// TODO:
+		// filter on average intensity value difference -- needle / haystack
+		var averageIndensityDiff = 0.01; // or outside of eg: 1 sigma of mean
+		if(averageIndensityDiff>0.10){
+			return null;
+		}
 		// ignore points with low variablity?
 
 		
@@ -4630,7 +4651,7 @@ Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, dense){
 	var cornersB = R3D.harrisCornerDetection(imageBGry, imageBWidth, imageBHeight, sigmaCorners);
 
 	// LATTICE
-	var cellSize = 10; // 15 10, 5, 3 // CELLSIZEHERE
+	var cellSize = dense._cellSize; // 15 10, 5, 3 // CELLSIZEHERE
 	var latticeAtoB = new Dense.Lattice(imageA,imageB, cornersA,cornersB, cellSize, matrixFfwd);
 	var globalQueue = new PriorityQueue(Dense.Vertex._queueSorting);
 	var localQueue = new PriorityQueue(Dense.Vertex._queueSorting);
@@ -4682,13 +4703,13 @@ Dense.denseMatch_iteration = function(){
 		Dense.IS_DONE = true;
 		console.log("is done");
 
-		return;
+//		return;
 		var pieces = latticeAtoB.serialized();
 		var imageA = latticeAtoB.imageFrom();
 		var imageB = latticeAtoB.imageTo();
 		console.log(console)
-		var output = R3D.outputDensePoints(imageA,imageB, pieces["pointsA"],pieces["pointsB"],pieces["scales"],pieces["angles"],pieces["scores"]);
-		console.clear();
+		var output = R3D.outputDensePoints(imageA,imageB, latticeAtoB.cellSize(), pieces["pointsA"],pieces["pointsB"],pieces["scales"],pieces["angles"],pieces["scores"]);
+		//console.clear();
 		console.log(output);
 		// YAML
 		//latticeAtoB.printYAML();

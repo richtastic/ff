@@ -598,6 +598,10 @@ console.log("creating sift points...");
 var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
 var siftB = R3D.pointsToSIFT(imageMatrixB, featuresB);
 
+
+console.log(siftA);
+console.log(siftB);
+
 /*
 // visualize features in place
 var lists = [[siftA,imageMatrixA],[siftB,imageMatrixB]];
@@ -620,6 +624,9 @@ console.log("limited search putatives");
 var error = 5;
 var putativeA = R3D.limitedSearchFromF(siftA,imageMatrixA,siftB,imageMatrixB,matrixFfwd, error);
 var putativeB = R3D.limitedSearchFromF(siftB,imageMatrixB,siftA,imageMatrixA,matrixFrev, error);
+
+console.log(putativeA);
+console.log(putativeB);
 
 // show potential grouping:
 var p;

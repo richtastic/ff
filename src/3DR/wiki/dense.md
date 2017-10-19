@@ -568,10 +568,14 @@ x refine from top results
 - drop worst [SAD? NCC? SIFT?]
 x export in format
 x import in format
+- REFINE LOCATION | ANGLE | SCALE
+	- doesn't appear to be using angles / scales anywhere
 
 DENSE MATCHING LIMITING
 x don't add point if SAD score is too different than neighbors
 x SHOULD HAVE A RANK
+
+- import prioritized on SAD score and on F line distances
 
 
 
@@ -588,7 +592,9 @@ x SHOULD HAVE A RANK
 	- correct: in line with F location, good SAD score, good NCC score, good 
 	- if the most unique item has no match, it will falsly select wrong one
 
-
+- COARSE-TO-FINE matching
+	- choose best to-from scores from eg 10 px
+	- use as seed points for eg 5 px
 AFFINE MATRIX: 6 DOF
 	- x, y, angle, skew, scaleX, scaleY
 	 - tx
@@ -615,19 +621,21 @@ x point-based scaling
 	- picked points is not reliable enough to do this
 
 - SIFT dominant angles are sometimes not matching up
-	- look for multiple (80%)
-
+	x look for multiple (75% of max)
+	- broke SIFT itself optimal rotations
 
 - for each match, do refinement, discard points that don't reach some SAD minimum [over 3+ scales] [~1E-5 ^ 3]
 
 
 
+
+
+
 DENSE error correction:
 x if a neighbor is matched, but the score is poorer than a new match, can the match be un-joined?
-	- use RANK score ?
-	- use SAD score [better?]
-	- is this worth increases processing time?
-
+	x use RANK score ?
+	x use SAD score [better?]
+	x is this worth increases processing time?
 
 
 

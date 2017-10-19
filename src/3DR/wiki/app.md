@@ -3,15 +3,19 @@
 ### MVP:
 - calibrate camera
 - import picture set
+- run (low res) modeling
 - view (low res) model locally
 - save multiple (limited) models
-- share models
+- share models [privately]
+	- 
 
 
 ### Extended:
 
 #### share model
 	=> needs to upload to server to share
+		- save preview image & model resources on server
+		- accessible via random hash
 	=> would need moderation?
 
 
@@ -25,7 +29,7 @@
 
 #### high resolution
 
-#### offload jobs to cloud
+#### offload processing jobs to cloud
 
 
 

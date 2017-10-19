@@ -363,14 +363,22 @@ SIFTDescriptor.confidence = function(matches){ // sorted matches list, higher co
 
 
 SIFT_CALL = -1;
-SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, point){
+SIFTDescriptor.fromPointGray = function(source, point){
 ++SIFT_CALL;
 	var overallSize = 21;
+	var width = source.width();
+	var height = source.height();
+	var red = source.red();
+	var grn = source.grn();
+	var blu = source.blu();
 	var location = new V2D(point.x*width, point.y*height);
 	var radius = point.z;
 	var ratioSize = SIFTDescriptor.DESCRIPTOR_SCALE*(radius/2.0);
 	var overallScale = overallSize/ratioSize;
-	var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
+	//var area = ImageMat.extractRectFromPointSimple(source, width,height, location.x,location.y,overallScale, overallSize,overallSize);
+	var area = R3D.imageFromParameters(source, location,overallScale,0.0,0.0,0.0, overallSize,overallSize);
+	var circleMask = ImageMat.circleMask(overallSize,overallSize);
+/*
 	// BLUR IMAGE
 	var blurred = ImageMat.getBlurredImage(area, overallSize,overallSize, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
 	// GET DERIVATIVES
@@ -404,88 +412,57 @@ SIFTDescriptor.fromPointGray = function(source, red,grn,blu, width, height, poin
 	// // find peak direction
 	var info = Code.infoArray(bins);
 	var binMaxIndex = info["indexMax"];
-	// var binMaxValue = info["max"];
-	// //console.log(binMaxIndex+" : "+binMaxValue);
-	// // parabola / interpolate estimate the best angle
-	// var x0 = (binMaxIndex-1)%totalBinCount; x0 = (x0>=0) ? x0 : (x0+totalBinCount);
-	// var x1 = binMaxIndex;
-	// var x2 = (binMaxIndex+1)%totalBinCount;
-	// var y0 = bins[x0];
-	// var y1 = bins[x1];
-	// var y2 = bins[x2];
-	// //console.log(x0,y0," ",x1,y1," ",x2,y2," ")
-	// var parabola = Code.parabolaABCFromPoints(-1,y0, 0,y1, 1,y2);
-	// var binAngle = Math.PI2/totalBinCount;
-	// var binHalfAngle = binAngle*0.5;
-	// var angle0 = x0*binAngle + binHalfAngle;
-	// var angle1 = x1*binAngle + binHalfAngle;
-	// var angle2 = x2*binAngle + binHalfAngle;
-	// //console.log(parabola)
-	// var parabolaPeak = Code.parabolaVertexFromABC(parabola["a"],parabola["b"],parabola["c"]);
-	// //console.log(parabolaPeak)
-	// // interpolate to find optimum orientation
-	// var optimalOrientation = 0.0;
-	// if(angle0>angle1){
-	// 	angle0 -= Math.PI2;
-	// }
-	// if(angle2<angle1){
-	// 	angle2 += Math.PI2;
-	// }
-	// if(parabolaPeak.x<0){ // left 2
-	// 	var per = 1 + parabolaPeak.x;
-	// 	var pm1 = 1 - per;
-	// 	optimalOrientation = pm1*angle0 + per*angle1;
-	// }else{ // right 2
-	// 	var per = parabolaPeak.x;
-	// 	var pm1 = 1 - per;
-	// 	optimalOrientation = pm1*angle1 + per*angle2;
-	// }
-	// TODO: add multiple angles:
+
 	var optimalOrientation = R3D.interpolateAngleMaxima(bins, binMaxIndex);
-
-	// asymmetric scaling
-	var circleMask = ImageMat.circleMask(overallSize,overallSize);
-	var areaCenter = new V2D( (overallSize-1)*0.5, (overallSize-1)*0.5 );
-	var covariance = ImageMat.calculateCovariance(area, overallSize,overallSize, areaCenter, circleMask);
-	var covarianceRatio = covariance[0].z/covariance[1].z;
-	var covarianceAngle = V2D.angleDirection(V2D.DIRX, covariance[0]);
-	var covarianceScale = Math.pow(covarianceRatio,1.0);
-
-	//var vector = SIFTDescriptor.vectorFromImage(source, width,height, location,overallScale, optimalOrientation);
-	//var vector = null;
-	//var vectorScales = [0.8,1.0,1.25];
-	//var vectorScales = [.6666,1.0,1.5];
-	//var vectorScales = [.5,1.0,2.0];
-	//var vectorScales = Code.divSpace(-1, 1, 4); // 0.5...2.0
-	var vectorScales = Code.divSpace(-1, 1, 5); // 0.5...1.0
-	var gry = source;
-	var vector = [];
-	for(i=0; i<vectorScales.length; ++i){
-		var scale = vectorScales[i];
-			scale = Math.pow(2,scale);
-// TODO: OVERALL SCALE NEEDS TO CONSIDER  vectorFromImage's scale in
-		var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
-		var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
-		var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
-		//var vectorY = SIFTDescriptor.vectorFromImage(gry, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
-		Code.arrayPushArray(vector,vectorR);
-		Code.arrayPushArray(vector,vectorG);
-		Code.arrayPushArray(vector,vectorB);
-		//Code.arrayPushArray(vector,vectorY);
+*/
+var optimalOrientations = R3D.angleImageRGB(area,circleMask);
+var i, k;
+var sifts = [];
+	for(k=0; k<optimalOrientations.length; ++k){
+		var optimalOrientation = optimalOrientations[k];
+		//console.log(k+": "+optimalOrientation);
+		// asymmetric scaling
+		//var circleMask = ImageMat.circleMask(overallSize,overallSize);
+		var areaCenter = new V2D( (overallSize-1)*0.5, (overallSize-1)*0.5 );
+		var covariance = ImageMat.calculateCovariance(area, overallSize,overallSize, areaCenter, circleMask);
+		var covarianceRatio = covariance[0].z/covariance[1].z;
+		var covarianceAngle = V2D.angleDirection(V2D.DIRX, covariance[0]);
+		var covarianceScale = Math.pow(covarianceRatio,1.0);
+		//var vector = SIFTDescriptor.vectorFromImage(source, width,height, location,overallScale, optimalOrientation);
+		//var vector = null;
+		//var vectorScales = [0.8,1.0,1.25];
+		//var vectorScales = [.6666,1.0,1.5];
+		//var vectorScales = [.5,1.0,2.0];
+		//var vectorScales = Code.divSpace(-1, 1, 4); // 0.5...2.0
+		var vectorScales = Code.divSpace(-.5, .5, 3); // 0.707...1.414
+		var gry = source;
+		var vector = [];
+		for(i=0; i<vectorScales.length; ++i){
+			var scale = vectorScales[i];
+				scale = Math.pow(2,scale);
+			// TODO: OVERALL SCALE NEEDS TO CONSIDER  vectorFromImage's scale in
+			var vectorR = SIFTDescriptor.vectorFromImage(red, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+			var vectorG = SIFTDescriptor.vectorFromImage(grn, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+			var vectorB = SIFTDescriptor.vectorFromImage(blu, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+			//var vectorY = SIFTDescriptor.vectorFromImage(gry, width,height, location,overallScale*scale, optimalOrientation, covarianceAngle, covarianceScale);
+			Code.arrayPushArray(vector,vectorR);
+			Code.arrayPushArray(vector,vectorG);
+			Code.arrayPushArray(vector,vectorB);
+			//Code.arrayPushArray(vector,vectorY);
+		}
+		if(vector){
+			var s = new SIFTDescriptor();
+			s.vector(vector);
+			s.point(point);
+			s._orientationAngle = optimalOrientation;
+			s._overallScale = ratioSize;
+			s._scaleRadius = radius;
+			s._covarianceAngle = covarianceAngle;
+			s._covarianceScale = covarianceScale;
+			sifts.push(s);
+		}
 	}
-
-	if(vector){
-		var s = new SIFTDescriptor();
-		s.vector(vector);
-		s.point(point);
-		s._orientationAngle = optimalOrientation;
-		s._overallScale = ratioSize;
-		s._scaleRadius = radius;
-		s._covarianceAngle = covarianceAngle;
-		s._covarianceScale = covarianceScale;
-		return [s];
-	}
-	return null;
+	return sifts;
 }
 SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimalScale,optimalOrientation,covarianceAngle,covarianceScale){
 	optimalScale = optimalScale!==undefined ? optimalScale : 1.0;
