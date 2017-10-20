@@ -18,8 +18,8 @@ function Dense(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 	
-	//this._loadingDense = true;
 	this._loadingDense = true;
+	//this._loadingDense = false;
 	this._cellSize = 5; // 6.6% = 20  |  3.3% = 10 | 1.6% = 5
 	var dataLoader = new FileLoader();
 		//dataLoader.setLoadList("./images/flow/",["sparseA.yaml"], this, this._handleFileDataLoadedFxn);

@@ -62,12 +62,18 @@ refined sift matches
 
 
 
+- medium matching:
+- want more best matches -- around mouse
+	-- too deformed ???
+iff distance too high => bad 'good' matches
 
 
-
-
-
-
+- refining not work in some cases
+	- using gry is better than RGB in general
+	- 
+- try gradient differences:
+	- angle / direction ?
+		error = magnitude of V2D.sub(gradA,gradB)
 
 
 

@@ -2940,7 +2940,7 @@ ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with oth
 	for(var i=0; i<gradX.length; ++i){
 		vectors[i] = new V2D(gradX[i],gradY[i]);
 	}
-	return vectors;
+	return {"value":vectors, "width":wid, "height":hei};
 }
 ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);

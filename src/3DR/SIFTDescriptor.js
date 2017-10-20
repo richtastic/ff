@@ -491,7 +491,7 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 	// BLUR IMAGE
 	var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
 	// GET DERIVATIVES
-	var gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet);
+	var gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet).value;
 	// UNPAD
 	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
 	//area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);

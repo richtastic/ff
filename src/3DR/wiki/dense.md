@@ -575,6 +575,9 @@ DENSE MATCHING LIMITING
 x don't add point if SAD score is too different than neighbors
 x SHOULD HAVE A RANK
 
+
+- USE SIFT-SCALE SPACE
+
 - import prioritized on SAD score and on F line distances
 
 
