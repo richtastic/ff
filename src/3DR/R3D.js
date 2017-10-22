@@ -1536,6 +1536,9 @@ maxIterations = 1E5;
 			pointsKeepB.push(pointsBIn[i]);
 		}
 	}
+
+	// TODO: are there possible 'duplicated' pointA_i == pointA_j ? => remove ?
+	//
 	return {"F":arr, "matches":[pointsKeepA,pointsKeepB]};	
 	//return {"F":arr, "matches":[subsetPointsA,subsetPointsB]};	
 	// BREAKS IF 7 OR LESS RETURNED
@@ -4013,9 +4016,12 @@ R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore){
 	
 	return pass;
 }
-R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle){
+R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
 	//var zoomScales = [0.25,0.5,0.75,1.0];
 	var zoomScales = [0.5,0.75,1.0,1.5,2.0];
+	if(simple){
+		zoomScales = [1.0];
+	}
 	var vector = [];
 	for(var z=0; z<zoomScales.length; ++z){
 		var zoom = zoomScales[z];
@@ -4041,10 +4047,9 @@ R3D.testExtract1 = function(imageSource, type){
 	var i, j, k;
 	var scales = [2.0,1.0,0.5];
 	var features = [];
-	var defaultRadius = 3.0;
-	//var defaultRadius = 4.0;
 	//var defaultRadius = 5.0;
-	//var defaultRadius = 7.0;
+	var defaultRadius = 7.0;
+	//var defaultRadius = 9.0;
 	for(k=0; k<scales.length; ++k){
 		var scale = scales[k];
 		var image = imageSource.getScaledImage(scale);
@@ -4054,7 +4059,7 @@ R3D.testExtract1 = function(imageSource, type){
 		var corners = R3D.pointsCornerMaxima(gry, wid, hei,  type);
 		for(i=0; i<corners.length; ++i){
 			var point = corners[i];
-			features.push(new V3D(point.x/scale,point.y/scale,defaultRadius/scale));
+			features.push(new V4D(point.x/scale,point.y/scale,defaultRadius/scale, point.z));
 		}
 	}
 	// remove very close points
@@ -4078,7 +4083,27 @@ R3D.testExtract1 = function(imageSource, type){
 		}
 	}
 	}
-	return features;
+	// remove low corner prominance
+	features = features.sort(function(a,b){
+		return a.t > b.t ? -1 : 1;
+	});
+	var max = features[0].t;
+	var min = features[features.length-1].t;
+	var range = max-min;
+	console.log(max+" | "+min+" | "+range);
+	// 2086 | 2134
+	var featuresOut = [];
+	for(i=0; i<features.length; ++i){
+		var feature = features[i];
+		// console.log(feature);
+		var f = new V3D(feature.x,feature.y,feature.z);
+		featuresOut.push(f);
+		if(featuresOut.length>=500){
+			break;
+		}
+	}
+	//throw ""+features.length;
+	return featuresOut;
 }
 R3D.cornerScaleSpaceExtract = function(imageSource, typo){
 	//typo = typo!==undefined ? typo : R3D.CORNER_SELECT_RESTRICTED;
@@ -4442,7 +4467,15 @@ R3D.optimalFeatureMatchesInImages = function(imageMatrixA,imageMatrixB, features
 	}
 	console.log("bestSADMatches: "+bestSADMatches.length);
 
-	return bestSADMatches;
+	var pointsA = [];
+	var pointsB = [];
+	for(i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		pointsA.push(match["A"]);
+		pointsB.push(match["B"]);
+	}
+
+	return {"matches":bestSADMatches, "pointsA":pointsA, "pointsB":pointsB};
 }
 
 
@@ -4811,8 +4844,8 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 	return {"transforms":transformsOut, "pointsA":pointsAOut, "pointsB":pointsBOut};
 }
 
-R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
-
+R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){//} offAX,offAY, offBX,offBY){
+	display = display ? display : GLOBALSTAGE;
 	var matches = [];
 	for(i=0; i<pointsA.length; ++i){
 		matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
@@ -4838,8 +4871,8 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
 		var d, v;
 		var dir = new V2D();
 		var org = new V2D();
-		var imageWidth = 400;
-		var imageHeight = 300;
+		var imageWidth = imageMatrixA ? imageMatrixA.width() : 400;
+		var imageHeight = imageMatrixA ? imageMatrixA.height() : 300;
 		var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
 		//
 
@@ -4856,7 +4889,7 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
 		d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
 		d.graphics().endPath();
 		d.graphics().strokeLine();
-		GLOBALSTAGE.addChild(d);
+		display.addChild(d);
 		//
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
 		dir.scale(scale);
@@ -4868,7 +4901,7 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
 		d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
 		d.graphics().endPath();
 		d.graphics().strokeLine();
-		GLOBALSTAGE.addChild(d);
+		display.addChild(d);
 	}
 }
 
@@ -6206,8 +6239,8 @@ GLOBALSTAGE.addChild(d);
 
 	var i, j, k;
 	// first image
-	var extremumLowContrastMinimum = 0.001; // 0.03
-	var hessianThreshold = 10; // 10
+	var extremumLowContrastMinimum = 0.01; // 0.03
+	var hessianThreshold = 10; // 10 // maximum allowable
 	var preSigma = null; // TODO: 0.5 ?
 	var preScale = 1.0; // TODO: CHANGE TO 2.0
 	var originalGray = imageSource.gry();
@@ -6345,29 +6378,50 @@ for(i=0; i<extrema.length; ++i){
 
 
 	// difference of gaussian pyramid
+	var extrema;
 if(true){
-	var totalFound = 0;
-for(i=0; i<differenceImageSets.length; ++i){
-	var set = differenceImageSets[i];
-	console.log(set);
-	var scale = Math.pow(2,i);
-	extrema = Code.findExtrema3DVolume(differenceImages, originalWid/scale,originalHei/scale);
-	console.log(i+": "+extrema.length);
-	totalFound += extrema.length;
-}
-console.log("totalFound: "+totalFound);
 
-HERE
+
+//if(true){
+if(false){
+	var totalFound = 0;
+	var extremaIndy = [];
+	var i, j;
+	for(i=0; i<differenceImageSets.length; ++i){
+	// if(i!=1){
+	// 	continue;
+	// }
+		var set = differenceImageSets[i];
+		console.log(set);
+		var scale = Math.pow(2,i);
+		var extrema = Code.findExtrema3DVolume(set, originalWid/scale,originalHei/scale);
+		console.log(i+": "+scale+""+extrema.length);
+		for(j=0; j<extrema.length; ++j){
+			extrema[j].x *= scale;
+			extrema[j].y *= scale;
+			extrema[j].z += i*octaveCount; // from full stack
+			extremaIndy.push(extrema[j]);
+			console.log(Math.pow(2,i))
+		}
+		//Code.arrayPushArray(extremaIndy,extrema);
+		totalFound += extrema.length;
+		console.log("totalFound: "+totalFound);
+		extrema = extremaIndy;
+	}
+}else{
+	extrema = Code.findExtrema3DVolume(differenceImages, originalWid,originalHei);
+	console.log("EXTREMA LEN: "+extrema.length);
+}
+
+
 	
 	//hessianThreshold = Math.pow(hessianThreshold+1,2)/hessianThreshold;
 	var dogOffset = 1.0/(differenceGaussianCount*differenceGaussianCount);
-	extrema = Code.findExtrema3DVolume(differenceImages, originalWid,originalHei);
-console.log("EXTREMA LEN: "+extrema.length);
 	var imageWidth = originalWid;
 	var imageHeight = originalHei;
 	for(i=0; i<extrema.length; ++i){
 				var ext = extrema[i];
-/*
+
 				// // HESSIAN EDGE CHECK -- remove edges, keep points
 				var depth = Math.min(Math.max(Math.round(ext.z),0),differenceImages.length-1);
 				var dog = differenceImages[depth];
@@ -6392,7 +6446,7 @@ console.log("EXTREMA LEN: "+extrema.length);
 				if(hessianScore>hessianThreshold){
 					continue;
 				}
-*/
+
 					//var point = new V4D(ext.x/originalWid, ext.y/originalHei, Math.abs(ext.z)*1.0, 0);
 					var point = new V4D(ext.x/scaleStart, ext.y/scaleStart, Math.abs(ext.z)*1.0, 0);
 					var z = point.z;
@@ -6441,12 +6495,22 @@ console.log("EXTREMA LEN: "+extrema.length);
 		}
 	}
 }
+	// TODO: combine features that share a close center and radius size
+
+		// ...
+
+	// 
 //GLOBALSTAGE.root().matrix().scale(0.75);
 	//var goodPoints = [];
 	// remove low contrast points
 	//goodPoints = siftPoints
 	// TODO: FLAT-CONTRAST TEST
 		// ...
+
+	// keep radius in line with corner feature sizing:
+	for(i=0; i<siftPoints.length; ++i){
+		siftPoints[i].z *= 0.5;
+	}
 	return siftPoints;
 }
 
@@ -6543,7 +6607,7 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 	var matches = [];
 	var matchesA = Code.newArrayArrays(objectsA.length);
 	var matchesB = Code.newArrayArrays(objectsB.length);
-	// A to putative B
+	// index
 	for(i=0; i<objectsA.length; ++i){
 		objectsA[i]["index"] = i;
 	}
@@ -6553,9 +6617,13 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 	// A to putative B
 	for(i=0; i<objectsA.length; ++i){
 		var objectA = objectsA[i];
-		var putative = putativeA[i];
+		var putative = putativeA; // if simply list
+		if( Code.isArray(putative[0]) ){ // list of arrays
+			putative = putative[i];
+		}
 		var vectorA = objectA["vector"];
 		var indexA = objectA["index"];
+
 		for(j=0; j<putative.length; ++j){
 			var objectB = putative[j];
 			var vectorB = objectB["vector"];
@@ -6572,12 +6640,16 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 	// B to putative A
 	for(i=0; i<objectsB.length; ++i){
 		var objectB = objectsB[i];
-		var putative = putativeB[i];
+		var putative = putativeB;
+		if( Code.isArray(putative[0]) ){ // list of arrays
+			putative = putative[i];
+		}
 		var vectorB = objectB["vector"];
 		var indexB = objectB["index"];
 		for(j=0; j<putative.length; ++j){
-			var objectA = objectsA[j];
-			var putative = putativeA[j];
+			//var objectA = objectsA[j];
+			//var putative = putativeA[j];
+			var objectA = putative[j];
 			var vectorA = objectA["vector"];
 			var indexA = objectA["index"];
 			var score = SIFTDescriptor.compareVector(vectorA, vectorB);
@@ -6639,8 +6711,9 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 			var aA = mA["a"];
 			var aB = mA["b"];
 			var lB = matchesB[aB];
+			if(true){
 			// match based on top matches equal eachother
-			/*if(lB && lB.length>0){
+			if(lB && lB.length>0){
 				var mB = lB[0];
 				var bA = mB["a"];
 				var bB = mB["b"];
@@ -6648,18 +6721,24 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 					var objectA = mA["A"];
 					var objectB = mB["B"];
 					var score = lA[0]["score"];
-					// if(lA.length>1 && lB.length>1){
-					// 	var scoreA = lA[0]["score"]/lA[1]["score"];
-					// 	var scoreB = lB[0]["score"]/lB[1]["score"];
-					// 	var scoreRank = Math.min(scoreA,scoreB);
-					// }
+					var scoreRank = null;
+					if(lA.length>1 && lB.length>1){
+						var scoreA = lA[0]["score"]/lA[1]["score"];
+						var scoreB = lB[0]["score"]/lB[1]["score"];
+						scoreRank = Math.min(scoreA,scoreB);
+					}
 					//score = score * scoreRank;
-					var score = scoreRank;
+					//var score = scoreRank;
 					var match = {"A":objectA, "B":objectB, "score":score, "a":objectA["index"], "b":objectB["index"]};
-					bestMatches.push(match);
+					if(scoreRank){
+						if(scoreRank<0.90){
+							bestMatches.push(match);
+						}
+					}
 					matchFound = true;
 				}
-			}*/
+			}
+			}else{
 			// match based on is better than sub matches
 			if(!matchFound){
 				if(lA.length>1){
@@ -6674,6 +6753,7 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 						matchFound = true;
 					}
 				}
+			}
 			}
 		}
 	}
@@ -9861,6 +9941,90 @@ R3D.bestDisparityLine = function(lineA, lineB, lineOA, lineOB){
 	//
 	var path = [];
 	return path;
+}
+
+R3D.drawMatches = function(matches, offXA,offYA, offXB,offYB, display, color){
+	if(!matches){
+		return;
+	}
+	display = display ? display : GLOBALSTAGE;
+	color = color ? color : 0x9900FF00;
+	var i, c;
+	var sca = 1.0;
+	var pointsA = [];
+	var pointsB = [];
+	if( Code.isArray(matches[0]) ){
+		pointsA = matches[0];
+		pointsB = matches[1];
+	}else{
+		for(i=0; i<matches.length; ++i){
+			var match = matches[i];
+			if(!match){
+				continue;
+			}
+			var score = match.score;
+			var pA = match.pointA;
+			var pB = match.pointB;
+			if(pA==undefined){
+				var mA = match["A"];
+				var mB = match["B"];
+				pA = mA["point"];
+				pB = mB["point"];
+				pA = pA ? pA : mA.point();
+				pB = pB ? pB : mB.point();
+				//score = match["confidence"];
+				//score = match["score"];
+				// pA = pA.copy();
+				// pB = pB.copy();
+				// pA.x *= 400;
+				// pA.y *= 300;
+				// pB.x *= 400;
+				// pB.y *= 300;
+			}
+			pointsA.push(pA);
+			pointsB.push(pB);
+		}
+	}
+		//console.log(pA,pB);
+//console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
+		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
+		// var percem1 = 1 - percent;
+		// var p = locations[i];
+		//var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
+		//var color = 0x66000000;
+		
+	for(i=0; i<pointsA.length; ++i){
+		var pA = pointsA[i];
+		var pB = pointsB[i];
+		// A
+		c = new DO();
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((pA.x)*sca, (pA.y)*sca,  3 + i*0.0);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(offXA, offYA);
+		display.addChild(c);
+		// B
+		c = new DO();
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle((pB.x)*sca, (pB.y)*sca,  3 + i*0.0);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(offXB, offYB);
+		display.addChild(c);
+		// line
+		c = new DO();
+		c.graphics().setLine(1.0, color);
+		c.graphics().beginPath();
+		c.graphics().moveTo(offXA + pA.x, offYA + pA.y);
+		c.graphics().lineTo(offXB + pB.x, offYB + pB.y);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		display.addChild(c);
+	}
+
 }
 
 

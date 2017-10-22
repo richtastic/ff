@@ -578,6 +578,8 @@ x SHOULD HAVE A RANK
 
 - USE SIFT-SCALE SPACE
 
+- better comparator ? SAD is pretty shitty
+
 - import prioritized on SAD score and on F line distances
 
 
@@ -698,7 +700,10 @@ roughness - ?
 
 
 
-
+---------
+DENSE PROBLEMS
+	- matrix / scale / rotation might be off
+	- 
 
 
 

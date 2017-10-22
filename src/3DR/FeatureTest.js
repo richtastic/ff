@@ -25,7 +25,13 @@
 	//var imageList = ["catHat.jpg","catHat.jpg"];
 //new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 //new ImageLoader("./images/",["tgag.jpg"],this,this.getScaledImage).load();
-new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+// main study
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+// pool
+//new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
+// snow
+new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
+
 }
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
 	var imageList = imageInfo.images;
@@ -46,7 +52,7 @@ FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
 		x += img.width;
 	}
 	var display = this._root;
-display.matrix().scale(1.5);
+	display.matrix().scale(1.5);
 	GLOBALSTAGE = this._stage;
 
 	var imageSourceA = images[0];
@@ -60,14 +66,16 @@ display.matrix().scale(1.5);
 
 	// var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
 	// var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
-	// var featuresA = R3D.testExtract1(imageMatrixA);
-	// var featuresB = R3D.testExtract1(imageMatrixB);
-	var featuresA = R3D.SIFTExtractTest1(imageMatrixA);
-	var featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+	var featuresA = R3D.testExtract1(imageMatrixA);
+	var featuresB = R3D.testExtract1(imageMatrixB);
+	// var featuresA = R3D.SIFTExtractTest1(imageMatrixA);
+	// var featuresB = R3D.SIFTExtractTest1(imageMatrixB);
 	
 	console.log(featuresA.length+" | "+featuresB.length);
 
-	
+// show initial matches
+//if(true){
+if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
@@ -95,8 +103,10 @@ display.matrix().scale(1.5);
 				display.addChild(c);
 		}
 	}
-
 	return;
+}
+
+
 
 	// var cornerMatrixAR = R3D.cornerScaleScores(imageMatrixA.red(), imageMatrixA.width(), imageMatrixA.height()).value;
 	// var cornerMatrixAG = R3D.cornerScaleScores(imageMatrixA.grn(), imageMatrixA.width(), imageMatrixA.height()).value;
@@ -248,7 +258,119 @@ if(k<0){
 		}
 	}
 
-	console.log(objectList);
+var objectsA = objectList[0];
+var objectsB = objectList[1];
+
+//var doFatMatch = true;
+var doFatMatch = false;
+
+if(doFatMatch){
+// DO UNKNOWN-ALL FAT MATCHING
+console.log("FAT MATCH");
+// R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
+var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
+var best = matching["best"];
+var pointsA = [];
+var pointsB = [];
+for(i=0; i<best.length; ++i){
+	pointsA.push(best[i]["A"]["point"]);
+	pointsB.push(best[i]["B"]["point"]);
+	console.log(pointsA[i]+" / "+pointsB[i]);
+}
+console.log(pointsA,pointsB);
+
+
+
+// show first draft matches
+if(false){
+R3D.drawMatches(best, 0,0, imageMatrixA.width(),0, display);
+}
+
+// return;
+
+
+
+// // initial test matching:
+// console.log("initial matches start");
+// var bestMatches = R3D.optimalFeatureMatchesInImages(imageMatrixA,imageMatrixB, featuresA,featuresB);
+// var pointsA = bestMatches["pointsA"];
+// var pointsB = bestMatches["pointsB"];
+// var matches = bestMatches["matches"];
+// console.log(pointsA,pointsB);
+
+// console.log("refine start");
+// var info = R3D.refinedMatchPoints(imageMatrixA,imageMatrixB, pointsA,pointsB);
+// var transforms = info["transforms"];
+// var pointsA = info["pointsA"];
+// var pointsB = info["pointsB"];
+
+// UNKNOWN F, DO RANSAC F SEARCH
+console.log("ransac start");
+// var error = 2.0; // few good matches
+// var error = 1.5;
+var error = 1.0; // lots of good matches
+// var error = 0.5;
+// var error = 0.25;
+//var error = 1.0; // shows more points, shows more widespread misses
+//var error = 0.5; // more points
+var matrixFfwd = null;
+var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, error, matrixFfwd);
+matrixFfwd = result["F"];
+var recheckCount = 0;
+if(result["matches"].length>200 && recheckCount>0){ // try with lower error to get more accurate F
+	error = error * 0.5;
+	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, error, matrixFfwd);
+	var matrixFfwd = result["F"];
+	--recheckCount;
+}
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+var ransacMatches = result["matches"];
+console.log(matrixFfwd.toArray()+"");
+
+
+// var matrixFfwd = R3D.fundamentalRefineFromPoints(pointsA,pointsB);
+// var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+// console.log(matrixFfwd+"");
+// console.log(matrixFfwd.toArray()+"");
+
+// matches = [];
+// for(i=0; i<pointsA.length; ++i){
+// 	matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
+// }
+
+console.log("showRansac...");
+//if(true){
+if(false){
+R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
+return;
+}
+
+
+// main test case
+// 0.000009922081724208012,-0.000021979443879611114,-0.02408291331289476,-0.000018988317673575977,-0.000023988033072291394,-0.00921142272248456,0.023998774814843207,0.01644780293372704,0.029690954586221736
+// 0.000008863797036674087,-0.000022999507708011593,-0.02269964556817645,-0.000021328907731917772,-0.000025310917963202806,-0.008034989957471685,0.023334388531389326,0.016257090703830034,-0.09187655405011143
+
+// pool
+// parallelish:
+// -4.329575620378955e-7,-0.000006527606439833653,-0.000035786992605986486,0.000010592059410897693,-0.000002301606537170875,0.013500324399064447,-0.0009201995453029818,-0.013870954152777209,-0.07627085401772694
+// -9.114594473867189e-8,-9.314654939898829e-7,-0.00011759683512453242,0.000004775527415844851,-0.0000023837567721791096,0.014627715970924923,-0.0008512310413968526,-0.014812826381786258,-0.08706618390046071
+// radialish:
+// -0.0000012915273650053417,-0.00003994587372281122,0.004969366247427215,0.00004391476386329129,-0.0000018812180601731265,0.006239675069682308,-0.006123388330698889,-0.0074773214821302475,0.1269561914884496
+// -9.607134124851651e-7,-0.00003477829274297771,0.00492854191289035,0.00003852144457127489,-0.000001919902454415091,0.007262668443135141,-0.006096071726922473,-0.00833262187469865,0.11780616036979104
+// 0.0000012196664173849832,0.00002582351016668929,-0.001657679429534259,-0.000029985574376317293,0.0000018569147357183277,-0.0084990521584006,0.0025909194843890416,0.00942332287131448,-0.006972287558751901
+
+// snow
+// parallelish:
+// 1.1800445042470806e-7,-0.0000027259485774118485,-0.0015187215077467541,0.000002571134191830763,2.3447461174616949e-7,-0.02217071738525383,0.0004886141322427082,0.021968974842540876,-0.19824168162683264
+// 3.4009438688059313e-7,-0.000006704217159580149,-0.0010107730741188436,0.0000068767588301145586,4.2166096739107775e-7,-0.023586913283455423,-0.00011155676880719541,0.022954779872645263,-0.14908830209360915
+// radial:
+// -0.000010145954026738663,0.0002051991188203881,-0.02980968244798959,-0.00020427297167430989,-0.000010343796946417176,0.03163542344905958,0.02974061320378105,-0.01308367009715102,-2.3802670596704862
+
+
+
+
+R3D.drawMatches(ransacMatches, 0,0, imageMatrixA.width(),0, display, 0x99FF0000);
+
 // TODO: RANSAC HERE
 // var ransac = R3D.fundamentalRANSACFromPoints(pointsA, pointsB, 1.5);
 // var ransacMatches = ransac["matches"];
@@ -257,11 +379,24 @@ if(k<0){
 // var matrixFfwd = ransac["F"];
 // var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
-	var F = [-0.00000734112314980731,0.0000014042825121461254,0.013796878168112627,0.0000122314671933435,0.000007232305118445193,0.004501805291850403,-0.011833960961180797,-0.005617128022406133,-0.3919487408251769];
+
+} // doFatMatch
+
+// snow
+var F = [3.4009438688059313e-7,-0.000006704217159580149,-0.0010107730741188436,0.0000068767588301145586,4.2166096739107775e-7,-0.023586913283455423,-0.00011155676880719541,0.022954779872645263,-0.14908830209360915];
+F = new Matrix(3,3).fromArray(F);
+var matrixFfwd = F;
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+
+
+
+/*
+	var F = [0.000008863797036674087,-0.000022999507708011593,-0.02269964556817645,-0.000021328907731917772,-0.000025310917963202806,-0.008034989957471685,0.023334388531389326,0.016257090703830034,-0.09187655405011143];
 	F = new Matrix(3,3).fromArray(F);
 	var matrixFfwd = F;
 	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
-
+*/
 	var objectsA = objectList[0];
 	var objectsB = objectList[1];
 
@@ -287,8 +422,9 @@ if(k<0){
 	var rowSize = 15;
 	var compareSize = 40;
 
-/*
-
+//if(true){
+if(false){
+// show original best matches
 	for(i=0; i<matches.length; ++i){
 		var match = matches[i];
 		//console.log(match)
@@ -320,9 +456,8 @@ if(k<0){
 			break;
 		}
 	}
-
-//return;
-*/
+return;
+}
 
 console.log("refining...");
 
@@ -395,8 +530,8 @@ console.log("refining...");
 		//sadTotal *= rangeDiff;
 		//sadTotal *= intensityDiff;
 		
-		
-		/*
+if(false){
+		// show refinement
 		var imageA = R3D.imageFromParameters(imageMatrixA, pointAllA, scaleAllA,angleAllA,skewXAllA,skewYAllA, compareSize,compareSize);
 		// var imageB = R3D.imageFromParameters(imageMatrixB, pointB, sizeB/compareSize,angleB,0.0,0.0, compareSize,compareSize);
 
@@ -411,10 +546,14 @@ console.log("refining...");
 		// 	//img.matrix().translate(100, 100 + i*(compareSize+5));
 		// 	img.matrix().translate(10 + (i/rowSize | 0)*(compareSize*2+30) + compareSize, 10 + (i%rowSize)*(compareSize+5));
 		// 	GLOBALSTAGE.addChild(img);
-		*/
+}
 		
 	}
-// show again:
+
+//	return;
+
+
+// sort from refinement
 matches = matches.sort(function(a,b){
 	return a["score"] < b["score"] ? -1 : 1;
 });
@@ -477,6 +616,7 @@ matches = matches.sort(function(a,b){
 //  ""					  LARGE COLOR AVG DIFFERENCES (blue vs white) -- hue/sat/val ?
 //  ""					  
 	
+	// drop matches outside good ranges
 	var keepMatches = [];
 	var compareSize = 11;
 	for(i=0; i<matches.length; ++i){
@@ -570,7 +710,7 @@ matches = matches.sort(function(a,b){
 				var meanDiffG = Math.abs(infoAG["mean"]-infoBG["mean"]);
 				var meanDiffB = Math.abs(infoAB["mean"]-infoBB["mean"]);
 				//console.log(i+"meanDiff: "+meanDiffR+" | "+meanDiffG+" | "+meanDiffB+" | ");
-				var maxMeanDiff = 0.10;
+				var maxMeanDiff = 0.20;
 				if(meanDiffR>maxMeanDiff || meanDiffG>maxMeanDiff || meanDiffB>maxMeanDiff){
 					console.log("DROPPED MEAN: "+meanDiffR+" | "+meanDiffG+" | "+meanDiffB+" | ");
 					continue;
@@ -713,9 +853,9 @@ FeatureTest.prototype.getScaledImage = function(o){
 	document.body.appendChild(i);
 }
 FeatureTest.prototype.handleMouseClickFxn = function(e){
-	console.log(e);
+	//console.log(e);
 	var point = e.location;
-	//console.log(e.x,e.y);
+	console.log((point.x%400)+","+(point.y));
 }
 FeatureTest.prototype.imagesLoadComplete = function(o){
 	this._imageSourceList = [];

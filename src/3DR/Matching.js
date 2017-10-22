@@ -2545,70 +2545,7 @@ Matching.recordLowMatches = function(bestUniqueFeaturesA){
 	}
 	return scoresA;
 }
-Matching.prototype.drawMatches = function(matches, offXA,offYA, offXB,offYB){
-	if(!matches){
-		return;
-	}
-	var i, c;
-	var sca = 1.0;
-	for(i=0; i<matches.length; ++i){
-		var match = matches[i];
-		if(!match){
-			continue;
-		}
-		var score = match.score;
-		var pA = match.pointA;
-		var pB = match.pointB;
-		if(pA==undefined){
-			pA = match["A"].point();
-			pB = match["B"].point();
-			//score = match["confidence"];
-			score = match["score"];
-			pA = pA.copy();
-			pB = pB.copy();
-			pA.x *= 400;
-			pA.y *= 300;
-			pB.x *= 400;
-			pB.y *= 300;
-		}
-//console.log(i+": "+score+"  @  "+pA+"  |  "+pB);
-		// var percent = (i+0.0)/((count==0?1.0:count)+0.0);
-		// var percem1 = 1 - percent;
-		// var p = locations[i];
-		//var color = Code.getColARGBFromFloat(1.0,percem1,0,percent);
-		//var color = 0x66000000;
-		var color = 0x9900FF00;
-		
-		// A
-		c = new DO();
-		c.graphics().setLine(2.0, color);
-		c.graphics().beginPath();
-		c.graphics().drawCircle((pA.x)*sca, (pA.y)*sca,  3 + i*0.0);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-		c.matrix().translate(offXA, offYA);
-		GLOBALSTAGE.addChild(c);
-		// B
-		c = new DO();
-		c.graphics().setLine(2.0, color);
-		c.graphics().beginPath();
-		c.graphics().drawCircle((pB.x)*sca, (pB.y)*sca,  3 + i*0.0);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-		c.matrix().translate(offXB, offYB);
-		GLOBALSTAGE.addChild(c);
-		// line
-		c = new DO();
-		c.graphics().setLine(1.0, color);
-		c.graphics().beginPath();
-		c.graphics().moveTo(offXA + pA.x, offYA + pA.y);
-		c.graphics().lineTo(offXB + pB.x, offYB + pB.y);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-		GLOBALSTAGE.addChild(c);
-	}
 
-}
 Matching.prototype.drawCover = function(wid, hei){
 	wid = wid !== undefined ? wid : 1000.0;
 	hei = hei !== undefined ? hei : 1000.0;
@@ -2697,66 +2634,6 @@ Matching.prototype.showComparrison = function(imageA, imageB, invert){
 	GLOBALSTAGE.addChild(d);
 
 	Matching._DY += 300;
-}
-Matching.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev){
-
-	var matches = [];
-	for(i=0; i<pointsA.length; ++i){
-		matches.push({"pointA":pointsA[i], "pointB":pointsB[i]});
-	}
-	// SHOW RANSAC:
-
-	var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
-	// SHOW F LINES ON EACH
-	for(var k=0;k<matches.length;++k){
-		var percent = k / (matches.length-1);
-		
-		var pointA = pointsA[k];
-		var pointB = pointsB[k];
-//console.log(pointA+" - "+pointB);
-		pointA = new V3D(pointA.x,pointA.y,1.0);
-		pointB = new V3D(pointB.x,pointB.y,1.0);
-		var lineA = new V3D();
-		var lineB = new V3D();
-
-		matrixFfwd.multV3DtoV3D(lineA, pointA);
-		matrixFrev.multV3DtoV3D(lineB, pointB);
-
-		var d, v;
-		var dir = new V2D();
-		var org = new V2D();
-		var imageWidth = 400;
-		var imageHeight = 300;
-		var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
-		//
-
-		var color = Code.interpolateColorGradientARGB(percent, colors);
-		//
-		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-//console.log(org+" - "+dir);
-		dir.scale(scale);
-		d = new DO();
-		d.graphics().clear();
-		d.graphics().setLine(1.0, color);
-		d.graphics().beginPath();
-		d.graphics().moveTo(imageWidth+org.x-dir.x,org.y-dir.y);
-		d.graphics().lineTo(imageWidth+org.x+dir.x,org.y+dir.y);
-		d.graphics().endPath();
-		d.graphics().strokeLine();
-		GLOBALSTAGE.addChild(d);
-		//
-		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-		dir.scale(scale);
-		d = new DO();
-		d.graphics().clear();
-		d.graphics().setLine(1.0, color);
-		d.graphics().beginPath();
-		d.graphics().moveTo( 0 + org.x-dir.x,org.y-dir.y);
-		d.graphics().lineTo( 0 + org.x+dir.x,org.y+dir.y);
-		d.graphics().endPath();
-		d.graphics().strokeLine();
-		GLOBALSTAGE.addChild(d);
-	}
 }
 /*
 - get initial best points
