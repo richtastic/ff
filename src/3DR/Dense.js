@@ -47,7 +47,7 @@ Dense.prototype._handleFileDataLoadedFxn = function(o){
 	var isDense = this._loadingDense;
 	// IF DENSE
 	var sparse = null;
-	var maxSeedCount = 200;
+	var maxSeedCount = 50;
 	if(isDense){
 		sparse = R3D.inputDensePoints(data);
 		maxSeedCount = 1000;
@@ -56,27 +56,34 @@ Dense.prototype._handleFileDataLoadedFxn = function(o){
 	}
 	console.log("loaded: "+file);
 		// limit to count
-		
 		//var maxSeedCount = 150;
 		var pointsA = sparse["pointsA"];
 		var pointsB = sparse["pointsB"];
 		var transforms = sparse["transforms"];
+		var imageFrom = sparse["imageFrom"];
+		var imageTo = sparse["imageTo"];
+			var imageFromPath = imageFrom["path"];
+			var imageToPath = imageTo["path"];
 		while(pointsA.length>maxSeedCount){
 			pointsA.pop();
 			pointsB.pop();
 			transforms.pop();
 		}
 	this._seedData = sparse;
-	this.loadImages();
+	this.loadImages(imageFromPath,imageToPath);
 }
-Dense.prototype.loadImages = function(){
-	// main study
-	//var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"], this,this.handleImagesLoaded,null);
+Dense.prototype.loadImages = function(imageA,imageB){
 	//var imageList = ["zoom_03.png","zoom_scale.png"];
-	// pool
+	// main study
+	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"], this,this.handleImagesLoaded,null);
+	// // pool
 	//var imageLoader = new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.handleImagesLoaded,null);
-	// snow
-	var imageLoader = new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.handleImagesLoaded,null);
+	// // snow
+	// var imageLoader = new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.handleImagesLoaded,null);
+
+	// zoom study
+	//var imageLoader = new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"], this,this.handleImagesLoaded,null);
+	var imageLoader = new ImageLoader("",[imageA,imageB], this,this.handleImagesLoaded,null);
 	imageLoader.load();
 }
 Dense.prototype.handleImagesLoaded = function(imageInfo){
@@ -270,12 +277,14 @@ pointsB = [
 		x += img.width;
 	}
 var transforms = [];
+var F = null;
 //if(false){
 if(true){
 	var seedData = this._seedData;
 	pointsA = seedData["pointsA"];
 	pointsB = seedData["pointsB"];
 	transforms = seedData["transforms"];
+	F = seedData["F"];
 }else{
 	for(i=0; i<pointsA.length; ++i){
 		transforms[i] = new Matrix(3,3).identity();
@@ -338,7 +347,7 @@ this._stage.root().matrix().translate(30,50);
 
 	
 
-	Dense.denseMatch(imageMatrixA,imageMatrixB, pointsA,pointsB,transforms, this);
+	Dense.denseMatch(imageMatrixA,imageMatrixB, pointsA,pointsB,transforms, F, this);
 }
 Dense.prototype.testSeedOptimization = function(imageA,pointsA, imageB,pointsB){
 	//
@@ -1007,20 +1016,20 @@ Dense._matchSorting = function(a,b){
 	return a.rank() < b.rank() ? -1 : 1;
 }
 
-Dense.denseMatchGrid = function(imageA,seedsA, imageB,seedsB, dense){
+Dense.denseMatchGrid = function(imageA,seedsA, imageB,seedsB, F, dense){
 	// Dense.DISPLAY = new DO();
 	// GLOBALSTAGE.addChild(Dense.DISPLAY);
-
 // TODO: should F be passed thru ? or derived from best points?
 var pointsA = seedsA;
 var pointsB = seedsB;
-var matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
-var matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
-
+var matrixFfwd = F;
+if(!matrixFfwd){
+	matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
+	matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+}
 //var matrixFfwd = new Matrix(3,3,[-0.00000734112314980731,0.0000014042825121461254,0.013796878168112627,0.0000122314671933435,0.000007232305118445193,0.004501805291850403,-0.011833960961180797,-0.005617128022406133,-0.3919487408251769]);
-var matrixFfwd = new Matrix(3,3,[0.000008863797036674087,-0.000022999507708011593,-0.02269964556817645,-0.000021328907731917772,-0.000025310917963202806,-0.008034989957471685,0.023334388531389326,0.016257090703830034,-0.09187655405011143]);
+//var matrixFfwd = new Matrix(3,3,[0.000008863797036674087,-0.000022999507708011593,-0.02269964556817645,-0.000021328907731917772,-0.000025310917963202806,-0.008034989957471685,0.023334388531389326,0.016257090703830034,-0.09187655405011143]);
 console.log("F = "+matrixFfwd.toArray()+"; ");
-
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 
 	var i, len, featureA, featureB, match;
@@ -3067,7 +3076,7 @@ Dense.Lattice.prototype.closestVertex = function(point){
 	}
 	var vertex = this._vertexFromColRow(col,row);
 	if(!vertex){ // outside area ? 
-		throw("VERTEX NULL - WHAT ?");
+		throw("VERTEX NULL - WHAT ?"+col+","+row);
 	}
 	return vertex;
 }
@@ -3985,22 +3994,23 @@ Dense.DISPLAY.addChild(d);
 	var relativeAngleAtoB = approximate["angle"];
 	// console.log("transform: "+transform)
 	//console.log(relativeScaleAtoB+" "+Code.degrees(relativeAngleAtoB));
-	console.log("seed: s "+relativeScaleAtoB+" @ "+Code.degrees(relativeAngleAtoB));
 
 	// use closest cell to approximate seed location
 	var vertex = lattice.closestVertex(pointA);
 	if(vertex.score()!==null){ // already found -- ? should TRY with better score anyway?
 		return null;
 	}
-	//vertex.from(pointA);
-	vertex.from(vertex.pointCenter());
+	vertex.from(pointA);
+	//vertex.from(vertex.pointCenter());
 	vertex.to(pointB); // neighborhood
 	vertex.scale(relativeScaleAtoB);
 	vertex.angle(relativeAngleAtoB);
 	//vertex.transform(transform);
 			var cells = [vertex];
 			var interpolator = new Dense.Interpolator(cells);
-	Dense.assignBestNeedleInHaystack(interpolator,vertex,queue);
+	var v = Dense.assignBestNeedleInHaystack(interpolator,vertex,queue);
+	console.log("seed: s "+relativeScaleAtoB+" @ "+Code.degrees(relativeAngleAtoB)+" == "+vertex.score()+"  (( "+pointA+" - "+pointB);
+	
 	//console.log(pointA+"  seed assignBestNeedleInHaystack - closest: "+vertex.rank()+"  "+vertex.score());
 	return vertex;
 }
@@ -4062,7 +4072,7 @@ Dense.lineFromF = function(FA,pointA){
 }
 
 Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
-	var fundamentalDistanceErrorMax = 10;
+	var fundamentalDistanceErrorMax = Math.pow(5,2);
 	var i, j, k, sigma, matrix, angle, scale, toScale, toPoint, toAngle, fromPoint;
 	
 	var lattice = vertex.lattice();
@@ -4106,7 +4116,8 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 		}
 	}
 	
-	var fromPoint = CE;
+//	var fromPoint = CE;
+var fromPoint = vertex.from(); // seed points are not center
 	var boundingBox = new Rect().fromArray([TLto,TRto,BLto,BRto]);
 	var compareSizeMax = 11;
 	var neighborhoodScale = Math.min(Math.max( (0.5/5)*(1.0/cellSize), 0.25),0.75);
@@ -4243,7 +4254,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 			matrix = Matrix.transform2DRotate(matrix,bestAngle);
 		var needle = imageFr.extractRectFromFloatImage(needlePoint.x,needlePoint.y,cellScale,sigma,needleWidth,needleHeight, matrix);
 		*/
-var needle = bestNeedle;
+		var needle = bestNeedle;
 
 		var uniquenessWindow = 3; // 3-5
 		var neighborhoodWidth = Math.round(compareSize * uniquenessWindow);
@@ -4285,8 +4296,28 @@ var needle = bestNeedle;
 			var haystackLine = Dense.lineFromF(Frev,bestPoint);
 			var distA = Code.distancePointRay2D(needleLine.org,needleLine.dir, bestPoint);
 			var distB = Code.distancePointRay2D(haystackLine.org,haystackLine.dir, needlePoint);
+			//console.log("dists: "+distA+" | "+distB);
 			var distRMS = Math.sqrt(distA*distA + distB*distB); // RMS ERROR
 			lineFDistanceError = distRMS;
+			// if(lineFDistanceError>fundamentalDistanceErrorMax){
+			// 	d = new DO();
+			// 	d.graphics().clear();
+			// 	d.graphics().setLine(1.0, 0xFF0000FF);
+			// 	d.graphics().beginPath();
+			// 	d.graphics().drawCircle(0 + needlePoint.x,needlePoint.y, 5);
+			// 	d.graphics().strokeLine();
+			// 	d.graphics().endPath();
+			// 	GLOBALSTAGE.addChild(d);
+
+			// 	d = new DO();
+			// 	d.graphics().clear();
+			// 	d.graphics().setLine(1.0, 0xFFFF0000);
+			// 	d.graphics().beginPath();
+			// 	d.graphics().drawCircle(400 + bestPoint.x,bestPoint.y, 5);
+			// 	d.graphics().strokeLine();
+			// 	d.graphics().endPath();
+			// 	GLOBALSTAGE.addChild(d);
+			// }
 		}
 				
 
@@ -4411,7 +4442,7 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 */
 
 		// ignore points that have minimal differences
-
+//console.log("PRE PEN");
 		if(worstRangeScore < 0.001){
 			return null;
 		}
@@ -4423,29 +4454,54 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 		}
 
 		// ignore points with really poor scores
-		//console.log("bestScore: "+bestScore);
-		//if(bestScore > 0.15){ // 0.15
-		if(bestScore > 0.20){ // 0.15
+		// console.log("bestScore: "+bestScore);
+		if(bestScore > 0.20){ // 0.10 - 0.20
 			return null;
 		}
-
+//console.log("X");
 		// ignore points with poor uniqueness
 		//console.log("uniqueness: "+uniqueness);
 		if(uniqueness > 1E5){ // [1E2~1E4]
 			return null;
 		}
-		//console.log("lineFDistanceError: "+lineFDistanceError);
+		// console.log("lineFDistanceError: "+lineFDistanceError);
 		if(lineFDistanceError>fundamentalDistanceErrorMax){
 			return null;
 		}
+//console.log("Y");
 		// ignore points with large color difference
 		// filter on average intensity value difference -- needle / haystack
 		var averageIntensityDiffR = Math.abs(meanIntensityHaystackR - meanIntensityNeedleR);
 		var averageIntensityDiffG = Math.abs(meanIntensityHaystackG - meanIntensityNeedleG);
 		var averageIntensityDiffB = Math.abs(meanIntensityHaystackB - meanIntensityNeedleB);
-		var averageIntensityDiffMax = Math.max(averageIntensityDiffR,averageIntensityDiffG,averageIntensityDiffB);
-		// console.log("averageIntensityDiffMax: "+averageIntensityDiffMax);
-		if(averageIntensityDiffMax>0.15){ // 15  in range: [0.01~0.1].2]
+		//var averageIntensityDiffMax = Math.max(averageIntensityDiffR,averageIntensityDiffG,averageIntensityDiffB);
+		var averageIntensityDiffMax = (averageIntensityDiffR+averageIntensityDiffG+averageIntensityDiffB)/3.0;
+		//console.log("averageIntensityDiffMax: "+averageIntensityDiffMax+" @ "+averageIntensityDiffR+" | "+averageIntensityDiffG+" | "+averageIntensityDiffB);
+		//if(averageIntensityDiffMax>0.15){ // 15  in range: [0.01~0.1].2]
+			if(averageIntensityDiffMax>0.25){
+			/*
+				d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(1.0, 0xFF0000FF);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(0 + needlePoint.x,needlePoint.y, 5);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				GLOBALSTAGE.addChild(d);
+
+				d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(1.0, 0xFFFF0000);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(400 + bestPoint.x,bestPoint.y, 5);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				GLOBALSTAGE.addChild(d);
+
+				console.log(".   R"+meanIntensityHaystackR+" | "+meanIntensityNeedleR);
+				console.log(".   G"+meanIntensityHaystackG+" | "+meanIntensityNeedleG);
+				console.log(".   B"+meanIntensityHaystackB+" | "+meanIntensityNeedleB);
+			*/
 			return null;
 		}
 		// ignore points with low variablity
@@ -4453,7 +4509,7 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 		if(variabilityNeedle<0.001){
 			return null;
 		}
-
+// console.log("   POST PEN");
 		
 /*
 		if(distanceFromTo>cellSize || distanceToFrom>cellSize){
@@ -4539,11 +4595,11 @@ rank = rank * rang; // OK
 				}
 				var d = V2D.distance(n.to(),bestPoint);
 				//console.log("DIST: "+d);
-				if(d<cellSize*0.2){ // 0.1
+				if(d<cellSize*0.2){ // 0.1-0.5
 					//console.log("too close to neighbor: "+d);
 					return null;
 				}
-				if(d>cellSize*5.0){ // 2
+				if(d>cellSize*5.0){ // 2-5
 					//console.log("too far from neighbor: "+d);
 					return null;
 				}
@@ -4559,6 +4615,7 @@ rank = rank * rang; // OK
 			}
 		}
 		*/
+//console.log("  CHECK");
 		var currentRank = vertex.rank();//vertex.transform();
 		if(currentRank!==null){
 			if(rank > currentRank){
@@ -4767,7 +4824,7 @@ Dense.Vertex._queueSorting = function(a,b){
 	return rankA < rankB ? -1 : 1;
 }
 
-Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, dense){
+Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, matrixFfwd, dense){
 	var pointsA = seedsA;
 	var pointsB = seedsB;
 
@@ -4786,11 +4843,18 @@ Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, dense){
 	var imageBHeight = imageB.height();
 
 	// F
-	var matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
-	if(matrixFfwd){
-		matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+	if(!matrixFfwd){
+		var matrixFfwd = R3D.fundamentalMatrix(pointsA,pointsB);
+		if(matrixFfwd){
+			matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,pointsA,pointsB);
+		}
 	}
 	console.log(matrixFfwd+"");
+	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+	var display = GLOBALSTAGE;
+	var imageMatrixA = imageA;
+	var imageMatrixB = imageB;
+	R3D.showFundamental(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 
 	// CORNERS
 	var sigmaCorners = 1.0;
@@ -4809,7 +4873,9 @@ Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, dense){
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
 		var transform = transforms[i];
+		//console.log(pointA+" | "+pointB+" ?? ");
 		var vertex = Dense.vertexFromMatch(pointA,pointB,transform, latticeAtoB, globalQueue);
+		//console.log("out")
 		// if(vertex){
 		// 	globalQueue.push(vertex);
 		// }
@@ -4835,6 +4901,7 @@ Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, dense){
 	Dense.KEYBOARD.addListeners();
 }
 Dense.denseMatch_iteration = function(){
+//return;
 	var localQueue = Dense.LOCALQUEUE;
 	var globalQueue = Dense.GLOBALQUEUE;
 	var latticeAtoB = Dense.LATTICE;

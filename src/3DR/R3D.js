@@ -4843,7 +4843,9 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 	}
 	return {"transforms":transformsOut, "pointsA":pointsAOut, "pointsB":pointsBOut};
 }
-
+R3D.showFundamental = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){
+	return R3D.showRansac(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
+}
 R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){//} offAX,offAY, offBX,offBY){
 	display = display ? display : GLOBALSTAGE;
 	var matches = [];
@@ -5118,6 +5120,17 @@ R3D.getbla = function(){
 			angleB = V2D.angle(V2D.DIRX,u);
 		}
 }
+R3D.writeImageObjectToYAML = function(name, object, yaml){
+	yaml.writeObjectStart(name);
+		yaml.writeString("id",object["id"]);
+		yaml.writeString("path",object["path"]);
+		yaml.writeNumber("width",object["width"]);
+		yaml.writeNumber("height",object["height"]);
+	yaml.writeObjectEnd();
+}
+R3D.loadImageObjectToYAML = function(name, object, yaml){
+	// ...
+}
 R3D.outputSparsePoints = function(imageA,imageB, pointsA,pointsB,transforms){
 	console.log(pointsA,pointsB,transforms);
 	var yaml = new YAML();
@@ -5181,9 +5194,25 @@ R3D.inputSparsePoints = function(yaml){
 		pointB.loadFromObject(match["to"]);
 		pointsB.push(pointB);
 	}
-	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms};
+	var F = null;
+	var fundamental = object["fundamental"];
+	if(fundamental){
+		F = new Matrix();
+		F.loadFromObject(fundamental);
+	}
+	var imageFrom = object["imageFrom"];
+	if(!imageFrom){
+		imageFrom = null;
+	}
+	var imageTo = object["imageTo"];
+	if(!imageTo){
+		imageTo = null;
+	}
+	// matrixFfwd.saveToYAML(yaml);
+	// yaml.writeObjectEnd();
+	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms, "F":F, "imageFrom":imageFrom,"imageTo":imageTo};
 }
-R3D.outputMediumPoints = function(imageA,imageB, pointsA,pointsB, transforms){
+R3D.outputMediumPoints = function(imageA,imageB, pointsA,pointsB, transforms, matrixFfwd, imageInfoA, imageInfoB){
 	console.log(pointsA,pointsB,transforms);
 	var yaml = new YAML();
 	var pointA = new V2D(1,2);
@@ -5191,8 +5220,18 @@ R3D.outputMediumPoints = function(imageA,imageB, pointsA,pointsB, transforms){
 	yaml.writeComment("medium mapping");
 	yaml.writeComment("created: "+Code.getTimeStamp());
 	yaml.writeBlank();
-	yaml.writeString("imageFrom","TODO");
-	yaml.writeString("imageTo","TODO");
+	if(imageInfoA){
+		R3D.writeImageObjectToYAML("imageFrom",imageInfoA,yaml);
+	}
+	if(imageInfoB){
+		R3D.writeImageObjectToYAML("imageTo",imageInfoB,yaml);
+	}
+	//yaml.writeString("imageFrom","TODO");
+	//yaml.writeString("imageTo","TODO");
+	yaml.writeObjectStart("fundamental");
+		matrixFfwd.saveToYAML(yaml);
+	yaml.writeObjectEnd();
+
 	yaml.writeArrayStart("matches");
 	var i, len=pointsA.length;
 	yaml.writeComment(" count: "+len);
@@ -6732,6 +6771,7 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 					var match = {"A":objectA, "B":objectB, "score":score, "a":objectA["index"], "b":objectB["index"]};
 					if(scoreRank){
 						if(scoreRank<0.90){
+						//if(scoreRank<0.75){
 							bestMatches.push(match);
 						}
 					}

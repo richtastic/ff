@@ -697,7 +697,8 @@ roughness - ?
 
 
 
-
+- concentric circles (sharing same point) => use as single object?
+	- only compare each of same group [not as separate entitites]
 
 
 ---------
@@ -707,15 +708,28 @@ DENSE PROBLEMS
 
 
 
+x pass F in yaml
+- pass image data in yaml
+	- id
+	- file path
+	- dimensions used
+- drop non-unique points from initial match sets (fat and thin)
 
 
 
 
 
-
-
-
-
+============= next:::::
+- program to check A->B and B->A & remove unclear matches. (distance < cellsize) Evaluation | double-check | grade | choose | judge | prefer | prune
+	- need to output angles and scales (V4D?)
+	- check for:
+		- similar color range
+		- similar color average
+		- good SAD score
+		- good F-distance
+	=> final best matches
+- show the points in the 3D preview
+- surface approximation from point cloud
 
 
 

@@ -26,11 +26,15 @@
 //new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 //new ImageLoader("./images/",["tgag.jpg"],this,this.getScaledImage).load();
 // main study
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
 // pool
-//new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
 // snow
-new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
+// zoom study:
+//new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load();
+//new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load();
 
 }
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
@@ -55,6 +59,9 @@ FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
 	display.matrix().scale(1.5);
 	GLOBALSTAGE = this._stage;
 
+var imagePathA = fileList[0];
+var imagePathB = fileList[1];
+
 	var imageSourceA = images[0];
 	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
 	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
@@ -73,7 +80,7 @@ FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
 	
 	console.log(featuresA.length+" | "+featuresB.length);
 
-// show initial matches
+// show initial feature sites
 //if(true){
 if(false){
 	// show points:
@@ -261,9 +268,12 @@ if(k<0){
 var objectsA = objectList[0];
 var objectsB = objectList[1];
 
-//var doFatMatch = true;
-var doFatMatch = false;
+var matrixFfwd = null;
+var matrixFrev = null;
 
+
+var doFatMatch = true;
+//var doFatMatch = false;
 if(doFatMatch){
 // DO UNKNOWN-ALL FAT MATCHING
 console.log("FAT MATCH");
@@ -275,18 +285,21 @@ var pointsB = [];
 for(i=0; i<best.length; ++i){
 	pointsA.push(best[i]["A"]["point"]);
 	pointsB.push(best[i]["B"]["point"]);
-	console.log(pointsA[i]+" / "+pointsB[i]);
+	//console.log(pointsA[i]+" / "+pointsB[i]);
 }
 console.log(pointsA,pointsB);
 
+if(pointsA.length<100){
+	console.log("low amount of good fat matches");
+}
 
 
 // show first draft matches
-if(false){
+//if(false){
+if(true){
 R3D.drawMatches(best, 0,0, imageMatrixA.width(),0, display);
 }
-
-// return;
+//return;
 
 
 
@@ -313,7 +326,7 @@ var error = 1.0; // lots of good matches
 // var error = 0.25;
 //var error = 1.0; // shows more points, shows more widespread misses
 //var error = 0.5; // more points
-var matrixFfwd = null;
+
 var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, error, matrixFfwd);
 matrixFfwd = result["F"];
 var recheckCount = 0;
@@ -323,7 +336,7 @@ if(result["matches"].length>200 && recheckCount>0){ // try with lower error to g
 	var matrixFfwd = result["F"];
 	--recheckCount;
 }
-var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 var ransacMatches = result["matches"];
 console.log(matrixFfwd.toArray()+"");
 
@@ -339,7 +352,7 @@ console.log(matrixFfwd.toArray()+"");
 // }
 
 console.log("showRansac...");
-//if(true){
+// if(true){
 if(false){
 R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 return;
@@ -349,6 +362,9 @@ return;
 // main test case
 // 0.000009922081724208012,-0.000021979443879611114,-0.02408291331289476,-0.000018988317673575977,-0.000023988033072291394,-0.00921142272248456,0.023998774814843207,0.01644780293372704,0.029690954586221736
 // 0.000008863797036674087,-0.000022999507708011593,-0.02269964556817645,-0.000021328907731917772,-0.000025310917963202806,-0.008034989957471685,0.023334388531389326,0.016257090703830034,-0.09187655405011143
+// nu:
+// -0.00001443379910278167,0.00001619149755304177,0.027196878457638442,0.00002262975572919865,0.00002427545587443947,0.010071448448549283,-0.02508059344765386,-0.016636806065596085,-0.26375845126737757
+// 0.000012796345432805438,-0.00001813625433628053,-0.02665568702738417,-0.000021181659856711046,-0.000024294650708435927,-0.01023743045661177,0.025200989031943847,0.016930232400357896,0.1956812790803158
 
 // pool
 // parallelish:
@@ -381,22 +397,22 @@ R3D.drawMatches(ransacMatches, 0,0, imageMatrixA.width(),0, display, 0x99FF0000)
 
 
 } // doFatMatch
+else
+{ // already have F from array:
+
+// main case study:
+// var F = [0.000012796345432805438,-0.00001813625433628053,-0.02665568702738417,-0.000021181659856711046,-0.000024294650708435927,-0.01023743045661177,0.025200989031943847,0.016930232400357896,0.1956812790803158];
+
+// pool
+// 
 
 // snow
-var F = [3.4009438688059313e-7,-0.000006704217159580149,-0.0010107730741188436,0.0000068767588301145586,4.2166096739107775e-7,-0.023586913283455423,-0.00011155676880719541,0.022954779872645263,-0.14908830209360915];
-F = new Matrix(3,3).fromArray(F);
-var matrixFfwd = F;
-var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+// var F = [3.4009438688059313e-7,-0.000006704217159580149,-0.0010107730741188436,0.0000068767588301145586,4.2166096739107775e-7,-0.023586913283455423,-0.00011155676880719541,0.022954779872645263,-0.14908830209360915];
 
-
-
-
-/*
-	var F = [0.000008863797036674087,-0.000022999507708011593,-0.02269964556817645,-0.000021328907731917772,-0.000025310917963202806,-0.008034989957471685,0.023334388531389326,0.016257090703830034,-0.09187655405011143];
 	F = new Matrix(3,3).fromArray(F);
-	var matrixFfwd = F;
-	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
-*/
+	matrixFfwd = F;
+	matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+}
 	var objectsA = objectList[0];
 	var objectsB = objectList[1];
 
@@ -825,8 +841,23 @@ matches = keepMatches;
 		transforms.push(matrix);
 	}
 	// END HERE
-	var output = R3D.outputMediumPoints(imageMatrixA,imageMatrixB, pointsA,pointsB, transforms);
+	var imageInfoA = {
+		"id":"0",
+		"path":imagePathA,
+		"width":imageMatrixA.width(),
+		"height":imageMatrixA.height(),
+	};
+	var imageInfoB = {
+		"id":"1",
+		"path":imagePathB,
+		"width":imageMatrixB.width(),
+		"height":imageMatrixB.height(),
+	};
+	var output = R3D.outputMediumPoints(imageMatrixA,imageMatrixB, pointsA,pointsB, transforms, matrixFfwd, imageInfoA,imageInfoB);
 	console.log(output);
+if(pointsA.length<40){
+console.log("low amount of good final matches");
+}
 	
 }
 FeatureTest.prototype.getScaledImage = function(o){
