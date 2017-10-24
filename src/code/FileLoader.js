@@ -9,6 +9,12 @@ function FileLoader(base,arr, ctx,cmp,pro){
 	this._fxnComplete = null;
 	this.setLoadList(base,arr, ctx,cmp,pro);
 }
+FileLoader.prototype.binary = function(b){
+	if(b!==undefined){
+		this._ajax.binary(b);
+	}
+	return this._ajax.binary();
+}
 FileLoader.prototype.setLoadList = function(base,arr, ctx,cmp,pro){
 	if(base===null || base===undefined || !arr){ return; }
 	Code.emptyArray(this._files);

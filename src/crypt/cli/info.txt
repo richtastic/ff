@@ -1,0 +1,15 @@
+
+
+echo -n "plaintext data here" > ./data.txt
+echo -n "password" > ./passphrase.txt
+
+openssl aes-256-cbc  -kfile passphrase.txt  -in ./data.txt -out encrypted_data.txt
+openssl aes-256-cbc  -d  -kfile passphrase.txt  -in ./encrypted_data.txt -out decrypted_data.txt
+
+
+
+xxd ./passphrase.txt
+xxd ./data.txt
+
+
+

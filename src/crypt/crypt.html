@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>FF Crypt</title>
-<script src="../code/FFLoadAll.js"></script>
+<script src="../code/FF.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
 <script type="text/javascript">
@@ -9,22 +9,56 @@
 var ff, scriptLoader;
 // ---------------------------------------------------------
 function pageLoadedFxn(){
-	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn, this);
 }
 function defaultClassesProgressFxn(o){
 	var perc = (o.loaded/o.total);
+	//console.log(" "+perc);
 }
 function defaultClassesLoadedFxn(o){
+	console.log("loaded default");
 	var list = [];
-	scriptLoader = new ScriptLoader("javascrypt/",list,customClassesLoadedFxn,customClassesProgressFxn,false);
+	scriptLoader = new ScriptLoader("javascrypt/",list,customClassesProgressFxn,customClassesLoadedFxn,false);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(){
-	//
+	console.log("prg");
 }
 
 function customClassesLoadedFxn(){
 	console.log("loading complete");
+	testAES();
+	//testA();
+}
+function testAES(data){
+	if(!data){
+		var fileLoader = new FileLoader();
+		fileLoader.setLoadList("./",["plaintext.txt"], this, testAES);
+		fileLoader.binary(true); // Uint8Array
+		fileLoader.load();
+	}else{
+		var files = data.files;
+		var datas = data.contents;
+		//            p    a    s    s    w    o    r    d
+		var key = [0x70,0x61,0x73,0x73,0x77,0x6F,0x72,0x64];
+		// 7061 7373 776f 7264
+		var plaintext = datas[0];
+		var cyphertext = ByteData.AESencrypt(key, plaintext);
+		//var restored = ByteData.AESencrypt(key, plaintext);
+		// // 706c 6169 6e74 6578 7420 6461 7461 2068 6572 65
+		// 70 6C 61 69 6E 74 65 78 74 20 64 61 74 61 20 68 65 72 65
+		console.log("key.      : "+Code.printArrayHex(key));
+		console.log("plaintext : "+Code.printArrayHex(plaintext));
+		console.log("cyphertext: "+Code.printArrayHex(cyphertext));
+		//console.log("check     : "+Code.printArrayHex(restored));
+		/*
+		00000000: 5361 6c74 6564 5f5f 1dd2 e97b bef7 7e89  Salted__...{..~.
+		00000010: 670e b4d2 0aaa 996a adc5 c2db 8746 bcba  g......j.....F..
+		00000020: cb9a 5312 97dd 80ca 2f04 78e2 2054 4eda  ..S...../.x. TN.
+		*/
+	}
+}
+function testA() {
 
 // UNSIGNED INTEGER && DIFFERNTLY-SIZED INTEGER MATH
 // var A = new BinInt(16, true);

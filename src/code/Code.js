@@ -2128,6 +2128,13 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
+Code.randomIntArray = function(count, min,max){
+	var i, a = [];
+	for(i=0; i<count; ++i){
+		a[i] = Code.randomInt(min,max);
+	}
+	return a;
+}
 Code.divSpace = function(start,end,count){ // start+end / count
 	count -= 1;
 	var range = end-start;
@@ -2298,7 +2305,7 @@ Code.colorARGBFromJSColor = function(jsColor){
 	return 0x00000000; // default clear
 }
 Code.getHexNumber = function(num,pad, post){
-	if(!num){ return 0; }
+	if(num===undefined){ return 0; }
 	var str = num.toString(16).toUpperCase();
 	if(pad!==undefined){
 		if(post){
@@ -2308,6 +2315,16 @@ Code.getHexNumber = function(num,pad, post){
 		}
 	}
 	return str;
+}
+Code.printArrayHex = function(a,pad){
+	var str = "";
+	if(a){
+		for(var i=0; i<a.length; ++i){
+			str = str + " " +Code.getHexNumber(a[i],pad);
+		}
+	}
+	return str;
+	//Code.getHexNumber = function(num,pad, post){
 }
 Code.getColARGBFromFloat = function(a,r,g,b){
 	a = Math.min(Math.floor(a*256.0),255);
