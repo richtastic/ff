@@ -634,23 +634,11 @@ ByteData.AES_SUB_BOXES_REVERSE = [ // s-box inverse
 	0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
 	0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d,
 ];
-ByteData.AES_RCON = [ // key scheduler ... AES uses few of these
-	0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,/*
-	0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39,
-	0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a,
-	0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8,
-	0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef,
-	0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc,
-	0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b,
-	0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3,
-	0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94,
-	0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20,
-	0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35,
-	0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f,
-	0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04,
-	0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63,
-	0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd,
-	0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d,*/
+ByteData.AES_RCON = [ // key scheduler ... AES uses few of these | can also generate from for loop
+	// some examples start with 0x8D
+	// first element is skipped
+	0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D, 0x9A, 0x2F, 0x5E, 0xBC, 0x63, 0xC6, 0x97, 0x35, 0x6A, 0xD4, 0xB3, 0x7D, 0xFA, 0xEF, 0xC5, 0x91, 0x39, // ...
+	// var root = 0x11B; var rcon = []; var r = 1; for(var i=0; i<10; ++i){ rcon[i]=r; r<<=1; if(r>0xFF){ r^=root;  } }
 ]
 
 // expects operations in byte arrays
@@ -658,14 +646,12 @@ ByteData.AESencrypt = function(key, message, type, size, isDecrypt){ // encrypti
 	var outputArray = [];
 	type = type!==undefined ? type : ByteData.AES_TYPE_CBC;
 	size = size!==undefined ? size : ByteData.AES_SIZE_256;
-	var roundCount;
+	var roundCount; // N_r
 	var blockLengthBytes;
 	var expansionSize;
 	var blockLength = 128;
 	var stateColumns = 4;// N_b
-	if(type==ByteData.AES_TYPE_CBC){
-		// ...
-	}
+	
 	if(size==ByteData.AES_SIZE_128){
 		roundCount = 10;
 		keyLengthBytes = 16;
@@ -685,45 +671,71 @@ ByteData.AESencrypt = function(key, message, type, size, isDecrypt){ // encrypti
 	while(key.length<keyLengthBytes){
 		key.push(0);
 	}
+	var keySchedule = ByteData._AESkeyExpansion(key, keyColumns, stateColumns, roundCount, size);
+
+	//console.log("keySchedule: "+Code.printArrayHex(keySchedule,2));
 	
 	// format message
 	message = Code.copyArray(message);
 	var remainder = keyLengthBytes - message.length%keyLengthBytes;
-	Code.arrayPushArray(message,Code.randomIntArray(remainder, 0,0xFF));
+	//Code.arrayPushArray(message,Code.randomIntArray(remainder, 0,0xFF));
+	Code.arrayPushArray(message,Code.newArrayZeros(remainder));
 
 	// setup state
 	var state = Code.newArrayZeros(4*4); // 4x4
-	var roundKey = Code.newArrayZeros(expansionSize); // derived cipher key
-	var initVector = Code.randomIntArray(keyLengthBytes, 0,0xFF); // initialization vector for CBC
+	//var roundKey = Code.newArrayZeros(expansionSize); // derived cipher key
+	var initVector;
+	if(type==ByteData.AES_TYPE_CBC){
+		initVector = Code.randomIntArray(keyLengthBytes, 0,0xFF); // initialization vector for CBC
+	}else{
+		initVector = Code.newArrayZeros(keyLengthBytes);
+	}
 
+// 32 * 8 = 256
 	var iterations = Math.ceil(message.length/16);
 iterations = 1;
-	console.log(Code.printArrayHex(key,2));
-	console.log(Code.printArrayHex(message,2));
+	console.log(Code.printArrayHex(key,2)+"\n");
+	console.log(Code.printArrayHex(message,2)+"\n");
 	if(!isDecrypt){
 		var cbcBlock = initVector;
+		var blockLength = 16;
 		for(var i=0; i<iterations; ++i){ // message loop: for each block
-			var block = message.slice(keyLengthBytes*i,keyLengthBytes*(i+1));
-			console.log(block);
-			if(type==ByteData.AES_TYPE_CBC){ // CBC
-				for(var j=0; j<keyLengthBytes; ++j){
-					block[j] = block[j] ^ cbcBlock[j];
-				}
-			}
-			console.log(block);
-			HERE
+			//var block = message.slice(keyLengthBytes*i,keyLengthBytes*(i+1));
+			var block = message.slice(blockLength*i,blockLength*(i+1));
+			//console.log(block);
+			// if(type==ByteData.AES_TYPE_CBC){ // CBC
+			// 	for(var j=0; j<keyLengthBytes; ++j){
+			// 		block[j] = block[j] ^ cbcBlock[j];
+			// 	}
+			// }
+			//console.log(block);
+			
 			// encrypt loop
+			Code.copyArray(state, block);
+			//console.log(state.length)
+			//console.log("             input: "+Code.printArrayHex(state,2));
+			//console.log(keySchedule.length)
+			// round*N_b*4 + j*N_b + i
+			console.log("     round["+0+"].input    "+Code.printArrayHex(state,2));
+			var schedule;
 			for(var round=0; round<=roundCount; ++round){
+				//var schedule = keySchedule.splice(i*blockLength, (i+1)*blockLength);
+				//console.log("     round["+round+"].k_sch    "+Code.printArrayHex(schedule,2));
 				if(round>0){
-					ByteData._AESsubBytes();
-					ByteData._AESshiftRows();
+					ByteData._AESsubBytes(state);
+					console.log("     round["+round+"].s_box    "+Code.printArrayHex(state,2));
+					ByteData._AESshiftRows(state);
+					console.log("     round["+round+"].s_row    "+Code.printArrayHex(state,2));
 					if(round<roundCount){
-						ByteData._AESmixColumns();
+						ByteData._AESmixColumns(state);
+						console.log("     round["+round+"].m_col    "+Code.printArrayHex(state,2));
 					}
 				}
-				ByteData._AESaddRoundKey(roundKey, state, round, stateColumns);
+				ByteData._AESaddRoundKey(keySchedule, state, round, stateColumns);
+				console.log("     round["+round+"].start    "+Code.printArrayHex(state,2));
+				
 			}
-			block = Code.copyArray(state);
+			Code.copyArray(block, state);
 			// use output and state to pass to next
 			cbcBlock = block; 
 			Code.arrayPushArray(outputArray,block);
@@ -749,31 +761,144 @@ iterations = 1;
 ByteData.AESdecrypt = function(key, cyphertext, type, size){
 	return ByteData.AESencrypt(key, cyphertext, type, size, true);
 }
-ByteData._AESaddRoundKey = function(roundKey, state, round, stateColumns){
+ByteData._AESrotateWord = function(word){
+	var word0 = word[0];
+	var end = word.length-1;
+	for(var i=0; i<end; ++i){
+		word[i] = word[i+1];
+	}
+	word[word.length-1] = word0;
+	return word;
+}
+ByteData._AESsubWord = function(word){
+	for(var i=0; i<word.length; ++i){
+		word[i] = ByteData.AES_SUB_BOXES_FORWARD[word[i]];
+	}
+	return word;
+}
+ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColumns stateColumns===4 roundCount
+	var i, j;
+	var temp = [];
+	var roundKey = [];
+	// first rounds == key
+	for(i=0; i<N_k; ++i){
+		for(j=0; j<4; ++j){
+			roundKey[(i*4)+j] = key[(i*4)+j];
+		}
+	}
+	// remaining rounds are scrambled 
+	var limit = N_b*(N_r+1);
+	for(i=N_k; i<limit; ++i){
+		for(j=0; j<4; ++j){
+			temp[j] = roundKey[(i-1)*4 + j];
+		}
+		//console.log(".     "+i+":    temp: "+Code.printArrayHex(temp,2));
+		if(i%N_k==0){
+			ByteData._AESrotateWord(temp);
+			//console.log("   rot: "+Code.printArrayHex(temp,2));
+			ByteData._AESsubWord(temp);
+			//console.log("   sub: "+Code.printArrayHex(temp,2));
+			temp[0] = temp[0] ^ ByteData.AES_RCON[i/N_k];
+			//console.log("   rcon: "+Code.printArrayHex(temp,2)+"  |  "+ByteData.AES_RCON[i/N_k]+"  @ "+(i/N_k));
+		}else if(N_k>6 && i%N_k==4){ // if(size==ByteData.AES_SIZE_256 && i%N_k==4){
+			ByteData._AESsubWord(temp);
+		}
+		if(true){
+			for(j=0; j<4; ++j){
+				roundKey[i*4 + j] = roundKey[(i-N_k)*4 + j] ^ temp[j];
+			}
+		}
+
+	}
+	return roundKey;
+}
+ByteData._AESaddRoundKey = function(roundKey, state, round, N_b){
 	var index = 0;
-	for(j=0; j<4; ++j){
+	for(j=0; j<4; ++j){ // N_b = 4 
 		for(i=0; i<4; ++i){
-			state[index] = state[index] ^ roundKey[round*stateColumns*4 + j*stateColumns + i];
+			//index = j*4 + i;
+			state[index] = state[index] ^ roundKey[round*N_b*4 + j*N_b + i];
 			++index;
 		}
 	}
 }
-ByteData._AESsubBytes = function(){
+ByteData._AESsubBytes = function(state){
+	return ByteData._AESsubWord(state);
+	// var index;
+	// for(var j=0; j<4; ++j){
+	// 	for(var i=0; i<4; ++i){
+	// 		state[index] = ByteData.AES_SUB_BOXES_FORWARD[ state[index] ];
+	// 		++index;
+	// 	}
+	// }
+}
+ByteData._AESshiftRows = function(state){
+	var temp;
+	// 0
+		// no change
+	// 1
+	temp           = state[0*4 + 1];
+	state[0*4 + 1] = state[1*4 + 1];
+	state[1*4 + 1] = state[2*4 + 1];
+	state[2*4 + 1] = state[3*4 + 1];
+	state[3*4 + 1] = temp;
+	// 2
+	temp           = state[0*4 + 2];
+	state[0*4 + 2] = state[2*4 + 2];
+	state[2*4 + 2] = temp;
+	temp           = state[1*4 + 2];
+	state[1*4 + 2] = state[3*4 + 2];
+	state[3*4 + 2] = temp;
+	// 3
+	temp           = state[0*4 + 3];
+	state[0*4 + 3] = state[3*4 + 3];
+	state[3*4 + 3] = state[2*4 + 3];
+	state[2*4 + 3] = state[1*4 + 3];
+	state[1*4 + 3] = temp;
+}
+ByteData._AESxTime = function(x){ // finite field | galois field
+	x <<= 1; // 7th bit = 0 then ok, else 
+	return (x&0x100) ? (x^0x11B) : x; // 0x1_1b sets 8th bit back to 0
+}
+
+ByteData._AESmultGF256 = function(a,b){ // finite field GF(256) multiplication
+	var ab = 0;
+	for(var i=1; i<256; i<<=1, b=ByteData._AESxTime(b)){
+		if(a&i){
+			ab ^= b;
+		}
+	}
+	return ab;
+}
+ByteData._AESmixColumns = function(state){
+	var col = [0,0,0,0];
+	var t;
+	for(var i=0; i<4; ++i){
+		col[0] = state[i*4 + 0];
+		col[1] = state[i*4 + 1];
+		col[2] = state[i*4 + 2];
+		col[3] = state[i*4 + 3];
+		state[i*4 + 0] = ByteData._AESmultGF256(col[0],0x02) ^ ByteData._AESmultGF256(col[1],0x03) ^ col[2] ^ col[3];
+		state[i*4 + 1] = ByteData._AESmultGF256(col[1],0x02) ^ ByteData._AESmultGF256(col[2],0x03) ^ col[3] ^ col[0];
+		state[i*4 + 2] = ByteData._AESmultGF256(col[2],0x02) ^ ByteData._AESmultGF256(col[3],0x03) ^ col[0] ^ col[1];
+		state[i*4 + 3] = ByteData._AESmultGF256(col[3],0x02) ^ ByteData._AESmultGF256(col[0],0x03) ^ col[1] ^ col[2];
+		// col[0] = state[0*4 + i];
+		// col[1] = state[1*4 + i];
+		// col[2] = state[2*4 + i];
+		// col[3] = state[3*4 + i];
+		// state[0*4 + i] = ByteData._AESmultGF256(col[0],0x02) ^ ByteData._AESmultGF256(col[1],0x03) ^ col[2] ^ col[3];
+		// state[1*4 + i] = ByteData._AESmultGF256(col[1],0x02) ^ ByteData._AESmultGF256(col[2],0x03) ^ col[3] ^ col[0];
+		// state[2*4 + i] = ByteData._AESmultGF256(col[2],0x02) ^ ByteData._AESmultGF256(col[3],0x03) ^ col[4] ^ col[1];
+		// state[3*4 + i] = ByteData._AESmultGF256(col[3],0x02) ^ ByteData._AESmultGF256(col[0],0x03) ^ col[1] ^ col[2];
+	}
+}
+ByteData._AESinverseSubBytes = function(state){
 	//
 }
-ByteData._AESshiftRows = function(){
+ByteData._AESinverseShiftRows = function(state){
 	//
 }
-ByteData._AESmixColumns = function(){
-	//
-}
-ByteData._AESinverseSubBytes = function(){
-	//
-}
-ByteData._AESinverseShiftRows = function(){
-	//
-}
-ByteData._AESinverseMixColumns = function(){
+ByteData._AESinverseMixColumns = function(state){
 	//
 }
 
