@@ -12,4 +12,27 @@ xxd ./passphrase.txt
 xxd ./data.txt
 
 
+openssl aes-256-ecb  -kfile passphrase.txt  -in ./data.txt -out encrypted_data_ecb.txt
+openssl aes-256-ecb  -d  -kfile passphrase.txt  -in ./encrypted_data_ecb.txt -out decrypted_data_ecb.txt
 
+
+ECB:
+00000000: 5361 6c74 6564 5f5f 4687 35b2 b856 f2ff  Salted__F.5..V..
+00000010: 6dbe e22e fd0b 359f 47a1 0c05 af4e ddca  m.....5.G....N..
+00000020: aca1 6c36 5750 f012 07e0 ecff bca4 5adc  ..l6WP........Z.
+NOSALT:
+00000000: ec7c 0c25 182c 315f b00c 4d6d 4d1a a935  .|.%.,1_..MmM..5
+00000010: cb55 8c13 0385 fe45 d338 a6f8 0e63 1154  .U.....E.8...c.T
+
+CBC:
+00000000: 5361 6c74 6564 5f5f 1dd2 e97b bef7 7e89  Salted__...{..~.
+00000010: 670e b4d2 0aaa 996a adc5 c2db 8746 bcba  g......j.....F..
+00000020: cb9a 5312 97dd 80ca 2f04 78e2 2054 4eda  ..S...../.x. TN.
+
+
+key.      : 70617373776F7264
+crypt.html:68 plaintext : 706C61696E7465787420646174612068657265
+crypt.html:69 cyphertext: 58A55155C7F6B9F245D82AEAB572CA00
+
+00000000: 706c 6169 6e74 6578 7420 6461 7461 2068  plaintext data h
+00000010: 6572 6570 6c61 696e 7465 7874 2064 6174  ereplaintext dat

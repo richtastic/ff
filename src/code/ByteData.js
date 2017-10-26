@@ -585,16 +585,17 @@ encryption modes
 CBC: cypher block chaining
 EBC: electronic code block -- BAD
 CFB: cipher feed back
-CTR: counter
 ...
 
 */
-ByteData.AES_TYPE_UNKNOWN = -1; // EBC is bad, so not implemented
-ByteData.AES_TYPE_CBC = 0;
-ByteData.AES_TYPE_PBC = 1;
-ByteData.AES_TYPE_CFB = 2;
-ByteData.AES_TYPE_OFB = 3;
-ByteData.AES_TYPE_CTR = 4;
+ByteData.AES_TYPE_UNKNOWN = -1;
+ByteData.AES_TYPE_EBC = 0; // electronic code block -- bad
+ByteData.AES_TYPE_CBC = 1; // cypher block chaining
+ByteData.AES_TYPE_PBC = 2; // cipher feed back
+ByteData.AES_TYPE_CFB = 3; // cipher feed back
+ByteData.AES_TYPE_OFB = 4; // output feedback
+ByteData.AES_TYPE_CTR = 5; // counter
+ByteData.AES_TYPE_XTS = 6; // XEX - xor encrypt xor
 ByteData.AES_SIZE_128 = 0;
 ByteData.AES_SIZE_192 = 1;
 ByteData.AES_SIZE_256 = 2;
@@ -642,7 +643,7 @@ ByteData.AES_RCON = [ // key scheduler ... AES uses few of these | can also gene
 ]
 
 // expects operations in byte arrays
-ByteData.AESencrypt = function(key, message, type, size, isDecrypt){ // encryption = ENCRYPT(key,message)
+ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){ // TODO: how SSL does salting, TODO: pass initVector
 	var outputArray = [];
 	type = type!==undefined ? type : ByteData.AES_TYPE_CBC;
 	size = size!==undefined ? size : ByteData.AES_SIZE_256;
@@ -651,115 +652,140 @@ ByteData.AESencrypt = function(key, message, type, size, isDecrypt){ // encrypti
 	var expansionSize;
 	var blockLength = 128;
 	var stateColumns = 4;// N_b
+	var blockLength = 16;
 	
 	if(size==ByteData.AES_SIZE_128){
 		roundCount = 10;
 		keyLengthBytes = 16;
-		expansionSize = 176;
+		expansionSize = 176; // (10 + 1)*16
 	}else if(size==ByteData.AES_SIZE_192){
 		roundCount = 12;
 		keyLengthBytes = 24;
-		expansionSize = 208;
+		expansionSize = 208; // (12 + 1)*16
 	}else if(size==ByteData.AES_SIZE_256){
 		roundCount = 14;
 		keyLengthBytes = 32;
-		expansionSize = 240;
+		expansionSize = 240; // (14 + 1)*16
 	}
 	var keyColumns = keyLengthBytes/4; // N_k
 	// format key
-	key = Code.copyArray(key);
+	key = Code.copyArray(key, 0, keyLengthBytes-1);
 	while(key.length<keyLengthBytes){
 		key.push(0);
 	}
 	var keySchedule = ByteData._AESkeyExpansion(key, keyColumns, stateColumns, roundCount, size);
-
-	//console.log("keySchedule: "+Code.printArrayHex(keySchedule,2));
-	
-	// format message
+	// format message -- TODO: CBC can do remainder
 	message = Code.copyArray(message);
-	var remainder = keyLengthBytes - message.length%keyLengthBytes;
-	//Code.arrayPushArray(message,Code.randomIntArray(remainder, 0,0xFF));
-	Code.arrayPushArray(message,Code.newArrayZeros(remainder));
+	var remainder = message.length%blockLength;
+	var missing = remainder>0 ? (blockLength - remainder) : 0;
+	Code.arrayPushArray(message,Code.newArrayZeros(missing));
 
 	// setup state
-	var state = Code.newArrayZeros(4*4); // 4x4
-	//var roundKey = Code.newArrayZeros(expansionSize); // derived cipher key
-	var initVector;
-	if(type==ByteData.AES_TYPE_CBC){
-		initVector = Code.randomIntArray(keyLengthBytes, 0,0xFF); // initialization vector for CBC
-	}else{
-		initVector = Code.newArrayZeros(keyLengthBytes);
-	}
-
-// 32 * 8 = 256
-	var iterations = Math.ceil(message.length/16);
-iterations = 1;
-	console.log(Code.printArrayHex(key,2)+"\n");
-	console.log(Code.printArrayHex(message,2)+"\n");
+	var state = Code.newArrayZeros(blockLength);
+	var initVector = Code.newArrayZeros(keyLengthBytes);
+	
+	var iterations = Math.ceil(message.length/blockLength);
 	if(!isDecrypt){
-		var cbcBlock = initVector;
-		var blockLength = 16;
+		
+		if(useSalting){
+			var salt = Code.randomIntArray(8, 0,0xFF);
+			var header = ByteData._AESgenerateSaltHeader(salt);
+		}
+		
 		for(var i=0; i<iterations; ++i){ // message loop: for each block
-			//var block = message.slice(keyLengthBytes*i,keyLengthBytes*(i+1));
 			var block = message.slice(blockLength*i,blockLength*(i+1));
-			//console.log(block);
-			// if(type==ByteData.AES_TYPE_CBC){ // CBC
-			// 	for(var j=0; j<keyLengthBytes; ++j){
-			// 		block[j] = block[j] ^ cbcBlock[j];
-			// 	}
-			// }
-			//console.log(block);
-			
-			// encrypt loop
 			Code.copyArray(state, block);
-			//console.log(state.length)
-			//console.log("             input: "+Code.printArrayHex(state,2));
-			//console.log(keySchedule.length)
-			// round*N_b*4 + j*N_b + i
-			console.log("     round["+0+"].input    "+Code.printArrayHex(state,2));
-			var schedule;
+			// CBC xor
+			if(type==ByteData.AES_TYPE_CBC){
+				for(var j=0; j<blockLength; ++j){
+					state[j] = state[j] ^ initVector[j];
+				}
+			}
+			// encrypt loop
 			for(var round=0; round<=roundCount; ++round){
-				//var schedule = keySchedule.splice(i*blockLength, (i+1)*blockLength);
-				//console.log("     round["+round+"].k_sch    "+Code.printArrayHex(schedule,2));
 				if(round>0){
 					ByteData._AESsubBytes(state);
-					console.log("     round["+round+"].s_box    "+Code.printArrayHex(state,2));
 					ByteData._AESshiftRows(state);
-					console.log("     round["+round+"].s_row    "+Code.printArrayHex(state,2));
 					if(round<roundCount){
 						ByteData._AESmixColumns(state);
-						console.log("     round["+round+"].m_col    "+Code.printArrayHex(state,2));
 					}
 				}
 				ByteData._AESaddRoundKey(keySchedule, state, round, stateColumns);
-				console.log("     round["+round+"].start    "+Code.printArrayHex(state,2));
-				
 			}
+
+			if(type==ByteData.AES_TYPE_CBC){
+				Code.copyArray(initVector, state);
+			}
+
 			Code.copyArray(block, state);
-			// use output and state to pass to next
-			cbcBlock = block; 
 			Code.arrayPushArray(outputArray,block);
 		}
 	}else{
+		if(useSalting){
+			var salt = ByteData._AESgetSalt(message);
+		}
+		
+		var output = [];
 		for(var i=0; i<iterations; ++i){
+			var input = message.slice(blockLength*i,blockLength*(i+1));
+			// decrypt loop
+			Code.copyArray(state, input);
 			for(var round=roundCount; round>=0; --round){
+				var invRound = roundCount - round;
 				if(round<roundCount){
-					ByteData._AESinverseShiftRows();
-					ByteData._AESinverseSubBytes();
+					ByteData._AESinverseShiftRows(state);
+					ByteData._AESinverseSubBytes(state);
 				}
-				ByteData._AESaddRoundKey(roundKey, state, round, stateColumns);
+				ByteData._AESaddRoundKey(keySchedule, state, round, stateColumns);
 				if(round<roundCount && round>0){
-					ByteData._AESinverseMixColumns();
+					ByteData._AESinverseMixColumns(state);
 				}
+
 			}
-			// use output and state to pass to next
+			Code.copyArray(output, state);
+			// CBC xor
+			if(type==ByteData.AES_TYPE_CBC){
+				for(var j=0; j<blockLength; ++j){
+					output[j] = output[j] ^ initVector[j];
+				}
+				Code.copyArray(initVector, input);
+			}
+			Code.arrayPushArray(outputArray,output);
 		}
 	}
 	return outputArray;
 }
-
-ByteData.AESdecrypt = function(key, cyphertext, type, size){
-	return ByteData.AESencrypt(key, cyphertext, type, size, true);
+ByteData.AESdecrypt = function(key, cyphertext, type, size, useSalting){
+	return ByteData.AESencrypt(key, cyphertext, type, size, useSalting, true);
+}
+ByteData._AESgenerateSaltHeader = function(bytesOfSalt){ // 16 byte salt prefix
+	var salt = Code.copyArray(ByteData._AES_SALT_BYTES);
+	for(var i=0; i<bytesOfSalt.length; ++i){
+		salt.push(bytesOfSalt);
+	}
+	return salt;
+}
+ByteData._AES_SALT_BYTES = [0x53,0x61,0x6c,0x74,0x65,0x64,0x5f,0x5f]; // Salted__
+ByteData._AESgetSalt = function(message){
+	if(message && message.length>16){
+		var expected = ByteData._AES_SALT_BYTES;
+		var failed = false;
+		var i;
+		for(i=0; i<expected.length; ++i){
+			if(message[i]=!expected[i]){
+				failed = true;
+				break;
+			}
+		}
+		if(!failed){
+			var salt = [];
+			for(; i<8; ++i){
+				salt.push(message[i+expected.length]);
+			}
+			return salt;
+		}
+	}
+	return null;
 }
 ByteData._AESrotateWord = function(word){
 	var word0 = word[0];
@@ -768,12 +794,6 @@ ByteData._AESrotateWord = function(word){
 		word[i] = word[i+1];
 	}
 	word[word.length-1] = word0;
-	return word;
-}
-ByteData._AESsubWord = function(word){
-	for(var i=0; i<word.length; ++i){
-		word[i] = ByteData.AES_SUB_BOXES_FORWARD[word[i]];
-	}
 	return word;
 }
 ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColumns stateColumns===4 roundCount
@@ -796,12 +816,12 @@ ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColu
 		if(i%N_k==0){
 			ByteData._AESrotateWord(temp);
 			//console.log("   rot: "+Code.printArrayHex(temp,2));
-			ByteData._AESsubWord(temp);
+			ByteData._AESsubBytes(temp);
 			//console.log("   sub: "+Code.printArrayHex(temp,2));
 			temp[0] = temp[0] ^ ByteData.AES_RCON[i/N_k];
 			//console.log("   rcon: "+Code.printArrayHex(temp,2)+"  |  "+ByteData.AES_RCON[i/N_k]+"  @ "+(i/N_k));
 		}else if(N_k>6 && i%N_k==4){ // if(size==ByteData.AES_SIZE_256 && i%N_k==4){
-			ByteData._AESsubWord(temp);
+			ByteData._AESsubBytes(temp);
 		}
 		if(true){
 			for(j=0; j<4; ++j){
@@ -810,27 +830,20 @@ ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColu
 		}
 
 	}
+	//console.log("ROUND KEY LENGHT: "+roundKey.length);
 	return roundKey;
 }
-ByteData._AESaddRoundKey = function(roundKey, state, round, N_b){
-	var index = 0;
-	for(j=0; j<4; ++j){ // N_b = 4 
-		for(i=0; i<4; ++i){
-			//index = j*4 + i;
-			state[index] = state[index] ^ roundKey[round*N_b*4 + j*N_b + i];
-			++index;
-		}
+ByteData._AESaddRoundKey = function(roundKey, state, round){ // N_b*4 = 16
+	for(var index = 0; index<16; ++index){
+		state[index] = state[index] ^ roundKey[round*16 + index];
 	}
+	return state;
 }
 ByteData._AESsubBytes = function(state){
-	return ByteData._AESsubWord(state);
-	// var index;
-	// for(var j=0; j<4; ++j){
-	// 	for(var i=0; i<4; ++i){
-	// 		state[index] = ByteData.AES_SUB_BOXES_FORWARD[ state[index] ];
-	// 		++index;
-	// 	}
-	// }
+	for(var i=0; i<state.length; ++i){
+		state[i] = ByteData.AES_SUB_BOXES_FORWARD[state[i]];
+	}
+	return state;
 }
 ByteData._AESshiftRows = function(state){
 	var temp;
@@ -855,6 +868,7 @@ ByteData._AESshiftRows = function(state){
 	state[3*4 + 3] = state[2*4 + 3];
 	state[2*4 + 3] = state[1*4 + 3];
 	state[1*4 + 3] = temp;
+	return state;
 }
 ByteData._AESxTime = function(x){ // finite field | galois field
 	x <<= 1; // 7th bit = 0 then ok, else 
@@ -882,24 +896,54 @@ ByteData._AESmixColumns = function(state){
 		state[i*4 + 1] = ByteData._AESmultGF256(col[1],0x02) ^ ByteData._AESmultGF256(col[2],0x03) ^ col[3] ^ col[0];
 		state[i*4 + 2] = ByteData._AESmultGF256(col[2],0x02) ^ ByteData._AESmultGF256(col[3],0x03) ^ col[0] ^ col[1];
 		state[i*4 + 3] = ByteData._AESmultGF256(col[3],0x02) ^ ByteData._AESmultGF256(col[0],0x03) ^ col[1] ^ col[2];
-		// col[0] = state[0*4 + i];
-		// col[1] = state[1*4 + i];
-		// col[2] = state[2*4 + i];
-		// col[3] = state[3*4 + i];
-		// state[0*4 + i] = ByteData._AESmultGF256(col[0],0x02) ^ ByteData._AESmultGF256(col[1],0x03) ^ col[2] ^ col[3];
-		// state[1*4 + i] = ByteData._AESmultGF256(col[1],0x02) ^ ByteData._AESmultGF256(col[2],0x03) ^ col[3] ^ col[0];
-		// state[2*4 + i] = ByteData._AESmultGF256(col[2],0x02) ^ ByteData._AESmultGF256(col[3],0x03) ^ col[4] ^ col[1];
-		// state[3*4 + i] = ByteData._AESmultGF256(col[3],0x02) ^ ByteData._AESmultGF256(col[0],0x03) ^ col[1] ^ col[2];
 	}
-}
-ByteData._AESinverseSubBytes = function(state){
-	//
+	return state;
 }
 ByteData._AESinverseShiftRows = function(state){
-	//
+	var temp;
+	// 0
+		// no change
+	// 1
+	temp           = state[3*4 + 1];
+	state[3*4 + 1] = state[2*4 + 1];
+	state[2*4 + 1] = state[1*4 + 1];
+	state[1*4 + 1] = state[0*4 + 1];
+	state[0*4 + 1] = temp;
+	// 2
+	temp           = state[0*4 + 2];
+	state[0*4 + 2] = state[2*4 + 2];
+	state[2*4 + 2] = temp;
+	temp           = state[1*4 + 2];
+	state[1*4 + 2] = state[3*4 + 2];
+	state[3*4 + 2] = temp;
+	// 3
+	temp           = state[0*4 + 3];
+	state[0*4 + 3] = state[1*4 + 3];
+	state[1*4 + 3] = state[2*4 + 3];
+	state[2*4 + 3] = state[3*4 + 3];
+	state[3*4 + 3] = temp;
+	return state;
+}
+ByteData._AESinverseSubBytes = function(state){
+	for(var i=0; i<state.length; ++i){
+		state[i] = ByteData.AES_SUB_BOXES_REVERSE[state[i]];
+	}
+	return state;
 }
 ByteData._AESinverseMixColumns = function(state){
-	//
+	var col = [0,0,0,0];
+	var t;
+	for(var i=0; i<4; ++i){
+		col[0] = state[i*4 + 0];
+		col[1] = state[i*4 + 1];
+		col[2] = state[i*4 + 2];
+		col[3] = state[i*4 + 3];
+		state[i*4 + 0] = ByteData._AESmultGF256(col[0],0x0e) ^ ByteData._AESmultGF256(col[1],0x0b) ^ ByteData._AESmultGF256(col[2],0x0d) ^ ByteData._AESmultGF256(col[3],0x09);
+		state[i*4 + 1] = ByteData._AESmultGF256(col[1],0x0e) ^ ByteData._AESmultGF256(col[2],0x0b) ^ ByteData._AESmultGF256(col[3],0x0d) ^ ByteData._AESmultGF256(col[0],0x09);
+		state[i*4 + 2] = ByteData._AESmultGF256(col[2],0x0e) ^ ByteData._AESmultGF256(col[3],0x0b) ^ ByteData._AESmultGF256(col[0],0x0d) ^ ByteData._AESmultGF256(col[1],0x09);
+		state[i*4 + 3] = ByteData._AESmultGF256(col[3],0x0e) ^ ByteData._AESmultGF256(col[0],0x0b) ^ ByteData._AESmultGF256(col[1],0x0d) ^ ByteData._AESmultGF256(col[2],0x09);
+	}
+	return state;
 }
 
 

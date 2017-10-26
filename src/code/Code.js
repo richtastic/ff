@@ -2320,7 +2320,7 @@ Code.printArrayHex = function(a,pad){
 	var str = "";
 	if(a){
 		for(var i=0; i<a.length; ++i){
-			str = str + " " +Code.getHexNumber(a[i],pad);
+			str = str + "" +Code.getHexNumber(a[i],pad);
 		}
 	}
 	return str;
