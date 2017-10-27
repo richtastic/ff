@@ -10067,6 +10067,11 @@ R3D.drawMatches = function(matches, offXA,offYA, offXB,offYB, display, color){
 
 }
 
+R3D.denseCheck = function(denseA,denseB){
+	//
+	throw "HERE";
+}
+
 
 
 

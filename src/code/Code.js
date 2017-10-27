@@ -971,10 +971,12 @@ Code.setArrayConstant = function(arr,c){
 	return arr;
 }
 // Code.appendArray = function(a,b){
-Code.arrayPushArray = function(a,b){
+Code.arrayPushArray = function(a,b, start,end){
 	if(a && b){
-		var i, len=b.length;
-		for(i=0;i<len;++i){
+		start = start!==undefined ? start : 0;
+		end = end!==undefined ? end : b.length-1;
+		var i;
+		for(i=start;i<=end;++i){
 			a.push(b[i]);
 		}
 	}

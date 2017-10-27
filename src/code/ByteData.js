@@ -801,25 +801,24 @@ ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColu
 	var temp = [];
 	var roundKey = [];
 	// first rounds == key
-	for(i=0; i<N_k; ++i){
-		for(j=0; j<4; ++j){
-			roundKey[(i*4)+j] = key[(i*4)+j];
-		}
+	for(i=0; i<key.length; ++i){
+		roundKey[i] = key[i];
 	}
+	// for(i=0; i<N_k; ++i){
+	// 	for(j=0; j<4; ++j){
+	// 		roundKey[(i*4)+j] = key[(i*4)+j];
+	// 	}
+	// }
 	// remaining rounds are scrambled 
 	var limit = N_b*(N_r+1);
 	for(i=N_k; i<limit; ++i){
 		for(j=0; j<4; ++j){
 			temp[j] = roundKey[(i-1)*4 + j];
 		}
-		//console.log(".     "+i+":    temp: "+Code.printArrayHex(temp,2));
 		if(i%N_k==0){
 			ByteData._AESrotateWord(temp);
-			//console.log("   rot: "+Code.printArrayHex(temp,2));
 			ByteData._AESsubBytes(temp);
-			//console.log("   sub: "+Code.printArrayHex(temp,2));
 			temp[0] = temp[0] ^ ByteData.AES_RCON[i/N_k];
-			//console.log("   rcon: "+Code.printArrayHex(temp,2)+"  |  "+ByteData.AES_RCON[i/N_k]+"  @ "+(i/N_k));
 		}else if(N_k>6 && i%N_k==4){ // if(size==ByteData.AES_SIZE_256 && i%N_k==4){
 			ByteData._AESsubBytes(temp);
 		}
@@ -830,7 +829,6 @@ ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColu
 		}
 
 	}
-	//console.log("ROUND KEY LENGHT: "+roundKey.length);
 	return roundKey;
 }
 ByteData._AESaddRoundKey = function(roundKey, state, round){ // N_b*4 = 16
