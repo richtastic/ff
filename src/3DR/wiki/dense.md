@@ -656,14 +656,6 @@ IMAGE-MATCHING-OPTIMIZING:
 	- use r,sx,sy to find optimal SAD score
 
 
-medium matching
-- fewer false positivies
-- 
-
-optimal dense matching points
-- multiple scales
-- 
-
 triangulation:
 - show cameras in scene == rect (400x300?) + direction
 - show images (behind)
@@ -693,48 +685,29 @@ roughness - ?
 
 
 
-
-
-
-
 - concentric circles (sharing same point) => use as single object?
 	- only compare each of same group [not as separate entitites]
-
-
----------
-DENSE PROBLEMS
-	- matrix / scale / rotation might be off
-	- 
-
-
-
-x pass F in yaml
-- pass image data in yaml
-	- id
-	- file path
-	- dimensions used
-- drop non-unique points from initial match sets (fat and thin)
 
 
 
 
 
 ============= next:::::
-- program to check A->B and B->A & remove unclear matches. (distance < cellsize) Evaluation | double-check | grade | choose | judge | prefer | prune
-	- need to output angles and scales (V4D?)
-	- check for:
-		- similar color range
-		- similar color average
-		- good SAD score
-		- good F-distance
-	=> final best matches
+
+
+x speed up dense matching by dropping triangulator
+x select FROM points as most cornerlike point inside cell area (fallback to center)
+
+
 - show the points in the 3D preview
 - surface approximation from point cloud
 
 
 
 
-
+- how to pick triangles in mesh
+	- discontinutities?
+- prefer smoother transitions over abrupt when @ fork
 
 
 

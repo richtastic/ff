@@ -575,6 +575,9 @@ ByteData.SHA512 = function(message){
 /* 
 http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
 https://csrc.nist.gov/csrc/media/publications/fips/197/final/documents/fips-197.pdf
+http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38c.pdf
+https://tools.ietf.org/html/rfc3610
+https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
 
 https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
 https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
@@ -596,6 +599,8 @@ ByteData.AES_TYPE_CFB = 3; // cipher feed back
 ByteData.AES_TYPE_OFB = 4; // output feedback
 ByteData.AES_TYPE_CTR = 5; // counter
 ByteData.AES_TYPE_XTS = 6; // XEX - xor encrypt xor
+ByteData.AES_TYPE_CCM = 7; // Counter w/ CBC-MAC [MAC=Message Authentication Code] == Counter with Cipher Block Chaining-Message Authentication Code 
+	// b-byte nonce + 8-byte counter => xor message
 ByteData.AES_SIZE_128 = 0;
 ByteData.AES_SIZE_192 = 1;
 ByteData.AES_SIZE_256 = 2;

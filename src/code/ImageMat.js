@@ -1504,6 +1504,21 @@ ImageMat.rangeInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, ma
 	return maxValue - minValue;
 }
 
+ImageMat.prototype.mean = function(){
+	var r = Code.infoArray(this.red())["mean"];
+	var g = Code.infoArray(this.grn())["mean"];
+	var b = Code.infoArray(this.blu())["mean"];
+	var y = (r+g+b)/3.0;
+	return {"r":r,"g":g,"b":b,"y":y};
+}
+		
+ImageMat.prototype.range = function(){
+	var r = ImageMat.range(this.red());
+	var g = ImageMat.range(this.grn());
+	var b = ImageMat.range(this.blu());
+	var y = (r+g+b)/3.0;
+	return {"r":r,"g":g,"b":b,"y":y};
+}
 
 ImageMat.range = function(data, wid,hei){
 	// if(wid==0||hei==0){

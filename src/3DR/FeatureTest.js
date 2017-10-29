@@ -34,7 +34,8 @@
 // zoom study:
 //new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load();
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load();
-new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load();
+//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load();
 
 }
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
@@ -73,10 +74,18 @@ var imagePathB = fileList[1];
 
 	// var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
 	// var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
+
+
+var useCorners = true; // SIFT points are still more poor than corners
+var featuresA = null;
+var featuresB = null;
+if(useCorners){
 	var featuresA = R3D.testExtract1(imageMatrixA);
 	var featuresB = R3D.testExtract1(imageMatrixB);
-	// var featuresA = R3D.SIFTExtractTest1(imageMatrixA);
-	// var featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+}else{
+	var featuresA = R3D.SIFTExtractTest1(imageMatrixA);
+	var featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+}
 	
 	console.log(featuresA.length+" | "+featuresB.length);
 
@@ -703,7 +712,7 @@ matches = matches.sort(function(a,b){
 					continue;
 				}
 
-				if(siftScore>0.15){
+				if(siftScore>0.10){
 					console.log("DROPPED SIFT: "+siftScore);
 					continue;
 				}
@@ -734,14 +743,29 @@ matches = matches.sort(function(a,b){
 
 				// 
 			}
-
+		match["score"] = siftScore;
 		keepMatches.push(match);
 	}
 matches = keepMatches;
- 
 
-//return;
 
+// sort from refinement
+matches = matches.sort(function(a,b){
+	return a["score"] < b["score"] ? -1 : 1;
+});
+var scoreKeep = 0.75;
+var scoreMin = matches[0]["score"];
+var scoreMax = matches[matches.length-1]["score"];
+var scoreRange = scoreMax - scoreMin;
+var maxScoreValue = scoreMin + scoreRange*scoreKeep;
+console.log("WAS COUNT: "+matches.length);
+for(i=0; i<matches.length; ++i){
+	if(matches[i]["score"]>maxScoreValue){
+		matches.splice(i,matches.length-i-1);
+		break;
+	}
+}
+console.log(" IS COUNT: "+matches.length);
 
 
 	// AGAIN
@@ -798,6 +822,20 @@ matches = keepMatches;
 
 
 //return;
+
+// DO F AGAIN:
+var fPointsA = [];
+var fPointsB = [];
+for(i=0; i<matches.length; ++i){
+	var match = matches[i];
+	var objectA = match["A"];
+	var objectB = match["B"];
+	var pointA	= objectA["point"];
+	var pointB	= objectB["point"];
+	fPointsA.push(pointA);
+	fPointsB.push(pointB);
+}
+matrixFfwd = R3D.fundamentalMatrixNonlinear(matrixFfwd,fPointsA,fPointsB);
 
 
 // OUTPUT

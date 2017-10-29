@@ -5259,16 +5259,27 @@ R3D.inputMediumPoints = function(yaml){
 	// want point positions & matrix to transform A to B
 	HERE
 }
-R3D.outputDensePoints = function(imageA,imageB, cellSize, pointsA,pointsB,scales,angles,scores){
-	console.log(pointsA,pointsB,scales,angles,scores);
+R3D.outputDensePoints = function(imageInfoA,imageInfoB, cellSize, pointsA,pointsB,scales,angles,scores, matrixFfwd){
 	var yaml = new YAML();
 	var pointA = new V2D(1,2);
 	var pointB = new V2D(3,4);
 	yaml.writeComment("dense mapping");
 	yaml.writeComment("created: "+Code.getTimeStamp());
 	yaml.writeBlank();
-	yaml.writeString("imageFrom","TODO");
-	yaml.writeString("imageTo","TODO");
+	if(imageInfoA){
+		R3D.writeImageObjectToYAML("imageFrom",imageInfoA,yaml);
+	}
+	if(imageInfoB){
+		R3D.writeImageObjectToYAML("imageTo",imageInfoB,yaml);
+	}
+	yaml.writeObjectStart("fundamental");
+		matrixFfwd.saveToYAML(yaml);
+	yaml.writeObjectEnd();
+
+	yaml.writeObjectStart("fundamentalX");
+		R3D.fundamentalInverse(matrixFfwd).saveToYAML(yaml);
+	yaml.writeObjectEnd();
+
 	yaml.writeNumber("cellSize",cellSize);
 	yaml.writeArrayStart("matches");
 	var i, len=pointsA.length;
@@ -5297,19 +5308,21 @@ R3D.outputDensePoints = function(imageA,imageB, cellSize, pointsA,pointsB,scales
 }
 R3D.inputDensePoints = function(yaml){
 	var object = R3D._getYAMLSparseObject(yaml);
-	console.log(object);
+//	console.log(object);
 	var pointsA = [];
 	var pointsB = [];
 	var transforms = [];
 	var matches = object["matches"];
-	var maxScore = 0.99; // 0.025
+	//var maxScore = 0.99; // 0.025
+//	console.log(matches)
 	// low sad scores are often white .... should try sift ?
+	var nativeMatches = [];
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		var score = match["score"];
-		if(score>maxScore){ // ignore low-scoring points
-			continue;
-		}
+		// if(score>maxScore){ // ignore low-scoring points
+		// 	continue;
+		// }
 		var scale = match["scale"];
 		var angle = match["angle"];
 		var matrix = new Matrix(3,3);
@@ -5323,8 +5336,24 @@ R3D.inputDensePoints = function(yaml){
 		var pointB = new V2D();
 		pointB.loadFromObject(match["to"]);
 		pointsB.push(pointB);
+		var obj = {};
+			obj["A"] = pointA;
+			obj["B"] = pointB;
+			obj["T"] = matrix;
+			obj["scale"] = scale;
+			obj["angle"] = angle;
+		nativeMatches.push(obj);
 	}
-	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms};
+	var fundamental = object["fundamental"];
+	var F = null;
+	if(fundamental){
+		F = new Matrix();
+		F.loadFromObject(fundamental);
+	}
+	var imageFrom = object["imageFrom"];
+	var imageTo = object["imageTo"];
+	var cellSize = object["cellSize"];
+	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms, "matches":nativeMatches, "F":F, "imageFrom":imageFrom, "imageTo":imageTo, "cellSize":cellSize};
 }
 
 R3D.fundamentalRefineFromPoints = function(pointsA,pointsB){
@@ -5512,6 +5541,35 @@ ab = 0.0;
 	return score;
 }
 
+R3D.sadRGBTotal = function(imageMatrixA,imageMatrixB, pointA,sizeA,scaleA,angleA, pointB,sizeB,scaleB,angleB, scales){
+	var i;
+	if(scales===undefined){
+		scales = Code.divSpace(-1,1,3);
+		for(i=0; i<scales.length; ++i){
+			var scale = scales[i];
+			scale = Math.pow(2,scale);
+			scales[i] = scale;
+		}
+	}
+	var sadSize = 11;
+	var compareMask = null;
+	var sadTotal = 1.0;
+	var rangeDiff;
+	var intensityDiff;
+	var scaleBase = 1.0;
+	for(i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		var scaleAllA = scale * scaleBase * sizeA/sadSize;
+		var scaleAllB = scale * scaleBase * sizeB/sadSize;
+		var imageA = R3D.imageFromParameters(imageMatrixA, pointA, scale, angleA,0.0,0.0, sadSize,sadSize);
+		var imageB = R3D.imageFromParameters(imageMatrixB, pointB, scale, angleB,0.0,0.0, sadSize,sadSize);
+		var sadC = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+		var sadG = R3D.sadRGBGradient(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(),imageA.width(),imageA.width(), compareMask);
+		var sad = sadC * sadG;
+		sadTotal *= sad;
+	}
+	return sadTotal;
+}
 
 
 R3D.sadRGB = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu, m, rangeYes){ // sum of absolute differences
@@ -10067,9 +10125,235 @@ R3D.drawMatches = function(matches, offXA,offYA, offXB,offYB, display, color){
 
 }
 
-R3D.denseCheck = function(denseA,denseB){
-	//
-	throw "HERE";
+R3D.denseCheck = function(matchingDataA,matchingDataB, imageMatrixA,imageMatrixB){
+	console.log("denseCheck")
+	console.log(matchingDataA)
+	var cellSizeA = matchingDataA["cellSize"];
+	var cellSizeB = matchingDataB["cellSize"];
+	var cellSize = (cellSizeA+cellSizeB)*0.5;
+	console.log("cellSize: "+cellSizeA,cellSizeB)
+	var maxErrorMatch = Math.min(cellSizeA,cellSizeB) * 1.0;
+	var matchingA = matchingDataA["matches"];
+	var matchingB = matchingDataB["matches"];
+	var Ffwd = matchingDataA["F"];
+	var Frev = R3D.fundamentalInverse(Ffwd);
+	/* dense is:
+		matches[]:
+			pointA: x,y
+			pointB: x,y
+			scale: number
+			rotation: number
+	*/
+	// console.log(matchingA);
+	// console.log(matchingB);
+	var i, j, k;
+	var lengthMatchingA = matchingA.length;
+	var lengthMatchingB = matchingB.length;
+	console.log(lengthMatchingA,lengthMatchingB)
+	var bestMatches = [];
+	for(i=0; i<lengthMatchingA; ++i){
+		var matchA = matchingA[i];
+		var matchAPointA = matchA["A"];
+		var matchAPointB = matchA["B"];
+		var closestMatch = null;
+		var closestDistanceA = null;
+		var closestDistanceB = null;
+		var totalDistanceError = null;
+		//console.log(matchA)
+		for(j=0; j<lengthMatchingB; ++j){
+			var matchB = matchingB[j];
+			// ignore already paired matches
+			if(matchB["paired"]){ // could also splice it out
+				continue;
+			}
+			var matchBPointA = matchB["A"];
+			var matchBPointB = matchB["B"];
+			var distanceAB = V2D.distance(matchAPointA, matchBPointB);
+			var distanceBA = V2D.distance(matchAPointB, matchBPointA);
+			var distanceError = Math.sqrt(distanceAB*distanceAB + distanceBA*distanceBA);
+			
+			if(distanceAB < maxErrorMatch && distanceBA < maxErrorMatch){
+			//if(true){
+				if(closestMatch==null || distanceError<totalDistanceError){
+					closestDistanceA = distanceAB;
+					closestDistanceB = distanceBA;
+					totalDistanceError = distanceError;
+					closestMatch = matchB;
+				}
+			}
+		}
+		if(closestMatch){
+			var matchB = closestMatch;
+			var pointAA = matchA["A"];
+			var pointAB = matchA["B"];
+			var pointBA = matchB["A"];
+			var pointBB = matchB["B"];
+			var scaleAB = matchA["scale"];
+			var angleAB = matchA["angle"];
+			var scaleBA = matchB["scale"];
+			var angleBA = matchB["angle"];
+				scaleBA = 1.0/scaleBA;
+				angleBA = -angleBA;
+			var diffScale = scaleAB>scaleBA ? scaleAB/scaleBA : scaleBA/scaleAB;
+			var diffAngle = angleAB - angleBA;
+			//console.log(i+": "+totalDistanceError+"  diff scale: "+diffScale+"  diff angle: "+diffAngle);
+
+			// throw out relations that are too different
+			if(Math.abs(diffScale)>1.5){
+				continue;
+			}
+			if(Math.abs(diffAngle)>Code.radians(15)){
+				continue;
+			}
+			// get average relationship
+			var zoomScale = 1.0;
+			var scale = zoomScale * (scaleAB+scaleBA)*0.5;
+			var angle = (angleAB+angleBA)*0.5;
+			var pointA = V2D.add(pointAA,pointBB).scale(0.5);
+			var pointB = V2D.add(pointAB,pointBA).scale(0.5);
+			// get image comparissons
+			var compareSize = 21;
+/*
+if(bestMatches.length>500){
+	continue;
+}
+*/
+			var scaleA = 1.0;
+			var scaleB = 1.0;
+			if(scale>1.0){ // => scale down A
+				scaleA = 1.0/scale;
+			}else{ // => scale down B
+				scaleB = scale;
+			}
+			var angleA = 0.0;
+			var angleB = angle;
+			var sizeA = cellSize;
+			var sizeB = cellSize;
+			// 
+			var computeScale = 2.0;
+			var scaleAImg = computeScale * scaleA * cellSize/compareSize;
+			var scaleBImg = computeScale * scaleB * cellSize/compareSize;
+			var imageA = R3D.imageFromParameters(imageMatrixA, pointA, scaleAImg,angleA,0.0,0.0, compareSize,compareSize);
+			var imageB = R3D.imageFromParameters(imageMatrixB, pointB, scaleBImg,angleB,0.0,0.0, compareSize,compareSize);
+
+			
+/*
+			var img = imageA;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+			var d = new DOImage(img);
+			d.matrix().translate(50 + (i/25|0)*(compareSize*3), 50 + (i%25)*compareSize);
+			GLOBALSTAGE.addChild(d);
+
+			var img = imageB;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+			var d = new DOImage(img);
+			d.matrix().translate(50 + (i/25|0)*(compareSize*3)+compareSize, 50 + (i%25)*compareSize);
+			GLOBALSTAGE.addChild(d);
+*/
+
+			// get ranges
+			var rangeA = imageA.range();
+			var rangeAR = rangeA["r"];
+			var rangeAG = rangeA["g"];
+			var rangeAB = rangeA["b"];
+			var rangeAA = rangeA["y"];
+			var rangeB = imageB.range();
+			var rangeBR = rangeB["r"];
+			var rangeBG = rangeB["g"];
+			var rangeBB = rangeB["b"];
+			var rangeBY = rangeB["y"];
+			//var rangeNeedle = (rangeNeedleR+rangeNeedleG+rangeNeedleB)/3.0;
+			// get intensity average
+			var meanA = imageA.mean();
+			var meanAR = meanA["r"];
+			var meanAG = meanA["g"];
+			var meanAB = meanA["b"];
+			var meanAY = meanA["y"];
+			var meanB = imageA.mean();
+			var meanBR = meanB["r"];
+			var meanBG = meanB["g"];
+			var meanBB = meanB["b"];
+			var meanBY = meanB["y"];
+			var diffMeanR = Math.abs(meanAR-meanBR);
+			var diffMeanG = Math.abs(meanAG-meanBG);
+			var diffMeanB = Math.abs(meanAB-meanBB);
+			var diffMeanY = Math.abs(meanAY-meanBY);
+			//
+			var meanDiffMax = 0.15; // big intensity differences ,,,
+			if(diffMeanR>meanDiffMax || diffMeanG>meanDiffMax || diffMeanB>meanDiffMax || diffMeanY>meanDiffMax){
+				continue;
+			}
+			// get F distance
+			if(Ffwd){
+				var smallestDimension = Math.min(imageMatrixA.width(), imageMatrixA.height(), imageMatrixB.width(), imageMatrixB.height());
+				var maxFLineDistance = 0.02 * smallestDimension; // @300 = ~5
+				var lineA = R3D.lineFromF(Ffwd,pointA);
+				var lineB = R3D.lineFromF(Frev,pointB);
+				var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pointB);
+				var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pointA);
+				var distRMS = Math.sqrt(distA*distA + distB*distB); // RMS ERROR
+				lineFDistanceError = distRMS;
+				if(lineFDistanceError > maxFLineDistance){
+					continue;
+				}
+			}
+			// get SAD score
+			var sadScale = 0.25; // 
+			var sadScore = R3D.sadRGBTotal(imageMatrixA,imageMatrixB, pointA,sizeA,sadScale*scaleA,angleA, pointB,sizeB,sadScale*scaleB,angleB);
+			var maxSADScore = 0.0001;
+			//var maxSADScore = 0.001;
+			if(sadScore>maxSADScore){
+				// console.log(sadScore);
+				continue;
+			}
+			// get SIFT score
+			//var maxSIFTScore = 0.025;
+			var maxSIFTScore = 0.02;
+			var simpleSIFT = true;
+			// R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+			var siftScale = 0.25; // TODO: based on cell size to image size
+			var siftA = R3D.SIFTVector(imageMatrixA, pointA, siftScale*sizeA*scaleA, angleA, simpleSIFT);
+			var siftB = R3D.SIFTVector(imageMatrixB, pointB, siftScale*sizeB*scaleB, angleB, simpleSIFT);
+			var siftScore = SIFTDescriptor.compareVector(siftA,siftB);
+			// console.log(siftScore);
+			if(siftScore>maxSIFTScore){
+				continue;
+			}
+			var score = siftScore * sadScore;
+			//console.log(i+": "+totalDistanceError+"  diff scale: "+diffScale+"  diff angle: "+diffAngle);
+			var match = {"matchA":matchA, "matchB":matchB, "error":totalDistanceError, "A":pointA, "B":pointB, "scale":scale, "angle":angle, "score":score};
+			matchA["paired"] = true;
+			matchB["paired"] = true;
+			bestMatches.push(match);
+		}
+	}
+	// 
+	// 
+	console.log(bestMatches.length+" / "+lengthMatchingA);
+	// 
+	
+	return bestMatches;
+	/*
+	- program to check A->B and B->A & remove unclear matches. (distance < cellsize) Evaluation | double-check | grade | choose | judge | prefer | prune
+	- need to output angles and scales (V4D?)
+	- check for:
+		- similar color range
+		- similar color average
+		- good SAD score
+		- good F-distance
+	=> final best matches
+	*/
+}
+
+R3D.lineFromF = function(FA,pointA){
+	var matrixFfwd = FA;
+	pointA = new V3D(pointA.x,pointA.y,1.0);
+	var lineA = new V3D();
+	matrixFfwd.multV3DtoV3D(lineA, pointA);
+	var dir = new V2D();
+	var org = new V2D();
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	return {"org":org,"dir":dir};
 }
 
 

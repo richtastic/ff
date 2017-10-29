@@ -17,7 +17,7 @@ Triangulator.prototype.addPoints = function(points, datas){
 Triangulator.prototype.addPoint = function(point, data){
 	this._mesh.addPoint(point, data);
 }
-Triangulator.prototype.addPoint = function(point, data){
+Triangulator.prototype.removePoint = function(point, data){
 	this._mesh.removePoint(point, data);
 }
 Triangulator.prototype.removePoints = function(points, datas){
@@ -27,10 +27,6 @@ Triangulator.prototype.removePoints = function(points, datas){
 Triangulator.prototype.triangle = function(point){
 	return this._mesh.triangle(point, true);
 }
-// Triangulator.prototype.triangles = function(){
-// 	var triangles = this._mesh.triangles(true);
-// 	return triangles;
-// }
 Triangulator.pointsEqualToEpsilon = function(a,b){
 	if(Math.abs(a.x-b.x)<Triangulator.EPSILON && Math.abs(a.y-b.y)<Triangulator.EPSILON){
 		return true;

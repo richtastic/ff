@@ -17,10 +17,10 @@ function DenseCheck(){
 	// this._ticker = new Ticker(1);
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
-	
+GLOBALSTAGE = this._stage;
 	
 	var dataLoader = new FileLoader();
-	dataLoader.setLoadList("./images/flow/",["denseA_10.yaml","denseA_10.yaml"], this, this._handleFileDataLoadedFxn);
+	dataLoader.setLoadList("./images/flow/",["dense_00_to_20.yaml","dense_20_to_00.yaml"], this, this._handleFileDataLoadedFxn);
 	dataLoader.load();
 }
 DenseCheck.prototype._handleFileDataLoadedFxn = function(o){
@@ -32,6 +32,42 @@ DenseCheck.prototype._handleFileDataLoadedFxn = function(o){
 	// var data = datas[i];
 	var data0 = datas[0];
 	var data1 = datas[1];
+	var object0 = R3D.inputDensePoints(data0);
+	var object1 = R3D.inputDensePoints(data1);
+	console.log(object0);
+	console.log(object1);
+	this._denseDataA = object0;
+	this._denseDataB = object1;
+	var imageA = object0["imageFrom"];
+	var imageB = object0["imageTo"];
+	// console.log(imageA)
+	// console.log(imageB)
+	var pathA = imageA["path"];
+	var pathB = imageB["path"];
+	var imageLoader = new ImageLoader("",[pathA,pathB], this,this._handleImagesLoadedFxn,null);
+	imageLoader.load();
+}
+DenseCheck.prototype._handleImagesLoadedFxn = function(imageInfo){
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0;
+	var y = 0;
+	var images = [];
+	
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images.push(img);
+	}
+	var imageSourceA = images[0];
+	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+
+	var imageSourceB = images[1];
+	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+
 	/*
 	var isDense = this._loadingDense;
 	// IF DENSE
@@ -43,16 +79,77 @@ DenseCheck.prototype._handleFileDataLoadedFxn = function(o){
 	}else{
 		sparse = R3D.inputSparsePoints(data);
 	}*/
-	R3D.denseCheck(null,null);
-	/*
-	- program to check A->B and B->A & remove unclear matches. (distance < cellsize) Evaluation | double-check | grade | choose | judge | prefer | prune
-	- need to output angles and scales (V4D?)
-	- check for:
-		- similar color range
-		- similar color average
-		- good SAD score
-		- good F-distance
-	=> final best matches
-	*/
+	var objectA = this._denseDataA;
+	var objectB = this._denseDataB;
+	var imageInfoA = objectA["imageFrom"];
+	var imageInfoB = objectB["imageTo"];
+
+	var F = objectA["F"];
+	var cellSize = objectA["cellSize"];
+
+	var matches = R3D.denseCheck(objectA,objectB, imageMatrixA,imageMatrixB);
+	matches = matches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	});
+	//console.log(matches);
+	DenseCheck.showMatchingMapping(matches, imageMatrixA,imageMatrixB, cellSize, GLOBALSTAGE);
+
+	// output
+	var pointsA = [];
+	var pointsB = [];
+	var scales = [];
+	var angles = [];
+	var scores = [];
+	for(i=0; i<matches.length; ++i){
+		var match = matches[i];
+		pointsA.push(match["A"]);
+		pointsB.push(match["B"]);
+		scales.push(match["scale"]);
+		angles.push(match["angle"]);
+		scores.push(match["score"]);
+	}
+	var output = R3D.outputDensePoints(imageInfoA,imageInfoB, cellSize, pointsA,pointsB,scales,angles,scores, F);
+	console.log(output);
 }
+
+
+
+
+DenseCheck.showMatchingMapping = function(matches, imageMatrixA,imageMatrixB, cellSizeA, displayStage){
+	var i = 0;
+	for(i=0; i<matches.length; ++i){
+		var match = matches[i];
+		cellSizeA = 10;
+		var rotationAtoB = match["angle"];
+		var scaleAtoB = match["scale"];
+		var pA = match["A"];
+		var pB = match["B"];
+		// B to A
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,-rotationAtoB);
+			matrix = Matrix.transform2DScale(matrix,1.0/scaleAtoB);
+		var bR = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.red(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		var bG = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.grn(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		var bB = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.blu(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+		d = new DOImage(img);
+		d.matrix().translate(0 + pA.x - cellSizeA*0.5, 0 + pA.y - cellSizeA*0.5);
+		displayStage.addChild(d);
+
+		// A to B
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DRotate(matrix,rotationAtoB);
+			matrix = Matrix.transform2DScale(matrix,scaleAtoB);
+		var bR = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.red(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+		var bG = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.grn(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+		var bB = ImageMat.extractRectFromFloatImage(pA.x,pA.y,1.0,null,cellSizeA,cellSizeA, imageMatrixA.blu(),imageMatrixA.width(),imageMatrixA.height(), matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+		d = new DOImage(img);
+		d.matrix().scale(1.0/scaleAtoB);
+		d.matrix().translate(imageMatrixA.width(),0);
+		d.matrix().translate(0 + pB.x - cellSizeA*0.5, 0 + pB.y - cellSizeA*0.5);
+		displayStage.addChild(d);
+	}
+}
+
 
