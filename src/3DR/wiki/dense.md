@@ -700,6 +700,7 @@ x select FROM points as most cornerlike point inside cell area (fallback to cent
 
 
 - show the points in the 3D preview
+	- delauny triangulate from single image to get rough surface texturing
 - surface approximation from point cloud
 
 

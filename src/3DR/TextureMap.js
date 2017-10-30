@@ -21,29 +21,55 @@ TextureMap.prototype.addTriangle = function(tri3D, triList, imageList){
 }
 TextureMap.prototype.pack = function(){
 	var i, j, k;
+	console.log("PACKING ...");
 	// go thru individual triangles & combine into texture
 	var maxTextureSize = 512;
 	var textureWidth = maxTextureSize;
 	var textureHeight = maxTextureSize;
 	var bounds = new Rect(0,0, textureWidth, textureHeight);
-
+console.log(" 0 ");
 	var mappings = this._mappings;
 	var rects = [];
 	for(i=0; i<mappings.length; ++i){
 		var map = mappings[i];
 		var rect = map.rect();
 		rects.push(rect);
+//console.log(map)
+//console.log(i+": "+rect.width()+" x "+rect.height()+" = "+rect.area())
 	}
 	// TODO: separate textures into multiple atlases
-	var packed = Rect.pack(rects, bounds);
-
+	//var packed = Rect.pack(rects, bounds);
+	var packing = Rect.pack(rects, bounds, true);
+console.log(packing);
+	var dead = packing["invalid"]; // TODO: something with unmapped tris => convert to multiple tris ? do this beforehand ?
+	var bins = packing["bins"];
+	var textures = [];
+	for(i=0; i<bins.length; ++i){
+		var bin = bins[i];
+//console.log("bin: "+i)
+		for(j=0; j<bin.length; ++j){
+			var rect = bin[j];
+			rect.data(i);
+//console.log("rect: "+j+" / "+rect.data());
+		}
+		var texture = new ImageMat(textureWidth, textureHeight);
+		textures[i] = texture;
+	}
+	//var atlas = [];
 	// packing into single texture:
-	var texture = new ImageMat(textureWidth, textureHeight);
+	
 	for(i=0; i<mappings.length; ++i){
 		var map = mappings[i];
-		var image = map.image();
 		var rect = map.rect();
+		var index = rect.data();
+		//console.log(index);
+		if(!Code.isNumber(index)){//if(index===undefined || index===null){
+			continue;
+		}
+		var image = map.image();
 		var origin = rect.min();
+		var texture = textures[index];
+		//console.log(texture)
 		// copy to texture
 		texture.insert(image, origin.x,origin.y);
 		// replace
@@ -51,15 +77,23 @@ TextureMap.prototype.pack = function(){
 		map.triImage().translate(origin);
 	}
 
-
 	// TODO: GET STAGE FROM SOMEWHERE ???
-	var img = GLOBALSTAGE.getFloatRGBAsImage(texture.red(),texture.grn(),texture.blu(), texture.width(),texture.height());
+	var images = [];
+	for(i=0; i<textures.length; ++i){
+		var texture = textures[i];
+		var img = GLOBALSTAGE.getFloatRGBAsImage(texture.red(),texture.grn(),texture.blu(), texture.width(),texture.height());
+		images[i] = img;
+		Code.addChild( Code.getBody(), img);
+	}
+
 	for(i=0; i<mappings.length; ++i){
 		var map = mappings[i];
+		var rect = map.rect();
+		var index = rect.data();
+		var img = images[index];
 		map.imageDOM(img);
 	}
 
-	Code.addChild( Code.getBody(), img);
 
 	//var texture = new ImageMat(textureWidth, textureHeight);
 }

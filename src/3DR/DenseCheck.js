@@ -18,6 +18,7 @@ function DenseCheck(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 GLOBALSTAGE = this._stage;
+GLOBALSTAGE.root().matrix().scale(1.5);
 	
 	var dataLoader = new FileLoader();
 	dataLoader.setLoadList("./images/flow/",["dense_00_to_20.yaml","dense_20_to_00.yaml"], this, this._handleFileDataLoadedFxn);
@@ -116,10 +117,11 @@ DenseCheck.prototype._handleImagesLoadedFxn = function(imageInfo){
 
 
 DenseCheck.showMatchingMapping = function(matches, imageMatrixA,imageMatrixB, cellSizeA, displayStage){
+	cellSizeA = cellSizeA*2;
 	var i = 0;
 	for(i=0; i<matches.length; ++i){
 		var match = matches[i];
-		cellSizeA = 10;
+		//cellSizeA = 10;
 		var rotationAtoB = match["angle"];
 		var scaleAtoB = match["scale"];
 		var pA = match["A"];

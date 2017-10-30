@@ -91,12 +91,245 @@ function Triangulate(){
 	this._pointList = points3D;
 	//this._renderScene();
 
-	this.caseStudy();
+	this.denseStudy();
+	//this.caseStudy();
 	//this.syntheticStudy();
 
 	this._stage.start();
 }
-Triangulate.prototype.caseStudy = function(t){
+Triangulate.prototype.denseStudy = function(){
+	console.log("denseStudy")
+	var fileLoader = new FileLoader("./images/flow/",["dense_00_20.yaml"],this,this._handleDenseStudyDataLoad);
+	fileLoader.load();
+}
+Triangulate.prototype._handleDenseStudyDataLoad = function(o){
+	var files = o.files;
+	var datas = o.contents;
+	var data = datas[0];
+	var object = R3D.inputDensePoints(data);
+	var imageInfoFrom = object["imageFrom"];
+	var imageInfoTo = object["imageTo"];
+	var F = object["F"];
+	var matches = object["matches"];
+	var i;
+	var pointsFrom = [];
+	var pointsTo = [];
+	// console.log(matches)
+	for(i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var from = match["A"];
+		var to = match["B"];
+		pointsFrom.push(from);
+		pointsTo.push(to);
+	}
+// console.log(pointsFrom)
+// console.log(pointsTo)
+
+	var K = [ 3.7576E+2 , -1.7370E+0 , 1.9356E+2 ,  0.0000E+0 , 3.8050E+2 , 1.6544E+2 ,  0.0000E+0 , 0.0000E+0 , 1.0000E+0 ];
+	K = new Matrix(3,3).fromArray(K);
+
+	//
+	var P = R3D.transformFromFundamental(pointsFrom, pointsTo, F, K);
+	console.log(F+"");
+	console.log(K+"");
+	console.log(P+"");
+	//console.log("var P = ["+P.toArray()+"];");
+	//var P = [0.9475207831216185,-0.1382261910413648,0.28826703880740556,-0.4827392727498371,0.2593875851740767,0.8594799396070502,-0.44046828951767153,0.6289791729798363,-0.18687548317035932,0.4921257497055592,0.8502292633558233,0.6093832903046816,0,0,0,1];
+	//P = new Matrix(4,4).fromArray(P);
+	// 
+	// GET 3D POINTS:
+	var cameraA = new Matrix(4,4).identity();
+	var cameraB = P;
+	this._cameraA = cameraA;
+	this._cameraB = cameraB;
+	var points3D = R3D.triangulationDLT(pointsFrom,pointsTo, cameraA,cameraB, K);
+	this._points3D = points3D;
+	// REPLACE 3D DISPLAY
+	console.log(points3D);
+	var pointList = this._pointList;
+	Code.emptyArray(pointList);
+	for(var i=0; i<points3D.length; ++i){
+		pointList.push(points3D[i]);
+	}
+	this._cameraPointsA =  pointsFrom;
+	this._cameraPointsB =  pointsTo;
+	this._cameraPoints3D =  points3D;
+
+	// get images
+	var imageFrom = object["imageFrom"];
+	var imageTo = object["imageTo"];
+	var pathFrom = imageFrom["path"];
+	var pathTo = imageTo["path"];
+	var imageLoader = new ImageLoader("",[pathFrom,pathTo], this,this._handleDenseStudyImagesLoad,null);
+	imageLoader.load();
+}
+Triangulate.prototype._handleDenseStudyImagesLoad = function(imageInfo){
+	console.log("_handleDenseStudyImagesLoad");
+
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0;
+	var y = 0;
+	var images = [];
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+	}
+
+	GLOBALSTAGE = this._stage;
+
+	var imageSourceA = images[0];
+	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+
+	var imageSourceB = images[1];
+	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+	
+	// create textures
+	var pointsA = this._cameraPointsA;
+	var pointsB = this._cameraPointsB;
+	var points3D = this._cameraPoints3D;
+
+	// create delauny triangulation from one of the images
+	var triangulator = new Triangulator();
+	for(i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var point3 = points3D[i];
+		triangulator.addPoint(pointA,{"A":pointA,"B":pointB,"3":point3});
+	}
+	var tris = triangulator.triangles();
+	var datas = triangulator.datas();
+	var points = triangulator.points();
+	console.log(tris);
+	console.log(datas);
+	// 
+	var triA, triB, tri3D;
+	var renderTris = [];
+	var mappings = [];
+	var textureMap = new TextureMap();
+	for(i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		var a = tri[0];
+		var b = tri[1];
+		var c = tri[2];
+		//console.log(a,b,c)
+		// a = points[a];
+		// b = points[b];
+		// c = points[c];
+		var aA = datas[a]["A"];
+		var aB = datas[b]["A"];
+		var aC = datas[c]["A"];
+		var bA = datas[a]["B"];
+		var bB = datas[b]["B"];
+		var bC = datas[c]["B"];
+		var cA = datas[a]["3"];
+		var cB = datas[b]["3"];
+		var cC = datas[c]["3"];
+		//
+		triA = new Tri2D(aA,aB,aC);
+		triB = new Tri2D(bA,bB,bC);
+		tri3D = new Tri3D(cA,cB,cC);
+		var mapping = textureMap.addTriangle(tri3D, [triA,triB], [imageMatrixA,imageMatrixB]);
+		mappings.push(mapping);
+// 50 ?
+if(i>500){
+	break;
+}
+	}
+	console.log(mappings);
+	
+	textureMap.pack();
+	console.log(" packed ");
+
+	for(i=0; i<mappings.length; ++i){
+		var mapping = mappings[i];
+		var textureMatrix = mapping.image();
+		var triOrigin = mapping.triImage();
+		var tri3D = mapping.tri3D();
+		var img = mapping.imageDOM();
+		//console.log(triOrigin)
+		//var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
+		//Code.addChild(Code.getBody(), img);
+		var renderTri = null;//new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
+		var tri = new DOTri(img, renderTri, triOrigin);
+		renderTris.push([tri,tri3D]);
+	}
+console.log("mappings "+mappings.length);
+	this._renderTris = renderTris;
+
+
+	//
+
+	// get back
+	/*
+	var points = this._triangulator.points();
+	var datas = this._triangulator.datas();
+	var tris = this._triangulator.triangles();
+	var perim = this._triangulator.perimeter();
+	var rays = Code.rayFromPointPerimeter(points,perim, true);
+	var hull = perim;
+	var hullFilled = [];
+	for(i=0; i<hull.length; ++i){
+		hullFilled.push( points[hull[i]] );
+	}
+	*/
+console.log("OUT");
+
+	/*
+	var textureMap = new TextureMap();
+	this._textureMap = textureMap;
+	
+	var groups = [];
+	var mapping = null;
+	groups.push([ 0,14,15]); // grid org, top, top-left
+	groups.push([ 0,15,17]); // grid org, top-left, bot-left
+	groups.push([ 0,17,18]); // grid bot
+	groups.push([ 0,14,16]); // grid right 1
+	groups.push([11,12,22]); // ruler base
+	groups.push([21,22, 9]); // base L
+	groups.push([ 9, 8,21]); // base R
+	groups.push([ 8, 9, 4]); // bod A
+	groups.push([ 4, 9, 7]); // bod B
+	groups.push([ 7, 6, 4]); // upper bod l
+	groups.push([ 4, 6, 5]); // upper bod r
+	var triA, triB, tri3D;
+	var renderTris = [];
+	var mappings = [];
+	for(i=0; i<groups.length; ++i){
+		var g = groups[i];
+		var a = g[0];
+		var b = g[1];
+		var c = g[2];
+		triA = new Tri2D(pointsA[a], pointsA[b], pointsA[c]);
+		triB = new Tri2D(pointsB[a], pointsB[b], pointsB[c]);
+		tri3D = new Tri3D(points3D[a], points3D[b], points3D[c]);
+		mapping = textureMap.addTriangle(tri3D, [triA,triB], [imageMatrixA,imageMatrixB]);
+		//mapping = textureMap.addTriangle(tri3D, [triB], [imageMatrixB]);
+		mappings.push(mapping);
+
+	}
+	textureMap.pack();
+	for(i=0; i<mappings.length; ++i){
+		var mapping = mappings[i];
+		var textureMatrix = mapping.image();
+		var triOrigin = mapping.triImage();
+		var tri3D = mapping.tri3D();
+		var img = mapping.imageDOM();
+		//console.log(triOrigin)
+		//var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
+		//Code.addChild(Code.getBody(), img);
+		var renderTri = null;//new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
+		var tri = new DOTri(img, renderTri, triOrigin);
+		renderTris.push([tri,tri3D]);
+	}
+//	this._renderTris = renderTris;
+	*/
+}
+Triangulate.prototype.caseStudy = function(){
 	
 	var pointsA = [
 		new V2D(172,107), // origin				// 0
@@ -815,7 +1048,8 @@ m.translate(0,0,dist);
 	for(i=0; i<pList.length; ++i){
 		var point = pList[i];
 		var d = new DO();
-		var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
+		//var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
+		rad = 3.0;
 		//rad = 3;
 		d.graphics().setFill(0xFF00FF00);
 		d.graphics().setLine(1.0, 0xFFFF0000);
@@ -840,10 +1074,12 @@ m.translate(0,0,dist);
 	// RENDER TRIS
 	var renderTris = this._renderTris;
 	if(renderTris){
+//		console.log("RENDERING...");
 		for(i=0; i<renderTris.length; ++i){
 			var dat = renderTris[i];
 			var triDO = dat[0];
 			var tri3D = dat[1];
+//			console.log(dat)
 			var a = this.renderPointFromWorldPoint(tri3D.A(), camera);
 			var b = this.renderPointFromWorldPoint(tri3D.B(), camera);
 			var c = this.renderPointFromWorldPoint(tri3D.C(), camera);
@@ -900,18 +1136,21 @@ if(cameraPointA&&cameraPointB){
 		d.graphics().endPath();
 		display.addChild(d);
 		// lines
-		var d = new DO();
-			d.graphics().setLine(1.0, 0x996699CC);
-		for(j=0; j<pList.length; ++j){
-			var p = pList[j];
-			
-			d.graphics().beginPath();
-			d.graphics().moveTo(point.x,point.y);
-			d.graphics().lineTo(p.x,p.y);
-			d.graphics().strokeLine();
-			d.graphics().endPath();
+		var drawLines = false;
+		if(drawLines){
+			var d = new DO();
+				d.graphics().setLine(1.0, 0x996699CC);
+			for(j=0; j<pList.length; ++j){
+				var p = pList[j];
+				
+				d.graphics().beginPath();
+				d.graphics().moveTo(point.x,point.y);
+				d.graphics().lineTo(p.x,p.y);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+			}
+			display.addChild(d);
 		}
-		display.addChild(d);
 	}
 }
 	

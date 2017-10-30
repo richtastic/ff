@@ -2264,10 +2264,11 @@ R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textu
 	for(i=0; i<sampleCount; ++i){
 		var area = sameAreaList[i];
 		if(area<maxTriArea/maxAreaDifference){ // drop tris that are relatively too small to be useful
-			console.log("TODO: drop this tri");
+			console.log("TODO: drop this tri: "+area);
 		}
 		sameErrorList[i] = area/totalTriArea;
 	}
+	console.log(" A ");
 	// determine final size of texture
 	var tri = sameTriList[maxEdgeIndex];
 	var relativeScale = 1.0;
@@ -2283,7 +2284,7 @@ R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textu
 	var textureWidth = Math.ceil(triangleScale*boundingRect.width());
 	var textureHeight = Math.ceil(triangleScale*boundingRect.height());
 	var textureMatrix = new ImageMat(textureWidth,textureHeight);
-
+console.log(" B ");
 	triOrigin.A().scale(triangleScale);
 	triOrigin.B().scale(triangleScale);
 	triOrigin.C().scale(triangleScale);
@@ -2297,7 +2298,7 @@ R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textu
 		tri = sameTriList[i];
 		listH[i] = R3D.homographyFromPoints([triOrigin.A(),triOrigin.B(),triOrigin.C()],[tri.A(),tri.B(),tri.C()]);
 	}
-	
+	console.log(" C ");
 	// TODO: pad texture for aliasing
 	for(j=0; j<textureHeight; ++j){
 		for(i=0; i<textureWidth; ++i){

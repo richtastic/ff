@@ -25,6 +25,7 @@ function Memory2D(bound, pList){
 	this._run_complete = false;
 	this._run_success = false;
 	this._iii = 0;
+	this._maxIterations = 1E8;
 	var dat = Memory2D.getObjFromRect(bound);
 	this._tree.data( dat );
 	this._memory.push( this._tree );
@@ -168,7 +169,7 @@ Memory2D.prototype.iteration = function(){
 	return false;
 }
 Memory2D.prototype._handle_success_fxn = function(){
-	console.log("memory success");
+//	console.log("memory success");
 	this._run_complete = true;
 	this._run_success = false;
 	this._run_finalize();
@@ -177,7 +178,7 @@ Memory2D.prototype._handle_series_fxn = function(){
 	//this._run_complete = true; this._run_success = false;
 }
 Memory2D.prototype._handle_failure_fxn = function(){
-	console.log("memory failure");
+//	console.log("memory failure");
 	this._run_complete = true;
 	this._run_success = false;
 	this._run_finalize();
@@ -185,7 +186,10 @@ Memory2D.prototype._handle_failure_fxn = function(){
 Memory2D.prototype.quit = function(){
 	this.alertAll(Memory2D.EVENT_FAILURE,this);
 }
-Memory2D.prototype.run = function(async){
+Memory2D.prototype.run = function(async, maxIterations){
+	if(maxIterations!==undefined){
+		this._maxIterations = maxIterations;
+	}
 	async = async!==undefined ? async : true; // default to async operation
 	var i, len = this._process.length, area = 0;
 	this.addFunction(Memory2D.EVENT_SUCCESS,this._handle_success_fxn, this);
@@ -203,7 +207,7 @@ Memory2D.prototype.run = function(async){
 	if(async){
 		this._run_timer.start();
 	}else{
-		this._run_all();
+		return this._run_all();
 	}
 	return true;
 }
@@ -213,13 +217,14 @@ Memory2D.prototype._run_setup = function(){
 }
 Memory2D.prototype._run_all = function(){
 	var i = 0;
-	var maxIterations = 1E8;
-	while(i<maxIterations && !this._run_complete){
-		this.iteration();
+	var maxIterations = this._maxIterations;
+	while(i<maxIterations && !this._run_complete){ // && !result
+		var result = this.iteration();
 		++i;
 		++this._iii;
 	}
-	console.log("completed?");
+	//console.log("completed?");
+	return result;
 }
 Memory2D.prototype._run_iteration = function(){
 	this._run_timer.stop();
