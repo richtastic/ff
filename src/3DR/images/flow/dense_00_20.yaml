@@ -8,7 +8,7 @@ imageFrom:
 	height: 300
 imageTo:
 	id: "1"
-	path: "./images/caseStudy1-0.jpg"
+	path: "./images/caseStudy1-20.jpg"
 	width: 400
 	height: 300
 fundamental:

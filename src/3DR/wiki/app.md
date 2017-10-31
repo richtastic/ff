@@ -84,9 +84,11 @@
 	- views[]
 	- view pairings[]
 	- points3d[]
-	- surface model mesh
+	- surface model mesh (OUTPUT)
 	- cameras[]
-	- background
+	- interactive experience
+		- cameras[] 
+		- background
 
 - camera
 	- calibration
@@ -122,6 +124,32 @@
 	- coords3D[]
 	- coords2D[]
 
+
+
+
+
+
+storage / memory info
+
+project typical numbers:
+	10~100  number of images
+		each imag has ~ 0.2 other matched images
+	~N*(1 + 0.2) pairs
+		~N! pairs of images
+	20~200 pairs
+	
+	[max 4032 x 3024 ]
+	2016x1512 image @ hi res
+	1920x1080 image @ med res
+	960x540 image @ lo res
+
+	1.2192768E7 pixels @ high res
+	2.073600E6 pixels @ med res
+	5.18400E5 pixels @ lo res
+
+	~100 medium feature points [medium]
+	~0.25 * pixels * (1/25) match points [dense]
+		0.25 * (1920*1080) * (1/25) = 2.0736E4 dense matches [20k per image pair]
 
 
 

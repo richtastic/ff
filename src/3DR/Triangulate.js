@@ -160,6 +160,7 @@ Triangulate.prototype._handleDenseStudyDataLoad = function(o){
 	var imageTo = object["imageTo"];
 	var pathFrom = imageFrom["path"];
 	var pathTo = imageTo["path"];
+	//console.log("PATHS: "+pathFrom+" | "+pathTo);
 	var imageLoader = new ImageLoader("",[pathFrom,pathTo], this,this._handleDenseStudyImagesLoad,null);
 	imageLoader.load();
 }
@@ -197,9 +198,12 @@ Triangulate.prototype._handleDenseStudyImagesLoad = function(imageInfo){
 	var triangulator = new Triangulator();
 	for(i=0; i<pointsA.length; ++i){
 		var pointA = pointsA[i];
+
 		var pointB = pointsB[i];
+
 		var point3 = points3D[i];
-		triangulator.addPoint(pointA,{"A":pointA,"B":pointB,"3":point3});
+		var pointUse = pointB;
+		triangulator.addPoint(pointUse,{"A":pointA,"B":pointB,"3":point3});
 	}
 	var tris = triangulator.triangles();
 	var datas = triangulator.datas();
@@ -216,7 +220,6 @@ Triangulate.prototype._handleDenseStudyImagesLoad = function(imageInfo){
 		var a = tri[0];
 		var b = tri[1];
 		var c = tri[2];
-		//console.log(a,b,c)
 		// a = points[a];
 		// b = points[b];
 		// c = points[c];
@@ -229,18 +232,24 @@ Triangulate.prototype._handleDenseStudyImagesLoad = function(imageInfo){
 		var cA = datas[a]["3"];
 		var cB = datas[b]["3"];
 		var cC = datas[c]["3"];
+//		console.log(aA+" ? "+bA);
 		//
 		triA = new Tri2D(aA,aB,aC);
 		triB = new Tri2D(bA,bB,bC);
 		tri3D = new Tri3D(cA,cB,cC);
 		var mapping = textureMap.addTriangle(tri3D, [triA,triB], [imageMatrixA,imageMatrixB]);
+		//var mapping = textureMap.addTriangle(tri3D, [triA], [imageMatrixA]);
+		//var mapping = textureMap.addTriangle(tri3D, [triB], [imageMatrixB]);
 		mappings.push(mapping);
-// 50 ?
-if(i>500){
+//if(i>100){
+//if(i>1000){ // start to slow
+//if(i>2000){
+//if(i>3000){
+if(i>5000){ // arbitrarily large
 	break;
 }
 	}
-	console.log(mappings);
+	console.log(mappings.length);
 	
 	textureMap.pack();
 	console.log(" packed ");
@@ -1073,6 +1082,7 @@ m.translate(0,0,dist);
 //console.log(" vs "+this._cameraPointsA.length+", "+this._cameraPointsB.length+", "+this._cameraPoints3D.length+", ")
 	// RENDER TRIS
 	var renderTris = this._renderTris;
+	var displayTriList = [];
 	if(renderTris){
 //		console.log("RENDERING...");
 		for(i=0; i<renderTris.length; ++i){
@@ -1088,13 +1098,15 @@ m.translate(0,0,dist);
 				a = V2D.copy(a);
 				b = V2D.copy(b);
 				c = V2D.copy(c);
+				var z = (a.z+b.z+c.z)/3.0;
 				//console.log(a)
 				var tri = new Tri2D(a,b,c);
 				// var renderTri = new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
 				//console.log(tri)
 				triDO.displayTri(tri);
-				display.addChild(triDO);
-
+				displayTriList.push([z, triDO]);
+				//display.addChild(triDO);
+				/*
 				var pts = [a,b,c];
 				var rad = 4.0;
 				for(j=0;j<pts.length;++j){
@@ -1108,7 +1120,15 @@ m.translate(0,0,dist);
 					d.graphics().endPath();
 					display.addChild(d);
 				}
+				*/
 			}
+		}
+		displayTriList = displayTriList.sort(function(a,b){
+			return a[0]>b[0] ? -1 : 1; // furthest first
+		});
+		for(i=0; i<displayTriList.length; ++i){
+			triDO = displayTriList[i][1];
+			display.addChild(triDO);
 		}
 	}
 

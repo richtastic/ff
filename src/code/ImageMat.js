@@ -307,7 +307,7 @@ ImageMat.prototype.insert = function(imageB, offX,offY){
 	var redB = imageB.red();
 	var grnB = imageB.grn();
 	var bluB = imageB.blu();
-	console.log(startX,startY,endX,endY,widthA," ... ",heightA,widthB,heightB);
+	//console.log(startX,startY,endX,endY,widthA," ... ",heightA,widthB,heightB);
 	for(jB=0, jA=startY; jB<heightB && jA<endY; ++jB, ++jA){
 		for(iB=0, iA=startX; iB<widthB && iA<endX; ++iB, ++iA){
 			indexA = jA*widthA + iA;

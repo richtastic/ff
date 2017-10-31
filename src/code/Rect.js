@@ -11,11 +11,11 @@ Rect.pack = function(rectList, bound, isList){
 		var bins = [];
 		var i, j, k;
 		var maxAreaPercent = 0.95;
-		var iterationsMax = 1E5;
+		var iterationsMax = 1E2; // 1E4 starts getting slow 1E5 too slow
 		for(i=0; i<rectList.length; ++i){
 			var rect = rectList[i];
 			var rectArea = rect.area();
-			console.log("rect: "+rect);
+			//console.log("rect: "+rect);
 			//console.log("try "+i+" @ "+rect);
 			if(rect.width()>bound.width() || rect.height>bound.height()){
 				console.log(" => unpackable");
@@ -24,11 +24,15 @@ Rect.pack = function(rectList, bound, isList){
 				var added = false;
 				for(j=0; j<bins.length; ++j){
 					bin = bins[j];
+					var fails = bin["fails"]; // TODO: this is a hack check for an underlying problem
+					if(fails>3){
+						continue;
+					}
 					var list = bin["list"];
 					if(list.length==1){
 						var rect0 = list[0];
 						if(rect.width()+rect0.width()>bound.width() && rect.height()+rect0.height()>bound.height()){ // impossible to fit
-							console.log(" => can't combine");
+							//console.log(" => can't combine");
 							continue;
 						}
 					}
@@ -52,6 +56,7 @@ Rect.pack = function(rectList, bound, isList){
 					var q = rect.copy();
 					q.data(rect);
 					copyList.push(q);
+					// TODO: remember if a previous pack was unsuccessful with a certain size/area and don't repeat
 					var result = Rect._packSingle(copyList, bound, iterationsMax);
 					if(result){ // success, use new rectangles
 						for(k=0; k<copyList.length; ++k){
@@ -60,22 +65,22 @@ Rect.pack = function(rectList, bound, isList){
 							q.set(r.x(),r.y(),r.width(),r.height());
 							copyList[k] = q;
 						}
-						console.log(copyList+"")
+						//console.log(copyList.length+"")
 						bin["list"] = copyList;
 						bin["area"] = newArea;
 						added = true;
-						console.log("  => add to bin "+j+" @ "+newArea+"/"+boundArea+" = "+(newArea/boundArea));
+						//console.log("  => add to bin "+j+" w/ "+copyList.length+" @ "+newArea+"/"+boundArea+" = "+(newArea/boundArea));
 						break;
 					}else{ // keep old list
-						// 
-						console.log("  => keep old");
+						bin["fails"] += 1;
+						//console.log("  => keep old "+(newArea/boundArea));
 					}
 				}
 				if(!added){ // make new bin
-					console.log("  => new bin");
+					//console.log("  => new bin");
 					rect.x(0);
 					rect.y(0);
-					bin = {"list":[rect], "area":rect.area()};
+					bin = {"list":[rect], "area":rect.area(), "fails":0};
 					bins.push(bin);
 				}
 			}

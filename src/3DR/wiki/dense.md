@@ -699,8 +699,33 @@ x speed up dense matching by dropping triangulator
 x select FROM points as most cornerlike point inside cell area (fallback to center)
 
 
-- show the points in the 3D preview
-	- delauny triangulate from single image to get rough surface texturing
+TODO:
+
+
+
+x dense matching finalize
+x display 3d points
+~ rectangle packing -- too long
+- tri2d display trangle depth ordering
+- tri2d triangle glitching [numerical stability problem]
+	- calculaing affine matrix is bad
+		- try custom non SVD version?
+- use iphone5 calibration K not iphone6 for case study
+- 
+- javascript + php combo to
+	- save data to file
+		- binary
+		- text
+	- delete file
+- export model to files
+- use stage3D to display model
+
+
+
+
+
+x show the points in the 3D preview
+	x delauny triangulate from single image to get rough surface texturing
 - surface approximation from point cloud
 
 

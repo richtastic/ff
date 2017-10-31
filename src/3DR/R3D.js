@@ -2268,7 +2268,7 @@ R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textu
 		}
 		sameErrorList[i] = area/totalTriArea;
 	}
-	console.log(" A ");
+	
 	// determine final size of texture
 	var tri = sameTriList[maxEdgeIndex];
 	var relativeScale = 1.0;
@@ -2284,7 +2284,7 @@ R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textu
 	var textureWidth = Math.ceil(triangleScale*boundingRect.width());
 	var textureHeight = Math.ceil(triangleScale*boundingRect.height());
 	var textureMatrix = new ImageMat(textureWidth,textureHeight);
-console.log(" B ");
+
 	triOrigin.A().scale(triangleScale);
 	triOrigin.B().scale(triangleScale);
 	triOrigin.C().scale(triangleScale);
@@ -2298,13 +2298,13 @@ console.log(" B ");
 		tri = sameTriList[i];
 		listH[i] = R3D.homographyFromPoints([triOrigin.A(),triOrigin.B(),triOrigin.C()],[tri.A(),tri.B(),tri.C()]);
 	}
-	console.log(" C ");
+
 	// TODO: pad texture for aliasing
 	for(j=0; j<textureHeight; ++j){
 		for(i=0; i<textureWidth; ++i){
 			texturePoint.set(i,j);
 			var isInside = Code.isPointInsideTri2D(texturePoint, triOrigin.A(),triOrigin.B(),triOrigin.C());
-			//var isInside = true;
+var isInside = true;
 			if(isInside){ // limit texture to points inside triangle
 				var colors = [];
 				var reds = [];

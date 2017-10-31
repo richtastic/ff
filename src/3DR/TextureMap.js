@@ -84,6 +84,7 @@ console.log(packing);
 		var img = GLOBALSTAGE.getFloatRGBAsImage(texture.red(),texture.grn(),texture.blu(), texture.width(),texture.height());
 		images[i] = img;
 		Code.addChild( Code.getBody(), img);
+		Code.setStyleDisplay(img, "none");
 	}
 
 	for(i=0; i<mappings.length; ++i){
