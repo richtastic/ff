@@ -357,6 +357,18 @@ Code.parseURL = function(url){ // https://tools.ietf.org/html/rfc3986#section-4.
 	datum["fragment"] = anchor;
 	return datum;
 }
+Code.printMatlabArray = function(array,name){
+	name = name!==undefined ? name : "x";
+	var str = name+" = [";
+	for(var i=0; i<array.length; ++i){
+		str = str + array[i] + "";
+		if(i<array.length-1){
+			str = str + ",";
+		}
+	}
+	str = str + "];";
+	console.log(str);
+}
 Code._appendParameter = function(container, key, value){ //
 	//console.log("ASSIGN: "+key+"="+value);
 	var regeExArrayPush = new RegExp("\\[\\]$","g");
@@ -958,10 +970,13 @@ Code.setArrayConstant = function(arr,c){
 	}
 	return arr;
 }
-Code.arrayPushArray = function(a,b){
+// Code.appendArray = function(a,b){
+Code.arrayPushArray = function(a,b, start,end){
 	if(a && b){
-		var i, len=b.length;
-		for(i=0;i<len;++i){
+		start = start!==undefined ? start : 0;
+		end = end!==undefined ? end : b.length-1;
+		var i;
+		for(i=start;i<=end;++i){
 			a.push(b[i]);
 		}
 	}
@@ -1185,7 +1200,15 @@ Code.printPoints = function(points){
 	var i, point, str = "";
 	for(i=0; i<points.length; ++i){
 		point = points[i];
-		str = str + "points.push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
+		if(point.v!==undefined){
+			str = str + "var pt = new V4D("+point.x+","+point.y+","+point.z+","+point.t+"); pt.u = "+point.u+"; pt.v = "+point.v+"; points.push( pt ); // " + i + "\n";
+		}else if(point.t!==undefined){
+			str = str + "points.push( new V4D("+point.x+","+point.y+","+point.z+","+point.t+") ); // " + i + "\n";
+		}else if(point.z!==undefined){
+			str = str + "points.push( new V3D("+point.x+","+point.y+","+point.z+") ); // " + i + "\n";
+		}else{
+			str = str + "points.push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
+		}
 	}
 	console.log("\n\n"+str+"\n\n");
 }
@@ -1667,16 +1690,23 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 			nextX[i] = x[i] - lambda*dy[i];
 		}
 		var newCost = fxn(args, nextX);
+		//console.log(cost+" vs "+newCost);
 		if(newCost<cost){
+			//console.log("better: "+(cost-newCost)+" < "+minDifference);
 			if(cost-newCost<minDifference){
+				// console.log("cost quit");
 				break;
 			}
 			cost = newCost;
 			x = nextX;
+			fxn(args,x, true);
 			lambda *= scaler;
 		}else{
 			lambda /= scaler;
 		}
+	}
+	if(k==maxIterations){
+		// console.log("iteration quit");
 	}
 	return {"x":x,"cost":cost};
 }
@@ -1893,6 +1923,7 @@ Code.getTimeZone = function(){
 Code.getTimeStampFromMilliseconds = function(milliseconds){
 	milliseconds = milliseconds!==undefined ? milliseconds : Code.getTimeMilliseconds();
 	var d = new Date(milliseconds);
+	console.log(d+" == DATE");
 	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 }
 Code.stringRemovePrefix = function(str,prefix){
@@ -1907,11 +1938,14 @@ Code.stringFilterNumbersOnly = function(str){ // [0-9]+[.[0-9]+][(E|e)[+.-][0-9]
 Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args
+    	console.log("IN A:");
     	var d;
     	if(year===undefined){ // use NOW
+    		console.log("USE NOW");
     		d = Code.getTimeMilliseconds(true);
     		d = new Date(d);
     	}else{
+    		console.log("YEAR???");
     		d = new Date(year);
     	}
 		year = d.getFullYear();
@@ -2096,7 +2130,23 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
-Code.lineSpace = function(start,end,count){
+Code.randomIntArray = function(count, min,max){
+	var i, a = [];
+	for(i=0; i<count; ++i){
+		a[i] = Code.randomInt(min,max);
+	}
+	return a;
+}
+Code.divSpace = function(start,end,count){ // start+end / count
+	count -= 1;
+	var range = end-start;
+	var i, arr = [];
+	for(i=0; i<=count; ++i){
+		arr[i] = start + i*range/count;
+	}
+	return arr;
+}
+Code.lineSpace = function(start,end,count){ // start +count ... end
 	count = count!==undefined ? count : 1.0;
 	var i, arr = [];
 	if(count==0){
@@ -2257,7 +2307,7 @@ Code.colorARGBFromJSColor = function(jsColor){
 	return 0x00000000; // default clear
 }
 Code.getHexNumber = function(num,pad, post){
-	if(!num){ return 0; }
+	if(num===undefined){ return 0; }
 	var str = num.toString(16).toUpperCase();
 	if(pad!==undefined){
 		if(post){
@@ -2267,6 +2317,16 @@ Code.getHexNumber = function(num,pad, post){
 		}
 	}
 	return str;
+}
+Code.printArrayHex = function(a,pad){
+	var str = "";
+	if(a){
+		for(var i=0; i<a.length; ++i){
+			str = str + "" +Code.getHexNumber(a[i],pad);
+		}
+	}
+	return str;
+	//Code.getHexNumber = function(num,pad, post){
 }
 Code.getColARGBFromFloat = function(a,r,g,b){
 	a = Math.min(Math.floor(a*256.0),255);
@@ -6341,6 +6401,11 @@ Code.radians = function(degrees){
 Code.degrees = function(radians){
 	return radians*(180.0/Math.PI);
 }
+Code.digits = function(value, d){
+	d = d!==undefined ? d : 5;
+	return value.toExponential(d);
+}
+
 Code.isPointInsideTri2DFast = function(p, a,b,c){ 
 	if(p.x < Math.min(a.x,b.x,c.x)){
 		return false;
@@ -6717,7 +6782,126 @@ Code.histogram = function(data, masking, buckets){
 	}
 	return {"histogram":histogram, "size":bucketSize, "min":null, "max":null};
 }
-
+Code.range = function(data, masking){
+	var i, len=data.length;
+	var min = null;
+	var max = null;
+	for(i=0; i<len; ++i){
+		var value = data[i];
+		if(!min){min = value;}
+		if(!max){max = value;}
+		min = Math.min(min,value);
+		max = Math.max(max,value);
+	}
+	var range = max - min;
+	return range;
+}
+Code.variabilityImage = function(data, width, height){
+	var i, j, x, y, m, len = data.length;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var roughness = 0;
+	var minX, maxX, minY, maxY, value, val, ind, index, m, diff, result, mCount;
+	var mask = 1.0;
+	var total = 0;
+	var maskCount = 0;
+	var result = Code.newArrayZeros(width*height);
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			value = data[index];
+			minX = Math.max(0,i-1);
+			maxX = Math.min(i+1,wm1);
+			minY = Math.max(0,j-1);
+			maxY = Math.min(j+1,hm1);
+			tot = null;
+			mCount = 0;
+			for(y=minY; y<=maxY; ++y){
+				for(x=minX; x<=maxX; ++x){
+					ind = y*width + x;
+					if(ind!==index){ // no differential with self
+						val = data[ind];
+						diff = Math.abs(value - val); // directional difference ?
+						if(tot===null){
+							tot = diff;
+						}else{
+							tot = Math.min(tot,diff); // minimum variablity
+						}
+					}
+				}
+			}
+			if(tot){
+				result[index] = tot;
+			}
+		}
+	}
+	return result;
+}
+Code.variability = function(data, width, height, masking, isMin){ // roughness measure of a 2D surface
+	var i, j, x, y, m, len = data.length;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var roughness = 0;
+	var minX, maxX, minY, maxY, value, val, ind, index, m, diff, result, mCount;
+	var mask = 1.0;
+	var total = 0;
+	var maskCount = 0;
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			if(masking){
+				mask = masking[index];
+			}
+			if(mask!==0){
+				++maskCount;
+				value = data[index];
+				minX = Math.max(0,i-1);
+				maxX = Math.min(i+1,wm1);
+				minY = Math.max(0,j-1);
+				maxY = Math.min(j+1,hm1);
+				m = 1.0;
+				tot = null;
+				mCount = 0;
+				for(y=minY; y<=maxY; ++y){
+					for(x=minX; x<=maxX; ++x){
+						ind = y*width + x;
+						if(ind!==index){ // no differential with self
+							if(masking){
+								m = masking[ind];
+							}
+							if(m!==0){
+								++mCount;
+								val = data[ind];
+								diff = Math.abs(value - val); // directional difference ?
+								//console.log(value)
+								if(tot===null){
+									tot = diff;
+								}else{
+									if(isMin){
+										tot = Math.min(tot,diff); // minimum variablity
+										//tot = Math.max(tot,diff); // maximum variablity
+									}else{
+										tot += diff; // average variablity
+									}
+								}
+							}
+						}
+					}
+				}
+				if(tot && mCount>0){
+					if(!isMin){
+						tot = tot / mCount; // average variablity
+					}
+					total += tot;
+				}
+			}
+		}
+	}
+	if(maskCount>0){ // average of each individual
+		return total/maskCount;
+	}
+	return 0;
+}
 Code.entropy01 = function(data, masking, buckets){
 	buckets = (buckets!==undefined && buckets!==null)? buckets : 10;
 	var i, count, p;

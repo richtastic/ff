@@ -1,4 +1,10 @@
 // V4D.js
+V4D.YAML = {
+	X:"x",
+	Y:"y",
+	Z:"z",
+	T:"t",
+}
 V4D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z + a.t*b.t;
 }
@@ -14,6 +20,17 @@ function V4D(xP,yP,zP,tP){
 	// }
 }
 Code.inheritClass(V4D, V3D);
+V4D.prototype.saveToYAML = function(yaml){
+	var DATA = V4D.YAML;
+	yaml.writeNumber(DATA.X, this.x);
+	yaml.writeNumber(DATA.Y, this.y);
+	yaml.writeNumber(DATA.Z, this.z);
+	yaml.writeNumber(DATA.T, this.t);
+}
+V4D.prototype.loadFromObject = function(obj){
+	var DATA = V4D.YAML;
+	this.set(obj[DATA.X],obj[DATA.Y],obj[DATA.Z],obj[DATA.T]);
+}
 // --------------------------------------------------------------------------------------------------------------------- quaternion
 V4D.copy = function(a){
 	return (new V4D()).copy(a);

@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Interface Test</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["InterfaceTest.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var interface = new InterfaceTest();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

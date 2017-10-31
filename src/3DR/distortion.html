@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Distortion</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["R3D.js","Distortion.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var pan = new Distortion();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

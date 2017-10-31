@@ -12,9 +12,10 @@ function Matrix(r,c, vals){
 	}
 }
 Matrix.prototype._init = function(r,c){
+	r = r!==undefined ? r : 0;
+	c = c!==undefined ? c : 0;
 	this._rowCount = r;
 	this._colCount = c;
-	this._total = r*c;
 	this._rows = new Array();
 	var i, j, row = this._rowCount, col = this._colCount;
 	for(j=0;j<row;++j){
@@ -25,7 +26,7 @@ Matrix.prototype._init = function(r,c){
 	}
 }
 Matrix.prototype.saveToYAML = function(yaml){
-	var i, j, r, row=this._rowCount, col=this._colCount;	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
+	var i, j, r, row=this._rowCount, col=this._colCount;
 	var DATA = Matrix.YAML;
 	yaml.writeNumber(DATA.ROWS, this._rowCount);
 	yaml.writeNumber(DATA.COLS, this._colCount);
@@ -37,6 +38,13 @@ Matrix.prototype.saveToYAML = function(yaml){
 			}
 		}
 	yaml.writeArrayEnd();
+}
+Matrix.prototype.loadFromObject = function(obj){
+	var DATA = Matrix.YAML;
+	var rows = obj[DATA.ROWS];
+	var cols = obj[DATA.COLS];
+	var data = obj[DATA.DATA];
+	this.fromArray(data, rows,cols);
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 Matrix.prototype.fromArray = function(list, newRow,newCol){
@@ -389,7 +397,19 @@ Matrix.prototype.cleanCheck = function(exp){
 		for(i=0;i<=colm1;++i){
 			num = this._rows[j][i];
 			if(isNaN(num)||num===undefined){
+				//throw "found: "+num;
 				this._rows[j][i] = 0.0;
+			}
+		}
+	}
+}
+Matrix.prototype.cleanAlert = function(exp){
+	var i, j, rowm1 = this._rowCount-1, colm1 = this._colCount-1, num, val;
+	for(j=0;j<=rowm1;++j){
+		for(i=0;i<=colm1;++i){
+			num = this._rows[j][i];
+			if(isNaN(num)||num===undefined){
+				throw "found: "+num;
 			}
 		}
 	}
@@ -1414,7 +1434,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
 	xTolerance = xTolerance!==undefined?xTolerance:1E-10;
 	epsilon = epsilon!=null ? epsilon : 1E-8; // should be on scale of ~min(x)/1E-6
-	//lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
+	lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
 	var i, j;
 	var x = new Matrix(n,1).setFromArray(xInitial);
 	var xTemp = new Matrix(n,1);
@@ -1426,19 +1446,19 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var jacobian = new Matrix(m,n); 
 	var L = new Matrix(n,n);
 	var errorPrev = -1, errorNext, errorCurr;
-	
 //console.log(epsilon)
+	//var lambda = 1E-3;
 	var lambda = 1E-3;
 	var lambdaScale = 10.0;
-	// if(lambdaScaleFlip){
-	// 	lambdaScale = 1.0/lambdaScale;
-	// }
+	if(lambdaScaleFlip){
+		lambdaScale = 1.0/lambdaScale;
+	}
 	// initial
 	fxn(args, x,y,error);
 	errorCurr = error.getNorm();
 //console.log("errorCurr: "+errorCurr);
 	for(i=0;i<maxIterations; ++i){
-//console.log(i+": "+errorCurr);
+//console.log(i+": "+errorPrev+" > "+errorCurr+" / ");
 		// check function error
 		if(errorCurr<fTolerance){
 			console.log("converge f");
@@ -1452,7 +1472,9 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 			Matrix.sub(dy,yTemp,y); // negative dy
 			jacobian.setColFromCol(j, dy,0);
 		}
+//console.log("x: "+xTemp.toArray());
 		jacobian.scale(1.0/epsilon);
+		//console.log()
 		// dx
 		var jt = Matrix.transpose(jacobian);
 		var jj = Matrix.mult(jt,jacobian);
@@ -1464,8 +1486,9 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		// check x tolernce
 // console.log(Jinv.toString())
 //console.log(dx.getNorm())
+//console.log(dx.toArray()+" : dx")
 		if(dx.getNorm()<xTolerance){
-//			console.log("converge x");
+			console.log("converge x");
 			break;
 		}
 		// x += dx  (putative)
@@ -1473,16 +1496,21 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		// possible new y
 		fxn(args, xTemp,yTemp,error);
 		errorNext = error.getNorm();
-//console.log("=> "+currError+" "+errorNext+"")
-		if(errorNext<errorPrev){
+console.log("=> "+errorPrev+" | "+errorCurr+" => "+errorNext+"")
+		if(errorNext<=errorPrev){
+			console.log(".  >> better")
 			x.copy(xTemp);
 			y.copy(yTemp);
+			fxn(args, xTemp,yTemp,error, true);
 			errorCurr = errorNext;
 			lambda *= lambdaScale;
 		}else{
+			console.log(".  >> worse")
 			lambda /= lambdaScale;
 		}
+		//console.log(" lambda"+lambda)
 	}
+	console.log(" iterations: "+i+"/"+maxIterations);
 	x.toArray(xInitial);
 	y.toArray(yFinal);
 }

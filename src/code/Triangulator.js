@@ -17,17 +17,16 @@ Triangulator.prototype.addPoints = function(points, datas){
 Triangulator.prototype.addPoint = function(point, data){
 	this._mesh.addPoint(point, data);
 }
+Triangulator.prototype.removePoint = function(point, data){
+	this._mesh.removePoint(point, data);
+}
 Triangulator.prototype.removePoints = function(points, datas){
 	if(!points){return;}
-	this._mesh.addPoints(points, datas);
+	this._mesh.removePoints(points, datas);
 }
 Triangulator.prototype.triangle = function(point){
 	return this._mesh.triangle(point, true);
 }
-// Triangulator.prototype.triangles = function(){
-// 	var triangles = this._mesh.triangles(true);
-// 	return triangles;
-// }
 Triangulator.pointsEqualToEpsilon = function(a,b){
 	if(Math.abs(a.x-b.x)<Triangulator.EPSILON && Math.abs(a.y-b.y)<Triangulator.EPSILON){
 		return true;
@@ -68,6 +67,9 @@ Triangulator.removeDuplicates = function(points, datas){
 }
 
 Triangulator.Mesh = function(containingRect){
+	this._init();
+}
+Triangulator.Mesh.prototype._init = function(){
 	this._perimeter = [];
 	this._tris = [];
 	this._edges = [];
@@ -98,7 +100,6 @@ Triangulator.Mesh = function(containingRect){
 	tri.id(this._tris.length);
 	this._tris.push(tri);
 }
-
 Triangulator.Mesh.prototype.points = function(){
 	var points = this._points;
 	var internals = [];
@@ -233,9 +234,39 @@ Triangulator.Mesh.prototype.addPoints = function(points, datas){
 		this.addPoint(point, data);
 	}
 }
-Triangulator.Mesh.prototype.removePoint = function(point, data){ // don't need data
-	// find point
-	// remove ???
+Triangulator.Mesh.prototype.removePoint = function(point, data){ // don't need data??
+	this.removePoints([point],[data]);
+}
+Triangulator.Mesh.prototype.removePoints = function(points, datas){
+	// TODO: MAKE PRETTIER: CURRENTLY BRUTE FORCE
+	var i, j;
+	var pointList = this._points;
+	var dataList = [];
+	for(j=0; j<pointList.length; ++j){
+		dataList[j] = pointList[j].data();
+		console.log(dataList[j])
+	}
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
+		for(j=0; j<pointList.length; ++j){
+			var p = pointList[i];
+			if(p.x==point.x && p.y==point.y){
+				pointList[j] = pointList[pointList.length-1];
+				pointList.pop();
+				dataList[j] = dataList[dataList.length-1];
+				dataList.pop();
+				break;
+			}
+		}
+	}
+	// REDO
+	this._init();
+	this.addPoints(pointList,dataList);
+	// for(j=0; j<pointList.length; ++j){
+	// 	var point = pointList[j];
+	// 	var data = dataList[j];
+	//	this.addPoint(point,data);
+	// }
 }
 Triangulator.Mesh.prototype.addPoint = function(point, data){
 	//console.log("addPoint "+point+" --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ");

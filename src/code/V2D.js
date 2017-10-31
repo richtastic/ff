@@ -1,4 +1,8 @@
 // V2D.js
+V2D.YAML = {
+	X:"x",
+	Y:"y",
+}
 
 V2D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y;
@@ -157,6 +161,15 @@ V2D.fromMagnitudeAndAngle = function(mag, ang){
 function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;
+}
+V2D.prototype.saveToYAML = function(yaml){
+	var DATA = V2D.YAML;
+	yaml.writeNumber(DATA.X, this.x);
+	yaml.writeNumber(DATA.Y, this.y);
+}
+V2D.prototype.loadFromObject = function(obj){
+	var DATA = V2D.YAML;
+	this.set(obj[DATA.X],obj[DATA.Y]);
 }
 V2D.prototype.copy = function(a){
 	if(a===undefined){ return new V2D(this.x,this.y); }

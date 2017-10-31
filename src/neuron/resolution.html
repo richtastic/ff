@@ -12,6 +12,62 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 	var res = new SuperRes();
+return;
+	var angle = Code.radians(15);
+	var scaleX = 1.5;
+	// var sx = scaleX*Math.cos(angle);
+	// var sy = scaleX*Math.sin(angle);
+	// var sx = scaleX*Math.sin(angle);
+	// var sy = scaleX*Math.cos(angle);
+
+	var sin = scaleX*Math.sin(angle);
+	var cos = scaleX*Math.cos(angle);
+	// var sx = Math.atan2(cos,sin);
+	// var sy = Math.atan2(sin,cos);
+	// var sy = Math.atan2(cos,sin);
+	// var sx = Math.atan2(sin,cos);
+
+	// var sy = scaleX*Math.atan(angle);
+	// var sx = scaleX*Math.atan(angle);
+
+	// var sy = scaleX/Math.sin(angle);
+	// var sx = scaleX/Math.cos(angle);
+	// var sx = scaleX * (1-Math.cos(angle));
+	// var sy = scaleX * (1-Math.sin(angle));
+	// var sx = scaleX * (1-Math.cos(Math.PI-angle));
+	// var sy = scaleX * (1-Math.sin(Math.PI-angle));
+	// var sx = scaleX * Math.cos(Math.PI-angle);
+	// var sy = scaleX * Math.sin(Math.PI-angle);
+	// var sx = scaleX * Math.cos(-angle);
+	// var sy = scaleX * Math.sin(-angle);
+	var sin = Math.sin(angle);
+	var cos = Math.cos(angle);
+	var skew = (scaleX-1.0)*cos*sin;
+	var sx = scaleX*cos*cos + sin*sin;
+	var sy = scaleX*sin*sin + cos*cos;
+
+	var A = new Matrix2D();
+		A.identity();
+		A.rotate(-angle);
+		A.scale(scaleX,1.0);
+		A.rotate(angle);
+	var B = new Matrix2D();
+		// B.identity();
+		// B.skewX(skew);
+		// B.skewY(skew);
+		// B.scale(sx,sy);
+		
+		B.set(sx,skew,skew,sy,0,0);
+
+	var v0 = new V2D(1,0);
+	var v1 = new V2D(0,1);
+	var v = [v0,v1];
+	var i, u;
+	for(i=0; i<v.length; ++i){
+		u = v[i];
+		console.log(i+" : " + A.multV2D(u) +" vs " + B.multV2D(u) );
+	}
+
 }
 </script>
 <body onload="pageLoadedFxn();">

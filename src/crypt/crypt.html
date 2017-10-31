@@ -1,7 +1,7 @@
 <html>
 <head>
 <title>FF Crypt</title>
-<script src="../code/FFLoadAll.js"></script>
+<script src="../code/FF.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
 <script type="text/javascript">
@@ -9,22 +9,84 @@
 var ff, scriptLoader;
 // ---------------------------------------------------------
 function pageLoadedFxn(){
-	ff = new FFLoadAll("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn,false);
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn, this);
 }
 function defaultClassesProgressFxn(o){
 	var perc = (o.loaded/o.total);
+	//console.log(" "+perc);
 }
 function defaultClassesLoadedFxn(o){
+	console.log("loaded default");
 	var list = [];
-	scriptLoader = new ScriptLoader("javascrypt/",list,customClassesLoadedFxn,customClassesProgressFxn,false);
+	scriptLoader = new ScriptLoader("javascrypt/",list,customClassesProgressFxn,customClassesLoadedFxn,false);
 	scriptLoader.load();
 }
 function customClassesProgressFxn(){
-	//
+	console.log("prg");
 }
 
 function customClassesLoadedFxn(){
 	console.log("loading complete");
+	testAES();
+	//testA();
+}
+function testAES(data){
+	if(!data){
+		var fileLoader = new FileLoader();
+		fileLoader.setLoadList("./",["plaintext.txt"], this, testAES);
+		fileLoader.binary(true); // Uint8Array
+		fileLoader.load();
+	}else{
+		var files = data.files;
+		var datas = data.contents;
+		// given key expansion:
+		// var key = [0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe, 0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81, 0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7, 0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4];
+		// var plaintext = datas[0];
+		/*
+		w0 = 603deb10 w1 = 15ca71be w2 = 2b73aef0 w3 = 857d7781 w4 = 1f352c07 w5 = 3b6108d7 w6 = 2d9810a3 w7 = 0914dff4 
+		*/
+		//var plaintext = [];
+		/*
+		var key = [0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f];
+		var plaintext = [0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff];
+		var cyphertext = [0x8e,0xa2,0xb7,0xca,0x51,0x67,0x45,0xbf,0xea,0xfc,0x49,0x90,0x4b,0x49,0x60,0x89];
+		console.log("actual: "+Code.printArrayHex(cyphertext,2));
+ 		*/
+		//            p    a    s    s    w    o    r    d
+		var key = [0x70,0x61,0x73,0x73,0x77,0x6F,0x72,0x64];
+			// Code.arrayPushArray(key,key);
+			// Code.arrayPushArray(key,key);
+			// Code.arrayPushArray(key,key);
+			// Code.arrayPushArray(key,key);
+		var plaintext = datas[0];
+//		plaintext = Code.copyArray(plaintext,0,15);
+		//console.log("plaintext: "+plaintext.length);
+		
+		//var type = ByteData.AES_TYPE_CBC;
+		var type = ByteData.AES_TYPE_EBC;
+		var size = ByteData.AES_SIZE_256;
+		//var size = ByteData.AES_SIZE_192;
+		//var size = ByteData.AES_SIZE_128;
+		var cyphertext = ByteData.AESencrypt(key, plaintext, type, size);
+		// // 706c 6169 6e74 6578 7420 6461 7461 2068 6572 65
+		// 70 6C 61 69 6E 74 65 78 74 20 64 61 74 61 20 68 65 72 65
+		
+		console.log("key.      : "+Code.printArrayHex(key,2));
+		console.log("plaintext : "+Code.printArrayHex(plaintext,2));
+		console.log("cyphertext: "+Code.printArrayHex(cyphertext,2));
+		// 
+		var restored = ByteData.AESdecrypt(key, cyphertext, type, size);
+		console.log("check     : "+Code.printArrayHex(restored,2));
+
+		//console.log("check     : "+Code.printArrayHex(restored));
+		/*
+		00000000: 5361 6c74 6564 5f5f 1dd2 e97b bef7 7e89  Salted__...{..~.
+		00000010: 670e b4d2 0aaa 996a adc5 c2db 8746 bcba  g......j.....F..
+		00000020: cb9a 5312 97dd 80ca 2f04 78e2 2054 4eda  ..S...../.x. TN.
+		*/
+	}
+}
+function testA() {
 
 // UNSIGNED INTEGER && DIFFERNTLY-SIZED INTEGER MATH
 // var A = new BinInt(16, true);

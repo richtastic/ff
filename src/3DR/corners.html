@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>Corners</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["AreaMap.js","R3D.js","SIFTDescriptor.js","Corners.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var corners = new Corners();
+}
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
+

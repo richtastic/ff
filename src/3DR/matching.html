@@ -8,9 +8,13 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["AreaMap.js","R3D.js","SIFTDescriptor.js","Matching.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["AreaMap.js","R3D.js","SIFTDescriptor.js","Dense.js","Matching.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	var matching = new Matching();
+	return;
+
+
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();

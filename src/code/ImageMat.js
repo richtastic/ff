@@ -277,6 +277,47 @@ ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include
 	}
 	return sub;
 }
+ImageMat.prototype.subImage = function(offX,offY,wid,hei){
+	var image = new ImageMat(wid,hei);
+	var width = this.width();
+	var height = this.height();
+	var red = ImageMat.subImage(this.red(),width,height, offX,offY,wid,hei);
+	var grn = ImageMat.subImage(this.grn(),width,height, offX,offY,wid,hei);
+	var blu = ImageMat.subImage(this.blu(),width,height, offX,offY,wid,hei);
+	image.red(red);
+	image.grn(grn);
+	image.blu(blu);
+	return image;
+}
+ImageMat.prototype.insert = function(imageB, offX,offY){
+	var iA, iB, jA, jB;
+	var imageA = this;
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthB = imageB.width();
+	var heightB = imageB.height();
+	var startX = Math.max(offX,0);
+	var startY = Math.max(offY,0);
+	var endX = Math.min(offX+widthB,widthA);
+	var endY = Math.min(offY+heightB,heightA);
+	var indexA, indexB;
+	var redA = imageA.red();
+	var grnA = imageA.grn();
+	var bluA = imageA.blu();
+	var redB = imageB.red();
+	var grnB = imageB.grn();
+	var bluB = imageB.blu();
+	console.log(startX,startY,endX,endY,widthA," ... ",heightA,widthB,heightB);
+	for(jB=0, jA=startY; jB<heightB && jA<endY; ++jB, ++jA){
+		for(iB=0, iA=startX; iB<widthB && iA<endX; ++iB, ++iA){
+			indexA = jA*widthA + iA;
+			indexB = jB*widthB + iB;
+			redA[indexA] = redB[indexB];
+			grnA[indexA] = grnB[indexB];
+			bluA[indexA] = bluB[indexB];
+		}
+	}
+}
 // ------------------------------------------------------------------------------------------------------------------------ set
 ImageMat.prototype.setFromArrayARGB = function(data){
 	var i, len = this._r.length;
@@ -1463,6 +1504,21 @@ ImageMat.rangeInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, ma
 	return maxValue - minValue;
 }
 
+ImageMat.prototype.mean = function(){
+	var r = Code.infoArray(this.red())["mean"];
+	var g = Code.infoArray(this.grn())["mean"];
+	var b = Code.infoArray(this.blu())["mean"];
+	var y = (r+g+b)/3.0;
+	return {"r":r,"g":g,"b":b,"y":y};
+}
+		
+ImageMat.prototype.range = function(){
+	var r = ImageMat.range(this.red());
+	var g = ImageMat.range(this.grn());
+	var b = ImageMat.range(this.blu());
+	var y = (r+g+b)/3.0;
+	return {"r":r,"g":g,"b":b,"y":y};
+}
 
 ImageMat.range = function(data, wid,hei){
 	// if(wid==0||hei==0){
@@ -2804,10 +2860,20 @@ ImageMat.extractRectFromPointSimple = function(source, width,height, x,y,scale, 
 	var sY = y - h*0.5;
 	return ImageMat.extractRectSimple(source, width,height, sX,sY,w,h, wid,hei);
 }
+
 ImageMat.extractRectFromMatrix = function(source, width,height, newWidth,newHeight, matrix){
 	// TODO: VERIFY ?
 	// source,sW,sH, wid,hei, projection, interpolationType
 	return ImageMat.extractRectWithProjection(source, width,height, newWidth,newHeight, matrix);
+}
+
+ImageMat.prototype.extractRectFromMatrix = function(newWidth,newHeight, matrix){
+	var width = this.width();
+	var height = this.height();
+	var red = ImageMat.extractRectWithProjection(this.red(), width,height, newWidth,newHeight, matrix);
+	var grn = ImageMat.extractRectWithProjection(this.grn(), width,height, newWidth,newHeight, matrix);
+	var blu = ImageMat.extractRectWithProjection(this.blu(), width,height, newWidth,newHeight, matrix);
+	return new ImageMat(newWidth,newHeight, red, grn, blu);
 }
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 	var newWid = wid+left+right, newHei = hei+top+bot;
@@ -2889,7 +2955,7 @@ ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with oth
 	for(var i=0; i<gradX.length; ++i){
 		vectors[i] = new V2D(gradX[i],gradY[i]);
 	}
-	return vectors;
+	return {"value":vectors, "width":wid, "height":hei};
 }
 ImageMat.gradientMagnitude = function(src,wid,hei, x,y){
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
@@ -3342,6 +3408,12 @@ ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding
 	source = ImageMat.gaussian2DFrom1DFloat(source, totWid,totHei, gauss1D);
 	source = ImageMat.unpadFloat(source, totWid,totHei, padding,padding,padding,padding);
 	return source;
+}
+ImageMat.prototype.getBlurredImage = function(sigma){ 
+	var red = ImageMat.getBlurredImage(this.red(),this.width(),this.height(), sigma);
+	var grn = ImageMat.getBlurredImage(this.grn(),this.width(),this.height(), sigma);
+	var blu = ImageMat.getBlurredImage(this.blu(),this.width(),this.height(), sigma);
+	return new ImageMat(this.width(),this.height(), red,grn,blu);
 }
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 
 	var blurr = (sigma!==undefined) && (sigma!=null);

@@ -1,14 +1,113 @@
 // Rect.js
-Rect.pack = function(rectList, bound){ // updates rectList to locations inside bound
+Rect.pack = function(rectList, bound, isList){ 
+	if(isList){ // pack to N bounds - minimized
+		console.log("RECT PACK LIST");
+		var boundArea = bound.area();
+		rectList = rectList.sort(function(a,b){
+			return a.area()>b.area() ? -1 : 1;
+		});
+		console.log(rectList)
+		var unpackable = []; // too big / invalid / full, 
+		var bins = [];
+		var i, j, k;
+		var maxAreaPercent = 0.95;
+		var iterationsMax = 1E5;
+		for(i=0; i<rectList.length; ++i){
+			var rect = rectList[i];
+			var rectArea = rect.area();
+			console.log("rect: "+rect);
+			//console.log("try "+i+" @ "+rect);
+			if(rect.width()>bound.width() || rect.height>bound.height()){
+				console.log(" => unpackable");
+				unpackable.push(rect);
+			}else{
+				var added = false;
+				for(j=0; j<bins.length; ++j){
+					bin = bins[j];
+					var list = bin["list"];
+					if(list.length==1){
+						var rect0 = list[0];
+						if(rect.width()+rect0.width()>bound.width() && rect.height()+rect0.height()>bound.height()){ // impossible to fit
+							console.log(" => can't combine");
+							continue;
+						}
+					}
+					var area = bin["area"];
+					var newArea = area + rectArea;
+					var areaRatio = newArea/boundArea;
+					if(areaRatio > maxAreaPercent){ //TODO: perhaps look at another metric like 'variabliity' / entropy / etc. : disperse set will more likely have fit
+						// don't bother trying
+						// console.log(" => don't try "+(areaRatio));
+						continue;
+					}
+					// good to try to fit in 
+					// copy all existing rects to remember best placements:
+					var copyList = [];
+					for(k=0; k<list.length; ++k){
+						var r = list[k];
+						var q = r.copy();
+						q.data(r);
+						copyList.push(q);
+					}
+					var q = rect.copy();
+					q.data(rect);
+					copyList.push(q);
+					var result = Rect._packSingle(copyList, bound, iterationsMax);
+					if(result){ // success, use new rectangles
+						for(k=0; k<copyList.length; ++k){
+							var r = copyList[k];
+							var q = r.data();
+							q.set(r.x(),r.y(),r.width(),r.height());
+							copyList[k] = q;
+						}
+						console.log(copyList+"")
+						bin["list"] = copyList;
+						bin["area"] = newArea;
+						added = true;
+						console.log("  => add to bin "+j+" @ "+newArea+"/"+boundArea+" = "+(newArea/boundArea));
+						break;
+					}else{ // keep old list
+						// 
+						console.log("  => keep old");
+					}
+				}
+				if(!added){ // make new bin
+					console.log("  => new bin");
+					rect.x(0);
+					rect.y(0);
+					bin = {"list":[rect], "area":rect.area()};
+					bins.push(bin);
+				}
+			}
+		}
+		// clear up bins to just a list
+		for(i=0; i<bins.length; ++i){
+			bin = bins[i];
+			bins[i] = bin["list"];
+		}
+		return {"invalid":unpackable, "bins":bins};
+	}else{
+		return Rect._packSingle(rectList, bound)
+	}
+}
+Rect._packSingle = function(rectList, bound, iterationsMax){ // updates rectList to locations inside bound
 	var i, j, len = rectList.length;
 	var area = 0;
 	for(i=0;i<len;++i){ area += rectList[i].area(); }
 	if( area>bound.area() ){ return false; }
-	rectList.sort(Rect.sortBigger);
-	for(i=0;i<len;++i){
-		console.log( i+": "+rectList[i].area() );
-	}
-	return true;
+	//rectList.sort(Rect.sortBigger);
+
+
+	var memory = new Memory2D( bound, rectList );
+	// memory.addFunction( Memory2D.EVENT_SUCCESS, this.handleMemorySuccess, this);
+	// memory.addFunction( Memory2D.EVENT_SERIES, this.handleMemorySeries, this);
+	// memory.addFunction( Memory2D.EVENT_FAILURE, this.handleMemoryFailure, this);
+	var result = memory.run(false, iterationsMax);
+	
+	// for(i=0;i<len;++i){
+	// 	console.log( i+": "+rectList[i].area() );
+	// }
+	return result;
 }
 
 Rect.sortBigger = function(a,b){
@@ -86,16 +185,18 @@ Rect.intersect = function(a,b){
 	}
 	return null;
 }
-function Rect(xPos,yPos, w,h){
+function Rect(xPos,yPos, w,h, d){
 	this._x = 0;
 	this._y = 0;
 	this._width = 0;
 	this._height = 0;
+	this._data = null;
 	//this._angle = 0; // origin @ x,y
 	this.x(xPos);
 	this.y(yPos);
 	this.width(w);
 	this.height(h);
+	this.data(d);
 }
 Rect.prototype.fromArray = function(points2D){ // bounding box of points
 	if(points2D && points2D.length>0){
@@ -116,12 +217,19 @@ Rect.prototype.copy = function(r){
 	}
 	return Rect.copy(this);
 }
-Rect.prototype.set = function(pX,pY,wid,hei){
+Rect.prototype.set = function(pX,pY,wid,hei,dat){
 	this.x(pX);
 	this.y(pY);
 	this.width(wid);
 	this.height(hei);
+	this.data(dat);
 	return this;
+}
+Rect.prototype.data = function(d){
+	if(d!==undefined){
+		this._data = d;
+	}
+	return this._data;
 }
 Rect.prototype.x = function(pX){
 	if(pX!==undefined){
@@ -190,6 +298,13 @@ Rect.prototype.pad = function(l,r, b,t){ //
 	h = Math.abs(h);
 	this.set(x,y, w,h);
 	return this;
+}
+Rect.copy = function(r){
+	var rect = new Rect(r.x(),r.y(),r.width(),r.height(),r.data());
+	return rect;
+}
+Rect.prototype.copy = function(){
+	return Rect.copy(this);
 }
 Rect.prototype.toString = function(){
 	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";

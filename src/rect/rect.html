@@ -9,7 +9,7 @@ function pageLoadedFxn(){
 }
 function defaultClassesProgressFxn(o){}
 function defaultClassesLoadedFxn(){
-	var list = ["ResourceRect.js","Memory2D.js","RectanglePacking.js"];
+	var list = ["ResourceRect.js","RectanglePacking.js"];
 	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
 	scriptLoader.load();
 }

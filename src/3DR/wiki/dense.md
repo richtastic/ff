@@ -515,32 +515,145 @@ reliable
 	- see what angle is at various scales at 'ideal' rotation / scale
 		=> throw out non-scaling points
 
+=> SPARSE
+obtain a good F
+
+~1000 initial feature sites
+~500 initial SIFT locations
+~100 matched SIFT locations
+~75 correctly matched sift locations
+~50 F-matrix matched points
 
 
+=> MEDIUM
+given an F, find a lot of good matches
 
+~1000 initial feature sites
+~500 SIFT locations
+~200 SIFT matches
+~100 matched points
 
+=> DENSE
+given F & good seed points, match as many pixels/pixel-areas as possible
+
+~100 initial seed sites
+~mxn * 0.5 pixel-areas
+~1/10 pixels matched
+
+=>
 
 
 
 radial distortion:
 x cost function nonlinear optimization determine k1,k2,p1
 x synthetic - planar to 3D - to estimate K / distortion
-- calculate inverse image distortion from params
+x calculate inverse image distortion from params
 
 texturing:
-- make compiled texture map
+x make compiled texture map
 
 optimal point detection
-- revisit corners
-	- how to get a non-peaked corner [all neighbors are peaks]
-- multiple scales
+x revisit corners
+x how to get a non-peaked corner [all neighbors are peaks]
+x combine scores at multiple scales
 
-medium matching
-- fewer false positivies
+OPTIMIZING POINTS:
+x pass in skew params to optimal check
+x figure out: scale,rotation,s_s,s_r from a given matrix transformation
+	x -theta,scalex,+theta ~ skew_x & skew_y & scale
+x how to decompose an affine matrix into usable interpolation elements
 
-optimal dense matching points
-- multiple scales
+MEDIUM BASICS
+x refine from top results
+- drop worst [SAD? NCC? SIFT?]
+x export in format
+x import in format
+- REFINE LOCATION | ANGLE | SCALE
+	- doesn't appear to be using angles / scales anywhere
+
+DENSE MATCHING LIMITING
+x don't add point if SAD score is too different than neighbors
+x SHOULD HAVE A RANK
+
+
+- USE SIFT-SCALE SPACE
+
+- better comparator ? SAD is pretty shitty
+
+- import prioritized on SAD score and on F line distances
+
+
+
+- SEE HOW DIFFERENT 'SAD' score calculations change final result
+- SEE HOW DIFFERENT 'uniqueness' score calculations change final result
+
+- use best output score points from dense match as input to new dense matching ?
+
+- SAD score is only good for comparing a single match with others'
+	- NOT for comparing across different matches
+- CURRENTLY: most unique goes next
+	- most unique doesn't mean correct
+	- want unique and correct
+	- correct: in line with F location, good SAD score, good NCC score, good 
+	- if the most unique item has no match, it will falsly select wrong one
+
+- COARSE-TO-FINE matching
+	- choose best to-from scores from eg 10 px
+	- use as seed points for eg 5 px
+AFFINE MATRIX: 6 DOF
+	- x, y, angle, skew, scaleX, scaleY
+	 - tx
+	 - ty
+	 - sx
+	 - sy
+	 - rot
+	 - skew (x & y)
+
+- USE 2x IMAGE WITH CORNER DETECTION
+- TRY REFINEMENT ON ALL MATCHES TO GET BEST
+
+--- REFINE SAD => REFINE SIFT & use SIFT SCORE AT END
+	- show refined image comparrisions
+	- extract sift vector from transformed images
+	- compare sift score for ordering
+
+- possible not getting equal matching points to allow for good matching
+	- different key point / scale detection
+		- variability
+
+x point-based scaling
+	- use nearest 2/3 points to create size
+	- picked points is not reliable enough to do this
+
+- SIFT dominant angles are sometimes not matching up
+	x look for multiple (75% of max)
+	- broke SIFT itself optimal rotations
+
+- for each match, do refinement, discard points that don't reach some SAD minimum [over 3+ scales] [~1E-5 ^ 3]
+
+
+
+
+
+
+DENSE error correction:
+x if a neighbor is matched, but the score is poorer than a new match, can the match be un-joined?
+	x use RANK score ?
+	x use SAD score [better?]
+	x is this worth increases processing time?
+
+
+
+OPTIMIZING F:
+- FIX LM METHOD
+- optimize good points by shifting based on SAD needle/haystack
+	- discard bad points by testing SAD needle/haystack point distances
 - 
+- try minimizing lm iteritively by moving the epipole(s?) rather than F
+
+
+IMAGE-MATCHING-OPTIMIZING:
+	- use r,sx,sy to find optimal SAD score
 
 
 triangulation:
@@ -554,36 +667,48 @@ camera control:
 
 
 
+bad / ok / good
+entropies - ok
+	- doesn't differentiate gradual changes vs immediate changes
+uniqueness - good
+	- doesn't bias feature/non-feature, is 
+	- takes longer to compute
+	- precise metric (eg slope or difference or ratio) not known which is best yet
+rangeness - ok
+	- preference for black/white images
+variability - good
+	- items with more 'edges' / 'corners' are favored
+	- can't differentiate simple patterns
+roughness - ?
+	- typically from the mean: rms, avg,  -- would seem to be overall & not differentiate locally
+
+
+
+
+- concentric circles (sharing same point) => use as single object?
+	- only compare each of same group [not as separate entitites]
 
 
 
 
 
+============= next:::::
+
+
+x speed up dense matching by dropping triangulator
+x select FROM points as most cornerlike point inside cell area (fallback to center)
+
+
+- show the points in the 3D preview
+	- delauny triangulate from single image to get rough surface texturing
+- surface approximation from point cloud
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- how to pick triangles in mesh
+	- discontinutities?
+- prefer smoother transitions over abrupt when @ fork
 
 
 

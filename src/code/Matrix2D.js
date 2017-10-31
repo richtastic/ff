@@ -108,12 +108,20 @@ Matrix2D.prototype.mult = function(mA,mB){
 	return this;
 }
 Matrix2D.prototype.multV2D = function(aV,bV){ // a = trans(b)
+	if(bV==undefined){
+		bV = aV;
+		aV = new V2D();
+	}
 	var ax = this.a*bV.x + this.b*bV.y + this.x;
 	aV.y =   this.c*bV.x + this.d*bV.y + this.y;
 	aV.x = ax;
 	return aV;
 }
 Matrix2D.prototype.multV3D = function(aV,bV){ // a = trans(b)
+	if(bV==undefined){
+		bV = aV;
+		aV = new V3D();
+	}
 	var ax = this.a*bV.x + this.b*bV.y + this.x*bV.z;
 	aV.y =   this.c*bV.x + this.d*bV.y + this.y*bV.z;
 	aV.x = ax;
