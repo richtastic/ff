@@ -4022,10 +4022,26 @@ Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 }
 Code.sizeToFitOutside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
 	var s = new V2D();
+	var ratioContents = contentsWidth/contentsHeight;
+	var sizeW = containerHeight * ratioContents;
+	var sizeH = containerWidth / ratioContents;
+	if(sizeW>=containerWidth){
+		s.set(sizeW, sizeW/ratioContents);
+	}else{
+		s.set(sizeH*ratioContents,sizeH);
+	}
 	return s;
 }
 Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
 	var s = new V2D();
+	var ratioContents = contentsWidth/contentsHeight;
+	var sizeW = containerHeight * ratioContents;
+	var sizeH = containerWidth / ratioContents;
+	if(sizeW<containerWidth){
+		s.set(sizeW, sizeW/ratioContents);
+	}else{
+		s.set(sizeH*ratioContents,sizeH);
+	}
 	return s;
 }
 
