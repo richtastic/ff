@@ -1772,8 +1772,99 @@ R3D.homographyFromPoints = function(pointsA,pointsB, angle){
 		H = Matrix.transform2DTranslate(H, pA0.x,pA0.y);
 		H = Matrix.transform2DTranslate(H, tx,ty);
 	}else if(len==3){ // affine. ---- does order matter?
-		H = R3D.affineMatrixLinear(pointsA,pointsB);
-/*
+		// if(pointsA.length==3){
+		//	console.log("want exact solution, not SVD");
+			H = R3D.affineMatrixExact(pointsA,pointsB);
+		// }else{
+		//	H = R3D.affineMatrixLinear(pointsA,pointsB);
+		// }
+	}else{ // if(len>=4){ // projective
+		H = R3D.projectiveMatrixLinear(pointsA,pointsB);
+		//H.scale( 1.0/H.get(2,2) );
+		//H = R3D.projectX(pointsA,pointsB);
+		//H = R3D.DLT2D(pointsA,pointsB);
+	}
+	return H;
+}
+R3D._affineMatrixSteps = function(pointA,pointB,pointC){
+	// if triangular area ~0 => error
+	var transX = -pointA.x;
+	var transY = -pointA.y;
+	var AB = V2D.sub(pointB,pointA);
+	var AC = V2D.sub(pointC,pointA);
+	var angle = -V2D.angleDirection(V2D.DIRX,AB);
+	V2D.rotate(AB, AB,angle);
+	V2D.rotate(AC, AC,angle);
+	var skewX = -AC.x/AC.y;
+//	console.log("   0?: "+(AC.x + AC.y*skewX));
+	var scaleX = 1.0/AB.x;
+	var scaleY = 1.0/AC.y;
+	//console.log("   1?: "+(AC.x + AC.x*skewX));
+	return {"translateX":transX,"translateY":transY,"rotate":angle,"skewX":skewX,"scaleX":scaleX,"scaleY":scaleY};
+}
+R3D.affineMatrixExact = function(pointsA,pointsB){ // first 3 points of A & B
+	var sequenceA = R3D._affineMatrixSteps(pointsA[0],pointsA[1],pointsA[2]);
+	var sequenceB = R3D._affineMatrixSteps(pointsB[0],pointsB[1],pointsB[2]);
+	// console.log(sequenceA);
+	// console.log(sequenceB);
+	var aTX = sequenceA["translateX"];
+	var aTY = sequenceA["translateY"];
+	var aRo = sequenceA["rotate"];
+	var aSK = sequenceA["skewX"];
+	var aSX = sequenceA["scaleX"];
+	var aSY = sequenceA["scaleY"];
+	var bTX = sequenceB["translateX"];
+	var bTY = sequenceB["translateY"];
+	var bRo = sequenceB["rotate"];
+	var bSK = sequenceB["skewX"];
+	var bSX = sequenceB["scaleX"];
+	var bSY = sequenceB["scaleY"];
+	var m = new Matrix(3,3).identity();
+	// forward A
+	m = Matrix.transform2DTranslate(m,aTX,aTY);
+	m = Matrix.transform2DRotate(m,aRo);
+	m = Matrix.transform2DSkewX(m,aSK);
+	m = Matrix.transform2DScale(m,aSX,aSY);
+	// reverse B
+	m = Matrix.transform2DScale(m,1.0/bSX,1.0/bSY);
+	m = Matrix.transform2DSkewX(m,-bSK);
+	m = Matrix.transform2DRotate(m,-bRo);
+	m = Matrix.transform2DTranslate(m,-bTX,-bTY);
+	return m;
+	/*
+	Matrix.transform2DTranslate = function(a,tX,tY){
+	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DScale = function(a,sX,sY){
+	sY = sY!==undefined?sY:sX;
+	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DRotate = function(a,ang){
+	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
+	if(isAngle){
+		ang = Math.tan(ang);
+	}
+	var b = Matrix._transformTemp2D.setFromArray([1.0,ang,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DSkewY = function(a,ang, isAngle){ // give an angle
+	if(isAngle){
+		ang = Math.tan(ang);
+	}
+	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,0.0, ang,1.0,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+//
+Matrix._transformTemp3D = new Matrix(4,4);
+Matrix.transform3DTranslate
+	*/
+	//
+	/*
 // SKEPTICAL IF THIS ACTUALLY WORKS ... OFFSET BY # ?
 		// if area of either triangle is 0 -> bad
 		//H = R3D.affineMatrixLinear(pointsA,pointsB);
@@ -1830,15 +1921,7 @@ R3D.homographyFromPoints = function(pointsA,pointsB, angle){
 		H = Matrix.transform2DRotate(H, angleB);
 		H = Matrix.transform2DTranslate(H, pB0.x,pB0.y);
 */
-	}else{ // if(len>=4){ // projective
-		H = R3D.projectiveMatrixLinear(pointsA,pointsB);
-		//H.scale( 1.0/H.get(2,2) );
-		//H = R3D.projectX(pointsA,pointsB);
-		//H = R3D.DLT2D(pointsA,pointsB);
-	}
-	return H;
 }
-
 R3D.DLT2D = function(pointsFr,pointsTo){
 	var i, j, fr, to, len = pointsFr.length;
 	var v = new V2D(), u = new V2D();
@@ -2264,9 +2347,17 @@ R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textu
 	for(i=0; i<sampleCount; ++i){
 		var area = sameAreaList[i];
 		if(area<maxTriArea/maxAreaDifference){ // drop tris that are relatively too small to be useful
-			console.log("TODO: drop this tri: "+area);
+			console.log("TODO: drop this tri: "+area+" ' "+(maxTriArea/maxAreaDifference));
+			sameAreaList[i] = 0;
+			sameErrorList[i] = 0;
+			// sameTriList.splice(i,1);
+			// sameAreaList.splice(i,1); // remove
+			// --sampleCount;
+			// --i;
+			// continue;
+		}else{
+			sameErrorList[i] = area/totalTriArea;
 		}
-		sameErrorList[i] = area/totalTriArea;
 	}
 	
 	// determine final size of texture
@@ -5357,6 +5448,70 @@ R3D.inputDensePoints = function(yaml){
 	return {"pointsA":pointsA, "pointsB":pointsB, "transforms":transforms, "matches":nativeMatches, "F":F, "imageFrom":imageFrom, "imageTo":imageTo, "cellSize":cellSize};
 }
 
+R3D.output3DPoints = function(points3D, pointLists){ // imageA,imageB transforms, matrixFfwd, imageInfoA, imageInfoB){
+	
+	var yaml = new YAML();
+	var pointA = new V2D(1,2);
+	var pointB = new V2D(3,4);
+	yaml.writeComment("point cloud 3D");
+	yaml.writeComment("created: "+Code.getTimeStamp());
+	yaml.writeBlank();
+
+	yaml.writeArrayStart("points3D");
+	var i, len=points3D.length;
+	yaml.writeComment(" count: "+len);
+	for(i=0; i<len; ++i){
+		var point = points3D[i];
+		yaml.writeObjectStart();
+			point.saveToYAML(yaml);
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+
+	// references to other images
+	yaml.writeArrayStart("points2D");
+		yaml.writeObjectStart();
+			yaml.writeString("image","TODO");
+			yaml.writeArrayStart("points");
+				// .. point array yere
+			yaml.writeArrayEnd();
+		yaml.writeObjectEnd();
+	yaml.writeArrayEnd();
+
+	yaml.writeDocument();
+	return yaml.toString();
+}
+R3D.output3dModel = function(points3D, others){ // imageA,imageB transforms, matrixFfwd, imageInfoA, imageInfoB){
+	console.log(pointsA,pointsB,transforms);
+	var yaml = new YAML();
+	var pointA = new V2D(1,2);
+	var pointB = new V2D(3,4);
+	yaml.writeComment("point cloud 3D");
+	yaml.writeComment("created: "+Code.getTimeStamp());
+	yaml.writeBlank();
+
+	yaml.writeArrayStart("points3D");
+	var i, len=points3D.length;
+	yaml.writeComment(" count: "+len);
+	for(i=0; i<len; ++i){
+		var point = points3D[i];
+		point.saveToYAML(yaml);
+	}
+	yaml.writeArrayEnd();
+
+	// references to other images
+	yaml.writeArrayStart("points2D");
+		yaml.writeObjectStart();
+			yaml.writeString("image","TODO");
+			yaml.writeArrayStart("points");
+				// .. point array yere
+			yaml.writeArrayEnd();
+		yaml.writeObjectEnd();
+	yaml.writeArrayEnd();
+
+	yaml.writeDocument();
+	return yaml.toString();
+}
 R3D.fundamentalRefineFromPoints = function(pointsA,pointsB){
 	var i;
 	for(i=0; i<pointsA.length; ++i){

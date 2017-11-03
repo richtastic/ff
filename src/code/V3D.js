@@ -145,7 +145,7 @@ function V3D(xP,yP,zP){
 }
 Code.inheritClass(V3D, V2D);
 V3D.prototype.saveToYAML = function(yaml){
-	var DATA = V2D.YAML;
+	var DATA = V3D.YAML;
 	yaml.writeNumber(DATA.X, this.x);
 	yaml.writeNumber(DATA.Y, this.y);
 	yaml.writeNumber(DATA.Z, this.z);

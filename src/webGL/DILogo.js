@@ -11,11 +11,9 @@ function DILogo(){
   	this._stage.setBackgroundColor(1.0,1.0,1.0,1.0);
   	this._stage.frustrumAngle(35);
 	this._stage.enableDepthTest();
+this._stage.setViewport(0,0,this._canvas.width(),this._canvas.height());
 	this.loadResources();
-}
-// ------------------------------------------------------------------------------------------------------------------------ 
-// ------------------------------------------------------------------------------------------------------------------------ 
-// ------------------------------------------------------------------------------------------------------------------------ Lessons  
+} 
 DILogo.prototype.loadResources = function(e){
 	//var loader = new ImageLoader("http://learningwebgl.com/",["lessons/lesson05/nehe.gif"],this,this.handleResourcesLoaded,null);
 	//var loader = new ImageLoader("./",["mickey.png"],this,this.handleResourcesLoaded,null);
@@ -23,8 +21,8 @@ DILogo.prototype.loadResources = function(e){
 	this.handleResourcesLoaded();
 }
 DILogo.prototype.handleResourcesLoaded = function(e){
-	//var images = e.images;
-	//this._resourceAImage = images[0];
+	// var images = e.images;
+	// this._resourceAImage = images[0];
 	this.setupFxn();
 }
 DILogo.prototype.icosahedron = function(){ // 20-sided, centered at 0,0,0, radius 1
@@ -229,7 +227,7 @@ DILogo.prototype.bufferTrisAndColors = function(listTris,listColors){
 		tri = listTris[i];
 		triBuffer.push(tri.A().x,tri.A().y,tri.A().z, tri.B().x,tri.B().y,tri.B().z, tri.C().x,tri.C().y,tri.C().z);
 		col = listColors[i];
-		cols = Code.getFloatArrayARGBFromARGB(col);
+		cols = Code.getFloatARGB(col);
 		triColorBuffer.push(cols[1],cols[2],cols[3],cols[0], cols[1],cols[2],cols[3],cols[0], cols[1],cols[2],cols[3],cols[0]);
 	}
 	var tris = this._stage.getBufferFloat32Array(triBuffer,3);
@@ -260,9 +258,8 @@ DILogo.prototype.setupFxn = function(e){
     this._stage.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn, this);
     this._stage.start();
 }
-DILogo.prototype.onEnterFrameFxn = function(count, time){
-//time = 0;
-	var e = time;
+DILogo.prototype.onEnterFrameFxn = function(count){
+	var e = count * 10;
 	var rateBase = 0.0004;
 	var rateHead = rateBase*1.0;
 	var rateEar1 = rateBase*2.0;
@@ -289,7 +286,13 @@ DILogo.prototype.onEnterFrameFxn = function(count, time){
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._headTriColorBuffer);
 	this._stage.matrixReset();
 	this._stage.drawTriangles(this._vertexPositionAttrib, this._headTriBuffer);
+/*
+		thisStage.matrixTranslate(3.0, 0.0, 0.0);
 
+		thisStage.bindArrayFloatBuffer(attrVP, squareVertexPositionBuffer);
+        thisStage.matrixReset();
+        thisStage.drawTriangleList(attrVP, squareVertexPositionBuffer);
+*/
 	// PINK EAR
 	this._stage.matrixIdentity();
 	this._stage.matrixTranslate(-earOffsetX,earOffsetY,zDistEars);

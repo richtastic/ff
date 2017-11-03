@@ -41,7 +41,8 @@ DOTri.prototype.drawImageStatic = function(){
 	if(image && triD && triI){
 		var wid = image.width;
 		var hei = image.height;
-		var trans = R3D.homographyFromPoints([triI.A(),triI.B(),triI.C()], [triD.A(),triD.B(),triD.C()]);
+		var trans = R3D.affineMatrixExact([triI.A(),triI.B(),triI.C()], [triD.A(),triD.B(),triD.C()]);
+		//var trans = R3D.homographyFromPoints([triI.A(),triI.B(),triI.C()], [triD.A(),triD.B(),triD.C()]);
 		var a = trans.toArray();
 		graphics.beginPath();
 		graphics.moveTo(triD.A().x,triD.A().y);

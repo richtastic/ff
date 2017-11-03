@@ -1,0 +1,128 @@
+<html>
+<head>
+<title>Web GL</title>
+<script src="../code/FF.js"></script>
+<script src="../code/FF.js"></script>
+<script type="text/javascript">
+
+function handleOnLoad(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,null,false);
+}
+function defaultClassesLoadedFxn(){
+	//var list = ["DILogo.js"];
+	var list = [];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	var obj = new Test();
+}
+
+function Test(){
+	var frameRate = 1000;
+	var thisCanvas = new Canvas(null,40,40,Canvas.STAGE_FIT_FILL,false,true);
+	var canvas = thisCanvas.canvas();
+	var thisStage = new StageGL(thisCanvas, frameRate, getVertexShaders1(), getFragmentShaders1() );
+	thisCanvas.addListeners();
+	thisStage.setBackgroundColor(1.0,0.0,0.0,1.0);
+	thisStage.enableDepthTest();
+ 	thisStage.frustrumAngle(35);
+	thisStage.setViewport(0,0,canvas.width,canvas.height);
+
+	var gl = thisCanvas.context();
+    var shaderProgram = thisStage.program(0);
+
+    var attrVP;
+
+    function initShaders() {
+    	
+        attrVP = thisStage.enableVertexAttribute("aVertexPosition");
+    }
+
+    var triangleVertexPositionBuffer;
+    var squareVertexPositionBuffer;
+
+    function initBuffers() {
+    	var vertices = [
+             0.0,  1.0,  0.0,
+            -1.0, -1.0,  0.0,
+             1.0, -1.0,  0.0
+        ];
+    	triangleVertexPositionBuffer = thisStage.getBufferFloat32Array(vertices, 3);
+
+        vertices = [
+             1.0,  1.0,  0.0,
+            -1.0,  1.0,  0.0,
+             1.0, -1.0,  0.0,
+            -1.0, -1.0,  0.0
+        ];
+        squareVertexPositionBuffer = thisStage.getBufferFloat32Array(vertices, 3);
+    }
+
+
+    function drawScene() {
+        thisStage.clear();
+
+		thisStage.matrixIdentity();
+		thisStage.matrixTranslate(-1.5, 0.0, -7.0);
+        
+        thisStage.bindArrayFloatBuffer(attrVP, triangleVertexPositionBuffer);
+        thisStage.matrixReset();
+        thisStage.drawTriangles(attrVP, triangleVertexPositionBuffer);
+		/*
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        thisStage.matrixReset();
+        gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+		*/
+
+
+		thisStage.matrixTranslate(3.0, 0.0, 0.0);
+
+		thisStage.bindArrayFloatBuffer(attrVP, squareVertexPositionBuffer);
+        thisStage.matrixReset();
+        thisStage.drawTriangleList(attrVP, squareVertexPositionBuffer);
+		/*
+        gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        thisStage.matrixReset();
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+        */
+    }
+
+	function getVertexShaders1 (){
+		return [" \
+			attribute vec3 aVertexPosition;\
+		    uniform mat4 uMVMatrix;\
+		    uniform mat4 uPMatrix;\
+		    void main(void) { \
+		        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+		    } \
+	    "];
+	}
+
+	function getFragmentShaders1 (){
+	    return ["\
+			precision mediump float; \
+				\
+	    	void main(void) { \
+		        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \
+	    	} \
+	    "];
+	}
+
+    initShaders();
+    initBuffers();
+    drawScene();
+
+}
+
+
+</script>
+
+
+
+</head>
+<body onload="handleOnLoad();">
+</body>
+</html>

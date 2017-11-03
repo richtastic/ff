@@ -12,7 +12,7 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
 	this._countTime = 0;
 	this._programs = [];
 	this.canvas(can);
-	for(var i=0; i<vertexShaders.length;++i){
+	for(var i=0; i<vertexShaders.length; ++i){
 		this.appendProgram( vertexShaders[i], fragmentShaders[i]);
 	}
 	this.selectProgram(0);
@@ -23,11 +23,13 @@ function StageGL(can, fr, vertexShaders, fragmentShaders){
 	this.frustrumAngle(45);
 	this.distanceNear(0.01);
 	this.distanceFar(100.0);
-	//
 	this.addListeners();
 }
 Code.inheritClass(StageGL,Dispatchable);
 // ------------------------------------------------------------------------------------------------------------------------ GET/SET
+StageGL.prototype.program = function(i){
+	return this._programs[i];
+}
 StageGL.prototype.selectProgram = function(i){
 	this._canvas.program( this._programs[i] );
 }
@@ -45,14 +47,14 @@ StageGL.prototype.canvas = function(canvas){
 }
 StageGL.prototype.getBufferFloat32Array = function(list, itemSize){
 	var buffer = this._canvas.getBufferFloat32Array(list,itemSize);
-	buffer.length = list.length/itemSize;
-	buffer.size = itemSize;
+	buffer.lengthX = list.length/itemSize;
+	buffer.sizeX = itemSize;
 	return buffer;
 }
 StageGL.prototype.getBufferUint16ArrayElement = function(list, itemSize){
 	var buffer = this._canvas.getBufferUint16ArrayElement(list,itemSize);
-	buffer.length = list.length/itemSize;
-	buffer.size = itemSize;
+	buffer.lengthX = list.length/itemSize;
+	buffer.sizeX = itemSize;
 	return buffer;
 }
 
@@ -108,6 +110,7 @@ StageGL.prototype.clear = function(){
 	var cutClose = this._distanceNear;
 	var cutFar = this._distanceFar;
 	this.setPerspective(angle,ratio, cutClose,cutFar, this._projectionMatrix);
+	this.matrixReset();
 }
 StageGL.prototype.setPerspective = function(angle, ratio, cutClose, cutFar, matrix){
 	mat4.perspective(angle, ratio, cutClose, cutFar, matrix);
@@ -143,31 +146,33 @@ StageGL.prototype.getMatrixAsArray = function(){
 	return this._modelViewMatrixStack.toArray();
 }
 StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
-	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.size);
+	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.sizeX);
 }
 StageGL.prototype.bindElementArrayBuffer = function(attr,buffer){
-	this._canvas.bindElementArrayBuffer(attr,buffer,buffer.size);
+	this._canvas.bindElementArrayBuffer(attr,buffer,buffer.sizeX);
 }
 StageGL.prototype.drawElementArrayUint16Buffer = function(buffer){
-	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.length);
+	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.lengthX);
 }
 StageGL.prototype.setLineWidth = function(width){
 	this._canvas.setLineWidth(width);
 }
 StageGL.prototype.drawPoints = function(attr,buffer){
-	this._canvas.drawPoints(buffer.length);
+	this._canvas.drawPoints(buffer.lengthX);
 }
 StageGL.prototype.drawLines = function(attr,buffer){
-	this._canvas.drawLines(buffer.length);
+	this._canvas.drawLines(buffer.lengthX);
 }
 StageGL.prototype.drawLineList = function(attr,buffer){
-	this._canvas.drawLineList(buffer.length);
+	this._canvas.drawLineList(buffer.lengthX);
 }
 StageGL.prototype.drawTriangles = function(attr,buffer){
-	this._canvas.drawTriangles(buffer.length);
+	if(buffer.lengthX>0){
+		this._canvas.drawTriangles(buffer.lengthX);
+	}
 }
 StageGL.prototype.drawTriangleList = function(attr,buffer){
-	this._canvas.drawTriangleList(buffer.length);
+	this._canvas.drawTriangleList(buffer.lengthX);
 }
 StageGL.prototype.matrixReset = function(){
 	this._canvas.uniformMatrices(this._projectionMatrix, this._modelViewMatrixStack.matrix());

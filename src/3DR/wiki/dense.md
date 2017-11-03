@@ -705,11 +705,11 @@ TODO:
 
 x dense matching finalize
 x display 3d points
-~ rectangle packing -- too long
-- tri2d display trangle depth ordering
-- tri2d triangle glitching [numerical stability problem]
-	- calculaing affine matrix is bad
-		- try custom non SVD version?
+x rectangle packing -- too long
+x tri2d display trangle depth ordering
+~ tri2d triangle glitching [numerical stability problem]
+	x calculaing affine matrix is bad
+		x try custom non SVD version?
 - use iphone5 calibration K not iphone6 for case study
 - 
 - javascript + php combo to
@@ -726,8 +726,9 @@ x display 3d points
 
 x show the points in the 3D preview
 	x delauny triangulate from single image to get rough surface texturing
+- export 3D points to file
 - surface approximation from point cloud
-
+- export mesh to files/images
 
 
 

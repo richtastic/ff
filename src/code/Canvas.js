@@ -87,6 +87,7 @@ Canvas.WEBGL_SHADER_TYPE_VERTEX = "vertex";
 Canvas.WEBGL_SHADER_TYPE_FRAGMENT = "fragment";
 function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D, autoscale){ // input is canvas HTML object
 	Canvas._.constructor.call(this);
+	this._browserContextScale = 1.0;
 	this._autoScale = autoscale!==undefined ? autoscale : true
 	this._dispatch = new Dispatch();
 	this._jsDispatch = new JSDispatch();
@@ -209,6 +210,7 @@ Canvas.prototype.linkProgram = function(program){
 	return program;
 }
 Canvas.prototype.enableVertexAttribute = function(attribName){
+	console.log(this._program,attribName)
 	var attr = this._context.getAttribLocation(this._program, attribName);
 	this._context.enableVertexAttribArray(attr);
 	this._program[attribName] = attr;
@@ -263,6 +265,8 @@ Canvas.prototype.getBufferUint16ArrayElement = function(list, lengthOfIndividual
 	return buffer;
 }
 Canvas.prototype.setViewport = function(xPos,yPos,wid,hei){
+		this._context.viewportWidth = this.width();
+		this._context.viewportHeight = this.height();
 	return this._context.viewport(xPos,yPos,wid,hei);
 }
 Canvas.prototype.clearViewport = function(){
@@ -350,6 +354,8 @@ Canvas.prototype.width = function(wid){
 	if(arguments.length>0){
 		var ratio = this.presentationScale();
 		this._canvas.width = wid;
+		//Code.setAttribute = function(a,nam,val){
+			Code.setAttribute(this._canvas,"width",wid);
 		// this._canvas.width = wid*ratio;
 		// this._canvas.style.width = wid+'px';
 		//this._updateSizeFromAbsolute(wid,null);
@@ -360,6 +366,7 @@ Canvas.prototype.height = function(hei){
 	if(arguments.length>0){
 		var ratio = this.presentationScale();
 		this._canvas.height = hei;
+		Code.setAttribute(this._canvas,"height",hei);
 		// this._canvas.height = hei*ratio;
 		// this._canvas.style.height= hei+'px';
 		//this._updateSizeFromAbsolute(null,hei);
@@ -374,11 +381,13 @@ Canvas.prototype._updateSizeFromAbsolute = function(wid,hei){// upscale for rend
 			this._canvas.width = wid*ratio;
 			this._canvas.style.width = wid+'px';
 			//this.width(wid);
+			Code.setAttribute(this._canvas,"width",wid);
 		}
 		if(hei){
 			this._canvas.height = hei*ratio;
 			this._canvas.style.height= hei+'px';
 			//this.height(hei);
+			Code.setAttribute(this._canvas,"height",hei);
 		}
 	}
 }

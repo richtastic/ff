@@ -1,7 +1,7 @@
 // WebEx1.js
 
 function WebEx1(){
-	var frameRate = 1000/50;
+	var frameRate = 1000;///5000;
   	this._canvas = new Canvas(null,600,400,Canvas.STAGE_FIT_FIXED,false,true);
     this._stage = new StageGL(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage.setBackgroundColor(0.0,0.0,0.0,1.0);
@@ -19,14 +19,18 @@ WebEx1.prototype.loadResources = function(e){
 WebEx1.prototype.handleResourcesLoaded = function(e){
 	var images = e.images;
 	this._resourceAImage = images[0];
+	console.log(images[0])
 	this.setupFxn1();
 }
 
 WebEx1.prototype.setupFxn1 = function(e){
-//this._angleTri = 0;
 	this._vertexPositionAttrib = this._stage.enableVertexAttribute("aVertexPosition");
-	this._vertexColorAttrib = this._stage.enableVertexAttribute("aVertexColor");
-	this._vertexTextureAttrib = this._stage.enableVertexAttribute("aTextureCoord");
+	//this._vertexColorAttrib = this._stage.enableVertexAttribute("aVertexColor"); // unused
+	//this._vertexTextureAttrib = this._stage.enableVertexAttribute("aTextureCoord");
+
+	// 	this._vertexPositionAttrib = this._stage.enableVertexAttribute("aVertexPosition");
+	// this._vertexColorAttrib = this._stage.enableVertexAttribute("aVertexColor");
+	
 	//this._triBuffer = this._stage.getBufferFloat32Array([0.0,1.0,0.0, -1.0,-1.0,0.0, 1.0,-1.0,0.0], 3);
 	this._triBuffer = this._stage.getBufferFloat32Array([
 		0.0,1.0,0.0, -1.0,-1.0,1.0,   1.0,-1.0,1.0, // front
@@ -85,6 +89,7 @@ WebEx1.prototype.setupFxn1 = function(e){
 		0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 
 		0.0,0.0, 1.0,0.0, 1.0,1.0, 0.0,1.0, 
 	], 2);
+
 	this._resourceATexture = this._stage._canvas.bindTextureImageRGBA(this._resourceAImage);
 	
     this._stage.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn1, this);
@@ -92,6 +97,7 @@ WebEx1.prototype.setupFxn1 = function(e){
 }
 WebEx1.prototype.onEnterFrameFxn1 = function(count, time){
 	var e = time;
+//this._stage.selectProgram(0);
 	// RESET
 	this._stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage.clear();
@@ -103,12 +109,20 @@ WebEx1.prototype.onEnterFrameFxn1 = function(count, time){
 	this._stage.matrixRotate(e*0.000667, 0,0,1);
 	
 	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._triBuffer);
-	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._triColorBuffer);
-	
+	//this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._triColorBuffer);
+console.log(this._vertexPositionAttrib, this._triBuffer)
+// return;
 	this._stage.matrixReset();
 	this._stage.drawTriangles(this._vertexPositionAttrib, this._triBuffer);
+	/*
+	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._headTriBuffer);
+	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._headTriColorBuffer);
+	this._stage.matrixReset();
+	this._stage.drawTriangles(this._vertexPositionAttrib, this._headTriBuffer);
+	*/
+// INVALID_OPERATION: drawArrays: no buffer is bound to enabled attribute
 //this._stage.matrixPop();
-
+return;
 	// SQUARE
 	this._stage.matrixIdentity();
 	this._stage.matrixTranslate(1.5,0.0,-7.0);

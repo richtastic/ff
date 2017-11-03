@@ -29,9 +29,9 @@ this._seeThru = false;
 	this._userMatrixTemp = new Matrix3D().identity();
 	this._userScale = 0.0;
 	//
-	this._ticker = new Ticker(100);
-	this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
-	this._ticker.start();
+	// this._ticker = new Ticker(100);
+	// this._ticker.addFunction(Ticker.EVENT_TICK, this.triangulateTick, this);
+	// this._ticker.start();
 	//
 	this._keyboard = new Keyboard();
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN, this.keyboardKeyDown, this);
@@ -90,33 +90,49 @@ SurfaceTri.prototype.getFragmentShaders1 = function(){
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 SurfaceTri.prototype.onMouseDownFxn3D = function(e){
+	var location = e["location"];
 	this._mouseIsDown = true;
-	this._mouseDownStartPoint = this._mouseSpherePoint(e);
+	this._mouseDownStartPoint = this._mouseSpherePoint(location);
 }
 SurfaceTri.prototype.onMouseUpFxn3D = function(e){
+	var location = e["location"];
 	this._mouseIsDown = false;
-	this._mouseDownEndPoint = this._mouseSpherePoint(e);
-	this._userMatrix.mult(this._userMatrix,this._userMatrixTemp);
+	this._mouseDownEndPoint = this._mouseSpherePoint(location);
+
+	//this._userMatrix.mult(this._userMatrix,this._userMatrixTemp);
+	//var inverse = Matrix3D.inverse(this._userMatrixTemp);
+	//this._userMatrix.mult(this._userMatrix,inverse);
+
+	this._userMatrix.mult(this._userMatrixTemp,this._userMatrix);
+
 	this._userMatrixTemp.identity();
 }
 SurfaceTri.prototype.onMouseMoveFxn3D = function(e){
+	var location = e["location"];
 	if(this._mouseIsDown){
-		this._mouseDownEndPoint = this._mouseSpherePoint(e);
+		this._mouseDownEndPoint = this._mouseSpherePoint(location);
 		this._userMatrixTemp.identity();
-		var angle = -V3D.angle(this._mouseDownStartPoint,this._mouseDownEndPoint);
+		var angle = V3D.angle(this._mouseDownStartPoint,this._mouseDownEndPoint);
 		var dir = V3D.cross(this._mouseDownStartPoint,this._mouseDownEndPoint);
 		dir.norm();
 		this._userMatrixTemp.rotateVector(dir,angle);
 	}
 }
 SurfaceTri.prototype.onMouseWheelFxn3D = function(e){
-	this._userScale += ((e.z>0)?-1:1)*0.25;
+	var location = e["location"];
+	var scroll = e["scroll"];
+	var y = scroll.y;
+	this._userScale += ((y>0)?-1:1)*0.25;
+	this._userScale = Math.min(Math.max(this._userScale,-5),5.0);
 }
 SurfaceTri.prototype._mouseSpherePoint = function(e){
 	return Code.spherePointFrom2DRect(0,0,this._canvas3D.width(),this._canvas3D.height(), e.x,e.y);
 }
 SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
+
 	if(!this._mlsMesh){ return; }
+//	console.log("onEnterFrameFxn3D");
+
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
 	// 
@@ -131,12 +147,14 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 	if(this._displayPoints){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._spherePointBuffer);
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._sphereColorBuffer);
+		this._stage3D.matrixReset();
 		this._stage3D.drawPoints(this._vertexPositionAttrib, this._spherePointBuffer);
 	}
 	// triangles
 	if(this._planeTriangleVertexList && this._displayTriangles){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._planeTriangleVertexList);
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._planeTriangleColorsList);
+		this._stage3D.matrixReset();
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 	}
 	// lines
@@ -144,6 +162,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 		this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._linePointBuffer);
 		this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._lineColorBuffer);
 		this._stage3D.setLineWidth(4.0);
+		this._stage3D.matrixReset();
 		this._stage3D.drawLines(this._vertexPositionAttrib, this._linePointBuffer);
 	}
 	//this._stage3D.matrixPop();
@@ -381,8 +400,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(){
-	var pts = this.generateSpherePoints(5000,1.5,1E-13);
-console.log("PUT FOOD IN ME");
+	var pts = this.generateTorusPoints(3000,3.0,1.0,1E-3);
 	this.startPointCloud(pts);
 }
 SurfaceTri.prototype.setupSphere3D = function(){
@@ -391,6 +409,7 @@ SurfaceTri.prototype.setupSphere3D = function(){
 }
 
 SurfaceTri.prototype.startPointCloud = function(pts){
+	console.log("start point cloud")
 	this._pointCloud = new PointCloud();
 	this._mlsMesh = new MLSMesh();
 
@@ -402,14 +421,18 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 		points.push(p.x,p.y,p.z);
 		colors.push(Math.random(),Math.random(),Math.random(),1.0);
 	}
+	//console.log(points)
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+	
+console.log("trianglate start");
 	// TRIANGULATE
 	this._pointCloud.initWithPointArray(pts, true);
 	console.log(pts);
 	console.log(this._pointCloud);
 	this._mlsMesh.initWithPointCloud(this._pointCloud);
 	this._mlsMesh.triangulateSurface();
+	
 }
 
 
@@ -719,6 +742,23 @@ SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
 		// v.x *= 0.5;
 		// v.y *= 1.0;
 		// v.z *= 2.0;
+	}
+	return list;
+}
+SurfaceTri.prototype.generateTorusPoints = function(count,radiusA,radiusB,error){
+	count = count!==undefined?count:25;
+	radiusA = radiusA!==undefined?radiusA:2.0;
+	radiusB = radiusB!==undefined?radiusB:1.0;
+	error = error!==undefined?error:0.01;
+	var i, list = [];
+	for(i=0;i<count;++i){
+		var angleA = Math.random()*Math.TAU;
+		var angleB = Math.random()*Math.TAU;
+		var errorX = (Math.random()-0.5)*error;
+		var errorY = (Math.random()-0.5)*error;
+		var point = new V3D(radiusA + radiusB*Math.cos(angleB) + errorX,radiusB*Math.sin(angleB) + errorY, 0);
+		point = V3D.rotateAngle(point, V3D.DIRY, angleA);
+		list.push(point);
 	}
 	return list;
 }

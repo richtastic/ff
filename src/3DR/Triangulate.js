@@ -143,6 +143,8 @@ Triangulate.prototype._handleDenseStudyDataLoad = function(o){
 	this._cameraA = cameraA;
 	this._cameraB = cameraB;
 	var points3D = R3D.triangulationDLT(pointsFrom,pointsTo, cameraA,cameraB, K);
+var str = R3D.output3DPoints(points3D, null);
+console.log(str);
 	this._points3D = points3D;
 	// REPLACE 3D DISPLAY
 	console.log(points3D);
@@ -233,7 +235,7 @@ Triangulate.prototype._handleDenseStudyImagesLoad = function(imageInfo){
 		var cB = datas[b]["3"];
 		var cC = datas[c]["3"];
 //		console.log(aA+" ? "+bA);
-		//
+		// 
 		triA = new Tri2D(aA,aB,aC);
 		triB = new Tri2D(bA,bB,bC);
 		tri3D = new Tri3D(cA,cB,cC);
@@ -443,8 +445,9 @@ this._cameraB = cameraB;
 	console.log("triangulationDLT");
 	var points3D = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, K);
 
+
 	// DISPLAY
-	console.log(points3D);
+//	console.log(points3D);
 	var pointList = this._pointList;
 	Code.emptyArray(pointList);
 	for(var i=0; i<points3D.length; ++i){
@@ -1054,35 +1057,38 @@ m.translate(0,0,dist);
 			pList.push(point);
 		}
 	}
-	for(i=0; i<pList.length; ++i){
-		var point = pList[i];
-		var d = new DO();
-		//var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
-		rad = 3.0;
-		//rad = 3;
-		d.graphics().setFill(0xFF00FF00);
-		d.graphics().setLine(1.0, 0xFFFF0000);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(point.x, point.y, rad);
-		d.graphics().fill();
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		dList.push([d,point.z]);
-	}
-	// TODO: outside viewport cipping
-	dList = dList.sort(function(a,b){
-		return a[1] < b[1];
-	});
-	for(i=0; i<dList.length; ++i){
-		var o = dList[i];
-		var d = o[0];
-		display.addChild(d);
+	var renderTris = this._renderTris;
+	var displayTriList = [];
+	if(!renderTris){ // don't show points if tris exist
+		for(i=0; i<pList.length; ++i){
+			var point = pList[i];
+			var d = new DO();
+			//var rad = Math.min(Math.max(400.0/point.z, 1.0),100.0);
+			rad = 3.0;
+			//rad = 3;
+			d.graphics().setFill(0xFF00FF00);
+			d.graphics().setLine(1.0, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(point.x, point.y, rad);
+			d.graphics().fill();
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			dList.push([d,point.z]);
+		}
+		// TODO: outside viewport cipping
+		dList = dList.sort(function(a,b){
+			return a[1] < b[1];
+		});
+		for(i=0; i<dList.length; ++i){
+			var o = dList[i];
+			var d = o[0];
+			display.addChild(d);
+		}
 	}
 
 //console.log(" vs "+this._cameraPointsA.length+", "+this._cameraPointsB.length+", "+this._cameraPoints3D.length+", ")
 	// RENDER TRIS
-	var renderTris = this._renderTris;
-	var displayTriList = [];
+
 	if(renderTris){
 //		console.log("RENDERING...");
 		for(i=0; i<renderTris.length; ++i){
@@ -1144,6 +1150,7 @@ if(cameraPointA&&cameraPointB){
 	if(camPointB2D){
 		list.push(camPointB2D);
 	}
+	/*
 	for(i=0; i<list.length; ++i){
 		var point = list[i];
 		var d = new DO();
@@ -1172,6 +1179,7 @@ if(cameraPointA&&cameraPointB){
 			display.addChild(d);
 		}
 	}
+	*/
 }
 	
 		// crosshair

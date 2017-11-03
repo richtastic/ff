@@ -8,9 +8,58 @@ function pageLoadedFxn(){
 	var ff = new FF("../../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["App3DR.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["App3DR.js", "../R3D.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+/*
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<3; ++i){
+		var p = new V2D( Code.randomFloat(-1,1), Code.randomFloat(-1,1) );
+		pointsA.push(p);
+		var p = new V2D( Code.randomFloat(-1,1), Code.randomFloat(-1,1) );
+		pointsB.push(p);
+	}
+	
+	var pointsA = [new V2D( 2, 3),new V2D(6,4),new V2D(3,6)];
+	//var pointsB = [new V2D(-1,-1),new V2D(1,0),new V2D(2,3)];
+	var pointsB = [new V2D(-1,-1),new V2D(1,0),new V2D(2,-3)];
+	
+	var m = R3D.affineMatrixExact(pointsA,pointsB);
+	var n = R3D.affineMatrixExact(pointsB,pointsA);
+
+	var pointsC = [];
+	var pointsD = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var pA = pointsA[i];
+		var pB = pointsB[i];
+		var pC = m.multV2DtoV2D(new V2D(), pA);
+		var pD = n.multV2DtoV2D(new V2D(), pB);
+		if(false){
+		if(i==0){
+			pA = new V2D(0,0);
+			pB = pA;
+		}else if(i==1){
+			pA = new V2D(1,0);
+			pB = pA;
+		}else if(i==2){
+			pA = new V2D(0,1);
+			pB = pA;
+		}
+		}
+		var diffA = V2D.distance(pA,pD);
+		var diffB = V2D.distance(pB,pC);
+		pointsC.push(pC);
+		pointsD.push(pD);
+		console.log(diffA+" | "+diffB);
+	}
+	console.log("A: "+pointsA+"");
+	console.log("B: "+pointsB+"");
+	console.log("C: "+pointsC+"");
+	console.log("D: "+pointsD+"");
+
+	return;
+*/
 	var app = new App3DR();
 }
 </script>

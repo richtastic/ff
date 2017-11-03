@@ -30,15 +30,16 @@ MLSField.prototype.preCalculations = function(){
 	len = points.length;
 	for(i=0;i<len;++i){
 		point = points[i];
-		try{
+		// try{
+			console.log("pre calc"+i);
 			data = this.projectToSurfaceData(point);
 			point.curvature(data.max);
-		}catch(e){
-			console.log("bandaid");
-			points[i] = points[len-1];
-			--len;
-			--i;
-		}
+		// }catch(e){
+		// 	console.log("bandaid");
+		// 	points[i] = points[len-1];
+		// 	--len;
+		// 	--i;
+		// }
 		
 	} // record bivariate coefficients?
 }

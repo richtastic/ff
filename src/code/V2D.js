@@ -21,7 +21,7 @@ V2D.crossTri = function(a,b,c){ // ab x bc // - area of a TRIANGLE is 1/2 of thi
 }
 V2D.rotate = function(b, a,ang){ // b = a.rotate(ang)
 	if(ang===undefined){
-		ang = a; a = b; b = V2D.copy(a);
+		ang = a; a = b; b = new V2D();
 	}
 	var cos = Math.cos(ang), sin = Math.sin(ang);
 	var x = a.x*cos - a.y*sin;
