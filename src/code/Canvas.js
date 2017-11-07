@@ -132,7 +132,6 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D, autoscale){ // input
 		}
 	}else{
 		var context = this._canvas.getContext("2d");
-		//window.devicePixelRatio = 1
 		var devicePixelRatio = window.devicePixelRatio || 1;
         var backingStoreRatio = context.webkitBackingStorePixelRatio ||
                             context.mozBackingStorePixelRatio ||
@@ -140,9 +139,15 @@ function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D, autoscale){ // input
                             context.oBackingStorePixelRatio ||
                             context.backingStorePixelRatio || 1;
 		var ratio = devicePixelRatio / backingStoreRatio;
-		//console.log("dpr: "+devicePixelRatio+"  | bsr: "+backingStoreRatio+"   ")
 		this._context = context;
 		this._browserContextScale = ratio;
+		// context.imageSmoothingEnabled = false;
+		// var ctx = context;
+		// ctx.mozImageSmoothingEnabled    = false;
+		// ctx.oImageSmoothingEnabled      = false;
+		// ctx.webkitImageSmoothingEnabled = false;
+		// ctx.msImageSmoothingEnabled     = false;
+		// ctx.imageSmoothingEnabled       = false;
 	}
 	if(!this._context){
 		console.log("unable to get any context");
@@ -210,7 +215,6 @@ Canvas.prototype.linkProgram = function(program){
 	return program;
 }
 Canvas.prototype.enableVertexAttribute = function(attribName){
-	console.log(this._program,attribName)
 	var attr = this._context.getAttribLocation(this._program, attribName);
 	this._context.enableVertexAttribArray(attr);
 	this._program[attribName] = attr;
@@ -352,42 +356,32 @@ Canvas.prototype.size = function(wid,hei){
 }
 Canvas.prototype.width = function(wid){
 	if(arguments.length>0){
-		var ratio = this.presentationScale();
-		this._canvas.width = wid;
-		//Code.setAttribute = function(a,nam,val){
-			Code.setAttribute(this._canvas,"width",wid);
-		// this._canvas.width = wid*ratio;
-		// this._canvas.style.width = wid+'px';
-		//this._updateSizeFromAbsolute(wid,null);
+		Code.setAttribute(this._canvas,"width",wid);
+		Code.setStyleWidth(this._canvas,wid+"px");
+		this._updateSizeFromAbsolute(wid,null);
 	}
-	return this._canvas.width;// / this.presentationScale();
+	return this._canvas.width;// / ratio;
 }
 Canvas.prototype.height = function(hei){
 	if(arguments.length>0){
-		var ratio = this.presentationScale();
-		this._canvas.height = hei;
 		Code.setAttribute(this._canvas,"height",hei);
-		// this._canvas.height = hei*ratio;
-		// this._canvas.style.height= hei+'px';
-		//this._updateSizeFromAbsolute(null,hei);
+		Code.setStyleHeight(this._canvas,hei+"px");
+		this._updateSizeFromAbsolute(null,hei);
 	}
-	return this._canvas.height;// / this.presentationScale();
+	return this._canvas.height;// / ratio;
 }
 Canvas.prototype._updateSizeFromAbsolute = function(wid,hei){// upscale for rendering, downscale for css presentation
-	var ratio = this.presentationScale();
-	//console.log("_updateSizeFromAbsolute",wid,hei,"ratio: "+ratio)
-	if(this._autoScale){ // not exactly working as expected
+	if(this._autoScale){
+		var ratio = this.presentationScale();
 		if(wid){
 			this._canvas.width = wid*ratio;
 			this._canvas.style.width = wid+'px';
-			//this.width(wid);
-			Code.setAttribute(this._canvas,"width",wid);
+			//Code.setAttribute(this._canvas,"width",wid);
 		}
 		if(hei){
 			this._canvas.height = hei*ratio;
 			this._canvas.style.height= hei+'px';
-			//this.height(hei);
-			Code.setAttribute(this._canvas,"height",hei);
+			//Code.setAttribute(this._canvas,"height",hei);
 		}
 	}
 }
@@ -419,7 +413,6 @@ Canvas.prototype.pushAlpha = function(a){
 	this._alphaStack.push(this._alphaComposite); // SAVE
 	this._alphaComposite *= a;
 	this._context.globalAlpha = this._alphaComposite;
-	//console.log(this._alphaComposite);
 	return a;
 }
 Canvas.prototype.popAlpha = function(){
@@ -428,7 +421,6 @@ Canvas.prototype.popAlpha = function(){
 	return this._alphaComposite;
 }
 Canvas.prototype.getColorArrayARGB = function(pX,pY,wid,hei){
-//	console.log("getColorArrayARGB: "+this.presentationScale())
 	var matrix = new Matrix2D();
 	matrix.identity();
 	matrix.scale(1.0/this.presentationScale());
@@ -554,12 +546,11 @@ Canvas.prototype.endPath = function(){
 Canvas.prototype.drawRect = function(sX,sY,wX,hY){
 	this._context.rect(sX,sY,wX,hY);
 }
-// Canvas.prototype.strokeRect = function(sX,sY,wX,hY){
-// 	this._context.strokeRect(sX,sY,wX,hY);
-// }
 // ------------------------------------------------------------------------------------------------------------------------ 
 Canvas.prototype.clear = function(){
-	var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
+	//var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
+	this._context.clearRect( 0, 0, this._context.width, this._context.height);
+	
 }
 Canvas.prototype.createLinearGradient = function(sX,sY,eX,eY, locations, colors){ // locations || percentsAndColors
 	var gra = this._context.createLinearGradient(sX,sY,eX,eY);
@@ -779,7 +770,10 @@ Canvas.prototype._handleWindowResizedFxn = function(e){
 	if(this._stageFit==Canvas.STAGE_FIT_FILL){
 		this.width(p.x); this.height(p.y);
 		//this.size(p.x,p.y);
-		this._updateSizeFromAbsolute(p.x,p.y);
+		//this._updateSizeFromAbsolute(p.x,p.y);
+
+
+
 	}else if(this._stageFit==Canvas.STAGE_FIT_SCALE){
 		Code.preserveAspectRatio2D(p,this.width(),this.height(),p.x,p.y);
 		this.width( Math.floor(p.x) ); this.height( Math.floor(p.y) );

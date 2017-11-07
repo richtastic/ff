@@ -210,6 +210,10 @@ Graphics.prototype.bezierTo = function(a,b, c,d, e,f){
 		this._graphics.push( Code.newArray(Graphics.canvasBezierCurveTo,Code.newArray(a,b,c,d,e,f)) );
 	}
 }
+Graphics.prototype.drawLine = function(ax,ay, bx,by){
+	this.moveTo(ax,ay);
+	this.lineTo(bx,by);
+}
 Graphics.prototype.drawPolygon = function(pointList,loop){
 	var i, len = pointList.length;
 	var count = loop ? pointList.length+1 : pointList.length;

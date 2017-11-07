@@ -2042,6 +2042,21 @@ Code.reverseBits = function(value,bits){
 	return rev;
 }
 // angles ----------------------------------------------------
+Code.averageAngles = function(angles, percents){
+	var i;
+	var sumSin = 0;
+	var sumCos = 0;
+	var p = 1.0;
+	for(i=0; i<angles.length; ++i){
+		var angle = angles[i];
+		if(percents){
+			p = percents[i];
+		}
+		sumSin += Math.sin(angle)*p;
+		sumCos += Math.cos(angle)*p;
+	}
+	return Math.atan2(sumSin,sumCos);
+}
 Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
 	// a = Code.angleZeroTwoPi(a);
 	// b = Code.angleZeroTwoPi(b);
@@ -5578,6 +5593,23 @@ Code.colinear = function(a,b,c){
 	}
 	return false;
 }
+Code.circleClosestPointToPoint = function(center,radius, point){
+	var d = V2D.sub(point,center);
+	var distance = d.length();
+	if(distance==0){
+		return null // entire circle is solution
+	}
+	d.scale(radius/distance);
+	d.add(center);
+	return d;
+}
+Code.circleDistanceToPoint = function(center,radius, point){
+	var distance = V2D.distance(point,center);
+	if(distance<radius){
+		return radius-distance;
+	}
+	return distance-radius;
+}
 Code.circleFromPoints = function(a,b,c){
 	if(Code.colinear(a,b,c)){
 		return null;
@@ -5601,6 +5633,17 @@ Code.circleFromPoints = function(a,b,c){
 		return {center:cenA, radius:lenA};
 	}
 	return null;
+}
+
+Code.sphereFromPoints = function(a,b,c,d){
+	var i;
+	if(Code.coplanar(a,b,c,d)){
+		return null;
+	}
+	var AB = V2D.sub(b,a);
+	var AC = V2D.sub(c,a);
+	var AD = V2D.sub(d,a);
+
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 Code.closestPointTLine3D = function(org,dir, point){ // infinite ray and point - t value

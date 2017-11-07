@@ -2,6 +2,10 @@
 <head>
 <title>PSS - Test</title>
 <script src="../code/FF.js"></script>
+
+<meta name="breakpoint" data="retina" media="(-webkit-device-pixel-ratio : 3)">
+
+
 </head>
 <script type="text/javascript">
 function pageLoadedFxn(){
@@ -13,8 +17,33 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 	var pss = new PSSTest();
+
+
+
+return;
+	var can = Code.getID("can");
+	console.log(can);
+
+	var context = can.getContext("2d");
+	console.log(context);
+
+	var devicePixelRatio = window.devicePixelRatio || 1;
+    var backingStoreRatio = context.webkitBackingStorePixelRatio ||
+                        context.mozBackingStorePixelRatio ||
+                        context.msBackingStorePixelRatio ||
+                        context.oBackingStorePixelRatio ||
+                        context.backingStorePixelRatio || 1;
+	console.log(context.backingStorePixelRatio);
+
+	console.log(context.webkitBackingStorePixelRatio);
+	
+	console.log("");
+	console.log(devicePixelRatio);
+	console.log(backingStoreRatio);
+	console.log("");
+	CTX = context;
+	// <canvas width="100" height="100" id="can"></canvas>
 }
 </script>
-<body onload="pageLoadedFxn();">
-</body>
+<body onload="pageLoadedFxn();"></body>
 </html>

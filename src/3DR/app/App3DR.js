@@ -1,7 +1,7 @@
 // App3DR.js
 
 function App3DR(){
-	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();
 	this._stage.addChild(this._root);
@@ -60,6 +60,7 @@ App3DR.prototype._handleCanvasResizeFxn = function(r){
 	this._updateBackground();
 	
 	var screenSize = new V2D( this._canvas.width(), this._canvas.height() );
+	console.log("screenSize: "+screenSize);
 	var screenCenter = screenSize.copy().scale(0.5);
 
 	var grid = this._grid;
