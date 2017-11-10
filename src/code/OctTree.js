@@ -227,7 +227,8 @@ OctTree.Voxel.prototype.childAt = function(i){
 }
 OctTree.Voxel.prototype.maxRadiusSquare = function(){
 	//return (3.0/4.0)*Math.pow(Math.max(this._size.x,this._size.y,this._size.z),2);
-	return V3D.dot(this._size,this._size)*3.0/4.0;
+	//return V3D.dot(this._size,this._size)*3.0/4.0; //  why 3/4?
+	return V3D.dot(this._size,this._size);
 }
 OctTree.Voxel.prototype.centerDistanceToPointSquare = function(p){
 	return V3D.distanceSquare(p,this.center()); //Math.max(0, V3D.distanceSquare(p,this.center())-this.maxRadiusSquare() );
@@ -333,8 +334,8 @@ OctTree.Voxel.prototype.objectsInsideSphereSquare = function(arr,cen,radSqu,srt)
 }
 OctTree.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,srt){
 	if(this._data){
-		var v = srt(this._data);
-		if(v.x<=max.x && v.y<=max.y && v.x<=max.z && v.x>=min.x && v.y>=min.y && v.x>=min.z){
+		var p = srt(this._data);
+		if(v.x<=max.x && v.y<=max.y && v.z<=max.z && v.x>=min.x && v.y>=min.y && v.x>=min.z){
 			arr.push(this._data);
 		}
 	}else{

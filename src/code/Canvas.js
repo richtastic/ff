@@ -352,6 +352,8 @@ Canvas.prototype.contextTransform = function(matrix,b,c,d,e,f){
 	}
 }
 Canvas.prototype.size = function(wid,hei){
+	// TODO: setting?
+	return new V2D(this.width(),this.height());
 	//this._updateSizeFromAbsolute(wid,hei);
 }
 Canvas.prototype.width = function(wid){

@@ -182,8 +182,8 @@ V2D.prototype.wiggle = function(a,b){
 	this.y += (Math.random()-0.5)*b;
 	return this;
 }
-V2D.prototype.set = function(xV,yV){
-	this.x = xV; this.y = yV;
+V2D.prototype.set = function(x,y){
+	this.x = x; this.y = y;
 	return this;
 }
 V2D.prototype.flip = function(a){
@@ -264,14 +264,18 @@ V2D.DIRY = new V2D(0.0,1.0);
 
 
 // HELPERS:
-V2D.meanFromArray = function(pointList){
+V2D.meanFromArray = function(pointList, weights){
 	var i, len=pointList.length, pt;
 	var mean = new V2D();
+	var weight = 1.0;
 	for(i=0; i<len; ++i){
 		pt = pointList[i];
 		//mean.add(pt);
-		mean.x += pt.x;
-		mean.y += pt.y;
+		if(weights){
+			weight = weights[i];
+		}
+		mean.x += pt.x * weight;
+		mean.y += pt.y * weight;
 	}
 	mean.scale(1.0/len);
 	return mean;

@@ -1189,12 +1189,15 @@ Code.addUnique = function(a,o){ // O(n)
 	return false;
 }
 Code.removeElements = function(a,f){ // preserves order O(n)
+	var removed = [];
 	for(var i=0; i<a.length; ++i){
 		if(f(a[i])){
+			removed.push(a[i]);
 			a.splice(i,1);
 			--i;
 		}
 	}
+	return removed;
 }
 Code.printPoints = function(points){
 	var i, point, str = "";
@@ -5424,7 +5427,7 @@ Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and poi
 }
 
 
-
+/*
 Code.sizeToFitRectInRect = function(widthItem,heightItem, widthContainer,heightContainer){
 	var widthToHeight = widthItem/heightItem;
 	var width = heightContainer*widthToHeight;
@@ -5436,9 +5439,6 @@ Code.sizeToFitRectInRect = function(widthItem,heightItem, widthContainer,heightC
 	}
 	return {"width":width, "height":height};
 }
-
-/*
-
 
 */
 Code.parabolaABCFromFocusDirectrix = function(focA,c){ // ax^2 + bx + c
@@ -5633,6 +5633,100 @@ Code.circleFromPoints = function(a,b,c){
 		return {center:cenA, radius:lenA};
 	}
 	return null;
+}
+
+Code.circleCoefficientsToCircle = function(a,b1,b2,c){
+	var center = new V2D(b1,b2).scale(-1.0/(2.0*a));
+	var bSq = b1*b1 + b2*b2;
+	var left = bSq/(4.0*a*a);
+	var right = c/a;
+	var inside = left - right
+	var radius = Math.sqrt(inside);
+	return {"radius":radius,"center":center};
+}
+Code.circleAlgebraic = function(points, location){
+	var N = points.length;
+	var W = null;
+	var weights = null;
+	var i, p;
+	// W
+	if(location){
+		weights = [];
+		for(i=0; i<N; ++i){
+			p = points[i];
+			var dist = V2D.distance(location,p);
+			var weight = 1.0/(1.0 + dist*dist);
+			//var weight = Math.exp(-dist*dist);
+			//weight = Math.pow(weight,2);
+			//weight = Math.pow(dist,-2);
+			weights.push(weight);
+		}
+		W = new Matrix(N,N);
+		for(i=0; i<N; ++i){
+			var weight = weights[i];
+			W.set(i,i, weight);
+		}
+	}
+	// A
+	var A = new Matrix(N,4);
+	for(i=0; i<N; ++i){
+		p = points[i];
+		A.set(i,0, V2D.dot(p,p));
+		A.set(i,1, p.x);
+		A.set(i,2, p.y);
+		A.set(i,3, 1);
+	}
+	if(W!=null){
+		A = Matrix.mult(W,A);
+	}
+	// SVD projection closest
+	var svd = Matrix.SVD(A);
+	var best = svd.V.colToArray(3);
+	var a = best[0];
+	var b1 = best[1];
+	var b2 = best[2];
+	var c = best[3];
+
+	if(a===0){
+		return null;
+	}
+	var circle = Code.circleCoefficientsToCircle(a,b1,b2,c);
+	circle["weights"] = weights;
+	return circle;
+}
+Code._circleGeometricGD = function(args,vals, isUpdate){
+	if(isUpdate){ return; }
+		var points = args[0];
+		var weights = args[1];
+		var cx = vals[0];
+		var cy = vals[1];
+		var rad = vals[2];
+		var cen = new V2D(cx,cy);
+		var error = 0;
+		var weight = 1.0;
+		for(var i=0; i<points.length; ++i){
+			var p = points[i];
+			var dist = Code.circleDistanceToPoint(cen,rad,p);
+			if(weights){
+				weight = weights[i];
+			}
+			error += weight * dist*dist;
+		}
+		return error;
+}
+Code.circleGeometric = function(points, location, maxIterations){
+	maxIterationsmaxIterations = maxIterations!==undefined ? maxIterations : 50;
+	var circle = Code.circleAlgebraic(points, location);
+	var weights = circle["weights"];
+	var center = circle["center"];
+	var radius = circle["radius"];
+
+	var result = Code.gradientDescent(Code._circleGeometricGD, [points, weights], [center.x,center.y,radius], null, maxIterationsmaxIterations, 1E-8);
+	
+	var x = result["x"];
+	center = new V2D(x[0],x[1]);
+	radius = x[2];
+	return {"center":center, "radius":radius, "weights":weights};
 }
 
 Code.sphereFromPoints = function(a,b,c,d){
@@ -6651,6 +6745,9 @@ Code.pointInterpolate2DLinear = function(array, wid,hei, x,y){
 Code.cuboidsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMax.z<bMin.z || aMin.x>bMax.x || aMin.y>bMax.y || aMin.z>bMax.z;
 }
+Code.rectsSeparate = function(aMin,aMax, bMin,bMax){
+	return aMax.x<bMin.x || aMax.y<bMin.y || aMin.x>bMax.x || aMin.y>bMax.y;
+}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parsePointSetString = function(data, max){
@@ -6699,6 +6796,7 @@ Code.copyProperties = function(objectOut,objectIn, override){
 	}
 };
 // ? functions ----------------------------------------------
+/*
 Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 	var ar = wid/hei;
 	v.x = fitWid; v.y = fitWid/ar;
@@ -6706,7 +6804,7 @@ Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 		v.x = fitHei*ar; v.y = fitHei;
 	}
 }
-
+*/
 // conversion functions ----------------------------------------------
 Code.getHex = function (intVal){
 	var str = intVal.toString(16);

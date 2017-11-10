@@ -35,6 +35,9 @@ PriorityQueue.prototype.minimum = function(){
 PriorityQueue.prototype.maximum = function(){
 	return this._tree.maximum();
 }
+PriorityQueue.prototype.pop = function(){
+	return this._tree.popMinimum();
+}
 PriorityQueue.prototype.popMinimum = function(){
 	return this._tree.popMinimum();
 }

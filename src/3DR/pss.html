@@ -12,7 +12,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PSSTest.js","R3D.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["R3D.js","MLSMesh2D.js", "PSSTest.js"],this,classesLoadedFxn)).load();
 	// MLS ... etc
 }
 function classesLoadedFxn(){
