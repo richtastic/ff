@@ -12,6 +12,7 @@ function PSSTest(){
 	this._stage.start();
 	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	this._keyboard = new Keyboard();
+GLOBALCANVAS = this._canvas;
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this._handleKeyboardDown,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
@@ -19,13 +20,17 @@ function PSSTest(){
 	// this._ticker = new Ticker(1);
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
-// GLOBALSTAGE = this._stage;
+GLOBALSTAGE = this._stage;
 // GLOBALSTAGE.root().matrix().scale(1.5);
 	
 	//this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this._handleEnterFrameFxn,this);
 // this.testCircle();
 // return;
 	//this.test2D();
+
+
+	//this.testGradient();
+
 	this.testMLS2D();
 }
 
@@ -344,6 +349,7 @@ PSSTest.prototype._handleEnterFrameFxn = function(t){
 	this.canvasCrap();
 }
 PSSTest.prototype.testMLS2D = function(){
+/*
 	var quadTree = new QuadTree();
 
  var size = this._canvas.size();
@@ -387,13 +393,289 @@ PSSTest.prototype.testMLS2D = function(){
 	//var knn = quadTree.objectsInsideRect( new V2D(point.x-2,point.y-1), new V2D(point.x+2,point.y+1) );
 	quadTree.visualize(this._root, size.x,size.y, point, knn);
 return;
+*/
+GLOBALSTAGE = this._stage;
+	var points = [];
+/*
+	var radius = 5;
+	var offset = new V2D(10,12);
+	var count = 30;
+	var error = 0.01;
+	for(var i=0; i<count; ++i){
+		var p = new V2D();
+		var a = Math.PI*2.0*(i/(count));
+		p.x = offset.x + radius*Math.cos(a) + error*(Math.random()-0.5);
+		p.y = offset.y + radius*Math.sin(a) + error*(Math.random()-0.5);
+		points.push(p);
+	}
+*/
+	points.push(new V2D(0,0));
+	points.push(new V2D(1,0));
+	points.push(new V2D(2.1,0));
+	//points.push(new V2D(2,1));
+	points.push(new V2D(2,2));
+	points.push(new V2D(1,2));
+	points.push(new V2D(0,2));
+	points.push(new V2D(0,1));
 
+
+	points.push(new V2D(2.5,-0.5));
+	points.push(new V2D(3,-1.1));
+	points.push(new V2D(3.5,-1.1));
+	points.push(new V2D(4.5,-1.5));
+	points.push(new V2D(5.5,-0.9));
+
+	points.push(new V2D(5.1,0.0));
+	points.push(new V2D(6.0,0.5));
+	points.push(new V2D(5.8,0.6));
+	points.push(new V2D(5.5,1.0));
+	// points.push(new V2D(4.0,2.0));
+	points.push(new V2D(4.7,1.6));
+	points.push(new V2D(4.4,1.7));
+	points.push(new V2D(4.1,1.9));
+	points.push(new V2D(3.8,2.2));
+	points.push(new V2D(3.5,2.5));
+	points.push(new V2D(3.3,2.1));
+	points.push(new V2D(3.1,1.9));
+	points.push(new V2D(2.9,1.4));
+	points.push(new V2D(2.6,1.3));
+	points.push(new V2D(2.1,1.6));
+	points.push(new V2D(1.5,2.1));
+	//points.push(new V2D(2.1,1.9));
+
+	var mesh = new MLSMesh2D(points,true);
+	// mesh.setPoints();
+	mesh.createSurface();
+	// 
+	var lines = mesh.lines();
+	console.log(lines);
+	//throw "here"
+}
+
+
+
+PSSTest.gradientFromPoints = function(points,normals, location){
+
+	var result = PSSTest.pointInfoField(points, normals, location);
+	return result;
+
+	var weightTotal = 0.0;
+	var gradient = new V2D();
+	var dMagTotal = 0.0;
+	var distanceTotal = 0.0;
+	var normalTotal = new V2D();
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var normal = normals[i];
+		var distance = V2D.distance(point,location)
+		var weight = 1.0 /(1.0+distance);
+		var pointToLocation = V2D.sub(location,point);
+
+		weightTotal += weight;
+
+
+		var dGrad = normal.copy().scale(weight);
+
+		dMagTotal += normal.copy().length() * weight;
+
+		gradient.add(dGrad);
+
+		normalTotal.add( normal.copy().scale(weight) );
+
+
+		var dotDirectionNormal = V2D.dot(normal,pointToLocation);
+		distanceTotal += weight*dotDirectionNormal;
+		// distance*
+
+
+	}
+	gradient.norm();
+	gradient.scale(1.0/weightTotal);
+	gradient.scale(dMagTotal);
+	normalTotal.scale(1.0/weightTotal);
+	distanceTotal *= 1.0/weightTotal;
+	dotDirectionNormal *= 1.0/weightTotal;
+
+	//gradient.scale(dotDirectionNormal);
+
+	//var scalar = gradient.length();
+	var direction = gradient.copy().norm();
+
+
+	scalar = Math.abs(dotDirectionNormal);
+	//scalar = distanceTotal;
+
+	return {"scalar":scalar, "direction":direction, "gradient":gradient};
+}
+
+PSSTest.prototype.testGradient = function(){
 
 	var points = [];
-	var mesh = new MLSMesh2D();
+	var normals = [];
+	points.push( new V2D(-1,0) );
+	points.push( new V2D( 0,0) );
+	points.push( new V2D( 1,0) );
+	points.push( new V2D( 2,0) );
+	normals.push( new V2D(-1,1).norm() );
+	normals.push( new V2D( 0,1).norm() );
+	normals.push( new V2D( 0,1).norm() );
+	normals.push( new V2D( 1,1).norm() );
 
-	throw "here"
+	points.push( new V2D(-1, -1) );
+	points.push( new V2D( 0, -1) );
+	points.push( new V2D( 1, -1) );
+	points.push( new V2D( 2, -1) );
+	normals.push( new V2D(-1, -1).norm() );
+	normals.push( new V2D( 0, -1).norm() );
+	normals.push( new V2D( 0, -1).norm() );
+	normals.push( new V2D( 1, -1).norm() );
+
+	// point.push( new MLSMesh2D.Point( new V2D(0,0), new V2D(0,1).norm() ) );
+	// point.push( new MLSMesh2D.Point( new V2D(1,0), new V2D(0,1).norm() ) );
+
+	// 
+	// area
+	// 
+		
+	var centroid = V2D.meanFromArray(points);
+	var extrema = V2D.extremaFromArray(points);
+	var min = extrema["min"];
+	var max = extrema["max"];
+	var areaWidth = max.x - min.x;
+	var areaHeight = max.y - min.y;
+	var center = new V2D( (min.x+max.x)*0.5, (min.y+max.y)*0.5 );
+
+	var availableWidth = this._canvas.width();
+	var availableHeight = this._canvas.height();
+	
+	var scaleX = availableWidth/areaWidth;
+	var scaleY = availableHeight/areaHeight;
+	// console.log(scaleX,scaleY)
+	var scale = Math.min(scaleX,scaleY);
+	var zoom = Math.min(Math.max(scale, 1E-4), 1E4);
+	zoom = zoom * 0.25; // zoom out a ta
+	zoom = zoom * 0.5;
+
+	// 
+	// display
+	// 
+
+	var display = new DO();
+	this._root.addChild(display);
+	display.matrix().identity();
+	display.matrix().scale(1.0,-1.0);
+	display.matrix().translate(availableWidth*0.5, availableHeight*0.5);
+	display.matrix().translate(center.x*0.5, center.y*0.5);
+
+
+	// create scalar field image
+	var siz = Math.round( Math.min(availableWidth,availableHeight) );
+	var image = new ImageMat(siz,siz);
+
+	
+	for(var j=0; j<siz; ++j){
+		//console.log(j+" / "+siz);
+		for(var i=0; i<siz; ++i){
+			var index = j*siz + i;
+			var x = i - siz*0.5;
+			var y = j - siz*0.5;
+			x = x / zoom;
+			y = y / zoom;
+			x = x + center.x;
+			y = y + center.y;
+			var pnt = new V2D(x,y);
+			// circles
+			var info = PSSTest.gradientFromPoints(points, normals, pnt);
+			var s;
+			if(info){
+				s = info["scalar"];
+				var direction = info["direction"];
+				var gradient = info["gradient"];
+				//s = V2D.dot(V2D.DIRY,direction);
+				if(i%50==0 && j%50==0){
+					var p = pnt.copy().sub(center).scale(zoom);
+					var d = new DO();
+						d.graphics().clear();
+						d.graphics().setLine(1.0,0xFF000000);
+						d.graphics().setFill(0xFF666666);
+						d.graphics().beginPath();
+						d.graphics().drawCircle(p.x,p.y, 4);
+						d.graphics().endPath();
+						d.graphics().fill();
+						d.graphics().strokeLine();
+					display.addChild(d);
+					// dir
+					//var n = direction.copy().scale(25.0);
+					var n = gradient.copy().scale(25.0);
+						var d = new DO();
+							d.graphics().clear();
+							d.graphics().setLine(1.0,0xFF000000);
+							d.graphics().beginPath();
+							d.graphics().drawLine(p.x,p.y, p.x+n.x, p.y+n.y);
+							d.graphics().endPath();
+							d.graphics().strokeLine();
+						display.addChild(d);
+				}
+			}else{
+				console.log("OUT INFO FAIL");
+				s = 0;
+			}
+			//s = 0;
+			//s = j * siz + i;
+			image.red()[index] = s;
+			image.grn()[index] = s;
+			image.blu()[index] = s;
+		}
+	}
+	var heat = ImageMat.normalFloat01(Code.copyArray(image.gry()));
+	heat = ImageMat.invertFloat01(heat);
+		//heat = ImageMat.pow(heat,100);
+		//heat = ImageMat.pow(heat,0.00001);
+		heat = Code.grayscaleFloatToHeatMapFloat(heat);
+		console.log(heat);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat["red"],heat["grn"],heat["blu"], siz, siz);
+		img = new DOImage(img);
+		// img.matrix().scale(1.0);
+		img.matrix().translate(-siz*0.25, -siz*0.25);
+		img.matrix().scale(2.0);
+		//img.matrix().translate((availableWidth-siz)*0.5, (availableHeight-siz)*0.5);
+		//img.matrix().translate(10,10);
+		//display.addChild(img);
+		display.addChildAtIndex(img,0);
+
+	// display points
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
+		//
+		var p = point.copy().sub(center).scale(zoom);
+		var d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(1.0,0xFF000000);
+			d.graphics().setFill(0xFF666666);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y, 4);
+			d.graphics().endPath();
+			d.graphics().fill();
+			d.graphics().strokeLine();
+		display.addChild(d);
+		
+		var normal = normals[i];
+		var n = normal.copy().scale(25.0);
+		var d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(1.0,0xFF000000);
+			d.graphics().beginPath();
+			d.graphics().drawLine(p.x,p.y, p.x+n.x, p.y+n.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+		display.addChild(d);
+		
+	}
 }
+
+
+
+
 PSSTest.prototype.test2D = function(){
 	//console.log("test2D");
 GLOBALSTAGE = this._stage;
@@ -472,8 +754,6 @@ GLOBALSTAGE = this._stage;
 	zoom = zoom * 0.25; // zoom out a tad
 	
 // console.log("available: "+availableWidth+"x"+availableHeight);
-
-
 	var i, j, k;
 	// show points:
 	var display = new DO();
@@ -1387,7 +1667,7 @@ PSSTest.pointInfoGeometric = function (points, normals, location, log){
 		var pnt = currentPoint;
 		var neighborhood = PSSTest.kNN(points,normals, pnt, 6)["points"];
 		//var pnt = V2D.midpoint(neighborhood[0],neighborhood[1]);
-		circle = Code.circleGeometric(neighborhood, pnt, 20);
+		var circle = Code.circleGeometric(neighborhood, pnt, 20);
 		
 		
 		//var neighborhood = PSSTest.kNN(points, location, 6);
@@ -1395,6 +1675,7 @@ PSSTest.pointInfoGeometric = function (points, normals, location, log){
 			var center = circle["center"];
 			var radius = circle["radius"];
 			var weights = circle["weights"];
+// 
 var percents = [];
 var totalWeight = 0;
 for(i=0; i<weights.length; ++i){
@@ -1452,7 +1733,6 @@ if(log){
 
 	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":currentPoint};
 }
-
 PSSTest.derivativeWeightFxn = function(x, p, h){
 	var distance = V2D.distance(x,p);
 	return PSSTest._derivativeWeightGeneric(distance / h);
@@ -1497,18 +1777,18 @@ PSSTest.pointInfoField = function (points, normals, location, log){
 	var x = location;
 	var circle;
 
-if(log){
-var d = new DO();
-var pp = x.copy().scale(ZOM).add(OFF);
-d.graphics().setLine(1.0,0xCCFF0000);
-d.graphics().setFill(0x99FF0000);
-d.graphics().beginPath();
-d.graphics().drawCircle(pp.x,pp.y, 3);
-d.graphics().endPath();
-d.graphics().fill();
-d.graphics().strokeLine();
-GLOBALDISPLAY.addChild(d);
-}
+// if(log){
+// var d = new DO();
+// var pp = x.copy().scale(ZOM).add(OFF);
+// d.graphics().setLine(1.0,0xCCFF0000);
+// d.graphics().setFill(0x99FF0000);
+// d.graphics().beginPath();
+// d.graphics().drawCircle(pp.x,pp.y, 3);
+// d.graphics().endPath();
+// d.graphics().fill();
+// d.graphics().strokeLine();
+// GLOBALDISPLAY.addChild(d);
+// }
 
 	for(iteration=0; iteration<maxIterations; ++iteration){
 		// local
@@ -1559,51 +1839,46 @@ GLOBALDISPLAY.addChild(d);
 		gradient.scale(1.0/weightTotal);
 
 		var gradientNormal = gradient.copy().norm();
-
-		var potential = gradientNormal.copy().scale(potentialTotal);
+	var potential = gradientNormal.copy().scale(potentialTotal);
 		//potential.scale(0.5);
-
 
 
 		//var nextX = V2D.add(x, potential);
 		var nextX = V2D.sub(x, potential);
 		var diffX = V2D.distance(x,nextX);
 		//console.log(diffX+" ?? ");
-if(log){
-var d = new DO();
-var pp = x.copy().scale(ZOM).add(OFF);
-var qq = nextX.copy().scale(ZOM).add(OFF);
-d.graphics().setLine(1.0,0x6600FF00);
-d.graphics().beginPath();
-d.graphics().drawLine(pp.x,pp.y, qq.x,qq.y);
-d.graphics().endPath();
-d.graphics().strokeLine();
-GLOBALDISPLAY.addChild(d);
-}	
+// if(log){
+// var d = new DO();
+// var pp = x.copy().scale(ZOM).add(OFF);
+// var qq = nextX.copy().scale(ZOM).add(OFF);
+// d.graphics().setLine(1.0,0x6600FF00);
+// d.graphics().beginPath();
+// d.graphics().drawLine(pp.x,pp.y, qq.x,qq.y);
+// d.graphics().endPath();
+// d.graphics().strokeLine();
+// GLOBALDISPLAY.addChild(d);
+// }	
 		x = nextX;
-if(log){
-var d = new DO();
-var pp = x.copy().scale(ZOM).add(OFF);
-d.graphics().setLine(1.0,0xCCFF0000);
-d.graphics().setFill(0x99FF0000);
-d.graphics().beginPath();
-d.graphics().drawCircle(pp.x,pp.y, 3);
-d.graphics().endPath();
-d.graphics().fill();
-d.graphics().strokeLine();
-GLOBALDISPLAY.addChild(d);
-console.log(iteration+": "+diffX);
-}
+// if(log){
+// var d = new DO();
+// var pp = x.copy().scale(ZOM).add(OFF);
+// d.graphics().setLine(1.0,0xCCFF0000);
+// d.graphics().setFill(0x99FF0000);
+// d.graphics().beginPath();
+// d.graphics().drawCircle(pp.x,pp.y, 3);
+// d.graphics().endPath();
+// d.graphics().fill();
+// d.graphics().strokeLine();
+// GLOBALDISPLAY.addChild(d);
+// console.log(iteration+": "+diffX);
+// }
 		if(diffX<1E-6){
 			break;
 		}
-//		break;
 	}
-	//console.log(currentPoint+"");
-	//var finalDistance = V2D.distance(location, currentPoint);
 	var finalDistance = V2D.distance(location,x);
 	var circle = null;
-	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x};
+	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":new V2D(0,0), "gradient":new V2D(0,0)};
 }
 
 

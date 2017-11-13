@@ -39,6 +39,7 @@ QuadTree.prototype.kill = function(){
 }
 QuadTree.prototype.visualize = function(display, availableWidth,availableHeight, queryPoint, knn){
 	display = display!==undefined ? display : new DO();
+	var toPoint = this._toPoint;
 	// show
 	display.removeAllChildren();
 	var size = this._root.size();
@@ -46,6 +47,7 @@ QuadTree.prototype.visualize = function(display, availableWidth,availableHeight,
 	var area = Code.sizeToFitInside(availableWidth,availableHeight, size.x,size.y);
 	var scale = area.x/size.x;
 	var leafs = QuadTree._arxels(this._root);
+//	console.log("scale: "+scale+"  mini: "+mini);
 	for(var i=0; i<leafs.length; ++i){
 		var arxel = leafs[i];
 		var min = arxel.min();
@@ -65,7 +67,7 @@ QuadTree.prototype.visualize = function(display, availableWidth,availableHeight,
 		var points = arxel.datas();
 		if(points){
 			for(var j=0; j<points.length; ++j){
-				var point = points[j];
+				var point = toPoint(points[j]);
 				// 
 				var d = new DO();
 					d.graphics().setLine(1.0,0xFF990000);
@@ -200,7 +202,7 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		return false;
 	}
 	var i, len = objects.length;
-	var obj, point, siz, min = new V3D(), max = new V3D();
+	var obj, point, min = new V3D(), max = new V3D();
 	point = this._toPoint(objects[0]);
 	min.copy(point);
 	max.copy(point);
@@ -218,23 +220,20 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 	}
 	return true;
 }
-
+QuadTree._sortAxel = function(a,b){
+	return a.temp() < b.temp() ? -1 : 1;
+}
+QuadTree._sortObject = function(a,b){
+	return a["distance"] < b["distance"] ? -1 : 1;
+}
 QuadTree.prototype.kNN = function(p,k){
 	var toPoint = this._toPoint;
-	var sortAxel = function(a,b){
-		return a.temp() < b.temp() ? -1 : 1;
-	};
-	var sortObject = function(a,b){
-		return a["distance"] < b["distance"] ? -1 : 1;
-	};
-	var axelQueue = new PriorityQueue(sortAxel);
-	var objectQueue = new PriorityQueue(sortObject, k);
+	var axelQueue = new PriorityQueue(QuadTree._sortAxel);
+	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);
 	var axel = this._root;
 	axel.temp(0); // 0 distance
 	axelQueue.push(axel);
-//var count = 50;
 	while(axelQueue.length()>0){
-//		console.log(count+" : "+objectQueue.length()+" / "+axelQueue.length());
 		var axel = axelQueue.popMinimum();
 		var children = axel.children();
 		if(children){
@@ -258,7 +257,6 @@ QuadTree.prototype.kNN = function(p,k){
 					var object = objects[i];
 					var q = toPoint(object);
 					var distance = V2D.distanceSquare(p,q);
-					//distance = Math.sqrt(distance);
 					object = {"object":object, "distance":distance};
 					objectQueue.push(object);
 				}
@@ -266,13 +264,8 @@ QuadTree.prototype.kNN = function(p,k){
 		}
 		// can quit if already have k && nearby cells are further away than best k
 		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"]) ){
-			console.log("enough");
 			break;
 		}
-// --count;
-// if(count<=0){
-// break;
-// }
 	}
 	var objects = objectQueue.toArray();
 	objectQueue.kill();
@@ -293,6 +286,7 @@ QuadTree.prototype.findObject = function(obj,equality){
 	// find cell that would contain object, 
 	// findClosest ?
 	// 	this._root.findObject(obj,this._toPoint);
+	return null;
 }
 // --------------------------------------------------------------------------------------------------------- 
 QuadTree.Arxel = function(){
@@ -323,17 +317,35 @@ QuadTree.Arxel.newChildFromParentAndPoint = function(arxel,v){
 	return child;
 }
 // --------------------------------------------------------------------------------------------------------- 
+QuadTree.Arxel.prototype.toString = function(tab,nex){
+	tab = tab!==undefined?tab:"";
+	nex = nex!==undefined?nex:"  ";
+	var i, child;
+	if(this.this._children){ // wuthout data
+		str += tab+" -["+this._count+"] ";
+		for(i=0;i<this._children.length;++i){
+			child = this._children[i];
+			if(child){
+				str += tab+child.toString(tab+nex,nex)+"";
+			}
+		}
+	}else{ // with data
+		str += tab+" -["+this._count+"] : "+this._datas+" ";
+	}
+	return str;
+}
 QuadTree.Arxel.prototype.kill = function(){
 	this.clear();
 	if(this._children){
 		Code.emptyArray(this._children);
+		this._children = null;
 	}
-	this._children = null;
 	this._parent = null;
 	this._center = null;
 	this._size = null;
 	this._min = null;
 	this._max = null;
+	this._temp = null;
 	if(this._datas){
 		Code.emptyArray(this._datas);
 		this._datas = null;
@@ -341,9 +353,6 @@ QuadTree.Arxel.prototype.kill = function(){
 }
 QuadTree.Arxel.prototype.isLeaf = function(){
 	return this._children == null;
-}
-QuadTree.Arxel.prototype.parent = function(){
-	return this._parent;
 }
 QuadTree.Arxel.prototype.children = function(){
 	return this._children;
@@ -353,25 +362,6 @@ QuadTree.Arxel.prototype.min = function(){
 }
 QuadTree.Arxel.prototype.max = function(){
 	return this._max;
-}
-QuadTree.Arxel.prototype.temp = function(t){
-	if(t!==undefined){
-		this._temp = t;
-	}
-	return this._temp;
-}
-QuadTree.Arxel.prototype.childAt = function(i){
-	if(this._children){
-		if(0<=i && i<=3){
-			return this._children[i];
-		}
-	}
-	return null;
-}
-QuadTree.Arxel.prototype._recheckExtrema = function(){
-	var cen = this._center, siz = this._size;
-	this._min.set(cen.x-0.5*siz.x,cen.y-0.5*siz.y);
-	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y);
 }
 QuadTree.Arxel.prototype.count = function(){
 	return this._count;
@@ -387,6 +377,25 @@ QuadTree.Arxel.prototype.datas = function(d){
 		this._datas = d;
 	}
 	return this._datas;
+}
+QuadTree.Arxel.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
+}
+QuadTree.Arxel.prototype.childAt = function(i){
+	if(this._children){
+		if(0<=i && i<=this._children.length){
+			return this._children[i];
+		}
+	}
+	return null;
+}
+QuadTree.Arxel.prototype._recheckExtrema = function(){
+	var cen = this._center, siz = this._size;
+	this._min.set(cen.x-0.5*siz.x,cen.y-0.5*siz.y);
+	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y);
 }
 QuadTree.Arxel.prototype.addData = function(data){
 	this._datas.push(data);
@@ -432,18 +441,20 @@ QuadTree.Arxel.prototype.clear = function(){
 	this._data = null;
 	this._count = 0;
 }
-QuadTree.Arxel.prototype.maxRadiusSquare = function(){
-	return V2D.dot(this._size,this._size);
+QuadTree.Arxel.prototype.minRadius = function(){
+	return Math.min(this._size.x,this._size.y,this._size.z);
 }
 QuadTree.Arxel.prototype.minRadiusSquare = function(){
-	return Math.pow(Math.min(this._size.x,this._size.y),2);
+	return Math.pow(this.minRadius(),2);
+}
+QuadTree.Arxel.prototype.maxRadiusSquare = function(){
+	return V2D.dot(this._size,this._size);
 }
 QuadTree.Arxel.prototype.centerDistanceToPointSquare = function(p){
 	return V2D.distanceSquare(p,this._center);
 }
 QuadTree.Arxel.prototype.insertObject = function(obj,toPoint){
-	// empty
-	if(this._count==0){
+	if(this._count==0){ // empty
 		++this._count;
 		this._datas = [obj];
 		return;
@@ -486,7 +497,7 @@ QuadTree.Arxel.prototype.insertObject = function(obj,toPoint){
 	}
 }
 QuadTree.Arxel.prototype.removeObject = function(obj,toPoint){
-	if(this._datas){ // 
+	if(this._datas){ // is leaf
 		for(var i=0; i<this._datas.length; ++i){
 			if(obj==this._datas[i]){
 				this._datas.splice(i,);

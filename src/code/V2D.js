@@ -113,7 +113,6 @@ V2D.norm = function(a,b){
 		a = b.copy();
 	}
 	a.copy(b);
-	//V2D.prototype.norm.apply(a);
 	a.norm();
 	return a;
 }
@@ -209,8 +208,9 @@ V2D.prototype.lengthSquare = function(){
 }
 V2D.prototype.norm = function(){
 	var dist = Math.sqrt(this.x*this.x+this.y*this.y);
-	if(dist==0){ return; }
-	this.x = this.x/dist; this.y = this.y/dist;
+	if(dist!=0){
+		this.x = this.x/dist; this.y = this.y/dist;
+	}
 	return this;
 }
 V2D.prototype.scale = function(c,d){
