@@ -29,8 +29,8 @@ GLOBALSTAGE = this._stage;
 	//this.test2D();
 
 
-	//this.testGradient();
-
+// this.testGradient();
+// return;
 	this.testMLS2D();
 }
 
@@ -456,8 +456,8 @@ GLOBALSTAGE = this._stage;
 
 PSSTest.gradientFromPoints = function(points,normals, location){
 
-	var result = PSSTest.pointInfoField(points, normals, location);
-	return result;
+	// var result = PSSTest.pointInfoField(points, normals, location);
+	// return result;
 
 	var weightTotal = 0.0;
 	var gradient = new V2D();
@@ -530,6 +530,65 @@ PSSTest.prototype.testGradient = function(){
 	normals.push( new V2D( 0, -1).norm() );
 	normals.push( new V2D( 1, -1).norm() );
 
+
+
+	var points = []; var normals = [];
+points.push(new V2D(0,0));
+normals.push(new V2D(0.7200289257753478,0.6939440510925925));
+points.push(new V2D(1,0));
+normals.push(new V2D(0.2921212128774295,0.956381303135428));
+points.push(new V2D(2.1,0));
+normals.push(new V2D(0.8160192111540634,0.5780247806344465));
+points.push(new V2D(2,2));
+normals.push(new V2D(-0.5869497343669737,-0.8096233749877402));
+points.push(new V2D(1,2));
+normals.push(new V2D(0.086643149701715,-0.9962394112911646));
+points.push(new V2D(0,2));
+normals.push(new V2D(0.7082504711454083,-0.7059612383993241));
+points.push(new V2D(0,1));
+normals.push(new V2D(0.9999163509814497,0.012934103754899976));
+points.push(new V2D(2.5,-0.5));
+normals.push(new V2D(0.6779163528089001,0.7351390471157677));
+points.push(new V2D(3,-1.1));
+normals.push(new V2D(0.4150957969464452,0.9097777087604397));
+points.push(new V2D(3.5,-1.1));
+normals.push(new V2D(0.2256622309542407,0.974205603310079));
+points.push(new V2D(4.5,-1.5));
+normals.push(new V2D(-0.2912029213264913,0.9566613082020811));
+points.push(new V2D(5.5,-0.9));
+normals.push(new V2D(-0.823016589243789,0.568017335852983));
+points.push(new V2D(5.1,0));
+normals.push(new V2D(-0.9179078373325155,0.39679365186900917));
+points.push(new V2D(6,0.5));
+normals.push(new V2D(-0.9999928870166738,-0.0037717258725555136));
+points.push(new V2D(5.8,0.6));
+normals.push(new V2D(-0.994580089091842,-0.10397329648550979));
+points.push(new V2D(5.5,1));
+normals.push(new V2D(-0.9181728888584406,-0.3961799416494298));
+points.push(new V2D(4.7,1.6));
+normals.push(new V2D(-0.5846143418875563,-0.8113113281961367));
+points.push(new V2D(4.4,1.7));
+normals.push(new V2D(-0.1532889531070638,-0.988181408879635));
+points.push(new V2D(4.1,1.9));
+normals.push(new V2D(-0.4258974151175154,-0.9047714583231605));
+points.push(new V2D(3.8,2.2));
+normals.push(new V2D(-0.2881844322347032,-0.9575749229264316));
+points.push(new V2D(3.5,2.5));
+normals.push(new V2D(0.20283154623762717,-0.9792136456620962));
+points.push(new V2D(3.3,2.1));
+normals.push(new V2D(0.5374641633022378,-0.8432865901731307));
+points.push(new V2D(3.1,1.9));
+normals.push(new V2D(0.7529180281702184,-0.658114308350966));
+points.push(new V2D(2.9,1.4));
+normals.push(new V2D(0.4817964041366033,-0.8762831876517082));
+points.push(new V2D(2.6,1.3));
+normals.push(new V2D(-0.010450913933765993,-0.9999453877077232));
+points.push(new V2D(2.1,1.6));
+normals.push(new V2D(-0.6361634341231577,-0.7715543306110275));
+points.push(new V2D(1.5,2.1));
+normals.push(new V2D(-0.18124785520690792,-0.9834374484342641));
+
+
 	// point.push( new MLSMesh2D.Point( new V2D(0,0), new V2D(0,1).norm() ) );
 	// point.push( new MLSMesh2D.Point( new V2D(1,0), new V2D(0,1).norm() ) );
 
@@ -553,7 +612,8 @@ PSSTest.prototype.testGradient = function(){
 	// console.log(scaleX,scaleY)
 	var scale = Math.min(scaleX,scaleY);
 	var zoom = Math.min(Math.max(scale, 1E-4), 1E4);
-	zoom = zoom * 0.25; // zoom out a ta
+	//zoom = zoom * 0.25; // zoom out a ta
+	//zoom = zoom * 0.5;
 	zoom = zoom * 0.5;
 
 	// 

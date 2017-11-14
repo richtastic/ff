@@ -60,6 +60,19 @@ MLSMesh2D.prototype.angle = function(a){ // constant angle of curvature for
 	}
 	return this._angle;
 }
+MLSMesh2D.prototype.printPoints = function(){
+	var points = this._points;
+	var str = "var points = []; var normals = [];";
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var p = point.point();
+		var n = point.normal();
+		str += "\n"+"points.push(new V2D("+p.x+","+p.y+"));";
+		str += " "+"normals.push(new V2D("+n.x+","+n.y+"));";
+	}
+	str += "\n";
+	console.log(str);
+}
 MLSMesh2D.prototype.createSurface = function(){ // main function to create the surface
 	console.log("createSurface")
 //(display, availableWidth,availableHeight, queryPoint, knn){
@@ -69,6 +82,7 @@ var size = canvas.size();
 this._quadTree.visualize(GLOBALSTAGE.root(), size.x,size.y);
 	this._estimateNormals();
 	this._propagateNormals();
+//this.printPoints();
 	this._setupStructures();
 	this._iterateFronts();
 	// 
@@ -124,13 +138,239 @@ MLSMesh2D.prototype.lines = function(){
 	return null;
 }
 MLSMesh2D.prototype._setupStructures = function(){
-	//
+	//fronts = 
+}
+MLSMesh2D._sortCurvature = function(a,b){ // largest circle first == smallest curvature
+	if(a==b){
+		return 0;
+	}
+	return Math.abs(a.radius()) > Math.abs(b.radius()) ? -1 : 1;
 }
 MLSMesh2D.prototype._iterateFronts = function(){
-	// ... 
-	this._projectPointToSurface( new V2D(5,5) );
-}
 
+// MLSMesh2D.Line;
+// MLSMesh2D.Mesh
+	var i, j;
+	var point;
+	var points = this._points;
+	var tree = this._quadTree;
+	var fronts = [];
+	var curvatureQueue = new PriorityQueue(MLSMesh2D._sortCurvature);
+	// find first point == flattest point -> radius = 0
+
+	for(i=0; i<points.length; ++i){
+		point = points[i];
+		curvatureQueue.push(point);
+	}
+
+	var firstPoint = curvatureQueue.pop(); // minimum();
+	firstPoint = this._projectPointToSurface(firstPoint.point());
+
+	var radius;
+	var kappa1 = this._maxCurvature(firstPoint);
+	radius = 1.0/kappa1;
+	// console.log(radius);
+	var kappa2 = this._maxCurvature(firstPoint, radius);
+	var minK = Math.min(kappa1,kappa2);
+	var maxK = Math.max(kappa1,kappa2);
+//console.log("["+minK+" | "+maxK+"]");
+	var kIn = (minK+maxK)*0.5;
+	var kOut;
+	var iterations = 0;
+	var maxRatio = 1.001;
+	while(iterations<10 && kIn>minK && kIn<maxK && (maxK/minK)>maxRatio){
+		radius = 1.0/kIn;
+		kOut = this._maxCurvature(firstPoint, radius);
+		if(kOut>kIn){
+			minK = kIn;
+		}else{ // kOut<=kIn
+			maxK = kIn;
+		}
+		//console.log("["+minK+" | "+maxK+"]  ==  ["+(1.0/maxK)+" | "+(1.0/minK)+"]    |  "+(maxK/minK));
+		var kIn = (minK+maxK)*0.5;
+		++iterations;
+	}
+	// make edge 
+	var edgeLength = 1.0/kIn;
+		edgeLength *= this._angle; // osculating sphere constant angle
+	var info = this._surfaceInfoAtPoint(firstPoint);
+//	console.log(info);
+	var normal = info["normal"];
+	var radius = info["radius"];
+	var curvature = radius;
+	var dir = V2D.rotate(normal,Math.PI*0.5);
+	var a = dir.copy().scale( 0.5*edgeLength).add(firstPoint);
+	var b = dir.copy().scale(-0.5*edgeLength).add(firstPoint);
+		a = this._projectPointToSurface(a);
+		b = this._projectPointToSurface(b);
+	// console.log(a+"");
+	// console.log(b+"");
+	//console.log(MLSMesh2D.Edge)
+	var edge = new MLSMesh2D.Edge(a,b);
+//	edge.normal(normal);
+	edge.ideaLength(edgeLength);
+
+var drawEdge = function(a,b, color){
+	color = color!==undefined ? color : 0xFF0000FF;
+// scale: 18.75  mini: <-1,-3.5>
+// scale: 37.5  mini: <-1,-3.5>
+//var sca = 52.25;
+//var sca = 37.5;
+var sca = 42.5;
+var min = new V2D(-1,-3.5);
+var pp = a.copy().sub(min).scale(sca);
+var qq = b.copy().sub(min).scale(sca);
+//var rr = circle["radius"] * sca;
+//console.log(pp+". "+qq);
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0,color);
+	//d.graphics().setFill(0xFF666666);
+	d.graphics().beginPath();
+	//d.graphics().drawCircle(pp.x,pp.y, rr);
+	d.graphics().drawLine(pp.x,pp.y, qq.x,qq.y);
+	d.graphics().endPath();
+	//d.graphics().fill();
+	d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+					
+}
+	//this._angle
+
+	drawEdge(a,b);
+
+	var pointFront = new MLSMesh2D.PointFront();
+	console.log(pointFront)
+	pointFront.edges([edge]);
+
+	var iterations = 0;
+//var totalLength = 0;
+
+	while(iterations<250){
+		console.log(iterations+" ........... ");
+		var edge = pointFront.best();
+		//console.log(edge);
+		var edgePoint = null;
+		var edgeDir = null;
+		var isNext = false;
+		if(!edge.next()){
+			edgePoint = edge.b();
+			edgeDir = V2D.sub(edge.b(),edge.a());
+			isNext = true;
+		}else if(!edge.prev()){
+			edgePoint = edge.a();
+			edgeDir = V2D.sub(edge.a(),edge.b());
+			isNext = false;
+		}else{
+			throw "end ed ...";
+		}
+		var info = this._surfaceInfoAtPoint(edgePoint);
+		var radius = info["radius"];
+		var normal = info["normal"];
+		var searchRadius = radius * 2.0;
+		var maxCurvature = this._maxCurvature(edgePoint, searchRadius);
+		var edgeLength = 1.0/maxCurvature;
+		//console.log("edgeLength: "+edgeLength);
+			edgeLength *= this._angle;
+//edgeLength = Math.max(edgeLength,0.4);
+console.log("edgeLength: "+edgeLength)
+			var dir = V2D.rotate(normal,Math.PI*0.5);
+//console.log("dir a: "+dir);
+			var dot = V2D.dot(dir,edgeDir);
+			if( dot<0 ){
+				dir.scale(-1.0);
+			}
+		c = dir.copy().scale(edgeLength).add(edgePoint);
+var cA = c;
+drawEdge(edgePoint,c, 0xFF00FF00);
+		c = this._projectPointToSurface(c);
+var cB = c;
+drawEdge(cA,cB, 0xFFFF0000);
+		if(isNext){
+			a = edgePoint;
+			b = c;
+		}else{
+			a = c;
+			b = edgePoint;
+		}
+		console.log("A: "+a);
+		console.log("B: "+b);
+		
+		var e = new MLSMesh2D.Edge(a,b);
+			var m = V2D.midpoint(a,b);
+			m = this._projectPointToSurface(m);
+			var info = this._surfaceInfoAtPoint(m);
+			var radius = info["radius"];
+			// var normal = info["normal"];
+			// var center = info["center"];
+			e.ideaLength(radius*this._angle);
+		console.log(" EDGE LENGTH: "+e.length());
+//totalLength += e.length();
+		if(isNext){
+			pointFront.pushNext(e);
+		}else{
+			pointFront.pushPrev(e);
+		}
+
+
+		drawEdge(a,b);
+++iterations;
+//		break;
+	}
+
+//console.log("totalLength: "+totalLength);
+
+
+// CAP INFINITE LENGTHS TO SOMETHING ?
+/*
+pick flattest point
+e => set edge to curvature at point
+e1 = e
+e2 = max(curvature in sphere 2*e)
+
+interval = [min(e1,e2), max(e1,e2)]
+
+eIn = midpoint(e1,e2)
+while(eIn>minE && eIn<maxE maxiter<N){
+	eOut = radiusInField(eIn)
+	assert(eOut>=minE && eOut<=maxE)
+	if(eOut<eIn){ // keep minimum
+		maxE = eIn
+	}else if(eOut>eIn){ // keep maximum
+		minE = eIn
+	}
+	eIn = midpoint(minE,maxE)
+}
+eIn = minE // use smallest radius of curvature
+
+*/
+	// 
+
+
+	// ... 
+	// this._projectPointToSurface( new V2D(5,5) );
+	// ...
+}
+MLSMesh2D.prototype._surfaceInfoAtPoint = function(location){
+	var maxNeighbors = 6;
+	var neighborhood = this._quadTree.kNN(location, maxNeighbors);
+	var neighs = [];
+	for(var i=0; i<neighborhood.length; ++i){
+		neighs.push( neighborhood[i].point() );
+	}
+	var circle = Code.circleGeometric(neighs, location, 50);
+	var center = circle["center"];
+	var radius = circle["radius"];
+	var curvature = 1.0/radius;
+	var normal = V2D.sub(location,center).norm();
+	var closest = neighborhood[0];
+	// orient normal in consistent surface direction
+		var dot = V2D.dot( V2D.sub(closest.point(),center), normal);
+		if(dot<0){
+			normal.scale(-1);
+		}
+	return {"center":center, "radius":radius, "curvature":curvature, "normal":normal};
+}
 MLSMesh2D.prototype._propagateNormals = function(){
 	var i, point, normal;
 	var points = this._points;
@@ -217,10 +457,24 @@ MLSMesh2D._sortConfidence = function(a,b){
 		}
 	}
 }
-MLSMesh2D.prototype._curvature = function(location){
-	return null;
+MLSMesh2D.prototype._maxCurvature = function(location, radius){
+	if(!radius){
+		var nearest = this._quadTree.closestObject(location);
+		var curvature = nearest.curvature();
+		return curvature;
+	}
+	var neighborhood = this._quadTree.objectsInsideCircle(location, radius);	
+	var maxCurvature = null;
+	for(var i=0; i<neighborhood.length; ++i){
+		var neighbor = neighborhood[i];
+		var curvature = neighbor.curvature();
+		if(maxCurvature===null || maxCurvature<curvature){
+			maxCurvature = curvature;
+		}
+	}
+	return maxCurvature;
 }
-MLSMesh2D.prototype._projectPointToSurface = function(location){
+MLSMesh2D.prototype._projectPointToSurface = function(location, data){
 	//(points, normals, location, log)
 	var points = this._points;
 // 	// ...
@@ -239,7 +493,8 @@ MLSMesh2D.prototype._projectPointToSurface = function(location){
 	var i, j, iteration;
 	var x = location;
 	var circle;
-	var maxNeighbors = 6;
+	var maxNeighbors = 6; // ..... larger number projects more only to closest point
+	// lower number is more jagged, but doesnt't screq up projection
 	for(iteration=0; iteration<maxIterations; ++iteration){
 
 		// var info = PSSTest.kNN(points,normals, x, 9); // min of 4 [nth is basically discarded with w = 0]
@@ -298,14 +553,20 @@ MLSMesh2D.prototype._projectPointToSurface = function(location){
 		var nextX = V2D.sub(x, potential);
 		var diffX = V2D.distance(x,nextX);
 		x = nextX;
-console.log(nextX+"");
+//console.log(nextX+"");
 		if(diffX<1E-6){
 			break;
 		}
 	}
 	var finalDistance = V2D.distance(location,x);
-	var circle = null;
-	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":new V2D(0,0), "gradient":new V2D(0,0)};
+	
+	if(data){
+		// var circle = null;
+		// var center = circle["center"];
+		// var normal = 
+		return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":new V2D(0,0), "gradient":new V2D(0,0)};
+	}
+	return x;
 }
 
 
@@ -334,12 +595,13 @@ MLSMesh2D.prototype._estimateNormals = function(){
 				neighs.push( neighborhood[k].point() );
 			}
 			var circle = Code.circleGeometric(neighs, point.point(), 50);
+
 			var center = circle["center"];
 			var radius = circle["radius"];
 			var normal = V2D.sub(point.point(),center);
 			normal.norm();
 			normals.push(normal);
-			if(j==normalBase){
+			if(j==neighborIndexBase){
 				radiusBase = radius;
 			}
 		}
@@ -372,12 +634,6 @@ MLSMesh2D.Point = function(point, normal){
 	this.point(point);
 	this.normal(normal);
 }
-MLSMesh2D.Point.prototype.point = function(b){
-	if(b!==undefined){
-		this._bidirection = b;
-	}
-	return this._bidirection = b;
-}
 MLSMesh2D.Point.prototype.point = function(p){
 	if(p!==undefined){
 		this._point = p;
@@ -394,7 +650,7 @@ MLSMesh2D.Point.prototype.curvature = function(c){
 	if(c!==undefined){
 		this._curvature = c;
 	}
-	return this._curvature;
+	return Math.abs(this._curvature);
 }
 MLSMesh2D.Point.prototype.bidirectional = function(b){
 	if(b!==undefined){
@@ -417,24 +673,142 @@ MLSMesh2D.Point.prototype.radius = function(r){
 			this._curvature = 1.0/r;
 		}
 	}
-	return 1.0/this._curvature;
+	return Math.abs(1.0/this._curvature);
 }
 MLSMesh2D.Point.prototype.toString = function(){
-	//str = "[Point: "+this._point+"  n: "+this._normal+"  c: "+this._normalConfidence+""+" ]";
-	str = "[P "+this.bidirectional()+""+"]";
+	str = "[Point: "+this._point+"  n: "+this._normal+"  c: "+this._normalConfidence+" "+(this.bidirectional()?"B":"N")+" ]";
 	return str;
 }
 
 
 
 // -------------------------------------------------------------------------------------------------------------------- 
-MLSMesh2D.Edge = function(point){
-	//
+
+MLSMesh2D.Edge = function(a,b,p){
+	this._priority = MLSMesh2D.Edge.PRIORITY_NORMAL;
+	this._a = null;
+	this._b = null;
+	this._normal = null;
+	this._idealLength = null;
+	this._next = null;
+	this._prev = null;
+	this.a(a);
+	this.b(b);
+	this.priority(p);
+}
+MLSMesh2D.Edge.PRIORITY_NORMAL = 0;
+MLSMesh2D.Edge.PRIORITY_DEFERRED = 1; // will cause topological event
+
+MLSMesh2D.Edge._sortEdges = function(a,b){
+	if(a===b){
+		return 0;
+	}
+	if(a.priority()===b.priority()){
+		a.ideal() < b.ideal() ? -1 : 1;
+	}
+	return a.priority()<b.priority() ? -1 : 1;
+}
+// -------------------------------------------------------------------------------------------------------------------- 
+MLSMesh2D.Edge.prototype.length = function(){
+	return V2D.distance(this._a,this._b);
+}
+MLSMesh2D.Edge.prototype.normal = function(n){
+	if(n!==undefined){
+		this._normal = n;
+	}
+	return this._normal;
+}
+MLSMesh2D.Edge.prototype.ideaLength = function(i){
+	if(i!==undefined){
+		this._idealLength = i;
+	}
+	return this._idealLength;
+}
+MLSMesh2D.Edge.prototype.a = function(a){
+	if(a!==undefined){
+		this._a = a;
+	}
+	return this._a;
+}
+MLSMesh2D.Edge.prototype.b = function(b){
+	if(b!==undefined){
+		this._b = b;
+	}
+	return this._b;
+}
+MLSMesh2D.Edge.prototype.next = function(n){
+	if(n!==undefined){
+		this._next = n;
+	}
+	return this._next;
+}
+MLSMesh2D.Edge.prototype.prev = function(p){
+	if(p!==undefined){
+		this._prev = p;
+	}
+	return this._prev;
+}
+MLSMesh2D.Edge.prototype.priority = function(p){
+	if(p!==undefined){
+		this._priority = p;
+	}
+	return this._priority;
+}
+MLSMesh2D.Edge.prototype.ideal = function(){
+	var ideal = this._idealLength / this.length();
+	if(ideal<1.0){
+		ideal = 1.0/ideal;
+	}
+	return ideal;
+}
+// -------------------------------------------------------------------------------------------------------------------- 
+MLSMesh2D.PointFront = function(edges){
+	this._edges = [];
+	this.edges(edges);
+}
+MLSMesh2D.PointFront.prototype.edges = function(edges){
+	if(edges!==undefined){
+		this._edges = edges;
+	}
+	return this._edges;
+}
+MLSMesh2D.PointFront.prototype.best = function(){ // select front with highest priority edge
+	if(this._edges.length>0){
+		var endLeft = this._edges[0];
+		var endRight = this._edges[this._edges.length-1];
+		var sorted = MLSMesh2D.Edge._sortEdges(endLeft,endRight);
+		// if(sorted<=0){
+		// 	return endLeft;
+		// }
+		//return endLeft;
+		return endRight;
+	}
+	return null;
+}
+MLSMesh2D.PointFront.prototype.pushNext = function(next){
+	if(this._edges.length>0){
+		var right = this._edges[this._edges.length-1];
+		right.next(next);
+		next.prev(right);
+		this._edges.push(next);
+	}else{
+		this._edges.push(next);
+	}
+}
+MLSMesh2D.PointFront.prototype.pushPrev = function(prev){
+	if(this._edges.length>0){
+		var left = this._edges[0];
+		left.prev(prev);
+		prev.next(left);
+		this._edges.unshift(prev);
+	}else{
+		this._edges.push(prev);
+	}
 }
 
-// -------------------------------------------------------------------------------------------------------------------- 
-MLSMesh2D.EdgeFront = function(point){
-	//
+
+MLSMesh2D.PointFront.prototype.closestFrontPoint = function(vertex){ // go over all edges in various fronts - find closest point(+edge) to point
+	return null;
 }
 
 // -------------------------------------------------------------------------------------------------------------------- 
@@ -450,6 +824,14 @@ MLSMesh2D.Line = function(point){
 // -------------------------------------------------------------------------------------------------------------------- 
 MLSMesh2D.Mesh = function(point){
 	//
+}
+MLSMesh2D.Mesh.prototype.vertexPredict = function(edge){
+	var midpoint = edge.midpoint();
+	var minLength = this._field.minimumInCircle(midpoint,b);
+	//var c = edge.length();
+	// ...
+	// var data = this._field.projectToSurfaceData(p);
+	return null;
 }
 
 // -------------------------------------------------------------------------------------------------------------------- 

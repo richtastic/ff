@@ -47,7 +47,7 @@ QuadTree.prototype.visualize = function(display, availableWidth,availableHeight,
 	var area = Code.sizeToFitInside(availableWidth,availableHeight, size.x,size.y);
 	var scale = area.x/size.x;
 	var leafs = QuadTree._arxels(this._root);
-//	console.log("scale: "+scale+"  mini: "+mini);
+	console.log("scale: "+scale+"  mini: "+mini);
 	for(var i=0; i<leafs.length; ++i){
 		var arxel = leafs[i];
 		var min = arxel.min();
@@ -179,6 +179,7 @@ QuadTree.prototype.removeObject = function(obj){
 }
 QuadTree.prototype.objectsInsideCircle = function(center,radius){
 	var arr = [];
+	radius = Math.min(this._root.size().length(),radius);
 	this._root.objectsInsideCircleSquare(arr,center,radius*radius,this._toPoint);
 	return arr;
 }

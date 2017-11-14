@@ -69,6 +69,7 @@ OctTree.prototype.findClosestObject = function(obj){
 }
 OctTree.prototype.objectsInsideSphere = function(center,radius){
 	var arr = [];
+	radius = Math.min(this._root.size().length(),radius);
 	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._sort);
 	return arr;
 }
