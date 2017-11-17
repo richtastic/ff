@@ -56,26 +56,26 @@ OctTree.prototype.clear = function(){
 	this._root.clear();
 }
 OctTree.prototype.insertObject = function(obj){
-	this._root.insertObject(obj,this._sort);
+	this._root.insertObject(obj,this._toPoint);
 }
 OctTree.prototype.deleteObject = function(obj){
-	return this._root.deleteObject(obj,this._sort);
+	return this._root.deleteObject(obj,this._toPoint);
 }
 OctTree.prototype.findObject = function(obj){ // use case?
-	this._root.findObject(obj,this._sort);
+	this._root.findObject(obj,this._toPoint);
 }
 OctTree.prototype.findClosestObject = function(obj){
-	return this._root.findClosestObject(obj,this._sort);
+	return this._root.findClosestObject(obj,this._toPoint);
 }
 OctTree.prototype.objectsInsideSphere = function(center,radius){
 	var arr = [];
 	radius = Math.min(this._root.size().length(),radius);
-	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._sort);
+	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._toPoint);
 	return arr;
 }
 OctTree.prototype.objectsInsideCuboid = function(min,max){
 	var arr = [];
-	this._root.objectsInsideCuboid(arr,min,max,this._sort);
+	this._root.objectsInsideCuboid(arr,min,max,this._toPoint);
 	return arr;
 }
 OctTree.prototype.toString = function(){
@@ -89,14 +89,15 @@ OctTree.prototype.initWithDimensions = function(center,size){
 }
 OctTree.prototype.initWithObjects = function(objects, force){
 	this.clear();
+	var toPoint = this._toPoint;
 	var i, len = objects.length;
 	var obj, point, siz, min = new V3D(), max = new V3D();
-	point = this._sort(objects[0]);
+	point = toPoint(objects[0]);
 	min.copy(point);
 	max.copy(point);
 	for(i=1;i<len;++i){
 		obj = objects[i];
-		point = this._sort(obj);
+		point = toPoint(obj);
 		V3D.min(min,min,point);
 		V3D.max(max,max,point);
 	}
@@ -118,14 +119,15 @@ OctTree._sortObject = function(a,b){
 }
 OctTree.prototype.kNN = function(p,k){
 	var toPoint = this._toPoint;
-	var axelQueue = new PriorityQueue(OctTree._sortVoxel);
+	var voxelQueue = new PriorityQueue(OctTree._sortVoxel);
 	var objectQueue = new PriorityQueue(OctTree._sortObject, k);
-	var axel = this._root;
-	axel.temp(0); // 0 distance
-	axelQueue.push(axel);
-	while(axelQueue.length()>0){
-		var axel = axelQueue.popMinimum();
-		var children = axel.children();
+	var voxel = this._root;
+	var children;
+	voxel.temp(0); // 0 distance
+	voxelQueue.push(voxel);
+	while(voxelQueue.length()>0){
+		voxel = voxelQueue.popMinimum();
+		children = voxel.children();
 		if(children){
 			for(var i=0; i<children.length; ++i){
 				var child = children[i];
@@ -137,11 +139,11 @@ OctTree.prototype.kNN = function(p,k){
 					var distance = Math.max(0,distanceCenter-distanceRadius);
 					distance = distance*distance;
 					child.temp(distance);
-					axelQueue.push(child);
+					voxelQueue.push(child);
 				}
 			}
 		}else{
-			var objects = axel.datas();
+			var objects = voxel.datas();
 			if(objects){
 				for(var i=0; i<objects.length; ++i){
 					var object = objects[i];
@@ -153,13 +155,13 @@ OctTree.prototype.kNN = function(p,k){
 			}
 		}
 		// can quit if already have k && nearby cells are further away than best k
-		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"]) ){
+		if(objectQueue.length()>=k && (voxelQueue.length()==0 || voxelQueue.minimum().temp()>objectQueue.maximum()["distance"]) ){
 			break;
 		}
 	}
 	var objects = objectQueue.toArray();
 	objectQueue.kill();
-	axelQueue.kill();
+	voxelQueue.kill();
 	for(var i=0; i<objects.length; ++i){
 		objects[i] = objects[i]["object"];
 	}
@@ -260,6 +262,12 @@ OctTree.Voxel.prototype.temp = function(t){
 		this._temp = t;
 	}
 	return this._temp;
+}
+OctTree.Voxel.prototype.datas = function(d){
+	if(d!==undefined){
+		this._datas = d;
+	}
+	return this._datas;
 }
 OctTree.Voxel.prototype.childAt = function(i){
 	if(this._children){

@@ -1,6 +1,5 @@
 // MLSMesh2D.js
 
-
 function MLSMesh2D(points, angle){
 	this._angle = Math.PI*0.1; // 18 degrees
 	this._quadTree = new QuadTree(MLSMesh2D._quadToPoint);
@@ -11,10 +10,6 @@ function MLSMesh2D(points, angle){
 MLSMesh2D._quadToPoint = function(meshPoint){
 	return meshPoint.point();
 }
-MLSMesh2D.x = function(){
-	// ... 
-}
-
 
 MLSMesh2D._derivativeWeight = function(x, p, h){
 	var distance = V2D.distance(x,p);
@@ -79,14 +74,14 @@ MLSMesh2D.prototype.createSurface = function(){ // main function to create the s
 var stage = GLOBALSTAGE;
 var canvas = GLOBALCANVAS;
 var size = canvas.size();
-this._quadTree.visualize(GLOBALSTAGE.root(), size.x,size.y);
+//this._quadTree.visualize(GLOBALSTAGE.root(), size.x,size.y);
 	this._estimateNormals();
 	this._propagateNormals();
 //this.printPoints();
 	this._setupStructures();
 	this._iterateFronts();
 	// 
-	this.drawNormals();
+//this.drawNormals();
 	// 
 	// init edge fronts & mesh
 	// propagation loop
@@ -168,12 +163,12 @@ MLSMesh2D.prototype._iterateFronts = function(){
 
 	var radius;
 	var kappa1 = this._maxCurvature(firstPoint);
+	kappa1 /= this._angle;
 	radius = 1.0/kappa1;
-	// console.log(radius);
 	var kappa2 = this._maxCurvature(firstPoint, radius);
+	kappa2 /= this._angle;
 	var minK = Math.min(kappa1,kappa2);
 	var maxK = Math.max(kappa1,kappa2);
-//console.log("["+minK+" | "+maxK+"]");
 	var kIn = (minK+maxK)*0.5;
 	var kOut;
 	var iterations = 0;
@@ -181,23 +176,31 @@ MLSMesh2D.prototype._iterateFronts = function(){
 	while(iterations<10 && kIn>minK && kIn<maxK && (maxK/minK)>maxRatio){
 		radius = 1.0/kIn;
 		kOut = this._maxCurvature(firstPoint, radius);
+		kOut /= this._angle;
 		if(kOut>kIn){
 			minK = kIn;
 		}else{ // kOut<=kIn
 			maxK = kIn;
 		}
-		//console.log("["+minK+" | "+maxK+"]  ==  ["+(1.0/maxK)+" | "+(1.0/minK)+"]    |  "+(maxK/minK));
+		console.log("["+minK+" | "+maxK+"]  ==  ["+(1.0/maxK)+" | "+(1.0/minK)+"]    |  "+(maxK/minK));
 		var kIn = (minK+maxK)*0.5;
 		++iterations;
 	}
 	// make edge 
+	//var edgeLength = this._angle * 1.0/kIn;
 	var edgeLength = 1.0/kIn;
-		edgeLength *= this._angle; // osculating sphere constant angle
+console.log("edgeLength A "+edgeLength);
+		//edgeLength *= this._angle; // osculating sphere constant angle
 	var info = this._surfaceInfoAtPoint(firstPoint);
-//	console.log(info);
 	var normal = info["normal"];
 	var radius = info["radius"];
-	var curvature = radius;
+	/*
+		radius *= this._angle;
+	var curvature = 1.0/radius;
+		//curvature /= this._angle;
+	var edgeLength = 1.0/curvature;
+console.log("edgeLength B "+edgeLength);
+*/
 	var dir = V2D.rotate(normal,Math.PI*0.5);
 	var a = dir.copy().scale( 0.5*edgeLength).add(firstPoint);
 	var b = dir.copy().scale(-0.5*edgeLength).add(firstPoint);
@@ -215,9 +218,13 @@ var drawEdge = function(a,b, color){
 // scale: 18.75  mini: <-1,-3.5>
 // scale: 37.5  mini: <-1,-3.5>
 //var sca = 52.25;
-//var sca = 37.5;
-var sca = 42.5;
+//var sca = 42.5;
+var sca = 37.5;
 var min = new V2D(-1,-3.5);
+
+// var sca = 21.125;
+// var min = new V2D(2.0004455367159295,4.000756239644177);
+
 var pp = a.copy().sub(min).scale(sca);
 var qq = b.copy().sub(min).scale(sca);
 //var rr = circle["radius"] * sca;
@@ -245,8 +252,8 @@ GLOBALSTAGE.addChild(d);
 
 	var iterations = 0;
 //var totalLength = 0;
-
-	while(iterations<250){
+	var iterationCount = 200;
+	while(iterations<iterationCount){
 		console.log(iterations+" ........... ");
 		var edge = pointFront.best();
 		//console.log(edge);
@@ -266,9 +273,11 @@ GLOBALSTAGE.addChild(d);
 		}
 		var info = this._surfaceInfoAtPoint(edgePoint);
 		var radius = info["radius"];
+			radius *= this._angle;
 		var normal = info["normal"];
 		var searchRadius = radius * 2.0;
 		var maxCurvature = this._maxCurvature(edgePoint, searchRadius);
+console.log(maxCurvature);
 		var edgeLength = 1.0/maxCurvature;
 		//console.log("edgeLength: "+edgeLength);
 			edgeLength *= this._angle;
@@ -282,10 +291,16 @@ console.log("edgeLength: "+edgeLength)
 			}
 		c = dir.copy().scale(edgeLength).add(edgePoint);
 var cA = c;
-drawEdge(edgePoint,c, 0xFF00FF00);
+//drawEdge(edgePoint,c, 0xFF009900);
 		c = this._projectPointToSurface(c);
+
+
+		var closest = pointFront.closestFrontPoint(c);
+		console.log(closest);
+
+
 var cB = c;
-drawEdge(cA,cB, 0xFFFF0000);
+//drawEdge(cA,cB, 0xFFFF0000);
 		if(isNext){
 			a = edgePoint;
 			b = c;
@@ -305,6 +320,24 @@ drawEdge(cA,cB, 0xFFFF0000);
 			// var center = info["center"];
 			e.ideaLength(radius*this._angle);
 		console.log(" EDGE LENGTH: "+e.length());
+
+		var closestDistance = closest["distance"];
+		if(closestDistance<0.5 * edgeLength){
+//drawEdge(edge.a(),edge.b(), 0xFFCC0000);
+			console.log("JOIN ENDS: "+closestDistance);
+			c = closest["point"];
+			if(isNext){
+				e.b(c);
+			}else{
+				e.a(c);
+			}
+drawEdge(e.a(),e.b(), 0xFF0000CC);
+//drawEdge(edge.a(),edge.b(), 0xFF0000CC);
+//drawEdge(edge.a().copy().add(1.0,1.0),edge.b().copy().add(1.0,1.0), 0xFF0000CC);
+			pointFront.close(e);
+			break;
+		}
+
 //totalLength += e.length();
 		if(isNext){
 			pointFront.pushNext(e);
@@ -312,8 +345,8 @@ drawEdge(cA,cB, 0xFFFF0000);
 			pointFront.pushPrev(e);
 		}
 
-
-		drawEdge(a,b);
+		drawEdge(a,b, 0xFF0000CC);
+		//drawEdge(a,b, 0xFF00CC00);
 ++iterations;
 //		break;
 	}
@@ -472,6 +505,11 @@ MLSMesh2D.prototype._maxCurvature = function(location, radius){
 			maxCurvature = curvature;
 		}
 	}
+	if(maxCurvature===null){
+		var nearest = this._quadTree.closestObject(location);
+		var curvature = nearest.curvature();
+		return curvature;
+	}
 	return maxCurvature;
 }
 MLSMesh2D.prototype._projectPointToSurface = function(location, data){
@@ -493,14 +531,9 @@ MLSMesh2D.prototype._projectPointToSurface = function(location, data){
 	var i, j, iteration;
 	var x = location;
 	var circle;
-	var maxNeighbors = 6; // ..... larger number projects more only to closest point
+	var maxNeighbors = 8; // ..... larger number projects more only to closest point
 	// lower number is more jagged, but doesnt't screq up projection
 	for(iteration=0; iteration<maxIterations; ++iteration){
-
-		// var info = PSSTest.kNN(points,normals, x, 9); // min of 4 [nth is basically discarded with w = 0]
-		// var neighborhoodNormals = info["normals"];
-		// var neighborhoodPoints = info["points"];
-		// var maxPoint = PSSTest.maxPoint(neighborhoodPoints, x);
 		var neighborhood = this._quadTree.kNN(x, maxNeighbors);
 		var maxPoint = neighborhood[neighborhood.length-1];
 		var maxDistance = V2D.distance(x,maxPoint.point());
@@ -510,21 +543,17 @@ MLSMesh2D.prototype._projectPointToSurface = function(location, data){
 		var normalTotal = new V2D();
 		var potentialTotal = 0;
 		var weightTotal = 0;
-//console.log(iteration+" "+neighborhood.length);
 		for(i=0; i<neighborhood.length; ++i){
 			var neighbor = neighborhood[i];
 			var p = neighbor.point();
 			var n = neighbor.normal();
-			// var p = neighborhoodPoints[i];
-			// var n = neighborhoodNormals[i];
 			var weight = MLSMesh2D._weight(x,p, maxDistance);
 			var dWeight = MLSMesh2D._derivativeWeight(x,p, maxDistance);
-			//console.log(weight,dWeight)
+dWeight *= 0.1; // dWeight pushes projection too close to nearest point / with more direct normal
 			
 			var pToX = V2D.sub(x,p);
 				var wXP = pToX.copy().scale(weight);
 			var dirDW = pToX.copy().scale(2.0*dWeight);
-
 			var dotNormalDirection = V2D.dot(pToX,n);
 			
 			
@@ -536,10 +565,6 @@ MLSMesh2D.prototype._projectPointToSurface = function(location, data){
 			weightTotal += weight;
 		}
 		potentialTotal = potentialTotal / weightTotal;
-
-		// directionDerivativeTotal.scale(1.0/weightTotal);
-		// normalTotal.scale(1.0/weightTotal);
-		// normalTotal.scale(1.0/weightTotal);
 
 		var gradient = new V2D();
 		gradient.sub( derivativeTotal.copy().scale(potentialTotal) );
@@ -553,7 +578,7 @@ MLSMesh2D.prototype._projectPointToSurface = function(location, data){
 		var nextX = V2D.sub(x, potential);
 		var diffX = V2D.distance(x,nextX);
 		x = nextX;
-//console.log(nextX+"");
+
 		if(diffX<1E-6){
 			break;
 		}
@@ -806,8 +831,40 @@ MLSMesh2D.PointFront.prototype.pushPrev = function(prev){
 	}
 }
 
+MLSMesh2D.PointFront.prototype.close = function(edge){
+	if(this._edges.length>0){
+		var left = this._edges[0];
+		var right = this._edges[this._edges.length-1];
+		right.next(edge);
+		left.prev(edge);
+		edge.next(left);
+		edge.prev(right);
+	}
+}
 
-MLSMesh2D.PointFront.prototype.closestFrontPoint = function(vertex){ // go over all edges in various fronts - find closest point(+edge) to point
+MLSMesh2D.PointFront.prototype.closestFrontPoint = function(point){ // go over all edges in various fronts - find closest point(+edge) to point
+	if(this._edges.length>0){
+		var endLeft = this._edges[0];
+		var endRight = this._edges[this._edges.length-1];
+		var a = endLeft.a();
+		var b = endRight.b();
+		var dA = V2D.distanceSquare(a,point);
+		var dB = V2D.distanceSquare(b,point);
+		
+		var pnt = null;
+		var edge = null;
+		var dist = null;
+		if(dA<dB){
+			pnt = a;
+			edge = endLeft;
+			dist = Math.sqrt(dA);
+		}else{
+			pnt = b;
+			edge = endRight;
+			dist = Math.sqrt(dB);
+		}
+		return {"point":pnt, "edge":edge, "distance":dist};
+	}
 	return null;
 }
 

@@ -67,6 +67,18 @@ App3DR.prototype._handleCanvasResizeFxn = function(r){
 	var cellCount = 4.0;
 	//var canvasScale = this._canvas.presentationScale();
 	var screenMin = Math.min(screenSize.x,screenSize.y);
+
+
+	//console.log(this._canvas)
+	//var screenSize = this._canvas.size();
+	// var iconSize = 0.10 * screenMin//Math.min(screenSize.x,screenSize.y);
+	// 	iconSize = Math.round(iconSize);
+
+	var iconSize = screenMin/2.0;//(10 * cellCount);////Math.min(screenSize.x,screenSize.y);
+		iconSize = Math.round(iconSize);
+	console.log(iconSize);
+	grid._iconSize = iconSize;
+	
 	
 	grid.viewScale(screenMin/cellCount);
 	grid.cellBuffer(Math.ceil( (screenSize.x/screenMin) * (cellCount+2)) , Math.ceil( (screenSize.y/screenMin) * (cellCount*2) ));
@@ -411,6 +423,8 @@ HexSystem.prototype._render = function(delta){
 	var t = 0;
 	var display = this._display;
 	display.removeAllChildren();
+	
+	var iconSize = this._iconSize;
 
 	var grid = this._grid;
 	var offset = this._offset;
@@ -503,7 +517,9 @@ HexSystem.prototype._render = function(delta){
 
 			if(imageIcon && isActive){
 				var icon = new DOImage(imageIcon);
-				icon.matrix().translate(-imageIcon.width*0.5,-imageIcon.height*0.5);
+				icon.size(iconSize,iconSize);
+				//icon.matrix().translate(-imageIcon.width*0.5,-imageIcon.height*0.5);
+				icon.matrix().translate(-iconSize*0.5,-iconSize*0.5);
 				icon.matrix().translate(centerDisplay.x,centerDisplay.y);
 				display.addChild(icon);
 			}

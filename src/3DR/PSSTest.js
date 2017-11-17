@@ -396,7 +396,9 @@ return;
 */
 GLOBALSTAGE = this._stage;
 	var points = [];
+
 /*
+	/// CIRCLE
 	var radius = 5;
 	var offset = new V2D(10,12);
 	var count = 30;
@@ -409,6 +411,7 @@ GLOBALSTAGE = this._stage;
 		points.push(p);
 	}
 */
+
 	points.push(new V2D(0,0));
 	points.push(new V2D(1,0));
 	points.push(new V2D(2.1,0));
@@ -425,7 +428,7 @@ GLOBALSTAGE = this._stage;
 	points.push(new V2D(4.5,-1.5));
 	points.push(new V2D(5.5,-0.9));
 
-	points.push(new V2D(5.1,0.0));
+	points.push(new V2D(5.7,-0.1));
 	points.push(new V2D(6.0,0.5));
 	points.push(new V2D(5.8,0.6));
 	points.push(new V2D(5.5,1.0));
@@ -442,6 +445,7 @@ GLOBALSTAGE = this._stage;
 	points.push(new V2D(2.1,1.6));
 	points.push(new V2D(1.5,2.1));
 	//points.push(new V2D(2.1,1.9));
+	
 
 	var mesh = new MLSMesh2D(points,true);
 	// mesh.setPoints();
@@ -456,23 +460,53 @@ GLOBALSTAGE = this._stage;
 
 PSSTest.gradientFromPoints = function(points,normals, location){
 
-	// var result = PSSTest.pointInfoField(points, normals, location);
-	// return result;
+	var result = PSSTest.pointInfoField(points, normals, location);
+	return result;
+
+	var intermediate = true;
+	if(intermediate){
+		var result
+		var eps = 1E-6;
+		var locX0 = location.copy().add(-eps,0);
+		var locX1 = location.copy().add(eps ,0);
+		var locY0 = location.copy().add(0,-eps);
+		var locY1 = location.copy().add(0, eps);
+			result = PSSTest.pointInfoField(points, normals, locX0);
+		var x0 = result["scalar"];
+			result = PSSTest.pointInfoField(points, normals, locX1);
+		var x1 = result["scalar"];
+			result = PSSTest.pointInfoField(points, normals, locY0);
+		var y0 = result["scalar"];
+			result = PSSTest.pointInfoField(points, normals, locY1);
+		var y1 = result["scalar"];
+
+		var avg = 0.25*(x0+x1+y0+y1);
+		var dx = x1-x0;
+		var dy = y1-y0;
+		var gradient = new V2D(-dx,-dy);
+			gradient.norm();
+			gradient.scale(avg);
+		var dir = gradient.copy().norm();
+		return {"scalar":avg, "gradient":gradient, "direction":dir};
+	}
 
 	var weightTotal = 0.0;
 	var gradient = new V2D();
 	var dMagTotal = 0.0;
 	var distanceTotal = 0.0;
 	var normalTotal = new V2D();
+	var distanceDirectionTotal = new V2D();
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 		var normal = normals[i];
 		var distance = V2D.distance(point,location)
-		var weight = 1.0 /(1.0+distance);
+		var weight = 1.0 /(1.0+distance*distance);
+//weight = Math.pow(weight,4);
 		var pointToLocation = V2D.sub(location,point);
-
+var normWeight = V2D.dot(normal,pointToLocation.copy().norm());
+		
+distanceDirectionTotal.add( pointToLocation.copy().scale(weight).scale(normWeight) );
 		weightTotal += weight;
-
 
 		var dGrad = normal.copy().scale(weight);
 
@@ -486,9 +520,9 @@ PSSTest.gradientFromPoints = function(points,normals, location){
 		var dotDirectionNormal = V2D.dot(normal,pointToLocation);
 		distanceTotal += weight*dotDirectionNormal;
 		// distance*
-
-
 	}
+distanceDirectionTotal.scale(1.0/weightTotal);
+
 	gradient.norm();
 	gradient.scale(1.0/weightTotal);
 	gradient.scale(dMagTotal);
@@ -504,6 +538,8 @@ PSSTest.gradientFromPoints = function(points,normals, location){
 
 	scalar = Math.abs(dotDirectionNormal);
 	//scalar = distanceTotal;
+gradient = distanceDirectionTotal;
+scalar = distanceDirectionTotal.length();
 
 	return {"scalar":scalar, "direction":direction, "gradient":gradient};
 }
@@ -1832,7 +1868,7 @@ PSSTest.maxPoint = function(list, x){
 PSSTest.pointInfoField = function (points, normals, location, log){
 	// use algebraic circle as initial point, get geometric circle, project pnt to surface
 	// PLOTIMAGE = false;
-	var maxIterations = 4;
+	var maxIterations = 5;
 	var i, j, iteration;
 	var x = location;
 	var circle;
@@ -1869,14 +1905,21 @@ PSSTest.pointInfoField = function (points, normals, location, log){
 		for(i=0; i<neighborhoodPoints.length; ++i){
 			var p = neighborhoodPoints[i];
 			var n = neighborhoodNormals[i];
+//n = V2D.sub(x,p).norm(); /// ADDED
 			var weight = PSSTest.weightFxn(x,p, maxDistance);
 			var dWeight = PSSTest.derivativeWeightFxn(x,p, maxDistance);
 			
 			var pToX = V2D.sub(x,p);
 				var wXP = pToX.copy().scale(weight);
 			var dirDW = pToX.copy().scale(2.0*dWeight);
+//dirDW.scale(0.0); /// added
+//.scale(0.1)
 
 			var dotNormalDirection = V2D.dot(pToX,n);
+			//dotNormalDirection *= 0.1;
+var dirNormalDir = dotNormalDirection<0 ? -1 : 1; /// ADDED
+
+//dotNormalDirection = dotNormalDirection<0 ? -1 : 1; /// ADDED
 			
 			
 			derivativeTotal.add(dirDW);
@@ -1884,19 +1927,18 @@ PSSTest.pointInfoField = function (points, normals, location, log){
 				var dirN = n.copy().scale(weight);
 			normalTotal.add(dirN);
 			potentialTotal += weight*dotNormalDirection;
+			//potentialTotal += weight*dirNormalDir; /// ADDED
 			weightTotal += weight;
 		}
 		potentialTotal = potentialTotal / weightTotal;
-
-		// directionDerivativeTotal.scale(1.0/weightTotal);
-		// normalTotal.scale(1.0/weightTotal);
-		// normalTotal.scale(1.0/weightTotal);
-
+//directionDerivativeTotal.scale(-10.0);
 		var gradient = new V2D();
 		gradient.sub( derivativeTotal.copy().scale(potentialTotal) );
 		gradient.add( directionDerivativeTotal );
 		gradient.add( normalTotal );
 		gradient.scale(1.0/weightTotal);
+//gradient.scale(0.5); /// ADDED
+//gradient.scale(5.0); /// ADDED
 
 		var gradientNormal = gradient.copy().norm();
 	var potential = gradientNormal.copy().scale(potentialTotal);
@@ -1938,7 +1980,9 @@ PSSTest.pointInfoField = function (points, normals, location, log){
 	}
 	var finalDistance = V2D.distance(location,x);
 	var circle = null;
-	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":new V2D(0,0), "gradient":new V2D(0,0)};
+	var gradient = V2D.sub(x,location);
+	var dir = gradient.copy().norm();
+	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":dir, "gradient":gradient};
 }
 
 

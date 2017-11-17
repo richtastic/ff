@@ -45,6 +45,7 @@ DOImage.prototype.size = function(wid,hei){
 	if(hei!==undefined){ // set
 		this.width(wid);
 		this.height(hei);
+		this.drawImageStatic();
 	}else{ // get
 		wid.x = this.width();
 		wid.y = this.height();

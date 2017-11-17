@@ -8,9 +8,28 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSPoint.js","MLSEdge.js","MLSTri.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	//(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSPoint.js","MLSEdge.js","MLSTri.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["MLSMesh3D.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	
 }
 function classesLoadedFxn(){
+/*
+	// var a = new V3D(0,0,0);
+	// var b = new V3D(1,2,3);
+	// var c = new V3D(0,2,4);
+	// var d = new V3D(0,2,0);
+
+	var a = new V3D(0,0,0);
+	var b = new V3D(0,4,0);
+	var c = new V3D(0,2,0);
+	var d = new V3D(0,1,0);
+
+	var x = Code.sphereFromPoints(a,b,c,d);
+	console.log(x);
+
+return;
+*/
+
 	/*
 	var res;
 	var o = new V3D(0,0,0);

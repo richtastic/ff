@@ -2229,6 +2229,15 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 	}
 	return null; // error?
 }
+// Code.grayscaleFloatToHeatMapFloat = function(gry){ 
+// 	var colors = [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF];
+// 	var color = Code.interpolateColorGradientARGB(gry[i], colors);
+// 	var a = Code.getFloatAlpARGB(color);
+// 	var r = Code.getFloatRedARGB(color);
+// 	var g = Code.getFloatGrnARGB(color);
+// 	var b = Code.getFloatBluARGB(color);
+// 	return {"alp":a, "red":r, "grn":g, "blu":b};
+// }
 Code.grayscaleFloatToHeatMapFloat = function(gry, colors){ // in [0,1]
 	// 0xFFFF0000, 
 	colors = colors!==undefined ? colors : [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
@@ -5610,6 +5619,13 @@ Code.circleDistanceToPoint = function(center,radius, point){
 	}
 	return distance-radius;
 }
+Code.sphereDistanceToPoint = function(center,radius, point){
+	var distance = V3D.distance(point,center);
+	if(distance<radius){
+		return radius-distance;
+	}
+	return distance-radius;
+}
 Code.circleFromPoints = function(a,b,c){
 	if(Code.colinear(a,b,c)){
 		return null;
@@ -5696,32 +5712,32 @@ Code.circleAlgebraic = function(points, location){
 }
 Code._circleGeometricGD = function(args,vals, isUpdate){
 	if(isUpdate){ return; }
-		var points = args[0];
-		var weights = args[1];
-		var cx = vals[0];
-		var cy = vals[1];
-		var rad = vals[2];
-		var cen = new V2D(cx,cy);
-		var error = 0;
-		var weight = 1.0;
-		for(var i=0; i<points.length; ++i){
-			var p = points[i];
-			var dist = Code.circleDistanceToPoint(cen,rad,p);
-			if(weights){
-				weight = weights[i];
-			}
-			error += weight * dist*dist;
+	var points = args[0];
+	var weights = args[1];
+	var cx = vals[0];
+	var cy = vals[1];
+	var rad = vals[2];
+	var cen = new V2D(cx,cy);
+	var error = 0;
+	var weight = 1.0;
+	for(var i=0; i<points.length; ++i){
+		var p = points[i];
+		var dist = Code.circleDistanceToPoint(cen,rad,p);
+		if(weights){
+			weight = weights[i];
 		}
-		return error;
+		error += weight * dist*dist;
+	}
+	return error;
 }
 Code.circleGeometric = function(points, location, maxIterations){
-	maxIterationsmaxIterations = maxIterations!==undefined ? maxIterations : 50;
+	maxIterations = maxIterations!==undefined ? maxIterations : 50;
 	var circle = Code.circleAlgebraic(points, location);
 	var weights = circle["weights"];
 	var center = circle["center"];
 	var radius = circle["radius"];
 
-	var result = Code.gradientDescent(Code._circleGeometricGD, [points, weights], [center.x,center.y,radius], null, maxIterationsmaxIterations, 1E-8);
+	var result = Code.gradientDescent(Code._circleGeometricGD, [points, weights], [center.x,center.y,radius], null, maxIterations, 1E-8);
 	
 	var x = result["x"];
 	center = new V2D(x[0],x[1]);
@@ -5730,15 +5746,145 @@ Code.circleGeometric = function(points, location, maxIterations){
 }
 
 Code.sphereFromPoints = function(a,b,c,d){
-	var i;
-	if(Code.coplanar(a,b,c,d)){
+	// var i;
+	// if(Code.coplanar(a,b,c,d)){
+	// 	return null;
+	// }
+	var AB = V3D.sub(b,a);
+	// var AC = V3D.sub(c,a);
+	// var AD = V3D.sub(d,a);
+	var BC = V3D.sub(c,b);
+	//var BD = V3D.sub(d,b);
+	var CD = V3D.sub(d,c);
+	var dotA = V3D.dot(a,a);
+	var dotB = V3D.dot(b,b);
+	var dotC = V3D.dot(c,c);
+	var dotD = V3D.dot(d,d);
+	// ...
+	var A = new Matrix(3,3);
+	A.fromArray([AB.x,AB.y,AB.z, BC.x,BC.y,BC.z, CD.x,CD.y,CD.z]);
+	var B = new Matrix(3,1);
+	B.set(0,0, (dotA-dotB)*0.5);
+	B.set(1,0, (dotB-dotC)*0.5);
+	B.set(2,0, (dotC-dotD)*0.5);
+	var invA = Matrix.inverse(A);
+	var X = Matrix.mult(invA,B);
+	console.log(X);
+	X = X.toArray();
+	var center = new V3D(X[0],X[1],X[2]);
+	var radius = V3D.sub(a,center).length();
+	return {"radius":radius, "center":center};
+}
+Code.sphereCoefficientsToSphere = function(a,b1,b2,b3,c){
+	var center = new V3D(b1,b2,b3).scale(-1.0/(2.0*a));
+	var left = V3D.dot(center,center);
+	var right = c/a;
+	var inside = left - right
+	var radius = Math.sqrt(inside);
+	return {"radius":radius,"center":center};
+}
+
+
+
+Code.sphereAlgebraic = function(points, location){
+	var N = points.length;
+	var W = null;
+	var weights = null;
+	var i, p;
+	// W
+	if(location){
+		var distanceTotal = 0;
+		weights = [];
+		for(i=0; i<N; ++i){
+			p = points[i];
+			var dist = V3D.distance(location,p);
+			distanceTotal += dist;
+			weights[i] = dist;
+		}
+		var distanceAverage = distanceTotal/N;
+		for(i=0; i<N; ++i){ // gaussian weight
+			var dist = weights[i];
+			//var weight = Math.exp(-dist/distanceAverage);
+			var weight = 1.0/(1.0 + dist*dist);
+			weights[i] = weight;
+		}
+		W = new Matrix(N,N);
+		for(i=0; i<N; ++i){
+			var weight = weights[i];
+			W.set(i,i, weight);
+		}
+	}
+	// A
+	var A = new Matrix(N,5);
+	for(i=0; i<N; ++i){
+		p = points[i];
+		A.set(i,0, V2D.dot(p,p));
+		A.set(i,1, p.x);
+		A.set(i,2, p.y);
+		A.set(i,3, p.z);
+		A.set(i,4, 1);
+	}
+	if(W!=null){
+		A = Matrix.mult(W,A);
+	}
+	// SVD projection closest
+	var svd = Matrix.SVD(A);
+	var best = svd.V.colToArray(4);
+	var a = best[0];
+	var b1 = best[1];
+	var b2 = best[2];
+	var b3 = best[3];
+	var c = best[4];
+	if(a===0){
 		return null;
 	}
-	var AB = V2D.sub(b,a);
-	var AC = V2D.sub(c,a);
-	var AD = V2D.sub(d,a);
-
+	var sphere = Code.sphereCoefficientsToSphere(a,b1,b2,b3,c);
+	sphere["weights"] = weights;
+	return sphere;
 }
+
+
+Code._sphereGeometricGD = function(args,vals, isUpdate){
+	if(isUpdate){ return; }
+	var points = args[0];
+	var weights = args[1];
+	var cx = vals[0];
+	var cy = vals[1];
+	var cz = vals[2];
+	var rad = vals[3];
+	var cen = new V3D(cx,cy,cz);
+	var error = 0;
+	var weight = 1.0;
+	for(var i=0; i<points.length; ++i){
+		var p = points[i];
+		var dist = Code.sphereDistanceToPoint(cen,rad,p);
+		if(weights){
+			weight = weights[i];
+		}
+		error += weight * dist*dist;
+	}
+	return error;
+}
+Code.sphereGeometric = function(points, location, maxIterations){
+	maxIterations = maxIterations!==undefined ? maxIterations : 50;
+	var sphere = Code.sphereAlgebraic(points, location);
+	var weights = sphere["weights"];
+	var center = sphere["center"];
+	var radius = sphere["radius"];
+	var result = Code.gradientDescent(Code._sphereGeometricGD, [points, weights], [center.x,center.y,center.y,radius], null, maxIterations, 1E-8);
+	var x = result["x"];
+	center = new V3D(x[0],x[1],x[2]);
+	radius = x[3];
+	return {"center":center, "radius":radius, "weights":weights};
+}
+
+
+
+
+
+
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------- INTERSECTIONS 3D
 Code.closestPointTLine3D = function(org,dir, point){ // infinite ray and point - t value
 	return (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
@@ -6253,16 +6399,92 @@ Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-
 	if(int1B<int2A){ return false; }
 	return true;
 }
-Code.planeEquationFromPointNormal = function(pnt,nrm){ // should d = -dot?
+Code.planeEquationFromPointNormal3D = function(pnt,nrm){ // should d = -dot?
 	var q = new V3D(nrm.x,nrm.y,nrm.z); q.norm();
 	var dot = q.x*pnt.x + q.y*pnt.y + q.z*pnt.z; // q.scale(dot);
 	return {a:nrm.x, b:nrm.y, c:nrm.z, d:-dot};
 }
-Code.planePointNormalFromEquation = function(a,b,c,d){
+Code.planePointNormalFromEquation3D = function(a,b,c,d){
 	var nrm = new V3D(a,b,c);
 	var len = nrm.length();
 	if(len!=0.0){ len = 1.0/len; }
 	return {normal:nrm, point:new V3D(a*d*len,b*d*len,c*d*len)};
+}
+Code.projectPointToPlane3D = function(location, point,normal){
+	var diff = V3D.sub(location,point);
+	var dN = V3D.dot(normal,diff);
+	return new V3D(location.x-dN*normal.x, location.y-dN*normal.y, location.z-dN*normal.z);
+}
+Code.planeFromPoints = function(center, points, weights){
+	if(!center){
+		center = V3D.mean(points);
+	}
+	var i, point, weight, distanceSquare;
+	var len = points.length;
+	var weightTotal=0;
+	var centerOfMass = new V3D(0.0,0.0,0.0);
+	var A=0,B=0,C=0, E=0,F=0, I=0;
+	var dx,dy,dz;
+	if(!weights){ // make up own weights
+		weights = [];
+		var weightAvg = 0;
+		for(i=0; i<len; ++i){
+			point = points[i];
+			weights[i] = V3D.distance(point,center);
+			weightAvg += weights[i];
+		}
+		weightAvg /= len;
+		for(i=0; i<len; ++i){
+			point = points[i];
+			weight = weights[i];
+			//weight = 1.0/(1.0 + weight*weight);
+			weight = Math.exp(-weight/weightAvg);
+			weights[i] = weight;
+		}
+	}
+	for(i=0; i<len; ++i){
+		point = points[i];
+		weight = weights[i];
+		centerOfMass.add(weight*point.x, weight*point.y, weight*point.z);
+		weightTotal += weight;
+	}
+	centerOfMass.scale(1.0/weightTotal);
+	for(i=0; i<len; ++i){
+		point = points[i];
+		distanceSquare = V3D.distanceSquare(point, center);
+		weight = weights[i];
+		dx = point.x-centerOfMass.x;
+		dy = point.y-centerOfMass.y;
+		dz = point.z-centerOfMass.z;
+		A += weight*dx*dx; B += weight*dx*dy; C += weight*dx*dz;
+		E += weight*dy*dy; F += weight*dy*dz; I += weight*dz*dz;
+	}
+	var covariance = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
+	var eig = Matrix.eigenValuesAndVectors(covariance);
+	var values = eig.values;
+	var vectors = eig.vectors;
+	var vMin = Math.min(values[0],values[1],values[2]); // least direction
+	var v0, v1, v2;
+	var vA = vectors[0].toV3D();
+	var vB = vectors[1].toV3D();
+	var vC = vectors[2].toV3D();
+	if(values[0] == vMin){
+		v0 = vA; v1 = vB; v2 = vC;
+	}else if(values[1] == vMin){
+		v0 = vB; v1 = vA; v2 = vC;
+	}else{
+		v0 = vC; v1 = vA; v2 = vB;
+	}
+	if( V3D.dot(V3D.cross(v1,v2),v0) <0 ){ // consistent orientation
+		var temp = v1; v1 = v2; v2 = temp;
+	}
+	//var diff = V3D.sub(center,centerOfMass);
+	//var dN = V3D.dot(v0,diff);
+	//var proj = new V3D( center.x-dN*v0.x, center.y-dN*v0.y, center.z-dN*v0.z ); // center plane under point's projection
+	return {"point":centerOfMass,"normal":v0, "x":v1, "y":v2};
+	// var normal = v0; // ||v0|| === 1
+	// var plane = Code.planeEquationFromPointNormal(centerOfMass,nrm);
+	// return plane;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
 Code.lineOriginAndDirection2DFromEquation = function(org,dir, a,b,c){
