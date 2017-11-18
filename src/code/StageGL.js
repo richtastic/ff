@@ -47,13 +47,13 @@ StageGL.prototype.canvas = function(canvas){
 }
 StageGL.prototype.getBufferFloat32Array = function(list, itemSize){
 	var buffer = this._canvas.getBufferFloat32Array(list,itemSize);
-	buffer.lengthX = list.length/itemSize;
+	buffer.length = list.length/itemSize;
 	buffer.sizeX = itemSize;
 	return buffer;
 }
 StageGL.prototype.getBufferUint16ArrayElement = function(list, itemSize){
 	var buffer = this._canvas.getBufferUint16ArrayElement(list,itemSize);
-	buffer.lengthX = list.length/itemSize;
+	buffer.length = list.length/itemSize;
 	buffer.sizeX = itemSize;
 	return buffer;
 }
@@ -152,27 +152,27 @@ StageGL.prototype.bindElementArrayBuffer = function(attr,buffer){
 	this._canvas.bindElementArrayBuffer(attr,buffer,buffer.sizeX);
 }
 StageGL.prototype.drawElementArrayUint16Buffer = function(buffer){
-	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.lengthX);
+	this._canvas.drawElementArrayUint16Buffer(buffer, buffer.length);
 }
 StageGL.prototype.setLineWidth = function(width){
 	this._canvas.setLineWidth(width);
 }
 StageGL.prototype.drawPoints = function(attr,buffer){
-	this._canvas.drawPoints(buffer.lengthX);
+	this._canvas.drawPoints(buffer.length);
 }
 StageGL.prototype.drawLines = function(attr,buffer){
-	this._canvas.drawLines(buffer.lengthX);
+	this._canvas.drawLines(buffer.length);
 }
 StageGL.prototype.drawLineList = function(attr,buffer){
-	this._canvas.drawLineList(buffer.lengthX);
+	this._canvas.drawLineList(buffer.length);
 }
 StageGL.prototype.drawTriangles = function(attr,buffer){
-	if(buffer.lengthX>0){
-		this._canvas.drawTriangles(buffer.lengthX);
+	if(buffer.length>0){
+		this._canvas.drawTriangles(buffer.length);
 	}
 }
 StageGL.prototype.drawTriangleList = function(attr,buffer){
-	this._canvas.drawTriangleList(buffer.lengthX);
+	this._canvas.drawTriangleList(buffer.length);
 }
 StageGL.prototype.matrixReset = function(){
 	this._canvas.uniformMatrices(this._projectionMatrix, this._modelViewMatrixStack.matrix());

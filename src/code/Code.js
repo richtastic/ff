@@ -5745,7 +5745,7 @@ Code.circleGeometric = function(points, location, maxIterations){
 	return {"center":center, "radius":radius, "weights":weights};
 }
 
-Code.sphereFromPoints = function(a,b,c,d){
+Code.sphereFromPoints = function(a,b,c,d){ // ~95+s% accurate
 	// var i;
 	// if(Code.coplanar(a,b,c,d)){
 	// 	return null;
@@ -5773,6 +5773,8 @@ Code.sphereFromPoints = function(a,b,c,d){
 	X = X.toArray();
 	var center = new V3D(X[0],X[1],X[2]);
 	var radius = V3D.sub(a,center).length();
+	center.scale(-1);
+	radius = Math.sqrt(radius);
 	return {"radius":radius, "center":center};
 }
 Code.sphereCoefficientsToSphere = function(a,b1,b2,b3,c){
@@ -5792,6 +5794,7 @@ Code.sphereAlgebraic = function(points, location){
 	var weights = null;
 	var i, p;
 	// W
+	//if(false){
 	if(location){
 		var distanceTotal = 0;
 		weights = [];
@@ -5804,8 +5807,8 @@ Code.sphereAlgebraic = function(points, location){
 		var distanceAverage = distanceTotal/N;
 		for(i=0; i<N; ++i){ // gaussian weight
 			var dist = weights[i];
-			//var weight = Math.exp(-dist/distanceAverage);
-			var weight = 1.0/(1.0 + dist*dist);
+			var weight = Math.exp(-dist/distanceAverage);
+			//var weight = 1.0/(1.0 + dist*dist);
 			weights[i] = weight;
 		}
 		W = new Matrix(N,N);
@@ -5818,7 +5821,7 @@ Code.sphereAlgebraic = function(points, location){
 	var A = new Matrix(N,5);
 	for(i=0; i<N; ++i){
 		p = points[i];
-		A.set(i,0, V2D.dot(p,p));
+		A.set(i,0, V3D.dot(p,p));
 		A.set(i,1, p.x);
 		A.set(i,2, p.y);
 		A.set(i,3, p.z);
@@ -5871,7 +5874,7 @@ Code.sphereGeometric = function(points, location, maxIterations){
 	var weights = sphere["weights"];
 	var center = sphere["center"];
 	var radius = sphere["radius"];
-	var result = Code.gradientDescent(Code._sphereGeometricGD, [points, weights], [center.x,center.y,center.y,radius], null, maxIterations, 1E-8);
+	var result = Code.gradientDescent(Code._sphereGeometricGD, [points, weights], [center.x,center.y,center.z,radius], null, maxIterations, 1E-8);
 	var x = result["x"];
 	center = new V3D(x[0],x[1],x[2]);
 	radius = x[3];

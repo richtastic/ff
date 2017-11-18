@@ -82,11 +82,12 @@ V3D.copy = function(a){
 	return (new V3D()).copy(a);
 }
 V3D.midpoint = function(a,b,c){
-	if(c!==undefined){
-		a.set((b.x+c.x)*0.5,(b.y+c.y)*0.5,(b.z+c.z)*0.5);
-		return a;
+	if(c===undefined){
+		c = b; b = a; a = new V3D();
 	}
-	return new V3D((a.x+b.x)*0.5,(a.y+b.y)*0.5,(a.z+b.z)*0.5);
+	a.set((b.x+c.x)*0.5,(b.y+c.y)*0.5,(b.z+c.z)*0.5);
+	return a;
+	//return new V3D((a.x+b.x)*0.5,(a.y+b.y)*0.5,(a.z+b.z)*0.5);
 }
 V3D.add = function(c,a,b){
 	if(b!==undefined){

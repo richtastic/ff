@@ -1,10 +1,12 @@
 // MLSMesh3D.js
 
 function MLSMesh3D(points, angle){
-	this._angle = Math.PI*0.1; // 18 degrees
+	var angle = Math.PI*0.1; // 18 degrees
+	var beta = 55.0*Math.PI/180.0;
 	this._field = new MLSMesh3D.Field();
-	this.angle(angle);
-	this.points(points);
+	this._field.points(points);
+	this._field.angle(angle);
+	this._field.beta(beta);
 }
 MLSMesh3D._derivativeWeight = function(x, p, h){
 	var distance = V3D.distance(x,p);
@@ -33,26 +35,20 @@ MLSMesh3D._weight = function(x, p, h){
 MLSMesh3D.prototype.points = function(points){
 	return this._field.points(points);
 }
-MLSMesh3D.prototype.angle = function(a){ // constant angle of curvature
-	if(a!==undefined){
-		this._angle;
-	}
-	return this._angle;
-}
 MLSMesh3D.prototype.triangulateSurface = function(){ // main function to create the surface
 	console.log("createSurface")
 	this._estimateNormals();
 	this._propagateNormals();
-//	this._iterateFronts();
+	this._iterateFronts();
 	return false;
 }
 MLSMesh3D.prototype._estimateNormals = function(){
 	var i, j, k, point, neighborhood;
 	var points = this.points();
 	var pointCount = points.length;
-	//var testCases = [5,7,9];
 	var testCases = [5,8,11];
-	var testCaseIndexBase = 1; // index of testCases to use as final surface normal
+	//var testCases = [4,8,12];
+	var testCaseIndexBase = 0; // index of testCases to use as final surface normal
 	var radiusBase = null;
 	var normalBase = null;
 	var maxTestCase = Code.maxArray(testCases);
@@ -69,7 +65,7 @@ MLSMesh3D.prototype._estimateNormals = function(){
 			}
 			//console.log(neighbors.length);
 			var sphere = Code.sphereGeometric(neighbors, point.point(), 50);
-			//var sphere = Code.sphereAlgebraic(neighbors, point.point(), 50);
+			//var sphere = Code.sphereAlgebraic(neighbors, point.point());
 			//console.log(sphere);
 			var center = sphere["center"];
 			var radius = sphere["radius"];
@@ -93,6 +89,8 @@ MLSMesh3D.prototype._estimateNormals = function(){
 		point.bidirectional(true);
 		point.radius(radiusBase);
 		//console.log(confidence)
+		
+		//this.pointDataFromPoint(point);
 	}
 }
 
@@ -114,15 +112,18 @@ MLSMesh3D.prototype._propagateNormals = function(){
 			pointA.bidirectional(false);
 		}
 		var neighborhood = this._field.neighborhoodBSP(pointA.point(), minNeighborhoodCount);
+		//var neighborhood = this._field.neighborhoodKNN(pointA.point(), minNeighborhoodCount);
 		for(var i=0; i<neighborhood.length; ++i){ // for each adjacent point to know direction
 			var pointB = neighborhood[i];
 			if( pointB!==pointA && pointB.bidirectional() ){
 				var midpoint = V3D.midpoint(pointA.point(),pointB.point());
 				var secondary = this._field.neighborhoodBSP(midpoint, minSecondaryCount);
+				//var secondary = this._field.neighborhoodKNN(midpoint, minSecondaryCount);
 				for(var j=0; j<secondary.length; ++j){
 					secondary[j] = secondary[j].point();
 				}
 				var sphere = Code.sphereGeometric(secondary, midpoint, 50);
+				//var sphere = Code.sphereAlgebraic(secondary, midpoint);
 				var center = sphere["center"];
 				var centerToA = V3D.sub(pointA.point(),center);
 				var centerToB = V3D.sub(pointB.point(),center);
@@ -144,7 +145,7 @@ MLSMesh3D._sortConfidence = function(a,b){
 	if(a===b){
 		return 0;
 	}else{
-		//return a.normalConfidence() > b.normalConfidence() ? -1 : 1;
+//return a.normalConfidence() > b.normalConfidence() ? -1 : 1;
 		if(a.bidirectional() && b.bidirectional()){ // both unknown
 			// fall through
 		}else if(a.bidirectional()){
@@ -223,9 +224,32 @@ MLSMesh3D.Point.prototype.toString = function(){
 	return str;
 }
 // -------------------------------------------------------------------------------------------------------------------- 
-MLSMesh3D.Field = function(points){
+MLSMesh3D.Field = function(points, angle, beta){
 	this._octTree = new OctTree(MLSMesh3D.Field._octToPoint);
 	this._points = null;
+	this._angle = null;
+	this._eta = null;
+	this.angle(angle);
+	this.beta(beta);
+}
+MLSMesh3D.Field.prototype.angle = function(a){ // constant angle of curvature
+	if(a!==undefined){
+		this._angle = a;
+	}
+	return this._angle;
+}
+MLSMesh3D.Field.prototype.beta = function(beta){ // choose beta = 55 degrees (search radius ~ 3.63)
+	if(beta!==undefined){
+		var eta = Math.sin(2.0*beta)/Math.sin(3.0*beta);
+		this.eta(eta);
+	}
+	return null; // not derived
+}
+MLSMesh3D.Field.prototype.eta = function(eta){
+	if(eta!==undefined){
+		this._eta = eta;
+	}
+	return this._eta;
 }
 MLSMesh3D.Field._octToPoint = function(meshPoint){
 	return meshPoint.point();
@@ -246,7 +270,6 @@ MLSMesh3D.Field.prototype.points = function(points){
 MLSMesh3D.Field.to2DPlane = function(location, planePoint, planeNormal){
 	var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
 	var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
-	//console.log(Code.degrees(offsetAngle))
 	var projection = Code.projectPointToPlane3D(location, planePoint, planeNormal);
 	projection = V3D.sub(projection,planePoint)
 	if( Math.abs(offsetAngle) > 1E-10 ){
@@ -254,6 +277,31 @@ MLSMesh3D.Field.to2DPlane = function(location, planePoint, planeNormal){
 	}
 	projection = new V2D(projection.x,projection.y);
 	return projection;
+}
+MLSMesh3D.Field.prototype.pointDataFromPoint = function(location, point){
+	if(!point){
+		if(Code.isa(location,MLSMesh3D.Point)){
+			point = location;//.point();
+		}else{
+			point = new MLSMesh3D.Point(location);
+		}
+	}
+	var neighborhoodMinCount = 5;
+	neighborhood = this.neighborhoodBSP(point, neighborhoodMinCount);
+	//neighborhood = this.neighborhoodKNN(point, maxTestCase);
+	for(k=0; k<neighborhood.length; ++k){
+		neighborhood[k] = neighborhood[k].point();
+	}
+	var sphere = Code.sphereGeometric(neighborhood, point.point(), 50);
+	var center = sphere["center"];
+	var radius = sphere["radius"];
+	var normal = V3D.sub(point.point(),center);
+	normal.norm();
+	point.normal(normal);
+	point.normalConfidence(0.0);
+	point.bidirectional(false);
+	point.radius(radius);
+	return point;
 }
 MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, desiredCount){
 	if(Code.isa(location,MLSMesh3D.Point)){
@@ -287,32 +335,6 @@ MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, desiredCount){
 		checkPoints.push(projections[i]);
 	}
 	checkPoints.push(projectedLocation);
-
-// var off = new V2D(1,1);
-// var sca = 200.0;
-// var display = GLOBALSTAGE;
-// for(i=0; i<checkPoints.length; ++i){
-// 	var color = 0xFFCC0000;
-// 	if(i==(checkPoints.length)-1){
-// 		console.log("in")
-// 		color = 0xFF0000CC;
-// 	}
-// 	var p = checkPoints[i];
-// console.log(p+"")
-// 	var pp = p.copy().add(off).scale(sca);
-// 	var d = new DO();
-// 			d.graphics().setLine(1.0,0xFF990000);
-// 			d.graphics().setFill(color);
-// 			d.graphics().beginPath();
-// 			//d.graphics().drawCircle((point.x-mini.x)*scale,(point.y-mini.y)*scale,12.0);
-// 			//d.graphics().drawLine( (p.x-mini.x)*scale,(p.y-mini.y)*scale, (q.x-mini.x)*scale,(q.y-mini.y)*scale, );
-// 			d.graphics().drawCircle(pp.x,pp.y,2);
-// 			//d.graphics().drawCircle(0,0,5);
-// 			d.graphics().endPath();
-// 			d.graphics().fill();
-// 			d.graphics().strokeLine();
-// 		display.addChild(d);
-// }
 
 	var collection = [];
 	var minDistance = null;
@@ -393,46 +415,11 @@ MLSMesh3D.halfPlaneSubsetPoints2D = function(location, points, keyPoint){ // poi
 			var o = point;
 			var plane = {"o":o, "d":d, "data":points[i]};
 			halfPlanes.push(plane);
-// var off = new V2D(1,1);
-// var sca = 200.0;
-// var display = GLOBALSTAGE;
-// var pp = point.copy().add(off).scale(sca);
-// var qq = location.copy().add(off).scale(sca);
-// var d = new DO();
-// d.graphics().setLine(1.0,0x99009900);
-// d.graphics().beginPath();
-// d.graphics().drawLine( pp.x,pp.y, qq.x,qq.y );
-// d.graphics().endPath();
-// d.graphics().strokeLine();
-// display.addChild(d);
 			setKeep.push(points[i]);
 		}else{
 			setDrop.push(points[i]);
 		}
 	}
-	// var set = [];
-	// for(i=0; i<halfPlanes.length; ++i){
-	// 	set.push( halfPlanes[i]["data"] );
-	// }
-	// if(minCount && set.length<minCount){
-	// 	for(i=0; i<sorted.length; ++i){
-	// 		var a = sorted[i];
-	// 		var isInside = false;
-	// 		for(j=0; j<set.length; ++j){
-	// 			var b = set[i];
-	// 			if(a==b){
-	// 				isInside = true;
-	// 				break;
-	// 			}
-	// 		}
-	// 		if(!isInside){
-	// 			set.push(a);
-	// 			if(set.length>=minCount){
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// }
 	return {"yes":setKeep, "no":setDrop};
 }
 MLSMesh3D.Field.prototype.neighborhoodKNN = function(point, maxNeighbors, asPoints){
@@ -462,8 +449,7 @@ MLSMesh3D.Field.prototype.printPoints = function(){
 	str += "\n";
 	console.log(str);
 }
-
-MLSMesh3D.Field.prototype._projectPointToSurface = function(location){
+MLSMesh3D.Field.prototype._projectPointToSurface = function(location, data){
 	//return {"scalar":0, "surface":null, "radius":null, "normal":null};
 
 	var points = this.points();
@@ -474,8 +460,8 @@ MLSMesh3D.Field.prototype._projectPointToSurface = function(location){
 	var minNeighbors = 8; // ..... larger number projects more only to closest point
 	// lower number is more jagged, but doesnt't screq up projection
 	for(iteration=0; iteration<maxIterations; ++iteration){
-		//var neighborhood = this._quadTree.kNN(x, maxNeighbors);
 		var neighborhood = this.neighborhoodBSP(x, minNeighbors);
+		//var neighborhood = this.neighborhoodKNN(x, minNeighbors);
 		neighborhood = neighborhood.sort(function(a,b){
 			var dA = V3D.distanceSquare(x,a.point());
 			var dB = V3D.distanceSquare(x,b.point());
@@ -495,7 +481,7 @@ MLSMesh3D.Field.prototype._projectPointToSurface = function(location){
 			var neighborNormal = neighbor.normal();
 			var weight = MLSMesh3D._weight(x,neighborPoint, maxDistance);
 			var dWeight = MLSMesh3D._derivativeWeight(x,neighborPoint, maxDistance);
-dWeight *= 0.1; // dWeight pushes projection too close to nearest point / with more direct normal
+dWeight *= 0.0001; // dWeight pushes projection too close to nearest point / with more direct normal
 			var pToX = V3D.sub(x,neighborPoint);
 				var wXP = pToX.copy().scale(weight);
 			var dirDW = pToX.copy().scale(2.0*dWeight);
@@ -523,14 +509,423 @@ dWeight *= 0.1; // dWeight pushes projection too close to nearest point / with m
 		var diffX = V3D.distance(x,nextX);
 		x = nextX;
 
-		if(diffX<1E-6){
+		if(diffX<1E-6){ // TODO: relative ?
 			break;
 		}
 	}
-	var finalDistance = V3D.distance(location,x);
-	
-	return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":new V3D(0,0), "gradient":new V3D(0,0)};
+	if(data){
+		var finalDistance = V3D.distance(location,x);
+		return {"scalar":finalDistance, "circle":circle, "point":location, "surface":x, "direction":new V3D(0,0), "gradient":new V3D(0,0)};
+	}
+	return x;
 }
+
+// MLSMesh3D.Field.prototype.searchLength = function(edge){
+// 	var c = edge.length();
+// 	var b = eta*c;
+// 	// find minimum in local area
+// 	var midpoint = edge.midpoint();
+// 	var i = this._field.minimumInSphere(midpoint,b);
+// 	return i;
+// }
+MLSMesh3D.Field._sortCurvature = function(a,b){ // largest circle first == smallest curvature
+	if(a==b){
+		return 0;
+	}
+	return Math.abs(a.radius()) > Math.abs(b.radius()) ? -1 : 1;
+}
+// MLSMesh3D.Field._sortConfidence = function(a,b){ // largest circle first == smallest curvature
+// 	if(a==b){
+// 		return 0;
+// 	}
+// 	return Math.abs(a.radius()) > Math.abs(b.radius()) ? -1 : 1;
+// }
+MLSMesh3D.Field.prototype.firstPoint = function(){ // find first point == flattest point -> radius = 0
+	var i, point;
+	var points = this.points();
+	//var curvatureQueue = new PriorityQueue(MLSMesh3D.Field._sortCurvature); // this will start by searching everything && high variability on equalateral
+	var curvatureQueue = new PriorityQueue(MLSMesh3D.Field._sortConfidence);
+	for(i=0; i<points.length; ++i){
+		point = points[i];
+		curvatureQueue.push(point);
+	}
+	var firstPoint = curvatureQueue.pop();
+	curvatureQueue.kill();
+	firstPoint = this._projectPointToSurface(firstPoint.point());
+	return firstPoint;
+}
+MLSMesh3D.Field.prototype.firstTriangle = function(location,edgeLength){
+//	console.log("firstTriangle: ",location,edgeLength);
+	var angle = this.angle();
+	var angle120 = Code.radians(120.0);
+	var cosRatio = 0.5 / Math.cos(Code.radians(30.0)); //var cosRatio = Math.tan(Code.radians(30.0)); // equalateral triangle inside length 
+	var insideLength = edgeLength*cosRatio;
+//console.log("insideLength: "+insideLength+" / "+edgeLength+" / "+(insideLength/edgeLength))
+	// get triangle from plane
+	var minNeighborhoodCount = 5;
+	var neighborhood = this.neighborhoodBSP(location, minNeighborhoodCount);
+	var points = [];
+	for(i=0; i<neighborhood.length; ++i){
+		points[i] = neighborhood[i].point();
+	}
+	var plane = Code.planeFromPoints(location, points);
+	var normal = plane["normal"];
+	var xDir = plane["x"];
+	var yDir = plane["y"];
+	var vertexA = xDir.copy().scale(insideLength);
+	var vertexB = V3D.rotateAngle(vertexA,normal, angle120);
+	var vertexC = V3D.rotateAngle(vertexA,normal,-angle120);
+	vertexA.add(location);
+	vertexB.add(location);
+	vertexC.add(location);
+	vertexA = this._projectPointToSurface(vertexA);
+	vertexB = this._projectPointToSurface(vertexB);
+	vertexC = this._projectPointToSurface(vertexC);
+	var edgeAB = new MLSMesh3D.Edge(vertexA,vertexB)
+	var edgeBC = new MLSMesh3D.Edge(vertexB,vertexC);
+	var edgeCA = new MLSMesh3D.Edge(vertexC,vertexA);
+// console.log(edgeAB.length());
+// console.log(edgeBC.length());
+// console.log(edgeCA.length());
+	var midpointAB = edgeAB.midpoint();
+	var midpointBC = edgeBC.midpoint();
+	var midpointCA = edgeCA.midpoint();
+	midpointAB = this._projectPointToSurface(midpointAB);
+	midpointBC = this._projectPointToSurface(midpointBC);
+	midpointCA = this._projectPointToSurface(midpointCA);
+	midpointAB = this.pointDataFromPoint(midpointAB);
+	midpointBC = this.pointDataFromPoint(midpointBC);
+	midpointCA = this.pointDataFromPoint(midpointCA);
+	var lengthAB = midpointAB.radius()*angle;
+	var lengthBC = midpointBC.radius()*angle;
+	var lengthCA = midpointCA.radius()*angle;
+		var center = this.pointDataFromPoint(location);
+	//console.log(lengthAB,lengthBC,lengthCA,"of:",edgeLength,(center.radius()*angle));
+	edgeAB.idealLength(lengthAB);
+	edgeBC.idealLength(lengthBC);
+	edgeCA.idealLength(lengthCA);
+	console.log(edgeAB.priority()+" | "+edgeBC.priority()+" | "+edgeCA.priority());
+	// initial triangle
+	var tri = new MLSMesh3D.Tri(vertexA,vertexB,vertexC);
+	tri.setEdges(edgeAB,edgeBC,edgeCA);
+	edgeAB.tri(tri);
+	edgeBC.tri(tri);
+	edgeCA.tri(tri);
+	return tri;
+}
+
+MLSMesh3D.Field.prototype.equilibriumEdgeForPoint = function(point){
+	var angle = this.angle();
+	var eta = this.eta();
+	var radius1 = this.minRadius(point);
+	var edgeLength1 = radius1*angle;
+	var searchRadius1 = edgeLength1*eta;
+	var radius2 = this.minRadius(point, searchRadius1);
+	var edgeLength2 = radius2*angle;
+	// start range search
+	var minE = Math.min(edgeLength1,edgeLength2);
+	var maxE = Math.max(edgeLength1,edgeLength2);
+	var eIn = (minE+maxE)*0.5;
+	var eOut;
+	var iterations = 0;
+	var maxIterations = 20;
+	var maxRatio = 1.001;
+	while(iterations<maxIterations && eIn>minE && eIn<maxE && (maxE/minE)>maxRatio){
+		var searchRadius = eIn*eta;
+		var radius = this.minRadius(point, searchRadius);
+		eOut = radius*angle;
+		if(eOut>eIn){
+			minE = eIn;
+		}else{ // eOut<=eIn
+			maxE = eIn;
+		}
+		//console.log("["+minE+" | "+maxE+"]  ==  "+(maxE/minE));
+		var eIn = (minE+maxE)*0.5;
+		++iterations;
+	}
+	var edgeLength = eIn;
+	return edgeLength;
+}
+MLSMesh3D.Field.prototype.maxCurvature = function(location, radiusSearch){
+	return this.minRadius(location, radiusSearch);
+}
+MLSMesh3D.Field.prototype.minRadius = function(location, radiusSearch){
+	if(!radiusSearch){
+		var nearest = this._octTree.closestObject(location);
+		var radius = nearest.radius();
+		return radius;
+	}
+	var neighborhood = this._octTree.objectsInsideSphere(location, radiusSearch);	
+	var minRadius = null;
+	for(var i=0; i<neighborhood.length; ++i){
+		var neighbor = neighborhood[i];
+		var radius = neighbor.radius();
+		if(minRadius===null || minRadius>radius){
+			minRadius = radius;
+		}
+	}
+	if(minRadius===null){
+		var nearest = this._quadTree.closestObject(location);
+		var radius = nearest.radius();
+		return radius;
+	}
+	return minRadius;
+}
+
+MLSMesh3D.Front = function(){ // all fronts - front list
+	this._fronts = []; // set of EdgeFront
+	this._triangles = []; // set of completed triangles from removed fronts*
+}
+MLSMesh3D.Front.prototype.newEdgeFront = function(){
+	var front = new MLSMesh3D.EdgeFront(this);
+	this._fronts.push(front);
+	return front;
+}
+MLSMesh3D.Front.prototype.triangles = function(){
+	return this._triangles;
+}
+MLSMesh3D.Front.prototype.addTri = function(tri){
+	this._triangles.push(tri);
+}
+
+
+// -------------------------------------------------------------------------------------------------------------------- 
+MLSMesh3D.EdgeFront = function(front){ // single front
+	this._edgeQueue = new PriorityQueue(MLSMesh3D.Edge.sortIncreasing);
+	this._edgeList = new LinkedList(true);
+	this._fullFront = null;
+	this.fullFront(front);
+}
+MLSMesh3D.EdgeFront.prototype.fullFront = function(f){
+	if(f!==undefined){
+		this._fullFront = f;
+	}
+	return this._fullFront;
+}
+MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgePush = function(edge){
+	edge.node( this._edgeQueue.push(edge) );
+	edge.link( this._edgeList.push(edge) );
+	return edge;
+}
+MLSMesh3D.EdgeFront.prototype.addTri = function(tri){
+	this._fullFront.addTri(tri);
+}
+MLSMesh3D.EdgeFront.prototype.fromTriangle = function(tri){ // initial front - // midpoint ideal length
+	this.clear();
+	this.addNodeLinkEdgePush(tri.edgeAB());
+	this.addNodeLinkEdgePush(tri.edgeBC());
+	this.addNodeLinkEdgePush(tri.edgeCA());
+	this.addTri(tri);
+	console.log("list:");
+	console.log(this._edgeList.toString());
+	console.log("queue:");
+	console.log(this._edgeQueue.toString());
+}
+MLSMesh3D.EdgeFront.prototype.closestEdgePoint = function(edgeIn,vertex){
+	//
+}
+MLSMesh3D.EdgeFront.prototype.clear = function(){
+	this._edgeQueue.clear();
+	this._edgeList.clear();
+}
+MLSMesh3D.EdgeFront.prototype.kill = function(){
+	this.clear();
+	this._edgeQueue = null;
+	this._edgeList = null;
+	this._fullFront = null;
+}
+
+
+// -------------------------------------------------------------------------------------------------------------------- 
+MLSMesh3D.Tri = function(a,b,c){
+	// MLSMesh3D.Tri._.constructor.call(this,a,b,c);
+	this._edgeAB = null;
+	this._edgeBC = null;
+	this._edgeCA = null;
+}
+// Code.inheritClass(MLSMesh3D.Tri, Tri3D); // ?
+MLSMesh3D.Tri.prototype.edgeAB = function(e){
+	if(e!==undefined){
+		this._edgeAB = e;
+	}
+	return this._edgeAB;
+}
+MLSMesh3D.Tri.prototype.edgeBC = function(e){
+	if(e!==undefined){
+		this._edgeBC = e;
+	}
+	return this._edgeBC;
+}
+MLSMesh3D.Tri.prototype.edgeCA = function(e){
+	if(e!==undefined){
+		this._edgeCA = e;
+	}
+	return this._edgeCA;
+}
+MLSMesh3D.Tri.prototype.setEdges = function(edgeAB,edgeBC,edgeCA){ // ABBCCA
+	this._edgeAB = edgeAB;
+	this._edgeBC = edgeBC;
+	this._edgeCA = edgeCA;
+}
+MLSMesh3D.Tri.prototype.generateEdgesFromVerts = function(){
+	this._edgeAB = new MLSEdge(this._a,this._b);
+		this._edgeAB.tri(this);
+	this._edgeBC = new MLSEdge(this._b,this._c);
+		this._edgeBC.tri(this);
+	this._edgeCA = new MLSEdge(this._c,this._a);
+		this._edgeCA.tri(this);
+}
+MLSMesh3D.Tri.prototype.kill = function(){
+	// MLSMesh3D.Tri._.kill.call(this);
+	this._edgeAB = null;
+	this._edgeBC = null;
+	this._edgeCA = null;
+}
+
+// -------------------------------------------------------------------------------------------------------------------- 
+MLSMesh3D.Edge = function(a,b){
+	//this._id = MLSEdge._count++;
+	this._a = null;
+	this._b = null;
+	this._tri = null; // only holds most-recently set tri (can actually be part of many tris, but is only set to single tri [many-one])
+	this._priorityType = MLSMesh3D.Edge.PRIORITY_NORMAL;
+	this._priority = null; // length/idealLength closest to 1 => l/i - 1
+	this._link = null; // linked list reference for prev/next
+	this._node = null; // priority queue reference
+	this._boundary = false;
+	this._idealLength = null;
+	this.A(a);
+	this.B(b);
+}
+MLSMesh3D.Edge.PRIORITY_NORMAL = 0;
+MLSMesh3D.Edge.PRIORITY_DEFERRED = 1;
+MLSMesh3D.Edge.PRIORITY_DEFERRED_2 = 2;
+MLSMesh3D.Edge.sortIncreasing = function(a,b){
+	if(a===b){
+		return 0;
+	}
+	var stateA = a.priorityType();
+	var stateB = b.priorityType();
+	if(stateA===stateB){
+		return a.priority() < b.priority() ? -1 : 1;
+	}
+	return stateA < stateB ? -1 : 1;
+}
+MLSMesh3D.Edge.midpointUnjoined = function(edgeA,edgeB){ // midpoint of 3rd triangle edge
+	if( V3D.equal(edgeA.A(),edgeB.A()) ){
+		return V3D.midpoint(edgeA.B(),edgeB.B());
+	}else if( V3D.equal(edgeA.A(),edgeB.B()) ){
+		return V3D.midpoint(edgeA.B(),edgeB.A());
+	}else if( V3D.equal(edgeA.B(),edgeB.A()) ){
+		return V3D.midpoint(edgeA.A(),edgeB.B());
+	}else if( V3D.equal(edgeA.B(),edgeB.B()) ){
+		return V3D.midpoint(edgeA.A(),edgeB.A());
+	}
+	return null;
+}
+MLSMesh3D.Edge.centroid = function(edgeA,edgeB){
+	var cenA = edgeA.midpoint();
+	var cenB = edgeB.midpoint();
+	return V3D.midpoint(cenA,cenA,cenB);
+}
+MLSMesh3D.Edge.prototype.A = function(a){
+	if(a!==undefined){
+		this._a = a;
+	}
+	return this._a;
+}
+MLSMesh3D.Edge.prototype.B = function(b){
+	if(b!==undefined){
+		this._b = b;
+	}
+	return this._b;
+}
+MLSMesh3D.Edge.prototype.tri = function(t){
+	if(t!==undefined){
+		this._tri = t;
+	}
+	return this._tri;
+}
+MLSMesh3D.Edge.prototype.priority = function(p){
+	if(p!==undefined){
+		this._priority = p;
+	}
+	return this._priority;
+}
+MLSMesh3D.Edge.prototype.priorityType = function(p){
+	if(p!==undefined){
+		this._priorityType = p;
+	}
+	return this._priorityType;
+}
+MLSMesh3D.Edge.prototype.idealLength = function(idealLength){
+	if(idealLength!==undefined){
+		this._idealLength = idealLength;
+		var ratio = this.length()/idealLength;
+		//console.log(this.length(),idealLength,ratio)
+		if(ratio<1.0){
+			ratio = 1.0/ratio;
+		}
+		this.priority(ratio);
+	}
+	return this._idealLength;
+}
+MLSMesh3D.Edge.prototype.link = function(l){
+	if(l!==undefined){
+		this._link = l;
+	}
+	return this._link;
+}
+MLSMesh3D.Edge.prototype.node = function(n){
+	if(n!==undefined){
+		this._node = n;
+	}
+	return this._node;
+}
+MLSMesh3D.Edge.prototype.next = function(){
+	return this._link.next().data();
+}
+MLSMesh3D.Edge.prototype.prev = function(){
+	return this._link.prev().data();
+}
+MLSMesh3D.Edge.prototype.isBoundary = function(b){
+	return this._boundary;
+}
+MLSMesh3D.Edge.prototype.boundary = function(b){
+	if(b!==undefined){
+		this._boundary = b;
+	}
+	return this._boundary;
+}
+MLSMesh3D.Edge.prototype.length = function(){
+	return V3D.distance(this._a,this._b);
+}
+// MLSMesh3D.Edge.prototype.idealLength = function(){
+// 	return this._idealLength;
+// }
+MLSMesh3D.Edge.prototype.direction = function(){
+	var AB = V3D.sub(this._b,this._a);
+	return AB;
+}
+MLSMesh3D.Edge.prototype.unit = function(){
+	return this.direction().norm();
+}
+MLSMesh3D.Edge.prototype.midpoint = function(){
+	return V3D.midpoint(this._a,this._b);
+}
+MLSMesh3D.Edge.prototype.toString = function(){
+	var str = "[E: "; // |"+this._id+"| ";
+	str += this._priorityType+":"+this._priority;
+	str += "]";
+	return str;
+}
+
+// -------------------------------------------------------------------------------------------------------------------- 
+
+
+
+
+
 
 /*
 MLSMesh2D.prototype.drawNormals = function(){
@@ -568,31 +963,30 @@ var display = stage;
 	}
 }
 */
-
-
-MLSMesh3D._sortCurvature = function(a,b){ // largest circle first == smallest curvature
-	if(a==b){
-		return 0;
-	}
-	return Math.abs(a.radius()) > Math.abs(b.radius()) ? -1 : 1;
-}
 MLSMesh3D.prototype._iterateFronts = function(){
-	/*
-	var i, j;
-	var point;
-	var points = this._points;
-	var tree = this._quadTree;
-	var fronts = [];
-	var curvatureQueue = new PriorityQueue(MLSMesh2D._sortCurvature);
-	// find first point == flattest point -> radius = 0
+	var field = this._field;
+	var firstPoint = field.firstPoint();
+	var firstLength = field.equilibriumEdgeForPoint(firstPoint);
+	//console.log("start edge: "+firstLength);
+	var firstTriangle = field.firstTriangle(firstPoint, firstLength);
+	console.log(firstTriangle);
+	//
 
-	for(i=0; i<points.length; ++i){
-		point = points[i];
-		curvatureQueue.push(point);
-	}
+	// var firstFront = new MLSEdgeFront();
+	// var frontList = new MLSFront();
+	// 	frontList.addFront(firstFront);
+	// 	firstFront.fromTriangle(seedData.tri);
+	// this.frontList = frontList;
+	var front = new MLSMesh3D.Front();
+	var firstFront = front.newEdgeFront();
+	firstFront.fromTriangle(firstTriangle);
+	
+	//front.addFront(firstFront);
 
-	var firstPoint = curvatureQueue.pop(); // minimum();
-	firstPoint = this._projectPointToSurface(firstPoint.point());
+	console.log("HERE");
+
+	throw "fronts";
+/*
 
 	var radius;
 	var kappa1 = this._maxCurvature(firstPoint);
@@ -667,7 +1061,7 @@ var d = new DO();
 	d.graphics().strokeLine();
 GLOBALSTAGE.addChild(d);		
 }
-*/
+
 	//this._angle
 
 	drawEdge(a,b);
@@ -776,7 +1170,7 @@ drawEdge(e.a(),e.b(), 0xFF0000CC);
 ++iterations;
 //		break;
 	}
-
+*/
 //console.log("totalLength: "+totalLength);
 
 

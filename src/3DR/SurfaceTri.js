@@ -24,8 +24,8 @@ GLOBALSTAGE = this._stage2D;
 	//
 	this.setupDisplay3D();
 //	this.setupSphere3D();
-	this.setupTorus3D();
-//	this.loadPointFile();
+//	this.setupTorus3D();
+	this.loadPointFile();
 //this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
@@ -129,7 +129,7 @@ SurfaceTri.prototype.onMouseWheelFxn3D = function(e){
 	var location = e["location"];
 	var scroll = e["scroll"];
 	var y = scroll.y;
-	this._userScale += ((y>0)?-1:1)*0.25;
+	this._userScale += ((y>0)?-1:1)*0.1;
 	this._userScale = Math.min(Math.max(this._userScale,-5),5.0);
 }
 SurfaceTri.prototype._mouseSpherePoint = function(e){
@@ -371,12 +371,13 @@ console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, c2,d2,a2,n3) );
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
 	//var sourceFileName = "./images/points/saltdome_1019.pts";
-	var sourceFileName = "./images/points/foot_5092.pts";
-	//var sourceFileName = "./images/points/bunny_30571.pts";
+	//var sourceFileName = "./images/points/foot_5092.pts";
+	var sourceFileName = "./images/points/bunny_30571.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
-		//Code.subSampleArray(list,5000);
+		Code.subSampleArray(list,5000);
+		//Code.subSampleArray(list,10000);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();
@@ -470,12 +471,15 @@ console.log("trianglate start");
 	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
 
 return;
+
 	// visualize potetial field:
 	var origin = new V3D(0,0,0);
-	var range = new V3D(2,2,2);
+	//var range = new V3D(2,2,2); // sphere
+	//var range = new V3D(7,4,7); // torus
+	var range = new V3D(2.1,2.1,2.1); // bunny
 	var min = V3D.sub(origin,range.copy().scale(0.5));
 	var max = V3D.add(origin,range.copy().scale(0.5));
-	var dim = 10;
+	var dim = 20;
 	var samples = new V3D(dim,dim,dim); // 100*100*100 = 1000000.   50^3 = 125000   20^3 = 8000  10^3 = 1000
 	var samplePoints = [];
 	var sampleValues = [];
@@ -493,7 +497,7 @@ var surfacePoints = [];
 				point.add(range.copy().scale(pI,pJ,pK));
 				samplePoints.push(point);
 				var data = this._mlsMesh._field._projectPointToSurface(point);
-				console.log(data);
+				//console.log(data);
 				var surface = data["surface"];
 				value = data["scalar"];
 surfacePoints.push(surface);
@@ -509,6 +513,7 @@ surfacePoints.push(surface);
 		}
 	}
 	// SURFACE PROJECTION:
+	
 	var points = [];
 	var colors = [];
 	for(i=0;i<surfacePoints.length;++i){
@@ -516,8 +521,9 @@ surfacePoints.push(surface);
 		points.push(point.x,point.y,point.z);
 		colors.push(Math.random(),Math.random(),Math.random(),1.0);
 	}
-	// this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
-	// this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+	
 	/*
 	// POTENTIAL FIELD
 	var sampleValueRange = sampleValueMax-sampleValueMin;
