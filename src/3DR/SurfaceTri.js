@@ -428,7 +428,7 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 	for(i=0;i<pts.length;++i){
 		p = pts[i];
 		points.push(p.x,p.y,p.z);
-		colors.push(Math.random(),Math.random(),Math.random(),1.0);
+		colors.push(Math.random(),Math.random(),Math.random(),0.50);
 	}
 	//console.log(points)
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
@@ -451,6 +451,7 @@ console.log("trianglate start");
 	var pts = this._mlsMesh._field.points();
 	console.log(pts);
 	for(i=0;i<pts.length;++i){
+break;
 		p = pts[i];
 		var point = p.point();
 		var normal = p.normal();
@@ -469,6 +470,37 @@ console.log("trianglate start");
 	}
 	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
 	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
+
+
+
+
+
+	// TRIANGLES:
+	var tris = this._mlsMesh._tris;
+	console.log("tris");
+	console.log(tris);
+	if(tris){
+		// this._spherePointBuffer = this._stage3D.getBufferFloat32Array([],3);
+		// this._sphereColorBuffer = this._stage3D.getBufferFloat32Array([],4);
+		// this._linePointBuffer = this._stage3D.getBufferFloat32Array([],3);
+		// this._lineColorBuffer = this._stage3D.getBufferFloat32Array([],4);
+		// intersection:
+		var pointsT = [];
+		var colorsT = [];
+		for(var i=0; i<tris.length; ++i){
+			var tri = tris[i];
+			V3D.pushToArray(pointsT,tri.A());
+			V3D.pushToArray(pointsT,tri.B());
+			V3D.pushToArray(pointsT,tri.C());
+			colorsT.push(0.50,0.0,0.0, 1.0);
+			colorsT.push(0.0,0.50,0.0, 1.0);
+			colorsT.push(0.0,0.0,0.50, 1.0);
+		}
+		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
+		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
+	}
+
+
 
 return;
 
@@ -523,6 +555,7 @@ surfacePoints.push(surface);
 	}
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
 	
 	/*
 	// POTENTIAL FIELD

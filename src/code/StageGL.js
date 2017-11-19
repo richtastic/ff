@@ -158,13 +158,19 @@ StageGL.prototype.setLineWidth = function(width){
 	this._canvas.setLineWidth(width);
 }
 StageGL.prototype.drawPoints = function(attr,buffer){
-	this._canvas.drawPoints(buffer.length);
+	if(buffer.length>0){
+		this._canvas.drawPoints(buffer.length);
+	}
 }
 StageGL.prototype.drawLines = function(attr,buffer){
-	this._canvas.drawLines(buffer.length);
+	if(buffer.length>0){
+		this._canvas.drawLines(buffer.length);
+	}
 }
 StageGL.prototype.drawLineList = function(attr,buffer){
-	this._canvas.drawLineList(buffer.length);
+	if(buffer.length>0){
+		this._canvas.drawLineList(buffer.length);
+	}
 }
 StageGL.prototype.drawTriangles = function(attr,buffer){
 	if(buffer.length>0){
@@ -172,7 +178,9 @@ StageGL.prototype.drawTriangles = function(attr,buffer){
 	}
 }
 StageGL.prototype.drawTriangleList = function(attr,buffer){
-	this._canvas.drawTriangleList(buffer.length);
+	if(buffer.length>0){
+		this._canvas.drawTriangleList(buffer.length);
+	}
 }
 StageGL.prototype.matrixReset = function(){
 	this._canvas.uniformMatrices(this._projectionMatrix, this._modelViewMatrixStack.matrix());
