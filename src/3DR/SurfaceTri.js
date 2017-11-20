@@ -24,8 +24,8 @@ GLOBALSTAGE = this._stage2D;
 	//
 	this.setupDisplay3D();
 //	this.setupSphere3D();
-//	this.setupTorus3D();
-	this.loadPointFile();
+	this.setupTorus3D();
+//	this.loadPointFile();
 //this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
@@ -492,9 +492,9 @@ break;
 			V3D.pushToArray(pointsT,tri.A());
 			V3D.pushToArray(pointsT,tri.B());
 			V3D.pushToArray(pointsT,tri.C());
-			colorsT.push(0.50,0.0,0.0, 1.0);
-			colorsT.push(0.0,0.50,0.0, 1.0);
-			colorsT.push(0.0,0.0,0.50, 1.0);
+			colorsT.push(0.90,0.0,0.0, 1.0);
+			colorsT.push(0.0,0.90,0.0, 1.0);
+			colorsT.push(0.0,0.0,0.90, 1.0);
 		}
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);

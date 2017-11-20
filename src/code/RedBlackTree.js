@@ -254,7 +254,7 @@ RedBlackTree.prototype.insertNode = function(newNode, unique){
 	++this._length;
 	if( this.isNil(parent) ){
 		this.root(newNode);
-		return;
+		return newNode;
 	}else{
 		if(value<0){
 			parent.left(newNode);
