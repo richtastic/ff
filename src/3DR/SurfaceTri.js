@@ -129,7 +129,7 @@ SurfaceTri.prototype.onMouseWheelFxn3D = function(e){
 	var location = e["location"];
 	var scroll = e["scroll"];
 	var y = scroll.y;
-	this._userScale += ((y>0)?-1:1)*0.1;
+	this._userScale += ((y>0)?-1:1)*0.02;
 	this._userScale = Math.min(Math.max(this._userScale,-5),5.0);
 }
 SurfaceTri.prototype._mouseSpherePoint = function(e){

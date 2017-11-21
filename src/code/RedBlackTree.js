@@ -572,7 +572,7 @@ RedBlackTree.Node.prototype.kill = function(n){
 	this._color = undefined;
 }
 // --------------------------------------------------------------------------------------------------------------------
-RedBlackTree.Node.prototype.manualCount = function(nil){
+RedBlackTree.Node.prototype.manualCount = function(nil){ // this should equal length() unless something has gone wrong
 	var countL = 0, countR = 0;
 	if(this._right!=nil && this._right!=this){
 		if(this._right!=null){
