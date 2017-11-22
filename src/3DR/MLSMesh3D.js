@@ -703,6 +703,7 @@ MLSMesh3D.Field.prototype.vertexPredict = function(edge){
 	var dir = edge.unit();
 	// find point p in same plane as edge, fitting isosceles:c,i,i
 	var alt = Math.sqrt(i*i + c*c*0.25);
+
 	var perp = V3D.cross(dir,norm).norm().scale(alt);
 	var midpoint = edge.midpoint();
 	p = V3D.add(midpoint,perp);
@@ -759,6 +760,7 @@ MLSMesh3D.Front.prototype.triangles = function(){
 }
 MLSMesh3D.Front.prototype.addTri = function(tri){
 	this._triangles.push(tri);
+	TRICHECK(tri);
 }
 MLSMesh3D.Front.prototype.removeFront = function(front){
 	Code.removeElementSimple(this._fronts, front);
@@ -831,7 +833,14 @@ MLSMesh3D.Front.prototype.closestFrontToPoint = function(vertex,edge){ // go ove
 
 
 
-
+TRICHECK = function(tri){
+	var norm = tri.normal();
+	if(norm.length()==0){
+		console.log("BAD TRI");
+		console.log(tri,norm);
+		throw "???";
+	}
+}
 
 
 MLSMesh3D.Front.prototype.growTriangle = function(edgeFront, edge,vertex,field){
@@ -862,6 +871,7 @@ MLSMesh3D.Front.prototype.growTriangle = function(edgeFront, edge,vertex,field){
 
 MLSMesh3D.Front.prototype.topologicalEvent = function(edgeFrontFrom, edgeFrom, vertexFrom, field){
 console.log("TOPOLOGIAL HANDLING:");
+throw "..."
 	// store stats, find perpendicular to edge
 	var fromA = edgeFrom.A();
 	var fromB = edgeFrom.B();
@@ -878,33 +888,32 @@ console.log("TOPOLOGIAL HANDLING:");
 		var len = edgeList.length();
 		for(j=0, edge=edgeList.head().data(); j<len; ++j, edge=edge.next()){ // go over all edges
 			if( edge!=edgeFrom && !V3D.equal(fromB, edge.A()) ){// && !V3D.equal(fromA, edge.A()) ){ // && !V3D.equal(fromA, edge.A()) && !V3D.equal(fromB, edge.B()) ){ // only need to check b for edge.prev: 1/n
-				// in correct direction - this may be limiting on odd surfaces ?
 				V3D.sub(midToVert, edge.A(),midpoint);
-// 				dot = V3D.dot(midToVert,perp);
-// if(dot<=0.0){ // this probably also covers the same-edge conlinearity ...
-// 	continue;
-// }
-				// WHICH DISTANCE TO USE:
-				//dist = V3D.distanceSquare( midpoint,edge.A() );
-				dist = V3D.distanceSquare( vertexFrom,edge.A() );
+				//dist = V3D.distanceSquare( midpoint,edge.A() ); // distance from existing edge
+				dist = V3D.distanceSquare( vertexFrom,edge.A() ); // distance from new-point
 				// closest so far
 				if( closestDistance==null || dist<closestDistance || (dist<=closestDistance && front==edgeFrontFrom) ){
-					var f, e, eL, len2, maxEdgeLength, newNorm;
+					var f, e, eL, len2, fenceHeight, newNorm;
 					var qInt, eNE, eNP, eNN, eD, qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D(), qN=new V3D();
 					var vert=edge.A(), aToV=new V3D(), bToV=new V3D();
 					// CHECK FOR FRONT-EDGE INTERSECTIONS
 					V3D.sub(aToV, vert,fromA);
 					V3D.sub(bToV, vert,fromB);
-					newNorm = V3D.cross(aToV,bToV).norm();
-					maxEdgeLength = Math.max(aToV.length(),bToV.length());
-maxEdgeLength = 1E2 * maxEdgeLength; // height of fence
-qInt = null;
+					newNorm = V3D.cross(aToV,bToV);
+					if(!newNorm){
+						console.log("NO NEW NORM: "+aToV+" | "+bToV);
+						continue;
+					}
+					newNorm.norm();
+					fenceHeight = 1E0 * Math.max(aToV.length(),bToV.length()); // TODO: does this need to be REALLY TALL ? would that interfere with unrelated fence points ?
+					// FIND CLOSEST NON-FENCE-INTERSECTING TRI TO CUT
+					qInt = null;
 					for(k=0;k<frontList.length;++k){
 						f = frontList[k];
 						eL = f.edgeList();
 						len2 = eL.length();
 						for(l=0, e=eL.head().data(); l<len2; ++l, e=e.next()){
-							// don't check if e is triangle edge
+							// don't check if e is triangle edge -- don't fence off self
 							if(e==edgeFrom // e.A()==fromA&&e.B()==fromB
 								|| (V3D.equal(e.A(),vert)&&V3D.equal(e.B(),fromA))
 								|| (V3D.equal(e.A(),vert)&&V3D.equal(e.B(),fromB))
@@ -913,43 +922,38 @@ qInt = null;
 								){
 								continue;
 							}
-//console.log((e.next()==e)+" "+(e.prev()==e));
 							// find 4 points to define fence quad
 							eNE = e.tri().normal();
 							eNP = e.prev().tri().normal();
 							eNN = e.next().tri().normal();
-							eD = e.unit();
-							qN = V3D.cross(qN, eD,eNE).norm();
-// have to remove portion in direction of edge-perpendicular
-
-// var dirQ;
-// dirQ = V3D.scale(qN, V3D.dot(eNP,qN));
-// eNP = V3D.sub(eNP, eNP,dirQ);
-// eNP.norm();
-// eNP = V3D.add(eNP, eNE,eNP).norm();
-// //eNP = V3D.avg(eNE,eNP).norm();
-// eNP.scale(maxEdgeLength);
-// dirQ = V3D.scale(qN, V3D.dot(eNN,qN));
-// eNN = V3D.sub(eNN, eNN,dirQ);
-// eNN.norm();
-// eNN = V3D.add(eNN, eNE,eNN).norm();
-// //eNN = V3D.avg(eNE,eNN).norm();
-// eNN.scale(maxEdgeLength);
-
-eNP = V3D.add(eNP, eNE,eNP).norm();
-eNP.scale(maxEdgeLength);
-eNN = V3D.add(eNN, eNE,eNN).norm();
-eNN.scale(maxEdgeLength);
-//
+							// TODO: what about triangles that diverge / converge ?
+							// eNP = average of edge and prev
+								// eNP = V3D.add(eNP, eNE,eNP).norm();
+								eNP.copy(eNE);
+							eNP.scale(fenceHeight);
+							// eNN = average of edge and next
+								// eNN = V3D.add(eNN, eNE,eNN).norm();
+								eNN.copy(eNE);
+							eNN.scale(fenceHeight);
+							// create 4 fence locations
 							V3D.add(qA, e.A(),eNP);
 							V3D.sub(qB, e.A(),eNP);
 							V3D.sub(qC, e.B(),eNN);
 							V3D.add(qD, e.B(),eNN);
-var qNA = V3D.cross(V3D.sub(qB,qA),V3D.sub(qC,qA)).norm();
-var qNB = V3D.cross(V3D.sub(qD,qC),V3D.sub(qA,qC)).norm();
+							// normals for 2 triangles:
+							var qNA = V3D.cross(V3D.sub(qB,qA),V3D.sub(qC,qA)).norm();
+							var qNB = V3D.cross(V3D.sub(qD,qC),V3D.sub(qA,qC)).norm();
+							// find plane intersection of 2 separate triangles:
+							if(!fromA || !fromB || !vert || !newNorm || !qA || !qB || !qC || !qD || !qNA || !qNB){
+								//console.log(fromA,fromB,vert,newNorm, qA,qB,qC,qNA);
+								console.log("un de fin ed");
+								console.log(eNE+" <<< NORMAL")
+								console.log(qA,qB,qC,qD);
+								console.log(qNA,qNB);
+								throw "???"
+							}
 							qInt = Code.triTriIntersection3D(fromA,fromB,vert,newNorm, qA,qB,qC,qNA);
-							//if(qInt){ break; }
-							var m, really;
+							var m, really; // really is to make sure intersection point isn't at edge corners which are valid
 							if(qInt){
 								really = false;
 								for(m=0;m<qInt.length;++m){
@@ -973,22 +977,16 @@ var qNB = V3D.cross(V3D.sub(qD,qC),V3D.sub(qA,qC)).norm();
 									break;
 								}
 							}
-
-							qInt = null;
-							//if(qInt){ break; }
-							// qInt = Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qA,qB,qC,qN);
-							// qInt |= Code.triTriIntersection3DBoolean(fromA,fromB,vertexFrom,fromN, qC,qD,qA,qN);
-							// if(qInt){
-							// 	break;
-							// }
+							//qInt = null;
+							//if(qInt){ break; } // break after first intersection
 						}
-						if(qInt){
-							console.log("TRIANGLE INTERSECTION "+frontList.length);
-							break; // stop checking - 
-						}
+						// if(qInt){
+						// 	//console.log("TRIANGLE INTERSECTION "+frontList.length);
+						// 	break; // stop checking - go to next edge
+						// }
 					}
 					if(!qInt){
-						console.log("NO INT -> ");
+						console.log("NO INT -> KEEP");
 						closestDistance = dist;
 						closestFront = front;
 						closestEdge = edge;
@@ -998,18 +996,19 @@ var qNB = V3D.cross(V3D.sub(qD,qC),V3D.sub(qA,qC)).norm();
 			}
 		}
 	}
-	console.log(closestFront)
 	if(closestFront==edgeFrontFrom){
 		console.log("SPLIT");
-		this.split(edgeFrom, closestEdge, closestPoint, edgeFrontFrom, field);
+		this.split(edgeFrontFrom,edgeFrom, closestEdge, closestPoint, field);
 	}else if(closestFront!=null){ // handle merge if seperate front
 		console.log("MERGE");
-		this.merge(edgeFrom, closestEdge, closestPoint, closestFront, edgeFrontFrom, field);
+		this.merge(edgeFrontFrom,edgeFrom, closestFront,closestEdge, closestPoint, field);
 	}else{
-		throw new Error("null edge "+closestFront+" ");
+		console.log("TODO: TOO CLOSE, BUT FOUND NO POSSIBLE CONNECTION ...");
+		//throw new Error("null edge "+closestFront+" ");
+		edgeFrontFrom.deferEdge(edgeFrom);
 	}
 }
-MLSMesh3D.Front.prototype.split = function(edgeFrom,edgeTo,vertexFrom, edgeFrontFrom, field){ // 
+MLSMesh3D.Front.prototype.split = function(edgeFrontFrom,edgeFrom,edgeTo,vertexFrom, field){ // 
 	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB;
 	if( V3D.equal(vertexFrom,edgeTo.A()) ){
 		lastEdge = edgeTo;
@@ -1023,27 +1022,32 @@ MLSMesh3D.Front.prototype.split = function(edgeFrom,edgeTo,vertexFrom, edgeFront
 	edgeAB.idealLength( field.necessaryMinLength(edgeAB) );
 	edgeBC.idealLength( field.necessaryMinLength(edgeBC) );
 	edgeCA.idealLength( field.necessaryMinLength(edgeCA) );
+// edges have diplicates ....
 	// triangle
 	tri = new MLSMesh3D.Tri(edgeAB.A(),edgeBC.A(),edgeCA.A());
 	tri.setEdges(edgeAB, edgeBC, edgeCA);
+		tri.SPLIT = true;
 	edgeAB.tri(tri);
 	edgeBC.tri(tri);
 	edgeCA.tri(tri);
 	this.addTri(tri);
-	// front
+	// remove old edges from existing front, add to new front
 	var newFront = new MLSMesh3D.EdgeFront(); // this.newEdgeFront(); // 
-	//front.fullFront(this);
+var loopCount = 0;
 	for(edge=edgeFrom.next(); edge!=lastEdge; ){
 		next = edge.next();
 		edgeFrontFrom.removeNodeLinkEdge(edge);
-		edgeFrontFrom.addNodeLinkEdgePush(edge);
+		newFront.addNodeLinkEdgePush(edge);
 		edge = next;
+++loopCount;
+if(loopCount>100){
+	throw("INFINITE LOOP");
+}
 	}
-	edgeFrontFrom.addNodeLinkEdgePush(edgeCA);
+	newFront.addNodeLinkEdgePush(edgeCA);
 	edgeFrontFrom.addNodeLinkEdgeAfter(edgeFrom, edgeBC);
 	edgeFrontFrom.removeNodeLinkEdge(edgeFrom);
 	// front may be a two-edge front if lastEdge==edgeFrom
-	//console.log("NEW FRONTS COUNT: "+this.count()+"("+(this._edgeQueue._tree.length())+"/"+(this._edgeQueue._tree.manualCount())+") | "+front.count()+"("+(front._edgeQueue._tree.length())+"/"+(front._edgeQueue._tree.manualCount())+")");
 	if(newFront.count()<=2){
 		newFront.kill();
 		newFront = null;
@@ -1052,27 +1056,18 @@ MLSMesh3D.Front.prototype.split = function(edgeFrom,edgeTo,vertexFrom, edgeFront
 	}
 	// this might be a two-edge front if edgeFrom.next().next()==edgeTo
 	if(edgeFrontFrom.count()<=2){
-		edgeFrontFrom.clear();
 		this.removeFront(edgeFrontFrom);
+		edgeFrontFrom.kill();
 	}
 	return newFront;
 }
-MLSMesh3D.Front.prototype.merge = function(edgeFrom,edgeTo, vertexFrom, edgeFront, edgeFrontFrom,  field){
-	console.log(edgeFrom,edgeTo);
-	console.log(edgeFrom.A()+"->"+edgeFrom.B());
-	console.log(edgeTo.A()+"->"+edgeTo.B());
-	console.log(vertexFrom+"");
-	console.log("OLD FRONTS COUNT: "+this.count()+" | "+edgeFront.count());
-
-	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB;
+MLSMesh3D.Front.prototype.merge = function(edgeFrontFrom,edgeFrom, edgeFrontTo,edgeTo, vertexFrom,  field){
+	var tri, edge, lastEdge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB;
 	if( V3D.equal(vertexFrom,edgeTo.A()) ){
 		lastEdge = edgeTo;
-		console.log("in - A");
 	}else{ // edgeTo.next().A()===edgeTo.B()
 		lastEdge = edgeTo.next();
-		console.log("in - B");
 	}
-	
 	// edges
 	edgeAB = new MLSMesh3D.Edge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
 	edgeBC = new MLSMesh3D.Edge(edgeFrom.A(),vertexFrom); // new
@@ -1080,43 +1075,40 @@ MLSMesh3D.Front.prototype.merge = function(edgeFrom,edgeTo, vertexFrom, edgeFron
 	edgeAB.idealLength( field.necessaryMinLength(edgeAB) );
 	edgeBC.idealLength( field.necessaryMinLength(edgeBC) );
 	edgeCA.idealLength( field.necessaryMinLength(edgeCA) );
-	// triangle
 	tri = new MLSMesh3D.Tri(edgeAB.A(),edgeBC.A(),edgeCA.A());
+		tri.MERGE = true;
 	tri.setEdges(edgeAB, edgeBC, edgeCA);
 	edgeAB.tri(tri);
 	edgeBC.tri(tri);
 	edgeCA.tri(tri);
 	this.addTri(tri);
+	// TODO: if fronts have opposite orientation, need to go thru edges in reverse
 	// front
-console.log("A");
 	var nodeStart = lastEdge.prev();
 	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom, edgeBC);
 var loopCount = 0;
 	for(edge=lastEdge; edge!=nodeStart; ){
 		next = edge.next();
-		edgeFront.removeNodeLinkEdge(edge);
+		edgeFrontTo.removeNodeLinkEdge(edge);
 		edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,edge);
 		edge = next;
 ++loopCount;
 if(loopCount>100){
-	break;
-	console.log("INFINITE LOOP");
+	throw("INFINITE LOOP");
 }
 	}
-	edgeFront.removeNodeLinkEdge(nodeStart);
+	edgeFrontTo.removeNodeLinkEdge(nodeStart);
 	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,nodeStart);
 	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,edgeCA);
 	edgeFrontFrom.removeNodeLinkEdge(edgeFrom);
-	console.log("NEW FRONTS COUNT: "+edgeFrontFrom.count()+" | "+edgeFront.count());
-	this.removeFront( edgeFront );
-	// remove possibly duplicated edges
-		// ..
-	// this might be a two-edge front?
-	if(edgeFrontFrom.count()<=2){
-		edgeFrontFrom.clear();
-		this.removeFront(edgeFrontFrom);
-	}
-	return edgeFront;
+	console.log("NEW FRONTS COUNT: "+edgeFrontFrom.count()+" | "+edgeFrontTo.count());
+	this.removeFront( edgeFrontTo );
+	// this might be a two-edge front
+	// if(edgeFrontFrom.count()<=2){
+	// 	edgeFrontFrom.clear();
+	// 	this.removeFront(edgeFrontFrom);
+	// }
+	return edgeFrontTo;
 }
 
 MLSMesh3D.Front.prototype.close = function(edgeFront, field){ // collape 3 edges to triangle
@@ -1297,7 +1289,6 @@ MLSMesh3D.EdgeFront.prototype.closestEdgePoint = function(vertex,edgesIgnore){
 MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgeBefore = function(edgeA,edgeB){
 	var node = this._edgeQueue.push(edgeB);
 	var link = this._edgeList.addBefore(edgeA.link(),edgeB);
-	//console.log("addNodeLinkEdgeBefore: "+link+" | "+node);
 	edgeB.node( node );
 	edgeB.link( link );
 	return edgeB;
@@ -1305,7 +1296,6 @@ MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgeBefore = function(edgeA,edgeB){
 MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgeAfter = function(edgeA,edgeB){
 	var node = this._edgeQueue.push(edgeB);
 	var link = this._edgeList.addAfter(edgeA.link(),edgeB);
-	//console.log("addNodeLinkEdgeAfter: "+link+" | "+node);
 	edgeB.node( node );
 	edgeB.link( link );
 	return edgeB;
@@ -1313,20 +1303,13 @@ MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgeAfter = function(edgeA,edgeB){
 MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgePush = function(edgeB){
 	var node = this._edgeQueue.push(edgeB);
 	var link = this._edgeList.push(edgeB);
-	//console.log("addNodeLinkEdgePush: "+link+" | "+node);
 	edgeB.node( node );
 	edgeB.link( link );
 	return edgeB;
 }
 MLSMesh3D.EdgeFront.prototype.removeNodeLinkEdge = function(edge){
-	//console.log("removeNodeLinkEdge");
-	// console.log(edge.link());
-	// console.log(edge.node());
 	var link = this._edgeList.removeNode(edge.link());
 	var node = this._edgeQueue.removeNode(edge.node());
-	//var node = this._edgeQueue.remove(edge);
-	// console.log(link);
-	// console.log(node);
 	if(link==null){
 		throw new Error("null link returned");
 	}
@@ -1664,56 +1647,6 @@ MLSMesh3D.Edge.prototype.toString = function(){
 // -------------------------------------------------------------------------------------------------------------------- 
 
 
-
-
-
-
-/*
-MLSMesh2D.prototype.drawNormals = function(){
-var stage = GLOBALSTAGE;
-var canvas = GLOBALCANVAS;
-var size = canvas.size();
-var availableWidth = size.x;
-var availableHeight = size.y;
-var tree = this._quadTree;
-var display = stage;
-	var size = tree.size();
-	var mini = tree.min();
-	var area = Code.sizeToFitInside(availableWidth,availableHeight, size.x,size.y);
-	var scale = area.x/size.x;
-	//var leafs = QuadTree._arxels(this._root);
-	var points = this._points;
-	for(var i=0; i<points.length; ++i){
-		var mlsPoint = points[i];
-		//var min = arxel.min();
-		var point = mlsPoint.point();
-		var normal = mlsPoint.normal();
-
-		var p = point;
-		var q = point.copy().add( normal.copy().scale(1.0) );
-		var d = new DO();
-			d.graphics().setLine(1.0,0xFF990000);
-			d.graphics().setFill(0xFFCC0000);
-			d.graphics().beginPath();
-			//d.graphics().drawCircle((point.x-mini.x)*scale,(point.y-mini.y)*scale,12.0);
-			d.graphics().drawLine( (p.x-mini.x)*scale,(p.y-mini.y)*scale, (q.x-mini.x)*scale,(q.y-mini.y)*scale, );
-			d.graphics().endPath();
-			d.graphics().fill();
-			d.graphics().strokeLine();
-		display.addChild(d);
-	}
-}
-*/
-
-
-// MLSMesh.prototype.triangleTooClose = function(frontList, edge,vertex, idealLength){ // too close to triangulation
-// 	return frontList.pointCloseToTriangulation(vertex,  this.minLengthBeforeEvent(edge,idealLength) );
-// }
-
-
-
-
-
 MLSMesh3D.prototype._iterateFronts = function(){
 	var field = this._field;
 	// setup front
@@ -1723,7 +1656,7 @@ MLSMesh3D.prototype._iterateFronts = function(){
 	console.log(firstTriangle);
 	var front = new MLSMesh3D.Front();
 	var firstFront = front.newEdgeFront();
-	front.fromTriangle(firstFront, firstTriangle);
+	front.fromTriangle(firstFront, firstTriangle); // AUTO ADDS: front.addTri(firstTriangle);
 
 
 this._tris = front._triangles;
@@ -1733,7 +1666,10 @@ this._tris = front._triangles;
 	
 	var iteration = 0;
 	//var maxIterations = 2000;
-	var maxIterations = 50;
+	var maxIterations = 500;
+	//var maxIterations = 200;
+	//var maxIterations = 100;
+	//var maxIterations = 50;
 	//var maxIterations = 25;
 	while(iteration<maxIterations && front.count()>0){
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+iteration+" ");
@@ -1778,7 +1714,7 @@ console.log("+------------------------------------------------------------------
 //break;
 			}
 			front.topologicalEvent(edgeFront, edge, point, field);
-			break;
+//			break;
 		}else{
 			console.log("GROW");
 			front.growTriangle(edgeFront, edge, point, field);

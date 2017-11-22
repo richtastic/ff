@@ -492,9 +492,15 @@ break;
 			V3D.pushToArray(pointsT,tri.A());
 			V3D.pushToArray(pointsT,tri.B());
 			V3D.pushToArray(pointsT,tri.C());
-			colorsT.push(0.90,0.0,0.0, 1.0);
-			colorsT.push(0.0,0.90,0.0, 1.0);
-			colorsT.push(0.0,0.0,0.90, 1.0);
+			if(tri.SPLIT || tri.MERGE){
+				colorsT.push(0.90,0.50,0.0, 1.0);
+				colorsT.push(0.50,0.90,0.0, 1.0);
+				colorsT.push(0.90,0.90,0.0, 1.0);
+			}else{
+				colorsT.push(0.90,0.0,0.0, 1.0);
+				colorsT.push(0.0,0.90,0.0, 1.0);
+				colorsT.push(0.0,0.0,0.90, 1.0);
+			}
 		}
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);

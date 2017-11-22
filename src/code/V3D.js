@@ -179,8 +179,9 @@ V3D.prototype.lengthSquare = function(){
 }
 V3D.prototype.norm = function(){
 	dist = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
-	if(dist==0){ return; }
-	this.x = this.x/dist; this.y = this.y/dist; this.z = this.z/dist;
+	if(dist!=0){
+		this.x = this.x/dist; this.y = this.y/dist; this.z = this.z/dist;
+	}
 	return this;
 }
 V3D.prototype.scale = function(c,d,e){
