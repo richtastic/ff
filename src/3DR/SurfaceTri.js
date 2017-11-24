@@ -903,11 +903,19 @@ SurfaceTri.prototype.generateTorusPoints = function(count,radiusA,radiusB,error)
 	radiusB = radiusB!==undefined?radiusB:1.0;
 	error = error!==undefined?error:0.01;
 	var i, list = [];
+var index = 0;
+var prng = [101681,101693,103001,102929,104033, 1, 2, 3, 4, 5, 6, 7];
+var prngMod = 104729;
+var r;
 	for(i=0;i<count;++i){
-		var angleA = Math.random()*Math.TAU;
-		var angleB = Math.random()*Math.TAU;
-		var errorX = (Math.random()-0.5)*error;
-		var errorY = (Math.random()-0.5)*error;
+		r = Code.PRNG(prng, ++index, prngMod);
+		var angleA = r*Math.TAU;
+		r = Code.PRNG(prng, ++index, prngMod);
+		var angleB = r*Math.TAU;
+		// var angleA = Math.random()*Math.TAU;
+		// var angleB = Math.random()*Math.TAU;
+		var errorX = 0;//(Math.random()-0.5)*error;
+		var errorY = 0;//(Math.random()-0.5)*error;
 		var point = new V3D(radiusA + radiusB*Math.cos(angleB) + errorX,radiusB*Math.sin(angleB) + errorY, 0);
 		point = V3D.rotateAngle(point, V3D.DIRY, angleA);
 		list.push(point);

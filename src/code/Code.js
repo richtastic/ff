@@ -2698,6 +2698,24 @@ Code.sign = function(num){
 	return num>=0.0 ? 1.0 : -1.0;
 }
 // -------------------------------------------------------- RNG
+Code.PRNG = function(array, input, mod){ // Code.PRNG([101681,101693,103001,102929,104033], i, 104729);
+	input = input!==undefined ? input : 0;
+	mod = mod!==undefined ? mod : 900275296079; //Math.pow(2,30)-1;
+	var i, j;
+	var len = array.length;
+	var number = 0;
+	for(i=0; i<31; ++i){
+		for(j=0; j<len; ++j){
+			array[i%len] = (array[input%len] + input) % mod; // this has had problems
+			input = Math.abs((input + array[j]) % mod);
+		}
+		if(input%2==0){
+			number = number + Math.pow(2,-(31-i));
+		}
+	}
+	//console.log(array+"")
+	return number;
+}
 Code._randGaussSin = null;
 Code.randGauss = function(){ // box muller - randn, normal, gaussian
 	var a, r;

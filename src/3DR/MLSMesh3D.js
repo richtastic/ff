@@ -2,7 +2,7 @@
 
 function MLSMesh3D(points, angle){
 	var angle = Math.PI*0.50; // 18 degrees
-	var beta = 55.0*Math.PI/180.0;
+	var beta = Code.radians(55.0);
 	this._field = new MLSMesh3D.Field();
 	this._field.points(points);
 	this._field.angle(angle);
@@ -699,14 +699,21 @@ MLSMesh3D.Field.prototype.vertexPredict = function(edge){
 	i = (c*0.5)/Math.sin(baseAngle*0.5);
 	console.log(" => i: "+i);
 	var tri = edge.tri();
-	var norm = tri.normal(); // TODO: get normal from midpoint projected to surface better?
-	var dir = edge.unit();
-	// find point p in same plane as edge, fitting isosceles:c,i,i
-	var alt = Math.sqrt(i*i + c*c*0.25);
-
-	var perp = V3D.cross(dir,norm).norm().scale(alt);
+	var normal = tri.normal(); // TODO: get normal from midpoint projected to surface better?
+	var unit = edge.unit();
 	var midpoint = edge.midpoint();
-	p = V3D.add(midpoint,perp);
+	// find point p in same plane as edge, fitting isosceles:c,i,i
+	var altitude = Math.sqrt(i*i + c*c*0.25);
+	var barycenter = tri.center();
+	var centerToEdge = V3D.sub(midpoint,barycenter);
+	var perpendicular = V3D.cross(unit,normal).norm().scale(altitude);
+
+	if(V3D.dot(centerToEdge,perpendicular)<0){
+		perpendicular.scale(-1.0);
+		console.log("WRONG DIRECTION A");
+	}
+	
+	p = V3D.add(midpoint,perpendicular);
 var d1 = (V3D.distance(midpoint,p))
 	p = this._projectPointToSurface(p);
 var d2 = (V3D.distance(midpoint,p))
@@ -796,22 +803,33 @@ MLSMesh3D.Front.prototype.count = function(){
 	return this._fronts.length;
 }
 
-MLSMesh3D.Front.prototype.isPointCloseToTriangulation = function(point, maxDistance){ // TODO: should this be triangles or front, if triangles: optimmize with grid
+MLSMesh3D.Front.prototype.isPointCloseToTriangulation = function(point, edge, maxDistance){ // TODO: should this be triangles or front, if triangles: optimmize with grid
 //MLSMesh3D.Front.prototype.isPointCloseToFront = function(point, maxDistance){
 	// this should only check the front edges ???
 	// go thru all fronts, find closest edge
 	var i, dist, tri, tris = this._triangles;
+	var minDistance = null;
 	var len = tris.length;
 	for(i=0;i<len;++i){
 		tri = tris[i];
 		dist = Code.closestDistancePointTri3D(point, tri.A(),tri.B(),tri.C(),tri.normal());
-//console.log("isPointCloseToTriangulation: "+dist+" / "+maxDistance);
+if(minDistance==null || dist<minDistance){
+	minDistance = dist;
+}
 		if(dist<maxDistance){
+			console.log("isPointCloseToTriangulation YES: "+minDistance);
 			return true;
 		}
 	}
+
+	// NOW CHECK TO SEE IF POINT CROSSES ANY FRONTS
+	this.newTriCrossFront(point, edge, );
+	console.log("isPointCloseToTriangulation NO: "+minDistance);
 	return false;
 	//this.closestFrontToPoint(point);
+}
+MLSMesh3D.Front.prototype.newTriCrossFront = function(point, edge){ 
+	//
 }
 MLSMesh3D.Front.prototype.closestFrontToPoint = function(vertex,edge){ // go over all edges in various fronts - find closest point(+edge) to point
 	var i, front, closest, fronts = this._fronts;
@@ -871,14 +889,20 @@ MLSMesh3D.Front.prototype.growTriangle = function(edgeFront, edge,vertex,field){
 
 MLSMesh3D.Front.prototype.topologicalEvent = function(edgeFrontFrom, edgeFrom, vertexFrom, field){
 console.log("TOPOLOGIAL HANDLING:");
-throw "..."
 	// store stats, find perpendicular to edge
 	var fromA = edgeFrom.A();
 	var fromB = edgeFrom.B();
-	var fromN = edgeFrom.tri().normal();
-	var midpoint = edgeFrom.midpoint();
-	var dir = edgeFrom.unit();
-	var perp = V3D.cross(dir,fromN).norm();
+	var fromTri = edgeFrom.tri();
+	var fromNormal = fromTri.normal();
+	var fromMidpoint = edgeFrom.midpoint();
+	var fromUnit = edgeFrom.unit();
+	var fromPerpendicular = V3D.cross(fromUnit,fromNormal).norm();
+	var fromCenter = fromTri.center();
+	var centerToEdge = V3D.sub(fromMidpoint,fromCenter);
+	if(V3D.dot(centerToEdge,fromPerpendicular)){
+		fromPerpendicular.scale(-1);
+		console.log("WRONG DIRECTION TOP");
+	}
 	// iterate to find closest vertex
 	var frontList = this._fronts;
 	var i, j, k, l, front, dot, edge, edgeList, dist, closestPoint = null, closestDistance = null, closestEdge = null, closestFront = null, midToVert=new V3D();
@@ -888,7 +912,7 @@ throw "..."
 		var len = edgeList.length();
 		for(j=0, edge=edgeList.head().data(); j<len; ++j, edge=edge.next()){ // go over all edges
 			if( edge!=edgeFrom && !V3D.equal(fromB, edge.A()) ){// && !V3D.equal(fromA, edge.A()) ){ // && !V3D.equal(fromA, edge.A()) && !V3D.equal(fromB, edge.B()) ){ // only need to check b for edge.prev: 1/n
-				V3D.sub(midToVert, edge.A(),midpoint);
+				V3D.sub(midToVert, edge.A(),fromMidpoint);
 				//dist = V3D.distanceSquare( midpoint,edge.A() ); // distance from existing edge
 				dist = V3D.distanceSquare( vertexFrom,edge.A() ); // distance from new-point
 				// closest so far
@@ -1666,11 +1690,12 @@ this._tris = front._triangles;
 	
 	var iteration = 0;
 	//var maxIterations = 2000;
-	var maxIterations = 500;
+	//var maxIterations = 500;
 	//var maxIterations = 200;
 	//var maxIterations = 100;
 	//var maxIterations = 50;
-	//var maxIterations = 25;
+//var maxIterations = 24;
+	var maxIterations = 15;
 	while(iteration<maxIterations && front.count()>0){
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+iteration+" ");
 	++iteration;
@@ -1701,7 +1726,7 @@ console.log("+------------------------------------------------------------------
 		//isClose = this.triangleTooClose(frontList, edge,vertex, idealLength);
 		var minLength = field.minLengthBeforeEvent(mlsPoint);
 		//console.log("minLength: "+minLength);
-		var isClose = front.isPointCloseToTriangulation(point, minLength);
+		var isClose = front.isPointCloseToTriangulation(point, edge, minLength);
 		if( isClose ){
 			console.log("CLOSE");
 			// can get better defer state based on how good resulting triangle would look (would need to update?)
@@ -1714,7 +1739,7 @@ console.log("+------------------------------------------------------------------
 //break;
 			}
 			front.topologicalEvent(edgeFront, edge, point, field);
-//			break;
+//break;
 		}else{
 			console.log("GROW");
 			front.growTriangle(edgeFront, edge, point, field);
