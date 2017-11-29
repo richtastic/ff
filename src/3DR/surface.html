@@ -14,6 +14,14 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 	//console.log("triangle intersections");
+	var array = [];
+	var iterations = 10;
+	var count = 1;
+	for(var i=0; i<count; ++i){
+		var number = Code.CSPRNG(array, iterations);
+		console.log(i+": "+number);
+	}
+//	return;
 /*
 	//104729
 	for(var i=0; i<100; ++i){

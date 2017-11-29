@@ -443,7 +443,6 @@ console.log("trianglate start");
 	// this._mlsMesh.triangulateSurface();
 	this._mlsMesh.points(pts);
 	this._mlsMesh.triangulateSurface();
-
 	// show normals
 	var p, i;
 	var pointsL = [];
@@ -502,6 +501,26 @@ break;
 				colorsT.push(0.0,0.0,0.90, 1.0);
 			}
 		}
+
+
+var wasEdge = WASEDGE;
+var wasPoint = WASPOINT;
+var wasPointProjected = WASPOINTPROJECTED;
+
+V3D.pushToArray(pointsT,wasEdge[0]);
+V3D.pushToArray(pointsT,wasEdge[1]);
+V3D.pushToArray(pointsT,wasPoint);
+colorsT.push(0.90,0.0, 0.0, 0.5);
+colorsT.push(0.50,0.0, 0.0, 0.5);
+colorsT.push(1.00,0.0, 0.0, 0.5);
+
+V3D.pushToArray(pointsT,wasEdge[0]);
+V3D.pushToArray(pointsT,wasEdge[1]);
+V3D.pushToArray(pointsT,wasPointProjected);
+colorsT.push(0.0,0.0, 0.50, 0.5);
+colorsT.push(0.0,0.0, 0.75, 0.5);
+colorsT.push(0.0,0.0, 1.00, 0.5);
+
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 	}

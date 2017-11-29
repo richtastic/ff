@@ -2716,6 +2716,40 @@ Code.PRNG = function(array, input, mod){ // Code.PRNG([101681,101693,103001,1029
 	//console.log(array+"")
 	return number;
 }
+Code.CSPRNG = function(array, iterations){ // sequence of masses, positions, velocities
+	iterations = iterations!==undefined ? iterations : 10;
+	var size = 7; // mass, px,py,pz, vx,vy,vz
+	if(array.length<2*size){ // need 2 minimum
+		return null;
+	}
+	var i, j;
+	var masses = [];
+	var positions = [];
+	var velocities = [];
+	var g = 0;
+	for(i=0, j=0; i<array.length; i+=3, ++j){
+		masses[j] = array[i];
+		positions[j] = array[i+1];
+		velocities[j] = array[i+2];
+	}
+	var number = 0;
+	for(i=0; i<iterations; ++i){
+		for(j=0; j<masses.length; ++j){
+			for(k=0; k<masses.length; ++k){
+				// F = m1 * m2 * G / r
+			}
+		}
+		// if(input%2==0){
+		// 	number = number + Math.pow(2,-(31-i));
+		// }
+	}
+	for(i=0, j=0; i<array.length; i+=3, ++j){
+		array[i]   = masses[j];
+		array[i+1] = positions[j];
+		array[i+2] = velocities[j];
+	}
+	return number;
+}
 Code._randGaussSin = null;
 Code.randGauss = function(){ // box muller - randn, normal, gaussian
 	var a, r;
@@ -6433,6 +6467,22 @@ Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-
 	}
 	// no overlap
 	if(int1B<int2A){ return false; }
+	return true;
+}
+
+Code.pointsNullOrCloseToPoints3D = function(pointsA, pointsB){ // fairly specific to MLSMesh3D
+	if(!pointsA || !pointsB){
+		return true;
+	}
+	for(var i=0; i<pointsA.length; ++i){
+		var really = false;
+		for(var j=0; j<pointsB.length; ++j){
+			really |= V3D.equalToEpsilon(pointsA[i],pointsB[j]);
+		}
+		if(!really){
+			return false;
+		}
+	}
 	return true;
 }
 Code.planeEquationFromPointNormal3D = function(pnt,nrm){ // should d = -dot?

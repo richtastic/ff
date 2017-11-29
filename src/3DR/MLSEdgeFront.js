@@ -325,7 +325,7 @@ MLSEdgeFront.prototype.split = function(edgeFrom,edgeTo,vertexFrom, field,      
 	edgeCA.priorityFromIdeal( field.idealEdgeLengthAtPoint(edgeCA.midpoint()) );
 	// triangle
 	tri = new MLSTri(edgeAB.A(),edgeBC.A(),edgeCA.A());
-	tri.setEdges(edgeAB, edgeBC, edgeCA);
+	tri.setEdgeABBCCA(edgeAB, edgeBC, edgeCA);
 	edgeAB.tri(tri);
 	edgeBC.tri(tri);
 	edgeCA.tri(tri);

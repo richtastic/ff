@@ -715,7 +715,10 @@ MLSMesh3D.Field.prototype.vertexPredict = function(edge){
 	
 	p = V3D.add(midpoint,perpendicular);
 var d1 = (V3D.distance(midpoint,p))
+WASEDGE = [edge.A(),edge.B().copy()];
+WASPOINT = p.copy();
 	p = this._projectPointToSurface(p);
+WASPOINTPROJECTED = p.copy();
 var d2 = (V3D.distance(midpoint,p))
 var delta = (d2/d1);
 if(delta<1){delta = 1.0/delta;}
@@ -803,7 +806,7 @@ MLSMesh3D.Front.prototype.count = function(){
 	return this._fronts.length;
 }
 
-MLSMesh3D.Front.prototype.isPointCloseToTriangulation = function(point, edge, maxDistance){ // TODO: should this be triangles or front, if triangles: optimmize with grid
+MLSMesh3D.Front.prototype.isPointCloseToTriangulation = function(edgeFront, edge, point, maxDistance){ // TODO: should this be triangles or front, if triangles: optimmize with grid
 //MLSMesh3D.Front.prototype.isPointCloseToFront = function(point, maxDistance){
 	// this should only check the front edges ???
 	// go thru all fronts, find closest edge
@@ -817,19 +820,77 @@ if(minDistance==null || dist<minDistance){
 	minDistance = dist;
 }
 		if(dist<maxDistance){
-			console.log("isPointCloseToTriangulation YES: "+minDistance);
+			//console.log("isPointCloseToTriangulation YES: "+minDistance);
 			return true;
 		}
 	}
-
+	//console.log("isPointCloseToTriangulation NO: "+minDistance);
 	// NOW CHECK TO SEE IF POINT CROSSES ANY FRONTS
-	this.newTriCrossFront(point, edge, );
-	console.log("isPointCloseToTriangulation NO: "+minDistance);
-	return false;
-	//this.closestFrontToPoint(point);
+	var crossesFront = this.newTriCrossFront(edgeFront, edge, point);
+	console.log("crossesFront LAST:: "+crossesFront);
+	return crossesFront;
 }
-MLSMesh3D.Front.prototype.newTriCrossFront = function(point, edge){ 
-	//
+MLSMesh3D.Front.prototype.newTriCrossFront = function(edgeFrontAux, edgeAux, pointAux){ 
+	var i;
+	var edgeFronts = this._fronts;
+	for(i=0; i<edgeFronts.length; ++i){
+		var edgeFront = edgeFronts[i];
+		var crosses = this.crossesEdgeFront(edgeFront, edgeFrontAux, edgeAux, pointAux);
+		if(crosses){
+			return true;
+		}
+	}
+	return false;
+}
+MLSMesh3D.Front.prototype.crossesEdgeFront = function(edgeFront, edgeFrontAux, edgeAux, pointAux){
+	var i, j;
+	var edgeList = edgeFront._edgeList;
+	var len = edgeList.length();
+	var triPointA = edgeAux.A();
+	var triPointB = edgeAux.B();
+	var triPointC = pointAux;
+	var triNormal = V3D.cross(V3D.sub(triPointB,triPointA),V3D.sub(triPointC,triPointA));
+	for(i=0, edge=edgeList.head().data(); i<len; ++i, edge=edge.next()){
+		// ignore edgeAux intersection
+		if(edge==edgeAux){
+			continue;
+		}
+		// ignore edges that share point
+		if(V3D.equal(edge.A(),pointAux) || V3D.equal(edge.B(),pointAux)){
+			continue;
+		}
+		// find fence directions -- edge points A-B, end points C-D & E-F
+		var fenceHeight = edge.length();// * 1E0; // fences that are big intersect with opposite sides of object
+		var fenceEdgeDirection = edge.unit();
+		var fenceTri = edge.tri();
+		var fenceTriNormal = fenceTri.normal();
+		var fenceEdgeNormal = fenceTriNormal.copy().scale(fenceHeight);
+		var fenceA = edge.A();
+		var fenceB = edge.B();
+		var fenceC = V3D.add(fenceA,fenceEdgeNormal);
+		var fenceD = V3D.add(fenceB,fenceEdgeNormal);
+		var fenceE = V3D.sub(fenceA,fenceEdgeNormal);
+		var fenceF = V3D.sub(fenceB,fenceEdgeNormal);
+		var fenceAB = [fenceA,fenceB];
+		var fencePlaneNormal = V3D.cross(fenceEdgeNormal,fenceEdgeDirection).norm();
+		// find intersections not close to edge corners
+		var intersections, nullOrEnds;
+		// tri CDF
+		intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fenceC,fenceD,fenceF,fencePlaneNormal); // TODO: are these triangles / lines / points ?
+		nullOrEnds = Code.pointsNullOrCloseToPoints3D(intersections, fenceAB);
+		if(!nullOrEnds){
+			console.log(intersections, fenceAB);
+			return true;
+		}
+		// tri FEC
+		intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fenceF,fenceE,fenceC,fencePlaneNormal);
+		nullOrEnds = Code.pointsNullOrCloseToPoints3D(intersections, fenceAB);
+		if(!nullOrEnds){
+			console.log(intersections, fenceAB);
+			return true;
+		}
+	}
+	return false;
 }
 MLSMesh3D.Front.prototype.closestFrontToPoint = function(vertex,edge){ // go over all edges in various fronts - find closest point(+edge) to point
 	var i, front, closest, fronts = this._fronts;
@@ -1694,8 +1755,11 @@ this._tris = front._triangles;
 	//var maxIterations = 200;
 	//var maxIterations = 100;
 	//var maxIterations = 50;
-//var maxIterations = 24;
-	var maxIterations = 15;
+//var maxIterations = 24; // 34-34 vertexPredict front crossing
+//var maxIterations = 46; // 45-46 = projection horrible
+var maxIterations = 54; // 53-54 = nearest corner decision wrong
+//var maxIterations = 15; // too long ish
+	//var maxIterations = 5;
 	while(iteration<maxIterations && front.count()>0){
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+iteration+" ");
 	++iteration;
@@ -1726,7 +1790,7 @@ console.log("+------------------------------------------------------------------
 		//isClose = this.triangleTooClose(frontList, edge,vertex, idealLength);
 		var minLength = field.minLengthBeforeEvent(mlsPoint);
 		//console.log("minLength: "+minLength);
-		var isClose = front.isPointCloseToTriangulation(point, edge, minLength);
+		var isClose = front.isPointCloseToTriangulation(edgeFront, edge, point, minLength);
 		if( isClose ){
 			console.log("CLOSE");
 			// can get better defer state based on how good resulting triangle would look (would need to update?)
