@@ -10,6 +10,46 @@ Tri3D.fromList = function(ax,ay,az, bx,by,bz, cx,cy,cz){
 	return new Tri3D(new V3D(ax,ay,az), new V3D(bx,by,bz), new V3D(cx,cy,cz));
 }
 // -------------------------------------------------------------------------------------------------------------------- 
+Tri3D.prototype.isEqual = function(tri){
+	var a1 = tri.A();
+	var b1 = tri.B();
+	var c1 = tri.C();
+	var a2 = this.A();
+	var b2 = this.B();
+	var c2 = this.C();
+	if( ( V3D.equalToEpsilon(a1,a2) && V3D.equalToEpsilon(b1,b2) && V3D.equalToEpsilon(c1,c2) ) ||
+		( V3D.equalToEpsilon(a1,a2) && V3D.equalToEpsilon(c1,b2) && V3D.equalToEpsilon(b1,c2) ) ||
+		( V3D.equalToEpsilon(b1,a2) && V3D.equalToEpsilon(a1,b2) && V3D.equalToEpsilon(c1,c2) ) ||
+		( V3D.equalToEpsilon(b1,a2) && V3D.equalToEpsilon(c1,b2) && V3D.equalToEpsilon(a1,c2) ) ||
+		( V3D.equalToEpsilon(c1,a2) && V3D.equalToEpsilon(a1,b2) && V3D.equalToEpsilon(b1,c2) ) ||
+		( V3D.equalToEpsilon(c1,a2) && V3D.equalToEpsilon(b1,b2) && V3D.equalToEpsilon(a1,c2) )
+		){
+		return true;
+	}
+	return false;
+}
+Tri3D.prototype.opposite = function(a,b){
+	if( V3D.equalToEpsilon(a,this._a) ){
+		if( V3D.equalToEpsilon(b,this._b) ){
+			return this._c;
+		}else if( V3D.equalToEpsilon(b,this._c) ){
+			return this._b;
+		}
+	}if( V3D.equalToEpsilon(a,this._b) ){
+		if( V3D.equalToEpsilon(b,this._a) ){
+			return this._c;
+		}else if( V3D.equalToEpsilon(b,this._c) ){
+			return this._a;
+		}
+	}if( V3D.equalToEpsilon(a,this._c) ){
+		if( V3D.equalToEpsilon(b,this._a) ){
+			return this._b;
+		}else if( V3D.equalToEpsilon(b,this._b) ){
+			return this._a;
+		}
+	}
+	return null;
+}
 Tri3D.prototype.normal = function(){
 	var AB = V3D.sub(this._b,this._a);
 	var AC = V3D.sub(this._c,this._a);

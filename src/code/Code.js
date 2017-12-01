@@ -6237,7 +6237,7 @@ Code.triTriIntersection2DBoolean = function(a1,b1,c1, a2,b2,c2){ // polygonal in
 	// no intersection
 	return false;
 }
-Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
+Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2,   log){ // n = b-a x c-a
 	var i, temp;
 	// a triangle intersection exists if signed distances are different
 	var d1 = -V3D.dot(n1,a1);
@@ -6291,17 +6291,21 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	var d = line[1]; d.norm();
 	var o1, u1, o2, u2;
 	// A segment of intersection
-	if( (d21a<=0&&d21b>0&&d21c>0) || (d21a>=0&&d21b<0&&d21c<0) ){ // lone a
+// if(log){
+// 	console.log("B");
+// 	console.log(" "+line);
+// }
+	if( (d21a<=0&&d21b>=0&&d21c>=0) || (d21a>=0&&d21b<=0&&d21c<=0) ){ // lone a
 		o1 = Code.closestPointsLines3D(a1,ab1, o,d);
 		u1 = Code.closestPointsLines3D(c1,ca1, o,d);
 		if(o1){ o1 = o1[0]; }
 		if(u1){ u1 = u1[0]; }
-	}else if( (d21a>0&&d21b<=0&&d21c>0) || (d21a<0&&d21b>=0&&d21c<0) ){ // lone b
+	}else if( (d21a>=0&&d21b<=0&&d21c>=0) || (d21a<=0&&d21b>=0&&d21c<=0) ){ // lone b
 		o1 = Code.closestPointsLines3D(a1,ab1, o,d);
 		u1 = Code.closestPointsLines3D(b1,bc1, o,d);
 		if(o1){ o1 = o1[0]; }
 		if(u1){ u1 = u1[0]; }
-	}else if( (d21a>0&&d21b>0&&d21c<=0) || (d21a<0&&d21b<0&&d21c>=0) ){ // lone c
+	}else if( (d21a>=0&&d21b>=0&&d21c<=0) || (d21a<=0&&d21b<=0&&d21c>=0) ){ // lone c
 		o1 = Code.closestPointsLines3D(b1,bc1, o,d);
 		u1 = Code.closestPointsLines3D(c1,ca1, o,d);
 		if(o1){ o1 = o1[0]; }
@@ -6315,19 +6319,25 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	}else if(d21c==0&&d21a==0){ // line ca
 		o1 = V3D.copy(c1);
 		u1 = V3D.copy(a1);
-	}else{ return null; } // ?
+	}else{
+		console.log("WHAT IS THIS ?: "+d21a+" | "+d21b+" | "+d21c+" | "+" ... ");
+		throw "?";
+	} // ?
 	// B segment of intersection
-	if( (d12a<=0&&d12b>0&&d12c>0) || (d12a>=0&&d12b<0&&d12c<0) ){ // lone a
+	// if(log){
+	// console.log("C");
+	// }
+	if( (d12a<=0&&d12b>=0&&d12c>=0) || (d12a>=0&&d12b<=0&&d12c<=0) ){ // lone a
 		o2 = Code.closestPointsLines3D(a2,ab2, o,d);
 		u2 = Code.closestPointsLines3D(c2,ca2, o,d);
 		if(o2){ o2 = o2[0]; }
 		if(u2){ u2 = u2[0]; }
-	}else if( (d12a>0&&d12b<=0&&d12c>0) || (d12a<0&&d12b>=0&&d12c<0) ){ // lone b
+	}else if( (d12a>=0&&d12b<=0&&d12c>=0) || (d12a<=0&&d12b>=0&&d12c<=0) ){ // lone b
 		o2 = Code.closestPointsLines3D(a2,ab2, o,d);
 		u2 = Code.closestPointsLines3D(b2,bc2, o,d);
 		if(o2){ o2 = o2[0]; }
 		if(u2){ u2 = u2[0]; }
-	}else if( (d12a>0&&d12b>0&&d12c<=0) || (d12a<0&&d12b<0&&d12c>=0) ){ // lone c
+	}else if( (d12a>=0&&d12b>=0&&d12c<=0) || (d12a<=0&&d12b<=0&&d12c>=0) ){ // lone c
 		o2 = Code.closestPointsLines3D(b2,bc2, o,d);
 		u2 = Code.closestPointsLines3D(c2,ca2, o,d);
 		if(o2){ o2 = o2[0]; }
@@ -6341,10 +6351,16 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 	}else if(d12c==0&&d12a==0){ // line ca
 		o2 = V3D.copy(c2);
 		u2 = V3D.copy(a2);
-	}else{ return null; } // ?
+	}else{
+		console.log("WHAT IS THIS ?: "+d21a+" | "+d21b+" | "+d21c+" | "+" ... ");
+		throw "?";
+	} // ?
 	// 1D interval check
 	if(!o1 || !o2 || !u1 || !u2){ // parallel somewhere -> many or no intersections
 		return null;
+	}
+	if(log){
+		console.log("D");
 	}
 	var int1A = V3D.dot(V3D.sub(o1,o),d);
 	var int1B = V3D.dot(V3D.sub(u1,o),d);
@@ -6358,7 +6374,12 @@ Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-a x c-a
 		temp=int1B; int1B=int2B; int2B=temp;
 	}
 	// no overlap
-	if(int1B<int2A){ return null; }
+	if(int1B<int2A){
+		if(log){
+			console.log(" => no overlap");
+		}
+		return null;
+	}
 	// first point
 	var intA = int1A;
 	if(int2A>int1A){ intA = int2A;}
@@ -6500,6 +6521,17 @@ Code.projectPointToPlane3D = function(location, point,normal){
 	var diff = V3D.sub(location,point);
 	var dN = V3D.dot(normal,diff);
 	return new V3D(location.x-dN*normal.x, location.y-dN*normal.y, location.z-dN*normal.z);
+}
+Code.projectTo2DPlane = function(location, planePoint, planeNormal){
+	var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
+	var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
+	var projection = Code.projectPointToPlane3D(location, planePoint, planeNormal);
+	projection = V3D.sub(projection,planePoint)
+	if( Math.abs(offsetAngle) > 1E-10 ){
+		projection = V3D.rotateAngle(projection, offsetNormal, -offsetAngle);
+	}
+	projection = new V2D(projection.x,projection.y);
+	return projection;
 }
 Code.planeFromPoints = function(center, points, weights){
 	if(!center){
@@ -6801,6 +6833,33 @@ Code.closestPointTri3D = function(pnt, a,b,c,nrm){ // closest point to plane als
 	return null;
 }
 
+Code.closestPointOnTri3D = function(p, a,b,c,nrm){ // shortest distance between point p and tri a,b,c
+	var d1,d2,d3, ray = Code.closestPointTri3D(p,a,b,c,nrm);
+	if( ray ){ // closest point to plane inside tri
+		return V3D.distance(p,ray);
+	} // else closest point on each of 3 edges
+	ray = new V3D();
+	V3D.sub(ray, b,a);
+	var p1 = Code.closestPointLineSegment3D(a,ray, p);
+	d1 = V3D.distanceSquare(p, p1 );
+	V3D.sub(ray, c,b);
+	var p2 = Code.closestPointLineSegment3D(b,ray, p)
+	d2 = V3D.distanceSquare(p, p2 );
+	V3D.sub(ray, a,c);
+	var p3 = Code.closestPointLineSegment3D(c,ray, p);
+	d3 = V3D.distanceSquare(p, p3 );
+	if(d1<=d2 && d1<=d3){
+		return p1;
+	}
+	if(d2<=d1 && d2<=d3){
+		return p2;
+	}
+	if(d3<=d1 && d3<=d2){
+		return p3;
+	}
+	throw "???";
+}
+
 Code.closestDistancePointTri3D = function(p, a,b,c,nrm){ // shortest distance between point p and tri a,b,c
 	var d1,d2,d3, ray = Code.closestPointTri3D(p,a,b,c,nrm);
 	if( ray ){ // closest point to plane inside tri
@@ -6815,6 +6874,23 @@ Code.closestDistancePointTri3D = function(p, a,b,c,nrm){ // shortest distance be
 	d3 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(c,ray, p) );
 	return Math.sqrt( Math.min(d1,d2,d3) );
 }
+
+Code.closestDistancePointTri3D = function(p, a,b,c,nrm){ // shortest distance between point p and tri a,b,c
+	var d1,d2,d3, ray = Code.closestPointTri3D(p,a,b,c,nrm);
+	if( ray ){ // closest point to plane inside tri
+		return V3D.distance(p,ray);
+	} // else closest point on each of 3 edges
+	ray = new V3D();
+	V3D.sub(ray, b,a);
+	d1 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(a,ray, p) );
+	V3D.sub(ray, c,b);
+	d2 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(b,ray, p) );
+	V3D.sub(ray, a,c);
+	d3 = V3D.distanceSquare(p, Code.closestPointLineSegment3D(c,ray, p) );
+	return Math.sqrt( Math.min(d1,d2,d3) );
+}
+
+
 Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest distance between line segment AB and tri a,b,c
 	var ab, ac, bc, ca, pA,pB,pC, dA,dB,dC;
 	ab = V3D.sub(b,a);

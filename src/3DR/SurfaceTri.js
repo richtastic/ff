@@ -24,8 +24,8 @@ GLOBALSTAGE = this._stage2D;
 	//
 	this.setupDisplay3D();
 //	this.setupSphere3D();
-	this.setupTorus3D();
-//	this.loadPointFile();
+//	this.setupTorus3D();
+	this.loadPointFile();
 //this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
@@ -368,6 +368,25 @@ console.log( Code.triTriIntersection3DBoolean(a1,b1,c1,n1, c2,d2,a2,n3) );
 	this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 }
 
+
+// 	for(i=0;i<count;++i){
+// 		r = Code.PRNG(prng, ++index, prngMod);
+// 		var angleA = r*Math.TAU;
+// 		r = Code.PRNG(prng, ++index, prngMod);
+// 		var angleB = r*Math.TAU;
+SurfaceTri.prototype.subSampleArray = function(array, count){
+	var prng = [101681,101693,103001,102929,104033, 1, 2, 3, 4, 5, 6, 7];
+	var prngMod = 104729;
+	var r;
+	var indexPRNG = 0;
+
+	var i, index, len = array.length - count;
+	for(i=0;i<len;++i){
+		r = Code.PRNG(prng, ++indexPRNG, prngMod);
+		index = Math.floor(r*array.length);
+		array[index] = array.pop();
+	}
+}
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
 	//var sourceFileName = "./images/points/saltdome_1019.pts";
@@ -376,8 +395,9 @@ SurfaceTri.prototype.loadPointFile = function(){
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
-		Code.subSampleArray(list,5000);
+		//Code.subSampleArray(list,5000);
 		//Code.subSampleArray(list,10000);
+		this.subSampleArray(list,5000);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();
@@ -425,14 +445,16 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 	var p, i;
 	var points = [];
 	var colors = [];
+	/*
 	for(i=0;i<pts.length;++i){
 		p = pts[i];
 		points.push(p.x,p.y,p.z);
 		colors.push(Math.random(),Math.random(),Math.random(),0.50);
 	}
-	//console.log(points)
+	*/
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
 	
 console.log("trianglate start");
 	// TRIANGULATE
@@ -521,6 +543,90 @@ colorsT.push(0.0,0.0, 0.50, 0.5);
 colorsT.push(0.0,0.0, 0.75, 0.5);
 colorsT.push(0.0,0.0, 1.00, 0.5);
 
+
+
+var tri = GLOBAL_LASTTRI;
+if(tri){
+V3D.pushToArray(pointsT,tri.A());
+V3D.pushToArray(pointsT,tri.B());
+V3D.pushToArray(pointsT,tri.C());
+colorsT.push(1.00, 0.00, 0.00, 0.95);
+colorsT.push(1.00, 0.00, 0.00, 0.95);
+colorsT.push(1.00, 0.00, 0.00, 0.95);
+}
+
+
+// var tris = this._mlsMesh._front.triangles();
+// console.log("TRIANGLES: "+tris.length);
+
+var front = this._mlsMesh._front;
+var edgeFronts = front._fronts;
+console.log("FRONTS: "+edgeFronts.length);
+for(var i=0; i<edgeFronts.length; ++i){
+	var edgeFront = edgeFronts[i];
+	//console.log(edgeFront);
+	var edgeList = edgeFront._edgeList;
+	var edgeListLength = edgeList.length();
+	console.log("   "+i+" : "+edgeListLength);
+	//console.log(edgeList);
+	for(var j=0, edge=edgeList.head().data(); j<edgeListLength; ++j, edge=edge.next()){ 
+		var M = edge.midpoint();
+		var C = edge.tri().normal().scale(edge.length()).scale(0.5).add(M);
+		var tri = new Tri3D(edge.A(),edge.B(),C);
+
+		V3D.pushToArray(pointsT,tri.A());
+		V3D.pushToArray(pointsT,tri.B());
+		V3D.pushToArray(pointsT,tri.C());
+		for(k=0; k<3; ++k){
+			if(i%3==0){
+				colorsT.push(0.00, 0.50, 0.00, 0.50);
+			}else if(i%3==1){
+				colorsT.push(0.50, 0.00, 0.00, 0.50);
+			}else{
+				colorsT.push(0.00, 0.00, 0.50, 0.50);
+			}
+		}
+	}
+}
+/*
+// pointsT = [];
+// colorsT = [];
+if(GLOBAL_CLOSEA){
+	console.log(GLOBAL_CLOSEA);
+	console.log(GLOBAL_CLOSEB);
+	console.log(GLOBAL_CLOSEPOINT);
+	V3D.pushToArray(pointsT,GLOBAL_CLOSEA);
+	V3D.pushToArray(pointsT,GLOBAL_CLOSEB);
+	V3D.pushToArray(pointsT,GLOBAL_CLOSEPOINT);
+	colorsT.push(0.50, 0.50, 0.50, 0.75);
+	colorsT.push(0.50, 0.50, 0.50, 0.75);
+	colorsT.push(0.50, 0.50, 0.50, 0.75);
+}
+*/
+
+/*
+var q = GLOB_TRI_A;
+V3D.pushToArray(pointsT,q[0]);
+V3D.pushToArray(pointsT,q[1]);
+V3D.pushToArray(pointsT,q[2]);
+colorsT.push(0.50, 0.50, 0.00, 0.75);
+colorsT.push(0.50, 0.50, 0.00, 0.75);
+colorsT.push(0.50, 0.50, 0.00, 0.75);
+
+var q = GLOB_FEN_A
+V3D.pushToArray(pointsT,q[0]);
+V3D.pushToArray(pointsT,q[1]);
+V3D.pushToArray(pointsT,q[2]);
+colorsT.push(0.00, 0.50, 0.50, 0.75);
+colorsT.push(0.00, 0.50, 0.50, 0.75);
+colorsT.push(0.00, 0.50, 0.50, 0.75);
+V3D.pushToArray(pointsT,q[2]);
+V3D.pushToArray(pointsT,q[3]);
+V3D.pushToArray(pointsT,q[0]);
+colorsT.push(0.00, 0.50, 0.50, 0.75);
+colorsT.push(0.00, 0.50, 0.50, 0.75);
+colorsT.push(0.00, 0.50, 0.50, 0.75);
+*/
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 	}

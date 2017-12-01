@@ -46,7 +46,9 @@ MLSMesh3D.prototype._estimateNormals = function(){
 	var i, j, k, point, neighborhood;
 	var points = this.points();
 	var pointCount = points.length;
-	var testCases = [5,8,11];
+//	var testCases = [5,8,11];
+	var testCases = [5,7,9];
+//	var testCases = [5,10,15];
 	//var testCases = [4,8,12];
 //HERE2
 	var testCaseIndexBase = 2; // index of testCases to use as final surface normal
@@ -167,7 +169,7 @@ MLSMesh3D._sortConfidence = function(a,b){
 
 
 MLSMesh3D.prototype.triangles = function(){
-	return null;
+	return this._front.triangles();
 }
 
 // -------------------------------------------------------------------------------------------------------------------- 
@@ -271,55 +273,17 @@ MLSMesh3D.Field.prototype.points = function(points){
 	}
 	return this._points;
 }
-MLSMesh3D.Field.to2DPlane = function(location, planePoint, planeNormal){
-	var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
-	var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
-	var projection = Code.projectPointToPlane3D(location, planePoint, planeNormal);
-	projection = V3D.sub(projection,planePoint)
-	if( Math.abs(offsetAngle) > 1E-10 ){
-		projection = V3D.rotateAngle(projection, offsetNormal, -offsetAngle);
-	}
-	projection = new V2D(projection.x,projection.y);
-	return projection;
-}
-/*
-MLSMesh3D.Field.prototype.pointDataFromPoint = function(location, point){
-	var angle = this.angle();
-	var searchLength = edge.length()*angle;
-	var minRadius = this.minRadius(p,searchLength);
-	var q = new MLSMesh3D.Point();
-		q.point(p);
-		q.radius(minRadius);
-	return q;
-}
-*/
-/*
-MLSMesh3D.Field.prototype.pointDataFromPoint = function(location, point){
-	if(!point){
-		if(Code.isa(location,MLSMesh3D.Point)){
-			point = location;//.point();
-		}else{
-			point = new MLSMesh3D.Point(location);
-		}
-	}
-	var neighborhoodMinCount = 5;
-	neighborhood = this.neighborhoodBSP(point, neighborhoodMinCount);
-	//neighborhood = this.neighborhoodKNN(point, maxTestCase);
-	for(k=0; k<neighborhood.length; ++k){
-		neighborhood[k] = neighborhood[k].point();
-	}
-	var sphere = Code.sphereGeometric(neighborhood, point.point(), 50);
-	var center = sphere["center"];
-	var radius = sphere["radius"];
-	var normal = V3D.sub(point.point(),center);
-	normal.norm();
-	point.normal(normal);
-	point.normalConfidence(0.0);
-	point.bidirectional(false);
-	point.radius(radius);
-	return point;
-}
-*/
+// MLSMesh3D.Field.to2DPlane = function(location, planePoint, planeNormal){
+// 	var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
+// 	var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
+// 	var projection = Code.projectPointToPlane3D(location, planePoint, planeNormal);
+// 	projection = V3D.sub(projection,planePoint)
+// 	if( Math.abs(offsetAngle) > 1E-10 ){
+// 		projection = V3D.rotateAngle(projection, offsetNormal, -offsetAngle);
+// 	}
+// 	projection = new V2D(projection.x,projection.y);
+// 	return projection;
+// }
 MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, desiredCount){
 	if(Code.isa(location,MLSMesh3D.Point)){
 		location = location.point();
@@ -342,10 +306,10 @@ MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, desiredCount){
 	var projections = [];
 	for(i=0; i<points.length; ++i){
 		p = points[i];
-		var projection = MLSMesh3D.Field.to2DPlane(p, planePoint, planeNormal);
+		var projection = Code.projectTo2DPlane(p, planePoint, planeNormal);
 		projections[i] = projection;
 	}
-	var projectedLocation = MLSMesh3D.Field.to2DPlane(location, planePoint, planeNormal);
+	var projectedLocation = Code.projectTo2DPlane(location, planePoint, planeNormal);
 
 	var checkPoints = [];
 	for(i=0; i<projections.length; ++i){
@@ -399,8 +363,6 @@ MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, desiredCount){
 	}
 	return neighborhood;
 }
-
-
 MLSMesh3D.halfPlaneSubsetPoints2D = function(location, points, keyPoint){ // points already sorted
 	var i, j, halfPlanes = [];
 	var N = points.length;
@@ -536,15 +498,6 @@ dWeight *= 0.0001; // dWeight pushes projection too close to nearest point / wit
 	}
 	return x;
 }
-
-// MLSMesh3D.Field.prototype.searchLength = function(edge){
-// 	var c = edge.length();
-// 	var b = eta*c;
-// 	// find minimum in local area
-// 	var midpoint = edge.midpoint();
-// 	var i = this._field.minimumInSphere(midpoint,b);
-// 	return i;
-// }
 MLSMesh3D.Field._sortCurvature = function(a,b){ // largest circle first == smallest curvature
 	if(a==b){
 		return 0;
@@ -659,8 +612,10 @@ MLSMesh3D.Field.prototype.maxCurvature = function(location, radiusSearch){
 	return this.minRadius(location, radiusSearch);
 }
 MLSMesh3D.Field.prototype.minRadius = function(location, radiusSearch){
+return 0.03;
 	var minRadius = null;
 	if(radiusSearch){
+//		radiusSearch = 10;
 		var neighborhood = this._octTree.objectsInsideSphere(location, radiusSearch);	
 		for(var i=0; i<neighborhood.length; ++i){
 			var neighbor = neighborhood[i];
@@ -681,51 +636,80 @@ MLSMesh3D.Field.prototype.vertexPredict = function(edge){
 	var c = edge.length(); // -> use ideal edge length instead?
 	var i = this.necessaryMinLength(edge);
 	var beta = this.beta();
-	//console.log("beta: "+Code.degrees(beta));
 	var minAngle = Code.radians(60.0) - beta;
 	var maxAngle = Code.radians(60.0) + beta;
 		// var minAngle = Code.radians(50.0);
 		// var maxAngle = Code.radians(65.0);
 	var baseAngle = Math.PI; // if impossible triangle
-	console.log("c: "+c);
-	console.log("i: "+i);
+// console.log("c: "+c);
+// console.log("i: "+i);
 	//console.log("t: "+Code.degrees(baseAngle));
 	if(i>0.5*c){ // possible triangle
 		baseAngle = 2.0*Math.asin( c*0.5/i ); // sin(t) = o/h => asin(o/h) = t
 	}
-	console.log("t: "+Code.degrees(baseAngle));
+// console.log("t: "+Code.degrees(baseAngle));
 	baseAngle = Math.min(Math.max(baseAngle,minAngle),maxAngle);
-	console.log(" => t: "+Code.degrees(baseAngle)+" [ "+Code.degrees(minAngle)+" - "+Code.degrees(maxAngle)+" ] ");
+// console.log(" => t: "+Code.degrees(baseAngle)+" [ "+Code.degrees(minAngle)+" - "+Code.degrees(maxAngle)+" ] ");
 	i = (c*0.5)/Math.sin(baseAngle*0.5);
-	console.log(" => i: "+i);
+// console.log(" => i: "+i);
 	var tri = edge.tri();
 	var normal = tri.normal(); // TODO: get normal from midpoint projected to surface better?
 	var unit = edge.unit();
 	var midpoint = edge.midpoint();
 	// find point p in same plane as edge, fitting isosceles:c,i,i
 	var altitude = Math.sqrt(i*i + c*c*0.25);
-	var barycenter = tri.center();
-	var centerToEdge = V3D.sub(midpoint,barycenter);
-	var perpendicular = V3D.cross(unit,normal).norm().scale(altitude);
-
-	if(V3D.dot(centerToEdge,perpendicular)<0){
-		perpendicular.scale(-1.0);
-		console.log("WRONG DIRECTION A");
-	}
+	var perpendicular = edge.perpendicular();
+	var perpendicularAltitude = perpendicular.copy().scale(altitude);
 	
-	p = V3D.add(midpoint,perpendicular);
+	var originalProjection = V3D.add(midpoint,perpendicularAltitude);
+	var p;
+	p = originalProjection.copy();
 var d1 = (V3D.distance(midpoint,p))
 WASEDGE = [edge.A(),edge.B().copy()];
 WASPOINT = p.copy();
 	p = this._projectPointToSurface(p);
+
+	var midpointToP, dot;
+	for(var count=0; count<3;++count){
+		midpointToP = V3D.sub(p,midpoint);
+		dot = V3D.dot(perpendicular, midpointToP);
+		if(dot<=0){
+			console.log("NEGATIVE PROJECTION DOT");
+			midpointToP.scale(-1);
+			p = midpointToP.add(midpoint);
+			p = this._projectPointToSurface(p);
+		}else{
+			break;
+		}
+	}
+
 WASPOINTPROJECTED = p.copy();
 var d2 = (V3D.distance(midpoint,p))
 var delta = (d2/d1);
 if(delta<1){delta = 1.0/delta;}
-console.log("  DISTANCE CHANGE: "+d1+"/"+d2+" = "+delta+" "+(delta>2 ? "ALERT DELTA" : "..."));
+
+if(delta>1.25){
+	console.log("  DISTANCE CHANGE: "+d1+"/"+d2+" = "+delta+" "+(delta>2 ? "ALERT DELTA" : "..."));
+	if(edge.canDefer()){
+		return {"type":"invalid"};
+	}
+}
 	// p = this.pointDataFromPoint(p);
 	// return p;
 	//var angle = this.angle();
+	
+
+
+
+	// get maximum angle of projected local neighborhood
+	var maxAngleNeighbors = this.projectedMaxNeghborhoodAngle(p);
+	var maximumNeighborAngle = Code.radians(150.0);
+	if(maxAngleNeighbors>maximumNeighborAngle){
+		return {"type":"border"};
+		//return null;
+	}
+
+	// good projection point, return object container
 	var eta = this.eta();
 	var searchLength = edge.length()*eta;
 	var minRadius = this.minRadius(p,searchLength);
@@ -734,10 +718,18 @@ console.log("  DISTANCE CHANGE: "+d1+"/"+d2+" = "+delta+" "+(delta>2 ? "ALERT DE
 		q.radius(minRadius);
 	return q;
 }
-MLSMesh3D.Field.prototype.minLengthBeforeEvent = function(mlsPoint){
+MLSMesh3D.Field.prototype.minLengthBeforeEvent = function(mlsPoint, edge){
 	var idealRadius = mlsPoint.radius();
 	var idealLength = idealRadius*this.angle();
-	return 0.5*idealLength;
+	if(false){
+	//if(edge){
+		var nextLength = Math.min( idealLength, edge.length() );
+		console.log("    diff: "+(edge.length()/idealLength));
+		idealLength = nextLength;
+	}
+	var minLength = 0.5*idealLength;
+	console.log("minLengthBeforeEvent: "+idealLength+" / "+minLength);
+	return minLength;
 }
 MLSMesh3D.Field.prototype.idealRadiusFromEdge = function(edge){
 	var eta = this.eta();
@@ -748,6 +740,38 @@ MLSMesh3D.Field.prototype.idealRadiusFromEdge = function(edge){
 	return minRadius;
 	//var mlsPoint = this.pointDataFromPoint(surface);
 	//return mlsPoint.radius();
+}
+MLSMesh3D.Field.prototype.projectedMaxNeghborhoodAngle = function(location){
+	var i;
+	var sampleNeighborhood = 10; // 10 18 // TODO: from data ?
+	var knn = this.neighborhoodKNN(location, sampleNeighborhood);
+	var points = [];
+	for(i=0; i<knn.length; ++i){
+		points[i] = knn[i].point();
+	}
+	var plane = Code.planeFromPoints(location, points);
+	var planePoint = plane["point"];
+	var planeNormal = plane["normal"];
+	var center = Code.projectTo2DPlane(location, planePoint, planeNormal);
+	var projections = [];
+	var angles = [];
+	for(i=0; i<points.length; ++i){
+		p = points[i];
+		var projection = Code.projectTo2DPlane(p, planePoint, planeNormal);		
+		projections[i] = projection;
+		var cToP = V2D.sub(projection,center);
+		var angle = V2D.angleDirection(V2D.DIRX,cToP);
+		angles[i] = angle;
+	}
+	angles = angles.sort(function(a,b){
+		return a < b ? -1 : 1;
+	});
+	var maxAngle = (angles[0]+Math.PI*2) - angles[angles.length-1];
+	for(i=1; i<angles; ++i){
+		var angle = angles[i]-angles[i-1];
+		maxAngle = Math.max(maxAngle,angle);
+	}
+	return maxAngle;
 }
 // MLSMesh3D.Field.prototype.idealRadiusPojectedAtPoint = function(point){
 // 	var surface = this._projectPointToSurface(point);
@@ -769,7 +793,15 @@ MLSMesh3D.Front.prototype.triangles = function(){
 	return this._triangles;
 }
 MLSMesh3D.Front.prototype.addTri = function(tri){
+	for(var i=0; i<this._triangles.length; ++i){
+		if( tri.isEqual(this._triangles[i]) ){
+			throw "EQUAL TRI ALERT "+tri;
+console.log("EQUAL TRI ALERT");
+break;
+		}
+	}
 	this._triangles.push(tri);
+GLOBAL_LASTTRI = tri;
 	TRICHECK(tri);
 }
 MLSMesh3D.Front.prototype.removeFront = function(front){
@@ -799,7 +831,6 @@ MLSMesh3D.Front.prototype.first = function(){ // select front with highest prior
 	var best = queue.popMinimum();
 	queue.kill();
 	var bestFront = best[1];
-	console.log(bestFront);
 	return bestFront;
 }
 MLSMesh3D.Front.prototype.count = function(){
@@ -807,27 +838,28 @@ MLSMesh3D.Front.prototype.count = function(){
 }
 
 MLSMesh3D.Front.prototype.isPointCloseToTriangulation = function(edgeFront, edge, point, maxDistance){ // TODO: should this be triangles or front, if triangles: optimmize with grid
-//MLSMesh3D.Front.prototype.isPointCloseToFront = function(point, maxDistance){
-	// this should only check the front edges ???
 	// go thru all fronts, find closest edge
 	var i, dist, tri, tris = this._triangles;
-	var minDistance = null;
 	var len = tris.length;
 	for(i=0;i<len;++i){
 		tri = tris[i];
 		dist = Code.closestDistancePointTri3D(point, tri.A(),tri.B(),tri.C(),tri.normal());
-if(minDistance==null || dist<minDistance){
-	minDistance = dist;
-}
-		if(dist<maxDistance){
-			//console.log("isPointCloseToTriangulation YES: "+minDistance);
+		var closest = Code.closestPointOnTri3D(point, tri.A(),tri.B(),tri.C(),tri.normal());
+		var isSelf = false;
+		if(closest){
+			isSelf = V3D.equalToEpsilon(edge.A(),closest) || V3D.equalToEpsilon(edge.B(),closest);
+		}
+		if(dist<maxDistance  && !isSelf){
+			// GLOBAL_CLOSEA = edge.A();
+			// GLOBAL_CLOSEB = edge.B();
+			// GLOBAL_CLOSEPOINT = closest;
 			return true;
 		}
 	}
-	//console.log("isPointCloseToTriangulation NO: "+minDistance);
+// console.log("isPointCloseToTriangulation NO: "+minDistance);
 	// NOW CHECK TO SEE IF POINT CROSSES ANY FRONTS
 	var crossesFront = this.newTriCrossFront(edgeFront, edge, point);
-	console.log("crossesFront LAST:: "+crossesFront);
+//	console.log("crossesFront LAST:: "+crossesFront);
 	return crossesFront;
 }
 MLSMesh3D.Front.prototype.newTriCrossFront = function(edgeFrontAux, edgeAux, pointAux){ 
@@ -842,55 +874,83 @@ MLSMesh3D.Front.prototype.newTriCrossFront = function(edgeFrontAux, edgeAux, poi
 	}
 	return false;
 }
-MLSMesh3D.Front.prototype.crossesEdgeFront = function(edgeFront, edgeFrontAux, edgeAux, pointAux){
-	var i, j;
-	var edgeList = edgeFront._edgeList;
-	var len = edgeList.length();
-	var triPointA = edgeAux.A();
-	var triPointB = edgeAux.B();
-	var triPointC = pointAux;
-	var triNormal = V3D.cross(V3D.sub(triPointB,triPointA),V3D.sub(triPointC,triPointA));
-	for(i=0, edge=edgeList.head().data(); i<len; ++i, edge=edge.next()){
-		// ignore edgeAux intersection
-		if(edge==edgeAux){
-			continue;
-		}
-		// ignore edges that share point
-		if(V3D.equal(edge.A(),pointAux) || V3D.equal(edge.B(),pointAux)){
-			continue;
-		}
-		// find fence directions -- edge points A-B, end points C-D & E-F
-		var fenceHeight = edge.length();// * 1E0; // fences that are big intersect with opposite sides of object
-		var fenceEdgeDirection = edge.unit();
-		var fenceTri = edge.tri();
-		var fenceTriNormal = fenceTri.normal();
-		var fenceEdgeNormal = fenceTriNormal.copy().scale(fenceHeight);
-		var fenceA = edge.A();
-		var fenceB = edge.B();
-		var fenceC = V3D.add(fenceA,fenceEdgeNormal);
-		var fenceD = V3D.add(fenceB,fenceEdgeNormal);
-		var fenceE = V3D.sub(fenceA,fenceEdgeNormal);
-		var fenceF = V3D.sub(fenceB,fenceEdgeNormal);
-		var fenceAB = [fenceA,fenceB];
-		var fencePlaneNormal = V3D.cross(fenceEdgeNormal,fenceEdgeDirection).norm();
-		// find intersections not close to edge corners
-		var intersections, nullOrEnds;
-		// tri CDF
-		intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fenceC,fenceD,fenceF,fencePlaneNormal); // TODO: are these triangles / lines / points ?
-		nullOrEnds = Code.pointsNullOrCloseToPoints3D(intersections, fenceAB);
-		if(!nullOrEnds){
-			console.log(intersections, fenceAB);
-			return true;
-		}
-		// tri FEC
-		intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fenceF,fenceE,fenceC,fencePlaneNormal);
-		nullOrEnds = Code.pointsNullOrCloseToPoints3D(intersections, fenceAB);
-		if(!nullOrEnds){
-			console.log(intersections, fenceAB);
+MLSMesh3D.Front.prototype.crossesAnyEdgeFront = function(edgeFrontAux, edgeAux, pointAux){
+	var fronts = this._fronts;
+	for(var i=0; i<fronts.length; ++i){
+		var edgeFront = fronts[i];
+		if(this.crossesEdgeFront(edgeFront, edgeFrontAux, edgeAux, pointAux)){
 			return true;
 		}
 	}
 	return false;
+}
+MLSMesh3D.Front.prototype.crossesEdgeFront = function(edgeFront, edgeFrontAux, edgeAux, pointAux){
+	var i, j;
+	var edgeList = edgeFront._edgeList;
+	var len = edgeList.length();
+	for(i=0, edge=edgeList.head().data(); i<len; ++i, edge=edge.next()){
+		// ignore edgeAux intersection
+		if(edge==edgeAux){
+			//console.log(" SKIP "+i);
+			continue;
+		}
+		// ignore edges that share point
+		if(V3D.equal(edge.A(),pointAux) || V3D.equal(edge.B(),pointAux)){
+			//console.log("  SHARED "+i);
+			continue;
+		}
+		var crossed = this.crossesEdge(edge, edgeFrontAux, edgeAux, pointAux);
+		if(crossed){
+			return true;
+		}
+	}
+	return false;
+}
+MLSMesh3D.Front.prototype.crossesEdge = function(edge, edgeFrontAux, edgeAux, pointAux){
+	var triPointA = edgeAux.A();
+	var triPointB = edgeAux.B();
+	var triPointC = pointAux;
+	var triNormal = V3D.cross(V3D.sub(triPointB,triPointA),V3D.sub(triPointC,triPointA));
+	// find fence directions -- edge points A-B, end points C-D & E-F
+	var fenceHeight = edge.length() * 1.0;// * 1E0; // fences that are big intersect with opposite sides of object
+//console.log(" | "+i+" "+fenceHeight);
+	var fenceEdgeDirection = edge.unit();
+	var fenceTri = edge.tri();
+	var fenceTriNormal = fenceTri.normal();
+	var fenceEdgeNormal = fenceTriNormal.copy().scale(fenceHeight);
+	var fenceA = edge.A();
+	var fenceB = edge.B();
+	var fenceC = V3D.add(fenceA,fenceEdgeNormal);
+	var fenceD = V3D.add(fenceB,fenceEdgeNormal);
+	var fenceE = V3D.sub(fenceA,fenceEdgeNormal);
+	var fenceF = V3D.sub(fenceB,fenceEdgeNormal);
+	var fenceAB = [fenceA,fenceB];
+	var fencePlaneNormal = V3D.cross(fenceEdgeNormal,fenceEdgeDirection).norm();
+
+var log = false;
+// if(i==9){
+// //GLOB_TRI_A = [triPointA,triPointB,triPointC];
+// off = new V3D(0.1,0.1,0.1);
+// GLOB_TRI_A = [triPointA.copy().add(off),triPointB.copy().add(off),triPointC.copy().add(off)];
+// GLOB_FEN_A = [fenceC,fenceD,fenceF,fenceE];
+// log = true;
+// }
+
+
+	// find intersections not close to edge corners
+	var intersections, nullOrEnds;
+	// tri CDF
+	intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fenceC,fenceD,fenceF,fencePlaneNormal, log); // TODO: are these triangles / lines / points ?
+	nullOrEnds = Code.pointsNullOrCloseToPoints3D(intersections, fenceAB);
+	if(!nullOrEnds){
+		return true;
+	}
+	// tri FEC
+	intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fenceF,fenceE,fenceC,fencePlaneNormal, log);
+	nullOrEnds = Code.pointsNullOrCloseToPoints3D(intersections, fenceAB);
+	if(!nullOrEnds){
+		return true;
+	}
 }
 MLSMesh3D.Front.prototype.closestFrontToPoint = function(vertex,edge){ // go over all edges in various fronts - find closest point(+edge) to point
 	var i, front, closest, fronts = this._fronts;
@@ -954,131 +1014,74 @@ console.log("TOPOLOGIAL HANDLING:");
 	var fromA = edgeFrom.A();
 	var fromB = edgeFrom.B();
 	var fromTri = edgeFrom.tri();
+	var fromC = fromTri.opposite(fromA,fromB);
 	var fromNormal = fromTri.normal();
 	var fromMidpoint = edgeFrom.midpoint();
 	var fromUnit = edgeFrom.unit();
 	var fromPerpendicular = V3D.cross(fromUnit,fromNormal).norm();
 	var fromCenter = fromTri.center();
 	var centerToEdge = V3D.sub(fromMidpoint,fromCenter);
+
+	var edgeTriA = null, edgeTriB = null;
+	if(fromTri.edgeAB()==edgeFrom){
+		edgeTriA = fromTri.edgeBC();
+		edgeTriB = fromTri.edgeCA();
+	}else if(fromTri.edgeBC()==edgeFrom){
+		edgeTriA = fromTri.edgeCA();
+		edgeTriB = fromTri.edgeAB();
+	}else if(fromTri.edgeCA()==edgeFrom){
+		edgeTriA = fromTri.edgeAB();
+		edgeTriB = fromTri.edgeBC();
+	}
+if(!edgeTriA){
+	throw "what"
+}
+
 	if(V3D.dot(centerToEdge,fromPerpendicular)){
 		fromPerpendicular.scale(-1);
-		console.log("WRONG DIRECTION TOP");
 	}
 	// iterate to find closest vertex
 	var frontList = this._fronts;
-	var i, j, k, l, front, dot, edge, edgeList, dist, closestPoint = null, closestDistance = null, closestEdge = null, closestFront = null, midToVert=new V3D();
+	var i, j;
+	var front, edge, edgeList, edgeListLength;
+	var closestFront = null;
+	var closestEdge = null;
+	var closestPoint = null;
+	var closestDistance = null;
 	for(i=0; i<frontList.length; ++i){ // go over all edge fronts
 		front = frontList[i];
 		edgeList = front.edgeList();
-		var len = edgeList.length();
-		for(j=0, edge=edgeList.head().data(); j<len; ++j, edge=edge.next()){ // go over all edges
-			if( edge!=edgeFrom && !V3D.equal(fromB, edge.A()) ){// && !V3D.equal(fromA, edge.A()) ){ // && !V3D.equal(fromA, edge.A()) && !V3D.equal(fromB, edge.B()) ){ // only need to check b for edge.prev: 1/n
-				V3D.sub(midToVert, edge.A(),fromMidpoint);
-				//dist = V3D.distanceSquare( midpoint,edge.A() ); // distance from existing edge
-				dist = V3D.distanceSquare( vertexFrom,edge.A() ); // distance from new-point
-				// closest so far
-				if( closestDistance==null || dist<closestDistance || (dist<=closestDistance && front==edgeFrontFrom) ){
-					var f, e, eL, len2, fenceHeight, newNorm;
-					var qInt, eNE, eNP, eNN, eD, qA=new V3D(), qB=new V3D(), qC=new V3D(), qD=new V3D(), qN=new V3D();
-					var vert=edge.A(), aToV=new V3D(), bToV=new V3D();
-					// CHECK FOR FRONT-EDGE INTERSECTIONS
-					V3D.sub(aToV, vert,fromA);
-					V3D.sub(bToV, vert,fromB);
-					newNorm = V3D.cross(aToV,bToV);
-					if(!newNorm){
-						console.log("NO NEW NORM: "+aToV+" | "+bToV);
-						continue;
-					}
-					newNorm.norm();
-					fenceHeight = 1E0 * Math.max(aToV.length(),bToV.length()); // TODO: does this need to be REALLY TALL ? would that interfere with unrelated fence points ?
-					// FIND CLOSEST NON-FENCE-INTERSECTING TRI TO CUT
-					qInt = null;
-					for(k=0;k<frontList.length;++k){
-						f = frontList[k];
-						eL = f.edgeList();
-						len2 = eL.length();
-						for(l=0, e=eL.head().data(); l<len2; ++l, e=e.next()){
-							// don't check if e is triangle edge -- don't fence off self
-							if(e==edgeFrom // e.A()==fromA&&e.B()==fromB
-								|| (V3D.equal(e.A(),vert)&&V3D.equal(e.B(),fromA))
-								|| (V3D.equal(e.A(),vert)&&V3D.equal(e.B(),fromB))
-								|| (V3D.equal(e.B(),vert)&&V3D.equal(e.A(),fromA))
-								|| (V3D.equal(e.B(),vert)&&V3D.equal(e.A(),fromB))
-								){
-								continue;
+		edgeListLength = edgeList.length();
+		for(j=0, edge=edgeList.head().data(); j<edgeListLength; ++j, edge=edge.next()){ // go over all edges
+			if(edge==edgeFrom){
+				continue;
+			}
+			var eA = edge.A();
+			var eB = edge.B();
+			// try a triangle:
+			if( !V3D.equalToEpsilon(fromA,eA) && !V3D.equalToEpsilon(fromB,eA) ){
+				var distance = V3D.distance(vertexFrom,eA);
+				//console.log("edge "+j+" = "+distance);
+				// want to use same front if there are multiple fronts at same point
+				if(closestDistance==null || distance<closestDistance || (distance<=closestDistance && edgeFrontFrom==front)){
+					// check no fronts are crossed
+					if( !this.crossesAnyEdgeFront(edgeFrontFrom,edgeFrom,eA) ){
+						// check if duplicting a tri -- probly unnecessary with edge crossing check
+						if( !V3D.equalToEpsilon(fromC, eA) ){
+							// TODO: INSTEAD CHECK IF IS CROSSED BY TRIANGLE EDGES == BACKWARDS
+							var crossedA = this.crossesEdge(edgeTriA, edgeFrontFrom,edgeFrom,eA);
+							var crossedB = this.crossesEdge(edgeTriB, edgeFrontFrom,edgeFrom,eA);
+
+							if(!crossedA && !crossedB){
+								closestDistance = distance;
+								closestPoint = eA;
+								closestEdge = edge;
+								closestFront = front;
 							}
-							// find 4 points to define fence quad
-							eNE = e.tri().normal();
-							eNP = e.prev().tri().normal();
-							eNN = e.next().tri().normal();
-							// TODO: what about triangles that diverge / converge ?
-							// eNP = average of edge and prev
-								// eNP = V3D.add(eNP, eNE,eNP).norm();
-								eNP.copy(eNE);
-							eNP.scale(fenceHeight);
-							// eNN = average of edge and next
-								// eNN = V3D.add(eNN, eNE,eNN).norm();
-								eNN.copy(eNE);
-							eNN.scale(fenceHeight);
-							// create 4 fence locations
-							V3D.add(qA, e.A(),eNP);
-							V3D.sub(qB, e.A(),eNP);
-							V3D.sub(qC, e.B(),eNN);
-							V3D.add(qD, e.B(),eNN);
-							// normals for 2 triangles:
-							var qNA = V3D.cross(V3D.sub(qB,qA),V3D.sub(qC,qA)).norm();
-							var qNB = V3D.cross(V3D.sub(qD,qC),V3D.sub(qA,qC)).norm();
-							// find plane intersection of 2 separate triangles:
-							if(!fromA || !fromB || !vert || !newNorm || !qA || !qB || !qC || !qD || !qNA || !qNB){
-								//console.log(fromA,fromB,vert,newNorm, qA,qB,qC,qNA);
-								console.log("un de fin ed");
-								console.log(eNE+" <<< NORMAL")
-								console.log(qA,qB,qC,qD);
-								console.log(qNA,qNB);
-								throw "???"
-							}
-							qInt = Code.triTriIntersection3D(fromA,fromB,vert,newNorm, qA,qB,qC,qNA);
-							var m, really; // really is to make sure intersection point isn't at edge corners which are valid
-							if(qInt){
-								really = false;
-								for(m=0;m<qInt.length;++m){
-									if( !(V3D.equalToEpsilon(qInt[m],e.A())||V3D.equalToEpsilon(qInt[m],e.B())) ){
-										really = true;
-									}
-								}
-								if(really){
-									break;
-								}
-							}
-							qInt = Code.triTriIntersection3D(fromA,fromB,vert,newNorm, qC,qD,qA,qNB);
-							if(qInt){
-								really = false;
-								for(m=0;m<qInt.length;++m){
-									if( !(V3D.equalToEpsilon(qInt[m],e.A())||V3D.equalToEpsilon(qInt[m],e.B())) ){
-										really = true;
-									}
-								}
-								if(really){
-									break;
-								}
-							}
-							//qInt = null;
-							//if(qInt){ break; } // break after first intersection
 						}
-						// if(qInt){
-						// 	//console.log("TRIANGLE INTERSECTION "+frontList.length);
-						// 	break; // stop checking - go to next edge
-						// }
-					}
-					if(!qInt){
-						console.log("NO INT -> KEEP");
-						closestDistance = dist;
-						closestFront = front;
-						closestEdge = edge;
-						closestPoint = edge.A();
 					}
 				}
-			}
+			} // second point [B] will be reached with another edge
 		}
 	}
 	if(closestFront==edgeFrontFrom){
@@ -1089,7 +1092,7 @@ console.log("TOPOLOGIAL HANDLING:");
 		this.merge(edgeFrontFrom,edgeFrom, closestFront,closestEdge, closestPoint, field);
 	}else{
 		console.log("TODO: TOO CLOSE, BUT FOUND NO POSSIBLE CONNECTION ...");
-		//throw new Error("null edge "+closestFront+" ");
+//		throw new Error("null edge "+closestFront+" ");
 		edgeFrontFrom.deferEdge(edgeFrom);
 	}
 }
@@ -1107,15 +1110,15 @@ MLSMesh3D.Front.prototype.split = function(edgeFrontFrom,edgeFrom,edgeTo,vertexF
 	edgeAB.idealLength( field.necessaryMinLength(edgeAB) );
 	edgeBC.idealLength( field.necessaryMinLength(edgeBC) );
 	edgeCA.idealLength( field.necessaryMinLength(edgeCA) );
-// edges have diplicates ....
 	// triangle
 	tri = new MLSMesh3D.Tri(edgeAB.A(),edgeBC.A(),edgeCA.A());
 	tri.setEdges(edgeAB, edgeBC, edgeCA);
-		tri.SPLIT = true;
+tri.SPLIT = true;
 	edgeAB.tri(tri);
 	edgeBC.tri(tri);
 	edgeCA.tri(tri);
 	this.addTri(tri);
+console.log("   -> old size: "+edgeFrontFrom.count());
 	// remove old edges from existing front, add to new front
 	var newFront = new MLSMesh3D.EdgeFront(); // this.newEdgeFront(); // 
 var loopCount = 0;
@@ -1125,7 +1128,7 @@ var loopCount = 0;
 		newFront.addNodeLinkEdgePush(edge);
 		edge = next;
 ++loopCount;
-if(loopCount>100){
+if(loopCount>10000){
 	throw("INFINITE LOOP");
 }
 	}
@@ -1133,6 +1136,7 @@ if(loopCount>100){
 	edgeFrontFrom.addNodeLinkEdgeAfter(edgeFrom, edgeBC);
 	edgeFrontFrom.removeNodeLinkEdge(edgeFrom);
 	// front may be a two-edge front if lastEdge==edgeFrom
+console.log("   -> new size: "+newFront.count());
 	if(newFront.count()<=2){
 		newFront.kill();
 		newFront = null;
@@ -1178,7 +1182,7 @@ var loopCount = 0;
 		edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,edge);
 		edge = next;
 ++loopCount;
-if(loopCount>100){
+if(loopCount>10000){
 	throw("INFINITE LOOP");
 }
 	}
@@ -1186,13 +1190,8 @@ if(loopCount>100){
 	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,nodeStart);
 	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,edgeCA);
 	edgeFrontFrom.removeNodeLinkEdge(edgeFrom);
-	console.log("NEW FRONTS COUNT: "+edgeFrontFrom.count()+" | "+edgeFrontTo.count());
+	//console.log("NEW FRONTS COUNT: "+edgeFrontFrom.count()+" | "+edgeFrontTo.count());
 	this.removeFront( edgeFrontTo );
-	// this might be a two-edge front
-	// if(edgeFrontFrom.count()<=2){
-	// 	edgeFrontFrom.clear();
-	// 	this.removeFront(edgeFrontFrom);
-	// }
 	return edgeFrontTo;
 }
 
@@ -1255,17 +1254,29 @@ MLSMesh3D.Front.prototype.canCutEar = function(edgeFront, edge, field){ // look 
 		c = Math.PI - V3D.angle(ca,bc);
 		maxAngleRight = Math.max(a,b,c);
 	}
-	// console.log("max angles: ["+Code.degrees(maxAngleLeft)+" "+Code.degrees(maxAngle)+" "+Code.degrees(maxAngleRight)+"]");
+	//console.log("max angles: ["+Code.degrees(maxAngleLeft)+" "+Code.degrees(maxAngle)+" "+Code.degrees(maxAngleRight)+"]");
+	var result = null;
 	if(maxAngleLeft<maxAngleRight){
 		if(maxAngleLeft<maxAngle){ // 
-			return {"edgeA":left, "edgeB":edge};
+			result = {"edgeA":left, "edgeB":edge, "point":left.B()};
 		}
 	}else{
 		if(maxAngleRight<maxAngle){
-			return {"edgeA":edge, "edgeB":right};
+			result =  {"edgeA":edge, "edgeB":right, "point":right.A()};
 		}
 	}
-	return null;
+	// check to see if resulting triangle is consistent with orientation of edge
+	if(result){
+		var perpendicular = edge.perpendicular();
+		var point = result["point"];
+		var midToOpposite = V3D.sub(point,edge.midpoint());
+		var dot = V3D.dot(perpendicular, midToOpposite);
+		if(dot<0){
+			//console.log("can cut dot: "+dot);
+			result = null;
+		}
+	}
+	return result;
 }
 MLSMesh3D.Front.prototype.cutEar = function(edgeFront, edgeA,edgeB, field){ // create triangle with edge, update front
 	var angle = field.angle();
@@ -1405,10 +1416,20 @@ MLSMesh3D.EdgeFront.prototype.removeNodeLinkEdge = function(edge){
 	edge.node(null);
 }
 MLSMesh3D.EdgeFront.prototype.deferEdge = function(edge){
-	if(edge.priorityType()==MLSMesh3D.Edge.PRIORITY_NORMAL){
+	if(edge.canDefer()){
 		this._edgeQueue.removeNode(edge.node());
 		//edge.node(null);
 		edge.priorityType(MLSMesh3D.Edge.PRIORITY_DEFERRED);
+		edge.node(this._edgeQueue.push(edge));
+		return true;
+	}
+	return false;
+}
+MLSMesh3D.EdgeFront.prototype.deferBoundaryEdge = function(edge){
+	if(edge.priorityType()!=MLSMesh3D.Edge.PRIORITY_BOUNDARY){
+		this._edgeQueue.removeNode(edge.node());
+		edge.priorityType(MLSMesh3D.Edge.PRIORITY_BOUNDARY);
+		edge.boundary(true);
 		edge.node(this._edgeQueue.push(edge));
 		return true;
 	}
@@ -1609,7 +1630,7 @@ MLSMesh3D.Edge = function(a,b){
 }
 MLSMesh3D.Edge.PRIORITY_NORMAL = 0;
 MLSMesh3D.Edge.PRIORITY_DEFERRED = 1;
-MLSMesh3D.Edge.PRIORITY_DEFERRED_2 = 2;
+MLSMesh3D.Edge.PRIORITY_BOUNDARY = 2;
 MLSMesh3D.Edge.sortIncreasingPayload = function(a,b){
 	return MLSMesh3D.Edge.sortIncreasing(a[0],b[0]);
 }
@@ -1659,6 +1680,20 @@ MLSMesh3D.Edge.prototype.tri = function(t){
 	}
 	return this._tri;
 }
+MLSMesh3D.Edge.prototype.perpendicular = function(){
+	var tri = this.tri();
+	var unit = this.unit();
+	var normal = tri.normal();
+	var barycenter = tri.center();
+	var midpoint = this.midpoint();
+	var centerToEdge = V3D.sub(midpoint,barycenter);
+	var perpendicular = V3D.cross(unit,normal).norm();
+	if(V3D.dot(centerToEdge,perpendicular)<0){
+		perpendicular.scale(-1.0);
+	}
+	return perpendicular;
+}
+
 MLSMesh3D.Edge.prototype.priority = function(p){
 	if(p!==undefined){
 		this._priority = p;
@@ -1709,6 +1744,9 @@ MLSMesh3D.Edge.prototype.boundary = function(b){
 	}
 	return this._boundary;
 }
+MLSMesh3D.Edge.prototype.canDefer = function(){
+	return this.priorityType()==MLSMesh3D.Edge.PRIORITY_NORMAL
+}
 MLSMesh3D.Edge.prototype.length = function(){
 	return V3D.distance(this._a,this._b);
 }
@@ -1740,6 +1778,7 @@ MLSMesh3D.prototype._iterateFronts = function(){
 	var firstTriangle = field.firstTriangle(firstPoint, firstLength);
 	console.log(firstTriangle);
 	var front = new MLSMesh3D.Front();
+this._front = front;
 	var firstFront = front.newEdgeFront();
 	front.fromTriangle(firstFront, firstTriangle); // AUTO ADDS: front.addTri(firstTriangle);
 
@@ -1747,7 +1786,7 @@ MLSMesh3D.prototype._iterateFronts = function(){
 this._tris = front._triangles;
 	// iterate over fronts
 
-
+ITERATIONGLOBAL = 0;
 	
 	var iteration = 0;
 	//var maxIterations = 2000;
@@ -1755,16 +1794,37 @@ this._tris = front._triangles;
 	//var maxIterations = 200;
 	//var maxIterations = 100;
 	//var maxIterations = 50;
+//var maxIterations = 14; // 13-14 too close unavail
 //var maxIterations = 24; // 34-34 vertexPredict front crossing
 //var maxIterations = 46; // 45-46 = projection horrible
-var maxIterations = 54; // 53-54 = nearest corner decision wrong
-//var maxIterations = 15; // too long ish
-	//var maxIterations = 5;
+//var maxIterations = 54; // 53-54 = nearest corner decision wrong
+//var maxIterations = 67; // 66-67 edges covered
+//var maxIterations = 71; // 71-72 = crosses
+//var maxIterations = 72; // 71....73-74
+//var maxIterations = 75; // 74-75 = crosses
+//var maxIterations = 106; // 105-106 = equal tri
+//var maxIterations = 746; //    745-746 LOOKS OK: 400  600  700  720  730  740  745 LOOKS BAD: 747 748 750 800
+//var maxIterations = 1001; // 1001-1002 = duplicate tri
+// 745 = split
+// 746 = cut ear
+//var maxIterations = 1003; // duplicat tri from bad geometry
+var maxIterations = 1050; 
+//var maxIterations = 785; // 784-785 equal tri
+//var maxIterations = 1100; // ... 1000
+// 81-82 - covered
+// NOT MEETING AT SIMILAR SIZES
+//var maxIterations = 881; //  880-881  389-390
+var maxIterations = 5500;
+//var maxIterations = 3770;
+	
 	while(iteration<maxIterations && front.count()>0){
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+iteration+" ");
+//console.log("top count "+front._fronts.length);
+//console.log("TRIANGLES: "+front.triangles().length);
+ITERATIONGLOBAL = iteration;
 	++iteration;
 		var edgeFront = front.first();
-		console.log(edgeFront+"");
+		//console.log(edgeFront+"");
 		// front closes in on itself
 		if(edgeFront.count()<=3 && edgeFront.moreThanSingleTri()){
 			console.log("CLOSE FRONT");
@@ -1772,6 +1832,10 @@ console.log("+------------------------------------------------------------------
 			continue;
 		}
 		var edge = edgeFront.bestEdge();
+		if(edge.isBoundary()){
+			console.log("reached a boundary edge == done ?")
+			break;
+		}
 		// edge can cut 
 		var cutInfo = front.canCutEar(edgeFront, edge, field);
 		if(cutInfo){
@@ -1782,20 +1846,34 @@ console.log("+------------------------------------------------------------------
 		}
 		// put new vertex out
 		var mlsPoint = field.vertexPredict(edge, null); // this is actully just a point and radius, not an mls point
+		if(!Code.isa(mlsPoint, MLSMesh3D.Point) ) { // projected into invalid area
+			if(mlsPoint["type"]=="border"){
+				console.log("FOUND BOUNDARY");
+				edgeFront.deferBoundaryEdge(edge);
+			}else if(mlsPoint["type"]=="invalid"){
+				console.log("FOUND INVALID");
+				edgeFront.deferEdge(edge);
+			}else{
+				console.log("WHAT");
+				console.log(mlsPoint);
+			}
+			continue;
+			//throw "wut";
+		}
 		var point = mlsPoint.point();
 		var idealRadius = mlsPoint.radius();
-		var ideaLength = idealRadius*field.angle();
+		var idealLength = idealRadius*field.angle();
 		console.log("point: "+point);
-		console.log("ideaLength: "+ideaLength);
-		//isClose = this.triangleTooClose(frontList, edge,vertex, idealLength);
-		var minLength = field.minLengthBeforeEvent(mlsPoint);
-		//console.log("minLength: "+minLength);
+		console.log("idealLength: "+idealLength);
+		
+		var minLength = field.minLengthBeforeEvent(mlsPoint, edge);
+		
 		var isClose = front.isPointCloseToTriangulation(edgeFront, edge, point, minLength);
 		if( isClose ){
 			console.log("CLOSE");
 			// can get better defer state based on how good resulting triangle would look (would need to update?)
-			if(false){
-//			if( edgeFront.deferEdge(edge) ){
+//			if(false){
+			if( edgeFront.deferEdge(edge) ){
 				console.log("DEFERRED");
 				continue;
 			}else{
