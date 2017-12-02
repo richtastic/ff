@@ -25,7 +25,9 @@ GLOBALSTAGE = this._stage2D;
 	this.setupDisplay3D();
 //	this.setupSphere3D();
 //	this.setupTorus3D();
-	this.loadPointFile();
+//	this.loadPointFile();
+//	this.setupRect3D();
+	this.setupCurveTest();
 //this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
@@ -380,7 +382,7 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 	var r;
 	var indexPRNG = 0;
 
-	var i, index, len = array.length - count;
+	var i, index, len = array.length - count + 1;
 	for(i=0;i<len;++i){
 		r = Code.PRNG(prng, ++indexPRNG, prngMod);
 		index = Math.floor(r*array.length);
@@ -389,8 +391,8 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	//var sourceFileName = "./images/points/saltdome_1019.pts";
-	//var sourceFileName = "./images/points/foot_5092.pts";
+	// var sourceFileName = "./images/points/saltdome_1019.pts";
+//	var sourceFileName = "./images/points/foot_5092.pts";
 	var sourceFileName = "./images/points/bunny_30571.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
@@ -435,36 +437,137 @@ SurfaceTri.prototype.setupSphere3D = function(){
 	var pts = this.generateSpherePoints(5000,1.5,1E-13);
 	this.startPointCloud(pts);
 }
+SurfaceTri.prototype.setupRect3D = function(){
+	var list = [];
+	var center = new V3D(0,0,0);
+	var size = new V3D(1,1,1);
+	var i, j, k, x, y, z;
+var regular = false;
+if(regular){
+	var count = 50;
+	for(i=0;i<=count;++i){
+		for(j=0;j<=count;++j){
+			for(k=0;k<=count;++k){
+				x = (i/count)*size.x - size.x*0.5 + center.x;
+				y = (j/count)*size.y - size.y*0.5 + center.y;
+				z = (k/count)*size.z - size.z*0.5 + center.z;
+				v = new V3D(x,y,z);
+				list.push(v);
+			}
+		}
+	}
+}else{
+	var count = 10000;
+	for(i=0;i<count;++i){
+		x = Math.random()*size.x - size.x*0.5 + center.x;
+		y = Math.random()*size.y - size.y*0.5 + center.y;
+		z = Math.random()*size.z - size.z*0.5 + center.z;
+		v = new V3D(x,y,z);
+		list.push(v);
+	}
+}
+	this.startPointCloud(list);
+}
+SurfaceTri.prototype.setupCurveTest = function(){
 
+	var list = [];
+	var center = new V3D(0,0,0);
+	var size = new V3D(10,10,10);
+	var i, j, k, x, y, z;
+	var count = 30;
+	//var count = 25;
+var maxZ = -1E5;
+var maxP = null;
+	for(i=0;i<=count;++i){
+		for(j=0;j<=count;++j){
+			k = 0;
+			x = (i/count)*size.x - size.x*0.5 + center.x;
+			y = (j/count)*size.y - size.y*0.5 + center.y;
+			z = center.z;
+			v = new V3D(x,y,z);
+			var dist = V3D.distance(v,center);
+			//V3D.scale( 1.0/(.01 + dist*dist) );
+			var sca = 4.0;
+			//z = sca*(Math.exp( -0.9 * dist) - 1);
+			z = sca*(Math.exp( -1.0 * dist) - 0.5);
+			//z = Math.min(z,5);
+			v.z = z;
+			list.push(v);
+if(z>maxZ){
+	maxZ = z;
+	maxP = v.copy();
+}
+		}
+	}
+console.log("maxP: "+maxP);
+	console.log(list)
+	this.startPointCloud(list);
+
+}
 SurfaceTri.prototype.startPointCloud = function(pts){
 	console.log("start point cloud")
 	// this._pointCloud = new PointCloud();
 	// this._mlsMesh = new MLSMesh();
 	this._mlsMesh = new MLSMesh3D();
 
+
+	
+console.log("trianglate start");
+	// TRIANGULATE
 	var p, i;
 	var points = [];
 	var colors = [];
-	/*
+
+	this._mlsMesh.points(pts);
+
+	this._mlsMesh.triangulateSurface();
+
+
+
+	var oct = this._mlsMesh._field._octTree;
+	var select = oct.kNN(new V3D(0,0,5), 1);
+	//var select = oct.kNN(new V3D(1,1,0), 1);
+	console.log("CLOSEST:");
+	console.log(select[0].point());
+	console.log(select[0].radius());
+// PEAK:  0.68565653925905 - 0.47
+
+// EDGE: 1.8016571812790163 - 1.845
+
+
+/*
+	// show sphere select:
+	var oct = this._mlsMesh._field._octTree;
+	console.log(oct);
+
+	//var select = oct.objectsInsideSphere(new V3D(0,0,0), 0.5);
+	//var select = oct.objectsInsideSphere(new V3D(0.0,0,0), 0.5);
+	//var select = oct.objectsInsideSphere(new V3D(0.0,0,0), 0.5);
+	//var select = oct.objectsInsideCuboid(new V3D(-0.1,-0.1,-0.1), new V3D(0.2,0.0,0.1));
+	//var select = oct.objectsInsideCuboid(new V3D(-0.5,-0.5,-0.5), new V3D(0.2,0.0,0.1));
+	for(i=0;i<select.length;++i){
+		p = select[i];
+		p = p.point();
+		points.push(p.x,p.y,p.z);
+		colors.push(1.0, 0.0, 0.0, 1.0);
+	}
+*/
+//var showPoints = false;
+var showPoints = true;
+if(showPoints){
+	// show source points
 	for(i=0;i<pts.length;++i){
 		p = pts[i];
 		points.push(p.x,p.y,p.z);
 		colors.push(Math.random(),Math.random(),Math.random(),0.50);
 	}
-	*/
+}
+
+
+	// show octtree stuff
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 
-	
-console.log("trianglate start");
-	// TRIANGULATE
-	// this._pointCloud.initWithPointArray(pts, true);
-	// console.log(pts);
-	// console.log(this._pointCloud);
-	// this._mlsMesh.initWithPointCloud(this._pointCloud);
-	// this._mlsMesh.triangulateSurface();
-	this._mlsMesh.points(pts);
-	this._mlsMesh.triangulateSurface();
 	// show normals
 	var p, i;
 	var pointsL = [];
@@ -489,6 +592,17 @@ break;
 		V3D.pushToArray(pointsL, a);
 		V3D.pushToArray(pointsL, b);
 	}
+
+var lines = GLOBAL_LINES;
+for(i=0; i<lines.length; ++i){
+	var a = lines[i][0];
+	var b = lines[i][1];
+	colorsL.push(0.0,0.0,0.0, 1.0 );
+	colorsL.push(0.0,0.0,0.0, 1.0 );
+	V3D.pushToArray(pointsL, a);
+	V3D.pushToArray(pointsL, b);
+}
+
 	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
 	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
 
@@ -524,7 +638,7 @@ break;
 			}
 		}
 
-
+if(false){
 var wasEdge = WASEDGE;
 var wasPoint = WASPOINT;
 var wasPointProjected = WASPOINTPROJECTED;
@@ -542,9 +656,9 @@ V3D.pushToArray(pointsT,wasPointProjected);
 colorsT.push(0.0,0.0, 0.50, 0.5);
 colorsT.push(0.0,0.0, 0.75, 0.5);
 colorsT.push(0.0,0.0, 1.00, 0.5);
+}
 
-
-
+if(GLOBAL_LASTTRI){
 var tri = GLOBAL_LASTTRI;
 if(tri){
 V3D.pushToArray(pointsT,tri.A());
@@ -554,12 +668,25 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 }
-
+}
+// var tri = GLOBAL_DEAD;
+// if(tri){
+// V3D.pushToArray(pointsT,tri.A());
+// V3D.pushToArray(pointsT,tri.B());
+// V3D.pushToArray(pointsT,tri.C());
+// colorsT.push(0.00, 1.00, 0.00, 0.95);
+// colorsT.push(0.00, 1.00, 0.00, 0.95);
+// colorsT.push(0.00, 1.00, 0.00, 0.95);
+// }
 
 // var tris = this._mlsMesh._front.triangles();
 // console.log("TRIANGLES: "+tris.length);
 
 var front = this._mlsMesh._front;
+
+
+front._validateFronts();
+/*
 var edgeFronts = front._fronts;
 console.log("FRONTS: "+edgeFronts.length);
 for(var i=0; i<edgeFronts.length; ++i){
@@ -578,16 +705,19 @@ for(var i=0; i<edgeFronts.length; ++i){
 		V3D.pushToArray(pointsT,tri.B());
 		V3D.pushToArray(pointsT,tri.C());
 		for(k=0; k<3; ++k){
-			if(i%3==0){
-				colorsT.push(0.00, 0.50, 0.00, 0.50);
-			}else if(i%3==1){
-				colorsT.push(0.50, 0.00, 0.00, 0.50);
-			}else{
-				colorsT.push(0.00, 0.00, 0.50, 0.50);
+			if(i%4==0){
+				colorsT.push(0.00, 0.50, 0.50, 0.50);
+			}else if(i%4==1){
+				colorsT.push(0.50, 0.00, 0.50, 0.50);
+			}else if(i%4==2){
+				colorsT.push(0.50, 0.00, 0.50, 0.50);
+			}else if(i%4==3){
+				colorsT.push(0.50, 0.50, 0.00, 0.50);
 			}
 		}
 	}
 }
+*/
 /*
 // pointsT = [];
 // colorsT = [];
@@ -604,7 +734,8 @@ if(GLOBAL_CLOSEA){
 }
 */
 
-/*
+
+if(GLOB_TRI_A){
 var q = GLOB_TRI_A;
 V3D.pushToArray(pointsT,q[0]);
 V3D.pushToArray(pointsT,q[1]);
@@ -612,8 +743,10 @@ V3D.pushToArray(pointsT,q[2]);
 colorsT.push(0.50, 0.50, 0.00, 0.75);
 colorsT.push(0.50, 0.50, 0.00, 0.75);
 colorsT.push(0.50, 0.50, 0.00, 0.75);
+}
 
-var q = GLOB_FEN_A
+if(GLOB_FEN_A){
+var q = GLOB_FEN_A;
 V3D.pushToArray(pointsT,q[0]);
 V3D.pushToArray(pointsT,q[1]);
 V3D.pushToArray(pointsT,q[2]);
@@ -626,7 +759,24 @@ V3D.pushToArray(pointsT,q[0]);
 colorsT.push(0.00, 0.50, 0.50, 0.75);
 colorsT.push(0.00, 0.50, 0.50, 0.75);
 colorsT.push(0.00, 0.50, 0.50, 0.75);
-*/
+}
+
+if(GLOB_FENCE){
+	for(var i=0; i<GLOB_FENCE.length; ++i){
+		var q = GLOB_FENCE[i];
+		var alp = 0.25;
+		V3D.pushToArray(pointsT,q[0]);
+		V3D.pushToArray(pointsT,q[1]);
+		V3D.pushToArray(pointsT,q[2]);
+		V3D.pushToArray(pointsT,q[2]);
+		V3D.pushToArray(pointsT,q[3]);
+		V3D.pushToArray(pointsT,q[0]);
+		for(j=0; j<3; ++j){
+			colorsT.push(0.00, 0.50, 0.50, alp);
+			colorsT.push(0.00, 0.00, 0.50, alp);
+		}
+	}
+}
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 	}
@@ -1026,6 +1176,8 @@ SurfaceTri.prototype.generateTorusPoints = function(count,radiusA,radiusB,error)
 	count = count!==undefined?count:25;
 	radiusA = radiusA!==undefined?radiusA:2.0;
 	radiusB = radiusB!==undefined?radiusB:1.0;
+	// radiusA = radiusA!==undefined?radiusA:3.0;
+	// radiusB = radiusB!==undefined?radiusB:0.2;
 	error = error!==undefined?error:0.01;
 	var i, list = [];
 var index = 0;

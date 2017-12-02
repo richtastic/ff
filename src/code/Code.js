@@ -5890,8 +5890,9 @@ Code.sphereAlgebraic = function(points, location){
 	var b2 = best[2];
 	var b3 = best[3];
 	var c = best[4];
-	if(a===0){
-		return null;
+	if(a===0){ // plane
+		var plane = Code.planeFromPoints(location, points, weights);
+		return plane;
 	}
 	var sphere = Code.sphereCoefficientsToSphere(a,b1,b2,b3,c);
 	sphere["weights"] = weights;
@@ -5923,8 +5924,14 @@ Code._sphereGeometricGD = function(args,vals, isUpdate){
 Code.sphereGeometric = function(points, location, maxIterations){
 	maxIterations = maxIterations!==undefined ? maxIterations : 50;
 	var sphere = Code.sphereAlgebraic(points, location);
-	var weights = sphere["weights"];
+	if(!sphere){
+		return null;
+	}
 	var center = sphere["center"];
+	if(!center){ // plane
+		return sphere;
+	}
+	var weights = sphere["weights"];
 	var radius = sphere["radius"];
 	var result = Code.gradientDescent(Code._sphereGeometricGD, [points, weights], [center.x,center.y,center.z,radius], null, maxIterations, 1E-8);
 	var x = result["x"];
@@ -5948,6 +5955,13 @@ Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
 	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
+Code.distancePointLine3D = function(org,dir, point){ // infinite ray and point
+	//console.log(org,dir, point)
+	var closest = Code.closestPointLine3D(org,dir, point);
+	//console.log(closest+" ???");
+	return V3D.distance(point, closest);
+}
+
 Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and point
 	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
 	if(t<=0){
@@ -6238,6 +6252,7 @@ Code.triTriIntersection2DBoolean = function(a1,b1,c1, a2,b2,c2){ // polygonal in
 	return false;
 }
 Code.triTriIntersection3D = function(a1,b1,c1,n1, a2,b2,c2,n2,   log){ // n = b-a x c-a
+	log = false;
 	var i, temp;
 	// a triangle intersection exists if signed distances are different
 	var d1 = -V3D.dot(n1,a1);
@@ -6490,19 +6505,47 @@ Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-
 	if(int1B<int2A){ return false; }
 	return true;
 }
+// intersections, fenceA-B
+
+
+Code.pointsNullOrCloseToLine3D = function(intersectionPoints, lineA, lineB){
+	if(!intersectionPoints){
+		return true;
+	}
+	var lineAB = V3D.sub(lineB,lineA);
+	for(var i=0; i<intersectionPoints.length; ++i){
+		var point = intersectionPoints[i];
+		//var closest = Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
+		var dist = Code.distancePointLine3D(lineA,lineAB, point);
+		//console.log("    "+i+" / "+intersectionPoints.length+" @ "+point+" "+" = "+dist); // lineA+" "+lineB+" "+lineAB
+		if(dist>1E-6){
+			//console.log();
+			return false;
+		}
+	}
+	return true;
+}
 
 Code.pointsNullOrCloseToPoints3D = function(pointsA, pointsB){ // fairly specific to MLSMesh3D
+	throw "nah";
 	if(!pointsA || !pointsB){
 		return true;
 	}
+return false;
+
+
+
+
+// TODO: is this on outer or inner ?
+	var really = false;
 	for(var i=0; i<pointsA.length; ++i){
-		var really = false;
 		for(var j=0; j<pointsB.length; ++j){
 			really |= V3D.equalToEpsilon(pointsA[i],pointsB[j]);
+			V3D.equalToEpsilon(pointsA[i],pointsB[j]);
 		}
-		if(!really){
-			return false;
-		}
+	}
+	if(!really){
+		return false;
 	}
 	return true;
 }
@@ -6549,6 +6592,7 @@ Code.planeFromPoints = function(center, points, weights){
 		for(i=0; i<len; ++i){
 			point = points[i];
 			weights[i] = V3D.distance(point,center);
+//console.log(weights[i]+" "+point+" "+center);
 			weightAvg += weights[i];
 		}
 		weightAvg /= len;
@@ -6566,7 +6610,10 @@ Code.planeFromPoints = function(center, points, weights){
 		centerOfMass.add(weight*point.x, weight*point.y, weight*point.z);
 		weightTotal += weight;
 	}
-	centerOfMass.scale(1.0/weightTotal);
+	// console.log(centerOfMass+" | "+weightTotal);
+	if(weightTotal>0){
+		centerOfMass.scale(1.0/weightTotal);
+	}
 	for(i=0; i<len; ++i){
 		point = points[i];
 		distanceSquare = V3D.distanceSquare(point, center);
@@ -6578,6 +6625,7 @@ Code.planeFromPoints = function(center, points, weights){
 		E += weight*dy*dy; F += weight*dy*dz; I += weight*dz*dz;
 	}
 	var covariance = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
+	//console.log(covariance);
 	var eig = Matrix.eigenValuesAndVectors(covariance);
 	var values = eig.values;
 	var vectors = eig.vectors;
