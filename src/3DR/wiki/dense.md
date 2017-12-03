@@ -41,6 +41,69 @@ To rank matches, queues area used
 
 
 
+triangulation:
+- high curvature areas are no more dense than low curvature areas
+	- is first tri right side
+
+
+- local edge searching [eg 2*edge length], not entrire volume
+- local triangle searching [eg 2*edge length], not entire volume
+
+- QuadSpace
+- OctSpace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 HIGH DESNE PROBLEMS WITH HIERARCHICAL ALGORITHM:
 - areas with large 'stretch' don't fit error metric well
 	=> need sub-pixel matching ?

@@ -9,13 +9,17 @@ function SurfaceTri(){
 	this._stage2D.start();
 	this._root = new DO();
 	this._stage2D.root().addChild(this._root);
-	// 
+	// var 
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage3D.setBackgroundColor(0x00000000);
 	this._stage3D.frustrumAngle(60);
 	this._stage3D.enableDepthTest();
 GLOBALSTAGE = this._stage2D;
+
+
+this.quadSpaceCheck();
+return;
 
 
 	// datas
@@ -25,9 +29,9 @@ GLOBALSTAGE = this._stage2D;
 	this.setupDisplay3D();
 //	this.setupSphere3D();
 //	this.setupTorus3D();
-//	this.loadPointFile();
+	this.loadPointFile();
 //	this.setupRect3D();
-	this.setupCurveTest();
+//	this.setupCurveTest();
 //this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
@@ -55,6 +59,147 @@ this._seeThru = false;
 
 	//
 }
+SurfaceTri.prototype.quadSpaceCheck = function(){
+	// function Rect(xPos,yPos, w,h, d){
+	var fxn = function(o){
+		console.log("    o"+o);
+		var min = o.min();
+		var max = o.max();
+		console.log("        =>"+min+" & "+max);
+		var siz = V2D.sub(max,min);
+		console.log("          size:"+siz);
+		return new Rect(min.x,min.y, siz.x,siz.y);
+	}
+	var tris = [];
+	var i, j, p, tri;
+	var count = 1;
+	var siz = 1.0;
+	var off = 10.0;
+	for(i=0; i<count; ++i){
+		var pts = [];
+		var cen = new V2D(Math.random()*off,Math.random()*off);
+		for(j=0; j<3; ++j){
+			var p = new V2D(Math.random()*siz,Math.random()*siz);
+			p.add(cen);
+			pts.push(p);
+		}
+		tri = new Tri2D(pts[0],pts[1],pts[2]);
+		tris.push(tri);
+	}
+	console.log(tris);
+	var minLoc = null;
+	var maxLoc = null;
+	for(i=0; i<tris.length; ++i){
+		tri = tris[i];
+		if(minLoc===null){
+			minLoc = tri.A().copy();
+			maxLoc = tri.A().copy();
+		}
+		var pts = [tri.A(),tri.B(),tri.C()];
+		for(j=0; j<pts.length; ++j){
+			p = pts[j];
+			minLoc.x = Math.min(minLoc.x, p.x);
+			minLoc.y = Math.min(minLoc.y, p.y);
+			maxLoc.x = Math.max(maxLoc.x, p.x);
+			maxLoc.y = Math.max(maxLoc.y, p.y);
+		}
+	}
+	console.log(""+minLoc+" => "+maxLoc);
+	var space = new QuadSpace(fxn);
+	space.fromSize(minLoc,maxLoc);
+	console.log(space);
+
+	for(i=0; i<tris.length; ++i){
+		tri = tris[i];
+		space.insertObject(tri);
+	}
+
+
+	console.log("VIZUALIZE ME");
+
+
+	var display = new DO();
+	this._root.addChild(display);
+	var availableSize = this._canvas2D.size();
+	var availableWidth = availableSize.x;
+	var availableHeight = availableSize.y;
+	// 
+	availableSize = Math.min(availableWidth,availableHeight);
+	// 
+	var root = space._root;
+	var min = root.min();
+	var getArxels = function(arx, array){
+		console.log("getArxels ... ",arx);
+		if(!arx){
+			return;
+		}
+		array.push(arx);
+		var ch = arx.children();
+		if(ch){
+			for(var i=0; i<ch.length; ++i){
+				getArxels(arx, array);
+			}
+		}
+	}
+	// console.log(availableWidth,availableHeight);
+	var arxels=[], arxel;
+	getArxels(root,arxels);
+
+	var i, j, d, p, o, t;
+	var scale = availableSize / root.size().x;
+	//var scale = root.size().x / availableSize;
+	console.log(scale);
+	for(i=0; i<arxels.length; ++i){
+		arxel = arxels[i];
+		console.log(arxel);
+		var c = arxel.center();
+		var s = arxel.size();
+		var m = arxel.min();
+
+		//var offset = new V2D((-min.x+m.x)*scale, (-min.y+m.y)*scale);
+		var offset = new V2D(-min.x*scale, -min.y*scale);
+		console.log("offset : "+offset);
+		d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(1.0, 0xCC666666);
+			d.graphics().beginPath();
+			//d.graphics().drawRect(0,0, 100,100);
+			//console.log((-min.x-m.x)*scale, (-min.y-m.y)*scale, s.x*scale, s.y*scale);
+			d.graphics().drawRect(offset.x+m.x*scale,offset.y+m.y*scale, s.x*scale, s.y*scale);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+		display.addChild(d);
+		var packages = arxel.objects();
+		if(packages){
+			for(j=0; j<packages.length; ++j){
+				p = packages[j];
+				t = p.object();
+				console.log(t);
+				d = new DO();
+//scale /= 50.0;
+console.log(offset+"");
+console.log(t.A(),t.B(),t.C());
+console.log(t.A().x*scale,t.A().y*scale);
+console.log(t.B().x*scale,t.B().y*scale);
+console.log(t.C().x*scale,t.C().y*scale);
+
+					d.graphics().clear();
+					d.graphics().setLine(1.0, 0xFFFF0000);
+					d.graphics().beginPath();
+					d.graphics().drawPolygon([
+						new V2D(offset.x+t.A().x*scale,offset.y+t.A().y*scale),
+						new V2D(offset.x+t.B().x*scale,offset.y+t.B().y*scale),
+						new V2D(offset.x+t.C().x*scale,offset.y+t.C().y*scale)], true);
+
+					//d.graphics().drawRect(0,0, 100,100);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+				display.addChild(d);
+			}
+		}
+	}
+}
+
 SurfaceTri.prototype.getVertexShaders1 = function(){
 	return ["\
 		attribute vec3 aVertexPosition; \
@@ -397,7 +542,6 @@ SurfaceTri.prototype.loadPointFile = function(){
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
-		//Code.subSampleArray(list,5000);
 		//Code.subSampleArray(list,10000);
 		this.subSampleArray(list,5000);
 		var i, v, len = list.length;
@@ -592,7 +736,7 @@ break;
 		V3D.pushToArray(pointsL, a);
 		V3D.pushToArray(pointsL, b);
 	}
-
+/*
 var lines = GLOBAL_LINES;
 for(i=0; i<lines.length; ++i){
 	var a = lines[i][0];
@@ -602,7 +746,7 @@ for(i=0; i<lines.length; ++i){
 	V3D.pushToArray(pointsL, a);
 	V3D.pushToArray(pointsL, b);
 }
-
+*/
 	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
 	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
 
@@ -627,6 +771,10 @@ for(i=0; i<lines.length; ++i){
 			V3D.pushToArray(pointsT,tri.A());
 			V3D.pushToArray(pointsT,tri.B());
 			V3D.pushToArray(pointsT,tri.C());
+			colorsT.push(0.70, 0.00, 0.90, 1.0);
+			colorsT.push(0.00, 0.70, 0.90, 1.0);
+			colorsT.push(0.60, 0.60, 0.99, 1.0);
+			/*
 			if(tri.SPLIT || tri.MERGE){
 				colorsT.push(0.90,0.50,0.0, 1.0);
 				colorsT.push(0.50,0.90,0.0, 1.0);
@@ -636,6 +784,7 @@ for(i=0; i<lines.length; ++i){
 				colorsT.push(0.0,0.90,0.0, 1.0);
 				colorsT.push(0.0,0.0,0.90, 1.0);
 			}
+			*/
 		}
 
 if(false){
@@ -657,10 +806,9 @@ colorsT.push(0.0,0.0, 0.50, 0.5);
 colorsT.push(0.0,0.0, 0.75, 0.5);
 colorsT.push(0.0,0.0, 1.00, 0.5);
 }
-
+/*
 if(GLOBAL_LASTTRI){
 var tri = GLOBAL_LASTTRI;
-if(tri){
 V3D.pushToArray(pointsT,tri.A());
 V3D.pushToArray(pointsT,tri.B());
 V3D.pushToArray(pointsT,tri.C());
@@ -668,7 +816,7 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 }
-}
+*/
 // var tri = GLOBAL_DEAD;
 // if(tri){
 // V3D.pushToArray(pointsT,tri.A());
@@ -734,7 +882,7 @@ if(GLOBAL_CLOSEA){
 }
 */
 
-
+/*
 if(GLOB_TRI_A){
 var q = GLOB_TRI_A;
 V3D.pushToArray(pointsT,q[0]);
@@ -777,6 +925,7 @@ if(GLOB_FENCE){
 		}
 	}
 }
+*/
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 	}

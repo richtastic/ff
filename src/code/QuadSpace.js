@@ -1,36 +1,77 @@
 // QuadSpace.js
 
-function QuadSpace(){
+function QuadSpace(toRect,min,max,eps){
 	this._root = new QuadSpace.Arxel();
+	this._epsilon = null;
+	this._toRectFxn = toRect;
+	this.fromSize(min,max,eps);
 }
-/*
-QuadTree.objectToV2D = function(p){
-	return p;
-}
-QuadTree.objectEquality = function(a,b){
-	return a==b;
-}
-QuadTree.roundedPoint = function(p){
-	var x;
-	return x;
-}
-QuadTree.twoRounded = function(d){
+QuadSpace.twoRounded = function(d){
 	var n = Math.abs(d);
 	var e = Math.ceil(Math.log(n)/Math.log(2));
 	return Math.pow(2,e);
 }
-QuadTree.twoDivisionRound = function(min,max, force){ // force dimensions equal
-	var dif = V2D.sub(max,min);
-	if(force){
-		dif.x = QuadTree.twoRounded( Math.max(dif.x,dif.y) );
-		dif.y = dif.x;
-	}else{
-		dif.x = QuadTree.twoRounded( dif.x );
-		dif.y = QuadTree.twoRounded( dif.y );
-	}
-	return dif;
+QuadSpace.objectToRect = function(p){
+	throw "need to rect function";
 }
 // --------------------------------------------------------------------------------------------------------- 
+QuadSpace.prototype.fromSize = function(min,max, epsilon){
+	if(!min || !max){
+		return;
+	}
+	this.clear();
+	var size = V2D.sub(max,min);
+	var center = min.copy().add( size.copy().scale(0.5) );
+	var square = Math.max(size.x,size.y);
+	square = QuadSpace.twoRounded(square);
+	size.set(square,square);
+	epsilon = epsilon!==undefined ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
+	this._epsilon = epsilon;
+	console.log("   "+center+" & "+size);
+	this._root.setCenterAndSize(center,size);
+}
+QuadSpace.prototype.clear = function(){
+	this._root.clear();
+}
+QuadSpace.prototype.insertObject = function(object){
+	var package = new QuadSpace.Package(object);
+	var rect = this._toRectFxn(object);
+	this._root.insertObject(package, rect, this._toRectFxn, this._epsilon);
+}
+QuadSpace.prototype.containsObject = function(object){
+	var package = this.findPackage(object);
+	if(package){
+		return true;
+	}
+	return false;
+}
+QuadSpace.prototype.findPackage = function(object){
+	var package = this._root.findObject(object);
+	if(!package){
+		return null;
+	}
+	return package;
+}
+QuadSpace.prototype.removeObject = function(object){
+	var package = this.findPackage(object);
+	if(!package){
+		return null;
+	}
+	var arxels = package.arxels();
+	var rect = this._toRectFxn(object);
+	var i, arxel;
+	for(i=0; i<arxels.length; ++i){
+		arxel = arxel[i];
+		arxel.removeObject(package, rect, this._toRectFxn, this._epsilon);
+	}
+	// for(i=0; i<arxels.length; ++i){
+	// 	arxel = arxel[i];
+	// 	arxel.
+	// }
+	package.kill();
+	return object;
+}
+/*
 QuadTree.prototype.kill = function(){
 	this.clear();
 	this._root = null;
@@ -290,35 +331,217 @@ QuadTree.prototype.findObject = function(obj,equality){
 }
 */
 // --------------------------------------------------------------------------------------------------------- 
+QuadSpace.Package = function(object){
+	this._object = null;
+	this._arxels = [];
+	this.object(object);
+}
+QuadSpace.Package.prototype.object = function(object){
+	if(object!==undefined){
+		this._object = object;
+	}
+	return this._object;
+}
+QuadSpace.Package.prototype.arxels = function(){
+	return this._arxels;
+}
+QuadSpace.Package.prototype.pushArxel = function(arxel){
+	this._arxels.push(arxel);
+}
+QuadSpace.Package.prototype.kill = function(){
+	this._object = null;
+	this._arxels = null;
+}
+// --------------------------------------------------------------------------------------------------------- 
 QuadSpace.Arxel = function(){
+	this._count = 0;
 	this._parent = null;
 	this._children = null;
-	this._count = 0;
+	this._objects = null;
+	this._temp = null;
 	this._center = new V2D();
 	this._size = new V2D();
 	this._min = new V2D();
 	this._max = new V2D();
-	this._datas = null;
-	this._temp = null;
 }
-/*
-QuadTree.Arxel.indexForPoint = function(center,v){
-	var index = 0;
-	index += (v.x>=center.x)?2:0;
-	index += (v.y>=center.y)?1:0;
-	return index;
-}
-QuadTree.Arxel.newChildFromParentAndPoint = function(arxel,v){
-	var child = new QuadTree.Arxel();
-	var siz = V2D.scale(arxel.size(),0.5);
-	var cen = new V2D().copy(arxel.center());
-	if(v.x>=cen.x){ cen.x += siz.x*0.5; }else{ cen.x -= siz.x*0.5; }
-	if(v.y>=cen.y){ cen.y += siz.y*0.5; }else{ cen.y -= siz.y*0.5; }
+
+QuadSpace.Arxel.newChildFromParent = function(arxel, index){
+	var child = new QuadSpace.Arxel();
+	var siz = arxel.size().copy().scale(0.5);
+	var cen = arxel.center().copy();
+	var isLeft = index%2 == 0;
+	var isDown = (index/2 | 0) == 0;
+	cen.x += (isLeft ? -1 : 1) * siz.x*0.5;
+	cen.y += (isDown ? -1 : 1) * siz.x*0.5;
 	child.setCenterAndSize(cen,siz);
 	child.parent(arxel);
 	return child;
 }
+QuadSpace.Arxel.prototype.kill = function(){
+	this.clear();
+	this._center = null;
+	this._size = null;
+	this._min = null;
+	this._max = null;
+	this._parent = null;
+	this._temp = null;
+	this._children = null;
+	this._objects = null;
+}
+QuadSpace.Arxel.prototype.setCenterAndSize = function(cen,siz){
+	this._center.copy(cen);
+	this._size.copy(siz);
+	this._recheckExtrema();
+}
+QuadSpace.Arxel.prototype.center = function(cen){
+	if(cen!==undefined){
+		this._center.copy(cen);
+		this._recheckExtrema();
+	}
+	return this._center;
+}
+QuadSpace.Arxel.prototype.size = function(siz){
+	if(siz!==undefined){
+		this._size.copy(siz);
+		this._recheckExtrema();
+	}
+	return this._size;
+}
+QuadSpace.Arxel.prototype._recheckExtrema = function(){
+	var cen = this._center, siz = this._size;
+	this._min.set(cen.x-0.5*siz.x,cen.y-0.5*siz.y);
+	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y);
+}
 // --------------------------------------------------------------------------------------------------------- 
+QuadSpace.Arxel.prototype.insertObject = function(package, rect, toRectFxn, epsilon){
+	console.log("insertObject");
+	var minSizeSelf = Math.min(this._size.x,this._size.y);
+	var maxSizeRect = Math.max(rect.width(),rect.height());
+	maxSizeRect *= 2;
+	var i, j, children = this._children;
+	var isInside = this.hasOverlap(rect);
+	console.log(" isInside: "+isInside);
+	if(!isInside){
+		return null;
+	}
+	++this._count;
+	package.pushArxel(this);
+	console.log(" push arxel ");
+	if(children==null){ // leaf
+		console.log("  ? leaf");
+		if(minSizeSelf<maxSizeRect || minSizeSelf <= epsilon){ // small enough
+			console.log("  small enough: "+minSizeSelf+" | "+maxSizeRect+" | "+epsilon);
+			if(!this._objects){
+				this._objects = [];
+			}
+			this._objects.push(package);
+		}else{ // need to be smaller => branch
+			console.log("  smaller");
+			children = [];
+			this._children = children;
+			// create 4 new children
+			for(i=0;i<4;++i){
+				arxel = QuadSpace.Arxel.newChildFromParent(this,i);
+				children[i] = arxel;
+			}
+			// insert existing objects
+			if(this._objects){
+				for(j=0; j<this._objects.length; ++j){
+					var p = this._objects[j];
+					p.removeArxel(this);
+					var r = toRectFxn(p.object());
+					for(i=0; i<children.length; ++i){
+						children[i].insertObject(p, r, toRectFxn, epsilon);
+					}
+				}
+				Code.emptyArray(this._objects);
+				this._objects = null;
+			}
+			
+			// insert new object
+			for(i=0; i<children.length; ++i){
+				children[i].insertObject(package, rect, toRectFxn, epsilon);
+			}
+		}
+	}else{ // add to children
+		console.log("  ? not leaf");
+		for(var i=0; i<children.length; ++i){
+			children[i].insertObject(package, rect, toRectFxn, epsilon);
+		}
+	}
+	return package;
+}
+QuadSpace.Arxel.prototype.removeObject = function(package, rect, toRectFxn, epsilon){
+	var contains = Code.removeElement(this._objects, package);
+	if(!contains){
+		return null;
+	}
+	this.removedItem();
+	return contains;
+}
+QuadSpace.Arxel.prototype.removedItem = function(){
+	--this._count;
+	var i;
+	var children = this._children;
+	if(this._count==0){ //if(this._objects && this._objects.length==0){
+		if(children){ // has children
+			for(i=0; i<children.length; ++i){
+				children[i].kill();
+			}
+			this._children = null;
+		}else{ // is leaf
+			this._objects = null;
+		}
+	}
+	if(this._parent){
+		this._parent.removedItem();
+	}
+}
+QuadSpace.Arxel.prototype.hasOverlap = function(rect){
+	return !Code.rectsSeparate(rect.min(),rect.max(), this._min,this._max);
+	//Code.rectsSeparate = function(aMin,aMax, bMin,bMax){
+}
+QuadSpace.Arxel.prototype.clear = function(){
+	var children = this._children;
+	if(children){
+		for(i=0; i<children.length; ++i){
+			children[i].clear();
+		}
+	}
+	if(this._objects){
+		Code.emptyArray(this._objects);
+		this._objects = null;
+	}
+	this._children = null;
+}
+QuadSpace.Arxel.prototype.isLeaf = function(){
+	return this._children == null;
+}
+QuadSpace.Arxel.prototype.children = function(){
+	return this._children;
+}
+QuadSpace.Arxel.prototype.min = function(){
+	return this._min;
+}
+QuadSpace.Arxel.prototype.max = function(){
+	return this._max;
+}
+QuadSpace.Arxel.prototype.count = function(){
+	return this._count;
+}
+QuadSpace.Arxel.prototype.parent = function(p){
+	if(p!==undefined){
+		this._parent = p;
+	}
+	return this._parent;
+}
+QuadSpace.Arxel.prototype.objects = function(o){
+	if(o!==undefined){
+		this._objects = o;
+	}
+	return this._objects;
+}
+/*
 QuadTree.Arxel.prototype.toString = function(tab,nex){
 	tab = tab!==undefined?tab:"";
 	nex = nex!==undefined?nex:"  ";
@@ -353,27 +576,7 @@ QuadTree.Arxel.prototype.kill = function(){
 		this._datas = null;
 	}
 }
-QuadTree.Arxel.prototype.isLeaf = function(){
-	return this._children == null;
-}
-QuadTree.Arxel.prototype.children = function(){
-	return this._children;
-}
-QuadTree.Arxel.prototype.min = function(){
-	return this._min;
-}
-QuadTree.Arxel.prototype.max = function(){
-	return this._max;
-}
-QuadTree.Arxel.prototype.count = function(){
-	return this._count;
-}
-QuadTree.Arxel.prototype.parent = function(p){
-	if(p!==undefined){
-		this._parent = p;
-	}
-	return this._parent;
-}
+
 QuadTree.Arxel.prototype.datas = function(d){
 	if(d!==undefined){
 		this._datas = d;
@@ -394,11 +597,7 @@ QuadTree.Arxel.prototype.childAt = function(i){
 	}
 	return null;
 }
-QuadTree.Arxel.prototype._recheckExtrema = function(){
-	var cen = this._center, siz = this._size;
-	this._min.set(cen.x-0.5*siz.x,cen.y-0.5*siz.y);
-	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y);
-}
+
 QuadTree.Arxel.prototype.addData = function(data){
 	this._datas.push(data);
 	return data;
@@ -407,25 +606,6 @@ QuadTree.Arxel.prototype.removeData = function(data, fxn){
 	fxn = fxn!==undefined ? fxn : QuadTree.objectEquality;
 	var results = Code.removeElements(this._datas, fxn);
 	return results;
-}
-QuadTree.Arxel.prototype.setCenterAndSize = function(cen,siz){
-	this._center.copy(cen);
-	this._size.copy(siz);
-	this._recheckExtrema();
-}
-QuadTree.Arxel.prototype.center = function(cen){
-	if(cen!==undefined){
-		this._center.copy(cen);
-		this._recheckExtrema();
-	}
-	return this._center;
-}
-QuadTree.Arxel.prototype.size = function(siz){
-	if(siz!==undefined){
-		this._size.copy(siz);
-		this._recheckExtrema();
-	}
-	return this._size;
 }
 QuadTree.Arxel.prototype.clear = function(){
 	var i, child;

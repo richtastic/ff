@@ -1,7 +1,7 @@
 // MLSMesh3D.js
 
 function MLSMesh3D(points, angle){
-	var angle = Math.PI*0.25; // 18 degrees
+	var angle = Math.PI*0.5; // 18 degrees
 	var beta = Code.radians(55.0);
 	this._field = new MLSMesh3D.Field();
 	this._field.points(points);
@@ -271,7 +271,7 @@ MLSMesh3D.Field.prototype.beta = function(beta){ // choose beta = 55 degrees (se
 	if(beta!==undefined){
 		this._beta = beta;
 		var eta = Math.sin(2.0*beta)/Math.sin(3.0*beta);
-		eta = 2.0 * eta; // ...
+//		eta = 2.0 * eta; // ...
 		this.eta(eta);
 	}
 	return this._beta; // not derived
@@ -299,17 +299,6 @@ MLSMesh3D.Field.prototype.points = function(points){
 	}
 	return this._points;
 }
-// MLSMesh3D.Field.to2DPlane = function(location, planePoint, planeNormal){
-// 	var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
-// 	var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
-// 	var projection = Code.projectPointToPlane3D(location, planePoint, planeNormal);
-// 	projection = V3D.sub(projection,planePoint)
-// 	if( Math.abs(offsetAngle) > 1E-10 ){
-// 		projection = V3D.rotateAngle(projection, offsetNormal, -offsetAngle);
-// 	}
-// 	projection = new V2D(projection.x,projection.y);
-// 	return projection;
-// }
 MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, desiredCount){
 	if(Code.isa(location,MLSMesh3D.Point)){
 		location = location.point();
@@ -664,9 +653,9 @@ MLSMesh3D.Field.prototype.minRadius = function(location, radiusSearch){
 MLSMesh3D.Field.prototype.shouldBeBorder = function(edge, p){
 	// get maximum angle of projected local neighborhood
 	var maxAngleNeighbors = this.projectedMaxNeghborhoodAngle(p);
-	//var maximumNeighborAngle = Code.radians(150.0);
-	var maximumNeighborAngle = Code.radians(225.0);
-	console.log("maxAngleNeighbors: "+Code.degrees(maxAngleNeighbors));
+	var maximumNeighborAngle = Code.radians(150.0);
+	//var maximumNeighborAngle = Code.radians(225.0);
+	//console.log("maxAngleNeighbors: "+Code.degrees(maxAngleNeighbors));
 	if(maxAngleNeighbors>maximumNeighborAngle){
 		return true;
 	}
@@ -716,7 +705,6 @@ WASPOINT = p.copy();
 		midpointToP = V3D.sub(p,midpoint);
 		dot = V3D.dot(perpendicular, midpointToP);
 		if(dot<=0){
-			console.log("NEGATIVE PROJECTION DOT");
 			midpointToP.scale(-1);
 			p = midpointToP.add(midpoint);
 			p = this._projectPointToSurface(p);
@@ -729,7 +717,7 @@ var d2 = (V3D.distance(midpoint,p));
 var delta = Math.max(d2/d1, d1/d2);
 
 if(delta>2){
-	console.log("  DISTANCE CHANGE: "+d1+"/"+d2+" = "+delta+"  ["+altitude+"]  "+(delta>5 ? "ALERT DELTA" : "..."));
+//	console.log("  DISTANCE CHANGE: "+d1+"/"+d2+" = "+delta+"  ["+altitude+"]  "+(delta>5 ? "ALERT DELTA" : "..."));
 
 }
 var minDelta = 1.25;
@@ -743,7 +731,7 @@ while(delta>minDelta && count<5){
 
 	d2 = (V3D.distance(midpoint,p));
 	delta = Math.max(d2/d1, d1/d2);
-	console.log("      "+count+" = "+delta+"  ");
+//	console.log("      "+count+" = "+delta+"  ");
 	++count;
 }
 
@@ -889,7 +877,7 @@ MLSMesh3D.Front.prototype.triangles = function(){
 MLSMesh3D.Front.prototype.addTri = function(tri){
 	for(var i=0; i<this._triangles.length; ++i){
 		if( tri.isEqual(this._triangles[i]) ){
-//			throw "EQUAL TRI ALERT "+tri;
+//throw "EQUAL TRI ALERT "+tri;
 console.log("EQUAL TRI ALERT");
 break;
 		}
@@ -1201,7 +1189,18 @@ GLOB_FENCE = [];
 				continue;
 			}
 			var eA = edge.A();
-			var eB = edge.B();
+			//var eB = edge.B();
+			// TODO: IF FINAL TRIANGLE SUCKS, DON'T DO IT
+			var sideLengthA = V3D.distance(eA,fromA);
+			var sideLengthB = V3D.distance(eA,fromB);
+			var sideLengthC = V3D.distance(fromA,fromB);
+			var ratioA = sideLengthA/sideLengthC;
+			var ratioB = sideLengthB/sideLengthC;
+			var maxRatio = 2.0;
+			if(ratioA>maxRatio || ratioB>maxRatio){
+				continue;
+			}
+
 			//console.log("TRY: "+eA+" => "+eB+"\n\n");
 			// try a triangle:
 			if( !V3D.equalToEpsilon(fromA,eA) && !V3D.equalToEpsilon(fromB,eA) ){
@@ -1228,7 +1227,7 @@ GLOB_FENCE = [];
 							// TODO: INSTEAD CHECK IF IS CROSSED BY TRIANGLE EDGES == BACKWARDS
 							var crossedA = this.crossesEdge(edgeTriA, edgeFrontFrom,edgeFrom,eA);
 							var crossedB = this.crossesEdge(edgeTriB, edgeFrontFrom,edgeFrom,eA);
-							console.log("crossedA: "+crossedA+"  | crossedB: "+crossedB);
+							//console.log("crossedA: "+crossedA+"  | crossedB: "+crossedB);
 							if(!crossedA && !crossedB){
 								closestDistance = distance;
 								closestPoint = eA;
@@ -1246,7 +1245,7 @@ GLOB_FENCE = [];
 			}
 		}
 	}
-	// TODO: IF FINAL TRIANGLE SUCKS, DON'T DO IT
+	
 	if(closestFront==edgeFrontFrom){
 		console.log("SPLIT");
 		this.split(edgeFrontFrom,edgeFrom, closestEdge, closestPoint, field);
@@ -1998,36 +1997,13 @@ ITERATIONGLOBAL = 0;
 	//var maxIterations = 200;
 	//var maxIterations = 100;
 	//var maxIterations = 50;
-//var maxIterations = 14; // 13-14 too close unavail
-//var maxIterations = 24; // 34-34 vertexPredict front crossing
-//var maxIterations = 46; // 45-46 = projection horrible
-//var maxIterations = 54; // 53-54 = nearest corner decision wrong
-//var maxIterations = 67; // 66-67 edges covered
-//var maxIterations = 71; // 71-72 = crosses
-//var maxIterations = 72; // 71....73-74
-//var maxIterations = 75; // 74-75 = crosses
-//var maxIterations = 106; // 105-106 = equal tri
-//var maxIterations = 746; //    745-746 LOOKS OK: 400  600  700  720  730  740  745 LOOKS BAD: 747 748 750 800
-//var maxIterations = 1001; // 1001-1002 = duplicate tri
-// 745 = split
-// 746 = cut ear
-//var maxIterations = 1003; // duplicat tri from bad geometry
-var maxIterations = 1050; 
-//var maxIterations = 785; // 784-785 equal tri
-//var maxIterations = 1100; // ... 1000
-// 81-82 - covered
-// NOT MEETING AT SIMILAR SIZES
-//var maxIterations = 881; //  880-881  389-390
-// bunny crosses
-//var maxIterations = 954; // 950..952-953-954  
-//var maxIterations = 950; // 900, 930, 940   ???? 950 
-//var maxIterations = 932;//
-var maxIterations = 1300;//
+var maxIterations = 5012;// 5011 - equal tri
+var maxIterations = 10100;// 4398
 
 	while(iteration<maxIterations && front.count()>0){
 console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+iteration+" ");
 //console.log("top count "+front._fronts.length);
-console.log("TRIANGLES: "+front.triangles().length);
+//console.log("TRIANGLES: "+front.triangles().length);
 ITERATIONGLOBAL = iteration;
 	++iteration;
 		var edgeFront = front.first();
@@ -2070,8 +2046,8 @@ ITERATIONGLOBAL = iteration;
 		var point = mlsPoint.point();
 		var idealRadius = mlsPoint.radius();
 		var idealLength = idealRadius*field.angle();
-		console.log("point: "+point);
-		console.log("idealLength: "+idealLength);
+		//console.log("point: "+point);
+		//console.log("idealLength: "+idealLength);
 		
 		var minLength = field.minLengthBeforeEvent(mlsPoint, edge);
 		
@@ -2081,10 +2057,10 @@ ITERATIONGLOBAL = iteration;
 			// can get better defer state based on how good resulting triangle would look (would need to update?)
 //			if(false){
 			if( edgeFront.deferEdge(edge) ){
-				console.log("DEFERRED");
+//				console.log("DEFERRED");
 				continue;
 			}else{
-				console.log("COULD NOT DEFER");
+//				console.log("COULD NOT DEFER");
 //break;
 			}
 			front.topologicalEvent(edgeFront, edge, point, field);
