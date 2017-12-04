@@ -185,10 +185,7 @@ Rect.isIntersect = function(a,b){
 	return Rect.isIntersectX(a,b) && Rect.isIntersectY(a,b);
 }
 Rect.intersect = function(a,b){
-	if(Rect.isIntersect(a,b)){
-
-	}
-	return null;
+	return Code.rectIntersect(a.min(),a.max(),b.min(),b.max());
 }
 function Rect(xPos,yPos, w,h, d){
 	this._x = 0;
@@ -303,13 +300,6 @@ Rect.prototype.pad = function(l,r, b,t){ //
 	h = Math.abs(h);
 	this.set(x,y, w,h);
 	return this;
-}
-Rect.copy = function(r){
-	var rect = new Rect(r.x(),r.y(),r.width(),r.height(),r.data());
-	return rect;
-}
-Rect.prototype.copy = function(){
-	return Rect.copy(this);
 }
 Rect.prototype.toString = function(){
 	return "[Rect: "+this._x+","+this._y+" | "+this._width+"x"+this._height+" | "+this.area()+"]";

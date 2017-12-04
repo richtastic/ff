@@ -7172,13 +7172,46 @@ Code.pointInterpolate2DLinear = function(array, wid,hei, x,y){
 	return val;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
-
+Code.nextExponentialTwoRounded = function(d){
+	var n = Math.abs(d);
+	var e = Math.ceil(Math.log(n)/Math.log(2));
+	return Math.pow(2,e);
+}
 
 Code.cuboidsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMax.z<bMin.z || aMin.x>bMax.x || aMin.y>bMax.y || aMin.z>bMax.z;
 }
+Code.cuboidIntersect = function(aMin,aMax, bMin,bMax){
+	if(Code.cuboidsSeparate(aMin,aMax, bMin,bMax)){
+		return null;
+	}
+	var left = Math.max(aMin.x,bMin.x);
+	var right = Math.min(aMax.x,bMax.x);
+	var bottom = Math.max(aMin.y,bMin.y);
+	var top = Math.min(aMax.y,bMax.y);
+	var up = Math.max(aMin.z,bMin.z);
+	var down = Math.min(aMax.z,bMax.z);
+	var width = right-left;
+	var height = top-bottom;
+	var depth = up-down;
+	var rect = new Cuboid(left,bottom,width,height);
+	return rect;
+}
 Code.rectsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMin.x>bMax.x || aMin.y>bMax.y;
+}
+Code.rectIntersect = function(aMin,aMax, bMin,bMax){
+	if(Code.rectsSeparate(aMin,aMax, bMin,bMax)){
+		return null;
+	}
+	var left = Math.max(aMin.x,bMin.x);
+	var right = Math.min(aMax.x,bMax.x);
+	var bottom = Math.max(aMin.y,bMin.y);
+	var top = Math.min(aMax.y,bMax.y);
+	var width = right-left;
+	var height = top-bottom;
+	var rect = new Rect(left,bottom,width,height);
+	return rect;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 

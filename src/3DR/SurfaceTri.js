@@ -60,33 +60,64 @@ this._seeThru = false;
 	//
 }
 SurfaceTri.prototype.quadSpaceCheck = function(){
-	// function Rect(xPos,yPos, w,h, d){
-	var fxn = function(o){
-		console.log("    o"+o);
+/*
+	var aMin = new V2D(1,1);
+	var aMax = new V2D(2,3);
+	//
+	// var bMin = new V2D(0,0);
+	// var bMax = new V2D(1.5,0.5);
+	// var bMin = new V2D(0,0);
+	// var bMax = new V2D(1,1);
+	var bMin = new V2D(0,0);
+	var bMax = new V2D(.1,.1);
+
+	var intA = Code.rectsSeparate(aMin,aMax, bMin,bMax);
+	var intB = Code.rectsSeparate(bMin,bMax, aMin,aMax);
+	console.log(intA,intB);
+
+	var intA = Code.rectIntersect(aMin,aMax, bMin,bMax);
+	var intB = Code.rectIntersect(bMin,bMax, aMin,aMax);
+	console.log(intA,intB);
+
+return;
+
+*/
+
+var fxn3D = function(o){
 		var min = o.min();
 		var max = o.max();
-		console.log("        =>"+min+" & "+max);
+		var siz = V3D.sub(max,min);
+		return new Cuboid(min, siz);
+	}
+var octSpace = new OctSpace(fxn3D);
+
+
+	var fxn2D = function(o){
+		var min = o.min();
+		var max = o.max();
 		var siz = V2D.sub(max,min);
-		console.log("          size:"+siz);
 		return new Rect(min.x,min.y, siz.x,siz.y);
 	}
 	var tris = [];
 	var i, j, p, tri;
-	var count = 1;
+	var count = 300;
+	var bas = 0.01;
+	var dif = 1.0;
 	var siz = 1.0;
-	var off = 10.0;
+	var off = 5.0;
 	for(i=0; i<count; ++i){
 		var pts = [];
 		var cen = new V2D(Math.random()*off,Math.random()*off);
+		var d = Math.random()*dif + bas;
 		for(j=0; j<3; ++j){
 			var p = new V2D(Math.random()*siz,Math.random()*siz);
+			p.scale(d);
 			p.add(cen);
 			pts.push(p);
 		}
 		tri = new Tri2D(pts[0],pts[1],pts[2]);
 		tris.push(tri);
 	}
-	console.log(tris);
 	var minLoc = null;
 	var maxLoc = null;
 	for(i=0; i<tris.length; ++i){
@@ -105,21 +136,67 @@ SurfaceTri.prototype.quadSpaceCheck = function(){
 		}
 	}
 	console.log(""+minLoc+" => "+maxLoc);
-	var space = new QuadSpace(fxn);
-	space.fromSize(minLoc,maxLoc);
-	console.log(space);
+	var space = new QuadSpace(fxn2D);
+	space.initWithSize(minLoc,maxLoc);
 
 	for(i=0; i<tris.length; ++i){
 		tri = tris[i];
 		space.insertObject(tri);
 	}
-
-
-	console.log("VIZUALIZE ME");
-
-
 	var display = new DO();
 	this._root.addChild(display);
+
+
+// searching:
+var objects = [];
+
+var ccc = 4.0;
+var center = new V2D(1.0 + Math.random()*ccc ,1.0 + Math.random()*ccc);
+var radius = 0.25 + Math.random()*1.0;
+objects = space.objectsInsideCircle(center,radius);
+
+var rectoid = false;
+
+if(rectoid){
+mmm = 0.5;
+ccc = 2.0;
+var rMin = new V2D( 1.0 + Math.random()*4.0, 1.0 + Math.random()*4.0 );
+var rMax = rMin.copy().add( mmm + Math.random()*ccc,  mmm + Math.random()*ccc );
+	objects = space.objectsInsideRect(rMin,rMax);
+	center = null;
+	radius = null;
+}
+/*
+console.log("closeness check:");
+for(i=0; i<objects.length; ++i){
+	var rect = fxn2D(objects[i]);
+	var intA = Code.rectsSeparate(rect.min(),rect.max(), rMin,rMax);
+	var intB = Code.rectsSeparate(rMin,rMax, rect.min(),rect.max());
+	//var intC = Rect.intersect(this.rect(), rect);
+	console.log("int: "+intA+" | "+intB);
+	if(intA || intB){
+		console.log("   A: "+rect.min()+" => "+rect.max());
+		console.log("   B: "+rMin+" => "+rMax);
+	}
+}
+*/
+
+	console.log("checked percentage: "+objects.length/space.count());
+	this.visualize(space, display, objects, center,radius, rMin,rMax);
+
+	while(tris.length>1){
+	//while(tris.length>count-1){
+		tri = tris.pop();
+		space.removeObject(tri);
+	}
+	var display = new DO();
+	display.matrix().translate(1400,0);
+	this._root.addChild(display);
+	this.visualize(space, display);
+//	console.log( space+"" );
+
+}
+SurfaceTri.prototype.visualize = function(space, display, objects, circleCenter,circleRadius, rectMin,rectMax){
 	var availableSize = this._canvas2D.size();
 	var availableWidth = availableSize.x;
 	var availableHeight = availableSize.y;
@@ -129,7 +206,7 @@ SurfaceTri.prototype.quadSpaceCheck = function(){
 	var root = space._root;
 	var min = root.min();
 	var getArxels = function(arx, array){
-		console.log("getArxels ... ",arx);
+		//console.log("getArxels ... ",arx);
 		if(!arx){
 			return;
 		}
@@ -137,52 +214,64 @@ SurfaceTri.prototype.quadSpaceCheck = function(){
 		var ch = arx.children();
 		if(ch){
 			for(var i=0; i<ch.length; ++i){
-				getArxels(arx, array);
+				getArxels(ch[i], array);
 			}
 		}
 	}
 	// console.log(availableWidth,availableHeight);
-	var arxels=[], arxel;
+	var arxels = [], arxel;
 	getArxels(root,arxels);
+//	console.log("ARXEL COUNT: "+arxels.length);
 
 	var i, j, d, p, o, t;
 	var scale = availableSize / root.size().x;
-	//var scale = root.size().x / availableSize;
-	console.log(scale);
+	var offset = new V2D(-min.x*scale, -min.y*scale);
+	
 	for(i=0; i<arxels.length; ++i){
 		arxel = arxels[i];
-		console.log(arxel);
 		var c = arxel.center();
 		var s = arxel.size();
 		var m = arxel.min();
-
+var packages = arxel.objects();
 		//var offset = new V2D((-min.x+m.x)*scale, (-min.y+m.y)*scale);
-		var offset = new V2D(-min.x*scale, -min.y*scale);
-		console.log("offset : "+offset);
-		d = new DO();
+		var d = new DO();
+		display.addChild(d);
 			d.graphics().clear();
+			d.graphics().setFill(0x33FF0000);
 			d.graphics().setLine(1.0, 0xCC666666);
 			d.graphics().beginPath();
-			//d.graphics().drawRect(0,0, 100,100);
-			//console.log((-min.x-m.x)*scale, (-min.y-m.y)*scale, s.x*scale, s.y*scale);
 			d.graphics().drawRect(offset.x+m.x*scale,offset.y+m.y*scale, s.x*scale, s.y*scale);
+			if(packages && packages.length>0){
+				d.graphics().fill();
+			}
 			d.graphics().endPath();
 			d.graphics().strokeLine();
-		display.addChild(d);
-		var packages = arxel.objects();
+			
+			
+			
+
+
+
+
+
+			// d.graphics().setFill(0xFF00FF00);
+			// d.graphics().setLine(1.0, 0xFFFF0000);
+			// d.graphics().beginPath();
+			// d.graphics().drawCircle(point.x, point.y, rad);
+			// d.graphics().fill();
+			// d.graphics().strokeLine();
+			// d.graphics().endPath();
+			// dList.push([d,point.z]);
+
+
+
+		
+		
 		if(packages){
 			for(j=0; j<packages.length; ++j){
 				p = packages[j];
 				t = p.object();
-				console.log(t);
 				d = new DO();
-//scale /= 50.0;
-console.log(offset+"");
-console.log(t.A(),t.B(),t.C());
-console.log(t.A().x*scale,t.A().y*scale);
-console.log(t.B().x*scale,t.B().y*scale);
-console.log(t.C().x*scale,t.C().y*scale);
-
 					d.graphics().clear();
 					d.graphics().setLine(1.0, 0xFFFF0000);
 					d.graphics().beginPath();
@@ -190,13 +279,53 @@ console.log(t.C().x*scale,t.C().y*scale);
 						new V2D(offset.x+t.A().x*scale,offset.y+t.A().y*scale),
 						new V2D(offset.x+t.B().x*scale,offset.y+t.B().y*scale),
 						new V2D(offset.x+t.C().x*scale,offset.y+t.C().y*scale)], true);
-
-					//d.graphics().drawRect(0,0, 100,100);
 					d.graphics().endPath();
 					d.graphics().strokeLine();
 				display.addChild(d);
 			}
 		}
+	}
+	if(objects){
+		for(j=0; j<objects.length; ++j){
+			t = objects[j];
+			d = new DO();
+				d.graphics().clear();
+				d.graphics().setFill(0x66FFCC00);
+				d.graphics().setLine(1.0, 0xFFCC9900);
+				d.graphics().beginPath();
+				d.graphics().drawPolygon([
+					new V2D(offset.x+t.A().x*scale,offset.y+t.A().y*scale),
+					new V2D(offset.x+t.B().x*scale,offset.y+t.B().y*scale),
+					new V2D(offset.x+t.C().x*scale,offset.y+t.C().y*scale)], true);
+				d.graphics().fill();
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+			display.addChild(d);
+		}
+	}
+	if(circleCenter && circleRadius){
+			d = new DO();
+				d.graphics().clear();
+				//d.graphics().setFill(0x66FFCC00);
+				d.graphics().setLine(2.0, 0xFF009933);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(offset.x + circleCenter.x*scale,offset.y + circleCenter.y*scale, circleRadius*scale);
+				//d.graphics().fill();
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+			display.addChild(d);
+	}
+	if(rectMin && rectMax){
+			d = new DO();
+				d.graphics().clear();
+				//d.graphics().setFill(0x66FFCC00);
+				d.graphics().setLine(2.0, 0xFF009933);
+				d.graphics().beginPath();
+				d.graphics().drawRect(offset.x + rectMin.x*scale,offset.y + rectMin.y*scale, (rectMax.x-rectMin.x)*scale, (rectMax.y-rectMin.y)*scale);
+				//d.graphics().fill();
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+			display.addChild(d);
 	}
 }
 

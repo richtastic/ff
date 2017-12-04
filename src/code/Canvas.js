@@ -550,7 +550,7 @@ Canvas.prototype.drawRect = function(sX,sY,wX,hY){
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
 Canvas.prototype.clear = function(){
-	//var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
+	var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
 	this._context.clearRect( 0, 0, this._context.width, this._context.height);
 	
 }
