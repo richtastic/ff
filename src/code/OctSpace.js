@@ -19,6 +19,28 @@ OctSpace.prototype.kill = function(){
 OctSpace.prototype.toString = function(){
 	return this._root.toString();
 }
+OctSpace.prototype.initWithObjects = function(objects, epsilon){
+	var i, object, cube;
+	var minLocation = null;
+	var maxLocation = null;
+	for(i=0; i<objects.length; ++i){
+		object = objects[i];
+		cube = this._toCuboidFxn(object);
+		if(!minLocation){
+			minLocation = cube.min().copy();
+			maxLocation = cube.max().copy();
+		}else{
+			minLocation = V3D.min(minLocation, cube.min());
+			maxLocation = V3D.max(maxLocation, cube.max());
+		}
+	}
+	console.log(minLocation+"  "+maxLocation);
+	this.initWithSize(minLocation, maxLocation, epsilon);
+	for(i=0; i<objects.length; ++i){
+		object = objects[i];
+		this.insertObject(object);
+	}
+}
 OctSpace.prototype.initWithSize = function(min,max, epsilon){
 	if(!min || !max){
 		return;
@@ -28,7 +50,7 @@ OctSpace.prototype.initWithSize = function(min,max, epsilon){
 	var center = min.copy().add( size.copy().scale(0.5) );
 	var square = Math.max(size.x,size.y);
 	square = Code.nextExponentialTwoRounded(square);
-	size.set(square,square);
+	size.set(square,square,square);
 	epsilon = epsilon!==undefined ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
 	this._epsilon = epsilon;
 	this._root.setCenterAndSize(center,size);
@@ -92,13 +114,16 @@ OctSpace.prototype.removeObject = function(object){
 }
 OctSpace.prototype.objectsInsideSphere = function(center,radius){
 	var arr = [];
+	console.log(this._root.size()+"");
+	console.log(this._root.size().length()+"");
 	radius = Math.min(this._root.size().length(),radius);
+	console.log(center+" @ "+radius);
 	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._toCuboidFxn);
 	return arr;
 }
 OctSpace.prototype.objectsInsideCuboid = function(min,max){
 	var arr = [];
-	this._root.objectsInsideCuboid(arr,min,max,this._toRectFxn);
+	this._root.objectsInsideCuboid(arr,min,max,this._toCuboidFxn);
 	return arr;
 }
 // --------------------------------------------------------------------------------------------------------- 
@@ -117,7 +142,7 @@ OctSpace.Package.prototype.voxels = function(){
 	return this._voxels;
 }
 OctSpace.Package.prototype.pushVoxel = function(voxel){
-	this._voxels.push(voxels);
+	this._voxels.push(voxel);
 }
 OctSpace.Package.prototype.removeVoxel = function(voxel){
 	return Code.removeElement(this._voxels,voxel);
@@ -201,17 +226,19 @@ OctSpace.Voxel.prototype.insertObject = function(package, cube, toCubeFxn, epsil
 	var maxSizeCube = Math.max(overlapSize.x,overlapSize.y,overlapSize.z);
 	maxSizeCube *= 2;
 	++this._count;
-	package.pushVoxel(this);
 	if(children==null){ // leaf
+//console.log("ADD OBJECT TO LEAF");
 		if(minSizeSelf<maxSizeCube || minSizeSelf <= epsilon){ // small enough
+			package.pushVoxel(this);
 			if(!this._objects){
 				this._objects = [];
 			}
 			this._objects.push(package);
 		}else{ // need to be smaller => branch
+			// console.log("SUBDIVIDE");
 			children = [];
 			this._children = children;
-			for(i=0;i<4;++i){ // create 4 new children
+			for(i=0;i<8;++i){ // create 4 new children
 				var voxel = OctSpace.Voxel.newChildFromParent(this,i);
 				children[i] = voxel;
 			}
@@ -233,6 +260,7 @@ OctSpace.Voxel.prototype.insertObject = function(package, cube, toCubeFxn, epsil
 			}
 		}
 	}else{ // add to children
+//console.log("ADD OBJECT TO CHILDREN");
 		for(var i=0; i<children.length; ++i){
 			children[i].insertObject(package, cube, toCubeFxn, epsilon);
 		}
@@ -365,7 +393,7 @@ OctSpace.Voxel.prototype.toString = function(str, ind){
 	}
 	return str;
 }
-OctSpace.closestDistanceSquareCuboid = function(center,radSquare, min,max){ // 27 possibilities
+OctSpace.closestDistanceSquareCuboid = function(center, min,max){ // 27 possibilities
 	var cen = center;
 	if(center.z < min.z){
 		if(center.y < min.y){
@@ -400,7 +428,7 @@ OctSpace.closestDistanceSquareCuboid = function(center,radSquare, min,max){ // 2
 			}else if(center.x > max.x){
 				return V3D.distanceSquare(center,new V3D(max.x,min.y,max.z));
 			}else{
-				return V3D.distanceSquare(center,new V3D(cen.x,min.y,maz.z));
+				return V3D.distanceSquare(center,new V3D(cen.x,min.y,max.z));
 			}
 		}else if(center.y > max.y){
 			if(center.x < min.x){
@@ -450,30 +478,34 @@ OctSpace.closestDistanceSquareCuboid = function(center,radSquare, min,max){ // 2
 // TODO: each item is potentially queried many times -> queried (fail | success) array ?
 // TODO: RBTREE
 OctSpace.Voxel.prototype.objectsInsideSphereSquare = function(arr,center,radSquare,toCubeFxn){
+	//console.log("OBJECTS: "+(this._objects ? this._objects.length : "null"));
 	if(this._objects){
+		// console.log("OBJECTS: "+this._objects.length);
 		for(var i=0; i<this._objects.length; ++i){
-			var rect = toCubeFxn(this._objects[i].object());
-			var distance = OctSpace.closestDistanceSquareCuboid(center,radSquare, rect.min(),rect.max());
+			var object = this._objects[i].object();
+			var cube = toCubeFxn(object);
+			var distance = OctSpace.closestDistanceSquareCuboid(center, cube.min(),cube.max());
 			if(distance<=radSquare){
-				Code.addUnique(arr,this._objects[i].object());
+				Code.addUnique(arr,object);
 			}
 		}
 	}else if(this._children){
 		for(var i=0; i<this._children.length; ++i){
 			var child = this._children[i];
-			var distance = OctSpace.closestDistanceSquareCuboid(center,radSquare, child.min(),child.max());
+			var distance = OctSpace.closestDistanceSquareCuboid(center, child.min(),child.max());
 			if( distance <= radSquare  ){
-				child.objectsInsideCircleSquare(arr,center,radSquare,toCubeFxn);
+				child.objectsInsideSphereSquare(arr,center,radSquare,toCubeFxn);
 			}
 		}
 	}
 }
-OctSpace.Voxel.prototype.objectsInsideRect = function(arr,min,max,toCubeFxn){
+OctSpace.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toCubeFxn){
 	if(this._objects){
 		for(var i=0; i<this._objects.length; ++i){
-			var rect = toCubeFxn(this._objects[i].object());
-			if( !Code.cuboidsSeparate(min,max, rect.min(),rect.max()) ){
-				Code.addUnique(arr,this._objects[i].object());
+			var object = this._objects[i].object();
+			var cube = toCubeFxn(object);
+			if( !Code.cuboidsSeparate(min,max, cube.min(),cube.max()) ){
+				Code.addUnique(arr,object);
 			}
 		}
 	}else if(this._children){
@@ -481,7 +513,7 @@ OctSpace.Voxel.prototype.objectsInsideRect = function(arr,min,max,toCubeFxn){
 			var child = this._children[i];
 			if(child){
 				if( !Code.cuboidsSeparate(child.min(),child.max(), min,max) ){
-					child.objectsInsideRect(arr,min,max,toRectFxn);
+					child.objectsInsideCuboid(arr,min,max,toCubeFxn);
 				}
 			}
 		}

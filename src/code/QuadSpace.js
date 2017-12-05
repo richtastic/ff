@@ -286,9 +286,9 @@ QuadSpace.Arxel.prototype.insertObject = function(package, rect, toRectFxn, epsi
 	maxSizeRect *= 2;
 
 	++this._count;
-	package.pushArxel(this);
 	if(children==null){ // leaf
 		if(minSizeSelf<maxSizeRect || minSizeSelf <= epsilon){ // small enough
+			package.pushArxel(this);
 			if(!this._objects){
 				this._objects = [];
 			}
@@ -486,10 +486,11 @@ QuadSpace.closestDistanceSquareRect = function(center,radSquare, min,max){
 QuadSpace.Arxel.prototype.objectsInsideCircleSquare = function(arr,center,radSquare,toRectFxn){
 	if(this._objects){
 		for(var i=0; i<this._objects.length; ++i){
-			var rect = toRectFxn(this._objects[i].object());
+			var obj = this._objects[i].object();
+			var rect = toRectFxn(obj);
 			var distance = QuadSpace.closestDistanceSquareRect(center,radSquare, rect.min(),rect.max());
 			if(distance<=radSquare){
-				Code.addUnique(arr,this._objects[i].object()); // TODO: RBTREE ? 
+				Code.addUnique(arr,obj); // TODO: RBTREE ? 
 			}
 		}
 	}else if(this._children){

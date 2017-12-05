@@ -87,7 +87,7 @@ Cuboid.prototype.fromArray = function(points3D){ // bounding box of points
 		var extrema = V3D.extremaFromArray(points3D);
 		var min = extrema.min;
 		var max = extrema.max;
-		this.set(min,max.sub(main));
+		this.set(min,max.sub(min));
 	}
 	return this;
 }

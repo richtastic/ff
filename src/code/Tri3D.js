@@ -9,6 +9,18 @@ Tri3D.fromPoints = function(a,b,c){
 Tri3D.fromList = function(ax,ay,az, bx,by,bz, cx,cy,cz){
 	return new Tri3D(new V3D(ax,ay,az), new V3D(bx,by,bz), new V3D(cx,cy,cz));
 }
+Tri3D.prototype.min = function(){
+	var v = this.A().copy();
+	V3D.min(v, v,this.B());
+	V3D.min(v, v,this.C());
+	return v;
+}
+Tri3D.prototype.max = function(){
+	var v = this.A().copy();
+	V3D.max(v, v,this.B());
+	V3D.max(v, v,this.C());
+	return v;
+}
 // -------------------------------------------------------------------------------------------------------------------- 
 Tri3D.prototype.isEqual = function(tri){
 	var a1 = tri.A();
@@ -136,3 +148,65 @@ Tri3D.extremaFromArray = function(triangles){
 	var size = V3D.sub(max,min);
 	return {"min":min, "max":max, "size":size};
 }
+
+
+
+Tri3D.generateSphere = function(radius, latNum, lonNum){ // latitude=up/down, longitude=around
+	latNum = latNum!==undefined ? latNum : 6;
+	lonNum = lonNum!==undefined ? lonNum : 10;
+	var i, j, tri, tris = [];
+	for(i=0; i<latNum; ++i){ // latitude
+		var aA = ((i+0)/latNum) * Math.PI;
+		var aB = ((i+1)/latNum) * Math.PI;
+		var zA = radius*Math.cos(aA);
+		var zB = radius*Math.cos(aB);
+		// var zA = (zA-0.5)*radius*2.0;
+		// var zB = (zB-0.5)*radius*2.0;
+		var rA = Math.sqrt(Math.max(0,radius*radius - zA*zA));
+		var rB =  Math.sqrt(Math.max(0,radius*radius - zB*zB));
+//console.log(i+" = "+rA+" | "+rB+"   "+zA+" | "+zB);
+		for(j=0; j<lonNum; ++j){ // longitude
+			var tA = (j/lonNum)*Math.PI*2.0;
+			var tB = ((j+1)/lonNum)*Math.PI*2.0;
+			var xAA = rA*Math.cos(tA);
+			var xAB = rA*Math.cos(tB);
+			var xBA = rB*Math.cos(tA);
+			var xBB = rB*Math.cos(tB);
+			var yAA = rA*Math.sin(tA);
+			var yAB = rA*Math.sin(tB);
+			var yBA = rB*Math.sin(tA);
+			var yBB = rB*Math.sin(tB);
+			var a,b,c,d;
+			a = new V3D(xAA,yAA,zA);
+			b = new V3D(xAB,yAB,zA);
+			c = new V3D(xBA,yBA,zB);
+			d = new V3D(xBB,yBB,zB);
+			if(i==0){ // top
+				tri = new Tri3D(a,c,d);
+				tris.push(tri);
+			}else if(i==latNum-1){ // bot
+				tri = new Tri3D(a,d,b);
+				tris.push(tri);
+			}else{ // mid
+				tri = new Tri3D(a,c,d);
+				tris.push(tri);
+				tri = new Tri3D(a,d,b);
+				tris.push(tri);
+			}
+		}
+	}
+	return tris;
+}
+
+
+Tri3D.applyTransform = function(list, matrix){
+	for(var i=0; i<list.length; ++i){
+		var tri = list[i];
+		tri.A( matrix.multV3DtoV3D(tri.A()) );
+		tri.B( matrix.multV3DtoV3D(tri.B()) );
+		tri.C( matrix.multV3DtoV3D(tri.C()) );
+	}
+	return list;
+}
+
+

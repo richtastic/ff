@@ -18,8 +18,11 @@ function SurfaceTri(){
 GLOBALSTAGE = this._stage2D;
 
 
-this.quadSpaceCheck();
-return;
+// this.triCheck();
+// return;
+
+// this.quadSpaceCheck();
+// return;
 
 
 	// datas
@@ -59,7 +62,14 @@ this._seeThru = false;
 
 	//
 }
+SurfaceTri.prototype.triCheck = function(){
+	var tris = Tri3D.generateSphere(1.0, 5, 10);
+	console.log(tris);
+}
 SurfaceTri.prototype.quadSpaceCheck = function(){
+	var cub = new Cuboid(new V3D(1,2,3), new V3D(3,3,3));
+	console.log(cub+"")
+	return;
 /*
 	var aMin = new V2D(1,1);
 	var aMax = new V2D(2,3);
@@ -786,6 +796,7 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 
 	
 console.log("trianglate start");
+var timeStart = Code.getTimeMilliseconds();
 	// TRIANGULATE
 	var p, i;
 	var points = [];
@@ -794,15 +805,19 @@ console.log("trianglate start");
 	this._mlsMesh.points(pts);
 
 	this._mlsMesh.triangulateSurface();
+var timeEnd = Code.getTimeMilliseconds();
 
+var timeDelta = timeEnd - timeStart;
+console.log("timeDelta: "+timeDelta+" = "+(timeDelta/1000.0)+" s");
 
-
+/*
 	var oct = this._mlsMesh._field._octTree;
 	var select = oct.kNN(new V3D(0,0,5), 1);
 	//var select = oct.kNN(new V3D(1,1,0), 1);
 	console.log("CLOSEST:");
 	console.log(select[0].point());
 	console.log(select[0].radius());
+*/
 // PEAK:  0.68565653925905 - 0.47
 
 // EDGE: 1.8016571812790163 - 1.845
@@ -880,12 +895,87 @@ for(i=0; i<lines.length; ++i){
 	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
 
 
+	var field = this._mlsMesh._field;
+
+var tris = [];
 
 
+var indexes = [100, 200, 250, 900, 1000, 1200, 1500, 1700, 2000, 2500, 3000, 4000, 4200, 4300, 4400, 4500, 4600, 4900, 4901];
+for(i=0; i<indexes.length; ++i){
+break;
+	var index = indexes[i];
+//index = 100 % pts.length;
+//index = 1000 % pts.length;
+//index = 1500 % pts.length;
+index = index % pts.length;
+	var point = pts[index];
+	var infos = field.neighborhoodKNN(point,1);
+	var info = infos[0];
 
-	// TRIANGLES:
-	var tris = this._mlsMesh._tris;
-	console.log("tris");
+	//var pnt = point.point();
+	var pnt = info.point();
+	var nrm = info.normal();
+		if(info.curvature()<0){
+			console.log("flip");
+			nrm.scale(-1);
+		}
+	var rad = info.radius();
+	var cen = nrm.copy().scale(rad).scale(-1).add(pnt);
+	// console.log(nrm+"");
+	// console.log(rad+"");
+	// console.log(pnt+"");
+	// console.log(cen+"");
+
+	
+	var sphere = Tri3D.generateSphere(1.0, 8, 12);
+	var matrix = new Matrix(4,4);
+	matrix.identity();
+	matrix = Matrix.transform3DScale(matrix, rad);
+	matrix = Matrix.transform3DTranslate(matrix, cen.x,cen.y,cen.z);
+	Tri3D.applyTransform(sphere, matrix);
+	Code.arrayPushArray(tris,sphere);
+}
+// console.log(tris);
+	//MLSMesh3D.Field.prototype.neighborhoodKNN = function(point, maxNeighbors, asPoints){
+
+// var tris = Tri3D.generateSphere(1.0, 8, 12);
+// console.log(tris);
+
+
+// 	// TRIANGLES:
+	var meshTris = this._mlsMesh._tris;
+	Code.arrayPushArray(tris,meshTris);
+//console.log("tris: "+tris.length);
+
+/*
+var toRectFxn = function(o){
+	var min = o.min();
+	var max = o.max();
+	var siz = V3D.sub(max,min);
+	var cub = new Cuboid(min, siz);
+	// console.log("\n");
+	// console.log("SIZE: "+siz);
+	// console.log("cub : "+cub);
+	return cub;
+}
+var octSpace = new OctSpace(toRectFxn);
+console.log(octSpace);
+octSpace.initWithObjects(tris);
+console.log("done: "+octSpace.count());
+*/
+/*
+var sphereCenter = new V3D(0,0.5,0);
+var sphereRadius = 0.5;
+var inSphere = octSpace.objectsInsideSphere(sphereCenter,sphereRadius);
+tris = inSphere;
+*/
+/*
+var cubeMin = new V3D(0,-1,-1);
+var cubeMax = new V3D(2.0,2.0,2.0);
+var inCube = octSpace.objectsInsideCuboid(cubeMin,cubeMax);
+tris = inCube;
+*/
+	console.log("tris: "+tris.length);
 	console.log(tris);
 	if(tris){
 		// this._spherePointBuffer = this._stage3D.getBufferFloat32Array([],3);
@@ -900,10 +990,11 @@ for(i=0; i<lines.length; ++i){
 			V3D.pushToArray(pointsT,tri.A());
 			V3D.pushToArray(pointsT,tri.B());
 			V3D.pushToArray(pointsT,tri.C());
+			/*
 			colorsT.push(0.70, 0.00, 0.90, 1.0);
 			colorsT.push(0.00, 0.70, 0.90, 1.0);
 			colorsT.push(0.60, 0.60, 0.99, 1.0);
-			/*
+			*/
 			if(tri.SPLIT || tri.MERGE){
 				colorsT.push(0.90,0.50,0.0, 1.0);
 				colorsT.push(0.50,0.90,0.0, 1.0);
@@ -913,7 +1004,7 @@ for(i=0; i<lines.length; ++i){
 				colorsT.push(0.0,0.90,0.0, 1.0);
 				colorsT.push(0.0,0.0,0.90, 1.0);
 			}
-			*/
+			
 		}
 
 if(false){
