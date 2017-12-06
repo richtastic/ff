@@ -24,6 +24,19 @@ GLOBALSTAGE = this._stage2D;
 // this.quadSpaceCheck();
 // return;
 
+/*
+var A = new V3D(1,2,3);
+var B = new V3D(2,1,0);
+var crossA = V3D.cross(A,B).norm();
+var crossB = V3D.cross(B,A).norm();
+console.log(crossA+"");
+console.log(crossB+"");
+console.log("cross dot: "+V3D.dot(crossA,crossB));
+var angleA = V3D.angleDirection(A,B, crossA);
+var angleB = V3D.angleDirection(B,A, crossA);
+console.log("angles: "+Code.degrees(angleA)+" & "+Code.degrees(angleB));
+return;
+*/
 
 	// datas
 	//
@@ -675,13 +688,14 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	// var sourceFileName = "./images/points/saltdome_1019.pts";
-//	var sourceFileName = "./images/points/foot_5092.pts";
-	var sourceFileName = "./images/points/bunny_30571.pts";
+//	 var sourceFileName = "./images/points/saltdome_1019.pts";
+	var sourceFileName = "./images/points/foot_5092.pts";
+	//var sourceFileName = "./images/points/bunny_30571.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
 		//Code.subSampleArray(list,10000);
+		//Code.subSampleArray(list,20000);
 		this.subSampleArray(list,5000);
 		var i, v, len = list.length;
 		var max = list[0].copy();
@@ -1007,6 +1021,12 @@ tris = inCube;
 			
 		}
 
+
+
+// pointsT = [];
+// colorsT = [];
+
+
 if(false){
 var wasEdge = WASEDGE;
 var wasPoint = WASPOINT;
@@ -1026,7 +1046,7 @@ colorsT.push(0.0,0.0, 0.50, 0.5);
 colorsT.push(0.0,0.0, 0.75, 0.5);
 colorsT.push(0.0,0.0, 1.00, 0.5);
 }
-/*
+
 if(GLOBAL_LASTTRI){
 var tri = GLOBAL_LASTTRI;
 V3D.pushToArray(pointsT,tri.A());
@@ -1036,7 +1056,7 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 }
-*/
+
 // var tri = GLOBAL_DEAD;
 // if(tri){
 // V3D.pushToArray(pointsT,tri.A());
@@ -1128,11 +1148,16 @@ colorsT.push(0.00, 0.50, 0.50, 0.75);
 colorsT.push(0.00, 0.50, 0.50, 0.75);
 colorsT.push(0.00, 0.50, 0.50, 0.75);
 }
+*/
 
+
+//console.log(GLOB_FENCE)
+GLOB_FENCE = front.toFence();
+console.log(GLOB_FENCE);
 if(GLOB_FENCE){
 	for(var i=0; i<GLOB_FENCE.length; ++i){
 		var q = GLOB_FENCE[i];
-		var alp = 0.25;
+		var alp = 1.0;
 		V3D.pushToArray(pointsT,q[0]);
 		V3D.pushToArray(pointsT,q[1]);
 		V3D.pushToArray(pointsT,q[2]);
@@ -1145,7 +1170,7 @@ if(GLOB_FENCE){
 		}
 	}
 }
-*/
+
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 	}

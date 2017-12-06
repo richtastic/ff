@@ -16,6 +16,24 @@ V3D.angle = function(a,b){ // check
 	}
 	return 0;
 }
+V3D.angleDirection = function(a,b, up){
+	var normal = V3D.cross(a,b).norm();
+	var angle = V3D.angle(a,b);
+	if( V3D.dot(normal,up)>=0){
+		return angle;
+	}
+	return -angle;
+	/*
+	var normal = V3D.cross(a,b).norm();
+	if(normal.length()>0){
+		var a2D = Code.projectTo2DPlane(a, V3D.ZERO, normal);
+		var b2D = Code.projectTo2DPlane(b, V3D.ZERO, normal);
+		var angle = V2D.angleDirection(a2D,b2D);
+		return angle;
+	}
+	return 0;
+	*/
+}
 V3D.cosAngle = function(a,b){
 	var lenA = a.length();
 	var lenB = b.length();

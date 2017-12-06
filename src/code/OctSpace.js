@@ -34,12 +34,16 @@ OctSpace.prototype.initWithObjects = function(objects, epsilon){
 			maxLocation = V3D.max(maxLocation, cube.max());
 		}
 	}
-	console.log(minLocation+"  "+maxLocation);
 	this.initWithSize(minLocation, maxLocation, epsilon);
 	for(i=0; i<objects.length; ++i){
 		object = objects[i];
 		this.insertObject(object);
 	}
+}
+OctSpace.prototype.toArray = function(){
+	var objects = [];
+	this._root.allObjects(objects);
+	return objects;
 }
 OctSpace.prototype.initWithSize = function(min,max, epsilon){
 	if(!min || !max){
@@ -114,10 +118,7 @@ OctSpace.prototype.removeObject = function(object){
 }
 OctSpace.prototype.objectsInsideSphere = function(center,radius){
 	var arr = [];
-	console.log(this._root.size()+"");
-	console.log(this._root.size().length()+"");
 	radius = Math.min(this._root.size().length(),radius);
-	console.log(center+" @ "+radius);
 	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._toCuboidFxn);
 	return arr;
 }
@@ -274,9 +275,11 @@ OctSpace.Voxel.prototype.findObject = function(object, cube, toCubeFxn){
 	}
 	var i, p, children = this._children, objects = this._objects;
 	if(children==null){ // leaf
-		for(i=0; i<objects.length; ++i){
-			if(objects[i].object()==object){
-				return objects[i];
+		if(objects){
+			for(i=0; i<objects.length; ++i){
+				if(objects[i].object()==object){
+					return objects[i];
+				}
 			}
 		}
 	}else{ // parent
@@ -515,6 +518,21 @@ OctSpace.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toCubeFxn){
 				if( !Code.cuboidsSeparate(child.min(),child.max(), min,max) ){
 					child.objectsInsideCuboid(arr,min,max,toCubeFxn);
 				}
+			}
+		}
+	}
+}
+OctSpace.Voxel.prototype.allObjects = function(arr){
+	if(this._objects){
+		for(var i=0; i<this._objects.length; ++i){
+			var object = this._objects[i].object();
+			Code.addUnique(arr,object);
+		}
+	}else if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			var child = this._children[i];
+			if(child){
+				child.allObjects(arr);
 			}
 		}
 	}

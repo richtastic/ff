@@ -43,14 +43,11 @@ To rank matches, queues area used
 
 triangulation:
 - high curvature areas are no more dense than low curvature areas
-	- is first tri right side
+	- is first tri right size?
 
 
-- local edge searching [eg 2*edge length], not entrire volume
-- local triangle searching [eg 2*edge length], not entire volume
+- 
 
-- QuadSpace
-- OctSpace
 
 
 

@@ -5861,6 +5861,7 @@ Code.sphereAlgebraic = function(points, location){
 			var dist = weights[i];
 			var weight = Math.exp(-dist/distanceAverage);
 			//var weight = 1.0/(1.0 + dist*dist);
+weight = 1.0;
 			weights[i] = weight;
 		}
 		W = new Matrix(N,N);
@@ -6515,11 +6516,9 @@ Code.pointsNullOrCloseToLine3D = function(intersectionPoints, lineA, lineB){
 	var lineAB = V3D.sub(lineB,lineA);
 	for(var i=0; i<intersectionPoints.length; ++i){
 		var point = intersectionPoints[i];
-		//var closest = Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
 		var dist = Code.distancePointLine3D(lineA,lineAB, point);
-		//console.log("    "+i+" / "+intersectionPoints.length+" @ "+point+" "+" = "+dist); // lineA+" "+lineB+" "+lineAB
 		if(dist>1E-6){
-			//console.log();
+			//console.log("pointsNullOrCloseToLine3D: "+dist);
 			return false;
 		}
 	}
@@ -6575,6 +6574,21 @@ Code.projectTo2DPlane = function(location, planePoint, planeNormal){
 	}
 	projection = new V2D(projection.x,projection.y);
 	return projection;
+}
+Code.pointOnPositiveSidePlane2D = function(location, planePoint, planeNormal, error){
+	error = error!==undefined ? error : -1E-8;
+	var toP = V2D.sub(location,planePoint);
+	var dot = V2D.dot(planeNormal,toP);
+	return dot>=error;
+}
+Code.pointOnPositiveSidePlane3D = function(location, planePoint, planeNormal, error, print){
+	error = error!==undefined ? error : -1E-8;
+	var toP = V3D.sub(location,planePoint);
+	var dot = V3D.dot(planeNormal,toP);
+	if(print){
+		console.log("     "+dot+" >= "+error);
+	}
+	return dot>=error;
 }
 Code.planeFromPoints = function(center, points, weights){
 	if(!center){
