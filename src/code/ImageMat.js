@@ -180,6 +180,14 @@ ImageMat.prototype.copy = function(){
 	var mat = new ImageMat(this.width(), this.height(), this.red(), this.grn(), this.blu());
 	return mat;
 }
+ImageMat.prototype.getHex = function(i,j){
+	var index = j*this._width + i;
+	var r = this._r[index];
+	var g = this._g[index];
+	var b = this._b[index];
+	var a = 1.0;//this._r[index];
+	return Code.getColARGBFromFloat(a,r,g,b);
+}
 ImageMat.prototype.red = function(r){
 	if(r!==undefined){
 		this._y = null;

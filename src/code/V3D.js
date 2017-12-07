@@ -179,7 +179,13 @@ V3D.prototype.copy = function(a){
 	return this;
 }
 V3D.prototype.set = function(xV,yV,zV){
-	this.x = xV; this.y = yV; this.z = zV;
+	if(zV===undefined){
+		this.x = xV.x;
+		this.y = xV.y;
+		this.z = xV.z;
+	}else{
+		this.x = xV; this.y = yV; this.z = zV;
+	}
 	return this;
 }
 V3D.prototype.setFromArray = function(a){

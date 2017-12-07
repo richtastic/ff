@@ -168,7 +168,17 @@ Graphics.prototype.contextTransform = function(matrix,b,c,d,e,f){
 		this._graphics.push( Code.newArray(Graphics.contextTransformValues,Code.newArray(matrix,b,c,d,e,f)) );
 	}
 }
-
+Graphics.prototype.addClipPolygon = function(poly){
+	this._graphics.unshift( Code.newArray(Graphics.canvasBeginPath,Code.newArray()) );
+	this._graphics.unshift( Code.newArray(Graphics.canvasMoveTo,Code.newArray(poly[0].x,poly[0].y)) );
+	for(var i=1; i<poly.length; ++i){
+		this._graphics.unshift( Code.newArray(Graphics.canvasLineTo,Code.newArray(poly[i].x,poly[i].y)) );
+	}
+	this._graphics.unshift( Code.newArray(Graphics.canvasEndPath,Code.newArray()) );
+	this._graphics.unshift( Code.newArray(Graphics.clipStart) );
+		// CONTENT
+	this._graphics.push( Code.newArray(Graphics.clipEnd) );
+}
 Graphics.prototype.setLine = function(wid,col){ // 3, 0xAARRGGBB
 	this._graphics.push( Code.newArray(Graphics.canvasSetLine,Code.newArray(wid,Code.getJSColorFromARGB(col))) );
 }

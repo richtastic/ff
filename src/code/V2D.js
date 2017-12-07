@@ -182,11 +182,26 @@ V2D.prototype.wiggle = function(a,b){
 	return this;
 }
 V2D.prototype.set = function(x,y){
-	this.x = x; this.y = y;
+	if(y===undefined){
+		this.x = x.x;
+		this.y = x.y;
+	}else{
+		this.x = x; this.y = y;
+	}
 	return this;
 }
 V2D.prototype.flip = function(a){
 	this.x = -this.x; this.y = -this.y;
+	return this;
+}
+V2D.prototype.min = function(a){
+	this.x = Math.min(this.x,a.x);
+	this.y = Math.min(this.y,a.y);
+	return this;
+}
+V2D.prototype.max = function(a){
+	this.x = Math.max(this.x,a.x);
+	this.y = Math.max(this.y,a.y);
 	return this;
 }
 V2D.prototype.rotate = function(a){

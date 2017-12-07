@@ -2362,6 +2362,17 @@ Code.getColARGBFromFloat = function(a,r,g,b){
 	b = Math.min(Math.floor(b*256.0),255);
 	return Code.getColARGB(a,r,g,b);
 }
+Code.inverseColorARGB = function(col){
+	a = (col>>24) & 0x000000FF;
+	r = (col>>16) & 0x000000FF;
+	g = (col>>8) & 0x000000FF;
+	b = (col>>0) & 0x000000FF;
+	//a = Math.min(256-a,255);
+	r = Math.min(256-r,255);
+	g = Math.min(256-g,255);
+	b = Math.min(256-b,255);;
+	return Code.getColARGB(a,r,g,b);
+}
 Code.getColARGB = function(a,r,g,b){
 	return ((a<<24)+(r<<16)+(g<<8)+b) >>> 0;
 }
@@ -2478,6 +2489,9 @@ Code.linear2DColorARGB = function(x,y, colA,colB,colC,colD){
 }
 Code.clampRound0255 = function(n){
 	return Math.min(Math.max(Math.round(n),0),255);
+}
+Code.clamp = function(n, a,b){
+	return Math.min(Math.max(n,a),b);
 }
 // Code.getFloatArrayARGBFromARGB = function(col){
 // 	return Code.getFloatARGB(colA);
@@ -5859,9 +5873,10 @@ Code.sphereAlgebraic = function(points, location){
 		var distanceAverage = distanceTotal/N;
 		for(i=0; i<N; ++i){ // gaussian weight
 			var dist = weights[i];
-			var weight = Math.exp(-dist/distanceAverage);
+//			var weight = Math.exp(-dist/distanceAverage);
+			var weight = Math.exp(-dist/(distanceAverage*distanceAverage));
 			//var weight = 1.0/(1.0 + dist*dist);
-weight = 1.0;
+//weight = 1.0;
 			weights[i] = weight;
 		}
 		W = new Matrix(N,N);
@@ -7285,10 +7300,18 @@ Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
 }
 */
 // conversion functions ----------------------------------------------
-Code.getHex = function (intVal){
+Code.brightnessFromARGB = function(col){
+	var colors = Code.getFloatARGB(col);
+	var avg = (colors[1] + colors[2] + colors[3])/3.0;
+	return avg;
+}
+Code.getHex = function(intVal, ignore){
 	var str = intVal.toString(16);
 	while(str.length<6){
 		str = "0"+str;
+	}
+	if(ignore){
+		return str;
 	}
 	return '#'+str;
 }

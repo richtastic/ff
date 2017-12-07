@@ -45,9 +45,12 @@ triangulation:
 - high curvature areas are no more dense than low curvature areas
 	- is first tri right size?
 
+- radius of items seems to depend on number of samples
+	- want more independent sphere calculation ?
 
-- 
-
+- projection to surface is very odd in places
+	- try different methods of projection ?
+		- line bisection @ field sampling
 
 
 

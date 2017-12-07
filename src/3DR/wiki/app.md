@@ -154,6 +154,47 @@ project typical numbers:
 
 
 
+# EXAMPLE USAGE:
+- import camera calibration/registration images
+- calculate camera calibration
+- import all source images
+- create mask images @ source resolution for undesired areas (eg people / variates)
+- create feature set for each images
+- n*n image source image matching [higher res]
+- c*n image dense depth matching [lower res] [use camera calibration / inverse distortion]
+- multi-view point following
+- bundle/adjust to refine 3d coordinate positions
+- 3d point generation
+- 3d surface triangulation
+- triangle texture mapping
+- model viewing
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TODO:
+x icons show up as correct size
+x assign icons to positions
+x limit movement to available icon areas
+- 
 
 
 

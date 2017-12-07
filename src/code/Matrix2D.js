@@ -133,7 +133,10 @@ Matrix2D.prototype.copy = function(m){
 	return this;
 }
 Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_inv.html
-	var det = 1/(m.a*m.d - m.b*m.c);
+	if(m===undefined){
+		m = this;
+	}
+	var det = 1.0/(m.a*m.d - m.b*m.c);
 	var a = m.d*det;
 	var b = -m.b*det;
 	var x = (m.b*m.y-m.d*m.x)*det;
