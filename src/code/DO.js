@@ -152,10 +152,12 @@ DO.prototype.graphicsIllustration = function(){
 	return this._graphicsIllustration;
 }
 // ------------------------------------------------------------------------------------------------------------------------ DISPATCHING
-DO.prototype.addFunction = function(str,fxn,ctx){
+DO.prototype.addListener = function(str,fxn,ctx){
 	DO._.addFunction.call(this,str,fxn,ctx);
+}
+DO.prototype.addFunction = function(str,fxn,ctx){
 	if(this._stage){
-		//console.log("I HAVE A STAGE");
+		//console.log("I HAVE A STAGE "+str);
 		this._stage.addFunctionDisplay(this,str,fxn,ctx);
 	}else{
 		console.log("need to add this request to some queue and activate on attaching to stage");
@@ -214,13 +216,19 @@ DO.prototype.takedownRender = function(){
 	//this._canvas.popAlpha(); // revert
 	this._canvas = null;
 }
+DO.prototype.mask = function(m){
+	if(m!==undefined){
+		this._mask = m;
+	}
+	return this._mask;
+}
 DO.prototype.render = function(canvas){
 	var context = canvas.context();
 	this.setupRender(canvas);
 	this._graphicsIllustration.setupRender(canvas);
 	this._graphicsIllustration.render(canvas);
 	// moved to allow alpha stacking inside graphics
-	if(this.mask){
+	if(this.mask()){
 		context.clip();
 	}
 	var arr = this._children;
@@ -364,10 +372,10 @@ DO.prototype.getIntersection = function(pos, can){
 	if(this._checkIntersectionChildren){
 		var ret, i, len = this._children.length;
 		for(i=len-1;i>=0;--i){
-			if(this.mask){
-				this.graphicsIntersection.setupRender(can);
-				this.graphicsIntersection.render(can);
-				this.graphicsIntersection.takedownRender(can);
+			if(this.mask()){
+				this._graphicsIntersection.setupRender(can);
+				this._graphicsIntersection.render(can);
+				this._graphicsIntersection.takedownRender(can);
 				context.clip();
 			}
 			ret = this._children[i].getIntersection(pos, can);
@@ -412,11 +420,14 @@ DO.prototype.removeListeners = function(){
 }
 // ------------------------------------------------------------------------------------------------------------------------ DRAGGING
 DO.prototype.enableDragging = function(){
+	console.log("enableDragging;")
 	this._isDragging = false;
 	this._dragOffset = new V2D();
 	this._dragMatrix = new Matrix2D();
 	this._dragStop(); // double check
 	this.addFunction(Canvas.EVENT_MOUSE_DOWN,this._dragMouseDownIn,this);
+	//this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
+	//this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
 }
 DO.prototype.disableDragging = function(){
 	this._dragStop(); // double check
@@ -431,7 +442,7 @@ DO.prototype._dragStart = function(e){
 	this.addFunction(Canvas.EVENT_MOUSE_MOVE,this._dragMouseMoveIn,this);
 	this.addFunction(Canvas.EVENT_MOUSE_MOVE_OUTSIDE,this._dragMouseMoveOut,this);
 	this._isDragging = true;
-	e.dragging = this;
+//	e.dragging = this;
 	this.alertAll(DO.EVENT_DRAG_BEGIN, e);
 }
 DO.prototype._dragStop = function(e){
@@ -444,26 +455,33 @@ DO.prototype._dragStop = function(e){
 	this.alertAll(DO.EVENT_DRAG_END, e);
 }
 DO.prototype._dragMouseDownIn = function(e){
-	if(e.target==this){
+	console.log("MOUSE DOWN IN");
+	if(e==this){
 		this._dragOffset.copy(e.global);
 		this._dragMatrix.copy(this.matrix());
 		this._dragStart(e);
 	}
 }
 DO.prototype._dragMouseUpIn = function(e){
+	console.log("_dragMouseUpIn");
 	if(this._isDragging){ this._dragStop(e); }
 }
 DO.prototype._dragMouseUpOut = function(e){
+	console.log("_dragMouseUpOut");
+	console.log(e)
 	if(this._isDragging){ this._dragStop(e); }
 }
 DO.prototype._dragMouseMoveIn = function(e){
+	console.log("_dragMouseMoveIn");
 	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragMouseMoveOut = function(e){
-//e.target = this; // use e.dragging as target
+	e.target = this; // use e.dragging as target
+	console.log("_dragMouseMoveOut");
 	if(this._isDragging){ this._dragUpdate(e); }
 }
 DO.prototype._dragUpdate = function(e){
+	console.log("DRAG UPDATE: "+e);
 	v = e.global;
 	e.dragging = this;
 	this.matrix().copy(this._dragMatrix);

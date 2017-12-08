@@ -191,10 +191,11 @@ project typical numbers:
 
 
 TODO:
-x icons show up as correct size
-x assign icons to positions
-x limit movement to available icon areas
+- ui elements
+- scrolling zoom gadget via mouse
+- rotation via mouse
+- movement via mouse
+- drawling onto mask image
 - 
-
 
 

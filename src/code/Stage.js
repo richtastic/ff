@@ -64,11 +64,33 @@ Stage.prototype.setCursorStyle = function(style){
 	this._canvas.setCursorStyle(style);
 }
 // ------------------------------------------------------------------------------------------------------------------------ 
+Stage.prototype.alertAll = function(str,obj){
+	//console.log(Stage._.alertAll)
+	Stage._.alertAll.call(this,str,obj);
+//	this.alertFunctionDisplay(str,obj);
+}
+
+Stage.prototype.alertFunctionDisplay = function(str){
+	var list = this._eventList[str];
+	if(list!=null && list.length>0){
+		for(var i=0; i<list.length; ++i){
+			var item = list[i];
+			var obj = item[0];
+			var fxn = item[1];
+			var ctx = item[2];
+			if(fxn && ctx && obj){
+				fxn.call(ctx,obj);
+			}
+		}
+	}
+}
 Stage.prototype.addFunctionDisplay = function(obj,str,fxn,ctx){
+	console.log("addFunctionDisplay: "+str);
 	if(this._eventList[str]!=null){
 		this._eventList[str].push([obj,fxn,ctx]);
 	}else{
-		// alervt event does not exist
+		// alert event does not exist
+		console.log("NOT EXIST ");
 	}
 }
 Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
@@ -275,7 +297,9 @@ Stage.prototype._performFxnOnDisplay = function(d,fxn){
 		this._performFxnOnDisplay(d._children[i],fxn);
 	}
 }
-Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLOBAL POSITION INTERSECTION LOCATION
+Stage.prototype.canvasMouseEventPropagate = function(eventData,pos){ // POS IS THE GLOBAL POSITION INTERSECTION LOCATION
+	var evt = eventData;
+	// var pos = event["location"];
 	var path, arr, obj, intersection = this.getIntersection(pos,this._tempCanvas);
 	//arr = new Array( intersection, pos );
 	path = new Array();
@@ -285,10 +309,14 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 		var list = this._eventList[Canvas.EVENT_MOUSE_UP_OUTSIDE];
 	}else if(evt==Canvas.EVENT_MOUSE_DOWN){
 		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN_OUTSIDE];
+// ???
+		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN];
 	}else if(evt==Canvas.EVENT_MOUSE_CLICK){
 		var list = this._eventList[Canvas.EVENT_MOUSE_CLICK_OUTSIDE];
 	}else if(evt==Canvas.EVENT_MOUSE_MOVE){
 		var list = this._eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
+/// var list = this._eventList[str];
+//var list = this._eventList[Canvas.EVENT_MOUSE_MOVE];
 		this._performFxnOnDisplay(this._root, function(d){ if(d._mouseOver){d._mouseWasOver=true;} d._mouseOver=false; } );
 		/*
 		go thru entire stack and:
@@ -308,6 +336,7 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	var cum = new Matrix2D();
 	//var arr;
 	if(list){ // OUTSIDE ALERTING
+//console.log("list",list)
 		for(var i=0;i<list.length;++i){
 			var obj = list[i][0];
 			if(intersection!=obj){ // is not object of intersection
@@ -354,6 +383,7 @@ Stage.prototype.canvasMouseEventPropagate = function(evt,pos){ // POS IS THE GLO
 	pos = null; //Code.emptyArray(arr); // results in undefined sent to events
 }
 Stage.prototype._canvasMouseDown = function(e){
+	console.log("alerted mouse down");
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
 	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
 }

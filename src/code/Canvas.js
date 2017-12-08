@@ -87,6 +87,9 @@ Canvas.WEBGL_SHADER_TYPE_VERTEX = "vertex";
 Canvas.WEBGL_SHADER_TYPE_FRAGMENT = "fragment";
 function Canvas(canHTML,canWid,canHei,fitStyle,hidden,is3D, autoscale){ // input is canvas HTML object
 	Canvas._.constructor.call(this);
+
+	this._currentTransform = [1,0,0, 0,1,0, ];
+
 	this._browserContextScale = 1.0;
 	this._autoScale = autoscale!==undefined ? autoscale : true
 	this._dispatch = new Dispatch();
@@ -242,13 +245,20 @@ Canvas.prototype.enableDepthTest = function(){
 }
 Canvas.prototype.clipStart = function(){
 	this._context.save();
-	return this._context.clip();
+	//var t = this.currentTransform();
+	//this._context.transform(t[0],t[1],t[2],t[3],t[4],t[5]);
+	var clip = this._context.clip();
+	
+	return clip;
 // void ctx.clip();
 // void ctx.clip(fillRule);
 // void ctx.clip(path, fillRule);
 }
 Canvas.prototype.clipEnd = function(){
+//	console.log("CLIP END ---");
 	this._context.restore();
+		// var t = this.currentTransform();
+		// this._context.transform(t[0],t[1],t[2],t[3],t[4],t[5]);
 }
 Canvas.prototype.enableCulling = function(){
 	return this._context.enable(this._context.CULL_FACE);
@@ -342,14 +352,18 @@ Canvas.prototype.contextIdentity = function(){
 }
 Canvas.prototype.contextTransform = function(matrix,b,c,d,e,f){
 	if(arguments.length>1){
-		//console.log(matrix,b,c,d,e,f);
-		this._context.transform(matrix,c,b,d,e,f);
-		//this._context.transform(matrix,c,b,d,e,f);
-		//this._context.transform(matrix,b,c,d,e,f);
+		this.currentTransform(matrix,c,b,d,e,f);
 	}else{
 		var a = matrix.get();
-		this._context.transform(a[0],a[2],a[1],a[3],a[4],a[5]);
+		this.currentTransform(a[0],a[2],a[1],a[3],a[4],a[5]);
 	}
+}
+Canvas.prototype.currentTransform = function(a,c,b,d,e,f){
+	if(a!==undefined){
+		this._context.transform(a,b,c,d,e,f);
+		this._currentTransform = [a,c,b,d,e,f];
+	}
+	return this._currentTransform;
 }
 Canvas.prototype.size = function(wid,hei){
 	// TODO: setting?
@@ -712,6 +726,7 @@ Canvas.prototype._canvasMouseDownFxn = function(e){
 	e.preventDefault();
 	this._mouseDown = true;
 	var obj = this.getMouseObjectFromEvent(e);
+	console.log("EVENT_MOUSE_DOWN:")
 	this.alertAll(Canvas.EVENT_MOUSE_DOWN,obj);
 }
 Canvas.prototype._canvasMouseUpFxn = function(e){

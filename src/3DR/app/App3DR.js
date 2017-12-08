@@ -129,7 +129,7 @@ App3DR.App.ImageEditor.prototype._handleTestImageLoaded = function(imageInfo){
 		var imageFloat = stage.getImageAsFloatRGB(imageSource);
 		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
 	this._testImageMatrix = imageMatrix;
-	console.log(this._testImageSource);
+	this._testImageMaskMatrix = new ImageMat(imageMatrix.width(),imageMatrix.height());
 	// ...
 
 	var img = this._testImageSource;
@@ -148,12 +148,29 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 
 	this._displayBackground = new DO();
 	this._displayPixels = new DO();
+	this._displayImageContainer = new DOImage();
 	this._displayImage = new DOImage();
 	this._root.addChild(this._displayBackground);
-	this._root.addChild(this._displayImage);
+		this._root.addChild(this._displayImageContainer);
+		this._displayImageContainer.addChild(this._displayImage);
 	this._root.addChild(this._displayPixels);
 
+	// UI
+	this._displayUI = new DO();
+	this._displayScale = new DO();
+	this._root.addChild(this._displayUI);
+		this._displayUI.addChild(this._displayScale);
+
+	this._gizmoScale = new GizmoSlider(this._displayScale);
 	this._render();
+
+	this._gizmoRotate = new GizmoRotate();
+
+	this._gizmoBrush = new GizmoSlider();
+
+	this._gizmoToggle = new GizmoToggle();
+
+	this._gizmoUndo = new GizmoToggle();
 /*
 	draw size
 	undo
@@ -167,6 +184,53 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 	toggle mask opacity
 	toggle mask color
 */
+}
+GizmoToggle = function(root, size){
+	// list of option / buttons
+	// on tap go to next option / image
+	// alert on change
+}
+GizmoRotate = function(root, size){
+	// inverted-circular hit area
+	// on start drag: record angle from center
+	// on end drag: record final location angle delta
+	// alert on changes
+}
+GizmoSlider = function(root, size){
+	// rectangular hit area -- events: down, move, out in local coords
+	// only care about up/down 
+	// round to some percentage of active height
+	// display visuals behind hit area:
+	//	small at top
+	// large at bottom
+	// gradient between
+	// alert on changes
+	this._root = root;
+	this._size = size;
+	var slider = new DO();
+	root.addChild(slider);
+	/*
+	var fxn = function(){
+		console.log("drag start");
+	}
+	slider.addListener(DO.EVENT_DRAG_BEGIN, fxn, this);
+
+	var size = new V2D(50,50);
+	var d = slider;
+	d.graphics().clear();
+	d.graphics().setFill(0xFF00FF00);
+	d.graphics().setLine(2.0, 0xCCCC0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, size.x,size.y);
+	//d.graphics().drawPolygon(poly,true);
+	//d.graphics().drawCircle(location.x,location.y,2.0);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.graphics().strokeLine();
+
+	//
+	slider.enableDragging();
+	*/
 }
 App3DR.App.ImageEditor.prototype._render = function(){
 	var canvas = this._canvas;
@@ -185,13 +249,29 @@ App3DR.App.ImageEditor.prototype._render = function(){
 	// 	d.graphics().strokeLine();
 	// this._root.addChild(d);
 
+
 	size = this.size();
+	var containerSize = this.size();
+	var containerClipPoly = [new V2D(0,0),new V2D(size.x,0),new V2D(size.x,size.y),new V2D(0,size.y)];
+
+		d = this._root;
+	this._root.mask(true);
+
+	d.graphics().clear();
+	d.graphics().setFill(0xFF00FF00);
+	d.graphics().beginPath();
+	d.graphics().drawPolygon(containerClipPoly);
+	d.graphics().endPath();
+	d.graphics().fill();
+
+
+
 	var d = this._displayBackground;
 		d.graphics().clear();
 		d.graphics().setFill(0xFF666666);
 		d.graphics().setLine(2.0, 0xCCCC0000);
 		d.graphics().beginPath();
-		d.graphics().drawRect(0,0, size.x,size.y);
+		d.graphics().drawRect(0,0, containerSize.x,containerSize.y);
 		//d.graphics().drawPolygon(poly,true);
 		//d.graphics().drawCircle(location.x,location.y,2.0);
 		d.graphics().endPath();
@@ -201,71 +281,133 @@ App3DR.App.ImageEditor.prototype._render = function(){
 	if(img){
 		var sourceWidth = img.width;
 		var sourceHeight = img.height;
-		// var s = Code.sizeToFitInside(size.x,size.y, sourceWidth,sourceHeight);
-		// console.log(s);
-		// d = this._displayImage;
-		// d.image(img);
-		// d.size(s.x,s.y);
-
-
-		var s = this._explorer.size();
-		var d;
-		d = this._displayImage;
-		d.image(img);
-		d.size(s.x,s.y);
-
-		d.graphics().addClipPolygon([new V2D(0,0),new V2D(size.x,0),new V2D(size.x,size.y),new V2D(0,size.y)]);
-
-
-		//d..drawClippedImage//(sX,sY,sW,sH, pX,pY,w,h){
-			var c = this._explorer.center();
-		var o = new V2D(-s.x*0.5 + c.x, -s.y*0.5 + c.y);
-		
-		d.matrix().identity();
-		d.matrix().translate(o.x,o.y);
 
 		var zoom = this._explorer.scale();
 		var d = this._displayPixels;
 			d.removeAllChildren();
-			var bound = this._explorer.bounds();
-			var i, j;
-			var TL = new V2D(o.x,o.y);
-			var vectorI = new V2D(s.x,0);
-			var vectorJ = new V2D(0,s.y);
+		
+		var bounds = this._explorer.bounds();
+		var axes = this._explorer.axes();
+		var axesX = axes["x"];
+		var axesY = axes["y"];
+		var axesO = axes["o"];
+
+			// image
+			//var polyA = [new V2D(o.x,o.y),new V2D(o.x+sourceWidth,0.0),new V2D(o.x+sourceWidth,o.y+sourceHeight),new V2D(0.0,o.y+sourceHeight)];
+			//var polyA = [new V2D(o.x,o.y),new V2D(o.x+s.x,o.y),new V2D(o.x+s.x,o.y+s.y),new V2D(o.x,o.y+s.y)];
+			var polyA = bounds;
+			// container
+			var polyB = containerClipPoly;//[new V2D(0,0),new V2D(size.x,0),new V2D(size.x,size.y),new V2D(0,size.y)];
+			var inside = true;
+			for(var i=0; i<polyA.length; ++i){
+				var p = polyA[i];
+				var isIn = Code.isPointInsidePolygon2D(p, polyB);
+				if(!isIn){
+					inside = false;
+					break;
+				}
+			}
+			//console.log("all points inside: "+inside);
+			// result
+			var polyC = Code.polygonIntersection2D(polyB,polyA);
+			if(polyC.length>0){
+				polyC = polyC[0];
+			}
+			// for each intersection point 
+			var minCoordinate = null;
+			var maxCoordinate = null;
+			for(var i=0; i<polyC.length; ++i){
+				var scnP = polyC[i];
+				var imgP = this._explorer.toLocalPoint(scnP);
+				if(!minCoordinate){
+					minCoordinate = imgP.copy();
+					maxCoordinate = imgP.copy();
+				}else{
+					minCoordinate.min(imgP);
+					maxCoordinate.max(imgP);
+				}
+			}
+			var minX = Math.floor(minCoordinate.x);
+			var minY = Math.floor(minCoordinate.y);
+			var maxX = Math.ceil(maxCoordinate.x);
+			var maxY = Math.ceil(maxCoordinate.y);
+			var countX = maxX-minX;
+			var countY = maxY-minY;
+			var count = countX * countY;
+			//console.log(minCoordinate+" - "+maxCoordinate+" = "+count);
+			var doSelfPixels = count<=5000 && zoom>=8;
+
+			// do image
+			var d;
+			var angle = this._explorer.rotation();
+			var scale = this._explorer.scale();
+			var offset = this._explorer.offset();
+			//var size = this._explorer.size();
+
+			var sizeX = scale*countX;
+			var sizeY = scale*countY;
+			
+			
+
+			// only draw image for zoomed out
+			//d.graphics().alpha(0.1);
+
+			if(!doSelfPixels){
+				d = this._displayImageContainer;
+				d.matrix().identity();
+				d.matrix().translate(-sizeX*0.5, -sizeY*0.5);
+				d.matrix().rotate(angle);
+				d.matrix().translate(containerSize.x*0.5, containerSize.y*0.5);
+				d.matrix().translate(offset.x, offset.y);
+				d = this._displayImage;
+				d.image(img);
+				d.drawClippedImage(minX,minY,countX,countY, 0,0,sizeX,sizeY);
+			}else{
+				d = this._displayImageContainer;
+				d.matrix().identity();
+				d.graphics().clear();
+				d = this._displayImage;
+				d.graphics().clear();
+			}
+
+			// PIXELS
+			d = this._displayPixels;
+
 			d.graphics().clear();
-			var poly = [new V2D(0,0), new V2D(s.x,0), new V2D(s.x,s.y), new V2D(0,s.y)];
-		if(zoom>=8){ // blocks
 
-			var imageMatrix = this._testImageMatrix;
+			var dirX = axesX.copy().norm();
+			var dirY = axesY.copy().norm();
+			var TL = axesO.copy();
+			TL.add( axesX.copy().scale(minX/sourceWidth) );
+			TL.add( axesY.copy().scale(minY/sourceHeight) );
+			var vectorI = dirX.copy().scale(countX*scale);
+			var vectorJ = dirY.copy().scale(countY*scale);
 
-
-			d.graphics().setLine(0.0, 0x0);
-			var count = 0;
-			for(i=0; i<sourceWidth; ++i){
-				var pI1 = (i/sourceWidth);
-				var pI2 = ((i+1)/sourceWidth);
-				for(j=0; j<sourceHeight; ++j){
-					// 400x300
-					if( !(190<=i && i<=210 && 140<=j && j<=160) ){
-						continue;
-					}
-					var pJ1 = (j/sourceHeight);
-					var pJ2 = ((j+1)/sourceHeight);
-					var a = new V2D(pI1*vectorI.x + pJ1*vectorJ.x, pI1*vectorI.y + pJ1*vectorJ.y).add(TL);
-					var b = new V2D(pI2*vectorI.x + pJ1*vectorJ.x, pI2*vectorI.y + pJ1*vectorJ.y).add(TL);
-					var c = new V2D(pI2*vectorI.x + pJ2*vectorJ.x, pI2*vectorI.y + pJ2*vectorJ.y).add(TL);
-					var e = new V2D(pI1*vectorI.x + pJ2*vectorJ.x, pI1*vectorI.y + pJ2*vectorJ.y).add(TL);
-					//var inA = Code.isInsideRect(a, );
-					// var inA = Code.isPointInsidePolygon2D(a, poly);
-					// var inB = Code.isPointInsidePolygon2D(b, poly);
-					// var inC = Code.isPointInsidePolygon2D(c, poly);
-					// var inE = Code.isPointInsidePolygon2D(e, poly);
-					// if(inA && inB && inC && inE){
-					if(true){
-						count++;
-						//console.log(i,j);
-						var color = imageMatrix.getHex(i,j);
-						// getColARGBFromFloat
+			// do pixel colors
+			if(doSelfPixels){ // 9604, 2500
+				var imageMatrix = this._testImageMatrix;
+				d.graphics().setLine(0.0, 0x0);
+				for(i=0; i<countX; ++i){
+					var pI1 = (i/countX);
+					var pI2 = ((i+1)/countX);
+					for(j=0; j<countY; ++j){
+						var pJ1 = (j/countY);
+						var pJ2 = ((j+1)/countY);
+						var a = new V2D(pI1*vectorI.x + pJ1*vectorJ.x, pI1*vectorI.y + pJ1*vectorJ.y).add(TL);
+						var b = new V2D(pI2*vectorI.x + pJ1*vectorJ.x, pI2*vectorI.y + pJ1*vectorJ.y).add(TL);
+						var c = new V2D(pI2*vectorI.x + pJ2*vectorJ.x, pI2*vectorI.y + pJ2*vectorJ.y).add(TL);
+						var e = new V2D(pI1*vectorI.x + pJ2*vectorJ.x, pI1*vectorI.y + pJ2*vectorJ.y).add(TL);
+						/*
+						var isInA = Code.isPointInsidePolygon2D(a, polyB);
+						var isInB = Code.isPointInsidePolygon2D(b, polyB);
+						var isInC = Code.isPointInsidePolygon2D(c, polyB);
+						var isInE = Code.isPointInsidePolygon2D(e, polyB);
+						var isIn = isInA || isInB || isInC || isInE;
+						if(!isIn){ // save some processing
+							continue; // not correct if only an edge is inside -- expand the rect by a pixel length
+						}
+						*/
+						var color = imageMatrix.getHex(i+minX,j+minY);
 						d.graphics().beginPath();
 						d.graphics().setFill(color);
 						d.graphics().moveTo(a.x,a.y);
@@ -276,8 +418,6 @@ App3DR.App.ImageEditor.prototype._render = function(){
 						d.graphics().fill();
 						var textHei = 12;
 						if(zoom>=textHei*3){ // hex
-							console.log("hex")
-							
 							var text = Code.getHex(color&0x00FFFFFF, true).toUpperCase();
 							//var inv = Code.inverseColorARGB(color); // TODO: GRAY
 							var brightness = Code.brightnessFromARGB(color);
@@ -293,29 +433,30 @@ App3DR.App.ImageEditor.prototype._render = function(){
 					}
 				}
 			}
-			console.log("count++;: "+count+" / "+sourceWidth+"x"+sourceHeight);
-		}
+
 		if(zoom>=4){
 			var color;
 			if(zoom<=4){
-				color = 0x33000000;
+				color = 0x66000000;
 			}else if(color<16){
 				color = 0x99000000;
-			}else{
+			}else if(color<23){
 				color = 0xCC000000;
+			}else{
+				color = 0xFF000000;
 			}
 			d.graphics().beginPath();
 			d.graphics().setLine(1.0, color);
-			for(i=0; i<=sourceWidth; ++i){
-				var pI = (i/sourceWidth);
+			for(i=0; i<=countX; ++i){
+				var pI = (i/countX);
 				var a = new V2D(pI*vectorI.x + 0.0*vectorJ.x, pI*vectorI.y + 0.0*vectorJ.y).add(TL);
 				var b = new V2D(pI*vectorI.x + 1.0*vectorJ.x, pI*vectorI.y + 1.0*vectorJ.y).add(TL);
 				d.graphics().moveTo(a.x,a.y);
 				d.graphics().lineTo(b.x,b.y);
 			}
 			
-			for(j=0; j<=sourceHeight; ++j){
-				var pJ = (j/sourceHeight);
+			for(j=0; j<=countY; ++j){
+				var pJ = (j/countY);
 				var a = new V2D(0.0*vectorI.x + pJ*vectorJ.x, 0.0*vectorI.y + pJ*vectorJ.y).add(TL);
 				var b = new V2D(1.0*vectorI.x + pJ*vectorJ.x, 1.0*vectorI.y + pJ*vectorJ.y).add(TL);
 				d.graphics().moveTo(a.x,a.y);
@@ -324,9 +465,6 @@ App3DR.App.ImageEditor.prototype._render = function(){
 			d.graphics().endPath();
 			d.graphics().strokeLine();
 		}
-
-
-		
 	}
 }
 App3DR.App.ImageEditor.prototype._zoomIn = function(){
@@ -337,12 +475,33 @@ App3DR.App.ImageEditor.prototype._zoomOut = function(){
 	this._explorer.updateScale( this._explorer.scale()*0.5 );
 	this._render();
 }
+App3DR.App.ImageEditor.prototype._rotate = function(angle){
+	this._explorer.updateRotation( this._explorer.rotation() + angle );
+	this._render();
+}
+App3DR.App.ImageEditor.prototype._move = function(dir){
+	this._explorer.updateOffset( this._explorer.offset().copy().add(dir) );
+	this._render();
+}
 App3DR.App.ImageEditor.prototype.handleKeyDown = function(e){
 	App3DR.App.ImageEditor._.handleKeyDown.call(this, e);
+	var moveSize = 10;
 	if(e.keyCode == Keyboard.KEY_LET_Q){
 		this._zoomIn();
 	}else if(e.keyCode == Keyboard.KEY_LET_W){
 		this._zoomOut();
+	}else if(e.keyCode == Keyboard.KEY_LET_A){
+		this._rotate( Code.radians(10.0) );
+	}else if(e.keyCode == Keyboard.KEY_LET_S){
+		this._rotate( -Code.radians(10.0) );
+	}else if(e.keyCode == Keyboard.KEY_LEFT){
+		this._move( new V2D(-moveSize,0) );
+	}else if(e.keyCode == Keyboard.KEY_RIGHT){
+		this._move( new V2D(moveSize,0) );
+	}else if(e.keyCode == Keyboard.KEY_UP){
+		this._move( new V2D(0,-moveSize) );
+	}else if(e.keyCode == Keyboard.KEY_DOWN){
+		this._move( new V2D(0,moveSize) );
 	}
 }
 App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
@@ -370,10 +529,13 @@ App3DR.Explorer2D = function(){
 	this._subjectScale = 1.0;
 	this._subjectRotation = 0.0;
 	//
-	this._scaleRangeMin = Math.pow(2,-5);//0.1;
-	this._scaleRangeMax = Math.pow(2,6);//10.0;
+	this._scaleRangeMin = Math.pow(2,-5);//0.1; 1/32
+	this._scaleRangeMax = Math.pow(2,7);//10.0;   64
 	this._rotateRangeMin = null;
 	this._rotateRangeMax = null;
+}
+App3DR.Explorer2D.prototype.offset = function(){
+	return this._subjectCenter;
 }
 App3DR.Explorer2D.prototype.scale = function(){
 	return this._subjectScale;
@@ -391,36 +553,46 @@ App3DR.Explorer2D.prototype.size = function(){
 	return size;
 }
 //App3DR.Explorer2D.prototype.boundingBox = function(){
-App3DR.Explorer2D.prototype.bounds = function(){
-	var screenSpace = new Rect();
-	var imageSpace = new Rect();
-
-	//var size = this.size();
+App3DR.Explorer2D.prototype.axes = function(){
+	var bounds = this.bounds();
+	var o = bounds[0];
+	var x = V2D.sub(bounds[1],bounds[0]);
+	var y = V2D.sub(bounds[3],bounds[0]);
+	return {"x":x, "y":y, "o":o};
+}
+App3DR.Explorer2D.prototype.toLocalPoint = function(p){
+	var matrix = this._matrix();
+	var inverse = matrix.copy().inverse();
+	var q = inverse.multV2D(p);
+	return q;
+}
+App3DR.Explorer2D.prototype._matrix = function(){
 	var container = this._containerSize;
 	var subject = this._subjectSize;
 	var offset = this._subjectCenter;
 	var matrix = new Matrix2D();
-		matrix.translate(-subject.x*0.5 + container.x*0.5, -subject.y*0.5 + container.x*0.5); // to center
+		matrix.translate(-subject.x*0.5, -subject.y*0.5); // center to origin
 		matrix.scale(this._subjectScale);
 		matrix.rotate(this._subjectRotation);
-		matrix.translate(offset.x*0.5, offset.y*0.5); // to offset
-	var inverse = matrix.copy().inverse();
-	// console.log(matrix);
-	// console.log(inverse);
+		matrix.translate(container.x*0.5, container.y*0.5); // to center
+		matrix.translate(offset.x, offset.y); // to offset
+	return matrix;
+}
+App3DR.Explorer2D.prototype.bounds = function(){
+	//var size = this.size();
+	var container = this._containerSize;
+	var subject = this._subjectSize;
+	var offset = this._subjectCenter;
+	var matrix = this._matrix();
 	var a = new V2D(0,0);
-	var b = new V2D(container.x,0);
-	var c = new V2D(container.x,container.y);
-	var d = new V2D(0,container.y);
-	var A = inverse.multV2D(a);
-	var B = inverse.multV2D(b);
-	var C = inverse.multV2D(c);
-	var D = inverse.multV2D(d);
-	// Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
-		// console.log(a+" -> "+A);
-		// console.log(b+" -> "+B);
-		// console.log(c+" -> "+C);
-		// console.log(d+" -> "+D);
-	return {"screen":screenSpace, "image":imageSpace};
+	var b = new V2D(subject.x,0);
+	var c = new V2D(subject.x,subject.y);
+	var d = new V2D(0,subject.y);
+	var array = [a,b,c,d];
+	for(var i=0; i<array.length; ++i){
+		array[i] = matrix.multV2D(array[i]);
+	}
+	return array;
 }
 App3DR.Explorer2D.prototype.setSizes = function(container, subject){
 	this._containerSize.copy(container);
