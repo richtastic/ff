@@ -33,6 +33,7 @@ Resource.prototype.context = function(ctx){
     return this._context;
 }
 Resource.prototype.load = function(){
+	console.log("start load");
 	this._load1();
 }
 Resource.prototype._load1 = function(){ // images

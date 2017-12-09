@@ -126,19 +126,19 @@ Stage.prototype.functionListFor = function(str){
 // 	}
 }
 Stage.prototype.addFunctionDisplay = function(obj,str,fxn,ctx){
-	console.log("addFunctionDisplay: "+str);
+//	console.log("addFunctionDisplay: "+str);
 	if(this._eventList[str]==null){
 		this._eventList[str] = [];
 	}
 	this._eventList[str].push([obj,fxn,ctx,obj]);
 return;
 
-	if(this._eventList[str]!=null){
-		this._eventList[str].push([obj,fxn,ctx]);
-	}else{
-		// alert event does not exist
-		console.log("NOT EXIST ");
-	}
+	// if(this._eventList[str]!=null){
+	// 	this._eventList[str].push([obj,fxn,ctx]);
+	// }else{
+	// 	// alert event does not exist
+	// 	console.log("NOT EXIST ");
+	// }
 }
 Stage.prototype.removeFunctionDisplay = function(obj,str,fxn,ctx){
 	var i, j, item, arr = this._eventList[str];
@@ -351,6 +351,12 @@ Stage.prototype.canvasMouseEventPropagate = function(eventName,eventData){ // PO
 	var path, arr, obj, fxn, ctx, evtObj, item;
 	var cum = new Matrix2D();
 	var intersection = this.getIntersection(pos,this._tempCanvas);
+// console.log("intersection:");
+//console.log(intersection);
+// console.log(" hierarchy: \n");
+// this._root.print();
+// console.log(" \n");
+	
 	if(list){ // OUTSIDE ALERTING
 		for(var i=0;i<list.length;++i){
 			item = list[i];
@@ -364,6 +370,7 @@ Stage.prototype.canvasMouseEventPropagate = function(eventName,eventData){ // PO
 					obj = obj.parent();
 				}
 				evtObj = Stage._objectFrom(intersection, cum, pos, eventData);
+
 				if(fxn && ctx){
 					fxn.call(ctx, evtObj);
 				}else{

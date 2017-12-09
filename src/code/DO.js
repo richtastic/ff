@@ -84,8 +84,8 @@ DO.removedFromStageRecursive = function(ch){
 DO.printRecursive = function(obj,cur,ind,fin){
 	var beg = cur;
 	console.log(""+beg+fin+obj.toString());
-	for(var i=0; i<obj.children.length; ++i){
-		DO.printRecursive(obj.children[i],ind+"|"+cur,ind,fin);
+	for(var i=0; i<obj._children.length; ++i){
+		DO.printRecursive(obj._children[i],ind+"|"+cur,ind,fin);
 	}
 }
 DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){ // transform point from lower in tree to higher in tree
@@ -180,6 +180,7 @@ DO.prototype._addStageFunction = function(str,fxn,ctx){
 		//console.log("I HAVE A STAGE "+str);
 		this._stage.addFunctionDisplay(this,str,fxn,ctx);
 	}else{
+		throw("NO STAGE");
 		console.log("need to add this request to some queue and activate on attaching to stage");
 	}
 }
@@ -191,13 +192,16 @@ DO.prototype._removeStageFunction = function(str,fxn,ctx){
 		// leaked? or should be called during remove child ?
 	}
 }
-DO._EVENT_TRANS = {};
-DO._EVENT_TRANS[DO.EVENT_MOUSE_DOWN] = [Canvas.EVENT_MOUSE_DOWN];
+// DO._EVENT_TRANS = {};
+// DO._EVENT_TRANS[DO.EVENT_MOUSE_DOWN] = [Canvas.EVENT_MOUSE_DOWN];
+// DO.prototype.addListener = function(str,fxn,ctx){
+// 	DO._.addFunction.call(this,str,fxn,ctx);
+// }
 DO.prototype.addFunction = function(str,fxn,ctx, only){
 	if(only){
-		DO._.addFunction.call(this,str,fxn,ctx);
-	}else{ //any
 		this._addStageFunction(str, fxn, ctx);
+	}else{ //any
+		DO._.addFunction.call(this,str,fxn,ctx);
 	}
 	// DO._.addFunction.call(this,str,fxn,ctx);
 	// var trans = DO._EVENT_TRANS;
@@ -212,9 +216,9 @@ DO.prototype.addFunction = function(str,fxn,ctx, only){
 }
 DO.prototype.removeFunction = function(str,fxn,ctx, only){
 	if(only){
-		DO._.removeFunction.call(this,str,fxn,ctx);
-	}else{ // any
 		this._removeStageFunction(str, fxn, ctx);
+	}else{ // any
+		DO._.removeFunction.call(this,str,fxn,ctx);
 	}
 }
 DO.prototype.alertAll = function(str,o){
@@ -393,7 +397,7 @@ DO.prototype.moveToFront = function(ch){
 		parent.addChildAtIndex(this,parent._children.length);
 	}
 }
-DO.prototype.kill = function(ch){
+DO.prototype.kill = function(){
 	Code.killArray(this._children);
 	this._matrix.kill();
 	this.parent(null);
@@ -412,34 +416,69 @@ DO.prototype.checkIntersectionChildren = function(bool){
 DO.prototype.checkIntersectionThis = function(bool){
 	this._checkIntersectionThis = bool;
 }
+/*
+var context = canvas.context();
+	this.setupRender(canvas);
+	this._graphicsIllustration.setupRender(canvas);
+	this._graphicsIllustration.render(canvas);
+	if(this._mask){
+		context.clip();
+	}
+	var arr = this._children;
+	var i, len = arr.length;
+	for(i=0;i<len;++i){
+		arr[i].render(canvas);
+	}
+	this._graphicsIllustration.takedownRender(canvas);
+	this.takedownRender(canvas);
+*/
 DO.prototype.getIntersection = function(pos, can){
-	this.setupRender(can);
 	var context = can.context();
+	this.setupRender(can);
+	if(this._mask){
+		this._graphicsIntersection.setupRender(can);
+		this._graphicsIntersection.render(can);
+		context.clip();
+	}
 	if(this._checkIntersectionChildren){
-		var ret, i, len = this._children.length;
+		var children = this._children;
+		var ret, i, len = children.length;
 		for(i=len-1;i>=0;--i){
-			if(this._mask){
-				this._graphicsIntersection.setupRender(can);
-				this._graphicsIntersection.render(can);
-				this._graphicsIntersection.takedownRender(can);
-				context.clip();
-			}
-			ret = this._children[i].getIntersection(pos, can);
+		//for(i=0;i<len;++i){
+			// if(this._mask){
+			// 	this._graphicsIntersection.setupRender(can);
+			// 	this._graphicsIntersection.render(can);
+			// 	context.clip();
+			// }
+			ret = children[i].getIntersection(pos, can);
+			// if(this._mask){
+			// 	this._graphicsIntersection.takedownRender(can);
+			// }
 			if(ret){
+				//console.log(" found child intersection "+this._children[i].id());
 				this.takedownRender(can);
 				return ret;
 			}
 		}
 	}
-	if(this._checkIntersectionThis){
+	if(this._mask){
+		this._graphicsIntersection.takedownRender(can);
+	}
+	this.takedownRender(can);
+
+	if(this._checkIntersectionThis && !this._mask){
+		this.setupRender(can);
 		this._graphicsIntersection.setupRender(can);
 		this._graphicsIntersection.render(can);
 		this._graphicsIntersection.takedownRender(can);
-		var context = can.context();
-var imgData = can.getImageData(0,0,can.width(),can.height());//context.getImageData(0,0,can.canvas.width,can.canvas.height);
-		var pix = this.getPixelARGB( imgData, pos.x,pos.y);
 		this.takedownRender(can);
+		var context = can.context();
+		var imgData = can.getImageData(0,0,can.width(),can.height());
+		var pix = this.getPixelARGB( imgData, pos.x,pos.y);
+		//console.log(pix+" ?  " + Code.getHex(pix));
+		//var pix = this.getPixelARGB( imgData, 0,0);
 		if(pix!=0){
+			//console.log(" found self intersection "+this.id());
 			return this;
 		}
 	}
@@ -566,7 +605,7 @@ DO.prototype.boundingBox = function(trans){ // TODO: _illustation vs _intersecti
 }
 // ------------------------------------------------------------------------------------------------------------------------ DEBUGGING
 DO.prototype.toString = function(){
-	return "[DO "+this._id+(this._stage==null?"-":"*")+"]";
+	return "[DO "+this._id+(this._stage==null?"-":"*")+(this._mask?"m":"-")+"]";
 }
 DO.prototype.print = function(){
 	DO.printRecursive(this,"","  ","-");

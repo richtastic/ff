@@ -7058,7 +7058,7 @@ Code.isPointInsideTri2D = function(p, a,b,c){
 	// var dotAA = V2D.dot(ab);
 	// var dotAA = V2D.dot(ab);
 	// var dotAA = V2D.dot(ab);
-}
+} 
 // Code.isPointInsideTri2D = function(p, a,b,c){ /// not correct at borders for whatever reason
 // 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
 // }

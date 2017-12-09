@@ -43,6 +43,15 @@ function App3DR(){
 
 
 
+var fxn = function(){
+		console.log("resources loaded");
+	}
+	var resource = new App3DR.Resource(fxn);
+	resource.load();
+
+
+
+
 var app = new App3DR.App.ImageEditor();
 this.setupAppActive(app);
 
@@ -51,6 +60,20 @@ this.setupAppActive(app);
 	this._stage.addListeners();
 	this._stage.start();
 	this._keyboard.addListeners();
+
+
+var d = new DO();
+this._root.addChild(d);
+	var gr = d.graphics();
+	gr.clear();
+	gr.setFill(0x55FF0077);
+	gr.setLine(2.0, 0xCCCC0000);
+	gr.beginPath();
+	gr.drawRect(50,50, 50,60);
+	gr.endPath();
+	gr.fill();
+	gr.strokeLine();
+
 
 return;
 
@@ -69,13 +92,31 @@ return;
 	this._stage.start();
 	this._keyboard.addListeners();
 
-	var imageLoader = new ImageLoader("./images/",["background.png"], this,this._handleBackgroundImagesLoaded,null);
-	imageLoader.load();
-
+	// var imageLoader = new ImageLoader("./images/",["background.png"], this,this._handleBackgroundImagesLoaded,null);
+	// imageLoader.load();
+	
 	// mouse stuff
 	this._mouseDown = false;
 }
 
+// ------------------------------------------------------------------------------------------------------------
+App3DR.Resource = function(complete, context){
+	App3DR.Resource._.constructor.call(this, complete, context);
+	console.log("new")
+	var imageBase = "./images/";
+	var img = [];
+		img[App3DR.Resource.TEX_BG_MAIN] = "background.png";
+		img[App3DR.Resource.TEX_BG_CHECKERBOARD] = "bg_checkerboard_repeat.png";
+	this._imgLoader.setLoadItems(imageBase,img);
+	// this._imgLoader.addLoadItem(imageBase, "background.png");
+	// this._imgLoader.addLoadItem(imageBase, "bg_checkerboard_repeat.png");
+	//
+}
+Code.inheritClass(App3DR.Resource,Resource);
+App3DR.Resource.TEX_BG_MAIN = 0;
+App3DR.Resource.TEX_BG_CHECKERBOARD = 1;
+
+// ------------------------------------------------------------------------------------------------------------
 
 App3DR.App = function(canvas){
 	this._root = new DO();
@@ -154,6 +195,8 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 		//this._root.addChild(this._displayImageContainer);
 		this._root.addChild(this._displayImage);
 	this._root.addChild(this._displayPixels);
+
+this._testButton();
 /*
 	// UI
 	this._displayUI = new DO();
@@ -190,6 +233,40 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 	* choose image transparancy
 */
 }
+App3DR.App.ImageEditor.prototype._testButton = function(){
+	var d = new DO();
+	var size = new V2D(200,230);
+	//var gr = d.newGraphicsIntersection();
+	var gr = d.graphics();
+	gr.clear();
+	gr.setFill(0xFF0099DD);
+	gr.setLine(2.0, 0xCCCC0000);
+	gr.beginPath();
+	gr.drawRect(0,0, size.x,size.y);
+	gr.endPath();
+	gr.fill();
+	gr.strokeLine();
+
+	var button = new DOButton();
+	this._root.addChild(button);
+	button.setDOHitArea(d);
+
+	button.addFunction(DOButton.EVENT_SHORT_PRESS, function(d){
+		console.log("short press");
+	});
+	button.addFunction(DOButton.EVENT_LONG_PRESS, function(d){
+		console.log("long press");
+	});
+	button.addFunction(DOButton.EVENT_PRESS_START, function(d){
+		console.log("do press");
+	});
+	button.addFunction(DOButton.EVENT_PRESS_END, function(d){
+		console.log("un press");
+	});
+	button.addFunction(DOButton.EVENT_PRESS_CANCEL, function(d){
+		console.log("cancel");
+	});
+}
 App3DR.App.ImageEditor.prototype.testDO = function(){
 	console.log("testDO");
 	var d = new DO();
@@ -217,6 +294,7 @@ App3DR.App.ImageEditor.prototype.testDO = function(){
 	gr.endPath();
 	gr.fill();
 	gr.strokeLine();
+
 
 
 }
@@ -293,14 +371,14 @@ App3DR.App.ImageEditor.prototype._render = function(){
 	this._root.mask(true);
 
 	d.graphics().clear();
-	d.graphics().setFill(0xFF00FF00);
+	// d.graphics().setFill(0xFF00FF00);
 	d.graphics().beginPath();
 	d.graphics().drawPolygon(containerClipPoly);
 	d.graphics().endPath();
-	d.graphics().fill();
+//	d.graphics().fill();
 
 
-
+/*
 	var d = this._displayBackground;
 		d.graphics().clear();
 		d.graphics().setFill(0xFF666666);
@@ -312,6 +390,7 @@ App3DR.App.ImageEditor.prototype._render = function(){
 		d.graphics().endPath();
 		d.graphics().fill();
 		d.graphics().strokeLine();
+*/
 	var img = this._testImageSource;
 	if(img){
 		var sourceWidth = img.width;
@@ -586,7 +665,6 @@ App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
 	var container = location.copy().sub(corner);
 	var imageLocation = this._explorer.toLocalPoint(container);
 	
-	console.log(imageLocation);
 	var colored = this._colorMaskImage(imageLocation,true);
 	if(colored){
 		this._render();

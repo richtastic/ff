@@ -130,7 +130,16 @@ DOText.prototype.callback = function(o){
 // 	this.size(this._size);
 // });
 // ------------------------------------------------------------------------------------------------------------------------ DEATH
-DOText.prototype.kill = function(canvas){
-	//
-	DOText._.kill.call(this,canvas);
+DOText.prototype.kill = function(){
+	this._text = null;
+	this._size = null;
+	this._fontObject = null;
+	this._font = null;
+	this._color = null;
+	this._align = null;
+	this._shadowColor = null;
+	this._shadowOffsetX = null;
+	this._shadowOffsetY = null;
+	this._shadowBlur = null;
+	DOText._.kill.call(this);
 }

@@ -30,14 +30,26 @@ ImageLoader.prototype.completeFxn = function(fxn){
 }
 ImageLoader.prototype.setLoadList = function(base,arr, ctx,cmp,prg){
 	if(base===null || base===undefined || !arr){ return; }
-	Code.emptyArray(this._files);
-	Code.emptyArray(this._images);
 	this.context(ctx);
 	this.completeFxn(cmp);
 	this.progressFxn(prg);
+	this.setLoadItems(base,arr);
+}
+ImageLoader.prototype.setLoadItems = function(base,arr){
+	Code.emptyArray(this._files);
+	Code.emptyArray(this._images);
 	for(var i=0;i<arr.length;++i){
-		this._files.push(base+""+arr[i]);
+		//this._files.push(base+""+arr[i]);
+		//this._images.push(null);
+		this.addLoadItem(base,arr[i])
 	}
+}
+ImageLoader.prototype.addLoadItem = function(path,ext){
+	if(ext!==undefined){
+		path = path+""+ext;
+	}
+	this._files.push(path);
+	this._images.push(null);
 }
 // --------------------------------------------------------------------------
 ImageLoader.prototype.load = function(){
