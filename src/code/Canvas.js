@@ -76,7 +76,7 @@ Canvas.BUTTON_RIGHT = 3;
 Canvas.MOUSE_EVENT_KEY_LOCATION = "location";
 Canvas.MOUSE_EVENT_KEY_SCROLL = "scroll";
 Canvas.MOUSE_EVENT_KEY_BUTTON = "button";
-
+Canvas.MOUSE_EVENT_MOUSE_DOWN = "mouseDown";
 // 
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 Canvas.IMAGE_TYPE_PNG = "png";
@@ -710,6 +710,7 @@ Canvas.prototype.getMouseObjectFromEvent = function(e){
 	obj[Canvas.MOUSE_EVENT_KEY_LOCATION] = pos;
 	obj[Canvas.MOUSE_EVENT_KEY_BUTTON] = but;
 	obj[Canvas.MOUSE_EVENT_KEY_SCROLL] = delta;
+	obj[Canvas.MOUSE_EVENT_MOUSE_DOWN] = this.isMouseDown();
 	return obj;
 }
 Canvas.prototype._canvasClickFxn = function(e){
@@ -726,7 +727,6 @@ Canvas.prototype._canvasMouseDownFxn = function(e){
 	e.preventDefault();
 	this._mouseDown = true;
 	var obj = this.getMouseObjectFromEvent(e);
-	console.log("EVENT_MOUSE_DOWN:")
 	this.alertAll(Canvas.EVENT_MOUSE_DOWN,obj);
 }
 Canvas.prototype._canvasMouseUpFxn = function(e){

@@ -13,6 +13,30 @@ DO.EVENT_MOUSE_OUT = "do.evtmouout";
 // DO.EVENT_MOUSE_UP_OUTSIDE = "doevtmouupout";
 // DO.EVENT_MOUSE_CLICK_OUTSIDE = "donevtmouclkout";
 // DO.EVENT_MOUSE_MOVE_OUTSIDE = "doevtmoumovout";
+
+
+DO.EVENT_MOUSE_DOWN = "do.evtdwn";
+DO.EVENT_MOUSE_UP = "do.evtupp";
+DO.EVENT_MOUSE_MOVE = "do.evtmov";
+//DO.EVENT_MOSE_DOWN = "do.evt";
+
+
+// Canvas.EVENT_MOUSE_DOWN = "canevtmoudwn";
+// Canvas.EVENT_MOUSE_UP = "canevtmouup";
+// Canvas.EVENT_MOUSE_CLICK = "canevtmouclk";
+// Canvas.EVENT_MOUSE_MOVE = "canevtmoumov";
+// Canvas.EVENT_MOUSE_WHEEL = "canevtmouwhl";
+// Canvas.EVENT_MOUSE_EXIT = "canevtmouext";
+// Canvas.EVENT_TOUCH_START = "canevttousta";
+// Canvas.EVENT_TOUCH_MOVE = "canevttoumov";
+// Canvas.EVENT_TOUCH_END = "canevttouend";
+// // these are only sent to DOs who have registered listeners
+// Canvas.EVENT_MOUSE_DOWN_OUTSIDE = "canevtmoudwnout";
+// Canvas.EVENT_MOUSE_UP_OUTSIDE = "canevtmouupout";
+// Canvas.EVENT_MOUSE_CLICK_OUTSIDE = "canevtmouclkout";
+// Canvas.EVENT_MOUSE_MOVE_OUTSIDE = "canevtmoumovout";
+
+
 DO._ID = 0;
 DO._tempO = new V2D();
 DO._tempX = new V2D();
@@ -113,7 +137,6 @@ function DO(parentDO){
 	this._id = DO._ID++;
 	this._stage = null;
 	this._parent = null;
-//this._alpha = 1.0;
 // tint?
 	this._children = new Array(); // 0 = back, length-1 = front
 	this._mask = false;
@@ -122,8 +145,8 @@ function DO(parentDO){
 	this._matrix = new Matrix2D();
 	this._parent = parentDO;
 	this._canvas = null;
-	this._graphics = new Graphics();
-	this._graphicsIllustration = this._graphics;
+	//this._graphics = new Graphics();
+	this._graphicsIllustration = new Graphics(); //this._graphics;
 	this._graphicsIntersection = this._graphicsIllustration;
 	this._checkIntersectionChildren = true;
 	this._checkIntersectionThis = true;
@@ -143,7 +166,7 @@ DO.prototype.matrix = function(){ // get only
 	return this._matrix;
 }
 DO.prototype.graphics = function(){
-	return this._graphics;
+	return this._graphicsIllustration;
 }
 DO.prototype.graphicsIntersection = function(){
 	return this._graphicsIntersection;
@@ -152,10 +175,7 @@ DO.prototype.graphicsIllustration = function(){
 	return this._graphicsIllustration;
 }
 // ------------------------------------------------------------------------------------------------------------------------ DISPATCHING
-DO.prototype.addListener = function(str,fxn,ctx){
-	DO._.addFunction.call(this,str,fxn,ctx);
-}
-DO.prototype.addFunction = function(str,fxn,ctx){
+DO.prototype._addStageFunction = function(str,fxn,ctx){
 	if(this._stage){
 		//console.log("I HAVE A STAGE "+str);
 		this._stage.addFunctionDisplay(this,str,fxn,ctx);
@@ -163,7 +183,7 @@ DO.prototype.addFunction = function(str,fxn,ctx){
 		console.log("need to add this request to some queue and activate on attaching to stage");
 	}
 }
-DO.prototype.removeFunction = function(str,fxn,ctx){
+DO.prototype._removeStageFunction = function(str,fxn,ctx){
 	DO._.removeFunction.call(this,str,fxn,ctx);
 	if(this._stage){
 		this._stage.removeFunctionDisplay(this,str,fxn,ctx);
@@ -171,9 +191,43 @@ DO.prototype.removeFunction = function(str,fxn,ctx){
 		// leaked? or should be called during remove child ?
 	}
 }
+DO._EVENT_TRANS = {};
+DO._EVENT_TRANS[DO.EVENT_MOUSE_DOWN] = [Canvas.EVENT_MOUSE_DOWN];
+DO.prototype.addFunction = function(str,fxn,ctx, only){
+	if(only){
+		DO._.addFunction.call(this,str,fxn,ctx);
+	}else{ //any
+		this._addStageFunction(str, fxn, ctx);
+	}
+	// DO._.addFunction.call(this,str,fxn,ctx);
+	// var trans = DO._EVENT_TRANS;
+	// var list = trans[str];
+	// if(list){
+	// 	var obj = {"str":str, "obj":null};
+	// 	for(var i=0; i<list.length; ++i){
+	// 		var event = list[i];
+	// 		this._addStageFunction(event, this._internalFunctionHandle, obj);
+	// 	}
+	// }
+}
+DO.prototype.removeFunction = function(str,fxn,ctx, only){
+	if(only){
+		DO._.removeFunction.call(this,str,fxn,ctx);
+	}else{ // any
+		this._removeStageFunction(str, fxn, ctx);
+	}
+}
 DO.prototype.alertAll = function(str,o){
+	//console.log("i was involved in event: "+str);
 	DO._.alertAll.call(this,str,o);
 }
+// DO.prototype._internalFunctionHandle = function(o){
+// 	var str = o["str"];
+// 	var obj = o["obj"];
+// 	// var ctx = o["ctx"];
+// 	// var fxn = o["fxn"];
+// 	this.alertAll(this,str,obj);
+// }
 // ------------------------------------------------------------------------------------------------------------------------ POINT TRANSFORMS
 DO.prototype.inverseTransformPoint = function(a,b){
 	var inv = new Matrix2D();
@@ -183,37 +237,36 @@ DO.prototype.inverseTransformPoint = function(a,b){
 DO.prototype.transformPoint = function(a,b){
 	this._matrix.multV2D(a,b);
 }
-DO.prototype.transformEvent = function(evt,pos){ // this.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
-	var arr = this._children;
-	var i, len = arr.length;
-	for(i=0;i<len;++i){
-		var newPos = new V2D();
-		this.transformPoint(newPos,pos);
-		arr[i].transformEvent(evt,newPos);
-	}
-	this.alertAll(evt,pos);
-}
+// DO.prototype.transformEvent = function(evt,pos){ // this.root.transformEvent(Canvas.EVENT_MOUSE_MOVE,new V2D(pos.x,pos.y));
+// 	var arr = this._children;
+// 	var i, len = arr.length;
+// 	for(i=0;i<len;++i){
+// 		var newPos = new V2D();
+// 		this.transformPoint(newPos,pos);
+// 		arr[i].transformEvent(evt,newPos);
+// 	}
+// 	this.alertAll(evt,pos);
+// }
 // ------------------------------------------------------------------------------------------------------------------------ RENDERING
 DO.prototype.newGraphicsIllustration = function(gr){
 	this._graphicsIllustration = gr?gr:new Graphics();
-	this._graphics = this._graphicsIllustration; // ? nbefore?
+	return this._graphicsIllustration;
 }
 DO.prototype.newGraphicsIntersection = function(gr){
-	this.graphicsIntersection = gr?gr:new Graphics();
+	this._graphicsIntersection = gr?gr:new Graphics();
+	return this._graphicsIntersection;
 }
 DO.prototype.setupRender = function(canvas){
 	this._canvas = canvas;
 	var context = this._canvas.context();
 	var a = this._matrix.get();
 	context.save();
-	//canvas.pushAlpha(this._alpha); // current transparancy
 	context.transform(a[0],a[2],a[1],a[3],a[4],a[5]); 
 	Code.emptyArray(a);
 }
 DO.prototype.takedownRender = function(){
 	var context = this._canvas.context();
 	context.restore();
-	//this._canvas.popAlpha(); // revert
 	this._canvas = null;
 }
 DO.prototype.mask = function(m){
@@ -227,8 +280,7 @@ DO.prototype.render = function(canvas){
 	this.setupRender(canvas);
 	this._graphicsIllustration.setupRender(canvas);
 	this._graphicsIllustration.render(canvas);
-	// moved to allow alpha stacking inside graphics
-	if(this.mask()){
+	if(this._mask){
 		context.clip();
 	}
 	var arr = this._children;
@@ -363,16 +415,10 @@ DO.prototype.checkIntersectionThis = function(bool){
 DO.prototype.getIntersection = function(pos, can){
 	this.setupRender(can);
 	var context = can.context();
-	/*if(this.mask){
-		this.graphicsIntersection.setupRender(can);
-		this.graphicsIntersection.render(can);
-		this.graphicsIntersection.takedownRender(can);
-		context.clip();
-	}*/
 	if(this._checkIntersectionChildren){
 		var ret, i, len = this._children.length;
 		for(i=len-1;i>=0;--i){
-			if(this.mask()){
+			if(this._mask){
 				this._graphicsIntersection.setupRender(can);
 				this._graphicsIntersection.render(can);
 				this._graphicsIntersection.takedownRender(can);
@@ -503,10 +549,10 @@ DO.prototype._dragUpdate = function(e){
 // 	this.dragRoundingX = 0;
 // 	this.dragRoundingY = 0;
 // ------------------------------------------------------------------------------------------------------------------------ EDITING
-DO.prototype.boundingBox = function(trans){
+DO.prototype.boundingBox = function(trans){ // TODO: _illustation vs _intersection
 	trans = trans?trans:new Matrix2D();
 	// find largest BB containing THIS and all CHILDREN
-	var box = this._graphics.boundingBox(trans);
+	var box = this._graphicsIllustration.boundingBox(trans);
 	var mat = new Matrix2D();
 	var d, bb, i, len = this._children.length;
 	for(i=0;i<len;++i){

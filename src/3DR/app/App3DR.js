@@ -148,13 +148,13 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 
 	this._displayBackground = new DO();
 	this._displayPixels = new DO();
-	this._displayImageContainer = new DOImage();
+	//this._displayImageContainer = new DOImage();
 	this._displayImage = new DOImage();
 	this._root.addChild(this._displayBackground);
-		this._root.addChild(this._displayImageContainer);
-		this._displayImageContainer.addChild(this._displayImage);
+		//this._root.addChild(this._displayImageContainer);
+		this._root.addChild(this._displayImage);
 	this._root.addChild(this._displayPixels);
-
+/*
 	// UI
 	this._displayUI = new DO();
 	this._displayScale = new DO();
@@ -163,7 +163,10 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 
 	this._gizmoScale = new GizmoSlider(this._displayScale);
 	this._render();
+*/
 
+//this.testDO();
+	/*
 	this._gizmoRotate = new GizmoRotate();
 
 	this._gizmoBrush = new GizmoSlider();
@@ -171,19 +174,51 @@ App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,m
 	this._gizmoToggle = new GizmoToggle();
 
 	this._gizmoUndo = new GizmoToggle();
+
+	*/
 /*
-	draw size
-	undo
-	toggle write/rease (add/delete)
-	image focus
-	zoom-scale
-	[?rotate]
-	show pts button
-	exit button
-	toggle pixel lines button
-	toggle mask opacity
-	toggle mask color
+	* slider draw-size
+	* undo
+	* toggle write/rease/move.   (add/delete)
+			image focus ?
+	* slider zoom/scale
+	* rotate starting point
+	* toggle feature pts
+	* exit button
+	* toggle pixel lines button
+	* choose mask color
+	* choose image transparancy
 */
+}
+App3DR.App.ImageEditor.prototype.testDO = function(){
+	console.log("testDO");
+	var d = new DO();
+		this._root.addChild(d);
+	var fxn = function(e){
+		//console.log("e");
+		console.log(e["target"]==d);
+		console.log(e);
+	}
+	//d.addFunction(DO.EVENT_MOUSE_DOWN, fxn, this);
+	//d.addFunction(Canvas.EVENT_MOUSE_DOWN, fxn, this);
+	//d.addFunction(Canvas.EVENT_MOUSE_MOVE, fxn, this);
+	d.addFunction(Canvas.EVENT_MOUSE_UP, fxn, this,  true);
+	//Canvas.EVENT_MOUSE_MOVE
+	
+
+	var size = new V2D(500,500);
+	//var gr = d.newGraphicsIntersection();
+	var gr = d.graphics();
+	gr.clear();
+	gr.setFill(0xFF00FF00);
+	gr.setLine(2.0, 0xCCCC0000);
+	gr.beginPath();
+	gr.drawRect(0,0, size.x,size.y);
+	gr.endPath();
+	gr.fill();
+	gr.strokeLine();
+
+
 }
 GizmoToggle = function(root, size){
 	// list of option / buttons
@@ -327,6 +362,8 @@ App3DR.App.ImageEditor.prototype._render = function(){
 					maxCoordinate.max(imgP);
 				}
 			}
+if(minCoordinate){
+//var focusPoint = this._explorer.focusPoint();
 			var minX = Math.floor(minCoordinate.x);
 			var minY = Math.floor(minCoordinate.y);
 			var maxX = Math.ceil(maxCoordinate.x);
@@ -347,28 +384,27 @@ App3DR.App.ImageEditor.prototype._render = function(){
 			var sizeX = scale*countX;
 			var sizeY = scale*countY;
 			
-			
-
 			// only draw image for zoomed out
 			//d.graphics().alpha(0.1);
 
 			if(!doSelfPixels){
-				d = this._displayImageContainer;
+				d = this._displayImage;
 				d.matrix().identity();
-				d.matrix().translate(-sizeX*0.5, -sizeY*0.5);
+				d.matrix().translate( (minX - sourceWidth*0.5)*scale, (minY - sourceHeight*0.5)*scale);
+				// already scaled
 				d.matrix().rotate(angle);
+				d.matrix().translate(offset.x, offset.y);// center of box
 				d.matrix().translate(containerSize.x*0.5, containerSize.y*0.5);
-				d.matrix().translate(offset.x, offset.y);
+				
 				d = this._displayImage;
 				d.image(img);
 				d.drawClippedImage(minX,minY,countX,countY, 0,0,sizeX,sizeY);
 			}else{
-				d = this._displayImageContainer;
+				d = this._displayImage;
 				d.matrix().identity();
 				d.graphics().clear();
-				d = this._displayImage;
-				d.graphics().clear();
 			}
+//			d.graphics().alpha(0.1);
 
 			// PIXELS
 			d = this._displayPixels;
@@ -386,6 +422,7 @@ App3DR.App.ImageEditor.prototype._render = function(){
 			// do pixel colors
 			if(doSelfPixels){ // 9604, 2500
 				var imageMatrix = this._testImageMatrix;
+				var maskMatrix = this._testImageMaskMatrix;
 				d.graphics().setLine(0.0, 0x0);
 				for(i=0; i<countX; ++i){
 					var pI1 = (i/countX);
@@ -407,15 +444,29 @@ App3DR.App.ImageEditor.prototype._render = function(){
 							continue; // not correct if only an edge is inside -- expand the rect by a pixel length
 						}
 						*/
-						var color = imageMatrix.getHex(i+minX,j+minY);
-						d.graphics().beginPath();
-						d.graphics().setFill(color);
-						d.graphics().moveTo(a.x,a.y);
-						d.graphics().lineTo(b.x,b.y);
-						d.graphics().lineTo(c.x,c.y);
-						d.graphics().lineTo(e.x,e.y);
-						d.graphics().endPath();
-						d.graphics().fill();
+						var indI = i+minX;
+						var indJ = j+minY;
+						var color = imageMatrix.getHex(indI,indJ);
+						var col = new V2D();
+						maskMatrix.getPoint(col, indI,indJ);
+						if(col.x>0){
+							col = 0x9900FF00;
+						}else{
+							col = 0x0000FF00;
+						}
+						var colors = [color,col];
+						for(k=0; k<colors.length; ++k){
+							var cc = colors[k];
+							d.graphics().beginPath();
+							d.graphics().setFill(cc);
+							d.graphics().moveTo(a.x,a.y);
+							d.graphics().lineTo(b.x,b.y);
+							d.graphics().lineTo(c.x,c.y);
+							d.graphics().lineTo(e.x,e.y);
+							d.graphics().endPath();
+							d.graphics().fill();
+						}
+						// var img = this._testImageMaskMatrix;
 						var textHei = 12;
 						if(zoom>=textHei*3){ // hex
 							var text = Code.getHex(color&0x00FFFFFF, true).toUpperCase();
@@ -436,15 +487,22 @@ App3DR.App.ImageEditor.prototype._render = function(){
 
 		if(zoom>=4){
 			var color;
-			if(zoom<=4){
-				color = 0x66000000;
-			}else if(color<16){
-				color = 0x99000000;
-			}else if(color<23){
-				color = 0xCC000000;
-			}else{
-				color = 0xFF000000;
-			}
+			var minScale = 4;
+			var maxScale = 32;
+			var ranScale = (maxScale-minScale);
+			var pct = (zoom-minScale)/ranScale;
+			pct = Math.pow(pct,.5);//Math.log(1+pct)/Math.log(2);
+			var alpha = Math.min(Math.max(pct,0),1);
+			color = Code.getColARGBFromFloat(alpha,0,0,0);
+			// if(zoom<=4){
+			// 	color = 0x66000000;
+			// }else if(color<16){
+			// 	color = 0x99000000;
+			// }else if(color<23){
+			// 	color = 0xCC000000;
+			// }else{
+			// 	color = 0xFF000000;
+			// }
 			d.graphics().beginPath();
 			d.graphics().setLine(1.0, color);
 			for(i=0; i<=countX; ++i){
@@ -466,6 +524,21 @@ App3DR.App.ImageEditor.prototype._render = function(){
 			d.graphics().strokeLine();
 		}
 	}
+}
+}
+App3DR.App.ImageEditor.prototype._colorMaskImage = function(location, fill){
+	var locationX = Math.floor(location.x);
+	var locationY = Math.floor(location.y);
+	var img = this._testImageMaskMatrix;// = new ImageMat(imageMatrix.width(),imageMatrix.height());
+	if( 0<=locationX && locationX < img.width() && 0<=locationY && locationY < img.height() ){
+		var val = new V3D(0,0,0);
+		if(fill){
+			val = new V3D(1,1,1);
+		}
+		img.setPoint(locationX,locationY, val);
+		return true;
+	}
+	return false;
 }
 App3DR.App.ImageEditor.prototype._zoomIn = function(){
 	this._explorer.updateScale( this._explorer.scale()*2.0 );
@@ -506,8 +579,22 @@ App3DR.App.ImageEditor.prototype.handleKeyDown = function(e){
 }
 App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
 	App3DR.App.ImageEditor._.handleMouseDown.call(this, e);
-	this._drag = e["location"];
-	console.log(this._drag);
+	var location = e["location"];
+	var containerSize = this._explorer._containerSize;
+	var canvasSize = this._canvas.size();
+	var corner = new V2D((canvasSize.x - containerSize.x)*0.5, (canvasSize.y - containerSize.y)*0.5);
+	var container = location.copy().sub(corner);
+	var imageLocation = this._explorer.toLocalPoint(container);
+	
+	console.log(imageLocation);
+	var colored = this._colorMaskImage(imageLocation,true);
+	if(colored){
+		this._render();
+	}
+
+
+//	this._drag = e["location"];
+//	console.log(this._drag);
 }
 App3DR.App.ImageEditor.prototype.handleMouseMove = function(e){
 	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
@@ -521,7 +608,6 @@ App3DR.App.ImageEditor.prototype.handleMouseUp = function(e){
 
 
 
-
 App3DR.Explorer2D = function(){
 	this._containerSize = new V2D();
 	this._subjectSize = new V2D();
@@ -529,10 +615,11 @@ App3DR.Explorer2D = function(){
 	this._subjectScale = 1.0;
 	this._subjectRotation = 0.0;
 	//
-	this._scaleRangeMin = Math.pow(2,-5);//0.1; 1/32
-	this._scaleRangeMax = Math.pow(2,7);//10.0;   64
+	this._scaleRangeMin = Math.pow(2,-5); //0.1; 1/32
+	this._scaleRangeMax = Math.pow(2,7); //10.0;   64
 	this._rotateRangeMin = null;
 	this._rotateRangeMax = null;
+//	this._focus = new V2D();
 }
 App3DR.Explorer2D.prototype.offset = function(){
 	return this._subjectCenter;
@@ -559,6 +646,11 @@ App3DR.Explorer2D.prototype.axes = function(){
 	var x = V2D.sub(bounds[1],bounds[0]);
 	var y = V2D.sub(bounds[3],bounds[0]);
 	return {"x":x, "y":y, "o":o};
+}
+App3DR.Explorer2D.prototype.toScreenPoint = function(p){
+	var matrix = this._matrix();
+	var q = matrix.multV2D(p);
+	return q;
 }
 App3DR.Explorer2D.prototype.toLocalPoint = function(p){
 	var matrix = this._matrix();
@@ -599,19 +691,27 @@ App3DR.Explorer2D.prototype.setSizes = function(container, subject){
 	this._subjectSize.copy(subject);
 }
 App3DR.Explorer2D.prototype.updateScale = function(desired){
+	var focus = this.focusPoint();
 	var scale = desired;
 	if(this._scaleRangeMin){
+		
+		// MOVE OFFSET TO ACCOUNT FOR CHANGE IN SCALE ABOUT 
+		this._focus;
 		scale = Code.clamp(scale, this._scaleRangeMin, this._scaleRangeMax);
 	}
 	this._subjectScale = scale;
+	this.toFocusPoint(focus);
 	return scale;
 }
 App3DR.Explorer2D.prototype.updateRotation = function(desired){
+	var focus = this.focusPoint();
 	var angle = desired;
 	if(this._rotateRangeMin){
+		this._focus;
 		angle = Code.clamp(angle, this._rotateRangeMin, this._rotateRangeMax);
 	}
 	this._subjectRotation = angle;
+	this.toFocusPoint(focus);
 	return angle;
 }
 App3DR.Explorer2D.prototype.updateOffset = function(desired){
@@ -621,9 +721,20 @@ App3DR.Explorer2D.prototype.updateOffset = function(desired){
 	// ...
 	return offset;
 }
-App3DR.Explorer2D.prototype.visibleSubject = function(){
-
+App3DR.Explorer2D.prototype.toFocusPoint = function(p){ // focus on pixel
+	var center = this._containerSize.copy().scale(0.5);
+	var screen = this.toScreenPoint(p);
+	var centerToPoint = V2D.sub(screen,center);
+	var scaled = centerToPoint.copy().scale(-1);
+	this._subjectCenter.add(scaled);
 }
+App3DR.Explorer2D.prototype.focusPoint = function(p){ // currently focused pixel
+	var center = this._containerSize.copy().scale(0.5);
+	var f = this.toLocalPoint( center );
+	return f;
+}
+
+
 
 
 

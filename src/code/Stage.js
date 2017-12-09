@@ -10,12 +10,12 @@ function Stage(can, fr){
 	this._time = 0;
 	this._tempCanvas = new Canvas(null,100,100,Canvas.STAGE_FIT_FIXED,true);
 	this._renderCanvas = new Canvas(null,100,100,Canvas.STAGE_FIT_FIXED,true);
-	this._eventList = new Object(); // hash
-	var evts = [Canvas.EVENT_MOUSE_UP,Canvas.EVENT_MOUSE_DOWN,Canvas.EVENT_MOUSE_CLICK,Canvas.EVENT_MOUSE_MOVE, Canvas.EVENT_MOUSE_EXIT,
-			Canvas.EVENT_MOUSE_UP_OUTSIDE,Canvas.EVENT_MOUSE_DOWN_OUTSIDE,Canvas.EVENT_MOUSE_CLICK_OUTSIDE,Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
-	for(var e in evts){
-		this._eventList[evts[e]] = new Array();
-	}
+	this._eventList = {};//new Object(); // hash
+	// var evts = [Canvas.EVENT_MOUSE_UP,Canvas.EVENT_MOUSE_DOWN,Canvas.EVENT_MOUSE_CLICK,Canvas.EVENT_MOUSE_MOVE, Canvas.EVENT_MOUSE_EXIT,
+	// 		Canvas.EVENT_MOUSE_UP_OUTSIDE,Canvas.EVENT_MOUSE_DOWN_OUTSIDE,Canvas.EVENT_MOUSE_CLICK_OUTSIDE,Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
+	// for(var e in evts){
+	// 	this._eventList[evts[e]] = new Array();
+	// }
 	this._root = new DO();
 	DO.addToStageRecursive(this._root,this);
 	this._root.graphics().clear();
@@ -69,23 +69,70 @@ Stage.prototype.alertAll = function(str,obj){
 	Stage._.alertAll.call(this,str,obj);
 //	this.alertFunctionDisplay(str,obj);
 }
-
-Stage.prototype.alertFunctionDisplay = function(str){
+// Stage.prototype.alertFunctionDisplay = function(str){
+// 	var list = this._eventList[str];
+// 	if(list!=null && list.length>0){
+// 		for(var i=0; i<list.length; ++i){
+// 			var item = list[i];
+// 			var obj = item[0];
+// 			var fxn = item[1];
+// 			var ctx = item[2];
+// 			if(fxn && ctx && obj){
+// 				fxn.call(ctx,obj);
+// 			}
+// 		}
+// 	}
+// }
+Stage.prototype.functionListFor = function(str){
 	var list = this._eventList[str];
-	if(list!=null && list.length>0){
-		for(var i=0; i<list.length; ++i){
-			var item = list[i];
-			var obj = item[0];
-			var fxn = item[1];
-			var ctx = item[2];
-			if(fxn && ctx && obj){
-				fxn.call(ctx,obj);
-			}
-		}
+	if(list){
+		return list;
 	}
+	return null;
+
+// 	var evt = eventData;
+// 	// var pos = event["location"];
+// 	//arr = new Array( intersection, pos );
+// 	path = new Array();
+// 	// OUTSIDE
+// 	var list = null;
+// 	if(evt==Canvas.EVENT_MOUSE_UP){ // || evt==Canvas.EVENT_MOUSE_EXIT){
+// 		var list = this._eventList[Canvas.EVENT_MOUSE_UP_OUTSIDE];
+// 	}else if(evt==Canvas.EVENT_MOUSE_DOWN){
+// 		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN_OUTSIDE];
+// // ???
+// 		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN];
+// 	}else if(evt==Canvas.EVENT_MOUSE_CLICK){
+// 		var list = this._eventList[Canvas.EVENT_MOUSE_CLICK_OUTSIDE];
+// 	}else if(evt==Canvas.EVENT_MOUSE_MOVE){
+// 		var list = this._eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
+// /// var list = this._eventList[str];
+// //var list = this._eventList[Canvas.EVENT_MOUSE_MOVE];
+// 		this._performFxnOnDisplay(this._root, function(d){ if(d._mouseOver){d._mouseWasOver=true;} d._mouseOver=false; } );
+// 		/*
+// 		go thru entire stack and:
+// 			if ch._mouseOver==true
+// 				ch._mouseWasOver = true
+// 			ch._mouseOver = false
+// 		if intersection: go over hierarchy and:
+// 			ch._mouseOver = true
+// 			if ch._mouseWasOver == false
+// 				:::ALERT MOUSE ENTER
+// 		go thru entire stack and:
+// 			if ch._mouseWasOver == true
+// 				:::ALERT MOUSE EXIT
+// 			ch._mouseWasOver = false
+// 		*/
+// 	}
 }
 Stage.prototype.addFunctionDisplay = function(obj,str,fxn,ctx){
 	console.log("addFunctionDisplay: "+str);
+	if(this._eventList[str]==null){
+		this._eventList[str] = [];
+	}
+	this._eventList[str].push([obj,fxn,ctx,obj]);
+return;
+
 	if(this._eventList[str]!=null){
 		this._eventList[str].push([obj,fxn,ctx]);
 	}else{
@@ -93,7 +140,7 @@ Stage.prototype.addFunctionDisplay = function(obj,str,fxn,ctx){
 		console.log("NOT EXIST ");
 	}
 }
-Stage.prototype.removeFunctionDisplay = function(obj,str,fxn){
+Stage.prototype.removeFunctionDisplay = function(obj,str,fxn,ctx){
 	var i, j, item, arr = this._eventList[str];
 	for(i=0;i<arr.length;++i){
 		item = arr[i];
@@ -297,66 +344,37 @@ Stage.prototype._performFxnOnDisplay = function(d,fxn){
 		this._performFxnOnDisplay(d._children[i],fxn);
 	}
 }
-Stage.prototype.canvasMouseEventPropagate = function(eventData,pos){ // POS IS THE GLOBAL POSITION INTERSECTION LOCATION
-	var evt = eventData;
-	// var pos = event["location"];
-	var path, arr, obj, intersection = this.getIntersection(pos,this._tempCanvas);
-	//arr = new Array( intersection, pos );
-	path = new Array();
-	// OUTSIDE
-	var list = null;
-	if(evt==Canvas.EVENT_MOUSE_UP){ // || evt==Canvas.EVENT_MOUSE_EXIT){
-		var list = this._eventList[Canvas.EVENT_MOUSE_UP_OUTSIDE];
-	}else if(evt==Canvas.EVENT_MOUSE_DOWN){
-		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN_OUTSIDE];
-// ???
-		var list = this._eventList[Canvas.EVENT_MOUSE_DOWN];
-	}else if(evt==Canvas.EVENT_MOUSE_CLICK){
-		var list = this._eventList[Canvas.EVENT_MOUSE_CLICK_OUTSIDE];
-	}else if(evt==Canvas.EVENT_MOUSE_MOVE){
-		var list = this._eventList[Canvas.EVENT_MOUSE_MOVE_OUTSIDE];
-/// var list = this._eventList[str];
-//var list = this._eventList[Canvas.EVENT_MOUSE_MOVE];
-		this._performFxnOnDisplay(this._root, function(d){ if(d._mouseOver){d._mouseWasOver=true;} d._mouseOver=false; } );
-		/*
-		go thru entire stack and:
-			if ch._mouseOver==true
-				ch._mouseWasOver = true
-			ch._mouseOver = false
-		if intersection: go over hierarchy and:
-			ch._mouseOver = true
-			if ch._mouseWasOver == false
-				:::ALERT MOUSE ENTER
-		go thru entire stack and:
-			if ch._mouseWasOver == true
-				:::ALERT MOUSE EXIT
-			ch._mouseWasOver = false
-		*/
-	}
+Stage.prototype.canvasMouseEventPropagate = function(eventName,eventData){ // POS IS THE GLOBAL POSITION INTERSECTION LOCATION
+	var list = this.functionListFor(eventName);
+	var pos = eventData["location"];
+
+	var path, arr, obj, fxn, ctx, evtObj, item;
 	var cum = new Matrix2D();
-	//var arr;
+	var intersection = this.getIntersection(pos,this._tempCanvas);
 	if(list){ // OUTSIDE ALERTING
-//console.log("list",list)
 		for(var i=0;i<list.length;++i){
-			var obj = list[i][0];
-			if(intersection!=obj){ // is not object of intersection
+			item = list[i];
+			obj = item[0];
+			if(true){ // if(intersection!=obj){ // is not object of intersection
+				fxn = item[1];
+				ctx = item[2];
 				cum.identity();
 				while(obj != null){
 					cum.mult(obj.matrix(),cum);
 					obj = obj.parent();
 				}
-				var o = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))};
-				if(list[i].length>2){
-					list[i][1].call( list[i][2], o );
+				evtObj = Stage._objectFrom(intersection, cum, pos, eventData);
+				if(fxn && ctx){
+					fxn.call(ctx, evtObj);
 				}else{
-					list[i][1]( o );
+					fxn(evtObj);
 				}
 			}
 		}
 	}
-	var evtObj
 	if(intersection){ // ANCESTOR INSIDE ALERT
 		obj = intersection;
+		path = [];
 		while(obj){ // } && obj.parent()){ // top parent = root ; and assuming root has identity
 			path.push(obj);
 			obj = obj.parent();
@@ -365,25 +383,33 @@ Stage.prototype.canvasMouseEventPropagate = function(eventData,pos){ // POS IS T
 		while(path.length>0){ // run path 
 			obj = path.pop();
 			cum.mult(cum,obj.matrix());
-			evtObj = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))}
-			obj._mouseOver = true;
-			if(!obj._mouseWasOver){
-				// console.log("MOUSE ENTERED");
-				obj.alertAll(DO.EVENT_MOUSE_IN,{"target":obj}); // TARGET IS ACTUALLY INTERSECTION
-			}
-			obj.alertAll( evt, evtObj );
+			evtObj = Stage._objectFrom(intersection, cum, pos, eventData);
+			// obj._mouseOver = true;
+			// if(!obj._mouseWasOver){
+			// 	// console.log("MOUSE ENTERED");
+			// 	obj.alertAll(DO.EVENT_MOUSE_IN,{"target":obj}); // TARGET IS ACTUALLY INTERSECTION
+			// }
+			obj.alertAll(eventName, evtObj );
 		}
 	}
-	if(evt==Canvas.EVENT_MOUSE_MOVE){
-		//evtObj = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))}
-		// TARGET IS ACTUALLY THE LOWEST SINGLE CHILD
-		this._performFxnOnDisplay(this._root, function(d){ if(d._mouseWasOver && !d._mouseOver){ d.alertAll(DO.EVENT_MOUSE_OUT,{"target":d}); } d._mouseWasOver=false; } );
-	}
-	// arr = null; 
-	pos = null; //Code.emptyArray(arr); // results in undefined sent to events
+	// if(evt==Canvas.EVENT_MOUSE_MOVE){
+	// 	//evtObj = {"target":intersection,"local":DO.getPointFromTransform(new V2D(),cum,pos),"global":(new V2D().copy(pos))}
+	// 	// TARGET IS ACTUALLY THE LOWEST SINGLE CHILD
+	// 	this._performFxnOnDisplay(this._root, function(d){ if(d._mouseWasOver && !d._mouseOver){ d.alertAll(DO.EVENT_MOUSE_OUT,{"target":d}); } d._mouseWasOver=false; } );
+	// }
+
+}
+Stage._objectFrom = function(target, cum, pos, dat){
+	var glob = pos.copy();
+	var local = DO.getPointFromTransform(new V2D(),cum,pos);
+	var obj = {};
+		obj["target"] = target;
+		obj["local"] = local;
+		obj["global"] = glob;
+		obj["data"] = dat;
+	return obj;
 }
 Stage.prototype._canvasMouseDown = function(e){
-	console.log("alerted mouse down");
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
 	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
 }
@@ -403,20 +429,18 @@ Stage.prototype._canvasMouseExit = function(e){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_EXIT,e); // ...
 	this.alertAll(Canvas.EVENT_MOUSE_EXIT,e);
 }
-
 Stage.prototype._canvasTouchStart = function(e){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_DOWN,e);
-//	this.alertAll(Canvas.EVENT_MOUSE_DOWN,e);
+	this.alertAll(Canvas.EVENT_MOUSE_START,e);
 }
 Stage.prototype._canvasTouchMove = function(e){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_MOVE,e);
-//	this.alertAll(Canvas.EVENT_MOUSE_MOVE,e);
+	this.alertAll(Canvas.EVENT_TOUCH_MOVE,e);
 }
 Stage.prototype._canvasTouchEnd = function(e){
 	this.canvasMouseEventPropagate(Canvas.EVENT_MOUSE_UP,e);
-//	this.alertAll(Canvas.EVENT_MOUSE_UP,e);
+	this.alertAll(Canvas.EVENT_TOUCH_END,e);
 }
-
 Stage.prototype.kill = function(){
 	Stage._.kill.call(this);
 }

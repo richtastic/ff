@@ -49,9 +49,13 @@ Dispatchable.prototype.addFunction = function(str,fxn,ctx,obj){
 }
 Dispatchable.prototype.removeFunction = function(str,fxn,ctx,obj){
 	this._checkDispatchExistsOrCreate();
-	this._dispatch.removeFunction(str,fxn,ctx,obj);
+	if(this._dispatch){
+		this._dispatch.removeFunction(str,fxn,ctx,obj);
+	}
 }
 Dispatchable.prototype.alertAll = function(str,o){
-	this._checkDispatchExistsOrCreate();
-	this._dispatch.alertAll.apply(this._dispatch,arguments);
+	//this._checkDispatchExistsOrCreate();
+	if(this._dispatch){
+		this._dispatch.alertAll.apply(this._dispatch,arguments);
+	}
 }

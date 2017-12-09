@@ -33,6 +33,8 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 			}else{
 				this.setFromFloats(r,r,r);
 			}
+		}else{
+			this.zeroAll();
 		}
 	}
 }
@@ -72,6 +74,14 @@ ImageMat.prototype.setPoint = function(x,y, val){
 	this._r[index] = val.x;
 	this._g[index] = val.y;
 	this._b[index] = val.z;
+	return val;
+}
+ImageMat.prototype.get = function(x,y, val){
+	var index = y*this.width() + x;
+	val.x = this._r[index];
+	val.y = this._g[index];
+	val.z = this._b[index];
+	return val;
 }
 ImageMat.prototype.getPoint = function(val, x,y){
 	this.getPointInterpolateCubic(val,x,y);
