@@ -328,7 +328,7 @@ Graphics.prototype.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch
 }
 Graphics.prototype.drawImagePattern = function(pat,pX,pY,wid,hei){
 	// inject rather than append ?
-	console.log("draw image pattern .... ",pat);
+//	console.log("draw image pattern .... ",pat);
 	this._graphics.push( Code.newArray(Graphics.canvasSetFill,Code.newArray(pat)) );
 	this._graphics.push( Code.newArray(Graphics.canvasDrawRect,Code.newArray(pX,pY,wid,hei)) );
 	// ?

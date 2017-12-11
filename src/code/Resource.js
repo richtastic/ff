@@ -1,4 +1,6 @@
 // Resource.js
+Resource.EVENT_START = "rsc.str";
+Resource.EVENT_LOADED = "rsc.lod";
 
 function Resource(complete, context){
 	Resource._.constructor.call(this);
@@ -19,11 +21,18 @@ function Resource(complete, context){
 	this._fxnComplete = null;
 	this.completeFxn(complete);
 	this.context(context);
+	this._loaded = false;
 }
 Code.inheritClass(Resource,Dispatchable);
 // --------------------------------------------------------------------------------------------
+Resource.prototype.loaded = function(){
+	return this._loaded;
+}
 Resource.prototype.tex = function(i){
-	return this._tex[i];
+	if(0<=i && i<this._tex.length){
+		return this._tex[i];
+	}
+	return null;
 }
 // loading ------------------------------------------------------------------------------
 Resource.prototype.context = function(ctx){
@@ -32,8 +41,15 @@ Resource.prototype.context = function(ctx){
     }
     return this._context;
 }
+Resource.prototype.context = function(ctx){
+    if(ctx!==undefined){
+        this._context = ctx;
+    }
+    return this._context;
+}
 Resource.prototype.load = function(){
 	console.log("start load");
+	this.alertAll(Resource.EVENT_START, this);
 	this._load1();
 }
 Resource.prototype._load1 = function(){ // images
@@ -65,6 +81,7 @@ Resource.prototype._load4 = function(){ // font complete |
 	this._fxnLoader.load();
 }
 Resource.prototype._load5 = function(){ // functions complete
+	this.alertAll(Resource.EVENT_LOADED, this);
 	if(this._fxnComplete!=null){
 		this._fxnComplete.call(this._context,{});
 	}

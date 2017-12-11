@@ -142,14 +142,16 @@ return;
 }
 Stage.prototype.removeFunctionDisplay = function(obj,str,fxn,ctx){
 	var i, j, item, arr = this._eventList[str];
-	for(i=0;i<arr.length;++i){
-		item = arr[i];
-		if(item[0]==obj && item[1]==fxn){
-			if(arr.length>i){
-				arr[i] = arr[arr.length-1];
+	if(arr){
+		for(i=0;i<arr.length;++i){
+			item = arr[i];
+			if(item[0]==obj && item[1]==fxn){
+				if(arr.length>i){
+					arr[i] = arr[arr.length-1];
+				}
+				arr.pop();
+				break; // assume single
 			}
-			arr.pop();
-			break; // assume single
 		}
 	}
 }
@@ -352,7 +354,7 @@ Stage.prototype.canvasMouseEventPropagate = function(eventName,eventData){ // PO
 	var cum = new Matrix2D();
 	var intersection = this.getIntersection(pos,this._tempCanvas);
 // console.log("intersection:");
-//console.log(intersection);
+// console.log(intersection);
 // console.log(" hierarchy: \n");
 // this._root.print();
 // console.log(" \n");

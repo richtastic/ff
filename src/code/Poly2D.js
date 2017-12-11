@@ -809,7 +809,7 @@ var doneEdgeArray = [];
 	var count = 0;
 	while( !eventQueue.isEmpty() && count < iteration ){
 		++count;
-		// console.log("EVENT QUEUE: \n"+eventQueue.toStringLinear());
+//		console.log("EVENT QUEUE: \n"+eventQueue.toStringLinear());
 		// console.log("SWEEP LINE: \n"+sweepLine.toStringLinear());
 		event = eventQueue.minimum();
 		eventQueue.popMinimum(); // eventQueue.removeObject(event); // 

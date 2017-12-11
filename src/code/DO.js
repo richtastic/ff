@@ -92,12 +92,15 @@ DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinatio
 	if(destinationElement==undefined){ destinationElement = null; }
 	var ele = sourceElement;
 	DO._tempMatrix.copy(ele.matrix()); // .identity() ?
+	//DO._tempMatrix.identity();
 	while(ele != destinationElement && ele != undefined){
 		ele = ele.parent();
 		if(ele){
-			DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
+			//DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
+			DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
 		}
 	}
+DO._tempMatrix.inverse(DO._tempMatrix);
 	DO._tempMatrix.multV2D(destinationPoint,sourcePoint);
 	return destinationPoint;
 }

@@ -48,11 +48,12 @@ var fxn = function(){
 	}
 	var resource = new App3DR.Resource(fxn);
 	resource.load();
+this._resource = resource;
 
 
 
 
-var app = new App3DR.App.ImageEditor();
+var app = new App3DR.App.ImageEditor(this._resource);
 this.setupAppActive(app);
 
 
@@ -104,21 +105,46 @@ App3DR.Resource = function(complete, context){
 	App3DR.Resource._.constructor.call(this, complete, context);
 	console.log("new")
 	var imageBase = "./images/";
+	var icons = "icons/"
 	var img = [];
 		img[App3DR.Resource.TEX_BG_MAIN] = "background.png";
 		img[App3DR.Resource.TEX_BG_CHECKERBOARD] = "bg_checkerboard_repeat.png";
+		img[App3DR.Resource.TEX_CASE_STUDY_EXAMPLE] = "../../images/caseStudy1-9.jpg";
+		img[App3DR.Resource.TEX_BUTTON_HEX_ACTIVE] = "button_base_active.png";
+		img[App3DR.Resource.TEX_BUTTON_HEX_INACTIVE] = "button_base_inactive.png";
+		img[App3DR.Resource.TEX_BUTTON_HEX_SELECTED] = "button_base_selected.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_LINK] = icons+"icon_button_link.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_PLUS] = icons+"icon_button_plus.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_MINUS] = icons+"icon_button_minus.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_UNDO] = icons+"icon_button_undo.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_GRID] = icons+"icon_button_grid.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_FEATURE] = icons+"icon_button_feature.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_DROP] = icons+"icon_button_drop.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_ARROW_DOWN] = icons+"icon_button_arrow_down_full.png";
 	this._imgLoader.setLoadItems(imageBase,img);
 	// this._imgLoader.addLoadItem(imageBase, "background.png");
 	// this._imgLoader.addLoadItem(imageBase, "bg_checkerboard_repeat.png");
-	//
 }
 Code.inheritClass(App3DR.Resource,Resource);
 App3DR.Resource.TEX_BG_MAIN = 0;
 App3DR.Resource.TEX_BG_CHECKERBOARD = 1;
+App3DR.Resource.TEX_CASE_STUDY_EXAMPLE = 2;
+App3DR.Resource.TEX_BUTTON_HEX_ACTIVE = 3;
+App3DR.Resource.TEX_BUTTON_HEX_INACTIVE = 4;
+App3DR.Resource.TEX_BUTTON_HEX_SELECTED = 5;
+App3DR.Resource.TEX_BUTTON_ICON_LINK = 6;
+App3DR.Resource.TEX_BUTTON_ICON_PLUS = 7;
+App3DR.Resource.TEX_BUTTON_ICON_MINUS = 8;
+App3DR.Resource.TEX_BUTTON_ICON_UNDO = 9;
+App3DR.Resource.TEX_BUTTON_ICON_GRID = 10;
+App3DR.Resource.TEX_BUTTON_ICON_FEATURE = 11;
+App3DR.Resource.TEX_BUTTON_ICON_DROP = 12;
+App3DR.Resource.TEX_BUTTON_ICON_ARROW_DOWN = 13;
 
 // ------------------------------------------------------------------------------------------------------------
 
-App3DR.App = function(canvas){
+App3DR.App = function(resource){
+	this._resource = resource;
 	this._root = new DO();
 	this._canvas = null;
 	this._stage = null;
@@ -136,6 +162,7 @@ App3DR.App.prototype.setActive = function(canvas,stage,parent, min,max){
 	this._root.matrix().identity();
 	this._root.matrix().translate(min.x,min.y);
 	console.log("active");
+	
 }
 App3DR.App.prototype.handleEnterFrame = function(e){
 }
@@ -154,24 +181,34 @@ App3DR.App.prototype.updateSize = function(min,max){
 	this._max = max;
 }
 
-App3DR.App.ImageEditor = function(){
-	App3DR.App.ImageEditor._.constructor.call(this);
+App3DR.App.ImageEditor = function(resource){
+	App3DR.App.ImageEditor._.constructor.call(this, resource);
 	this._explorer = new App3DR.Explorer2D();
-	var imageLoader = new ImageLoader("../images/",["caseStudy1-9.jpg"], this,this._handleTestImageLoaded,null);
-	imageLoader.load();
+	// var imageLoader = new ImageLoader("../images/",["caseStudy1-9.jpg"], this,this._handleTestImageLoaded,null);
+	// imageLoader.load();
 }
 Code.inheritClass(App3DR.App.ImageEditor, App3DR.App);
+App3DR.App.ImageEditor.prototype._handleResourceLoaded = function(){
+//	console.log("galaxy");
+	var resource = this._resource;
+	this._imageCheckerboard = resource.tex(App3DR.Resource.TEX_BG_CHECKERBOARD);
+//	console.log(this._imageCheckerboard);
+	this._testImageSource = resource.tex(App3DR.Resource.TEX_CASE_STUDY_EXAMPLE);
+/*
+}
 App3DR.App.ImageEditor.prototype._handleTestImageLoaded = function(imageInfo){
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
 	this._testImageSource = imageList[0];
+	*/
 		var stage = this._stage;
-		var imageSource = this._testImageSource
+		var imageSource = this._testImageSource;
 		var imageFloat = stage.getImageAsFloatRGB(imageSource);
 		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
 	this._testImageMatrix = imageMatrix;
 	this._testImageMaskMatrix = new ImageMat(imageMatrix.width(),imageMatrix.height());
 	// ...
+
 
 	var img = this._testImageSource;
 	var sourceWidth = img.width;
@@ -181,22 +218,88 @@ App3DR.App.ImageEditor.prototype._handleTestImageLoaded = function(imageInfo){
 	siz = Math.min(size.x,size.y);
 	size.set(siz,siz);
 	this._explorer.setSizes(size, new V2D(sourceWidth,sourceHeight) );
+
+	this._displayBackground.image(this._imageCheckerboard);
+	this._displayImageAlpha = 0.75;
+	this._maskColor = 0x6600FF00;
+
+	this._testButton();
+
 	this._render();
+}
+App3DR.App.ImageEditor.prototype.updateMaskImageFromMatrix = function(){
+	var matrix = this._testImageMaskMatrix;
+	var stage = this._stage;
+
+	var color = this._maskColor;//0x00FF00;
+	var width = matrix.width();
+	var height = matrix.height();
+	var alp = Code.copyArray(matrix.red()); // any of 3
+	var a = Code.getFloatAlpARGB(color);
+	var r = Code.getFloatRedARGB(color);
+	var g = Code.getFloatGrnARGB(color);
+	var b = Code.getFloatBluARGB(color);
+//	console.log(Code.getHex(color),a,r,g,b)
+	var count = width*height;
+	// getFloatRedARGB
+	//Code.getRedRGBA
+	var red = new Array(count);
+	var grn = new Array(count);
+	var blu = new Array(count);
+	var i;
+	for(i=0; i<count; ++i){
+		red[i] = r;
+		grn[i] = g;
+		blu[i] = b;
+		alp[i] = alp[i] * a; // 1 or 0 * a
+	}
+	var image = stage.getFloatARGBAsImage(alp,red,grn,blu, width, height);
+	// 
+	// this._displayMaskImage.
+	this._imageMaskSource = image;
+	// .getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
 }
 App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,max){
 	App3DR.App.ImageEditor._.setActive.call(this, canvas,stage,parent, min,max);
-	console.log("setup screen");
 
-	this._displayBackground = new DO();
+	this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+
+	// setup screen
+	this._displayBackground = new DOImage();
 	this._displayPixels = new DO();
 	//this._displayImageContainer = new DOImage();
+	this._displayMaskImage = new DOImage();
 	this._displayImage = new DOImage();
 	this._root.addChild(this._displayBackground);
 		//this._root.addChild(this._displayImageContainer);
 		this._root.addChild(this._displayImage);
+		this._root.addChild(this._displayMaskImage);
 	this._root.addChild(this._displayPixels);
+	//this._root.addChild(this._displayBac);
 
-this._testButton();
+	this._areaInterfaceMove = new DO();
+	this._areaInterfaceRotate = new DO();
+	this._root.addChild(this._areaInterfaceMove);
+	this._root.addChild(this._areaInterfaceRotate);
+
+this._rotationAngle = null;
+
+	this._areaInterfaceMove.addFunction(Canvas.EVENT_MOUSE_UP, this.moveAreaHandleMouseUp, this);
+	this._areaInterfaceMove.addFunction(Canvas.EVENT_MOUSE_DOWN, this.moveAreaHandleMouseDown, this);
+
+	this._areaInterfaceRotate.addFunction(Canvas.EVENT_MOUSE_DOWN, this.rotateAreaHandleMouseDown, this);
+
+	this._imageMaskSource = null;
+
+
+	console.log(this._resource);
+	if(!this._resource.loaded()){
+		this._resource.addFunction(Resource.EVENT_LOADED, this._handleResourceLoaded, this);
+	}else{
+		this._handleResourceLoaded();
+	}
+
+	console.log("setup screen");
 /*
 	// UI
 	this._displayUI = new DO();
@@ -233,23 +336,67 @@ this._testButton();
 	* choose image transparancy
 */
 }
-App3DR.App.ImageEditor.prototype._testButton = function(){
+App3DR.App.generateButton = function(resource, parent, iconImage){
+
+	var imageActive = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_ACTIVE);
+	var imageInactive = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_INACTIVE);
+	var imageSelected = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_SELECTED);
+
+
 	var d = new DO();
-	var size = new V2D(200,230);
-	//var gr = d.newGraphicsIntersection();
-	var gr = d.graphics();
+	var size = new V2D(100,100);
+	var gr = d.newGraphicsIntersection();
+	//var gr = d.graphics();
 	gr.clear();
-	gr.setFill(0xFF0099DD);
-	gr.setLine(2.0, 0xCCCC0000);
+	gr.setFill(0xFF009900);
 	gr.beginPath();
 	gr.drawRect(0,0, size.x,size.y);
 	gr.endPath();
 	gr.fill();
-	gr.strokeLine();
 
 	var button = new DOButton();
-	this._root.addChild(button);
+	parent.addChild(button);
 	button.setDOHitArea(d);
+
+	var active = new DO();
+		d = new DOImage();
+		d.image(imageActive);
+		d.size(size.x,size.y);
+		active.addChild(d);
+		d = new DOImage();
+		d.image(iconImage);
+		d.size(size.x,size.y);
+		active.addChild(d);
+	button.setDOUnpressed(active);
+
+	var upscale = 1.2;
+	var pressed = new DO();
+		d = new DOImage();
+		d.image(imageSelected);
+		d.size(size.x,size.y);
+		pressed.addChild(d);
+		d = new DOImage();
+		d.image(iconImage);
+		d.size(size.x,size.y);
+		pressed.addChild(d);
+		d.matrix().identity();
+		d.matrix().translate(-size.x*0.5,-size.y*0.5);
+		d.matrix().scale(upscale);
+		d.matrix().translate(size.x*0.5,size.y*0.5);
+	button.setDOPressed(pressed);
+
+	var notactive = new DO();
+		d = new DOImage();
+		d.image(imageInactive);
+		d.size(size.x,size.y);
+		notactive.addChild(d);
+	button.setDOInactive(notactive);
+
+
+	// button.isActive(false);
+	// button.isActive(true);
+
+	
 
 	button.addFunction(DOButton.EVENT_SHORT_PRESS, function(d){
 		console.log("short press");
@@ -266,6 +413,49 @@ App3DR.App.ImageEditor.prototype._testButton = function(){
 	button.addFunction(DOButton.EVENT_PRESS_CANCEL, function(d){
 		console.log("cancel");
 	});
+
+	return button;
+}
+
+App3DR.App.ImageEditor.prototype._testButton = function(){
+	var resource = this._resource;
+	var imageIconLink = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_LINK);
+	var imageIconUndo = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_UNDO);
+	var imageIconPlus = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_PLUS);
+	var imageIconMinus = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_MINUS);
+	var imageIconUndo = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_UNDO);
+	var imageIconGrid = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_GRID);
+	var imageIconFeature = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_FEATURE);
+	var imageIconDrop = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_DROP);
+	var imageIconArrow = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_ARROW_DOWN);
+	//console.log(imageIconArrow)
+	var button;
+	var buttons = [];
+	button = App3DR.App.generateButton(resource, this._root, imageIconLink);
+	buttons.push(button);
+	button = App3DR.App.generateButton(resource, this._root, imageIconUndo);
+	buttons.push(button);
+	button = App3DR.App.generateButton(resource, this._root, imageIconPlus);
+	buttons.push(button);
+	button = App3DR.App.generateButton(resource, this._root, imageIconMinus);
+	buttons.push(button);
+	button = App3DR.App.generateButton(resource, this._root, imageIconDrop);
+	buttons.push(button);
+	button = App3DR.App.generateButton(resource, this._root, imageIconArrow);
+	buttons.push(button);
+	button = App3DR.App.generateButton(resource, this._root, imageIconFeature);
+	buttons.push(button);
+	var i;
+	for(i=0; i<buttons.length; ++i){
+		var y = 0;
+		var x = i * 100;
+		button = buttons[i];
+		if(i>=5){
+			y = 400;
+			x = (i-5)*100;
+		}
+		button.matrix().translate(x,y);
+	}
 }
 App3DR.App.ImageEditor.prototype.testDO = function(){
 	console.log("testDO");
@@ -347,6 +537,7 @@ GizmoSlider = function(root, size){
 }
 App3DR.App.ImageEditor.prototype._render = function(){
 	var canvas = this._canvas;
+	var size = this.size();
 	// var size = canvas.size();
 	var d;
 	// var d = new DO();
@@ -362,11 +553,45 @@ App3DR.App.ImageEditor.prototype._render = function(){
 	// 	d.graphics().strokeLine();
 	// this._root.addChild(d);
 
+	var percentHeader = 0.15;
+	var percentFooter = 0.15;
+	var percentRotate = 0.1;
+	var percentMove = 1.0 - percentHeader - percentRotate - percentFooter;
+	d = this._areaInterfaceMove;
+	var moveYStart = percentHeader;
+	var moveYEnd = moveYStart+percentMove;
+	var rotYStart = moveYEnd;
+	var rotYEnd = rotYStart+percentRotate;
 
-	size = this.size();
+	d.graphics().clear();
+	d.graphics().beginPath();
+	d.graphics().drawPolygon([
+		new V2D(0,size.y*moveYStart),
+		new V2D(size.x,size.y*moveYStart),
+		new V2D(size.x,size.y*moveYEnd),
+		new V2D(0,size.y*moveYEnd)
+		]);
+	d.graphics().endPath();
+	d.graphics().setFill(0x77FF0000);
+	d.graphics().fill();
+
+	d = this._areaInterfaceRotate;
+	d.graphics().clear();
+	d.graphics().beginPath();
+	d.graphics().drawPolygon([
+		new V2D(0,size.y*rotYStart),
+		new V2D(size.x,size.y*rotYStart),
+		new V2D(size.x,size.y*rotYEnd),
+		new V2D(0,size.y*rotYEnd)
+		]);
+	d.graphics().endPath();
+	d.graphics().setFill(0x7700FF00);
+	d.graphics().fill();
+
+	
 	var containerSize = this.size();
 	var containerClipPoly = [new V2D(0,0),new V2D(size.x,0),new V2D(size.x,size.y),new V2D(0,size.y)];
-
+	//
 		d = this._root;
 	this._root.mask(true);
 
@@ -378,8 +603,10 @@ App3DR.App.ImageEditor.prototype._render = function(){
 //	d.graphics().fill();
 
 
-/*
+
 	var d = this._displayBackground;
+	d.drawTilePattern(0,0, size.x,size.y);
+/*
 		d.graphics().clear();
 		d.graphics().setFill(0xFF666666);
 		d.graphics().setLine(2.0, 0xCCCC0000);
@@ -462,10 +689,12 @@ if(minCoordinate){
 
 			var sizeX = scale*countX;
 			var sizeY = scale*countY;
+
+// this._imageMaskSource
 			
 			// only draw image for zoomed out
 			//d.graphics().alpha(0.1);
-
+				
 			if(!doSelfPixels){
 				d = this._displayImage;
 				d.matrix().identity();
@@ -478,8 +707,21 @@ if(minCoordinate){
 				d = this._displayImage;
 				d.image(img);
 				d.drawClippedImage(minX,minY,countX,countY, 0,0,sizeX,sizeY);
+				d.graphics().alpha(this._displayImageAlpha);
+
+				// MASK
+				var e;
+				e = this._displayMaskImage;
+				if(this._imageMaskSource){
+					e.image(this._imageMaskSource);
+					e.drawClippedImage(minX,minY,countX,countY, 0,0,sizeX,sizeY);
+					e.matrix().copy( d.matrix() );
+				}
 			}else{
 				d = this._displayImage;
+				d.matrix().identity();
+				d.graphics().clear();
+				d = this._displayMaskImage;
 				d.matrix().identity();
 				d.graphics().clear();
 			}
@@ -526,12 +768,13 @@ if(minCoordinate){
 						var indI = i+minX;
 						var indJ = j+minY;
 						var color = imageMatrix.getHex(indI,indJ);
+							color = Code.setAlpFloatARGB(color, this._displayImageAlpha);
 						var col = new V2D();
 						maskMatrix.getPoint(col, indI,indJ);
 						if(col.x>0){
-							col = 0x9900FF00;
+							col = this._maskColor;
 						}else{
-							col = 0x0000FF00;
+							col = 0x00000000;
 						}
 						var colors = [color,col];
 						for(k=0; k<colors.length; ++k){
@@ -605,19 +848,39 @@ if(minCoordinate){
 	}
 }
 }
-App3DR.App.ImageEditor.prototype._colorMaskImage = function(location, fill){
+App3DR.App.ImageEditor.prototype._colorMaskImage = function(location, fill, diameter){
+	diameter = diameter!==undefined ? diameter : 1.0;
+console.log(diameter);
 	var locationX = Math.floor(location.x);
 	var locationY = Math.floor(location.y);
-	var img = this._testImageMaskMatrix;// = new ImageMat(imageMatrix.width(),imageMatrix.height());
-	if( 0<=locationX && locationX < img.width() && 0<=locationY && locationY < img.height() ){
-		var val = new V3D(0,0,0);
-		if(fill){
-			val = new V3D(1,1,1);
+	var img = this._testImageMaskMatrix;
+	var changed = false;
+	// TODO: skip if rect is outside
+	var i, j; 
+	var radius = diameter*0.5;
+	var radiusFloor = Math.floor(radius);
+	var radiusSquare = radius * radius;
+	var startI = locationX - radiusFloor;
+	var endI = locationX + radiusFloor;
+	var startJ = locationY - radiusFloor;
+	var endJ = locationY + radiusFloor;
+	for(i=startI; i<=endI; ++i){
+		for(j=startJ; j<=endJ; ++j){
+			var inside = Math.pow(locationX-i,2) + Math.pow(locationY-j,2) <= radiusSquare;
+			if( inside && 0<=i && i<img.width() && 0<=j && j<img.height() ){
+				var val = new V3D(0,0,0);
+				if(fill){
+					val = new V3D(1,1,1);
+				}
+				img.setPoint(i,j, val);
+				changed = true;
+			}
 		}
-		img.setPoint(locationX,locationY, val);
-		return true;
 	}
-	return false;
+	if(changed){
+		this.updateMaskImageFromMatrix(); // TODO: only when necessary at zoom-display level
+	}
+	return changed;
 }
 App3DR.App.ImageEditor.prototype._zoomIn = function(){
 	this._explorer.updateScale( this._explorer.scale()*2.0 );
@@ -656,32 +919,203 @@ App3DR.App.ImageEditor.prototype.handleKeyDown = function(e){
 		this._move( new V2D(0,moveSize) );
 	}
 }
-App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
-	App3DR.App.ImageEditor._.handleMouseDown.call(this, e);
-	var location = e["location"];
-	var containerSize = this._explorer._containerSize;
-	var canvasSize = this._canvas.size();
-	var corner = new V2D((canvasSize.x - containerSize.x)*0.5, (canvasSize.y - containerSize.y)*0.5);
-	var container = location.copy().sub(corner);
-	var imageLocation = this._explorer.toLocalPoint(container);
-	
-	var colored = this._colorMaskImage(imageLocation,true);
-	if(colored){
+App3DR.App.ImageEditor.prototype.moveAreaHandleMouseUp = function(e){
+	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	if(move){
+		var data = e["data"];
+		var location = data["location"];
+		this._explorer.mouseUp(location);
+		this.moveAreaCancel();
 		this._render();
 	}
+}
+App3DR.App.ImageEditor.prototype.moveAreaHandleMouseDown = function(e){
+	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	if(move){
+		var data = e["data"];
+		var location = data["location"];
+		this._explorer.mouseDown(location);
+		this._render();
+		this._areaInterfaceMove.addFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
+	}
+}
+App3DR.App.ImageEditor.prototype.moveAreaCancel = function(){
+	this._areaInterfaceMove.removeFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
+}
+App3DR.App.ImageEditor.prototype.moveAreaHandleMouseMove = function(e){
+	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	if(move){
+		var data = e["data"];
+		var location = data["location"];
+		var target = e["target"];
+		if(target==this._areaInterfaceMove){
+			this._explorer.mouseMove(location);
+		}else{ // move out = donw
+			this._explorer.mouseUp(location);
+			this.moveAreaCancel();
+		}
+		this._render();
+	}
+}
 
+
+App3DR.App.ImageEditor.prototype._toRotationAngle = function(location){
+	//DO.pointLocalUpfunction(destinationPoint,sourcePoint,sourceElement,destinationElement){
+	var destinationPoint = new V2D();
+	var sourcePoint = location.copy();
+	//var sourceElement = target;
+	var sourceElement = this._areaInterfaceRotate;
+	var destinationElement = null; // this._root; // this._areaInterfaceRotate;
+	DO.pointLocalUp(destinationPoint,sourcePoint,sourceElement,destinationElement);
+	//DO.pointLocalDown(destinationPoint,sourcePoint,sourceElement,destinationElement);
+	//console.log(" "+sourcePoint+" => "+destinationPoint);
+	var point = destinationPoint;
+
+	var size = this._explorer.containerSize();
+	var center = size.copy().scale(0.5);
+	var oToP = V2D.sub(point,center);
+	var angle = V2D.angleDirection(V2D.DIRX,oToP);
+	return angle;
+}
+App3DR.App.ImageEditor.prototype.rotateAreaHandleMouseDown = function(e){
+	var rotate = true;
+	if(rotate){
+		var data = e["data"];
+		var location = data["location"];
+		var angle = this._toRotationAngle(location);
+		var angleA = this._explorer.rotation();
+		//var angleB = angle;
+		//this._rotationAngleStart -= Math.PI;// * 0.5;
+		//var diff = Code.minAngle(angleA,angleB);
+		//var angle = angleA + diff;
+		//this._rotationAngle = diff;
+		this._rotationAngle = angle;
+		this._rotationAngleStart = angleA;
+		//this._updateRotationAngle(angle);
+		this._areaInterfaceRotate.addFunction(Canvas.EVENT_MOUSE_MOVE, this.rotateAreaHandleMouseMove, this, true);
+		this._areaInterfaceRotate.addFunction(Canvas.EVENT_MOUSE_UP, this.rotateAreaHandleMouseUp, this, true);
+	}
+	/*
+	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	if(move){
+		var data = e["data"];
+		var location = data["location"];
+		this._explorer.mouseDown(location);
+		this._render();
+		this._areaInterfaceMove.addFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
+	}
+	*/
+}
+// App3DR.App.ImageEditor.prototype.moveAreaCancel = function(){
+// 	this._areaInterfaceMove.removeFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
+// }
+App3DR.App.ImageEditor.prototype.rotateAreaHandleMouseMove = function(e){
+	var rotate = this._rotationAngleStart!=null;
+	if(rotate){
+		var data = e["data"];
+		var location = data["location"];
+		var angle = this._toRotationAngle(location);
+		this._updateRotationAngle(angle);
+	}
+}
+App3DR.App.ImageEditor.prototype.rotateAreaHandleMouseUp = function(e){
+	var rotate = this._rotationAngleStart!=null;
+	if(rotate){
+		var data = e["data"];
+		var location = data["location"];
+		var angle = this._toRotationAngle(location);
+		this._updateRotationAngle(angle);
+		this._rotationAngleStart = null;
+		this._areaInterfaceRotate.removeFunction(Canvas.EVENT_MOUSE_MOVE, this.rotateAreaHandleMouseMove, this, true);
+		this._areaInterfaceRotate.removeFunction(Canvas.EVENT_MOUSE_UP, this.rotateAreaHandleMouseUp, this, true);
+
+	}
+}
+App3DR.App.ImageEditor.prototype._updateRotationAngle = function(angle){
+	var angleA = this._rotationAngle;
+	var angleB = angle;
+	//var diff = Code.minAngle(angleA,angleB);
+	var diff = angleB-angleA;
+	var fin = this._rotationAngleStart + diff;
+	var rounding = Code.radians(15.0);
+	var rounded = Math.round(fin/rounding)*rounding;
+	fin = rounded;
+	//var nearest = angle % 
+
+	//this._rotationAngleStart += diff;
+	/*
+	var angleA = this._rotationAngleStart;
+	var angleB = this._rotationAngle;
+	console.log(Code.degrees(angleA)+" | "+Code.degrees(angleB));
+	//var angle = angleB - angleA;
+	var angle = angleA + angleB;
+	// var diff = Code.minAngle(angleA,angleB);
+	// var angle = angleA + diff;
+	var rounding = Code.radians(15.0);
+	var rounded = Math.round(angle/rounding)*rounding;
+	console.log("rounded: "+rounded);
+	//var nearest = angle % 
+	*/
+	this._explorer.updateRotation(fin);
+	this._render();
+}
+
+
+
+App3DR.App.ImageEditor.EDIT_MODE_UNKNOWN = 0;
+App3DR.App.ImageEditor.EDIT_MODE_MOVE = 1;
+App3DR.App.ImageEditor.EDIT_MODE_ERASE = 2;
+App3DR.App.ImageEditor.EDIT_MODE_DRAW = 3;
+App3DR.App.ImageEditor.prototype.handleMouseUp = function(e){
+	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
+	// var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	// if(move){
+	// 	var location = e["location"];
+	// 	this._explorer.mouseUp(location);
+	// 	this._render();
+	// }
+}
+App3DR.App.ImageEditor.prototype.handleMouseMove = function(e){
+	App3DR.App.ImageEditor._.handleMouseMove.call(this, e);
+	
+}
+App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
+	App3DR.App.ImageEditor._.handleMouseDown.call(this, e);
+	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	if(move){
+		
+	}else{
+
+		// color
+		
+		var location = e["location"];
+		var containerSize = this._explorer._containerSize;
+		var canvasSize = this._canvas.size();
+		var corner = new V2D((canvasSize.x - containerSize.x)*0.5, (canvasSize.y - containerSize.y)*0.5);
+		var container = location.copy().sub(corner);
+		var imageLocation = this._explorer.toLocalPoint(container);
+	//var diameter = 3;
+	//var diameter = 4;
+	//var diameter = 5;
+	//var diameter = 6;
+	var diameter = 7; // TODO: MULT BY SCALE & round
+		var colored = this._colorMaskImage(imageLocation,true, diameter);
+		if(colored){
+			this._render();
+		}
+	}
 
 //	this._drag = e["location"];
 //	console.log(this._drag);
 }
-App3DR.App.ImageEditor.prototype.handleMouseMove = function(e){
-	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
-	this._drag = null;
-}
-App3DR.App.ImageEditor.prototype.handleMouseUp = function(e){
-	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
-	this._drag = null;
-}
+// App3DR.App.ImageEditor.prototype.handleMouseMove = function(e){
+// 	App3DR.App.ImageEditor._.handleMouseMove.call(this, e);
+// 	this._drag = null;
+// }
+// App3DR.App.ImageEditor.prototype.handleMouseUp = function(e){
+// 	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
+// 	this._drag = null;
+// }
 
 
 
@@ -698,6 +1132,9 @@ App3DR.Explorer2D = function(){
 	this._rotateRangeMin = null;
 	this._rotateRangeMax = null;
 //	this._focus = new V2D();
+}
+App3DR.Explorer2D.prototype.containerSize = function(){
+	return this._containerSize;
 }
 App3DR.Explorer2D.prototype.offset = function(){
 	return this._subjectCenter;
@@ -811,7 +1248,28 @@ App3DR.Explorer2D.prototype.focusPoint = function(p){ // currently focused pixel
 	var f = this.toLocalPoint( center );
 	return f;
 }
-
+App3DR.Explorer2D.prototype.mouseDown = function(location){
+	if(!this._isDragging){
+		this._isDragging = true;
+		this._dragOrigin = location.copy();
+	}
+}
+App3DR.Explorer2D.prototype.mouseMove = function(location){
+	if(this._isDragging){
+		this._dragOffset = location.copy();
+		var diff = V2D.sub(this._dragOffset,this._dragOrigin)
+		this._dragOrigin = this._dragOffset;
+		this._subjectCenter.add(diff);
+	}
+}
+App3DR.Explorer2D.prototype.mouseUp = function(location){
+	if(this._isDragging){
+		this._isDragging = false;
+		this._dragOffset = location.copy();
+		var diff = V2D.sub(this._dragOffset,this._dragOrigin);
+		this._subjectCenter.add(diff);
+	}
+}
 
 
 

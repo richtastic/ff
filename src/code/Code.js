@@ -2456,6 +2456,26 @@ Code.setAlpARGB = function(col, a){
 	col = col & 0x00FFFFFF;
 	return col + (a << 24);
 }
+Code.setAlpFloatARGB = function(col, a){
+	col = col & 0x00FFFFFF;
+	a = Math.min(Math.floor(a*256.0),255);
+	return col + (a << 24);
+}
+Code.setRedFloatARGB = function(col, r){
+	col = col & 0x00FFFFFF;
+	r = Math.min(Math.floor(r*256.0),255);
+	return col + (r << 16);
+}
+Code.setGrnFloatARGB = function(col, g){
+	col = col & 0x00FFFFFF;
+	g = Math.min(Math.floor(g*256.0),255);
+	return col + (g << 8);
+}
+Code.setBluFloatARGB = function(col, b){
+	col = col & 0x00FFFFFF;
+	b = Math.min(Math.floor(b*256.0),255);
+	return col + (b);
+}
 Code.getFloatAlpARGB = function(col){
 	return ((col>>24)&0xFF)/255.0;
 }
