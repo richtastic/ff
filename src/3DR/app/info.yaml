@@ -1,0 +1,33 @@
+# info.yaml
+
+
+origninal sizes:
+
+100%:
+3264x2448
+
+50%:
+
+1632x1224
+
+25%:
+816x612
+
+12.5%:
+408x306
+
+6.25%:
+204x153
+
+
+
+# resize image until the resolution is about 400x300 ~ 120000 pixels [1E5-2E5]
+# half this size can be used as an icon: 200x150 ~ [2E4-3E4]
+
+
+icon resolution: 0.0625 = 1/2
+dense match A: 0.125 = 1.0
+feature search resolution: 0.25 = 2.0
+dense match up res: 0.25 = 2.0
+texturing: 1.0 = highest
+
