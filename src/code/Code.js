@@ -7388,7 +7388,57 @@ Code.binaryToBase64String = function(binaryData){
 	return window.btoa(binaryData);
 }
 Code.base64StringToBinary = function(stringData){
-	return null; // ?
+	/*
+	var base64 = stringData;
+	var binary_string =  window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array( len );
+    for (var i = 0; i < len; i++)        {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    // return bytes;
+    */
+	//
+	var i, char, byt;
+	var BASE64TABLE = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","+","/"];
+	var lookupTable = {};
+	for(i=0; i<BASE64TABLE.length; ++i){
+		char = BASE64TABLE[i];
+		lookupTable[char] = i;
+	}
+	var bytes = [];
+	var count = stringData.length;
+	var endMask = 1;
+	var currentByte = 0x0;
+	var currentLength = 0;
+	for(i=0; i<count; ++i){
+		char = stringData[i];
+		if(char=="="){ // drop remainder
+			currentLength = 0;
+			break;
+		}else{
+			var c = lookupTable[char];
+			currentByte <<= 6; 
+			currentByte |= c;
+			currentLength += 6;
+			if(currentLength>8){
+				byt = (currentByte >> (currentLength-8)) & 0x0FF;
+				currentLength -= 8;
+				bytes.push(byt);
+			}
+		}
+	}
+	if(currentLength>0){
+		byt = (currentByte >> (currentLength-8)) & 0x0FF;
+		bytes.push(byt);
+		currentLength = 0;
+	}
+	var byteArray = new Uint8Array(bytes.length);
+	for(i=0; i<bytes.length; ++i){
+		byteArray[i] = bytes[i];
+	}
+	return byteArray;
+
 }
 Code.generateImageFromData = function(wid,hei,imageData){
     var img = new Image(wid,hei);

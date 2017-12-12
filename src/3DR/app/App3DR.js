@@ -121,6 +121,7 @@ App3DR.Resource = function(complete, context){
 		img[App3DR.Resource.TEX_BUTTON_ICON_FEATURE] = icons+"icon_button_feature.png";
 		img[App3DR.Resource.TEX_BUTTON_ICON_DROP] = icons+"icon_button_drop.png";
 		img[App3DR.Resource.TEX_BUTTON_ICON_ARROW_DOWN] = icons+"icon_button_arrow_down_full.png";
+		img[App3DR.Resource.TEX_BUTTON_ICON_MOVE] = icons+"icon_button_move.png";
 	this._imgLoader.setLoadItems(imageBase,img);
 	// this._imgLoader.addLoadItem(imageBase, "background.png");
 	// this._imgLoader.addLoadItem(imageBase, "bg_checkerboard_repeat.png");
@@ -140,6 +141,7 @@ App3DR.Resource.TEX_BUTTON_ICON_GRID = 10;
 App3DR.Resource.TEX_BUTTON_ICON_FEATURE = 11;
 App3DR.Resource.TEX_BUTTON_ICON_DROP = 12;
 App3DR.Resource.TEX_BUTTON_ICON_ARROW_DOWN = 13;
+App3DR.Resource.TEX_BUTTON_ICON_MOVE = 14;
 
 // ------------------------------------------------------------------------------------------------------------
 
@@ -336,67 +338,48 @@ this._rotationAngle = null;
 	* choose image transparancy
 */
 }
+App3DR.App.generateButtonToggle = function(resource, parent, iconImages){
+
+	var button = new DOButtonToggle();
+	parent.addChild(button);
+	var pressed = [];
+	var unpressed = [];
+	var hit = null;
+	var inactive = null;
+	var i;
+	for(i=0; i<iconImages.length; ++i){
+		var icon = iconImages[i];
+console.log(icon);
+		var displays = App3DR.App.generateButtons(resource, parent, icon);
+		pressed.push(displays["active"]);
+		unpressed.push(displays["pressed"]);
+		if(i==0){
+			inactive = displays["inactive"];
+			hit = displays["hit"];
+		}
+	}
+console.log(unpressed,pressed);
+	button.setDOHitArea(hit);
+	button.setDOInactive(inactive);
+	button.setToggleItems(unpressed,pressed);
+	return button;
+}
 App3DR.App.generateButton = function(resource, parent, iconImage){
+	var displays = App3DR.App.generateButtons(resource, parent, iconImage);
 
-	var imageActive = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_ACTIVE);
-	var imageInactive = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_INACTIVE);
-	var imageSelected = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_SELECTED);
+	var d;
 
-
-	var d = new DO();
-	var size = new V2D(100,100);
-	var gr = d.newGraphicsIntersection();
-	//var gr = d.graphics();
-	gr.clear();
-	gr.setFill(0xFF009900);
-	gr.beginPath();
-	gr.drawRect(0,0, size.x,size.y);
-	gr.endPath();
-	gr.fill();
+	var hit = displays["hit"];
+	var active = displays["active"];
+	var notactive = displays["inactive"];
+	var pressed = displays["pressed"];
 
 	var button = new DOButton();
 	parent.addChild(button);
-	button.setDOHitArea(d);
-
-	var active = new DO();
-		d = new DOImage();
-		d.image(imageActive);
-		d.size(size.x,size.y);
-		active.addChild(d);
-		d = new DOImage();
-		d.image(iconImage);
-		d.size(size.x,size.y);
-		active.addChild(d);
+	button.setDOHitArea(hit);
 	button.setDOUnpressed(active);
-
-	var upscale = 1.2;
-	var pressed = new DO();
-		d = new DOImage();
-		d.image(imageSelected);
-		d.size(size.x,size.y);
-		pressed.addChild(d);
-		d = new DOImage();
-		d.image(iconImage);
-		d.size(size.x,size.y);
-		pressed.addChild(d);
-		d.matrix().identity();
-		d.matrix().translate(-size.x*0.5,-size.y*0.5);
-		d.matrix().scale(upscale);
-		d.matrix().translate(size.x*0.5,size.y*0.5);
 	button.setDOPressed(pressed);
-
-	var notactive = new DO();
-		d = new DOImage();
-		d.image(imageInactive);
-		d.size(size.x,size.y);
-		notactive.addChild(d);
 	button.setDOInactive(notactive);
-
-
-	// button.isActive(false);
-	// button.isActive(true);
-
-	
 
 	button.addFunction(DOButton.EVENT_SHORT_PRESS, function(d){
 		console.log("short press");
@@ -414,7 +397,66 @@ App3DR.App.generateButton = function(resource, parent, iconImage){
 		console.log("cancel");
 	});
 
+	// button.isActive(false);
+	// button.isActive(true);
+
 	return button;
+}
+App3DR.App.generateButtons = function(resource, parent, iconImage){
+	var imageActive = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_ACTIVE);
+	var imageInactive = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_INACTIVE);
+	var imageSelected = resource.tex(App3DR.Resource.TEX_BUTTON_HEX_SELECTED);
+
+	var displays = {};
+
+	var d = new DO();
+	var size = new V2D(100,100);
+	var gr = d.newGraphicsIntersection();
+	//var gr = d.graphics();
+	gr.clear();
+	gr.setFill(0xFF009900);
+	gr.beginPath();
+	gr.drawRect(0,0, size.x,size.y);
+	gr.endPath();
+	gr.fill();
+	displays["hit"] = d;
+
+
+	var active = new DO();
+		d = new DOImage();
+		d.image(imageActive);
+		d.size(size.x,size.y);
+		active.addChild(d);
+		d = new DOImage();
+		d.image(iconImage);
+		d.size(size.x,size.y);
+		active.addChild(d);
+	displays["active"] = active;
+
+	var upscale = 1.2;
+	var pressed = new DO();
+		d = new DOImage();
+		d.image(imageSelected);
+		d.size(size.x,size.y);
+		pressed.addChild(d);
+		d = new DOImage();
+		d.image(iconImage);
+		d.size(size.x,size.y);
+		pressed.addChild(d);
+		d.matrix().identity();
+		d.matrix().translate(-size.x*0.5,-size.y*0.5);
+		d.matrix().scale(upscale);
+		d.matrix().translate(size.x*0.5,size.y*0.5);
+	displays["pressed"] = pressed;
+	
+	var notactive = new DO();
+		d = new DOImage();
+		d.image(imageInactive);
+		d.size(size.x,size.y);
+		notactive.addChild(d);
+	displays["inactive"] = notactive;
+
+	return displays;
 }
 
 App3DR.App.ImageEditor.prototype._testButton = function(){
@@ -428,7 +470,9 @@ App3DR.App.ImageEditor.prototype._testButton = function(){
 	var imageIconFeature = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_FEATURE);
 	var imageIconDrop = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_DROP);
 	var imageIconArrow = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_ARROW_DOWN);
+	var imageIconMove = resource.tex(App3DR.Resource.TEX_BUTTON_ICON_MOVE);
 	//console.log(imageIconArrow)
+	/*
 	var button;
 	var buttons = [];
 	button = App3DR.App.generateButton(resource, this._root, imageIconLink);
@@ -456,7 +500,95 @@ App3DR.App.ImageEditor.prototype._testButton = function(){
 		}
 		button.matrix().translate(x,y);
 	}
+	*/
+
+	var button = App3DR.App.generateButtonToggle(resource, this._root, [imageIconPlus, imageIconMinus, imageIconMove]);
+
+
+	button.addFunction(DOButtonToggle.EVENT_TOGGLE_CHANGE, function(d){
+		//console.log("toggled: "+d.toggleIndex());
+		this.saveImage();
+	}, this);
+
+	button.matrix().translate(0,0);
 }
+
+App3DR.App.ImageEditor.prototype.saveImage = function(){
+
+return;
+
+	var image = this._stage.renderImage(500,101,this._root, this._root.matrix().copy().inverse());
+	//var image = this._stage.renderImage(100,100,this._root.parent());
+	//var image = this._stage.renderImage(500,100,this._root);
+	//var image = this._stage.renderImage(500,100,this._root);
+	//var image = this._stage.renderImage(500,100,d.parent());
+	//var image = this._stage.renderImage(500,100,this._displayBackground.parent());
+	//var image = this._stage.renderImage(600,100,d.parent().parent());
+	//var image = this._stage.renderImage(100,100,this._root, this._root.matrix());
+//	console.log(image);
+/*
+	Code.addChild( Code.getBody(), image);
+	Code.setStyleWidth( image, "200px");
+*/
+	var src = image.src;
+//	console.log(src);
+	//var string = src.replace("data:image/png;base64,","");
+	///data:(.*);base64,/"
+	var string = src.replace(/data:(.*);base64,/,"");
+	console.log(string);
+	var data = Code.base64StringToBinary(string);
+	console.log(data);
+	data = [data];
+	// return;
+	// console.log(data);
+
+	var type = "image/png";
+	//var type = 'application/octet-stream';
+	var blob = new Blob(data,{"type":type});
+	console.log(blob);
+
+	var url = window.URL.createObjectURL(blob);
+	var view = window;
+	view.open(url, "newwindow",'width=300,height=300');
+
+
+
+// 	next
+// App3DR.js:509 toggled: 1
+// App3DR.js:518 <img width=​"100" height=​"100" src=​"data:​image/​png;​base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAFIklEQVR4Xu3VsRHAMAzEsHj/​pTOBXbB9pFchyLycz0eAwFXgsCFA4C4gEK+DwENAIJ4HAYF4AwSagD9IczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhH4AStUAMmSuOW2AAAAAElFTkSuQmCC">​
+// Dispatch.js:37 CAUGHT ERROR FOR EVENT:  dobt.evttgl
+// Dispatch.js:38 TypeError: Failed to construct 'Blob': Iterator getter is not callable.
+//     at App3DR.App.ImageEditor.saveImage (App3DR.js:520)
+//     at App3DR.App.ImageEditor.<anonymous> (App3DR.js:510)
+//     at Dispatch.alertAll (Dispatch.js:34)
+//     at DOButtonToggle.Dispatchable.alertAll (Dispatchable.js:59)
+//     at DOButtonToggle.DO.alertAll (DO.js:229)
+//     at DOButtonToggle.toggleIndex (DOButton.js:283)
+//     at DOButtonToggle._toggleComplete (DOButton.js:276)
+//     at Dispatch.alertAll (Dispatch.js:34)
+//     at DOButtonToggle.Dispatchable.alertAll (Dispatchable.js:59)
+//     at DOButtonToggle.
+
+	// getARGBAsImage
+	/*
+	var data = ["teting data blob"];
+	var type = "text/plain";
+
+	var blob = new Blob(data,{"type":type});
+
+	console.log(blob);
+
+
+	var url = window.URL.createObjectURL(blob);
+	var view = window;
+	//view.open(url, "_blank");
+
+	view.open(url, "newwindow",'width=300,height=300');
+	return;
+	//view.location.href = url;
+	*/
+}
+
 App3DR.App.ImageEditor.prototype.testDO = function(){
 	console.log("testDO");
 	var d = new DO();
@@ -592,7 +724,7 @@ App3DR.App.ImageEditor.prototype._render = function(){
 	var containerSize = this.size();
 	var containerClipPoly = [new V2D(0,0),new V2D(size.x,0),new V2D(size.x,size.y),new V2D(0,size.y)];
 	//
-		d = this._root;
+	d = this._root;
 	this._root.mask(true);
 
 	d.graphics().clear();

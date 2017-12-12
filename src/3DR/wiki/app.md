@@ -191,11 +191,19 @@ project typical numbers:
 
 
 TODO:
-- ui elements
+- triangulate.html broke
+
+- display feature locations onto image
+- how images perform with large image
 - scrolling zoom gadget via mouse
-- rotation via mouse
-- movement via mouse
-- drawling onto mask image
+- scale brush size with gadget
+- saving mask image to file
+
+
 - 
 
+- triangulation not working
+- POLY2D error
+
+- triangulate projection textures from camera (from 3D points to 2D points [currently reversed])
 

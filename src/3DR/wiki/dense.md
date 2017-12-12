@@ -53,6 +53,8 @@ triangulation:
 		- line bisection @ field sampling
 
 
+- 'crosses a fence' similar to:
+	- triangle 2D projection has intersection with another in Radius neighborhood
 
 
 
@@ -60,8 +62,8 @@ triangulation:
 
 
 
-
-
+file:///var/containers/Bundle/Application/9619FBE0-A501-4FB0-8277-74AB3FE38DDC/unitywrapper.app/Data/Raw/jeditrainer_scenes.unity3d
+file:///var/containers/Bundle/Application/9619FBE0-A501-4FB0-8277-74AB3FE38DDC/unitywrapper.app/Data/Raw/jeditrainer_
 
 
 

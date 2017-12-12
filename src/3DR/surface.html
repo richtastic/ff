@@ -13,6 +13,56 @@ function ffLoadedFxn(){
 	
 }
 function classesLoadedFxn(){
+	var data = ["teting data blob"];
+	var type = "text/plain";
+
+	var blob = new Blob(data,{"type":type});
+
+	console.log(blob);
+
+
+	var url = window.URL.createObjectURL(blob);
+	var view = window;
+	//view.open(url, "_blank");
+
+	view.open(url, "newwindow",'width=300,height=300');
+	return;
+	//view.location.href = url;
+
+	
+
+/*
+http://qnimate.com/an-introduction-to-javascript-blobs-and-file-interface/
+
+var myReader = new FileReader();
+//handler executed once reading(blob content referenced to a variable) from blob is finished. 
+myReader.addEventListener("loadend", function(e){
+    document.getElementById("paragraph").innerHTML = e.srcElement.result;//prints a string
+});
+//start the reading process.
+myReader.readAsText(myBlob);
+*/
+
+/*
+
+
+
+
+object_url = get_URL().createObjectURL(blob);
+					}
+					if (force) {
+						view.location.href = object_url;
+					} else {
+						var opened = view.open(object_url, "_blank");
+						if (!opened) {
+							// Apple does not allow window.open, see https://developer.apple.com/library/safari/documentation/Tools/Conceptual/SafariExtensionGuide/WorkingwithWindowsandTabs/WorkingwithWindowsandTabs.html
+							view.location.href = object_url;
+
+
+*/
+
+
+	return;
 	//console.log("triangle intersections");
 	/*
 	var array = [];

@@ -7,8 +7,6 @@ DOButton.EVENT_LONG_PRESS = "dobu.evtlng";
 DOButton.EVENT_SHORT_PRESS = "dobu.evtsht";
 
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
-
-// ------------------------------------------------------------------------------------------------------------------------ 
 function DOButton(parentDO){
 	DOButton._.constructor.call(this, parentDO);
 	this._isPressed = false;
@@ -26,7 +24,7 @@ function DOButton(parentDO){
 	this.addChild(this._displayContainer);
 }
 Code.inheritClass(DOButton,DO);
-// ------------------------------------------------------------------------------------------------------------------------ GET/SET
+
 DOButton.setupFrom = function(info){
 	//parent, size, unpressed, pressed, inactive){
 	var parent = info["parent"];
@@ -34,6 +32,8 @@ DOButton.setupFrom = function(info){
 		parent.addChild(button);
 	}
 }
+
+// ------------------------------------------------------------------------------------------------------------------------ GET/SET
 DOButton.prototype.setDOHitArea = function(d){
 	this._removeDOHitArea();
 	if(d){
@@ -56,12 +56,24 @@ DOButton.prototype.setDOInactive = function(d){
 	this._displayInactive = d;
 	this._updateDisplay();
 }
+DOButton.prototype._removeDOInactive = function(){
+	if(this._displayInactive){
+		this._displayInactive.removeParent();
+		this._displayInactive = null;
+	}
+}
 DOButton.prototype.setDOPressed = function(d){
 	if(this._displayPressed){
 		this._displayPressed.removeParent();
 	}
 	this._displayPressed = d;
 	this._updateDisplay();
+}
+DOButton.prototype._removeDOPressed = function(){
+	if(this._displayPressed){
+		this._displayPressed.removeParent();
+		this._displayPressed = null;
+	}
 }
 DOButton.prototype.setDOUnpressed = function(d){
 	if(this._displayUnpressed){
@@ -70,6 +82,13 @@ DOButton.prototype.setDOUnpressed = function(d){
 	this._displayUnpressed = d;
 	this._updateDisplay();
 }
+DOButton.prototype._removeDOUnpressed = function(){
+	if(this._displayUnpressed){
+		this._displayUnpressed.removeParent();
+		this._displayUnpressed = null;
+	}
+}
+// ------------------------------------------------------------------------------------------------------------------------ 
 DOButton.prototype._updateDisplay = function(){
 	if(this._isActive){
 		if(this._isPressed && !this._canceled){
@@ -188,7 +207,6 @@ DOButton.prototype.isPressed = function(){
 	return this._isPressed;
 }
 DOButton.prototype.isActive = function(a){
-	console.log("set active: "+a);
 	if(a!==undefined){
 		if(this._isActive != a){
 			this._isActive = a;
@@ -212,8 +230,90 @@ DOButton.prototype.isActive = function(a){
 
 
 DOButton.prototype.kill = function(){
-	DOText._.kill.call(this);
+	this._removeDOHitArea();
+	this._removeDOInactive();
+	this._removeDOPressed();
+	this._removeDOUnpressed();
 	this._isPressed = false;
+	this._isPressed = false;
+	this._hitAreaDO = null;
+	this._allowLongPress = true;
+	this._timeLongPress = 500;
+	this._tickerLongPress = null;
+	this._cancelOnOut = true;
+	this._canceled = false;
+	this._isActive = true;
+	this._displayContainer.removeParent();
+	this._displayContainer = null;
+	this._displayPressed = null;
+	this._displayUnpressed = null;
+	this._displayInactive = null;
+	DOButton._.kill.call(this);
 }
+
+
+
+
+
+
+
+function DOButtonToggle(parentDO){
+	DOButtonToggle._.constructor.call(this, parentDO);
+	this._toggleIndex = -1;
+	this._toggleCount = -1;
+	this._toggleUnpressed = null;
+	this._togglePressed = null;
+	//this.alertAll(DOButton.EVENT_PRESS_END, this);
+	this.addFunction(DOButton.EVENT_PRESS_END, this._toggleComplete, this);
+}
+Code.inheritClass(DOButtonToggle,DOButton);
+
+DOButtonToggle.prototype.kill = function(){
+	DOButtonToggle._.kill.call(this);
+}
+DOButtonToggle.prototype._toggleComplete = function(str,obj){
+	this.toggleIndex(this._toggleIndex + 1);
+}
+DOButtonToggle.prototype.toggleIndex = function(i){
+	if(i!==undefined){
+		i = i % this._toggleCount;
+		if(this._toggleIndex!=i){
+			this._toggleIndex = i;
+			this.alertAll(DOButtonToggle.EVENT_TOGGLE_CHANGE, this);
+		}
+		if(this._toggleUnpressed){
+			var nextUnpressed = this._toggleUnpressed[this._toggleIndex];
+			this.setDOUnpressed(nextUnpressed);
+		}
+		if(this._togglePressed){
+			var nextPressed = this._togglePressed[this._toggleIndex];
+			this.setDOPressed(nextPressed);
+		}
+		this._updateDisplay();
+	}
+	return this._toggleIndex;
+}
+
+DOButtonToggle.prototype.setToggleItems = function(arrayUnpressed, arrayPressed){
+	var i;
+	this._toggleCount = arrayUnpressed.length;
+	if(arrayUnpressed){
+		this._toggleUnpressed = arrayUnpressed;
+	}
+	if(arrayPressed){
+		this._togglePressed = arrayPressed;
+	}
+	this._toggleIndex = 0;
+	this.toggleIndex(0);
+}
+DOButtonToggle.EVENT_TOGGLE_CHANGE = "dobt.evttgl";
+
+
+
+
+
+
+
+
 
 
