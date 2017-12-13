@@ -227,9 +227,14 @@ Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
 	this._renderCanvas.height(hei);
 	this._renderCanvas.size(wid,hei);
 	this._renderCanvas.contextIdentity();
+	var upScale = this._canvas.presentationScale();
+	var upMatrix = new Matrix2D();
+		upMatrix.identity();
+		upMatrix.scale(upScale);
 	if(matrix){
-		this._renderCanvas.contextTransform(matrix); 
+		upMatrix.mult(upMatrix,matrix); // AFTER?
 	}
+	this._renderCanvas.contextTransform(upMatrix); 
 }
 Stage.prototype._toImage = function(wid,hei, type){
 	var image = new Image();

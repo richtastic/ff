@@ -7384,21 +7384,57 @@ Code.setPixelRGBA = function(dat, x,y, r,g,b,a){
 Code.generateBMPImageSrc = function(wid,hei,imageData){
     return 'data:image/bmp;base64,'+window.btoa(Code.generateBMPImageHeader(wid,hei)+imageData.join(""));
 }
-Code.binaryToBase64String = function(binaryData){
-	return window.btoa(binaryData);
+Code.byteArrayToJsBinary = function(binaryData){
+	var len = binaryData.length;
+	var bytes = '';
+	for(var i=0; i<len; ++i){
+		bytes += String.fromCharCode(binaryData[i]);
+	}
+	return bytes;
 }
-Code.base64StringToBinary = function(stringData){
+Code.binaryToBase64String = function(binaryData, offset, count, skip){
+	offset = offset!==undefined ? offset : 0;
+	count = count!==undefined ? count : binaryData.length;
+	if(offset>0 || count<binaryData.length){
+		console.log("TRIM.  "+offset+" & "+count);
+		var size = Math.min(count, binaryData.length-offset);
+		var byteArray = new Uint8Array(size);
+		var end = offset+size;//Math.min(offset+count, binaryData.length);
+		console.log("OFFSET: "+offset);
+		for(var i=offset, j=0; i<end; ++i, ++j){
+			byteArray[j] = binaryData[i];
+		}
+		binaryData = byteArray;
+	}
+	var bytes = binaryData;
+	// if(!skip){
+		bytes = Code.byteArrayToJsBinary(binaryData);
+	// }
+	return window.btoa(bytes);
 	/*
-	var base64 = stringData;
-	var binary_string =  window.atob(base64);
-    var len = binary_string.length;
-    var bytes = new Uint8Array( len );
-    for (var i = 0; i < len; i++)        {
-        bytes[i] = binary_string.charCodeAt(i);
+	return window.btoa(binaryData);
+	// TODO: BY SELF
+	*/
+}
+Code.arrayBufferToBase64 = function(arrayBuffer){
+	return Code.binaryToBase64String( new Uint8Array(arrayBuffer) );
+	/*
+    var binary = '';
+    var bytes = new Uint8Array(arrayBuffer);
+    var len = bytes.byteLength;
+    for (var i = 0; i < len; i++) {
+        binary += String.fromCharCode( bytes[ i ] );
     }
-    // return bytes;
+    return window.btoa( binary );
     */
-	//
+}
+Code.base64StringToBinary = function(stringData, check, final){
+	check = check!==undefined ? check : true;
+	final = final!==undefined ? final : true;
+	if(check){
+		stringData = stringData.replace(/data:(.*);base64,/,"");
+	}
+    //console.log(window.atob(stringData));
 	var i, char, byt;
 	var BASE64TABLE = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","+","/"];
 	var lookupTable = {};
@@ -7433,11 +7469,25 @@ Code.base64StringToBinary = function(stringData){
 		bytes.push(byt);
 		currentLength = 0;
 	}
-	var byteArray = new Uint8Array(bytes.length);
-	for(i=0; i<bytes.length; ++i){
-		byteArray[i] = bytes[i];
+	if(final){
+		var byteArray = new Uint8Array(bytes.length);
+		for(i=0; i<bytes.length; ++i){
+			byteArray[i] = bytes[i];
+		}
+		return byteArray;
+	}else{
+		return bytes;
 	}
-	return byteArray;
+
+}
+Code.saveFile = function(data, type){
+	data = [data];
+	type = type!==undefined ? type : "image/png";
+	//var type = 'application/octet-stream';
+	var blob = new Blob(data,{"type":type});
+	var url = window.URL.createObjectURL(blob);
+	var view = window;
+	view.open(url, "newwindow",'width=300,height=300');
 
 }
 Code.generateImageFromData = function(wid,hei,imageData){

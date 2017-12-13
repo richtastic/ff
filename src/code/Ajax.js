@@ -217,8 +217,8 @@ Ajax.prototype.send = function(url,meth,cmp,params){
 	}else{ // don't care about parameters
 		this._request.send();
 	}
-
 }
+
 // ---- helpers ---------------------------------------------------------
 Ajax.prototype.responseCode = function(){
 	var responseCode = this._request.status;

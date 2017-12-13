@@ -42,6 +42,10 @@ function App3DR(){
 //	this.generate();
 
 
+	var projectManager = new App3DR.ProjectManager();
+	console.log(projectManager);
+
+
 
 var fxn = function(){
 		console.log("resources loaded");
@@ -53,7 +57,10 @@ this._resource = resource;
 
 
 
-var app = new App3DR.App.ImageEditor(this._resource);
+// var app = new App3DR.App.ImageEditor(this._resource);
+// this.setupAppActive(app);
+
+var app = new App3DR.App.ImageUploader(this._resource);
 this.setupAppActive(app);
 
 
@@ -99,6 +106,9 @@ return;
 	// mouse stuff
 	this._mouseDown = false;
 }
+
+
+
 
 // ------------------------------------------------------------------------------------------------------------
 App3DR.Resource = function(complete, context){
@@ -182,6 +192,146 @@ App3DR.App.prototype.updateSize = function(min,max){
 	this._min = min;
 	this._max = max;
 }
+
+
+
+
+/*
+giau.FileUploadDropArea.prototype._handleDragDropUploadFxn = function(e){
+	e.stopPropagation();
+	e.preventDefault();
+	var fileList = e.dataTransfer.files;
+	var i, len = fileList.length;
+	for(i=0; i<len; ++i){
+		var file = fileList[i];
+		var filename = file.name;
+		var filetype = file.type;
+		if(this.fileTypeAcceptable(filetype)){
+			this.uploadFile(file, filename);
+			break; // only one
+		}
+	}
+}
+*/
+
+App3DR.App.ImageUploader = function(resource){
+	App3DR.App.ImageEditor._.constructor.call(this, resource);
+
+	var client = new ClientFile();
+	this._clientFile = client;
+	// this._explorer = new App3DR.Explorer2D();
+	// var imageLoader = new ImageLoader("../images/",["caseStudy1-9.jpg"], this,this._handleTestImageLoaded,null);
+	// imageLoader.load();
+
+
+	var domUploadDiv = Code.newDiv();
+		Code.setStyleWidth(domUploadDiv, "200px");
+		Code.setStyleHeight(domUploadDiv, "200px");
+		Code.setStylePosition(domUploadDiv, "absolute");
+		Code.setStyleBackgroundColor(domUploadDiv, Code.getJSColorFromARGB(0x9900FF00));
+		Code.setStylePadding(domUploadDiv, "0px");
+		Code.setStyleMargin(domUploadDiv, "0px");
+		Code.setStyleLeft(domUploadDiv, "0px");
+		Code.setStyleTop(domUploadDiv, "0px");
+	var body = Code.getBody();
+		//Code.addChild(domUploadDiv, body);
+		Code.addChild(body, domUploadDiv);
+
+		// LISTNERS
+	this._jsDispatch = new JSDispatch();
+	// UPLOAD
+	this._jsDispatch.addJSEventListener(domUploadDiv, Code.JS_EVENT_DRAG_OVER, this._handleDragOverUploadFxn, this);
+	this._jsDispatch.addJSEventListener(domUploadDiv, Code.JS_EVENT_DRAG_DROP, this._handleDragDropUploadFxn, this);
+}
+Code.inheritClass(App3DR.App.ImageUploader, App3DR.App);
+
+App3DR.App.ImageUploader.prototype._fileTypeAcceptable = function(type){
+	return true;
+}
+App3DR.App.ImageUploader.prototype._handleDragOverUploadFxn = function(e){
+	console.log("_handleDragOverUploadFxn");
+	e.stopPropagation();
+	e.preventDefault();
+}
+App3DR.App.ImageUploader.prototype._handleDragDropUploadFxn = function(e){
+	console.log("_handleDragDropUploadFxn");
+	e.stopPropagation();
+	e.preventDefault();
+	var fileList = e.dataTransfer.files;
+	var i, len = fileList.length;
+	for(i=0; i<len; ++i){
+		var file = fileList[i];
+		var filename = file.name;
+		var filetype = file.type;
+		console.log(filename+" "+filetype);
+		if(this._fileTypeAcceptable(filetype)){
+			this.uploadFile(file, filename);
+			break; // only one
+		}
+	}
+}
+App3DR.App.ImageUploader.prototype.uploadFile = function(file){
+	var filename = file.name;
+	var filetype = file.type;
+	var reader = new FileReader();
+	var canvas = this._canvas;
+	var stage = this._stage;
+	var root = this._root;
+	var client = this._clientFile;
+
+	reader.onload = function(progressEvent){
+		//console.log(progressEvent)
+		var binary = reader.result;
+		if(binary){
+			
+			var base64 = Code.arrayBufferToBase64(binary);
+			//console.log(base64);
+			//var data = Code.base64StringToBinary(base64);
+			//data = [data];
+			//var type = "image/png";
+			//var blob = new Blob(data,{"type":type});
+			//var url = window.URL.createObjectURL(blob);
+			var src = "data:image/png;base64,"+base64;
+			var image = new Image();
+			image.onload = function(e){
+				console.log(e);
+//				console.log(image);
+//				Code.addChild(Code.getBody(), image);
+				var width = image.width;
+				var height = image.height;
+				var scale = 1.0;
+				console.log(width+"x"+height);
+				var widScale = width*scale;
+				var heiScale = height*scale;
+				var d = new DOImage(image);
+					d.matrix().scale(scale);
+				console.log(stage);
+				console.log(canvas.presentationScale());
+				var img2 = stage.renderImage(widScale,heiScale,d, null);
+//				console.log(img2);
+				//Code.addChild(Code.getBody(), img2);
+				var imageBase64 = img2.src;
+				var imageBinary = Code.base64StringToBinary(imageBase64);
+				client.set("p100.png", imageBinary);
+//root.addChild(d);
+
+				client
+			}
+			//image.src = url;
+			image.src = src;
+			/*
+			var view = window;
+			view.open(url, "newwindow",'width=300,height=300');
+			*/
+		}
+      };
+	reader.readAsArrayBuffer(file);
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+
+
 
 App3DR.App.ImageEditor = function(resource){
 	App3DR.App.ImageEditor._.constructor.call(this, resource);
@@ -2321,7 +2471,7 @@ HexSystem.prototype.cellPolygon = function(cellX,cellY,cellZ){
 }
 
 
-
+// ------------------------------------------------------------------------------------------------------------
 
 
 function HexMenu(){
@@ -2338,6 +2488,70 @@ HexMenu.prototype.x = function(){
 }
 
 
+
+// ------------------------------------------------------------------------------------------------------------
+
+App3DR.ProjectManager = function(relativePath){ // very async heavy
+	App3DR.ProjectManager._.constructor.call(this);
+	this._fileClient = new ClientFile();
+	this._views = null;
+	/*
+/index
+	info.yaml
+
+	*/
+}
+Code.inheritClass(App3DR.ProjectManager,Dispatchable);
+App3DR.ProjectManager.INFO_FILE_NAME = "info.yaml";
+App3DR.ProjectManager.prototype.addPicture = function(binary){
+	// full size picture
+	// scale down to starting size by 1/2
+	// create a new view object
+}
+App3DR.ProjectManager.prototype.removePicture = function(index){
+	//
+}
+App3DR.ProjectManager.prototype.pictureCount = function(){
+	return 0;
+}
+App3DR.ProjectManager.prototype.setMask = function(index){
+
+}
+App3DR.ProjectManager.prototype.getMask = function(index){
+
+}
+App3DR.ProjectManager.prototype.setFeatures = function(index){
+
+}
+App3DR.ProjectManager.prototype.getFeatures = function(index){
+
+}
+App3DR.ProjectManager.prototype.setMatching = function(indexA,indexB, matches){
+
+}
+App3DR.ProjectManager.prototype.pairCount = function(){
+	return 0;
+}
+App3DR.ProjectManager.prototype.setReconstruction = function(points){
+
+}
+App3DR.ProjectManager.prototype.setModel = function(stuff){
+	// cameras
+	// textures
+	// background
+	// 
+}
+// ------------------------------------------------------------------------------------------------------------
+App3DR.ProjectManager.prototype._createView = function(){
+	// ..
+}
+App3DR.ProjectManager.prototype.x = function(){
+
+}
+App3DR.ProjectManager.prototype.x = function(){
+
+}
+// ------------------------------------------------------------------------------------------------------------
 
 
 

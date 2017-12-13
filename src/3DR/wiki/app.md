@@ -191,6 +191,10 @@ project typical numbers:
 
 
 TODO:
+- project manager stub out
+- import picture file & save to N files
+
+
 - triangulate.html broke
 
 - display feature locations onto image

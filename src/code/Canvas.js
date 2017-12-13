@@ -653,6 +653,8 @@ Canvas.prototype.addListeners = function(){
 		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn, this);
 		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn, this);
 		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_DRAG_OVER, this._canvasDragOverFxn, this);
+		this._jsDispatch.addJSEventListener(this._canvas, Code.JS_EVENT_DRAG_DROP, this._canvasDragDropFxn, this);
 		this._handleWindowResizedFxn(); // expect a recheck, rather than trigger externally
 		this._listening = true;
 	}
@@ -668,6 +670,8 @@ Canvas.prototype.removeListeners = function(){
 		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_START, this._canvasTouchStartFxn, this);
 		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_MOVE, this._canvasTouchMoveFxn, this);
 		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_TOUCH_END, this._canvasTouchEndFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_DRAG_OVER, this._canvasDragOverFxn, this);
+		this._jsDispatch.removeJSEventListener(this._canvas, Code.JS_EVENT_DRAG_DROP, this._canvasDragDropFxn, this);
 		this._listening = false;
 	}
 }
@@ -797,6 +801,18 @@ Canvas.prototype._handleWindowResizedFxn = function(e){
 	} // Canvas.STAGE_FIT_FIXED
 	this.alertAll(Canvas.EVENT_WINDOW_RESIZE,{"pos":p});
 }
+//  ------------------------------------------------------------------------------------------------------------------------ DRAGGING
+Canvas.prototype._canvasDragOverFxn = function(e){
+	console.log(e);
+	e.stopPropagation();
+	e.preventDefault();
+}
+Canvas.prototype._canvasDragDropFxn = function(e){
+	console.log(e);
+	e.stopPropagation();
+	e.preventDefault();
+}
+
 
 Canvas.prototype.kill = function(e){
 	// ...
