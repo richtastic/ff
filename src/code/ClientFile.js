@@ -12,10 +12,47 @@ function ClientFile(url, path){
 Code.inheritClass(ClientFile,Dispatchable);
 
 ClientFile.EVENT_GET_COMPLETE = "client.get.complete";
+ClientFile.EVENT_SET_COMPLETE = "client.set.complete";
+ClientFile.EVENT_DEL_COMPLETE = "client.del.complete";
+ClientFile.EVENT_MOV_COMPLETE = "client.mov.complete";
+
+// ClientFile.prototype._setupClient = function(filePath){
+// 	var operation = new ClientFile.Operation(this._serverURL);
+// 	return operation;
+// }
+ClientFile.prototype._handleClientCompleteGet = function(operation){
+	var success = operation.success();
+	var data = null;
+	if(success){
+		data = operation.buffer();
+	}
+	operation.removeFunction(ClientFile.EVENT_GET_COMPLETE, this._handleClientComplete, this);
+	Code.removeElement(this._operations, operation);
+	this.alertAll(ClientFile.EVENT_GET_COMPLETE, data);
+}
+ClientFile.prototype._handleClientCompleteSet = function(operation){
+	var success = operation.success();
+	operation.removeFunction(ClientFile.EVENT_SET_COMPLETE, this._handleClientComplete, this);
+	Code.removeElement(this._operations, operation);
+	this.alertAll(ClientFile.EVENT_SET_COMPLETE, success);
+}
+ClientFile.prototype._handleClientCompleteDel = function(operation){
+	var success = operation.success();
+	operation.removeFunction(ClientFile.EVENT_DEL_COMPLETE, this._handleClientComplete, this);
+	Code.removeElement(this._operations, operation);
+	this.alertAll(ClientFile.EVENT_DEL_COMPLETE, success);
+}
+ClientFile.prototype._handleClientCompleteMov = function(operation){
+	var success = operation.success();
+	operation.removeFunction(ClientFile.EVENT_MOV_COMPLETE, this._handleClientComplete, this);
+	Code.removeElement(this._operations, operation);
+	this.alertAll(ClientFile.EVENT_MOV_COMPLETE, success);
+}
 
 ClientFile.prototype.get = function(filePath){
 	console.log("get: "+filePath);
 	var operation = new ClientFile.Operation(this._serverURL);
+	operation.addFunction(ClientFile.EVENT_GET_COMPLETE, this._handleClientCompleteGet, this);
 	this._operations.push(operation);
 	var fullPath = this._workingPath+""+filePath;
 	console.log("full path: "+fullPath);
@@ -24,6 +61,7 @@ ClientFile.prototype.get = function(filePath){
 ClientFile.prototype.set = function(filePath, data){
 	console.log("set: "+filePath);
 	var operation = new ClientFile.Operation(this._serverURL);
+	operation.addFunction(ClientFile.EVENT_SET_COMPLETE, this._handleClientCompleteSet, this);
 	this._operations.push(operation);
 	var fullPath = this._workingPath+""+filePath;
 	console.log("full path: "+fullPath);
@@ -32,39 +70,62 @@ ClientFile.prototype.set = function(filePath, data){
 ClientFile.prototype.del = function(filePath){
 	console.log("del: "+filePath);
 	var operation = new ClientFile.Operation(this._serverURL);
+	operation.addFunction(ClientFile.EVENT_DEL_COMPLETE, this._handleClientCompleteDel, this);
 	this._operations.push(operation);
 	var fullPath = this._workingPath+""+filePath;
 	console.log("full path: "+fullPath);
 	operation.deleteFileOrDirectory(fullPath);
 }
+ClientFile.prototype.mov = function(filePath){
+	console.log("mov: "+filePath);
+}
+
 
 ClientFile.Operation = function(serviceURL){
+	ClientFile.Operation._.constructor.call(this);
 	this._serviceURL = serviceURL;
-	this._buffer = [];
+	this._buffer = null;
 	this._offset = 0;
-	this._pageSize = 1E6; // 1E4 = 10KB   1E6 = 1MB
-	//this._pageSize = 100;
-	//this._pageSize = 96;
+	this._pageSize = 1E6; // 1MB
+	this._success = false;
 	this._relativePath = null;
 }
-ClientFile.Operation.prototype._doneRead = function(data64){
-	var bytes = this._buffer;
-// var base64 = Code.binaryToBase64String(bytes);
-// console.log(base64);
-// return;
-	var byteArray = new Uint8Array(bytes.length);
-	for(i=0; i<bytes.length; ++i){
-		byteArray[i] = bytes[i];
+Code.inheritClass(ClientFile.Operation,Dispatchable);
+ClientFile.Operation.prototype.buffer = function(){
+	return this._buffer;
+}
+ClientFile.Operation.prototype.success = function(){
+	return this._success;
+}
+ClientFile.Operation.prototype._doneRead = function(){
+	if(this._success){
+		var bytes = this._buffer;
+		var byteArray = new Uint8Array(bytes.length);
+		for(i=0; i<bytes.length; ++i){
+			byteArray[i] = bytes[i];
+		}
+		this._buffer = byteArray;
 	}
+	this.alertAll(ClientFile.EVENT_GET_COMPLETE, this);
+/*
 	var data = [byteArray];
 	var type = "image/png";
 	var blob = new Blob(data,{"type":type});
-//	console.log(blob);
 	var url = window.URL.createObjectURL(blob);
 	var view = window;
 	view.open(url, "newwindow",'width=300,height=300');
-	
+*/
 }
+ClientFile.Operation.prototype._doneWrite = function(){
+	this.alertAll(ClientFile.EVENT_SET_COMPLETE, this);
+}
+ClientFile.Operation.prototype._doneDelete = function(){
+	this.alertAll(ClientFile.EVENT_DEL_COMPLETE, this);
+}
+ClientFile.Operation.prototype._doneMove = function(){
+	this.alertAll(ClientFile.EVENT_MOV_COMPLETE, this);
+}
+
 ClientFile.Operation.prototype._appendData64 = function(data64){
 	var data = Code.base64StringToBinary(data64);//, false, false);
 	for(var i=0; i<data.length; ++i){
@@ -73,9 +134,7 @@ ClientFile.Operation.prototype._appendData64 = function(data64){
 }
 
 ClientFile.Operation.prototype._handleCompleteRead = function(result){
-	//console.log(result);
 	console.log("_handleCompleteRead");
-
 	var json = Code.parseJSON(result);
 	var success = json["result"] == "success";
 	if(success){
@@ -97,29 +156,41 @@ ClientFile.Operation.prototype._handleCompleteRead = function(result){
 				this._offset = last;
 				this._readNextPage();
 			}else{
+				this._success = true;
 				this._doneRead();
 			}
-
 		}
+	}else{
+		this._doneRead();
 	}
 }
 ClientFile.Operation.prototype._handleCompleteWrite = function(result){
-	console.log(result);
+	//console.log(result);
 	var json = Code.parseJSON(result);
 	var success = json["result"] == "success";
+	var isDone = false;
 	if(success){
 		var payload = json["payload"];
 		var isDirectory = payload["isDirectory"];
 		if(isDirectory){
 			console.log("CREATED DIRECTORY");
+			isDone = true;
 		}else{
 			console.log("CREATED FILE");
 			var written = parseInt(payload["count"]);
 			this._offset += written;
 			if(this._offset<this._buffer.length){
 				this._writeNextPage();
+			}else{
+				this._success = true;
+				isDone = true;
 			}
 		}
+	}else{
+		isDone = true;
+	}
+	if(isDone){
+		this._doneWrite();
 	}
 }
 ClientFile.Operation.prototype._handleCompleteDelete = function(result){
@@ -130,33 +201,12 @@ ClientFile.Operation.prototype._handleCompleteDelete = function(result){
 	if(success){
 		var payload = json["payload"];
 		console.log(payload);
-		/*
-		
-		
-		var isDirectory = payload["isDirectory"];
-		if(isDirectory){
-			console.log("got directory listing");
-		}else{
-			var size = payload["size"];
-			var data = payload["data"];
-			var offset = parseInt(data["offset"]);
-			var count = parseInt(data["count"]);
-			var data64 = data["base64"];
-			var last = offset+count;
-			console.log(last);
-			this._appendData64(data64);
-			if(last<size){
-				this._offset = last;
-				this._readNextPage();
-			}else{
-				this._doneRead();
-			}
-
-		}*/
+		this._success = true;
 	}
+	this._doneDelete();
 }
 
-// READ
+
 ClientFile.Operation.prototype._setupAjax = function(){
 	if(this._ajax){
 		this._ajax.kill();
@@ -167,8 +217,9 @@ ClientFile.Operation.prototype._setupAjax = function(){
 	this._ajax.timeout(10000); // 10 seconds
 	this._ajax.context(this);
 }
+
+// READ
 ClientFile.Operation.prototype._readNextPage = function(){
-	console.log("_readNextPage");
 	this._setupAjax();
 	this._ajax.callback(this._handleCompleteRead);
 	var params = {};
@@ -181,13 +232,13 @@ ClientFile.Operation.prototype._readNextPage = function(){
 	this._ajax.send();
 }
 ClientFile.Operation.prototype.readFileOrDirectory = function(relativePath){
+	this._buffer = [];
 	this._offset = 0;
 	this._relativePath = relativePath;
 	this._readNextPage();
 }
 // CREATE / UPDATE / EDIT
 ClientFile.Operation.prototype.writeFileOrDirectory = function(relativePath, data){
-	console.log("WRITE: "+relativePath);
 	this._relativePath = relativePath;
 	this._buffer = data;
 	this._offset = 0;
@@ -205,7 +256,6 @@ ClientFile.Operation.prototype._writeNextPage = function(){
 	}else{
 		var count = Math.min(this._pageSize, this._buffer.length-this._offset);
 		var base64 = Code.binaryToBase64String(this._buffer, this._offset, count);
-//		console.log("SEND: "+this._offset+" / "+count+" @ "+base64);
 		params["data"] = base64;
 		params["offset"] = this._offset;
 		params["count"] = count;
@@ -214,15 +264,11 @@ ClientFile.Operation.prototype._writeNextPage = function(){
 	this._ajax.params(params);
 	this._ajax.send();
 }
-// ClientFile.Operation.prototype.createDirectory = function(relativePath, name){
-// 	console.log("CREATE: "+relativePath);
-// 	return null;
-// }
+
 // DELETE
 ClientFile.Operation.prototype.deleteFileOrDirectory = function(relativePath){
 	this._setupAjax();
 	this._ajax.callback(this._handleCompleteDelete);
-	console.log("DELETE: "+relativePath);
 	this._relativePath = relativePath;
 	var params = {};
 		params["operation"] = "delete";

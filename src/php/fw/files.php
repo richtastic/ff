@@ -43,7 +43,7 @@ function moveTempFileToLocation($root, $source, $relativeDestination=null, $file
 
 function appendToPath($path,$next){
 	$concat = null;
-	if(substr($concat,-1)=="/"){
+	if(substr($path,-1)=="/"){
 		$concat = "";
 	}else{
 		$concat = "/";

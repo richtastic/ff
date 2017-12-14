@@ -382,6 +382,9 @@ YAML.prototype.writeNumber = function(name,value){
 }
 YAML.prototype.writeString = function(name,value){
 	if(value===undefined){ value = name; name = null; }
+	// if(name==null){
+	// 	return;
+	// }
 	// if it starts or ends with a space, quote, doublequote ... needs to be enclosed in double quotes
 	if(false){//value.indexOf('\n')>=0){ // multiline string
 		arr = value.split('\n');
@@ -398,11 +401,16 @@ YAML.prototype.writeString = function(name,value){
 		this._indent--;
 	}else{
 		//value = value.replace(/\\n/g,"\\\\n")
-		value = value.replace(/\n/g,"\\n");
-		if(this._stackIsArray()){
-			this._lines[this._lineNumber++] = this._prefixIndent()+YAML.ARRAY_SEPARATOR+YAML.SPACE+'"'+value+'"';
+		if(value){
+			value = value.replace(/\n/g,"\\n");
+			value = '"'+value+'"';
 		}else{
-			this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR+YAML.SPACE+'"'+value+'"';
+			value = null;
+		}
+		if(this._stackIsArray()){
+			this._lines[this._lineNumber++] = this._prefixIndent()+YAML.ARRAY_SEPARATOR+YAML.SPACE+value;
+		}else{
+			this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR+YAML.SPACE+value;
 		}
 	}
 }

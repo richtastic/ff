@@ -59,6 +59,7 @@ $OPERATION_TYPE_HELLO = "hello";
 $OPERATION_TYPE_READ = "read";
 $OPERATION_TYPE_WRITE = "write";
 $OPERATION_TYPE_DELETE = "delete";
+$OPERATION_TYPE_MOVE = "move";
 
 
 
@@ -156,6 +157,9 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 			}else{
 				if($PARAM_OFFSET==0){
 					$payload["info"] = "create";
+					if($fileExists){ // delete and rewrite from 0
+						$removed = removeFileAtLocation($absolutePath);
+					}
 					$handle = fopen($absolutePath, 'wb'); // write with binary
 					if($handle){
 						$written = fwrite($handle, $dataBinary);
@@ -179,12 +183,15 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 	}else{
 		$payload["path"] = $path;
 		if(!$fileExists){
+			$payload["isDirectory"] = true;
 			$result = createDirectoryAtLocation($absolutePath);
 			if($result){
+				//setFilePermissionsReadOnly($absolutePath);
 				$success = true;
 			}
 		}else{ // already exists
 			$isDirectory = is_dir($absolutePath);
+			$payload["isDirectory"] = $isDirectory ? true : false;
 			if($isDirectory){
 				$success = true;
 			}
@@ -211,6 +218,29 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 	}else{
 		$payload["error"] = "path not exist";
 	}
+}else if($PARAM_OPERATION==$OPERATION_TYPE_MOVE){
+	/*
+	$absolutePath = appendToPath($FILESYSTEM_PATH, $PARAM_PATH);
+	$fileExists = file_exists($absolutePath);
+	$path = trimDirectoryPrefix($FILESYSTEM_PATH,$absolutePath);
+	$payload["path"] = $path;
+	if($fileExists){
+		$isDirectory = is_dir($absolutePath);
+		if($isDirectory){
+			$result = removeFileAtLocation($absolutePath, true);
+			if($result){
+				$success = true;
+			}
+		}else{
+			$result = removeFileAtLocation($absolutePath);
+			if($result){
+				$success = true;
+			}
+		}
+	}else{
+		$payload["error"] = "path not exist";
+	}*/
+	$payload["error"] = "not implemented";
 }
 
 

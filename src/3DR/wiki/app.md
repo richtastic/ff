@@ -191,8 +191,10 @@ project typical numbers:
 
 
 TODO:
-- project manager stub out
+
 - import picture file & save to N files
+
+- project manager stub out
 
 
 - triangulate.html broke

@@ -357,6 +357,27 @@ Code.parseURL = function(url){ // https://tools.ietf.org/html/rfc3986#section-4.
 	datum["fragment"] = anchor;
 	return datum;
 }
+Code.fileExtensionFromName = function(filename){
+	var regex = /\.(\w+)$/g;
+	var ext = filename.match(regex);
+	if(ext){
+		ext = ext[0];
+		return ext.substr(1,ext.length-1);
+	}
+	return null;
+}
+Code.appendToPath = function(path,next){
+	if(!path){
+		return "";
+	}
+	var concat = "";
+	if(path.length>1){
+		if(path.substr(path.length-2,path.length-1)!="/"){
+			concat = "/";
+		}
+	}
+	return path+concat+next;
+}
 Code.printMatlabArray = function(array,name){
 	name = name!==undefined ? name : "x";
 	var str = name+" = [";
@@ -1926,7 +1947,7 @@ Code.getTimeZone = function(){
 Code.getTimeStampFromMilliseconds = function(milliseconds){
 	milliseconds = milliseconds!==undefined ? milliseconds : Code.getTimeMilliseconds();
 	var d = new Date(milliseconds);
-	console.log(d+" == DATE");
+//	console.log(d+" == DATE");
 	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 }
 Code.stringRemovePrefix = function(str,prefix){
@@ -2154,6 +2175,16 @@ Code.randomIntArray = function(count, min,max){
 		a[i] = Code.randomInt(min,max);
 	}
 	return a;
+}
+Code.randomID = function(len){
+	len = len!==undefined ? len : 6;
+	var chars = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+	var i, c, str = "";
+	for(i=0; i<len; ++i){
+		c = Code.randomInt(0,chars.length-1);
+		str = str + chars[c];
+	}
+	return str;
 }
 Code.divSpace = function(start,end,count){ // start+end / count
 	count -= 1;
@@ -7478,8 +7509,11 @@ Code.base64StringToBinary = function(stringData, check, final){
 	}else{
 		return bytes;
 	}
-
 }
+Code.appendHeaderBase64 = function(base64, type){
+	return "data:"+type+";base64,"+base64;
+}
+
 Code.saveFile = function(data, type){
 	data = [data];
 	type = type!==undefined ? type : "image/png";
@@ -7505,7 +7539,28 @@ Code.generateImageFromBit64encode = function(str, fxn){
     img.src = str;
     return img;
 }
-
+Code.stringToBinary = function(str){ // currently only asci-256
+	var i, len = str.length;
+	var buffer = new Uint8Array(len);
+	for(i=0; i<len; ++i){
+		buffer[i] = str.charCodeAt(i);
+	}
+	return buffer;
+	// // 'utf-16le'
+	// var encoder = new TextEncoder('utf-8');
+	// var data = encoder.encode(str);
+	// return data;
+	// // encoder.decode(data);
+}
+Code.binaryToString = function(binary){
+	var i, len = binary.length;
+	var array = [];
+	for(i=0; i<len; ++i){
+		array.push( String.fromCharCode(binary[i]) );
+	}
+	var str = array.join("");
+	return str;
+}
 
 // multivalued logic [0,1]
 Code.fuzzyNot = function(a){ // compliment

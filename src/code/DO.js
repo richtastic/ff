@@ -91,16 +91,16 @@ DO.printRecursive = function(obj,cur,ind,fin){
 DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){ // transform point from lower in tree to higher in tree
 	if(destinationElement==undefined){ destinationElement = null; }
 	var ele = sourceElement;
-	DO._tempMatrix.copy(ele.matrix()); // .identity() ?
-	//DO._tempMatrix.identity();
-	while(ele != destinationElement && ele != undefined){
-		ele = ele.parent();
+	//DO._tempMatrix.copy(ele.matrix()); // .identity() ?
+	DO._tempMatrix.identity();
+	while(ele != destinationElement && ele){
 		if(ele){
 			//DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
 			DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
 		}
+		ele = ele.parent();
 	}
-DO._tempMatrix.inverse(DO._tempMatrix);
+	DO._tempMatrix.inverse(DO._tempMatrix);
 	DO._tempMatrix.multV2D(destinationPoint,sourcePoint);
 	return destinationPoint;
 }

@@ -803,12 +803,12 @@ Canvas.prototype._handleWindowResizedFxn = function(e){
 }
 //  ------------------------------------------------------------------------------------------------------------------------ DRAGGING
 Canvas.prototype._canvasDragOverFxn = function(e){
-	console.log(e);
+	// console.log(e);
 	e.stopPropagation();
 	e.preventDefault();
 }
 Canvas.prototype._canvasDragDropFxn = function(e){
-	console.log(e);
+	// console.log(e);
 	e.stopPropagation();
 	e.preventDefault();
 }
