@@ -136,7 +136,13 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 				$size = filesize($absolutePath);
 				$payload["size"] = $size;
 				$payload["info"] = "append";
-				$handle = fopen($absolutePath, 'ab'); // append with binary
+				$handle = null;
+				if($PARAM_OFFSET==0){
+					//$removed = removeFileAtLocation($absolutePath);
+					$handle = fopen($absolutePath, 'wb'); // OVERWRITE with binary
+				}else{
+					$handle = fopen($absolutePath, 'ab'); // append with binary
+				}
 				if($handle){
 					$moved = fseek($handle, $PARAM_OFFSET);
 					if($moved==0){
@@ -157,9 +163,9 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 			}else{
 				if($PARAM_OFFSET==0){
 					$payload["info"] = "create";
-					if($fileExists){ // delete and rewrite from 0
-						$removed = removeFileAtLocation($absolutePath);
-					}
+					// if($fileExists){ // delete and rewrite from 0
+					// 	$removed = removeFileAtLocation($absolutePath);
+					// }
 					$handle = fopen($absolutePath, 'wb'); // write with binary
 					if($handle){
 						$written = fwrite($handle, $dataBinary);
