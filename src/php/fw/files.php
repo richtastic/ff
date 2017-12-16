@@ -55,7 +55,7 @@ function moveFileToRelativeLocation($root, $relativeSource, $relativeDestination
 
 }
 
-function createDirectoryAtLocation($absolutePath){
+function createDirectoryAtLocation($absolutePath, $createParent=false){
 	$parentPath = dirname($absolutePath);
 	if(file_exists($parentPath)){
 		if(!file_exists($absolutePath)){ // already exists
@@ -63,6 +63,11 @@ function createDirectoryAtLocation($absolutePath){
 			if($didMakeDirectory){
 				return true;
 			}
+		}
+	}else if($createParent){
+		$didMakeDirectory = mkdir($absolutePath, 0755, true); // 0644
+		if($didMakeDirectory){
+			return true;
 		}
 	}
 	return false;

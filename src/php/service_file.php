@@ -166,6 +166,13 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 					// if($fileExists){ // delete and rewrite from 0
 					// 	$removed = removeFileAtLocation($absolutePath);
 					// }
+					$parentPath = dirname($absolutePath);
+					// $payload["A"] = $parentPath;
+					// $payload["B"] = $absolutePath;
+					$parentExists = file_exists($parentPath);
+					if(!$parentExists){ // need to create container for file
+						createDirectoryAtLocation($parentPath, true);
+					}
 					$handle = fopen($absolutePath, 'wb'); // write with binary
 					if($handle){
 						$written = fwrite($handle, $dataBinary);
@@ -190,7 +197,7 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 		$payload["path"] = $path;
 		if(!$fileExists){
 			$payload["isDirectory"] = true;
-			$result = createDirectoryAtLocation($absolutePath);
+			$result = createDirectoryAtLocation($absolutePath, true);
 			if($result){
 				//setFilePermissionsReadOnly($absolutePath);
 				$success = true;

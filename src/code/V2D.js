@@ -165,10 +165,12 @@ V2D.prototype.saveToYAML = function(yaml){
 	var DATA = V2D.YAML;
 	yaml.writeNumber(DATA.X, this.x);
 	yaml.writeNumber(DATA.Y, this.y);
+	return this;
 }
 V2D.prototype.loadFromObject = function(obj){
 	var DATA = V2D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y]);
+	return this;
 }
 V2D.prototype.copy = function(a){
 	if(a===undefined){ return new V2D(this.x,this.y); }

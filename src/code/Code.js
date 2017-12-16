@@ -366,17 +366,25 @@ Code.fileExtensionFromName = function(filename){
 	}
 	return null;
 }
-Code.appendToPath = function(path,next){
+Code.appendToPath = function(path){
 	if(!path){
 		return "";
 	}
-	var concat = "";
-	if(path.length>1){
-		if(path.substr(path.length-2,path.length-1)!="/"){
-			concat = "/";
+	var fin = path;
+	for(var i=1; i<arguments.length; ++i){
+		var next = arguments[i];
+		var concat = "";
+		if(fin.length>0 && next.length>0){
+			var last = fin.substr(fin.length-1,1);
+			var first = next.substr(0,1);
+			//console.log(i,fin, last,first);
+			if(last!="/" && first!="/"){
+				concat = "/";
+			}
 		}
+		fin = fin+concat+next;
 	}
-	return path+concat+next;
+	return fin;
 }
 Code.printMatlabArray = function(array,name){
 	name = name!==undefined ? name : "x";
@@ -7427,11 +7435,11 @@ Code.binaryToBase64String = function(binaryData, offset, count, skip){
 	offset = offset!==undefined ? offset : 0;
 	count = count!==undefined ? count : binaryData.length;
 	if(offset>0 || count<binaryData.length){
-		console.log("TRIM.  "+offset+" & "+count);
+		//console.log("TRIM.  "+offset+" & "+count);
 		var size = Math.min(count, binaryData.length-offset);
 		var byteArray = new Uint8Array(size);
 		var end = offset+size;//Math.min(offset+count, binaryData.length);
-		console.log("OFFSET: "+offset);
+		//console.log("OFFSET: "+offset);
 		for(var i=offset, j=0; i<end; ++i, ++j){
 			byteArray[j] = binaryData[i];
 		}
@@ -7560,6 +7568,14 @@ Code.binaryToString = function(binary){
 	}
 	var str = array.join("");
 	return str;
+}
+Code.binaryToYAMLObject = function(binary){
+	var str = Code.binaryToString(binary);
+	var yaml = YAML.parse(str);
+	if(Code.isArray(yaml)){
+		yaml = yaml[0];
+	}
+	return yaml;
 }
 
 // multivalued logic [0,1]

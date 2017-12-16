@@ -8,9 +8,17 @@ function pageLoadedFxn(){
 	var ff = new FF("../../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["App3DR.js", "../R3D.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+/*
+	console.log(Code.appendToPath("a","b","c") );
+	console.log(Code.appendToPath("a","b") );
+	console.log(Code.appendToPath("/","a") );
+	console.log(Code.appendToPath("/","a/") );
+	console.log(Code.appendToPath("/","/a/","/b/") );
+	return;
+*/
 	//var client = new ClientFile();
 	// http://localhost/ff/3DR/app/app.html
 	/*

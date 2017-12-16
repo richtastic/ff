@@ -150,7 +150,7 @@ ClientFile.Operation.prototype._handleCompleteRead = function(result){
 			var count = parseInt(data["count"]);
 			var data64 = data["base64"];
 			var last = offset+count;
-			console.log(last);
+			//console.log(last);
 			this._appendData64(data64);
 			if(last<size){
 				this._offset = last;
@@ -165,7 +165,7 @@ ClientFile.Operation.prototype._handleCompleteRead = function(result){
 	}
 }
 ClientFile.Operation.prototype._handleCompleteWrite = function(result){
-	//console.log(result);
+	console.log(result);
 	var json = Code.parseJSON(result);
 	var success = json["result"] == "success";
 	var isDone = false;

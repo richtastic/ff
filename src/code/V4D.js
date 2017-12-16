@@ -26,10 +26,12 @@ V4D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.Y, this.y);
 	yaml.writeNumber(DATA.Z, this.z);
 	yaml.writeNumber(DATA.T, this.t);
+	return this;
 }
 V4D.prototype.loadFromObject = function(obj){
 	var DATA = V4D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y],obj[DATA.Z],obj[DATA.T]);
+	return this;
 }
 // --------------------------------------------------------------------------------------------------------------------- quaternion
 V4D.copy = function(a){

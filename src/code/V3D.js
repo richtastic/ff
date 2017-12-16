@@ -168,10 +168,12 @@ V3D.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber(DATA.X, this.x);
 	yaml.writeNumber(DATA.Y, this.y);
 	yaml.writeNumber(DATA.Z, this.z);
+	return this;
 }
 V3D.prototype.loadFromObject = function(obj){
 	var DATA = V3D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y],obj[DATA.Z]);
+	return this;
 }
 V3D.prototype.copy = function(a){
 	if(!a){  return new V3D(this.x,this.y,this.z); }

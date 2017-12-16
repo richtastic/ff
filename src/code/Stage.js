@@ -222,15 +222,16 @@ Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base
 	return this._toImage(wid,hei, type);
 }
 Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
+	var presScale = this._canvas.presentationScale();;
 	this._renderCanvas.clear();
-	this._renderCanvas.width(wid);
-	this._renderCanvas.height(hei);
-	this._renderCanvas.size(wid,hei);
+	this._renderCanvas.width(wid/presScale);
+	this._renderCanvas.height(hei/presScale);
+	this._renderCanvas.size(wid/presScale,hei/presScale);
 	this._renderCanvas.contextIdentity();
-	var upScale = this._canvas.presentationScale();
+	var upScale = 1.0;//this._canvas.presentationScale();
 	var upMatrix = new Matrix2D();
 		upMatrix.identity();
-		upMatrix.scale(upScale);
+		//upMatrix.scale(upScale);
 	if(matrix){
 		upMatrix.mult(upMatrix,matrix); // AFTER?
 	}

@@ -143,6 +143,7 @@ Triangulate.prototype._handleDenseStudyDataLoad = function(o){
 	this._cameraA = cameraA;
 	this._cameraB = cameraB;
 	var points3D = R3D.triangulationDLT(pointsFrom,pointsTo, cameraA,cameraB, K);
+	// TODO: nonlinear optimizing
 var str = R3D.output3DPoints(points3D, null);
 console.log(str);
 	this._points3D = points3D;

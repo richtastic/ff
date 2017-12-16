@@ -190,11 +190,11 @@ project typical numbers:
 
 
 
-TODO:
+APP TODO:
+- roll up medium code into R3D fxn
+- roll up dense code into R3D fxn
 
-- import picture file & save to N files
-
-- project manager stub out
+- start visualizing data from generated files
 
 
 - triangulate.html broke
@@ -212,4 +212,104 @@ TODO:
 - POLY2D error
 
 - triangulate projection textures from camera (from 3D points to 2D points [currently reversed])
+
+- app visualizations
+	- single-view features [points]
+	- 2-view point-matching [lines]
+	- 3-view point-matching [lines]
+	- 2-view dense match [texture-show]
+	- cameras in 3D space along with projections to 3d points
+		- filter display by pair or tuple or ALL
+	- 
+
+
+ALGORITHM TODO:
+
+TRIPLES:
+- from 2 separate dense matches to 3-view tuple
+	- for each matched pixel in image A [A-B]
+		- is there a match within cellsize/2 radius in [A-C]
+		- is the SAD/SIFT matching A-B, B-C, C-A all similar in score ?
+
+
+BUNDLE ADJUST:
+
+- use triples as a basis for bundle-adjusting
+- iterate on: K, P3D (xN), p2d(xNx3), [A-B], [A-C]
+	- while total error is decreasing with some minimum velocity:
+		- for each triple:
+			minimize error for all variables involved in triple
+				[K should be fairly fixed ... was determined independently]
+				[2d points should be fairly fixed ... ie high-movement should force high-error]
+				[3d points should change]
+				[Pa,Pb,Pc  should change]
+				=>
+					change 3D points by some minimum amount (maximum volume dimension * 1E-6)
+					change camera positions by some minimum amount (maximum origin volume * 1E-6)
+					change camera rotations by some minimum amount ()
+		- need to be able to drop matches that contribute a large portion of error
+				- if error created by point is above some stddev of rest of data
+					- use BEST data [knee point / min count] as population to estimate stddev
+		- total error = sum of individual triplet error
+
+	variables: 
+
+- data:
+	Camera Matrix K:
+		- [values]
+
+	Point3D:
+		- projections:
+			point2D [view A]
+			point2D [view B]
+	View:
+		- transforms:
+			transform:
+				- T3D[A-B]
+		- points:
+			- point2D
+			...
+		- camera K
+
+	point2D:
+		source: point3D
+		view: View
+
+	Transform3D:
+		- viewA
+		- viewB
+		- matrix
+
+
+OUTPUT:
+	refined K, Camera_i, points2D, points3D
+
+
+output can be used to:
+	- only keep tripled/optimized 3D points [ignore many more ]
+	- reproject 2D points to 3D (keep as-is 2d dense matches)
+	- reuse triple 3D points as dense matching seeds, to reiterate bundle adjustment
+	- 
+
+
+
+
+
+
+SPEEDUPS:
+	- 2x+ using native coding language
+	- 2x+ using matrix libraries
+	- 10x+ using file i/o [some places]
+	- 2+ using caching [some places]
+
+
+
+
+
+
+
+
+
+
+
 
