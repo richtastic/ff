@@ -191,6 +191,9 @@ project typical numbers:
 
 
 APP TODO:
+- visualize pair matches
+
+
 - roll up medium code into R3D fxn
 - roll up dense code into R3D fxn
 
@@ -199,11 +202,14 @@ APP TODO:
 
 - triangulate.html broke
 
-- display feature locations onto image
+
+- use 2d quadspace to display feature locations onto image
+
+
 - how images perform with large image
 - scrolling zoom gadget via mouse
 - scale brush size with gadget
-- saving mask image to file
+
 
 
 - 

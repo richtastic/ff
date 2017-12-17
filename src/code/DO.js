@@ -91,11 +91,9 @@ DO.printRecursive = function(obj,cur,ind,fin){
 DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){ // transform point from lower in tree to higher in tree
 	if(destinationElement==undefined){ destinationElement = null; }
 	var ele = sourceElement;
-	//DO._tempMatrix.copy(ele.matrix()); // .identity() ?
 	DO._tempMatrix.identity();
 	while(ele != destinationElement && ele){
 		if(ele){
-			//DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
 			DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
 		}
 		ele = ele.parent();
@@ -107,15 +105,32 @@ DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinatio
 DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinationElement){ // transform point from higher in tree to lower in tree
 	if(destinationElement==undefined){ destinationElement = null; }
 	var ele = sourceElement;
-	DO._tempMatrix.copy(ele.matrix()); // .identity() ?
+	DO._tempMatrix.identity();
 	while(ele != destinationElement && ele != undefined){
-		ele = ele.parent();
 		if(ele){
-			DO._tempMatrix.mult(ele.matrix(),DO._tempMatrix);
+			DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
 		}
+		ele = ele.parent();
 	}
 	DO._tempMatrix.multV2D(destinationPoint,sourcePoint);
 	return destinationPoint;
+
+/*
+	console.log(e["local"]+" ?");
+	var target = this._areaInterfaceMove;//e["target"];
+	var sourcePoint = location.copy();
+	var sourceElement = target;
+	//var sourceElement = this._areaInterfaceRotate;
+	var destinationElement = this._root;//this._stage.root(); // this._root; // this._areaInterfaceRotate;
+	var destinationPoint = new V2D();
+	//var local = DO.pointLocalUp(destinationPoint,sourcePoint,sourceElement,destinationElement);;
+	var local = DO.pointLocalDown(destinationPoint,sourcePoint,sourceElement,destinationElement);
+	console.log(location+"");
+	console.log(local+"");
+	var imageLocation = this._explorer.toLocalPoint(local);
+*/
+
+
 }
 DO.matrixLocalDown = function(matrix,sourceElement,destinationElement){ // transform matrix from higher in tree to lower in tree
 	if(destinationElement==undefined){ destinationElement = null; }

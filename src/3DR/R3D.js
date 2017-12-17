@@ -4133,6 +4133,9 @@ R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle, simp
 }
 
 R3D.imageMatrixFromImage = function(image, stage){
+	if(!image || !stage){
+		return null;
+	}
 	var imageFloat = stage.getImageAsFloatRGB(image);
 	var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
 	return imageMatrix;
@@ -4762,7 +4765,7 @@ R3D.fullMatchesForObjects = function(objectsA, imageMatrixA, objectsB, imageMatr
 		var a = best[i]["A"]["point"];
 		var b = best[i]["B"]["point"];
 		matches.push({"A":a, "B":b});
-		p.x = x; p.y = y; p.z = size; p.y = angle;
+		p.x = x; p.y = y; p.z = size; p.t = angle;
 		TODO: angle & size & score
 	}
 	return {"F":matrixFfwd, "Finv":matrixFrev, "matches":matches};

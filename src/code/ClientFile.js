@@ -165,7 +165,7 @@ ClientFile.Operation.prototype._handleCompleteRead = function(result){
 	}
 }
 ClientFile.Operation.prototype._handleCompleteWrite = function(result){
-	console.log(result);
+//	console.log(result);
 	var json = Code.parseJSON(result);
 	var success = json["result"] == "success";
 	var isDone = false;

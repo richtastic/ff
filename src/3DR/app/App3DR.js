@@ -60,12 +60,25 @@ function App3DR(){
 
 
 
+	// this._projectManager
 
-// var app = new App3DR.App.ImageEditor(this._resource);
-// this.setupAppActive(app);
-	
-var app = new App3DR.App.ImageUploader(this._resource, this._projectManager);
+	// this._activeView = this._projectManager.views()[0];
+	// console.log(this._activeView);
+
+
+var app = new App3DR.App.ImageEditor(this._resource);
 this.setupAppActive(app);
+// app.setActiveImage(null);
+// app.setActiveMask(null);
+
+this._imageEditor = app;
+app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
+this._setupImageEditorProjectManager();
+
+
+	
+// var app = new App3DR.App.ImageUploader(this._resource, this._projectManager);
+// this.setupAppActive(app);
 	
 	
 	this._canvas.addListeners();
@@ -160,12 +173,15 @@ App3DR.Resource.TEX_BUTTON_ICON_MOVE = 14;
 // ------------------------------------------------------------------------------------------------------------
 
 App3DR.App = function(resource, manager){
+	App3DR.App._.constructor.call(this, resource, manager);
 	this._projectManager = manager;
 	this._resource = resource;
 	this._root = new DO();
 	this._canvas = null;
 	this._stage = null;
 }
+Code.inheritClass(App3DR.App, Dispatchable);
+
 App3DR.App.prototype.size = function(){
 	return V2D.sub(this._max,this._min);
 }
@@ -198,32 +214,65 @@ App3DR.App.prototype.updateSize = function(min,max){
 	this._max = max;
 }
 
+App3DR.prototype._setupImageEditorProjectManager = function(){
+	var manager = this._projectManager;
+	if(manager.isLoaded()){
+		
+		var views = manager.views();
+		console.log("is loaded: "+views.length);
+		if(views.length>0){
+			//var view = views[0];
+			var view = views[1];
+			this._activeView = view;
+			var app = this._imageEditor;
+			var self = this;
 
-
-
-/*
-giau.FileUploadDropArea.prototype._handleDragDropUploadFxn = function(e){
-	e.stopPropagation();
-	e.preventDefault();
-	var fileList = e.dataTransfer.files;
-	var i, len = fileList.length;
-	for(i=0; i<len; ++i){
-		var file = fileList[i];
-		var filename = file.name;
-		var filetype = file.type;
-		if(this.fileTypeAcceptable(filetype)){
-			this.uploadFile(file, filename);
-			break; // only one
+			var fxnA = function(){
+				view.loadFeaturesImage(fxnB, self);
+			}
+			var fxnB = function(){
+				app.setActiveImage(view.featuresImage());
+				view.loadMaskImage(fxnC, self);
+			}
+			var fxnC = function(){
+				app.setActiveMask(view.maskImage(), true);
+				view.loadFeatures(fxnD, self);
+			}
+			var fxnD = function(){
+				var features = view.features();
+				console.log(features);
+				var expanded = [];
+				var img = view.featuresImage();
+				var width = img.width;
+				var height = img.height;
+				for(var i=0; i<features.length; ++i){
+					var f = features[i];
+					var p = new V3D();
+					p.x = f.x * width;
+					p.y = f.y * height;
+					p.z = f.z * width;
+					expanded.push(p);
+				}
+				app.setActiveFeatures(expanded);
+			}
+			fxnA();
 		}
+	}else{
+		console.log("not loaded");
+		manager.addFunction(App3DR.ProjectManager.EVENT_LOADED, this._setupImageEditorProjectManager, this);
 	}
 }
-*/
+App3DR.prototype._handleImageEditorMaskUpdate = function(editor){
+	console.log("_handleImageEditorMaskUpdate");
+	var image = editor.maskSource();
+	var view = this._activeView;
+	if(view && image){
+		view.saveMaskPicture(image);
+	}
+}
 
 App3DR.App.ImageUploader = function(resource, manager){
-	App3DR.App.ImageEditor._.constructor.call(this, resource, manager);
-
-
-	
+	App3DR.App.ImageUploader._.constructor.call(this, resource, manager);
 
 	var client = new ClientFile();
 	this._clientFile = client;
@@ -259,10 +308,6 @@ App3DR.App.ImageUploader = function(resource, manager){
 	this._jsDispatch.addJSEventListener(domUploadDiv, Code.JS_EVENT_DRAG_LEAVE, this._handleDragOutUploadFxn, this);
 }
 Code.inheritClass(App3DR.App.ImageUploader, App3DR.App);
-
-// App3DR.App.ImageUploader.FileQueueSort = function(a,b){
-// 	//
-// }
 
 App3DR.App.ImageUploader.prototype.setActive = function(canvas,stage,parent, min,max){
 	App3DR.App.ImageUploader._.setActive.call(this, canvas,stage,parent, min,max);
@@ -317,7 +362,7 @@ App3DR.App.ImageUploader.prototype._render = function(){
 
 	var topLeftMe = new V2D();
 	var topLeftRoot = new V2D();
-	DO.pointLocalUp(topLeftRoot,topLeftMe,this._displayDropArea,null);//this._root);
+	DO.pointLocalDown(topLeftRoot,topLeftMe,this._displayDropArea,null);//this._root);
 	
 	var topLeft = topLeftRoot.copy().scale(-1).scale(downScale);
 	var divSize = size.copy().scale(downScale);
@@ -329,7 +374,6 @@ App3DR.App.ImageUploader.prototype._render = function(){
 	Code.setStyleTop(d, topLeft.y+"0px");
 	Code.setStyleWidth(d, divSize.x+"px");
 	Code.setStyleHeight(d, divSize.y+"px");
-
 }
 App3DR.App.ImageUploader.prototype._fileTypeAcceptable = function(type){
 	return true;
@@ -366,59 +410,6 @@ App3DR.App.ImageUploader.prototype.isBusy = function(){
 	return val!=null;
 }
 
-/*
-App3DR.App.ImageUploader.prototype._addViewToQueue = function(view){
-	console.log("_addViewToQueue");
-	this._viewQueue.push(view);
-	this._checkViewQueue();
-}
-App3DR.App.ImageUploader.prototype._checkViewQueue = function(view){
-	console.log("_checkViewQueue");
-	if(this._processingView){
-		return;
-	}
-	if(this._viewQueue.length==0){
-		this._checkPictureQeueue();
-		return;
-	}
-	this._processingView = this._viewQueue.shift();
-	this._processCurrentView();
-}
-App3DR.App.ImageUploader.prototype._processCurrentView = function(){
-	console.log("_processCurrentView");
-	var view = this._processingView;
-	this._projectManager.createDirectoryForView(view);
-
-	???
-
-}
-
-App3DR.App.ImageUploader.prototype._addPictureToQueue = function(picture){
-	console.log("_addPictureToQueue");
-	this._pictureQueue.push(picture);
-	this._checkPictureQueue();
-}
-App3DR.App.ImageUploader.prototype._checkPictureQueue = function(){
-	console.log("_addPictureToQueue");
-	if(this.isBusy()){
-		return;
-	}
-	if(this._pictureQueue.length==0){
-		this._checkFileQueue();
-		return;
-	}
-	this._processingPicture = this._pictureQueue.shift();
-	this._processCurrentPicture();
-}
-
-App3DR.App.ImageUploader.prototype._processCurrentPicture = function(){
-	console.log("_processCurrentPicture");
-	var object = this._processingPicture;
-	var filename = object["filename"];
-	var size = object["size"];
-	var binary = object["binary"];
-}
-*/
 App3DR.App.ImageUploader.prototype._addFileToQueue = function(file){
 	console.log("_checkFileQueue");
 	this._fileQueue.push(file);
@@ -617,19 +608,26 @@ App3DR.App.ImageUploader.prototype.uploadFile = function(file){
 
 
 
-App3DR.App.ImageEditor = function(resource, manager){
-	App3DR.App.ImageEditor._.constructor.call(this, resource, manager);
+App3DR.App.ImageEditor = function(resource){
+	App3DR.App.ImageEditor._.constructor.call(this, resource);
 	this._explorer = new App3DR.Explorer2D();
-	// var imageLoader = new ImageLoader("../images/",["caseStudy1-9.jpg"], this,this._handleTestImageLoaded,null);
-	// imageLoader.load();
+	this._testImageSource = null;
+	this._testImageMatrix = null;
+	this._imageMaskSource = null;
+	this._testImageMaskMatrix = null;
+	this._featuresSource = null;
 }
 Code.inheritClass(App3DR.App.ImageEditor, App3DR.App);
+
+App3DR.App.ImageEditor.EVENT_MASK_UPDATE = "img.update";
+
 App3DR.App.ImageEditor.prototype._handleResourceLoaded = function(){
-//	console.log("galaxy");
 	var resource = this._resource;
 	this._imageCheckerboard = resource.tex(App3DR.Resource.TEX_BG_CHECKERBOARD);
+	
+
 //	console.log(this._imageCheckerboard);
-	this._testImageSource = resource.tex(App3DR.Resource.TEX_CASE_STUDY_EXAMPLE);
+//	this._testImageSource = resource.tex(App3DR.Resource.TEX_CASE_STUDY_EXAMPLE);
 /*
 }
 App3DR.App.ImageEditor.prototype._handleTestImageLoaded = function(imageInfo){
@@ -637,23 +635,6 @@ App3DR.App.ImageEditor.prototype._handleTestImageLoaded = function(imageInfo){
 	var fileList = imageInfo.files;
 	this._testImageSource = imageList[0];
 	*/
-		var stage = this._stage;
-		var imageSource = this._testImageSource;
-		var imageFloat = stage.getImageAsFloatRGB(imageSource);
-		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
-	this._testImageMatrix = imageMatrix;
-	this._testImageMaskMatrix = new ImageMat(imageMatrix.width(),imageMatrix.height());
-	// ...
-
-
-	var img = this._testImageSource;
-	var sourceWidth = img.width;
-	var sourceHeight = img.height;
-	var canvas = this._canvas;
-	var size = canvas.size();
-	siz = Math.min(size.x,size.y);
-	size.set(siz,siz);
-	this._explorer.setSizes(size, new V2D(sourceWidth,sourceHeight) );
 
 	this._displayBackground.image(this._imageCheckerboard);
 	this._displayImageAlpha = 0.75;
@@ -663,7 +644,65 @@ App3DR.App.ImageEditor.prototype._handleTestImageLoaded = function(imageInfo){
 
 	this._render();
 }
-App3DR.App.ImageEditor.prototype.updateMaskImageFromMatrix = function(){
+App3DR.App.ImageEditor.prototype.maskSource = function(){
+	return this._imageMaskSource;
+}
+App3DR.App.ImageEditor.prototype.setActiveImage = function(imageSource){
+	console.log("setActiveImage");
+	this._testImageSource = imageSource;
+	this._testImageMatrix = R3D.imageMatrixFromImage(imageSource, this._stage);
+
+	if(this._testImageSource){
+		var img = this._testImageSource;
+		var sourceWidth = img.width;
+		var sourceHeight = img.height;
+		var canvas = this._canvas;
+		var size = canvas.size();
+		siz = Math.min(size.x,size.y);
+		size.set(siz,siz);
+		this._explorer.setSizes(size, new V2D(sourceWidth,sourceHeight) );
+	}
+	//this._render();
+}
+App3DR.App.ImageEditor.prototype.setActiveMask = function(imageSource, force){
+	this._imageMaskSource = imageSource;
+	this._testImageMaskMatrix = R3D.imageMatrixFromImage(imageSource, this._stage);
+	// change from colored to gray:
+	if(this._testImageMaskMatrix){
+		console.log(this._testImageMaskMatrix)
+		var m = this._testImageMaskMatrix;
+		var r = m.red();
+		var g = m.grn();
+		var b = m.blu();
+		var l = r.length;
+		for(var i=0; i<l; ++i){
+			var rr = r[i];
+			var gg = g[i];
+			var bb = b[i];
+			// force all to 1.0;
+			if(rr>0 || gg>0 || bb>0){
+				r[i] = g[i] = b[i] = 1.0;
+			}
+		}
+	}
+	if(!imageSource && force && this._testImageMatrix){
+		var mat = this._testImageMatrix;
+		this._testImageMaskMatrix = new ImageMat(mat.width(), mat.height());
+		this.updateMaskImageFromMatrix(false);
+	}
+	this._render();
+}
+App3DR.App.ImageEditor.prototype.setActiveFeatures = function(features){
+	var maxCount = 500;
+	if(features.length>maxCount){
+		features = Code.copyArray(features, 0,maxCount-1);
+	}
+	this._featuresSource = features;
+	this._render();
+}
+App3DR.App.ImageEditor.prototype.updateMaskImageFromMatrix = function(send){
+	console.log("updateMaskImageFromMatrix");
+	send = send!==undefined ? send : true;
 	var matrix = this._testImageMaskMatrix;
 	var stage = this._stage;
 
@@ -675,43 +714,47 @@ App3DR.App.ImageEditor.prototype.updateMaskImageFromMatrix = function(){
 	var r = Code.getFloatRedARGB(color);
 	var g = Code.getFloatGrnARGB(color);
 	var b = Code.getFloatBluARGB(color);
-//	console.log(Code.getHex(color),a,r,g,b)
 	var count = width*height;
-	// getFloatRedARGB
-	//Code.getRedRGBA
 	var red = new Array(count);
 	var grn = new Array(count);
 	var blu = new Array(count);
 	var i;
 	for(i=0; i<count; ++i){
+		var c = alp[i] * a;
 		red[i] = r;
 		grn[i] = g;
 		blu[i] = b;
-		alp[i] = alp[i] * a; // 1 or 0 * a
+		alp[i] = c;
 	}
 	var image = stage.getFloatARGBAsImage(alp,red,grn,blu, width, height);
 	// 
-	// this._displayMaskImage.
 	this._imageMaskSource = image;
-	// .getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
+	if(send){
+		this._maskUpdate();
+	}
+}
+App3DR.App.ImageEditor.prototype._maskUpdate = function(){
+	this.alertAll(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this);
 }
 App3DR.App.ImageEditor.prototype.setActive = function(canvas,stage,parent, min,max){
 	App3DR.App.ImageEditor._.setActive.call(this, canvas,stage,parent, min,max);
 
-	this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	//this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_DRAW;
 
 	// setup screen
 	this._displayBackground = new DOImage();
 	this._displayPixels = new DO();
-	//this._displayImageContainer = new DOImage();
+	this._displayFeatures = new DO();
+
 	this._displayMaskImage = new DOImage();
 	this._displayImage = new DOImage();
 	this._root.addChild(this._displayBackground);
-		//this._root.addChild(this._displayImageContainer);
 		this._root.addChild(this._displayImage);
 		this._root.addChild(this._displayMaskImage);
 	this._root.addChild(this._displayPixels);
-	//this._root.addChild(this._displayBac);
+	this._root.addChild(this._displayFeatures);
+	
 
 	this._areaInterfaceMove = new DO();
 	this._areaInterfaceRotate = new DO();
@@ -783,7 +826,7 @@ App3DR.App.generateButtonToggle = function(resource, parent, iconImages){
 	var i;
 	for(i=0; i<iconImages.length; ++i){
 		var icon = iconImages[i];
-console.log(icon);
+//console.log(icon);
 		var displays = App3DR.App.generateButtons(resource, parent, icon);
 		pressed.push(displays["active"]);
 		unpressed.push(displays["pressed"]);
@@ -792,7 +835,7 @@ console.log(icon);
 			hit = displays["hit"];
 		}
 	}
-console.log(unpressed,pressed);
+//console.log(unpressed,pressed);
 	button.setDOHitArea(hit);
 	button.setDOInactive(inactive);
 	button.setToggleItems(unpressed,pressed);
@@ -946,6 +989,34 @@ App3DR.App.ImageEditor.prototype._testButton = function(){
 
 	button.matrix().translate(0,0);
 }
+
+// App3DR.App.ImageEditor.prototype._loadActiveViewPictureComplete = function(view){
+// 	console.log("_loadActiveViewPictureComplete");
+// 	console.log(view);
+// 	var image = this._activeView.featuresImage();
+// 	console.log(image);
+
+// 	// set local variables
+// 		var stage = this._stage;
+// 		var imageSource = this._testImageSource;
+// 		var imageFloat = stage.getImageAsFloatRGB(imageSource);
+// 		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+// 	this._testImageMatrix = imageMatrix;
+// 	this._testImageMaskMatrix = new ImageMat(imageMatrix.width(),imageMatrix.height());
+	
+// 	console.log("set");
+
+// 	var img = this._testImageSource;
+// 	var sourceWidth = img.width;
+// 	var sourceHeight = img.height;
+// 	var canvas = this._canvas;
+// 	var size = canvas.size();
+// 	siz = Math.min(size.x,size.y);
+// 	size.set(siz,siz);
+// 	this._explorer.setSizes(size, new V2D(sourceWidth,sourceHeight) );
+
+// 	this._render();
+// }
 
 App3DR.App.ImageEditor.prototype.saveImage = function(){
 
@@ -1102,6 +1173,7 @@ GizmoSlider = function(root, size){
 	*/
 }
 App3DR.App.ImageEditor.prototype._render = function(){
+//	console.log("RENDER");
 	var canvas = this._canvas;
 	var size = this.size();
 	// var size = canvas.size();
@@ -1123,36 +1195,43 @@ App3DR.App.ImageEditor.prototype._render = function(){
 	var percentFooter = 0.15;
 	var percentRotate = 0.1;
 	var percentMove = 1.0 - percentHeader - percentRotate - percentFooter;
-	d = this._areaInterfaceMove;
+	
 	var moveYStart = percentHeader;
 	var moveYEnd = moveYStart+percentMove;
 	var rotYStart = moveYEnd;
 	var rotYEnd = rotYStart+percentRotate;
 
-	d.graphics().clear();
-	d.graphics().beginPath();
-	d.graphics().drawPolygon([
+	// TODO: 
+
+	d = this._areaInterfaceMove;
+d.newGraphicsIntersection();
+var g = d.graphicsIntersection();
+	g.clear();
+	g.beginPath();
+	g.drawPolygon([
 		new V2D(0,size.y*moveYStart),
 		new V2D(size.x,size.y*moveYStart),
 		new V2D(size.x,size.y*moveYEnd),
 		new V2D(0,size.y*moveYEnd)
 		]);
-	d.graphics().endPath();
-	d.graphics().setFill(0x77FF0000);
-	d.graphics().fill();
+	g.endPath();
+	g.setFill(0x77FF0000);
+	g.fill();
 
 	d = this._areaInterfaceRotate;
-	d.graphics().clear();
-	d.graphics().beginPath();
-	d.graphics().drawPolygon([
+//d.newGraphicsIntersection();
+var g = d.graphicsIntersection();
+	g.clear();
+	g.beginPath();
+	g.drawPolygon([
 		new V2D(0,size.y*rotYStart),
 		new V2D(size.x,size.y*rotYStart),
 		new V2D(size.x,size.y*rotYEnd),
 		new V2D(0,size.y*rotYEnd)
 		]);
-	d.graphics().endPath();
-	d.graphics().setFill(0x7700FF00);
-	d.graphics().fill();
+	g.endPath();
+	g.setFill(0x7700FF00);
+	g.fill();
 
 	
 	var containerSize = this.size();
@@ -1292,7 +1371,7 @@ if(minCoordinate){
 				d.graphics().clear();
 			}
 //			d.graphics().alpha(0.1);
-
+			
 			// PIXELS
 			d = this._displayPixels;
 
@@ -1307,7 +1386,7 @@ if(minCoordinate){
 			var vectorJ = dirY.copy().scale(countY*scale);
 
 			// do pixel colors
-			if(doSelfPixels){ // 9604, 2500
+			if(this._testImageMatrix && doSelfPixels){ // 9604, 2500
 				var imageMatrix = this._testImageMatrix;
 				var maskMatrix = this._testImageMaskMatrix;
 				d.graphics().setLine(0.0, 0x0);
@@ -1336,7 +1415,9 @@ if(minCoordinate){
 						var color = imageMatrix.getHex(indI,indJ);
 							color = Code.setAlpFloatARGB(color, this._displayImageAlpha);
 						var col = new V2D();
-						maskMatrix.getPoint(col, indI,indJ);
+						if(maskMatrix){
+							maskMatrix.getPoint(col, indI,indJ);
+						}
 						if(col.x>0){
 							col = this._maskColor;
 						}else{
@@ -1412,14 +1493,53 @@ if(minCoordinate){
 			d.graphics().strokeLine();
 		}
 	}
+
+	if(this._featuresSource){
+		var scaling = this._explorer.scale();
+		var line = 1.0;
+		if(scaling>=2.0){
+			line = Math.round(Math.sqrt(scaling));
+		}
+		var d = this._displayFeatures;
+		d.graphics().clear();
+			d.graphics().setLine(line,0xFFFF00FF);
+			d.graphics().setFill(0x22FF00FF);
+
+
+
+		// TODO: GET FEATURES ONLY INSIDE LOCAL WINDOW:
+			// origin + 
+		var features = this._featuresSource;
+		var f = new V3D();
+		for(i=0; i<features.length; ++i){
+			var feature = features[i];
+			//f.set(feature.x+0.5, feature.y+0.5);
+			f.set(feature.x+0.5, feature.y+0.5, feature.z);
+			var siz = f.z;
+				siz = siz * scaling;
+				var p = this._explorer.toScreenPoint(f);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(p.x,p.y, siz);
+				d.graphics().endPath();
+				d.graphics().fill();
+				d.graphics().strokeLine();
+			// x,y position
+			// z size
+			// t score [color ?]
+		}
+	}
 }
 }
 App3DR.App.ImageEditor.prototype._colorMaskImage = function(location, fill, diameter){
+	console.log("_colorMaskImage");
 	diameter = diameter!==undefined ? diameter : 1.0;
-console.log(diameter);
+	if(!this._testImageMaskMatrix){
+		return;
+	}
+	var img = this._testImageMaskMatrix;
 	var locationX = Math.floor(location.x);
 	var locationY = Math.floor(location.y);
-	var img = this._testImageMaskMatrix;
+	
 	var changed = false;
 	// TODO: skip if rect is outside
 	var i, j; 
@@ -1483,6 +1603,15 @@ App3DR.App.ImageEditor.prototype.handleKeyDown = function(e){
 		this._move( new V2D(0,-moveSize) );
 	}else if(e.keyCode == Keyboard.KEY_DOWN){
 		this._move( new V2D(0,moveSize) );
+
+// edit mode
+
+	}else if(e.keyCode == Keyboard.KEY_LET_Z){
+		this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_ERASE;
+	}else if(e.keyCode == Keyboard.KEY_LET_X){
+		this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_DRAW;
+	}else if(e.keyCode == Keyboard.KEY_LET_C){
+		this._editingMode = App3DR.App.ImageEditor.EDIT_MODE_MOVE;
 	}
 }
 App3DR.App.ImageEditor.prototype.moveAreaHandleMouseUp = function(e){
@@ -1497,12 +1626,34 @@ App3DR.App.ImageEditor.prototype.moveAreaHandleMouseUp = function(e){
 }
 App3DR.App.ImageEditor.prototype.moveAreaHandleMouseDown = function(e){
 	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	var data = e["data"];
+	var location = data["location"];
+	//var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
+	var add = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_DRAW;
+	var remove = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_ERASE;
+	var edit = add || remove;
 	if(move){
-		var data = e["data"];
-		var location = data["location"];
+		
 		this._explorer.mouseDown(location);
 		this._render();
 		this._areaInterfaceMove.addFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
+	}else if(edit){
+		var target = this._areaInterfaceMove;//e["target"];
+		var sourcePoint = location.copy();
+		var sourceElement = target;
+		var destinationElement = this._stage.root(); //this._root;//this._stage.root(); // this._root; // this._areaInterfaceRotate;
+		var destinationPoint = new V2D();
+		var local = DO.pointLocalUp(destinationPoint,sourcePoint,sourceElement,destinationElement);
+		var imageLocation = this._explorer.toLocalPoint(local);
+	//var diameter = 3;
+	//var diameter = 4;
+	//var diameter = 5;
+	//var diameter = 6;
+	var diameter = 7; // TODO: MULT BY SCALE & round
+		var colored = this._colorMaskImage(imageLocation, add?true:false, diameter);
+		if(colored){
+			this._render();
+		}
 	}
 }
 App3DR.App.ImageEditor.prototype.moveAreaCancel = function(){
@@ -1526,15 +1677,12 @@ App3DR.App.ImageEditor.prototype.moveAreaHandleMouseMove = function(e){
 
 
 App3DR.App.ImageEditor.prototype._toRotationAngle = function(location){
-	//DO.pointLocalUpfunction(destinationPoint,sourcePoint,sourceElement,destinationElement){
 	var destinationPoint = new V2D();
 	var sourcePoint = location.copy();
 	//var sourceElement = target;
 	var sourceElement = this._areaInterfaceRotate;
 	var destinationElement = null; // this._root; // this._areaInterfaceRotate;
 	DO.pointLocalUp(destinationPoint,sourcePoint,sourceElement,destinationElement);
-	//DO.pointLocalDown(destinationPoint,sourcePoint,sourceElement,destinationElement);
-	//console.log(" "+sourcePoint+" => "+destinationPoint);
 	var point = destinationPoint;
 
 	var size = this._explorer.containerSize();
@@ -1545,32 +1693,17 @@ App3DR.App.ImageEditor.prototype._toRotationAngle = function(location){
 }
 App3DR.App.ImageEditor.prototype.rotateAreaHandleMouseDown = function(e){
 	var rotate = true;
+	console.log("rotateAreaHandleMouseDown");
 	if(rotate){
 		var data = e["data"];
 		var location = data["location"];
 		var angle = this._toRotationAngle(location);
 		var angleA = this._explorer.rotation();
-		//var angleB = angle;
-		//this._rotationAngleStart -= Math.PI;// * 0.5;
-		//var diff = Code.minAngle(angleA,angleB);
-		//var angle = angleA + diff;
-		//this._rotationAngle = diff;
 		this._rotationAngle = angle;
 		this._rotationAngleStart = angleA;
-		//this._updateRotationAngle(angle);
 		this._areaInterfaceRotate.addFunction(Canvas.EVENT_MOUSE_MOVE, this.rotateAreaHandleMouseMove, this, true);
 		this._areaInterfaceRotate.addFunction(Canvas.EVENT_MOUSE_UP, this.rotateAreaHandleMouseUp, this, true);
 	}
-	/*
-	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
-	if(move){
-		var data = e["data"];
-		var location = data["location"];
-		this._explorer.mouseDown(location);
-		this._render();
-		this._areaInterfaceMove.addFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
-	}
-	*/
 }
 // App3DR.App.ImageEditor.prototype.moveAreaCancel = function(){
 // 	this._areaInterfaceMove.removeFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
@@ -1606,22 +1739,6 @@ App3DR.App.ImageEditor.prototype._updateRotationAngle = function(angle){
 	var rounding = Code.radians(15.0);
 	var rounded = Math.round(fin/rounding)*rounding;
 	fin = rounded;
-	//var nearest = angle % 
-
-	//this._rotationAngleStart += diff;
-	/*
-	var angleA = this._rotationAngleStart;
-	var angleB = this._rotationAngle;
-	console.log(Code.degrees(angleA)+" | "+Code.degrees(angleB));
-	//var angle = angleB - angleA;
-	var angle = angleA + angleB;
-	// var diff = Code.minAngle(angleA,angleB);
-	// var angle = angleA + diff;
-	var rounding = Code.radians(15.0);
-	var rounded = Math.round(angle/rounding)*rounding;
-	console.log("rounded: "+rounded);
-	//var nearest = angle % 
-	*/
 	this._explorer.updateRotation(fin);
 	this._render();
 }
@@ -1634,54 +1751,13 @@ App3DR.App.ImageEditor.EDIT_MODE_ERASE = 2;
 App3DR.App.ImageEditor.EDIT_MODE_DRAW = 3;
 App3DR.App.ImageEditor.prototype.handleMouseUp = function(e){
 	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
-	// var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
-	// if(move){
-	// 	var location = e["location"];
-	// 	this._explorer.mouseUp(location);
-	// 	this._render();
-	// }
 }
 App3DR.App.ImageEditor.prototype.handleMouseMove = function(e){
 	App3DR.App.ImageEditor._.handleMouseMove.call(this, e);
-	
 }
 App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
 	App3DR.App.ImageEditor._.handleMouseDown.call(this, e);
-	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
-	if(move){
-		
-	}else{
-
-		// color
-		
-		var location = e["location"];
-		var containerSize = this._explorer._containerSize;
-		var canvasSize = this._canvas.size();
-		var corner = new V2D((canvasSize.x - containerSize.x)*0.5, (canvasSize.y - containerSize.y)*0.5);
-		var container = location.copy().sub(corner);
-		var imageLocation = this._explorer.toLocalPoint(container);
-	//var diameter = 3;
-	//var diameter = 4;
-	//var diameter = 5;
-	//var diameter = 6;
-	var diameter = 7; // TODO: MULT BY SCALE & round
-		var colored = this._colorMaskImage(imageLocation,true, diameter);
-		if(colored){
-			this._render();
-		}
-	}
-
-//	this._drag = e["location"];
-//	console.log(this._drag);
 }
-// App3DR.App.ImageEditor.prototype.handleMouseMove = function(e){
-// 	App3DR.App.ImageEditor._.handleMouseMove.call(this, e);
-// 	this._drag = null;
-// }
-// App3DR.App.ImageEditor.prototype.handleMouseUp = function(e){
-// 	App3DR.App.ImageEditor._.handleMouseUp.call(this, e);
-// 	this._drag = null;
-// }
 
 
 
@@ -2846,10 +2922,15 @@ App3DR.ProjectManager = function(relativePath, operatingStage){ // very async he
 	this.loadProjectFile();
 }
 Code.inheritClass(App3DR.ProjectManager,Dispatchable);
+
+App3DR.ProjectManager.EVENT_LOADED = "pm.loaded";
+
+
 App3DR.ProjectManager.INFO_FILE_NAME = "info.yaml";
 App3DR.ProjectManager.FEATURES_FILE_NAME = "features.yaml";
 App3DR.ProjectManager.VIEWS_DIRECTORY = "views";
 App3DR.ProjectManager.PICTURES_DIRECTORY = "pictures";
+App3DR.ProjectManager.PICTURE_MASK_FILE_NAME = "mask.png"; 
 App3DR.ProjectManager.CAMERAS_DIRECTORY = "cameras";
 App3DR.ProjectManager.PAIRS_DIRECTORY = "pairs";
 App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME = "matches.yaml"; // points
@@ -2858,6 +2939,12 @@ App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml";
 App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml"; 
 App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
 
+App3DR.ProjectManager.prototype.isLoaded = function(){
+	return !this._loading;
+}
+App3DR.ProjectManager.prototype.views = function(){
+	return this._views;
+}
 App3DR.ProjectManager.prototype.infoPath = function(){
 	var infoPath = Code.appendToPath(this._workingPath,App3DR.ProjectManager.INFO_FILE_NAME);
 	return infoPath;
@@ -2909,9 +2996,6 @@ App3DR.ProjectManager.prototype.checkOperations = function(){
 }
 
 App3DR.ProjectManager.prototype._loadProjectCallback = function(object, data){
-	// console.log("from data");
-	// console.log(object);
-	// console.log(data);
 	if(data){
 		var str = Code.binaryToString(data);
 		var yaml = YAML.parse(str);
@@ -2920,6 +3004,8 @@ App3DR.ProjectManager.prototype._loadProjectCallback = function(object, data){
 		console.log("no data, save file");
 		this.saveProjectFile();
 	}
+	this._loading = false;
+	this.alertAll(App3DR.ProjectManager.EVENT_LOADED, this);
 }
 App3DR.ProjectManager.prototype._saveProjectCallback = function(object, data){
 	console.log("saved");
@@ -3015,6 +3101,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 }
 App3DR.ProjectManager.prototype.loadProjectFile = function(){
 	console.log("loadProjectFile");
+	this._loading = true;
 	this._operation = App3DR.ProjectManager.OPERATION_LOAD_PROJECT;
 	this.addOperation("GET", {"path":this.infoPath(),"data":null}, this._loadProjectCallback, this, null);
 }
@@ -3182,6 +3269,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
+return; // TODO: uncomment this
 	var i, j, k, len;
 	console.log("next task?");
 	var views = this._views;
@@ -3231,7 +3319,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 		}
 	}
 	// does a triple exist (even a bad one) for all pairs ...
-	HRERE
+	HERE
 	var pairs = [];
 	for(i=0; i<pairs.length; ++i){
 		// 
@@ -3523,11 +3611,12 @@ App3DR.ProjectManager.View = function(manager, name, directory){
 	this._features = null; // actual data when loaded
 	// this._pairInfo = null;
 	this._cameraID = null;
-		this._pictureSourceIcon = null;
-		this._pictureSourceDenseLo = null;
-		this._pictureSourceFeatures = null;
-		this._pictureSourceDenseHi = null;
-		this._pictureSourceTexture = null;
+	this._pictureSourceMask = null;
+	this._pictureSourceIcon = null;
+	this._pictureSourceDenseLo = null;
+	this._pictureSourceFeatures = null;
+	this._pictureSourceDenseHi = null;
+	this._pictureSourceTexture = null;
 }
 App3DR.ProjectManager.View.prototype.hasFeatures = function(){
 	return this._featureInfo != null;
@@ -3651,6 +3740,24 @@ App3DR.ProjectManager.View.prototype.readFromObject = function(obj){
 	}
 	*/
 }
+App3DR.ProjectManager.View.prototype.saveMaskPicture = function(image){
+	console.log("saveMaskPicture");
+	var filename = App3DR.ProjectManager.PICTURE_MASK_FILE_NAME;
+	var size = null;
+	var scale = null;
+		var imageBase64 = image.src;
+		var imageBinary = Code.base64StringToBinary(imageBase64);
+	var binary = imageBinary;
+	var object = {};
+	var info = this._manager.addPictureForView(this, filename, size, scale, binary, this._saveMaskPictureComplete, this, object);
+	// console.log("doing");
+	// var path = Code.appendToPath(this._workingPath, view.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
+	// console.log(path);
+	// this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
+}
+App3DR.ProjectManager.View.prototype._saveMaskPictureComplete = function(object, data){
+	console.log("_saveMaskPictureComplete");
+}
 App3DR.ProjectManager.View.prototype.addPicture = function(size, scale, binary,  callback, context, returnObject){
 	console.log(callback);
 	console.log(context);
@@ -3728,7 +3835,7 @@ App3DR.ProjectManager.View.prototype.features = function(){
 	return this._features;
 }
 App3DR.ProjectManager.View.prototype.loadFeatures = function(callback, context, returnObject){
-	console.log("loadFeatures");
+	// console.log("loadFeatures");
 	var object = {};
 		object["callback"] = callback;
 		object["context"] = context;
@@ -3736,17 +3843,15 @@ App3DR.ProjectManager.View.prototype.loadFeatures = function(callback, context, 
 	this._manager.loadFeaturesForView(this, App3DR.ProjectManager.FEATURES_FILE_NAME, this._loadFeaturesComplete, this, object);
 }
 App3DR.ProjectManager.View.prototype._loadFeaturesComplete = function(object, data){
-	console.log("_loadFeaturesComplete");
-	console.log(object);
-	console.log(data);
+	// console.log("_loadFeaturesComplete");
+	// console.log(object);
+	// console.log(data);
 		var callback = object["callback"];
 		var context = object["context"];
 		var returnObject = object["object"];
 	var yamlObject = Code.binaryToYAMLObject(data);
-	console.log(yamlObject);
 	var features = this._manager._featuresFromObject(yamlObject);
 	this._features = features;
-	console.log(features)
 	// 
 	returnObject = this;
 	callback.call(context, this, returnObject);
@@ -3764,6 +3869,9 @@ App3DR.ProjectManager.View.prototype.unload = function(){
 	// free space
 }
 // image loading
+App3DR.ProjectManager.View.prototype.maskImage = function(){
+	return this._pictureSourceMask;
+}
 App3DR.ProjectManager.View.prototype.iconImage = function(){
 	return this._pictureSourceIcon;
 }
@@ -3794,6 +3902,13 @@ App3DR.ProjectManager.View.prototype.loadDenseHiImage = function(callback, conte
 App3DR.ProjectManager.View.prototype.loadTextureImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE, callback, context);
 }
+App3DR.ProjectManager.View.prototype.loadMaskImage = function(callback, context){
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+		object["type"] = App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_MASK;
+	this._manager.loadImageForView(this, App3DR.ProjectManager.PICTURE_MASK_FILE_NAME, this._loadImageComplete, this, object);
+}
 // synonyms:
 App3DR.ProjectManager.View.prototype.matchingImage = function(){
 	return this.featuresImage();
@@ -3808,11 +3923,8 @@ App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO = 1;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES = 2;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI = 3;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE = 4;
+App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_MASK = 100;
 App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, context){
-	console.log("_loadImage");
-	console.log(type);
-	console.log(callback);
-	console.log(context);
 	var i;
 	var pictures = this._pictureInfo.sort(App3DR.ProjectManager.View.sortSizeIncreasing);
 	var desiredPixelCount = 600*400;
@@ -3838,7 +3950,6 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 		closestPicture = 0;
 	}
 	var picture = pictures[closestPicture];
-	console.log(picture);
 	var object = {};
 		object["callback"] = callback;
 		object["context"] = context;
@@ -3846,24 +3957,24 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	this._manager.loadImageForView(this, picture["file"], this._loadImageComplete, this, object);
 }
 App3DR.ProjectManager.View.prototype._loadImageComplete = function(object, data){
-	console.log("_loadImageComplete");
-	console.log(object);
-	console.log(data);
+	// console.log("_loadImageComplete");
+	// console.log(object);
+	// console.log(data);
+	var callback = object["callback"];
+	var context = object["context"];
+	var loadType = object["type"];
+	var self = this;
+
+	if(!data){
+		callback.call(context, self);
+		return;
+	}
 
 	var binary = data;
 	var filetype = "png";
 	var base64 = Code.arrayBufferToBase64(binary);
 	var imageSrc = Code.appendHeaderBase64(base64, filetype);
 	var image = new Image();
-	
-	var callback = object["callback"];
-	var context = object["context"];
-	var loadType = object["type"];
-	console.log(callback);
-	console.log(context);
-	console.log(loadType);
-	
-	var self = this;
 
 	image.onload = function(e){
 		if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON){
@@ -3876,6 +3987,8 @@ App3DR.ProjectManager.View.prototype._loadImageComplete = function(object, data)
 			self._pictureSourceDenseHi = image;
 		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE){
 			self._pictureSourceTexture = image;
+		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_MASK){
+			self._pictureSourceMask = image;
 		}else{
 			console.log("UNKNOWN LOAD TYPE");
 		}
