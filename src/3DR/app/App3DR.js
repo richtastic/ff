@@ -65,22 +65,24 @@ function App3DR(){
 	// this._activeView = this._projectManager.views()[0];
 	// console.log(this._activeView);
 
+var modeImageEdit = false;
+var modeImageUpload = true;
+if(modeImageEdit){
+	var app = new App3DR.App.ImageEditor(this._resource);
+	this.setupAppActive(app);
+	// app.setActiveImage(null);
+	// app.setActiveMask(null);
+	app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
+	this._setupImageEditorProjectManager();
+}
 
-var app = new App3DR.App.ImageEditor(this._resource);
-this.setupAppActive(app);
-// app.setActiveImage(null);
-// app.setActiveMask(null);
-
-this._imageEditor = app;
-app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
-this._setupImageEditorProjectManager();
-
-
-	
-// var app = new App3DR.App.ImageUploader(this._resource, this._projectManager);
-// this.setupAppActive(app);
-	
-	
+if(modeImageUpload){
+	var app = new App3DR.App.ImageUploader(this._resource, this._projectManager);
+	this.setupAppActive(app);
+	this._uploadAdapter = new App3DR.App.UploadAdapterToPictures(this._projectManager, this._stage);
+	app.addFunction(App3DR.App.ImageUploader.EVENT_FILE_ADDED, this._handleImageUploaderFileReady, this);
+	this._setupImageUploaderProjectManager();
+}
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
@@ -213,7 +215,16 @@ App3DR.App.prototype.updateSize = function(min,max){
 	this._min = min;
 	this._max = max;
 }
-
+App3DR.prototype._setupImageUploaderProjectManager = function(){
+	console.log("_setupImageUploaderProjectManager");
+	var manager = this._projectManager;
+	if(manager.isLoaded()){
+		console.log("is loaded: ");
+	}else{
+		console.log("not loaded");
+		manager.addFunction(App3DR.ProjectManager.EVENT_LOADED, this._setupImageUploaderProjectManager, this);
+	}
+}
 App3DR.prototype._setupImageEditorProjectManager = function(){
 	var manager = this._projectManager;
 	if(manager.isLoaded()){
@@ -224,7 +235,7 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 			//var view = views[0];
 			var view = views[1];
 			this._activeView = view;
-			var app = this._imageEditor;
+			var app = this._activeApp;
 			var self = this;
 
 			var fxnA = function(){
@@ -270,31 +281,27 @@ App3DR.prototype._handleImageEditorMaskUpdate = function(editor){
 		view.saveMaskPicture(image);
 	}
 }
+App3DR.prototype._handleImageUploaderFileReady = function(package){
+	console.log(package);
+	var file = package["file"];
+	var uploader = this._activeApp;
+	var adapter = this._uploadAdapter;
+	adapter._addFileToQueue(file);
+}
 
 App3DR.App.ImageUploader = function(resource, manager){
 	App3DR.App.ImageUploader._.constructor.call(this, resource, manager);
 
 	var client = new ClientFile();
 	this._clientFile = client;
-	
-	//this._fileQueue = new PriorityQueue();
-	this._fileQueue = [];
-	this._processingFile = null;
-	// this._pictureQueue = [];
-	// this._processingPicture = null;
-	// this._viewQueue = [];
-	// this._processingView = null;
-
 	this._displayDropArea = new DO();
-
 	this._root.addChild(this._displayDropArea);
 
 	var d;
-
 	var domUploadDiv = Code.newDiv();
 		Code.setStylePosition(domUploadDiv, "absolute");
-		//Code.setStyleBackgroundColor(domUploadDiv, Code.getJSColorFromARGB(0x9900FF00));
-		Code.setStyleBackgroundColor(domUploadDiv, Code.getJSColorFromARGB(0x00000000));
+		Code.setStyleBackgroundColor(domUploadDiv, Code.getJSColorFromARGB(0x9900FF00));
+		//Code.setStyleBackgroundColor(domUploadDiv, Code.getJSColorFromARGB(0x00000000));
 	this._domUploadDiv = domUploadDiv;
 	var body = Code.getBody();
 		//Code.addChild(domUploadDiv, body);
@@ -362,7 +369,7 @@ App3DR.App.ImageUploader.prototype._render = function(){
 
 	var topLeftMe = new V2D();
 	var topLeftRoot = new V2D();
-	DO.pointLocalDown(topLeftRoot,topLeftMe,this._displayDropArea,null);//this._root);
+	DO.pointLocalUp(topLeftRoot,topLeftMe,this._displayDropArea,null);//this._root);
 	
 	var topLeft = topLeftRoot.copy().scale(-1).scale(downScale);
 	var divSize = size.copy().scale(downScale);
@@ -371,7 +378,7 @@ App3DR.App.ImageUploader.prototype._render = function(){
 	Code.setStylePadding(d, "0px");
 	Code.setStyleMargin(d, "0px");
 	Code.setStyleLeft(d, topLeft.x+"px");
-	Code.setStyleTop(d, topLeft.y+"0px");
+	Code.setStyleTop(d, topLeft.y+"px");
 	Code.setStyleWidth(d, divSize.x+"px");
 	Code.setStyleHeight(d, divSize.y+"px");
 }
@@ -401,21 +408,38 @@ App3DR.App.ImageUploader.prototype._handleDragDropUploadFxn = function(e){
 		var filetype = file.type;
 		console.log(filename+" "+filetype);
 		if(this._fileTypeAcceptable(filetype)){
-			this._addFileToQueue(file);
+			var package = {"file":file, "filename":filename, "filetype":filetype};
+			this.alertAll(App3DR.App.ImageUploader.EVENT_FILE_ADDED, package);
+			
 		}
 	}
 }
-App3DR.App.ImageUploader.prototype.isBusy = function(){
+
+
+
+
+
+
+
+
+
+
+App3DR.App.UploadAdapterToPictures = function(manager, stage){
+	this._projectManager = manager;
+	this._stage = stage;
+	this._fileQueue = [];
+	this._processingFile = null;
+}
+App3DR.App.UploadAdapterToPictures.prototype.isBusy = function(){
 	var val = this._processingFile; // || this._processingPicture || this._processingView;
 	return val!=null;
 }
-
-App3DR.App.ImageUploader.prototype._addFileToQueue = function(file){
-	console.log("_checkFileQueue");
+App3DR.App.UploadAdapterToPictures.prototype._addFileToQueue = function(file){
+	console.log("_addFileToQueue");
 	this._fileQueue.push(file);
 	this._checkFileQueue();
 }
-App3DR.App.ImageUploader.prototype._checkFileQueue = function(){
+App3DR.App.UploadAdapterToPictures.prototype._checkFileQueue = function(){
 	console.log("_checkFileQueue");
 	if(this.isBusy()){
 		return;
@@ -426,7 +450,7 @@ App3DR.App.ImageUploader.prototype._checkFileQueue = function(){
 	this._processingFile = this._fileQueue.shift();
 	this._processCurrentFile();
 }
-App3DR.App.ImageUploader.prototype._processCurrentFile = function(){
+App3DR.App.UploadAdapterToPictures.prototype._processCurrentFile = function(){
 	console.log("_processCurrentFile");
 	var file = this._processingFile;
 	
@@ -474,64 +498,91 @@ App3DR.App.ImageUploader.prototype._processCurrentFile = function(){
 	}
 	reader.readAsArrayBuffer(file);
 }
-/*
-	file
-		new view
-			new picture
-			new picture
-			new picture
-			...
-	file
-		new view
-			...
-*/
-App3DR.App.ImageUploader.prototype._processPictures = function(image, extension, sizes){
-	var canvas = this._canvas;
+App3DR.App.UploadAdapterToPictures.prototype._processPicturesLoaded = function(i){
+	console.log("_processPicturesLoaded: "+i);
+}
+App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, extension, sizes){
 	var stage = this._stage;
-	var client = this._clientFile;
 	console.log("_processPictures");
 	var self = this;
 
-var viewReady = function(view){
-	console.log("view ready");
-	console.log(arguments);
-	console.log(view);
-	var i;
-	var pictureList = [];
-	var d = new DOImage(image);
-	for(i=0; i<sizes.length; ++i){
-		size = sizes[i];
-		var width = size.x;
-		var height = size.y;
-		var scale = size.z;
-			d.matrix().identity();
-			d.matrix().scale(scale);
-		var img2 = stage.renderImage(width,height,d, null);
-//		Code.addChild(Code.getBody(), img2);
-		var imageBase64 = img2.src;
-		var imageBinary = Code.base64StringToBinary(imageBase64);
-var w = img2.width;
-var h = img2.height;
-console.log(w+"x"+h+" | "+size+" ? ");
+	var viewReady = function(view){
+		var i;
+		var pictureList = [];
 
-		var filename = (scale*100)+""+"."+extension; // Math.round
-		console.log(filename+" ... <");
-		var object = {};
-			object["filename"] = filename;
-			object["size"] = size;
-			object["binary"] = imageBinary;
-			object["scale"] = scale;
-			object["view"] = view;
-		pictureList.push(object);
+		var mat = R3D.imageMatrixFromImage(image, stage);
+		var countTotal = sizes.length;
+//		var scaledImages = [];
+		for(i=0; i<sizes.length; ++i){
+			size = sizes[i];
+			var width = size.x;
+			var height = size.y;
+			var scale = size.z;
+			var matBlurred;
+			var sigma = Math.sqrt(0.5 / scale);
+//			sigma = 10;
+			console.log(i+" : "+size+" sigma: "+sigma);
+			if(scale<1.0){
+				matBlurred = mat.getBlurredImage(sigma);
+			}else{
+				matBlurred = mat;
+			}
+			
+			var completeFxn = function(s){
+				var self = this;
+				this.fxn = function(){
+					var size = self.size;
+					var pictureList = self.pictureList;
+					var app = self.app;
+					var scaledImage = self.scaledImage;
+					var width = size.x;
+					var height = size.y;
+					var scale = size.z;
+						var d = new DOImage(scaledImage);
+						// d.graphics().setLine(4.0,0xFFFF0000);
+						// d.graphics().setFill(0x55FF00FF);
+						// d.graphics().drawRect(0,0,width,height);
+						// d.graphics().strokeLine();
+						// d.graphics().fill();
+						d.matrix().identity();
+						d.matrix().scale(scale);
+					var renderedImage = stage.renderImage(width,height,d, null);
+					var imageBase64 = renderedImage.src;
+					console.log("SIZE: "+imageBase64.length+" vs "+image.src.length);
+	//				Code.addChild(Code.getBody(), renderedImage);
+					//console.log(imageBase64);
+					var imageBinary = Code.base64StringToBinary(imageBase64);
+					var w = renderedImage.width;
+					var h = renderedImage.height;
+	//				console.log(w+"x"+h+" | "+size+" ? ");
+					var filename = (scale*100)+""+"."+extension; // Math.round
+			//		console.log(filename+" ... <");
+					var object = {};
+						object["filename"] = filename;
+						object["size"] = size;
+						object["binary"] = imageBinary;
+						object["scale"] = scale;
+						object["view"] = view;
+					pictureList.push(object);
+					console.log(pictureList.length+" / "+countTotal);
+					if(pictureList.length==countTotal){
+						app._uploadedViewPicture(view, pictureList);
+					}
+				}
+			}
+			var temp = new completeFxn(i);
+			temp.size = size;
+			temp.pictureList = pictureList;
+			temp.app = self;
+			var scaledImage = R3D.imageFromImageMatrix(matBlurred, stage, temp.fxn);
+			temp.scaledImage = scaledImage;
+			//scaledImage = R3D.imageFromImageMatrix(matBlurred, stage, completeFxn);
+//			scaledImages.push(scaledImage);
+		}
 	}
-	self._uploadedViewPicture(view, pictureList);
-	// function(size, scale, binary,  callback, context){
-	//this._processingFile = null;
-	//this._checkFileQueue();
+	this._projectManager.addView(viewReady, viewReady, this);
 }
-this._projectManager.addView(viewReady, viewReady, this);
-}
-App3DR.App.ImageUploader.prototype._uploadedViewPicture = function(view, pictureList){
+App3DR.App.UploadAdapterToPictures.prototype._uploadedViewPicture = function(view, pictureList){
 	if(pictureList.length>0){
 		var top = pictureList.shift();
 			var size = top["size"];
@@ -548,6 +599,15 @@ console.log("ADD PICTURE: "+size+" ??? ");
 		this._checkFileQueue();
 	}
 }
+
+
+
+
+
+
+
+
+
 /*
 App3DR.App.ImageUploader.prototype.uploadFile = function(file){
 	var filename = file.name;
@@ -1371,7 +1431,7 @@ if(minCoordinate){
 				d.graphics().clear();
 			}
 //			d.graphics().alpha(0.1);
-			
+
 			// PIXELS
 			d = this._displayPixels;
 

@@ -4132,6 +4132,11 @@ R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle, simp
 	return vector;
 }
 
+R3D.imageFromImageMatrix = function(matrix, stage, onloadFxn){
+	var image = stage.getFloatRGBAsImage(matrix.red(),matrix.grn(),matrix.blu(), matrix.width(),matrix.height(), null, null, onloadFxn);
+	return image;
+}
+
 R3D.imageMatrixFromImage = function(image, stage){
 	if(!image || !stage){
 		return null;

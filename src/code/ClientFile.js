@@ -173,10 +173,10 @@ ClientFile.Operation.prototype._handleCompleteWrite = function(result){
 		var payload = json["payload"];
 		var isDirectory = payload["isDirectory"];
 		if(isDirectory){
-			console.log("CREATED DIRECTORY");
+			//console.log("CREATED DIRECTORY");
 			isDone = true;
 		}else{
-			console.log("CREATED FILE");
+			//console.log("CREATED FILE");
 			var written = parseInt(payload["count"]);
 			this._offset += written;
 			if(this._offset<this._buffer.length){

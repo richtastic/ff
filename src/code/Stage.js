@@ -199,27 +199,27 @@ var alp = null; // DNE
 	img.unset();
 	return {width:wid, height:hei, red:red, grn:grn, blu:blu, alp:alp};
 }
-Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type){
+Stage.prototype.getFloatARGBAsImage = function(a,r,g,b, wid,hei, matrix, type, onloadFxn){
 	var argb = ImageMat.ARGBFromARGBFloats(a,r,g,b);
-	return this.getARGBAsImage(argb, wid,hei,matrix,type);
+	return this.getARGBAsImage(argb, wid,hei,matrix,type, onloadFxn);
 }
-Stage.prototype.getFloatRGBAsImage = function(r,g,b, wid,hei, matrix, type){
+Stage.prototype.getFloatRGBAsImage = function(r,g,b, wid,hei, matrix, type, onloadFxn){
 	var argb = ImageMat.ARGBFromFloats(r,g,b);
-	return this.getARGBAsImage(argb, wid,hei,matrix,type);
+	return this.getARGBAsImage(argb, wid,hei,matrix,type, onloadFxn);
 }
-Stage.prototype.getFloatGrayAsImage = function(gray, wid,hei, matrix, type){
+Stage.prototype.getFloatGrayAsImage = function(gray, wid,hei, matrix, type, onloadFxn){
 	var argb = ImageMat.ARGBFromFloat(gray);
-	return this.getARGBAsImage(argb, wid,hei,matrix,type);
+	return this.getARGBAsImage(argb, wid,hei,matrix,type, onloadFxn);
 }
-Stage.prototype.getARGBAsImage = function(argb, wid,hei, matrix, type){//Stage.prototype.getRGBAAsImage = function(argb, wid,hei, matrix, type){
+Stage.prototype.getARGBAsImage = function(argb, wid,hei, matrix, type, onloadFxn){//Stage.prototype.getRGBAAsImage = function(argb, wid,hei, matrix, type){
 	this._setupRenderCanvas(wid,hei, matrix);
 	this._renderCanvas.setColorArrayARGB(argb, 0,0, wid,hei);
-	return this._toImage(wid,hei, type);
+	return this._toImage(wid,hei, type, onloadFxn);
 }
-Stage.prototype.renderImage = function(wid,hei,obj, matrix, type){ // get a base-64(src) image from OBJ 
+Stage.prototype.renderImage = function(wid,hei,obj, matrix, type, onloadFxn){ // get a base-64(src) image from OBJ 
 	this._setupRenderCanvas(wid,hei, matrix);
 	obj.render(this._renderCanvas);
-	return this._toImage(wid,hei, type);
+	return this._toImage(wid,hei, type, onloadFxn);
 }
 Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
 	var presScale = this._canvas.presentationScale();;
@@ -237,15 +237,21 @@ Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
 	}
 	this._renderCanvas.contextTransform(upMatrix); 
 }
-Stage.prototype._toImage = function(wid,hei, type){
+Stage.prototype._toImage = function(wid,hei, type, onloadFxn){
 	var image = new Image();
 	image.width = wid;
 	image.height = hei;
-	image.src = this._toDataURL(type);
+	var url = this._toDataURL(type);
+	image.onload = function(e){
+		if(onloadFxn){
+			onloadFxn(e);
+		}
+	}
+	image.src = url;
 	return image;
 }
 Stage.prototype._toDataURL = function(type){
-	if(type==null||type==Canvas.IMAGE_TYPE_PNG){
+	if(type==null||type==undefined||type==Canvas.IMAGE_TYPE_PNG){
 		return this._renderCanvas.toDataURL();
 	}
 	return this._renderCanvas.toDataURL('image/jpeg');
