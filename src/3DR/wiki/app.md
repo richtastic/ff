@@ -192,27 +192,26 @@ project typical numbers:
 
 APP TODO:
 - visualize pair matches
+- visualize F transform
 
+- TRIPLE ALGORITHM
+
+- visualize triple matches
+
+- BUNDLE AJUST ALGORITHM
 
 - roll up medium code into R3D fxn
 - roll up dense code into R3D fxn
 
-- start visualizing data from generated files
-
 
 - triangulate.html broke
 
-
 - use 2d quadspace to display feature locations onto image
-
 
 - how images perform with large image
 - scrolling zoom gadget via mouse
 - scale brush size with gadget
 
-
-
-- 
 
 - triangulation not working
 - POLY2D error

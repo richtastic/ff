@@ -134,11 +134,11 @@ ClientFile.Operation.prototype._appendData64 = function(data64){
 }
 
 ClientFile.Operation.prototype._handleCompleteRead = function(result){
-	console.log("_handleCompleteRead");
+//	console.log("_handleCompleteRead");
 	var json = Code.parseJSON(result);
 	var success = json["result"] == "success";
 	if(success){
-		console.log(json);
+//		console.log(json);
 		var payload = json["payload"];
 		var isDirectory = payload["isDirectory"];
 		if(isDirectory){
@@ -194,8 +194,8 @@ ClientFile.Operation.prototype._handleCompleteWrite = function(result){
 	}
 }
 ClientFile.Operation.prototype._handleCompleteDelete = function(result){
-	console.log(result);
-	console.log("_handleCompleteDelete");
+	// console.log(result);
+	// console.log("_handleCompleteDelete");
 	var json = Code.parseJSON(result);
 	var success = json["result"] == "success";
 	if(success){

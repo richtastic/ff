@@ -66,12 +66,12 @@ function App3DR(){
 	// console.log(this._activeView);
 
 var modeImageEdit = false;
-var modeImageUpload = true;
+var modeImageUpload = false;
+//var modeImageUpload = true;
+var modeImageCompare = true;
 if(modeImageEdit){
 	var app = new App3DR.App.ImageEditor(this._resource);
 	this.setupAppActive(app);
-	// app.setActiveImage(null);
-	// app.setActiveMask(null);
 	app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
 	this._setupImageEditorProjectManager();
 }
@@ -83,12 +83,22 @@ if(modeImageUpload){
 	app.addFunction(App3DR.App.ImageUploader.EVENT_FILE_ADDED, this._handleImageUploaderFileReady, this);
 	this._setupImageUploaderProjectManager();
 }
+
+//modeImageCompare = false;
+if(modeImageCompare){
+	var app = new App3DR.App.MatchCompare(this._resource);
+	this.setupAppActive(app);
+	// app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
+	this._setupMatchCompareProjectManager();
+}
+
+
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
 	this._keyboard.addListeners();
 
-
+/*
 var d = new DO();
 this._root.addChild(d);
 	var gr = d.graphics();
@@ -100,6 +110,7 @@ this._root.addChild(d);
 	gr.endPath();
 	gr.fill();
 	gr.strokeLine();
+*/
 
 
 return;
@@ -215,6 +226,44 @@ App3DR.App.prototype.updateSize = function(min,max){
 	this._min = min;
 	this._max = max;
 }
+App3DR.prototype._setupMatchCompareProjectManager = function(){
+	console.log("_setupMatchCompareProjectManager");
+	var manager = this._projectManager;
+	var app = this._activeApp;
+	if(manager.isLoaded()){
+		var views = manager.views();
+		var pairs = manager.pairs();
+		if(pairs.length>0){
+			var pair = pairs[0];
+			var viewA = pair.viewA()
+			var viewB = pair.viewB()
+			if(viewA && viewB){ // load: imageA | imageB | matching | 
+				var app = this._activeApp;
+				var self = this;
+				var imageA, imageB, matchAB;
+				var fxnA = function(){
+					viewA.loadFeaturesImage(fxnB, self);
+				}
+				var fxnB = function(){
+					imageA = viewA.featuresImage();
+					viewB.loadFeaturesImage(fxnC, self);
+				}
+				var fxnC = function(){
+					imageB = viewB.featuresImage();
+					pair.loadMatchingData(fxnD, self);
+				}
+				var fxnD = function(){
+					matchAB = pair.matchingData();
+					app.setDisplay([imageA,imageB],[2],[imageA,imageB,matchAB]);
+				}
+				fxnA();
+			}
+		}
+	}else{
+		console.log("not loaded");
+		manager.addFunction(App3DR.ProjectManager.EVENT_LOADED, this._setupMatchCompareProjectManager, this);
+	}
+}
 App3DR.prototype._setupImageUploaderProjectManager = function(){
 	console.log("_setupImageUploaderProjectManager");
 	var manager = this._projectManager;
@@ -289,11 +338,108 @@ App3DR.prototype._handleImageUploaderFileReady = function(package){
 	adapter._addFileToQueue(file);
 }
 
-App3DR.App.ImageUploader = function(resource, manager){
-	App3DR.App.ImageUploader._.constructor.call(this, resource, manager);
 
-	var client = new ClientFile();
-	this._clientFile = client;
+
+
+// --------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+App3DR.App.MatchCompare = function(resource, manager){
+	App3DR.App.MatchCompare._.constructor.call(this, resource);
+	console.log("MatchCompare");
+	this._displayData = null;
+	this._display = new DO();
+	this._root.addChild(this._display);
+}
+Code.inheritClass(App3DR.App.MatchCompare, App3DR.App);
+
+App3DR.App.MatchCompare.prototype.setDisplay = function(imageList,rowList,matchList){
+	console.log("setDisplay");
+	var i, j, k;
+	var countTotal = imageList.length;
+	var countCurrent = 0;
+	var maxWidth = 0;
+	var colHeight = 0;
+	var rowInfo = [];
+	var imageInfo = [];
+	console.log(matchList);
+	for(i=0; i<rowList.length; ++i){
+		var rowCount = rowList[i];
+		var maxRowHeight = 0;
+		var rowWidth = 0;
+		var row = {};
+		for(j=0; j<rowCount; ++j){
+			var image = imageList[countCurrent+j];
+			rowWidth += image.width;
+			maxRowHeight = Math.max(maxRowHeight, image.height);
+			var match = null;
+			// for(k=0; k<matchList.length; ++k){
+			// 	if(matchList[k][0]==image){
+			// 		match = ;
+			// 	}
+			// }
+			var info = {"image":image, "row":row, "match":match};
+			imageInfo.push(info);
+		}
+		row = {"width":rowWidth, "height":maxRowHeight}
+		rowInfo[i] = row;
+		colHeight += maxRowHeight;
+		maxWidth = Math.max(maxWidth, rowWidth);
+		countCurrent += rowCount;
+	}
+	var objectSize = new V2D(maxWidth,colHeight);
+	this._displayData = {"images":imageInfo, "size":objectSize, "matches":matchList};
+	this._render();
+}
+App3DR.App.MatchCompare.prototype._render = function(){
+	// ...
+	console.log("RENDER");
+	this._display.removeAllChildren();
+	if(this._displayData){
+		var objectSize = this._displayData["size"];
+		var imageInfo = this._displayData["images"];
+		var matchList = this._displayData["matches"];
+		var containerSize = this.size();
+		var fitSize = Code.sizeToFitInside(containerSize.x,containerSize.y, objectSize.x,objectSize.y);
+		//Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
+		//console.log(objectSize+"  ... "+fitSize);
+		var scale = fitSize.x/objectSize.x;
+		//console.log(scale);
+		//this._displayData = {"images":imageInfo, "size":objectSize}
+		var diff = V2D.sub(containerSize,fitSize);
+		var i, j, k;
+		for(i=0; i<imageInfo.length; ++i){
+			var info = imageInfo[i];
+			var image = info["image"];
+			var row = info["row"];
+			var d = new DOImage(image);
+			var s = new V2D(image.width,image.height).scale(scale);
+			info["position"] = null;
+			info["size"] = s;
+			d.size(s.x,s.y);
+			this._display.addChild(d);
+			d.matrix().identity();
+			d.matrix().translate(i*s.x,i*s.y);
+		}
+		// matches after images
+		for(i=0; i<matchList.length; ++i){
+			var match = matchList[i];
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+
+
+
+App3DR.App.ImageUploader = function(resource){
+	App3DR.App.ImageUploader._.constructor.call(this, resource);
+	// var client = new ClientFile();
+	// this._clientFile = client;
 	this._displayDropArea = new DO();
 	this._root.addChild(this._displayDropArea);
 
@@ -307,7 +453,7 @@ App3DR.App.ImageUploader = function(resource, manager){
 		//Code.addChild(domUploadDiv, body);
 		Code.addChild(body, domUploadDiv);
 
-		// LISTNERS
+		// LISTEinfo["position"] = null;NERS
 	this._jsDispatch = new JSDispatch();
 	// UPLOAD
 	this._jsDispatch.addJSEventListener(domUploadDiv, Code.JS_EVENT_DRAG_OVER, this._handleDragOverUploadFxn, this);
@@ -435,12 +581,10 @@ App3DR.App.UploadAdapterToPictures.prototype.isBusy = function(){
 	return val!=null;
 }
 App3DR.App.UploadAdapterToPictures.prototype._addFileToQueue = function(file){
-	console.log("_addFileToQueue");
 	this._fileQueue.push(file);
 	this._checkFileQueue();
 }
 App3DR.App.UploadAdapterToPictures.prototype._checkFileQueue = function(){
-	console.log("_checkFileQueue");
 	if(this.isBusy()){
 		return;
 	}
@@ -451,9 +595,7 @@ App3DR.App.UploadAdapterToPictures.prototype._checkFileQueue = function(){
 	this._processCurrentFile();
 }
 App3DR.App.UploadAdapterToPictures.prototype._processCurrentFile = function(){
-	console.log("_processCurrentFile");
 	var file = this._processingFile;
-	
 	var filename = file.name;
 	var extension = Code.fileExtensionFromName(filename);
 	var filetype = file.type;
@@ -509,21 +651,18 @@ App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, 
 	var viewReady = function(view){
 		var i;
 		var pictureList = [];
-
 		var mat = R3D.imageMatrixFromImage(image, stage);
 		var countTotal = sizes.length;
-//		var scaledImages = [];
 		for(i=0; i<sizes.length; ++i){
 			size = sizes[i];
 			var width = size.x;
 			var height = size.y;
 			var scale = size.z;
 			var matBlurred;
-			var sigma = Math.sqrt(0.5 / scale);
-//			sigma = 10;
-			console.log(i+" : "+size+" sigma: "+sigma);
 			if(scale<1.0){
-				matBlurred = mat.getBlurredImage(sigma);
+				//var sigma = Math.sqrt(0.25 / scale);
+				//matBlurred = mat.getBlurredImage(sigma); // picking right sigma is hard
+				matBlurred = mat.getScaledImageInteger(scale);
 			}else{
 				matBlurred = mat;
 			}
@@ -544,19 +683,18 @@ App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, 
 						// d.graphics().drawRect(0,0,width,height);
 						// d.graphics().strokeLine();
 						// d.graphics().fill();
+						var doScale = false;
+						//var doScale = true;
 						d.matrix().identity();
-						d.matrix().scale(scale);
+						if(doScale){
+							d.matrix().scale(scale);
+						}
 					var renderedImage = stage.renderImage(width,height,d, null);
 					var imageBase64 = renderedImage.src;
-					console.log("SIZE: "+imageBase64.length+" vs "+image.src.length);
-	//				Code.addChild(Code.getBody(), renderedImage);
-					//console.log(imageBase64);
 					var imageBinary = Code.base64StringToBinary(imageBase64);
 					var w = renderedImage.width;
 					var h = renderedImage.height;
-	//				console.log(w+"x"+h+" | "+size+" ? ");
 					var filename = (scale*100)+""+"."+extension; // Math.round
-			//		console.log(filename+" ... <");
 					var object = {};
 						object["filename"] = filename;
 						object["size"] = size;
@@ -570,14 +708,12 @@ App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, 
 					}
 				}
 			}
-			var temp = new completeFxn(i);
+			var temp = new completeFxn();
 			temp.size = size;
 			temp.pictureList = pictureList;
 			temp.app = self;
 			var scaledImage = R3D.imageFromImageMatrix(matBlurred, stage, temp.fxn);
 			temp.scaledImage = scaledImage;
-			//scaledImage = R3D.imageFromImageMatrix(matBlurred, stage, completeFxn);
-//			scaledImages.push(scaledImage);
 		}
 	}
 	this._projectManager.addView(viewReady, viewReady, this);
@@ -606,63 +742,6 @@ console.log("ADD PICTURE: "+size+" ??? ");
 
 
 
-
-
-/*
-App3DR.App.ImageUploader.prototype.uploadFile = function(file){
-	var filename = file.name;
-	var filetype = file.type;
-	var reader = new FileReader();
-	var canvas = this._canvas;
-	var stage = this._stage;
-	var root = this._root;
-	var client = this._clientFile;
-
-	reader.onload = function(progressEvent){
-		//console.log(progressEvent)
-		var binary = reader.result;
-		if(binary){
-			
-			var base64 = Code.arrayBufferToBase64(binary);
-			//console.log(base64);
-			//var data = Code.base64StringToBinary(base64);
-			//data = [data];
-			//var type = "image/png";
-			//var blob = new Blob(data,{"type":type});
-			//var url = window.URL.createObjectURL(blob);
-			var src = "data:image/png;base64,"+base64;
-			var image = new Image();
-			image.onload = function(e){
-				console.log(e);
-//				console.log(image);
-//				Code.addChild(Code.getBody(), image);
-				var width = image.width;
-				var height = image.height;
-				var scale = 1.0;
-				console.log(width+"x"+height);
-				var widScale = width*scale;
-				var heiScale = height*scale;
-				var d = new DOImage(image);
-					d.matrix().scale(scale);
-				console.log(stage);
-				console.log(canvas.presentationScale());
-				var img2 = stage.renderImage(widScale,heiScale,d, null);
-//				console.log(img2);
-				//Code.addChild(Code.getBody(), img2);
-				var imageBase64 = img2.src;
-				var imageBinary = Code.base64StringToBinary(imageBase64);
-				client.set("p100.png", imageBinary);
-//root.addChild(d);
-
-				client
-			}
-			//image.src = url;
-			image.src = src;
-		}
-      };
-	reader.readAsArrayBuffer(file);
-}
-*/
 // --------------------------------------------------------------------------------------------------------------------
 
 
@@ -2004,6 +2083,7 @@ App3DR.prototype._handleCanvasResizeFxn = function(r){
 	var screenCenter = screenSize.copy().scale(0.5);
 
 	var grid = this._grid;
+if(grid){
 	var cellCount = 4.0;
 	//var canvasScale = this._canvas.presentationScale();
 	var screenMin = Math.min(screenSize.x,screenSize.y);
@@ -2025,6 +2105,7 @@ App3DR.prototype._handleCanvasResizeFxn = function(r){
 	grid.render();
 	this._displayMenu.matrix().identity();
 	this._displayMenu.matrix().translate(screenCenter.x,screenCenter.y);
+}
 }
 App3DR.prototype._handleKeyboardUp = function(e){
 	if(this._activeApp){
@@ -2924,9 +3005,7 @@ projects/
 					12.5.png
 		pairs/
 			0/
-				matching.yaml 			x,y,z,t[,u,v] <=> ; F
-				sparse.yaml 			x,y+transform <=>; F
-				medium.yaml 			sparse (more)
+				matching.yaml 			x,y,z,t[,u,v] <=> ; F [medium matching]
 				dense.yaml 				x,y, relScale,relAng @ density ; F
 				triangulation.yaml 		x,y <=> x,y <=> X,Y,Z ; K ; F ; P ;
 
@@ -2974,6 +3053,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage){ // very async he
 	this._clientFile.addFunction(ClientFile.EVENT_MOV_COMPLETE, this._handleFileClientComplete, this);
 	this._views = [];
 	this._pairs = [];
+	this._triples = [];
 	this._cameras = [];
 	this._loading = true;
 	this._stage = operatingStage;
@@ -2994,8 +3074,8 @@ App3DR.ProjectManager.PICTURE_MASK_FILE_NAME = "mask.png";
 App3DR.ProjectManager.CAMERAS_DIRECTORY = "cameras";
 App3DR.ProjectManager.PAIRS_DIRECTORY = "pairs";
 App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME = "matches.yaml"; // points
-App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
-App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml"; 
+// App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
+// App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml"; 
 App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml"; 
 App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
 
@@ -3004,6 +3084,12 @@ App3DR.ProjectManager.prototype.isLoaded = function(){
 }
 App3DR.ProjectManager.prototype.views = function(){
 	return this._views;
+}
+App3DR.ProjectManager.prototype.pairs = function(){
+	return this._pairs;
+}
+App3DR.ProjectManager.prototype.triples = function(){
+	return this._triples;
 }
 App3DR.ProjectManager.prototype.infoPath = function(){
 	var infoPath = Code.appendToPath(this._workingPath,App3DR.ProjectManager.INFO_FILE_NAME);
@@ -3283,6 +3369,14 @@ App3DR.ProjectManager.prototype._addPairComplete = function(object, data){
 	callback.call(context, pair);
 }
 
+App3DR.ProjectManager.prototype.loadMatchingDataForPair = function(pair, filename, callback, context, object){
+	console.log("loadMatchingDataForPair");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), filename);
+	console.log(path);
+	this.addOperation("GET", {"path":path}, callback, context, object);
+}
+
+
 
 
 App3DR.ProjectManager.prototype.viewCount = function(){
@@ -3329,7 +3423,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
-return; // TODO: uncomment this
+//return; // TODO: uncomment this
 	var i, j, k, len;
 	console.log("next task?");
 	var views = this._views;
@@ -3346,6 +3440,7 @@ return; // TODO: uncomment this
 			return;
 		}
 	}
+//return; // TODO: uncomment this
 	// does a feature-match pair exist (even a bad match) between every view?
 	console.log("check pairs");
 	len = views.length;
@@ -3359,10 +3454,9 @@ return; // TODO: uncomment this
 			console.log("pair: ? "+idA+" & "+idB+" ? ");
 			var found = false;
 			// 1) feature match
-			// 2) sparse match
-			// 3) medium match
-			// 4) dense match
+			// 2) dense match
 			for(k=0; k<pairs.length; ++k){
+//break; // TODO: REMOVE
 				var pair = pairs[i];
 				if(pair.isPair(idA,idB)){
 					if(pair.hasMatch()){
@@ -3375,14 +3469,19 @@ return; // TODO: uncomment this
 			if(!found){
 				console.log("need to match pair ... ");
 				this.calculatePairMatch(viewA,viewB, foundPair);
+				return;
 			}
 		}
 	}
 	// does a triple exist (even a bad one) for all pairs ...
-	HERE
-	var pairs = [];
-	for(i=0; i<pairs.length; ++i){
-		// 
+	//var pairs = [];
+	len = views.length;
+	for(i=0; i<views.length; ++i){
+		for(j=i+1; j<views.length; ++j){
+			for(k=j+1; k<views.length; ++k){
+				console.log("triple: "+i+" & "+j+" & "+k);
+			}
+		}
 	}
 
 /*
@@ -3416,27 +3515,12 @@ App3DR.ProjectManager.prototype.calculateFeatures = function(view){
 	view.loadFeaturesImage(this._calculateFeaturesLoaded, this);
 }
 App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
-	console.log("with image loaded, can calculate");
 	var image = view.featuresImage();
-	//console.log(image);
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
-	console.log(imageMatrix);
-	var features = R3D.testExtract1(imageMatrix, null, 1E4);
-	console.log(features); // 2284
-	normalizedFeatures = [];
-	var i;
-	var width = imageMatrix.width();
-	var height = imageMatrix.height();
-	var scaleX = 1.0/width;
-	var scaleY = 1.0/height;
-	var scaleZ = 1.0/width;
-	for(i=0; i<features.length; ++i){
-		var feature = features[i];
-		var normal = new V3D();
-		normal.copy(feature);
-		normal.scale(scaleX,scaleY,scaleZ);
-		normalizedFeatures.push(normal);
-	}
+	var featurePoints = R3D.testExtract1(imageMatrix, null, 1E4);
+	var objects = R3D.generateSIFTObjects(featurePoints, imageMatrix);
+	normalizedFeatures = R3D.normalizeSIFTObjects(objects, imageMatrix.width(), imageMatrix.height());
+	console.log(normalizedFeatures);
 	view.setFeatures(normalizedFeatures, this._calculateFeaturesComplete, this);
 }
 App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
@@ -3450,14 +3534,6 @@ App3DR.ProjectManager.prototype.loadImageForView = function(view, filename, call
 	console.log("IMAGE PATH: "+path);
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
-App3DR.ProjectManager.prototype._denormalizeFeatures = function(features, width, height){
-	var i;
-	var fixed = [];
-	for(i=0; i<features.length; ++i){
-		fixed[i] = features[i].copy().scale(width, height, width);
-	}
-	return fixed;
-}
 App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair, callback, context, object){
 	console.log("calculatePairMatch");
 	// ...
@@ -3468,73 +3544,73 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 	var stage = this._stage;
 	var self = this;
 	var fxnA = function(){ // load features A
-		viewA.loadFeatures(fxnB, self);
+		viewA.loadFeatures(function(){
+			featuresA = viewA.features();
+			fxnReadyCheck();
+		}, self);
 	}
 	var fxnB = function(v){ // load features B
-		featuresA = viewA.features();
-		viewB.loadFeatures(fxnC, self);
+		viewB.loadFeatures(function(){
+			featuresB = viewB.features();
+			fxnReadyCheck();
+		}, self);
 	}
 	var fxnC = function(){ // load matching Image A
-		featuresB = viewB.features();
-		viewA.loadMatchingImage(fxnD, self);
+		viewA.loadMatchingImage(function(){
+			imageA = viewA.matchingImage();
+			fxnReadyCheck();
+		}, self);
 	}
 	var fxnD = function(){// load matching Image B
-		imageA = viewA.matchingImage();
-		viewB.loadMatchingImage(fxnF, self);
+		viewB.loadMatchingImage(function(){
+			imageB = viewB.matchingImage();
+			fxnReadyCheck();
+		}, self);
 	}
 	
-	var fxnF = function(){
-		console.log("fxnF");
-		imageB = viewB.matchingImage();
-		// 
+	var fxnReadyCheck = function(){
+		console.log("fxnReadyCheck");
+		if(!(featuresA && featuresB && imageA && imageB)){
+			return;
+		}
+		console.log("GO");
 		var imageAWidth = imageA.width;
 		var imageAHeight = imageA.height;
 		var imageBWidth = imageB.width;
 		var imageBHeight = imageB.height;
 
-		// console.log(featuresA);
-		// console.log(featuresB);
-		// console.log(imageA);
-		// console.log(imageB);
+		featuresA = R3D.denormalizeSIFTObjects(featuresA, imageAWidth, imageAHeight);
+		featuresB = R3D.denormalizeSIFTObjects(featuresB, imageBWidth, imageBHeight);
 
-		
-		featuresA = self._denormalizeFeatures(featuresA, imageAWidth, imageAHeight);
-		featuresB = self._denormalizeFeatures(featuresB, imageBWidth, imageBHeight);
-		//var maxFeatures = 500;
-		var maxFeatures = 200;
-		featuresA = Code.copyArray(featuresA, 0,maxFeatures-1);
-		featuresB = Code.copyArray(featuresB, 0,maxFeatures-1);
-
-		//throw "de-normalize feature points";
-		console.log(featuresA);
-
-		// create imageMatrix from image A
 		var imageMatrixA = R3D.imageMatrixFromImage(imageA, stage);
-		// create imageMatrix from image B
 		var imageMatrixB = R3D.imageMatrixFromImage(imageB, stage);
-		// create SIFTs from features A
-		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
-		// create SIFTs from features B
-		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
+		// from limited SIFT to points
+		var pointsA = R3D.generatePointsFromSIFTObjects(featuresA);
+		var pointsB = R3D.generatePointsFromSIFTObjects(featuresB);
+		// TO SIFT OBJECTS
+		var maxFeatures = 500;
+		//var maxFeatures = 200; // TESTING
+		var objectsA = R3D.generateSIFTObjects(pointsA, imageMatrixA);
+		var objectsB = R3D.generateSIFTObjects(pointsB, imageMatrixB);
+		objectsA = Code.copyArray(objectsA, 0,maxFeatures-1);
+		objectsB = Code.copyArray(objectsB, 0,maxFeatures-1);
 		// fat matching (no prior knowledge)
-console.log("START");
 		var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB);
 		var F = matchData["F"];
 		var matches = matchData["matches"];
-console.log("END");
 		// ...
 		matchCount = matches.length;
 		console.log(matches);
-//throw " ??? ";
-		var str = self._matchesToYAML(matches, F, viewA, viewB);
+
+		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
+
 		if(pair){
 			fxnG(pair);
 		}else{
 			self.addPair(viewA, viewB, fxnG, self);
 		}
-		// App3DR.ProjectManager.prototype.addPair = function(viewA, viewB, callback, context){
 	}
 	var yamlBinary = null;
 	var matchCount = -1;
@@ -3542,7 +3618,7 @@ console.log("END");
 		console.log("fxnG");
 		console.log(yamlBinary!==null);
 		var path = Code.appendToPath(self._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
-		pair.setMatchInfo(matchCount);//, App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME);
+		pair.setMatchInfo(matchCount);
 		self.addOperation("SET", {"path":path, "data":yamlBinary}, fxnH, self, pair);
 	}
 	var fxnH = function(object, data){
@@ -3552,6 +3628,10 @@ console.log("END");
 		self.saveProjectFile();
 	}
 	fxnA();
+	fxnB();
+	fxnC();
+	fxnD();
+
 }
 /*
 SPARSE
@@ -3575,8 +3655,12 @@ console.log(yaml);
 
 
 */
-App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB){
+App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
 	var timestampNow = Code.getTimeStampFromMilliseconds();
+	var widA = imageMatrixA.width();
+	var heiA = imageMatrixA.height();
+	var widB = imageMatrixB.width();
+	var heiB = imageMatrixB.height();
 
 	var yaml = new YAML();
 	yaml.writeComment("3DR Features File 0");
@@ -3587,25 +3671,30 @@ App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, vie
 	yaml.writeString("from", viewA.id());
 	yaml.writeString("to", viewB.id());
 
-
-//	TODO: INCLUDE SIZE DATA WITH VIEWS
-
 	yaml.writeObjectStart("F");
 		F.saveToYAML(yaml);
 	yaml.writeObjectEnd();
-
 	yaml.writeNumber("count", matches.length);
 	yaml.writeArrayStart("matches");
 	var i, len=matches.length;
 	for(i=0; i<len; ++i){
 		var match = matches[i];
-		var fr = match["A"];
-		var to = match["B"];
-		yaml.writeObjectStart("from");
-			fr.saveToYAML(yaml);
+		var score = match["score"];
+		var fr = match["from"];
+		var to = match["to"];
+		yaml.writeObjectStart("fr");
+			yaml.writeNumber("i", match["A"]);
+			yaml.writeNumber("x", fr["point"].x/widA);
+			yaml.writeNumber("y", fr["point"].y/heiA);
+			yaml.writeNumber("s", fr["size"]/widA);
+			yaml.writeNumber("a", fr["angle"]);
 		yaml.writeObjectEnd();
 		yaml.writeObjectStart("to");
-			to.saveToYAML(yaml);
+			yaml.writeNumber("i", match["B"]);
+			yaml.writeNumber("x", to["point"].x/widB);
+			yaml.writeNumber("y", to["point"].y/heiB);
+			yaml.writeNumber("s", to["size"]/widB);
+			yaml.writeNumber("a", to["angle"]);
 		yaml.writeObjectEnd();
 	}
 	yaml.writeArrayEnd();
@@ -3625,8 +3714,18 @@ App3DR.ProjectManager.prototype._featuresToYAML = function(features){
 	yaml.writeArrayStart("features");
 	for(i=0; i<len; ++i){
 		var feature = features[i];
+		var point = feature["point"];
+		var size = feature["size"];
+		var angle = feature["angle"];
+//		var vector = feature["vector"];
+		var score = feature["score"];
 		yaml.writeObjectStart();
-			feature.saveToYAML(yaml);
+			yaml.writeNumber("x",point.x);
+			yaml.writeNumber("y",point.y);
+			yaml.writeNumber("size",size);
+			yaml.writeNumber("angle",angle);
+			yaml.writeNumber("score",score);
+//			yaml.writeArrayNumbers("vector",vector);
 		yaml.writeObjectEnd();
 	}
 	yaml.writeArrayEnd();
@@ -3644,15 +3743,30 @@ App3DR.ProjectManager.prototype._featuresFromObject = function(object){
 		var i, len = features.length;
 		for(i=0; i<len; ++i){
 			var feature = features[i];
-			//console.log(feature);
-			var point = new V3D().loadFromObject(feature);
-			list.push(point);
+				var object = {};
+				var pointX = feature["x"];
+				var pointY = feature["y"];
+				object["point"] = new V2D(pointX,pointY);
+				object["size"] = feature["size"];
+				object["angle"] = feature["angle"];
+				object["score"] = feature["score"];
+//				object["vector"] = feature["vector"];
+			list.push(object);
 		}
 	}
 	return list;
 }
-App3DR.ProjectManager.prototype.x = function(){
-	//
+App3DR.ProjectManager.prototype.viewFromID = function(viewID){
+	if(viewID){
+		var views = this._views;
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			if(view.id()==viewID){
+				return view;
+			}
+		}
+	}
+	return null;
 }
 App3DR.ProjectManager.prototype.x = function(){
 
@@ -4090,6 +4204,16 @@ App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
 	this._viewBID = viewB;
 	this._matchFeatureScore = null; // median / average of feature scores [some distribution of good scores metric]
 	this._matchFeatureCount = null; // total matched features [above minimum]
+	this._matchingData = null;
+	this._matchingSparse = null;
+	this._matchingMedium = null;
+	this._matchingDense = null;
+}
+App3DR.ProjectManager.Pair.prototype.viewA = function(){
+	return this._manager.viewFromID(this._viewAID);
+}
+App3DR.ProjectManager.Pair.prototype.viewB = function(){
+	return this._manager.viewFromID(this._viewBID);
 }
 App3DR.ProjectManager.Pair.prototype.directory = function(){
 	return this._directory;
@@ -4097,6 +4221,10 @@ App3DR.ProjectManager.Pair.prototype.directory = function(){
 App3DR.ProjectManager.Pair.prototype.id = function(){
 	return this.directory();
 }
+App3DR.ProjectManager.Pair.prototype.matchingData = function(){
+	return this._matchingData;
+}
+
 App3DR.ProjectManager.Pair.prototype.setMatchInfo = function(count, dir){
 	this._matchFeatureCount = count;
 	// TODO: DIR
@@ -4109,9 +4237,9 @@ App3DR.ProjectManager.Pair.prototype.isPair = function(idA,idB){
 	}
 	return false;
 }
+
 App3DR.ProjectManager.Pair.prototype.hasMatch = function(){
-	//return this._matchFeatureCount != null && this._matchFeatureCount >= 0;
-	return false; // ?
+	return this._matchFeatureCount != null && this._matchFeatureCount >= 0;
 }
 App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
@@ -4127,6 +4255,71 @@ App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._matchFeatureScore = object["featureScore"];
 	this._matchFeatureCount = object["featureCount"];
 }
+//
+App3DR.ProjectManager.Pair.prototype.loadMatchingData = function(callback, context){
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+		// ...
+	this._manager.loadMatchingDataForPair(this, App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME, this._loadMatchingDataComplete, this, object);
+}
+App3DR.ProjectManager.Pair.prototype._loadMatchingDataComplete = function(object, data){
+	// TODO: to internal object
+	var yamlObject = Code.binaryToYAMLObject(data);
+	console.log(yamlObject);
+	this._matchingData = yamlObject;
+	var callback = object["callback"];
+	var context = object["context"];
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+/*
+
+INITIAL:
+	?
+
+SPARSE:
+
+	matches:
+	#  count: 26
+	-
+		from:
+			x: 93.93939393939394
+			y: 175.75757575757575
+		to:
+			x: 112.87878787878786
+			y: 137.87878787878788
+		transform:
+			row: 3
+			col: 3
+			data:
+				- 0.6830127018922193
+				- 0.18301270189221933
+				- 0
+				- -0.18301270189221933
+				- 0.6830127018922193
+				- 0
+				- 0
+				- 0
+				- 1
+MEDIUM:
+	- ''
+
+
+DENSE:
+
+	-
+		from:
+			x: 235
+			y: 205
+		to:
+			x: 196.99406527873768
+			y: 208.11651939948283
+		score: 0.0015980056352500494
+		scale: 1.0927485080280512
+		angle: 0.40775651486928477
+*/
 // ------------------------------------------------------------------------------------------------------------
 App3DR.ProjectManager.Camera = function(manager, directory){
 	this._manager = manager;

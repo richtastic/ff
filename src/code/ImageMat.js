@@ -278,13 +278,13 @@ ImageMat.prototype.getSubImageIndex = function(colSta,colEnd, rowSta,rowEnd){
 ImageMat.prototype.getSubImage = function(px,py, wid,hei){
 	return ImageMat.extractRect(this, px-wid/2.0,py-hei/2.0, px+wid/2.0,py-hei/2.0, px+wid/2.0,py+hei/2.0, px-wid/2.0,py+hei/2.0, wid,hei);
 }
-ImageMat.prototype.getScaledImage = function(scale, sigma){
-	var finalWidth = Math.floor(scale*this.width());
-	var finalHeight = Math.floor(scale*this.height());
-	var centerX = this.width()*0.5;
-	var centerY = this.height()*0.5;
-	return this.extractRectFromFloatImage(centerX,centerY,1.0/scale,sigma, finalWidth,finalHeight, null);
-}
+// ImageMat.prototype.getScaledImage = function(scale, sigma){
+// 	var finalWidth = Math.floor(scale*this.width());
+// 	var finalHeight = Math.floor(scale*this.height());
+// 	var centerX = this.width()*0.5;
+// 	var centerY = this.height()*0.5;
+// 	return this.extractRectFromFloatImage(centerX,centerY,1.0/scale,sigma, finalWidth,finalHeight, null);
+// }
 ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include 
 	var sub = [wid*hei];
 	var i, j;
@@ -3411,6 +3411,44 @@ ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forc
 	//var newImg = ImageMat.extractRectFromFloatImage(x,y,1.0/scale,null, newWid,newHei, source,wid,hei, null);
 	var newImg = ImageMat.extractRectSimple(source,wid,hei, 0,0,wid-1,hei-1, newWid,newHei);
 	return {"width":newWid, "height":newHei, "value":newImg};
+}
+ImageMat.prototype.getScaledImageInteger = function(scale){
+	var newWidth = Math.round(scale*this.width());
+	var newHeight = Math.round(scale*this.height());
+	var red = ImageMat.getScaledImageInteger(this.red(), this.width(), this.height(), scale, newWidth, newHeight);
+	var grn = ImageMat.getScaledImageInteger(this.grn(), this.width(), this.height(), scale, newWidth, newHeight);
+	var blu = ImageMat.getScaledImageInteger(this.blu(), this.width(), this.height(), scale, newWidth, newHeight);
+		red = red["value"];
+		grn = grn["value"];
+		blu = blu["value"];
+	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
+	return image;
+}
+ImageMat.getScaledImageInteger = function(src,wid,hei, scale, forceWidth,forceHeight){
+	if(scale<1.0){
+		var size = Math.round(1.0/scale);
+		var sizeSquare = size*size;
+		var newWid = forceWidth ? forceWidth : Math.round(width*scale);
+		var newHei = forceHeight ? forceHeight : Math.round(height*scale);
+		var newSrc = new Array(newWid*newHei);
+		var index, ind;
+		for(var j=0; j<newHei; ++j){
+			for(var i=0; i<newWid; ++i){
+				ind = j*newWid + i;
+				value = 0;
+				for(var k=0; k<size; ++k){ // blocks
+					for(var l=0; l<size; ++l){ 
+						index = (j*size+k)*wid + (i*size+l); // TODO: FORCE END TRUNCATION
+						value += src[index];
+					}
+				}
+				value /= sizeSquare;
+				newSrc[ind] = value;
+			}
+		}
+		return {"value":newSrc};
+	} // else bigger
+	return ImageMat.getScaledImage(src,wid,hei, scale, null, forceWidth,forceHeight);
 }
 ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding and unpadding to avoid shadow on image edges
 	var x = wid*0.5;

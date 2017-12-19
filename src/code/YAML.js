@@ -452,6 +452,13 @@ YAML.prototype.writeObjectEnd = function(name){
 }
 
 // -------------------------------------------------------------------------------------------------- ARRAY
+YAML.prototype.writeArrayNumbers = function(name, array){
+	this.writeArrayStart(name);
+	for(var i=0; i<array.length; ++i){
+		this.writeNumber(array[i]);
+	}
+	this.writeArrayEnd();
+}
 YAML.prototype.writeArrayStart = function(name){
 	this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR;
 	this._stack.push(YAML.STACK_ARRAY);
