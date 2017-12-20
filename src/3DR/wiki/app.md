@@ -191,8 +191,18 @@ project typical numbers:
 
 
 APP TODO:
-- visualize pair matches
-- visualize F transform
+- dense alg:
+	- smaller cells are better for accuracy
+	- larger cells are bette:
+		- connect space
+		- discard mismatching seeds
+
+	- TRY larger image resolutions with larger cells
+	- dense use CELLS as quadspace
+	- some SAD scores have to be horrible ??? 
+
+- fix lm minimization F error
+- corner feature size should be based on something ...
 
 - TRIPLE ALGORITHM
 

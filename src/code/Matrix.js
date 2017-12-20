@@ -38,6 +38,7 @@ Matrix.prototype.saveToYAML = function(yaml){
 			}
 		}
 	yaml.writeArrayEnd();
+	return this;
 }
 Matrix.prototype.loadFromObject = function(obj){
 	var DATA = Matrix.YAML;
@@ -45,6 +46,7 @@ Matrix.prototype.loadFromObject = function(obj){
 	var cols = obj[DATA.COLS];
 	var data = obj[DATA.DATA];
 	this.fromArray(data, rows,cols);
+	return this;
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 Matrix.prototype.fromArray = function(list, newRow,newCol){

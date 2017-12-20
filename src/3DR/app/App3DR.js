@@ -65,10 +65,14 @@ function App3DR(){
 	// this._activeView = this._projectManager.views()[0];
 	// console.log(this._activeView);
 
+//var modeImageEdit = true;
 var modeImageEdit = false;
-var modeImageUpload = false;
+
 //var modeImageUpload = true;
+var modeImageUpload = false;
+
 var modeImageCompare = true;
+// var modeImageCompare = false;
 if(modeImageEdit){
 	var app = new App3DR.App.ImageEditor(this._resource);
 	this.setupAppActive(app);
@@ -234,7 +238,8 @@ App3DR.prototype._setupMatchCompareProjectManager = function(){
 		var views = manager.views();
 		var pairs = manager.pairs();
 		if(pairs.length>0){
-			var pair = pairs[0];
+			//var pair = pairs[0];
+			var pair = pairs[pairs.length-1];
 			var viewA = pair.viewA()
 			var viewB = pair.viewB()
 			if(viewA && viewB){ // load: imageA | imageB | matching | 
@@ -254,7 +259,7 @@ App3DR.prototype._setupMatchCompareProjectManager = function(){
 				}
 				var fxnD = function(){
 					matchAB = pair.matchingData();
-					app.setDisplay([imageA,imageB],[2],[imageA,imageB,matchAB]);
+					app.setDisplay([imageA,imageB], [2], [[imageA,imageB,matchAB]]);
 				}
 				fxnA();
 			}
@@ -282,7 +287,7 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 		console.log("is loaded: "+views.length);
 		if(views.length>0){
 			//var view = views[0];
-			var view = views[1];
+			var view = views[views.length-1];
 			this._activeView = view;
 			var app = this._activeApp;
 			var self = this;
@@ -300,19 +305,22 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 			}
 			var fxnD = function(){
 				var features = view.features();
-				console.log(features);
+console.log("fxnD")
+console.log(features)
 				var expanded = [];
 				var img = view.featuresImage();
 				var width = img.width;
 				var height = img.height;
-				for(var i=0; i<features.length; ++i){
-					var f = features[i];
-					var p = new V3D();
-					p.x = f.x * width;
-					p.y = f.y * height;
-					p.z = f.z * width;
-					expanded.push(p);
-				}
+				// for(var i=0; i<features.length; ++i){
+				// 	var f = features[i];
+				// 	var p = new V3D();
+				// 	p.x = f.x * width;
+				// 	p.y = f.y * height;
+				// 	p.z = f.z * width;
+				// 	expanded.push(p);
+				// }
+				console.log("FEATURE SIZE: "+width+"x"+height);
+				var expanded = R3D.denormalizeSIFTObjects(features, width, height);
 				app.setActiveFeatures(expanded);
 			}
 			fxnA();
@@ -364,16 +372,56 @@ App3DR.App.MatchCompare.prototype.setDisplay = function(imageList,rowList,matchL
 	var countCurrent = 0;
 	var maxWidth = 0;
 	var colHeight = 0;
-	var rowInfo = [];
-	var imageInfo = [];
+	// var rowInfo = [];
+	// var imageInfo = [];
 	console.log(matchList);
+	var largestWidth = 0;
+	var largestHeight = 0;
+	var imageInfoList = [];
+	var matchInfoList = [];
+	var image;
+	for(i=0; i<imageList.length; ++i){
+		image = imageList[i];
+		largestWidth = Math.max(largestWidth,image.width);
+		largestHeight = Math.max(largestHeight,image.height);
+		imageInfoList[i] = {"image":image};
+	}
+	var maximumRows = rowList.length;
+	var maximumCols = 0;
+	for(i=0; i<rowList.length; ++i){
+		maximumCols = Math.max(maximumCols, rowList[i]);
+	}
+	console.log("maximumRows: "+maximumRows);
+	console.log("maximumCols: "+maximumCols);
+	for(i=0; i<matchList.length; ++i){
+		var imageA = matchList[i][0];
+		var imageB = matchList[i][1];
+		var matching = matchList[i][2];
+		var match = {};
+		match["match"] = matching;
+		for(j=0; j<imageInfoList.length; ++j){
+			var info = imageInfoList[j];
+			if(info["image"]==imageA){
+				match["A"] = info;
+			}else if(info["image"]==imageB){
+				match["B"] = info;
+			}
+		}
+		matchInfoList.push(match);
+	}
+	var grid = new V2D(maximumCols,maximumRows);
+	var objectSize = new V2D(largestWidth,largestHeight);
+console.log("objectSize: "+objectSize)
+	var fullSize = new V2D(largestWidth*maximumCols,largestHeight*maximumRows);
+	// setup display locations:
+
 	for(i=0; i<rowList.length; ++i){
 		var rowCount = rowList[i];
-		var maxRowHeight = 0;
-		var rowWidth = 0;
-		var row = {};
 		for(j=0; j<rowCount; ++j){
-			var image = imageList[countCurrent+j];
+			var info = imageInfoList[countCurrent+j];
+			info["column"] = j;
+			info["row"] = i;
+			/*
 			rowWidth += image.width;
 			maxRowHeight = Math.max(maxRowHeight, image.height);
 			var match = null;
@@ -384,15 +432,16 @@ App3DR.App.MatchCompare.prototype.setDisplay = function(imageList,rowList,matchL
 			// }
 			var info = {"image":image, "row":row, "match":match};
 			imageInfo.push(info);
+			*/
 		}
-		row = {"width":rowWidth, "height":maxRowHeight}
-		rowInfo[i] = row;
-		colHeight += maxRowHeight;
-		maxWidth = Math.max(maxWidth, rowWidth);
-		countCurrent += rowCount;
+		// row = {"width":rowWidth, "height":maxRowHeight}
+		// rowInfo[i] = row;
+		// colHeight += maxRowHeight;
+		// maxWidth = Math.max(maxWidth, rowWidth);
+		// countCurrent += rowCount;
 	}
-	var objectSize = new V2D(maxWidth,colHeight);
-	this._displayData = {"images":imageInfo, "size":objectSize, "matches":matchList};
+
+	this._displayData = {"images":imageInfoList, "objectSize":objectSize, "fullSize":fullSize, "grid":grid, "matches":matchInfoList};
 	this._render();
 }
 App3DR.App.MatchCompare.prototype._render = function(){
@@ -400,37 +449,207 @@ App3DR.App.MatchCompare.prototype._render = function(){
 	console.log("RENDER");
 	this._display.removeAllChildren();
 	if(this._displayData){
-		var objectSize = this._displayData["size"];
+		var grid = this._displayData["grid"];
+		var fullSize = this._displayData["fullSize"];
+		var objectSize = this._displayData["objectSize"];
 		var imageInfo = this._displayData["images"];
-		var matchList = this._displayData["matches"];
+		var matchInfo = this._displayData["matches"];
 		var containerSize = this.size();
-		var fitSize = Code.sizeToFitInside(containerSize.x,containerSize.y, objectSize.x,objectSize.y);
-		//Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
+
+		var fitSize = Code.sizeToFitInside(containerSize.x,containerSize.y, fullSize.x,fullSize.y);
 		//console.log(objectSize+"  ... "+fitSize);
-		var scale = fitSize.x/objectSize.x;
+		var scale = fitSize.x/fullSize.x;
 		//console.log(scale);
 		//this._displayData = {"images":imageInfo, "size":objectSize}
-		var diff = V2D.sub(containerSize,fitSize);
+		//var diff = V2D.sub(containerSize,fitSize);
 		var i, j, k;
 		for(i=0; i<imageInfo.length; ++i){
 			var info = imageInfo[i];
 			var image = info["image"];
+			var col = info["column"];
 			var row = info["row"];
+			var size = objectSize.copy().scale(scale);
+			var off = size.copy().scale(col,row);
 			var d = new DOImage(image);
-			var s = new V2D(image.width,image.height).scale(scale);
-			info["position"] = null;
-			info["size"] = s;
-			d.size(s.x,s.y);
+			info["offset"] = off;
+			info["size"] = size;
+			d.size(size.x,size.y);
 			this._display.addChild(d);
 			d.matrix().identity();
-			d.matrix().translate(i*s.x,i*s.y);
+			d.matrix().translate(off.x,off.y);
 		}
 		// matches after images
-		for(i=0; i<matchList.length; ++i){
-			var match = matchList[i];
+		for(i=0; i<matchInfo.length; ++i){
+			var match = matchInfo[i];
+			var imageA = match["A"];
+			var imageB = match["B"];
+			var matches = match["match"];
+console.log(match)
+			var F = matches["F"];
+console.log(F);
+				F = new Matrix().loadFromObject(F);
+console.log(F+"")
+
+			var matchingList = matches["matches"];
+			var d = new DO();
+			this._display.addChild(d);
+			console.log(matchingList.length+" .... match length" );
+			//d.graphics().setLine(1.0,0x99FF0000);
+			for(j=0; j<matchingList.length; ++j){
+break;
+				var m = matchingList[j];
+				var to = m["to"];
+				var fr = m["fr"];
+					var t = new V2D(to["x"],to["y"]);
+					var f = new V2D(fr["x"],fr["y"]);
+				var f = f.copy().scale(imageA["size"].x,imageA["size"].y);
+				f.add(imageA["offset"]);
+				var t = t.copy().scale(imageB["size"].x,imageB["size"].y);
+				t.add(imageB["offset"]);
+				// console.log(f+" => "+t);
+				var colors = [];
+				var color = Code.getColARGBFromFloat(1.0,Math.random(),Math.random(),Math.random());
+				colors.push(color);
+				color = Code.inverseColorARGB(color);
+				//colors.push(color);
+				for(k=0; k<colors.length; ++k){ // fat to skinny
+					//d.graphics().setLine(1.0+(colors.length-1-k)*6,color);
+					d.graphics().setLine(1.0,color);
+					d.graphics().beginPath();
+					d.graphics().moveTo(f.x,f.y+k);
+					d.graphics().lineTo(t.x,t.y+k);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+				}
+
+				// if(j>100){
+				// 	break;
+				// }
+			}
+			
 		}
+
+		var imA = imageA["image"];
+		var imB = imageB["image"];
+
+		// var toSizeA = new V2D(imA.width,imA.height);
+		// var toSizeB = new V2D(imB.width,imB.height);
+
+
+		var toSizeA = new V2D(imA.width,imA.height).scale(scale);
+		var toSizeB = new V2D(imB.width,imB.height).scale(scale);
+
+		var scaleA = scale;
+		var scaleB = scale;
+		// F for visualizing
+		var Floc = F.copy();
+			Floc = Matrix.mult( Floc, Matrix.transform2DScale(new Matrix(3,3).identity(), 1.0/scaleA, 1.0/scaleA) );
+			Floc = Matrix.mult( Matrix.transform2DScale(new Matrix(3,3).identity(), 1.0/scaleB, 1.0/scaleB), Floc );
+
+		this.showF(d, Floc, matchingList, imageA["offset"],imageA["size"], imageB["offset"],imageB["size"]);
+
+		
+			var pointsA = [];
+			var pointsB = [];
+			var matches = match["match"];
+			var matchingList = matches["matches"];;
+			for(i=0; i<matchingList.length; ++i){
+				var m = matchingList[i];
+				var to = m["to"];
+				var fr = m["fr"];
+					var t = new V2D(to["x"],to["y"]);
+					var f = new V2D(fr["x"],fr["y"]);
+					f.scale(imA.width,imA.height);
+					t.scale(imB.width,imB.height);
+				pointsA[i] = new V3D(f.x,f.y,1.0);
+				pointsB[i] = new V3D(t.x,t.y,1.0);
+			}
+		// var error = R3D._gdFun([pointsA,pointsB], F.toArray(), false);
+		// var averageError = error/pointsA.length;
+		// console.log("F AVG ERROR: "+error+" == "+averageError);
+		R3D.refineSimple(F, pointsA,pointsB, true);
+	}
+
+
+}
+
+App3DR.App.MatchCompare.prototype.showF = function(display, matrixFfwd, matches, offsetA,sizeA, offsetB,sizeB){
+	console.log(matches)
+
+	matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+	var colors = [0xFFFF0000, 0xFFFF9900, 0xFFFF6699, 0xFFFF00FF, 0xFF9966FF, 0xFF0000FF,  0xFF00FF00 ]; // R O M P B P G
+	// var imageWidth = imageMatrixA ? imageMatrixA.width() : 400;
+		// var imageHeight = imageMatrixA ? imageMatrixA.height() : 300;
+		// var scale = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight); // imageWidth + imageHeight;
+	var scale = 0.25 * Math.max(sizeA.length(),sizeB.length());
+
+	// SHOW F LINES ON EACH
+	for(var k=0; k<matches.length; ++k){
+		var percent = k / (matches.length-1);
+		var match = matches[k];
+		var to = match["to"];
+		var fr = match["fr"];
+		var pointA = new V2D(fr["x"],fr["y"]);
+		var pointB = new V2D(to["x"],to["y"]);
+			pointA.scale(sizeA.x,sizeA.y);
+			pointB.scale(sizeB.x,sizeB.y);
+		pointA = new V3D(pointA.x,pointA.y,1.0);
+		pointB = new V3D(pointB.x,pointB.y,1.0);
+		var lineA = new V3D();
+		var lineB = new V3D();
+
+		matrixFfwd.multV3DtoV3D(lineA, pointA);
+		matrixFrev.multV3DtoV3D(lineB, pointB);
+
+		var d, v;
+		var dir = new V2D();
+		var org = new V2D();
+		
+		var rad = 4.0;
+		//var color = Code.interpolateColorGradientARGB(percent, colors);
+		var color = colors[k%colors.length];
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	var closest = Code.closestPointLine2D(org,dir, pointB);
+	var dist = V2D.distance(closest,pointA);
+//console.log("DIFF 1: "+dist);	
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(offsetB.x + closest.x-dir.x, offsetB.y + closest.y-dir.y);
+		d.graphics().lineTo(offsetB.x + closest.x+dir.x, offsetB.y + closest.y+dir.y);
+		d.graphics().drawCircle(offsetB.x + pointB.x, offsetB.y + pointB.y, rad);
+		// d.graphics().drawCircle(offsetB.x + closest.x, offsetB.y + closest.y, rad*0.5);
+		d.graphics().moveTo(offsetB.x + pointB.x, offsetB.y + pointB.y);
+		d.graphics().lineTo(offsetB.x + closest.x, offsetB.y + closest.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		display.addChild(d);
+		//
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+	var closest = Code.closestPointLine2D(org,dir, pointA);
+	var dist = V2D.distance(closest,pointA);
+//console.log("DIFF 2: "+dist);
+		dir.scale(scale);
+		d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(offsetA.x + closest.x-dir.x, offsetA.y + closest.y-dir.y);
+		d.graphics().lineTo(offsetA.x + closest.x+dir.x, offsetA.y + closest.y+dir.y);
+		d.graphics().drawCircle(offsetA.x + pointA.x, offsetA.y + pointA.y, rad);
+		// d.graphics().drawCircle(offsetA.x + closest.x, offsetA.y + closest.y, rad*0.5);
+		d.graphics().moveTo(offsetA.x + pointA.x, offsetA.y + pointA.y);
+		d.graphics().lineTo(offsetA.x + closest.x, offsetA.y + closest.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		display.addChild(d);
+
 	}
 }
+
 
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -797,8 +1016,9 @@ App3DR.App.ImageEditor.prototype.setActiveImage = function(imageSource){
 		var sourceHeight = img.height;
 		var canvas = this._canvas;
 		var size = canvas.size();
-		siz = Math.min(size.x,size.y);
-		size.set(siz,siz);
+		// siz = Math.min(size.x,size.y);
+		// size.set(siz,siz);
+		size = this.size();
 		this._explorer.setSizes(size, new V2D(sourceWidth,sourceHeight) );
 	}
 	//this._render();
@@ -832,10 +1052,11 @@ App3DR.App.ImageEditor.prototype.setActiveMask = function(imageSource, force){
 	this._render();
 }
 App3DR.App.ImageEditor.prototype.setActiveFeatures = function(features){
-	var maxCount = 500;
+	var maxCount = 2000;
 	if(features.length>maxCount){
 		features = Code.copyArray(features, 0,maxCount-1);
 	}
+	console.log(features)
 	this._featuresSource = features;
 	this._render();
 }
@@ -1312,10 +1533,9 @@ GizmoSlider = function(root, size){
 	*/
 }
 App3DR.App.ImageEditor.prototype._render = function(){
-//	console.log("RENDER");
 	var canvas = this._canvas;
 	var size = this.size();
-	// var size = canvas.size();
+
 	var d;
 	// var d = new DO();
 	// 	d.graphics().clear();
@@ -1358,7 +1578,7 @@ var g = d.graphicsIntersection();
 	g.fill();
 
 	d = this._areaInterfaceRotate;
-//d.newGraphicsIntersection();
+d.newGraphicsIntersection();
 var g = d.graphicsIntersection();
 	g.clear();
 	g.beginPath();
@@ -1377,7 +1597,7 @@ var g = d.graphicsIntersection();
 	var containerClipPoly = [new V2D(0,0),new V2D(size.x,0),new V2D(size.x,size.y),new V2D(0,size.y)];
 	//
 	d = this._root;
-	this._root.mask(true);
+//	this._root.mask(true);
 
 	d.graphics().clear();
 	// d.graphics().setFill(0xFF00FF00);
@@ -1385,9 +1605,7 @@ var g = d.graphicsIntersection();
 	d.graphics().drawPolygon(containerClipPoly);
 	d.graphics().endPath();
 //	d.graphics().fill();
-
-
-
+	
 	var d = this._displayBackground;
 	d.drawTilePattern(0,0, size.x,size.y);
 /*
@@ -1416,7 +1634,7 @@ var g = d.graphicsIntersection();
 		var axesX = axes["x"];
 		var axesY = axes["y"];
 		var axesO = axes["o"];
-
+//console.log("bounds: "+bounds)
 			// image
 			//var polyA = [new V2D(o.x,o.y),new V2D(o.x+sourceWidth,0.0),new V2D(o.x+sourceWidth,o.y+sourceHeight),new V2D(0.0,o.y+sourceHeight)];
 			//var polyA = [new V2D(o.x,o.y),new V2D(o.x+s.x,o.y),new V2D(o.x+s.x,o.y+s.y),new V2D(o.x,o.y+s.y)];
@@ -1478,7 +1696,6 @@ if(minCoordinate){
 			
 			// only draw image for zoomed out
 			//d.graphics().alpha(0.1);
-				
 			if(!doSelfPixels){
 				d = this._displayImage;
 				d.matrix().identity();
@@ -1487,7 +1704,6 @@ if(minCoordinate){
 				d.matrix().rotate(angle);
 				d.matrix().translate(offset.x, offset.y);// center of box
 				d.matrix().translate(containerSize.x*0.5, containerSize.y*0.5);
-				
 				d = this._displayImage;
 				d.image(img);
 				d.drawClippedImage(minX,minY,countX,countY, 0,0,sizeX,sizeY);
@@ -1641,26 +1857,31 @@ if(minCoordinate){
 		}
 		var d = this._displayFeatures;
 		d.graphics().clear();
-			d.graphics().setLine(line,0xFFFF00FF);
+			d.graphics().setLine(line,0xCCFF00FF);
 			d.graphics().setFill(0x22FF00FF);
-
-
+		d.matrix().identity();
+		d.matrix().translate(0,0);
 
 		// TODO: GET FEATURES ONLY INSIDE LOCAL WINDOW:
 			// origin + 
 		var features = this._featuresSource;
-		var f = new V3D();
+		var f = new V2D();
 		for(i=0; i<features.length; ++i){
 			var feature = features[i];
-			//f.set(feature.x+0.5, feature.y+0.5);
-			f.set(feature.x+0.5, feature.y+0.5, feature.z);
-			var siz = f.z;
-				siz = siz * scaling;
+			var point = feature["point"];
+			var size = feature["size"];
+size = size * 0.25;
+			var angle = feature["angle"];
+			f.set(point.x+0.5, point.y+0.5);
+				var siz = size * scaling;
 				var p = this._explorer.toScreenPoint(f);
 				d.graphics().beginPath();
 				d.graphics().drawCircle(p.x,p.y, siz);
 				d.graphics().endPath();
 				d.graphics().fill();
+				d.graphics().strokeLine();
+				d.graphics().moveTo(p.x,p.y);
+				d.graphics().lineTo(p.x+siz*Math.cos(angle), p.y+siz*Math.sin(angle));
 				d.graphics().strokeLine();
 			// x,y position
 			// z size
@@ -2059,9 +2280,11 @@ App3DR.prototype.setupAppActive = function(app){
 	this._activeApp = app;
 	var size = this._canvas.size();
 	var siz = Math.min(size.x,size.y);
+	var sizX = size.x;
+	var sizY = size.y;
 	var cen = new V2D(size.x*0.5,size.y*0.5);
-	var min = new V2D(cen.x-siz*0.5,cen.y-siz*0.5);
-	var max = new V2D(min.x+siz,min.y+siz);
+	var min = new V2D(cen.x-sizX*0.5,cen.y-sizY*0.5);
+	var max = new V2D(min.x+sizX,min.y+sizY);
 	// Code.sizeToFitInside = function(containerWidth,containerHeight, contentsWidth,contentsHeight){
 	app.setActive(this._canvas, this._stage, this._root, min,max);
 }
@@ -3291,7 +3514,7 @@ App3DR.ProjectManager.prototype.addView = function(callback, context){
 	console.log("addView");
 	var nextIndex = this._views.length;
 	var directory = this._uniqueViewID();
-	var path = Code.appendToPath(this._workingPath, directory);
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, directory);
 	var view = new App3DR.ProjectManager.View(this, "New View "+directory, directory);
 	this._views.push(view);
 	this.addOperation("SET", {"path":path}, callback, context, view);
@@ -3310,7 +3533,7 @@ App3DR.ProjectManager.prototype.removeView = function(view, callback, context){
 		console.log("removeView ... ");
 		Code.removeElementAt(this._views,foundView);
 		view.unload();
-		var path = Code.appendToPath(this._workingPath, view.directory());
+		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, view.directory());
 		var object = {"view":view, };
 		this.addOperation("DEL", {"path":path}, callback, context, object);
 		this.saveProjectFile();
@@ -3320,13 +3543,13 @@ App3DR.ProjectManager.prototype.removeView = function(view, callback, context){
 }
 App3DR.ProjectManager.prototype.addPictureForView = function(view, filename, size, scale, binary, callback, context, object){
 	console.log("doing");
-	var path = Code.appendToPath(this._workingPath, view.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, view.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
 	console.log(path);
 	this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
 }
 App3DR.ProjectManager.prototype.saveFeaturesForView = function(view, features, filename, callback, context, object){
 	console.log("saveFeaturesForView");
-	var path = Code.appendToPath(this._workingPath, view.directory(), filename);
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, view.directory(), filename);
 	console.log(path);
 	if(features){
 		var str = this._featuresToYAML(features);
@@ -3338,7 +3561,7 @@ App3DR.ProjectManager.prototype.saveFeaturesForView = function(view, features, f
 }
 App3DR.ProjectManager.prototype.loadFeaturesForView = function(view, filename, callback, context, object){
 	console.log("loadFeaturesForView");
-	var path = Code.appendToPath(this._workingPath, view.directory(), filename);
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, view.directory(), filename);
 	console.log(path);
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
@@ -3520,7 +3743,6 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var featurePoints = R3D.testExtract1(imageMatrix, null, 1E4);
 	var objects = R3D.generateSIFTObjects(featurePoints, imageMatrix);
 	normalizedFeatures = R3D.normalizeSIFTObjects(objects, imageMatrix.width(), imageMatrix.height());
-	console.log(normalizedFeatures);
 	view.setFeatures(normalizedFeatures, this._calculateFeaturesComplete, this);
 }
 App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
@@ -3530,7 +3752,7 @@ App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
 	this.checkPerformNextTask();
 }
 App3DR.ProjectManager.prototype.loadImageForView = function(view, filename, callback, context, object){
-	var path = Code.appendToPath(this._workingPath, view.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, view.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
 	console.log("IMAGE PATH: "+path);
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
@@ -3569,7 +3791,6 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 	}
 	
 	var fxnReadyCheck = function(){
-		console.log("fxnReadyCheck");
 		if(!(featuresA && featuresB && imageA && imageB)){
 			return;
 		}
@@ -3592,16 +3813,16 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		//var maxFeatures = 200; // TESTING
 		var objectsA = R3D.generateSIFTObjects(pointsA, imageMatrixA);
 		var objectsB = R3D.generateSIFTObjects(pointsB, imageMatrixB);
-		objectsA = Code.copyArray(objectsA, 0,maxFeatures-1);
-		objectsB = Code.copyArray(objectsB, 0,maxFeatures-1);
+		// objectsA = Code.copyArray(objectsA, 0,maxFeatures-1);
+		// objectsB = Code.copyArray(objectsB, 0,maxFeatures-1);
 		// fat matching (no prior knowledge)
-		var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB);
+		var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeatures);
 		var F = matchData["F"];
 		var matches = matchData["matches"];
 		// ...
 		matchCount = matches.length;
 		console.log(matches);
-
+// throw "hold on";
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
@@ -3633,28 +3854,6 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 	fxnD();
 
 }
-/*
-SPARSE
-
-refineFromSIFT
-
-
-transformFromSiftRefine
-
-
-var info = R3D.refinedMatchPoints(imageMatrixA,imageMatrixB, pointsA,pointsB);
-var transforms = info["transforms"];
-var pointsA = info["pointsA"];
-var pointsB = info["pointsB"];
-
-
-
-var yaml = R3D.outputSparsePoints(imageMatrixA,imageMatrixB, pointsA,pointsB, transforms);
-console.log(yaml);
-
-
-
-*/
 App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
 	var timestampNow = Code.getTimeStampFromMilliseconds();
 	var widA = imageMatrixA.width();
@@ -3682,22 +3881,25 @@ App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, vie
 		var score = match["score"];
 		var fr = match["from"];
 		var to = match["to"];
-		yaml.writeObjectStart("fr");
-			yaml.writeNumber("i", match["A"]);
-			yaml.writeNumber("x", fr["point"].x/widA);
-			yaml.writeNumber("y", fr["point"].y/heiA);
-			yaml.writeNumber("s", fr["size"]/widA);
-			yaml.writeNumber("a", fr["angle"]);
-		yaml.writeObjectEnd();
-		yaml.writeObjectStart("to");
-			yaml.writeNumber("i", match["B"]);
-			yaml.writeNumber("x", to["point"].x/widB);
-			yaml.writeNumber("y", to["point"].y/heiB);
-			yaml.writeNumber("s", to["size"]/widB);
-			yaml.writeNumber("a", to["angle"]);
+		yaml.writeObjectStart();
+			yaml.writeObjectStart("fr");
+				yaml.writeNumber("i", match["A"]);
+				yaml.writeNumber("x", fr["point"].x/widA);
+				yaml.writeNumber("y", fr["point"].y/heiA);
+				yaml.writeNumber("s", fr["size"]/widA);
+				yaml.writeNumber("a", fr["angle"]);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("to");
+				yaml.writeNumber("i", match["B"]);
+				yaml.writeNumber("x", to["point"].x/widB);
+				yaml.writeNumber("y", to["point"].y/heiB);
+				yaml.writeNumber("s", to["size"]/widB);
+				yaml.writeNumber("a", to["angle"]);
+			yaml.writeObjectEnd();
 		yaml.writeObjectEnd();
 	}
 	yaml.writeArrayEnd();
+	yaml.writeBlank();
 	return yaml.toString();
 }
 
@@ -3924,10 +4126,6 @@ App3DR.ProjectManager.View.prototype.saveMaskPicture = function(image){
 	var binary = imageBinary;
 	var object = {};
 	var info = this._manager.addPictureForView(this, filename, size, scale, binary, this._saveMaskPictureComplete, this, object);
-	// console.log("doing");
-	// var path = Code.appendToPath(this._workingPath, view.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
-	// console.log(path);
-	// this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
 }
 App3DR.ProjectManager.View.prototype._saveMaskPictureComplete = function(object, data){
 	console.log("_saveMaskPictureComplete");

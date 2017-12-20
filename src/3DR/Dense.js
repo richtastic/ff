@@ -18,15 +18,16 @@ function Dense(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 	
-	//this._imageFlip = false;
-	this._imageFlip = true;
+	this._imageFlip = false;
+	//this._imageFlip = true;
 	//this._loadingDense = true;
 	this._loadingDense = false;
 	this._cellSize = 10; // 6.6% = 20  |  3.3% = 10 | 1.6% = 5
 	var dataLoader = new FileLoader();
 		//dataLoader.setLoadList("./images/flow/",["sparseA.yaml"], this, this._handleFileDataLoadedFxn);
 		if(!this._loadingDense){
-			dataLoader.setLoadList("./images/flow/",["mediumA.yaml"], this, this._handleFileDataLoadedFxn);
+			//dataLoader.setLoadList("./images/flow/",["mediumA.yaml"], this, this._handleFileDataLoadedFxn);
+			dataLoader.setLoadList("./images/flow/",["matches.yaml"], this, this._handleFileDataLoadedFxn);
 		}else{
 			this._cellSize = 5;
 			dataLoader.setLoadList("./images/flow/",["denseA_10.yaml"], this, this._handleFileDataLoadedFxn);
@@ -34,8 +35,9 @@ function Dense(){
 		}
 
 //		this._cellSize = 3;
-		this._cellSize = 5;
-//		this._cellSize = 10;
+//		this._cellSize = 5;
+		this._cellSize = 11;
+//		this._cellSize = 21;
 
 		dataLoader.load();
 }
@@ -54,7 +56,8 @@ Dense.prototype._handleFileDataLoadedFxn = function(o){
 		sparse = R3D.inputDensePoints(data);
 		maxSeedCount = 1000;
 	}else{
-		sparse = R3D.inputSparsePoints(data);
+		//sparse = R3D.inputSparsePoints(data);
+		sparse = R3D.inputMatchPoints(data);
 	}
 	console.log("loaded: "+file);
 		// limit to count
@@ -64,6 +67,8 @@ Dense.prototype._handleFileDataLoadedFxn = function(o){
 		var transforms = sparse["transforms"];
 		var imageFrom = sparse["imageFrom"];
 		var imageTo = sparse["imageTo"];
+
+
 if(this._imageFlip){
 	sparse["pointsA"] = pointsB;
 	sparse["pointsB"] = pointsA;
@@ -144,154 +149,6 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
-
-
-	var pointsA = [
-//				new V2D(86,208), // glasses corner left
-//				new V2D(190,180), // glasses corner right
-				new V2D(172,107), // origin
-				new V2D(22.5,166), // lighter button
-				new V2D(361,183), // mouse eye
-				new V2D(18,225), // bic corner left
-				//new V2D(37,216), // bic corner right
-				//new V2D(65,169), // cup 
-				new V2D(226,87), // face BL
-				new V2D(219,66), // glasses TL
-				new V2D(250,72), // glasses TR
-				new V2D(260,103), // elbow
-				new V2D(216,154), // toe left
-				new V2D(245,158), // toe right
-				new V2D(202,127), // brick
-				new V2D(240,248), // 12
-				new V2D(332,249), // 16
-				new V2D(145,203), // glasses center
-				new V2D(172,68), // grid top
-				new V2D(141,76), // grid TL
-				new V2D(204,75), // grid TR
-				new V2D(144,119), // grid BL
-				new V2D(175,128), // grid bot
-				new V2D(362,213), // U
-				new V2D(326,176), // tail
-				new V2D(190,173), // base left
-				new V2D(265,178), // base right
-				new V2D(372,181), // nose
-				new V2D(129,88), // power top
-				new V2D(132,141), // power bot
-				new V2D(62,107), // cup
-				new V2D(94,176), // glass tip left
-				new V2D(131,166), // glass tip right
-
-				new V2D(190,180), // glasses right
-				new V2D(86,210), // glasses left
-				new V2D(17,259), // 3
-				new V2D(115,255), // 7
-				new V2D(65,170), // cup bottom
-				new V2D(141,95), // power right
-				new V2D(313,204), // X
-				new V2D(23,193), // MY
-				new V2D(337,200), // belly
-				new V2D(222,127), // knee left
-				new V2D(266,139), // base right
-				new V2D(61,88), // cup top
-				new V2D(7,174), // bic top left
-				new V2D(93,94), // cup right
-
-// new V2D(), // 
-			];
-var pointsB = [
-//				new V2D(87,192),
-//				new V2D(170,178),
-				new V2D(212,46),
-				new V2D(50,149),
-				new V2D(278,241),
-				new V2D(52,179), // left
-				//new V2D(64,172), // bic right
-				//new V2D(94,124), 
-				new V2D(225,98), // face BL
-				new V2D(221,80), // glasses TL
-				new V2D(246,95), // glasses TR
-				new V2D(250,121),
-				new V2D(214,139), // tow left
-				new V2D(237,150), // toe right
-				new V2D(213,106), // brick
-				new V2D(180,252), // 12
-				new V2D(245,271), // 16
-				new V2D(131,193), // glasses center
-				new V2D(213,12), // grid top
-				new V2D(177,26), // grid TL
-				new V2D(239,33), // grid TR
-				new V2D(180,61), // grid BL
-				new V2D(202,83), // grid bot
-				new V2D(282,251), // U
-				new V2D(256,225), // tail
-				new V2D(187,153), // base left
-				new V2D(245,173), // base right
-				new V2D(290,240), // nose
-				new V2D(150,63), // power top
-				new V2D(155,100), // power bot
-				new V2D(85,92), // cup
-				new V2D(113,138), // glass tip left
-				new V2D(145,132), // glass tip right
-
-				new V2D(170,179), // glasses right
-				new V2D(88,193), // glasses left
-				new V2D(43,218), // 3
-				new V2D(101,232), // 7
-				new V2D(94,124), // cup bottom
-				new V2D(163,67), // power right
-				new V2D(251,233), // X
-				new V2D(52,165), // MY
-				new V2D(263,241), // belly
-				new V2D(222,119), // knee left
-				new V2D(269,126), // base right
-				new V2D(85,58), // cup top
-				new V2D(39,155), // bic top left
-				new V2D(115,68), // cup right
-//				new V2D(), // 
-			];
-
-
-
-//R3D.drawMatches([pointsA,pointsB], 0,0, imageMatrixA.width(),0, GLOBALSTAGE);
-
-/*
-// only 1:
-GLOBALSTAGE.root().matrix().scale(2.0);
-var indee = 1; // 0,3,8
-var pointsA = [ pointsA[indee] ];
-var pointsB = [ pointsB[indee] ];
-*/
-
-
-
-/*
-// TEST zoom/rotated images
-pointsA = [
-			new V2D(240.5,161.5), // armpit
-			new V2D(187.5,181.0), // origin
-			new V2D(182.0,218.0), // grid corner
-			new V2D(220.0,211.0), // brick
-			new V2D(280.0,137.0), // right mouth
-			];
-pointsB = [
-			new V2D(230.0,169.0),
-			new V2D(120.5,151.5), // origin
-			new V2D( 71.0,209.0), // grid corner
-			new V2D(144.5,234.0), // brick
-			new V2D(325.0,166.0), // right mouth
-			];
-*/
-
-// from medium:
-/// ...
-
-// // flip for tests:
-// var imageMatrixC = imageMatrixA;
-// var pointsC = pointsA;
-// imageMatrixA = imageMatrixB;
-// pointsA = pointsB;
-// imageMatrixB = imageMatrixC;
-// pointsB = pointsC;
 
 	var images = [];
 	//var imageList = Code.arrayReverse(imageList);
@@ -766,12 +623,6 @@ return;
 
 return;
 
-
-
-	// imageA = imageB;
-	// pointsA = pointsB;
-
-	
 	//
 	var pointA = pointsA[0];
 	//
@@ -1196,7 +1047,6 @@ GLOBALSTAGE.root().removeAllChildren();
 	
 }
 Dense.denseMatch_iteration_ticker = function(t){
-	//console.log("denseMatch_iteration_ticker: "+t)
 	Dense.TICKER.stop();
 	Dense.denseMatch_iteration();
 	if(Dense.IS_DONE!==true){
@@ -3553,9 +3403,6 @@ Dense.bestTransformationFromPoints = function(imageA,pointA, imageB,pointB, cell
 	scaleUpA = scaleUpA / pointScaleA;
 	scaleUpA = scaleUpB / pointScaleB;
 
-	// scaleUpA = 1.0 / scaleUpA;
-	// scaleUpB = 1.0 / scaleUpB;
-
  	var mask = ImageMat.circleMask(windowSize);
  	var center = Math.floor(windowSize * 0.5);
  	var i, j, k, l, score;
@@ -4040,7 +3887,7 @@ Dense.DISPLAY.addChild(d);
 	//vertex.transform(transform);
 			var cells = [vertex];
 			var interpolator = new Dense.Interpolator(cells);
-	var v = Dense.assignBestNeedleInHaystack(interpolator,vertex,queue);
+	var v = Dense.assignBestNeedleInHaystack(interpolator,vertex,queue, true);
 	console.log("seed: s "+relativeScaleAtoB+" @ "+Code.degrees(relativeAngleAtoB)+" == "+vertex.score()+"  (( "+pointA+" - "+pointB);
 	
 	//console.log(pointA+"  seed assignBestNeedleInHaystack - closest: "+vertex.rank()+"  "+vertex.score());
@@ -4093,7 +3940,7 @@ Dense.seedScaleCheck = function(pointA,pointB, imageA,imageB, compareSize, relat
 	return {"rangeSAD":scoreRangeSAD,"maxSAD":maxScoreSAD,"minSAD":minScoreSAD, "rangeNCC":scoreRangeNCC,"maxNCC":maxScoreNCC,"minNCC":minScoreNCC};
 }
 
-Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
+Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, isSeed){
 	var fundamentalDistanceErrorMax = Math.pow(5,2);
 	var i, j, k, sigma, matrix, angle, scale, toScale, toPoint, toAngle, fromPoint;
 	
@@ -4119,6 +3966,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 	var currentTransform = vertex.transform();
 	
 	// stop search if close enough to previous search
+	/*
 	var checkOnly = true;
 	if(checkOnly){
 		if(vertex.isJoined() && currentTransform && currentTransform.to()!==null){
@@ -4137,9 +3985,9 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue){
 			}
 		}
 	}
+	*/
 	
-//	var fromPoint = CE;
-var fromPoint = vertex.from(); // seed points are not center
+	var fromPoint = vertex.from(); // seed points are not center
 	var boundingBox = new Rect().fromArray([TLto,TRto,BLto,BRto]);
 	var compareSizeMax = 11;
 	var neighborhoodScale = Math.min(Math.max( (0.5/5)*(1.0/cellSize), 0.25),0.75);
@@ -4169,6 +4017,7 @@ var fromPoint = vertex.from(); // seed points are not center
 			cellScale = (cellSize/neighborhoodScale/compareSize);
 		}
 	}
+
 	// console.log(".     compareSize: "+compareSize+" cellScale: "+cellScale+" ------------");
 	var needlePoint = fromPoint;
 	var needleWidth = compareSize;
@@ -4215,6 +4064,12 @@ var fromPoint = vertex.from(); // seed points are not center
 	// extract needle at relative scales / rotations
 	var angleRangeDeg = [-10, 0, 10];
 	var scaleRangeExp = [-0.1,0.0,0.1];
+	if(isSeed){
+		angleRangeDeg = Code.lineSpace(-30,30,10);
+		scaleRangeExp = Code.lineSpace(-.3,.3,.1);
+	// 		var scales = Code.lineSpace(-2,0,0.5); // negatives should be done on opposite image -- scaling down
+	// var rotations = Code.lineSpace(-180,170,10);
+	}
 	var bestScore = null;
 	var bestPoint, bestAngle, bestScale, bestNeedle;
 	var best = {};
@@ -4246,14 +4101,6 @@ var fromPoint = vertex.from(); // seed points are not center
 						bestScore = peak.z;
 						bestScale = scale;
 						bestAngle = angle;
-						//var s = 1.0/cellScale;
-						//bestPoint = new V2D(haystackPoint.x - (valueWidth-1)*0.5 + peak.x, haystackPoint.y - (valueHeight-1)*0.5 + peak.y);
-						//bestPoint = new V2D(haystackPoint.x + peak.x, haystackPoint.y + peak.y);
-						//bestPoint = haystackPoint.copy().add( new V2D(peak.x/cellScale-(valueWidth-1)*0.5/cellScale, peak.y/cellScale-(valueHeight-1)*0.5/cellScale) );
-						//bestPoint = haystackPoint.copy().add( new V2D(peak.x-(valueWidth-1)*0.5, peak.y-(valueHeight-1)*0.5).scale(1.0/cellScale) );
-						//bestPoint = haystackPoint.copy().add( new V2D(peak.x-(valueWidth)*0.5, peak.y-(valueHeight)*0.5).scale(1.0/cellScale) );
-						// bestPoint.x -= compareSize*0.5;///cellScale;
-						// bestPoint.y -= compareSize*0.5;///cellScale;
 // TODO: IS THIS OFF BY HALF PIXEL ANYWHERE ?
 						// var local = new V2D(peak.x-(valueWidth-1)*0.5, peak.y-(valueHeight-1)*0.5);
 						// bestPoint = haystackPoint.copy().add( local.scale(cellScale) );
@@ -4278,6 +4125,7 @@ var fromPoint = vertex.from(); // seed points are not center
 		*/
 		var needle = bestNeedle;
 
+		
 		var uniquenessWindow = 3; // 3-5
 		var neighborhoodWidth = Math.round(compareSize * uniquenessWindow);
 		var neighborhoodHeight = Math.round(compareSize * uniquenessWindow);
@@ -4289,6 +4137,7 @@ var fromPoint = vertex.from(); // seed points are not center
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
 		var uniquenessNH = Dense.uniquenessFromValues(values);
+		
 
 		var isMin = true;
 		var variabilityNeedleR = Code.variability(needle.red(), needleWidth, needleHeight, null, isMin);
@@ -4321,60 +4170,9 @@ var fromPoint = vertex.from(); // seed points are not center
 			//console.log("dists: "+distA+" | "+distB);
 			var distRMS = Math.sqrt(distA*distA + distB*distB); // RMS ERROR
 			lineFDistanceError = distRMS;
-			// if(lineFDistanceError>fundamentalDistanceErrorMax){
-			// 	d = new DO();
-			// 	d.graphics().clear();
-			// 	d.graphics().setLine(1.0, 0xFF0000FF);
-			// 	d.graphics().beginPath();
-			// 	d.graphics().drawCircle(0 + needlePoint.x,needlePoint.y, 5);
-			// 	d.graphics().strokeLine();
-			// 	d.graphics().endPath();
-			// 	GLOBALSTAGE.addChild(d);
-
-			// 	d = new DO();
-			// 	d.graphics().clear();
-			// 	d.graphics().setLine(1.0, 0xFFFF0000);
-			// 	d.graphics().beginPath();
-			// 	d.graphics().drawCircle(400 + bestPoint.x,bestPoint.y, 5);
-			// 	d.graphics().strokeLine();
-			// 	d.graphics().endPath();
-			// 	GLOBALSTAGE.addChild(d);
-			// }
 		}
-				
 
 
-		// change in local orientation ?
-
-		// change in local scale ?
-
-		// only choose points in direction of original neighbor
-
-
-/*
-var values2 = Code.copyArray(values).sort( function(a,b){ return a<b ? -1 : 1; } );
-// use differentials to get a peakness value
-var sigma = 1.0;
-var filter = ImageMat.gaussianWindow1DFromSigma(sigma);
-var averaged = Code.convolve1D(values2,filter);
-values2 = averaged;
-
-var str = "\n\ny = [";
-for(var i=0; i<values2.length; ++i){
-	str = str + values2[i].toExponential(3) + ",";
-}
-str = str + "];\n";
-str = str + "plot(y,'r-x');\n\n";
-console.log(str);
-*/
-
-		// get uniqueness of matchee point
-		// var needle = imageTo.extractRectFromFloatImage(bestPoint.x,bestPoint.y,compareScale,sigma,cellSize,cellSize, matrix);
-		// var scores = Dense.searchNeedleHaystackImage(needle,needleMask, haystack);
-		// 	var values = scores.value;
-		// 	var valueWidth = scores.width;
-		// 	var valueHeight = scores.height;
-		// var uniquenessHH = Dense.uniquenessFromValues(values);
 			matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,1.0/bestScale);
 			matrix = Matrix.transform2DRotate(matrix,-bestAngle);
@@ -4420,7 +4218,6 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 			}
 			break; // only first
 		}
-		//console.log(bestPoint2+"")
 		var dist = V2D.distance(needlePoint, bestPoint2);
 		var distanceFromTo = dist;
 
@@ -4428,40 +4225,6 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 
 		var worstRangeScore = Math.min(rangeNeedle, rangeHaystackNeedle);
 		worstRangeScore = Math.max(worstRangeScore,1E-10);
-		
-/*
-
-		// PENALTY FOR MATCH DISTANCE BASED ON 
-		// PENALTY MATCH DISTANCE
-		//uniqueness = uniqueness * (1+distanceFromTo);
-		uniqueness = uniqueness * (1+distanceFromTo*distanceFromTo);
-			//uniqueness = uniqueness * (1+Math.sqrt(distanceFromTo));
-		// PENALTY F DISTANCE
-		//uniqueness = uniqueness * (1+lineFDistanceError);
-			uniqueness = uniqueness * (1+Math.pow(lineFDistanceError,0.5));
-		// PENALTY NON-TEXTURENESS
-		
-		//worstRangeScore = Math.pow(1.0/worstRangeScore,0.25);  // 0.1 to 1.0  //uniqueness = uniqueness * (1 + 1.0/rangeNeedle); //uniqueness = uniqueness * (1 + (1.0-rangeNeedle));
-		worstRangeScore = Math.pow(1.0/worstRangeScore,0.1);
-		//worstRangeScore = Math.pow(1.0/worstRangeScore,0.25);
-		uniqueness = uniqueness * worstRangeScore;
-
-		//uniqueness = uniqueness * (1.0+bestScore);
-
-		//uniqueness = bestScore * worstRangeScore * distanceFromTo * lineFDistanceError;
-		
-		// PENALTY: brightness difference -- median color ?
-		// ...
-		// PENALTY: range difference
-		// ...
-		// PENALTY: NEIGHBOR DIFFERENCE ?
-		// ...
-		//console.log("lineFDistanceError: "+lineFDistanceError)
-		//
-
-		// TODO: if range is too low: do nothing
-		var rank = uniqueness
-*/
 
 		// ignore points that have minimal differences
 		if(worstRangeScore < 0.001){
@@ -4469,7 +4232,6 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 		}
 		// ignore points outside image window
 		if(bestPoint.x<0 || bestPoint.y<0 || bestPoint.x>imageTo.width()-1 || bestPoint.y>imageTo.height()-1 ){
-			//console.log("POINT OUTSIDE TO WINDOW");
 			return null;
 		}
 		// ignore points with really poor scores
@@ -4478,7 +4240,6 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 			return null;
 		}
 		// ignore points with poor uniqueness
-		//console.log("uniqueness: "+uniqueness);
 		if(uniqueness > 1E5){ // [1E2~1E4]
 			return null;
 		}
@@ -4495,7 +4256,7 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 		var averageIntensityDiffMax = (averageIntensityDiffR+averageIntensityDiffG+averageIntensityDiffB)/3.0;
 		//console.log("averageIntensityDiffMax: "+averageIntensityDiffMax+" @ "+averageIntensityDiffR+" | "+averageIntensityDiffG+" | "+averageIntensityDiffB);
 		//if(averageIntensityDiffMax>0.15){ // 15  in range: [0.01~0.1].2]
-			if(averageIntensityDiffMax>0.25){
+		if(averageIntensityDiffMax>0.25){
 			/*
 				d = new DO();
 				d.graphics().clear();
@@ -4523,66 +4284,13 @@ var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanI
 		}
 		// ignore points with low variablity
 		// console.log("variabilityNeedle: "+variabilityNeedle);
-		if(variabilityNeedle<0.001){
+		if(variabilityNeedle<0.001){ // 0.001
 			return null;
 		}
-/*
-	// penalty type 2:
-		var rank = 1.0;
-//rank = rank * Math.pow(1.0+uniqueness,2.0);
-rank = rank * Math.pow(1.0+uniqueness,3.0);
-		//rank = rank * Math.pow(1.0+uniquenessNH,2.0);
-		//rank = rank * uniquenessTotal;
-		//rank = rank * Math.pow(1.0+bestScore,1.0);
-//rank = rank * Math.pow(1.0/worstRangeScore,1.0);
-		//rank = rank * (Math.pow(1.0/worstRangeScore,0.1));
-		//rank = rank * (1.0 + Math.pow(1.0 - worstRangeScore,1.0));
-		// 	gradientNeedle = Math.max(gradientNeedle,1E-10);
-		// rank = rank * Math.pow(1.0/gradientNeedle,2.0);
-rank = rank * Math.pow(1.0+lineFDistanceError,1.0);
-// rank = rank * Math.pow(1.0+distanceFromTo,5.0); // raw pixel values - TODO: should be in terms of error %
-// rank = rank * Math.pow(1.0+distanceToFrom,5.0);
-		//rank = rank * Math.pow(1.0/entropyNeedle,1.0);
 
-//rank = rank * Math.pow(bestScore,1.0);
+var rank = Math.pow(bestScore,2.0);
 
-	//rank = rank * Math.pow(1.0/variabilityNeedle,0.10);
-//rank = rank * Math.pow(1.0/variabilityNeedle,2.0);
-		//console.log("VAR COMPONENT: "+Math.pow(0.0+variabilityNeedle,0.50));
-
-		//console.log(rank);
-
-		// if(rank>1E10){
-		// 	return vertex;
-		// }
-// RANK BASED ON BEST SCORE
-//rank = bestScore; // [0.01~0.5]
-*/
-rank = Math.pow(bestScore,2.0);
-
-/*
-var vari = Math.log(1.0 + 1.0/variabilityNeedle)*0.02; // ~.1
-	//vari += 1.0;
-rank = rank*vari;
-
-var uniq = Math.log(1.0+uniqueness)*0.01; // ~ 0.1
-	//uniq += 1.0;
-rank = rank * uniq; // OK
-
-var rang = Math.log(1 + 1.0/worstRangeScore)*0.05; // ~0.1
-	//rang += 1.0;
-rank = rank * rang; // OK
-
-var lind = lineFDistanceError*0.01 // ~ 0.01
-	//lind += 1.0;
-rank = rank * lind;
-*/
-
-
-
-
-
-var uniq = Math.pow(1.0+uniqueness,1.0);
+var uniq = Math.pow(1.0+uniqueness,2.0);
 rank = rank * uniq; // OK
 
 var lind = Math.pow(1.0+lineFDistanceError,1.0);
@@ -4635,14 +4343,10 @@ rank = rank * rang; // OK
 		}
 		if(globalQueue){
 			if(vertex.isJoined()){
-				//console.log("FOUND A JOINED");
-				//var ratio = vertex.rank()/rank;
-				//var ratioMin = 10.0;
 				var ratio = vertex.score()/bestScore;
 				var diff = vertex.score()-bestScore;
-				var differenceMin = 0.00001;
-				var ratioMin = 1.00001; // scores might want to use basic subtraction
-				//if(ratio>ratioMin){
+				var differenceMin = 0.0001;
+				var ratioMin = 1.0001; // scores might want to use basic subtraction
 				if(diff>differenceMin){
 					console.log("FOUND JOINED VERTEX -> UNJOINING: "+vertex.rank()+" < "+rank+" | "+vertex.score()+" < "+bestScore+"   @ "+diff+" | "+ratio);
 					vertex.unjoin();
@@ -4865,7 +4569,12 @@ Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, matrixFfwd,
 	var display = GLOBALSTAGE;
 	var imageMatrixA = imageA;
 	var imageMatrixB = imageB;
-	R3D.showFundamental(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
+
+	var showF = false;
+	//var showF = true;
+	if(showF){
+		R3D.showFundamental(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
+	}
 
 	// CORNERS
 	//var sigmaCorners = 1.0;
@@ -4905,7 +4614,7 @@ Dense.denseMatch = function(imageA,imageB, seedsA,seedsB,transforms, matrixFfwd,
 	Dense.LATTICE = latticeAtoB;
 	Dense.ITERATION = 0;
 	//Dense.TICKER = new Ticker(2000000);
-	Dense.TICKER = new Ticker(10);
+	Dense.TICKER = new Ticker(1);
 	Dense.TICKER.addFunction(Ticker.EVENT_TICK, Dense.denseMatch_iteration_ticker, Dense);
 	Dense.TICKER.start();
 	Dense.KEYBOARD = new Keyboard();
@@ -5200,7 +4909,6 @@ if(points){
 Dense.Interpolator = function(cells){
 	this._pA = 0.0;
 	this._cells = [];
-//	this._triangulator = new Triangulator();
 	if(cells){
 		var i;
 		for(i=0; i<cells.length; ++i){
@@ -5210,32 +4918,10 @@ Dense.Interpolator = function(cells){
 }
 
 Dense.Interpolator.prototype.removeCell = function(cell){
-//	this._triangulator.removePoint(cell.from(), cell);
 	Code.removeElement(this._cells,cell);
 }
 Dense.Interpolator.prototype.addCell = function(cell){
-this._cells.push(cell);
-/*
-	this._triangulator.addPoint(cell.from(), cell);
-	//console.log("TOTAL POINTS: "+this._triangulator._mesh._points.length);
-	var points = this._triangulator.points(); // this.points();
-	var datas = this._triangulator.datas()
-	var tris = this._triangulator.triangles();
-	var perim = this._triangulator.perimeter();
-	var rays = Code.rayFromPointPerimeter(points,perim, true);
-	var hull = perim;
-	var hullFilled = [];
-	for(i=0; i<hull.length; ++i){
-		hullFilled.push( points[hull[i]] );
-	}
-	this._points = points;
-	this._datas = datas;
-	this._triangles = tris;
-	this._perimeter = perim;
-	this._hull = hull;
-	this._hullFilled = hullFilled;
-	this._rays = rays;
-*/
+	this._cells.push(cell);
 }
 Dense.Interpolator.prototype.projected = function(from){
 	var nextPos = new V2D(0,0);
@@ -5287,45 +4973,14 @@ if(interp.length==0){
 	//console.log("NEXT POS: "+nextPos);
 	return {"point":nextPos, "scale":nextScale, "angle":nextAngle};
 }
-Dense.Interpolator.prototype.points = function(){
-	//var points = this._triangulator.points();
-	return this._points;
-}
-Dense.Interpolator.prototype.triangles = function(){
-	//var triangles = this._triangulator.triangles();//this._triangles;
-	return this._triangles;
-}
-Dense.Interpolator.prototype.datas = function(){
-	//var datas = this._triangulator.datas();//this._cells;
-	return this._datas;
-}
-Dense.Interpolator.prototype.perimeter = function(){
-	//var perimeter = this._triangulator.perimeter();//this._datas;
-	return this._perimeter;
-}
-Dense.Interpolator.prototype.rays = function(){
-	return this._rays;
-}
-Dense.Interpolator.prototype.hull = function(){
-	return this._hull;
-}
-Dense.Interpolator.prototype.hullFilled = function(){
-	return this._hullFilled;
-}
-Dense.Interpolator.prototype.setAsTri = function(){
-	this._pA = 0.0;
-}
-Dense.Interpolator.prototype.setAsNeighbor = function(){
-	this._pA = 1.0;
-}
 
 Dense.Interpolator.prototype.value = function(point){
-
-	//var interpolateTriangular = true;
-	var interpolateTriangular = false;
 	// nearest by distance:
 		var items = [];
 		var cells = this._cells;
+		//console.log(this._cells[0].lattice().cellSize())
+		var cellSize = this._cells[0].lattice().cellSize();
+		
 		var i;
 		var cell, distance, fraction;
 		var total = 0;
@@ -5336,10 +4991,8 @@ Dense.Interpolator.prototype.value = function(point){
 			if(distance==0){
 				return [{"value":cell, "percent":1.0}];
 			}
-fraction = 1.0 / (1.0 + Math.pow(distance, 2) );
-//fraction = 1.0 / (0.1 + Math.pow(distance, 2) );
-			//fraction = 1.0 / Math.pow( distance, 1);
-			//total += fraction;
+//fraction = 1.0 / (1.0 + Math.pow(distance, 2) );
+fraction = Math.exp( -cellSize*distance );
 			largest = Math.max(largest,fraction);
 			items.push({"value":cell, "percent":fraction, "triangular":false});
 		}
@@ -5367,325 +5020,9 @@ fraction = 1.0 / (1.0 + Math.pow(distance, 2) );
 		for(i=0; i<items.length; ++i){
 			items[i]["percent"] /= total;
 		}
-// simple distance only
-//return items;
-
 	var distanceItems = items;
-if(!interpolateTriangular){
-return distanceItems;
-}
-
-
-
-// throw "interp triang"
-// var distanceItems = [];
-
-	var i, j, k;
-	var items = [];
-	var points = this.points();
-	var datas = this.datas();
-	var cells = datas;
-	var tris = this.triangles();
-	var rays = this.rays();
-	var hull = this.hull();
-	var hullFilled = this.hullFilled();
-
-	//var triangle = this._triangulator.triangle(point);
-	//neighbors = triangle.neighbors();
-	//var triangle = this._triangulator.mesh().triangle(point);
-	//console.log(triangle);
-	
-	var triangleNeighbors = this._triangulator.mesh().triangleNeighbors(point,true);
-	//console.log(triangleNeighbors);
-
-if(points.length<3){
 	return distanceItems;
 }
-	/*
-	if(points.length==0){
-		// items.push({"value":null, "percent":1.0});
-	}else if(points.length==1){
-		items.push({"value":cells[0], "percent":1.0});
-	}else if(points.length==2){
-// THIS SEEMS HIGHLY OFF
-		var cellA = cells[0];
-		var cellB = cells[1];
-		var pointA = cellA.from();
-		var pointB = cellB.from();
-		// general distance
-		var distanceA = V2D.distance(point,pointA);
-		var distanceB = V2D.distance(point,pointB);
-			// distanceA = distanceA * distanceA;
-			// distanceB = distanceB * distanceB;
-		var distanceTotal = distanceA + distanceB;
-		var fracA = 1.0 - distanceA/distanceTotal;
-		var fracB = 1.0 - distanceB/distanceTotal;
-		items.push({"value":cellA, "percent":fracA});
-		items.push({"value":cellB, "percent":fracB});
-		
-		var rayAB = V2D.sub(pointB,pointA);
-		// find closest point on line 0-1
-		var distanceAB = rayAB.length();
-		var closest = Code.closestPointLine2D(pointA,rayAB, point);
-		var dA = V2D.distance(closest, pointA);
-		var dB = V2D.distance(closest, pointB);
-		if(dA<distanceAB && dB<distanceAB){
-			var fracA = dB/distanceAB;
-			var fracB = dA/distanceAB; // 1.0 - fracA; //
-			items.push({"value":cellA, "percent":fracA});
-			items.push({"value":cellB, "percent":fracB});
-		}else if(dB<dA){ // all B
-			items.push({"value":cellB, "percent":1.0});
-		}else if(dA<dB){ // all A
-			items.push({"value":cellA, "percent":1.0});
-		}
-		
-	}else if(points.length>=3){
-*/
-		//var isInside = Code.isPointInsidePolygon2D(point, hullFilled); // THIS IS BAD
-		var tri = null;
-			for(i=0; i<tris.length; ++i){// find containing triangle
-				var t = tris[i];
-				var a = points[t[0]];
-				var b = points[t[1]];
-				var c = points[t[2]];
-				var inside = Code.isPointInsideTri2D(point, a,b,c);
-				if(inside){
-					tri = [ datas[t[0]], datas[t[1]], datas[t[2]]];
-					break;
-				}
-			}
-		var isInside = tri !== null;
-		if(isInside){
-			//???
-			//console.log("triangleNeighbors: "+triangleNeighbors.length);
-			var cw = 0;
-			var ccw = 0;
-			var minAngle = 1000
-			for(var k=0; k<triangleNeighbors.length; ++k){
-				var t = triangleNeighbors[k];
-				//console.log(k+": "+t+" .............");
-				var a = t.a();
-				var b = t.b();
-				var c = t.c();
-				var vA = cells[a.id()];
-				var vB = cells[b.id()];
-				var vC = cells[c.id()];
-				var toA = vA.to();
-				var toB = vB.to();
-				var toC = vC.to();
-				// console.log(toA);
-				// console.log(toB);
-				// console.log(toC);
-				// throw("X")
-				var isCCW = Code.isCCW(toA,toB,toC);
-				minAngle = Math.min( minAngle, Code.minimumTriAngle(toA,toB,toC) );
-				if(isCCW){
-					ccw += 1;
-				}else{
-					cw += 1;
-				}
-			}
-			
-			if( (cw>0 && ccw>0) || minAngle<Code.radians(10) ){
-				// USE LOCAL EXPANSIONONLY, NOT TRIANGULAR EXPANSION
-				//console.log("FLIPPED");
-//				interpolateTriangular = false;
-			}else{
-				interpolateTriangular = true;
-
-			}
-
-			
-				var areaTotal = V2D.areaTri(tri[0].from(),tri[1].from(),tri[2].from());
-				if(areaTotal==0){
-					Code.printPoints(this._triangulator.points());
-					console.log(tri[0].row(),tri[0].col(),"  ",tri[1].row(),tri[1].col(),"  ",tri[2].row(),tri[2].col());
-					console.log(tri[0].from(),tri[1].from(),tri[2].from());
-				}
-				// console.log("HAVE TRI "+tri+" >>> "+areaTotal);
-				for(k=0; k<3; ++k){
-					var c = tri[k];
-					var area = V2D.areaTri(tri[(k+1)%3].from(),tri[(k+2)%3].from(),point);
-					var percent = area / areaTotal;
-					items.push({"value":c, "percent":percent,"triangular":true});
-				}
-			//}
-		}else{
-			var closestDistance = null;
-			var closestPoint = null;
-			var cellA = null;
-			var cellB = null;
-			var rayA = null;
-			var rayB = null;
-			for(i=0; i<hull.length; ++i){ // for every pair of hull points
-				var curr = hull[i];
-				var next = hull[(i+1)%hull.length];
-				var a = points[curr];
-				var b = points[next];
-				var ab = V2D.sub(b,a);
-				var rA = rays[curr];
-				var rB = rays[next];
-				var closest = Code.closestPointLineSegment2D(a,ab, point);
-				if(closest){
-					var distance = V2D.distance(point,closest);
-					if(closestDistance==null || distance<closestDistance){
-						var pointA = Code.rayLineIntersect2D(point,ab, a,rA);
-						var pointB = Code.rayLineIntersect2D(point,ab, b,rB);
-						if(pointA && pointB){
-							var dA = V2D.distance(point, pointA);
-							var dB = V2D.distance(point, pointB);
-							var dAB = V2D.distance(pointA, pointB);
-							if(dA<=dAB && dB<=dAB){ // check to see point is between 2 rays
-								closestDistance = distance;
-								closestPoint = closest;
-								cellA = datas[curr];
-								cellB = datas[next];
-								rayA = rA;
-								rayB = rB;
-							}
-						}
-					}
-				}
-			}
-			if(cellA && cellB){
-/*
-// find 3rd point from hull
-				var cellC = null;
-				for(i=0; i<tris.length; ++i){
-					var tri = tris[i];
-					var a = points[tri[0]];
-					var b = points[tri[1]];
-					var c = points[tri[2]];
-					console.log(a,b,c);
-					if( 
-						(V2D.equal(a,cellA.from()) && V2D.equal(b,cellB.from())) ||
-						(V2D.equal(b,cellA.from()) && V2D.equal(a,cellB.from()))
-						){
-						cellC = datas[tri[2]];
-							break;
-					}else if(
-						(V2D.equal(a,cellA.from()) && V2D.equal(c,cellB.from())) ||
-						(V2D.equal(c,cellA.from()) && V2D.equal(a,cellB.from())) 
-						){
-						cellC = datas[tri[1]];
-							break;
-					}else if(
-						(V2D.equal(b,cellA.from()) && V2D.equal(c,cellB.from())) ||
-						(V2D.equal(c,cellA.from()) && V2D.equal(b,cellB.from()))
-						){
-							cellC = datas[tri[0]];
-							break;
-					}
-				}
-				
-console.log(cellC);
-//TODO: find closest triangle & do interpolation with NEGATIVE amounts ?
-tri = [cellA,cellB,cellC];
-				var areaTotal = 0;//V2D.areaTri(tri[0].from(),tri[1].from(),tri[2].from());
-				for(k=0; k<3; ++k){
-					var c = tri[k];
-					var area = V2D.areaTri(tri[(k+1)%3].from(),tri[(k+2)%3].from(),point);
-					area = Math.abs(area);
-					areaTotal += area;
-				}
-				for(k=0; k<3; ++k){
-					var c = tri[k];
-					var area = V2D.areaTri(tri[(k+1)%3].from(),tri[(k+2)%3].from(),point);
-					area = Math.abs(area);
-					var percent = area / areaTotal;
-					console.log(area+" / "+areaTotal+" = "+percent);
-					items.push({"value":c, "percent":percent});
-				}
-return items;
-*/
-				var cA = cellA.from();
-				var cB = cellB.from();
-				
-				// use rays
-				// var gamma = V2D.sub(cB,cA);
-				// var pointA = Code.rayLineIntersect2D(point,gamma, cA,rayA);
-				// var pointB = Code.rayLineIntersect2D(point,gamma, cB,rayB);
-				// var dA = V2D.distance(point, pointA);
-				// var dB = V2D.distance(point, pointB);
-				// var distanceAB = V2D.distance(pointA, pointB);
-
-				// use nearest
-				var pointA = cellA.from();
-				var pointB = cellB.from();
-				var dA = V2D.distance(closestPoint, pointA);
-				var dB = V2D.distance(closestPoint, pointB);
-				var distanceAB = V2D.distance(pointA, pointB);
-				/*
-dA = V2D.distance(point,pointA);
-dB = V2D.distance(point,pointB);
-	// dA = dA * dA;
-	// dB = dB * dB;
-distanceAB = dA + dB;
-var fracA = 1.0 - dA/distanceAB;
-var fracB = 1.0 - dB/distanceAB;
-
-// if(dA<dB){
-// 	items.push({"value":cellA, "percent":1.0});
-// }else{
-// 	items.push({"value":cellB, "percent":1.0});
-// }
-
-items.push({"value":cellA, "percent":fracA});
-items.push({"value":cellB, "percent":fracB});
-return items;
-				*/
-				var tr = interpolateTriangular;
-				if(dA<distanceAB && dB<distanceAB){
-					var fracA = dB/distanceAB;
-					var fracB = 1.0 - fracA; // dA/distanceAB;
-					items.push({"value":cellA, "percent":fracA, "triangular":tr});
-					items.push({"value":cellB, "percent":fracB, "triangular":tr});
-				}else if(dB<dA){ // all B
-					items.push({"value":cellB, "percent":1.0, "triangular":tr});
-				}else if(dA<dB){ // all A
-					items.push({"value":cellA, "percent":1.0, "triangular":tr});
-				}
-				return items;
-			}
-		}
-		
-	//}
-	//var pA = 1.0;
-// TODO: if occlusion is detected (overlapping triangles)
-//       => use distance metrics instead
-
-	var pA = this._pA;
-	var pB = 1.0 - pA;
-	var triangleItems = items;
-
-
-if(interpolateTriangular){
-	return triangleItems;
-}else{
-	return distanceItems;
-}
-
-
-//return triangleItems;
-
-items = [];
-	for(i=0; i<distanceItems.length; ++i){
-		var item = distanceItems[i];
-		item["percent"] *= pA;
-		items.push( item );
-	}
-	for(i=0; i<triangleItems.length; ++i){
-		var item = triangleItems[i];
-		item["percent"] *= pB;
-		items.push( item );
-	}
-
-	return items;
-}
-
-
-
 
 
 
