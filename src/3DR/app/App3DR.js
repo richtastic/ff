@@ -72,7 +72,7 @@ var modeImageEdit = false;
 var modeImageUpload = false;
 
 var modeImageCompare = true;
-// var modeImageCompare = false;
+//var modeImageCompare = false;
 if(modeImageEdit){
 	var app = new App3DR.App.ImageEditor(this._resource);
 	this.setupAppActive(app);
@@ -238,28 +238,48 @@ App3DR.prototype._setupMatchCompareProjectManager = function(){
 		var views = manager.views();
 		var pairs = manager.pairs();
 		if(pairs.length>0){
-			//var pair = pairs[0];
-			var pair = pairs[pairs.length-1];
-			var viewA = pair.viewA()
-			var viewB = pair.viewB()
+			var pair = pairs[0];
+			var pair2 = pairs[1];
+			//var pair = pairs[2];
+			//var pair = pairs[pairs.length-1];
+			var viewA = pair.viewA();
+			var viewB = pair.viewB();
+			var viewC = pair2.viewB();
+			console.log(viewC+"")
 			if(viewA && viewB){ // load: imageA | imageB | matching | 
 				var app = this._activeApp;
 				var self = this;
-				var imageA, imageB, matchAB;
+				var imageA, imageB, imageC;
+				var matchAB, matchAC;
 				var fxnA = function(){
 					viewA.loadFeaturesImage(fxnB, self);
 				}
 				var fxnB = function(){
-					imageA = viewA.featuresImage();
 					viewB.loadFeaturesImage(fxnC, self);
 				}
 				var fxnC = function(){
-					imageB = viewB.featuresImage();
 					pair.loadMatchingData(fxnD, self);
 				}
+
 				var fxnD = function(){
+					viewC.loadFeaturesImage(fxnE, self);
+				}
+				var fxnE = function(){
+					pair2.loadMatchingData(fxnX, self);
+				}
+
+
+				var fxnX = function(){
+					imageA = viewA.featuresImage();
+					imageB = viewB.featuresImage();
 					matchAB = pair.matchingData();
-					app.setDisplay([imageA,imageB], [2], [[imageA,imageB,matchAB]]);
+
+					matchAC = pair2.matchingData();
+					imageC = viewC.featuresImage();
+					//app.setDisplay([imageA,imageB], [2], [[imageA,imageB,matchAB]]);
+					app.setDisplay([imageA,imageB,imageC], [1,2], [[imageA,imageB,matchAB],[imageA,imageC,matchAC]]);
+
+					R3D.triplePointMatches(matchAB,matchAC);
 				}
 				fxnA();
 			}
@@ -305,8 +325,6 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 			}
 			var fxnD = function(){
 				var features = view.features();
-console.log("fxnD")
-console.log(features)
 				var expanded = [];
 				var img = view.featuresImage();
 				var width = img.width;
@@ -411,15 +429,16 @@ App3DR.App.MatchCompare.prototype.setDisplay = function(imageList,rowList,matchL
 	}
 	var grid = new V2D(maximumCols,maximumRows);
 	var objectSize = new V2D(largestWidth,largestHeight);
-console.log("objectSize: "+objectSize)
+console.log("objectSize: "+objectSize);
 	var fullSize = new V2D(largestWidth*maximumCols,largestHeight*maximumRows);
 	// setup display locations:
 
 	for(i=0; i<rowList.length; ++i){
 		var rowCount = rowList[i];
+
 		for(j=0; j<rowCount; ++j){
 			var info = imageInfoList[countCurrent+j];
-			info["column"] = j;
+			info["column"] = (j + (maximumCols-rowCount)*0.5 );
 			info["row"] = i;
 			/*
 			rowWidth += image.width;
@@ -438,7 +457,7 @@ console.log("objectSize: "+objectSize)
 		// rowInfo[i] = row;
 		// colHeight += maxRowHeight;
 		// maxWidth = Math.max(maxWidth, rowWidth);
-		// countCurrent += rowCount;
+		countCurrent += rowCount;
 	}
 
 	this._displayData = {"images":imageInfoList, "objectSize":objectSize, "fullSize":fullSize, "grid":grid, "matches":matchInfoList};
@@ -480,23 +499,22 @@ App3DR.App.MatchCompare.prototype._render = function(){
 		}
 		// matches after images
 		for(i=0; i<matchInfo.length; ++i){
+			console.log("matchInfo: "+i);
 			var match = matchInfo[i];
 			var imageA = match["A"];
 			var imageB = match["B"];
 			var matches = match["match"];
-console.log(match)
 			var F = matches["F"];
-console.log(F);
 				F = new Matrix().loadFromObject(F);
-console.log(F+"")
-
+//console.log(F+"");
+// console.log("A: "+imageA["offset"]);
+// console.log("B: "+imageB["offset"]);
 			var matchingList = matches["matches"];
 			var d = new DO();
 			this._display.addChild(d);
 			console.log(matchingList.length+" .... match length" );
 			//d.graphics().setLine(1.0,0x99FF0000);
 			for(j=0; j<matchingList.length; ++j){
-break;
 				var m = matchingList[j];
 				var to = m["to"];
 				var fr = m["fr"];
@@ -521,16 +539,17 @@ break;
 					d.graphics().endPath();
 					d.graphics().strokeLine();
 				}
-
-				// if(j>100){
+				// if(j>50){
 				// 	break;
 				// }
 			}
+
+			// var imA = imageA["image"];
+			// var imB = imageB["image"];
 			
 		}
-
-		var imA = imageA["image"];
-		var imB = imageB["image"];
+/*
+		
 
 		// var toSizeA = new V2D(imA.width,imA.height);
 		// var toSizeB = new V2D(imB.width,imB.height);
@@ -552,7 +571,7 @@ break;
 			var pointsA = [];
 			var pointsB = [];
 			var matches = match["match"];
-			var matchingList = matches["matches"];;
+			var matchingList = matches["matches"];
 			for(i=0; i<matchingList.length; ++i){
 				var m = matchingList[i];
 				var to = m["to"];
@@ -566,8 +585,9 @@ break;
 			}
 		// var error = R3D._gdFun([pointsA,pointsB], F.toArray(), false);
 		// var averageError = error/pointsA.length;
-		// console.log("F AVG ERROR: "+error+" == "+averageError);
-		R3D.refineSimple(F, pointsA,pointsB, true);
+		var error = R3D.fundamentalMatrixError(F, pointsA,pointsB);
+		console.log("F AVG ERROR: "+error+" == "+(error/pointsA.length));
+		*/
 	}
 
 
@@ -3340,7 +3360,6 @@ App3DR.ProjectManager.prototype._handleFileClientComplete = function(data){
 	this.checkOperations();
 }
 App3DR.ProjectManager.prototype.checkOperations = function(){
-	//console.log("checkOperations");
 	if(this._operation){
 		return;
 	}
@@ -3453,6 +3472,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 	yaml.writeArrayEnd();
 	// pairs
 	len = this._pairs ? this._pairs.length : 0;
+	console.log("PAIRS COUNT: "+len)
 	yaml.writeArrayStart("pairs");
 	for(i=0; i<len; ++i){
 		var pair = this._pairs[i];
@@ -3674,24 +3694,25 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 		for(j=i+1; j<len; ++j){
 			var viewB = views[j];
 			var idB = viewB.id();
-			console.log("pair: ? "+idA+" & "+idB+" ? ");
+//			console.log("pair: ? "+idA+" & "+idB+" ? ");
 			var found = false;
 			// 1) feature match
 			// 2) dense match
 			for(k=0; k<pairs.length; ++k){
 //break; // TODO: REMOVE
-				var pair = pairs[i];
+				var pair = pairs[k];
+//				console.log("pair: "+pair);
 				if(pair.isPair(idA,idB)){
 					if(pair.hasMatch()){
 						foundPair = pair;
-						found = true;
 					}
+					found = true;
 					break;
 				}
 			}
 			if(!found){
-				console.log("need to match pair ... ");
-				this.calculatePairMatch(viewA,viewB, foundPair);
+//				console.log("need to match pair ... "+viewA+" & "+viewB);
+				this.calculatePairMatch(viewA,viewB, null);
 				return;
 			}
 		}
@@ -3813,8 +3834,6 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		//var maxFeatures = 200; // TESTING
 		var objectsA = R3D.generateSIFTObjects(pointsA, imageMatrixA);
 		var objectsB = R3D.generateSIFTObjects(pointsB, imageMatrixB);
-		// objectsA = Code.copyArray(objectsA, 0,maxFeatures-1);
-		// objectsB = Code.copyArray(objectsB, 0,maxFeatures-1);
 		// fat matching (no prior knowledge)
 		var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeatures);
 		var F = matchData["F"];
@@ -3822,11 +3841,11 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		// ...
 		matchCount = matches.length;
 		console.log(matches);
-// throw "hold on";
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
 
+		console.log("HAVE PAIR? "+(pair!==null));
 		if(pair){
 			fxnG(pair);
 		}else{
@@ -3836,17 +3855,14 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 	var yamlBinary = null;
 	var matchCount = -1;
 	var fxnG = function(pair){
-		console.log("fxnG");
-		console.log(yamlBinary!==null);
 		var path = Code.appendToPath(self._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
 		pair.setMatchInfo(matchCount);
 		self.addOperation("SET", {"path":path, "data":yamlBinary}, fxnH, self, pair);
 	}
 	var fxnH = function(object, data){
-		console.log("fxnH");
-		console.log(object);
-		console.log(data);
-		self.saveProjectFile();
+		self.saveProjectFile(); // TODO: add completion here 
+		// return to checking 
+//		self.startBackgroundTasks();
 	}
 	fxnA();
 	fxnB();
@@ -3870,8 +3886,18 @@ App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, vie
 	yaml.writeString("from", viewA.id());
 	yaml.writeString("to", viewB.id());
 
+	yaml.writeObjectStart("fromSize");
+		yaml.writeNumber("x",widA);
+		yaml.writeNumber("y",heiA);
+	yaml.writeObjectStart("toSize");
+		yaml.writeNumber("x",widB);
+		yaml.writeNumber("y",heiB);
+
 	yaml.writeObjectStart("F");
-		F.saveToYAML(yaml);
+		var Fnorm = F.copy();
+			Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
+			Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
+		Fnorm.saveToYAML(yaml);
 	yaml.writeObjectEnd();
 	yaml.writeNumber("count", matches.length);
 	yaml.writeArrayStart("matches");
@@ -4393,6 +4419,9 @@ App3DR.ProjectManager.View.sortSizeIncreasing = function(a,b){
 	var bSize = bWidth*bHeight;
 	return aSize < bSize ? -1 : 1;
 }
+App3DR.ProjectManager.View.prototype.toString = function(){
+	return "[View: "+this.id()+"]";
+}
 
 // ------------------------------------------------------------------------------------------------------------
 App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
@@ -4406,6 +4435,9 @@ App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
 	this._matchingSparse = null;
 	this._matchingMedium = null;
 	this._matchingDense = null;
+}
+App3DR.ProjectManager.Pair.prototype.toString = function(){
+	return "[Pair: "+this._viewAID+" : "+this._viewBID+"]";
 }
 App3DR.ProjectManager.Pair.prototype.viewA = function(){
 	return this._manager.viewFromID(this._viewAID);
@@ -4435,9 +4467,8 @@ App3DR.ProjectManager.Pair.prototype.isPair = function(idA,idB){
 	}
 	return false;
 }
-
 App3DR.ProjectManager.Pair.prototype.hasMatch = function(){
-	return this._matchFeatureCount != null && this._matchFeatureCount >= 0;
+	return this._matchFeatureCount != null || this._matchFeatureCount >= 0;
 }
 App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeString("directory", this._directory);

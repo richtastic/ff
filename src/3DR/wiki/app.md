@@ -192,17 +192,17 @@ project typical numbers:
 
 APP TODO:
 - dense alg:
-	- smaller cells are better for accuracy
+	- smaller cells are better:
+		-for accuracy
 	- larger cells are bette:
 		- connect space
 		- discard mismatching seeds
-
-	- TRY larger image resolutions with larger cells
-	- dense use CELLS as quadspace
+	- 
 	- some SAD scores have to be horrible ??? 
+	- does dense use SAD scores at different scales? eg: 1,2,4 ?
 
-- fix lm minimization F error
 - corner feature size should be based on something ...
+
 
 - TRIPLE ALGORITHM
 

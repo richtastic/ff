@@ -894,12 +894,19 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	return F;
 }
 R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole
-	var svd = Matrix.SVD(F);
-	var U = svd.U;
-	var S = svd.S;
-	var V = svd.V;
-	S.set(2,2, 0.0);
-	return Matrix.fromSVD(U,S,V);
+	try{
+		var svd = Matrix.SVD(F);
+		var U = svd.U;
+		var S = svd.S;
+		var V = svd.V;
+		if(S.get(0,0)==0 || S.get(1,1)==0){
+			return F.copy();
+		}
+		S.set(2,2, 0.0);
+		return Matrix.fromSVD(U,S,V);
+	}catch(e){
+		return F.copy();
+	}
 }
 R3D.fundamentalMatrix7 = function(pointsA,pointsB){ // b * F * a = 0
 	if(pointsA.length<7){ return null; }
@@ -1285,6 +1292,8 @@ R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSqu
 	//E = R3D.forceRank2(E);
 	return E;
 }
+R3D._gdFun_A = new Matrix(3,3);
+R3D._gdFun_B = new Matrix(3,3);
 R3D._gdFun = function(args, x, isUpdate){
 	if(isUpdate){
 		var Ffwd = new Matrix(3,3).fromArray(x);
@@ -1295,15 +1304,13 @@ R3D._gdFun = function(args, x, isUpdate){
 	var pointsA = args[0];
 	var pointsB = args[1];
 
-
 	var i, len = pointsA.length;
 	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
-	var Frev = new Matrix(3,3), Ffwd = new Matrix(3,3);
+	var Frev = R3D._gdFun_B, Ffwd = R3D._gdFun_A;
 	var orgA = new V2D(), orgB = new V2D(), dirA = new V2D(), dirB = new V2D();
-
 	Ffwd.setFromArray(x);
 	Ffwd = R3D.forceRank2F(Ffwd);
-	Frev = Matrix.transpose(Ffwd);
+	Matrix.transpose(Frev, Ffwd);
 
 	var error = 0;
  	for(i=0;i<len;++i){
@@ -1315,53 +1322,35 @@ R3D._gdFun = function(args, x, isUpdate){
 		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
 		onA = Code.closestPointLine2D(orgA,dirA, pointB);
 		onB = Code.closestPointLine2D(orgB,dirB, pointA);
-//		console.log(onA+" - "+pointB+" && "+onB+" - "+pointA);
-		//error += Math.pow(onB.x-pointA.x,2);
- 		//error += Math.pow(onB.y-pointA.y,2);
- 		//error += Math.pow(onA.x-pointB.x,2);
- 		//error += Math.pow(onA.y-pointB.y,2);
  		var distA = V2D.distance(onB,pointA);
  		var distB = V2D.distance(onA,pointB);
- 		// error += distA;
- 		// error += distB;
  		error += distA*distA;
  		error += distB*distB;
  	}
 	return error;
 }
-R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares
+R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares : input normalized points
 	var xVals = fundamental.toArray();
 	var args = [pointsA,pointsB];
-	result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-6);
+	result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-10);
 	xVals = result["x"];
 	fundamental = new Matrix(3,3).fromArray(xVals);
 	fundamental = R3D.forceRank2F(fundamental);
 	return fundamental;
 }
 
-R3D.fundamentalMatrixNonlinearLM = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares
-var F = fundamental;
-
-// var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
-// var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
-// var normA = pointsANorm.normalized[0];
-// var normB = pointsBNorm.normalized[0];
-// var leftT = Matrix.transpose(pointsBNorm.forward[0]);
-// var rightT = pointsANorm.forward[0];
-
+R3D.fundamentalMatrixNonlinearLM = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares : input normalized points
+	var F = fundamental;
 	var maxIterations = 30;
 	var fxn, args, xVals, yVals, maxSupportCount;
 	maxSupportCount = pointsA.length;
 	fxn = R3D.lmMinFundamentalFxn; // fxn = R3D.lmMinEssentialFxn;
-	//args = [pointsA,pointsB, leftT, rightT];
 	args = [pointsA,pointsB];
 	xVals = fundamental.toArray();
 	yVals = Code.newArrayZeros(maxSupportCount*4);
-	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, false);
+	Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10);
 	// fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance, lambdaScaleFlip, epsilon
 	F = new Matrix(3,3).fromArray(xVals);
-	// F = Matrix.mult(F, rightT);
-	// F = Matrix.mult(leftT, F);
 	F = R3D.forceRank2F(F);
 	return F;
 }
@@ -1371,7 +1360,7 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 	try{
 		fundamental = R3D.fundamentalMatrixNonlinearGD(fundamental,pointsA,pointsB);
 	}catch(e){
-		console.log("TODO: FIX");
+		fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
 	}
 	return fundamental;
 }
@@ -1554,15 +1543,14 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 	return {"F":arr, "matches":[pointsKeepA,pointsKeepB]};	
 }
 
-
+R3D._lmMinFundamentalA = new Matrix(3,3);
+R3D._lmMinFundamentalB = new Matrix(3,3);
 R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix, isUpdate){ // x:nx1, y:1xm, e:1xm
 	var pointsA = args[0];
 	var pointsB = args[1];
-	var leftT = args[2];
-	var rightT = args[3];
 	var unknowns = 9;
 	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
-	var Frev = new Matrix(3,3), Ffwd = new Matrix(3,3);
+	var Frev = R3D._lmMinFundamentalB, Ffwd = R3D._lmMinFundamentalA;
 	var orgA = new V2D(), orgB = new V2D(), dirA = new V2D(), dirB = new V2D();
 	var onA, onB;
 	var i, len = pointsA.length;
@@ -1571,50 +1559,23 @@ R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix, isUpdate){ // 
 	for(i=0;i<unknowns;++i){
 		Ffwd.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
 	}
-
-
-/*
-	// denormalize for error
-	Ffwd = Matrix.mult(Ffwd, rightT);
-	Ffwd = Matrix.mult(leftT, Ffwd);
-	//Ffwd = R3D.forceRank2F(Ffwd);
-
-if(isUpdate){
-	console.log("update")
-	Ffwd = Matrix.mult(Ffwd, rightT);
-	Ffwd = Matrix.mult(leftT, Ffwd);
-		Ffwd = R3D.forceRank2F(Ffwd);
-	Ffwd = Matrix.mult(Ffwd, Matrix.inverse(rightT) );
-	Ffwd = Matrix.mult(Matrix.inverse(leftT), Ffwd);
-	Code.copyArray(x,Ffwd.toArray());
-	return;
-}
-*/
-
-	Frev = Matrix.transpose(Ffwd);
-	// console.log(":\n"+Ffwd+" IN 1")
-	// console.log(":\n"+Frev+" IN 2")
+	// Ffwd = R3D.forceRank2F(Ffwd);
+	Matrix.transpose(Frev, Ffwd);
 	// find forward / reverse distances from line
  	for(i=0;i<len;++i){
 		pointA = pointsA[i];
 		pointB = pointsB[i];
-		//console.log(pointA+" | "+pointB) // OK
 		Ffwd.multV3DtoV3D(lineA, pointA);
 		Frev.multV3DtoV3D(lineB, pointB);
-		// console.log(lineA+" | "+lineB) // ? OK ?
 		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
 		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
-		//console.log(orgA+" | "+dirA+" | "+orgB+" | "+dirB)
 		onA = Code.closestPointLine2D(orgA,dirA, pointB);
 		onB = Code.closestPointLine2D(orgB,dirB, pointA);
-		//console.log(onA+" ? "+onB)
-		// var distB = Code.distancePointLine2D(orgA,dirA, pointB);
-		// var distA = Code.distancePointLine2D(orgB,dirB, pointA);
  		if(yMatrix){
- 			yMatrix.set(i*4+0,0, onA.x);
- 			yMatrix.set(i*4+1,0, onA.y);
- 			yMatrix.set(i*4+2,0, onB.x);
- 			yMatrix.set(i*4+3,0, onB.y);
+ 			yMatrix.set(i*4+0,0, onB.x);
+ 			yMatrix.set(i*4+1,0, onB.y);
+ 			yMatrix.set(i*4+2,0, onA.x);
+ 			yMatrix.set(i*4+3,0, onA.y);
  		}
  		if(eMatrix){
  			eMatrix.set(i*4+0,0, Math.pow(onB.x-pointA.x,2) );
@@ -1623,15 +1584,6 @@ if(isUpdate){
  			eMatrix.set(i*4+3,0, Math.pow(onA.y-pointB.y,2) );
  		}
  	}
- 	if(eMatrix){
- 		var error = 0;
- 		for(i=0; i<eMatrix.rows(); ++i){
- 			error += eMatrix.get(i,0);
- 		}
- 		//console.log("error: "+error);
- 	}
- 	// console.log(yMatrix+"")
- 	// console.log(eMatrix+"")
 }
 
 
@@ -4950,13 +4902,13 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	var bestMatchCount = -1;
 	var best = null;
 	var averageError = -1;
+		var maximumSamplingList = null;
+		var maximumSamplingCount = null;
+		var maximumSamplingF = null;
 	while(loopCount>0 && (bestMatchCount<0 || bestMatchCount>50)){ // looping on this makes it worse ..  
 		console.log("loop: "+loopCount+" = "+bestMatchCount);
-		// console.log(objectsA)
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, errorB);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, errorA);
-		// console.log("putative: ");
-		// console.log(putativeA);
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB);
 		var matchesBest = matching["best"];
 		
@@ -4968,16 +4920,24 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 			ptsA.push( matchesBest[i]["A"]["point"] );
 			ptsB.push( matchesBest[i]["B"]["point"] );
 		}
-		var Fnext = R3D.refineSimple(matrixFfwd.copy(), ptsA, ptsB);
+		var Fnext = R3D.fundamentalRefineFromPoints(ptsA,ptsB, matrixFfwd);
+
+		var error = R3D.fundamentalMatrixError(Fnext, ptsA, ptsB);
+		var errorAvg = error/ptsA.length;
 		
 		var nextBestMatchCount = matchesBest.length;
-		console.log("bestMatchCount: "+bestMatchCount+" => "+nextBestMatchCount);
+		console.log("bestMatchCount: "+bestMatchCount+" => "+nextBestMatchCount+".      & error: "+averageError+" => "+errorAvg);
 		//TODO: averageError
-		if(best==null || (nextBestMatchCount>100 && nextBestMatchCount>bestMatchCount)){
+		if(best==null || (nextBestMatchCount>100)  ){//  && nextBestMatchCount>=bestMatchCount)){
 			bestMatchCount = nextBestMatchCount;
 			best = matchesBest;
 			matrixFfwd = Fnext;
-			matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+			averageError = errorAvg;
+			if(bestMatchCount>=maximumSamplingCount){
+				maximumSamplingList = best;
+				maximumSamplingCount = bestMatchCount;
+				maximumSamplingF = matrixFfwd;
+			}
 		}else{
 			break;
 		}
@@ -4985,6 +4945,10 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		errorB *= 0.5;
 		--loopCount;
 	}
+	best = maximumSamplingList;
+	bestMatchCount = maximumSamplingCount;
+	matrixFfwd = maximumSamplingF;
+	matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	// THIS IS MEDIUM MATCH
 	console.log("BEST:");
 	console.log(best);
@@ -5010,7 +4974,19 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	return {"F":matrixFfwd, "Finv":matrixFrev, "matches":matches};
 }
 
+R3D.fundamentalMatrixError = function(F, pointsAin,pointsBin){
+	var pointsA = [];
+	var pointsB = [];
+	for(i=0; i<pointsAin.length; ++i){
+		pointsA[i] = new V3D(pointsAin[i].x,pointsAin[i].y,1.0);
+		pointsB[i] = new V3D(pointsBin[i].x,pointsBin[i].y,1.0);
+	}
+	var error = R3D._gdFun([pointsA,pointsB], F.toArray(), false);
+	return error;
+}
+/*
 R3D.refineSimple = function(F, pointsAin,pointsBin, errorOnly){
+	
 	var pointsA = [];
 	var pointsB = [];
 	for(i=0; i<pointsAin.length; ++i){
@@ -5022,74 +4998,10 @@ R3D.refineSimple = function(F, pointsAin,pointsBin, errorOnly){
 
 	var error = R3D._gdFun([pointsA,pointsB], F.toArray(), false);
 	var averageError = error/pointsA.length;
-	//var error = R3D.lmMinFundamentalFxn
 	console.log("F AVG ERROR: "+error+" == "+averageError);
 	if(errorOnly){
 		return;
 	}
-
-//HERE ? 
-
-
-// R3D.lmMinFundamentalFxn = function(args, xMatrix,yMatrix,eMatrix, isUpdate){ // x:nx1, y:1xm, e:1xm
-// 	var pointsA = args[0];
-// 	var pointsB = args[1];
-// 	var leftT = args[2];
-// 	var rightT = args[3];
-// 	var unknowns = 9;
-// 	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
-// 	var Frev = new Matrix(3,3), Ffwd = new Matrix(3,3);
-// 	var orgA = new V2D(), orgB = new V2D(), dirA = new V2D(), dirB = new V2D();
-// 	var onA, onB;
-// 	var i, len = pointsA.length;
-// 	var rows = 2*2*len;
-// 	// convert unknown list to matrix
-// 	for(i=0;i<unknowns;++i){
-// 		Ffwd.set( Math.floor(i/3),i%3, xMatrix.get(i,0) );
-// 	}
-
-// 	Frev = Matrix.transpose(Ffwd);
-// 	// console.log(":\n"+Ffwd+" IN 1")
-// 	// console.log(":\n"+Frev+" IN 2")
-// 	// find forward / reverse distances from line
-//  	for(i=0;i<len;++i){
-// 		pointA = pointsA[i];
-// 		pointB = pointsB[i];
-// 		//console.log(pointA+" | "+pointB) // OK
-// 		Ffwd.multV3DtoV3D(lineA, pointA);
-// 		Frev.multV3DtoV3D(lineB, pointB);
-// 		// console.log(lineA+" | "+lineB) // ? OK ?
-// 		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
-// 		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
-// 		//console.log(orgA+" | "+dirA+" | "+orgB+" | "+dirB)
-// 		onA = Code.closestPointLine2D(orgA,dirA, pointB);
-// 		onB = Code.closestPointLine2D(orgB,dirB, pointA);
-// 		//console.log(onA+" ? "+onB)
-// 		// var distB = Code.distancePointLine2D(orgA,dirA, pointB);
-// 		// var distA = Code.distancePointLine2D(orgB,dirB, pointA);
-//  		if(yMatrix){
-//  			yMatrix.set(i*4+0,0, onA.x);
-//  			yMatrix.set(i*4+1,0, onA.y);
-//  			yMatrix.set(i*4+2,0, onB.x);
-//  			yMatrix.set(i*4+3,0, onB.y);
-//  		}
-//  		if(eMatrix){
-//  			eMatrix.set(i*4+0,0, Math.pow(onB.x-pointA.x,2) );
-//  			eMatrix.set(i*4+1,0, Math.pow(onB.y-pointA.y,2) );
-//  			eMatrix.set(i*4+2,0, Math.pow(onA.x-pointB.x,2) );
-//  			eMatrix.set(i*4+3,0, Math.pow(onA.y-pointB.y,2) );
-//  		}
-//  	}
-//  	if(eMatrix){
-//  		var error = 0;
-//  		for(i=0; i<eMatrix.rows(); ++i){
-//  			error += eMatrix.get(i,0);
-//  		}
-//  		//console.log("error: "+error);
-//  	}
-//  	// console.log(yMatrix+"")
-//  	// console.log(eMatrix+"")
-// }
 
 	// var Fnext = R3D.fundamentalMatrixNonlinearLM(F, pointsA, pointsB);
 	// return Fnext;
@@ -5097,7 +5009,7 @@ R3D.refineSimple = function(F, pointsAin,pointsBin, errorOnly){
 	var Fnext = R3D.fundamentalMatrixNonlinearGD(F, pointsA, pointsB);
 	return Fnext;
 }
-
+*/
 
 R3D.fundamentalFromRansacImageMatches = function(imageMatrixA,imageMatrixB, matches){
 	console.log("RANSACing...");
@@ -6122,7 +6034,7 @@ R3D.output3dModel = function(points3D, others){ // imageA,imageB transforms, mat
 	yaml.writeDocument();
 	return yaml.toString();
 }
-R3D.fundamentalRefineFromPoints = function(pointsAin,pointsBin){
+R3D.fundamentalRefineFromPoints = function(pointsAin,pointsBin, F){
 	var i;
 	var pointsA = [];
 	var pointsB = [];
@@ -6130,28 +6042,29 @@ R3D.fundamentalRefineFromPoints = function(pointsAin,pointsBin){
 		pointsA[i] = new V3D(pointsAin[i].x,pointsAin[i].y,1.0);
 		pointsB[i] = new V3D(pointsBin[i].x,pointsBin[i].y,1.0);
 	}
-
-	console.log("NORMALIZING");
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
 	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
 	var normA = pointsANorm.normalized[0];
 	var normB = pointsBNorm.normalized[0];
-	// console.log("MINIMIZING");
-	var F = R3D.fundamentalMatrix(normA,normB);
-	F = R3D.forceRank2F(F);
-	// F = R3D.fundamentalMatrixNonlinear(F, normA, normB);
-	//F = R3D.fundamentalMatrixNonlinear(F, normA, normB);
-	//F = R3D.fundamentalMatrixNonlinearGD(F, normA, normB);
-	//F = R3D.fundamentalMatrixNonlinearLM(F, normA, normB);
-	//F = R3D.fundamentalMatrixNonlinearGD(F, normA, normB);
+	if(!F){
+		F = R3D.fundamentalMatrix(normA,normB);
+		F = R3D.forceRank2F(F);
+	}else{ // convert F to normalized F
+		F = Matrix.mult(F, pointsANorm.reverse[0]);
+		F = Matrix.mult(Matrix.transpose(pointsBNorm.reverse[0]), F);
+	}
+	// F = Matrix.mult(F, pointsANorm.forward[0]);
+	// F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F);
+	// F = R3D.forceRank2F(F);
+
+	// do both, might help somewhat
+	// F = R3D.fundamentalMatrixNonlinearLM(F, normA, normB);
+	F = R3D.fundamentalMatrixNonlinearGD(F, normA, normB);
+
 
 	F = Matrix.mult(F, pointsANorm.forward[0]);
 	F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F);
 	F = R3D.forceRank2F(F);
-
-	// already does normalizing:
-	//F = R3D.fundamentalMatrixNonlinearLM(F,pointsA,pointsB);
-	F = R3D.fundamentalMatrixNonlinearGD(F, pointsA, pointsA);
 
 	return F;
 }
@@ -6173,7 +6086,6 @@ R3D.imageFromParameters = function(imageMatrix, point,scale,angle,skewX,skewY, s
 R3D.scoreSADFromPoints = function(){
 	// ..
 }
-var R3DCALLED = 0;
 R3D.vectorFromParameters = function(sA,imageMatrixA, refine){
 	var size = 20; // 16x16 + gradient
 	var point = sA.point().scale(imageMatrixA.width(),imageMatrixA.height());
@@ -11124,6 +11036,113 @@ R3D.lineFromF = function(FA,pointA){
 	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
 	return {"org":org,"dir":dir};
 }
+
+// FIND MATCHES SAME IN A | B | C
+R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC){ // TODO: allow reversed?
+	// viewA, viewB, viewC,
+	console.log(matchesAB);
+	console.log(matchesAC);
+	var sizeABFr = matchesAB["fromSize"];
+	var sizeABTo = matchesAB["toSize"];
+	var sizeACFr = matchesAC["fromSize"];
+	var sizeACTo = matchesAC["toSize"];
+	var sizeBCFr = matchesBC["fromSize"];
+	var sizeBCTo = matchesBC["toSize"];
+		sizeABFr = new V2D(sizeABFr["x"],sizeABFr["y"]);
+		sizeABTo = new V2D(sizeABTo["x"],sizeABTo["y"]);
+		// 
+	var sizeA = V2D.max(sizeABFr,sizeABTo);
+	// 
+	var Fab = new Matrix().loadFromObject(matchesAB["F"]);
+	var Fac = new Matrix().loadFromObject(matchesAC["F"]);
+	var Fbc = new Matrix().loadFromObject(matchesBC["F"]);
+
+	// scale up F to be correct ratio -- width = 1
+	HERE ...
+			Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
+			Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
+	// find all matches within same % of A / B / C = 
+	var pointsA = [];
+	var pointsB = [];
+	var pointsC = [];
+	return {"A":pointsA, "B":pointsB, "C":pointsC};
+}
+
+
+
+
+
+// ITERITIVE BUNDLE ADJUSTMENT
+
+R3D.BundleAdjust = function(){
+	// construct objects from input data
+	// iterate on randomly connected groups of 2 / 3
+}
+
+
+R3D.BundleAdjust.Point3D = function(){
+	this._point = new V3D();
+	this._projections = []; // list of Point2D
+}
+
+R3D.BundleAdjust.point2D = function(){
+	this._point = new V2D();
+	this._view = null; // View
+	this._source = null; // Point3D
+}
+
+R3D.BundleAdjust.Camera = function(){
+	this._K = null;
+}
+
+R3D.BundleAdjust.Transform3D = function(){
+	this._viewA = null;
+	this._viewB = null;
+	this._transformAToB = new Matrix(4,4);
+}
+
+R3D.BundleAdjust.View = function(){
+	this._transforms = []; // list of Transform3D
+	this._points = []; // list of Point2D
+	this._camera = null; // Camera
+}
+
+R3D.BundleAdjust.X = function(){
+	// 
+}
+
+/*
+
+- data:
+	Camera Matrix K:
+		- [values]
+
+	Point3D:
+		- projections:
+			point2D [view A]
+			point2D [view B]
+	View:
+		- transforms:
+			transform:
+				- T3D[A-B]
+		- points:
+			- point2D
+			...
+		- camera K
+
+	point2D:
+		source: point3D
+		view: View
+
+	Transform3D:
+		- viewA
+		- viewB
+		- matrix
+
+
+
+
+*/
 
 
 

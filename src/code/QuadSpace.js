@@ -29,7 +29,7 @@ QuadSpace.prototype.initWithSize = function(min,max, epsilon){
 	var square = Math.max(size.x,size.y);
 	square = Code.nextExponentialTwoRounded(square);
 	size.set(square,square);
-	epsilon = epsilon!==undefined ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
+	epsilon = (epsilon!==undefined && eps!==null) ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
 	this._epsilon = epsilon;
 	console.log("   "+center+" & "+size);
 	this._root.setCenterAndSize(center,size);
@@ -108,6 +108,11 @@ QuadSpace.prototype.objectsInsideRect = function(min,max){
 	// }
 	return arr;
 }
+QuadSpace.prototype.toArray = function(){
+	var arr = [];
+	this._root.toArray(arr);
+	return arr
+}
 /*
 QuadTree.prototype.initWithObjects = function(objects, force){
 	this.clear();
@@ -133,10 +138,18 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 	}
 	return true;
 }
-QuadTree.prototype.kNN = function(p,k){
+*/
+/*
+QuadSpace._sortArxel = function(a,b){
+	return a.temp() < b.temp() ? -1 : 1;
+}
+QuadSpace._sortObject = function(a,b){
+	return a["distance"] < b["distance"] ? -1 : 1;
+}
+QuadSpace.prototype.kNN = function(p,k){
 	var toPoint = this._toPoint;
-	var axelQueue = new PriorityQueue(QuadTree._sortAxel);
-	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);
+	var axelQueue = new PriorityQueue(QuadSpace._sortArxel);
+	var objectQueue = new PriorityQueue(QuadSpace._sortObject, k);
 	var axel = this._root;
 	axel.temp(0); // 0 distance
 	axelQueue.push(axel);
@@ -147,6 +160,8 @@ QuadTree.prototype.kNN = function(p,k){
 			for(var i=0; i<children.length; ++i){
 				var child = children[i];
 				if(child){
+					??
+
 					var distanceCenter = child.centerDistanceToPointSquare(p);
 					var distanceRadius = child.maxRadiusSquare();
 					distanceCenter = Math.sqrt(distanceCenter);
@@ -182,7 +197,7 @@ QuadTree.prototype.kNN = function(p,k){
 	}
 	return objects;
 }
-QuadTree.prototype.closestObject = function(point){
+QuadSpace.prototype.closestObject = function(point){
 	var objects = this.kNN(point, 1);
 	if(objects.length>0){
 		return objects[0];
@@ -412,6 +427,12 @@ QuadSpace.Arxel.prototype.clear = function(){
 	}
 	this._children = null;
 }
+QuadSpace.Arxel.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
+}
 QuadSpace.Arxel.prototype.isLeaf = function(){
 	return this._children == null;
 }
@@ -482,6 +503,23 @@ QuadSpace.closestDistanceSquareRect = function(center,radSquare, min,max){
 		}
 	}
 }
+QuadSpace.Arxel.prototype.toArray = function(arr){
+	arr = arr!==undefined ? arr : [];
+	if(this._objects){
+		for(var i=0; i<this._objects.length; ++i){
+			arr.push( this._objects[i]);
+		}
+	}
+	if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			this._children[i].toArray(arr);
+		}
+	}
+	return arr;
+}
+
+
+
 // TODO: each item is potentially queried many times -> queried (fail | success) array ?
 QuadSpace.Arxel.prototype.objectsInsideCircleSquare = function(arr,center,radSquare,toRectFxn){
 	if(this._objects){

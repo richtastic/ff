@@ -1,9 +1,14 @@
 // QuadTree.js
 
-function QuadTree(toPoint){
+function QuadTree(toPoint, min, max){
 	this._root = new QuadTree.Arxel();
 	this._toPoint = QuadTree.objectToV2D;
 	this.toPoint(toPoint);
+	if(min && max){
+		var size = V2D.sub(max,min);
+		var center = V2D.avg(max,min);
+		this.initWithDimensions(center, size);
+	}
 }
 QuadTree.objectToV2D = function(p){
 	return p;
@@ -150,6 +155,11 @@ QuadTree._arxels = function(arxel, list){
 	}
 	return list;
 }
+QuadTree.prototype.toArray = function(){
+	var arr = [];
+	this._root.toArray(arr);
+	return arr
+}
 QuadTree.prototype.toPoint = function(p){
 	if(p!==undefined){
 		this._toPoint = p;
@@ -203,7 +213,7 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		return false;
 	}
 	var i, len = objects.length;
-	var obj, point, min = new V3D(), max = new V3D();
+	var obj, point, min = new V2D(), max = new V2D();
 	point = this._toPoint(objects[0]);
 	min.copy(point);
 	max.copy(point);
@@ -214,14 +224,14 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		V2D.max(max,max,point);
 	}
 	var size = QuadTree.twoDivisionRound(min,max, force);
-	var center = V3D.avg(max,min);
+	var center = V2D.avg(max,min);
 	this.initWithDimensions(center,size);
 	for(i=0;i<len;++i){
 		this.insertObject(objects[i]);
 	}
 	return true;
 }
-QuadTree._sortAxel = function(a,b){
+QuadTree._sortArxel = function(a,b){
 	return a.temp() < b.temp() ? -1 : 1;
 }
 QuadTree._sortObject = function(a,b){
@@ -229,7 +239,7 @@ QuadTree._sortObject = function(a,b){
 }
 QuadTree.prototype.kNN = function(p,k){
 	var toPoint = this._toPoint;
-	var axelQueue = new PriorityQueue(QuadTree._sortAxel);
+	var axelQueue = new PriorityQueue(QuadTree._sortArxel);
 	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);
 	var axel = this._root;
 	axel.temp(0); // 0 distance
@@ -441,6 +451,23 @@ QuadTree.Arxel.prototype.clear = function(){
 	this._parent = null; // ?
 	this._data = null;
 	this._count = 0;
+}
+QuadTree.Arxel.prototype.toArray = function(arr){
+	arr = arr!==undefined ? arr : [];
+	if(this._datas){
+		for(var i=0; i<this._datas.length; ++i){
+			arr.push( this._datas[i]);
+		}
+	}
+	if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			var child = this._children[i];
+			if(child){
+				child.toArray(arr);
+			}
+		}
+	}
+	return arr;
 }
 QuadTree.Arxel.prototype.minRadius = function(){
 	return Math.min(this._size.x,this._size.y,this._size.z);

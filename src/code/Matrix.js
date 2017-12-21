@@ -422,6 +422,9 @@ Matrix.prototype.toString = function(exp){
 }
 
 Matrix._transformTemp2D = new Matrix(3,3);
+Matrix.transform2DIdentity = function(){
+	return new Matrix(3,3).identity();
+}
 Matrix.transform2DTranslate = function(a,tX,tY){
 	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
@@ -1419,7 +1422,7 @@ Matrix.matrixArrayToString = function(A, m,n){
 	return str;
 }
 
-
+//.       Matrix.lmMinimize( fxn, args, yVals.length, xVals.length, xVals, yVals, maxIterations, 1E-10, 1E-10, false);
 Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fTolerance, xTolerance, lambdaScaleFlip, epsilon){ // levenberg marquardt nonlinear minimization - reference: lmdif
 	// fxn = function to evaluate y && error from a given x
 	// m = number of functions
@@ -1432,11 +1435,13 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	// maxIterations = halt if loop is greater or equal to this
 	// diag is scaling array length = m
 	// 	
+try{
 	maxIterations = maxIterations!==undefined?maxIterations:50;
 	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
 	xTolerance = xTolerance!==undefined?xTolerance:1E-10;
-	epsilon = epsilon!=null ? epsilon : 1E-8; // should be on scale of ~min(x)/1E-6
+	epsilon = epsilon!=null ? epsilon : 1E-6; // should be on scale of ~min(x)/1E-6
 	lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
+
 	var i, j;
 	var x = new Matrix(n,1).setFromArray(xInitial);
 	var xTemp = new Matrix(n,1);
@@ -1448,19 +1453,16 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	var jacobian = new Matrix(m,n); 
 	var L = new Matrix(n,n);
 	var errorPrev = -1, errorNext, errorCurr;
-//console.log(epsilon)
-	//var lambda = 1E-3;
 	var lambda = 1E-3;
 	var lambdaScale = 10.0;
 	if(lambdaScaleFlip){
 		lambdaScale = 1.0/lambdaScale;
 	}
+
 	// initial
 	fxn(args, x,y,error);
 	errorCurr = error.getNorm();
-//console.log("errorCurr: "+errorCurr);
 	for(i=0;i<maxIterations; ++i){
-//console.log(i+": "+errorPrev+" > "+errorCurr+" / ");
 		// check function error
 		if(errorCurr<fTolerance){
 			console.log("converge f");
@@ -1474,9 +1476,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 			Matrix.sub(dy,yTemp,y); // negative dy
 			jacobian.setColFromCol(j, dy,0);
 		}
-//console.log("x: "+xTemp.toArray());
 		jacobian.scale(1.0/epsilon);
-		//console.log()
 		// dx
 		var jt = Matrix.transpose(jacobian);
 		var jj = Matrix.mult(jt,jacobian);
@@ -1485,12 +1485,9 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		ji = Matrix.inverse(ji);
 		var Jinv = Matrix.mult(ji,jt);
 		dx = Matrix.mult(Jinv, error);
-		// check x tolernce
-// console.log(Jinv.toString())
-//console.log(dx.getNorm())
-//console.log(dx.toArray()+" : dx")
+		// x tolerance
 		if(dx.getNorm()<xTolerance){
-			console.log("converge x");
+			// console.log("converge x: "+dx.getNorm());
 			break;
 		}
 		// x += dx  (putative)
@@ -1498,21 +1495,24 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 		// possible new y
 		fxn(args, xTemp,yTemp,error);
 		errorNext = error.getNorm();
-console.log("=> "+errorPrev+" | "+errorCurr+" => "+errorNext+"")
+//		console.log("=> "+errorPrev+" | "+errorCurr+" => "+errorNext+" == "+(errorNext/errorCurr))
 		if(errorNext<=errorPrev){
-			console.log(".  >> better")
+			//console.log(".  >> better")
 			x.copy(xTemp);
 			y.copy(yTemp);
 			fxn(args, xTemp,yTemp,error, true);
 			errorCurr = errorNext;
 			lambda *= lambdaScale;
 		}else{
-			console.log(".  >> worse")
+			//console.log(".  >> worse")
 			lambda /= lambdaScale;
 		}
 		//console.log(" lambda"+lambda)
 	}
-	console.log(" iterations: "+i+"/"+maxIterations);
+//	console.log(" iterations: "+i+"/"+maxIterations);
+}catch(e){
+	console.log("error avoided: "+e);
+}
 	x.toArray(xInitial);
 	y.toArray(yFinal);
 }

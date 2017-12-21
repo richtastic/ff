@@ -12,6 +12,150 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 /*
+
+	var pointsA = [
+				new V2D(86,208), // glasses corner left
+				new V2D(190,180), // glasses corner right
+				new V2D(172,107), // origin
+				new V2D(22.5,166), // lighter button
+				new V2D(361,183), // mouse eye
+				new V2D(18,225), // bic corner left
+				new V2D(37,216), // bic corner right
+				new V2D(65,169), // cup 
+				new V2D(226,87), // face BL
+				new V2D(219,66), // glasses TL
+				new V2D(250,72), // glasses TR
+				new V2D(260,103), // elbow
+				new V2D(216,154), // toe left
+				new V2D(245,158), // toe right
+				new V2D(202,127), // brick
+				new V2D(240,248), // 12
+				new V2D(332,249), // 16
+				new V2D(145,203), // glasses center
+				new V2D(172,68), // grid top
+				new V2D(141,76), // grid TL
+				new V2D(204,75), // grid TR
+				new V2D(144,119), // grid BL
+				new V2D(175,128), // grid bot
+				new V2D(362,213), // U
+				new V2D(326,176), // tail
+				new V2D(190,173), // base left
+				new V2D(265,178), // base right
+				new V2D(372,181), // nose
+				new V2D(129,88), // power top
+				new V2D(132,141), // power bot
+				new V2D(62,107), // cup
+				new V2D(94,176), // glass tip left
+				new V2D(131,166), // glass tip right
+			];
+var pointsB = [
+				new V2D(87,192),
+				new V2D(170,178),
+				new V2D(212,46),
+				new V2D(50,149),
+				new V2D(278,241),
+				new V2D(52,179), // left
+				new V2D(64,172), // right//new V2D(18,225), // right
+				new V2D(94,124), 
+				new V2D(225,98), // face BL
+				new V2D(221,80), // glasses TL
+				new V2D(246,95), // glasses TR
+				new V2D(250,121),
+				new V2D(214,139), // tow left
+				new V2D(237,150), // toe right
+				new V2D(213,106), // brick
+				new V2D(180,252), // 12
+				new V2D(245,271), // 16
+				new V2D(131,193), // glasses center
+				new V2D(213,12), // grid top
+				new V2D(177,26), // grid TL
+				new V2D(239,33), // grid TR
+				new V2D(180,61), // grid BL
+				new V2D(202,83), // grid bot
+				new V2D(282,251), // U
+				new V2D(256,225), // tail
+				new V2D(187,153), // base left
+				new V2D(245,173), // base right
+				new V2D(290,240), // nose
+				new V2D(150,63), // power top
+				new V2D(155,100), // power bot
+				new V2D(85,92), // cup
+				new V2D(113,138), // glass tip left
+				new V2D(145,132), // glass tip right
+			];
+var pointsAin = pointsA;
+var pointsBin = pointsB;
+
+	var pointsA = [];
+	var pointsB = [];
+	for(i=0; i<pointsAin.length; ++i){
+		pointsA[i] = new V3D(pointsAin[i].x,pointsAin[i].y,1.0);
+		pointsB[i] = new V3D(pointsBin[i].x,pointsBin[i].y,1.0);
+	}
+	
+	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	var pA = pointsANorm.normalized[0];
+	var pB = pointsBNorm.normalized[0];
+
+	
+
+	var Fnrm = R3D.fundamentalMatrix(pA,pB);
+	var Floc = Fnrm.copy();
+	Floc = Matrix.mult(Floc, pointsANorm.forward[0]);
+	Floc = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), Floc);
+
+	console.log(Floc+"");
+
+
+	var error = R3D._gdFun([pointsA,pointsB], Floc.toArray(), false);
+	var averageError = error/pointsA.length;
+	console.log("1 F AVG ERROR: "+error+" == "+averageError);
+var errorA = averageError;
+
+
+	
+	
+	var Fnext = Fnrm;
+	//var Fnext = R3D.fundamentalMatrixNonlinearGD(Fnrm, pA, pB);
+	//Fnext = R3D.forceRank2F(Fnext);
+//try{
+	for(i=0; i<3; ++i){
+		//console.log("LM");
+		Fnext = R3D.fundamentalMatrixNonlinearLM(Fnext, pA, pB);
+		//console.log("GD");
+		Fnext = R3D.fundamentalMatrixNonlinearGD(Fnext, pA, pB);
+	}
+// }catch(e){
+// 	console.log("??? "+e);
+// }
+	//Fnext = R3D.forceRank2F(Fnext);
+
+	// GD: 0.8771833241544938
+	// LM: 0.9928658790461447
+	// GD+LM: 0.87718
+	// LM+GD: 0.876840
+	// 2x.  : 0.8727416521415238
+	// 10x. : 0.871342
+	// 0.8702023724746977
+	//Fnext = R3D.forceRank2F(Fnext);
+	Floc = Fnext.copy();
+	Floc = Matrix.mult(Floc, pointsANorm.forward[0]);
+	Floc = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), Floc);
+	console.log(Floc+"");
+
+
+
+
+	var error = R3D._gdFun([pointsA,pointsB], Floc.toArray(), false);
+	var averageError = error/pointsA.length;
+	console.log("2 F AVG ERROR: "+error+" == "+averageError);
+var errorB = averageError;
+	
+	console.log(" DELTA ERROR: "+(errorB/errorA));
+	return;
+*/
+/*
 	console.log(Code.appendToPath("a","b","c") );
 	console.log(Code.appendToPath("a","b") );
 	console.log(Code.appendToPath("/","a") );
