@@ -12,7 +12,6 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 /*
-
 	var pointsA = [
 				new V2D(86,208), // glasses corner left
 				new V2D(190,180), // glasses corner right
@@ -119,13 +118,15 @@ var errorA = averageError;
 	var Fnext = Fnrm;
 	//var Fnext = R3D.fundamentalMatrixNonlinearGD(Fnrm, pA, pB);
 	//Fnext = R3D.forceRank2F(Fnext);
-//try{
+
 	for(i=0; i<3; ++i){
 		//console.log("LM");
 		Fnext = R3D.fundamentalMatrixNonlinearLM(Fnext, pA, pB);
 		//console.log("GD");
 		Fnext = R3D.fundamentalMatrixNonlinearGD(Fnext, pA, pB);
 	}
+
+//	Fnext = R3D.fundamentalMatrixNonlinearGD(Fnext, pA, pB);
 // }catch(e){
 // 	console.log("??? "+e);
 // }
@@ -139,6 +140,7 @@ var errorA = averageError;
 	// 10x. : 0.871342
 	// 0.8702023724746977
 	//Fnext = R3D.forceRank2F(Fnext);
+	//  0.8711342044146368
 	Floc = Fnext.copy();
 	Floc = Matrix.mult(Floc, pointsANorm.forward[0]);
 	Floc = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), Floc);
@@ -155,6 +157,8 @@ var errorB = averageError;
 	console.log(" DELTA ERROR: "+(errorB/errorA));
 	return;
 */
+
+
 /*
 	console.log(Code.appendToPath("a","b","c") );
 	console.log(Code.appendToPath("a","b") );

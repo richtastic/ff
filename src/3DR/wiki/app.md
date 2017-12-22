@@ -203,12 +203,13 @@ APP TODO:
 
 - corner feature size should be based on something ...
 
-
-- TRIPLE ALGORITHM
-
-- visualize triple matches
+- TRIPLE ALGORITHM REFINEMENT
+	- scale, rotation
 
 - BUNDLE AJUST ALGORITHM
+
+- revisit matching feature scoring ... SIFT / SAD / ...
+	> still have bad matches in triple
 
 - roll up medium code into R3D fxn
 - roll up dense code into R3D fxn

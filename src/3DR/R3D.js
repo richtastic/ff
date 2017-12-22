@@ -11026,6 +11026,13 @@ if(bestMatches.length>500){
 	*/
 }
 
+R3D.fundamentalNormalize = function(F, matrixA, matrixB){
+	var fNorm = F;
+	fNorm = Matrix.mult(fNorm, matrixA);
+	fNorm = Matrix.mult(matrixB, fNorm);
+	return fNorm;
+}
+
 R3D.lineFromF = function(FA,pointA){
 	var matrixFfwd = FA;
 	pointA = new V3D(pointA.x,pointA.y,1.0);
@@ -11038,10 +11045,21 @@ R3D.lineFromF = function(FA,pointA){
 }
 
 // FIND MATCHES SAME IN A | B | C
-R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC){ // TODO: allow reversed?
+R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA, imageMatrixB, imageMatrixC){// inverseA, inverseB, inverseC){ // TODO: allow any direction to be reversed
+	console.log("triplePointMatches ....");
+	// // inversing
+	// if(inverseA){
+	// 	// ?
+	// }
+	// if(inverseB){
+	// 	// ?
+	// }
+	// if(inverseC){
+	// 	// ?
+	// }
+	// A->B B->C C->A : (A->B),inv(C->A),B->C
 	// viewA, viewB, viewC,
-	console.log(matchesAB);
-	console.log(matchesAC);
+	var i, j, k;
 	var sizeABFr = matchesAB["fromSize"];
 	var sizeABTo = matchesAB["toSize"];
 	var sizeACFr = matchesAC["fromSize"];
@@ -11050,25 +11068,223 @@ R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC){ // TODO: all
 	var sizeBCTo = matchesBC["toSize"];
 		sizeABFr = new V2D(sizeABFr["x"],sizeABFr["y"]);
 		sizeABTo = new V2D(sizeABTo["x"],sizeABTo["y"]);
+		sizeACFr = new V2D(sizeACFr["x"],sizeACFr["y"]);
+		sizeACTo = new V2D(sizeACTo["x"],sizeACTo["y"]);
+		sizeBCFr = new V2D(sizeBCFr["x"],sizeBCFr["y"]);
+		sizeBCTo = new V2D(sizeBCTo["x"],sizeBCTo["y"]);
 		// 
-	var sizeA = V2D.max(sizeABFr,sizeABTo);
-	// 
+	var sizeA = V2D.max(sizeABFr,sizeACFr);
+	var sizeB = V2D.max(sizeABTo,sizeBCFr);
+	var sizeC = V2D.max(sizeACTo,sizeBCTo);
+	var ratioWidHeiA = sizeA.x / sizeA.y;
+	var ratioWidHeiB = sizeB.x / sizeB.y;
+	var ratioWidHeiC = sizeC.x / sizeC.y;
+	var sizeAWidth = 1.0;
+	var sizeAHeight = 1.0/ratioWidHeiA;
+	var sizeBWidth = 1.0;
+	var sizeBHeight = 1.0/ratioWidHeiB;
+	var sizeCWidth = 1.0;
+	var sizeCHeight = 1.0/ratioWidHeiC;
+	// normalize to width = 1, height = x
+	sizeA.scale(1.0/sizeA.x);
+	sizeB.scale(1.0/sizeB.x);
+	sizeC.scale(1.0/sizeC.x);
+	// F
 	var Fab = new Matrix().loadFromObject(matchesAB["F"]);
 	var Fac = new Matrix().loadFromObject(matchesAC["F"]);
 	var Fbc = new Matrix().loadFromObject(matchesBC["F"]);
-
-	// scale up F to be correct ratio -- width = 1
-	HERE ...
-			Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
-			Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
-	// find all matches within same % of A / B / C = 
+	var FabNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeAWidth,sizeAHeight),  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeBWidth,sizeBHeight));
+	var FacNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeAWidth,sizeAHeight),  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeCWidth,sizeCHeight));
+	var FbcNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeBWidth,sizeBHeight),  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeCWidth,sizeCHeight));
+	// points:
+	var matchesABReg = matchesAB["matches"];
+	var matchesACReg = matchesAC["matches"];
+	var matchesBCReg = matchesBC["matches"];
+	var matchesABNorm = R3D.matchObjectToLocal(matchesABReg, sizeAWidth,sizeAHeight, sizeBWidth,sizeBHeight);
+	var matchesACNorm = R3D.matchObjectToLocal(matchesACReg, sizeAWidth,sizeAHeight, sizeCWidth,sizeCHeight);
+	var matchesBCNorm = R3D.matchObjectToLocal(matchesBCReg, sizeBWidth,sizeBHeight, sizeCWidth,sizeCHeight);
+	// 
+	var maximumDistanceError = 0.1; // 1%
+	// .1 = 298 [some wrong]
+	// .01 = 201 [few wrong]
+	// .001 = 141 [few wrong]
+	// .0001 = 141
+	var spaceA_ac = new QuadTree(R3D._matchToPointFrom, new V2D(0,0), new V2D(sizeBWidth,sizeBHeight));
+	var spaceB_bc = new QuadTree(R3D._matchToPointFrom, new V2D(0,0), new V2D(sizeBWidth,sizeBHeight));
+	// fill in spaces
+	for(i=0; i<matchesACNorm.length; ++i){ 	
+		var matchAC = matchesACNorm[i];
+		spaceA_ac.insertObject(matchAC);
+	}
+	for(i=0; i<matchesBCNorm.length; ++i){ 	
+		var matchBC = matchesBCNorm[i];
+		spaceB_bc.insertObject(matchBC);
+	}
+	var triples = [];
+	for(i=0; i<matchesABNorm.length; ++i){ // for all A in A->B
+		var bestTripleMatch = null;
+		var bestTripleDistance = null;
+		var matchAB = matchesABNorm[i];
+		var A_ab = matchAB["from"];
+		var B_ab = matchAB["to"];
+		var closestAC_A = spaceA_ac.objectsInsideCircle(A_ab, maximumDistanceError);
+		for(j=0; j<closestAC_A.length; ++j){
+			var matchAC = closestAC_A[j];
+			var A_ac = matchAC["from"];
+			var C_ac = matchAC["to"];
+			var closestBC_B = spaceB_bc.objectsInsideCircle(B_ab, maximumDistanceError);
+			for(k=0; k<closestBC_B.length; ++k){
+				var matchBC = closestBC_B[k];
+				var B_bc = matchBC["from"];
+				var C_bc = matchBC["to"];
+				var distA = V2D.distance(A_ab, A_ac);
+				var distB = V2D.distance(B_ab, B_bc);
+				var distC = V2D.distance(C_ac, C_bc);
+				var distance = distA*distA + distB*distB + distC*distC;
+				if(distA<maximumDistanceError && distB<maximumDistanceError && distC<maximumDistanceError){
+					if( (!bestTripleMatch || distance<bestTripleDistance) ){//&& distance<maximumDistanceError){
+						bestTripleDistance = distance;
+						bestTripleMatch = {"AB":matchAB, "AC":matchAC, "BC":matchBC, "score":distance};
+					}
+				}
+			}
+		}
+		if(bestTripleMatch){
+			triples.push(bestTripleMatch);
+		}
+	}
+	console.log("TRIPLES: "+triples.length);
+	// REMOVE DUPLICATES & NON-UNIQUE
+	// => discard any matches where all points are not unique [& discard duplicates if all points are unique] V2D.equal epsilon
+	// for(i=0; i<triples.length; ++i){
+	// 	var triple = triples[i];
+	// 	var matchAB = triple["AB"];
+	// 	var matchAC = triple["AC"];
+	// 	var matchBC = triple["BC"];
+	// 	var A_ab = matchAB["from"];
+	// 	var B_ab = matchAB["to"];
+	// 	var A_ac = matchAC["from"];
+	// 	var C_ac = matchAC["to"];
+	// 	var B_bc = matchBC["from"];
+	// 	var C_bc = matchBC["to"];
+	// }
+	// sort by best score:
+	triples = triples.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	});
+	// return in triple-point set form
 	var pointsA = [];
 	var pointsB = [];
 	var pointsC = [];
+	for(i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var matchAB = triple["AB"];
+		var matchAC = triple["AC"];
+		var matchBC = triple["BC"];
+		var A_ab = matchAB["from"];
+		var B_ab = matchAB["to"];
+		var A_ac = matchAC["from"];
+		var C_ac = matchAC["to"];
+		var B_bc = matchBC["from"];
+		var C_bc = matchBC["to"];
+		var A = V2D.avg(A_ab,A_ac);
+		var B = V2D.avg(B_ab,B_bc);
+		var C = V2D.avg(C_ac,C_bc);
+		// revert to 1:1 scaling
+		A.scale(1.0/sizeAWidth,1.0/sizeAHeight);
+		B.scale(1.0/sizeBWidth,1.0/sizeBHeight);
+		C.scale(1.0/sizeCWidth,1.0/sizeCHeight);
+		pointsA.push(A);
+		pointsB.push(B);
+		pointsC.push(C);
+	}
+	// REMOVE DUPLICATES & NON-UNIQUE
+	// => discard any matches where all points are not unique [& discard duplicates if all points are unique] V2D.equal epsilon
+	for(i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pointC = pointsC[i];
+	}
+
+	// TODO: REFINE exact points based on SAD score of a/b/c locations => need imagaes
+	if(imageMatrixA && imageMatrixB && imageMatrixC){
+		console.log("refine points from matrices");
+		var compareSize = 11;
+		// need angle and scale 
+		// scale points up to imageMatrix
+		// extract blocks
+		// score
+		R3D._costTripleFeatures(blockA, blockB, blockB);
+		// do another score rejection if too bad ? Dense.SAD SCORE ?
+	}
+	
+	/*
+	for each A->B : A_ab, B_ab
+		B_bc = closest point(s) to B_ab from B->C, [inside maximum error radius]
+		C_bc = B_bc.opposite
+		C_ac = closest point(s) to A_ac from A->C, [inside maximum error radius]
+		A_ac = C_ac.opposite
+		
+		valid match:
+			dist(A_ab,A_ac)
+			dist(B_ab,B_bc)
+			dist(C_ac,C_bc)
+			< max error 
+			=> pick valid match with minimum error
+	=> discard any matches where all points are not unique [& discard duplicates if all points are unique] V2D.equal epsilon
+	*/
+
+	
+
+	// find all matches within same % of A / B / C = 
+	
 	return {"A":pointsA, "B":pointsB, "C":pointsC};
+}
+R3D._matchToPointFrom = function(match){
+	return match["from"];
+}
+
+R3D.matchObjectToLocal = function(matchesABReg, sXfr,sYfr, sXto,sYto, invert){
+	sXfr = sXfr!==undefined ? sXfr : 1.0;
+	sYfr = sYfr!==undefined ? sYfr : 1.0;
+	sXto = sXto!==undefined ? sXto : 1.0;
+	sYto = sYto!==undefined ? sYto : 1.0;
+	invert = invert!==undefined ? invert : false;
+	var matchesABNorm = [];
+	var point2DFr, point2DTo, fr, to, frS, toS, frA, toA;
+	for(i=0; i<matchesABReg.length; ++i){
+		var match = matchesABReg[i];
+		fr = match["fr"];
+		to = match["to"];
+		frS = fr["s"];
+		frA = fr["a"];
+		toS = to["s"];
+		toA = to["a"];
+		point2DFr = new V2D(fr["x"],fr["y"]);
+		point2DTo = new V2D(to["x"],to["y"]);
+		point2DFr.scale(sXfr,sYfr);
+		point2DTo.scale(sXto,sYto);
+		if(invert){
+			var temp = point2DFr;
+			point2DFr = point2DTo;
+			point2DTo = temp;
+		}
+		matchesABNorm.push({"from":point2DFr,"to":point2DTo, "fromScale":frS, "fromAngle":frA, "toScale":toS, "toAngle":toA});
+	}
+	return matchesABNorm;
 }
 
 
+R3D._costTripleFeatures = function(patchA,patchB,patchC){
+	var cost = 0;
+	// A-B, A-C, B-C SAD scores
+	var scoreAB = 0;
+	var scoreBC = 0;
+	var scoreAC = 0;
+	var score = scoreAB*scoreAB + scoreBC*scoreBC + scoreAC*scoreAC
+	cost = score;
+	return cost;
+}
 
 
 

@@ -1699,47 +1699,65 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 	var currCost, nextCost;
 	var maxIterations = iter!=null ? iter : 50;
 	var minDifference = diff!=null ? diff : 1E-10;
-	var lambda = 1.0;
-	var scaler = 10.0;
+	var lambda = 1.0/epsilon; // start at on par with 1.0
+	var scaler = 2.0; // smaller is more accurate, larger is quicker initially
+	var nextX = Code.newArrayZeros(sizeX);
+	var prevX = Code.copyArray(x); // local instance of x
+	var dy = Code.newArrayZeros(sizeX);
+	var tx = Code.newArrayZeros(sizeX);
+	// TODO: individual epsilon for each variable
 	if(!dx){
 		dx = Code.newArrayZeros(sizeX);
 		for(i=0; i<sizeX; ++i){
 			dx[i] = epsilon;
 		}
 	}
-	var dy = Code.newArrayZeros(sizeX);
-	var tx = Code.newArrayZeros(sizeX);
 	for(k=0; k<maxIterations; ++k){
 		for(i=0; i<sizeX; ++i){
-			Code.copyArray(tx,x);
+			Code.copyArray(tx,prevX);
 			tx[i] += dx[i];
 			c = fxn(args, tx);
 			dy[i] = c - cost;
 			tx[i] = 0;
 		}
-		var nextX = Code.newArrayZeros(sizeX);
+
+		// initial best guess:
 		for(i=0; i<sizeX; ++i){
-			nextX[i] = x[i] - lambda*dy[i];
+			nextX[i] = prevX[i] - lambda*dy[i];
 		}
 		var newCost = fxn(args, nextX);
-		//console.log(cost+" vs "+newCost);
-		if(newCost<cost){
-			//console.log("better: "+(cost-newCost)+" < "+minDifference);
-			if(cost-newCost<minDifference){
-				// console.log("cost quit");
-				break;
-			}
-			cost = newCost;
-			x = nextX;
-			fxn(args,x, true);
-			lambda *= scaler;
-		}else{
+		// scale down lambda as necessary:
+		var iter = 10;
+		while(newCost>=cost && iter>0){
 			lambda /= scaler;
+			for(i=0; i<sizeX; ++i){
+				nextX[i] = prevX[i] - lambda*dy[i];
+			}
+			newCost = fxn(args, nextX);
+			--iter;
+		}
+
+		// should be good by now, following gradient
+		//console.log(k+" update: "+cost+" => "+newCost+" @ "+lambda);
+		var diffCost = Math.abs(newCost-cost);
+		if(newCost<cost){
+			cost = newCost;
+			var temp = prevX;
+			prevX = nextX;
+			nextX = temp;
+			fxn(args,prevX, true);
+			lambda *= scaler;
+		}else{ // should not happen much
+			lambda /= scaler;
+		}
+		if(diffCost<minDifference){
+			break;
 		}
 	}
 	if(k==maxIterations){
 		// console.log("iteration quit");
 	}
+	Code.copyArray(x,prevX);
 	return {"x":x,"cost":cost};
 }
 // https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/
