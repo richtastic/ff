@@ -165,6 +165,52 @@ FOR EACH MINIMIZING ERROR ITERATION:
 
 
 
+### tensors:
+
+summation rules:
+<br/>
+only over indices that appear twice in the equation -- indices only appearing once are for offset placeholding
+
+
+matrix multiplication:
+<br/>
+u<sub>n&times;1</sub> = A<sub>n&times;m</sub>&middot; v<sub>m&times;1</sub>
+<br/>
+
+u<sub>i</sub> = &Sum;<sub>j&in;[1,m]</sub> A<sub>i,j</sub> &middot; v<sub>j</sub> ; (i &in;[1,n])
+<br/>
+<br/>
+
+
+<br/>
+dot product: u &middot; v = u<sub>i</sub> v<sup>i</sup>
+<br/>
+cross product: (u &times; v)<sub>i</sub> = &epsilon;<sub>ijk</sub> u<sup>i</sup> v<sup>k</sup>
+<br/>
+permutation tensor: &epsilon;<sub>ijk</sub> = [x<sub>i</sub>,x<sub>j</sub>,x<sub>k</sub>]
+<br/>
+<br/>
+<br/>
+
+
+
+scalar, vector, dyad, triad
+
+
+
+
+
+
+
+
+
+### trifocal tensor:
+
+
+
+
+
+
 
 
 

@@ -7625,6 +7625,45 @@ Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
 }
 
+Code.dropOutliers = function(list, valueFxn, sigmas){
+	if(list.length<=1){
+		return {"outliers":[], "inliers":Code.copyArray(list)};
+	}
+	var mean = 0;
+	var sigma = 0;
+	var i;
+	var value;
+	var count = list.length;
+	var values = [];
+	for(i=0; i<count; ++i){
+		var item = list[i];
+		value = valueFxn(item);
+		values[i] = value;
+		mean += value;
+	}
+	mean /= count;
+	for(i=0; i<count; ++i){
+		value = values[i];
+		sigma += Math.pow(value - mean,2);
+	}
+	sigma = Math.sqrt( sigma / count );
+	console.log("sigma: "+sigma);
+	var maxValue = sigmas * sigma;
+	var keep = [];
+	var outliers = [];
+	for(i=0; i<count; ++i){
+		value = values[i] - mean;
+//		console.log("i: "+values[i]+" / "+mean+" = |"+value+"|  <?<  "+maxValue);
+		if( Math.abs(value) < maxValue){
+//			console.log(". YES: "+value+" < "+maxValue);
+			keep.push(list[i]);
+		}else{
+			outliers.push(list[i]);
+		}
+	}
+	return {"outliers":outliers, "inliers":keep};
+}
+
 Code.histogram = function(data, masking, buckets){
 	var value, i, bin, len = data.length;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));

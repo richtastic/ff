@@ -971,6 +971,30 @@ R3D.cameraMatricesFromF = function(F){
 	var camA = new Matrix(4,4).identity();
 	return {A:camA, B:camB};
 }
+
+// ------------------------------------------------------------------------------------------- trifocal tensor
+R3D.trifocalTensor = function(pointsA,pointsB,pointsC){
+
+	// ???
+
+	// if(pointsA.length<8){ return null; }
+	// var i, a, b, svd, U, S, V, len = pointsA.length, F = new Matrix(3,3), A = new Matrix(len,9);
+	// for(i=0;i<len;++i){
+	// 	a = pointsA[i];
+	// 	b = pointsB[i];
+	// 	var az = a.z ? a.z : 1.0;
+	// 	var bz = b.z ? b.z : 1.0;
+	// 	A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
+	// 	//A.setRowFromArray(i,[a.x*b.x, a.x*b.y, a.x*bz, a.y*b.x, a.y*b.y, a.y*bz, az*b.x, az*b.y, az*bz]);
+	// }
+	// svd = Matrix.SVD(A);
+	// U = svd.U;
+	// S = svd.S;
+	// V = svd.V;
+	// F.setFromArray( V.colToArray(8) );
+	// F = R3D.forceRank2F(F);
+	// return F;
+}
 // ------------------------------------------------------------------------------------------- rectification
 R3D.angleInLimits = function(angle,min,max){
 	while(angle<min){
@@ -4921,6 +4945,16 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 			ptsB.push( matchesBest[i]["B"]["point"] );
 		}
 		var Fnext = R3D.fundamentalRefineFromPoints(ptsA,ptsB, matrixFfwd);
+/*
+TOOD: FIND OUTLIERS
+
+DISCARD OUTLIERS
+
+RECOMPUTE F ..
+
+... until equlibrium ?
+*/
+
 
 		var error = R3D.fundamentalMatrixError(Fnext, ptsA, ptsB);
 		var errorAvg = error/ptsA.length;
@@ -11045,18 +11079,10 @@ R3D.lineFromF = function(FA,pointA){
 }
 
 // FIND MATCHES SAME IN A | B | C
-R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA, imageMatrixB, imageMatrixC){// inverseA, inverseB, inverseC){ // TODO: allow any direction to be reversed
+R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA, imageMatrixB, imageMatrixC){
+	// TODO: REVERSE SHOULD BE DONE OUTSIDE THIS FXN
+	// inverseA, inverseB, inverseC){ // TODO: allow any direction to be reversed
 	console.log("triplePointMatches ....");
-	// // inversing
-	// if(inverseA){
-	// 	// ?
-	// }
-	// if(inverseB){
-	// 	// ?
-	// }
-	// if(inverseC){
-	// 	// ?
-	// }
 	// A->B B->C C->A : (A->B),inv(C->A),B->C
 	// viewA, viewB, viewC,
 	var i, j, k;
@@ -11085,10 +11111,13 @@ R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA,
 	var sizeBHeight = 1.0/ratioWidHeiB;
 	var sizeCWidth = 1.0;
 	var sizeCHeight = 1.0/ratioWidHeiC;
+	var imageSizeA = sizeA.copy();
+	var imageSizeB = sizeB.copy();
+	var imageSizeC = sizeC.copy();
 	// normalize to width = 1, height = x
-	sizeA.scale(1.0/sizeA.x);
-	sizeB.scale(1.0/sizeB.x);
-	sizeC.scale(1.0/sizeC.x);
+	// sizeA.scale(1.0/sizeA.x);
+	// sizeB.scale(1.0/sizeB.x);
+	// sizeC.scale(1.0/sizeC.x);
 	// F
 	var Fab = new Matrix().loadFromObject(matchesAB["F"]);
 	var Fac = new Matrix().loadFromObject(matchesAC["F"]);
@@ -11153,29 +11182,14 @@ R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA,
 			triples.push(bestTripleMatch);
 		}
 	}
-	console.log("TRIPLES: "+triples.length);
+	console.log("ORIGINAL TRIPLES: "+triples.length);
 	// REMOVE DUPLICATES & NON-UNIQUE
-	// => discard any matches where all points are not unique [& discard duplicates if all points are unique] V2D.equal epsilon
-	// for(i=0; i<triples.length; ++i){
-	// 	var triple = triples[i];
-	// 	var matchAB = triple["AB"];
-	// 	var matchAC = triple["AC"];
-	// 	var matchBC = triple["BC"];
-	// 	var A_ab = matchAB["from"];
-	// 	var B_ab = matchAB["to"];
-	// 	var A_ac = matchAC["from"];
-	// 	var C_ac = matchAC["to"];
-	// 	var B_bc = matchBC["from"];
-	// 	var C_bc = matchBC["to"];
-	// }
 	// sort by best score:
 	triples = triples.sort(function(a,b){
 		return a["score"] < b["score"] ? -1 : 1;
 	});
 	// return in triple-point set form
-	var pointsA = [];
-	var pointsB = [];
-	var pointsC = [];
+	var betters = [];
 	for(i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var matchAB = triple["AB"];
@@ -11194,66 +11208,998 @@ R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA,
 		A.scale(1.0/sizeAWidth,1.0/sizeAHeight);
 		B.scale(1.0/sizeBWidth,1.0/sizeBHeight);
 		C.scale(1.0/sizeCWidth,1.0/sizeCHeight);
-		pointsA.push(A);
-		pointsB.push(B);
-		pointsC.push(C);
-	}
-	// REMOVE DUPLICATES & NON-UNIQUE
-	// => discard any matches where all points are not unique [& discard duplicates if all points are unique] V2D.equal epsilon
-	for(i=0; i<pointsA.length; ++i){
-		var pointA = pointsA[i];
-		var pointB = pointsB[i];
-		var pointC = pointsC[i];
-	}
+		triple["A"] = A;
+		triple["B"] = B;
+		triple["C"] = C;
+		// angles
+		var angleA_ab = matchAB["fromAngle"];
+		var angleA_ac = matchAC["fromAngle"];
+		var angleB_ab = matchAB["toAngle"];
+		var angleB_bc = matchBC["fromAngle"];
+		var angleC_ac = matchAC["toAngle"];
+		var angleC_bc = matchBC["toAngle"];
+		var angleA = Code.averageAngles([angleA_ab,angleA_ac],[0.5,0.5]);
+		var angleB = Code.averageAngles([angleB_ab,angleB_bc],[0.5,0.5]);
+		var angleC = Code.averageAngles([angleC_ac,angleC_bc],[0.5,0.5]);
+		// HIGH VARIABILITY IN ANGLES ...
+		// console.log( Code.degrees( Code.minAngle(angleA,angleA_ab) ) + " | " + Code.degrees( Code.minAngle(angleA,angleA_ac) ) );
+		// console.log(Code.degrees(angleA_ab), Code.degrees(angleA_ac), Code.degrees(angleA) );
+		triple["angleA"] = angleA;
+		triple["angleB"] = angleB;
+		triple["angleC"] = angleC;
+		// sizes/scales:
+		var sizeA_ab = matchAB["fromSize"];
+		var sizeA_ac = matchAC["fromSize"];
+		var sizeB_ab = matchAB["toSize"];
+		var sizeB_bc = matchBC["fromSize"];
+		var sizeC_ac = matchAC["toSize"];
+		var sizeC_bc = matchBC["toSize"];
+		var sizeA = (sizeA_ab+sizeA_ac)*0.5;
+		var sizeB = (sizeB_ab+sizeB_bc)*0.5;
+		var sizeC = (sizeC_ac+sizeC_bc)*0.5;
+		// HIGH VARIABILITY IN ANGLES ...
+		// console.log(sizeA_ab/sizeA, sizeA_ac/sizeA);
+		triple["sizeA"] = sizeA;
+		triple["sizeB"] = sizeB;
+		triple["sizeC"] = sizeC;
 
-	// TODO: REFINE exact points based on SAD score of a/b/c locations => need imagaes
+
+		var maxDiffAngle = Code.radians(10.0);
+		var maxDiffAngleA = Math.max( Code.minAngle(angleA,angleA_ab) , Code.minAngle(angleA,angleA_ac) );
+		var maxDiffAngleB = Math.max( Code.minAngle(angleB,angleB_ab) , Code.minAngle(angleB,angleB_bc) );
+		var maxDiffAngleC = Math.max( Code.minAngle(angleC,angleC_ac) , Code.minAngle(angleC,angleC_bc) );
+		var maxDiffSize = 1.25;
+		var maxDiffSizeA = Math.max( sizeA_ab/sizeA_ac, sizeA_ac/sizeA_ab );
+		var maxDiffSizeB = Math.max( sizeB_ab/sizeB_bc, sizeB_bc/sizeB_ab );
+		var maxDiffSizeC = Math.max( sizeC_ac/sizeC_bc, sizeC_bc/sizeC_ac );
+		/// yes
+		if(maxDiffAngleA<maxDiffAngle && maxDiffAngleB<maxDiffAngle && maxDiffAngleB<maxDiffAngle && 
+			maxDiffSizeA<maxDiffSize && maxDiffSizeB<maxDiffSize && maxDiffSizeC<maxDiffSize){
+			betters.push(triple);
+		}
+
+	}
+	console.log("betters: "+betters.length);
+triples = betters;
+	// REMOVE DUPLICATES & NON-UNIQUE
+	var sameEpsilon = 1E-6;
+	var removeTriples = Code.newArrayOnes(triples.length);
+	for(i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var A = triple["A"];
+		var B = triple["B"];
+		var C = triple["C"];
+		for(j=i+1; j<triples.length; ++j){
+			var other = triples[j];
+			var X = other["A"];
+			var Y = other["B"];
+			var Z = other["C"];
+			var sameA = V2D.distance(A,X) < sameEpsilon;
+			var sameB = V2D.distance(B,Y) < sameEpsilon;
+			var sameC = V2D.distance(C,Z) < sameEpsilon;
+			var isDuplicate = sameA && sameB && sameC;
+			var isCommon = sameA || sameB || sameC;
+			var isConflicting = isCommon && !isDuplicate;
+			if(isConflicting){ // mark both for removal
+				//console.log("CONFLICT: "+sameA+" | "+sameB+" | "+sameC+"");
+				removeTriples[i] = 0;
+				removeTriples[j] = 0;
+			}
+			if(isDuplicate){ // mark subsequent duplicate as removal
+				//console.log("DUPLICATE");
+				removeTriples[j] = 0;
+			}
+		}
+	}
+	var keepTriples = [];
+	for(i=0; i<triples.length; ++i){
+		if(removeTriples[i]==1){
+			keepTriples.push(triples[i]);
+		}
+	}
+	triples = keepTriples;
+	console.log("KEEP: "+triples.length);
+	// TODO: REFINE exact points based on SAD score of a/b/c locations => need images
 	if(imageMatrixA && imageMatrixB && imageMatrixC){
+		var sizeImageA = new V2D(imageMatrixA.width(),imageMatrixA.height());
+		var sizeImageB = new V2D(imageMatrixB.width(),imageMatrixB.height());
+		var sizeImageC = new V2D(imageMatrixC.width(),imageMatrixC.height());
 		console.log("refine points from matrices");
 		var compareSize = 11;
+var errors = [];
+var keeps = [];
+var discards = [];
+var results = [];
+		for(i=0; i<triples.length; ++i){
+			var triple = triples[i];
+			var pointA = triple["A"];
+			var pointB = triple["B"];
+			var pointC = triple["C"];
+			var angleA = triple["angleA"];
+			var angleB = triple["angleB"];
+			var angleC = triple["angleC"];
+			var sizeA = triple["sizeA"];
+			var sizeB = triple["sizeB"];
+			var sizeC = triple["sizeC"];
+			// to image sizes:
+			pointA = pointA.copy().scale(sizeImageA.x,sizeImageA.y);
+			pointB = pointB.copy().scale(sizeImageB.x,sizeImageB.y);
+			pointC = pointC.copy().scale(sizeImageC.x,sizeImageC.y);
+			sizeA = sizeA*sizeImageA.x;
+			sizeB = sizeB*sizeImageB.x;
+			sizeC = sizeC*sizeImageC.x;
+			
+			var matchAB = triple["AB"];
+			var matchAC = triple["AC"];
+			var matchBC = triple["BC"];
+			var pointA_ab = matchAB["from"];
+			var pointB_ab = matchAB["to"];
+			var pointA_ac = matchAC["from"];
+			var pointC_ac = matchAC["to"];
+			var pointB_bc = matchBC["from"];
+			var pointC_bc = matchBC["to"];
+
+			pointA_ab = pointA_ab.copy().scale(sizeImageA.x,sizeImageA.y);
+			pointA_ac = pointA_ac.copy().scale(sizeImageA.x,sizeImageA.y);
+			pointB_ab = pointB_ab.copy().scale(sizeImageB.x,sizeImageB.y);
+			pointB_bc = pointB_bc.copy().scale(sizeImageB.x,sizeImageB.y);
+			pointC_ac = pointB_ab.copy().scale(sizeImageC.x,sizeImageC.y);
+			pointC_bc = pointB_bc.copy().scale(sizeImageC.x,sizeImageC.y);
+
+			var angleA_ab = matchAB["fromAngle"];
+			var sizeA_ab = matchAB["fromSize"];
+			var angleB_ab = matchAB["toAngle"];
+			var sizeB_ab = matchAB["toSize"];
+
+			var angleA_ac = matchAC["fromAngle"];
+			var sizeA_ac = matchAC["fromSize"];
+			var angleC_ac = matchAC["toAngle"];
+			var sizeC_ac = matchAC["toSize"];
+
+			var angleB_bc = matchBC["fromAngle"];
+			var sizeB_bc = matchBC["fromSize"];
+			var angleC_bc = matchBC["toAngle"];
+			var sizeC_bc = matchBC["toSize"];			
+
+			var scale, sigma, size, angle, point;
+			var cellScale = 1.0;
+			var matrix;
+
+
+var maxDiffAngle = Code.radians(10.0);
+var maxDiffAngleA = Math.max( Code.minAngle(angleA,angleA_ab) , Code.minAngle(angleA,angleA_ac) );
+var maxDiffAngleB = Math.max( Code.minAngle(angleB,angleB_ab) , Code.minAngle(angleB,angleB_bc) );
+var maxDiffAngleC = Math.max( Code.minAngle(angleC,angleC_ac) , Code.minAngle(angleC,angleC_bc) );
+var maxDiffSize = 1.25;
+var maxDiffSizeA = Math.max( sizeA_ab/sizeA_ac, sizeA_ac/sizeA_ab );
+var maxDiffSizeB = Math.max( sizeB_ab/sizeB_bc, sizeB_bc/sizeB_ab );
+var maxDiffSizeC = Math.max( sizeC_ac/sizeC_bc, sizeC_bc/sizeC_ac );
+
+
+// console.log(maxDiffAngleA);
+// if( maxDiffAngleA<Code.radians(10.0) ){
+// 	continue;
+// }
+
+// 0 : wrong == 7-8-7 	0.0224344442605242
+// 1 : wrong middle 	0.01743883893597281
+// 2 : good 			0.014616560138806195
+// 3 : off zoom 		0.006248201769017201
+// 4 : good 			0.003654337085027761
+// 5 : good 			0.0010107409792555323
+// 6 : good 			0.0018058991721905003
+// 7 : good 			0.003409693105881185
+// 8 : good 			0.010699139750851166
+// 9 : good 			0.0011513842461797837
+// 10: good 			0.0022480295907990233
+// 11: good 			0.0026341516460159256
+// 12: good 			0.004051700813904366
+// 13: good 			0.004132173292212899
+// 14: good 			0.001820986409520576
+// 15: off zoom 		0.18979515039463074
+// 16: good 			0.0016615966004023554
+// 17: good 			0.001705558845438074
+// 18: good 			0.0034109469821560646
+// 1 : 
+// if(i<18){
+// 	continue;
+// }
+
+//cellScale = 0.15;
+//cellScale = 0.5;
+//compareSize = 100;
+//cellScale = 0.25;
+cellScale = 0.5;
+//cellScale = 1.0;
+compareSize = 11;
+
+			var sigma = null;
+			var blockSize = compareSize;
+			var stage = GLOBALSTAGE;
+
+			var d;
+
+			sigma = null;
+			point = pointA_ab;//.copy().scale(sizeImageA.x,sizeImageA.y);;
+			size = sizeA_ab * sizeImageA.x;
+			angle = angleA_ab;
+		
+		// points, sizes, sizeRanges, angles, angleRanges, imageMatrixes, blockSize, cellScale){
+			var sizeRangeScale = 1.5;
+			var pts = [pointA,pointB,pointC];
+			var szs = [sizeA,sizeB,sizeC];
+			var szRs = [[0,0],[0,0],[0,0]]; //[sizeA/sizeRangeScale, sizeA*sizeRangeScale];
+
+			var ags = [angleA,angleB,angleC];
+			var agRs = [[0,0],[0,0],[0,0]];
+
+			var ims = [imageMatrixA,imageMatrixB,imageMatrixC];
+/*
+// BEFORE:
+var ss = 5.0;
+		for(var k=0; k<pts.length; ++k){
+			var p = pts[k];
+			var s = szs[k];
+			var a = ags[k];
+			var im = ims[k];
+			var block = R3D.extractTriBlock(p, s, a, im, blockSize, cellScale);
+			var stage = GLOBALSTAGE;
+			var img = R3D.imageFromImageMatrix(block, stage);
+			var d = new DOImage(img);
+			d.matrix().identity();
+			d.matrix().scale(ss);
+			d.matrix().translate(0 + ss*blockSize*k, 0);
+			GLOBALSTAGE.addChild(d);
+		}
+*/
+
+
+
+// R3D.optimumTriComparrisionBlock = function(points, sizes, sizeRanges, angles, angleRanges, imageMatrixes, blockSize, cellScale){
+		var info = R3D.optimumTriComparrisionBlock(pts, szs, szRs, ags, agRs, ims, blockSize, cellScale);
+	var error = info["error"];
+	console.log("error: "+error);
+errors.push(error);
+results.push(info);
+		var points = info["points"];
+		var sizes = info["sizes"];
+		var angles = info["angles"];
+/*
+		var pA = points[0];
+		var pB = points[1];
+		var pC = points[2];
+		var aA = angles[0];
+		var aB = angles[1];
+		var aC = angles[2];
+		var sA = sizes[0];
+		var sB = sizes[1];
+		var sC = sizes[2];
+		var iA = ims[0];
+		var iB = ims[1];
+		var iC = ims[2];
+		// console.log("DO IT");
+		// console.log(pA, sA, aA, iA);
+*/
+		// var blockA = R3D.extractTriBlock(pA, sA, aA, iA, blockSize, cellScale);
+		// var block = blockA;
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+		// var d = new DOImage(img);
+		// d.matrix().translate(0, 0);
+		// GLOBALSTAGE.addChild(d);
+/*
+// AFTER
+		var ss = 5.0;
+		for(var k=0; k<points.length; ++k){
+			var p = points[k];
+			var s = sizes[k];
+			var a = angles[k];
+			var im = ims[k];
+			var block = R3D.extractTriBlock(p, s, a, im, blockSize, cellScale);
+			var stage = GLOBALSTAGE;
+			var img = R3D.imageFromImageMatrix(block, stage);
+			var d = new DOImage(img);
+			d.matrix().identity();
+			d.matrix().scale(ss);
+			d.matrix().translate(0 + ss*blockSize*k, 100);
+			GLOBALSTAGE.addChild(d);
+		}
+*/
+		// var blockB = R3D.optimumTriComparrisionBlock();
+		// var blockC = R3D.optimumTriComparrisionBlock();
+
+		
+		// console.log(blockB);
+		// console.log(blockC);
+
+//		FINAL SCORE:
+
+
+// var blockA = R3D.extractTriBlock(pointA, sizeA, angleA, imageMatrixA, blockSize, cellScale);
+// var blockB = R3D.extractTriBlock(pointB, sizeB, angleB, imageMatrixB, blockSize, cellScale);
+// var blockC = R3D.extractTriBlock(pointC, sizeC, angleC, imageMatrixC, blockSize, cellScale);
+//if(i>24){
+if(i>130){
+//if(i>=0){
+//if(i>=24){
+	break;
+}
+		}
 		// need angle and scale 
 		// scale points up to imageMatrix
 		// extract blocks
 		// score
-		R3D._costTripleFeatures(blockA, blockB, blockB);
+//		R3D._costTripleFeatures(blockA, blockB, blockC);
 		// do another score rejection if too bad ? Dense.SAD SCORE ?
 	}
-	
-	/*
-	for each A->B : A_ab, B_ab
-		B_bc = closest point(s) to B_ab from B->C, [inside maximum error radius]
-		C_bc = B_bc.opposite
-		C_ac = closest point(s) to A_ac from A->C, [inside maximum error radius]
-		A_ac = C_ac.opposite
-		
-		valid match:
-			dist(A_ab,A_ac)
-			dist(B_ab,B_bc)
-			dist(C_ac,C_bc)
-			< max error 
-			=> pick valid match with minimum error
-	=> discard any matches where all points are not unique [& discard duplicates if all points are unique] V2D.equal epsilon
-	*/
 
+console.log(errors);
+console.log(results);
+Code.printMatlabArray(errors);
+var valueFxn = function(a){
+	var value = a["error"];
+	//return Math.exp(value); // more normal looking
+	return value; // normal distribution
+	//return a["error"];
+}
+	console.log("start: "+results.length);
+	var sigmaA = 2.0;
+	var sigmaB = 1.0;
+	var groupA = Code.dropOutliers(results, valueFxn, sigmaA);
+		var inA = groupA["inliers"];
+		var ouA = groupA["outliers"];
+	var groupB = Code.dropOutliers(inA, valueFxn, sigmaB);
+	var group = groupB;
+	console.log(groupA);
+	console.log(groupB);
 	
+	var inliers = group["inliers"];
+	var outliers = group["outliers"];
+	console.log(inliers);
+	console.log("  end: "+inliers.length);
+		Code.arrayPushArray(outliers, ouA);
 
 	// find all matches within same % of A / B / C = 
-	
-	return {"A":pointsA, "B":pointsB, "C":pointsC};
+
+	// DISPLAY ALL INLIERS AND OUTLIERS
+	var cellScale = 0.5;
+	var blockSize = 11;
+	var ss = 4.0;
+	var dispayLists = [inliers,outliers];
+	for(var j=0; j<dispayLists.length; ++j){
+		var array = dispayLists[j];
+		for(var i=0; i<array.length; ++i){
+			var info = array[i];
+			var points = info["points"];
+			var sizes = info["sizes"];
+			var angles = info["angles"];
+			var ims = [imageMatrixA,imageMatrixB,imageMatrixC];
+			for(var k=0; k<points.length; ++k){
+				var p = points[k];
+				var s = sizes[k];
+				var a = angles[k];
+				var im = ims[k];
+				var block = R3D.extractTriBlock(p, s, a, im, blockSize, cellScale);
+				var stage = GLOBALSTAGE;
+				var img = R3D.imageFromImageMatrix(block, stage);
+				var d = new DOImage(img);
+				d.matrix().identity();
+				d.matrix().scale(ss);
+				var countRow = 20;
+				var countRowX = Math.floor(i/countRow);
+				var countRowY = i%countRow;
+				d.matrix().translate(10 + 3*ss*blockSize*countRowX + blockSize*ss*k + 600*j, (10 + compareSize*ss*countRowY) );
+				GLOBALSTAGE.addChild(d);
+			}
+		}
+	}
+
+	var pointsA = [];
+	var pointsB = [];
+	var pointsC = [];
+	var scores = [];
+
+	for(i=0; i<inliers.length; ++i){
+		var triple = inliers[i];
+		var pts = triple["points"];
+		var szs = triple["sizes"];
+		var ags = triple["angles"];
+		var score = triple["error"];
+	// 	var sizeA = V2D.max(sizeABFr,sizeACFr);
+	// var sizeB = V2D.max(sizeABTo,sizeBCFr);
+	// var sizeC = V2D.max(sizeACTo,sizeBCTo);
+		var A = {"point":pts[0].copy().scale(1.0/imageSizeA.x,1.0/imageSizeA.y), "size":szs[0]/imageSizeA.x, "angle":ags[0]};
+		var B = {"point":pts[1].copy().scale(1.0/imageSizeB.x,1.0/imageSizeB.y), "size":szs[1]/imageSizeB.x, "angle":ags[1]};
+		var C = {"point":pts[2].copy().scale(1.0/imageSizeC.x,1.0/imageSizeC.y), "size":szs[2]/imageSizeC.x, "angle":ags[2]};
+		pointsA.push(A);
+		pointsB.push(B);
+		pointsC.push(C);
+		scores.push(score);
+	}
+	// want size & rotation still
+	return {"A":pointsA, "B":pointsB, "C":pointsC, "scores":scores};
 }
+
+R3D.optimumTriComparrisionBlock = function(points, sizes, sizeRanges, angles, angleRanges, imageMatrixes, blockSize, cellScale){
+	var i;
+	var parameters = [];
+	for(i=0; i<points.length; ++i){
+		var point = points[i];
+		var size = sizes[i];
+		var sizeRange = sizeRanges[i];
+		var angle = angles[i];
+		var angleRange = angleRanges[i];
+		var imageMatrix = imageMatrixes[i];
+		var params = R3D.optimumTriComparrisionSizeParams(point, size, angle, imageMatrix, blockSize, cellScale);
+			params["image"] = imageMatrix;
+			params["sizeRange"] = sizeRange;
+			params["angleRange"] = angleRange;
+		parameters[i] = params;
+	}
+	// var block = R3D.extractTriBlock(point, size, angle, imageMatrix, blockSize, cellScale);
+	var info = R3D._gdOptimumTriComparrisionBlock(parameters, blockSize, cellScale);
+	return info;
+}
+R3D._gdOptimumTriComparrisionBlock = function(paramsList, blockSize, cellScale){
+	var groupA = paramsList[0];
+	var groupB = paramsList[1];
+	var groupC = paramsList[2];
+
+	var pointA = groupA["point"];
+	var sizeA = groupA["size"];
+	var angleA = groupA["angle"];
+	var sizeRangeA = groupA["sizeRange"];
+	var angleRangeA = groupA["angleRange"];
+	var imageMatrixA = groupA["image"];
+
+	var pointB = groupB["point"];
+	var sizeB = groupB["size"];
+	var angleB = groupB["angle"];
+	var sizeRangeB = groupB["sizeRange"];
+	var angleRangeB = groupB["angleRange"];
+	var imageMatrixB = groupB["image"];
+
+	var pointC = groupC["point"];
+	var sizeC = groupC["size"];
+	var angleC = groupC["angle"];
+	var sizeRangeC = groupC["sizeRange"];
+	var angleRangeC = groupC["angleRange"];
+	var imageMatrixC = groupC["image"];
+
+	var data = R3D._triMatchNonlinearGD(
+		pointA,sizeA,sizeRangeA,angleA,angleRangeA,imageMatrixA,
+		pointB,sizeB,sizeRangeB,angleB,angleRangeB,imageMatrixB,
+		pointC,sizeC,sizeRangeC,angleC,angleRangeC,imageMatrixC,
+		blockSize,cellScale);
+	return data;
+}
+R3D.optimumTriComparrisionSizeParams = function(point, size, angle, imageMatrix, blockSize, cellScale){
+// optimumTriComparrisionSizeParams
+	//var minimumRange = 0.15;
+	var minimumRange = 0.25;
+	//var minimumRange = 0.65; // entropy
+	//var minimumEntropy = 0.25;
+	var epsilon = 1E-6;
+	var sizeUp = 2.0;
+	// SCALE IMAGE UP INTO GOOD PIXEL RANGE
+	var currentSize = size;
+	var masking = ImageMat.circleMask(blockSize);
+	
+	var loop = 20;
+
+	var rangeMin = null;
+	var rangeMax = null;
+	var sizeMin = null;
+	var sizeMax = null;
+	var range = 0;
+	var block, rangeRed, rangeGrn, rangeBlu, rangeGry, range, rangeMid, sizeMid;
+
+var iteration = 0;
+var foundCorrect = false;
+var error = null;
+	while( (error===null || error>epsilon) && loop>0){
+		break; // SKIP
+//	while( (range<minimumRange) && loop>0){
+		if(!currentSize){
+			currentSize = size;
+		}
+		block = R3D.extractTriBlock(point, currentSize, angle, imageMatrix, blockSize, cellScale);
+		
+		rangeRed = Code.range(block.red(), masking);
+		rangeGrn = Code.range(block.grn(), masking);
+		rangeBlu = Code.range(block.blu(), masking);
+		//rangeGry = Code.range(block.gry(), masking);
+		range = (rangeRed+rangeGrn+rangeBlu)/3.0;
+		
+		
+		/*
+		var buckets = 100;
+		var entropyRed = Code.entropy01(block.red(), masking, buckets);
+		var entropyGrn = Code.entropy01(block.grn(), masking, buckets);
+		var entropyBlu = Code.entropy01(block.blu(), masking, buckets);
+		range = (entropyRed+entropyGrn+entropyBlu)/3.0;
+		//range = entropyRed;
+		//range = entropyGrn;
+		//range = entropyBlu;
+		*/
+
+//		console.log("ranges: "+range+" | "+rangeMin+" / "+rangeMax);
+
+var check = false;
+	
+		// end not fulfilled yet
+		if(rangeMin===null || rangeMax===null){
+			if(rangeMin==null){
+				//console.log(iteration+" :  set range min: "+range);
+				rangeMin = range;
+				sizeMin = currentSize;
+				if(rangeMax===null){
+					currentSize = currentSize * sizeUp;
+				} // else will set later
+			}else if(rangeMax===null){
+				//console.log(iteration+" :  set range max: "+range);
+				rangeMax = range;
+				sizeMax = currentSize;
+				if(rangeMin===null){
+					currentSize = currentSize / sizeUp;
+				} // else will set later
+			}
+		}
+		if(rangeMin!==null && rangeMax!==null){
+			if(rangeMin>rangeMax){
+				//console.log("min > max: "+rangeMin+" - "+rangeMax);
+				var temp = rangeMin;
+				rangeMin = rangeMax;
+				rangeMax = temp;
+			}
+			check = true;
+		}
+
+	//console.log(iteration+" : RANGE:"+range+"  @  ["+rangeMin+"-"+rangeMax+"]     SIZE: "+currentSize+"  @  ["+sizeMin+"-"+sizeMax+"]");
+		//console.log("  error: "+error);//( Math.abs(range-minimumRange) ));
+		if(check){ // resize
+			
+			if(!foundCorrect && rangeMax<minimumRange){ // outside high
+				//console.log(" over max");
+				sizeMin = sizeMax;
+				sizeMax = sizeMax * sizeUp;
+				currentSize = sizeMax;
+					rangeMin = rangeMax;
+					rangeMax = null;
+			}else if(!foundCorrect && rangeMin>minimumRange){ // outside low
+				//console.log(" under min");
+				sizeMax = sizeMin;
+				sizeMin = sizeMin / sizeUp;
+				currentSize = sizeMin;
+					rangeMax = rangeMin;
+					rangeMin = null;
+			}else{
+				foundCorrect = true;
+				//console.log(" correct");
+				if(range>rangeMin){
+					if(range<minimumRange){
+						//console.log("TOO LOW >>> FLIPPED MAX/MIN");
+						sizeMin = currentSize;
+						rangeMin = range;
+					}else{
+						sizeMax = currentSize;
+						rangeMax = range;
+					}
+				}else if(range<rangeMax){
+					if(range>minimumRange){
+						//console.log("TOO HIGH >>> FLIPPED MIN/MAX");
+						sizeMax = currentSize;
+						rangeMax = range;
+					}else{
+						sizeMin = currentSize;
+						rangeMin = range;
+					}
+				}else{
+					console.log("OUTSIDE ??? ");
+					throw "out"
+				}
+				currentSize = sizeMin + (sizeMax-sizeMin)*0.5;
+			}
+			error = Math.abs(range-minimumRange);
+		}
+++iteration;
+		--loop;
+	} //> BINARY SEARCH
+	// console.log("currentSize: "+currentSize);
+	var params = {};
+		params["point"] = point;
+		params["size"] = currentSize;
+		params["angle"] = angle;
+	return params;
+}
+R3D.extractTriBlock = function(point, size, angle, imageMatrix, blockSize, cellScale){
+	var sigma = null;
+	// cellScale = cellScale!==undefined ? cellScale : 0.25;
+	var scale = cellScale * blockSize/size;
+		var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DRotate(matrix,angle);
+	var block = imageMatrix.extractRectFromFloatImage(point.x,point.y,1.0,sigma,blockSize,blockSize, matrix);
+	return block;
+}
+
+
+R3D._triMatchNonlinearGD = function(pointA,sizeA,sizeRangeA,angleA,angleRangeA,imageMatrixA,
+									pointB,sizeB,sizeRangeB,angleB,angleRangeB,imageMatrixB,
+									pointC,sizeC,sizeRangeC,angleC,angleRangeC,imageMatrixC,
+									blockSize,cellScale){
+	var xVals = [
+		pointA.x, pointA.y, sizeA, angleA,
+		pointB.x, pointB.y, sizeB, angleB,
+		pointC.x, pointC.y, sizeC, angleC,
+	];
+	var sets = [
+		[imageMatrixA,sizeRangeA,angleRangeA],
+		[imageMatrixB,sizeRangeB,angleRangeB],
+		[imageMatrixC,sizeRangeC,angleRangeC],
+	];
+	var args = [sets,blockSize,cellScale];
+	// var maxIterations = 50;
+	// var maxDifference = 1E-4;
+	var maxIterations = 10;
+	//var maxIterations = 0;
+	var maxDifference = 1E-3;
+	result = Code.gradientDescent(R3D._gdTriMatchSAD, args, xVals, null, maxIterations, maxDifference);
+	x = result["x"];
+
+	var error = R3D._gdTriMatchSAD(args, x, false);
+//	console.log("SAD ERROR: "+error);
+
+	var imageCount = 3;
+	var points = [];
+	var sizes = [];
+	var angles = [];
+	for(i=0; i<imageCount; ++i){
+		var pointsX = x[i*4 + 0];
+		var pointsY = x[i*4 + 1];
+		points[i] = new V2D(pointsX,pointsY);
+		sizes[i] = x[i*4 + 2];
+		angles[i] = x[i*4 + 3];
+	}
+	var params = {};
+		params["points"] = points;
+		params["sizes"] = sizes;
+		params["angles"] = angles;
+	params["error"] = error;
+	return params;
+}
+
+R3D._gdTriMatchSAD = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	var i, j, k;
+	// constant input data:
+	var sets = args[0];
+	var blockSize = args[1];
+	var cellScale = args[2];
+	var needleMask = ImageMat.circleMask(blockSize);
+	var imageMatrixes = [];
+	var sizeRanges = [];
+	var angleRanges = [];
+	var imageMasks = [];
+	var imageBlockSize = [];
+	var imageCount = sets.length;
+	for(i=0; i<imageCount; ++i){
+		imageMatrixes[i] = sets[i][0];
+		sizeRanges[i] = sets[i][1];
+		angleRanges[i] = sets[i][2];
+	}
+	// variable arguments:
+	var pointsX = [];
+	var pointsY = [];
+	var angles = [];
+	var sizes = [];
+	for(i=0; i<imageCount; ++i){
+		pointsX[i] = x[i*4 + 0];
+		pointsY[i] = x[i*4 + 1];
+		sizes[i] = x[i*4 + 2];
+		angles[i] = x[i*4 + 3];
+	}
+	// SAD SCORES
+// A-B, B-C, C-A
+	var error = 0;
+	for(i=0; i<=imageCount; ++i){
+		var imageMatrixA = imageMatrixes[(i+0)%imageCount];
+		var imageMatrixB = imageMatrixes[(i+1)%imageCount];
+		var pointA = new V2D(pointsX[(i+0)%imageCount],pointsY[(i+0)%imageCount]);
+		var pointB = new V2D(pointsX[(i+1)%imageCount],pointsY[(i+1)%imageCount]);
+		var sizeA = sizes[(i+0)%imageCount];
+		var sizeB = sizes[(i+1)%imageCount];
+		var angleA = angles[(i+0)%imageCount];
+		var angleB = angles[(i+1)%imageCount];
+
+		//var scales = [0.5,1.0,2.0];
+		var scales = [1.0];
+		for(var j=0; j<scales.length; ++j){
+			var scale = scales[j];
+			var needle = R3D.extractTriBlock(pointA, sizeA, angleA, imageMatrixA, blockSize, scale*cellScale);
+			var haystack = R3D.extractTriBlock(pointB, sizeB, angleB, imageMatrixB, blockSize, scale*cellScale);
+			//var sad = Dense.searchNeedleHaystackImageFlat(needle,needleMask, haystack);
+			var sad = R3D.searchNeedleHaystackImageFlat(needle,needleMask, haystack);
+			var sad = sad["value"];
+			//console.log("sad: "+sad);
+			error += sad*sad;
+		}
+		// TODO: if outside ranges, error *= 1E10;
+	}
+//	console.log("error: "+error);
+	return error;
+}
+
+//var sad = Dense.searchNeedleHaystackImageFlat(needle,needleMask, haystack);
+
+// EXPERIMENTING DIFFERENTLY
+R3D.searchNeedleHaystackImageFlat = function(needle,needleMask, haystack){
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var needleR = needle.red();
+	var needleG = needle.grn();
+	var needleB = needle.blu();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
+	var haystackR = haystack.red();
+	var haystackG = haystack.grn();
+	var haystackB = haystack.blu();
+
+	var needleCount = needleWidth*needleHeight;
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth * resultHeight;
+	if(resultCount<=0){
+		return null;
+	}
+	var mask = 1.0;
+	var i, j;
+	var maskCount = 0;
+	for(i=0; i<needleCount; ++i){
+		if(needleMask){ mask = needleMask[i]; }
+		if(mask===0){ continue; }
+		++maskCount;
+	}
+	// needle infos
+	var avgN = new V3D();
+	var minN = null;
+	var maxN = null;
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		avgN.x += needleR[k];
+		avgN.y += needleG[k];
+		avgN.z += needleB[k];
+		++maskCount;
+		if(minN==null){
+			minN = new V3D();
+			minN.x = needleR[k];
+			minN.y = needleG[k];
+			minN.z = needleB[k];
+			maxN = new V3D();
+			maxN.x = needleR[k];
+			maxN.y = needleG[k];
+			maxN.z = needleB[k];
+		}
+		minN.x = Math.min(minN.x,needleR[k]);
+		minN.y = Math.min(minN.y,needleG[k]);
+		minN.z = Math.min(minN.z,needleB[k]);
+		maxN.x = Math.max(maxN.x,needleR[k]);
+		maxN.y = Math.max(maxN.y,needleG[k]);
+		maxN.z = Math.max(maxN.z,needleB[k]);
+	}
+	avgN.scale(1.0/needleCount);
+	var rangeN = V3D.sub(maxN,minN);
+	// sigma
+	var sigmaN = new V3D();
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
+		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
+		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
+	}
+	sigmaN.x = Math.sqrt(sigmaN.x);
+	sigmaN.y = Math.sqrt(sigmaN.y);
+	sigmaN.z = Math.sqrt(sigmaN.z);
+	// 
+	var result = new Array();
+	for(j=0; j<resultHeight; ++j){
+		for(i=0; i<resultWidth; ++i){
+			var resultIndex = j*resultWidth + i;
+			var sadR = 0;
+			var sadG = 0;
+			var sadB = 0;
+			var nccR = 0;
+			var nccG = 0;
+			var nccB = 0;
+			var minH = null;
+			var maxH = null;
+			var avgH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					if(minH==null){
+						minH = new V3D();
+						minH.x = haystackR[hIndex];
+						minH.y = haystackG[hIndex];
+						minH.z = haystackB[hIndex];
+						maxH = new V3D();
+						maxH.x = haystackR[hIndex];
+						maxH.y = haystackG[hIndex];
+						maxH.z = haystackB[hIndex];
+					}
+					minH.x = Math.min(minH.x,haystackR[hIndex]);
+					minH.y = Math.min(minH.y,haystackG[hIndex]);
+					minH.z = Math.min(minH.z,haystackB[hIndex]);
+					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
+					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
+					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
+					avgH.x += haystackR[hIndex];
+					avgH.y += haystackG[hIndex];
+					avgH.z += haystackB[hIndex];
+				}
+			}
+			avgH.scale(1.0/needleCount);
+			var rangeH = V3D.sub(maxH,minH);
+			// sigma
+			var sigmaH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
+					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
+					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
+				}
+			}
+			sigmaH.x = Math.sqrt(sigmaH.x);
+			sigmaH.y = Math.sqrt(sigmaH.y);
+			sigmaH.z = Math.sqrt(sigmaH.z);
+			// ...
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					// completely ignore a masked operation
+					var nR = needleR[nIndex];
+					var nG = needleG[nIndex];
+					var nB = needleB[nIndex];
+					var hR = haystackR[hIndex];
+					var hG = haystackG[hIndex];
+					var hB = haystackB[hIndex];
+					nR = nR - avgN.x;
+					nG = nG - avgN.y;
+					nB = nB - avgN.z;
+					hR = hR - avgH.x;
+					hG = hG - avgH.y;
+					hB = hB - avgH.z;
+						// nR = nR / rangeN.x;
+						// nG = nG / rangeN.y;
+						// nB = nB / rangeN.z;
+						// hR = hR / rangeH.x;
+						// hG = hG / rangeH.y;
+						// hB = hB / rangeH.z;
+						nR = nR / sigmaN.x;
+						nG = nG / sigmaN.y;
+						nB = nB / sigmaN.z;
+						hR = hR / sigmaH.x;
+						hG = hG / sigmaH.y;
+						hB = hB / sigmaH.z;
+					// SAD
+					var absR = Math.abs(nR - hR);
+					var absG = Math.abs(nG - hG);
+					var absB = Math.abs(nB - hB);
+					// sadR += absR*absR;
+					// sadG += absG*absG;
+					// sadB += absB*absB;
+					sadR += absR;
+					sadG += absG;
+					sadB += absB;
+					// sadR += Math.sqrt(absR);
+					// sadG += Math.sqrt(absG);
+					// sadB += Math.sqrt(absB);
+					// NCC:
+					nccR += (nR * hR);
+					nccG += (nG * hG);
+					nccB += (nB * hB);
+					// nccR += Math.abs(nR * hR);
+					// nccG += Math.abs(nG * hG);
+					// nccB += Math.abs(nB * hB);
+				}
+			}
+			var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
+			var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
+			var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
+			nccR = nccR / sigSquR;
+			nccG = nccG / sigSquG;
+			nccB = nccB / sigSquB;
+			// sadR = sadR * sigSquR;
+			// sadG = sadG * sigSquG;
+			// sadB = sadB * sigSquB;
+			// sadR = sadR / sigSquR;
+			// sadG = sadG / sigSquG;
+			// sadB = sadB / sigSquB;
+			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+			var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
+			// 
+			var rngR = Math.abs(rangeN.x-rangeH.x);
+			var rngG = Math.abs(rangeN.y-rangeH.y);
+			var rngB = Math.abs(rangeN.z-rangeH.z);
+			var rngAvg = (rngR+rngG+rngB) / 3.0;
+			/*
+			var avgR = (avgN.x+avgH.x);
+			var avgG = (avgN.y+avgH.y);
+			var avgB = (avgN.z+avgH.z);
+			var avgTot = (avgR+avgG+avgB) / 3.0;
+			
+			var minR = Math.min(avgN.x,avgH.x);
+			var minG = Math.min(avgN.y,avgH.y);
+			var minB = Math.min(avgN.z,avgH.z);
+			var minTot = (minR+minG+minB) / 3.0;
+			*/
+			var difR = Math.abs(avgN.x-avgH.x);
+			var difG = Math.abs(avgN.y-avgH.y);
+			var difB = Math.abs(avgN.z-avgH.z);
+			var difAvg = (difR+difG+difB) / 3.0;
+			var difX = Math.max(difR,difG,difB);
+//			sss = sss * (1.0 + difAvg);
+			// var rangeR = Math.min(minN.x,minH.x);
+			// var rangeG = Math.min(minN.y,minH.y);
+			// var rangeB = Math.min(minN.z,minH.z);
+			var minRangeR = Math.min(rangeN.x,rangeH.x);
+			var minRangeG = Math.min(rangeN.y,rangeH.y);
+			var minRangeB = Math.min(rangeN.z,rangeH.z);
+			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
+
+sss = sadAvg;
+//sss = sadAvg/nccAvg;
+//sss = 1.0/nccAvg;
+//sss = nccAvg;
+//sss = nccAvg*sadAvg;
+			result[resultIndex] = sss;
+		}
+	}
+	return {"value":result, "width":resultWidth, "height":resultHeight};
+
+}
+
+
+
+
+
+
+
+
+
+
+
 R3D._matchToPointFrom = function(match){
 	return match["from"];
 }
 
-R3D.matchObjectToLocal = function(matchesABReg, sXfr,sYfr, sXto,sYto, invert){
+R3D.matchObjectToLocal = function(matchesReg, sXfr,sYfr, sXto,sYto, invert){
 	sXfr = sXfr!==undefined ? sXfr : 1.0;
 	sYfr = sYfr!==undefined ? sYfr : 1.0;
 	sXto = sXto!==undefined ? sXto : 1.0;
 	sYto = sYto!==undefined ? sYto : 1.0;
 	invert = invert!==undefined ? invert : false;
-	var matchesABNorm = [];
+	var matchesNorm = [];
 	var point2DFr, point2DTo, fr, to, frS, toS, frA, toA;
-	for(i=0; i<matchesABReg.length; ++i){
-		var match = matchesABReg[i];
+	for(i=0; i<matchesReg.length; ++i){
+		var match = matchesReg[i];
 		fr = match["fr"];
 		to = match["to"];
 		frS = fr["s"];
@@ -11269,15 +12215,15 @@ R3D.matchObjectToLocal = function(matchesABReg, sXfr,sYfr, sXto,sYto, invert){
 			point2DFr = point2DTo;
 			point2DTo = temp;
 		}
-		matchesABNorm.push({"from":point2DFr,"to":point2DTo, "fromScale":frS, "fromAngle":frA, "toScale":toS, "toAngle":toA});
+		matchesNorm.push({"from":point2DFr,"to":point2DTo, "fromSize":(frS*sXfr), "fromAngle":frA, "toSize":(toS*sXto), "toAngle":toA});
 	}
-	return matchesABNorm;
+	return matchesNorm;
 }
 
 
 R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	var cost = 0;
-	// A-B, A-C, B-C SAD scores
+	// A-B, A-C, B-C SAD scores 
 	var scoreAB = 0;
 	var scoreBC = 0;
 	var scoreAC = 0;

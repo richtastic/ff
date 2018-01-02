@@ -93,8 +93,34 @@ timeline:
 			summary: 
 			description:
 
-
-
+		-
+			dateStart: 1879-03-14
+			dateEnd: 1955-04-14
+			short: Albert Einstein
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 1881-09-25
+			dateEnd:   1973-04-08
+			short: Pablo Picasso
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd:   
+			short: 
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd:   
+			short: 
+			title: 
+			summary: 
+			description:
 
 
 

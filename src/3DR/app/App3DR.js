@@ -40,6 +40,8 @@ function App3DR(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 //	this.generate();
+
+GLOBALSTAGE = this._stage;
 	
 	
 	var projectManager = new App3DR.ProjectManager("/projects/0", this._stage);
@@ -232,12 +234,13 @@ App3DR.App.prototype.updateSize = function(min,max){
 }
 App3DR.prototype._setupMatchCompareProjectManager = function(){
 	console.log("_setupMatchCompareProjectManager");
+//return;
 	var manager = this._projectManager;
 	var app = this._activeApp;
-//return; // TODO: uncomment
 	if(manager.isLoaded()){
 		var views = manager.views();
 		var pairs = manager.pairs();
+		var triples = manager.triples();
 		if(pairs.length>0){
 			var pair = pairs[0];
 			var pair2 = pairs[1];
@@ -246,7 +249,10 @@ App3DR.prototype._setupMatchCompareProjectManager = function(){
 			var viewA = pair.viewA();
 			var viewB = pair.viewB();
 			var viewC = pair2.viewB();
-			console.log(viewC+"")
+			var triple = triples[0];
+			console.log(triple);
+			var yamlBinary = null;
+			var matchCount = null;
 			if(viewA && viewB){ // load: imageA | imageB | matching | 
 				var app = this._activeApp;
 				var self = this;
@@ -261,21 +267,37 @@ App3DR.prototype._setupMatchCompareProjectManager = function(){
 				var fxnC = function(){
 					pair.loadMatchingData(fxnD, self);
 				}
-
 				var fxnD = function(){
 					viewC.loadFeaturesImage(fxnE, self);
 				}
 				var fxnE = function(){
 					pair2.loadMatchingData(fxnF, self);
 				}
-
 				var fxnF = function(){
-					pair3.loadMatchingData(fxnX, self);
+					pair3.loadMatchingData(fxnG, self);
 				}
-
-
-
+				var fxnG = function(){
+					triple.loadMatchingData(fxnX, self);
+				}
+				var fxnH = function(what){
+					//
+				}
 				var fxnX = function(){
+					var data = triple._matchingData;
+					var matches = data["matches"];
+					var tripleA = [];
+					var tripleB = [];
+					var tripleC = [];
+					for(var i=0; i<matches.length; ++i){
+						var match = matches[i];
+						var A = match["A"];
+						var B = match["B"];
+						var C = match["C"];
+						tripleA.push( new V2D(A["x"],A["y"]) );
+						tripleB.push( new V2D(B["x"],B["y"]) );
+						tripleC.push( new V2D(C["x"],C["y"]) );
+					}
+
 					imageA = viewA.featuresImage();
 					imageB = viewB.featuresImage();
 					matchAB = pair.matchingData();
@@ -285,15 +307,16 @@ App3DR.prototype._setupMatchCompareProjectManager = function(){
 
 					matchBC = pair3.matchingData();
 
-					//app.setDisplay([imageA,imageB], [2], [[imageA,imageB,matchAB]]);
-					//app.setDisplay([imageA,imageB,imageC], [1,2], [[imageA,imageB,matchAB],[imageA,imageC,matchAC]]);
-					var triples = R3D.triplePointMatches(matchAB,matchAC,matchBC);
-					var tripleA = triples["A"];
-					var tripleB = triples["B"];
-					var tripleC = triples["C"];
+					var stage = self._stage;
+					var imageMatrixA = R3D.imageMatrixFromImage(imageA, stage);
+					var imageMatrixB = R3D.imageMatrixFromImage(imageB, stage);
+					var imageMatrixC = R3D.imageMatrixFromImage(imageC, stage);
+					console.log("ALLLLLL LOADED")
+					// 
+					// app.setDisplay([imageA,imageB], [2], [[imageA,imageB,matchAB]]);
+					// app.setDisplay([imageA,imageB,imageC], [1,2], [[imageA,imageB,matchAB],[imageA,imageC,matchAC]]);
 					//app.setDisplay([imageA,imageB,imageC], [1,2], [[imageA,imageB,matchAB],[imageA,imageC,matchAC],[imageB,imageC,matchBC]]);
 					app.setDisplay([imageA,imageB,imageC], [1,2], [], [[tripleA,imageA, tripleB,imageB, tripleC,imageC]]);
-					
 				}
 				fxnA();
 			}
@@ -444,29 +467,31 @@ App3DR.App.MatchCompare.prototype.setDisplay = function(imageList,rowList,matchL
 		matchInfoList.push(match);
 	}
 	// TRIPLES:
-	for(i=0; i<tripleList.length; ++i){
-		var triple = tripleList[i];
-		var pointsA = triple[0];
-		var imageA = triple[1];
-		var pointsB = triple[2];
-		var imageB = triple[3];
-		var pointsC = triple[4];
-		var imageC = triple[5];
-		var trip = {};
-			trip["pointsA"] = pointsA;
-			trip["pointsB"] = pointsB;
-			trip["pointsC"] = pointsC;
-		for(j=0; j<imageInfoList.length; ++j){
-			var info = imageInfoList[j];
-			if(info["image"]==imageA){
-				trip["imageA"] = info;
-			}else if(info["image"]==imageB){
-				trip["imageB"] = info;
-			}else if(info["image"]==imageC){
-				trip["imageC"] = info;
+	if(tripleList){
+		for(i=0; i<tripleList.length; ++i){
+			var triple = tripleList[i];
+			var pointsA = triple[0];
+			var imageA = triple[1];
+			var pointsB = triple[2];
+			var imageB = triple[3];
+			var pointsC = triple[4];
+			var imageC = triple[5];
+			var trip = {};
+				trip["pointsA"] = pointsA;
+				trip["pointsB"] = pointsB;
+				trip["pointsC"] = pointsC;
+			for(j=0; j<imageInfoList.length; ++j){
+				var info = imageInfoList[j];
+				if(info["image"]==imageA){
+					trip["imageA"] = info;
+				}else if(info["image"]==imageB){
+					trip["imageB"] = info;
+				}else if(info["image"]==imageC){
+					trip["imageC"] = info;
+				}
 			}
+			tripleInfoList.push(trip);
 		}
-		tripleInfoList.push(trip);
 	}
 
 	var grid = new V2D(maximumCols,maximumRows);
@@ -3344,7 +3369,7 @@ projects/
 
 		triples/ tuples
 			0/
-				matches,yaml 			x,y <=> pixel matches among 3 views
+				matches.yaml 			x,y <=> pixel matches among 3 views
 		cameras/
 			0/
 				info.yaml 				computed intrinsic properties
@@ -3404,7 +3429,9 @@ App3DR.ProjectManager.PICTURES_DIRECTORY = "pictures";
 App3DR.ProjectManager.PICTURE_MASK_FILE_NAME = "mask.png"; 
 App3DR.ProjectManager.CAMERAS_DIRECTORY = "cameras";
 App3DR.ProjectManager.PAIRS_DIRECTORY = "pairs";
+App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
 App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME = "matches.yaml"; // points
+App3DR.ProjectManager.TRIPLE_MATCHES_FILE_NAME = "matches.yaml"; // points
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml"; 
 App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml"; 
@@ -3500,6 +3527,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var modified = object["modified"];
 	var views = object["views"];
 	var pairs = object["pairs"];
+	var triples = object["triples"];
 	var cameras = object["cameras"];
 	this._titleName = title;
 	this._createdTimestamp = created;
@@ -3522,6 +3550,16 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 			var pair = new App3DR.ProjectManager.Pair(this);
 			pair.readFromObject(p);
 			this._pairs.push(pair);
+		}
+	}
+	this._triples = [];
+	if(triples){
+		len = triples.length;
+		for(i=0; i<len; ++i){
+			var t = triples[i];
+			var triple = new App3DR.ProjectManager.Triple(this);
+			triple.readFromObject(t);
+			this._triples.push(triple);
 		}
 	}
 	this._cameras = [];
@@ -3560,10 +3598,19 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 	yaml.writeArrayEnd();
 	// pairs
 	len = this._pairs ? this._pairs.length : 0;
-	console.log("PAIRS COUNT: "+len)
 	yaml.writeArrayStart("pairs");
 	for(i=0; i<len; ++i){
 		var pair = this._pairs[i];
+		yaml.writeObjectStart();
+			pair.saveToYAML(yaml);
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+	// TRIPLES
+	len = this._triples ? this._triples.length : 0;
+	yaml.writeArrayStart("triples");
+	for(i=0; i<len; ++i){
+		var pair = this._triples[i];
 		yaml.writeObjectStart();
 			pair.saveToYAML(yaml);
 		yaml.writeObjectEnd();
@@ -3598,6 +3645,9 @@ App3DR.ProjectManager.prototype._uniqueViewID = function(){
 }
 App3DR.ProjectManager.prototype._uniquePairID = function(){
 	return this._uniqueArrayItemID( this._pairs, function(p){ return p.id(); } );
+}
+App3DR.ProjectManager.prototype._uniqueTripleID = function(){
+	return this._uniqueArrayItemID( this._triples, function(p){ return p.id(); } );
 }
 App3DR.ProjectManager.prototype._uniqueCameraID = function(){
 	return this._uniqueArrayItemID( this._cameras, function(c){ return c.id(); } );
@@ -3675,7 +3725,16 @@ App3DR.ProjectManager.prototype.loadFeaturesForView = function(view, filename, c
 }
 
 
-
+App3DR.ProjectManager.prototype.pair = function(idA,idB){
+	var pairs = this._pairs;
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		if(pair.isPair(idA,idB)){
+			return pair;
+		}
+	}
+	return null;
+}
 
 App3DR.ProjectManager.prototype.addPair = function(viewA, viewB, callback, context){
 	console.log("addPair");
@@ -3707,6 +3766,39 @@ App3DR.ProjectManager.prototype.loadMatchingDataForPair = function(pair, filenam
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
 
+
+App3DR.ProjectManager.prototype.loadMatchingDataForTriple = function(triple, filename, callback, context, object){
+	console.log("loadMatchingDataForTriple");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.TRIPLES_DIRECTORY, triple.directory(), filename);
+	console.log(path);
+	this.addOperation("GET", {"path":path}, callback, context, object);
+}
+
+
+
+App3DR.ProjectManager.prototype.addTriple = function(viewA, viewB, viewC, callback, context){
+	console.log("addTriple");
+	var viewAID = viewA.id();
+	var viewBID = viewB.id();
+	var viewCID = viewC.id();
+	var directory = this._uniqueTripleID();
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.TRIPLES_DIRECTORY, directory);
+	var triple = new App3DR.ProjectManager.Triple(this, directory, viewAID, viewBID, viewCID);
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+		object["triple"] = triple;
+	this.addOperation("SET", {"path":path}, this._addTripleComplete, this, object);
+}
+App3DR.ProjectManager.prototype._addTripleComplete = function(object, data){
+	console.log("_addPairComplete");
+	var callback = object["callback"];
+	var context = object["context"];
+	var triple = object["triple"];
+	this._triples.push(triple);
+	this.saveProjectFile();
+	callback.call(context, triple);
+}
 
 
 
@@ -3771,9 +3863,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 			return;
 		}
 	}
-//return; // TODO: uncomment this
 	// does a feature-match pair exist (even a bad match) between every view?
-	console.log("check pairs");
 	len = views.length;
 	var foundPair = null;
 	for(i=0; i<len; ++i){
@@ -3782,10 +3872,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 		for(j=i+1; j<len; ++j){
 			var viewB = views[j];
 			var idB = viewB.id();
-//			console.log("pair: ? "+idA+" & "+idB+" ? ");
 			var found = false;
-			// 1) feature match
-			// 2) dense match
 			for(k=0; k<pairs.length; ++k){
 //break; // TODO: REMOVE
 				var pair = pairs[k];
@@ -3806,15 +3893,39 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 		}
 	}
 	// does a triple exist (even a bad one) for all pairs ...
-	//var pairs = [];
 	len = views.length;
+	var triples = this._triples;
 	for(i=0; i<views.length; ++i){
+		var viewA = views[i];
+		var idA = viewA.id();
 		for(j=i+1; j<views.length; ++j){
+			var viewB = views[j];
+			var idB = viewB.id();
 			for(k=j+1; k<views.length; ++k){
-				console.log("triple: "+i+" & "+j+" & "+k);
+				var viewC = views[k];
+				var idC = viewC.id();
+				// console.log("triple: "+i+" & "+j+" & "+k);
+				var found = false;
+				for(l=0; l<triples.length; ++l){
+					var triple = triples[l];
+					if(triple.isTriple(idA,idB,idC)){
+						if(triple.hasMatch()){
+							// don't need to do this
+						}
+						found = true;
+						break;
+					}
+				}
+				if(!found){
+					console.log(" NOT FOUND: ");
+					this.calculateTripleMatch(viewA,viewB,viewC, null);
+				}
 			}
 		}
 	}
+	// dense matching
+
+	// texturing
 
 /*
 	for each view
@@ -3956,8 +4067,96 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 	fxnB();
 	fxnC();
 	fxnD();
-
 }
+
+App3DR.ProjectManager.prototype.calculateTripleMatch = function(viewA, viewB, viewC, triple, callback, context, object){
+	console.log("calculateTripleMatch");
+	if(viewA && viewB && viewC){
+		var imageA = null;
+		var imageB = null;
+		var imageC = null;
+		var stage = this._stage;
+		var self = this;
+		var views = self.views();
+		var pair1 = self.pair(viewA.id(),viewB.id());
+		var pair2 = self.pair(viewA.id(),viewC.id());
+		var pair3 = self.pair(viewB.id(),viewC.id());
+		if(pair1 && pair2 && pair3){
+			var yamlBinary = null;
+			var matchCount = null;
+			var matchAB, matchAC, matchBC;
+			var fxnA = function(){
+				viewA.loadFeaturesImage(fxnB, self);
+			}
+			var fxnB = function(){
+				viewB.loadFeaturesImage(fxnC, self);
+			}
+			var fxnC = function(){
+				pair1.loadMatchingData(fxnD, self);
+			}
+			var fxnD = function(){
+				viewC.loadFeaturesImage(fxnE, self);
+			}
+			var fxnE = function(){
+				pair2.loadMatchingData(fxnF, self);
+			}
+			var fxnF = function(){
+				pair3.loadMatchingData(fxnX, self);
+			}
+			var fxnX = function(){
+				imageA = viewA.featuresImage();
+				imageB = viewB.featuresImage();
+				matchAB = pair1.matchingData();
+
+				matchAC = pair2.matchingData();
+				imageC = viewC.featuresImage();
+
+				matchBC = pair3.matchingData();
+
+				var stage = self._stage;
+				var imageMatrixA = R3D.imageMatrixFromImage(imageA, stage);
+				var imageMatrixB = R3D.imageMatrixFromImage(imageB, stage);
+				var imageMatrixC = R3D.imageMatrixFromImage(imageC, stage);
+				// 
+				var tripleInfo = R3D.triplePointMatches(matchAB,matchAC,matchBC, imageMatrixA,imageMatrixB,imageMatrixC);
+				console.log(tripleInfo);
+				// TODO: trifocal tensor from best point matches
+				// 6 point alg
+				// ransac
+				// final inliers
+				var scores = tripleInfo["scores"];
+				matchCount = scores.length;
+	
+				var str = self._tripleMatchesToYAML(tripleInfo, viewA, viewB, viewC, imageMatrixA, imageMatrixB, imageMatrixC);
+				var binary = Code.stringToBinary(str);
+				yamlBinary = binary;
+				var triple = null;
+
+				if(triple){
+					fxnY(triple);
+				}else{
+					self.addTriple(viewA,viewB,viewC, fxnY, this);
+				}
+			}
+			var fxnY = function(triple){
+				console.log("save triple data");
+				return;
+				var path = Code.appendToPath(self._workingPath, App3DR.ProjectManager.TRIPLES_DIRECTORY, triple.directory(), App3DR.ProjectManager.TRIPLE_MATCHES_FILE_NAME);
+				console.log("path: "+path+"");
+				triple.setMatchInfo(matchCount);
+				self.addOperation("SET", {"path":path, "data":yamlBinary}, fxnZ, self, triple);
+			}
+			var fxnZ = function(triple){
+				console.log("saved triple");
+				manager.saveProjectFile();
+				
+			}
+			fxnA();
+		}
+	}
+}
+
+
 App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
 	var timestampNow = Code.getTimeStampFromMilliseconds();
 	var widA = imageMatrixA.width();
@@ -4017,6 +4216,95 @@ App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, vie
 	yaml.writeArrayEnd();
 	yaml.writeBlank();
 	return yaml.toString();
+}
+
+App3DR.ProjectManager.prototype._tripleMatchesToYAML = function(tripleInfo, viewA, viewB, viewC, imageMatrixA, imageMatrixB, imageMatrixC){
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+	var widA = imageMatrixA.width();
+	var heiA = imageMatrixA.height();
+	var widB = imageMatrixB.width();
+	var heiB = imageMatrixB.height();
+	var widC = imageMatrixC.width();
+	var heiC = imageMatrixC.height();
+
+	var yaml = new YAML();
+	yaml.writeComment("3DR Triple Matches File 0");
+	yaml.writeBlank();
+	yaml.writeString("title", "triple matches");
+	yaml.writeString("created", timestampNow);
+
+	yaml.writeString("viewA", viewA.id());
+	yaml.writeString("viewB", viewB.id());
+	yaml.writeString("viewC", viewC.id());
+
+	yaml.writeObjectStart("ASize");
+		yaml.writeNumber("x",widA);
+		yaml.writeNumber("y",heiA);
+	yaml.writeObjectEnd();
+	yaml.writeObjectStart("BSize");
+		yaml.writeNumber("x",widB);
+		yaml.writeNumber("y",heiB);
+	yaml.writeObjectEnd();
+	yaml.writeObjectStart("CSize");
+		yaml.writeNumber("x",widC);
+		yaml.writeNumber("y",heiC);
+	yaml.writeObjectEnd();
+
+
+	var tripleA = tripleInfo["A"];
+	var tripleB = tripleInfo["B"];
+	var tripleC = tripleInfo["C"];
+	var scores = tripleInfo["scores"];
+
+
+	yaml.writeObjectStart("T");
+		// TODO: TRIFOCAL TENSOR
+		yaml.writeString("dunno",null);
+	yaml.writeObjectEnd();
+
+	yaml.writeNumber("count", scores.length);
+
+	yaml.writeArrayStart("matches");
+	var i, len=scores.length;
+	for(i=0; i<len; ++i){
+		var A = tripleA[i];
+		var B = tripleB[i];
+		var C = tripleC[i];
+		var score = scores[i];
+			var pointA = A["point"];
+			var pointB = B["point"];
+			var pointC = C["point"];
+			var sizeA = A["size"];
+			var sizeB = B["size"];
+			var sizeC = C["size"];
+			var angleA = A["angle"];
+			var angleB = B["angle"];
+			var angleC = C["angle"];
+		yaml.writeObjectStart();
+			yaml.writeObjectStart("A");
+				yaml.writeNumber("x", pointA.x);
+				yaml.writeNumber("y", pointA.y);
+				yaml.writeNumber("s", sizeA);
+				yaml.writeNumber("a", angleA);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("B");
+				yaml.writeNumber("x", pointB.x);
+				yaml.writeNumber("y", pointB.y);
+				yaml.writeNumber("s", sizeB);
+				yaml.writeNumber("a", angleB);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("C");
+				yaml.writeNumber("x", pointC.x);
+				yaml.writeNumber("y", pointC.y);
+				yaml.writeNumber("s", sizeC);
+				yaml.writeNumber("a", angleC);
+			yaml.writeObjectEnd();
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+	yaml.writeBlank();
+	var str = yaml.toString();
+	return str;
 }
 
 App3DR.ProjectManager.prototype._featuresToYAML = function(features){
@@ -4574,7 +4862,6 @@ App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._matchFeatureScore = object["featureScore"];
 	this._matchFeatureCount = object["featureCount"];
 }
-//
 App3DR.ProjectManager.Pair.prototype.loadMatchingData = function(callback, context){
 	var object = {};
 		object["callback"] = callback;
@@ -4593,6 +4880,93 @@ App3DR.ProjectManager.Pair.prototype._loadMatchingDataComplete = function(object
 		callback.call(context, this);
 	}
 }
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+App3DR.ProjectManager.Triple = function(manager, directory, viewA, viewB, viewC){
+	this._manager = manager;
+	this._directory = directory;
+	this._viewAID = viewA;
+	this._viewBID = viewB;
+	this._viewCID = viewC;
+	this._matchFeatureCount = null;
+	this._matchFeatureScore = null;
+	this._matchingData = null;
+}
+App3DR.ProjectManager.Triple.prototype.toString = function(){
+	return "[Triple: "+this._viewAID+" : "+this._viewBID+" : "+this._viewCID+"]";
+}
+App3DR.ProjectManager.Triple.prototype.viewA = function(){
+	return this._manager.viewFromID(this._viewAID);
+}
+App3DR.ProjectManager.Triple.prototype.viewB = function(){
+	return this._manager.viewFromID(this._viewBID);
+}
+App3DR.ProjectManager.Triple.prototype.viewC = function(){
+	return this._manager.viewFromID(this._viewCID);
+}
+App3DR.ProjectManager.Triple.prototype.directory = function(){
+	return this._directory;
+}
+App3DR.ProjectManager.Triple.prototype.id = function(){
+	return this.directory();
+}
+App3DR.ProjectManager.Triple.prototype.setMatchInfo = function(count){
+	this._matchFeatureCount = count;
+}
+App3DR.ProjectManager.Triple.prototype.isTriple = function(idA,idB,idC){
+	if(idA && idB && idC && this._viewAID && this._viewBID && this._viewCID){
+		if( (idA==this._viewAID && idB==this._viewBID && idC==this._viewCID) ||
+			(idB==this._viewAID && idA==this._viewBID && idC==this._viewCID) ||
+			(idA==this._viewAID && idC==this._viewBID && idB==this._viewCID) ||
+			(idC==this._viewAID && idA==this._viewBID && idB==this._viewCID) ||
+			(idB==this._viewAID && idC==this._viewBID && idA==this._viewCID) ||
+			(idC==this._viewAID && idB==this._viewBID && idA==this._viewCID) 
+			){
+			return true;
+		}
+	}
+	return false;
+}
+App3DR.ProjectManager.Triple.prototype.hasMatch = function(){
+	return this._matchFeatureCount != null || this._matchFeatureCount >= 0;
+}
+App3DR.ProjectManager.Triple.prototype.saveToYAML = function(yaml){
+	yaml.writeString("directory", this._directory);
+	yaml.writeString("viewA", this._viewAID);
+	yaml.writeString("viewB", this._viewBID);
+	yaml.writeString("viewC", this._viewCID);
+	yaml.writeNumber("featureScore", this._matchFeatureScore);
+	yaml.writeNumber("featureCount", this._matchFeatureCount);
+}
+App3DR.ProjectManager.Triple.prototype.readFromObject = function(object){
+	this._directory = object["directory"];
+	this._viewAID = object["viewA"];
+	this._viewBID = object["viewB"];
+	this._viewCID = object["viewC"];
+	this._matchFeatureScore = object["featureScore"];
+	this._matchFeatureCount = object["featureCount"];
+}
+App3DR.ProjectManager.Triple.prototype.loadMatchingData = function(callback, context){
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+		// ...
+	this._manager.loadMatchingDataForTriple(this, App3DR.ProjectManager.TRIPLE_MATCHES_FILE_NAME, this._loadMatchingDataComplete, this, object);
+}
+App3DR.ProjectManager.Triple.prototype._loadMatchingDataComplete = function(object, data){
+	var yamlObject = Code.binaryToYAMLObject(data);
+	console.log(yamlObject);
+	this._matchingData = yamlObject;
+	var callback = object["callback"];
+	var context = object["context"];
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+
 /*
 
 INITIAL:

@@ -204,7 +204,27 @@ APP TODO:
 - corner feature size should be based on something ...
 
 - TRIPLE ALGORITHM REFINEMENT
-	- scale, rotation
+	- minimize costs
+	- WANT COMPARABLE SCALES OF COMPARRISON ...
+	- want to throw out score outliers
+
+
+
+
+
+- recognizing outliers at various points in algorithms -- based on std dev | 2 or 3 sigma [95% or 99.7%]
+	- medium matching: sort on distance(^2) from F-lines
+	- triangle matching: can also use F with final sample triple-points and remove where each of point is outside respective (of 3) F-line distance range
+
+
+fullMatchesForObjects
+
+
+
+
+
+
+
 
 - BUNDLE AJUST ALGORITHM
 
