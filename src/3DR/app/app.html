@@ -11,6 +11,29 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js", "../Dense.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	var t = new Tensor([3,3,3]);
+	console.log(t);
+	console.log(t+"");
+	console.log("FR ");
+	var a = [];
+	for(var i=0; i<27; ++i){
+		a[i] = i;
+	}
+	t.fromArray(a);
+	console.log("TO ");
+	console.log(t.toArray());
+	console.log("GET ");
+	console.log(t.get([0,1,2]));
+
+	console.log("SET ");
+	console.log(t.set([0,1,2], 99));
+
+	console.log("SET ");
+	console.log(t.set([2,2,2], 0));
+
+	console.log("TO ");
+	console.log(t.toArray());
+	return;
 /*
 	var pointsA = [
 				new V2D(86,208), // glasses corner left

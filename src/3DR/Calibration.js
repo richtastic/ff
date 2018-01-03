@@ -34,7 +34,7 @@ function Calibration(){
 	//var imageList = ["calib-6.png"];
 	var imageList = ["calib-0.png","calib-1.png","calib-2.png","calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
 	//var imageList = ["calib-0.png","calib-1.png","calib-2.png"];
-	//var imageList = ["calib-0.png"];
+//var imageList = ["calib-0.png"];
 	// GOOD: 0 3
 	// ? : 1 2 5 6
 	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoaded,null);

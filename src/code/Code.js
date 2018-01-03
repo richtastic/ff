@@ -7647,7 +7647,7 @@ Code.dropOutliers = function(list, valueFxn, sigmas){
 		sigma += Math.pow(value - mean,2);
 	}
 	sigma = Math.sqrt( sigma / count );
-	console.log("sigma: "+sigma);
+//	console.log("sigma: "+sigma);
 	var maxValue = sigmas * sigma;
 	var keep = [];
 	var outliers = [];

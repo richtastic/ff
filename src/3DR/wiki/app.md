@@ -191,6 +191,24 @@ project typical numbers:
 
 
 APP TODO:
+
+- upload camera images
+	- A upload the image scales
+	- B calculate detected 2D/3D-pairs [or error if unable]
+	- C calculate calibration if valid pairs >= 3
+		- K
+		- distortion r & t
+		- normalize params to width/height = 1:1
+	
+
+- BUNDLE ADJUST ALGORITHM
+
+
+- trifocal tensor how-to-calculate (from points) / robust iterate
+
+
+
+
 - dense alg:
 	- smaller cells are better:
 		-for accuracy
@@ -203,19 +221,9 @@ APP TODO:
 
 - corner feature size should be based on something ...
 
-- TRIPLE ALGORITHM REFINEMENT
-	- minimize costs
-	- WANT COMPARABLE SCALES OF COMPARRISON ...
-	- want to throw out score outliers
 
 
-
-
-
-- recognizing outliers at various points in algorithms -- based on std dev | 2 or 3 sigma [95% or 99.7%]
-	- medium matching: sort on distance(^2) from F-lines
-	- triangle matching: can also use F with final sample triple-points and remove where each of point is outside respective (of 3) F-line distance range
-
+- recognizing outliers at various points in algorithms -- revisit
 
 fullMatchesForObjects
 
@@ -225,8 +233,6 @@ fullMatchesForObjects
 
 
 
-
-- BUNDLE AJUST ALGORITHM
 
 - revisit matching feature scoring ... SIFT / SAD / ...
 	> still have bad matches in triple
@@ -336,7 +342,7 @@ SPEEDUPS:
 	- 2x+ using native coding language
 	- 2x+ using matrix libraries
 	- 10x+ using file i/o [some places]
-	- 2+ using caching [some places]
+	- 2x+ using caching [some places]
 
 
 

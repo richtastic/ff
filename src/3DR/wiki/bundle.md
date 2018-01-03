@@ -194,7 +194,7 @@ permutation tensor: &epsilon;<sub>ijk</sub> = [x<sub>i</sub>,x<sub>j</sub>,x<sub
 
 
 
-scalar, vector, dyad, triad
+scalar, vector, dyad, triad, n-ad
 
 
 
@@ -205,6 +205,72 @@ scalar, vector, dyad, triad
 
 
 ### trifocal tensor:
+<br/>
+27 parameters
+<br/>
+18 dof
+<br/>
+[8 internal constraints]
+<br/>
+min 6 correspondences, 
+<br/>
+T = [G<sub>1</sub>;G<sub>2</sub>;G<sub>3</sub>]
+<br/>
+l<sub>3</sub>i = l<sub>1</sub><sup>T</sup> &middot; G<sub>i</sub> &middot; l<sub>2</sub>
+<br/>
+<br/>
+
+
+x^i == b ???
+[a]<sub>&times;</sub>(&Sum;<sub>i</sub> x<sup>i</sup> T<sub>i</sub>)[c]<sub>&times;</sub>
+<br/>
+
+
+P<sub>1</sub> = [I|0]
+<br/>
+P<sub>2</sub> = [A|a<sub>4</sub>]
+<br/>
+P<sub>3</sub> = [B|b<sub>4</sub>]
+<br/>
+a<sub>4</sub> = epipole from first camera center = P<sub>2</sub>C
+<br/>
+b<sub>4</sub> = epipole from first camera center = P<sub>3</sub>C
+
+
+
+<br/>
+paramiterization:
+3 3&times;3 orthogonal matrices &plus; 10-vector
+
+
+
+
+
+
+
+
+DLT: 27 params,
+4 equations:
+27/4 = 7 points
+
+
+T<sub>0</sub>= 
+<br/>
+[a<sub>x</sub>, 0, -a<sub>x</sub>&middot;b<sub>x</sub>]
+<br/>
+[0, 0, 0]
+<br/>
+[-a<sub>x</sub>&middot;c<sub>x</sub>, 0, a<sub>x</sub>&middot;b<sub>x</sub>&middot;c<sub>x</sub>]
+<br/>
+
+
+
+
+
+
+
+
+
 
 
 

@@ -2960,7 +2960,24 @@ ImageMat.mean3x3 = function(src,wid,hei){
 ImageMat.mean5x5 = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1,], 5,5);
 }
-
+ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y){ 
+	var xMin = Math.floor(x);
+	var xMax = Math.ceil(x);
+	var yMin = Math.floor(y);
+	var yMax = Math.ceil(y);
+	var pX0 = x - xMin;
+	var pY0 = y - yMin;
+	var pX1 = 1.0 - pX0;
+	var pY1 = 1.0 - pY0;
+	var gA = ImageMat.gradientVector(src,wid,hei, xMin,yMin);
+	var gB = ImageMat.gradientVector(src,wid,hei, xMax,yMin);
+	var gC = ImageMat.gradientVector(src,wid,hei, xMin,yMax);
+	var gD = ImageMat.gradientVector(src,wid,hei, xMax,yMax);
+	var gX1 = new V2D(gA.x*pX1 + gB.x*pX0, gA.y*pX1 + gB.y*pX0);
+	var gX2 = new V2D(gC.x*pX1 + gD.x*pX0, gC.y*pX1 + gD.y*pX0);
+	var grad = new V2D(gX1.x*pY1 + gX2.x*pY0, gX1.y*pY1 + gX2.y*pY0);
+	return grad;
+}
 ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with other value/width/height
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
 	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
