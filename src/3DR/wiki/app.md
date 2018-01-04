@@ -192,6 +192,9 @@ project typical numbers:
 
 APP TODO:
 
+
+- how to derive TFT minimization equations [4]
+
 - upload camera images
 	- A upload the image scales
 	- B calculate detected 2D/3D-pairs [or error if unable]
@@ -204,10 +207,10 @@ APP TODO:
 - BUNDLE ADJUST ALGORITHM
 
 
+
 - trifocal tensor how-to-calculate (from points) / robust iterate
-
-
-
+- TFT nonlinear estimation
+- TFT sparse
 
 - dense alg:
 	- smaller cells are better:

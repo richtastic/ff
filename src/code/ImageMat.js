@@ -978,12 +978,11 @@ ImageMat.describeBlobs = function(info){
 				blob = blobs[value];
 
 				if(!blob){
-					//console.log(i,j) // ?
-				//	throw("NO BLOB "+i+","+j+" @ "+value);
 					continue;
 				}
 				com.set(blob["x"],blob["y"]);
 				//console.log(" "+com);
+				// r
 				loc.set(i,j);
 				dist = V2D.distance(com,loc);
 				min = blob["radiusMin"]; // this needs to check if any neighbors are NOT the same id as self
@@ -994,6 +993,24 @@ ImageMat.describeBlobs = function(info){
 				max = Math.max(max,dist);
 				blob["radiusMin"] = min;
 				blob["radiusMax"] = max;
+				// x
+				min = blob["xMin"];
+				max = blob["xMax"];
+				min = min!==undefined ? min : i;
+				max = max!==undefined ? max : i;
+				min = Math.min(min,i);
+				max = Math.max(max,i);
+				blob["xMin"] = min;
+				blob["xMax"] = max;
+				// y
+				min = blob["yMin"];
+				max = blob["yMax"];
+				min = min!==undefined ? min : j;
+				max = max!==undefined ? max : j;
+				min = Math.min(min,j);
+				max = Math.max(max,j);
+				blob["yMin"] = min;
+				blob["yMax"] = max;
 			}
 		}
 	}

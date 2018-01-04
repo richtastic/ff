@@ -1,6 +1,7 @@
 # data.yaml
 
 timeline:
+# events
 		-
 			dateStart: 2017-12-31
 			dateEnd:   2018-01-01
@@ -92,41 +93,129 @@ timeline:
 			title: 
 			summary: 
 			description:
-
+# famous
 		-
 			dateStart: 1879-03-14
-			dateEnd: 1955-04-14
-			short: Albert Einstein
-			title: 
+			dateEnd:   1955-04-14
+			short: 
+			title: Albert Einstein
 			summary: 
 			description:
 		-
 			dateStart: 1881-09-25
 			dateEnd:   1973-04-08
-			short: Pablo Picasso
-			title: 
+			short: 
+			title: Pablo Picasso
+			summary: 
+			description:
+		-
+			dateStart: 1769-08-15
+			dateEnd:   1821-05-05
+			short: 
+			title: Napoleon Bonaparte
+			summary: 
+			description:
+
+# scientists
+		-
+			dateStart: 1822-12-27
+			dateEnd:   1895-09-28
+			short: 
+			title: Louis Pasteur
+			summary: 
+			description:
+		-
+			dateStart: 1856-07-10
+			dateEnd:   1943-01-07
+			short: 
+			title: Nikola Tesla
+			summary: 
+			description:
+		-
+			dateStart: 1596-03-31
+			dateEnd:   1650-02-11
+			short: 
+			title: Rene Descartes
 			summary: 
 			description:
 		-
 			dateStart: 
-			dateEnd:   
+			dateEnd: 
 			short: 
 			title: 
 			summary: 
 			description:
 		-
 			dateStart: 
-			dateEnd:   
+			dateEnd: 
 			short: 
 			title: 
 			summary: 
 			description:
-
-
-
-
-
-
+# anchients
+		-
+			dateStart: 100-00-00
+			dateEnd:   170-00-00
+			short: 
+			title: Ptolemy
+			summary: 
+			description:
+		-
+			dateStart: 1475-03-06
+			dateEnd:   1564-02-18
+			short: 
+			title: Michelangelo
+			summary: 
+			description:
+		-
+			dateStart: 1452-04-15
+			dateEnd:   1519-05-02
+			short: 
+			title: Leonardo da Vinci
+			summary: 
+			description:
+		-
+			dateStart: -356-07-20
+			dateEnd:   -323-06-10
+			short: 
+			title: Alexander the Great
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description:
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description:
 
 
 end: 0
