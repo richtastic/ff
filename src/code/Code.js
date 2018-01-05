@@ -6837,7 +6837,9 @@ Code.eigenValues2D = function(a,b,c,d){
 	var trace = a + d;
 	var det = a*d - b*c;
 	var left = trace*0.5;
-	var right = Math.sqrt(trace*trace*0.25 - det);
+	var inside = trace*trace*0.25 - det;
+		inside = Math.max(0,inside);
+	var right = Math.sqrt(inside);
 	var l1 = left - right;
 	var l2 = left + right;
 	return [l1, l2];

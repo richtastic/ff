@@ -3926,6 +3926,11 @@ App3DR.ProjectManager.prototype.addMatchesForCamera = function(camera, filename,
 	console.log(path);
 	this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
 }
+App3DR.ProjectManager.prototype.loadCalibrationDataForCamera = function(camera, filename, callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.CAMERAS_DIRECTORY, camera.directory(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
+	console.log(path);
+	this.addOperation("GET", {"path":path}, callback, context, object);
+}
 
 App3DR.ProjectManager.prototype.viewCount = function(){
 	return 0;
@@ -4330,10 +4335,72 @@ return;
 }
 App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, callback, context, object){
 	console.log("TODO");
-	throw "?"
-	// load all detected point matches
-	// 
-	// this.checkPerformNextTask();
+	var i;
+	var expectedCount = 0;
+	var callbackCount = 0;
+	var calibrationImages = camera.images();
+	var self = this;
+	var fxnA = function(){
+		++callbackCount;
+		if(callbackCount==expectedCount){
+			console.log('do');
+			var imageSizeWidth = 816;
+			var imageSizeHeight = 612;
+			var pointList2D = [];
+			var pointList3D = [];
+			for(var i=0; i<calibrationImages.length; ++i){
+				var calibrationImage = calibrationImages[i];
+				var calibrationData = calibrationImage.calibrationData();
+				if(Code.isArray(calibrationData)){
+					calibrationData = calibrationData[0];
+				}
+				//console.log(calibrationData);
+				var matches = calibrationData["matches"];
+				//console.log(matches);
+				var points2D = [];
+				var points3D = [];
+				for(var j=0; j<matches.length; ++j){
+					var match = matches[j];
+					var point2D = new V2D(match["x"],match["y"]);
+					var point3D = new V2D(match["X"],match["Y"],match["Z"]);
+					// need original image size / aspect ratio
+					point2D.scale(imageSizeWidth,imageSizeHeight);
+					points2D.push(point2D);
+					points3D.push(point3D);
+					if(j==0){
+						console.log(point2D+"")
+					}
+				}
+				pointList2D.push(points2D);
+				pointList3D.push(points3D);
+				// if(i==2){
+				// 	break;
+				// }
+			}
+			console.log(pointList2D);
+			console.log(pointList3D);
+			var result = R3D.calibrateCameraK(pointList3D,pointList2D);
+			console.log(result)
+			var distortion = result["distortion"];
+			var K = result["K"];
+			console.log(distortion);
+			console.log(K);
+		}
+	}
+	var fxnB = function(){
+		// this.checkPerformNextTask();
+	}
+	for(i=0; i<calibrationImages.length; ++i){
+		var calibrationImage = calibrationImages[i];
+		console.log(calibrationImage);
+		++expectedCount;
+	}
+	// do loading
+	for(i=0; i<calibrationImages.length; ++i){
+		var calibrationImage = calibrationImages[i];
+		calibrationImage.loadCalibratationData(fxnA, this);
+	}
+	
 }
 
 
@@ -5218,7 +5285,6 @@ App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	yaml.writeArrayStart("images");
 	for(i=0; i<len; ++i){
 		var image = this._images[i];
-		console.log(image);
 		yaml.writeObjectStart();
 			image.saveToYAML(yaml);
 		yaml.writeObjectEnd();
@@ -5266,7 +5332,7 @@ App3DR.ProjectManager.Camera.CalibrationImage = function(camera, directory){
 	this._directory = directory;
 	this._pictureInfo = [];
 	this._matchesCount = null;
-	this._matchesData = null;
+	this._calibrationData = null;
 	self._calibrationImage = null;
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.directory = function(){
@@ -5284,6 +5350,9 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.hasMatches = function(){
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.calibrationImage = function(){
 	return this._calibrationImage;
+}
+App3DR.ProjectManager.Camera.CalibrationImage.prototype.calibrationData = function(){
+	return this._calibrationData;
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.readFromObject = function(object){
 	var pictures = object["pictures"];
@@ -5306,7 +5375,7 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.readFromObject = functio
 	}
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.saveToYAML = function(yaml){
-	console.log(" this._matchesCount: "+ this._matchesCount);
+//	console.log(" this._matchesCount: "+ this._matchesCount);
 	var i, len;
 	yaml.writeString("directory", this._directory);
 	yaml.writeNumber("matches", this._matchesCount);
@@ -5446,10 +5515,26 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype._loadCalibrationImageCom
 	image.src = imageSrc;
 }
 
+App3DR.ProjectManager.Camera.CalibrationImage.prototype.loadCalibratationData = function(callback, context){
+	var object = {};
+		object["context"] = context;
+		object["callback"] = callback;
+	var path = Code.appendToPath(this.directory(), App3DR.ProjectManager.CAMERA_MATCHES_FILE_NAME);
+	this.manager().loadCalibrationDataForCamera(this._camera, path, this._loadCalibratationDataComplete, this, object);
+}
 
-
-
-
+App3DR.ProjectManager.Camera.CalibrationImage.prototype._loadCalibratationDataComplete = function(object, data){
+	var str = Code.binaryToString(data);
+	var yaml = YAML.parse(str);
+	this._calibrationData = yaml;
+	if(object){
+		var callback = object["callback"];
+		var context = object["context"];
+		if(callback && context){
+			callback.call(context, self);
+		}
+	}
+}
 
 
 

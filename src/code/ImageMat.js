@@ -969,6 +969,8 @@ ImageMat.describeBlobs = function(info){
 	var i, j, k, index, value, blob, min, max, dist;
 	var loc = new V2D();
 	var com = new V2D();
+	var wm1 = width-1;
+	var hm1 = height-1;
 	for(j=0; j<height; ++j){
 		for(i=0; i<width; ++i){
 			index = j*width + i;
@@ -976,6 +978,48 @@ ImageMat.describeBlobs = function(info){
 			//console.log(value);
 			if(value!==undefined && value>=0){
 				blob = blobs[value];
+
+
+				var nUL = -1;
+				var nUM = -1;
+				var nUR = -1;
+				var nML = -1;
+				var nMM = -1;
+				var nMR = -1;
+				var nDL = -1;
+				var nDM = -1;
+				var nDR = -1;
+				if(0<j && 0<i){
+					nUL = image[(j-1)*width + (i-1)];
+				}
+				if(0<j && 0<=i){
+					nUM = image[(j-1)*width + (i-0)];
+				}
+				if(0<j && i<wm1){
+					nUR = image[(j-1)*width + (i+1)];
+				}
+
+				if(0<=j && 0<i){
+					nML = image[(j-0)*width + (i-1)];
+				}
+				if(0<=j && 0<=i){
+					nMM = image[(j-0)*width + (i-0)];
+				}
+				if(0<=j && i<wm1){
+					nMR = image[(j-0)*width + (i+1)];
+				}
+
+				if(j<hm1 && 0<i){
+					nDL = image[(j+1)*width + (i-1)];
+				}
+				if(j<hm1 && 0<=i){
+					nDM = image[(j+1)*width + (i-0)];
+				}
+				if(j<hm1 && i<wm1){
+					nDR = image[(j+1)*width + (i+1)];
+				}
+
+				var isBorder = nUL!=value || nUM!=value || nUR!=value || nML!=value || nMM!=value || nMR!=value || nDL!=value || nDM!=value || nDR!=value;
 
 				if(!blob){
 					continue;
@@ -985,14 +1029,16 @@ ImageMat.describeBlobs = function(info){
 				// r
 				loc.set(i,j);
 				dist = V2D.distance(com,loc);
-				min = blob["radiusMin"]; // this needs to check if any neighbors are NOT the same id as self
 				max = blob["radiusMax"];
-				min = min!==undefined ? min : dist;
 				max = max!==undefined ? max : dist;
-				min = Math.min(min,dist);
 				max = Math.max(max,dist);
-				blob["radiusMin"] = min;
 				blob["radiusMax"] = max;
+				if(isBorder){
+					min = blob["radiusMin"]; // this needs to check if any neighbors are NOT the same id as self
+					min = min!==undefined ? min : dist;
+					min = Math.min(min,dist);
+					blob["radiusMin"] = min;
+				}
 				// x
 				min = blob["xMin"];
 				max = blob["xMax"];
@@ -3813,6 +3859,47 @@ ImageMat._filterContrastFxn = function(v, args){
 
 
 
+ImageMat.filterGrayContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
+	ImageMat.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, ImageMat._filterGrayContrastFxn, scale);
+}
+ImageMat._filterGrayContrastFxn = function(v, scale){
+	var mid = 0.5;
+	var gry = (v.x+v.y+v.z)/3.0; 
+	var diff = gry-mid;
+	var sca = Math.pow(Math.abs(diff), scale);
+	if(diff<0){
+		sca *= -1;
+	}
+	// v.x = (v.x)/sca;
+	// v.y = (v.y)/sca;
+	// v.z = (v.z)/sca;
+	// v.x = (v.x)*sca;
+	// v.y = (v.y)*sca;
+	// v.z = (v.z)*sca;
+	v.x = (v.x) + sca;
+	v.y = (v.y) + sca;
+	v.z = (v.z) + sca;
+	// var avg = 0.5;
+	// v.x = (v.x - mid)*sca + avg;
+	// v.y = (v.y - avg)*sca + avg;
+	// v.z = (v.z - avg)*sca + avg;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+
+	// var scale = args!==undefined ? args : 0.5;
+	// var avg = 0.5;
+	// v.x = scale * (v.x - avg) + avg;
+	// v.y = scale * (v.y - avg) + avg;
+	// v.z = scale * (v.z - avg) + avg;
+	// v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	// v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	// v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
+
+
+
 
 
 ImageMat.filterSaturation = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, increase S
@@ -3873,3 +3960,205 @@ ImageMat._filterGammaFxn = function(v, args){
 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
 	return v;
 }
+
+
+
+
+
+
+
+ImageMat.adaptiveThreshold = function(src, wid, hei, size, threshold, rangeMin){ // TODO:  faster via: chow kaneko adaptive threshold
+	size = size!==undefined ? size : 11;
+	threshold = threshold!==undefined ? threshold : 0.5;
+	rangeMin = rangeMin!==undefined ? rangeMin : 0.10; // minimum difference to force a change
+	var half = Math.floor(size/2.0);
+	var i, j, k, ii, jj;
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var len = wid*hei;
+	var minI, minJ, maxI, maxJ;
+	var index, mean, count, ind, color, value, val, range;
+	var minValue, maxValue;
+	var result = Code.newArrayZeros(len);
+//	var prevColor = 0;
+	var uknownColor = 0.5;
+	var knownColorIndex = null;
+	for(i=0; i<wid; ++i){
+		for(j=0; j<hei; ++j){
+			index = j*wid + i;
+			value = src[index];
+			minI = Math.max(0,i-half);
+			maxI = Math.min(wm1,minI+size);
+			minJ = Math.max(0,j-half);
+			maxJ = Math.min(hm1,minJ+size);
+			mean = 0;
+			count = 0;
+			minValue = null;
+			maxValue = null;
+			for(ii=minI; ii<=maxI; ++ii){
+				for(jj=minJ; jj<=maxJ; ++jj){
+					ind = jj*wid + ii;
+					val = src[ind];
+					mean += val;
+					count += 1;
+					if(minValue==null || val<minValue){
+						minValue = val;
+					}
+					if(maxValue==null || val>maxValue){
+						maxValue = val;
+					}
+				}
+			}
+			range = maxValue - minValue;
+			if(range>rangeMin){
+				color = (value - minValue)/range;
+				color = (color>threshold) ? 1 : 0;
+				if(!knownColorIndex){ // TODO: pick a known color nearest to center
+					knownColorIndex = new V2D(i,j);
+				}
+			}else{
+				color = uknownColor;
+			}
+			result[index] = color;
+//			prevColor = color;
+		}
+	}
+	// go thru unknown colors & replace with neighbor
+	// start at known location, expand square to full size of image
+	var cx = knownColorIndex.x;
+	var cy = knownColorIndex.y;
+	var s = 1;
+	var iteration = Math.max(wid,hei);
+	var nearestNeighborValue = function(s,i,j, x){
+		var v;
+		// left side
+		if(i>0){
+			// top side
+			if(j>0){
+				v = s[(j-1)*wid+(i-1)];
+				if(v!=x){ return v; }
+			}
+			// mid side
+			v = s[(j-0)*wid+(i-1)];
+			if(v!=x){ return v; }
+			// bot side
+			if(j<hm1){
+				v = s[(j+1)*wid+(i-1)];
+				if(v!=x){ return v; }
+			}
+		}
+		// top
+		if(j>0){
+			v = s[(j-1)*wid+(i-0)];
+			if(v!=x){ return v; }
+		} // bot
+		if(j<hm1){
+			v = s[(j+1)*wid+(i-0)];
+			if(v!=x){ return v; }
+		}
+		// right side
+		if(i<wm1){
+			// top side
+			if(j>0){
+				v = s[(j-1)*wid+(i+1)];
+				if(v!=x){ return v; }
+			}
+			// mid side
+			v = s[(j-0)*wid+(i+1)];
+			if(v!=x){ return v; }
+			// bot side
+			if(j<hm1){
+				v = s[(j+1)*wid+(i+1)];
+				if(v!=x){ return v; }
+			}
+		}
+		throw "none ?";
+	}
+	while(iteration>0){
+	//while(false){
+		minI = cx-s;
+		maxI = cx+s;
+		minJ = cy-s;
+		maxJ = cy+s;
+		// left & right side:
+		var is = [minI,maxI];
+		for(k=0; k<is.length; ++k){
+			i = is[k];
+			for(j=minJ; j<=maxJ; ++j){
+				if(0<=i && i<=wm1 && 0<=j && j<=hm1){
+					index = j*wid + i;
+					value = result[index];
+					if(value==uknownColor){
+						result[index] = nearestNeighborValue(result, i,j, uknownColor);
+					}
+				}
+			}
+		}
+		// top + bottom side:
+		var js = [minJ,maxJ];
+		for(k=0; k<js.length; ++k){
+			j = js[k];
+			for(i=minI; i<=maxI; ++i){
+				if(0<=i && i<=wm1 && 0<=j && j<=hm1){
+					index = j*wid + i;
+					value = result[index];
+					if(value==uknownColor){
+						result[index] = nearestNeighborValue(result, i,j, uknownColor);
+					}
+				}
+			}
+		}
+		++s;
+		if( (cx-s<0) && (cx+s>wm1) && (cy-s<0) && (cy+s>hm1) ){
+			break;
+		}
+		--iteration;
+	}
+	/*
+	left side,
+	right side,
+	bottom side,
+	top side,
+
+	if color is unknown:
+		look at neighbors, pick first color
+	else
+		-
+	
+	increment size
+	if all:
+		center-size <0
+		center+size >wm1
+		center-size <0
+		center+size >wm1
+		=> done
+	*/
+	return {"value":result, "width":wid, "height":hei};
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

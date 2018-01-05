@@ -29,10 +29,15 @@ function Calibration(){
 	// 4 is good
 	// 5 is small - x => CORNERS NOT CLOSE ENOUGH | MERGE?
 
-	var directory = "./images/phone6/calibrate/";
+	//var directory = "./images/phone6/calibrate/";
 	//var imageList = ["calib-1.png","calib-2.png","calib-5.png","calib-6.png"];
 	//var imageList = ["calib-6.png"];
-	var imageList = ["calib-0.png","calib-1.png","calib-2.png","calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
+//var imageList = ["calib-0.png","calib-1.png","calib-2.png","calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
+
+	var directory = "./images/calib_test/";
+	//var imageList = ["A.png","B.png","C.png","D.png","E.png","F.png","G.png"];
+	var imageList = ["X.png","Y.png","C.png","D.png","E.png","F.png","G.png"];
+
 	//var imageList = ["calib-0.png","calib-1.png","calib-2.png"];
 //var imageList = ["calib-0.png"];
 	// GOOD: 0 3
