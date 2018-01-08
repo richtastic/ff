@@ -196,8 +196,8 @@ APP TODO:
 - how to derive TFT minimization equations [4]
 
 - upload camera images
-	- A upload the image scales
-	- B calculate detected 2D/3D-pairs [or error if unable]
+	- FILL algorithm update
+	- EXPANG blobs update [disjoint]
 	- C calculate calibration if valid pairs >= 3
 		- K
 		- distortion r & t

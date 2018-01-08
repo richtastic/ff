@@ -3444,6 +3444,9 @@ projects/
 									y
 									z
 
+		bundle/
+			info.yaml
+
 		reconstruction/
 			WORKING YAML FILE
 
@@ -4074,6 +4077,8 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 
 	// bundle adjust
 
+	this.calculateBundleAdjust();
+
 	// surface
 
 	// texturing
@@ -4404,6 +4409,19 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 }
 
 
+App3DR.ProjectManager.prototype.calculateBundleAdjust = function(x, callback, context, object){
+/*
+	- get camera [K]
+	- get views [assign K]
+	- get view pairs [points2Ds, Fs]
+	- init BA
+		- points3Ds
+		- Ms
+		- ...
+	- 
+
+*/
+}
 
 App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
 	var timestampNow = Code.getTimeStampFromMilliseconds();

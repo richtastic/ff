@@ -8171,18 +8171,18 @@ R3D.detectCheckerboard = function(imageSource, detectSizeX,detectSizeY, interior
 
 //		ImageMat.filterContrast(imageAdjusted.red(),imageAdjusted.grn(),imageAdjusted.blu(), imageAdjusted.width(),imageAdjusted.height(), 5);
 //
-
+/*
 var img = GLOBALSTAGE.getFloatRGBAsImage(imageAdjusted.red(),imageAdjusted.grn(),imageAdjusted.blu(), imageAdjusted.width(),imageAdjusted.height());
 var d = new DOImage(img);
 GLOBALSTAGE.addChild(d);
 d.graphics().alpha(1.0);
 //d.matrix().translate(imageWidth,0);
 d.matrix().translate(imageWidth*CALLED,imageHeight);
-
+*/
 
 var localSize = Math.round(Math.max(imageWidth,imageHeight)*0.05); // size 1/10~1/20 of image width    eg: 400x300 ~31
-localSize = 31;
-console.log("localSize: "+localSize);
+localSize = 31; // TODO
+//console.log("localSize: "+localSize);
 var gray = imageAdjusted.gry();
 var result = ImageMat.adaptiveThreshold(gray, imageWidth, imageHeight, localSize, 0.5, 0.25);
 result = result["value"];
@@ -8191,7 +8191,7 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(result,result,result, imageAdjusted.wid
 var d = new DOImage(img);
 GLOBALSTAGE.addChild(d);
 d.graphics().alpha(1.0);
-d.matrix().translate(imageWidth*CALLED,imageHeight);
+d.matrix().translate(imageWidth*CALLED,0*imageHeight);
 
 
 
@@ -8199,30 +8199,36 @@ var imageBinary = Code.copyArray(result);
 ImageMat.invertFloat01(imageBinary);
 imageBinary = ImageMat.retractBlob(imageBinary, imageWidth,imageHeight).value;
 
-	//imageBinary = ImageMat.retractBlob(imageBinary, imageWidth,imageHeight).value; // blobs to be separate
+	// imageBinary = ImageMat.retractBlob(imageBinary, imageWidth,imageHeight).value; // blobs to be separate
 var blobInfo = ImageMat.findBlobsCOM(imageBinary,imageWidth,imageHeight);
 var labels = blobInfo["value"];
 var blobs = blobInfo["blobs"];
 ImageMat.describeBlobs(blobInfo);
-imageBinary = ImageMat.fillBlobs(blobInfo).value;
-ImageMat.describeBlobs(blobInfo); // need to rediscribe after fill
-imageBinary = ImageMat.gteFloat(blobInfo["value"], 0);
+
+// BREAKS CORNER AREA::
+imageBinary = ImageMat.fillBlobs(blobInfo).value; // remove gaps that might interfere with minrad calculation
+//imageBinary = ImageMat.gteFloat(blobInfo["value"], 0);
+	imageBinary = ImageMat.expandBlobs(blobInfo).value; // bring back to original size, but still separated blobs
+	imageBinary = ImageMat.gteFloat(imageBinary, 0);
+//ImageMat.describeBlobs(blobInfo); // need to rediscribe after fill
+//imageBinary = ImageMat.gteFloat(blobInfo["value"], 0);
 ImageMat.invertFloat01(imageBinary);
 
 
 var imageThreshold = Code.copyArray(imageBinary);
-imageThreshold = ImageMat.expandBlob(imageBinary, imageWidth,imageHeight).value;
+//imageThreshold = ImageMat.expandBlob(imageBinary, imageWidth,imageHeight).value;
 //imageThreshold = ImageMat.applyGaussianFloat(imageThreshold, imageWidth,imageHeight, 1.0);
 
 
 //imageBinary = ImageMat.normalFloat01(blobInfo["value"]);
-// var img = GLOBALSTAGE.getFloatRGBAsImage(imageBinary,imageBinary,imageBinary, imageAdjusted.width(),imageAdjusted.height());
+ var img = GLOBALSTAGE.getFloatRGBAsImage(imageBinary,imageBinary,imageBinary, imageAdjusted.width(),imageAdjusted.height());
 //var img = GLOBALSTAGE.getFloatRGBAsImage(imageThreshold,imageThreshold,imageThreshold, imageAdjusted.width(),imageAdjusted.height());
-var img = GLOBALSTAGE.getFloatRGBAsImage(imageBinary,imageBinary,imageBinary, imageAdjusted.width(),imageAdjusted.height());
+//var img = GLOBALSTAGE.getFloatRGBAsImage(imageBinary,imageBinary,imageBinary, imageAdjusted.width(),imageAdjusted.height());
 var d = new DOImage(img);
 GLOBALSTAGE.addChild(d);
 d.graphics().alpha(1.0);
-d.matrix().translate(imageWidth*CALLED,imageHeight*0.0);
+d.matrix().translate(imageWidth*CALLED,imageHeight*1);
+
 
 
 		var nonMaximalPercent = Math.sqrt(imageWidth*imageWidth+imageHeight*imageHeight)*0.005; // 800x800 = 5px
@@ -8468,6 +8474,7 @@ for(i=0; i<corners.length; ++i){
 // d.matrix().translate(imageWidth*2,0);
 	// create rectangle container for each blob
 	var rectangles = [];
+	var maxRadiusSize = Math.min(imageWidth,imageHeight)*0.25;
 	for(i=0; i<blobs.length; ++i){
 		var blob = blobs[i];
 		var bX = blob.x;
@@ -8475,10 +8482,13 @@ for(i=0; i<corners.length; ++i){
 		var id = blob["id"];
 		var radiusMin = blob["radiusMin"];
 		var radiusMax = blob["radiusMax"];
-		if(radiusMax<1 || radiusMin<1){ // drop single-pixel boxes
+		if(radiusMax<1 || radiusMin<1){ // drop single-pixel boxes or non-centered boxes
 			continue;
 		}
 		if(radiusMax/radiusMin>4.0){ // drop odd-sized-boxes
+			continue;
+		}
+		if(radiusMax>maxRadiusSize){ // drop really big boxes
 			continue;
 		}
 		rectangles.push({"blob":blob, "label":id, "points":[]});
@@ -8509,7 +8519,7 @@ for(i=0; i<blobs.length; ++i){
 	GLOBALSTAGE.addChild(d);
 	d.matrix().translate(imageWidth*CALLED,imageHeight*1.0);
 }
-*/	
+*/
 	//console.log("RECTS: "+rectangles.length);
 	var points = [];
 	var allPoints = points;
@@ -9019,26 +9029,26 @@ var sy = Math.random()*0;
 	}
 
 	var pointList = [];
-	var startNode = startNodes[0];
-	//var startNode = startNodes[1];
-	//var startNode = startNodes[3];
 	var node, link, next, temp;
-	node = startNode;
-
-	link = startNode.links()[0];
-	var visited = 0;
-	var cornerNode = startNode;
-	var cornerLink = startNode.links()[0];
 	
 	var endPoints = [];
 	var row1Points = [];
 	var row2Points = [];
-	 // TODO: find size dynamically
-	var gridSizeI = 0;
-	var gridSizeJ = 0;
+	 
+	var gridSizeI, gridSizeJ;
+	var cornerNode, cornerLink;
 
+	var notRightSize = true;
+var k = 0;
+detectSizeX=10; 
+detectSizeY=10;
+while(notRightSize && k<startNodes.length){
+	var startNode = startNodes[k];
 	
-
+	cornerNode = startNode;
+	cornerLink = startNode.links()[0];
+	gridSizeI = 0;
+	gridSizeJ = 0;
 	// count width:
 	node = cornerNode;
 	link = cornerLink;
@@ -9073,16 +9083,26 @@ var sy = Math.random()*0;
 		node = temp.opposite(next);
 		link = node.prevLink(temp);
 	}
+
+	console.log("gridSize: "+gridSizeI+" x "+gridSizeJ);
+	if(detectSizeX && detectSizeY){
+		if(gridSizeI==detectSizeX && gridSizeJ==detectSizeY){
+			notRightSize = false;
+			break;
+		}
+	}else{
+		break;
+	}
+	++k;
+
+}
+// TODO: retry at different starting node if fail
+
 	var gridSizeCols = gridSizeI;
 	var gridSizeRows = gridSizeJ;
 	var isOddI = gridSizeI%2 == 1;
 	var isOddJ = gridSizeJ%2 == 1;
-	console.log("gridSize: "+gridSizeI+" x "+gridSizeJ);
-	if(detectSizeX && detectSizeY){
-		if(gridSizeI!=detectSizeX || gridSizeJ!=detectSizeY){
-			return null;
-		}
-	}
+	
 
 	// fill in grid with nodes
 	var nodeCount = gridSizeCols*gridSizeRows;
@@ -9104,10 +9124,10 @@ var sy = Math.random()*0;
 		for(i=0; i<gridSizeCols; i+=2){
 			if(linkUpward){ // up-down movement
 				next = link.opposite(node);
-				// if(node.visited() || next.visited()){
-				// 	console.log("already visited");
-				// 	return null; // already visited, some odd arrangement => TODO: try different start node
-				// }
+				if(node.visited() || next.visited()){  // already visited, some odd arrangement => TODO: try different start node
+					console.log("already visited");
+					return null;
+				}
 				node.visited(true);
 				node.startLink(link);
 				nodeGrid[j*gridSizeCols + i] = node;
@@ -9122,6 +9142,10 @@ var sy = Math.random()*0;
 					link = node.nextLink(temp);
 				}
 			}else{ // top-odd scenario -- start off 
+				if(node.visited()){  // already visited, some odd arrangement => TODO: try different start node
+					console.log("already visited");
+					return null;
+				}
 				next = link.opposite(node);
 				node.visited(true);
 				node.startLink(link);
@@ -9289,6 +9313,7 @@ e.matrix().translate(imageWidth*CALLED,imageHeight*1.0);
 	}
 	points2D = valid2D;
 	points3D = valid3D;
+// TODO: GEOMETRY CHECKS
 	
 	console.log(points3D.length+" vs "+points2D.length);
 return null;
@@ -12553,17 +12578,16 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 		for each external view:
 	 		make a view in BA
 		 	assign a camera in BA
-		 	add all points2d in BA
 
-		for each external view:
+		for each external view PAIR:
 	 		for each matched point in external view:
-				match the point in BA [creates a 3d point & creates a transform]
+				match the point in BA [creates a 2d point (or finds existing) & 3d point & creates a transform]
 	 
 
 	INITIALIZE:
  	for each view:
 		for each other view: 
-	 		have enough points to calculate F ?
+	 		have enough points to calculate F ? [OR USE EXISTING F]
 	 			estimate F [nonlinear]
 	 			estimate M from F + K [nonlinear]
 	 			estimate 3D points for each 2d-pair from point2D & M & K
@@ -12610,16 +12634,25 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 R3D.BundleAdjust = function(){
 	// construct objects from input data
 	// iterate on randomly connected groups of 2 / 3
-	this._points2D = [];
-	this._points3D = [];
+	//this._points2D = [];
+	//this._points3D = [];
+	this._pointCloud3D = new OctTree(R3D.BundleAdjust._toPoint3D);
 	this._views = [];
 	this._cameras = [];
 	this._transforms = []; // list of all transforms from i to j
 	this._doubles = []; // currently valid double-sets
 	this._triples = []; // currently valid triple-sets
 }
-R3D.BundleAdjust = function(){
-	//
+R3D.BundleAdjust._toPoint2D = function(p){
+	return p.point();
+}
+R3D.BundleAdjust._toPoint3D = function(p){
+	return p.point();
+}
+R3D.BundleAdjust.prototype.addCamera = function(){
+	var camera = new R3D.BundleAdjust.Camera();
+	this._cameras.push(camera);
+	return camera;
 }
 R3D.BundleAdjust.prototype.addView = function(){
 	var view = new R3D.BundleAdjust.View();
@@ -12636,6 +12669,21 @@ R3D.BundleAdjust.prototype.unmatchPoints2D = function(a, b){ // now separate poi
 R3D.BundleAdjust.Point3D = function(){
 	this._point = new V3D();
 	this._projections = []; // list of Point2D
+		this._putatives = []; // list of calculated locations w/ corresponding error metric
+}
+R3D.BundleAdjust.Point3D.prototype.addPutative = function(point, error){
+	var putative = new R3D.BundleAdjust.Point3DPutative(point, error);
+	this._putatives.push(putative);
+}
+R3D.BundleAdjust.Point3D.prototype.combinePutative = function(){
+	// go thru putative estimages & estimate location
+	// window/sigma combining
+	// ...
+	Code.emptyArray(this._putatives);
+}
+R3D.BundleAdjust.Point3DPutative = function(){
+	var location = new V3D();
+	var error = -1; // based on 2d re-projection error
 }
 
 R3D.BundleAdjust.point2D = function(){
@@ -12658,8 +12706,9 @@ R3D.BundleAdjust.Transform3D = function(){
 
 R3D.BundleAdjust.View = function(){
 	this._transforms = []; // list of all transforms to other views [by index]
-	this._points = []; // list of Point2D
+	this._pointCloud2D = new QuadTree(R3D.BundleAdjust._toPoint2D); //this._points = []; // list of Point2D
 	this._camera = null; // Camera
+	
 }
 
 R3D.BundleAdjust.X = function(){

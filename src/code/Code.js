@@ -1343,6 +1343,28 @@ Code.normalizeArray = function(array){ // L2 length
 		}
 	}
 }
+Code.sortFrequency = function(array){
+	if(array.length==0){
+		return null;
+	}
+	var sorted = Code.copyArray(array).sort(function(a,b){ return a<b ? -1 : 1; });
+	var items = [];
+	var value = sorted[0];
+	var item = {"value":value,"count":1};
+	items.push(item);
+	for(var i=1; i<sorted.length; ++i){
+		var v = sorted[i];
+		if(v!=value){
+			value = v;
+			item = {"value":value,"count":1};
+			items.push(item);
+		}else{
+			item["count"]++;
+		}
+	}
+	var items = items.sort(function(a,b){ return a["count"]>b["count"] ? -1 : 1; });
+	return items;
+}
 Code.sad = function(a,b){
 	var sad = 0;
 	var i, len = Math.min(a.length,b.length);

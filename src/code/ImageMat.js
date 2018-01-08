@@ -1070,11 +1070,87 @@ ImageMat.describeBlobs = function(info){
 		}
 	}
 }
+ImageMat.expandBlobs = function(info){
+	var image = info["value"];
+	var blobs = info["blobs"];
+	var width = info["width"];
+	var height = info["height"];
+	var wm1 = width-1;
+	var hm1 = height-1;
+	// go thru each pixel
+	//var emptyColor = -2;
+	var i, j, k, v, index;
+	var result = [];
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			index = j*width + i;
+			v = image[index];
+			result[index] = v;
+			if(v<=0){ // empty
+				var nUL = -1;
+				var nUM = -1;
+				var nUR = -1;
+				var nML = -1;
+				var nMM = -1;
+				var nMR = -1;
+				var nDL = -1;
+				var nDM = -1;
+				var nDR = -1;
+				if(0<j && 0<i){
+					nUL = image[(j-1)*width + (i-1)];
+				}
+				if(0<j && 0<=i){
+					nUM = image[(j-1)*width + (i-0)];
+				}
+				if(0<j && i<wm1){
+					nUR = image[(j-1)*width + (i+1)];
+				}
+
+				if(0<=j && 0<i){
+					nML = image[(j-0)*width + (i-1)];
+				}
+				if(0<=j && 0<=i){
+					nMM = image[(j-0)*width + (i-0)];
+				}
+				if(0<=j && i<wm1){
+					nMR = image[(j-0)*width + (i+1)];
+				}
+
+				if(j<hm1 && 0<i){
+					nDL = image[(j+1)*width + (i-1)];
+				}
+				if(j<hm1 && 0<=i){
+					nDM = image[(j+1)*width + (i-0)];
+				}
+				if(j<hm1 && i<wm1){
+					nDR = image[(j+1)*width + (i+1)];
+				}
+				var list = [nUL,nUM,nUR,nML,nMR,nDL,nDM,nDR];
+				// find most common color & set
+				list = Code.sortFrequency(list);
+				var anyColor = -3;
+				for(k=0; k<list.length;++k){
+					if(list[k]["value"]>=0){
+						anyColor = list[k]["value"];
+						break;
+					}
+				}
+				if(anyColor>=0){ // set to ANY (or most common)
+					result[index] = anyColor;
+				}
+			}
+		}
+	}
+	Code.copyArray(image,result);
+	return {"value":image, "width":width, "height":height};
+	//return {"value":result, "width":width, "height":height};
+}
 ImageMat.fillBlobs = function(info){
 	var image = info["value"];
 	var blobs = info["blobs"];
 	var width = info["width"];
 	var height = info["height"];
+	
 	var fillColor = -2;
 	var maxWidth = -1;
 	var maxHeight = -1;
@@ -1104,6 +1180,7 @@ ImageMat.fillBlobs = function(info){
 				bitmap[j*maxWidth + i] = 0;
 			}
 		}
+		bitmap = Code.newArrayZeros(size);
 		// grab blob
 		blob = blobs[k];
 		var value = blob["id"];
@@ -1135,34 +1212,29 @@ ImageMat.fillBlobs = function(info){
 	return {"value":image, "width":width, "height":height};
 }
 ImageMat._binaryFill = function(src,wid,hei, offX,offY,sizeX,sizeY, i,j, target, replace){ // TODO: faster implementation
-	if(i<offX || j<offY || i>=offX+sizeX || j>=offY+sizeY){ // outsize relevant zone
-		return;
+	var queue = [];
+	queue.push([i,j]);
+	while(queue.length>0){
+		var item = queue.shift();
+			i = item[0];
+			j = item[1];
+		if(i<offX || j<offY || i>=offX+sizeX || j>=offY+sizeY){ // outsize relevant zone
+			continue;
+		}
+		var y = (j+offY);
+		var x = (i+offX);
+		var index = y*wid + x;
+		var value = src[index];
+		if(value==replace || value!=target){ // filled or wrong target
+			continue;
+		}
+		src[index] = replace;
+		queue.push([i-1,j]);
+		queue.push([i+1,j]);
+		queue.push([i,j-1]);
+		queue.push([i,j+1]);
 	}
-	var y = (j+offY);
-	var x = (i+offX);
-	var index = y*wid + x;
-	var value = src[index];
-	if(value==replace || value!=target){ // filled or wrong target
-		return;
-	}
-	//console.log("REPLACED");
-	src[index] = replace;
-	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i-1,j, target,replace);
-	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i+1,j, target,replace);
-	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i,j-1, target,replace);
-	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i,j+1, target,replace);
 }
-/*
-Flood-fill (node, target-color, replacement-color):
- 1. If target-color is equal to replacement-color, return.
- 2. If the color of node is not equal to target-color, return.
- 3. Set the color of node to replacement-color.
- 4. Perform Flood-fill (one step to the south of node, target-color, replacement-color).
-    Perform Flood-fill (one step to the north of node, target-color, replacement-color).
-    Perform Flood-fill (one step to the west of node, target-color, replacement-color).
-    Perform Flood-fill (one step to the east of node, target-color, replacement-color).
- 5. Return.
-*/
 ImageMat.closestBlobFromPoint = function(info, point){
 	var image = info["value"];
 	var blobs = info["blobs"];
