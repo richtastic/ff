@@ -950,6 +950,13 @@ Code.setArray = function(arr){
 	}
 	return arr;
 }
+Code.arraySet = function(arr, c){
+	var i, len = arr.length;
+	for(i=0;i<len;++i){
+		arr[i] = c;
+	}
+	return arr;
+}
 Code.newArray = function(){
 	var arr = new Array();
 	var i, len = arguments.length;

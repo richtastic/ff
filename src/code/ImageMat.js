@@ -971,6 +971,17 @@ ImageMat.describeBlobs = function(info){
 	var com = new V2D();
 	var wm1 = width-1;
 	var hm1 = height-1;
+	// reset to unknown:
+	// TODO: recalc com.set(blob["x"],blob["y"]); ????
+	for(i=0; i<blobs.length; ++i){
+		var blob = blobs[i];
+		blob["radiusMin"] = undefined;
+		blob["radiusMax"] = undefined;
+		blob["xMin"] = undefined;
+		blob["xMax"] = undefined;
+		blob["yMin"] = undefined;
+		blob["yMax"] = undefined;
+	}
 	for(j=0; j<height; ++j){
 		for(i=0; i<width; ++i){
 			index = j*width + i;
@@ -978,8 +989,6 @@ ImageMat.describeBlobs = function(info){
 			//console.log(value);
 			if(value!==undefined && value>=0){
 				blob = blobs[value];
-
-
 				var nUL = -1;
 				var nUM = -1;
 				var nUR = -1;
@@ -1061,6 +1070,99 @@ ImageMat.describeBlobs = function(info){
 		}
 	}
 }
+ImageMat.fillBlobs = function(info){
+	var image = info["value"];
+	var blobs = info["blobs"];
+	var width = info["width"];
+	var height = info["height"];
+	var fillColor = -2;
+	var maxWidth = -1;
+	var maxHeight = -1;
+	var wid, hei, blob, value, h2, w2;
+	var i, j, k;
+	for(i=0; i<blobs.length; ++i){
+		blob = blobs[i];
+		wid = blob["xMax"] - blob["xMin"] + 1;
+		hei = blob["yMax"] - blob["yMin"] + 1;
+		maxWidth = Math.max(maxWidth,wid);
+		maxHeight = Math.max(maxHeight,hei);
+	}
+	// create rect + 1 border pixel all around
+	maxWidth += 2;
+	maxHeight += 2;
+	var size = maxWidth*maxHeight;
+	var bitmap = Code.newArrayZeros(size);
+	// fill bitmap
+	wid = 0;
+	hei = 0;
+	for(k=0; k<blobs.length; ++k){
+		// zero previous
+		wid = Math.min(wid+2,maxWidth);
+		hei = Math.min(hei+2,maxHeight);
+		for(j=0; j<hei; ++j){
+			for(i=0; i<wid; ++i){
+				bitmap[j*maxWidth + i] = 0;
+			}
+		}
+		// grab blob
+		blob = blobs[k];
+		var value = blob["id"];
+		var offX = blob["xMin"];
+		var offY = blob["yMin"];
+		// copy source with value into rect
+		wid = blob["xMax"] - blob["xMin"] + 1;
+		hei = blob["yMax"] - blob["yMin"] + 1;
+		for(j=0; j<hei; ++j){
+			for(i=0; i<wid; ++i){
+				val = image[(j+offY)*width + (i+offX)];
+				if(val==value){
+					bitmap[(j+1)*maxWidth + (i+1)] = value;
+				}
+			}
+		}
+		// flood fill outside w/ -1
+		ImageMat._binaryFill(bitmap,maxWidth,maxHeight, 0,0,wid+2,hei+2, 0,0, 0,fillColor);
+		// copy-copy : select all points !=-1 & fill in original
+		for(j=0; j<hei; ++j){
+			for(i=0; i<wid; ++i){
+				val = bitmap[(j+1)*maxWidth + (i+1)];
+				if(val!=fillColor){// && val!=value){ // replace only what is different
+					image[(j+offY)*width + (i+offX)] = value;
+				}
+			}
+		}
+	}
+	return {"value":image, "width":width, "height":height};
+}
+ImageMat._binaryFill = function(src,wid,hei, offX,offY,sizeX,sizeY, i,j, target, replace){ // TODO: faster implementation
+	if(i<offX || j<offY || i>=offX+sizeX || j>=offY+sizeY){ // outsize relevant zone
+		return;
+	}
+	var y = (j+offY);
+	var x = (i+offX);
+	var index = y*wid + x;
+	var value = src[index];
+	if(value==replace || value!=target){ // filled or wrong target
+		return;
+	}
+	//console.log("REPLACED");
+	src[index] = replace;
+	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i-1,j, target,replace);
+	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i+1,j, target,replace);
+	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i,j-1, target,replace);
+	ImageMat._binaryFill(src,wid,hei, offX,offY,sizeX,sizeY, i,j+1, target,replace);
+}
+/*
+Flood-fill (node, target-color, replacement-color):
+ 1. If target-color is equal to replacement-color, return.
+ 2. If the color of node is not equal to target-color, return.
+ 3. Set the color of node to replacement-color.
+ 4. Perform Flood-fill (one step to the south of node, target-color, replacement-color).
+    Perform Flood-fill (one step to the north of node, target-color, replacement-color).
+    Perform Flood-fill (one step to the west of node, target-color, replacement-color).
+    Perform Flood-fill (one step to the east of node, target-color, replacement-color).
+ 5. Return.
+*/
 ImageMat.closestBlobFromPoint = function(info, point){
 	var image = info["value"];
 	var blobs = info["blobs"];
@@ -2545,11 +2647,28 @@ ImageMat.gtFloat = function(data, val){
 	}
 	return result;
 }
+ImageMat.gteFloat = function(data, val){
+	var i, len = data.length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = (data[i]>=val)?1.0:0.0;
+	}
+	return result;
+}
 ImageMat.ltFloat = function(data, val){
 	var i, len = data.length;
 	var result = new Array(len);
 	for(i=0;i<len;++i){
 		result[i] = (data[i]<val)?1.0:0.0;
+	}
+	return result;
+}
+
+ImageMat.leFloat = function(data, val){
+	var i, len = data.length;
+	var result = new Array(len);
+	for(i=0;i<len;++i){
+		result[i] = (data[i]<=val)?1.0:0.0;
 	}
 	return result;
 }
@@ -2804,6 +2923,15 @@ ImageMat.pow = function(data,power){
 		data[i] = Math.pow(data[i],power);
 	}
 	return data;
+}
+
+ImageMat.nonZero = function(data){
+	var i, len = data.length;
+	var result = [];
+	for(i=0;i<len;++i){
+		result[i] = data[i]!=0 ? 1.0 : 0.0;
+	}
+	return result;
 }
 
 ImageMat.getPointInterpolateNearest = function(array, wid,hei, x,y){
@@ -4139,7 +4267,19 @@ ImageMat.adaptiveThreshold = function(src, wid, hei, size, threshold, rangeMin){
 
 
 
-
+ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDistance, inside){
+	inside = inside!==undefined ? inside : true;
+	// RGB -> HSV
+	// distance in H
+	//   hue = [color base]
+	//   sat = [white,color]
+	// value = [black,white]
+	// 
+	// RGB sphere Euclidean Color
+	// radius ?
+	var mask;
+	return {"value":mask, "width":wid, "height":hei};
+}
 
 
 

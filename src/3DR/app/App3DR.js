@@ -4311,7 +4311,7 @@ App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, c
 		var imageMatrix = R3D.imageMatrixFromImage(img, stage);
 		var imageWidth = imageMatrix.width();
 		var imageHeight = imageMatrix.height();
-		var pointMatches = R3D.detectCheckerboard(imageMatrix);
+		var pointMatches = R3D.detectCheckerboard(imageMatrix, 10,10, true);
 console.log(pointMatches);
 return;
 
