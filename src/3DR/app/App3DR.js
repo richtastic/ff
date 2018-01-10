@@ -70,7 +70,7 @@ GLOBALSTAGE = this._stage;
 //var modeImageEdit = true;
 var modeImageEdit = false;
 
-var modeImageUpload = true;
+var modeImageUpload = true; //  uploadImageTypeCamera
 //var modeImageUpload = false;
 
 //var modeImageCompare = true;
@@ -351,11 +351,13 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 	if(manager.isLoaded()){
 		
 		var views = manager.views();
+		console.log(views.length)
 		console.log("is loaded: "+views.length);
 		if(views.length>0){
-			//var view = views[0];
-			var view = views[views.length-1];
+			var view = views[0];
+			//var view = views[views.length-1];
 			this._activeView = view;
+			console.lo
 			var app = this._activeApp;
 			var self = this;
 
@@ -1007,6 +1009,7 @@ App3DR.App.UploadAdapterToPictures.prototype._processPicturesLoaded = function(i
 }
 App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, extension, sizes){
 var uploadImageTypeCamera = true;
+//var uploadImageTypeCamera = false;
 
 	var stage = this._stage;
 	console.log("_processPictures");
@@ -1021,6 +1024,12 @@ var uploadImageTypeCamera = true;
 		var i;
 		var pictureList = [];
 		var mat = R3D.imageMatrixFromImage(image, stage);
+		console.log(view)
+		// if(uploadImageTypeCamera){
+		// 	view.camera()
+		// }else{
+			view.aspectRatio(mat.width()/mat.height());
+		// }
 		var countTotal = sizes.length;
 		for(i=0; i<sizes.length; ++i){
 			size = sizes[i];
@@ -3391,8 +3400,13 @@ projects/
 				matching.yaml 			x,y,z,t[,u,v] <=> ; F [medium matching]
 				dense.yaml 				x,y, relScale,relAng @ density ; F
 				triangulation.yaml 		x,y <=> x,y <=> X,Y,Z ; K ; F ; P ;
-
+				
+				# use bundle adjustment results to init seed points & retain only 1~2-sigma valid results
 				???? dense_5x5_800x600.yaml  high dense [after some other process?]
+				dense_forward.yaml
+				dense_reverse.yaml
+				dense_pair.yaml 		# only valid fwd<=>rev mapping within 1~2 sigma of F
+
 
 		triples/ tuples
 			0/
@@ -3445,10 +3459,25 @@ projects/
 									z
 
 		bundle/
-			info.yaml
+			info.yaml    				result of a bundle adjustment
+				- views
+					- 
+				- Ks
+					- fx,fy,s,cx,cy
+				- transforms
+					- rot, trans
+				- points2d
+					- x,y
+					- point3d index OR null
+				- points3d
+					- X,Y,Z
+			* could do sparse / dense BA
 
-		reconstruction/
-			WORKING YAML FILE
+			
+			
+
+		reconstruction/					combine bundle adjust with dense => produce 3D model outputs
+			WORKING YAML FILES
 
 			points3d.yaml 				3d points found from pixels
 			surface.yaml 				triangle soup of approximated surface
@@ -3898,10 +3927,10 @@ App3DR.ProjectManager.prototype._addTripleComplete = function(object, data){
 
 
 App3DR.ProjectManager.prototype.addCamera = function(callback, context){
-	console.log("addTriple");
+	console.log("addCamera");
 	var directory = this._uniqueCameraID();
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.CAMERAS_DIRECTORY, directory);
-	var camera = new App3DR.ProjectManager.Camera(this, directory);
+	var camera = new App3DR.ProjectManager.Camera(this, "New Camera "+directory, directory);
 	var object = {};
 		object["callback"] = callback;
 		object["context"] = context;
@@ -3979,7 +4008,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
-//return; // TODO: uncomment this
+// return; // TODO: uncomment this
 	var i, j, k, len;
 	console.log("next task?");
 	var views = this._views;
@@ -4074,10 +4103,12 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	}
 
 	// dense matching
-
+return;
 	// bundle adjust
-
-	this.calculateBundleAdjust();
+	if(views.length>1 && pairs.length>0 && cameras.length>0){
+		this.calculateBundleAdjust();
+		return;
+	}
 
 	// surface
 
@@ -4317,9 +4348,8 @@ App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, c
 		var imageWidth = imageMatrix.width();
 		var imageHeight = imageMatrix.height();
 		var pointMatches = R3D.detectCheckerboard(imageMatrix, 10,10, true);
-console.log(pointMatches);
-return;
-
+// console.log(pointMatches);
+// return;
 		var points2D = [];
 		var points3D = [];
 		if(pointMatches){
@@ -4349,38 +4379,42 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 		++callbackCount;
 		if(callbackCount==expectedCount){
 			console.log('do');
-			var imageSizeWidth = 816;
-			var imageSizeHeight = 612;
+			// var imageSizeWidth = 816;
+			// var imageSizeHeight = 612;
 			var pointList2D = [];
 			var pointList3D = [];
 			for(var i=0; i<calibrationImages.length; ++i){
 				var calibrationImage = calibrationImages[i];
+				console.log(calibrationImage);
+				var aspect = calibrationImage.aspectRatio();
+				var width = 1.0;
+				var height = width/aspect;
+width = 816;
+height = 612;
+				console.log(width+"x"+height)
 				var calibrationData = calibrationImage.calibrationData();
 				if(Code.isArray(calibrationData)){
 					calibrationData = calibrationData[0];
 				}
-				//console.log(calibrationData);
+				console.log(calibrationData);
 				var matches = calibrationData["matches"];
-				//console.log(matches);
 				var points2D = [];
 				var points3D = [];
 				for(var j=0; j<matches.length; ++j){
 					var match = matches[j];
 					var point2D = new V2D(match["x"],match["y"]);
-					var point3D = new V2D(match["X"],match["Y"],match["Z"]);
-					// need original image size / aspect ratio
-					point2D.scale(imageSizeWidth,imageSizeHeight);
+					var point3D = new V3D(match["X"],match["Y"],match["Z"]);
+					point2D.scale(width,height);
 					points2D.push(point2D);
 					points3D.push(point3D);
 					if(j==0){
 						console.log(point2D+"")
+						console.log(point3D+"")
 					}
 				}
+// TODO: aspect ratio K
 				pointList2D.push(points2D);
 				pointList3D.push(points3D);
-				// if(i==2){
-				// 	break;
-				// }
 			}
 			console.log(pointList2D);
 			console.log(pointList3D);
@@ -4409,10 +4443,134 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 }
 
 
-App3DR.ProjectManager.prototype.calculateBundleAdjust = function(x, callback, context, object){
+App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
+	console.log("calculateBundleAdjust");
+	var i, j, k;
+	var view, pair, camera;
+	var views = this._views;
+	var pairs = this._pairs;
+	var expectedViews = views.length;
+	var expectedPairs = pairs.length;
+
+	var cameras = [];
+	for(i=0; i<views.length; ++i){
+		view = views[i];
+		var cameraID = view.cameraID();
+		if(cameraID){
+			camera = this.cameraFromID(cameraID);
+			if(camera){
+				Code.addUnique(cameras, camera);
+			}
+		}
+	}
+	cameras = this._cameras;// TODO: hook cameras up
+	var expectedCameras = cameras.length;
+	var loadedViews = 0;
+	var loadedPairs = 0;
+	var loadedCameras = 0;
+	var fxnA = function(view){
+		console.log("loaded view");
+		++loadedViews;
+		fxnD.call(this);
+	}
+	var fxnB = function(pair){
+		console.log("loaded pair");
+		++loadedPairs;
+		fxnD.call(this);
+	}
+	// var fxnC = function(camera){
+	// 	console.log("loaded camera");
+	// 	++loadedCameras;
+	// 	fxnD();
+	// }
+	var fxnD = function(){
+		console.log(loadedPairs+" / "+expectedPairs+"  &&  "+loadedViews+" / "+expectedViews+"  &&  "+loadedCameras+" / "+expectedCameras);
+		// normalize everything in width=1, height = htowratio
+		if(loadedViews==expectedViews && loadedPairs==expectedPairs){
+			console.log("complete");
+			var i, j;
+			var BA = new R3D.BundleAdjust();
+			var baViews = [];
+			var baCameras = [];
+			for(i=0; i<cameras.length; ++i){
+				var camera = cameras[i];
+				var c = BA.addCamera();
+					var K = camera.K();
+					if(K){
+						var fx = K["fx"];
+						var fy = K["fy"];
+						var s = K["s"];
+						var cx = K["cx"];
+						var cy = K["cy"];
+						c.set(fx,fy,s,cx,cy);
+					}
+				baCameras.push(c);
+			}
+			var cam = baCameras[0]; // TODO: connect camera to views
+			for(i=0; i<views.length; ++i){
+				var view = views[i];
+				var size = new V2D(1.0, 1.0/view.aspectRatio());
+				var v = BA.addView(size);
+				baViews.push(v);
+					v.camera(cam);
+					view._temp = v;
+				// add all feature points
+				var features = view.features();
+				console.log(features);
+				for(j=0; j<features.length; ++j){
+					var feature = features[j];
+						var pos = feature["point"];
+						var size = feature["size"];
+						var angle = feature["angle"];
+					var point = view.addPoint2D(pos.x,pos.y,angle,size);
+					break;
+				}
+			}
+			for(i=0; i<pairs.length; ++i){
+				var pair = pairs[i];
+				var matchData = pair.matchingData();
+				console.log(matchData);
+				var fromViewID = matchData["from"];
+				var toViewID = matchData["to"];
+				var matches = matchData["matches"];
+				console.log(matches);
+				var viewA = this.viewFromID(fromViewID);
+				var viewB = this.viewFromID(toViewID);
+				console.log(viewA,viewB);
+					var vA = viewA._temp;
+					var vB = viewB._temp;
+				for(j=0; j<matches.length; ++j){
+					var match = matches[j];
+					var fr = match["fr"];
+					var to = match["to"];
+					// connect points
+					var pointA = vA.closestPoint2D(fr.x,fr.y);
+					var pointB = vB.closestPoint2D(to.x,to.y);
+					if(pointA && pointB){
+						BA.matchPoints2D(viewA,pointA, viewB,pointB);
+					}
+				}
+				// initially get 2-sigma points & only add those from match list
+			}
+			BA.process();
+		}
+	}
+	for(i=0; i<views.length; ++i){
+		view = views[i];
+		view.loadFeatures(fxnA, this);
+	}
+	for(i=0; i<pairs.length; ++i){
+		pair = pairs[i];
+		pair.loadMatchingData(fxnB, this);
+	}
+	for(i=0; i<cameras.length; ++i){
+		// camera K is in default camera data
+	}
 /*
-	- get camera [K]
-	- get views [assign K]
+	
+	- get views
+	- load referenced cameras
+	- assign K to V
 	- get view pairs [points2Ds, Fs]
 	- init BA
 		- points3Ds
@@ -4640,6 +4798,18 @@ App3DR.ProjectManager.prototype.viewFromID = function(viewID){
 	}
 	return null;
 }
+App3DR.ProjectManager.prototype.cameraFromID = function(cameraID){
+	if(cameraID){
+		var cameras = this._cameras;
+		for(var i=0; i<cameras.length; ++i){
+			var camera = cameras[i];
+			if(camera.id()==cameraID){
+				return camera;
+			}
+		}
+	}
+	return null;
+}
 App3DR.ProjectManager.prototype.x = function(){
 
 }
@@ -4650,7 +4820,8 @@ App3DR.ProjectManager.View = function(manager, name, directory){
 	this._title = name ? name : "dunno1";
 	this._directory = directory ? directory : "dunno2";
 	this._pictureInfo = []; // 
-	//this._pictures = null; // actual data when loaded --- maybe only specific sizes ? [icon, denseLo, features, denseHi, texture, original]
+	this._widthToHeightRatio = null;
+	// this._pictures = null; // actual data when loaded --- maybe only specific sizes ? [icon, denseLo, features, denseHi, texture, original]
 	this._maskInfo = null; // info
 	this._mask = null; // actual data when loaded
 	this._featureInfo = null;
@@ -4671,6 +4842,8 @@ App3DR.ProjectManager.View.prototype.saveToYAML = function(yaml){
 	var i, len;
 	yaml.writeString("title", this._title);
 	yaml.writeString("directory", this._directory);
+	yaml.writeString("camera", this._cameraID);
+	yaml.writeNumber("aspectRatio", this._widthToHeightRatio);
 	// mask
 	if(this._maskInfo){
 		var mask = this._maskInfo;
@@ -4719,12 +4892,13 @@ App3DR.ProjectManager.View.prototype.readFromObject = function(obj){
 	var features = obj["features"];
 	var pairs = obj["pairs"];
 	var camera = obj["camera"];
+	var aspect = obj["aspectRatio"]
 	this._title = title;
 	this._directory = directory;
 	this._pictureInfo = [];
 	this._featureInfo = [];
-	// this._pairInfo = [];
 	this._cameraID = camera;
+	this._widthToHeightRatio = aspect;
 	// mask
 	if(mask){
 		var m = {};
@@ -4823,10 +4997,18 @@ App3DR.ProjectManager.View.prototype._callbackAddPicture = function(object, data
 App3DR.ProjectManager.View.prototype.id = function(){
 	return this.directory();
 }
+App3DR.ProjectManager.View.prototype.cameraID = function(){
+	return this._cameraID;
+}
 App3DR.ProjectManager.View.prototype.directory = function(){
 	return this._directory;
 }
-
+App3DR.ProjectManager.View.prototype.aspectRatio = function(r){
+	if(r!==undefined){
+		this._widthToHeightRatio = r;
+	}
+	return this._widthToHeightRatio;
+}
 App3DR.ProjectManager.View.prototype.removePicture = function(index){
 	//
 }
@@ -5220,9 +5402,10 @@ App3DR.ProjectManager.Triple.prototype._loadMatchingDataComplete = function(obje
 	}
 }
 // ------------------------------------------------------------------------------------------------------------
-App3DR.ProjectManager.Camera = function(manager, directory){
+App3DR.ProjectManager.Camera = function(manager, name, directory){
 	this._manager = manager;
 	this._directory = directory;
+	this._title = name;
 	this._K = null; // calculated camera matrix
 	this._calculatedCount = 0; // number of images used to calculate 
 	this._distortion = null; // calculated distortions
@@ -5274,20 +5457,32 @@ App3DR.ProjectManager.Camera.prototype.newCalibrationImage = function(){
 	return image;
 }
 
-
+App3DR.ProjectManager.Camera.prototype.K = function(){
+	var K = null;
+	if(this._K){
+		K = {};
+		K["fx"] = this._K["fx"];
+		K["fy"] = this._K["fy"];
+		K["s"] = this._K["s"];
+		K["cx"] = this._K["cx"];
+		K["cy"] = this._K["cy"];
+	}
+	return K;
+}
 
 App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	console.log("CAMERA saveToYAML");
 	var i, j, len;
 	yaml.writeString("directory", this._directory);
+	yaml.writeString("title", this._title);
 	// K
 	if(this._K){
 		var K = this._K;
-		yaml.writeNumber("fx", d["fx"]);
-		yaml.writeNumber("fy", d["fy"]);
-		yaml.writeNumber("s",  d["s"]);
-		yaml.writeNumber("cx", d["cx"]);
-		yaml.writeNumber("cy", d["cy"]);
+		yaml.writeNumber("fx", K["fx"]);
+		yaml.writeNumber("fy", K["fy"]);
+		yaml.writeNumber("s",  K["s"]);
+		yaml.writeNumber("cx", K["cx"]);
+		yaml.writeNumber("cy", K["cy"]);
 	}
 	// distortions
 	if(this._distortion){
@@ -5310,10 +5505,13 @@ App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	yaml.writeArrayEnd();
 }
 App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
-	this._directory = object["directory"];
+	var directory = object["directory"];
+	var title = object["title"];
 	var images = object["images"];
 	var K = object["K"];
 	var distortion = object["distortion"];
+	this._directory = directory;
+	this._title = title;
 	// images
 	this._images = [];
 	if(images){
@@ -5349,6 +5547,7 @@ App3DR.ProjectManager.Camera.CalibrationImage = function(camera, directory){
 	this._camera = camera;
 	this._directory = directory;
 	this._pictureInfo = [];
+	this._widthToHeightRatio = null;
 	this._matchesCount = null;
 	this._calibrationData = null;
 	self._calibrationImage = null;
@@ -5358,6 +5557,13 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.directory = function(){
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.id = function(){
 	return this.directory();
+}
+
+App3DR.ProjectManager.Camera.CalibrationImage.prototype.aspectRatio = function(r){
+	if(r!==undefined){
+		this._widthToHeightRatio = r;
+	}
+	return this._widthToHeightRatio;
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.manager = function(){
 	return this._camera._manager;
@@ -5376,7 +5582,9 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.readFromObject = functio
 	var pictures = object["pictures"];
 	var directory = object["directory"];
 	var matches = object["matches"];
+	var aspectRatio = object["aspectRatio"];
 	this._directory = directory;
+	this._widthToHeightRatio = aspectRatio;
 	this._matchesCount = (matches!==undefined && matches!==null) ? matches : null;
 	this._pictureInfo = [];
 	// pictures
@@ -5397,6 +5605,7 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.saveToYAML = function(ya
 	var i, len;
 	yaml.writeString("directory", this._directory);
 	yaml.writeNumber("matches", this._matchesCount);
+	yaml.writeNumber("aspectRatio", this._widthToHeightRatio);
 	// pictures
 	len = this._pictureInfo ? this._pictureInfo.length : 0;
 	yaml.writeArrayStart("pictures");
@@ -5555,7 +5764,20 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype._loadCalibratationDataCo
 }
 
 
+// sparse approximation | estimate | combine | merge
+App3DR.ProjectManager.BundleAdjustment = function(directory){
+	this._x;
+}
 
+// 3D-triangle-model | textures | 
+App3DR.ProjectManager.Reconstruction = function(directory){
+	this._x;
+}
+
+// camera | background | filtered-textures | 
+App3DR.ProjectManager.Scene = function(name, directory){
+	this._x;
+}
 
 
 App3DR.ProjectManager._closestPictureSize = function(pictures, desiredPixelCount, maximumPixelCount){

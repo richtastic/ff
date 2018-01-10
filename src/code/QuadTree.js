@@ -3,6 +3,7 @@
 function QuadTree(toPoint, min, max){
 	this._root = new QuadTree.Arxel();
 	this._toPoint = QuadTree.objectToV2D;
+	this._autoResize = true;
 	this.toPoint(toPoint);
 	if(min && max){
 		var size = V2D.sub(max,min);
@@ -182,7 +183,27 @@ QuadTree.prototype.clear = function(){
 	this._root.clear();
 }
 QuadTree.prototype.insertObject = function(obj){
-	this._root.insertObject(obj,this._toPoint);
+	var result = this._root.insertObject(obj,this._toPoint);
+	if(!result && this._autoResize){
+		console.log("need to resize to fit next object");
+		var objects = this.toArray();
+		objects.push(object);
+		var point = this._toPoint(object);
+		// reinit
+		this.clear();
+		var min = this._root.min();
+		var max = this._root.max();
+		min = V2D.min(min,point);
+		max = V2D.max(max,point);
+		var center = V2D.avg(min,max);
+		var size = V2D.sub(max,min);
+		this.initWithDimensions(center,size);
+		// readd
+		var i, len=objects.length;
+		for(i=0;i<len;++i){
+			this.insertObject(objects[i]);
+		}
+	}
 }
 QuadTree.prototype.removeObject = function(obj){
 	return this._root.removeObject(obj,this._toPoint);

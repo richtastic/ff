@@ -193,11 +193,10 @@ project typical numbers:
 APP TODO:
 
 
-- how to derive TFT minimization equations [4]
 
 - upload camera images
-	- FILL algorithm update
-	- EXPANG blobs update [disjoint]
+	- camera double-check point location checks
+	
 	- C calculate calibration if valid pairs >= 3
 		- K
 		- distortion r & t
@@ -207,7 +206,7 @@ APP TODO:
 - BUNDLE ADJUST ALGORITHM
 
 
-
+- how to derive TFT minimization equations [4]
 - trifocal tensor how-to-calculate (from points) / robust iterate
 - TFT nonlinear estimation
 - TFT sparse

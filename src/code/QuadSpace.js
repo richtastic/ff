@@ -2,6 +2,7 @@
 
 function QuadSpace(toRect,min,max,eps){
 	this._root = new QuadSpace.Arxel();
+	this._autoResize = true;
 	this._epsilon = null;
 	this._toRectFxn = toRect;
 	this.initWithSize(min,max,eps);
@@ -53,7 +54,14 @@ QuadSpace.prototype.clear = function(){
 QuadSpace.prototype.insertObject = function(object){
 	var package = new QuadSpace.Package(object);
 	var rect = this._toRectFxn(object);
-	this._root.insertObject(package, rect, this._toRectFxn, this._epsilon);
+	var result = this._root.insertObject(package, rect, this._toRectFxn, this._epsilon);
+	if(!result && this._autoResize){
+		console.log("need to resize to fit object");
+		var items = this.toArray();
+		items.push(object);
+		this.clear();
+		throw("TODO: insertObject");
+	}
 }
 QuadSpace.prototype.containsObject = function(object){
 	var package = this.findPackage(object);
@@ -95,17 +103,11 @@ QuadSpace.prototype.objectsInsideCircle = function(center,radius){
 	var arr = [];
 	radius = Math.min(this._root.size().length(),radius);
 	this._root.objectsInsideCircleSquare(arr,center,radius*radius,this._toRectFxn);
-	// for(var i=0; i<arr.length; ++i){
-	// 	arr[i] = arr[i].object();
-	// }
 	return arr;
 }
 QuadSpace.prototype.objectsInsideRect = function(min,max){
 	var arr = [];
 	this._root.objectsInsideRect(arr,min,max,this._toRectFxn);
-	// for(var i=0; i<arr.length; ++i){
-	// 	arr[i] = arr[i].object();
-	// }
 	return arr;
 }
 QuadSpace.prototype.toArray = function(){

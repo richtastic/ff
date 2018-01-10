@@ -56,7 +56,27 @@ OctTree.prototype.clear = function(){
 	this._root.clear();
 }
 OctTree.prototype.insertObject = function(obj){
-	this._root.insertObject(obj,this._toPoint);
+	var result = this._root.insertObject(obj,this._toPoint);
+	if(!result && this._autoResize){
+		console.log("need to resize to fit next object");
+		var objects = this.toArray();
+		objects.push(object);
+		var point = this._toPoint(object);
+		// reinit
+		this.clear();
+		var min = this._root.min();
+		var max = this._root.max();
+		min = V3D.min(min,point);
+		max = V3D.max(max,point);
+		var center = V3D.avg(min,max);
+		var size = V3D.sub(max,min);
+		this.initWithDimensions(center,size);
+		// readd
+		var i, len=objects.length;
+		for(i=0;i<len;++i){
+			this.insertObject(objects[i]);
+		}
+	}
 }
 OctTree.prototype.deleteObject = function(obj){
 	return this._root.deleteObject(obj,this._toPoint);
