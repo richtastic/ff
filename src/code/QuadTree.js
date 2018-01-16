@@ -9,6 +9,8 @@ function QuadTree(toPoint, min, max){
 		var size = V2D.sub(max,min);
 		var center = V2D.avg(max,min);
 		this.initWithDimensions(center, size);
+	}else{
+		this.initWithDimensions(new V2D(0,0,0), new V2D(1,1,1));
 	}
 }
 QuadTree.objectToV2D = function(p){
@@ -183,12 +185,18 @@ QuadTree.prototype.clear = function(){
 	this._root.clear();
 }
 QuadTree.prototype.insertObject = function(obj){
-	var result = this._root.insertObject(obj,this._toPoint);
-	if(!result && this._autoResize){
-		console.log("need to resize to fit next object");
+
+	var point = this._toPoint(obj);
+	var min = this.min();
+	var max = this.max();
+	var isInside = min.x<=point.x && point.x<max.x && min.y<=point.y && point.y<max.y;
+	if(isInside){
+		this._root.insertObject(obj,this._toPoint);
+	}else if(this._autoResize){
+		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
 		var objects = this.toArray();
-		objects.push(object);
-		var point = this._toPoint(object);
+		objects.push(obj);
+		
 		// reinit
 		this.clear();
 		var min = this._root.min();
@@ -197,6 +205,8 @@ QuadTree.prototype.insertObject = function(obj){
 		max = V2D.max(max,point);
 		var center = V2D.avg(min,max);
 		var size = V2D.sub(max,min);
+console.log("center: "+center);
+console.log("size: "+size);
 		this.initWithDimensions(center,size);
 		// readd
 		var i, len=objects.length;
@@ -549,7 +559,7 @@ QuadTree.Arxel.prototype.removeObject = function(obj,toPoint){
 	if(this._datas){ // is leaf
 		for(var i=0; i<this._datas.length; ++i){
 			if(obj==this._datas[i]){
-				this._datas.splice(i,);
+				this._datas.splice(i,1);
 				--this._count;
 				if(this._datas.length==0){
 					this._datas = null;

@@ -1018,6 +1018,7 @@ return Matrix.nonShittySVD(A);
 	// 
 	//
 }
+// numeric.QRFrancis
 Matrix.QRCore = function(){ // 
 // Q = normal basis for col(A)
 // Q^t * A = R

@@ -192,18 +192,69 @@ project typical numbers:
 
 APP TODO:
 
+- how to go from refined X points to M matrices ?
+	M = f(Xi,xi) @ 6 unknowns rx,ry,rz,tx,ty,tz
+	"Pose" from known 3d points
+	http://www.uio.no/studier/emner/matnat/its/UNIK4690/v16/forelesninger/lecture_5_2_pose_from_known_3d_points.pdf
+	https://dsp.stackexchange.com/questions/1727/3d-position-estimation-using-2d-camera
+
+	http://openmvg.readthedocs.io/en/latest/openMVG/multiview/multiview/
+
+	6pt Direct Linear Transform [HZ],
+		7: computaation of camera matrix P
+
+	https://www.cs.umd.edu/class/fall2013/cmsc426/lectures/camera-calibration.pdf
+
+	https://www.cs.utah.edu/~srikumar/cv_spring2017_files/Lecture3.pdf
+	http://ags.cs.uni-kl.de/fileadmin/inf_ags/3dcv-ws11-12/3DCV_WS11-12_lec03.pdf
+
+	https://www.safaribooksonline.com/library/view/programming-computer-vision/9781449341916/ch04.html
+	http://www.cs.ucf.edu/~bagci/teaching/computervision16/Lec9.pdf
+	http://teaching.csse.uwa.edu.au/units/CITS4402/lectures/Lecture08-CameraCalibration.pdf
+
+
+
+	http://ksimek.github.io/2012/08/14/decompose/
+
+	https://en.wikipedia.org/wiki/Perspective-n-Point
+
+
+with known K ?
+
+A) use DLT to find P
+.) M = first P_3x3
+
+.) C = null vector of P
+
+
+
+A = QR
+	R = upper triangular (upper-right)
+	Q = orthogonal (Q*Qinv = I)
+
+multiply by Kinv ???
+
+isolate R & t
+
+P = K[R|t]
+	PC = 0
+	M = KR
+	QR decompose 
+	=> if know K:
+		R = Kinv * M ?
+=> force orthonormal?
+=> ????
+
+numeric.QRFrancis
 
 
 - upload camera images
 	- camera double-check point location checks
 	
-	- C calculate calibration if valid pairs >= 3
-		- K
-		- distortion r & t
-		- normalize params to width/height = 1:1
-	
 
 - BUNDLE ADJUST ALGORITHM
+
+- before/during feature matching: remove duplicate match-points
 
 
 - how to derive TFT minimization equations [4]
@@ -258,9 +309,6 @@ fullMatchesForObjects
 - triangulate projection textures from camera (from 3D points to 2D points [currently reversed])
 
 - app visualizations
-	- single-view features [points]
-	- 2-view point-matching [lines]
-	- 3-view point-matching [lines]
 	- 2-view dense match [texture-show]
 	- cameras in 3D space along with projections to 3d points
 		- filter display by pair or tuple or ALL

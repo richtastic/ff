@@ -4101,9 +4101,9 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 			return;
 		}
 	}
-
+	console.log("... continue");
 	// dense matching
-return;
+
 	// bundle adjust
 	if(views.length>1 && pairs.length>0 && cameras.length>0){
 		this.calculateBundleAdjust();
@@ -4337,7 +4337,7 @@ App3DR.ProjectManager.prototype.calculateTripleMatch = function(viewA, viewB, vi
 
 
 App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, callback, context, object){
-	// load first camera image missing file
+	console.log("calculateCameraCheckerboard");
 	var image = camera.needsDetectionImage();
 	var self = this;
 	var fxnA = function(img){
@@ -4360,6 +4360,7 @@ App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, c
 		for(var i=0; i<points2D.length; ++i){
 			points2D[i].scale(1.0/imageWidth, 1.0/imageHeight);
 		}
+ //return; // TODO: REMOVE
 		image.setCheckerboardMatches(points2D,points3D, fxnB, self);
 	}
 	var fxnB = function(){
@@ -4369,7 +4370,7 @@ App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, c
 	image.loadCalibrationImage(fxnA, this);
 }
 App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, callback, context, object){
-	console.log("TODO");
+	console.log("calculateCameraParameters");
 	var i;
 	var expectedCount = 0;
 	var callbackCount = 0;
@@ -4385,18 +4386,17 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 			var pointList3D = [];
 			for(var i=0; i<calibrationImages.length; ++i){
 				var calibrationImage = calibrationImages[i];
-				console.log(calibrationImage);
+				//console.log(calibrationImage);
 				var aspect = calibrationImage.aspectRatio();
 				var width = 1.0;
 				var height = width/aspect;
-width = 816;
-height = 612;
-				console.log(width+"x"+height)
+// width = 816;
+// height = 612;
+				//console.log(width+"x"+height)
 				var calibrationData = calibrationImage.calibrationData();
 				if(Code.isArray(calibrationData)){
 					calibrationData = calibrationData[0];
 				}
-				console.log(calibrationData);
 				var matches = calibrationData["matches"];
 				var points2D = [];
 				var points3D = [];
@@ -4408,22 +4408,31 @@ height = 612;
 					points2D.push(point2D);
 					points3D.push(point3D);
 					if(j==0){
-						console.log(point2D+"")
-						console.log(point3D+"")
+						console.log(point2D+"");
+						console.log(point3D+"");
 					}
 				}
-// TODO: aspect ratio K
 				pointList2D.push(points2D);
 				pointList3D.push(points3D);
 			}
-			console.log(pointList2D);
-			console.log(pointList3D);
 			var result = R3D.calibrateCameraK(pointList3D,pointList2D);
-			console.log(result)
 			var distortion = result["distortion"];
 			var K = result["K"];
-			console.log(distortion);
-			console.log(K);
+			var fx = K.get(0,0);
+			var s = K.get(0,1);
+			var cx = K.get(0,2);
+			var fy = K.get(1,1);
+			var cy = K.get(1,2);
+			var k1 = distortion["k1"];
+			var k2 = distortion["k2"];
+			var k3 = distortion["k3"];
+			var p1 = distortion["p1"];
+			var p2 = distortion["p2"];
+			console.log(fx,fy,s,cx,cy);
+			camera.setK(fx,fy,s,cx,cy);
+			camera.setDistortion(k1,k2,k3,p1,p2);
+			camera.setCalculatedCount(calibrationImages.length);
+			self.saveProjectFile();
 		}
 	}
 	var fxnB = function(){
@@ -4488,62 +4497,135 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 		// normalize everything in width=1, height = htowratio
 		if(loadedViews==expectedViews && loadedPairs==expectedPairs){
 			console.log("complete");
-			var i, j;
+			var i, j, k;
 			var BA = new R3D.BundleAdjust();
 			var baViews = [];
 			var baCameras = [];
+			console.log("CAMS");
 			for(i=0; i<cameras.length; ++i){
 				var camera = cameras[i];
+				console.log(camera);
 				var c = BA.addCamera();
 					var K = camera.K();
-					if(K){
+					var distortion = camera.distortion();
+					console.log(K);
+					console.log(distortion);
+					if(K && distortion){
 						var fx = K["fx"];
 						var fy = K["fy"];
 						var s = K["s"];
 						var cx = K["cx"];
 						var cy = K["cy"];
-						c.set(fx,fy,s,cx,cy);
+						var k1 = distortion["k1"];
+						var k2 = distortion["k2"];
+						var k3 = distortion["k3"];
+						var p1 = distortion["p1"];
+						var p2 = distortion["p2"];
+						c.set(fx,fy,s,cx,cy, k1,k2,k3, p1,p2);
 					}
 				baCameras.push(c);
 			}
 			var cam = baCameras[0]; // TODO: connect camera to views
+			console.log(cam);
+			console.log("VIEWS");
 			for(i=0; i<views.length; ++i){
 				var view = views[i];
-				var size = new V2D(1.0, 1.0/view.aspectRatio());
-				var v = BA.addView(size);
+				var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
+				var v = BA.addView(imageSize);
 				baViews.push(v);
 					v.camera(cam);
 					view._temp = v;
 				// add all feature points
 				var features = view.features();
-				console.log(features);
+				features.sort(function(a,b){ return a["score"]<b["score"] ? -1 : 1; });
+				console.log("FEATURES BEFORE: "+features.length);
+				//console.log(features);
+				var filteredFeatures = [];
+				// save local copy -- assumed orderd by score increasing
 				for(j=0; j<features.length; ++j){
 					var feature = features[j];
-						var pos = feature["point"];
-						var size = feature["size"];
-						var angle = feature["angle"];
-					var point = view.addPoint2D(pos.x,pos.y,angle,size);
-					break;
+					var pos = feature["point"];
+					var size = feature["size"];
+					var angle = feature["angle"];
+					pos = pos.copy().scale(imageSize.x,imageSize.y);
+					size = size * imageSize.x;
+					var feature = new V4D(pos.x,pos.y,angle,size);
+					filteredFeatures.push(feature);
+				}
+				// remove duplicate features:
+				var eps = 1E-10;
+				for(j=0; j<filteredFeatures.length; ++j){
+					var featureA = filteredFeatures[j];
+					for(k=j+1; k<filteredFeatures.length; ++k){
+						var featureB = filteredFeatures[k];
+						if( Math.abs(featureA.x-featureB.x)<eps &&  Math.abs(featureA.y-featureB.y)<eps){
+							filteredFeatures.splice(j,1);
+							--j; // retry
+							break;
+						}
+					}
+				}
+				console.log("FEATURES AFTER: "+filteredFeatures.length);
+				// copy over
+				for(j=0; j<filteredFeatures.length; ++j){
+					var pos = filteredFeatures[j];
+					var point = v.addPoint2D(pos.x,pos.y,pos.z,pos.t);
 				}
 			}
+			console.log("PAIRS");
 			for(i=0; i<pairs.length; ++i){
 				var pair = pairs[i];
 				var matchData = pair.matchingData();
-				console.log(matchData);
-				var fromViewID = matchData["from"];
+				var matches = matchData["matches"];
+				var fromSize = matchData["fromSize"];
+				var toSize = matchData["toSize"];
 				var toViewID = matchData["to"];
 				var matches = matchData["matches"];
-				console.log(matches);
+				var fromViewID = matchData["from"];
+				var toViewID = matchData["to"];
+				// 
 				var viewA = this.viewFromID(fromViewID);
 				var viewB = this.viewFromID(toViewID);
-				console.log(viewA,viewB);
-					var vA = viewA._temp;
-					var vB = viewB._temp;
+					var aspectA = viewA.aspectRatio();
+					var aspectB = viewB.aspectRatio();
+					var fromImageSize = new V2D(1.0,1.0/aspectA);
+					var toImageSize = new V2D(1.0,1.0/aspectB);
+				var vA = viewA._temp;
+				var vB = viewB._temp;
+				console.log("MATCHES BEFORE: "+matches.length);
+
+				// save local copy
+				var filteredMatches = [];
 				for(j=0; j<matches.length; ++j){
 					var match = matches[j];
 					var fr = match["fr"];
 					var to = match["to"];
-					// connect points
+					fr = new V2D(fr.x,fr.y);
+					fr.scale(fromImageSize.x,fromImageSize.y);
+					to = new V2D(to.x,to.y);
+					to.scale(toImageSize.x,toImageSize.y);
+					filteredMatches.push([fr,to]);
+				}
+				// remove duplicates
+				var eps = 1E-10;
+				for(j=0; j<filteredMatches.length; ++j){
+					var matchA = filteredMatches[j];
+					for(k=j+1; k<filteredMatches.length; ++k){
+						var matchB = filteredMatches[k];
+						if( (Math.abs(matchA[0].x-matchB[0].x)<eps && Math.abs(matchA[0].y-matchB[0].y)<eps) ||
+						    (Math.abs(matchA[1].x-matchB[1].x)<eps && Math.abs(matchA[1].y-matchB[1].y)<eps) ){
+							filteredMatches.splice(j,1);
+							--j; // retry
+							break;
+						}
+					}
+				}
+				console.log("MATCHES AFTER: "+filteredMatches.length);
+				// copy over
+				for(j=0; j<filteredMatches.length; ++j){
+					var match = filteredMatches[j];
+					var fr = match[0];
+					var to = match[1];
 					var pointA = vA.closestPoint2D(fr.x,fr.y);
 					var pointB = vB.closestPoint2D(to.x,to.y);
 					if(pointA && pointB){
@@ -5437,6 +5519,7 @@ App3DR.ProjectManager.Camera.prototype.needsDetection = function(){
 	return image!==null;
 }
 App3DR.ProjectManager.Camera.prototype.needsCalculation = function(){
+// return true;
 	var imageCount = this.imageCount();
 	var calculated = this._calculatedCount;
 	if(imageCount>=3 && calculated!=imageCount){ // at least 3 images, and not calculated with same count
@@ -5456,7 +5539,41 @@ App3DR.ProjectManager.Camera.prototype.newCalibrationImage = function(){
 	this._images.push(image);
 	return image;
 }
-
+App3DR.ProjectManager.Camera.prototype.setCalculatedCount = function(count){
+	this._calculatedCount = count;
+}
+App3DR.ProjectManager.Camera.prototype.setDistortion = function(k1,k2,k3,p1,p2){
+	distortion = {};
+	distortion["k1"] = k1;
+	distortion["k2"] = k2;
+	distortion["k3"] = k3;
+	distortion["p1"] = p1;
+	distortion["p2"] = p2;
+	this._distortion = distortion;
+	return this._distortion;
+}
+App3DR.ProjectManager.Camera.prototype.distortion = function(){
+	var distortion = null;
+	if(this._K){
+		distortion = {};
+		distortion["k1"] = this._distortion["k1"];
+		distortion["k2"] = this._distortion["k2"];
+		distortion["k3"] = this._distortion["k3"];
+		distortion["p1"] = this._distortion["p1"];
+		distortion["p2"] = this._distortion["p2"];
+	}
+	return distortion;
+}
+App3DR.ProjectManager.Camera.prototype.setK = function(fx,fy,s,cx,cy){
+	K = {};
+	K["fx"] = fx;
+	K["fy"] = fy;
+	K["s"] = s;
+	K["cx"] = cx;
+	K["cy"] = cy;
+	this._K = K;
+	return this._K;
+}
 App3DR.ProjectManager.Camera.prototype.K = function(){
 	var K = null;
 	if(this._K){
@@ -5475,23 +5592,28 @@ App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	var i, j, len;
 	yaml.writeString("directory", this._directory);
 	yaml.writeString("title", this._title);
+	yaml.writeNumber("calculatedCount", this._calculatedCount);
 	// K
 	if(this._K){
 		var K = this._K;
-		yaml.writeNumber("fx", K["fx"]);
-		yaml.writeNumber("fy", K["fy"]);
-		yaml.writeNumber("s",  K["s"]);
-		yaml.writeNumber("cx", K["cx"]);
-		yaml.writeNumber("cy", K["cy"]);
+		yaml.writeObjectStart("K");
+			yaml.writeNumber("fx", K["fx"]);
+			yaml.writeNumber("fy", K["fy"]);
+			yaml.writeNumber("s",  K["s"]);
+			yaml.writeNumber("cx", K["cx"]);
+			yaml.writeNumber("cy", K["cy"]);
+		yaml.writeObjectEnd();
 	}
 	// distortions
 	if(this._distortion){
 		var d = this._distortion;
-		yaml.writeNumber("k1", d["k1"]);
-		yaml.writeNumber("k2", d["k2"]);
-		yaml.writeNumber("k3", d["k3"]);
-		yaml.writeNumber("p1", d["p1"]);
-		yaml.writeNumber("p2", d["p2"]);
+		yaml.writeObjectStart("distortion");
+			yaml.writeNumber("k1", d["k1"]);
+			yaml.writeNumber("k2", d["k2"]);
+			yaml.writeNumber("k3", d["k3"]);
+			yaml.writeNumber("p1", d["p1"]);
+			yaml.writeNumber("p2", d["p2"]);
+		yaml.writeObjectEnd();
 	}
 	// images
 	len = this._images ? this._images.length : 0;
@@ -5505,6 +5627,7 @@ App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	yaml.writeArrayEnd();
 }
 App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
+	console.log(object)
 	var directory = object["directory"];
 	var title = object["title"];
 	var images = object["images"];
@@ -5512,6 +5635,10 @@ App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
 	var distortion = object["distortion"];
 	this._directory = directory;
 	this._title = title;
+	this._calculatedCount = object["calculatedCount"];
+	if(!this._calculatedCount){
+		this._calculatedCount = 0;
+	}
 	// images
 	this._images = [];
 	if(images){
@@ -5532,6 +5659,7 @@ App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
 		var cy = K["cy"];
 		this._K = {"fx":fx, "fy":fy, "s":s, "cx":cx, "cy":cy};
 	}
+	console.log("READ K:"+this._K);;
 	this._distortions = null;
 	if(distortion){
 		var k1 = distortion["k1"];
@@ -5601,7 +5729,6 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.readFromObject = functio
 	}
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.saveToYAML = function(yaml){
-//	console.log(" this._matchesCount: "+ this._matchesCount);
 	var i, len;
 	yaml.writeString("directory", this._directory);
 	yaml.writeNumber("matches", this._matchesCount);
