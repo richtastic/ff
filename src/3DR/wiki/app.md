@@ -192,6 +192,12 @@ project typical numbers:
 
 APP TODO:
 
+- saving yaml file from initial model
+- load model yaml
+- sub-app to show cameras & model points
+
+- 
+
 - how to go from refined X points to M matrices ?
 	M = f(Xi,xi) @ 6 unknowns rx,ry,rz,tx,ty,tz
 	"Pose" from known 3d points

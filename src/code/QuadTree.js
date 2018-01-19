@@ -363,6 +363,7 @@ QuadTree.Arxel.prototype.toString = function(tab,nex){
 	tab = tab!==undefined?tab:"";
 	nex = nex!==undefined?nex:"  ";
 	var i, child;
+	var str = "";
 	if(this.this._children){ // wuthout data
 		str += tab+" -["+this._count+"] ";
 		for(i=0;i<this._children.length;++i){

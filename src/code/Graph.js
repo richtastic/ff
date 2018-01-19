@@ -530,8 +530,147 @@ if(iteration>=1E4){
 	}
 	return cuts;
 }
-Graph._minPath = function(graph,source,target,adjacency){ // dijkstra
-	return [];
+Graph._disjointSets = function(graph){ // 
+	var sets = [];
+	var i, j;
+	var vertexes = Code.copyArray(graph.vertexes());
+	if(vertexes.length>0){
+		for(i=0; i<vertexes.length; ++i){ // init to unvisited
+			vertexes[i].temp(false);
+		}
+		while(vertexes.length>0){ // for each unconnected grouping
+			var queue = [];
+			queue.push(vertexes[0]);
+			while(queue.length>0){
+				var vertex = queue.shift();
+				if(!vertex.temp()){
+					vertex.temp(true);
+					var edges = vertex.edges();
+					for(j=0;j<edges.length;++j){
+						var edge = edges[j];
+						var a = edge.A();
+						var b = edge.B();
+						if(a==vertex){ // any kind of connection
+							queue.push(b);
+						}else{
+							queue.push(a);
+						}
+					}
+				}
+			}
+			var set = [];
+			for(i=0; i<vertexes.length; ++i){
+				var vertex = vertexes[i];
+				if(vertex.temp()){
+					vertexes.splice(i,1);
+					set.push(vertex);
+					--i;
+				}
+			}
+			sets.push(set);
+		}
+		var vertexes = graph.vertexes();
+		for(i=0; i<vertexes.length; ++i){
+			vertexes[i].temp(null);
+		}
+	}
+	return sets;
+}
+Graph._minPaths = function(graph,source){ // dijkstra ??
+	var i, j;
+	var paths = [];
+	var vertexes = graph.vertexes();
+	if(vertexes.length>1){
+		for(i=0; i<vertexes.length; ++i){
+			vertexes[i].temp([null,[]]);
+		}
+		source.temp()[0] = 0;
+		var queue = [source];
+		while(queue.length>0){
+			var vertex = queue.shift();
+			var edges = vertex.edges();
+			for(j=0;j<edges.length;++j){
+				var edge = edges[j];
+				var a = edge.A();
+				var b = edge.B();
+				var w = edge.weight();
+				var d = edge.direction();
+				var to = null;
+				if(a==vertex){
+					if(d==Graph.Edge.DIRECTION_FORWARD || d==Graph.Edge.DIRECTION_DUPLEX){
+						to = b;
+					}
+				}else{ // b==vertex
+					if(d==Graph.Edge.DIRECTION_REVERSE || d==Graph.Edge.DIRECTION_DUPLEX){
+						to = a;
+					}
+				}
+				if(to){
+					a = vertex.temp();
+					b = to.temp();
+					if(b[0]===null || b[0]>a[0]+w){
+						b[0] = a[0] + w;
+						b[1] = Code.copyArray(a[1]);
+						b[1].push(vertex);
+						queue.push(to);
+					}
+				}
+			}
+		}
+		for(i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var temp = vertex.temp();
+			var cost = temp[0];
+			var path = temp[1];
+			paths.push({"vertex":vertex, "cost":cost, "path":path});
+			vertexes[i].temp(null);
+		}
+
+	}
+	return paths;
+}
+Graph._minPath = function(graph,source,target){
+	var paths = Graph._minPath(graph,source);
+	for(var i=0; i<paths.length; ++i){
+		var path = paths[i];
+		if(path["vertex"]==target){
+			return path;
+		}
+	}
+	return null;
+}
+Graph._minRootPaths = function(graph,source){ // find best vertex to be at root to minimize all paths thru graph
+	var vertexes = graph.vertexes();
+	if(vertexes.length<=1){
+		return null;
+	}
+	var i, j;
+	var minRoot = null;
+	var minPath = null;
+	var minCount = null;
+	var minEdges = null;
+	for(i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var paths = Graph._minPaths(graph,vertex);
+		var count = 0;
+		var maxPath = null;
+		for(j=0; j<paths.length; ++j){
+			var cost = paths[j]["cost"];
+			var path = paths[j]["path"];
+			count += cost;
+			if(maxPath===null || maxPath<path.length){
+				maxPath = path.length;
+			}
+		}
+		console.log(i+": "+count+" @ max: "+maxPath);
+		if(minPath===null || minCount>count){
+			minCount = count;
+			minRoot = vertex;
+			minPath = paths;
+			minEdges = maxPath;
+		}
+	}
+	return {"root":minRoot, "paths":minPath, "height":minEdges, "cost":minCount};
 }
 Graph._addVistitedVertex = function(graph, vertex, skippedEdges, list){
 	if(vertex.temp()==Graph.BFS_COLOR_WHITE){ // is unvisited
@@ -828,6 +967,11 @@ Graph.prototype.addEdge = function(a,b,w,d){
 	this._edges.push(edge);
 	return edge;
 }
+Graph.prototype.addEdgeDuplex = function(a,b,w){
+	var edge = (arguments.length==1) ? a : new Graph.Edge(a,b,w, Graph.Edge.DIRECTION_DUPLEX);
+	this._edges.push(edge);
+	return edge;
+}
 Graph.prototype.edgeCount = function(){
 	return this._edges.length;
 }
@@ -843,21 +987,19 @@ Graph.prototype.copy = function(){
 Graph.prototype.splitWithCut = function(cut){
 	return Graph.splitGraphFromEdgeCut(this,cut);
 }
-Graph.prototype.toString = function(){
-	var i, len;
-	var str = "[Graph: (v:"+this._vertexes.length+") (e:"+this._edges.length+") \n";
-	len = this._vertexes.length;
-	for(i=0; i<len; ++i){
-		str += "  "+Code.postpendFixed(i+""," ",5)+this._vertexes[i].toString()+"\n";
-	}
-	str += "...\n";
-	len = this._edges.length;
-	for(i=0; i<len; ++i){
-		str += "  "+Code.postpendFixed(i+""," ",5)+this._edges[i].toString()+"\n";
-	}
-	str += "]";
-	return str;
+Graph.prototype.minPaths = function(source){
+	return Graph._minPaths(this,source);
 }
+Graph.prototype.minPath = function(source,target){
+	return Graph._minPaths(this,source,target);
+}
+Graph.prototype.minRootPaths = function(){
+	return Graph._minRootPaths(this);
+}
+Graph.prototype.disjointSets = function(){
+	return Graph._disjointSets(this);
+}
+
 Graph.prototype.adjacent = function(data){ // connects to vertex via edge : neighbors
 	var vertex = this.vertexFromData(data);
 	var result = [];
@@ -1021,6 +1163,7 @@ Graph.Edge = function(a,b,w,d){
 	this._weight = Graph.WEIGHT_NONE;
 	this._direction = Graph.Edge.DIRECTION_UNKNOWN;
 	this._temp = null;
+	this._data = null;
 	this.A(a);
 	this.B(b);
 	this.weight(w);
@@ -1033,7 +1176,14 @@ Graph.Edge.prototype.kill = function(){
 	this._vertexB = null;
 	this._weight = null;
 	this._direction = Graph.Edge.DIRECTION_UNKNOWN;
+	this._data = null;
 	this._temp = null;
+}
+Graph.Edge.prototype.data = function(d){
+	if(d!==undefined){
+		this._data = d;
+	}
+	return this._data;
 }
 Graph.Edge.prototype.id = function(i){
 	if(i!==undefined){

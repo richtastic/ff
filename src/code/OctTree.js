@@ -3,6 +3,7 @@
 function OctTree(toPoint, max, min){
 	this._root = new OctTree.Voxel();
 	this._toPoint = OctTree.objectToV3D;
+	this._autoResize = true;
 	this.toPoint(toPoint);
 	if(min && max){
 		var size = V3D.sub(max,min);
@@ -76,26 +77,14 @@ OctTree.prototype.insertObject = function(obj){
 	if(isInside){
 		this._root.insertObject(obj,this._toPoint);
 	}else if(this._autoResize){
-		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
+//		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
 		var objects = this.toArray();
 		objects.push(obj);
-		
-		// reinit
+
 		this.clear();
-		var min = this._root.min();
-		var max = this._root.max();
-		min = V3D.min(min,point);
-		max = V3D.max(max,point);
-		var center = V3D.avg(min,max);
-		var size = V3D.sub(max,min);
-		console.log("center: "+center);
-		console.log("size: "+size);
-		this.initWithDimensions(center,size);
-		// readd
-		var i, len=objects.length;
-		for(i=0;i<len;++i){
-			this.insertObject(objects[i]);
-		}
+		this.initWithObjects(objects, true);
+		// console.log("NEW SIZE: "+this.count());
+		// console.log(this.min()+" - "+this.max());
 	}
 }
 OctTree.prototype.removeObject = function(obj){
@@ -252,7 +241,8 @@ OctTree.Voxel.prototype.toString = function(tab,nex){
 	tab = tab!==undefined?tab:"";
 	nex = nex!==undefined?nex:"  ";
 	var i, child;
-	if(this.this._children){ // wuthout data
+	var str = "";
+	if(this._children){ // without data
 		str += tab+" -["+this._count+"] ";
 		for(i=0;i<this._children.length;++i){
 			child = this._children[i];

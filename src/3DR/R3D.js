@@ -12659,7 +12659,7 @@ R3D.BundleAdjust = function(){
 	this._pointCloud3D = new OctTree(R3D.BundleAdjust._toPoint3D);
 	this._views = [];
 	this._cameras = [];
-	this._transforms = []; // list of all transforms from i to j
+	this._transforms = {}; // lookup table of all transforms from i to j
 	this._doubles = []; // currently valid double-sets
 	this._triples = []; // currently valid triple-sets
 }
@@ -12760,6 +12760,7 @@ R3D.BundleAdjust.prototype.unmatchPoints2D = function(viewA,a, viewB,b){ // now 
 // --------------------------------------------------------------------------------------------------
 R3D.BundleAdjust.Point3D = function(){
 	this._point = new V3D();
+	this._error = null;
 	this._relativeView = null; // view used to calculate 3D position
 	this._relativeError = -1; // sum of error used to estimate
 	this._projections = []; // list of Point2D
@@ -12768,7 +12769,10 @@ R3D.BundleAdjust.Point3D = function(){
 R3D.BundleAdjust.Point3D.combine = function(point3DA,point3DB){
 	// recombine based on relative error
 }
-R3D.BundleAdjust.Point3D.prototype.point = function(){
+R3D.BundleAdjust.Point3D.prototype.point = function(p){
+	if(p!==undefined){
+		this._point.copy(p);
+	}
 	return this._point;
 }
 R3D.BundleAdjust.Point3D.prototype.points2D = function(){
@@ -12781,20 +12785,74 @@ R3D.BundleAdjust.Point3D.prototype.removePoint2D = function(point2D){
 	Code.removeElement(this._projections,point2D);
 }
 
-R3D.BundleAdjust.Point3D.prototype.addPutative3D = function(point, error){
-	var putative = new R3D.BundleAdjust.Point3DPutative(point, error);
+R3D.BundleAdjust.Point3D.prototype.addPutative3D = function(point, error, view){
+	var putative = new R3D.BundleAdjust.Point3DPutative(point, error, view);
+	if(error<0){
+		throw "? error low";
+	}
 	this._putatives.push(putative);
 }
 R3D.BundleAdjust.Point3D.prototype.combinePutative = function(){
-	// go thru putative estimages & estimate location
-	// window/sigma combining
-	// ...
+	var i = 0;
+	var count = this._putatives.length;
+	if(count==0){ // keep old data
+		return;
+	}
+	var totalError = 0;
+	var errorWindow = 0;
+	var errors = [];
+	for(i=0; i<count; ++i){
+		var put = this._putatives[i];
+		//console.log(i+": "+put.point()+" @ "+put.error());
+		error = put.error();
+		totalError += error;
+		errorWindow += 1.0/(error*error);
+	}
+	errorWindow = 1.0/errorWindow;
+	errorWindow = Math.sqrt(errorWindow); // final combined window error
+	var estimated = new V3D();
+	for(i=0; i<count; ++i){
+		var put = this._putatives[i];
+		var point = put.point();
+		var error = put.error();
+		var p = error/totalError;
+		estimated.add( point.copy().scale(p) );
+	}
+	this._error = errorWindow;
+	this.point(estimated);
+	//console.log(estimated+" @ "+errorWindow);
+		//		absolute position is based off of relative 
+		// 			find lowest-error-path between views to generate absolute offset
+		//			? view with lowest average reprojection error should be absolute ? [or just choose numerically first each time]
+		// 				? does this require re-setting absolute group 
 	Code.emptyArray(this._putatives);
 }
-R3D.BundleAdjust.Point3DPutative = function(){
-	var location = new V3D();
-	var error = -1; // based on 2d re-projection error
-	var pair = null; // pair transform that estimated
+R3D.BundleAdjust.Point3DPutative = function(p,e,v){
+	this._point = new V3D();
+	this._error = -1; // based on 2d re-projection error
+	this._pair = null; // pair transform that estimated
+	this._view = null; // reference view
+	this.point(p);
+	this.error(e);
+	this.view(v);
+}
+R3D.BundleAdjust.Point3DPutative.prototype.point = function(p){
+	if(p!==undefined){
+		this._point.copy(p);
+	}
+	return this._point;
+}
+R3D.BundleAdjust.Point3DPutative.prototype.error = function(e){
+	if(e!==undefined){
+		this._error = e;
+	}
+	return this._error;
+}
+R3D.BundleAdjust.Point3DPutative.prototype.view = function(v){
+	if(v!==undefined){
+		this._view = v;
+	}
+	return this._view;
 }
 
 R3D.BundleAdjust.Point2D = function(){
@@ -12827,8 +12885,15 @@ R3D.BundleAdjust.Point2D.prototype.point3D = function(p3D){
 }
 
 R3D.BundleAdjust.Camera = function(K, distortion){
+	this._index = null;
 	this._K = null;
 	this._distortion = null;
+}
+R3D.BundleAdjust.Camera.prototype.index = function(i){
+	if(i!==undefined){
+		this._index = i;
+	}
+	return this._index;
 }
 R3D.BundleAdjust.Camera.prototype.set = function(fx,fy,s,cx,cy, k1,k2,k3,p1,p2){
 	console.log("set");
@@ -12843,11 +12908,22 @@ R3D.BundleAdjust.Camera.prototype.K = function(k){
 }
 
 
-R3D.BundleAdjust.Transform3D = function(){
+R3D.BundleAdjust.Transform3D = function(a,b,e,f){
 	this._viewA = null;
 	this._viewB = null;
-	this._transformAToB = new Matrix(4,4);
+	this._error = null;
+	this._transformAToB = new Matrix(4,4).identity();
+	this.A(a);
+	this.B(b);
+	this.error(e);
+	this.forward(f);
 //	this._points3D = null; // any points affected by transform /// /////////////////
+}
+R3D.BundleAdjust.Transform3D.prototype.error = function(e){
+	if(e!==undefined){
+		this._error = e;
+	}
+	return this._error;
 }
 R3D.BundleAdjust.Transform3D.prototype.A = function(a){
 	if(a!==undefined){
@@ -12875,10 +12951,13 @@ R3D.BundleAdjust.Transform3D.prototype.reverse = function(m){
 }
 R3D.BundleAdjust.ViewID = 0;
 R3D.BundleAdjust.View = function(size){
+	this._index = null;
 	this._id = R3D.BundleAdjust.ViewID++;
-	this._transforms = []; // list of all transforms to other views [by index]
+	//this._transforms = []; // list of all transforms to other views [by index]
 	this._pointCloud2D = new QuadTree(R3D.BundleAdjust._toPoint2D, new V2D(0,0), new V2D(size.x,size.y) );
 	this._camera = null; // Camera
+	this._size = new V2D();
+	this._absoluteTransform = null; // relative to some root view
 }
 // R3D.BundleAdjust.View.prototype.transformTo = function(view){
 // 	var transform = this.transform(view);
@@ -12887,8 +12966,10 @@ R3D.BundleAdjust.View = function(size){
 // 	}
 // 	return null;
 // }
+/*
 R3D.BundleAdjust.View.prototype.transform = function(view, transform){
 	if(transform!==undefined){ // set
+// TODO: this should be a lookup from indexes this.id(),view.id()
 		for(var i=0; i<this._transforms.length; ++i){
 			var trans = this._transforms[i];
 			if(trans && (trans.A()==view || trans.B()==view)){
@@ -12898,7 +12979,7 @@ R3D.BundleAdjust.View.prototype.transform = function(view, transform){
 		}
 		this._transforms.push(transform);
 		return;
-	}else{
+	}else{ // set the transform
 		for(var i=0; i<this._transforms.length; ++i){
 			var trans = this._transforms[i];
 			if(trans && (trans.A()==view || trans.B()==view) ){
@@ -12908,8 +12989,24 @@ R3D.BundleAdjust.View.prototype.transform = function(view, transform){
 		return null;
 	}
 }
-R3D.BundleAdjust.View.prototype.id = function(){
+*/
+R3D.BundleAdjust.View.prototype.index = function(i){
+	if(i!==undefined){
+		this._index = i;
+	}
+	return this._index;
+}
+R3D.BundleAdjust.View.prototype.id = function(i){
+	if(i!==undefined){
+		this._id = i;
+	}
 	return this._id;
+}
+R3D.BundleAdjust.View.prototype.size = function(s){
+	if(s!==undefined){
+		this._size.copy(s);
+	}
+	return this._size;
 }
 R3D.BundleAdjust.View.prototype.points2D = function(){
 	return this._pointCloud2D.toArray();
@@ -12931,8 +13028,185 @@ R3D.BundleAdjust.View.prototype.closestPoint2D = function(x,y){
 	return this._pointCloud2D.closestObject(new V2D(x,y));
 }
 
-R3D.BundleAdjust.X = function(){
-	// 
+R3D.BundleAdjust.prototype.toModel = function(){
+	console.log("toModel");
+	// go thru instances & output JS objects
+	var cameras = [];
+	var points3D = [];
+	var views = [];
+	var pairs = [];
+	var i, j;
+
+	for(i=0; i<this._cameras.length; ++i){
+		var camera = this._cameras[i];
+		var c = {};
+			c["id"] = camera.index();
+			c["K"] = null;
+			c["distortion"] = null;
+		cameras.push(c);
+	}
+	/*
+	for(i=0; i<this._pairs.length; ++i){
+		var pair = this._pairs[i];
+		console.log(pair);
+		// var c = {};
+		// 	c["id"] = camera.index();
+		// 	c["K"] = null;
+		// 	c["distortion"] = null;
+		// cameras.push(c);
+	}
+	*/
+
+	for(i=0; i<this._views.length; ++i){
+		var view = this._views[i];
+		var size = view.size();
+		var v = {};
+			v["id"] = view.index();
+			v["size"] = {"x":size.x, "y":size.y};
+			v["transform"] = null;
+			v["points"] = null;
+			v["matches"] = null;
+		views.push(v);
+	}
+
+	var allPoints3D = this._pointCloud3D.toArray();
+	for(i=0; i<allPoints3D.length; ++i){
+		var point3D = allPoints3D[i];
+		var point = point3D.point()
+		var p = {};
+			p["x"] = point.x;
+			p["y"] = point.y;
+			p["z"] = point.z;
+		points3D.push(p);
+	}
+
+	/*
+	var view = {"F":null,
+		"pairs":[
+			{"viewA":null,
+			"viewB":null,
+			"transform":null,
+			"matches":[
+				{"pointA":null,"pointB":null,"point3D":null}
+			],
+			}
+		]
+	};
+	*/
+	// views
+	//   F
+	//   matches
+	//   transforms
+	//
+	// points3D
+	//   points2D
+	return {"cameras":cameras, "views":views, "points3D":points3D};
+}
+R3D.BundleAdjust.prototype.toYAMLString = function(){
+	console.log("toYAMLString");
+	var model = this.toModel();
+	var yaml = new YAML();
+	var timestampNow = Code.getTimeStamp();
+
+	var i, j;
+
+	console.log(model);
+
+	var cameras = model["cameras"];
+	var views = model["views"];
+	var points3D = model["points3D"];
+
+	yaml.writeComment("BA model");
+	yaml.writeComment("created: "+timestampNow);
+	yaml.writeBlank();
+	yaml.writeString("?","?");
+	if(cameras && cameras.length>0){
+		yaml.writeArrayStart("cameras");
+		for(i=0; i<cameras.length; ++i){
+			var camera = cameras[i];
+			yaml.writeObjectStart();
+				yaml.writeString("id",camera["id"]);
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
+	}
+	if(views && views.length>0){
+		yaml.writeArrayStart("views");
+		for(i=0; i<views.length; ++i){
+			var view = views[i];
+			yaml.writeObjectStart();
+				yaml.writeString("id",view["id"]);
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
+	}
+	if(points3D && points3D.length>0){
+		yaml.writeArrayStart("points");
+		for(i=0; i<points3D.length; ++i){
+			var point3D = points3D[i];
+			yaml.writeObjectStart();
+				yaml.writeNumber("x",point3D["x"]);
+				yaml.writeNumber("y",point3D["y"]);
+				yaml.writeNumber("z",point3D["z"]);
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
+	}
+
+	yaml.writeDocument();
+	return yaml.toString();
+}
+/*
+
+cameras:
+	- 
+		id: [UDID]
+		K:
+			[matrix]
+		distortion:
+			[#]
+views:
+	- 
+		id: [UDID]
+		camera: [index to camera]
+		transform: (absolute)
+			[matrix]
+		points2D:
+			- 
+				x: #
+				y: #
+				p: [index to point3d]
+points3D: (absolute)
+	- 
+		x: #
+		y: #
+		z: #
+*/
+R3D.BundleAdjust.prototype.transformFromViews = function(viewA,viewB, transform){
+	var index = R3D.BundleAdjust._indexFromIDs([viewA.id(),viewB.id()]);
+	if(transform!==undefined){
+		this._transforms[index] = transform;
+	}
+	var result = this._transforms[index];
+	if(!result){
+		result = null;
+	}
+	return result;
+}
+R3D.BundleAdjust._indexSort = function(a,b){
+	return a < b ? -1 : 1;
+}
+R3D.BundleAdjust._indexFromIDs = function(list){
+	list.sort(R3D.BundleAdjust._indexSort);
+	var index = "";
+	var div = "-";
+	for(var i=0; i<list.length; ++i){
+		index = index + list[i];
+		if(i<list.length-1){
+			index = index + div;
+		}
+	}
+	return index;
 }
 
 
@@ -13028,26 +13302,28 @@ R3D.BundleAdjust.prototype._iteration = function(){
 	console.log(pairs);
 	console.log(triples);
 	var pairFromViews = function(pairs, viewA,viewB){
-		var idA = viewA.id();
-		var idB = viewB.id();
-		var index;
-		if(idA<idB){
-			index = idA+"-"+idB+"";
-		}else{
-			index = idB+"-"+idA+"";
-		}
+		var index = R3D.BundleAdjust._indexFromIDs([viewA.id(),viewB.id()]);
+		// var idA = viewA.id();
+		// var idB = viewB.id();
+		// var index;
+		// if(idA<idB){
+		// 	index = idA+"-"+idB+"";
+		// }else{
+		// 	index = idB+"-"+idA+"";
+		// }
 		return pairs[index];
 	};
 	// 
 	var tripleFromViews = function(triples, viewA,viewB,viewC){
-		var idA = viewA.id();
-		var idB = viewB.id();
-		var idC = viewC.id();
-		var list = [idA,idB,idC];
-		list.sort(function(a,b){
-			return a < b ? -1 : 1;
-		});
-		var index = list[0]+"-"+list[1]+"-"+list[2]+"";
+		// var idA = viewA.id();
+		// var idB = viewB.id();
+		// var idC = viewC.id();
+		// var list = [idA,idB,idC];
+		// list.sort(function(a,b){
+		// 	return a < b ? -1 : 1;
+		// });
+		// var index = list[0]+"-"+list[1]+"-"+list[2]+"";
+		var index = R3D.BundleAdjust._indexFromIDs([viewA.id(),viewB.id(),viewC.id()]);
 		return triples[index];
 	};
 	// 
@@ -13066,12 +13342,12 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				var pointB = points2D[k];
 				var viewB = pointB.view();
 				var pair = pairFromViews(pairs, viewA,viewB);
-				pair["list"].push({"A":pointA,"B":pointB});
+				pair["list"].push({"A":pointA,"B":pointB, "P3D":point3D});
 				for(l=k+1; l<points2D.length; ++l){
 					var pointC = points2D[l];
 					var viewC = pointC.view();
 					var triple = tripleFromViews(triples, viewA,viewB,viewC);
-					triple["list"].push({"A":pointA,"B":pointB,"C":pointC});
+					triple["list"].push({"A":pointA,"B":pointB,"C":pointC, "P3D":point3D});
 				}
 			}
 		}
@@ -13089,7 +13365,6 @@ R3D.BundleAdjust.prototype._iteration = function(){
 	Code.randomizeArray(pairKeys);
 	console.log("HERE");
 	for(i=0; i<pairKeys.length; ++i){
-		console.log("i: "+i);
 		var pairKey = pairKeys[i];
 		var pair = pairs[pairKey];
 		var viewA = pair["A"];
@@ -13098,7 +13373,8 @@ R3D.BundleAdjust.prototype._iteration = function(){
 		var camB = viewB.camera();
 		var Ka = camA.K();
 		var Kb = camB.K();
-		var transform = viewA.transform(viewB);
+		var transform = this.transformFromViews(viewA,viewB);
+		console.log(transform);
 		var pairPoints = pair["list"];
 		var count = pairPoints.length;
 		console.log("pair: "+i+" = "+count);
@@ -13113,6 +13389,7 @@ R3D.BundleAdjust.prototype._iteration = function(){
 					var pairPoint = pairPoints[j];
 					var pointA = pairPoint["A"];
 					var pointB = pairPoint["B"];
+					//console.log(pointA.point()+" - "+pointB.point());
 					pointsA.push(pointA.point());
 					pointsB.push(pointB.point());
 				}
@@ -13123,79 +13400,188 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				console.log(F+"");
 				F = Matrix.mult(F, pointsANorm.forward[0]);
 				F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F);
+				var Ffwd = F;
+				var Frev = Matrix.inverse(Ffwd);
 				console.log(F+"");
 				F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+				// TODO: use top 2 sigma points -- // get lowest-error points ?
+
+				// TODO: get F error:
+				var transformError = 1.0;
+
 				// E
-				console.log(Ka+"");
-				console.log(Kb+"");
-				// use top 2 sigma points -- // get lowest-error points ?
 				var E = R3D.essentialFromFundamental(Ka, Kb, F);
 				console.log(E+"");
-				// E nonlinaer?
-				// var P = 
+				// E nonlinear?
 				var P = R3D.transformFromFundamental(pointsA, pointsB, F, Ka, Kb);
 				var cameraA = new Matrix(4,4).identity();
-console.log(P+"");
-
-HERE
+				// P
+				console.log(P+"");
 				var cameraB = P;
+				console.log(viewA,viewB,transformError)
+				var trans = new R3D.BundleAdjust.Transform3D(viewA,viewB,transformError);
+				this.transformFromViews(viewA,viewB, trans);
+				if(trans.A()==viewA){
+					trans.forward(P);
+				}else{
+					trans.reverse(P);
+				}
 				var pointsFr = pointsA;
 				var pointsTo = pointsB;
-				pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, K);
-
-				// 
-				// 
-				// P => SET
-				// X
-				// R3D.BAPoints2DGD(M,X)
-				// error = errorA^2 + errorB^2
-				// 
-				// 
+				// p3d initial points
+				pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
+				for(j=0; j<pairPoints.length; ++j){
+					var pairPoint = pairPoints[j];
+					var pointA = pairPoint["A"];
+					var pointB = pairPoint["B"];
+					var point3D = pairPoint["P3D"];
+					var estimated = pointsRev[j];
+					// project A to B & B to A
+					var pA = pointA.point();
+					var pB = pointB.point();
+					// console.log(pA+"");
+					pA = new V3D(pA.x,pA.y,1.0);
+					pB = new V3D(pB.x,pB.y,1.0);
+					var lineA = R3D.lineRayFromPointF(Ffwd, pA);
+					var lineB = R3D.lineRayFromPointF(Frev, pB);
+					var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pB);
+					var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pA);
+					var errorA = distA;
+					var errorB = distB;
+					var error = errorA*errorA + errorB*errorB;
+					//console.log(error);
+					// TODO: multiply by pair's average error
+					point3D.addPutative3D(estimated, error, viewA);
+				}
 			}else{ // minimize reprojection error with points
 				console.log("transform exists, gradient decent minimize reprojection error");
 				//  batchSize = Math.min(listCountBatchSize,count); // TODO: use subset or all points ?
 				//  var batchLoopCount = 0;
 				// 
+				// 
+				// 
+				// X
+				// R3D.BAPoints2DGD(M,X)
+				// error = errorA^2 + errorB^2
+				// 
+				// 
+				// 
 				// update rx,ry,rz,tx,ty,tz gradient descent
 				//
 				// provide an estimate for all 3D points X w/ error
 				//
+				// 
+				// 
+				// remove transforms where support is low
+				// 
 			}
 		}
-			
 	}
+// TODO: find each view's absolute location based on relative transform graph
+	// find discrete groupings
+	var graph = new Graph();
+	var vertexes = [];
+	var edges = [];
+	for(i=0; i<views.length; ++i){
+		var viewA = views[i];
+		var vertex = graph.addVertex();
+		vertex.data(viewA);
+		vertexes[i] = vertex;
+	}
+	for(i=0; i<views.length; ++i){
+		var viewA = views[i];
+		for(j=i+1; j<views.length; ++j){
+			var viewB = views[j];
+			var trans = this.transformFromViews(viewA,viewB);
+			console.log(trans);
+			if(trans){
+				var weight = trans.error();
+				console.log(weight);
+				var vA = vertexes[i];
+				var vB = vertexes[j];
+				var edge = graph.addEdgeDuplex(vA,vB,weight);
+				edge.data(trans);
+			}
+		}
+	}
+	var groups = graph.disjointSets();
+	console.log(groups);
+	// find best root for each set:
+
+HERE --- make sub-graphs for each set ???
+
+	// ...
+	// determine absolute camera positions based root & min path graph
+	// root == identity
+	// each edge transforms a->b->...
+	// if edge is 'reversed', then apply reverse transform
+
+
+
 	console.log("point3D may have multiple approx, combine based on relative errors");
 	// combine 3D point estimates into final position
 	var points3D = this._pointCloud3D.toArray();
 	for(i=0; i<points3D.length; ++i){
-		// remove point
-		// calcualte new position
-		//		absolute position is based off of relative 
-		// 			find lowest-error-path between views to generate absolute offset
-		//			? view with lowest average reprojection error should be absolute ? [or just choose numerically first each time]
-		// 				? does this require re-setting absolute group 
-		// readd point
+		var point3D = points3D[i];
+//		console.log("point3D: "+point3D.point());
+		this._pointCloud3D.removeObject(point3D);
+//		console.log("removed");
+		point3D.combinePutative();
+		this._pointCloud3D.insertObject(point3D);
+//		console.log("added");
 	}
+	points3D = this._pointCloud3D.toArray();
+	// 
+	// TODO: pairs & triples need to be recalculated for now matched / unmatched 
 	// 
 	console.log("after pair & tri minimization, refine approx. by adding and removing points based on population probabilities");
 // 3D[n 2D] + 3D[m 2D] ->  3D [n+m 2D]
 	console.log("combine point3Ds if close");
 	// merge 3D points that are very close together  [and are in same reachable group/graph -- not disjoint]  & have some minimum error & have good SAD scores in corresponding views
 	// if there aren't enough 2D points (pairs), don't include yet?
+	for(i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// ...
+	}
 
 // 3D [n 2D] -> 3D [n-1 2D]
 	console.log("separate single point2D from point3Ds if error single > 3sigma or error any > 4sigma");
 	// separate 2D point (from 3D point group) if worst error score > 3 sigma of OWN F-pair, or worst error overall > 4 sigma (some pairs might have more error than others)
+	for(i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// ...
+	}
 
 // 2D pair -> 3D
 	console.log("create 3D point by checking best F-matches, only check points with error < 2sigma");
 	// merge more 2D points pairs from pairs using F if error < 2 sigma && SAD score is good  &&  < 2 sigma
 	//  	record each pair error sigma
+	for(i=0; i<pairs.length; ++i){
+		// get viewA & viewB & F between the 2 (if exists)
+		// for each point2D w/o a match in viewB
+		//    project point in viewA to viewB
+		//    check all possible matches within 2 sigma
+		// repeat for viewB->viewA
+	}
 
 // 3D [n 2D] + 2D -> 3D [n+1 2D]
 	console.log("combine point2D to point3D in new view if projected point3D is close to existing point");
 	// merge in 2D points based on projection of 3D point into camera image ( F-projection to area [sqrt(error)] ) & have good SAD score
-	// 
+	for(i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// get viewA & viewB
+		/*
+		var viewA = pair["A"];
+		var viewB = pair["B"];
+		for(j=0; j<views.length; ++j){
+			viewC = views[j];
+			if(viewC!==viewA && viewC!==viewB){
+				console.log(viewC)
+				// do projection of shared 3D point to 2D point
+			}
+		}
+		*/
+	}
 
 	// TODO: allow some moving of point2d location to better fit projections?
 	// 

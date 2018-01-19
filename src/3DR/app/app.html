@@ -12,6 +12,51 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 	/*
+	var g = new Graph();
+	var v = [];
+
+	//for(var i=0; i<10; ++i){
+	for(var i=0; i<7; ++i){
+		var u = g.addVertex();
+		v[i] = u;
+	}
+	g.addEdgeDuplex(v[0],v[1], 1); // 0
+	g.addEdgeDuplex(v[0],v[6], 4); // 1
+	g.addEdgeDuplex(v[1],v[2], 2); // 2
+	g.addEdgeDuplex(v[1],v[3], 3); // 3
+//g.addEdgeDuplex(v[2],v[5], 0); // TEST
+	g.addEdgeDuplex(v[3],v[4], 1); // 4
+	g.addEdgeDuplex(v[4],v[5], 1); // 5
+	g.addEdgeDuplex(v[5],v[6], 2); // 6
+	// g.addEdgeDuplex(v[7],v[8], 1); // 7
+	// g.addEdgeDuplex(v[8],v[9], 2); // 8
+	// g.addEdgeDuplex(v[],v[], );
+
+	var sets = Graph._disjointSets(g);
+	console.log(sets);
+
+	var set = sets[0];
+
+	var paths = Graph._minPaths(g, v[0]);
+	
+	console.log(paths);
+
+	for(i=0; i<paths.length; ++i){
+		var path = paths[i];
+		var vertex = path["vertex"];
+		var cost = path["cost"];
+		var path = path["path"];
+		console.log(vertex+" = "+cost+" @ len: "+path.length);
+	}
+
+
+	var minRoot = Graph._minRootPaths(g);
+	console.log(minRoot);
+
+
+	return;
+	*/
+	/*
 	var t = new Tensor([3,3,3]);
 	console.log(t);
 	console.log(t+"");

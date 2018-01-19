@@ -70,11 +70,16 @@ GLOBALSTAGE = this._stage;
 //var modeImageEdit = true;
 var modeImageEdit = false;
 
-var modeImageUpload = true; //  uploadImageTypeCamera
-//var modeImageUpload = false;
+//var modeImageUpload = true; //  uploadImageTypeCamera
+var modeImageUpload = false;
 
 //var modeImageCompare = true;
 var modeImageCompare = false;
+
+//var modeModel = false;
+
+var modeModelReconstruction = true;
+
 if(modeImageEdit){
 	var app = new App3DR.App.ImageEditor(this._resource);
 	this.setupAppActive(app);
@@ -97,7 +102,12 @@ if(modeImageCompare){
 	// app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
 	this._setupMatchCompareProjectManager();
 }
-
+if(modeModelReconstruction){
+	var app = new App3DR.App.Model3D(this._resource);
+	this.setupAppActive(app);
+	//app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
+	this._setupModel3DProjectManager();
+}
 
 	this._canvas.addListeners();
 	this._stage.addListeners();
@@ -417,8 +427,9 @@ App3DR.prototype._handleImageUploaderFileReady = function(package){
 
 
 // --------------------------------------------------------------------------------------------------------------------
-
-
+App3DR.prototype._setupModel3DProjectManager = function(){
+	console.log("_setupModel3DProjectManager");
+}
 
 
 
@@ -2291,6 +2302,45 @@ App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
 
 
 
+
+// ------------------------------------------------------------------
+
+
+App3DR.App.Model3D = function(resource, manager){
+	App3DR.App.Model3D._.constructor.call(this, resource);
+	console.log("Model3D");
+	this._displayData = null;
+	this._display = new DO();
+	this._root.addChild(this._display);
+}
+Code.inheritClass(App3DR.App.Model3D, App3DR.App);
+
+App3DR.App.Model3D.prototype.what = function(location){
+/*
+
+load imageA, imageB
+load data: camera centers, 2D points, 3D points, ...
+
+
+
+show 3D point dots
+show camera center
+show camera/image screens [textured rects]
+show lines from camera center to dots
+
+show surface triangulation
+show surface textures
+
+*/
+}
+
+
+// ------------------------------------------------------------------
+
+
+
+
+
 App3DR.Explorer2D = function(){
 	this._containerSize = new V2D();
 	this._subjectSize = new V2D();
@@ -2441,6 +2491,9 @@ App3DR.Explorer2D.prototype.mouseUp = function(location){
 		this._subjectCenter.add(diff);
 	}
 }
+
+
+
 
 
 
@@ -4508,8 +4561,8 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 				var c = BA.addCamera();
 					var K = camera.K();
 					var distortion = camera.distortion();
-					console.log(K);
-					console.log(distortion);
+					// console.log(K);
+					// console.log(distortion);
 					if(K && distortion){
 						var fx = K["fx"];
 						var fy = K["fy"];
@@ -4521,6 +4574,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 						var k3 = distortion["k3"];
 						var p1 = distortion["p1"];
 						var p2 = distortion["p2"];
+						c.index(camera.id());
 						c.set(fx,fy,s,cx,cy, k1,k2,k3, p1,p2);
 					}
 				baCameras.push(c);
@@ -4532,6 +4586,8 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 				var view = views[i];
 				var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
 				var v = BA.addView(imageSize);
+				v.index(view.id());
+				v.size(imageSize);
 				baViews.push(v);
 					v.camera(cam);
 					view._temp = v;
@@ -4635,6 +4691,8 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 				// initially get 2-sigma points & only add those from match list
 			}
 			BA.process();
+			var str = BA.toYAMLString();
+//			console.log(str);
 		}
 	}
 	for(i=0; i<views.length; ++i){
