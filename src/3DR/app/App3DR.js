@@ -106,7 +106,7 @@ if(modeModelReconstruction){
 	var app = new App3DR.App.Model3D(this._resource);
 	this.setupAppActive(app);
 	//app.addFunction(App3DR.App.ImageEditor.EVENT_MASK_UPDATE, this._handleImageEditorMaskUpdate, this);
-	this._setupModel3DProjectManager();
+	this._setupModel3DProjectManager(this._projectManager);
 }
 
 	this._canvas.addListeners();
@@ -427,8 +427,35 @@ App3DR.prototype._handleImageUploaderFileReady = function(package){
 
 
 // --------------------------------------------------------------------------------------------------------------------
-App3DR.prototype._setupModel3DProjectManager = function(){
+App3DR.prototype._setupModel3DProjectManager = function(projectManager){
 	console.log("_setupModel3DProjectManager");
+
+	if(projectManager.isLoaded()){
+		this._projectBALoad(projectManager);
+	}else{
+		var self = this;
+		var fxn = function(){
+			self._projectBALoad(projectManager);
+		}
+		projectManager.addFunction(App3DR.ProjectManager.EVENT_LOADED, fxn, this);
+	}
+
+}
+App3DR.prototype._projectBALoad = function(projectManager){
+	projectManager.loadBundleAdjust(this._projectBALoaded,this, null);
+}
+App3DR.prototype._projectBALoaded = function(object, data){
+	console.log("_projectBALoaded")
+	// console.log(data);
+	// console.log(object);
+	var str = Code.binaryToString(data);
+	console.log(str);
+
+	HERE 
+	
+	var yaml = YAML.parse(str);
+//	this.setFromYAML(yaml);
+
 }
 
 
@@ -3514,11 +3541,9 @@ projects/
 		bundle/
 			info.yaml    				result of a bundle adjustment
 				- views
-					- 
+					- transform / rot, trans
 				- Ks
 					- fx,fy,s,cx,cy
-				- transforms
-					- rot, trans
 				- points2d
 					- x,y
 					- point3d index OR null
@@ -3563,6 +3588,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage){ // very async he
 	this._pairs = [];
 	this._triples = [];
 	this._cameras = [];
+	this._bundleFilename = null;
 	this._loading = true;
 	this._stage = operatingStage;
 	this._ticker = new Ticker();
@@ -3582,9 +3608,11 @@ App3DR.ProjectManager.PICTURE_MASK_FILE_NAME = "mask.png";
 App3DR.ProjectManager.CAMERAS_DIRECTORY = "cameras";
 App3DR.ProjectManager.PAIRS_DIRECTORY = "pairs";
 App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
+App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY = "bundle";
 App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME = "matches.yaml"; // points
 App3DR.ProjectManager.TRIPLE_MATCHES_FILE_NAME = "matches.yaml"; // points
 App3DR.ProjectManager.CAMERA_MATCHES_FILE_NAME = "matches.yaml";
+App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME = "info.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml"; 
 App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml"; 
@@ -3604,6 +3632,12 @@ App3DR.ProjectManager.prototype.triples = function(){
 }
 App3DR.ProjectManager.prototype.cameras = function(){
 	return this._cameras;
+}
+App3DR.ProjectManager.prototype.bundleFilename = function(file){
+	if(file!==undefined){
+		this._bundleFilename = file;
+	}
+	return this._bundleFilename;
 }
 App3DR.ProjectManager.prototype.infoPath = function(){
 	var infoPath = Code.appendToPath(this._workingPath,App3DR.ProjectManager.INFO_FILE_NAME);
@@ -3685,6 +3719,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var pairs = object["pairs"];
 	var triples = object["triples"];
 	var cameras = object["cameras"];
+	var bundle = object["bundle"];
 	this._titleName = title;
 	this._createdTimestamp = created;
 	this._modifiedTimestamp = modified;
@@ -3719,8 +3754,6 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 		}
 	}
 	this._cameras = [];
-	console.log("READ THE CAMEARS");
-	console.log(cameras);
 	if(cameras){
 		len = cameras.length;
 		
@@ -3733,6 +3766,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 			this._cameras.push(camera);
 		}
 	}
+	this._bundleFilename = bundle ? bundle : null;
 }
 App3DR.ProjectManager.prototype.saveToYAML = function(){
 	var modified = Code.getTimeStampFromMilliseconds();
@@ -3744,7 +3778,6 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 	yaml.writeString("title", this._titleName);
 	yaml.writeString("created", this._createdTimestamp);
 	yaml.writeString("modified", this._modifiedTimestamp);
-console.log("A")
 	// views
 	len = this._views ? this._views.length : 0;
 	yaml.writeArrayStart("views");
@@ -3780,9 +3813,7 @@ console.log("A")
 	// cameras
 	len = this._cameras ? this._cameras.length : 0;
 	if(len>0){
-		console.log("... IN");
 		yaml.writeArrayStart("cameras");
-		console.log("... IN 2");
 		for(i=0; i<len; ++i){
 			var camera = this._cameras[i];
 			console.log(camera);
@@ -3792,8 +3823,10 @@ console.log("A")
 		}
 		yaml.writeArrayEnd();
 	}
-	// 
-console.log("C")
+	// bundles
+	yaml.writeString("bundle",this._bundleFilename);
+	// reconstruction
+
 	yaml.writeBlank();
 
 	var str = yaml.toString();
@@ -3899,6 +3932,29 @@ App3DR.ProjectManager.prototype.loadFeaturesForView = function(view, filename, c
 	console.log(path);
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
+
+
+App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, object){
+	
+	var filename = this._bundleFilename;
+	console.log("loadBundleAdjust: "+filename);
+	if(filename){
+		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
+		console.log(path);
+		this.addOperation("GET", {"path":path}, callback, context, object);
+	}
+}
+App3DR.ProjectManager.prototype.saveBundleAdjust = function(string, callback, context, object){
+	console.log("saveBundleAdjust");
+	var filename = this._bundleFilename;
+	if(filename){
+		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
+		console.log(path);
+		var binary = Code.stringToBinary(string);
+		this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
+	}
+}
+
 
 
 App3DR.ProjectManager.prototype.pair = function(idA,idB){
@@ -4507,6 +4563,7 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 
 App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
 	console.log("calculateBundleAdjust");
+return; // TODO: UNCOMMENT
 	var i, j, k;
 	var view, pair, camera;
 	var views = this._views;
@@ -4693,6 +4750,9 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 			BA.process();
 			var str = BA.toYAMLString();
 //			console.log(str);
+			this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+			this.saveBundleAdjust(str);
+			this.saveProjectFile();
 		}
 	}
 	for(i=0; i<views.length; ++i){

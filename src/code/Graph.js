@@ -662,7 +662,7 @@ Graph._minRootPaths = function(graph,source){ // find best vertex to be at root 
 				maxPath = path.length;
 			}
 		}
-		console.log(i+": "+count+" @ max: "+maxPath);
+		//console.log(i+": "+count+" @ max: "+maxPath);
 		if(minPath===null || minCount>count){
 			minCount = count;
 			minRoot = vertex;

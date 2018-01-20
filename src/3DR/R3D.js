@@ -12815,7 +12815,11 @@ R3D.BundleAdjust.Point3D.prototype.combinePutative = function(){
 		var put = this._putatives[i];
 		var point = put.point();
 		var error = put.error();
+		var view = put.view();
 		var p = error/totalError;
+		// multiply 3D point by view's now determined 3D transform
+		var absoluteTransform = view.absoluteTransform();
+		point = absoluteTransform.multV3DtoV3D(point);
 		estimated.add( point.copy().scale(p) );
 	}
 	this._error = errorWindow;
@@ -12906,6 +12910,12 @@ R3D.BundleAdjust.Camera.prototype.K = function(k){
 	}
 	return this._K;
 }
+R3D.BundleAdjust.Camera.prototype.distortion = function(a){
+	if(a!==undefined){
+		Code.copyArray(this._distortion,a);
+	}
+	return this._distortion;
+}
 
 
 R3D.BundleAdjust.Transform3D = function(a,b,e,f){
@@ -12959,13 +12969,12 @@ R3D.BundleAdjust.View = function(size){
 	this._size = new V2D();
 	this._absoluteTransform = null; // relative to some root view
 }
-// R3D.BundleAdjust.View.prototype.transformTo = function(view){
-// 	var transform = this.transform(view);
-// 	if(transform){
-// 		return transform; // TODO: needs inverse?
-// 	}
-// 	return null;
-// }
+R3D.BundleAdjust.View.prototype.absoluteTransform = function(trans){
+	if(trans!==undefined){
+		this._absoluteTransform = trans;
+	}
+	return this._absoluteTransform;
+}
 /*
 R3D.BundleAdjust.View.prototype.transform = function(view, transform){
 	if(transform!==undefined){ // set
@@ -13041,21 +13050,13 @@ R3D.BundleAdjust.prototype.toModel = function(){
 		var camera = this._cameras[i];
 		var c = {};
 			c["id"] = camera.index();
-			c["K"] = null;
-			c["distortion"] = null;
+			var K = camera.K();
+			c["K"] = K;
+			var distortion = camera.distortion();
+			console.log(distortion);
+			c["distortion"] = distortion;
 		cameras.push(c);
 	}
-	/*
-	for(i=0; i<this._pairs.length; ++i){
-		var pair = this._pairs[i];
-		console.log(pair);
-		// var c = {};
-		// 	c["id"] = camera.index();
-		// 	c["K"] = null;
-		// 	c["distortion"] = null;
-		// cameras.push(c);
-	}
-	*/
 
 	for(i=0; i<this._views.length; ++i){
 		var view = this._views[i];
@@ -13063,9 +13064,19 @@ R3D.BundleAdjust.prototype.toModel = function(){
 		var v = {};
 			v["id"] = view.index();
 			v["size"] = {"x":size.x, "y":size.y};
-			v["transform"] = null;
-			v["points"] = null;
-			v["matches"] = null;
+			v["transform"] = view.absoluteTransform();
+			v["camera"] = view.camera().index();
+			var points = view.points2D();
+			var pts = [];
+			for(j=0; j<points.length; ++j){
+				var pt = points[j];
+				if(pt.point3D()){ // only care about matched points
+					pt = pt.point();
+					pts.push({"x":pt.x,"y":pt.y});
+				}
+			}
+			v["points"] = pts;
+			//v["matches"] = pts;
 		views.push(v);
 	}
 
@@ -13079,27 +13090,6 @@ R3D.BundleAdjust.prototype.toModel = function(){
 			p["z"] = point.z;
 		points3D.push(p);
 	}
-
-	/*
-	var view = {"F":null,
-		"pairs":[
-			{"viewA":null,
-			"viewB":null,
-			"transform":null,
-			"matches":[
-				{"pointA":null,"pointB":null,"point3D":null}
-			],
-			}
-		]
-	};
-	*/
-	// views
-	//   F
-	//   matches
-	//   transforms
-	//
-	// points3D
-	//   points2D
 	return {"cameras":cameras, "views":views, "points3D":points3D};
 }
 R3D.BundleAdjust.prototype.toYAMLString = function(){
@@ -13119,13 +13109,23 @@ R3D.BundleAdjust.prototype.toYAMLString = function(){
 	yaml.writeComment("BA model");
 	yaml.writeComment("created: "+timestampNow);
 	yaml.writeBlank();
-	yaml.writeString("?","?");
 	if(cameras && cameras.length>0){
 		yaml.writeArrayStart("cameras");
 		for(i=0; i<cameras.length; ++i){
 			var camera = cameras[i];
 			yaml.writeObjectStart();
 				yaml.writeString("id",camera["id"]);
+				var K = camera["K"];
+				if(K){
+					yaml.writeObjectStart("K");
+						K.saveToYAML(yaml);
+					yaml.writeObjectEnd();
+				}
+				var distortion = camera["distortion"];
+				
+				if(distortion){
+					yaml.writeArrayNumbers("distortion",distortion);
+				}
 			yaml.writeObjectEnd();
 		}
 		yaml.writeArrayEnd();
@@ -13136,6 +13136,22 @@ R3D.BundleAdjust.prototype.toYAMLString = function(){
 			var view = views[i];
 			yaml.writeObjectStart();
 				yaml.writeString("id",view["id"]);
+				yaml.writeString("camera",view["camera"]);
+				yaml.writeObjectStart("transform");
+					view["transform"].saveToYAML(yaml);
+				yaml.writeObjectEnd();
+				var pts = view["points"];
+				if(pts && pts.length>0){
+					yaml.writeArrayStart("points");
+					for(j=0; j<pts.length; ++j){
+						var point2D = pts[j];
+						yaml.writeObjectStart();
+							yaml.writeNumber("x",point2D["x"]);
+							yaml.writeNumber("y",point2D["y"]);
+						yaml.writeObjectEnd();
+					}
+					yaml.writeArrayEnd();
+				}
 			yaml.writeObjectEnd();
 		}
 		yaml.writeArrayEnd();
@@ -13505,32 +13521,88 @@ R3D.BundleAdjust.prototype._iteration = function(){
 		}
 	}
 	var groups = graph.disjointSets();
-	console.log(groups);
+	
 	// find best root for each set:
+	for(i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var groupGraph = new Graph();
+		var groupVertexes = [];
+		for(j=0; j<group.length; ++j){
+			var vertex = group[j];
+			var view = vertex.data();
+			var groupVertex = groupGraph.addVertex();
+				groupVertex.data(view);
+			groupVertexes.push(groupVertex);
+		}
+		for(j=0; j<groupVertexes.length; ++j){
+			var groupVertexA = groupVertexes[j];
+			for(k=j+1; k<groupVertexes.length; ++k){
+				var groupVertexB = groupVertexes[k];
+				var trans = this.transformFromViews(groupVertexA.data(),groupVertexB.data());
+				if(trans){
+					var weight = trans.error();
+					var edge = groupGraph.addEdgeDuplex(groupVertexA,groupVertexB,weight);
+					edge.data(trans);
+				}
+			}
+		}
+		console.log("bestRoot")
+		var bestPaths = groupGraph.minRootPaths();
+		var bestRoot = bestPaths["root"];
+		var bestList = bestPaths["paths"];
+		var rootView = bestRoot.data();
+		//console.log(rootView);
+		
+		// determine absolute camera positions based root & min path graph
+		for(j=0; j<bestList.length; ++j){
+			var info = bestList[j];
+			var vertex = info["vertex"];
+			var cost = info["cost"];
+			var path = info["path"];
+			var view = vertex.data();
+				path.push(vertex);
+			var mat = new Matrix(4,4).identity();
+			var prev = null;
+			var next = null;
+			for(k=0; k<path.length; ++k){
+				var vert = path[k];
+				var next = vert.data();
+				if(next && prev){
+					var trans = this.transformFromViews(prev,next);
+					console.log(trans);
+					var t = null;
+					if(trans.A()==prev){
+						t = trans.forward();
+					}else{ // trans.B()==prev
+						t = trans.reverse();
+					}
+					mat = Matrix.mult(mat,t);
+				}
+				prev = next;
+			}
+			view.absoluteTransform(mat);
+		}
+		groupGraph.kill();
+	}
+	graph.kill();
 
-HERE --- make sub-graphs for each set ???
+	// now have absolute positions from least-error-propagated origin view
+	for(i=0; i<views.length; ++i){
+		var view = views[i];
+		console.log(i+" "+view.absoluteTransform());
+	}
 
-	// ...
-	// determine absolute camera positions based root & min path graph
-	// root == identity
-	// each edge transforms a->b->...
-	// if edge is 'reversed', then apply reverse transform
-
-
-
-	console.log("point3D may have multiple approx, combine based on relative errors");
+	// console.log("point3D may have multiple approx, combine based on relative errors");
 	// combine 3D point estimates into final position
 	var points3D = this._pointCloud3D.toArray();
 	for(i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
-//		console.log("point3D: "+point3D.point());
 		this._pointCloud3D.removeObject(point3D);
-//		console.log("removed");
 		point3D.combinePutative();
 		this._pointCloud3D.insertObject(point3D);
-//		console.log("added");
 	}
 	points3D = this._pointCloud3D.toArray();
+
 	// 
 	// TODO: pairs & triples need to be recalculated for now matched / unmatched 
 	// 
