@@ -78,6 +78,7 @@ var modeImageCompare = false;
 
 //var modeModel = false;
 
+//var modeModelReconstruction = false;
 var modeModelReconstruction = true;
 
 if(modeImageEdit){
@@ -449,13 +450,43 @@ App3DR.prototype._projectBALoaded = function(object, data){
 	// console.log(data);
 	// console.log(object);
 	var str = Code.binaryToString(data);
-	console.log(str);
+	// console.log(str);
 
-	HERE 
 	
-	var yaml = YAML.parse(str);
-//	this.setFromYAML(yaml);
 
+	var object = YAML.parse(str);
+	if(Code.isArray(object)){
+		object = object[0];
+	}
+
+	var cameras = object["cameras"];
+	var views = object["views"];
+	var points = object["points"];
+	console.log(cameras);
+	console.log(views);
+	console.log(points);
+
+
+	var points3D = [];
+	for(var i=0; i<points.length; ++i){
+		var v = points[i];
+		var point3D = new V3D(v["x"],v["y"],v["z"]);
+		points3D.push(point3D);
+	}
+	console.log(points3D);
+
+	
+
+	var views3D = [];
+	for(var i=0; i<views.length; ++i){
+		var v = views[i];
+	}
+
+
+	var app = this._activeApp;
+	app.setPoints(points3D);
+
+	app.setViews(views3D);
 }
 
 
@@ -2339,10 +2370,178 @@ App3DR.App.Model3D = function(resource, manager){
 	this._displayData = null;
 	this._display = new DO();
 	this._root.addChild(this._display);
+
+	this._camera = new App3DR.App.Model3D.Camera();
+
+
+	// interaction
+	this._sphereMatrix = new Matrix3D();
+	this._sphereMatrix.identity();
+
+	this._userInteractionMatrix = new Matrix3D();
+	this._sphereMatrix.identity();
+
+	this._siDirection = new V3D(1,0,0);
+	this._upDirection = new V3D(0,1,0);
+	this._inDirection = new V3D(0,0,1);
+
+
+	var frameRate = 1000.0/20.0;
+	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
+    this._stage3D = new StageGL(this._canvas3D, frameRate, this.getVertexShaders(), this.getFragmentShaders());
+    this._canvas3D.addListeners();
+  	this._stage3D.setBackgroundColor(0xFF000000);
+  	this._stage3D.frustrumAngle(35);
+	this._stage3D.enableDepthTest();
+	this._stage3D.setViewport(0,0,this._canvas3D.width(),this._canvas3D.height());
+	this._stage3D.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this._eff, this);
+	this._stage3D.start();
+
+
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_DOWN, this.onMouseDownFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_UP, this.onMouseUpFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
+	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_EXIT, this.onMouseExitFxn3D, this);
+
+
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
+	this._keyboard.addListeners();
+
+
+	this._time = 0;
 }
 Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 
+App3DR.App.Model3D.prototype.setViews = function(input){
+	console.log(input);
+}
+App3DR.App.Model3D.prototype.setPoints = function(input){
+	// CREATE POINTS:
+	var points = [];
+	var colors = [];
+	for(var i=0; i<input.length; ++i){
+		//var v = new V3D( Math.random()*10 - 5.0, Math.random()*10 -5.0, Math.random()*10 -5.0 );
+		var v = input[i];
+		points.push(v.x,v.y,v.z);
+		colors.push(0.5,0.5,0.5,0.5);
+	}
+	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+
+	this._pointPointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
+}
+
+App3DR.App.Model3D.prototype.onMouseDownFxn3D = function(e){
+
+}
+App3DR.App.Model3D.prototype.onMouseUpFxn3D = function(e){
+
+}
+App3DR.App.Model3D.prototype.onMouseMoveFxn3D = function(e){
+
+}
+App3DR.App.Model3D.prototype.onMouseWheelFxn3D = function(e){
+	console.log(e);
+	var scroll = e["scroll"];
+
+	var up = this._upDirection;
+	var ni = this._inDirection;
+
+	var direction = new V3D(scroll.x,scroll.y,0);
+
+
+
+	// TODO: project onto some matrix
+	
+	// var pos = e.location;
+	// var scale = 1.0 * pos.z;
+	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+		var magnitude = direction.length();
+		var theta = Code.radians(10.0 * magnitude);
+		// rotate
+		var transform = new Matrix3D();
+		transform.identity();
+		transform.rotateVector(up, theta);
+		// var dir = this.getCameraDirectionForward();
+		//dir.scale(scale);
+		//transform.translate(dir.x,dir.y,dir.z);
+		this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
+	}else{
+		var magnitude = direction.length() * 0.1;
+		// var dir = this.getCameraDirectionForward();
+		var dir = ni.copy().scale(magnitude);
+		//dir.scale(scale);
+		var transform = new Matrix3D();
+		transform.identity();
+		transform.translate(dir.x,dir.y,dir.z);
+		this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
+	}
+	
+
+}
+App3DR.App.Model3D.prototype.onMouseClickFxn3D = function(e){
+
+}
+App3DR.App.Model3D.prototype.onMouseExitFxn3D = function(e){
+
+}
+
+App3DR.App.Model3D.prototype._eff = function(){
+	++this._time;
+
+	this.rotateScene();
+
+	// RENDERING:
+	this._stage3D.clear();
+
+	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
+
+
+
+	// RENDER POINTS
+	if(this._pointPointBuffer && this._pointPointBuffer.length>0){
+		this._stage3D.selectProgram(3);
+		this._stage3D.disableCulling();
+		this._stage3D.matrixReset();
+		this._stage3D.bindArrayFloatBuffer(this._pointVertexPositionAttrib, this._pointPointBuffer);
+		this._stage3D.bindArrayFloatBuffer(this._pointVertexColorAttrib, this._pointColorBuffer);
+		this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
+	}
+}
+App3DR.App.Model3D.prototype.rotateScene = function(){
+
+
+
+	
+	var e = this._time;
+
+	
+	this._sphereMatrix.identity();
+	this._sphereMatrix.rotateVector( (new V3D(0,1,0)).norm(), Code.radians(e) );
+
+
+
+	var transform = new Matrix3D();
+	transform.identity();
+	transform.mult(transform, this._sphereMatrix);
+	transform.mult(transform, this._userInteractionMatrix);
+	this._stage3D.matrixSetFromMatrix3D(transform);
+}
 App3DR.App.Model3D.prototype.what = function(location){
+	// POINTS
+	this._stage3D.selectProgram(3);
+	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	this._pointPointBuffer = this._stage3D.getBufferFloat32Array(points,3);
+	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
+
 /*
 
 load imageA, imageB
@@ -2360,7 +2559,96 @@ show surface textures
 
 */
 }
+App3DR.App.Model3D.Camera = function(){
+	this._pos = new V3D();
+	this._rot = new V3D();
+}
+App3DR.App.Model3D.Camera.prototype.identity = function(){
+	this._pos.set(0,0,0);
+	this._rot.set(1,0,0);
+}
 
+
+
+App3DR.App.Model3D.prototype.getVertexShaders = function(){
+	return ["\
+		attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
+    	", // ^ colored triangles
+    	"\
+    	attribute vec3 aVertexPosition; \
+		attribute vec2 aTextureCoord; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		varying vec2 vTextureCoord; \
+		void main(void) { \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vTextureCoord = aTextureCoord; \
+		} \
+		", // ^ textured triangles
+		" \
+		attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_PointSize = 2.0; \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
+		", // ^ lines
+		" \
+		attribute vec3 aVertexPosition; \
+		attribute vec4 aVertexColor; \
+		varying vec4 vColor; \
+		uniform mat4 uMVMatrix; \
+		uniform mat4 uPMatrix; \
+		void main(void) { \
+			gl_PointSize = 4.0; \
+			gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+			vColor = aVertexColor; \
+		} \
+		"]; // ^ points
+}
+App3DR.App.Model3D.prototype.getFragmentShaders = function(){
+    return ["\
+		precision highp float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
+		} \
+		", // 
+		"\
+		precision mediump float; \
+		varying vec2 vTextureCoord; \
+		uniform sampler2D uSampler; \
+		void main(void){ \
+			gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t)); \
+		} \
+    	", // 
+    	"\
+		precision highp float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
+		} \
+		", // 
+    	"\
+		precision highp float; \
+		varying vec4 vColor; \
+		void main(void){ \
+			gl_FragColor = vColor; \
+		} \
+    	"]; // 
+}
 
 // ------------------------------------------------------------------
 
