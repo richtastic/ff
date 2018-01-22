@@ -115,9 +115,10 @@ V4D.prototype.eulerAngles = function(){ // x=[-pi,pi]  y=[-pi/2,-pi/2], z=[-pi,p
 }
 V4D.prototype.qClear = function(){ // init to identity
 	this.set(0,0,0,1);
+	return this;
 }
-V4D.prototype.qRotateDir = function(x,y,z, angle){
-	if(angle===undefined){
+V4D.prototype.qRotateDir = function(x,y,z, angle){ // quaternion version of vector twist by angle
+	if(angle===undefined){ // vector, angle
 		angle = y;
 		z = x.z;
 		y = x.y;
@@ -125,11 +126,11 @@ V4D.prototype.qRotateDir = function(x,y,z, angle){
 	}
 	angle *= 0.5;
 	var sin = Math.sin(angle);
-	this.x = x * this.x*sin;
-	this.y = y * this.y*sin;
-	this.z = z * this.z*sin;
+	this.x = x * sin;
+	this.y = y * sin;
+	this.z = z * sin;
 	this.t = Math.cos(angle);
-	console.log(""+this)
+	return this;
 }
 V4D.prototype.qRotation = function(angle){
 	angle *= 0.5;
@@ -141,7 +142,7 @@ V4D.prototype.qRotation = function(angle){
 }
 V4D.prototype.qNorm = function(){
 	dist = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z+this.t*this.t);
-	if(dist==0){ return; }
+	if(dist==0){ return this; }
 	this.x /= dist; this.y /= dist; this.z /= dist; this.t /= dist;
 	return this;
 }
@@ -177,6 +178,7 @@ V4D.prototype.qRotatePoint = function(b, a){ // b = a * q | assuming V3D
 	var y = a.x*(xy2+zt2) + a.y*(tt-xx+yy-zz) + a.z*(yz2-xt2);
 	var z = a.x*(xz2-yt2) + a.y*(yz2+xt2) + a.z*(tt-xx-yy+zz);
 	b.set(x,y,z);
+	return b;
 }
 // ---------------------------------------------------------------------------------------------------------------------
 V4D.prototype.copy = function(a){
@@ -206,7 +208,6 @@ V4D.angle = function(a,b){ // check
 	if(lenA!=0 && lenB!=0){
 		return Math.acos( Math.max(Math.min( V4D.dot(a,b)/(lenA*lenB),1.0 ),-1.0) );
 	}
-	return 0;
 }
 V4D.cosAngle = function(a,b){
 	var lenA = a.length();

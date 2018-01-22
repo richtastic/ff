@@ -2371,7 +2371,9 @@ App3DR.App.Model3D = function(resource, manager){
 	this._display = new DO();
 	this._root.addChild(this._display);
 
-	this._camera = new App3DR.App.Model3D.Camera();
+	//this._camera = new App3DR.App.Model3D.Camera();
+	this._camera = new Cam3D();
+	console.log(this._camera);
 
 
 	// interaction
@@ -2379,11 +2381,13 @@ App3DR.App.Model3D = function(resource, manager){
 	this._sphereMatrix.identity();
 
 	this._userInteractionMatrix = new Matrix3D();
-	this._sphereMatrix.identity();
+	this._userInteractionMatrix.identity();
 
-	this._siDirection = new V3D(1,0,0);
-	this._upDirection = new V3D(0,1,0);
-	this._inDirection = new V3D(0,0,1);
+	// this._siDirection = new V3D(1,0,0);
+	// this._upDirection = new V3D(0,1,0);
+	// this._inDirection = new V3D(0,0,1);
+
+	//this._camera = new App3DR.App.Model3D.Camera();
 
 
 	var frameRate = 1000.0/20.0;
@@ -2407,9 +2411,9 @@ App3DR.App.Model3D = function(resource, manager){
 
 
 	this._keyboard = new Keyboard();
-	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
-	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
-	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
 	this._keyboard.addListeners();
 
 
@@ -2448,42 +2452,47 @@ App3DR.App.Model3D.prototype.onMouseMoveFxn3D = function(e){
 
 }
 App3DR.App.Model3D.prototype.onMouseWheelFxn3D = function(e){
-	console.log(e);
 	var scroll = e["scroll"];
+	var orientation = this._camera.orientation();
 
-	var up = this._upDirection;
-	var ni = this._inDirection;
+	var x = orientation["x"];
+	var y = orientation["y"];
+	var z = orientation["z"];
+	var o = orientation["o"];
 
-	var direction = new V3D(scroll.x,scroll.y,0);
-
-
-
-	// TODO: project onto some matrix
-	
-	// var pos = e.location;
-	// var scale = 1.0 * pos.z;
-	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
-		var magnitude = direction.length();
-		var theta = Code.radians(10.0 * magnitude);
-		// rotate
-		var transform = new Matrix3D();
-		transform.identity();
-		transform.rotateVector(up, theta);
-		// var dir = this.getCameraDirectionForward();
-		//dir.scale(scale);
-		//transform.translate(dir.x,dir.y,dir.z);
-		this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
-	}else{
-		var magnitude = direction.length() * 0.1;
-		// var dir = this.getCameraDirectionForward();
-		var dir = ni.copy().scale(magnitude);
-		//dir.scale(scale);
-		var transform = new Matrix3D();
-		transform.identity();
-		transform.translate(dir.x,dir.y,dir.z);
-		this._userInteractionMatrix.mult(transform,this._userInteractionMatrix);
+// ROTATIONS
+	if(this._keyboard.isKeyDown(Keyboard.KEY_LET_Z)){ // left/right
+y = new V3D(0,1,0);
+		var dirY = y.copy().scale(scroll.x);
+		var rot = dirY.copy().norm();
+		var mag = dirY.length() * 0.001;
+		this._camera.rotate(rot, mag);
+	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_X)){ // up/down
+x = new V3D(1,0,0);
+		var dirX = x.copy().scale(scroll.y);
+		var rot = dirX.copy().norm();
+		var mag = dirX.length() * 0.001;
+		this._camera.rotate(rot, mag);
+	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_C)){ // around
+z = new V3D(0,0,1);
+		var dirZ = z.copy().scale(scroll.y);
+		var rot = dirZ.copy().norm();
+		var mag = dirZ.length() * 0.001;
+		this._camera.rotate(rot, mag);
+// TRANSLATIONS
+	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_S)){ // up/down
+y = new V3D(0,1,0);
+		var dirY = y.copy().scale(-scroll.y *0.001);
+		this._camera.translate(dirY);
+	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_A)){ // left/right
+x = new V3D(1,0,0);
+		var dirX = x.copy().scale(scroll.x *0.001);
+		this._camera.translate(dirX);
+	}else{ // in/out
+z = new V3D(0,0,1);
+		var dirZ = z.copy().scale(scroll.y *0.001);
+		this._camera.translate(dirZ);
 	}
-	
 
 }
 App3DR.App.Model3D.prototype.onMouseClickFxn3D = function(e){
@@ -2524,14 +2533,20 @@ App3DR.App.Model3D.prototype.rotateScene = function(){
 
 	
 	this._sphereMatrix.identity();
-	this._sphereMatrix.rotateVector( (new V3D(0,1,0)).norm(), Code.radians(e) );
+//	this._sphereMatrix.rotateVector( (new V3D(0,1,0)).norm(), Code.radians(e) );
 
+
+	var matrix = this._camera.matrix();
 
 
 	var transform = new Matrix3D();
 	transform.identity();
 	transform.mult(transform, this._sphereMatrix);
-	transform.mult(transform, this._userInteractionMatrix);
+	//transform.mult(transform, this._userInteractionMatrix);
+
+	transform.mult(transform, matrix);
+	
+
 	this._stage3D.matrixSetFromMatrix3D(transform);
 }
 App3DR.App.Model3D.prototype.what = function(location){
@@ -2560,13 +2575,14 @@ show surface textures
 */
 }
 App3DR.App.Model3D.Camera = function(){
-	this._pos = new V3D();
-	this._rot = new V3D();
+	// this._pos = new V3D();
+	// this._rot = new V3D();
 }
-App3DR.App.Model3D.Camera.prototype.identity = function(){
-	this._pos.set(0,0,0);
-	this._rot.set(1,0,0);
-}
+
+// App3DR.App.Model3D.Camera.prototype.identity = function(){
+// 	this._pos.set(0,0,0);
+// 	this._rot.set(1,0,0);
+// }
 
 
 

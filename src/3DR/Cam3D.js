@@ -1,9 +1,12 @@
 // Cam3D.js
 
 function Cam3D(p, r, l,f, s){
-	Cam3D._.constructor.call(this,  p, r, l,f, s); // Code.constructorClass(Cam3D, this);
+//	Cam3D._.constructor.call(this,  p, r, l,f, s); // Code.constructorClass(Cam3D, this);
+	//this._rot = new V3D(0,0,0); // 
+	this._rot = new V4D();
+		this._rot.qClear();
+		console.log("asdadsasdsasasd "+this._rot);
 	this._pos = new V3D(0,0,0);
-	this._rot = new V3D(0,0,0);
 	this._K = new Matrix3D();
 	this._target = new V3D(0,0,0);
 	this._distortion = null;
@@ -14,25 +17,31 @@ function Cam3D(p, r, l,f, s){
 	//this.K(0,0, 10000,10000, 0);
 	this.K(0,0, 100,100, 0);
 	this.distortion(0,0,0 ,0,0);
-this._matrix = new Matrix3D();
+//	this._matrix = new Matrix3D();
 }
-Code.inheritClass(Cam3D,Cam2D);
-Cam3D.prototype.updateFromTarget = function(){ // rotate to face target
-	var dirCamToTarget = V3D.sub(this._target,this._pos);
-	var dirDefault = V3D.DIRZ;
-	var dirCross = V3D.cross(dirDefault,dirCamToTarget);
-	dirCross.norm();
-	var angle = V3D.angle(dirDefault,dirCamToTarget);
-	var rotation = new Matrix3D().identity();
-	var q = new V4D();
-	q.qClear();
-	//q.qRotateDir(rotation, dirCross);
-	//q.qRotateDir(dirCross,angle);
-	q.set(dirCross.x,dirCross.y,dirCross.z, angle);
-	var angles = q.eulerAngles();
-	// console.log(angles+"")
-	this._rot.copy(angles);
+//Code.inheritClass(Cam3D,Cam2D);
+
+
+
+Cam3D.prototype.position = function(p){
+	if(p!==undefined){
+		this._pos.copy(p);
+	}
+	return this._pos;
 }
+Cam3D.prototype.rotation = function(r){
+	// if(r!==undefined){
+	// 	this._rot = r;
+	// }
+	return this._rot;
+}
+Cam3D.prototype.K = function(cx,cy, fx,fy, s){
+	if(cx!==undefined){
+		this._K.fromArray([fx, s, cx, 0,   0, fy, cy, 0,  0, 0, 1, 0]);
+	}
+	return this._K;
+}
+
 Cam3D.prototype.distortion = function(k1,k2,k3,p1,p2){
 	if(k1!==undefined){
 		if(p2!==undefined){
@@ -43,69 +52,71 @@ Cam3D.prototype.distortion = function(k1,k2,k3,p1,p2){
 	}
 	return this._distortion;
 }
-Cam3D.prototype.rotation = function(r){
-	if(r!==undefined){
-		this._rot.copy(r);
-	}
-	return this._rot;
-}
-Cam3D.prototype.location = function(l){
-	if(l!==undefined){
-		this._pos.copy(l);
-	}
-	return this._pos;
-}
-Cam3D.prototype.translate = function(tx,ty,tz){
-	this._pos.add(tx,ty,tz);
-}
-Cam3D.prototype.rotate = function(rx,ry,rz){
-	this._rot.add(rx,ry,rz);
-	this._rot.x = Code.angleZeroTwoPi(this._rot.x);
-	this._rot.y = Code.angleZeroTwoPi(this._rot.y);
-	this._rot.z = Code.angleZeroTwoPi(this._rot.z);
-}
-
-Cam3D.prototype.K = function(cx,cy, fx,fy, s){
-	if(cx!==undefined){
-		this._K.fromArray([fx, s, cx, 0,   0, fy, cy, 0,  0, 0, 1, 0]);
-	}
-	return this._K;
-}
-Cam3D.prototype.matrix = function(){ // transform the world to what it would look like to camera
-	return this._matrix;
-
-	var matrix = new Matrix3D();
-	var scale = this._scale;
-	//matrix.scale(scale);
-	//matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
-	//matrix.rotateXYZ(-this._rot.x,-this._rot.y,-this._rot.z);
-// matrix.rotateY(-this._rot.y);
-// matrix.rotateX(-this._rot.x);
-
-// NORMAL:
-matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
-matrix.rotateY(-this._rot.y);
-matrix.rotateX(-this._rot.x);
-matrix.rotateZ(-this._rot.z);
-	matrix.scale(scale);
 
 
-/*
-matrix.rotateY(-this._rot.y);
-matrix.rotateX(-this._rot.x);
-matrix.rotateZ(-this._rot.z);
-matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
-// matrix.set(0,3, -this._pos.x);
-// matrix.set(1,3, -this._pos.y);
-// matrix.set(2,3, -this._pos.z);
-//matrix.setTranslation(-this._pos.x,-this._pos.y,-this._pos.z);
-*/
-	//matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
-	//matrix.translate(0,0,10);
-	//matrix.translate(0,0,10);
-	return matrix;
-	//return this.reverseMatrix();
+
+Cam3D.prototype.rotate = function(vector, angle){
+//	console.log(this._rot+" ... ROTATE BY: "+vector+" @ "+Code.degrees(angle));
+	var q = new V4D().qClear();
+	q.qRotateDir(vector.x,vector.y,vector.z, angle);
+	//console.log("q: "+q)
+
+	//V4D.qMul(this._rot, this._rot, q);
+	this._rot = V4D.qMul(q, this._rot);
+	this._rot.qNorm();
+
+	return this;
 }
+Cam3D.prototype.translate = function(t){
+	this._pos.add(t);
+	return this;
+}
+Cam3D.prototype.transform = function(point){
+	var next = point.copy();
+	next = this._rot.qRotatePoint(new V3D(), next);
+	next.sub(this._pos);
+	return next;
+}
+Cam3D.prototype.orientation = function(){
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	var o = new V3D(0,0,0);
+	x = this.transform(x);
+	y = this.transform(y);
+	z = this.transform(z);
+	o = this.transform(o);
+	x.sub(o);
+	y.sub(o);
+	z.sub(o);
+	return {"x":x,"y":y,"z":z,"o":o};
+}
+
+
+Cam3D.prototype.matrix = function(){
+	var rotation = new Matrix3D();
+	V4D.qMatrix(rotation, this._rot);
+
+	var translation = new Matrix3D();
+	translation.translate(-this._pos.x,-this._pos.y,-this._pos.z);
+
+
+	var combined = new Matrix3D();
+	// combined.mult(rotation,translation); // x
+	combined.mult(translation,rotation);
+
+	return combined;
+}
+
+
+
+
+
+
+
+
+
+
 Cam3D.prototype.applyDistortion = function(d,u){ // c = distort(a)
 	if(u===undefined){
 		u = d;
@@ -114,23 +125,10 @@ Cam3D.prototype.applyDistortion = function(d,u){ // c = distort(a)
 	var d = R3D.applyDistortionParameters(d, u, this.K(), this.distortion());
 	return d;
 }
-Cam3D.prototype.forwardMatrix = function(){
-	var matrix = new Matrix3D();
-	var scale = this._scale;
-	matrix.scale(scale);
-	matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
-	matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
-	return matrix;
-}
-Cam3D.prototype.reverseMatrix = function(){
-	var matrix = new Matrix3D();
-	var scale = this._scale;
-	matrix.translate(-this._pos.x,-this._pos.y,-this._pos.z);
-	matrix.rotateXYZ(this._rot.x,this._rot.y,this._rot.z);
-	matrix.scale(scale);
-	return matrix;
-	//return Matrix3D.inverse( this.forwardMatrix() );
-}
+
+
+
+
 Cam3D.prototype.toString = function(){
 	var str = "";
 	str += "[Cam3D: ";
