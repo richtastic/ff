@@ -192,11 +192,39 @@ project typical numbers:
 
 APP TODO:
 
-- saving yaml file from initial model
-- load model yaml
-- sub-app to show cameras & model points
+- convert from P to rx,ry,rz,tx,ty,tz
+	- & back
 
+R = toRotationMatrix(p)
+p = torodriguezvector(R)
 - 
+
+
+
+
+
+input:
+	paired view transforms that have some absolute transform relative to eachother or NO (disjoint) relationship
+
+	relative rot & pos are finnessed to minimize reprojection error
+
+	absolute transform is determined from group of relative transforms
+
+output:
+
+
+
+
+
+joining disjoint groups:
+
+
+
+
+
+
+
+
 
 - how to go from refined X points to M matrices ?
 	M = f(Xi,xi) @ 6 unknowns rx,ry,rz,tx,ty,tz

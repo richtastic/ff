@@ -482,7 +482,6 @@ App3DR.prototype._projectBALoaded = function(object, data){
 		var v = views[i];
 	}
 
-
 	var app = this._activeApp;
 	app.setPoints(points3D);
 
@@ -4867,7 +4866,7 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 
 App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
 	console.log("calculateBundleAdjust");
-return; // TODO: UNCOMMENT
+//return; // TODO: UNCOMMENT
 	var i, j, k;
 	var view, pair, camera;
 	var views = this._views;

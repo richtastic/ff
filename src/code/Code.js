@@ -2971,7 +2971,7 @@ Code._randomSubsetNoScale = function(newArr, count, oldArr){
 	return newArr;
 }
 
-Code.stdDev = function(list,key,mean){
+Code.stdDev = function(list,mean,key){
 	var i, sig=0, item, len=list.length;
 	if(len==0){ return 0; }
 	for(i=len;i--;){
