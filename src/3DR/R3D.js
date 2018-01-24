@@ -9745,13 +9745,16 @@ R3D.rotationMatrixToEulerRodriguez = function(R){
 	var p = new V3D(R.get(2,1)-R.get(1,2), R.get(0,2)-R.get(2,0), R.get(1,0)-R.get(0,1) ); // cross
 	p.scale(0.5);
 	var c = 0.5*(R.get(0,0) + R.get(1,1) + R.get(2,2) - 1); // trace
+//		c = Math.round(c);
 	var rho;
-	if(p==0 && c==1){
-		rho = new V3D();
-	}else if(p==0 && c==-1){
-		var r1 = new V3D(R.get(0,0),R.get(1,0),R.get(2,0));
-		var r2 = new V3D(R.get(0,1),R.get(1,1),R.get(2,1));
-		var r3 = new V3D(R.get(0,2),R.get(1,2),R.get(2,2));
+	var pMag = p.length();
+	pMag = pMag > 1E-6 ? pMag : 0;
+	if(pMag==0 && c==1){
+		rho = new V3D(0,0,0);
+	}else if(pMag==0 && c==-1){
+		var r1 = new V3D(R.get(0,0) + 1,R.get(1,0),R.get(2,0));
+		var r2 = new V3D(R.get(0,1),R.get(1,1) + 1,R.get(2,1));
+		var r3 = new V3D(R.get(0,2),R.get(1,2),R.get(2,2) + 1);
 		var r1Norm = r1.length();
 		var r2Norm = r2.length();
 		var r3Norm = r3.length();
@@ -9768,10 +9771,11 @@ R3D.rotationMatrixToEulerRodriguez = function(R){
 			u.scale(-1);
 		}
 		rho = u.copy().scale(Math.PI);
+	}else if(pMag==0){
+		throw "some other error with c: "+c;
 	}else{ // p!=0
-		var pNorm = p.norm();
-		var u = p.copy().scale(1.0/pNorm);
-		var theta = Math.atan2(pNorm, c); //var theta = Math.atan(pNorm/c);
+		var u = p.copy().scale(1.0/pMag);
+		var theta = Math.atan2(pMag, c); //var theta = Math.atan(pMag/c);
 		rho = u.copy().scale(theta);
 	}
 	return rho;
@@ -9786,7 +9790,7 @@ R3D.rotationEulerRodriguezToMatrix = function(v){ // http://www.sciencedirect.co
 	var cos = Math.cos(theta);
 	var sin = Math.sin(theta);
 	var cm1 = 1.0 - cos;
-	var sm1 = 1.0 - sin;
+	
 	var a =    cos + x*x*cm1;
 	var b = -z*sin + x*y*cm1;
 	var c =  y*sin + x*z*cm1;
@@ -9796,8 +9800,36 @@ R3D.rotationEulerRodriguezToMatrix = function(v){ // http://www.sciencedirect.co
 	var g = -y*sin + x*z*cm1;
 	var h =  x*sin + y*z*cm1;
 	var i =    cos + z*z*cm1;
+	
 	var R = new Matrix(3,3).setFromArray([a, b, c,  d, e, f,  g, h, i]);
+	return R;
 }
+/*
+R3D.rotationMatrixToEulerRodriguez2 = function(R){
+	var a11 = R.get(0,0);
+	var a12 = R.get(0,1);
+	var a13 = R.get(0,2);
+	var a21 = R.get(1,0);
+	var a22 = R.get(1,1);
+	var a23 = R.get(1,2);
+	var a31 = R.get(2,0);
+	var a32 = R.get(2,1);
+	var a33 = R.get(2,2);
+
+	var m = Math.sqrt( Math.pow(a23-a32,2) + Math.pow(a31-a13,2) + Math.pow(a12-a21,2) )
+	var r = new V3D(a23-a32, a31-a13, a12-a21);
+	r.scale(1.0/m);
+	var trace = a11 + a22 + a33;
+	var theta = Math.acos(0.5 * trace - 1);
+	theta = Math.min(Math.max(theta,-1),1);
+
+	console.log(trace, Code.degrees(theta),r)
+
+	r.scale(theta);
+
+	return r;
+}
+*/
 R3D.rotationFromApproximate = function(Q){
 	var svd = Matrix.SVD(Q);
 	var U = svd.U;
@@ -13480,20 +13512,13 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				}
 			}else{ // minimize reprojection error with points
 				console.log("transform exists, gradient decent minimize reprojection error");
-
+				// OR USE THE transform ???
 				var absoluteA = viewA.absoluteTransform();
 				var absoluteB = viewB.absoluteTransform();
 				var inverseA = Matrix.inverse(absoluteA);
 				console.log("inverseA: "+inverseA);
 
 				var relativeAtoB = Matrix.mult(inverseA,absoluteB);
-				console.log("relativeAtoB: "+relativeAtoB);
-				var R = relativeAtoB.getSubMatrix(0,0, 3,3);
-				console.log("R: "+R);
-				//R = R3D.rotationFromApproximate(R);
-				// convert relative transform to rx,ry,rz,tx,ty,tz
-				var angles = R3D.rotationMatrixToEulerRodriguez(R);
-				console.log(angles);
 
 				// get all points that share A & B
 				var pointsA = [];
@@ -13513,24 +13538,52 @@ R3D.BundleAdjust.prototype._iteration = function(){
 					var p3D = inverseA.multV3DtoV3D(point3D.point());
 					points3DRelative.push(p3D);
 				}
-			console.log("FIX UP: "+points3DRelative.length);
+				console.log("FIX UP: "+points3DRelative.length);
 
-			// batchSize = Math.min(listCountBatchSize,count); // TODO: use subset [random, low error] or all points ?
-			// var batchLoopCount = 0;
-			// 
-			// 
-			// R3D.BAPoints2DGD(M,X)
-				// minimize reprojection error:
-				// update rx,ry,rz,tx,ty,tz gradient descent
-			// error = errorA^2 + errorB^2
-			// provide an estimate for all 3D points X w/ error
-			/*
-				R3D.rotationMatrixToEulerRodriguez(R);
-				R3D.rotationEulerRodriguezToMatrix(v);
-				R3D.rotationFromApproximate(R);
-			*/
-			// set 3D putative points
+				// batchSize = Math.min(listCountBatchSize,count); // TODO: use subset [random, low error] or all points ?
+				// var batchLoopCount = 0;
+				// 
+				// 
+				var transform = R3D.BAPoints2DGD(pointsA, pointsB, points3DRelative, relativeAtoB);
+				console.log("transform: ");
+				console.log(transform+"");
+				
+				// update transform:
+				var transformError = 1.0; // TODO: ???
+				var trans = new R3D.BundleAdjust.Transform3D(viewA,viewB,transformError);
+				trans.forward(transform);
+				
+				var cameraA = new Matrix(4,4).identity();
+				var cameraB = transform;
+				// set 3D putative points
+				pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
 
+				for(j=0; j<pairPoints.length; ++j){
+					break; // TODO: HERE
+					var pairPoint = pairPoints[j];
+					var pointA = pairPoint["A"];
+					var pointB = pairPoint["B"];
+					var point3D = pairPoint["P3D"];
+					// point3D.addPutative3D(estimated, error, viewA);
+
+					var estimated = pointsRev[j];
+					// project A to B & B to A
+					var pA = pointA.point();
+					var pB = pointB.point();
+					// console.log(pA+"");
+					pA = new V3D(pA.x,pA.y,1.0);
+					pB = new V3D(pB.x,pB.y,1.0);
+					var lineA = R3D.lineRayFromPointF(Ffwd, pA);
+					var lineB = R3D.lineRayFromPointF(Frev, pB);
+					var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pB);
+					var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pA);
+					var error = distA*distA + distB*distB;
+					// TODO: multiply by pair's average error
+					point3D.addPutative3D(estimated, error, viewA);
+
+
+				}
+				
 			}
 		}
 	}
@@ -13955,6 +14008,20 @@ R3D.projectPoint3DToCamera2D = function(in3D, extrinsic, K, distortions){
 }
 
 R3D._gdBAPoints3D = function(args, x, isUpdate){
+
+	// create transform matrix from x
+	// 
+	// get projected 3D points from: R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
+	// 
+
+	// get reprojection error:
+	// i: X,Y,Z => x,y
+	// errorI = dist(x,y, imageX,imageY)
+	// error = errorA^2 + errorB^2
+	// provide an estimate for all 3D points X w/ error
+
+
+
 	/*
 	if(isUpdate){
 		var Ffwd = new Matrix(3,3).fromArray(x);
@@ -13991,19 +14058,27 @@ R3D._gdBAPoints3D = function(args, x, isUpdate){
  	*/
 	return error;
 }
-R3D.BAPoints2DGD = function(pointsA2D,pointsB2D,points3D){ // nonlinearLeastSquares : input normalized points
+R3D.BAPoints2DGD = function(pointsA2D,pointsB2D,points3D, transform){ // nonlinearLeastSquares : input normalized points ??????
 
-	/*
-	fundamental ???
+	console.log("transform: "+transform);
+	var R = transform.getSubMatrix(0,0, 3,3);
+	console.log("R: "+R);
+	R = R3D.rotationFromApproximate(R);
+	var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
+	console.log(rodrigues);
+	var Q = R3D.rotationEulerRodriguezToMatrix(rodrigues);
+	console.log("Q: "+Q);
 
-	var xVals = fundamental.toArray();
-	var args = [pointsA,pointsB];
+	var tx, ty, tz; // TODO: SET
+	var xVals = [rodrigues.x,rodrigues.y,rodrigues.z, tx,ty,tz];
+	var args = [pointsA2D,pointsB2D,points3D];
+/*
 	result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-10);
 	xVals = result["x"];
 	fundamental = new Matrix(3,3).fromArray(xVals);
 	fundamental = R3D.forceRank2F(fundamental);
 	*/
-	return fundamental;
+	return transform;
 }
 
 

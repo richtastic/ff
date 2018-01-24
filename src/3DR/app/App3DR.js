@@ -462,10 +462,13 @@ App3DR.prototype._projectBALoaded = function(object, data){
 	var cameras = object["cameras"];
 	var views = object["views"];
 	var points = object["points"];
-	console.log(cameras);
-	console.log(views);
-	console.log(points);
-
+	
+	var cameraLookup = {};
+	for(var i=0; i<cameras.length; ++i){
+		var c = cameras[i];
+		var id = c["id"];
+		cameraLookup[id] = c; // TODO: this should be id
+	}
 
 	var points3D = [];
 	for(var i=0; i<points.length; ++i){
@@ -473,13 +476,18 @@ App3DR.prototype._projectBALoaded = function(object, data){
 		var point3D = new V3D(v["x"],v["y"],v["z"]);
 		points3D.push(point3D);
 	}
-	console.log(points3D);
-
-	
 
 	var views3D = [];
 	for(var i=0; i<views.length; ++i){
 		var v = views[i];
+		var transform = v["transform"];
+			transform = new Matrix().loadFromObject(transform);
+		var camID = v["camera"]
+		var camera = cameraLookup[camID];
+		var K = camera["K"];
+		var distortion = camera["distortion"];
+		var view = {"transform":transform, "K":K, "distortion":distortion};
+		views3D.push(view);
 	}
 
 	var app = this._activeApp;
@@ -2421,7 +2429,51 @@ App3DR.App.Model3D = function(resource, manager){
 Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 
 App3DR.App.Model3D.prototype.setViews = function(input){
+	console.log("setViews");
+
 	console.log(input);
+	var i;
+	var lines = [];
+	for(i=0; i<input.length; ++i){
+		var view = input[i];
+		console.log(view);
+		var transform = view["transform"];
+		console.log(transform)
+		var tx = transform.get(0,3);
+		var ty = transform.get(1,3);
+		var tz = transform.get(2,3);
+		var o = new V3D(0,0,0);
+		var x = new V3D(1,0,0);
+		var y = new V3D(0,1,0);
+		var z = new V3D(0,0,1);
+		o = transform.multV3DtoV3D(o);
+		x = transform.multV3DtoV3D(x);
+		y = transform.multV3DtoV3D(y);
+		z = transform.multV3DtoV3D(z);
+		var dirX = V3D.sub(x,o);
+		var dirY = V3D.sub(y,o);
+		var dirZ = V3D.sub(z,o);
+		lines.push(o,x);
+		lines.push(o,y);
+		lines.push(o,z);
+	}
+	this.setLines(lines);
+}
+App3DR.App.Model3D.prototype.setLines = function(input){
+	// CREATE LINES:
+	var points = [];
+	var colors = [];
+	for(var i=0; i<input.length; ++i){
+		var v = input[i];
+		points.push(v.x,v.y,v.z);
+		colors.push(0.5,0.5,0.5,0.95);
+	}
+	// create objects
+	this._stage3D.selectProgram(2);
+	this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._programLineVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
+	this._programLinePoints = this._stage3D.getBufferFloat32Array(points, 3);
+	this._programLineColors = this._stage3D.getBufferFloat32Array(colors, 4);
 }
 App3DR.App.Model3D.prototype.setPoints = function(input){
 	// CREATE POINTS:
@@ -2521,6 +2573,15 @@ App3DR.App.Model3D.prototype._eff = function(){
 		this._stage3D.bindArrayFloatBuffer(this._pointVertexPositionAttrib, this._pointPointBuffer);
 		this._stage3D.bindArrayFloatBuffer(this._pointVertexColorAttrib, this._pointColorBuffer);
 		this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
+	}
+	// RENDER LINES
+	if(this._programLinePoints && this._programLinePoints.length>0){
+		this._stage3D.selectProgram(2);
+		this._stage3D.matrixReset();
+		this._stage3D.disableCulling();
+		this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
+		this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
+		this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
 	}
 }
 App3DR.App.Model3D.prototype.rotateScene = function(){

@@ -192,15 +192,12 @@ project typical numbers:
 
 APP TODO:
 
-- convert from P to rx,ry,rz,tx,ty,tz
-	- & back
-
-R = toRotationMatrix(p)
-p = torodriguezvector(R)
-- 
 
 
 
+- BUNDLE ADJUST ALGORITHM
+
+- before/during feature matching: remove duplicate match-points
 
 
 input:
@@ -285,11 +282,6 @@ numeric.QRFrancis
 - upload camera images
 	- camera double-check point location checks
 	
-
-- BUNDLE ADJUST ALGORITHM
-
-- before/during feature matching: remove duplicate match-points
-
 
 - how to derive TFT minimization equations [4]
 - trifocal tensor how-to-calculate (from points) / robust iterate
