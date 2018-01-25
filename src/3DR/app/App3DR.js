@@ -6372,7 +6372,6 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype._loadCalibratationDataCo
 	}
 }
 
-
 // sparse approximation | estimate | combine | merge
 App3DR.ProjectManager.BundleAdjustment = function(directory){
 	this._x;

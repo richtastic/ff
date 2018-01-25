@@ -196,6 +196,9 @@ APP TODO:
 
 
 - BUNDLE ADJUST ALGORITHM
+	- adding in new p2d via projections & SAD
+	- adding in new p3d + p2d pair using F & SAD
+
 
 - before/during feature matching: remove duplicate match-points
 

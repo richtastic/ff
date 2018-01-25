@@ -229,6 +229,13 @@ QuadTree.prototype.objectsInsideRect = function(min,max){
 	this._root.objectsInsideRect(arr,min,max,this._toPoint);
 	return arr;
 }
+
+QuadTree.prototype.objectsInsideLine = function(org,dir,maxDistance, isFinite){
+	isFinite = isFinite!==undefined ? isFinite : false;
+	// all points within maxDistance of line
+	throw "todo";
+}
+
 QuadTree.prototype.toString = function(){
 	var str = "[QuadTree]:\n";
 	str += this._root.toString()+"";
