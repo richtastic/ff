@@ -76,7 +76,6 @@ var modeImageUpload = false;
 //var modeImageCompare = true;
 var modeImageCompare = false;
 
-//var modeModel = false;
 
 //var modeModelReconstruction = false;
 var modeModelReconstruction = true;
@@ -4951,6 +4950,8 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 	var loadedViews = 0;
 	var loadedPairs = 0;
 	var loadedCameras = 0;
+	var loadedFeatureImages = 0;
+	var expectedFeatureImages = views.length;
 	var fxnA = function(view){
 		console.log("loaded view");
 		++loadedViews;
@@ -4961,6 +4962,11 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 		++loadedPairs;
 		fxnD.call(this);
 	}
+	var fxnC = function(view){
+		console.log("loaded features image");
+		++loadedFeatureImages;
+		fxnD.call(this);
+	}
 	// var fxnC = function(camera){
 	// 	console.log("loaded camera");
 	// 	++loadedCameras;
@@ -4969,7 +4975,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 	var fxnD = function(){
 		console.log(loadedPairs+" / "+expectedPairs+"  &&  "+loadedViews+" / "+expectedViews+"  &&  "+loadedCameras+" / "+expectedCameras);
 		// normalize everything in width=1, height = htowratio
-		if(loadedViews==expectedViews && loadedPairs==expectedPairs){
+		if(loadedViews==expectedViews && loadedPairs==expectedPairs && loadedFeatureImages==expectedFeatureImages){
 			console.log("complete");
 			var i, j, k;
 			var BA = new R3D.BundleAdjust();
@@ -5007,6 +5013,9 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 				var view = views[i];
 				var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
 				var v = BA.addView(imageSize);
+					var img = view.featuresImage();
+					var matrix = R3D.imageMatrixFromImage(img, this._stage);
+					v.images().push(matrix);
 				v.index(view.id());
 				v.size(imageSize);
 				baViews.push(v);
@@ -5106,7 +5115,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 					var pointA = vA.closestPoint2D(fr.x,fr.y);
 					var pointB = vB.closestPoint2D(to.x,to.y);
 					if(pointA && pointB){
-						BA.matchPoints2D(viewA,pointA, viewB,pointB);
+						BA.matchPoints2D(pointA, pointB);
 					}
 				}
 				// initially get 2-sigma points & only add those from match list
@@ -5126,6 +5135,10 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 	for(i=0; i<pairs.length; ++i){
 		pair = pairs[i];
 		pair.loadMatchingData(fxnB, this);
+	}
+	for(i=0; i<views.length; ++i){
+		view = views[i];
+		view.loadFeaturesImage(fxnC, this);
 	}
 	for(i=0; i<cameras.length; ++i){
 		// camera K is in default camera data

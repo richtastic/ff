@@ -12735,7 +12735,7 @@ R3D.BundleAdjust.prototype.addView = function(size){
 	this._views.push(view);
 	return view;
 }
-R3D.BundleAdjust.prototype.matchPoints2D = function(viewA,a, viewB,b){ // merge/join: now share the same point3D
+R3D.BundleAdjust.prototype.matchPoints2D = function(a,b){ // merge/join: now share the same point3D
 // these 2 points will have been decided to be within some minimal distance (reprojection error) and SAD score is high enough to assume match
 	var point3DA = a.point3D();
 	var point3DB = b.point3D();
@@ -12928,9 +12928,11 @@ R3D.BundleAdjust.Point2D = function(){
 	this._size = null;
 	this._view = null; // View
 	this._source = null; // Point3D -- reference
-	this._pairScores = []; // sigma values for estimated pairs ---- putative?
 	this._errorF = null;
 	this._errorR = null;
+	this._temp = null;
+	this._pairs = []; // sigma values for estimated pairs ---- putative?
+	this._sift = null; // comparrision object [vector]
 }
 R3D.BundleAdjust.Point2D.prototype.errorF = function(e){
 	if(e!==undefined){
@@ -12956,6 +12958,19 @@ R3D.BundleAdjust.Point2D.prototype.size = function(s){
 	}
 	return this._size;
 }
+R3D.BundleAdjust.Point2D.prototype.sift = function(s){
+	if(s!==undefined){
+		this._sift = s;
+	}
+	return this._sift;
+}
+R3D.BundleAdjust.Point2D.prototype.pairs = function(p){
+	if(p!==undefined){
+		this._pairs = p;
+	}
+	return this._pairs;
+}
+
 R3D.BundleAdjust.Point2D.prototype.point = function(){
 	return this._point;
 }
@@ -12968,8 +12983,12 @@ R3D.BundleAdjust.Point2D.prototype.set = function(x,y,a,s, v){
 	this._size = s;
 	this._view = v;
 }
-
-
+R3D.BundleAdjust.Point2D.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
+}
 R3D.BundleAdjust.Point2D.prototype.point3D = function(p3D){
 	if(p3D!==undefined){
 		this._source = p3D;
@@ -13057,6 +13076,7 @@ R3D.BundleAdjust.View = function(size){
 	this._camera = null; // Camera
 	this._size = new V2D();
 	this._absoluteTransform = null; // relative to some root view
+	this._images = [];
 	this._temp = null;
 }
 R3D.BundleAdjust.View.prototype.absoluteTransform = function(trans){
@@ -13077,36 +13097,18 @@ R3D.BundleAdjust.View.prototype.errorR = function(e){
 	}
 	return this._errorR;
 }
+R3D.BundleAdjust.View.prototype.images = function(i){
+	if(i!==undefined){
+		this._images = i;
+	}
+	return this._images;
+}
 R3D.BundleAdjust.View.prototype.temp = function(t){
 	if(t!==undefined){
 		this._temp = t;
 	}
 	return this._temp;
 }
-/*
-R3D.BundleAdjust.View.prototype.transform = function(view, transform){
-	if(transform!==undefined){ // set
-// TODO: this should be a lookup from indexes this.id(),view.id()
-		for(var i=0; i<this._transforms.length; ++i){
-			var trans = this._transforms[i];
-			if(trans && (trans.A()==view || trans.B()==view)){
-				this._transforms[i] = transform;
-				return;
-			}
-		}
-		this._transforms.push(transform);
-		return;
-	}else{ // set the transform
-		for(var i=0; i<this._transforms.length; ++i){
-			var trans = this._transforms[i];
-			if(trans && (trans.A()==view || trans.B()==view) ){
-				return trans;
-			}
-		}
-		return null;
-	}
-}
-*/
 R3D.BundleAdjust.View.prototype.index = function(i){
 	if(i!==undefined){
 		this._index = i;
@@ -13164,7 +13166,6 @@ R3D.BundleAdjust.prototype.toModel = function(){
 			var K = camera.K();
 			c["K"] = K;
 			var distortion = camera.distortion();
-			console.log(distortion);
 			c["distortion"] = distortion;
 		cameras.push(c);
 	}
@@ -13397,7 +13398,8 @@ R3D.BundleAdjust.prototype.process = function(maxIterations){
 		}
 	}
 	// initialize all views M = null
-	maxIterations = 2;
+	//maxIterations = 5;
+	maxIterations = 10;
 	for(i=0; i<maxIterations; ++i){
 		console.log("ITERATION: "+i+" ============================================================");
 		this._iteration();
@@ -13483,6 +13485,7 @@ R3D.BundleAdjust.prototype._iteration = function(){
 		var camB = viewB.camera();
 		var Ka = camA.K();
 		var Kb = camB.K();
+		//var F = pair["F"];
 		var distortionsA = camA.distortion();
 		var distortionsB = camB.distortion();
 		var transform = this.transformFromViews(viewA,viewB);
@@ -13544,6 +13547,7 @@ R3D.BundleAdjust.prototype._iteration = function(){
 					var pointB = pairPoint["B"];
 					var point3D = pairPoint["P3D"];
 					var estimated = pointsRev[j];
+/*
 					// project A to B & B to A
 					var pA = pointA.point();
 					var pB = pointB.point();
@@ -13557,9 +13561,13 @@ R3D.BundleAdjust.prototype._iteration = function(){
 					var error = distA*distA + distB*distB;
 					// TODO: multiply by pair's average error
 					point3D.addPutative3D(estimated, error, viewA);
+
+*/
+					R3D._addPutativeForPoints(pointA,pointB,point3D,estimated, Ffwd, Frev);
 				}
 			}else{ // minimize reprojection error with points
 				console.log("transform exists, gradient decent minimize reprojection error");
+// TODO: need to somehow update the 3D point locations (new empty ones from last ?)
 				// OR USE THE transform ???
 				var absoluteA = viewA.absoluteTransform();
 				var absoluteB = viewB.absoluteTransform();
@@ -13577,7 +13585,6 @@ R3D.BundleAdjust.prototype._iteration = function(){
 					var pointA = pairPoint["A"];
 					var pointB = pairPoint["B"];
 					var point3D = pairPoint["P3D"];
-					
 					var pA = pointA.point();
 					var pB = pointB.point();
 					pointsA.push(pA);
@@ -13587,6 +13594,11 @@ R3D.BundleAdjust.prototype._iteration = function(){
 					points3DRelative.push(p3D);
 				}
 				console.log("FIX UP: "+points3DRelative.length);
+
+				var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+				var Ffwd = F;
+				console.log(F);
+				var Frev = Matrix.inverse(Ffwd);
 
 				// batchSize = Math.min(listCountBatchSize,count); // TODO: use subset [random, low error] or all points ?
 				// var batchLoopCount = 0;
@@ -13607,31 +13619,14 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				var pointsFr = pointsA;
 				var pointsTo = pointsB;
 				pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
-
+				console.log("pairPoints: ??? "+pairPoints.length);
 				for(j=0; j<pairPoints.length; ++j){
-					break; // TODO: HERE
 					var pairPoint = pairPoints[j];
 					var pointA = pairPoint["A"];
 					var pointB = pairPoint["B"];
 					var point3D = pairPoint["P3D"];
-					// point3D.addPutative3D(estimated, error, viewA);
-
 					var estimated = pointsRev[j];
-					// project A to B & B to A
-					var pA = pointA.point();
-					var pB = pointB.point();
-					// console.log(pA+"");
-					pA = new V3D(pA.x,pA.y,1.0);
-					pB = new V3D(pB.x,pB.y,1.0);
-					var lineA = R3D.lineRayFromPointF(Ffwd, pA);
-					var lineB = R3D.lineRayFromPointF(Frev, pB);
-					var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pB);
-					var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pA);
-					var error = distA*distA + distB*distB;
-					// TODO: multiply by pair's average error
-					point3D.addPutative3D(estimated, error, viewA);
-
-
+					R3D._addPutativeForPoints(pointA,pointB,point3D,estimated, Ffwd, Frev);
 				}
 			}
 		}
@@ -13832,15 +13827,21 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				var p3D = point3D.point();
 				var proj2DA = R3D.projectPoint3DToCamera2D(p3D, absoluteA, Ka, distortionsA);
 				var proj2DB = R3D.projectPoint3DToCamera2D(p3D, absoluteB, Kb, distortionsB);
+				///if(proj2DA && proj2DB){ // might be null if z == 0 OR < 0 ?
+					var errorA = V2D.distance(p2DA,proj2DA);
+					var errorB = V2D.distance(p2DB,proj2DB);
+						errorA = errorA*errorA;
+						errorB = errorB*errorB;
+					errorsA.push(errorA);
+					errorsB.push(errorB);
+					var errorAB = errorA + errorB;
+					errorsAB.push(errorAB);
 
-				var errorA = V2D.distance(p2DA,proj2DA);
-				var errorB = V2D.distance(p2DB,proj2DB);
-					errorA = errorA*errorA;
-					errorB = errorB*errorB;
-				errorsA.push(errorA);
-				errorsB.push(errorB);
-				var errorAB = errorA + errorB;
-				errorsAB.push(errorAB);
+					pointA.errorR(errorAB);
+					pointB.errorR(errorAB);
+				// }else{
+				// 	console.log("BAD PROJECTION");
+				// }
 
 				// F error
 				var pA = new V3D(p2DA.x,p2DA.y,1.0);
@@ -13851,12 +13852,8 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pA);
 				var errorF = distA*distA + distB*distB;
 				errorsF.push(errorF);
-
 				pointA.errorF(errorF);
 				pointB.errorF(errorF);
-				pointA.errorR(errorAB);
-				pointB.errorR(errorAB);
-				
 			}
 			var meanF = Code.median(errorsF);
 			var sigmaF = Code.stdDev(errorsF, meanF);
@@ -13866,29 +13863,39 @@ R3D.BundleAdjust.prototype._iteration = function(){
 			var sigmaB = Code.stdDev(errorsB, meanB);
 			var meanAB = Code.median(errorsAB);
 			var sigmaAB = Code.stdDev(errorsAB, meanAB);
-			pair["errorF"] = sigmaF;
-			pair["errorA"] = sigmaA;
-			pair["errorB"] = sigmaB;
-			pair["errorR"] = sigmaAB;
-			view.temp().push([errorF,errorR]);
-			console.log(pair);
-			// sigmas
+			pair["meanF"] = meanF;
+			pair["sigmaF"] = sigmaF;
+			pair["meanR"] = meanAB;
+			pair["sigmaR"] = sigmaAB;
+			// pair["errorA"] = sigmaA;
+			// pair["errorB"] = sigmaB;
+			
+			console.log("ERRORS: "+sigmaF+"["+meanF+"] | "+sigmaAB+" ["+meanAB+"]");
+			//view.temp().push([errorF,errorR]);
+			view.temp().push([[meanF,sigmaF],[meanAB,sigmaAB]]);
+			//console.log(pair);
 		}
 	}
 	for(i=0; i<views.length; ++i){
 		var view = views[i];
 		var errors = view.temp();
 		if(errors.length>0){
-			var errorF = 0;
-			var errorR = 0;
+			var meanF = 0;
+			var sigmaF = 0;
+			var meanR = 0;
+			var sigmaR = 0;
 			for(j=0; j<errors.length; ++j){
-				errorF += errors[j][0];
-				errorR += errors[j][1];
+				meanF += errors[j][0][0];
+				sigmaF += errors[j][0][1];
+				meanR += errors[j][1][0];
+				sigmaR += errors[j][1][1];
 			}
-			errorF /= errors.length;
-			errorR /= errors.length;
-			view.errorF(errorF);
-			view.errorR(errorR);
+			meanF /= errors.length;
+			sigmaF /= errors.length;
+			meanR /= errors.length;
+			sigmaR /= errors.length;
+			view.errorF({"sigma":sigmaF,"mean":meanF});
+			view.errorR({"sigma":sigmaR,"mean":meanR});
 		}
 		view.temp(null);
 	}
@@ -13933,24 +13940,30 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				var errorRB = pointB.errorR();
 				var viewB = pointB.view();
 				var pair = pairFromViews(pairs, viewA,viewB);
-				var errorF = pair["errorF"];
-				var errorR = pair["errorR"];
-				var maxErrorF = errorF * 3.0;
-				var maxErrorR = errorR * 4.0;
+				var pairMeanF = pair["meanF"];
+				var pairSigmaF = pair["sigmaF"];
+				var pairMeanR = pair["meanR"];
+				var pairSigmaR = pair["sigmaR"];
+				var maxErrorF = pairMeanF + pairSigmaF * 2.0;
+				var maxErrorR = pairMeanR + pairSigmaR * 3.0;
 				if(errorFA>maxErrorF){
+					console.log("err 1: "+errorFA + " / "+pairMeanF+" +/- "+pairSigmaF);
 					point3D.removePoint2D(pointA);
 					breakPoint = true;
 				}
 				if(errorFB>maxErrorF){
+					console.log("err 2: "+errorFB + " / "+pairMeanF+" +/- "+pairSigmaF);
 					point3D.removePoint2D(pointB);
 					breakPoint = true;
 				}
 				if(errorRA>maxErrorR || errorRB>maxErrorR){
+					console.log("err 3: "+errorRA+" | "+errorRB + " / "+pairMeanR+" +/- "+pairSigmaR);
 					point3D.removePoint2D(pointA);
 					point3D.removePoint2D(pointB);
 					breakPoint = true;
 				}
 				if(point3D.pointCount()<=1){ // unjoined point
+					console.log("REMOVING POINT 3D");
 					this._pointCloud3D.removeObject(point3D);
 					point3D.kill();
 				}
@@ -13970,9 +13983,11 @@ R3D.BundleAdjust.prototype._iteration = function(){
 	// merge more 2D points pairs from pairs using F if error < 2 sigma && SAD score is good  &&  < 2 sigma
 	//  	record each pair error sigma
 	
-	var sadSort = function(a,b){
-		return a[0] < b[0] ? -1 : 1;
+	var sadSortScore = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
 	};
+
+	var newPointMatches = [];
 	for(i=0; i<views.length; ++i){
 		var viewA = views[i];
 		for(j=i+1; j<views.length; ++j){
@@ -13982,62 +13997,145 @@ R3D.BundleAdjust.prototype._iteration = function(){
 				var vA = pair["A"];
 				var vB = pair["B"];
 				var F = pair["F"];
-				var sigma = pair["errorF"];
-				var maxError = sigma * 1.0;
+				var Ffwd = F;
+				var Frev = Matrix.inverse(Ffwd);
+				var meanF = pair["meanF"];
+				var sigmaF = pair["sigmaF"];
+if(meanF+sigmaF>0.25){
+	// larger than entire image -- initial alignments are very bad
+	continue;
+}
+var compareSize = 11;
+var compareMask = ImageMat.circleMask(compareSize);
+				var maximumScoreError = 0.5; // SAD
+				var maxErrorF = (meanF + sigmaF * 0.5) * 0.5; // 0.5 is added because error = errorA + errorB => half error for each point
 				var points2DA = vA.points2D();
 				var points2DB = vB.points2D();
-
-				for(k=0; k<points2DA.length; ++k){
-					var point2DA = points2DA[k];
-					var point3D = point2DA.point3D();
-					if(!point3D){ // only look at points without a match
-						console.log(point2DA);
-						console.log(point3D);
-						console.log(point2DA.point()+" find points B on line from");
-						var angleA = point2DA.angle();
-						var sizeA = point2DA.size();
-
-						console.log("TODO: EXTRACT OUT IMAGE & GET SAD SCORE");
-						HERE
-						
-						break;
-						// find line in B
-						var validPoints = [];
-						for(l=0; l<points2DB.length; ++l){
-							var point2DB = points2DB[l];
-							// all points in B closer than sigma
-							if(false){
-								// SAD score above somemin
-								var sad = 1.0;
-								if(false){
-									validPoints.push([sad, point2DB]);
+				var pointsAUse = R3D.getAndPreparePoints2DToUse(points2DA, viewA, compareSize, 0);
+				var pointsBUse = R3D.getAndPreparePoints2DToUse(points2DB, viewB, compareSize, 1);
+				
+var counted = 0;
+				for(k=0; k<pointsAUse.length; ++k){
+					var pointA = pointsAUse[k];
+					var p2DA = pointA.point();
+					var pA = new V3D(p2DA.x,p2DA.y,1.0);
+					var lineA = R3D.lineRayFromPointF(Ffwd, pA);
+					for(l=0; l<pointsBUse.length; ++l){
+						var pointB = pointsBUse[l];
+						var p2DB = pointB.point();
+						var pB = new V3D(p2DB.x,p2DB.y,1.0);
+						var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pB);
+						var dA2 = distA*distA;
+						if(dA2<maxErrorF){
+							//++counted;
+							var lineB = R3D.lineRayFromPointF(Frev, pB);
+							var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pA);
+							var dB2 = distB*distB;
+							if(dB2<maxErrorF){
+								var imageA = pointA.sift();
+								var imageB = pointB.sift();
+								var score = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+								//var score = SIFTDescriptor.compareVector(imageA, imageB);
+								if(score<maximumScoreError){
+									++counted;
+									var p = {"A":pointA,"B":pointB,"score":score,"a":k,"b":l};
+									pointA.pairs().push(p);
+									pointB.pairs().push(p);
 								}
 							}
 						}
-						point2DA._temp = validPoints;
 					}
 				}
-				// 
-				// repeat for viewB->viewA
-				// ONLY JOIN IF A->B < sigma && B->A < sigma
-				for(k=0; k<points2DA.length; ++k){
-					var point2DA = points2DA[k];
-					// 
+console.log(".  @ "+meanF+"+/- "+sigmaF+"  counted: "+counted+" ("+pointsAUse.length+" / "+pointsBUse.length+")");
+// console.log(pointsAUse);
+// console.log(pointsBUse);
+				// order pairs as best first
+				for(k=0; k<pointsAUse.length; ++k){
+					var pointA = pointsAUse[k];
+					pointA.pairs().sort(sadSortScore)
+					//pointA.pairs( pointA.pairs().sort(sadSortScore) );
 				}
-				// 
+				for(k=0; k<pointsBUse.length; ++k){
+					var pointB = pointsBUse[k];
+					pointB.pairs().sort(sadSortScore);
+					//console.log(pointB.pairs().length);
+					//pointB.pairs( pointB.pairs().sort(sadSortScore) );
+				}
+				// pick double matching top scores only
+counted = 0;
+				for(k=0; k<pointsAUse.length; ++k){
+					var pointA = pointsAUse[k];
+					pairsA = pointA.pairs();
+					if(pairsA.length>0){
+						var pairA = pairsA[0];
+
+						var score = pairA["score"];
+						//console.log(k+" score: "+score);
+						var pointB = pairA["B"];
+						var pairsB = pointB.pairs();
+						var pairB = pairsB[0];
+						// each found eachother -- put into new point3D
+						if(pairA==pairB){ // double match
+							newPointMatches.push([pointA,pointB,Ffwd,Frev]);
+							++counted;
+						}
+					}
+				}
+console.log("double match: "+counted);
 				// clear:
-				for(k=0; k<points2DA.length; ++k){
-					var point2DA = points2DA[k];
-					point2DA._temp = null;
+				for(k=0; k<pointsAUse.length; ++k){
+					var point2DA = pointsAUse[k];
+					point2DA.pairs([]);
 				}
-				// 
-				// 
-				for(k=0; k<points2DB.length; ++k){
-					var points2DB = points2DB[k];
-					points2DB._temp = null;
+				for(k=0; k<pointsBUse.length; ++k){
+					var point2DB = pointsBUse[k];
+					point2DB.pairs([]);
 				}
 			}
 		}
+	}
+
+	// THESE POINTS DON'T HAVE 3D POSITION ---  (0,0,0)
+	var newPoints3D = [];
+	for(i=0; i<newPointMatches.length; ++i){
+		var match = newPointMatches[i];
+		var a = match[0];
+		var b = match[1];
+		this.matchPoints2D(a,b);
+		var point3D = a.point3D();
+		Code.addUnique(newPoints3D, point3D);
+		// add initual match:
+		var Ffwd = match[2];
+		var Frev = match[3];
+		var pointsFr = [a.point()];
+		var pointsTo = [b.point()];
+
+		var absoluteA = a.view().absoluteTransform();
+		var absoluteB = b.view().absoluteTransform();
+		var inverseA = Matrix.inverse(absoluteA);
+		var relativeAtoB = Matrix.mult(inverseA,absoluteB);
+		var cameraA = new Matrix(4,4).identity();
+		var cameraB = transform;
+
+		var Ka = a.view().camera().K();
+		var Kb = b.view().camera().K();
+		var pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
+		var estimated = pointsRev[0];
+		// project A to B & B to A
+		//console.log("_addPutativeForPoints: "+estimated);
+		R3D._addPutativeForPoints(pointA,pointB,point3D,estimated, Ffwd, Frev);
+	}
+	for(i=0; i<newPoints3D.length; ++i){
+		console.log("CONSISTENCY CHECK: "+newPoints3D.length);
+		// NEED TO DO CONSISTENCY CHECK SO THAT NO NEW 3D POINT HAS 2 POINTS IN SAME VIEW (3+ view )
+		// drop point if view duplicate exists
+		break;
+	}
+	for(i=0; i<newPoints3D.length; ++i){
+		var point3D = newPoints3D[i];
+		this._pointCloud3D.removeObject(point3D);
+		point3D.combinePutative();
+		this._pointCloud3D.insertObject(point3D);
 	}
 
 // 3D [n 2D] + 2D -> 3D [n+1 2D]
@@ -14119,6 +14217,93 @@ P3D = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, K);
 
 R3D.cameraMatricesFromF
 */
+}
+
+R3D._addPutativeForPoints = function(pointA,pointB,point3D,estimated, Ffwd, Frev){
+	var viewA = pointA.view();
+	var pA = pointA.point();
+	var pB = pointB.point();
+	pA = new V3D(pA.x,pA.y,1.0);
+	pB = new V3D(pB.x,pB.y,1.0);
+	var lineA = R3D.lineRayFromPointF(Ffwd, pA);
+	var lineB = R3D.lineRayFromPointF(Frev, pB);
+	var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pB);
+	var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pA);
+	var error = distA*distA + distB*distB;
+	// TODO: multiply by pair's average error
+	point3D.addPutative3D(estimated, error, viewA);
+}
+CALLLR = -1;
+CALLLR2 = false;
+R3D.getAndPreparePoints2DToUse = function(points2DA, viewA, compareSize, show){
+	var imageA = viewA.images()[0]; // assume
+	var imageWidth = imageA.width();
+	var imageHeight = imageA.height();
+
+// var sca = 2.0;
+// if(!CALLLR2){
+// 	CALLLR2 = [];
+// }
+// if(!CALLLR[show]){
+// CALLLR[show] = true;
+// var image = imageA;
+// img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
+// var d = new DOImage(img);
+// d.matrix().scale(sca);
+// d.matrix().translate(imageWidth*show*sca, 0);
+// d.graphics().alpha(0.5);
+// GLOBALSTAGE.addChild(d);
+// }
+	var k;
+	var pointsAUse = [];
+	for(k=0; k<points2DA.length; ++k){
+		var point2DA = points2DA[k];
+		var point3D = point2DA.point3D();
+		if(!point3D){ // only look at points without a match
+			if(!point2DA.sift()){
+				var pointA = point2DA.point();
+				var angleA = point2DA.angle();
+				var sizeA = point2DA.size();
+				var size = sizeA*imageWidth;
+				var angle = angleA;
+				//var location = new V2D(pointA.x*imageWidth,pointA.y*imageHeight);
+				var location = new V2D(pointA.x*imageWidth,pointA.y*imageWidth);
+				//console.log(location+" <<<")
+				var scale = size/compareSize;
+				if(false){
+					// SIFT
+					//var simple = false;
+					var simple = true;
+					var sift = R3D.SIFTVector(imageA, location,size,angle, simple);
+				}else{
+					// SAD
+					var matrix = new Matrix(3,3).identity();
+					matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
+					matrix = Matrix.transform2DScale(matrix, scale);
+					matrix = Matrix.transform2DRotate(matrix, -angle);
+					matrix = Matrix.transform2DTranslate(matrix, location.x, location.y);
+					var sift = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
+
+
+// if(show!==undefined){
+// 	++CALLLR;
+// var image = sift;
+// img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
+// //var img = GLOBALSTAGE.getFloatGrayAsImage(image.gry(), image.width(),image.height(), null, null);
+// var d = new DOImage(img);
+// d.matrix().scale(sca);
+// //d.matrix().translate(sca*CALLLR*compareSize, 0);
+// d.matrix().translate(imageWidth*show*sca + (location.x-compareSize*0.5)*sca, (location.y-compareSize*0.5)*sca);
+// GLOBALSTAGE.addChild(d);
+// }
+				}
+				point2DA.sift(sift);
+				
+			}
+			pointsAUse.push(point2DA);
+		}
+	}
+	return pointsAUse;
 }
 
 R3D.projectPoint3DToCamera2D = function(in3D, extrinsic, K, distortions){
