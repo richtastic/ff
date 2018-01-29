@@ -216,6 +216,29 @@ Stage.prototype.getARGBAsImage = function(argb, wid,hei, matrix, type, onloadFxn
 	this._renderCanvas.setColorArrayARGB(argb, 0,0, wid,hei);
 	return this._toImage(wid,hei, type, onloadFxn);
 }
+
+Stage.prototype.textureBase2FromImage = function(texture){
+	var obj = new DOImage(texture);
+	this.root().addChild(obj);
+	var wid = texture.width;
+	var hei = texture.height;
+	var origWid = wid;
+	var origHei = hei;
+	wid = Math.pow(2.0, Math.ceil(Math.log(wid)/Math.log(2.0)) );
+	hei = Math.pow(2.0, Math.ceil(Math.log(hei)/Math.log(2.0)) );
+	wid = Math.max(wid,hei);
+	hei = wid;
+	var origWid = origWid/wid;
+	var origHei = origHei/hei;
+	texture = this.renderImage(wid,hei,obj, null, null, function(e){
+		console.log("IMAGE LOADED");
+	});
+	obj.removeParent();
+	var vert = 1-origHei;
+	var horz = origWid;
+	return {"texture":texture,"width":horz,"height":vert};
+}
+
 Stage.prototype.renderImage = function(wid,hei,obj, matrix, type, onloadFxn){ // get a base-64(src) image from OBJ 
 	this._setupRenderCanvas(wid,hei, matrix);
 	obj.render(this._renderCanvas);

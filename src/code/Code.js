@@ -7277,6 +7277,7 @@ Code.SSDEqual = function(a,b){
 	find extent of resulting rect, extract only that, gaussian blur that, transfer from that
 	*/
 // }
+
 Code.scaleImage = function(image,width,height, point,scale){
 	var newWidth = Math.round(width*scale);
 	var newHeight = Math.round(height*scale);

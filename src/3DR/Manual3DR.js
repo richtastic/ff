@@ -988,6 +988,16 @@ Manual3DR.prototype._eff = function(e){
 		this._stage3D.drawPoints(this._pointVertexPositionAttrib, this._pointPointBuffer);
 	}
 
+	// RENDER LINES
+	if(this._programLinePoints.length>0){
+		this._stage3D.selectProgram(2);
+		this._stage3D.matrixReset();
+		this._stage3D.disableCulling();
+		this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
+		this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
+		this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
+	}
+
 	// RENDER TEXTURES
 	if(this._textureUVPoints.length>0){
 		this._stage3D.selectProgram(1);
@@ -1002,16 +1012,6 @@ Manual3DR.prototype._eff = function(e){
 			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
 			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 		}
-	}
-
-	// RENDER LINES
-	if(this._programLinePoints.length>0){
-		this._stage3D.selectProgram(2);
-		this._stage3D.matrixReset();
-		this._stage3D.disableCulling();
-		this._stage3D.bindArrayFloatBuffer(this._programLineVertexPositionAttrib, this._programLinePoints);
-		this._stage3D.bindArrayFloatBuffer(this._programLineVertexColorAttrib, this._programLineColors);
-		this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
 	}
 
 }
