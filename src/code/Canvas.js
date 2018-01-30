@@ -322,18 +322,12 @@ Canvas.prototype.drawTriangleList = function(count, offset){
 }
 
 Canvas.prototype.bindTextureImageRGBA = function(image){
-	console.log(image.src.length)
-	//console.log(image.src.length)
 	var texture = this._context.createTexture(image);
-	console.log(texture);
 	this._context.bindTexture(this._context.TEXTURE_2D,texture);
-	console.log("A");
 	this._context.pixelStorei(this._context.UNPACK_FLIP_Y_WEBGL, true);
 	this._context.texImage2D(this._context.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
-	console.log("C");
 	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST);
 	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
-	console.log("D");
 	this._context.bindTexture(this._context.TEXTURE_2D,null);
 	return texture;
 }

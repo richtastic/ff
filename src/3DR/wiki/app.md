@@ -194,23 +194,23 @@ APP TODO:
 
 
 
+- allow for multiple point2d with different scales at same point
+	= to allow for more matches to be made
 
-- BUNDLE ADJUST ALGORITHM
-	- adding in new p2d via projections & SAD
-	- adding in new p3d + p2d pair using F & SAD
+
+- initial matches still fairly poor
+	- still have basic color mismatches
+		- combine SAD w/ sift (initial try bad)
+
+
+
+- add transform error for graph weight based on PAIR F/R error
+
 
 
 - before/during feature matching: remove duplicate match-points
 
 
-input:
-	paired view transforms that have some absolute transform relative to eachother or NO (disjoint) relationship
-
-	relative rot & pos are finnessed to minimize reprojection error
-
-	absolute transform is determined from group of relative transforms
-
-output:
 
 
 

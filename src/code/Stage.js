@@ -217,7 +217,7 @@ Stage.prototype.getARGBAsImage = function(argb, wid,hei, matrix, type, onloadFxn
 	return this._toImage(wid,hei, type, onloadFxn);
 }
 
-Stage.prototype.textureBase2FromImage = function(texture){
+Stage.prototype.textureBase2FromImage = function(texture, onLoadFxn){
 	var obj = new DOImage(texture);
 	this.root().addChild(obj);
 	var wid = texture.width;
@@ -230,9 +230,7 @@ Stage.prototype.textureBase2FromImage = function(texture){
 	hei = wid;
 	var origWid = origWid/wid;
 	var origHei = origHei/hei;
-	texture = this.renderImage(wid,hei,obj, null, null, function(e){
-		console.log("IMAGE LOADED");
-	});
+	texture = this.renderImage(wid,hei,obj, null, null, onLoadFxn);
 	obj.removeParent();
 	var vert = 1-origHei;
 	var horz = origWid;

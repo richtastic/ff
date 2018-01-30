@@ -383,8 +383,8 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 		console.log(views.length)
 		console.log("is loaded: "+views.length);
 		if(views.length>0){
-			//var view = views[0];
-			var view = views[1];
+			var view = views[0];
+			//var view = views[1];
 			//var view = views[views.length-1];
 			this._activeView = view;
 			console.lo
@@ -524,12 +524,12 @@ var projectViews = manager.views();
 	var views3D = [];
 	for(var i=0; i<views.length; ++i){
 		var v = views[i];
-console.log(v);
 		var transform = v["transform"];
 			transform = new Matrix().loadFromObject(transform);
 		var camID = v["camera"]
 		var camera = cameraLookup[camID];
 		var K = camera["K"];
+			K = new Matrix().loadFromObject(K);
 		var distortion = camera["distortion"];
 		var image = null;
 		for(var j=0; j<projectViews.length; ++j){
@@ -2479,12 +2479,31 @@ App3DR.App.Model3D = function(resource, manager){
 }
 Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 
-App3DR.App.Model3D.prototype.setViews = function(input){
-	console.log("setViews");
+
+App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 	var i;
+	++this._loadedTextures;
+	//console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
+	if(this._loadedTextures!=this._expectedTextures){
+		return
+	}
+	this._textures = [];
+	var nextIndex = 0;
+
+	this._renderTextureUVList = [];
+	this._renderTexturePointList = [];
+	this._textureUVPoints = [];
+	this._textureVertexPoints = [];
+
 	var lines = [];
-	for(i=0; i<input.length; ++i){
-		var view = input[i];
+
+	var views = this._views;
+	for(i=0; i<views.length; ++i){
+		var view = views[i];
+
+		console.log(view)
+
+
 		var transform = view["transform"];
 		var tx = transform.get(0,3);
 		var ty = transform.get(1,3);
@@ -2503,80 +2522,106 @@ App3DR.App.Model3D.prototype.setViews = function(input){
 		lines.push(o,x);
 		lines.push(o,y);
 		lines.push(o,z);
+
+
+		var K = view["K"];
+		var image = view["image"];
+		var obj = this._viewImages[i];
+		if(obj){
+			var texture = obj["texture"];
+			var horz = obj["width"];
+			var vert = obj["height"];
+			var bind = this._canvas3D.bindTextureImageRGBA(texture);
+			this._textures.push(bind);
+
+//console.log(K)
+			var wid = image.width;
+			var hei = image.height;
+			var fx = K.get(0,0);
+			var fy = K.get(1,1);
+			var cx = K.get(0,2);
+			var cy = K.get(1,2);
+			var s = K.get(0,1);
+			var camWid = 1.0;
+camWid = 0.25;
+			var camHei = camWid*(hei/wid);
+			var fyOfx = fy/fx;
+//console.log("fyOfx: "+fyOfx);
+//s = 0.5
+console.log("s: "+s);
+			//console.log(camWid+"x"+camHei);
+			var off = dirZ.copy().scale(camWid * fx);
+			//off.scale(0.8);
+// .add( dirY.copy().scale(s).scale(-cy)
+			// HERE:
+			var pBL = o.copy().add( dirX.copy().scale(camWid).scale(-cx) ).add( dirY.copy().scale(camHei).scale(fyOfx).scale(cy) )     ;
+			pBL.add( off );
+			var pBR = pBL.copy().add( dirX.copy().scale(camWid) );
+			var pTR = pBL.copy().add( dirX.copy().scale(camWid) ).add( dirY.copy().scale(-camHei).scale(fyOfx) );
+			var pTL = pBL.copy().add( dirY.copy().scale(-camHei).scale(fyOfx) );
+			
+			var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
+			var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
+			
+			this._renderTextureUVList[nextIndex] = uvList;
+			this._renderTexturePointList[nextIndex] = vertList;
+			++nextIndex;
+
+
+
+
+			// add lines:
+			var points = this._points3D;
+			console.log(points)
+			for(var j=0; j<points.length; ++j){
+				var v = points[j];
+				lines.push(o,v);
+			}
+		}
 	}
+
+	// set textures:
+
+	this._stage3D.selectProgram(1);
+	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
+
+	var len = this._textures.length;
+	for(i=0; i<len; ++i){
+		var texturePoints = this._renderTextureUVList[i];
+		var vertexPoints = this._renderTexturePointList[i];
+		this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+		this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+	}
+
+
+	// set lines
 	this.setLines(lines);
+	
 
-	// 	var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-	// 	var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
-	// this._renderTextureUVList[nextIndex] = uvList;
-	// this._renderTexturePointList[nextIndex] = vertList;
+}
 
-var self = this;
+App3DR.App.Model3D.prototype.setViews = function(input){
+	var i;
+
+	this._viewImages = [];
+	this._expectedTextures = input.length;
+	this._loadedTextures = 0;
+
+	this._views = input;
 	for(i=0; i<input.length; ++i){
 		var view = input[i];
 		var image = view["image"];
+		var obj = null;
 		if(image){
-			// var width = image.width;
-			// var height = image.height;
-
-//Code.addChild( Code.getBody(), image);
-self._textures = [];
-
-			var obj = self._stage.textureBase2FromImage(image);
-//console.log(obj)
-			var texture = obj["texture"];
-			console.log("loaded?: "+texture.complete); // not loaded yet
-			var horz = obj["width"];
-			var vert = obj["height"];
-			//console.log(horz,vert);
-setTimeout(function(){
-			//console.log(texture);
-//			Code.addChild( Code.getBody(), texture);
-			var bind = self._canvas3D.bindTextureImageRGBA(texture);
-			self._textures.push( bind );
-			
-			var nextIndex = 0;
-
-self._renderTextureUVList = [];
-self._renderTexturePointList = [];
-self._textureUVPoints = [];
-self._textureVertexPoints = [];
-				// var horz = width;
-				// var vert = height;
-				var pBL = new V3D(0,0,0);
-				var pBR = new V3D(1,0,0);
-				var pTR = new V3D(1,1,0);
-				var pTL = new V3D(0,1,0);
-				//var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-					var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-				//var uvList = [0,0, horz,0, horz,vert,  horz,vert, 0,vert, 0,0];
-				//var uvList = [0,0, 1,0, 1,1,  1,1, 0,1, 0,0];
-				var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
-				console.log("TEXTURE RENDERING");
-			self._renderTextureUVList[nextIndex] = uvList;
-			self._renderTexturePointList[nextIndex] = vertList;
-
-
-			++nextIndex;
-
-self._stage3D.selectProgram(1);
-self._vertexPositionAttrib = self._stage3D.enableVertexAttribute("aVertexPosition");
-self._textureCoordAttrib = self._stage3D.enableVertexAttribute("aTextureCoord");
-
-			var j, len = self._textures.length;
-			// console.log("len: "+len)
-			for(j=0;j<len;++j){
-				var texturePoints = self._renderTextureUVList[j];
-				var vertexPoints = self._renderTexturePointList[j];
-				// console.log(texturePoints)
-				// console.log(vertexPoints)
-				self._textureUVPoints[j] = self._stage3D.getBufferFloat32Array(texturePoints, 2);
-				self._textureVertexPoints[j] = self._stage3D.getBufferFloat32Array(vertexPoints, 3);
-			}
-}, 100);
-			//this.setTextures();
-			break;
+			var self = this;
+			var obj = this._stage.textureBase2FromImage(image, function(e){
+				self._loadedViewTexture();
+			});
+		}else{
+			++this._loadedTextures;
 		}
+		this._viewImages[i] = obj;
 	}
 	
 }
@@ -2590,7 +2635,7 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	for(var i=0; i<input.length; ++i){
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
-		colors.push(0.5,0.5,0.5,0.95);
+		colors.push(0.5,0.5,0.5,0.1);
 	}
 	// create objects
 	this._stage3D.selectProgram(2);
@@ -2601,6 +2646,7 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 }
 App3DR.App.Model3D.prototype.setPoints = function(input){
 	// CREATE POINTS:
+	this._points3D = input;
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input.length; ++i){
@@ -2687,7 +2733,22 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 
-
+	// RENDER TEXTURES
+	if(this._textureUVPoints && this._textureUVPoints.length>0){
+		this._stage3D.selectProgram(1);
+		this._stage3D.disableCulling();
+		this._stage3D.matrixReset();
+		//console.log(this._textureUVPoints.length)
+		for(var i=0; i<this._textureUVPoints.length; ++i){
+			this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints[i]);
+			this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+			this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
+			// console.log( this._canvas3D._context.TEXTURE0 )
+			this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
+			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
+			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
+		}
+	}
 	// RENDER POINTS
 	if(this._pointPointBuffer && this._pointPointBuffer.length>0){
 		this._stage3D.selectProgram(3);
@@ -2707,22 +2768,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 		this._stage3D.drawLines(this._programLineVertexPositionAttrib, this._programLinePoints);
 	}
 
-	// RENDER TEXTURES
-	if(this._textureUVPoints && this._textureUVPoints.length>0){
-		this._stage3D.selectProgram(1);
-		this._stage3D.disableCulling();
-		this._stage3D.matrixReset();
-		//console.log(this._textureUVPoints.length)
-		for(var i=0; i<this._textureUVPoints.length; ++i){
-			this._stage3D.bindArrayFloatBuffer(this._textureCoordAttrib, this._textureUVPoints[i]);
-			this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
-			this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
-			// console.log( this._canvas3D._context.TEXTURE0 )
-			this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
-			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
-			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
-		}
-	}
+
 	/*
 
 
@@ -4691,7 +4737,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 			}
 		}
 	}
-// return; // TODO: remove
+//return; // TODO: remove
 	// does a triple exist (even a bad one) for all pairs ...
 	len = views.length;
 	var triples = this._triples;
@@ -4836,6 +4882,16 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var imageAHeight = imageA.height;
 		var imageBWidth = imageB.width;
 		var imageBHeight = imageB.height;
+
+		console.log("A: "+featuresA.length+" | "+featuresB.length)
+		
+		// drop low score corners:
+		featuresA = R3D.keepGoodCornerFeatures(featuresA);
+		featuresB = R3D.keepGoodCornerFeatures(featuresB);
+
+		console.log("B: "+featuresA.length+" | "+featuresB.length)
+
+		// featuresA = keepA;
 /*
 var scaleIncrease = 3; // 4=good 4=good .. 8==too much
 		console.log(featuresA,featuresB);
@@ -5163,11 +5219,11 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 			var BA = new R3D.BundleAdjust();
 			var baViews = [];
 			var baCameras = [];
-view = Code.copyArray(views);
-pairs = Code.copyArray(pairs);
+// view = Code.copyArray(views);
+// pairs = Code.copyArray(pairs);
 
-views = [views[0],views[1]];
-pairs = [pairs[0]];
+// views = [views[0],views[1]];
+// pairs = [pairs[0]];
 			for(i=0; i<cameras.length; ++i){
 				var camera = cameras[i];
 				console.log(camera);

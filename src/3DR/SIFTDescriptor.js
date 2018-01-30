@@ -56,10 +56,15 @@ SIFTDescriptor.compare = function(descA,descB){
 }
 SIFTDescriptor.compareVector = function(vectorA,vectorB){ // L1 distance
 	var i, score = 0;
-	for(i=0; i<vectorA.length; ++i){
+	var len = vectorA.length;
+	for(i=0; i<len; ++i){
 //		score += Math.abs(vectorA[i] - vectorB[i]); // L1
 		score += Math.pow(Math.abs(vectorA[i] - vectorB[i]),2); // L2
 	}
+	score = Math.sqrt(score);
+	// if(len>0){
+	// 	score *= len;
+	// }
 	// CONV
 	// for(i=0; i<vectorA.length; ++i){
 	// 	score += (vectorA[i]*vectorB[i]);
@@ -463,6 +468,38 @@ var sifts = [];
 		}
 	}
 	return sifts;
+}
+SIFTDescriptor.flatFromImage = function(source, width,height, location,optimalScale,optimalOrientation,covarianceAngle,covarianceScale){
+// TODO: 11 | 15 | 21 ?
+	var insideSet = 11;
+	optimalScale = optimalScale!==undefined ? optimalScale : 1.0;
+	optimalOrientation = optimalOrientation!==undefined ? optimalOrientation : 0.0;
+	covarianceAngle = covarianceAngle!==undefined ? covarianceAngle : 0.0;
+	covarianceScale = covarianceScale!==undefined ? covarianceScale : 1.0;
+	
+	
+	var mask = ImageMat.circleMask(insideSet);
+	// extract image at new orientation
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		// asymm scale
+		matrix = Matrix.transform2DRotate(matrix, -covarianceAngle);
+		matrix = Matrix.transform2DScale(matrix, covarianceScale,1.0/covarianceScale);
+		matrix = Matrix.transform2DRotate(matrix, covarianceAngle);
+		// scaling
+		matrix = Matrix.transform2DScale(matrix, optimalScale);
+		matrix = Matrix.transform2DRotate(matrix, -optimalOrientation);
+		matrix = Matrix.transform2DTranslate(matrix, (insideSet*0.5) , (insideSet*0.5) );
+		matrix = Matrix.inverse(matrix);
+	// GET IMAGE
+	var area = ImageMat.extractRectFromMatrix(source, width,height, insideSet,insideSet, matrix);
+	var inside = [];
+	for(var i=0; i<area.length; ++i){
+		if(mask[i]>0){
+			inside.push(area[i]);
+		}
+	}
+	return inside;
 }
 SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimalScale,optimalOrientation,covarianceAngle,covarianceScale){
 	optimalScale = optimalScale!==undefined ? optimalScale : 1.0;

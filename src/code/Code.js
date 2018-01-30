@@ -1697,21 +1697,19 @@ Code.secondMax = function(){
 	}
 	return nextMax;
 }
-Code.maxArray = function(a){
+Code.max = Code.maxArray = function(a){
 	var max = a[0];
 	for(var i=a.length; i--; ){
 		max = Math.max(max,a[i]);
 	}
 	return max;
-	//return Math.max.apply(this,a); // max stack size exceeded
 }
-Code.minArray = function(a){
+Code.min = Code.minArray = function(a){
 	var min = a[0];
 	for(var i=a.length; i--; ){
 		min = Math.min(min,a[i]);
 	}
 	return min;
-	//return Math.min.apply(this,a); // max stack size exceeded
 }
 Code.sumArray = function(a){
 	var sum = 0;
@@ -2983,7 +2981,20 @@ Code.stdDev = function(list,mean,key){
 	}
 	return Math.sqrt(sig / len);
 }
-Code.median = function(list,key){
+Code.mean = function(list,key){
+	var i, mu=0, item, len=list.length;
+	if(len==0){ return 0; }
+	for(i=len;i--;){
+		item = list[i];
+		if(key!==undefined && key!==null){
+			item = item[key];
+		}
+		mu += item;
+	}
+	return mu / len;
+}
+Code.median = function(list,key){ // TODO: durrr median = middle of set
+	throw "TODO";
 	var i, mu=0, item, len=list.length;
 	if(len==0){ return 0; }
 	for(i=len;i--;){
@@ -4001,7 +4012,9 @@ Code.setStyleFontStyleItalic = function(ele){
 Code.setSrc = function(i,s){
 	return i.src = s;
 };
-
+Code.getImageIsLoaded = function(img){
+	return img.complete;
+};
 Code.emptyDom = function(ele){
 	while(ele.firstChild){
 		Code.removeChild(ele,ele.firstChild);
