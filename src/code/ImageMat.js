@@ -1892,10 +1892,10 @@ ImageMat.costToMoveAny = function(image,wid,hei){ // 4 main directions | +4 diag
 		ImageMat.costToMove(image,wid,hei, 0,1, result);
 		ImageMat.costToMove(image,wid,hei, -1,0, result);
 		ImageMat.costToMove(image,wid,hei, 0,-1, result);
-		ImageMat.costToMove(image,wid,hei,-1,-1, result);
-		ImageMat.costToMove(image,wid,hei,1,-1, result);
-		ImageMat.costToMove(image,wid,hei,-1,1, result);
-		ImageMat.costToMove(image,wid,hei,1,1, result);
+		// ImageMat.costToMove(image,wid,hei,-1,-1, result);
+		// ImageMat.costToMove(image,wid,hei,1,-1, result);
+		// ImageMat.costToMove(image,wid,hei,-1,1, result);
+		// ImageMat.costToMove(image,wid,hei,1,1, result);
 	}else{
 		result = ImageMat.costToMoveImage(image,1,0);
 		ImageMat.costToMoveImage(image,0,1, result);
@@ -1908,7 +1908,7 @@ ImageMat.costToMoveAny = function(image,wid,hei){ // 4 main directions | +4 diag
 	}
 	return result;
 }
-ImageMat.costToMoveImage = function(image, dx,dy, sum){
+ImageMat.costToMoveImageX = function(image, dx,dy, sum){
 	return ImageMat.costToMove(image.red(),image.grn(),image.blu(),image.width(),image.height(), dx,dy, sum);
 }
 ImageMat.costToMoveImage = function(red,grn,blu, wid,hei, dx,dy, sum){ // assume image stretches in all directions
@@ -1972,6 +1972,31 @@ ImageMat.costToMove = function(channel, wid,hei, dx,dy, sum){ // assume image st
 }
 
 
+
+// var cost = ImageMat.costToMoveMaskImage(block.red(), block.width(), block.height(), 1,1, blockMaskInside);
+ImageMat.costToMoveMask = function(channel, wid,hei, dx,dy, mask, sum){ // assume image stretches in all directions
+	throw " ... "
+	var resultLen = wid * hei;
+	var sum = 0;
+	var i, j, x, y;
+	var indexA, indexB;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			indexA = j*wid + i;
+			x = i + dx;
+			y = j + dy;
+			x = Math.min(Math.max(0,x),wid-1);
+			y = Math.min(Math.max(0,y),hei-1);
+			indexB = y*wid + x;
+			//sum[indexA] += Math.abs(channel[indexA] - channel[indexB]);
+			//sum[indexA] *= Math.abs(channel[indexA] - channel[indexB]);
+		// (A * B) / (A + B)
+		}
+	}
+	return {"value":sum, "width":wid, "height":hei};
+}
+
+
 ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
 	var cX = (imageWidth-1)/2.0;
 	var cY = (imageHeight-1)/2.0;
@@ -2011,7 +2036,8 @@ ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY){ // area ~ 1
 	return image;
 }
 
-ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ? [currently oval]
+ImageMat.circleMask = function(imageWidth, imageHeight, padding){ // force circle ? [currently oval]
+	padding = padding!==undefined ? padding : 0;
 	// SHOULD BE SYMMETRIC
 	imageHeight = imageHeight!==undefined ? imageHeight : imageWidth;
 	var i, j;
@@ -2019,8 +2045,8 @@ ImageMat.circleMask = function(imageWidth, imageHeight){ // force circle ? [curr
 	var mask = Code.newArrayZeros(len);
 	var cx = (imageWidth-1.0)*0.5;
 	var cy = (imageHeight-1.0)*0.5;
-	var rx = imageWidth*0.5;
-	var ry = imageHeight*0.5;
+	var rx = (imageWidth-padding)*0.5;
+	var ry = (imageHeight-padding)*0.5;
 	for(i=0; i<imageWidth; ++i){
 		for(j=0; j<imageHeight; ++j){
 			var d = Math.pow((i-cx)/rx,2) + Math.pow((j-cy)/ry,2);
@@ -2857,6 +2883,13 @@ ImageMat.scaleFloat = function(a,b){
 	}
 	return result;
 }
+ImageMat.scaleFloatSame = function(a,b){
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		a[i] = a[i]*b;
+	}
+	return a;
+}
 ImageMat.phaseFloat = function(a,b){
 	var i, len = a.length;
 	var result = new Array(len);
@@ -2890,6 +2923,9 @@ ImageMat.prototype.normalFloat01 = function(){
 }
 ImageMat.prototype.invertFloat01 = function(){
 	this._op(ImageMat.invertFloat01);
+}
+ImageMat.prototype.scaleFloat01 = function(){
+	this._op(ImageMat.scaleFloat01);
 }
 ImageMat.clipFloat01 = function(data){
 	var i, len = data.length;
@@ -3223,7 +3259,8 @@ ImageMat.mean3x3 = function(src,wid,hei){
 ImageMat.mean5x5 = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1,], 5,5);
 }
-ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y){ 
+ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y, isGrad){ 
+	//console.log(isGrad)
 	var xMin = Math.floor(x);
 	var xMax = Math.ceil(x);
 	var yMin = Math.floor(y);
@@ -3232,10 +3269,18 @@ ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y){
 	var pY0 = y - yMin;
 	var pX1 = 1.0 - pX0;
 	var pY1 = 1.0 - pY0;
-	var gA = ImageMat.gradientVector(src,wid,hei, xMin,yMin);
-	var gB = ImageMat.gradientVector(src,wid,hei, xMax,yMin);
-	var gC = ImageMat.gradientVector(src,wid,hei, xMin,yMax);
-	var gD = ImageMat.gradientVector(src,wid,hei, xMax,yMax);
+	var gA, gB, gC, gD;
+	if(isGrad){
+		gA = src[yMin*wid + xMin];
+		gB = src[yMin*wid + xMax];
+		gC = src[yMax*wid + xMin];
+		gD = src[yMax*wid + xMax];
+	}else{
+		gA = ImageMat.gradientVector(src,wid,hei, xMin,yMin);
+		gB = ImageMat.gradientVector(src,wid,hei, xMax,yMin);
+		gC = ImageMat.gradientVector(src,wid,hei, xMin,yMax);
+		gD = ImageMat.gradientVector(src,wid,hei, xMax,yMax);
+	}
 	var gX1 = new V2D(gA.x*pX1 + gB.x*pX0, gA.y*pX1 + gB.y*pX0);
 	var gX2 = new V2D(gC.x*pX1 + gD.x*pX0, gC.y*pX1 + gD.y*pX0);
 	var grad = new V2D(gX1.x*pY1 + gX2.x*pY0, gX1.y*pY1 + gX2.y*pY0);
@@ -3656,6 +3701,7 @@ ImageMat.prototype.calculateGradient = function(x,y, blur){
 ImageMat.prototype.getScaledImage = function(scale){
 	var sigma = null;
 	if(scale<1.0){
+		/*
 		if(scale==0.75){
 			sigma = 0.75;
 		}else if(scale==0.5){
@@ -3663,6 +3709,8 @@ ImageMat.prototype.getScaledImage = function(scale){
 		}else if(scale==0.25){
 			sigma = 2.0;
 		}
+		*/
+		sigma = Math.sqrt(1.0/scale);
 	}
 	var newWidth = Math.round(scale*this.width());
 	var newHeight = Math.round(scale*this.height());
@@ -3807,6 +3855,24 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	}
 	return img;
 }
+
+ImageMat.prototype.gradientMagnitude = function(){
+	var red = ImageMat.gradientMagnitude(this.red(),this.width(),this.height()).value;
+	var grn = ImageMat.gradientMagnitude(this.grn(),this.width(),this.height()).value;
+	var blu = ImageMat.gradientMagnitude(this.blu(),this.width(),this.height()).value;
+	return new ImageMat(this.width(),this.height(), red,grn,blu);
+}
+ImageMat.prototype.normalize = function(){ // convert existing scale to 0-1
+	var maxR = Code.maxArray(this.red());
+	var maxG = Code.maxArray(this.grn());
+	var maxB = Code.maxArray(this.blu());
+	var max = Code.maxArray([maxR,maxG,maxB]);
+	var scale = 1.0/max;
+	ImageMat.scaleFloatSame(this.red(), scale);
+	ImageMat.scaleFloatSame(this.grn(), scale);
+	ImageMat.scaleFloatSame(this.blu(), scale);
+}
+
 ImageMat._watershedPointSort = function(a,b){
 	if(a==b){
 		return 0;

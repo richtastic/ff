@@ -164,7 +164,7 @@ QuadTree.prototype.toArray = function(){
 	return arr
 }
 QuadTree.prototype.toPoint = function(p){
-	if(p!==undefined){
+	if(p!==undefined && p!==null){
 		this._toPoint = p;
 	}
 	return this._toPoint;
@@ -185,7 +185,6 @@ QuadTree.prototype.clear = function(){
 	this._root.clear();
 }
 QuadTree.prototype.insertObject = function(obj){
-
 	var point = this._toPoint(obj);
 	var min = this.min();
 	var max = this.max();

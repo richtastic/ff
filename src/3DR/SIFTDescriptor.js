@@ -495,9 +495,9 @@ SIFTDescriptor.flatFromImage = function(source, width,height, location,optimalSc
 	var area = ImageMat.extractRectFromMatrix(source, width,height, insideSet,insideSet, matrix);
 	var inside = [];
 	for(var i=0; i<area.length; ++i){
-		if(mask[i]>0){
+		// if(mask[i]>0){
 			inside.push(area[i]);
-		}
+		// }
 	}
 	return inside;
 }

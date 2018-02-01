@@ -193,6 +193,51 @@ project typical numbers:
 APP TODO:
 
 
+- keep many corner puermutations
+	- don't need to calc vector since scale and angle are known
+	- don't pre-limit count
+	- get some corner score -- cornerA +/* cornerB
+
+- don't drop multiple corners in bundle adjustment
+
+
+- features = 2 corner point pairs (nearest neighbor0
+	- form a line
+		- gradient at ~3 points along the line are ~perp to line ... this restricts the possible points a lot
+- USE TWO ENDPOINTS TO DEFINE FEATURE ANGLE (2*oriented either way ???  = for center points)
+
+
+----- try to find scale space maxima for corner points
+	- maximum blur - subtraction value for gray
+		scale & check value of:
+			blur
+			entropy
+			circular distance SAD subtraction per pixel
+			variability per pixel
+		- scale profiles
+			fxn values at various scales
+----- revisit SIFT descriptor
+
+
+===== performance eval:
+	pick a single feature & see the scores among a various bunch of other features 
+
+-- plot entropy profiles / values at different scales along with picture of area
+
+-- angle select: most prominant direction
+	- high mass vs low mass [from average?]
+	- gradients
+	- 
+
+
+- compare SAD scores
+	- blurring / vs non-blurring
+	- with various errors in angle [0,10,20,30,40]
+
+
+
+
+
 
 - allow for multiple point2d with different scales at same point
 	= to allow for more matches to be made

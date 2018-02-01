@@ -3006,7 +3006,34 @@ Code.median = function(list,key){ // TODO: durrr median = middle of set
 	}
 	return mu / len;
 }
-
+Code.arrayVectorLength = function(a){
+	var s = 0;
+	for(var i=a.length; --i; ){
+		s += a[i]*a[i];
+	}
+	return Math.sqrt(s);
+}
+Code.arrayScale = function(a, s){
+	for(var i=a.length; --i; ){
+		a[i] = s*a[i];
+	}
+	return a;
+}
+/*
+ar vLen = Code.arrayVectorLength(v);
+	if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
+	if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
+	// if(lenR > maxVectorLength){ maxVectorLength = lenR; maxVector = r; }
+	// if(lenG > maxVectorLength){ maxVectorLength = lenG; maxVector = g; }
+	// if(lenB > maxVectorLength){ maxVectorLength = lenB; maxVector = b; }
+	// if(lenR < minVectorLength){ minVectorLength = lenR; minVector = r; }
+	// if(lenG < minVectorLength){ minVectorLength = lenG; minVector = g; }
+	// if(lenB < minVectorLength){ minVectorLength = lenB; minVector = b; }
+	var d = Math.sqrt(x*x + y*y);
+	var fall = Math.exp(-d/size);
+	var s = fall/vLen;
+	Code.arrayScale(vLen);
+*/
 
 Code.gaussianWindow = function(sigma, len, unit){ // to simplify: mirror
 	len = len!==undefined ? len : (Math.round(sigma*1.5)*2 + 1);
@@ -5350,8 +5377,8 @@ Code.extrema3DInterpolateRecursive = function(volume, wid,hei, inI,inJ,inK){
 			}
 		}
 	} // fail by iteration maxima
-	return null;
-	b4 = volume[inK][inJ*wid+inI];
+	// return null;
+	// b4 = volume[inK][inJ*wid+inI];
 	return new V4D(inI,inJ,inK, b4);
 }
 Code.isExtrema3D = function(volume, wid,hei, i,j,k, simple){

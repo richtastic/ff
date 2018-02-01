@@ -30,12 +30,16 @@
 // pool
 // new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
 // snow
-// new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
+//new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-//new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load();
-//new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load();
-//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load();
-new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load();
+//new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated
+//new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
 
 }
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
@@ -75,20 +79,125 @@ var imagePathB = fileList[1];
 	// var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
 	// var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
 
+// imageMatrixGA = imageMatrixA.gradientMagnitude();
+// imageMatrixGA.normalize();
+// imageMatrixGB = imageMatrixB.gradientMagnitude();
+// imageMatrixGB.normalize();
 
-var useCorners = true; // SIFT points are still more poor than corners
+
+
+
+
+
+/*
+// A
+var pt = new V3D(151,104, 4.0);
+//var pt = new V3D(251,104, 4.0);
+
+// B
+//pt.scale(2.0);
+
+
+featuresA = [];
+featuresB = [];
+
+
+featuresA.push(pt);
+
+
+
+// costToMoveAny
+
+
+
+var point = pt.copy();
+	var imageMatrix = imageMatrixA;
+	//var imageMatrix = imageMatrixB;
+var padding = 2;
+var blockSize = 21;
+var blockInsideA = blockSize-2;
+var blockMask = ImageMat.circleMask(blockSize,blockSize, 0);
+var blockMaskA = ImageMat.circleMask(blockSize,blockSize, 2);
+var blockMaskB = ImageMat.circleMask(blockSize,blockSize, 4);
+
+
+var prevBlock = null;
+
+var scales = [0.125,0.25,0.5,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,12.0,14.0,16.0,18.0,20.0,25.0,30.0];
+var size = point.z;
+var cellScale = 1.0;
+var angle = 0;
+var x = [];
+for(var i=0; i<scales.length; ++i){
+	var sigma = null;
+	//console.log(i+": "+s)
+	var s = 1.0/scales[i];
+	//var s = scales[i];
+	var scale = s * blockSize/size;
+		var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DRotate(matrix,angle);
+	var block = imageMatrix.extractRectFromFloatImage(point.x,point.y,1.0,sigma,blockSize,blockSize, matrix);
+	
+	var gry = block.gry();
+	// var entropy = Code.entropy01(gry, blockMask);
+	// var range = Code.range(gry, blockMask);
+	// var value = entropy*range;
+	var value = Code.variability(gry, block.width(), block.height(), blockMask);
+	// Code.variability = function(data, width, height, masking, isMin){
+	x.push(value);
+	
+
+
+var img, d;
+img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+d = new DOImage(img);
+//d.matrix().scale();//displayScale*originalWid/imageCurrentWid);
+d.matrix().translate(100, 50 + 30*i);
+GLOBALSTAGE.addChild(d);
+}
+
+
+Code.printMatlabArray(x,"x");
+
+return;
+*/
+
+
+var useCorners = false; // SIFT points are still more poor than corners
+var useSIFT = false;
+var useCornerGeometry = true;
+//var useCorners = false;
 var featuresA = null;
 var featuresB = null;
 if(useCorners){
-	var featuresA = R3D.testExtract1(imageMatrixA);
-	var featuresB = R3D.testExtract1(imageMatrixB);
-}else{
-	var featuresA = R3D.SIFTExtractTest1(imageMatrixA);
-	var featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+	featuresA = R3D.testExtract1(imageMatrixA, null, null, true);
+	featuresB = R3D.testExtract1(imageMatrixB, null, null, true);
+	// var featuresA = R3D.testExtract1(imageMatrixGA, null, null, true);
+	// var featuresB = R3D.testExtract1(imageMatrixGB, null, null, true);
+}else if(useSIFT){
+	featuresA = R3D.SIFTExtractTest1(imageMatrixA);
+	featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+}else if(useCornerGeometry){
+	featuresA = R3D.extractCornerGeometryFeatures(imageMatrixA, true);
+	featuresB = R3D.extractCornerGeometryFeatures(imageMatrixB, true);
 }
-	
-	console.log(featuresA.length+" | "+featuresB.length);
 
+console.log(featuresA.length+" | "+featuresB.length);
+
+// console.log(featuresA)
+// // group by corners
+// //if(false){
+// if(true){
+// // convert point features to line-features
+// 	featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
+// 	featuresB = R3D.featureCornersToLines(featuresB, imageMatrixB);
+// 	console.log(featuresA.length+" | "+featuresB.length);
+// }
+
+
+
+console.log(featuresA)
 // show initial feature sites
 //if(true){
 if(false){
@@ -99,6 +208,9 @@ if(false){
 		
 		for(k=0; k<features.length; ++k){
 			var point = features[k];
+			if(!Code.isa(point,V4D)){
+				point = new V4D(point["point"].x,point["point"].y, point["size"],point["angle"]);
+			}
 			//console.log(""+point)
 				// var x = point.x * imageMatrixA.width();
 				// var y = point.y * imageMatrixA.height();
@@ -106,6 +218,7 @@ if(false){
 				var x = point.x;
 				var y = point.y;
 				var z = point.z;
+z=1
 			var c = new DO();
 				color = 0xFFFF0000;
 				//color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
@@ -121,6 +234,12 @@ if(false){
 	}
 	return;
 }
+
+
+
+//return;
+
+
 
 
 
@@ -277,8 +396,146 @@ if(false){
 // var objectsA = objectList[0];
 // var objectsB = objectList[1];
 
+featuresA = R3D.keepGoodCornerFeatures(featuresA);
+featuresB = R3D.keepGoodCornerFeatures(featuresB);
+
+console.log(featuresA.length+" v "+featuresB.length);
+
 var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
+
+//if(false){
+if(true){
+	// reduce count
+objectsA = R3D.siftObjectsToUnique(objectsA);
+objectsB = R3D.siftObjectsToUnique(objectsB);
+console.log(objectsA.length+" & "+objectsB.length);
+}
+
+/*
+
+// SHOW SINGLE MATCH & EQUALITY INFORMATION
+
+
+//var indexA = 10; // corner - grey
+//var indexA = 70; // FL
+//var indexA = 75;
+
+//var indexA = 80;
+//var indexA = 70;
+//var indexA = 280; // face
+var indexA = 290;
+
+
+
+var upper = 1.0;
+
+var objectA = objectsA[indexA];
+
+var displaySize = 31;
+
+var vectorA = objectA["vector"];
+var indexA = objectA["index"];
+var sadA = objectA["sad"];
+var angleA = objectA["angle"];
+var sizeA = objectA["size"];
+var pointA = objectA["point"];
+var scaleA = sizeA/displaySize;
+
+scaleA = scaleA * upper;
+
+// display:
+var img = R3D.imageFromParameters(imageMatrixA, pointA,scaleA,angleA,0,0, displaySize,displaySize);
+img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+var d = new DOImage(img);
+d.matrix().translate(50, 50);
+GLOBALSTAGE.addChild(d);
+
+
+var rows = 15;
+var results = [];
+for(var j=0; j<objectsB.length; ++j){
+	var objectB = objectsB[j];
+	var vectorB = objectB["vector"];
+	var indexB = objectB["index"];
+	var sadB = objectB["sad"];
+	var angleB = objectB["angle"];
+	var sizeB = objectB["size"];
+	var pointB = objectB["point"];
+	var scaleB = sizeB/displaySize;
+
+scaleB = scaleB * upper;
+
+	//var scoreSIFT = SIFTDescriptor.compareVector(vectorA, vectorB);
+	var scoreSAD = R3D.compareSADVector(sadA, sadB);
+	//var scoreSAD = R3D.compareSADVector(sadA, sadB);
+	//var scoreSAD = R3D.compareSADVector3D(sadA, sadB);
+	//var scoreSAD = R3D.compareSADGradientVector(sadA, sadB);
+
+	// display
+	var img = R3D.imageFromParameters(imageMatrixB, pointB,scaleB,angleB,0,0, displaySize,displaySize);
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+
+	//var img = SIFTDescriptor.flatFromImage(imageMatrixB.red(), imageMatrixB.width(),imageMatrixB.height(), pointB,scaleB,angleB);
+	//img = GLOBALSTAGE.getFloatRGBAsImage(img,img,img, 11,11);
+	
+	
+	var d = new DOImage(img);
+	// var x = 100 + (j/rows|0)*(displaySize*2);
+	// var y = 50 + (j%rows)*(displaySize+12)
+	// d.matrix().translate(x, y);
+	GLOBALSTAGE.addChild(d);
+
+
+	//var score = scoreSIFT;
+	var score = scoreSAD;
+	
+	
+	//var disp = scoreSIFT.toExponential(4);
+	//var disp = scoreSAD+"";//.toExponential(4);
+	var disp = score+"";
+	//disp = Code.clipStringToMaxChars(disp,6);
+	disp = disp.substr(0,7);
+	//Code.clipStringToMaxChars = function(str,chr,filler){
+	var dd = new DOText(disp+"", 8, DOText.FONT_ARIAL, 0xFF000000, DOText.ALIGN_LEFT);
+	// dd.matrix().translate(x,y+displaySize+8);
+	GLOBALSTAGE.addChild(dd);
+
+
+	
+	//console.log(score)
+	results.push([score, d, dd]);
+}
+results = results.sort(function(a,b){
+	return a[0] < b[0] ? -1 : 1;
+});
+
+for(var j=0; j<results.length; ++j){
+	var x = 100 + (j/rows|0)*(displaySize*2);
+	var y = 50 + (j%rows)*(displaySize+12)
+
+	var result = results[j];
+	var score = result[0];
+	var d = result[1];
+	var dd = result[2];
+
+	d.matrix().identity();
+	d.matrix().translate(x, y);
+
+	dd.matrix().identity();
+	dd.matrix().translate(x,y+displaySize+8);
+
+}
+
+
+return;
+
+*/
+
+
+
+
+
 
 var matrixFfwd = null;
 var matrixFrev = null;
@@ -289,7 +546,6 @@ var doFatMatch = true;
 if(doFatMatch){
 // DO UNKNOWN-ALL FAT MATCHING
 console.log("FAT MATCH");
-// R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
 var best = matching["best"];
 var pointsA = [];
@@ -311,8 +567,9 @@ if(pointsA.length<100){
 if(true){
 R3D.drawMatches(best, 0,0, imageMatrixA.width(),0, display);
 }
-//return;
 
+return;
+// 
 
 
 // // initial test matching:
