@@ -4235,99 +4235,167 @@ d.matrix().translate(408*(CALLED),306*0);
 	
 	return pass;
 }
-R3D.SADVectorAll = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
-	diaNeighborhood = diaNeighborhood * 7;
+// R3D.SADVectorAll = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+// 	diaNeighborhood = diaNeighborhood * 7;
 
-	var vector = [];
-	var zoomScales = [1.0];
-	var size = 15;
-	var outerSize = size + 2;
-	var center = Math.floor((outerSize-1)* 0.5);
-	var wid = imageMatrix.width();
-	var hei = imageMatrix.height();
-	var mask = ImageMat.circleMask(size,size, 2);
-	var colorScale = 1.0;
-	var halfLife = size*0.5; // 100% = 0.135
-	//var halfLife = size; // 100% = 0.36
-	var maxVector = null;
-	var minVector = null;
-	var maxVectorLength = null;
-	var minVectorLength = null;
+// 	var vector = [];
+// 	var zoomScales = [1.0];
+// 	var size = 15;
+// 	var outerSize = size + 2;
+// 	var center = Math.floor((outerSize-1)* 0.5);
+// 	var wid = imageMatrix.width();
+// 	var hei = imageMatrix.height();
+// 	var mask = ImageMat.circleMask(size,size, 2);
+// 	var colorScale = 1.0;
+// 	//var halfLife = size*0.5; // 100% = 0.135
+// 	var halfLife = size; // 100% = 0.36
+// 	var maxVector = null;
+// 	var minVector = null;
+// 	var maxVectorLength = null;
+// 	var minVectorLength = null;
 
-	for(var z=0; z<zoomScales.length; ++z){
-		var zoom = zoomScales[z];
-			zoom = zoom * diaNeighborhood/outerSize;
-		var image = R3D.imageFromParameters(imageMatrix, location, zoom,pointAngle,0.0,0.0, outerSize,outerSize);
-		var cR = image.red();
-		var cG = image.grn();
-		var cB = image.blu();
-		var gR = ImageMat.gradientVector(cR,outerSize,outerSize).value;
-		var gG = ImageMat.gradientVector(cG,outerSize,outerSize).value;
-		var gB = ImageMat.gradientVector(cB,outerSize,outerSize).value;
-		for(var j=0; j<outerSize; ++j){
-			for(var i=0; i<outerSize; ++i){
-				var index = j*i;
-				if(mask[index]>0){
-					var x = i - center;
-					var y = j - center;
-					var rr = cR[index];
-					var gg = cG[index];
-					var bb = cB[index];
-					rr *= colorScale;
-					gg *= colorScale;
-					bb *= colorScale;
-					var r = gR[index];
-					var g = gG[index];
-					var b = gB[index];
-					var v = [rr,gg,bb, r.x,r.y,g.x,g.y,b.x,b.y];
-					var vLen = Code.arrayVectorLength(v);
-					if(!maxVector){
-						maxVector = Code.copyArray(v); maxVectorLength = vLen;
-						minVector = Code.copyArray(v); minVectorLength = vLen;
-					}
-					if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
-					if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
-					var d = Math.sqrt(x*x + y*y);
-					var fall = Math.exp(-d/halfLife);
-					Code.arrayScale(v, fall);
-					vector.push(v);
-				}
+// 	for(var z=0; z<zoomScales.length; ++z){
+// 		var zoom = zoomScales[z];
+// 			zoom = zoom * diaNeighborhood/outerSize;
+// 		var image = R3D.imageFromParameters(imageMatrix, location, zoom,pointAngle,0.0,0.0, outerSize,outerSize);
+// 		var cR = image.red();
+// 		var cG = image.grn();
+// 		var cB = image.blu();
+// 		var gR = ImageMat.gradientVector(cR,outerSize,outerSize).value;
+// 		var gG = ImageMat.gradientVector(cG,outerSize,outerSize).value;
+// 		var gB = ImageMat.gradientVector(cB,outerSize,outerSize).value;
+// 		for(var j=0; j<outerSize; ++j){
+// 			for(var i=0; i<outerSize; ++i){
+// 				var index = j*i;
+// 				if(mask[index]>0){
+// 					var x = i - center;
+// 					var y = j - center;
+// 					var rr = cR[index];
+// 					var gg = cG[index];
+// 					var bb = cB[index];
+// 					rr *= colorScale;
+// 					gg *= colorScale;
+// 					bb *= colorScale;
+// 					var r = gR[index];
+// 					var g = gG[index];
+// 					var b = gB[index];
+// 					var v = [rr,gg,bb, r.x,r.y,g.x,g.y,b.x,b.y];
+// 					var vLen = Code.arrayVectorLength(v);
+// 					if(!maxVector){
+// 						maxVector = Code.copyArray(v); maxVectorLength = vLen;
+// 						minVector = Code.copyArray(v); minVectorLength = vLen;
+// 					}
+// 					if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
+// 					if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
+// 					var d2 = x*x + y*y;
+// 					var fall = Math.exp(-d2/halfLife);
+// 					// var d = Math.sqrt(x*x + y*y);
+// 					// var fall = Math.exp(-d/halfLife);
+// 					//var fall = 1.0 - (d/halfLife);
+// //					Code.arrayScale(v, fall);
+// 					vector.push(v);
+// 				}
 				
-			}
-		}
-		/*
-		// scale by max total
-		var s = 0;
-		for(var i=0; i<vector.length; ++i){
-			var v = vector[i];
-			for(var j=0; j<v.length; ++j){
-				s += v[j]*v[j];
-			}
-		}
-		s = Math.sqrt(s);
-		maxVectorLength = s;
-		*/
-		// scale by only largest
-		for(var i=0; i<vector.length; ++i){
-			Code.arrayScale(vector[i], 1.0/maxVectorLength);
+// 			}
+// 		}
+// 		/*
+// 		// scale by max total
+// 		var s = 0;
+// 		for(var i=0; i<vector.length; ++i){
+// 			var v = vector[i];
+// 			for(var j=0; j<v.length; ++j){
+// 				s += v[j]*v[j];
+// 			}
+// 		}
+// 		s = Math.sqrt(s);
+// 		maxVectorLength = s;
+// 		*/
+// 		// scale by only largest
+// 		for(var i=0; i<vector.length; ++i){
+// 			Code.arrayScale(vector[i], 1.0/maxVectorLength);
+// 		}
+// 	}
+// 	return vector;
+// }
+
+R3D.SADVectorSIFTGradient = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+	diaNeighborhood = diaNeighborhood * 3;
+
+	var outerSize = 16;
+
+
+	var width = imageMatrix.width();
+	var height = imageMatrix.height();
+	var optimalScale = diaNeighborhood/outerSize;
+	var optimalOrientation = pointAngle;
+/*
+	var source = imageMatrix.gry();
+	var vector = SIFTDescriptor.vectorFromImage(source, width,height, location,optimalScale,optimalOrientation);
+	return vector;
+*/
+// 3 colors is better than 3 gry scales
+	/*
+	// scales:
+	var source = imageMatrix.gry();
+	//var scales = [0.5,1.0,2.0];
+	var scales = [1.0];
+	var vector = [];
+	for(var i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		scale = scale * optimalScale;
+		var v = SIFTDescriptor.vectorFromImage(source, width,height, location,scale,optimalOrientation);
+		Code.arrayPushArray(vector,v);
+	}
+	return vector;
+	*/
+
+
+	//var scales = [0.5,1.0,2.0];
+	//var scales = [1.0,2.0,3.0];
+	var scales = [1.0];
+	var angles = [0,Math.PI*0.25];
+	var vector = [];
+	for(var i=0; i<scales.length; ++i){
+		for(var j=0; j<angles.length; ++j){
+			var scale = scales[i];
+				scale = scale * optimalScale;
+			var angle = optimalOrientation;
+				angle += angles[j];
+			var vectorR = SIFTDescriptor.vectorFromImage(imageMatrix.red(), width,height, location,scale,angle);
+			var vectorG = SIFTDescriptor.vectorFromImage(imageMatrix.grn(), width,height, location,scale,angle);
+			var vectorB = SIFTDescriptor.vectorFromImage(imageMatrix.blu(), width,height, location,scale,angle);
+			//var vectorY = SIFTDescriptor.vectorFromImage(imageMatrix.gry(), width,height, location,optimalScale,optimalOrientation);
+			Code.arrayPushArray(vector,vectorR);
+			Code.arrayPushArray(vector,vectorG);
+			Code.arrayPushArray(vector,vectorB);
+			//Code.arrayPushArray(vector,vectorY);
 		}
 	}
 	return vector;
+
 }
 R3D.SADVectorGradient = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+	diaNeighborhood = diaNeighborhood * 3;
+
+	var outerSize = 16;
+
+	//diaNeighborhood = diaNeighborhood * 3;
 	//diaNeighborhood = diaNeighborhood * 5;
-	diaNeighborhood = diaNeighborhood * 7;
+	//diaNeighborhood = diaNeighborhood * 7;
+	//diaNeighborhood = diaNeighborhood * 9;
 
 	var vector = [];
 	var zoomScales = [1.0];
-	var size = 15;
+	//var size = 15;
+	var size = 21;
 	var outerSize = size + 2;
 	var center = Math.floor((outerSize-1)* 0.5);
 	var wid = imageMatrix.width();
 	var hei = imageMatrix.height();
 	var mask = ImageMat.circleMask(size,size, 2);
-	var halfLife = size*0.5; // 100% = 0.135
+	//var halfLife = size*0.5; // 100% = 0.135
 	//var halfLife = size; // 100% = 0.36
+	var halfLife = size*size * 2.0;
 	var maxVector = null;
 	var minVector = null;
 	var maxVectorLength = null;
@@ -4341,14 +4409,19 @@ R3D.SADVectorGradient = function(imageMatrix, location,diaNeighborhood,pointAngl
 		var gB = ImageMat.gradientVector(image.blu(),outerSize,outerSize).value;
 		for(var j=0; j<outerSize; ++j){
 			for(var i=0; i<outerSize; ++i){
-				var index = j*i;
+				var index = j*outerSize + i;
 				if(mask[index]>0){
 					var x = i - center;
 					var y = j - center;
 					var r = gR[index];
 					var g = gG[index];
 					var b = gB[index];
+					// regular gradient
 					var v = [r.x,r.y,g.x,g.y,b.x,b.y];
+
+//var v = R3D._RGBDeltaToRainbow(r,g,b); // only mildly helpful
+// console.log(v);
+// throw "?"
 					var vLen = Code.arrayVectorLength(v);
 					if(!maxVector){
 						maxVector = Code.copyArray(v);
@@ -4358,8 +4431,10 @@ R3D.SADVectorGradient = function(imageMatrix, location,diaNeighborhood,pointAngl
 					}
 					if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
 					if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
-					var d = Math.sqrt(x*x + y*y);
-					var fall = Math.exp(-d/halfLife);
+					//var d = Math.sqrt(x*x + y*y);
+					var d2 = x*x + y*y;
+					var fall = Math.exp(-d2/halfLife);
+					//var fall = 1.0 - (d/halfLife);
 					Code.arrayScale(v, fall);
 					vector.push(v);
 				}
@@ -4382,24 +4457,124 @@ R3D.SADVectorGradient = function(imageMatrix, location,diaNeighborhood,pointAngl
 		for(var i=0; i<vector.length; ++i){
 			Code.arrayScale(vector[i], 1.0/maxVectorLength);
 		}
+		/*
+		// clamping high grads
+		var scaleMax = 0.25;
+		var scaleInv = 1.0/scaleMax;
+		for(var i=0; i<vector.length; ++i){
+			var v = vector[i];
+			var len = Code.arrayVectorLength(v);
+			len = Math.min(scaleMax,len);
+			Code.arrayScale(v, len);
+			var len = Code.arrayVectorLength(v);
+		}
+		for(var i=0; i<vector.length; ++i){
+			var v = vector[i];
+			Code.arrayScale(v, scaleInv);
+		}
+		*/
 	}
+	// console.log(vector.length);
+	// console.log(vector);
+	// throw "?"
 	return vector;
 }
+R3D._RGBDeltaToRainbow = function(r,g,b){
+	//console.log(r+""+g+""+b)
+	var x = new V3D(r.x,g.x,b.x);
+	var y = new V3D(r.y,g.y,b.y);
+	//console.log(x+""+y);
+	x = R3D._RGBtoRainbow(x);
+	y = R3D._RGBtoRainbow(y);
+	//console.log(x+""+y);
+	//return [];
+	return Code.arrayPushArray(x,y);
+	//return x;
+	//return [x.x,y.x, x.y,y.y, x.z,y.z];
+}
+R3D._RGBtoRainbow = function(v){
+	if(!R3D._RGBRainbow_value){
+		R3D._RGBRainbow_value = R3D._RGBRainbow();
+	}
+	var vs = R3D._RGBRainbow_value;
+	var gry = new V3D(0.5,0.5,0.5);
+	v = V3D.sub(v,gry);
+	var u = [];
+	var vLen = v.length();
+	for(var k=0; k<vs.length; ++k){
+		var dot = 0;
+		var vsLen = vs[k].length();
+		// TO-vectors:
+		var d = V3D.sub(v, vs[k]);
+		var l = d.length();
+		l = l / vsLen;
+		u.push(l);
+		//u.push(d.x,d.y,d.z);
+
+		// dot = V3D.dot(vs[k],d) / vsLen;
+		// dot = Math.abs(dot);
+		// u.push(dot);
+	}
+	return u;
+}
+/*
+		var d = V3D.sub(v, vs[k]);
+		u.push(d.x,d.y,d.z);
+*/
+/*
+		var d = V3D.sub(v, vs[k]);
+		var l = d.length();
+		u.push(l);
+*/
+/*
+	if(!R3D._RGBRainbow_value){
+		R3D._RGBRainbow_value = R3D._RGBRainbow();
+	}
+	var vs = R3D._RGBRainbow_value;
+	var u = [];
+	for(var k=0; k<vs.length; ++k){
+		var dot = 0;
+		var vsLen = vs[k].length();
+		dot = V3D.dot(vs[k],v) / vsLen;
+		u.push(dot);
+	}
+	return u;
+*/
+R3D._RGBRainbow_value = null;
+R3D._RGBRainbow = function(){
+	var gry = new V3D(0.5,0.5,0.5);
+	var vR = new V3D(1,0,0);
+	var vG = new V3D(0,1,0);
+	var vB = new V3D(0,0,1);
+	var vW = new V3D(1,1,1);
+	var vK = new V3D(0,0,0);
+	var vC = new V3D(0,1,1);
+	var vM = new V3D(1,0,1);
+	var vY = new V3D(1,1,0);
+	var vs = [vK, vR,vG,vB, vC,vM,vY, vW];
+	//var vs = [vR,vG,vB, vC,vM,vY, vW];
+	//var vs = [vK, vW];
+	for(var k=0; k<vs.length; ++k){
+		vs[k].sub(gry);
+		//vs[k].norm();
+	}
+	return vs;
+}
+R3D.SADVector3DSize = 21;
 R3D.SADVector3D = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
-	//diaNeighborhood = diaNeighborhood * 5;
-	diaNeighborhood = diaNeighborhood * 7;
+	diaNeighborhood = diaNeighborhood * 3;
 	var vector = [];
-	var outerSize = 15;
+	var outerSize = R3D.SADVector3DSize;
 	var center = Math.floor((outerSize-1)* 0.5);
 	var zoomScales = [1.0];
 	var wid = imageMatrix.width();
 	var hei = imageMatrix.height();
 	var mask = ImageMat.circleMask(outerSize,outerSize);
-	var halfLife = outerSize * 0.5;
 	var maxVector = null;
 	var minVector = null;
 	var maxVectorLength = null;
 	var minVectorLength = null;
+	//var averageColor = new V3D();
 	for(var z=0; z<zoomScales.length; ++z){
 		var zoom = zoomScales[z];
 		var sca = zoom * diaNeighborhood;
@@ -4410,7 +4585,7 @@ R3D.SADVector3D = function(imageMatrix, location,diaNeighborhood,pointAngle, sim
 		var vB = image.blu();
 		for(var j=0; j<outerSize; ++j){
 			for(var i=0; i<outerSize; ++i){
-				var index = j*i;
+				var index = j*outerSize + i;
 				if(mask[index]>0){
 					var x = i - center;
 					var y = j - center;
@@ -4418,23 +4593,24 @@ R3D.SADVector3D = function(imageMatrix, location,diaNeighborhood,pointAngle, sim
 					var g = vG[index];
 					var b = vB[index];
 					var v = new V3D(r,g,b);
-					var vLen = v.length();
-					if(!maxVector){
-						maxVector = Code.copyArray(v);
-						maxVectorLength = vLen;
-						minVector = Code.copyArray(v);
-						minVectorLength = vLen;
-					}
-					if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
-					if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
-					var d = Math.sqrt(x*x + y*y);
-					var fall = Math.exp(-d/halfLife);
-					v.scale(fall);
-					vector.push( v );
+						v = R3D._RGBtoRainbow(v);
+						//v = [v.x,v.y,v.z];
+					
+						var vLen = Code.arrayVectorLength(v);
+						if(!maxVector){
+							maxVector = Code.copyArray(v); maxVectorLength = vLen;
+							minVector = Code.copyArray(v); minVectorLength = vLen;
+						}
+						if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
+						if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
+
+						vector.push(v);
 				}
 			}
 		}
 	}
+	//averageColor.scale(1.0/count);
+
 	/*
 	// scale by max total
 	var s = 0;
@@ -4445,12 +4621,143 @@ R3D.SADVector3D = function(imageMatrix, location,diaNeighborhood,pointAngle, sim
 	s = Math.sqrt(s);
 	maxVectorLength = s;
 	*/
-	// scale by largest s
+	/*
+	//---- these hav already been scaled by halflife -> update
+	// subtract out range difference
+	var range = maxVectorLength - minVectorLength;
+	var invRange = 1.0/range;
 	for(var i=0; i<vector.length; ++i){
-		vector[i].scale(1.0/maxVectorLength);
+		var v = vector[i];
+		var l = v.length;
+		var u = v.copy().norm().scale(minVectorLength);
+		v.sub(u).scale(invRange);
+		//vector[i].sub(minVector).scale(invRange);
+		//vector[i].sub(minVector).scale(invRange);
+		//vector[i].scale(1.0/maxVectorLength);
+	}
+	*/
+	/*
+	for(var i=0; i<vector.length; ++i){
+		Code.arrayScale(vector[i], 1.0/maxVectorLength);
+	}
+	*/
+	/*
+	// rescale to unity:
+	var maxLen = 0;
+	for(var i=0; i<vector.length; ++i){
+		var v = vector[i];
+		var vLen = Code.arrayVectorLength(v);
+		maxLen = Math.max(maxLen,vLen);
+	}
+	var invLen = 1.0/maxLen;
+	for(var i=0; i<vector.length; ++i){
+		Code.arrayScale(vector[i], invLen);
+	}
+	*/
+
+
+	/*
+	// treat entire item as a vector
+	var out = [];
+	
+	for(var i=0; i<vector.length; ++i){
+		Code.arrayPushArray(out, vector[i]);
+	}
+	var min = Code.minArray(out);
+	var max = Code.maxArray(out);
+	Code.arrayVectorSub(out,min);
+	Code.arrayScale(out,max-min);
+	return out;
+	*/
+	
+
+
+
+	// scale by largest s
+	
+	for(var i=0; i<vector.length; ++i){
+		//vector[i] = Code.arrayVectorSub(vector[i],minVector);
+		Code.arrayScale(vector[i], 1.0/maxVectorLength);
+	}
+	
+	
+	// distance from average color ?????  COLOR MATTERS
+	// var maxLen = 0;
+	// for(var i=0; i<vector.length; ++i){
+	// 	var v = vector[i];
+	// 	v.sub(averageColor);
+	// 	maxLen = Math.max(maxLen,v.length());
+	// }
+	// for(var i=0; i<vector.length; ++i){
+	// 	vector[i].scale(1.0/maxLen);
+	// }
+	
+	// var min = Code.minArray(vector);
+	// Code.arraySub(vector, min);
+	// Code.normalizeArray(vector);
+
+
+	return vector;
+}
+R3D.SADVectorHSV = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+	diaNeighborhood = diaNeighborhood * 3;
+	var vector = [];
+	var outerSize = R3D.SADVector3DSize;
+	var center = Math.floor((outerSize-1)* 0.5);
+	var zoomScales = [1.0];
+	var wid = imageMatrix.width();
+	var hei = imageMatrix.height();
+	var mask = ImageMat.circleMask(outerSize,outerSize);
+	var halfLife = outerSize*outerSize * 1.0;
+	var maxVector = null;
+	var minVector = null;
+	var maxVectorLength = null;
+	var minVectorLength = null;
+	
+	for(var z=0; z<zoomScales.length; ++z){
+		var zoom = zoomScales[z];
+		var sca = zoom * diaNeighborhood;
+		var ang = pointAngle;
+		var image = R3D.imageFromParameters(imageMatrix, location, zoom,pointAngle,0.0,0.0, outerSize,outerSize);
+		var vR = image.red();
+		var vG = image.grn();
+		var vB = image.blu();
+		var count = 0;
+		for(var j=0; j<outerSize; ++j){
+			for(var i=0; i<outerSize; ++i){
+				var index = j*outerSize + i;
+				if(mask[index]>0){
+					++count;
+					var x = i - center;
+					var y = j - center;
+					var r = vR[index];
+					var g = vG[index];
+					var b = vB[index];
+					var v = new V3D(r,g,b);
+					var h = Code.HSVFromRGB(v);
+					v = [h.x,h.y,h.z];
+					// var q = Math.sqrt(h.y*h.y + h.z*h.z);
+					// v = [h.x,q];
+					var vLen = Code.arrayVectorLength(v);
+					if(!maxVector){
+						maxVector = Code.copyArray(v); maxVectorLength = vLen;
+						minVector = Code.copyArray(v); minVectorLength = vLen;
+					}
+					if(vLen > maxVectorLength){ maxVectorLength = vLen; maxVector = Code.copyArray(v); }
+					if(vLen < minVectorLength){ minVectorLength = vLen; minVector = Code.copyArray(v); }
+					vector.push(v);
+				}
+			}
+		}
+	}
+	for(var i=0; i<vector.length; ++i){
+		Code.arrayScale(vector[i], 1.0/maxVectorLength);
 	}
 	return vector;
 }
+
+// R3D.SADVector3D = R3D.SADVectorHSV;
+
 R3D.SADVectorFlat = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
 	var vector = [];
 	var zoomScales = [1.0,2.0,4.0];
@@ -4483,74 +4790,19 @@ zoom = zoom * 0.125;
 }
 
 
-R3D.SADVectorBoth = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+//R3D.SADVectorBoth = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
+R3D.SADVectorBoth = function(imageMatrix, imageBlurred, location,diaNeighborhood,pointAngle, simple){
+	//var imageBlurred = imageMatrix;
 	var vF = R3D.SADVector3D(imageMatrix, location,diaNeighborhood,pointAngle);
-	var vG = R3D.SADVectorGradient(imageMatrix, location,diaNeighborhood,pointAngle);
-	var vector = [vF,vG];
+	//var vF = null;
+	//var vG = R3D.SADVectorGradient(imageMatrix, location,diaNeighborhood,pointAngle);
+	var vG = null;
+	//var vS = R3D.SADVectorSIFTGradient(imageMatrix, location,diaNeighborhood,pointAngle);
+	var vS = null;
+	var vector = [vF,vG,vS];
 	return vector;
 }
-R3D.compareSADVectorBoth = function(vectorA, vectorB){
-	var vFA = vectorA[0];
-	var vGA = vectorA[1];
-	var vFB = vectorB[0];
-	var vGB = vectorB[1];
-	var sF = R3D.compareSADVector3D(vFA,vFB);
-	var sG = R3D.compareSADVectorGradient(vGA,vGB);
-	
-	/*
-	//return sF * Math.pow(sG,0.5); // gradient more important
-	//return Math.pow(sF,0.5) * sG; // flat more important
-	//var pF = 0.0;
-	//var pF = 0.1;
-	var pF = 0.5; // OK
-	//var pF = 0.9; // BETTER
-	//var pF = 1.0;
-	var pG = 1.0 - pF;
-	return pF*sF + pG*sG;
-	*/
 
-	//return sF * sG; // OK - double penalize
-	//return (sF*sG)/(sF+sG); // ?
-	return (sF*sG)*(sF+sG); // BETTER
-}
-
-R3D.compareSADVectorAll = function(vectorA, vectorB){
-	var score = 0;
-	var i, j, len = vectorA.length;
-	// SAD 6D
-	for(i=0; i<len; ++i){
-		var a = vectorA[i];
-		var b = vectorB[i];
-		var d = 0;
-		for(j=0; j<a.length; ++j){
-			d += Math.pow(a[j]-b[j], 2);
-		}
-		score += d;
-	}
-	if(len>0){
-		score = score/len;
-	}
-	return score;
-}
-R3D.compareSADVectorGradient = function(vectorA, vectorB){
-	var score = 0;
-	var i, j, len = vectorA.length;
-	// SAD 6D
-	for(i=0; i<len; ++i){
-		var a = vectorA[i];
-		var b = vectorB[i];
-		var d = 0;
-		for(j=0; j<a.length; ++j){
-			d += Math.pow(a[j]-b[j], 2);
-		}
-		score += d;
-		//score += Math.sqrt(d);
-	}
-	if(len>0){
-		score = score/len;
-	}
-	return score;
-}
 R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
 	//var zoomScales = [0.25,0.5,0.75,1.0];
 	//var zoomScales = [0.5,0.75,1.0,1.5,2.0];
@@ -5208,7 +5460,8 @@ R3D.generateSIFTObjects = function(featuresA, imageMatrixA){
 
 		var imageWidth = imageMatrix.width();
 		var imageHeight = imageMatrix.height();
-//		var imageBlurred = imageMatrix.getBlurredImage(1.0);
+var imageBlurred = imageMatrix.getBlurredImage(1.0);
+//var imageBlurred = imageMatrix.getBlurredImage(2.0);
 //var imageGradient = ImageMat.gradientVector(imageBlurred,imageWidth,imageHeight).value;
 		// var imageCorners = corners[i];
 		// var imageGradients = gradients[i];
@@ -5223,7 +5476,7 @@ R3D.generateSIFTObjects = function(featuresA, imageMatrixA){
 			var location =  null;
 			var rad = null;
 			var angle = null;
-			if(Code.isa(point,V3D)){
+			if(Code.isa(point,V4D)){
 				hasAngle = point.t!==undefined;
 				angle = point.t;
 				location = new V2D(point.x,point.y);
@@ -5239,7 +5492,6 @@ R3D.generateSIFTObjects = function(featuresA, imageMatrixA){
 			// var dia = 2.0*rad; // full area
 			// var diaNeighborhood = dia * 2.0; // area around feature
 			var diaNeighborhood = rad;
-			
 
 			var pointAngles = null;
 			if(hasAngle){
@@ -5295,7 +5547,8 @@ R3D.generateSIFTObjects = function(featuresA, imageMatrixA){
 
 				//var vector = R3D.SIFTVector(imageMatrix, location, diaNeighborhood, pointAngle);
 				var vector = null;
-				var image = R3D.SADVector(imageMatrix, location, diaNeighborhood, pointAngle);
+				//var image = R3D.SADVector(imageMatrix, location, diaNeighborhood, pointAngle);
+				var image = R3D.SADVector(imageMatrix, imageBlurred, location, diaNeighborhood, pointAngle);
 				//var image = R3D.SADVector(imageMatrix, location, diaNeighborhood, pointAngle);
 					//var image = R3D.SADVector3D(imageMatrix, location, diaNeighborhood, pointAngle);
 					//var image = R3D.SADGradientVector(imageBlurred, location, diaNeighborhood, pointAngle);
@@ -5384,13 +5637,16 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	var recheckCount = 1;
 	var matchLength = result["matches"].length;
 	// console.log(matchLength+" == matchLength");
-	var recheckCount = 100; // arbitrary -- TODO: 
+	var recheckCount = 10; // arbitrary -- TODO: 
+	console.log("matchLength: "+matchLength+" / "+recheckCount);
 	while(matchLength>recheckCount && recheckCount>0){ // try with lower error to get more accurate F
+		console.log("recheck: "+error);
 		error = error * 0.5;
 		var nextResult = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, error, matrixFfwd);
 		var nextMatrixFfwd = result["F"];
 		matchLength = result["matches"].length;
 		--recheckCount;
+		console.log("matchLength: "+matchLength);
 		// console.log(matchLength+" == matchLength");
 		if(matchLength>recheckCount){
 			result = nextResult;
@@ -5441,7 +5697,14 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	*/
 
 
-
+//var totalAllowedMin = 100; // .. should depend on input data
+//var totalAllowedMin = Math.max(25, Math.ceil( Math.pow( Math.min(objectsAIn,objectsBIn), 0.75 ) ) );
+var minCount = Math.min(objectsAIn.length,objectsBIn.length);
+var guess = Math.pow( 0.25 * minCount, 0.75 ) ;
+var totalAllowedMin = Math.max(25, Math.ceil( guess ) );
+totalAllowedMin = 20;
+var bestMatchCountMin = 20;
+console.log("totalAllowedMin: "+totalAllowedMin);
 	// LIMITED F SEARCH
 	objectsA = objectsAIn; // use full features if cut short previously
 	objectsB = objectsBIn;
@@ -5453,52 +5716,83 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	var bestMatchCount = -1;
 	var best = null;
 var highestMatchCount = 0;
-var allowableMasPercent = 0.707;
+var allowableMaxPercent = 0.707;
 	var averageError = -1;
 		var maximumSamplingList = null;
 		var maximumSamplingCount = null;
 		var maximumSamplingF = null;
-	while(loopCount>0 && (bestMatchCount<0 || bestMatchCount>50)){ // looping on this makes it worse ..  
+		var maxiumumAverageScore = null;
+	while(loopCount>0 && (bestMatchCount<0 || bestMatchCount>bestMatchCountMin)){ // looping on this makes it worse ..  
 //		console.log("loop: "+loopCount+" = "+bestMatchCount);
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, errorB);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, errorA);
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB);
 		var matchesBest = matching["best"];
+		// 
 		// add distance error term to each match
+		var totalScore = 0;
 		for(i=0; i<matchesBest.length; ++i){
-			var pA = matchesBest[i]["A"]["point"];
-			var pB = matchesBest[i]["B"]["point"];
+			var match = matchesBest[i];
+			var itemA = match["A"];
+			var itemB = match["B"];
+			var pA = itemA["point"];
+			var pB = itemB["point"];
+			
+
+			// TODO: DROP POINTS WITH POOR SCORES
+
+
+
 			var pointA = new V3D(pA.x,pA.y,1.0);
 			var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
 			var pointB = new V3D(pB.x,pB.y,1.0);
 			var lineB = R3D.lineRayFromPointF(matrixFrev, pointB);
 			var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pointB);
 			var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pointA);
-			var errorA = distA;
-			var errorB = distB;
-			var error = errorA*errorA + errorB*errorB;
+			var error = distA*distA + distB*distB;
 			matchesBest[i]["error"] = error;
 		}
 		// keep inliers
-		var valueFxn = function(a){
-			//var value = a["score"]; // image score
-			var value = a["error"]; // F distance
+		var valueErrorFxn = function(a){
+			var s = a["score"]; // image score
+			var e = a["error"]; // F distance
+			//var value = s*e;
+			//var value = s;
+			var value = e;
 			return value;
 		}
-		//console.log(matchesBest);
-		//console.log("start: "+matchesBest.length);
-		var sigma = 2.0;
-		var group = Code.dropOutliers(matchesBest, valueFxn, sigma);
+		var valueScoreFxn = function(a){
+			var s = a["score"]; // image score
+			var e = a["error"]; // F distance
+			//var value = s*e;
+			var value = s;
+			//var value = e;
+			return value;
+		}
+		
+		var group = Code.dropOutliers(matchesBest, valueErrorFxn, 2.0);
+		var group = Code.dropOutliers(matchesBest, valueScoreFxn, 2.0);
 		var inliers = group["inliers"];
-		//console.log("end: "+inliers.length);
 		matchesBest = inliers;
 
 		var ptsA = [];
 		var ptsB = [];
-		for(var i=0; i<matchesBest.length; ++i){
-			ptsA.push( matchesBest[i]["A"]["point"] );
-			ptsB.push( matchesBest[i]["B"]["point"] );
+		for(i=0; i<matchesBest.length; ++i){
+			var match = matchesBest[i];
+			var itemA = match["A"];
+			var itemB = match["B"];
+			var pA = itemA["point"];
+			var pB = itemB["point"];
+			
+			var matchScore = match["score"];
+
+			totalScore += matchScore;//*matchScore;
+
+			ptsA.push(pA);
+			ptsB.push(pB);
 		}
+		totalScore = Math.sqrt(totalScore);
+		var averageScore = totalScore/ptsA.length;
 
 	highestMatchCount = Math.max(highestMatchCount, ptsA.length);
 
@@ -5508,28 +5802,35 @@ var allowableMasPercent = 0.707;
 		
 		//var nextBestMatchCount = matchesBest.length;
 		var nextBestMatchCount = ptsA.length;
-		console.log("bestMatchCount: "+bestMatchCount+" => "+nextBestMatchCount+".      & error: "+averageError+" => "+errorAvg);
+		console.log("bestMatchCount: "+bestMatchCount+" => "+nextBestMatchCount+".      & error: "+averageError+" => "+errorAvg+"  @  "+averageScore+" ~ "+(averageScore/errorAvg));
 		//TODO: averageError
-		if(best==null || (nextBestMatchCount>100)  ){//  && nextBestMatchCount>=bestMatchCount)){
+		if(best==null || (nextBestMatchCount>totalAllowedMin)  ){//  && nextBestMatchCount>=bestMatchCount)){
+			var wasScore = averageScore;
 			var wasError = averageError;
 			bestMatchCount = nextBestMatchCount;
 			best = matchesBest;
 			matrixFfwd = Fnext;
 			averageError = errorAvg;
-			if(bestMatchCount>=(highestMatchCount*allowableMasPercent)){
+//			if(averageScore<){
+//			if(bestMatchCount>=(highestMatchCount*allowableMaxPercent)){
 //			if(bestMatchCount>=maximumSamplingCount){
+			if(maxiumumAverageScore==null || averageScore < maxiumumAverageScore || maximumSamplingCount <= bestMatchCount){
+				maxiumumAverageScore = averageScore;
 				maximumSamplingList = best;
 				maximumSamplingCount = bestMatchCount;
 				maximumSamplingF = matrixFfwd;
 			}
-if(wasError==averageError){
-	break;
-}
+			//}
+			if(wasError==averageError){
+				break;
+			}
 		}else{
 			break;
 		}
-		errorA *= 0.5;
-		errorB *= 0.5;
+		// errorA *= 0.5;
+		// errorB *= 0.5;
+		errorA *= 0.9;
+		errorB *= 0.9;
 		--loopCount;
 	}
 
@@ -5694,9 +5995,10 @@ R3D.siftObjectsToUnique = function(objects){
 		var scores = group["s"];
 		scores.sort(sorting);
 		var ratio = scores[0]/scores[1];
-		//if(ratio<0.99){
+		//if(ratio<0.999){
+		if(ratio<0.99){
 		//if(ratio<0.95){
-		if(ratio<0.90){
+		//if(ratio<0.90){
 		//if(ratio<0.80){
 		//if(ratio<0.50){
 			group["r"] = ratio;
@@ -7812,6 +8114,7 @@ GLOBALSTAGE.addChild(d);
 	// first image
 	var extremumLowContrastMinimum = 0.01; // 0.03
 	var hessianThreshold = 10; // 10 // maximum allowable
+	hessianThreshold = 20;
 	var preSigma = null; // TODO: 0.5 ?
 	var preScale = 1.0; // TODO: CHANGE TO 2.0
 	var originalGray = imageSource.gry();
@@ -8312,12 +8615,12 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 					//score = score * scoreRank;
 					//var score = scoreRank;
 					if(scoreRank!==null){
+						if(scoreRank<0.95){
 						//if(scoreRank<0.90){
-						//if(scoreRank<0.95){
 						//if(scoreRank<0.80){
 						//if(scoreRank<0.75){
 						//if(scoreRank<0.70){
-						if(scoreRank<0.666){
+						//if(scoreRank<0.666){
 						//if(scoreRank<0.50){
 							var match = {"A":objectA, "B":objectB, "score":score, "a":objectA["index"], "b":objectB["index"]};
 							bestMatches.push(match);
@@ -8351,16 +8654,296 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB){
 
 	return {"matches":matches, "A":matchesA, "B":matchesB, "best":bestMatches};
 }
+
+R3D.compareSADVectorBoth = function(vectorA, vectorB){
+	var vFA = vectorA[0];
+	var vGA = vectorA[1];
+	var vSA = vectorA[2];
+	var vFB = vectorB[0];
+	var vGB = vectorB[1];
+	var vSB = vectorB[2];
+	var sF = R3D.compareSADVector3D(vFA,vFB);
+	//var sG = R3D.compareSADVectorGradient(vGA,vGB);
+	//var sS = R3D.compareSADVectorSIFTGradient(vSA,vSB);
+
+	return sF;
+	// return sG;
+	// return sS;
+
+	//console.log( sS, sG);
+
+	//return sS*sF;
+	return (sF*sS)*(sF+sS); // better
+	
+	/*
+	//return sF * Math.pow(sG,0.5); // gradient more important
+	//return Math.pow(sF,0.5) * sG; // flat more important
+	//var pF = 0.0;
+	//var pF = 0.1;
+	var pF = 0.5; // OK
+	//var pF = 0.9; // BETTER
+	//var pF = 1.0;
+	var pG = 1.0 - pF;
+	return pF*sF + pG*sG;
+	*/
+
+	//return sF * sG; // OK - double penalize
+	//return (sF*sG)/(sF+sG); // ?
+
+	//return Math.pow(sF,1)*Math.pow(sG,0.5); // poor
+	//return Math.pow(sF,0.5)*Math.pow(sG,1); // ok
+	//return Math.pow(sF,0.25)*Math.pow(sG,1); // poor
+	//return Math.pow(sF,0.5)*Math.pow(sG,1) *(sF+sG) ; // bad
+	//return (sF*sG);
+	return (sF*sG)*(sF+sG); // BETTER
+}
+// R3D.compareSADVectorAll = function(vectorA, vectorB){
+// 	var score = 0;
+// 	var i, j, len = vectorA.length;
+// 	// SAD 6D
+// 	for(i=0; i<len; ++i){
+// 		var a = vectorA[i];
+// 		var b = vectorB[i];
+// 		var d = 0;
+// 		for(j=0; j<a.length; ++j){
+// 			d += Math.pow(a[j]-b[j], 2);
+// 		}
+// 		score += d;
+// 	}
+// 	if(len>0){
+// 		score = score/len;
+// 	}
+// 	return score;
+// }
+R3D.compareSADVectorGradient = function(vectorA, vectorB){
+	var score = 0;
+	var i, j, len = vectorA.length;
+	// SAD 6D
+	for(i=0; i<len; ++i){
+		var a = vectorA[i];
+		var b = vectorB[i];
+// if single vector:
+//			score += Math.abs(a-b);
+		
+		var d = 0;
+		for(j=0; j<a.length; ++j){
+			//d += Math.pow(a[j]-b[j], 2);
+			d += Math.abs(a[j]-b[j]);
+			// var dif = a[j]-b[j];
+			// var sum = Math.abs(a[j]+b[j]);
+			// if(sum!=0){
+			// 	d += Math.pow(dif, 2) / sum;
+			// }
+		}
+		score += d;
+		//score += Math.sqrt(d);
+		
+	}
+// console.log(score);
+// throw "...";
+	// if(len>0){
+	// 	score = score/len;
+	// }
+	return score;
+}
+R3D.compareSADVectorSIFTGradient = function(vectorA, vectorB){
+	var score = 0;
+	var i, j, len = vectorA.length;
+	// SAD 6D
+	for(i=0; i<len; ++i){
+		var a = vectorA[i];
+		var b = vectorB[i];
+		score += Math.abs(a-b);
+		//score += Math.pow(a-b, 2);
+	}
+	return score;
+}
 R3D.compareSADVector3D = function(vectorA, vectorB){
+	var outerSize = R3D.SADVector3DSize;
+	var sigma = outerSize * 2.0;
+	var circleMask = ImageMat.circleMask(outerSize,outerSize);
+	var gaussianMask = ImageMat.gaussianMask(outerSize,outerSize, sigma);
+	var mask = [];
+	for(var i=0; i<circleMask.length; ++i){
+		if(circleMask[i]>0){
+			mask.push(gaussianMask[i]);
+		}
+	}
+	var i, len = vectorA.length;
+	var score = 0;
+	var single = true;
+	if(single){
+	for(i=0; i<len; ++i){
+		var a = vectorA[i];
+		var b = vectorB[i];
+		var diff = Code.arrayVectorSub(a,b);
+		var dLen = Code.arrayVectorLength(diff);
+		var weight = mask[i];
+		//score += dLen*weight;
+		score += dLen*dLen*weight;
+	}
+	}else{
+		var ratio = vectorA.length/mask.length;
+		// console.log(ratio)
+		// throw "?"
+	for(i=0; i<len; ++i){
+		var j = Math.floor(i/ratio);
+		var a = vectorA[i];
+		var b = vectorB[i];
+		var d = Math.abs(a-b);
+		//var diff = Code.arrayVectorSub(a,b);
+		//var dLen = Code.arrayVectorLength(diff);
+		var weight = mask[j];
+		//console.log(a,b,d,j,weight);
+		//throw "?"
+		score += d*weight;
+	}
+
+		/*
+		// if sub elements
+		var d = 0;
+		// var diff = 0;
+		// var sum = 0;
+		for(var j=0; j<a.length; ++j){
+			// var dif = a[j]-b[j];
+			// var sum = Math.abs(a[j]+b[j]);
+			// if(sum!=0){
+			// 	d += Math.pow(dif, 2) / sum;
+			// }
+			//d += Math.pow(a[j]-b[j], 2);
+			d += Math.abs(a[j]-b[j]);
+		}
+		//s = Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) + Math.pow(a.z-b.z,2);
+		score += d;
+		//score += Math.sqrt(d);
+		*/
+		
+	}
+	// if(len>0){
+	// 	score = score/len;
+	// }
+	// console.log(vectorA.length,mask.length)
+	// console.log(score);
+	// throw "?"
+	return score;
+}
+
+R3D.compareSADVector3D_reuseme = function(vectorA, vectorB){
 	var score = 0;
 	var i, len = vectorA.length;
 	for(i=0; i<len; ++i){
 		var a = vectorA[i];
 		var b = vectorB[i];
-		var s = Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) + Math.pow(a.z-b.z,2);
-		score += s;
-		//score += Math.sqrt(s);
+		// if single element
+		//score += Math.pow(a-b,2);
+		//score += Math.abs(a-b);
+
+		var diff = Code.arrayVectorSub(a,b);
+		var dLen = Code.arrayVectorLength(diff);
+		score += dLen;
+
+		/*
+		// if sub elements
+		var d = 0;
+		// var diff = 0;
+		// var sum = 0;
+		for(var j=0; j<a.length; ++j){
+			// var dif = a[j]-b[j];
+			// var sum = Math.abs(a[j]+b[j]);
+			// if(sum!=0){
+			// 	d += Math.pow(dif, 2) / sum;
+			// }
+			//d += Math.pow(a[j]-b[j], 2);
+			d += Math.abs(a[j]-b[j]);
+		}
+		//s = Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) + Math.pow(a.z-b.z,2);
+		score += d;
+		//score += Math.sqrt(d);
+		*/
+		
 	}
+	// if(len>0){
+	// 	score = score/len;
+	// }
+	// console.log(score)
+	// throw "?"
+	return score;
+}
+R3D.compareSADVectoHSV = function(vectorA, vectorB){
+	var score = 0;
+	var i, len = vectorA.length;
+	for(i=0; i<len; ++i){
+		var a = vectorA[i];
+		var b = vectorB[i];
+
+
+		// HSV + e
+		var angleA = a[0] * Math.PI*2;
+		var angleB = b[0] * Math.PI*2;
+		var angle = Code.minAngle(angleA,angleB);
+		angle /= Math.PI; // [0-1]
+		//angle = Math.abs(angle);
+
+		var satA = a[1];
+		var satB = b[1];
+		var sat = (satA-satB) ; //* 0.50;
+
+		var valA = a[2];
+		var valB = b[2];
+		var val = (valA-valB) ; //* 0.25;
+
+
+		var svA = Math.sqrt(satA*satA + valA*valA);
+		var svB = Math.sqrt(satB*satB + valB*valB);
+		var sv = (svA-svB);
+
+		var scaA = a[3];
+		var scaB = b[3];
+
+		var diff = 0;
+		//diff += Math.pow(angle, 2);
+		// diff += Math.pow(sat, 2);
+		// diff += Math.pow(val, 2);
+		//diff += Math.pow(sv, 2);
+		diff += Math.abs(angle);
+		//diff += Math.abs(sat);
+		//diff += Math.abs(val);
+		//diff += Math.abs(sat*val);
+		diff += Math.abs(sv);
+
+		//diff += Math.pow(angle, 2) * Math.abs(sv);
+		// importance:
+		score += diff * scaA;
+		//score += diff;
+
+
+		// if single element
+		//score += Math.pow(a-b,2);
+		//score += Math.abs(a-b);
+
+		/*
+		// if sub elements
+		var d = 0;
+		// var diff = 0;
+		// var sum = 0;
+		for(var j=0; j<a.length; ++j){
+			// var dif = a[j]-b[j];
+			// var sum = Math.abs(a[j]+b[j]);
+			// if(sum!=0){
+			// 	d += Math.pow(dif, 2) / sum;
+			// }
+			d += Math.pow(a[j]-b[j], 2);
+			//d += Math.abs(a[j]-b[j]);
+		}
+		//s = Math.pow(a.x-b.x,2) + Math.pow(a.y-b.y,2) + Math.pow(a.z-b.z,2);
+		//score += d;
+		score += Math.sqrt(d);
+		*/
+		
+	}
+	//score = Math.sqrt(score);
+	// console.log(score);
+	// throw "?";
 	if(len>0){
 		score = score/len;
 	}
@@ -11827,8 +12410,13 @@ R3D.drawMatches = function(matches, offXA,offYA, offXB,offYB, display, color){
 			if(pA==undefined){
 				var mA = match["A"];
 				var mB = match["B"];
+				if(Code.isNumber(mA)){
+					mA = match["from"];
+					mB = match["to"];
+				}
 				pA = mA["point"];
 				pB = mB["point"];
+				
 				pA = pA ? pA : mA.point();
 				pB = pB ? pB : mB.point();
 				//score = match["confidence"];

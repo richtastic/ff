@@ -1081,6 +1081,7 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	//end = Math.min(b.length-1,end);
 	//if(b===undefined){ b=a; a=new Array(); }
 	Code.emptyArray(a);
+	end = Math.min(b.length-1, end);
 	for(var j=0,i=start; i<=end; ++i,++j){
 		a[j] = b[i];
 	}
@@ -1342,6 +1343,7 @@ Code.normalizeArray = function(array){ // L2 length
 			array[i] = array[i]/length;
 		}
 	}
+	return array;
 }
 Code.sortFrequency = function(array){
 	if(array.length==0){
@@ -2642,6 +2644,12 @@ Code.LUVFromRGB = function(){ // CIE / LUV. : L=[0,100] U=[-134,220], V=[-140,12
 
 	//
 }
+Code.RGBtoYUV = function(rgb){ // in [0,1]
+	var y = rgb.x*0.299 + rgb.y*0.587 + rgb.z*0.114;
+	var u = rgb.x*-0.147 + rgb.y*-0.289 + rgb.z*0.463;
+	var v = rgb.x*0.615 + rgb.y*-0.515 + rgb.z*-0.100;
+	return new V3D(y,u,v);
+}
 Code.HSVFromRGB = function(vout, vin){//, r,g,b){ // in [0,1]
 	if(vin===undefined){
 		vin = vout;
@@ -3006,6 +3014,20 @@ Code.median = function(list,key){ // TODO: durrr median = middle of set
 	}
 	return mu / len;
 }
+Code.arrayVectorSub = function(a,b){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; --i; ){
+		c[i] = a[i] - b[i];
+	}
+	return c;
+}
+Code.arrayVectorAdd = function(a,b){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; --i; ){
+		c[i] = a[i] + b[i];
+	}
+	return c;
+}
 Code.arrayVectorLength = function(a){
 	var s = 0;
 	for(var i=a.length; --i; ){
@@ -3016,6 +3038,18 @@ Code.arrayVectorLength = function(a){
 Code.arrayScale = function(a, s){
 	for(var i=a.length; --i; ){
 		a[i] = s*a[i];
+	}
+	return a;
+}
+Code.arraySub = function(a, s){
+	for(var i=a.length; --i; ){
+		a[i] = a[i] - s;
+	}
+	return a;
+}
+Code.arrayClip = function(a, min, max){
+	for(var i=a.length; --i; ){
+		a[i] = Math.min(Math.max(a[i], min),max);
 	}
 	return a;
 }

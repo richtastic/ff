@@ -192,19 +192,65 @@ project typical numbers:
 
 APP TODO:
 
+- GOOD COLOR DISTANCE METRIC
+	- red is just as different from blue as it is from black
 
-- keep many corner puermutations
-	- don't need to calc vector since scale and angle are known
-	- don't pre-limit count
-	- get some corner score -- cornerA +/* cornerB
+		euclidean:
+			sqrt( |ra-rb|^2 + |ga-gb|^2 + |ba-bb|^2 )
+		?:
+			?
+		?:
+			?
+		?:
+			?
 
-- don't drop multiple corners in bundle adjustment
+	https://en.wikipedia.org/wiki/Color_difference
 
 
-- features = 2 corner point pairs (nearest neighbor0
-	- form a line
-		- gradient at ~3 points along the line are ~perp to line ... this restricts the possible points a lot
-- USE TWO ENDPOINTS TO DEFINE FEATURE ANGLE (2*oriented either way ???  = for center points)
+---- could keep top-matches & do another round of matches using only these tops
+
+
+
+try to combine colors in same way SIFT adds gradients:
+===== little summaries aggregated over
+	color is a magnitude: (light/dark) & 2/3 angles ?
+	- binning colors ~ just a lower res [not good differentiator]
+	- centers of mass / devecits [seems like a color averaging/scaling]
+	- histogram in sub-areas ~ averaging
+	> do aggregation at the COMPARE step
+		- for each sub-section:
+
+
+--- in iteritive RANSAC, scores of matches should be used in error metrics
+
+--- drop large corner-geometry features
+
+- tinkering with feature descriptor more
+	- size [3-5]
+	- falloff
+	- flat vs grad combinations
+	- blurred vs original
+	- rgb/hsv/..
+	- clamp high grads
+	- 2D vs 6d gradient vectors
+	- offsets from 0, min, averages, 
+	- 
+	other proprerties:
+	2nd derivative
+
+
+	- scale by entire 144*8 vectors as individual components
+	- can scale by maxium 144 vecto
+
+	- HSV ==> HUE IMPORATNT, SAT/VAL LESS SO
+
+	- combine multiple 'flat' metrics
+
+
+
+
+- allow for increasing (dynamic fat matching cut-offs)
+	- ~100 minimum
 
 
 ----- try to find scale space maxima for corner points

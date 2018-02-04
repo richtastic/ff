@@ -36,10 +36,13 @@
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
-new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
+new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
+//new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
+//new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
 }
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
@@ -165,7 +168,9 @@ return;
 
 
 var useCorners = false; // SIFT points are still more poor than corners
-var useSIFT = false;
+//var useCorners = true;
+//var useSIFT = false;
+var useSIFT = true;
 var useCornerGeometry = true;
 //var useCorners = false;
 var featuresA = null;
@@ -196,11 +201,22 @@ console.log(featuresA.length+" | "+featuresB.length);
 // }
 
 
-
-console.log(featuresA)
-// show initial feature sites
-//if(true){
 if(false){
+// default set corner size & orientation
+var lists = [featuresA,featuresB];
+for(var f=0; f<lists.length; ++f){
+	var features = lists[f];
+	for(var k=0; k<features.length; ++k){
+		var feature = features[k];
+		feature.z *= 10; // 1 -> size
+		feature.t = 0.0; // 0 rotation
+	}
+}
+}
+
+// show initial feature sites
+if(true){
+//if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
@@ -232,7 +248,7 @@ z=1
 				display.addChild(c);
 		}
 	}
-	return;
+	//return;
 }
 
 
@@ -396,8 +412,10 @@ z=1
 // var objectsA = objectList[0];
 // var objectsB = objectList[1];
 
-featuresA = R3D.keepGoodCornerFeatures(featuresA);
-featuresB = R3D.keepGoodCornerFeatures(featuresB);
+console.log(featuresA);
+
+// featuresA = R3D.keepGoodCornerFeatures(featuresA);
+// featuresB = R3D.keepGoodCornerFeatures(featuresB);
 
 console.log(featuresA.length+" v "+featuresB.length);
 
@@ -544,6 +562,10 @@ var matrixFrev = null;
 var doFatMatch = true;
 //var doFatMatch = false;
 if(doFatMatch){
+
+var oldStuff = true;
+
+if(oldStuff){
 // DO UNKNOWN-ALL FAT MATCHING
 console.log("FAT MATCH");
 var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
@@ -566,9 +588,41 @@ if(pointsA.length<100){
 //if(false){
 if(true){
 R3D.drawMatches(best, 0,0, imageMatrixA.width(),0, display);
+return;
+}
+
+}else{ // old vs new stuff
+
+
+//NEW:
+
+//fullMatchesForObjects
+var maxFeatures = 800;
+var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeatures);
+var F = matchData["F"];
+var matches = matchData["matches"];
+console.log(matchData)
+
+var matrixFfwd = F;
+var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+var pointsA = [];
+var pointsB = [];
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+//	console.log(match)
+	pointsA.push(match["from"]["point"]);
+	pointsB.push(match["to"]["point"]);
+}
+
+//if(false){
+if(true){
+R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, display);
+//R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 }
 
 return;
+} // end new stuff
 // 
 
 
@@ -621,8 +675,8 @@ console.log(matrixFfwd.toArray()+"");
 // }
 
 console.log("showRansac...");
-// if(true){
-if(false){
+if(true){
+//if(false){
 R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 return;
 }

@@ -534,7 +534,8 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 	//area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);
 	// get 16 separate bins
 	// circleMask = ImageMat.circleMask(insideSet,insideSet);
-	var gaussianMask = ImageMat.gaussianMask(insideSet,insideSet);
+	var sigma = insideSet * 2.0;
+	var gaussianMask = ImageMat.gaussianMask(insideSet,insideSet, sigma);
 	var bins = [];
 	var binCount = 8;
 	// for each grid component: 4x4 = 16
@@ -555,31 +556,32 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 					bin[b] += m*w;
 				}
 			}
-			
 		}
 	}
-
 	// convert bins into vector
 	var vector = [];
-	var vectorSize = 0;
 	for(i=0; i<bins.length; ++i){
 		var bin = bins[i];
 		for(j=0; j<bin.length; ++j){
 			var value = bin[j];
-			vectorSize += value;
 			vector.push(value);
 		}
 	}
+	var vectorSize = vector.length;
 	if(vectorSize>0){
+		
+		// subtract min vector
+		var min = Code.minArray(vector);
+		Code.arraySub(vector, min);
+		
 		// normalize vector ||m||
-		Code.normalizeArray(vector);
-		// skew vector? vector = Math.pow(vector, 0.5) ?
-		vector = ImageMat.pow(vector,0.5);
 		Code.normalizeArray(vector);
 
 		// clip high-value vector components
+		vector = ImageMat.pow(vector,0.25); // little better than clipping
 
-		// normalize vector ||m||
+		// Code.arrayClip(vector, 0.0, 0.2);
+		// Code.normalizeArray(vector);
 		return vector;
 	}
 	return null;
