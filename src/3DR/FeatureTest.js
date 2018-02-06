@@ -40,8 +40,8 @@
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
-//new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
+//new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
+new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
 //new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
 }
@@ -169,8 +169,8 @@ return;
 
 var useCorners = false; // SIFT points are still more poor than corners
 //var useCorners = true;
-//var useSIFT = false;
-var useSIFT = true;
+var useSIFT = false;
+//var useSIFT = true;
 var useCornerGeometry = true;
 //var useCorners = false;
 var featuresA = null;
@@ -570,6 +570,18 @@ if(oldStuff){
 console.log("FAT MATCH");
 var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
 var best = matching["best"];
+
+
+var valueFxn = function(a){
+	return a["score"];
+}
+var sigma = 1.5;
+var groupA = Code.dropOutliers(best, valueFxn, sigma);
+	var inA = groupA["inliers"];
+	var ouA = groupA["outliers"];
+	console.log("dropped: "+inA.length+" | "+ouA.length+" ("+(best.length-ouA.length)+")");
+//best = inA;
+
 var pointsA = [];
 var pointsB = [];
 for(i=0; i<best.length; ++i){
@@ -577,7 +589,7 @@ for(i=0; i<best.length; ++i){
 	pointsB.push(best[i]["B"]["point"]);
 	//console.log(pointsA[i]+" / "+pointsB[i]);
 }
-console.log(pointsA,pointsB);
+//console.log(pointsA,pointsB);
 
 if(pointsA.length<100){
 	console.log("low amount of good fat matches");

@@ -276,7 +276,7 @@ V3D.meanFromArray = function(pointList){
 	// for(i=0; i<len; ++i){
 	// 	pt = pointList[i];
 	// 	mean.add(pt);
-	// }
+	// }`
 	// mean.scale(1.0/len);
 	return V3D.infoFromArray(pointList)["mean"];
 }

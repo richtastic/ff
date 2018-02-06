@@ -534,7 +534,7 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 	//area = ImageMat.unpadFloat(area,outsideSet,outsideSet, padding,padding,padding,padding);
 	// get 16 separate bins
 	// circleMask = ImageMat.circleMask(insideSet,insideSet);
-	var sigma = insideSet * 2.0;
+	var sigma = insideSet * 2.0; // TODO: EXTERNALIZE THIS
 	var gaussianMask = ImageMat.gaussianMask(insideSet,insideSet, sigma);
 	var bins = [];
 	var binCount = 8;
@@ -552,7 +552,11 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 						a = Code.angleZeroTwoPi(a);
 					var w = gaussianMask[index];// weight on gaussian
 					//w = 1.0;
+					// SINGLE BIN:
 					var b = Math.min(Math.floor((a/Math.PI2)*binCount),binCount-1);
+					bin[b] += m*w;
+					// DUAL BINS: -- TO HELP WITH TRUNCATION ROUNDING
+					b = Math.min(Math.floor(( Code.angleZeroTwoPi(a+0.5*Math.PI2/binCount) / Math.PI2)*binCount),binCount-1);
 					bin[b] += m*w;
 				}
 			}

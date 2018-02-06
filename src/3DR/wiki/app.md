@@ -192,6 +192,27 @@ project typical numbers:
 
 APP TODO:
 
+--- KEYS to SIFT DESCRIPTOR:
+	- using histogram un-localizes the variables
+		- not averaging
+		- sums attributes in area
+			- minor shifts are tolerated
+			- minor changes in gradients are 'averaged' out
+
+	/ saturation (also called “chroma”)
+
+http://infohost.nmt.edu/tcc/help/pubs/colortheory/web/hsv.html
+
+
+-) SIFT histogram using gray-center RGB 8 quadrants w/ mag = gray-offset vector length
+-) color gradient histogram [average-color delta] 8-color quadrant
+-) SIFT histogram using hue angle & grayscale-RGB-length as magnitude
+-) 
+-) 
+-) 
+
+
+
 - GOOD COLOR DISTANCE METRIC
 	- red is just as different from blue as it is from black
 
