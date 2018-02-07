@@ -192,6 +192,11 @@ project typical numbers:
 
 APP TODO:
 
+--- WHAT DO RESULTS AT RANSAC LOOK LIKE, BEFORE LIMITED-MATCHING?
+	> RECHECK R3D.matchObjectsSubset
+---
+
+
 --- KEYS to SIFT DESCRIPTOR:
 	- using histogram un-localizes the variables
 		- not averaging
@@ -204,10 +209,10 @@ APP TODO:
 http://infohost.nmt.edu/tcc/help/pubs/colortheory/web/hsv.html
 
 
--) SIFT histogram using gray-center RGB 8 quadrants w/ mag = gray-offset vector length
--) color gradient histogram [average-color delta] 8-color quadrant
--) SIFT histogram using hue angle & grayscale-RGB-length as magnitude
--) 
+x) SIFT histogram using gray-center RGB 8 quadrants w/ mag = gray-offset vector length
+x) color gradient histogram [average-color delta] 8-color quadrant
+x) SIFT histogram using hue angle & grayscale-RGB-length as magnitude
+x) SIFT histogram R/G/B values
 -) 
 -) 
 
@@ -303,7 +308,7 @@ try to combine colors in same way SIFT adds gradients:
 
 
 
-
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 - allow for multiple point2d with different scales at same point
