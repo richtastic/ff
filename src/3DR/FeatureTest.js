@@ -36,11 +36,11 @@
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
+//new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
 //new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
 //new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
@@ -624,6 +624,9 @@ var pointsB = [];
 for(var i=0; i<matches.length; ++i){
 	var match = matches[i];
 //	console.log(match)
+// console.log(match);
+// console.log(match["from"]);
+// console.log(match["from"]["point"]);
 	pointsA.push(match["from"]["point"]);
 	pointsB.push(match["to"]["point"]);
 }
@@ -633,6 +636,57 @@ if(true){
 R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, display);
 R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 }
+
+
+/*
+// MAKE V4D points for generating relative transforms
+var pointsA = [];
+var pointsB = [];
+// var transforms = [];
+var matching = [];
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+	console.log(match);
+	throw "?"
+	var score = match["score"];
+	var A = match["from"];
+	var B = match["to"];
+	var pA = A["point"];
+	var pB = B["point"];
+	var sA = A["size"];
+	var sB = B["size"];
+	var aA = A["angle"];
+	var aB = B["angle"];
+	//var vA = new V4D(pA.x,pA.y,);
+	// var matrix = R3D.matrixTransform2D(null,null, sA,sB, aA,aB);
+
+	// var vA = new V4D(pA.x,pA.y,sA,aA);
+	// var vB = new V4D(pB.x,pB.y,sB,aB);
+	// pointsA.push(vA);
+	// pointsB.push(vB);
+	// transforms.push(matrix);
+
+	var fr = {"point":pA, "size":sA, "angle":aA};
+	var to = {"point":pB, "size":sB, "angle":aB};
+	var m = {"score":score, "A":null, "B":null, "from":fr, "to":to};
+	matching.push(m);
+}
+console.log(pointsA);
+console.log(pointsB);
+// console.log(transforms);
+// = function(locationA,locationB, sizeA,sizeB, angleA,angleB){
+*/
+
+
+
+//var info = R3D.refinedMatchPoints(imageMatrixA,imageMatrixB, pointsA,pointsB);
+// var transforms = info["transforms"];
+// var pointsA = info["pointsA"];
+// var pointsB = info["pointsB"];
+//var yaml = R3D.outputSparsePoints(imageMatrixA,imageMatrixB, pointsA,pointsB, transforms);
+var yaml = R3D.outputMatchPoints(imageMatrixA, imageMatrixB, matrixFfwd, matches, yaml);
+console.log(yaml)
+
 
 return;
 } // end new stuff

@@ -5397,66 +5397,83 @@ var beforeCount = matches.length;
 */
 }
 
-App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
-	var timestampNow = Code.getTimeStampFromMilliseconds();
-	var widA = imageMatrixA.width();
-	var heiA = imageMatrixA.height();
-	var widB = imageMatrixB.width();
-	var heiB = imageMatrixB.height();
 
+App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
+	// imageMatrixA, imageMatrixB, F, matches, additionalParams
+	// var parameters = {};
+	// 	parameters[""] = null;
 	var yaml = new YAML();
+	
 	yaml.writeComment("3DR Features File 0");
 	yaml.writeBlank();
 	yaml.writeString("title", "features");
 	yaml.writeString("created", timestampNow);
-
 	yaml.writeString("from", viewA.id());
 	yaml.writeString("to", viewB.id());
-
-	yaml.writeObjectStart("fromSize");
-		yaml.writeNumber("x",widA);
-		yaml.writeNumber("y",heiA);
-	yaml.writeObjectEnd();
-	yaml.writeObjectStart("toSize");
-		yaml.writeNumber("x",widB);
-		yaml.writeNumber("y",heiB);
-	yaml.writeObjectEnd();
-
-	yaml.writeObjectStart("F");
-		var Fnorm = F.copy();
-			Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
-			Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
-		Fnorm.saveToYAML(yaml);
-	yaml.writeObjectEnd();
-	yaml.writeNumber("count", matches.length);
-	yaml.writeArrayStart("matches");
-	var i, len=matches.length;
-	for(i=0; i<len; ++i){
-		var match = matches[i];
-		var score = match["score"];
-		var fr = match["from"];
-		var to = match["to"];
-		yaml.writeObjectStart();
-			yaml.writeObjectStart("fr");
-				yaml.writeNumber("i", match["A"]);
-				yaml.writeNumber("x", fr["point"].x/widA);
-				yaml.writeNumber("y", fr["point"].y/heiA);
-				yaml.writeNumber("s", fr["size"]/widA);
-				yaml.writeNumber("a", fr["angle"]);
-			yaml.writeObjectEnd();
-			yaml.writeObjectStart("to");
-				yaml.writeNumber("i", match["B"]);
-				yaml.writeNumber("x", to["point"].x/widB);
-				yaml.writeNumber("y", to["point"].y/heiB);
-				yaml.writeNumber("s", to["size"]/widB);
-				yaml.writeNumber("a", to["angle"]);
-			yaml.writeObjectEnd();
-		yaml.writeObjectEnd();
-	}
-	yaml.writeArrayEnd();
-	yaml.writeBlank();
-	return yaml.toString();
+	
+	return R3D.outputMatchPoints(imageMatrixA, imageMatrixB, F, matches, yaml);
 }
+
+// App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, viewB, imageMatrixA, imageMatrixB){
+// 	var timestampNow = Code.getTimeStampFromMilliseconds();
+// 	var widA = imageMatrixA.width();
+// 	var heiA = imageMatrixA.height();
+// 	var widB = imageMatrixB.width();
+// 	var heiB = imageMatrixB.height();
+
+// 	var yaml = new YAML();
+// 	yaml.writeComment("3DR Features File 0");
+// 	yaml.writeBlank();
+// 	yaml.writeString("title", "features");
+// 	yaml.writeString("created", timestampNow);
+
+// 	yaml.writeString("from", viewA.id());
+// 	yaml.writeString("to", viewB.id());
+
+// 	yaml.writeObjectStart("fromSize");
+// 		yaml.writeNumber("x",widA);
+// 		yaml.writeNumber("y",heiA);
+// 	yaml.writeObjectEnd();
+// 	yaml.writeObjectStart("toSize");
+// 		yaml.writeNumber("x",widB);
+// 		yaml.writeNumber("y",heiB);
+// 	yaml.writeObjectEnd();
+
+// 	yaml.writeObjectStart("F");
+// 		var Fnorm = F.copy();
+// 			Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
+// 			Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
+// 		Fnorm.saveToYAML(yaml);
+// 	yaml.writeObjectEnd();
+// 	yaml.writeNumber("count", matches.length);
+// 	yaml.writeArrayStart("matches");
+// 	var i, len=matches.length;
+// 	for(i=0; i<len; ++i){
+// 		var match = matches[i];
+// 		var score = match["score"];
+// 		var fr = match["from"];
+// 		var to = match["to"];
+// 		yaml.writeObjectStart();
+// 			yaml.writeObjectStart("fr");
+// 				yaml.writeNumber("i", match["A"]);
+// 				yaml.writeNumber("x", fr["point"].x/widA);
+// 				yaml.writeNumber("y", fr["point"].y/heiA);
+// 				yaml.writeNumber("s", fr["size"]/widA);
+// 				yaml.writeNumber("a", fr["angle"]);
+// 			yaml.writeObjectEnd();
+// 			yaml.writeObjectStart("to");
+// 				yaml.writeNumber("i", match["B"]);
+// 				yaml.writeNumber("x", to["point"].x/widB);
+// 				yaml.writeNumber("y", to["point"].y/heiB);
+// 				yaml.writeNumber("s", to["size"]/widB);
+// 				yaml.writeNumber("a", to["angle"]);
+// 			yaml.writeObjectEnd();
+// 		yaml.writeObjectEnd();
+// 	}
+// 	yaml.writeArrayEnd();
+// 	yaml.writeBlank();
+// 	return yaml.toString();
+// }
 
 App3DR.ProjectManager.prototype._tripleMatchesToYAML = function(tripleInfo, viewA, viewB, viewC, imageMatrixA, imageMatrixB, imageMatrixC){
 	var timestampNow = Code.getTimeStampFromMilliseconds();

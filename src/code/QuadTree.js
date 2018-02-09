@@ -191,7 +191,7 @@ QuadTree.prototype.insertObject = function(obj){
 	var isInside = min.x<=point.x && point.x<max.x && min.y<=point.y && point.y<max.y;
 	if(isInside){
 		this._root.insertObject(obj,this._toPoint);
-	}else if(this._autoResize){
+	}else if(this._autoResize){ // is this broke?
 		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
 		var objects = this.toArray();
 		objects.push(obj);

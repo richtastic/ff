@@ -5982,6 +5982,33 @@ R3D.denormalizeSIFTObjects = function(features, width, height){
 }
 R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, imageMatrixB, maxCount){
 	console.log("fullMatchesForObjects");
+
+	// TODO: duplicated points with different sizes
+	
+/*
+	// keep inliers
+		// var valueErrorFxn = function(a){
+		// 	var s = a["score"]; // image score
+		// 	var e = a["error"]; // F distance
+		// 	//var value = s*e;
+		// 	//var value = s;
+		// 	var value = e;
+		// 	return value;
+		// }
+		var valueScoreFxn = function(a){
+			var s = a["score"]; // image score
+			var value = s;
+			return value;
+		}
+		var group = Code.dropOutliers(objectsAIn, valueScoreFxn, 1.0);
+			objectsAIn = group["inliers"];
+console.log("DROPPING A: "+group["outliers"].length+" -> "+objectsAIn.length);
+		var group = Code.dropOutliers(objectsBIn, valueScoreFxn, 1.0);
+			objectsBIn = group["inliers"];
+console.log("DROPPING B: "+group["outliers"].length+" -> "+objectsBIn.length);
+	*/
+
+
 	var objectsA = objectsAIn;
 	var objectsB = objectsBIn;
 	if(maxCount){
@@ -5996,11 +6023,54 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	var best = matching["best"];
 	console.log(best);
 	console.log(best.length);
+
+
+
+
+
+
+	
+	var scores = [];
+	for(i=0; i<best.length; ++i){
+		var match = best[i];
+		var score = match["score"];
+score = Math.pow(score, 0.5);
+		scores.push(score);
+	}
+	var meanScores = Code.mean(scores);
+	var sigmaScores = Code.stdDev(scores, meanScores);
+
+meanScores = Math.pow(meanScores,2);
+sigmaScores = Math.pow(sigmaScores,2);
+
+	console.log("SCORE BEST DATA: "+meanScores+" +/- "+sigmaScores);
+
+	var limitScoreSearch = meanScores + sigmaScores * 1.0;
+	//limitScoreSearch = limitScoreSearch * 1.0;
+	console.log("limitScoreSearch: "+(limitScoreSearch)+" / "+(limitScoreSearch/(575957429 * 1000)));
+	//var limitScoreRatio = 1.0;
+	var limitScoreRatio = 0.90;
+	//var limitScoreRatio = 0.75;
+
+
+	// TODO: use exiting matches to find sigma 1.0 additions
+	// var matches = result["matches"];
+	// var ptsA = matches[0];
+	// var ptsB = matches[1];
+
+
+	//
+
+
+
 	var pointsA = [];
 	var pointsB = [];
+	var scores = [];
 	for(i=0; i<best.length; ++i){
-		var A = best[i]["A"];
-		var B = best[i]["B"];
+		var match = best[i];
+		scores.push(match["score"]);
+		var A = match["A"];
+		var B = match["B"];
 		var aP = A["point"];
 		var bP = B["point"];
 		var a = new V3D(aP.x,aP.y, A["index"]);
@@ -6008,6 +6078,11 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		pointsA.push(a);
 		pointsB.push(b);
 	}
+
+
+	console.log("GRAPH THIS:");
+	Code.printMatlabArray(scores);
+
 	var bestLength = best.length;
 	if(best.length<10){
 		console.log("not enough best matches");
@@ -6015,11 +6090,12 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	}
 
 	// BROAD F SEARCH - 
-	console.log("broad match...");
+	console.log("broad match... "+pointsA.length+" - "+pointsB.length);
 	var matrixFfwd = null;
 	var error = 1.0; // error in pixels -- TODO: FROM INPUT
 	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, error, matrixFfwd);
-	var minMatchCount = 20;
+	//console.log("10%: "+(pointsA.length*0.1)+" & "+(pointsB.length*0.1));
+	var minMatchCount = Math.max(20,0.1*Math.min(pointsA.length,pointsB.length)); // ~10% ?
 	matrixFfwd = result["F"];
 	var recheckCount = 2; 
 	var matchLength = result["matches"][0].length;
@@ -6046,11 +6122,41 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 
 
 
+/*
+	// see what ransac output is:
+	var matches = result["matches"];
+	var pointsA = matches[0];
+	var pointsB = matches[1];
+	var list = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var pA = pointsA[i];
+		var pB = pointsB[i];
+		list.push({"from":{"index":0, "sad":null, "angle":0, "size":0, "point":pA},
+			"to":{"index":0, "sad":null, "angle":0, "size":0, "point":pB},
+			"a":0, "b":0, "score":0,
+			"pointA":pA,
+			"pointB":pB});
+	}
+	var output = {"F":matrixFfwd, "Finv":matrixFrev, "matches":list};
+	return output;
+*/
+
+
+
+
+
+
+
+
+
+
+
 
 	// TODO: use exiting matches to find sigma 1.0 additions
-	var matches = nextResult["matches"];
+	var matches = result["matches"];
 	var ptsA = matches[0];
 	var ptsB = matches[1];
+
 	var errorInfo = R3D.fundamentalMatrixError(matrixFfwd, ptsA, ptsB, true);
 	console.log(errorInfo);
 	var errorA = errorInfo["A"];
@@ -6061,8 +6167,8 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	// errorB = Math.sqrt(errorB);
 	// errorA = 0.50 * errorA;
 	// errorB = 0.50 * errorB;
-	errorA = errorA / ptsA.length;
-	errorB = errorB / ptsA.length;
+	// errorA = errorA / ptsA.length;
+	// errorB = errorB / ptsB.length;
 
 
 var minCount = Math.min(objectsAIn.length,objectsBIn.length);
@@ -6088,8 +6194,9 @@ var highestMatchCount = 0;
 //		console.log("loop: "+loopCount+" = "+bestMatchCount);
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, errorB);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, errorA);
-		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, 0.75);
+		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
 		var matchesBest = matching["best"];
+//		console.log(matchesBest)
 		// 
 		// add distance error term to each match
 		var totalScore = 0;
@@ -6114,6 +6221,7 @@ var highestMatchCount = 0;
 			var error = distA*distA + distB*distB;
 			matchesBest[i]["error"] = error;
 		}
+		/*
 		// keep inliers
 		var valueErrorFxn = function(a){
 			var s = a["score"]; // image score
@@ -6135,6 +6243,7 @@ var highestMatchCount = 0;
 		var group = Code.dropOutliers(matchesBest, valueScoreFxn, 2.0);
 		var inliers = group["inliers"];
 		matchesBest = inliers;
+		*/
 
 		var ptsA = [];
 		var ptsB = [];
@@ -6181,10 +6290,11 @@ var highestMatchCount = 0;
 				maximumSamplingCount = bestMatchCount;
 				maximumSamplingF = matrixFfwd;
 			}
-			if(wasError==averageError){
-				break;
-			}
+			// if(wasError==averageError){
+			// 	break;
+			// }
 		}else{
+			console.log("break early");
 			break;
 		}
 		// errorA *= 0.5;
@@ -6319,7 +6429,6 @@ var output = [];
 			// ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y){ 
 		}
 	}
-	console.log("cnt: "+cnt)
 	return output;
 }
 
@@ -6457,6 +6566,7 @@ R3D.bestPointNeedleInHaystack = function(needle, haystack){ // point in haystack
 	}
 	return new V2D(bestPoint.x,bestPoint.y);
 }
+
 // var result = R3D.refineTransformNonlinearGD(imageA,imageB, pointA,scaleA,angleA,skewXA,skewYA, pointB,scaleB,angleB);
 R3D.refineTransformNonlinearGD = function(imageA,imageB, pointA,scaleA,angleA, pointB,scaleB,angleB, scaleAToB,angleAToB,skewXA,skewYA,tranXA,tranYA, ignoreSkew){ // nonlinearLeastSquares
 	ignoreSkew = ignoreSkew!==undefined ? ignoreSkew : true;
@@ -6552,7 +6662,7 @@ REFINER += 1;
 
 pointA.t = 0;
 pointB.t = 0;
-		var compareSize = 11;
+var compareSize = R3D.sadBinOctantEdgeSize();
 		var neighborhoodSize = 3*compareSize;
 		// find optimal location of image in other image
 		// TODO: ASYMM SCALING
@@ -7088,6 +7198,65 @@ R3D._getYAMLSparseObject = function(yaml){
 	return object;
 }
 
+
+R3D.outputMatchPoints = function(imageMatrixA, imageMatrixB, F, matches, yaml){
+	yaml = yaml!==undefined? yaml : new YAML();
+
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+	var widA = imageMatrixA.width();
+	var heiA = imageMatrixA.height();
+	var widB = imageMatrixB.width();
+	var heiB = imageMatrixB.height();
+
+	yaml.writeObjectStart("fromSize");
+		yaml.writeNumber("x",widA);
+		yaml.writeNumber("y",heiA);
+	yaml.writeObjectEnd();
+	yaml.writeObjectStart("toSize");
+		yaml.writeNumber("x",widB);
+		yaml.writeNumber("y",heiB);
+	yaml.writeObjectEnd();
+
+	if(F){
+		yaml.writeObjectStart("F");
+			var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB));
+			// var Fnorm = F.copy();
+			// 	Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
+			// 	Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
+			Fnorm.saveToYAML(yaml);
+		yaml.writeObjectEnd();
+	}
+
+	yaml.writeNumber("count", matches.length);
+	yaml.writeArrayStart("matches");
+	var i, len=matches.length;
+	for(i=0; i<len; ++i){
+		var match = matches[i];
+		var score = match["score"];
+		var fr = match["from"];
+		var to = match["to"];
+		yaml.writeObjectStart();
+			yaml.writeObjectStart("fr");
+				yaml.writeNumber("i", match["A"]);
+				yaml.writeNumber("x", fr["point"].x/widA);
+				yaml.writeNumber("y", fr["point"].y/heiA);
+				yaml.writeNumber("s", fr["size"]/widA);
+				yaml.writeNumber("a", fr["angle"]);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("to");
+				yaml.writeNumber("i", match["B"]);
+				yaml.writeNumber("x", to["point"].x/widB);
+				yaml.writeNumber("y", to["point"].y/heiB);
+				yaml.writeNumber("s", to["size"]/widB);
+				yaml.writeNumber("a", to["angle"]);
+			yaml.writeObjectEnd();
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+	yaml.writeBlank();
+	return yaml.toString();
+}
+
 R3D.inputMatchPoints = function(yaml){
 	var object = R3D._getYAMLSparseObject(yaml);
 	console.log(object);
@@ -7104,10 +7273,12 @@ R3D.inputMatchPoints = function(yaml){
 		var match = matches[i];
 		var fr = match["fr"];
 		var to = match["to"];
+		var frI = fr["i"];
 		var frX = fr["x"];
 		var frY = fr["y"];
 		var frS = fr["s"];
 		var frA = fr["a"];
+		var toI = to["i"];
 		var toX = to["x"];
 		var toY = to["y"];
 		var toS = to["s"];
@@ -7143,7 +7314,8 @@ R3D.inputMatchPoints = function(yaml){
 		var sizeX = Fsize["width"];
 		var sizeY = Fsize["height"];
 		// transform F for appropriate image size:
-
+		// WHAT IS THIS ??????
+		/*
 		var scaleA = 2.0;
 		var scaleB = 2.0;
 		// F for visualizing
@@ -7151,6 +7323,7 @@ R3D.inputMatchPoints = function(yaml){
 			Floc = Matrix.mult( Floc, Matrix.transform2DScale(new Matrix(3,3).identity(), 1.0/scaleA, 1.0/scaleA) );
 			Floc = Matrix.mult( Matrix.transform2DScale(new Matrix(3,3).identity(), 1.0/scaleB, 1.0/scaleB), Floc );
 		F = Floc;
+		*/
 
 	}
 	var imageFrom = object["imageFrom"];
@@ -7467,6 +7640,150 @@ R3D.imageFromParameters = function(imageMatrix, point,scale,angle,skewX,skewY, s
 R3D.scoreSADFromPoints = function(){
 	// ..
 }
+
+
+
+
+
+// DENSE-type stuff
+
+/*
+TODO: PREVIOUS 1:1 compare was 11x11
+=> NOW WANT:
+3*4 = 12x12
+3*5 = 15x15
+3*6 = 18
+3*7 = 21x21
+3*8 = 24
+--------
+4*4 = 16
+4*6 = 20
+4*6 = 24
+--------
+*/
+
+R3D._SAD_HISTOGRAM_SIZE = 4;
+R3D._SAD_HISTOGRAM_COUNT = 3; // around minimum usable
+// R3D._SAD_HISTOGRAM_SIZE = 5;
+// R3D._SAD_HISTOGRAM_COUNT = 3; // 3x3
+// R3D._SAD_HISTOGRAM_SIZE = 8;
+// R3D._SAD_HISTOGRAM_COUNT = 4; // 4x4
+// R3D._SAD_HISTOGRAM_SIZE = 8;
+// R3D._SAD_HISTOGRAM_COUNT = 8; /// sloooow
+R3D._SAD_HISTOGRAM_PIXELS = R3D._SAD_HISTOGRAM_SIZE * R3D._SAD_HISTOGRAM_COUNT;
+R3D.sadBinOctantEdgeSize = function(){
+	return R3D._SAD_HISTOGRAM_PIXELS;
+}
+R3D._SAD_GAUSSIAN_MASK = null;
+R3D.sadBinOctantGaussian = function(){
+	if(!R3D._SAD_GAUSSIAN_MASK){
+		var size = R3D.sadBinOctantEdgeSize();
+		var sigma = size * 2.0;
+		R3D._SAD_GAUSSIAN_MASK = ImageMat.gaussianMask(size,size, sigma);
+	}
+	return R3D._SAD_GAUSSIAN_MASK;
+}
+R3D.sadBinOctantVector = function(image, offX,offY){
+	var binSize = 8;
+	var cols = R3D._SAD_HISTOGRAM_COUNT;
+	var rows = R3D._SAD_HISTOGRAM_COUNT;
+	var edgeSize = R3D._SAD_HISTOGRAM_SIZE;
+	var groupCount = cols*rows;
+	var pixelsCol = cols*edgeSize;
+	var pixelsRow = rows*edgeSize;
+	var vectorCount = groupCount * binSize;
+	var vector = Code.newArrayZeros(vectorCount);
+	var v = new V3D();
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
+	var imageWidth = image.width();
+//var weights = R3D.sadBinOctantGaussian();
+	for(var j=0; j<pixelsRow; ++j){
+		for(var i=0; i<pixelsCol; ++i){
+			var index = (j+offY)*imageWidth + (i+offX);
+			//v.set(red[index]-0.5, grn[index]-0.5,blu[index]-0.5);
+			v.x = red[index]-0.5;
+			v.y = grn[index]-0.5;
+			v.z = blu[index]-0.5;
+			var groupIndex = Math.floor(j/edgeSize)*rows + Math.floor(i/edgeSize);
+			var binIndex = (v.x >= 0 ? 4 : 0) + (v.y >= 0 ? 2 : 0) + (v.z >= 0 ? 1 : 0);
+			var vectorIndex = groupIndex*binSize + binIndex;
+// var weightIndex = j*pixelsCol + i;
+// var weight = weights[weightIndex];
+	var weight = 1.0;
+			vector[vectorIndex] += v.length() * weight; // possibly squared length ? 
+		}
+	}
+	var min = Code.minArray(vector);
+	Code.arraySub(vector, min);
+	Code.normalizeArray(vector);
+	return vector;
+}
+R3D.sadBinOctantScore = function(vectorA,vectorB){
+	var score = 0;
+	for(var i=vectorA.length; i--; ){
+		score += Math.abs(vectorA[i]-vectorB[i]);
+	}
+	return score/vectorA.length;
+}
+R3D.sadBinOctantImageScore = function(imageA,aX,aY, imageB,bX,bY){ // histogram-binned sum of absolute differences
+	var vectorA = R3D.sadBinOctantVector(imageA,aX,aY);
+	var vectorB = R3D.sadBinOctantVector(imageB,bX,bY);
+	return R3D.sadBinOctantScore(vectorA,vectorB);
+}
+R3D.searchNeedleHaystackImageFlatSADBin = function(needle, haystack){ // needle assumed to be of size: R3D.sadBinOctantEdgeSize();
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth*resultHeight;
+	if(resultCount<=0){
+		return null;
+	}
+	var i, j;
+	var result = new Array(resultCount);
+	for(j=0; j<resultHeight; ++j){
+		for(i=0; i<resultWidth; ++i){
+			var resultIndex = j*resultWidth + i;
+			var score = R3D.sadBinOctantImageScore(needle,0,0, haystack,i,j);
+			result[resultIndex] = score;
+		}
+	}
+	return {"value":result, "width":resultWidth, "height":resultHeight};
+}
+R3D.matrixTransform2D = function(locationA,locationB, sizeA,sizeB, angleA,angleB){
+	var matrix = new Matrix(3,3).identity();
+	if(sizeA && sizeB){
+		matrix = Matrix.transform2DScale(matrix,sizeB/sizeA);
+	}
+	if(angleA && angleB){
+		matrix = Matrix.transform2DRotate(matrix,angleB-angleA);
+	}
+	if(locationA && locationB){
+		matrix = Matrix.transform2DTranslate(matrix,pointB.x-pointA.x,pointB.y-pointA.y);
+	}
+	return matrix;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 R3D.vectorFromParameters = function(sA,imageMatrixA, refine){
 	var size = 20; // 16x16 + gradient
 	var point = sA.point().scale(imageMatrixA.width(),imageMatrixA.height());
@@ -8824,6 +9141,10 @@ R3D.limitedObjectSearchFromF = function(featuresA,imageMatrixA, featuresB,imageM
 		var featureA = featuresA[j];
 		var pointA = featureA["point"];
 		var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
+
+// TODO:
+// if epipole is not at infinity, only search a half-line
+
 		// find relevant B points
 		putatives[j] = [];
 		for(i=0; i<featuresB.length; ++i){
@@ -8838,7 +9159,7 @@ R3D.limitedObjectSearchFromF = function(featuresA,imageMatrixA, featuresB,imageM
 	}
 	return putatives;
 }
-R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, minimumRatio){
+R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, minimumRatio, minScore){
 	var i, j, k;
 	var matches = [];
 	var matchesA = Code.newArrayArrays(objectsA.length);
@@ -8959,14 +9280,18 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, mini
 					var objectB = mB["B"];
 					var score = lA[0]["score"];
 					var scoreRank = null;
+					var scoreA, scoreB;
 					if(lA.length>1 && lB.length>1){
-						var scoreA = lA[0]["score"]/lA[1]["score"];
-						var scoreB = lB[0]["score"]/lB[1]["score"];
-						scoreRank = Math.min(scoreA,scoreB);
+						scoreA = lA[0]["score"]/lA[1]["score"];
+						scoreB = lB[0]["score"]/lB[1]["score"];
+						scoreRank = Math.max(scoreA,scoreB);
 					}
 					//score = score * scoreRank;
 					//var score = scoreRank;
-					if(scoreRank!==null){
+					var passScoreLimit = !minScore || (scoreA<minScore && scoreB<minScore);
+					var passRankLimit = (scoreRank!==null && scoreRank<minimumRatio) || (scoreRank===null && !minScore);
+					var pass = passScoreLimit && passRankLimit;
+					if(pass){
 						//if(scoreRank<0.999){
 						//if(scoreRank<0.99){
 						//if(scoreRank<0.95){
@@ -8976,10 +9301,9 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, mini
 						//if(scoreRank<0.70){
 						//if(scoreRank<0.666){
 						//if(scoreRank<0.50){
-						if(scoreRank<minimumRatio){
 							var match = {"A":objectA, "B":objectB, "score":score, "a":objectA["index"], "b":objectB["index"]};
 							bestMatches.push(match);
-						}
+						//}
 					}
 					matchFound = true;
 				}
@@ -9032,9 +9356,11 @@ R3D.compareSADVectorBoth = function(vectorA, vectorB){
 	//return Math.pow(sF,0.5) * sS;
 
 	//console.log( sS, sG);
-
+//return sS + sF; // eh
 	//return sS*sF;
-	return (sF*sS)*(sF+sS); // better
+	var score = (sF*sS)*(sF+sS); // better
+	//score = Math.pow(score,0.5);
+	return score;
 	
 	/*
 	//return sF * Math.pow(sG,0.5); // gradient more important
@@ -12831,7 +13157,7 @@ R3D.drawMatches = function(matches, offXA,offYA, offXB,offYB, display, color){
 			var score = match.score;
 			var pA = match.pointA;
 			var pB = match.pointB;
-			if(pA==undefined){
+			if(pA===undefined){
 				var mA = match["A"];
 				var mB = match["B"];
 				if(Code.isNumber(mA)){

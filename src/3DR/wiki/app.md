@@ -192,9 +192,20 @@ project typical numbers:
 
 APP TODO:
 
---- WHAT DO RESULTS AT RANSAC LOOK LIKE, BEFORE LIMITED-MATCHING?
-	> RECHECK R3D.matchObjectsSubset
----
+
+-- revisit dense-match
+	- new SAD score w/o grad
+	- convert result to 'scale difference' image
+
+- retry 
+
+
+- roll up dense code into R3D fxn
+
+
+
+- one-sided R3D match search for epipolar lines inside/near image
+
 
 
 --- KEYS to SIFT DESCRIPTOR:
@@ -429,15 +440,6 @@ fullMatchesForObjects
 
 
 
-
-
-
-
-- revisit matching feature scoring ... SIFT / SAD / ...
-	> still have bad matches in triple
-
-- roll up medium code into R3D fxn
-- roll up dense code into R3D fxn
 
 
 - triangulate.html broke

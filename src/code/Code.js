@@ -1118,6 +1118,7 @@ Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
 };
 Code.truncateArray = function(a,length){
+	// TODO: splice em out
 	while(a.length>length){ a.pop(); }
 };
 Code.getElements = function(element, fxn, stop, arr){
@@ -7731,7 +7732,8 @@ Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
 }
 
-Code.dropOutliers = function(list, valueFxn, sigmas){
+Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly){
+	rightOnly = rightOnly!==undefined ? rightOnly : true;
 	if(list.length<=1){
 		return {"outliers":[], "inliers":Code.copyArray(list)};
 	}
@@ -7759,8 +7761,12 @@ Code.dropOutliers = function(list, valueFxn, sigmas){
 	var outliers = [];
 	for(i=0; i<count; ++i){
 		value = values[i] - mean;
+		var shouldKeep = Math.abs(value) < maxValue;
+		if(rightOnly){
+			shouldKeep = value < maxValue;
+		} // left only: -value 
 //		console.log("i: "+values[i]+" / "+mean+" = |"+value+"|  <?<  "+maxValue);
-		if( Math.abs(value) < maxValue){
+		if(shouldKeep){
 //			console.log(". YES: "+value+" < "+maxValue);
 			keep.push(list[i]);
 		}else{
