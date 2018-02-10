@@ -7662,10 +7662,16 @@ TODO: PREVIOUS 1:1 compare was 11x11
 --------
 */
 
-R3D._SAD_HISTOGRAM_SIZE = 4;
-R3D._SAD_HISTOGRAM_COUNT = 3; // around minimum usable
+//TESTING:
+// R3D._SAD_HISTOGRAM_SIZE = 2;
+// R3D._SAD_HISTOGRAM_COUNT = 4;
+
+// R3D._SAD_HISTOGRAM_SIZE = 4;
+// R3D._SAD_HISTOGRAM_COUNT = 3; // around minimum usable - localization
 // R3D._SAD_HISTOGRAM_SIZE = 5;
 // R3D._SAD_HISTOGRAM_COUNT = 3; // 3x3
+R3D._SAD_HISTOGRAM_SIZE = 4;
+R3D._SAD_HISTOGRAM_COUNT = 4; // around maximum usable - speed
 // R3D._SAD_HISTOGRAM_SIZE = 8;
 // R3D._SAD_HISTOGRAM_COUNT = 4; // 4x4
 // R3D._SAD_HISTOGRAM_SIZE = 8;
@@ -7698,7 +7704,7 @@ R3D.sadBinOctantVector = function(image, offX,offY){
 	var grn = image.grn();
 	var blu = image.blu();
 	var imageWidth = image.width();
-//var weights = R3D.sadBinOctantGaussian();
+// var weights = R3D.sadBinOctantGaussian();
 	for(var j=0; j<pixelsRow; ++j){
 		for(var i=0; i<pixelsCol; ++i){
 			var index = (j+offY)*imageWidth + (i+offX);
@@ -7711,8 +7717,8 @@ R3D.sadBinOctantVector = function(image, offX,offY){
 			var vectorIndex = groupIndex*binSize + binIndex;
 // var weightIndex = j*pixelsCol + i;
 // var weight = weights[weightIndex];
-	var weight = 1.0;
-			vector[vectorIndex] += v.length() * weight; // possibly squared length ? 
+			//vector[vectorIndex] += v.length() * weight; // possibly squared length ? 
+			vector[vectorIndex] += v.length();
 		}
 	}
 	var min = Code.minArray(vector);

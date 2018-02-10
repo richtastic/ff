@@ -195,6 +195,9 @@ QuadTree.prototype.insertObject = function(obj){
 		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
 		var objects = this.toArray();
 		objects.push(obj);
+
+
+		// TODO: keep track of previous size and make sure next size is at least covering previoius limits
 		
 		// reinit
 		this.clear();

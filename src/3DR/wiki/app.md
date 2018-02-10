@@ -193,11 +193,16 @@ project typical numbers:
 APP TODO:
 
 
+SAD-SIFT SCORE:
+		-- a fair amount of drift on non-distinct items
+	- normalized: matches a lot of shitty things as it trails off of seed point
+	- unnormalized: 
+
+
+
 -- revisit dense-match
 	- new SAD score w/o grad
 	- convert result to 'scale difference' image
-
-- retry 
 
 
 - roll up dense code into R3D fxn
@@ -205,6 +210,9 @@ APP TODO:
 
 
 - one-sided R3D match search for epipolar lines inside/near image
+
+
+- color 3D dots the color of the pixel(s) it subsumes
 
 
 
