@@ -14,6 +14,35 @@ function ffLoadedFxn(){
 function classesLoadedFxn(){
 	var features = new FeatureTest();
 	return;
+	/*
+	var points = [];
+	var a = 5;
+	var b = 2;
+	var c = 3;
+	var samples = 4;
+	for(var i=0; i<samples; ++i){
+		var x = 0 + i;
+		var y = a*x*x + b*x + c;
+		points.push(new V2D(x,y));	
+	}
+	// points.push(new V2D(0,0));
+	// points.push(new V2D(1,1));
+	// points.push(new V2D(2,4));
+	// points.push(new V2D(3,9));
+	// points.push(new V2D(4,16));
+	var parabola = Code.parabolaAlgebraic(points);
+	console.log(parabola);
+
+	a = parabola["a"];
+	b = parabola["b"];
+	c = parabola["c"];
+
+	var i = 2;
+	var p = points[i];
+	y = p.x*p.x*a + b*p.x + c;
+	console.log(y,p.y)
+	return;
+	*/
 
 // testing polynomial root finding
 //                   0, 1, 2, 3, 4 

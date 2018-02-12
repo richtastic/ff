@@ -192,18 +192,116 @@ project typical numbers:
 
 APP TODO:
 
+- corner geometry still not solved for size
+	- corners look ok
 
-SAD-SIFT SCORE:
-		-- a fair amount of drift on non-distinct items
-	- normalized: matches a lot of shitty things as it trails off of seed point
-	- unnormalized: 
+		- recheck how color gradient performs [currently is ]
+		which is better:
+			- as-is histograms
+			- should offset minimize & normalize scale?
+
+		- scale SAD-SIFT by maxium length >1 around cube intersection
+			 -- closest intersction of 3 [6] planes => move into +,+,+ cube & intersect with positive .5,.5,.5 planes
+
+		- figure out how to decide size
+			- dcount / dradius
+				- 1/2 => 1/1
+				- fit parabola ?
+
+		- parabola from point set
+
+		- derivative of parabola => find when slope = m
+
+		- circular sift pattern HOWTO
+			- radius size (pixels)
+			- r1 = entire inner circle
+			- r2 = segmented portion outside r1
+				- divide angles by % area in 
+					- r1 = pi*r^2
+					- r2 = pi*(r*3)^2
+					- diff = pi*r^2*(9 - 1)
+					- r^(i+2) / r^(i) => divide by FLOOR of difference
+					: eg: 
+r1 = 4
+areaR1 = pi*r1^2
+r2 = 2*r1
+areaR2 = pi*r2^2
+ratio = areaR2/areaR1 % 4 = (2)^2 => 4 angles
+r3 = 3*r1
+areaR3 = pi*r3^2
+ratio = areaR3/areaR1 % 9 = (3)^2 => 9 angles
+...
+1   1
+4   5
+9   14
+16  30
+25  55
+36  91
+------ every other:
+1   1     1
+9   10    2/3
+25  35    1/2
+
+GLOH:
+1 : 8 : 8
+1
+
+			- r3 
+			... up to some outer r
+
+- METRICS FOR THE ITERITIVE IMPROVEMENT OF 3D MODEL:
+	- F point-line distance error
+	- 3D->2d reprojection error distance
+	- 3D location 'error volume'
+	
+	- average/mean error
+	- 
+
+	- adding a point/pair/3D should reduce error in some way
+	- removing a match should reduce error in some way (don't want to remove everything)
+
+
+- give corner-geometry points scores
+
+- ratio-disqualifying does not seem good
+- score subtraction rather than ratio?
+
+
+x drop very close corner-geometry points
+
+- dropping matches after initial grab
+	- bymatch score
+	- by F distance
+
+TOO BIG AN AREA ~ everything has a poor score
+TOO SMALL AN AREA ~ everything has a good score
+	=> do sigma dropping
+
+
+
+IMG_7521.JPG
+IMG_7525.JPG
+IMG_7523.JPG
 
 
 
 -- revisit dense-match
-	- new SAD score w/o grad
-	- convert result to 'scale difference' image
+	- 
 
+
+-- 3DR refininig
+	- initial 3-pair views are lined up bad
+		- 
+		
+	- switch from SIFT comparrison to SAD comparrision
+
+	- pair F-related try to aquire more neighbor matches
+
+	- how to do point comparrisons if each point can have multiple scales
+		... compare each ? take best score?
+	- 
+	- 
+	- color 3D dots the color of the pixel(s) it subsumes
 
 - roll up dense code into R3D fxn
 
@@ -212,7 +310,16 @@ SAD-SIFT SCORE:
 - one-sided R3D match search for epipolar lines inside/near image
 
 
-- color 3D dots the color of the pixel(s) it subsumes
+
+
+
+
+SAD-SIFT SCORE:
+		-- a fair amount of drift on non-distinct items
+	- normalized: matches a lot of shitty things as it trails off of seed point
+	- unnormalized: trails off
+
+
 
 
 

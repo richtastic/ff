@@ -75,12 +75,12 @@ var modeImageUpload = false;
 	// var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-var modeImageCompare = true;
-//var modeImageCompare = false;
+//var modeImageCompare = true;
+var modeImageCompare = false;
 
 
-var modeModelReconstruction = false;
-//var modeModelReconstruction = true;
+//var modeModelReconstruction = false;
+var modeModelReconstruction = true;
 
 
 if(modeImageEdit){
@@ -4712,6 +4712,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	// does a feature-match pair exist (even a bad match) between every view?
 	len = views.length;
 	var foundPair = null;
+	console.log(pairs)
 	for(i=0; i<len; ++i){
 		var viewA = views[i];
 		var idA = viewA.id();
@@ -4742,6 +4743,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	len = views.length;
 	var triples = this._triples;
 	for(i=0; i<views.length; ++i){
+break; // TODO: remove
 		var viewA = views[i];
 		var idA = viewA.id();
 		for(j=i+1; j<views.length; ++j){
@@ -4904,8 +4906,10 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var maxFeatures = 800;
 		//var maxFeatures = 500; // PREVIOUS
 		//var maxFeatures = 200; // TESTING
-		var objectsA = R3D.generateSIFTObjects(objectsA, imageMatrixA);
-		var objectsB = R3D.generateSIFTObjects(objectsB, imageMatrixB);
+		// var objectsA = R3D.generateSIFTObjects(objectsA, imageMatrixA);
+		// var objectsB = R3D.generateSIFTObjects(objectsB, imageMatrixB);
+		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
+		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 
 		objectsA = R3D.siftObjectsToUnique(objectsA);
 		objectsB = R3D.siftObjectsToUnique(objectsB);
@@ -4922,7 +4926,8 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
-//return;
+// // TODO: REMOVE
+// return;
 		console.log("HAVE PAIR? "+(pair!==null));
 		if(pair){
 			fxnG(pair);
@@ -5403,14 +5408,15 @@ App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, vie
 	// var parameters = {};
 	// 	parameters[""] = null;
 	var yaml = new YAML();
-	
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+
 	yaml.writeComment("3DR Features File 0");
 	yaml.writeBlank();
 	yaml.writeString("title", "features");
 	yaml.writeString("created", timestampNow);
 	yaml.writeString("from", viewA.id());
 	yaml.writeString("to", viewB.id());
-	
+
 	return R3D.outputMatchPoints(imageMatrixA, imageMatrixB, F, matches, yaml);
 }
 

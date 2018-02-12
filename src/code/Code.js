@@ -7314,6 +7314,65 @@ Code.rectContainingRectAtTangent = function(a,b,c,d, tan){
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));
 }
+Code.parabolaAlgebraic = function(points, location, intercept){ // 2d list of points -> least squares solution
+	// TODO: intercept force y = location = ?
+	// a*x*x + b*x + c = 0
+	// (x - h)^2 = 4*p(y-k)
+	// 
+	if(points.length<3){
+		return null;
+	}
+	var N = points.length;
+	var W = null;
+	var weights = null;
+	var i, p;
+	// W
+	if(location){
+		weights = [];
+		for(i=0; i<N; ++i){
+			p = points[i];
+			var dist = V2D.distance(location,p);
+			var weight = 1.0/(1.0 + dist*dist);
+			//var weight = Math.exp(-dist*dist);
+			//weight = Math.pow(weight,2);
+			//weight = Math.pow(dist,-2);
+			weights.push(weight);
+		}
+		W = new Matrix(N,N);
+		for(i=0; i<N; ++i){
+			var weight = weights[i];
+			W.set(i,i, weight);
+		}
+	}
+	// A
+	var A = new Matrix(N,4);
+	for(i=0; i<N; ++i){
+		p = points[i];
+		A.set(i,0, p.x*p.x);
+		A.set(i,1, p.x);
+		A.set(i,2, 1);
+		A.set(i,3, -p.y);
+	}
+	if(W!=null){
+		A = Matrix.mult(W,A);
+	}
+	// SVD projection closest
+	var svd = Matrix.SVD(A);
+	var best = svd.V.colToArray(3);
+	var a = best[0];
+	var b = best[1];
+	var c = best[2];
+	var y = best[3];
+	if(y===0){
+		return null;
+	}
+	a /= y;
+	b /= y;
+	c /= y;
+	var parabola = {"a":a,"b":b,"c":c};
+	parabola["weights"] = weights;
+	return parabola;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.ssdWindow = function(needle,widN,heiN, haystack,widH,heiH){
 	return ImageMat.ssd(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight);

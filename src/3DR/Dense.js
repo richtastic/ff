@@ -3095,6 +3095,43 @@ Dense.Lattice.prototype.cellSize = function(size){
 	}
 	return this._cellSize;
 }
+Dense.Lattice.prototype.scaleMap = function(){
+	var rows = this.rows();
+	var cols = this.cols();
+	var count = rows*cols;
+	var image = Code.newArrayZeros(count);
+	var i, j;
+	var cells = this._vertexTree.toArray();
+	var len = cells.length;
+	for(i=0; i<len; ++i){
+		var cell = cells[i];
+		var trans = cell.transform();
+		if(trans){
+			var row = cell.row();
+			var col = cell.col();
+			var index = row*cols + col;
+			var scale = trans.scale();
+			image[index] = scale;
+		}
+	}
+
+console.log(image);
+var c = Code.copyArray(image);
+c = ImageMat.invertFloat(c);
+c = ImageMat.normalFloat01(c);
+//c = ImageMat.pow(c,0.5);
+c = Code.grayscaleFloatToHeatMapFloat(c);
+img = GLOBALSTAGE.getFloatRGBAsImage(c["red"],c["grn"],c["blu"], cols,rows);
+//img = GLOBALSTAGE.getFloatRGBAsImage(image,image,image, cols,rows);
+d = new DOImage(img);
+d.matrix().scale(10.0);
+d.matrix().translate(860,10);
+//d.matrix().translate(200 , 100);
+GLOBALSTAGE.addChild(d);
+//d.graphics().alpha(0.5);
+
+	return image;
+}
 Dense.Lattice.prototype.serialized = function(){
 	var pointsA = [];
 	var pointsB = [];
@@ -3133,56 +3170,8 @@ Dense.Lattice.prototype.closestVertexes = function(point, count){
 }
 Dense.Lattice.prototype.closestVertex = function(point){
 	var vertex = this._vertexTree.closestObject(point);
-	// var width = this._imageFr.width();
-	// var height = this._imageFr.height();
-	// var col = ((point.x/width)*this._cols) | 0;
-	// var row = ((point.y/height)*this._rows) | 0;
-	// if(col<0){
-	// 	col = 0;
-	// }
-	// if(row<0){
-	// 	row = 0;
-	// }
-	// if(col>=this._cols){
-	// 	col = this._cols - 1;
-	// }
-	// if(row>=this._rows){
-	// 	row = this._rows - 1;
-	// }
-	// var vertex = this._vertexFromColRow(col,row);
-	// if(!vertex){ // outside area ? 
-	// 	throw("VERTEX NULL - WHAT ?"+col+","+row);
-	// }
 	return vertex;
 }
-//Dense.Lattice.prototype.vertex = function(a,b){
-// 	if(arguments.length==2){
-// 		return this._vertexFromColRow(a,b);
-// 	}else if(Code.isa(a,V2D)){ // point index
-// 		var width = this._imageFr.width();
-// 		var height = this._imageFr.height();
-// 		var col = ((a.x/width)*this._cols) | 0;
-// 		var row = ((a.y/height)*this._rows) | 0;
-// 		return this._vertexFromColRow(col,row);
-// 	}else{
-// 		console.log("unknown");
-// 	}
-// 	return null;
-// }
-// Dense.Lattice.prototype._vertexFromColRow = function(col,row){
-// 	var index = this._indexFromColRow(col,row);
-// 	if(index!==null){
-// 		return this._vertexes[index];
-// 	}
-// 	return null;
-// }
-// Dense.Lattice.prototype._indexFromColRow = function(col,row){
-// 	if(0<=row && row<this._rows  &&  0<=col && col<this._cols){
-// 		var index = row*this._cols + col;
-// 		return index;
-// 	}
-// 	return null;
-// }
 Dense.Lattice.prototype.allValidCells = function(fromPoint, maximumCount, maximumDistance){
 	var vertexes = this._vertexTree.toArray();
 	var list = [];
@@ -3194,80 +3183,6 @@ Dense.Lattice.prototype.allValidCells = function(fromPoint, maximumCount, maximu
 	}
 	return list
 }
-// 	var i, j, v, list = [];
-// 	var rows = this._rows;
-// 	var cols = this._cols;
-// 	for(j=0; j<rows; ++j){
-// 		for(i=0; i<cols; ++i){
-// 			v = this.vertex(i,j);
-// 			if(v.to() && v.isJoined()){
-// 				var distance = 1E12;
-// 				if(fromPoint){
-// 					distance = V2D.distance(fromPoint,v.from());
-// 				}
-// 				list.push([v,distance]);
-// 			}
-// 		}
-// 	}
-// 	if(maximumCount || maximumDistance){
-// 		list = list.sort(function(a,b){
-// 			var distanceA = a[1];
-// 			var distanceB = b[1];
-// 			return distanceA<distanceB ? -1 : 1;
-// 		});
-// 		if(maximumCount){
-// 			if(maximumCount<list.length){
-// 				list = Code.copyArray(list,0,maximumCount-1);
-// 			}
-// 		}else if(maximumDistance){
-// 			for(i=0; i<list.length; ++i){
-// 				var distance = list[i][1];
-// 				if(distance>maximumDistance){
-// 					list = Code.copyArray(list,0,i-1);
-// 					break;
-// 				}
-// 			}
-// 		}
-// 	}
-// 	for(i=0; i<list.length; ++i){ // remove appended distances
-// 		list[i] = list[i][0];
-// 	}
-// 	return list;
-// }
-// Dense.Lattice.prototype.printYAML = function(){
-// 	var str = "";
-// 	str += "# dense mapping \n";
-// 	var i, j, k;
-// 	var vertex, from, to;
-// 	var rows = this.rows();
-// 	var cols = this.cols();
-// 	//var cells = this.cells();
-// 	str += "created: "+Code.getTimeStampFromMilliseconds()+"\n";
-// 	str += "imageFrom: \n";
-// 	str += "imageTo: \n";
-// 	str += "mapping: \n";
-// 	// image: filename, width, height, 
-// 	//
-// 	for(j=0; j<rows; ++j){
-// 		for(i=0; i<cols; ++i){
-// 			vertex = this._vertexFromColRow(i,j);
-// 			if(vertex.isJoined()){
-// 				from = vertex.from();
-// 				to = vertex.to()
-// 				str += "\t-\n";
-// 				str += "\t\tfrom:\n"; // pointCenter
-// 				str += "\t\t\tx: "+from.x+"\n";
-// 				str += "\t\t\ty: "+from.y+"\n";
-// 				str += "\t\tto:\n";
-// 				str += "\t\t\tx: "+to.x+"\n";
-// 				str += "\t\t\ty: "+to.y+"\n";
-// 			}
-// 		}
-// 	}
-// 	console.log("\n\n"+str+"\n\n");
-// }
-
-
 
 // var distanceA = V2D.distanceSquare(fromPoint,a.from());
 // var distanceB = V2D.distanceSquare(fromPoint,b.from());
@@ -3322,6 +3237,12 @@ Dense.Vertex = function(lattice, row, col, from){
 	this._joined = false;
 	this._temp = null;
 }
+Dense.Vertex.prototype.row = function(){
+	return this._row;
+}
+Dense.Vertex.prototype.col = function(){
+	return this._col;
+}
 Dense.Vertex.prototype.temp = function(t){
 	if(t!==undefined){
 		this._temp = t;
@@ -3371,42 +3292,6 @@ Dense.Vertex.prototype.pointBR = function(){
 	var halfCellSize = this._lattice.cellSize()*0.5;
 	return this.pointCenter().add(halfCellSize, halfCellSize);
 }
-// Dense.Vertex.prototype.TL = function(){
-// 	return this._lattice.vertex(this._col-1,this._row-1);
-// }
-// Dense.Vertex.prototype.top = function(){
-// 	return this._lattice.vertex(this._col,this._row-1);
-// }
-// Dense.Vertex.prototype.TR = function(){
-// 	return this._lattice.vertex(this._col+1,this._row-1);
-// }
-// Dense.Vertex.prototype.left = function(){
-// 	return this._lattice.vertex(this._col-1,this._row);
-// }
-// Dense.Vertex.prototype.right = function(){
-// 	return this._lattice.vertex(this._col+1,this._row);
-// }
-// Dense.Vertex.prototype.BL = function(){
-// 	return this._lattice.vertex(this._col-1,this._row+1);
-// }
-// Dense.Vertex.prototype.bottom = function(){
-// 	return this._lattice.vertex(this._col,this._row+1);
-// }
-// Dense.Vertex.prototype.BR = function(){
-// 	return this._lattice.vertex(this._col+1,this._row+1);
-// }
-// Dense.Vertex.prototype.row = function(r){
-// 	if(r!==undefined){
-// 		this._row = r;
-// 	}
-// 	return this._row;
-// }
-// Dense.Vertex.prototype.col = function(c){
-// 	if(c!==undefined){
-// 		this._col = c;
-// 	}
-// 	return this._col;
-// }
 Dense.Vertex.prototype.from = function(f){
 	if(f!==undefined){
 		this._pointFrom = f;
@@ -3561,8 +3446,8 @@ Dense.Vertex.prototype.assignNeighbors = function(queue, interpolator){
 	var scale = this.scale();
 	for(var i=0; i<neighbors.length; ++i){
 		var n = neighbors[i];
-		if(true){ // todo: uncomment to not reconsider joined neighbors
-		//if(!n.isJoined()){
+		//if(true){ // todo: uncomment to not reconsider joined neighbors
+		if(!n.isJoined()){
 			//console.log("neighbor: "+i);
 			//queue.remove(n); // TODO: BECAUSE 
 			//var same = Dense.assignBestNeedleInHaystack(interpolator, n, queue, true);
@@ -4160,6 +4045,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, i
 	var imageFr = lattice.imageFrom();
 	var imageTo = lattice.imageTo();
 	var cellSize = lattice.cellSize();
+cellSize += 2;
 	var cellPaddedSize = cellSize; //  + 1;
 	
 	var halfCellSize = 0.5*cellSize;
@@ -4237,8 +4123,11 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, i
 	var scaleRangeExp = [-0.1,0.0,0.1];
 	if(isSeed){
 		angleRangeDeg = Code.lineSpace(-15,15,5);
-		scaleRangeExp = Code.lineSpace(-.2,.2,.05);
+		//scaleRangeExp = Code.lineSpace(-.2,.2,.05);
+		scaleRangeExp = Code.lineSpace(-.2,.2,.1);
 	}
+angleRangeDeg = [0];
+scaleRangeExp = [0];
 	var bestScore = null;
 	var bestPoint, bestAngle, bestScale, bestNeedle;
 	var best = {};
@@ -4382,7 +4271,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, i
 		var uniqueness = Math.max(uniquenessNH,uniquenessHN);
 		
 		// // ignore points with poor uniqueness
-		if(uniqueness > 0.99999){
+		if(uniqueness > 0.999){ // 0.9999
 			console.log("uniqueness DROPPED "+uniqueness);
 			return null;
 		}
@@ -4402,11 +4291,11 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, i
 		}
 
 		// ignore points with really poor scores
-		//console.log("bestScore: "+bestScore);
-		// if(bestScore > 0.1){ // 0.0005 for normalized, 0.5? unnormalized
-		// 	console.log("bestScore DROPPED "+bestScore);
-		// 	return null;
-		// }
+		// console.log("bestScore: "+bestScore);
+		if(bestScore > 0.01){ // 0.0005 for normalized, 0.5? unnormalized
+			console.log("bestScore DROPPED "+bestScore);
+			return null;
+		}
 
 		// ignore points with large average color difference
 		var averageIntensityDiffR = Math.abs(meanIntensityHaystackR - meanIntensityNeedleR);
@@ -4420,7 +4309,7 @@ Dense.assignBestNeedleInHaystack = function(interpolator, vertex, globalQueue, i
 		
 // penalties
 var scor = Math.pow(1.0+bestScore,1.0);
-var uniq = Math.pow(uniqueness,0.10);
+var uniq = Math.pow(uniqueness,1.0);
 var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
 var vari = Math.pow(1.0/variabilityNeedle,.1);
 var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
@@ -4434,7 +4323,7 @@ var rang = Math.pow(1.0/worstRangeScore, 0.1);
 var rank = bestScore;
 rank = rank * lind;
 //var rank = scor;
-//rank = rank * uniq;
+rank = rank * uniq;
 // rank = rank * vari;
 //rank = rank * inte;
 //rank = rank * rang;
@@ -4475,7 +4364,7 @@ rank = rank * lind;
 		var currentRank = vertex.rank();//vertex.transform();
 		if(currentRank!==null){
 			if(rank > currentRank){
-				console.log("worse score DROPPED "+rank+" / "+currentRank);
+				//console.log("worse score DROPPED "+rank+" / "+currentRank);
 				return null; // not better, don't change
 			}
 		}
@@ -4484,9 +4373,9 @@ rank = rank * lind;
 			if(vertex.isJoined()){
 				var ratio = vertex.score()/bestScore;
 				var diff = vertex.score()-bestScore;
-				var differenceMin = 0.0001;
+				//var differenceMin = 0.0001;
 				var ratioMin = 1.0001; // scores might want to use basic subtraction
-				if(diff>differenceMin){
+				if(diff>ratioMin){
 					console.log("FOUND JOINED VERTEX -> UNJOINING: "+vertex.rank()+" < "+rank+" | "+vertex.score()+" < "+bestScore+"   @ "+diff+" | "+ratio);
 					vertex.unjoin();
 				}else{
@@ -4773,6 +4662,8 @@ Dense.denseMatch_iteration = function(){
 		console.log(" duration: "+(deltaTime/1000.0/60.0)+" min");
 		Dense.IS_DONE = true;
 		console.log("is done");
+
+		latticeAtoB.scaleMap();
 
 		return;
 
