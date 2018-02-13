@@ -216,8 +216,8 @@ for(var f=0; f<lists.length; ++f){
 }
 
 // show initial feature sites
-if(true){
-//if(false){
+//if(true){
+if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
@@ -235,7 +235,8 @@ if(true){
 				var x = point.x;
 				var y = point.y;
 				var z = point.z;
-z=1
+				var a = point.t;
+//z=1
 			var c = new DO();
 				color = 0xFFFF0000;
 				//color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
@@ -245,6 +246,15 @@ z=1
 				c.graphics().drawCircle(x, y, z);
 				c.graphics().strokeLine();
 				c.graphics().endPath();
+
+				var v = new V2D(z,0);
+				v.rotate(a);
+				c.graphics().beginPath();
+				c.graphics().moveTo(x,y);
+				c.graphics().lineTo(x+v.x,y+v.y);
+				c.graphics().strokeLine();
+				c.graphics().endPath();
+
 				c.matrix().translate(0 + f*imageMatrixA.width(), 0);
 				display.addChild(c);
 		}

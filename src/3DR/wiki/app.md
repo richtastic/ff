@@ -192,8 +192,16 @@ project typical numbers:
 
 APP TODO:
 
+- use neighbor corner with highest score [up to ~10 neighbors ... ?]
+- use averaging of nearest ~3 neighbors radius sizes
+- first neighbor to have a score higher than the next neighbor
+- peak in ds/dr [division by 0]
+- move-any direction at multiple scales [per pixel or static size] peaks
+
+
 - corner geometry still not solved for size
 	- corners look ok
+	- scale for geometry corners not matching up
 
 		- recheck how color gradient performs [currently is ]
 		which is better:

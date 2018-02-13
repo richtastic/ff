@@ -1489,9 +1489,10 @@ Code.array2DtoString = function(arr, exp){
 	}
 	return str.replace(/e/g,"E");
 }
-Code.array1Das2DtoString = function(arr, wid,hei, exp){
+Code.array1Das2DtoString = function(arr, wid,hei, exp, min){
 	exp = exp===undefined?4:exp;
 	var minLen = exp+6+1; // -#.E+#
+var minLen = 3;
 	var i, j, val, index=0, str = "";
 	str += "\n";
 	for(j=0;j<hei;++j){
@@ -1499,7 +1500,8 @@ Code.array1Das2DtoString = function(arr, wid,hei, exp){
 			//str += arr[index]+" ";
 			num = arr[index];
 			if(num!==undefined && num!==null){
-				val = num.toExponential(exp);
+				//val = num.toExponential(exp);
+				val = num+""
 				if(num<0){
 					str += Code.padStringLeft(val,minLen," ");
 				}else{

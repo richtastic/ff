@@ -4693,7 +4693,7 @@ R3D.SADVectorRGBGradientOctant = function(imageMatrix, location,diaNeighborhood,
 	// var sigma = paddedSize * 0.25;
 	// var sigma = paddedSize * 100;
 	var sigma = paddedSize * 2.0;
-	var gaussianMask = ImageMat.gaussianMask(paddedSize,paddedSize, sigma); // TODO: reuse this
+	//var gaussianMask = ImageMat.gaussianMask(paddedSize,paddedSize, sigma); // TODO: reuse this
 	//var gaussianMask = R3D.SADVectorRGBGradientOctant_GAUSSIAN;
 	var zoomScales = [1.0];
 	var wid = imageMatrix.width();
@@ -4720,7 +4720,7 @@ R3D.SADVectorRGBGradientOctant = function(imageMatrix, location,diaNeighborhood,
 			for(var i=0; i<outerSize; ++i){
 				var index = (j+1)*paddedSize + (i+1);
 				var groupIndex = Math.floor(j/edgeSize)*quadCount + Math.floor(i/edgeSize);
-				/*
+				
 				var averageColor = new V3D();
 				for(var jj=0;jj<=2;++jj){
 					for(var ii=0;ii<=2;++ii){
@@ -4735,7 +4735,7 @@ R3D.SADVectorRGBGradientOctant = function(imageMatrix, location,diaNeighborhood,
 				}
 				// 
 				averageColor.scale(1.0/9.0);
-				*/
+				
 
 				var group = groups[groupIndex];
 				var r = vR[index];
@@ -4748,13 +4748,13 @@ R3D.SADVectorRGBGradientOctant = function(imageMatrix, location,diaNeighborhood,
 				var v = new V3D(r,g,b);
 				
 				
-				
+				/*
 				// BASIC OCTANT BINNING FROM RGB -- POOR | OK w/ large area / sampling
 				R3D._RGBGrayOffset(v);
 				var bin = R3D._RGBGrayToBin(v);
 				var mag = v.length();
 				group[bin] += weight * mag;
-				
+				*/
 
 
 				/*
@@ -4765,13 +4765,13 @@ R3D.SADVectorRGBGradientOctant = function(imageMatrix, location,diaNeighborhood,
 				*/
 
 				
-				/*
+				
 				// COLOR GRADIENT BINNING -- POOR, OK w/ large sampling
 				var delta = V3D.sub(v,averageColor);
 				var bin = R3D._RGBGrayToBin(delta);
 				var mag = delta.length();
 				group[bin] += weight * mag;
-				*/
+				
 
 				/*
 				// HUE BINNED, GRAYSCALE MAGNITUDE -- POOR, OK w/ large sampling
@@ -5192,8 +5192,8 @@ R3D.SADVectorBoth = function(imageMatrix, imageBlurred, location,diaNeighborhood
 	//var vF = R3D.SADVector3D(imageMatrix, location,diaNeighborhood,pointAngle);
 	//var vF = R3D.SADVectorColorGradient(imageMatrix, location,diaNeighborhood,pointAngle);
 	//var vF = R3D.SADVectorRGBOctant(imageMatrix, location,diaNeighborhood,pointAngle);
-	var vF = R3D.SADVectorRGBGradientOctant(imageMatrix, location,diaNeighborhood,pointAngle);
-	//var vF = null;
+	//var vF = R3D.SADVectorRGBGradientOctant(imageMatrix, location,diaNeighborhood,pointAngle);
+	var vF = null;
 	//var vG = R3D.SADVectorGradient(imageMatrix, location,diaNeighborhood,pointAngle);
 	var vG = null;
 	var vS = R3D.SADVectorSIFTGradient(imageMatrix, location,diaNeighborhood,pointAngle);
@@ -5299,6 +5299,7 @@ R3D.featuresFromPoints = function(points){ // V4D
 R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 	var maxCount = 1000;
 	var featuresA = R3D.testExtract1(imageMatrixA, null, maxCount, true);
+	console.log(featuresA);
 		featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
 //throw "yay";
 		return featuresA;
@@ -6446,7 +6447,7 @@ R3D.featureCornersToLines = function(features, imageMatrix, keepLines, keepPoint
 		//space.insertObject( new V2D(feature.x,feature.y) );
 		space.insertObject( feature );
 	}
-	var samples = 0;
+	var samples = 3;
 	var imageGradient = null;
 	if(samples>0){
 		var img = imageMatrix.gry();
@@ -6510,9 +6511,211 @@ var output = [];
 			console.log(xSlope);
 			throw "?";
 */
+/*
+			// get neightbor with best score:
+			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
+			var neighbors = [];
+			for(j=1; j<nearest.length; ++j){
+				var near = nearest[j];
+				var radius = V2D.distance(point, near);
+				var score = near.t;
+				//neighbors.push( [near, score] );
+				neighbors.push( [near, radius] );
+			}
+			neighbors.sort(function(a,b){
+				return a[0].t > b[0].t ? -1 : 1;
+			});
+			console.log(neighbors);
+			var radius = neighbors[0][1];
+			console.log("radius: "+radius);
+*/
+/*
+			// get self at successive scales
+			var size = 5;
+			var s0 = 5;
+			//var scalers = [-2,-1,0,1,2,3];
+			var scalers = [-2,-1.5,-1,-.5,0,.5,1,1.5,2,2.5,3];
+var scales = [];
+var scores = [];
+			for(var k=0; k<scalers.length; ++k){
+				var scale = Math.pow(2.0,scalers[k]);
+				var matrix = new Matrix(3,3).identity();
+					matrix = Matrix.transform2DTranslate(matrix, -size*0.5, -size*0.5);
+					matrix = Matrix.transform2DScale(matrix, scale);
+					matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
+				var image = imageMatrix.extractRectFromMatrix(size,size, matrix);
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+var d = new DOImage(img);
+d.matrix().scale(5.0);
+d.matrix().translate(0 + i*50, 0 + k*50);
+GLOBALSTAGE.addChild(d);
+// 
 
 
+				//var score = ImageMat.totalCostToMoveAny(image, g,b,wid,hei);
+				var value = ImageMat.totalCostToMoveAny(image);
+				var score = Code.sum(value["value"]);
+					score /= (size*size);
+				scores.push(score);
+				scales.push(scale);
+			}
+
+			//console.log(scores);
+			//console.log(scales);
+			Code.printMatlabArray(scores);
+if(i==20){
+	throw "?";
+}
+*/
+
+/*
+			var size = 5;
+			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
+			var neighbors = [];
+			var scores = [];
+			var scales = [];
+			for(j=1; j<nearest.length; ++j){
+				var near = nearest[j];
+				var radius = V2D.distance(point, near);
+				var scale = radius/size;
+
+				var matrix = new Matrix(3,3).identity();
+					matrix = Matrix.transform2DTranslate(matrix, -size*0.5, -size*0.5);
+					matrix = Matrix.transform2DScale(matrix, scale);
+					matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
+				var image = imageMatrix.extractRectFromMatrix(size,size, matrix);
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+var d = new DOImage(img);
+d.matrix().scale(5.0);
+d.matrix().translate(0 + i*50, 0 + j*50);
+GLOBALSTAGE.addChild(d);
+// 
+
+
+				//var score = ImageMat.totalCostToMoveAny(image, g,b,wid,hei);
+				var value = ImageMat.totalCostToMoveAny(image);
+				var score = Code.sum(value["value"]);
+				scores.push(score);
+				scales.push(scale);
+			}
 			
+			Code.printMatlabArray(scores);
+
+if(i==20){
+	throw "?";
+}
+*/
+
+
+/*
+			// use first neighbor with highest score
+			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
+			var neighbors = [];
+			var scores = [];
+			var radiuses = [];
+			for(j=1; j<nearest.length; ++j){
+				var near = nearest[j];
+				var radius = V2D.distance(point, near);
+				var score = near.t;
+				//neighbors.push( [near, score] );
+				//neighbors.push( [near, radius] );
+				scores.push(score);
+				radiuses.push(radius);
+			}
+			// neighbors.sort(function(a,b){
+			// 	return a[0].t > b[0].t ? -1 : 1;
+			// });
+			// console.log(neighbors);
+			// var radius = neighbors[0][1];
+			// console.log("radius: "+radius);
+
+			Code.printMatlabArray(scores,"s");
+			Code.printMatlabArray(radiuses,"r");
+			console.log("-");
+
+if(i==20){
+	throw "?";
+}
+
+*/
+
+			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
+			var neighbors = [];
+			var scores = [];
+			var radiuses = [];
+			var bestNeighbor = null;
+			var bestScore = 0;
+			var bestRadius = 0;
+			for(j=1; j<nearest.length; ++j){
+				var near = nearest[j];
+				var radius = V2D.distance(point, near);
+				var score = near.t;
+				if(score > bestScore){
+					bestNeighbor = near;
+					bestRadius = radius;
+					bestScore = score;
+//if(true){
+/*
+					var dir = V2D.sub(near,point);
+					var minAngle = Code.radians(80.0);
+					var isLine = true;
+					for(k=0; k<samples; ++k){
+						var pct = (k+1)/(samples+1);
+						var x = pct*dir.x + point.x;
+						var y = pct*dir.y + point.y;
+						var grad = ImageMat.gradientVectorNonIntegerIndex(imageGradient,imageWidth,imageHeight, x,y, true);
+						var angle = V2D.angle(grad,dir);
+						if(angle>Math.PI*0.5){
+							angle = Math.abs(Math.PI - angle);
+						}
+						if(angle<minAngle){
+							isLine = false;
+							break;
+						}
+					}
+
+
+					if(isLine){
+						bestNeighbor = near;
+						bestRadius = radius;
+						bestScore = score;
+
+var neighbor = bestNeighbor;
+var radius = bestRadius;
+var dir = V2D.sub(neighbor,point);
+var isLine = true;
+if(isLine){
+	var angle = V2D.angle(V2D.DIRX,dir);
+	var cornerScore = point.t * neighbor.t;
+	var feature = {"point": new V2D(point.x,point.y), "size":radius, "angle":angle, "score":cornerScore};
+	output.push( feature );
+	++cnt;
+}
+					}
+*/
+				}else{
+					break; // done
+				}
+			}
+
+
+			var neighbor = bestNeighbor;
+if(neighbor){
+			var radius = bestRadius;
+			var dir = V2D.sub(neighbor,point);
+			var isLine = true;
+			if(isLine){
+				var angle = V2D.angle(V2D.DIRX,dir);
+				var cornerScore = point.t * neighbor.t;
+//radius *= 2;
+angle = null;
+				var feature = {"point": new V2D(point.x,point.y), "size":radius, "angle":angle, "score":cornerScore};
+				output.push( feature );
+				++cnt;
+			}
+}
+
+/*
 			// var nearest = space.kNN(feature, 2);
 			// 	nearest = nearest[1];
 			// var radius = V2D.distance(point, nearest);
@@ -6559,6 +6762,7 @@ angle = null;
 				}
 			}
 			// ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y){ 
+*/
 		}
 	}
 	return output;
@@ -9483,9 +9687,11 @@ R3D.compareSADVectorBoth = function(vectorA, vectorB){
 	//var sF = R3D.compareSADVector3D(vFA,vFB);
 		//var sF = R3D.compareSADVectorColorGradient(vFA,vFB);
 	//var sF = R3D.compareSADVectorRGBOctant(vFA,vFB);
-	var sF = R3D.compareSADVectorRGBGradientOctant(vFA,vFB);
+	//var sF = R3D.compareSADVectorRGBGradientOctant(vFA,vFB);
+//return sF;
 	//var sG = R3D.compareSADVectorGradient(vGA,vGB);
 	var sS = R3D.compareSADVectorSIFTGradient(vSA,vSB);
+	return sS;
 
 	return sF*sF;
 	//return sS*sS;
