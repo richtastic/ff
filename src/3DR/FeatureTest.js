@@ -40,8 +40,8 @@
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
+//new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
 //new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
 //new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
@@ -433,8 +433,8 @@ console.log(featuresA.length+" v "+featuresB.length);
 var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 
-//if(false){
-if(true){
+if(false){
+//if(true){
 	// reduce count
 objectsA = R3D.siftObjectsToUnique(objectsA);
 objectsB = R3D.siftObjectsToUnique(objectsB);

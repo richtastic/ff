@@ -16,63 +16,8 @@ function classesLoadedFxn(){
 	return;
 
 
-var circularSIFTBinMask = function(r1,count){ // 0,8,16
-	count = count!==undefined? count : 3;
-	var i, j, k;
-	var rs = [];
-	var divs = [];
-	var totalC = 0;
-	var bins = [];
-	for(i=0; i<count; ++i){
-		var r = r1 * (i*2 + 1);
-		rs[i] = r;
-		var cnt;
-		if(i==0){
-			cnt = 1;
-			divs.push(0);
-			bins.push(0);
-		}else{
-			var cnt = (r*r - rs[i-1]*rs[i-1])/(r1*r1);
-			divs.push(cnt);
-			bins.push(totalC);
-		}
-		totalC += cnt;
-	}
-	var width = rs[rs.length-1]*2;
-	var height = width;
-	var count = width*height;
-	console.log(rs);
-	console.log(divs);
-	var mask = Code.newArrayConstant(count,-1);
-	var binCount = 0;
-	// for(i=0; i<rs.length; ++i){
-	// 	var r = rs[i];
-	// }
-	var cx = width*0.5 - 0.5;
-	var cy = height*0.5 - 0.5;
-	for(j=0; j<height; ++j){
-		for(i=0; i<width; ++i){
-			var index = j*width + i;
-			var x = i - cx;
-			var y = j - cy;
-			var p = new V2D(x,y);
-			var r = p.length();
-			//var radius = Math.sqrt(x*x + y*y);
-			for(k=0; k<rs.length; ++k){
-				if(r<=rs[k]){
-					var angle = 1.0 - (Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,p) ) / (Math.PI*2));
-					var bin = bins[k] + Math.floor(angle*divs[k]);
-					mask[index] = bin;
-					break;
-				}
-			}
-		}
-	}
 
-	return {"value":mask, "width":width, "height":height, "bins":binCount};
-}
-
-var mask = circularSIFTBinMask(2);
+var mask = R3D.circularSIFTBinMask(3);
 console.log(mask);
 var width = mask["width"];
 var height = mask["height"];

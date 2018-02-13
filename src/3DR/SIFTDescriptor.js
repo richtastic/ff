@@ -555,9 +555,9 @@ SIFTDescriptor.vectorFromImage = function(source, width,height, location,optimal
 					// SINGLE BIN:
 					var b = Math.min(Math.floor((a/Math.PI2)*binCount),binCount-1);
 					bin[b] += m*w;
-					// DUAL BINS: -- TO HELP WITH TRUNCATION ROUNDING
-					b = Math.min(Math.floor(( Code.angleZeroTwoPi(a+0.5*Math.PI2/binCount) / Math.PI2)*binCount),binCount-1);
-					bin[b] += m*w;
+					// // DUAL BINS: -- TO HELP WITH TRUNCATION ROUNDING
+					// b = Math.min(Math.floor(( Code.angleZeroTwoPi(a+0.5*Math.PI2/binCount) / Math.PI2)*binCount),binCount-1);
+					// bin[b] += m*w;
 				}
 			}
 		}

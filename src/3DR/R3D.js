@@ -4361,7 +4361,7 @@ d.matrix().translate(408*(CALLED),306*0);
 // }
 
 R3D.SADVectorSIFTGradient = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
-	diaNeighborhood = diaNeighborhood * 3;
+	diaNeighborhood = diaNeighborhood * 5;
 
 	var outerSize = 16;
 
@@ -4659,6 +4659,86 @@ R3D.SADVectorRGBOctant = function(imageMatrix, location,diaNeighborhood,pointAng
 	// Code.normalizeArray(vector);
 	return vector;
 }
+
+
+R3D._SIFTchannel = function(source,width,height, insideSet, location, scale, angle){
+	var padding = 2;
+	var outsideSet = insideSet + 2*padding;
+	// extract image at new orientation
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		matrix = Matrix.transform2DScale(matrix, scale);
+		matrix = Matrix.transform2DRotate(matrix, -angle);
+		matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
+		matrix = Matrix.inverse(matrix);
+	var area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
+	// BLUR IMAGE
+	//var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
+	var blurred = area;
+	// GET DERIVATIVES
+	var gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet).value;
+	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
+	return gradients;
+}
+R3D._SIFTimage = function(imageMatrix, insideSet, location, scale, angle){
+	var wid = imageMatrix.width();
+	var hei = imageMatrix.height();
+	var red = R3D._SIFTchannel(imageMatrix.red(), wid,hei, insideSet, location, scale, angle);
+	var grn = R3D._SIFTchannel(imageMatrix.grn(), wid,hei, insideSet, location, scale, angle);
+	var blu = R3D._SIFTchannel(imageMatrix.blu(), wid,hei, insideSet, location, scale, angle);
+	return {"r":red,"g":grn,"b":blu};
+}
+R3D._SIFVectorRGBCircularVectorAdd = function(vector, redV, binsSize, binCount, vectorLen, bin, weight, offset){
+//	weight = 1.0;
+	var redM = redV.length();
+	var redA = V2D.angleDirection(V2D.DIRX,redV);
+		redA = Code.angleZeroTwoPi(redA);
+	var valueR = redM * weight;
+	var redB = Math.min(Math.floor((redA/Math.PI2)*binsSize),binsSize-1);
+	var vectorIndexR = binsSize*bin + redB + vectorLen*offset;
+	vector[vectorIndexR] += valueR;
+}
+R3D.SIFVectorRGBCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
+	diaNeighborhood = diaNeighborhood * 3;
+	var binMask = R3D._defaultCircularSIFTBinMask();
+		var binLookup = binMask["value"];
+		var binWidth = binMask["width"];
+		var binCount = binMask["bins"];
+		var binWeights = binMask["weights"];
+		// console.log(binWeights);
+	var binsSize = 8;
+	var vectorLen = binCount*binsSize;
+	var vector = Code.newArrayZeros(vectorLen*3);
+
+	var scale = diaNeighborhood/binWidth;
+	var gradients = R3D._SIFTimage(imageMatrix, binWidth, location, scale, pointAngle);
+	var gradientR = gradients["r"];
+	var gradientG = gradients["g"];
+	var gradientB = gradients["b"];
+
+	for(var j=0; j<binWidth; ++j){
+		for(var i=0; i<binWidth; ++i){
+			var index = j*binWidth + i;
+			var bin = binLookup[index];
+			if(bin>=0){
+				var weight = binWeights[index];
+				R3D._SIFVectorRGBCircularVectorAdd(vector, gradientR[index], binsSize, binCount, vectorLen, bin, weight, 0);
+				R3D._SIFVectorRGBCircularVectorAdd(vector, gradientG[index], binsSize, binCount, vectorLen, bin, weight, 1);
+				R3D._SIFVectorRGBCircularVectorAdd(vector, gradientB[index], binsSize, binCount, vectorLen, bin, weight, 2);
+			}
+		}
+	}
+	// console.log(vector);
+	// throw "?"
+	var min = Code.minArray(vector);
+	Code.arraySub(vector, min);
+	Code.normalizeArray(vector);
+	vector = ImageMat.pow(vector,0.25);
+	return vector;
+}
+
+
+
 
 R3D.SADVectorRGBGradientOctant_GAUSSIAN = ImageMat.gaussianMask(16+2,16+2, 2.0*(16+2));
 R3D.SADVectorRGBGradientOctant = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
@@ -5196,7 +5276,8 @@ R3D.SADVectorBoth = function(imageMatrix, imageBlurred, location,diaNeighborhood
 	var vF = null;
 	//var vG = R3D.SADVectorGradient(imageMatrix, location,diaNeighborhood,pointAngle);
 	var vG = null;
-	var vS = R3D.SADVectorSIFTGradient(imageMatrix, location,diaNeighborhood,pointAngle);
+	//var vS = R3D.SADVectorSIFTGradient(imageMatrix, location,diaNeighborhood,pointAngle);
+	var vS = R3D.SIFVectorRGBCircular(imageMatrix, location,diaNeighborhood,pointAngle);
 	//var vS = null;
 	var vector = [vF,vG,vS];
 	return vector;
@@ -5236,6 +5317,65 @@ R3D.SIFTVector = function(imageMatrix, location,diaNeighborhood,pointAngle, simp
 	}
 	return vector;
 }
+R3D._defaultCircularSIFTBinMaskValue = null;
+R3D._defaultCircularSIFTBinMask = function(){
+	if(!R3D._defaultCircularSIFTBinMaskValue){
+		R3D._defaultCircularSIFTBinMaskValue = R3D.circularSIFTBinMask(2);
+	}
+	return R3D._defaultCircularSIFTBinMaskValue;
+}
+R3D.circularSIFTBinMask = function(r1,count){ // 2,2.5,3 @ 20,25,30
+	count = count!==undefined? count : 3;
+	var i, j, k;
+	var rs = [];
+	var divs = [];
+	var totalC = 0;
+	var bins = [];
+	for(i=0; i<count; ++i){
+		var r = r1 * (i*2 + 1);
+		rs[i] = r;
+		var cnt;
+		if(i==0){
+			cnt = 1;
+			divs.push(0);
+			bins.push(0);
+		}else{
+			var cnt = (r*r - rs[i-1]*rs[i-1])/(r1*r1);
+			divs.push(cnt);
+			bins.push(totalC);
+		}
+		totalC += cnt;
+	}
+	var binCount = totalC;
+	var width = rs[rs.length-1]*2;
+	var height = width;
+	var count = width*height;
+	var mask = Code.newArrayConstant(count,-1);
+	var cx = width*0.5 - 0.5;
+	var cy = height*0.5 - 0.5;
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			var x = i - cx;
+			var y = j - cy;
+			var p = new V2D(x,y);
+			var r = p.length();
+			for(k=0; k<rs.length; ++k){
+				if(r<=rs[k]){
+					var angle = (Code.angleZeroTwoPi( V2D.angleDirection(p,V2D.DIRX) ) / (Math.PI*2));
+					var bin = bins[k] + Math.floor(angle*divs[k]);
+					mask[index] = bin;
+					break;
+				}
+			}
+		}
+	}
+	var sigma = width * 2.0;
+	var weights = ImageMat.gaussianMask(width,width, sigma);
+	return {"value":mask, "width":width, "height":height, "bins":binCount, "weights": weights};
+}
+
+
 
 R3D.imageFromImageMatrix = function(matrix, stage, onloadFxn){
 	var image = stage.getFloatRGBAsImage(matrix.red(),matrix.grn(),matrix.blu(), matrix.width(),matrix.height(), null, null, onloadFxn);
@@ -5335,8 +5475,8 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 
 	//var scales = [2.0,1.0,0.5];
 	// 0.9999
-//type = R3D.CORNER_SELECT_RELAXED; // 0.99999
-type = R3D.CORNER_SELECT_REGULAR; // 0.999
+type = R3D.CORNER_SELECT_RELAXED; // 0.99999
+//type = R3D.CORNER_SELECT_REGULAR; // 0.999
 //type : R3D.CORNER_SELECT_RESTRICTED;
 	
 	var wm1 = sourceWidth-1;
@@ -9690,7 +9830,8 @@ R3D.compareSADVectorBoth = function(vectorA, vectorB){
 	//var sF = R3D.compareSADVectorRGBGradientOctant(vFA,vFB);
 //return sF;
 	//var sG = R3D.compareSADVectorGradient(vGA,vGB);
-	var sS = R3D.compareSADVectorSIFTGradient(vSA,vSB);
+	//var sS = R3D.compareSADVectorSIFTGradient(vSA,vSB);
+	var sS = R3D.compareSIFVectorRGBCircular(vSA,vSB);
 	return sS;
 
 	return sF*sF;
@@ -9822,13 +9963,23 @@ R3D.compareSADVectorSIFTGradient = function(vectorA, vectorB){
 		var a = vectorA[i];
 		var b = vectorB[i];
 		var d = Math.abs(a-b);
-		score += d;
-		//score += d*d;
+		//score += d;
+		score += d*d;
 		//score += Math.pow(a-b, 2);
 	}
 	return score;
 }
-
+R3D.compareSIFVectorRGBCircular = function(vectorA, vectorB){
+	var score = 0;
+	var i, len = vectorA.length;
+	for(i=0; i<len; ++i){
+		var a = vectorA[i];
+		var b = vectorB[i];
+		var d = Math.abs(a-b);
+		score += d;
+	}
+	return score;
+}
 R3D.compareSADVectorRGBOctant = function(vectorA, vectorB){
 	var score = 0;
 	var i, len = vectorA.length;
