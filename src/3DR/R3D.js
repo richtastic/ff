@@ -4737,7 +4737,58 @@ R3D.SIFVectorRGBCircular = function(imageMatrix, location,diaNeighborhood,pointA
 	return vector;
 }
 
+R3D.cornerFeaturesAddAngles = function(imageMatrix, features){
+	var updated = [];
+	var i, j;
+	var checkSize = 5;
+	var checkDoubleSize = 11;
+	var matrix = new Matrix(3,3).identity();
+	var imageSource = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+	for(i=0; i<features.length; ++i){
+		var feature = features[i];
+		var location = new V2D();
+		var size = 0;
+if( Code.ofa(feature,V2D) ){
+	// console.log(feature,"V3D")
+	location.set(feature.x,feature.y);
+	size = feature.z;
+}else{
+	// console.log(feature,"object")
+	location.set(feature["point"].x,feature["point"].y);
+	size = feature["size"];
+}
+		var scaleDouble = size/checkDoubleSize;
+			matrix.identity();
+			matrix = Matrix.transform2DTranslate(matrix, -location.x , -location.y );
+			matrix = Matrix.transform2DScale(matrix, scaleDouble);
+			matrix = Matrix.transform2DTranslate(matrix, (checkDoubleSize*0.5) , (checkDoubleSize*0.5) );
+			matrix = Matrix.inverse(matrix);
+		var doubleImage = ImageMat.extractRectFromMatrix(imageSource, imageWidth,imageHeight, checkDoubleSize,checkDoubleSize, matrix);
+		var doubleBlurred = ImageMat.getBlurredImage(doubleImage, checkDoubleSize,checkDoubleSize, 1.0); // TODO:  sigma matters?
+			matrix.identity();
+			matrix = Matrix.transform2DTranslate(matrix, -checkDoubleSize*0.5, -checkDoubleSize*0.5);
+			matrix = Matrix.transform2DScale(matrix, checkSize/checkDoubleSize);
+			matrix = Matrix.transform2DTranslate(matrix, (checkSize*0.5) , (checkSize*0.5) );
+			matrix = Matrix.inverse(matrix);
+		var singleImage = ImageMat.extractRectFromMatrix(doubleBlurred, checkDoubleSize,checkDoubleSize, checkSize,checkSize, matrix);
+		var gradients = ImageMat.gradientVector(singleImage, checkSize,checkSize).value;
+		
+		//console.log(gradients);
 
+		var direction = gradients[ Math.floor(checkSize*0.5)*checkSize + Math.floor(checkSize*0.5) ];
+		//console.log(direction);
+
+		var angle = V2D.angleDirection(V2D.DIRX,direction);
+		//console.log(angle);
+
+		//throw "?"
+		var changed = new V4D(feature.x,feature.y,size,angle);
+		updated.push(changed);
+	}
+	return updated;
+}
 
 
 R3D.SADVectorRGBGradientOctant_GAUSSIAN = ImageMat.gaussianMask(16+2,16+2, 2.0*(16+2));
@@ -5438,30 +5489,10 @@ R3D.featuresFromPoints = function(points){ // V4D
 
 R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 	var maxCount = 1000;
-	var featuresA = R3D.testExtract1(imageMatrixA, null, maxCount, true);
+	var featuresA = R3D.testExtract1(imageMatrixA, R3D.CORNER_SELECT_RELAXED, maxCount, true);
 	console.log(featuresA);
-		featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
-//throw "yay";
-		return featuresA;
-		/*
-	var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
-		objectsA = R3D.siftObjectsToUnique(objectsA);
-	if(toFeatures){
-		var finals = [];
-		for(var i=0; i<objectsA.length; ++i){
-			var object = objectsA[i];
-			var point = object["point"];
-			var size = object["size"];
-			var angle = object["angle"];
-			finals.push( new V4D(point.x,point.y,size,angle) );
-		}
-		return finals;
-	}
-
-	// TODO: FEATURES DON'T HAVE A SCORE ...
-
-	return objectsA;
-	*/
+	featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
+	return featuresA;
 }
 R3D.testExtract1 = function(imageSource, type, maxCount, single){
 	maxCount = (maxCount!==undefined && maxCount!==null) ? maxCount : 500; 
@@ -5475,7 +5506,7 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 
 	//var scales = [2.0,1.0,0.5];
 	// 0.9999
-type = R3D.CORNER_SELECT_RELAXED; // 0.99999
+//type = R3D.CORNER_SELECT_RELAXED; // 0.99999
 //type = R3D.CORNER_SELECT_REGULAR; // 0.999
 //type : R3D.CORNER_SELECT_RESTRICTED;
 	
@@ -6013,6 +6044,7 @@ var imageBlurred = imageMatrix.getBlurredImage(1.0);
 		objectList.push(objects);
 		for(k=0; k<features.length; ++k){
 			var point = features[k];
+//console.log(point+"")
 			var isObject = false;
 			var hasAngle = false;
 			var score = 0;
@@ -6208,7 +6240,7 @@ limitScoreSearch = null;
 var limitScoreRatio = null;
 	//var limitScoreRatio = 1.0;
 	//var limitScoreRatio = 0.99;
-//	var limitScoreRatio = 0.90;
+	//var limitScoreRatio = 0.90;
 	//var limitScoreRatio = 0.75;
 	//var limitScoreRatio = 0.85;
 
@@ -6344,7 +6376,7 @@ var bestMatchCountMin = 20;
 	objectsA = objectsAIn; // use full features if cut short previously
 	objectsB = objectsBIn;
 	console.log("limited match... - ALLOWABLE ERRORS: "+errorA+" & "+errorB);
-	var loopCount = 10;
+	var loopCount = 20;
 	var bestMatchCount = -1;
 	var best = null;
 var highestMatchCount = 0;
@@ -6353,12 +6385,17 @@ var highestMatchCount = 0;
 		var maximumSamplingCount = null;
 		var maximumSamplingF = null;
 		var maxiumumAverageScore = null;
+var cntI = 0;
 	while(loopCount>0 && (bestMatchCount<0 || bestMatchCount>bestMatchCountMin)){ // looping on this makes it worse ..  
 //		console.log("loop: "+loopCount+" = "+bestMatchCount);
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, errorB);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, errorA);
 //console.log(putativeA,putativeB)
-limitScoreRatio = 0.95;
+//limitScoreRatio = 0.95;
+//limitScoreRatio = 0.95 - cntI*0.05;
+//limitScoreRatio = 0.90;
+limitScoreRatio = 0.95 - cntI*0.01;
+++cntI;
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
 		var matchesBest = matching["best"];
 //		console.log(matchesBest)
@@ -6474,7 +6511,7 @@ console.log("out");
 	console.log("BEST:");
 	console.log(best);
 	// drop worst score points:
-	var sigmaF = 1.0;
+	var sigmaF = 2.0;
 	var sigmaS = 0.0;
 
 	var scores = [];
@@ -6489,19 +6526,28 @@ console.log("out");
 		return s*s; // score^2 has more normal distribution
 	}
 
+	
 	var valueFxnF = function(m){
-		a = m["a"];
-		return dA*dA + dB*dB; // score^2 has more normal distribution
-	}
-	var valueFxnF = function(a){
-		return TODO
+		var e = m["error"]; // squared error
+		return e;
+		/*
+		var a = m["A"];
+		var b = m["B"];
+		var ptA = a["point"];
+		var ptB = b["point"];
+		*/
 	}
 	console.log("start: "+best.length);
 	var group = Code.dropOutliers(best, valueFxnS, sigmaS);
 		var best = group["inliers"];
 		var worst = group["outliers"];
 	console.log("end: "+best.length+" - "+worst.length+" = "+(best.length/(best.length+worst.length))+" %")
-	// drop worst F-dstance points
+	// drop worst F-distance points
+
+		var group = Code.dropOutliers(best, valueFxnF, sigmaS);
+		var best = group["inliers"];
+		var worst = group["outliers"];
+	console.log("end2: "+best.length+" - "+worst.length+" = "+(best.length/(best.length+worst.length))+" %")
 
 
 	// recalc F
@@ -6587,7 +6633,7 @@ R3D.featureCornersToLines = function(features, imageMatrix, keepLines, keepPoint
 		//space.insertObject( new V2D(feature.x,feature.y) );
 		space.insertObject( feature );
 	}
-	var samples = 3;
+	var samples = 0;
 	var imageGradient = null;
 	if(samples>0){
 		var img = imageMatrix.gry();
@@ -6609,175 +6655,49 @@ var output = [];
 		for(i=0; i<points.length; ++i){
 			var point = points[i];
 
-/*
+			var pointScore = point.t;
 			// testing stuff:
 			var nearest = space.kNN(point, 40);
 			var rads = [];
+			var angs = [];
+			var scrs = [];
 			var totD = 0;
 			var cnts = 0;
+			var rScores = [];
+			var rTotal = 0;
 			for(j=1; j<nearest.length; ++j){
 				var near = nearest[j];
 				var radius = V2D.distance(point, near);
+				var dr = V2D.sub(near,point);
+				var angle = V2D.angleDirection(V2D.DIRX,dr);
 				totD += radius;
 				rads.push(radius);
-				//rads.push(totD);
+				angs.push(angle);
+				scrs.push(near.t);
+				//var rS = near.t/(Math.pow(radius,2));
+				//var rS = near.t/(Math.pow(radius,1));
+				//var rS = (Math.pow(near.t,2))/(Math.pow(radius,2));
+				var rS = (Math.pow(near.t,.5))/(Math.pow(radius,2));
+				//var rS = (Math.pow(near.t,.25))/(Math.pow(radius,2));
+				//var rS = (Math.pow(near.t,1))/(Math.pow(radius,2));
+				//var rS = (Math.pow(near.t,2))/(Math.pow(radius,3));
+				rScores.push(rS);
+				rTotal += rS;
 			}
-			Code.printMatlabArray(rads);
-*/
-/*
-			var nearest = space.kNN(point, 10);
-			var rads = [];
-			var rads2 = [];
-			for(j=0; j<nearest.length; ++j){
-				var near = nearest[j];
-				var radius = V2D.distance(point, near);
-				rads.push(new V2D(radius,j));
-				rads2.push(radius);
+			var R = 0;
+			var A = 0;
+			var pcts = [];
+			for(j=0; j<rScores.length; ++j){
+				var p = (rScores[j]/rTotal);
+				pcts.push(p);
+				R += p * rads[j];
 			}
-			console.log(rads);
-			Code.printMatlabArray(rads2);
-			//var parabola = Code.parabolaFromPoints(rads);
-			var parabola = Code.parabolaAlgebraic(rads);
-			console.log(parabola);
-			var a = parabola["a"];
-			var b = parabola["b"];
-			var c = parabola["c"];
-			console.log(a,b,c);
-			// slope: a*x + b = y
-			// x = (y - b)/a
-			var checkSlope = 0.30;
-			//var xSlope = (checkSlope - b)/a;
-			var xSlope = (checkSlope - b)/a;
-			console.log(xSlope);
-			throw "?";
-*/
-/*
-			// get neightbor with best score:
-			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
-			var neighbors = [];
-			for(j=1; j<nearest.length; ++j){
-				var near = nearest[j];
-				var radius = V2D.distance(point, near);
-				var score = near.t;
-				//neighbors.push( [near, score] );
-				neighbors.push( [near, radius] );
-			}
-			neighbors.sort(function(a,b){
-				return a[0].t > b[0].t ? -1 : 1;
-			});
-			console.log(neighbors);
-			var radius = neighbors[0][1];
-			console.log("radius: "+radius);
-*/
-/*
-			// get self at successive scales
-			var size = 5;
-			var s0 = 5;
-			//var scalers = [-2,-1,0,1,2,3];
-			var scalers = [-2,-1.5,-1,-.5,0,.5,1,1.5,2,2.5,3];
-var scales = [];
-var scores = [];
-			for(var k=0; k<scalers.length; ++k){
-				var scale = Math.pow(2.0,scalers[k]);
-				var matrix = new Matrix(3,3).identity();
-					matrix = Matrix.transform2DTranslate(matrix, -size*0.5, -size*0.5);
-					matrix = Matrix.transform2DScale(matrix, scale);
-					matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
-				var image = imageMatrix.extractRectFromMatrix(size,size, matrix);
-var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
-var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(0 + i*50, 0 + k*50);
-GLOBALSTAGE.addChild(d);
-// 
+			var A = Code.averageAngles(angs, pcts);
 
-
-				//var score = ImageMat.totalCostToMoveAny(image, g,b,wid,hei);
-				var value = ImageMat.totalCostToMoveAny(image);
-				var score = Code.sum(value["value"]);
-					score /= (size*size);
-				scores.push(score);
-				scales.push(scale);
-			}
-
-			//console.log(scores);
-			//console.log(scales);
-			Code.printMatlabArray(scores);
-if(i==20){
-	throw "?";
-}
-*/
-
-/*
-			var size = 5;
-			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
-			var neighbors = [];
-			var scores = [];
-			var scales = [];
-			for(j=1; j<nearest.length; ++j){
-				var near = nearest[j];
-				var radius = V2D.distance(point, near);
-				var scale = radius/size;
-
-				var matrix = new Matrix(3,3).identity();
-					matrix = Matrix.transform2DTranslate(matrix, -size*0.5, -size*0.5);
-					matrix = Matrix.transform2DScale(matrix, scale);
-					matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
-				var image = imageMatrix.extractRectFromMatrix(size,size, matrix);
-var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
-var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(0 + i*50, 0 + j*50);
-GLOBALSTAGE.addChild(d);
-// 
-
-
-				//var score = ImageMat.totalCostToMoveAny(image, g,b,wid,hei);
-				var value = ImageMat.totalCostToMoveAny(image);
-				var score = Code.sum(value["value"]);
-				scores.push(score);
-				scales.push(scale);
-			}
-			
-			Code.printMatlabArray(scores);
-
-if(i==20){
-	throw "?";
-}
-*/
-
-
-/*
-			// use first neighbor with highest score
-			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
-			var neighbors = [];
-			var scores = [];
-			var radiuses = [];
-			for(j=1; j<nearest.length; ++j){
-				var near = nearest[j];
-				var radius = V2D.distance(point, near);
-				var score = near.t;
-				//neighbors.push( [near, score] );
-				//neighbors.push( [near, radius] );
-				scores.push(score);
-				radiuses.push(radius);
-			}
-			// neighbors.sort(function(a,b){
-			// 	return a[0].t > b[0].t ? -1 : 1;
-			// });
-			// console.log(neighbors);
-			// var radius = neighbors[0][1];
-			// console.log("radius: "+radius);
-
-			Code.printMatlabArray(scores,"s");
-			Code.printMatlabArray(radiuses,"r");
-			console.log("-");
-
-if(i==20){
-	throw "?";
-}
-
-*/
+			// Code.printMatlabArray(rads,"r");
+			// Code.printMatlabArray(scrs,"s");
+			// Code.printMatlabArray([R],"R");
+// console.log(R);
 
 			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
 			var neighbors = [];
@@ -6847,62 +6767,21 @@ if(neighbor){
 			if(isLine){
 				var angle = V2D.angle(V2D.DIRX,dir);
 				var cornerScore = point.t * neighbor.t;
+//radius = R * 0.4;
+//radius = R * 0.5; // OK
+//radius = R * 0.2; // too small
+radius = R;
+//radius = R * 2.0;
 //radius *= 2;
-angle = null;
+//angle = null;
+//radius = 10;
+angle = A;
 				var feature = {"point": new V2D(point.x,point.y), "size":radius, "angle":angle, "score":cornerScore};
 				output.push( feature );
 				++cnt;
 			}
 }
 
-/*
-			// var nearest = space.kNN(feature, 2);
-			// 	nearest = nearest[1];
-			// var radius = V2D.distance(point, nearest);
-			//console.log(radius);
-			//var neighbors = [nearest]; // TODO GET INSIDE RADIUS * 2
-			var neighbors = space.kNN(point, neighborGroups);
-			// 2-3 neighbors only ...
-			neighbors.shift();
-				//neighbors.shift(); // SKIP FIRST 2 NEIGHBORS
-			for(j=0; j<neighbors.length; ++j){
-				var neighbor = neighbors[j];
-				var dir = V2D.sub(neighbor,point);
-				radius = dir.length();
-				// drop too large or small items
-				if(radius<2 || radius>100){ // TODO: limits should depend on source image
-					continue;
-				}
-				var isLine = true;
-				for(k=0; k<samples; ++k){
-					var pct = (k+1)/(samples+1);
-					var x = pct*dir.x + point.x;
-					var y = pct*dir.y + point.y;
-					var grad = ImageMat.gradientVectorNonIntegerIndex(imageGradient,imageWidth,imageHeight, x,y, true);
-					var angle = V2D.angle(grad,dir);
-					if(angle>Math.PI*0.5){
-						angle = Math.abs(Math.PI - angle);
-					}
-					if(angle<minAngle){
-						isLine = false;
-						break;
-					}
-				}
-				if(isLine){
-					var angle = V2D.angle(V2D.DIRX,dir);
-					var center = V2D.avg(point,neighbor);
-					//var cornerScore = point.t + neighbor.t; // OR SIMILAR -> increasing
-					var cornerScore = point.t * neighbor.t;
-radius *= 2;
-//radius = 6;
-angle = null;
-					var feature = {"point": new V2D(point.x,point.y), "size":radius, "angle":angle, "score":cornerScore};
-					output.push( feature );
-					++cnt;
-				}
-			}
-			// ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y){ 
-*/
 		}
 	}
 	return output;

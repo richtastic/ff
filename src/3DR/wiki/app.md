@@ -192,11 +192,61 @@ project typical numbers:
 
 APP TODO:
 
+
+----- corner geometry again,
+	- further out scores pull the radius larger but proportional to 1.0/distance && 1.0*corner-score
+PLOT MATCHING POINT IN A/B AND COMPARE SCALES/whatnot
+-- better angle determiner
+
+
+
+----- not ENTROPY, but some measurement of the variability of the area
+	smooth ~ 0
+	crazy ~ 1
+	derivative entropy / gradient variability ?
+	look at 'lifetime of area scale'
+
+
+----- inner / outer concentric circle comparrisions
+	- angle diff => 
+	- histogram of angle differences
+
+
+
+----- orientation binning ?
+	- starting angle peak vs later peak?
+----- inner gradient circle vs outer gradient circle compare ?
+	- 
+----- angle differences not dot
+	- 
+
+x ----- historgram max/min ratio
+----- inner mask vs outer mask
+
+- if using corners, how to get orientation?:
+	- SIFT maxiumum gradient direction [+/- neighbors @ 80%]
+	- corners should have 1 primary direction ?
+		- pick zoomed-in carefully gradient primary direction
+
+- extract area image by:
+	A) scale to 2ce desired size
+	B) blur
+	C) scale by half
+
+
+------ peak gradient average at middle
+=> how does this behave AROUND corner ? ---- exact center matter
+=> how does this behave with different window sizes
+--- picking 'max'/'min' location: largest elevation change (not including end points) of EITHER min or max
+--- throw away points that have multiple max/mins ?
+
+
+
 - use neighbor corner with highest score [up to ~10 neighbors ... ?]
 - use averaging of nearest ~3 neighbors radius sizes
-- first neighbor to have a score higher than the next neighbor
+x first neighbor to have a score higher than the next neighbor
 - peak in ds/dr [division by 0]
-- move-any direction at multiple scales [per pixel or static size] peaks
+x move-any direction at multiple scales [per pixel or static size] peaks
 
 
 - corner geometry still not solved for size

@@ -15,6 +15,22 @@ function classesLoadedFxn(){
 	var features = new FeatureTest();
 	return;
 
+var a = [1.171363878968783, 0.013877909973027156, 0.03884755420317247, 0.32626487295571016, 0.7877497467896601, 0, 0.04407590059487167, 0.5189962959809866];
+var b = Code.copyArray(a);
+console.log(a);
+console.log(b);
+var c = Code.arrayVectorSub(a,b);
+	// Code.arrayVectorSub = function(a,b){
+	// var c = Code.newArray(a.length);
+	// for(var i=a.length; --i; ){
+	// 	c[i] = a[i] - b[i];
+	// }
+	// return c;
+
+
+console.log(c);
+
+return;
 
 
 var mask = R3D.circularSIFTBinMask(3);

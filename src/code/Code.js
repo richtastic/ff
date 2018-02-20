@@ -746,7 +746,10 @@ Code.isa = function(obj, klass){ // only this?
 	return (obj && obj.constructor && obj.constructor==klass);
 }
 Code.ofa = function(obj, klass){ // inherits?
-	return (obj && obj.constructor && obj.constructor==klass) || Code.ofa(obj.constructor._, klass);
+	if(obj){
+		return (obj && obj.constructor && obj.constructor==klass) || Code.ofa(obj.constructor._, klass);
+	}
+	return false;
 }
 // ------------------------------------------------------------------------------------------ PRINT
 Code.log = function log(o){
@@ -824,7 +827,7 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 Code.hash = function(string){
 	if(string==null || string.length==0){ return 0; }
 	var i, char, hash = 0;
-	for(i=string.length; --i; ){
+	for(i=string.length; i--; ){
 		char = string.charCodeAt(i);
 		hash = ((hash<<5)-hash)+char;
 		hash = hash & hash; // >>> 0
@@ -1655,7 +1658,7 @@ Code.points2DToZeroOne = function(arr, width, height){
 
 Code.sum = function(a){
 	var i, sum=0;
-	for(i=a.length; --i;){
+	for(i=a.length; i--;){
 		sum += a[i];
 	}
 	return sum;
@@ -3017,41 +3020,66 @@ Code.median = function(list,key){ // TODO: durrr median = middle of set
 	}
 	return mu / len;
 }
+Code.sum = function(list,key){
+	var i, sum=0, item, len=list.length;
+	if(len==0){ return 0; }
+	for(i=len;i--;){
+		item = list[i];
+		if(key!==undefined && key!==null){
+			item = item[key];
+		}
+		sum += item;
+	}
+	return sum;
+}
+Code.abs = function(a){
+	for(var i=a.length; i--; ){
+		a[i] = Math.abs(a[i]);
+	}
+	return a;
+}
 Code.arrayVectorSub = function(a,b){
 	var c = Code.newArray(a.length);
-	for(var i=a.length; --i; ){
+	for(var i=a.length; i--; ){
 		c[i] = a[i] - b[i];
 	}
 	return c;
 }
 Code.arrayVectorAdd = function(a,b){
 	var c = Code.newArray(a.length);
-	for(var i=a.length; --i; ){
+	for(var i=a.length; i--; ){
 		c[i] = a[i] + b[i];
+	}
+	return c;
+}
+Code.arrayVectorMul = function(a,b){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; i--; ){
+		c[i] = a[i] * b[i];
 	}
 	return c;
 }
 Code.arrayVectorLength = function(a){
 	var s = 0;
-	for(var i=a.length; --i; ){
+	for(var i=a.length; i--; ){
 		s += a[i]*a[i];
 	}
 	return Math.sqrt(s);
 }
 Code.arrayScale = function(a, s){
-	for(var i=a.length; --i; ){
+	for(var i=a.length; i--; ){
 		a[i] = s*a[i];
 	}
 	return a;
 }
 Code.arraySub = function(a, s){
-	for(var i=a.length; --i; ){
+	for(var i=a.length; i--; ){
 		a[i] = a[i] - s;
 	}
 	return a;
 }
 Code.arrayClip = function(a, min, max){
-	for(var i=a.length; --i; ){
+	for(var i=a.length; i--; ){
 		a[i] = Math.min(Math.max(a[i], min),max);
 	}
 	return a;
@@ -7860,7 +7888,7 @@ Code.histogram = function(data, masking, buckets){
 	if(buckets>0){
 		bucketSize = infoRange/buckets;
 	}
-	return {"histogram":histogram, "size":bucketSize, "min":null, "max":null};
+	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
 }
 Code.range = function(data, masking){
 	var i, len=data.length;

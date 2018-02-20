@@ -34,14 +34,14 @@
 // zoom study:
 //new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
-//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
-//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated
+new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+//	new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
-new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-//new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
+//new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP
 //new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
 //new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
@@ -168,6 +168,7 @@ return;
 */
 
 
+
 var useCorners = false; // SIFT points are still more poor than corners
 //var useCorners = true;
 var useSIFT = false;
@@ -177,8 +178,19 @@ var useCornerGeometry = true;
 var featuresA = null;
 var featuresB = null;
 if(useCorners){
-	featuresA = R3D.testExtract1(imageMatrixA, null, null, true);
-	featuresB = R3D.testExtract1(imageMatrixB, null, null, true);
+	// featuresA = R3D.testExtract1(imageMatrixA, R3D.CORNER_SELECT_REGULAR, null, true);
+	// featuresB = R3D.testExtract1(imageMatrixB, R3D.CORNER_SELECT_REGULAR, null, true);
+	// if too few points, 
+	featuresA = R3D.testExtract1(imageMatrixA, R3D.CORNER_SELECT_RELAXED, null, true);
+	featuresB = R3D.testExtract1(imageMatrixB, R3D.CORNER_SELECT_RELAXED, null, true);
+	/*for(var i=0; i<featuresA.length; ++i){
+		featuresA[i].z *= 2;
+	}
+	for(var i=0; i<featuresB.length; ++i){
+		featuresB[i].z *= 2;
+	}*/
+	// featuresA = R3D.cornerFeaturesAddAngles(imageMatrixA, featuresA);
+	// featuresB = R3D.cornerFeaturesAddAngles(imageMatrixB, featuresB);
 	// var featuresA = R3D.testExtract1(imageMatrixGA, null, null, true);
 	// var featuresB = R3D.testExtract1(imageMatrixGB, null, null, true);
 }else if(useSIFT){
@@ -188,6 +200,10 @@ if(useCorners){
 	featuresA = R3D.extractCornerGeometryFeatures(imageMatrixA, true);
 	featuresB = R3D.extractCornerGeometryFeatures(imageMatrixB, true);
 }
+
+// OVERWRITE: / ADD:
+// featuresA = R3D.cornerFeaturesAddAngles(imageMatrixA, featuresA);
+// featuresB = R3D.cornerFeaturesAddAngles(imageMatrixB, featuresB);
 
 console.log(featuresA.length+" | "+featuresB.length);
 
@@ -216,8 +232,8 @@ for(var f=0; f<lists.length; ++f){
 }
 
 // show initial feature sites
-//if(true){
-if(false){
+if(true){
+//if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
@@ -237,6 +253,7 @@ if(false){
 				var z = point.z;
 				var a = point.t;
 //z=1
+z *= 0.25;
 			var c = new DO();
 				color = 0xFFFF0000;
 				//color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
@@ -432,6 +449,10 @@ console.log(featuresA.length+" v "+featuresB.length);
 
 var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
+
+// for(var i=0; i<featuresA.length; ++i){
+// 	console.log(featuresA[i]["angle"]+"|"+objectsA[i]["angle"])
+// }
 
 if(false){
 //if(true){
