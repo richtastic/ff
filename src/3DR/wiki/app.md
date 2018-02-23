@@ -193,6 +193,35 @@ project typical numbers:
 APP TODO:
 
 
+better metric for: 'things going on'
+	x entropy is net sum (order not matter)
+	high differentials
+		- cost to move?
+		- variability?
+			- min?
+			- avg?
+		- gradient magnitudes
+	- algorithm for using original picture and doing on a zoom-basis
+		- for each pixel in original image:
+			- calculate average variability
+			- keep accumulator sum maxiumum of entire image average
+		- for each feature point
+			- start at center pixel
+			- circularly add concentric pixel circles?
+				- size == rad/wid of circle
+
+
+
+
+MOPS"?
+http://graphics.cs.cmu.edu/courses/15-463/2005_fall/www/Papers/MOPS.pdf
+https://piazza-resources.s3.amazonaws.com/hz5ykuetdmr53k/i2c8h15sptx3kq/16.2_MOPS_Descriptor.pdf?AWSAccessKeyId=AKIAIEDNRLJ4AZKBW6HA&Expires=1519171943&Signature=%2Fq3LL7Qj72NP0xvI772nyMd5Re8%3D
+https://pdfs.semanticscholar.org/9a7d/bce8c3b041e9954cc90286657c5554c76533.pdf
+
+
+
+
+
 ----- corner geometry again,
 	- further out scores pull the radius larger but proportional to 1.0/distance && 1.0*corner-score
 PLOT MATCHING POINT IN A/B AND COMPARE SCALES/whatnot

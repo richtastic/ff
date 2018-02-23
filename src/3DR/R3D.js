@@ -6606,6 +6606,84 @@ console.log("out");
 		OR HAVE 2 points
 		OR BOTH
 */
+
+R3D.variabilityForPoint = function(image, width, height, pointX, pointY){
+	pointX = Math.floor(pointX);
+	pointY = Math.floor(pointY);
+	var maxSize = 100;
+	//var sizes = Code.lineSpace(1,51,2);
+	var total = 0;
+	var count = 0;
+	var tlX = pointX;
+	var tlY = pointY;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var vars = [];
+	var sizes = [];
+	var counts = [];
+	for(var s=0; s<maxSize; s+=2){
+		var minX = Math.max(tlX,0);
+		var maxX = Math.min(tlX+s,wm1);
+		var minY = Math.max(tlY,0);
+		var maxY = Math.min(tlY+s,hm1);
+		var i, j, val, index;
+//		console.log(s,minX,maxX,minY,maxY);
+		// top
+		j = minY;
+		if(j>=0){
+			for(i=minX; i<=maxX; ++i){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+			}
+		}
+		// bottom
+		j = maxY;
+		if(j<height && j>minY){
+			for(i=minX; i<=maxX; ++i){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+			}
+		}
+		// inset 1
+		minY += 1;
+		maxY -= 1;
+		// left
+		i = minX;
+		if(i>=0){
+			for(j=minY; j<=maxY; ++j){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+			}
+		}
+		// right
+		i = maxX;
+		if(i<width && i>minX){
+			for(j=minY; j<=maxY; ++j){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+			}
+		}
+		var size = s+1;
+		// totals
+		sizes.push(size);
+		//vars.push(total/count);
+		vars.push(total);
+		//vars.push(total/size);
+		counts.push(count);
+		tlX -= 1;
+		tlY -= 1;
+	}
+	// ...
+	return {"size":sizes, "variability":vars, "count":counts};
+}
 R3D.featureCornersToLines = function(features, imageMatrix, keepLines, keepPoints){ // centers of lines have multiple problems [localization, angle], so just use corners
 	console.log("featureCornersToLines")
 	keepLines = keepLines!==undefined ? keepLines : true;
@@ -6647,7 +6725,9 @@ R3D.featureCornersToLines = function(features, imageMatrix, keepLines, keepPoint
 var cnt = 0;
 var output = [];
 
+var imageVariability = Code.variabilityImage(imageMatrix.gry(), imageWidth,imageHeight);
 
+var allTests = [];
 	var keys = Code.keys(spaces);
 	for(s=0; s<keys.length; ++s){
 		var key = keys[s];
@@ -6693,6 +6773,282 @@ var output = [];
 				R += p * rads[j];
 			}
 			var A = Code.averageAngles(angs, pcts);
+
+
+
+
+
+
+
+
+
+
+
+// TESTING:
+
+if(true){//i==13){
+console.log("START: ------- "+i);
+
+
+/*
+
+// PEAKS IN DY ?
+// 
+
+
+var vars = R3D.variabilityForPoint(imageVariability, imageWidth, imageHeight, point.x, point.y);
+
+var sizes = vars["size"];
+var count = vars["count"];
+var scores = vars["variability"];
+
+allTests.push([sizes,scores]);
+
+
+
+// TODO:
+// use size / 
+// scores = Code.arrayVectorDiv(scores,sizes);
+// scores = Code.arrayVectorDiv(scores,sizes);
+// DO DIFF
+var dy = Code.arrayDerivative(scores);
+// FIND FIRST PEAK
+var peaks = Code.findMaxima1D(dy);
+if(peaks.length>0){
+var peak = peaks[0];
+var peak = peak.x + 1;
+//throw "?"
+
+
+//Code.printMatlabArray(vars["count"],"s");
+// Code.printMatlabArray(vars["size"],"s");
+// Code.printMatlabArray(vars["variability"],"v");
+
+
+// SHOW:
+var sca = 1.0;
+var sizeLarge = 50;
+//var scale = peak / sizeLarge;
+var scale = 2.0 * peak / sizeLarge;
+var matrix = new Matrix(3,3).identity();
+	matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
+	matrix = Matrix.transform2DScale(matrix, scale);
+	matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
+var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
+var image = imageLarge;
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(0 + i*50, 0 + 50);
+GLOBALSTAGE.addChild(d);
+}
+
+
+
+
+if(i==9){
+	var str = "";
+	for(var k=0; k<allTests.length; ++k){
+		var entry = allTests[k];
+		var sizes = entry[0];
+		var scores = entry[1];
+		str = str + Code.printMatlabArray(sizes,"s"+k, true) + "\n";
+		str = str + Code.printMatlabArray(scores,"v"+k, true) + "\n";
+	}
+	var cols = ["r","m","b","g","k"]; // "w"
+	var sigs = ["-","x","o","+"];
+	//var sigs = ["-"];
+	str = str + "hold off;" + "\n";
+	for(var k=0; k<allTests.length; ++k){
+		var c = cols[k%cols.length];
+		var s = "";//sigs[k%sigs.length];
+		str = str + "plot(s"+k+",v"+k+",\""+c+"-"+s+"\");" + "\n";
+		if(k==0){
+			str = str + "hold on;" + "\n";
+		}
+	}
+	console.log(str);
+	throw "?";
+
+}
+
+
+*/
+
+
+var sca = 2.0;
+
+			// var sizeInner = 5;
+			// var sizeSmall = 11;
+			// var sizeLarge = 21;
+
+			var sizeInner = 11;
+			var sizeSmall = 21;
+			var sizeLarge = 43;
+
+			// var sizeInner = 21;
+			// var sizeSmall = 51;
+			// var sizeLarge = 101;
+
+			var maskSmall = ImageMat.circleMask(sizeSmall);
+			var maskInner = ImageMat.circleMask(sizeSmall,sizeSmall,Math.floor((sizeSmall-sizeInner)*0.5));
+			var maskDoughbut = Code.arrayVectorSub(sizeSmall,maskInner);
+
+			var scalers = Code.divSpace(-4.0,2.0,10);
+			scalers.push(4.0); // however big to include the entire image
+			var scores = [];
+			
+var scales = [];
+var scores = [];
+			for(var k=0; k<scalers.length; ++k){
+				var scale = Math.pow(2.0,scalers[k]) ; // / sizeLarge;
+//				console.log(scale)
+				var matrix = new Matrix(3,3).identity();
+					matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
+					matrix = Matrix.transform2DScale(matrix, scale);
+					matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
+				var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
+				//imageLarge = imageLarge.getBlurredImage(1.0);
+				imageLarge = imageLarge.getBlurredImage(0.5);
+				var matrix = new Matrix(3,3).identity();
+					matrix = Matrix.transform2DTranslate(matrix, -sizeSmall*0.5, -sizeSmall*0.5);
+					matrix = Matrix.transform2DScale(matrix, sizeLarge/sizeSmall);
+					matrix = Matrix.transform2DTranslate(matrix, sizeLarge*0.5, sizeLarge*0.5 );
+				var imageSmall = imageLarge.extractRectFromMatrix(sizeSmall,sizeSmall, matrix);
+				var gry = imageSmall.gry();
+				// imageGradient = ImageMat.gradientVector(gry,sizeSmall,sizeSmall).value;
+				// var imageGradientMagnitude = ImageMat.gradientMagnitude(gry,sizeSmall,sizeSmall).value;
+
+
+				//var isMin = true;
+				var isMin = false;
+				var variabilityOuter = Code.variability(gry, sizeSmall, sizeSmall, maskSmall, isMin);
+				//var variabilityOuter = Code.variability(gry, sizeSmall, sizeSmall, maskDoughbut, isMin);
+				var variabilityInner = Code.variability(gry, sizeSmall, sizeSmall, maskInner, isMin);
+				//var variability = variabilityOuter==0 ? 0 : variabilityInner/variabilityOuter;
+				//var variability = (variabilityInner+variabilityOuter)*0.5;
+				var variability = variabilityOuter;
+				scores.push(variability);
+
+				scales.push(scale);
+
+
+
+var image = imageSmall;
+//var image = imageLarge;
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+var d = new DOImage(img);
+//d.matrix().scale(2.0);
+d.matrix().scale(sca);
+d.matrix().translate(0 + i*50, 0 + k*50);
+GLOBALSTAGE.addChild(d);				
+
+			} // k
+
+
+
+		// Code.printMatlabArray(scales,"s");
+		// Code.printMatlabArray(scores,"v");
+
+
+
+		// FORCE MONOTONIC INCREASING
+scores.unshift(0);
+		scores = Code.toMonotonicIncreasing(scores);
+
+		var percentWant = 0.25;
+		//var percentWant = 0.333;
+		//var percentWant = 0.50;
+		//var percentWant = 0.75; // worse the further away it gets
+		var info = Code.infoArray(scores);
+		var mean = info["mean"];
+		var mini = info["min"];
+		var maxi = info["max"];
+		var range = info["range"];
+		var valueWant = mini + percentWant*range;
+
+// // SCALE to 0/1
+// Code.arrayScale(scores,1.0/maxi);
+// valueWant = percentWant;
+
+
+		var info = Code.valuesIn(scores,valueWant);
+		//console.log(info);
+
+if(info.length>0){
+	info = info[0];
+	var k = info["location"];
+	//k = Math.floor(k);
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFFFF00FF);
+	d.graphics().drawRect(0,0,sizeSmall*sca,sizeSmall*sca);
+	d.graphics().strokeLine();
+	d.matrix().translate(0 + i*50, 0 + k*50);
+	GLOBALSTAGE.addChild(d);
+}
+
+
+		allTests.push([scales,scores]);
+
+
+if(i==75){
+	
+	var str = "";
+	for(var k=0; k<allTests.length; ++k){
+		var entry = allTests[k];
+		var scales = entry[0];
+			scales.unshift(0);
+		var scores = entry[1];
+		if(k==0){
+			str = str + Code.printMatlabArray(scales,"s", true) + "\n";
+		}
+		str = str + Code.printMatlabArray(scores,"v"+k, true) + "\n";
+	}
+	var cols = ["r","m","b","g","y","k"]; // "w"
+	var sigs = ["-","x","o","+"];
+	str = str + "hold off;" + "\n";
+	for(var k=0; k<allTests.length; ++k){
+		var c = cols[k%cols.length];
+		var s = sigs[k%sigs.length];
+		str = str + "plot(s,v"+k+",\""+c+"-"+s+"\");" + "\n";
+		if(k==0){
+			str = str + "hold on;" + "\n";
+		}
+	}
+	console.log(str);
+	throw "?";
+}
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 			// Code.printMatlabArray(rads,"r");
 			// Code.printMatlabArray(scrs,"s");

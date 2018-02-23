@@ -386,7 +386,7 @@ Code.appendToPath = function(path){
 	}
 	return fin;
 }
-Code.printMatlabArray = function(array,name){
+Code.printMatlabArray = function(array,name, ret){
 	name = name!==undefined ? name : "x";
 	var str = name+" = [";
 	for(var i=0; i<array.length; ++i){
@@ -396,6 +396,9 @@ Code.printMatlabArray = function(array,name){
 		}
 	}
 	str = str + "];";
+	if(ret){
+		return str;
+	}
 	console.log(str);
 }
 Code._appendParameter = function(container, key, value){ //
@@ -1428,6 +1431,18 @@ Code.nonZero = function(a){
 		}
 	}
 	return false;
+}
+Code.toMonotonicIncreasing = function(array){
+	var next = [];
+	var i, len = array.length;
+	if(len==0){
+		return next;
+	}
+	next[0] = array[0];
+	for(i=1; i<len; ++i){
+		next[i] = Math.max(next[i-1],array[i]);
+	}
+	return next;
 }
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
@@ -3059,6 +3074,13 @@ Code.arrayVectorMul = function(a,b){
 	}
 	return c;
 }
+Code.arrayVectorDiv = function(a,b){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; i--; ){
+		c[i] = a[i] / b[i];
+	}
+	return c;
+}
 Code.arrayVectorLength = function(a){
 	var s = 0;
 	for(var i=a.length; i--; ){
@@ -3083,6 +3105,14 @@ Code.arrayClip = function(a, min, max){
 		a[i] = Math.min(Math.max(a[i], min),max);
 	}
 	return a;
+}
+Code.arrayDerivative = function(a){
+	var result = [];
+	var i, len = a.length;
+	for(i=1; i<a.length; ++i){
+		result.push(a[i]-a[i-1]);
+	}
+	return result;
 }
 /*
 ar vLen = Code.arrayVectorLength(v);
@@ -7904,7 +7934,7 @@ Code.range = function(data, masking){
 	var range = max - min;
 	return range;
 }
-Code.variabilityImage = function(data, width, height){
+Code.variabilityImageDiffs = function(data, width, height){
 	var i, j, x, y, m, len = data.length;
 	var wm1 = width - 1;
 	var hm1 = height - 1;
@@ -7922,29 +7952,81 @@ Code.variabilityImage = function(data, width, height){
 			maxX = Math.min(i+1,wm1);
 			minY = Math.max(0,j-1);
 			maxY = Math.min(j+1,hm1);
-			tot = null;
+			//tot = null;
+			tot = 0;
 			mCount = 0;
 			for(y=minY; y<=maxY; ++y){
 				for(x=minX; x<=maxX; ++x){
 					ind = y*width + x;
 					if(ind!==index){ // no differential with self
+						++mCount
 						val = data[ind];
 						diff = Math.abs(value - val); // directional difference ?
-						if(tot===null){
-							tot = diff;
-						}else{
-							tot = Math.min(tot,diff); // minimum variablity
-						}
+						tot += diff;
+						// if(tot===null){
+						// 	tot = diff;
+						// }else{
+						// 	tot = Math.min(tot,diff); // minimum variablity
+						// }
 					}
 				}
 			}
 			if(tot){
-				result[index] = tot;
+				result[index] = mCount>0 ? tot/mCount : 0;
+				//result[index] = tot;
 			}
 		}
 	}
 	return result;
 }
+Code.variabilityImageColorGradient = function(data, width, height){ // 
+	var i, j, x, y, m, len = data.length;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var roughness = 0;
+	var minX, maxX, minY, maxY, value, val, ind, index, m, diff, result, mCount;
+	var mask = 1.0;
+	var total = 0;
+	var maskCount = 0;
+	var result = Code.newArrayZeros(width*height);
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			var index = j*width + i;
+			value = data[index];
+			minX = Math.max(0,i-1);
+			maxX = Math.min(i+1,wm1);
+			minY = Math.max(0,j-1);
+			maxY = Math.min(j+1,hm1);
+			avg = 0;
+			mCount = 0;
+			for(y=minY; y<=maxY; ++y){
+				for(x=minX; x<=maxX; ++x){
+					ind = y*width + x;
+					val = data[ind];
+					avg += val;
+					++mCount;
+					// if(ind!==index){ // no differential with self
+					// 	++mCount
+					// 	val = data[ind];
+					// 	diff = Math.abs(value - val); // directional difference ?
+					// 	tot += diff;
+					// 	// if(tot===null){
+					// 	// 	tot = diff;
+					// 	// }else{
+					// 	// 	tot = Math.min(tot,diff); // minimum variablity
+					// 	// }
+					// }
+				}
+			}
+			avg /= mCount;
+			var diff = Math.abs(value-avg);
+			result[index] = diff;
+			
+		}
+	}
+	return result;
+}
+Code.variabilityImage = Code.variabilityImageColorGradient;
 Code.variability = function(data, width, height, masking, isMin){ // roughness measure of a 2D surface
 	var i, j, x, y, m, len = data.length;
 	var wm1 = width - 1;
@@ -7968,11 +8050,18 @@ Code.variability = function(data, width, height, masking, isMin){ // roughness m
 				minY = Math.max(0,j-1);
 				maxY = Math.min(j+1,hm1);
 				m = 1.0;
-				tot = null;
+				//tot = null;
+				var avg = 0;
 				mCount = 0;
 				for(y=minY; y<=maxY; ++y){
 					for(x=minX; x<=maxX; ++x){
 						ind = y*width + x;
+
+						val = data[ind];
+						avg += val;
+						++mCount;
+
+						/*
 						if(ind!==index){ // no differential with self
 							if(masking){
 								m = masking[ind];
@@ -7994,14 +8083,22 @@ Code.variability = function(data, width, height, masking, isMin){ // roughness m
 								}
 							}
 						}
+						*/
 					}
 				}
+				
+				avg /= mCount;
+				var diff = Math.abs(value-avg);
+				total += diff;
+
+				/*
 				if(tot && mCount>0){
 					if(!isMin){
 						tot = tot / mCount; // average variablity
 					}
 					total += tot;
 				}
+				*/
 			}
 		}
 	}
@@ -8010,6 +8107,8 @@ Code.variability = function(data, width, height, masking, isMin){ // roughness m
 	}
 	return 0;
 }
+
+
 Code.entropy01 = function(data, masking, buckets){
 	buckets = (buckets!==undefined && buckets!==null)? buckets : 10;
 	var i, count, p;
@@ -8040,6 +8139,30 @@ Code.histogram01 = function(data, masking, buckets){
 		}
 	}
 	return histogram;
+}
+
+
+Code.valuesIn = function(array, value){
+	var values = [];
+	var i, len=array.length;
+	var lm1 = len-1;
+	for(i=0; i<lm1; ++i){
+		var vA = array[i];
+		var vB = array[i+1];
+		var val = null;
+		//console.log(vA,vB,value)
+		// currently linear interpolated
+		if(vA<=value && value<=vB){ // ASSUME INCREASING
+			var ran = vB-vA;
+			var pct = (value-vA)/ran;
+			var loc = i + pct;
+			val = {"location":loc};
+		}
+		if(val){
+			values.push(val);
+		}
+	}
+	return values;
 }
 
 
