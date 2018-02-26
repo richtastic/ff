@@ -192,23 +192,28 @@ project typical numbers:
 
 APP TODO:
 
+x-- get angle from SIFT dominant angle of angles --- this is not good?
+	- top 80% close maximums too ?
+--- center gradient is not so stable
+	-- other neighborhood angle measurements?
+	-> COM with radial decay @ size
+--- pass average score to matching limit pass, for items with a single match
+	- 
+--- feel like there needs to be more points in order to catch everything
+--- corner non maximal suppression for some image size
+	-> MOPS adaptive
 
 better metric for: 'things going on'
 	x entropy is net sum (order not matter)
 	high differentials
 		- cost to move?
-		- variability?
+		- variability? -- similar to gradient
 			- min?
-			- avg?
+			- avg? ==> better
 		- gradient magnitudes
-	- algorithm for using original picture and doing on a zoom-basis
-		- for each pixel in original image:
-			- calculate average variability
-			- keep accumulator sum maxiumum of entire image average
-		- for each feature point
-			- start at center pixel
-			- circularly add concentric pixel circles?
-				- size == rad/wid of circle
+		- color gradient ==> better
+
+
 
 
 

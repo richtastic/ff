@@ -143,6 +143,9 @@ function Code(){
 Code.getType = function(obj){
 	return (typeof obj);
 }
+Code.isUndefined = function(obj){
+	return obj===undefined;
+}
 Code.isNaN = function(obj){
 	return isNaN(obj);
 }

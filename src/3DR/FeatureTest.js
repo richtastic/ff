@@ -33,9 +33,9 @@
 //new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
 //new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
-new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
-//	new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
+//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
@@ -79,6 +79,10 @@ var imagePathB = fileList[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
+
+// var temp = imageMatrixB
+// imageMatrixB = imageMatrixA
+// imageMatrixA = temp
 
 	// var featuresA = R3D.optimalFeaturePointsInImage(imageMatrixA);
 	// var featuresB = R3D.optimalFeaturePointsInImage(imageMatrixB);
@@ -232,8 +236,8 @@ for(var f=0; f<lists.length; ++f){
 }
 
 // show initial feature sites
-if(true){
-//if(false){
+//if(true){
+if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
