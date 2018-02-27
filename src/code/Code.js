@@ -6925,6 +6925,37 @@ Code.planeFromPoints = function(center, points, weights){
 	// var plane = Code.planeEquationFromPointNormal(centerOfMass,nrm);
 	// return plane;
 }
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------- center of mass / centroid / moment / covariance / ...
+Code.centroid2D = function(image, imageWidth,imageHeight, imageMaskWeights){ // centroid === center of mass
+	var cen = new V2D();
+	var length = imageWidth * imageHeight;
+	var totalWeight = 0;
+	var i, j, index, value;
+	var mask = 1.0;
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+			index = j*imageWidth + i;
+			if(imageMaskWeights){
+				mask = imageMaskWeights[index];
+			}
+			if(mask>0.0){
+				value = image[index];
+				value *= mask;
+				totalWeight += value;
+				cen.x += i*value;
+				cen.y += j*value;
+			}
+		}
+	}
+	cen.scale(1.0/totalWeight);
+	return cen;
+}
+
+
+
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
 Code.lineOriginAndDirection2DFromEquation = function(org,dir, a,b,c){
 	if(c==0){

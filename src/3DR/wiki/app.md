@@ -192,67 +192,26 @@ project typical numbers:
 
 APP TODO:
 
-x-- get angle from SIFT dominant angle of angles --- this is not good?
-	- top 80% close maximums too ?
---- center gradient is not so stable
-	-- other neighborhood angle measurements?
-	-> COM with radial decay @ size
---- pass average score to matching limit pass, for items with a single match
-	- 
---- feel like there needs to be more points in order to catch everything
---- corner non maximal suppression for some image size
-	-> MOPS adaptive
 
-better metric for: 'things going on'
-	x entropy is net sum (order not matter)
-	high differentials
-		- cost to move?
-		- variability? -- similar to gradient
-			- min?
-			- avg? ==> better
-		- gradient magnitudes
-		- color gradient ==> better
+- iteritive matching is not acually doing and point maximizing ...
+	- currently reduces to the best of the best matches
+	- if too few points, it starts grabbing worse point matches
+	=> want to pick up more matches too
+		- F error
+		- match error
+		- 
+
+- with best points, zoom out by 2 and pick still best matching -- more stable points?
 
 
 
+--- rotational direction is still not accurate
+--- feel like there needs to be more points in order to catch everything ==> this might require larger images
 
-
-
-MOPS"?
-http://graphics.cs.cmu.edu/courses/15-463/2005_fall/www/Papers/MOPS.pdf
-https://piazza-resources.s3.amazonaws.com/hz5ykuetdmr53k/i2c8h15sptx3kq/16.2_MOPS_Descriptor.pdf?AWSAccessKeyId=AKIAIEDNRLJ4AZKBW6HA&Expires=1519171943&Signature=%2Fq3LL7Qj72NP0xvI772nyMd5Re8%3D
-https://pdfs.semanticscholar.org/9a7d/bce8c3b041e9954cc90286657c5554c76533.pdf
-
-
-
-
-
------ corner geometry again,
-	- further out scores pull the radius larger but proportional to 1.0/distance && 1.0*corner-score
-PLOT MATCHING POINT IN A/B AND COMPARE SCALES/whatnot
--- better angle determiner
-
-
-
------ not ENTROPY, but some measurement of the variability of the area
-	smooth ~ 0
-	crazy ~ 1
-	derivative entropy / gradient variability ?
-	look at 'lifetime of area scale'
 
 
 ----- inner / outer concentric circle comparrisions
-	- angle diff => 
-	- histogram of angle differences
 
-
-
------ orientation binning ?
-	- starting angle peak vs later peak?
------ inner gradient circle vs outer gradient circle compare ?
-	- 
------ angle differences not dot
-	- 
 
 x ----- historgram max/min ratio
 ----- inner mask vs outer mask

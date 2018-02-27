@@ -26,14 +26,14 @@
 //new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 //new ImageLoader("./images/",["tgag.jpg"],this,this.getScaledImage).load();
 // main study
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
 // pool
 // new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
 // snow
-//new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
 //new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
-new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
@@ -176,7 +176,7 @@ return;
 var useCorners = false; // SIFT points are still more poor than corners
 //var useCorners = true;
 var useSIFT = false;
-//var useSIFT = true;
+var useSIFT = true;
 var useCornerGeometry = true;
 //var useCorners = false;
 var featuresA = null;
@@ -200,6 +200,8 @@ if(useCorners){
 }else if(useSIFT){
 	featuresA = R3D.SIFTExtractTest1(imageMatrixA);
 	featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+	// featuresA = R3D.featureCornersToPSA(featuresA, imageMatrixA);
+	// featuresB = R3D.featureCornersToPSA(featuresB, imageMatrixB);
 }else if(useCornerGeometry){
 	featuresA = R3D.extractCornerGeometryFeatures(imageMatrixA, true);
 	featuresB = R3D.extractCornerGeometryFeatures(imageMatrixB, true);
@@ -257,7 +259,7 @@ if(false){
 				var z = point.z;
 				var a = point.t;
 //z=1
-z *= 0.25;
+//z *= 0.25;
 			var c = new DO();
 				color = 0xFFFF0000;
 				//color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
