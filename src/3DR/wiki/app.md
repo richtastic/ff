@@ -192,6 +192,160 @@ project typical numbers:
 
 APP TODO:
 
+- roll up dense code into R3D fxn
+	- add F optimizing
+
+
+- redesign bundle adjust:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+> need to keep track of attempted & failed neighbor projections [dead ends]
+	- these need to be 'reversible' as the model changes & failed points may need revisiting
+> need to keep track of projected attempts? [does this just happen every iteration for every point3D w/o a point2D in given view?]
+
+
+SETUP STEPS:
+	- record match scores
+	- enter into structures
+ITERATION STEPS:
+	- PROJECTING [expanding P3D base]
+		- for the best N points over all views
+			- project P3D into each un-matched view
+				- ...
+	- TRYING NEIGHBORS [probing]
+		- for the best N points over all views
+			- ...
+	- DROPPING BAD
+		- r check
+		- f check
+
+
+camera
+	- k
+	- distortions
+view
+	- camera
+	- image
+	- size
+	- points2D [quadtree]
+	- absolute transform
+
+transform2D
+	- viewA
+	- viewB
+	- Ffwd / Frev
+	- errorFMean
+	- errorFSigma
+	- errorRMean
+	- errorRSigma
+	- matches2D[]
+
+point2D
+	- x,y
+	- matches2D[]
+	- point3D
+	> DEAD END ? => needs a list of attempted compared views & how 'long ago' (in model delta changes) this happened
+	
+match2D
+	- point2dA
+	- point2dB
+	- score
+	- relativeScale A->B
+	- relativeAngle A->B
+	- transform2D
+	- errorFdistanceAB
+	- errorRdistanceAB
+	- errorFdistanceBA
+	- errorRdistanceBA
+
+point3D
+	- x,y,z
+	- points2d[]
+	- matches2d[] *?
+
+world
+	- 
+
+
+* if a point2d exists, it will always have a match, a 3d point
+* a point2d might be a 'dead end' and have no content other than placed as an unmatched point
+
+....... notes:
+
+- GET LOW-RES DENSE MATCH TO UP F-ESTIMATE MATCHES
+	- DROP:
+		- 2D points with poor F-distance error (relative to group)
+		- 2D points with poor R-distance error (relative to group)
+		- 2D points with poor match score 
+		- low variability (just don't include)
+- USE THESE MATCHES AS BASE FOR BA
+- IN BA, ALLOW FOR NON-PREDEFINED POINTS TO MATCH
+	-> HOW TO MATCH NON-PREDEFINED POINTS?
+
+
+
+COMBINING POINTS IN BA:
+	- A-B-3D projected to C
+		- use closest N points to approximate angle and scale
+			- iteritively pic location ? wiggle?
+	- if good match:
+		- average the best points into single point
+		
+		- if not near anything
+			- create new point
+		- if near other points
+			- if VERY CLOSE
+				- combine both 3D points somehow
+					- which points should adjust?
+					- average optimum locations from P3DA with P3DB
+			- HOW TO COMBINE ALL MATCHED POINTS?
+			- NEED TO ALL HAVE SOME GOOD SIZE-SCALE COMPARRISION??????
+				- this is the 'resolution' of the grid
+				- min [eg 5] ~ 1/80
+				- max [eg 21] ~ 1/20
+				- ideal [eg 11] ~ 1/40
+			- WHAT IS 'CLOSE'
+	- P3d?
+		- very close to other P3D
+		- all matches are good
+		- all F errors are good
+		- all R errors are good
+
+
+- dense matching iteritive cell size matching
+	- higher res to lower res ?
+	- take lower res best matches & do higher res
+		- PREP:
+			- each point should allow minor rotation/scale/movement to optimal location
+	- adjust F as the number of points increases past original point set ????
+		- keep list of matches & scores for calcuating F?
+		- need to combine original points with matched points
+... dense still trying to match low-range areas
+
+
+
+DENSE -> F
+drop lowest point matches by:
+	score-error
+	F-error
+RE-DENSE with better F & lower error
+
+
+
+
+
+- undistort images before F estimate ?
+- does this result in better matching ?
+
+
+
+
+
+-> F-estimate 0 ~ 100
+-> dense neighbor search: 100 ~ 50 ~ 200
+-> F-estimate 100 ~ 125
+...
+-> F-estimate ~ 200
+
+
 
 - iteritive matching is not acually doing and point maximizing ...
 	- currently reduces to the best of the best matches
@@ -199,7 +353,25 @@ APP TODO:
 	=> want to pick up more matches too
 		- F error
 		- match error
-		- 
+		- match second/first ratio
+
+=> optimal F-error / match-score-error goal?
+	lower of both
+	f*m ?
+
+average error
+RMS error
+
+
+GOAL: limiting F error => force to use more-correct points
+	FAIL: lose existing match in 
+GOAL: choose scores with lower error => choose more-correct points
+	FAIL: a mildly better score might be a worse match [non-unique or bad matching]
+
+- keep track of better / previous: match scores / match errors ?
+
+
+
 
 - with best points, zoom out by 2 and pick still best matching -- more stable points?
 
@@ -336,8 +508,6 @@ IMG_7523.JPG
 
 
 
--- revisit dense-match
-	- 
 
 
 -- 3DR refininig
@@ -354,7 +524,7 @@ IMG_7523.JPG
 	- 
 	- color 3D dots the color of the pixel(s) it subsumes
 
-- roll up dense code into R3D fxn
+
 
 
 

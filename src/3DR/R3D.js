@@ -5854,9 +5854,8 @@ R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 	// // NMS
 	maxCount = 500;
 //	maxCount = Math.min(maxCount, Math.round(featuresA.length*0.5));
-	featuresA = R3D.ANMS(imageMatrixA, featuresA, maxCount);
+featuresA = R3D.ANMS(imageMatrixA, featuresA, maxCount);
 	// featuresA = R3D.ANMS_Full(imageMatrixA, maxCount);
-	// TODO: MULTI SCALE AGAIN
 	featuresA = R3D.featureCornersToPSA(featuresA, imageMatrixA);
 	//console.log(featuresA);
 	//featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
@@ -5869,36 +5868,20 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 	var sourceHeight = imageSource.height();
 	var hypotenuse = Math.sqrt(sourceWidth*sourceWidth + sourceHeight*sourceHeight);
 	var i, j, k;
-
-
-
-	//var scales = [2.0,1.0,0.5];
-	// 0.9999
-//type = R3D.CORNER_SELECT_RELAXED; // 0.99999
-//type = R3D.CORNER_SELECT_REGULAR; // 0.999
-//type : R3D.CORNER_SELECT_RESTRICTED;
 	var wm1 = sourceWidth-1;
 	var hm1 = sourceHeight-1;
 	var features = [];
-	//var defaultRadius = 5.0;
-	//var defaultRadius = 7.0;
-	//var defaultRadius = 9.0;
 	var defaultRadius = hypotenuse*0.004; // radius = 1% of image size .. TODO: scale based.   1~4
-defaultRadius *= 4.0;
+	defaultRadius *= 4.0;
 	var offsetRadius = defaultRadius;
-	var offsetScale = 0;
-	// while(offsetRadius>2.5){
-	// 	offsetScale -= 1;
-	// 	offsetRadius /= 2;
-	// }
-	var scales = [];
-	var count = 6;
+	//var scales = [2.0,1.0,0.5,0.25];
+	var scales = [1.0,0.5,0.25,0.125];
 	if(single){
-		count = 1;
-		offsetScale = 0;
+		scales = [1.0];
 	}
+	var count = scales.length;
 	for(k=0; k<count; ++k){
-		scales.push( Math.pow(2,1-k-offsetScale) );//[2.0,1.0,0.5,0.25,0.125,0.0625,  0.0078125];
+		scales[k] = Math.pow(2,scales[k]);
 	}
 
 	console.log("defaultRadius: "+defaultRadius);
@@ -5926,25 +5909,28 @@ defaultRadius *= 4.0;
 		}
 	}
 	// remove very close points
-	if(false){
-	var limitDistance = 0.005;
-	limitDistance = Math.min(sourceWidth*limitDistance,sourceHeight*limitDistance);
-	for(i=0; i<features.length; ++i){
-		featureA = features[i];
-		for(j=i+1; j<features.length; ++j){
-			featureB = features[j];
-			if(V2D.distance(featureA,featureB) < limitDistance){
-				if(featureA.z<featureB.z){ // remove smaller
-					features[i] = features[features.length-1] ;
-				}else{
-					features[j] = features[features.length-1] ;
+	if(!single){
+		var limitDistance = 0.5;
+		//limitDistance = limitDistance/defaultRadius;
+		console.log(limitDistance);
+		for(i=0; i<features.length; ++i){
+			featureA = features[i];
+			for(j=i+1; j<features.length; ++j){
+				featureB = features[j];
+				//var lim = Math.min(featureA.z,featureB.z)*limitDistance;
+				var lim = limitDistance;
+				if(V2D.distance(featureA,featureB) < lim){
+					if(featureA.t<featureB.t){ // remove smaller
+						features[i] = features[features.length-1] ;
+					}else{
+						features[j] = features[features.length-1] ;
+					}
+					features.pop();
+					--i;
+					break;
 				}
-				features.pop();
-				--i;
-				break;
 			}
 		}
-	}
 	}
 	// remove low corner prominance
 	features = features.sort(function(a,b){
@@ -6782,7 +6768,7 @@ var cntI = 0;
 	var sigmaScoresA = Code.stdDev(scoresA, meanScoresA);
 	var sigmaScoresB = Code.stdDev(scoresB, meanScoresB);
 
-	var sigAmount = 1.0;
+	var sigAmount = 2.0;
 	var limitA = meanScoresA + sigmaScoresA*sigAmount;
 	var limitB = meanScoresB + sigmaScoresB*sigAmount;
 
@@ -6811,7 +6797,7 @@ limitScoreSearch = some maximum limit
 //limitScoreRatio = 0.95;
 //limitScoreRatio = 0.95 - cntI*0.05;
 //limitScoreRatio = 0.90;
-limitScoreRatio = 0.95 - cntI*0.005;
+limitScoreRatio = 0.95 - cntI*0.001;
 //limitScoreRatio = 0.95;//
 limitScoreRatio = Math.max(limitScoreRatio,0.5);
 ++cntI;
@@ -6880,11 +6866,14 @@ limitScoreRatio = Math.max(limitScoreRatio,0.5);
 		if(ptsA.length>10){ // else no fundamental matrix
 //			totalScore = Math.sqrt(totalScore);
 			var averageScore = totalScore/ptsA.length;
+			var errorScoreRMS = Math.sqrt(totalScore/ptsA.length);
+//averageScore = errorScoreRMS;
 		highestMatchCount = Math.max(highestMatchCount, ptsA.length);
 			var Fnext = R3D.fundamentalRefineFromPoints(ptsA,ptsB, matrixFfwd);
 			var error = R3D.fundamentalMatrixError(Fnext, ptsA, ptsB);
 				//error = error * error;
 			var errorAvg = error/ptsA.length;
+			
 
 
 
@@ -6903,8 +6892,9 @@ limitScoreRatio = Math.max(limitScoreRatio,0.5);
 				matrixFfwd = Fnext;
 				averageError = errorAvg;
 				//if(true){
+				if(maxiumumAverageScore==null || maximumSamplingCount <= bestMatchCount){
 				//if(maxiumumAverageScore==null || averageScore < maxiumumAverageScore || maximumSamplingCount <= bestMatchCount){
-				if(maxiumumAverageScore==null || averageScore < maxiumumAverageScore ){
+				//if(maxiumumAverageScore==null || averageScore < maxiumumAverageScore ){
 					console.log("SET BEST @ "+bestMatchCount+" @ "+maxiumumAverageScore);
 					maxiumumAverageScore = averageScore;
 					maximumSamplingList = best;
@@ -10580,6 +10570,39 @@ R3D.limitedObjectSearchFromF = function(featuresA,imageMatrixA, featuresB,imageM
 	}
 	return putatives;
 }
+/*
+// THIS IS NOT A THING
+R3D.limitedObjectSearchFromPK = function(featuresA,imageMatrixA, featuresB,imageMatrixB, cameraA,cameraB, Ka,Kb, errorDistanceA,errorDistanceB){
+	errorDistance = (errorDistance!==null && errorDistance!==undefined) ? errorDistance : 5;
+	var i, j, putatives = [];
+	for(j=0; j<featuresA.length; ++j){
+		var featureA = featuresA[j];
+		var pointA = featureA["point"];
+
+		var destinationA = R3D.?
+
+		// find relevant B points
+		putatives[j] = [];
+		for(i=0; i<featuresB.length; ++i){
+			var featureB = featuresB[i];
+			var pointB = featureB["point"];
+			var destinationB = R3D.? // TODO: calculate this once
+
+			var distA = V2D.distance(pointA,destinationB);
+			var distB = V2D.distance(pointB,destinationA);
+			if(distA<errorDistanceA && distB<errorDistanceB){
+				//console.log("distance: "+dist+" / "+pointB);
+				putatives[j].push(featureB);
+			}
+		}
+	}
+
+var pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb)[0];
+
+	return putatives;
+}
+*/
+
 R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, minimumRatio, minScore){
 	var i, j, k;
 	var matches = [];
@@ -10787,8 +10810,13 @@ R3D.compareSADVectorBoth = function(vectorA, vectorB){
 	var sS = R3D.compareSIFVectorRGBCircular(vSA,vSB);
 	//return sS;
 
-	sF = sF*0.1;
-	sF = Math.pow(sF,0.25); // better for geometric
+	// console.log(sF,sS);
+	// throw "RATIO: "+(sF/sS);
+	//0.7755502137517548 679.4739035879326
+	//RATIO: 0.001141398087044249
+
+	sF = sF*0.001;
+	//sF = Math.pow(sF,0.25); // better for geometric
 	//sF = Math.pow(sF,2); // was ok for geo ?
 
 // console.log(sF);
@@ -10801,9 +10829,7 @@ R3D.compareSADVectorBoth = function(vectorA, vectorB){
 
 	//return sF * sS;
 	var score = (sF*sS)*(sF+sS); // better
-
 	//var score = (sF*sS)/(sF+sS); // BAD
-
 	//score = Math.pow(score,0.5);
 	return score;
 	
