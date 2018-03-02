@@ -10,7 +10,7 @@ function QuadTree(toPoint, min, max){
 		var center = V2D.avg(max,min);
 		this.initWithDimensions(center, size);
 	}else{
-		this.initWithDimensions(new V2D(0,0,0), new V2D(1,1,1));
+		this.initWithDimensions(new V2D(0,0), new V2D(1,1));
 	}
 }
 QuadTree.objectToV2D = function(p){

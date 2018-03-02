@@ -38,8 +38,8 @@ console.log("LOADING DENSE");
 		}
 
 //		this._cellSize = 3;
-//		this._cellSize = 5;
-		this._cellSize = 11;
+		this._cellSize = 5;
+//		this._cellSize = 11;
 //		this._cellSize = 21;
 //		this._cellSize = 35;
 
@@ -153,6 +153,36 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+
+
+
+
+
+
+// NEW STUFF
+
+var cellSize = 11;
+var seedData = this._seedData;
+console.log(seedData)
+pointsA = seedData["pointsA"];
+pointsB = seedData["pointsB"];
+transforms = seedData["transforms"];
+F = seedData["F"];
+F = R3D.fundamentalNormalize(F,  Matrix.transform2DScale(Matrix.transform2DIdentity(),imageMatrixA.width(),imageMatrixA.height()),  Matrix.transform2DScale(Matrix.transform2DIdentity(),imageMatrixB.width(),imageMatrixB.height()));
+// TODO: undistort images A & B
+R3D.Dense.denseMatch(cellSize, imageMatrixA, imageMatrixB, pointsA, pointsB, transforms, F);
+
+return;
+// HERE
+
+
+
+
+
+
+
+
+
 
 	var images = [];
 	//var imageList = Code.arrayReverse(imageList);
@@ -4121,13 +4151,13 @@ cellSize += 2;
 	// extract needle at relative scales / rotations
 	var angleRangeDeg = [-10, 0, 10];
 	var scaleRangeExp = [-0.1,0.0,0.1];
-	if(isSeed){
-		angleRangeDeg = Code.lineSpace(-15,15,5);
-		//scaleRangeExp = Code.lineSpace(-.2,.2,.05);
-		scaleRangeExp = Code.lineSpace(-.2,.2,.1);
-	}
-angleRangeDeg = [0];
-scaleRangeExp = [0];
+	// if(isSeed){
+	// 	angleRangeDeg = Code.lineSpace(-15,15,5);
+	// 	//scaleRangeExp = Code.lineSpace(-.2,.2,.05);
+	// 	scaleRangeExp = Code.lineSpace(-.2,.2,.1);
+	// }
+// angleRangeDeg = [0];
+// scaleRangeExp = [0];
 	var bestScore = null;
 	var bestPoint, bestAngle, bestScale, bestNeedle;
 	var best = {};
@@ -4447,7 +4477,7 @@ Dense.assignBestNeedlesInHaystack = function(vertex,haystackPoint, baseScale,bas
 	baseScale = baseScale!==undefined ? baseScale : 1.0;
 	baseAngle = baseAngle!==undefined ? baseAngle : 0.0;
 	searchSize = searchSize!==undefined ? searchSize : 4.0;
-	var MAX_MATCHES = 10;
+	var MAX_MATCHES = 1000;
 	var F_AVG_ERROR = 5 * Math.sqrt(2);
 	var needlePoint = vertex.from();
 	var lattice = vertex.lattice();

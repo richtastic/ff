@@ -9156,10 +9156,13 @@ R3D.searchNeedleHaystackImageFlatSADBin = function(needle, haystack){ // needle 
 	}
 	var i, j;
 	var result = new Array(resultCount);
+	var needleVector = R3D.sadBinOctantVector(needle,0,0);
 	for(j=0; j<resultHeight; ++j){
 		for(i=0; i<resultWidth; ++i){
 			var resultIndex = j*resultWidth + i;
-			var score = R3D.sadBinOctantImageScore(needle,0,0, haystack,i,j);
+			var haystackVector = R3D.sadBinOctantVector(haystack,i,j);
+			var score = R3D.sadBinOctantScore(needleVector,haystackVector);
+			//var score = R3D.sadBinOctantImageScore(needle,0,0, haystack,i,j);
 			result[resultIndex] = score;
 		}
 	}
@@ -13211,7 +13214,9 @@ R3D.projectedPoint3DFromPoint3D = function(point3D, P, K, distortions){
 	var normal2D = K.multV3DtoV3D(new V3D(), local3D);
 		normal2D.homo();
 	var location = V2D.copy(normal2D);
-	location = R3D.applyDistortionParameters(new V2D(), location, K, distortions);
+	if(distortions){
+		location = R3D.applyDistortionParameters(new V2D(), location, K, distortions);
+	}
 	return location;
 }
 R3D.rotationMatrixToEulerRodriguez = function(R){

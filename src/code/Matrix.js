@@ -452,6 +452,25 @@ Matrix.transform2DSkewY = function(a,ang, isAngle){ // give an angle
 	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,0.0, ang,1.0,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
+Matrix.angle2D = function(a){
+	var x = new V2D(1,0);
+	var v = a.multV2DtoV2D(new V2D(), x);
+	if(v.length()>0){
+		return V2D.angleDirection(x,v);
+	}
+	return 0.0;
+}
+Matrix.scale2D = function(a){
+	var x = new V2D(1,0);
+	var v = a.multV2DtoV2D(new V2D(), x);
+	var len = v.length();
+	if(len>0){
+		return len/x.length();
+	}
+	return 0.0;
+}
+
+
 //
 Matrix._transformTemp3D = new Matrix(4,4);
 Matrix.transform3DTranslate = function(a,tX,tY,tZ){

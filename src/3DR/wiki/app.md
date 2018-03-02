@@ -192,8 +192,21 @@ project typical numbers:
 
 APP TODO:
 
+MOPS:
+-- outlier error rejection:
+	- look at average 2nd nearest neighbor distance across all images
+
+https://piazza-resources.s3.amazonaws.com/hz5ykuetdmr53k/i2c8h15sptx3kq/16.2_MOPS_Descriptor.pdf?AWSAccessKeyId=AKIAIEDNRLJ4AZKBW6HA&Expires=1519952044&Signature=ngbvKO9ykNMyu98oMKS4AgWucrg%3D
+https://courses.cs.washington.edu/courses/cse576/13sp/projects/project1/artifacts/ykhlee/Report.htm
+	- 40x40 subsampled every 5th pixel
+		- low freq filtering
+		- localization error
+- multi-scale corner detector should use gaussian smoothing & halving, not arbitrary scales
+
 - roll up dense code into R3D fxn
-	- add F optimizing
+	- add F updating during process [maybe every nth addition if too slow?]
+	- non-cell [ad-hoc] based structure?
+
 
 
 - redesign bundle adjust:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -203,19 +216,134 @@ APP TODO:
 
 
 SETUP STEPS:
-	- record match scores
-	- enter into structures
+	- define:
+		minNeighborhoodRadius ~5			1		7
+		avgNeighborhoodRadius ~11 [target]	2		15
+		maxNeighborhoodRadius ~21			4		29
+
+	STRUCTURE PASSING:
+		- for each camera
+			- create a camera object
+		- for each view
+			- create a view object
+		- for each view image:
+			- undistort image based on view's camera distortion
+		- create a blank transform / match pair for all view pairs
+		- for each match pair
+			- create match object & add to transform
+			- add points to views [using undistorted locations]
+	INITIAL METRICS
+		- for each point match
+			- get descriptor at each of 2 points
+				- record score
+		- for each view match
+			- create transform + F
+			- calculate F 
+	REMOVE CLOSE POINTS:
+		- repeat until no pair is found:
+			- for each 2D point
+				- for each other point in same view
+					- if 2 points are closer than 1/2 min radius
+						- get descriptor at centroid using neighborhood radius
+						- for each other match (other view) of each point:
+							- find best match of decriptor (using interpolated scale / angle / position)
+						- if all new matches 
+							- merge points in view & replace points in other views with best match locations (merge duplicate view points at respective centroids)
+						- else:
+							- keep point with best score
+							- drop point2d [and possibly point3D]
+	- RECALCULATE METRICS
+		- view-pair M
 ITERATION STEPS:
-	- PROJECTING [expanding P3D base]
-		- for the best N points over all views
-			- project P3D into each un-matched view
-				- ...
-	- TRYING NEIGHBORS [probing]
-		- for the best N points over all views
+	- INITIAL PROJECTION
+		- for every view pair with enough point matches [10~16] && no transform F yet:
+			- F
+			- R
+		- calculate METRICS:
+			- pair F, R
+			- point: F, R
+	- GROUPS [GRAPH]:
+		- estimate absolute positions of each item
+			- error of relation ~ RMS / mean reprojection error
+	- SETUP:
+		
+		prioritize projection queue with 3d points based on:
+			- possible projection exists [not already 'failed'] [if failed attempt is stale, set back to possible proj exsts (r changed less, f changed less)]
+			- average match score
+		prioritize neighbor queue with 2d points based on:
+			- possible check exists (all other views: minimum angle neighbor exists)
+	- PROJECTING [expanding P3D base, merge, join, compound]
+		- for P3D in queue:
+			- for each P3D un-matched view:
+				- project P3D into view image plane [projectedPoint3DFromPoint3D]
+					- if inside image area [inset neighborhood min radius]
+						- for each other P3D-matched view
+							- use closest ~3-8 2D neighbors to interpolate location, scale, orientation
+								- search for several combinations of scale/orientation to find peak match in neighborhood ~ min(rError*2, maxNeighborhoodRadius)
+								- scale offset [0.9,1.0,1.1]
+								- angle offset [-10,  0, 10]
+							- choose best location for other view 
+						- best point = average of individual other view best points
+						- create decriptor at best point
+						- if descriptor passes criteria: [minimum range, minimum variability, ?]
+							- get matching scores for each other view
+							- if each matching score for each other view is better than the average-matching-score for respective views:
+								- good match point:
+								- if there are other 2D neighbors [within minimum radius]
+									- if projection of new point to all neighbors is inside cellRadius
+										- combine P3Ds
+											- merge all P2D to same P2D
+										- RECORD NEW SCORES FOR CHANGED FEATURES
+									- else:
+										- SET P3D PROJECTION ATTEMPT TO VIEW AS FAILED
+											- record point, existing views used, r error, f error
+								- else:
+									- set as new 2D matched point assigned to P3D
+
+	- PROBING NEIGHBORS [probing, extending]
+		- for P2D in queue:
+			- get list of all points in view at distance maximum neighborhood radius
+				- for each other view:
+					- select only points that have match with other view [including dead-end points]
+					- find smallest angle larger than minimum neighborhood angle [~45 degrees]
+					- if no angle exists
+						- record that point2d's neighborhood is full [dead end] to prevent future searches here
+					- else
+						- create serach map using minimum radius and maximum radius - min rad [window]
+						- find best corner location in this window in view
+						- create descriptor at best corner point
+						- get ~8 NN around corner point [convex hull if possible] & interpolate scale, angle, position in other view
+						- create neighborhood circle mask around estimated location of target radius size
+						- search opposite view for best matching location
+							- iterate over several relative scales & angles, s=[0.9,1.0,1.1], a=[-10,0,10]
+						- create descriptor at points in each view with optimum relative scaling [ie larger item is scaled down]
+						- if match score is good for both view's local point matches around:
+							- create match between two views & 3D point
+						- else 
+							- create dead-end point in view (not opposite view?)
+								- record:
+									- m score
+									- f error
+									- r error [if a point was to be created]
+						...
 			- ...
+	- RECALCULATE METRICS FROM P2D/P3D
+		- each view re-estimate: F & F error, match score
+		- determine P3D exact position from each view-pair P2D's putative guess based on reprojection error rates
+		- each view re-estimate: R error
+		- 
 	- DROPPING BAD
+		- for each view
+			- for each p2d
+				- drop if way outside median scores: f, r, m
+		- for each p3d
+			- drop if way outside median scores: f, r, m
 		- r check
 		- f check
+	- if a pair has fewer than ~10 points for F, then transform should be reset to 0 / nil / invalid
+
+
+
 
 
 camera
@@ -242,7 +370,10 @@ point2D
 	- x,y
 	- matches2D[]
 	- point3D
-	> DEAD END ? => needs a list of attempted compared views & how 'long ago' (in model delta changes) this happened
+		> DEAD END ? => needs a list of attempted compared views & how 'long ago' (in model delta changes) this happened
+	- isDeadEnd
+		- matches will hold the views attempted
+
 	
 match2D
 	- point2dA
@@ -262,7 +393,8 @@ point3D
 	- matches2d[] *?
 
 world
-	- 
+	- views
+	- transforms [relate 2 views]
 
 
 * if a point2d exists, it will always have a match, a 3d point
