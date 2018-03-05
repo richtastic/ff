@@ -2910,7 +2910,36 @@ Dense.slope = function(values,start,count,skip){
 Dense.uniqueness = function(needle,needleWidth,needleHeight,needleMask, haystack,haystackWidth,haystackHeight, type){
 	throw "old"
 }
-Dense.uniquenessFromValues = function(valuesIn){ // smaller is better
+Dense.uniquenessFromValues = function(valuesIn, width,height){ // smaller is better
+
+// TESTING
+	var info = Code.infoArray(valuesIn);
+	var max = info["max"];
+	var min = info["min"];
+	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-6, 0.0); // to force maxima differences
+
+	var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
+	var values = null;
+	if(peaks.length>1){
+		values = [];
+		for(var i=0; i<peaks.length; ++i){
+			values.push(peaks[i].z);
+		}
+	}else{
+		values = Code.copyArray(valuesIn);
+	}
+
+	values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
+	if(values[0]==0){
+		return 1E-9;
+	}
+	//return values[0]/values[1];
+	return values[0]/values[values.length-1]; // lowest in area?
+
+
+
+
+
 	var values = Code.copyArray(valuesIn).sort( function(a,b){ return a<b ? -1 : 1; } );
 	// use differentials to get a peakness value
 	// var sigma = 1.0;
@@ -4121,22 +4150,35 @@ cellSize += 2;
 	var neighborhoodScale = 1.0;
 	var cellScale = (cellPaddedSize*neighborhoodScale/compareSize);
 	
+
+
+
+
+
+
+// TESTING
 	// // scale up until window is large enough
-	// var minRangeCompare = 0.1; // high is worse
-	// var rangeCheck = 0;
-	// var loop = 4; // max zooming attempts
-	// while(rangeCheck<minRangeCompare && loop>0){
-	// 	var sample = imageFr.extractRectFromFloatImage(fromPoint.x,fromPoint.y,cellScale,null,compareSize,compareSize, null);
-	// 	var rangeR = Code.infoArray(sample.red())["range"];
-	// 	var rangeG = Code.infoArray(sample.grn())["range"];
-	// 	var rangeB = Code.infoArray(sample.blu())["range"];
-	// 	var rangeCheck = (rangeR+rangeG+rangeB)/3.0;
-	// 	--loop;
-	// 	if(rangeCheck<minRangeCompare){
-	// 		neighborhoodScale *= 2;
-	// 		cellScale = (cellPaddedSize*neighborhoodScale/compareSize);
-	// 	}
-	// }
+	var minRangeCompare = 0.1; // high is worse
+	var rangeCheck = 0;
+	var loop = 4; // max zooming attempts
+	while(rangeCheck<minRangeCompare && loop>0){
+		var sample = imageFr.extractRectFromFloatImage(fromPoint.x,fromPoint.y,cellScale,null,compareSize,compareSize, null);
+		var rangeR = Code.infoArray(sample.red())["range"];
+		var rangeG = Code.infoArray(sample.grn())["range"];
+		var rangeB = Code.infoArray(sample.blu())["range"];
+		var rangeCheck = (rangeR+rangeG+rangeB)/3.0;
+		--loop;
+		if(rangeCheck<minRangeCompare){
+			neighborhoodScale *= 2;
+			cellScale = (cellPaddedSize*neighborhoodScale/compareSize);
+		}
+	}
+
+
+
+
+
+
 	
 	var needlePoint = fromPoint;
 	var needleWidth = compareSize;
@@ -4208,7 +4250,7 @@ cellSize += 2;
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
-		var uniquenessNH = Dense.uniquenessFromValues(values);
+		var uniquenessNH = Dense.uniquenessFromValues(values,valueWidth.valueHeight);
 
 		var isMin = true;
 		var variabilityNeedleR = Code.variability(needle.red(), needleWidth, needleHeight, null, isMin);
@@ -4264,7 +4306,7 @@ cellSize += 2;
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
-		var uniquenessHN = Dense.uniquenessFromValues(values);
+		var uniquenessHN = Dense.uniquenessFromValues(values,valueWidth.valueHeight);
 
 			var rangeHaystackNeedleR = ImageMat.range(needle.red());
 			var rangeHaystackNeedleG = ImageMat.range(needle.grn());
@@ -4464,7 +4506,7 @@ var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
-			var uniqueness = Dense.uniquenessFromValues(values);
+			var uniqueness = Dense.uniquenessFromValues(values,valueWidth.valueHeight);
 			map[index] = uniqueness;
 		}
 		console.log(j+"/"+hei);
@@ -4550,7 +4592,7 @@ var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
 					best["scale"] = scale;
 					best["angle"] = angle;
 					best["score"] = bestScore;
-					best["uniqueness"] = Dense.uniquenessFromValues(values);
+					best["uniqueness"] = Dense.uniquenessFromValues(values,valueWidth.valueHeight);
 					best["location"] = new V2D(peak.x + haystackPoint.x - (valueWidth-1)*0.5, peak.y + haystackPoint.y - (valueHeight-1)*0.5);
 				}
 				break; // only first

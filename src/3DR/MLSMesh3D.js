@@ -360,6 +360,10 @@ MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, minDesiredCount){
 	}
 	var projectedLocation = Code.projectTo2DPlane(location, planePoint, planeNormal);
 
+// TODO: THIS COPIED IN CODE:
+
+// Code.convexNeighborhood(center, points, knn, minNeighborhood)
+
 	var collection = [];
 	var minDistance = null;
 	var maxDistance = null;
@@ -384,7 +388,7 @@ MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, minDesiredCount){
 		centerRemoved.push( collection[0] );
 		collection.shift();
 	}
-	var halfPlaneInfo = MLSMesh3D.halfPlaneSubsetPoints2D(projectedLocation, collection, "projection");
+	var halfPlaneInfo = Code.halfPlaneSubsetPoints2D(projectedLocation, collection, "projection");
 	var halfPlaneKeep = halfPlaneInfo["yes"];
 	var halfPlaneDrop = halfPlaneInfo["no"];
 	var neighborhood = [];
@@ -402,6 +406,7 @@ MLSMesh3D.Field.prototype.neighborhoodBSP = function(location, minDesiredCount){
 	}
 	return neighborhood;
 }
+/*
 MLSMesh3D.halfPlaneSubsetPoints2D = function(location, points, keyPoint){ // points already sorted
 	var i, j, halfPlanes = [];
 	var N = points.length;
@@ -440,6 +445,7 @@ MLSMesh3D.halfPlaneSubsetPoints2D = function(location, points, keyPoint){ // poi
 	}
 	return {"yes":setKeep, "no":setDrop};
 }
+*/
 MLSMesh3D.Field.prototype.neighborhoodRadius = function(point, radius){
 	var objects = this._octTree.objectsInsideSphere(point, radius);
 	return objects;

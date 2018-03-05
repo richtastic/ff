@@ -237,7 +237,17 @@ QuadTree.prototype.objectsInsideLine = function(org,dir,maxDistance, isFinite){
 	// all points within maxDistance of line
 	throw "todo";
 }
-
+QuadTree.prototype.convexNeighborhood = function(center, minDesiredCount, epsilon){
+	var minNeighborhood = minDesiredCount!==undefined ? minDesiredCount : 5;
+	var sampleNeighborhood = Math.max(10, minDesiredCount);
+	var knn = this.kNN(location, sampleNeighborhood);
+	var points = [];
+	for(i=0; i<knn.length; ++i){
+		points[i] = this._toPoint(knn[i]);
+	}
+	var results = Code.convexNeighborhood(center, points, knn, minNeighborhood);
+	return results;
+}
 QuadTree.prototype.toString = function(){
 	var str = "[QuadTree]:\n";
 	str += this._root.toString()+"";
@@ -373,7 +383,7 @@ QuadTree.Arxel.prototype.toString = function(tab,nex){
 	nex = nex!==undefined?nex:"  ";
 	var i, child;
 	var str = "";
-	if(this.this._children){ // wuthout data
+	if(this._children){ // without data
 		str += tab+" -["+this._count+"] ";
 		for(i=0;i<this._children.length;++i){
 			child = this._children[i];

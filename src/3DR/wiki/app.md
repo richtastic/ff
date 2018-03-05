@@ -196,6 +196,8 @@ MOPS:
 -- outlier error rejection:
 	- look at average 2nd nearest neighbor distance across all images
 
+---- IF PREDICTED DESTINATION POINT IS TOO CLOSE TO OTHER NEIGHBORS => SHOULD ALSO BE DROPPED AS DEAD POINT
+
 https://piazza-resources.s3.amazonaws.com/hz5ykuetdmr53k/i2c8h15sptx3kq/16.2_MOPS_Descriptor.pdf?AWSAccessKeyId=AKIAIEDNRLJ4AZKBW6HA&Expires=1519952044&Signature=ngbvKO9ykNMyu98oMKS4AgWucrg%3D
 https://courses.cs.washington.edu/courses/cse576/13sp/projects/project1/artifacts/ykhlee/Report.htm
 	- 40x40 subsampled every 5th pixel

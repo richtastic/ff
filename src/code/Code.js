@@ -1512,8 +1512,7 @@ Code.array2DtoString = function(arr, exp){
 }
 Code.array1Das2DtoString = function(arr, wid,hei, exp, min){
 	exp = exp===undefined?4:exp;
-	var minLen = exp+6+1; // -#.E+#
-var minLen = 3;
+	var minLen = min!==undefined ? min : exp+6+1; // -#.E+#
 	var i, j, val, index=0, str = "";
 	str += "\n";
 	for(j=0;j<hei;++j){
@@ -2146,11 +2145,11 @@ Code.reverseBits = function(value,bits){
 }
 // angles ----------------------------------------------------
 Code.averageAngles = function(angles, percents){
-	var i;
+	var i, count = angles.length;
 	var sumSin = 0;
 	var sumCos = 0;
-	var p = 1.0;
-	for(i=0; i<angles.length; ++i){
+	var p = 1.0/count;
+	for(i=0; i<count; ++i){
 		var angle = angles[i];
 		if(percents){
 			p = percents[i];
@@ -6343,6 +6342,89 @@ Code.isCCW = function(a,b,c){
 	//cross3 = V2D.cross(ca,V2D.sub(orgA,c2));
 	// strictly inside
 	return cross >= 0;
+}
+Code.convexNeighborhood = function(center, points, knn, minNeighborhood){ // points are closest relevant neighbors
+	knn = knn!==undefined ? knn : points;
+	minNeighborhood = minNeighborhood!==undefined ? minNeighborhood : 3;
+	var collection = [];
+	var minDistance = null;
+	var maxDistance = null;
+	for(i=0; i<points.length; ++i){
+		var distanceSquare = V2D.distanceSquare(points[i],center);
+		collection[i] = {"source":knn[i], "point":points[i], "distance":distanceSquare};
+		if(minDistance==null || minDistance>distanceSquare){
+			minDistance = distanceSquare;
+		}
+		if(maxDistance==null || maxDistance<distanceSquare){
+			maxDistance = distanceSquare;
+		}
+	}
+	collection = collection.sort(function(a,b){
+		return a["distance"] < b["distance"] ? -1 : 1;
+	});
+	// remove all points~@ center for more circular neighborhood
+	var centerRemoved = [];
+	var minDistanceEquality = maxDistance!==null ? (minDistance+maxDistance)*0.5 * 0.01 : 0.0; // 1/10th the average size
+	while(collection.length>0 && collection[0]["distance"]<=minDistanceEquality){
+		// TODO: 0 OR NEAR ZERO
+		centerRemoved.push( collection[0] );
+		collection.shift();
+	}
+	var halfPlaneInfo = Code.halfPlaneSubsetPoints2D(center, collection, "point");
+	var halfPlaneKeep = halfPlaneInfo["yes"];
+	var halfPlaneDrop = halfPlaneInfo["no"];
+	var neighborhood = [];
+	// middle points
+	for(i=0; i<centerRemoved.length; ++i){
+		neighborhood.push(centerRemoved[i]["source"]);
+	}
+	// half plane points
+	for(i=0; i<halfPlaneKeep.length; ++i){
+		neighborhood.push(halfPlaneKeep[i]["source"]);
+	}
+	// necessary extras
+	for(i=0; i<halfPlaneDrop.length && neighborhood.length<minNeighborhood; ++i){
+		neighborhood.push(halfPlaneDrop[i]["source"]);
+	}
+	return neighborhood;
+}
+Code.halfPlaneSubsetPoints2D = function(location, points, keyPoint){ // points already sorted
+	var i, j, halfPlanes = [];
+	var N = points.length;
+	var setKeep = [];
+	var setDrop = [];
+	for(i=0; i<N; ++i){
+		var point = points[i];
+		if(keyPoint){
+			point = point[keyPoint];
+		}
+		var dir = V2D.sub(point,location);
+		var distPoint = dir.length();
+		var isBehind = false;
+		for(j=0; j<halfPlanes.length; ++j){
+			var plane = halfPlanes[j];
+			var o = plane["o"];
+			var d = plane["d"];
+			var d2 = d.copy().scale(-1);
+			var intersectA = Code.rayIntersect2D(o,d, location,dir);
+			var intersectB = Code.rayIntersect2D(o,d2, location,dir);
+			var intersect = intersectA ? intersectA : intersectB;
+			if(intersect && V2D.distance(intersect,location)<distPoint ){
+				isBehind = true;
+				break;
+			}
+		}
+		if(!isBehind){
+			var d = V2D.rotate(dir,Math.PI*0.5);
+			var o = point;
+			var plane = {"o":o, "d":d, "data":points[i]};
+			halfPlanes.push(plane);
+			setKeep.push(points[i]);
+		}else{
+			setDrop.push(points[i]);
+		}
+	}
+	return {"yes":setKeep, "no":setDrop};
 }
 Code.minRectFromPolygon = function(points){ // min-area-rect: epects convex hull - n^2 - TODO: rotating calipers
 	// ...
