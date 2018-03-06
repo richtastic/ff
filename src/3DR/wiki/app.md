@@ -192,9 +192,11 @@ project typical numbers:
 
 APP TODO:
 
-MOPS:
--- outlier error rejection:
-	- look at average 2nd nearest neighbor distance across all images
+- dynemic dense:
+	- not starting with best points
+	- clustering around other point happens too much
+	- print out images in sequence to test algorithm
+
 
 ---- IF PREDICTED DESTINATION POINT IS TOO CLOSE TO OTHER NEIGHBORS => SHOULD ALSO BE DROPPED AS DEAD POINT
 

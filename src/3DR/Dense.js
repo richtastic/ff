@@ -161,7 +161,12 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 
 // NEW STUFF
 
-var cellSize = 11;
+var cellSize = 5;
+//var cellSize = 11;
+//var cellSize = 15;
+//var cellSize = 21;
+var cellAngle = Code.radians(90.0);
+//var cellAngle = Code.radians(60.0);
 var seedData = this._seedData;
 console.log(seedData)
 pointsA = seedData["pointsA"];
@@ -170,7 +175,7 @@ transforms = seedData["transforms"];
 F = seedData["F"];
 F = R3D.fundamentalNormalize(F,  Matrix.transform2DScale(Matrix.transform2DIdentity(),imageMatrixA.width(),imageMatrixA.height()),  Matrix.transform2DScale(Matrix.transform2DIdentity(),imageMatrixB.width(),imageMatrixB.height()));
 // TODO: undistort images A & B
-R3D.Dense.denseMatch(cellSize, imageMatrixA, imageMatrixB, pointsA, pointsB, transforms, F);
+R3D.Dense.denseMatch(cellSize,cellAngle, imageMatrixA, imageMatrixB, pointsA, pointsB, transforms, F);
 
 return;
 // HERE

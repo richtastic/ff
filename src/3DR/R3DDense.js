@@ -13,16 +13,17 @@ R3D.Dense._vertexToPoint = function(item){
 	return item.point();
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-R3D.Dense.Solver = function(size, imageMatrixA,imageMatrixB, pointsA,pointsB, transforms, Ffwd){
+R3D.Dense.Solver = function(size,angl, imageMatrixA,imageMatrixB, pointsA,pointsB, transforms, Ffwd){
 	// TODO: different resolution sizes for different images
 	this._targetSize = size;
 	if(this._targetSize%2==0){
 		this._targetSize += 1;
 	}
-	this._neighborhoodAngle = Code.radians(60.0);
+	//this._neighborhoodAngle = Code.radians(60.0);
+	this._neighborhoodAngle = angl;
 	this._minimumSize = Math.floor(this._targetSize/2.0);
 	this._maximumSize = Math.floor(this._targetSize*2.0) + 1;
-	this._compareSize = this._targetSize + 2;
+	this._compareSize = this._targetSize * 2; //+ 2;
 	this._Ffwd = Ffwd;
 	this._Frev = Ffwd ? R3D.fundamentalInverse(Ffwd) : null;
 	
@@ -38,8 +39,8 @@ R3D.Dense.Solver = function(size, imageMatrixA,imageMatrixB, pointsA,pointsB, tr
 	this._viewA = viewA;
 	this._viewB = viewB;
 
-	var seedTestScales = [0];
-	var seedTestAngles = [0];
+	// var seedTestScales = [0];
+	// var seedTestAngles = [0];
 	// var seedTestScales = [-0.2,-0.1,0.0,0.1,0.2];
 	// var seedTestAngles = [-20,-10,0,10,20];
 	//angleRangeDeg = Code.lineSpace(-15,15,5);
@@ -55,10 +56,10 @@ R3D.Dense.Solver = function(size, imageMatrixA,imageMatrixB, pointsA,pointsB, tr
 		if(scale<0){
 			throw "here"
 		}
-		this.optimumTransformAddAll(pointA,pointB, scale,angle, seedTestScales,seedTestAngles);
-if(i>10){
-	break;
-}
+		this.optimumTransformAddAll(pointA,pointB, scale,angle);//, seedTestScales,seedTestAngles);
+// if(i>10){
+// 	break;
+// }
 	}
 	this.removeDuplicatePoints();
 
@@ -66,21 +67,37 @@ if(i>10){
 	this._addKeyboard();
 }
 R3D.Dense.Solver.prototype.optimumTransformAddAll = function(pointA,pointB, scale,angle, testScales,testAngles){ // TODO: different neighborhood sizes based on image A/B resolution
-	testScales = (testScales!==undefined && testScales!==null) ? testScales : [0];
-	testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [0];
+	// testScales = (testScales!==undefined && testScales!==null) ? testScales : [0];
+	// testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [0];
+	testScales = (testScales!==undefined && testScales!==null) ? testScales : [-0.1,0.0,0.1]
+	testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [-10, 0, 10];
 	var needleSize = this._compareSize;
-	var haystackSize = this._maximumSize;
 	var viewA = this._viewA;
 	var viewB = this._viewB;
 	var imageMatrixA = viewA.image();
 	var imageMatrixB = viewB.image();
+	var cornerA = viewA.corners();
+	var cornerB = viewB.corners();
 	var queue = this._queue;
-	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, needleSize,haystackSize,scale,angle, testScales,testAngles);
+	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, needleSize,scale,angle, testScales,testAngles);
 	if(info!==null){
+// TODO: FROM SHOULD ALWAYS BE SAME AS INPUT
 		var pointFrom = info["from"];
 		var poinTo = info["to"];
+		// must be inside image:
+		if(pointFrom.x<0 || pointFrom.x>imageMatrixA.width()-1 || pointFrom.y<0 || pointFrom.y>imageMatrixA.height()-1){
+			return null;
+		}
+		if(poinTo.x<0 || poinTo.x>imageMatrixB.width()-1 || poinTo.y<0 || poinTo.y>imageMatrixB.height()-1){
+			return null;
+		}
+		// keep
+// TODO: GET RANGE ZOOMING OUT FROM INFO
+		var zoomScale = info["zoomScale"];
+		zoomScale = 1.0;
 		var score = info["score"];
-		var rank = R3D.Dense.rankForTransform(imageMatrixA,pointA, imageMatrixB,pointB, scale,angle,score, this._compareSize, this._Ffwd,this._Frev);
+		var rank = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, needleSize*zoomScale, this._Ffwd,this._Frev);
+//		console.log(score,rank);
 		if(rank!==null){
 			rank = rank["rank"];
 			var vertexA = new R3D.Dense.Vertex(pointFrom);
@@ -98,8 +115,17 @@ R3D.Dense.Solver.prototype.optimumTransformAddAll = function(pointA,pointB, scal
 }
 R3D.Dense.Solver.prototype.solve = function(){
 	console.log("SOLVE")
-this._tickCount = 3;
+//this._tickCount = 1;
+//this._tickCount = 100;
+//this._tickCount = 175;
+//this._tickCount = 196;
+//this._tickCount = 300;
+//this._tickCount = 1000;
+//this._tickCount = 2000;
+//this._tickCount = 5000;
+this._tickCount = 10000;
 // show images:
+
 GLOBALSTAGE.root().matrix().identity();
 GLOBALSTAGE.root().matrix().translate(4,4);
 GLOBALSTAGE.root().matrix().scale(1.5);
@@ -115,6 +141,7 @@ img = new DOImage(img);
 img.matrix().translate(400, 0);
 GLOBALSTAGE.addChild(img);
 img.graphics().alpha(0.5);
+
 // show 
 	var ticker = new Ticker(1);
 	this._ticker = ticker;
@@ -131,33 +158,22 @@ R3D.Dense.Solver.prototype._iterationTick = function(){
 }
 R3D.Dense.Solver.prototype._iteration = function(){
 	var len = this._queue.length();
-	console.log("ITERATION :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: "+len);
+GLOBALSTAGE.root().graphics().clear();
+	console.log("ITERATION :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: "+this._tickCount+" | "+len+" | viewA: "+this._viewA.pointSpacePutative().count()+" | viewB: "+this._viewB.pointSpacePutative().count());
 	if(len>0){
 		var transform = this._queue.pop();
 		var next = this.nextTransform(transform);
-		if(next.length>0){
-			console.log("re-got a new item => readd");
+		if(next.length>0){ // changed => readd
 			this._queue.push(transform);
-			for(var i=0; i<next.length; ++i){
-				var n = next[i];
-				console.log(n);
-				if(Code.isa(n,R3D.Dense.Transform)){
-					console.log("got transform");
-					this._queue.push(next[i]);
-				}else{
-					console.log("got dead point");
-					// is a dead point
-				}
-			}
+			//console.log("change");
 		}else{
-			console.log("no new object found, add points as final");
 			var viewA = transform.viewA();
 			var viewB = transform.viewB();
 			var vertexA = transform.vertexA();
 			var vertexB = transform.vertexB();
 			viewA.addPointDecided(vertexA);
 			viewB.addPointDecided(vertexB);
-			// do anything with transform ?
+			//console.log("done");
 		}
 		return true;
 	}
@@ -165,20 +181,23 @@ R3D.Dense.Solver.prototype._iteration = function(){
 }
 R3D.Dense.drawSelectedPoint = function(point,insideRadius,outsideRadius, offX,offY, colorA){
 colorA = colorA!==undefined ? colorA : 0xFFFF0000;
-var d = new DO();
+//var d = new DO();
+var d = GLOBALSTAGE.root();
+var oA = point.x + offX;
+var oB = point.y + offY;
 d.graphics().setLine(1, colorA);
 d.graphics().beginPath();
 if(insideRadius){
-d.graphics().drawCircle(0,0, insideRadius);
+d.graphics().drawCircle(oA,oB, insideRadius);
 }
 if(outsideRadius){
-d.graphics().drawCircle(0,0, outsideRadius);
+d.graphics().drawCircle(oA,oB, outsideRadius);
 }
 d.graphics().strokeLine();
 d.graphics().endPath();
-d.matrix().translate(point.x,point.y);
-d.matrix().translate(offX,offY);
-GLOBALSTAGE.addChild(d);
+//d.matrix().translate(point.x,point.y);
+//d.matrix().translate(offX,offY);
+//GLOBALSTAGE.addChild(d);
 }
 R3D.Dense.Solver.prototype.nextTransform = function(transform){
 	var viewA = this._viewA;
@@ -186,7 +205,8 @@ R3D.Dense.Solver.prototype.nextTransform = function(transform){
 	var vertexA = transform.vertexA();
 	var vertexB = transform.vertexB();
 	var nextA = this.nextNeighbor(viewA,viewB,vertexA,vertexB,transform);
-	var nextB = this.nextNeighbor(viewB,viewA,vertexB,vertexA,transform);
+	//var nextB = this.nextNeighbor(viewB,viewA,vertexB,vertexA,transform);
+	nextB = [];
 	var nextList = [];
 	for(var i=0; i<nextA.length; ++i){
 		nextList.push(nextA[i]);
@@ -196,9 +216,19 @@ R3D.Dense.Solver.prototype.nextTransform = function(transform){
 	}
 	return nextList;
 }
+
+R3D.Dense.Solver.prototype._doughnutSearch = function(sizeLarge,sizeSmall){
+	if(!this._doughnutValue){
+		var maskLarge = ImageMat.circleMask(sizeLarge,sizeLarge, 0);
+		var maskSmall = ImageMat.circleMask(sizeLarge,sizeLarge, sizeLarge-sizeSmall);
+		var maskDoughnut = Code.arrayVectorSub(maskLarge,maskSmall);
+		this._doughnutValue = maskDoughnut;
+	}
+	return this._doughnutValue;
+}
 R3D.Dense.Solver.prototype.nextNeighbor = function(viewA,viewB,vertexA,vertexB,transform){
 	var maxRadius = this._maximumSize*0.5;
-	var minRadius = this._minimumSize*0.5;
+	var minRadius = this._minimumSize;//*0.5;
 	var tooCloseRadius = minRadius*0.5;
 	var minSearchAngle = this._neighborhoodAngle;
 	var minNearAngle = this._neighborhoodAngle*0.5;
@@ -208,19 +238,15 @@ R3D.Dense.Solver.prototype.nextNeighbor = function(viewA,viewB,vertexA,vertexB,t
 	var neighborsA = viewA.pointSpacePutative().objectsInsideCircle(centerA,maxRadius);
 	var pointA = vertexA.point();
 	var pointB = vertexB.point();
-	console.log(minSearchAngle,centerA,neighborsA)
-	var bestA = R3D.Dense.smallestAngleGreaterThan(minSearchAngle,centerA, neighborsA);
-
-R3D.Dense.drawSelectedPoint(pointA,minRadius,maxRadius, viewA==this._viewA ? 0 : 400,0);
-R3D.Dense.drawSelectedPoint(pointB,minRadius,maxRadius, viewB==this._viewB ? 400 : 0,0);
-
-console.log(bestA);
+	var bestA = R3D.Dense.smallestAngleGreaterThan(minSearchAngle,centerA, neighborsA,   this._tickCount);
+	var patchExists = (bestA===null) || bestA["angle"]!==null;
+	if(!patchExists){
+		return [];
+	}
 	if(bestA){ // a blank patch exists
 		var sizeLarge = this._maximumSize - this._minimumSize; // 23 - 5 = 18 ... ?
 		var sizeSmall = this._minimumSize; // 5
-		var maskLarge = ImageMat.circleMask(sizeLarge,sizeLarge, 0);
-		var maskSmall = ImageMat.circleMask(sizeLarge,sizeLarge, sizeLarge-sizeSmall);
-		var maskDoughnut = Code.arrayVectorSub(maskLarge,maskSmall);
+		var maskDoughnut = this._doughnutSearch(sizeLarge,sizeSmall);
 		// local area
 		var imageSourceA = viewA.image();
 		var imageWidth = imageSourceA.width();
@@ -239,11 +265,11 @@ console.log(bestA);
 				angDiff += Math.PI2;
 			}
 			var median = angA + angDiff*0.5;
-			console.log("median: "+angA+" / "+angDiff);
+			median = Code.angleZeroTwoPi(median);
 			centralVector = V2D.rotate(V2D.DIRX,median);
 			centralAngle = (angDiff - minNearAngle)*0.5;
-			console.log("ANGS: "+Code.degrees(angA)+" | "+Code.degrees(angB)+" | "+Code.degrees(angDiff)+" = "+Code.degrees(median));
-			console.log("CENTRAL: "+centralVector);
+			// console.log("ANGS: "+Code.degrees(angA)+" | "+Code.degrees(angB)+" | "+Code.degrees(angDiff)+" = "+Code.degrees(median));
+			// console.log("CENTRAL: "+centralVector+" @ "+Code.degrees(centralAngle)+"    .... "+Code.degrees(angleInterrior)+" / "+Code.degrees(minNearAngle));
 		} // no neighbors => use whole area
 		var halfSpace = sizeLarge*0.5 | 0;
 		var pointX = Math.floor(pointA.x);
@@ -255,8 +281,6 @@ console.log(bestA);
 		var maxValue = null;
 		var passAngle = true;
 		var vCP = new V2D();
-		//var vC = new V2D(halfSpace,halfSpace);
-		//var vP = new V2D();
 		for(var j=0; j<sizeLarge; ++j){
 			for(var i=0; i<sizeLarge; ++i){
 				var x = (i+offsetI);
@@ -266,124 +290,89 @@ console.log(bestA);
 					var indexCorner = y*imageWidth + x;
 					var m = maskDoughnut[indexMask];
 					if(m>0){
-						// restrict angle
-						if(centralVector){
-							vCP.set(i - halfSpace,j - halfSpace);
+						vCP.set(i - halfSpace,j - halfSpace);
+						if(centralVector){ // restrict angle
 							var ang = V2D.angle(centralVector,vCP);
 							passAngle = ang < centralAngle;
-//							console.log(i+","+j+" : "+passAngle+"         "+centralVector+" & "+vCP+"  =  "+ang);
 						}
 						if(passAngle){
-							//maskDoughnut[indexMask] = 3;
 							var c = imageCornersA[indexCorner];
 							if(maxValue===null || c>maxValue){
-								maxX = i;
-								maxY = j;
+								maxX = vCP.x;
+								maxY = vCP.y;
 								maxValue = c;
 							}
-						}else{
-							//maskDoughnut[indexMask] = 2;
 						}
 					}
 				}
 			}
 		}
+		
+		if(maxX===null || maxY===null){ // not reached (outside picture)
+			return [];
+		}
 		// estimate location for new point
-		console.log("max offset: "+maxX+","+maxY)
 		var bestPointA = new V2D(pointA.x+maxX, pointA.y+maxY);
-		console.log("BEST POINT: "+pointA+" => "+bestPointA+"");
+//R3D.Dense.drawSelectedPoint(bestPointA,4,6, viewA==this._viewA ? 0 : 400,0,    0xFF445566);
 		// get convex hull neighborhood
-		//var destinationNeighborhood = viewA.pointSpaceDecided().convexNeighborhood(bestPointA, 3);
-		var destinationNeighborhood = viewA.pointSpaceDecided().kNN(bestPointA, 8);
+		//var destinationNeighborhood = viewA.pointSpaceDecided().convexNeighborhood(bestPointA, 5);
+		var destinationNeighborhood = viewA.pointSpaceDecided().kNN(bestPointA, 3);
+		//var destinationNeighborhood = viewA.pointSpacePutative().kNN(bestPointA, 10);
 		destinationNeighborhood.push(vertexA); // 'deciding point' should also be included
-		console.log(destinationNeighborhood);
 for(var i=0; i<destinationNeighborhood.length; ++i){
-	console.log(destinationNeighborhood[i]);
-	console.log(i+" : "+destinationNeighborhood[i].point());
-	var pp = destinationNeighborhood[i].point();
-	R3D.Dense.drawSelectedPoint(pp,2,0, viewA==this._viewA ? 0 : 400,0,    0xFF00FF00);
+	var vv = destinationNeighborhood[i];
+	var pp = vv.point();
+	if(vv.isFail()){
+		Code.removeElementAt(destinationNeighborhood,i);
+		--i;
+	}else{
+		R3D.Dense.drawSelectedPoint(pp,2,0, viewA==this._viewA ? 0 : 400,0,    0xFF00FF00);
+	}
 }
 		var predicted = R3D.Dense.interpolationData(bestPointA, destinationNeighborhood,  viewA,viewB);
-		console.log(predicted);
-//		COMPARE POINT
 		var pA = bestPointA;
 		var pB = predicted["point"];
 		var scaAB = predicted["scale"];
 		var angAB = predicted["angle"];
 R3D.Dense.drawSelectedPoint(pA,minRadius,maxRadius, viewA==this._viewA ? 0 : 400,0,    0xFF0000FF);
 R3D.Dense.drawSelectedPoint(pB,minRadius,maxRadius, viewB==this._viewB ? 400 : 0,0,  0xFF6699FF);
-console.log("COMPARE ...",pA,pB,scaAB,angAB);
 		var transform = this.optimumTransformAddAll(pA,pB, scaAB,angAB, null,null);
 		if(transform){
-			console.log("ADDED, SUCCESS");
-			return [transform];
-			/*
-			// check if destination point is too close to neighbors => drop
+			//return [transform];
+			
+			// check if destination point is too close to neighbors in opposite view => drop
 			var finalB = transform.vertexForView(viewB);
 			var finalP = finalB.point();
 			var finalNeighbors = viewB.pointSpacePutative().objectsInsideCircle(finalP,tooCloseRadius);
 			// need to add pointsA & B
-			if(finalNeighbors.length==0){
+			if(finalNeighbors.length<=1){
 				return [transform];
 			}else{
-				console.log("NOT ADDED => DEAD POINT x 2");
+				transform.removeComponents(this._queue);
+				console.log("NOT ADDED => DEAD POINT x 2: "+tooCloseRadius);
 				var failA = new R3D.Dense.Vertex(pA, null);
 				failA.addFail(vertexA);
-				var failB = new R3D.Dense.Vertex(finalB, null);
-				failB.addFail(vertexB);
 				viewA.addPointPutative(failA);
-				viewB.addPointPutative(failB);
-				return [failA,failB];
+				return [failA];
+				// var failB = new R3D.Dense.Vertex(finalB, null);
+				// failB.addFail(vertexB);
+				// viewB.addPointPutative(failB);
+				//return [failA,failB];
 			}
-			*/
-		}else{
-			console.log("NOT ADDED => DEAD POINT");
+		}else{ // fail location
 			var failA = new R3D.Dense.Vertex(pA, null);
 			failA.addFail(vertexA);
 			viewA.addPointPutative(failA);
 			return [failA];
 		}
-	}else{
-		console.log("no available neighborhood => done");
-	}
+	} // else no avail neighborhood
 	return [];
 }
 
 
-
-
-/*
-
-R3D.Dense.Interpolator.prototype.value = function(point){
-		var items = [];
-		var cells = this._cellTree.kNN(point,8);
-		var cellSize = this._lattice.cellSize();
-		var i;
-		var cell, distance, fraction;
-		var total = 0;
-		var largest = -1;
-		for(i=0; i<cells.length; ++i){
-			cell = cells[i];
-			distance = V2D.distance(cell.from(), point);
-			if(distance==0){
-				return [{"value":cell, "percent":1.0}];
-			}
-fraction = 1.0 / (1.0 + Math.pow(distance, 2) );
-//fraction = Math.exp( -distance*distance/cellSize );
-			total += fraction;
-			items.push({"value":cell, "percent":fraction, "triangular":false});
-		}
-		for(i=0; i<items.length; ++i){
-			items[i]["percent"] /= total;
-		}
-	var distanceItems = items;
-	return distanceItems;
-}
-
-*/
 R3D.Dense.interpolationData = function(point, vertexes, viewA,viewB){
 	var data = [];
-	// create percentages
+	// create percentage targets
 	var totalFraction = 0;
 	for(var i=0; i<vertexes.length; ++i){
 		var n = vertexes[i];
@@ -410,62 +399,17 @@ R3D.Dense.interpolationData = function(point, vertexes, viewA,viewB){
 		var transform = d["transform"];
 		var ang = transform.angleForVertex(vertexA);
 		var sca = transform.scaleForVertex(vertexA);
-console.log(vertexA.point()+" => "+vertexB.point()+" | "+Code.degrees(ang)+"* "+sca+"   @ "+percent);
 		angle += percent*ang;
-		//scale += percent*Math.sign(sca)Math.pow(0.5,sca); // TODO: log, but absolute
-		scale += percent*Math.log2(sca);
+		//scale += percent*Math.log2(sca);
+		scale += percent*sca;
 		var relativeFrom = V2D.sub(point,fr);
 		var pos = relativeFrom.copy().rotate(ang).scale(sca).add(to).scale(percent);
 		position.add(pos);
 	}
-	console.log(scale);
-	scale = Math.pow(2,scale);
-	console.log("prediction: ");
-	console.log("    "+position);
-	console.log("    "+Code.degrees(angle));
-	console.log("    "+scale);
+	//scale = Math.pow(2,scale);
 	var prediction = {"point":position, "angle":angle, "scale":scale};
 	return prediction;
 }
-
-/*
-
-for(k=0; k<interp.length; ++k){
-	var int = interp[k];
-	var c = int["value"];
-	var p = int["percent"];
-	var originA = c.from();
-	var originB = c.to();
-	var angle = c.angle();
-	var scale = c.scale();
-	var relativeDirA = V2D.sub(from,originA);
-	var pos = relativeDirA.copy().rotate(angle).scale(scale).add(originB).scale(p);
-	nextScale += scale*p;
-	nextAngle += angle*p;
-	nextPos.add(pos);
-}
-nextScale = Math.max(0.1,Math.min(10.0,nextScale));
-if(nextPos.x==0 || nextPos.y==0 || Code.isNaN(nextPos.x) || Code.isNaN(nextPos.y)){
-	console.log("GOT INTERP: ");
-	console.log(interp.length);
-	for(k=0; k<interp.length; ++k){
-		var c = int["value"];
-		var p = int["percent"];
-		console.log(". "+k);
-		console.log("value: "+c);
-		console.log("percent: "+p);
-	}
-}
-return {"point":nextPos, "scale":nextScale, "angle":nextAngle};
-
-
-*/
-
-
-
-
-
-
 R3D.Dense.Solver.prototype.removeDuplicatePoints = function(){
 	var minDistance = 1.0;
 	var viewA = this._viewA;
@@ -529,22 +473,23 @@ R3D.Dense.Solver.prototype._consolidateDuplicatePointsSingleArray = function(que
 						transformAB.removeComponents(queue);
 						transformABN.removeComponents(queue);
 					}
-					
+					break;
 				}
 			}
 		}
 	}
 	return found;
 }
-R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts){ // assume angle < 2pi
-	console.log("smallestAngleGreaterThan: "+center);
+R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts,     tick){ // assume angle < 2pi
+//	console.log("smallestAngleGreaterThan: "+center);
 	var diffs = [];
 	for(var i=0; i<verts.length; ++i){
-		console.log("VERT: "+verts[i].point());
+		var vert = verts[[i]];
 		var diff = V2D.sub(verts[i].point(),center);
-		if(diff.length()<=1E-6){
+		if(diff.length()<=1E-6){ // ignore the same point
 			continue;
 		}
+//console.log("VERT: "+verts[i].point());
 		diff.norm();
 		var angle = V2D.angleDirection(V2D.DIRX,diff);
 		angle = Code.angleZeroTwoPi(angle);
@@ -553,15 +498,13 @@ R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts){ // a
 	diffs.sort(function(a,b){
 		return a[0] < b[0] ? -1 : 1;
 	});
-	console.log(diffs);
 	var count = diffs.length;
 	var angle = null;
 	var vectorA = null;
 	var vectorB = null;
 	var angleA = null;
 	var angleB = null;
-	if(count==0){
-		// N/A
+	if(count==0){ // N/A
 		return null;
 	}else if(count==1){
 		vectorA = diffs[0][1];
@@ -570,16 +513,21 @@ R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts){ // a
 		angleA = V2D.angle(V2D.DIRX,vectorA);
 		angleB = angleA;
 	}else{
-		var smallest = null;
 		var prev = diffs[0];
+// console.log("0: "+Code.degrees(prev[0])+"");
 		for(var i=1; i<=diffs.length; ++i){
 			var diff = diffs[i%diffs.length];
-			console.log("    test: "+Code.degrees(prev[0])+" -> "+Code.degrees(diff[0]));
-			var angDiff = diff[0] > prev[0] ? (diff[0]-prev[0]) : (diff[0]+Math.PI2-prev[0]);
-			console.log("DIFF: "+Code.degrees(angDiff)); // +" | "+Code.degrees(angleMinimum));
+			var angDiff = diff[0] >= prev[0] ? (diff[0]-prev[0]) : (diff[0]+Math.PI2-prev[0]);
+// if(tick<3){
+// console.log(i+": "+Code.degrees(diff[0])+"");
+//console.log("    test: "+Code.degrees(prev[0])+" -> "+Code.degrees(diff[0]));
+//console.log("DIFF: "+Code.degrees(angDiff)); // +" | "+Code.degrees(angleMinimum));
+// }
 			if(angDiff > angleMinimum){
-				if(smallest===null || angDiff<smallest["angle"]){
-					console.log("KEEP: "+Code.degrees(angDiff));
+				if(angle===null || angDiff<angle){
+// if(tick<3){
+// console.log("KEEP: "+Code.degrees(angDiff)+" / "+Code.degrees(angleMinimum));
+// }
 					angle = angDiff;
 					angleA = prev[0];
 					angleB = diff[0];
@@ -643,11 +591,16 @@ R3D.Dense.View.prototype.pointSpaceDecided = function(point){
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.Vertex = function(point, transform){
+	this._id = R3D.Dense.Vertex._ID++;
 	this._point = null;
 	this._attemptVertexes = null;
 	this._transforms = [];
 	this.point(point);
 	this.addTransform(transform);
+}
+R3D.Dense.Vertex._ID = 0;
+R3D.Dense.Vertex.prototype.toString = function(){
+	return "[V: "+this._id+" & "+(this._point?"Y":"N")+"]";
 }
 R3D.Dense.Vertex.prototype.point = function(point){
 	if(point!==undefined){
@@ -724,6 +677,7 @@ R3D.Dense.Vertex.prototype.kill = function(){
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.Transform = function(vertA,viewA, vertB,viewB, scale, angle, score, rank){
+	this._id = R3D.Dense.Transform._ID++;
 	this._scale = 1.0;
 	this._angle = 0.0;
 	this._score = null;
@@ -741,8 +695,9 @@ R3D.Dense.Transform = function(vertA,viewA, vertB,viewB, scale, angle, score, ra
 	this.score(score);
 	this.rank(rank);
 }
+R3D.Dense.Transform._ID = 0;
 R3D.Dense.Transform.prototype.toString = function(){
-	return "[T: r: "+this._rank+"  s: "+this._score+" @ "+this._scale+" @ "+Code.degrees(this._angle)+" ]";
+	return "[T: "+this._id+" A:"+this._vertexA+" -> "+this._vertexB+"  |  r: "+this._rank+"  s: "+this._score+" @ "+this._scale+" @ "+Code.degrees(this._angle)+" ]";
 }
 R3D.Dense.Transform.prototype.scale = function(scale){
 	if(scale!==undefined){
@@ -855,7 +810,7 @@ R3D.Dense.Transform.prototype.kill = function(){
 R3D.Dense.Queue = function(){
 	this._queue = new PriorityQueue(R3D.Dense.Queue._queueSorting, R3D.Dense.Queue._MAX_SIZE);
 }
-R3D.Dense.Queue._MAX_SIZE = 1000;
+R3D.Dense.Queue._MAX_SIZE = 10000;
 R3D.Dense.Queue._queueSorting = function(a,b){
 	if(a===b){ return 0; }
 	var rankA = a.rank();
@@ -875,55 +830,103 @@ R3D.Dense.Queue.prototype.length = function(){
 	return this._queue.length();
 }
 R3D.Dense.Queue.prototype.remove = function(transform){
-	return this._queue.remove(transform);
+	var result = this._queue.remove(transform);
+	return result;
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, needleSize,haystackSize,scale,angle, scaleRangeExp,angleRangeDeg){
+R3D.Dense.COUNTA = 0;
+R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg){
 	// constants
 	var maximumBestScore = 0.01;
 	// prep
 	var compareSize = R3D.sadBinOctantEdgeSize();
 	var neighborhoodScale = 1.0;
-	var cellScale = (needleSize*neighborhoodScale/compareSize);
+	var cellScale = (inputCompareSize*neighborhoodScale/compareSize);
 	// setup image to/from
 	var imageFrom = imageA;
 	var imageTo = imageB;
 	var pointFrom = pointA;
 	var pointTo = pointB;
 	var reversed = false;
-	if(scale>1.0){ // only increase resolution
-		imageFrom = imageB;
-		imageTo = imageA;
-		pointFrom = pointB;
-		pointTo = pointA;
-		scale = 1.0/scale;
-		angle = -angle;
-		reversed = true;
+	// if(scale>1.0){ // only increase resolution
+	// 	imageFrom = imageB;
+	// 	imageTo = imageA;
+	// 	pointFrom = pointB;
+	// 	pointTo = pointA;
+	// 	scale = 1.0/scale;
+	// 	angle = -angle;
+	// 	reversed = true;
+	// }
+
+
+
+// scale up until window is large enough
+	var minRangeCompare = 0.1;
+	var rangeCheck = 0;
+	var loop = 4; // max zooming attempts
+	while(rangeCheck<minRangeCompare && loop>0){
+		var sample = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, null);
+		var rangeR = Code.infoArray(sample.red())["range"];
+		var rangeG = Code.infoArray(sample.grn())["range"];
+		var rangeB = Code.infoArray(sample.blu())["range"];
+		var rangeCheck = (rangeR+rangeG+rangeB)/3.0;
+		--loop;
+		if(rangeCheck<minRangeCompare){
+			neighborhoodScale *= 2;
+			cellScale = (inputCompareSize*neighborhoodScale/compareSize);
+		}
 	}
+
+
+
+
 	// find best orientation
 	var matrix = new Matrix(3,3).identity();
+	var haystackSize = compareSize*2;
 	var haystack = imageTo.extractRectFromFloatImage(pointTo.x,pointTo.y,cellScale,null,haystackSize,haystackSize, matrix);
 	var bestScore = null;
 	var bestPoint, bestAngle, bestScale, bestNeedle;
+
+// var sca = 2.0;
+// var iii = haystack;
+// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+// var d = new DOImage(img);
+// d.matrix().scale(sca);
+// d.matrix().translate(0 + R3D.Dense.COUNTA * 80, 10);
+// GLOBALSTAGE.addChild(d);
+// var count = 0;
 	for(var i=0; i<scaleRangeExp.length; ++i){
 		var rangeScale = scale * Math.pow(2,scaleRangeExp[i]);
 		for(var j=0; j<angleRangeDeg.length; ++j){
 			var rangeAngle = angle + Code.radians(angleRangeDeg[j]);
+//console.log(i,j,rangeScale,rangeAngle)
 			matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,rangeScale);
 			matrix = Matrix.transform2DRotate(matrix,rangeAngle);
 			var needle = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, matrix);
+
+// var iii = needle;
+// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+// var d = new DOImage(img);
+// d.matrix().scale(sca);
+// d.matrix().translate(0 + R3D.Dense.COUNTA * 80, 100 + count*50);
+// GLOBALSTAGE.addChild(d);
+
 			var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
+// var maxScore = null;
 			for(k=0; k<values.length; ++k){
 				var zLoc = values[k];
+// if(maxScore===null || zLoc<maxScore){
+// 	maxScore = zLoc;
+// }
 				var index = k;
 				var xLoc = index % valueWidth;
-				var yLoc = Math.floor(index/valueWidth);// | 0;
+				var yLoc = (index/valueWidth) | 0;
 				var peak = new V3D(xLoc,yLoc,zLoc);
 				if(bestScore===null || peak.z < bestScore){
 					bestScore = peak.z;
@@ -933,36 +936,50 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, needleSize,h
 					bestNeedle = needle;
 				}
 			}
+// d = new DOText(maxScore.toExponential(3)+"", 8, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
+// d.matrix().scale(sca);
+// d.matrix().translate(0 + 0 + R3D.Dense.COUNTA * 80, 100 + count*50);
+// GLOBALSTAGE.addChild(d);
+// ++count;
 		}
 	}
 	var bestFrom = pointA;
 	var bestTo = bestPoint;
-	if(reversed){
-		bestAngle = -bestAngle;
-		bestScale = 1.0/bestScale;
-		bestFrom = bestPoint;
-		bestTo = pointB;
-	}
+	// if(reversed){
+	// 	bestAngle = -bestAngle;
+	// 	bestScale = 1.0/bestScale;
+	// 	bestFrom = bestPoint;
+	// 	bestTo = pointB;
+	// }
 	// ignore points with poor scores
 	if(bestScore > maximumBestScore){
 		console.log("bestScore DROPPED "+bestScore);
 		return null;
 	}
 
-	if(bestScale<0){
-		console.log(scale);
-		throw bestScale
-	}
+// TODO: draw peak in image
+// var d = new DO();
+// d.graphics().setLine(1, 0xFFFF0000);
+// d.graphics().beginPath();
+// d.graphics().drawCircle(bestPoint.x,bestPoint.y, 1.0);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+// overlay.addChild(d);
 
-	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":bestScore};
+// d = new DOText(bestScore.toExponential(3)+"", 8, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
+// d.matrix().scale(sca);
+// d.matrix().translate(0 + 0 + R3D.Dense.COUNTA * 80, 100 + count*50);
+// GLOBALSTAGE.addChild(d);
+// ++R3D.Dense.COUNTA;
+	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":bestScore, "zoomScale":neighborhoodScale};
 }
 
 
-R3D.Dense.rankForTransform = function(imageA,pointA, imageB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev){
+R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev){
 	// constants
 	//var fundamentalDistanceErrorMax = Math.pow(5,2);
 	var fundamentalDistanceErrorMax = 10; // < 10 ? --- should get this from average + sigma error beforehand
-	var minimumVariability = 0.0001;
+	var minimumVariability = 0.001;
 	var maximumUniquenessScore = 0.999;
 	var minimumRangeScore = 0.01;
 	// setup image to/from
@@ -975,7 +992,28 @@ R3D.Dense.rankForTransform = function(imageA,pointA, imageB,pointB, scale,angle,
 	var neighborhoodScale = 1.0;
 	var cellScale = (inputCompareSize*neighborhoodScale/compareSize);
 
-	// TODO: ADD BACK ZOOMING-OUT FOR RANGE MINIMUM
+	
+	// TODO: ZOOMING OUT SHOULD HAVE BEEN HANDLED ALREADY BY OPTIMUM TRANSFORM COMPARE
+	// // scale up until window is large enough
+	// var minRangeCompare = 0.1;
+	// var rangeCheck = 0;
+	// var loop = 4; // max zooming attempts
+	// while(rangeCheck<minRangeCompare && loop>0){
+	// 	var sample = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, null);
+	// 	var rangeR = Code.infoArray(sample.red())["range"];
+	// 	var rangeG = Code.infoArray(sample.grn())["range"];
+	// 	var rangeB = Code.infoArray(sample.blu())["range"];
+	// 	var rangeCheck = (rangeR+rangeG+rangeB)/3.0;
+	// 	--loop;
+	// 	if(rangeCheck<minRangeCompare){
+	// 		neighborhoodScale *= 2;
+	// 		cellScale = (inputCompareSize*neighborhoodScale/compareSize);
+	// 	}
+	// }
+
+
+
+
 
 	// get needle
 	var matrix = new Matrix(3,3).identity();
@@ -1065,7 +1103,7 @@ R3D.Dense.rankForTransform = function(imageA,pointA, imageB,pointB, scale,angle,
 		console.log("uniqueness DROPPED "+uniqueness);
 		return null;
 	}else{
-		console.log("uniqueness: "+uniqueness);
+		// console.log("uniqueness: "+uniqueness);
 	}
 
 	// range scores
@@ -1086,19 +1124,28 @@ R3D.Dense.rankForTransform = function(imageA,pointA, imageB,pointB, scale,angle,
 	if(averageIntensityDiffMax>0.25){
 		return null;
 	}
+
+	var cornerScoreA = cornerA[ Math.floor(pointA.y)*imageA.width() + Math.floor(pointA.x)];
+	var cornerScoreB = cornerB[ Math.floor(pointB.y)*imageB.width() + Math.floor(pointB.x)];
+	var cornerScore = (cornerScoreA*cornerScoreB)/(cornerScoreA+cornerScoreB);
 		
 	// penalties
 	var scor = Math.pow(1.0+score,1.0);
 	var uniq = Math.pow(uniqueness,1.0);
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
-	var vari = Math.pow(1.0/variabilityNeedle,.1);
+	var vari = Math.pow(1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
 	var rang = Math.pow(1.0/worstRangeScore, 0.1);
-
-	// ...
+	var corn = Math.pow(1.0/cornerScore,0.01);
+	//console.log(corn);
+	// actually use
+	//var rank = 1.0;
 	var rank = score;
 	rank = rank * lind;
 	rank = rank * uniq;
+	//rank = rank * vari;
+	//rank = rank * rang;
+	//rank = rank * corn;
 	return {"rank":rank};
 }
 
@@ -1108,6 +1155,7 @@ R3D.Dense.uniquenessFromValues = function(valuesIn, width,height){
 	var info = Code.infoArray(valuesIn);
 	var max = info["max"];
 	var min = info["min"];
+	
 	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-6, 0.0); // to force maxima differences
 
 	var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
@@ -1125,8 +1173,16 @@ R3D.Dense.uniquenessFromValues = function(valuesIn, width,height){
 	if(values[0]==0){
 		return 1E-9;
 	}
-	//return values[0]/values[1]; // next lowest -- not very descriptive
 	return values[0]/values[values.length-1]; // lowest in area?
+
+/*
+	values = Code.copyArray(valuesIn);
+	values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
+	if(values[0]==0){
+		return 1E-9;
+	}
+	return values[0]/values[1];
+	*/
 }
 
 
@@ -1140,16 +1196,18 @@ R3D.Dense.Solver.prototype._addKeyboard = function(e){
 	//this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN_,Dense.denseMatch_iteration_key,Dense);
 	this._keyboard.addListeners();
 	this._overlay = new DO();
-	GLOBALSTAGE.root().addChild(this._overlay);
 }
 // interactive delete me
 R3D.Dense.Solver.prototype._keyFxn = function(e){
 	//console.log("denseMatch_iteration_key "+e.keyCode);
-	// if(e.keyCode==Keyboard.KEY_SPACE){
-	// 	Dense.TICKER.stop();
-	// 	Dense.denseMatch_iteration();
-	// 	Dense.TICKER.start();
-	// }
+	if(e.keyCode==Keyboard.KEY_SPACE){
+		if(this._tickCount==0){
+			this._tickCount = 100000;
+			this._ticker.start();
+		}else{
+			this._tickCount = 0;
+		}
+	}
 	// if(e.keyCode==Keyboard.KEY_ESCAPE){
 	// 	Dense.TICKER.stop();
 	// }
@@ -1157,13 +1215,14 @@ R3D.Dense.Solver.prototype._keyFxn = function(e){
 	// 	Dense.TICKER.start();
 	// }
 	if(e.keyCode==Keyboard.KEY_LET_D){
-		console.log("CLEAR");
 		var overlay = this._overlay;
 		overlay.removeAllChildren();
 	}
 	if(e.keyCode==Keyboard.KEY_LET_S){
 		var overlay = this._overlay;
+		overlay.removeParent();
 		overlay.removeAllChildren();
+		GLOBALSTAGE.root().addChild(overlay);
 		var viewA = this._viewA;
 		var viewB = this._viewB;
 		//var spaceA = viewA.pointSpacePutative();
@@ -1176,23 +1235,43 @@ R3D.Dense.Solver.prototype._keyFxn = function(e){
 			var vertexB = transform.opposite(vertexA);
 			var pointA = vertexA.point();
 			var pointB = vertexB.point();
-			console.log(vertexA,vertexB)
+//			console.log(vertexA,vertexB)
 			this.showMatchingMapping(vertexA, vertexB, transform, overlay);
 		}
 	}
-// 	if(e.keyCode==Keyboard.KEY_LET_Q){
-// 		console.log("DRAW LATTICE");
-// 		var latticeAtoB = Dense.LATTICE;
-// 		Dense.visualizeLattice(latticeAtoB, Dense.DISPLAY);
-// 		var interpolator = Dense.INTERPOLATOR;
-// 		Code.printPoints(interpolator.points());
-// 	}
-// if(e.keyCode==Keyboard.KEY_LET_P){
-// Dense.ITER = 0;
-// GLOBALSTAGE.root().removeAllChildren();	
-// // GLOBALSTAGE.root().matrix().identity().scale(4.0);
-// 	}
-	
+	if(e.keyCode==Keyboard.KEY_LET_W){
+		var overlay = this._overlay;
+		overlay.removeParent();
+		overlay.removeAllChildren();
+		GLOBALSTAGE.root().addChild(overlay);
+		var viewA = this._viewA;
+		var viewB = this._viewB;
+		var spaceA = viewA.pointSpaceDecided();
+		var vertexesA = spaceA.toArray();
+		for(var i=0; i<vertexesA.length; ++i){
+			var vertexA = vertexesA[i];
+			var transform = vertexA.transformForViews(viewA,viewB);
+			var vertexB = transform.opposite(vertexA);
+			var pointA = vertexA.point();
+			var pointB = vertexB.point();
+
+			var d = new DO();
+			d.graphics().setLine(1, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y, 1.0);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			overlay.addChild(d);
+			var d = new DO();
+			d.graphics().setLine(1, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointB.x,pointB.y, 1.0);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(400,0);
+			overlay.addChild(d);
+		}
+	}
 }
 
 
@@ -1200,6 +1279,7 @@ R3D.Dense.Solver.prototype.showMatchingMapping = function(vertexA, vertexB, tran
 		var viewA = this._viewA;
 		var viewB = this._viewB;
 		var cellSizeA = this._targetSize;
+		//var cellSizeA = this._minimumSize;
 		var imageMatrixA = viewA.image();
 		var imageMatrixB = viewB.image();
 		var rotationAtoB = transform.angleForVertex(vertexA);
