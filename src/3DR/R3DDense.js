@@ -23,9 +23,12 @@ R3D.Dense.Solver = function(size,angl, imageMatrixA,imageMatrixB, pointsA,points
 	this._neighborhoodAngle = angl;
 	this._minimumSize = Math.floor(this._targetSize/2.0);
 	this._maximumSize = Math.floor(this._targetSize*2.0) + 1;
-	this._compareSize = this._targetSize * 2; //+ 2;
-	this._Ffwd = Ffwd;
-	this._Frev = Ffwd ? R3D.fundamentalInverse(Ffwd) : null;
+	this._compareSize = this._targetSize * 1; //  * 2 + 2;
+	// this._Ffwd = Ffwd;
+	// this._Frev = Ffwd ? R3D.fundamentalInverse(Ffwd) : null;
+
+	this._FTracker = new R3D.Dense.FundamentalTracker();
+
 	
 	// transform
 	var cornersA = R3D.cornerScaleOptimum(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height());
@@ -81,7 +84,6 @@ R3D.Dense.Solver.prototype.optimumTransformAddAll = function(pointA,pointB, scal
 	var queue = this._queue;
 	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, needleSize,scale,angle, testScales,testAngles);
 	if(info!==null){
-// TODO: FROM SHOULD ALWAYS BE SAME AS INPUT
 		var pointFrom = info["from"];
 		var poinTo = info["to"];
 		// must be inside image:
@@ -92,12 +94,10 @@ R3D.Dense.Solver.prototype.optimumTransformAddAll = function(pointA,pointB, scal
 			return null;
 		}
 		// keep
-// TODO: GET RANGE ZOOMING OUT FROM INFO
 		var zoomScale = info["zoomScale"];
 		zoomScale = 1.0;
 		var score = info["score"];
-		var rank = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, needleSize*zoomScale, this._Ffwd,this._Frev);
-//		console.log(score,rank);
+		var rank = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, needleSize*zoomScale, this._Ffwd,this._Frev, this._FerrorMax);
 		if(rank!==null){
 			rank = rank["rank"];
 			var vertexA = new R3D.Dense.Vertex(pointFrom);
@@ -123,7 +123,8 @@ R3D.Dense.Solver.prototype.solve = function(){
 //this._tickCount = 1000;
 //this._tickCount = 2000;
 //this._tickCount = 5000;
-this._tickCount = 10000;
+//this._tickCount = 10000;
+this._tickCount = 20000;
 // show images:
 
 GLOBALSTAGE.root().matrix().identity();
@@ -174,6 +175,11 @@ GLOBALSTAGE.root().graphics().clear();
 			viewA.addPointDecided(vertexA);
 			viewB.addPointDecided(vertexB);
 			//console.log("done");
+			//this._FTracker.estimateFromViews(viewA,viewB);
+			// this._Ffwd = this._FTracker.F();
+			// this._Frev = this._FTracker.Finverse();
+			// this._FerrorMax = this._FTracker.allowedError();
+
 		}
 		return true;
 	}
@@ -545,10 +551,82 @@ R3D.Dense.searchForBestCorner = function(){
 	return null;
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+R3D.Dense.FundamentalTracker = function(){
+	this._Ffwd = null;
+	this._Frev = null;
+	this._pointCount = 0;
+	this._errorMean = 0;
+	this._errorSigma = 0;
+	this._errorAllowed = null;
+	this._maximumCalculation = 200;
+	this._minimumError = 1.0; // pixels
+}
+R3D.Dense.FundamentalTracker.prototype.F = function(){
+	return this._Ffwd;
+}
+R3D.Dense.FundamentalTracker.prototype.Finverse = function(){
+	return this._Frev;
+}
+R3D.Dense.FundamentalTracker.prototype.allowedError = function(){
+	return this._errorAllowed;
+}
+R3D.Dense.FundamentalTracker.prototype.estimateFromViews = function(viewA,viewB){
+	var pointSpaceA = viewA.pointSpaceDecided();
+	var pointCount = pointSpaceA.count();
+	if(pointCount>this._maximumCalculation){
+		return;
+	}
+	var vertexesA = pointSpaceA.toArray();
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<vertexesA.length; ++i){
+		var vertexA = vertexesA[i];
+		var vertexB = vertexA.transformForViews(viewA,viewB).opposite(vertexA);
+		if(vertexA && vertexB){
+			pointsA.push(vertexA.point());
+			pointsB.push(vertexB.point());
+		}
+	}
+	if(pointsA.length>7){
+		var Ffwd = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		if(Ffwd){
+			//var Frev = Matrix.inverse(Ffwd);
+			var Frev = R3D.fundamentalInverse(Ffwd);
+			var errors = [];
+			for(var i=0; i<pointsA.length; ++i){
+				var pointA = pointsA[i];
+				var pointB = pointsB[i];
+				var lineA = R3D.lineFromF(Ffwd,pointA);
+				var lineB = R3D.lineFromF(Frev,pointB);
+				var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pointB);
+				var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pointA);
+				var distRMS = Math.sqrt(distA*distA + distB*distB);
+				//var distRMS = (distA + distB)*0.5;
+				errors.push(distRMS);
+				//errors.push(distA);
+				//errors.push(distB);
+			}
+			var meanError = Code.mean(errors);
+			var sigmaError = Code.stdDev(errors, meanError);
+			// set locals
+			var errorScaler = 2.0;
+			var multiplier = 1.0 * (this._maximumCalculation/pointCount);
+			var allowError = (meanError + 2.0*sigmaError);
+			this._pointCount = pointsA.length;
+			this._Ffwd = Ffwd;
+			this._Frev = Frev;
+			this._errorMean = meanError;
+			this._errorSigma = sigmaError;
+			this._errorAllowed = Math.max(multiplier, allowError); // 1 lowish
+			this._errorAllowed *= errorScaler;
+			console.log("ERROR: "+this._pointCount+" - "+this._errorMean+" +/- "+this._errorSigma+" ~ "+allowError+"  ...   "+this._errorAllowed);
+		}
+	}
+}
+// --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.View = function(image, corners){
 	this._image = null;
 	this._corners = null;
-	//this._pointSpace = null;
 	this._putativePointSpace = null;
 	this._decidedPointSpace = null; // accepted final approved confirmed decided
 	this.image(image);
@@ -839,8 +917,7 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 R3D.Dense.COUNTA = 0;
 R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg){
 	// constants
-	var maximumBestScore = 0.01;
-	// prep
+	var maximumBestScore = 0.02; // 0.01;
 	var compareSize = R3D.sadBinOctantEdgeSize();
 	var neighborhoodScale = 1.0;
 	var cellScale = (inputCompareSize*neighborhoodScale/compareSize);
@@ -860,10 +937,8 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 	// 	reversed = true;
 	// }
 
-
-
-// scale up until window is large enough
-	var minRangeCompare = 0.1;
+	// scale up until window is large enough for distinctiveness via range metric
+	var minRangeCompare = 0.10;
 	var rangeCheck = 0;
 	var loop = 4; // max zooming attempts
 	while(rangeCheck<minRangeCompare && loop>0){
@@ -878,13 +953,31 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 			cellScale = (inputCompareSize*neighborhoodScale/compareSize);
 		}
 	}
+	// variability zooming
+	// var minVariabilityCompare = 0.04;
+	// var variabilityCheck = 0;
+	// var loop = 4; // max zooming attempts
+	// while(variabilityCheck<minVariabilityCompare && loop>0){
+	// 	var sample = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, null);
+	// 	var isMin = false;
+	// 	var variabilityR = Code.variability(sample.red(), compareSize, compareSize, null, isMin);
+	// 	var variabilityG = Code.variability(sample.grn(), compareSize, compareSize, null, isMin);
+	// 	var variabilityB = Code.variability(sample.blu(), compareSize, compareSize, null, isMin);
+	// 	var variabilityCheck = (variabilityR+variabilityG+variabilityB)/3.0;
+	// 	console.log(variabilityCheck);
+	// 	--loop;
+	// 	if(variabilityCheck<minVariabilityCompare){
+	// 		neighborhoodScale *= 2;
+	// 		cellScale = (inputCompareSize*neighborhoodScale/compareSize);
+	// 	}
+	// }
 
 
 
 
 	// find best orientation
 	var matrix = new Matrix(3,3).identity();
-	var haystackSize = compareSize*2;
+	var haystackSize = compareSize * 2; // 2-4
 	var haystack = imageTo.extractRectFromFloatImage(pointTo.x,pointTo.y,cellScale,null,haystackSize,haystackSize, matrix);
 	var bestScore = null;
 	var bestPoint, bestAngle, bestScale, bestNeedle;
@@ -975,12 +1068,14 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 }
 
 
-R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev){
+R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax){
 	// constants
+	fundamentalDistanceErrorMax = fundamentalDistanceErrorMax!==undefined ? fundamentalDistanceErrorMax : 100.0;
 	//var fundamentalDistanceErrorMax = Math.pow(5,2);
-	var fundamentalDistanceErrorMax = 10; // < 10 ? --- should get this from average + sigma error beforehand
+	//var fundamentalDistanceErrorMax = 10; // < 10 ? --- should get this from average + sigma error beforehand
 	var minimumVariability = 0.001;
-	var maximumUniquenessScore = 0.999;
+	//var maximumUniquenessScore = 0.999;
+	var maximumUniquenessScore = 0.90;
 	var minimumRangeScore = 0.01;
 	// setup image to/from
 	var imageFrom = imageA;
@@ -991,29 +1086,6 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var compareSize = R3D.sadBinOctantEdgeSize();
 	var neighborhoodScale = 1.0;
 	var cellScale = (inputCompareSize*neighborhoodScale/compareSize);
-
-	
-	// TODO: ZOOMING OUT SHOULD HAVE BEEN HANDLED ALREADY BY OPTIMUM TRANSFORM COMPARE
-	// // scale up until window is large enough
-	// var minRangeCompare = 0.1;
-	// var rangeCheck = 0;
-	// var loop = 4; // max zooming attempts
-	// while(rangeCheck<minRangeCompare && loop>0){
-	// 	var sample = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, null);
-	// 	var rangeR = Code.infoArray(sample.red())["range"];
-	// 	var rangeG = Code.infoArray(sample.grn())["range"];
-	// 	var rangeB = Code.infoArray(sample.blu())["range"];
-	// 	var rangeCheck = (rangeR+rangeG+rangeB)/3.0;
-	// 	--loop;
-	// 	if(rangeCheck<minRangeCompare){
-	// 		neighborhoodScale *= 2;
-	// 		cellScale = (inputCompareSize*neighborhoodScale/compareSize);
-	// 	}
-	// }
-
-
-
-
 
 	// get needle
 	var matrix = new Matrix(3,3).identity();
@@ -1131,7 +1203,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 		
 	// penalties
 	var scor = Math.pow(1.0+score,1.0);
-	var uniq = Math.pow(uniqueness,1.0);
+	var uniq = Math.pow(uniqueness,0.50);
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
 	var vari = Math.pow(1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
@@ -1155,10 +1227,9 @@ R3D.Dense.uniquenessFromValues = function(valuesIn, width,height){
 	var info = Code.infoArray(valuesIn);
 	var max = info["max"];
 	var min = info["min"];
-	
 	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-6, 0.0); // to force maxima differences
-
-	var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
+	//var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
+	var peaks = Code.findMinima2DFloat(valuesIn,width,height);
 	var values = null;
 	if(peaks.length>1){
 		values = [];
@@ -1174,15 +1245,6 @@ R3D.Dense.uniquenessFromValues = function(valuesIn, width,height){
 		return 1E-9;
 	}
 	return values[0]/values[values.length-1]; // lowest in area?
-
-/*
-	values = Code.copyArray(valuesIn);
-	values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
-	if(values[0]==0){
-		return 1E-9;
-	}
-	return values[0]/values[1];
-	*/
 }
 
 

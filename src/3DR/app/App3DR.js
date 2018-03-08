@@ -5215,6 +5215,11 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 		if(loadedViews==expectedViews && loadedPairs==expectedPairs && loadedFeatureImages==expectedFeatureImages){
 //			console.log("complete");
 			var i, j, k;
+
+throw "USE NEW BUNDLE ADJUST: R3D.BA";
+
+
+
 			var BA = new R3D.BundleAdjust();
 			var baViews = [];
 			var baCameras = [];

@@ -161,6 +161,13 @@ Dense.prototype.handleImagesLoaded = function(imageInfo){
 
 // NEW STUFF
 
+// 400x300
+// 
+var size = Math.max(400,300) / 20; // 21
+var size = Math.max(400,300) / 40; // 11
+var size = Math.max(400,300) / 80; // 5
+size = size%2==0 ? size : size+1;
+
 var cellSize = 5;
 //var cellSize = 11;
 //var cellSize = 15;

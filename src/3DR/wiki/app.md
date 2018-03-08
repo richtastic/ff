@@ -192,10 +192,37 @@ project typical numbers:
 
 APP TODO:
 
+- see what undistorted images look like
+
+
 - dynemic dense:
-	- not starting with best points
-	- clustering around other point happens too much
-	- print out images in sequence to test algorithm
+	~ not starting with best points
+	~ clustering around other point happens too much
+	~ print out images in sequence to test algorithm
+
+- revisit failed points & how they are currently being used?
+	- record/reset from F?
+
+- what does using/updating F matrix entail?
+	x F-matrix manager
+		- on final point decided:
+			- recalculate F from points
+			- record error statistics
+		- as error gets less, recalculate less often
+			- stop ~100 ? or error < 1 pixel [or % of cell radius]
+	
+	- how to drop points afterwards when F is more accurate ?
+		retro dropping
+
+
+- forward-and back point match searching
+x zoom out for variabliity rather than range ?
+- sub-pixel accuracy in various points?
+
+
+
+- similarity metric
+- HOW-TO-COMPARE-METRIC
 
 
 ---- IF PREDICTED DESTINATION POINT IS TOO CLOSE TO OTHER NEIGHBORS => SHOULD ALSO BE DROPPED AS DEAD POINT
@@ -206,11 +233,6 @@ https://courses.cs.washington.edu/courses/cse576/13sp/projects/project1/artifact
 		- low freq filtering
 		- localization error
 - multi-scale corner detector should use gaussian smoothing & halving, not arbitrary scales
-
-- roll up dense code into R3D fxn
-	- add F updating during process [maybe every nth addition if too slow?]
-	- non-cell [ad-hoc] based structure?
-
 
 
 - redesign bundle adjust:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -241,7 +263,7 @@ SETUP STEPS:
 			- get descriptor at each of 2 points
 				- record score
 		- for each view match
-			- create transform + F
+			- create transform: R + F
 			- calculate F 
 	REMOVE CLOSE POINTS:
 		- repeat until no pair is found:
@@ -264,18 +286,20 @@ ITERATION STEPS:
 			- F
 			- R
 		- calculate METRICS:
-			- pair F, R
-			- point: F, R
+			- points: F, R
+			- pair: F, R
+			
 	- GROUPS [GRAPH]:
 		- estimate absolute positions of each item
 			- error of relation ~ RMS / mean reprojection error
+	
 	- SETUP:
-		
 		prioritize projection queue with 3d points based on:
 			- possible projection exists [not already 'failed'] [if failed attempt is stale, set back to possible proj exsts (r changed less, f changed less)]
 			- average match score
 		prioritize neighbor queue with 2d points based on:
 			- possible check exists (all other views: minimum angle neighbor exists)
+
 	- PROJECTING [expanding P3D base, merge, join, compound]
 		- for P3D in queue:
 			- for each P3D un-matched view:
@@ -297,6 +321,8 @@ ITERATION STEPS:
 									- if projection of new point to all neighbors is inside cellRadius
 										- combine P3Ds
 											- merge all P2D to same P2D
+												=> find median point in all other views
+												=> need to recheck if any points are now too close to eachother
 										- RECORD NEW SCORES FOR CHANGED FEATURES
 									- else:
 										- SET P3D PROJECTION ATTEMPT TO VIEW AS FAILED
@@ -332,21 +358,26 @@ ITERATION STEPS:
 						...
 			- ...
 	- RECALCULATE METRICS FROM P2D/P3D
-		- each view re-estimate: F & F error, match score
+		- each view re-estimate: F, F error, match score
 		- determine P3D exact position from each view-pair P2D's putative guess based on reprojection error rates
 		- each view re-estimate: R error
-		- 
 	- DROPPING BAD
 		- for each view
 			- for each p2d
-				- drop if way outside median scores: f, r, m
+				- drop if way outside (all/any) view's median scores: f, r, m - FOR VIEW GROUPS [compare the point's ferror to the view's ferror] [removes 'singles' with high error]
 		- for each p3d
-			- drop if way outside median scores: f, r, m
+			- drop if way outside (any/all) median scores: f, r, m  - FOR P3D GROUPING [compare the point's reprojection RMS error (over all)] [removes 'groupings' with high error]
 		- r check
 		- f check
-	- if a pair has fewer than ~10 points for F, then transform should be reset to 0 / nil / invalid
+	- REFRESH FAILS
+		- if a pair has fewer than ~10 points for F, then transform should be reset to 0 / nil / invalid
+		- for each p3D
+			- if any failed R or F error has changed [~ half of failed's recorded value] => reset to null to allow new reprojection attempt
+		- for each view:
+			- for each P2D-Fail
+				- if any F error has changed [~ half of failed's recorded value] => remove from view point space [to allow new neighbor attempt]
 
-
+	
 
 
 
@@ -374,27 +405,48 @@ point2D
 	- x,y
 	- matches2D[]
 	- point3D
-		> DEAD END ? => needs a list of attempted compared views & how 'long ago' (in model delta changes) this happened
+		> if null == DEAD END =>
+			> list of attempted compared views & how 'long ago' (in model delta changes) this happened
 	- isDeadEnd
 		- matches will hold the views attempted
 
 	
 match2D
+	- viewA
+	- viewB
 	- point2dA
 	- point2dB
 	- score
-	- relativeScale A->B
-	- relativeAngle A->B
-	- transform2D
+	- relativeScaleAB
+	- relativeAngleAB
 	- errorFdistanceAB
 	- errorRdistanceAB
 	- errorFdistanceBA
 	- errorRdistanceBA
+	- transform2D
 
 point3D
 	- x,y,z
-	- points2d[]
+	- points2d[] // place for each view, p2d = exists, fail = tried, null = not tried
 	- matches2d[] *?
+
+P3DDeadEnd
+	-> result of failed projection
+	- location [for single view]
+	- R mean error   [for single view]
+	- R sigma error
+	- F mean error  [for single view]
+	- F sigma error
+	- M mean error  [if valid reprojection]
+	- M sigma error
+
+P2DDeadEnd
+	-> result of failed neighbor search resulting in no matches
+	- locations[1 for each view]
+	- F mean error [across all views]
+	- F sigma error
+	- M mean error  across all views]
+	- M sigma error
 
 world
 	- views
