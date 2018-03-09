@@ -2425,6 +2425,8 @@ App3DR.App.ImageEditor.prototype.handleMouseDown = function(e){
 App3DR.App.Model3D = function(resource, manager){
 	App3DR.App.Model3D._.constructor.call(this, resource);
 	console.log("Model3D");
+console.log("TODO: UNDO");
+return; // TODO: REMOVE
 	this._displayData = null;
 	this._display = new DO();
 	this._root.addChild(this._display);
@@ -5096,9 +5098,7 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 				var aspect = calibrationImage.aspectRatio();
 				var width = 1.0;
 				var height = width/aspect;
-// width = 816;
-// height = 612;
-				//console.log(width+"x"+height)
+				console.log(width+"x"+height)
 				var calibrationData = calibrationImage.calibrationData();
 				if(Code.isArray(calibrationData)){
 					calibrationData = calibrationData[0];
@@ -5110,7 +5110,6 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 					var match = matches[j];
 					var point2D = new V2D(match["x"],match["y"]);
 					var point3D = new V3D(match["X"],match["Y"],match["Z"]);
-					point2D.scale(width,height);
 					points2D.push(point2D);
 					points3D.push(point3D);
 					if(j==0){
@@ -5121,8 +5120,15 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 				pointList2D.push(points2D);
 				pointList3D.push(points3D);
 			}
+			// pointList2D are aspect-ratioed points to fill [0,0]->[wid,h2w], eg: [0,0]->[1,0.75]
 			var result = R3D.calibrateCameraK(pointList3D,pointList2D);
-			var distortion = result["distortion"];
+			console.log(result);
+			//var result = R3D.calibrateCameraKIteritive(pointList3D,pointList2D,result["H"], result["K"], result["inverted"]);
+			var result = R3D.calibrateCameraKIteritive(pointList3D,pointList2D);
+			console.log(result);
+
+			//var distortion = result["distortion"];
+			var distortion = result["inverted"]; // want to know how to un-distort a given image
 			var K = result["K"];
 			var fx = K.get(0,0);
 			var s = K.get(0,1);
@@ -5134,10 +5140,76 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 			var k3 = distortion["k3"];
 			var p1 = distortion["p1"];
 			var p2 = distortion["p2"];
-			console.log(fx,fy,s,cx,cy);
 			camera.setK(fx,fy,s,cx,cy);
 			camera.setDistortion(k1,k2,k3,p1,p2);
 			camera.setCalculatedCount(calibrationImages.length);
+
+
+var Kmat = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+// example point:
+var TL = new V2D(0,0);
+var BR = new V2D(1,0.75);
+var center = new V2D(0.5,0.375);
+
+console.log(TL+" =?> " + R3D.applyDistortionParameters(new V2D(), TL, Kmat, distortion));
+console.log(center+" =?> " + R3D.applyDistortionParameters(new V2D(), center, Kmat, distortion));
+console.log(BR+" =?> " + R3D.applyDistortionParameters(new V2D(), BR, Kmat, distortion));
+
+/*
+// MOAR TESTING:
+
+console.log("SYNTHETIC:");
+var fx = 1;
+var fy = 1;
+var s = 0;
+var cx = 0.5;
+var cy = 0.5;
+var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+// var k1 = 0.01;
+// var k2 = 0.001;
+// var k3 = 0.0001;
+// var p1 = 0.000002;
+// var p2 = 0.000005;
+var k1 = 0.1;
+var k2 = 0.01;
+var k3 = 0.1;
+var p1 = 0.02;
+var p2 = 0.05;
+var pointsFrom = [];
+var pointsTo = [];
+var distortions = {"k1":k1,"k2":k2,"k3":k3,"p1":p1,"p2":p2};
+for(var i=0; i<100; ++i){
+	var fr = new V2D(Math.random(),Math.random());
+	var to = new V2D();
+	// var xr = fr.x - cx;
+	// var yr = fr.y - cy;
+	// var r2 = xr*xr + yr*yr;
+	// var r4 = r2*r2;
+	// var r6 = r4*r2;
+	// to.x = fr.x + k1*xr*r2 + k2*xr*r4 + k3*xr*r6 + p1*(r2 + 2*xr*xr) + p2*2*xr*yr;
+	// to.y = fr.y + k1*yr*r2 + k2*yr*r4 + k3*yr*r6 + p2*(r2 + 2*yr*yr) + p1*2*xr*yr;
+	// console.log("A: "+to+"");
+	to = R3D.applyDistortionParameters(to,fr,K,distortions);
+	// console.log("B: "+to+"");
+	pointsFrom.push(fr);
+	pointsTo.push(to);
+}
+// FORWARD
+var params = R3D.cameraDistortionNonlinear(pointsFrom,pointsTo, K);
+console.log(params);
+var params = R3D.cameraDistortionNonlinear(pointsTo,pointsFrom, K);
+console.log(params);
+
+var params = R3D.linearCameraDistortion(pointsFrom,pointsTo, K);
+console.log(params);
+// REVERSE
+var params = R3D.linearCameraDistortion(pointsTo,pointsFrom, K);
+console.log(params);
+
+*/
+
+throw "CALIBRATE YEAH"
+
 			self.saveProjectFile();
 		}
 	}
@@ -5216,8 +5288,159 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 //			console.log("complete");
 			var i, j, k;
 
-throw "USE NEW BUNDLE ADJUST: R3D.BA";
+// SHOW UNDISTORTED IMAGE:
+//console.log(cameras[0].distortion());
 
+var distortion = cameras[0].distortion();
+// distortion["k1"] = -0.1;
+// distortion["k2"] = 0;
+// distortion["k3"] = 0;
+// distortion["p1"] = 0;
+// distortion["p2"] = 0;
+var K = cameras[0].K();
+	K = new Matrix(3,3).fromArray([K["fx"],K["s"],K["cx"], 0,K["fy"],K["cy"], 0,0,1]);
+// distortion["k1"] = 0;
+// distortion["k2"] = 0;
+// distortion["k3"] = 0;
+// distortion["p1"] = 0;
+// distortion["p2"] = 0;
+var distortionFwd = distortion;
+var distortionRev = distortion;
+	var img = views[0].featuresImage();
+	var matrix = R3D.imageMatrixFromImage(img, this._stage);
+var source = matrix;
+
+
+console.log(source, K, distortionFwd, distortionRev)
+var what = R3D.invertImageDistortion(source, K, distortionFwd, distortionRev, true);
+console.log(what);
+
+var image = what["image"];
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+var d = new DOImage(img);
+d.matrix().scale(1.0);
+d.matrix().translate(10, 10);
+GLOBALSTAGE.addChild(d);
+
+
+// locals
+var BACAMS = [];
+var BAVIEWS = [];
+// world
+var world = new R3D.BA.World();
+console.log(world);
+// cameras
+for(var i=0; i<cameras.length; ++i){
+	var camera = cameras[i];
+	var c = world.addCamera();
+	console.log(c);
+	var K = camera.K();
+	var distortion = camera.distortion();
+	if(K && distortion){
+		var fx = K["fx"];
+		var fy = K["fy"];
+		var s = K["s"];
+		var cx = K["cx"];
+		var cy = K["cy"];
+		var k1 = distortion["k1"];
+		var k2 = distortion["k2"];
+		var k3 = distortion["k3"];
+		var p1 = distortion["p1"];
+		var p2 = distortion["p2"];
+		var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+		c.K(K);
+		c.distortion(distortion);
+	}
+	BACAMS.push(c);
+}
+var cam = BACAMS[0];
+// views
+for(var i=0; i<views.length; ++i){
+	var view = views[i];
+	var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
+	var v = world.addView();
+	console.log(v);
+		var img = view.featuresImage();
+		var matrix = R3D.imageMatrixFromImage(img, this._stage);
+	//v.images().push(matrix);
+	//v.index(view.id());
+	v.size(imageSize);
+	v.image(matrix);
+	v.corners(null);
+	v.camera(cam);
+		view.temp(v);
+	BAVIEWS.push(c);
+}
+// matches
+for(i=0; i<pairs.length; ++i){
+	var pair = pairs[i];
+	var matchData = pair.matchingData();
+	var matches = matchData["matches"];
+	var fromSize = matchData["fromSize"];
+	var toSize = matchData["toSize"];
+	var matches = matchData["matches"];
+	var fromViewID = matchData["from"];
+	var toViewID = matchData["to"];
+	// 
+	var viewA = this.viewFromID(fromViewID);
+	var viewB = this.viewFromID(toViewID);
+		var aspectA = viewA.aspectRatio();
+		var aspectB = viewB.aspectRatio();
+		var fromImageSize = new V2D(1.0,1.0/aspectA);
+		var toImageSize = new V2D(1.0,1.0/aspectB);
+	var vA = viewA.temp();
+	var vB = viewB.temp();
+	// save local copy
+	var filteredMatches = [];
+	for(var j=0; j<matches.length; ++j){
+		var match = matches[j];
+		var fr = match["fr"];
+		var to = match["to"];
+		fr = new V2D(fr.x,fr.y);
+		fr.scale(fromImageSize.x,fromImageSize.y);
+		to = new V2D(to.x,to.y);
+		to.scale(toImageSize.x,toImageSize.y);
+		filteredMatches.push([fr,to]);
+	}
+	/*
+	// remove duplicates
+	// TODO: keep best dups
+	var eps = 1E-10;
+	for(j=0; j<filteredMatches.length; ++j){
+		var matchA = filteredMatches[j];
+		for(k=j+1; k<filteredMatches.length; ++k){
+			var matchB = filteredMatches[k];
+			if( (Math.abs(matchA[0].x-matchB[0].x)<eps && Math.abs(matchA[0].y-matchB[0].y)<eps) ||
+			    (Math.abs(matchA[1].x-matchB[1].x)<eps && Math.abs(matchA[1].y-matchB[1].y)<eps) ){
+				filteredMatches.splice(j,1);
+				--j; // retry
+				break;
+			}
+		}
+	}
+	*/
+	//console.log("MATCHES AFTER: "+filteredMatches.length);
+	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
+	// copy over
+	for(var j=0; j<filteredMatches.length; ++j){
+		var match = filteredMatches[j];
+		var fr = match[0];
+		var to = match[1];
+		world.addMatchForViews(vA,fr, vB,to);
+		/*
+		var pointA = vA.closestPoint2D(fr.x,fr.y);
+		var pointB = vB.closestPoint2D(to.x,to.y);
+		if(pointA && pointB){
+			BA.matchPoints2D(pointA, pointB);
+			++matchesCount;
+		}
+		*/
+	}
+	// initially get 2-sigma points & only add those from match list
+	
+}
+
+throw "USE NEW BUNDLE ADJUST: R3D.BA";
 
 
 			var BA = new R3D.BundleAdjust();
@@ -5225,7 +5448,6 @@ throw "USE NEW BUNDLE ADJUST: R3D.BA";
 			var baCameras = [];
 // view = Code.copyArray(views);
 // pairs = Code.copyArray(pairs);
-
 // views = [views[0],views[1]];
 // pairs = [pairs[0]];
 			for(i=0; i<cameras.length; ++i){
@@ -5678,6 +5900,13 @@ App3DR.ProjectManager.View = function(manager, name, directory){
 	this._pictureSourceFeatures = null;
 	this._pictureSourceDenseHi = null;
 	this._pictureSourceTexture = null;
+	this._temp = null;
+}
+App3DR.ProjectManager.View.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
 }
 App3DR.ProjectManager.View.prototype.hasFeatures = function(){
 	return this._featureInfo != null;

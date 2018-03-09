@@ -193,9 +193,13 @@ project typical numbers:
 APP TODO:
 
 - see what undistorted images look like
+	-> linear distortion is very bad for reprojection points
+		- try nonlinear?
+		- try nonlinear with K + dist.
+		- 
 
 
-- dynemic dense:
+- dynamic dense:
 	~ not starting with best points
 	~ clustering around other point happens too much
 	~ print out images in sequence to test algorithm
@@ -213,19 +217,21 @@ APP TODO:
 	
 	- how to drop points afterwards when F is more accurate ?
 		retro dropping
-
+-> not using F actually results in better results
+	- use lighter F scoring?
 
 - forward-and back point match searching
-x zoom out for variabliity rather than range ?
+	-> whats wrong with symmetric nextB = [] ?????
 - sub-pixel accuracy in various points?
 
 
 
-- similarity metric
-- HOW-TO-COMPARE-METRIC
-
-
----- IF PREDICTED DESTINATION POINT IS TOO CLOSE TO OTHER NEIGHBORS => SHOULD ALSO BE DROPPED AS DEAD POINT
+- intermediary step:
+	- pick cell points that look good at higher & higher scales 
+	1 * cellScore @ 1
+	0.5 * cellScore @ 2
+	0.25 * cellScore @ 4 
+	...
 
 https://piazza-resources.s3.amazonaws.com/hz5ykuetdmr53k/i2c8h15sptx3kq/16.2_MOPS_Descriptor.pdf?AWSAccessKeyId=AKIAIEDNRLJ4AZKBW6HA&Expires=1519952044&Signature=ngbvKO9ykNMyu98oMKS4AgWucrg%3D
 https://courses.cs.washington.edu/courses/cse576/13sp/projects/project1/artifacts/ykhlee/Report.htm
@@ -248,14 +254,14 @@ SETUP STEPS:
 		maxNeighborhoodRadius ~21			4		29
 
 	STRUCTURE PASSING:
-		- for each camera
-			- create a camera object
-		- for each view
-			- create a view object
+x		- for each camera
+x			- create a camera object
+x		- for each view
+x			- create a view object
 		- for each view image:
 			- undistort image based on view's camera distortion
-		- create a blank transform / match pair for all view pairs
-		- for each match pair
+x		- create a blank transform / match pair for all view pairs
+x		- for each match pair
 			- create match object & add to transform
 			- add points to views [using undistorted locations]
 	INITIAL METRICS

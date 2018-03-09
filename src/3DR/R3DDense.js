@@ -24,6 +24,29 @@ R3D.Dense.Solver = function(size,angl, imageMatrixA,imageMatrixB, pointsA,points
 	this._minimumSize = Math.floor(this._targetSize/2.0);
 	this._maximumSize = Math.floor(this._targetSize*2.0) + 1;
 	this._compareSize = this._targetSize * 1; //  * 2 + 2;
+
+if(this._targetSize<=3){
+	this._targetSize = 3;
+	this._minimumSize = 3;
+	this._maximumSize = 11;
+	this._compareSize = 5;
+}
+
+if(this._targetSize==5){
+	this._targetSize = 5;
+	this._minimumSize = 3;
+	this._maximumSize = 13;
+	this._compareSize = 7;
+}
+
+if(this._targetSize==11){
+	this._targetSize = 11;
+	this._minimumSize = 5;
+	this._maximumSize = 21;
+	this._compareSize = 13;
+}
+
+console.log(this._minimumSize,this._maximumSize,this._compareSize);
 	// this._Ffwd = Ffwd;
 	// this._Frev = Ffwd ? R3D.fundamentalInverse(Ffwd) : null;
 
@@ -42,12 +65,10 @@ R3D.Dense.Solver = function(size,angl, imageMatrixA,imageMatrixB, pointsA,points
 	this._viewA = viewA;
 	this._viewB = viewB;
 
-	// var seedTestScales = [0];
-	// var seedTestAngles = [0];
-	// var seedTestScales = [-0.2,-0.1,0.0,0.1,0.2];
-	// var seedTestAngles = [-20,-10,0,10,20];
-	//angleRangeDeg = Code.lineSpace(-15,15,5);
-	//scaleRangeExp = Code.lineSpace(-.2,.2,.1);
+	var seedTestAngles = Code.lineSpace(-20,20,10);
+	var seedTestScales = Code.lineSpace(-.3,.3,.1);
+	// var seedTestScales = null;
+	// var seedTestAngles = null;
 	var pointLength = Math.min(pointsA.length,pointsB.length,transforms.length);
 	for(var i=0; i<pointLength; ++i){
 		var pointA = pointsA[i];
@@ -59,7 +80,7 @@ R3D.Dense.Solver = function(size,angl, imageMatrixA,imageMatrixB, pointsA,points
 		if(scale<0){
 			throw "here"
 		}
-		this.optimumTransformAddAll(pointA,pointB, scale,angle);//, seedTestScales,seedTestAngles);
+		this.optimumTransformAddAll(pointA,pointB, scale,angle, seedTestScales,seedTestAngles);
 // if(i>10){
 // 	break;
 // }
@@ -211,8 +232,8 @@ R3D.Dense.Solver.prototype.nextTransform = function(transform){
 	var vertexA = transform.vertexA();
 	var vertexB = transform.vertexB();
 	var nextA = this.nextNeighbor(viewA,viewB,vertexA,vertexB,transform);
-	//var nextB = this.nextNeighbor(viewB,viewA,vertexB,vertexA,transform);
-	nextB = [];
+	//var nextB = this.nextNeighbor(viewB,viewA,vertexB,vertexA,transform); // something wrong with using this
+	var nextB = [];
 	var nextList = [];
 	for(var i=0; i<nextA.length; ++i){
 		nextList.push(nextA[i]);
@@ -355,7 +376,7 @@ R3D.Dense.drawSelectedPoint(pB,minRadius,maxRadius, viewB==this._viewB ? 400 : 0
 				return [transform];
 			}else{
 				transform.removeComponents(this._queue);
-				console.log("NOT ADDED => DEAD POINT x 2: "+tooCloseRadius);
+				console.log("NOT ADDED => DEAD POINT x 2: "+tooCloseRadius+" == "+finalNeighbors.length);
 				var failA = new R3D.Dense.Vertex(pA, null);
 				failA.addFail(vertexA);
 				viewA.addPointPutative(failA);
@@ -1074,7 +1095,8 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	//var fundamentalDistanceErrorMax = Math.pow(5,2);
 	//var fundamentalDistanceErrorMax = 10; // < 10 ? --- should get this from average + sigma error beforehand
 	var minimumVariability = 0.001;
-	//var maximumUniquenessScore = 0.999;
+	//var maximumUniquenessScore = 0.999; // 0.90 - 0.99
+	//var maximumUniquenessScore = 0.99;
 	var maximumUniquenessScore = 0.90;
 	var minimumRangeScore = 0.01;
 	// setup image to/from
@@ -1204,6 +1226,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	// penalties
 	var scor = Math.pow(1.0+score,1.0);
 	var uniq = Math.pow(uniqueness,0.50);
+	//var uniq = Math.pow(uniqueness,0.25); // 0.5
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
 	var vari = Math.pow(1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);

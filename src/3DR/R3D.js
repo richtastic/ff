@@ -12924,8 +12924,179 @@ R3D._visitBoxes = function(boxes, boxGroups, grouping){
 		}
 	}
 }
+R3D.calibrateCameraKIteritive = function(pointGroups3D, pointGroups2D){
+	// get initial K & initial distortion
+	var initial = R3D.calibrateCameraK(pointGroups3D, pointGroups2D);
+	console.log(initial);
+//return initial;
+	var K = initial["K"];
+	var distortion = initial["inverted"];
+	var listH = initial["H"];
+	// nonlinear error minimize
+	var result = R3D.cameraParametersAllNonlinear(pointGroups3D,pointGroups2D,listH,K,distortion);
+	
 
-R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){ // 
+// SHOW
+var K = result["K"];
+var inverted = result["inverted"];
+
+
+var Kinv = Matrix.inverse(K);
+var totalPoints3D = [];
+var totalPoints2D = [];
+var estimatedPoints2D = [];
+var listM = R3D.extrinsicCalibratedMatrixFromGroups(pointGroups2D, pointGroups3D, listH, K, Kinv);
+for(var k=0; k<pointGroups2D.length; ++k){
+	var points2D = pointGroups2D[k];
+	var points3D = pointGroups3D[k];
+	Code.arrayPushArray(totalPoints2D, points2D);
+	Code.arrayPushArray(totalPoints3D, points3D);
+	var P = listM[k];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var point = R3D.projectedPoint3DFromPoint3D(point3D, P, K, null);
+		estimatedPoints2D.push(point);
+	}
+}
+
+//inverted = R3D.linearCameraDistortion(totalPoints2D, estimatedPoints2D, K);
+inverted = R3D.cameraDistortionNonlinear(totalPoints2D, estimatedPoints2D, K, null);
+result["inverted"] = inverted;
+
+//var cen = new V2D(0.5,0.375);
+var cen = new V2D(0,0);
+var sca = 400.0;
+
+var display = GLOBALSTAGE;
+for(var i=0; i<totalPoints2D.length; ++i){
+	var pA = totalPoints2D[i];
+	var pB = estimatedPoints2D[i];
+	var pC = R3D.applyDistortionParameters(new V2D(), pA, K, inverted);
+	//var pC = R3D.applyDistortionParameters(new V2D(), pA, K, distortion);
+	//var pC = R3D.applyDistortionParameters(new V2D(), pB, K, distortion);
+	//var pC = R3D.applyDistortionParameters(new V2D(), pB, K, inverted);
+pA = pA.copy().sub(cen).scale(sca);
+pB = pB.copy().sub(cen).scale(sca);
+pC = pC.copy().sub(cen).scale(sca);
+var d = new DO();
+d.graphics().setLine(1.0,0x99FF0000);
+d.graphics().beginPath();
+d.graphics().drawCircle(pA.x,pA.y, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.graphics().setLine(1.0,0x990000FF);
+d.graphics().beginPath();
+d.graphics().drawCircle(pB.x,pB.y, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+
+d.graphics().setLine(1.0,0xFF000000);
+d.graphics().beginPath();
+d.graphics().drawCircle(pC.x,pC.y, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+
+d.matrix().translate(100, 10);
+display.addChild(d);
+if(i>=80){
+	break;
+}
+}
+var d = new DO();
+d.graphics().setLine(1.0,0x99FF0000);
+d.graphics().beginPath();
+d.graphics().drawRect(0,0, 400,400);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(100, 10);
+display.addChild(d);
+//console.log(K.toArray()+" ");
+
+
+
+
+	return result;
+}
+
+R3D.cameraParametersAllNonlinear = function(pointGroups3D,pointGroups2D,listH, K, d){
+	d = {"k1":0,"k2":0,"k3":0,"p1":0,"p2":0};
+	var xVals = [K.get(0,0), K.get(0,1), K.get(0,2), K.get(1,1), K.get(1,2), d["k1"],d["k2"],d["k3"], d["p1"],d["p2"]];
+	var args = [pointGroups3D,pointGroups2D,listH];
+	var result = Code.gradientDescent(R3D._gdKAll, args, xVals, null, 100, 1E-10);
+	xVals = result["x"];
+	var fx = xVals[0];
+	var s =  xVals[1];
+	var cx = xVals[2];
+	var fy = xVals[3];
+	var cy = xVals[4];
+	var k1 = xVals[5];
+	var k2 = xVals[6];
+	var k3 = xVals[7];
+	var p1 = xVals[8];
+	var p2 = xVals[9];
+	var distortion = {"k1":k1,"k2":k2,"k3":k3,"p1":p1,"p2":p2};
+	console.log("K:"+fx+"|"+s+"|"+cx+"|"+fy+"|"+cy);
+	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	return {"K":K, "inverted":distortion};
+}
+R3D._gdKAll = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	var pointGroups3D = args[0];
+	var pointGroups2D = args[1];
+	var listH = args[2];
+
+	var fx = x[0];
+	var s  = x[1];
+	var cx = x[2];
+	var fy = x[3];
+	var cy = x[4];
+	var k1 = x[5];
+	var k2 = x[6];
+	var k3 = x[7];
+	var p1 = x[8];
+	var p2 = x[9];
+	var distortions = {"k1":k1,"k2":k2,"k3":k3,"p1":p1,"p2":p2};
+	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	var Kinv = Matrix.inverse(K);
+
+	var totalPoints3D = [];
+	var totalPoints2D = [];
+	var estimatedPoints2D = [];
+	
+	var listM = R3D.extrinsicCalibratedMatrixFromGroups(pointGroups2D, pointGroups3D, listH, K, Kinv);
+	for(var k=0; k<pointGroups2D.length; ++k){
+		var points2D = pointGroups2D[k];
+		var points3D = pointGroups3D[k];
+		Code.arrayPushArray(totalPoints2D, points2D);
+		Code.arrayPushArray(totalPoints3D, points3D);
+		var P = listM[k];
+		for(var i=0; i<points3D.length; ++i){
+			var point3D = points3D[i];
+			var point = R3D.projectedPoint3DFromPoint3D(point3D, P, K, null);
+			estimatedPoints2D.push(point);
+		}
+	}
+
+	var pointsFrom = totalPoints2D;
+	var pointsTo = estimatedPoints2D;
+
+	var appliedP2D = new V2D();
+	var i, len = pointsFrom.length;
+	var error = 0;
+ 	for(i=0;i<len;++i){
+ 		var fromP2D = pointsFrom[i];
+ 		var toP2D = pointsTo[i];
+		//appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
+// ignore distortion
+appliedP2D.set(fromP2D.x,fromP2D.y);
+ 		var dist = V2D.distance(toP2D,appliedP2D);
+ 		error += dist*dist;
+ 	}
+	return error;
+}
+R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){
 	console.log(" calibrateCameraK ");
 	if(pointGroups3D.length<3){ // minimum 3 unique perspectives
 		return null;
@@ -12936,8 +13107,6 @@ R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){ //
 	for(k=0; k<pointGroups2D.length; ++k){ // for each image projection
 		var points2D = pointGroups2D[k];
 		var points3D = pointGroups3D[k];
-		// console.log(points2D.length,points3D.length);
-		// TODO: REQUIREMENTS ON POINTS2D TO HAVE z = 1?
 		var norm = R3D.calculateNormalizedPoints([points3D,points2D]);
 		// nonlinear minimization goes here
 		var H = R3D.projectiveMatrixNonlinear(norm.normalized[0],norm.normalized[1]); // this is off a bit ... get BAD RATIO ad wrog results
@@ -12999,6 +13168,9 @@ R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){ //
 	}
 	var svd = Matrix.SVD(V);
 	var coeff = svd.V.colToArray(5);
+
+	// TODO: nonlinear H estimation?
+
 	//console.log(coeff)
 	var b00 = coeff[0]; // 0
 	var b01 = coeff[1]; // 1
@@ -13046,40 +13218,10 @@ R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){ //
 */
 	// construct K
 	var K = new Matrix(3,3).setFromArray([fx,s,u0, 0,fy,v0, 0,0,1]);
-
-	// TODO: try post multiplying by normalization ??????
-	console.log("K: ");
-	console.log(K.toString());
 	var Kinv = Matrix.inverse(K);
 
 	// get extrinsic matrixes for each view
-	
-	var listM = [];
-	for(k=0; k<pointGroups2D.length; ++k){
-		var points2D = pointGroups2D[k];
-		var points3D = pointGroups3D[k];
-		var H = listH[k];
-		var h1 = H.getCol(0);
-		var h2 = H.getCol(1);
-		var h3 = H.getCol(2);
-		var r1 = Matrix.mult(Kinv,h1);
-		var r2 = Matrix.mult(Kinv,h2);
-		var t = Matrix.mult(Kinv,h3);
-		var lambda1 = 1.0/r1.getNorm();
-		var lambda2 = 1.0/r2.getNorm();
-		lambda = (lambda1+lambda2)*0.5;
-		r1.scale(lambda);
-		r2.scale(lambda);
-		t.scale(lambda);
-		r1 = new V3D(r1.get(0,0), r1.get(1,0), r1.get(2,0));
-		r2 = new V3D(r2.get(0,0), r2.get(1,0), r2.get(2,0));
-		t = new V3D(t.get(0,0), t.get(1,0), t.get(2,0));
-		var r3 = V3D.cross(r1,r2);
-		var Q = new Matrix(3,3).setFromArray([r1.x,r2.x,r3.x, r1.y,r2.y,r3.y, r1.z,r2.z,r3.z]);
-		var R = R3D.rotationFromApproximate(Q);
-		var M = new Matrix(4,4).setFromArray([ R.get(0,0), R.get(0,1), R.get(0,2), t.x,   R.get(1,0), R.get(1,1), R.get(1,2), t.y,  R.get(2,0), R.get(2,1), R.get(2,2), t.z, 0,0,0,1 ]);
-		listM.push(M); // this is in normalized coordinates
-	}
+	var listM = R3D.extrinsicCalibratedMatrixFromGroups(pointGroups2D, pointGroups3D, listH, K, Kinv);
 
 	// use K as base, correct for distortions
 	var totalPoints3D = [];
@@ -13099,21 +13241,215 @@ R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){ //
 	}
 	var distortion = null;
 	var inverted = null;
-	// initial distortion estimate
-	distortion = R3D.linearCameraDistortion(estimatedPoints2D, totalPoints2D, K);
-	inverted = R3D.linearCameraDistortion(totalPoints2D, estimatedPoints2D, K); // Kinv?
+	// distortion = R3D.linearCameraDistortion(estimatedPoints2D, totalPoints2D, K); // FROM ESTIMATED => TO OBSERVED [forward]
+	// inverted = R3D.linearCameraDistortion(totalPoints2D, estimatedPoints2D, K); // FROM OBSERVED => TO ESTIMATED   [reverse]
+// distortion = null;
+// inverted = null;
+	distortion = R3D.cameraDistortionNonlinear(estimatedPoints2D, totalPoints2D, K, distortion); // FROM ESTIMATED => TO OBSERVED [forward]
+	inverted = R3D.cameraDistortionNonlinear(totalPoints2D, estimatedPoints2D, K, inverted); // FROM OBSERVED => TO ESTIMATED   [reverse]
 	if(inverted){
 		console.log(" inverted:\n  k1: "+inverted["k1"]+"\n  k2: "+inverted["k2"]+"\n  k3: "+inverted["k3"]+"\n  p1: "+inverted["p1"]+"\n  p2: "+inverted["p2"]);
 	}
 	if(distortion){
 		console.log(" distortions:\n  k1: "+distortion["k1"]+"\n  k2: "+distortion["k2"]+"\n  k3: "+distortion["k3"]+"\n  p1: "+distortion["p1"]+"\n  p2: "+distortion["p2"]);
 	}
+
+	// TODO: nonlinear K + dist. estimation
+
+
+// //var cen = new V2D(0.5,0.375);
+// var cen = new V2D(0,0);
+// var sca = 400.0;
+
+// var display = GLOBALSTAGE;
+// for(var i=0; i<totalPoints2D.length; ++i){
+// 	var pA = totalPoints2D[i];
+// 	var pB = estimatedPoints2D[i];
+// 	var pC = R3D.applyDistortionParameters(new V2D(), pA, K, inverted);
+// 	//var pC = R3D.applyDistortionParameters(new V2D(), pA, K, distortion);
+// 	//var pC = R3D.applyDistortionParameters(new V2D(), pB, K, distortion);
+// 	//var pC = R3D.applyDistortionParameters(new V2D(), pB, K, inverted);
+// pA = pA.copy().sub(cen).scale(sca);
+// pB = pB.copy().sub(cen).scale(sca);
+// pC = pC.copy().sub(cen).scale(sca);
+// var d = new DO();
+// d.graphics().setLine(1.0,0x99FF0000);
+// d.graphics().beginPath();
+// d.graphics().drawCircle(pA.x,pA.y, 10);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+// d.graphics().setLine(1.0,0x990000FF);
+// d.graphics().beginPath();
+// d.graphics().drawCircle(pB.x,pB.y, 10);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+
+// d.graphics().setLine(1.0,0xFF000000);
+// d.graphics().beginPath();
+// d.graphics().drawCircle(pC.x,pC.y, 10);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+
+// d.matrix().translate(100, 10);
+// display.addChild(d);
+// if(i>=80){
+// 	break;
+// }
+// }
+// var d = new DO();
+// d.graphics().setLine(1.0,0x99FF0000);
+// d.graphics().beginPath();
+// d.graphics().drawRect(0,0, 400,400);
+// d.graphics().strokeLine();
+// d.graphics().endPath();
+// d.matrix().translate(100, 10);
+// display.addChild(d);
+// //console.log(K.toArray()+" ");
+
+
 	// var i = 0;
 	// var distortion = R3D.cameraDistortionIteritive(pointGroups3D[i], pointGroups2D[i], listM[i], K);
 	//var distortion = R3D.cameraDistortionIteritive(pointGroups3D[i], pointGroups2D[i], listM[i], K);
 
-	return {"K":K, "distortion":distortion, "inverted":inverted, "extrinsic":listM};
+	return {"K":K, "distortion":distortion, "inverted":inverted, "extrinsic":listM, "H":listH};
 }
+R3D.extrinsicCalibratedMatrixFromGroups = function(pointGroups2D, pointGroups3D, listH, K, Kinv){
+	var listM = [];
+	for(var k=0; k<pointGroups2D.length; ++k){
+		var points2D = pointGroups2D[k];
+		var points3D = pointGroups3D[k];
+		var H = listH[k];
+		var h1 = H.getCol(0);
+		var h2 = H.getCol(1);
+		var h3 = H.getCol(2);
+		var r1 = Matrix.mult(Kinv,h1);
+		var r2 = Matrix.mult(Kinv,h2);
+		var t = Matrix.mult(Kinv,h3);
+		var lambda1 = 1.0/r1.getNorm();
+		var lambda2 = 1.0/r2.getNorm();
+		var lambda = (lambda1+lambda2)*0.5;
+		r1.scale(lambda);
+		r2.scale(lambda);
+		t.scale(lambda);
+		r1 = new V3D(r1.get(0,0), r1.get(1,0), r1.get(2,0));
+		r2 = new V3D(r2.get(0,0), r2.get(1,0), r2.get(2,0));
+		t = new V3D(t.get(0,0), t.get(1,0), t.get(2,0));
+		var r3 = V3D.cross(r1,r2);
+		var Q = new Matrix(3,3).setFromArray([r1.x,r2.x,r3.x, r1.y,r2.y,r3.y, r1.z,r2.z,r3.z]);
+		var R = R3D.rotationFromApproximate(Q);
+		var M = new Matrix(4,4).setFromArray([ R.get(0,0), R.get(0,1), R.get(0,2), t.x,   R.get(1,0), R.get(1,1), R.get(1,2), t.y,  R.get(2,0), R.get(2,1), R.get(2,2), t.z, 0,0,0,1 ]);
+		listM.push(M); // this is in normalized coordinates
+	}
+	return listM;
+}
+R3D.cameraDistortionNonlinear = function(pointsFrom,pointsTo, K, d){
+	var xVals = [0,0,0, 0,0]; // k1 k2 k3 p1 p2
+	if(d){
+		xVals = [d["k1"],d["k2"],d["k3"],d["p1"],d["p2"]]; 
+	}
+	var args = [pointsFrom,pointsTo,K];
+	var result = Code.gradientDescent(R3D._gdDist, args, xVals, null, 300, 1E-10);
+	xVals = result["x"];
+	//console.log(xVals);
+	var k1 = xVals[0];
+	var k2 = xVals[1];
+	var k3 = xVals[2];
+	var p1 = xVals[3];
+	var p2 = xVals[4];
+	return {"k1":k1,"k2":k2,"k3":k3,"p1":p1,"p2":p2};
+}
+R3D._gdDist = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	var pointsFrom = args[0];
+	var pointsTo = args[1];
+	var K = args[2];
+	var distortions = {"k1":x[0],"k2":x[1],"k3":x[2],"p1":x[3],"p2":x[4]};
+	var appliedP2D = new V2D();
+	
+	var i, len = pointsFrom.length;
+	var error = 0;
+ 	for(i=0;i<len;++i){
+ 		var fromP2D = pointsFrom[i];
+ 		var toP2D = pointsTo[i];
+		appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
+ 		var dist = V2D.distance(toP2D,appliedP2D);
+ 		//error += dist*dist;
+ 		error += dist*dist;
+ 	}
+ 	//console.log(" error: "+error);
+	return error;
+}
+
+
+/*
+
+EX:
+
+R3D._gdFun_A = new Matrix(3,3);
+R3D._gdFun_B = new Matrix(3,3);
+R3D._gdFun = function(args, x, isUpdate, descriptive){
+	if(isUpdate){
+		var Ffwd = new Matrix(3,3).fromArray(x);
+		Ffwd = R3D.forceRank2F(Ffwd);
+		Code.copyArray(x,Ffwd.toArray());
+		return;
+	}
+	var pointsA = args[0];
+	var pointsB = args[1];
+
+	var i, len = pointsA.length;
+	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
+	var Frev = R3D._gdFun_B, Ffwd = R3D._gdFun_A;
+	var orgA = new V2D(), orgB = new V2D(), dirA = new V2D(), dirB = new V2D();
+	Ffwd.setFromArray(x);
+	Ffwd = R3D.forceRank2F(Ffwd);
+	Matrix.transpose(Frev, Ffwd);
+
+	var errorA = 0;
+	var errorB = 0;
+ 	for(i=0;i<len;++i){
+		pointA = pointsA[i];
+		pointB = pointsB[i];
+		Ffwd.multV3DtoV3D(lineA, pointA);
+		Frev.multV3DtoV3D(lineB, pointB);
+		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
+		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
+		onA = Code.closestPointLine2D(orgA,dirA, pointB);
+		onB = Code.closestPointLine2D(orgB,dirB, pointA);
+ 		var distA = V2D.distance(onB,pointA);
+ 		var distB = V2D.distance(onA,pointB);
+ 		errorA += distA*distA;
+ 		errorB += distB*distB;
+ 	}
+ 	var error = errorA + errorB;
+ 	if(descriptive){
+ 		return {"error":error, "A":errorA, "B":errorB}
+ 	}
+	return error;
+}
+R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares : input normalized points
+	var xVals = fundamental.toArray();
+	var args = [pointsA,pointsB];
+	result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-10);
+	xVals = result["x"];
+	fundamental = new Matrix(3,3).fromArray(xVals);
+	fundamental = R3D.forceRank2F(fundamental);
+	return fundamental;
+}
+
+*/
+
+
+
+
+
+
+
+
+
+
 R3D.cameraDistortionIteritive = function(knownPoints3D, knownPoints2D, estimatedCameraMatrix, estimatedK){
 	console.log("distortion calculation: \n");
 	var i, j, k;
@@ -13133,7 +13469,7 @@ R3D.cameraDistortionIteritive = function(knownPoints3D, knownPoints2D, estimated
 	//
 	var distortions = R3D.linearCameraDistortion(estimatedPoints2D, knownPoints2D, K);
 	var distortionsInverse = R3D.linearCameraDistortion(knownPoints2D, estimatedPoints2D, K);
-	//
+/*
 	console.log("find error:");
 var cx = K.get(0,2);
 var cy = K.get(1,2);
@@ -13146,7 +13482,7 @@ d.graphics().fill();
 d.matrix().translate(cx,cy);
 d.matrix().translate(0*400,0);
 GLOBALSTAGE.addChild(d);
-
+*/
 	var totalError = null;
 	for(i=0; i<10; ++i){
 		
@@ -13157,6 +13493,7 @@ GLOBALSTAGE.addChild(d);
 			var locationNonD = R3D.projectedPoint3DFromPoint3D(point3D, P, K, null);
 			var location = R3D.projectedPoint3DFromPoint3D(point3D, P, K, distortions);
 				var inverted = R3D.applyDistortionParameters(new V2D(), location, K, distortionsInverse);
+/*
 //var d2 = R3D.linearCameraDistortion(estimatedPoints2D, knownPoints2D, K);
 //
 //console.log(HERE)
@@ -13190,9 +13527,7 @@ d.graphics().fill();
 d.matrix().translate(inverted.x,inverted.y);
 d.matrix().translate(0*400,0);
 GLOBALSTAGE.addChild(d);
-
-
-
+*/
 			var error = V2D.distance(location, point2D);
 			totalError += error*error;
 		}
@@ -13343,6 +13678,8 @@ R3D.linearCameraDistortion = function(pointsFrom,pointsTo, K){ // radial distort
 		var y = point2D.y;
 		var u = estim2D.x;
 		var v = estim2D.y;
+		var xc = x-cx;
+		var yc = y-cy;
 		var uc = u-cx;
 		var vc = v-cy;
 		var r2 = uc*uc + vc*vc;
@@ -13354,14 +13691,14 @@ R3D.linearCameraDistortion = function(pointsFrom,pointsTo, K){ // radial distort
 		A.set(i*2+0,2, uc*r6 ); // k3
 		A.set(i*2+0,3, 2*uc*uc + r2 ); // p1
 		A.set(i*2+0,4, 2*uc*vc ); // p2
-		A.set(i*2+0,5, -(x-u) ); // 1
+		A.set(i*2+0,5, uc-xc ); // 1
 		// y
 		A.set(i*2+1,0, vc*r2 ); // k1
 		A.set(i*2+1,1, vc*r4 ); // k2
 		A.set(i*2+1,2, vc*r6 ); // k3
 		A.set(i*2+1,3, 2*uc*vc ); // p1
 		A.set(i*2+1,4, 2*vc*vc + r2 ); // p2
-		A.set(i*2+1,5, -(y-v) ); // 1
+		A.set(i*2+1,5, vc-yc ); // 1
 	}
 	try{
 		var svd = Matrix.SVD(A);
@@ -13372,6 +13709,11 @@ R3D.linearCameraDistortion = function(pointsFrom,pointsTo, K){ // radial distort
 		var p1 = coeff[3];
 		var p2 = coeff[4];
 		var scale = coeff[5];
+console.log("scale: "+scale);
+//scale = 1.0;
+//scale = scale * 10;
+// var sign = Math.sign(scale);
+// scale = Math.pow(Math.abs(scale),0.5)*sign;
 		k1 /= scale;
 		k2 /= scale;
 		k3 /= scale;
@@ -13405,7 +13747,7 @@ R3D.linearCameraDistortion = function(pointsFrom,pointsTo, K){ // radial distort
 */
 //R3D.imageCorrectDistortion = function(imageSource, K, distortions){
 
-R3D.invertImageDistortion = function(source, K, distortionFwd, distortionRev){
+R3D.invertImageDistortion = function(source, K, distortionFwd, distortionRev, isUnit){
 	var distortions = distortionFwd;
 	var cx = K.get(0,2);
 	var cy = K.get(1,2);
@@ -13454,11 +13796,13 @@ R3D.invertImageDistortion = function(source, K, distortionFwd, distortionRev){
 		for(i=0; i<destWidth; ++i){
 			//index = j*destWidth + i;
 			undistorted.set(i-offX,j-offY);
+			if(isUnit){
+				undistorted.scale(1.0/sourceWidth,1.0/sourceHeight);
+			}
 			distorted = R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
-			//source.getPoint(val, distorted.x,distorted.y);
-			// if(j==400){
-			// 	console.log(distorted+" <- "+undistorted);
-			// }
+			if(isUnit){
+				distorted.scale(sourceWidth,sourceHeight);
+			}
 			if(distorted.x>=0 && distorted.x<=sourceWidth-1 && distorted.y>=0 && distorted.y<=sourceHeight-1){
 				distorted.x = Math.min(Math.max(distorted.x,0),sourceWidth-1);
 				distorted.y = Math.min(Math.max(distorted.y,0),sourceHeight-1);
@@ -13474,6 +13818,9 @@ R3D.invertImageDistortion = function(source, K, distortionFwd, distortionRev){
 				destination.setPoint(i,j, val);
 			}
 		}
+	}
+	if(!max || !min){
+		return null;
 	}
 	var subWidth = max.x-min.x + 1;
 	var subHeight = max.y-min.y + 1;
@@ -13520,8 +13867,8 @@ R3D.applyDistortionParameters = function(distorted, undistorted, K, distortions)
 	var r4 = r2*r2;
 	var r6 = r4*r2;
 
-	var xD = xO + xR*(1 + k1*r2 + k2*r4 + k3*r6)  +  p1*(r2 + 2*xR*xR) + 2*p2*xR*yR;
-	var yD = yO + yR*(1 + k1*r2 + k2*r4 + k3*r6)  +  p2*(r2 + 2*yR*yR) + 2*p1*xR*yR;
+	var xD = xU  +  k1*xR*r2 + k2*xR*r4 + k3*xR*r6 + p1*(r2 + 2*xR*xR) + 2*p2*xR*yR;
+	var yD = yU  +  k1*yR*r2 + k2*yR*r4 + k3*yR*r6 + p2*(r2 + 2*yR*yR) + 2*p1*xR*yR;
 
 	distorted.set(xD,yD);
 	return distorted;

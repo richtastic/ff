@@ -168,8 +168,9 @@ var size = Math.max(400,300) / 40; // 11
 var size = Math.max(400,300) / 80; // 5
 size = size%2==0 ? size : size+1;
 
-var cellSize = 5;
-//var cellSize = 11;
+//var cellSize = 3; // too small
+// var cellSize = 5;
+var cellSize = 11;
 //var cellSize = 15;
 //var cellSize = 21;
 var cellAngle = Code.radians(90.0);
@@ -2930,7 +2931,7 @@ Dense.uniquenessFromValues = function(valuesIn, width,height){ // smaller is bet
 	var min = info["min"];
 	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-6, 0.0); // to force maxima differences
 
-	var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
+	var peaks = Code.findMinima2DFloat(valuesIn,width,height);
 	var values = null;
 	if(peaks.length>1){
 		values = [];

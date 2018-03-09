@@ -1,6 +1,6 @@
 // R3DBA.js
 
-function R3D.BA(){
+R3D.BA = function(){
 	// library to be merged into R3D
 }
 
@@ -36,20 +36,37 @@ R3D.BA.World = function(){
 	this._views = {};
 	this._transforms = {};
 }
-R3D.BA.World.prototype.addCamera = function(camera){
+R3D.BA.World.prototype.addCamera = function(){
+	var camera = new R3D.BA.Camera();
 	this._cameras.push(camera);
+	return camera;
 }
-R3D.BA.World.prototype.addView = function(view){
-	if(Code.elementExists(this._views,view)){
-		return false;
-	}
-	for(var i=0; i<this._views.length; ++i){
-		var v = this._views[i];
+R3D.BA.World.prototype.addView = function(){
+	var viewA = new R3D.BA.View();
+	// if(Code.elementExists(this._views,view)){
+	// 	return false;
+	// }
+	var keys = Code.keys(this._views);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var viewB = this._views[key];
 		var index = R3D.BA.indexFromViews(viewA,viewB);
-		this._transforms[index] = new R3D.BA.Transform2D(viewA,viewB);
+		this._transforms[index] = new R3D.BA.Transform(viewA,viewB);
 	}
-	this._view[view.id()+""] = view;
-	return true;
+	this._views[viewA.id()+""] = viewA;
+	return viewA;
+}
+R3D.BA.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB){
+	console.log(pointA+"->"+pointB);
+	var transform = this.transformFromViews(viewA,viewB);
+	console.log(transform);
+	// create new p3d
+	// create new 2d points A & B
+		// get scores
+	// connect all
+	// check for any existing intersections
+		// do any necessary merging
+throw "todo";
 }
 R3D.BA.World.prototype.transformFromViews = function(viewA,viewB){
 	if(viewA==viewB){
@@ -88,6 +105,11 @@ R3D.BA.View = function(image, corners, camera){
 	this._corners = null;
 	this._pointSpace = null;
 	this._absoluteTransform = null;
+	//
+	this._targetRadius = 7;
+	this._minRadius = 3;
+	this._maxRadius = 15;
+	//
 	this.image(image);
 	this.corners(corners);
 	this.camera(camera);
@@ -96,21 +118,21 @@ R3D.BA.View.ID = 0;
 R3D.BA.View.prototype.id = function(){
 	return this._id;
 }
-R3D.BA.View.prototype.size = function(){
-	if(this._image){
-		return new V2D(this._image.width(),this._image.height());
-	}
-	return null;
-}
-R3D.BA.View.prototype.image = function(image){
-	if(image){
-		this._image = image;
+R3D.BA.View.prototype.size = function(size){
+	if(size){
+		this._size = size;
 		if(this._pointSpace){
 			this._pointSpace.kill();
 		}
 		var min = new V2D(0,0);
-		var max = new V2D(image.width(),image.height());
+		var max = size;
 		this._pointSpace = new QuadTree(R3D.BA._point2DToPoint, min, max);
+	}
+	return this._size;
+}
+R3D.BA.View.prototype.image = function(image){
+	if(image){
+		this._image = image;
 	}
 	return this._image;
 }
@@ -230,12 +252,12 @@ R3D.BA.Match2D = function(){
 	this._errorRAB = null;
 	// transform2D ?
 }
-R3D.BA.Point3D.prototype.point = function(point){
-	if(point){
-		this._point = point;
-	}
-	return this._point;
-}
+// R3D.BA.Match2D.prototype.point = function(point){
+// 	if(point){
+// 		this._point = point;
+// 	}
+// 	return this._point;
+// }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.BA.Point3D = function(){
 	this._point = null;
