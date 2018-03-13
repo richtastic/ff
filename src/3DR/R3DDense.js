@@ -134,6 +134,8 @@ R3D.Dense.Solver.prototype.optimumTransformAddAll = function(pointA,pointB, scal
 	}
 	return null;
 }
+
+
 R3D.Dense.Solver.prototype.solve = function(){
 	console.log("SOLVE")
 //this._tickCount = 1;

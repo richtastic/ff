@@ -966,6 +966,19 @@ Code.arraySet = function(arr, c){
 	}
 	return arr;
 }
+Code.arrayFromHash = function(hash, nonnull){
+	nonnull = nonnull!==undefined ? nonnull : true;
+	var arr = [];
+	var keys = Code.keys(hash);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var value = hash[key];
+		if(nonnull || value!==undefined){
+			arr.push(value);
+		}
+	}
+	return arr;
+}
 Code.newArray = function(){
 	var arr = new Array();
 	var i, len = arguments.length;

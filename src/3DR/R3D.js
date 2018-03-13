@@ -469,6 +469,7 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 
 var projection = null;
 var countsUnderZero = Code.newArrayZeros(possibles.length);
+var countsOverZero = Code.newArrayZeros(possibles.length);
 	
 for(index=0; index<pointsA.length; ++index){
 //	var index = 0;
@@ -507,6 +508,7 @@ for(index=0; index<pointsA.length; ++index){
 //			console.log(".......................>>XXX");
 //			projection = possible;
 			//break; // look at others still
+			countsOverZero[i] += 1;
 		}else{
 			countsUnderZero[i] += 1;
 		}
@@ -514,6 +516,7 @@ for(index=0; index<pointsA.length; ++index){
 }
 console.log("total points: "+pointsA.length);
 console.log(countsUnderZero);
+console.log(countsOverZero);
 var count = null;
 for(i=0; i<possibles.length; ++i){
 	var possible = possibles[i];

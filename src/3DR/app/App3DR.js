@@ -75,12 +75,12 @@ var modeImageUpload = false;
 	// var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-//var modeImageCompare = true;
-var modeImageCompare = false;
+var modeImageCompare = true;
+//var modeImageCompare = false;
 
 
-//var modeModelReconstruction = false;
-var modeModelReconstruction = true;
+var modeModelReconstruction = false;
+//var modeModelReconstruction = true;
 
 
 if(modeImageEdit){
@@ -5288,7 +5288,9 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 //			console.log("complete");
 			var i, j, k;
 
-// SHOW UNDISTORTED IMAGE:
+/*
+console.log("SHOW UNDISTORTED IMAGE:")
+// 
 //console.log(cameras[0].distortion());
 
 var distortion = cameras[0].distortion();
@@ -5321,7 +5323,7 @@ var d = new DOImage(img);
 d.matrix().scale(1.0);
 d.matrix().translate(10, 10);
 GLOBALSTAGE.addChild(d);
-
+*/
 
 // locals
 var BACAMS = [];
@@ -5357,22 +5359,25 @@ var cam = BACAMS[0];
 // views
 for(var i=0; i<views.length; ++i){
 	var view = views[i];
-	var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
 	var v = world.addView();
-	console.log(v);
-		var img = view.featuresImage();
+	var img = view.featuresImage();
 		var matrix = R3D.imageMatrixFromImage(img, this._stage);
-	//v.images().push(matrix);
+		v.image(matrix);
+		// v.images().push(matrix);
+	//var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
+	var imageWidth = v.image().width();
+	var imageHeight = v.image().height();
+	var imageSize = new V2D(imageWidth, imageHeight);
 	//v.index(view.id());
 	v.size(imageSize);
-	v.image(matrix);
+	
 	v.corners(null);
 	v.camera(cam);
 		view.temp(v);
 	BAVIEWS.push(c);
 }
 // matches
-for(i=0; i<pairs.length; ++i){
+for(var i=0; i<pairs.length; ++i){
 	var pair = pairs[i];
 	var matchData = pair.matchingData();
 	var matches = matchData["matches"];
@@ -5384,23 +5389,35 @@ for(i=0; i<pairs.length; ++i){
 	// 
 	var viewA = this.viewFromID(fromViewID);
 	var viewB = this.viewFromID(toViewID);
-		var aspectA = viewA.aspectRatio();
-		var aspectB = viewB.aspectRatio();
-		var fromImageSize = new V2D(1.0,1.0/aspectA);
-		var toImageSize = new V2D(1.0,1.0/aspectB);
 	var vA = viewA.temp();
 	var vB = viewB.temp();
+	var imageWidthA = vA.image().width();
+	var imageHeightA = vA.image().height();
+	var imageWidthB = vB.image().width();
+	var imageHeightB = vB.image().height();
+		var aspectA = viewA.aspectRatio();
+		var aspectB = viewB.aspectRatio();
+		// var fromImageSize = new V2D(1.0,1.0/aspectA);
+		// var toImageSize = new V2D(1.0,1.0/aspectB);
+		var fromImageSize = new V2D(imageWidthA,imageHeightA);
+		var toImageSize = new V2D(imageWidthB,imageHeightB);
+	
+	
 	// save local copy
 	var filteredMatches = [];
 	for(var j=0; j<matches.length; ++j){
 		var match = matches[j];
 		var fr = match["fr"];
 		var to = match["to"];
+
+		var relScale = (to["s"]*imageWidthB)/(fr["s"]*imageWidthA);
+		var relAngle = to["a"] - fr["a"];
+		
 		fr = new V2D(fr.x,fr.y);
 		fr.scale(fromImageSize.x,fromImageSize.y);
 		to = new V2D(to.x,to.y);
 		to.scale(toImageSize.x,toImageSize.y);
-		filteredMatches.push([fr,to]);
+		filteredMatches.push([fr,to,relAngle,relScale]);
 	}
 	/*
 	// remove duplicates
@@ -5424,9 +5441,13 @@ for(i=0; i<pairs.length; ++i){
 	// copy over
 	for(var j=0; j<filteredMatches.length; ++j){
 		var match = filteredMatches[j];
+//		console.log(match);
 		var fr = match[0];
 		var to = match[1];
-		world.addMatchForViews(vA,fr, vB,to);
+		var angleAB = match[2];
+		var scaleAB = match[3]; // THIS DEPENDS ON ABSOLUTE SIZE ... 
+//		console.log(fr+" & "+to+" & "+angleAB+" | "+scaleAB);
+		world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB);
 		/*
 		var pointA = vA.closestPoint2D(fr.x,fr.y);
 		var pointB = vB.closestPoint2D(to.x,to.y);
@@ -5436,6 +5457,7 @@ for(i=0; i<pairs.length; ++i){
 		}
 		*/
 	}
+	world.solve();
 	// initially get 2-sigma points & only add those from match list
 	
 }

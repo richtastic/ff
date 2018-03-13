@@ -262,7 +262,7 @@ x			- create a view object
 			- undistort image based on view's camera distortion
 x		- create a blank transform / match pair for all view pairs
 x		- for each match pair
-			- create match object & add to transform
+xx			- create match object & add to transform
 			- add points to views [using undistorted locations]
 	INITIAL METRICS
 		- for each point match
@@ -276,14 +276,16 @@ x		- for each match pair
 			- for each 2D point
 				- for each other point in same view
 					- if 2 points are closer than 1/2 min radius
-						- get descriptor at centroid using neighborhood radius
-						- for each other match (other view) of each point:
-							- find best match of decriptor (using interpolated scale / angle / position)
-						- if all new matches 
-							- merge points in view & replace points in other views with best match locations (merge duplicate view points at respective centroids)
-						- else:
-							- keep point with best score
-							- drop point2d [and possibly point3D]
+						COMBINE POINTS
+											OLD:
+											- get descriptor at centroid using neighborhood radius
+											- for each other match (other view) of each point:
+												- find best match of decriptor (using interpolated scale / angle / position)
+											- if all new matches 
+												- merge points in view & replace points in other views with best match locations (merge duplicate view points at respective centroids)
+											- else:
+												- keep point with best score
+												- drop point2d [and possibly point3D]
 	- RECALCULATE METRICS
 		- view-pair M
 ITERATION STEPS:
@@ -331,7 +333,7 @@ ITERATION STEPS:
 												=> need to recheck if any points are now too close to eachother
 										- RECORD NEW SCORES FOR CHANGED FEATURES
 									- else:
-										- SET P3D PROJECTION ATTEMPT TO VIEW AS FAILED
+										- SET P3D PROJECTION ATTEMPT TO VIEW AS: FAILED
 											- record point, existing views used, r error, f error
 								- else:
 									- set as new 2D matched point assigned to P3D
@@ -385,6 +387,46 @@ ITERATION STEPS:
 
 	
 
+INIT COMBINING POINTS:
+	- P3DA already exists
+	- P3DB is being added
+		=> calculate scores for each of match pairs [2]
+			- A->B & B->A should have close points
+				> average midpoint
+	P3DA & P3DB
+
+		- choose P3D with better average score to be 'base'
+		- for each view-point in P3DB
+			- for each view-point P3DA [except for same view]
+				- determine optimal scale | position | rotation @ new 'potential point'
+			- if all scores and placements are < 2 * avg score & within radius:
+				- add or replace P3DA-view-point with new optimal point
+		- remove P3DA-set & readd
+		- repeat until no collisions
+
+
+COMBING P3D PROJECTIONS:
+	- is score good:
+		- add P2D to sets
+		- is close:
+			- each P3DB known p2d is close to each other known P3DA known
+				- use P3D(A) with best score as base
+				- remove P3DB
+				- add P3DB new points to P3DA based on average location
+				=> need to readd to check for other collisions
+			- else
+				=> FAILED P3D
+	- else
+		=> FAILED P3D
+
+COMBINING P2D PROBES:
+	- is score good:
+		- is close:
+			* SAME as P3D combine
+		- else:
+			=> failed P2d
+	- else
+		=> fail point p2d
 
 
 camera
