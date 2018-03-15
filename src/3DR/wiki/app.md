@@ -192,6 +192,11 @@ project typical numbers:
 
 APP TODO:
 
+
+- display initial reconstruction points
+- 
+
+
 - see what undistorted images look like
 	-> linear distortion is very bad for reprojection points
 		- try nonlinear?
@@ -264,13 +269,13 @@ x		- create a blank transform / match pair for all view pairs
 x		- for each match pair
 xx			- create match object & add to transform
 			- add points to views [using undistorted locations]
-	INITIAL METRICS
-		- for each point match
-			- get descriptor at each of 2 points
-				- record score
-		- for each view match
-			- create transform: R + F
-			- calculate F 
+x	INITIAL METRICS
+x		- for each point match
+x			- get descriptor at each of 2 points
+x				- record score
+x		- for each view match
+x			- create transform: R + F
+x			- calculate F 
 	REMOVE CLOSE POINTS:
 		- repeat until no pair is found:
 			- for each 2D point

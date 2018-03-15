@@ -75,12 +75,12 @@ var modeImageUpload = false;
 	// var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-var modeImageCompare = true;
-//var modeImageCompare = false;
+// var modeImageCompare = true;
+var modeImageCompare = false;
 
 
-var modeModelReconstruction = false;
-//var modeModelReconstruction = true;
+// var modeModelReconstruction = false;
+var modeModelReconstruction = true;
 
 
 if(modeImageEdit){
@@ -463,6 +463,7 @@ App3DR.prototype._setupModel3DProjectManager = function(projectManager){
 			}
 		}
 		var fxnImageLoaded = function(){
+			console.log("fxnImageLoaded")
 			currentFeaturesImages++;
 			checkDone();
 		}
@@ -473,13 +474,13 @@ App3DR.prototype._setupModel3DProjectManager = function(projectManager){
 			fxnDone();
 		}
 		var fxnDone = function(){
+			console.log("fxnDone");
 			self._projectBALoad(projectManager);
 		}
 
 	if(projectManager.isLoaded()){
 		fxnStart();
 	}else{
-		
 		projectManager.addFunction(App3DR.ProjectManager.EVENT_LOADED, fxnStart, this);
 	}
 
@@ -517,6 +518,8 @@ App3DR.prototype._projectBALoaded = function(object, data){
 		var v = points[i];
 		var point3D = new V3D(v["x"],v["y"],v["z"]);
 		points3D.push(point3D);
+console.log("TODO: SCALE ENTIRE SCENE ????? OR INCREASE FRUSTRUM");
+point3D.scale(0.001);
 	}
 var manager = this._projectManager;
 console.log(manager);
@@ -547,7 +550,7 @@ var projectViews = manager.views();
 	app.setPoints(points3D);
 
 	app.setViews(views3D);
-
+console.log("DONE");
 }
 
 
@@ -2426,7 +2429,7 @@ App3DR.App.Model3D = function(resource, manager){
 	App3DR.App.Model3D._.constructor.call(this, resource);
 	console.log("Model3D");
 console.log("TODO: UNDO");
-return; // TODO: REMOVE
+//return; // TODO: REMOVE
 	this._displayData = null;
 	this._display = new DO();
 	this._root.addChild(this._display);
@@ -2469,7 +2472,6 @@ return; // TODO: REMOVE
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_EXIT, this.onMouseExitFxn3D, this);
 
-
 	this._keyboard = new Keyboard();
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
@@ -2483,6 +2485,7 @@ Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 
 
 App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
+	console.log("_loadedViewTexture !!!");
 	var i;
 	++this._loadedTextures;
 	//console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
@@ -5232,7 +5235,8 @@ throw "CALIBRATE YEAH"
 
 App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
 	console.log("calculateBundleAdjust");
-//return; // TODO: UNCOMMENT
+
+return; // TODO: UNCOMMENT
 	var i, j, k;
 	var view, pair, camera;
 	var views = this._views;
@@ -5279,7 +5283,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 	// 	fxnD();
 	// }
 	var fxnZ = function(eh){
-		//
+		console.log("saved bundle adjust");
 	}
 	var fxnD = function(){
 //		console.log(loadedPairs+" / "+expectedPairs+"  &&  "+loadedViews+" / "+expectedViews+"  &&  "+loadedCameras+" / "+expectedCameras);
@@ -5457,11 +5461,21 @@ for(var i=0; i<pairs.length; ++i){
 		}
 		*/
 	}
-	world.solve();
 	// initially get 2-sigma points & only add those from match list
-	
 }
 
+
+world.solve();
+
+
+//throw "...";
+
+var str = world.toYAMLString();
+this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+this.saveBundleAdjust(str, fxnZ, this);
+this.saveProjectFile();
+
+return;
 throw "USE NEW BUNDLE ADJUST: R3D.BA";
 
 

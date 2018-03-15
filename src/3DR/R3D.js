@@ -389,13 +389,18 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 	Kb = Kb ? Kb : Ka;
 	var KaInv = Matrix.inverse(Ka);
 	var KbInv = Matrix.inverse(Kb);
+
+		// KaInv = Matrix.transpose(Ka);
+		// KbInv = Matrix.transpose(Kb);
 //	console.log("K: \n"+Ka);
 //	console.log("K^-1: \n"+KaInv);
 	
+	/*
 	// FORWARD: ... looks bad
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbInv,E);
 //	console.log("INCOMING E [from F]:\n"+E);
+	*/
 	
 	// FROM SCRATCH
 	// get screen-normalized image points:
@@ -414,9 +419,11 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // fin
 	// get dimension-normalized. points
 	var norm = R3D.calculateNormalizedPoints([eA,eB]);
 	E = R3D.essentialMatrix(norm.normalized[0],norm.normalized[1]);
+	
 		//E = R3D.essentialMatrixNonlinear(E,norm.normalized[0],norm.normalized[1]);
 	E = Matrix.mult(E,norm.forward[1]);
 	E = Matrix.mult(Matrix.transpose(norm.forward[0]),E);
+
 //	console.log("INCOMING E [self]:\n"+E);
 
 	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
@@ -514,9 +521,9 @@ for(index=0; index<pointsA.length; ++index){
 		}
 	}
 }
-console.log("total points: "+pointsA.length);
-console.log(countsUnderZero);
-console.log(countsOverZero);
+// console.log("total points: "+pointsA.length);
+// console.log(countsUnderZero);
+// console.log(countsOverZero);
 var count = null;
 for(i=0; i<possibles.length; ++i){
 	var possible = possibles[i];
@@ -818,7 +825,8 @@ R3D.lmMinHomographyFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1x
 // ------------------------------------------------------------------------------------------- F utilities
 R3D.essentialFromFundamental = function(K1, K2, F){  // K maps from 1 to 2  |  E = K2 * F * K1
 	var temp = Matrix.mult(F,K2);
-	var K1T = Matrix.transpose(K1);
+	//var K1T = Matrix.transpose(K1);
+	var K1T = Matrix.inverse(K1); // WAS TRANSPOSE
 	var E = Matrix.mult(K1T,temp);
 	// var E = Matrix.mult(F,Ka);
 	// E = Matrix.mult(KbT,E);
@@ -2327,8 +2335,8 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 }
 R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
 	// TODO: are these normalized (E) image coords ?
-	pointsFr = Code.copyArray(pointsFr);
-	pointsTo = Code.copyArray(pointsTo);
+	// pointsFr = Code.copyArray(pointsFr);
+	// pointsTo = Code.copyArray(pointsTo);
 	var KaInv = null;
 	var KbInv = null;
 	if(Ka || Kb){
@@ -18473,6 +18481,7 @@ R3D._gdBAPoints3D = function(args, x, isUpdate){
 //	console.log("B: "+transform);
 	
 	// TODO: should A be able to move around as well ? -- otherwise error only changes in B w/ no recourse to fix A
+	// ^ ?
 	var cameraA = R3D._gdBAPoints3D_temp_B;
 	cameraA.identity();
 	var cameraB = transform;
@@ -18540,6 +18549,17 @@ R3D.BAPoints2DGD = function(pointsA2D,pointsB2D,points3D, Ka,Kb,distortionsA,dis
 }
 
 
+R3D.cameraExtrinsicMatrixFromInitial = function(pointsA, pointsB, P, F, Ka, Kb, distortionsA, distortionsB){
+	if(!F){
+		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	}
+	var Ffwd = F;
+	var Frev = Matrix.inverse(Ffwd);
+	var points3DRelative = null;
+	var transform = R3D.BAPoints2DGD(pointsA, pointsB, points3DRelative, Ka, Kb, distortionsA, distortionsB, P);
+	console.log(transform+"");
+	return transform;
+}
 
 
 
