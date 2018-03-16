@@ -513,13 +513,21 @@ App3DR.prototype._projectBALoaded = function(object, data){
 		cameraLookup[id] = c; // TODO: this should be id
 	}
 
+var min3D = null;
+var max3D = new V3D();
 	var points3D = [];
 	for(var i=0; i<points.length; ++i){
 		var v = points[i];
 		var point3D = new V3D(v["x"],v["y"],v["z"]);
+		if(!min3D){
+			min3D = new V3D(point3D.x,point3D.y,point3D.z);
+			max3D = new V3D(point3D.x,point3D.y,point3D.z);
+		}
+		V3D.min(min3D,min3D,point3D);
+		V3D.max(max3D,max3D,point3D);
 		points3D.push(point3D);
-console.log("TODO: SCALE ENTIRE SCENE ????? OR INCREASE FRUSTRUM");
-point3D.scale(0.001);
+//console.log("TODO: SCALE ENTIRE SCENE ????? OR INCREASE FRUSTRUM");
+//point3D.scale(0.001);
 	}
 var manager = this._projectManager;
 console.log(manager);
@@ -538,6 +546,7 @@ var projectViews = manager.views();
 		for(var j=0; j<projectViews.length; ++j){
 			var pv = projectViews[j];
 			if(pv.id()==v["id"]){
+			//if(i==j){ // TODO: FIX ID
 				image = pv.featuresImage();
 				break;
 			}
@@ -550,6 +559,25 @@ var projectViews = manager.views();
 	app.setPoints(points3D);
 
 	app.setViews(views3D);
+
+var range = V3D.sub(max3D,min3D);
+
+var maxDistance = max3D.length();
+
+app._distanceRange = maxDistance;
+
+console.log("maxDistance: "+maxDistance);
+maxDistance = maxDistance * 2;
+
+
+
+app._stage3D.frustrumAngle(45);
+app._stage3D.distanceNear(0.01);
+//app._stage3D.distanceFar(100.0);
+
+app._stage3D.distanceFar(maxDistance);
+
+
 console.log("DONE");
 }
 
@@ -2485,7 +2513,6 @@ Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 
 
 App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
-	console.log("_loadedViewTexture !!!");
 	var i;
 	++this._loadedTextures;
 	//console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
@@ -2608,7 +2635,6 @@ console.log("s: "+s);
 
 App3DR.App.Model3D.prototype.setViews = function(input){
 	var i;
-
 	this._viewImages = [];
 	this._expectedTextures = input.length;
 	this._loadedTextures = 0;
@@ -2686,37 +2712,42 @@ App3DR.App.Model3D.prototype.onMouseWheelFxn3D = function(e){
 	var z = orientation["z"];
 	var o = orientation["o"];
 
+	//console.log(this._distanceRange);
+
+	var scaleSize = this._distanceRange * 0.00001;
+	var scaleAngle = 0.001;
+
 // ROTATIONS
 	if(this._keyboard.isKeyDown(Keyboard.KEY_LET_Z)){ // left/right
 y = new V3D(0,1,0);
 		var dirY = y.copy().scale(scroll.x);
 		var rot = dirY.copy().norm();
-		var mag = dirY.length() * 0.001;
+		var mag = dirY.length() * scaleAngle;
 		this._camera.rotate(rot, mag);
 	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_X)){ // up/down
 x = new V3D(1,0,0);
 		var dirX = x.copy().scale(scroll.y);
 		var rot = dirX.copy().norm();
-		var mag = dirX.length() * 0.001;
+		var mag = dirX.length() * scaleAngle;
 		this._camera.rotate(rot, mag);
 	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_C)){ // around
 z = new V3D(0,0,1);
 		var dirZ = z.copy().scale(scroll.y);
 		var rot = dirZ.copy().norm();
-		var mag = dirZ.length() * 0.001;
+		var mag = dirZ.length() * scaleAngle;
 		this._camera.rotate(rot, mag);
 // TRANSLATIONS
 	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_S)){ // up/down
 y = new V3D(0,1,0);
-		var dirY = y.copy().scale(-scroll.y *0.001);
+		var dirY = y.copy().scale(-scroll.y * scaleSize);
 		this._camera.translate(dirY);
 	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_A)){ // left/right
 x = new V3D(1,0,0);
-		var dirX = x.copy().scale(scroll.x *0.001);
+		var dirX = x.copy().scale(scroll.x * scaleSize);
 		this._camera.translate(dirX);
 	}else{ // in/out
 z = new V3D(0,0,1);
-		var dirZ = z.copy().scale(scroll.y *0.001);
+		var dirZ = z.copy().scale(scroll.y * scaleSize);
 		this._camera.translate(dirZ);
 	}
 
@@ -5236,7 +5267,7 @@ throw "CALIBRATE YEAH"
 App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
 	console.log("calculateBundleAdjust");
 
-return; // TODO: UNCOMMENT
+//return; // TODO: UNCOMMENT
 	var i, j, k;
 	var view, pair, camera;
 	var views = this._views;
@@ -5374,10 +5405,12 @@ for(var i=0; i<views.length; ++i){
 	var imageSize = new V2D(imageWidth, imageHeight);
 	//v.index(view.id());
 	v.size(imageSize);
-	
-	v.corners(null);
+	var corners = R3D.cornerScaleOptimum(matrix.gry(), matrix.width(), matrix.height());
+	v.corners(corners);
 	v.camera(cam);
 		view.temp(v);
+		v.mapping(view.id());
+//console.log("MAPPING: "+v.mapping());
 	BAVIEWS.push(c);
 }
 // matches
@@ -5463,6 +5496,9 @@ for(var i=0; i<pairs.length; ++i){
 	}
 	// initially get 2-sigma points & only add those from match list
 }
+
+// check
+world.consistencyCheck();
 
 
 world.solve();

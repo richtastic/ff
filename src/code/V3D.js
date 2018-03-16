@@ -268,7 +268,28 @@ V3D.DIRY = new V3D(0.0,1.0,0.0);
 V3D.DIRZ = new V3D(0.0,0.0,1.0);
 
 
-
+V3D.min = function(out, a,b){
+	if(b===undefined){
+		b = a;
+		a = out;
+		out = new V3D();
+	}
+	out.x = Math.min(a.x,b.x);
+	out.y = Math.min(a.y,b.y);
+	out.z = Math.min(a.z,b.z);
+	return out;
+}
+V3D.max = function(out, a,b){
+	if(b===undefined){
+		b = a;
+		a = out;
+		out = new V3D();
+	}
+	out.x = Math.max(a.x,b.x);
+	out.y = Math.max(a.y,b.y);
+	out.z = Math.max(a.z,b.z);
+	return out;
+}
 // HELPERS:
 V3D.meanFromArray = function(pointList){
 	// var i, len=pointList.length, pt;

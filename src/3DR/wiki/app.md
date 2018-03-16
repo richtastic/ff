@@ -193,8 +193,6 @@ project typical numbers:
 APP TODO:
 
 
-- display initial reconstruction points
-- 
 
 
 - see what undistorted images look like
@@ -267,8 +265,8 @@ x			- create a view object
 			- undistort image based on view's camera distortion
 x		- create a blank transform / match pair for all view pairs
 x		- for each match pair
-xx			- create match object & add to transform
-			- add points to views [using undistorted locations]
+x			- create match object & add to transform
+x			- add points to views [using undistorted locations]
 x	INITIAL METRICS
 x		- for each point match
 x			- get descriptor at each of 2 points
@@ -277,45 +275,36 @@ x		- for each view match
 x			- create transform: R + F
 x			- calculate F 
 	REMOVE CLOSE POINTS:
-		- repeat until no pair is found:
-			- for each 2D point
-				- for each other point in same view
-					- if 2 points are closer than 1/2 min radius
-						COMBINE POINTS
-											OLD:
-											- get descriptor at centroid using neighborhood radius
-											- for each other match (other view) of each point:
-												- find best match of decriptor (using interpolated scale / angle / position)
-											- if all new matches 
-												- merge points in view & replace points in other views with best match locations (merge duplicate view points at respective centroids)
-											- else:
-												- keep point with best score
-												- drop point2d [and possibly point3D]
+x		- repeat until no pair is found:
+x			- for each 2D point
+x				- for each other point in same view
+x					- if 2 points are closer than 1/2 min radius
+x						COMBINE POINTS
 	- RECALCULATE METRICS
 		- view-pair M
 ITERATION STEPS:
-	- INITIAL PROJECTION
-		- for every view pair with enough point matches [10~16] && no transform F yet:
-			- F
-			- R
-		- calculate METRICS:
-			- points: F, R
-			- pair: F, R
+x	- INITIAL PROJECTION
+x		- for every view pair with enough point matches [10~16] && no transform F yet:
+x			- F
+x			- R
+x		- calculate METRICS:
+x			- points: F, R
+x			- pair: F, R
 			
-	- GROUPS [GRAPH]:
-		- estimate absolute positions of each item
-			- error of relation ~ RMS / mean reprojection error
+x	- GROUPS [GRAPH]:
+x		- estimate absolute positions of each item
+x			- error of relation ~ RMS / mean reprojection error
 	
-	- SETUP:
-		prioritize projection queue with 3d points based on:
-			- possible projection exists [not already 'failed'] [if failed attempt is stale, set back to possible proj exsts (r changed less, f changed less)]
-			- average match score
-		prioritize neighbor queue with 2d points based on:
-			- possible check exists (all other views: minimum angle neighbor exists)
+x	- SETUP:
+x		prioritize projection queue with 3d points based on:
+x			- possible projection exists [not already 'failed'] [if failed attempt is stale, set back to possible proj exsts (r changed less, f changed less)]
+x			- average match score
+x		prioritize neighbor queue with 2d points based on:
+x			- possible check exists (all other views: minimum angle neighbor exists)
 
 	- PROJECTING [expanding P3D base, merge, join, compound]
-		- for P3D in queue:
-			- for each P3D un-matched view:
+x		- for P3D in queue:
+x			- for each P3D un-matched view:
 				- project P3D into view image plane [projectedPoint3DFromPoint3D]
 					- if inside image area [inset neighborhood min radius]
 						- for each other P3D-matched view
@@ -343,8 +332,8 @@ ITERATION STEPS:
 								- else:
 									- set as new 2D matched point assigned to P3D
 
-	- PROBING NEIGHBORS [probing, extending]
-		- for P2D in queue:
+x	- PROBING NEIGHBORS [probing, extending]
+x		- for P2D in queue:
 			- get list of all points in view at distance maximum neighborhood radius
 				- for each other view:
 					- select only points that have match with other view [including dead-end points]
@@ -370,6 +359,16 @@ ITERATION STEPS:
 									- r error [if a point was to be created]
 						...
 			- ...
+	- BLIND SEARCH [guessing, seeding]
+ 		- pick points in un-covered areas with large corner values
+ 			- for each view
+ 				- find large areas with no p2Ds [or FAILs]
+ 				- pick best point with large corner values
+ 				- for each other view
+ 					- search along F line to find best point
+ 					- if points are good match (score, F, R)
+ 						=> create new match & P3D
+
 	- RECALCULATE METRICS FROM P2D/P3D
 		- each view re-estimate: F, F error, match score
 		- determine P3D exact position from each view-pair P2D's putative guess based on reprojection error rates

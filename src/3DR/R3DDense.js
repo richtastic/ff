@@ -415,9 +415,10 @@ R3D.Dense.interpolationData = function(point, vertexes, viewA,viewB){
 	}
 	// convert to interpolated points
 	var predictions = [];
-	var angle = 0;
 	var scale = 0.0;
 	var position = new V2D();
+	var angles = [];
+	var percents = [];
 	for(var i=0; i<data.length; ++i){
 		var d = data[i];
 		var percent = d["fraction"]/totalFraction;
@@ -428,14 +429,14 @@ R3D.Dense.interpolationData = function(point, vertexes, viewA,viewB){
 		var transform = d["transform"];
 		var ang = transform.angleForVertex(vertexA);
 		var sca = transform.scaleForVertex(vertexA);
-		angle += percent*ang;
-		//scale += percent*Math.log2(sca);
-		scale += percent*sca;
+		scale += percent*sca; // TODO: add in linear domain
 		var relativeFrom = V2D.sub(point,fr);
 		var pos = relativeFrom.copy().rotate(ang).scale(sca).add(to).scale(percent);
 		position.add(pos);
+		percents.push(percent);
+		angles.push(ang);
 	}
-	//scale = Math.pow(2,scale);
+	var angle = Code.averageAngles(angles, percents);
 	var prediction = {"point":position, "angle":angle, "scale":scale};
 	return prediction;
 }
@@ -509,7 +510,7 @@ R3D.Dense.Solver.prototype._consolidateDuplicatePointsSingleArray = function(que
 	}
 	return found;
 }
-R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts,     tick){ // assume angle < 2pi
+R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts){ // assume angle < 2pi
 //	console.log("smallestAngleGreaterThan: "+center);
 	var diffs = [];
 	for(var i=0; i<verts.length; ++i){
@@ -1091,7 +1092,8 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 }
 
 
-R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax){
+R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
+	dropEarly = dropEarly!==undefined ? dropEarly : true;
 	// constants
 	fundamentalDistanceErrorMax = fundamentalDistanceErrorMax!==undefined ? fundamentalDistanceErrorMax : 100.0;
 	//var fundamentalDistanceErrorMax = Math.pow(5,2);
@@ -1139,7 +1141,9 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 
 	if(variabilityNeedle<minimumVariability){ // 0.001
 		console.log("variabilityNeedle DROPPED "+variabilityNeedle);
-		return null;
+		if(dropEarly){
+			return null;
+		}
 	}
 
 	// range from
@@ -1166,8 +1170,10 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 
 	
 	if(lineFDistanceError>fundamentalDistanceErrorMax){
-			console.log("lineFDistanceError DROPPED "+lineFDistanceError);
-		return null;
+		console.log("lineFDistanceError DROPPED "+lineFDistanceError);
+		if(dropEarly){
+			return null;
+		}
 	}
 
 	// reverse needle
@@ -1197,9 +1203,9 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	// ignore points with poor uniqueness
 	if(uniqueness > maximumUniquenessScore){
 		console.log("uniqueness DROPPED "+uniqueness);
-		return null;
-	}else{
-		// console.log("uniqueness: "+uniqueness);
+		if(dropEarly){
+			return null;
+		}
 	}
 
 	// range scores
@@ -1208,7 +1214,9 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	// ignore points that have minimal differences
 	if(worstRangeScore < minimumRangeScore){
 		console.log("worstRangeScore DROPPED: "+worstRangeScore);
-		return null;
+		if(dropEarly){
+			return null;
+		}
 	}
 
 	// ignore points with large average color difference
@@ -1218,12 +1226,17 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var averageIntensityDiffMax = (averageIntensityDiffR+averageIntensityDiffG+averageIntensityDiffB)/3.0;
 
 	if(averageIntensityDiffMax>0.25){
-		return null;
+		if(dropEarly){
+			return null;
+		}
 	}
 
-	var cornerScoreA = cornerA[ Math.floor(pointA.y)*imageA.width() + Math.floor(pointA.x)];
-	var cornerScoreB = cornerB[ Math.floor(pointB.y)*imageB.width() + Math.floor(pointB.x)];
-	var cornerScore = (cornerScoreA*cornerScoreB)/(cornerScoreA+cornerScoreB);
+	var cornerScore = 1.0;
+	if(cornerA && cornerB){
+		var cornerScoreA = cornerA[ Math.floor(pointA.y)*imageA.width() + Math.floor(pointA.x)];
+		var cornerScoreB = cornerB[ Math.floor(pointB.y)*imageB.width() + Math.floor(pointB.x)];
+		cornerScore = (cornerScoreA*cornerScoreB)/(cornerScoreA+cornerScoreB);
+	}
 		
 	// penalties
 	var scor = Math.pow(1.0+score,1.0);
@@ -1243,7 +1256,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	//rank = rank * vari;
 	//rank = rank * rang;
 	//rank = rank * corn;
-	return {"rank":rank};
+	return {"rank":rank, "uniqneness":uniqueness};
 }
 
 

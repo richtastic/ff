@@ -281,6 +281,27 @@ V2D.DIRY = new V2D(0.0,1.0);
 
 
 // HELPERS:
+V2D.min = function(out, a,b){
+	if(b===undefined){
+		b = a;
+		a = out;
+		out = new V2D();
+	}
+	out.x = Math.min(a.x,b.x);
+	out.y = Math.min(a.y,b.y);
+	return out;
+}
+V2D.max = function(out, a,b){
+	if(b===undefined){
+		b = a;
+		a = out;
+		out = new V2D();
+	}
+	out.x = Math.max(a.x,b.x);
+	out.y = Math.max(a.y,b.y);
+	return out;
+}
+
 V2D.meanFromArray = function(pointList, weights){
 	var i, len=pointList.length, pt;
 	var mean = new V2D();
