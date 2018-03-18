@@ -79,7 +79,7 @@ var modeImageUpload = false;
 var modeImageCompare = false;
 
 
-// var modeModelReconstruction = false;
+//var modeModelReconstruction = false;
 var modeModelReconstruction = true;
 
 
@@ -2515,7 +2515,7 @@ Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 	var i;
 	++this._loadedTextures;
-	//console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
+//	console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
 	if(this._loadedTextures!=this._expectedTextures){
 		return
 	}
@@ -2554,6 +2554,7 @@ App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 		lines.push(o,x);
 		lines.push(o,y);
 		lines.push(o,z);
+		console.log("VIEW ORIGIN : "+o);
 
 
 		var K = view["K"];

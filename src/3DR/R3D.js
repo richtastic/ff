@@ -383,7 +383,7 @@ R3D.PFromKRT = function(K,R,t){
 	// transform[:,-1] = -c[:]
 	// return transform
 }
-R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1){ // find relative transformation matrix  // points use F
+R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1, forceSolution){ // find relative transformation matrix  // points use F
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 	//console.log("M1: \n"+M1);
 	Kb = Kb ? Kb : Ka;
@@ -525,17 +525,21 @@ for(index=0; index<pointsA.length; ++index){
 // console.log(countsUnderZero);
 // console.log(countsOverZero);
 var count = null;
+var minUnder = null;
 for(i=0; i<possibles.length; ++i){
 	var possible = possibles[i];
 	if(count===null || count>countsUnderZero[i]){
 		count = countsUnderZero[i];
+		minUnder = possible;
 		if(count==0){
 			projection = possible;
 		}
 	}
 }
 console.log("min under: "+count);
-
+if(forceSolution){
+	projection = minUnder;
+}
 	if(!projection){
 		return null;
 	}

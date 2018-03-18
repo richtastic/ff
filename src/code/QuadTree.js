@@ -197,7 +197,7 @@ QuadTree.prototype.insertObject = function(obj){
 		objects.push(obj);
 
 
-		// TODO: keep track of previous size and make sure next size is at least covering previoius limits
+		// TODO: keep track of previous size and make sure next size is at least covering previous limits
 		
 		// reinit
 		this.clear();
@@ -209,14 +209,23 @@ QuadTree.prototype.insertObject = function(obj){
 		var size = V2D.sub(max,min);
 console.log("center: "+center);
 console.log("size: "+size);
+console.log("inside: "+min+" to "+max);
+
+throw "? not working";
+
 		this.initWithDimensions(center,size);
 		// readd
 		var i, len=objects.length;
 		for(i=0;i<len;++i){
 			this.insertObject(objects[i]);
 		}
+		
 	}
 }
+
+
+
+
 QuadTree.prototype.removeObject = function(obj){
 	return this._root.removeObject(obj,this._toPoint);
 }
@@ -287,7 +296,7 @@ QuadTree._sortArxel = function(a,b){
 QuadTree._sortObject = function(a,b){
 	return a["distance"] < b["distance"] ? -1 : 1;
 }
-QuadTree.prototype.kNN = function(p,k){
+QuadTree.prototype.kNN = function(p,k, evaluationFxn){
 	var toPoint = this._toPoint;
 	var axelQueue = new PriorityQueue(QuadTree._sortArxel);
 	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);
@@ -316,10 +325,16 @@ QuadTree.prototype.kNN = function(p,k){
 			if(objects){
 				for(var i=0; i<objects.length; ++i){
 					var object = objects[i];
-					var q = toPoint(object);
-					var distance = V2D.distanceSquare(p,q);
-					object = {"object":object, "distance":distance};
-					objectQueue.push(object);
+					var keep = true;
+					if(evaluationFxn){
+						keep = evaluationFxn(object);
+					}
+					if(keep){
+						var q = toPoint(object);
+						var distance = V2D.distanceSquare(p,q);
+						object = {"object":object, "distance":distance};
+						objectQueue.push(object);
+					}
 				}
 			}
 		}

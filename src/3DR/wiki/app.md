@@ -133,7 +133,7 @@ storage / memory info
 
 project typical numbers:
 	10~100  number of images
-		each imag has ~ 0.2 other matched images
+		each image has ~ 0.2 other matched images
 	~N*(1 + 0.2) pairs
 		~N! pairs of images
 	20~200 pairs
@@ -192,6 +192,17 @@ project typical numbers:
 
 APP TODO:
 
+
+- is P3D absolute location calculated correctly? (multiple sources)
+
+
+- criteria for removing P3D?
+	- average scores median / sigma
+
+
+
+
+- get new case study set & camera calibration @ same time
 
 
 
