@@ -200,6 +200,11 @@ APP TODO:
 	- average scores median / sigma
 
 
+CONSERVATION OF SCALE AND ANGLE [ACCURACY IS ONLY WITHIN .1s & 10deg]
+- once around any loop in match2Ds should result on 0 angle and 1.0 scale
+	-> check to see how off these are
+	-> iterate to solution ???
+
 
 
 - get new case study set & camera calibration @ same time

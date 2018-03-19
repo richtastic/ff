@@ -540,7 +540,7 @@ R3D.Dense.smallestAngleGreaterThan = function(angleMinimum, center, verts){ // a
 		vectorA = diffs[0][1];
 		vectorB = vectorA;
 		angle = Math.PI2;
-		angleA = V2D.angle(V2D.DIRX,vectorA);
+		angleA = V2D.angleDirection(V2D.DIRX,vectorA);
 		angleB = angleA;
 	}else{
 		var prev = diffs[0];

@@ -2157,6 +2157,19 @@ Code.reverseBits = function(value,bits){
 	return rev;
 }
 // angles ----------------------------------------------------
+Code.averageNumbers = function(values, percents){
+	var i, count = values.length;
+	var sum = 0;
+	var p = 1.0/count;
+	for(i=0; i<count; ++i){
+		var value = values[i];
+		if(percents){
+			p = percents[i];
+		}
+		sum += value*p;
+	}
+	return sum;
+}
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;
 	var sumSin = 0;
