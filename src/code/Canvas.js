@@ -519,6 +519,13 @@ Canvas.prototype.setLineJoinCap = function(j,c){
 	this._context.lineJoin = j; // bevel|round|miter
 	this._context.lineCap = c; // butt|round|square
 }
+Canvas.prototype.setLineDashes = function(dashes){ // [line-length, gap-length, ..]
+	if(!dashes){
+		this._context.setLineDash([]);
+	}else{
+		this._context.setLineDash(dashes);
+	}
+}
 Canvas.prototype.setLinearFill = function(){
 	this._context.fillStyle = this.createLinearGradient.apply(this,arguments);
 }

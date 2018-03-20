@@ -939,7 +939,7 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.COUNTA = 0;
-R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg){
+R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg, neighborhoodSize){
 	// constants
 	var maximumBestScore = 0.02; // 0.01;
 	var compareSize = R3D.sadBinOctantEdgeSize();
@@ -1001,8 +1001,20 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 
 	// find best orientation
 	var matrix = new Matrix(3,3).identity();
-	var haystackSize = compareSize * 2; // 2-4
+	var haystackSize = (neighborhoodSize!==undefined && neighborhoodSize!==null) ? neighborhoodSize : compareSize * 2; // 2-4
+		haystackSize = Math.max(haystackSize,compareSize);
+// console.log("haystackSize: "+haystackSize);
 	var haystack = imageTo.extractRectFromFloatImage(pointTo.x,pointTo.y,cellScale,null,haystackSize,haystackSize, matrix);
+if(neighborhoodSize){
+	var sca = 2.0;
+	var iii = haystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(400 + (R3D.Dense.COUNTA * haystackSize * sca), 300);
+	GLOBALSTAGE.addChild(d);
+}
+
 	var bestScore = null;
 	var bestPoint, bestAngle, bestScale, bestNeedle;
 
@@ -1014,15 +1026,33 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 // d.matrix().translate(0 + R3D.Dense.COUNTA * 80, 10);
 // GLOBALSTAGE.addChild(d);
 // var count = 0;
+if(neighborhoodSize){
+	console.log(scaleRangeExp);
+	console.log(angleRangeDeg);
+}
 	for(var i=0; i<scaleRangeExp.length; ++i){
 		var rangeScale = scale * Math.pow(2,scaleRangeExp[i]);
 		for(var j=0; j<angleRangeDeg.length; ++j){
 			var rangeAngle = angle + Code.radians(angleRangeDeg[j]);
+if(neighborhoodSize){
+	console.log(i,j,rangeScale,rangeAngle);
+}
 //console.log(i,j,rangeScale,rangeAngle)
 			matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,rangeScale);
 			matrix = Matrix.transform2DRotate(matrix,rangeAngle);
 			var needle = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, matrix);
+
+if(neighborhoodSize){
+	var sca = 4.0;
+	var iii = needle;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + R3D.Dense.COUNTA * 100, 300);
+	GLOBALSTAGE.addChild(d);
+	++R3D.Dense.COUNTA;
+}
 
 // var iii = needle;
 // var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());

@@ -28,6 +28,9 @@ Graphics.canvasSetLine = function(wid,col){
 Graphics.setLineJoinCap = function(j,c){
 	Graphics._canvas.setLineJoinCap(j,c);
 }
+Graphics.setLineDashes = function(d){
+	Graphics._canvas.setLineDashes(d);
+}
 Graphics.canvasSetRadialFill = function(a){
 	Graphics._canvas.setRadialFill.apply(Graphics._canvas,arguments);
 }
@@ -205,6 +208,9 @@ Graphics.prototype.setLine = function(wid,col){ // 3, 0xAARRGGBB
 }
 Graphics.prototype.setLineJoinCap = function(j,c){
 	this._graphics.push( Code.newArray(Graphics.canvasSetLineJoinCap,Code.newArray(j,c)) );
+}
+Graphics.prototype.setLineDashes = function(d){
+	this._graphics.push( Code.newArray(Graphics.setLineDashes,Code.newArray(d)) );
 }
 Graphics.prototype.setRadialFill = function(){
 	this._graphics.push( Code.newArray(Graphics.canvasSetRadialFill,arguments ) );

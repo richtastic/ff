@@ -195,6 +195,28 @@ APP TODO:
 
 - is P3D absolute location calculated correctly? (multiple sources)
 
+projecting:
+		- ERROR SOURCES:
+			- projection location far off
+			- position alignment
+			- neighbor angle/scale far off
+			- objects move in space [covering/obscuring]
+			- asymm scaling of items
+			
+	 - optimal locations are wrong
+	 	- print out compare points ?
+	 - score should be ~ same as average [less than ~2x]
+	 - if interpolated 2D points == projected optimal point => good indicator of converging estimations
+
+	 - ignore points if optimal location is on border of search location
+
+- NEED GOOD UNIQUENESS SCORES FOR PROJECTIONS & PROBINGS
+	
+	- uniqieness?
+
+
+- projection via P3D average vs projection via several P3Ds ?? is this possible?
+
 
 - criteria for removing P3D?
 	- average scores median / sigma
