@@ -16,6 +16,32 @@ function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
 	var tri = new Triangulate();
 }
+/*
+
+location alg:
+
+
+sensors have some random min/max signal value
+	- disappates as r^2
+	- has cutoff if too far away 
+	- signal is noisy
+	- known 2D/3D location
+
+as time passes:
+	- target keeps track of table of: sensor & intensity value
+
+location:
+	- estimated by looking at average of last intensity values & relative errors/sigmas
+	- each sensor:
+		- intensity with mean sigma
+		- 
+-> moving around should help somehow => relative 
+	= closer & further away
+		- with some error
+
+
+
+*/
 </script>
 </head>
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">

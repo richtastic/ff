@@ -30,7 +30,7 @@ Triangulate.prototype._refreshDisplay = function(){
 	this._root.graphics().clear();
 this._displayScale = 30.0;
 this._doX = 300;
-this._doY = 100;
+this._doY = -300;
 	for(i=0; i<beacons.length; ++i){
 		beacon = beacons[i];
 		this.drawDot( V2D.add(V2D.scale(beacon.location,this._displayScale), new V2D(this._doX,this._doY)), 0x99FF0000,0xFFFF0000, 3.0);

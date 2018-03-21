@@ -79,8 +79,8 @@ var modeImageUpload = false;
 var modeImageCompare = false;
 
 
-var modeModelReconstruction = false;
-//var modeModelReconstruction = true;
+//var modeModelReconstruction = false;
+var modeModelReconstruction = true;
 
 
 if(modeImageEdit){
@@ -5361,6 +5361,11 @@ d.matrix().translate(10, 10);
 GLOBALSTAGE.addChild(d);
 */
 
+
+
+
+return; // don't run
+
 // locals
 var BACAMS = [];
 var BAVIEWS = [];
@@ -5502,8 +5507,10 @@ for(var i=0; i<pairs.length; ++i){
 world.consistencyCheck();
 
 
+
 world.solve();
 
+//return; // don't save
 
 //throw "...";
 

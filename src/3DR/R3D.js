@@ -536,7 +536,7 @@ for(i=0; i<possibles.length; ++i){
 		}
 	}
 }
-console.log("min under: "+count);
+//console.log("min under: "+count);
 if(forceSolution){
 	projection = minUnder;
 }

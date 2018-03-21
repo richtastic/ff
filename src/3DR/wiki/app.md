@@ -192,9 +192,25 @@ project typical numbers:
 
 APP TODO:
 
+- iteritive P reprojection minimization seems very bad
+
+- P3D Fail points [to discourage retesting failed locations]
+
+- drop points that project far outside (past margin of error) outside the image
+
+- point scale/rotation may not be very optimal
+	... try to retry / refine at some point?
+
+- look at points 'close' together in 3D space [kNN] and see if the are good matches in 2D
+	=> merge
+
+- frop
 
 - is P3D absolute location calculated correctly? (multiple sources)
+	- error windows, not just percent averaging
 
+
+- 
 projecting:
 		- ERROR SOURCES:
 			- projection location far off
@@ -202,7 +218,7 @@ projecting:
 			- neighbor angle/scale far off
 			- objects move in space [covering/obscuring]
 			- asymm scaling of items
-			
+
 	 - optimal locations are wrong
 	 	- print out compare points ?
 	 - score should be ~ same as average [less than ~2x]

@@ -9,6 +9,7 @@ Hot.prototype.handleLoaded = function(){
 	this._keyboard = new Keyboard();
 	this._root = new DO();
 	this._stage.addChild(this._root);
+this._root.matrix().translate(100,400);
 	this.addListeners();
 	this._refreshDisplay();
 }
@@ -26,7 +27,7 @@ Hot.prototype.addListeners = function(){
 Hot.prototype._refreshDisplay = function(){
 	console.log("refresh");
 	if(!this._device){
-		this._displayScale = 100;
+		this._displayScale = 20;
 		this._device = { "location":new V2D(4,1), "distance":0, "prevLocation":new V2D(), "prevDistance":0}
 		this._halfPlanes = [];//
 		this._beacons = [
@@ -213,8 +214,8 @@ Hot.prototype._moveOver = function(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Hot.prototype.handleCanvasResizeFxn = function(e){
-	this._root.matrix().identity();
-	this._root.matrix().translate(0.0,e.y);
+	//this._root.matrix().identity();
+	//this._root.matrix().translate(0.0,e.y);
 }
 Hot.prototype.handleStageEnterFrameFxn = function(e){
 	//console.log(e);
