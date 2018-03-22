@@ -1191,6 +1191,19 @@ Matrix.sub = function(r, ain,bin){ // c = a - b
 	r.copy(c);
 	return r;
 }
+Matrix.abs = function(a,b){ // a = abs(b)
+	if(b===undefined){
+		b = a;
+		a = a.copy();
+	}
+	var i,j, rows=a._rowCount, cols=a._colCount;
+	for(j=0;j<rows;++j){
+		for(i=0;i<cols;++i){
+			a._rows[j][i] = Math.abs(b._rows[j][i]);
+		}
+	}
+	return a;
+}
 
 Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
 	// 

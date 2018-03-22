@@ -1165,7 +1165,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	variabilityNeedle = Math.max(variabilityNeedle,1E-10);
 
 	if(variabilityNeedle<minimumVariability){ // 0.001
-		console.log("variabilityNeedle DROPPED "+variabilityNeedle);
+//		console.log("variabilityNeedle DROPPED "+variabilityNeedle);
 		if(dropEarly){
 			return null;
 		}
@@ -1195,7 +1195,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 
 	
 	if(lineFDistanceError>fundamentalDistanceErrorMax){
-		console.log("lineFDistanceError DROPPED "+lineFDistanceError);
+//		console.log("lineFDistanceError DROPPED "+lineFDistanceError);
 		if(dropEarly){
 			return null;
 		}
@@ -1227,7 +1227,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var uniqueness = Math.max(uniquenessNH,uniquenessHN);
 	// ignore points with poor uniqueness
 	if(uniqueness > maximumUniquenessScore){
-		console.log("uniqueness DROPPED "+uniqueness);
+//		console.log("uniqueness DROPPED "+uniqueness);
 		if(dropEarly){
 			return null;
 		}
@@ -1238,7 +1238,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	worstRangeScore = Math.max(worstRangeScore,1E-10);
 	// ignore points that have minimal differences
 	if(worstRangeScore < minimumRangeScore){
-		console.log("worstRangeScore DROPPED: "+worstRangeScore);
+//		console.log("worstRangeScore DROPPED: "+worstRangeScore);
 		if(dropEarly){
 			return null;
 		}
@@ -1276,7 +1276,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	// actually use
 	//var rank = 1.0;
 	var rank = score;
-	rank = rank * lind;
+//	rank = rank * lind; // moves it to 0 when far ?
 	rank = rank * uniq;
 	//rank = rank * vari;
 	//rank = rank * rang;

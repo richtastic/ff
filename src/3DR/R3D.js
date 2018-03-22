@@ -18459,6 +18459,10 @@ R3D.projectPoint3DToCamera2D = function(in3D, extrinsic, K, distortions){
 }
 R3D._gdBAPoints3D_temp_A = new Matrix(4,4);
 R3D._gdBAPoints3D_temp_B = new Matrix(4,4);
+/*
+var xVals = [rx,ry,rz, tx,ty,tz];
+var args = [pointsA2D,pointsB2D,points3D, Ka,Kb,distortionsA,distortionsB];
+*/
 R3D._gdBAPoints3D = function(args, x, isUpdate){
 	if(isUpdate){ return; }
 	var rx = x[0];
@@ -18481,11 +18485,12 @@ R3D._gdBAPoints3D = function(args, x, isUpdate){
 	transform.set(0,3, tx);
 	transform.set(1,3, ty);
 	transform.set(2,3, tz);
+	transform.set(3,0, 0.0);
+	transform.set(3,1, 0.0);
+	transform.set(3,2, 0.0);
 	transform.set(3,3, 1.0);
 //	console.log("B: "+transform);
 	
-	// TODO: should A be able to move around as well ? -- otherwise error only changes in B w/ no recourse to fix A
-	// ^ ?
 	var cameraA = R3D._gdBAPoints3D_temp_B;
 	cameraA.identity();
 	var cameraB = transform;
@@ -18494,17 +18499,23 @@ R3D._gdBAPoints3D = function(args, x, isUpdate){
 
 	var pointsFr = pointsA2D;
 	var pointsTo = pointsB2D;
-	var estimated3D = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
+	//var estimated3D = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
+	var estimated3D = points3D;
+	if(!estimated3D){ // create on-the-go ?
+		estimated3D = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb);
+	}
 	for(var i=0; i<estimated3D.length; ++i){
 		var p2DA = pointsA2D[i];
 		var p2DB = pointsB2D[i];
 		var p3D = estimated3D[i];
+//		console.log(p3D+" = "+p2DA+" | "+p2DB);
 		var proj2DA = R3D.projectPoint3DToCamera2D(p3D, cameraA, Ka, distortionsA);
 		var proj2DB = R3D.projectPoint3DToCamera2D(p3D, cameraB, Kb, distortionsB);
 		var errorA = V2D.distance(p2DA,proj2DA);
 		var errorB = V2D.distance(p2DB,proj2DB);
 		var error = errorA*errorA + errorB*errorB;
 		totalError += error;
+		//totalError += Math.sqrt(error);
 	}
 	//console.log("totalError: "+totalError+" % "+(totalError/points3D.length));
 	return totalError;
@@ -18553,15 +18564,13 @@ R3D.BAPoints2DGD = function(pointsA2D,pointsB2D,points3D, Ka,Kb,distortionsA,dis
 }
 
 
-R3D.cameraExtrinsicMatrixFromInitial = function(pointsA, pointsB, P, F, Ka, Kb, distortionsA, distortionsB){
-	if(!F){
-		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-	}
-	var Ffwd = F;
-	var Frev = Matrix.inverse(Ffwd);
-	var points3DRelative = null;
-	var transform = R3D.BAPoints2DGD(pointsA, pointsB, points3DRelative, Ka, Kb, distortionsA, distortionsB, P);
-	console.log(transform+"");
+R3D.cameraExtrinsicMatrixFromInitial = function(pointsA, pointsB, points3D, P, F, Ka, Kb, distortionsA, distortionsB){
+	// if(!F){
+	// 	F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	// }
+	// var Ffwd = F;
+	// var Frev = Matrix.inverse(Ffwd);
+	var transform = R3D.BAPoints2DGD(pointsA, pointsB, points3D, Ka, Kb, distortionsA, distortionsB, P);
 	return transform;
 }
 

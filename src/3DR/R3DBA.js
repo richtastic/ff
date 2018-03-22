@@ -53,8 +53,15 @@ R3D.BA.rError = function(p3D, pA,pB, viewA,viewB, cameraA, cameraB, Ka, Kb){
 	//var predicted3D = point3D.point3DForViews(viewA,viewB);
 	var projected2DA = R3D.projectPoint3DToCamera2D(p3D, cameraA, Ka, null);
 	var projected2DB = R3D.projectPoint3DToCamera2D(p3D, cameraB, Kb, null);
-	var distanceA = V2D.distance(pA,projected2DA);
-	var distanceB = V2D.distance(pB,projected2DB);
+	var distanceA;
+	var distanceB;
+	if(!projected2DA || !projected2DA){
+		distanceA = 1E9;
+		distanceB = 1E9;
+	}else{
+		distanceA = V2D.distance(pA,projected2DA);
+		distanceB = V2D.distance(pB,projected2DB);
+	}
 	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
 	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB};
 }
@@ -155,6 +162,7 @@ R3D.BA.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, r
 
 
 R3D.BA.World.prototype.consistencyCheck = function(){
+return;
 	// should have no overlapping points
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
@@ -267,7 +275,7 @@ R3D.BA.View = function(image, corners, camera){
 	this._targetRadius = 5;
 	this._minRadius = 2;
 	this._maxRadius = 11;
-	this._minDiffNeighbor = 1;
+	this._minDiffNeighbor = 0.5;
 	//
 	this._errorMMean = null;
 	this._errorRMean = null;
@@ -844,12 +852,31 @@ R3D.BA.Point2D.prototype.averageRError = function(){
 	error = error / matches.length;
 	return error;
 }
+R3D.BA.Point2D.prototype.averageRank = function(){
+	var matches = this.toMatchArray();
+	var rank = 0;
+	var count = 0;
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		if(match){
+			var r = match.rank();
+			//rank += r*r;
+			rank += r;
+			++count;
+		}
+	}
+	if(count==0){
+		return null;
+	}
+	//rank = Math.sqrt(rank);
+	return rank/count;
+}
 R3D.BA.Point2D.prototype.priority = function(){
-	// TODO:
 	// var scor = Math.pow(1.0+score,1.0);
 	// var uniq = Math.pow(uniqueness,0.50);
 	//return this.averageRError();
-	return this.averageScore();
+	//return this.averageScore();
+	return this.averageRank();
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.BA.Match2D = function(viewA,viewB){
@@ -867,6 +894,7 @@ R3D.BA.Match2D = function(viewA,viewB){
 	this._errorRAB = null;
 	this._transform = null;
 	this._uniqueness = null;
+	this._rank = null;
 	this.viewA(viewA);
 	this.viewB(viewB);
 }
@@ -902,7 +930,6 @@ R3D.BA.Match2D.prototype.oppositePoint = function(point2D){
 	}
 	return null;
 }
-
 R3D.BA.Match2D.prototype.point3D = function(point3D){
 	if(point3D!==undefined){
 		this._point3D = point3D;
@@ -940,6 +967,12 @@ R3D.BA.Match2D.prototype.score = function(score){
 		this._score = score;
 	}
 	return this._score;
+}
+R3D.BA.Match2D.prototype.rank = function(rank){
+	if(rank!==undefined){
+		this._rank = rank;
+	}
+	return this._rank;
 }
 R3D.BA.Match2D.prototype.uniqueness = function(uniqueness){
 	if(uniqueness!==undefined){
@@ -1355,8 +1388,13 @@ R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,po
 	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
 	return info;
 }
+R3D.BA.infoForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
+	//var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror, false);
+	var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
+	return info;
+}
 R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
-	var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror, false);
+	var info = R3D.BA.infoForPoints(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
 	if(info){
 		return info["uniqneness"];
 	}
@@ -1368,7 +1406,7 @@ R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,c
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.BA.World.prototype.solve = function(){
 	console.log("SOLVE");
-
+/*
 // DISPLAY SOURCE IMAGES:
 var views = this.toViewArray();
 for(var i=0; i<views.length; ++i){
@@ -1388,7 +1426,7 @@ for(var i=0; i<views.length; ++i){
 	d.graphics().alpha(alp);
 	GLOBALSTAGE.addChild(d);
 }
-
+*/
 // image = viewB.image();
 // img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 // d = new DOImage(img);
@@ -1397,7 +1435,7 @@ for(var i=0; i<views.length; ++i){
 // d.graphics().alpha(alp);
 // GLOBALSTAGE.addChild(d);
 
-this._drawPatterns();
+//this._drawPatterns();
 // show points
 
 //throw "?";
@@ -1407,10 +1445,13 @@ this._drawPatterns();
 	//var maxIterations = 3;
 	//var maxIterations = 4;
 	var maxIterations = 5;
+	//var maxIterations = 10;
 	for(var i=0; i<maxIterations; ++i){
 		var isLastIteration = i == maxIterations-1;
-		this._iteration(isLastIteration);
+		this._iteration(isLastIteration, i);
 	}
+
+	//this.removePoorP3D(1.0);
 }
 
 R3D.BA.World.prototype._drawPatterns = function(){
@@ -1453,11 +1494,12 @@ R3D.BA.World.prototype._drawPatterns = function(){
 	}
 }
 
-R3D.BA.World.prototype._iteration = function(isLastIteration){
-var display = this._display;
-display.removeAllChildren();
+R3D.BA.World.prototype._iteration = function(isLastIteration, iterationIndex){
+// var display = this._display;
+// display.removeAllChildren();
 	// gerneate transforms where available & get stats
 	this.generateStatsForExistingTransforms(isLastIteration);
+	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex);
 
 	// cerate queues
 	var priorityFxn = function(a,b){
@@ -1475,6 +1517,10 @@ display.removeAllChildren();
 	// get absolute locations of cameras & 3D points
 	this.absoluteCameras();
 	this.absolutePoints();
+
+
+	// set match ranks -- before recrording average ranks:
+	this.setMatchRanksFromNull();
 
 	// prioritize P3Ds based on reprojection / match score
 	var points3D = this.points3D();
@@ -1499,8 +1545,12 @@ display.removeAllChildren();
 
 			//console.log(point2D.averageScore()+" | "+point2D.averageFError()+" | "+point2D.averageRError()+"  ");
 			//console.log(point2D.priority()+" ");
+			var r = point2D.priority();
+			if(r>=1){
+				continue;
+			}
 			priorityQueueP2D.push(point2D);
-			priorities2D.push(point2D.priority());
+			priorities2D.push(r);
 		}
 	}
 
@@ -1510,7 +1560,7 @@ display.removeAllChildren();
 
  	var priority3DMean = Code.mean(priorities3D);
 	var priority3DSigma = Code.stdDev(priorities3D, priority3DMean);
- 	var priority3DMax = priority3DMean + 0.0*priority3DSigma;
+ 	var priority3DMax = priority3DMean + 1.0*priority3DSigma;
 
 // 	console.log(priority3DMean+" +/- "+priority3DSigma+" < "+priority3DMax);
 
@@ -1518,6 +1568,8 @@ display.removeAllChildren();
 	// project P3Ds into views w/o p3D
 	var minimumProjectionRadius = 16*1;
 	var maximumProjectionRadius = 16*4;
+	//var maxAttemptRadius = maximumProjectionRadius*2;
+	var maxAttemptRadius = 0;
 	console.log("P3D PRIORITY QUEUE: "+priorityQueueP3D.length());
 // TESTING DISPLAY
 // 19 = far out
@@ -1538,6 +1590,10 @@ if(maxCountX<=0){
  		// console.log(point3D.priority()+"/"+priority3DMax);
  		if(point3D.priority()>priority3DMax){
  			break;
+ 		}
+ 		// don't waste time:
+ 		if(point3D.averageRError()>maxAttemptRadius){
+ 			continue;
  		}
  		// want to ... search each unknown view regardless of success / fail of previous
  		var triedViews = [];
@@ -1678,6 +1734,7 @@ if(maxCountX<=0){
 						//console.log(predicted);
 						var toPoint = predicted["point"];
 						// show fav:
+/*
 						var c = new DO();
 						var p = toPoint;
 						var color = 0x990000FF;
@@ -1688,6 +1745,7 @@ if(maxCountX<=0){
 						c.graphics().endPath();
 						c.matrix().translate(unknownView.size().x * unknownView.id(), 0);
 						display.addChild(c);
+*/
 						// 
 						var scaAB = predicted["scale"]; // 1.0;
 						var angAB = predicted["angle"]; // Code.radians(-10);
@@ -1714,7 +1772,7 @@ if(maxCountX<=0){
 							break;
 						}
 	//					var uniqueness = R3D.BA.uniquenssForPoints(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, sizeCompare);//, Ffwd, Frev, Ferror);
-						var uniqueness = -1;
+						//var uniqueness = -1;
 	//console.log("COMPARE SCORE: "+j+" = "+score+" : UNIQUENESS: "+uniqueness);
 	//var matchAB = point3D.matchForViews(viewA,viewB);
 	//console.log("  existing - "+point3D.averageScore());
@@ -1795,8 +1853,16 @@ if(maxCountX<=0){
 						unknownFinalPoint2D.point(meanPoint);
 						unknownFinalPoint2D.view(unknownView);
 						unknownFinalPoint2D.point3D(point3D);
-						// combine 
 
+//var matches = point3D.matchesForPoint2D(unknownFinalPoint2D);
+					
+						// RANK INFO FOR EACH MATCH
+						// for(var k=0; k<matches.length; ++k){
+						// 	var match = matches[k];
+						// 	R3D.BA.setRankForMatch(match);
+						// }
+
+						// combine 
 						point3D.disconnect(this);
 						this.connectMatchesToPoint3D(point3D,matches);
 						this.insertNewPoint3D(point3D);
@@ -1833,7 +1899,7 @@ if(maxCountX<=0){
  	//console.log(priorities2D);
  	var priority2DMean = Code.mean(priorities2D);
 	var priority2DSigma = Code.stdDev(priorities2D, priority2DMean);
- 	var priority2DMax = priority2DMean + 1.0*priority2DSigma;
+ 	var priority2DMax = priority2DMean + 0.0*priority2DSigma;
 	// 	console.log(priority2DMean+" +/- "+priority2DSigma+" < "+priority2DMax);
 	
 	// probe P2Ds around neighbors w/ space
@@ -1997,13 +2063,17 @@ break;
 				var transformRMean = transform.rMean();
 				var transformRSigma = transform.rSigma();
 				var matches = transform.matches();
-				// var maxM = transformMMean + 0.0 * transformMSigma;
-				// var maxF = transformFMean + 0.0 * transformFSigma;
-				// var maxR = transformRMean + 0.0 * transformRSigma;
-				var maxM = transformMMean - 0.5 * transformMSigma;
-				var maxF = transformFMean - 0.5 * transformFSigma;
-				var maxR = transformRMean - 0.5 * transformRSigma;
-				if(m<maxM && f<maxF && r<maxR){
+				var maxM = transformMMean + 0.0 * transformMSigma;
+				var maxF = transformFMean + 0.0 * transformFSigma;
+				var maxR = transformRMean + 0.0 * transformRSigma;
+				// var maxM = transformMMean - 0.5 * transformMSigma;
+				// var maxF = transformFMean - 0.5 * transformFSigma;
+				// var maxR = transformRMean - 0.5 * transformRSigma;
+				//if(m<maxM && f<maxF && r<maxR){
+				// var maxM = transformMMean + 2.0 * transformMSigma;
+				// var maxF = transformFMean + 2.0 * transformFSigma;
+				// var maxR = transformRMean + 2.0 * transformRSigma;
+				if(m<maxM || f<maxF || r<maxR){
 					space.removeObject(point);
 					point.kill();
 				}
@@ -2056,7 +2126,51 @@ break;
 	}
 
 }
-R3D.BA.World.prototype.removePoorP3D = function(){
+R3D.BA.World.prototype.setMatchRanksFromNull = function(){
+	var transforms = this.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		for(var k=0; k<matches.length; ++k){
+			var match = matches[k];
+//			console.log("\t"+k+" before: "+match.rank());
+			R3D.BA.setRankForMatch(match, true);
+//			console.log("\t"+k+" after: "+match.rank());
+		}
+	}
+}
+R3D.BA.setRankForMatch = function(match, checkNull){
+	if(checkNull && match.rank()!==null){
+		return;
+	}
+	var viewA = match.viewA();
+	var viewB = match.viewB();
+	var imageA = viewA.image();
+	var imageB = viewB.image();
+	var cornerA = viewA.corners();
+	var cornerB = viewB.corners();
+	var sizeCompare = Math.round((viewA.pixelsCompareP2D() + viewB.pixelsCompareP2D())*0.5);
+	var pointA = match.pointA();
+	var pointB = match.pointB();
+	var scale = match.scaleForPoint(pointB);
+	var angle = match.scaleForPoint(pointB);
+	var score = match.score();
+		pointA = pointA.point();
+		pointB = pointB.point();
+	info = R3D.BA.infoForPoints(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, sizeCompare);
+	var rank = 1;
+	if(info){
+		var rank = info["rank"]; // rank, uniqueness, ...
+	}
+	// console.log(rank)
+	if(rank===0){
+		throw "no zeros should exist ..."
+	}
+	match.rank(rank);
+}
+R3D.BA.World.prototype.removePoorP3D = function(sigma){
+	sigma = sigma!==undefined ? sigma : 4.0;
+	//sigma = sigma!==undefined ? sigma : 3.0;
 	var errorM = [];
 	var errorF = [];
 	var errorR = [];
@@ -2084,6 +2198,9 @@ R3D.BA.World.prototype.removePoorP3D = function(){
 	var errorRMean = rMean;
 	var errorRSigma = rSigma;
 
+	// var maxM = errorMMean + sigma * errorMSigma;
+	// var maxF = errorFMean + sigma * errorFSigma;
+	// var maxR = errorRMean + sigma * errorRSigma;
 	var maxM = errorMMean + 4.0 * errorMSigma;
 	var maxF = errorFMean + 4.0 * errorFSigma;
 	var maxR = errorRMean + 4.0 * errorRSigma;
@@ -2101,7 +2218,9 @@ R3D.BA.World.prototype.removePoorP3D = function(){
 	}
 	console.log( "     dropped 3D: "+dropCount);
 }
-R3D.BA.World.prototype.removePoorP2D = function(){
+R3D.BA.World.prototype.removePoorP2D = function(sigma){
+	sigma = sigma!==undefined ? sigma : 4.0;
+	//sigma = sigma!==undefined ? sigma : 3.0;
 	var dropCount = 0;
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
@@ -2112,11 +2231,34 @@ R3D.BA.World.prototype.removePoorP2D = function(){
 		var errorFSigma = view.fSigma();
 		var errorRMean = view.rMean();
 		var errorRSigma = view.rSigma();
+		// var maxM = errorMMean + sigma * errorMSigma;
+		// var maxF = errorFMean + sigma * errorFSigma;
+		// var maxR = errorRMean + sigma * errorRSigma;
 		var maxM = errorMMean + 4.0 * errorMSigma;
 		var maxF = errorFMean + 4.0 * errorFSigma;
 		var maxR = errorRMean + 4.0 * errorRSigma;
 		var space = view.pointSpace();
 		var points2D = space.toArray();
+		// generate rank data:
+		var ranks = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			if(Code.isa(point2D,R3D.BA.Point2DFail)){
+				continue;
+			}
+			if(!point2D.point()){ // may now be dead
+				continue;
+			}
+			var p = point2D.averageRank();
+			if(p>=1){
+				continue;
+			}
+			ranks.push(p);
+		}
+		var pMean = Code.mean(ranks);
+		var pSigma = Code.stdDev(ranks, pMean);
+		var maxP = pMean + 3.0 * pSigma;
+		// do dropping:
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
 			if(Code.isa(point2D,R3D.BA.Point2DFail)){
@@ -2128,16 +2270,21 @@ R3D.BA.World.prototype.removePoorP2D = function(){
 			var m = point2D.averageScore();
 			var f = point2D.averageFError();
 			var r = point2D.averageRError();
+			var p = point2D.averageRank();
 			//console.log(m+" / "+maxM+" | "+f+" / "+maxF+" | "+r+" / "+maxR+" | ");
-			if(m>maxM || f>maxF || r>maxR){
+			if(m>maxM || f>maxF || r>maxR || p>maxP){
 				//console.log( "     drop: " );
 				++dropCount;
 				this.removeP2D(point2D);
 			}
 		}
 		console.log( "     dropped 2d: "+dropCount);
-		
 	}
+
+
+
+	
+
 }
 
 R3D.BA.World.prototype.generateStatsForExistingTransforms = function(isLastIteration){ // CREATE F & P MATRIX WHERE POSSIBLE
@@ -2187,9 +2334,17 @@ R3D.BA.World.prototype.generateStatsForExistingTransforms = function(isLastItera
 					P = R3D.transformFromFundamental(pointsA, pointsB, F, Ka, Kb, null, force);
 					if(P){
 //							console.log("calculated P: "+P+"\n @ "+j);
-// if(isLastIteration){
-// 							P = R3D.cameraExtrinsicMatrixFromInitial(pointsA, pointsB, P, F, Ka, Kb); // this pushes the points very far away to minimize reproj error
-// }
+//if(isLastIteration){
+if(true){
+	var info = this.points3DForViews(viewA,viewB);
+	var p2DA = info["points2DA"];
+	var p2DB = info["points2DB"];
+	var p3D = info["points3D"];
+//	console.log(info);
+	if(p3D.length>minimumTransformMatchCountR){
+		P = R3D.cameraExtrinsicMatrixFromInitial(p2DA, p2DB, p3D, P, F, Ka, Kb); // this pushes the points very far away to minimize reproj error
+	}
+}
 
 						Pfinal = P;
 						break;
@@ -2264,9 +2419,31 @@ R3D.BA.World.prototype.generateStatsForExistingTransforms = function(isLastItera
 		// console.log(" V F : "+view.fMean()+" +/- "+view.fSigma());
 		// console.log(" V R : "+view.rMean()+" +/- "+view.rSigma());
 	}
-	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+");
 }
 
+
+
+R3D.BA.World.prototype.points3DForViews = function(viewA, viewB){
+	var points3D = this._points3D;
+	var P3DA = [];
+	var P3DB = [];
+	var P3D = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var point = point3D.point3DForViews(viewA,viewB);
+		if(point){
+			var a = point3D.point2DForView(viewA);
+			var b = point3D.point2DForView(viewB);
+			if(a && b){
+				P3D.push(point);
+				P3DA.push(a.point());
+				P3DB.push(b.point());
+			}
+		}
+	}
+	var info = {"points2DA": P3DA,  "points2DB": P3DB, "points3D": P3D};
+	return info;
+}
 R3D.BA.World.prototype.insertNewPoint3D = function(point3D, count){ // adds point to lists, or merges/splits as necessary
 	count = count!==undefined ? count : 0;
 	++count;
@@ -2521,6 +2698,9 @@ R3D.BA.World.prototype.mergeOrSplitPoints = function(point3DA, point3DB){ // all
 // console.log(" WANT : "+viewB+" & "+sharedView);
 // console.log(p3DA.matchForViews(viewB,sharedView))
 					var matchB = p3DB.matchForViews(viewB,sharedView);
+if(!matchB){
+	continue;
+}
 // console.log(matchB);
 					var pntB = p3DB.point2DForView(viewB);
 // console.log(pntB);
@@ -2659,12 +2839,12 @@ R3D.BA.World.prototype.addPointForMatch = function(bestMatchA, viewA, viewB, tra
 	var sigmaF = transform.fSigma();
 	var sigmaR = transform.rSigma();
 	// limits
-	// var maxS = meanS + 1.0*sigmaS;
-	// var maxF = meanF + 1.0*sigmaF;
-	// var maxR = meanR + 1.0*sigmaR;
-	var maxS = meanS + 0.0*sigmaS;
-	var maxF = meanF + 0.0*sigmaF;
-	var maxR = meanR + 0.0*sigmaR;
+	var maxS = meanS + 1.0*sigmaS;
+	var maxF = meanF + 1.0*sigmaF;
+	var maxR = meanR + 1.0*sigmaR;
+	// var maxS = meanS + 0.0*sigmaS;
+	// var maxF = meanF + 0.0*sigmaF;
+	// var maxR = meanR + 0.0*sigmaR;
 	// check that errors are all acceptable
 	var pointSpaceA = viewA.pointSpace();
 	var pointSpaceB = viewB.pointSpace();
@@ -3271,10 +3451,11 @@ console.log("PRINT OUT THE ERROR IN RELATIVE AND ABSOLUTE LOCATION, HOW FAR ARE 
 			if(pointCount==3){
 				pairsOf3++;
 			}
-
+			// drop non-3 points
 			// if(pointCount<3){
 			// 	continue;
 			// }
+			// drop worst points ?
 
 			if(!point){
 				throw "problem: "+point;

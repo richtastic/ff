@@ -72,7 +72,7 @@ var modeImageEdit = false;
 
 //var modeImageUpload = true; //  uploadImageTypeCamera
 var modeImageUpload = false;
-	// var modeImageUploadCamera = true;
+	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
 // var modeImageCompare = true;
@@ -383,9 +383,9 @@ App3DR.prototype._setupImageEditorProjectManager = function(){
 		console.log(views.length)
 		console.log("is loaded: "+views.length);
 		if(views.length>0){
-			var view = views[0];
+			//var view = views[0];
 			//var view = views[1];
-			//var view = views[views.length-1];
+			var view = views[views.length-1];
 			this._activeView = view;
 			console.lo
 			var app = this._activeApp;
@@ -4392,24 +4392,29 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 	yaml.writeString("modified", this._modifiedTimestamp);
 	// views
 	len = this._views ? this._views.length : 0;
-	yaml.writeArrayStart("views");
-	for(i=0; i<len; ++i){
-		var view = this._views[i];
-		yaml.writeObjectStart();
-			view.saveToYAML(yaml);
-		yaml.writeObjectEnd();
+	if(len>0){
+		yaml.writeArrayStart("views");
+		for(i=0; i<len; ++i){
+			var view = this._views[i];
+			yaml.writeObjectStart();
+				view.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
 	}
-	yaml.writeArrayEnd();
+
 	// pairs
 	len = this._pairs ? this._pairs.length : 0;
-	yaml.writeArrayStart("pairs");
-	for(i=0; i<len; ++i){
-		var pair = this._pairs[i];
-		yaml.writeObjectStart();
-			pair.saveToYAML(yaml);
-		yaml.writeObjectEnd();
+	if(len>0){
+		yaml.writeArrayStart("pairs");
+		for(i=0; i<len; ++i){
+			var pair = this._pairs[i];
+			yaml.writeObjectStart();
+				pair.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
 	}
-	yaml.writeArrayEnd();
 	// triples
 	len = this._triples ? this._triples.length : 0;
 	if(len>0){
@@ -4436,6 +4441,8 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		yaml.writeArrayEnd();
 	}
 	// bundles
+	yaml.writeBlank();
+
 	yaml.writeString("bundle",this._bundleFilename);
 	// reconstruction
 
@@ -4811,6 +4818,7 @@ break; // TODO: remove
 	}
 	// cameras:
 	var cameras = this._cameras;
+	console.log(cameras)
 	len = cameras.length;
 	for(i=0; i<cameras.length; ++i){
 		var camera = cameras[i];
@@ -5243,7 +5251,7 @@ console.log(params);
 
 */
 
-throw "CALIBRATE YEAH"
+//throw "CALIBRATE YEAH"
 
 			self.saveProjectFile();
 		}
@@ -5364,7 +5372,7 @@ GLOBALSTAGE.addChild(d);
 
 
 
-return; // don't run
+//return; // don't run
 
 // locals
 var BACAMS = [];
@@ -6294,8 +6302,10 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	var desiredPixelCount = 600*400;
 	var maximumPixelCount = 1000*750;
 	if(true){//loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON){
-		desiredPixelCount = 400*300;
-		maximumPixelCount = 500*350;
+		// desiredPixelCount = 400*300;
+		// maximumPixelCount = 500*350;
+		desiredPixelCount = 500*400;
+		maximumPixelCount = 700*650;
 	}
 	// 1306
 	var closestPicture = -1;
@@ -6700,6 +6710,7 @@ App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	yaml.writeArrayEnd();
 }
 App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
+	console.log("READ CAMERA FROM OBJECT");
 	var directory = object["directory"];
 	var title = object["title"];
 	var images = object["images"];

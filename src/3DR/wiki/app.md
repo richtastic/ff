@@ -192,14 +192,45 @@ project typical numbers:
 
 APP TODO:
 
-- iteritive P reprojection minimization seems very bad
+--  is camera K interpolateded correctly
+fx / fy / s ?
+	- test with different options and see ?
+
+- COLOR POINTS IN MODEL AS AVERAGE COLOR OF PIXELS -> need to load images
+
+
+- after first initial matches: some point-pairs may not have a match
+	- because match was inserted not derived
+
+
+
+- if initial projection errors are very big, 3d-point-projection cost may not be worth it
+
+- get better population approximation of ~half-normal distribution
+
+- matching is not robust enough ... 
+
+- progressively drop more points with higher criteria (sigma: 4->3->2->1)
 
 - P3D Fail points [to discourage retesting failed locations]
 
+- local P2D searches to see if there's a better match at a neighbor ?
+
 - drop points that project far outside (past margin of error) outside the image
+
+- more 'dense-depth-matching' type prioritization / iterating
+	- rank
+
+- worst-matches vs best matches to isolate location of points?
+
+- drop worst P3D points when final exporting
 
 - point scale/rotation may not be very optimal
 	... try to retry / refine at some point?
+
+
+- Trifocal tensor for 3 view approx ?
+
 
 - look at points 'close' together in 3D space [kNN] and see if the are good matches in 2D
 	=> merge

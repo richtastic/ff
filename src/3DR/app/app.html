@@ -11,6 +11,32 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+/*
+	var angleX = Math.random()*Math.PI2;
+	var angleY = Math.random()*Math.PI2;
+	var angleZ = Math.random()*Math.PI2;
+	// 
+	var R, Q, transform;
+	transform = new Matrix(4,4).identity();
+	transform = Matrix.transform3DRotateX(transform, angleX);
+	transform = Matrix.transform3DRotateY(transform, angleY);
+	transform = Matrix.transform3DRotateZ(transform, angleZ);
+	R = transform.getSubMatrix(0,0, 3,3);
+	R = R3D.rotationFromApproximate(R);
+	
+	var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
+	var transform = R3D.rotationEulerRodriguezToMatrix(rodrigues);
+	var Q = transform.getSubMatrix(0,0, 3,3);
+	var D = Matrix.sub(R,Q);
+		D = Matrix.abs(D);
+	console.log(R+"");
+	console.log(Q+"");
+	console.log(D+"");
+
+	return;
+*/
+
+
 	/*
 	var g = new Graph();
 	var v = [];
