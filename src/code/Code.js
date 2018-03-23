@@ -1702,17 +1702,20 @@ Code.combineErrorMeasurements = function(estimates,errors){
 	// for(i=0; i<N; ++i){
 	// 	probErrors[i] = 1.0 - (errors[i]/sumErrors);
 	// }
+	var percents = [];
 	var estimateTop = 0;
 	var estimateBot = 0;
 	for(i=0; i<N; ++i){
+		var errI = 1.0/errors[i];
 		estimateTop += estimates[i]/errors[i];
-		estimateBot += 1.0/errors[i];
+		estimateBot += errI;
+		percents[i] = errI;
 		//estimate += Math.pow(probErrors[i]*estimates[i], 2);
 	}
 	var estimate = estimateTop/estimateBot;
 	//combined = Math.sqrt(combined);
 	var error = 1.0/estimateBot;
-	return {"value":estimate, "error":error};
+	return {"value":estimate, "error":error, "percents":percents, };
 }
 // ------------------------------------------------------------------------------------------ 
 Code.isUnique = function(val){ // val, ...array

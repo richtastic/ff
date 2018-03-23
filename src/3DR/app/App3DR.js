@@ -75,7 +75,7 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-// var modeImageCompare = true;
+//var modeImageCompare = true;
 var modeImageCompare = false;
 
 
@@ -564,11 +564,14 @@ var range = V3D.sub(max3D,min3D);
 
 var maxDistance = max3D.length();
 
-app._distanceRange = maxDistance;
 
 console.log("maxDistance: "+maxDistance);
 maxDistance = maxDistance * 2;
 
+maxDistance = Math.max(maxDistance,10);
+
+
+app._distanceRange = maxDistance * 0.5;
 
 
 app._stage3D.frustrumAngle(45);
@@ -2532,10 +2535,6 @@ App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 	var views = this._views;
 	for(i=0; i<views.length; ++i){
 		var view = views[i];
-
-		console.log(view)
-
-
 		var transform = view["transform"];
 		var tx = transform.get(0,3);
 		var ty = transform.get(1,3);
@@ -2554,7 +2553,7 @@ App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 		lines.push(o,x);
 		lines.push(o,y);
 		lines.push(o,z);
-		console.log("VIEW ORIGIN : "+o);
+//		console.log("VIEW ORIGIN : "+o);
 
 
 		var K = view["K"];
@@ -2581,7 +2580,7 @@ camWid = 0.25;
 			var fyOfx = fy/fx;
 //console.log("fyOfx: "+fyOfx);
 //s = 0.5
-console.log("s: "+s);
+//console.log("s: "+s);
 			//console.log(camWid+"x"+camHei);
 			var off = dirZ.copy().scale(camWid * fx);
 			//off.scale(0.8);
@@ -2605,7 +2604,7 @@ console.log("s: "+s);
 
 			// add lines:
 			var points = this._points3D;
-			console.log(points)
+//			console.log(points)
 			for(var j=0; j<points.length; ++j){
 				var v = points[j];
 				lines.push(o,v);
@@ -4934,8 +4933,8 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		console.log("A: "+featuresA.length+" | "+featuresB.length)
 		
 		// drop low score corners:
-		featuresA = R3D.keepGoodCornerFeatures(featuresA);
-		featuresB = R3D.keepGoodCornerFeatures(featuresB);
+		// featuresA = R3D.keepGoodCornerFeatures(featuresA);
+		// featuresB = R3D.keepGoodCornerFeatures(featuresB);
 
 		console.log("B: "+featuresA.length+" | "+featuresB.length)
 
@@ -4955,6 +4954,7 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		// var objectsB = R3D.generateSIFTObjects(objectsB, imageMatrixB);
 		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
+
 
 		objectsA = R3D.siftObjectsToUnique(objectsA);
 		objectsB = R3D.siftObjectsToUnique(objectsB);
@@ -5372,7 +5372,13 @@ GLOBALSTAGE.addChild(d);
 
 
 
-//return; // don't run
+return; // don't run
+
+
+
+
+
+
 
 // locals
 var BACAMS = [];

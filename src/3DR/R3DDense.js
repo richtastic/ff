@@ -162,7 +162,7 @@ img.graphics().alpha(0.5);
 var img = this._viewB.image();
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 img = new DOImage(img);
-img.matrix().translate(400, 0);
+img.matrix().translate( this._viewA.image().width() , 0);
 GLOBALSTAGE.addChild(img);
 img.graphics().alpha(0.5);
 
@@ -178,6 +178,9 @@ R3D.Dense.Solver.prototype._iterationTick = function(){
 	if(cont && this._tickCount>0){
 		this._tickCount--;
 		this._ticker.start();
+	}
+	if(!cont){
+		console.log("DONE");
 	}
 }
 R3D.Dense.Solver.prototype._iteration = function(){
@@ -1324,6 +1327,12 @@ R3D.Dense.Solver.prototype._addKeyboard = function(e){
 }
 // interactive delete me
 R3D.Dense.Solver.prototype._keyFxn = function(e){
+
+	var viewA = this._viewA;
+	var viewB = this._viewB;
+	var offsetSizeX = viewA.image().width();
+
+
 	//console.log("denseMatch_iteration_key "+e.keyCode);
 	if(e.keyCode==Keyboard.KEY_SPACE){
 		if(this._tickCount==0){
@@ -1373,6 +1382,7 @@ R3D.Dense.Solver.prototype._keyFxn = function(e){
 		var viewB = this._viewB;
 		var spaceA = viewA.pointSpaceDecided();
 		var vertexesA = spaceA.toArray();
+		
 		for(var i=0; i<vertexesA.length; ++i){
 			var vertexA = vertexesA[i];
 			var transform = vertexA.transformForViews(viewA,viewB);
@@ -1393,10 +1403,83 @@ R3D.Dense.Solver.prototype._keyFxn = function(e){
 			d.graphics().drawCircle(pointB.x,pointB.y, 1.0);
 			d.graphics().strokeLine();
 			d.graphics().endPath();
-			d.matrix().translate(400,0);
+			d.matrix().translate(offsetSizeX,0);
 			overlay.addChild(d);
 		}
 	}
+	if(e.keyCode==Keyboard.KEY_LET_P){
+		// output string
+		var viewA = this._viewA;
+		var viewB = this._viewB;
+		var widA = viewA.image().width();
+		var heiA = viewA.image().height();
+		var widB = viewB.image().width();
+		var heiB = viewB.image().height();
+		var spaceA = viewA.pointSpaceDecided();
+		var vertexesA = spaceA.toArray();
+		var list = [];
+		for(var i=0; i<vertexesA.length; ++i){
+			var v = vertexesA[i];
+			var t = v.transforms();
+			if(t.length==0){
+				continue;
+			}
+			t = t[0];
+			var u = t.opposite(v);
+			var score = t.rank();
+			var rank = t.score();
+			var angle = t.angleForVertex(v);
+			var scale = t.scaleForVertex(v);
+			var fr = v.point();
+			var to = u.point();
+			fr = fr.copy().scale(1.0/widA,1.0/heiA);
+			to = to.copy().scale(1.0/widB,1.0/heiB);
+			var o = {"score":score, "rank":rank, "scale":scale, "angle":angle, "from":fr, "to":to};
+			list.push(o);
+		}
+		list.sort(function(a,b){
+			return a["score"]<b["score"] ? -1 : 1;
+		});
+		Code.truncateArray(list,5000);
+		var yaml = new YAML();
+		yaml.writeNumber("count",list.length);
+		yaml.writeArrayStart("matches");
+		for(var i=0; i<list.length; ++i){
+			var o = list[i];
+			yaml.writeObjectStart();
+				yaml.writeObjectStart("fr");
+					yaml.writeNumber("x",o.from.x);
+					yaml.writeNumber("y",o.from.y);
+					yaml.writeNumber("s",1.0);
+					yaml.writeNumber("a",0.0);
+				yaml.writeObjectEnd();
+				yaml.writeObjectStart("to");
+					yaml.writeNumber("x",o.to.x);
+					yaml.writeNumber("y",o.to.y);
+					yaml.writeNumber("s",o.scale);
+					yaml.writeNumber("a",o.angle);
+				yaml.writeObjectEnd();
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
+		yaml.writeDocument();
+		console.log( yaml.toString() );
+	}
+	// 	matches:
+	// -
+	// 	fr:
+	// 		i: 114
+	// 		x: 0.8650783708253429
+	// 		y: 0.6309527908765377
+	// 		s: 0.0133157187577744
+	// 		a: 1.8688261033807978
+	// 	to:
+	// 		i: 125
+	// 		x: 0.8878952687565361
+	// 		y: 0.5661386809036193
+	// 		s: 0.011644082429169264
+	// 		a: 1.971714347330039
+	// -
 }
 
 

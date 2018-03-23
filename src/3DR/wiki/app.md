@@ -192,6 +192,50 @@ project typical numbers:
 
 APP TODO:
 
+
+- is P calculation still way off
+- is P inversed or altered in some way in the process ?
+... why IS reprojection error so bad ?
+
+- why is camera square now ?
+
+
+
+
+
+- Z depth seems reversed ?
+
+
+- allow optimum orientation checking on initializing points
+
+- get better population modeling of one-sided errors ~half-normal distribution
+	- PRINT OUT DISTRIBUTIONS:
+		- score
+		- rank
+		- f error
+		- r error
+
+
+- can the P3D error be minimized keeping the Ps constant?
+
+- don't prioritize P2D, prioritize matches
+	- > matches queue is always on & removed from like typical nulls are skipped, 1s are ignored
+
+- drop matches with 1s as rank
+
+
+
+- can dense match allow for dropping points ?
+	- if it is very different than neighbors ?
+	- if score is much worse than neighbors ?
+	- 
+
+- output dense results & import to BA
+
+
+
+- once in a 'stable' location, maybe the Ps stop being linearly estimated?, and jsut reused from last location?
+
 --  is camera K interpolateded correctly
 fx / fy / s ?
 	- test with different options and see ?
@@ -203,12 +247,14 @@ fx / fy / s ?
 	- because match was inserted not derived
 
 
+- P2D & P3D queue should be based on elements NOT ALREADY ADDRESSED
+	- REPEATED CHECKING FOR ELEMENTS
 
-- if initial projection errors are very big, 3d-point-projection cost may not be worth it
+~ if initial projection errors are very big, 3d-point-projection cost may not be worth it
 
-- get better population approximation of ~half-normal distribution
 
 - matching is not robust enough ... 
+
 
 - progressively drop more points with higher criteria (sigma: 4->3->2->1)
 
@@ -227,6 +273,8 @@ fx / fy / s ?
 
 - point scale/rotation may not be very optimal
 	... try to retry / refine at some point?
+
+- revisit lense distortion using known method
 
 
 - Trifocal tensor for 3 view approx ?
