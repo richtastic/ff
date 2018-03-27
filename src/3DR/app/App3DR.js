@@ -551,11 +551,14 @@ var projectViews = manager.views();
 				break;
 			}
 		}
-		var view = {"transform":transform, "K":K, "distortion":distortion, "image":image};
+		var view = {"transform":transform, "K":K, "distortion":distortion, "image":image, "id":v["id"]};
 		views3D.push(view);
 	}
 
 	var app = this._activeApp;
+	app._originalPoints = points;
+console.log("this._originalPoints")
+console.log(app._originalPoints)
 	app.setPoints(points3D);
 
 	app.setViews(views3D);
@@ -2575,22 +2578,26 @@ App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 			var cy = K.get(1,2);
 			var s = K.get(0,1);
 			var camWid = 1.0;
-camWid = 0.25;
+camWid = 0.20;
 			var camHei = camWid*(hei/wid);
 			var fyOfx = fy/fx;
+//console.log("CAM WID: "+camWid+" x "+camHei);
 //console.log("fyOfx: "+fyOfx);
-//s = 0.5
-//console.log("s: "+s);
-			//console.log(camWid+"x"+camHei);
+//s = 0.25;
+			var CX = camWid * cx;
+			var CY = camHei * cy;
+			var SX = camHei * cy * s; // top left offset
+			var FX = camHei * s; // full offset
+
+//console.log(dirX.length(),dirY.length(),dirZ.length());
+
+
 			var off = dirZ.copy().scale(camWid * fx);
-			//off.scale(0.8);
-// .add( dirY.copy().scale(s).scale(-cy)
-			// HERE:
-			var pBL = o.copy().add( dirX.copy().scale(camWid).scale(-cx) ).add( dirY.copy().scale(camHei).scale(fyOfx).scale(cy) )     ;
+			var pBL = o.copy().add( dirX.copy().scale(-CX) ) .add( dirY.copy().scale(CY) )  .add( dirX.copy().scale(SX) );
 			pBL.add( off );
 			var pBR = pBL.copy().add( dirX.copy().scale(camWid) );
-			var pTR = pBL.copy().add( dirX.copy().scale(camWid) ).add( dirY.copy().scale(-camHei).scale(fyOfx) );
-			var pTL = pBL.copy().add( dirY.copy().scale(-camHei).scale(fyOfx) );
+			var pTR = pBL.copy().add( dirX.copy().scale(camWid) ).add( dirY.copy().scale(-camHei) ) .add( dirX.copy().scale(FX) );
+			var pTL = pBL.copy().add( dirY.copy().scale(-camHei) ) .add( dirX.copy().scale(FX) );
 			
 			var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
 			var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
@@ -2630,6 +2637,8 @@ camWid = 0.25;
 	// set lines
 	this.setLines(lines);
 	
+	// reset points with colors now avail:
+	this.setPoints(this._points3D, this._originalPoints);
 
 }
 
@@ -2643,6 +2652,8 @@ App3DR.App.Model3D.prototype.setViews = function(input){
 	for(i=0; i<input.length; ++i){
 		var view = input[i];
 		var image = view["image"];
+		var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
+		view["matrix"] = imageMatrix;
 		var obj = null;
 		if(image){
 			var self = this;
@@ -2664,9 +2675,11 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input.length; ++i){
+//break;
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
-		colors.push(0.5,0.5,0.5,0.1);
+		colors.push(1.0,1.0,1.0,0.03);
+//		colors.push(0.1,0.1,0.1,0.01);
 	}
 	// create objects
 	this._stage3D.selectProgram(2);
@@ -2675,7 +2688,22 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	this._programLinePoints = this._stage3D.getBufferFloat32Array(points, 3);
 	this._programLineColors = this._stage3D.getBufferFloat32Array(colors, 4);
 }
-App3DR.App.Model3D.prototype.setPoints = function(input){
+App3DR.App.Model3D.prototype.setPoints = function(input, hasImages){
+	console.log("setPoints");
+
+	//console.log(this._viewImages);
+
+	console.log(this._views);
+	console.log(hasImages);
+	var viewTable = {};
+	if(this._views) {
+		for(var i=0; i<this._views.length; ++i){
+			var view = this._views[i];
+			var index = view["id"];
+			viewTable[index] = view;
+		}
+	}
+
 	// CREATE POINTS:
 	this._points3D = input;
 	var points = [];
@@ -2684,7 +2712,28 @@ App3DR.App.Model3D.prototype.setPoints = function(input){
 		//var v = new V3D( Math.random()*10 - 5.0, Math.random()*10 -5.0, Math.random()*10 -5.0 );
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
-		colors.push(0.5,0.5,0.5,0.5);
+		if(hasImages){
+			// get color from images
+			var vList = hasImages[i]["views"];
+			//console.log(vList)
+			var item = vList[0]; // just grab 1
+			var vIndex = item["view"];
+			var view = viewTable[vIndex];
+			var image = view["matrix"];
+			var pnt = new V2D(item["x"],item["y"]);
+			var wid = image.width();
+			var hei = image.height();
+			pnt.scale(wid, hei);
+			var x = Math.min(Math.max(Math.round(pnt.x),0),wid-1);
+			var y = Math.min(Math.max(Math.round(pnt.y),0),hei-1);
+			var index = y*wid + x;
+			var red = image.red()[index];
+			var grn = image.grn()[index];
+			var blu = image.blu()[index];
+			colors.push(red,grn,blu,1.0);
+		}else{
+			colors.push(0.5,0.5,0.5,0.5);
+		}
 	}
 	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
@@ -5371,7 +5420,7 @@ GLOBALSTAGE.addChild(d);
 
 
 
-
+// DON'T RUN
 return; // don't run
 
 

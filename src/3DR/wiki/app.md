@@ -187,28 +187,49 @@ project typical numbers:
 
 
 
-
-
-
 APP TODO:
 
+
+- keep a queue of matches ordered on rank
+- on init, add matches to queue
+- each 'iteration' is a series of:
+	- pop M matches off queue, and attempt to add
+		- insert match 
+		- search 2D neighborhood to create more matches, until no more space exists
+	- go thru all P3D
+		- project point to unknown views, create 'temp' match add to queue
+	- drop bad matches
+		- if count > ~16 & and aspects are too far worse from mean 
+			- drop
+			- use points A & B from dropped match points as P2D neighborhood search
+
+	- 
+
+M ~ 10-100
+
+
+
+
+---
+
+matches2:
+
+
+
+- revisit lense distortion using known method
 
 - is P calculation still way off
 - is P inversed or altered in some way in the process ?
 ... why IS reprojection error so bad ?
+- sometimes inverted, sometimes not?
+	- are all transform methods being used correctly
+=> CHECK ALL USAGES
 
-- why is camera square now ?
-
-
-
-
-
-- Z depth seems reversed ?
 
 
 - allow optimum orientation checking on initializing points
 
-- get better population modeling of one-sided errors ~half-normal distribution
+- get better population modeling of one-sided errors WHAT DISTRIBUTIONS ARE THESE
 	- PRINT OUT DISTRIBUTIONS:
 		- score
 		- rank
@@ -218,11 +239,10 @@ APP TODO:
 
 - can the P3D error be minimized keeping the Ps constant?
 
-- don't prioritize P2D, prioritize matches
-	- > matches queue is always on & removed from like typical nulls are skipped, 1s are ignored
-
-- drop matches with 1s as rank
-
+	- calculate P
+	- refine P
+	- refine P3D
+	REPEAT ?
 
 
 - can dense match allow for dropping points ?
@@ -239,8 +259,6 @@ APP TODO:
 --  is camera K interpolateded correctly
 fx / fy / s ?
 	- test with different options and see ?
-
-- COLOR POINTS IN MODEL AS AVERAGE COLOR OF PIXELS -> need to load images
 
 
 - after first initial matches: some point-pairs may not have a match
@@ -274,7 +292,7 @@ fx / fy / s ?
 - point scale/rotation may not be very optimal
 	... try to retry / refine at some point?
 
-- revisit lense distortion using known method
+
 
 
 - Trifocal tensor for 3 view approx ?
@@ -359,6 +377,46 @@ CONSERVATION OF SCALE AND ANGLE [ACCURACY IS ONLY WITHIN .1s & 10deg]
 - forward-and back point match searching
 	-> whats wrong with symmetric nextB = [] ?????
 - sub-pixel accuracy in various points?
+
+
+
+
+CHI-SQUARE DISTRIBUTIONS FOR ERROR:
+
+	Chi-Square: squared normal distributed variable
+
+	k = 1: X
+	k = 2: X + X
+
+	mean = k
+	sigma = sqrt(2k)
+
+
+	f(x) = 1/(GAMMA(k/2)*2^(k/2)) * x^(k/2-1) * exp(-x/2)
+
+	@ k = 1:
+	= 1/[GAMMA(0.5)*sqrt(2)*k^(-1/2)] * exp(-x/2)
+
+
+
+	X^2 = sum [ (ob - ex)^2/ex ]
+
+
+
+	MINIMUM => 0
+
+
+	Observed = ?
+	Calculated = ?
+	sigma = ?
+	chi^2 = sum(i=1 to N): (Observed - Calculated)^2 / sigma^2
+		 = (x_i - u)/u
+
+
+	reduced chi-squared statistic
+
+
+
 
 
 

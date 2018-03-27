@@ -543,7 +543,8 @@ if(forceSolution){
 	if(!projection){
 		return null;
 	}
-	//projection = R3D.inverseCameraMatrix(projection);
+	
+	projection = R3D.inverseCameraMatrix(projection); // ?
 	return projection;
 }
 R3D.inverseCameraMatrix = function(P){
