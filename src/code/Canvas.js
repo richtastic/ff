@@ -322,13 +322,17 @@ Canvas.prototype.drawTriangleList = function(count, offset){
 }
 
 Canvas.prototype.bindTextureImageRGBA = function(image){
-	var texture = this._context.createTexture(image);
-	this._context.bindTexture(this._context.TEXTURE_2D,texture);
-	this._context.pixelStorei(this._context.UNPACK_FLIP_Y_WEBGL, true);
-	this._context.texImage2D(this._context.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
-	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST);
-	this._context.texParameteri(this._context.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
-	this._context.bindTexture(this._context.TEXTURE_2D,null);
+	var texture = this._context.createTexture();//image);
+	var gl = this._context;
+	this._context.bindTexture(gl.TEXTURE_2D,texture);
+	this._context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	this._context.texImage2D(gl.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
+	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST); // this._context.LINEAR
+	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
+		// this fixes some sort of edge problem :  RENDER WARNING: texture bound to texture unit 0 is not renderable. It maybe non-power-of-2 and have incompatible texture filtering.
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	this._context.bindTexture(gl.TEXTURE_2D,null);
 	return texture;
 }
 

@@ -190,8 +190,35 @@ project typical numbers:
 APP TODO:
 
 
-- keep a queue of matches ordered on rank
-- on init, add matches to queue
+- projection of known P3D into unknown views & making matches in queue
+
+- dropping known matches due to P3D changes, P2D changes, 
+
+- dropping pending matches to allow for P3D re-projection to possibly better points
+
+
+---- does merging a single match at a time cause any conflict / duplicated points in same views ?
+---- current logic just chooses more-matched set
+
+R3DBA.js:3407 (5) [0, 0, 4338, 24, 0]
+
+
+
+
+- allow closer neighbors : ~ 2 pixels
+	- merge at larger distances: ~ 4 pixels
+
+- revisit lense distortion using known method
+	- does refinement need to also adjust K values ?
+=> 1/1000 % error not tolerated for linear
+=> 1/100 % error not tolerated for nonlinear
+-> is accuracy the problem?
+
+
+
+
+x keep a queue of matches ordered on rank
+x on init, add matches to queue
 - each 'iteration' is a series of:
 	- pop M matches off queue, and attempt to add
 		- insert match 
@@ -205,18 +232,9 @@ APP TODO:
 
 	- 
 
-M ~ 10-100
 
 
-
-
----
-
-matches2:
-
-
-
-- revisit lense distortion using known method
+-> get tabs or whatever in app to toggle between actual usage: image upload, view, edit, model
 
 - is P calculation still way off
 - is P inversed or altered in some way in the process ?
