@@ -222,3 +222,14 @@ Triangulate.prototype.drawDot = function(global, col, lin, rad){ // flip y
 	this._root.graphics().fill();
 	this._root.graphics().strokeLine();
 }
+
+
+
+
+
+
+
+
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------

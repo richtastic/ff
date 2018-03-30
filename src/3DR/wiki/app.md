@@ -190,6 +190,63 @@ project typical numbers:
 APP TODO:
 
 
+- rewrite insert / merge:
+	from queue:
+		- if P3D only contains 2 point2d
+			ok
+		- else P3D has at least 1 other nonputative point2d
+			- remove match from P3D: [one of match's point2d should be nonputative]
+				- if P3D has only 1 match ok
+					- disconnect P3D from everything
+				- else
+					- for pointA & pointB
+						- if has only 1 match ok
+							- remove point2D from P3D point list
+						- else 
+							- duplicate point location and attach to match
+					- remove match from P3D match list
+					- create new P3D with same match core points, but new 
+				- set match points as nonputative
+				- insert (now) standalone match
+	insert:
+		- look for intersection of any point2D in corresponding view
+		- if no intersections:
+			- connect
+		- else
+			- disconnect intersection
+			- merge point & intersection
+			- re-insert merged point
+
+	merge:
+		- choose A = p3d with better average score as base
+		- remove all putative points from p3dA & p3db
+		- collect unknown & known view groups
+		- for every unknown view of A:
+			- for every known view on A:
+				- find best location match for unknown view
+			- average new locations
+			- if new location is near all estimates [~2 pixels]
+				- create matches between this new point & known points
+		- create new P3D from all new points
+		- return new p3D
+
+-- markRemoved probly breaks stuff
+
+--- match not checked for inside view before adding ...
+
+- match intersection should check to see if it's intersecting with itself before doing merge
+	=> remove self
+	=> check for collision
+	=> add self [non-putatives]
+- collision:
+	- ignore putative points in combining, replace any putatives in 
+
+INTERSECTION / COLLISION:
+	- remove putative match from P3D if P3D has more than 1 match
+	(there should be no such thing as a P3D with all putatives)
+
+
+
 - projection of known P3D into unknown views & making matches in queue
 
 - dropping known matches due to P3D changes, P2D changes, 

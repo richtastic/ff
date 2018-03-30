@@ -41,6 +41,33 @@ location:
 
 
 
+
+
+
+each beacon is it's own estimator of object's location
+	- tries to estimate maximum power based on readings from 
+	- can then use square power falloff to more accurately estimate user's distance
+	- as target moves, it gets closer and further from beacons
+		=> close/far have only so many possibilities of location
+		=> two-timestamp vectors can only exist in finite locations
+		
+		-> finite element analysis
+			-> each point that can satisfy simultaneous situations gets a +1 /errorWindow [HOT/COLD]
+			=> object has finite probability region
+
+		-> with region probability:
+			=> some range of power
+
+	=> with power estimation and region liklihood:
+		-> some most likely location of target
+
+each time-stamp has a location of each beacon
+
+
+
+- init at centroid of all present devices ?
+	- 
+
 */
 </script>
 </head>
