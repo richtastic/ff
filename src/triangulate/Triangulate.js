@@ -233,3 +233,354 @@ Triangulate.prototype.drawDot = function(global, col, lin, rad){ // flip y
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
+function Tri.Beacon(location, power, distance, staticError, powerError, distanceError){
+	this._id = Tri.Beacon._ID++;
+	this._sourcePower = 1.0;
+	this._noisePower = 0.01;
+	this._noiseStatic = 0.01;
+	this._maximumDistance = 10.0;
+	this._maximumDistanceError = 1.0;
+	this._location = null;
+	this.location(location);
+	this.power(power);
+	this.maxDistance(distance);
+	this.staticError(staticError);
+	this.powerError(powerError);
+	this.distanceError(distanceError);
+}
+Tri.Beacon._ID = 0;
+Tri.Beacon.prototype.id = function(){
+	return this._id;
+}
+Tri.Beacon.prototype.location = function(location){
+	if(location!==undefined){
+		this._location = location;
+	}
+	return this._location;
+}
+Tri.Beacon.prototype.power = function(power){
+	if(power!==undefined){
+		this._sourcePower = power;
+	}
+	return this._sourcePower;
+}
+Tri.Beacon.prototype.maxDistance = function(maxDistance){
+	if(maxDistance!==undefined){
+		this._maximumDistance = maxDistance;
+	}
+	return this._maximumDistance;
+}
+Tri.Beacon.prototype.sample = function(position){
+	var distance = V2D.distance(this._location,position);
+	var d2 = distance *distance;
+	var inverse = d2>0 ? 1.0/d2 : 0.0;
+	var exp = Math.exp(-inverse);
+	var errorPower = Code.randomFloat(-1.0,1.0) * this._noisePower * inverse;
+	var errorStatic = Code.randomFloat(-1.0,1.0) * this._noiseStatic;
+	var error = errorPower + errorStatic;
+	var power = this._sourcePower * inverse  +  error;
+	// dropping in / out based on distance:
+	var distanceCheck = this._maximumDistance + Code.randomFloat(-1.0,1.0)*this._maximumDistanceError;
+	if(distance>distanceCheck){
+		power = 0.0;
+	}
+	return power;
+}
+
+
+function Tri.DAQ(){
+	this._beacons = {};
+	this.samples = [];
+}
+Tri.DAQ.prototype.addBeacon = function(beacon){
+	var index = beacon.id()+"";
+	this._beacons[index] = beacon;
+}
+
+function Tri.Target(){
+	this._location = new V2D();
+	this._daq = Tri.DAQ();
+		this.addBeacon();
+
+}
+Tri.Target.prototype.addBeacon = function(location, power, distance, staticError, powerError, distanceError){
+	var beacon = new Tri.Beacon(location, power, distance, staticError, powerError, distanceError);
+	this._daq.addBeacon(beacon);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

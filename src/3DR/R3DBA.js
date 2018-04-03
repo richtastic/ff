@@ -95,7 +95,7 @@ R3D.BA.World.prototype.addMatchQueue = function(match){
 			var rank = match.rank();
 		}
 		if(rank==null){//} || rank==1){
-			throw "don't any rank: "+rank;
+			throw "don'thave any rank: "+rank;
 		}
 		//if(rank!==1){ // NEED TO KEEP BAD RANK ITEMS BECAUSE NEIGHBOR SEARCH NEEDS ALL INSIDE
 
@@ -1227,10 +1227,10 @@ R3D.BA.Point3D.prototype.point2DForView = function(view, point){
 	var value = this._points2D[index];
 	return value!==undefined ? value : null;
 }
-R3D.BA.Point3D.prototype.matchForViews = function(viewA,viewB, point){
+R3D.BA.Point3D.prototype.matchForViews = function(viewA,viewB, match){
 	var index = R3D.BA.indexFromViews(viewA,viewB);
-	if(point){
-		this._matches[index] = point;
+	if(match){
+		this._matches[index] = match;
 	}
 	var value = this._matches[index];
 	return value!==undefined ? value : null;
@@ -1746,21 +1746,58 @@ console.log("pop matches ----------");
 				console.log("done => matches reached the dreggs");
 				break;
 			}
-			var transform = match.transform();
-			var viewA = match.viewA();
-			var viewB = match.viewB();
-			var pointA = match.pointA();
-			var pointB = match.pointB();
-			viewA.pointSpace().removeObject(pointA);
-			viewB.pointSpace().removeObject(pointB);
-				pointA.isPutative(false);
-				pointB.isPutative(false);
-			var locationA = pointA.point().copy();
-			var locationB = pointB.point().copy();
-			var point3D = match.point3D();
-			this.insertNewPoint3D(point3D);
-			// add neighbor matches around new point:
-			this.appendNeighborMatchesAround(viewA,locationA, viewB,locationB);
+
+// INSERT HERE
+var point3D = match.point3D();
+var points2D = point3D.toPointArray();
+
+var locationA = null;
+var locationB = null;
+
+if(points2D.length==2){ // pure putative
+	console.log("2");
+	var pointA = match.pointA();
+	var pointB = match.pointB();
+	var isPutativeA = pointA.isPutative();
+	var isPutativeB = pointB.isPutative();
+	if(!(isPutativeA && isPutativeB)){
+		throw "not both putative: "+isPutativeA+" & "+isPutativeB;
+	}
+	var transform = match.transform();
+	var viewA = match.viewA();
+	var viewB = match.viewB();
+	viewA.pointSpace().removeObject(pointA);
+	viewB.pointSpace().removeObject(pointB);
+		pointA.isPutative(false);
+		pointB.isPutative(false);
+	locationA = pointA.point().copy();
+	locationB = pointB.point().copy();
+	this.insertNewPoint3D(point3D);
+	// add neighbor matches around new point:
+	this.appendNeighborMatchesAround(viewA,locationA, viewB,locationB);
+}else{ // mixed
+	console.log("more: "+points2D.length);
+	throw "working";
+}
+/*
+if point3D.points count == 2
+	throw if not both putative 
+else{ 
+	- isolate match from P3D:
+	throw if not one is putatative other is not
+	new point3D
+	duplicate nonputative point
+	remove match
+
+}
+*/
+
+
+
+
+
+			
+			
 		}
 	}
 	this.printPointCounts();
@@ -1963,7 +2000,7 @@ R3D.BA.World.prototype.appendNeighborMatchesSingle = function(viewA, pointA, vie
 	}
 }
 R3D.BA.World.prototype.projectKnownP3DToUnknownViews = function(){
-return;
+//return;
 	var points3D = this._points3D;
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
@@ -2009,8 +2046,8 @@ return;
 
 var transformRRadius = Math.sqrt(transformRMean);
 var minimumProjectionRadius = 16*1;
-var maximumProjectionRadius = 16*3;
-var sizeSearch = Math.min(maximumProjectionRadius, transformRRadius)*2;
+var maximumProjectionRadius = 16*4;
+var sizeSearch = Math.min(maximumProjectionRadius, transformRRadius*2);
 sizeSearch = Math.round(sizeSearch);
 
 
@@ -2077,6 +2114,8 @@ console.log(neighborsB);
 						console.log("ADD NEW MATCH");
 						console.log(match);
 						this.addMatchQueue(match);
+						point3D.matchForViews(match.viewA(),match.viewB(),match);
+						throw "need P3D to keep track of this match: "+match
 					}
 				}
 			}			
@@ -2514,7 +2553,10 @@ R3D.BA.World.prototype.insertNewPoint3D = function(point3D, count){ // adds poin
 	++count;
 	if(count>10){
 		console.log(point3D);
-		throw "recursion problem";
+		console.log(" possible recursion problem");
+		if(count>20){
+			throw "recursion problem";
+		}
 	}
 	// point should not be connected yet
 	// look for any intersections of 2d points

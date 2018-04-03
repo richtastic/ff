@@ -208,6 +208,10 @@ APP TODO:
 					- create new P3D with same match core points, but new 
 				- set match points as nonputative
 				- insert (now) standalone match
+
+		- set match points as nonputative
+		- DO INSERT
+
 	insert:
 		- look for intersection of any point2D in corresponding view
 		- if no intersections:
@@ -289,7 +293,7 @@ x on init, add matches to queue
 
 	- 
 
-
+- use corner score as best way to choose base P3D on merging, instead of score / rank
 
 -> get tabs or whatever in app to toggle between actual usage: image upload, view, edit, model
 
