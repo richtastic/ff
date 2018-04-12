@@ -190,6 +190,148 @@ project typical numbers:
 APP TODO:
 
 
+
+IGNORE PUTATIVE POINTS
+
+
+... ANOTHER SET OF ALGORITHM REDESIGNS
+
+
+~ NEIGHBOR PROBING:
+	- for each view pair
+		- repeat until no open area available:
+			- search local neighborhood for open area (min open angle), choose most corner-like point (peak?) here
+				- include ALL non-putative points
+				- exclude ALL putative points who do not have a same view-pair
+			- interpolation for opposite view should only include non-putative points
+			- create purely putative match
+
+~ POINT3D PROJECTING:
+	- for each P3D with a predicted 3D location
+		- project 3D location onto un-projected views
+		- create a putativ match
+
+x INSERTING:
+	- look for any intersection/collisins with NON-PUTATIVE POINTS
+	- if no intersection:
+		- connect P3D
+	- else if intersection
+		- remove intersection point
+		- merge point and intersection
+		- re-insert merged point
+
+MERGING:
+	- remove all putative points from P3DA & P3DB
+	- each view has max of 2 points
+		- if only 1 point, or 2 points are close enough together(set to center)
+		- else 2 distinct points
+	- each point get's vote based on average of each match's rank
+	=> each view has final single location
+	- for each view pair, to forward/reverse projection
+	- while 'remaining' points error is larger than allowed neighbor distance:
+		- the point for each view is the COM of 'remaining' points
+		- point with worst error over all views is dropped -> repeat
+	- create match for each remaining point-pair @ center points
+	- combine matches into single P3D
+	- return new P3D
+-> if any views are not retained => should neighborhood be searched to add back points
+
+
+
+x POPPING PUTATIVE:
+	- remove next-best putative match from 
+	- BEFORE insert:
+		- if match is purely putative
+			- set to nonputative
+		- if match has non-putative elements:
+			- disconnect P3D
+			- set match to nonputative
+			- drop non-putative elements
+	- insert match
+
+DROPPING:
+	poor matches:
+		...
+	poor p3d:
+		...
+	poor p2d:
+
+
+RESETTING:
+	putative matches who's recorded errors have changed
+		...
+
+
+
+
+MERGING PROCESS:
+
+	=> get initial view points:
+	- for views with 1 point => choose this point
+	- for views with more than 1:
+		each match votes for a point in each view based on rank
+	- choose point with lowest average score
+
+	---- need to keep track of all of:
+		- position
+		- scale
+		- angle
+
+	=> for each view:
+		calculate COM
+		while any points are outside the COM target area:
+			=> if only 2 points:
+				drop 2 points -- nonagreed match
+			else:
+				=> each source point records:
+					average total distance from each other point
+				=> drop worst point, recalculate COM
+
+
+	- for all remaining views [at least 2 points remaining]:
+		- create a match between view pairs
+			- relative angle / scale = AVERAGE of all 'points' involved [if a point is in BOTH views it can/should be counted twice]
+				- if a
+				- > if any relative angles/scales are off: drop?
+		- get match score using averaged position/angles/scales 
+		- if match score is too poor => drop match
+			=> else add to match array
+
+
+	if 0 matches remain:
+		- return original P3D with best average match score?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---- keep all items connected to P3D
+---- P2D should be duplicates so that removal is ?... ?
+---- should point2d putative be added to the view pointspace?
+---- match should remove from P3D if P3D has more than 2 points
+---- P3D should remove all 'other' putative matches
+
+how to merge putative with nonputative P3D
+
+
 - rewrite insert / merge:
 	from queue:
 		- if P3D only contains 2 point2d
