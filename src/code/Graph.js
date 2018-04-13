@@ -582,7 +582,7 @@ Graph._minPaths = function(graph,source){ // dijkstra ??
 	var vertexes = graph.vertexes();
 	if(vertexes.length>1){
 		for(i=0; i<vertexes.length; ++i){
-			vertexes[i].temp([null,[]]);
+			vertexes[i].temp([null,[],[]]);
 		}
 		source.temp()[0] = 0;
 		var queue = [source];
@@ -611,7 +611,9 @@ Graph._minPaths = function(graph,source){ // dijkstra ??
 					if(b[0]===null || b[0]>a[0]+w){
 						b[0] = a[0] + w;
 						b[1] = Code.copyArray(a[1]);
+						b[2] = Code.copyArray(a[2]);
 						b[1].push(vertex);
+						b[2].push(edge);
 						queue.push(to);
 					}
 				}
@@ -622,7 +624,8 @@ Graph._minPaths = function(graph,source){ // dijkstra ??
 			var temp = vertex.temp();
 			var cost = temp[0];
 			var path = temp[1];
-			paths.push({"vertex":vertex, "cost":cost, "path":path});
+			var edges = temp[2];
+			paths.push({"vertex":vertex, "cost":cost, "path":path, "edges":edges});
 			vertexes[i].temp(null);
 		}
 
@@ -991,7 +994,7 @@ Graph.prototype.minPaths = function(source){
 	return Graph._minPaths(this,source);
 }
 Graph.prototype.minPath = function(source,target){
-	return Graph._minPaths(this,source,target);
+	return Graph._minPath(this,source,target);
 }
 Graph.prototype.minRootPaths = function(){
 	return Graph._minRootPaths(this);

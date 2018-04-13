@@ -79,8 +79,8 @@ var modeImageUpload = false;
 var modeImageCompare = false;
 
 
-//var modeModelReconstruction = false;
-var modeModelReconstruction = true;
+var modeModelReconstruction = false;
+//var modeModelReconstruction = true;
 
 
 if(modeImageEdit){

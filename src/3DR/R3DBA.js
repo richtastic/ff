@@ -1065,6 +1065,14 @@ R3D.BA.Match2D.prototype.oppositePoint = function(point2D){
 	}
 	return null;
 }
+R3D.BA.Match2D.prototype.oppositeView = function(view){
+	if(view==this._viewA){
+		return this._viewB;
+	}else if(view==this._viewB){
+		return this._viewA;
+	}
+	return null;
+}
 R3D.BA.Match2D.prototype.pointForView = function(view, point){
 	if(view==this._viewA){
 		if(point!==undefined){
@@ -2484,8 +2492,9 @@ R3D.BA.World.prototype.insertNewPoint3D = function(point3D, count){ // adds poin
 	if(intersection){
 		console.log("FOUND INTERSECTION @ "+count+" ");
 		intersection.disconnect(this);
-		var point = this.mergePoints(point3D,intersection);
-		if(point){
+		var points = this.mergePoints(point3D,intersection);
+		for(var i=0; i<points.length; ++i){
+			var point = points[i];
 			this.insertNewPoint3D(point, count+1);
 		}
 	}else{
@@ -2559,6 +2568,51 @@ R3D.BA.World.prototype._sumMergeVotes = function(pointSets){
 	}
 	return finals;
 }
+R3D.BA.World.prototype.relationMapFromMatches = function(matches){
+	var graph = new Graph();
+	var allViews = [];
+	var vertexes = {};
+	var edges = [];
+	var index, vertex, edge;
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var viewA = match.viewA();
+		var viewB = match.viewB();
+		// A
+		index = viewA.id()+"";
+		//var item = vertexes[index];
+		vertex = vertexes[index];
+		if(!vertex){
+			vertex = graph.addVertex();
+			vertex.data(viewA);
+			//item = {"view":viewA, "vertex":vertex};
+			vertexes[index] = vertex;
+		}
+		// B
+		index = viewB.id()+"";
+		vertex = vertexes[index];
+		if(!vertex){
+			vertex = graph.addVertex();
+			vertex.data(viewB);
+			vertexes[index] = vertex;
+		}
+		var weight = 1.0; // TODO: distance bewteen points in shared views
+		//var trans = {"A":viewA, "B":viewB, "angle":match.angleForward(), "scale":match.scaleForward()};
+		var vA = vertexes[viewA.id()+""];
+		var vB = vertexes[viewB.id()+""];
+		var edge = graph.addEdgeDuplex(vA,vB,weight);
+		//edge.data(trans);
+		edge.data(match);
+		edges.push(edge);
+	}
+	//var groups = graph.disjointSets();
+
+
+
+
+	return graph;
+	// create 
+}
 R3D.BA.World.prototype.mergePoints = function(point3DA, point3DB){ 
 	console.log("mergePoints");
 	// only want to combine non-putative P2Ds
@@ -2576,39 +2630,279 @@ R3D.BA.World.prototype.mergePoints = function(point3DA, point3DB){
 	// each view has final single location
 	var finals = this._sumMergeVotes(pointSets);
 	// get interpolation scales / angles:
-		// get list of shared views
-		// get list of unshared views
-	// from source view A
-	// to destination view B
-	// if a direct match exists => record this
-	// else find all matches from A to shared
-	//      find all matches from shared to B
-	// average these into a base rotation & scale
-
-	// project each point from each view to each other view
-	var keys = Code.keys(finals);
-	for(var i=0; i<keys.length; ++i){
-		var keyA = keys[i];
-		var itemA = finals[keyA];
-		console.log(itemA);
-		for(var j=0; j<keys.length; ++j){
-			if(i!=j){
-				var keyB = keys[j];
-				var itemB = finals[keyB];
-				// project from A -> B
-
+	var sharedViews = [];
+	var viewsA = point3DA.toViewArray();
+	var viewsB = point3DB.toViewArray();
+	for(var i=0; i<viewsA.length; ++i){
+		var viewA = viewsA[i];
+		for(var j=0; j<viewsB.length; ++j){
+			var viewB = viewsB[j];
+			if(viewA==viewB){
+				sharedViews.push(viewA);
+				break;
 			}
 		}
 	}
-
+	// save all views
+	var allViews = [];
+	for(var i=0; i<viewsA.length; ++i){
+		var viewA = viewsA[i];
+		Code.addUnique(allViews,viewA);
+	}
+	for(var i=0; i<viewsB.length; ++i){
+		var viewB = viewsB[i];
+		Code.addUnique(allViews,viewB);
+	}
+	if(sharedViews.length==0){
+		return [];
+	}
+	// get graph from matches
+	var allMatches = [];
+	for(var i=0; i<matchesA.length; ++i){
+		var matchA = matchesA[i];
+		Code.addUnique(allMatches,matchA);
+	}
+	for(var i=0; i<matchesB.length; ++i){
+		var matchB = matchesB[i];
+		Code.addUnique(allMatches,matchB);
+	}
+	var graph = this.relationMapFromMatches(allMatches);
+	var vertexes = graph.vertexes();
+	// project final points to various views
+	var projections = {};
+	console.log(finals);
+	for(var i=0; i<vertexes.length; ++i){
+		var vertexA = vertexes[i];
+		var viewA = vertexA.data();
+		var paths = graph.minPaths(vertexA);
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var vertexB = path["vertex"];
+			var viewB = vertexB.data();
+			var lookupIndex = vertexA.data().id()+"-"+vertexB.data().id();//R3D.BA.indexFromViews(vertexA.data(), vertexB.data());
+			if(vertexA!=vertexB){
+				var edges = path["edges"];
+				var cost = path["cost"];
+				var angleAB = 0;
+				var scaleAB = 1.0;
+// order matters ...
+//console.log("GOT A LOOKUP INDEX: "+lookupIndex);
+//var entry = projections[lookupIndex];
+				//var vertex = vertexA;
+				var vA = vertexA.data()
+				for(var k=0; k<edges.length; ++k){
+					//var vA = vertex.data();
+					var edge = edges[k];
+					var match = edge.data();
+					//console.log(k+" = "+vA+" ,,,,,,," , match.viewA()+"",match.viewB()+"");
+					var vB = match.oppositeView(vA);
+					var pA = match.pointForView(vA);
+					var pB = match.pointForView(vB);
+					//console.log(vA,vB,pB);
+					var a = match.angleForPoint(pB);
+					var s = match.scaleForPoint(pB);
+					//console.log("GOT SCALE: "+s);
+					angleAB += a;
+					scaleAB *= s;
+					vA = vB;
+				}
+				// console.log(" "+vertexA.data().id()+" -> "+vertexB.data().id()+" = "+cost+"  @  "+scaleAB+" | "+Code.degrees(angleAB));
+				// project from A -> B
+				
+				// TODO: CAN ALSO SEARCH NEIGHBORS IF ENOUGH EXIST pointSpaceA.kNN( --- also possibly average the findings
+				var imageA = viewA.image();
+				var imageB = viewB.image();
+				var pointA = finals[viewA.id()+""]["point"];
+				var pointB = finals[viewB.id()+""]["point"];
+				var sizeCompare = viewB.pixelsCompareP2D();
+				// pointA = pointA.point();
+				// pointB = pointB.point();
+				var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare);//, null,null,0);
+				//console.log(info);
+				//var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, null,null,0);
+				var pA = info["from"];
+				var pB = info["to"];
+				var score = info["score"];
+				var angle = info["angle"];
+				var scale = info["scale"];
+				var entry = {"from":viewA,"to":viewB,"info":info};
+				projections[lookupIndex] = entry;
+			}else{
+				var entry = {"from":viewA,"to":viewB,"info":finals[viewA.id()+""]};
+				projections[lookupIndex] = entry;
+			}
+		}
+	}
+	console.log(projections);
+	// put projected points into each view to init trimming
+	var viewSets = {};
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		var index = view.id()+"";
+		viewSets[index] = {"view":view, "points":[]};
+	}
+	var keys = Code.keys(projections);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var entry = projections[key];
+		console.log(key,entry)
+		var viewA = entry["from"];
+		var viewB = entry["to"];
+		var index = viewB.id()+"";
+		var set = viewSets[index];
+		var point = null;
+		if(viewA==viewB){
+			point = entry["info"]["point"];
+			console.log(entry["info"]);
+		}else{
+			point = entry["info"]["to"];
+		}
+		point = {"point":point, entry};
+		set["points"].push(point);
+	}
+	console.log(viewSets);
 	// trim off outlier points & get final COM points
+	var keys = Code.keys(viewSets);
+	for(var i=0; i<keys.length; ++i){
+		console.log(i+"+++++++++++++++++++++++++++++++");
+		var key = keys[i];
+		var entry = viewSets[key];
+		var view = entry["view"];
+		var maximumSamePointDistance = view.minimumDifferenceNeighborP2D();
+//			maximumSamePointDistance *= 2;
+//maximumSamePointDistance = 0.1;
+//maximumSamePointDistance = 1.0;
+		var points = entry["points"];
+		if(points.length==0){
+			continue;
+		}
+		// R3D.BA.View.prototype.minRadius = function(){ 3
+		// R3D.BA.View.prototype.minimumDifferenceNeighborP2D 0.5
+		retryPoints = true;
+		var oops = 10;
+		while(retryPoints){
+			--oops;
+			if(oops<0){
+				break;
+			}
+			retryPoints = false;
+			var median = new V2D();
+			for(var j=0; j<points.length; ++j){
+				var point = points[j];
+				var p = point["point"];
+				console.log(p+"");
+				median.add(p);
+			}
+			median.scale(1.0/points.length);
+			console.log("  median: "+median);
+			var isOver = false;
+			for(var j=0; j<points.length; ++j){
+				var p = points[j]["point"];
+				var d = V2D.distance(median,p);
+				console.log("  d: "+d);
+				if(d>maximumSamePointDistance){
+					isOver = true;
+				}
+			}
+			if(isOver){ // drop worst point
+				if(points.length==2){ // drop all -- don't need to retry
+					Code.emptyArray(points);
+				}else{ // drop worst
+					retryPoints = true;
+					var maxDistance = null;
+					var maxIndex = -1
+					for(var j=0; j<points.length; ++j){
+						var pA = points[j]["point"];
+						var distance = 0;
+						for(var k=0; k<points.length; ++k){
+							if(k==j){
+								continue;
+							}
+							var pB = points[k]["point"];
+							distance += V2D.distance(pA,pB);
+						}
+						distance /= (points.length-1);
+						if(maxDistance===null || distance>maxDistance){
+							maxDistance = distance;
+							maxIndex = j;
+						}
+					}
+					console.log(maxIndex+" @ "+maxDistance);
+					Code.removeElementAt(points,maxIndex);
+				}
 
+			}else{
+				entry["equilibrium"] = median;
+			}
+		}
+	}
+	console.log(viewSets);
 	// create final list of best matches
+	var bestMatches = [];
+	var keys = Code.keys(viewSets);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		console.log(i+"+++++++++++++++++++++++++++++++ "+key);
+		var setA = viewSets[key];
+		var viewA = setA["view"];
+		var pointA = setA["equilibrium"];
+		if(pointA){
+			for(var j=0; j<keys.length; ++j){
+				var key = keys[j];
+				console.log(".    "+key);
+				var setB = viewSets[key];
+				var viewB = setB["view"];
+				var pointB = setB["equilibrium"];
+				if(pointB){
+					if(j>i){
+						//console.log(pointA+" -> "+pointB);
+						// var angle = ?;
+						// var scale = ?;
+						var index = viewA.id()+"-"+viewB.id();
+						var projection = projections[index];
+						console.log(projection);
+
+						var info = projection["info"];
+						console.log(info["from"]+" & "+info["to"]);
+						// var pA = info["from"];
+						// var pB = info["to"];
+						//var score = info["score"];
+						var angleAB = info["angle"];
+						var scaleAB = info["scale"];
+
+						var imageA = viewA.image();
+						var imageB = viewB.image();
+						var sizeCompare = viewB.pixelsCompareP2D();
+
+						var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, null,null,0);
+						console.log(info);
+
+NEED TO STORE POINT2D FOR EACH VIEW
+
+var match = new R3D.BA.Match2D();
+match.viewA(viewA);
+match.viewB(viewB);
+match.pointA( singlePointA );
+match.pointB( singlePointB );
+match.angleForward(info["angle"]);
+match.scaleForward(info["scale"]);
+match.score(info["score"]);
+matches.push(match);
+
+						bestMatches.push(match);
+
+					}
+				}
+			}
+		}
+	}
+	console.log(bestMatches);
+	// get set of disjoint views/matches
 
 	// create point from matches
 
 	throw "TODO";
-	return null;
+	return [];
 
 
 /*

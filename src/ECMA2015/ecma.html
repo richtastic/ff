@@ -1,0 +1,72 @@
+<html>
+<head>
+<title>ECMA 2015 - ES6</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,funLoadedFxn)).load();
+}
+function funLoadedFxn(){
+	console.log("loaded");
+
+
+
+	// classes
+	class Animal {
+		//var VARIABLE = "1";
+		static Log(value) {
+			console.log("ANIMAL LOG: "+value);
+		}
+		//
+		constructor(name){
+			console.log("[Animal constructor]");
+			this.name = name;
+		}
+		speak(){
+			console.log("I'm an animal "+name);
+			console.log(this);
+		}
+	}
+
+	class Fish extends Animal {
+		static Log(value) {
+			console.log("FISH LOG");
+		}
+		constructor(name){
+			super(name);
+			console.log("[Fish constructor]");
+		}
+		speak(){
+			super.speak();
+			console.log("... I am also a fish");
+			console.log(this);
+		}
+	}
+	Animal.VARIABLE = "1";
+
+
+	console.log(" +++ ");
+
+	let animal = new Animal("basic");
+	animal.speak();
+
+	console.log(" +++ ");
+	
+	let fish = new Fish("fishy");
+	fish.speak();
+
+	console.log(" +++ ");
+
+	Animal.Log("what");
+	Fish.Log("what");
+	console.log(Animal.VARIABLE);
+
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
