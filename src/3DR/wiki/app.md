@@ -190,11 +190,159 @@ project typical numbers:
 APP TODO:
 
 
+- why is there inconsistency in calc of p3d in matches / views
+- why do the P3D become fewer and fewer?
+	- merging algorithm?
 
-IGNORE PUTATIVE POINTS
+- how to include RANSAC in F / P estimation
 
 
-... ANOTHER SET OF ALGORITHM REDESIGNS
+- need to remove bad matches from queues too, not just final matches array
+- as old matches are dropped, the area needs to be filled as good matches might be skipped over
+	- 
+
+
+
+
+
+
+-> trifocal tensor for merging multiple views
+	- calc T from point correspondences
+	- get F-,A,V,C from T
+	- calc P-A,B,C from T / Fi
+	- 
+	- how to 'combine' these T / P into algorithm ?
+		-> graph again ?
+	- 
+
+
+
+
+algorithm with RANSAC
+	- get best points for estimating F
+		- at least ~50 points
+		- at least ~50 lowest error points
+		- at least ~50 groups of 3
+	- get initial F
+	- pixelError = record current average error with initial F [+ sigma]
+	- inliers & inlierCounts = 
+	- minimumInlierCount = ~50% of starting OR 15
+	- while next-inlier-count > minimumInlierCount
+		best inlier group = []
+		for some minimal percent ?????
+			- pick random points
+			- calculate F
+			- find inliers within pixelError
+			- keep better inlier group
+		pixelError *= 0.5
+	- calculate best F with best group
+	-> P
+
+
+
+-> algs have final global bundle adjustment step:
+	- minimize reprojection error over:
+		- all 3D points [X,Y,Z]
+		- all camera parameters [rx,ry,rz,tx,ty,tz]
+
+
+http://www.robots.ox.ac.uk/~vgg/data1.html
+
+
+
+- are larger images better performing?
+
+- when a point is dropped (match)
+	-> record for when dropping is complete
+	-> retry search in area ? (keep if better than previous dropped match)
+
+
+--- each 2-vide pair has satisfactory 3D projections
+	=> but when combined the averages are very noisy
+		-> are the 3D positions ABSOLUTE or still somehwo relative?
+		-> are the 3D positions averaged together well ?
+
+
+--- PROBLEM:
+	- getting triplets of points doesn't seem to help all that much...
+		- only use triplets of points when possible to determine relative camera matrices
+		- only keep very 'best' point3Ds for extrinsic matrix calculation
+		- 
+		- leave out putatives
+
+- print out stats for only P3D with 3 nonputative matches
+
+- averaging the positions messes it all up ..
+	- try a single 3D from the first view ?
+	- maybe the averaging is wrong?
+
+
+
+-> NO POINTS3D AFTER 200 ITERATIONS???
+
+
+
+--- go thru logics and see if anything doesn't add up
+
+--- try increasing merge distances
+
+
+--- try to find ways to get single pair matches to become group matches
+
+
+- 'probing' around P3D results
+	- if a neighbor 
+
+
+
+-> a point3d says it only has a single view / point, but has a match with 2 views
+	---> some point3D has a match that has a POINT2D that is not shared by another point2d
+		=> after first match is made, subsequent matches are overridden
+			eg: p3d = 1-2
+				add 1-0
+				add 2-0
+					=> 2-0 replaces 1-0
+	=> SOLUTIONS:
+		- combine matches to single point?
+			-> this is more like merging
+		- use best match, ordered on eg: score / rank
+
+
+
+
+
+
+- putative points seem to be orphaned ant left behind
+
+--- match isn't being added / removed from list
+-> a match has a point3D who's match is not it
+
+- SHOULD there be a case where a match is replaced on a p3d (projection) ? 
+	[cause there is]
+
+
+x try increasing error on what constitutes a 'same' P2D on merge
+x lower error drop rates
+
+
+
+
+---- without projection, groups of 3D aren't merging
+
+
+
+
+3D-neighbor probing
+	- for each unknown view in P3D 
+		- look for closest P2D neighbor that has a P3D with 'unknown' view [within some radius]
+			=> if found:
+				- use transform to look for matching point [neighborhood = radius * 2]
+					- blind neighborhood or use directional offset
+				- create match if good enough
+				- add match as putative to P3D
+	- ...
+
+
 
 
 ~ NEIGHBOR PROBING:

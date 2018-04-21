@@ -996,6 +996,9 @@ Graph.prototype.minPaths = function(source){
 Graph.prototype.minPath = function(source,target){
 	return Graph._minPath(this,source,target);
 }
+Graph.prototype.minSpanningTree = function(source,target){ // maximum spanning tree MST
+	throw "Kruskal";
+}
 Graph.prototype.minRootPaths = function(){
 	return Graph._minRootPaths(this);
 }

@@ -1,4 +1,21 @@
 ## Bundle Adjustment
+*Definition:*
+<br/>
+	- minimize reprojection error over:
+		- all 3D points [X,Y,Z]
+		- all camera parameters [rx,ry,rz,tx,ty,tz]
+
+~10 views
+~100 points per view
+
+	- changing a single camera parameter
+		=> re-estimate all 3D points connected to camera A/B
+
+each variable change:
+	10*100 = 1000 3D point & 2D reprojection calculations
+	*6 params = 6000 calcs
+	*100 iterations = 600,000 calcs
+
 
 
 - refining camera positions

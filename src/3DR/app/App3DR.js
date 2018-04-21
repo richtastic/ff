@@ -79,8 +79,8 @@ var modeImageUpload = false;
 var modeImageCompare = false;
 
 
-var modeModelReconstruction = false;
-//var modeModelReconstruction = true;
+//var modeModelReconstruction = false;
+var modeModelReconstruction = true;
 
 
 if(modeImageEdit){
@@ -2780,7 +2780,14 @@ if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 	//console.log(this._distanceRange);
 
 	var scaleSize = this._distanceRange * 0.00001;
+	//var scaleSize = this._distanceRange * 0.000001; // with a LOT OF ERROR this is better
 	var scaleAngle = 0.001;
+
+	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
+		scaleSize *= 0.1;
+		scaleAngle *= 0.25;
+	}
+	
 
 // ROTATIONS
 	if(this._keyboard.isKeyDown(Keyboard.KEY_LET_Z)){ // left/right

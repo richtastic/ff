@@ -296,7 +296,10 @@ QuadTree._sortArxel = function(a,b){
 QuadTree._sortObject = function(a,b){
 	return a["distance"] < b["distance"] ? -1 : 1;
 }
-QuadTree.prototype.kNN = function(p,k, evaluationFxn){
+QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
+	var size = this.size();
+	maxRadius = (maxRadius!==undefined && maxRadius!==null) ? maxRadius : Math.max(size.x,size.y);
+	var maxRadiusSquare =  maxRadius*maxRadius;
 	var toPoint = this._toPoint;
 	var axelQueue = new PriorityQueue(QuadTree._sortArxel);
 	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);
@@ -338,18 +341,26 @@ QuadTree.prototype.kNN = function(p,k, evaluationFxn){
 				}
 			}
 		}
+		// can quit if too far away
+		if(axelQueue.length()>0 && axelQueue.minimum().temp()>maxRadiusSquare ){
+			break;
+		}
 		// can quit if already have k && nearby cells are further away than best k
-		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"]) ){
+		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"])){
 			break;
 		}
 	}
 	var objects = objectQueue.toArray();
+	var output = [];
 	objectQueue.kill();
 	axelQueue.kill();
 	for(var i=0; i<objects.length; ++i){
-		objects[i] = objects[i]["object"];
+		var object = objects[i];
+		if(object["distance"]<maxRadius){
+			output.push( object["object"] );
+		}
 	}
-	return objects;
+	return output;
 }
 QuadTree.prototype.closestObject = function(point){
 	var objects = this.kNN(point, 1);

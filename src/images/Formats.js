@@ -29,7 +29,7 @@ function Formats(){
 	//ajax.get("./image_.1.png",this,this._handleLoaded,null);
 	//ajax.get("./image.png",this,this._handleLoaded,null);
 //	ajax.get("./apng.apng",this,this._handleLoaded,null);
-	//ajax.get("./mri.png",this,this._handleLoaded,null);
+	ajax.get("./mri.png",this,this._handleLoaded,null);
 	//ajax.();
 GLOBALSTAGE = this._stage;
 
@@ -135,7 +135,7 @@ GLOBALSTAGE = this._stage;
 	dd.graphics().endPath();
 	dd.graphics().strokeLine();
 
-
+/*
 	// actual gradient coloring
 	dd.graphics().setLine(1.0, 0x660000FF);
 	dd.graphics().setFillGradientLinear(mpA.x,mpA.y, mpB.x,mpB.y, [0.0, 1.0], [0xCC000000, 0xCC00FFFF]);
@@ -149,14 +149,15 @@ GLOBALSTAGE = this._stage;
 	dd.graphics().endPath();
 	dd.graphics().fill();
 	dd.graphics().strokeLine();
-
+*/
 
 
 	console.log("yep");
 	
 }
 Formats.prototype._handleLoaded = function(response){
-	//console.log(response);
+	console.log("_handleLoaded");
+	console.log(response);
 	var i, len, c, b;
 	len = response.length;
 	//console.log("length:"+len);
