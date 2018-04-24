@@ -190,6 +190,20 @@ project typical numbers:
 APP TODO:
 
 
+
+x synthetic check:
+	create 3d points
+	create matrix
+	projection check:
+	R3D.projectPoint3DToCamera2DInverse
+
+- absolute & relative locations of points / cameras during calculation
+
+...
+
+
+- ransac using R not F error ?
+
 - why is there inconsistency in calc of p3d in matches / views
 - why do the P3D become fewer and fewer?
 	- merging algorithm?
@@ -203,17 +217,6 @@ APP TODO:
 
 
 
-
-
-
--> trifocal tensor for merging multiple views
-	- calc T from point correspondences
-	- get F-,A,V,C from T
-	- calc P-A,B,C from T / Fi
-	- 
-	- how to 'combine' these T / P into algorithm ?
-		-> graph again ?
-	- 
 
 
 
@@ -247,6 +250,22 @@ algorithm with RANSAC
 
 
 http://www.robots.ox.ac.uk/~vgg/data1.html
+
+
+
+
+
+-> trifocal tensor for merging multiple views
+	- calc T from point correspondences
+	- get F-,A,V,C from T
+	- calc P-A,B,C from T / Fi
+	- 
+	- how to 'combine' these T / P into algorithm ?
+		-> graph again ?
+	- 
+
+
+
 
 
 

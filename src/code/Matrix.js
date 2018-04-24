@@ -227,15 +227,27 @@ Matrix.prototype.getSubMatrix = function(offRow,offCol, rows,cols){
 	}
 	return m;
 }
-Matrix.prototype.setSubMatrix = function(submatrix, subOffRow,subOffCol,subRows,subCols, matOffRow,matOffCol,matRows,matCols){
-	
-	// var i,j, m = new Matrix(rows,cols);
-	// for(j=0;j<rows;++j){
-	// 	for(i=0;i<cols;++i){
-	// 		m._rows[j][i] = this._rows[j+offRow][i+offCol];
-	// 	}
-	// }
-	// return m;
+Matrix.prototype.setSubMatrix = function(submatrix, matOffRow,matOffCol,matRows,matCols, subOffRow,subOffCol,subRows,subCols){
+	matOffRow = matOffRow!==undefined ? matOffRow : 0;
+	matOffCol = matOffCol!==undefined ? matOffCol : 0;
+	matRows = matRows!==undefined ? matRows : this.rows();
+	matCols = matCols!==undefined ? matCols : this.cols();
+	subOffRow = subOffRow!==undefined ? subOffRow : 0;
+	subOffCol = subOffCol!==undefined ? subOffCol : 0;
+	subRows = subRows!==undefined ? subRows : submatrix.rows();
+	subCols = subCols!==undefined ? subCols : submatrix.cols();
+	var i,j;
+	// these should match ?
+	var rowCount = Math.min(matRows,subRows);
+	var colCount = Math.min(matCols,subCols);
+	console.log("setSubMatrix: "+rowCount+"x"+colCount+" : "+matOffRow+","+matOffCol+" | "+subOffRow+","+subOffCol+" ... "+matRows+"x"+matCols+" & "+subRows+"x"+subCols+"");
+	for(j=0;j<rowCount;++j){
+		for(i=0;i<colCount;++i){
+			//m._rows[j][i] = this._rows[j+offRow][i+offCol];
+			this._rows[j+matOffRow][i+matOffCol] = submatrix._rows[j+subOffRow][i+subOffCol];
+		}
+	}
+	return this;
 }
 Matrix.prototype.randomize = function(mul,rnd){
 	var i, j, row = this._rowCount, col = this._colCount;

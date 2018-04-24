@@ -11,7 +11,7 @@
 	- changing a single camera parameter
 		=> re-estimate all 3D points connected to camera A/B
 
-each variable change:
+each camera variable change:
 	10*100 = 1000 3D point & 2D reprojection calculations
 	*6 params = 6000 calcs
 	*100 iterations = 600,000 calcs

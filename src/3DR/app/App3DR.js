@@ -43,6 +43,11 @@ function App3DR(){
 
 GLOBALSTAGE = this._stage;
 	
+
+// TODO: UN-UNCOMMENT
+
+
+
 	
 	var projectManager = new App3DR.ProjectManager("/projects/0", this._stage);
 	console.log(projectManager);
@@ -113,10 +118,21 @@ if(modeModelReconstruction){
 	this._setupModel3DProjectManager(this._projectManager);
 }
 
+
+
+
+
+
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
 	this._keyboard.addListeners();
+
+
+//this.testCams();
+
+
+
 
 /*
 var d = new DO();
@@ -157,6 +173,292 @@ return;
 	this._mouseDown = false;
 }
 
+
+
+
+App3DR.prototype.testCams = function(){
+
+// camera points in -z direction
+// cam AtoB = camB * inv(camA)
+// original p3d = inv(camA) * estimated-p3d(in AtoB)
+// 	cameras are 'opposite' of their function, are forward of point translation
+
+	var points3D = [];
+	// make a cube
+	points3D.push(new V3D(-1,-1,-1));
+	points3D.push(new V3D( 1,-1,-1));
+	points3D.push(new V3D(-1, 1,-1));
+	points3D.push(new V3D( 1, 1,-1));
+	points3D.push(new V3D(-1,-1, 1));
+	points3D.push(new V3D( 1,-1, 1));
+	points3D.push(new V3D(-1, 1, 1));
+	points3D.push(new V3D( 1, 1, 1));
+
+	points3D.push(new V3D(0,0,0));
+	
+	points3D.push(new V3D(0,1,0));
+	points3D.push(new V3D(0,2,0));
+	points3D.push(new V3D(0,3,0));
+	points3D.push(new V3D(0,4,0));
+
+
+	points3D.push(new V3D(1,0,0));
+	points3D.push(new V3D(2,0,0));
+	points3D.push(new V3D(3,0,0));
+	points3D.push(new V3D(4,0,0));
+
+	// make a camera - intrinsic
+	var imageWidth = 300;
+	var imageHeight = 200;
+	var fx = 10;
+	var fy = 10;
+	var cx = imageWidth*0.5;
+	var cy = imageHeight*0.5;
+	var  s = 0;
+	var K = new Matrix(3,3);
+	K.identity();
+	K.set(0,0, fx);
+	K.set(1,1, fy);
+	K.set(0,2, cx);
+	K.set(1,2, cy);
+	K.set(0,1,  s);
+	var Kinv = Matrix.inverse(K);
+	//console.log("K: \n"+K);
+
+	// position camera - extrinsic
+	var camIdentity = new Matrix(4,4);
+	camIdentity.identity();
+
+	var camA = new Matrix(4,4);
+	camA.identity();
+		camA = Matrix.transform3DRotateY(camA, Code.radians(45));
+		//camA = Matrix.transform3DRotateY(camA, Code.radians(0));
+		//camA = Matrix.transform3DRotateX(camA, Code.radians(-10));
+		camA = Matrix.transform3DTranslate(camA, 0,1,2);
+	var camB = new Matrix(4,4);
+	camB.identity();
+		camB = Matrix.transform3DRotateY(camB, Code.radians(15));
+		camB = Matrix.transform3DRotateX(camB, Code.radians(15));
+		camB = Matrix.transform3DTranslate(camB, 0,0,1);
+	// var camInvA = R3D.inverseCameraMatrix(camA);
+	// var camInvB = R3D.inverseCameraMatrix(camB);
+	var camInvA = Matrix.inverse(camA);
+	var camInvB = Matrix.inverse(camB);
+
+	
+	var camAtoB = Matrix.mult(camB,camInvA); // YES
+	
+
+
+// 	var o = new V3D(0,0,0);
+// 	var x = new V3D(1,0,0);
+// 	var o2 = camAtoB.multV3DtoV3D(new V3D(), o);
+// 	var x2 = camAtoB.multV3DtoV3D(new V3D(), x);
+// 	console.log(o2+"");
+// 	console.log(x2+"");
+// 	var dx = V3D.sub(x2,o2);
+// 	console.log(dx+" = "+dx.length());
+// return;
+
+
+	var camAtoBInv = R3D.inverseCameraMatrix(camAtoB);
+
+	console.log("A: \n"+camA+"");
+	console.log("B: \n"+camB+"");
+	console.log("I: \n"+camIdentity+"");
+	console.log("AB: \n"+camAtoB+"");
+
+	// project points to screen
+	var projected2DA = [];
+	var projected2DB = [];
+	var errored2DA = [];
+	var errored2DB = [];
+	var errorPixels = 1.0; //1; //1.0;
+	var min = -0.5 * errorPixels;
+	var max =  0.5 * errorPixels;
+	var keep3D = [];
+	for(var i=0; i<points3D.length; ++i){
+		var p3D = points3D[i];
+		// YES
+		var p2DA = R3D.projectPoint3DToCamera2DForward(p3D, camA, K, null, true);
+		var p2DB = R3D.projectPoint3DToCamera2DForward(p3D, camB, K, null, true);
+
+		// var p2DA = R3D.projectPoint3DToCamera2DForward(p3D, camIdentity, K, null, true);
+		// var p2DB = R3D.projectPoint3DToCamera2DForward(p3D, camAtoB, K, null, true);
+		//console.log(p3D+" & "+p2DA+" | "+p2DB);
+		if(!p2DA || !p2DB){
+			continue;
+		}
+		var insideA = 0<p2DA.x && p2DA.x<imageWidth && 0<p2DA.y && p2DA.y<imageHeight;
+		var insideB = 0<p2DB.x && p2DB.x<imageWidth && 0<p2DB.y && p2DB.y<imageHeight;
+		if(!insideA || !insideB){
+			continue;
+		}
+		keep3D.push(p3D);
+		projected2DA.push(p2DA);
+		projected2DB.push(p2DB);
+		var e2DA = p2DA.copy();
+		var e2DB = p2DB.copy();
+		e2DA.add(new V2D( Code.randomFloat(min,max) ));
+		e2DB.add(new V2D( Code.randomFloat(min,max) ));
+		errored2DA.push(e2DA);
+		errored2DB.push(e2DB);
+	}
+	points3D = keep3D;
+
+	// estimate 3D points from errored pixels:
+	// var estimated3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+	var estimated3D = [];
+	var reprojected2DA = [];
+	var reprojected2DB = [];
+	for(var i=0; i<projected2DA.length; ++i){
+		// actual
+		var pA2D = projected2DA[i];
+		var pB2D = projected2DB[i];
+		// estimated
+			pA2D = errored2DA[i];
+			pB2D = errored2DB[i];
+		// var p3D = R3D.triangulatePointDLT(pA2D,pB2D, camA,camB, Kinv, Kinv); // OK
+
+		var p3D = R3D.triangulatePointDLT(pA2D,pB2D, camIdentity,camAtoB, Kinv, Kinv);
+
+		console.log("triangulated: "+p3D);
+		estimated3D.push(p3D);
+
+		// reprojection
+		var p2DA = R3D.projectPoint3DToCamera2DForward(p3D, camIdentity, K, null, true);
+		var p2DB = R3D.projectPoint3DToCamera2DForward(p3D, camAtoB, K, null, true);
+		reprojected2DA.push(pA2D);
+		reprojected2DB.push(pB2D);
+	}
+	// REPROJECTION ERROR
+	var errorsA = [];
+	var errorsB = [];
+	var errors = [];
+	for(var i=0; i<reprojected2DA.length; ++i){
+		var p2DA1 = projected2DA[i];
+		var p2DB1 = projected2DB[i];
+		var p2DA2 = reprojected2DA[i];
+		var p2DB2 = reprojected2DB[i];
+		var errorA = V2D.distanceSquare(p2DA1,p2DA2);
+		var errorB = V2D.distanceSquare(p2DB1,p2DB2);
+		var error = errorA + errorB;
+		console.log(errorA+" | "+errorB+" | "+error+" | ");
+	}
+	
+
+
+//console.log(V3D.distance(estimated3D[10],estimated3D[11]));
+//console.log(V3D.sub(estimated3D[10],estimated3D[11]).length());
+	//console.log(estimated3D);
+	for(var i=0; i<estimated3D.length; ++i){
+		var p3D = points3D[i];
+		var e3D = estimated3D[i];
+		//console.log(p3D+"");
+		
+
+		var o3D = camInvA.multV3DtoV3D(new V3D(), e3D); // identity & AtoB
+		//var o3D = camA.multV3DtoV3D(new V3D(), e3D);
+		//var o3D = camInvB.multV3DtoV3D(new V3D(), e3D);
+		//var o3D = camB.multV3DtoV3D(new V3D(), e3D);
+
+		//var o3D = e3D; // camA & camB
+		
+		console.log(i+": "+p3D+" => "+o3D);
+	}
+
+	// F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	// F = R3D.fundamentalMatrixNonlinear(F,bestPointsA,bestPointsB);
+	// P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka, Kb, null, force);
+
+	// display projections
+	var image = new DO();
+	this._root.addChild(image);
+	// image.graphics().clear();
+
+	var d = image;
+	// camera:
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(0,0);
+	d.graphics().lineTo(imageWidth,0);
+	d.graphics().lineTo(imageWidth,imageHeight);
+	d.graphics().lineTo(0,imageHeight);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	// projections
+	for(var i=0; i<projected2DA.length; ++i){
+		var p2DA = projected2DA[i];
+		var p2DB = projected2DB[i];
+		p2DA = p2DB;
+		d.graphics().setLine(1.0,0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p2DA.x,imageHeight-p2DA.y, 3);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	}
+	d.matrix().identity();
+	d.matrix().translate(100,100);
+
+
+return;
+/*
+
+estimate 3D point from F / R
+
+reproject estimated 3D points to 2D
+
+calculate reprojection error
+
+cacluate exact reprojection error with known points
+
+*/
+	
+
+
+	var camB = new Matrix(4,4);
+	camB.identity();
+	//camB = Matrix.transform3DRotateY(camB, Code.radians(180));
+	camB = Matrix.transform3DTranslate(camB, 2,0,1);
+
+	var camInvA = R3D.inverseCameraMatrix(camA);
+	var camInvB = R3D.inverseCameraMatrix(camB);
+
+	var p3D = new V3D(1,0,-2);
+
+	// R3D.projectPoint3DToCamera2DInverse
+	// var projected2DB = R3D.projectPoint3DToCamera2D(p3D, cameraB, Kb, null);//, true);
+	var p2DA = R3D.projectPoint3DToCamera2DInverse(p3D, camInvA, K, null, true);
+	var p2DB = R3D.projectPoint3DToCamera2DInverse(p3D, camInvB, K, null, true);
+	// var p2DA = R3D.projectPoint3DToCamera2DInverse(p3D, camA, K, null, true);
+	// var p2DB = R3D.projectPoint3DToCamera2DInverse(p3D, camB, K, null, true);
+
+	console.log("camA: \n"+camA);
+	console.log("camB: \n"+camB);
+	console.log("P3D: "+p3D);
+	console.log("P2DA: "+p2DA);
+	console.log("P2DB: "+p2DB);
+
+
+	var image = new DO();
+	this._root.addChild(image);
+	//image.graphics().clear();
+
+	var d = image;
+
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(0,0);
+	d.graphics().lineTo(200,200);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	d.matrix().identity();
+	d.matrix().translate(100,100);
+
+	return;
+}
 
 
 
@@ -2719,6 +3021,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input, hasImages){
 	for(var i=0; i<input.length; ++i){
 		//var v = new V3D( Math.random()*10 - 5.0, Math.random()*10 -5.0, Math.random()*10 -5.0 );
 		var v = input[i];
+//		console.log(v+"")
 		points.push(v.x,v.y,v.z);
 		if(hasImages){
 			// get color from images
