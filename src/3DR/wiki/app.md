@@ -197,7 +197,71 @@ x synthetic check:
 	projection check:
 	R3D.projectPoint3DToCamera2DInverse
 
+
+- multiple views don't all reduce in error as iteration increases
+	- view match counts peaks ~300-400
+		-> around 80-90 the R error went down to 
+
+	-> see how views do individually ... 1 & 3, 2 & 3
+		- 1 & 2 -> F:3, R:2å
+
+- how to combine views' absolute transforms
+	- 
+
+- with sparse matches on an image how to go to dense matches?
+	- 
+	- pick lowest-error points to get best P relation ? @ end
+	- look at directional errors ?
+	- only include points with 3+ matches ?
+	- 
+	- use best points as seeds & double resolution & search there
+
+- drop points with 'possibility' of higher error ?
+	- angle / direction / distance
+
+- epipolar line ordering constraints
+
+- do basic triangulation using sets of 3 on a given image [delauny]
+
+
+
+- POINT COUNT NOT MATCH MATCH SIZE:
+	R3DBA.js:1720  0 QUEUE SIZE: 915 MATCHES SIZE: 3317
+	R3DBA.js:316 NON-PUTATIVE POINT COUNTS: 0,0,3335
+
+
 - absolute & relative locations of points / cameras during calculation
+
+- draw matches on bundle image
+	-> way to compare results are getting better or worse
+
+
+- what does a full bundle adjust method look like?
+	- 
+
+
+----- overview entire logic again all through
+
+
+
+
+
+- relative error between cameras is not reducing
+	- look at F error
+		-> good
+	- r error fluctuates a lot
+
+
+R3D.BA.rError MIGHT HAVE WRONG MATRICES ?
+	=>
+	errors are now very sporadic
+
+testCams
+
+
+transform.initialEstimatePoints3D();
+info = transform.calculateErrorR(true);
+
 
 ...
 

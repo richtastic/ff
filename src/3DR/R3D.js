@@ -384,6 +384,10 @@ R3D.PFromKRT = function(K,R,t){
 	// return transform
 }
 R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1, forceSolution){ // find relative transformation matrix  // points use F
+
+return R3D.transformFromFundamental2(pointsA, pointsB, F, Ka, Kb, M1, forceSolution);
+
+
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 	//console.log("M1: \n"+M1);
 	Kb = Kb ? Kb : Ka;
@@ -397,8 +401,10 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1, forceSo
 	
 	/*
 	// FORWARD: ... looks bad
+	var KbT = Matrix.transpose(Kb);
 	var E = Matrix.mult(F,Ka);
-		E = Matrix.mult(KbInv,E);
+		//E = Matrix.mult(KbInv,E);
+		E = Matrix.mult(KbT,E);
 //	console.log("INCOMING E [from F]:\n"+E);
 	*/
 	
@@ -419,7 +425,6 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka, Kb, M1, forceSo
 	// get dimension-normalized. points
 	var norm = R3D.calculateNormalizedPoints([eA,eB]);
 	E = R3D.essentialMatrix(norm.normalized[0],norm.normalized[1]);
-	
 		//E = R3D.essentialMatrixNonlinear(E,norm.normalized[0],norm.normalized[1]);
 	E = Matrix.mult(E,norm.forward[1]);
 	E = Matrix.mult(Matrix.transpose(norm.forward[0]),E);
@@ -522,31 +527,287 @@ for(index=0; index<pointsA.length; ++index){
 	}
 }
 // console.log("total points: "+pointsA.length);
-// console.log(countsUnderZero);
-// console.log(countsOverZero);
+console.log(countsUnderZero);
+console.log(countsOverZero);
 var count = null;
 var minUnder = null;
 for(i=0; i<possibles.length; ++i){
 	var possible = possibles[i];
 	if(count===null || count>countsUnderZero[i]){
 		count = countsUnderZero[i];
+// if(count===null || count>countsOverZero[i]){ // OPPOSITE
+// count = countsOverZero[i]; // OPPOSITE
 		minUnder = possible;
 		if(count==0){
 			projection = possible;
 		}
 	}
 }
-//console.log("min under: "+count);
+console.log("min under: "+count+" / "+pointsA.length);
 if(forceSolution){
 	projection = minUnder;
 }
 	if(!projection){
 		return null;
 	}
-	
 	projection = R3D.inverseCameraMatrix(projection); // ?
 	return projection;
 }
+
+
+
+
+
+R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceSolution){ // find relative transformation matrix  // points use F
+	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+	var M1Full = M1.copy().appendRowFromArray([0,0,0,1]);
+	Kb = Kb ? Kb : Ka;
+	var KaInv = Matrix.inverse(Ka);
+	var KbInv = Matrix.inverse(Kb);
+
+		// KaInv = Matrix.transpose(Ka);
+		// KbInv = Matrix.transpose(Kb);
+//	console.log("K: \n"+Ka);
+//	console.log("K^-1: \n"+KaInv);
+
+	// FORWARD: ... looks bad
+	var KbT = Matrix.transpose(Kb);
+	var E = Matrix.mult(F,Ka);
+		E = Matrix.mult(KbT,E);
+//	console.log("INCOMING E [from F]:\n"+E);
+	
+	/*
+	// FROM SCRATCH
+	// get screen-normalized image points:
+	var eA = [];
+	var eB = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		a = new V3D(a.x,a.y,1.0);
+		b = new V3D(b.x,b.y,1.0);
+		a = KaInv.multV3DtoV3D(new V3D(), a);
+		b = KbInv.multV3DtoV3D(new V3D(), b);
+		eA[i] = new V2D(a.x,a.y);
+		eB[i] = new V2D(b.x,b.y);
+	}
+	
+	// get dimension-normalized. points
+	var norm = R3D.calculateNormalizedPoints([eA,eB]);
+	E = R3D.essentialMatrix(norm.normalized[0],norm.normalized[1]);
+	
+		//E = R3D.essentialMatrixNonlinear(E,norm.normalized[0],norm.normalized[1]);
+	E = Matrix.mult(E,norm.forward[1]);
+	E = Matrix.mult(Matrix.transpose(norm.forward[0]),E);
+	*/
+//	console.log("INTERNAL E [self]:\n"+E);
+
+	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
+	var svd, U, S, V, Vt;
+	
+	// force D = 1,1,0 ----------------------
+	svd = Matrix.SVD(E);
+	U = svd.U;
+	S = svd.S;
+	V = svd.V;
+	Vt = Matrix.transpose(V);
+
+	// // RE-GET matrix
+	// E = Matrix.mult(diag110,Vt);
+	// E = Matrix.mult(U,E);
+	// // new decomposition
+	// svd = Matrix.SVD(E);
+	// U = svd.U;
+	// S = svd.S;
+	// V = svd.V;
+	// Vt = Matrix.transpose(V);
+	
+
+	var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
+	var Wt = Matrix.transpose(W);
+	var t = U.getCol(2);
+	var tNeg = t.copy().scale(-1.0);
+	t = t.toArray();
+	tNeg = tNeg.toArray();
+
+	// var R1 = Matrix.mult(W, Vt); // U * W * V'
+	// 	R1 = Matrix.mult(U, R1);
+	// var R2 = Matrix.mult(Wt, Vt); // U * W' * V'
+	// 	R2 = Matrix.mult(U, R2);
+
+	// one of 4 possible solutions
+	var possibles = []; // U*W*V | t
+	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
+	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
+	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
+	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
+	
+	/*
+	if both z are negative:
+		t should be negative
+	if one z is positive & one z is negative: 
+		entire E should be negated
+	*/
+	// ? WHERE IS THIS DESCRIBED?
+
+	for(i=0;i<possibles.length;++i){
+		var m = possibles[i];
+		var r = m.getSubMatrix(0,0, 3,3);
+		var t = m.getSubMatrix(0,3, 3,1);
+		var det = r.det();
+		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
+			r.scale(-1.0);
+		}
+		var r = R3D.rotationFromApproximate(r);
+		var trans = r.copy().appendColFromArray(t.toArray());
+		trans.appendRowFromArray([0,0,0,1]);
+		possibles[i] = trans;
+	}
+	
+	// find single matrix that results in 3D point in front of both cameras Z>0
+
+
+var projection = null;
+// var countsUnderZero = Code.newArrayZeros(possibles.length);
+// var countsOverZero = Code.newArrayZeros(possibles.length);
+var countsTotal = Code.newArrayZeros(possibles.length);
+	
+for(index=0; index<pointsA.length; ++index){
+	var pA = pointsA[index];
+	var pB = pointsB[index];
+	pA = new V3D(pA.x, pA.y, 1.0);
+	pB = new V3D(pB.x, pB.y, 1.0);
+	pA = KaInv.multV3DtoV3D(new V3D(), pA);
+	pB = KbInv.multV3DtoV3D(new V3D(), pB);
+	var pAx = Matrix.crossMatrixFromV3D( pA );
+	var pBx = Matrix.crossMatrixFromV3D( pB );
+
+	for(i=0; i<possibles.length; ++i){
+		var possible = possibles[i];
+		var possibleInv = Matrix.inverse(possible);
+		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
+		var pAM = Matrix.mult(pAx,M1);
+		var pBM = Matrix.mult(pBx,M2);
+		
+		var A = pAM.copy().appendMatrixBottom(pBM);
+		svd = Matrix.SVD(A);
+		var P1 = svd.V.getCol(3);
+		var p1Norm = new V4D().fromArray(P1.toArray());
+		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
+		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+
+		var P2 = Matrix.mult(possibleInv,P1est);
+		var P2 = Matrix.mult(possible,P1est);
+		var p2Norm = new V4D().fromArray(P2.toArray());
+		p2Norm.homo(); // not necessary?
+		// if(p1Norm.z>=0 && p2Norm.z>=0){
+		// 	countsOverZero[i] += 1;
+		// }else if(p1Norm.z<=0 && p2Norm.z<=0){
+		// 	countsUnderZero[i] += 1;
+		// }
+		countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
+	}
+}
+// console.log("total points: "+pointsA.length);
+// console.log(countsUnderZero);
+// console.log(countsOverZero);
+// console.log(countsTotal);
+var minCountUnder = null;
+var maxCountOver = null;
+var minUnder = null;
+var pickedIndex = -1;
+
+var maximumTotalCount = pointsA.length * 2;
+var bestTotalCount = Code.max(countsTotal);
+var bestProjections = [];
+
+for(i=0; i<possibles.length; ++i){
+	var possible = possibles[i];
+	if(countsTotal[i]==bestTotalCount){
+		if(bestTotalCount==maximumTotalCount || forceSolution){
+			bestProjections.push(possible);
+			// WHY?
+			//var flipped = R3D.inverseCameraMatrix(possible);
+			//bestProjections.push(flipped);
+		}
+	}
+	// if(minCountUnder===null || minCountUnder>countsUnderZero[i] || (minCountUnder>=countsUnderZero[i] && maxCountOver<=countsOverZero[i])){
+	// //if(maxCountOver===null || maxCountOver>countsOverZero[i] || (maxCountOver>=countsOverZero[i] && maxCountUnder<=countsUnderZero[i])){
+	// 	minCountUnder = countsUnderZero[i];
+	// 	maxCountOver = countsOverZero[i];
+	// 	minUnder = possible;
+	// 	pickedIndex = i;
+	// 	if(minCountUnder==0){
+	// 		projection = possible;
+	// 	}
+	// }
+}
+	// if mutliple good matches, choose between
+	if(bestProjections.length>0){
+		if(bestProjections.length==1){
+			return bestProjections[0];
+		}
+		var lowestError = null;
+		var bestProjection = null;
+		for(var i=0; i<bestProjections.length; ++i){
+			var M1 = M1Full;
+			var M2 = bestProjections[i];
+			var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb);
+			var error = R3D.reprojectionErrorList(points3D, pointsA, pointsB, M1,M2, Ka,Kb);
+			if(error){
+				error = error["error"];
+//				console.log("GOT ERROR: "+i+" : "+error);
+				if(lowestError===null || error<lowestError){
+					lowestError = error;
+					bestProjection = M2;
+				}
+			}
+		}
+		return bestProjection;
+	}
+	return null;
+}
+R3D.reprojectionErrorList = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
+	var errorTotal = 0;
+	var countTotal = 0;
+	for(var i=0; i<p3D.length; ++i){
+		var error = R3D.reprojectionError(p3D[i], pA[i], pB[i], cameraA, cameraB, Ka, Kb);
+		if(error){
+			++countTotal;
+			errorTotal += error["error"];
+		}
+	}
+	if(countTotal>0){
+		errorTotal /= countTotal;
+		return {"error":errorTotal};
+	}
+	return null;
+}
+R3D.reprojectionError = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
+	if(!cameraA || !cameraB){
+		console.log("missing ...")
+		return null;
+	} // drop -z ?
+	var projected2DA = R3D.projectPoint3DToCamera2DForward(p3D, cameraA, Ka, null);
+	var projected2DB = R3D.projectPoint3DToCamera2DForward(p3D, cameraB, Kb, null);
+	var distanceA;
+	var distanceB;
+	if(!projected2DA || !projected2DB){
+		return null;
+	}else{
+		distanceA = V2D.distance(pA,projected2DA);
+		distanceB = V2D.distance(pB,projected2DB);
+		// console.log(distanceA+" & "+distanceB);
+	}
+	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
+	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB};
+}
+
+
+
+
+
+
 R3D.inverseCameraMatrix = function(P){
 	var R = P.getSubMatrix(0,0,3,3);
 	var t = P.getSubMatrix(0,3,3,1);
@@ -2338,18 +2599,20 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	cam.setFromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0.0,0.0,0.0,1.0]);
 	return cam;
 }
-R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
+R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb,   KaInv, KbInv){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
 	// TODO: are these normalized (E) image coords ?
 	// pointsFr = Code.copyArray(pointsFr);
 	// pointsTo = Code.copyArray(pointsTo);
-	var KaInv = null;
-	var KbInv = null;
+	// var KaInv = null;
+	// var KbInv = null;
 	if(Ka || Kb){
 		if(Kb===undefined){
 			Kb = Ka;
 		}
-		KaInv = Matrix.inverse(Ka);
-		KbInv = Matrix.inverse(Kb);
+		if(!KaInv || !KbInv){
+			KaInv = Matrix.inverse(Ka);
+			KbInv = Matrix.inverse(Kb);
+		}
 	}
 	var i, j, to, fr, len=pointsFr.length;
 	var points3D = new Array(len);
@@ -18500,19 +18763,9 @@ R3D._dropDuplicatedPointsInList = function(points3D, pointCloud3D, only2D){
 }
 //R3D.projectPoint3DToCamera2D = function(in3D, extrinsic, K, distortions,    log){
 //R3D.projectPoint3DToCamera2DInverse = function(in3D, extrinsicInverse, K, distortions,    dropZ){
-R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions,    dropZ){
-	//does extrinsic need to be inverse ???
-	// if(log){
-	// 	console.log("    A => "+in3D);
-	// }
+R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, dropZ){
 	var v3D = extrinsic.multV3DtoV3D(in3D);
-	// if(log){
-	// 	console.log("    B => "+v3D);
-	// }
 	var p3D = K.multV3DtoV3D(v3D);
-	// if(log){
-	// 	console.log("    C => "+p3D);
-	// }
 	if(p3D.z==0){
 		return null;
 	}

@@ -3053,18 +3053,16 @@ Code.mean = function(list,key){
 	}
 	return mu / len;
 }
-Code.median = function(list,key){ // TODO: durrr median = middle of set
-	throw "TODO";
-	var i, mu=0, item, len=list.length;
-	if(len==0){ return 0; }
-	for(i=len;i--;){
-		item = list[i];
-		if(key!==undefined && key!==null){
-			item = item[key];
-		}
-		mu += item;
+Code.median = function(list,key){ // TODO: durrr median = middle of set -- assume sorted
+	if(list.length==0){
+		return null;
 	}
-	return mu / len;
+	var lo = Math.floor(list.length*0.5);
+	if(list.length%2==0){
+		var hi = lo + 1;
+		return (list[lo] + list[hi])*0.5;
+	}
+	return list[lo];
 }
 Code.sum = function(list,key){
 	var i, sum=0, item, len=list.length;

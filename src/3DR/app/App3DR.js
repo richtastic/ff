@@ -123,6 +123,7 @@ if(modeModelReconstruction){
 
 
 
+
 	this._canvas.addListeners();
 	this._stage.addListeners();
 	this._stage.start();
@@ -201,17 +202,46 @@ App3DR.prototype.testCams = function(){
 	points3D.push(new V3D(0,3,0));
 	points3D.push(new V3D(0,4,0));
 
-
 	points3D.push(new V3D(1,0,0));
 	points3D.push(new V3D(2,0,0));
 	points3D.push(new V3D(3,0,0));
 	points3D.push(new V3D(4,0,0));
 
+	// + z
+	points3D.push(new V3D(0,0,1));
+	points3D.push(new V3D(0,0,2));
+	points3D.push(new V3D(0,0,3));
+	points3D.push(new V3D(0,0,4));
+	points3D.push(new V3D(0,0,5));
+	points3D.push(new V3D(0,0,6));
+
+	// circle XY
+	var circleCount = 100;
+	var circleMag = 1.5;
+	for(var i=0; i<circleCount; ++i){
+		var p = i/(circleCount);
+		var x = circleMag * Math.cos(p*2*Math.PI);
+		var y = circleMag * Math.sin(p*2*Math.PI);
+		var point = new V3D(x,y,0);
+		points3D.push(point);
+	}
+
+	// circle xz
+	var circleCount = 100;
+	var circleMag = 1.5;
+	for(var i=0; i<circleCount; ++i){
+		var p = i/(circleCount);
+		var x = circleMag * Math.cos(p*2*Math.PI);
+		var y = circleMag * Math.sin(p*2*Math.PI);
+		var point = new V3D(x,0,y);
+		points3D.push(point);
+	}
+
 	// make a camera - intrinsic
 	var imageWidth = 300;
 	var imageHeight = 200;
-	var fx = 10;
-	var fy = 10;
+	var fx = 100;
+	var fy = 100;
 	var cx = imageWidth*0.5;
 	var cy = imageHeight*0.5;
 	var  s = 0;
@@ -234,12 +264,12 @@ App3DR.prototype.testCams = function(){
 		camA = Matrix.transform3DRotateY(camA, Code.radians(45));
 		//camA = Matrix.transform3DRotateY(camA, Code.radians(0));
 		//camA = Matrix.transform3DRotateX(camA, Code.radians(-10));
-		camA = Matrix.transform3DTranslate(camA, 0,1,2);
+		camA = Matrix.transform3DTranslate(camA, 0,1,3);
 	var camB = new Matrix(4,4);
 	camB.identity();
 		camB = Matrix.transform3DRotateY(camB, Code.radians(15));
 		camB = Matrix.transform3DRotateX(camB, Code.radians(15));
-		camB = Matrix.transform3DTranslate(camB, 0,0,1);
+		camB = Matrix.transform3DTranslate(camB, -1,0,2);
 	// var camInvA = R3D.inverseCameraMatrix(camA);
 	// var camInvB = R3D.inverseCameraMatrix(camB);
 	var camInvA = Matrix.inverse(camA);
@@ -259,7 +289,8 @@ App3DR.prototype.testCams = function(){
 // 	var dx = V3D.sub(x2,o2);
 // 	console.log(dx+" = "+dx.length());
 // return;
-
+	
+	// ...
 
 	var camAtoBInv = R3D.inverseCameraMatrix(camAtoB);
 
@@ -274,6 +305,7 @@ App3DR.prototype.testCams = function(){
 	var errored2DA = [];
 	var errored2DB = [];
 	var errorPixels = 1.0; //1; //1.0;
+	//var errorPixels = 0.1;
 	var min = -0.5 * errorPixels;
 	var max =  0.5 * errorPixels;
 	var keep3D = [];
@@ -306,6 +338,40 @@ App3DR.prototype.testCams = function(){
 	}
 	points3D = keep3D;
 
+	// get an F 
+	var F = null;
+	F = R3D.fundamentalFromUnnormalized(errored2DA,errored2DB);
+	// F = R3D.fundamentalFromUnnormalized(errored2DB,errored2DA);
+	console.log("F:\n"+F);
+	// F = R3D.fundamentalMatrixNonlinear(F,errored2DA,errored2DB);
+	// console.log("F:\n"+F);
+
+	// get a P
+	// console.log(errored2DA);
+	// console.log(errored2DB);
+	var P = null;
+	var force = true;
+	//var force = false;
+	// REVERSED: ?
+	//P = R3D.transformFromFundamental(errored2DB, errored2DA, F, K, K, null, force);
+	P = R3D.transformFromFundamental2(errored2DA, errored2DB, F, K, K, null, force);
+	// P = R3D.inverseCameraMatrix(P);
+	console.log("P:\n"+P);
+//throw "?";
+camAtoB = P;
+		var P0 = new Matrix(4,4).identity();
+		for(var i=0; i<1; ++i){
+			var p3D = R3D.triangulationDLT(errored2DA,errored2DB, P0,P, K, K);
+			P = R3D.cameraExtrinsicMatrixFromInitial(errored2DA, errored2DB, p3D, P, F, K, K);
+		}
+	//console.log("P:\n"+P);
+
+
+
+// TEST
+// var scaleToNormal = 1.0/0.6443050094821295;
+// camAtoB = Matrix.transform3DScale(camAtoB, scaleToNormal);
+console.log("camAtoB:\n"+camAtoB);
 	// estimate 3D points from errored pixels:
 	// var estimated3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
 	var estimated3D = [];
@@ -320,14 +386,14 @@ App3DR.prototype.testCams = function(){
 			pB2D = errored2DB[i];
 		// var p3D = R3D.triangulatePointDLT(pA2D,pB2D, camA,camB, Kinv, Kinv); // OK
 
-		var p3D = R3D.triangulatePointDLT(pA2D,pB2D, camIdentity,camAtoB, Kinv, Kinv);
+		var p3D = R3D.triangulatePointDLT(pA2D,pB2D, camIdentity,camAtoB, Kinv, Kinv); // A TO B 1
 
-		console.log("triangulated: "+p3D);
+//		console.log("triangulated: "+p3D);
 		estimated3D.push(p3D);
 
 		// reprojection
 		var p2DA = R3D.projectPoint3DToCamera2DForward(p3D, camIdentity, K, null, true);
-		var p2DB = R3D.projectPoint3DToCamera2DForward(p3D, camAtoB, K, null, true);
+		var p2DB = R3D.projectPoint3DToCamera2DForward(p3D, camAtoB, K, null, true); // A TO B !
 		reprojected2DA.push(pA2D);
 		reprojected2DB.push(pB2D);
 	}
@@ -343,30 +409,65 @@ App3DR.prototype.testCams = function(){
 		var errorA = V2D.distanceSquare(p2DA1,p2DA2);
 		var errorB = V2D.distanceSquare(p2DB1,p2DB2);
 		var error = errorA + errorB;
-		console.log(errorA+" | "+errorB+" | "+error+" | ");
+		//console.log(errorA+" | "+errorB+" | "+error+" | ");
+
+		var p3D = estimated3D[i];
+		var info = R3D.reprojectionError(p3D, p2DA2,p2DB2, camIdentity, camAtoB, K, K);
+		info = info ? info["error"] : null;
+		//console.log(info);
 	}
+
+
+
+	var error = R3D.reprojectionErrorList(estimated3D, reprojected2DA, reprojected2DB, camIdentity,camAtoB, K,K);
+	console.log("REPROJECTION TOTAL ERROR");
+	console.log(error);
 	
 
 
-//console.log(V3D.distance(estimated3D[10],estimated3D[11]));
+// console.log(" 0- 1: "+V3D.distance(estimated3D[0],estimated3D[1]));
+// console.log("13-14: "+V3D.distance(estimated3D[13],estimated3D[14]));
+	var ratios = [];
+	for(var i=0; i<estimated3D.length-1; ++i){
+		var p3D1 = points3D[i];
+		var e3D1 = estimated3D[i];
+		for(var j=i+1; j<estimated3D.length-1; ++j){
+			var p3D2 = points3D[j];
+			var e3D2 = estimated3D[j];
+			var dp = V3D.distance(p3D1,p3D2);
+			var de = V3D.distance(e3D1,e3D2);
+			if(dp>0){
+				var ratio = de/dp;
+				// console.log(ratio);
+				ratios.push(ratio);
+			}
+		}
+	}
+	var rMean = Code.mean(ratios);
+	var rSigma = Code.stdDev(ratios, rMean);
+	console.log("ratio error: "+rMean+" +/- "+rSigma);
+
+// var scaleToNormal = 1.0/V3D.distance(estimated3D[13],estimated3D[14]);
+// camAtoB = Matrix.transform3DScale(camAtoB,scaleToNormal);
+// 0.6443050094821295
+//Matrix.transform3DScale(a,sX,sY,sZ)
 //console.log(V3D.sub(estimated3D[10],estimated3D[11]).length());
 	//console.log(estimated3D);
+
 	for(var i=0; i<estimated3D.length; ++i){
 		var p3D = points3D[i];
 		var e3D = estimated3D[i];
 		//console.log(p3D+"");
-		
-
+		// 
 		var o3D = camInvA.multV3DtoV3D(new V3D(), e3D); // identity & AtoB
 		//var o3D = camA.multV3DtoV3D(new V3D(), e3D);
 		//var o3D = camInvB.multV3DtoV3D(new V3D(), e3D);
 		//var o3D = camB.multV3DtoV3D(new V3D(), e3D);
-
+		// 
 		//var o3D = e3D; // camA & camB
-		
-		console.log(i+": "+p3D+" => "+o3D);
+		// 
+//		console.log(i+": "+p3D+" => "+o3D);
 	}
-
 	// F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 	// F = R3D.fundamentalMatrixNonlinear(F,bestPointsA,bestPointsB);
 	// P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka, Kb, null, force);
@@ -402,62 +503,68 @@ App3DR.prototype.testCams = function(){
 	d.matrix().translate(100,100);
 
 
+// save fake bundle adjustment data for visualization
+
+var yaml = new YAML();
+var timestampNow = Code.getTimeStamp();
+yaml.writeComment("BA test");
+yaml.writeComment("created: "+timestampNow);
+yaml.writeBlank();
+
+yaml.writeArrayStart("cameras");
+	yaml.writeObjectStart();
+		yaml.writeString("id","0");
+		yaml.writeObjectStart("K");
+			K.saveToYAML(yaml);
+		yaml.writeObjectEnd();
+	yaml.writeObjectEnd();
+yaml.writeArrayEnd();
+
+
+yaml.writeArrayStart("views");
+	yaml.writeObjectStart();
+		yaml.writeString("id","R04ZYF8K");
+		yaml.writeString("camera","0");
+		yaml.writeObjectStart("transform");
+			camIdentity.saveToYAML(yaml);
+		yaml.writeObjectEnd();
+	yaml.writeObjectEnd();
+	yaml.writeObjectStart();
+		yaml.writeString("id","UB2GL8EB");
+		yaml.writeString("camera","0");
+		yaml.writeObjectStart("transform");
+			camAtoB.saveToYAML(yaml);
+		yaml.writeObjectEnd();
+	yaml.writeObjectEnd();
+yaml.writeArrayEnd();
+
+
+yaml.writeArrayStart("points");
+for(i=0; i<estimated3D.length; ++i){
+	var e3D = estimated3D[i];
+	yaml.writeObjectStart();
+	yaml.writeNumber("x",e3D.x);
+	yaml.writeNumber("y",e3D.y);
+	yaml.writeNumber("z",e3D.z);
+	yaml.writeObjectEnd();
+}
+yaml.writeArrayEnd();
+
+yaml.writeDocument();
+var str = yaml.toString();
+
+var fxnZ = function(){
+	console.log("saved ....");
+}
+var pm = this._projectManager;
+pm.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+pm.saveBundleAdjust(str, fxnZ, this);
+//this.saveProjectFile();
+
+
 return;
-/*
-
-estimate 3D point from F / R
-
-reproject estimated 3D points to 2D
-
-calculate reprojection error
-
-cacluate exact reprojection error with known points
-
-*/
-	
 
 
-	var camB = new Matrix(4,4);
-	camB.identity();
-	//camB = Matrix.transform3DRotateY(camB, Code.radians(180));
-	camB = Matrix.transform3DTranslate(camB, 2,0,1);
-
-	var camInvA = R3D.inverseCameraMatrix(camA);
-	var camInvB = R3D.inverseCameraMatrix(camB);
-
-	var p3D = new V3D(1,0,-2);
-
-	// R3D.projectPoint3DToCamera2DInverse
-	// var projected2DB = R3D.projectPoint3DToCamera2D(p3D, cameraB, Kb, null);//, true);
-	var p2DA = R3D.projectPoint3DToCamera2DInverse(p3D, camInvA, K, null, true);
-	var p2DB = R3D.projectPoint3DToCamera2DInverse(p3D, camInvB, K, null, true);
-	// var p2DA = R3D.projectPoint3DToCamera2DInverse(p3D, camA, K, null, true);
-	// var p2DB = R3D.projectPoint3DToCamera2DInverse(p3D, camB, K, null, true);
-
-	console.log("camA: \n"+camA);
-	console.log("camB: \n"+camB);
-	console.log("P3D: "+p3D);
-	console.log("P2DA: "+p2DA);
-	console.log("P2DB: "+p2DB);
-
-
-	var image = new DO();
-	this._root.addChild(image);
-	//image.graphics().clear();
-
-	var d = image;
-
-	d.graphics().setLine(1.0,0xFFFF0000);
-	d.graphics().beginPath();
-	d.graphics().moveTo(0,0);
-	d.graphics().lineTo(200,200);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-
-	d.matrix().identity();
-	d.matrix().translate(100,100);
-
-	return;
 }
 
 
@@ -809,21 +916,49 @@ App3DR.prototype._projectBALoaded = function(object, data){
 	var points = object["points"];
 	
 	var cameraLookup = {};
+	var cameraLookupIndex = {};
 	for(var i=0; i<cameras.length; ++i){
 		var c = cameras[i];
 		var id = c["id"];
 		cameraLookup[id] = c; // TODO: this should be id
+		cameraLookupIndex[id] = i;
 	}
 
 var min3D = null;
 var max3D = new V3D();
 	var points3D = [];
+	var points2D = Code.newArrayArrays(views.length);
+	console.log(views);
+
+	var viewsLookupIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var v = views[i];
+		var id = v["id"];
+		viewsLookupIndex[id] = c; // TODO: this should be id
+		console.log(id+" = "+i)
+		viewsLookupIndex[id] = i;
+	}
+
+
 	for(var i=0; i<points.length; ++i){
 		var v = points[i];
 		var point3D = new V3D(v["x"],v["y"],v["z"]);
 		if(!min3D){
 			min3D = new V3D(point3D.x,point3D.y,point3D.z);
 			max3D = new V3D(point3D.x,point3D.y,point3D.z);
+		}
+		var viewList = v["views"];
+		if(viewList){
+			for(var j=0; j<viewList.length; ++j){
+				var v = viewList[j];
+				var index = v["view"];
+				index = viewsLookupIndex[index];
+				var p = {"x":v["x"], "y":v["y"], "3D":point3D}; // new V2D(v["x"],v["y"]);
+				// var v = views[index];
+				// console.log(v)
+				// throw "???"
+				points2D[index].push(p);
+			}
 		}
 		V3D.min(min3D,min3D,point3D);
 		V3D.max(max3D,max3D,point3D);
@@ -859,9 +994,10 @@ var projectViews = manager.views();
 
 	var app = this._activeApp;
 	app._originalPoints = points;
-console.log("this._originalPoints")
-console.log(app._originalPoints)
-	app.setPoints(points3D);
+console.log("this._originalPoints");
+console.log(app._originalPoints);
+console.log(points2D);
+	app.setPoints(points3D, points2D);
 
 	app.setViews(views3D);
 
@@ -2871,14 +3007,17 @@ App3DR.App.Model3D.prototype._bindAfterTexturesLoaded = function(){
 //Code.addChild(Code.getBody(), image);
 		if(obj){
 			var texture = obj["texture"];
+			var original = obj["original"];
 //console.log(texture);
 console.log(texture.complete+" ? ");
 console.log(texture.width,texture.height);
 			var horz = obj["width"];
 			var vert = obj["height"];
 			var bind = this._canvas3D.bindTextureImageRGBA(texture);
+			obj["bind"] = bind;
 			this._textures.push(bind);
 
+		
 //console.log(K)
 			var wid = image.width;
 			var hei = image.height;
@@ -2912,6 +3051,40 @@ camWid = 0.20;
 			var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
 			var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
 			
+			console.log("SRZ: "+horz+" x "+vert);
+		//if(i==0){
+		if(false){ // none
+		//if(true){ // overlapping
+			console.log("CREATE TEXTURES HERE");
+			var triangleInfo = this._triangulateSurface(i);
+			//console.log(triangleInfo);
+			var triangles = triangleInfo["triangles"];
+			for(var t=0; t<triangles.length; ++t){
+				var tri = triangles[t];
+				var p2Ds = tri["2D"];
+				var p3Ds = tri["3D"];
+				for(var k=0; k<3; ++k){
+					var x = p2Ds[k].x;
+					var y = p2Ds[k].y;
+					x = x / original.width;
+					y = y / original.height;
+					x = x * horz;
+					
+					// y flipped
+					// y = y * (1.0 - vert);
+					// y = 1 - y;
+
+					// single line
+					y = 1 + y*vert - y;
+
+					uvList.push(x,y);
+					vertList.push(p3Ds[k].x,p3Ds[k].y,p3Ds[k].z);
+				}
+			}
+			console.log(uvList);
+			console.log(vertList);
+		}
+
 			this._renderTextureUVList[nextIndex] = uvList;
 			this._renderTexturePointList[nextIndex] = vertList;
 			++nextIndex;
@@ -2928,6 +3101,9 @@ camWid = 0.20;
 			}
 		}
 	}
+
+
+	
 
 	// set textures:
 	//console.log(this._textures)
@@ -2949,7 +3125,7 @@ camWid = 0.20;
 	this.setLines(lines);
 	
 	// reset points with colors now avail:
-	this.setPoints(this._points3D, this._originalPoints);
+	this.setPoints(this._points3D, this._points2D, this._originalPoints);
 
 }
 
@@ -2971,6 +3147,7 @@ App3DR.App.Model3D.prototype.setViews = function(input){
 			var obj = this._stage.textureBase2FromImage(image, function(e){
 				self._loadedViewTexture();
 			});
+			obj["original"] = image;
 		}else{
 			++this._loadedTextures;
 		}
@@ -2998,7 +3175,7 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	this._programLinePoints = this._stage3D.getBufferFloat32Array(points, 3);
 	this._programLineColors = this._stage3D.getBufferFloat32Array(colors, 4);
 }
-App3DR.App.Model3D.prototype.setPoints = function(input, hasImages){
+App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 	console.log("setPoints");
 
 	//console.log(this._viewImages);
@@ -3015,36 +3192,42 @@ App3DR.App.Model3D.prototype.setPoints = function(input, hasImages){
 	}
 
 	// CREATE POINTS:
-	this._points3D = input;
+	this._points3D = input3D;
+	this._points2D = input2D;
 	var points = [];
 	var colors = [];
-	for(var i=0; i<input.length; ++i){
+	for(var i=0; i<input3D.length; ++i){
 		//var v = new V3D( Math.random()*10 - 5.0, Math.random()*10 -5.0, Math.random()*10 -5.0 );
-		var v = input[i];
+		var v = input3D[i];
 //		console.log(v+"")
 		points.push(v.x,v.y,v.z);
 		if(hasImages){
 			// get color from images
 			var vList = hasImages[i]["views"];
-			//console.log(vList)
-			var item = vList[0]; // just grab 1
-			var vIndex = item["view"];
-			var view = viewTable[vIndex];
-			var image = view["matrix"];
-			var pnt = new V2D(item["x"],item["y"]);
-			var wid = image.width();
-			var hei = image.height();
-			pnt.scale(wid, hei);
-			var x = Math.min(Math.max(Math.round(pnt.x),0),wid-1);
-			var y = Math.min(Math.max(Math.round(pnt.y),0),hei-1);
-			var index = y*wid + x;
-			var red = image.red()[index];
-			var grn = image.grn()[index];
-			var blu = image.blu()[index];
-			colors.push(red,grn,blu,1.0);
+			//if(vList){
+				//console.log(vList)
+				var item = vList[0]; // just grab 1
+				var vIndex = item["view"];
+				var view = viewTable[vIndex];
+				var image = view["matrix"];
+				var pnt = new V2D(item["x"],item["y"]);
+				var wid = image.width();
+				var hei = image.height();
+				pnt.scale(wid, hei);
+				var x = Math.min(Math.max(Math.round(pnt.x),0),wid-1);
+				var y = Math.min(Math.max(Math.round(pnt.y),0),hei-1);
+				var index = y*wid + x;
+				var red = image.red()[index];
+				var grn = image.grn()[index];
+				var blu = image.blu()[index];
+				colors.push(red,grn,blu,1.0);
+			//}
 		}else{
 			colors.push(0.5,0.5,0.5,0.5);
 		}
+		// if(i>10){
+		// 	break;
+		// }
 	}
 	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
@@ -3052,6 +3235,152 @@ App3DR.App.Model3D.prototype.setPoints = function(input, hasImages){
 	this._pointPointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._pointColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 
+
+}
+
+App3DR.App.Model3D.prototype._triangulateSurface = function(surfaceUse){
+	var views = this._views;
+	if(views) {
+		console.log("TRIANGULATE SURFACE");
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			var index = view["id"];
+			//viewTable[index] = view;
+		}
+		// 
+		// var surfaceUse = 0;
+		var view = views[surfaceUse];
+		var points2D = this._points2D[surfaceUse];
+		var points3D = this._points3D;
+		console.log(points2D);
+
+		var images = this._viewImages;
+		var image = images[surfaceUse];
+		var original = image["original"];
+		var texture = image["texture"];
+		var bind = image["bind"];
+		var width = original.width;
+		var height = original.height;
+		console.log("scale to: "+width+"x"+height);
+
+		// create:
+		var triangulator = new Triangulator();
+		for(i=0; i<points2D.length; ++i){
+			var point2D = points2D[i];
+			var point3D = point2D["3D"];
+			var p = new V2D(point2D["x"],point2D["y"]);
+			//p.scale(width);
+			p.scale(width,height);
+			triangulator.addPoint(p,{"data":point2D, "2D":p, "3D":point3D});
+			// if(i>=1000){
+			// 	break;
+			// }
+		}
+
+		var tris = triangulator.triangles();
+		var datas = triangulator.datas();
+		var points = triangulator.points();
+		console.log(tris);
+		console.log(datas);
+		console.log(points);
+		var output = [];
+		for(var i=0; i<tris.length; ++i){
+			var t = tris[i];
+			var pA = datas[t[0]];
+			var pB = datas[t[1]];
+			var pC = datas[t[2]];
+			output.push({"2D":[pA["2D"],pB["2D"],pC["2D"]], "3D":[pA["3D"],pB["3D"],pC["3D"]]});
+		}
+		return {"triangles":output, "texture":bind};
+	}
+	return null;
+	/*
+	// create textures
+	var pointsA = this._cameraPointsA;
+	var pointsB = this._cameraPointsB;
+	var points3D = this._cameraPoints3D;
+
+	// create delauny triangulation from one of the images
+	var triangulator = new Triangulator();
+	for(i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+
+		var pointB = pointsB[i];
+
+		var point3 = points3D[i];
+		var pointUse = pointB;
+		triangulator.addPoint(pointUse,{"A":pointA,"B":pointB,"3":point3});
+	}
+	var tris = triangulator.triangles();
+	var datas = triangulator.datas();
+	var points = triangulator.points();
+	console.log(tris);
+	console.log(datas);
+	// 
+	var triA, triB, tri3D;
+	var renderTris = [];
+	var mappings = [];
+	var textureMap = new TextureMap();
+	for(i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		var a = tri[0];
+		var b = tri[1];
+		var c = tri[2];
+		// a = points[a];
+		// b = points[b];
+		// c = points[c];
+		var aA = datas[a]["A"];
+		var aB = datas[b]["A"];
+		var aC = datas[c]["A"];
+		var bA = datas[a]["B"];
+		var bB = datas[b]["B"];
+		var bC = datas[c]["B"];
+		var cA = datas[a]["3"];
+		var cB = datas[b]["3"];
+		var cC = datas[c]["3"];
+//		console.log(aA+" ? "+bA);
+		// 
+		triA = new Tri2D(aA,aB,aC);
+		triB = new Tri2D(bA,bB,bC);
+		tri3D = new Tri3D(cA,cB,cC);
+		var mapping = textureMap.addTriangle(tri3D, [triA,triB], [imageMatrixA,imageMatrixB]);
+		//var mapping = textureMap.addTriangle(tri3D, [triA], [imageMatrixA]);
+		//var mapping = textureMap.addTriangle(tri3D, [triB], [imageMatrixB]);
+		mappings.push(mapping);
+//if(i>100){
+//if(i>1000){ // start to slow
+//if(i>2000){
+//if(i>3000){
+if(i>5000){ // arbitrarily large
+	break;
+}
+	}
+	console.log(mappings.length);
+	
+	textureMap.pack();
+	console.log(" packed ");
+
+	for(i=0; i<mappings.length; ++i){
+		var mapping = mappings[i];
+		var textureMatrix = mapping.image();
+		var triOrigin = mapping.triImage();
+		var tri3D = mapping.tri3D();
+		var img = mapping.imageDOM();
+		//console.log(triOrigin)
+		//var img = GLOBALSTAGE.getFloatRGBAsImage(textureMatrix.red(),textureMatrix.grn(),textureMatrix.blu(), textureMatrix.width(),textureMatrix.height());
+		//Code.addChild(Code.getBody(), img);
+		var renderTri = null;//new Tri2D( new V2D(100,100), new V2D(150,120), new V2D(100,60) );
+		var tri = new DOTri(img, renderTri, triOrigin);
+		renderTris.push([tri,tri3D]);
+	}
+console.log("mappings "+mappings.length);
+	this._renderTris = renderTris;
+
+
+
+
+	????
+	*/
 }
 
 App3DR.App.Model3D.prototype.onMouseDownFxn3D = function(e){
@@ -5782,7 +6111,7 @@ GLOBALSTAGE.addChild(d);
 } // if false
 
 // DON'T RUN
-//return; // don't run
+return; // don't run
 
 
 
