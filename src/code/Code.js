@@ -1439,6 +1439,16 @@ Code.clipArray = function(array, min,max){
 	}
 	return array;
 }
+// Code.arrayToZeroOne = function(a){
+// 	var i, len = a.length;
+// 	for(i=0;i<len;++i){
+// 		if(a[i]!==0.0){
+// 			return true;
+// 		}
+// 	}
+// 	return false;
+// }
+// ImageMat.normalFloat01
 Code.nonZero = function(a){
 	var i, len = a.length;
 	for(i=0;i<len;++i){

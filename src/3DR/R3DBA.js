@@ -429,6 +429,10 @@ R3D.BA.View.prototype.image = function(image){
 }
 R3D.BA.View.prototype.corners = function(corners){
 	if(corners!==undefined){
+		// NORMALIZE TO 0-1
+		corners = Code.copyArray(corners);
+		ImageMat.pow(corners,0.25);
+		ImageMat.normalFloat01(corners);
 		this._corners = corners;
 	}
 	return this._corners;
@@ -1677,12 +1681,12 @@ for(var i=0; i<views.length; ++i){
 	//var maxIterations = 3;
 	//var maxIterations = 4;
 	//var maxIterations = 5;
-	var maxIterations = 10;
+	//var maxIterations = 10;
 	//var maxIterations = 25; // positions better
-	//var maxIterations = 50; // some correct points start to show
-	//var maxIterations = 100; // cameras are in rough correct locations
+	//var maxIterations = 50; // R => ~
+	var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
 	//var maxIterations = 200;
-	//var maxIterations = 500;
+	//var maxIterations = 500; // R errors SHOULD BE 1~2
 	for(var i=0; i<maxIterations; ++i){
 		var isLastIteration = i == maxIterations-1;
 		var isDone = this._iteration(i, isLastIteration);
@@ -1763,7 +1767,7 @@ if(!exists){
 	//this.projectKnownP3DToUnknownViews();
 
 	// P3D probing
-	this.probeNeighborsP3DToUnknownViews();
+//	this.probeNeighborsP3DToUnknownViews();
 
  	// blind search:
  	// ... TBD
@@ -1824,13 +1828,17 @@ R3D.BA.World.prototype.appendNeighborMatchesAround = function(viewA, pointA, vie
 }
 R3D.BA.World.prototype.appendNeighborMatchesSingle = function(viewA, pointA, viewB, pointB){ 
 	var found = true;
-	var loopCount = 15;
+	var loopCount = 30;
 	var previousPoint = null;
 	while(found){
 		found = false;
 		--loopCount;
 		if(loopCount==0){
 			console.log("too much - break");
+			console.log(viewA);
+			console.log(viewB);
+			console.log(pointA);
+			console.log(pointB);
 			throw "too much";
 		}
 		var bestMatchA = this.bestNextMatchForPoint(viewA,pointA, viewB);
@@ -2353,10 +2361,40 @@ R3D.BA.setRankForMatch = function(match, checkNull){
 	}
 	match.rank(rank);
 }
+R3D.BA.World.prototype.checkRemovePoorMatch = function(match, maxM, maxF, maxR){
+	var matchP = match.rank();
+	var matchM = match.score();
+	var matchF = match.errorF();
+	var matchR = match.errorR();
+	if(matchM>maxM || matchF>maxF || matchR>maxR){
+		var point3D = match.point3D();
+		if(point3D.toMatchArray().length==1){ // a point3D has alwasys 2 + matches
+			point3D.disconnect(this);
+		}else{
+			transform.removeMatch(match);
+			point3D.removeMatch(match);
+			match.pointA().removeMatch(match);
+			match.pointB().removeMatch(match);
+			match.kill();
+		}
+		//this.checkP3DMadness();
+		return true;
+	}
+	return false;
+}
+
 R3D.BA.World.prototype.removePoorMatches = function(sigma){
+// TODO: 
+// - REMOVE MATCHES IN FINAL GROUP
+// - remember lost views/points
+// - REMOVE MATCHES IN PUTATIVE GROUP
+// - re-check add in dropped locations
+
 	// remove poor matches
 	var transforms = this.toTransformArray();
 	var removeCount = 0;
+	var putativeCount = 0;
+	var droppedList = [];
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var transformMMean = transform.mMean();
@@ -2366,18 +2404,22 @@ R3D.BA.World.prototype.removePoorMatches = function(sigma){
 		var transformRMean = transform.rMean();
 		var transformRSigma = transform.rSigma();
 		var matches = transform.matches();
+			matches = Code.copyArray(matches); // stays same size
+
 		var maxM = transformMMean + 4.0 * transformMSigma; // 4
-		var maxF = transformFMean + 4.0 * transformFSigma; // 2
+		var maxF = transformFMean + 2.0 * transformFSigma; // 2
 		var maxR = transformRMean + 4.0 * transformRSigma; // 2
 		//var maxR = 1E99;
 		//var maxR = transformRMean + 0.9 * transformRSigma;
 		//console.log("MATCHES BEFORE: "+matches.length);
 		//if(matches.length<100){
+
 		if(matches.length<50){
 			continue;
 		}
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
+			/*
 			var matchP = match.rank();
 			var matchM = match.score();
 			var matchF = match.errorF();
@@ -2401,28 +2443,53 @@ R3D.BA.World.prototype.removePoorMatches = function(sigma){
 //console.log(point3D.toMatchArray().length+" | "+point3D.toPointArray().length+" < AFTER");
 //this.checkP3DMadness();
 				}
-				var afterLength = matches.length;
-				if(beforeLength==afterLength){
-						console.log("matches: "+matches.length);
-						console.log(matches);
-						console.log(match);
-						console.log( Code.elementExists(matches,match) );
-						console.log( Code.elementExists(transform.matches(),match) );
-						console.log("matches: "+matches.length);
-						console.log(match.point3D());
-						var pMatches = point3D.toMatchArray();
-						console.log(pMatches);
-						console.log(pMatches[0]==match);
-					throw "match wasn't removed";
+				*/
+				var entry = {"viewA":match.viewA(), "pointA":match.pointA().point(), "viewB":match.viewB(), "pointB":match.pointB().point()}; // pre-empt create in case removed
+				var removed = this.checkRemovePoorMatch(match, maxM, maxF, maxR);
+				if(removed){
+					removeCount += 1;
+					droppedList.push(entry);
 				}
-				// TODO: WHEN POINT IS REMOVED: NEIGHBORHOOD SHOULD BE CHECK TO BE ADDED BACK TO QUEUE
-				// WOULD THIS POSSIBLY INTRODUCE UNWANTERD LOOPING BEHAVIOR ?
-				--j; // TODO ADD THIS BACK ?
-			}
+				// var afterLength = matches.length;
+				// if(beforeLength==afterLength){
+				// 		console.log("matches: "+matches.length);
+				// 		console.log(matches);
+				// 		console.log(match);
+				// 		console.log( Code.elementExists(matches,match) );
+				// 		console.log( Code.elementExists(transform.matches(),match) );
+				// 		console.log("matches: "+matches.length);
+				// 		console.log(match.point3D());
+				// 		var pMatches = point3D.toMatchArray();
+				// 		console.log(pMatches);
+				// 		console.log(pMatches[0]==match);
+				// 	throw "match wasn't removed";
+				// }
+				// // TODO: WHEN POINT IS REMOVED: NEIGHBORHOOD SHOULD BE CHECK TO BE ADDED BACK TO QUEUE
+				// // WOULD THIS POSSIBLY INTRODUCE UNWANTERD LOOPING BEHAVIOR ?
+				// --j; // TODO ADD THIS BACK ?
+			// }
 		}
-		//console.log("MATCHES AFTER: "+matches.length);
+
+		// remove putative
+		
+		matches = transform.matchQueueArray();
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var removed = this.checkRemovePoorMatch(match, maxM, maxF, maxR);
+			putativeCount += removed ? 1 : 0;
+		}
+		
+		// check that all remaining non-putative matches has neighbors defined
+		for(var j=0; j<droppedList.length; ++j){
+			var entry = droppedList[i];
+			var viewA = entry["viewA"];
+			var pointA = entry["pointA"];
+			var viewB = entry["viewB"];
+			var pointB = entry["pointB"];
+			this.appendNeighborMatchesAround(viewA, pointA, viewB, pointB);
+		}
 	}
-	console.log("MATCHES REMOVED: "+removeCount);
+	console.log("MATCHES REMOVED: "+removeCount+"  |  "+putativeCount);
 	// TODO: remove putative matches too ?
 }
 R3D.BA.World.prototype.removePoorP3D = function(sigma){
@@ -2576,8 +2643,8 @@ R3D.BA.World.prototype.generateStatsForExistingTransforms = function(isLastItera
 			transform.mMean(info["mean"]);
 			transform.mSigma(info["sigma"]);
 		}
-//console.log(" T "+i+" M : "+transform.mMean()+" +/- "+transform.mSigma());
-//console.log(" T "+i+" F : "+transform.fMean()+" +/- "+transform.fSigma());
+//console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  M : "+transform.mMean()+" +/- "+transform.mSigma());
+console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  F : "+transform.fMean()+" +/- "+transform.fSigma());
 console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  R : "+transform.rMean()+" +/- "+transform.rSigma());
 	}
 	
@@ -4068,6 +4135,7 @@ R3D.BA.World.prototype.cameraTriples = function(){
 }
 
 R3D.BA.World.prototype.absoluteCameras = function(){
+
 	// find discrete groupings
 	var views = this.toViewArray();
 	var graph = new Graph();
@@ -4148,22 +4216,6 @@ R3D.BA.World.prototype.absoluteCameras = function(){
 					//t = trans.R(next,prev);
 					//t = R3D.inverseCameraMatrix(t);
 
-
-					/*
-					// // // WAS
-					if(trans.viewA()==prev){
-						console.log("was A");
-						t = trans.R(prev,next);
-					}else if(trans.viewB()==prev){
-						console.log("was B");
-						t = trans.R(next,prev);
-					}
-					*/
-
-					// EXAMPLE:
-					// var camAtoB = Matrix.mult(camB,camInvA); // YES
-
-
 					if(t){
 						//mat = Matrix.mult(mat,t);
 						mat = Matrix.mult(t,mat); // ?
@@ -4186,6 +4238,26 @@ R3D.BA.World.prototype.absoluteCameras = function(){
 
 	}
 	graph.kill();
+
+/*
+	// TODO: REMOVE:
+	// set positions manually:
+	var views = this.toViewArray();
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		if(i==0){
+			view.absoluteTransform(new Matrix(4,4).identity());
+		}else if(i==1){
+			var transform = this.transformFromViews(views[0],views[1]);
+			view.absoluteTransform( transform.R(views[1],views[0]) );
+			//view.absoluteTransform( transform.R(views[0],views[1]) );
+		}else if(i==2){
+			var transform = this.transformFromViews(views[0],views[2]);
+			//view.absoluteTransform( transform.R(views[0],views[2]) );
+			view.absoluteTransform( transform.R(views[2],views[0]) );
+		}
+	}
+*/
 	// now have absolute positions from least-error-propagated origin view
 	// for(var i=0; i<views.length; ++i){
 	// 	var view = views[i];

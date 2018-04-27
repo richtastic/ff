@@ -1258,31 +1258,43 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 			return null;
 		}
 	}
-
+	
 	var cornerScore = 1.0;
+	//var corn = 1.0;
+	var cornerScoreMinimum = 0.01;
 	if(cornerA && cornerB){
 		var cornerScoreA = cornerA[ Math.floor(pointA.y)*imageA.width() + Math.floor(pointA.x)];
 		var cornerScoreB = cornerB[ Math.floor(pointB.y)*imageB.width() + Math.floor(pointB.x)];
-		cornerScore = (cornerScoreA*cornerScoreB)/(cornerScoreA+cornerScoreB);
+		if(cornerScoreA<cornerScoreMinimum || cornerScoreB<cornerScoreMinimum){
+			return null;
+		}
+		//cornerScore = (cornerScoreA*cornerScoreB)/(cornerScoreA+cornerScoreB);
+		cornerScore = cornerScoreA * cornerScoreB;
+		// 
+		//corn = Math.pow(1.0/cornerScore,0.1);
+		//corn = Math.pow(1.0/cornerScore,0.25);
+		//console.log("cornerScore:  "+corn+" | "+cornerScore+" = "+cornerScoreA+" & "+cornerScoreB);
 	}
-		
+	
 	// penalties
 	var scor = Math.pow(1.0+score,1.0);
 	var uniq = Math.pow(uniqueness,0.50);
+	//var uniq = Math.pow(uniqueness,1.0);
 	//var uniq = Math.pow(uniqueness,0.25); // 0.5
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
 	var vari = Math.pow(1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
 	var rang = Math.pow(1.0/worstRangeScore, 0.1);
-	var corn = Math.pow(1.0/cornerScore,0.01);
+	var corn = Math.pow(1.0/cornerScore,0.1);
 	//console.log(corn);
 	// actually use
 	//var rank = 1.0;
 	var rank = score;
 //	rank = rank * lind; // moves it to 0 when far ?
 	rank = rank * uniq;
-	//rank = rank * vari;
-	//rank = rank * rang;
+//rank = rank * corn;
+//rank = rank * vari;
+//rank = rank * rang;
 	//rank = rank * corn;
 	return {"rank":rank, "uniqneness":uniqueness};
 }
