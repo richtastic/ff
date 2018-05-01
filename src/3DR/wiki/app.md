@@ -178,84 +178,93 @@ project typical numbers:
 
 
 
-
-
-
-
-
-
-
-
-
 APP TODO:
 
-
-
-x synthetic check:
-	create 3d points
-	create matrix
-	projection check:
-	R3D.projectPoint3DToCamera2DInverse
-
-
-1) see what arrangement is by choosing view 0 to be identity, view 1 to be transform 0-1, view 2 to be transform 0-2
-	-> STILL BAD @ 50 iterations
-2) see what 1-3 & 2-3 look like on own
-	1 & 3 :
-		100:
-			F: 7~8
-			R: 13~16
-		200:
-			F: 10~11
-			R: 9~10
-		NO PROBING:
-			100: F: ~8, R: 13~16
-		F drop on 2 sigma:
-			100: F: ~3.5, R: 30~35
-		RANSACING + F=2sig
-			50: F: 2~3, R: ~55
-			100: F: 3~4, R: 34~36
-	2 & 3 :
-3) 
+- preprocessing step to convert images into warped images from camera distorition
 
 
 
 
 
--+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 24
-R3DBA.js:2584  T 0 1->0  F : 2.210148390389859 +/- 2.1746635054104746
-R3DBA.js:2585  T 0 1->0  R : 13.07510030211738 +/- 3.2407553220115783
-R3DBA.js:1726  0 1->0 QUEUE SIZE: 309   MATCHES SIZE: 178
-R3DBA.js:316 NON-PUTATIVE POINT COUNTS: 0,0,194
-R3DBA.js:2584  T 0 1->0  F : 2.64892970043634 +/- 2.6395323875313976
-R3DBA.js:2585  T 0 1->0  R : 6.165705429360335 +/- 6.145773657297603
+- covariance of pair of images (via gauge scale)
+	- tr(C(x,y,z)) = edge weight = sum of eigenvalues
+	- DIRECTIONAL weights
+
+- DENSE/pair-P method
+- BA method
+
+
+
+- R3D.BA pick best dense points to do BA
+	- kNN error dropping
+
+- BA for multiple cameras / points
+	- new file format?
+
+
+
+steps:
+- initial feature matches
+- initial high density matching
+	-> best F/R points
+- bundle-adjustment to combine multiple views
+- restricted high density matching
+
+
+
+- ...
+
+
+- HOW TO COMBINE: / WORK WITH
+	- multi-scaled dense matching
+		- start with lower-res image
+		- restrict higher-res searching 
+	- relative extrinsic matrix determination
+		- use most well placed dense matches [highest uniqueness & lowest F / R error]
+		- determine top N points between pair
+		- BA points+cameras => final
+		- contract graph edge
+		- ... repeat until all edges contracted
+
+
+
+
+- how does lower-res image handle
+
+- hierarchtical neighbor search structure
+
+- low range dropping ?
+
+
+- kNN worst score dropping
+	~16
+- gaussian smoothing ?
+
+- need to bring error down:
+	- lower threshold for F/M/R errors
+	- lower SAD threshold
+	- drop worst F/M/R at end
+
+- do dropping at lower frequency: 20 -> 100 -> 200 ?
+
+- looping behavior prevents new areas from being processed
+
+- would image rectifying make it better?
+
+
+- a way to exchange DROPPING points to not even saerching the points to begin with?
 
 
 
 
 
- 0 1->0 QUEUE SIZE: 341   MATCHES SIZE: 233
-R3DBA.js:316 NON-PUTATIVE POINT COUNTS: 0,0,247
-R3DBA.js:2584  T 0 1->0  F : 2.490013667059713 +/- 2.481645803763166
-R3DBA.js:2585  T 0 1->0  R : 10.287501207270866 +/- 10.023743577063383
 
 
 
-NON-PUTATIVE POINT COUNTS: 0,0,237
-R3DBA.js:2584  T 0 1->0  F : 3.6335784323672358 +/- 3.616468060677977
-R3DBA.js:2585  T 0 1->0  R : 9.361680165375533 +/- 9.337310382851845
-
-
-
-
-
----- HAS A LOT OF BAD SEED POINTS .. 50% + are wrong
-	- INITIAL F IS PROBLY PRETTY BAD
-	- 
-
-
-
--> draw matches on opposite views DEBUG
+- DENSE MATCHING:
+	- all low separate distance for neighbor SEARCHING vs neighbor 
+	- larger patch size means search window would need to be different than just radial / angular saerch
+		- masking of areas around found points / vs / unsearched area COMs
 
 
 - on removing a final match -> research the area
@@ -266,6 +275,24 @@ R3DBA.js:2585  T 0 1->0  R : 9.361680165375533 +/- 9.337310382851845
 	- else create a new one & corresponding match
 	-> search-add-at area
 - might this cause looping-ish behavior ?
+
+
+
+
+REVISIT: BAD ESHAISTIVE MATCHING
+R3D.bestPairMatchExhaustivePoint
+R3D.searchNeedleHaystackImageFlatSADBin
+R3D.searchNeedleHaystackImageFlat
+
+=> FOR AREAS -> SIFT IS BETTER
+=> FOR LOCAL -> SAD IS BETTER?
+
+
+
+
+- 
+
+
 
 
 

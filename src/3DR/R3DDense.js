@@ -944,7 +944,8 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 R3D.Dense.COUNTA = 0;
 R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg, neighborhoodSize){
 	// constants
-	var maximumBestScore = 0.02; // 0.01;
+	//var maximumBestScore = 0.02; // 0.01; // SAD SIFT
+	var maximumBestScore = 0.25; // SAD --- 0.5 prev, 0.25 ok
 	var compareSize = R3D.sadBinOctantEdgeSize();
 	var neighborhoodScale = 1.0;
 	var cellScale = (inputCompareSize*neighborhoodScale/compareSize);
@@ -998,7 +999,6 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 	// 		cellScale = (inputCompareSize*neighborhoodScale/compareSize);
 	// 	}
 	// }
-
 
 
 
@@ -1059,7 +1059,8 @@ if(neighborhoodSize){
 // d.matrix().translate(0 + R3D.Dense.COUNTA * 80, 100 + count*50);
 // GLOBALSTAGE.addChild(d);
 
-			var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
+			//var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
+			var scores = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
@@ -1129,6 +1130,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var minimumVariability = 0.001;
 	//var maximumUniquenessScore = 0.999; // 0.90 - 0.99
 	//var maximumUniquenessScore = 0.99;
+	//var maximumUniquenessScore = 0.90;
 	var maximumUniquenessScore = 0.90;
 	var minimumRangeScore = 0.01;
 	// setup image to/from
@@ -1285,7 +1287,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var vari = Math.pow(1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
 	var rang = Math.pow(1.0/worstRangeScore, 0.1);
-	var corn = Math.pow(1.0/cornerScore,0.1);
+	var corn = Math.pow(1.0/cornerScore,0.25);
 	//console.log(corn);
 	// actually use
 	//var rank = 1.0;

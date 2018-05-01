@@ -1654,7 +1654,7 @@ R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,c
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-R3D.BA.World.prototype.solve = function(){
+R3D.BA.World.prototype.solve = function(completeFxn, completeContext){
 	console.log("SOLVE");
 /*
 // DISPLAY SOURCE IMAGES:
@@ -1675,26 +1675,181 @@ for(var i=0; i<views.length; ++i){
 	GLOBALSTAGE.addChild(d);
 }
 */
+
+	var ticker = new Ticker(1);
+	this._ticker = ticker;
+	ticker.addFunction(Ticker.EVENT_TICK, this._iterationTick, this);
+
+	this._keyboard = new Keyboard();
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this._keyFxn,this);
+	this._keyboard.addListeners();
+	this._matchDisplay = new DO();
+	GLOBALSTAGE.addChild(this._matchDisplay);
+	
+
+
 	//var maxIterations = 0;
 	//var maxIterations = 1;
 	//var maxIterations = 2;
 	//var maxIterations = 3;
 	//var maxIterations = 4;
 	//var maxIterations = 5;
-	//var maxIterations = 10;
+	var maxIterations = 10;
 	//var maxIterations = 25; // positions better
 	//var maxIterations = 50; // R => ~
-	var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
+	//var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
 	//var maxIterations = 200;
 	//var maxIterations = 500; // R errors SHOULD BE 1~2
-	for(var i=0; i<maxIterations; ++i){
-		var isLastIteration = i == maxIterations-1;
+	//var maxIterations = 800;
+	// for(var i=0; i<maxIterations; ++i){
+	// 	var isLastIteration = i == maxIterations-1;
+	// 	var isDone = this._iteration(i, isLastIteration);
+	// 	if(isDone){
+	// 		break;
+	// 	}
+	// }
+	// this._bundleAdjust();
+	this._completeFxn = completeFxn;
+	this._completeContext = completeContext;
+	this._iterationI = 0;
+	this._maxIterations = maxIterations;
+	this._ticker.start();
+
+}
+R3D.BA.World.prototype._iterationTick = function(){
+	this._ticker.stop();
+	if(this._iterationI<this._maxIterations){
+		var i = this._iterationI;
+		var isLastIteration = i == this._maxIterations-1;
 		var isDone = this._iteration(i, isLastIteration);
-		if(isDone){
-			break;
+		if(!isDone){
+			this._iterationI += 1;
+			this._ticker.start(); // recheck
+			return;
 		}
 	}
+	//this._filterBest();
 	this._bundleAdjust();
+	if(this._completeFxn){
+		this._completeFxn.call(this._completeContext);
+	}
+}
+R3D.BA.World.prototype._filterBest = function(){
+	// LOCAL METHOD:
+		// get KNN for each point in view / match ? and drop if outside
+	// GLOBAL METHOD
+	var minimumCount = 400;
+	var transforms = this.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches;
+		var startM = 4.0;
+		var startF = 3.0;
+		var startR = 3.0;
+		for(j=0; j<10; ++j){
+			var m = 0;
+			if(matches>minimumCount){
+				this.removePoorMatches(m,f,r);
+				throw "HERE"
+			}else{
+				break;
+			}
+		}
+	}
+}
+R3D.BA.World.prototype._keyFxn = function(e){
+	// console.log(e);
+	// console.log(this._matchDisplay);
+	if(e.keyCode==Keyboard.KEY_SPACE){ // PLAY/PAUSE
+		if(this._ticker.isRunning()){
+			this._ticker.stop();
+			console.log("STOP");
+		}else{
+			this._ticker.start();
+			console.log("START");
+		}
+	}
+	if(e.keyCode==Keyboard.KEY_LET_S){
+		this._matchDisplay.removeAllChildren();
+		console.log("SHOW");
+		var views = this.toViewArray();
+		var transforms = this.toTransformArray();
+		var viewA = views[0];
+		var viewB = views[1];
+
+			// 	var matrix = new Matrix(3,3).identity();
+			// matrix = Matrix.transform2DRotate(matrix,-rotationAtoB);
+			// matrix = Matrix.transform2DScale(matrix,1.0/scaleAtoB);
+		// var bR = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.red(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		// var bG = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.grn(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		// var bB = ImageMat.extractRectFromFloatImage(pB.x,pB.y,1.0,null,cellSizeA,cellSizeA, imageMatrixB.blu(),imageMatrixB.width(),imageMatrixB.height(), matrix);
+		// img = GLOBALSTAGE.getFloatRGBAsImage(bR,bG,bB, cellSizeA,cellSizeA);
+		// d = new DOImage(img);
+		// d.matrix().translate(0 + pA.x - cellSizeA*0.5, 0 + pA.y - cellSizeA*0.5);
+		// displayStage.addChild(d);
+
+		// show views
+		var imageA = viewA.image();
+		var imageB = viewB.image();
+
+		
+		var img = imageA;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		d.matrix().translate(0,0);
+		d.graphics().alpha(0.1);
+		this._matchDisplay.addChild(d);
+		//
+		var img = imageB;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		d.matrix().translate(imageA.width(),0);
+		d.graphics().alpha(0.1);
+		this._matchDisplay.addChild(d);
+
+		// opposites
+		var transform = this.transformFromViews(viewA,viewB);
+		var matches = transform.matches();
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var pointA = match.pointForView(viewA);
+			var pointB = match.pointForView(viewB);
+			var pA = pointA.point();
+			var pB = pointB.point();
+			var scaleAB = match.scaleForPoint(pointB);
+			var angleAB = match.angleForPoint(pointB);
+
+			var compareSize = 11;
+			var scale = 1.0;
+			
+			// A
+			var matrix = new Matrix(3,3).identity();
+				matrix = Matrix.transform2DRotate(matrix,-angleAB);
+				matrix = Matrix.transform2DScale(matrix,1.0/scaleAB);
+			var img = imageB.extractRectFromFloatImage(pB.x,pB.y,scale,null,compareSize,compareSize, matrix);
+				img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				var d = new DOImage(img);
+				d.matrix().scale(1.0);
+				d.matrix().translate(0 + pA.x - compareSize*0.5, pA.y - compareSize*0.5);
+				this._matchDisplay.addChild(d);
+
+			// B
+			var matrix = new Matrix(3,3).identity();
+				matrix = Matrix.transform2DRotate(matrix,angleAB);
+				matrix = Matrix.transform2DScale(matrix,scaleAB);
+			var img = imageA.extractRectFromFloatImage(pA.x,pA.y,scale,null,compareSize,compareSize, matrix);
+				img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				var d = new DOImage(img);
+				d.matrix().scale(1.0);
+				d.matrix().translate(imageA.width() + pB.x - compareSize*0.5, pB.y - compareSize*0.5);
+				this._matchDisplay.addChild(d);
+		}
+
+	}
+	if(e.keyCode==Keyboard.KEY_LET_D){
+		console.log("CLEAR");
+		this._matchDisplay.removeAllChildren();
+	}
 }
 
 R3D.BA.World.prototype._iteration = function(iterationIndex, isLastIteration){
@@ -2383,12 +2538,15 @@ R3D.BA.World.prototype.checkRemovePoorMatch = function(match, maxM, maxF, maxR){
 	return false;
 }
 
-R3D.BA.World.prototype.removePoorMatches = function(sigma){
+R3D.BA.World.prototype.removePoorMatches = function(sigmaM, sigmaF, sigmaR){
 // TODO: 
 // - REMOVE MATCHES IN FINAL GROUP
 // - remember lost views/points
 // - REMOVE MATCHES IN PUTATIVE GROUP
 // - re-check add in dropped locations
+	sigmaM = sigmaM!==undefined? sigmaM : 5.0;
+	sigmaF = sigmaF!==undefined? sigmaF : 4.0;
+	sigmaR = sigmaR!==undefined? sigmaR : 4.0;
 
 	// remove poor matches
 	var transforms = this.toTransformArray();
@@ -2406,9 +2564,9 @@ R3D.BA.World.prototype.removePoorMatches = function(sigma){
 		var matches = transform.matches();
 			matches = Code.copyArray(matches); // stays same size
 
-		var maxM = transformMMean + 4.0 * transformMSigma; // 4
-		var maxF = transformFMean + 2.0 * transformFSigma; // 2
-		var maxR = transformRMean + 4.0 * transformRSigma; // 2
+		var maxM = transformMMean + sigmaM * transformMSigma; // 4
+		var maxF = transformFMean + sigmaF * transformFSigma; // below 3 bad
+		var maxR = transformRMean + sigmaR * transformRSigma; // 3
 		//var maxR = 1E99;
 		//var maxR = transformRMean + 0.9 * transformRSigma;
 		//console.log("MATCHES BEFORE: "+matches.length);
@@ -2471,15 +2629,16 @@ R3D.BA.World.prototype.removePoorMatches = function(sigma){
 		}
 
 		// remove putative
-		
+		/*
 		matches = transform.matchQueueArray();
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var removed = this.checkRemovePoorMatch(match, maxM, maxF, maxR);
 			putativeCount += removed ? 1 : 0;
 		}
-		
+		*/
 		// check that all remaining non-putative matches has neighbors defined
+		/*
 		for(var j=0; j<droppedList.length; ++j){
 			var entry = droppedList[i];
 			var viewA = entry["viewA"];
@@ -2488,6 +2647,7 @@ R3D.BA.World.prototype.removePoorMatches = function(sigma){
 			var pointB = entry["pointB"];
 			this.appendNeighborMatchesAround(viewA, pointA, viewB, pointB);
 		}
+		*/
 	}
 	console.log("MATCHES REMOVED: "+removeCount+"  |  "+putativeCount);
 	// TODO: remove putative matches too ?
@@ -3950,6 +4110,9 @@ R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
 	var imageB = viewB.image();
 	var sizeCompare = viewA.pixelsCompareP2D();
 	var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare);
+	if(!info){
+		return null;
+	}
 	var pA = info["from"];
 	var pB = info["to"];
 	if(!viewA.isPointInside(pA)){
