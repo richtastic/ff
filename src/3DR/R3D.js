@@ -13896,10 +13896,10 @@ R3D._gdDist = function(args, x, isUpdate){
  		//appliedP2D = R3D.applyDistortionParameters(fromP2D, appliedP2D, K, distortions);
 		appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
 		//appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
- 		var dist = V2D.distance(toP2D,appliedP2D);
+ 		var dist = V2D.distanceSquare(toP2D,appliedP2D);
  		//error += dist*dist;
- 		//error += dist;
- 		error += Math.pow(dist,2);
+ 		error += dist;
+ 		//error += Math.pow(dist,2);
  		//error += Math.pow(dist,1);
  		//error += Math.pow(dist,0.5);
  	}
@@ -14218,32 +14218,76 @@ console.log("scale: "+scale);
 */
 //R3D.imageCorrectDistortion = function(imageSource, K, distortions){
 
+R3D.getInvertedDistortion = function(distortion, K) {
+	// get ~100 points in [0,1],[0,1]
+	var pointsUndistorted = [];
+	var pointsDistorted = [];
+	var minSize = 10;
+	for(var j=0; j<=minSize; ++j){
+		for(var i=0; i<=minSize; ++i){
+			var undistorted = new V2D(i/minSize,j/minSize);
+			var distorted = new V2D();
+			R3D.applyDistortionParameters(distorted, undistorted, K, distortion);
+			pointsUndistorted.push(undistorted);
+			pointsDistorted.push(distorted);
+		}
+	}
+	// get inverse linear approx
+	console.log(pointsUndistorted);
+	console.log(pointsDistorted);
+	var linear = R3D.linearCameraDistortion(pointsDistorted, pointsUndistorted, K);
+	// get ~ 1000 points
+	console.log(linear);
+	// get nonlinear solution
+		linear = null;
+	var nonlinear = R3D.cameraDistortionNonlinear(pointsDistorted, pointsUndistorted, K, linear);
+	console.log(nonlinear);
+	//var inverted = {};
+	var inverted = nonlinear;
 
-R3D.invertImageDistortionPoint = function(undistorted, distorted, K, distortionFwd, isUnit){
-	if(isUnit){
-		undistorted.scale(1.0/sourceWidth,(1.0/sourceHeight)/widthToHeightRatio);
-		//undistorted.scale(1.0/sourceWidth,(1.0/sourceHeight));
+
+	for(var i=0; i<=pointsUndistorted.length; ++i){
+		//R3D.applyDistortionParameters(distorted[i], undistorted[i], K, distortion);
+		var A = pointsUndistorted[i];
+		var B = pointsDistorted[i];
+		// FORWARD:
+		var testB = R3D.applyDistortionParameters(new V2D(), A, K, distortion);
+		var testA = R3D.applyDistortionParameters(new V2D(), B, K, inverted);
+		console.log(V2D.distance(B,testB));
+		console.log(V2D.distance(A,testA));
 	}
-	R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
-	//R3D.applyDistortionParameters(undistorted, distorted, K, distortions);
-	if(isUnit){
-		distorted.scale(sourceWidth,sourceHeight*widthToHeightRatio);
-	}
-	return undistorted;
+
+
+	return {"inverted":inverted, "distortion":distortion};
 }
+
+
+// R3D.invertImageDistortionPoint = function(undistorted, distorted, K, distortionFwd, isUnit){
+// 	if(isUnit){
+// 		undistorted.scale(1.0/sourceWidth,(1.0/sourceHeight)/widthToHeightRatio);
+// 		//undistorted.scale(1.0/sourceWidth,(1.0/sourceHeight));
+// 	}
+// 	R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
+// 	//R3D.applyDistortionParameters(undistorted, distorted, K, distortions);
+// 	if(isUnit){
+// 		distorted.scale(sourceWidth,sourceHeight*widthToHeightRatio);
+// 	}
+// 	return undistorted;
+// }
 R3D.invertImageDistortionPerimeter = function(countX,countY, K, distortionFwd, isUnit){
 	// determine maximum edge points / size
-	var min = null;
-	var max = null;
 	var undistorted = new V2D();
 	var distorted = new V2D();
 	var i, j, pJ, pI;
+	// corner / setup
+	undistorted.set(0, 0);
+	R3D.applyDistortionParameters(distorted, undistorted, K, distortionFwd);
+	var min = distorted.copy();
+	var max = distorted.copy();
 	// top
 	for(i=0; i<=countX; ++i){
 		undistorted.set(i/countX, 0);
 		R3D.applyDistortionParameters(distorted, undistorted, K, distortionFwd);
-		if(!min){ min = distorted.copy(); }
-		if(!max){ max = distorted.copy(); }
 		V2D.min(min,min, distorted);
 		V2D.max(max,max, distorted);
 	}
@@ -14268,36 +14312,57 @@ R3D.invertImageDistortionPerimeter = function(countX,countY, K, distortionFwd, i
 		V2D.min(min,min, distorted);
 		V2D.max(max,max, distorted);
 	}
-		// for(i=0; i<countY; ++i){
-		// 	undistorted.set(i,-j);
-		// 	distorted = R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
-		// 	if(!min){
-		// 		min = distorted.copy();
-		// 	}
-		// 	if(!max){
-		// 		max = distorted.copy();
-		// 	}
-		// 	V2D.min(min,min, distorted);
-		// 	V2D.max(max,max, distorted);
-		// }
 	var cx = K.get(0,2);
 	var cy = K.get(1,2);
 	var cen = new V2D(cx,cy);
 	var size = V2D.sub(max,min);
 	var center = new V2D(cen.x/size.x, cen.y/size.y);
-	console.log(min+" => "+max);
 	return {"min":min, "max":max, "size":size, "center":center};
 }
-R3D.invertImageDistortion = function(source, K, distortionFwd, isUnit, keepOriginalSizeAndCenter){
+R3D.invertImageDistortion = function(source, K, distortionFwd, isUnit, keepOriginalSizeAndCenter){ // isUnit, keepOriginalSizeAndCenter ignored
 	console.log("invertImageDistortion")
-	var distortions = distortionFwd;
+	isUnit = true;
 	var cx = K.get(0,2);
 	var cy = K.get(1,2);
-	var k1 = distortions["k1"];
-	var k2 = distortions["k2"];
-	var k3 = distortions["k3"];
-	var p1 = distortions["p1"];
-	var p2 = distortions["p2"];
+	var sourceWidth = source.width();
+	var sourceHeight = source.height();
+	var widthToHeightRatio = sourceWidth/sourceHeight;
+	var tempA = new V2D();
+	var tempB = new V2D();
+	var mapping = function(to, fr){
+		tempA.set(fr.x,fr.y);
+		if(isUnit){
+			tempA.scale(1.0/sourceWidth,1.0/sourceHeight);///widthToHeightRatio);
+		}
+		R3D.applyDistortionParameters(tempB, tempA, K, distortionFwd);
+		if(isUnit){
+			tempB.scale(sourceWidth,sourceHeight);//*widthToHeightRatio);
+		}
+		to.copy(tempB);
+	}
+	//var samples = 0.1;
+	//var samples = 0.25;
+	// 0.5 + 
+	//var samples = 0.5;
+	var samples = 1.0;
+	var result = Code.imageNonlinearTransform(source, mapping, Math.round(source.width()*samples),Math.round(source.height()*samples));
+	var image = result["image"]
+	var min = result["min"];
+	var max = result["max"];
+	//var cen = result["center"];
+	// min.scale(1.0/sourceWidth,1.0/sourceHeight);
+	// max.scale(1.0/sourceWidth,1.0/sourceHeight);
+	//var center = new V2D((cx*sourceWidth - min.x)/image.width(),(cy*sourceHeight - min.y)/image.height());
+	var center = new V2D((cx*sourceWidth - min.x)/image.width(),(cy*sourceHeight - min.y)/image.height());
+	//var center = cen.copy().scale(1.0/image.width(), 1.0/image.height());
+	//var size = V2D.sub(max,min);
+	console.log("move center x: "+cx+" => "+min.x+","+max.x);
+	console.log("move center y: "+cy+" => "+min.y+","+max.y);
+	// var center = new V2D(cx-min.x,cy-min.y);
+	return {"image":image, "center": center, "min":min, "max":max};
+/*
+	var cx = K.get(0,2);
+	var cy = K.get(1,2);
 	console.log(cx,cy);
 	
 	var sourceWidth = source.width();
@@ -14308,72 +14373,83 @@ R3D.invertImageDistortion = function(source, K, distortionFwd, isUnit, keepOrigi
 	var distorted = new V2D();
 	// determine maximum edge points / size
 	var info = R3D.invertImageDistortionPerimeter(100,100, K, distortionFwd);
-	console.log(info);
-	console.log("min: "+info["min"]);
-	console.log("max: "+info["max"]);
-	console.log("cen: "+info["center"]);
-	console.log("siz: "+info["size"]);
-	/*
-	var min = null;
-	var max = null;
-	for(j=0; j<sourceWidth; ++j){
-		for(i=0; i<sourceHeight; ++i){
-			undistorted.set(i,-j);
-			distorted = R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
-			if(!min){
-				min = distorted.copy();
-			}
-			if(!max){
-				max = distorted.copy();
-			}
-			V2D.min(min,min, distorted);
-			V2D.max(max,max, distorted);
-		}
-	}
-	console.log(min+" => "+max);
-	*/
+	var newMin = info["min"];
+	var newMax = info["max"];
+	var newSize = info["size"];
+	var newCenter = info["center"];
+	console.log("min: "+newMin);
+	console.log("max: "+newMax);
+	console.log("cen: "+newCenter);
+	console.log("siz: "+newSize);
 	//var maxScale = 1.0;
 
-throw "make new size based on perimeter limits"
+//throw "make new size based on perimeter limits"
 
-
-	var destWidth = sourceWidth * maxScale;
-	var destHeight = sourceHeight * maxScale;
-	var offX = (destWidth-sourceWidth)*0.5;
-	var offY = (sourceHeight-sourceHeight)*0.5;
+	
+	var destWidth = Math.ceil(sourceWidth * newSize.x);
+	var destHeight = Math.ceil(sourceHeight * newSize.y);
+	var sizedCenter = newCenter.copy().scale(sourceWidth,sourceHeight);
+	// var cenX = cx*sourceWidth;
+	// var cenY = cy*sourceHeight;
+	// var offX = (destWidth-sourceWidth)*0.5;
+	// var offY = (sourceHeight-sourceHeight)*0.5;
+	var offX = (newMin.x)*sourceWidth;
+	var offY = (newMin.y)*sourceHeight;
+	
 	var destination = new ImageMat(destWidth,destHeight);
-	var min = null;
-	var max = null;
-	var d = new V2D();
+
+// NEED INVERTED DISTORTION
+// .....
+
+	//var d = new V2D();
 isUnit = true;
 var widthToHeightRatio = sourceWidth/sourceHeight;
 console.log(sourceWidth+"x"+sourceHeight);
-console.log(offX+","+offY);
-	for(var j=0; j<destHeight; ++j){
-		for(var i=0; i<destWidth; ++i){
-			//index = j*destWidth + i;
-			undistorted.set(i-offX,j-offY);
+console.log("off: "+offX+","+offY);
+//console.log("cen: "+cenX+","+cenY);
+	// for(var j=0; j<destHeight; ++j){
+	// 	for(var i=0; i<destWidth; ++i){
+	for(var j=0; j<sourceHeight; ++j){
+		for(var i=0; i<sourceWidth; ++i){
+			// FORWARD
+			// undistorted.set(i+offX,j+offY);
+
+			// REVERSE
+			undistorted.set(i,j);
+
 			distorted.set(0,0);
 			if(isUnit){
 				undistorted.scale(1.0/sourceWidth,(1.0/sourceHeight)/widthToHeightRatio);
-				//undistorted.scale(1.0/sourceWidth,(1.0/sourceHeight));
 			}
-			R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
-			//R3D.applyDistortionParameters(undistorted, distorted, K, distortions);
+			// FORWARD
+			// R3D.applyDistortionParameters(distorted, undistorted, K, distortionRev);
+
+			// // REVERSE
+			R3D.applyDistortionParameters(distorted, undistorted, K, distortionFwd);
+
 			if(isUnit){
 				distorted.scale(sourceWidth,sourceHeight*widthToHeightRatio);
 			}
-//			console.log("hum");
-			if(distorted.x>=0 && distorted.x<=sourceWidth-1 && distorted.y>=0 && distorted.y<=sourceHeight-1){
+
+			// FORWARD
+			// if(distorted.x>=0 && distorted.x<=sourceWidth-1 && distorted.y>=0 && distorted.y<=sourceHeight-1){
+			// 	distorted.x = Math.min(Math.max(distorted.x,0),sourceWidth-1);
+			// 	distorted.y = Math.min(Math.max(distorted.y,0),sourceHeight-1);
+			// 	source.getPoint(val, distorted.x,distorted.y);
+			// 	destination.setPoint(i,j, val);
+			// }else{
+			// 	val.set(0,0,0);
+			// 	destination.setPoint(i,j, val);
+			// }
+
+			// REVERSE
+			if(distorted.x>=0 && distorted.x<=destWidth-1 && distorted.y>=0 && distorted.y<=destHeight-1){
+				distorted.x = Math.round(distorted.x-offX);
+				distorted.y = Math.round(distorted.y-offY);
 				distorted.x = Math.min(Math.max(distorted.x,0),sourceWidth-1);
 				distorted.y = Math.min(Math.max(distorted.y,0),sourceHeight-1);
-				source.getPoint(val, distorted.x,distorted.y);
-				d.set(i,j);
-				destination.setPoint(i,j, val);
-				if(!min){ min = d.copy(); }
-				if(!max){ max = d.copy(); }
-				V2D.min(min,min, d);
-				V2D.max(max,max, d);
+				source.getPoint(val, i,j);
+				destination.setPoint(distorted.x,distorted.y, val);
 			}else{
 				val.set(0,0,0);
 				destination.setPoint(i,j, val);
@@ -14382,16 +14458,17 @@ console.log(offX+","+offY);
 		}
 	}
 	console.log("done A");
-	if(!max || !min){
-		return null;
-	}
-	var subWidth = max.x-min.x + 1;
-	var subHeight = max.y-min.y + 1;
-	var startX = min.x;
-	var startY = min.y;
-	destination = destination.subImage(startX,startY,subWidth,subHeight);
-	var center = new V2D(cx+offX-min.x, cy+offY-min.y);
-	return {"image":destination, "center":center};
+	// if(!max || !min){
+	// 	return null;
+	// }
+	// var subWidth = max.x-min.x + 1;
+	// var subHeight = max.y-min.y + 1;
+	// var startX = min.x;
+	// var startY = min.y;
+	// destination = destination.subImage(startX,startY,subWidth,subHeight);
+	// var center = new V2D(cx+offX-min.x, cy+offY-min.y);
+*/
+	return {"image":destination, "center":newCenter};
 }
 R3D.applyDistortionParameters = function(distorted, undistorted, K, distortions){ // undistorted => distorted
 	if(distortions===undefined){

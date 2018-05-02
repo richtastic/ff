@@ -4984,6 +4984,106 @@ Code.bestFitLine2DWeights = function(points, count, weights){ // weighted least 
 	// argmin = Ainv * B
 
 }
+// TODO: BILINEAR VECTOR FIELD ?
+Code.imageNonlinearTransform = function(source, mappingFxn, samplesX, samplesY){ // image warping / distorting / transform -- very time consuming
+	var toPoint = function(a){
+		return a["point"];
+	};
+	var sourceWidth = source.width();
+	var sourceHeight = source.height();
+	var swm1 = sourceWidth - 1;
+	var shm1 = sourceHeight - 1;
+	// add samples to space
+	var pointFr = new V2D();
+	var pointTo = new V2D();
+	var minTo = null;
+	var maxTo = null;
+	var points = [];
+	for(var j=0; j<=samplesY; ++j){
+		var pJ = j/samplesY;
+		for(var i=0; i<=samplesX; ++i){
+			var pI = i/samplesX;
+			pointFr.set(pI*sourceWidth - 0.5, pJ*sourceHeight - 0.5);
+			//pointFr.set(pI*swm1 - 0.0, pJ*shm1 - 0.0);
+			mappingFxn(pointTo, pointFr);
+			var p = {"point":pointTo.copy(), "mapping":pointFr.copy()};
+			points.push(p);
+			if(!minTo){ minTo = pointTo.copy(); }
+			if(!maxTo){ maxTo = pointTo.copy(); }
+			V2D.min(minTo, minTo,pointTo);
+			V2D.max(maxTo, maxTo,pointTo);
+		}
+	}
+	console.log("mini: "+minTo);
+	console.log("maxi: "+maxTo);
+	// create destination image
+	var mini = new V2D(Math.floor(minTo.x), Math.floor(minTo.y));
+	var maxi = new V2D(Math.ceil(maxTo.x), Math.ceil(maxTo.y));
+	var destWidth = maxi.x - mini.x;
+	var destHeight = maxi.y - mini.y;
+	// console.log("     SOURCE SIZE: "+sourceWidth+"x"+sourceHeight);
+	// console.log("DESTINATION SIZE: "+destWidth+"x"+destHeight);
+	var destination = new ImageMat(destWidth,destHeight);
+	var pointSpace = new QuadTree(toPoint, mini, maxi);
+	// console.log(points.length);
+	for(var i=0; i<points.length; ++i){
+		var p = points[i];
+		pointSpace.insertObject(p);
+	}
+	// fill in 
+	var weights = [];
+	var val = new V3D();
+	var org = new V2D();
+	var dir = new V2D();
+	for(var j=0; j<destHeight; ++j){
+		for(var i=0; i<destWidth; ++i){
+			pointTo.set(i,j);
+				//pointTo.add(mini.x,mini.y);
+				pointTo.add(minTo.x,minTo.y);
+			/*
+			// poor  & not much faster
+			var neighbors = pointSpace.kNN(pointTo, 1);
+			var neighbor = neighbors[0];
+			pointFr.copy(neighbor["mapping"]);
+			*/
+			var neighbors = pointSpace.kNN(pointTo, 4);
+			var totalWeight = 0;
+			for(var k=0; k<neighbors.length; ++k){
+				var neighbor = neighbors[k];
+				var b = neighbor["mapping"];
+				//var weight = 1.0/(0.1 + V2D.distance(pointTo,b) );
+				var weight = 1.0/(1.0 + V2D.distance(pointTo,b) );
+				weights[k] = weight;
+				totalWeight += weight;
+			}
+			//pointFr.set(0,0);
+			org.set(0,0);
+			dir.set(0,0);
+			for(var k=0; k<neighbors.length; ++k){
+				var neighbor = neighbors[k];
+				var a = neighbor["point"];
+				var b = neighbor["mapping"];
+				var v = V2D.sub(b,a);
+				var percent = weights[k]/totalWeight;
+				//pointFr.add(percent*b.x,percent*b.y);
+				org.add(percent*a.x,percent*a.y);
+				dir.add(percent*v.x,percent*v.y);
+			}
+			pointFr.set(org.x+dir.x,org.y+dir.y);
+			// if(0<=pointFr.x && pointFr.x<=sourceWidth-1 && 0<=pointFr.y && pointFr.y<=sourceHeight-1){
+				source.getPoint(val, pointFr.x,pointFr.y);
+			// }else{
+			// 	val.set(0,0,0);
+			// }
+			destination.setPoint(i,j, val);
+		}
+	}
+	// TODO: better interpolation
+	// faster averaging?
+	return {"image":destination, "min":mini, "max":maxi};
+}
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------- transform matrices
 Code.separateAffine2D = function(a,b,c,d, tx,ty){
 	var scaleX = Math.sqrt(a*a+b*b);

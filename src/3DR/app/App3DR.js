@@ -6247,13 +6247,44 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 			var i, j, k;
 
 
-//if(false){
-if(true){
-console.log("SHOW UNDISTORTED IMAGE:")
+//var SHOULD_CORRECT_DISTOTION = true;
+var SHOULD_CORRECT_DISTOTION = false;
+
+if(false){
+//if(true){
+console.log("SHOW UNDISTORTED IMAGE:");
+
 // 
 //console.log(cameras[0].distortion());
 
 var distortion = cameras[0].distortion();
+// distortion["k1"] = 0.0;
+// distortion["k2"] = 0.0;
+// distortion["k3"] = 0.0;
+// distortion["p1"] = 0.0;
+// distortion["p2"] = 0.0;
+
+// RADIAL RESULT
+// distortion["k1"] = -0.2;
+// distortion["k2"] = 0.1;
+// distortion["k3"] = -0.1;
+// distortion["p1"] = 0.0;
+// distortion["p2"] = 0.0;
+
+// PINCUSHIN
+// distortion["k1"] = 0.3;
+// distortion["k2"] = 0.2;
+// distortion["k3"] = 0.1;
+// distortion["p1"] = 0.0;
+// distortion["p2"] = 0.0;
+
+// crazy
+// distortion["k1"] = 0.3;
+// distortion["k2"] = -0.2;
+// distortion["k3"] = 0.3;
+// distortion["p1"] = 0.3;
+// distortion["p2"] = -0.2;
+
 // distortion["k1"] = -0.1;
 // distortion["k2"] = 0;
 // distortion["k3"] = 0;
@@ -6271,27 +6302,131 @@ var K = cameras[0].K();
 // distortion["k3"] = 0;
 // distortion["p1"] = 0;
 // distortion["p2"] = 0;
-var distortionFwd = distortion;
-var distortionRev = distortion;
 	//var img = views[0].featuresImage();
 	var img = views[0].bundleAdjustImage();
 	var matrix = R3D.imageMatrixFromImage(img, this._stage);
 var source = matrix;
-console.log(source, K, distortionFwd, distortionRev);
+var distortionFwd = distortion;
+
+
+var randomPoints = [];
+for(var i=0; i<=10; ++i){
+	//var point = new V2D(Math.random()*source.width(),Math.random()*source.height());
+	for(var j=0; j<=10; ++j){
+		//var point = new V2D(Math.random()*source.width(),Math.random()*source.height());
+		var point = new V2D((i/10)*source.width(),(j/10)*source.height());
+		randomPoints.push(point);
+	}
+}
+
+//var distortionRev = R3D.getInvertedDistortion(distortion, K);
+//var distortionRev = distortionFwd;
+var distortionRev = null;
 var what = R3D.invertImageDistortion(source, K, distortionFwd, true);
-console.log("what");
 console.log(what);
 var center = what["center"];
+var mini = what["min"];
+var deltaCenter = mini.copy().scale(-1);
 console.log("center: "+center);
 console.log("K: "+K);
+var cx = K.get(0,2);
+var cy = K.get(1,2);
+
+
+var image = source;
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+var d = new DOImage(img);
+d.matrix().scale(1.0);
+d.matrix().translate(10, 10);
+d.graphics().alpha(0.5);
+GLOBALSTAGE.addChild(d);
+	d = new DO();
+	d.graphics().setLine(1.0,0xFFFF0000);
+
+	d.graphics().beginPath();
+	d.graphics().moveTo(-10,0);
+	d.graphics().lineTo(10,0);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	d.graphics().beginPath();
+	d.graphics().moveTo(0,-10);
+	d.graphics().lineTo(0,10);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	d.matrix().translate(10+cx*image.width(), 10+cy*image.height());
+	GLOBALSTAGE.addChild(d);
+
+	for(var i=0; i<randomPoints.length; ++i){
+		var point = randomPoints[i];
+		d = new DO();
+		d.graphics().setLine(1.0,0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0, 3);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(10+point.x, 10+point.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+
+
 
 var image = what["image"];
 var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 var d = new DOImage(img);
 d.matrix().scale(1.0);
-d.matrix().translate(10, 10);
+d.matrix().translate(610, 10);
+d.graphics().alpha(0.5);
 GLOBALSTAGE.addChild(d);
 
+var cx = center.x;
+var cy = center.y;
+
+	d = new DO();
+	d.graphics().setLine(1.0,0xFFFF0000);
+
+	d.graphics().beginPath();
+	d.graphics().moveTo(-10,0);
+	d.graphics().lineTo(10,0);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	d.graphics().beginPath();
+	d.graphics().moveTo(0,-10);
+	d.graphics().lineTo(0,10);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	d.matrix().translate(610+cx*image.width(), 10+cy*image.height());
+	GLOBALSTAGE.addChild(d);
+
+	var sourceWidth = source.width();
+	var sourceHeight = source.height();
+	for(var i=0; i<randomPoints.length; ++i){
+		var point = randomPoints[i];
+		var p1 = point.copy();
+		//
+		p1.scale(1.0/sourceWidth,1.0/sourceHeight);
+		var p2 = R3D.applyDistortionParameters(new V2D(), p1, K, distortionFwd);
+		p2.scale(sourceWidth,sourceHeight);
+		p2.add(deltaCenter);
+		//
+		point = p2;
+		d = new DO();
+		d.graphics().setLine(1.0,0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0, 3);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(610+point.x, 10+point.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+
+K.set(0,2, center.x);
+K.set(1,2, center.y);
 
 } // if false
 
@@ -6325,8 +6460,6 @@ console.log(offX+","+offY);
 */
 
 
-console.log("CHECK PREPROCESSING STEP");
-
 // DON'T RUN
 //return; // don't run
 
@@ -6337,6 +6470,9 @@ console.log("CHECK PREPROCESSING STEP");
 
 
 
+if(SHOULD_CORRECT_DISTOTION){
+	/// ....
+}
 
 // locals
 var BACAMS = [];
@@ -6367,6 +6503,8 @@ for(var i=0; i<cameras.length; ++i){
 		var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 		c.K(K);
 		c.distortion(distortion);
+		// var inverted = R3D.getInvertedDistortion(K,distortion);
+		// c.distortionInverted(inverted);
 	}
 	BACAMS.push(c);
 }
@@ -6382,14 +6520,15 @@ for(var i=0; i<views.length; ++i){
 
 
 
-
+	var K = cam.K();
+	var distortion = cam.distortion();
 
 
 		var matrix = R3D.imageMatrixFromImage(img, this._stage);
 
-var info = R3D.invertImageDistortion(matrix, K, distortionFwd,true);
-var center = info["center"];
-matrix = info["image"];
+// var info = R3D.invertImageDistortion(matrix, K, distortion,true);
+// var center = info["center"];
+// matrix = info["image"];
 
 
 		v.image(matrix);
@@ -6410,7 +6549,7 @@ matrix = info["image"];
 }
 
 
-throw "NOT YET";
+
 
 
 // matches
@@ -6450,12 +6589,13 @@ for(var i=0; i<pairs.length; ++i){
 		var relAngle = to["a"] - fr["a"];
 		
 		fr = new V2D(fr.x,fr.y);
-		fr = R3D.undistortPointCamera(fr, K, distortion);
+		//fr = R3D.undistortPointCamera(fr, K, distortion);
 		fr.scale(fromImageSize.x,fromImageSize.y);
 
 		to = new V2D(to.x,to.y);
-		to = R3D.undistortPointCamera(to, K, distortion);
+		//to = R3D.undistortPointCamera(to, K, distortion);
 		to.scale(toImageSize.x,toImageSize.y);
+		
 		filteredMatches.push([fr,to,relAngle,relScale]);
 	}
 	/*

@@ -1728,7 +1728,7 @@ R3D.BA.World.prototype._iterationTick = function(){
 			return;
 		}
 	}
-	//this._filterBest();
+	this._filterBest();
 	this._bundleAdjust();
 	if(this._completeFxn){
 		this._completeFxn.call(this._completeContext);
@@ -1737,12 +1737,39 @@ R3D.BA.World.prototype._iterationTick = function(){
 R3D.BA.World.prototype._filterBest = function(){
 	// LOCAL METHOD:
 		// get KNN for each point in view / match ? and drop if outside
+		var minimumCount = 400;
+	var transforms = this.toTransformArray();
+	var removeMatches = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var viewA = transform.viewA();
+			var viewB = transform.viewB();
+			var pointA = match.pointA();
+			var pointB = match.pointB();
+			var neighbors = viewA.pointSpace().kNN(pointA.point(), 12);
+			console.log(neighbors);
+			for(var n=0; n<neighbors.length; ++n){
+				//
+			}
+			var errors
+			break;
+		}
+	}
+	for(var i=0; i<removeMatches.length; ++i){
+		var match = removeMatches[i];
+		this.checkRemoveMatch(match);
+	}
+	throw "HERE";
 	// GLOBAL METHOD
+	/*
 	var minimumCount = 400;
 	var transforms = this.toTransformArray();
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
-		var matches = transform.matches;
+		var matches = transform.matches();
 		var startM = 4.0;
 		var startF = 3.0;
 		var startR = 3.0;
@@ -1756,6 +1783,7 @@ R3D.BA.World.prototype._filterBest = function(){
 			}
 		}
 	}
+	*/
 }
 R3D.BA.World.prototype._keyFxn = function(e){
 	// console.log(e);
@@ -2522,20 +2550,24 @@ R3D.BA.World.prototype.checkRemovePoorMatch = function(match, maxM, maxF, maxR){
 	var matchF = match.errorF();
 	var matchR = match.errorR();
 	if(matchM>maxM || matchF>maxF || matchR>maxR){
-		var point3D = match.point3D();
-		if(point3D.toMatchArray().length==1){ // a point3D has alwasys 2 + matches
-			point3D.disconnect(this);
-		}else{
-			transform.removeMatch(match);
-			point3D.removeMatch(match);
-			match.pointA().removeMatch(match);
-			match.pointB().removeMatch(match);
-			match.kill();
-		}
+		this.checkRemoveMatch(match);
 		//this.checkP3DMadness();
 		return true;
 	}
 	return false;
+}
+R3D.BA.World.prototype.checkRemoveMatch = function(match){
+	var point3D = match.point3D();
+	var transform = match.transform();
+	if(point3D.toMatchArray().length==1){ // a point3D has always 2 + matches
+		point3D.disconnect(this);
+	}else{
+		transform.removeMatch(match);
+		point3D.removeMatch(match);
+		match.pointA().removeMatch(match);
+		match.pointB().removeMatch(match);
+		match.kill();
+	}
 }
 
 R3D.BA.World.prototype.removePoorMatches = function(sigmaM, sigmaF, sigmaR){

@@ -180,18 +180,32 @@ project typical numbers:
 
 APP TODO:
 
-- preprocessing step to convert images into warped images from camera distorition
+A) see how distortion-correcting helps R/F in current 100-500 iteration process
+	-> converting image takes way too long: 10~30s
+	-> correction doesn't seem better, maybe worse
+B) implement kNN dropping to output ~1000 best match points
+
+C) save pair match data in some format [F | P | 2d points | 3D points]
+D) import pair match data & do real BA on 3 views / 3 pairs
+	- how to combine P3D with multiple matches [eg average?]
+E) add algorithm piece for doing cross-pair matching to get 3D points with 2+ pairs / 3+ matches
+	- to add more points to BA approximation & help remove outliers
+F) hierarchical dense matching
+	- back to grid ?
 
 
 
 
 
-- covariance of pair of images (via gauge scale)
-	- tr(C(x,y,z)) = edge weight = sum of eigenvalues
-	- DIRECTIONAL weights
+
+~ preprocessing step to convert images into warped images from camera distorition
+	- faster way to inverse-image ?
+
 
 - DENSE/pair-P method
+	-> determine a camera's best P & best points
 - BA method
+	-> combine 3+ views into single view
 
 
 
@@ -209,6 +223,14 @@ steps:
 	-> best F/R points
 - bundle-adjustment to combine multiple views
 - restricted high density matching
+
+
+
+
+- covariance of pair of images (via gauge scale)
+	- tr(C(x,y,z)) = edge weight = sum of eigenvalues
+	- DIRECTIONAL weights
+
 
 
 
