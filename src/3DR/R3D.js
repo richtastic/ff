@@ -1132,7 +1132,7 @@ R3D.fundamentalFromCamera = function(cam, K, Kinv, optionallyKb){ // find relati
 	// m.setFromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
 	var E = Matrix.mult(Tx,R);
 	//var F = Kt * E * K;
-	var F = Matrix.mult(Matrix.mult(KInvT, E), Kinv);
+	var F = Matrix.mult(Matrix.mult(KinvT, E), Kinv);
 	return F;
 }
 R3D.forceRank2 = function(fundamental){
@@ -17095,14 +17095,7 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 
 
 R3D.BundleAdjustFull = function(intrinsics, extrinsics, pointLists2D, pointList3D, maxIterations){ // optimal P3D & Extrinsic | 2D points should already be undistorted
-	/*
-	intrinsics = [K] // constant
-	extrinsics = [P] // rx,ry,rz,tx,ty,tz
-	pointLists2D = [{"2D":V2D,"3D":index}]; // constant
-	pointLists3D = [V3D, ...] // X,Y,Z
-	*/
 	var cameraCount = extrinsics.length;
-	// deconstruct into vectors
 	var args = [];
 	var x = [];
 	args.push(intrinsics);
@@ -17116,10 +17109,14 @@ R3D.BundleAdjustFull = function(intrinsics, extrinsics, pointLists2D, pointList3
 		var v3D = pointList3D[i];
 		Code.arrayPushArray(x,[v3D.x,v3D.y,v3D.z]);
 	}
+	// 
 	maxIterations = (maxIterations!==undefined && maxIterations!==null)? maxIterations : 1;
+	Code.timerStart();
 	var result = Code.gradientDescent(R3D._gd_BAFull, args, x, null, maxIterations, 1E-10);
+	Code.timerStop();
 	x = result["x"];
-	console.log(x);
+	console.log("  POINT COUNT: "+pointList3D.length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
+	// deconstruct into original parameters
 	var pList = [];
 	for(var i=0; i<cameraCount; ++i){
 		var tx = x[i*6 + 0];
@@ -17138,12 +17135,12 @@ R3D.BundleAdjustFull = function(intrinsics, extrinsics, pointLists2D, pointList3
 		var p3D = new V3D(x[offset3D + i*3 + 0], x[offset3D + i*3 + 1], x[offset3D + i*3 + 2]);
 		points3D.push(p3D);
 	}
-
-	throw "BundleAdjustFull";
-	return {"extrinsic":pList, "points":points3D};
+	return {"extrinsics":pList, "points":points3D};
 }
-R3D._gd_BAFull = function(args, x, isUpdate){ // TODO: can limit processing if keep track of what has been changed, keep matrix pool
-	if(isUpdate){ return; }
+R3D._gd_BAFull_matrix = new Matrix(4,4);
+R3D.HASRUN = false;
+R3D._gd_BAFull = function(args, x, isUpdate, testingIndex){ // TODO: can limit processing if keep track of what has been changed, keep matrix pool
+	if(isUpdate){ return; } // console.log("looped once"); 
 	var intrinsics = args[0];
 	var pointLists2D = args[1];
 	var cameraCount = pointLists2D.length;
@@ -17159,19 +17156,41 @@ R3D._gd_BAFull = function(args, x, isUpdate){ // TODO: can limit processing if k
 		var rx = x[i*6 + 3];
 		var ry = x[i*6 + 4];
 		var rz = x[i*6 + 5];
-		var P = new Matrix(4,4);
+		var P = R3D._gd_BAFull_matrix;
 		R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+		if(!R3D.HASRUN){
+			console.log(" "+i+": \n"+P);
+		}
+var avgDistance = 0;
 		for(var j=0; j<pointList.length; ++j){
 			var info = pointList[j];
 			var p2D = info["2D"];
+			// if(!R3D.HASRUN){
+			// 	console.log(" "+j+": "+p2D);
+			// }
 			var index = info["3D"];
 			p3D.set(x[offset3D + index*3 + 0], x[offset3D + index*3 + 1], x[offset3D + index*3 + 2]);
+			// if(!R3D.HASRUN){
+			// 	console.log(" "+j+": "+p3D);
+			// }
 			var projected = R3D.projectPoint3DToCamera2DForward(p3D, P, K, null);
-			var error = V2D.distanceSquare(distorted,projected);
+			var error = V2D.distanceSquare(p2D,projected);
+			//console.log("error:  "+Math.sqrt(error));
+			var d = Math.sqrt(error);
+			avgDistance += d;
+			totalError += error;
+			// if(!R3D.HASRUN){
+			// 	console.log(" "+j+": "+p2D+" & "+projected+" @ "+d);
+			// }
 		}
-		totalError += error;
+		if(!R3D.HASRUN){
+			console.log("avgDistance: "+(avgDistance/pointList.length));
+		}
 	}
-	throw "_gd_BAFull";
+if(!R3D.HASRUN){
+	R3D.HASRUN = true;
+}
+	return totalError;
 }
 R3D.BundleAdjustIteritive = function(intrinsics, extrinsics, pointLists2D, pointLists3D){
 	// call the FULL in chunks

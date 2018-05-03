@@ -1773,7 +1773,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 	var i, j, k, c;
 	var sizeX = x.length;
 	var epsilon = 1E-6;
-	var cost = fxn(args, x); // current cost
+	var cost = fxn(args, x, false, -1); // current cost
 	var currCost, nextCost;
 	var maxIterations = iter!=null ? iter : 50;
 	var minDifference = diff!=null ? diff : 1E-10;
@@ -1794,7 +1794,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		for(i=0; i<sizeX; ++i){
 			Code.copyArray(tx,prevX);
 			tx[i] += dx[i];
-			c = fxn(args, tx);
+			c = fxn(args, tx, false, i);
 			dy[i] = c - cost;
 			tx[i] = 0;
 		}
@@ -1803,7 +1803,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 		for(i=0; i<sizeX; ++i){
 			nextX[i] = prevX[i] - lambda*dy[i];
 		}
-		var newCost = fxn(args, nextX);
+		var newCost = fxn(args, nextX, false, -1);
 		// scale down lambda as necessary:
 		var iter = 10;
 		while(newCost>=cost && iter>0){
@@ -1811,19 +1811,17 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 			for(i=0; i<sizeX; ++i){
 				nextX[i] = prevX[i] - lambda*dy[i];
 			}
-			newCost = fxn(args, nextX);
+			newCost = fxn(args, nextX, false, -1);
 			--iter;
 		}
-
 		// should be good by now, following gradient
-		//console.log(k+" update: "+cost+" => "+newCost+" @ "+lambda);
 		var diffCost = Math.abs(newCost-cost);
 		if(newCost<cost){
 			cost = newCost;
 			var temp = prevX;
 			prevX = nextX;
 			nextX = temp;
-			fxn(args,prevX, true);
+			fxn(args,prevX, true, -1);
 			lambda *= scaler;
 		}else{ // should not happen much
 			lambda /= scaler;

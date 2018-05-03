@@ -180,12 +180,19 @@ project typical numbers:
 
 APP TODO:
 
+
+- look at zooming out till range = N [grayscale]
+
+
 A) see how distortion-correcting helps R/F in current 100-500 iteration process
 	-> converting image takes way too long: 10~30s
 	-> correction doesn't seem better, maybe worse
 B) implement kNN dropping to output ~1000 best match points
-
+	-
 C) save pair match data in some format [F | P | 2d points | 3D points]
+	- 
+
+
 D) import pair match data & do real BA on 3 views / 3 pairs
 	- how to combine P3D with multiple matches [eg average?]
 E) add algorithm piece for doing cross-pair matching to get 3D points with 2+ pairs / 3+ matches
