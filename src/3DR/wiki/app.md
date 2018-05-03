@@ -180,6 +180,7 @@ project typical numbers:
 
 APP TODO:
 
+- right window matches are off by one pane
 
 - look at zooming out till range = N [grayscale]
 

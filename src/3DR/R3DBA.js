@@ -170,16 +170,16 @@ R3D.BA.World.prototype.toTransformArray = function(){
 	return Code.arrayFromHash(this._transforms);
 }
 R3D.BA.World.prototype.addView = function(){
-	var viewA = new R3D.BA.View();
+	var viewB = new R3D.BA.View();
 	var keys = Code.keys(this._views);
 	for(var i=0; i<keys.length; ++i){
 		var key = keys[i];
-		var viewB = this._views[key];
+		var viewA = this._views[key];
 		var index = R3D.BA.indexFromViews(viewA,viewB);
 		this._transforms[index] = new R3D.BA.Transform(viewA,viewB, this);
 	}
-	this._views[viewA.id()+""] = viewA;
-	return viewA;
+	this._views[viewB.id()+""] = viewB;
+	return viewB;
 }
 
 R3D.BA.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, relativeScale,relativeAngle){
@@ -1700,11 +1700,11 @@ for(var i=0; i<views.length; ++i){
 	//var maxIterations = 2;
 	//var maxIterations = 3;
 	//var maxIterations = 4;
-	var maxIterations = 5;
+	//var maxIterations = 5;
 	//var maxIterations = 10;
 	//var maxIterations = 25; // positions better
 	//var maxIterations = 50; // R => ~
-	//var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
+	var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
 	//var maxIterations = 200;
 	//var maxIterations = 500; // R errors SHOULD BE 1~2
 	//var maxIterations = 800;
@@ -1735,8 +1735,8 @@ R3D.BA.World.prototype._iterationTick = function(){
 			return;
 		}
 	}
-// 	this._filterBest();
-// this.generateStatsForExistingTransforms();
+	this._filterBest();
+this.generateStatsForExistingTransforms();
 	this._bundleAdjust();
 this.generateStatsForExistingTransforms(true);
 //this._outputPair();
@@ -1799,6 +1799,7 @@ R3D.BA.World.prototype._filterBest = function(){
 			this.checkRemovePoorNeighbors(match, neighborsA, viewA, viewB, removeMatches);
 			this.checkRemovePoorNeighbors(match, neighborsB, viewA, viewB, removeMatches);
 		}
+
 	}
 	console.log("TO DROP: "+removeMatches.length);
 	for(var i=0; i<removeMatches.length; ++i){
@@ -1807,12 +1808,35 @@ R3D.BA.World.prototype._filterBest = function(){
 			this.checkRemoveMatch(match);
 		}
 	}
-	
+
+var minMatchCount = 100;
+var maxMatchCount = 500;
+
+	// sort / drop worst up to 100:
+	var transforms = this.toTransformArray();
+	var removeMatches = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		matches = Code.copyArray(matches);
+		matches.sort(function(a,b){
+			return a.errorR() < b.errorR() ? -1 : 1;
+		});
+		var maxCount = Math.min(Math.max(0.25*matches.length,minMatchCount),maxMatchCount);
+		for(var j=maxCount; j<matches.length; ++j){
+			var match = matches[j];
+			if(match && match.viewA()){ 
+				this.checkRemoveMatch(match);
+			}
+		}
+	}
+	/*
 	// GLOBAL METHOD
 	var startM = 3.0;
 	var startF = 2.0;
 	var startR = 1.0;
 	this.removePoorMatches(startM,startF,startR);
+	*/
 	/*
 	var minimumCount = 400;
 	var transforms = this.toTransformArray();
@@ -2883,6 +2907,7 @@ R3D.BA.World.prototype.generateStatsForExistingTransforms = function(skipCalc){ 
 				transform.initialEstimatePoints3D();
 			}
 			info = transform.calculateErrorR(true, undefined, skipCalc);
+			//info = transform.calculateErrorR(true);
 			transform.rMean(info["mean"]);
 			transform.rSigma(info["sigma"]);
 		}
@@ -3239,6 +3264,8 @@ R3D.BA.World.prototype._outputPair = function(transform){
 }
 R3D.BA.World.prototype._bundleAdjust = function(){
 	console.log("_bundleAdjust");
+
+
 	var views = this.toViewArray();
 	var listK = [];
 	var listA = [];
@@ -3247,7 +3274,8 @@ R3D.BA.World.prototype._bundleAdjust = function(){
 	for(var i=0; i<views.length; ++i){
 		var viewA = views[i];
 		var absoluteTransform = viewA.absoluteTransform();
-absoluteTransform = R3D.inverseCameraMatrix(absoluteTransform);
+//absoluteTransform = R3D.inverseCameraMatrix(absoluteTransform);
+console.log("ABS. :\n"+absoluteTransform);
 		listK[i] = viewA.K();
 		listA[i] = absoluteTransform;
 		for(var j=0; j<views.length; ++j){
@@ -3259,7 +3287,7 @@ absoluteTransform = R3D.inverseCameraMatrix(absoluteTransform);
 				var viewB = views[j];
 				var transform = this.transformFromViews(viewA,viewB);
 				var matches = transform.matches();
-
+/*
 console.log("absolutes all kinds of messed")
 //var cameraA = viewA.absoluteTransform();
 //var cameraB = viewB.absoluteTransform();
@@ -3267,7 +3295,8 @@ var cameraA = new Matrix(4,4).identity();
 var cameraB = transform.R(viewB,viewA);
 //var cameraB = transform.R(viewA,viewB);
 console.log("A:\n"+cameraA+"\nB:\n"+cameraB);
-
+//listA[1] = cameraB;
+*/
 				for(var k=0; k<matches.length; ++k){
 					var match = matches[k];
 
@@ -3282,14 +3311,14 @@ console.log("A:\n"+cameraA+"\nB:\n"+cameraB);
 					listPoints2D[i].push({"2D":pointA.point().copy(), "3D":point3D.temp()});
 					listPoints2D[j].push({"2D":pointB.point().copy(), "3D":point3D.temp()});
 
-
+/*
 var Ka = viewA.K();
 var Kb = viewB.K();
 //var info = R3D.reprojectionError(match.estimated3D(), pointA.point(),pointB.point(), cameraA, cameraB, Ka, Kb);
 var info = R3D.reprojectionError(match.estimated3D(), pointB.point(),pointA.point(), cameraA, cameraB, Ka, Kb);
 console.log(info);
 //console.log(info["error"]);
-
+*/
 
 				}
 			}
@@ -3302,10 +3331,10 @@ console.log(info);
 		point3D.temp(null);
 		listPoints3D[i] = point3D.point().copy();
 	}
-console.log("LISTS: \n"+listA[0]+"\n"+listA[1]);
-	var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 1);
-	// var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 10);
-	// var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 100);
+//console.log("LISTS: \n"+listA[0]+"\n"+listA[1]);
+	//var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 1);
+	//var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 10);
+	var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 100);
 //	var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 1000);
 
 
@@ -3349,6 +3378,8 @@ console.log("LISTS: \n"+listA[0]+"\n"+listA[1]);
 		var F = R3D.fundamentalFromCamera(relativeAtoB, K, Kinv);
 		transform.R(viewA,viewB,relativeAtoB);
 		transform.F(viewA,viewB,F);
+		// transform.R(viewB,viewA,relativeAtoB);
+		// transform.F(viewB,viewA,F);
 	}
 }
 
@@ -4591,11 +4622,8 @@ R3D.BA.World.prototype.absoluteCameras = function(){
 					var t = null;
 
 // CORRECT WAY TO GET ABSOLUTE POSITION ?
-					
-					//t = trans.R(prev,next); // WAS
-					t = trans.R(next,prev);
-					//t = R3D.inverseCameraMatrix(t);
-
+					t = trans.R(prev,next); // WAS
+					//t = trans.R(next,prev);
 					if(t){
 						//mat = Matrix.mult(mat,t);
 						mat = Matrix.mult(t,mat); // ?
@@ -4606,12 +4634,11 @@ R3D.BA.World.prototype.absoluteCameras = function(){
 				}
 				prev = next;
 			}
-//console.log("absoluteTransform: "+j+"\n "+mat);
-			// if(mat){
-			// 	mat = R3D.inverseCameraMatrix(mat);
-			// }
 
 //mat = new Matrix(4,4).identity();
+// if(mat){
+// mat = R3D.inverseCameraMatrix(mat);
+// }
 			view.absoluteTransform(mat);
 		}
 		groupGraph.kill();
