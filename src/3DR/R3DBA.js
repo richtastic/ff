@@ -373,7 +373,8 @@ R3D.BA.View = function(image, corners, camera){
 	this._errorMSigma = null;
 	this._errorRSigma = null;
 	this._errorFSigma = null;
-	this._maxSearchPointAngle = Code.radians(60.0);
+	//this._maxSearchPointAngle = Code.radians(60.0);
+	this._maxSearchPointAngle = Code.radians(90.0);
 	// 
 	this.image(image);
 	this.corners(corners);
@@ -1701,10 +1702,10 @@ for(var i=0; i<views.length; ++i){
 	//var maxIterations = 3;
 	//var maxIterations = 4;
 	//var maxIterations = 5;
-	//var maxIterations = 10;
+	var maxIterations = 10;
 	//var maxIterations = 25; // positions better
 	//var maxIterations = 50; // R => ~
-	var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
+	//var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
 	//var maxIterations = 200;
 	//var maxIterations = 500; // R errors SHOULD BE 1~2
 	//var maxIterations = 800;
@@ -1780,8 +1781,25 @@ R3D.BA.World.prototype._filterBest = function(){
 	// LOCAL METHOD:
 		// get KNN for each point in view / match ? and drop if outside
 		//var minimumCount = 400;
-	
+
+	// can also drop based on uniqueness ----- 
+
 	var transforms = this.toTransformArray();
+	console.log("SHOW CURRENT SCORES:");
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+			var scores = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			scores.push(match.errorR());
+		}
+		scores.sort(function(a,b){
+			return a < b ? -1 : 1;
+		});
+		Code.printMatlabArray(scores,"errorR");
+	}
+
 	var removeMatches = [];
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
@@ -1814,7 +1832,6 @@ var maxMatchCount = 500;
 
 	// sort / drop worst up to 100:
 	var transforms = this.toTransformArray();
-	var removeMatches = [];
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var matches = transform.matches();
@@ -1822,7 +1839,8 @@ var maxMatchCount = 500;
 		matches.sort(function(a,b){
 			return a.errorR() < b.errorR() ? -1 : 1;
 		});
-		var maxCount = Math.min(Math.max(0.25*matches.length,minMatchCount),maxMatchCount);
+		var maxCount = Math.min(Math.max(Math.round(0.25*matches.length),minMatchCount),maxMatchCount);
+console.log("maxCount: "+maxCount+" / "+matches.length);
 		for(var j=maxCount; j<matches.length; ++j){
 			var match = matches[j];
 			if(match && match.viewA()){ 

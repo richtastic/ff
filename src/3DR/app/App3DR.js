@@ -80,8 +80,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-//var modeImageCompare = true;
-var modeImageCompare = false;
+var modeImageCompare = true;
+//var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -1037,7 +1037,8 @@ App3DR.App.MatchCompare = function(resource, manager){
 	this._displayData = null;
 	this._display = new DO();
 	this._root.addChild(this._display);
-
+//this._displayPairDO.alpha(0.5);
+this._root.graphics().alpha(0.1);
 	this._matchingPair = null;
 }
 Code.inheritClass(App3DR.App.MatchCompare, App3DR.App);
@@ -1155,6 +1156,7 @@ App3DR.App.MatchCompare.prototype.handleMouseDown = function(e){
 	var display = this._displayData;
 	var location = e["location"];
 	// console.log(display);
+
 	if(!this._displayPairDO){
 		this._displayPairDO = new DO();
 		this._root.addChild(this._displayPairDO);
@@ -1184,9 +1186,14 @@ App3DR.App.MatchCompare.prototype.handleMouseDown = function(e){
 					image["matrix"] = matrix;
 				}
 				// show a rect:
+
 				///console.log(matrix);
 				var total = new V2D(matrix.width(),matrix.height());
 				total.scale(percent.x,percent.y);
+
+console.log("RANGE PROFILING:");
+R3D.rangeProfileImagePoint(matrix, total);
+
 				var compareSize = 21;
 				var scale = 1.0;
 				var square = matrix.extractRectFromFloatImage(total.x,total.y,scale,null,compareSize,compareSize, null);
@@ -1364,38 +1371,40 @@ App3DR.App.MatchCompare.prototype._render = function(){
 // console.log("A: "+imageA["offset"]);
 // console.log("B: "+imageB["offset"]);
 			var matchingList = matches["matches"];
-			var d = new DO();
-			this._display.addChild(d);
-			console.log(matchingList.length+" .... match length" );
-			//d.graphics().setLine(1.0,0x99FF0000);
-			for(j=0; j<matchingList.length; ++j){
-				var m = matchingList[j];
-				var to = m["to"];
-				var fr = m["fr"];
-					var t = new V2D(to["x"],to["y"]);
-					var f = new V2D(fr["x"],fr["y"]);
-				var f = f.copy().scale(imageA["size"].x,imageA["size"].y);
-				f.add(imageA["offset"]);
-				var t = t.copy().scale(imageB["size"].x,imageB["size"].y);
-				t.add(imageB["offset"]);
-				// console.log(f+" => "+t);
-				var colors = [];
-				var color = Code.getColARGBFromFloat(1.0,Math.random(),Math.random(),Math.random());
-				colors.push(color);
-				color = Code.inverseColorARGB(color);
-				//colors.push(color);
-				for(k=0; k<colors.length; ++k){ // fat to skinny
-					//d.graphics().setLine(1.0+(colors.length-1-k)*6,color);
-					d.graphics().setLine(1.0,color);
-					d.graphics().beginPath();
-					d.graphics().moveTo(f.x,f.y+k);
-					d.graphics().lineTo(t.x,t.y+k);
-					d.graphics().endPath();
-					d.graphics().strokeLine();
+			if(matchingList){
+				var d = new DO();
+				this._display.addChild(d);
+				console.log(matchingList.length+" .... match length" );
+				//d.graphics().setLine(1.0,0x99FF0000);
+				for(j=0; j<matchingList.length; ++j){
+					var m = matchingList[j];
+					var to = m["to"];
+					var fr = m["fr"];
+						var t = new V2D(to["x"],to["y"]);
+						var f = new V2D(fr["x"],fr["y"]);
+					var f = f.copy().scale(imageA["size"].x,imageA["size"].y);
+					f.add(imageA["offset"]);
+					var t = t.copy().scale(imageB["size"].x,imageB["size"].y);
+					t.add(imageB["offset"]);
+					// console.log(f+" => "+t);
+					var colors = [];
+					var color = Code.getColARGBFromFloat(1.0,Math.random(),Math.random(),Math.random());
+					colors.push(color);
+					color = Code.inverseColorARGB(color);
+					//colors.push(color);
+					for(k=0; k<colors.length; ++k){ // fat to skinny
+						//d.graphics().setLine(1.0+(colors.length-1-k)*6,color);
+						d.graphics().setLine(1.0,color);
+						d.graphics().beginPath();
+						d.graphics().moveTo(f.x,f.y+k);
+						d.graphics().lineTo(t.x,t.y+k);
+						d.graphics().endPath();
+						d.graphics().strokeLine();
+					}
+					// if(j>50){
+					// 	break;
+					// }
 				}
-				// if(j>50){
-				// 	break;
-				// }
 			}
 			// var imA = imageA["image"];
 			// var imB = imageB["image"];
@@ -6461,7 +6470,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-//return; // don't run
+return; // don't run
 
 
 
@@ -6595,7 +6604,7 @@ for(var i=0; i<pairs.length; ++i){
 		to = new V2D(to.x,to.y);
 		//to = R3D.undistortPointCamera(to, K, distortion);
 		to.scale(toImageSize.x,toImageSize.y);
-		
+
 		filteredMatches.push([fr,to,relAngle,relScale]);
 	}
 	/*

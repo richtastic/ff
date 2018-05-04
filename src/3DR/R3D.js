@@ -4758,6 +4758,172 @@ R3D.ANMS_Full = function(imageSource, maxCount, supression){ // adaptive nonmaxi
 
 	return features;
 }
+
+
+
+R3D.rangeProfileImagePoint = function(image, location){
+	//var gry = image.gry();
+
+	var size = 11;
+	var scale = 1.0;
+	var mask = ImageMat.circleMask(size);
+
+	var rList = [];
+	var sList = [];
+	var vList = [];
+	//console.log(mask);
+	var scales = Code.divSpace(-4,4,15);
+	for(var i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		scale = Math.pow(2,scale);
+		var square = image.extractRectFromFloatImage(location.x,location.y,scale,null,size,size, null);
+		var gry = square.gry();
+		var rangeMax = null;
+		var rangeMin = null;
+		for(var j=0; j<gry.length; ++j){
+			var m = mask[j];
+			if(m>0){
+				var v = gry[j];
+				if(rangeMin===null){
+					rangeMin = v;
+					rangeMax = v;
+				}else{
+					rangeMin = Math.min(v,rangeMin);
+					rangeMax = Math.max(v,rangeMax);
+				}
+			}
+		}
+
+
+		var variability = Code.variability(gry, size, size, mask, false);
+		var range = rangeMax - rangeMin;
+		rList.push(range);
+		sList.push(scale);
+		vList.push(variability);
+	}
+
+Code.printMatlabArray(sList,"scales");
+//Code.printMatlabArray(rList,"ranges");
+Code.printMatlabArray(vList,"variability");
+
+/*
+	var info = R3D.rangeForPoint(gry, image.width(), image.height(), location.x,location.y);
+	console.log(info);
+	var ranges = info["ranges"];
+	var sizes = info["sizes"];
+	var scales = [];
+	//scales.push(1);
+	for(var i=0; i<sizes.length; ++i){
+		//console.log(sizes[i],sizes[i-1]);
+		//scales.push(sizes[i] + sizes[i]/sizes[i-1]);
+		scales.push( Math.pow(sizes[i],0.5) );
+	}
+
+
+Code.printMatlabArray(scales,"scales");
+Code.printMatlabArray(ranges,"ranges");
+*/
+	// want a circular ...
+	return {"ranges":rList, "scales":sList};
+}
+/*
+
+*/
+
+
+
+R3D.rangeForPoint = function(image, width, height, pointX, pointY){
+	pointX = Math.floor(pointX);
+	pointY = Math.floor(pointY);
+	var maxSize = 50;
+	//var sizes = Code.lineSpace(1,51,2);
+	var total = 0;
+	var count = 0;
+	var tlX = pointX;
+	var tlY = pointY;
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	var vars = [];
+	var sizes = [];
+	var counts = [];
+	var ranges = [];
+	var minRange = image[pointY*width+pointX];
+	var maxRange = minRange;
+	var range;
+	for(var s=0; s<maxSize; s+=2){
+		var minX = Math.max(tlX,0);
+		var maxX = Math.min(tlX+s,wm1);
+		var minY = Math.max(tlY,0);
+		var maxY = Math.min(tlY+s,hm1);
+		var i, j, val, index;
+		// top
+		j = minY;
+		if(j>=0){
+			for(i=minX; i<=maxX; ++i){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+				minRange = Math.min(val,minRange);
+				maxRange = Math.max(val,maxRange);
+			}
+		}
+		// bottom
+		j = maxY;
+		if(j<height && j>minY){
+			for(i=minX; i<=maxX; ++i){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+				minRange = Math.min(val,minRange);
+				maxRange = Math.max(val,maxRange);
+			}
+		}
+		// inset 1
+		minY += 1;
+		maxY -= 1;
+		// left
+		i = minX;
+		if(i>=0){
+			for(j=minY; j<=maxY; ++j){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+				minRange = Math.min(val,minRange);
+				maxRange = Math.max(val,maxRange);
+			}
+		}
+		// right
+		i = maxX;
+		if(i<width && i>minX){
+			for(j=minY; j<=maxY; ++j){
+				index = j*width + i;
+				val = image[index];
+				total += val;
+				count += 1;
+				minRange = Math.min(val,minRange);
+				maxRange = Math.max(val,maxRange);
+			}
+		}
+		var size = s+1;
+		var range = maxRange-minRange;
+		// totals
+		sizes.push(size);
+		//vars.push(total/count);
+		ranges.push(range);
+		//vars.push(total/size);
+		counts.push(count);
+		tlX -= 1;
+		tlY -= 1;
+	}
+	// ...
+	return {"sizes":sizes, "variability":vars, "count":counts, "ranges":ranges};
+}
+
+
+
 // R3D.SADVectorAll = function(imageMatrix, location,diaNeighborhood,pointAngle, simple){
 // 	diaNeighborhood = diaNeighborhood * 7;
 
@@ -17180,8 +17346,8 @@ var avgDistance = 0;
 			var d = Math.sqrt(error);
 			avgDistance += d;
 			distances.push(d);
-			//totalError += error;
-			totalError += d;
+//totalError += error;
+totalError += d;
 			// if(!R3D.HASRUN){
 			// 	console.log(" "+j+": "+p2D+" & "+projected+" @ "+d);
 			// }

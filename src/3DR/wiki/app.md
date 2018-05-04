@@ -180,14 +180,31 @@ project typical numbers:
 
 APP TODO:
 
-- right window matches are off by one pane
 
-- look at zooming out till range = N [grayscale]
+
+- neighbor searching more grid-like method, rather than radial searching
+	- allow for larger search windows but still sparse spacing
+
+
+
+- look at zooming out till range = N [grayscale / RGB]
+- range profile (@ SCALES)
+
+
+		R3D.ANMS_Full
+		R3D.rangeProfileImagePoint
+		R3D.variabilityForPoint
+
+		- circular range gray hard to scale-match
+		- variability range gray vaguely matches
+=> 
+
+
 
 
 A) see how distortion-correcting helps R/F in current 100-500 iteration process
 	-> converting image takes way too long: 10~30s
-	-> correction doesn't seem better, maybe worse
+	-> correction doesn't seem better, maybe worse [line straigtness]
 B) implement kNN dropping to output ~1000 best match points
 	-
 C) save pair match data in some format [F | P | 2d points | 3D points]
@@ -203,6 +220,28 @@ F) hierarchical dense matching
 
 
 
+
+UB2GL8EB
+JS8R1VXQ
+
+
+
+FF6ZQTUH:
+from: "R04ZYF8K" 1
+to: "9I774XQV" 2
+
+H07XXFHR
+from: "UB2GL8EB" 2
+to: "9I774XQV" 3
+
+
+JS8R1VXQ
+from: "R04ZYF8K" 1
+to: "UB2GL8EB" 3
+
+
+
+- want well distributed optimizing points
 
 
 
