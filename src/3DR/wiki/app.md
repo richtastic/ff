@@ -181,6 +181,12 @@ project typical numbers:
 APP TODO:
 
 
+- convex hull for set of points
+	MAR:
+	https://www.geometrictools.com/Documentation/MinimumAreaRectangle.pdf
+- min rect for set of points
+
+
 
 - neighbor searching more grid-like method, rather than radial searching
 	- allow for larger search windows but still sparse spacing
@@ -197,7 +203,61 @@ APP TODO:
 
 		- circular range gray hard to scale-match
 		- variability range gray vaguely matches
-=> 
+
+- corner-geometry
+	- first closest corner with score better than mine
+
+-maximally stable extremal regions
+-LaplaceAffine
+-HessinanAffine
+
+:::
+Matas et al : http://cmp.felk.cvut.cz/~matas/papers/matas-bmvc02.pdf
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.93.6657&rep=rep1&type=pdf
+http://vbn.aau.dk/files/219488957/tip_preprint.pdf
+https://www.mathworks.com/help/vision/ref/detectmserfeatures.html
+http://vision.princeton.edu/projects/2012/SUN360/CVPR2012code/code/vlfeat-0.9.5/doc/api/mser_8h.html
+http://icvl.ee.ic.ac.uk/DescrWorkshop/featw-papers/Paper_0007.pdf
+https://www.hindawi.com/journals/mpe/2012/857210/
+https://pdfs.semanticscholar.org/9ad2/74191ee7b41d1f16cccb1aff8ff2d0a026e2.pdf
+
+https://github.com/idiap/mser
+
+
+change threshold of image grayscale, eg [0:.1:1]
+create compoent for each blob
+connect previous componets to any new blobs it overlaps
+> creates component tree 
+[separating regions appears to be same as merging regions]
+psi(Ri) = (|Rj| - |Rk|) / |Ri|    ...  Rj = g-del, Rk = g+del, Ri = g
+SIMPLER: v(Ri) = (Ri+del - Ri) / |Ri|
+- del == stability range parameter
+- connectivity = 4 or 8
+- stability is how long an object's area is ~constant = maxAreaVariation.= 0.25
+- prune smallest features off [eg min radius = 3]
+- prune largest features off
+- prune too similar to parent
+- CAN prune on 'lifetime' of region [more is better] - prune on minimum lifetime
+- prune regions that are locally less stable than the local maxima
+- can ignore regions (large) touching perimeter?
+??? which level to choose? Ri, Ri+del/2, Ri+del ?
+??? orientation?
+??? rectangle fitting?
+??? ellipse fitting?
+	- perimeter points?
+	- eccentricity
+	= MEAN & VARIANCE
+	http://www.visiondummy.com/2014/04/draw-error-ellipse-representing-covariance-matrix/
+	http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.120.1946&rep=rep1&type=pdf
+	https://dspace5.zcu.cz/bitstream/11025/916/1/Wijewickrema.pdf
+??? is point of 'merging' of blobs at all significant? [maximum area]
+??? combine with 'corners' to produce different set of points ?
+??? stability over scale SIMSER
+
+
+-> objects only have coarse localization
+-> precise localizations need to jiggle parameters [angle,scale,skew] around coarse approximation
+-> exact localization needs to do sub-pixel maximizing around peak match
 
 
 

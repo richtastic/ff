@@ -6298,13 +6298,13 @@ R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 	var featuresA = R3D.testExtract1(imageMatrixA, 1.0, maxCount, true);
 	//console.log(featuresA);
 	// // NMS
-	maxCount = 500;
+	//maxCount = 500;
 //	maxCount = Math.min(maxCount, Math.round(featuresA.length*0.5));
 featuresA = R3D.ANMS(imageMatrixA, featuresA, maxCount);
 	// featuresA = R3D.ANMS_Full(imageMatrixA, maxCount);
-	featuresA = R3D.featureCornersToPSA(featuresA, imageMatrixA);
+	//featuresA = R3D.featureCornersToPSA(featuresA, imageMatrixA);
 	//console.log(featuresA);
-	//featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
+	featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
 	return featuresA;
 }
 R3D.testExtract1 = function(imageSource, type, maxCount, single){
@@ -6378,7 +6378,7 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 			}
 		}
 	}
-	// remove low corner prominance
+	// remove low corner prominence
 	features = features.sort(function(a,b){
 		return a.t > b.t ? -1 : 1;
 	});
@@ -7592,12 +7592,15 @@ var allTests = [];
 	for(s=0; s<keys.length; ++s){
 		var key = keys[s];
 		space = spaces[key];
+		
 		for(i=0; i<points.length; ++i){
+			
+			//console.log(i+"/"+points.length);
 			var point = points[i];
-/*
+
 			var pointScore = point.t;
 			// testing stuff:
-			var nearest = space.kNN(point, 40);
+			var nearest = space.kNN(point, 10);
 			var rads = [];
 			var angs = [];
 			var scrs = [];
@@ -7605,9 +7608,16 @@ var allTests = [];
 			var cnts = 0;
 			var rScores = [];
 			var rTotal = 0;
+			/*
 			for(j=1; j<nearest.length; ++j){
 				var near = nearest[j];
+
+				
+
 				var radius = V2D.distance(point, near);
+				if(near.t<pointScore || radius<=0){
+					continue;
+				}
 				var dr = V2D.sub(near,point);
 				var angle = V2D.angleDirection(V2D.DIRX,dr);
 				totD += radius;
@@ -7633,12 +7643,11 @@ var allTests = [];
 				R += p * rads[j];
 			}
 			var A = Code.averageAngles(angs, pcts);
-
-
-
 */
-	var A = 0;
-	var R = 0;
+		//break; // points
+		
+
+	
 
 
 
@@ -7647,8 +7656,8 @@ var allTests = [];
 
 
 // TESTING:
-
-if(true){//i==13){
+if(false){
+//if(true){//i==13){
 //console.log("START: ------- "+i);
 
 
@@ -7935,30 +7944,36 @@ if(i==75){
 
 
 
-
-
-
-
 			// Code.printMatlabArray(rads,"r");
 			// Code.printMatlabArray(scrs,"s");
 			// Code.printMatlabArray([R],"R");
 // console.log(R);
-
+var A = 0;
+var R = 0;
+	//console.log(point+"")
 			var nearest = space.kNN(point, 10); // TODO: 10 should be from somewhere
 			var neighbors = [];
 			var scores = [];
 			var radiuses = [];
 			var bestNeighbor = null;
-			var bestScore = 0;
+			var bestScore = 0;//pointScore * 4;
 			var bestRadius = 0;
+
+			var bestNeighbor2 = null;
+			var bestRadius2 = 0;
+
 			for(j=1; j<nearest.length; ++j){
 				var near = nearest[j];
 				var radius = V2D.distance(point, near);
 				var score = near.t;
-				if(score > bestScore){
-					bestNeighbor = near;
-					bestRadius = radius;
-					bestScore = score;
+				if(score > bestScore && radius>0){
+					if(!bestNeighbor){
+						bestNeighbor = near;
+						bestRadius = radius;
+					}
+					//bestScore = score;
+					//break;
+
 //if(true){
 /*
 					var dir = V2D.sub(near,point);
@@ -7998,14 +8013,13 @@ if(isLine){
 }
 					}
 */
-				}else{
-					break; // done
+				// }else{
+				// 	break; // done
 				}
 			}
-
-
 			var neighbor = bestNeighbor;
 if(neighbor){
+	//console.log("bestRadius: "+bestRadius);
 			var radius = bestRadius;
 			var dir = V2D.sub(neighbor,point);
 			var isLine = true;
@@ -8015,12 +8029,13 @@ if(neighbor){
 //radius = R * 0.4;
 //radius = R * 0.5; // OK
 //radius = R * 0.2; // too small
-radius = R;
+//radius = R;
 //radius = R * 2.0;
 //radius *= 2;
 //angle = null;
 //radius = 10;
-angle = A;
+//angle = A;
+radius = 0.01;
 				var feature = {"point": new V2D(point.x,point.y), "size":radius, "angle":angle, "score":cornerScore};
 				output.push( feature );
 				++cnt;
@@ -8726,6 +8741,506 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 	}
 	return {"transforms":transformsOut, "pointsA":pointsAOut, "pointsB":pointsBOut};
 }
+
+
+// ------------------------------------------------------------------------------------------------------------------------------
+R3D.XCOUNT = 0;
+R3D.MSERTest = function(image, width, height){
+	var counting = 6;
+	var thresholds = Code.divSpace(0,1,counting+2);
+	thresholds.pop();
+	thresholds.shift();
+	// console.log(thresholds);
+	for(var i=0; i<thresholds.length; ++i){
+		var threshold = thresholds[i];
+		var clipped = ImageMat.gtFloat(image, threshold);
+
+		var img = GLOBALSTAGE.getFloatRGBAsImage(clipped,clipped,clipped, width, height);
+		var d = new DOImage(img);
+		d.matrix().translate(10 + (i%counting)*width, 10 + (i/counting | 0)*height + ((R3D.XCOUNT/counting | 0)*height) );
+		GLOBALSTAGE.addChild(d);
+
+		var blobInfo = ImageMat.findBlobsCOM(clipped,width,height);
+		ImageMat.describeBlobs(blobInfo);
+		var blobs = blobInfo["blobs"];
+		console.log(i+": "+blobs.length)
+
+		// see if overlapping
+++R3D.XCOUNT;
+	}
+	/*
+	pick level amount
+	for each level
+		get threshold
+		get blobs
+		if blob overlaps smaller/previous blob [child] => parent
+			if parent ~ same size as child
+				- keep
+			else
+				- big diff, record child & drop
+
+	*/
+}
+R3D.MSERfeatures = function(image){
+	var gry = image.gry();
+	var width = image.width();
+	var height = image.height();
+
+	// R3D.MSERTest(gry,width,height);
+	// return [];
+	
+	var mser = new R3D.MSER();
+	// only work on discrete set
+	var image = Code.array01To0255( Code.copyArray(gry) );
+	var inverted = Code.array01To0255( ImageMat.invertFloat01(Code.copyArray(gry)) );
+	var images = [image, inverted];
+	// DO INVERTED AND NON_INVERTED
+	//image = inverted;
+	var features = [];
+var blobImageA = Code.newArrayZeros(width*height);
+var blobImageB = Code.newArrayZeros(width*height);
+var blobImageC = Code.newArrayZeros(width*height);
+var blobImage = [blobImageA,blobImageB,blobImageC];
+	for(var j=0; j<images.length; ++j){
+		var image = images[j];
+		var result = mser.operator(image, width, height);
+		var regions = result["regions"];
+		
+		for(var i=0; i<regions.length; ++i){
+		//var i =10;
+			var region = regions[i];
+			var axes = region.axes();
+			var centroid = region.centroid();
+			var axisX = axes["x"];
+			var axisY = axes["y"];
+			var blob = {"center":centroid, "x":axisX, "y":axisY};
+			features.push(blob);
+
+			region.recordPixels(blobImage, width, height, i/regions.length);
+		}
+	}
+var sca = 1.5;
+var img = GLOBALSTAGE.getFloatRGBAsImage(blobImageA,blobImageB,blobImageC, width, height);
+var d = new DOImage(img);
+d.graphics().alpha(0.5);
+d.matrix().scale(sca);
+d.matrix().translate(0 + R3D.XCOUNT*width*sca, 0);
+//d.matrix().translate(10 + (i%counting)*width, 10 + (i/counting | 0)*height + ((R3D.XCOUNT/counting | 0)*height) );
+GLOBALSTAGE.addChild(d);
+++R3D.XCOUNT;
+
+	return features;
+}
+R3D.MSER = function(delta, minArea, maxArea, maxVariation, minDiversity){ // 8-connected
+	// delta = Code.valueOrDefault(delta, 2.0);
+	// minArea = Code.valueOrDefault(minArea, 0.0005);
+	// maxArea = Code.valueOrDefault(maxArea, 0.1);
+	// maxVariation = Code.valueOrDefault(maxVariation, 0.5);
+	// minDiversity = Code.valueOrDefault(minDiversity, 0.5);
+
+	delta = Code.valueOrDefault(delta, 1.0);
+	minArea = Code.valueOrDefault(minArea, 0.0005);
+	maxArea = Code.valueOrDefault(maxArea, 0.25);
+	maxVariation = Code.valueOrDefault(maxVariation, 0.50);
+	minDiversity = Code.valueOrDefault(minDiversity, 0.90);
+
+	this._delta = delta;
+	this._minArea = minArea;
+	this._maxArea = maxArea;
+	this._maxVariation = maxVariation;
+	this._minDiversity = minDiversity;
+}
+R3D.MSER.prototype.operator = function(image, width, height){
+	var regions = [];
+	var pixelCount = width*height;
+	var accessible = Code.newArrayConstant(pixelCount, false);
+	var priority = 256;
+	var boundaryPixels = Code.newArrayArrays(256);
+	var regionStack = [];
+	regionStack.push(new R3D.MSER.Region(256,0)); // highest gray level
+	var currentPixel = 0;
+	var currentEdge = 0;
+	var currentLevel = image[0];
+	accessible[0] = true;
+	var maxArea = this._maxArea*width*height;
+	var minArea = this._minArea*width*height;
+
+	// push / repeat
+	var pushComponent = true;
+// var maxLoop = 10000;
+	while(pushComponent){
+// --maxLoop;
+// if(maxLoop<0){
+// 	throw "yup1";
+// }
+		pushComponent = false;
+		regionStack.push(new R3D.MSER.Region(currentLevel,currentPixel));
+		// explore 
+// var maxLoop2 = 20000;
+		while(true){
+// --maxLoop2;
+// if(maxLoop2<0){
+// 	throw "yup2";
+// }
+			var x = currentPixel%width;
+			var y = currentPixel/width | 0;
+
+			var maxCount = 8;
+			maxCount = 4;
+
+			for(;currentEdge<maxCount; ++currentEdge){
+				var neighborPixel = currentPixel;
+				if(maxCount==8){
+					if(currentEdge==0){ // right
+						if(x<width-1){ neighborPixel = currentPixel+1; }
+					}else if(currentEdge==1){ // top right
+						if(x<width-1 && y>0){ neighborPixel = currentPixel-width+1; }
+					}else if(currentEdge==2){ // top
+						if(y>0){ neighborPixel = currentPixel-width; }
+					}else if(currentEdge==3){ // top left
+						if(x>0 && y>0){ neighborPixel = currentPixel-width-1; }
+					}else if(currentEdge==4){ // left
+						if(x>0){ neighborPixel = currentPixel-1; }
+					}else if(currentEdge==5){ // bottom left
+						if(x>0 && y<height-1){ neighborPixel = currentPixel+width-1; }
+					}else if(currentEdge==6){ // bottom
+						if(y<height-1){ neighborPixel = currentPixel+width; }
+					}else{// if(currentEdge==7){ // bottom right
+						if(x<width-1 && y<height-1){ neighborPixel = currentPixel+width+1; }
+					}
+				}else{
+					if(currentEdge==0){ // right
+						if(x<width-1){ neighborPixel = currentPixel+1; }
+					}else if(currentEdge==1){ // top
+						if(y>0){ neighborPixel = currentPixel-width; }
+					}else if(currentEdge==2){ // left
+						if(x>0){ neighborPixel = currentPixel-1; }
+					}else if(currentEdge==3){ // bottom
+						if(y<height-1){ neighborPixel = currentPixel+width; }
+					}
+				}
+				// process neighbor pixel
+				if(neighborPixel!=currentPixel && !accessible[neighborPixel]){
+					neighborLevel = image[neighborPixel];
+					accessible[neighborPixel] = true;
+					if(neighborLevel>=currentLevel){
+						boundaryPixels[neighborLevel].push( neighborPixel<<4 );
+						if(neighborLevel<priority){
+							priority = neighborLevel;
+						}
+					}else{ // neighborLevel < currentLevel
+						boundaryPixels[currentLevel].push( (currentPixel<<4) | (currentEdge+1) );
+						if(currentLevel<priority){
+							priority = currentLevel;
+						}
+						currentPixel = neighborPixel;
+						currentEdge = 0;
+						currentLevel = neighborLevel;
+						pushComponent = true;
+						break; // to outer loop
+					}
+				} // else continue through other pixels
+			}
+			if(pushComponent){
+				break; // to outer while(pushComponent)
+			}
+
+			regionStack.last().accumulate(x,y);
+			if(priority==256){ // done
+				regionStack.last().detect(this._delta, minArea, maxArea, this._maxVariation, this._minDiversity, regions);
+				break;
+			}
+
+			currentPixel = boundaryPixels[priority].last() >> 4;
+			currentEdge = boundaryPixels[priority].last() & 15;
+			boundaryPixels[priority].pop();
+			while((priority<256) && boundaryPixels[priority].length==0){
+				priority += 1;
+			}
+
+			var newPixelGrayLevel = image[currentPixel];
+			if(newPixelGrayLevel!=currentLevel){ // switch to higher level
+				currentLevel = newPixelGrayLevel;
+				this.processStack(newPixelGrayLevel, currentPixel, regionStack);
+			}
+		}
+	}
+	return {"regions": regions};
+}
+R3D.MSER.prototype.processStack = function(newPixelGrayLevel, pixel, regionStack){
+	do{ // process item at top of stack
+		var top = regionStack.last();
+		regionStack.pop();
+		if(newPixelGrayLevel<regionStack.last()._level){
+			regionStack.push( new R3D.MSER.Region(newPixelGrayLevel, pixel) );
+			regionStack.last().merge(top);
+			return;
+		}
+		regionStack.last().merge(top);
+	}while(newPixelGrayLevel>regionStack.last()._level);
+
+}
+R3D.MSER.Region = function(level,pixel){
+	this._level = Code.valueOrDefault(level, 0);
+	this._pixel = Code.valueOrDefault(pixel, 0);
+	this._area = 0;
+	this._variation = Number.MAX_VALUE;//1E99;//infinity;
+	this._stable = false;
+	this._pixels = [];
+	this._moments = [];
+	this._minX = null;
+	this._minY = null;
+	this._maxX = null;
+	this._maxY = null;
+	for(var i=0; i<5; ++i){
+		this._moments[i] = 0.0;
+	}
+	this._parent = null;
+	this._child = null;
+	this._next = null;
+}
+R3D.MSER.Region.prototype.axes = function(){
+	var area = this._area;
+	var x = this._moments[0];
+	var y = this._moments[1];
+	var xx = this._moments[2];
+	var xy = this._moments[3];
+	var yy = this._moments[4];
+	var com = this.centroid();
+	x /= area;
+	y /= area;
+	xx /= area;
+	yy /= area;
+	xy /= area;
+	
+	// var diffX = this._maxX - this._minX + 1;
+	// var diffY = this._maxY - this._minY + 1;
+	// return {"x":new V2D(diffX,0), "y":new V2D(0,diffY)};
+	
+	var a = xx - x*x;
+	var b = xy - x*y;
+	var d = yy - y*y;
+	var eigen = Code.eigenValuesAndVectors2D(a,b,b,d);
+	var values = eigen["values"];
+	var vectors = eigen["vectors"];
+	var vX = values[0];
+	var vY = values[1];
+	vX = Math.sqrt(vX);
+	vY = Math.sqrt(vY);
+	// var scaler = Math.sqrt(vX*vX + vY*vY);
+	var dX = vectors[0];
+	var dY = vectors[1];
+	dX = new V2D(dX[0],dX[1]);
+	dY = new V2D(dY[0],dY[1]);
+vX *= 4;
+vY *= 4;
+	/*
+	var maxP = null;
+	var minP = null;
+	var p = new V2D();
+	var maxD = null;
+	var minD = null;
+	for(var i=0; i<pixels.length; ++i){
+		var pixel = pixels[i];
+		var d = V2D.distance(com,p);
+		if(maxD===null){
+			minD = d;
+			maxD = d;
+			minP = p.copy();
+			maxP = p.copy();
+		}
+		if(maxD<d){
+			maxD = d;
+			maxP.set(p.x,p.y);
+		}
+		if(minD>d){
+			minD = d;
+			minP.set(p.x,p.y);
+		}
+	}
+
+// oval from min point, max point, center point
+// min rect
+
+	dX.set();
+	*/
+
+/*
+// dilation ish
+	var pixels = this._pixels;
+	var maxX = 0;
+	var maxY = 0;
+	var dir = new V2D();
+	for(var i=0; i<pixels.length; ++i){
+		var pixel = pixels[i];
+		dir.set(pixel[0]-com.x,pixel[1]-com.y);
+		var dotX = V2D.dot(dir,dX);
+		var dotY = V2D.dot(dir,dY);
+		dotX = Math.abs(dotX);
+		dotY = Math.abs(dotY);
+		maxX = Math.max(maxX,dotX);
+		maxY = Math.max(maxY,dotY);
+	}
+vX = maxX;
+vY = maxY;
+*/
+	
+	dX.scale(vX);
+	dY.scale(vY);
+	
+	return {"x":dX, "y":dY};
+}
+R3D.MSER.Region.prototype.recordPixels = function(image, width, height, color){
+	var imageA = image[0];
+	var imageB = image[1];
+	var imageC = image[2];
+	var cA = Math.random();
+	var cB = Math.random();
+	var cC = Math.random();
+	for(var i=0; i<this._pixels.length; ++i){
+		var p = this._pixels[i];
+		var index = p[1]*width + p[0];
+		//image[ index ] = color;
+		imageA[ index ] = cA;
+		imageB[ index ] = cB;
+		imageC[ index ] = cC;
+	}
+}
+R3D.MSER.Region.prototype.centroid = function(){
+	// var diffX = (this._maxX + this._minX)*0.5;
+	// var diffY = (this._maxY + this._minY)*0.5;
+	// return new V2D(diffX, diffY);
+
+	var area = this._area;
+	var x = this._moments[0];
+	var y = this._moments[1];
+	return new V2D(x/area, y/area);
+}
+R3D.MSER.Region.prototype.accumulate = function(x,y){
+	this._area += 1;
+	this._moments[0] += x;
+	this._moments[1] += y;
+	this._moments[2] += x*x;
+	this._moments[3] += x*y;
+	this._moments[4] += y*y;
+	this._pixels.push([x,y]);
+	if(!this._minX){
+		this._minX = x;
+		this._minY = y;
+		this._maxX = x;
+		this._maxY = y;
+	}else{
+		this._minX = Math.min(this._minX,x);
+		this._minY = Math.min(this._minY,y);
+		this._maxX = Math.max(this._maxX,x);
+		this._maxY = Math.max(this._maxY,y);
+	}
+}
+R3D.MSER.Region.prototype.merge = function(child){ // append child to region
+	this._area += child._area;
+	this._moments[0] += child._moments[0];
+	this._moments[1] += child._moments[1];
+	this._moments[2] += child._moments[2];
+	this._moments[3] += child._moments[3];
+	this._moments[4] += child._moments[4];
+	Code.arrayPushArray(this._pixels, child._pixels);
+	if(child._minX!==null){
+		if(this._minX===null){
+			this._minX = child._minX;
+			this._minY = child._minY;
+			this._maxX = child._maxX;
+			this._maxY = child._maxY;
+		}else{
+			this._minX = Math.min(this._minX,child._minX);
+			this._minY = Math.min(this._minY,child._minY);
+			this._maxX = Math.max(this._maxX,child._maxX);
+			this._maxY = Math.max(this._maxY,child._maxY);
+		}
+	}
+	child._next = this._child;
+	this._child = child;
+	child._parent = this;
+
+}
+R3D.MSER.Region.prototype.process = function(delta, minArea, maxArea, maxVariation){
+	var parent = this;
+	var maxLevel = this._level+delta;
+	while(parent._parent && (parent._parent._level<=maxLevel)){ // get last parent under delta
+		parent = parent._parent;
+	}
+	this._variation = (parent._area - this._area)/this._area;
+	var stable = (!this._parent || this._variation<=this._parent._variation) && this._area>=minArea && this._area<=maxArea && this._variation<=maxVariation;
+	for(var child=this._child; child!=null; child=child._next){ // do same for all children
+		child.process(delta,minArea,maxArea,maxVariation);
+		if(stable && (this._variation<this._child._variation)){ // stable as long as at least one child is stable ?
+			this._stable = true;
+		}
+	}
+	if(!this._child){
+		this._stable = stable;
+	}
+}
+R3D.MSER.Region.prototype.check = function(variation, area){
+	if(this._area<=area){
+		return true;
+	}
+	if(this._stable && this._variation<variation){
+		return false;
+	}
+	for(var child=this._child; child!=null; child=child._next){
+		if(!child.check(variation,area)){
+			return false;
+		}
+	}
+	return true;
+}
+R3D.MSER.Region.prototype.save = function(minDiversity, regions){
+	if(this._stable){
+		var minParentArea = this._area/(1.0-minDiversity) + 0.5;
+		var parent = this;
+		while(parent._parent && (parent._parent._area<minParentArea)){
+			parent = parent._parent;
+			if(parent._stable && parent._variation<=this._variation){
+				this._stable = false;
+				break;
+			}
+		}
+		if(this._stable){
+			var maxChildArea = this._area*(1.0-minDiversity) + 0.5;
+			if(!this.check(this._variation,maxChildArea)){
+				this._stable = false;
+			}
+		}
+		if(this._stable){
+			regions.push(this.blankCopy());
+		}
+	}
+	for(var child=this._child; child!=null; child=child._next){
+		child.save(minDiversity,regions);
+	}
+}
+R3D.MSER.Region.prototype.detect = function(delta, minArea, maxArea, maxVariation, minDiversity, regions){
+	this.process(delta,minArea,maxArea,maxVariation);
+	this.save(minDiversity,regions);
+}
+R3D.MSER.Region.prototype.blankCopy = function(){
+	var blank = new R3D.MSER.Region();
+	blank._pixel = this._pixel;
+	blank._level = this._level;
+	blank._minX = this._minX;
+	blank._minY = this._minY;
+	blank._maxX = this._maxX;
+	blank._maxY = this._maxY;
+	blank._area = this._area;
+	blank._variation = this._variation;
+	blank._stable = this._stable;
+	blank._moments = Code.copyArray(this._moments);
+	blank._pixels = Code.copyArray(this._pixels);
+	return blank;
+}
+// ------------------------------------------------------------------------------------------------------------------------------
+
+
 R3D.showFundamental = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){
 	return R3D.showRansac(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 }

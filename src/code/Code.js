@@ -2659,6 +2659,12 @@ Code.clampRound0255 = function(n){
 Code.clamp = function(n, a,b){
 	return Math.min(Math.max(n,a),b);
 }
+Code.array01To0255 = function(array){
+	for(var i=0; i<array.length; ++i){
+		array[i] = Math.min(Math.floor(array[i]*256.0),255);
+	}
+	return array;
+}
 // Code.getFloatArrayARGBFromARGB = function(col){
 // 	return Code.getFloatARGB(colA);
 // }
@@ -3767,11 +3773,14 @@ Code.removeProperty = function(ele,pro){
 };
 Code.getValueOrDefault = function(obj,key, def){
 	var val = obj[key];
+	return Code.valueOrDefault(val, def);
+};
+Code.valueOrDefault = function(val, def){
 	if(val!==undefined && val!==null){
 		return val;
 	}
 	return def;
-};
+}
 Code.getPropertyOrDefault = function(ele,pro, def){
 	if(Code.hasProperty(ele,pro)){
 		return Code.getProperty(ele,pro);
@@ -8925,7 +8934,24 @@ Code.open = function(url){
 	window.open(url);
 }
 
-
+Code.assert = function(boolCheck, comment){
+	if(!boolCheck){
+		throw comment ? comment : "assert bool check";
+	}
+}
+// -------------------------------------------------------------------------------------------------------------------------------------------- Array
+Array.prototype.first = function(){
+	if(this.length>0){
+		return this[0];
+	}
+	return undefined;
+}
+Array.prototype.last = function(){
+	if(this.length>0){
+		return this[this.length-1];
+	}
+	return undefined;
+}
 
 
 
