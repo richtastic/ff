@@ -6034,6 +6034,95 @@ Code.intersectionRayParabola = function(org,dir, foc,drx){
 	var y2 = pA*x2*x2 + pB*x2 + pC;
 	return [new V2D(x1,y1), new V2D(x2,y2)];
 }
+Code.convexHull = function(pointList){ // V2D point list
+	pointList = Code.copyArray(pointList);
+	if(pointList.length<3){
+		return pointList;
+	}
+	pointList.sort(function(a,b){ // sort on lower x & lower y
+		if(a.x<b.x){
+			return -1;
+		}else if(a.x>b.x){
+			return 1;
+		}else if(a.y<b.y){
+			return -1;
+		}else if(a.y>b.y){
+			return 1;
+		}else{
+			return 0;
+		}
+	});
+	// bottom
+	var bot = [];
+	for(var i=0; i<pointList.length; ++i){
+		var point = pointList[i];
+		while(bot.length>=2 && V2D.crossOrigin(point,bot[bot.length-2],bot[bot.length-1]) <= 0){
+			bot.pop();
+		}
+		bot.push(point);
+	}
+	// top
+	var top = [];
+	for(var i=pointList.length-1; i>=0; --i){
+		var point = pointList[i];
+		while(top.length>=2 && V2D.crossOrigin(point,top[top.length-2],top[top.length-1]) <= 0){
+			top.pop();
+		}
+		top.push(point);
+	}
+	bot.pop();
+	top.pop();
+	Code.arrayPushArray(bot,top);
+	return bot;
+}
+Code.minRect = function(pointList){ // minimum area rectangle / bounding box for convex hull : V2D list - exhaustive O(n^2) -- todo: rotating calipers
+	if(pointList.length<3){
+		return null;
+	} // rotate for each edge & record area
+	var bestArea = null;
+	var bestAngle = null;
+	var bestWidth = null;
+	var bestHeight= null;
+	var bestCorner = new V2D();
+	var p = new V2D();
+	var len = pointList.length;
+	for(var i=0; i<len; ++i){
+		var pointA = pointList[i];
+		var pointB = pointList[(i+1)%len];
+		var angle = Math.atan2(pointB.y-pointA.y,pointB.x-pointA.x);
+		var minX = null;
+		var minY = null;
+		var maxX = null;
+		var maxY = null;
+		for(var j=0; j<len; ++j){
+			p.set(pointList[j]);
+			p.rotate(-angle);
+			if(j==0){
+				minX = p.x;
+				minY = p.y;
+				maxX = p.x;
+				maxY = p.y;
+			}else{
+				minX = Math.min(minX,p.x);
+				minY = Math.min(minY,p.y);
+				maxX = Math.max(maxX,p.x);
+				maxY = Math.max(maxY,p.y);
+			}
+		}
+		var w = maxX-minX;
+		var h = maxY-minY;
+		var area = w*h;
+		if(bestArea===null || bestArea>area){
+			bestArea = area;
+			bestAngle = angle;
+			bestWidth = w;
+			bestHeight = h;
+			bestCorner.set(minX,minY);
+			bestCorner.rotate(angle);
+		}
+	}
+	return {"origin":bestCorner, "width":bestWidth, "height":bestHeight, "angle":bestAngle, "area":bestArea};
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- CIRCLES
 Code.colinear = function(a,b,c){
 	var EPSILON = 1E-12;

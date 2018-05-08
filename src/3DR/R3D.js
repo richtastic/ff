@@ -8788,7 +8788,7 @@ R3D.MSERfeatures = function(image){
 
 	// R3D.MSERTest(gry,width,height);
 	// return [];
-	
+	var maxEccentricity = 4.0;
 	var mser = new R3D.MSER();
 	// only work on discrete set
 	var image = Code.array01To0255( Code.copyArray(gry) );
@@ -8809,10 +8809,30 @@ var blobImage = [blobImageA,blobImageB,blobImageC];
 		for(var i=0; i<regions.length; ++i){
 		//var i =10;
 			var region = regions[i];
-			var axes = region.axes();
-			var centroid = region.centroid();
-			var axisX = axes["x"];
-			var axisY = axes["y"];
+			// var area = region.area();
+			// if(area<3){
+			// 	continue;
+			// }
+			// var axes = region.axes();
+			// var centroid = region.centroid();
+			// var axisX = axes["x"];
+			// var axisY = axes["y"];
+
+			// bounding box solution:
+			var minRect = region.minRect();
+			if(!minRect){
+				continue;
+			}
+			var centroid = minRect["center"];
+			var axisX = minRect["x"];
+			var axisY = minRect["y"];
+			var eccentricity = axisX.length()/axisY.length();
+			if(eccentricity<1.0){
+				eccentricity = 1.0/eccentricity;
+			}
+			if(eccentricity>maxEccentricity){
+				continue;
+			}
 			var blob = {"center":centroid, "x":axisX, "y":axisY};
 			features.push(blob);
 
@@ -8822,7 +8842,8 @@ var blobImage = [blobImageA,blobImageB,blobImageC];
 var sca = 1.5;
 var img = GLOBALSTAGE.getFloatRGBAsImage(blobImageA,blobImageB,blobImageC, width, height);
 var d = new DOImage(img);
-d.graphics().alpha(0.5);
+//d.graphics().alpha(0.5);
+d.graphics().alpha(0.1);
 d.matrix().scale(sca);
 d.matrix().translate(0 + R3D.XCOUNT*width*sca, 0);
 //d.matrix().translate(10 + (i%counting)*width, 10 + (i/counting | 0)*height + ((R3D.XCOUNT/counting | 0)*height) );
@@ -8839,8 +8860,8 @@ R3D.MSER = function(delta, minArea, maxArea, maxVariation, minDiversity){ // 8-c
 	// minDiversity = Code.valueOrDefault(minDiversity, 0.5);
 
 	delta = Code.valueOrDefault(delta, 1.0);
-	minArea = Code.valueOrDefault(minArea, 0.0005);
-	maxArea = Code.valueOrDefault(maxArea, 0.25);
+	minArea = Code.valueOrDefault(minArea, 0.0002);
+	maxArea = Code.valueOrDefault(maxArea, 0.10);
 	maxVariation = Code.valueOrDefault(maxVariation, 0.50);
 	minDiversity = Code.valueOrDefault(minDiversity, 0.90);
 
@@ -8999,6 +9020,35 @@ R3D.MSER.Region = function(level,pixel){
 	this._child = null;
 	this._next = null;
 }
+R3D.MSER.Region.prototype.area = function(){
+	return this._area;
+}
+R3D.MSER.Region.prototype.minRect = function(){
+	if(this._pixels.length<3){
+		return null;
+	}
+	var points = [];
+	for(var i=0; i<this._pixels.length; ++i){
+		var p = this._pixels[i];
+		points.push(new V2D(p[0],p[1]));
+	}
+	var hull = Code.convexHull(points);
+	if(hull.length<3){
+		return null;
+	}
+	var mar = Code.minRect(hull);
+	//console.log(mar);
+	var ang = mar["angle"];
+	var wid = mar["width"];
+	var hei = mar["height"];
+	var org = mar["origin"];
+	var xAxis = new V2D(wid,0);
+	var yAxis = new V2D(0,hei);
+	xAxis.rotate(ang);
+	yAxis.rotate(ang);
+	var center = org.copy().add(xAxis.x*0.5,xAxis.y*0.5).add(yAxis.x*0.5,yAxis.y*0.5);
+	return {"center":center, "x":xAxis, "y":yAxis};
+}
 R3D.MSER.Region.prototype.axes = function(){
 	var area = this._area;
 	var x = this._moments[0];
@@ -9110,7 +9160,6 @@ R3D.MSER.Region.prototype.centroid = function(){
 	// var diffX = (this._maxX + this._minX)*0.5;
 	// var diffY = (this._maxY + this._minY)*0.5;
 	// return new V2D(diffX, diffY);
-
 	var area = this._area;
 	var x = this._moments[0];
 	var y = this._moments[1];

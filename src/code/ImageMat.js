@@ -3695,7 +3695,7 @@ ImageMat.prototype.calculateGradient = function(x,y, blur){
 	Ix = Ix.value;
 	Iy = Iy.value;
 	var dir = new V2D(Ix[index],Iy[index]);
-	dir.norm();
+	//dir.norm();
 	return dir;
 }
 ImageMat.prototype.getScaledImage = function(scale){

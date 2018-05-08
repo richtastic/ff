@@ -13,6 +13,9 @@ V2D.dotNorm = function(a,b){
 V2D.cross = function(a,b){ // z direction
 	return a.x*b.y-a.y*b.x;
 }
+V2D.crossOrigin = function(o,a,b){ // cross vectors oa & ob
+	return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+}
 V2D.areaTri = function(a,b,c){ 
 	return V2D.crossTri(a,b,c)*0.5;
 }
