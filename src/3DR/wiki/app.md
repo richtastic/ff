@@ -181,6 +181,33 @@ project typical numbers:
 APP TODO:
 
 
+
+- multiple orientations
+- SIFT descriptor
+
+
+
+- for each MSER:
+	- for each corner inside MSER rect (+ delta ~ 1.25)
+		- assign scale based on MSER size [~0.5 of MSER average size]
+
+
+
+
+https://github.com/vlfeat/vlfeat
+- color histogram over entire area
+- HOG:
+	- 8x8 binning
+	- combine over entire picture ???
+
+VL DENSE SIFT
+	http://www.vlfeat.org/overview/dsift.html
+	http://www.vlfeat.org/api/dsift.html
+
+
+https://ags.cs.uni-kl.de/fileadmin/inf_ags/2dip-ss17/2DIP_SS2017_lec07_Descriptors.pdf
+
+
 https://en.wikipedia.org/wiki/Scale-invariant_feature_transform#Orientation_assignment
 
 
@@ -211,7 +238,7 @@ https://en.wikipedia.org/wiki/Scale-invariant_feature_transform#Orientation_assi
 ORB (Oriented FAST and Rotated BRIEF) — OpenCV-Python Tutorials ...
 FAST = Features_from_accelerated_segment_test
 GLOH (Gradient Location and Orientation Histogram)
-
+HOG = Histogram of oriented gradients
 
 
 

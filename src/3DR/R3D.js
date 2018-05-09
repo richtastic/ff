@@ -286,7 +286,7 @@ R3D.angleImageRGB = function(image,mask){
 R3D.interpolateAngleMaxima = function(bins, binMaxIndex){
 	// parabola / interpolate estimate the best angle
 	var totalBinCount = bins.length;
-	var x0 = (binMaxIndex-1)%totalBinCount; x0 = (x0>=0) ? x0 : (x0+totalBinCount);
+	var x0 = (binMaxIndex-1 + totalBinCount)%totalBinCount;
 	var x1 = binMaxIndex;
 	var x2 = (binMaxIndex+1)%totalBinCount;
 	var y0 = bins[x0];

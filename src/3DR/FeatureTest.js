@@ -1,4 +1,4 @@
-                   function FeatureTest(){
+function FeatureTest(){
 	// setup display
 	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas, (1/5)*1000);
@@ -26,16 +26,16 @@
 //new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 //new ImageLoader("./images/",["tgag.jpg"],this,this.getScaledImage).load();
 // main study
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
 // pool
 // new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
 // snow
 // new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
 //new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
-//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
+// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 
@@ -48,10 +48,49 @@ new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
 //new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
-// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
+//new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 
 }
-FeatureTest.prototype.showMSER = function(features, display, offsetX, offsetY){
+FeatureTest.prototype.showCorners = function(features, display, offsetX, offsetY, color){
+	color = color!==undefined ? color : 0xFFFF0000;
+	for(k=0; k<features.length; ++k){
+		var point = features[k];
+		if(!Code.isa(point,V4D)){
+			point = new V4D(point["point"].x,point["point"].y, point["size"],point["angle"]);
+		}
+		//console.log(""+point)
+			// var x = point.x * imageMatrixA.width();
+			// var y = point.y * imageMatrixA.height();
+			// var z = point.z;
+			var x = point.x;
+			var y = point.y;
+			var z = point.z;
+			var a = point.t;
+		var c = new DO();
+			//color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
+			//color = 0xFF000000;
+			c.graphics().setLine(0.50, color);
+			c.graphics().beginPath();
+			c.graphics().drawCircle(x, y, z);
+			c.graphics().strokeLine();
+			c.graphics().endPath();
+
+// 			var v = new V2D(z,0);
+// 			v.rotate(a);
+// 			c.graphics().beginPath();
+// 			c.graphics().moveTo(x,y);
+// 			c.graphics().lineTo(x+v.x,y+v.y);
+// 			c.graphics().strokeLine();
+// 			c.graphics().endPath();
+// //			c.matrix().scale(GLOBALSCALE);
+// 			//c.matrix().translate(0 + f*imageMatrixA.width()*GLOBALSCALE, 0);
+			c.matrix().translate(offsetX, offsetY);
+			display.addChild(c);
+	}
+	
+}
+FeatureTest.prototype.showMSER = function(features, display, offsetX, offsetY, color){
+	color = color!==undefined ? color : 0xFFFF0000;
 	for(k=0; k<features.length; ++k){
 		var feature = features[k];
 		//console.log(feature)
@@ -66,7 +105,7 @@ FeatureTest.prototype.showMSER = function(features, display, offsetX, offsetY){
 		var angleX = V2D.angleDirection(V2D.DIRX,dX);
 
 		var c = new DO();
-		c.graphics().setLine(1.0,0xFFFF0000);
+		c.graphics().setLine(1.0,color);
 		c.graphics().beginPath();
 		//c.graphics().moveTo(x,y);
 		//c.graphics().lineTo(x+v.x,y+v.y);
@@ -135,19 +174,27 @@ FeatureTest.imageFromParameters = function(imageMatrix, point,scale,angle,sizeX,
 	var image = imageMatrix.extractRectFromMatrix(sizeWidth,sizeHeight, matrix);
 	return image;
 }
-
+FeatureTest._defaultCircularSADinMaskValue = null;
+FeatureTest._defaultCircularSADBinMask = function(){
+	if(!FeatureTest._defaultCircularSADinMaskValue){
+		//FeatureTest._defaultCircularSADinMaskValue = R3D.circularSIFTBinMask(3.2, 3); // 32
+		//FeatureTest._defaultCircularSADinMaskValue = R3D.circularSIFTBinMask(3, 3); // 30
+		//FeatureTest._defaultCircularSADinMaskValue = R3D.circularSIFTBinMask(2.5, 3); // 25
+		FeatureTest._defaultCircularSADinMaskValue = R3D.circularSIFTBinMask(2, 3); // 20
+	}
+	return FeatureTest._defaultCircularSADinMaskValue;
+}
 FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,directionX,directionY,optimumAngle){
-	var scale = 1.0;
+	//var scale = 1.0;
+	//var scale = 0.707;
+	var scale = 0.25;
 	//var scale = 0.5;
-	//var scale = 0.25;
-	//var scale = 2.0;
-	//var scale = 4.0;
 	var angleX = V2D.angleDirection(V2D.DIRX,directionX);
 	var sizeX = directionX.length();
 	var sizeY = directionY.length();
 	var wid = imageMatrix.width();
 	var hei = imageMatrix.height();
-	var binMask = R3D._defaultCircularSADBinMask();
+	var binMask = FeatureTest._defaultCircularSADBinMask();
 		var binLookup = binMask["value"];
 		var binWidth = binMask["width"];
 		var binCount = binMask["bins"];
@@ -166,11 +213,12 @@ FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,di
 	// 	vector.push(vG[i]);
 	// 	vector.push(vB[i]);
 	// }
+	// var min = Code.minArray(vector);
+	// Code.arraySub(vector, min);
+	// Code.normalizeArray(vector);
 	// return vector;
 	
-	/*
-	source = ImageMat.getBlurredImage(source, wid,hei, sigma);
-	*/
+
 	
 	var averageColor = new V3D();
 	var v = new V3D(r,g,b);
@@ -182,8 +230,8 @@ FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,di
 			if(binGroup<0){
 				continue;
 			}
-			//var binWeight = binWeights[index];
-			var binWeight = 1.0;
+			var binWeight = binWeights[index];
+//			var binWeight = 1.0;
 			// AVERAGE COLOR
 			averageColor.set(0,0,0);
 			for(var jj=0;jj<=2;++jj){
@@ -218,22 +266,145 @@ FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,di
 	
 	return vector;
 }
+FeatureTest._defaultCircularSIFTBinMaskValue = null;
+FeatureTest._defaultCircularSIFTBinMask = function(){
+	if(!FeatureTest._defaultCircularSIFTBinMaskValue){
+		FeatureTest._defaultCircularSIFTBinMaskValue = R3D.circularSIFTBinMask(2, 3); // 2,2.5,3
+	}
+	return FeatureTest._defaultCircularSIFTBinMaskValue;
+}
+FeatureTest.SIFTVectorCircular = function(imageMatrix, center,directionX,directionY,optimumAngle, colors){
+	colors = colors!==undefined ? colors : true;
+	var colorCount = colors ? 3 : 1;
+	//var scale = 1.0;
+	//var scale = 0.707;
+	//var scale = 0.5;
+	var scale = 0.25;
+
+	var binMask = FeatureTest._defaultCircularSIFTBinMask();
+		var binLookup = binMask["value"];
+		var binWidth = binMask["width"];
+		var binCount = binMask["bins"];
+		var binWeights = binMask["weights"];
+	var binsSize = 8;
+//	var binsSize = 16;
+	var vectorLen = binCount*binsSize;
+	var vector = Code.newArrayZeros(vectorLen*colorCount);
+
+	var angleX = V2D.angleDirection(V2D.DIRX,directionX);
+	var sizeX = directionX.length();
+	var sizeY = directionY.length();
+	var wid = imageMatrix.width();
+	var hei = imageMatrix.height();
+
+
+	var gradients = FeatureTest._SIFTimage(imageMatrix, binWidth, center, scale,-angleX,sizeX,sizeY,-optimumAngle, colors);
+	//console.log(gradients)
+	var gradientR, gradientG, gradientB, gradientY;
+	if(colors){
+		var gradientR = gradients["r"];
+		var gradientG = gradients["g"];
+		var gradientB = gradients["b"];
+	}else{
+		var gradientY = gradients["y"];
+	}
+
+	for(var j=0; j<binWidth; ++j){
+		for(var i=0; i<binWidth; ++i){
+			var index = j*binWidth + i;
+			var bin = binLookup[index];
+			if(bin>=0){
+				var weight = binWeights[index];
+				if(colors){
+					R3D._SIFVectorRGBCircularVectorAdd(vector, gradientR[index], binsSize, binCount, vectorLen, bin, weight, 0);
+					R3D._SIFVectorRGBCircularVectorAdd(vector, gradientG[index], binsSize, binCount, vectorLen, bin, weight, 1);
+					R3D._SIFVectorRGBCircularVectorAdd(vector, gradientB[index], binsSize, binCount, vectorLen, bin, weight, 2);
+				}else{
+					R3D._SIFVectorRGBCircularVectorAdd(vector, gradientY[index], binsSize, binCount, vectorLen, bin, weight, 0);
+				}
+			}
+		}
+	}
+	var min = Code.minArray(vector);
+	Code.arraySub(vector, min);
+	Code.normalizeArray(vector);
+	vector = ImageMat.pow(vector,0.25);
+	return vector;
+}
+FeatureTest._SIFTimage = function(imageMatrix, insideSet, location, scale,angle,sizeX,sizeY,bestAngle, colors){
+	var wid = imageMatrix.width();
+	var hei = imageMatrix.height();
+	if(colors){
+		var red = FeatureTest._SIFTchannel(imageMatrix.red(), wid,hei, insideSet, location, scale,angle,sizeX,sizeY,bestAngle);
+		var grn = FeatureTest._SIFTchannel(imageMatrix.grn(), wid,hei, insideSet, location, scale,angle,sizeX,sizeY,bestAngle);
+		var blu = FeatureTest._SIFTchannel(imageMatrix.blu(), wid,hei, insideSet, location, scale,angle,sizeX,sizeY,bestAngle);
+		return {"r":red,"g":grn,"b":blu};
+	}else{
+		var gry = FeatureTest._SIFTchannel(imageMatrix.gry(), wid,hei, insideSet, location, scale,angle,sizeX,sizeY,bestAngle);
+		return {"y":gry};
+	}
+}
+// imageMatrix, point,scale,angle,sizeX,sizeY,bestAngle, sizeWidth,sizeHeight
+//FeatureTest._SIFTchannel = function(source,width,height, insideSet, location, scale, angle){
+FeatureTest.CALLX1 = 0;	
+FeatureTest._SIFTchannel = function(source,width,height, insideSet, location, scale,angle,sizeX,sizeY,bestAngle){
+	var padding = 2;
+	var outsideSet = insideSet + 2*padding;
+	// extract image at new orientation
+	var scaleX = insideSet/sizeX;
+	var scaleY = insideSet/sizeY;
+	var matrix = new Matrix(3,3).identity();
+		// matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		// matrix = Matrix.transform2DScale(matrix, scale);
+		// matrix = Matrix.transform2DRotate(matrix, -angle);
+		// matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
+		// matrix = Matrix.inverse(matrix);
+
+		matrix = Matrix.transform2DTranslate(matrix, -outsideSet*0.5, -outsideSet*0.5);
+		matrix = Matrix.transform2DRotate(matrix,angle);
+		matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
+		matrix = Matrix.transform2DRotate(matrix,bestAngle);
+		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DTranslate(matrix, location.x, location.y);
+		
+		// matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
+		// matrix = Matrix.transform2DScale(matrix, scale);
+		// matrix = Matrix.transform2DRotate(matrix, -angle);
+		// matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
+		// matrix = Matrix.inverse(matrix);
+
+
+
+	var area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
+	// BLUR IMAGE
+	//var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
+	var blurred = area;
+
+		// var img, d;
+		// img = GLOBALSTAGE.getFloatRGBAsImage(blurred,blurred,blurred, outsideSet, outsideSet);
+		// d = new DOImage(img);
+		// d.matrix().scale(2.0);
+		// d.matrix().translate(10 + 50*FeatureTest.CALLX1, 10 + 50);
+		// GLOBALSTAGE.addChild(d);
+		// ++FeatureTest.CALLX1;
+
+	// GET DERIVATIVES
+	var gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet).value;
+	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
+	return gradients;
+}
+
+// FeatureTest.prototype.processCornerFeatures = function(image, corners, offY){
+// 	var vectors = [];
+// }
 
 FeatureTest.prototype.processMSERfeatures = function(image, corners, gradient, features, offY){
-var vectors = [];
-
-	offY += 200;
+	console.log(corners);
+var featureScale = 1.0;
+	var vectors = [];
 	var blockSize = 24;
-	var paddingSize = 4;
-	var gradientBlockSize = blockSize + 2*paddingSize;
+	offY += 200;
 
-
-	
-	var width = image.width();
-	var height = image.height();
-	var blockMask = ImageMat.circleMask(blockSize);
-	var sigma = 1.0;
-	var gaussMask = ImageMat.gaussianMask(blockSize,blockSize, sigma);
 	for(var i=0; i<features.length; ++i){
 		
 
@@ -243,29 +414,13 @@ var vectors = [];
 		var dirY = feature["y"];
 		var sizeX = dirX.length();
 		var sizeY = dirY.length();
-		//var maxSize = Math.max(sizeX,sizeY);
-		var angleX = V2D.angleDirection(V2D.DIRX,dirX);
-		//var widthToHeight = sizeX/sizeY;
 		var scaleX = blockSize/sizeX;
 		var scaleY = blockSize/sizeY;
-		// var scaleX = sizeX/blockSize;
-		// var scaleY = sizeY/blockSize;
-//console.log(sizeX+" / "+blockSize+" "+scaleX);
-/*
-FeatureTest.js:148 10 / 24 0.4166666666666667
-FeatureTest.js:148 24 / 24 1
-FeatureTest.js:148 16 / 24 0.6666666666666666
-FeatureTest.js:148 16.150691241745903 / 24 0.6729454684060793
-FeatureTest.js:148 20 / 24 0.8333333333333334
-FeatureTest.js:148 19 / 24 0.7916666666666666
-FeatureTest.js:148 30 / 24 1.25
-FeatureTest.js:148 14.01592500858061 / 24 0.5839968753575254
-FeatureTest.js:148 8.27720938009611 / 24 0.34488372417067126
-*/
-		var sigma = null;
-		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DRotate(matrix,-angleX);
-			matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
+		
+		// var sigma = null;
+		// var matrix = new Matrix(3,3).identity();
+		// 	matrix = Matrix.transform2DRotate(matrix,-angleX);
+		// 	matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
 			//matrix = Matrix.transform2DRotate(matrix,-angleX);
 		
 		//x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix
@@ -274,90 +429,35 @@ FeatureTest.js:148 8.27720938009611 / 24 0.34488372417067126
 		//var cornerBlock = ImageMat.extractRectFromFloatImage(center.x,center.y,1.0,sigma,blockSize,blockSize, image.gry(),width,height, matrix);
 
 
-		matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DRotate(matrix,-angleX);
-			matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
-			matrix = Matrix.transform2DScale(matrix,1.0);
-			//matrix = Matrix.transform2DScale(matrix,2.5);
-			// matrix = Matrix.transform2DRotate(matrix,-bestAngle);
-		var gradientBlock = ImageMat.extractRectFromFloatImage(center.x,center.y,2.0,null,gradientBlockSize,gradientBlockSize, image.gry(),width,height, matrix);
-		var gradientBlurBlock = ImageMat.getBlurredImage(gradientBlock, gradientBlockSize, gradientBlockSize, 1.0);
-		var gradientBlock = ImageMat.gradientVector(gradientBlurBlock, gradientBlockSize, gradientBlockSize).value;
-		gradientBlock = ImageMat.subImage(gradientBlock,gradientBlockSize,gradientBlockSize, paddingSize,paddingSize,blockSize,blockSize);
-		
-		// var gradientBlock = image.extractRectFromFloatImage(center.x,center.y,1.0,sigma,gradientBlockSize,gradientBlockSize, matrix);
-		// var gradientBlurBlock = gradientBlock.getBlurredImage(1.0);
-		// var gradientBlock = gradientBlurBlock.calculateGradient();
 
 
-		// find primary direction:
-/*
-		var binsTotal = 16;
-		var bins = Code.newArrayZeros(binsTotal);
-		var off = (blockSize-0.5)*0.5;
-		for(var x=0; x<blockSize; ++x){
-			for(var y=0; y<blockSize; ++y){
-				var index = y*blockSize + x;
-				var maskValue = blockMask[index];
-				if(maskValue>0){
-					var vx = x - off;
-					var vy = y - off;
-					var angle = Math.atan2(vy,vx) + Math.PI;
-					var bin = Math.min(Math.floor((angle/Math.PI2)*binsTotal),binsTotal-1);
-					var cornerScore = cornerBlock[index];
-					var distance = Math.sqrt( vx*vx + vy*vy );
-					if(distance<1){
-						distance = 1;
-					}
-					// distance = 1.0;
-					var score = cornerScore / distance;
-					bins[bin] += score;
-				}
-			}
+if(corners){ // make corner features
+	var a = center.copy().add( dirX.copy().scale(-0.5) ).add( dirY.copy().scale(-0.5) );
+	var b = a.copy().add(dirX);
+	var c = a.copy().add(dirX).add(dirY);
+	var d = a.copy().add(dirY);
+	var poly = [a,b,c,d];
+	// find all incident corners
+	var averageSize = (sizeX+sizeY)*0.5;
+	for(var c=0; c<corners.length; ++c){
+		var corner = corners[c];
+		var inside = Code.isPointInsidePolygon2D(center,poly);
+		if(inside){
+			// console.log("inside");
+			// console.log(corner);
+			var cen = new V2D(corner.x,corner.y);
+			var dX = new V2D(averageSize,0);
+			var dY = new V2D(0,averageSize);
+			var f = {"center":cen,"x":dX,"y":dY};
+			FeatureTest.addToVectors(vectors, f, cen, dX,dY, featureScale, image, blockSize);
 		}
-		*/
+	}
+}else{
+	//console.log("i: "+i);
+	FeatureTest.addToVectors(vectors, feature, center, dirX,dirY, featureScale, image, blockSize);
+}
 
-		//var binsTotal = 36;
-		//var binsTotal = 48;
-		var binsTotal = 64;
-
-		// TODO: find different peaks
-		
-		var bins = Code.newArrayZeros(binsTotal);
-		var off = (blockSize-0.5)*0.5;
-		for(var x=0; x<blockSize; ++x){
-			for(var y=0; y<blockSize; ++y){
-				var index = y*blockSize + x;
-				var maskValue = blockMask[index];
-				if(maskValue>0){
-					var grad = gradientBlock[index];
-					var mag = grad.length();
-					var vx = x - off;
-					var vy = y - off;
-					// var angle = Math.atan2(vy,vx) + Math.PI;
-					var angle = Math.atan2(grad.y,grad.x) + Math.PI;
-					var bin = Math.min(Math.floor((angle/Math.PI2)*binsTotal),binsTotal-1);
-					//var cornerScore = cornerBlock[index];
-					var distance = Math.sqrt( vx*vx + vy*vy );
-					if(distance<1){
-						distance = 1;
-					}
-					//var falloff = Math.exp(-distance*distance*1.0);
-					var falloff = 1.0;
-					//distance = 1.0;
-					var score = mag * falloff;
-					bins[bin] += score;
-				}
-			}
-		}
-
-//console.log("....... "+i)
-//Code.printMatlabArray(bins,"bins");
-
-	var info = Code.infoArray(bins);
-	var max = info["max"];
-	var maxIndex = info["indexMax"];
-	var bestAngle = R3D.interpolateAngleMaxima(bins,maxIndex);
+	
 	//console.log("bestAngle: "+bestAngle);
 
 /*
@@ -377,9 +477,7 @@ FeatureTest.js:148 8.27720938009611 / 24 0.34488372417067126
 
 */
 
-		feature["angle"] = bestAngle;
-		var vector = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
-		vectors.push({"vector":vector, "feature":feature});
+		
 		// get primary direction
 
 		// if(i>3){
@@ -391,18 +489,160 @@ FeatureTest.js:148 8.27720938009611 / 24 0.34488372417067126
 	}
 	return vectors;
 }
+FeatureTest.addToVectors = function(vectors, feature, center, dirX,dirY, featureScale, image, blockSize){
+	var paddingSize = 4;
+	var gradientBlockSize = blockSize + 2*paddingSize;
+
+	var sizeX = dirX.length();
+	var sizeY = dirY.length();
+	//var maxSize = Math.max(sizeX,sizeY);
+	var angleX = V2D.angleDirection(V2D.DIRX,dirX);
+	//var widthToHeight = sizeX/sizeY;
+	var scaleX = blockSize/sizeX;
+	var scaleY = blockSize/sizeY;
+
+	var useColors = true;
+	//var featureScale = 1.0;
+	//var featureScale = 1.0/Math.sqrt(2.0); // 0.707 inside circle
+	//var featureScale = 0.5; // zoom out
+	var featureScale = .707;
+	
+	var width = image.width();
+	var height = image.height();
+	var blockMask = ImageMat.circleMask(blockSize);
+	var sigma = 1.0;
+	var gaussMask = ImageMat.gaussianMask(blockSize,blockSize, sigma);
+
+
+
+
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix,-angleX);
+		matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
+		matrix = Matrix.transform2DScale(matrix,featureScale);
+		//matrix = Matrix.transform2DScale(matrix,2.5);
+		// matrix = Matrix.transform2DRotate(matrix,-bestAngle);
+	var gradientBlock = ImageMat.extractRectFromFloatImage(center.x,center.y,2.0,null,gradientBlockSize,gradientBlockSize, image.gry(),width,height, matrix);
+	var gradientBlurBlock = ImageMat.getBlurredImage(gradientBlock, gradientBlockSize, gradientBlockSize, 1.0);
+	var gradientBlock = ImageMat.gradientVector(gradientBlurBlock, gradientBlockSize, gradientBlockSize).value;
+	gradientBlock = ImageMat.subImage(gradientBlock,gradientBlockSize,gradientBlockSize, paddingSize,paddingSize,blockSize,blockSize);
+	
+	// var gradientBlock = image.extractRectFromFloatImage(center.x,center.y,1.0,sigma,gradientBlockSize,gradientBlockSize, matrix);
+	// var gradientBlurBlock = gradientBlock.getBlurredImage(1.0);
+	// var gradientBlock = gradientBlurBlock.calculateGradient();
+
+
+	// find primary direction:
+/*
+	var binsTotal = 16;
+	var bins = Code.newArrayZeros(binsTotal);
+	var off = (blockSize-0.5)*0.5;
+	for(var x=0; x<blockSize; ++x){
+		for(var y=0; y<blockSize; ++y){
+			var index = y*blockSize + x;
+			var maskValue = blockMask[index];
+			if(maskValue>0){
+				var vx = x - off;
+				var vy = y - off;
+				var angle = Math.atan2(vy,vx) + Math.PI;
+				var bin = Math.min(Math.floor((angle/Math.PI2)*binsTotal),binsTotal-1);
+				var cornerScore = cornerBlock[index];
+				var distance = Math.sqrt( vx*vx + vy*vy );
+				if(distance<1){
+					distance = 1;
+				}
+				// distance = 1.0;
+				var score = cornerScore / distance;
+				bins[bin] += score;
+			}
+		}
+	}
+	*/
+
+	//var binsTotal = 36;
+	//var binsTotal = 48;
+	var binsTotal = 64;
+
+	// TODO: find different peaks
+
+	var bins = Code.newArrayZeros(binsTotal);
+	var off = (blockSize-0.5)*0.5;
+	for(var x=0; x<blockSize; ++x){
+		for(var y=0; y<blockSize; ++y){
+			var index = y*blockSize + x;
+			var maskValue = blockMask[index];
+			if(maskValue>0){
+				var grad = gradientBlock[index];
+				var mag = grad.length();
+				var vx = x - off;
+				var vy = y - off;
+				// var angle = Math.atan2(vy,vx) + Math.PI;
+				var angle = Math.atan2(grad.y,grad.x) + Math.PI;
+				var bin = Math.min(Math.floor((angle/Math.PI2)*binsTotal),binsTotal-1);
+				//var cornerScore = cornerBlock[index];
+				var distance = Math.sqrt( vx*vx + vy*vy );
+				if(distance<1){
+					distance = 1;
+				}
+				//var falloff = Math.exp(-distance*distance*1.0);
+				var falloff = 1.0;
+				//distance = 1.0;
+				var score = mag * falloff;
+				bins[bin] += score;
+			}
+		}
+	}
+	
+	var bestBinDropPercent = 0.75;
+	var bestBinKeepPercent = 0.80;
+	var info = Code.infoArray(bins);
+	var maxAngleScore = info["max"];
+	var scoreCutoffDrop = maxAngleScore*bestBinDropPercent;
+	var scoreCutoffKeep = maxAngleScore*bestBinDropPercent;
+	var bestAngles = [];
+	var checkAngles = [];
+	for(var index=0; index<bins.length; ++index){
+		var bin = bins[index];
+		if(bin>=scoreCutoffDrop){
+			checkAngles.push([bin,index]);
+		}
+		if(bin>=scoreCutoffKeep){
+			bestAngles.push([bin,index]);
+		}
+	}
+useColors = false;
+	if(checkAngles.length<=2){
+	//if(true){//if(checkAngles.length<=5){
+		for(var j=0; j<bestAngles.length; ++j){
+			var best = bestAngles[j];
+			var index = best[1];
+			var bestAngle = R3D.interpolateAngleMaxima(bins,index);
+			var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
+			var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
+			var vector = [];
+				Code.arrayPushArray(vector,vectorSIFT);
+				Code.arrayPushArray(vector,vectorSAD);
+				//console.log("sizes: "+vectorSAD.length+" / "+vectorSIFT.length); // 200/600
+			
+			vectors.push({"vector":vector, "feature":feature, "angle":bestAngle});
+		}
+	}
+}
+
 FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
 	var offY = 0;
 	var blockSize = 25;
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
-		var pairs = [match["A"]["feature"],match["B"]["feature"]];
+		var pairs = [match["A"],match["B"]];
 		for(var j=0; j<pairs.length; ++j){
-			var feature = pairs[j];
+			var item = pairs[j];
+			var feature = item["feature"];
 			var center = feature["center"];
 			var dirX = feature["x"];
 			var dirY = feature["y"];
-			var bestAngle = feature["angle"];
+			//var bestAngle = feature["angle"];
+			var bestAngle = item["angle"];
 			var sizeX = dirX.length();
 			var sizeY = dirY.length();
 			var angleX = V2D.angleDirection(V2D.DIRX,dirX);
@@ -522,7 +762,7 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 	for(i=0; i<objectsB.length; ++i){
 		matchesB[i] = matchesB[i].sort(sortScore);
 	}
-	console.log(matches);
+//	console.log(matches);
 	// matches = matches.sort(sortScore);
 	//console.log(objectsA.length+" x "+objectsB.length+" = "+matches.length);
 	var bestMatches = [];
@@ -570,6 +810,22 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 	console.log(bestMatches);
 	return bestMatches;
 }
+FeatureTest.convertCornersToFeatures = function(corners, features, imageMatrix){
+	HERE
+	/*
+	create 'corner' objects
+	put corners in quadtree
+	for each region
+		get local rect from feature
+		grab all points inside rect
+			each corner inside actual rect:
+			=> set feature IF is feature average area is smaller than current
+	each corner object with feature assigned:
+		convert to 'region' at 
+	*/
+	return [];
+}
+
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
@@ -783,21 +1039,69 @@ var cornersB = null;
 		// d.matrix().scale(1.5);
 		// d.matrix().translate(0,0);
 		// GLOBALSTAGE.addChild(d);
-
+	var display = this._root;
 
 	featuresA = R3D.MSERfeatures(imageMatrixA);
 	featuresB = R3D.MSERfeatures(imageMatrixB);
-	console.log("counts: "+featuresA.length+"  "+featuresB.length);
-	var display = this._root;
-	this.showMSER(featuresA, display, 0,0);
-	this.showMSER(featuresB, display, imageMatrixA.width(),0);
+	console.log("features: "+featuresA.length+"  "+featuresB.length);
+	var c1 = 0xFFFF0000;
+	this.showMSER(featuresA, display, 0,0, c1);
+	this.showMSER(featuresB, display, imageMatrixA.width(),0, c1);
 
+
+	// corner play:
+	//var types = R3D.CORNER_SELECT_RELAXED;
+	var types = R3D.CORNER_SELECT_REGULAR;
+	var cornersA = R3D.testExtract1(imageMatrixA, types, null, true);
+	var cornersB = R3D.testExtract1(imageMatrixB, types, null, true);
+	console.log("corners: "+cornersA.length+"  "+cornersB.length);
+	var c1 = 0xFF00FF00;
+
+	Code.truncateArray(cornersA,10);
+	Code.truncateArray(cornersB,10);
+	this.showCorners(cornersA, display, 0,0, c1);
+	this.showCorners(cornersB, display, imageMatrixA.width(),0, c1);
+	console.log(cornersA);
+
+
+	// convert corners to features:
+	var featuresA = FeatureTest.convertCornersToFeatures(cornersA, featuresA, imageMatrixA);
+	var featuresB = FeatureTest.convertCornersToFeatures(cornersB, featuresB, imageMatrixB);
+
+//	HERE
+
+	var cornersA = null;
+	var cornersB = null;
 	var vectorsA = this.processMSERfeatures(imageMatrixA, cornersA, gradientA, featuresA, 0);
 	var vectorsB = this.processMSERfeatures(imageMatrixB, cornersB, gradientB, featuresB, 50);
+	console.log("vectors: "+vectorsA.length+"  "+vectorsB.length);
+	
+	var fA = [];
+	for(var i=0; i<vectorsA.length; ++i){
+		var vector = vectorsA[i];
+		fA.push(vector["feature"]);
+	}
+	var fB = [];
+	for(var i=0; i<vectorsB.length; ++i){
+		var vector = vectorsB[i];
+		fB.push(vector["feature"]);
+	}
 
+	this.showMSER(fA, display, 0,0, 0xFF00FF00);
+	this.showMSER(fB, display, imageMatrixA.width(),0, 0xFF00FF00);
+	
 	var matches = this.compareVectors(vectorsA,vectorsB, vectorsB,vectorsA);
 	this.showMSERmatches(matches, imageMatrixA, imageMatrixB);
+	
 
+
+
+
+	
+
+
+	// var vectorsA = this.processCornerFeatures(imageMatrixA, cornersA, 0);
+	// var vectorsB = this.processCornerFeatures(imageMatrixB, cornersB, 50);
 
 	throw "HERE";
 }
