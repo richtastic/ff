@@ -390,3 +390,15 @@ V2D.maxY = function(pointList){
 	return minP;
 }
 
+V2D.infoArray = function(pointList){
+	var i, p;
+	var min = pointList[0].copy();
+	var max = min.copy();
+	for(i=pointList.length-1; i>=0; i--){
+		p = pointList[i];
+		V2D.min(min,min,p);
+		V2D.max(max,max,p);
+	}
+	return {"min":min, "max":max};
+}
+

@@ -26,15 +26,15 @@ function FeatureTest(){
 //new ImageLoader("./images/",imageList,this,this.imagesLoadComplete).load();
 //new ImageLoader("./images/",["tgag.jpg"],this,this.getScaledImage).load();
 // main study
-new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
 // pool
 // new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
 // snow
 // new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
-//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
+// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
 // new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
 //new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
@@ -46,9 +46,9 @@ new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.i
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
 // new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
-//new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
+// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
-//new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
+// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 
 }
 FeatureTest.prototype.showCorners = function(features, display, offsetX, offsetY, color){
@@ -105,7 +105,7 @@ FeatureTest.prototype.showMSER = function(features, display, offsetX, offsetY, c
 		var angleX = V2D.angleDirection(V2D.DIRX,dX);
 
 		var c = new DO();
-		c.graphics().setLine(1.0,color);
+		c.graphics().setLine(1.0, Code.setAlpARGB(color, 0x11) );
 		c.graphics().beginPath();
 		//c.graphics().moveTo(x,y);
 		//c.graphics().lineTo(x+v.x,y+v.y);
@@ -119,6 +119,24 @@ FeatureTest.prototype.showMSER = function(features, display, offsetX, offsetY, c
 		//c.matrix().scale(GLOBALSCALE);
 		c.matrix().translate(x + offsetX, y + offsetY);
 		display.addChild(c);
+
+		var bestAngles = feature["bestAngles"];
+		if(bestAngles){
+			for(var j=0; j<bestAngles.length; ++j){
+				var best = bestAngles[j];
+				var angle = best[0];
+				var mag = (sizeX+sizeY)*0.5;
+					mag = 10
+				var lX = mag*Math.cos(-angle);
+				var lY = mag*Math.sin(-angle);
+				c.graphics().setLine(1.0, Code.setAlpARGB(color, 0x99) );
+				c.graphics().beginPath();
+				c.graphics().moveTo(0,0);
+				c.graphics().lineTo(lX,lY);
+				c.graphics().strokeLine();
+				c.graphics().endPath();
+			}
+		}
 
 		/*
 		var point = features[k];
@@ -187,8 +205,8 @@ FeatureTest._defaultCircularSADBinMask = function(){
 FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,directionX,directionY,optimumAngle){
 	//var scale = 1.0;
 	//var scale = 0.707;
-	var scale = 0.25;
-	//var scale = 0.5;
+	var scale = 0.5;
+	//var scale = 0.25;
 	var angleX = V2D.angleDirection(V2D.DIRX,directionX);
 	var sizeX = directionX.length();
 	var sizeY = directionY.length();
@@ -278,8 +296,8 @@ FeatureTest.SIFTVectorCircular = function(imageMatrix, center,directionX,directi
 	var colorCount = colors ? 3 : 1;
 	//var scale = 1.0;
 	//var scale = 0.707;
-	//var scale = 0.5;
-	var scale = 0.25;
+	var scale = 0.5;
+	//var scale = 0.25;
 
 	var binMask = FeatureTest._defaultCircularSIFTBinMask();
 		var binLookup = binMask["value"];
@@ -328,7 +346,7 @@ FeatureTest.SIFTVectorCircular = function(imageMatrix, center,directionX,directi
 	var min = Code.minArray(vector);
 	Code.arraySub(vector, min);
 	Code.normalizeArray(vector);
-	vector = ImageMat.pow(vector,0.25);
+	//vector = ImageMat.pow(vector,0.25);
 	return vector;
 }
 FeatureTest._SIFTimage = function(imageMatrix, insideSet, location, scale,angle,sizeX,sizeY,bestAngle, colors){
@@ -377,8 +395,8 @@ FeatureTest._SIFTchannel = function(source,width,height, insideSet, location, sc
 
 	var area = ImageMat.extractRectFromMatrix(source, width,height, outsideSet,outsideSet, matrix);
 	// BLUR IMAGE
-	//var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
-	var blurred = area;
+	var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, 1.0);
+	//var blurred = area;
 
 		// var img, d;
 		// img = GLOBALSTAGE.getFloatRGBAsImage(blurred,blurred,blurred, outsideSet, outsideSet);
@@ -399,7 +417,6 @@ FeatureTest._SIFTchannel = function(source,width,height, insideSet, location, sc
 // }
 
 FeatureTest.prototype.processMSERfeatures = function(image, corners, gradient, features, offY){
-	console.log(corners);
 var featureScale = 1.0;
 	var vectors = [];
 	var blockSize = 24;
@@ -438,7 +455,8 @@ if(corners){ // make corner features
 	var d = a.copy().add(dirY);
 	var poly = [a,b,c,d];
 	// find all incident corners
-	var averageSize = (sizeX+sizeY)*0.5;
+	//var averageSize = (sizeX+sizeY)*0.5;
+	var averageSize = 21;
 	for(var c=0; c<corners.length; ++c){
 		var corner = corners[c];
 		var inside = Code.isPointInsidePolygon2D(center,poly);
@@ -502,10 +520,10 @@ FeatureTest.addToVectors = function(vectors, feature, center, dirX,dirY, feature
 	var scaleY = blockSize/sizeY;
 
 	var useColors = true;
-	//var featureScale = 1.0;
+	var featureScale = 1.0;
 	//var featureScale = 1.0/Math.sqrt(2.0); // 0.707 inside circle
 	//var featureScale = 0.5; // zoom out
-	var featureScale = .707;
+	//var featureScale = .707;
 	
 	var width = image.width();
 	var height = image.height();
@@ -559,9 +577,9 @@ FeatureTest.addToVectors = function(vectors, feature, center, dirX,dirY, feature
 	}
 	*/
 
-	//var binsTotal = 36;
+	var binsTotal = 36;
 	//var binsTotal = 48;
-	var binsTotal = 64;
+	//var binsTotal = 64;
 
 	// TODO: find different peaks
 
@@ -592,45 +610,88 @@ FeatureTest.addToVectors = function(vectors, feature, center, dirX,dirY, feature
 			}
 		}
 	}
+
+// COMBINE MULTIPLE PEAKS INTO SINGLE PEAK IF THEY'RE WITHIN ~10* of eachother
 	
 	var bestBinDropPercent = 0.75;
 	var bestBinKeepPercent = 0.80;
 	var info = Code.infoArray(bins);
+	var total = info["total"];
 	var maxAngleScore = info["max"];
 	var scoreCutoffDrop = maxAngleScore*bestBinDropPercent;
 	var scoreCutoffKeep = maxAngleScore*bestBinDropPercent;
 	var bestAngles = [];
 	var checkAngles = [];
+	var totes = 0;
 	for(var index=0; index<bins.length; ++index){
 		var bin = bins[index];
 		if(bin>=scoreCutoffDrop){
 			checkAngles.push([bin,index]);
 		}
 		if(bin>=scoreCutoffKeep){
+			totes += bin;
 			bestAngles.push([bin,index]);
 		}
 	}
-useColors = false;
-	if(checkAngles.length<=2){
-	//if(true){//if(checkAngles.length<=5){
-		for(var j=0; j<bestAngles.length; ++j){
-			var best = bestAngles[j];
-			var index = best[1];
-			var bestAngle = R3D.interpolateAngleMaxima(bins,index);
-			var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
-			var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
-			var vector = [];
-				Code.arrayPushArray(vector,vectorSIFT);
-				Code.arrayPushArray(vector,vectorSAD);
-				//console.log("sizes: "+vectorSAD.length+" / "+vectorSIFT.length); // 200/600
+
+var valueAngles = [];
+var percentAngles = [];
+// average over ALL BINS
+// for(var i=0; i<bins.length; ++i){
+// 	valueAngles[i] = ((i+0.5)/bins.length) * Math.PI2;
+// 	percentAngles[i] = bins[i]/total;
+// }
+// average over PEAKS ONLY
+for(var i=0; i<bestAngles.length; ++i){
+	var best = bestAngles[i];
+	var value = best[0];
+	var index = best[1];
+	valueAngles[i] = ((index+0.5)/bins.length) * Math.PI2;
+	percentAngles[i] = value/totes;
+}
+
+
+var averageAngle = Code.averageAngles(valueAngles, percentAngles);
+// console.log(valueAngles);
+// console.log(percentAngles);
+// console.log(averageAngle);
+// throw "?";
+//useColors = false;
+//console.log(averageAngle);
+feature["bestAngles"] = [[averageAngle,0]];
+useColors = true;
+	var bestAngle = averageAngle;
+	var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
+	var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
+	var vector = [];
+		Code.arrayPushArray(vector,vectorSIFT);
+		//Code.arrayPushArray(vector,vectorSAD);
+	vectors.push({"vector":vector, "feature":feature, "angle":bestAngle, "SAD":vectorSAD});
+
+
+// //useColors = false;
+// useColors = true;
+// 	//if(checkAngles.length<=2){
+// 	if(true){//if(checkAngles.length<=5){
+// 		feature["bestAngles"] = bestAngles;
+// 		for(var j=0; j<bestAngles.length; ++j){
+// 			var best = bestAngles[j];
+// 			var index = best[1];
+// 			var bestAngle = R3D.interpolateAngleMaxima(bins,index);
+// 			var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
+// 			var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
+// 			var vector = [];
+// 				Code.arrayPushArray(vector,vectorSIFT);
+// 				//Code.arrayPushArray(vector,vectorSAD);
+// 				//console.log("sizes: "+vectorSAD.length+" / "+vectorSIFT.length); // 200/600
 			
-			vectors.push({"vector":vector, "feature":feature, "angle":bestAngle});
-		}
-	}
+// 			vectors.push({"vector":vector, "feature":feature, "angle":bestAngle, "SAD":vectorSAD});
+// 		}
+// 	}
 }
 
 FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
-	var offY = 0;
+	var offY = 400;
 	var blockSize = 25;
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
@@ -660,7 +721,7 @@ FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
 				matrix = Matrix.transform2DRotate(matrix,-angleX);
 				matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
 				matrix = Matrix.transform2DRotate(matrix,-bestAngle);
-				matrix = Matrix.transform2DScale(matrix,0.5);
+				//matrix = Matrix.transform2DScale(matrix,0.5);
 			var block = image.extractRectFromFloatImage(center.x,center.y,1.0,null,blockSize,blockSize, matrix);
 
 			var img, d;
@@ -712,6 +773,7 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 			putative = putative[i];
 		}
 		var vectorA = objectA["vector"];
+		var vectorA_SAD = objectA["SAD"];
 		var indexA = objectA["index"];
 		var sadA = objectA["sad"];
 
@@ -720,41 +782,49 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 			tableMatch[lookup] = true;
 			var objectB = putative[j];
 			var vectorB = objectB["vector"];
+			var vectorB_SAD = objectB["SAD"];
 			var indexB = objectB["index"];
 			//var sadB = objectB["sad"];
-			var score = FeatureTest.compareSADVectors(vectorA, vectorB);
+			var scoreVector = FeatureTest.compareSADVectors(vectorA, vectorB);
+			var scoreSAD = FeatureTest.compareSADVectors(vectorA, vectorB);
+			// var score = scoreVector * Math.pow(scoreSAD,0.5);
+			//var score = scoreVector * scoreSAD;
+			//var score = (scoreVector + scoreSAD);
+			var score = (scoreVector+1)*(scoreSAD+1);
+			//var score = (scoreVector+1)*(scoreSAD+1)*(scoreVector+scoreSAD+1) - 1;
+			//var score = scoreVector;
 			var match = {"A":objectA, "B":objectB, "score":score, "a":indexA, "b":indexB};
 			matchesA[indexA].push(match);
 			matchesB[indexB].push(match);
 			matches.push(match);
 		}
 	}
-	// B to putative A
-	for(i=0; i<objectsB.length; ++i){
-		var objectB = objectsB[i];
-		var putative = putativeB;
-		if( Code.isArray(putative[0]) ){ // list of arrays
-			putative = putative[i];
-		}
-		var vectorB = objectB["vector"];
-		var indexB = objectB["index"];
-		var sadB = objectB["sad"];
-		for(j=0; j<putative.length; ++j){
-			var lookup = j+"-"+i;
-			if(tableMatch[lookup]){
-				continue;
-			}
-			tableMatch[lookup] = true;
-			var objectA = putative[j];
-			var vectorA = objectA["vector"];
-			var indexA = objectA["index"];
-			var score = FeatureTest.compareSADVectors(vectorA, vectorB);
-			var match = {"A":objectA, "B":objectB, "score":score, "a":indexA, "b":indexB};
-			matchesA[indexA].push(match);
-			matchesB[indexB].push(match);
-			matches.push(match);
-		}
-	}
+	// // B to putative A
+	// for(i=0; i<objectsB.length; ++i){
+	// 	var objectB = objectsB[i];
+	// 	var putative = putativeB;
+	// 	if( Code.isArray(putative[0]) ){ // list of arrays
+	// 		putative = putative[i];
+	// 	}
+	// 	var vectorB = objectB["vector"];
+	// 	var indexB = objectB["index"];
+	// 	var sadB = objectB["sad"];
+	// 	for(j=0; j<putative.length; ++j){
+	// 		var lookup = j+"-"+i;
+	// 		if(tableMatch[lookup]){
+	// 			continue;
+	// 		}
+	// 		tableMatch[lookup] = true;
+	// 		var objectA = putative[j];
+	// 		var vectorA = objectA["vector"];
+	// 		var indexA = objectA["index"];
+	// 		var score = FeatureTest.compareSADVectors(vectorA, vectorB);
+	// 		var match = {"A":objectA, "B":objectB, "score":score, "a":indexA, "b":indexB};
+	// 		matchesA[indexA].push(match);
+	// 		matchesB[indexB].push(match);
+	// 		matches.push(match);
+	// 	}
+	// }
 	// sort
 	for(i=0; i<objectsA.length; ++i){
 		matchesA[i] = matchesA[i].sort(sortScore);
@@ -811,7 +881,75 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 	return bestMatches;
 }
 FeatureTest.convertCornersToFeatures = function(corners, features, imageMatrix){
-	HERE
+	var pad = 4;
+	var width = imageMatrix.width();
+	var height = imageMatrix.height()
+	var maxFeatureSize = 0.2 * Math.sqrt(width*width+height*height);
+	var toPointFxn = function(o){
+		return o["point"];
+	}
+	var space = new QuadTree(toPointFxn, new V2D(0,0), new V2D(width,height));
+	for(var i=0; i<corners.length; ++i){
+		var corner = corners[i];
+		var p = new V2D(corner.x,corner.y);
+		var c = {"point":p, "feature":null, "size":null};
+		space.insertObject(c);
+	}
+	for(var i=0; i<features.length; ++i){
+		var feature = features[i];
+		// create actual rect
+		var center = feature["center"];
+		var dirX = feature["x"];
+		var dirY = feature["y"];
+		// expand out by a few pixels for corners on edge:
+			dirX = V2D.add(dirX, dirX.copy().norm().scale(pad));
+			dirY = V2D.add(dirY, dirY.copy().norm().scale(pad));
+		var sizeX = dirX.length();
+		var sizeY = dirY.length();
+		var sizeAverage = (sizeX+sizeY)*0.5;
+//sizeAverage = 5;
+		var a = center.copy().add( dirX.copy().scale(-0.5) ).add( dirY.copy().scale(-0.5) );
+		var b = a.copy().add(dirX);
+		var c = a.copy().add(dirX).add(dirY);
+		var d = a.copy().add(dirY);
+		var poly = [a,b,c,d];
+		var info = V2D.infoArray(poly);
+		var min = info["min"];
+		var max = info["max"];
+		var cornerList = space.objectsInsideRect(min,max);
+		// if(cornerList.length>0){
+		// 	console.log(i+" / "+features.length+" = "+cornerList.length);
+		// }
+		for(var j=0; j<cornerList.length; ++j){
+			var c = cornerList[j];
+			var p = c["point"];
+			var inside = Code.isPointInsidePolygon2D(p,poly);
+			if(inside){
+				var f = c["feature"];
+				var s = c["size"];
+				if(!f || s>sizeAverage){
+					c["feature"] = feature;
+					c["size"] = sizeAverage;
+				}
+			}
+		}
+	}
+	var cornerFeatures = space.toArray();
+	var newFeatures = [];
+	for(var i=0; i<cornerFeatures.length; ++i){
+		var c = cornerFeatures[i];
+		var f = c["feature"];
+		var p = c["point"];
+		var s = c["size"];
+		if(f){
+			if(s>maxFeatureSize){
+				continue;
+			}
+			o = {"center":p, "x":new V2D(s,0), "y":new V2D(0,s)};
+			newFeatures.push(o);
+		}
+	}
+	
 	/*
 	create 'corner' objects
 	put corners in quadtree
@@ -823,7 +961,7 @@ FeatureTest.convertCornersToFeatures = function(corners, features, imageMatrix){
 	each corner object with feature assigned:
 		convert to 'region' at 
 	*/
-	return [];
+	return newFeatures;
 }
 
 FeatureTest.prototype.imagesLoadComplete2 = function(imageInfo){
@@ -1045,30 +1183,31 @@ var cornersB = null;
 	featuresB = R3D.MSERfeatures(imageMatrixB);
 	console.log("features: "+featuresA.length+"  "+featuresB.length);
 	var c1 = 0xFFFF0000;
-	this.showMSER(featuresA, display, 0,0, c1);
-	this.showMSER(featuresB, display, imageMatrixA.width(),0, c1);
+	// this.showMSER(featuresA, display, 0,0, c1);
+	// this.showMSER(featuresB, display, imageMatrixA.width(),0, c1);
 
 
 	// corner play:
-	//var types = R3D.CORNER_SELECT_RELAXED;
-	var types = R3D.CORNER_SELECT_REGULAR;
+	var types = R3D.CORNER_SELECT_RELAXED;
+	//var types = R3D.CORNER_SELECT_REGULAR;
 	var cornersA = R3D.testExtract1(imageMatrixA, types, null, true);
 	var cornersB = R3D.testExtract1(imageMatrixB, types, null, true);
 	console.log("corners: "+cornersA.length+"  "+cornersB.length);
 	var c1 = 0xFF00FF00;
 
-	Code.truncateArray(cornersA,10);
-	Code.truncateArray(cornersB,10);
-	this.showCorners(cornersA, display, 0,0, c1);
-	this.showCorners(cornersB, display, imageMatrixA.width(),0, c1);
-	console.log(cornersA);
+	// Code.truncateArray(cornersA,10);
+	// Code.truncateArray(cornersB,10);
+	// this.showCorners(cornersA, display, 0,0, c1);
+	// this.showCorners(cornersB, display, imageMatrixA.width(),0, c1);
+	// console.log(cornersA);
 
 
 	// convert corners to features:
 	var featuresA = FeatureTest.convertCornersToFeatures(cornersA, featuresA, imageMatrixA);
 	var featuresB = FeatureTest.convertCornersToFeatures(cornersB, featuresB, imageMatrixB);
+	console.log("corner features: "+featuresA.length+"  "+featuresB.length);
 
-//	HERE
+
 
 	var cornersA = null;
 	var cornersB = null;
@@ -1087,8 +1226,8 @@ var cornersB = null;
 		fB.push(vector["feature"]);
 	}
 
-	this.showMSER(fA, display, 0,0, 0xFF00FF00);
-	this.showMSER(fB, display, imageMatrixA.width(),0, 0xFF00FF00);
+	this.showMSER(fA, display, 0,0, 0xFFFF00FF);
+	this.showMSER(fB, display, imageMatrixA.width(),0, 0xFFFF00FF);
 	
 	var matches = this.compareVectors(vectorsA,vectorsB, vectorsB,vectorsA);
 	this.showMSERmatches(matches, imageMatrixA, imageMatrixB);

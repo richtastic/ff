@@ -180,17 +180,44 @@ project typical numbers:
 
 APP TODO:
 
+- for each corner:
+	- for scales: [0.75,1.0,2.0]
+		- get peak angle orientation
+		- get SIFT & SAD vectors
+- compare:
+	- compare each feature at each scale [3x3 = 9]
+	- pick best score
 
 
-- multiple orientations
-- SIFT descriptor
+	
 
 
 
-- for each MSER:
-	- for each corner inside MSER rect (+ delta ~ 1.25)
-		- assign scale based on MSER size [~0.5 of MSER average size]
+- for the vast majority, the peak angles can be averaged to a common anglt
+	- try just averaging the top peak angles?
+	- try percent-averaging ALL the angles ?
 
+
+
+- show when corner has peak 'cornerness' over scales
+	- pixel movement error
+- show peak corner scores at different scales for a feature
+	- use sift orientation
+
+
+
+
+
+- for features multiple orientations
+	- do match at all orientations & record best [ n^2 ~ 5]
+
+- compare items over multiple scales [multiple vectors for each corner]
+
+
+- once matches have top ~3 do more detailed checks across scales/rotations
+
+- once MSER have been matched [top ~3], match contained corners
+	- after all have been considered, then do best-matching
 
 
 
