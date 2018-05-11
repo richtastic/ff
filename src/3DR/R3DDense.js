@@ -1061,6 +1061,11 @@ if(neighborhoodSize){
 
 			//var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
 			var scores = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+
+HERE
+BAD SCORING
+
+
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
@@ -1281,6 +1286,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	// penalties
 	var scor = Math.pow(1.0+score,1.0);
 	var uniq = Math.pow(uniqueness,0.50);
+	//var uniq = Math.pow(uniqueness,0.50);
 	//var uniq = Math.pow(uniqueness,1.0);
 	//var uniq = Math.pow(uniqueness,0.25); // 0.5
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
@@ -1293,7 +1299,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	//var rank = 1.0;
 	var rank = score;
 //	rank = rank * lind; // moves it to 0 when far ?
-	rank = rank * uniq;
+//	rank = rank * uniq; // TODO: ADD BACK
 //rank = rank * corn;
 //rank = rank * vari;
 //rank = rank * rang;

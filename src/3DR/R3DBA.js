@@ -355,27 +355,14 @@ R3D.BA.View = function(image, corners, camera){
 	this._corners = null;
 	this._pointSpace = null;
 	this._absoluteTransform = null;
-	// 
-	// this._targetRadius = 7;
-	// this._minRadius = 3;
-	// this._maxRadius = 15;
-	// this._minDiffNeighbor = 2;
-
-	this._targetRadius = 5;
-	this._minRadius = 2;
-	this._maxRadius = 11;
-	//this._minDiffNeighbor = 0.5;
-	this._minDiffNeighbor = 1.0;
-	//
 	this._errorMMean = null;
 	this._errorRMean = null;
 	this._errorFMean = null;
 	this._errorMSigma = null;
 	this._errorRSigma = null;
 	this._errorFSigma = null;
-	//this._maxSearchPointAngle = Code.radians(60.0);
-	this._maxSearchPointAngle = Code.radians(90.0);
-	// 
+	this._cellSize = 5;
+	this._compareSize = 13;
 	this.image(image);
 	this.corners(corners);
 	this.camera(camera);
@@ -393,17 +380,14 @@ R3D.BA.View.prototype.mapping = function(map){
 	}
 	return this._mapID;
 }
-R3D.BA.View.prototype.pixelsCompareP2D = function(){
-	return 11;
+R3D.BA.View.prototype.pixelsCompareP2D = function(){ // size of comparrison window -- should be at least size of block
+	return this._compareSize; // 13 ?
 }
-R3D.BA.View.prototype.minRadius = function(){
-	return 3;
+R3D.BA.View.prototype.neighborhoodSize = function(){ // area constituting a neighborhood block
+	return 13; // 400x300 ~ 10-20
 }
-R3D.BA.View.prototype.maxRadius = function(){
-	return 13;
-}
-R3D.BA.View.prototype.maxAngle = function(){
-	return this._maxSearchPointAngle;
+R3D.BA.View.prototype.neighborhoodSearchSize = function(){ // number of neighborhood blocks to search to
+	return this.neighborhoodSize()*2;
 }
 
 R3D.BA.View.prototype.minimumDifferenceNeighborP2D = function(){
@@ -1702,10 +1686,10 @@ for(var i=0; i<views.length; ++i){
 	//var maxIterations = 3;
 	//var maxIterations = 4;
 	//var maxIterations = 5;
-	var maxIterations = 10;
+	//var maxIterations = 10;
 	//var maxIterations = 25; // positions better
 	//var maxIterations = 50; // R => ~
-	//var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
+	var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
 	//var maxIterations = 200;
 	//var maxIterations = 500; // R errors SHOULD BE 1~2
 	//var maxIterations = 800;
@@ -1937,7 +1921,8 @@ R3D.BA.World.prototype._keyFxn = function(e){
 			var scaleAB = match.scaleForPoint(pointB);
 			var angleAB = match.angleForPoint(pointB);
 
-			var compareSize = 11;
+			//var compareSize = 11;
+			var compareSize = 21;
 			var scale = 1.0;
 			
 			// A
@@ -2120,7 +2105,7 @@ R3D.BA.World.prototype.appendNeighborMatchesSingle = function(viewA, pointA, vie
 			var from = bestMatchA["from"];
 			if(viewA.isPointInside(from)){
 				if(previousPoint && V2D.distance(previousPoint,from)<1E-8){
-					throw "too close again";
+					throw "too close again "+V2D.distance(previousPoint,from);
 				}
 				previousPoint = from.copy();
 				this.addPointForMatch(bestMatchA, viewA,viewB,transform);
@@ -4331,17 +4316,14 @@ R3D.BA.World.neighborsForInterpolation = function(bestPointA, viewA,viewB){
 	return neighborsA;
 }
 R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
-	var minRadius = viewA.minRadius();
-	var maxRadius = viewA.maxRadius();
-	var maxAngle = viewA.maxAngle();
-	var minAngle = maxAngle * 0.5;
-	var searchRadius = maxRadius + minRadius;
-	var centerA = pointA;//.point();
-	//var centerB = pointB.point();
+	var centerA = pointA;
 	var pointSpaceA = viewA.pointSpace();
 	var pointSpaceB = viewB.pointSpace();
 	// find all existing points in cell radius
-	var neighborsA = pointSpaceA.objectsInsideCircle(centerA,searchRadius);
+	var blockSize = viewA.neighborhoodSize();
+	var searchSize = viewA.neighborhoodSearchSize();
+	var neighborsA = pointSpaceA.objectsInsideCircle(centerA,searchSize);
+//var neighborsA = pointSpaceA.objectsInsideNeighborhood(centerA,blockSize,searchSize);
 	// filter points not corresponding to view pairs
 	for(var i=0; i<neighborsA.length; ++i){
 		var n = neighborsA[i];
@@ -4352,13 +4334,8 @@ R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
 			--i;
 		}
 	}
-	// get next best spot
-	var bestA = R3D.Dense.smallestAngleGreaterThan(maxAngle,centerA, neighborsA);
-	var patchExists = (bestA===null) || bestA["angle"]!==null;
-	if(!patchExists){
-		return null;
-	} // a blank patch exists
-	var bestPointA = this.nextBestSearchPoint(viewA, centerA, bestA);
+	// a blank cell exists
+	var bestPointA = this.nextBestSearchPoint(viewA, centerA);
 	if(!bestPointA){
 		return null;
 	}
@@ -4395,7 +4372,87 @@ R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
 	// }
 	return info;
 }
-R3D.BA.World.prototype.nextBestSearchPoint = function(viewA, centerA, bestA){
+R3D.BA.World.prototype.nextBestSearchPoint = function(viewA, centerA){ // first empty neighbor 
+	var space = viewA.pointSpace();
+	var corners = viewA.corners();
+	var viewSize = viewA.size();
+	var searchRadius = viewA.neighborhoodSearchSize();
+	var cellSize = viewA.neighborhoodSize();
+	var cellCountX = Math.ceil(viewSize.x/cellSize);
+	var cellCountY = Math.ceil(viewSize.y/cellSize);
+	var cellX = Math.floor(centerA.x/cellSize);
+	var cellY = Math.floor(centerA.y/cellSize);
+	// narrow to square:
+	var countCells = Math.ceil(searchRadius/cellSize);
+	var minCellX = Math.max(cellX-countCells,0);
+	var minCellY = Math.max(cellY-countCells,0);
+	var maxCellX = Math.min(cellX+countCells,cellCountX-1);
+	var maxCellY = Math.min(cellY+countCells,cellCountY-1);
+
+	var minRect = new V2D(minCellX*cellSize, minCellY*cellSize);
+	var maxRect = new V2D((maxCellX+1)*cellSize, (maxCellY+1)*cellSize);
+	var neighbors = space.objectsInsideRect(minRect,maxRect);
+
+	var binCountX = maxCellX-minCellX + 1;
+	var binCountY = maxCellY-minCellY + 1;
+	var binCount = binCountX*binCountY;
+	var neighborBins = Code.newArrayZeros(binCount);
+
+	// push items into bin
+	for(var i=0; i<neighbors.length; ++i){ 
+		var neighbor = neighbors[i];
+		var point = neighbor.point();
+		var yBin = (Math.floor(point.y/cellSize)-minCellY);
+		var xBin = (Math.floor(point.x/cellSize)-minCellX);
+		if(0<=yBin && yBin<binCountY && 0<=xBin && xBin<binCountX){ // edge points are returned
+			var bin = yBin*binCountX + xBin;
+			neighborBins[bin] += 1;
+		}
+		
+	}
+	var insetNeighbor = 0; // min = cellsize / 2 - 1
+	// find first bin with no elements
+	var aCenter = new V2D((cellX+0.5)*cellSize,(cellY+0.5)*cellSize);
+	var cellCenter = new V2D();
+	for(var j=0; j<binCountY; ++j){
+		for(var i=0; i<binCountX; ++i){
+			var cx = i+minCellX;
+			var cy = j+minCellY;
+			cellCenter.set((cx+0.5)*cellSize,(cy+0.5)*cellSize);
+			var d = V2D.distance(cellCenter,aCenter);
+			//console.log(".    check: "+i+","+j);
+			//console.log(cellX+","+cellY+" & "+cx+","+cy+" - D = "+d);
+			if(d<=searchRadius){
+				var bin = j*binCountX + i;
+				var val = neighborBins[bin];
+				if(val==0){
+					// console.log(corners);
+					var peakPixel = corners;
+					var maxI = null;
+					var maxJ = null;
+					var maxV = null;
+					var calculateMaxFxn = function(_v,_i,_j){
+						// console.log(_v,_i,_j);
+						if(maxV===null || _v>maxV){
+							maxV = _v;
+							maxI = _i;
+							maxJ = _j;
+						}
+					}
+					ImageMat.getSubImageFxn(corners,viewSize.x,viewSize.y, cx*cellSize+insetNeighbor,(cx+1)*cellSize-1-insetNeighbor, cy*cellSize+insetNeighbor,(cy+1)*cellSize-1-insetNeighbor, calculateMaxFxn);
+					//console.log(maxI,maxJ,maxV);
+					// console.log(".  bin: "+i+","+j+"   = "+bin);
+					//console.log("location: "+cellCenter);
+					// console.log((cx*cellSize)+" < ("+cellCenter.x+") < "+((cx+1)*cellSize)+" && "+(cy*cellSize)+" < ("+cellCenter.y+") <  "+((cy+1)*cellSize));
+					var best = new V2D(maxI,maxJ);
+					return best;
+				}
+			}
+		}
+	}
+	return null;
+}
+R3D.BA.World.prototype.nextBestSearchPointOLD = function(viewA, centerA, bestA){
 // TODO: poins here are somehow outside of image area
 	var imageA = viewA.image();
 	var cornerA = viewA.corners();

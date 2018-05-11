@@ -2910,6 +2910,20 @@ ImageMat.normFloats3D = function(x,y,z){
 		}
 	}
 }
+ImageMat.getSubImageFxn = function(src,width,height, colSta,colEnd, rowSta,rowEnd, fxn){
+	var i, j, index, ind, val;
+	// var wid = colEnd-colSta+1;
+	// var hei = colEnd-colSta+1;
+	// var len = wid*hei;
+	for(index=0, j=rowSta;j<=rowEnd;++j){
+		for(i=colSta; i<=colEnd;++i,++index){
+			ind = j*width + i;
+			val = src[ind];
+			fxn(val, i,j, ind);
+		}
+	}
+}
+
 ImageMat.prototype._op = function(fxn){
 	fxn(this._r);
 	fxn(this._g);

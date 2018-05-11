@@ -1142,6 +1142,7 @@ Code.emptyArray = function(a){
 Code.truncateArray = function(a,length){
 	// TODO: splice em out
 	while(a.length>length){ a.pop(); }
+	return a;
 };
 Code.getElements = function(element, fxn, stop, arr){
 	return Code.getElementsWithFunction(element, fxn, stop, arr);

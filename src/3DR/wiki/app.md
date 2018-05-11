@@ -180,22 +180,24 @@ project typical numbers:
 
 APP TODO:
 
-- for each corner:
-	- for scales: [0.75,1.0,2.0]
-		- get peak angle orientation
-		- get SIFT & SAD vectors
-- compare:
-	- compare each feature at each scale [3x3 = 9]
-	- pick best score
-
-
-	
 
 
 
-- for the vast majority, the peak angles can be averaged to a common anglt
-	- try just averaging the top peak angles?
-	- try percent-averaging ALL the angles ?
+- neighbor searching more grid-like method, rather than radial searching
+	- allow for larger search windows but still sparse spacing
+
+
+- save best ~100 pts from each view's P bundle-adjustment
+- combine all bundle-adjustments into final BA
+	- output to result view
+
+
+
+
+
+
+
+
 
 
 
@@ -208,10 +210,6 @@ APP TODO:
 
 
 
-- for features multiple orientations
-	- do match at all orientations & record best [ n^2 ~ 5]
-
-- compare items over multiple scales [multiple vectors for each corner]
 
 
 - once matches have top ~3 do more detailed checks across scales/rotations
@@ -239,10 +237,6 @@ https://en.wikipedia.org/wiki/Scale-invariant_feature_transform#Orientation_assi
 
 
 
-- how to combine corners to MSER algorithm ?
-	- 'group/attach' corners to regions
-	- restrict checks to areas around regions
-
 - get cutout of MSER feature @ even width/height
 - how to get primary gradient orientation
 	 - peaks in 'local' gradient goups / bins
@@ -268,11 +262,6 @@ GLOH (Gradient Location and Orientation Histogram)
 HOG = Histogram of oriented gradients
 
 
-
-
-
-- neighbor searching more grid-like method, rather than radial searching
-	- allow for larger search windows but still sparse spacing
 
 
 

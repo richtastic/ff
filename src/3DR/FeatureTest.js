@@ -32,12 +32,12 @@ function FeatureTest(){
 // snow
 // new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
-// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
-// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
-//new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
+// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
+//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
+//new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,tvector = ImageMat.pow(vector,0.5);his.imagesLoadComplete2).load(); // typical angle
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-12.jpg"],this,this.imagesLoadComplete2).load(); // actual big scale difference
 
@@ -46,7 +46,7 @@ new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
 // new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
-// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
+//new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
 // new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 
@@ -205,8 +205,8 @@ FeatureTest._defaultCircularSADBinMask = function(){
 FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,directionX,directionY,optimumAngle){
 	//var scale = 1.0;
 	//var scale = 0.707;
-	var scale = 0.5;
-	//var scale = 0.25;
+	//var scale = 0.5;
+	var scale = 0.25;
 	var angleX = V2D.angleDirection(V2D.DIRX,directionX);
 	var sizeX = directionX.length();
 	var sizeY = directionY.length();
@@ -281,7 +281,7 @@ FeatureTest.SADVectorRGBGradientOctantCircular = function(imageMatrix, center,di
 	var min = Code.minArray(vector);
 	Code.arraySub(vector, min);
 	Code.normalizeArray(vector);
-	
+	//vector = ImageMat.pow(vector,0.5); // ...
 	return vector;
 }
 FeatureTest._defaultCircularSIFTBinMaskValue = null;
@@ -296,8 +296,8 @@ FeatureTest.SIFTVectorCircular = function(imageMatrix, center,directionX,directi
 	var colorCount = colors ? 3 : 1;
 	//var scale = 1.0;
 	//var scale = 0.707;
-	var scale = 0.5;
-	//var scale = 0.25;
+	//var scale = 0.5;
+	var scale = 0.25;
 
 	var binMask = FeatureTest._defaultCircularSIFTBinMask();
 		var binLookup = binMask["value"];
@@ -347,6 +347,7 @@ FeatureTest.SIFTVectorCircular = function(imageMatrix, center,directionX,directi
 	Code.arraySub(vector, min);
 	Code.normalizeArray(vector);
 	//vector = ImageMat.pow(vector,0.25);
+	vector = ImageMat.pow(vector,0.5);
 	return vector;
 }
 FeatureTest._SIFTimage = function(imageMatrix, insideSet, location, scale,angle,sizeX,sizeY,bestAngle, colors){
@@ -417,7 +418,8 @@ FeatureTest._SIFTchannel = function(source,width,height, insideSet, location, sc
 // }
 
 FeatureTest.prototype.processMSERfeatures = function(image, corners, gradient, features, offY){
-var featureScale = 1.0;
+//var featureScale = 1.0;
+var featureScale = 0.5;
 	var vectors = [];
 	var blockSize = 24;
 	offY += 200;
@@ -455,8 +457,12 @@ if(corners){ // make corner features
 	var d = a.copy().add(dirY);
 	var poly = [a,b,c,d];
 	// find all incident corners
-	//var averageSize = (sizeX+sizeY)*0.5;
-	var averageSize = 21;
+	var averageSize = (sizeX+sizeY)*0.5;
+// if(averageSize<=maxSize){
+
+// console.log(averageSize)
+//var averageSize = 21;
+//var averageSize = 11;
 	for(var c=0; c<corners.length; ++c){
 		var corner = corners[c];
 		var inside = Code.isPointInsidePolygon2D(center,poly);
@@ -507,9 +513,17 @@ if(corners){ // make corner features
 	}
 	return vectors;
 }
-FeatureTest.addToVectors = function(vectors, feature, center, dirX,dirY, featureScale, image, blockSize){
+FeatureTest.addToVectors = function(vectors, feature, center, dirXIn,dirYIn, featureScale, image, blockSize){
 	var paddingSize = 4;
 	var gradientBlockSize = blockSize + 2*paddingSize;
+
+var vectorList = [];
+//var vectorScales = [0.5,1.0,2.0];
+var vectorScales = [1.0,2.0,4.0];
+for(var i=0; i<vectorScales.length; ++i){
+	var vectorScale = vectorScales[i];
+	var dirX = dirXIn.copy().scale(vectorScale);
+	var dirY = dirYIn.copy().scale(vectorScale);
 
 	var sizeX = dirX.length();
 	var sizeY = dirY.length();
@@ -530,7 +544,6 @@ FeatureTest.addToVectors = function(vectors, feature, center, dirX,dirY, feature
 	var blockMask = ImageMat.circleMask(blockSize);
 	var sigma = 1.0;
 	var gaussMask = ImageMat.gaussianMask(blockSize,blockSize, sigma);
-
 
 
 
@@ -642,13 +655,15 @@ var percentAngles = [];
 // 	percentAngles[i] = bins[i]/total;
 // }
 // average over PEAKS ONLY
-for(var i=0; i<bestAngles.length; ++i){
-	var best = bestAngles[i];
+for(var b=0; b<bestAngles.length; ++b){
+	var best = bestAngles[b];
 	var value = best[0];
 	var index = best[1];
-	valueAngles[i] = ((index+0.5)/bins.length) * Math.PI2;
-	percentAngles[i] = value/totes;
+	valueAngles[b] = ((index+0.5)/bins.length) * Math.PI2;
+	percentAngles[b] = value/totes;
 }
+
+var sizeAverage = (sizeX+sizeY)*0.5;
 
 
 var averageAngle = Code.averageAngles(valueAngles, percentAngles);
@@ -658,15 +673,23 @@ var averageAngle = Code.averageAngles(valueAngles, percentAngles);
 // throw "?";
 //useColors = false;
 //console.log(averageAngle);
-feature["bestAngles"] = [[averageAngle,0]];
+//if(i==vectorScales.length){
+if(i==1){
+	feature["bestAngles"] = [[averageAngle,0]];
+}
 useColors = true;
 	var bestAngle = averageAngle;
 	var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
 	var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
-	var vector = [];
-		Code.arrayPushArray(vector,vectorSIFT);
-		//Code.arrayPushArray(vector,vectorSAD);
-	vectors.push({"vector":vector, "feature":feature, "angle":bestAngle, "SAD":vectorSAD});
+	// var vector = [];
+		// Code.arrayPushArray(vector,vectorSIFT);
+		// Code.arrayPushArray(vector,vectorSAD);
+	//vectors.push({"SIFT":vectorSIFT, "feature":feature, "angle":bestAngle, "SAD":vectorSAD});
+	vectorList.push({"SAD":vectorSAD, "SIFT":vectorSIFT, "size":sizeAverage, "angle":bestAngle});
+
+	//console.log(i+"/"+vectorScales.length);
+}
+vectors.push({"vectors":vectorList, "feature":feature});
 
 
 // //useColors = false;
@@ -695,6 +718,7 @@ FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
 	var blockSize = 25;
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
+		// console.log(match);
 		var pairs = [match["A"],match["B"]];
 		for(var j=0; j<pairs.length; ++j){
 			var item = pairs[j];
@@ -702,11 +726,17 @@ FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
 			var center = feature["center"];
 			var dirX = feature["x"];
 			var dirY = feature["y"];
+
 			//var bestAngle = feature["angle"];
-			var bestAngle = item["angle"];
-			var sizeX = dirX.length();
-			var sizeY = dirY.length();
-			var angleX = V2D.angleDirection(V2D.DIRX,dirX);
+			//var bestAngle = item["angle"];
+				var bestAngle = j==0 ? match["angleA"] : match["angleB"]; // TODO: GET FROM BEST MATCH YEAH
+				var bestSize = j==0 ? match["sizeA"] : match["sizeB"];
+				var sizeX = bestSize;
+				var sizeY = bestSize;
+				var angleX = 0;
+			// var sizeX = dirX.length();
+			// var sizeY = dirY.length();
+			// var angleX = V2D.angleDirection(V2D.DIRX,dirX);
 			var scaleX = blockSize/sizeX;
 			var scaleY = blockSize/sizeY;
 
@@ -744,7 +774,7 @@ FeatureTest.compareSADVectors = function(vectorA, vectorB){
 		score += d;
 		//score += d*d;
 	}
-	return score;
+	return score/len;
 }
 
 FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, putativeB, minimumRatio, minScore){
@@ -772,28 +802,66 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 		if( Code.isArray(putative[0]) ){ // list of arrays
 			putative = putative[i];
 		}
-		var vectorA = objectA["vector"];
-		var vectorA_SAD = objectA["SAD"];
+		//var vectorA = objectA["vectors"];
 		var indexA = objectA["index"];
-		var sadA = objectA["sad"];
+			var vectorListA = objectA["vectors"];
+
 
 		for(j=0; j<putative.length; ++j){
 			var lookup = i+"-"+j;
 			tableMatch[lookup] = true;
 			var objectB = putative[j];
-			var vectorB = objectB["vector"];
-			var vectorB_SAD = objectB["SAD"];
 			var indexB = objectB["index"];
-			//var sadB = objectB["sad"];
-			var scoreVector = FeatureTest.compareSADVectors(vectorA, vectorB);
-			var scoreSAD = FeatureTest.compareSADVectors(vectorA, vectorB);
-			// var score = scoreVector * Math.pow(scoreSAD,0.5);
-			//var score = scoreVector * scoreSAD;
-			//var score = (scoreVector + scoreSAD);
-			var score = (scoreVector+1)*(scoreSAD+1);
-			//var score = (scoreVector+1)*(scoreSAD+1)*(scoreVector+scoreSAD+1) - 1;
-			//var score = scoreVector;
-			var match = {"A":objectA, "B":objectB, "score":score, "a":indexA, "b":indexB};
+			//var vectorB = objectB["vector"];
+				var vectorListB = objectB["vectors"];
+			
+			
+
+			var bestScore = null;
+			var bestAngle = 0;
+			var bestSize = 0;
+			for(var va=0; va<vectorListA.length; ++va){
+				var vectorSIFTA = vectorListA[va]["SIFT"];
+				var vectorSADA = vectorListA[va]["SAD"];
+				var vectorSizeA = vectorListA[va]["size"];
+				var vectorAngleA = vectorListA[va]["angle"];
+				for(var vb=0; vb<vectorListB.length; ++vb){
+					var vectorSIFTB = vectorListB[vb]["SIFT"];
+					var vectorSADB = vectorListB[vb]["SAD"];
+					var vectorSizeB = vectorListB[vb]["size"];
+					var vectorAngleB = vectorListB[vb]["angle"];
+					var scoreSIFT = FeatureTest.compareSADVectors(vectorSIFTA, vectorSIFTB);
+					var scoreSAD = FeatureTest.compareSADVectors(vectorSADA, vectorSADB);
+					// var score = scoreVector * Math.pow(scoreSAD,0.5);
+					//var score = scoreSIFT * scoreSAD;
+					//var score = (scoreSIFT + scoreSAD);
+					//var score = (scoreSIFT+1)*(scoreSAD+1)*(scoreVector+scoreSAD+1) - 1;
+					//var score = scoreSIFT;
+					//var score = (scoreSIFT+1)*(scoreSAD+1) - 1;
+					//var score = scoreSAD;
+					var scoreSum = scoreSIFT + scoreSAD;
+					var scoreMul = (scoreSIFT+1)*(scoreSAD+1);
+					//var score = (scoreSum+1)*scoreMul - 0;
+					//var score = scoreSIFT + scoreSAD;
+					//var score = (scoreSIFT+1)*Math.pow(scoreSAD+1,1.0) - 1;
+					//var score = (scoreSum+1)*scoreMul - 1;
+					//var score = (scoreSum+1)*scoreMul; // best
+					//var score = (scoreSIFT)*(scoreSAD)*(scoreSIFT+scoreSAD*0.5); // best
+					var score = (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1) - 1; // [0-11]?
+
+					// (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1)*0.5 - 1
+
+					if(bestScore===null || bestScore>score){
+						bestScore = score; // pick best score
+						bestAngle = [vectorAngleA, vectorAngleB];
+						bestSize = [vectorSizeA, vectorSizeB];
+					}
+//console.log("bestScore: "+bestScore);
+					break;
+				}
+			}
+			
+			var match = {"A":objectA, "B":objectB, "score":bestScore, "a":indexA, "b":indexB, "angleA":bestAngle[0], "angleB":bestAngle[1], "sizeA":bestSize[0], "sizeB":bestSize[1]};
 			matchesA[indexA].push(match);
 			matchesB[indexB].push(match);
 			matches.push(match);
@@ -866,7 +934,7 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 						scoreRank = Math.max(scoreA,scoreB);
 						//console.log(scoreA+" + "+scoreB+" = "+scoreRank);
 						var score = scoreRank;
-						var match = {"A":objectA, "B":objectB, "score":score, "a":objectA["index"], "b":objectB["index"]};
+						var match = {"A":objectA, "B":objectB, "score":score, "a":objectA["index"], "b":objectB["index"], "angleA":mA["angleA"], "angleB":mA["angleB"], "sizeA":mA["sizeA"], "sizeB":mA["sizeB"]};
 						bestMatches.push(match);
 					}
 				}
@@ -880,10 +948,180 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 	console.log(bestMatches);
 	return bestMatches;
 }
+FeatureTest.spaceToPointFxn = function(o){
+	return o["point"];
+}
+FeatureTest.tosSparseSpace = function(corners, imageMatrix){
+	var width = imageMatrix.width();
+	var height = imageMatrix.height();
+	var space = new QuadTree(FeatureTest.spaceToPointFxn, new V2D(0,0), new V2D(width,height));
+	for(var i=0; i<corners.length; ++i){
+		var corner = corners[i];
+		var p = new V2D(corner.x,corner.y);
+		var c = {"point":p, "matches":[], "i":i};
+		space.insertObject(c);
+	}
+	return space;
+}
+FeatureTest.sparseSearchMatches = function(matches, imageMatrixA,cornersAllA, imageMatrixB,cornersAllB){
+	var widthA = imageMatrixA.width();
+	var heightA = imageMatrixA.height();
+	var widthB = imageMatrixB.width();
+	var heightB = imageMatrixB.height();
+	// create spaces
+	var spaceA = FeatureTest.tosSparseSpace(cornersAllA, imageMatrixA);
+	var spaceB = FeatureTest.tosSparseSpace(cornersAllB, imageMatrixB);
+	// init loops
+	var betterMatches = [];
+	// var compareScales = [-.25,0,.25];
+	// var compareAngles = [-15,0,15];
+	var compareScales = [0];
+	var compareAngles = [0];
+	var compareSize = 11;
+	//var compareScales = Code.divSpace(-1.0,2.0, 4); //  0.5 1.0 2.0 4.0 in -> out
+	var compareMask = ImageMat.circleMask(compareSize);
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var objA = match["A"];
+		var objB = match["B"];
+		var featureA = objA["feature"];
+		var featureB = objB["feature"];
+		var pointA = featureA["center"];
+		var pointB = featureB["center"];
+		var angleA = match["angleA"];
+		var angleB = match["angleB"];
+		var sizeA = match["sizeA"];
+		var sizeB = match["sizeB"];
+		var neighborsA = spaceA.kNN(pointA, 10);
+		var neighborsB = spaceB.kNN(pointB, 10);
+		//console.log(".    "+i+"/"+matches.length+" : "+neighborsA.length+" & "+neighborsB.length);
+
+		var sizA = sizeA;
+		var angA = angleA;
+		var scaleA = compareSize/sizA;
+
+		for(var na=0; na<neighborsA.length; ++na){
+			var neighborA = neighborsA[na];
+			var pA = neighborA["point"];
+			// var matrix = new Matrix(3,3).identity();
+			// 	matrix = Matrix.transform2DRotate(matrix,-angA);
+			// 	matrix = Matrix.transform2DScale(matrix,scaleA);
+			// var imageA = imageMatrixA.extractRectFromFloatImage(pA.x,pA.y,1.0,null,compareSize,compareSize, matrix);
+var vectorSAD_A = FeatureTest.SADVectorRGBGradientOctantCircular(imageMatrixA, pA,new V2D(sizA,0),new V2D(0,sizA),angA);
+var vectorSIFT_A = FeatureTest.SIFTVectorCircular(imageMatrixA, pA,new V2D(sizA,0),new V2D(0,sizA),angA, true);
+
+
+			for(var nb=0; nb<neighborsB.length; ++nb){
+				var neighborB = neighborsB[nb];
+				var pB = neighborB["point"];
+				bestMatch = null;
+				for(var s=0; s<compareScales.length; ++s){
+					var compareScale = compareScales[s];
+						compareScale = Math.pow(2.0,compareScale);
+					for(var a=0; a<compareAngles.length; ++a){
+						var compareAngle = compareAngles[a];
+							compareAngle = Code.radians(compareAngle);
+
+// compareAngle = 0;
+// compareScale = 1.0;
+
+						var sizB = sizeB * compareScale;
+						var angB = angleB + compareAngle;
+						var scaleB = compareSize/sizB;
+
+
+var vectorSAD_B = FeatureTest.SADVectorRGBGradientOctantCircular(imageMatrixB, pB,new V2D(sizB,0),new V2D(0,sizB),angB);
+var vectorSIFT_B = FeatureTest.SIFTVectorCircular(imageMatrixB, pB,new V2D(sizB,0),new V2D(0,sizB),angB, true);
+
+
+var scoreSAD = FeatureTest.compareSADVectors(vectorSAD_A, vectorSAD_B);
+var scoreSIFT = FeatureTest.compareSADVectors(vectorSIFT_A, vectorSIFT_B);
+//var score = (scoreSAD+1)*(scoreSIFT+1)*(scoreSAD+scoreSIFT+1) - 1;
+//var score = ( (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1) - 1) *(1/12); // best
+var score = (scoreSIFT)*(scoreSAD)*((scoreSIFT+scoreSAD)*0.5);
+
+						// var matrix = new Matrix(3,3).identity();
+						// 	matrix = Matrix.transform2DRotate(matrix,-angB);
+						// 	matrix = Matrix.transform2DScale(matrix,scaleB);
+						// var imageB = imageMatrixA.extractRectFromFloatImage(pB.x,pB.y,1.0,null,compareSize,compareSize, matrix);
+					
+						// var score = R3D.sadRGB(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
+
+						if(bestMatch===null || bestMatch["score"]>score){
+							bestMatch = {"score":score, "A":neighborA, "B":neighborB, "angleA":angA,"angleB":angB, "sizeA":sizA,"sizeB":sizB};;
+						}
+					}
+				}
+				neighborA["matches"].push(bestMatch);
+				neighborB["matches"].push(bestMatch);
+			}
+		}
+	}
+	// sort by best match scores
+	var sortMatchFxn = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	};
+	var newPointsA = spaceA.toArray();
+	var newPointsB = spaceB.toArray();
+	for(var i=0; i<newPointsA.length; ++i){
+		var p = newPointsA[i];
+		p["matches"].sort(sortMatchFxn);
+	}
+	for(var i=0; i<newPointsB.length; ++i){
+		var p = newPointsB[i];
+		p["matches"].sort(sortMatchFxn);
+	}
+	// console.log(newPointsA);
+	// console.log(newPointsB);
+	// record best:
+	for(var i=0; i<newPointsA.length; ++i){
+		var pA = newPointsA[i];
+		var mA = pA["matches"];
+		if(mA.length>=2){
+			var a0 = mA[0];
+			var a1 = mA[1];
+			var pB = a0["B"];
+			var mB = pB["matches"];
+			if(mB.length>=2){
+				var b0 = mB[0];
+				var b1 = mB[1];
+				var qA = b0["A"];
+				if(qA==pA){
+					var ratioA = a0["score"]/a1["score"];
+					var ratioB = b0["score"]/b1["score"];
+					var ratio = Math.max(ratioA,ratioB);
+					if(ratio<0.90){
+						var score = a0["score"];
+	//					console.log("found: "+ratioA+" & "+ratioB+". ... "+score);
+						//var match = {"A":objectA, "B":objectB, "score":bestScore, "a":indexA, "b":indexB, "angleA":bestAngle[0], "angleB":bestAngle[1], "sizeA":bestSize[0], "sizeB":bestSize[1]};
+						var sizeA = a0["sizeA"];
+						var sizeB = a0["sizeB"];
+						var featureA = {"center":pA["point"], "index":pA["i"], "x": new V2D(sizeA,0), "y": new V2D(0,sizeA)};
+						var featureB = {"center":pB["point"], "index":pB["i"], "x": new V2D(sizeB,0), "y": new V2D(0,sizeB)};
+						var objectA = {"vectors":null, "feature":featureA};
+						var objectB = {"vectors":null, "feature":featureB};
+						var match = {"A":objectA, "B":objectB, "score":score, "a":featureA["index"], "b":featureA["index"], "angleA":a0["angleA"], "angleB":a0["angleB"], "sizeA":a0["sizeA"], "sizeB":a0["sizeB"]};
+						betterMatches.push(match);
+					}
+				}
+			}
+			//var ratio = a["score"]/b["score"];
+
+		}
+	}
+
+	// get best
+	betterMatches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	});
+
+	
+	return betterMatches;
+}
 FeatureTest.convertCornersToFeatures = function(corners, features, imageMatrix){
 	var pad = 4;
 	var width = imageMatrix.width();
-	var height = imageMatrix.height()
+	var height = imageMatrix.height();
 	var maxFeatureSize = 0.2 * Math.sqrt(width*width+height*height);
 	var toPointFxn = function(o){
 		return o["point"];
@@ -908,6 +1146,7 @@ FeatureTest.convertCornersToFeatures = function(corners, features, imageMatrix){
 		var sizeY = dirY.length();
 		var sizeAverage = (sizeX+sizeY)*0.5;
 //sizeAverage = 5;
+sizeAverage = 11; // ignore dynamic placements
 		var a = center.copy().add( dirX.copy().scale(-0.5) ).add( dirY.copy().scale(-0.5) );
 		var b = a.copy().add(dirX);
 		var c = a.copy().add(dirX).add(dirY);
@@ -1190,8 +1429,16 @@ var cornersB = null;
 	// corner play:
 	var types = R3D.CORNER_SELECT_RELAXED;
 	//var types = R3D.CORNER_SELECT_REGULAR;
-	var cornersA = R3D.testExtract1(imageMatrixA, types, null, true);
-	var cornersB = R3D.testExtract1(imageMatrixB, types, null, true);
+	var totalMaxCorners = 1000;
+	var maxCorners = 550;
+	var cornersAllA = R3D.testExtract1(imageMatrixA, types, totalMaxCorners, true);
+	var cornersAllB = R3D.testExtract1(imageMatrixB, types, totalMaxCorners, true);
+	var cornersA = Code.truncateArray(Code.copyArray(cornersAllA),maxCorners);
+	var cornersB = Code.truncateArray(Code.copyArray(cornersAllB),maxCorners);
+	// SIFT FEATURES
+	// var cornersA = R3D.SIFTExtractTest1(imageMatrixA);
+	// var cornersB = R3D.SIFTExtractTest1(imageMatrixB);
+
 	console.log("corners: "+cornersA.length+"  "+cornersB.length);
 	var c1 = 0xFF00FF00;
 
@@ -1231,6 +1478,10 @@ var cornersB = null;
 	
 	var matches = this.compareVectors(vectorsA,vectorsB, vectorsB,vectorsA);
 	this.showMSERmatches(matches, imageMatrixA, imageMatrixB);
+
+	// var betterMatches = FeatureTest.sparseSearchMatches(matches, imageMatrixA,cornersAllA, imageMatrixB,cornersAllB);
+	// console.log(betterMatches);
+	// this.showMSERmatches(betterMatches, imageMatrixA, imageMatrixB);
 	
 
 
@@ -2116,6 +2367,7 @@ matches = matches.sort(function(a,b){
 		var sizeB = objectB["size"];
 		var siftScore = match["SIFT"];
 		var sadScore = match["SAD"];
+
 		var outer = 1.5;
 		//var imageA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
 			//var imageB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
