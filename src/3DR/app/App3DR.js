@@ -80,7 +80,7 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-//var modeImageCompare = true;
+// var modeImageCompare = true;
 var modeImageCompare = false;
 
 
@@ -1038,7 +1038,7 @@ App3DR.App.MatchCompare = function(resource, manager){
 	this._display = new DO();
 	this._root.addChild(this._display);
 //this._displayPairDO.alpha(0.5);
-this._root.graphics().alpha(0.1);
+//this._root.graphics().alpha(0.1);
 	this._matchingPair = null;
 }
 Code.inheritClass(App3DR.App.MatchCompare, App3DR.App);
@@ -1267,6 +1267,60 @@ var lB = locationB.copy().scale(1.0/matrixB.width(),1.0/matrixB.height());
 		console.log(str);
 
 
+
+
+// SHOW SAD SCORE:
+var compareSize = 21;
+var matrix = new Matrix(3,3).identity();
+var needle = matrixA.extractRectFromFloatImage(locationA.x,locationA.y,1.0,null,compareSize,compareSize, matrix);
+//
+var matrix = new Matrix(3,3).identity();
+	matrix = Matrix.transform2DScale(matrix,bestScale);
+	matrix = Matrix.transform2DRotate(matrix,bestAngle);
+var haystack = matrixB.extractRectFromFloatImage(locationB.x,locationB.y,1.0,null,compareSize,compareSize, matrix);
+//R3D.searchNeedleHaystackImageFlatSADBin
+var result = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+var score = result["value"];
+console.log("SCORE: "+score);
+
+
+var info = R3D.BA.optimumTransformForPoints(matrixA,matrixB, locationA,locationB, 1.0,0.0, compareSize, null,null);
+// console.log(info);
+var scale = info["scale"];
+var angle = info["angle"];
+var score = info["score"];
+
+var info = R3D.Dense.rankForTransform(matrixA,null,locationA, matrixB,null,locationB, scale,angle,score, compareSize);
+// console.log(info);
+var rank = info["rank"];
+var uniq = info["uniqueness"];
+console.log("SCORE: "+score);
+console.log("RANK: "+rank);
+console.log("UNIQ: "+uniq);
+
+/*
+R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize){
+	testScales = (testScales!==undefined && testScales!==null) ? testScales : [-0.1,0.0,0.1]
+	testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [-10, 0, 10];
+	// testScales = (testScales!==undefined && testScales!==null) ? testScales : [0];
+	// testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [0];
+	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
+//	console.log(info)
+	return info;
+}
+R3D.BA.infoForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
+	//var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror, false);
+	var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
+	return info;
+}
+R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
+	var info = R3D.BA.infoForPoints(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
+	if(info){
+		return info["uniqneness"];
+	}
+	return null;
+}
+*/
 
 
 			var compareSize = 21;

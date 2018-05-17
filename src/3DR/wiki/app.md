@@ -180,11 +180,42 @@ project typical numbers:
 
 APP TODO:
 
+- maybe scaling needs some blurring steps?
+
+- maybe interpolation is off?
+
+- color erros absolute ?
+
+
+- 2 BA modes:
+1) get top 100~1000 points & best estimated P
+-) combine all view Ps & bundle adjust to get optimum Ps final
+2) dense point finding given optimal Ps
 
 
 
-- neighbor searching more grid-like method, rather than radial searching
-	- allow for larger search windows but still sparse spacing
+
+- find out why particular BAD match is good & howit can be prevented
+
+
+
+- dense point matching is letting in some bad matches
+
+
+- local normalization of image
+
+
+- look at derivatives
+
+
+- RELIABITLITY (pick highest RANK)
+	- maximum difference of local 4-neighborhood / average difference of 8-neighborhood
+
+
+
+
+
+
 
 
 - save best ~100 pts from each view's P bundle-adjustment

@@ -945,7 +945,10 @@ R3D.Dense.COUNTA = 0;
 R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg, neighborhoodSize){
 	// constants
 	//var maximumBestScore = 0.02; // 0.01; // SAD SIFT
-	var maximumBestScore = 0.25; // SAD --- 0.5 prev, 0.25 ok
+	var maximumBestScore = 0.10; // SAD --- 0.25 ok, 0.01 too small
+	//var maximumBestScore = 0.05;
+//maximumBestScore = 0.50; // LARGER needs moere 
+//maximumBestScore = 0.25;
 	var compareSize = R3D.sadBinOctantEdgeSize();
 	var neighborhoodScale = 1.0;
 	var cellScale = (inputCompareSize*neighborhoodScale/compareSize);
@@ -964,7 +967,6 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 	// 	angle = -angle;
 	// 	reversed = true;
 	// }
-
 	// scale up until window is large enough for distinctiveness via range metric
 	var minRangeCompare = 0.10;
 	var rangeCheck = 0;
@@ -999,9 +1001,7 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 	// 		cellScale = (inputCompareSize*neighborhoodScale/compareSize);
 	// 	}
 	// }
-
-
-
+	// 
 	// find best orientation
 	var matrix = new Matrix(3,3).identity();
 	var haystackSize = (neighborhoodSize!==undefined && neighborhoodSize!==null) ? neighborhoodSize : compareSize * 2; // 2-4
@@ -1062,8 +1062,8 @@ if(neighborhoodSize){
 			//var scores = R3D.searchNeedleHaystackImageFlatSADBin(needle, haystack);
 			var scores = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
 
-HERE
-BAD SCORING
+// HERE
+// BAD SCORING
 
 
 			var values = scores.value;
@@ -1103,6 +1103,7 @@ BAD SCORING
 	// 	bestTo = pointB;
 	// }
 	// ignore points with poor scores
+//	console.log(bestScore)
 	if(bestScore > maximumBestScore){
 		console.log("bestScore DROPPED "+bestScore);
 		return null;
@@ -1126,18 +1127,28 @@ BAD SCORING
 }
 
 
+R3D.Dense.rankForTransform2 = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
+	// reliability = max(local difference) / avg(neighborhod difference) --- higher is better --- uniqueness  measurement?
+	// 
+	// get local neighborhood (half ?)
+	// get 
+	//	rank = rank * reliability;
+	return score;
+}
 R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
+//console.log("in: "+inputCompareSize);
 	dropEarly = dropEarly!==undefined ? dropEarly : true;
 	// constants
 	fundamentalDistanceErrorMax = fundamentalDistanceErrorMax!==undefined ? fundamentalDistanceErrorMax : 100.0;
 	//var fundamentalDistanceErrorMax = Math.pow(5,2);
 	//var fundamentalDistanceErrorMax = 10; // < 10 ? --- should get this from average + sigma error beforehand
-	var minimumVariability = 0.001;
+	var minimumVariability = 0.001 / inputCompareSize;
 	//var maximumUniquenessScore = 0.999; // 0.90 - 0.99
 	//var maximumUniquenessScore = 0.99;
 	//var maximumUniquenessScore = 0.90;
-	var maximumUniquenessScore = 0.90;
-	var minimumRangeScore = 0.01;
+	//var maximumUniquenessScore = 0.90;
+	var maximumUniquenessScore = 0.99;
+	var minimumRangeScore = 0.02;
 	// setup image to/from
 	var imageFrom = imageA;
 	var imageTo = imageB;
@@ -1173,10 +1184,12 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var variabilityNeedleB = Code.variability(needle.blu(), compareSize, compareSize, null, isMin);
 	var variabilityNeedle = (variabilityNeedleR + variabilityNeedleG + variabilityNeedleB) / 3.0;
 	variabilityNeedle = Math.max(variabilityNeedle,1E-10);
+	variabilityNeedle /= inputCompareSize;
 
 	if(variabilityNeedle<minimumVariability){ // 0.001
-//		console.log("variabilityNeedle DROPPED "+variabilityNeedle);
+		console.log("variabilityNeedle DROPPED "+variabilityNeedle);
 		if(dropEarly){
+			console.log("drop VAR");
 			return null;
 		}
 	}
@@ -1205,7 +1218,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 
 	
 	if(lineFDistanceError>fundamentalDistanceErrorMax){
-//		console.log("lineFDistanceError DROPPED "+lineFDistanceError);
+		console.log("lineFDistanceError DROPPED "+lineFDistanceError);
 		if(dropEarly){
 			return null;
 		}
@@ -1234,10 +1247,11 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	var meanIntensityHaystack = (meanIntensityHaystackR+meanIntensityHaystackG+meanIntensityHaystackB)/3.0;
 
 	// uniqueness
-	var uniqueness = Math.max(uniquenessNH,uniquenessHN);
+	// var uniqueness = Math.max(uniquenessNH,uniquenessHN);
+	var uniqueness = uniquenessNH;
 	// ignore points with poor uniqueness
 	if(uniqueness > maximumUniquenessScore){
-//		console.log("uniqueness DROPPED "+uniqueness);
+		console.log("uniqueness DROPPED "+uniqueness);
 		if(dropEarly){
 			return null;
 		}
@@ -1248,7 +1262,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	worstRangeScore = Math.max(worstRangeScore,1E-10);
 	// ignore points that have minimal differences
 	if(worstRangeScore < minimumRangeScore){
-//		console.log("worstRangeScore DROPPED: "+worstRangeScore);
+		console.log("worstRangeScore DROPPED: "+worstRangeScore);
 		if(dropEarly){
 			return null;
 		}
@@ -1284,36 +1298,114 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	}
 	
 	// penalties
-	var scor = Math.pow(1.0+score,1.0);
-	var uniq = Math.pow(uniqueness,0.50);
+	//var scor = Math.pow(1.0 + score,1.0);
+
+	//var scor = Math.pow(score,0.25);
+	//var scor = Math.pow(score,0.50);
+	var scor = Math.pow(score,1.0);
+	//var scor = Math.pow(score,2.0);
+
+
+//var uniq = Math.pow(1.0 + uniqueness,1.0);
+// var uniq = Math.pow(1.0 + uniqueness,0.50);
+
+//var uniq = Math.pow(uniqueness,0.10);
+var uniq = Math.pow(uniqueness,0.50);
+//var uniq = Math.pow(uniqueness,1.0);
+//var uniq = Math.pow(uniqueness,2.0);
+//var uniq = Math.pow(uniqueness,4.0);
+//var uniq = 1.0 + Math.pow(uniqueness,0.50);
+//var uniq = 1.0;
+
+//console.log(uniqueness, uniq, " ... ", score, scor);
+
+//var uniq = uniqueness;
 	//var uniq = Math.pow(uniqueness,0.50);
 	//var uniq = Math.pow(uniqueness,1.0);
 	//var uniq = Math.pow(uniqueness,0.25); // 0.5
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
-	var vari = Math.pow(1.0/variabilityNeedle,0.5);
+	var vari = Math.pow(1.0 + 1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
-	var rang = Math.pow(1.0/worstRangeScore, 0.1);
+	var rang = Math.pow(1.0 + 1.0/worstRangeScore, 0.1);
 	var corn = Math.pow(1.0/cornerScore,0.25);
 	//console.log(corn);
 	// actually use
 	//var rank = 1.0;
-	var rank = score;
+	//var rank = score;
 //	rank = rank * lind; // moves it to 0 when far ?
-//	rank = rank * uniq; // TODO: ADD BACK
+//var rank = scor * uniq * rang;
+var rank = scor * uniq * vari; 
+//var rank = scor * uniq;
+
+
+
+
+
+// var scor = Math.pow(score,0.50);
+// var uniq = Math.pow(uniqueness,1.0);
+// var rank = scor * uniq;
+
+
+// 11/15:
+// @  25:   398 =   22 +/- 22
+// @  50:   871 =   20 +/- 20
+// lots of bad matches
+// 5/7:
+// @  25:   260 =  1.5 +/- 1.5
+// @  35:   381 =  1.1 +/- 1.1
+// @  50:   658 =  4.0 +/- 3.0
+// @  65:   721 = 15.0 +/- 13.0
+// @  75:   876 = 18.0 +/- 13.0
+// @ 100:  1206 = 12.0 +/- 12.0
+// var scor = Math.pow(score,1.0);
+// var uniq = Math.pow(uniqueness,0.50);
+// var rank = scor * uniq;
+
+
+// 11/15:
+// ?
+// 5/7:
+// @  25:   450 =  60 +/- 30
+// @  35:   650 =   7 +/-  7
+// @  50:   950 =   7 +/-  7
+// @  65:  1000 =   6 +/-  6
+
+// var scor = Math.pow(1.0 + score,1.0);
+// var uniq = Math.pow(1.0 + uniqueness,0.50);
+// var rank = scor * uniq;
+// rank -= 1.0;
+
+
+// var scor = Math.pow(1.0 + score,1.0);
+// var uniq = Math.pow(1.0 + uniqueness,1.0);
+// var rank = scor * uniq;
+// rank -= 1.0;
+
+
+
+//rank = uniq;
+
+//	rank = rank * reliability;
+
+
+// reliability = local maximum difference / neighborhood average difference
+
+
 //rank = rank * corn;
 //rank = rank * vari;
 //rank = rank * rang;
+// console.log("out");
 	//rank = rank * corn;
-	return {"rank":rank, "uniqneness":uniqueness};
+	return {"rank":rank, "uniqueness":uniqueness};
 }
 
 
 
-R3D.Dense.uniquenessFromValues = function(valuesIn, width,height){
+R3D.Dense.uniquenessFromValuesPeaks = function(valuesIn, width,height){
 	var info = Code.infoArray(valuesIn);
 	var max = info["max"];
 	var min = info["min"];
-	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-6, 0.0); // to force maxima differences
+	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-9, 0.0); // to force maxima differences
 	//var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
 	var peaks = Code.findMinima2DFloat(valuesIn,width,height);
 	var values = null;
@@ -1330,10 +1422,24 @@ R3D.Dense.uniquenessFromValues = function(valuesIn, width,height){
 	if(values[0]==0){
 		return 1E-9;
 	}
-	return values[0]/values[values.length-1]; // lowest in area?
+	//return values[0]/values[values.length-1]; // lowest in area?
+	return values[0]/values[1]; // next
 }
 
 
+R3D.Dense.uniquenessFromValuesClosest = function(valuesIn, width,height){
+	var values = Code.copyArray(valuesIn);
+	values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
+	if(values[0]==0){
+		return 1E-9;
+	}
+	//return values[0]/values[values.length-1]; // lowest in area?
+	return values[0]/values[1]; // next
+}
+
+//R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesClosest;
+
+R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesPeaks;
 
 
 

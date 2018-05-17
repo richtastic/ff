@@ -3247,6 +3247,18 @@ ImageMat.applyGaussianFloat = function(src,wid,hei, sigma){
 	var tmp = ImageMat.gaussian2DFrom1DFloat(tmp, newWid,newHei, gauss1D);
 	return ImageMat.unpadFloat(tmp, newWid,newHei, padding,padding,padding,padding);
 }
+ImageMat.prototype.derivativeX = function(){
+	var dr = ImageMat.derivativeX(this._r,this._width,this._height).value;
+	var dg = ImageMat.derivativeX(this._g,this._width,this._height).value;
+	var db = ImageMat.derivativeX(this._b,this._width,this._height).value;
+	return new ImageMat(this._width,this._height, dr,dg,db);
+}
+ImageMat.prototype.derivativeY = function(){
+	var dr = ImageMat.derivativeY(this._r,this._width,this._height).value;
+	var dg = ImageMat.derivativeY(this._g,this._width,this._height).value;
+	var db = ImageMat.derivativeY(this._b,this._width,this._height).value;
+	return new ImageMat(this._width,this._height, dr,dg,db);
+}
 ImageMat.derivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
 		return -0.5*src[wid*y+(x-1)] + 0.5*src[wid*y+(x+1)];

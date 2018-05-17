@@ -190,6 +190,9 @@ R3D.BA.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, r
 	var imageA = viewA.image();
 	var imageB = viewB.image();
 	var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, relativeScale,relativeAngle, sizeCompare, null,null,0); // FORCE LOCATION
+	if(!info){
+		return false;
+	}
 	var score = info["score"];
 	var bestAngle = info["angle"];
 	var bestScale = info["scale"];
@@ -361,8 +364,23 @@ R3D.BA.View = function(image, corners, camera){
 	this._errorMSigma = null;
 	this._errorRSigma = null;
 	this._errorFSigma = null;
-	this._cellSize = 5;
-	this._compareSize = 13;
+	// this._cellSize = 5;
+	// this._compareSize = 11;
+	// this._cellSize = 11;
+	// this._compareSize = 11;
+	
+	// large
+	// this._cellSize = 21;
+	// this._compareSize = 31;
+
+	// average
+	this._cellSize = 11;
+	this._compareSize = 15;
+
+	// // small
+	// this._cellSize = 5;
+	// this._compareSize = 7;
+
 	this.image(image);
 	this.corners(corners);
 	this.camera(camera);
@@ -384,10 +402,14 @@ R3D.BA.View.prototype.pixelsCompareP2D = function(){ // size of comparrison wind
 	return this._compareSize; // 13 ?
 }
 R3D.BA.View.prototype.neighborhoodSize = function(){ // area constituting a neighborhood block
-	return 13; // 400x300 ~ 10-20
+	return this._cellSize; // 400x300 ~ 10-20
 }
 R3D.BA.View.prototype.neighborhoodSearchSize = function(){ // number of neighborhood blocks to search to
-	return this.neighborhoodSize()*2;
+	//return this.neighborhoodSize()*3; // large 5x5+
+	//return this.neighborhoodSize()*2; // diamond
+	return this.neighborhoodSize()*1.5; // 8s
+	//return this.neighborhoodSize()*1.1; // 4s
+
 }
 
 R3D.BA.View.prototype.minimumDifferenceNeighborP2D = function(){
@@ -408,6 +430,15 @@ R3D.BA.View.prototype.size = function(size){
 }
 R3D.BA.View.prototype.image = function(image){
 	if(image!==undefined){
+		/*
+		var gradX = image.derivativeX();
+		//var gradY = image.derivativeY();
+		console.log(gradX);
+		//console.log(gradY);
+		this._image = gradX;
+		this._imageSource = image;
+		// throw "HERE"
+		*/
 		this._image = image;
 	}
 	return this._image;
@@ -447,7 +478,7 @@ R3D.BA.View.prototype.Kinv = function(){
 R3D.BA.View.prototype.isPointInside = function(point){
 	if(point){
 		var size = this.size();
-		if(0<point.x && point.x<size.x-1 && 0<point.y && point.y<size.y-1){
+		if(0<=point.x && point.x<=size.x-1 && 0<=point.y && point.y<=size.y-1){
 			return true;
 		}
 	}
@@ -1628,6 +1659,7 @@ R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,po
 	testScales = (testScales!==undefined && testScales!==null) ? testScales : [0];
 	testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [0];
 	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
+//	console.log(info)
 	return info;
 }
 R3D.BA.infoForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
@@ -1638,7 +1670,7 @@ R3D.BA.infoForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,corner
 R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
 	var info = R3D.BA.infoForPoints(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
 	if(info){
-		return info["uniqneness"];
+		return info["uniqueness"];
 	}
 	return null;
 }
@@ -1689,8 +1721,8 @@ for(var i=0; i<views.length; ++i){
 	//var maxIterations = 10;
 	//var maxIterations = 25; // positions better
 	//var maxIterations = 50; // R => ~
-	var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
-	//var maxIterations = 200;
+	//var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
+	var maxIterations = 200;
 	//var maxIterations = 500; // R errors SHOULD BE 1~2
 	//var maxIterations = 800;
 	// for(var i=0; i<maxIterations; ++i){
@@ -1720,10 +1752,11 @@ R3D.BA.World.prototype._iterationTick = function(){
 			return;
 		}
 	}
-	this._filterBest();
-this.generateStatsForExistingTransforms();
-	this._bundleAdjust();
-this.generateStatsForExistingTransforms(true);
+// TODO: ADD BACK
+// 	this._filterBest();
+// // this.generateStatsForExistingTransforms();
+// // 	this._bundleAdjust();
+// // this.generateStatsForExistingTransforms(true);
 //this._outputPair();
 	if(this._completeFxn){
 		this._completeFxn.call(this._completeContext);
@@ -1893,6 +1926,11 @@ R3D.BA.World.prototype._keyFxn = function(e){
 		// show views
 		var imageA = viewA.image();
 		var imageB = viewB.image();
+		// var imageA = viewA._imageSource;
+		// var imageB = viewB._imageSource;
+
+		//var compareSize = viewA.neighborhoodSize();
+		var compareSize = viewA.pixelsCompareP2D();
 
 		
 		var img = imageA;
@@ -1922,7 +1960,9 @@ R3D.BA.World.prototype._keyFxn = function(e){
 			var angleAB = match.angleForPoint(pointB);
 
 			//var compareSize = 11;
-			var compareSize = 21;
+			//var compareSize = 13;
+			//var compareSize = 21;
+
 			var scale = 1.0;
 			
 			// A
@@ -1971,8 +2011,6 @@ R3D.BA.World.prototype._iteration = function(iterationIndex, isLastIteration){
 	// get absolute locations of cameras & 3D points
 	this.absoluteCameras();
 	this.absolutePoints();
-	// TODO: matches errors change as cameras change
-// this.checkP3DMadness();
 	// add next best matches for each transform
 	var maxMatchCount = 20;
 	var transforms = this.toTransformArray();
@@ -1996,28 +2034,24 @@ R3D.BA.World.prototype._iteration = function(iterationIndex, isLastIteration){
 			var point3D = match.point3D();
 			var pointA = match.pointA();
 			var pointB = match.pointB();
-			// var viewA = match.viewA();
-			// var viewB = match.viewB();
 			point3D.disconnect(this); // for P3D already in world
 			pointA.isPutative(false);
 			pointB.isPutative(false);
 
-var pointMatches = point3D.toMatchArray();
-var exists = Code.elementExists(pointMatches, match);
-if(!exists){
-	console.log(match);
-	console.log(point3D);
-	throw "pop - a point not match it's match's point";
-}
-// this.checkP3DMadness();
+			// var pointMatches = point3D.toMatchArray();
+			// var exists = Code.elementExists(pointMatches, match);
+			// if(!exists){
+			// 	console.log(match);
+			// 	console.log(point3D);
+			// 	throw "pop - a point not match it's match's point";
+			// }
+			// this.checkP3DMadness();
 			this.insertNewPoint3D(point3D);
 			// add around neighborhood
 			this.appendNeighborMatchesAround(viewA, pointA.point(), viewB, pointB.point());
-// this.checkP3DMadness();
+			// this.checkP3DMadness();
 		}
 	}
-
-//this.consistencyCheck();
 	
 	this.printPointCounts();
 
@@ -2086,7 +2120,7 @@ R3D.BA.World.prototype.appendNeighborMatchesAround = function(viewA, pointA, vie
 }
 R3D.BA.World.prototype.appendNeighborMatchesSingle = function(viewA, pointA, viewB, pointB){ 
 	var found = true;
-	var loopCount = 30;
+	var loopCount = 30; // max neighbors - error check
 	var previousPoint = null;
 	while(found){
 		found = false;
@@ -2109,6 +2143,8 @@ R3D.BA.World.prototype.appendNeighborMatchesSingle = function(viewA, pointA, vie
 				}
 				previousPoint = from.copy();
 				this.addPointForMatch(bestMatchA, viewA,viewB,transform);
+			}else{
+				throw "point not inside: "+from;
 			}
 		}
 	}
@@ -2192,16 +2228,12 @@ R3D.BA.World.prototype.probeNeighborsP3DToUnknownViews = function(){
 					//var neighborPoint = neighborP3D.point2DForView(knownView); 
 					var counterPoint = neighborP3D.point2DForView(unknownView);
 					if(counterPoint){ // search around this point for good match
-//console.log(this.unprojectedViews(point3D)+" ... NOW UNKNOWN B");
 						var viewA = knownView;
 						var viewB = unknownView;
 						var pointA = knownPoint.point();
 						var pointB = counterPoint.point();
-						//var counterNeighbors = R3D.BA.World.neighborsForInterpolation(counterPoint.point(), knownView,unknownView);
-						// get the neighbors in viewB who also have a viewA connection
 						var neighborsA = R3D.BA.World.neighborsForInterpolation(pointA, viewA,viewB);
-//						console.log(neighborsA);
-						if(neighborsA.length>=3){ // == 1
+						if(neighborsA){
 							var predicted = R3D.BA.interpolationData(pointA, neighborsA, viewA,viewB);
 							var pointB = predicted["point"];
 							var scaleAB = predicted["scale"];
@@ -2211,10 +2243,11 @@ R3D.BA.World.prototype.probeNeighborsP3DToUnknownViews = function(){
 							var imageA = viewA.image();
 							var imageB = viewB.image();
 							var sizeCompare = viewB.pixelsCompareP2D();
-							var seedTestAngles = Code.lineSpace(-15,15, 15);
-							var seedTestScales = Code.lineSpace(-.1,.1, .1);
+							// var seedTestAngles = Code.lineSpace(-15,15, 15);
+							// var seedTestScales = Code.lineSpace(-.1,.1, .1);
 							var searchSize = 4*sizeCompare;
-							var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, seedTestScales,seedTestAngles, searchSize);  // , 0); // FORCE LOCATION ???
+							throw "TODO"
+							//var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, seedTestScales,seedTestAngles, searchSize);  // , 0); // FORCE LOCATION ???
 							var pA = info["from"];
 							var pB = info["to"];
 							var score = info["score"];
@@ -2442,7 +2475,7 @@ if(existing){
 					// TODO: IS THIS DONE TWICE ?
 					console.log("projected2D: "+projected2D);
 					var neighborsB = R3D.BA.World.neighborsForInterpolation(projected2D, viewB,viewA);
-					if(!neighborsB || neighborsB.length<3){ // 
+					if(!neighborsB){ // 
 						continue;
 					}
 					var predicted = R3D.BA.interpolationData(pointB, neighborsB,  viewB,viewA);
@@ -2465,10 +2498,9 @@ if(existing){
 					var imageB = viewB.image();
 					var sizeCompare = viewA.pixelsCompareP2D();
 //					console.log("optimumTransformForPoints");
-					//var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare);
-
-					var seedTestAngles = Code.lineSpace(-15,15, 15);
-						var seedTestScales = Code.lineSpace(-.1,.1, .1);
+					throw "HERE"
+					var seedTestAngles = [];//Code.lineSpace(-15,15, 15);
+					var seedTestScales = [];//Code.lineSpace(-.1,.1, .1);
 //						console.log(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, seedTestScales,seedTestAngles, sizeSearch)
 					var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, seedTestScales,seedTestAngles);//, 0); // FORCE LOCATION ???
 						var pA = info["from"];
@@ -2610,6 +2642,7 @@ R3D.BA.setRankForMatch = function(match, checkNull){
 		pointA = pointA.point();
 		pointB = pointB.point();
 	info = R3D.BA.infoForPoints(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, sizeCompare);
+	// console.log(info)
 	var rank = 1;
 	if(info){
 		var rank = info["rank"]; // rank, uniqueness, ...
@@ -3720,7 +3753,7 @@ R3D.BA.World.prototype.mergePoints = function(point3DA, point3DB){
 				var sizeCompare = viewB.pixelsCompareP2D();
 				// pointA = pointA.point();
 				// pointB = pointB.point();
-				var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare);//, null,null,0);
+				var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, null,null,0);
 				//console.log(info);
 				//var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pointA,pointB, scaleAB,angleAB, sizeCompare, null,null,0);
 				var pA = info["from"];
@@ -4264,20 +4297,20 @@ R3D.BA.World.prototype.addPointForMatch = function(bestMatchA, viewA, viewB, tra
 	// if(pA.x<=0 || pA.x>=sizeA.x-1 || pA.y<=0 || pA.y>=sizeA.y-1){
 	if(!viewA.isPointInside(pA)){
 		console.log(pA);
-		throw "addPointForMatch outside A"
+		throw "addPointForMatch outside A "+pA
 	}
 	if(!viewB.isPointInside(pB)){
 	// if(pB.x<=0 || pB.x>=sizeB.x-1 || pB.y<=0 || pB.y>=sizeB.y-1){
 		console.log(pB);
-		throw "addPointForMatch outside B"
+		throw "addPointForMatch outside B "+pB
 	}
 	// M
 	var score = bestMatchA["score"];
 	// F
 	var fError = null;
 	var rError = null;
-	var pointSpaceA = viewA.pointSpace();
-	var pointSpaceB = viewB.pointSpace();
+	// var pointSpaceA = viewA.pointSpace();
+	// var pointSpaceB = viewB.pointSpace();
 	var bestAngle = bestMatchA["angle"];
 	var bestScale = bestMatchA["scale"];
 	var match = this.createNewMatch(viewA,pA, viewB,pB, null, bestAngle,bestScale, score,fError,rError);
@@ -4309,42 +4342,26 @@ R3D.BA.World.neighborsForInterpolation = function(bestPointA, viewA,viewB){
 		return false;
 	}
 	var neighborsA = pointSpaceA.kNN(bestPointA, 6, evaluationFxn);
-	if(neighborsA.length<3){
+	if(neighborsA.length<2){
 		//console.log("not enough regular points:"+neighborsA.length);
-		//return null;
+		return null;
 	}
 	return neighborsA;
 }
 R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
-	var centerA = pointA;
-	var pointSpaceA = viewA.pointSpace();
-	var pointSpaceB = viewB.pointSpace();
-	// find all existing points in cell radius
-	var blockSize = viewA.neighborhoodSize();
-	var searchSize = viewA.neighborhoodSearchSize();
-	var neighborsA = pointSpaceA.objectsInsideCircle(centerA,searchSize);
-//var neighborsA = pointSpaceA.objectsInsideNeighborhood(centerA,blockSize,searchSize);
-	// filter points not corresponding to view pairs
-	for(var i=0; i<neighborsA.length; ++i){
-		var n = neighborsA[i];
-		var p = n.point3D();
-		if(!(p.point2DForView(viewA) && p.point2DForView(viewB))){
-			neighborsA[i] = neighborsA[neighborsA.length-1];
-			neighborsA.pop();
-			--i;
-		}
-	}
-	// a blank cell exists
-	var bestPointA = this.nextBestSearchPoint(viewA, centerA);
-	if(!bestPointA){
+	var bestPointA = this.nextBestSearchPoint(viewA, pointA);
+	if(!bestPointA){ // console.log("no empty neighbors");
 		return null;
 	}
 	// best point neighbors
 	var neighborsA = R3D.BA.World.neighborsForInterpolation(bestPointA, viewA,viewB);
-	if(neighborsA.length==0){
+	if(!neighborsA){
 		return null;
 	}
 	var predicted = R3D.BA.interpolationData(bestPointA, neighborsA,  viewA,viewB);
+	if(!predicted){
+		return null;
+	}
 	var pA = bestPointA;
 	var pB = predicted["point"];
 	var scaAB = predicted["scale"];
@@ -4352,8 +4369,18 @@ R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
 	var imageA = viewA.image();
 	var imageB = viewB.image();
 	var sizeCompare = viewA.pixelsCompareP2D();
-	var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare);
-	if(!info){
+
+	// R3D.BA.optimumTransformForPoints
+	// R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize){
+		var seedAngles = Code.lineSpace(-40,40, 10);
+		var seedScales = Code.lineSpace(-.1,.1, .1);
+		// var seedAngles = Code.lineSpace(-10,10, 10);
+		// var seedAngles = Code.lineSpace(-20,20, 10);
+		// var seedScales = Code.lineSpace(-.1,.1, .1);
+		// var seedAngles = null;
+		// var seedScales = null;
+	var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare, seedScales,seedAngles);
+	if(!info){ // console.log("no optimum transform");
 		return null;
 	}
 	var pA = info["from"];
@@ -4364,12 +4391,6 @@ R3D.BA.World.prototype.bestNextMatchForPoint = function(viewA, pointA, viewB){
 	if(!viewB.isPointInside(pB)){
 		return null;
 	}
-	// if(pA.x<=0 || pA.x>=viewA.size().x-1  ||  pA.y<=0 || pA.y>=viewA.size().y-1){
-	// 	return null;
-	// }
-	// if(pB.x<=0 || pB.x>=viewB.size().x-1  ||  pB.y<=0 || pB.y>=viewB.size().y-1){
-	// 	return null;
-	// }
 	return info;
 }
 R3D.BA.World.prototype.nextBestSearchPoint = function(viewA, centerA){ // first empty neighbor 
@@ -4427,6 +4448,7 @@ R3D.BA.World.prototype.nextBestSearchPoint = function(viewA, centerA){ // first 
 				var val = neighborBins[bin];
 				if(val==0){
 					// console.log(corners);
+					/*
 					var peakPixel = corners;
 					var maxI = null;
 					var maxJ = null;
@@ -4439,13 +4461,30 @@ R3D.BA.World.prototype.nextBestSearchPoint = function(viewA, centerA){ // first 
 							maxJ = _j;
 						}
 					}
-					ImageMat.getSubImageFxn(corners,viewSize.x,viewSize.y, cx*cellSize+insetNeighbor,(cx+1)*cellSize-1-insetNeighbor, cy*cellSize+insetNeighbor,(cy+1)*cellSize-1-insetNeighbor, calculateMaxFxn);
+					var startX = cx*cellSize+insetNeighbor;
+					var endX = (cx+1)*cellSize-1-insetNeighbor;
+					var startY = cy*cellSize+insetNeighbor;
+					var endY = (cy+1)*cellSize-1-insetNeighbor;
+					// if(endX<=){
+					// 	//
+					// }
+					startX = Math.max(startX,0);
+					endX = Math.min(endX,viewSize.x-1);
+					startY = Math.max(startY,0);
+					endY = Math.min(endY,viewSize.y-1);
+					ImageMat.getSubImageFxn(corners,viewSize.x,viewSize.y, startX,endX, startY,endY, calculateMaxFxn);
 					//console.log(maxI,maxJ,maxV);
 					// console.log(".  bin: "+i+","+j+"   = "+bin);
 					//console.log("location: "+cellCenter);
 					// console.log((cx*cellSize)+" < ("+cellCenter.x+") < "+((cx+1)*cellSize)+" && "+(cy*cellSize)+" < ("+cellCenter.y+") <  "+((cy+1)*cellSize));
 					var best = new V2D(maxI,maxJ);
 					return best;
+					*/
+					// return center -- stops 'nesting'
+					cellCenter.x = Math.min(Math.max(cellCenter.x,0),viewSize.x-1);
+					cellCenter.y = Math.min(Math.max(cellCenter.y,0),viewSize.y-1);
+					
+					return cellCenter;
 				}
 			}
 		}
@@ -4538,14 +4577,20 @@ R3D.BA.interpolationData = function(point, points2D, viewA,viewB){ // find locat
 	for(var i=0; i<points2D.length; ++i){
 		var p = points2D[i];
 		var m = p.matchForViews(viewA,viewB);
-//console.log("A MATCH IS NOT GUARANTEED TO EXIST IF IT IS NOT FILTERED BEFOREHAND");
 		var a = m.pointForView(viewA);
 		var b = m.pointForView(viewB);
 		var distance = V2D.distance(a.point(), point);
-		var fraction = 1.0 / (1.0 + Math.pow(distance, 2) );
+		var fraction = 1.0 / (1E-6 + Math.pow(distance, 2) );
+		//var fraction = 1.0 / (1E-6 + Math.pow(distance, 1) );
+		//var fraction = 1.0 / (1.0 + Math.pow(distance, 2) );
+		//var fraction = 1.0 / (1.0 + distance );
+		//var fraction = 1.0 / (0.01 + distance);
+		//var fraction = 1.0 / (1.0 + Math.pow(distance, 0.5) );
 		totalFraction += fraction;
 		data.push({"from":a, "to":b, "match":m, "fraction":fraction});
 	}
+	// if interpolation is very crazy .. ignore
+//	console.log(data);
 	// convert to interpolated points
 	var predictions = [];
 	var scale = 0.0;
@@ -4562,7 +4607,7 @@ R3D.BA.interpolationData = function(point, points2D, viewA,viewB){ // find locat
 		var match = d["match"];
 		var ang = match.angleForPoint(pointB);
 		var sca = match.scaleForPoint(pointB);
-		//scale += percent*Math.log2(sca);
+		// scale += percent*Math.log2(sca);
 		scale += percent*sca;
 		var relativeFrom = V2D.sub(point,fr);
 		var pos = relativeFrom.copy().rotate(ang).scale(sca).add(to).scale(percent);
@@ -4571,6 +4616,7 @@ R3D.BA.interpolationData = function(point, points2D, viewA,viewB){ // find locat
 		angles.push(ang);
 	}
 	var angle = Code.averageAngles(angles, percents);
+	// scale = Math.pow(2,scale);
 	var prediction = {"point":position, "angle":angle, "scale":scale};
 	return prediction;
 }

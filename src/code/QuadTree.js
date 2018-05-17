@@ -341,12 +341,15 @@ QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
 				}
 			}
 		}
+
 		// can quit if too far away
 		if(axelQueue.length()>0 && axelQueue.minimum().temp()>maxRadiusSquare ){
+			//console.log(axelQueue.minimum().temp()+" / "+maxRadiusSquare);
 			break;
 		}
 		// can quit if already have k && nearby cells are further away than best k
 		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"])){
+			//console.log(axelQueue.length()+" / "+k+" ");
 			break;
 		}
 	}
@@ -356,7 +359,7 @@ QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
 	axelQueue.kill();
 	for(var i=0; i<objects.length; ++i){
 		var object = objects[i];
-		if(object["distance"]<maxRadius){
+		if(object["distance"]<maxRadiusSquare){
 			output.push( object["object"] );
 		}
 	}
