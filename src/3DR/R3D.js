@@ -3868,7 +3868,6 @@ R3D.bestUniqueFeatureList = function(listA, rangeA, listB, rangeB){
 				list = uniqueFeaturesB;
 				index = j - uniqueFeaturesA.length;
 			}
-
 			var rangeJ = range;
 			var uniqueB = list[index];
 			var pointB = uniqueB["point"];
@@ -9495,7 +9494,7 @@ R3D.bestPairMatchExhaustivePoint = function(imageA,locationA, imageB,locationB, 
 	var scales = Code.divSpace(-1,1,7);
 	var angles = Code.divSpace(0,360,36); angles.pop();
 // TODO: REMOVE:
-angles = Code.lineSpace(-15,5,15);
+//angles = Code.lineSpace(-15,5,15);
 	//console.log(scales.length,rotations.length);
 	//var compareSize = R3D._SAD_HISTOGRAM_PIXELS;
 	var compareSize = 21;
@@ -17677,29 +17676,29 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 					var hG = haystackG[hIndex];
 					var hB = haystackB[hIndex];
 					// from median .... intensity differences
-					// nR = nR - avgN.x;
-					// nG = nG - avgN.y;
-					// nB = nB - avgN.z;
-					// hR = hR - avgH.x;
-					// hG = hG - avgH.y;
-					// hB = hB - avgH.z;
+					nR = nR - avgN.x;
+					nG = nG - avgN.y;
+					nB = nB - avgN.z;
+					hR = hR - avgH.x;
+					hG = hG - avgH.y;
+					hB = hB - avgH.z;
 						// nR = nR / rangeN.x;
 						// nG = nG / rangeN.y;
 						// nB = nB / rangeN.z;
 						// hR = hR / rangeH.x;
 						// hG = hG / rangeH.y;
 						// hB = hB / rangeH.z;
-						nR = nR / sigmaN.x;
-						nG = nG / sigmaN.y;
-						nB = nB / sigmaN.z;
-						hR = hR / sigmaH.x;
-						hG = hG / sigmaH.y;
-						hB = hB / sigmaH.z;
+					nR = nR / sigmaN.x;
+					nG = nG / sigmaN.y;
+					nB = nB / sigmaN.z;
+					hR = hR / sigmaH.x;
+					hG = hG / sigmaH.y;
+					hB = hB / sigmaH.z;
 					// SAD
 					var absR = Math.abs(nR - hR);
 					var absG = Math.abs(nG - hG);
 					var absB = Math.abs(nB - hB);
-					var absY = Math.abs(nR + nG + nB - hB - hG - hB);
+					//var absY = Math.abs(nR + nG + nB - hB - hG - hB);
 // absR += 1;
 // absG += 1;
 // absB += 1;
@@ -17730,7 +17729,7 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 					// sadB += Math.pow(absB,0.5);
 
 
-				sadY += absY;
+					//sadY += absY;
 					// sadR += Math.sqrt(absR);
 					// sadG += Math.sqrt(absG);
 					// sadB += Math.sqrt(absB);

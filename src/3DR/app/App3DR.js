@@ -80,7 +80,7 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-// var modeImageCompare = true;
+//var modeImageCompare = true;
 var modeImageCompare = false;
 
 
@@ -988,6 +988,10 @@ var projectViews = manager.views();
 				//image = pv.featuresImage();
 				//image = pv.denseHiImage(); // REPLACE 1
 				image = pv.bundleAdjustImage(); // REPLACE 1
+				// console.log("bundleAdjustImage");
+				// console.log(image);
+				// console.log(pv.denseHiImage());
+				image = pv.denseHiImage();
 				break;
 			}
 		}
@@ -1284,43 +1288,31 @@ var score = result["value"];
 console.log("SCORE: "+score);
 
 
-var info = R3D.BA.optimumTransformForPoints(matrixA,matrixB, locationA,locationB, 1.0,0.0, compareSize, null,null);
-// console.log(info);
+
+//var seedTestAngles = Code.lineSpace(-15,15, 15);
+var testAngles = Code.lineSpace(-10,10, 10);
+var testScales = Code.lineSpace(-.1,.1, .1);
+var baseScale = bestScale;
+var baseAngle = bestAngle;
+var searchSize = null;
+//R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize){
+// var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
+//var info = R3D.BA.optimumTransformForPoints(matrixA,matrixB, locationA,locationB, 1.0,0.0, compareSize, seedTestScales,seedTestAngles);
+var info = R3D.Dense.optimumTransform(matrixA,locationA, matrixB,locationB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
+console.log(info);
 var scale = info["scale"];
 var angle = info["angle"];
 var score = info["score"];
-
+// R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
 var info = R3D.Dense.rankForTransform(matrixA,null,locationA, matrixB,null,locationB, scale,angle,score, compareSize);
-// console.log(info);
+if(info){
 var rank = info["rank"];
 var uniq = info["uniqueness"];
 console.log("SCORE: "+score);
 console.log("RANK: "+rank);
 console.log("UNIQ: "+uniq);
+}
 
-/*
-R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize){
-	testScales = (testScales!==undefined && testScales!==null) ? testScales : [-0.1,0.0,0.1]
-	testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [-10, 0, 10];
-	// testScales = (testScales!==undefined && testScales!==null) ? testScales : [0];
-	// testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [0];
-	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
-//	console.log(info)
-	return info;
-}
-R3D.BA.infoForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
-	//var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror, false);
-	var info = R3D.Dense.rankForTransform(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
-	return info;
-}
-R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
-	var info = R3D.BA.infoForPoints(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror);
-	if(info){
-		return info["uniqneness"];
-	}
-	return null;
-}
-*/
 
 
 			var compareSize = 21;
@@ -3355,7 +3347,7 @@ camWid = 0.20;
 		this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
 	}
 
-
+console.log("GOT STUFF ?");
 	// set lines
 	this.setLines(lines);
 	
@@ -3365,6 +3357,7 @@ camWid = 0.20;
 }
 
 App3DR.App.Model3D.prototype.setViews = function(input){
+	console.log("setViews");
 	var i;
 	this._viewImages = [];
 	this._expectedTextures = input.length;
@@ -3373,6 +3366,7 @@ App3DR.App.Model3D.prototype.setViews = function(input){
 	this._views = input;
 	for(i=0; i<input.length; ++i){
 		var view = input[i];
+		console.log(view);
 		var image = view["image"];
 		var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
 		view["matrix"] = imageMatrix;
@@ -3411,12 +3405,7 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	this._programLineColors = this._stage3D.getBufferFloat32Array(colors, 4);
 }
 App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
-	console.log("setPoints");
-
 	//console.log(this._viewImages);
-
-	console.log(this._views);
-	console.log(hasImages);
 	var viewTable = {};
 	if(this._views) {
 		for(var i=0; i<this._views.length; ++i){
@@ -3425,7 +3414,6 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 			viewTable[index] = view;
 		}
 	}
-
 	// CREATE POINTS:
 	this._points3D = input3D;
 	this._points2D = input2D;
@@ -3439,8 +3427,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 		if(hasImages){
 			// get color from images
 			var vList = hasImages[i]["views"];
-			//if(vList){
-				//console.log(vList)
+			if(vList){
 				var item = vList[0]; // just grab 1
 				var vIndex = item["view"];
 				var view = viewTable[vIndex];
@@ -3456,7 +3443,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 				var grn = image.grn()[index];
 				var blu = image.blu()[index];
 				colors.push(red,grn,blu,1.0);
-			//}
+			}
 		}else{
 			colors.push(0.5,0.5,0.5,0.5);
 		}

@@ -180,17 +180,51 @@ project typical numbers:
 
 APP TODO:
 
+
+- show steps on demand as alg progresses
+- set a display flag to true
+pick up display flag & show the item
+
+
+needle
+haystack
+heat map of SAD scores
+display score, uniqueness
+
+
+
+
+
+
+
+
+- review all steps of algorithm...
+
+
+- how to remove/update queue
+	- shouldn't have multiple matches for same cells ?
+		[unless they match different to/from] --- injective
+
+
+- is interpolation location/scale ok?
+
+- is removing / re-adding matches / points ok
+-> dropping from queue too ?
+
 - maybe scaling needs some blurring steps?
 
-- maybe interpolation is off?
 
-- color erros absolute ?
 
 
 - 2 BA modes:
 1) get top 100~1000 points & best estimated P
+	- racalculate P ongoing
+	=> save to pair dirs
+		- F, P, pairs
 -) combine all view Ps & bundle adjust to get optimum Ps final
 2) dense point finding given optimal Ps
+	- don't recalculate P as it processd
+	- more aggressive error dropping
 
 
 
