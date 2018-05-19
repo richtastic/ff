@@ -970,9 +970,9 @@ R3D.projectX = function(pointsA,pointsB){ // NOT TESTED YET
 	//H.scale(1.0/H.get(2,2));
 	return H;
 }
-R3D.projectiveMatrixLinear = function(pointsA,pointsB){
+R3D.projectiveMatrixLinear = function(pointsA,pointsB, weights){
 	if (pointsA && pointsB && pointsA.length>=4 && pointsB.length>=4){
-		return R3D.projectiveDLT(pointsA,pointsB);
+		return R3D.projectiveDLT(pointsA,pointsB, weights);
 	}
 	return null;
 }
@@ -2200,96 +2200,6 @@ R3D.affineMatrixExact = function(pointsA,pointsB){ // first 3 points of A & B
 	m = Matrix.transform2DRotate(m,-bRo);
 	m = Matrix.transform2DTranslate(m,-bTX,-bTY);
 	return m;
-	/*
-	Matrix.transform2DTranslate = function(a,tX,tY){
-	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
-}
-Matrix.transform2DScale = function(a,sX,sY){
-	sY = sY!==undefined?sY:sX;
-	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
-}
-Matrix.transform2DRotate = function(a,ang){
-	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
-}
-Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
-	if(isAngle){
-		ang = Math.tan(ang);
-	}
-	var b = Matrix._transformTemp2D.setFromArray([1.0,ang,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
-}
-Matrix.transform2DSkewY = function(a,ang, isAngle){ // give an angle
-	if(isAngle){
-		ang = Math.tan(ang);
-	}
-	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,0.0, ang,1.0,0.0, 0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
-}
-//
-Matrix._transformTemp3D = new Matrix(4,4);
-Matrix.transform3DTranslate
-	*/
-	//
-	/*
-// SKEPTICAL IF THIS ACTUALLY WORKS ... OFFSET BY # ?
-		// if area of either triangle is 0 -> bad
-		//H = R3D.affineMatrixLinear(pointsA,pointsB);
-		var pA0 = pointsA[0];
-		var pA1 = pointsA[1];
-		var pA2 = pointsA[2];
-		var pB0 = pointsB[0];
-		var pB1 = pointsB[1];
-		var pB2 = pointsB[2];
-		var pA01 = V2D.sub(pA1,pA0);
-		var pA12 = V2D.sub(pA2,pA1);
-		var pB01 = V2D.sub(pB1,pB0);
-		var pB12 = V2D.sub(pB2,pB1);
-		var area1 = Math.abs(V2D.cross(pA01,pA12));
-		var area2 = Math.abs(V2D.cross(pB01,pB12));
-		var limit = 1E-12;
-		if(area1<=limit || area2<=limit){
-			var a = Code.copyArray(pointsA,0,1);
-			var b = Code.copyArray(pointsB,0,1);
-			return R3D.homographyFromPoints(a,b,angle);
-		}
-		
-		var tx = pB0.x - pA0.x;
-		var ty = pB0.y - pA0.y;
-		var angleAB = V2D.angle(pA01,pB01);
-		var lenA01 = pA01.length();
-		var lenB01 = pB01.length();
-		var lenA12 = pA12.length();
-		var lenB12 = pB12.length();
-		var angleA = V2D.angle(pA01,V2D.DIRX);
-		var angleB = V2D.angle(pB01,V2D.DIRX);
-		var scaleX = lenB01/lenA01;
-			// A
-			var nDotA = V2D.dot(pA01,pA12) / lenA01;
-			var paraA01 = pA01.copy().scale(nDotA/lenA01);
-			var perpA12 = V2D.sub(pA12,paraA01);
-			var lenPerpA12 = perpA12.length();
-			// B
-			var nDotB = V2D.dot(pB01,pB12) / lenB01;
-			var paraB01 = pB01.copy().scale(nDotB/lenB01);
-			var perpB12 = V2D.sub(pB12,paraB01);
-			var lenPerpB12 = perpB12.length();
-		var scaleY = lenPerpB12/lenPerpA12;
-		// skew
-		var soloA12 = V2D.rotate(pA12,-angleA);
-		var soloB12 = V2D.rotate(pB12,-angleB);
-		soloA12.scale(scaleX,scaleY);
-		var skew = (soloB12.x - soloA12.x)/soloB12.y;
-		H = new Matrix(3,3).identity();
-		H = Matrix.transform2DTranslate(H, -pA0.x,-pA0.y);
-		H = Matrix.transform2DRotate(H, -angleA);
-		H = Matrix.transform2DScale(H, scaleX, scaleY);
-		H = Matrix.transform2DSkewX(H, skew);
-		H = Matrix.transform2DRotate(H, angleB);
-		H = Matrix.transform2DTranslate(H, pB0.x,pB0.y);
-*/
 }
 R3D.DLT2D = function(pointsFr,pointsTo){
 	var i, j, fr, to, len = pointsFr.length;
@@ -2359,16 +2269,43 @@ R3D.affineDLT = function(pointsFr,pointsTo){ // 3 points = affine matrix tranfor
 	}
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(6);
-	//console.log(coeff[6])
-	//coeff[6] = Math.abs(coeff[6]);
 	coeff = [ coeff[0]/coeff[6], coeff[1]/coeff[6], coeff[2]/coeff[6], coeff[3]/coeff[6], coeff[4]/coeff[6], coeff[5]/coeff[6] ];
 	coeff.push(0,0,1);
 	var H = new Matrix(3,3).setFromArray(coeff);
 	return H;
 }
+R3D.projectiveDLTWeights = function(pointsFr,pointsTo, weights){ 
+	if(weights){
+		return R3D._projectiveDLTWeights(pointsFr,pointsTo, weights);
+	}else{
+		return R3D._projectiveDLT(pointsFr,pointsTo);
+	}
+}
+R3D._projectiveDLTWeights = function(pointsFr,pointsTo, weights){
+	var N = pointsFr.length;
+	var W = new Matrix(N*3,N*3);
+	for(var i=0; i<N; ++i){
+		var weight = weights[i];
+		W.set(i*3+0,i*3+0, weight);
+		W.set(i*3+1,i*3+1, weight);
+		W.set(i*3+2,i*3+2, weight);
+	}
 
-
-R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x3 homography / projection matrix -- need 2nx9 == 4 correspondences
+	var A = R3D._projectiveDLT_A(pointsFr,pointsTo);
+		A = Matrix.mult(W,A);
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(8);
+	var H = new Matrix(3,3).setFromArray(coeff);
+	return H;
+}
+R3D._projectiveDLT = function(pointsFr,pointsTo){ 
+	var A = R3D._projectiveDLT_A(pointsFr,pointsTo);
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(8);
+	var H = new Matrix(3,3).setFromArray(coeff);
+	return H;
+}
+R3D._projectiveDLT_A = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x3 homography / projection matrix -- need 2nx9 == 4 correspondences
 	var i, j, fr, to, len = pointsFr.length;
 	var v = new V3D(), u = new V3D();
 	var rows = len*3;
@@ -2409,10 +2346,7 @@ R3D.projectiveDLT = function(pointsFr,pointsTo){ // 2D or 3D points  --- find 3x
 		A.set(i*3+2,7, 0);
 		A.set(i*3+2,8, 0);
 	}
-	var svd = Matrix.SVD(A);
-	var coeff = svd.V.colToArray(8);
-	var H = new Matrix(3,3).setFromArray(coeff);
-	return H;
+	return A;
 }
 
 
@@ -17682,23 +17616,23 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 					hR = hR - avgH.x;
 					hG = hG - avgH.y;
 					hB = hB - avgH.z;
-						// nR = nR / rangeN.x;
-						// nG = nG / rangeN.y;
-						// nB = nB / rangeN.z;
-						// hR = hR / rangeH.x;
-						// hG = hG / rangeH.y;
-						// hB = hB / rangeH.z;
-					nR = nR / sigmaN.x;
-					nG = nG / sigmaN.y;
-					nB = nB / sigmaN.z;
-					hR = hR / sigmaH.x;
-					hG = hG / sigmaH.y;
-					hB = hB / sigmaH.z;
+						nR = nR / rangeN.x;
+						nG = nG / rangeN.y;
+						nB = nB / rangeN.z;
+						hR = hR / rangeH.x;
+						hG = hG / rangeH.y;
+						hB = hB / rangeH.z;
+					// nR = nR / sigmaN.x;
+					// nG = nG / sigmaN.y;
+					// nB = nB / sigmaN.z;
+					// hR = hR / sigmaH.x;
+					// hG = hG / sigmaH.y;
+					// hB = hB / sigmaH.z;
 					// SAD
 					var absR = Math.abs(nR - hR);
 					var absG = Math.abs(nG - hG);
 					var absB = Math.abs(nB - hB);
-					//var absY = Math.abs(nR + nG + nB - hB - hG - hB);
+					var absY = Math.abs(nR + nG + nB - hB - hG - hB);
 // absR += 1;
 // absG += 1;
 // absB += 1;
@@ -17712,13 +17646,15 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 // sadG -= 1;
 // sadB -= 1;
 					// ABS
-					sadR += absR;
-					sadG += absG;
-					sadB += absB;
+					// sadR += absR;
+					// sadG += absG;
+					// sadB += absB;
+					// sadY += absY;
 					// SQ
-					// sadR += absR*absR;
-					// sadG += absG*absG;
-					// sadB += absB*absB;
+					sadR += absR*absR;
+					sadG += absG*absG;
+					sadB += absB*absB;
+					sadY += absY*absY;
 					// QU
 					// sadR += Math.pow(absR,4);
 					// sadG += Math.pow(absG,4);
@@ -17729,7 +17665,7 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 					// sadB += Math.pow(absB,0.5);
 
 
-					//sadY += absY;
+					
 					// sadR += Math.sqrt(absR);
 					// sadG += Math.sqrt(absG);
 					// sadB += Math.sqrt(absB);
@@ -17756,9 +17692,12 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 			// sadB = sadB / sigSquB;
 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
 //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
-			var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
+//var sadAvg = (sadY) / maskCount / 3.0;
+			//var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
 
 //sss = 1E-4 * 1.0/nccAvg;
+
+//sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0;
 
 /*
 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
@@ -17796,11 +17735,11 @@ sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0; // div 
 			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
 */
 
-sss = sadAvg; // current best
+//sss = sadAvg; // current best
 
 //sss = sadRMS;
 
-//sss = sadAvg;
+sss = sadAvg;
 //sss = (sadAvg/nccAvg) * 0.001; // BAD
 //sss = 1.0/nccAvg;
 //sss = nccAvg;

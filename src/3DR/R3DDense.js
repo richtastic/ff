@@ -942,13 +942,15 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.COUNTA = 0;
+// R3D.Dense.SHOW = true;
+R3D.Dense.SHOW = false;
 R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg, neighborhoodSize){
 	// constants
 	//var maximumBestScore = 0.02; // 0.01; // SAD SIFT
 	//var maximumBestScore = 0.10; // SAD --- 0.25 ok, 0.01 too small
 	//var maximumBestScore = 0.05;
 	var maximumBestScore = 0.50; 
-//maximumBestScore = 0.50; // LARGER needs moere 
+//maximumBestScore = 0.50; // LARGER needs more 
 //maximumBestScore = 0.25;
 	var compareSize = R3D.sadBinOctantEdgeSize();
 	var neighborhoodScale = 1.0;
@@ -1147,8 +1149,8 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	//var maximumUniquenessScore = 0.99;
 	//var maximumUniquenessScore = 0.90;
 	//var maximumUniquenessScore = 0.90;
-	var maximumUniquenessScore = 0.999; // for 0.5
-	//var maximumUniquenessScore = 0.99; // for 1
+	//var maximumUniquenessScore = 0.999; // for 0.5
+	var maximumUniquenessScore = 0.99; // for 1
 	var minimumRangeScore = 0.02;
 	// setup image to/from
 	var imageFrom = imageA;
@@ -1167,7 +1169,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 	matrix = Matrix.transform2DRotate(matrix,angle);
 	var needle = imageFrom.extractRectFromFloatImage(pointFrom.x,pointFrom.y,cellScale,null,compareSize,compareSize, matrix);
 	// get haystack
-	var uniquenessWindow = 2; // 3-5
+	var uniquenessWindow = 3; // 3-5
 	//var uniquenessWindow = 5;
 	var neighborhoodSize = Math.round(compareSize * uniquenessWindow);
 		matrix = new Matrix(3,3).identity();
@@ -1179,6 +1181,72 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 		var valueHeight = scores.height;
 	// uniqueness
 	var uniquenessNH = R3D.Dense.uniquenessFromValues(values,valueWidth,valueHeight);
+var peaks = uniquenessNH["peaks"];
+		uniquenessNH = uniquenessNH.value;
+
+if(R3D.Dense.SHOW){
+console.log("UNIQUENESS A: "+uniquenessNH);
+
+
+
+if(!R3D.Dense.DISP){
+	R3D.Dense.DISP = new DO();
+	GLOBALSTAGE.addChild(R3D.Dense.DISP);
+}
+var displayStage = R3D.Dense.DISP;
+
+displayStage.removeAllChildren();
+
+var SCALE = 4.0
+var OFFX = 1500;
+var OFFY = 40;
+
+
+var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
+var d = new DOImage(img);
+	d.matrix().scale(SCALE);
+	d.matrix().translate(OFFX, OFFY);
+	d.matrix().translate(-needle.width()*0.5*SCALE, -needle.height()*0.5*SCALE);
+displayStage.addChild(d);
+
+
+
+
+var image = ImageMat.normalFloat01(Code.copyArray(values));
+var imageWidth = valueWidth;
+var imageHeight = valueHeight;
+//ImageMat.invertFloat01(image);
+ImageMat.pow(image,0.25);
+
+var heat = ImageMat.heatImage(image, imageWidth, imageHeight, true);
+var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
+var d = new DOImage(img);
+	d.graphics().alpha(0.5);
+	d.matrix().scale(SCALE);
+	d.matrix().translate(OFFX, OFFY);
+displayStage.addChild(d);
+
+
+for(var i=0; i<peaks.length; ++i){
+	var peak = peaks[i];
+	//console.log(i+": "+peak);
+	var d = new DO();
+		d.graphics().setLine(1, 0xFFFF0000);
+		d.graphics().beginPath();
+		//d.graphics().drawCircle(peak.x,peak.y, 1.0/(0.000001+Math.pow(peak.z,2)*1000.0) );
+		d.graphics().drawCircle(peak.x,peak.y, 1E-5/(0.000001+Math.pow(peak.z,2)*1000.0) );
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+	d.matrix().scale(SCALE);
+	d.matrix().translate(OFFX, OFFY);
+	displayStage.addChild(d);
+}
+
+// var img = GLOBALSTAGE.getFloatRGBAsImage(image,image,image, valueWidth,valueHeight);
+// var d = new DOImage(img);
+// d.matrix().translate(1800, 100);
+// GLOBALSTAGE.addChild(d);
+}
 
 	// variability
 	var isMin = false;
@@ -1225,7 +1293,7 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 			return null;
 		}
 	}
-
+/*
 	// reverse needle
 		matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DScale(matrix,1.0/scale);
@@ -1239,55 +1307,12 @@ R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,poin
 		var valueWidth = scores.width;
 		var valueHeight = scores.height;
 	var uniquenessHN = R3D.Dense.uniquenessFromValues(values,valueWidth,valueHeight);
-
-/*
-console.log("UNIQUENESS A: "+uniquenessHN);
-
-
-
-if(!R3D.Dense.DISP){
-	R3D.Dense.DISP = new DO();
-	GLOBALSTAGE.addChild(R3D.Dense.DISP);
-}
-var displayStage = R3D.Dense.DISP;
-
-displayStage.removeAllChildren();
-
-var SCALE = 4.0
-var OFFX = 1500;
-var OFFY = 40;
-
-
-var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
-var d = new DOImage(img);
-	d.matrix().scale(SCALE);
-	d.matrix().translate(OFFX, OFFY);
-	d.matrix().translate(-needle.width()*0.5*SCALE, -needle.height()*0.5*SCALE);
-displayStage.addChild(d);
-
-
-
-
-var image = ImageMat.normalFloat01(Code.copyArray(values));
-var imageWidth = valueWidth;
-var imageHeight = valueHeight;
-//ImageMat.invertFloat01(image);
-ImageMat.pow(image,0.5);
-
-var heat = ImageMat.heatImage(image, imageWidth, imageHeight, true);
-var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
-var d = new DOImage(img);
-	d.graphics().alpha(0.5);
-	d.matrix().scale(SCALE);
-	d.matrix().translate(OFFX, OFFY);
-displayStage.addChild(d);
-
-// var img = GLOBALSTAGE.getFloatRGBAsImage(image,image,image, valueWidth,valueHeight);
-// var d = new DOImage(img);
-// d.matrix().translate(1800, 100);
-// GLOBALSTAGE.addChild(d);
-
+var peaks = uniquenessHN["peaks"];
+		uniquenessHN = uniquenessHN.value
 */
+var uniquenessHN = uniquenessNH;
+
+
 
 
 	// reverse haystak
@@ -1306,11 +1331,11 @@ displayStage.addChild(d);
 
 
 
-/*
+if(R3D.Dense.SHOW){
 
 console.log("UNIQUENESS B: "+uniquenessNH);
 
-*/
+}
 
 	//var uniqueness = uniquenessNH;
 	// ignore points with poor uniqueness
@@ -1401,8 +1426,8 @@ var uniq = Math.pow(uniqueness,1.0);
 //var rank = scor * uniq * vari;
 
 
-var rank = scor;
-//var rank = uniq; // ...
+//var rank = scor;
+var rank = uniq; // ...
 // var rank = scor * uniq; // BAD
 //var rank = Math.pow(score,1.0) * Math.pow(uniqueness,0.50);
 //var rank = Math.pow(score,0.1) * Math.pow(uniqueness,1.0); // OK. ~8
@@ -1416,7 +1441,7 @@ var rank = scor;
 
 
 
-rank = rank * 1E-3;
+//rank = rank * 1E-3;
 
 //var rank = scor * rang; // OK
 
@@ -1499,10 +1524,18 @@ UNIQUENESS
 
 
 R3D.Dense.uniquenessFromValuesPeaks = function(valuesIn, width,height){
+valuesIn = Code.copyArray(valuesIn);
+valuesIn.sort( function(a,b){ return a<b ? -1 : 1; } );
+
+Code.printMatlabArray(valuesIn,"values");
+
 	var info = Code.infoArray(valuesIn);
 	var max = info["max"];
 	var min = info["min"];
-	valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-9, 0.0); // to force maxima differences
+	var range = info["range"];
+	var average = info["mean"];
+	var std = Code.stdDev(valuesIn, average);
+	//valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-9, 0.0); // to force maxima differences
 	//var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
 	var peaks = Code.findMinima2DFloat(valuesIn,width,height);
 	var values = null;
@@ -1519,30 +1552,122 @@ R3D.Dense.uniquenessFromValuesPeaks = function(valuesIn, width,height){
 	if(values[0]==0){
 		return 1E-9;
 	}
+	//console.log("range: "+range);
+	//var u = values[0]/values[1];
+	//var u = (max - values[1])/(max - values[0]);
+	console.log("INFO: \n rng: "+range+" \n min: "+min+"\n max: "+max+" \n avg: "+average+" \n std: "+std+" \n   0: "+values[0]+" \n   1: "+values[1]+"");
+	//var u = 1E-4 * 1/(range*(values[1]-values[0])); // better ... 
+	//var u = (values[1]-values[2]) / (values[0]-values[2]);
+	//var u = 1 - ( (max-values[1]) / (max-values[0]) );
+	//var u = (avg-values[0])/(avg-values[1]);
+	// var u = (values[0])/(values[1]);
+		var u = (values[1] - values[0]);
+	// u = u / range;
+	// u = u * std;
+	u = u * 1.0;
 	//return values[0]/values[values.length-1]; // lowest in area? ... not bad .. but this doesn't make sense
-	return values[0]/values[1]; // next
+	return {"value":u, "peaks":peaks};
 	//return Math.pow(values[0],2)/Math.pow(values[1],2); // OK
 	//return Math.pow(values[0],0.5)/Math.pow(values[1],0.5);  // ?
 	//return Math.pow(values[0],4)/Math.pow(values[1],4); 
 	//return Math.pow(values[0],3)/Math.pow(values[1],3); 
 	//return Math.pow(values[0],10)/Math.pow(values[1],10);  // OK
+
+/*
+
+GOOD:
+INFO: 
+ rng: 0.03413827890571445 
+ min: 0.015436449369006231
+ max: 0.04957472827472068 
+ avg: 0.032365108818847806 
+ std: 0.007555405755031825 
+   0: 0.015079514161483419 
+   1: 0.015399841856948463
+
+
+
+
+POOR:
+INFO: 
+ rng: 0.027660733892671246 
+ min: 0.024454958346617203
+ max: 0.05211569223928845 
+ avg: 0.036322562387218975 
+ std: 0.004691982584330041 
+   0: 0.0244243927188554 
+   1: 0.02471012760574035
+
+
+
+WRONG:
+INFO: 
+ rng: 0.09759377851382303 
+ min: 0.011044019224963106
+ max: 0.10863779773878614 
+ avg: 0.036327796391031945 
+ std: 0.01818128141622069 
+   0: 0.010805624664705065 
+   1: 0.012353668122668754
+
+
+
+*/
 }
 
 
 R3D.Dense.uniquenessFromValuesClosest = function(valuesIn, width,height){
 	var values = Code.copyArray(valuesIn);
 	values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
-	if(values[0]==0){
-		return 1E-9;
-	}
+
+// Code.printMatlabArray(values,"values");
+
+	// if(values[0]==0){
+	// 	return 1E-9;
+	// }
 	//return values[0]/values[values.length-1]; // lowest in area?
-	return values[0]/values[1]; // next
+	//return values[0]/values[1]; // next
 	//return Math.pow(values[0],2)/Math.pow(values[1],2); 
+	//var diff = 
+	//return values[0]/values[5]; // first ~ 10
+	var inv1 = 1.0 / (values[1] - values[0]);
+	var inv3 = 1.0 / (values[3] - values[0]);
+	var inv5 = 1.0 / (values[5] - values[0]);
+	// ...
+//	console.log("INV: "+inv1+" | "+inv3+" | "+inv5+" | ")
+	// inv = inv * values[0];
+	//var inv = inv1 * inv3 * inv5;
+	//var inv = Math.pow(inv1,1.0) * Math.pow(inv3,2) * Math.pow(inv5, 4);
+	//var inv = Math.pow(inv1,1.0) * Math.pow(inv3,.5) * Math.pow(inv5, .25);
+	//var inv = inv1 * inv3 * inv5;
+	//var inv = inv5;
+
+	//var inv = Math.pow(inv5,1.0) * Math.pow(values[0],0.5);
+
+
+	//var inv = Math.pow(inv5,1.0) * Math.pow(values[0],0.5);
+	var max = values[values.length-1];
+	var min = values[0];
+	var range = max - min;
+	var fifth = values[5];
+	var zeroth = values[0];
+	//var inv = (fifth + zeroth) / (fifth - zeroth);
+	//var inv = (zeroth*fifth) / (fifth - zeroth);
+	//var inv = (zeroth/fifth) / (fifth - zeroth);
+
+	var inv = 1.0 / (fifth - zeroth);
+
+	inv = inv * 1E-8;
+	//inv = inv * 1E-5;
+	//inv = inv * 1E-3;
+	// inv = inv * 1E-2;
+	return {"value":inv, "peaks":[]};
+
 }
 
-// R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesClosest;
+R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesClosest;
 
-R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesPeaks;
+//R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesPeaks;
 
 
 

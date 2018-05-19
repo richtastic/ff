@@ -6435,6 +6435,70 @@ Code.sphereGeometric = function(points, location, maxIterations){
 
 
 
+Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: convex hull outside ?
+	// TODO: unknown weights = average
+	var x = pointX;
+	var scale = 0.0;
+	var position = new V2D();
+	var centerA = new V2D();
+	var centerB = new V2D();
+	var percent = 1.0 / pointsA.length;
+	for(var i=0; i<pointsA.length; ++i){
+		//var w = weights[i];
+		var w = percent;
+		var a = pointsA[i];
+		var b = pointsB[i];
+		// console.log(a+" | "+b);
+		centerA.add(w*a.x, w*a.y);
+		centerB.add(w*b.x, w*b.y);
+	}
+	console.log("CENTERS: "+centerA+" | "+centerB);
+	var position = new V2D();
+	var ao = new V2D();
+	var bo = new V2D();
+	var ax = new V2D();
+	var p1 = new V2D();
+	var t1 = new V2D();
+	var p2 = new V2D();
+	var t2 = new V2D();
+// if any points are ON COM -> DROP COLLINEAR ?
+	for(var i=0; i<pointsA.length; ++i){
+		var w = weights[i];
+		var a = pointsA[i];
+		var b = pointsB[i];
+		V2D.sub(ao, centerA,a);
+		V2D.sub(bo, centerB,b);
+		V2D.sub(ax, x,a);
+		var lenAO = ao.length();
+		var lenBO = bo.length();
+//		var scale = 1.0;
+		var percentT = 0.0;
+		var percentP = 1.0;
+		if(lenAO<1E-10){ // basically at center
+			p1.set(ox.x,ox.y);
+			t1.set(0,0);
+		}else{
+			t1.set(ao.x/lenAO,ao.y/lenAO);
+			V2D.rotate(p1, t1,Math.PIO2);
+			//console.log(t1.length(), p1.length());
+			percentT = V2D.dot(ax,t1)/lenAO;
+			percentP = V2D.dot(ax,p1)/lenAO;
+			console.log(percentT,percentP);
+		}
+
+		console.log(" 1) TAN: "+t1+" PAR: "+p1);
+		//bo.scale(scale);
+		t2.set(bo.x,bo.y);
+		V2D.rotate(p2, t2, Math.PIO2);
+		t2.scale(percentT);
+		p2.scale(percentP);
+		console.log(" 2) TAN: "+t2+" PAR: "+p2);
+		console.log(" W: "+w+" S: "+scale);
+		position.add((p2.x+t2.x)*w,(p2.y+t2.y)*w);
+	}
+	console.log(position+" ....");
+	return position;
+}
 
 
 

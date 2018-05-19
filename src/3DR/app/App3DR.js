@@ -80,8 +80,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-//var modeImageCompare = true;
-var modeImageCompare = false;
+var modeImageCompare = true;
+//var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -1263,6 +1263,9 @@ App3DR.App.MatchCompare.prototype.checkMatchPairs = function(){
 			var bestOffset = result["offset"];
 			console.log("MATCH: "+locationA+" => "+locationB+" @ scale: "+bestScale+", angle: "+bestAngle+", + "+bestOffset);
 			//console.log(result);
+bestScale = 1.0;
+bestAngle = 0.0;
+bestOffset = new V2D();
 
 locationB.add(bestOffset);
 var lA = locationA.copy().scale(1.0/matrixA.width(),1.0/matrixA.height());
@@ -1274,7 +1277,9 @@ var lB = locationB.copy().scale(1.0/matrixB.width(),1.0/matrixB.height());
 
 
 // SHOW SAD SCORE:
+//var compareSize = 31;
 var compareSize = 21;
+//var compareSize = 11;
 var matrix = new Matrix(3,3).identity();
 var needle = matrixA.extractRectFromFloatImage(locationA.x,locationA.y,1.0,null,compareSize,compareSize, matrix);
 //
@@ -1295,15 +1300,13 @@ var testScales = Code.lineSpace(-.1,.1, .1);
 var baseScale = bestScale;
 var baseAngle = bestAngle;
 var searchSize = null;
-//R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize){
-// var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
-//var info = R3D.BA.optimumTransformForPoints(matrixA,matrixB, locationA,locationB, 1.0,0.0, compareSize, seedTestScales,seedTestAngles);
+
 var info = R3D.Dense.optimumTransform(matrixA,locationA, matrixB,locationB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
 console.log(info);
 var scale = info["scale"];
 var angle = info["angle"];
 var score = info["score"];
-// R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
+
 var info = R3D.Dense.rankForTransform(matrixA,null,locationA, matrixB,null,locationB, scale,angle,score, compareSize);
 if(info){
 var rank = info["rank"];
@@ -1312,6 +1315,88 @@ console.log("SCORE: "+score);
 console.log("RANK: "+rank);
 console.log("UNIQ: "+uniq);
 }
+
+
+
+
+// interpolationData
+
+var pairs = [];
+	pairs.push([new V2D(0.0,0.0), new V2D(0.0,0.0), 2.0, 0.0]);
+	pairs.push([new V2D(1.0,1.0), new V2D(2.0,2.0), 2.0, 1.0]);
+	pairs.push([new V2D(5.0,0.5), new V2D(10.0,1.0), 2.0, 2.0]);
+var world = new R3D.BA.World();
+var viewA = world.addView();
+var viewB = world.addView();
+viewA.image(matrixA);
+viewB.image(matrixB);
+viewA.size(new V2D(matrixA.width(), matrixA.height()));
+viewB.size(new V2D(matrixB.width(), matrixB.height()));
+// console.log(viewA,viewB)
+var transform = world.transformFromViews(viewA,viewB);
+// console.log("PAIRS:"+pairs.length);
+for(var p=0; p<pairs.length; ++p){
+	var pair = pairs[p];
+	var pA = pair[0];
+	var pB = pair[1];
+	var scaleAB = pair[2];
+	var angleAB = pair[3];
+	//console.log(pA,pB,scaleAB, angleAB);
+	var match = world.addMatchForViews(viewA,pA, viewB,pB, scaleAB,angleAB);
+
+	var point3D = match.point3D();
+		point3D.disconnect(world);
+	var pointA = match.pointA();
+	var pointB = match.pointB();
+		pointA.isPutative(false);
+		pointB.isPutative(false);
+	world.insertNewPoint3D(point3D);
+}
+
+//console.log("SIZEA: "+viewA.pointSpace().toArray().length);
+var pointA = new V2D(1,0);
+var points2D = R3D.BA.World.neighborsForInterpolation(pointA, viewA,viewB, true);
+var data = R3D.BA.interpolationData(pointA, points2D, viewA,viewB);
+console.log(data);
+
+var OFFX = 1600;
+var OFFY = 400;
+var ss = 20.0;
+for(x=0; x<10; ++x){
+	for(y=0; y<10; ++y){
+		//var pointA = new V2D(0,0);
+		var pointA = new V2D(x,y);
+		var points2D = R3D.BA.World.neighborsForInterpolation(pointA, viewA,viewB, true);
+		// console.log(points2D);
+		var data = R3D.BA.interpolationData(pointA, points2D, viewA,viewB);
+		// console.log(data);
+		var pt = data["point"];
+		var ang = data["angle"];
+		var sca = data["scale"];
+		// console.log("point:"+pt);
+		// console.log("angle:"+ang);
+		// console.log("scale:"+sca);
+		var base = 5.0;
+		var d = new DO();
+		d.graphics().clear();
+		//d.graphics().setFill(0xFF00FF00);
+		d.graphics().setLine(1.0, 0xCCCC0000);
+		d.graphics().beginPath();
+		//d.graphics().drawCircle(0,0,base*sca);
+		d.graphics().drawCircle(0,0,base*sca);
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(base*sca,0);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().rotate(ang);
+		//d.matrix().translate(x*ss,y*ss);
+		d.matrix().translate(pt.x*ss,-pt.y*ss);
+		d.matrix().translate(OFFX,OFFY);
+		GLOBALSTAGE.addChild(d);
+	}
+}
+
+
 
 
 
@@ -6511,7 +6596,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-//return; // don't run
+return; // don't run
 
 
 

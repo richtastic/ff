@@ -180,6 +180,25 @@ project typical numbers:
 
 APP TODO:
 
+- 2D interpolation visualization
+
+SAD SCORING:
+
+- step slope
+- low score
+
+
+
+
+
+
+
+
+- SAD scoring visualization
+
+
+- how do compareSize & cellSize interact in  R3D.BA.infoForPoints(
+
 
 - show steps on demand as alg progresses
 - set a display flag to true
