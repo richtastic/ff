@@ -1393,9 +1393,6 @@ console.log("UNIQUENESS B: "+uniquenessNH);
 	//var scor = Math.pow(score,0.50);
 	var scor = Math.pow(score,1.0);
 	//var scor = Math.pow(score,2.0);
-
-
-
 //var uniq = Math.pow(1.0 + uniqueness,0.50);
 
 //var uniq = Math.pow(uniqueness,0.10);
@@ -1424,11 +1421,13 @@ var uniq = Math.pow(uniqueness,1.0);
 //	rank = rank * lind; // moves it to 0 when far ?
 //var rank = scor * uniq * rang;
 //var rank = scor * uniq * vari;
-
-
+// 
+var rank = scor * rang;
+// 
+//var rank = scor * corn * rang;
 //var rank = scor;
-var rank = uniq; // ...
-// var rank = scor * uniq; // BAD
+//var rank = uniq; // ...
+//var rank = scor * uniq; // BAD
 //var rank = Math.pow(score,1.0) * Math.pow(uniqueness,0.50);
 //var rank = Math.pow(score,0.1) * Math.pow(uniqueness,1.0); // OK. ~8
 //var rank = Math.pow(score,1.0) * Math.pow(uniqueness,1.0); // POOR ~10

@@ -4332,9 +4332,13 @@ R3D.BA.World.neighborsForInterpolation = function(bestPointA, viewA,viewB, force
 		}
 		return false;
 	}
-	var neighborsA = pointSpaceA.kNN(bestPointA, 6, evaluationFxn);
-	if(!force || neighborsA.length<2){
-		//console.log("not enough regular points:"+neighborsA.length);
+	// CONVEX NEIGHBORS ?
+	//var neighborsA = pointSpaceA.kNN(bestPointA, 4, evaluationFxn);
+	var neighborsA = pointSpaceA.kNN(bestPointA, 9, evaluationFxn);
+	if(force){
+		return neighborsA;
+	}
+	if(neighborsA.length<2){
 		return null;
 	}
 	return neighborsA;
@@ -4570,10 +4574,11 @@ R3D.BA.interpolationData = function(point, points2D, viewA,viewB){ // find locat
 		var a = m.pointForView(viewA);
 		var b = m.pointForView(viewB);
 		var scale = m.scaleForPoint(b);
-		var angle = m.scaleForPoint(b);
+		var angle = m.angleForPoint(b);
 		var distance = V2D.distance(a.point(), point);
 		// inverse distance weighting
-		var bottom = Math.pow(distance, 2);
+		var bottom = Math.pow(distance, 2.0);
+		//var bottom = Math.pow(distance, 4.0);
 		bottom = Math.max(bottom, 1E-9);
 		var fraction = 1.0 / bottom;
 		// exponential weighting
@@ -4593,7 +4598,6 @@ R3D.BA.interpolationData = function(point, points2D, viewA,viewB){ // find locat
 	var scale = Code.averageNumbers(scales, weights);
 	var angle = Code.averageAngles(angles, weights);
 	var prediction = {"point":position, "angle":angle, "scale":scale};
-	console.log(prediction);
 	return prediction;
 	/*
 	H = R3D.affineMatrixExact(pointsA,pointsB);

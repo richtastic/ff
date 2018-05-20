@@ -65,10 +65,7 @@ GLOBALSTAGE = this._stage;
 	
 	this._resource = resource;
 
-
-
 	// this._projectManager
-
 	// this._activeView = this._projectManager.views()[0];
 	// console.log(this._activeView);
 
@@ -80,8 +77,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-var modeImageCompare = true;
-//var modeImageCompare = false;
+//var modeImageCompare = true;
+var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -1160,7 +1157,6 @@ App3DR.App.MatchCompare.prototype.handleMouseDown = function(e){
 	var display = this._displayData;
 	var location = e["location"];
 	// console.log(display);
-
 	if(!this._displayPairDO){
 		this._displayPairDO = new DO();
 		this._root.addChild(this._displayPairDO);
@@ -1322,9 +1318,41 @@ console.log("UNIQ: "+uniq);
 // interpolationData
 
 var pairs = [];
-	pairs.push([new V2D(0.0,0.0), new V2D(0.0,0.0), 2.0, 0.0]);
-	pairs.push([new V2D(1.0,1.0), new V2D(2.0,2.0), 2.0, 1.0]);
-	pairs.push([new V2D(5.0,0.5), new V2D(10.0,1.0), 2.0, 2.0]);
+	// 9:
+	// pairs.push([new V2D(1.0,1.0), new V2D( 0.0,1.0), 2.0, 0.0]);
+	// pairs.push([new V2D(5.0,1.0), new V2D( 7.0,1.0), 2.0, 1.0]);
+	// pairs.push([new V2D(9.0,1.0), new V2D(12.0,1.0), 2.0, 2.0]);
+	// pairs.push([new V2D(1.0,5.0), new V2D( 1.0,5.0), 2.0, 0.0]);
+	// pairs.push([new V2D(5.0,5.0), new V2D( 6.0,5.0), 2.0, 1.0]);
+	// pairs.push([new V2D(9.0,6.0), new V2D(10.0,5.0), 2.0, 2.0]);
+	// pairs.push([new V2D(1.0,9.0), new V2D( 3.0,7.0), 2.0, 0.0]);
+	// pairs.push([new V2D(5.0,9.0), new V2D( 4.0,8.0), 2.0, 1.0]);
+	// pairs.push([new V2D(9.0,9.0), new V2D( 7.0,9.0), 2.0, 2.0]);
+
+	pairs.push([new V2D(1.0,1.0), new V2D( 0.0,1.0), 2.0, 0.0]);
+	pairs.push([new V2D(5.0,1.0), new V2D( 6.0,1.0), 2.0, 1.0]);
+	pairs.push([new V2D(9.0,1.0), new V2D(11.0,1.0), 2.0, 3.0]);
+	pairs.push([new V2D(1.0,5.0), new V2D( 1.0,5.0), 2.0, 0.0]);
+	pairs.push([new V2D(5.0,5.0), new V2D( 5.0,5.0), 2.0, 1.0]);
+	pairs.push([new V2D(9.0,5.0), new V2D( 9.0,5.0), 2.0, 2.0]);
+	pairs.push([new V2D(1.0,9.0), new V2D( 2.0,9.0), 2.0, 0.0]);
+	pairs.push([new V2D(5.0,9.0), new V2D( 5.0,9.0), 2.0, 1.0]);
+	pairs.push([new V2D(9.0,9.0), new V2D( 8.0,9.0), 2.0, 2.0]);
+
+	// pairs.push([new V2D(0.0,0.0), new V2D(0.0,0.0), 2.0, 0.0]);
+	// pairs.push([new V2D(1.0,1.0), new V2D(2.0,3.0), 2.0, 1.0]);
+	// pairs.push([new V2D(5.0,0.5), new V2D(3.0,2.0), 2.0, 2.0]);
+	// pairs.push([new V2D(0.0,0.0), new V2D( 0.0, 0.0), 2.0, 0.0]);
+	// pairs.push([new V2D(1.0,1.0), new V2D( 2.0, 2.0), 2.0, 1.0]);
+	// pairs.push([new V2D(5.0,0.5), new V2D( 8.0, 1.5), 2.0, 2.0]);
+	//pairs.push([new V2D(5.0,5.0), new V2D(10.0, 8.0), 2.0, 2.0]);
+	//pairs.push([new V2D(2.0,6.0), new V2D(4.0,12.0), 2.0, 2.0]);
+	// pairs.push([new V2D(0.0,0.0), new V2D(0.0,0.0), 2.0, 0.0]);
+	// pairs.push([new V2D(1.0,1.0), new V2D(2.0,2.0), 2.0, 1.0]);
+	// pairs.push([new V2D(5.0,0.5), new V2D(10.0,1.0), 2.0, 2.0]);
+	// pairs.push([new V2D(0.0,0.0), new V2D(0.0,0.0), 2.0, 0.0]);
+	// pairs.push([new V2D(1.0,1.0), new V2D(1.0,1.0), 2.0, 1.0]);
+	// pairs.push([new V2D(5.0,0.5), new V2D(5.0,0.5), 2.0, 2.0]);
 var world = new R3D.BA.World();
 var viewA = world.addView();
 var viewB = world.addView();
@@ -1354,16 +1382,17 @@ for(var p=0; p<pairs.length; ++p){
 }
 
 //console.log("SIZEA: "+viewA.pointSpace().toArray().length);
-var pointA = new V2D(1,0);
+var pointA = new V2D(5,5);
 var points2D = R3D.BA.World.neighborsForInterpolation(pointA, viewA,viewB, true);
 var data = R3D.BA.interpolationData(pointA, points2D, viewA,viewB);
-console.log(data);
+console.log(data["point"]+"");
+
 
 var OFFX = 1600;
-var OFFY = 400;
-var ss = 20.0;
-for(x=0; x<10; ++x){
-	for(y=0; y<10; ++y){
+var OFFY = 450;
+var ss = 40.0;
+for(x=0; x<=10; x+=.5){
+	for(y=0; y<=10; y+=.5){
 		//var pointA = new V2D(0,0);
 		var pointA = new V2D(x,y);
 		var points2D = R3D.BA.World.neighborsForInterpolation(pointA, viewA,viewB, true);
@@ -6596,7 +6625,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-return; // don't run
+//return; // don't run
 
 
 
