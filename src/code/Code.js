@@ -5463,9 +5463,11 @@ Code.gradient2D = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){
 	loc.y = (d7-d1)*0.5;
 }
 Code.findMaxima2DFloat = function(d, wid,hei, inte){
+	// inte = false;
 	return Code.findExtrema2DFloat(d,wid,hei, inte, true, false);
 }
 Code.findMinima2DFloat = function(d, wid,hei, inte){
+	// inte = false;
 	return Code.findExtrema2DFloat(d,wid,hei, inte, false, true);
 }
 Code.findExtrema2DFloat = function(d, wid,hei,   inte, maxi,mini){
@@ -5476,21 +5478,51 @@ Code.findExtrema2DFloat = function(d, wid,hei,   inte, maxi,mini){
 	var jW0, jW1, jW2, i0,i1,i2;
 	var d0,d1,d2,d3,d4,d5,d6,d7,d8;
 	var result, count = 0;
+// var info = Code.infoArray(d);
+// var minimum = info["min"];
+// var maximum = info["max"];
+// var minIndex = info["indexMin"];
+// var maxIndex = info["indexMax"];
+//console.log(info,minimum,maximum);
+// console.log("minimum: "+minIndex+" = "+minimum);
+// console.log("maximum: "+maxIndex+" = "+maximum);
+// var eq = true;
+var count = 0;
 	for(j=1;j<hm1;++j){
 		jW0 = (j-1)*wid; jW1 = j*wid; jW2 = (j+1)*wid;
+		//console.log(jW0,jW1,jW2);
 		for(i=1;i<wm1;++i){
+			// var isGT = false;
+			// var isLT = false;
 			i0 = i-1; i1 = i; i2 = i+1;
-			d0 = d[jW0+i0]; d1 = d[jW0+i1]; d2 = d[jW0+i2]; d3 = d[jW1+i0]; d4 = d[jW1+i1]; d5 = d[jW1+i2]; d6 = d[jW2+i0]; d7 = d[jW2+i1]; d8 = d[jW2+i2];
+			//var index = jW1+i1;
+			d0 = d[jW0+i0];
+			d1 = d[jW0+i1];
+			d2 = d[jW0+i2];
+			d3 = d[jW1+i0];
+			d4 = d[jW1+i1];
+			d5 = d[jW1+i2];
+			d6 = d[jW2+i0];
+			d7 = d[jW2+i1];
+			d8 = d[jW2+i2];
 			var isGT = d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4 && maxi;
 			var isLT = d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4 && mini;
+
+// var d4 = d[index];
+//console.log(d4,minimum);
+// if(d4==minimum){
+// 	console.log("minimum: "+minimum);
+// }
 			// if(eq){
-			// 	var isGT = d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4 && maxi;
-			// 	var isLT = d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4 && mini;
+			// 	isGT = d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4 && maxi;
+			// 	isLT = d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4 && mini;
+			// 	//console.log("check eq "+isGT+" | "+isLT);
 			// }
 			//var isGTE = d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4;
 			//var isLTE = d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4;
 //inte = true;
 			if(isGT || isLT){
+				//console.log("maybe: "+d4);
 				if(inte){
 					result = new V3D(i,j,d4);
 					list.push(result);
@@ -5506,7 +5538,6 @@ Code.findExtrema2DFloat = function(d, wid,hei,   inte, maxi,mini){
 						list.push(result);
 					}
 				}
-
 			// if( (d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4) // maxima
 			// ||  (d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4) ){ // minima
 			// if( (d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4) // maxima
@@ -5530,11 +5561,41 @@ Code.findExtrema2DFloat = function(d, wid,hei,   inte, maxi,mini){
 			// 			}
 			// 	}
 			}
+
+			++count;
 		}
 	}
+//	console.log("COUNT: "+count)
 	return list;
 }
 // https://www.value-at-risk.net/ordinary-interpolation-methodology/
+Code.extrema2DFloatDiscrete = function(d, wid,hei){
+	// CRITICAL POINTS
+	// 2D SCALAR
+	/*
+
+
+	WATER FILL MAXIMA / MINIMA / SADDLE:
+	) order on maxima [record value & x & y]
+	) for each element:
+		) make it into a group
+		) if touching a neighbor who is already a group [lookup index]
+			) add to other group's list of elements
+		) else
+			) keep in own group list
+		) mark point as group index
+
+	) for each maxima:
+		) center point = location = average first points with all same value
+
+
+
+
+
+
+	*/
+}
+
 
 https://www.quora.com/What-is-the-Hessian-matrix
 Code._tempMatrixArray2 = [0,0];
@@ -6436,6 +6497,7 @@ Code.sphereGeometric = function(points, location, maxIterations){
 
 
 Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: convex hull outside closest point => weight = 1
+//weights = null;
 	var x = pointX;
 	var scale = 0.0;
 	var position = new V2D();
@@ -6452,6 +6514,10 @@ Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: conv
 		centerA.add(w*a.x, w*a.y);
 		centerB.add(w*b.x, w*b.y);
 	}
+// centerA.set(0,0);
+// centerB.set(0,0);
+centerA.set(-100,0);
+centerB.set(-100,0);
 	// move COM if coincides with  ... hack
 	var atCOM = true;
 	while(atCOM){

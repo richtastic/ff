@@ -77,8 +77,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-//var modeImageCompare = true;
-var modeImageCompare = false;
+var modeImageCompare = true;
+// var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -1302,7 +1302,6 @@ console.log(info);
 var scale = info["scale"];
 var angle = info["angle"];
 var score = info["score"];
-
 var info = R3D.Dense.rankForTransform(matrixA,null,locationA, matrixB,null,locationB, scale,angle,score, compareSize);
 if(info){
 var rank = info["rank"];
@@ -1380,6 +1379,7 @@ for(var p=0; p<pairs.length; ++p){
 		pointB.isPutative(false);
 	world.insertNewPoint3D(point3D);
 }
+
 
 //console.log("SIZEA: "+viewA.pointSpace().toArray().length);
 var pointA = new V2D(5,5);
@@ -6625,7 +6625,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-//return; // don't run
+return; // don't run
 
 
 

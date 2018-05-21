@@ -9428,7 +9428,7 @@ R3D.bestPairMatchExhaustivePoint = function(imageA,locationA, imageB,locationB, 
 	var scales = Code.divSpace(-1,1,7);
 	var angles = Code.divSpace(0,360,36); angles.pop();
 // TODO: REMOVE:
-//angles = Code.lineSpace(-15,5,15);
+angles = Code.lineSpace(-15,5,15);
 	//console.log(scales.length,rotations.length);
 	//var compareSize = R3D._SAD_HISTOGRAM_PIXELS;
 	var compareSize = 21;
@@ -17751,10 +17751,320 @@ sss = sadAvg;
 
 }
 
+R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var needleR = needle.red();
+	var needleG = needle.grn();
+	var needleB = needle.blu();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
+	var haystackR = haystack.red();
+	var haystackG = haystack.grn();
+	var haystackB = haystack.blu();
+
+	var needleCount = needleWidth*needleHeight;
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth * resultHeight;
+	if(resultCount<=0){
+		return null;
+	}
+	var mask = 1.0;
+	var i, j;
+	var maskCount = 0;
+	for(i=0; i<needleCount; ++i){
+		if(needleMask){ mask = needleMask[i]; }
+		if(mask===0){ continue; }
+		++maskCount;
+	}
+	// needle infos
+	var avgN = new V3D();
+	var minN = null;
+	var maxN = null;
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		avgN.x += needleR[k];
+		avgN.y += needleG[k];
+		avgN.z += needleB[k];
+		++maskCount;
+		if(minN==null){
+			minN = new V3D();
+			minN.x = needleR[k];
+			minN.y = needleG[k];
+			minN.z = needleB[k];
+			maxN = new V3D();
+			maxN.x = needleR[k];
+			maxN.y = needleG[k];
+			maxN.z = needleB[k];
+		}
+		minN.x = Math.min(minN.x,needleR[k]);
+		minN.y = Math.min(minN.y,needleG[k]);
+		minN.z = Math.min(minN.z,needleB[k]);
+		maxN.x = Math.max(maxN.x,needleR[k]);
+		maxN.y = Math.max(maxN.y,needleG[k]);
+		maxN.z = Math.max(maxN.z,needleB[k]);
+	}
+	avgN.scale(1.0/needleCount);
+	var rangeN = V3D.sub(maxN,minN);
+	// sigma
+	var sigmaN = new V3D();
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
+		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
+		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
+	}
+	sigmaN.x = Math.sqrt(sigmaN.x);
+	sigmaN.y = Math.sqrt(sigmaN.y);
+	sigmaN.z = Math.sqrt(sigmaN.z);
+	// 
+	var result = new Array();
+	for(j=0; j<resultHeight; ++j){
+		for(i=0; i<resultWidth; ++i){
+			var resultIndex = j*resultWidth + i;
+			var sadR = 0;
+			var sadG = 0;
+			var sadB = 0;
+				var sadY = 0;
+			var nccR = 0;
+			var nccG = 0;
+			var nccB = 0;
+			var minH = null;
+			var maxH = null;
+			var avgH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					if(minH==null){
+						minH = new V3D();
+						minH.x = haystackR[hIndex];
+						minH.y = haystackG[hIndex];
+						minH.z = haystackB[hIndex];
+						maxH = new V3D();
+						maxH.x = haystackR[hIndex];
+						maxH.y = haystackG[hIndex];
+						maxH.z = haystackB[hIndex];
+					}
+					minH.x = Math.min(minH.x,haystackR[hIndex]);
+					minH.y = Math.min(minH.y,haystackG[hIndex]);
+					minH.z = Math.min(minH.z,haystackB[hIndex]);
+					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
+					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
+					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
+					avgH.x += haystackR[hIndex];
+					avgH.y += haystackG[hIndex];
+					avgH.z += haystackB[hIndex];
+				}
+			}
+			avgH.scale(1.0/needleCount);
+			var rangeH = V3D.sub(maxH,minH);
+			// sigma
+			var sigmaH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
+					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
+					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
+				}
+			}
+			sigmaH.x = Math.sqrt(sigmaH.x);
+			sigmaH.y = Math.sqrt(sigmaH.y);
+			sigmaH.z = Math.sqrt(sigmaH.z);
+			// ...
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					// completely ignore a masked operation
+					var nR = needleR[nIndex];
+					var nG = needleG[nIndex];
+					var nB = needleB[nIndex];
+					var hR = haystackR[hIndex];
+					var hG = haystackG[hIndex];
+					var hB = haystackB[hIndex];
+					// from median .... intensity differences
+					nR = nR - avgN.x;
+					nG = nG - avgN.y;
+					nB = nB - avgN.z;
+					hR = hR - avgH.x;
+					hG = hG - avgH.y;
+					hB = hB - avgH.z;
+						// nR = nR / rangeN.x;
+						// nG = nG / rangeN.y;
+						// nB = nB / rangeN.z;
+						// hR = hR / rangeH.x;
+						// hG = hG / rangeH.y;
+						// hB = hB / rangeH.z;
+					// nR = nR / sigmaN.x;
+					// nG = nG / sigmaN.y;
+					// nB = nB / sigmaN.z;
+					// hR = hR / sigmaH.x;
+					// hG = hG / sigmaH.y;
+					// hB = hB / sigmaH.z;
+					// SAD
+					var absR = Math.abs(nR - hR);
+					var absG = Math.abs(nG - hG);
+					var absB = Math.abs(nB - hB);
+					var absY = Math.abs(nR + nG + nB - hR - hG - hB);
+// absR += 1;
+// absG += 1;
+// absB += 1;
+// sadR += Math.pow(absR,2);
+// sadG += Math.pow(absG,2);
+// sadB += Math.pow(absB,2);
+// sadR += Math.pow(absR,.1);
+// sadG += Math.pow(absG,.1);
+// sadB += Math.pow(absB,.1);
+//sadR -= 1;
+// sadG -= 1;
+// sadB -= 1;
+					// ABS
+					// sadR += absR;
+					// sadG += absG;
+					// sadB += absB;
+					// sadY += absY;
+					// SQ
+					sadR += absR*absR;
+					sadG += absG*absG;
+					sadB += absB*absB;
+					sadY += absY*absY;
+					// QU
+					// sadR += Math.pow(absR,4);
+					// sadG += Math.pow(absG,4);
+					// sadB += Math.pow(absB,4);
+					// RT
+					// sadR += Math.pow(absR,0.5);
+					// sadG += Math.pow(absG,0.5);
+					// sadB += Math.pow(absB,0.5);
+
+
+					
+					// sadR += Math.sqrt(absR);
+					// sadG += Math.sqrt(absG);
+					// sadB += Math.sqrt(absB);
+					// NCC:
+					nccR += (nR * hR);
+					nccG += (nG * hG);
+					nccB += (nB * hB);
+					// nccR += Math.abs(nR * hR);
+					// nccG += Math.abs(nG * hG);
+					// nccB += Math.abs(nB * hB);
+				}
+			}
+			// var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
+			// var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
+			// var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
+			// nccR = nccR / sigSquR;
+			// nccG = nccG / sigSquG;
+			// nccB = nccB / sigSquB;
+			// sadR = sadR * sigSquR;
+			// sadG = sadG * sigSquG;
+			// sadB = sadB * sigSquB;
+			// sadR = sadR / sigSquR;
+			// sadG = sadG / sigSquG;
+			// sadB = sadB / sigSquB;
+			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+//var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
+//var sadAvg = (sadY) / maskCount / 3.0;
+
+				// nccR = nccR / ( Math.pow(rangeN.x,2) * Math.pow(rangeH.x,2) );
+				// nccG = nccG / ( Math.pow(rangeN.y,2) * Math.pow(rangeH.y,2) );
+				// nccB = nccB / ( Math.pow(rangeN.z,2) * Math.pow(rangeH.z,2) );
+
+				// nccR = nccR / ( Math.pow(sigmaN.x,2) * Math.pow(sigmaH.x,2) );
+				// nccG = nccG / ( Math.pow(sigmaN.y,2) * Math.pow(sigmaH.y,2) );
+				// nccB = nccB / ( Math.pow(sigmaN.z,2) * Math.pow(sigmaH.z,2) );
+
+				// nccR = nccR / ( Math.pow(sigmaN.x,.5) * Math.pow(sigmaH.x,0.5) );
+				// nccG = nccG / ( Math.pow(sigmaN.y,.5) * Math.pow(sigmaH.y,0.5) );
+				// nccB = nccB / ( Math.pow(sigmaN.z,.5) * Math.pow(sigmaH.z,0.5) );
+
+				// nccR = nccR / ( Math.pow(sigmaN.x,1.0) * Math.pow(sigmaH.x,1.0) );
+				// nccG = nccG / ( Math.pow(sigmaN.y,1.0) * Math.pow(sigmaH.y,1.0) );
+				// nccB = nccB / ( Math.pow(sigmaN.z,1.0) * Math.pow(sigmaH.z,1.0) );
+				// var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
+			// var avgR = (avgN.x+avgH.x);
+			// var avgG = (avgN.y+avgH.y);
+			// var avgB = (avgN.z+avgH.z);
+			// var avgTot = (avgR+avgG+avgB) / 3.0;
+
+			var difR = Math.abs(avgN.x-avgH.x);
+			var difG = Math.abs(avgN.y-avgH.y);
+			var difB = Math.abs(avgN.z-avgH.z);
+			var difAvg = (difR+difG+difB) / 3.0;
+
+//sss = 1E-4 * 1.0/nccAvg;
+
+//sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0;
+
+/*
+			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+
+sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0; // div 3 no longer makes sense
+			
+			// 
+			var rngR = Math.abs(rangeN.x-rangeH.x);
+			var rngG = Math.abs(rangeN.y-rangeH.y);
+			var rngB = Math.abs(rangeN.z-rangeH.z);
+			var rngAvg = (rngR+rngG+rngB) / 3.0;
+			
+			
+			var minR = Math.min(avgN.x,avgH.x);
+			var minG = Math.min(avgN.y,avgH.y);
+			var minB = Math.min(avgN.z,avgH.z);
+			var minTot = (minR+minG+minB) / 3.0;
+			
+			
+			var difX = Math.max(difR,difG,difB);
+//			sss = sss * (1.0 + difAvg);
+			// var rangeR = Math.min(minN.x,minH.x);
+			// var rangeG = Math.min(minN.y,minH.y);
+			// var rangeB = Math.min(minN.z,minH.z);
+			var minRangeR = Math.min(rangeN.x,rangeH.x);
+			var minRangeG = Math.min(rangeN.y,rangeH.y);
+			var minRangeB = Math.min(rangeN.z,rangeH.z);
+			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
+*/
+
+//sss = sadAvg; // current best
+
+//sss = sadRMS;
+
+sss = sadAvg;
+//sss = sadAvg * (1.0 + difAvg);
+
+//sss = (sadAvg/nccAvg) * 0.001; // BAD
+//sss = 1.0/nccAvg;
+// sss = -nccAvg;
+//sss = nccAvg*sadAvg;
+			result[resultIndex] = sss;
+		}
+	}
+	return {"value":result, "width":resultWidth, "height":resultHeight};
+
+}
+
 
 
 //R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatFast;
-R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatTest;
+//R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatTest;
+R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatTest2;
 
 
 

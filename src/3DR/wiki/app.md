@@ -180,7 +180,18 @@ project typical numbers:
 
 APP TODO:
 
-- 2D interpolation visualization
+- localizing SAD score is good
+
+-> interpolation / prediction might be off
+
+-> maybe triangle interpolation
+
+- ordering is still off
+
+
+
+
+
 
 SAD SCORING:
 
@@ -190,6 +201,8 @@ SAD SCORING:
 
 
 
+
+https://pdfs.semanticscholar.org/ca92/4f6c0fce953f202547212dc19e7e49db3074.pdf
 
 
 

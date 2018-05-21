@@ -942,8 +942,8 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.COUNTA = 0;
-// R3D.Dense.SHOW = true;
-R3D.Dense.SHOW = false;
+R3D.Dense.SHOW = true;
+// R3D.Dense.SHOW = false;
 R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg, neighborhoodSize){
 	// constants
 	//var maximumBestScore = 0.02; // 0.01; // SAD SIFT
@@ -1216,7 +1216,7 @@ var image = ImageMat.normalFloat01(Code.copyArray(values));
 var imageWidth = valueWidth;
 var imageHeight = valueHeight;
 //ImageMat.invertFloat01(image);
-ImageMat.pow(image,0.25);
+//ImageMat.pow(image,0.25);
 
 var heat = ImageMat.heatImage(image, imageWidth, imageHeight, true);
 var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
@@ -1234,7 +1234,7 @@ for(var i=0; i<peaks.length; ++i){
 		d.graphics().setLine(1, 0xFFFF0000);
 		d.graphics().beginPath();
 		//d.graphics().drawCircle(peak.x,peak.y, 1.0/(0.000001+Math.pow(peak.z,2)*1000.0) );
-		d.graphics().drawCircle(peak.x,peak.y, 1E-5/(0.000001+Math.pow(peak.z,2)*1000.0) );
+		d.graphics().drawCircle(peak.x,peak.y, 1E-3/(0.000001+Math.pow(peak.z,2)*1000.0) );
 		d.graphics().strokeLine();
 		d.graphics().endPath();
 	d.matrix().scale(SCALE);
@@ -1412,7 +1412,7 @@ var uniq = Math.pow(uniqueness,1.0);
 	var lind = Math.pow(1.0+lineFDistanceError/fundamentalDistanceErrorMax,0.5);
 	var vari = Math.pow(1.0 + 1.0/variabilityNeedle,0.5);
 	var inte = Math.pow(1.0+averageIntensityDiffMax,1.0);
-	var rang = Math.pow(1.0 + 1.0/worstRangeScore, 0.1);
+	var rang = Math.pow(1.0 + 1.0/worstRangeScore, 0.5);
 	var corn = Math.pow(1.0/cornerScore,0.25);
 	//console.log(corn);
 	// actually use
@@ -1422,11 +1422,14 @@ var uniq = Math.pow(uniqueness,1.0);
 //var rank = scor * uniq * rang;
 //var rank = scor * uniq * vari;
 // 
-var rank = scor * rang;
+//var rank = scor * rang;
 // 
 //var rank = scor * corn * rang;
-//var rank = scor;
-//var rank = uniq; // ...
+// var rank = scor;
+var rank = uniq; // ...
+
+// var rank = uniq * rang;
+// var rank = uniq * vari;
 //var rank = scor * uniq; // BAD
 //var rank = Math.pow(score,1.0) * Math.pow(uniqueness,0.50);
 //var rank = Math.pow(score,0.1) * Math.pow(uniqueness,1.0); // OK. ~8
@@ -1523,20 +1526,26 @@ UNIQUENESS
 
 
 R3D.Dense.uniquenessFromValuesPeaks = function(valuesIn, width,height){
-valuesIn = Code.copyArray(valuesIn);
-valuesIn.sort( function(a,b){ return a<b ? -1 : 1; } );
+	// console.log(valuesIn)
+	var peaks = Code.findMinima2DFloat(valuesIn,width,height);
+	console.log("PEAKS: "+peaks.length);
 
-Code.printMatlabArray(valuesIn,"values");
-
+// valuesIn = Code.copyArray(valuesIn);
+// valuesIn.sort( function(a,b){ return a<b ? -1 : 1; } );
+// console.log("VALUES IN: "+valuesIn.length+" | "+(width*height));
+//Code.printMatlabArray(valuesIn,"values");
+/*
 	var info = Code.infoArray(valuesIn);
 	var max = info["max"];
 	var min = info["min"];
 	var range = info["range"];
 	var average = info["mean"];
 	var std = Code.stdDev(valuesIn, average);
-	//valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-9, 0.0); // to force maxima differences
+	// valuesIn = ImageMat.randomAdd(valuesIn, (max-min)*1E-9, 0.0); // to force maxima differences
 	//var peaks = Code.findMaxima2DFloat(valuesIn,width,height);
-	var peaks = Code.findMinima2DFloat(valuesIn,width,height);
+	
+	//var peaks = Code.findExtrema2DFloat(valuesIn,width,height);
+*/
 	var values = null;
 	if(peaks.length>1){
 		values = [];
@@ -1544,26 +1553,31 @@ Code.printMatlabArray(valuesIn,"values");
 			values.push(peaks[i].z);
 		}
 	}else{
-		values = Code.copyArray(valuesIn);
+		//values = Code.copyArray(valuesIn);
+		return {"value":1E10, "peaks":[]};
 	}
 
 	values = values.sort( function(a,b){ return a<b ? -1 : 1; } );
-	if(values[0]==0){
-		return 1E-9;
-	}
+	// console.log("VALUES OUT: "+values.length);
+	// Code.printMatlabArray(values,"values");
+
+	// if(values[0]==0){
+	// 	return 1E-9;
+	// }
 	//console.log("range: "+range);
 	//var u = values[0]/values[1];
 	//var u = (max - values[1])/(max - values[0]);
-	console.log("INFO: \n rng: "+range+" \n min: "+min+"\n max: "+max+" \n avg: "+average+" \n std: "+std+" \n   0: "+values[0]+" \n   1: "+values[1]+"");
+//	console.log("INFO: \n rng: "+range+" \n min: "+min+"\n max: "+max+" \n avg: "+average+" \n std: "+std+" \n   0: "+values[0]+" \n   1: "+values[1]+"");
 	//var u = 1E-4 * 1/(range*(values[1]-values[0])); // better ... 
 	//var u = (values[1]-values[2]) / (values[0]-values[2]);
 	//var u = 1 - ( (max-values[1]) / (max-values[0]) );
 	//var u = (avg-values[0])/(avg-values[1]);
 	// var u = (values[0])/(values[1]);
-		var u = (values[1] - values[0]);
+	var u = 1.0/(values[1] - values[0]); // highest slope wins => lowest score
 	// u = u / range;
 	// u = u * std;
-	u = u * 1.0;
+	// u = u * 1E-3;
+	u = u * 1E-5;
 	//return values[0]/values[values.length-1]; // lowest in area? ... not bad .. but this doesn't make sense
 	return {"value":u, "peaks":peaks};
 	//return Math.pow(values[0],2)/Math.pow(values[1],2); // OK
@@ -1572,46 +1586,6 @@ Code.printMatlabArray(valuesIn,"values");
 	//return Math.pow(values[0],3)/Math.pow(values[1],3); 
 	//return Math.pow(values[0],10)/Math.pow(values[1],10);  // OK
 
-/*
-
-GOOD:
-INFO: 
- rng: 0.03413827890571445 
- min: 0.015436449369006231
- max: 0.04957472827472068 
- avg: 0.032365108818847806 
- std: 0.007555405755031825 
-   0: 0.015079514161483419 
-   1: 0.015399841856948463
-
-
-
-
-POOR:
-INFO: 
- rng: 0.027660733892671246 
- min: 0.024454958346617203
- max: 0.05211569223928845 
- avg: 0.036322562387218975 
- std: 0.004691982584330041 
-   0: 0.0244243927188554 
-   1: 0.02471012760574035
-
-
-
-WRONG:
-INFO: 
- rng: 0.09759377851382303 
- min: 0.011044019224963106
- max: 0.10863779773878614 
- avg: 0.036327796391031945 
- std: 0.01818128141622069 
-   0: 0.010805624664705065 
-   1: 0.012353668122668754
-
-
-
-*/
 }
 
 
@@ -1664,9 +1638,9 @@ R3D.Dense.uniquenessFromValuesClosest = function(valuesIn, width,height){
 
 }
 
-R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesClosest;
+//R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesClosest;
 
-//R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesPeaks;
+R3D.Dense.uniquenessFromValues = R3D.Dense.uniquenessFromValuesPeaks;
 
 
 
