@@ -5569,10 +5569,16 @@ var count = 0;
 	return list;
 }
 // https://www.value-at-risk.net/ordinary-interpolation-methodology/
-Code.extrema2DFloatDiscrete = function(d, wid,hei){
+//Code.extrema2DFloatDiscrete = function(d, wid,hei){
+Code.contourTreeExtrema = function(d, wid,hei){
 	// CRITICAL POINTS
 	// 2D SCALAR
 	/*
+
+	contour tree
+	http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.538.4660&rep=rep1&type=pdf
+
+	convert to triangle set
 
 
 	WATER FILL MAXIMA / MINIMA / SADDLE:
@@ -5594,6 +5600,7 @@ Code.extrema2DFloatDiscrete = function(d, wid,hei){
 
 
 	*/
+	return null;
 }
 
 
@@ -6497,7 +6504,7 @@ Code.sphereGeometric = function(points, location, maxIterations){
 
 
 Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: convex hull outside closest point => weight = 1
-//weights = null;
+// weights = null;
 	var x = pointX;
 	var scale = 0.0;
 	var position = new V2D();
@@ -6516,8 +6523,8 @@ Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: conv
 	}
 // centerA.set(0,0);
 // centerB.set(0,0);
-centerA.set(-100,0);
-centerB.set(-100,0);
+// centerA.set(-100,0);
+// centerB.set(-100,0);
 	// move COM if coincides with  ... hack
 	var atCOM = true;
 	while(atCOM){

@@ -77,8 +77,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-var modeImageCompare = true;
-// var modeImageCompare = false;
+// var modeImageCompare = true;
+var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -1330,11 +1330,11 @@ var pairs = [];
 
 	pairs.push([new V2D(1.0,1.0), new V2D( 0.0,1.0), 2.0, 0.0]);
 	pairs.push([new V2D(5.0,1.0), new V2D( 6.0,1.0), 2.0, 1.0]);
-	pairs.push([new V2D(9.0,1.0), new V2D(11.0,1.0), 2.0, 3.0]);
+	pairs.push([new V2D(9.0,1.0), new V2D(12.0,0.0), 2.0, 3.0]);
 	pairs.push([new V2D(1.0,5.0), new V2D( 1.0,5.0), 2.0, 0.0]);
 	pairs.push([new V2D(5.0,5.0), new V2D( 5.0,5.0), 2.0, 1.0]);
 	pairs.push([new V2D(9.0,5.0), new V2D( 9.0,5.0), 2.0, 2.0]);
-	pairs.push([new V2D(1.0,9.0), new V2D( 2.0,9.0), 2.0, 0.0]);
+	pairs.push([new V2D(1.0,9.0), new V2D( 3.0,7.0), 2.0, 0.0]);
 	pairs.push([new V2D(5.0,9.0), new V2D( 5.0,9.0), 2.0, 1.0]);
 	pairs.push([new V2D(9.0,9.0), new V2D( 8.0,9.0), 2.0, 2.0]);
 
@@ -6625,7 +6625,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-return; // don't run
+// return; // don't run
 
 
 

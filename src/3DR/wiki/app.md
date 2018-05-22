@@ -180,14 +180,75 @@ project typical numbers:
 
 APP TODO:
 
+- test out stability = scale search point up 2ce and see how far away the new peak location changes
+
+=> can uniquely find the optimal location
+	-> if a location DOESN'T EXIST, it finds the best one available, which is wrong but may have a good score
+=> SAD scores between optimal locations are not easily comparable
+=> NEED WAY TO DIFFERENTIATE GOOD RESULTS / BAD RESULTS 
+
+-> secondary score metrics ?
+-> test what a good result would be with addition of noise
+
+- COMMON RESULT
+	=> use next-best-score ratio test to drop
+- BAD RESULT
+	=> ?
+
+
+- if predicted point is too far away (eg twice the scale distance away)
+- if predicted point is in wrong direction (90 deg off of original direction)
+- if predicted point has low uniqueness score
+- if predicted point has same location when scaled up x2 (stability)
+
+
+
+
+------ other methods to determing good / bad 
+
+- direction from pointA to pointB can be used in location A & B to determine separate SAD scores
+- line from A to B can itself be tested as a SAD score
+	- compare in segments ?
+	- 
+- poorly localized points could still have good scores
+
+-> score is now a 'path' score from getting from A to B [or some combination of the path]
+- seed points wont have a path-score & might offset things
+- 
+
+
+
+- show steps and find out where it breaks
+
+=> WHAT TO DO IF MATCH 'IS NOT FOUND'
+	=> is there a way to tell ?
+		- compare to 'previous' match ?
+		- uniqueness ?
+
+
+- compare to what match would be with ~ 10% noise ?
+
+- 
+- ignore plain areas [low gradient magnitudes]
+- ignore multiple-peaked [nonunique] areas
+- gradient compare?
+
+
+-> nearest neighbor blocking @ center rather than position interpolation
+
 - localizing SAD score is good
 
 -> interpolation / prediction might be off
 
 -> maybe triangle interpolation
+-> convex hull interpolation
 
 - ordering is still off
 
+
+- might want to check for duplicate matches in queue?
+-> when matching a POP -> if a point is already in cell, don't need to check
+-> dup matches should be dropped already ?
 
 
 
@@ -205,6 +266,7 @@ SAD SCORING:
 https://pdfs.semanticscholar.org/ca92/4f6c0fce953f202547212dc19e7e49db3074.pdf
 
 
+https://pdfs.semanticscholar.org/ab62/f870909b606f34f6c5843fa736aea65b06db.pdf
 
 
 - SAD scoring visualization

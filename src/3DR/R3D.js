@@ -17899,12 +17899,12 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
 					var hG = haystackG[hIndex];
 					var hB = haystackB[hIndex];
 					// from median .... intensity differences
-					nR = nR - avgN.x;
-					nG = nG - avgN.y;
-					nB = nB - avgN.z;
-					hR = hR - avgH.x;
-					hG = hG - avgH.y;
-					hB = hB - avgH.z;
+					// nR = nR - avgN.x;
+					// nG = nG - avgN.y;
+					// nB = nB - avgN.z;
+					// hR = hR - avgH.x;
+					// hG = hG - avgH.y;
+					// hB = hB - avgH.z;
 						// nR = nR / rangeN.x;
 						// nG = nG / rangeN.y;
 						// nB = nB / rangeN.z;
@@ -17935,15 +17935,15 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
 // sadG -= 1;
 // sadB -= 1;
 					// ABS
-					// sadR += absR;
-					// sadG += absG;
-					// sadB += absB;
-					// sadY += absY;
+					sadR += absR;
+					sadG += absG;
+					sadB += absB;
+					sadY += absY;
 					// SQ
-					sadR += absR*absR;
-					sadG += absG*absG;
-					sadB += absB*absB;
-					sadY += absY*absY;
+					// sadR += absR*absR;
+					// sadG += absG*absG;
+					// sadB += absB*absB;
+					// sadY += absY*absY;
 					// QU
 					// sadR += Math.pow(absR,4);
 					// sadG += Math.pow(absG,4);
@@ -18004,10 +18004,10 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
 			// var avgB = (avgN.z+avgH.z);
 			// var avgTot = (avgR+avgG+avgB) / 3.0;
 
-			var difR = Math.abs(avgN.x-avgH.x);
-			var difG = Math.abs(avgN.y-avgH.y);
-			var difB = Math.abs(avgN.z-avgH.z);
-			var difAvg = (difR+difG+difB) / 3.0;
+			// var difR = Math.abs(avgN.x-avgH.x);
+			// var difG = Math.abs(avgN.y-avgH.y);
+			// var difB = Math.abs(avgN.z-avgH.z);
+			// var difAvg = (difR+difG+difB) / 3.0;
 
 //sss = 1E-4 * 1.0/nccAvg;
 

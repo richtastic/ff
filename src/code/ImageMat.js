@@ -2943,7 +2943,7 @@ ImageMat.prototype.scaleFloat01 = function(){
 }
 ImageMat.clipFloat01 = function(data){
 	var i, len = data.length;
-	for(i=1;i<len;++i){
+	for(i=0;i<len;++i){
 		data[i] = Math.min(Math.max(data[i],0.0),1.0);
 	}
 	return data;

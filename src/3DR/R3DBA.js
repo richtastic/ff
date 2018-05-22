@@ -1662,12 +1662,12 @@ R3D.BA.Point3D.prototype.connect = function(world){
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // LOGIC
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize){
+R3D.BA.optimumTransformForPoints = function(imageMatrixA,imageMatrixB, pointA,pointB, baseScale,baseAngle, compareSize, testScales,testAngles, searchSize, show){
 	// testScales = (testScales!==undefined && testScales!==null) ? testScales : [-0.1,0.0,0.1]
 	// testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [-10, 0, 10];
 	testScales = (testScales!==undefined && testScales!==null) ? testScales : [0];
 	testAngles = (testAngles!==undefined && testAngles!==null) ? testAngles : [0];
-	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize);
+	var info = R3D.Dense.optimumTransform(imageMatrixA,pointA, imageMatrixB,pointB, compareSize,baseScale,baseAngle, testScales,testAngles, searchSize, show);
 	return info;
 }
 R3D.BA.infoForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,cornerB,pointB, scale,angle,score, compareSize, Ffwd, Frev, Ferror){
@@ -4334,15 +4334,18 @@ R3D.BA.World.neighborsForInterpolation = function(bestPointA, viewA,viewB, force
 	}
 	// CONVEX NEIGHBORS ?
 	// var neighborsA = pointSpaceA.kNN(bestPointA, 3, evaluationFxn);
-	var neighborsA = pointSpaceA.kNN(bestPointA, 9, evaluationFxn);
+	//var neighborsA = pointSpaceA.kNN(bestPointA, 9, evaluationFxn);
+	// var neighborsA = pointSpaceA.kNN(bestPointA, 4, evaluationFxn);
+	var neighborsA = pointSpaceA.kNN(bestPointA, 1, evaluationFxn);
 	if(force){
 		return neighborsA;
 	}
-	if(neighborsA.length<2){
-		return null;
-	}
+	// if(neighborsA.length<2){
+	// 	return null;
+	// }
 	return neighborsA;
 }
+R3D.BA.World.SHOW = 0;
 R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
 	var bestPointsA = this.nextBestSearchPoints(viewA, pointA);
 	var bestMatches = [];
@@ -4352,7 +4355,52 @@ R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
 		if(!neighborsA){
 			continue;
 		}
+		/*
+
+		// TODO: fix?
 		var predicted = R3D.BA.interpolationData(bestPointA, neighborsA,  viewA,viewB);
+
+		*/
+		// TEMP: pass along NN cell @ parent scale / angle
+		// var cellAX = ?;
+		// var cellAY = ?;
+
+		// just pass location
+		if(neighborsA.length<1){
+			continue;
+		}
+		var neighborA = neighborsA[0];
+		// console.log(neighborA);
+		var matchA = neighborA.matchForViews(viewA,viewB);
+		// console.log(matchA);
+		var oppositeA = matchA.pointForView(viewB);
+		// console.log(oppositeA);
+		var ang = matchA.angleForPoint(oppositeA);
+		var sca = matchA.scaleForPoint(oppositeA);
+
+		//console.log(bestPointA);
+
+			
+		// this is the SEARCH location
+		var predicted = {};
+			predicted["point"] = oppositeA.point();
+			predicted["scale"] = sca;
+			predicted["angle"] = ang;
+
+// predicted["scale"] = 1.0
+// predicted["angle"] = 0.0
+
+//		TODO: GET BEST LOCATION ?
+
+
+
+		//interpolationData
+
+
+
+		// console.log(predicted);
+
+
 		var pA = bestPointA;
 		var pB = predicted["point"];
 		var scaAB = predicted["scale"];
@@ -4360,15 +4408,41 @@ R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
 		var imageA = viewA.image();
 		var imageB = viewB.image();
 		var sizeCompare = viewA.pixelsCompareP2D();
+//sizeCompare = 21*2;
+sizeCompare = 21;
 			// var seedAngles = Code.lineSpace(-40,40, 10);
 			// var seedScales = Code.lineSpace(-.1,.1, .1);
 			// var seedAngles = Code.lineSpace(-10,10, 10);
 			// var seedScales = Code.lineSpace(-.1,.1, .1);
 			var seedAngles = Code.lineSpace(-15,15, 15);
 			var seedScales = Code.lineSpace(-.1,.1, .1);
+
+
+			// var seedAngles = Code.lineSpace(-20,20,  5);
+			// var seedScales = Code.lineSpace(-.1,.1, .5);
 			// var seedAngles = null;
 			// var seedScales = null;
-		var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare, seedScales,seedAngles);
+// what if DNE
+		var show = R3D.BA.World.SHOW == 11;
+		/*
+		good:
+			0,1,6,7
+		nonunique:
+			3,4,5,8
+		bad:
+			2,10,11,14
+		*/
+		++R3D.BA.World.SHOW;
+
+		var searchWindow = 3 * sizeCompare; // 3-5
+		var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare, seedScales,seedAngles, searchWindow, show);
+//optimumTransform
+// optimumTransform
+
+//		
+
+
+
 		if(!info){ // console.log("no optimum transform");
 			continue;
 		}
@@ -4577,8 +4651,9 @@ R3D.BA.interpolationData = function(point, points2D, viewA,viewB){ // find locat
 		var angle = m.angleForPoint(b);
 		var distance = V2D.distance(a.point(), point);
 		// inverse distance weighting
-		var bottom = Math.pow(distance, 2.0);
-		//var bottom = Math.pow(distance, 10.0);
+		// var bottom = Math.pow(distance, 2.0);
+		//var bottom = Math.pow(distance, 1.0); // discontinuties
+		var bottom = Math.pow(distance, 10.0);
 		bottom = Math.max(bottom, 1E-9);
 		var fraction = 1.0 / bottom;
 		// exponential weighting
