@@ -182,6 +182,7 @@ V3D.prototype.copy = function(a){
 }
 V3D.prototype.set = function(xV,yV,zV){
 	if(zV===undefined){
+// TODO: CHECK IF xV IS A V3D?
 //		console.log(xV,yV,zV);
 		this.x = xV.x;
 		this.y = xV.y;

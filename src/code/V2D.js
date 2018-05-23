@@ -308,7 +308,7 @@ V2D.max = function(out, a,b){
 V2D.meanFromArray = function(pointList, weights){
 	var i, len=pointList.length, pt;
 	var mean = new V2D();
-	var weight = 1.0;
+	var weight = 1.0/len;
 	for(i=0; i<len; ++i){
 		pt = pointList[i];
 		//mean.add(pt);
@@ -318,7 +318,7 @@ V2D.meanFromArray = function(pointList, weights){
 		mean.x += pt.x * weight;
 		mean.y += pt.y * weight;
 	}
-	mean.scale(1.0/len);
+	//mean.scale(1.0/len);
 	return mean;
 }
 V2D.extremaFromArray = function(pointList){

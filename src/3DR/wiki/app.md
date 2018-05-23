@@ -180,6 +180,17 @@ project typical numbers:
 
 APP TODO:
 
+
+--- try matching on a rectified image pair
+
+
+- are relative match scores good at determining better / worse ?
+
+- need to drop / replace duplicate matches [pick better one]
+
+
+
+
 - test out stability = scale search point up 2ce and see how far away the new peak location changes
 
 => can uniquely find the optimal location
@@ -200,8 +211,11 @@ APP TODO:
 - if predicted point is in wrong direction (90 deg off of original direction)
 - if predicted point has low uniqueness score
 - if predicted point has same location when scaled up x2 (stability)
+	=> stability also in rotational invariance wich is already been done - record all absolute-location changes in search
 
+- angle error ???
 
+- how to enforce uniqueness / direction
 
 
 ------ other methods to determing good / bad 

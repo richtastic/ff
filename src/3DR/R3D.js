@@ -1167,7 +1167,7 @@ R3D.essentialMatrix = function(pointsA,pointsB){ // 2D points only
 	return E;
 }
 R3D.fundamentalInverse = function(fundamental){
-	return Matrix.transpose(fundamental);
+	return Matrix.transpose(fundamental); // INVERSE ?
 }
 R3D.fundamentalMatrix = function(pointsA,pointsB){
 	if(pointsA.length>=8){
@@ -1437,6 +1437,28 @@ R3D.polarRectificationRelativeRotation = function(sourceA,epipoleA, sourceB,epip
 	// }
 	return result;
 }
+R3D.polarRectificationAbsoluteRotation = function(source,epipole){ // TODO: TEST
+	var region = R3D._polarRectificationRegionFromEpipole(source,epipole);
+	if(region==0){
+		return 0;
+	}else if(region==1){
+		return 0;
+	}else if(region==2){
+		return 180;
+	}else if(region==3){
+		return 0;
+	}else if(region==4){ // this might have 4 sub-answers
+		return 0;
+	}else if(region==5){
+		return 180;
+	}else if(region==6){
+		return 0;
+	}else if(region==7){
+		return 180;
+	}else if(region==8){
+		return 180;
+	}
+}
 R3D._polarRectificationRelativeRotationMinMax = function(regionMin,regionMax){ // not entirely sure about these
 	if(regionMin==0 && (regionMax==5 || regionMax==7 || regionMax==8)){
 		return 180;
@@ -1605,7 +1627,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		for(i=radiusMax;i>=radiusMin;--i){
 			var relativeRadius = i-radiusMin;
 			index = radiusCount*j + relativeRadius; // 7 needs +1, 5 needs none
-			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y);
+			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y, 1);
 			var isInside = point.x>=0 && point.x<width && point.y>=0 && point.y<height;
 			if(!isInside && radiusEnd!==null && radiusStart===null){
 				radiusStart = relativeRadius;
@@ -1613,6 +1635,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			if(isInside && radiusEnd===null){
 				radiusEnd = relativeRadius;
 			}
+			// console.log(point+" @ "+i+" "+epipole+" | "+ray);
 			image.getPointInterpolateLinear(color,point.x,point.y);
 			// image.getPointInterpolateCubic(color,point.x,point.y);
 			rectifiedR[index] = color.x;
@@ -1840,6 +1863,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		 		//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
 		 			//arr = R3D.fundamentalMatrixNonlinear(arr, subsetPointsA, subsetPointsB);
 				var FFwd = arr;
+				var FRev = Matrix.inverse(FFwd);
 				var FRev = R3D.fundamentalInverse(FFwd);
 				var dir = new V2D();
 				var org = new V2D();
@@ -17751,7 +17775,7 @@ sss = sadAvg;
 
 }
 
-R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
+R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, flag){
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
@@ -17899,24 +17923,27 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
 					var hG = haystackG[hIndex];
 					var hB = haystackB[hIndex];
 					// from median .... intensity differences
-					// nR = nR - avgN.x;
-					// nG = nG - avgN.y;
-					// nB = nB - avgN.z;
-					// hR = hR - avgH.x;
-					// hG = hG - avgH.y;
-					// hB = hB - avgH.z;
-						// nR = nR / rangeN.x;
-						// nG = nG / rangeN.y;
-						// nB = nB / rangeN.z;
-						// hR = hR / rangeH.x;
-						// hG = hG / rangeH.y;
-						// hB = hB / rangeH.z;
+					if(flag){
+						nR = nR - avgN.x;
+						nG = nG - avgN.y;
+						nB = nB - avgN.z;
+						hR = hR - avgH.x;
+						hG = hG - avgH.y;
+						hB = hB - avgH.z;
+
+						nR = nR / rangeN.x;
+						nG = nG / rangeN.y;
+						nB = nB / rangeN.z;
+						hR = hR / rangeH.x;
+						hG = hG / rangeH.y;
+						hB = hB / rangeH.z;
 					// nR = nR / sigmaN.x;
 					// nG = nG / sigmaN.y;
 					// nB = nB / sigmaN.z;
 					// hR = hR / sigmaH.x;
 					// hG = hG / sigmaH.y;
 					// hB = hB / sigmaH.z;
+					}
 					// SAD
 					var absR = Math.abs(nR - hR);
 					var absG = Math.abs(nG - hG);
@@ -17935,10 +17962,18 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
 // sadG -= 1;
 // sadB -= 1;
 					// ABS
-					sadR += absR;
-					sadG += absG;
-					sadB += absB;
-					sadY += absY;
+					
+					if(flag){
+						sadR += absR*absR;
+						sadG += absG*absG;
+						sadB += absB*absB;
+						sadY += absY*absY;
+					}else{
+						sadR += absR;
+						sadG += absG;
+						sadB += absB;
+						sadY += absY;
+					}
 					// SQ
 					// sadR += absR*absR;
 					// sadG += absG*absG;
@@ -17979,6 +18014,7 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack){
 			// sadR = sadR / sigSquR;
 			// sadG = sadG / sigSquG;
 			// sadB = sadB / sigSquB;
+			//var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
 //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
 //var sadAvg = (sadY) / maskCount / 3.0;

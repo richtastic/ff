@@ -5956,7 +5956,29 @@ Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and poi
 	}
 	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
-
+Code.clipLine2DToRect = function(org,dir, x,y,w,h){
+	var eps = 1E-6;
+	var poly = [new V2D(x,y), new V2D(x+w,y), new V2D(x+w,y+h), new V2D(x,y+h)];
+	var inv = dir.copy().scale(-1);
+	var ints = [];
+	var lines = [];
+		lines.push( [poly[0], new V2D(1,0)] );
+		lines.push( [poly[1], new V2D(0,1)] );
+		lines.push( [poly[2], new V2D(-1,0)] );
+		lines.push( [poly[3], new V2D(0,-1)] );
+	for(var i=0; i<lines.length; ++i){
+		var o = lines[i][0];
+		var d = lines[i][1];
+		var intersection = Code.rayLineIntersect2D(org,dir, o,d);
+		if(intersection){
+			//if(Code.isPointInsidePolygon2D(intersection, poly)){
+			if(x-eps<=intersection.x && intersection.x<=x+w+eps && y-eps<=intersection.y && intersection.y<=y+h+eps){
+				ints.push(intersection);
+			}
+		}
+	}
+	return ints;
+}
 
 /*
 Code.sizeToFitRectInRect = function(widthItem,heightItem, widthContainer,heightContainer){

@@ -1684,10 +1684,379 @@ R3D.BA.uniquenssForPoints = function(imageMatrixA,cornerA,pointA, imageMatrixB,c
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+R3D.BA.World.prototype.epipolarSearch = function(){
 
+	// console.log("..");
+	var transforms = this.toTransformArray();
+	var transform = transforms[0];
+	var queue = transform._matchQueue;
+	var list = queue.toArray();
+	var viewA = transform.viewA();
+	var viewB = transform.viewB();
+	// console.log(list);
+	var points2DA = [];
+	var points2DB = [];
+	for(var i=0; i<list.length; ++i){
+		var match = list[i];
+		var pointA = match.pointForView(viewA);
+		var pointB = match.pointForView(viewB);
+		points2DA.push(pointA.point());
+		points2DB.push(pointB.point());
+	}
+	// console.log(points2DA);
+	var FFwd = R3D.fundamentalFromUnnormalized(points2DA,points2DB);
+	var FRev = R3D.fundamentalInverse(FFwd);
+	console.log("F:\n"+FFwd);
+
+
+	// show images
+	var imageA = viewA.image();
+	var imageB = viewB.image();
+
+	var offsetX = 0;
+	var alp = 0.25;
+	var sca = 1.0;
+
+	var iii = imageA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + offsetX, 10);
+	GLOBALSTAGE.addChild(d);
+	offsetX += iii.width();
+
+	var iii = imageB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + offsetX, 10);
+	GLOBALSTAGE.addChild(d);
+	offsetX += iii.width();
+
+
+	// show F on images
+	var dir = new V2D();
+	var org = new V2D();
+	var imageWidth = imageA.width();
+	var imageHeight = imageA.height();
+
+/*
+var testPoints2DA = [];
+for(j=0; j<15; ++j){
+testPoints2DA.push(new V2D(200,25 + j*25));
+// for(j=0; j<20; ++j){
+// testPoints2DA.push(new V2D(25 + j*25, 150));
+}
+*/
+	for(j=0; j<points2DA.length; ++j){
+		a = points2DA[j];
+		b = points2DB[j];
+	// for(j=0; j<testPoints2DA.length; ++j){
+	// 	a = testPoints2DA[j];
+	// 	b = null;
+		a = new V3D(a.x,a.y,1.0);
+		if(b){
+			b = new V3D(b.x,b.y,1.0);
+		}
+		// A
+		var lineB = FFwd.multV3DtoV3D(new V3D(), a);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+// console.log( V2D.angleDirection(V2D.DIRX,dir) );
+		if(b){
+		var closestB = Code.closestPointLine2D(org,dir, b);
+		var distanceB = Code.distancePointRay2D(org,dir, b);
+		}
+		var clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+		// B
+		var clippedA, distanceA, closestA, lineA;
+		if(b){
+			lineA = FRev.multV3DtoV3D(new V3D(), b);
+			Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+			closestA = Code.closestPointLine2D(org,dir, a);
+			distanceA = Code.distancePointRay2D(org,dir, a);
+			clippedA = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+		}
+		var color = new V3D(Math.random()*1.0,Math.random()*0.5,Math.random()*0.5);
+		color = Code.getColARGBFromFloat(0.5,color.x,color.y,color.z);
+
+// console.log(clippedA);
+// console.log(clippedB);
+// if( !clippedA || !clippedB || !(clippedB.length==0 && clippedA.length==0) ){
+if( clippedB.length==0  ){
+	continue;
+}
+
+		// A
+		var d = new DO();
+		d.graphics().setLine(2.0, color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(a.x,a.y, 5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(10 + 0, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+		// B
+		if(b){
+		var d = new DO();
+		d.graphics().setLine(2.0, color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(b.x,b.y, 5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(10 + imageWidth, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+		}
+
+		// lineB
+		
+		var d = new DO();
+		d.graphics().setLine(2.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(clippedB[0].x,clippedB[0].y);
+		d.graphics().lineTo(clippedB[1].x,clippedB[1].y);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(10 + imageWidth, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+		if(b){
+		// lineA
+		var d = new DO();
+		d.graphics().setLine(2.0, color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(clippedA[0].x,clippedA[0].y);
+		d.graphics().lineTo(clippedA[1].x,clippedA[1].y);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(10 + 0, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+	}
+
+		// get a slice from A & B
+var index = 8;
+if(j==index){
+if(a&&b){
+			var pointA1 = clippedA[0];
+			var pointA2 = clippedA[1];
+			var pointB1 = clippedB[0];
+			var pointB2 = clippedB[1];
+
+
+
+			if(true){
+				var temp = pointA1;
+				pointA1 = pointA2;
+				pointA2 = temp;
+			}
+			if(true){
+				var temp = pointB1;
+				pointB1 = pointB2;
+				pointB2 = temp;
+			}
+
+// TODO: ORDER / DIR DEPENDS ON WHERE EPIPOLE IS
+
+
+			var lengthA = V2D.distance(pointA1,pointA2);
+			var lengthB = V2D.distance(pointB1,pointB2);
+			var locationA = V2D.distance(pointA1,closestA);
+			var locationB = V2D.distance(pointB1,closestB);
+
+			var padding = 0;
+			var haystackScale = 1.0;
+			var haystackHeight = 31;
+			var haystackWidthA = Math.round(lengthA);
+			var haystackWidthB = Math.round(lengthB);
+
+			var haystackA = R3D.Dense.extractRectFromPoints(imageA,pointA1,pointA2, haystackWidthA,haystackHeight, haystackScale, padding);
+			var haystackB = R3D.Dense.extractRectFromPoints(imageB,pointB1,pointB2, haystackWidthB,haystackHeight, haystackScale, padding);
+
+console.log(haystackA);
+console.log(haystackB);
+
+				var haystack = haystackA;
+				var sca = 1.0;
+				var iii = haystack;
+				var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+				var d = new DOImage(img);
+				d.matrix().scale(sca);
+				d.matrix().translate(1100, 150+0);
+				GLOBALSTAGE.addChild(d);
+
+				var haystack = haystackB;
+				var sca = 1.0;
+				var iii = haystack;
+				var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+				var d = new DOImage(img);
+				d.matrix().scale(sca);
+				d.matrix().translate(1100, 150+haystackHeight);
+
+
+				// d.matrix().translate(0 + lengthB-lengthA, 0);
+				d.matrix().translate(0 + locationA-locationB, 0);
+
+				GLOBALSTAGE.addChild(d);
+}
+}
+		// break;
+	}
+
+	var epipole = R3D.getEpipolesFromF(FFwd);
+	var epipoleA = epipole["A"];
+	var epipoleB = epipole["B"];
+	// console.log(epipoleA);
+	// console.log(epipoleB);
+	var rectifiedA = R3D.polarRectification(imageA,epipoleA);
+		var infoA = rectifiedA;
+		console.log(rectifiedA);
+	rectifiedA = new ImageMat(rectifiedA["width"],rectifiedA["height"], rectifiedA["red"],rectifiedA["grn"],rectifiedA["blu"]);
+	var rectifiedB = R3D.polarRectification(imageB,epipoleB);
+		var infoB = rectifiedB;
+		console.log(rectifiedB);
+	rectifiedB = new ImageMat(rectifiedB["width"],rectifiedB["height"], rectifiedB["red"],rectifiedB["grn"],rectifiedB["blu"]);
+	//var rectifiedB = R3D.polarRectification(imageB,epipoleB);
+
+
+	//var rotation = R3D.polarRectificationRelativeRotation(imageA,epipoleA, imageB,epipoleB);
+	var rotationA = R3D.polarRectificationAbsoluteRotation(imageA,epipoleA);
+	var rotationB = R3D.polarRectificationAbsoluteRotation(imageB,epipoleB);
+
+	console.log(rotationA,rotationB);
+	//console.log(rotation);
+
+	// rotationA = 0;
+	// rotationB = 0;
+
+
+// how to tell where a line-pair first / last matches up?
+// go over entire perimeter ? record min and max epipole angles ?
+
+
+
+	var iii = rectifiedA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	// d.graphics().alpha(alp);
+		d.matrix().translate(-rectifiedA.width()*0.5, -rectifiedA.height()*0.5);
+		d.matrix().rotate( Code.radians(rotationA) );
+		d.matrix().translate(rectifiedA.width()*0.5, rectifiedA.height()*0.5);
+	d.matrix().scale(sca);
+	d.matrix().translate(1100, 10);
+	GLOBALSTAGE.addChild(d);
+
+	var iii = rectifiedB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	// d.graphics().alpha(alp);
+		d.matrix().translate(-rectifiedB.width()*0.5, -rectifiedB.height()*0.5);
+		d.matrix().rotate( Code.radians(rotationB) );
+		d.matrix().translate(rectifiedB.width()*0.5, rectifiedB.height()*0.5);
+	d.matrix().scale(sca);
+	d.matrix().translate(1100 + rectifiedA.width() + 10, 10);
+	GLOBALSTAGE.addChild(d);
+	
+
+
+	// find wheere imge rectification starts & ends
+	/*
+	iterate over perimeter & find lowest and highest angles
+
+	iterate thru angle table until starts / ends
+	*/
+	var widthA = imageA.width();
+	var heightA = imageA.width();
+	var p = new V3D(0,0,1);
+	var minAngle = null;
+	var maxAngle = null;
+	var pointList = [];
+	for(var i=0; i<widthA; ++i){
+		var p = new V3D(i,0,1);
+		pointList.push(p);
+		var p = new V3D(i,heightA-1,1);
+		pointList.push(p);
+	}
+	for(var i=0; i<heightA; ++i){
+		var p = new V3D(0,i,1);
+		pointList.push(p);
+		var p = new V3D(widthA-1,i,1);
+		pointList.push(p);
+	}
+	for(var i=0; i<pointList.length; ++i){
+		var p = pointList[i];
+		var lineB = FFwd.multV3DtoV3D(new V3D(), p);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+			var clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+			// console.log(clippedB)
+		if(clippedB.length==0){
+			continue;
+		}
+
+		var angle = V2D.angleDirection(V2D.DIRX,dir);
+		// var angle = V2D.angleDirection(dir,V2D.DIRX);
+		if(minAngle===null){
+			minAngle = angle;
+			maxAngle = angle;
+		}
+		if(angle<minAngle){
+			minAngle = angle;
+		}
+		if(angle>maxAngle){
+			maxAngle = angle;
+		}
+	}
+	console.log(minAngle,maxAngle);
+	var anglesB = infoB["angles"];
+	var radiusA = infoB["radius"];
+	var minRow = null;
+	var maxRow = null;
+	console.log(anglesB)
+	for(var i=0; i<anglesB.length; ++i){
+		var ang = anglesB[i];
+		// console.log(ang);
+		if(minAngle<=ang && ang<=maxAngle){
+			if(minRow==null){
+				minRow = i;
+			}
+		}else{
+			if(minRow!==null && maxRow==null){
+				maxRow = i-1;
+			}
+		}
+	}
+	console.log(minRow,maxRow);
+
+
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFFFF00FF);
+	d.graphics().drawRect(0,0,rectifiedB.width(), maxRow-minRow);
+	d.graphics().strokeLine();
+	d.matrix().translate(1100 + rectifiedA.width() + 10, 10 + minRow);
+	GLOBALSTAGE.addChild(d);
+
+	/*
+	get match scores along line
+		- dynamic programming along line
+
+	get rectified images .....
+
+	r3d.rectify ...
+	*/
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.BA.World.prototype.solve = function(completeFxn, completeContext){
 	console.log("SOLVE");
+
+// WHY ?
+GLOBALSTAGE.root().matrix().translate(0,50);
+// GLOBALSTAGE.root().matrix().translate(10,10);
+
+	console.log("hijack to do epipolar line test");
+	this.epipolarSearch();
+return;
+
 /*
 // DISPLAY SOURCE IMAGES:
 var views = this.toViewArray();
@@ -4347,6 +4716,7 @@ R3D.BA.World.neighborsForInterpolation = function(bestPointA, viewA,viewB, force
 }
 R3D.BA.World.SHOW = 0;
 R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
+	console.log("bestNextMatchesForPoint : "+pointA);
 	var bestPointsA = this.nextBestSearchPoints(viewA, pointA);
 	var bestMatches = [];
 	for(var i=0; i<bestPointsA.length; ++i){
@@ -4355,12 +4725,12 @@ R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
 		if(!neighborsA){
 			continue;
 		}
-		/*
+		
 
 		// TODO: fix?
 		var predicted = R3D.BA.interpolationData(bestPointA, neighborsA,  viewA,viewB);
 
-		*/
+		
 		// TEMP: pass along NN cell @ parent scale / angle
 		// var cellAX = ?;
 		// var cellAY = ?;
@@ -4369,6 +4739,7 @@ R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
 		if(neighborsA.length<1){
 			continue;
 		}
+
 		var neighborA = neighborsA[0];
 		// console.log(neighborA);
 		var matchA = neighborA.matchForViews(viewA,viewB);
@@ -4377,16 +4748,15 @@ R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB){
 		// console.log(oppositeA);
 		var ang = matchA.angleForPoint(oppositeA);
 		var sca = matchA.scaleForPoint(oppositeA);
-
+/*
 		//console.log(bestPointA);
-
 			
 		// this is the SEARCH location
 		var predicted = {};
 			predicted["point"] = oppositeA.point();
 			predicted["scale"] = sca;
 			predicted["angle"] = ang;
-
+*/
 // predicted["scale"] = 1.0
 // predicted["angle"] = 0.0
 
@@ -4423,14 +4793,17 @@ sizeCompare = 21;
 			// var seedAngles = null;
 			// var seedScales = null;
 // what if DNE
-		var show = R3D.BA.World.SHOW == 11;
+
+// BAD:  12 : 0.0268
+// GOOD: 10 : 
+		var show = R3D.BA.World.SHOW == 1999;
 		/*
 		good:
-			0,1,6,7
+			0,1,6,7,20s,
 		nonunique:
 			3,4,5,8
 		bad:
-			2,10,11,14
+			2,10,11,14,18
 		*/
 		++R3D.BA.World.SHOW;
 
@@ -4446,6 +4819,27 @@ sizeCompare = 21;
 		if(!info){ // console.log("no optimum transform");
 			continue;
 		}
+		var optimumScore = info["sad"];
+
+
+		// if(show){
+			var pointA1 = pointA;
+			var pointA2 = pA;
+			var pointB1 = oppositeA.point();
+			var pointB2 = info["to"];
+			var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, null, scaAB, show);
+			var score = data["score"];
+			var relative = score/optimumScore;
+			console.log("       SCORE: "+score+" = "+relative);
+
+		// }
+
+
+		if(show){
+			throw "throwed";
+		}
+
+
 		var pA = info["from"];
 		var pB = info["to"];
 		if(!viewA.isPointInside(pA)){
@@ -4454,7 +4848,9 @@ sizeCompare = 21;
 		if(!viewB.isPointInside(pB)){
 			continue;
 		}
-		bestMatches.push(info);
+		if(relative <= 1.5){
+			bestMatches.push(info);
+		}
 	}
 	return bestMatches;
 }
@@ -4544,7 +4940,9 @@ R3D.BA.World.prototype.nextBestSearchPoints = function(viewA, centerA){ // first
 					// return center -- stop 'clumping'
 					cellCenter.x = Math.min(Math.max(cellCenter.x,0),viewSize.x-1);
 					cellCenter.y = Math.min(Math.max(cellCenter.y,0),viewSize.y-1);
-					nextPoints.push(cellCenter.copy());
+					if( V2D.distance(centerA, cellCenter)>1.0 ){ // WHY ?
+						nextPoints.push(cellCenter.copy());
+					}
 					
 				}
 			}

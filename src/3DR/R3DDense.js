@@ -940,6 +940,106 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+R3D.Dense.extractRectFromPoints = function(imageA,pointA,pointB, width,height,heightScale,padding){
+	heightScale = heightScale!==undefined ? heightScale : 1.0;
+	padding = padding!==undefined ? padding : 0;
+	var dir = V2D.sub(pointB,pointA);
+	var length = dir.length();
+	var center = V2D.avg(pointA,pointB);
+	var angle = V2D.angleDirection(V2D.DIRX,dir);
+	var scaleX = width/length;
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix,-angle); // to x-axis
+		matrix = Matrix.transform2DScale(matrix,scaleX,heightScale); // to 'width' length
+		// matrix = Matrix.transform2DScale(matrix,0.5);
+	var imageWidth = width + padding;
+	var imageHeight = height;
+	// console.log(imageWidth+"x"+imageHeight);
+	var image = imageA.extractRectFromFloatImage(center.x,center.y,1.0,null,imageWidth,imageHeight, matrix);
+	return image;
+}
+
+R3D.Dense.comparePathTransforms = function(imageA,pointA1,pointA2, imageB,pointB1,pointB2, inputCompareSize, expectedScale, show){ // TODO: need a VERTICAL SCALE TOO
+	var compareSize = (inputCompareSize!==undefined && inputCompareSize!==null)? inputCompareSize : 21;
+	//var compareScale = (inputCompareScale!==undefined && inputCompareScale!==null)? inputCompareScale : 1.0;
+	var dirA = V2D.sub(pointA2,pointA1);
+	var dirB = V2D.sub(pointB2,pointB1);
+	var lengthA = dirA.length();
+	var lengthB = dirB.length();
+	var lengthRatio = lengthA/lengthB;
+	if(lengthRatio<1){
+		lengthRatio = 1.0/lengthRatio;
+	}
+	var centerA = V2D.avg(pointA1,pointA2);
+	var centerB = V2D.avg(pointB1,pointB2);
+	// console.log("lengths: "+lengthA+" | "+lengthB+" = "+lengthRatio);
+
+	var averageLength = (lengthA+lengthB)*0.5;
+	var haystackWidth = Math.round(averageLength);
+	var haystackHeight = 11;
+		haystackWidth = Math.max(haystackWidth,11);
+	var haystackScale = haystackHeight/compareSize;
+	var padding = 2; // haystackHeight
+//console.log(haystackWidth,haystackHeight,haystackScale)
+// console.log("B: ",pointA1,pointA2, haystackWidth,haystackHeight, haystackScale, padding);
+	var haystackA = R3D.Dense.extractRectFromPoints(imageA,pointA1,pointA2, haystackWidth,haystackHeight, haystackScale, padding);
+	var haystackB = R3D.Dense.extractRectFromPoints(imageB,pointB1,pointB2, haystackWidth,haystackHeight, haystackScale, padding);
+	// console.log(haystackA);
+	// console.log(haystackB);
+
+// SHOW
+if(show){
+	var haystack = haystackA;
+	var sca = 4.0;
+	var iii = haystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(900, 50+0);
+	GLOBALSTAGE.addChild(d);
+
+	var haystack = haystackB;
+	var sca = 4.0;
+	var iii = haystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(900, 50+sca*haystackHeight);
+	GLOBALSTAGE.addChild(d);
+	
+
+	var dif = ImageMat.subFloat(haystackA.gry(),haystackB.gry());
+	// console.log(dif);
+	//var abs = ImageMat.absFloat(dif);
+	var ssd = ImageMat.mulFloat(dif,dif);
+	var sum = ImageMat.sumFloat(ssd);
+	var count = ssd.length;
+	var scoreSSD = sum / count;
+	console.log(scoreSSD);
+
+
+	var ssdImage = new ImageMat(haystackA.width(),haystackA.height(), ssd);
+
+
+	var haystack = ssdImage;
+	var sca = 4.0;
+	var iii = haystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(900, 250);
+	GLOBALSTAGE.addChild(d);
+
+}
+	// var scores = R3D.searchNeedleHaystackImageFlat(haystackA, null, haystackB);
+	var scores = R3D.searchNeedleHaystackImageFlatTest2(haystackA, null, haystackB, true); // sending flag for different metric
+	var scoreSAD = scores["value"][0];
+//	console.log(scoreSAD);
+
+	var score = scoreSAD; // * (lengthRatio/expectedScale) ??;
+
+	return {"score":score};
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.COUNTA = 0;
 // R3D.Dense.SHOW = true;
@@ -949,7 +1049,7 @@ R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompare
 	//var maximumBestScore = 0.02; // 0.01; // SAD SIFT
 	//var maximumBestScore = 0.10; // SAD --- 0.25 ok, 0.01 too small
 	//var maximumBestScore = 0.05;
-	var maximumBestScore = 0.50; 
+	var maximumBestScore = 0.15; 
 //maximumBestScore = 0.50; // LARGER needs more 
 //maximumBestScore = 0.25;
 	var compareSize = 11;//R3D.sadBinOctantEdgeSize();
@@ -1040,6 +1140,7 @@ if(show){
 // d.matrix().translate(0 + R3D.Dense.COUNTA * 80, 10);
 // GLOBALSTAGE.addChild(d);
 // var count = 0;
+var peakList = [];
 	for(var i=0; i<scaleRangeExp.length; ++i){
 		var rangeScale = scale * Math.pow(2,scaleRangeExp[i]);
 if(show){
@@ -1082,25 +1183,36 @@ if(neighborhoodSize){
 			var values = scores.value;
 			var valueWidth = scores.width;
 			var valueHeight = scores.height;
+				// console.log(values)
+				// var minValue = values[0];
+				var info = Code.infoArray(values);
+				// console.log(info);
+				var index = info["indexMin"];
+				var zLoc = values[index];
+				// console.log(index,zLoc);
+				// for(k=0; k<values.length; ++k){
+				// 	var zLoc = values[k];
 // var maxScore = null;
-			for(k=0; k<values.length; ++k){
-				var zLoc = values[k];
+			// for(k=0; k<values.length; ++k){
+			// 	var zLoc = values[k];
 // if(maxScore===null || zLoc<maxScore){
 // 	maxScore = zLoc;
 // }
-				var index = k;
+				// var index = k;
 				var xLoc = index % valueWidth;
 				var yLoc = (index/valueWidth) | 0;
 				var peak = new V3D(xLoc,yLoc,zLoc);
+					var p = new V2D(pointTo.x - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointTo.y - (valueHeight*0.5)*cellScale + peak.y*cellScale);
+					peakList.push(p);
 				if(bestScore===null || peak.z < bestScore){
 					bestScore = peak.z;
 					bestScale = rangeScale;
 					bestAngle = rangeAngle;
-					bestPoint = new V2D(pointTo.x - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointTo.y - (valueHeight*0.5)*cellScale + peak.y*cellScale);
+					bestPoint = p;
 					bestNeedle = needle;
 					bestValues = [values, valueWidth,valueHeight, new V2D(peak.x,peak.y)];
 				}
-			}
+			// }
 // d = new DOText(maxScore.toExponential(3)+"", 8, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
 // d.matrix().scale(sca);
 // d.matrix().translate(0 + 0 + R3D.Dense.COUNTA * 80, 100 + count*50);
@@ -1126,7 +1238,26 @@ bad scores:
 
 
 */
+	var averagePeak = V2D.meanFromArray(peakList);
+	var peakDistance = V2D.distance(bestPoint,averagePeak); // stability
+	var stability = Math.pow(peakDistance,0.5);
+
+	// uniqueness
+	var peaks = Code.findMinima2DFloat(bestValues[0],bestValues[1],bestValues[2], true);
+		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
+	var uniqueness = 1.0;
+	if(peaks.length>1){
+		var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
+		uniqueness = 1.0 + Math.pow(uniqueness,0.1);
+		// uniqueness = 1.0;
+	}
+
+var shouldKeep = true; // various checks
+
 if(show){
+	
+	console.log("stability location: "+peakDistance);
+
 	console.log("bestScore: "+bestScore);
 	matrix = new Matrix(3,3).identity();
 	matrix = Matrix.transform2DScale(matrix,bestScale);
@@ -1179,10 +1310,11 @@ if(show){
 
 
 
-	var peaks = Code.findMinima2DFloat(bestValues[0],bestValues[1],bestValues[2], true);
-		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
+	
+
 		// console.log(peaks)
 	if(peaks.length>2){
+		var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
 		var diff10 = peaks[1].z-peaks[0].z;
 		var diff21 = peaks[2].z-peaks[1].z;
 		var diff20 = peaks[2].z-peaks[0].z;
@@ -1258,12 +1390,15 @@ console.log(pt+"")
 // d.matrix().translate(0 + 0 + R3D.Dense.COUNTA * 80, 100 + count*50);
 // GLOBALSTAGE.addChild(d);
 // ++R3D.Dense.COUNTA;
-if(show){
-	throw "...";
-}
 
+// if(show){
+// 	throw "...";
+// }
 
-	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":bestScore, "zoomScale":neighborhoodScale};
+	// var score = bestScore;
+	var score = bestScore * (1.0+stability) * (uniqueness);
+	// console.log(score);
+	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":score, "zoomScale":neighborhoodScale, "keep":shouldKeep, "sad":bestScore};
 
 }
 
@@ -1278,6 +1413,14 @@ R3D.Dense.rankForTransform2 = function(imageA,cornerA,pointA, imageB,cornerB,poi
 }
 R3D.Dense.DISP = null;
 R3D.Dense.rankForTransform = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
+
+var rank = score * 1E-3;
+// console.log(score,rank);
+if(score>0.50){ // 
+	return null;
+}
+return {"rank":rank, "uniqueness":0};
+
 //console.log("in: "+inputCompareSize);
 	dropEarly = dropEarly!==undefined ? dropEarly : true;
 	// constants
@@ -1565,7 +1708,7 @@ var uniq = Math.pow(uniqueness,1.0);
 //var rank = scor * rang;
 // 
 //var rank = scor * corn * rang;
-//var rank = scor;
+var rank = scor;
 //var rank = uniq; // ...
 
 
@@ -1573,7 +1716,7 @@ var uniq = Math.pow(uniqueness,1.0);
 //var rank = scor / worstRangeScore;
 //var rank = scor / cornerScore;
 
-var rank = uniq / worstRangeScore;
+// var rank = uniq / worstRangeScore;
 
 
 
