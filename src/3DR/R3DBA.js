@@ -1742,6 +1742,27 @@ R3D.BA.World.prototype.epipolarSearch = function(){
 	var imageWidth = imageA.width();
 	var imageHeight = imageA.height();
 
+
+
+var widthA = imageA.width();
+var heightA = imageA.height();
+	var p = new V3D(0,0,1);
+	var pointList = [];
+	for(var i=0; i<widthA; ++i){
+		var p = new V3D(i,0,1);
+		pointList.push(p);
+		var p = new V3D(i,heightA-1,1);
+		pointList.push(p);
+	}
+	for(var i=0; i<heightA; ++i){
+		var p = new V3D(0,i,1);
+		pointList.push(p);
+		var p = new V3D(widthA-1,i,1);
+		pointList.push(p);
+	}
+var perimeterPoints = pointList;
+
+var testPoints2DA = perimeterPoints;
 /*
 var testPoints2DA = [];
 for(j=0; j<15; ++j){
@@ -1754,28 +1775,36 @@ testPoints2DA.push(new V2D(200,25 + j*25));
 		a = points2DA[j];
 		b = points2DB[j];
 	// for(j=0; j<testPoints2DA.length; ++j){
-	// 	a = testPoints2DA[j];
-	// 	b = null;
-		a = new V3D(a.x,a.y,1.0);
+		// a = testPoints2DA[j];
+		// b = null;
+		// a = null;
+		// b = testPoints2DA[j];
 		if(b){
 			b = new V3D(b.x,b.y,1.0);
 		}
-		// A
-		var lineB = FFwd.multV3DtoV3D(new V3D(), a);
-		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-// console.log( V2D.angleDirection(V2D.DIRX,dir) );
-		if(b){
-		var closestB = Code.closestPointLine2D(org,dir, b);
-		var distanceB = Code.distancePointRay2D(org,dir, b);
+		if(a){
+			a = new V3D(a.x,a.y,1.0);
 		}
-		var clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
-		// B
+		// A
+		var clippedB, distanceB, closestB, lineB;
+		if(a){
+			lineB = FFwd.multV3DtoV3D(new V3D(), a);
+			Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+			if(b){
+				closestB = Code.closestPointLine2D(org,dir, b);
+				distanceB = Code.distancePointRay2D(org,dir, b);
+			}
+			clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+		}
+		
 		var clippedA, distanceA, closestA, lineA;
 		if(b){
 			lineA = FRev.multV3DtoV3D(new V3D(), b);
 			Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-			closestA = Code.closestPointLine2D(org,dir, a);
-			distanceA = Code.distancePointRay2D(org,dir, a);
+			if(a){
+				closestA = Code.closestPointLine2D(org,dir, a);
+				distanceA = Code.distancePointRay2D(org,dir, a);
+			}
 			clippedA = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
 		}
 		var color = new V3D(Math.random()*1.0,Math.random()*0.5,Math.random()*0.5);
@@ -1784,61 +1813,59 @@ testPoints2DA.push(new V2D(200,25 + j*25));
 // console.log(clippedA);
 // console.log(clippedB);
 // if( !clippedA || !clippedB || !(clippedB.length==0 && clippedA.length==0) ){
-if( clippedB.length==0  ){
-	continue;
-}
+
 
 		// A
-		var d = new DO();
-		d.graphics().setLine(2.0, color);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(a.x,a.y, 5);
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(10 + 0, 10 + 0);
-		GLOBALSTAGE.addChild(d);
-
+		if(a){
+			var d = new DO();
+			d.graphics().setLine(2.0, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(a.x,a.y, 5);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(10 + 0, 10 + 0);
+			GLOBALSTAGE.addChild(d);
+		}
 		// B
 		if(b){
-		var d = new DO();
-		d.graphics().setLine(2.0, color);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(b.x,b.y, 5);
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(10 + imageWidth, 10 + 0);
-		GLOBALSTAGE.addChild(d);
+			var d = new DO();
+			d.graphics().setLine(2.0, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(b.x,b.y, 5);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(10 + imageWidth, 10 + 0);
+			GLOBALSTAGE.addChild(d);
+		}
+		// lineB
+		if(clippedB && clippedB.length>0){
+			var d = new DO();
+			d.graphics().setLine(2.0, color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(clippedB[0].x,clippedB[0].y);
+			d.graphics().lineTo(clippedB[1].x,clippedB[1].y);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(10 + imageWidth, 10 + 0);
+			GLOBALSTAGE.addChild(d);
+		}
+		// lineA
+		if(clippedA && clippedA.length>0){
+			var d = new DO();
+			d.graphics().setLine(2.0, color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(clippedA[0].x,clippedA[0].y);
+			d.graphics().lineTo(clippedA[1].x,clippedA[1].y);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(10 + 0, 10 + 0);
+			GLOBALSTAGE.addChild(d);
 		}
 
-		// lineB
-		
-		var d = new DO();
-		d.graphics().setLine(2.0, color);
-		d.graphics().beginPath();
-		d.graphics().moveTo(clippedB[0].x,clippedB[0].y);
-		d.graphics().lineTo(clippedB[1].x,clippedB[1].y);
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(10 + imageWidth, 10 + 0);
-		GLOBALSTAGE.addChild(d);
-
-		if(b){
-		// lineA
-		var d = new DO();
-		d.graphics().setLine(2.0, color);
-		d.graphics().beginPath();
-		d.graphics().moveTo(clippedA[0].x,clippedA[0].y);
-		d.graphics().lineTo(clippedA[1].x,clippedA[1].y);
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(10 + 0, 10 + 0);
-		GLOBALSTAGE.addChild(d);
-	}
-
 		// get a slice from A & B
-var index = 8;
-if(j==index){
-if(a&&b){
+	var index = -1;
+	if(j==index){
+		if(a&&b){
 			var pointA1 = clippedA[0];
 			var pointA2 = clippedA[1];
 			var pointB1 = clippedB[0];
@@ -1899,8 +1926,8 @@ console.log(haystackB);
 				d.matrix().translate(0 + locationA-locationB, 0);
 
 				GLOBALSTAGE.addChild(d);
-}
-}
+			}
+		}
 		// break;
 	}
 
@@ -1966,69 +1993,39 @@ console.log(haystackB);
 
 	iterate thru angle table until starts / ends
 	*/
-	var widthA = imageA.width();
-	var heightA = imageA.width();
-	var p = new V3D(0,0,1);
-	var minAngle = null;
-	var maxAngle = null;
-	var pointList = [];
-	for(var i=0; i<widthA; ++i){
-		var p = new V3D(i,0,1);
-		pointList.push(p);
-		var p = new V3D(i,heightA-1,1);
-		pointList.push(p);
-	}
-	for(var i=0; i<heightA; ++i){
-		var p = new V3D(0,i,1);
-		pointList.push(p);
-		var p = new V3D(widthA-1,i,1);
-		pointList.push(p);
-	}
-	for(var i=0; i<pointList.length; ++i){
-		var p = pointList[i];
-		var lineB = FFwd.multV3DtoV3D(new V3D(), p);
+
+	// pick starting point @ random & work outward
+	var j = 1;
+	//for(j=0; j<points2DA.length; ++j){
+		a = points2DA[j];
+		b = points2DB[j];
+		b = new V3D(b.x,b.y,1.0);
+		a = new V3D(a.x,a.y,1.0);
+		// A
+		var lineB = FFwd.multV3DtoV3D(new V3D(), a);
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-			var clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
-			// console.log(clippedB)
-		if(clippedB.length==0){
-			continue;
-		}
+		var angleB = ;
+			// closestB = Code.closestPointLine2D(org,dir, b);
+			distanceB = Code.distancePointRay2D(org,dir, b);
+			// clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+		var lineA = FRev.multV3DtoV3D(new V3D(), b);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+		var angleA = ;
+			// closestA = Code.closestPointLine2D(org,dir, a);
+			distanceA = Code.distancePointRay2D(org,dir, a);
+			// clippedA = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+		
 
-		var angle = V2D.angleDirection(V2D.DIRX,dir);
-		// var angle = V2D.angleDirection(dir,V2D.DIRX);
-		if(minAngle===null){
-			minAngle = angle;
-			maxAngle = angle;
-		}
-		if(angle<minAngle){
-			minAngle = angle;
-		}
-		if(angle>maxAngle){
-			maxAngle = angle;
-		}
-	}
-	console.log(minAngle,maxAngle);
-	var anglesB = infoB["angles"];
-	var radiusA = infoB["radius"];
-	var minRow = null;
-	var maxRow = null;
-	console.log(anglesB)
-	for(var i=0; i<anglesB.length; ++i){
-		var ang = anglesB[i];
-		// console.log(ang);
-		if(minAngle<=ang && ang<=maxAngle){
-			if(minRow==null){
-				minRow = i;
-			}
-		}else{
-			if(minRow!==null && maxRow==null){
-				maxRow = i-1;
-			}
-		}
-	}
+		var color = 0xFFFF0000;
+
+
+/*
+	// NOT WORKING
+	// active area a -> b
+	var rowSets = R3D.polarRectificationRowSets(infoB, FFwd, imageA,imageB);
+	var minRow = rowSets[0];
+	var maxRow = rowSets[1];
 	console.log(minRow,maxRow);
-
-
 	var d = new DO();
 	d.graphics().setLine(2.0,0xFFFF00FF);
 	d.graphics().drawRect(0,0,rectifiedB.width(), maxRow-minRow);
@@ -2036,6 +2033,18 @@ console.log(haystackB);
 	d.matrix().translate(1100 + rectifiedA.width() + 10, 10 + minRow);
 	GLOBALSTAGE.addChild(d);
 
+	// active area b -> a
+	var rowSets = R3D.polarRectificationRowSets(infoA, FRev, imageB,imageA);
+	var minRow = rowSets[0];
+	var maxRow = rowSets[1];
+	console.log(minRow,maxRow);
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFFFF00FF);
+	d.graphics().drawRect(0,0,rectifiedA.width(), maxRow-minRow);
+	d.graphics().strokeLine();
+	d.matrix().translate(1100 + 0, 10 + minRow);
+	GLOBALSTAGE.addChild(d);
+*/
 	/*
 	get match scores along line
 		- dynamic programming along line

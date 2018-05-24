@@ -1385,6 +1385,118 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 	}
 	return {max:max, min:min, angles:angles, increasing:(angles[0]<angles[1])};
 }
+R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination){
+	var epipoles = R3D.getEpipolesFromF(FFwd);
+	var epipoleA = epipoles["A"];
+	var visibleAngle = rectification["rotation"];
+	var opposite = visibleAngle != 0;
+	// console.log(source)
+	var imageWidth = source.width();
+	var imageHeight = source.height();
+	// get perimeter points
+	var pointList = [];
+	for(var i=0; i<imageWidth; ++i){
+		var p = new V3D(i,0,1);
+		pointList.push(p);
+		var p = new V3D(i,imageHeight-1,1);
+		pointList.push(p);
+	}
+	for(var i=0; i<imageHeight; ++i){
+		var p = new V3D(0,i,1);
+		pointList.push(p);
+		var p = new V3D(imageWidth-1,i,1);
+		pointList.push(p);
+	}
+	// find angle limits
+	// var minAngle = null;
+	// var maxAngle = null;
+	var org = new V2D();
+	var dir = new V2D();
+	var startAngle = null;
+	var endAngle = null;
+
+	// var centerAngle = null;
+//need to have some kind of continuous angle binning, not just a max / min
+	var destCenter = new V2D(destination.width()*0.5,destination.height()*0.5);
+	var d = V2D.sub(destCenter,epipoleA);
+		d.norm();
+	for(var i=0; i<pointList.length; ++i){
+		var p = pointList[i];
+		var lineB = FFwd.multV3DtoV3D(new V3D(), p);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+		var clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
+		if(clippedB.length==0){ // not inside
+			continue;
+		}
+		// origin = epipole
+		if(V2D.dot(dir,d)>0){ // ?
+			dir.scale(-1);
+		}
+		var angle = V2D.angleDirection(V2D.DIRX,dir);
+		angle = Code.angleZeroTwoPi(angle);
+		if(startAngle===null){
+			startAngle = angle;
+			endAngle = startAngle;
+		}
+		//var minAngle = Code.minAngle(angle,centerAngle);
+		var inside = Code.isAngleInside(startAngle, endAngle, angle);
+		// console.log(i+"  ["+startAngle+","+endAngle+"]  vs : "+angle+" == "+inside);//+minAngleS+" | "+minAngleE+" | "+inside);
+		if(!inside){
+			// console.log("NOT INSIDE: ",startAngle,angle,endAngle);
+			var minAngleS = Code.minAngle(startAngle,angle);
+			var minAngleE = Code.minAngle(endAngle,angle);
+			//if(minAngleS==minAngleE){
+			if(startAngle==endAngle){
+				if(minAngleS<=0){
+					// console.log("SET A");
+					startAngle = angle;
+				}else{
+					// console.log("SET B");
+					endAngle = angle;
+				}
+			}else if(Math.abs(minAngleS)<Math.abs(minAngleE)){
+				startAngle = angle;
+			}else{
+				endAngle = angle;
+			}
+		}
+	}
+	// get rows;
+	console.log(startAngle,endAngle);
+	var anglesB = rectification["angles"];
+	//var radiusA = rectification["radius"];
+	var minRow = null;
+	var maxRow = null;
+	console.log(anglesB);
+	for(var i=0; i<anglesB.length; ++i){
+		var index = i;
+		// if(opposite){
+		// 	index = anglesB.length-1-i
+		// }
+		var angle = anglesB[index];
+		angle = Code.angleZeroTwoPi(angle);
+		var inside = Code.isAngleInside(startAngle, endAngle, angle);
+		// console.log(" INSIDE: ["+startAngle+","+endAngle+"] ? "+angle+".  "+inside);
+		// console.log("    INSIDE: "+index+" ? "+inside+"    ["+startAngle+","+endAngle+"] ? "+angle );
+		if(inside){
+			if(minRow==null){
+				minRow = index;
+				maxRow = index;
+			}else{
+				minRow = Math.min(minRow, index);
+				maxRow = Math.max(maxRow, index);
+			}
+		}else{
+			//console.log("NOT INSIDE: "+startAngle+","+endAngle+" : "+angle);
+		}
+	}
+	/*
+- rotation always goes CW from anglesB[0] to anglesB[anglesB.length-1]
+	*/
+
+	// TODO: can this ever be multiple disconnected row sets ?
+	return [minRow,maxRow];
+}
 R3D.polarRectification = function(source,epipole){
 	var region = R3D._polarRectificationRegionFromEpipole(source,epipole);
 	return R3D._rectifyRegionAll(source,epipole, region);
@@ -1438,7 +1550,10 @@ R3D.polarRectificationRelativeRotation = function(sourceA,epipoleA, sourceB,epip
 	return result;
 }
 R3D.polarRectificationAbsoluteRotation = function(source,epipole){ // TODO: TEST
-	var region = R3D._polarRectificationRegionFromEpipole(source,epipole);
+	var region = source;
+	if(epipole){
+		region = R3D._polarRectificationRegionFromEpipole(source,epipole);
+	}
 	if(region==0){
 		return 0;
 	}else if(region==1){
@@ -1459,25 +1574,25 @@ R3D.polarRectificationAbsoluteRotation = function(source,epipole){ // TODO: TEST
 		return 180;
 	}
 }
-R3D._polarRectificationRelativeRotationMinMax = function(regionMin,regionMax){ // not entirely sure about these
-	if(regionMin==0 && (regionMax==5 || regionMax==7 || regionMax==8)){
-		return 180;
-	}
-	if(regionMin==1 && (regionMax==6 || regionMax==7 || regionMax==8)){
-		return 180;
-	}
-	if(regionMin==2 && (regionMax==3 || regionMax==6 || regionMax==7)){
-		return 180;
-	}
-	if(regionMin==3 && (regionMax==2 || regionMax==5 || regionMax==8)){
-		return 180;
-	}
-	if(regionMin==5 && (regionMax==0 || regionMax==3 || regionMax==6)){
-		return 180;
-	}
-	//console.log(regionMin,regionMax);
-	return 0;
-}
+// R3D._polarRectificationRelativeRotationMinMax = function(regionMin,regionMax){ // not entirely sure about these
+// 	if(regionMin==0 && (regionMax==5 || regionMax==7 || regionMax==8)){
+// 		return 180;
+// 	}
+// 	if(regionMin==1 && (regionMax==6 || regionMax==7 || regionMax==8)){
+// 		return 180;
+// 	}
+// 	if(regionMin==2 && (regionMax==3 || regionMax==6 || regionMax==7)){
+// 		return 180;
+// 	}
+// 	if(regionMin==3 && (regionMax==2 || regionMax==5 || regionMax==8)){
+// 		return 180;
+// 	}
+// 	if(regionMin==5 && (regionMax==0 || regionMax==3 || regionMax==6)){
+// 		return 180;
+// 	}
+// 	//console.log(regionMin,regionMax);
+// 	return 0;
+// }
 R3D._rectifyRegionAll = function(source,epipole, region){ // convention is always CW & seamless border-interface
 	var image, width, height;
 	if( source && Code.isa(source,ImageMat) ){ // is already imagemat
@@ -1673,7 +1788,11 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	rectifiedR = rectifiedR.slice(0,len);
 	rectifiedG = rectifiedG.slice(0,len);
 	rectifiedB = rectifiedB.slice(0,len);
-	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax, angleOffset:regionAngleOffset};
+
+
+	var rotatedAngle = R3D.polarRectificationAbsoluteRotation(region)
+
+	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax, angleOffset:regionAngleOffset, "rotation":rotatedAngle};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSquares

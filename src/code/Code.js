@@ -2231,6 +2231,21 @@ Code.angleTwoPi = function(ang){ // [-inf,inf] => [-2pi,2pi]
 	}
 	return ang;
 }
+Code.angleDifference = function(a,b){ // radians between a->b
+	if(a<=b){
+		return b-a;
+	}
+	return b + Math.PI*2 - a;
+}
+Code.isAngleInside = function(start,end, a){ // all angles in [0,2pi]
+	var diffE = Code.angleDifference(start,end);
+	var diffA = Code.angleDifference(start,a);
+	if(diffA<=diffE){
+		return true;
+	}
+	return false;
+}
+
 // color functions ----------------------------------------------------
 Code.color255 = function(c){
 	return Math.min( Math.max( Math.round(c), 0), 255);

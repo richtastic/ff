@@ -186,7 +186,11 @@ APP TODO:
 
 - are relative match scores good at determining better / worse ?
 
+- fix uniqueness problem: stop repeated cells from showing up
+
 - need to drop / replace duplicate matches [pick better one]
+
+
 
 
 
