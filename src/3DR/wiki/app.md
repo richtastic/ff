@@ -181,7 +181,19 @@ project typical numbers:
 APP TODO:
 
 
+
+
 --- try matching on a rectified image pair
+- match up lines in A to B
+	- each image has an empty array for each row
+	- rows are added to for every row that is mapped to it
+	- rows with values are averaged
+	- rows with no values are interpolated between (ends get some sort of gradient offset per pixel)
+- break up images into cells, ~20x20
+- for each cell in left, +- disparity, fing best disparity in opposite image line
+- create disparity image from cell assignments
+
+- calcualte reversed-rectified image [use table mapping for reverse]
 
 
 - are relative match scores good at determining better / worse ?

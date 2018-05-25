@@ -1746,23 +1746,25 @@ R3D.BA.World.prototype.epipolarSearch = function(){
 
 var widthA = imageA.width();
 var heightA = imageA.height();
-	var p = new V3D(0,0,1);
-	var pointList = [];
-	for(var i=0; i<widthA; ++i){
-		var p = new V3D(i,0,1);
-		pointList.push(p);
-		var p = new V3D(i,heightA-1,1);
-		pointList.push(p);
-	}
-	for(var i=0; i<heightA; ++i){
-		var p = new V3D(0,i,1);
-		pointList.push(p);
-		var p = new V3D(widthA-1,i,1);
-		pointList.push(p);
-	}
-var perimeterPoints = pointList;
+// 	var p = new V3D(0,0,1);
+// 	var pointList = [];
+// 	for(var i=0; i<widthA; ++i){
+// 		var p = new V3D(i,0,1);
+// 		pointList.push(p);
+// 		var p = new V3D(i,heightA-1,1);
+// 		pointList.push(p);
+// 	}
+// 	for(var i=0; i<heightA; ++i){
+// 		var p = new V3D(0,i,1);
+// 		pointList.push(p);
+// 		var p = new V3D(widthA-1,i,1);
+// 		pointList.push(p);
+// 	}
+// var perimeterPoints = pointList;
 
-var testPoints2DA = perimeterPoints;
+
+
+// var testPoints2DA = perimeterPoints;
 /*
 var testPoints2DA = [];
 for(j=0; j<15; ++j){
@@ -1771,7 +1773,11 @@ testPoints2DA.push(new V2D(200,25 + j*25));
 // testPoints2DA.push(new V2D(25 + j*25, 150));
 }
 */
+// var checkJ = 5;
 	for(j=0; j<points2DA.length; ++j){
+		// if(j!==checkJ){
+		// 	continue;
+		// }
 		a = points2DA[j];
 		b = points2DB[j];
 	// for(j=0; j<testPoints2DA.length; ++j){
@@ -1901,8 +1907,8 @@ testPoints2DA.push(new V2D(200,25 + j*25));
 			var haystackA = R3D.Dense.extractRectFromPoints(imageA,pointA1,pointA2, haystackWidthA,haystackHeight, haystackScale, padding);
 			var haystackB = R3D.Dense.extractRectFromPoints(imageB,pointB1,pointB2, haystackWidthB,haystackHeight, haystackScale, padding);
 
-console.log(haystackA);
-console.log(haystackB);
+// console.log(haystackA);
+// console.log(haystackB);
 
 				var haystack = haystackA;
 				var sca = 1.0;
@@ -1947,42 +1953,51 @@ console.log(haystackB);
 	//var rectifiedB = R3D.polarRectification(imageB,epipoleB);
 
 
+var rowSets = R3D.polarRectificationRowSets(infoB, FFwd, imageA,imageB);
+	var minRowB = rowSets[0];
+	var maxRowB = rowSets[1];
+	// console.log(minRow,maxRow);
+var rowSets = R3D.polarRectificationRowSets(infoA, FRev, imageB,imageA);
+	var minRowA = rowSets[0];
+	var maxRowA = rowSets[1];
+	// console.log(minRow,maxRow);
+
 	//var rotation = R3D.polarRectificationRelativeRotation(imageA,epipoleA, imageB,epipoleB);
 	var rotationA = R3D.polarRectificationAbsoluteRotation(imageA,epipoleA);
 	var rotationB = R3D.polarRectificationAbsoluteRotation(imageB,epipoleB);
 
-	console.log(rotationA,rotationB);
+	// console.log(rotationA,rotationB);
 	//console.log(rotation);
-
-	// rotationA = 0;
-	// rotationB = 0;
 
 
 // how to tell where a line-pair first / last matches up?
 // go over entire perimeter ? record min and max epipole angles ?
 
+// console.log(rotationA,rotationB);
 
+var offsetRectA = 10 + ( rotationA==0 ? -minRowA : -(rectifiedA.height()-maxRowA) );
+var offsetRectB = 10 + ( rotationB==0 ? -minRowB : -(rectifiedB.height()-minRowB) );
 
 	var iii = rectifiedA;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 	var d = new DOImage(img);
-	// d.graphics().alpha(alp);
+	d.graphics().alpha(0.5);
 		d.matrix().translate(-rectifiedA.width()*0.5, -rectifiedA.height()*0.5);
 		d.matrix().rotate( Code.radians(rotationA) );
 		d.matrix().translate(rectifiedA.width()*0.5, rectifiedA.height()*0.5);
 	d.matrix().scale(sca);
-	d.matrix().translate(1100, 10);
+	d.matrix().translate(1100, offsetRectA);
 	GLOBALSTAGE.addChild(d);
 
 	var iii = rectifiedB;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 	var d = new DOImage(img);
-	// d.graphics().alpha(alp);
+	d.graphics().alpha(0.5);
 		d.matrix().translate(-rectifiedB.width()*0.5, -rectifiedB.height()*0.5);
 		d.matrix().rotate( Code.radians(rotationB) );
 		d.matrix().translate(rectifiedB.width()*0.5, rectifiedB.height()*0.5);
 	d.matrix().scale(sca);
-	d.matrix().translate(1100 + rectifiedA.width() + 10, 10);
+	d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB);
 	GLOBALSTAGE.addChild(d);
 	
 
@@ -1995,8 +2010,12 @@ console.log(haystackB);
 	*/
 
 	// pick starting point @ random & work outward
-	var j = 1;
-	//for(j=0; j<points2DA.length; ++j){
+	var centerA = new V2D(imageA.width()*0.5,imageA.height()*0.5);
+	var centerB = new V2D(imageB.width()*0.5,imageB.height()*0.5);
+	var dirEA = V2D.sub(centerA,epipoleA).norm();
+	var dirEB = V2D.sub(centerB,epipoleB).norm();
+	// var j = checkJ;
+	for(j=0; j<points2DA.length; ++j){
 		a = points2DA[j];
 		b = points2DB[j];
 		b = new V3D(b.x,b.y,1.0);
@@ -2004,47 +2023,91 @@ console.log(haystackB);
 		// A
 		var lineB = FFwd.multV3DtoV3D(new V3D(), a);
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-		var angleB = ;
+		if(V2D.dot(dir,dirEB)<0){ dir.scale(-1); }
+		var angleB = V2D.angle(V2D.DIRX, dir);
+		var rowB = R3D.rectificationRowFromAngle(infoB, angleB);
 			// closestB = Code.closestPointLine2D(org,dir, b);
-			distanceB = Code.distancePointRay2D(org,dir, b);
+			// distanceB = Code.distancePointRay2D(org,dir, b);
 			// clippedB = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
 		var lineA = FRev.multV3DtoV3D(new V3D(), b);
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-		var angleA = ;
+		if(V2D.dot(dir,dirEA)<0){ dir.scale(-1); }
+// dir.scale(-1);
+		var angleA = V2D.angleDirection(V2D.DIRX, dir);
+		var rowA = R3D.rectificationRowFromAngle(infoA, angleA);
 			// closestA = Code.closestPointLine2D(org,dir, a);
-			distanceA = Code.distancePointRay2D(org,dir, a);
+			// distanceA = Code.distancePointRay2D(org,dir, a);
 			// clippedA = Code.clipLine2DToRect(org,dir, 0,0,imageWidth,imageHeight);
-		
+	// console.log(angleA,angleB);
+	// console.log(rowA,rowB);
 
-		var color = 0xFFFF0000;
+		if(rowA>=0 && rowB>=0){
+			var color = Code.getColARGBFromFloat(1.0,Math.random()*0.5 + 0.2,Math.random()*0.5 + 0.2,Math.random()*0.5 + 0.2);
+			// var color = Code.getColARGBFromFloat(1.0,Math.random()*0.5 + 0.5,Math.random()*0.5 + 0.0,Math.random()*0.5 + 0.0);
+			var d = new DO();
+//console.log(rotationA,rotationB);
+			var dispA = rotationA==0 ? rowA : rectifiedA.height() - rowA;
+			var dispB = rotationB==0 ? rowB : rectifiedB.height() - rowB;
+
+			//dispA = rowA;
+			// dispA = rectifiedA.height() - rowA;
+			// dispB = rowB;
+			// A
+			d.graphics().setLine(1.0,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(1100 + 0, offsetRectA + dispA);
+			d.graphics().lineTo(1100 + rectifiedA.width(), offsetRectA + dispA);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			// B
+			d.graphics().setLine(1.0,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(1100 + rectifiedA.width() + 10, offsetRectB + dispB);
+			d.graphics().lineTo(1100 + rectifiedA.width() + 10 + rectifiedB.width(), offsetRectB + dispB);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			//
+			GLOBALSTAGE.addChild(d);
+		}
+	}
 
 
-/*
-	// NOT WORKING
+		//
+
+
+
 	// active area a -> b
-	var rowSets = R3D.polarRectificationRowSets(infoB, FFwd, imageA,imageB);
-	var minRow = rowSets[0];
-	var maxRow = rowSets[1];
-	console.log(minRow,maxRow);
+	
 	var d = new DO();
 	d.graphics().setLine(2.0,0xFFFF00FF);
-	d.graphics().drawRect(0,0,rectifiedB.width(), maxRow-minRow);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0,rectifiedB.width(), maxRowB-minRowB);
 	d.graphics().strokeLine();
-	d.matrix().translate(1100 + rectifiedA.width() + 10, 10 + minRow);
+	d.graphics().endPath();
+	if(rotationB==0){
+		d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB + minRowB);
+	}else{
+		d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB + rectifiedA.height() - maxRowB);
+	}
+	
 	GLOBALSTAGE.addChild(d);
 
 	// active area b -> a
-	var rowSets = R3D.polarRectificationRowSets(infoA, FRev, imageB,imageA);
-	var minRow = rowSets[0];
-	var maxRow = rowSets[1];
-	console.log(minRow,maxRow);
+	
 	var d = new DO();
 	d.graphics().setLine(2.0,0xFFFF00FF);
-	d.graphics().drawRect(0,0,rectifiedA.width(), maxRow-minRow);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0,rectifiedA.width(), maxRowA-minRowA);
 	d.graphics().strokeLine();
-	d.matrix().translate(1100 + 0, 10 + minRow);
+	d.graphics().endPath();
+	// d.matrix().translate(1100 + 0, 10 + minRow);
+	if(rotationA==0){
+		d.matrix().translate(1100 + 0, offsetRectA + minRowA);
+	}else{ // flip dir
+		d.matrix().translate(1100 + 0, offsetRectA + rectifiedA.height() - maxRowA);
+	}
 	GLOBALSTAGE.addChild(d);
-*/
+
 	/*
 	get match scores along line
 		- dynamic programming along line

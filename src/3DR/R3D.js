@@ -1462,12 +1462,12 @@ R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination
 		}
 	}
 	// get rows;
-	console.log(startAngle,endAngle);
+//	console.log(startAngle,endAngle);
 	var anglesB = rectification["angles"];
 	//var radiusA = rectification["radius"];
 	var minRow = null;
 	var maxRow = null;
-	console.log(anglesB);
+//	console.log(anglesB);
 	for(var i=0; i<anglesB.length; ++i){
 		var index = i;
 		// if(opposite){
@@ -1701,6 +1701,8 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	edge.copy(corners.shift());
 	V2D.sub(dir, corners[0],edge);
 	dir.norm();
+var lookupTable = [];
+// var prevTheta = null;
 	for(j=0;j<thetaCount;++j){ // for each border pixel
 		//console.log(edge+"");
 		V2D.sub(ray, edge,epipole);
@@ -1733,6 +1735,12 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		//angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
 		//var direction = V2D.angleDirection(V2D.DIRX, ray);
 		var direction = V2D.angleDirection(V2D.DIRX, ray);
+
+// if( Code.angleDifference(prevTheta,direction)<0 ){
+// 	console.log(direction,prevTheta);
+// 	throw "thetas";
+// }
+// prevTheta = direction;
 		//direction += regionAngleOffset;
 		// console.log("ray: "+ray);
 		// console.log(Code.degrees(direction));
@@ -1750,7 +1758,13 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			if(isInside && radiusEnd===null){
 				radiusEnd = relativeRadius;
 			}
+
+			// INDEX = point.y * width + point.x; ... rounded
+			// lookupTable[INDEX] += 
+			// radiusCount*j + relativeRadius
+			//  -- this may be accessed multiple times ..
 			// console.log(point+" @ "+i+" "+epipole+" | "+ray);
+
 			image.getPointInterpolateLinear(color,point.x,point.y);
 			// image.getPointInterpolateCubic(color,point.x,point.y);
 			rectifiedR[index] = color.x;
@@ -1783,6 +1797,7 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	}
 	radiusTable.pop(); // ?
 	angleTable.pop(); // one extra ...
+	// console.log("OFF BY: "+j+" / "+thetaCount);
 	thetaCount = j; // actual resulting length
 	len = thetaCount*radiusCount;
 	rectifiedR = rectifiedR.slice(0,len);
@@ -1790,9 +1805,60 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	rectifiedB = rectifiedB.slice(0,len);
 
 
-	var rotatedAngle = R3D.polarRectificationAbsoluteRotation(region)
+	var rotatedAngle = R3D.polarRectificationAbsoluteRotation(region);
+
+	// angleTable = R3D.monotonicAngleArray(angleTable);
+
+	// TODO: want a reverse-lookup array
 
 	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax, angleOffset:regionAngleOffset, "rotation":rotatedAngle};
+}
+// ------------------------------------------------------------------------------------------- 
+// R3D.monotonicAngleArray
+R3D.rectificationRowFromAngle = function(rectification, angleIn){ // TODO: this is broken around discontinuties
+	var angles = rectification["angles"];
+	// angles = R3D.monotonicAngleArray(angles);
+
+	angleIn = Code.angleZeroTwoPi(angleIn);
+	angles = Code.copyArray(angles);
+	for(var i=0; i<angles.length; ++i){
+		angles[i] = Code.angleZeroTwoPi(angles[i]);
+	}
+
+	// var min = angles[0];
+	// var max = angles[angles.length-1];
+	// if(max<min){
+	// 	var t = min;
+	// 	min = max;
+	// 	max = t;
+	// }
+	// angleIn = R3D.angleInLimits(angleIn,min,max);
+	var lm1 = angles.length - 1;
+	// console.log(angles);
+	for(var i=0; i<angles.length; ++i){ // is always negative direction
+		var angle = angles[i];
+		//console.log(i+": "+angle+" ? "+angleIn);
+		if(angle==angleIn){
+			return i;
+		}
+		if(i>0){
+			var prev = angles[i-1];
+			//if(prev<angleIn && angleIn<angle || prev>angleIn && angleIn>angle){
+			if(prev<angleIn && angleIn<angle){
+				// console.log(prev,angleIn,angle,i);
+				return i;
+			}
+		}
+		// if(i==lm1){ // last one
+		// 	var next = angles[i+1];
+		// 	// if(next<angleIn && angleIn<angle){
+		// 	if(next>angleIn && angleIn>angle){
+		// 		console.log(next,angleIn,angle)
+		// 		return i;
+		// 	}
+		// }
+	}
+	return -1;
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSquares
