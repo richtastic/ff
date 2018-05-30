@@ -2009,6 +2009,8 @@ var offsetRectB = 10 + ( rotationB==0 ? -minRowB : -(rectifiedB.height()-minRowB
 	iterate thru angle table until starts / ends
 	*/
 
+	var rowPairs = [];
+
 	// pick starting point @ random & work outward
 	var centerA = new V2D(imageA.width()*0.5,imageA.height()*0.5);
 	var centerB = new V2D(imageB.width()*0.5,imageB.height()*0.5);
@@ -2042,6 +2044,7 @@ var offsetRectB = 10 + ( rotationB==0 ? -minRowB : -(rectifiedB.height()-minRowB
 	// console.log(rowA,rowB);
 
 		if(rowA>=0 && rowB>=0){
+			rowPairs.push([rowA,rowB]);
 			var color = Code.getColARGBFromFloat(1.0,Math.random()*0.5 + 0.2,Math.random()*0.5 + 0.2,Math.random()*0.5 + 0.2);
 			// var color = Code.getColARGBFromFloat(1.0,Math.random()*0.5 + 0.5,Math.random()*0.5 + 0.0,Math.random()*0.5 + 0.0);
 			var d = new DO();
@@ -2070,11 +2073,62 @@ var offsetRectB = 10 + ( rotationB==0 ? -minRowB : -(rectifiedB.height()-minRowB
 			GLOBALSTAGE.addChild(d);
 		}
 	}
+	//
+	//
+	//
+	var mapping = R3D.rectificationRowAssignment(infoA,infoB,rowPairs);
+	//var mapping = R3D.rectificationRowAssignment(rectifiedA,rectifiedB,rowPairs);
 
 
-		//
+// TODO: REVERSE MAPPING -- ROTATE IMAGE 
+// TODO: ROTATED
 
+var stereoA = rectifiedA;
+var stereoB = rectifiedB;
+console.log("ANGLES: "+rotationA+" | "+rotationA);
+if(rotationA != rotationB){ // one image is flipped, but not other
+	var mapA = mapping["A"];
+	var mapB = mapping["B"];
+	mapping["A"] = Code.reverseArray(mapA);
+	mapping["B"] = Code.reverseArray(mapB);
+	if(rotationA!=0){
+		console.log("ROTATE A");
+		stereoA = rectifiedA.rotate180();
+	}
+	if(rotationB!=0){
+		console.log("ROTATE B");
+		stereoB = rectifiedB.rotate180();
+	}
 
+}
+
+// stereoA = rectifiedA;
+// stereoA = rectifiedA.rotate90();
+// stereoA = rectifiedA.rotate180();
+// stereoA = rectifiedA.rotate270();
+
+// console.log(stereoA);
+// console.log(stereoB);
+var stereo = R3D.stereoMatch(stereoA,stereoB,mapping);
+console.log(stereo);
+var values = R3D.stereoMatchToDisparity(stereo["disparity"], stereo["width"], stereo["height"]);
+console.log(values);
+values = values["disparity"];
+	//...SHOW ?
+
+ImageMat.normalFloat01(values);
+console.log(values)
+var img = GLOBALSTAGE.getFloatRGBAsImage(values,values,values, stereo["width"], stereo["height"]);
+var d = new DOImage(img);
+d.matrix().scale(10.0);
+d.matrix().translate(810,10);
+GLOBALSTAGE.addChild(d);
+
+// var iii = stereoA;
+// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+// var d = new DOImage(img);
+// d.matrix().translate(100,100);
+// GLOBALSTAGE.addChild(d);
 
 	// active area a -> b
 	
@@ -2125,9 +2179,11 @@ R3D.BA.World.prototype.solve = function(completeFxn, completeContext){
 GLOBALSTAGE.root().matrix().translate(0,50);
 // GLOBALSTAGE.root().matrix().translate(10,10);
 
-	console.log("hijack to do epipolar line test");
-	this.epipolarSearch();
-return;
+	// console.log("hijack to do epipolar line test");
+	// this.epipolarSearch();
+
+	// throw "?"
+	// return;
 
 /*
 // DISPLAY SOURCE IMAGES:
@@ -2167,11 +2223,11 @@ for(var i=0; i<views.length; ++i){
 	//var maxIterations = 3;
 	//var maxIterations = 4;
 	//var maxIterations = 5;
-	//var maxIterations = 10;
+	var maxIterations = 10;
 	//var maxIterations = 25; // positions better
 	//var maxIterations = 50; // R => ~
 	//var maxIterations = 100; // R errors SHOULD BE MAX 5 pixels
-	var maxIterations = 200;
+	//var maxIterations = 200;
 	//var maxIterations = 500; // R errors SHOULD BE 1~2
 	//var maxIterations = 800;
 	// for(var i=0; i<maxIterations; ++i){
@@ -4865,19 +4921,10 @@ sizeCompare = 21;
 			// var seedAngles = null;
 			// var seedScales = null;
 // what if DNE
-
-// BAD:  12 : 0.0268
-// GOOD: 10 : 
-		var show = R3D.BA.World.SHOW == 1999;
-		/*
-		good:
-			0,1,6,7,20s,
-		nonunique:
-			3,4,5,8
-		bad:
-			2,10,11,14,18
-		*/
+	
+		var show = R3D.BA.World.SHOW == 10;
 		++R3D.BA.World.SHOW;
+
 
 		var searchWindow = 3 * sizeCompare; // 3-5
 		var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare, seedScales,seedAngles, searchWindow, show);
@@ -4899,7 +4946,10 @@ sizeCompare = 21;
 			var pointA2 = pA;
 			var pointB1 = oppositeA.point();
 			var pointB2 = info["to"];
+			// PATH SCORE
 			var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, null, scaAB, show);
+console.log(data);
+// throw "check"
 			var score = data["score"];
 			var relative = score/optimumScore;
 			console.log("       SCORE: "+score+" = "+relative);
@@ -4921,6 +4971,7 @@ sizeCompare = 21;
 			continue;
 		}
 		if(relative <= 1.5){
+			info["score"] = relative; // ...
 			bestMatches.push(info);
 		}
 	}

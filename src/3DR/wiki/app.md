@@ -180,27 +180,124 @@ project typical numbers:
 
 APP TODO:
 
-
-
-
---- try matching on a rectified image pair
-- match up lines in A to B
-	- each image has an empty array for each row
-	- rows are added to for every row that is mapped to it
-	- rows with values are averaged
-	- rows with no values are interpolated between (ends get some sort of gradient offset per pixel)
-- break up images into cells, ~20x20
 - for each cell in left, +- disparity, fing best disparity in opposite image line
+	=> limit disparity check to +/- like 50 pixels / 2 cells
 - create disparity image from cell assignments
 
-- calcualte reversed-rectified image [use table mapping for reverse]
+- calculate reversed-rectified image [use table mapping for reverse]
+
 
 
 - are relative match scores good at determining better / worse ?
 
+
+
+
+
+
+- ordering constraints:
+	- topoligically similar
+	- half-plan ordering x
+	- radial ordering x
+	- angular ordering ?
+	
+
+
+INPUT:
+	- seed points
+		- angle
+		- scale
+for each seed point:
+	- get optimal affine transform
+		- rotation, scaleX, scaleY, skewX
+	- rank = neighborhood score / seed score
+	- add to match queue
+while queue is not empty:
+	- pop match from queue
+	- if cell A already has match || cell B already has match
+		- if matchA->B is better than both existing cell matches && new match is of different cells
+			- remove existing matches [may be the same]
+		- else
+			- match = null [not better]
+	- if match != null
+		- if match still satisfies constraints [ordering, ..?]
+			- add matchA->B to final match set
+			- for each neighbor of A and of B [4-or-8-neighbor]
+				- interpolate best location as search starting point
+				- vary affine transformation to find best local transform & location
+					- rotation, scaleX, scaleY, skewX
+				- get rank = path score / origin score
+				- if match satisfies constraings [ordering, min uniqueness, max score, ... ?]
+					- add match to queue
+
+
+
+affine:
+- rotate angle
+- skewX mag
+- scaleX mag
+- scaleY mag
+
+
+
+
+
 - fix uniqueness problem: stop repeated cells from showing up
 
 - need to drop / replace duplicate matches [pick better one]
+
+
+
+- if a collision (same-cell-match, invalid ordering, ??)
+	-> how to resolve?:
+
+
+
+
+
+RE-ASSESS INDIvIDUAL POINTS OF ALGORITHM:
+
+- affine transform representation [3 points]
+
+IMAGE PREP:
+- contrast stretching
+- adaptive histogram equalisation 
+- sharpening
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

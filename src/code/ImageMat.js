@@ -542,6 +542,69 @@ ImageMat.colorArrayFxnARGB_ARGB = function(data, fxnA, fxnR, fxnG, fxnB){
 ImageMat.rotateImage = function(){
 	// ?
 }
+ImageMat.prototype.rotate90 = function(){
+	var wid = this.width();
+	var hei = this.height();
+	var rS = this._r;
+	var gS = this._g;
+	var bS = this._b;
+	var image = new ImageMat(hei,wid);
+	var rD = image._r;
+	var gD = image._g;
+	var bD = image._b;
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			var indexS = j*wid + i;
+			var indexD = (wid-i-1)*hei + j;
+			rD[indexD] = rS[indexS];
+			gD[indexD] = gS[indexS];
+			bD[indexD] = bS[indexS];
+		}
+	}
+	return image;
+}
+ImageMat.prototype.rotate180 = function(){
+	var wid = this.width();
+	var hei = this.height();
+	var rS = this._r;
+	var gS = this._g;
+	var bS = this._b;
+	var image = new ImageMat(wid,hei);
+	var rD = image._r;
+	var gD = image._g;
+	var bD = image._b;
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			var indexS = j*wid + i;
+			var indexD = (hei-j-1)*wid + (wid-i-1);
+			rD[indexD] = rS[indexS];
+			gD[indexD] = gS[indexS];
+			bD[indexD] = bS[indexS];
+		}
+	}
+	return image;
+}
+ImageMat.prototype.rotate270 = function(){
+	var wid = this.width();
+	var hei = this.height();
+	var rS = this._r;
+	var gS = this._g;
+	var bS = this._b;
+	var image = new ImageMat(hei,wid);
+	var rD = image._r;
+	var gD = image._g;
+	var bD = image._b;
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			var indexS = j*wid + i;
+			var indexD = i*hei + (hei-j-1);
+			rD[indexD] = rS[indexS];
+			gD[indexD] = gS[indexS];
+			bD[indexD] = bS[indexS];
+		}
+	}
+	return image;
+}
 // ------------------------------------------------------------------------------------------------------------------------ image operations
 ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc, does){
 	bas = bas!==undefined?bas:2;

@@ -1860,6 +1860,250 @@ R3D.rectificationRowFromAngle = function(rectification, angleIn){ // TODO: this 
 	}
 	return -1;
 }
+R3D.rectificationRowAssignment = function(rectificationA, rectificationB, rowPairs){
+	var anglesA = rectificationA["angles"];
+	var anglesB = rectificationB["angles"];
+	var rowsA = Code.newArrayNulls(anglesA.length);
+	var rowsB = Code.newArrayNulls(anglesB.length);
+	for(var i=0; i<rowPairs.length; ++i){
+		var pair = rowPairs[i];
+		var rowA = pair[0];
+		var rowB = pair[1];
+		if(!rowsA[rowA]){
+			rowsA[rowA] = [];
+		}
+		if(!rowsB[rowB]){
+			rowsB[rowB] = [];
+		}
+		rowsA[rowA].push(rowB);
+		rowsB[rowB].push(rowA);
+	}
+	// average duplicated rows
+	for(var i=0; i<rowsA.length; ++i){
+		var rowA = rowsA[i];
+		if(rowA){
+			rowsA[i] = Code.averageNumbers(rowA);
+		}
+	}
+	for(var i=0; i<rowsB.length; ++i){
+		var rowB = rowsB[i];
+		if(rowB){
+			rowsB[i] = Code.averageNumbers(rowB);
+		}
+	}
+	R3D.interpolate1DFillArray(rowsA);
+	R3D.interpolate1DFillArray(rowsB);
+	console.log(rowsA);
+	console.log(rowsB);
+	return {"A":rowsA, "B":rowsB};
+}
+R3D.interpolate1DFillArray = function(array){
+	var firstElementIndex = null;
+	var lastElementIndex = null;
+	var startElementIndex = null;
+	var endElementIndex = null;
+	for(var i=0; i<array.length; ++i){
+		var value = array[i];
+		if(value!==null){
+			if(firstElementIndex==null){
+				firstElementIndex = i;
+				startElementIndex = i;
+			}else{
+				lastElementIndex = i;
+				endElementIndex = i;
+				// console.log("interpolate: "+startElementIndex+" => "+endElementIndex);
+				var valueA = array[startElementIndex];
+				var valueB = array[endElementIndex];
+				var count = endElementIndex-startElementIndex;
+				for(var j=1; j<count; ++j){
+					var p = (j/count);
+					var value = valueA*(1.0-p) + valueB*p;
+					array[startElementIndex+j] = value;
+				}
+				startElementIndex = endElementIndex;
+				endElementIndex = null;
+			}
+		}
+	}
+	// interpolate ends
+	// console.log(firstElementIndex,lastElementIndex);
+	if(firstElementIndex!==null && lastElementIndex!==null){
+		var v, a, b;
+		if(firstElementIndex>1){
+			a = array[firstElementIndex+1];
+			b = array[firstElementIndex];
+			v = b-a;
+			// console.log(a,b,v);
+			for(var i=0; i<firstElementIndex; ++i){
+				// console.log(i+"/"+firstElementIndex);
+				array[i] = (firstElementIndex-i)*v + a;
+			}
+		}
+		if(lastElementIndex<array.length-1){
+			a = array[lastElementIndex-1];
+			b = array[lastElementIndex];
+			v = b-a;
+			// console.log(a,b,v);
+			for(var i=lastElementIndex+1; i<array.length; ++i){
+				array[i] = (i-lastElementIndex)*v + b;
+			}
+		}
+	}
+	return array;
+}
+R3D.stereoMatch = function(imageA, imageB, rowMapping){ // rectificationA, rectificationB
+	var sizeAWidth = imageA.width();
+	var sizeAHeight = imageA.height();
+	var sizeBWidth = imageB.width();
+	var sizeBHeight = imageB.height();
+	var mappingA = rowMapping["A"];
+	var mappingB = rowMapping["B"];
+	var cellSize = 11;
+	var compareSize = 11;
+	var disparityCheck = 50;
+	var cellCountAX = Math.ceil(sizeAWidth/cellSize);
+	var cellCountAY = Math.ceil(sizeAHeight/cellSize);
+	var dispartyA = [];
+		var compareScale = compareSize/cellSize;
+		//compareScale *= 2.0; // zoom out a bit
+	console.log(compareScale);
+	var haystackWidth = Math.round(sizeBWidth*compareScale);
+	for(var j=0; j<cellCountAY; ++j){
+		// console.log(j+"/"+cellCountAY);
+		// extract B row
+		var rowA = Math.round(cellSize*(j+0.5));
+		// if(rowA>mappingA.length){
+		// 	break;
+		// }
+		var rowB = mappingA[rowA];
+		// console.log(rowA,rowB);
+		if(rowB>sizeBHeight-1 || rowB<0){
+			break; // subsequent rows should also be past ends
+		}
+		var centerB = new V2D(sizeBWidth*0.5,rowB);
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DScale(matrix,compareScale,compareScale);
+		var haystack = imageB.extractRectFromFloatImage(centerB.x,centerB.y,1.0,null, haystackWidth,compareSize, matrix);
+
+var iii = haystack;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().translate(10,10);
+d.matrix().translate(0,j*compareSize);
+GLOBALSTAGE.addChild(d);
+		
+		for(var i=0; i<cellCountAX; ++i){
+			// extract A cell
+			// slide in disparity range
+			var centerA = new V2D(cellSize*(i+0.5),cellSize*(j+0.5));
+			var matrix = new Matrix(3,3).identity();
+				matrix = Matrix.transform2DScale(matrix,compareScale,compareScale);
+			var needle = imageA.extractRectFromFloatImage(centerA.x,centerA.y,1.0,null, compareSize,compareSize, matrix);
+			
+			var scores = R3D.stereoNeedleHaystack(needle, haystack);
+				//console.log(scores);
+				var offset = scores["offset"];
+				// console.log(offset+"");
+				// offset.x -= i*cellSize;
+				// offset.x -= (i+0.5)*cellSize;
+
+				dispartyA[j*cellCountAX+i] = offset;
+			
+var iii = needle;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().translate(400,10);
+d.matrix().translate(i*compareSize,j*compareSize);
+GLOBALSTAGE.addChild(d);
+			// ...
+		}
+		// break;
+	}
+	cellCountAY = j-1; // if exit prior
+	/*
+		- 
+		- break up images into cells, ~20x20
+		- for each cell in left, +- disparity, fing best disparity in opposite image line
+		- create disparity image from cell assignments
+
+	*/
+
+	return {"disparity":dispartyA, "width":cellCountAX, "height":cellCountAY};
+}
+R3D.stereoMatchToDisparity = function(disparity, width, height){
+	var minX = null;
+	var minY = null;
+	for(var i=0; i<disparity.length; ++i){
+		var d = disparity[i];
+		// if(minX==null || )
+	}
+	var values = [];
+	for(var i=0; i<disparity.length; ++i){
+		var d = disparity[i];
+		values[i] = Math.abs(d.x);
+	}
+	return {"disparity":values};
+}
+R3D.stereoNeedleHaystack = function(needle, haystack, startNeedle, endNeedle){
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
+	var countI = haystackWidth-needleWidth+1;
+	var countJ = haystackHeight-needleHeight+1;
+	if(startNeedle && endNeedle){
+		// confine search to sub-area
+	}
+	var pixels = needleWidth*needleHeight;
+	var bestScore = null;
+	var bestOffset = new V2D();
+	var nR = needle.red();
+	var nG = needle.grn();
+	var nB = needle.blu();
+	var hR = haystack.red();
+	var hG = haystack.grn();
+	var hB = haystack.blu();
+	// var offset = new V2D();
+	for(var j=0; j<countJ; ++j){
+		for(var i=0; i<countI; ++i){
+			var score = 0;
+			for(var jj=0; jj<needleHeight; ++jj){
+				for(var ii=0; ii<needleWidth; ++ii){
+					var h = (j+jj)*haystackWidth + (i+ii);
+					var n = j*needleWidth + i;
+
+					
+					// SAD
+					var sadR = Math.abs(nR[n]-hR[h]);
+					var sadG = Math.abs(nG[n]-hG[h]);
+					var sadB = Math.abs(nB[n]-hB[h]);
+					score += sadR+sadG+sadB;
+					
+					// SSD
+					/*
+					var ssR = nR[n]*hR[h];
+					var ssG = nG[n]*hG[h];
+					var ssB = nB[n]*hB[h];
+					score += ssR+ssG+ssB;
+					*/
+					/*
+					var ssR = nR[n]*hR[h];
+					var ssG = nG[n]*hG[h];
+					var ssB = nB[n]*hB[h];
+					score += ssR*ssG*ssB;
+					*/
+				}
+			}
+			score = score/pixels/3.0;
+			//if(bestScore==null || score<bestScore){
+			if(bestScore==null || score>bestScore){
+				bestScore = score;
+				bestOffset.set(i,j);
+			}
+		}
+	}
+	return {"score":bestScore, "offset":bestOffset, "other":null};
+}
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSquares
 //return E;
