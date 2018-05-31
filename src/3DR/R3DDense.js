@@ -939,6 +939,17 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 	return result;
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){ // generates homography beforehand
+// 	//var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
+// 	var fromPoints = [new V2D(0,0), new V2D(wid,0), new V2D(wid,hei), new V2D(0,hei)];
+// 	var toPoints = [new V2D(aX,aY), new V2D(bX,bY), new V2D(cX,cY), new V2D(dX,dY)];
+// 	var projection = Matrix.get2DProjectiveMatrix(fromPoints,toPoints);
+// 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
+// }
+R3D.Dense.extractRectFromPoints2 = function(imageA,pointTL,pointTR,pointBR,pointBL, width,height,heightScale){
+	// HOMOGRAPHY EXTRACT
+	HERE
+}
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.extractRectFromPoints = function(imageA,pointA,pointB, width,height,heightScale,padding){
 	heightScale = heightScale!==undefined ? heightScale : 1.0;
@@ -959,7 +970,7 @@ R3D.Dense.extractRectFromPoints = function(imageA,pointA,pointB, width,height,he
 	return image;
 }
 
-R3D.Dense.comparePathTransforms = function(imageA,pointA1,pointA2, imageB,pointB1,pointB2, inputCompareSize, expectedScale, show){ // TODO: need a VERTICAL SCALE TOO
+R3D.Dense.comparePathTransforms = function(imageA,pointA1,pointA2, imageB,pointB1,pointB2, inputCompareSize, scaleAtoB, show){ // TODO: need a VERTICAL SCALE TOO
 	var compareSize = (inputCompareSize!==undefined && inputCompareSize!==null)? inputCompareSize : 21;
 	//var compareScale = (inputCompareScale!==undefined && inputCompareScale!==null)? inputCompareScale : 1.0;
 	var dirA = V2D.sub(pointA2,pointA1);
@@ -979,7 +990,8 @@ R3D.Dense.comparePathTransforms = function(imageA,pointA1,pointA2, imageB,pointB
 	var haystackHeight = 11;
 		haystackWidth = Math.max(haystackWidth,11);
 	var haystackScale = haystackHeight/compareSize;
-	var padding = 2; // haystackHeight
+	var padding = 0; // haystackHeight
+
 //console.log(haystackWidth,haystackHeight,haystackScale)
 // console.log("B: ",pointA1,pointA2, haystackWidth,haystackHeight, haystackScale, padding);
 	var haystackA = R3D.Dense.extractRectFromPoints(imageA,pointA1,pointA2, haystackWidth,haystackHeight, haystackScale, padding);
@@ -1015,7 +1027,7 @@ if(show){
 	var sum = ImageMat.sumFloat(ssd);
 	var count = ssd.length;
 	var scoreSSD = sum / count;
-	console.log(scoreSSD);
+	// console.log(scoreSSD);
 
 
 	var ssdImage = new ImageMat(haystackA.width(),haystackA.height(), ssd);
@@ -1032,13 +1044,15 @@ if(show){
 
 }
 	// var scores = R3D.searchNeedleHaystackImageFlat(haystackA, null, haystackB);
-	var scores = R3D.searchNeedleHaystackImageFlatTest2(haystackA, null, haystackB, true); // sending flag for different metric
-	var scoreSAD = scores["value"][0];
+	//var scores = R3D.searchNeedleHaystackImageFlatTest2(haystackA, null, haystackB, true); // sending flag for different metric
+	var scores = R3D.searchNeedleHaystackImageFlatTest2(haystackA, null, haystackB, true);
+	var score = scores["value"][0];
 //	console.log(scoreSAD);
 
-	var score = scoreSAD; // * (lengthRatio/expectedScale) ??;
+	//var score = scoreSAD; // * (lengthRatio/expectedScale) ??;
+	// var score = scoreSAD; // * (lengthRatio/expectedScale) ??;
 
-	return {"score":score};
+	return {"score":score};//, "pathScore":scoreSAD};
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.Dense.COUNTA = 0;
@@ -1046,10 +1060,10 @@ R3D.Dense.COUNTA = 0;
 R3D.Dense.SHOW = false;
 R3D.Dense.optimumTransform = function(imageA,pointA, imageB,pointB, inputCompareSize,scale,angle, scaleRangeExp,angleRangeDeg, neighborhoodSize,    show){
 	// constants
-	//var maximumBestScore = 0.02; // 0.01; // SAD SIFT
+	var maximumBestScore = 0.25; // 0.01; // SAD SIFT
 	//var maximumBestScore = 0.10; // SAD --- 0.25 ok, 0.01 too small
 	//var maximumBestScore = 0.05;
-	var maximumBestScore = 0.15; 
+	// var maximumBestScore = 0.15; 
 //maximumBestScore = 0.50; // LARGER needs more 
 //maximumBestScore = 0.25;
 	var compareSize = 11;//R3D.sadBinOctantEdgeSize();
@@ -1246,9 +1260,14 @@ bad scores:
 	var peaks = Code.findMinima2DFloat(bestValues[0],bestValues[1],bestValues[2], true);
 		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 	var uniqueness = 1.0;
+	var nextBest = 0;
+	var thisBest = 0;
 	if(peaks.length>1){
+		thisBest = peaks[0].z;
+		nextBest = peaks[1].z;
 		var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
-		uniqueness = 1.0 + Math.pow(uniqueness,0.1);
+		uniqeness = Math.pow(uniqueness,0.5);
+		//uniqueness = 1.0 + Math.pow(uniqueness,0.1);
 		// uniqueness = 1.0;
 	}
 
@@ -1282,10 +1301,8 @@ if(show){
 		ImageMat.clipFloat01(noiseNeedle.blu());
 
 	var scores = R3D.searchNeedleHaystackImageFlat(noiseNeedle, null, bestNeedle);
-	console.log("25% score: "+scores.value[0]);
-
-
-
+	// console.log("25% score: "+scores.value[0]);
+	// 
 	// var half = (haystackSize-compareSize)*0.5;
 	var half = compareSize*0.5;
 	var sca = 4.0;
@@ -1311,7 +1328,7 @@ if(show){
 
 
 	
-
+	/*
 		// console.log(peaks)
 	if(peaks.length>2){
 		var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
@@ -1327,7 +1344,7 @@ if(show){
 		console.log("  ratio C: "+(diff20/diff10));
 		console.log("  ratio X: "+((1/diff10) * (1/diff20) * (1/diff21)));
 	}
-		
+	*/
 	for(var p=0; p<peaks.length; ++p){
 		var peak = peaks[p];
 		var d = new DO();
@@ -1396,9 +1413,9 @@ console.log(pt+"")
 // }
 
 	// var score = bestScore;
-	var score = bestScore * (1.0+stability) * (uniqueness);
+	var score = bestScore ; // * (1.0+stability) * (uniqueness);
 	// console.log(score);
-	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":score, "zoomScale":neighborhoodScale, "keep":shouldKeep, "sad":bestScore};
+	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":score, "zoomScale":neighborhoodScale, "keep":shouldKeep, "sad":bestScore, "uniqueness":uniqueness, "thisBest":thisBest, "nextBest":nextBest};
 
 }
 

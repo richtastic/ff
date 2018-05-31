@@ -137,7 +137,7 @@ FeatureTest.prototype.showMSER = function(features, display, offsetX, offsetY, c
 				c.graphics().endPath();
 			}
 		}
-
+		
 		/*
 		var point = features[k];
 		if(!Code.isa(point,V4D)){

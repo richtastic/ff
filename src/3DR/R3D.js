@@ -18205,6 +18205,7 @@ sss = sadAvg;
 }
 
 R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, flag){
+// flag = false;
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
@@ -18353,25 +18354,26 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 					var hB = haystackB[hIndex];
 					// from median .... intensity differences
 					if(flag){
-						nR = nR - avgN.x;
-						nG = nG - avgN.y;
-						nB = nB - avgN.z;
-						hR = hR - avgH.x;
-						hG = hG - avgH.y;
-						hB = hB - avgH.z;
+						// nR = nR - avgN.x;
+						// nG = nG - avgN.y;
+						// nB = nB - avgN.z;
+						// hR = hR - avgH.x;
+						// hG = hG - avgH.y;
+						// hB = hB - avgH.z;
 
-						nR = nR / rangeN.x;
-						nG = nG / rangeN.y;
-						nB = nB / rangeN.z;
-						hR = hR / rangeH.x;
-						hG = hG / rangeH.y;
-						hB = hB / rangeH.z;
-					// nR = nR / sigmaN.x;
-					// nG = nG / sigmaN.y;
-					// nB = nB / sigmaN.z;
-					// hR = hR / sigmaH.x;
-					// hG = hG / sigmaH.y;
-					// hB = hB / sigmaH.z;
+						// nR = nR / rangeN.x;
+						// nG = nG / rangeN.y;
+						// nB = nB / rangeN.z;
+						// hR = hR / rangeH.x;
+						// hG = hG / rangeH.y;
+						// hB = hB / rangeH.z;
+
+						// nR = nR / sigmaN.x;
+						// nG = nG / sigmaN.y;
+						// nB = nB / sigmaN.z;
+						// hR = hR / sigmaH.x;
+						// hG = hG / sigmaH.y;
+						// hB = hB / sigmaH.z;
 					}
 					// SAD
 					var absR = Math.abs(nR - hR);

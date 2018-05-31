@@ -1,7 +1,7 @@
 // DOText.js
 DOText.ALIGN_LEFT = "left";
 DOText.ALIGN_CENTER = "center";
-DOText.ALIGN_RIGHT = "left";
+DOText.ALIGN_RIGHT = "right";
 
 DOText.FONT_ARIAL = "arial";
 // ------------------------------------------------------------------------------------------------------------------------ 

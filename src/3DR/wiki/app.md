@@ -180,6 +180,13 @@ project typical numbers:
 
 APP TODO:
 
+
+- homography path extract scalingwise
+- cells going into clearly the wrong locations
+	- are transforms correct?
+	- is replacement mechanism being checked ? [don't replace if worse]
+
+
 - for each cell in left, +- disparity, fing best disparity in opposite image line
 	=> limit disparity check to +/- like 50 pixels / 2 cells
 - create disparity image from cell assignments
@@ -188,10 +195,20 @@ APP TODO:
 
 
 
+
+
+
+- drop on uniqueness
+
+- what is relative uniquenesss look like?
+
+- error-reference scores (~.1 error)
+
 - are relative match scores good at determining better / worse ?
 
 
 
+- progressively loosen matching constraints -> dropping limits, etc ...
 
 
 
@@ -199,7 +216,7 @@ APP TODO:
 	- topoligically similar
 	- half-plan ordering x
 	- radial ordering x
-	- angular ordering ?
+	- angular ordering ? ... OK -> TEST
 	
 
 
@@ -222,12 +239,14 @@ while queue is not empty:
 	- if match != null
 		- if match still satisfies constraints [ordering, ..?]
 			- add matchA->B to final match set
+			- TODO: PRUNING IN CONNECTED NEIGHBORHOOD
+				- 
 			- for each neighbor of A and of B [4-or-8-neighbor]
 				- interpolate best location as search starting point
 				- vary affine transformation to find best local transform & location
 					- rotation, scaleX, scaleY, skewX
 				- get rank = path score / origin score
-				- if match satisfies constraings [ordering, min uniqueness, max score, ... ?]
+				- if match satisfies constraints [ordering, min uniqueness, max score, ... ?]
 					- add match to queue
 
 
