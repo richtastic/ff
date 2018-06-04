@@ -181,7 +181,122 @@ project typical numbers:
 APP TODO:
 
 
-- homography path extract scalingwise
+- look at variables of a given cell / seed on propagation attempts
+	- need way to differentiate good / vs bad matches - locally at least
+
+
+NO IDEA ON HOW TO ORDER CHOICES
+=> try simultaneous minimization of error / cost
+
+- for each seed match
+	- find cost of match
+	- for each neighbor [L/R/U/D]:
+		- find next possible match / cost / path-cost
+		- 
+
+Cost Volume
+
+=> be able to not match cells who don't have matches
+=> 
+
+OUTPUT: 
+	list of cells / matches
+
+
+
+semi-global matching SGM
+filters: LoG, rank, mean, 
+mutial information
+entropy of the histograms
+graph cutting
+
+
+
+cell:
+	- maping costs[]: -- 1 entry for each searched cell
+		adjacent[i]: cell(x,y), cost
+			- neighbor costs[]: (L/R/U/D = 4):
+				cell(x,y), path cost
+
+
+
+
+
+
+
+
+
+- loopy belief propagation
+https://www.cs.cmu.edu/~epxing/Class/10708-14/scribe_notes/scribe_note_lecture13.pdf
+https://cseweb.ucsd.edu/classes/sp06/cse151/lectures/belief-propagation.pdf
+
+- belief update
+- 
+
+Loopy Belief Propagation - Turbo Code
+- Bethe approximation
+- Gibbs Free energy
+- cost computation, cost-volume filtering, winner-take-all 
+
+
+
+if bipartite -- what are the cuts?
+- directional weights ?
+
+
+graph iteitive ? 
+	 - expand
+	 	- relative weights
+	 - pick
+	 - prune
+	 => repeat
+
+- keep track of 'candidates' in graph, not in queue
+- 
+
+graph-queue-iteritive
+	- go over all 'seeds', finding costs, constructing graph
+	- pick best graph, prune
+	=> repeat [keep prior graph for next iteration, remember failed edges to prevent re-searching]
+
+
+'should i keep this neighbor'
+'which match should i keep'
+
+
+
+
+
+- reference error:
+	- all offset by range * 0.1 ?
+
+- compare gradients by directional / dot
+
+
+- flow / optical flow
+
+- interpolation bad?
+- SAD metric bad?
+- global compare param?
+- fusion of: cell score, path score, uniqueness, ...
+
+
+
+
+- placement / offset wrong?
+
+
+- relative uniqueness based on range of scores in area
+
+- 'expected' score
+	- 'reference' error / score:
+	- scale signal to [0,1]
+	- add 10% [0.1] error [+/- 0.05]
+	- get score as if comparing
+		-> rank = (cell score / cell reference score) * (path score / path reference score)
+
+
+
 - cells going into clearly the wrong locations
 	- are transforms correct?
 	- is replacement mechanism being checked ? [don't replace if worse]

@@ -336,6 +336,29 @@ ImageMat.prototype.insert = function(imageB, offX,offY){
 		}
 	}
 }
+ImageMat.prototype.to01 = function(){ // each channel separate 0 to 1
+	ImageMat.normalFloat01(this._r);
+	ImageMat.normalFloat01(this._g);
+	ImageMat.normalFloat01(this._b);
+	return this;
+}
+ImageMat.prototype.addRandom = function(mag){  // each channel separate error add
+	var off = 0.5*mag;
+	ImageMat.random(this._r,mag,off);
+	ImageMat.random(this._g,mag,off);
+	ImageMat.random(this._b,mag,off);
+	return this;
+}
+// ImageMat.prototype.normalize = function(){ // convert existing scale to 0-1
+// 	var maxR = Code.maxArray(this.red());
+// 	var maxG = Code.maxArray(this.grn());
+// 	var maxB = Code.maxArray(this.blu());
+// 	var max = Code.maxArray([maxR,maxG,maxB]);
+// 	var scale = 1.0/max;
+// 	ImageMat.scaleFloatSame(this.red(), scale);
+// 	ImageMat.scaleFloatSame(this.grn(), scale);
+// 	ImageMat.scaleFloatSame(this.blu(), scale);
+// }
 // ------------------------------------------------------------------------------------------------------------------------ set
 ImageMat.prototype.setFromArrayARGB = function(data){
 	var i, len = this._r.length;
@@ -2986,6 +3009,13 @@ ImageMat.getSubImageFxn = function(src,width,height, colSta,colEnd, rowSta,rowEn
 		}
 	}
 }
+ImageMat.prototype.addConst = function(a){
+	// this._op(ImageMat.addConst);
+	ImageMat.addConst(this._r, a);
+	ImageMat.addConst(this._g, a);
+	ImageMat.addConst(this._b, a);
+	return this;
+}
 
 ImageMat.prototype._op = function(fxn){
 	fxn(this._r);
@@ -2994,15 +3024,19 @@ ImageMat.prototype._op = function(fxn){
 }
 ImageMat.prototype.clipFloat01 = function(){
 	this._op(ImageMat.clipFloat01);
+	return this;
 }
 ImageMat.prototype.normalFloat01 = function(){
 	this._op(ImageMat.normalFloat01);
+	return this;
 }
 ImageMat.prototype.invertFloat01 = function(){
 	this._op(ImageMat.invertFloat01);
+	return this;
 }
 ImageMat.prototype.scaleFloat01 = function(){
 	this._op(ImageMat.scaleFloat01);
+	return this;
 }
 ImageMat.clipFloat01 = function(data){
 	var i, len = data.length;
@@ -3081,6 +3115,13 @@ ImageMat.randomFloat01 = function(data){
 	var i, len = data.length;
 	for(i=0;i<len;++i){
 		data[i] = Math.random();
+	}
+	return data;
+}
+ImageMat.random = function(data,mag,off){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		data[i] = data[i] + Math.random()*mag - off;
 	}
 	return data;
 }
@@ -3228,7 +3269,14 @@ ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH)
 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
 }
 
-
+ImageMat.prototype.extractRect = function(aX,aY,bX,bY,cX,cY,dX,dY, wid,hei){
+	var width = this.width();
+	var height = this.height();
+	var r = ImageMat.extractRect(this.red(), aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, width,height);
+	var g = ImageMat.extractRect(this.grn(), aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, width,height);
+	var b = ImageMat.extractRect(this.blu(), aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, width,height);
+	return new ImageMat(wid,hei, r,g,b);
+}
 
 ImageMat.extractRectSimple = function(source, width,height, x,y,w,h, wid,hei){
 	var size = wid*hei;

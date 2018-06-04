@@ -18206,6 +18206,7 @@ sss = sadAvg;
 
 R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, flag){
 // flag = false;
+// flag = true;
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
@@ -18354,12 +18355,12 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 					var hB = haystackB[hIndex];
 					// from median .... intensity differences
 					if(flag){
-						// nR = nR - avgN.x;
-						// nG = nG - avgN.y;
-						// nB = nB - avgN.z;
-						// hR = hR - avgH.x;
-						// hG = hG - avgH.y;
-						// hB = hB - avgH.z;
+						nR = nR - avgN.x;
+						nG = nG - avgN.y;
+						nB = nB - avgN.z;
+						hR = hR - avgH.x;
+						hG = hG - avgH.y;
+						hB = hB - avgH.z;
 
 						// nR = nR / rangeN.x;
 						// nG = nG / rangeN.y;
@@ -18395,10 +18396,14 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 					// ABS
 					
 					if(flag){
-						sadR += absR*absR;
-						sadG += absG*absG;
-						sadB += absB*absB;
-						sadY += absY*absY;
+						// sadR += absR*absR;
+						// sadG += absG*absG;
+						// sadB += absB*absB;
+						// sadY += absY*absY;
+						sadR += absR;
+						sadG += absG;
+						sadB += absB;
+						sadY += absY;
 					}else{
 						sadR += absR;
 						sadG += absG;
@@ -18447,6 +18452,10 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 			// sadB = sadB / sigSquB;
 			//var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+			if(flag){
+				// sadAvg = sadAvg /((rangeN.x + rangeN.y + rangeN.z)/3.0);
+				var sadAvg = sadY / maskCount;
+			}
 //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
 //var sadAvg = (sadY) / maskCount / 3.0;
 

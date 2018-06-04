@@ -77,8 +77,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-// var modeImageCompare = true;
-var modeImageCompare = false;
+var modeImageCompare = true;
+// var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -1309,10 +1309,26 @@ var uniq = info["uniqueness"];
 console.log("SCORE: "+score);
 console.log("RANK: "+rank);
 console.log("UNIQ: "+uniq);
+
+
+
+// investigate more
+
+// HERE
+// var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, sizeCompare,scaAB, subShow);
+// NEED START/END POINT PAIRS
+
+
+
+
+// HERE 
+
+
+
 }
 
 
-
+/*
 
 // interpolationData
 
@@ -1425,6 +1441,7 @@ for(x=0; x<=10; x+=.5){
 	}
 }
 
+*/
 
 
 
@@ -6625,7 +6642,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-// return; // don't run
+return; // don't run
 
 
 
