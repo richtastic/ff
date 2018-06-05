@@ -77,8 +77,8 @@ var modeImageUpload = false;
 	//var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-var modeImageCompare = true;
-// var modeImageCompare = false;
+// var modeImageCompare = true;
+var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -6642,7 +6642,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-return; // don't run
+// return; // don't run
 
 
 

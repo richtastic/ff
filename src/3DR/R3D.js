@@ -1965,10 +1965,12 @@ R3D.stereoMatch = function(imageA, imageB, rowMapping){ // rectificationA, recti
 	var cellCountAY = Math.ceil(sizeAHeight/cellSize);
 	var dispartyA = [];
 		var compareScale = compareSize/cellSize;
-		//compareScale *= 2.0; // zoom out a bit
-	console.log(compareScale);
+		// compareScale *= 2.0; // zoom out a bit
+		// compareScale *= 0.5;
+	var show = false;
 	var haystackWidth = Math.round(sizeBWidth*compareScale);
 	for(var j=0; j<cellCountAY; ++j){
+// var j = 21;
 		// console.log(j+"/"+cellCountAY);
 		// extract B row
 		var rowA = Math.round(cellSize*(j+0.5));
@@ -1978,21 +1980,25 @@ R3D.stereoMatch = function(imageA, imageB, rowMapping){ // rectificationA, recti
 		var rowB = mappingA[rowA];
 		// console.log(rowA,rowB);
 		if(rowB>sizeBHeight-1 || rowB<0){
-			break; // subsequent rows should also be past ends
+			// break; // subsequent rows should also be past ends
+			console.log("TOO FAR ?");
 		}
 		var centerB = new V2D(sizeBWidth*0.5,rowB);
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,compareScale,compareScale);
 		var haystack = imageB.extractRectFromFloatImage(centerB.x,centerB.y,1.0,null, haystackWidth,compareSize, matrix);
-
+if(show){
 var iii = haystack;
 var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 var d = new DOImage(img);
-d.matrix().translate(10,10);
+// d.matrix().translate(10,10);
+d.matrix().translate(1100 + imageA.width() + 10,-55);
 d.matrix().translate(0,j*compareSize);
 GLOBALSTAGE.addChild(d);
-		
+}
 		for(var i=0; i<cellCountAX; ++i){
+// var i = 35;
+// 10 15 20 25 30 35
 			// extract A cell
 			// slide in disparity range
 			var centerA = new V2D(cellSize*(i+0.5),cellSize*(j+0.5));
@@ -2001,24 +2007,27 @@ GLOBALSTAGE.addChild(d);
 			var needle = imageA.extractRectFromFloatImage(centerA.x,centerA.y,1.0,null, compareSize,compareSize, matrix);
 			
 			var scores = R3D.stereoNeedleHaystack(needle, haystack);
-				//console.log(scores);
+if(show){
+Code.printMatlabArray(scores["list"],"sad");
+}
 				var offset = scores["offset"];
 				// console.log(offset+"");
 				// offset.x -= i*cellSize;
 				// offset.x -= (i+0.5)*cellSize;
 
 				dispartyA[j*cellCountAX+i] = offset;
-			
+if(show){
 var iii = needle;
 var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 var d = new DOImage(img);
-d.matrix().translate(400,10);
+// d.matrix().translate(400,10);
+d.matrix().translate(1100,-50);
 d.matrix().translate(i*compareSize,j*compareSize);
 GLOBALSTAGE.addChild(d);
-			// ...
-		}
-		// break;
-	}
+}
+		} // i
+		
+	} // j
 	cellCountAY = j-1; // if exit prior
 	/*
 		- 
@@ -2041,6 +2050,7 @@ R3D.stereoMatchToDisparity = function(disparity, width, height){
 	for(var i=0; i<disparity.length; ++i){
 		var d = disparity[i];
 		values[i] = Math.abs(d.x);
+		// values[i] = d.x;
 	}
 	return {"disparity":values};
 }
@@ -2064,13 +2074,16 @@ R3D.stereoNeedleHaystack = function(needle, haystack, startNeedle, endNeedle){
 	var hG = haystack.grn();
 	var hB = haystack.blu();
 	// var offset = new V2D();
+// console.log(haystackWidth+"x"+haystackHeight+" ? "+needleWidth+"x"+needleHeight);
+// console.log(countI,countJ);
+	var list = [];
 	for(var j=0; j<countJ; ++j){
 		for(var i=0; i<countI; ++i){
 			var score = 0;
 			for(var jj=0; jj<needleHeight; ++jj){
 				for(var ii=0; ii<needleWidth; ++ii){
 					var h = (j+jj)*haystackWidth + (i+ii);
-					var n = j*needleWidth + i;
+					var n = jj*needleWidth + ii;
 
 					
 					// SAD
@@ -2078,6 +2091,7 @@ R3D.stereoNeedleHaystack = function(needle, haystack, startNeedle, endNeedle){
 					var sadG = Math.abs(nG[n]-hG[h]);
 					var sadB = Math.abs(nB[n]-hB[h]);
 					score += sadR+sadG+sadB;
+					// score += sadR*sadR+sadG*sadG+sadB*sadB;
 					
 					// SSD
 					/*
@@ -2095,6 +2109,8 @@ R3D.stereoNeedleHaystack = function(needle, haystack, startNeedle, endNeedle){
 				}
 			}
 			score = score/pixels/3.0;
+			list.push(score);
+			// list.push(i);
 			//if(bestScore==null || score<bestScore){
 			if(bestScore==null || score>bestScore){
 				bestScore = score;
@@ -2102,7 +2118,7 @@ R3D.stereoNeedleHaystack = function(needle, haystack, startNeedle, endNeedle){
 			}
 		}
 	}
-	return {"score":bestScore, "offset":bestOffset, "other":null};
+	return {"score":bestScore, "offset":bestOffset, "other":null, "list":list};
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSquares
@@ -18362,12 +18378,12 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 						hG = hG - avgH.y;
 						hB = hB - avgH.z;
 
-						// nR = nR / rangeN.x;
-						// nG = nG / rangeN.y;
-						// nB = nB / rangeN.z;
-						// hR = hR / rangeH.x;
-						// hG = hG / rangeH.y;
-						// hB = hB / rangeH.z;
+						nR = nR / rangeN.x;
+						nG = nG / rangeN.y;
+						nB = nB / rangeN.z;
+						hR = hR / rangeH.x;
+						hG = hG / rangeH.y;
+						hB = hB / rangeH.z;
 
 						// nR = nR / sigmaN.x;
 						// nG = nG / sigmaN.y;
@@ -18396,14 +18412,14 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 					// ABS
 					
 					if(flag){
-						// sadR += absR*absR;
-						// sadG += absG*absG;
-						// sadB += absB*absB;
-						// sadY += absY*absY;
-						sadR += absR;
-						sadG += absG;
-						sadB += absB;
-						sadY += absY;
+						sadR += absR*absR;
+						sadG += absG*absG;
+						sadB += absB*absB;
+						sadY += absY*absY;
+						// sadR += absR;
+						// sadG += absG;
+						// sadB += absB;
+						// sadY += absY;
 					}else{
 						sadR += absR;
 						sadG += absG;
@@ -18454,7 +18470,7 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
 			if(flag){
 				// sadAvg = sadAvg /((rangeN.x + rangeN.y + rangeN.z)/3.0);
-				var sadAvg = sadY / maskCount;
+				// var sadAvg = sadY / maskCount;
 			}
 //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
 //var sadAvg = (sadY) / maskCount / 3.0;

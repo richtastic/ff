@@ -201,24 +201,12 @@ R3D.BA.scoreForPointMatch = function(viewA,pointA, viewB,pointB, scale,angle, ce
 	var scores = R3D.searchNeedleHaystackImageFlatTest2(needleA, null, needleB, true);
 	var needleScore = scores["value"][0];
 
-/*
-	var errorA = needleA.copy();
-	var infoA = Code.infoArray(errorA.gry());
-		errorA.addRandom(0.1*infoA["range"]);
-		errorA.addConst(0.1*infoA["range"]);
-		var scores = R3D.searchNeedleHaystackImageFlatTest2(needleA, null, errorA, true);
-		var referenceA = scores["value"][0];
+	// TODO: dropped:
+	var referenceA = 0;
+	var referenceB = 0;
 
-	var errorB = needleA.copy();
-	var infoA = Code.infoArray(errorA.gry());
-		errorA.addRandom(0.1*infoA["range"]);
-		errorA.addConst(0.1*infoA["range"]);
-		var scores = R3D.searchNeedleHaystackImageFlatTest2(needleA, null, errorA, true);
-		var referenceA = scores["value"][0];
-		var referenceB = referenceA;
-*/
-		var referenceA = R3D.BA.World.referenceError(needleA);
-		var referenceB = R3D.BA.World.referenceError(needleB);
+		// var referenceA = R3D.BA.World.referenceError(needleA);
+		// var referenceB = R3D.BA.World.referenceError(needleB);
 
 	return {"cross":needleScore, "referenceA":referenceA, "referenceB":referenceB};
 }
@@ -262,8 +250,8 @@ R3D.BA.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, r
 
 	var needleScore = R3D.BA.scoreForPointMatch(viewA,pointA, viewB,pointB, bestScale,bestAngle);
 		needleScore = needleScore["cross"];
-	// var haystackScore = R3D.BA.scoreForPointMatch(viewA,pointA, viewB,pointB, bestScale,bestAngle, 0.333);
-	// 	haystackScore = haystackScore["cross"];
+	var haystackScore = R3D.BA.scoreForPointMatch(viewA,pointA, viewB,pointB, bestScale,bestAngle, 0.333);
+		haystackScore = haystackScore["cross"];
 
 	var referenceA = needleScore["referenceA"];
 	var referenceB = needleScore["referenceB"];
@@ -274,9 +262,11 @@ R3D.BA.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, r
 	// TODO: SET RANK FROM NEIGHBORHOOD:
 	// var rank = relativeScore * relativeScore;
 
+	// absolute cost * path-cost
+	var rank = needleScore * haystackScore / needleScore;
 
 	// ...
-	var rank = (needleScore*needleScore)/(referenceA*referenceB);
+	//var rank = (needleScore*needleScore)/(referenceA*referenceB);
 	// console.log(rank);
 
 		// var scores = R3D.BA.scoreForPointMatch(viewA,pA, viewB,pB, bestScale,bestAngle);
@@ -463,8 +453,8 @@ R3D.BA.View = function(image, corners, camera){
 	this._cellSize = 21;
 	this._compareSize = 21;
 
-	// this._cellSize = 31;
-	// this._compareSize = 51;
+	// this._cellSize = 41;
+	// this._compareSize = 41;
 
 	// // average
 	// this._cellSize = 11;
@@ -1346,6 +1336,7 @@ R3D.BA.Match2D.prototype.score = function(score){
 	return this._score;
 }
 R3D.BA.Match2D.prototype.rank = function(rank){
+rank = 1.0; // TODO: UNFORCE
 	if(rank!==undefined){
 		this._rank = rank;
 	}
@@ -2228,7 +2219,8 @@ values = values["disparity"];
 	//...SHOW ?
 
 ImageMat.normalFloat01(values);
-console.log(values)
+ImageMat.invertFloat01(values);
+// console.log(values)
 var img = GLOBALSTAGE.getFloatRGBAsImage(values,values,values, stereo["width"], stereo["height"]);
 var d = new DOImage(img);
 d.matrix().scale(10.0);
@@ -2288,9 +2280,9 @@ R3D.BA.World.prototype.solve = function(completeFxn, completeContext){
 
 // WHY ?
 GLOBALSTAGE.root().matrix().identity();
-GLOBALSTAGE.root().matrix().translate(0,50);
-GLOBALSTAGE.root().matrix().translate(0,100);
-// GLOBALSTAGE.root().matrix().translate(10,10);
+// GLOBALSTAGE.root().matrix().translate(0,50);
+// GLOBALSTAGE.root().matrix().translate(0,100);
+GLOBALSTAGE.root().matrix().translate(10,10);
 
 	
 	
@@ -2318,11 +2310,10 @@ var haystack = R3D.Dense.extractRectFromPoints(image,pointA,pointB, sizeA,sizeB,
 
 throw "?";
 */
-	// console.log("hijack to do epipolar line test");
-	// this.epipolarSearch();
-
-	// throw "?"
-	// return;
+	console.log("hijack to do epipolar line test");
+	this.epipolarSearch();
+	throw "?"
+	return;
 
 /*
 // DISPLAY SOURCE IMAGES:
@@ -2687,9 +2678,72 @@ R3D.BA.World.prototype._iteration = function(iterationIndex, isLastIteration){
 			// console.log(existingB);
 
 			if(existingA.length>0 || existingB.length>0){
-				console.log("MATCH ALREADY EXISTS ... DISCARD")
-				point3D.disconnect(this);
-			}else{
+				var nextScore = match.score();
+				console.log("MATCH ALREADY EXISTS ... USE? : "+nextScore);
+				var isBetterA = true;
+				if(existingA.length>0){
+					var p = existingA[0];
+					var m = p.matchForViews(viewA,viewB);
+					console.log(m);
+					console.log(m.score());
+					if(m.score()<nextScore){
+						isBetterA = false;
+					}
+				}
+				var isBetterB = true;
+				if(existingB.length>0){
+					var p = existingB[0];
+					var m = p.matchForViews(viewA,viewB);
+					console.log(m);
+					console.log(m.score());
+					if(m.score()<nextScore){
+						isBetterB = false;
+					}
+				}
+				var isBetter = isBetterA && isBetterA;
+				if(isBetter){
+					console.log("DROP PRIORS & USE THIS:");
+					console.log(match);
+
+					var imA = viewA.image();
+					var pA = match.pointForView(viewA);
+					var pB = match.pointForView(viewB);
+					var a = pA.point();
+					var b = pB.point();
+/*
+					var d = new DO();
+					d.graphics().setLine(1, 0x99FF0000);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(a.x,a.y, 10 );
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+					GLOBALSTAGE.addChild(d);
+
+					var d = new DO();
+					d.graphics().setLine(1, 0x99FF0000);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(b.x,b.y, 10 );
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+					d.matrix().translate(imA.width(), 0);
+					GLOBALSTAGE.addChild(d);
+
+*/
+					if(existingA.length>0){
+						existingA[0].point3D().disconnect(this);
+					}
+					if(existingB.length>0){
+						existingB[0].point3D().disconnect(this);
+					}
+
+
+				}else{
+					match = null;
+				}
+				// throw "TODO: COMPARE / remove old socres if exits";
+
+			}
+			if(match){
 				var isPurePutative = match.isPurePutative();
 				
 				
@@ -4952,7 +5006,6 @@ R3D.BA.World.prototype.addPointForMatch = function(bestMatchA, viewA, viewB, tra
 
 	// rememeber params for next time:
 	var rank = bestMatchA["rank"];
-
 	// M
 	var score = bestMatchA["score"];
 	// F
@@ -5014,7 +5067,7 @@ R3D.BA.World.prototype.bestNextMatchesForPoint = function(viewA, pointA, viewB, 
 	console.log("bestPointsA: "+bestPointsA.length);
 
 
-	var show = R3D.BA.World.SHOW == 5;
+	var show = R3D.BA.World.SHOW == 999;
 	++R3D.BA.World.SHOW;
 
 
@@ -5092,9 +5145,9 @@ sizeCompare = 11;
 			// var seedScales = Code.lineSpace(-.1,.1, .1);
 			// var seedAngles = Code.lineSpace(-20,20,  5);
 			// var seedScales = Code.lineSpace(-.1,.1, .05);
-			//var seedAngles = Code.lineSpace(-20,20, 10);
-			var seedAngles = Code.lineSpace(-25,25, 5);
+			var seedAngles = Code.lineSpace(-20,20, 10);
 			var seedScales = Code.lineSpace(-.1,.1, .1);
+			// var seedAngles = Code.lineSpace(-25,25, 5);
 			// var seedAngles = Code.lineSpace(-10,10, 5);
 			// var seedScales = Code.lineSpace(-.1,.1, .1);
 			// var seedAngles = null;
@@ -5103,8 +5156,8 @@ sizeCompare = 11;
 	
 
 
-		var searchWindow = 4 * sizeCompare; // 3-5
-		var subShow = show && i==5;
+		var searchWindow = 3 * sizeCompare; // 3-5
+		var subShow = show && i==1;
 		var info = R3D.BA.optimumTransformForPoints(imageA,imageB, pA,pB, scaAB,angAB, sizeCompare, seedScales,seedAngles, searchWindow, subShow);
 // console.log(info);
 		if(!info){ // 
@@ -5123,23 +5176,25 @@ sizeCompare = 11;
 		var referenceA = scores["referenceA"];
 
 
-		// if(show){
 			var pointA1 = pointA;
 			var pointA2 = pA;
 			var pointB1 = oppositeA.point();
 			var pointB2 = info["to"];
 			// PATH SCORE
 			// var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, null, scaAB, subShow);
+			// var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, sizeCompare,scaAB, subShow);
+			// var pathScore = data["score"];
+			// var referencePathA = data["referenceA"];
+			// var referencePathB = data["referenceB"];
+			// var pathScoreRelative = pathScore/sourceScore;
+
+
+			// TODO: dropped
 			var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, sizeCompare,scaAB, subShow);
-			var pathScore = data["score"];
-			var referencePathA = data["referenceA"];
-			var referencePathB = data["referenceB"];
-			var pathScoreRelative = pathScore/sourceScore;
-			
-			// 
-
-		// }
-
+			var pathScore = 0;
+			var referencePathA = 0;
+			var referencePathB = 0;
+			var pathScoreRelative = pathScore;
 
 		var pA = info["from"];
 		var pB = info["to"];
@@ -5167,7 +5222,11 @@ sizeCompare = 11;
 			//var rank = relativeScore * relativeCost;
 			// var rank = relativeCost;
 			// var rank = pathScore * destinationScore;
-				var rank = ((destinationScore*destinationScore)/(referenceA*referenceB)) * (pathScore*pathScore/(referencePathA*referencePathB));
+				//var rank = ((destinationScore*destinationScore)/(referenceA*referenceB)) * (pathScore*pathScore/(referencePathA*referencePathB));
+			// absolute cost * path-cost
+			//var rank = destinationScore * pathScore;
+			var rank = destinationScore * pathScore / sourceScore;
+
 			info["rank"] = rank;
 			bestMatches.push(info);
 
@@ -5178,6 +5237,8 @@ sizeCompare = 11;
 
 // console.log(bestMatches);
 	if(show){
+console.log("sourceScore: "+sourceScore);
+var feedback = [];
 		for(var k=0; k<bestMatches.length; ++k){
 			var m = bestMatches[k];
 			var fr = m["from"];
@@ -5196,6 +5257,13 @@ sizeCompare = 11;
 				var sourceScore = m["parentScoreAbsolute"];
 				var destinationScore = m["neighborScoreAbsolute"];
 				var relScore = (destinationScore/sourceScore);
+// feedback.push(scorePathA);
+// feedback.push(destinationScore);
+// feedback.push(destinationScore/referenceA);
+// feedback.push(destinationScore/referenceB);
+//feedback.push(relScore);
+feedback.push(scorePathA*destinationScore);
+
 			// IMAGES
 			var siz = 21;
 			var sca = 6.0;
@@ -5271,6 +5339,7 @@ sizeCompare = 11;
 			*/
 
 		}
+Code.printMatlabArray(feedback,"x");
 		throw "throwed";
 	}
 
@@ -5334,7 +5403,7 @@ R3D.BA.World.prototype.nextBestSearchPoints = function(viewA, centerA){ // first
 				var val = neighborBins[bin];
 				if(val==0){
 					// console.log(corners);
-					
+					/*
 					var peakPixel = corners;
 					var maxI = null;
 					var maxJ = null;
@@ -5359,15 +5428,15 @@ R3D.BA.World.prototype.nextBestSearchPoints = function(viewA, centerA){ // first
 					// console.log((cx*cellSize)+" < ("+cellCenter.x+") < "+((cx+1)*cellSize)+" && "+(cy*cellSize)+" < ("+cellCenter.y+") <  "+((cy+1)*cellSize));
 					var best = new V2D(maxI,maxJ);
 					nextPoints.push(best);
+					*/
 					
-					/*
 					// return center -- stop 'clumping'
 					cellCenter.x = Math.min(Math.max(cellCenter.x,0),viewSize.x-1);
 					cellCenter.y = Math.min(Math.max(cellCenter.y,0),viewSize.y-1);
 					if( V2D.distance(centerA, cellCenter)>1.0 ){ // WHY ?
 						nextPoints.push(cellCenter.copy());
 					}
-					*/
+					
 					
 				}
 			}

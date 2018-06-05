@@ -180,9 +180,29 @@ project typical numbers:
 
 APP TODO:
 
+----- old areas not correctly removing priors ?
+
+
+- restrict before queuing / after popping:
+	- is-homogeneous (close) matrix transform
+	- 
+
+---- keep queue from getting real big -> ignore scores that are lower than existing minimum scores (asigned to a cell)
+
+- Q with no ordering ?
+	> only get score initially
+	> 
+	> prne after the fact
+
+
 
 - look at variables of a given cell / seed on propagation attempts
 	- need way to differentiate good / vs bad matches - locally at least
+
+		=> given a seed cenn
+			- it's score
+			- neighbors:
+				- path scores
 
 
 NO IDEA ON HOW TO ORDER CHOICES
@@ -199,8 +219,7 @@ Cost Volume
 => be able to not match cells who don't have matches
 => 
 
-OUTPUT: 
-	list of cells / matches
+
 
 
 
@@ -209,6 +228,7 @@ filters: LoG, rank, mean,
 mutial information
 entropy of the histograms
 graph cutting
+- alpha expansion graph cut
 
 
 
@@ -231,6 +251,7 @@ https://www.cs.cmu.edu/~epxing/Class/10708-14/scribe_notes/scribe_note_lecture13
 https://cseweb.ucsd.edu/classes/sp06/cse151/lectures/belief-propagation.pdf
 
 - belief update
+- reliability 
 - 
 
 Loopy Belief Propagation - Turbo Code
@@ -265,10 +286,17 @@ graph-queue-iteritive
 
 
 
+------ belief propagation
+	- get list of histograms from neighbors
+	- update myself
+	- send histogram to other neighbors
+
+- pixel i,j : disparity OR occluded
+	- allows to treat edge-pixels differently
 
 
-- reference error:
-	- all offset by range * 0.1 ?
+
+
 
 - compare gradients by directional / dot
 
