@@ -404,6 +404,30 @@ Code.printMatlabArray = function(array,name, ret){
 	}
 	console.log(str);
 }
+Code.printHistogram = function(bins, displayMax){
+	var displayMax = displayMax!==undefined ? displayMax : 10;
+	var str = "";
+	var info = Code.infoArray(bins);
+	var max = info["max"];
+	
+	var scale = displayMax/max;
+	for(var i=0; i<bins.length; ++i){
+		str += "\n";
+		var j = 0;
+		var bin = bins[i];
+		bin = Math.round(bin*scale);
+		str += "[";
+		for(j=0; j<bin; ++j){
+			str += "*";
+		}
+		for(; j<displayMax; ++j){
+			str += " ";
+		}
+		str += "] "+i;
+	}
+	str += "\n";
+	console.log(str);
+}
 Code._appendParameter = function(container, key, value){ //
 	//console.log("ASSIGN: "+key+"="+value);
 	var regeExArrayPush = new RegExp("\\[\\]$","g");
@@ -2244,6 +2268,93 @@ Code.isAngleInside = function(start,end, a){ // all angles in [0,2pi]
 		return true;
 	}
 	return false;
+}
+Code.anglesToBins = function(angles, mags, binCount){ // [0,2pi]
+	var withPercentBinning = true;
+	// var withPercentBinning = false;
+	var bins = Code.newArrayZeros(binCount);
+	var binAngle = Math.PI*2.0/binCount;
+	var halfAngle = binAngle*0.5;
+	var baseDir = new V2D(1,0).rotate(-halfAngle);
+	for(var i=0; i<angles.length; ++i){
+		var angle = angles[i];
+		var mag = mags[i];
+		// var angle = V2D.angleDirection(V2D.DIRX,vector);
+			// angle = Code.angleZeroTwoPi(angle);
+		var percent = angle/(Math.PI2);
+		var binP = percent*binCount;
+		var binD = Math.floor(binP);
+		var binR = binP % 1;
+		var binS = 1.0 - binR;
+		if(withPercentBinning){
+			var binI = binD;
+			var binJ = (binD+1)%binCount;
+			bins[binI] += mag*binS;
+			bins[binJ] += mag*binR;
+		}else{
+			bins[binD] += mag;
+		}
+	}
+	return {"bins":bins, "count":binCount};
+}
+Code.vectorsToAngleBins = function(vectors, binCount){
+	var angles = [];
+	var mags = [];
+	for(var i=0; i<vectors.length; ++i){
+		var vector = vectors[i];
+		var mag = vector.length();
+		var angle = V2D.angleDirection(V2D.DIRX,vector);
+			angle = Code.angleZeroTwoPi(angle);
+		angles.push(angle);
+		mags.push(mag);
+	}
+	return Code.anglesToBins(angles, mags, binCount);
+}
+
+Code.vectorsToBins3D = function(vectors, sizeX,sizeY,sizeZ, offX,offY,offZ){
+	var binCount = sizeX*sizeY*sizeZ;
+	var bins = Code.newArrayZeros(binCount);
+	var minV = new V3D();
+	var maxV = new V3D();
+	var minR = new V3D();
+	var maxR = new V3D();
+	var halfSize = 0.5;
+	var cuboid = new Cuboid();
+	for(var i=0; i<vectors.length; ++i){
+		var vector = vectors[i];
+		// minV.set(offX+vector.x-halfSize,offY+vector.y-halfSize,offZ+vector.z-halfSize);
+		// maxV.set(offX+vector.x+halfSize,offY+vector.y+halfSize,offZ+vector.z+halfSize);
+		minV.set(vector.x-halfSize,vector.y-halfSize,vector.z-halfSize);
+		maxV.set(vector.x+halfSize,vector.y+halfSize,vector.z+halfSize);
+		var intersections = [];
+		var volumeTotal = 0;
+		var mag = vector.length();
+		for(var z=0; z<sizeZ; ++z){
+			for(var y=0; y<sizeY; ++y){
+				for(var x=0; x<sizeX; ++x){
+					minR.set(offX+x-0,offY+y-0,offZ+z-0);
+					maxR.set(offX+x+1,offY+y+1,offZ+z+1);
+					var intersection = Code.cuboidIntersect(minV,maxV,minR,maxR, cuboid);
+					if(intersection){
+						var vol = intersection.volume();
+						if(vol>0){
+							var bin = z*sizeY*sizeX + y*sizeX + x;
+							volumeTotal += vol;
+							intersections.push([bin,vol]);
+						}
+					}
+				}
+			}
+		}
+		for(var j=0; j<intersections.length; ++j){
+			var intersection = intersections[j];
+			var bin = intersection[0];
+			var vol = intersection[1];
+
+			bins[bin] += mag*vol/volumeTotal;
+		}
+	}
+	return {"bins":bins, "count":binCount};
 }
 
 // color functions ----------------------------------------------------
@@ -8062,7 +8173,7 @@ Code.nextExponentialTwoRounded = function(d){
 Code.cuboidsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMax.z<bMin.z || aMin.x>bMax.x || aMin.y>bMax.y || aMin.z>bMax.z;
 }
-Code.cuboidIntersect = function(aMin,aMax, bMin,bMax){
+Code.cuboidIntersect = function(aMin,aMax, bMin,bMax, cuboid){
 	if(Code.cuboidsSeparate(aMin,aMax, bMin,bMax)){
 		return null;
 	}
@@ -8070,13 +8181,16 @@ Code.cuboidIntersect = function(aMin,aMax, bMin,bMax){
 	var right = Math.min(aMax.x,bMax.x);
 	var bottom = Math.max(aMin.y,bMin.y);
 	var top = Math.min(aMax.y,bMax.y);
-	var up = Math.max(aMin.z,bMin.z);
-	var down = Math.min(aMax.z,bMax.z);
+	var down = Math.max(aMin.z,bMin.z);
+	var up = Math.min(aMax.z,bMax.z);
 	var width = right-left;
 	var height = top-bottom;
 	var depth = up-down;
-	var rect = new Cuboid(left,bottom,width,height);
-	return rect;
+	if(!cuboid){
+		cuboid = new Cuboid();
+	}
+	cuboid.set(new V3D(left,bottom,down),new V3D(width,height,depth));
+	return cuboid;
 }
 Code.rectsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMin.x>bMax.x || aMin.y>bMax.y;

@@ -1066,7 +1066,9 @@ if(show){
 	//var score = scoreSAD; // * (lengthRatio/expectedScale) ??;
 	// var score = scoreSAD; // * (lengthRatio/expectedScale) ??;
 
-	// references:
+	// TODO: dropped:
+	// var referenceA = 0;
+	// var referenceB = 0;
 	var referenceA = R3D.BA.World.referenceError(haystackA);
 	var referenceB = R3D.BA.World.referenceError(haystackB);
 

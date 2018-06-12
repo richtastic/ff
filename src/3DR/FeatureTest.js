@@ -32,11 +32,11 @@ function FeatureTest(){
 // snow
 // new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
-//new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
-//new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
-new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
-//new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,tvector = ImageMat.pow(vector,0.5);his.imagesLoadComplete2).load(); // typical angle
+new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
+// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
+// new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-12.jpg"],this,this.imagesLoadComplete2).load(); // actual big scale difference
@@ -46,7 +46,7 @@ new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
 // new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
-//new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
+// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
 
 // new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 
@@ -679,8 +679,37 @@ if(i==1){
 }
 useColors = true;
 	var bestAngle = averageAngle;
-	var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
-	var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
+
+
+
+
+	// var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
+	// var vectorSIFT = FeatureTest.SIFTVectorCircular(image, center,dirX,dirY,bestAngle, useColors);
+
+// console.log(dirX,dirY);
+
+// throw "?";
+
+//R3D.SADVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix){ 
+	// R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, colors){
+	var neighborhoodSize = (dirX.length()+dirY.length())*0.5;
+	neighborhoodSize = neighborhoodSize * 2.0;
+var matrix = new Matrix(3,3).identity();
+	matrix = Matrix.transform2DScale(matrix,1.0);
+	matrix = Matrix.transform2DRotate(matrix,-bestAngle);
+
+	var vectorSAD = R3D.SADVectorCircular(image, center,neighborhoodSize,matrix);
+	var vectorSIFT = R3D.SIFTVectorCircular(image, center,neighborhoodSize,matrix, useColors);
+
+	// ?
+	// var vectorSIFT2 = R3D.SIFTVectorCircular(image, center,neighborhoodSize*2.0,matrix, useColors);
+	// vectorSIFT = Code.arrayPushArray(vectorSIFT,vectorSIFT2);
+
+	// var vectorSAD2 = R3D.SADVectorCircular(image, center,neighborhoodSize*2.0,matrix, useColors);
+	// vectorSAD = Code.arrayPushArray(vectorSAD,vectorSAD2);
+
+
+
 	// var vector = [];
 		// Code.arrayPushArray(vector,vectorSIFT);
 		// Code.arrayPushArray(vector,vectorSAD);
@@ -714,14 +743,20 @@ vectors.push({"vectors":vectorList, "feature":feature});
 }
 
 FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
-	var offY = 400;
+	var offY = 450;
 	var blockSize = 25;
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		// console.log(match);
 		var pairs = [match["A"],match["B"]];
+// draw matches:
+var ssss = 1.5;
+var c = new DO();
+c.graphics().setLine(1.0, 0x33FF0000);
+c.graphics().beginPath();
 		for(var j=0; j<pairs.length; ++j){
 			var item = pairs[j];
+// console.log(item);
 			var feature = item["feature"];
 			var center = feature["center"];
 			var dirX = feature["x"];
@@ -760,7 +795,30 @@ FeatureTest.prototype.showMSERmatches = function(matches, imageA, imageB){
 			d.matrix().scale(2.0);
 			d.matrix().translate(10 + 50*i, 10 + offY + 50*j);
 			GLOBALSTAGE.addChild(d);
+
+
+
+
+			
+			//color = 0xFFFF0000;
+			center = center.copy();
+			if(j==0){
+				c.graphics().drawCircle(center.x, center.y, 5);
+				c.graphics().moveTo(center.x, center.y);
+			}else{
+				//center.x += imageA.width()*ssss;
+				center.x += imageA.width();
+				c.graphics().lineTo(center.x, center.y);
+				c.graphics().drawCircle(center.x, center.y, 5);
+			}
+			// if(j==1){
+			// 	c.matrix().translate(imageA.width()*ssss,0.0);
+			// }
 		}
+c.graphics().strokeLine();
+c.graphics().endPath();
+c.matrix().scale(ssss);
+GLOBALSTAGE.addChild(c);
 	}
 }
 
@@ -846,8 +904,20 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 					//var score = (scoreSIFT+1)*Math.pow(scoreSAD+1,1.0) - 1;
 					//var score = (scoreSum+1)*scoreMul - 1;
 					//var score = (scoreSum+1)*scoreMul; // best
-					//var score = (scoreSIFT)*(scoreSAD)*(scoreSIFT+scoreSAD*0.5); // best
-					var score = (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1) - 1; // [0-11]?
+					// var score = (scoreSIFT)*(scoreSAD)*(scoreSIFT+scoreSAD*0.5); // best
+
+					// var score = (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1) - 1; // [0-11]?
+
+					// var score = (scoreSIFT+1)*(scoreSAD+1)/(scoreSIFT+scoreSAD+2) - 1; // OK
+
+
+					// var score = scoreSIFT; // ok
+					// var score = scoreSAD; // poor
+					// var score = scoreSAD*scoreSIFT;
+
+					// var score = (1.0+scoreSAD)*scoreSIFT;
+					// var score = (scoreSAD)*(1.0+scoreSIFT);
+					var score = (1+scoreSAD)*(1+scoreSIFT) - 1;
 
 					// (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1)*0.5 - 1
 
@@ -1527,18 +1597,22 @@ for(var f=0; f<lists.length; ++f){
 }
 
 // show initial feature sites
-if(true){
-// if(false){
+// if(true){
+if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
 		var features = lists[f];
-		
 		for(k=0; k<features.length; ++k){
 			var point = features[k];
-			if(!Code.isa(point,V4D)){
-				point = new V4D(point["point"].x,point["point"].y, point["size"],point["angle"]);
-			}
+			console.log(point);
+
+			var center = point["center"];
+			point = new V4D(center.x,center.y,5,1);
+			// if(!Code.isa(point,V4D)){
+			// 	point = new V4D(point["point"].x,point["point"].y, point["size"],point["angle"]);
+			// }
+
 			//console.log(""+point)
 				// var x = point.x * imageMatrixA.width();
 				// var y = point.y * imageMatrixA.height();

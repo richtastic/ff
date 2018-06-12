@@ -180,7 +180,44 @@ project typical numbers:
 
 APP TODO:
 
+x do NCC tests
+x look at binning @ histograms better/worse?
+	=> binning by percent seems more accurate
+x optimize scale/rotation agnostically fxn
+
+
+~ '3D' FLAT SIFT
+	-> 3D ANGLES, NOT BINS -> bin %s
+	-> 3 2D vectors:
+		RG
+		RB
+		GB
+
+~ fix SIFT with % binnings
+~ do SIFT/Flat-sift tests
+
+
+
+
+- new dense process
+	- belief choosing
+
+
+2 main problems:
+	- don't know when i have my own match vs just the best match available [wrong]
+		=> recheck 'reference' scoring
+	- don't know how to compare match scores globally
+
 ----- old areas not correctly removing priors ?
+
+- look @ color histograms
+
+- how to compare gradient
+	-> which methods work best
+
+
+
+
 
 
 - restrict before queuing / after popping:

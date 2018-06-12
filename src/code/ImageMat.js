@@ -342,11 +342,12 @@ ImageMat.prototype.to01 = function(){ // each channel separate 0 to 1
 	ImageMat.normalFloat01(this._b);
 	return this;
 }
-ImageMat.prototype.addRandom = function(mag){  // each channel separate error add
-	var off = 0.5*mag;
-	ImageMat.random(this._r,mag,off);
-	ImageMat.random(this._g,mag,off);
-	ImageMat.random(this._b,mag,off);
+ImageMat.prototype.addRandom = function(magR, magG, magB){  // each channel separate error add
+	magG = magG!==undefined ? magG : magR;
+	magB = magB!==undefined ? magB : magR;
+	ImageMat.random(this._r,magR,0.5*magR);
+	ImageMat.random(this._g,magG,0.5*magG);
+	ImageMat.random(this._b,magB,0.5*magB);
 	return this;
 }
 // ImageMat.prototype.normalize = function(){ // convert existing scale to 0-1
@@ -3512,8 +3513,25 @@ ImageMat.sharpen = function(src,wid,hei){
 	// TODO
 }
 ImageMat.sobel = function(src,wid,hei, w,h){
-	// 1/8*[-1,0,1, -2,-0,2, -1,0,1] , 1/8*[1,2,1, 0,0,0, -1,-2,-1]
-	// TODO
+	var valX = ImageMat.sobelX(src,wid,hei, w,h);
+	var valY = ImageMat.sobelY(src,wid,hei, w,h);
+	var result = [];
+	var valueX = valX["value"];
+	var valueY = valY["value"];
+	for(var i=0; i<valueX.length; ++i){
+		result.push(new V2D(valueX[i],valueY[i]));
+	}
+	return {"value":result, "width":wid, "height":hei};
+}
+ImageMat.sobelX = function(src,wid,hei, w,h){
+	// var val = ImageMat.convolve(src,wid,hei, [1,0,-1, 2,0,-2, 1,0,-1], 3,3);
+	var val = ImageMat.convolve(src,wid,hei, [-1,0,1, -2,0,2, -1,0,1], 3,3);
+	return val;
+}
+ImageMat.sobelX = function(src,wid,hei, w,h){
+	// var val = ImageMat.convolve(src,wid,hei, [1,2,1, 0,0,0, -1,-2,-1], 3,3);
+	var val = ImageMat.convolve(src,wid,hei, [-1,-2,-1, 0,0,0, 1,2,1], 3,3);
+	return val;
 }
 ImageMat.meanFilter = function(src,wid,hei, w,h){
 	if(w!==undefined && w!==undefined){

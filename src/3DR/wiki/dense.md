@@ -78,6 +78,9 @@ file:///var/containers/Bundle/Application/9619FBE0-A501-4FB0-8277-74AB3FE38DDC/u
 
 
 
+Maximum Normalized Cross-Correlation. MNCC
+
+MNCC = Cov(X,Y)/[Var(X) + Var(Y)]  ???
 
 
 
@@ -94,6 +97,338 @@ file:///var/containers/Bundle/Application/9619FBE0-A501-4FB0-8277-74AB3FE38DDC/u
 
 
 
+
+OPTICAL FLOW
+	- brightness constancy assumption
+	- lambertian assumption
+	- 
+	- HORKSCHUNK (HS) METHOD - BCA equation => minimize cost: sum(all-pixels) (dI/dx * u + dI/dy * v + DI/dt)^2 + lambda*(du/dx^2 + du/dv^2 + dv/dx^2 + dv/dy^2). ---- data + smoothness
+	- gradients * flow = #
+	- pixels near eachother should have similar flow vectors
+		-> impose smoothness
+	- LUCAS-KANADE method - 
+	- combined
+		- don't smooth across color edges (could be depth discontinutities)
+	- 
+
+patchmatch = ?
+	- robust cost function -- quadratic, linear, asymptotic -- outliers don't throw things off
+
+
+
+
+- edge oval - diffusion in... 53:00 - [13]?
+
+
+ANNF: Approx Neareast Neighbor Fields - 
+PatchMatch - 
+FeatureMatch - 
+
+
+
+
+http://www.sci.utah.edu/~gerig/CS6320-S2013/Materials/CS6320-CV-S2012-OpticalFlow-I.pdf
+- solve over window linear matrix
+
+
+https://www.xilinx.com/support/documentation/application_notes/xapp1300-lucas-kanade-optical-flow.pdf
+
+
+https://github.com/cheind/image-align
+
+https://github.com/kasumi494/opencv_lucas-kanade/blob/master/main.cpp
+	http://robots.stanford.edu/cs223b04/algo_tracking.pdf
+
+https://github.com/yjadaa/KLT/blob/master/KLT.m
+
+https://github.com/inspirit/AS3OpticalFlowLK/blob/master/src/ru/inspirit/asfeat/oflow/OpticalFlowPyrLK.as
+
+https://github.com/ablarry91/Optical-Flow-LucasKanade-HornSchunck/blob/master/LKPY.py
+
+
+https://github.com/zyinshi/Optical-Flow
+
+
+https://chenhsuanlin.bitbucket.io/conditional-LK/paper.pdf
+
+https://github.com/csukuangfj/code-for-Lucas-Kanade-20-Years-On
+
+
+
+
+- asymmetric ?
+- pick best 4 of 8 ?
+- use NCC ? is this better at picking textured peaks ? [prioritizing high-range-matches] ?
+
+
+- could have a 'putative' group (not involved in calculations -- only there if pass a step)
+	- final/proven/established/justified/validated/verified/confirmed
+
+- how to make hierarchical?
+	-> search in established areas sub-pixelly ?
+
+
+for each iteration:
+
+	create graph from seeds:
+SENSE:
+	- save to graph [as putative ?]
+	- do neighbor calculations [path / best possible score]
+EXPAND:
+	- determine best possible next-cells to proceed with
+	- add these to graph
+RETRACT:
+	- belief propagation
+		- 4-8 neighbor
+			- relative flow directions [diff vectors] - dot product histogram?
+			- average color diffs
+	- recalculate errors / costs
+	- 
+	- drop worst from graph
+	- mark dropped points so that they aren't retried for a while (until things change enough)
+
+COSTS:
+	- average color [R,G,B,Y]
+	- average gradient
+	- intensity distribution (histogram)
+	- relative score
+	- relative path cost
+	- uniqueness
+	- smoothness of transform
+		- scale
+		- rotation
+		- translation ~ flow
+	- topology consistency 
+	- F error
+	- histograms [color, gradient]
+	- entropy / mutual information
+	- 
+
+prevention:
+
+SAD SCORE
+	- if too high
+NCC
+	- if too high
+RANGE
+	- if too low
+UNIQUENESS
+	- if very low
+TOPOLOGY
+	- if any crossover [angle ordering constraint]
+	- if angles are off by more than 90
+	- if distances are over 2x scale
+	
+
+
+
+belief propagation:
+
+- actual scores
+- neighbor scores
+- expected scores
+=> if expected score
+	- doesn't match actual score well => bad score
+	- very sparse => not reliable
+
+
+
+AVERAGE COLOR:
+expected = V3D.sum(neighborColors)/neighborColors.length;
+difference = V3D.distance(expected,actual);
+
+HISTOGRAM COLOR:
+R/G/B plots ?
+
+
+NCC SCORE:
+"
+
+SAD SCORE:
+"
+
+AFFINE: ANGLE / SCALES / SKEWS
+	- angle = average rotation
+	- scale / scaleX / scaleY
+	=> maybe just look at diffs of entire transform ? a^-1 * b  &&  b^-1 * a = ?
+
+
+FLOW:
+expected = V2D.sum(neighborFlows)/neighborColors.length;
+difference = V2D.distance(expected,actual);
+
+ENTROPY:
+compare mutual-information
+
+outlier if error is ~ [1-4]*sigma
+
+
+sequence:
+SET VALUES [when point is created]
+GET VALUES FROM NEIGHBORS
+CALCULATE EXPECTED VALUE
+GET EXPECTED VALUES FROM NEIGHBORS
+CALCULATE IF INLIER OR OUTLIER
+
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Seeded, Dense Matching, Optical Flow, Cost, Message Passing, Hierarchical, Pruning
+
+
+
+Cell
+	- label [int]
+	- self-info:
+		- 
+	- group-info:
+		-
+
+
+
+hierarchy purpose: to reduce search space
+
+mean square color error: MSE:
+1/(n*m) * sum: |Ra-Rb|^2 + |Ga-Gb|^2 + |Ba-Bb|^2
+
+forward-backward-consistency check:
+
+
+GRADIENT-SIMILARITY METRIC
+	- eucliden squared (L2) distance [SSD w/ x & y]
+
+
+
+diffeomophic transform - PDE fluid
+
+
+
+
+
+
+http://vision.middlebury.edu/
+
+
+
+visual SFM - http://ccwu.me/vsfm/
+
+
+123D catch - autodesk
+
+PMVS
+http://ccwu.me/vsfm/
+
+http://vision.middlebury.edu/
+http://vision.middlebury.edu/MRF/code/
+
+
+
+
+
+
+
+http://www.bmva.org/bmvc/2014/files/paper106.pdf
+
+
+
+
+patchmatch:
+http://vis.berkeley.edu/courses/cs294-69-fa11/wiki/images/1/18/05-PatchMatch.pdf
+http://gfx.cs.princeton.edu/pubs/Barnes_2010_TGP/generalized_pm.pdf
+
+
+
+
+
+
+
+
+
+
+
+https://github.com/feihuzhang/CNNF
+	http://www.bmva.org/bmvc/2012/BMVC/paper132/abstract132.pdf
+	https://www.microsoft.com/en-us/research/wp-content/uploads/2012/01/PMBP.pdf
+	https://www.microsoft.com/en-us/research/wp-content/uploads/2012/01/PMPBPsupmat.pdf
+	http://wwwpub.zih.tu-dresden.de/~cvweb/publications/papers/2012/FastCost-VolumeFiltering.pdf
+	https://pdfs.semanticscholar.org/ba87/c459c9419977d9685d8136cf66f3b5d98bb9.pdf
+	https://pdfs.semanticscholar.org/b1c0/18d75cdccf46f593490fc05fece558198b24.pdf
+
+
+https://github.com/swayfreeda/igitSFM
+
+
+https://github.com/CansenJIANG/Dense3dMatching
+
+
+https://arxiv.org/pdf/1805.03517.pdf
+https://arxiv.org/pdf/1709.00930.pdf
+
+https://github.com/ruddradev/dense_stereo
+
+
+
+
+https://people.eecs.berkeley.edu/~chaene/cvpr17tut/stereo.pdf
+http://wavelab.uwaterloo.ca/slam/2017-SLAM/Lecture14-Direct_visual_inertial_odometry_and_SLAM/slides.pdf
+
+https://cmp.felk.cvut.cz/cvww2006/papers/11/11.pdf
+
+
+
+https://people.csail.mit.edu/celiu/pdfs/CVPR13-DSPM.pdf
+http://vision.cs.utexas.edu/projects/dsp/
+https://github.com/tinghuiz/flowweb/blob/master/external/dsp-code/DSPMatch.m
+https://github.com/tinghuiz/flowweb/tree/master/external/dsp-code
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://arxiv.org/pdf/1703.02563.pdf
+https://arxiv.org/pdf/1704.03217.pdf
+http://courses.cecs.anu.edu.au/courses/CSPROJECTS/16S2/Reports/Qiang_Duan_Report.pdf
+http://jankautz.com/publications/HighlyOverparamOpticalFlow_ECCV14.pdf
+https://hal.inria.fr/inria-00614408/document
+
+http://cs.brown.edu/~dqsun/pubs/cvpr_2010_flow.pdf
+
+http://www.serc.iisc.ernet.in/~venky/Papers/OF_via_ANNF_ICASSP14.pdf
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------
 
 
 

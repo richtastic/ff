@@ -1,0 +1,77 @@
+<html>
+<head>
+<title>Belief Propagation ... kinda</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["R3D.js", "BeliefTest.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var b = new BeliefTest();
+	return;
+
+
+	
+	var vectors = [];
+		vectors.push( new V3D(1.0, 1.0, 1.0) );
+		vectors.push( new V3D(0.5, 0.5, 0.5) );
+		vectors.push( new V3D(-0.75,0.25,0.0) );
+		vectors.push( new V3D(-1.0,0.0,0.0) );
+	var result = Code.vectorsToBins3D(vectors, 2,2,2, -1,-1,-1);
+	var bins = result["bins"];
+	// console.log(bins);
+	//
+	// ...
+	//
+	Code.printHistogram(bins);
+	//
+	return;
+
+	//var withPercentBinning = false;
+	var withPercentBinning = true;
+	var vectors = [];
+		vectors.push( new V2D(1.0,1.0) );
+		vectors.push( new V2D(1.0,0.5) );
+		vectors.push( new V2D(1.0,-0.5) );
+		vectors.push( new V2D(1.0,0.0) );
+		vectors.push( new V2D(1.0,0.0) );
+	var bins = Code.vectorsToAngleBins(vectors, 8)["bins"];
+	/*
+	var binCount = 8;
+	var bins = Code.newArrayZeros(binCount);
+	var binAngle = Math.PI*2.0/binCount;
+	var halfAngle = binAngle*0.5;
+	var baseDir = new V2D(1,0).rotate(-halfAngle);
+	for(var i=0; i<vectors.length; ++i){
+		var vector = vectors[i];
+		var mag = vector.length();
+		var angle = V2D.angleDirection(V2D.DIRX,vector);
+			angle = Code.angleZeroTwoPi(angle);
+		var percent = angle/(Math.PI2);
+		var binP = percent*binCount;
+		var binD = Math.floor(binP);
+		var binR = binP % 1;
+		var binS = 1.0 - binR;
+		// console.log(".    "+i+" : "+vector+" @ "+Code.degrees(angle)+" = "+percent+" ("+binP+")  = "+binD+"r "+binR+" / "+binS+".  ... ");
+		// console.log("   INTO THIS: "+binS);
+		// console.log("   INTO NEXT: "+binR);
+		if(withPercentBinning){
+			var binI = binD;
+			var binJ = (binD+1)%binCount;
+			bins[binI] += mag*binS;
+			bins[binJ] += mag*binR;
+		}else{
+			bins[binD] += mag;
+		}
+	}*/
+	Code.printHistogram(bins);
+}
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

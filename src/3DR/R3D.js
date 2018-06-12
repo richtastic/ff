@@ -1196,7 +1196,7 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	F = R3D.forceRank2F(F);
 	return F;
 }
-R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole
+R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole, eigenvalue = 0
 	try{
 		var svd = Matrix.SVD(F);
 		var U = svd.U;
@@ -1247,7 +1247,7 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){ // b * F * a = 0
 	}
 	return list;
 }
-R3D.getEpipolesFromF = function(F,normed){
+R3D.getEpipolesFromF = function(F,normed){ // epipole = eigenvalue of F & eigenvalue = 0 (~0)
 	normed = normed!==undefined?normed:true;
 	var svd = Matrix.SVD(F);
 	var a = (new V3D()).fromArray(svd.V.getColAsArray(2));
@@ -5740,7 +5740,6 @@ R3D._SIFTimage = function(imageMatrix, insideSet, location, scale, angle, colors
 	}
 }
 R3D._SIFVectorRGBCircularVectorAdd = function(vector, redV, binsSize, binCount, vectorLen, bin, weight, offset){
-//	weight = 1.0;
 	var redM = redV.length();
 	var redA = V2D.angleDirection(V2D.DIRX,redV);
 		redA = Code.angleZeroTwoPi(redA);
@@ -5755,12 +5754,8 @@ R3D.SIFVectorGrayCircular = function(imageMatrix, location,diaNeighborhood,point
 R3D.SIFVectorRGBCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
 	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,pointAngle, true);
 }
-R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,pointAngle, colors){
-	//diaNeighborhood = diaNeighborhood * 1; // too small
-	//diaNeighborhood = diaNeighborhood * 3;
-	diaNeighborhood = diaNeighborhood * 5;
-	//diaNeighborhood = diaNeighborhood * 7;
-
+R3D.SIFTVectorCircularOLD = function(imageMatrix, location,diaNeighborhood,pointAngle, colors){
+	diaNeighborhood = diaNeighborhood * 1;
 	colors = colors!==undefined ? colors : true;
 	var colorCount = colors ? 3 : 1;
 	var binMask = R3D._defaultCircularSIFTBinMask();
@@ -5769,11 +5764,9 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,pointAng
 		var binCount = binMask["bins"];
 		var binWeights = binMask["weights"];
 	var binsSize = 8;
-	var vectorLen = binCount*binsSize;
-	var vector = Code.newArrayZeros(vectorLen*colorCount);
-
+	var vectorLen = binCount;
+	var vectorGroups = Code.newArrayArrays(vectorLen*colorCount);
 	var scale = diaNeighborhood/binWidth;
-
 	var gradients = R3D._SIFTimage(imageMatrix, binWidth, location, scale, pointAngle, colors);
 	var gradientR, gradientG, gradientB, gradientY;
 	if(colors){
@@ -5784,6 +5777,34 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,pointAng
 		var gradientY = gradients["y"];
 	}
 
+// console.log(vectorGroups);
+	console.log("binCount: "+binCount);
+	// Code.vectorsToAngleBins(vectors, binsSize);
+	for(var j=0; j<binWidth; ++j){
+		for(var i=0; i<binWidth; ++i){
+			var index = j*binWidth + i;
+			var bin = binLookup[index];
+			if(bin>=0){
+				if(colors){
+					vectorGroups[bin + 0*vectorLen].push(gradientR[index]);
+					vectorGroups[bin + 1*vectorLen].push(gradientG[index]);
+					vectorGroups[bin + 2*vectorLen].push(gradientB[index]);
+				}else{
+					vectorGroups[bin].push(gradientY[index]);
+				}
+			}
+		}
+	}
+	
+	var vector = [];
+	for(var i=0; i<vectorGroups.length; ++i){
+		var group = vectorGroups[i];
+		// console.log(group);
+		var b = Code.vectorsToAngleBins(group, binsSize);
+		Code.arrayPushArray(vector, b["bins"]);
+	}
+	// console.log(vector);
+	/*
 	for(var j=0; j<binWidth; ++j){
 		for(var i=0; i<binWidth; ++i){
 			var index = j*binWidth + i;
@@ -5800,12 +5821,187 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,pointAng
 			}
 		}
 	}
+	*/
 	var min = Code.minArray(vector);
 	Code.arraySub(vector, min);
 	Code.normalizeArray(vector);
-	vector = ImageMat.pow(vector,0.25);
+	// vector = ImageMat.pow(vector,0.25);
+	vector = ImageMat.pow(vector,0.5);
 	return vector;
 }
+
+
+
+R3D.XXX = 0;
+
+R3D._SIFTchannelMatrix = function(source,width,height, insideSet, location, scale, matrix){
+	var padding = 2;
+	var outsideSet = insideSet + 2*padding;
+	var area = ImageMat.extractRectFromFloatImage(location.x,location.y,scale ,null, outsideSet,outsideSet, source,width,height, matrix);
+	// BLUR IMAGE
+	//var blurred = ImageMat.getBlurredImage(area, outsideSet,outsideSet, SIFTDescriptor.GAUSSIAN_BLUR_GRADIENT);
+	var blurred = area;
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(area,area,area, outsideSet,outsideSet);
+		// var d = new DOImage(img);
+		// d.matrix().scale(4.0);
+		// d.matrix().translate(R3D.XXX*50, R3D.XXX*50);
+		// GLOBALSTAGE.addChild(d);
+		// ++R3D.XXX;
+	// GET DERIVATIVES
+	var gradients = ImageMat.gradientVector(blurred, outsideSet,outsideSet).value;
+	gradients = ImageMat.unpadFloat(gradients,outsideSet,outsideSet, padding,padding,padding,padding);
+	return gradients;
+}
+
+
+R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, colors){
+	colors = colors!==undefined ? colors : true;
+	var colorCount = colors ? 3 : 1;
+	var binMask = R3D._defaultCircularSIFTBinMask();
+		var binLookup = binMask["value"];
+		var binWidth = binMask["width"];
+		var binCount = binMask["bins"];
+		var binWeights = binMask["weights"];
+	var binsSize = 8;
+	var vectorLen = binCount;
+	var vectorGroups = Code.newArrayArrays(vectorLen*colorCount);
+	var scale = diaNeighborhood/binWidth;
+	var gradientR, gradientG, gradientB, gradientY;
+	if(colors){
+		gradientR = R3D._SIFTchannelMatrix(imageMatrix.red(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
+		gradientG = R3D._SIFTchannelMatrix(imageMatrix.grn(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
+		gradientB = R3D._SIFTchannelMatrix(imageMatrix.blu(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
+	}else{
+		gradientB = R3D._SIFTchannelMatrix(imageMatrix.gry(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
+	}
+	for(var j=0; j<binWidth; ++j){
+		for(var i=0; i<binWidth; ++i){
+			var index = j*binWidth + i;
+			var bin = binLookup[index];
+			if(bin>=0){
+				if(colors){
+					vectorGroups[bin + 0*vectorLen].push(gradientR[index]);
+					vectorGroups[bin + 1*vectorLen].push(gradientG[index]);
+					vectorGroups[bin + 2*vectorLen].push(gradientB[index]);
+				}else{
+					vectorGroups[bin].push(gradientY[index]);
+				}
+			}
+		}
+	}
+	
+	var vector = [];
+	for(var i=0; i<vectorGroups.length; ++i){
+		var group = vectorGroups[i];
+		var b = Code.vectorsToAngleBins(group, binsSize);
+		Code.arrayPushArray(vector, b["bins"]);
+	}
+	var min = Code.minArray(vector);
+	Code.arraySub(vector, min);
+	Code.normalizeArray(vector);
+	// ImageMat.normalFloat01(vector); ?
+	vector = ImageMat.pow(vector,0.25);
+	// vector = ImageMat.pow(vector,0.5);
+	return vector;
+}
+
+
+
+R3D.SADVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix){ // color gradient
+	var wid = imageMatrix.width();
+	var hei = imageMatrix.height();
+	var binMask = R3D._defaultCircularSADBinMask();
+		var binLookup = binMask["value"];
+		var binWidth = binMask["width"];
+		var binCount = binMask["bins"];
+		var binWeights = binMask["weights"];
+	var outerSize = binWidth;
+	var paddedSize = outerSize + 2;
+	var vectorGroups = Code.newArrayArrays(binCount);
+	var zoom = 1.0;
+	var scale = diaNeighborhood/outerSize;
+	var image = imageMatrix.extractRectFromFloatImage(location.x,location.y,scale,null,paddedSize,paddedSize, matrix);
+	// console.log(image)
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), paddedSize,paddedSize);
+		// var d = new DOImage(img);
+		// d.matrix().scale(4.0);
+		// d.matrix().translate(R3D.XXX*50, R3D.XXX*50);
+		// GLOBALSTAGE.addChild(d);
+		// ++R3D.XXX;
+	var vR = image.red();
+	var vG = image.grn();
+	var vB = image.blu();
+	var averageColor = new V3D();
+	var v = new V3D();
+	var delta = new V3D();
+	for(var j=0; j<outerSize; ++j){
+		for(var i=0; i<outerSize; ++i){
+			var index = j*outerSize + i;
+			var binGroup = binLookup[index];
+			if(binGroup<0){
+				continue;
+			}
+			//var binWeight = binWeights[index];
+			var binWeight = 1.0;
+			// AVERAGE COLOR
+			averageColor.set(0,0,0);
+			for(var jj=0;jj<=2;++jj){
+				for(var ii=0;ii<=2;++ii){
+					var x = (i+ii);
+					var y = (j+jj);
+					var ind = y*paddedSize + x;
+					var r = vR[ind];
+					var g = vG[ind];
+					var b = vB[ind];
+					averageColor.add(r,g,b);
+				}
+			}
+			averageColor.scale(1.0/9.0);
+			// COLOR GRADIENT
+			index = (j+1)*paddedSize + (i+1);
+			var r = vR[index];
+			var g = vG[index];
+			var b = vB[index];
+			v.set(r,g,b);
+			V3D.sub(delta, v,averageColor);
+			vectorGroups[binGroup].push(delta.copy());
+		}
+	}
+	// vector list to number list
+	var vector = [];
+	for(var i=0; i<vectorGroups.length; ++i){
+		var group = vectorGroups[i];
+		var b = Code.vectorsToBins3D(group, 2,2,2, -1,-1,-1);
+		Code.arrayPushArray(vector, b["bins"]);
+	}
+	// normalize
+	var min = Code.minArray(vector);
+	Code.arraySub(vector, min);
+	Code.normalizeArray(vector);
+	return vector;
+}
+
+R3D.compareSADVectorCircular = function(vectorA, vectorB){
+	var score = 0;
+	var i, len = vectorA.length;
+	for(i=0; i<len; ++i){
+		var s = Math.abs(vectorA[i]-vectorB[i]);
+		// console.log(Math.abs(vectorA[i]-vectorB[i]))
+		score += s;
+	}
+	if(len>0){
+		score = score/len;
+	}
+	return score;
+}
+R3D.compareSIFTVectorCircular = function(vectorA, vectorB){
+	return R3D.compareSADVectorCircular(vectorA, vectorB);
+}
+
+
+
+
+
 
 
 R3D.SIFTVAngleMeasurement = function(imageMatrix,location,diaNeighborhood, single){
@@ -18259,7 +18455,6 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 		avgN.x += needleR[k];
 		avgN.y += needleG[k];
 		avgN.z += needleB[k];
-		++maskCount;
 		if(minN==null){
 			minN = new V3D();
 			minN.x = needleR[k];
@@ -18557,6 +18752,347 @@ sss = sadAvg;
 //R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatFast;
 //R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatTest;
 R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatTest2;
+
+
+
+
+
+
+R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ // ZNCC
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var needleR = needle.red();
+	var needleG = needle.grn();
+	var needleB = needle.blu();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
+	var haystackR = haystack.red();
+	var haystackG = haystack.grn();
+	var haystackB = haystack.blu();
+
+	var needleCount = needleWidth*needleHeight;
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth * resultHeight;
+	if(resultCount<=0){
+		return null;
+	}
+	var mask = 1.0;
+	var i, j;
+	var maskCount = 0;
+	for(i=0; i<needleCount; ++i){
+		if(needleMask){ mask = needleMask[i]; }
+		if(mask===0){ continue; }
+		++maskCount;
+	}
+	// needle infos
+	var avgN = new V3D();
+	var minN = null;
+	var maxN = null;
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		avgN.x += needleR[k];
+		avgN.y += needleG[k];
+		avgN.z += needleB[k];
+		if(minN==null){
+			minN = new V3D();
+			minN.x = needleR[k];
+			minN.y = needleG[k];
+			minN.z = needleB[k];
+			maxN = new V3D();
+			maxN.x = needleR[k];
+			maxN.y = needleG[k];
+			maxN.z = needleB[k];
+		}
+		minN.x = Math.min(minN.x,needleR[k]);
+		minN.y = Math.min(minN.y,needleG[k]);
+		minN.z = Math.min(minN.z,needleB[k]);
+		maxN.x = Math.max(maxN.x,needleR[k]);
+		maxN.y = Math.max(maxN.y,needleG[k]);
+		maxN.z = Math.max(maxN.z,needleB[k]);
+	}
+	avgN.scale(1.0/maskCount);
+	var rangeN = V3D.sub(maxN,minN);
+	// sigma N
+	var sigmaN = new V3D();
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
+		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
+		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
+	}
+	sigmaN.x = Math.sqrt(sigmaN.x);
+	sigmaN.y = Math.sqrt(sigmaN.y);
+	sigmaN.z = Math.sqrt(sigmaN.z);
+	// 
+	var result = new Array();
+	for(j=0; j<resultHeight; ++j){
+		for(i=0; i<resultWidth; ++i){
+			var resultIndex = j*resultWidth + i;
+			var nccR = 0;
+			var nccG = 0;
+			var nccB = 0;
+			var minH = null;
+			var maxH = null;
+			var avgH = new V3D();
+			var autH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					if(minH==null){
+						minH = new V3D();
+						minH.x = haystackR[hIndex];
+						minH.y = haystackG[hIndex];
+						minH.z = haystackB[hIndex];
+						maxH = new V3D();
+						maxH.x = haystackR[hIndex];
+						maxH.y = haystackG[hIndex];
+						maxH.z = haystackB[hIndex];
+					}
+					minH.x = Math.min(minH.x,haystackR[hIndex]);
+					minH.y = Math.min(minH.y,haystackG[hIndex]);
+					minH.z = Math.min(minH.z,haystackB[hIndex]);
+					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
+					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
+					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
+					avgH.x += haystackR[hIndex];
+					avgH.y += haystackG[hIndex];
+					avgH.z += haystackB[hIndex];
+				}
+			}
+			avgH.scale(1.0/maskCount);
+			var rangeH = V3D.sub(maxH,minH);
+			// sigma H
+			var sigmaH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var n = needle[nIndex];
+					var h = haystack[hIndex];
+					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
+					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
+					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
+				}
+			}
+			sigmaH.x = Math.sqrt(sigmaH.x);
+			sigmaH.y = Math.sqrt(sigmaH.y);
+			sigmaH.z = Math.sqrt(sigmaH.z);
+			// N * H
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				for(var nI=0; nI<needleWidth; ++nI){ 
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					// completely ignore a masked operation
+					var nR = needleR[nIndex];
+					var nG = needleG[nIndex];
+					var nB = needleB[nIndex];
+					var hR = haystackR[hIndex];
+					var hG = haystackG[hIndex];
+					var hB = haystackB[hIndex];
+					nR = nR - avgN.x;
+					nG = nG - avgN.y;
+					nB = nB - avgN.z;
+					hR = hR - avgH.x;
+					hG = hG - avgH.y;
+					hB = hB - avgH.z;
+					nccR += (nR * hR);
+					nccG += (nG * hG);
+					nccB += (nB * hB);
+				}
+			}
+			nccR = nccR / (sigmaN.x*sigmaH.x);
+			nccG = nccG / (sigmaN.y*sigmaH.y);
+			nccB = nccB / (sigmaN.z*sigmaH.z);
+			var nccAvg = (nccR+nccG+nccB)/3.0;
+			if(isCost){
+				nccAvg = (1 - nccAvg)*0.5;
+			}
+			result[resultIndex] = nccAvg;
+		}
+	}
+	
+	return {"value":result, "width":resultWidth, "height":resultHeight};
+
+}
+
+R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vectorY, sizeA, limits){ // affine = v1(x,y) v2(x,y) + tx,ty
+	sizeA = Code.valueOrDefault(sizeA, 11); 
+	if(!limits){
+		limits = {};
+	} // default to 
+	// var percent = 1.0;
+	var percent = 0.25;
+	limits["t"] = Code.valueOrDefault(limits["t"], 1); // pixel
+	limits["a"] = Code.valueOrDefault(limits["a"], vectorX.length()*percent);
+	limits["b"] = Code.valueOrDefault(limits["b"], vectorY.length()*percent);
+	// optimum transform:
+	var compareSize = 11;
+	var scaleCompare = compareSize/sizeA;
+		var matrix = new Matrix(3,3).identity();
+			matrix = Matrix.transform2DScale(matrix,scaleCompare);
+	var h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
+	var m = needleMask = ImageMat.circleMask(compareSize);
+	var u = new V2D(0,0);
+	var x = new V2D(1,0);
+	var y = new V2D(0,1);
+
+;
+console.log("scaleCompare: "+scaleCompare);
+
+
+var iii = h;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(4.0);
+d.matrix().translate(1300,400);
+GLOBALSTAGE.addChild(d);
+var index = 0;
+	var compareFxn = function(o,a,b, isUpdate){ // from control points
+		var matrix = R3D.affineMatrixExact([u,x,y],[u,a,b]);
+			matrix = Matrix.transform2DScale(matrix,scaleCompare);
+		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,compareSize,compareSize, matrix);
+		var ncc = R3D.normalizedCrossCorrelation (n,m,h, true);
+if(isUpdate){
+// if(index==0){
+	var iii = n;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(4.0);
+	d.matrix().translate(1200,300 + index*50);
+	GLOBALSTAGE.addChild(d);
+// }
+++index;
+}
+
+		return ncc["value"][0];
+	}
+
+	var result = R3D._affineTransformNonlinearGD(pointA,pointB, vectorX,vectorY,  vectorX,vectorY, compareFxn, limits);
+	return result;
+}
+
+
+
+R3D._affineTransformNonlinearGD = function(imageFlatA,pointA, imageFlatB,pointB,  vectorX,vectorY, compareFxn, limits){
+	// var limitAx = 0;
+	// var limitAy = 0;
+	// var limitBx = 0;
+	// var limitBy = 0;
+	// var limitTx = 0;
+	// var limitTy = 0;
+	var limitA = 0;
+	var limitB = 0;
+	var limitT = 0;
+	if(limits){
+		limitT = limits["t"];
+		limitA = limits["a"];
+		limitB = limits["b"];
+		// limitAx = limits["ax"];
+		// limitAy = limits["ay"];
+		// limitBx = limits["bx"];
+		// limitBy = limits["by"];
+		// limitTx = limits["tx"];
+		// limitTy = limits["ty"];
+	}
+	var xVals = [0,0, vectorX.x,vectorX.y, vectorY.x,vectorY.y];
+	// var imageGradA = null;
+	// var imageGradB = null;
+	var ranges = {};
+		// ranges["tx"] = [0-limitTx, 0+limitTx];
+		// ranges["ty"] = [0-limitTx, 0+limitTy];
+		// ranges["ax"] = [vectorX.x-limitAx, vectorX.x+limitAx];
+		// ranges["ay"] = [vectorX.y-limitAy, vectorY.y+limitAy];
+		// ranges["bx"] = [vectorY.x-limitBx, vectorX.x+limitBx];
+		// ranges["by"] = [vectorY.y-limitBy, vectorX.y+limitBy];
+		ranges["t"] = limitT;
+		ranges["a"] = limitA;
+		ranges["b"] = limitB;
+	var args = [ranges, compareFxn, vectorX, vectorY];
+	var maxIterations = 10;
+	result = Code.gradientDescent(R3D._gdAffineTransform, args, xVals, null, maxIterations, 1E-6);
+	xVals = result["x"];
+	var off = new V2D(xVals[0],xVals[1]);
+	var vA = new V2D(xVals[2],xVals[3]);
+	var vB = new V2D(xVals[4],xVals[5]);
+	return {"O":off, "A":vA, "B":vB};
+}
+
+R3D._gdAffineTransform = function(args, x, isUpdate){
+	if(isUpdate){
+		// return;
+	}
+	// args
+	// var imageFlatA = args[0];
+	// var imageGradA = args[1];
+	// var imageFlatB = args[2];
+	// var imageGradB = args[3];
+	var range = args[0];
+	var compareFxn = args[1];
+	var vX = args[2];
+	var vY = args[3];
+	// limits
+	var maxValue = 1E9;
+	var vO = new V2D(x[0],x[1]);
+	var vA = new V2D(x[2],x[3]);
+	var vB = new V2D(x[4],x[5]);
+	var dO = vO.length();
+	var dA = V2D.distance(vX,vA);
+	var dB = V2D.distance(vY,vB);
+	if(	dO>range["t"] || dA>range["a"] || dB>range["b"] ){
+	// if(	x[0]<range["tx"][0] || x[0]>range["tx"][1] ||
+	// 	x[1]<range["ty"][0] || x[1]>range["ty"][1] || 
+	// 	x[2]<range["ax"][0] || x[2]>range["ax"][1] || 
+	// 	x[3]<range["ay"][0] || x[3]>range["ay"][1] ||
+	// 	x[4]<range["bx"][0] || x[4]>range["bx"][1] ||
+	// 	x[5]<range["by"][0] || x[5]>range["by"][1] ){
+		// console.log("IS OUTSIDE: "+x);
+		// console.log("       ",range);
+		return maxValue;
+	}
+	// var o = new V2D(x[0],x[1]);
+	// var vA = new V2D(x[2],x[3]);
+	// var vB = new V2D(x[4],x[5]);
+	var error = compareFxn(vO,vA,vB, isUpdate);
+	// if(isUpdate){
+	// 	console.log("    => "+error);
+	// }
+	return error;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
